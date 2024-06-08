@@ -12,7 +12,7 @@ namespace Tests.UserTests
 	[TestFixture]
 	public class GroupBySubqueryTests : TestBase
 	{
-		class Table1
+		sealed class Table1
 		{
 			public long Field1 { get; set; }
 			public int  Field2 { get; set; }
@@ -30,13 +30,13 @@ namespace Tests.UserTests
 			public Table2? Ref3 { get; set; }
 		}
 
-		class Table2
+		sealed class Table2
 		{
 			public int     Field2 { get; set; }
 			public string? Field4 { get; set; }
 		}
 
-		class Table3
+		sealed class Table3
 		{
 			public int  Field5 { get; set; }
 			public long Field1 { get; set; }
@@ -45,7 +45,7 @@ namespace Tests.UserTests
 			public Table4 Ref4 { get; set; } = null!;
 		}
 
-		class Table4
+		sealed class Table4
 		{
 			public int Field5 { get; set; }
 			public int Field6 { get; set; }
@@ -84,6 +84,8 @@ namespace Tests.UserTests
 				).Distinct();
 
 				var sql1 = q1.GetSelectQuery();
+				TestContext.WriteLine(q1.ToString());
+
 				Assert.That(sql1.Select.IsDistinct, "Distinct not present");
 
 				var q2 =
@@ -93,10 +95,13 @@ namespace Tests.UserTests
 					where g.Count() > 1
 					select new { g.Key.Field6, EngineeringCircuitNumber = g.Key.Field4, Count = g.Count() };
 
+				var sql2 = q2.GetSelectQuery();
+				TestContext.WriteLine(q2.ToString());
+
 				var distinct = q2.EnumQueries().FirstOrDefault(q => q.Select.IsDistinct)!;
 
 				Assert.That(distinct, Is.Not.Null);
-				Assert.That(distinct.Select.Columns.Count, Is.EqualTo(3));
+				Assert.That(distinct.Select.Columns, Has.Count.EqualTo(3));
 			}
 		}
 	}

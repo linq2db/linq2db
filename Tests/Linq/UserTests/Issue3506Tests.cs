@@ -14,7 +14,7 @@ namespace Tests.UserTests
 	public class Issue3506Tests : TestBase
 	{
 		[Test]
-		public void Test1([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		public void Test1([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			var cats = new[]
 			{
@@ -40,12 +40,12 @@ namespace Tests.UserTests
 					(cat, owner) => cat)
 				.Count();
 
-				Assert.AreEqual(1, result);
+				Assert.That(result, Is.EqualTo(1));
 			}
 		}
 
 		[Test]
-		public void Test2([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		public void Test2([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			var cats = new[]
 			{
@@ -71,7 +71,7 @@ namespace Tests.UserTests
 					(cat, owner) => cat)
 				.Count();
 
-				Assert.AreEqual(1, result);
+				Assert.That(result, Is.EqualTo(1));
 			}
 		}
 	}

@@ -9,7 +9,6 @@
 #nullable enable
 
 using System;
-using System.Collections.Generic;
 using System.Linq;
 
 using LinqToDB;
@@ -146,8 +145,8 @@ namespace SqlCeDataContext
 		/// <summary>
 		/// FK_Issue695_Parent (Issue695Parent)
 		/// </summary>
-		[Association(ThisKey="ID, ID", OtherKey="ID, ID", CanBeNull=false)]
-		public Issue695Parent Parent { get; set; } = null!;
+		[Association(ThisKey="ID", OtherKey="ID", CanBeNull=false)]
+		public Issue695Parent Issue695Parent { get; set; } = null!;
 
 		#endregion
 	}
@@ -162,8 +161,8 @@ namespace SqlCeDataContext
 		/// <summary>
 		/// FK_Issue695_Parent_BackReference (Issue695)
 		/// </summary>
-		[Association(ThisKey="ID, ID", OtherKey="ID, ID", CanBeNull=true)]
-		public IEnumerable<Issue695> FKIssue695ParentBackReferences { get; set; } = null!;
+		[Association(ThisKey="ID", OtherKey="ID", CanBeNull=true)]
+		public Issue695? FKIssue695ParentBackReference { get; set; }
 
 		#endregion
 	}
@@ -387,19 +386,19 @@ namespace SqlCeDataContext
 		/// <summary>
 		/// FK_Issue695_Parent
 		/// </summary>
-		[Association(ThisKey="ID, ID", OtherKey="ID, ID", CanBeNull=false)]
-		public static IQueryable<Issue695Parent> Parents(this Issue695 obj, IDataContext db)
+		[Association(ThisKey="ID", OtherKey="ID", CanBeNull=false)]
+		public static IQueryable<Issue695Parent> Issue695Parents(this Issue695 obj, IDataContext db)
 		{
-			return db.GetTable<Issue695Parent>().Where(c => c.ID == obj.ID && c.ID == obj.ID);
+			return db.GetTable<Issue695Parent>().Where(c => c.ID == obj.ID);
 		}
 
 		/// <summary>
 		/// FK_Issue695_Parent
 		/// </summary>
-		[Association(ThisKey="ID, ID", OtherKey="ID, ID", CanBeNull=false)]
-		public static Issue695 Parent(this Issue695Parent obj, IDataContext db)
+		[Association(ThisKey="ID", OtherKey="ID", CanBeNull=false)]
+		public static Issue695 Issue695Parent(this Issue695Parent obj, IDataContext db)
 		{
-			return db.GetTable<Issue695>().Where(c => c.ID == obj.ID && c.ID == obj.ID).First();
+			return db.GetTable<Issue695>().Where(c => c.ID == obj.ID).First();
 		}
 
 		#endregion
@@ -409,10 +408,19 @@ namespace SqlCeDataContext
 		/// <summary>
 		/// FK_Issue695_Parent_BackReference
 		/// </summary>
-		[Association(ThisKey="ID, ID", OtherKey="ID, ID", CanBeNull=true)]
+		[Association(ThisKey="ID", OtherKey="ID", CanBeNull=true)]
 		public static IQueryable<Issue695> FKIssue695ParentBackReferences(this Issue695Parent obj, IDataContext db)
 		{
-			return db.GetTable<Issue695>().Where(c => c.ID == obj.ID && c.ID == obj.ID);
+			return db.GetTable<Issue695>().Where(c => c.ID == obj.ID);
+		}
+
+		/// <summary>
+		/// FK_Issue695_Parent_BackReference
+		/// </summary>
+		[Association(ThisKey="ID", OtherKey="ID", CanBeNull=true)]
+		public static Issue695Parent? FKIssue695ParentBackReference(this Issue695 obj, IDataContext db)
+		{
+			return db.GetTable<Issue695Parent>().Where(c => c.ID == obj.ID).FirstOrDefault();
 		}
 
 		#endregion

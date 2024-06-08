@@ -15,7 +15,7 @@ namespace Tests.Linq
 	public class SubQueryTests : TestBase
 	{
 		[Test]
-		public void Test1([DataSources] string context)
+		public void Test1([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -28,7 +28,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Test2([DataSources] string context)
+		public void Test2([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -41,7 +41,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Test3([DataSources] string context)
+		public void Test3([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -55,7 +55,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Test4([DataSources] string context)
+		public void Test4([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -70,7 +70,7 @@ namespace Tests.Linq
 		static int _testValue = 3;
 
 		[Test]
-		public void Test5([DataSources] string context)
+		public void Test5([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -89,7 +89,7 @@ namespace Tests.Linq
 						Count2 = Child.Where(p => p.ParentID == id && p.ParentID == _testValue).Count(),
 					});
 
-				var rids   = db.Parent
+				var rids = db.Parent
 					.Where(p => ids.Contains(p.ParentID))
 					.Select(p => p.Value1 == null ? p.ParentID : p.ParentID + 1)
 					.Distinct();
@@ -107,7 +107,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Test6([DataSources] string context)
+		public void Test6([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -147,7 +147,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Test7([DataSources] string context)
+		public void Test7([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -156,7 +156,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Test8([DataSources] string context)
+		public void Test8([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -184,12 +184,12 @@ namespace Tests.Linq
 
 				var chs2 = chilren.ToList();
 
-				Assert.AreEqual(chs2.Count, chs2.Except(chs1).Count());
+				Assert.That(chs2.Except(chs1).Count(), Is.EqualTo(chs2.Count));
 			}
 		}
 
 		[Test]
-		public void ObjectCompare([DataSources(ProviderName.Access)] string context)
+		public void ObjectCompare([DataSources(TestProvName.AllAccess)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -214,6 +214,7 @@ namespace Tests.Linq
 		[Test]
 		public void Contains1([DataSources(
 			TestProvName.AllInformix,
+			TestProvName.AllClickHouse,
 			TestProvName.AllSybase,
 			TestProvName.AllSapHana,
 			TestProvName.AllAccess,
@@ -234,6 +235,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Contains2([DataSources(
+			TestProvName.AllClickHouse,
 			TestProvName.AllInformix,
 			TestProvName.AllMySql,
 			TestProvName.AllSybase,
@@ -254,10 +256,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void SubSub1([DataSources(
-			ProviderName.SqlCe, ProviderName.Access, ProviderName.DB2,
-			TestProvName.AllOracle)]
-			string context)
+		public void SubSub1([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -294,9 +293,10 @@ namespace Tests.Linq
 		[Test]
 		public void SubSub2([DataSources(
 			TestProvName.AllAccess,
+			TestProvName.AllClickHouse,
 			ProviderName.DB2,
 			TestProvName.AllOracle,
-			TestProvName.AllMySql,
+			TestProvName.AllMySql57,
 			TestProvName.AllSybase,
 			TestProvName.AllInformix,
 			TestProvName.AllSapHana)]
@@ -343,54 +343,50 @@ namespace Tests.Linq
 		}
 
 		//[Test]
-		public void SubSub201([DataSources] string context)
-		{
-			using (var db = GetDataContext(context))
-				AreEqual(
-					from p1 in
-						from p2 in Parent
-						select new { p2, ID = p2.ParentID + 1 } into p3
-						where p3.ID > 0
-						select new { p2 = p3, ID = p3.ID + 1 }
-					where p1.ID > 0
-					select new
-					{
-						Count =
-						(
-							from c in p1.p2.p2.Children
-							select new { c, ID = c.ParentID + 1 } into c
-							where c.ID < p1.ID
-							select new { c.c, ID = c.c.ParentID + 1 } into c
-							where c.ID < p1.ID
-							select c
-						).FirstOrDefault()
-					},
-					from p1 in
-						from p2 in db.Parent
-						select new { p2, ID = p2.ParentID + 1 } into p3
-						where p3.ID > 0
-						select new { p2 = p3, ID = p3.ID + 1 }
-					where p1.ID > 0
-					select new
-					{
-						Count =
-						(
-							from c in p1.p2.p2.Children
-							select new { c, ID = c.ParentID + 1 } into c
-							where c.ID < p1.ID
-							select new { c.c, ID = c.c.ParentID + 1 } into c
-							where c.ID < p1.ID
-							select c
-						).FirstOrDefault()
-					});
-		}
+		//public void SubSub201([DataSources] string context)
+		//{
+		//	using (var db = GetDataContext(context))
+		//		AreEqual(
+		//			from p1 in
+		//				from p2 in Parent
+		//				select new { p2, ID = p2.ParentID + 1 } into p3
+		//				where p3.ID > 0
+		//				select new { p2 = p3, ID = p3.ID + 1 }
+		//			where p1.ID > 0
+		//			select new
+		//			{
+		//				Count =
+		//				(
+		//					from c in p1.p2.p2.Children
+		//					select new { c, ID = c.ParentID + 1 } into c
+		//					where c.ID < p1.ID
+		//					select new { c.c, ID = c.c.ParentID + 1 } into c
+		//					where c.ID < p1.ID
+		//					select c
+		//				).FirstOrDefault()
+		//			},
+		//			from p1 in
+		//				from p2 in db.Parent
+		//				select new { p2, ID = p2.ParentID + 1 } into p3
+		//				where p3.ID > 0
+		//				select new { p2 = p3, ID = p3.ID + 1 }
+		//			where p1.ID > 0
+		//			select new
+		//			{
+		//				Count =
+		//				(
+		//					from c in p1.p2.p2.Children
+		//					select new { c, ID = c.ParentID + 1 } into c
+		//					where c.ID < p1.ID
+		//					select new { c.c, ID = c.c.ParentID + 1 } into c
+		//					where c.ID < p1.ID
+		//					select c
+		//				).FirstOrDefault()
+		//			});
+		//}
 
 		[Test]
-		public void SubSub21([DataSources(
-			ProviderName.SqlCe, ProviderName.DB2,
-			TestProvName.AllOracle,
-			ProviderName.Access)]
-			string context)
+		public void SubSub21([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -433,10 +429,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void SubSub211([DataSources(
-			ProviderName.SqlCe, ProviderName.Access, ProviderName.DB2,
-			TestProvName.AllOracle)]
-			string context)
+		public void SubSub211([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -481,10 +474,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void SubSub212([DataSources(
-			ProviderName.SqlCe, TestProvName.AllAccess, ProviderName.DB2,
-			TestProvName.AllOracle)]
-			string context)
+		public void SubSub212([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -529,6 +519,7 @@ namespace Tests.Linq
 		[Test]
 		public void SubSub22([DataSources(
 			ProviderName.SqlCe, ProviderName.Access, ProviderName.DB2,
+			TestProvName.AllClickHouse,
 			TestProvName.AllOracle, TestProvName.AllSapHana)]
 			string context)
 		{
@@ -575,7 +566,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Count1([DataSources(ProviderName.SqlCe)] string context)
+		public void Count1([DataSources(ProviderName.SqlCe, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -600,7 +591,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Count2([DataSources(ProviderName.SqlCe)] string context)
+		public void Count2([DataSources(ProviderName.SqlCe, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -625,7 +616,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Count3([DataSources(ProviderName.SqlCe)] string context)
+		public void Count3([DataSources(ProviderName.SqlCe, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -666,12 +657,12 @@ namespace Tests.Linq
 
 				query.ToList();
 
-				Assert.AreEqual(1, System.Text.RegularExpressions.Regex.Matches(db.LastQuery!, "Types").Count);
+				Assert.That(System.Text.RegularExpressions.Regex.Matches(db.LastQuery!, "Types"), Has.Count.EqualTo(1));
 			}
 		}
 
 		[Table]
-		class Contract_Distributor_Agent
+		sealed class Contract_Distributor_Agent
 		{
 			[Column] public int Agent_Id { get; set; }
 			[Column] public int Distributor_Id { get; set; }
@@ -687,7 +678,7 @@ namespace Tests.Linq
 		}
 
 		[Table]
-		class Agent
+		sealed class Agent
 		{
 			[Column] public int Agent_Id { get; set; }
 			[Column] public string? First_Name { get; set; }
@@ -700,7 +691,7 @@ namespace Tests.Linq
 		}
 
 		[Table]
-		class Distributor
+		sealed class Distributor
 		{
 			[Column] public int Distributor_Id { get; set; }
 			[Column] public string? Type_Code { get; set; }
@@ -713,7 +704,7 @@ namespace Tests.Linq
 		}
 
 		[Table]
-		class Distributor_Commercial_Propert
+		sealed class Distributor_Commercial_Propert
 		{
 			[Column] public int Distributor_Id { get; set; }
 			[Column] public int Commercial_Property_Id { get; set; }
@@ -726,7 +717,7 @@ namespace Tests.Linq
 		}
 
 		[Table]
-		class Commercial_Property
+		sealed class Commercial_Property
 		{
 			[Column              ] public int     Commercial_Property_Id { get; set; }
 			[Column(Length = 100)] public string? Street_Number          { get; set; }
@@ -743,7 +734,7 @@ namespace Tests.Linq
 		}
 
 		[Table]
-		class Contract_Dates
+		sealed class Contract_Dates
 		{
 			[Column] public int Contract_Id { get; set; }
 			[Column] public string? Type_Code { get; set; }
@@ -756,7 +747,7 @@ namespace Tests.Linq
 		}
 
 		[Table]
-		class Cities
+		sealed class Cities
 		{
 			[Column] public string? City_Code { get; set; }
 			[Column] public string? City_Name { get; set; }
@@ -768,7 +759,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Issue383Test1([DataSources(false)] string context)
+		public void Issue383Test1([DataSources(false, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable(Contract_Distributor_Agent.Data))
@@ -810,13 +801,13 @@ namespace Tests.Linq
 
 				var res = query.ToList();
 
-				Assert.AreEqual(1, res.Count);
-				Assert.AreEqual("Urupinsk", res[0].City_Name.Single().City_Name);
+				Assert.That(res, Has.Count.EqualTo(1));
+				Assert.That(res[0].City_Name.Single().City_Name, Is.EqualTo("Urupinsk"));
 			}
 		}
 
 		[Test]
-		public void Issue383Test2([DataSources(false)] string context)
+		public void Issue383Test2([DataSources(false, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable(Contract_Distributor_Agent.Data))
@@ -858,8 +849,8 @@ namespace Tests.Linq
 
 				var res = query.ToList();
 
-				Assert.AreEqual(1, res.Count);
-				Assert.AreEqual("Urupinsk", res[0].City_Name);
+				Assert.That(res, Has.Count.EqualTo(1));
+				Assert.That(res[0].City_Name, Is.EqualTo("Urupinsk"));
 			}
 		}
 

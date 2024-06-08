@@ -3,15 +3,13 @@ using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
 using System.Diagnostics;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace LinqToDB.Data
 {
-	public class DataReaderAsync : IDisposable
-#if !NETFRAMEWORK
-		, IAsyncDisposable
-#endif
+	public class DataReaderAsync : IDisposable, IAsyncDisposable
 	{
 		internal DataReaderWrapper? ReaderWrapper     { get; private set; }
 		public   DbDataReader?      Reader            => ReaderWrapper?.DataReader;
@@ -50,7 +48,6 @@ namespace LinqToDB.Data
 			}
 		}
 
-#if NETSTANDARD2_1PLUS
 		public async ValueTask DisposeAsync()
 		{
 			if (ReaderWrapper != null)
@@ -73,19 +70,6 @@ namespace LinqToDB.Data
 				ReaderWrapper = null;
 			}
 		}
-#elif NATIVE_ASYNC
-		public ValueTask DisposeAsync()
-		{
-			Dispose();
-			return default;
-		}
-#else
-		public Task DisposeAsync()
-		{
-			Dispose();
-			return TaskEx.CompletedTask;
-		}
-#endif
 
 		#region Query with object reader
 
@@ -122,6 +106,17 @@ namespace LinqToDB.Data
 		{
 			while (await Reader!.ReadAsync(cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext))
 				action(objectReader(Reader));
+		}
+
+		public IAsyncEnumerable<T> QueryToAsyncEnumerable<T>(Func<DbDataReader, T> objectReader)
+		{
+			return Impl(objectReader);
+
+			async IAsyncEnumerable<T> Impl(Func<DbDataReader, T> objectReader, [EnumeratorCancellation] CancellationToken cancellationToken = default)
+			{
+				while (await Reader!.ReadAsync(cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext))
+					yield return objectReader(Reader);
+			}
 		}
 
 		#endregion
@@ -165,7 +160,30 @@ namespace LinqToDB.Data
 
 			ReadNumber++;
 
-			await CommandInfo!.ExecuteQueryAsync(Reader!, CommandInfo.CommandText + "$$$" + ReadNumber, action, cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+			await CommandInfo!.ExecuteQueryAsync(Reader!, FormattableString.Invariant($"{CommandInfo.CommandText}$$${ReadNumber}"), action, cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+		}
+
+		public IAsyncEnumerable<T> QueryToAsyncEnumerable<T>()
+		{
+			return Impl();
+
+			async IAsyncEnumerable<T> Impl([EnumeratorCancellation] CancellationToken cancellationToken = default)
+			{
+				if (ReadNumber != 0
+					&& !await Reader!.NextResultAsync(cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext))
+				{
+					yield break;
+				}
+
+				ReadNumber++;
+
+				await foreach (var element in CommandInfo!.ExecuteQueryAsync<T>(Reader!, FormattableString.Invariant($"{CommandInfo.CommandText}$$${ReadNumber}"))
+						.WithCancellation(cancellationToken)
+						.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext))
+				{
+					yield return element;
+				}
+			}
 		}
 
 		#endregion
@@ -206,6 +224,11 @@ namespace LinqToDB.Data
 			return QueryForEachAsync(action, cancellationToken);
 		}
 
+		public IAsyncEnumerable<T> QueryToAsyncEnumerable<T>(T template)
+		{
+			return QueryToAsyncEnumerable<T>();
+		}
+		
 		#endregion
 
 		#region Execute scalar
@@ -223,7 +246,7 @@ namespace LinqToDB.Data
 
 			ReadNumber++;
 
-			var sql = CommandInfo!.CommandText + "$$$" + ReadNumber;
+			var sql = FormattableString.Invariant($"{CommandInfo!.CommandText}$$${ReadNumber}");
 
 			return await CommandInfo.ExecuteScalarAsync<T>(Reader!, sql, cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 		}

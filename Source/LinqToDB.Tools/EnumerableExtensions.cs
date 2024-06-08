@@ -1,22 +1,25 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Globalization;
 using System.Text;
 
 using JetBrains.Annotations;
 
-using LinqToDB.Extensions;
-using LinqToDB.Mapping;
-using LinqToDB.Reflection;
-
 namespace LinqToDB.Tools
 {
+	using Extensions;
+	using Mapping;
+	using Reflection;
+
 	public static class EnumerableExtensions
 	{
-		class ValueHolder<T>
+		sealed class ValueHolder<T>
 		{
 			[UsedImplicitly] public T Value = default!;
 		}
+
+		private static readonly string[] _nullItem = new[] { "<NULL>" };
 
 		/// <summary>
 		/// Returns well formatted text.
@@ -59,22 +62,20 @@ namespace LinqToDB.Tools
 						var type   = ta.Members[i].Type.ToNullableUnderlying();
 
 						if      (value == null)            values[i] = "<NULL>";
-						else if (type == typeof(decimal))  values[i] = ((decimal) value).ToString("G");
-						else if (type == typeof(DateTime)) values[i] = ((DateTime)value).ToString("yyy-MM-dd hh:mm:ss");
-						else                               values[i] = value.ToString() ?? string.Empty;
+						else if (type == typeof(decimal))  values[i] = ((decimal) value).ToString("G", DateTimeFormatInfo.InvariantInfo);
+						else if (type == typeof(DateTime)) values[i] = ((DateTime)value).ToString("yyy-MM-dd hh:mm:ss", DateTimeFormatInfo.InvariantInfo);
+						else                               values[i] = string.Format(CultureInfo.InvariantCulture, "{0}", value);
 					}
 
 					itemValues.Add(values);
 				}
 				else
 				{
-					itemValues.Add(item == null ? new[] { "<NULL>" } : new[] { item.ToString() ?? string.Empty });
+					itemValues.Add(item == null ? _nullItem : new[] { item.ToString() ?? string.Empty });
 				}
 			}
 
-			stringBuilder
-				.Append("Count : ").Append(itemValues.Count).AppendLine()
-				;
+			stringBuilder.AppendLine(CultureInfo.InvariantCulture, $"Count : {itemValues.Count}");
 
 			var lens = ta.Members.Count > 0 ? ta.Members.Select(m => m.Name.Length).ToArray() : new[] { ta.Type.Name.Length };
 

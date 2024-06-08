@@ -1,14 +1,19 @@
-﻿using System;
+﻿using System.Globalization;
+
+#if NETFRAMEWORK || NETSTANDARD2_0
+using System.Text;
+#endif
 
 namespace LinqToDB.DataProvider.DB2
 {
+	using Common;
 	using Mapping;
 	using SqlProvider;
 
-	class DB2zOSSqlBuilder : DB2SqlBuilderBase
+	sealed class DB2zOSSqlBuilder : DB2SqlBuilderBase
 	{
-		public DB2zOSSqlBuilder(IDataProvider? provider, MappingSchema mappingSchema, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
-			: base(provider, mappingSchema, sqlOptimizer, sqlProviderFlags)
+		public DB2zOSSqlBuilder(IDataProvider? provider, MappingSchema mappingSchema, DataOptions dataOptions, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
+			: base(provider, mappingSchema, dataOptions, sqlOptimizer, sqlProviderFlags)
 		{
 		}
 
@@ -22,5 +27,19 @@ namespace LinqToDB.DataProvider.DB2
 		}
 
 		protected override DB2Version Version => DB2Version.zOS;
+
+		protected override void BuildDataTypeFromDataType(DbDataType type, bool forCreateTable, bool canBeNull)
+		{
+			switch (type.DataType)
+			{
+				case DataType.VarBinary:
+					// https://www.ibm.com/docs/en/db2-for-zos/12?topic=strings-varying-length-binary
+					var length = type.Length == null || type.Length > 32704 || type.Length < 1 ? 32704 : type.Length;
+					StringBuilder.Append(CultureInfo.InvariantCulture, $"VARBINARY({length})");
+					return;
+			}
+
+			base.BuildDataTypeFromDataType(type, forCreateTable, canBeNull);
+		}
 	}
 }

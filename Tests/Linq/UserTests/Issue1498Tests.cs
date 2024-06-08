@@ -114,19 +114,22 @@ namespace Tests.UserTests
 		[Test]
 		public void TestFluentAssociationByExpression([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				db.MappingSchema.GetFluentMappingBuilder()
-					.Entity<Topic>()
-						.Property(e => e.Id)
-						.Association(e => e.MessagesF1, (t, m) => t.Id == m.TopicId)
-						.Property(e => e.Title)
-						.Property(e => e.Text)
-					.Entity<Message>()
-						.Property(e => e.Id)
-						.Property(e => e.TopicId)
-						.Property(e => e.Text);
+			var ms = new MappingSchema();
 
+			new FluentMappingBuilder(ms)
+				.Entity<Topic>()
+					.Property(e => e.Id)
+					.Association(e => e.MessagesF1, (t, m) => t.Id == m.TopicId)
+					.Property(e => e.Title)
+					.Property(e => e.Text)
+				.Entity<Message>()
+					.Property(e => e.Id)
+					.Property(e => e.TopicId)
+					.Property(e => e.Text)
+				.Build();
+
+			using (var db = GetDataContext(context, ms))
+			{
 				using (db.CreateLocalTable<Topic>())
 				using (db.CreateLocalTable<Message>())
 				{
@@ -147,19 +150,22 @@ namespace Tests.UserTests
 		[Test]
 		public void TestFluentAssociationByKeys([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				db.MappingSchema.GetFluentMappingBuilder()
-					.Entity<Topic>()
-						.Property(e => e.Id)
-						.Association(e => e.MessagesF2, t => t.Id, m => m.TopicId)
-						.Property(e => e.Title)
-						.Property(e => e.Text)
-					.Entity<Message>()
-						.Property(e => e.Id)
-						.Property(e => e.TopicId)
-						.Property(e => e.Text);
+			var ms = new MappingSchema();
 
+			new FluentMappingBuilder(ms)
+				.Entity<Topic>()
+					.Property(e => e.Id)
+					.Association(e => e.MessagesF2, t => t.Id, m => m.TopicId)
+					.Property(e => e.Title)
+					.Property(e => e.Text)
+				.Entity<Message>()
+					.Property(e => e.Id)
+					.Property(e => e.TopicId)
+					.Property(e => e.Text)
+				.Build();
+
+			using (var db = GetDataContext(context, ms))
+			{
 				using (db.CreateLocalTable<Topic>())
 				using (db.CreateLocalTable<Message>())
 				{
@@ -180,19 +186,22 @@ namespace Tests.UserTests
 		[Test]
 		public void TestFluentAssociationByQuery([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				db.MappingSchema.GetFluentMappingBuilder()
-					.Entity<Topic>()
-						.Property(e => e.Id)
-						.Association(e => e.MessagesF3, (t, ctx) => ctx.GetTable<Message>().Where(m => m.TopicId == t.Id))
-						.Property(e => e.Title)
-						.Property(e => e.Text)
-					.Entity<Message>()
-						.Property(e => e.Id)
-						.Property(e => e.TopicId)
-						.Property(e => e.Text);
+			var ms = new MappingSchema();
 
+			new FluentMappingBuilder(ms)
+				.Entity<Topic>()
+					.Property(e => e.Id)
+					.Association(e => e.MessagesF3, (t, ctx) => ctx.GetTable<Message>().Where(m => m.TopicId == t.Id))
+					.Property(e => e.Title)
+					.Property(e => e.Text)
+				.Entity<Message>()
+					.Property(e => e.Id)
+					.Property(e => e.TopicId)
+					.Property(e => e.Text)
+				.Build();
+
+			using (var db = GetDataContext(context, ms))
+			{
 				using (db.CreateLocalTable<Topic>())
 				using (db.CreateLocalTable<Message>())
 				{
@@ -209,8 +218,8 @@ namespace Tests.UserTests
 							MessagesIds = x.MessagesF3.Select(t => t.Id).ToList()
 						}).FirstOrDefault()!;
 
-					Assert.IsNotNull(result);
-					Assert.AreEqual(60, result.MessagesIds.Single());
+					Assert.That(result, Is.Not.Null);
+					Assert.That(result.MessagesIds.Single(), Is.EqualTo(60));
 				}
 			}
 		}
@@ -218,19 +227,22 @@ namespace Tests.UserTests
 		[Test]
 		public void TestFluentAssociationByQueryWithKeys([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				db.MappingSchema.GetFluentMappingBuilder()
-					.Entity<Topic>()
-						.Property(e => e.Id).IsPrimaryKey()
-						.Association(e => e.MessagesF3, (t, ctx) => ctx.GetTable<Message>().Where(m => m.TopicId == t.Id))
-						.Property(e => e.Title)
-						.Property(e => e.Text)
-					.Entity<Message>()
-						.Property(e => e.Id).IsPrimaryKey()
-						.Property(e => e.TopicId)
-						.Property(e => e.Text);
+			var ms = new MappingSchema();
 
+			new FluentMappingBuilder(ms)
+				.Entity<Topic>()
+					.Property(e => e.Id).IsPrimaryKey()
+					.Association(e => e.MessagesF3, (t, ctx) => ctx.GetTable<Message>().Where(m => m.TopicId == t.Id))
+					.Property(e => e.Title)
+					.Property(e => e.Text)
+				.Entity<Message>()
+					.Property(e => e.Id).IsPrimaryKey()
+					.Property(e => e.TopicId)
+					.Property(e => e.Text)
+				.Build();
+
+			using (var db = GetDataContext(context, ms))
+			{
 				using (db.CreateLocalTable<Topic>())
 				using (db.CreateLocalTable<Message>())
 				{
@@ -249,11 +261,14 @@ namespace Tests.UserTests
 							MessagesIds = x.MessagesF3.Select(t => t.Id).ToList()
 						}).FirstOrDefault()!;
 
-					Assert.That(result,           Is.Not.Null);
-					Assert.That(topic.Id,         Is.EqualTo(result.Topic.Id));
-					Assert.That(topic.Text,       Is.EqualTo(result.Topic.Text));
-					Assert.That(topic.Title,      Is.EqualTo(result.Topic.Title));
-					Assert.That(new[] { 60 }, Is.EqualTo(result.MessagesIds));
+					Assert.Multiple(() =>
+					{
+						Assert.That(result, Is.Not.Null);
+						Assert.That(topic.Id, Is.EqualTo(result.Topic.Id));
+						Assert.That(topic.Text, Is.EqualTo(result.Topic.Text));
+						Assert.That(topic.Title, Is.EqualTo(result.Topic.Title));
+						Assert.That(new[] { 60 }, Is.EqualTo(result.MessagesIds));
+					});
 				}
 			}
 		}

@@ -8,7 +8,7 @@ namespace LinqToDB.CodeModel
 	/// </summary>
 	public sealed class CodeAttribute : ITopLevelElement
 	{
-		public record CodeNamedParameter(CodeIdentifier Property, ICodeExpression Value);
+		public record CodeNamedParameter(CodeReference Property, ICodeExpression Value);
 
 		private readonly List<ICodeExpression>    _parameters;
 		private readonly List<CodeNamedParameter> _namedParameters;
@@ -19,8 +19,8 @@ namespace LinqToDB.CodeModel
 			IEnumerable<CodeNamedParameter>? namedParameters)
 		{
 			Type             = type;
-			_parameters      = new (parameters      ?? Array<ICodeExpression>   .Empty);
-			_namedParameters = new (namedParameters ?? Array<CodeNamedParameter>.Empty);
+			_parameters      = new (parameters      ?? []);
+			_namedParameters = new (namedParameters ?? []);
 		}
 
 		public CodeAttribute(IType type)
@@ -48,7 +48,7 @@ namespace LinqToDB.CodeModel
 			_parameters.Add(parameterValue);
 		}
 
-		public void AddNamedParameter(CodeIdentifier property, ICodeExpression value)
+		public void AddNamedParameter(CodeReference property, ICodeExpression value)
 		{
 			_namedParameters.Add(new(property, value));
 		}

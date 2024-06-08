@@ -21,22 +21,16 @@ namespace Cli.Default.SqlServer
 
 		#region Associations
 		/// <summary>
-		/// FK_TestSchemaY_ParentTestSchemaX backreference
-		/// </summary>
-		[Association(ThisKey = nameof(TestSchemaXid), OtherKey = nameof(SqlServer.TestSchemaY.ParentTestSchemaXid))]
-		public IEnumerable<TestSchemaY> TestSchemaYParentTestSchemaX { get; set; } = null!;
-
-		/// <summary>
 		/// FK_TestSchemaY_OtherID backreference
 		/// </summary>
 		[Association(ThisKey = nameof(TestSchemaXid), OtherKey = nameof(SqlServer.TestSchemaY.TestSchemaXid))]
-		public IEnumerable<TestSchemaY> TestSchemaYOtherIds { get; set; } = null!;
+		public IEnumerable<TestSchemaY> TestSchemaY { get; set; } = null!;
 
 		/// <summary>
-		/// FK_TestSchemaY_TestSchemaX backreference
+		/// FK_TestSchemaY_ParentTestSchemaX backreference
 		/// </summary>
-		[Association(ThisKey = nameof(TestSchemaXid), OtherKey = nameof(SqlServer.TestSchemaY.TestSchemaXid))]
-		public IEnumerable<TestSchemaY> TestSchemaY { get; set; } = null!;
+		[Association(ThisKey = nameof(TestSchemaXid), OtherKey = nameof(SqlServer.TestSchemaY.ParentTestSchemaXid))]
+		public IEnumerable<TestSchemaY> TestSchemaY1 { get; set; } = null!;
 		#endregion
 	}
 }

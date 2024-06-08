@@ -42,7 +42,7 @@ namespace Tests.UserTests
 		};
 
 		[Table("Issue2816Table")]
-		class TestClass
+		sealed class TestClass
 		{
 			[PrimaryKey]
 			public int Id { get; set; }
@@ -90,15 +90,6 @@ namespace Tests.UserTests
 
 			using (var db = GetDataContext(context))
 			{
-#if AZURE
-				// CI use docker image with non-utf8 database
-				// for some reason it cannot handle 8xxx characters in parameters
-				// for both managed and unmanaged providers, but can handle them in literals...
-				if (context.IsAnyOf(TestProvName.AllSybase) && isRemoteContext)
-				{
-					db.InlineParameters = true;
-				}
-#endif
 				using (var table = db.CreateLocalTable(testData))
 				{
 					var query = (from p in table
@@ -107,12 +98,12 @@ namespace Tests.UserTests
 
 					if (supported)
 					{
-						Assert.AreEqual(1, query.Length);
-						Assert.AreEqual(3, query[0].Id);
+						Assert.That(query, Has.Length.EqualTo(1));
+						Assert.That(query[0].Id, Is.EqualTo(3));
 					}
 					else
 					{
-						Assert.AreEqual(3, query.Length);
+						Assert.That(query, Has.Length.EqualTo(3));
 					}
 				}
 			}

@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
-using System.Text;
 using System.Threading;
 
 namespace LinqToDB.SqlQuery
@@ -9,9 +9,8 @@ namespace LinqToDB.SqlQuery
 	using Common;
 	using Data;
 	using Mapping;
-	using Remote;
 
-	public class SqlTable : ISqlTableSource, IQueryExtendible
+	public class SqlTable : SqlExpressionBase, ISqlTableSource
 	{
 		#region Init
 
@@ -20,6 +19,7 @@ namespace LinqToDB.SqlQuery
 			SourceID   = sourceId ?? Interlocked.Increment(ref SelectQuery.SourceIDCounter);
 			ObjectType = objectType;
 			TableName  = tableName;
+			_all       = SqlField.All(this);
 		}
 
 		internal SqlTable(
@@ -46,23 +46,21 @@ namespace LinqToDB.SqlQuery
 			SqlTableType   = sqlTableType;
 			TableArguments = tableArguments;
 			TableOptions   = tableOptions;
+
+			_all ??= SqlField.All(this);
 		}
 
 		#endregion
 
 		#region Init from type
 
-		public SqlTable(MappingSchema mappingSchema, Type objectType, string? physicalName = null)
-			: this(objectType, null, new(String.Empty))
+		public SqlTable(EntityDescriptor entityDescriptor, string? physicalName = null)
+			: this(entityDescriptor.ObjectType, (int?)null, new(string.Empty))
 		{
-			if (mappingSchema == null) throw new ArgumentNullException(nameof(mappingSchema));
+			TableName    = physicalName != null && entityDescriptor.Name.Name != physicalName ? entityDescriptor.Name with { Name = physicalName } : entityDescriptor.Name;
+			TableOptions = entityDescriptor.TableOptions;
 
-			var ed = mappingSchema.GetEntityDescriptor(objectType);
-
-			TableName    = physicalName != null && ed.Name.Name != physicalName ? ed.Name with { Name = physicalName } : ed.Name;
-			TableOptions = ed.TableOptions;
-
-			foreach (var column in ed.Columns)
+			foreach (var column in entityDescriptor.Columns)
 			{
 				var field = new SqlField(column);
 
@@ -70,11 +68,11 @@ namespace LinqToDB.SqlQuery
 
 				if (field.Type.DataType == DataType.Undefined)
 				{
-					var dataType = mappingSchema.GetDataType(field.Type.SystemType);
+					var dataType = entityDescriptor.MappingSchema.GetDataType(field.Type.SystemType);
 
 					if (dataType.Type.DataType == DataType.Undefined)
 					{
-						dataType = mappingSchema.GetUnderlyingDataType(field.Type.SystemType, out var canBeNull);
+						dataType = entityDescriptor.MappingSchema.GetUnderlyingDataType(field.Type.SystemType, out var canBeNull);
 
 						if (canBeNull)
 							field.CanBeNull = true;
@@ -87,11 +85,13 @@ namespace LinqToDB.SqlQuery
 					{
 						try
 						{
-							var converter = mappingSchema.GetConverter(
+							var converter = entityDescriptor.MappingSchema.GetConverter(
 								field.Type,
-								new DbDataType(typeof(DataParameter)), true);
+								new DbDataType(typeof(DataParameter)),
+								true,
+								ConversionType.ToDatabase);
 
-							var parameter = converter?.ConvertValueToParameter?.Invoke(DefaultValue.GetValue(field.Type.SystemType, mappingSchema));
+							var parameter = converter?.ConvertValueToParameter(DefaultValue.GetValue(field.Type.SystemType, entityDescriptor.MappingSchema));
 							if (parameter != null)
 								field.Type = field.Type.WithDataType(parameter.DataType);
 						}
@@ -111,14 +111,11 @@ namespace LinqToDB.SqlQuery
 
 			if (identityField != null)
 			{
-				var cd = ed[identityField.Name]!;
+				var cd = entityDescriptor[identityField.Name]!;
 				SequenceAttributes = cd.SequenceName == null ? null : new[] { cd.SequenceName };
 			}
-		}
 
-		public SqlTable(Type objectType)
-			: this(MappingSchema.Default, objectType)
-		{
+			_all ??= SqlField.All(this);
 		}
 
 		#endregion
@@ -139,6 +136,8 @@ namespace LinqToDB.SqlQuery
 
 			Expression         = table.Expression;
 			TableArguments     = table.TableArguments;
+
+			_all ??= SqlField.All(this);
 		}
 
 		public SqlTable(SqlTable table, IEnumerable<SqlField> fields, ISqlExpression[] tableArguments)
@@ -154,28 +153,54 @@ namespace LinqToDB.SqlQuery
 			SqlTableType       = table.SqlTableType;
 			TableArguments     = tableArguments;
 			SqlQueryExtensions = table.SqlQueryExtensions;
+
+			_all ??= SqlField.All(this);
 		}
 
 		#endregion
 
 		#region Overrides
 
-		public override string ToString()
+		public override QueryElementType ElementType => QueryElementType.SqlTable;
+
+		public override QueryElementTextWriter ToString(QueryElementTextWriter writer)
 		{
-			return ((IQueryElement)this).ToString(new StringBuilder(), new Dictionary<IQueryElement,IQueryElement>()).ToString();
+			if (TableName.Server   != null) writer.Append('[').Append(TableName.Server).Append("].");
+			if (TableName.Database != null) writer.Append('[').Append(TableName.Database).Append("].");
+			if (TableName.Schema   != null) writer.Append('[').Append(TableName.Schema).Append("].");
+			return writer.Append('[').Append(Expression ?? TableName.Name).Append('(').Append(SourceID).Append(")]");
 		}
 
+		public override bool Equals(ISqlExpression? other, Func<ISqlExpression, ISqlExpression, bool> comparer)
+		{
+			if (ReferenceEquals(this, other))
+				return true;
+
+			if (other is not SqlTable otherTable)
+				return false;
+
+			return ObjectType == otherTable.ObjectType &&
+			       TableName  == otherTable.TableName  &&
+			       Alias      == otherTable.Alias;
+		}
+
+		public override bool CanBeNullable(NullabilityContext nullability) => CanBeNull;
+
+		public override int Precedence => SqlQuery.Precedence.Primary;
+		public override Type SystemType => ObjectType;
+		
 		#endregion
 
 		#region Public Members
 
-		public SqlField? this[string fieldName]
+		/// <summary>
+		/// Search for table field by mapping class member name.
+		/// </summary>
+		/// <param name="memberName">Mapping class member name.</param>
+		public SqlField? FindFieldByMemberName(string memberName)
 		{
-			get
-			{
-				_fieldsLookup.TryGetValue(fieldName, out var field);
-				return field;
-			}
+			_fieldsLookup.TryGetValue(memberName, out var field);
+			return field;
 		}
 
 		public         string?           Alias          { get; set; }
@@ -184,6 +209,8 @@ namespace LinqToDB.SqlQuery
 		public virtual SqlTableType      SqlTableType   { get; set; }
 		public         TableOptions      TableOptions   { get; set; }
 		public virtual string?           ID             { get; set; }
+
+		public bool CanBeNull { get; set; } = true;
 
 		/// <summary>
 		/// Custom SQL expression format string (used together with <see cref="TableArguments"/>) to
@@ -201,10 +228,10 @@ namespace LinqToDB.SqlQuery
 		internal string NameForLogging => Expression ?? TableName.Name;
 
 		// list user to preserve order of fields in queries
-		readonly List<SqlField>              _orderedFields = new();
-		readonly Dictionary<string,SqlField> _fieldsLookup  = new();
+		internal readonly List<SqlField>              _orderedFields = new();
+		readonly          Dictionary<string,SqlField> _fieldsLookup  = new();
 
-		public           IReadOnlyList<SqlField>         Fields => _orderedFields;
+		public           List<SqlField> Fields => _orderedFields;
 		public List<SqlQueryExtension>? SqlQueryExtensions { get; set; }
 
 		// identity fields cached, as it is most used fields filter
@@ -220,8 +247,8 @@ namespace LinqToDB.SqlQuery
 
 		public SequenceNameAttribute[]? SequenceAttributes { get; protected internal set; }
 
-		private SqlField? _all;
-		public  SqlField   All => _all ??= SqlField.All(this);
+		SqlField?       _all;
+		public SqlField All => _all!;
 
 		public SqlField? GetIdentityField()
 		{
@@ -231,7 +258,7 @@ namespace LinqToDB.SqlQuery
 
 			var keys = GetKeys(true);
 
-			if (keys.Count == 1)
+			if (keys?.Count == 1)
 				return (SqlField)keys[0];
 
 			return null;
@@ -269,7 +296,7 @@ namespace LinqToDB.SqlQuery
 
 		List<ISqlExpression>? _keyFields;
 
-		public IList<ISqlExpression> GetKeys(bool allIfEmpty)
+		public virtual IList<ISqlExpression>? GetKeys(bool allIfEmpty)
 		{
 			_keyFields ??=
 			(
@@ -288,76 +315,28 @@ namespace LinqToDB.SqlQuery
 
 		#endregion
 
-		#region IQueryElement Members
-
-		public virtual QueryElementType ElementType => QueryElementType.SqlTable;
-
-		public virtual StringBuilder ToString(StringBuilder sb, Dictionary<IQueryElement,IQueryElement> dic)
-		{
-			if (TableName.Server   != null) sb.Append($"[{TableName.Server}].");
-			if (TableName.Database != null) sb.Append($"[{TableName.Database}].");
-			if (TableName.Schema   != null) sb.Append($"[{TableName.Schema}].");
-			return sb.Append($"[{Expression ?? TableName.Name}({SourceID})]");
-		}
-
-		#endregion
-
-		#region ISqlExpression Members
-
-		public bool CanBeNull { get; set; } = true;
-
-		int  ISqlExpression.Precedence => Precedence.Primary;
-		Type ISqlExpression.SystemType => ObjectType;
-
-		public bool Equals(ISqlExpression other, Func<ISqlExpression,ISqlExpression,bool> comparer)
-		{
-			return this == other;
-		}
-
-		#endregion
-
-		#region IEquatable<ISqlExpression> Members
-
-		bool IEquatable<ISqlExpression>.Equals(ISqlExpression? other)
-		{
-			return this == other;
-		}
-
-		#endregion
-
-		#region ISqlExpressionWalkable Members
-
-		public virtual ISqlExpression Walk<TContext>(WalkOptions options, TContext context, Func<TContext, ISqlExpression, ISqlExpression> func)
-		{
-			if (TableArguments != null)
-				for (var i = 0; i < TableArguments.Length; i++)
-					TableArguments[i] = TableArguments[i].Walk(options, context, func)!;
-
-			if (SqlQueryExtensions != null)
-				foreach (var e in SqlQueryExtensions)
-					e.Walk(options, context, func);
-
-			return func(context, this);
-		}
-
-		#endregion
-
 		#region System tables
 
-		internal static SqlTable Inserted(Type objectType)
-			=> new (objectType)
+		internal static SqlTable Inserted(EntityDescriptor entityDescriptor)
+			=> new (entityDescriptor)
 			{
 				TableName    = new ("INSERTED"),
 				SqlTableType = SqlTableType.SystemTable,
 			};
 
-		internal static SqlTable Deleted(Type objectType)
-			=> new (objectType)
+		internal static SqlTable Deleted(EntityDescriptor entityDescriptor)
+			=> new (entityDescriptor)
 			{
 				TableName    = new ("DELETED"),
 				SqlTableType = SqlTableType.SystemTable,
 			};
 
 		#endregion
+
+		internal static SqlTable Create<T>(IDataContext dataContext)
+		{
+			return new SqlTable(dataContext.MappingSchema.GetEntityDescriptor(typeof(T), dataContext.Options.ConnectionOptions.OnEntityDescriptorCreated));
+		}
+
 	}
 }

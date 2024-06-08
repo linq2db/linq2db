@@ -2,15 +2,15 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Data.SqlTypes;
+using System.Globalization;
 using System.Linq;
 using System.Numerics;
-using System.Text;
 
 namespace LinqToDB.SqlQuery
 {
 	using Common;
 	using Common.Internal;
-	using LinqToDB.Extensions;
+	using Extensions;
 	using Mapping;
 
 	public class SqlDataType : ISqlExpression, IEquatable<SqlDataType>
@@ -30,13 +30,6 @@ namespace LinqToDB.SqlQuery
 		public SqlDataType(DataType dataType, int? length)
 		{
 			Type = GetDataType(dataType).Type.WithDataType(dataType).WithLength(length);
-		}
-
-		public SqlDataType(Type type)
-		{
-			if (type == null) throw new ArgumentNullException(nameof(type));
-
-			Type = GetDataType(type).Type.WithSystemType(type);
 		}
 
 		public SqlDataType(DataType dataType, Type type)
@@ -119,7 +112,7 @@ namespace LinqToDB.SqlQuery
 
 		#region Static Members
 
-		struct TypeInfo
+		readonly struct TypeInfo
 		{
 			public TypeInfo(DataType dbType, int? maxLength, int? maxPrecision, int? maxScale, int? maxDisplaySize)
 			{
@@ -149,7 +142,7 @@ namespace LinqToDB.SqlQuery
 
 		static int Len(object obj)
 		{
-			return obj.ToString()!.Length;
+			return string.Format(CultureInfo.InvariantCulture, "{0}", obj).Length;
 		}
 
 		static readonly TypeInfo[] _typeInfo = SortTypeInfo
@@ -197,73 +190,36 @@ namespace LinqToDB.SqlQuery
 			new TypeInfo(DataType.BitArray,          null,                  null,                  null,                    null)
 		);
 
-		public static int? GetMaxLength     (DataType dbType) { return _typeInfo[(int)dbType].MaxLength;      }
-		public static int? GetMaxPrecision  (DataType dbType) { return _typeInfo[(int)dbType].MaxPrecision;   }
-		public static int? GetMaxScale      (DataType dbType) { return _typeInfo[(int)dbType].MaxScale;       }
-		public static int? GetMaxDisplaySize(DataType dbType) { return _typeInfo[(int)dbType].MaxDisplaySize; }
-
-		public static SqlDataType GetDataType(Type type)
+		public static int? GetMaxLength(DataType dbType)
 		{
-			var underlyingType = type;
+			var idx = (int)dbType;
+			if (idx >= _typeInfo.Length)
+				return null;
+			return _typeInfo[idx].MaxLength;
+		}
 
-			if (underlyingType.IsNullable())
-				underlyingType = underlyingType.GetGenericArguments()[0];
+		public static int? GetMaxPrecision(DataType dbType)
+		{
+			var idx = (int)dbType;
+			if (idx >= _typeInfo.Length)
+				return null;
+			return _typeInfo[idx].MaxPrecision;
+		}
 
-			if (underlyingType.IsEnum)
-				underlyingType = Enum.GetUnderlyingType(underlyingType);
+		public static int? GetMaxScale(DataType dbType)
+		{
+			var idx = (int)dbType;
+			if (idx >= _typeInfo.Length)
+				return null;
+			return _typeInfo[idx].MaxScale;
+		}
 
-			switch (underlyingType.GetTypeCodeEx())
-			{
-				case TypeCode.Boolean  : return Boolean;
-				case TypeCode.Char     : return DbNChar;
-				case TypeCode.SByte    : return SByte;
-				case TypeCode.Byte     : return Byte;
-				case TypeCode.Int16    : return Int16;
-				case TypeCode.UInt16   : return UInt16;
-				case TypeCode.Int32    : return Int32;
-				case TypeCode.UInt32   : return UInt32;
-				case TypeCode.Int64    : return DbInt64;
-				case TypeCode.UInt64   : return UInt64;
-				case TypeCode.Single   : return Single;
-				case TypeCode.Double   : return Double;
-				case TypeCode.Decimal  : return Decimal;
-				case TypeCode.DateTime : return DateTime;
-				case TypeCode.String   : return String;
-				case TypeCode.Object   :
-					if (underlyingType == typeof(Guid))           return Guid;
-					if (underlyingType == typeof(byte[]))         return ByteArray;
-					if (underlyingType == typeof(System.Data.Linq.Binary)) return LinqBinary;
-					if (underlyingType == typeof(char[]))         return CharArray;
-					if (underlyingType == typeof(DateTimeOffset)) return DateTimeOffset;
-					if (underlyingType == typeof(TimeSpan))       return TimeSpan;
-#if NET6_0_OR_GREATER
-					if (underlyingType == typeof(DateOnly))       return DbDate;
-#endif
-					break;
-
-				case TypeCode.DBNull   :
-				case TypeCode.Empty    :
-				default                : break;
-			}
-
-			if (underlyingType == typeof(SqlByte))     return SqlByte;
-			if (underlyingType == typeof(SqlInt16))    return SqlInt16;
-			if (underlyingType == typeof(SqlInt32))    return SqlInt32;
-			if (underlyingType == typeof(SqlInt64))    return SqlInt64;
-			if (underlyingType == typeof(SqlSingle))   return SqlSingle;
-			if (underlyingType == typeof(SqlBoolean))  return SqlBoolean;
-			if (underlyingType == typeof(SqlDouble))   return SqlDouble;
-			if (underlyingType == typeof(SqlDateTime)) return SqlDateTime;
-			if (underlyingType == typeof(SqlDecimal))  return SqlDecimal;
-			if (underlyingType == typeof(SqlMoney))    return SqlMoney;
-			if (underlyingType == typeof(SqlString))   return SqlString;
-			if (underlyingType == typeof(SqlBinary))   return SqlBinary;
-			if (underlyingType == typeof(SqlGuid))     return SqlGuid;
-			if (underlyingType == typeof(SqlBytes))    return SqlBytes;
-			if (underlyingType == typeof(SqlChars))    return SqlChars;
-			if (underlyingType == typeof(SqlXml))      return SqlXml;
-
-			return DbVariant;
+		public static int? GetMaxDisplaySize(DataType dbType)
+		{
+			var idx = (int)dbType;
+			if (idx >= _typeInfo.Length)
+				return null;
+			return _typeInfo[idx].MaxDisplaySize;
 		}
 
 		public static SqlDataType GetDataType(DataType type)
@@ -396,7 +352,7 @@ namespace LinqToDB.SqlQuery
 		public static readonly SqlDataType UInt16           = new (DataType.UInt16,         typeof(ushort),        (int?)null,     (int?)null, null, null);
 		public static readonly SqlDataType Int32            = DbInt32;
 		public static readonly SqlDataType UInt32           = new (DataType.UInt32,         typeof(uint),          (int?)null,     (int?)null, null, null);
-		public static readonly SqlDataType UInt64           = new (DataType.UInt64,         typeof(ulong),         (int?)null, ulong.MaxValue.ToString().Length, null, null);
+		public static readonly SqlDataType UInt64           = new (DataType.UInt64,         typeof(ulong),         (int?)null, ulong.MaxValue.ToString(NumberFormatInfo.InvariantInfo).Length, null, null);
 		public static readonly SqlDataType Single           = DbSingle;
 		public static readonly SqlDataType Double           = DbDouble;
 		public static readonly SqlDataType Decimal          = DbDecimal;
@@ -438,7 +394,7 @@ namespace LinqToDB.SqlQuery
 
 		public override string ToString()
 		{
-			return ((IQueryElement)this).ToString(new StringBuilder(), new Dictionary<IQueryElement,IQueryElement>()).ToString();
+			return this.ToDebugString();
 		}
 
 #endif
@@ -449,15 +405,6 @@ namespace LinqToDB.SqlQuery
 
 		public int  Precedence => SqlQuery.Precedence.Primary;
 		public Type SystemType => Type.SystemType;
-
-		#endregion
-
-		#region ISqlExpressionWalkable Members
-
-		ISqlExpression ISqlExpressionWalkable.Walk<TContext>(WalkOptions options, TContext context, Func<TContext, ISqlExpression, ISqlExpression> func)
-		{
-			return func(context, this);
-		}
 
 		#endregion
 
@@ -475,6 +422,8 @@ namespace LinqToDB.SqlQuery
 
 		#region ISqlExpression Members
 
+		public bool CanBeNullable(NullabilityContext nullability) => CanBeNull;
+
 		public bool CanBeNull => false;
 
 		public bool Equals(ISqlExpression other, Func<ISqlExpression,ISqlExpression,bool> comparer)
@@ -486,21 +435,24 @@ namespace LinqToDB.SqlQuery
 
 		#region IQueryElement Members
 
+#if DEBUG
+		public string DebugText => this.ToDebugString();
+#endif
 		public QueryElementType ElementType => QueryElementType.SqlDataType;
 
-		StringBuilder IQueryElement.ToString(StringBuilder sb, Dictionary<IQueryElement,IQueryElement> dic)
+		QueryElementTextWriter IQueryElement.ToString(QueryElementTextWriter writer)
 		{
-			sb.Append(Type.DataType);
+			writer.Append(Type.DataType);
 
 			if (!string.IsNullOrEmpty(Type.DbType))
-				sb.Append($":\"{Type.DbType}\"");
+				writer.Append(":\"").Append(Type.DbType).Append('"');
 
-			if (Type.Length != 0)
-				sb.Append('(').Append(Type.Length).Append(')');
-			else if (Type.Precision != 0)
-				sb.Append('(').Append(Type.Precision).Append(',').Append(Type.Scale).Append(')');
+			if (Type.Length != null && Type.Length != 0)
+				writer.Append('(').Append(Type.Length).Append(')');
+			else if (Type.Precision != null && Type.Precision != 0)
+				writer.Append('(').Append(Type.Precision).Append(',').Append(Type.Scale).Append(')');
 
-			return sb;
+			return writer;
 		}
 
 		#endregion

@@ -7,14 +7,21 @@ using System.Text;
 namespace LinqToDB.DataProvider.Firebird
 {
 	using Common;
+	using Data;
 	using Mapping;
 	using SqlQuery;
 
 	sealed class FirebirdMappingSchema : LockedMappingSchema
 	{
+#if SUPPORTS_COMPOSITE_FORMAT
+		private static readonly CompositeFormat DATE_FORMAT      = CompositeFormat.Parse("CAST('{0:yyyy-MM-dd}' AS {1})");
+		private static readonly CompositeFormat DATETIME_FORMAT  = CompositeFormat.Parse("CAST('{0:yyyy-MM-dd HH:mm:ss}' AS {1})");
+		private static readonly CompositeFormat TIMESTAMP_FORMAT = CompositeFormat.Parse("CAST('{0:yyyy-MM-dd HH:mm:ss.fff}' AS {1})");
+#else
 		private const string DATE_FORMAT      = "CAST('{0:yyyy-MM-dd}' AS {1})";
 		private const string DATETIME_FORMAT  = "CAST('{0:yyyy-MM-dd HH:mm:ss}' AS {1})";
 		private const string TIMESTAMP_FORMAT = "CAST('{0:yyyy-MM-dd HH:mm:ss.fff}' AS {1})";
+#endif
 
 		FirebirdMappingSchema() : base(ProviderName.Firebird)
 		{
@@ -23,24 +30,26 @@ namespace LinqToDB.DataProvider.Firebird
 			SetDataType(typeof(string), new SqlDataType(DataType.NVarChar, typeof(string), 255));
 
 			// firebird string literals can contain only limited set of characters, so we should encode them
-			SetValueToSqlConverter(typeof(string)  , (sb, dt, v) => ConvertStringToSql(sb, (string)v));
-			SetValueToSqlConverter(typeof(char)    , (sb, dt, v) => ConvertCharToSql  (sb, (char)v));
-			SetValueToSqlConverter(typeof(byte[])  , (sb, dt, v) => ConvertBinaryToSql(sb, (byte[])v));
-			SetValueToSqlConverter(typeof(Binary)  , (sb, dt, v) => ConvertBinaryToSql(sb, ((Binary)v).ToArray()));
-			SetValueToSqlConverter(typeof(DateTime), (sb, dt, v) => BuildDateTime(sb, dt, (DateTime)v));
-			SetValueToSqlConverter(typeof(Guid)    , (sb, dt, v) => ConvertGuidToSql(sb, dt, (Guid)v));
-
+			SetValueToSqlConverter(typeof(string)  , (sb, _,o,v) => ConvertStringToSql (sb, o, (string)v));
+			SetValueToSqlConverter(typeof(char)    , (sb, _,o,v) => ConvertCharToSql   (sb, o, (char)v));
+			SetValueToSqlConverter(typeof(byte[])  , (sb, _,_,v) => ConvertBinaryToSql (sb, (byte[])v));
+			SetValueToSqlConverter(typeof(Binary)  , (sb, _,_,v) => ConvertBinaryToSql (sb, ((Binary)v).ToArray()));
+			SetValueToSqlConverter(typeof(DateTime), (sb,dt,_,v) => BuildDateTime      (sb, dt, (DateTime)v));
+			SetValueToSqlConverter(typeof(Guid)    , (sb,dt,_,v) => ConvertGuidToSql   (sb, dt, (Guid)v));
 #if NET6_0_OR_GREATER
-			SetValueToSqlConverter(typeof(DateOnly), (sb, dt, v) => BuildDateOnly(sb, dt, (DateOnly)v));
+			SetValueToSqlConverter(typeof(DateOnly), (sb,dt,_,v) => BuildDateOnly(sb, dt, (DateOnly)v));
 #endif
 
+			SetDataType(typeof(bool), new SqlDataType(DataType.Boolean, typeof(bool), "BOOLEAN"));
+			SetValueToSqlConverter(typeof(bool), (sb, dt, _, v) => ConvertBooleanToSql(sb, dt, (bool)v));
+
 			SetDataType(typeof(BigInteger), new SqlDataType(DataType.Int128, typeof(BigInteger), "INT128"));
-			SetValueToSqlConverter(typeof(BigInteger), (sb, dt, v) => sb.Append(((BigInteger)v).ToString(CultureInfo.InvariantCulture)));
+			SetValueToSqlConverter(typeof(BigInteger), (sb,_,_,v) => sb.Append(((BigInteger)v).ToString(CultureInfo.InvariantCulture)));
 
 			// adds floating point special values support
 			// Firebird support special values but lacks literals support, so we use LOG function instead of literal
 			// https://firebirdsql.org/refdocs/langrefupd25-intfunc-log.html
-			SetValueToSqlConverter(typeof(float), (sb, dt, v) =>
+			SetValueToSqlConverter(typeof(float), (sb,_,_,v) =>
 			{
 				// infinity cast could fail due to bug (fix not yet released when this code added):
 				// https://github.com/FirebirdSQL/firebird/issues/6750
@@ -55,7 +64,7 @@ namespace LinqToDB.DataProvider.Firebird
 					sb.AppendFormat(CultureInfo.InvariantCulture, "{0:G9}", f);
 			});
 
-			SetValueToSqlConverter(typeof(double), (sb, dt, v) =>
+			SetValueToSqlConverter(typeof(double), (sb,_,_,v) =>
 			{
 				var d = (double)v;
 				if (double.IsNaN(d))
@@ -124,18 +133,22 @@ namespace LinqToDB.DataProvider.Firebird
 				.Append('\'');
 		}
 
-		static void ConvertStringToSql(StringBuilder stringBuilder, string value)
+		static void ConvertStringToSql(StringBuilder stringBuilder, DataOptions options, string value)
 		{
-			if (value == string.Empty)
+			if (value.Length == 0)
 				stringBuilder.Append("''");
 			else
-				if (FirebirdConfiguration.IsLiteralEncodingSupported && NeedsEncoding(value))
+			{
+				var fbo = options.FindOrDefault(FirebirdOptions.Default);
+
+				if (fbo.IsLiteralEncodingSupported && NeedsEncoding(value))
 					MakeUtf8Literal(stringBuilder, Encoding.UTF8.GetBytes(value));
 				else
 					stringBuilder
 						.Append('\'')
 						.Append(value.Replace("'", "''"))
 						.Append('\'');
+			}
 		}
 
 		static bool NeedsEncoding(string str)
@@ -152,9 +165,11 @@ namespace LinqToDB.DataProvider.Firebird
 			return c == '\x00' || c >= '\x80';
 		}
 
-		static void ConvertCharToSql(StringBuilder stringBuilder, char value)
+		static void ConvertCharToSql(StringBuilder stringBuilder, DataOptions options, char value)
 		{
-			if (FirebirdConfiguration.IsLiteralEncodingSupported && NeedsEncoding(value))
+			var fbo = options.FindOrDefault(FirebirdOptions.Default);
+
+			if (fbo.IsLiteralEncodingSupported && NeedsEncoding(value))
 				MakeUtf8Literal(stringBuilder, Encoding.UTF8.GetBytes(new[] {value}));
 			else
 				stringBuilder
@@ -168,19 +183,61 @@ namespace LinqToDB.DataProvider.Firebird
 			stringBuilder.Append("_utf8 x'");
 
 			foreach (var bt in bytes)
-				stringBuilder.AppendFormat("{0:X2}", bt);
+				stringBuilder.Append(CultureInfo.InvariantCulture, $"{bt:X2}");
 
 			stringBuilder.Append('\'');
 		}
 
+		static void ConvertBooleanToSql(StringBuilder sb, SqlDataType dataType, bool value)
+		{
+			if (dataType.Type.DataType is DataType.Char)
+			{
+				sb
+					.Append('\'')
+					.Append(value ? '1' : '0')
+					.Append('\'');
+			}
+			else
+			{
+				sb.Append(value ? "TRUE" : "FALSE");
+			}
+		}
+
 		internal static MappingSchema Instance { get; } = new FirebirdMappingSchema();
 
-		// internal as it will be replaced with versioned schemas in v4
-		public sealed class FirebirdProviderMappingSchema : LockedMappingSchema
+		public sealed class Firebird25MappingSchema : LockedMappingSchema
 		{
-			public FirebirdProviderMappingSchema() : base(ProviderName.Firebird, FirebirdProviderAdapter.Instance.MappingSchema, Instance)
+			public Firebird25MappingSchema()
+				: base(ProviderName.Firebird25, FirebirdProviderAdapter.Instance.MappingSchema, Instance)
 			{
+				// setup bool to "1"/"0" conversions
+				var booleanType = new SqlDataType(DataType.Char, typeof(bool), length: 1, null, null, dbType: "CHAR(1)");
+				SetDataType(typeof(bool), booleanType);
+				// TODO: we should add support for single converter to parameter for structs
+				SetConvertExpression<bool , DataParameter>(value => new DataParameter(null, value ? '1' : '0', booleanType.Type));
+				SetConvertExpression<bool?, DataParameter>(value => new DataParameter(null, value == null ? null : value.Value ? '1' : '0', booleanType.Type.WithSystemType(typeof(bool?))), addNullCheck: false);
+				SetValueToSqlConverter(typeof(bool), (sb, dt, _, v) => ConvertBooleanToSql(sb, dt, (bool)v));
 			}
+
+			static void ConvertBooleanToSql(StringBuilder sb, SqlDataType dataType, bool value)
+			{
+				sb
+					.Append('\'')
+					.Append(value ? '1' : '0')
+					.Append('\'');
+			}
+		}
+
+		public sealed class Firebird3MappingSchema() : LockedMappingSchema(ProviderName.Firebird3, FirebirdProviderAdapter.Instance.MappingSchema, Instance)
+		{
+		}
+
+		public sealed class Firebird4MappingSchema() : LockedMappingSchema(ProviderName.Firebird4, FirebirdProviderAdapter.Instance.MappingSchema, Instance)
+		{
+		}
+
+		public sealed class Firebird5MappingSchema() : LockedMappingSchema(ProviderName.Firebird5, FirebirdProviderAdapter.Instance.MappingSchema, Instance)
+		{
 		}
 	}
 }

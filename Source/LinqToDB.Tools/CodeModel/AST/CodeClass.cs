@@ -23,8 +23,8 @@ namespace LinqToDB.CodeModel
 		{
 			Parent          = parent;
 			Inherits        = inherits;
-			_implements     = new (implements ?? Array<CodeTypeToken>.Empty);
-			_members        = new (members    ?? Array<IMemberGroup> .Empty);
+			_implements     = new (implements ?? []);
+			_members        = new (members    ?? []);
 			TypeInitializer = typeInitializer;
 			This            = new CodeThis(this);
 		}

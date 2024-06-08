@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 
 namespace LinqToDB
 {
-	internal class InvariantCultureRegion : IExecutionScope
+	internal sealed class InvariantCultureRegion : IExecutionScope
 	{
 		private readonly IExecutionScope? _parentRegion;
 		private readonly CultureInfo?     _original;
@@ -29,7 +29,6 @@ namespace LinqToDB
 			_parentRegion?.Dispose();
 		}
 
-#if NATIVE_ASYNC
 		ValueTask IAsyncDisposable.DisposeAsync()
 		{
 			if (_original != null)
@@ -37,6 +36,5 @@ namespace LinqToDB
 
 			return _parentRegion?.DisposeAsync() ?? default;
 		}
-#endif
 	}
 }

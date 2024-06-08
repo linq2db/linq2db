@@ -1,14 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
-using LinqToDB.Mapping;
+using System.Linq.Expressions;
 
 namespace LinqToDB.DataProvider.SapHana
 {
-	using System.Globalization;
-	using System.Linq.Expressions;
-	using LinqToDB.Expressions;
-	using LinqToDB.SqlProvider;
+	using Expressions;
+	using Mapping;
+	using SqlProvider;
 	using SqlQuery;
 
 	public class CalculationViewInputParametersExpressionAttribute : Sql.TableExpressionAttribute
@@ -25,17 +25,11 @@ namespace LinqToDB.DataProvider.SapHana
 		{
 			if (value is string stringValue)
 				return stringValue;
-			if (value is decimal decimalValue)
-				return decimalValue.ToString(new NumberFormatInfo());
-			if (value is double doubleValue)
-				return doubleValue.ToString(new NumberFormatInfo());
-			if (value is float floatValue)
-				return floatValue.ToString(new NumberFormatInfo());
 
-			return value.ToString();
+			return string.Format(CultureInfo.InvariantCulture, "{0}", value);
 		}
 
-		public override void SetTable<TContext>(TContext context, ISqlBuilder sqlBuilder, MappingSchema mappingSchema, SqlTable table, MethodCallExpression methodCall, Func<TContext, Expression, ColumnDescriptor?, ISqlExpression> converter)
+		public override void SetTable<TContext>(DataOptions options, TContext context, ISqlBuilder sqlBuilder, MappingSchema mappingSchema, SqlTable table, MethodCallExpression methodCall, Sql.ExpressionAttribute.ConvertFunc<TContext> converter)
 		{
 			var paramsList = methodCall.Method.GetParameters();
 
@@ -56,7 +50,7 @@ namespace LinqToDB.DataProvider.SapHana
 			arg[0] = new SqlExpression(
 				string.Join(", ",
 					Enumerable.Range(0, sqlValues.Count)
-						.Select(static x => "{" + x + "}")),
+						.Select(static x => FormattableString.Invariant($"{{{x}}}"))),
 				sqlValues.ToArray());
 
 			table.SqlTableType   = SqlTableType.Expression;

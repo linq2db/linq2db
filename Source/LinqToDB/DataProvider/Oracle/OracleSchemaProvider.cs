@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data.Common;
+using System.Globalization;
 using System.Linq;
 using System.Data;
 
@@ -12,7 +13,7 @@ namespace LinqToDB.DataProvider.Oracle
 
 	// Missing features:
 	// - function with ref_cursor return type returns object, need to find out how to map it
-	class OracleSchemaProvider : SchemaProviderBase
+	sealed class OracleSchemaProvider : SchemaProviderBase
 	{
 		private readonly OracleDataProvider _provider;
 		private int _majorVersion;
@@ -20,7 +21,7 @@ namespace LinqToDB.DataProvider.Oracle
 		// both managed and native providers will execute procedure
 		protected override bool GetProcedureSchemaExecutesProcedure => true;
 
-		protected string? SchemasFilter { get; private set; }
+		private string? SchemasFilter { get; set; }
 
 		public OracleSchemaProvider(OracleDataProvider provider)
 		{
@@ -158,14 +159,14 @@ namespace LinqToDB.DataProvider.Oracle
 				.ToList();
 		}
 
-		private int GetMajorVersion(DataConnection dataConnection)
+		private static int GetMajorVersion(DataConnection dataConnection)
 		{
 			var version = dataConnection.Query<string?>("SELECT  VERSION from PRODUCT_COMPONENT_VERSION WHERE ROWNUM = 1").FirstOrDefault();
 			if (version != null)
 			{
 				try
 				{
-					return int.Parse(version.Split('.')[0]);
+					return int.Parse(version.Split('.')[0], NumberStyles.Integer, NumberFormatInfo.InvariantInfo);
 				}
 				catch { }
 			}
@@ -404,8 +405,7 @@ ORDER BY
 
 		private void LoadCurrentUser(DataConnection dataConnection)
 		{
-			if (_currentUser == null)
-				_currentUser = dataConnection.Execute<string>("select user from dual");
+			_currentUser ??= dataConnection.Execute<string>("select user from dual");
 		}
 
 		protected override List<ProcedureParameterInfo> GetProcedureParameters(DataConnection dataConnection, IEnumerable<ProcedureInfo> procedures, GetSchemaOptions options)
@@ -524,7 +524,7 @@ WHERE SEQUENCE > 0 AND DATA_LEVEL = 0 AND OWNER = USER
 			return base.GetSystemType(dataType, columnType, dataTypeInfo, length, precision, scale, options);
 		}
 
-		protected override DataType GetDataType(string? dataType, string? columnType, int? length, int? prec, int? scale)
+		protected override DataType GetDataType(string? dataType, string? columnType, int? length, int? precision, int? scale)
 		{
 			switch (dataType)
 			{

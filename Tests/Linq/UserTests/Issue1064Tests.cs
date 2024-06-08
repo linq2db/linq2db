@@ -1,23 +1,24 @@
-﻿using LinqToDB.Data;
+﻿using System.Linq;
+
+using LinqToDB;
+using LinqToDB.Data;
+using LinqToDB.Mapping;
+
 using NUnit.Framework;
 
 namespace Tests.UserTests
 {
-	using LinqToDB;
-	using LinqToDB.Mapping;
-	using System.Linq;
-
 	public class Issue1064Tests : TestBase
 	{
 		[Table]
-		class TableTest1064
+		sealed class TableTest1064
 		{
 			[Column]
 			public int Column1064 { get; set; }
 		}
 
 		[Table("TableTest1064")]
-		class TableTest1064Renamed
+		sealed class TableTest1064Renamed
 		{
 			[Column("#Column1064")]
 			public int Column1064 { get; set; }
@@ -40,8 +41,8 @@ namespace Tests.UserTests
 
 						var records = db.GetTable<TableTest1064Renamed>().ToList();
 
-						Assert.AreEqual(1, records.Count);
-						Assert.AreEqual(123, records[0].Column1064);
+						Assert.That(records, Has.Count.EqualTo(1));
+						Assert.That(records[0].Column1064, Is.EqualTo(123));
 					}
 					finally
 					{

@@ -43,7 +43,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void SelectAssociations([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void SelectAssociations([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable(new []
@@ -58,11 +58,14 @@ namespace Tests.UserTests
 			{
 				var items = db.GetTable<Person1974>().LoadWith(p => p.Bought).LoadWith(p => p.BoughtQuery).ToArray();
 
-				Assert.That(items[0].Bought,      Is.Null);
-				Assert.That(items[0].BoughtQuery, Is.Null);
+				Assert.Multiple(() =>
+				{
+					Assert.That(items[0].Bought, Is.Null);
+					Assert.That(items[0].BoughtQuery, Is.Null);
 
-				Assert.That(items[1].Bought!.ID,      Is.EqualTo("Article"));
-				Assert.That(items[1].BoughtQuery!.ID, Is.EqualTo("Article"));
+					Assert.That(items[1].Bought!.ID, Is.EqualTo("Article"));
+					Assert.That(items[1].BoughtQuery!.ID, Is.EqualTo("Article"));
+				});
 			}
 		}
 	}

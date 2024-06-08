@@ -13,7 +13,7 @@ namespace Tests.Linq
 	public partial class ParameterTests
 	{
 		[Table("AllTypes")]
-		class AllTypesWithLength
+		sealed class AllTypesWithLength
 		{
 			[Column(                             Length = 1)]  public byte[]? VarBinaryDataType;
 			[Column(DataType = DataType.VarChar, Length = 20)] public string? VarcharDataType;
@@ -21,7 +21,7 @@ namespace Tests.Linq
 		}
 
 		[Table("AllTypes")]
-		class AllTypesCustom
+		sealed class AllTypesCustom
 		{
 			[Column] public VarBinary? VarBinaryDataType;
 			[Column] public VarChar?   VarcharDataType;
@@ -29,21 +29,21 @@ namespace Tests.Linq
 		}
 
 		[Table("AllTypes")]
-		class AllTypesCustomWithLength
+		sealed class AllTypesCustomWithLength
 		{
 			[Column(Length = 1)]  public VarBinary? VarBinaryDataType;
 			[Column(Length = 20)] public VarChar?   VarcharDataType;
 			[Column(Length = 20)] public NVarChar?  NVarcharDataType;
 		}
 
-		class AllTypesCustomMaxLength
+		sealed class AllTypesCustomMaxLength
 		{
 			public VarBinary? VarBinary;
 			public VarChar?   VarChar;
 			public NVarChar?  NVarChar;
 		}
 
-		class VarChar : CustomBase<string>
+		sealed class VarChar : CustomBase<string>
 		{
 			public override string ToString(IFormatProvider? provider)
 			{
@@ -51,7 +51,7 @@ namespace Tests.Linq
 			}
 		}
 
-		class NVarChar : CustomBase<string>
+		sealed class NVarChar : CustomBase<string>
 		{
 			public override string ToString(IFormatProvider? provider)
 			{
@@ -59,7 +59,7 @@ namespace Tests.Linq
 			}
 		}
 
-		class VarBinary : CustomBase<byte[]>
+		sealed class VarBinary : CustomBase<byte[]>
 		{
 			public override object ToType(Type conversionType, IFormatProvider? provider)
 			{
@@ -439,10 +439,13 @@ namespace Tests.Linq
 					var p = new NVarChar() { Value = value };
 					var sql = table.Where(t => t.NVarChar == p).ToString()!;
 
-					Assert.AreEqual(1, records.Count);
-					Assert.IsNotNull(records[0].NVarChar);
-					Assert.AreEqual(value, records[0].NVarChar!.Value);
-					Assert.That(sql.Contains("NVarChar -- String"));
+					Assert.That(records, Has.Count.EqualTo(1));
+					Assert.That(records[0].NVarChar, Is.Not.Null);
+					Assert.Multiple(() =>
+					{
+						Assert.That(records[0].NVarChar!.Value, Is.EqualTo(value));
+						Assert.That(sql, Does.Contain("NVarChar -- String"));
+					});
 				}
 			}
 		}
@@ -465,10 +468,13 @@ namespace Tests.Linq
 					var p = new VarChar() { Value = value };
 					var sql = table.Where(t => t.VarChar == p).ToString();
 
-					Assert.AreEqual(1, records.Count);
-					Assert.IsNotNull(records[0].VarChar);
-					Assert.AreEqual(value, records[0].VarChar!.Value);
-					Assert.That(sql, Contains.Substring(" VarChar -- AnsiString"));
+					Assert.That(records, Has.Count.EqualTo(1));
+					Assert.That(records[0].VarChar, Is.Not.Null);
+					Assert.Multiple(() =>
+					{
+						Assert.That(records[0].VarChar!.Value, Is.EqualTo(value));
+						Assert.That(sql, Contains.Substring(" VarChar -- AnsiString"));
+					});
 				}
 			}
 		}
@@ -494,10 +500,13 @@ namespace Tests.Linq
 					var p = new VarBinary() { Value = value };
 					var sql = table.Where(t => t.VarBinary == p).ToString()!;
 
-					Assert.AreEqual(1, records.Count);
-					Assert.IsNotNull(records[0].VarBinary);
-					Assert.AreEqual(value, records[0].VarBinary!.Value);
-					Assert.That(sql.Contains("VarBinary -- Binary"));
+					Assert.That(records, Has.Count.EqualTo(1));
+					Assert.That(records[0].VarBinary, Is.Not.Null);
+					Assert.Multiple(() =>
+					{
+						Assert.That(records[0].VarBinary!.Value, Is.EqualTo(value));
+						Assert.That(sql, Does.Contain("VarBinary -- Binary"));
+					});
 				}
 			}
 		}
@@ -656,10 +665,13 @@ namespace Tests.Linq
 					var p = new NVarChar() { Value = value };
 					var sql = table.Where(t => t.NVarChar == p).ToString()!;
 
-					Assert.AreEqual(1, records.Count);
-					Assert.IsNotNull(records[0].NVarChar);
-					Assert.AreEqual(value, records[0].NVarChar!.Value);
-					Assert.That(sql.Contains("NVarChar(5000) -- String"));
+					Assert.That(records, Has.Count.EqualTo(1));
+					Assert.That(records[0].NVarChar, Is.Not.Null);
+					Assert.Multiple(() =>
+					{
+						Assert.That(records[0].NVarChar!.Value, Is.EqualTo(value));
+						Assert.That(sql, Does.Contain("NVarChar(5000) -- String"));
+					});
 				}
 			}
 		}
@@ -682,10 +694,13 @@ namespace Tests.Linq
 					var p = new VarChar() { Value = value };
 					var sql = table.Where(t => t.VarChar == p).ToString()!;
 
-					Assert.AreEqual(1, records.Count);
-					Assert.IsNotNull(records[0].VarChar);
-					Assert.AreEqual(value, records[0].VarChar!.Value);
-					Assert.That(sql.Contains(" VarChar(10000) -- AnsiString"));
+					Assert.That(records, Has.Count.EqualTo(1));
+					Assert.That(records[0].VarChar, Is.Not.Null);
+					Assert.Multiple(() =>
+					{
+						Assert.That(records[0].VarChar!.Value, Is.EqualTo(value));
+						Assert.That(sql, Does.Contain(" VarChar(10000) -- AnsiString"));
+					});
 				}
 			}
 		}
@@ -711,10 +726,13 @@ namespace Tests.Linq
 					var p = new VarBinary() { Value = value };
 					var sql = table.Where(t => t.VarBinary == p).ToString()!;
 
-					Assert.AreEqual(1, records.Count);
-					Assert.IsNotNull(records[0].VarBinary);
-					Assert.AreEqual(value, records[0].VarBinary!.Value);
-					Assert.That(sql.Contains("VarBinary(10000) -- Binary"));
+					Assert.That(records, Has.Count.EqualTo(1));
+					Assert.That(records[0].VarBinary, Is.Not.Null);
+					Assert.Multiple(() =>
+					{
+						Assert.That(records[0].VarBinary!.Value, Is.EqualTo(value));
+						Assert.That(sql, Does.Contain("VarBinary(10000) -- Binary"));
+					});
 				}
 			}
 		}

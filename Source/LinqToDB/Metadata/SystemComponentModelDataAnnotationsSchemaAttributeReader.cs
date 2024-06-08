@@ -4,79 +4,72 @@ using System.Reflection;
 namespace LinqToDB.Metadata
 {
 	using Common;
+	using Extensions;
 	using Mapping;
 
+	/// <summary>
+	/// Metadata provider using mapping attributes from <see cref="System.ComponentModel.DataAnnotations.Schema"/> namespace:
+	/// <list type="bullet">
+	/// <item><see cref="System.ComponentModel.DataAnnotations.Schema.TableAttribute"/></item>
+	/// <item><see cref="System.ComponentModel.DataAnnotations.Schema.ColumnAttribute"/></item>
+	/// </list>
+	/// </summary>
 	public class SystemComponentModelDataAnnotationsSchemaAttributeReader : IMetadataReader
 	{
-		readonly AttributeReader _reader = new AttributeReader();
-
-		public T[] GetAttributes<T>(Type type, bool inherit)
-			where T : Attribute
+		public MappingAttribute[] GetAttributes(Type type)
 		{
-			if (typeof(T) == typeof(TableAttribute))
+			var t = type.GetAttribute<System.ComponentModel.DataAnnotations.Schema.TableAttribute>();
+
+			if (t != null)
 			{
-				var ta = _reader.GetAttributes<System.ComponentModel.DataAnnotations.Schema.TableAttribute>(type, inherit);
+				var attr = new TableAttribute();
 
-				var t = ta.Length == 1 ? ta[0] : null;
+				var name = t.Name;
 
-				if (t != null)
+				if (name != null)
 				{
-					var attr = new TableAttribute();
+					var names = name.Replace("[", "").Replace("]", "").Split('.');
 
-					var name = t.Name;
-
-					if (name != null)
+					switch (names.Length)
 					{
-						var names = name.Replace("[", "").Replace("]", "").Split('.');
-
-						switch (names.Length)
-						{
-							case 0  : break;
-							case 1  : attr.Name = names[0]; break;
-							case 2  :
-								attr.Name   = names[0];
-								attr.Schema = names[1];
-								break;
-							default :
-								throw new MetadataException(string.Format(
-									"Invalid table name '{0}' of type '{1}'",
-									name, type.FullName));
-						}
+						case 0: break;
+						case 1: attr.Name = names[0]; break;
+						case 2:
+							attr.Name   = names[0];
+							attr.Schema = names[1];
+							break;
+						default:
+							throw new MetadataException($"Invalid table name '{name}' of type '{type.FullName}'");
 					}
-
-					return new[] { (T)(Attribute)attr };
 				}
+
+				return new MappingAttribute[] { attr };
 			}
 
-			return Array<T>.Empty;
+			return [];
 		}
 
-		public T[] GetAttributes<T>(Type type, MemberInfo memberInfo, bool inherit)
-			where T : Attribute
+		public MappingAttribute[] GetAttributes(Type type, MemberInfo memberInfo)
 		{
-			if (typeof(T) == typeof(ColumnAttribute))
+			var c = memberInfo.GetAttribute<System.ComponentModel.DataAnnotations.Schema.ColumnAttribute>();
+
+			if (c != null)
 			{
-				var attrs = _reader.GetAttributes<System.ComponentModel.DataAnnotations.Schema.ColumnAttribute>(type, memberInfo, inherit);
-
-				if (attrs.Length == 1)
+				var attr = new ColumnAttribute()
 				{
-					var c = attrs[0];
+					Name   = c.Name,
+					DbType = c.TypeName
+				};
 
-					var attr = new ColumnAttribute
-					{
-						Name   = c.Name,
-						DbType = c.TypeName
-					};
-
-					return new[] { (T)(Attribute)attr };
-				}
+				return new MappingAttribute[] { attr };
 			}
 
-			return Array<T>.Empty;
+			return [];
 		}
 
 		/// <inheritdoc cref="IMetadataReader.GetDynamicColumns"/>
-		public MemberInfo[] GetDynamicColumns(Type type)
-			=> Array<MemberInfo>.Empty;
+		public MemberInfo[] GetDynamicColumns(Type type) => [];
+
+		public string GetObjectID() => $".{nameof(SystemComponentModelDataAnnotationsSchemaAttributeReader)}.";
 	}
 }

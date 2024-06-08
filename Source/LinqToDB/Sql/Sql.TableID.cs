@@ -9,7 +9,7 @@ namespace LinqToDB
 
 	public partial class Sql
 	{
-		public struct SqlID : IToSqlConverter
+		public readonly struct SqlID : IToSqlConverter, IEquatable<SqlID>
 		{
 			public SqlIDType Type { get; }
 			public string    ID   { get; }
@@ -27,7 +27,12 @@ namespace LinqToDB
 
 			public override bool Equals(object? obj)
 			{
-				return obj is SqlID id && Type == id.Type && ID == id.ID;
+				return obj is SqlID other && Equals(other);
+			}
+
+			public bool Equals(SqlID other)
+			{
+				return Type == other.Type && ID == other.ID;
 			}
 
 			public override int GetHashCode()
@@ -35,9 +40,8 @@ namespace LinqToDB
 				return (int)Type | (ID.GetHashCode() >> 3);
 			}
 
-			public ISqlExpression ToSql(Expression expression)
+			public ISqlExpression ToSql(object value)
 			{
-				var value = expression.EvaluateExpression();
 				return new SqlValue(typeof(SqlID), value);
 			}
 
@@ -51,7 +55,9 @@ namespace LinqToDB
 				var type = value.Substring(0, idx);
 				var id   = value.Substring(idx + 1);
 
+#pragma warning disable CA2263 // Prefer generic overload when type is known
 				return new ((SqlIDType)Enum.Parse(typeof(SqlIDType), type), id);
+#pragma warning restore CA2263 // Prefer generic overload when type is known
 			}
 		}
 

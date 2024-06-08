@@ -1,22 +1,25 @@
 ﻿using System;
-using System.Data;
-using System.Data.SqlTypes;
-using System.Data.Common;
 using System.Collections.Generic;
+using System.Data;
+using System.Data.Common;
+using System.Data.SqlTypes;
+using System.Globalization;
 using System.Linq;
 using System.Text;
-using System.Globalization;
 
 namespace LinqToDB.DataProvider.DB2
 {
+	using Common;
 	using Mapping;
-	using SqlQuery;
 	using SqlProvider;
+	using SqlQuery;
 
-	abstract partial class DB2SqlBuilderBase : BasicSqlBuilder
+	abstract partial class DB2SqlBuilderBase : BasicSqlBuilder<DB2Options>
 	{
-		protected DB2SqlBuilderBase(IDataProvider? provider, MappingSchema mappingSchema, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
-			: base(provider, mappingSchema, sqlOptimizer, sqlProviderFlags)
+		public override bool CteFirst => false;
+
+		protected DB2SqlBuilderBase(IDataProvider? provider, MappingSchema mappingSchema, DataOptions dataOptions, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
+			: base(provider, mappingSchema, dataOptions, sqlOptimizer, sqlProviderFlags)
 		{
 		}
 
@@ -27,8 +30,6 @@ namespace LinqToDB.DataProvider.DB2
 		SqlField? _identityField;
 
 		protected abstract DB2Version Version { get; }
-
-		protected override bool SupportsNullInColumn => false;
 
 		public override int CommandCount(SqlStatement statement)
 		{
@@ -66,6 +67,8 @@ namespace LinqToDB.DataProvider.DB2
 
 		protected override void BuildTruncateTableStatement(SqlTruncateTableStatement truncateTable)
 		{
+			var nullability = NullabilityContext.NonQuery;
+
 			var table = truncateTable.Table!;
 
 			BuildTag(truncateTable);
@@ -78,6 +81,8 @@ namespace LinqToDB.DataProvider.DB2
 
 		protected override void BuildSql(int commandNumber, SqlStatement statement, StringBuilder sb, OptimizationContext optimizationContext, int indent, bool skipAlias)
 		{
+			var nullability = NullabilityContext.GetContext(statement.SelectQuery);
+
 			Statement           = statement;
 			StringBuilder       = sb;
 			OptimizationContext = optimizationContext;
@@ -125,36 +130,47 @@ namespace LinqToDB.DataProvider.DB2
 				base.BuildSelectClause(selectQuery);
 		}
 
+		protected override bool OffsetFirst => true;
+
 		protected override string? LimitFormat(SelectQuery selectQuery)
 		{
-			return selectQuery.Select.SkipValue == null ? "FETCH FIRST {0} ROWS ONLY" : null;
+			//return selectQuery.Select.SkipValue == null ? "FETCH FIRST {0} ROWS ONLY" : null;
+			return "FETCH NEXT {0} ROWS ONLY";
 		}
 
-		protected override void BuildDataTypeFromDataType(SqlDataType type, bool forCreateTable)
+		protected override string OffsetFormat(SelectQuery selectQuery)
 		{
-			switch (type.Type.DataType)
+			return "OFFSET {0} ROWS";
+		}
+
+		protected override void BuildDataTypeFromDataType(DbDataType type, bool forCreateTable, bool canBeNull)
+		{
+			switch (type.DataType)
 			{
 				case DataType.DateTime  :
 				case DataType.DateTime2 :
+				{
 					StringBuilder.Append("timestamp");
-					if (type.Type.Precision != null && type.Type.Precision != 6)
-						StringBuilder.Append($"({type.Type.Precision})");
+					if (type.Precision != null && type.Precision != 6)
+						StringBuilder.Append(CultureInfo.InvariantCulture, $"({type.Precision})");
 					return;
+				}
+				case DataType.SByte:
 				case DataType.Boolean   : StringBuilder.Append("smallint");              return;
 				case DataType.Guid      : StringBuilder.Append("char(16) for bit data"); return;
 				case DataType.NVarChar  :
-					if (type.Type.Length == null || type.Type.Length > 8168 || type.Type.Length < 1)
+				{
+					if (type.Length == null || type.Length > 8168 || type.Length < 1)
 					{
-						StringBuilder
-							.Append(type.Type.DataType)
-							.Append("(8168)");
+						StringBuilder.Append("NVarChar(8168)");
 						return;
 					}
 
 					break;
+				}
 			}
 
-			base.BuildDataTypeFromDataType(type, forCreateTable);
+			base.BuildDataTypeFromDataType(type, forCreateTable, canBeNull);
 		}
 
 		protected override void BuildCreateTableNullAttribute(SqlField field, DefaultNullable defaultNullable)
@@ -165,7 +181,12 @@ namespace LinqToDB.DataProvider.DB2
 			base.BuildCreateTableNullAttribute(field, defaultNullable);
 		}
 
-		public static DB2IdentifierQuoteMode IdentifierQuoteMode = DB2IdentifierQuoteMode.Auto;
+		[Obsolete("Use DB2Options.Default.IdentifierQuoteMode instead.")]
+		public static DB2IdentifierQuoteMode IdentifierQuoteMode
+		{
+			get => DB2Options.Default.IdentifierQuoteMode;
+			set => DB2Options.Default = DB2Options.Default with { IdentifierQuoteMode = value };
+		}
 
 		public override StringBuilder Convert(StringBuilder sb, string value, ConvertType convertType)
 		{
@@ -191,14 +212,14 @@ namespace LinqToDB.DataProvider.DB2
 				case ConvertType.NameToSchema         :
 				case ConvertType.NameToDatabase       :
 				case ConvertType.NameToQueryTableAlias:
-					if (IdentifierQuoteMode != DB2IdentifierQuoteMode.None)
+					if (ProviderOptions.IdentifierQuoteMode != DB2IdentifierQuoteMode.None)
 					{
 						if (value.Length > 0 && value[0] == '"')
 							return sb.Append(value);
 
-						if (IdentifierQuoteMode == DB2IdentifierQuoteMode.Quote ||
-							value.StartsWith("_") ||
-							value.Any(c => char.IsLower(c) || char.IsWhiteSpace(c)))
+						if (ProviderOptions.IdentifierQuoteMode == DB2IdentifierQuoteMode.Quote ||
+						    value.StartsWith("_") ||
+						    value.Any(c => char.IsLower(c) || char.IsWhiteSpace(c)))
 							return sb.Append('"').Append(value).Append('"');
 					}
 
@@ -228,7 +249,7 @@ namespace LinqToDB.DataProvider.DB2
 			StringBuilder.Append("GENERATED ALWAYS AS IDENTITY");
 		}
 
-		public override StringBuilder BuildObjectName(StringBuilder sb, SqlObjectName name, ConvertType objectType, bool escape, TableOptions tableOptions)
+		public override StringBuilder BuildObjectName(StringBuilder sb, SqlObjectName name, ConvertType objectType, bool escape, TableOptions tableOptions, bool withoutSuffix = false)
 		{
 			var schemaName = name.Schema;
 			if (schemaName == null && tableOptions.IsTemporaryOptionSet())
@@ -260,7 +281,7 @@ namespace LinqToDB.DataProvider.DB2
 			if (parameter.DbType == DbType.Decimal && parameter.Value is decimal decValue)
 			{
 				var d = new SqlDecimal(decValue);
-				return string.Format("({0}{1}{2})", d.Precision.ToString(CultureInfo.InvariantCulture), InlineComma, d.Scale.ToString(CultureInfo.InvariantCulture));
+				return string.Format(CultureInfo.InvariantCulture, "({0}{1}{2})", d.Precision, InlineComma, d.Scale);
 			}
 
 			if (DataProvider is DB2DataProvider provider)
@@ -275,7 +296,8 @@ namespace LinqToDB.DataProvider.DB2
 
 		protected override void BuildDropTableStatement(SqlDropTableStatement dropTable)
 		{
-			var table = dropTable.Table!;
+			var nullability = NullabilityContext.NonQuery;
+			var table       = dropTable.Table;
 
 			BuildTag(dropTable);
 			if (dropTable.Table.TableOptions.HasDropIfExists())
@@ -331,7 +353,7 @@ END");
 
 		protected override void BuildStartCreateTableStatement(SqlCreateTableStatement createTable)
 		{
-			if (createTable.StatementHeader == null && createTable.Table!.TableOptions.HasCreateIfNotExists())
+			if (createTable.StatementHeader == null && createTable.Table.TableOptions.HasCreateIfNotExists())
 			{
 				AppendIndent().AppendLine(@"BEGIN");
 
@@ -350,7 +372,16 @@ END");
 		{
 			base.BuildEndCreateTableStatement(createTable);
 
-			if (createTable.StatementHeader == null && createTable.Table!.TableOptions.HasCreateIfNotExists())
+			var table = createTable.Table;
+
+			if (table.TableOptions.IsTemporaryOptionSet())
+			{
+				AppendIndent().AppendLine(table.TableOptions.HasIsTransactionTemporaryData()
+					? "ON COMMIT DELETE ROWS"
+					: "ON COMMIT PRESERVE ROWS");
+			}
+
+			if (createTable.StatementHeader == null && createTable.Table.TableOptions.HasCreateIfNotExists())
 			{
 				Indent--;
 
@@ -377,6 +408,68 @@ END");
 			}
 
 			base.BuildCreateTablePrimaryKey(createTable, pkName, fieldNames);
+		}
+
+		// TODO: Copy of Firebird's BuildParameter, looks like we can move such functionality to SqlProviderFlags
+		protected override void BuildParameter(SqlParameter parameter)
+		{
+			if (BuildStep == Step.TypedExpression || !parameter.NeedsCast)
+			{
+				base.BuildParameter(parameter);
+				return;
+			}
+
+			if (parameter.NeedsCast)
+			{
+				var paramValue = parameter.GetParameterValue(OptimizationContext.EvaluationContext.ParameterValues);
+
+				var dbDataType = paramValue.DbDataType;
+				// temporary guard against cast to unknown type (Variant)
+				//if (dbDataType.DataType == DataType.Undefined)
+				//{
+				//	base.BuildParameter(parameter);
+				//	return;
+				//}
+
+				var saveStep = BuildStep;
+				BuildStep = Step.TypedExpression;
+
+				if (paramValue.ProviderValue is byte[] bytes)
+				{
+					dbDataType = dbDataType.WithLength(bytes.Length);
+				}
+				else if (paramValue.ProviderValue is string str)
+				{
+					dbDataType = dbDataType.WithLength(str.Length);
+				}
+				else if (paramValue.ProviderValue is decimal d)
+				{
+					if (dbDataType.Precision == null)
+						dbDataType = dbDataType.WithPrecision(DecimalHelper.GetPrecision(d));
+					if (dbDataType.Scale == null)
+						dbDataType = dbDataType.WithScale(DecimalHelper.GetScale(d));
+				}
+
+				if (dbDataType.Length > 32672)
+				{
+					base.BuildParameter(parameter);
+					return;
+				}
+
+				if (dbDataType.DataType != DataType.Undefined)
+				{
+					BuildTypedExpression(dbDataType, parameter);
+				}
+				else
+				{
+					base.BuildParameter(parameter);
+				}
+				BuildStep = saveStep;
+
+				return;
+			}
+
+			base.BuildParameter(parameter);
 		}
 	}
 }

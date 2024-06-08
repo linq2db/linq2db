@@ -1,13 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Data.Common;
 using System.Linq.Expressions;
-using System.Threading.Tasks;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace LinqToDB.DataProvider
 {
-	using System.Data.Common;
 	using Common;
 	using Data;
 	using Mapping;
@@ -23,10 +23,11 @@ namespace LinqToDB.DataProvider
 		MappingSchema    MappingSchema         { get; }
 		SqlProviderFlags SqlProviderFlags      { get; }
 		TableOptions     SupportedTableOptions { get; }
+		bool             TransactionsSupported { get; }
 		void             InitContext           (IDataContext dataContext);
-		DbConnection     CreateConnection      (string        connectionString);
-		ISqlBuilder      CreateSqlBuilder      (MappingSchema mappingSchema);
-		ISqlOptimizer    GetSqlOptimizer       ();
+		DbConnection     CreateConnection      (string       connectionString);
+		ISqlBuilder      CreateSqlBuilder      (MappingSchema mappingSchema, DataOptions dataOptions);
+		ISqlOptimizer    GetSqlOptimizer       (DataOptions  dataOptions);
 		/// <summary>
 		/// Initializes <see cref="DataConnection"/> command object.
 		/// </summary>
@@ -39,12 +40,12 @@ namespace LinqToDB.DataProvider
 		/// <returns>Initialized command instance.</returns>
 		DbCommand          InitCommand           (DataConnection dataConnection, DbCommand command, CommandType commandType, string commandText, DataParameter[]? parameters, bool withParameters);
 		void               DisposeCommand        (DbCommand command);
-#if NETSTANDARD2_1PLUS
+#if NET6_0_OR_GREATER
 		ValueTask          DisposeCommandAsync   (DbCommand command);
 #endif
 		object?            GetConnectionInfo     (DataConnection dataConnection, string parameterName);
 		Expression         GetReaderExpression   (DbDataReader reader, int idx, Expression readerExpression, Type toType);
-		bool?              IsDBNullAllowed       (DbDataReader reader, int idx);
+		bool?              IsDBNullAllowed       (DataOptions options, DbDataReader reader, int idx);
 		void               SetParameter          (DataConnection dataConnection, DbParameter parameter, string name, DbDataType dataType, object? value);
 		Type               ConvertParameterType  (Type type, DbDataType dataType);
 		CommandBehavior    GetCommandBehavior    (CommandBehavior commandBehavior);
@@ -61,15 +62,37 @@ namespace LinqToDB.DataProvider
 
 		ISchemaProvider    GetSchemaProvider     ();
 
-		BulkCopyRowsCopied       BulkCopy<T>     (ITable<T> table, BulkCopyOptions options, IEnumerable<T> source)
-			where T : notnull;
+		BulkCopyRowsCopied BulkCopy<T>(
+			DataOptions     options,
+			ITable<T>       table,
+			IEnumerable<T>  source)
+		where T : notnull;
 
-		Task<BulkCopyRowsCopied> BulkCopyAsync<T>(ITable<T> table, BulkCopyOptions options, IEnumerable<T> source, CancellationToken cancellationToken)
-			where T : notnull;
+		Task<BulkCopyRowsCopied> BulkCopyAsync<T>(
+			DataOptions       options,
+			ITable<T>         table,
+			IEnumerable<T>    source,
+			CancellationToken cancellationToken)
+		where T : notnull;
 
-#if NATIVE_ASYNC
-		Task<BulkCopyRowsCopied> BulkCopyAsync<T>(ITable<T> table, BulkCopyOptions options, IAsyncEnumerable<T> source, CancellationToken cancellationToken)
+		Task<BulkCopyRowsCopied> BulkCopyAsync<T>(
+			DataOptions         options,
+			ITable<T>           table,
+			IAsyncEnumerable<T> source,
+			CancellationToken   cancellationToken)
 		where T: notnull;
-#endif
+
+		/// <summary>
+		/// Returns instance of <see cref="IQueryParametersNormalizer"/>, which implements normalization logic for parameters of single query.
+		/// E.g. it could include:
+		/// <list type="bullet">
+		/// <item>trimming names that are too long</item>
+		/// <item>removing/replacing unsupported characters</item>
+		/// <item>name deduplication for parameters with same name</item>
+		/// </list>.
+		/// For implementation without state it is recommended to return static instance.
+		/// E.g. this could be done for providers with positional parameters that ignore names.
+		/// </summary>
+		IQueryParametersNormalizer GetQueryParameterNormalizer();
 	}
 }

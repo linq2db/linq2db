@@ -118,7 +118,7 @@ namespace Tests.UserTests
 
 		[ActiveIssue(Details = "Converted FuncLikePredicate expression is not a Predicate expression.")]
 		[Test]
-		public void ExistsRemoval([IncludeDataSources(TestProvName.AllSqlServer)] string context, [Values] bool shouldFilter, [Values] bool isPositive)
+		public void ExistsRemoval([IncludeDataSources(TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context, [Values] bool shouldFilter, [Values] bool isPositive)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -134,9 +134,12 @@ namespace Tests.UserTests
 				var result = query.ToArray();
 				var cnt    = query.Count();
 
-				Assert.That(query.ToString(), Does.Not.Contains("EXISTS"));
-				
-				Assert.That(cnt, Is.EqualTo(result.Length));
+				Assert.Multiple(() =>
+				{
+					Assert.That(query.ToString(), Does.Not.Contains("EXISTS"));
+
+					Assert.That(cnt, Is.EqualTo(result.Length));
+				});
 			}
 		}
 

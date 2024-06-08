@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 
 namespace LinqToDB.Interceptors
 {
-	abstract class AggregatedInterceptor<TInterceptor>: IInterceptor
+	abstract class AggregatedInterceptor<TInterceptor> : IInterceptor
 		where TInterceptor : IInterceptor
 	{
 		public List<TInterceptor> Interceptors { get; } = new ();
@@ -98,15 +98,6 @@ namespace LinqToDB.Interceptors
 				_enumerating = false;
 				RemoveDelayed();
 			}
-		}
-
-		protected abstract AggregatedInterceptor<TInterceptor> Create();
-
-		public AggregatedInterceptor<TInterceptor> Clone()
-		{
-			var clone = Create();
-			clone.Interceptors.AddRange(Interceptors);
-			return clone;
 		}
 	}
 }

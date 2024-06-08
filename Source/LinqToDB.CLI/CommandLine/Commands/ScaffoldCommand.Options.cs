@@ -1,9 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Reflection;
-using LinqToDB.Configuration;
+using System.Text;
+
 using LinqToDB.DataModel;
+using LinqToDB.Metadata;
 using LinqToDB.Naming;
 using LinqToDB.Scaffold;
 
@@ -21,7 +24,7 @@ namespace LinqToDB.CommandLine
 		/// <summary>
 		/// Provides access to general scaffold options definitions.
 		/// </summary>
-		public static class General
+		internal static class General
 		{
 			/// <summary>
 			/// Import settings JSON option.
@@ -88,18 +91,21 @@ JSON file example:
 					null,
 					null,
 					false,
-					new (false, false, DatabaseType.Access    .ToString(), "MS Access (requires OLE DB or/and ODBC provider installed)"),
-					new (false, false, DatabaseType.DB2       .ToString(), "IBM DB2 LUW or z/OS"                                       ),
-					new (false, false, DatabaseType.Firebird  .ToString(), "Firebird"                                                  ),
-					new (false, false, DatabaseType.Informix  .ToString(), "IBM Informix"                                              ),
-					new (false, false, DatabaseType.SQLServer .ToString(), "MS SQL Server (including Azure SQL Server)"                ),
-					new (false, false, DatabaseType.MySQL     .ToString(), "MySQL/MariaDB"                                             ),
-					new (false, false, DatabaseType.Oracle    .ToString(), "Oracle Database"                                           ),
-					new (false, false, DatabaseType.PostgreSQL.ToString(), "PostgreSQL"                                                ),
-					new (false, false, DatabaseType.SqlCe     .ToString(), "MS SQL Server Compact"                                     ),
-					new (false, false, DatabaseType.SQLite    .ToString(), "SQLite"                                                    ),
-					new (false, false, DatabaseType.Sybase    .ToString(), "SAP/Sybase ASE"                                            ),
-					new (false, false, DatabaseType.SapHana   .ToString(), "SAP HANA"                                                  ));
+					new (false, false, DatabaseType.Access         .ToString(), "MS Access (requires OLE DB or/and ODBC provider installed)"),
+					new (false, false, DatabaseType.DB2            .ToString(), "IBM DB2 LUW or z/OS"                                       ),
+					new (false, false, DatabaseType.Firebird       .ToString(), "Firebird"                                                  ),
+					new (false, false, DatabaseType.Informix       .ToString(), "IBM Informix"                                              ),
+					new (false, false, DatabaseType.SQLServer      .ToString(), "MS SQL Server (including Azure SQL Server)"                ),
+					new (false, false, DatabaseType.MySQL          .ToString(), "MySQL/MariaDB"                                             ),
+					new (false, false, DatabaseType.Oracle         .ToString(), "Oracle Database"                                           ),
+					new (false, false, DatabaseType.PostgreSQL     .ToString(), "PostgreSQL"                                                ),
+					new (false, false, DatabaseType.SqlCe          .ToString(), "MS SQL Server Compact"                                     ),
+					new (false, false, DatabaseType.SQLite         .ToString(), "SQLite"                                                    ),
+					new (false, false, DatabaseType.Sybase         .ToString(), "SAP/Sybase ASE"                                            ),
+					new (false, false, DatabaseType.SapHana        .ToString(), "SAP HANA"                                                  ),
+					new (false, false, DatabaseType.ClickHouseMySql.ToString(), "ClickHouse (MySql interface)"                              ),
+					new (false, false, DatabaseType.ClickHouseHttp .ToString(), "ClickHouse (HTTP(S) interface)"                            ),
+					new (false, false, DatabaseType.ClickHouseTcp  .ToString(), "ClickHouse (TCP/binary interface)"                         ));
 
 			/// <summary>
 			/// Database provider location option.
@@ -209,7 +215,7 @@ Example of platform-specific providers:
 
 If you choose T4, you can create initial empty template using 'dotnet linq2db template' command. It will generate initial template file with pre-generated extension points which you can modify to implement required customizations.
 Customization using compiled assembly has several requirements:
-- it should be compatible with current runtime, used by 'dotnet linq2db' tool (netcoreapp3.1 by default);
+- it should be compatible with current runtime, used by 'dotnet linq2db' tool;
 - assembly should contain exactly one interceptor class with customization logic. It should be inherited from {nameof(ScaffoldInterceptors)} and has default public constructor;
 - linq2db.Tools version should match tool's version to avoid possible compatibility issues/errors.",
 					null,
@@ -221,7 +227,7 @@ Customization using compiled assembly has several requirements:
 		/// <summary>
 		/// Provides access to code-generation scaffold options definitions.
 		/// </summary>
-		public static class CodeGen
+		internal static class CodeGen
 		{
 			/// <summary>
 			/// Nullable annotations generation option.
@@ -374,7 +380,7 @@ Customization using compiled assembly has several requirements:
 		/// <summary>
 		/// Provides access to data model scaffold options definitions.
 		/// </summary>
-		public static class DataModel
+		internal static class DataModel
 		{
 			/// <summary>
 			/// Naming option help text.
@@ -397,8 +403,9 @@ Customization using compiled assembly has several requirements:
 - prefix                           : string? : optional name prefix
 - suffix                           : string? : optional name suffix
 - transformation                   : string  : base name transformation logic (see values below)
+    + ""none""                : no transformations applied, treat whole identifier as one word
     + ""split_by_underscore"" : split base name, got from database object name, into separate words by underscore (_)
-    + ""t4""                  : emulation of identifier generation logic for association name used by T4 templates (compat. option)
+    + ""association""         : emulation of identifier generation logic for association name used by T4 templates (compat. option)
 - pluralize_if_ends_with_word_only : bool    : when set, pluralization not applied if name ends with non-word (e.g. with digit)
 - ignore_all_caps                  : bool    : when set, casing not applied to names that contain only uppercase letters
 If you don't specify some property, CLI will use default value for current option. This allows you to override only some properties without need to specify all properties.
@@ -408,8 +415,23 @@ If you don't specify some property, CLI will use default value for current optio
 			/// <summary>
 			/// Naming option example template.
 			/// </summary>
-			private const string NAMING_EXAMPLE_TEMPLATE =
 #pragma warning disable JSON001 // Invalid JSON pattern
+#if SUPPORTS_COMPOSITE_FORMAT
+			private static readonly CompositeFormat NAMING_EXAMPLE_TEMPLATE = CompositeFormat.Parse(
+ @"
+{{
+  ""dataModel"":
+  {{
+    ""{0}"":
+    {{
+      ""case""         : ""pascal_case"",
+      ""pluralization"": ""singular"",
+      ""suffix""       : ""Record""
+    }}
+  }}
+}}");
+#else
+			private const string NAMING_EXAMPLE_TEMPLATE =
  @"
 {{
   ""dataModel"":
@@ -422,6 +444,7 @@ If you don't specify some property, CLI will use default value for current optio
     }}
   }}
 }}";
+#endif
 #pragma warning restore JSON001 // Invalid JSON pattern
 
 			/// <summary>
@@ -451,6 +474,23 @@ If you don't specify some property, CLI will use default value for current optio
 					null,
 					_defaultOptions.DataModel.GenerateDefaultSchema,
 					_t4ModeOptions.DataModel.GenerateDefaultSchema);
+
+			/// <summary>
+			/// Specifies type of generated metadata source.
+			/// </summary>
+			public static readonly CliOption Metadata = new StringEnumCliOption(
+					"metadata",
+					null,
+					false,
+					false,
+					"specify type of generated metadata",
+					null,
+					null,
+					null,
+					false,
+					new StringEnumOption(_defaultOptions.DataModel.Metadata == MetadataSource.None         , _t4ModeOptions.DataModel.Metadata == MetadataSource.None         , "none"      , "don't emit metadata for model"         ),
+					new StringEnumOption(_defaultOptions.DataModel.Metadata == MetadataSource.Attributes   , _t4ModeOptions.DataModel.Metadata == MetadataSource.Attributes   , "attributes", "annotate model with mapping attributes"),
+					new StringEnumOption(_defaultOptions.DataModel.Metadata == MetadataSource.FluentMapping, _t4ModeOptions.DataModel.Metadata == MetadataSource.FluentMapping, "fluent"    , "annotate model using fluent mapping"   ));
 
 			/// <summary>
 			/// Base entity class option.
@@ -576,6 +616,20 @@ If you don't specify some property, CLI will use default value for current optio
 					_t4ModeOptions.DataModel.IncludeDatabaseInfo);
 
 			/// <summary>
+			/// Generate InitDataContext partial method on data context class option.
+			/// </summary>
+			public static readonly CliOption EmitInitDataContextMethod = new BooleanCliOption(
+					"add-init-context",
+					null,
+					false,
+					"generate InitDataContext partial method on data context for custom context setup",
+					null,
+					null,
+					null,
+					_defaultOptions.DataModel.GenerateInitDataContextMethod,
+					_t4ModeOptions.DataModel.GenerateInitDataContextMethod);
+
+			/// <summary>
 			/// Default data context contructor generation option.
 			/// </summary>
 			public static readonly CliOption EmitDefaultConstructor = new BooleanCliOption(
@@ -611,7 +665,7 @@ If you don't specify some property, CLI will use default value for current optio
 					null,
 					false,
 					"generate data context contructor with options parameter",
-					$"Constructor example: public MyDataContext({nameof(LinqToDBConnectionOptions)} options) {{ ... }}",
+					$"Constructor example: public MyDataContext({nameof(DataOptions)} options) {{ ... }}",
 					null,
 					null,
 					_defaultOptions.DataModel.HasUntypedOptionsConstructor,
@@ -625,7 +679,7 @@ If you don't specify some property, CLI will use default value for current optio
 					null,
 					false,
 					"generate data context contructor with generic options parameter",
-					$"Constructor example: public MyDataContext({nameof(LinqToDBConnectionOptions)}<MyDataContext> options) {{ ... }}",
+					$"Constructor example: public MyDataContext({nameof(DataOptions)}<MyDataContext> options) {{ ... }}",
 					null,
 					null,
 					_defaultOptions.DataModel.HasTypedOptionsConstructor,
@@ -862,18 +916,19 @@ If you don't specify some property, CLI will use default value for current optio
 					null,
 					null,
 					false,
-					new StringEnumOption((_defaultOptions.DataModel.GenerateFindExtensions & FindTypes.FindByPkOnTable           ) != 0, (_t4ModeOptions.DataModel.GenerateFindExtensions & FindTypes.FindByPkOnTable           ) != 0, "sync-pk-table"       , "generate sync entity load extension on table object with primary key parameters: Entity?            Find     (this ITable<Entity> table, pk_fields)"),
-					new StringEnumOption((_defaultOptions.DataModel.GenerateFindExtensions & FindTypes.FindAsyncByPkOnTable      ) != 0, (_t4ModeOptions.DataModel.GenerateFindExtensions & FindTypes.FindAsyncByPkOnTable      ) != 0, "async-pk-table"      , "generate sync entity load extension on table object with primary key parameters: Task<Entity?>      FindAsync(this ITable<Entity> table, pk_fields, CancellationToken)"),
-					new StringEnumOption((_defaultOptions.DataModel.GenerateFindExtensions & FindTypes.FindQueryByPkOnTable      ) != 0, (_t4ModeOptions.DataModel.GenerateFindExtensions & FindTypes.FindQueryByPkOnTable      ) != 0, "query-pk-table"      , "generate entity query extension on table object with primary key parameters    : IQueryable<Entity> FindQuery(this ITable<Entity> table, pk_fields)"),
-					new StringEnumOption((_defaultOptions.DataModel.GenerateFindExtensions & FindTypes.FindByPkOnContext         ) != 0, (_t4ModeOptions.DataModel.GenerateFindExtensions & FindTypes.FindByPkOnContext         ) != 0, "sync-pk-context"     , "generate sync entity load extension on table object with primary key parameters: Entity?            Find     (this DataContext    db   , pk_fields)"),
-					new StringEnumOption((_defaultOptions.DataModel.GenerateFindExtensions & FindTypes.FindAsyncByPkOnContext    ) != 0, (_t4ModeOptions.DataModel.GenerateFindExtensions & FindTypes.FindAsyncByPkOnContext    ) != 0, "async-pk-context"    , "generate sync entity load extension on table object with primary key parameters: Task<Entity?>      FindAsync(this DataContext    db   , pk_fields, CancellationToken)"),
-					new StringEnumOption((_defaultOptions.DataModel.GenerateFindExtensions & FindTypes.FindAsyncByPkOnContext    ) != 0, (_t4ModeOptions.DataModel.GenerateFindExtensions & FindTypes.FindAsyncByPkOnContext    ) != 0, "query-pk-context"    , "generate entity query extension on table object with primary key parameters    : IQueryable<Entity> FindQuery(this DataContext    db   , pk_fields)"),
-					new StringEnumOption((_defaultOptions.DataModel.GenerateFindExtensions & FindTypes.FindByRecordOnTable       ) != 0, (_t4ModeOptions.DataModel.GenerateFindExtensions & FindTypes.FindByRecordOnTable       ) != 0, "sync-entity-table"   , "generate sync entity load extension on table object with entity parameter      : Entity?            Find     (this ITable<Entity> table, Entity row)"),
-					new StringEnumOption((_defaultOptions.DataModel.GenerateFindExtensions & FindTypes.FindAsyncByRecordOnTable  ) != 0, (_t4ModeOptions.DataModel.GenerateFindExtensions & FindTypes.FindAsyncByRecordOnTable  ) != 0, "async-entity-table"  , "generate sync entity load extension on table object with entity parameter      : Task<Entity?>      FindAsync(this ITable<Entity> table, Entity row, CancellationToken)"),
-					new StringEnumOption((_defaultOptions.DataModel.GenerateFindExtensions & FindTypes.FindQueryByRecordOnTable  ) != 0, (_t4ModeOptions.DataModel.GenerateFindExtensions & FindTypes.FindQueryByRecordOnTable  ) != 0, "query-entity-table"  , "generate entity query extension on table object with entity parameter          : IQueryable<Entity> FindQuery(this ITable<Entity> table, Entity row)"),
-					new StringEnumOption((_defaultOptions.DataModel.GenerateFindExtensions & FindTypes.FindByRecordOnContext     ) != 0, (_t4ModeOptions.DataModel.GenerateFindExtensions & FindTypes.FindByRecordOnContext     ) != 0, "sync-entity-context" , "generate sync entity load extension on generated context with entity parameter : Entity?            Find     (this DataContext>   db   , Entity row)"),
-					new StringEnumOption((_defaultOptions.DataModel.GenerateFindExtensions & FindTypes.FindAsyncByRecordOnContext) != 0, (_t4ModeOptions.DataModel.GenerateFindExtensions & FindTypes.FindAsyncByRecordOnContext) != 0, "async-entity-context", "generate sync entity load extension on generated context with entity parameter : Task<Entity?>      FindAsync(this DataContext    db   , Entity row, CancellationToken)"),
-					new StringEnumOption((_defaultOptions.DataModel.GenerateFindExtensions & FindTypes.FindQueryByRecordOnContext) != 0, (_t4ModeOptions.DataModel.GenerateFindExtensions & FindTypes.FindQueryByRecordOnContext) != 0, "query-entity-context", "generate entity query extension on generated context with entity parameter     : IQueryable<Entity> FindQuery(this DataContext    db   , Entity row)"));
+					new StringEnumOption( _defaultOptions.DataModel.GenerateFindExtensions                                         == 0                                   ,  _t4ModeOptions.DataModel.GenerateFindExtensions                                         == 0                                   , "none"                , "disable generation of Find extensions. Cannot be used with other values"),
+					new StringEnumOption((_defaultOptions.DataModel.GenerateFindExtensions & FindTypes.FindByPkOnTable           ) == FindTypes.FindByPkOnTable           , (_t4ModeOptions.DataModel.GenerateFindExtensions & FindTypes.FindByPkOnTable           ) == FindTypes.FindByPkOnTable           , "sync-pk-table"       , "generate sync entity load extension on table object with primary key parameters: Entity?            Find     (this ITable<Entity> table, pk_fields)"),
+					new StringEnumOption((_defaultOptions.DataModel.GenerateFindExtensions & FindTypes.FindAsyncByPkOnTable      ) == FindTypes.FindAsyncByPkOnTable      , (_t4ModeOptions.DataModel.GenerateFindExtensions & FindTypes.FindAsyncByPkOnTable      ) == FindTypes.FindAsyncByPkOnTable      , "async-pk-table"      , "generate sync entity load extension on table object with primary key parameters: Task<Entity?>      FindAsync(this ITable<Entity> table, pk_fields, CancellationToken)"),
+					new StringEnumOption((_defaultOptions.DataModel.GenerateFindExtensions & FindTypes.FindQueryByPkOnTable      ) == FindTypes.FindQueryByPkOnTable      , (_t4ModeOptions.DataModel.GenerateFindExtensions & FindTypes.FindQueryByPkOnTable      ) == FindTypes.FindQueryByPkOnTable      , "query-pk-table"      , "generate entity query extension on table object with primary key parameters    : IQueryable<Entity> FindQuery(this ITable<Entity> table, pk_fields)"),
+					new StringEnumOption((_defaultOptions.DataModel.GenerateFindExtensions & FindTypes.FindByPkOnContext         ) == FindTypes.FindByPkOnContext         , (_t4ModeOptions.DataModel.GenerateFindExtensions & FindTypes.FindByPkOnContext         ) == FindTypes.FindByPkOnContext         , "sync-pk-context"     , "generate sync entity load extension on table object with primary key parameters: Entity?            Find     (this DataContext    db   , pk_fields)"),
+					new StringEnumOption((_defaultOptions.DataModel.GenerateFindExtensions & FindTypes.FindAsyncByPkOnContext    ) == FindTypes.FindAsyncByPkOnContext    , (_t4ModeOptions.DataModel.GenerateFindExtensions & FindTypes.FindAsyncByPkOnContext    ) == FindTypes.FindAsyncByPkOnContext    , "async-pk-context"    , "generate sync entity load extension on table object with primary key parameters: Task<Entity?>      FindAsync(this DataContext    db   , pk_fields, CancellationToken)"),
+					new StringEnumOption((_defaultOptions.DataModel.GenerateFindExtensions & FindTypes.FindQueryByPkOnContext    ) == FindTypes.FindQueryByPkOnContext    , (_t4ModeOptions.DataModel.GenerateFindExtensions & FindTypes.FindQueryByPkOnContext    ) == FindTypes.FindQueryByPkOnContext    , "query-pk-context"    , "generate entity query extension on table object with primary key parameters    : IQueryable<Entity> FindQuery(this DataContext    db   , pk_fields)"),
+					new StringEnumOption((_defaultOptions.DataModel.GenerateFindExtensions & FindTypes.FindByRecordOnTable       ) == FindTypes.FindByRecordOnTable       , (_t4ModeOptions.DataModel.GenerateFindExtensions & FindTypes.FindByRecordOnTable       ) == FindTypes.FindByRecordOnTable       , "sync-entity-table"   , "generate sync entity load extension on table object with entity parameter      : Entity?            Find     (this ITable<Entity> table, Entity row)"),
+					new StringEnumOption((_defaultOptions.DataModel.GenerateFindExtensions & FindTypes.FindAsyncByRecordOnTable  ) == FindTypes.FindAsyncByRecordOnTable  , (_t4ModeOptions.DataModel.GenerateFindExtensions & FindTypes.FindAsyncByRecordOnTable  ) == FindTypes.FindAsyncByRecordOnTable  , "async-entity-table"  , "generate sync entity load extension on table object with entity parameter      : Task<Entity?>      FindAsync(this ITable<Entity> table, Entity row, CancellationToken)"),
+					new StringEnumOption((_defaultOptions.DataModel.GenerateFindExtensions & FindTypes.FindQueryByRecordOnTable  ) == FindTypes.FindQueryByRecordOnTable  , (_t4ModeOptions.DataModel.GenerateFindExtensions & FindTypes.FindQueryByRecordOnTable  ) == FindTypes.FindQueryByRecordOnTable  , "query-entity-table"  , "generate entity query extension on table object with entity parameter          : IQueryable<Entity> FindQuery(this ITable<Entity> table, Entity row)"),
+					new StringEnumOption((_defaultOptions.DataModel.GenerateFindExtensions & FindTypes.FindByRecordOnContext     ) == FindTypes.FindByRecordOnContext     , (_t4ModeOptions.DataModel.GenerateFindExtensions & FindTypes.FindByRecordOnContext     ) == FindTypes.FindByRecordOnContext     , "sync-entity-context" , "generate sync entity load extension on generated context with entity parameter : Entity?            Find     (this DataContext>   db   , Entity row)"),
+					new StringEnumOption((_defaultOptions.DataModel.GenerateFindExtensions & FindTypes.FindAsyncByRecordOnContext) == FindTypes.FindAsyncByRecordOnContext, (_t4ModeOptions.DataModel.GenerateFindExtensions & FindTypes.FindAsyncByRecordOnContext) == FindTypes.FindAsyncByRecordOnContext, "async-entity-context", "generate sync entity load extension on generated context with entity parameter : Task<Entity?>      FindAsync(this DataContext    db   , Entity row, CancellationToken)"),
+					new StringEnumOption((_defaultOptions.DataModel.GenerateFindExtensions & FindTypes.FindQueryByRecordOnContext) == FindTypes.FindQueryByRecordOnContext, (_t4ModeOptions.DataModel.GenerateFindExtensions & FindTypes.FindQueryByRecordOnContext) == FindTypes.FindQueryByRecordOnContext, "query-entity-context", "generate entity query extension on generated context with entity parameter     : IQueryable<Entity> FindQuery(this DataContext    db   , Entity row)"));
 
 			/// <summary>
 			/// Order Find extension method parameters by primary key column ordinal instead of order by parameter name option.
@@ -919,7 +974,7 @@ If you don't specify some property, CLI will use default value for current optio
 				"entity class naming options",
 				_defaultOptions.DataModel.EntityClassNameOptions,
 				_t4ModeOptions.DataModel.EntityClassNameOptions);
-			
+
 			/// <summary>
 			/// Entity column property naming option.
 			/// </summary>
@@ -928,7 +983,7 @@ If you don't specify some property, CLI will use default value for current optio
 				"entity column properties naming options",
 				_defaultOptions.DataModel.EntityColumnPropertyNameOptions,
 				_t4ModeOptions.DataModel.EntityColumnPropertyNameOptions);
-			
+
 			/// <summary>
 			/// Entity data context property naming option.
 			/// </summary>
@@ -946,7 +1001,7 @@ If you don't specify some property, CLI will use default value for current optio
 				"association property or extension method naming options",
 				_defaultOptions.DataModel.SourceAssociationPropertyNameOptions,
 				_t4ModeOptions.DataModel.SourceAssociationPropertyNameOptions);
-			
+
 			/// <summary>
 			/// Association back reference property/method naming option for non-many cardinality association.
 			/// </summary>
@@ -973,7 +1028,7 @@ If you don't specify some property, CLI will use default value for current optio
 				"procedure or function method naming options",
 				_defaultOptions.DataModel.ProcedureNameOptions,
 				_t4ModeOptions.DataModel.ProcedureNameOptions);
-			
+
 			/// <summary>
 			/// Stored procedure or function mapping method parameters naming option.
 			/// </summary>
@@ -982,7 +1037,7 @@ If you don't specify some property, CLI will use default value for current optio
 				"procedure or function method parameters naming options",
 				_defaultOptions.DataModel.ProcedureParameterNameOptions,
 				_t4ModeOptions.DataModel.ProcedureParameterNameOptions);
-			
+
 			/// <summary>
 			/// Stored procedure or table function result-set record class naming option.
 			/// </summary>
@@ -1022,16 +1077,7 @@ If you don't specify some property, CLI will use default value for current optio
 				"procedure or table function custom result record column property naming options. You probably don't want to specify this option, as it used for field with private visibility.",
 				_defaultOptions.DataModel.ProcedureResultColumnPropertyNameOptions,
 				_t4ModeOptions.DataModel.ProcedureResultColumnPropertyNameOptions);
-			
-			/// <summary>
-			/// Table function <see cref="MethodInfo"/> field naming option.
-			/// </summary>
-			public static readonly CliOption TableFunctionMethodInfoNaming = DefineNamingOption(
-				"table-function-methodinfo-field-name",
-				"table function FieldInfo field naming options",
-				_defaultOptions.DataModel.TableFunctionMethodInfoFieldNameOptions,
-				_t4ModeOptions.DataModel.TableFunctionMethodInfoFieldNameOptions);
-			
+
 			/// <summary>
 			/// Scalar function with tuple return type tuple mapping class naming option.
 			/// </summary>
@@ -1058,7 +1104,7 @@ If you don't specify some property, CLI will use default value for current optio
 				"non-default schema wrapper class naming options",
 				_defaultOptions.DataModel.SchemaClassNameOptions,
 				_t4ModeOptions.DataModel.SchemaClassNameOptions);
-			
+
 			/// <summary>
 			/// Non-default schema data context property naming option.
 			/// </summary>
@@ -1083,7 +1129,7 @@ If you don't specify some property, CLI will use default value for current optio
 					option,
 					help,
 					NAMING_HELP,
-					new[] { string.Format(NAMING_EXAMPLE_TEMPLATE, option) },
+					new[] { string.Format(CultureInfo.InvariantCulture, NAMING_EXAMPLE_TEMPLATE, option) },
 					defaults,
 					t4defaults);
 			}
@@ -1092,7 +1138,7 @@ If you don't specify some property, CLI will use default value for current optio
 		/// <summary>
 		/// Provides access to database schema scaffold options definitions.
 		/// </summary>
-		public static class SchemaOptions
+		internal static class SchemaOptions
 		{
 			/// <summary>
 			/// Schema objects to load option.
@@ -1175,6 +1221,25 @@ If you don't specify some property, CLI will use default value for current optio
 					null);
 
 			/// <summary>
+			/// Explicit list of schemas to load option.
+			/// </summary>
+			public static readonly CliOption DefaultSchemas = new StringCliOption(
+					"default-schemas",
+					null,
+					false,
+					true,
+					"specify which schemas should be recognized as default schemas",
+					@"Objects from schemas, marked as default, will be:
+  - put to main data context instead of separate schema-specific class (see also schema-as-type option)
+  - will skip generation of schema name in metadata (see also include-default-schema-name option)
+
+When this option is not set, CLI tool use database-specific logic to detect default schema. Usually it is current user/schema name associated with connection string, used for database scaffolding and supports only one schema. Using this option you can specify multiple schemas.",
+					null,
+					null,
+					_defaultOptions.Schema.DefaultSchemas?.ToArray(),
+					_t4ModeOptions.Schema.DefaultSchemas?.ToArray());
+
+			/// <summary>
 			/// Explicit list of catalogs/databases for schema load option.
 			/// </summary>
 			public static readonly CliOption IncludedCatalogs = new StringCliOption(
@@ -1217,6 +1282,20 @@ If you don't specify some property, CLI will use default value for current optio
 					null,
 					_defaultOptions.Schema.LoadDatabaseName,
 					_t4ModeOptions.Schema.LoadDatabaseName);
+
+			/// <summary>
+			/// Don't load history tables for SQL Server temporal tables.
+			/// </summary>
+			public static readonly CliOption IgnoreSystemHistoryTables = new BooleanCliOption(
+					"mssql-ignore-temporal-history-tables",
+					null,
+					false,
+					"ignore history tables for SQL Server temporal tables (SQL Server 2016+ only)",
+					null,
+					null,
+					null,
+					_defaultOptions.Schema.IgnoreSystemHistoryTables,
+					_t4ModeOptions.Schema.IgnoreSystemHistoryTables);
 
 			/// <summary>
 			/// Use only safe schema load methods to load table function and store procedure result-set schema option.
@@ -1294,7 +1373,7 @@ string // also you can put table name as string directly to list
 						/*lang=json*/
 						"{ \"schema\": { \"include-tables\": [ \"Users\", { \"name\": \"Roles\", \"schema\": \"dbo\" } ] } } // Users and dbo.Roles tables",
 						/*lang=json*/
-						"{ \"schema\": { \"include-tables\": [ { \"regex\": \"^audit_.$+\", \"schema\": \"dbo\" } ] } } // all tables starting from audit_ prefix"
+						"{ \"schema\": { \"include-tables\": [ { \"regex\": \"^audit_.+$\", \"schema\": \"dbo\" } ] } } // all tables starting from audit_ prefix"
 					});
 
 			/// <summary>
@@ -1331,7 +1410,7 @@ string // also you can put table name as string directly to list
 						/*lang=json*/
 						"{ \"schema\": { \"exclude-tables\": [ \"Users\", { \"name\": \"Roles\", \"schema\": \"dbo\" } ] } } // Users and dbo.Roles tables ignored",
 						/*lang=json*/
-						"{ \"schema\": { \"exclude-tables\": [ { \"regex\": \"^audit_.$+\", \"schema\": \"dbo\" } ] } } // all tables starting from audit_ prefix ignored"
+						"{ \"schema\": { \"exclude-tables\": [ { \"regex\": \"^audit_.+$\", \"schema\": \"dbo\" } ] } } // all tables starting from audit_ prefix ignored"
 					});
 
 			/// <summary>
@@ -1368,7 +1447,7 @@ string // also you can put view name as string directly to list
 						/*lang=json*/
 						"{ \"schema\": { \"include-views\": [ \"Users\", { \"name\": \"Roles\", \"schema\": \"dbo\" } ] } } // Users and dbo.Roles views",
 						/*lang=json*/
-						"{ \"schema\": { \"include-views\": [ { \"regex\": \"^audit_.$+\", \"schema\": \"dbo\" } ] } } // all views starting from audit_ prefix"
+						"{ \"schema\": { \"include-views\": [ { \"regex\": \"^audit_.+$\", \"schema\": \"dbo\" } ] } } // all views starting from audit_ prefix"
 					});
 
 			/// <summary>
@@ -1405,7 +1484,7 @@ string // also you can put view name as string directly to list
 						/*lang=json*/
 						"{ \"schema\": { \"exclude-views\": [ \"Users\", { \"name\": \"Roles\", \"schema\": \"dbo\" } ] } } // Users and dbo.Roles views ignored",
 						/*lang=json*/
-						"{ \"schema\": { \"exclude-views\": [ { \"regex\": \"^audit_.$+\", \"schema\": \"dbo\" } ] } } // all views starting from audit_ prefix ignored"
+						"{ \"schema\": { \"exclude-views\": [ { \"regex\": \"^audit_.+$\", \"schema\": \"dbo\" } ] } } // all views starting from audit_ prefix ignored"
 					});
 
 			/// <summary>
@@ -1442,7 +1521,7 @@ string // also you can put procedure name as string directly to list
 						/*lang=json*/
 						"{ \"schema\": { \"procedures-with-schema\": [ \"GetUsers\", { \"name\": \"LoadPermissions\", \"schema\": \"dbo\" } ] } } // GetUsers and dbo.LoadPermissions procedures",
 						/*lang=json*/
-						"{ \"schema\": { \"procedures-with-schema\": [ { \"regex\": \"^Load.$+\", \"schema\": \"dbo\" } ] } } // all procedures starting from Load prefix"
+						"{ \"schema\": { \"procedures-with-schema\": [ { \"regex\": \"^Load.+$\", \"schema\": \"dbo\" } ] } } // all procedures starting from Load prefix"
 					});
 
 			/// <summary>
@@ -1479,7 +1558,81 @@ string // also you can put procedure name as string directly to list
 						/*lang=json*/
 						"{ \"schema\": { \"procedures-without-schema\": [ \"DropAllTables\", { \"name\": \"FormatAllDrives\", \"schema\": \"dbo\" } ] } } // DropAllTables and dbo.FormatAllDrives procedures schema not loaded",
 						/*lang=json*/
-						"{ \"schema\": { \"procedures-without-schema\": [ { \"regex\": \"^Delete.$+\", \"schema\": \"dbo\" } ] } } // all procedures starting from Delete prefix"
+						"{ \"schema\": { \"procedures-without-schema\": [ { \"regex\": \"^Delete.+$\", \"schema\": \"dbo\" } ] } } // all procedures starting from Delete prefix"
+					});
+
+			/// <summary>
+			/// Stored procedure load filter option.
+			/// </summary>
+			public static readonly CliOption IncludedStoredProcedures = new ObjectNameFilterCliOption(
+					"include-stored-procedures",
+					null,
+					false,
+					"only load stored procedures with specified name(s)",
+					@"Provided stored procedures names should have same casing as actual procedure name in database. Specifying this option in command line has several limitations and it is recommended to use JSON for it instead:
+  - there is no way to specify schema name for stored procedure;
+  - stored procedure name cannot have comma (,) as it is used as list separator;
+  - only exact match possible;
+JSON allows you to specify more options:
+  - stored procedure schema (schema property);
+  - regular expression (regex property) instead of exact stored procedure name (name property).
+JSON list element schema:
+{
+    ""name""  : string  // stored procedure name
+    ""schema"": string? // stored procedure schema (optional)
+}
+|
+{
+    ""regex"" : string  // stored procedure name matching regular expression
+    ""schema"": string? // stored procedure schema (optional)
+}
+|
+string // also you can put stored procedure name as string directly to list
+",
+					new[] { "--include-stored-procedures GetUsers,GetRoles,LoadPermissions" },
+					new[]
+					{
+						/*lang=json*/
+						"{ \"schema\": { \"include-stored-procedures\": [ \"ActiveUsers\", { \"name\": \"InactiveUsers\", \"schema\": \"dbo\" } ] } } // ActiveUsers and dbo.InactiveUsers procedures",
+						/*lang=json*/
+						"{ \"schema\": { \"include-stored-procedures\": [ { \"regex\": \"^Query.+$\", \"schema\": \"dbo\" } ] } } // all stored procedures starting from Query prefix"
+					});
+
+			/// <summary>
+			/// Stored procedure skip filter option.
+			/// </summary>
+			public static readonly CliOption ExcludedStoredProcedures = new ObjectNameFilterCliOption(
+					"exclude-stored-procedures",
+					null,
+					false,
+					"skip load of stored procedures with specified name(s)",
+					@"Provided stored procedures names should have same casing as actual procedure name in database. Specifying this option in command line has several limitations and it is recommended to use JSON for it instead:
+  - there is no way to specify schema name for stored procedure;
+  - stored procedure name cannot have comma (,) as it is used as list separator;
+  - only exact match possible;
+JSON allows you to specify more options:
+  - stored procedure schema (schema property);
+  - regular expression (regex property) instead of exact stored procedure name (name property).
+JSON list element schema:
+{
+    ""name""  : string  // stored procedure name
+    ""schema"": string? // stored procedure schema (optional)
+}
+|
+{
+    ""regex"" : string  // stored procedure name matching regular expression
+    ""schema"": string? // stored procedure schema  (optional)
+}
+|
+string // also you can put stored procedure name as string directly to list
+",
+					new[] { "--exclude-stored-procedure GetUsers,GetRoles,LoadPermissions" },
+					new[]
+					{
+						/*lang=json*/
+						"{ \"schema\": { \"exclude-stored-procedure\": [ \"TestProcedure\", { \"name\": \"CheckDb\", \"schema\": \"dbo\" } ] } } // TestProcedure and dbo.CheckDb procedures ignored",
+						/*lang=json*/
+						"{ \"schema\": { \"exclude-stored-procedure\": [ { \"regex\": \"^Audit.+$\", \"schema\": \"dbo\" } ] } } // all stored procedures starting from Audit prefix ignored"
 					});
 
 			/// <summary>
@@ -1516,7 +1669,7 @@ string // also you can put table function name as string directly to list
 						/*lang=json*/
 						"{ \"schema\": { \"include-table-functions\": [ \"ActiveUsers\", { \"name\": \"InactiveUsers\", \"schema\": \"dbo\" } ] } } // ActiveUsers and dbo.InactiveUsers functions",
 						/*lang=json*/
-						"{ \"schema\": { \"include-table-functions\": [ { \"regex\": \"^Query.$+\", \"schema\": \"dbo\" } ] } } // all table functions starting from Query prefix"
+						"{ \"schema\": { \"include-table-functions\": [ { \"regex\": \"^Query.+$\", \"schema\": \"dbo\" } ] } } // all table functions starting from Query prefix"
 					});
 
 			/// <summary>
@@ -1553,7 +1706,155 @@ string // also you can put table function name as string directly to list
 						/*lang=json*/
 						"{ \"schema\": { \"exclude-table-functions\": [ \"TestFunction\", { \"name\": \"CheckDb\", \"schema\": \"dbo\" } ] } } // TestFunction and dbo.CheckDb functions ignored",
 						/*lang=json*/
-						"{ \"schema\": { \"exclude-table-functions\": [ { \"regex\": \"^Audit.$+\", \"schema\": \"dbo\" } ] } } // all table functions starting from Audit prefix ignored"
+						"{ \"schema\": { \"exclude-table-functions\": [ { \"regex\": \"^Audit.+$\", \"schema\": \"dbo\" } ] } } // all table functions starting from Audit prefix ignored"
+					});
+
+			/// <summary>
+			/// Scalar function load filter option.
+			/// </summary>
+			public static readonly CliOption IncludedScalarFunctions = new ObjectNameFilterCliOption(
+					"include-scalar-functions",
+					null,
+					false,
+					"only load scalar functions with specified name(s)",
+					@"Provided scalar functions names should have same casing as actual function name in database. Specifying this option in command line has several limitations and it is recommended to use JSON for it instead:
+  - there is no way to specify schema name for scalar function;
+  - scalar function name cannot have comma (,) as it is used as list separator;
+  - only exact match possible;
+JSON allows you to specify more options:
+  - scalar function schema (schema property);
+  - regular expression (regex property) instead of exact scalar function name (name property).
+JSON list element schema:
+{
+    ""name""  : string  // scalar function name
+    ""schema"": string? // scalar function schema (optional)
+}
+|
+{
+    ""regex"" : string  // scalar function name matching regular expression
+    ""schema"": string? // scalar function schema (optional)
+}
+|
+string // also you can put scalar function name as string directly to list
+",
+					new[] { "--include-scalar-functions GetUsers,GetRoles,LoadPermissions" },
+					new[]
+					{
+						/*lang=json*/
+						"{ \"schema\": { \"include-scalar-functions\": [ \"ActiveUsers\", { \"name\": \"InactiveUsers\", \"schema\": \"dbo\" } ] } } // ActiveUsers and dbo.InactiveUsers functions",
+						/*lang=json*/
+						"{ \"schema\": { \"include-scalar-functions\": [ { \"regex\": \"^Query.+$\", \"schema\": \"dbo\" } ] } } // all scalar functions starting from Query prefix"
+					});
+
+			/// <summary>
+			/// Scalar function skip filter option.
+			/// </summary>
+			public static readonly CliOption ExcludedScalarFunctions = new ObjectNameFilterCliOption(
+					"exclude-scalar-functions",
+					null,
+					false,
+					"skip load of scalar functions with specified name(s)",
+					@"Provided scalar functions names should have same casing as actual function name in database. Specifying this option in command line has several limitations and it is recommended to use JSON for it instead:
+  - there is no way to specify schema name for scalar function;
+  - scalar function name cannot have comma (,) as it is used as list separator;
+  - only exact match possible;
+JSON allows you to specify more options:
+  - scalar function schema (schema property);
+  - regular expression (regex property) instead of exact scalar function name (name property).
+JSON list element schema:
+{
+    ""name""  : string  // scalar function name
+    ""schema"": string? // scalar function schema (optional)
+}
+|
+{
+    ""regex"" : string  // scalar function name matching regular expression
+    ""schema"": string? // scalar function schema  (optional)
+}
+|
+string // also you can put scalar function name as string directly to list
+",
+					new[] { "--exclude-scalar-functions GetUsers,GetRoles,LoadPermissions" },
+					new[]
+					{
+						/*lang=json*/
+						"{ \"schema\": { \"exclude-scalar-functions\": [ \"TestFunction\", { \"name\": \"CheckDb\", \"schema\": \"dbo\" } ] } } // TestFunction and dbo.CheckDb functions ignored",
+						/*lang=json*/
+						"{ \"schema\": { \"exclude-scalar-functions\": [ { \"regex\": \"^Audit.+$\", \"schema\": \"dbo\" } ] } } // all scalar functions starting from Audit prefix ignored"
+					});
+
+			/// <summary>
+			/// Aggregate function load filter option.
+			/// </summary>
+			public static readonly CliOption IncludedAggregateFunctions = new ObjectNameFilterCliOption(
+					"include-aggregate-functions",
+					null,
+					false,
+					"only load aggregate functions with specified name(s)",
+					@"Provided aggregate functions names should have same casing as actual function name in database. Specifying this option in command line has several limitations and it is recommended to use JSON for it instead:
+  - there is no way to specify schema name for aggregate function;
+  - aggregate function name cannot have comma (,) as it is used as list separator;
+  - only exact match possible;
+JSON allows you to specify more options:
+  - aggregate function schema (schema property);
+  - regular expression (regex property) instead of exact aggregate function name (name property).
+JSON list element schema:
+{
+    ""name""  : string  // aggregate function name
+    ""schema"": string? // aggregate function schema (optional)
+}
+|
+{
+    ""regex"" : string  // aggregate function name matching regular expression
+    ""schema"": string? // aggregate function schema (optional)
+}
+|
+string // also you can put aggregateaggregate function name as string directly to list
+",
+					new[] { "--include-aggregate-functions GetUsers,GetRoles,LoadPermissions" },
+					new[]
+					{
+						/*lang=json*/
+						"{ \"schema\": { \"include-aggregate-functions\": [ \"ActiveUsers\", { \"name\": \"InactiveUsers\", \"schema\": \"dbo\" } ] } } // ActiveUsers and dbo.InactiveUsers functions",
+						/*lang=json*/
+						"{ \"schema\": { \"include-aggregate-functions\": [ { \"regex\": \"^Query.+$\", \"schema\": \"dbo\" } ] } } // all aggregate functions starting from Query prefix"
+					});
+
+			/// <summary>
+			/// Aggregate function skip filter option.
+			/// </summary>
+			public static readonly CliOption ExcludedAggregateFunctions = new ObjectNameFilterCliOption(
+					"exclude-aggregate-functions",
+					null,
+					false,
+					"skip load of aggregate functions with specified name(s)",
+					@"Provided aggregate functions names should have same casing as actual function name in database. Specifying this option in command line has several limitations and it is recommended to use JSON for it instead:
+  - there is no way to specify schema name for aggregate function;
+  - aggregate function name cannot have comma (,) as it is used as list separator;
+  - only exact match possible;
+JSON allows you to specify more options:
+  - aggregate function schema (schema property);
+  - regular expression (regex property) instead of exact aggregate function name (name property).
+JSON list element schema:
+{
+    ""name""  : string  // aggregate function name
+    ""schema"": string? // aggregate function schema (optional)
+}
+|
+{
+    ""regex"" : string  // aggregate function name matching regular expression
+    ""schema"": string? // aggregate function schema  (optional)
+}
+|
+string // also you can put aggregate function name as string directly to list
+",
+					new[] { "--exclude-aggregate-functions GetUsers,GetRoles,LoadPermissions" },
+					new[]
+					{
+						/*lang=json*/
+						"{ \"schema\": { \"exclude-aggregate-functions\": [ \"TestFunction\", { \"name\": \"CheckDb\", \"schema\": \"dbo\" } ] } } // TestFunction and dbo.CheckDb functions ignored",
+						/*lang=json*/
+						"{ \"schema\": { \"exclude-aggregate-functions\": [ { \"regex\": \"^Audit.+$\", \"schema\": \"dbo\" } ] } } // all aggregate functions starting from Audit prefix ignored"
 					});
 		}
 
@@ -1570,7 +1871,11 @@ string // also you can put table function name as string directly to list
 			SqlCe,
 			SQLite,
 			Sybase,
-			SapHana
+			SapHana,
+			// all three ClickHouse clients used as we don't know which protocol available for user
+			ClickHouseMySql,
+			ClickHouseHttp,
+			ClickHouseTcp,
 		}
 
 		public static CliCommand Instance { get; } = new ScaffoldCommand();

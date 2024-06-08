@@ -25,7 +25,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void Test([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		public void Test([IncludeDataSources(TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db    = GetDataContext(context))
 			using (var table = db.CreateLocalTable(Issue1977Table.TestData))
@@ -52,7 +52,7 @@ namespace Tests.UserTests
 					}
 				);
 
-				Assert.True(itemsQuery.ToArray().All(r => r.equals));
+				Assert.That(itemsQuery.ToArray().All(r => r.equals), Is.True);
 			}
 		}
 	}

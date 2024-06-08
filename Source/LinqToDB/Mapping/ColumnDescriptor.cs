@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -15,6 +16,7 @@ namespace LinqToDB.Mapping
 	/// <summary>
 	/// Stores mapping entity column descriptor.
 	/// </summary>
+	[DebuggerDisplay("Member:{MemberName}, Column:'{ColumnName}'")]
 	public class ColumnDescriptor : IColumnChangeDescriptor
 	{
 		/// <summary>
@@ -43,43 +45,38 @@ namespace LinqToDB.Mapping
 				var propertyInfo = (PropertyInfo)MemberInfo;
 				MemberType       = propertyInfo.PropertyType;
 			}
+			else
+				throw new LinqToDBException($"Column should be mapped to property of field. Was: {MemberInfo.GetType()}.");
 
 			var dataType = mappingSchema.GetDataType(MemberType);
 			if (dataType.Type.DataType == DataType.Undefined)
 				dataType = mappingSchema.GetUnderlyingDataType(MemberType, out var _);
 
-			if (columnAttribute == null)
+			MemberName        = columnAttribute?.MemberName ?? MemberInfo.Name;
+			ColumnName        = columnAttribute?.Name       ?? MemberInfo.Name;
+			Storage           = columnAttribute?.Storage;
+			PrimaryKeyOrder   = columnAttribute?.PrimaryKeyOrder   ?? 0;
+			IsDiscriminator   = columnAttribute?.IsDiscriminator   ?? false;
+			SkipOnEntityFetch = columnAttribute?.SkipOnEntityFetch ?? false;
+			DataType          = columnAttribute != null ? columnAttribute.DataType : dataType.Type.DataType;
+			DbType            = columnAttribute != null ? columnAttribute.DbType   : dataType.Type.DbType;
+			CreateFormat      = columnAttribute?.CreateFormat;
+
+			if (columnAttribute == null || (columnAttribute.DataType == DataType.Undefined || columnAttribute.DataType == dataType.Type.DataType))
 			{
-				columnAttribute = new ColumnAttribute();
-
-				columnAttribute.DataType  = dataType.Type.DataType;
-				columnAttribute.DbType    = dataType.Type.DbType;
-
-				if (dataType.Type.Length    != null) columnAttribute.Length    = dataType.Type.Length.Value;
-				if (dataType.Type.Precision != null) columnAttribute.Precision = dataType.Type.Precision.Value;
-				if (dataType.Type.Scale     != null) columnAttribute.Scale     = dataType.Type.Scale.Value;
+				Length    = columnAttribute?.HasLength()    != true ? dataType.Type.Length    : columnAttribute.Length;
+				Precision = columnAttribute?.HasPrecision() != true ? dataType.Type.Precision : columnAttribute.Precision;
+				Scale     = columnAttribute?.HasScale()     != true ? dataType.Type.Scale     : columnAttribute.Scale;
 			}
-			else if (columnAttribute.DataType == DataType.Undefined || columnAttribute.DataType == dataType.Type.DataType)
+			else
 			{
-				if (dataType.Type.Length    != null && !columnAttribute.HasLength())    columnAttribute.Length    = dataType.Type.Length.Value;
-				if (dataType.Type.Precision != null && !columnAttribute.HasPrecision()) columnAttribute.Precision = dataType.Type.Precision.Value;
-				if (dataType.Type.Scale     != null && !columnAttribute.HasScale())     columnAttribute.Scale     = dataType.Type.Scale.Value;
+				if (columnAttribute.HasLength())    Length    = columnAttribute.Length;
+				if (columnAttribute.HasPrecision()) Precision = columnAttribute.Precision;
+				if (columnAttribute.HasScale())     Scale     = columnAttribute.Scale;
 			}
 
-			MemberName        = columnAttribute.MemberName ?? MemberInfo.Name;
-			ColumnName        = columnAttribute.Name       ?? MemberInfo.Name;
-			Storage           = columnAttribute.Storage;
-			PrimaryKeyOrder   = columnAttribute.PrimaryKeyOrder;
-			IsDiscriminator   = columnAttribute.IsDiscriminator;
-			SkipOnEntityFetch = columnAttribute.SkipOnEntityFetch;
-			DataType          = columnAttribute.DataType;
-			DbType            = columnAttribute.DbType;
-			CreateFormat      = columnAttribute.CreateFormat;
-
-			if (columnAttribute.HasLength   ()) Length    = columnAttribute.Length;
-			if (columnAttribute.HasPrecision()) Precision = columnAttribute.Precision;
-			if (columnAttribute.HasScale    ()) Scale     = columnAttribute.Scale;
-			if (columnAttribute.HasOrder    ()) Order     = columnAttribute.Order;
+			if (columnAttribute?.HasOrder() == true)
+				Order = columnAttribute.Order;
 
 			if (Storage == null)
 			{
@@ -93,52 +90,32 @@ namespace LinqToDB.Mapping
 				StorageInfo = expr.Member;
 			}
 
-			var defaultCanBeNull = false;
-
-			if (columnAttribute.HasCanBeNull())
-				CanBeNull = columnAttribute.CanBeNull;
-			else
-			{
-				var na = mappingSchema.GetAttribute<NullableAttribute>(MemberAccessor.TypeAccessor.Type, MemberInfo, attr => attr.Configuration);
-
-				if (na != null)
-				{
-					CanBeNull = na.CanBeNull;
-				}
-				else
-				{
-					CanBeNull        = mappingSchema.GetCanBeNull(MemberType);
-					defaultCanBeNull = true;
-				}
-			}
-
-			if (columnAttribute.HasIsIdentity())
+			if (columnAttribute?.HasIsIdentity() == true)
 			{
 				IsIdentity = columnAttribute.IsIdentity;
 			}
 			else if (MemberName.IndexOf(".") < 0)
 			{
-				var a = mappingSchema.GetAttribute<IdentityAttribute>(MemberAccessor.TypeAccessor.Type, MemberInfo, attr => attr.Configuration);
-				if (a != null)
+				var hasIdentity = mappingSchema.HasAttribute<IdentityAttribute>(MemberAccessor.TypeAccessor.Type, MemberInfo);
+				if (hasIdentity)
 					IsIdentity = true;
 			}
 
-			SequenceName = mappingSchema.GetAttribute<SequenceNameAttribute>(memberAccessor.TypeAccessor.Type, MemberInfo, attr => attr.Configuration);
+			SequenceName = mappingSchema.GetAttribute<SequenceNameAttribute>(memberAccessor.TypeAccessor.Type, MemberInfo);
 
 			if (SequenceName != null)
 				IsIdentity = true;
 
-			SkipOnInsert = columnAttribute.HasSkipOnInsert() ? columnAttribute.SkipOnInsert : IsIdentity;
-			SkipOnUpdate = columnAttribute.HasSkipOnUpdate() ? columnAttribute.SkipOnUpdate : IsIdentity;
+			SkipOnInsert = columnAttribute?.HasSkipOnInsert() == true ? columnAttribute.SkipOnInsert : IsIdentity;
+			SkipOnUpdate = columnAttribute?.HasSkipOnUpdate() == true ? columnAttribute.SkipOnUpdate : IsIdentity;
 
-			if (defaultCanBeNull && IsIdentity)
-				CanBeNull = false;
+			CanBeNull = AnalyzeCanBeNull(columnAttribute);
 
-			if (columnAttribute.HasIsPrimaryKey())
+			if (columnAttribute?.HasIsPrimaryKey() == true)
 				IsPrimaryKey = columnAttribute.IsPrimaryKey;
 			else if (MemberName.IndexOf(".") < 0)
 			{
-				var a = mappingSchema.GetAttribute<PrimaryKeyAttribute>(MemberAccessor.TypeAccessor.Type, MemberInfo, attr => attr.Configuration);
+				var a = mappingSchema.GetAttribute<PrimaryKeyAttribute>(MemberAccessor.TypeAccessor.Type, MemberInfo);
 
 				if (a != null)
 				{
@@ -149,30 +126,47 @@ namespace LinqToDB.Mapping
 
 			if (DbType == null || DataType == DataType.Undefined)
 			{
-				var a = mappingSchema.GetAttribute<DataTypeAttribute>(MemberAccessor.TypeAccessor.Type, MemberInfo, attr => attr.Configuration);
+				var a = mappingSchema.GetAttribute<DataTypeAttribute>(MemberAccessor.TypeAccessor.Type, MemberInfo);
 
 				if (a != null)
 				{
-					if (DbType == null)
-						DbType = a.DbType;
+					DbType ??= a.DbType;
 
 					if (DataType == DataType.Undefined && a.DataType.HasValue)
 						DataType = a.DataType.Value;
 				}
 			}
 
-			var vc = mappingSchema.GetAttribute<ValueConverterAttribute>(memberAccessor.TypeAccessor.Type, MemberInfo, attr => attr.Configuration);
+			var vc = mappingSchema.GetAttribute<ValueConverterAttribute>(memberAccessor.TypeAccessor.Type, MemberInfo);
 			if (vc != null)
 			{
 				ValueConverter = vc.GetValueConverter(this);
 			}
 
-			var skipValueAttributes = mappingSchema.GetAttributes<SkipBaseAttribute>(MemberAccessor.TypeAccessor.Type, MemberInfo, attr => attr.Configuration);
+			var skipValueAttributes = mappingSchema.GetAttributes<SkipBaseAttribute>(MemberAccessor.TypeAccessor.Type, MemberInfo);
 			if (skipValueAttributes.Length > 0)
 			{
 				SkipBaseAttributes    = skipValueAttributes;
 				SkipModificationFlags = SkipBaseAttributes.Aggregate(SkipModification.None, (s, c) => s | c.Affects);
 			}
+		}
+
+		private bool AnalyzeCanBeNull(ColumnAttribute? columnAttribute)
+		{
+			if (columnAttribute?.HasCanBeNull() == true)
+				return columnAttribute.CanBeNull;
+
+			var na = MappingSchema.GetAttribute<NullableAttribute>(MemberAccessor.TypeAccessor.Type, MemberInfo);
+			if (na != null)
+				return na.CanBeNull;
+
+			if (Configuration.UseNullableTypesMetadata && Nullability.TryAnalyzeMember(MemberInfo, out var isNullable))
+				return isNullable;
+
+			if (IsIdentity)
+				return false;
+
+			return MappingSchema.GetCanBeNull(MemberType);
 		}
 
 		/// <summary>
@@ -208,7 +202,7 @@ namespace LinqToDB.Mapping
 		/// <summary>
 		/// Gets type of column mapping member (field or property).
 		/// </summary>
-		public Type           MemberType      { get; } = null!;
+		public Type           MemberType      { get; }
 
 		/// <summary>
 		/// Gets type of column value storage member (field or property).
@@ -407,7 +401,6 @@ namespace LinqToDB.Mapping
 		/// Gets value converter for specific column.
 		/// </summary>
 		public IValueConverter? ValueConverter  { get; }
-
 		LambdaExpression?    _getOriginalValueLambda;
 
 		LambdaExpression?    _getDbValueLambda;
@@ -423,17 +416,15 @@ namespace LinqToDB.Mapping
 		/// <returns></returns>
 		public DbDataType GetDbDataType(bool completeDataType)
 		{
-			var systemType = MemberType;
-			var dataType   = DataType;
+			var systemType         = MemberType;
+			var dataType           = DataType;
+			DbDataType? dbDataType = null;
 
 			if (completeDataType && dataType == DataType.Undefined)
-			{
-				dataType = CalculateDataType(MappingSchema, systemType);
-			}
+				dbDataType = CalculateDbDataType(MappingSchema, systemType);
 
-			return new DbDataType(systemType, dataType, DbType, Length, Precision, Scale);
+			return new DbDataType(systemType, dbDataType?.DataType ?? dataType, DbType ?? dbDataType?.DbType, Length ?? dbDataType?.Length, Precision ?? dbDataType?.Precision, Scale ?? dbDataType?.Scale);
 		}
-
 
 		/// <summary>
 		/// Returns DbDataType for current column after conversions.
@@ -478,44 +469,43 @@ namespace LinqToDB.Mapping
 			return dbDataType;
 		}
 
-		public static DataType CalculateDataType(MappingSchema mappingSchema, Type systemType)
+		public static DbDataType CalculateDbDataType(MappingSchema mappingSchema, Type systemType)
 		{
-			var dataType = DataType.Undefined;
+			DbDataType dbDataType = default;
+
 			if (systemType.ToNullableUnderlying().IsEnum)
 			{
 				var enumType = mappingSchema.GetDefaultFromEnumType(systemType);
 
 				if (enumType != null)
-					dataType = mappingSchema.GetDataType(enumType).Type.DataType;
+					dbDataType = mappingSchema.GetDataType(enumType).Type;
 
-				if (dataType == DataType.Undefined && systemType.IsNullable())
+				if (dbDataType.DataType == DataType.Undefined && systemType.IsNullable())
 				{
 					enumType = mappingSchema.GetDefaultFromEnumType(systemType.ToNullableUnderlying());
 
 					if (enumType != null)
-						dataType = mappingSchema.GetDataType(enumType).Type.DataType;
+						dbDataType = mappingSchema.GetDataType(enumType).Type;
 				}
 
-				if (dataType == DataType.Undefined)
+				if (dbDataType.DataType == DataType.Undefined)
 				{
 					enumType = mappingSchema.GetDefaultFromEnumType(typeof(Enum));
 
 					if (enumType != null)
-						dataType = mappingSchema.GetDataType(enumType).Type.DataType;
+						dbDataType = mappingSchema.GetDataType(enumType).Type;
 				}
 
-				if (dataType == DataType.Undefined)
-				{
-					dataType = mappingSchema.GetUnderlyingDataType(systemType, out var canBeNull).Type.DataType;
-				}
+				if (dbDataType.DataType == DataType.Undefined)
+					dbDataType = mappingSchema.GetUnderlyingDataType(systemType, out var canBeNull).Type;
 			}
 
-			if (dataType == DataType.Undefined)
-				dataType = mappingSchema.GetDataType(systemType).Type.DataType;
-			if (dataType == DataType.Undefined)
-				dataType = mappingSchema.GetUnderlyingDataType(systemType, out var _).Type.DataType;
+			if (dbDataType.DataType == DataType.Undefined)
+				dbDataType = mappingSchema.GetDataType(systemType).Type;
+			if (dbDataType.DataType == DataType.Undefined)
+				dbDataType = mappingSchema.GetUnderlyingDataType(systemType, out var _).Type;
 
-			return dataType;
+			return dbDataType.WithSystemType(systemType);
 		}
 
 		/// <summary>
@@ -528,7 +518,7 @@ namespace LinqToDB.Mapping
 				return _getOriginalValueLambda;
 
 			var objParam   = Expression.Parameter(MemberAccessor.TypeAccessor.Type, "obj");
-			var getterExpr = MemberAccessor.GetterExpression.GetBody(objParam);
+			var getterExpr = MemberAccessor.GetGetterExpression(objParam);
 
 			_getOriginalValueLambda = Expression.Lambda(getterExpr, objParam);
 			return _getOriginalValueLambda;
@@ -593,26 +583,14 @@ namespace LinqToDB.Mapping
 				return _getDbParamLambda;
 
 			var objParam   = Expression.Parameter(MemberAccessor.TypeAccessor.Type, "obj");
-			var getterExpr = MemberAccessor.GetterExpression.GetBody(objParam);
+			var getterExpr = MemberAccessor.GetGetterExpression(objParam);
 			var dbDataType = GetDbDataType(true);
 
 			if (IsDiscriminator && MemberAccessor.HasSetter)
 			{
 				var param = Expression.Parameter(getterExpr.Type, "v");
 
-				var current = EntityDescriptor;
-				do
-				{
-					if (current.InheritanceMapping.Count > 0)
-						break;
-
-					if (current.ObjectType.BaseType == typeof(object) || current.ObjectType.BaseType == null)
-						break;
-
-					current = MappingSchema.GetEntityDescriptor(current.ObjectType.BaseType!);
-
-				} while (true);
-
+				var current = EntityDescriptor.InheritanceRoot ?? EntityDescriptor;
 
 				if (current.InheritanceMapping.Count > 0)
 				{
@@ -682,7 +660,7 @@ namespace LinqToDB.Mapping
 		public static Expression ApplyConversions(MappingSchema mappingSchema, Expression getterExpr, DbDataType dbDataType, IValueConverter? valueConverter, bool includingEnum)
 		{
 			// search for type preparation converter
-			var prepareConverter = mappingSchema.GetConvertExpression(getterExpr.Type, getterExpr.Type, false, false);
+			var prepareConverter = mappingSchema.GetConvertExpression(getterExpr.Type, getterExpr.Type, false, false, ConversionType.ToDatabase);
 
 			if (prepareConverter != null)
 				getterExpr = InternalExtensions.ApplyLambdaToExpression(prepareConverter, getterExpr);
@@ -695,11 +673,13 @@ namespace LinqToDB.Mapping
 				getterExpr = InternalExtensions.ApplyLambdaToExpression(toProvider, getterExpr);
 			}
 
-			if (!getterExpr.Type.IsSameOrParentOf(typeof(DataParameter)))
+			if (!getterExpr.Type.IsSameOrParentOf(typeof(DataParameter)) || getterExpr.Type == typeof(object))
 			{
 				var convertLambda = mappingSchema.GetConvertExpression(
 					dbDataType.WithSystemType(getterExpr.Type),
-					dbDataType.WithSystemType(typeof(DataParameter)), createDefault: false);
+					dbDataType.WithSystemType(typeof(DataParameter)),
+					createDefault  : false,
+					conversionType : ConversionType.ToDatabase);
 
 				if (convertLambda != null)
 				{
@@ -713,12 +693,14 @@ namespace LinqToDB.Mapping
 						var type = Converter.GetDefaultMappingFromEnumType(mappingSchema, getterExpr.Type);
 						if (type != null)
 						{
-							var enumConverter = mappingSchema.GetConvertExpression(getterExpr.Type, type)!;
+							var enumConverter = mappingSchema.GetConvertExpression(getterExpr.Type, type, conversionType: ConversionType.ToDatabase)!;
 							getterExpr = InternalExtensions.ApplyLambdaToExpression(enumConverter, getterExpr);
 
 							convertLambda = mappingSchema.GetConvertExpression(
 								dbDataType.WithSystemType(getterExpr.Type),
-								dbDataType.WithSystemType(typeof(DataParameter)), createDefault: false);
+								dbDataType.WithSystemType(typeof(DataParameter)),
+								createDefault  : false,
+								conversionType : ConversionType.ToDatabase);
 
 							if (convertLambda != null)
 							{
@@ -761,7 +743,7 @@ namespace LinqToDB.Mapping
 				if (HasInheritanceMapping)
 				{
 					// Additional check that column member belong to proper entity
-					// 
+					//
 					getterExpr = Expression.Condition(Expression.TypeIs(objParam, MemberAccessor.TypeAccessor.Type),
 						getterExpr, GetDefaultDbValueExpression());
 				}

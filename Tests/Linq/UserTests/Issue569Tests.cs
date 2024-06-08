@@ -1,9 +1,11 @@
-﻿namespace Tests.UserTests
-{
-	using System.Linq;
-	using LinqToDB;
-	using NUnit.Framework;
+﻿using System.Linq;
 
+using LinqToDB;
+
+using NUnit.Framework;
+
+namespace Tests.UserTests
+{
 	[TestFixture]
 	public class Issue569Tests : TestBase
 	{
@@ -152,7 +154,7 @@
 						s
 					};
 
-				Assert.AreEqual(rq.Count(), q.Count());
+				Assert.That(q.Count(), Is.EqualTo(rq.Count()));
 			}
 		}
 
@@ -201,7 +203,7 @@
 						s
 					};
 
-				Assert.AreEqual(rq.Count(), q.Count());
+				Assert.That(q.Count(), Is.EqualTo(rq.Count()));
 			}
 		}
 	}

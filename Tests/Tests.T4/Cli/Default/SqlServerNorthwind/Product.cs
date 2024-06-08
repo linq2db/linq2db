@@ -29,10 +29,10 @@ namespace Cli.Default.SqlServerNorthwind
 
 		#region Associations
 		/// <summary>
-		/// FK_Products_Suppliers
+		/// FK_Order_Details_Products backreference
 		/// </summary>
-		[Association(ThisKey = nameof(SupplierId), OtherKey = nameof(SqlServerNorthwind.Supplier.SupplierId))]
-		public Supplier? Supplier { get; set; }
+		[Association(ThisKey = nameof(ProductId), OtherKey = nameof(OrderDetail.ProductId))]
+		public IEnumerable<OrderDetail> OrderDetails { get; set; } = null!;
 
 		/// <summary>
 		/// FK_Products_Categories
@@ -41,10 +41,10 @@ namespace Cli.Default.SqlServerNorthwind
 		public Category? Category { get; set; }
 
 		/// <summary>
-		/// FK_Order_Details_Products backreference
+		/// FK_Products_Suppliers
 		/// </summary>
-		[Association(ThisKey = nameof(ProductId), OtherKey = nameof(OrderDetail.ProductId))]
-		public IEnumerable<OrderDetail> OrderDetails { get; set; } = null!;
+		[Association(ThisKey = nameof(SupplierId), OtherKey = nameof(SqlServerNorthwind.Supplier.SupplierId))]
+		public Supplier? Supplier { get; set; }
 		#endregion
 	}
 }

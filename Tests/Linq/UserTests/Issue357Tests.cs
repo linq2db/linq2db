@@ -12,7 +12,7 @@ namespace Tests.UserTests
 	public class Issue357Tests : TestBase
 	{
 		[Table(Name="AllTypes2")]
-		class AllTypes2
+		sealed class AllTypes2
 		{
 			[Column(DbType="int"), PrimaryKey, Identity]
 			public int ID { get; set; }
@@ -35,8 +35,8 @@ namespace Tests.UserTests
 			using (var db = GetDataContext(context))
 			{
 				var dt = db.GetTable<AllTypes2>().First(t => t.ID == 2);
-				Assert.IsNotNull(dt);
-				Assert.IsNotNull(dt.DateTime);
+				Assert.That(dt, Is.Not.Null);
+				Assert.That(dt.DateTime, Is.Not.Null);
 			}
 		}
 	}

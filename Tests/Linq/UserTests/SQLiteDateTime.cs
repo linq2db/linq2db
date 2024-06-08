@@ -14,14 +14,14 @@ namespace Tests.UserTests
 	public class SQLiteDateTime : TestBase
 	{
 		[Table]
-		class A
+		sealed class A
 		{
 			[PrimaryKey, Identity] public int       ID       { get; set; }
 			[Column,     NotNull ] public string    Value    { get; set; } = null!;
 			[Column,     NotNull ] public DateTime  DateTime { get; set; }
 		}
 
-		class B
+		sealed class B
 		{
 			public int     ID;
 			public string? Name;
@@ -65,7 +65,7 @@ namespace Tests.UserTests
 			TestContext.WriteLine(query2);
 			TestContext.WriteLine(query3);
 
-			Assert.AreEqual(query1, query2);
+			Assert.That(query2, Is.EqualTo(query1));
 		}
 	}
 }

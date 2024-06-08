@@ -13,8 +13,8 @@ using System;
 
 namespace Cli.Default.MariaDB
 {
-	[Table("alltypesnoyear")]
-	public class Alltypesnoyear
+	[Table("AllTypesNoYear")]
+	public class AllTypesNoYear
 	{
 		[Column("ID"                 , IsPrimaryKey = true, IsIdentity = true, SkipOnInsert = true, SkipOnUpdate = true)] public int       Id                  { get; set; } // int(11)
 		[Column("bigintDataType"                                                                                       )] public long?     BigintDataType      { get; set; } // bigint(20)

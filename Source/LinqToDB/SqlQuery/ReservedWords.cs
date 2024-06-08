@@ -6,8 +6,6 @@ using System.Linq;
 
 namespace LinqToDB.SqlQuery
 {
-	using LinqToDB.Extensions;
-
 	public static class ReservedWords
 	{
 		static ReservedWords()
@@ -92,7 +90,6 @@ namespace LinqToDB.SqlQuery
 		static readonly HashSet<string> _reservedWordsOracle   = new (StringComparer.OrdinalIgnoreCase);
 		static readonly HashSet<string> _reservedWordsFirebird = new (StringComparer.OrdinalIgnoreCase);
 		static readonly HashSet<string> _reservedWordsInformix = new (StringComparer.OrdinalIgnoreCase);
-
 
 		static readonly ConcurrentDictionary<string,HashSet<string>> _reservedWords = new (StringComparer.OrdinalIgnoreCase);
 

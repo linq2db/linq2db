@@ -30,11 +30,13 @@ namespace Tests.UserTests
 			[Column] public string? Role    { get; set; }
 		}
 
+		[Ignore("Not more applicable. Optimizer choose APPLY join when needed automatically.")]
 		[Test]
 		public void OuterApplyOptimization([IncludeDataSources(TestProvName.AllSqlServer)] string context, [Values]bool preferApply)
 		{
 			const string Admin = "Admin";
 
+			using(new PreferApply(preferApply))
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable<Task>())
 			using (db.CreateLocalTable<Party>())
@@ -48,19 +50,16 @@ namespace Tests.UserTests
 						.DefaultIfEmpty()
 					select new { task.Description, party.Name };
 
-				using(new PreferApply(preferApply))
-				{
-					_ = query.ToArray();
-					var sql = query.ToString();
+				_ = query.ToArray();
+				var sql = query.ToString();
 
-					if (preferApply)
-					{
-						sql.Should().Contain("OUTER APPLY");
-					}
-					else
-					{
-						sql.Should().NotContain("OUTER APPLY");
-					}
+				if (preferApply)
+				{
+					sql.Should().Contain("OUTER APPLY");
+				}
+				else
+				{
+					sql.Should().NotContain("OUTER APPLY");
 				}
 			}
 		}

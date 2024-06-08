@@ -1,0 +1,56 @@
+﻿<#@ template language="C#" debug="True" hostSpecific="True" compilerOptions="/langversion:latest" #>
+<#@ output extension=".generated.cs"                                                              #>
+<#@ include file="CLI.ttinclude"                                               once="true"        #>
+<#
+	var solutionsPath = Host.ResolveAssemblyReference("$(SolutionDir)");
+	var artifactsPath = Host.ResolveAssemblyReference("$(ArtifactsPath)");
+	var targetDir     = Path.Combine(solutionsPath, "Tests", "Tests.T4", "Cli", "NoMetadata");
+	var mode          = "default";
+
+	var dbPath        = $@"{artifactsPath}\bin\Tests\Debug\net462\Database\TestData.ODBC.mdb";
+	var accessOdbcCN  = $"Driver={{Microsoft Access Driver (*.mdb, *.accdb)}};Dbq={dbPath};ExtendedAnsiSQL=1";
+
+	dbPath            = $@"{artifactsPath}\bin\Tests\Debug\net462\Database\TestData.mdb";
+	var accessOleDbCN = $"Provider=Microsoft.ACE.OLEDB.12.0;Data Source={dbPath};Locale Identifier=1033;Persist Security Info=True";
+
+	var sqliteCN      = "Data Source=" + Path.Combine(solutionsPath, "Data", "TestData.sqlite");
+	var sqliteNwCN    = "Data Source=" + Path.Combine(solutionsPath, "Data", "Northwind.sqlite");
+	var sqlceCN       = "Data Source=" + Path.Combine(solutionsPath, "Data", "TestData.sdf");
+
+	var db2ProviderLocation = $@"{artifactsPath}\bin\Tests\Debug\net6.0\IBM.Data.Db2.dll";
+
+	var options = new string[]
+	{
+		"--metadata none",
+		"--safe-schema-only false",
+		"--load-sproc-schema true",
+		"--add-association-extensions true",
+		"--add-init-context false", // use for option testing
+		"--find-methods none",
+		"--objects table,view,foreign-key,stored-procedure,scalar-function,table-function,aggregate-function"
+	};
+
+	var extraOptions = string.Join(" ", options);
+
+	// to skip scaffold, just comment line for specific database/connection
+	RunCliTool("Access"         , null                 , "Cli.NoMetadata.Access.Odbc"        , Path.Combine(targetDir, "AccessOdbc")         , mode, connectionString: accessOdbcCN, extraOptions: extraOptions);
+	RunCliTool("Access"         , null                 , "Cli.NoMetadata.Access.OleDb"       , Path.Combine(targetDir, "AccessOleDb")        , mode, connectionString: accessOleDbCN, extraOptions: extraOptions);
+	RunCliTool("Access"         , null                 , "Cli.NoMetadata.Access.Both"        , Path.Combine(targetDir, "AccessBoth")         , mode, connectionString: accessOleDbCN, additionalConnectionString: accessOdbcCN, extraOptions: extraOptions);
+	RunCliTool("DB2"            , "DB2"                , "Cli.NoMetadata.DB2"                , Path.Combine(targetDir, "DB2")                , mode, providerLocation: db2ProviderLocation, extraOptions: extraOptions);
+	RunCliTool("Firebird"       , "Firebird.5"         , "Cli.NoMetadata.Firebird"           , Path.Combine(targetDir, "Firebird")           , mode, extraOptions: extraOptions);
+	RunCliTool("Informix"       , "Informix.DB2"       , "Cli.NoMetadata.Informix"           , Path.Combine(targetDir, "Informix")           , mode, providerLocation: db2ProviderLocation, extraOptions: extraOptions);
+	RunCliTool("MySQL"          , "MariaDB.11"         , "Cli.NoMetadata.MariaDB"            , Path.Combine(targetDir, "MariaDB")            , mode, extraOptions: extraOptions);
+	RunCliTool("MySQL"          , "MySqlConnector.8.0" , "Cli.NoMetadata.MySql"              , Path.Combine(targetDir, "MySql")              , mode, extraOptions: extraOptions);
+	RunCliTool("Oracle"         , "Oracle.11.Managed"  , "Cli.NoMetadata.Oracle"             , Path.Combine(targetDir, "Oracle")             , mode, extraOptions: extraOptions);
+	RunCliTool("PostgreSQL"     , "PostgreSQL.10"      , "Cli.NoMetadata.PostgreSQL"         , Path.Combine(targetDir, "PostgreSQL")         , mode, extraOptions: extraOptions);
+	RunCliTool("SapHana"        , "SapHana.Native"     , "Cli.NoMetadata.SapHana"            , Path.Combine(targetDir, "SapHana")            , mode, extraOptions: extraOptions);
+	RunCliTool("SqlCe"          , null                 , "Cli.NoMetadata.SqlCe"              , Path.Combine(targetDir, "SqlCe")              , mode, connectionString: sqlceCN, providerLocation: @"c:\Program Files\Microsoft SQL Server Compact Edition\v4.0\Private\System.Data.SqlServerCe.dll", extraOptions: extraOptions);
+	RunCliTool("SQLite"         , null                 , "Cli.NoMetadata.SQLiteNorthwind"    , Path.Combine(targetDir, "SQLiteNorthwind")    , mode, connectionString: sqliteNwCN, extraOptions: extraOptions);
+	RunCliTool("SQLite"         , null                 , "Cli.NoMetadata.SQLite"             , Path.Combine(targetDir, "SQLite")             , mode, connectionString: sqliteCN, extraOptions: extraOptions);
+	RunCliTool("SQLServer"      , "SqlServer.Northwind", "Cli.NoMetadata.SqlServerNorthwind" , Path.Combine(targetDir, "SqlServerNorthwind") , mode, extraOptions: extraOptions);
+	RunCliTool("SQLServer"      , "SqlServer.2017"     , "Cli.NoMetadata.SqlServer"          , Path.Combine(targetDir, "SqlServer")          , mode, extraOptions: extraOptions);
+	RunCliTool("Sybase"         , "Sybase.Managed"     , "Cli.NoMetadata.Sybase"             , Path.Combine(targetDir, "Sybase")             , mode, extraOptions: extraOptions);
+	RunCliTool("ClickHouseMySql", "ClickHouse.MySql"   , "Cli.NoMetadata.ClickHouse.MySql"   , Path.Combine(targetDir, "ClickHouse.MySql")   , mode, extraOptions: extraOptions);
+	RunCliTool("ClickHouseHttp" , "ClickHouse.Client"  , "Cli.NoMetadata.ClickHouse.Client"  , Path.Combine(targetDir, "ClickHouse.Client")  , mode, extraOptions: extraOptions);
+	RunCliTool("ClickHouseTcp"  , "ClickHouse.Octonica", "Cli.NoMetadata.ClickHouse.Octonica", Path.Combine(targetDir, "ClickHouse.Octonica"), mode, extraOptions: extraOptions);
+#>

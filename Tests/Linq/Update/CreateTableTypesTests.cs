@@ -126,7 +126,7 @@ namespace Tests.xUpdate
 				yield return new TestCreateTableColumnTypeParameters("Double"                         , e => e.HasColumn(_ => _.Double),                                 v => v.Double             = 3.14                                , null,                                                                                                                        ctx => ctx.IsAnyOf(TestProvName.AllFirebird), null);
 				// Firebird looses precision of double
 				yield return new TestCreateTableColumnTypeParameters("DoubleNullable"                 , e => e.HasColumn(_ => _.DoubleNullable),                         v => v.DoubleNullable     = 4.13                                , null,                                                                                                                        ctx => ctx.IsAnyOf(TestProvName.AllFirebird), null);
-				yield return new TestCreateTableColumnTypeParameters("Boolean"                        , e => e.HasColumn(_ => _.Boolean),                                v => v.Boolean            = true                                , null,                                                                                                                        null,                            null);
+				yield return new TestCreateTableColumnTypeParameters("Boolean"                        , e => e.HasColumn(_ => _.Boolean),                                v => v.Boolean            = true                                , null,                                                                                                                        null, null);
 				// Sybase doesn't support nullable bits
 				// Access allows you to define nullable bits, but returns null as false
 				yield return new TestCreateTableColumnTypeParameters("BooleanNullable"                , e => e.HasColumn(_ => _.BooleanNullable),                        v => v.BooleanNullable    = true                                , (ctx, v) => { if (ctx.IsAnyOf(TestProvName.AllAccess)) { v.BooleanNullable = false; } },                                                  null,                            ctx => ctx.IsAnyOf(TestProvName.AllSybase));
@@ -169,10 +169,13 @@ namespace Tests.xUpdate
 			Query.ClearCaches();
 
 			var ms = new MappingSchema();
-			var entity = ms.GetFluentMappingBuilder()
+			var entity = new FluentMappingBuilder(ms)
 				.Entity<CreateTableTypes>()
 				.HasColumn(e => e.Id);
+
 			testCase.ColumnBuilder(entity);
+
+			entity.Build();
 
 			var options = new JsonSerializerOptions () { IncludeFields = true };
 

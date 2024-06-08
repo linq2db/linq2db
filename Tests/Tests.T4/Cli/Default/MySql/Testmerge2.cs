@@ -13,8 +13,8 @@ using System;
 
 namespace Cli.Default.MySql
 {
-	[Table("testmerge2")]
-	public class Testmerge2
+	[Table("TestMerge2")]
+	public class TestMerge2
 	{
 		[Column("Id"             , IsPrimaryKey = true)] public int       Id              { get; set; } // int
 		[Column("Field1"                              )] public int?      Field1          { get; set; } // int
@@ -30,7 +30,7 @@ namespace Cli.Default.MySql
 		[Column("FieldNChar"                          )] public char?     FieldNChar      { get; set; } // char(1)
 		[Column("FieldFloat"                          )] public float?    FieldFloat      { get; set; } // float
 		[Column("FieldDouble"                         )] public double?   FieldDouble     { get; set; } // double
-		[Column("FieldDateTime"                       )] public DateTime? FieldDateTime   { get; set; } // datetime
+		[Column("FieldDateTime"                       )] public DateTime? FieldDateTime   { get; set; } // datetime(6)
 		[Column("FieldBinary"                         )] public byte[]?   FieldBinary     { get; set; } // varbinary(20)
 		[Column("FieldGuid"                           )] public string?   FieldGuid       { get; set; } // char(36)
 		[Column("FieldDecimal"                        )] public decimal?  FieldDecimal    { get; set; } // decimal(24,10)

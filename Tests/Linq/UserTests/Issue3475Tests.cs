@@ -13,7 +13,7 @@ namespace Tests.UserTests
 	[TestFixture]
 	public class Issue3475Tests : TestBase
 	{
-		internal class LinqToDBDynamicLinqCustomTypeProvider : DefaultDynamicLinqCustomTypeProvider
+		internal sealed class LinqToDBDynamicLinqCustomTypeProvider : DefaultDynamicLinqCustomTypeProvider
 		{
 			public override HashSet<Type> GetCustomTypes()
 			{
@@ -35,7 +35,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void NumberLikeTests([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void NumberLikeTests([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			ParsingConfig.Default.CustomTypeProvider = new LinqToDBDynamicLinqCustomTypeProvider();
 

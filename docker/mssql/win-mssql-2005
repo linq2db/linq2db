@@ -1,0 +1,18 @@
+ARG FROM
+FROM mcr.microsoft.com/$FROM
+
+ARG VERSION VERSION2 SHARE_PATH SHARE_USER SHARE_PASS
+
+RUN net use x: "%SHARE_PATH%" /user:"%SHARE_USER%" "%SHARE_PASS%" \
+&& x:\mssql-%VERSION%\setup.exe /qn AddLocal=SQL_FullText INSTANCENAME=MSSQLSERVER SAPWD=qGH6RFvq SQLACCOUNT="NT AUTHORITY\System" DISABLENETWORKPROTOCOLS=0 SECURITYMODE=SQL \
+&& rmdir "c:\Program Files (x86)\Microsoft SQL Server\%VERSION2%\Setup Bootstrap" /q /s \
+&& rmdir "c:\Windows\Installer" /q /s \
+&& rmdir "c:\Windows\SoftwareDistribution\Download" /q /s
+
+COPY start.ps1 /
+
+ENV ACCEPT_EULA=_ MSSQL_SA_PASSWORD=_
+
+CMD powershell -Command (C:/start.ps1 -ACCEPT_EULA $env:ACCEPT_EULA -MSSQL_SA_PASSWORD $env:MSSQL_SA_PASSWORD -Verbose)
+
+

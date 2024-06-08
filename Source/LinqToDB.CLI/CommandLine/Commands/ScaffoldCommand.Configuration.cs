@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using LinqToDB.DataModel;
+using LinqToDB.Metadata;
 using LinqToDB.Naming;
 using LinqToDB.Scaffold;
 using LinqToDB.Schema;
@@ -78,6 +79,7 @@ namespace LinqToDB.CommandLine
 			if (options.Remove(DataModel.PrecisionOnTables             , out value)) settings.GeneratePrecision                  = (bool)value!;
 			if (options.Remove(DataModel.ScaleOnTables                 , out value)) settings.GenerateScale                      = (bool)value!;
 			if (options.Remove(DataModel.EmitDbInfo                    , out value)) settings.IncludeDatabaseInfo                = (bool)value!;
+			if (options.Remove(DataModel.EmitInitDataContextMethod     , out value)) settings.GenerateInitDataContextMethod      = (bool)value!;
 			if (options.Remove(DataModel.EmitDefaultConstructor        , out value)) settings.HasDefaultConstructor              = (bool)value!;
 			if (options.Remove(DataModel.EmitConfigurationConstructor  , out value)) settings.HasConfigurationConstructor        = (bool)value!;
 			if (options.Remove(DataModel.EmitOptionsConstructor        , out value)) settings.HasUntypedOptionsConstructor       = (bool)value!;
@@ -115,14 +117,29 @@ namespace LinqToDB.CommandLine
 				}
 			}
 
+			// Metadata source
+			if (options.Remove(DataModel.Metadata, out value))
+			{
+				var str = (string)value!;
+				settings.Metadata = str switch
+				{
+					"none"       => MetadataSource.None,
+					"attributes" => MetadataSource.Attributes,
+					"fluent"     => MetadataSource.FluentMapping,
+					_            => throw new InvalidOperationException($"Unsuppored value for option {DataModel.Metadata.Name}: {str}")
+				};
+			}
+
 			// Find method variants
 			if (options.Remove(DataModel.GenerateFind, out value))
 			{
 				var findTypes = FindTypes.None;
+				var hasNone   = false;
 				foreach (var strVal in (string[])value!)
 				{
 					switch (strVal)
 					{
+						case "none"                : hasNone = true                                   ; break;
 						case "sync-pk-table"       : findTypes |= FindTypes.FindByPkOnTable           ; break;
 						case "async-pk-table"      : findTypes |= FindTypes.FindAsyncByPkOnTable      ; break;
 						case "query-pk-table"      : findTypes |= FindTypes.FindQueryByPkOnTable      ; break;
@@ -138,6 +155,10 @@ namespace LinqToDB.CommandLine
 						default                    : throw new InvalidOperationException($"Unsuppored value for option {DataModel.GenerateFind.Name}: {strVal}");
 					}
 				}
+
+				if (hasNone && findTypes != FindTypes.None)
+					throw new InvalidOperationException($"Option {DataModel.GenerateFind.Name} combines `none` value with other values ({string.Join(',', (string[])value!)})");
+
 				settings.GenerateFindExtensions = findTypes;
 			}
 
@@ -176,7 +197,6 @@ namespace LinqToDB.CommandLine
 			if (options.Remove(DataModel.AsyncProcResultClassNaming          , out value)) settings.AsyncProcedureResultClassNameOptions           = ((NormalizationOptions)value!).MergeInto(settings.AsyncProcedureResultClassNameOptions);
 			if (options.Remove(DataModel.AsyncProcResultClassPropertyNaming  , out value)) settings.AsyncProcedureResultClassPropertiesNameOptions = ((NormalizationOptions)value!).MergeInto(settings.AsyncProcedureResultClassPropertiesNameOptions);
 			if (options.Remove(DataModel.ProcOrFuncResultColumnPropertyNaming, out value)) settings.ProcedureResultColumnPropertyNameOptions       = ((NormalizationOptions)value!).MergeInto(settings.ProcedureResultColumnPropertyNameOptions);
-			if (options.Remove(DataModel.TableFunctionMethodInfoNaming       , out value)) settings.TableFunctionMethodInfoFieldNameOptions        = ((NormalizationOptions)value!).MergeInto(settings.TableFunctionMethodInfoFieldNameOptions);
 			if (options.Remove(DataModel.FunctionTupleClassNaming            , out value)) settings.FunctionTupleResultClassNameOptions            = ((NormalizationOptions)value!).MergeInto(settings.FunctionTupleResultClassNameOptions);
 			if (options.Remove(DataModel.FunctionTupleFieldPropertyNaming    , out value)) settings.FunctionTupleResultPropertyNameOptions         = ((NormalizationOptions)value!).MergeInto(settings.FunctionTupleResultPropertyNameOptions);
 			if (options.Remove(DataModel.SchemaWrapperClassNaming            , out value)) settings.SchemaClassNameOptions                         = ((NormalizationOptions)value!).MergeInto(settings.SchemaClassNameOptions);
@@ -227,6 +247,15 @@ namespace LinqToDB.CommandLine
 					settings.Schemas.Add(strVal);
 			}
 
+			if (options.Remove(SchemaOptions.DefaultSchemas, out value))
+			{
+				settings.DefaultSchemas = new HashSet<string>();
+
+				foreach (var strVal in (string[])value!)
+					settings.DefaultSchemas.Add(strVal);
+			}
+
+
 			// include/exclude catalogs
 			if (options.Remove(SchemaOptions.IncludedCatalogs, out value))
 			{
@@ -246,6 +275,7 @@ namespace LinqToDB.CommandLine
 			// simple flags
 			if (options.Remove(SchemaOptions.PreferProviderTypes       , out value)) settings.PreferProviderSpecificTypes = (bool)value!;
 			if (options.Remove(SchemaOptions.IgnoreDuplicateFKs        , out value)) settings.IgnoreDuplicateForeignKeys  = (bool)value!;
+			if (options.Remove(SchemaOptions.IgnoreSystemHistoryTables , out value)) settings.IgnoreSystemHistoryTables   = (bool)value!;
 			if (options.Remove(SchemaOptions.UseSafeSchemaLoadOnly     , out value)) settings.UseSafeSchemaLoad           = (bool)value!;
 			if (options.Remove(SchemaOptions.LoadDatabaseName          , out value)) settings.LoadDatabaseName            = (bool)value!;
 			if (options.Remove(SchemaOptions.LoadProcedureSchema       , out value)) settings.LoadProceduresSchema        = (bool)value!;
@@ -287,6 +317,18 @@ namespace LinqToDB.CommandLine
 				};
 			}
 
+			// stored procedure filter
+			if (options.Remove(SchemaOptions.IncludedStoredProcedures, out value))
+			{
+				var filter = (NameFilter)value!;
+				settings.LoadStoredProcedure = name => filter.ApplyTo(name.Schema, name.Name);
+			}
+			else if (options.Remove(SchemaOptions.ExcludedStoredProcedures, out value))
+			{
+				var filter = (NameFilter)value!;
+				settings.LoadStoredProcedure = name => !filter.ApplyTo(name.Schema, name.Name);
+			}
+
 			// procedure schema load filter
 			if (options.Remove(SchemaOptions.ProceduresWithSchema, out value))
 			{
@@ -309,6 +351,30 @@ namespace LinqToDB.CommandLine
 			{
 				var filter = (NameFilter)value!;
 				settings.LoadTableFunction = name => !filter.ApplyTo(name.Schema, name.Name);
+			}
+
+			// scalar function filter
+			if (options.Remove(SchemaOptions.IncludedScalarFunctions, out value))
+			{
+				var filter = (NameFilter)value!;
+				settings.LoadScalarFunction = name => filter.ApplyTo(name.Schema, name.Name);
+			}
+			else if (options.Remove(SchemaOptions.ExcludedScalarFunctions, out value))
+			{
+				var filter = (NameFilter)value!;
+				settings.LoadScalarFunction = name => !filter.ApplyTo(name.Schema, name.Name);
+			}
+
+			// aggregate function filter
+			if (options.Remove(SchemaOptions.IncludedAggregateFunctions, out value))
+			{
+				var filter = (NameFilter)value!;
+				settings.LoadAggregateFunction = name => filter.ApplyTo(name.Schema, name.Name);
+			}
+			else if (options.Remove(SchemaOptions.ExcludedAggregateFunctions, out value))
+			{
+				var filter = (NameFilter)value!;
+				settings.LoadAggregateFunction = name => !filter.ApplyTo(name.Schema, name.Name);
 			}
 		}
 	}

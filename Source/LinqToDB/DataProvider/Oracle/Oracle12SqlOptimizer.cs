@@ -1,5 +1,6 @@
 ﻿namespace LinqToDB.DataProvider.Oracle
 {
+	using Mapping;
 	using SqlProvider;
 	using SqlQuery;
 
@@ -9,17 +10,22 @@
 		{
 		}
 
-		public override SqlStatement TransformStatement(SqlStatement statement)
+		public override SqlExpressionConvertVisitor CreateConvertVisitor(bool allowModify)
 		{
+			return new Oracle12SqlExpressionConvertVisitor(allowModify);
+		}
+
+		public override SqlStatement TransformStatement(SqlStatement statement, DataOptions dataOptions, MappingSchema mappingSchema)
+		{
+			switch (statement.QueryType)
+			{
+				case QueryType.Delete : statement = GetAlternativeDelete((SqlDeleteStatement) statement, dataOptions); break;
+				case QueryType.Update : statement = GetAlternativeUpdate((SqlUpdateStatement) statement, dataOptions, mappingSchema); break;
+			}
+
 			if (statement.IsUpdate() || statement.IsInsert() || statement.IsDelete())
 				statement = ReplaceTakeSkipWithRowNum(statement, false);
 
-			switch (statement.QueryType)
-			{
-				case QueryType.Delete : statement = GetAlternativeDelete((SqlDeleteStatement) statement); break;
-				case QueryType.Update : statement = GetAlternativeUpdate((SqlUpdateStatement) statement); break;
-			}
-			
 			return statement;
 		}
 	}

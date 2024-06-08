@@ -11,9 +11,14 @@ namespace LinqToDB.DataModel
 	{
 		protected FunctionModelBase(SqlObjectName name, MethodModel method)
 		{
+			Name   = name;
 			Method = method;
 		}
 
+		/// <summary>
+		/// Gets or sets database name of function/procedure.
+		/// </summary>
+		public SqlObjectName                Name       { get; set; }
 		/// <summary>
 		/// Gets or sets method descriptor for function/procedure.
 		/// </summary>

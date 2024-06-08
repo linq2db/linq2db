@@ -1,14 +1,13 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Linq;
-using System.Linq.Expressions;
+
+using JetBrains.Annotations;
 
 namespace LinqToDB.Common
 {
-	using Expressions;
 	using Extensions;
-	using JetBrains.Annotations;
-	using LinqToDB.Common.Internal;
+	using Internal;
 	using Mapping;
 
 	/// <summary>
@@ -73,16 +72,7 @@ namespace LinqToDB.Common
 			}
 
 			if (value == null && !type.IsNullableType())
-			{
-				var mi = MemberHelper.MethodOf(() => GetValue<int>());
-
-				value =
-					Expression.Lambda<Func<object>>(
-						Expression.Convert(
-							Expression.Call(mi.GetGenericMethodDefinition().MakeGenericMethod(type)),
-							typeof(object)))
-						.CompileExpression()();
-			}
+				value = ReflectionExtensions.GetDefaultValue(type);
 
 			_values[type] = value;
 

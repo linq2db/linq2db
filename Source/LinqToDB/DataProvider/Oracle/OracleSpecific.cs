@@ -6,6 +6,7 @@ using JetBrains.Annotations;
 
 namespace LinqToDB.DataProvider.Oracle
 {
+	using Expressions;
 	using Linq;
 	using SqlProvider;
 
@@ -14,7 +15,7 @@ namespace LinqToDB.DataProvider.Oracle
 	{
 	}
 
-	class OracleSpecificTable<TSource> : DatabaseSpecificTable<TSource>, IOracleSpecificTable<TSource>, ITable
+	sealed class OracleSpecificTable<TSource> : DatabaseSpecificTable<TSource>, IOracleSpecificTable<TSource>, ITable
 		where TSource : notnull
 	{
 		public OracleSpecificTable(ITable<TSource> table) : base(table)
@@ -26,7 +27,7 @@ namespace LinqToDB.DataProvider.Oracle
 	{
 	}
 
-	class OracleSpecificQueryable<TSource> : DatabaseSpecificQueryable<TSource>, IOracleSpecificQueryable<TSource>, ITable
+	sealed class OracleSpecificQueryable<TSource> : DatabaseSpecificQueryable<TSource>, IOracleSpecificQueryable<TSource>, ITable
 	{
 		public OracleSpecificQueryable(IQueryable<TSource> queryable) : base(queryable)
 		{
@@ -35,20 +36,22 @@ namespace LinqToDB.DataProvider.Oracle
 
 	public static partial class OracleTools
 	{
-		[LinqTunnel, Pure]
+		[LinqTunnel, Pure, IsQueryable]
 		[Sql.QueryExtension(null, Sql.QueryExtensionScope.None, typeof(NoneExtensionBuilder))]
 		public static IOracleSpecificTable<TSource> AsOracle<TSource>(this ITable<TSource> table)
 			where TSource : notnull
 		{
-			table.Expression = Expression.Call(
-				null,
-				MethodHelper.GetMethodInfo(AsOracle, table),
-				table.Expression);
+			var newTable = new Table<TSource>(table.DataContext,
+				Expression.Call(
+					null,
+					MethodHelper.GetMethodInfo(AsOracle, table),
+					table.Expression)
+			);
 
-			return new OracleSpecificTable<TSource>(table);
+			return new OracleSpecificTable<TSource>(newTable);
 		}
 
-		[LinqTunnel, Pure]
+		[LinqTunnel, Pure, IsQueryable]
 		[Sql.QueryExtension(null, Sql.QueryExtensionScope.None, typeof(NoneExtensionBuilder))]
 		public static IOracleSpecificQueryable<TSource> AsOracle<TSource>(this IQueryable<TSource> source)
 			where TSource : notnull

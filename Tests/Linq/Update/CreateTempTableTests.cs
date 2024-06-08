@@ -4,9 +4,10 @@ using System.Threading;
 using System.Threading.Tasks;
 
 using LinqToDB;
+using LinqToDB.Data;
 using LinqToDB.Mapping;
+
 using NUnit.Framework;
-using Tests.Model;
 
 namespace Tests.xUpdate
 {
@@ -14,7 +15,7 @@ namespace Tests.xUpdate
 	[Order(10000)]
 	public class CreateTempTableTests : TestBase
 	{
-		class IDTable
+		sealed class IDTable
 		{
 			public int ID;
 		}
@@ -156,11 +157,10 @@ namespace Tests.xUpdate
 			}
 		}
 
-
 		[Test]
 		public async Task CreateTableAsyncCanceled([DataSources(false)] string context)
 		{
-			var cts = new CancellationTokenSource();
+			using var cts = new CancellationTokenSource();
 			cts.Cancel();
 			using (var db = GetDataContext(context))
 			{
@@ -180,10 +180,18 @@ namespace Tests.xUpdate
 							select t
 						).ToList();
 					}
-					Assert.Fail("Task should have been canceled but was not");
+					if (!context.IsAnyOf(TestProvName.AllMySqlData))
+					{
+						Assert.Fail("Task should have been canceled but was not");
+					}
 				}
-				catch (OperationCanceledException) { }
-
+				catch (OperationCanceledException)
+				{
+					if (context.IsAnyOf(TestProvName.AllMySqlData))
+					{
+						Assert.Fail("Update test. MySql.Data developers evolved");
+					}
+				}
 
 				var tableExists = true;
 				try
@@ -194,14 +202,14 @@ namespace Tests.xUpdate
 				{
 					tableExists = false;
 				}
-				Assert.AreEqual(false, tableExists);
+				Assert.That(tableExists, Is.EqualTo(false));
 			}
 		}
 
 		[Test]
 		public async Task CreateTableAsyncCanceled2([DataSources(false)] string context)
 		{
-			var cts = new CancellationTokenSource();
+			using var cts = new CancellationTokenSource();
 			using (var db = GetDataContext(context))
 			{
 				db.DropTable<int>("TempTable", throwExceptionIfNotExists: false);
@@ -225,9 +233,18 @@ namespace Tests.xUpdate
 							select t
 						).ToList();
 					}
-					Assert.Fail("Task should have been canceled but was not");
+					if (!context.IsAnyOf(TestProvName.AllMySqlData))
+					{
+						Assert.Fail("Task should have been canceled but was not");
+					}
 				}
-				catch (OperationCanceledException) { }
+				catch (OperationCanceledException)
+				{
+					if (context.IsAnyOf(TestProvName.AllMySqlData))
+					{
+						Assert.Fail("oracle fixed something, update test code");
+					}
+				}
 
 				var tableExists = true;
 				try
@@ -238,7 +255,7 @@ namespace Tests.xUpdate
 				{
 					tableExists = false;
 				}
-				Assert.AreEqual(false, tableExists);
+				Assert.That(tableExists, Is.EqualTo(false));
 			}
 		}
 
@@ -304,6 +321,169 @@ namespace Tests.xUpdate
 			// looks like some test blocks session cleanup in Sybase
 			using var t = new[] { new TableWithPrimaryKey() { Key = 1 } }
 				.IntoTempTable(db, tableName: "TableWithPrimaryKey2", tableOptions: TableOptions.IsTemporary);
+		}
+
+		[Table]
+		sealed class TestTempTable
+		{
+			[Column] public int Id        { get; set; }
+			[Column] public string? Value { get; set; }
+		}
+
+		[Test]
+		[ActiveIssue("It is only possible to implement limited set of mapping changes. API should be removed at some point")]
+		public void CreateTempTable_TestSchemaConflicts([DataSources] string context)
+		{
+			using var db    = GetDataContext(context, new MappingSchema());
+
+			using var table = db.CreateLocalTable<TestTempTable>();
+			table.Insert(() => new TestTempTable() { Id = 1, Value = "value" });
+
+			using var tmp   = db.CreateTempTable(
+				"TempTable",
+				table,
+				setTable: em => em.Property(e => e.Value).HasColumnName("Renamed"),
+				tableOptions: TableOptions.CheckExistence);
+
+			table.Insert(() => new TestTempTable() { Id = 2, Value = "value 2" });
+			tmp  .Insert(() => new TestTempTable() { Id = 2, Value = "renamed 2" });
+
+			var records1 = table.OrderBy(r => r.Id).ToArray();
+			var records2 = tmp.OrderBy(r => r.Id).ToArray();
+
+			Assert.That(records1, Has.Length.EqualTo(2));
+			Assert.Multiple(() =>
+			{
+				Assert.That(records1[0].Id, Is.EqualTo(1));
+				Assert.That(records1[0].Value, Is.EqualTo("value"));
+				Assert.That(records1[1].Id, Is.EqualTo(2));
+				Assert.That(records1[1].Value, Is.EqualTo("value 2"));
+
+				Assert.That(records2, Has.Length.EqualTo(2));
+			});
+			Assert.Multiple(() =>
+			{
+				Assert.That(records2[0].Id, Is.EqualTo(1));
+				Assert.That(records2[0].Value, Is.EqualTo("value"));
+				Assert.That(records2[1].Id, Is.EqualTo(2));
+				Assert.That(records2[1].Value, Is.EqualTo("renamed 2"));
+			});
+		}
+
+		[Test]
+		public void CreateTableEnumerableWithDescriptionTest([DataSources(false)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			db.DropTable<int>("TempTable", throwExceptionIfNotExists: false);
+
+			using var tmp = db.CreateTempTable(
+				new[] { new { Name = "John" } },
+				m => m
+					.HasTableName("TempTable")
+					.Property(p => p.Name)
+						.HasLength(20)
+						.IsNotNull(),
+				tableOptions:TableOptions.CheckExistence);
+
+			if (db is DataConnection dc)
+				Assert.That(dc.LastQuery, Contains.Substring("(20) NOT NULL").Or.Not.Contains("NULL"));
+
+			var list =
+			(
+				from p in db.Person
+				join t in tmp on p.FirstName equals t.Name
+				select t
+			).ToList();
+
+			Assert.That(list, Has.Count.EqualTo(1));
+		}
+
+		[Test]
+		public void CreateTableEnumerableWithNameAndDescriptionTest([DataSources(false)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			db.DropTable<int>("TempTable", throwExceptionIfNotExists: false);
+
+			using var tmp = db.CreateTempTable(
+				"TempTable",
+				new[] { new { Name = "John" } },
+				m => m
+					.Property(p => p.Name)
+						.HasLength(20)
+						.IsNotNull(),
+				tableOptions:TableOptions.CheckExistence);
+
+			if (db is DataConnection dc)
+				Assert.That(dc.LastQuery, Contains.Substring("(20) NOT NULL").Or.Not.Contains("NULL"));
+
+			var list =
+			(
+				from p in db.Person
+				join t in tmp on p.FirstName equals t.Name
+				select t
+			).ToList();
+
+			Assert.That(list, Has.Count.EqualTo(1));
+		}
+
+		[Test]
+		public async Task CreateTableEnumerableWithDescriptionAsyncTest([DataSources(false)] string context)
+		{
+			await using var db = GetDataContext(context);
+
+			await db.DropTableAsync<int>("TempTable", throwExceptionIfNotExists: false);
+
+			await using var tmp = await db.CreateTempTableAsync(
+				new[] { new { Name = "John" } },
+				m => m
+					.HasTableName("TempTable")
+					.Property(p => p.Name)
+						.HasLength(20)
+						.IsNotNull(),
+				tableOptions:TableOptions.CheckExistence);
+
+			if (db is DataConnection dc)
+				Assert.That(dc.LastQuery, Contains.Substring("(20) NOT NULL").Or.Not.Contains("NULL"));
+
+			var list = await
+			(
+				from p in db.Person
+				join t in tmp on p.FirstName equals t.Name
+				select t
+			).ToListAsync();
+
+			Assert.That(list, Has.Count.EqualTo(1));
+		}
+
+		[Test]
+		public async Task CreateTableEnumerableWithNameAndDescriptionAsyncTest([DataSources(false, TestProvName.AllSqlServerCS)] string context)
+		{
+			await using var db = GetDataContext(context);
+
+			await db.DropTableAsync<int>("TempTable", tableOptions:TableOptions.CheckExistence | TableOptions.IsTemporary);
+
+			await using var tmp = await db.CreateTempTableAsync(
+				"TempTable",
+				new[] { new { Name = "John" } },
+				m => m
+					.Property(p => p.Name)
+						.HasLength(20)
+						.IsNotNull(),
+				tableOptions:TableOptions.CheckExistence | TableOptions.IsTemporary);
+
+			if (db is DataConnection dc)
+				Assert.That(dc.LastQuery, Contains.Substring("(20) NOT NULL").Or.Not.Contains("NULL"));
+
+			var list = await
+			(
+				from p in db.Person
+				join t in tmp on p.FirstName equals t.Name
+				select t
+			).ToListAsync();
+
+			Assert.That(list, Has.Count.EqualTo(1));
 		}
 	}
 }

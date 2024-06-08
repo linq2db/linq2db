@@ -10,15 +10,21 @@ namespace Tests.Common
 		[Test]
 		public void FromString1()
 		{
-			Assert.AreEqual(11, Converter.ChangeType("11", typeof(int)));
-			Assert.AreEqual(12, Converter.ChangeType("12", typeof(int)));
+			Assert.Multiple(() =>
+			{
+				Assert.That(Converter.ChangeType("11", typeof(int)), Is.EqualTo(11));
+				Assert.That(Converter.ChangeType("12", typeof(int)), Is.EqualTo(12));
+			});
 		}
 
 		[Test]
 		public void FromString2()
 		{
-			Assert.AreEqual(11, Converter.ChangeTypeTo<int>("11"));
-			Assert.AreEqual(12, Converter.ChangeTypeTo<int>("12"));
+			Assert.Multiple(() =>
+			{
+				Assert.That(Converter.ChangeTypeTo<int>("11"), Is.EqualTo(11));
+				Assert.That(Converter.ChangeTypeTo<int>("12"), Is.EqualTo(12));
+			});
 		}
 	}
 }

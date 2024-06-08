@@ -11,7 +11,7 @@ namespace Tests.DataProvider
 	public class SQLiteParameterTests : TestBase
 	{
 		[Table]
-		class ClassWithIntDate
+		sealed class ClassWithIntDate
 		{
 			[Column] public int Id             { get; set; }
 			[Column(DataType = DataType.Int64)] public DateTime Value { get; set; }
@@ -20,7 +20,7 @@ namespace Tests.DataProvider
 		}
 
 		[Table]
-		class ClassRealTypes
+		sealed class ClassRealTypes
 		{
 			[Column] public int Id             { get; set; }
 			[Column] public double DoubleValue { get; set; }
@@ -54,9 +54,14 @@ namespace Tests.DataProvider
 							where t.Value > TestData.DateTime
 							select t;
 
-				Assert.That(query.GetStatement().CollectParameters().Length, Is.EqualTo(0));
+				Assert.Multiple(() =>
+				{
+#pragma warning disable CS0618 // Type or member is obsolete
+					Assert.That(query.GetStatement().CollectParameters(), Is.Empty);
+#pragma warning restore CS0618 // Type or member is obsolete
 
-				Assert.That(query.ToString(), Does.Not.Contain("DateTime("));
+					Assert.That(query.ToString(), Does.Not.Contain("DateTime("));
+				});
 			}
 		}
 

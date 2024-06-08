@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Data;
+using System.Data.Common;
+using System.Linq.Expressions;
 
 namespace LinqToDB.DataProvider.SqlCe
 {
-	using System.Data.Common;
-	using System.Linq.Expressions;
 	using LinqToDB.Expressions;
 
 	public class SqlCeProviderAdapter : IDynamicProviderAdapter
@@ -22,15 +22,18 @@ namespace LinqToDB.DataProvider.SqlCe
 			Type parameterType,
 			Type commandType,
 			Type transactionType,
+			Func<string, DbConnection> connectionFactory,
+
 			Action<DbParameter, SqlDbType>   dbTypeSetter,
 			Func  <DbParameter, SqlDbType>   dbTypeGetter,
-			Func  <string,           SqlCeEngine> sqlCeEngineCreator)
+			Func  <string,      SqlCeEngine> sqlCeEngineCreator)
 		{
 			ConnectionType  = connectionType;
 			DataReaderType  = dataReaderType;
 			ParameterType   = parameterType;
 			CommandType     = commandType;
 			TransactionType = transactionType;
+			_connectionFactory = connectionFactory;
 
 			SetDbType = dbTypeSetter;
 			GetDbType = dbTypeGetter;
@@ -38,11 +41,18 @@ namespace LinqToDB.DataProvider.SqlCe
 			CreateSqlCeEngine = sqlCeEngineCreator;
 		}
 
+#region IDynamicProviderAdapter
+
 		public Type ConnectionType  { get; }
 		public Type DataReaderType  { get; }
 		public Type ParameterType   { get; }
 		public Type CommandType     { get; }
 		public Type TransactionType { get; }
+
+		readonly Func<string, DbConnection> _connectionFactory;
+		public DbConnection CreateConnection(string connectionString) => _connectionFactory(connectionString);
+
+#endregion
 
 		public Action<DbParameter, SqlDbType> SetDbType { get; }
 		public Func  <DbParameter, SqlDbType> GetDbType { get; }
@@ -52,8 +62,11 @@ namespace LinqToDB.DataProvider.SqlCe
 		public static SqlCeProviderAdapter GetInstance()
 		{
 			if (_instance == null)
+			{
 				lock (_syncRoot)
+#pragma warning disable CA1508 // Avoid dead conditional code
 					if (_instance == null)
+#pragma warning restore CA1508 // Avoid dead conditional code
 					{
 						var assembly = Common.Tools.TryLoadAssembly(AssemblyName, ProviderFactoryName);
 						if (assembly == null)
@@ -67,6 +80,7 @@ namespace LinqToDB.DataProvider.SqlCe
 						var sqlCeEngine     = assembly.GetType($"{ClientNamespace}.SqlCeEngine"     , true)!;
 
 						var typeMapper = new TypeMapper();
+						typeMapper.RegisterTypeWrapper<SqlCeConnection>(connectionType);
 						typeMapper.RegisterTypeWrapper<SqlCeEngine>(sqlCeEngine);
 						typeMapper.RegisterTypeWrapper<SqlCeParameter>(parameterType);
 						typeMapper.FinalizeMappings();
@@ -75,16 +89,20 @@ namespace LinqToDB.DataProvider.SqlCe
 						var typeSetter    = dbTypeBuilder.BuildSetter<DbParameter>();
 						var typeGetter    = dbTypeBuilder.BuildGetter<DbParameter>();
 
+						var connectionFactory = typeMapper.BuildTypedFactory<string, SqlCeConnection, DbConnection>((string connectionString) => new SqlCeConnection(connectionString));
+
 						_instance = new SqlCeProviderAdapter(
 							connectionType,
 							dataReaderType,
 							parameterType,
 							commandType,
 							transactionType,
+							connectionFactory,
 							typeSetter,
 							typeGetter,
 							typeMapper.BuildWrappedFactory((string connectionString) => new SqlCeEngine(connectionString))!);
 					}
+			}
 
 			return _instance;
 		}
@@ -114,9 +132,15 @@ namespace LinqToDB.DataProvider.SqlCe
 		}
 
 		[Wrapper]
-		private class SqlCeParameter
+		private sealed class SqlCeParameter
 		{
 			public SqlDbType SqlDbType { get; set; }
+		}
+
+		[Wrapper]
+		private sealed class SqlCeConnection
+		{
+			public SqlCeConnection(string connectionString) => throw new NotImplementedException();
 		}
 
 		#endregion

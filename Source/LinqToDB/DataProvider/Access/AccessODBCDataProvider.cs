@@ -1,6 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Data.Common;
+using System.Threading;
+using System.Threading.Tasks;
 
 using OdbcType = LinqToDB.DataProvider.OdbcProviderAdapter.OdbcType;
 
@@ -8,31 +11,37 @@ namespace LinqToDB.DataProvider.Access
 {
 	using Common;
 	using Data;
+	using Linq.Translation;
 	using Mapping;
 	using SchemaProvider;
 	using SqlProvider;
-	using System.Data.Common;
-	using System.Threading;
-	using System.Threading.Tasks;
+	using Translation;
 
 	public class AccessODBCDataProvider : DynamicDataProviderBase<OdbcProviderAdapter>
 	{
-		public AccessODBCDataProvider() : base(ProviderName.AccessOdbc, MappingSchemaInstance, OdbcProviderAdapter.GetInstance())
+		public AccessODBCDataProvider() : base(ProviderName.AccessOdbc, _mappingSchemaInstance, OdbcProviderAdapter.GetInstance())
 		{
-			SqlProviderFlags.AcceptsTakeAsParameter           = false;
-			SqlProviderFlags.IsSkipSupported                  = false;
-			SqlProviderFlags.IsCountSubQuerySupported         = false;
-			SqlProviderFlags.IsInsertOrUpdateSupported        = false;
-			SqlProviderFlags.TakeHintsSupported               = TakeHints.Percent;
-			SqlProviderFlags.IsCrossJoinSupported             = false;
-			SqlProviderFlags.IsInnerJoinAsCrossSupported      = false;
-			SqlProviderFlags.IsDistinctOrderBySupported       = false;
-			SqlProviderFlags.IsDistinctSetOperationsSupported = false;
-			SqlProviderFlags.IsParameterOrderDependent        = true;
-			SqlProviderFlags.IsUpdateFromSupported            = false;
-			SqlProviderFlags.DefaultMultiQueryIsolationLevel  = IsolationLevel.Unspecified;
+			SqlProviderFlags.AcceptsTakeAsParameter                       = false;
+			SqlProviderFlags.IsSkipSupported                              = false;
+			SqlProviderFlags.IsInsertOrUpdateSupported                    = false;
+			SqlProviderFlags.IsSubQuerySkipSupported                      = false;
+			SqlProviderFlags.IsSupportsJoinWithoutCondition               = false;
+			SqlProviderFlags.TakeHintsSupported                           = TakeHints.Percent;
+			SqlProviderFlags.IsCrossJoinSupported                         = false;
+			SqlProviderFlags.IsDistinctSetOperationsSupported             = false;
+			SqlProviderFlags.IsParameterOrderDependent                    = true;
+			SqlProviderFlags.IsUpdateFromSupported                        = false;
+			SqlProviderFlags.IsWindowFunctionsSupported                   = false;
+			SqlProviderFlags.IsColumnSubqueryWithParentReferenceSupported = false;
+			SqlProviderFlags.DefaultMultiQueryIsolationLevel              = IsolationLevel.Unspecified;
+			SqlProviderFlags.IsOuterJoinSupportsInnerJoin                 = false;
+			SqlProviderFlags.IsMultiTablesSupportsJoins                   = false;
+			SqlProviderFlags.IsAccessBuggyLeftJoinConstantNullability     = true;
 
-			SetCharField            ("CHAR", (r, i) => r.GetString(i).TrimEnd(' '));
+			SqlProviderFlags.IsCountDistinctSupported       = false;
+			SqlProviderFlags.IsAggregationDistinctSupported = false;
+
+			SetCharField("CHAR", (r, i) => r.GetString(i).TrimEnd(' '));
 			SetCharFieldToType<char>("CHAR", DataTools.GetCharExpression);
 
 			SetToType<DbDataReader, sbyte , int>  ("INTEGER" , (r, i) => unchecked((sbyte )r.GetInt32(i)));
@@ -46,14 +55,19 @@ namespace LinqToDB.DataProvider.Access
 
 		public override TableOptions SupportedTableOptions => TableOptions.None;
 
-		public override ISqlBuilder CreateSqlBuilder(MappingSchema mappingSchema)
+		protected override IMemberTranslator CreateMemberTranslator()
 		{
-			return new AccessODBCSqlBuilder(this, mappingSchema, GetSqlOptimizer(), SqlProviderFlags);
+			return new AccessMemberTranslator();
+		}
+
+		public override ISqlBuilder CreateSqlBuilder(MappingSchema mappingSchema, DataOptions dataOptions)
+		{
+			return new AccessODBCSqlBuilder(this, mappingSchema, dataOptions, GetSqlOptimizer(dataOptions), SqlProviderFlags);
 		}
 
 		readonly ISqlOptimizer _sqlOptimizer;
 
-		public override ISqlOptimizer GetSqlOptimizer()
+		public override ISqlOptimizer GetSqlOptimizer(DataOptions dataOptions)
 		{
 			return _sqlOptimizer;
 		}
@@ -62,6 +76,8 @@ namespace LinqToDB.DataProvider.Access
 		{
 			return new AccessODBCSchemaProvider();
 		}
+
+		public override IQueryParametersNormalizer GetQueryParameterNormalizer() => NoopQueryParametersNormalizer.Instance;
 
 		public override void SetParameter(DataConnection dataConnection, DbParameter parameter, string name, DbDataType dataType, object? value)
 		{
@@ -135,46 +151,47 @@ namespace LinqToDB.DataProvider.Access
 			base.SetParameterType(dataConnection, parameter, dataType);
 		}
 
-		private static readonly MappingSchema MappingSchemaInstance = new AccessMappingSchema.OdbcMappingSchema();
+		static readonly MappingSchema _mappingSchemaInstance = new AccessMappingSchema.OdbcMappingSchema();
 
 		#region BulkCopy
 
-		public override BulkCopyRowsCopied BulkCopy<T>(
-			ITable<T> table, BulkCopyOptions options, IEnumerable<T> source)
+		public override BulkCopyRowsCopied BulkCopy<T>(DataOptions options, ITable<T> table, IEnumerable<T> source)
 		{
-
 			return new AccessBulkCopy().BulkCopy(
-				options.BulkCopyType == BulkCopyType.Default ? AccessTools.DefaultBulkCopyType : options.BulkCopyType,
+				options.BulkCopyOptions.BulkCopyType == BulkCopyType.Default ?
+					options.FindOrDefault(AccessOptions.Default).BulkCopyType :
+					options.BulkCopyOptions.BulkCopyType,
 				table,
 				options,
 				source);
 		}
 
-		public override Task<BulkCopyRowsCopied> BulkCopyAsync<T>(
-			ITable<T> table, BulkCopyOptions options, IEnumerable<T> source, CancellationToken cancellationToken)
+		public override Task<BulkCopyRowsCopied> BulkCopyAsync<T>(DataOptions options, ITable<T> table,
+			IEnumerable<T>    source,
+			CancellationToken cancellationToken)
 		{
-
 			return new AccessBulkCopy().BulkCopyAsync(
-				options.BulkCopyType == BulkCopyType.Default ? AccessTools.DefaultBulkCopyType : options.BulkCopyType,
+				options.BulkCopyOptions.BulkCopyType == BulkCopyType.Default ?
+					options.FindOrDefault(AccessOptions.Default).BulkCopyType :
+					options.BulkCopyOptions.BulkCopyType,
 				table,
 				options,
 				source,
 				cancellationToken);
 		}
 
-#if NATIVE_ASYNC
-		public override Task<BulkCopyRowsCopied> BulkCopyAsync<T>(
-			ITable<T> table, BulkCopyOptions options, IAsyncEnumerable<T> source, CancellationToken cancellationToken)
+		public override Task<BulkCopyRowsCopied> BulkCopyAsync<T>(DataOptions options, ITable<T> table,
+			IAsyncEnumerable<T> source, CancellationToken cancellationToken)
 		{
-
 			return new AccessBulkCopy().BulkCopyAsync(
-				options.BulkCopyType == BulkCopyType.Default ? AccessTools.DefaultBulkCopyType : options.BulkCopyType,
+				options.BulkCopyOptions.BulkCopyType == BulkCopyType.Default ?
+					options.FindOrDefault(AccessOptions.Default).BulkCopyType :
+					options.BulkCopyOptions.BulkCopyType,
 				table,
 				options,
 				source,
 				cancellationToken);
 		}
-#endif
 
 		#endregion
 	}

@@ -29,8 +29,8 @@ namespace Tests.Linq
 					.Where(x => Sql.Property<int>(x, IDColumn) == 1)
 					.ToList();
 
-				Assert.AreEqual(1, result.Count);
-				Assert.AreEqual("John", result.Single().FirstName);
+				Assert.That(result, Has.Count.EqualTo(1));
+				Assert.That(result.Single().FirstName, Is.EqualTo("John"));
 			}
 		}
 
@@ -44,8 +44,8 @@ namespace Tests.Linq
 								"Hallucination with Paranoid Bugs\' Delirium of Persecution")
 					.ToList();
 
-				Assert.AreEqual(1, result.Count);
-				Assert.AreEqual("Tester", result.Single().FirstName);
+				Assert.That(result, Has.Count.EqualTo(1));
+				Assert.That(result.Single().FirstName, Is.EqualTo("Tester"));
 			}
 		}
 
@@ -59,8 +59,8 @@ namespace Tests.Linq
 								"Hallucination with Paranoid Bugs\' Delirium of Persecution")
 					.ToList();
 
-				Assert.AreEqual(1, result.Count);
-				Assert.AreEqual("Tester", result.Single().FirstName);
+				Assert.That(result, Has.Count.EqualTo(1));
+				Assert.That(result.Single().FirstName, Is.EqualTo("Tester"));
 			}
 		}
 
@@ -74,8 +74,8 @@ namespace Tests.Linq
 								"Hallucination with Paranoid Bugs\' Delirium of Persecution")
 					.ToList();
 
-				Assert.AreEqual(1, result.Count);
-				Assert.AreEqual("Tester", result.Single().FirstName);
+				Assert.That(result, Has.Count.EqualTo(1));
+				Assert.That(result.Single().FirstName, Is.EqualTo("Tester"));
 			}
 		}
 
@@ -89,7 +89,7 @@ namespace Tests.Linq
 					.Select(x => Sql.Property<object>(Sql.Property<object>(x, PatientColumn), DiagnosisColumn))
 					.ToList();
 
-				Assert.IsTrue(result.OrderBy(_ => _ as string).SequenceEqual(expected.OrderBy(_ => _)));
+				Assert.That(result.OrderBy(_ => _ as string).SequenceEqual(expected.OrderBy(_ => _)), Is.True);
 			}
 		}
 
@@ -102,8 +102,8 @@ namespace Tests.Linq
 					.Where(x => Sql.Property<string>(x, "FirstName") == "John")
 					.ToList();
 
-				Assert.AreEqual(1, result.Count);
-				Assert.AreEqual(1, result.Single().ID);
+				Assert.That(result, Has.Count.EqualTo(1));
+				Assert.That(result.Single().ID, Is.EqualTo(1));
 			}
 		}
 
@@ -117,8 +117,8 @@ namespace Tests.Linq
 								"Hallucination with Paranoid Bugs\' Delirium of Persecution")
 					.ToList();
 
-				Assert.AreEqual(1, result.Count);
-				Assert.AreEqual(2, result.Single().ID);
+				Assert.That(result, Has.Count.EqualTo(1));
+				Assert.That(result.Single().ID, Is.EqualTo(2));
 			}
 		}
 
@@ -130,7 +130,7 @@ namespace Tests.Linq
 				var expected = Person.Select(p => p.FirstName).ToList();
 				var result = db.GetTable<PersonWithDynamicStore>().ToList().Select(p => p.ExtendedProperties["FirstName"]).ToList();
 
-				Assert.IsTrue(result.SequenceEqual(expected));
+				Assert.That(result.SequenceEqual(expected), Is.True);
 			}
 		}
 
@@ -144,7 +144,7 @@ namespace Tests.Linq
 					.Select(x => Sql.Property<string>(x, "FirstName"))
 					.ToList();
 
-				Assert.IsTrue(result.SequenceEqual(expected));
+				Assert.That(result.SequenceEqual(expected), Is.True);
 			}
 		}
 
@@ -167,7 +167,7 @@ namespace Tests.Linq
 					})
 					.ToList();
 
-				Assert.IsTrue(result.SequenceEqual(expected));
+				Assert.That(result.SequenceEqual(expected), Is.True);
 			}
 		}
 
@@ -182,7 +182,7 @@ namespace Tests.Linq
 					.Select(x => Sql.Property<string>(Sql.Property<Patient>(x, PatientColumn), DiagnosisColumn))
 					.ToList();
 
-				Assert.IsTrue(result.OrderBy(_ => _).SequenceEqual(expected.OrderBy(_ => _)));
+				Assert.That(result.OrderBy(_ => _).SequenceEqual(expected.OrderBy(_ => _)), Is.True);
 			}
 		}
 
@@ -197,7 +197,7 @@ namespace Tests.Linq
 					.Select(x => x.ID)
 					.ToList();
 
-				Assert.IsTrue(result.SequenceEqual(expected));
+				Assert.That(result.SequenceEqual(expected), Is.True);
 			}
 		}
 
@@ -212,7 +212,7 @@ namespace Tests.Linq
 					.Select(x => x.ID)
 					.ToList();
 
-				Assert.IsTrue(result.SequenceEqual(expected));
+				Assert.That(result.SequenceEqual(expected), Is.True);
 			}
 		}
 
@@ -227,7 +227,7 @@ namespace Tests.Linq
 					.Select(x => x.ID)
 					.ToList();
 
-				Assert.IsTrue(result.SequenceEqual(expected));
+				Assert.That(result.SequenceEqual(expected), Is.True);
 			}
 		}
 
@@ -242,7 +242,7 @@ namespace Tests.Linq
 					.Select(x => x.ID)
 					.ToList();
 
-				Assert.IsTrue(result.OrderBy(_ => _).SequenceEqual(expected.OrderBy(_ => _)));
+				Assert.That(result.OrderBy(_ => _).SequenceEqual(expected.OrderBy(_ => _)), Is.True);
 			}
 		}
 
@@ -257,7 +257,7 @@ namespace Tests.Linq
 					.Select(p => new {p.Key, Count = p.Count()})
 					.ToList();
 
-				Assert.IsTrue(result.OrderBy(_ => _.Key).SequenceEqual(expected.OrderBy(_ => _.Key)));
+				Assert.That(result.OrderBy(_ => _.Key).SequenceEqual(expected.OrderBy(_ => _.Key)), Is.True);
 			}
 		}
 
@@ -272,7 +272,7 @@ namespace Tests.Linq
 					.Select(p => new { p.Key, Count = p.Count() })
 					.ToList();
 
-				Assert.IsTrue(result.OrderBy(_ => _.Key).SequenceEqual(expected.OrderBy(_ => _.Key)));
+				Assert.That(result.OrderBy(_ => _.Key).SequenceEqual(expected.OrderBy(_ => _.Key)), Is.True);
 			}
 		}
 
@@ -291,7 +291,7 @@ namespace Tests.Linq
 					join pa in db.Patient on Sql.Property<string>(p, "FirstName") equals Sql.Property<string>(pa, DiagnosisColumn)
 					select p;
 
-				Assert.IsTrue(result.ToList().SequenceEqual(expected.ToList()));
+				Assert.That(result.ToList().SequenceEqual(expected.ToList()), Is.True);
 			}
 		}
 
@@ -307,7 +307,7 @@ namespace Tests.Linq
 					.Select(p => ((Patient)p.ExtendedProperties[PatientColumn])?.Diagnosis)
 					.ToList();
 
-				Assert.IsTrue(result.OrderBy(_ => _).SequenceEqual(expected.OrderBy(_ => _)));
+				Assert.That(result.OrderBy(_ => _).SequenceEqual(expected.OrderBy(_ => _)), Is.True);
 			}
 		}
 
@@ -386,7 +386,7 @@ namespace Tests.Linq
 
 				var result = query.ToArray();
 
-				Assert.AreEqual(77, result[0].NI);
+				Assert.That(result[0].NI, Is.EqualTo(77));
 			}
 		}
 
@@ -414,9 +414,12 @@ namespace Tests.Linq
 
 				var result = query.ToArray();
 
-				Assert.AreEqual(77, result[0].NI);
-				Assert.AreEqual(2,  result[0].Count);
-				Assert.AreEqual(10, result[0].Sum);
+				Assert.Multiple(() =>
+				{
+					Assert.That(result[0].NI, Is.EqualTo(77));
+					Assert.That(result[0].Count, Is.EqualTo(2));
+				});
+				Assert.That(result[0].Sum, Is.EqualTo(10));
 			}
 		}
 
@@ -424,13 +427,14 @@ namespace Tests.Linq
 		{
 			var ms = new MappingSchema();
 
-			ms.GetFluentMappingBuilder()
+			new FluentMappingBuilder(ms)
 				.Entity<PersonWithDynamicStore>().HasTableName("Person")
 				.HasPrimaryKey(x => Sql.Property<int>(x, "ID"))
 				.Property(x => Sql.Property<string>(x, "FirstName")).IsNullable(false)
 				.Property(x => Sql.Property<string>(x, "LastName")).IsNullable(false)
 				.Property(x => Sql.Property<string>(x, "MiddleName"))
-				.Association(x => Sql.Property<Patient>(x, "Patient"), x => Sql.Property<int>(x, "ID"), x => x.PersonID);
+				.Association(x => Sql.Property<Patient>(x, "Patient"), x => Sql.Property<int>(x, "ID"), x => x.PersonID)
+				.Build();
 
 			return ms;
 		}
@@ -523,15 +527,17 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestConcatWithDynamic([IncludeDataSources(true, TestProvName.AllSQLiteClassic)] string context)
+		public void TestConcatWithDynamic([IncludeDataSources(true, TestProvName.AllSQLiteClassic, TestProvName.AllClickHouse)] string context)
 		{
 			var mappingSchema = new MappingSchema();
-			var builder = mappingSchema.GetFluentMappingBuilder()
+			var builder = new FluentMappingBuilder(mappingSchema)
 				.Entity<SomeClassWithDynamic>();
 
 			builder.Property(x => x.Description).HasColumnName("F066_04");
 			builder.Property(x => Sql.Property<string>(x, "F066_05"));
 			builder.Property(x => Sql.Property<string>(x, "F066_00"));
+
+			builder.Build();
 
 			var testData1 = new[]
 			{
@@ -561,32 +567,29 @@ namespace Tests.Linq
 			}
 		}
 
-
-		class BananaTable
+		sealed class BananaTable
 		{
 			public int Id { get; set; }
 			public string? Property { get; set; }
 		}
 
-		[Test]
-		[ActiveIssue("https://stackoverflow.com/questions/61081571", Details = "Expression 't.Id' is not a Field.")]
+		[Test(Description = "https://stackoverflow.com/questions/61081571: Expression 't.Id' is not a Field.")]
 		public void DynamicGoesBanana1([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
 		{
-
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable<BananaTable>())
 			{
 				db.GetTable<BananaTable>().Insert(() => new BananaTable() { Id = 1, Property = "test1" });
 
 				var res = db.GetTable<BananaTable>().ToList();
-				Assert.AreEqual(1, res.Count);
-				Assert.AreEqual("test1", res[0].Property);
+				Assert.That(res, Has.Count.EqualTo(1));
+				Assert.That(res[0].Property, Is.EqualTo("test1"));
 
 				Test(nameof(BananaTable), nameof(BananaTable.Id), nameof(BananaTable.Property), 1, "banana");
 
 				res = db.GetTable<BananaTable>().ToList();
-				Assert.AreEqual(1, res.Count);
-				Assert.AreEqual("banana", res[0].Property);
+				Assert.That(res, Has.Count.EqualTo(1));
+				Assert.That(res[0].Property, Is.EqualTo("banana"));
 
 				void Test(string entity, string filterProperty, string changedProperty, object filter, object value)
 				{
@@ -600,23 +603,22 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void DynamicGoesBanana2([IncludeDataSources(true, TestProvName.AllSQLiteClassic)] string context)
+		public void DynamicGoesBanana2([IncludeDataSources(true, TestProvName.AllSQLiteClassic, TestProvName.AllClickHouse)] string context)
 		{
-
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable<BananaTable>())
 			{
 				db.GetTable<BananaTable>().Insert(() => new BananaTable() { Id = 1, Property = "test1" });
 
 				var res = db.GetTable<BananaTable>().ToList();
-				Assert.AreEqual(1, res.Count);
-				Assert.AreEqual("test1", res[0].Property);
+				Assert.That(res, Has.Count.EqualTo(1));
+				Assert.That(res[0].Property, Is.EqualTo("test1"));
 
 				Test<BananaTable>(nameof(BananaTable), nameof(BananaTable.Id), nameof(BananaTable.Property), 1, "banana");
 
 				res = db.GetTable<BananaTable>().ToList();
-				Assert.AreEqual(1, res.Count);
-				Assert.AreEqual("banana", res[0].Property);
+				Assert.That(res, Has.Count.EqualTo(1));
+				Assert.That(res[0].Property, Is.EqualTo("banana"));
 
 				void Test<TEntity>(string entity, string filterProperty, string changedProperty, object filter, object value)
 					where TEntity : class
@@ -630,9 +632,8 @@ namespace Tests.Linq
 			}
 		}
 
-
 		[Test]
-		public void Issue3158([DataSources] string context)
+		public void Issue3158([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{

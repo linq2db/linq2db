@@ -42,13 +42,13 @@ namespace LinqToDB.DataProvider.Oracle
 		public const string DevartTypesNamespace  = "Devart.Data.Oracle";
 		public const string DevartFactoryName     = "Devart.Data.Oracle";
 
-
 		private OracleProviderAdapter(
 			Type connectionType,
 			Type dataReaderType,
 			Type parameterType,
 			Type commandType,
 			Type transactionType,
+			Func<string, DbConnection> connectionFactory,
 
 			MappingSchema mappingSchema,
 			bool bindingByNameEnabled,
@@ -71,8 +71,6 @@ namespace LinqToDB.DataProvider.Oracle
 			Type? oracleXmlStreamType,
 			Type oracleRefCursorType,
 			Type? oracleRefType,
-
-			Func<string, DbConnection> connectionCreator,
 
 			string typesNamespace,
 
@@ -99,13 +97,14 @@ namespace LinqToDB.DataProvider.Oracle
 
 			IBulkCopyAdapter? bulkCopy)
 		{
-			ConnectionType  = connectionType;
-			DataReaderType  = dataReaderType;
-			ParameterType   = parameterType;
-			CommandType     = commandType;
-			TransactionType = transactionType;
+			ConnectionType     = connectionType;
+			DataReaderType     = dataReaderType;
+			ParameterType      = parameterType;
+			CommandType        = commandType;
+			TransactionType    = transactionType;
+			_connectionFactory = connectionFactory;
 
-			MappingSchema        = mappingSchema;
+			MappingSchema = mappingSchema;
 			BindingByNameEnabled = bindingByNameEnabled;
 
 			CustomReaders = customReaders;
@@ -127,7 +126,6 @@ namespace LinqToDB.DataProvider.Oracle
 			OracleRefCursorType    = oracleRefCursorType;
 			OracleRefType          = oracleRefType;
 
-			_connectionCreator     = connectionCreator;
 			ProviderTypesNamespace = typesNamespace;
 
 			SetDbType = dbTypeSetter;
@@ -154,11 +152,18 @@ namespace LinqToDB.DataProvider.Oracle
 			BulkCopy = bulkCopy;
 		}
 
+#region IDynamicProviderAdapter
+
 		public Type ConnectionType  { get; }
 		public Type DataReaderType  { get; }
 		public Type ParameterType   { get; }
 		public Type CommandType     { get; }
 		public Type TransactionType { get; }
+
+		readonly Func<string, DbConnection> _connectionFactory;
+		public DbConnection CreateConnection(string connectionString) => _connectionFactory(connectionString);
+
+#endregion
 
 		public bool BindingByNameEnabled   { get; }
 		public MappingSchema MappingSchema { get; }
@@ -207,9 +212,6 @@ namespace LinqToDB.DataProvider.Oracle
 		private readonly Func<DateTimeOffset, string, object> _createOracleTimeStampTZ;
 		public object CreateOracleTimeStampTZ(DateTimeOffset dto, string offset) => _createOracleTimeStampTZ(dto, offset);
 
-		private readonly Func<string, DbConnection> _connectionCreator;
-		public DbConnection CreateConnection(string connectionString) => _connectionCreator(connectionString);
-
 		internal IBulkCopyAdapter? BulkCopy { get; }
 
 		internal interface IBulkCopyService : IDisposable
@@ -222,15 +224,15 @@ namespace LinqToDB.DataProvider.Oracle
 		internal interface IBulkCopyAdapter
 		{
 			IBulkCopyService Create(
-				DbConnection connection,
-				BulkCopyOptions options,
-				string table,
-				string? schema,
-				int? notifyAfter,
+				DbConnection                connection,
+				BulkCopyOptions             options,
+				string                      table,
+				string?                     schema,
+				int?                        notifyAfter,
 				Action<BulkCopyRowsCopied>? rowsCopiedCallback,
-				BulkCopyRowsCopied rowsCopiedArgs,
-				int? batchSize,
-				int? timeout);
+				BulkCopyRowsCopied          rowsCopiedArgs,
+				int?                        batchSize,
+				int?                        timeout);
 		}
 
 		private sealed class OracleBulkCopyAdapter : IBulkCopyAdapter
@@ -286,7 +288,7 @@ namespace LinqToDB.DataProvider.Oracle
 				return new BulkCopyWrapper(bc, _createColumnMapping);
 			}
 
-			private class BulkCopyWrapper : IBulkCopyService
+			private sealed class BulkCopyWrapper : IBulkCopyService
 			{
 				private readonly OracleWrappers.OracleBulkCopy _bulkCopy;
 				private readonly Func<int, string, OracleWrappers.OracleBulkCopyColumnMapping> _createColumnMapping;
@@ -366,7 +368,7 @@ namespace LinqToDB.DataProvider.Oracle
 				return new BulkCopyWrapper(bc, _createColumnMapping);
 			}
 
-			private class BulkCopyWrapper : IBulkCopyService
+			private sealed class BulkCopyWrapper : IBulkCopyService
 			{
 				private readonly DevartWrappers.OracleLoader _bulkCopy;
 				private readonly Func<DevartWrappers.OracleLoader, string, DevartWrappers.OracleDbType, int, int, int, string, int> _createColumnMapping;
@@ -395,27 +397,36 @@ namespace LinqToDB.DataProvider.Oracle
 			if (provider == OracleProvider.Native)
 			{
 				if (_nativeAdapter == null)
+				{
 					lock (_nativeSyncRoot)
-						if (_nativeAdapter == null)
-							_nativeAdapter = CreateAdapter(NativeAssemblyName, NativeClientNamespace, NativeTypesNamespace, NativeProviderFactoryName, new OracleNativeClientAdapterMappingSchema());
+#pragma warning disable CA1508 // Avoid dead conditional code
+						_nativeAdapter ??= CreateAdapter(NativeAssemblyName, NativeClientNamespace, NativeTypesNamespace, NativeProviderFactoryName, new OracleNativeClientAdapterMappingSchema());
+#pragma warning restore CA1508 // Avoid dead conditional code
+				}
 
 				return _nativeAdapter;
 			}
 			else if (provider == OracleProvider.Devart)
 			{
 				if (_devartAdapter == null)
+				{
 					lock (_devartSyncRoot)
-						if (_devartAdapter == null)
-							_devartAdapter = CreateDevartAdapter();
+#pragma warning disable CA1508 // Avoid dead conditional code
+						_devartAdapter ??= CreateDevartAdapter();
+#pragma warning restore CA1508 // Avoid dead conditional code
+				}
 
 				return _devartAdapter;
 			}
 			else
 			{
 				if (_managedAdapter == null)
+				{
 					lock (_managedSyncRoot)
-						if (_managedAdapter == null)
-							_managedAdapter = CreateAdapter(ManagedAssemblyName, ManagedClientNamespace, ManagedTypesNamespace, null, new OracleManagedClientAdapterMappingSchema());
+#pragma warning disable CA1508 // Avoid dead conditional code
+						_managedAdapter ??= CreateAdapter(ManagedAssemblyName, ManagedClientNamespace, ManagedTypesNamespace, null, new OracleManagedClientAdapterMappingSchema());
+#pragma warning restore CA1508 // Avoid dead conditional code
+				}
 
 				return _managedAdapter;
 			}
@@ -604,7 +615,7 @@ namespace LinqToDB.DataProvider.Oracle
 			var dbTypeSetter = dbTypeBuilder.BuildSetter<DbParameter>();
 			var dbTypeGetter = dbTypeBuilder.BuildGetter<DbParameter>();
 
-			var connectionFactory = typeMapper.BuildWrappedFactory((string connectionString) => new OracleWrappers.OracleConnection(connectionString));
+			var connectionFactory = typeMapper.BuildTypedFactory<string, OracleWrappers.OracleConnection, DbConnection>((string connectionString) => new OracleWrappers.OracleConnection(connectionString));
 
 			return new OracleProviderAdapter(
 				connectionType,
@@ -612,6 +623,8 @@ namespace LinqToDB.DataProvider.Oracle
 				parameterType,
 				commandType,
 				transactionType,
+				connectionFactory,
+
 				mappingSchema,
 				assemblyName != ManagedAssemblyName,
 
@@ -633,8 +646,6 @@ namespace LinqToDB.DataProvider.Oracle
 				oracleXmlStreamType,
 				oracleRefCursorType,
 				oracleRefType,
-
-				cs => (DbConnection)connectionFactory(cs).instance_,
 
 				typesNamespace,
 
@@ -796,7 +807,7 @@ namespace LinqToDB.DataProvider.Oracle
 			// command.ExecuteArray(int)
 			var executeArray = typeMapper.BuildFunc<DbCommand, int, int>(typeMapper.MapLambda((DevartWrappers.OracleCommand conn, int iters) => conn.ExecuteArray(iters)));
 
-			var connectionFactory = typeMapper.BuildWrappedFactory((string connectionString) => new DevartWrappers.OracleConnection(connectionString));
+			var connectionFactory = typeMapper.BuildTypedFactory<string, DevartWrappers.OracleConnection, DbConnection>((string connectionString) => new DevartWrappers.OracleConnection(connectionString));
 
 			return new OracleProviderAdapter(
 				connectionType,
@@ -804,6 +815,8 @@ namespace LinqToDB.DataProvider.Oracle
 				parameterType,
 				commandType,
 				transactionType,
+				connectionFactory,
+
 				mappingSchema,
 				true,
 
@@ -825,8 +838,6 @@ namespace LinqToDB.DataProvider.Oracle
 				null,
 				oracleCursorType,
 				oracleRefType,
-
-				cs => (DbConnection)connectionFactory(cs).instance_,
 
 				DevartTypesNamespace,
 
@@ -1051,7 +1062,7 @@ namespace LinqToDB.DataProvider.Oracle
 				return null;
 			}
 
-		public static OracleDbType GetDbType(DbDataType dbDataType)
+			public static OracleDbType GetDbType(DbDataType dbDataType)
 			{
 				return dbDataType.DataType switch
 				{
@@ -1122,20 +1133,20 @@ namespace LinqToDB.DataProvider.Oracle
 			}
 
 			[Wrapper]
-			public class OracleParameter
+			public sealed class OracleParameter
 			{
 				public OracleDbType OracleDbType { get; set; }
 			}
 
 			[Wrapper]
-			public class OracleDataReader
+			public sealed class OracleDataReader
 			{
 				public OracleTimeStamp GetOracleTimeStamp(int i) => throw new NotImplementedException();
 				public OracleNumber    GetOracleNumber   (int i) => throw new NotImplementedException();
 			}
 
 			[Wrapper]
-			public class OracleCommand
+			public sealed class OracleCommand
 			{
 				public bool PassParametersByName
 				{
@@ -1147,38 +1158,19 @@ namespace LinqToDB.DataProvider.Oracle
 			}
 
 			[Wrapper]
-			public class OracleConnection : TypeWrapper, IDisposable
+			internal sealed class OracleConnection
 			{
-				private static LambdaExpression[] Wrappers { get; }
-					= new LambdaExpression[]
-				{
-					// [0]: Open
-					(Expression<Action<OracleConnection>>         )((OracleConnection this_) => this_.Open()),
-					// [1]: CreateCommand
-					(Expression<Func<OracleConnection, DbCommand>>)((OracleConnection this_) => this_.CreateCommand()),
-					// [2]: Dispose
-					(Expression<Action<OracleConnection>>         )((OracleConnection this_) => this_.Dispose()),
-				};
-
-				public OracleConnection(object instance, Delegate[] wrappers) : base(instance, wrappers)
-				{
-				}
-
 				public OracleConnection(string connectionString) => throw new NotImplementedException();
-
-				public void Open()               => ((Action<OracleConnection>)CompiledWrappers[0])(this);
-				public DbCommand CreateCommand() => ((Func<OracleConnection, DbCommand>)CompiledWrappers[1])(this);
-				public void Dispose()            => ((Action<OracleConnection>)CompiledWrappers[2])(this);
 			}
 
 			[Wrapper]
-			public class OracleNumber
+			public sealed class OracleNumber
 			{
 				public static explicit operator decimal(OracleNumber val) => throw new NotImplementedException();
 			}
 
 			[Wrapper]
-			public class OracleTimeStamp : TypeWrapper
+			public sealed class OracleTimeStamp : TypeWrapper
 			{
 				public OracleTimeStamp(object instance) : base(instance, null)
 				{
@@ -1199,7 +1191,7 @@ namespace LinqToDB.DataProvider.Oracle
 
 			#region BulkCopy
 			[Wrapper]
-			public class OracleLoader : TypeWrapper, IDisposable
+			internal sealed class OracleLoader : TypeWrapper, IDisposable
 			{
 				private static LambdaExpression[] Wrappers { get; }
 					= new LambdaExpression[]
@@ -1260,7 +1252,7 @@ namespace LinqToDB.DataProvider.Oracle
 			}
 
 			[Wrapper]
-			public class OracleLoaderRowsCopiedEventArgs : TypeWrapper
+			public sealed class OracleLoaderRowsCopiedEventArgs : TypeWrapper
 			{
 				private static LambdaExpression[] Wrappers { get; }
 					= new LambdaExpression[]
@@ -1290,7 +1282,7 @@ namespace LinqToDB.DataProvider.Oracle
 			public delegate void OracleLoaderRowsCopiedEventHandler(object sender, OracleLoaderRowsCopiedEventArgs e);
 
 			[Wrapper]
-			public class OracleLoaderColumnCollection : TypeWrapper
+			public sealed class OracleLoaderColumnCollection : TypeWrapper
 			{
 				private static LambdaExpression[] Wrappers { get; }
 					= new LambdaExpression[]
@@ -1322,7 +1314,7 @@ namespace LinqToDB.DataProvider.Oracle
 			}
 
 			[Wrapper]
-			public class OracleLoaderColumn : TypeWrapper
+			public sealed class OracleLoaderColumn : TypeWrapper
 			{
 				public OracleLoaderColumn(object instance) : base(instance, null)
 				{
@@ -1396,13 +1388,13 @@ namespace LinqToDB.DataProvider.Oracle
 			}
 
 			[Wrapper]
-			public class OracleParameter
+			public sealed class OracleParameter
 			{
 				public OracleDbType OracleDbType { get; set; }
 			}
 
 			[Wrapper]
-			public class OracleDataReader
+			public sealed class OracleDataReader
 			{
 				public OracleTimeStampTZ  GetOracleTimeStampTZ (int i) => throw new NotImplementedException();
 				public OracleTimeStampLTZ GetOracleTimeStampLTZ(int i) => throw new NotImplementedException();
@@ -1454,7 +1446,7 @@ namespace LinqToDB.DataProvider.Oracle
 			}
 
 			[Wrapper]
-			public class OracleCommand
+			public sealed class OracleCommand
 			{
 				public int ArrayBindCount
 				{
@@ -1476,7 +1468,7 @@ namespace LinqToDB.DataProvider.Oracle
 			}
 
 			[Wrapper]
-			public class OracleConnection : TypeWrapper, IDisposable
+			public sealed class OracleConnection : TypeWrapper
 			{
 				private static LambdaExpression[] Wrappers { get; }
 					= new LambdaExpression[]
@@ -1506,7 +1498,7 @@ namespace LinqToDB.DataProvider.Oracle
 			}
 
 			[Wrapper]
-			public class OracleTimeStampLTZ
+			public sealed class OracleTimeStampLTZ
 			{
 				public int Year       => throw new NotImplementedException();
 				public int Month      => throw new NotImplementedException();
@@ -1521,7 +1513,7 @@ namespace LinqToDB.DataProvider.Oracle
 			}
 
 			[Wrapper]
-			public class OracleDecimal
+			public sealed class OracleDecimal
 			{
 				public static OracleDecimal SetPrecision(OracleDecimal value1, int precision) => throw new NotImplementedException();
 
@@ -1529,7 +1521,7 @@ namespace LinqToDB.DataProvider.Oracle
 			}
 
 			[Wrapper]
-			public class OracleTimeStampTZ : TypeWrapper
+			public sealed class OracleTimeStampTZ : TypeWrapper
 			{
 				public OracleTimeStampTZ(object instance) : base(instance, null)
 				{
@@ -1551,7 +1543,7 @@ namespace LinqToDB.DataProvider.Oracle
 
 			#region BulkCopy
 			[Wrapper]
-			public class OracleBulkCopy : TypeWrapper, IDisposable
+			public sealed class OracleBulkCopy : TypeWrapper, IDisposable
 			{
 				private static LambdaExpression[] Wrappers { get; }
 					= new LambdaExpression[]
@@ -1642,7 +1634,7 @@ namespace LinqToDB.DataProvider.Oracle
 			}
 
 			[Wrapper]
-			public class OracleRowsCopiedEventArgs : TypeWrapper
+			public sealed class OracleRowsCopiedEventArgs : TypeWrapper
 			{
 				private static LambdaExpression[] Wrappers { get; }
 					= new LambdaExpression[]
@@ -1672,7 +1664,7 @@ namespace LinqToDB.DataProvider.Oracle
 			public delegate void OracleRowsCopiedEventHandler(object sender, OracleRowsCopiedEventArgs e);
 
 			[Wrapper]
-			public class OracleBulkCopyColumnMappingCollection : TypeWrapper
+			public sealed class OracleBulkCopyColumnMappingCollection : TypeWrapper
 			{
 				private static LambdaExpression[] Wrappers { get; }
 					= new LambdaExpression[]
@@ -1696,7 +1688,7 @@ namespace LinqToDB.DataProvider.Oracle
 			}
 
 			[Wrapper]
-			public class OracleBulkCopyColumnMapping : TypeWrapper
+			public sealed class OracleBulkCopyColumnMapping : TypeWrapper
 			{
 				public OracleBulkCopyColumnMapping(object instance) : base(instance, null)
 				{

@@ -1,5 +1,5 @@
 ﻿{
-	"NET472": {
+	"NETFX": {
 		"BasedOn": "MyConnectionStrings",
 		"Providers": [
 			// to enable test provider uncomment it and configure connection string if need
@@ -18,10 +18,11 @@
 			// SQL CE
 			//"SqlCe",
 
-			// Firebird 2.5-4
-			//"Firebird",
-			//"Firebird3",
-			//"Firebird4",
+			// Firebird
+			//"Firebird.2.5",
+			//"Firebird.3",
+			//"Firebird.4",
+			//"Firebird.5",
 
 			// Various versions of SQL Server
 			//"SqlServer.2005",
@@ -38,6 +39,8 @@
 			//"SqlServer.2017.MS",
 			//"SqlServer.2019",
 			//"SqlServer.2019.MS",
+			//"SqlServer.2022",
+			//"SqlServer.2022.MS",
 			//"SqlServer.SA",
 			//"SqlServer.SA.MS",
 			//"SqlServer.Contained",
@@ -48,12 +51,11 @@
 			//"SqlServer.Azure.MS",
 
 			// MySQL and MariaDB
-			//"MySql",
-			//"MySqlConnector",
-			//"MySql55",
-			//"MySql55Connector",
-			//"MariaDB",
-			//"MariaDBConnector",
+			//"MySql.8.0",
+			//"MySqlConnector.8.0",
+			//"MySql.5.7",
+			//"MySqlConnector.5.7",
+			//"MariaDB.11",
 
 			// PostgreSQL
 			//"PostgreSQL.9.2",
@@ -64,6 +66,8 @@
 			//"PostgreSQL.12",
 			//"PostgreSQL.13",
 			//"PostgreSQL.14",
+			//"PostgreSQL.15",
+			//"PostgreSQL.16",
 
 			// OleDB and ODBC MS Access providers
 			//"Access",
@@ -93,18 +97,31 @@
 			//"Oracle.18.Native",
 			//"Oracle.18.Devart.Direct",
 			//"Oracle.18.Devart.OCI",
+			//"Oracle.19.Managed",
+			//"Oracle.19.Native",
+			//"Oracle.19.Devart.Direct",
+			//"Oracle.19.Devart.OCI",
 			//"Oracle.21.Managed",
 			//"Oracle.21.Native",
 			//"Oracle.21.Devart.Direct",
 			//"Oracle.21.Devart.OCI",
+			//"Oracle.23.Managed",
+			//"Oracle.23.Native",
+			//"Oracle.23.Devart.Direct",
+			//"Oracle.23.Devart.OCI",
 
 			// SAP HANA 2
 			//"SapHana.Odbc",
 			//"SapHana.Native",
+
+			// ClickHouse
+			//"ClickHouse.Octonica",
+			//"ClickHouse.Client",
+			//"ClickHouse.MySql",
 		]
 	},
 
-	"CORE31": {
+	"NET60": {
 		"BasedOn": "MyConnectionStrings",
 		"DefaultConfiguration": "SQLite.MS",
 		"Providers": [
@@ -124,10 +141,11 @@
 			// SQL CE
 			//"SqlCe",
 
-			// Firebird 2.5-4
-			//"Firebird",
-			//"Firebird3",
-			//"Firebird4",
+			// Firebird
+			//"Firebird.2.5",
+			//"Firebird.3",
+			//"Firebird.4",
+			//"Firebird.5",
 
 			// Various versions of SQL Server
 			//"SqlServer.2005",
@@ -144,6 +162,8 @@
 			//"SqlServer.2017.MS",
 			//"SqlServer.2019",
 			//"SqlServer.2019.MS",
+			//"SqlServer.2022",
+			//"SqlServer.2022.MS",
 			//"SqlServer.SA",
 			//"SqlServer.SA.MS",
 			//"SqlServer.Contained",
@@ -154,12 +174,11 @@
 			//"SqlServer.Azure.MS",
 
 			// MySQL and MariaDB
-			//"MySql",
-			//"MySqlConnector",
-			//"MySql55",
-			//"MySql55Connector",
-			//"MariaDB",
-			//"MariaDBConnector",
+			//"MySql.8.0",
+			//"MySqlConnector.8.0",
+			//"MySql.5.7",
+			//"MySqlConnector.5.7",
+			//"MariaDB.11",
 
 			// PostgreSQL
 			//"PostgreSQL.9.2",
@@ -170,6 +189,8 @@
 			//"PostgreSQL.12",
 			//"PostgreSQL.13",
 			//"PostgreSQL.14",
+			//"PostgreSQL.15",
+			//"PostgreSQL.16",
 
 			// OleDB and ODBC MS Access providers
 			//"Access",
@@ -194,18 +215,29 @@
 			//"Oracle.18.Managed",
 			//"Oracle.18.Devart.Direct",
 			//"Oracle.18.Devart.OCI",
+			//"Oracle.19.Managed",
+			//"Oracle.19.Devart.Direct",
+			//"Oracle.19.Devart.OCI",
 			//"Oracle.21.Managed",
 			//"Oracle.21.Devart.Direct",
 			//"Oracle.21.Devart.OCI",
+			//"Oracle.23.Managed",
+			//"Oracle.23.Devart.Direct",
+			//"Oracle.23.Devart.OCI",
 
 			// SAP HANA 2
 			//"SapHana.Odbc",
 			//"SapHana.Native",
+
+			// ClickHouse
+			//"ClickHouse.Octonica",
+			//"ClickHouse.Client",
+			//"ClickHouse.MySql",
 		]
 	},
 
-	"NET60": {
-		"BasedOn": "CORE31",
+	"NET80": {
+		"BasedOn": "NET60",
 		"DefaultConfiguration": "SQLite.MS",
 		"Providers": [
 			// to enable test provider uncomment it and configure connection string if need
@@ -224,10 +256,11 @@
 			// SQL CE
 			//"SqlCe",
 
-			// Firebird 2.5-4
-			//"Firebird",
-			//"Firebird3",
-			//"Firebird4",
+			// Firebird
+			//"Firebird.2.5",
+			//"Firebird.3",
+			//"Firebird.4",
+			//"Firebird.5",
 
 			// Various versions of SQL Server
 			//"SqlServer.2005",
@@ -244,6 +277,8 @@
 			//"SqlServer.2017.MS",
 			//"SqlServer.2019",
 			//"SqlServer.2019.MS",
+			//"SqlServer.2022",
+			//"SqlServer.2022.MS",
 			//"SqlServer.SA",
 			//"SqlServer.SA.MS",
 			//"SqlServer.Contained",
@@ -254,12 +289,11 @@
 			//"SqlServer.Azure.MS",
 
 			// MySQL and MariaDB
-			//"MySql",
-			//"MySqlConnector",
-			//"MySql55",
-			//"MySql55Connector",
-			//"MariaDB",
-			//"MariaDBConnector",
+			//"MySql.8.0",
+			//"MySqlConnector.8.0",
+			//"MySql.5.7",
+			//"MySqlConnector.5.7",
+			//"MariaDB.11",
 
 			// PostgreSQL
 			//"PostgreSQL.9.2",
@@ -270,6 +304,8 @@
 			//"PostgreSQL.12",
 			//"PostgreSQL.13",
 			//"PostgreSQL.14",
+			//"PostgreSQL.15",
+			//"PostgreSQL.16",
 
 			// OleDB and ODBC MS Access providers
 			//"Access",
@@ -294,20 +330,32 @@
 			//"Oracle.18.Managed",
 			//"Oracle.18.Devart.Direct",
 			//"Oracle.18.Devart.OCI",
+			//"Oracle.19.Managed",
+			//"Oracle.19.Devart.Direct",
+			//"Oracle.19.Devart.OCI",
 			//"Oracle.21.Managed",
 			//"Oracle.21.Devart.Direct",
 			//"Oracle.21.Devart.OCI",
+			//"Oracle.23.Managed",
+			//"Oracle.23.Devart.Direct",
+			//"Oracle.23.Devart.OCI",
 
 			// SAP HANA 2
 			//"SapHana.Odbc",
 			//"SapHana.Native",
+
+			// ClickHouse
+			//"ClickHouse.Octonica",
+			//"ClickHouse.Client",
+			//"ClickHouse.MySql",
 		]
 	},
 
-	// for those providers you should specify connection string first to use them
+	// For those providers you should specify connection string first to use them.
+	// If we have setup script for database in "Data\Setup Scripts" folder, connection string is already set
 	"MyConnectionStrings": {
 		"BasedOn": "CommonConnectionStrings",
-		"DefaultConfiguration": "SQLite.Classic",
+		"DefaultConfiguration": "SQLite.MS",
 		// you can specify folder to save test sql baselines
 		"BaselinesPath": "",
 		"Connections": {
@@ -351,46 +399,56 @@
 				"Provider": "Microsoft.Data.SqlClient",
 				"ConnectionString": "TODO_ADD_CONNECTION_STRING"
 			},
+
 			"SqlServer.2017": {
 				"Provider": "System.Data.SqlClient",
-				"ConnectionString": "TODO_ADD_CONNECTION_STRING"
+				"ConnectionString": "Server=localhost,1417;Database=TestData;User Id=sa;Password=Password12!;Encrypt=true;TrustServerCertificate=true"
 			},
 			"SqlServer.2017.MS": {
 				"Provider": "Microsoft.Data.SqlClient",
-				"ConnectionString": "TODO_ADD_CONNECTION_STRING"
+				"ConnectionString": "Server=localhost,1417;Database=TestDataMS;User Id=sa;Password=Password12!;Encrypt=true;TrustServerCertificate=true"
 			},
-			"SqlServer.2018": {
+			"SqlServer.2019": {
 				"Provider": "System.Data.SqlClient",
-				"ConnectionString": "TODO_ADD_CONNECTION_STRING"
+				"ConnectionString": "Server=localhost,1419;Database=TestData;User Id=sa;Password=Password12!;Encrypt=true;TrustServerCertificate=true"
 			},
-			"SqlServer.2018.MS": {
+			"SqlServer.2019.MS": {
 				"Provider": "Microsoft.Data.SqlClient",
-				"ConnectionString": "TODO_ADD_CONNECTION_STRING"
+				"ConnectionString": "Server=localhost,1419;Database=TestDataMS;User Id=sa;Password=Password12!;Encrypt=true;TrustServerCertificate=true"
+			},
+			"SqlServer.2022": {
+				"Provider": "System.Data.SqlClient",
+				"ConnectionString": "Server=localhost,1422;Database=TestData;User Id=sa;Password=Password12!;Encrypt=true;TrustServerCertificate=true"
+			},
+			"SqlServer.2022.MS": {
+				"Provider": "Microsoft.Data.SqlClient",
+				"ConnectionString": "Server=localhost,1422;Database=TestDataMS;User Id=sa;Password=Password12!;Encrypt=true;TrustServerCertificate=true"
 			},
 			"SqlServer.SA": {
 				"Provider": "System.Data.SqlClient",
-				"ConnectionString": "TODO_ADD_CONNECTION_STRING"
+				"ConnectionString": "localhost,1419;Database=TestDataSA;User Id=sa;Password=Password12!;Encrypt=true;TrustServerCertificate=true"
 			},
 			"SqlServer.SA.MS": {
 				"Provider": "Microsoft.Data.SqlClient",
-				"ConnectionString": "TODO_ADD_CONNECTION_STRING"
+				"ConnectionString": "localhost,1419;Database=TestDataMSSA;User Id=sa;Password=Password12!;Encrypt=true;TrustServerCertificate=true"
 			},
 			"SqlServer.Contained": {
 				"Provider": "System.Data.SqlClient",
-				"ConnectionString": "TODO_ADD_CONNECTION_STRING"
+				"ConnectionString": "localhost,1419;Database=TestDataContained;User Id=sa;Password=Password12!Encrypt=true;TrustServerCertificate=true"
 			},
 			"SqlServer.Contained.MS": {
 				"Provider": "Microsoft.Data.SqlClient",
-				"ConnectionString": "TODO_ADD_CONNECTION_STRING"
+				"ConnectionString": "localhost,1419;Database=TestDataMSContained;User Id=sa;Password=Password12!;Encrypt=true;TrustServerCertificate=true"
 			},
 			"SqlServer.Northwind": {
 				"Provider": "System.Data.SqlClient",
-				"ConnectionString": "TODO_ADD_CONNECTION_STRING"
+				"ConnectionString": "localhost,1419;Database=Northwind;User Id=sa;Password=Password12!;Encrypt=true;TrustServerCertificate=true"
 			},
 			"SqlServer.Northwind.MS": {
 				"Provider": "Microsoft.Data.SqlClient",
-				"ConnectionString": "TODO_ADD_CONNECTION_STRING"
+				"ConnectionString": "localhost,1419;Database=NorthwindMS;User Id=sa;Password=Password12!;Encrypt=true;TrustServerCertificate=true"
 			},
+
 			"SqlServer.Azure": {
 				"Provider": "System.Data.SqlClient",
 				"ConnectionString": "TODO_ADD_CONNECTION_STRING"
@@ -403,13 +461,16 @@
 				"Provider": "IBM.Data.DB2",
 				"ConnectionString": "TODO_ADD_CONNECTION_STRING"
 			},
-			"Firebird": {
+			"Firebird.2.5": {
 				"ConnectionString": "TODO_ADD_CONNECTION_STRING"
 			},
-			"Firebird3": {
+			"Firebird.3": {
 				"ConnectionString": "TODO_ADD_CONNECTION_STRING"
 			},
-			"Firebird4": {
+			"Firebird.4": {
+				"ConnectionString": "TODO_ADD_CONNECTION_STRING"
+			},
+			"Firebird.5": {
 				"ConnectionString": "TODO_ADD_CONNECTION_STRING"
 			},
 			"Informix": {
@@ -419,30 +480,28 @@
 			"Informix.DB2": {
 				"ConnectionString": "TODO_ADD_CONNECTION_STRING"
 			},
-			"MySql": {
+			"MySql.8.0": {
 				"Provider": "MySql",
 				"ConnectionString": "TODO_ADD_CONNECTION_STRING"
 			},
-			"MySqlConnector": {
+			"MySqlConnector.8.0": {
 				"Provider": "MySqlConnector",
 				"ConnectionString": "TODO_ADD_CONNECTION_STRING"
 			},
-			"MySql55": {
+			"MySql.5.7": {
 				"Provider": "MySql",
 				"ConnectionString": "TODO_ADD_CONNECTION_STRING"
 			},
-			"MySql55Connector": {
+			"MySqlConnector.5.7": {
 				"Provider": "MySqlConnector",
 				"ConnectionString": "TODO_ADD_CONNECTION_STRING"
 			},
-			"MariaDB": {
-				"Provider": "MySql",
-				"ConnectionString": "TODO_ADD_CONNECTION_STRING"
-			},
-			"MariaDBConnector": {
+
+			"MariaDB.11": {
 				"Provider": "MySqlConnector",
-				"ConnectionString": "TODO_ADD_CONNECTION_STRING"
+				"ConnectionString": "Server=localhost;Port=3316;SslMode=None;Database=testdata;Uid=root;Pwd=root;charset=utf8;Allow User Variables=True;AllowLoadLocalInfile=true;"
 			},
+
 			"Oracle.11.Native": {
 				"Provider": "Oracle.DataAccess.Client",
 				"ConnectionString": "TODO_ADD_CONNECTION_STRING"
@@ -491,6 +550,22 @@
 				"Provider": "Devart.Data.Oracle",
 				"ConnectionString": "TODO_ADD_CONNECTION_STRING"
 			},
+			"Oracle.19.Native": {
+				"Provider": "Oracle.DataAccess.Client",
+				"ConnectionString": "TODO_ADD_CONNECTION_STRING"
+			},
+			"Oracle.19.Managed": {
+				"Provider": "Oracle.ManagedDataAccess.Client",
+				"ConnectionString": "TODO_ADD_CONNECTION_STRING"
+			},
+			"Oracle.19.Devart.Direct": {
+				"Provider": "Devart.Data.Oracle",
+				"ConnectionString": "TODO_ADD_CONNECTION_STRING"
+			},
+			"Oracle.19.Devart.OCI": {
+				"Provider": "Devart.Data.Oracle",
+				"ConnectionString": "TODO_ADD_CONNECTION_STRING"
+			},
 			"Oracle.21.Native": {
 				"Provider": "Oracle.DataAccess.Client",
 				"ConnectionString": "TODO_ADD_CONNECTION_STRING"
@@ -507,38 +582,64 @@
 				"Provider": "Devart.Data.Oracle",
 				"ConnectionString": "TODO_ADD_CONNECTION_STRING"
 			},
+			"Oracle.23.Native": {
+				"Provider": "Oracle.DataAccess.Client",
+				"ConnectionString": "TODO_ADD_CONNECTION_STRING"
+			},
+			"Oracle.23.Managed": {
+				"Provider": "Oracle.ManagedDataAccess.Client",
+				"ConnectionString": "TODO_ADD_CONNECTION_STRING"
+			},
+			"Oracle.23.Devart.Direct": {
+				"Provider": "Devart.Data.Oracle",
+				"ConnectionString": "TODO_ADD_CONNECTION_STRING"
+			},
+			"Oracle.23.Devart.OCI": {
+				"Provider": "Devart.Data.Oracle",
+				"ConnectionString": "TODO_ADD_CONNECTION_STRING"
+			},
+
 			"PostgreSQL.9.2": {
 				"Provider": "Npgsql",
-				"ConnectionString": "TODO_ADD_CONNECTION_STRING"
+				"ConnectionString": "Server=localhost;Port=5492;Database=testdata;User Id=postgres;Password=Password12!;Pooling=true;MinPoolSize=10;MaxPoolSize=100;"
 			},
 			"PostgreSQL.9.3": {
 				"Provider": "Npgsql",
-				"ConnectionString": "TODO_ADD_CONNECTION_STRING"
+				"ConnectionString": "Server=localhost;Port=5493;Database=testdata;User Id=postgres;Password=Password12!;Pooling=true;MinPoolSize=10;MaxPoolSize=100;"
 			},
 			"PostgreSQL.9.5": {
 				"Provider": "Npgsql",
-				"ConnectionString": "TODO_ADD_CONNECTION_STRING"
+				"ConnectionString": "Server=localhost;Port=5495;Database=testdata;User Id=postgres;Password=Password12!;Pooling=true;MinPoolSize=10;MaxPoolSize=100;"
 			},
 			"PostgreSQL.10": {
 				"Provider": "Npgsql",
-				"ConnectionString": "TODO_ADD_CONNECTION_STRING"
+				"ConnectionString": "Server=localhost;Port=5410;Database=testdata;User Id=postgres;Password=Password12!;Pooling=true;MinPoolSize=10;MaxPoolSize=100;"
 			},
 			"PostgreSQL.11": {
 				"Provider": "Npgsql",
-				"ConnectionString": "TODO_ADD_CONNECTION_STRING"
+				"ConnectionString": "Server=localhost;Port=5411;Database=testdata;User Id=postgres;Password=Password12!;Pooling=true;MinPoolSize=10;MaxPoolSize=100;"
 			},
 			"PostgreSQL.12": {
 				"Provider": "Npgsql",
-				"ConnectionString": "TODO_ADD_CONNECTION_STRING"
+				"ConnectionString": "Server=localhost;Port=5412;Database=testdata;User Id=postgres;Password=Password12!;Pooling=true;MinPoolSize=10;MaxPoolSize=100;"
 			},
 			"PostgreSQL.13": {
 				"Provider": "Npgsql",
-				"ConnectionString": "TODO_ADD_CONNECTION_STRING"
+				"ConnectionString": "Server=localhost;Port=5413;Database=testdata;User Id=postgres;Password=Password12!;Pooling=true;MinPoolSize=10;MaxPoolSize=100;"
 			},
 			"PostgreSQL.14": {
 				"Provider": "Npgsql",
-				"ConnectionString": "TODO_ADD_CONNECTION_STRING"
+				"ConnectionString": "Server=localhost;Port=5414;Database=testdata;User Id=postgres;Password=Password12!;Pooling=true;MinPoolSize=10;MaxPoolSize=100;"
 			},
+			"PostgreSQL.15": {
+				"Provider": "Npgsql",
+				"ConnectionString": "Server=localhost;Port=5415;Database=testdata;User Id=postgres;Password=Password12!;Pooling=true;MinPoolSize=10;MaxPoolSize=100;"
+			},
+			"PostgreSQL.16": {
+				"Provider": "Npgsql",
+				"ConnectionString": "Server=localhost;Port=5416;Database=testdata;User Id=postgres;Password=Password12!;Pooling=true;MinPoolSize=10;MaxPoolSize=100;"
+			},
+
 			"Sybase": {
 				"Provider": "Sybase.Data.AseClient",
 				"ConnectionString": "TODO_ADD_CONNECTION_STRING"
@@ -553,6 +654,19 @@
 			},
 			"SapHana.Odbc": {
 				"ConnectionString": "TODO_ADD_CONNECTION_STRING"
+			},
+
+			"ClickHouse.Octonica": {
+				"Provider": "Octonica.ClickHouseClient",
+				"ConnectionString": "Host=localhost;Port=9000;Database=testdb1;User=testuser;Password=testuser"
+			},
+			"ClickHouse.Client": {
+				"Provider": "ClickHouse.Client",
+				"ConnectionString": "Host=localhost;Port=8123;Database=testdb2;Username=testuser;Password=testuser;UseSession=true"
+			},
+			"ClickHouse.MySql": {
+				"Provider": "MySqlConnector",
+				"ConnectionString": "Host=localhost;Port=9004;Database=testdb3;Username=testuser;Password=testuser;Pooling=false;"
 			}
 		}
 	},

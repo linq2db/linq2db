@@ -89,7 +89,7 @@ namespace Tests.Linq
 
 		#region Helpers
 
-		[return: NotNullIfNotNull("ex")]
+		[return: NotNullIfNotNull(nameof(ex))]
 		static Expression? Unwrap(this Expression? ex)
 		{
 			if (ex == null)
@@ -220,7 +220,7 @@ namespace Tests.Linq
 			return path.Split('.').Aggregate(objExpression, Expression.PropertyOrField);
 		}
 
-		private class Envelope<T>
+		private sealed class Envelope<T>
 		{
 			public int TotalCount { get; set; }
 			public T Data { get; set; } = default!;
@@ -294,7 +294,7 @@ namespace Tests.Linq
 			}
 		}
 
-		class RownNumberHolder<T>
+		sealed class RownNumberHolder<T>
 		{
 			public T Data = default!;
 			public long RowNumber;

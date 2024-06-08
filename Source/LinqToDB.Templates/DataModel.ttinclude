@@ -20,6 +20,7 @@ string   NamespaceName
 
 public static string BaseDataContextClass;
 public static bool   EnforceModelNullability = true;
+public static string GetDataOptionsMethod;
 
 public string   ServerName;
 public string   DatabaseName;
@@ -47,11 +48,13 @@ public bool SingularizeDataContextPropertyNames;
 public bool PluralizeForeignKeyNames            = true;
 public bool SingularizeForeignKeyNames          = true;
 
+public bool NormalizeParameterName              = true;
+public bool NormalizeProcedureColumnName        = true;
 public bool NormalizeNames                      = true;
 public bool NormalizeNamesWithoutUnderscores;
 
-private Func<string, bool, string> _toValidName;
-public Func<string, bool, string> ToValidName
+private Func<string,bool,string> _toValidName;
+public  Func<string,bool,string>  ToValidName
 {
 	get { return _toValidName ?? ToValidNameDefault; }
 	set { _toValidName = value;                      }
@@ -62,6 +65,13 @@ public Func<string, bool, string> ConvertToCompilable
 {
 	get { return _convertToCompilabl ?? ConvertToCompilableDefault; }
 	set { _convertToCompilabl = value;                              }
+}
+
+private Func<string, bool, string> _normalizeName;
+public Func<string, bool, string>   NormalizeName
+{
+	get { return _normalizeName ?? NormalizeNameDefault; }
+	set { _normalizeName = value;                        }
 }
 
 private Func<ForeignKey, string> _getAssociationExtensionPluralName;
@@ -113,7 +123,7 @@ static Func<DataConnection,GetSchemaOptions,DatabaseSchema> LoadDatabaseSchema =
 
 void LoadServerMetadata(DataConnection dataConnection)
 {
-	SqlBuilder = dataConnection.DataProvider.CreateSqlBuilder(dataConnection.MappingSchema);
+	SqlBuilder = dataConnection.DataProvider.CreateSqlBuilder(dataConnection.MappingSchema, dataConnection.Options);
 
 	var db = LoadDatabaseSchema(dataConnection, GetSchemaOptions);
 
@@ -409,8 +419,9 @@ string CheckColumnName(string memberName)
 			.Replace(".", "_")
 			.Replace("\u00A3", "Pound");
 
-		if (KeyWords.Contains(memberName))
-			memberName = "@" + memberName;
+		IsProcedureColumn = true;
+		memberName = NormalizeName(memberName, false);
+		IsProcedureColumn = false;
 	}
 	return memberName;
 }
@@ -448,21 +459,12 @@ void LoadMetadata(DataConnection dataConnection)
 
 	foreach (var t in Tables.Values)
 	{
-		if (KeyWords.Contains(t.TypeName))
-			t.TypeName = "@" + t.TypeName;
-
-		if (KeyWords.Contains(t.DataContextPropertyName))
-			t.DataContextPropertyName = "@" + t.DataContextPropertyName;
-
-		t.TypeName                = ConvertToCompilable(t.TypeName,                true);
-		t.DataContextPropertyName = ConvertToCompilable(t.DataContextPropertyName, true);
+		t.TypeName                = NormalizeName(t.TypeName,                true);
+		t.DataContextPropertyName = NormalizeName(t.DataContextPropertyName, true);
 
 		foreach (var col in t.Columns.Values)
 		{
-			if (KeyWords.Contains(col.MemberName))
-				col.MemberName = "@" + col.MemberName;
-
-			col.MemberName = ConvertToCompilable(col.MemberName, true);
+			col.MemberName = NormalizeName(col.MemberName, true);
 
 			if (col.MemberName == t.TypeName)
 				col.MemberName += "Column";
@@ -470,10 +472,7 @@ void LoadMetadata(DataConnection dataConnection)
 
 		foreach (var fk in t.ForeignKeys.Values)
 		{
-			if (KeyWords.Contains(fk.MemberName))
-				fk.MemberName = "@" + fk.MemberName;
-
-			fk.MemberName = ConvertToCompilable(fk.MemberName, true);
+			fk.MemberName = NormalizeName(fk.MemberName, true);
 
 			if (fk.MemberName == t.TypeName)
 				fk.MemberName += "_FK";
@@ -513,16 +512,16 @@ void LoadMetadata(DataConnection dataConnection)
 
 	foreach (var proc in Procedures.Values)
 	{
-		proc.Name = ConvertToCompilable(proc.Name, false);
+		proc.Name = NormalizeName(proc.Name, false);
 
-		if (KeyWords.Contains(proc.Name))
-			proc.Name = "@" + proc.Name;
-
+		// for now indicate parameter using instance field to not break API
+		// if requested, we can add enum with name types and pass it to normalization delegates API
+		IsParameter = true;
 		foreach (var param in proc.ProcParameters)
 		{
-			if (KeyWords.Contains(param.ParameterName))
-				param.ParameterName = ConvertToCompilable("@" + param.ParameterName, true);
+			param.ParameterName = NormalizeName(param.ParameterName, true);
 		}
+		IsParameter = false;
 	}
 
 	AfterLoadMetadata();
@@ -568,6 +567,16 @@ string SuggestNoDuplicate(IEnumerable<string> currentNames, string newName, stri
 	}
 
 	return result;
+}
+
+string NormalizeNameDefault(string name, bool mayRemoveUnderscore)
+{
+	name = ConvertToCompilable(name, mayRemoveUnderscore);
+
+	if (KeyWords.Contains(name))
+		name = "@" + name;
+
+	return name;
 }
 
 string ConvertToCompilableDefault(string name, bool mayRemoveUnderscore)
@@ -877,9 +886,13 @@ public class Parameter
 
 private int _counter = 0;
 
+public bool IsParameter;
+public bool IsProcedureColumn;
+
 string ToValidNameDefault(string name, bool mayRemoveUnderscore)
 {
-	if (NormalizeNames)
+	var normalize = IsParameter && NormalizeParameterName || IsProcedureColumn && NormalizeProcedureColumnName || (!IsParameter && !IsProcedureColumn && NormalizeNames);
+	if (normalize)
 	{
 		if (mayRemoveUnderscore && name.Contains("_"))
 			name = SplitAndJoin(name, "", '_');
@@ -898,9 +911,12 @@ string ToValidNameDefault(string name, bool mayRemoveUnderscore)
 	if (string.IsNullOrEmpty(name))
 		name = "_" + _counter++;
 
-	if (NormalizeNames)
+	if (normalize)
 	{
-		name = char.ToUpper(name[0]) + name.Substring(1);
+		if (IsParameter)
+			name = char.ToLower(name[0]) + name.Substring(1);
+		else
+			name = char.ToUpper(name[0]) + name.Substring(1);
 	}
 
 	return name;
@@ -991,6 +1007,8 @@ static bool IsValueTypeDefault(string typeName)
 		case "NpgsqlInet?":
 		case "NpgsqlDateTime":
 		case "NpgsqlDateTime?":
+		case "NpgsqlCidr":
+		case "NpgsqlCidr?":
 			return true;
 		case "object":
 		case "string":

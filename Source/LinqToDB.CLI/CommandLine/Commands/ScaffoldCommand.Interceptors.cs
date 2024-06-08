@@ -71,7 +71,9 @@ namespace LinqToDB.CommandLine
 			{
 				// this method loads assemblies from both assembly folder and nuget cache and requires deps.json file
 				// see https://github.com/dotnet/runtime/issues/18527#issuecomment-611499261
-				var dependencyContext = DependencyContext.Load(interceptorsAssembly);
+				var dependencyContext = DependencyContext.Load(interceptorsAssembly)
+					?? throw new InvalidOperationException($"DependencyContext.Load cannot load interceptor assembly");
+
 				var resolver          = new ICompilationAssemblyResolver[]
 				{
 					new AppBaseCompilationAssemblyResolver(assemblyFolder),
@@ -265,7 +267,7 @@ namespace LinqToDB.CommandLine
 			var (status, templateAsembly) = CompileAndLoadAssembly(TEMPLATE_ASSEMBLY_NAME, templateCode, references);
 
 			// find and instantiate template host class
-			var type = templateAsembly!.GetType(TEMPLATE_CLASS_NAME);
+			var type = templateAsembly!.GetTypes().FirstOrDefault(type => type.Name == TEMPLATE_CLASS_NAME);
 			if (type == null)
 			{
 				Console.Error.WriteLine("Cannot find template in T4 file. Make sure you didn't changed @template directive");
@@ -323,7 +325,7 @@ namespace LinqToDB.CommandLine
 
 				Console.Error.WriteLine("T4 compilation failed:");
 				foreach (var diag in result.Diagnostics)
-					Console.Error.WriteLine($"\t{diag}");
+					Console.Error.WriteLine(FormattableString.Invariant($"\t{diag}"));
 
 				return (StatusCodes.EXPECTED_ERROR, null);
 			}
@@ -348,7 +350,7 @@ namespace LinqToDB.CommandLine
 
 			var generator    = new TemplateGenerator();
 			var templateText = File.ReadAllText(t4templatePath);
-			var template     = ParsedTemplate.FromText(templateText, generator);
+			var template     = generator.ParseTemplate(Path.GetFileName(t4templatePath), templateText);
 
 			// parse template by mono.t4
 			if (!generator.PreprocessTemplate(null, TEMPLATE_CLASS_NAME, null, templateText, out var language, out var referencesFromTemplate, out templateCode))
@@ -357,7 +359,7 @@ namespace LinqToDB.CommandLine
 				foreach (CompilerError? error in generator.Errors)
 				{
 					if (error != null)
-						Console.Error.WriteLine($"\t{error.FileName} ({error.Line}, {error.Column}): {error.ErrorText}");
+						Console.Error.WriteLine(FormattableString.Invariant($"\t{error.FileName} ({error.Line}, {error.Column}): {error.ErrorText}"));
 				}
 
 				return StatusCodes.T4_ERROR;
@@ -397,8 +399,10 @@ namespace LinqToDB.CommandLine
 			// reference netstandard + System*
 			referencesList.Add(MetadataReference.CreateFromFile(Path.Combine(fwPath, "netstandard.dll")));
 			foreach (var asmName in Directory.GetFiles(fwPath, "System*.dll"))
-				referencesList.Add(MetadataReference.CreateFromFile(Path.Combine(fwPath, asmName)));
-
+			{
+				if (!asmName.Contains(".Native.", StringComparison.Ordinal))
+					referencesList.Add(MetadataReference.CreateFromFile(Path.Combine(fwPath, asmName)));
+			}
 			var usings = new List<string>();
 			foreach (var directive in template.Directives)
 			{

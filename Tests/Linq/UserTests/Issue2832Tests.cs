@@ -59,13 +59,13 @@ namespace Tests.UserTests
 		}
 
 		[LinqToDB.Sql.FunctionAttribute(Name = "UTILS.GREATESTNOTNULL3", ServerSideOnly = true)]
-		public static decimal? UtilsGreatestnotnull3(decimal? value1, decimal? value2, decimal? value3)
+		private static decimal? UtilsGreatestnotnull3(decimal? value1, decimal? value2, decimal? value3)
 		{
 			throw new NotImplementedException();
 		}
 
 		[Test]
-		public void TestIssue2832([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void TestIssue2832([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{

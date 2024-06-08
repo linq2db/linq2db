@@ -23,6 +23,12 @@ IF EXISTS (SELECT * FROM sys.objects WHERE type = 'P' AND name = 'TestProcedure'
 	DROP PROCEDURE TestSchema.TestProcedure
 GO
 
+IF EXISTS (SELECT * FROM sys.objects WHERE type = 'IF' AND name = 'SchemaTableFunction' AND schema_id = SCHEMA_ID('TestSchema'))
+BEGIN DROP FUNCTION TestSchema.SchemaTableFunction
+END
+GO
+
+
 CREATE TABLE InheritanceParent
 (
 	InheritanceParentId int          NOT NULL CONSTRAINT PK_InheritanceParent PRIMARY KEY CLUSTERED,
@@ -487,6 +493,8 @@ CREATE TABLE AllTypes
 -- SKIP SqlServer.2017.MS BEGIN
 -- SKIP SqlServer.2019 BEGIN
 -- SKIP SqlServer.2019.MS BEGIN
+-- SKIP SqlServer.2022 BEGIN
+-- SKIP SqlServer.2022.MS BEGIN
 -- SKIP SqlServer.SA BEGIN
 -- SKIP SqlServer.SA.MS BEGIN
 -- SKIP SqlServer.Contained BEGIN
@@ -517,6 +525,8 @@ CREATE TABLE AllTypes
 -- SKIP SqlServer.2017.MS END
 -- SKIP SqlServer.2019 END
 -- SKIP SqlServer.2019.MS END
+-- SKIP SqlServer.2022 END
+-- SKIP SqlServer.2022.MS END
 -- SKIP SqlServer.SA END
 -- SKIP SqlServer.SA.MS END
 -- SKIP SqlServer.Contained END
@@ -705,6 +715,7 @@ CREATE TABLE LinqDataTypes
 GO
 -- SKIP SqlServer.2005.MS END
 -- SKIP SqlServer.2005 END
+
 -- SKIP SqlServer.2008 BEGIN
 -- SKIP SqlServer.2008.MS BEGIN
 -- SKIP SqlServer.2012 BEGIN
@@ -717,6 +728,8 @@ GO
 -- SKIP SqlServer.2017.MS BEGIN
 -- SKIP SqlServer.2019 BEGIN
 -- SKIP SqlServer.2019.MS BEGIN
+-- SKIP SqlServer.2022 BEGIN
+-- SKIP SqlServer.2022.MS BEGIN
 -- SKIP SqlServer.SA BEGIN
 -- SKIP SqlServer.SA.MS BEGIN
 -- SKIP SqlServer.Contained BEGIN
@@ -750,6 +763,8 @@ GO
 -- SKIP SqlServer.2017.MS END
 -- SKIP SqlServer.2019 END
 -- SKIP SqlServer.2019.MS END
+-- SKIP SqlServer.2022 END
+-- SKIP SqlServer.2022.MS END
 -- SKIP SqlServer.SA END
 -- SKIP SqlServer.SA.MS END
 -- SKIP SqlServer.Contained END
@@ -1144,11 +1159,21 @@ END
 GO
 -- SKIP SqlServer.2005.MS END
 -- SKIP SqlServer.2005 END
+
 CREATE PROCEDURE TestSchema.TestProcedure
 AS
 BEGIN
 	SELECT 1
 END
+GO
+
+CREATE FUNCTION TestSchema.SchemaTableFunction(@id int)
+RETURNS TABLE
+AS
+RETURN
+(
+	SELECT * FROM Parent WHERE ParentID = @id
+)
 GO
 
 
@@ -1343,7 +1368,9 @@ CREATE TABLE CollatedTable
 GO
 
 -- SKIP SqlServer.2005 BEGIN
+-- SKIP SqlServer.2005.MS BEGIN
 -- SKIP SqlServer.2008 BEGIN
+-- SKIP SqlServer.2008.MS BEGIN
 IF EXISTS (SELECT name FROM sys.sequences  WHERE name = N'TestSequence')
 	DROP SEQUENCE dbo.TestSequence
 GO
@@ -1351,5 +1378,28 @@ CREATE SEQUENCE dbo.TestSequence
 	START WITH 1
 	INCREMENT BY 1;
 GO
+-- SKIP SqlServer.2008.MS END
 -- SKIP SqlServer.2008 END
+-- SKIP SqlServer.2005.MS END
 -- SKIP SqlServer.2005 END
+
+-- one-to-one (by primary key) relation for scaffold testing
+GO
+DROP TABLE Provider
+GO
+DROP TABLE Member
+GO
+CREATE TABLE Member(
+	MemberId INT IDENTITY(1,1) NOT NULL,
+	Alias    NVARCHAR(50)      NOT NULL,
+ CONSTRAINT PK_Member PRIMARY KEY (MemberId)
+)
+GO
+CREATE TABLE Provider(
+	ProviderId INT           NOT NULL,
+	Test       NVARCHAR(MAX) NOT NULL,
+ CONSTRAINT PK_Provider PRIMARY KEY (ProviderId)
+)
+GO
+ALTER TABLE Provider WITH CHECK ADD CONSTRAINT FK_Provider_Member FOREIGN KEY(ProviderId) REFERENCES Member (MemberId)
+GO

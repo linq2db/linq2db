@@ -50,7 +50,7 @@ namespace LinqToDB.Expressions
 			_staticFunc = func;
 		}
 
-		private Expression? Find<T>(IEnumerable<T> source, Func<T, Expression?> func)
+		private static Expression? Find<T>(IEnumerable<T> source, Func<T, Expression?> func)
 		{
 			foreach (var item in source)
 			{
@@ -258,17 +258,43 @@ namespace LinqToDB.Expressions
 				}
 
 				case ExpressionType.Extension:
+				{
+					if (expr is SqlGenericConstructorExpression generic)
+					{
+						return Find(generic.Parameters, ParameterFind) ??
+						       Find(generic.Assignments, AssignmentFind);
+					}
+
+					if (expr is SqlErrorExpression error)
+					{
+						return Find(error.Expression);
+					}
+
+					if (expr is SqlAdjustTypeExpression adjustType)
+					{
+						return Find(adjustType.Expression);
+					}
+
+					if (expr is SqlGenericParamAccessExpression paramAccess)
+					{
+						return Find(paramAccess.Constructor);
+					}
+
+					if (expr is SqlDefaultIfEmptyExpression defaultIfEmptyExpression)
+					{
+						return Find(defaultIfEmptyExpression.InnerExpression);
+					}
+
 					if (expr.CanReduce)
 						return Find(expr.Reduce());
 
 					break;
-
+				}
 					// final expressions
 				case ExpressionType.Parameter:
 				case ExpressionType.Default  :
 				case ExpressionType.Constant : break;
 
-					// TODO: comment before merge to avoid potential regressions?
 				default:
 					throw new NotImplementedException($"Unhandled expression type: {expr.NodeType}");
 			}
@@ -295,6 +321,16 @@ namespace LinqToDB.Expressions
 				MemberBindingType.MemberBinding => Find(((MemberMemberBinding)b).Bindings,     MemberBindingFind),
 				_                               => null,
 			};
+		}
+
+		private Expression? AssignmentFind(SqlGenericConstructorExpression.Assignment assignment)
+		{
+			return Find(assignment.Expression);
+		}
+
+		private Expression? ParameterFind(SqlGenericConstructorExpression.Parameter parameter)
+		{
+			return Find(parameter.Expression);
 		}
 
 		Expression? ElementInitFind(ElementInit ei)

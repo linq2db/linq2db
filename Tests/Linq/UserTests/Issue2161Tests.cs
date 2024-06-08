@@ -49,7 +49,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void TestLoadWithDiscriminator([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void TestLoadWithDiscriminator([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable<Order>(new []{new OrderType1() { OrderId = 1, OrderName = "Order1" }}))
@@ -61,7 +61,7 @@ namespace Tests.UserTests
 				var query = db.GetTable<Order>().LoadWith(o => o.Details).Where(o => o.OrderId == 1);
 				var order = query.FirstOrDefault();
 
-				Assert.AreEqual(2, interceptor.Count);
+				Assert.That(interceptor.Count, Is.EqualTo(2));
 			}
 		}
 

@@ -17,7 +17,7 @@ namespace Tests.UserTests
 	public class Issue3148Tests : TestBase
 	{
 		[Test]
-		public void TestDefaultExpression([IncludeDataSources(true, TestProvName.AllSQLite)] string context, [Values] bool withDefault)
+		public void TestDefaultExpression([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context, [Values] bool withDefault)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -41,12 +41,12 @@ namespace Tests.UserTests
 				query1.ToArray();
 				var cacheMiss = Query<Person>.CacheMissCount;
 				query2.ToArray();
-				Assert.AreEqual(cacheMiss, Query<Person>.CacheMissCount);
+				Assert.That(Query<Person>.CacheMissCount, Is.EqualTo(cacheMiss));
 			}
 		}
 
 		[Test]
-		public void TestDefaultExpression_01([IncludeDataSources(true, TestProvName.AllSQLite)] string context, [Values] bool withDefault)
+		public void TestDefaultExpression_01([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context, [Values] bool withDefault)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -64,12 +64,12 @@ namespace Tests.UserTests
 				query1.ToArray();
 				var cacheMiss = Query<Person>.CacheMissCount;
 				query2.ToArray();
-				Assert.AreEqual(cacheMiss, Query<Person>.CacheMissCount);
+				Assert.That(Query<Person>.CacheMissCount, Is.EqualTo(cacheMiss));
 			}
 		}
 
 		[Test]
-		public void TestDefaultExpression_02([IncludeDataSources(true, TestProvName.AllSQLite)] string context, [Values] bool withDefault)
+		public void TestDefaultExpression_02([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context, [Values] bool withDefault)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -87,12 +87,12 @@ namespace Tests.UserTests
 				query1.ToArray();
 				var cacheMiss = Query<Person>.CacheMissCount;
 				query2.ToArray();
-				Assert.AreEqual(cacheMiss, Query<Person>.CacheMissCount);
+				Assert.That(Query<Person>.CacheMissCount, Is.EqualTo(cacheMiss));
 			}
 		}
 
 		[Test]
-		public void TestDefaultExpression_05([IncludeDataSources(true, TestProvName.AllSQLite)] string context, [Values] bool withDefault)
+		public void TestDefaultExpression_05([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context, [Values] bool withDefault)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -120,12 +120,12 @@ namespace Tests.UserTests
 				query1.ToArray();
 				var cacheMiss = Query<Parent>.CacheMissCount;
 				query2.ToArray();
-				Assert.AreEqual(cacheMiss, Query<Parent>.CacheMissCount);
+				Assert.That(Query<Parent>.CacheMissCount, Is.EqualTo(cacheMiss));
 			}
 		}
 
 		[Test]
-		public void TestDefaultExpression_06([IncludeDataSources(true, TestProvName.AllSQLite)] string context, [Values] bool withDefault)
+		public void TestDefaultExpression_06([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context, [Values] bool withDefault)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -153,7 +153,7 @@ namespace Tests.UserTests
 				query1.ToArray();
 				var cacheMiss = Query<Parent>.CacheMissCount;
 				query2.ToArray();
-				Assert.AreEqual(cacheMiss, Query<Parent>.CacheMissCount);
+				Assert.That(Query<Parent>.CacheMissCount, Is.EqualTo(cacheMiss));
 			}
 		}
 
@@ -186,14 +186,13 @@ namespace Tests.UserTests
 				query1.ToArray();
 				var cacheMiss = Query<Parent>.CacheMissCount;
 				query2.ToArray();
-				Assert.AreEqual(cacheMiss, Query<Parent>.CacheMissCount);
+				Assert.That(Query<Parent>.CacheMissCount, Is.EqualTo(cacheMiss));
 			}
 		}
 
-		// no idea wether it should work, but now it throws (due to bad expression rewrite?)
-		// InvalidOperationException : variable 'x' of type 'Tests.Model.Child' referenced from scope '', but it is not defined
-		[Test, ActiveIssue]
-		public void TestDefaultExpression_08([IncludeDataSources(true, TestProvName.AllSQLite)] string context, [Values] bool withDefault)
+		// Test requires OUTER/LATERAL APPLY support from Provider
+		[Test]
+		public void TestDefaultExpression_08([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus, TestProvName.AllPostgreSQL)] string context, [Values] bool withDefault)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -231,26 +230,13 @@ namespace Tests.UserTests
 				query1.ToArray();
 				var cacheMiss = Query<Child>.CacheMissCount;
 				query2.ToArray();
-				Assert.AreEqual(cacheMiss, Query<Child>.CacheMissCount);
+				Assert.That(Query<Child>.CacheMissCount, Is.EqualTo(cacheMiss));
 			}
 		}
 
-		// some databases require EXISTS
-		[Test, ActiveIssue(
-			Configurations = new[]
-			{
-				TestProvName.AllAccess,
-				ProviderName.DB2,
-				TestProvName.AllFirebird,
-				TestProvName.AllInformix,
-				TestProvName.AllOracle,
-				TestProvName.AllPostgreSQL,
-				TestProvName.AllSapHana,
-				ProviderName.SqlCe,
-				TestProvName.AllSqlServer,
-				TestProvName.AllSybase
-			})]
-		public void TestDefaultExpression_09([DataSources] string context, [Values] bool withDefault)
+		// Test requires OUTER/LATERAL APPLY support from Provider
+		[Test]
+		public void TestDefaultExpression_09([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus, TestProvName.AllPostgreSQL)] string context, [Values] bool withDefault)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -286,12 +272,44 @@ namespace Tests.UserTests
 				query1.ToArray();
 				var cacheMiss = Query<Child>.CacheMissCount;
 				query2.ToArray();
-				Assert.AreEqual(cacheMiss, Query<Child>.CacheMissCount);
+				Assert.That(Query<Child>.CacheMissCount, Is.EqualTo(cacheMiss));
+			}
+		}
+
+		// Test requires OUTER/LATERAL APPLY or ROW_NUMBER Window function support from Provider
+		[Test]
+		public void TestDefaultExpression_10([IncludeDataSources(true, ProviderName.SQLiteClassic, TestProvName.AllSqlServer2008Plus, TestProvName.AllPostgreSQL)] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var query1 = db.Child
+					.Where(x => x.GrandChildren.FirstOrDefault() != x
+						            .GrandChildren
+						            .FirstOrDefault()!
+					            &&
+					            x.ParentID != x
+						            .Parent!.Children
+						            .Select(p => p.ChildID)
+						            .FirstOrDefault());
+				var query2 = db.Child
+					.Where(x => x.GrandChildren.FirstOrDefault() != x
+						            .GrandChildren
+						            .FirstOrDefault()!
+					            &&
+					            x.ParentID != x
+						            .Parent!.Children
+						            .Select(p => p.ChildID)
+						            .FirstOrDefault());
+
+				query1.ToArray();
+				var cacheMiss = Query<Child>.CacheMissCount;
+				query2.ToArray();
+				Assert.That(Query<Child>.CacheMissCount, Is.EqualTo(cacheMiss));
 			}
 		}
 
 		[Test]
-		public void TestDefaultExpression_10([IncludeDataSources(TestProvName.AllSqlServer2016Plus)] string context, [Values] bool withDefault)
+		public void TestTruncateDrop([IncludeDataSources(TestProvName.AllSqlServer2016Plus)] string context, [Values] bool withDefault)
 		{
 			using (var db = new TestDataConnection(context))
 			using (var tb = db.CreateLocalTable<TestTable>())
@@ -307,9 +325,9 @@ namespace Tests.UserTests
 				}
 
 				provider.Execute<int>(query1.Body);
-				Assert.True(db.LastQuery!.Contains("DELETE FROM"));
+				Assert.That(db.LastQuery!, Does.Contain("DELETE FROM"));
 				provider.Execute<int>(query2.Body);
-				Assert.True(db.LastQuery!.Contains("DROP TABLE IF EXISTS"));
+				Assert.That(db.LastQuery!, Does.Contain("DROP TABLE IF EXISTS"));
 			}
 		}
 
@@ -333,13 +351,13 @@ namespace Tests.UserTests
 				}
 				catch (Exception e)
 				{
-					Assert.True(e.Message.Contains("invalid table name"));
+					Assert.That(e.Message, Does.Contain("invalid table name"));
 				}
 			}
 		}
 
 		[Test]
-		public void TestDefaultExpression_12([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values] bool withDefault)
+		public void TestDefaultExpression_12([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context, [Values] bool withDefault)
 		{
 			using (var db = new TestDataConnection(context))
 			{
@@ -363,12 +381,12 @@ namespace Tests.UserTests
 				query1.ToArray();
 				var cacheMiss = Query<TestTable>.CacheMissCount;
 				query2.ToArray();
-				Assert.AreEqual(cacheMiss, Query<TestTable>.CacheMissCount);
+				Assert.That(Query<TestTable>.CacheMissCount, Is.EqualTo(cacheMiss));
 			}
 		}
 
 		[Test]
-		public void TestDefaultExpression_13([IncludeDataSources(true, TestProvName.AllSQLite)] string context, [Values] bool withDefault)
+		public void TestDefaultExpression_13([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context, [Values] bool withDefault)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -386,12 +404,12 @@ namespace Tests.UserTests
 				query1.ToArray();
 				var cacheMiss = Query<Person>.CacheMissCount;
 				query2.ToArray();
-				Assert.AreEqual(cacheMiss, Query<Person>.CacheMissCount);
+				Assert.That(Query<Person>.CacheMissCount, Is.EqualTo(cacheMiss));
 			}
 		}
 
 		[Test]
-		public void TestDefaultExpression_14([IncludeDataSources(true, TestProvName.AllSQLite)] string context, [Values] bool withDefault)
+		public void TestDefaultExpression_14([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context, [Values] bool withDefault)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -409,12 +427,12 @@ namespace Tests.UserTests
 				query1.ToArray();
 				var cacheMiss = Query<Person>.CacheMissCount;
 				query2.ToArray();
-				Assert.AreEqual(cacheMiss, Query<Person>.CacheMissCount);
+				Assert.That(Query<Person>.CacheMissCount, Is.EqualTo(cacheMiss));
 			}
 		}
 
 		[Test]
-		public void TestDefaultExpression_15([IncludeDataSources(true, TestProvName.AllSQLite)] string context, [Values] bool withDefault)
+		public void TestDefaultExpression_15([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context, [Values] bool withDefault)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -432,12 +450,12 @@ namespace Tests.UserTests
 				query1.ToArray();
 				var cacheMiss = Query<Person>.CacheMissCount;
 				query2.ToArray();
-				Assert.AreEqual(cacheMiss, Query<Person>.CacheMissCount);
+				Assert.That(Query<Person>.CacheMissCount, Is.EqualTo(cacheMiss));
 			}
 		}
 
 		[Test]
-		public void TestDefaultExpression_16([IncludeDataSources(true, TestProvName.AllSQLite)] string context, [Values] bool withDefault)
+		public void TestDefaultExpression_16([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context, [Values] bool withDefault)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -469,12 +487,12 @@ namespace Tests.UserTests
 				query1.ToArray();
 				var cacheMiss = Query<Person>.CacheMissCount;
 				query2.ToArray();
-				Assert.AreEqual(cacheMiss, Query<Person>.CacheMissCount);
+				Assert.That(Query<Person>.CacheMissCount, Is.EqualTo(cacheMiss));
 			}
 		}
 
 		[Test]
-		public void TestDefaultExpression_17([IncludeDataSources(true, TestProvName.AllSQLite)] string context, [Values] bool withDefault)
+		public void TestDefaultExpression_17([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context, [Values] bool withDefault)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -490,12 +508,12 @@ namespace Tests.UserTests
 				query1.ToArray();
 				var cacheMiss = Query<int>.CacheMissCount;
 				query2.ToArray();
-				Assert.AreEqual(cacheMiss, Query<int>.CacheMissCount);
+				Assert.That(Query<int>.CacheMissCount, Is.EqualTo(cacheMiss));
 			}
 		}
 
 		[Test]
-		public void TestDefaultExpression_18([IncludeDataSources(true, TestProvName.AllSQLite)] string context, [Values] bool withDefault)
+		public void TestDefaultExpression_18([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context, [Values] bool withDefault)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -511,12 +529,12 @@ namespace Tests.UserTests
 				query1.ToArray();
 				var cacheMiss = Query<int?>.CacheMissCount;
 				query2.ToArray();
-				Assert.AreEqual(cacheMiss, Query<int?>.CacheMissCount);
+				Assert.That(Query<int?>.CacheMissCount, Is.EqualTo(cacheMiss));
 			}
 		}
 
 		[Test]
-		public void TestDefaultExpression_19([IncludeDataSources(true, TestProvName.AllSQLite)] string context, [Values] bool withDefault)
+		public void TestDefaultExpression_19([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context, [Values] bool withDefault)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -533,12 +551,12 @@ namespace Tests.UserTests
 				query1.ToArray();
 				var cacheMiss = Query<string>.CacheMissCount;
 				query2.ToArray();
-				Assert.AreEqual(cacheMiss, Query<string>.CacheMissCount);
+				Assert.That(Query<string>.CacheMissCount, Is.EqualTo(cacheMiss));
 			}
 		}
 
 		[Test]
-		public void TestDefaultExpression_20([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllSqlServer)] string context, [Values] bool withDefault)
+		public void TestDefaultExpression_20([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context, [Values] bool withDefault)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -556,12 +574,12 @@ namespace Tests.UserTests
 				query1.ToArray();
 				var cacheMiss = Query<Person>.CacheMissCount;
 				query2.ToArray();
-				Assert.AreEqual(cacheMiss, Query<Person>.CacheMissCount);
+				Assert.That(Query<Person>.CacheMissCount, Is.EqualTo(cacheMiss));
 			}
 		}
 
 		[Test]
-		public void TestDefaultExpression_21([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values] bool withDefault)
+		public void TestDefaultExpression_21([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context, [Values] bool withDefault)
 		{
 			using (var db = new TestDataConnection(context))
 			{
@@ -585,12 +603,12 @@ namespace Tests.UserTests
 				query1.ToArray();
 				var cacheMiss = Query<TestTable>.CacheMissCount;
 				query2.ToArray();
-				Assert.AreEqual(cacheMiss, Query<TestTable>.CacheMissCount);
+				Assert.That(Query<TestTable>.CacheMissCount, Is.EqualTo(cacheMiss));
 			}
 		}
 
 		[Test]
-		public void TestDefaultExpression_22([IncludeDataSources(true, TestProvName.AllSQLite)] string context, [Values] bool withDefault)
+		public void TestDefaultExpression_22([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context, [Values] bool withDefault)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -618,7 +636,7 @@ namespace Tests.UserTests
 				query1.ToArray();
 				var cacheMiss = Query<Doctor>.CacheMissCount;
 				query2.ToArray();
-				Assert.AreEqual(cacheMiss, Query<Doctor>.CacheMissCount);
+				Assert.That(Query<Doctor>.CacheMissCount, Is.EqualTo(cacheMiss));
 			}
 		}
 
@@ -642,8 +660,8 @@ namespace Tests.UserTests
 		{
 			var restored = expr.Transform(RestoreDefault);
 
-			Assert.AreNotEqual(expr, restored);
-			Assert.IsNotNull(restored.Find<object?>(null, (_, e) => e.NodeType == ExpressionType.Default));
+			Assert.That(restored, Is.Not.EqualTo(expr));
+			Assert.That(restored.Find<object?>(null, (_, e) => e.NodeType == ExpressionType.Default), Is.Not.Null);
 
 			return (T)restored;
 		}

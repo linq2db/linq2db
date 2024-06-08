@@ -21,10 +21,10 @@ namespace Cli.Default.Oracle
 
 		#region Associations
 		/// <summary>
-		/// SYS_C00903690 backreference
+		/// SYS_C007123 backreference
 		/// </summary>
 		[Association(ThisKey = nameof(UserId), OtherKey = nameof(TTestUserContract.UserId))]
-		public IEnumerable<TTestUserContract> Syscs { get; set; } = null!;
+		public IEnumerable<TTestUserContract> TTestUserContracts { get; set; } = null!;
 		#endregion
 	}
 }

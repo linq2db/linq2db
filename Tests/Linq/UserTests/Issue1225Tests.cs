@@ -12,7 +12,7 @@ namespace Tests.UserTests
 	public class Issue1225Tests : TestBase
 	{
 		[Table]
-		class Task
+		sealed class Task
 		{
 			[Column(IsPrimaryKey = true)]
 			public int Id { get; set; }
@@ -25,7 +25,7 @@ namespace Tests.UserTests
 		}
 
 		[Table]
-		class TaskStage
+		sealed class TaskStage
 		{
 			[Column(IsPrimaryKey = true)]
 			public int Id { get; set; }
@@ -35,11 +35,10 @@ namespace Tests.UserTests
 
 			[Column]
 			[Column(Configuration = ProviderName.DB2, DbType = "char")]
-			[Column(Configuration = ProviderName.Firebird, DbType = "char(1)")]
 			public bool Actual { get; set; }
 		}
 
-		private class GroupByWrapper
+		private sealed class GroupByWrapper
 		{
 			public GroupByWrapper()
 			{
@@ -48,7 +47,7 @@ namespace Tests.UserTests
 			public LastInChain GroupByContainer { get; set; } = null!;
 		}
 
-		private class LastInChain
+		private sealed class LastInChain
 		{
 			public LastInChain()
 			{
@@ -58,7 +57,7 @@ namespace Tests.UserTests
 			public object? Value { get; set; }
 		}
 
-		private class AggregationWrapper
+		private sealed class AggregationWrapper
 		{
 			public AggregationWrapper()
 			{
@@ -102,11 +101,14 @@ namespace Tests.UserTests
 							});
 					var res = query.AsEnumerable().OrderBy(_ => _.GroupByContainer.Value).ToArray();
 
-					Assert.AreEqual (2, res.Length);
-					Assert.IsNotNull(res[0].Container);
-					Assert.AreEqual (2, res[0].Container.Value);
-					Assert.IsNotNull(res[1].Container);
-					Assert.IsNull   (res[1].Container.Value);
+					Assert.That(res, Has.Length.EqualTo(2));
+					Assert.That(res[0].Container, Is.Not.Null);
+					Assert.Multiple(() =>
+					{
+						Assert.That(res[0].Container.Value, Is.EqualTo(2));
+						Assert.That(res[1].Container, Is.Not.Null);
+					});
+					Assert.That(res[1].Container.Value, Is.Null);
 				}
 			}
 		}

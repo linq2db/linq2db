@@ -111,7 +111,7 @@ namespace Tests.OData.Microsoft
 
 				var uri = new Uri("http://localhost:15580" + testCase.Query);
 #if NETFRAMEWORK
-				var request = new HttpRequestMessage()
+				using var request = new HttpRequestMessage()
 				{
 					Method = HttpMethod.Get,
 					RequestUri = uri
@@ -139,7 +139,7 @@ namespace Tests.OData.Microsoft
 
 				var resultQuery  = options.ApplyTo(table);
 				var materialized = Materialize(resultQuery);
-				Assert.That(materialized.Count, Is.EqualTo(1));
+				Assert.That(materialized, Has.Count.EqualTo(1));
 			}
 		}
 
@@ -174,24 +174,24 @@ namespace Tests.OData.Microsoft
 			public virtual AggregationPropertyContainer Container { get; set; } = null!;
 		}
 
-		class AggregationWrapper : GroupByWrapper
+		sealed class AggregationWrapper : GroupByWrapper
 		{
 		}
 
 		class AggregationPropertyContainer : NamedProperty
 		{
-			public class LastInChain : AggregationPropertyContainer
+			public sealed class LastInChain : AggregationPropertyContainer
 			{
 			}
 		}
 
-		class FlatteningWrapper<T>: GroupByWrapper
+		sealed class FlatteningWrapper<T>: GroupByWrapper
 		{
 			public T Source { get; set; } = default!;
 		}
 
 		[Test]
-		public void SelectPure([IncludeDataSources(ProviderName.SQLiteClassic)] string context)
+		public void SelectPure([IncludeDataSources(ProviderName.SQLiteClassic, TestProvName.AllClickHouse)] string context)
 		{
 			var testData = GenerateTestData();
 			using (var db = GetDataContext(context))
@@ -230,7 +230,7 @@ namespace Tests.OData.Microsoft
 
 				var materialized = query.ToArray();
 
-				Assert.That(materialized.Length, Is.EqualTo(1));
+				Assert.That(materialized, Has.Length.EqualTo(1));
 			}
 		}
 
@@ -279,7 +279,7 @@ namespace Tests.OData.Microsoft
 
 				var materialized = query.ToArray();
 
-				Assert.That(materialized.Length, Is.EqualTo(1));
+				Assert.That(materialized, Has.Length.EqualTo(1));
 			}
 		}
 

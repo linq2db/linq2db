@@ -23,7 +23,7 @@ namespace Cli.Default.Firebird
 		[Column("Field4"                              )] public int?      Field4          { get; set; } // integer
 		[Column("Field5"                              )] public int?      Field5          { get; set; } // integer
 		[Column("FieldInt64"                          )] public long?     FieldInt64      { get; set; } // bigint
-		[Column("FieldBoolean"                        )] public char?     FieldBoolean    { get; set; } // char(1)
+		[Column("FieldBoolean"                        )] public bool?     FieldBoolean    { get; set; } // boolean
 		[Column("FieldString"                         )] public string?   FieldString     { get; set; } // varchar(20)
 		[Column("FieldNString"                        )] public string?   FieldNString    { get; set; } // varchar(20)
 		[Column("FieldChar"                           )] public char?     FieldChar       { get; set; } // char(1)

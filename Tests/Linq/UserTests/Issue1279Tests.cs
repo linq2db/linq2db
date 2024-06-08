@@ -8,7 +8,7 @@ namespace Tests.UserTests
 	[TestFixture]
 	public class Issue1279Tests : TestBase
 	{
-		class Issue1279Table
+		sealed class Issue1279Table
 		{
 			[PrimaryKey(1)]
 			[Identity] public int Id { get; set; }
@@ -28,7 +28,7 @@ namespace Tests.UserTests
 
 				var result = db.GetTable<Issue1279Table>().First().CharFld;
 
-				Assert.AreEqual(val, result);
+				Assert.That(result, Is.EqualTo(val));
 			}
 		}
 	}

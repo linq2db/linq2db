@@ -9,7 +9,7 @@ namespace Tests.UserTests
 	[TestFixture]
 	public class Issue2564Tests : TestBase
 	{
-		class Issue2564Class
+		sealed class Issue2564Class
 		{
 			public long Id { get; set; }
 			public DateTime TimestampGenerated { get; set; }
@@ -21,15 +21,15 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void TestIssue2564([IncludeDataSources(TestProvName.AllOracle)] string context)
+		public void TestIssue2564([IncludeDataSources(TestProvName.AllOracle, TestProvName.AllClickHouse)] string context)
 		{
 			var ms = new MappingSchema();
 
-			ms.GetFluentMappingBuilder()
+			new FluentMappingBuilder(ms)
 				.Entity<Issue2564Class>()
 				.HasTableName("Issue2564Table")
-				.Property(e => e.Id).IsPrimaryKey();
-
+				.Property(e => e.Id).IsPrimaryKey()
+				.Build();
 
 			using (var db = GetDataContext(context, ms))
 			{

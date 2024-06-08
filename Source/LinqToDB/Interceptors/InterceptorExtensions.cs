@@ -5,6 +5,7 @@ namespace LinqToDB
 {
 	using Data;
 	using Interceptors;
+	using Interceptors.Internal;
 
 	/// <summary>
 	/// Contains extensions that add one-time interceptors to connection.
@@ -41,22 +42,27 @@ namespace LinqToDB
 		{
 			switch (interceptor)
 			{
-				case ICommandInterceptor          cm : AddInterceptorImpl((IInterceptable<ICommandInterceptor>)         interceptable, cm); break;
-				case IConnectionInterceptor       cn : AddInterceptorImpl((IInterceptable<IConnectionInterceptor>)      interceptable, cn); break;
-				case IDataContextInterceptor      dc : AddInterceptorImpl((IInterceptable<IDataContextInterceptor>)     interceptable, dc); break;
-				case IEntityServiceInterceptor    es : AddInterceptorImpl((IInterceptable<IEntityServiceInterceptor>)   interceptable, es); break;
-				case IUnwrapDataObjectInterceptor wr : AddInterceptorImpl((IInterceptable<IUnwrapDataObjectInterceptor>)interceptable, wr); break;
+				case ICommandInterceptor          cm : AddInterceptorImpl(interceptable, cm); break;
+				case IConnectionInterceptor       cn : AddInterceptorImpl(interceptable, cn); break;
+				case IDataContextInterceptor      dc : AddInterceptorImpl(interceptable, dc); break;
+				case IEntityServiceInterceptor    es : AddInterceptorImpl(interceptable, es); break;
+				case IUnwrapDataObjectInterceptor wr : AddInterceptorImpl(interceptable, wr); break;
+				case IEntityBindingInterceptor    ex : AddInterceptorImpl(interceptable, ex); break;
+				case IQueryExpressionInterceptor  ep:  AddInterceptorImpl(interceptable, ep); break;
 			}
 		}
 
-		internal static void AddInterceptorImpl<T>(this IInterceptable<T> interceptable, T interceptor)
+		internal static void AddInterceptorImpl<T>(this IInterceptable interceptable, T interceptor)
 			where T : IInterceptor
 		{
-			if (interceptable.Interceptor == null)
-				interceptable.Interceptor = interceptor;
-			else if (interceptable.Interceptor is AggregatedInterceptor<T> aggregated)
+			if (interceptable is not IInterceptable<T> typedInterceptable)
+				throw new ArgumentException($"Context of type {interceptable.GetType()} doesn't support {typeof(T)} interceptor");
+
+			if (typedInterceptable.Interceptor == null)
+				typedInterceptable.Interceptor = interceptor;
+			else if (typedInterceptable.Interceptor is AggregatedInterceptor<T> aggregated)
 				aggregated.Interceptors.Add(interceptor);
-			else switch (interceptable)
+			else switch (typedInterceptable)
 			{
 				case IInterceptable<ICommandInterceptor> cmi when interceptor is ICommandInterceptor cm:
 					cmi.Interceptor = new AggregatedCommandInterceptor          { Interceptors = { cmi.Interceptor!, cm } };
@@ -72,6 +78,12 @@ namespace LinqToDB
 					break;
 				case IInterceptable<IUnwrapDataObjectInterceptor> wri when interceptor is IUnwrapDataObjectInterceptor wr:
 					wri.Interceptor = new AggregatedUnwrapDataObjectInterceptor { Interceptors = { wri.Interceptor!, wr } };
+					break;
+				case IInterceptable<IEntityBindingInterceptor> exi when interceptor is IEntityBindingInterceptor ex:
+					exi.Interceptor = new AggregatedEntityBindingInterceptor    { Interceptors = { exi.Interceptor!, ex } };
+					break;
+				case IInterceptable<IQueryExpressionInterceptor> qexi when interceptor is IQueryExpressionInterceptor ex:
+					qexi.Interceptor = new AggregatedQueryExpressionInterceptor { Interceptors = { qexi.Interceptor!, ex } };
 					break;
 				default:
 					throw new NotImplementedException($"AddInterceptor for '{typeof(T).Name}' is not implemented.");
@@ -95,12 +107,6 @@ namespace LinqToDB
 						break;
 				}
 			}
-		}
-
-		internal static T? CloneAggregated<T>(this T? interceptor)
-			where T : IInterceptor
-		{
-			return interceptor is AggregatedInterceptor<T> ai ? (T?)(object?)ai.Clone() : interceptor;
 		}
 	}
 }

@@ -1,18 +1,17 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
-using System.Text;
 
 namespace LinqToDB.SqlQuery
 {
 	using Common;
+	using Common.Internal;
 
 	public class SqlValue : ISqlExpression
 	{
 		public SqlValue(Type systemType, object? value)
 		{
-			_valueType    = new DbDataType(systemType);
-			Value         = value;
+			_valueType = new DbDataType(value != null && value is not DBNull ? systemType.UnwrapNullableType() : systemType);
+			Value      = value;
 		}
 
 		public SqlValue(DbDataType valueType, object? value)
@@ -54,7 +53,7 @@ namespace LinqToDB.SqlQuery
 
 		public override string ToString()
 		{
-			return ((IQueryElement)this).ToString(new StringBuilder(), new Dictionary<IQueryElement,IQueryElement>()).ToString();
+			return this.ToDebugString();
 		}
 
 #endif
@@ -64,15 +63,6 @@ namespace LinqToDB.SqlQuery
 		#region ISqlExpression Members
 
 		public int Precedence => SqlQuery.Precedence.Primary;
-
-		#endregion
-
-		#region ISqlExpressionWalkable Members
-
-		ISqlExpression ISqlExpressionWalkable.Walk<TContext>(WalkOptions options, TContext context, Func<TContext, ISqlExpression, ISqlExpression> func)
-		{
-			return func(context, this);
-		}
 
 		#endregion
 
@@ -112,6 +102,8 @@ namespace LinqToDB.SqlQuery
 
 		#region ISqlExpression Members
 
+		public bool CanBeNullable(NullabilityContext nullability) => CanBeNull;
+
 		public bool CanBeNull => Value == null;
 
 		public bool Equals(ISqlExpression other, Func<ISqlExpression,ISqlExpression,bool> comparer)
@@ -123,22 +115,31 @@ namespace LinqToDB.SqlQuery
 
 		#region IQueryElement Members
 
+#if DEBUG
+		public string DebugText => this.ToDebugString();
+#endif
+
 		public QueryElementType ElementType => QueryElementType.SqlValue;
 
-		StringBuilder IQueryElement.ToString(StringBuilder sb, Dictionary<IQueryElement,IQueryElement> dic)
+		QueryElementTextWriter IQueryElement.ToString(QueryElementTextWriter writer)
 		{
 			return
 				Value == null ?
-					sb.Append("NULL") :
+					writer.Append("NULL") :
 				Value is string strVal ?
-					sb
+					writer
 						.Append('\'')
 						.Append(strVal.Replace("\'", "''"))
 						.Append('\'')
 				:
-					sb.Append(Value);
+					writer.Append(Value);
 		}
 
 		#endregion
+
+		public void Deconstruct(out object? value)
+		{
+			value = Value;
+		}
 	}
 }

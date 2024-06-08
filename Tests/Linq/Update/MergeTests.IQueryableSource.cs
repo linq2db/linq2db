@@ -29,7 +29,7 @@ namespace Tests.xUpdate
 
 				AssertRowCount(2, rows, context);
 
-				Assert.AreEqual(6, result.Count);
+				Assert.That(result, Has.Count.EqualTo(6));
 
 				AssertRow(InitialTargetData[0], result[0], null, null);
 				AssertRow(InitialTargetData[1], result[1], null, null);
@@ -73,7 +73,7 @@ namespace Tests.xUpdate
 
 				AssertRowCount(2, rows, context);
 
-				Assert.AreEqual(6, result.Count);
+				Assert.That(result, Has.Count.EqualTo(6));
 
 				AssertRow(InitialTargetData[0], result[0], null, null);
 				AssertRow(InitialTargetData[1], result[1], null, null);
@@ -82,6 +82,36 @@ namespace Tests.xUpdate
 				AssertRow(InitialSourceData[2], result[4], null, null);
 				AssertRow(InitialSourceData[3], result[5], null, 216);
 			}
+		}
+
+		[Test]
+		[ActiveIssue(3015, Configurations = new[]
+		{
+			TestProvName.AllAccess,
+			ProviderName.DB2,
+			TestProvName.AllFirebird,
+			TestProvName.AllInformix,
+			TestProvName.AllMySql,
+			TestProvName.AllOracle,
+			TestProvName.AllPostgreSQL,
+			ProviderName.SqlCe,
+			TestProvName.AllSQLite,
+			TestProvName.AllSapHana,
+			TestProvName.AllSybase,
+		})]
+		public void MergeIntoCteIssue4107([MergeDataContextSource] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var updatedCount = db.Person.Where(x => x.FirstName == "unknown").AsCte()
+				.Merge()
+					.Using(db.Child)
+					.On((dest, src) => dest.ID == src.ChildID)
+						.UpdateWhenMatched((dest, temp) => new Model.Person()
+						{
+							MiddleName = "unpdated"
+						})
+					.Merge();
 		}
 
 		[Test]
@@ -104,7 +134,7 @@ namespace Tests.xUpdate
 
 				AssertRowCount(2, rows, context);
 
-				Assert.AreEqual(6, result.Count);
+				Assert.That(result, Has.Count.EqualTo(6));
 
 				AssertRow(InitialTargetData[0], result[0], null, null);
 				AssertRow(InitialTargetData[1], result[1], null, null);
@@ -138,17 +168,17 @@ namespace Tests.xUpdate
 
 				var table = GetTarget(db);
 
-				var rows = table.Where(_ => _.Id >= 1).AsCte()
+				var rows = table.Where(s => s.Id >= 1).AsCte()
 					.Merge().Using(GetSource1(db))
 					.OnTargetKey()
 					.InsertWhenNotMatched()
 					.Merge();
 
-				var result = table.OrderBy(_ => _.Id).ToList();
+				var result = table.OrderBy(t => t.Id).ToList();
 
 				AssertRowCount(2, rows, context);
 
-				Assert.AreEqual(6, result.Count);
+				Assert.That(result, Has.Count.EqualTo(6));
 
 				AssertRow(InitialTargetData[0], result[0], null, null);
 				AssertRow(InitialTargetData[1], result[1], null, null);
@@ -168,7 +198,6 @@ namespace Tests.xUpdate
 			TestProvName.AllInformix,
 			TestProvName.AllMySql,
 			TestProvName.AllOracle,
-			TestProvName.AllPostgreSQL,
 			ProviderName.SqlCe,
 			TestProvName.AllSQLite,
 			TestProvName.AllSapHana,
@@ -192,7 +221,7 @@ namespace Tests.xUpdate
 
 				AssertRowCount(2, rows, context);
 
-				Assert.AreEqual(6, result.Count);
+				Assert.That(result, Has.Count.EqualTo(6));
 
 				AssertRow(InitialTargetData[0], result[0], null, null);
 				AssertRow(InitialTargetData[1], result[1], null, null);
@@ -212,7 +241,6 @@ namespace Tests.xUpdate
 			TestProvName.AllInformix,
 			TestProvName.AllMySql,
 			TestProvName.AllOracle,
-			TestProvName.AllPostgreSQL,
 			ProviderName.SqlCe,
 			TestProvName.AllSQLite,
 			TestProvName.AllSapHana,
@@ -236,7 +264,7 @@ namespace Tests.xUpdate
 
 				AssertRowCount(2, rows, context);
 
-				Assert.AreEqual(6, result.Count);
+				Assert.That(result, Has.Count.EqualTo(6));
 
 				AssertRow(InitialTargetData[0], result[0], null, null);
 				AssertRow(InitialTargetData[1], result[1], null, null);

@@ -2,7 +2,7 @@
 {
 	using SqlProvider;
 
-	class SapHanaNativeSqlOptimizer : SapHanaSqlOptimizer
+	sealed class SapHanaNativeSqlOptimizer : SapHanaSqlOptimizer
 	{
 		public SapHanaNativeSqlOptimizer(SqlProviderFlags sqlProviderFlags) : base(sqlProviderFlags)
 		{

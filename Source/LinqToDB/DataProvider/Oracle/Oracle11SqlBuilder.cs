@@ -1,17 +1,19 @@
-﻿namespace LinqToDB.DataProvider.Oracle
+﻿using System;
+
+namespace LinqToDB.DataProvider.Oracle
 {
 	using Mapping;
-	using SqlProvider;
 	using SqlQuery;
+	using SqlProvider;
 
-	partial class Oracle11SqlBuilder : OracleSqlBuilderBase
+	sealed class Oracle11SqlBuilder : OracleSqlBuilderBase
 	{
-		public Oracle11SqlBuilder(IDataProvider? provider, MappingSchema mappingSchema, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
-			: base(provider, mappingSchema, sqlOptimizer, sqlProviderFlags)
+		public Oracle11SqlBuilder(IDataProvider? provider, MappingSchema mappingSchema, DataOptions dataOptions, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
+			: base(provider, mappingSchema, dataOptions, sqlOptimizer, sqlProviderFlags)
 		{
 		}
 
-		protected Oracle11SqlBuilder(BasicSqlBuilder parentBuilder) : base(parentBuilder)
+		private Oracle11SqlBuilder(BasicSqlBuilder parentBuilder) : base(parentBuilder)
 		{
 		}
 
@@ -20,9 +22,10 @@
 			return new Oracle11SqlBuilder(this) { HintBuilder = HintBuilder };
 		}
 
-		protected override string GetPhysicalTableName(ISqlTableSource table, string? alias, bool ignoreTableExpression = false, string? defaultDatabaseName = null)
+		protected override string GetPhysicalTableName(ISqlTableSource table, string? alias,
+			bool ignoreTableExpression = false, string? defaultDatabaseName = null, bool withoutSuffix = false)
 		{
-			var name = base.GetPhysicalTableName(table, alias, ignoreTableExpression, defaultDatabaseName);
+			var name = base.GetPhysicalTableName(table, alias, ignoreTableExpression : ignoreTableExpression, defaultDatabaseName : defaultDatabaseName, withoutSuffix : withoutSuffix);
 
 			if (table.SqlTableType == SqlTableType.Function)
 				return $"TABLE({name})";

@@ -1,13 +1,19 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-	<Import Project="..\..\Build\linq2db.Source.props" />
 
 	<PropertyGroup>
 		<AssemblyName>linq2db.Remote.Grpc</AssemblyName>
 		<RootNamespace>LinqToDB.Remote.Grpc</RootNamespace>
 
-		<DocumentationFile>bin\$(Configuration)\$(TargetFramework)\linq2db.remote.grpc.xml</DocumentationFile>
-		<TargetFrameworks>netstandard2.0</TargetFrameworks>
+		<DocumentationFile>$(ArtifactsPath)\bin\$(MSBuildProjectName)\$(Configuration)\$(TargetFramework)\$(AssemblyName).xml</DocumentationFile>
+
+		<TargetFrameworks>net462;netstandard2.0;net6.0;net8.0</TargetFrameworks>
+
+		<IsAotCompatible Condition="$(TargetFramework) == 'net8.0'">true</IsAotCompatible>
 	</PropertyGroup>
+
+	<ItemGroup>
+		<AdditionalFiles Include="PublicAPI.*.txt" />
+	</ItemGroup>
 
 	<ItemGroup>
 		<ProjectReference Include="..\LinqToDB\LinqToDB.csproj" />

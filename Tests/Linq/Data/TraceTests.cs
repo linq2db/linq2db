@@ -1,37 +1,30 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
-using LinqToDB;
-using LinqToDB.Configuration;
-using NUnit.Framework;
 
+using LinqToDB;
 using LinqToDB.Data;
+
+using NUnit.Framework;
 
 namespace Tests.Data
 {
-	using System.Data;
 	using Model;
-	using Tests.Tools;
+	using Tools;
 
 	[TestFixture]
 	public class TraceTests : TestBase
 	{
 		private TraceLevel                           OriginalTraceLevel { get; set; }
-		private Action<TraceInfo>                    OriginalOnTrace    { get; set; } = null!;
 		private Action<string?, string?, TraceLevel> OriginalWrite      { get; set; } = null!;
 
 
 		[OneTimeSetUp]
 		public void SetTraceInfoLevel()
 		{
-			using (var db = new DataConnection())
-			{
-				//gets the default static on trace so it'll be reset after the tests are done
-				OriginalOnTrace = db.OnTraceConnection;
-			}
-
 			OriginalTraceLevel               = DataConnection.TraceSwitch.Level;
 			OriginalWrite                    = DataConnection.WriteTraceLine;
 			DataConnection.TraceSwitch.Level = TraceLevel.Info;
@@ -41,9 +34,6 @@ namespace Tests.Data
 		public void RestoreOriginalTraceLevel()
 		{
 			DataConnection.TraceSwitch.Level = OriginalTraceLevel;
-#pragma warning disable CS0618 // Type or member is obsolete
-			DataConnection.OnTrace           = OriginalOnTrace;
-#pragma warning restore CS0618 // Type or member is obsolete
 			DataConnection.WriteTraceLine    = OriginalWrite;
 		}
 
@@ -76,21 +66,26 @@ namespace Tests.Data
 					counters[e.TraceInfoStep]++;
 				};
 
-				NUnitAssert.ThrowsAny(() => db.GetTable<Child>().ToList(), typeof(ArgumentException), typeof(InvalidOperationException));
+				Assert.That(
+					() => db.GetTable<Child>().ToList(),
+					Throws.TypeOf<ArgumentException>().Or.TypeOf<InvalidOperationException>());
 
-				// steps called once
-				Assert.AreEqual(1, counters[TraceInfoStep.Error]);
-				Assert.AreEqual(1, counters[TraceInfoStep.Completed]);
+				Assert.Multiple(() =>
+				{
+					// steps called once
+					Assert.That(counters[TraceInfoStep.Error], Is.EqualTo(1));
+					Assert.That(counters[TraceInfoStep.Completed], Is.EqualTo(1));
 
-				// steps never called
-				Assert.AreEqual(0, counters[TraceInfoStep.BeforeExecute]);
-				Assert.AreEqual(0, counters[TraceInfoStep.AfterExecute]);
-				Assert.AreEqual(0, counters[TraceInfoStep.MapperCreated]);
+					// steps never called
+					Assert.That(counters[TraceInfoStep.BeforeExecute], Is.EqualTo(0));
+					Assert.That(counters[TraceInfoStep.AfterExecute], Is.EqualTo(0));
+					Assert.That(counters[TraceInfoStep.MapperCreated], Is.EqualTo(0));
+				});
 			}
 		}
 
 		[Test]
-		public async Task TraceInfoErrorsAreReportedForInvalidConnectionStringAsync([DataSources(false)] string context)
+		public void TraceInfoErrorsAreReportedForInvalidConnectionStringAsync([DataSources(false)] string context)
 		{
 			var events   = GetEnumValues((TraceInfoStep s) => default(TraceInfo));
 			var counters = GetEnumValues((TraceInfoStep s) => 0);
@@ -104,16 +99,21 @@ namespace Tests.Data
 					counters[e.TraceInfoStep]++;
 				};
 
-				await NUnitAssert.ThrowsAnyAsync(() => db.GetTable<Child>().ToListAsync(), typeof(ArgumentException), typeof(InvalidOperationException));
+				Assert.That(
+					() => db.GetTable<Child>().ToListAsync(),
+					Throws.TypeOf<ArgumentException>().Or.TypeOf<InvalidOperationException>());
 
-				// steps called once
-				Assert.AreEqual(1, counters[TraceInfoStep.Error]);
-				Assert.AreEqual(1, counters[TraceInfoStep.Completed]);
+				Assert.Multiple(() =>
+				{
+					// steps called once
+					Assert.That(counters[TraceInfoStep.Error], Is.EqualTo(1));
+					Assert.That(counters[TraceInfoStep.Completed], Is.EqualTo(1));
 
-				// steps never called
-				Assert.AreEqual(0, counters[TraceInfoStep.BeforeExecute]);
-				Assert.AreEqual(0, counters[TraceInfoStep.AfterExecute]);
-				Assert.AreEqual(0, counters[TraceInfoStep.MapperCreated]);
+					// steps never called
+					Assert.That(counters[TraceInfoStep.BeforeExecute], Is.EqualTo(0));
+					Assert.That(counters[TraceInfoStep.AfterExecute], Is.EqualTo(0));
+					Assert.That(counters[TraceInfoStep.MapperCreated], Is.EqualTo(0));
+				});
 			}
 		}
 
@@ -135,18 +135,21 @@ namespace Tests.Data
 
 				// the same command is reported on each step
 				var command = events[TraceInfoStep.BeforeExecute]!.Command;
-				Assert.AreSame(command, events[TraceInfoStep.AfterExecute]!.Command);
-				Assert.AreSame(command, events[TraceInfoStep.Completed]!.Command);
-				Assert.NotNull(command);
+				Assert.Multiple(() =>
+				{
+					Assert.That(events[TraceInfoStep.AfterExecute]!.Command, Is.SameAs(command));
+					Assert.That(events[TraceInfoStep.Completed]!.Command, Is.Null);
+					Assert.That(command, Is.Not.Null);
 
-				// steps called once
-				Assert.AreEqual(1, counters[TraceInfoStep.BeforeExecute]);
-				Assert.AreEqual(1, counters[TraceInfoStep.AfterExecute]);
-				Assert.AreEqual(1, counters[TraceInfoStep.Completed]);
+					// steps called once
+					Assert.That(counters[TraceInfoStep.BeforeExecute], Is.EqualTo(1));
+					Assert.That(counters[TraceInfoStep.AfterExecute], Is.EqualTo(1));
+					Assert.That(counters[TraceInfoStep.Completed], Is.EqualTo(1));
 
-				// steps never called
-				Assert.AreEqual(0, counters[TraceInfoStep.MapperCreated]);
-				Assert.AreEqual(0, counters[TraceInfoStep.Error]);
+					// steps never called
+					Assert.That(counters[TraceInfoStep.MapperCreated], Is.EqualTo(0));
+					Assert.That(counters[TraceInfoStep.Error], Is.EqualTo(0));
+				});
 			}
 		}
 
@@ -172,18 +175,21 @@ namespace Tests.Data
 
 				// the same command is reported on each step
 				var command = events[TraceInfoStep.BeforeExecute]!.Command;
-				Assert.AreSame(command, events[TraceInfoStep.AfterExecute]!.Command);
-				Assert.AreSame(command, events[TraceInfoStep.Completed]!.Command);
-				Assert.NotNull(command);
+				Assert.Multiple(() =>
+				{
+					Assert.That(events[TraceInfoStep.AfterExecute]!.Command, Is.SameAs(command));
+					Assert.That(events[TraceInfoStep.Completed]!.Command, Is.SameAs(command));
+					Assert.That(command, Is.Not.Null);
 
-				// steps called once
-				Assert.AreEqual(1, counters[TraceInfoStep.BeforeExecute]);
-				Assert.AreEqual(1, counters[TraceInfoStep.AfterExecute]);
-				Assert.AreEqual(1, counters[TraceInfoStep.Completed]);
+					// steps called once
+					Assert.That(counters[TraceInfoStep.BeforeExecute], Is.EqualTo(1));
+					Assert.That(counters[TraceInfoStep.AfterExecute], Is.EqualTo(1));
+					Assert.That(counters[TraceInfoStep.Completed], Is.EqualTo(1));
 
-				// steps never called
-				Assert.AreEqual(0, counters[TraceInfoStep.MapperCreated]);
-				Assert.AreEqual(0, counters[TraceInfoStep.Error]);
+					// steps never called
+					Assert.That(counters[TraceInfoStep.MapperCreated], Is.EqualTo(0));
+					Assert.That(counters[TraceInfoStep.Error], Is.EqualTo(0));
+				});
 			}
 		}
 
@@ -209,18 +215,21 @@ namespace Tests.Data
 
 				// the same command is reported on each step
 				var command = events[TraceInfoStep.BeforeExecute]!.Command;
-				Assert.AreSame(command, events[TraceInfoStep.AfterExecute]!.Command);
-				Assert.AreSame(command, events[TraceInfoStep.Completed]!.Command);
-				Assert.NotNull(command);
+				Assert.Multiple(() =>
+				{
+					Assert.That(events[TraceInfoStep.AfterExecute]!.Command, Is.SameAs(command));
+					Assert.That(events[TraceInfoStep.Completed]!.Command, Is.SameAs(command));
+					Assert.That(command, Is.Not.Null);
 
-				// steps called once
-				Assert.AreEqual(1, counters[TraceInfoStep.BeforeExecute]);
-				Assert.AreEqual(1, counters[TraceInfoStep.AfterExecute]);
-				Assert.AreEqual(1, counters[TraceInfoStep.Completed]);
+					// steps called once
+					Assert.That(counters[TraceInfoStep.BeforeExecute], Is.EqualTo(1));
+					Assert.That(counters[TraceInfoStep.AfterExecute], Is.EqualTo(1));
+					Assert.That(counters[TraceInfoStep.Completed], Is.EqualTo(1));
 
-				// steps never called
-				Assert.AreEqual(0, counters[TraceInfoStep.MapperCreated]);
-				Assert.AreEqual(0, counters[TraceInfoStep.Error]);
+					// steps never called
+					Assert.That(counters[TraceInfoStep.MapperCreated], Is.EqualTo(0));
+					Assert.That(counters[TraceInfoStep.Error], Is.EqualTo(0));
+				});
 			}
 		}
 
@@ -243,18 +252,21 @@ namespace Tests.Data
 
 				// the same command is reported on each step
 				var command = events[TraceInfoStep.BeforeExecute]!.Command;
-				Assert.AreSame(command, events[TraceInfoStep.AfterExecute]!.Command);
-				Assert.AreSame(command, events[TraceInfoStep.Completed]!.Command);
-				Assert.NotNull(command);
+				Assert.Multiple(() =>
+				{
+					Assert.That(events[TraceInfoStep.AfterExecute]!.Command, Is.SameAs(command));
+					Assert.That(events[TraceInfoStep.Completed]!.Command, Is.SameAs(command));
+					Assert.That(command, Is.Not.Null);
 
-				// steps called once
-				Assert.AreEqual(1, counters[TraceInfoStep.BeforeExecute]);
-				Assert.AreEqual(1, counters[TraceInfoStep.AfterExecute]);
-				Assert.AreEqual(1, counters[TraceInfoStep.Completed]);
+					// steps called once
+					Assert.That(counters[TraceInfoStep.BeforeExecute], Is.EqualTo(1));
+					Assert.That(counters[TraceInfoStep.AfterExecute], Is.EqualTo(1));
+					Assert.That(counters[TraceInfoStep.Completed], Is.EqualTo(1));
 
-				// steps never called
-				Assert.AreEqual(0, counters[TraceInfoStep.MapperCreated]);
-				Assert.AreEqual(0, counters[TraceInfoStep.Error]);
+					// steps never called
+					Assert.That(counters[TraceInfoStep.MapperCreated], Is.EqualTo(0));
+					Assert.That(counters[TraceInfoStep.Error], Is.EqualTo(0));
+				});
 			}
 		}
 
@@ -281,18 +293,21 @@ namespace Tests.Data
 
 				// the same command is reported on each step
 				var command = events[TraceInfoStep.BeforeExecute]!.Command;
-				Assert.AreSame(command, events[TraceInfoStep.AfterExecute]!.Command);
-				Assert.AreSame(command, events[TraceInfoStep.Completed]!.Command);
-				Assert.NotNull(command);
+				Assert.Multiple(() =>
+				{
+					Assert.That(events[TraceInfoStep.AfterExecute]!.Command, Is.SameAs(command));
+					Assert.That(events[TraceInfoStep.Completed]!.Command, Is.SameAs(command));
+					Assert.That(command, Is.Not.Null);
 
-				// steps called once
-				Assert.AreEqual(1, counters[TraceInfoStep.BeforeExecute]);
-				Assert.AreEqual(1, counters[TraceInfoStep.AfterExecute]);
-				Assert.AreEqual(1, counters[TraceInfoStep.Completed]);
+					// steps called once
+					Assert.That(counters[TraceInfoStep.BeforeExecute], Is.EqualTo(1));
+					Assert.That(counters[TraceInfoStep.AfterExecute], Is.EqualTo(1));
+					Assert.That(counters[TraceInfoStep.Completed], Is.EqualTo(1));
 
-				// steps never called
-				Assert.AreEqual(0, counters[TraceInfoStep.MapperCreated]);
-				Assert.AreEqual(0, counters[TraceInfoStep.Error]);
+					// steps never called
+					Assert.That(counters[TraceInfoStep.MapperCreated], Is.EqualTo(0));
+					Assert.That(counters[TraceInfoStep.Error], Is.EqualTo(0));
+				});
 			}
 		}
 
@@ -317,18 +332,21 @@ namespace Tests.Data
 
 				// the same command is reported on each step
 				var command = events[TraceInfoStep.BeforeExecute]!.Command;
-				Assert.AreSame(command, events[TraceInfoStep.AfterExecute]!.Command);
-				Assert.AreSame(command, events[TraceInfoStep.Completed]!.Command);
-				Assert.NotNull(command);
+				Assert.Multiple(() =>
+				{
+					Assert.That(events[TraceInfoStep.AfterExecute]!.Command, Is.SameAs(command));
+					Assert.That(events[TraceInfoStep.Completed]!.Command, Is.SameAs(command));
+					Assert.That(command, Is.Not.Null);
 
-				// steps called once
-				Assert.AreEqual(1, counters[TraceInfoStep.BeforeExecute]);
-				Assert.AreEqual(1, counters[TraceInfoStep.AfterExecute]);
-				Assert.AreEqual(1, counters[TraceInfoStep.Completed]);
+					// steps called once
+					Assert.That(counters[TraceInfoStep.BeforeExecute], Is.EqualTo(1));
+					Assert.That(counters[TraceInfoStep.AfterExecute], Is.EqualTo(1));
+					Assert.That(counters[TraceInfoStep.Completed], Is.EqualTo(1));
 
-				// steps never called
-				Assert.AreEqual(0, counters[TraceInfoStep.MapperCreated]);
-				Assert.AreEqual(0, counters[TraceInfoStep.Error]);
+					// steps never called
+					Assert.That(counters[TraceInfoStep.MapperCreated], Is.EqualTo(0));
+					Assert.That(counters[TraceInfoStep.Error], Is.EqualTo(0));
+				});
 
 				db.RollbackTransaction();
 			}
@@ -353,18 +371,21 @@ namespace Tests.Data
 
 				// the same command is reported on each step
 				var command = events[TraceInfoStep.BeforeExecute]!.Command;
-				Assert.AreSame(command, events[TraceInfoStep.AfterExecute]!.Command);
-				Assert.AreSame(command, events[TraceInfoStep.Completed]!.Command);
-				Assert.NotNull(command);
+				Assert.Multiple(() =>
+				{
+					Assert.That(events[TraceInfoStep.AfterExecute]!.Command, Is.SameAs(command));
+					Assert.That(events[TraceInfoStep.Completed]!.Command, Is.SameAs(command));
+					Assert.That(command, Is.Not.Null);
 
-				// steps called once
-				Assert.AreEqual(1, counters[TraceInfoStep.BeforeExecute]);
-				Assert.AreEqual(1, counters[TraceInfoStep.AfterExecute]);
-				Assert.AreEqual(1, counters[TraceInfoStep.Completed]);
+					// steps called once
+					Assert.That(counters[TraceInfoStep.BeforeExecute], Is.EqualTo(1));
+					Assert.That(counters[TraceInfoStep.AfterExecute], Is.EqualTo(1));
+					Assert.That(counters[TraceInfoStep.Completed], Is.EqualTo(1));
 
-				// steps never called
-				Assert.AreEqual(0, counters[TraceInfoStep.MapperCreated]);
-				Assert.AreEqual(0, counters[TraceInfoStep.Error]);
+					// steps never called
+					Assert.That(counters[TraceInfoStep.MapperCreated], Is.EqualTo(0));
+					Assert.That(counters[TraceInfoStep.Error], Is.EqualTo(0));
+				});
 
 				db.RollbackTransaction();
 			}
@@ -389,18 +410,21 @@ namespace Tests.Data
 
 				// the same command is reported on each step
 				var command = events[TraceInfoStep.BeforeExecute]!.Command;
-				Assert.AreSame(command, events[TraceInfoStep.AfterExecute]!.Command);
-				Assert.AreSame(command, events[TraceInfoStep.Completed]!.Command);
-				Assert.NotNull(command);
+				Assert.Multiple(() =>
+				{
+					Assert.That(events[TraceInfoStep.AfterExecute]!.Command, Is.SameAs(command));
+					Assert.That(events[TraceInfoStep.Completed]!.Command, Is.SameAs(command));
+					Assert.That(command, Is.Not.Null);
 
-				// steps called once
-				Assert.AreEqual(1, counters[TraceInfoStep.BeforeExecute]);
-				Assert.AreEqual(1, counters[TraceInfoStep.AfterExecute]);
-				Assert.AreEqual(1, counters[TraceInfoStep.Completed]);
+					// steps called once
+					Assert.That(counters[TraceInfoStep.BeforeExecute], Is.EqualTo(1));
+					Assert.That(counters[TraceInfoStep.AfterExecute], Is.EqualTo(1));
+					Assert.That(counters[TraceInfoStep.Completed], Is.EqualTo(1));
 
-				// steps never called
-				Assert.AreEqual(0, counters[TraceInfoStep.MapperCreated]);
-				Assert.AreEqual(0, counters[TraceInfoStep.Error]);
+					// steps never called
+					Assert.That(counters[TraceInfoStep.MapperCreated], Is.EqualTo(0));
+					Assert.That(counters[TraceInfoStep.Error], Is.EqualTo(0));
+				});
 
 				db.RollbackTransaction();
 			}
@@ -425,18 +449,21 @@ namespace Tests.Data
 
 				// the same command is reported on each step
 				var command = events[TraceInfoStep.BeforeExecute]!.Command;
-				Assert.AreSame(command, events[TraceInfoStep.AfterExecute]!.Command);
-				Assert.AreSame(command, events[TraceInfoStep.Completed]!.Command);
-				Assert.NotNull(command);
+				Assert.Multiple(() =>
+				{
+					Assert.That(events[TraceInfoStep.AfterExecute]!.Command, Is.SameAs(command));
+					Assert.That(events[TraceInfoStep.Completed]!.Command, Is.SameAs(command));
+					Assert.That(command, Is.Not.Null);
 
-				// steps called once
-				Assert.AreEqual(1, counters[TraceInfoStep.BeforeExecute]);
-				Assert.AreEqual(1, counters[TraceInfoStep.AfterExecute]);
-				Assert.AreEqual(1, counters[TraceInfoStep.Completed]);
+					// steps called once
+					Assert.That(counters[TraceInfoStep.BeforeExecute], Is.EqualTo(1));
+					Assert.That(counters[TraceInfoStep.AfterExecute], Is.EqualTo(1));
+					Assert.That(counters[TraceInfoStep.Completed], Is.EqualTo(1));
 
-				// steps never called
-				Assert.AreEqual(0, counters[TraceInfoStep.MapperCreated]);
-				Assert.AreEqual(0, counters[TraceInfoStep.Error]);
+					// steps never called
+					Assert.That(counters[TraceInfoStep.MapperCreated], Is.EqualTo(0));
+					Assert.That(counters[TraceInfoStep.Error], Is.EqualTo(0));
+				});
 
 				db.RollbackTransaction();
 			}
@@ -461,18 +488,21 @@ namespace Tests.Data
 
 				// the same command is reported on each step
 				var command = events[TraceInfoStep.BeforeExecute]!.Command;
-				Assert.AreSame(command, events[TraceInfoStep.AfterExecute]!.Command);
-				Assert.AreSame(command, events[TraceInfoStep.Completed]!.Command);
-				Assert.NotNull(command);
+				Assert.Multiple(() =>
+				{
+					Assert.That(events[TraceInfoStep.AfterExecute]!.Command, Is.SameAs(command));
+					Assert.That(events[TraceInfoStep.Completed]!.Command, Is.SameAs(command));
+					Assert.That(command, Is.Not.Null);
 
-				// steps called once
-				Assert.AreEqual(1, counters[TraceInfoStep.BeforeExecute]);
-				Assert.AreEqual(1, counters[TraceInfoStep.AfterExecute]);
-				Assert.AreEqual(1, counters[TraceInfoStep.Completed]);
+					// steps called once
+					Assert.That(counters[TraceInfoStep.BeforeExecute], Is.EqualTo(1));
+					Assert.That(counters[TraceInfoStep.AfterExecute], Is.EqualTo(1));
+					Assert.That(counters[TraceInfoStep.Completed], Is.EqualTo(1));
 
-				// steps never called
-				Assert.AreEqual(0, counters[TraceInfoStep.MapperCreated]);
-				Assert.AreEqual(0, counters[TraceInfoStep.Error]);
+					// steps never called
+					Assert.That(counters[TraceInfoStep.MapperCreated], Is.EqualTo(0));
+					Assert.That(counters[TraceInfoStep.Error], Is.EqualTo(0));
+				});
 			}
 		}
 
@@ -491,30 +521,36 @@ namespace Tests.Data
 				};
 				using (db.BeginTransaction())
 				{
-					// Begin transaction command is reported on each step
-					Assert.AreEqual("BeginTransaction", events[TraceInfoStep.BeforeExecute]!.CommandText);
-					Assert.AreEqual("BeginTransaction", events[TraceInfoStep.AfterExecute]!.CommandText);
-					
+					Assert.Multiple(() =>
+					{
+						// Begin transaction command is reported on each step
+						Assert.That(events[TraceInfoStep.BeforeExecute]!.CommandText, Is.EqualTo("BeginTransaction"));
+						Assert.That(events[TraceInfoStep.AfterExecute]!.CommandText, Is.EqualTo("BeginTransaction"));
+					});
+
 					db.SetCommand(@"UPDATE Categories SET CategoryName = CategoryName WHERE 1=2").Execute();
 					db.CommitTransaction();
 
-					// Commit transaction command is reported on each step
-					Assert.AreEqual("CommitTransaction", events[TraceInfoStep.BeforeExecute]!.CommandText);
-					Assert.AreEqual("CommitTransaction", events[TraceInfoStep.AfterExecute]!.CommandText);
-					
-					// steps called once for BeginTransaction once for Update and once for CommitTransaction
-					Assert.AreEqual(3, counters[TraceInfoStep.BeforeExecute]);
-					Assert.AreEqual(3, counters[TraceInfoStep.AfterExecute]);
+					Assert.Multiple(() =>
+					{
+						// Commit transaction command is reported on each step
+						Assert.That(events[TraceInfoStep.BeforeExecute]!.CommandText, Is.EqualTo("CommitTransaction"));
+						Assert.That(events[TraceInfoStep.AfterExecute]!.CommandText, Is.EqualTo("CommitTransaction"));
 
-					// step called once for Update
-					Assert.AreEqual(1, counters[TraceInfoStep.Completed]);
+						// steps called once for BeginTransaction once for Update and once for CommitTransaction
+						Assert.That(counters[TraceInfoStep.BeforeExecute], Is.EqualTo(3));
+						Assert.That(counters[TraceInfoStep.AfterExecute], Is.EqualTo(3));
 
-					// steps never called
-					Assert.AreEqual(0, counters[TraceInfoStep.MapperCreated]);
-					Assert.AreEqual(0, counters[TraceInfoStep.Error]);
+						// step called once for Update
+						Assert.That(counters[TraceInfoStep.Completed], Is.EqualTo(1));
+
+						// steps never called
+						Assert.That(counters[TraceInfoStep.MapperCreated], Is.EqualTo(0));
+						Assert.That(counters[TraceInfoStep.Error], Is.EqualTo(0));
+					});
 				}
 			}
-			
+
 		}
 
 		[Test]
@@ -532,27 +568,33 @@ namespace Tests.Data
 				};
 				using (await db.BeginTransactionAsync())
 				{
-					// Begin transaction command is reported on each step
-					Assert.AreEqual("BeginTransactionAsync", events[TraceInfoStep.BeforeExecute]!.CommandText);
-					Assert.AreEqual("BeginTransactionAsync", events[TraceInfoStep.AfterExecute]!.CommandText);
+					Assert.Multiple(() =>
+					{
+						// Begin transaction command is reported on each step
+						Assert.That(events[TraceInfoStep.BeforeExecute]!.CommandText, Is.EqualTo("BeginTransactionAsync"));
+						Assert.That(events[TraceInfoStep.AfterExecute]!.CommandText, Is.EqualTo("BeginTransactionAsync"));
+					});
 
 					db.SetCommand(@"UPDATE Categories SET CategoryName = CategoryName WHERE 1=2").Execute();
 					await db.CommitTransactionAsync();
 
-					// Commit transaction command is reported on each step
-					Assert.AreEqual("CommitTransactionAsync", events[TraceInfoStep.BeforeExecute]!.CommandText);
-					Assert.AreEqual("CommitTransactionAsync", events[TraceInfoStep.AfterExecute]!.CommandText);
+					Assert.Multiple(() =>
+					{
+						// Commit transaction command is reported on each step
+						Assert.That(events[TraceInfoStep.BeforeExecute]!.CommandText, Is.EqualTo("CommitTransactionAsync"));
+						Assert.That(events[TraceInfoStep.AfterExecute]!.CommandText, Is.EqualTo("CommitTransactionAsync"));
 
-					// steps called once for BeginTransaction once for Update and once for CommitTransaction
-					Assert.AreEqual(3, counters[TraceInfoStep.BeforeExecute]);
-					Assert.AreEqual(3, counters[TraceInfoStep.AfterExecute]);
+						// steps called once for BeginTransaction once for Update and once for CommitTransaction
+						Assert.That(counters[TraceInfoStep.BeforeExecute], Is.EqualTo(3));
+						Assert.That(counters[TraceInfoStep.AfterExecute], Is.EqualTo(3));
 
-					// step called once for Update
-					Assert.AreEqual(1, counters[TraceInfoStep.Completed]);
+						// step called once for Update
+						Assert.That(counters[TraceInfoStep.Completed], Is.EqualTo(1));
 
-					// steps never called
-					Assert.AreEqual(0, counters[TraceInfoStep.MapperCreated]);
-					Assert.AreEqual(0, counters[TraceInfoStep.Error]);
+						// steps never called
+						Assert.That(counters[TraceInfoStep.MapperCreated], Is.EqualTo(0));
+						Assert.That(counters[TraceInfoStep.Error], Is.EqualTo(0));
+					});
 				}
 			}
 		}
@@ -572,27 +614,33 @@ namespace Tests.Data
 				};
 				using (db.BeginTransaction())
 				{
-					// Begin transaction command is reported on each step
-					Assert.AreEqual("BeginTransaction", events[TraceInfoStep.BeforeExecute]!.CommandText);
-					Assert.AreEqual("BeginTransaction", events[TraceInfoStep.AfterExecute]!.CommandText);
+					Assert.Multiple(() =>
+					{
+						// Begin transaction command is reported on each step
+						Assert.That(events[TraceInfoStep.BeforeExecute]!.CommandText, Is.EqualTo("BeginTransaction"));
+						Assert.That(events[TraceInfoStep.AfterExecute]!.CommandText, Is.EqualTo("BeginTransaction"));
+					});
 
 					db.SetCommand(@"UPDATE Categories SET CategoryName = CategoryName WHERE 1=2").Execute();
 					db.RollbackTransaction();
 
-					// Commit transaction command is reported on each step
-					Assert.AreEqual("RollbackTransaction", events[TraceInfoStep.BeforeExecute]!.CommandText);
-					Assert.AreEqual("RollbackTransaction", events[TraceInfoStep.AfterExecute]!.CommandText);
+					Assert.Multiple(() =>
+					{
+						// Commit transaction command is reported on each step
+						Assert.That(events[TraceInfoStep.BeforeExecute]!.CommandText, Is.EqualTo("RollbackTransaction"));
+						Assert.That(events[TraceInfoStep.AfterExecute]!.CommandText, Is.EqualTo("RollbackTransaction"));
 
-					// steps called once for BeginTransaction once for Update and once for CommitTransaction
-					Assert.AreEqual(3, counters[TraceInfoStep.BeforeExecute]);
-					Assert.AreEqual(3, counters[TraceInfoStep.AfterExecute]);
+						// steps called once for BeginTransaction once for Update and once for CommitTransaction
+						Assert.That(counters[TraceInfoStep.BeforeExecute], Is.EqualTo(3));
+						Assert.That(counters[TraceInfoStep.AfterExecute], Is.EqualTo(3));
 
-					// step called once for Update
-					Assert.AreEqual(1, counters[TraceInfoStep.Completed]);
+						// step called once for Update
+						Assert.That(counters[TraceInfoStep.Completed], Is.EqualTo(1));
 
-					// steps never called
-					Assert.AreEqual(0, counters[TraceInfoStep.MapperCreated]);
-					Assert.AreEqual(0, counters[TraceInfoStep.Error]);
+						// steps never called
+						Assert.That(counters[TraceInfoStep.MapperCreated], Is.EqualTo(0));
+						Assert.That(counters[TraceInfoStep.Error], Is.EqualTo(0));
+					});
 				}
 			}
 
@@ -613,27 +661,33 @@ namespace Tests.Data
 				};
 				using (await db.BeginTransactionAsync())
 				{
-					// Begin transaction command is reported on each step
-					Assert.AreEqual("BeginTransactionAsync", events[TraceInfoStep.BeforeExecute]!.CommandText);
-					Assert.AreEqual("BeginTransactionAsync", events[TraceInfoStep.AfterExecute]!.CommandText);
+					Assert.Multiple(() =>
+					{
+						// Begin transaction command is reported on each step
+						Assert.That(events[TraceInfoStep.BeforeExecute]!.CommandText, Is.EqualTo("BeginTransactionAsync"));
+						Assert.That(events[TraceInfoStep.AfterExecute]!.CommandText, Is.EqualTo("BeginTransactionAsync"));
+					});
 
 					db.SetCommand(@"UPDATE Categories SET CategoryName = CategoryName WHERE 1=2").Execute();
 					await db.RollbackTransactionAsync();
 
-					// Commit transaction command is reported on each step
-					Assert.AreEqual("RollbackTransactionAsync", events[TraceInfoStep.BeforeExecute]!.CommandText);
-					Assert.AreEqual("RollbackTransactionAsync", events[TraceInfoStep.AfterExecute]!.CommandText);
+					Assert.Multiple(() =>
+					{
+						// Commit transaction command is reported on each step
+						Assert.That(events[TraceInfoStep.BeforeExecute]!.CommandText, Is.EqualTo("RollbackTransactionAsync"));
+						Assert.That(events[TraceInfoStep.AfterExecute]!.CommandText, Is.EqualTo("RollbackTransactionAsync"));
 
-					// steps called once for BeginTransaction once for Update and once for CommitTransaction
-					Assert.AreEqual(3, counters[TraceInfoStep.BeforeExecute]);
-					Assert.AreEqual(3, counters[TraceInfoStep.AfterExecute]);
+						// steps called once for BeginTransaction once for Update and once for CommitTransaction
+						Assert.That(counters[TraceInfoStep.BeforeExecute], Is.EqualTo(3));
+						Assert.That(counters[TraceInfoStep.AfterExecute], Is.EqualTo(3));
 
-					// step called once for Update
-					Assert.AreEqual(1, counters[TraceInfoStep.Completed]);
+						// step called once for Update
+						Assert.That(counters[TraceInfoStep.Completed], Is.EqualTo(1));
 
-					// steps never called
-					Assert.AreEqual(0, counters[TraceInfoStep.MapperCreated]);
-					Assert.AreEqual(0, counters[TraceInfoStep.Error]);
+						// steps never called
+						Assert.That(counters[TraceInfoStep.MapperCreated], Is.EqualTo(0));
+						Assert.That(counters[TraceInfoStep.Error], Is.EqualTo(0));
+					});
 				}
 			}
 		}
@@ -657,27 +711,33 @@ namespace Tests.Data
 				};
 				using (db.BeginTransaction(IsolationLevel.ReadCommitted))
 				{
-					// Begin transaction command is reported on each step
-					Assert.AreEqual("BeginTransaction(ReadCommitted)", events[TraceInfoStep.BeforeExecute]!.CommandText);
-					Assert.AreEqual("BeginTransaction(ReadCommitted)", events[TraceInfoStep.AfterExecute]!.CommandText);
+					Assert.Multiple(() =>
+					{
+						// Begin transaction command is reported on each step
+						Assert.That(events[TraceInfoStep.BeforeExecute]!.CommandText, Is.EqualTo("BeginTransaction(ReadCommitted)"));
+						Assert.That(events[TraceInfoStep.AfterExecute]!.CommandText, Is.EqualTo("BeginTransaction(ReadCommitted)"));
+					});
 
 					db.SetCommand(@"UPDATE Categories SET CategoryName = CategoryName WHERE 1=2").Execute();
 					db.CommitTransaction();
 
-					// Commit transaction command is reported on each step
-					Assert.AreEqual("CommitTransaction", events[TraceInfoStep.BeforeExecute]!.CommandText);
-					Assert.AreEqual("CommitTransaction", events[TraceInfoStep.AfterExecute]!.CommandText);
+					Assert.Multiple(() =>
+					{
+						// Commit transaction command is reported on each step
+						Assert.That(events[TraceInfoStep.BeforeExecute]!.CommandText, Is.EqualTo("CommitTransaction"));
+						Assert.That(events[TraceInfoStep.AfterExecute]!.CommandText, Is.EqualTo("CommitTransaction"));
 
-					// steps called once for BeginTransaction once for Update and once for CommitTransaction
-					Assert.AreEqual(3, counters[TraceInfoStep.BeforeExecute]);
-					Assert.AreEqual(3, counters[TraceInfoStep.AfterExecute]);
+						// steps called once for BeginTransaction once for Update and once for CommitTransaction
+						Assert.That(counters[TraceInfoStep.BeforeExecute], Is.EqualTo(3));
+						Assert.That(counters[TraceInfoStep.AfterExecute], Is.EqualTo(3));
 
-					// step called once for Update
-					Assert.AreEqual(1, counters[TraceInfoStep.Completed]);
+						// step called once for Update
+						Assert.That(counters[TraceInfoStep.Completed], Is.EqualTo(1));
 
-					// steps never called
-					Assert.AreEqual(0, counters[TraceInfoStep.MapperCreated]);
-					Assert.AreEqual(0, counters[TraceInfoStep.Error]);
+						// steps never called
+						Assert.That(counters[TraceInfoStep.MapperCreated], Is.EqualTo(0));
+						Assert.That(counters[TraceInfoStep.Error], Is.EqualTo(0));
+					});
 				}
 			}
 
@@ -702,64 +762,49 @@ namespace Tests.Data
 				};
 				using (await db.BeginTransactionAsync(IsolationLevel.ReadCommitted))
 				{
-					// Begin transaction command is reported on each step
-					Assert.AreEqual("BeginTransactionAsync(ReadCommitted)", events[TraceInfoStep.BeforeExecute]!.CommandText);
-					Assert.AreEqual("BeginTransactionAsync(ReadCommitted)", events[TraceInfoStep.AfterExecute]!.CommandText);
+					Assert.Multiple(() =>
+					{
+						// Begin transaction command is reported on each step
+						Assert.That(events[TraceInfoStep.BeforeExecute]!.CommandText, Is.EqualTo("BeginTransactionAsync(ReadCommitted)"));
+						Assert.That(events[TraceInfoStep.AfterExecute]!.CommandText, Is.EqualTo("BeginTransactionAsync(ReadCommitted)"));
+					});
 
 					db.SetCommand(@"UPDATE Categories SET CategoryName = CategoryName WHERE 1=2").Execute();
 					await db.CommitTransactionAsync();
 
-					// Commit transaction command is reported on each step
-					Assert.AreEqual("CommitTransactionAsync", events[TraceInfoStep.BeforeExecute]!.CommandText);
-					Assert.AreEqual("CommitTransactionAsync", events[TraceInfoStep.AfterExecute]!.CommandText);
+					Assert.Multiple(() =>
+					{
+						// Commit transaction command is reported on each step
+						Assert.That(events[TraceInfoStep.BeforeExecute]!.CommandText, Is.EqualTo("CommitTransactionAsync"));
+						Assert.That(events[TraceInfoStep.AfterExecute]!.CommandText, Is.EqualTo("CommitTransactionAsync"));
 
-					// steps called once for BeginTransaction once for Update and once for CommitTransaction
-					Assert.AreEqual(3, counters[TraceInfoStep.BeforeExecute]);
-					Assert.AreEqual(3, counters[TraceInfoStep.AfterExecute]);
+						// steps called once for BeginTransaction once for Update and once for CommitTransaction
+						Assert.That(counters[TraceInfoStep.BeforeExecute], Is.EqualTo(3));
+						Assert.That(counters[TraceInfoStep.AfterExecute], Is.EqualTo(3));
 
-					// step called once for Update
-					Assert.AreEqual(1, counters[TraceInfoStep.Completed]);
+						// step called once for Update
+						Assert.That(counters[TraceInfoStep.Completed], Is.EqualTo(1));
 
-					// steps never called
-					Assert.AreEqual(0, counters[TraceInfoStep.MapperCreated]);
-					Assert.AreEqual(0, counters[TraceInfoStep.Error]);
+						// steps never called
+						Assert.That(counters[TraceInfoStep.MapperCreated], Is.EqualTo(0));
+						Assert.That(counters[TraceInfoStep.Error], Is.EqualTo(0));
+					});
 				}
 			}
 		}
 
 		[Test]
-		public void OnTraceConnectionShouldUseStatic()
-		{
-			bool traceCalled = false;
-#pragma warning disable CS0618 // Type or member is obsolete
-			DataConnection.OnTrace = info => traceCalled = true;
-#pragma warning restore CS0618 // Type or member is obsolete
-
-			using (var db = new DataConnection())
-			{
-				db.OnTraceConnection(new TraceInfo(db, TraceInfoStep.BeforeExecute, TraceOperation.BuildMapping, false));
-			}
-			Assert.True(traceCalled);
-		}
-
-		[Test]
 		public void OnTraceConnectionShouldUseFromBuilder()
 		{
-			bool defaultTraceCalled = false;
-#pragma warning disable CS0618 // Type or member is obsolete
-			DataConnection.OnTrace = info => defaultTraceCalled = true;
-#pragma warning restore CS0618 // Type or member is obsolete
-
 			bool builderTraceCalled = false;
-			var builder = new LinqToDBConnectionOptionsBuilder().WithTracing(info => builderTraceCalled = true);
+			var builder = new DataOptions().UseTracing(info => builderTraceCalled = true);
 
-			using (var db = new DataConnection(builder.Build()))
+			using (var db = new DataConnection(builder))
 			{
 				db.OnTraceConnection(new TraceInfo(db, TraceInfoStep.BeforeExecute, TraceOperation.BuildMapping, false));
 			}
 
-			Assert.True(builderTraceCalled, "because the builder trace should have been called");
-			Assert.False(defaultTraceCalled, "because the static trace should not have been called");
+			Assert.That(builderTraceCalled, Is.True, "because the builder trace should have been called");
 		}
 
 		[Test]
@@ -769,7 +814,7 @@ namespace Tests.Data
 
 			using (var db = new DataConnection())
 			{
-				Assert.AreEqual(staticTraceLevel, db.TraceSwitchConnection.Level);
+				Assert.That(db.TraceSwitchConnection.Level, Is.EqualTo(staticTraceLevel));
 			}
 		}
 
@@ -778,12 +823,12 @@ namespace Tests.Data
 		{
 			var staticTraceLevel = DataConnection.TraceSwitch.Level;
 			var builderTraceLevel = staticTraceLevel + 1;
-			var builder = new LinqToDBConnectionOptionsBuilder().WithTraceLevel(builderTraceLevel);
+			var builder = new DataOptions().UseTraceLevel(builderTraceLevel);
 
-			using (var db = new DataConnection(builder.Build()))
+			using (var db = new DataConnection(builder))
 			{
-				Assert.AreEqual(builderTraceLevel, db.TraceSwitchConnection.Level);
-				Assert.AreNotEqual(staticTraceLevel, db.TraceSwitchConnection.Level);
+				Assert.That(db.TraceSwitchConnection.Level, Is.EqualTo(builderTraceLevel));
+				Assert.That(db.TraceSwitchConnection.Level, Is.Not.EqualTo(staticTraceLevel));
 			}
 		}
 
@@ -798,7 +843,7 @@ namespace Tests.Data
 				db.WriteTraceLineConnection(null, null, TraceLevel.Info);
 			}
 
-			Assert.True(staticWriteCalled, "because the data connection should have used the static version by default");
+			Assert.That(staticWriteCalled, Is.True, "because the data connection should have used the static version by default");
 		}
 
 		[Test]
@@ -808,16 +853,19 @@ namespace Tests.Data
 			DataConnection.WriteTraceLine = (s, s1, arg3) => staticWriteCalled = true;
 
 			var builderWriteCalled = false;
-			var builder = new LinqToDBConnectionOptionsBuilder()
-				.WriteTraceWith((s, s1, a3) => builderWriteCalled = true);
+			var builder = new DataOptions()
+				.UseTraceWith((s, s1, a3) => builderWriteCalled = true);
 
-			using (var db = new DataConnection(builder.Build()))
+			using (var db = new DataConnection(builder))
 			{
 				db.WriteTraceLineConnection(null, null, TraceLevel.Info);
 			}
 
-			Assert.True(builderWriteCalled, "because the data connection should have used the action from the builder");
-			Assert.False(staticWriteCalled, "because the data connection should have used the action from the builder");
+			Assert.Multiple(() =>
+			{
+				Assert.That(builderWriteCalled, Is.True, "because the data connection should have used the action from the builder");
+				Assert.That(staticWriteCalled, Is.False, "because the data connection should have used the action from the builder");
+			});
 		}
 	}
 }

@@ -9,7 +9,7 @@ namespace Tests.UserTests
 	public class Issue2665Tests : TestBase
 	{
 		[Table]
-		class ProductTable
+		sealed class ProductTable
 		{
 			[PrimaryKey]
 			public int Id { get; set; }
@@ -24,7 +24,7 @@ namespace Tests.UserTests
 		}
 
 		[Table]
-		class ProductAttributeTable
+		sealed class ProductAttributeTable
 		{
 			[PrimaryKey]
 			public int Id { get; set; }
@@ -40,7 +40,7 @@ namespace Tests.UserTests
 		}
 
 		[Table]
-		class ProductAttributeMapping
+		sealed class ProductAttributeMapping
 		{
 			[PrimaryKey]
 			public int ProductId { get; set; }
@@ -50,7 +50,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void IssueTest([DataSources] string context)
+		public void IssueTest([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -71,7 +71,7 @@ namespace Tests.UserTests
 
 					var res = query2.ToList();
 
-					Assert.AreEqual(res.Count, 0);
+					Assert.That(res, Is.Empty);
 				}
 			}
 		}

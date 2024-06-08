@@ -41,7 +41,7 @@ namespace LinqToDB.CodeModel
 		private abstract class ColumnBase<TData> : ColumnBase
 			where TData : ColumnDataBase
 		{
-			public ColumnBase(string? name)
+			protected ColumnBase(string? name)
 				: base(name)
 			{
 			}
@@ -71,7 +71,7 @@ namespace LinqToDB.CodeModel
 		/// </summary>
 		private abstract class ColumnBase
 		{
-			public ColumnBase(string? name)
+			protected ColumnBase(string? name)
 			{
 				Name = name;
 			}
@@ -300,7 +300,7 @@ namespace LinqToDB.CodeModel
 		/// <summary>
 		/// Data storage for simple column.
 		/// </summary>
-		private class SimpleColumnData : ColumnDataBase
+		private sealed class SimpleColumnData : ColumnDataBase
 		{
 			// per-row values
 			// as we don't know row count, we use list
@@ -333,15 +333,14 @@ namespace LinqToDB.CodeModel
 			public void AddValue(string value, int rowIndex)
 			{
 				// allocate values collection if it is not created yet
-				if (_rowValues == null)
-					_rowValues = new();
+				_rowValues ??= new();
 
 				// fill prevous rows with null, if they are not filled yet
 				while (_rowValues.Count < rowIndex)
 					_rowValues.Add(null);
 
 				// for empty value we replace it with null, as we use null as empty column indicator
-				_rowValues.Add(value == string.Empty ? null : value);
+				_rowValues.Add(value.Length == 0 ? null : value);
 
 				// update max column length if needed
 				if (value.Length > MaxLength)
@@ -358,7 +357,7 @@ namespace LinqToDB.CodeModel
 		/// <summary>
 		/// Simple column descriptor.
 		/// </summary>
-		private class SimpleColumn : ColumnBase<SimpleColumnData>
+		private sealed class SimpleColumn : ColumnBase<SimpleColumnData>
 		{
 			public SimpleColumn(string columnName)
 				: base(columnName)

@@ -11,7 +11,22 @@ namespace LinqToDB.DataProvider.DB2
 
 	sealed class DB2MappingSchema : LockedMappingSchema
 	{
+#if SUPPORTS_COMPOSITE_FORMAT
+		private static readonly CompositeFormat DATE_FORMAT       = CompositeFormat.Parse("{0:yyyy-MM-dd}");
+		private static readonly CompositeFormat DATETIME_FORMAT   = CompositeFormat.Parse("{0:yyyy-MM-dd-HH.mm.ss}");
+
+		private static readonly CompositeFormat TIMESTAMP0_FORMAT = CompositeFormat.Parse("{0:yyyy-MM-dd-HH.mm.ss}");
+		private static readonly CompositeFormat TIMESTAMP1_FORMAT = CompositeFormat.Parse("{0:yyyy-MM-dd-HH.mm.ss.f}");
+		private static readonly CompositeFormat TIMESTAMP2_FORMAT = CompositeFormat.Parse("{0:yyyy-MM-dd-HH.mm.ss.ff}");
+		private static readonly CompositeFormat TIMESTAMP3_FORMAT = CompositeFormat.Parse("{0:yyyy-MM-dd-HH.mm.ss.fff}");
+		private static readonly CompositeFormat TIMESTAMP4_FORMAT = CompositeFormat.Parse("{0:yyyy-MM-dd-HH.mm.ss.ffff}");
+		private static readonly CompositeFormat TIMESTAMP5_FORMAT = CompositeFormat.Parse("{0:yyyy-MM-dd-HH.mm.ss.fffff}");
+		private static readonly CompositeFormat TIMESTAMP6_FORMAT = CompositeFormat.Parse("{0:yyyy-MM-dd-HH.mm.ss.ffffff}");
+		private static readonly CompositeFormat TIMESTAMP7_FORMAT = CompositeFormat.Parse("{0:yyyy-MM-dd-HH.mm.ss.fffffff}");
+#else
+#if NET6_0_OR_GREATER
 		private const string DATE_FORMAT       = "{0:yyyy-MM-dd}";
+#endif
 		private const string DATETIME_FORMAT   = "{0:yyyy-MM-dd-HH.mm.ss}";
 
 		private const string TIMESTAMP0_FORMAT = "{0:yyyy-MM-dd-HH.mm.ss}";
@@ -22,6 +37,7 @@ namespace LinqToDB.DataProvider.DB2
 		private const string TIMESTAMP5_FORMAT = "{0:yyyy-MM-dd-HH.mm.ss.fffff}";
 		private const string TIMESTAMP6_FORMAT = "{0:yyyy-MM-dd-HH.mm.ss.ffffff}";
 		private const string TIMESTAMP7_FORMAT = "{0:yyyy-MM-dd-HH.mm.ss.fffffff}";
+#endif
 
 		private static readonly string[] DateParseFormats = new[]
 		{
@@ -45,28 +61,27 @@ namespace LinqToDB.DataProvider.DB2
 		{
 			SetDataType(typeof(string), new SqlDataType(DataType.NVarChar, typeof(string), 255));
 			SetDataType(typeof(byte), new SqlDataType(DataType.Int16, typeof(byte)));
-			SetDataType(typeof(byte?), new SqlDataType(DataType.Int16, typeof(byte)));
 
-			SetValueToSqlConverter(typeof(Guid),     (sb,dt,v) => ConvertBinaryToSql  (sb, ((Guid)v).ToByteArray()));
-			SetValueToSqlConverter(typeof(string),   (sb,dt,v) => ConvertStringToSql  (sb, v.ToString()!));
-			SetValueToSqlConverter(typeof(char),     (sb,dt,v) => ConvertCharToSql    (sb, (char)v));
-			SetValueToSqlConverter(typeof(byte[]),   (sb,dt,v) => ConvertBinaryToSql  (sb, (byte[])v));
-			SetValueToSqlConverter(typeof(Binary),   (sb,dt,v) => ConvertBinaryToSql  (sb, ((Binary)v).ToArray()));
-			SetValueToSqlConverter(typeof(TimeSpan), (sb,dt,v) => ConvertTimeToSql    (sb, (TimeSpan)v));
-			SetValueToSqlConverter(typeof(DateTime), (sb,dt,v) => ConvertDateTimeToSql(sb, dt, (DateTime)v));
+			SetValueToSqlConverter(typeof(Guid),     (sb, _,_,v) => ConvertBinaryToSql  (sb, ((Guid)v).ToByteArray()));
+			SetValueToSqlConverter(typeof(string),   (sb, _,_,v) => ConvertStringToSql  (sb, (string)v));
+			SetValueToSqlConverter(typeof(char),     (sb, _,_,v) => ConvertCharToSql    (sb, (char)v));
+			SetValueToSqlConverter(typeof(byte[]),   (sb, _,_,v) => ConvertBinaryToSql  (sb, (byte[])v));
+			SetValueToSqlConverter(typeof(Binary),   (sb, _,_,v) => ConvertBinaryToSql  (sb, ((Binary)v).ToArray()));
+			SetValueToSqlConverter(typeof(TimeSpan), (sb, _,_,v) => ConvertTimeToSql    (sb, (TimeSpan)v));
+			SetValueToSqlConverter(typeof(DateTime), (sb,dt,_,v) => ConvertDateTimeToSql(sb, dt, (DateTime)v));
 
 			// set reader conversions from literals
 			SetConverter<string, DateTime>(ParseDateTime);
 
 #if NET6_0_OR_GREATER
-			SetValueToSqlConverter(typeof(DateOnly), (sb,dt,v) => ConvertDateOnlyToSql(sb, dt, (DateOnly)v));
+			SetValueToSqlConverter(typeof(DateOnly), (sb,dt,_,v) => ConvertDateOnlyToSql(sb, dt, (DateOnly)v));
 			SetConverter<string, DateOnly>(ParseDateOnly);
 #endif
 		}
 
 		static DateTime ParseDateTime(string value)
 		{
-			if (DateTime.TryParse(value, out var res))
+			if (DateTime.TryParse(value, DateTimeFormatInfo.InvariantInfo, DateTimeStyles.None, out var res))
 				return res;
 
 			return DateTime.ParseExact(
@@ -78,10 +93,16 @@ namespace LinqToDB.DataProvider.DB2
 
 		static void ConvertTimeToSql(StringBuilder stringBuilder, TimeSpan time)
 		{
-			stringBuilder.Append($"'{time:hh\\:mm\\:ss}'");
+			stringBuilder.Append(CultureInfo.InvariantCulture, $"'{time:hh\\:mm\\:ss}'");
 		}
 
-		static string GetTimestampFormat(SqlDataType type)
+		static
+#if SUPPORTS_COMPOSITE_FORMAT
+			CompositeFormat
+#else
+			string
+#endif
+		GetTimestampFormat(SqlDataType type)
 		{
 			var precision = type.Type.Precision;
 
@@ -90,7 +111,7 @@ namespace LinqToDB.DataProvider.DB2
 				var dbtype = type.Type.DbType.ToLowerInvariant();
 				if (dbtype.StartsWith("timestamp("))
 				{
-					if (int.TryParse(dbtype.Substring(10, dbtype.Length - 11), out var fromDbType))
+					if (int.TryParse(dbtype.Substring(10, dbtype.Length - 11), NumberStyles.Integer, NumberFormatInfo.InvariantInfo, out var fromDbType))
 						precision = fromDbType;
 				}
 			}
@@ -157,11 +178,7 @@ namespace LinqToDB.DataProvider.DB2
 
 		static void AppendConversion(StringBuilder stringBuilder, int value)
 		{
-			stringBuilder
-				.Append("chr(")
-				.Append(value)
-				.Append(')')
-				;
+			stringBuilder.Append(CultureInfo.InvariantCulture, $"chr({value})");
 		}
 
 		static void ConvertStringToSql(StringBuilder stringBuilder, string value)

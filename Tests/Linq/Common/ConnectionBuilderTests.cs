@@ -2,18 +2,25 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using LinqToDB.AspNet.Logging;
-using LinqToDB.Configuration;
+
+using LinqToDB;
+using LinqToDB.Extensions.Logging;
+using LinqToDB.Data;
+using LinqToDB.DataProvider.SqlServer;
+
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+
 using NUnit.Framework;
 
 namespace Tests.Common
 {
+	using Model;
+
 	[TestFixture]
 	public class ConnectionBuilderTests : TestBase
 	{
-		private class TestLoggerFactory : ILoggerFactory
+		private sealed class TestLoggerFactory : ILoggerFactory
 		{
 			public List<TestLogger> Loggers = new ();
 
@@ -33,7 +40,7 @@ namespace Tests.Common
 			}
 		}
 
-		private class TestLogger : ILogger
+		private sealed class TestLogger : ILogger
 		{
 			public List<string> Messages = new ();
 
@@ -52,9 +59,11 @@ namespace Tests.Common
 				return false;
 			}
 
-			public IDisposable BeginScope<TState>(TState state) => new Disposable();
+			public IDisposable BeginScope<TState>(TState state)
+				where TState : notnull
+				=> new Disposable();
 
-			private class Disposable : IDisposable
+			private sealed class Disposable : IDisposable
 			{
 				void IDisposable.Dispose()
 				{
@@ -65,37 +74,55 @@ namespace Tests.Common
 		[Test]
 		public void CanUseWithLoggingFromFactory()
 		{
-			var builder = new LinqToDBConnectionOptionsBuilder();
-			var factory = new TestLoggerFactory();
-			builder.UseLoggerFactory(factory);
+			var builder = new DataOptions();
+			using var factory = new TestLoggerFactory();
 
-			Assert.NotNull(builder.WriteTrace);
+			builder = builder.UseLoggerFactory(factory);
+
+			var extension = builder.Find<QueryTraceOptions>();
+
+			Assert.That(extension?.WriteTrace, Is.Not.Null);
 
 			var expectedMessage = "this is a test log";
-			builder.WriteTrace!(expectedMessage, "some category", TraceLevel.Info);
+			extension?.WriteTrace!(expectedMessage, "some category", TraceLevel.Info);
 
 			Assert.That(factory.Loggers, Has.One.Items);
 			var testLogger = factory.Loggers.Single();
-			Assert.Contains(expectedMessage, testLogger.Messages);
+			Assert.That(testLogger.Messages, Does.Contain(expectedMessage));
 		}
 
 		[Test]
 		public void CanUseLoggingFactoryFromIoc()
 		{
-			var builder  = new LinqToDBConnectionOptionsBuilder();
-			var factory  = new TestLoggerFactory();
+			var builder  = new DataOptions();
+			using var factory  = new TestLoggerFactory();
 			var services = new ServiceCollection();
-			services.AddSingleton<ILoggerFactory>(factory);
-			builder.UseDefaultLogging(services.BuildServiceProvider());
 
-			Assert.NotNull(builder.WriteTrace);
+			services.AddSingleton<ILoggerFactory>(factory);
+
+			builder = builder.UseDefaultLogging(services.BuildServiceProvider());
+
+			var extension = builder.Find<QueryTraceOptions>();
+			Assert.That(extension?.WriteTrace, Is.Not.Null);
 
 			var expectedMessage = "this is a test log";
-			builder.WriteTrace!(expectedMessage, "some category", TraceLevel.Info);
+			extension!.WriteTrace!(expectedMessage, "some category", TraceLevel.Info);
 
 			Assert.That(factory.Loggers, Has.One.Items);
 			var testLogger = factory.Loggers.Single();
-			Assert.Contains(expectedMessage, testLogger.Messages);
+			Assert.That(testLogger.Messages, Does.Contain(expectedMessage));
+		}
+
+		[Test]
+		public void SqlServerBuilderWitAutoDetect([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			var provider = !context.EndsWith(".MS") ? SqlServerProvider.SystemDataSqlClient : SqlServerProvider.MicrosoftDataSqlClient;
+			var cs = DataConnection.GetConnectionString(context);
+
+			var builder = new DataOptions().UseSqlServer(cs, provider : provider);
+
+			using var dc = new DataConnection(builder);
+			_ = dc.GetTable<Parent>().First();
 		}
 	}
 }

@@ -1,10 +1,11 @@
 ﻿using System;
 using System.Linq.Expressions;
-using LinqToDB.Expressions;
 
 namespace LinqToDB.Linq.Builder
 {
-	class TagQueryBuilder : MethodCallBuilder
+	using LinqToDB.Expressions;
+
+	sealed class TagQueryBuilder : MethodCallBuilder
 	{
 		protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
@@ -13,11 +14,11 @@ namespace LinqToDB.Linq.Builder
 
 		private static readonly char[] NewLine = new[] { '\r', '\n' };
 
-		protected override IBuildContext BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
+		protected override BuildSequenceResult BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
 			var sequence = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
 
-			var tag = (string?)methodCall.Arguments[1].EvaluateExpression();
+			var tag = builder.EvaluateExpression<string>(methodCall.Arguments[1]);
 
 			if (!string.IsNullOrWhiteSpace(tag))
 			{
@@ -25,7 +26,7 @@ namespace LinqToDB.Linq.Builder
 				(builder.Tag ??= new ()).Lines.AddRange(tag!.Split(NewLine, StringSplitOptions.RemoveEmptyEntries));
 			}
 
-			return sequence;
+			return BuildSequenceResult.FromContext(sequence);
 		}
 	}
 }

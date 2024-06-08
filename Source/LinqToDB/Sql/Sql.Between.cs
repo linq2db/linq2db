@@ -1,8 +1,9 @@
 ﻿using System;
-using LinqToDB.SqlQuery;
 
 namespace LinqToDB
 {
+	using SqlQuery;
+
 	partial class Sql
 	{
 
@@ -34,25 +35,22 @@ namespace LinqToDB
 			return value != null && (value.Value.CompareTo(low) < 0 || value.Value.CompareTo(high) > 0);
 		}
 
-		private class BetweenBuilder : IExtensionCallBuilder
+		private sealed class BetweenBuilder : IExtensionCallBuilder
 		{
 			public void Build(ISqExtensionBuilder builder)
 			{
-				var args = Array.ConvertAll(builder.Arguments, x => builder.ConvertExpressionToSql(x));
-				builder.ResultExpression = new SqlSearchCondition(new SqlCondition(false,
-					new SqlPredicate.Between(args[0], false, args[1], args[2])));
+				var args = Array.ConvertAll(builder.Arguments, x => builder.ConvertExpressionToSql(x)!);
+				builder.ResultExpression = new SqlSearchCondition(false, new SqlPredicate.Between(args[0], false, args[1], args[2]));
 			}
 		}
-		
-		private class NotBetweenBuilder : IExtensionCallBuilder
+
+		private sealed class NotBetweenBuilder : IExtensionCallBuilder
 		{
 			public void Build(ISqExtensionBuilder builder)
 			{
-				var args = Array.ConvertAll(builder.Arguments, x => builder.ConvertExpressionToSql(x));
-				builder.ResultExpression = new SqlSearchCondition(new SqlCondition(false,
-					new SqlPredicate.Between(args[0], true, args[1], args[2])));
+				var args = Array.ConvertAll(builder.Arguments, x => builder.ConvertExpressionToSql(x)!);
+				builder.ResultExpression = new SqlSearchCondition(false, new SqlPredicate.Between(args[0], true, args[1], args[2]));
 			}
 		}
-		
 	}
 }

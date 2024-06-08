@@ -7,7 +7,7 @@ namespace LinqToDB.SqlQuery
 
 	public class EvaluationContext
 	{
-		private Dictionary<IQueryElement, (object? value, string? error)>? _evaluationCache;
+		private Dictionary<IQueryElement, (object? value, bool success)>? _evaluationCache;
 
 		public EvaluationContext(IReadOnlyParameterValues? parameterValues = null)
 		{
@@ -16,7 +16,9 @@ namespace LinqToDB.SqlQuery
 
 		public IReadOnlyParameterValues? ParameterValues { get; }
 
-		internal bool TryGetValue(IQueryElement expr, [NotNullWhen(true)] out (object? value, string? error)? info)
+		public bool IsParametersInitialized => ParameterValues != null;
+
+		internal bool TryGetValue(IQueryElement expr, [NotNullWhen(true)] out (object? value, bool success)? info)
 		{
 			if (_evaluationCache == null)
 			{
@@ -37,13 +39,13 @@ namespace LinqToDB.SqlQuery
 		public void Register(IQueryElement expr, object? value)
 		{
 			_evaluationCache ??= new (Utils.ObjectReferenceEqualityComparer<IQueryElement>.Default);
-			_evaluationCache.Add(expr, (value, null));
+			_evaluationCache.Add(expr, (value, true));
 		}
 
-		public void RegisterError(IQueryElement expr, string error)
+		public void RegisterError(IQueryElement expr)
 		{
 			_evaluationCache ??= new(Utils.ObjectReferenceEqualityComparer<IQueryElement>.Default);
-			_evaluationCache.Add(expr, (null, error));
+			_evaluationCache.Add(expr, (null, false));
 		}
 	}
 }

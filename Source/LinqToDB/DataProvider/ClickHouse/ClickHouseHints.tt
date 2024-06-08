@@ -1,0 +1,70 @@
+﻿<#@ template debug="false" hostspecific="false" language="C#" #>
+<#@ assembly name="System.Core" #>
+<#@ import namespace="System.Linq" #>
+<#@ import namespace="System.Text" #>
+<#@ import namespace="System.Collections.Generic" #>
+<#@ output extension=".generated.cs" #>
+#nullable enable
+// Generated.
+//
+using System;
+using System.Linq.Expressions;
+
+namespace LinqToDB.DataProvider.ClickHouse
+{
+	public static partial class ClickHouseHints
+	{
+<#
+	GenerateJoinHint("Outer");
+	GenerateJoinHint("Semi");
+	GenerateJoinHint("Anti");
+	GenerateJoinHint("Any");
+	GenerateJoinHint("AsOf");
+	GenerateJoinHint("Global");
+	GenerateJoinHint("GlobalOuter");
+	GenerateJoinHint("GlobalSemi");
+	GenerateJoinHint("GlobalAnti");
+	GenerateJoinHint("GlobalAny");
+	GenerateJoinHint("GlobalAsOf");
+	GenerateJoinHint("All");
+	GenerateJoinHint("AllOuter");
+	GenerateJoinHint("AllSemi");
+	GenerateJoinHint("AllAnti");
+	GenerateJoinHint("AllAny");
+	GenerateJoinHint("AllAsOf");
+#>
+	}
+}
+<#+
+void GenerateJoinHint(string hint)
+{
+#>
+		[ExpressionMethod(nameof(Join<#= hint #>HintImpl))]
+		internal static IClickHouseSpecificQueryable<TSource> Join<#= hint #>Hint<TSource>(this IClickHouseSpecificQueryable<TSource> query)
+			where TSource : notnull
+		{
+			return query.JoinHint(Join.<#= hint #>);
+		}
+
+		static Expression<Func<IClickHouseSpecificQueryable<TSource>,IClickHouseSpecificQueryable<TSource>>> Join<#= hint #>HintImpl<TSource>()
+			where TSource : notnull
+		{
+			return query => query.JoinHint(Join.<#= hint #>);
+		}
+
+		[ExpressionMethod(nameof(Join<#= hint #>TableHintImpl))]
+		internal static IClickHouseSpecificTable<TSource> Join<#= hint #>Hint<TSource>(this IClickHouseSpecificTable<TSource> table)
+			where TSource : notnull
+		{
+			return table.JoinHint(Join.<#= hint #>);
+		}
+
+		static Expression<Func<IClickHouseSpecificTable<TSource>,IClickHouseSpecificTable<TSource>>> Join<#= hint #>TableHintImpl<TSource>()
+			where TSource : notnull
+		{
+			return table => table.JoinHint(Join.<#= hint #>);
+		}
+
+<#+
+}
+#>

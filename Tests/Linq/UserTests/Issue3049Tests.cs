@@ -11,7 +11,7 @@ namespace Tests.UserTests
 	[TestFixture]
 	public class Issue3049Tests : TestBase
 	{
-		class AdminContext : DataContext
+		sealed class AdminContext : DataContext
 		{
 			public AdminContext(string configuration) : base(configuration)
 			{
@@ -22,14 +22,14 @@ namespace Tests.UserTests
 		}
 
 		[Table]
-		class SampleClass
+		sealed class SampleClass
 		{
 			[Column]              public int     Id    { get; set; }
 			[Column(Length = 50)] public string? Value { get; set; }
 		}
 
 		[Test]
-		public void TestContextProp([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values("key1", "key2")] string currentKey)
+		public void TestContextProp([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context, [Values("key1", "key2")] string currentKey)
 		{
 			using (var db = new AdminContext(context))
 			using (var table = db.CreateLocalTable(new SampleClass[]

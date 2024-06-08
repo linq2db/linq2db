@@ -1,6 +1,8 @@
 ﻿using System.Linq;
 
-using LinqToDB;
+using FluentAssertions;
+
+using LinqToDB.Linq;
 
 using NUnit.Framework;
 
@@ -16,16 +18,16 @@ namespace Tests.Linq
 			{
 				var exp = from o in Parent
 					join c in Child on o.ParentID equals c.ParentID into cg
-					from c in cg.DefaultIfEmpty().Take(1)
+					from c in cg.OrderByDescending(x => x.ChildID).DefaultIfEmpty().Take(1)
 					select new { o, c };
 
 				var act = from o in db.Parent
 					join c in db.Child on o.ParentID equals c.ParentID into cg
-					from c in cg.DefaultIfEmpty().Take(1)
+					from c in cg.OrderByDescending(x => x.ChildID).DefaultIfEmpty().Take(1)
 					select new { o, c };
 
-				if (!db.SqlProviderFlags.IsApplyJoinSupported)
-					Assert.Throws<LinqToDBException>(() => AreEqual(exp, act));
+				if (!db.SqlProviderFlags.IsWindowFunctionsSupported)
+					FluentActions.Enumerating(() => act).Should().Throw<LinqException>();
 				else
 					AreEqual(exp, act);
 			}
@@ -37,15 +39,15 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 			{
 				var exp = from o in Parent
-					from c in Child.Where(x => x.ParentID == o.ParentID).DefaultIfEmpty().Take(1)
+					from c in Child.Where(x => x.ParentID == o.ParentID).OrderByDescending(x => x.ChildID).DefaultIfEmpty().Take(1)
 					select new { o, c };
 
 				var act = from o in db.Parent
-					from c in db.Child.Where(x => x.ParentID == o.ParentID).DefaultIfEmpty().Take(1)
+					from c in db.Child.Where(x => x.ParentID == o.ParentID).OrderByDescending(x => x.ChildID).DefaultIfEmpty().Take(1)
 					select new { o, c };
 
-				if (!db.SqlProviderFlags.IsApplyJoinSupported)
-					Assert.Throws<LinqToDBException>(() => AreEqual(exp, act));
+				if (!db.SqlProviderFlags.IsWindowFunctionsSupported)
+					FluentActions.Enumerating(() => act).Should().Throw<LinqException>();
 				else
 					AreEqual(exp, act);
 			}
@@ -59,12 +61,12 @@ namespace Tests.Linq
 			{
 				var exp = from o in Parent
 					join c in Child.Take(1) on o.ParentID equals c.ParentID into cg
-					from c in cg.DefaultIfEmpty()
+					from c in cg.OrderByDescending(x => x.ChildID).DefaultIfEmpty()
 					select new { o, c };
 
 				var act = from o in db.Parent
 					join c in db.Child.Take(1) on o.ParentID equals c.ParentID into cg
-					from c in cg.DefaultIfEmpty()
+					from c in cg.OrderByDescending(x => x.ChildID).DefaultIfEmpty()
 					select new { o, c };
 
 				AreEqual(exp, act);
@@ -78,11 +80,11 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 			{
 				var exp = from o in Parent
-					from c in Child.Take(1).Where(x => x.ParentID == o.ParentID).DefaultIfEmpty()
+					from c in Child.OrderByDescending(x => x.ChildID).Take(1).Where(x => x.ParentID == o.ParentID).DefaultIfEmpty()
 					select new { o, c };
 
 				var act = from o in db.Parent
-					from c in db.Child.Take(1).Where(x => x.ParentID == o.ParentID).DefaultIfEmpty()
+					from c in db.Child.OrderByDescending(x => x.ChildID).Take(1).Where(x => x.ParentID == o.ParentID).DefaultIfEmpty()
 					select new { o, c };
 
 				AreEqual(exp, act);
@@ -96,16 +98,16 @@ namespace Tests.Linq
 			{
 				var exp = from o in Parent
 					join c in Child on o.ParentID equals c.ParentID into cg
-					from c in cg.Take(1).DefaultIfEmpty()
+					from c in cg.OrderByDescending(x => x.ChildID).Take(1).DefaultIfEmpty()
 					select new { o, c };
 
 				var act = from o in db.Parent
 					join c in db.Child on o.ParentID equals c.ParentID into cg
-					from c in cg.Take(1).DefaultIfEmpty()
+					from c in cg.OrderByDescending(x => x.ChildID).Take(1).DefaultIfEmpty()
 					select new { o, c };
 
-				if (!db.SqlProviderFlags.IsApplyJoinSupported)
-					Assert.Throws<LinqToDBException>(() => AreEqual(exp, act));
+				if (!db.SqlProviderFlags.IsWindowFunctionsSupported)
+					FluentActions.Enumerating(() => act).Should().Throw<LinqException>();
 				else
 					AreEqual(exp, act);
 			}
@@ -126,10 +128,7 @@ namespace Tests.Linq
 					from c in cg.DefaultIfEmpty().Distinct()
 					select new { o, c };
 
-				if (!db.SqlProviderFlags.IsApplyJoinSupported)
-					Assert.Throws<LinqToDBException>(() => AreEqual(exp, act));
-				else
-					AreEqual(exp, act);
+				AreEqual(exp, act);
 			}
 		}
 
@@ -146,10 +145,7 @@ namespace Tests.Linq
 					from c in db.Child.Where(x => x.ParentID == o.ParentID).DefaultIfEmpty().Distinct()
 					select new { o, c };
 
-				if (!db.SqlProviderFlags.IsApplyJoinSupported)
-					Assert.Throws<LinqToDBException>(() => AreEqual(exp, act));
-				else
-					AreEqual(exp, act);
+				AreEqual(exp, act);
 			}
 		}
 
@@ -204,10 +200,7 @@ namespace Tests.Linq
 					from c in cg.Distinct().DefaultIfEmpty()
 					select new { o, c };
 
-				if (!db.SqlProviderFlags.IsApplyJoinSupported)
-					Assert.Throws<LinqToDBException>(() => AreEqual(exp, act));
-				else
-					AreEqual(exp, act);
+				AreEqual(exp, act);
 			}
 		}
 
@@ -218,16 +211,16 @@ namespace Tests.Linq
 			{
 				var exp = from o in Parent
 					join c in Child on o.ParentID equals c.ParentID into cg
-					from c in cg.Take(1)
+					from c in cg.OrderByDescending(x => x.ChildID).Take(1)
 					select new { o, c };
 
 				var act = from o in db.Parent
 					join c in db.Child on o.ParentID equals c.ParentID into cg
-					from c in cg.Take(1)
+					from c in cg.OrderByDescending(x => x.ChildID).Take(1)
 					select new { o, c };
 
-				if (!db.SqlProviderFlags.IsApplyJoinSupported)
-					Assert.Throws<LinqToDBException>(() => AreEqual(exp, act));
+				if (!db.SqlProviderFlags.IsWindowFunctionsSupported)
+					FluentActions.Enumerating(() => act).Should().Throw<LinqException>();
 				else
 					AreEqual(exp, act);
 			}
@@ -239,21 +232,22 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 			{
 				var exp = from o in Parent
-					from c in Child.Where(x => x.ParentID == o.ParentID).Take(1)
+					from c in Child.Where(x => x.ParentID == o.ParentID).OrderByDescending(x => x.ChildID).Take(1)
 					select new { o, c };
 
 				var act = from o in db.Parent
-					from c in db.Child.Where(x => x.ParentID == o.ParentID).Take(1)
+					from c in db.Child.Where(x => x.ParentID == o.ParentID).OrderByDescending(x => x.ChildID).Take(1)
 					select new { o, c };
 
-				if (!db.SqlProviderFlags.IsApplyJoinSupported)
-					Assert.Throws<LinqToDBException>(() => AreEqual(exp, act));
+				if (!db.SqlProviderFlags.IsWindowFunctionsSupported)
+					FluentActions.Enumerating(() => act).Should().Throw<LinqException>();
 				else
 					AreEqual(exp, act);
 			}
 		}
 
 		[Test]
+		[ThrowsForProvider(typeof(LinqException), TestProvName.AllSybase, "Provider has issue with JOIN to limited recordset.")]
 		public void InnerJoinLimited([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -273,6 +267,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		[ThrowsForProvider(typeof(LinqException), TestProvName.AllSybase, "Provider has issue with JOIN to limited recordset.")]
 		public void InnerJoinLimitedWhere([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -296,16 +291,16 @@ namespace Tests.Linq
 			{
 				var exp = from o in Parent
 					join c in Child on o.ParentID equals c.ParentID into cg
-					from c in cg.Take(1)
+					from c in cg.OrderByDescending(x => x.ChildID).Take(1)
 					select new { o, c };
 
 				var act = from o in db.Parent
 					join c in db.Child on o.ParentID equals c.ParentID into cg
-					from c in cg.Take(1)
+					from c in cg.OrderByDescending(x => x.ChildID).Take(1)
 					select new { o, c };
 
-				if (!db.SqlProviderFlags.IsApplyJoinSupported)
-					Assert.Throws<LinqToDBException>(() => AreEqual(exp, act));
+				if (!db.SqlProviderFlags.IsWindowFunctionsSupported)
+					FluentActions.Enumerating(() => act).Should().Throw<LinqException>();
 				else
 					AreEqual(exp, act);
 			}
@@ -326,10 +321,7 @@ namespace Tests.Linq
 					from c in cg.Distinct()
 					select new { o, c };
 
-				if (!db.SqlProviderFlags.IsApplyJoinSupported)
-					Assert.Throws<LinqToDBException>(() => AreEqual(exp, act));
-				else
-					AreEqual(exp, act);
+				AreEqual(exp, act);
 			}
 		}
 
@@ -346,10 +338,7 @@ namespace Tests.Linq
 					from c in db.Child.Where(x => x.ParentID == o.ParentID).Distinct()
 					select new { o, c };
 
-				if (!db.SqlProviderFlags.IsApplyJoinSupported)
-					Assert.Throws<LinqToDBException>(() => AreEqual(exp, act));
-				else
-					AreEqual(exp, act);
+				AreEqual(exp, act);
 			}
 		}
 
@@ -408,10 +397,7 @@ namespace Tests.Linq
 					from c in cg.Distinct()
 					select new { o, c };
 
-				if (!db.SqlProviderFlags.IsApplyJoinSupported)
-					Assert.Throws<LinqToDBException>(() => AreEqual(exp, act));
-				else
-					AreEqual(exp, act);
+				AreEqual(exp, act);
 			}
 		}
 	}

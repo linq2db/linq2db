@@ -1,21 +1,21 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Data;
+using System.Data.Common;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 
 namespace LinqToDB.DataProvider.Informix
 {
-	using SqlQuery;
-	using SqlProvider;
-	using System.Globalization;
+	using Common;
 	using Mapping;
-	using System.Data.Common;
+	using SqlProvider;
+	using SqlQuery;
 
-	partial class InformixSqlBuilder : BasicSqlBuilder
+	sealed partial class InformixSqlBuilder : BasicSqlBuilder
 	{
-		public InformixSqlBuilder(IDataProvider? provider, MappingSchema mappingSchema, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
-			: base(provider, mappingSchema, sqlOptimizer, sqlProviderFlags)
+		public InformixSqlBuilder(IDataProvider? provider, MappingSchema mappingSchema, DataOptions dataOptions, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
+			: base(provider, mappingSchema, dataOptions, sqlOptimizer, sqlProviderFlags)
 		{
 		}
 
@@ -27,8 +27,6 @@ namespace LinqToDB.DataProvider.Informix
 		{
 			return new InformixSqlBuilder(this);
 		}
-
-		protected override bool SupportsNullInColumn => false;
 
 		public override int CommandCount(SqlStatement statement)
 		{
@@ -113,9 +111,9 @@ namespace LinqToDB.DataProvider.Informix
 			}
 		}
 
-		protected override void BuildDataTypeFromDataType(SqlDataType type, bool forCreateTable)
+		protected override void BuildDataTypeFromDataType(DbDataType type, bool forCreateTable, bool canBeNull)
 		{
-			switch (type.Type.DataType)
+			switch (type.DataType)
 			{
 				case DataType.Guid       : StringBuilder.Append("VARCHAR(36)");               return;
 				case DataType.VarBinary  : StringBuilder.Append("BYTE");                      return;
@@ -123,8 +121,7 @@ namespace LinqToDB.DataProvider.Informix
 				case DataType.DateTime   : StringBuilder.Append("datetime year to second");   return;
 				case DataType.DateTime2  : StringBuilder.Append("datetime year to fraction"); return;
 				case DataType.Time       :
-					StringBuilder.Append("INTERVAL HOUR TO FRACTION");
-					StringBuilder.AppendFormat("({0})", (type.Type.Length ?? 5).ToString(CultureInfo.InvariantCulture));
+					StringBuilder.Append(CultureInfo.InvariantCulture, $"INTERVAL HOUR TO FRACTION({type.Length ?? 5})");
 					return;
 				case DataType.Date       : StringBuilder.Append("DATETIME YEAR TO DAY");      return;
 				case DataType.SByte      :
@@ -132,25 +129,21 @@ namespace LinqToDB.DataProvider.Informix
 				case DataType.SmallMoney : StringBuilder.Append("Decimal(10, 4)");            return;
 				case DataType.Decimal    :
 					StringBuilder.Append("Decimal");
-					if (type.Type.Precision != null && type.Type.Scale != null)
-						StringBuilder.AppendFormat(
-							"({0}, {1})",
-							type.Type.Precision.Value.ToString(CultureInfo.InvariantCulture),
-							type.Type.Scale.Value.ToString(CultureInfo.InvariantCulture));
+					if (type.Precision != null && type.Scale != null)
+						StringBuilder.Append(CultureInfo.InvariantCulture, $"({type.Precision}, {type.Scale})");
 					return;
 				case DataType.NVarChar:
-					if (type.Type.Length == null || type.Type.Length > 255 || type.Type.Length < 1)
+					if (type.Length == null || type.Length > 255 || type.Length < 1)
 					{
-						StringBuilder
-							.Append(type.Type.DataType)
-							.Append("(255)");
+						StringBuilder.Append("NVarChar(255)");
+
 						return;
 					}
 
 					break;
 			}
 
-			base.BuildDataTypeFromDataType(type, forCreateTable);
+			base.BuildDataTypeFromDataType(type, forCreateTable, canBeNull);
 		}
 
 		/// <summary>
@@ -232,7 +225,7 @@ namespace LinqToDB.DataProvider.Informix
 		}
 
 		// https://www.ibm.com/support/knowledgecenter/en/SSGU8G_12.1.0/com.ibm.sqls.doc/ids_sqs_1652.htm
-		public override StringBuilder BuildObjectName(StringBuilder sb, SqlObjectName name, ConvertType objectType, bool escape, TableOptions tableOptions)
+		public override StringBuilder BuildObjectName(StringBuilder sb, SqlObjectName name, ConvertType objectType, bool escape, TableOptions tableOptions, bool withoutSuffix = false)
 		{
 			if (name.Server != null && name.Database == null)
 				throw new LinqToDBException("You must specify database for linked server query");
@@ -281,11 +274,19 @@ namespace LinqToDB.DataProvider.Informix
 			return base.GetProviderTypeName(dataContext, parameter);
 		}
 
-		protected override void BuildTypedExpression(SqlDataType dataType, ISqlExpression value)
+		protected override void BuildTypedExpression(DbDataType dataType, ISqlExpression value)
 		{
-			BuildExpression(value);
+			var saveStep = BuildStep;
+
+			BuildStep = Step.TypedExpression;
+
+			BuildExpression(Precedence.Primary, value);
+
 			StringBuilder.Append("::");
-			BuildDataType(dataType, false);
+
+			BuildDataType(dataType, false, value.CanBeNullable(NullabilityContext));
+
+			BuildStep = saveStep;
 		}
 
 		protected override void BuildCreateTableCommand(SqlTable table)
@@ -325,7 +326,8 @@ namespace LinqToDB.DataProvider.Informix
 			BuildDropTableStatementIfExists(dropTable);
 		}
 
-		protected override void BuildSqlRow(SqlRow expr, bool buildTableName, bool checkParentheses, bool throwExceptionIfTableNotFound)
+		protected override void BuildSqlRow(SqlRowExpression expr, bool buildTableName, bool checkParentheses,
+			bool                                   throwExceptionIfTableNotFound)
 		{
 			// Informix needs ROW(1,2) syntax instead of BasicSqlBuilder default (1,2)
 			StringBuilder.Append("ROW (");
@@ -336,18 +338,6 @@ namespace LinqToDB.DataProvider.Informix
 			}
 			StringBuilder.Length -= InlineComma.Length; // Note that SqlRow are never empty
 			StringBuilder.Append(')');
-		}
-
-		protected override ISqlExpression WrapBooleanExpression(ISqlExpression expr)
-		{
-			var newExpr = base.WrapBooleanExpression(expr);
-			if (!ReferenceEquals(newExpr, expr))
-			{
-				return new SqlFunction(typeof(bool), "Convert", false, new SqlDataType(DataType.Boolean),
-					newExpr);
-			}
-
-			return newExpr;
 		}
 
 		protected override bool IsReserved(string word)

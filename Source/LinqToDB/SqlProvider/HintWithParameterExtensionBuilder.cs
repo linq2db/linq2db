@@ -1,23 +1,19 @@
 ﻿using System;
+using System.Globalization;
 using System.Text;
 
 namespace LinqToDB.SqlProvider
 {
 	using SqlQuery;
 
-	class HintWithParameterExtensionBuilder : ISqlQueryExtensionBuilder
+	sealed class HintWithParameterExtensionBuilder : ISqlQueryExtensionBuilder
 	{
-		void ISqlQueryExtensionBuilder.Build(ISqlBuilder sqlBuilder, StringBuilder stringBuilder, SqlQueryExtension sqlQueryExtension)
+		void ISqlQueryExtensionBuilder.Build(NullabilityContext nullability, ISqlBuilder sqlBuilder, StringBuilder stringBuilder, SqlQueryExtension sqlQueryExtension)
 		{
 			var hint  = ((SqlValue)sqlQueryExtension.Arguments["hint"]).    Value;
 			var param = GetValue((SqlValue)sqlQueryExtension.Arguments["hintParameter"]);
 
-			stringBuilder
-				.Append(hint)
-				.Append('(')
-				.Append(param)
-				.Append(')');
-
+			stringBuilder.Append(CultureInfo.InvariantCulture, $"{hint}({param})");
 
 			object? GetValue(SqlValue value)
 			{

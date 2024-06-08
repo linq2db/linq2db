@@ -18,7 +18,7 @@ namespace Tests.UserTests
 			Value2
 		}
 
-		class TestIssue358Class
+		sealed class TestIssue358Class
 		{
 			public TestIssue358Enum? MyEnum;
 			public TestIssue358Enum  MyEnum2;
@@ -98,6 +98,7 @@ namespace Tests.UserTests
 
 		static LinqDataTypes2 FixData(LinqDataTypes2 data)
 		{
+			data = data.Clone();
 			data.StringValue = null;
 			return data;
 		}

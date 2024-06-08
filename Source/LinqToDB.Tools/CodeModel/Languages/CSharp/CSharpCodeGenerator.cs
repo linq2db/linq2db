@@ -11,13 +11,23 @@ namespace LinqToDB.CodeModel
 	internal sealed class CSharpCodeGenerator : CodeGenerationVisitor<CSharpCodeGenerator>
 	{
 		/// <summary>
+		/// Code fragments for unary operators.
+		/// </summary>
+		private static readonly IReadOnlyDictionary<UnaryOperation, string> _unaryOperators = new Dictionary<UnaryOperation, string>()
+		{
+			{ UnaryOperation.Not, "!" },
+		};
+
+		/// <summary>
 		/// Code fragments for binary operators.
 		/// </summary>
 		private static readonly IReadOnlyDictionary<BinaryOperation, string> _operators = new Dictionary<BinaryOperation, string>()
 		{
-			{ BinaryOperation.Equal, " == " },
-			{ BinaryOperation.And  , " && " },
-			{ BinaryOperation.Add  , " + "  },
+			{ BinaryOperation.Equal   , " == " },
+			{ BinaryOperation.NotEqual, " != " },
+			{ BinaryOperation.And     , " && " },
+			{ BinaryOperation.Or      , " || " },
+			{ BinaryOperation.Add     , " + "  },
 		};
 
 		// newline sequences according to language specs
@@ -136,12 +146,22 @@ namespace LinqToDB.CodeModel
 		{
 			// hardcoded sequence with newline spacers
 			VisitList(file.Header);
-			Visit(CodeEmptyLine.Instance);
+			WriteLine();
 			VisitList(file.Imports);
-			Visit(CodeEmptyLine.Instance);
+			WriteLine();
 
 			_currentImports = file.Imports;
 			VisitList(file);
+		}
+
+		protected override void Visit(CodeUnary expression)
+		{
+			if (_unaryOperators.TryGetValue(expression.Operation, out var operatorCode))
+				Write(operatorCode);
+			else
+				throw new NotImplementedException($"Unary operator {expression.Operation} support missing from C# code generator");
+
+			Visit(expression.Argument);
 		}
 
 		protected override void Visit(CodeBinary expression)
@@ -154,6 +174,15 @@ namespace LinqToDB.CodeModel
 				throw new NotImplementedException($"Binary operator {expression.Operation} support missing from C# code generator");
 
 			Visit(expression.Right);
+		}
+
+		protected override void Visit(CodeTernary expression)
+		{
+			Visit(expression.Condition);
+			Write(" ? ");
+			Visit(expression.True);
+			Write(" : ");
+			Visit(expression.False);
 		}
 
 		protected override void Visit(CodeLambda method)
@@ -181,7 +210,7 @@ namespace LinqToDB.CodeModel
 
 			Write(" =>");
 
-			WriteMethodBodyBlock(method.Body!, true, true, false, false);
+			WriteMethodBodyBlock(method.Body, true, true, false, false);
 		}
 
 		protected override void Visit(CodeMember expression)
@@ -325,7 +354,7 @@ namespace LinqToDB.CodeModel
 			if (method.Attributes.HasFlag(Modifiers.Partial) && method.Body == null)
 				WriteLine(";");
 			else
-				WriteMethodBodyBlock(method.Body!, false, method.ReturnType == null, false, true);
+				WriteMethodBodyBlock(method.Body, false, method.ReturnType == null, false, true);
 		}
 
 		protected override void Visit(CodeParameter parameter)
@@ -400,7 +429,7 @@ namespace LinqToDB.CodeModel
 
 			Write("()");
 
-			WriteMethodBodyBlock(cctor.Body!, false, true, false, true);
+			WriteMethodBodyBlock(cctor.Body, false, true, false, true);
 		}
 
 		protected override void Visit(CodeConstructor ctor)
@@ -428,7 +457,7 @@ namespace LinqToDB.CodeModel
 				DecreaseIdent();
 			}
 
-			WriteMethodBodyBlock(ctor.Body!, false, true, false, true);
+			WriteMethodBodyBlock(ctor.Body, false, true, false, true);
 		}
 
 		protected override void Visit(CodeThis expression)
@@ -441,13 +470,16 @@ namespace LinqToDB.CodeModel
 		private            void WriteCall(CodeCallBase       call)
 		{
 			// TODO: check if we can ommit "this" or it will result in name conflicts
-			if (call.Callee != null && call.Callee.ElementType != CodeElementType.This)
+			var hasCalle = call.Callee != null && call.Callee.ElementType != CodeElementType.This;
+			if (hasCalle)
 			{
 				if (call.Extension)
 					// TODO: here we could need () around parameter value if it is complex expression
 					Visit(call.Parameters[0]);
 				else
-					Visit(call.Callee);
+					Visit(call.Callee!);
+
+				WriteTrivia(call.WrapTrivia);
 				Write('.');
 			}
 
@@ -463,6 +495,9 @@ namespace LinqToDB.CodeModel
 			Write('(');
 			WriteDelimitedList(call.Extension ? call.Parameters.Skip(1) : call.Parameters, ", ", false);
 			Write(')');
+
+			if (hasCalle)
+				UndoTrivia(call.WrapTrivia);
 		}
 
 		protected override void Visit(CodeReturn statement)
@@ -1087,7 +1122,7 @@ namespace LinqToDB.CodeModel
 					RenderType(type.WithNullability(false), null, false);
 					Write(')');
 					var underlyingType = Enum.GetUnderlyingType(enumType);
-					WriteLiteral(Convert.ChangeType(value, underlyingType), _languageProvider.TypeParser.Parse(underlyingType), true);
+					WriteLiteral(Convert.ChangeType(value, underlyingType, CultureInfo.InvariantCulture), _languageProvider.TypeParser.Parse(underlyingType), true);
 				}
 			}
 			else
@@ -1103,14 +1138,14 @@ namespace LinqToDB.CodeModel
 		/// <param name="inlineNeedsSemicolon">Indicate that when method body generated as inline statement, statement should be terminated by semicolon.</param>
 		/// <param name="endWithNewLine">Indicate that method body should be terminated by new line sequence.</param>
 		private void WriteMethodBodyBlock(
-			CodeBlock statements,
+			CodeBlock? statements,
 			bool preferInline,
 			bool allowEmpty,
 			bool inlineNeedsSemicolon,
 			bool endWithNewLine)
 		{
 			// empty body processing
-			if (statements.Items.Count == 0)
+			if (statements == null || statements.Items.Count == 0)
 			{
 				if (!allowEmpty)
 					throw new InvalidOperationException($"Emty code block encountered in unsuppored context");
@@ -1176,8 +1211,10 @@ namespace LinqToDB.CodeModel
 				OpenBlock(false);
 				foreach (var stmt in statements.Items)
 				{
+					WriteTrivia(stmt.Before);
 					Visit(stmt);
 					WriteLine(';');
+					WriteTrivia(stmt.After);
 				}
 				CloseBlock(false, true);
 			}

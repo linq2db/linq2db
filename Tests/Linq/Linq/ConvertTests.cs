@@ -1,9 +1,15 @@
 ﻿using System;
 using System.Globalization;
 using System.Linq;
+using System.Linq.Expressions;
+using System.Text.Json;
+using System.Text.Json.Serialization;
+
 using FluentAssertions;
 using LinqToDB;
+using LinqToDB.Data;
 using LinqToDB.Mapping;
+using LinqToDB.SqlQuery;
 using NUnit.Framework;
 using Tests.Model;
 
@@ -16,7 +22,7 @@ namespace Tests.Linq
 		public void Test1([DataSources(TestProvName.AllSQLite)] string context)
 		{
 			using (var db = GetDataContext(context))
-				Assert.AreEqual(1, (from t in db.Types where t.MoneyValue * t.ID == 1.11m  select t).Single().ID);
+				Assert.That((from t in db.Types where t.MoneyValue * t.ID == 1.11m select t).Single().ID, Is.EqualTo(1));
 		}
 
 		#region Int
@@ -46,6 +52,15 @@ namespace Tests.Linq
 				AreEqual(
 					from t in    Types select Sql.Convert(Sql.Types.BigInt, t.MoneyValue),
 					from t in db.Types select Sql.Convert(Sql.Types.BigInt, t.MoneyValue));
+		}
+
+		[Test]
+		public void ToBigInt2([DataSources(TestProvName.AllMySql)] string context)
+		{
+			using (var db = GetDataContext(context))
+				AreEqual(
+					from t in Types select Sql.Convert(Sql.Types.BigInt, t.MoneyValue),
+					from t in db.Types select Sql.AsSql(Sql.Convert(Sql.Types.BigInt, t.MoneyValue)));
 		}
 
 		[Test]
@@ -282,8 +297,18 @@ namespace Tests.Linq
 					from p in from t in db.Types select (decimal)t.MoneyValue where p > 0 select p);
 		}
 
+		// providers disabled due to change in
+		// https://github.com/linq2db/linq2db/pull/3690
 		[Test]
-		public void ConvertToDecimal([DataSources] string context)
+		public void ConvertToDecimal([DataSources(
+			ProviderName.DB2,
+			TestProvName.AllFirebird,
+			TestProvName.AllSqlServer,
+			TestProvName.AllSybase,
+			TestProvName.AllOracle,
+			TestProvName.AllMySql,
+			ProviderName.SqlCe
+			)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -404,12 +429,21 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void ToSqlTime([DataSources(TestProvName.AllSQLite, TestProvName.AllAccess)] string context)
+		public void ToSqlTime([DataSources(TestProvName.AllSQLite, TestProvName.AllAccess, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
 					from t in    Types select Sql.Convert(Sql.Types.Time, t.DateTimeValue.Hour + ":01:01"),
 					from t in db.Types select Sql.Convert(Sql.Types.Time, t.DateTimeValue.Hour + ":01:01"));
+		}
+
+		[Test]
+		public void ToSqlTimeSql([DataSources(TestProvName.AllSQLite, TestProvName.AllAccess, TestProvName.AllClickHouse)] string context)
+		{
+			using (var db = GetDataContext(context))
+				AreEqual(
+					from t in    Types select Sql.AsSql(Sql.Convert(Sql.Types.Time, t.DateTimeValue.Hour + ":01:01")),
+					from t in db.Types select Sql.AsSql(Sql.Convert(Sql.Types.Time, t.DateTimeValue.Hour + ":01:01")));
 		}
 
 		DateTime ToDateTime(DateTimeOffset dto)
@@ -418,7 +452,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void ToSqlDateTimeOffset([DataSources] string context)
+		public void ToSqlDateTimeOffset([DataSources(ProviderName.SqlCe)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -612,15 +646,28 @@ namespace Tests.Linq
 		[Test]
 		public void ConvertFromOneToAnother([DataSources] string context)
 		{
+			// providers disabled due to change in
+			// https://github.com/linq2db/linq2db/pull/3690
+			var scaleLessDecimal = context.IsAnyOf(
+				TestProvName.AllFirebird,
+				TestProvName.AllSybase,
+				TestProvName.AllOracle,
+				TestProvName.AllMySql,
+				ProviderName.SqlCe,
+				TestProvName.AllSqlServer);
+
 			using (var db = GetDataContext(context))
 			{
 				var decimalValue = 6579.64648m;
 				var floatValue   = 6579.64648f;
 				var doubleValue  = 6579.64648d;
 
-				AssertConvert(db, decimalValue, decimalValue);
-				AssertConvert(db, decimalValue, floatValue);
-				AssertConvert(db, decimalValue, doubleValue);
+				if (!scaleLessDecimal)
+				{
+					AssertConvert(db, decimalValue, decimalValue);
+					AssertConvert(db, decimalValue, floatValue);
+					AssertConvert(db, decimalValue, doubleValue);
+				}
 
 				AssertConvert(db, floatValue, decimalValue);
 				AssertConvert(db, floatValue, floatValue);
@@ -638,16 +685,18 @@ namespace Tests.Linq
 
 			TestContext.WriteLine($"Expected {expected} result {r}");
 
-			Assert.GreaterOrEqual(0.01m,
-				Math.Abs(LinqToDB.Common.Convert<TTo, decimal>.From(expected) - LinqToDB.Common.Convert<TTo, decimal>.From(r)));
+			Assert.That(Math.Abs(LinqToDB.Common.Convert<TTo, decimal>.From(expected) - LinqToDB.Common.Convert<TTo, decimal>.From(r)), Is.LessThan(0.01m));
 		}
 
-		//[CLSCompliant(false)]
-		[Sql.Function("$Convert$", 1, 2, 0, ServerSideOnly = true)]
-		public static TTo ServerConvert<TTo, TFrom>(TFrom obj)
+		[ExpressionMethod(nameof(ServerConvertImp))]
+		private static TTo ServerConvert<TTo, TFrom>(TFrom obj)
 		{
 			throw new NotImplementedException();
 		}
+
+		static Expression<Func<TFrom, TTo>> ServerConvertImp<TTo, TFrom>()
+			=> obj => Sql.AsSql(Sql.Convert<TTo, TFrom>(obj));
+		
 
 		[Test]
 		public void ConvertDataToDecimal([NorthwindDataContext] string context)
@@ -662,11 +711,11 @@ namespace Tests.Linq
 								select
 								od.UnitPrice * od.Quantity * (decimal)(1 - od.Discount)).ToArray();
 
-				Assert.AreEqual(actual.Length, expected.Length);
+				Assert.That(expected, Has.Length.EqualTo(actual.Length));
 
 				for (var i = 0; i < actual.Length; i++)
 				{
-					Assert.GreaterOrEqual(0.01m, Math.Abs(actual[i] - expected[i]));
+					Assert.That(Math.Abs(actual[i] - expected[i]), Is.LessThan(0.01m));
 				}
 			}
 		}
@@ -689,17 +738,20 @@ namespace Tests.Linq
 				var sqlActual   = qActual.  ToString();
 				var sqlExpected = qExpected.ToString();
 
-				Assert.That(sqlActual,   Is.Not.Contains("Convert").Or.Contains("Cast"));
-				Assert.That(sqlExpected, Is.Not.Contains("Convert").Or.Contains("Cast"));
+				Assert.Multiple(() =>
+				{
+					Assert.That(sqlActual, Is.Not.Contains("Convert").Or.Contains("Cast"));
+					Assert.That(sqlExpected, Is.Not.Contains("Convert").Or.Contains("Cast"));
+				});
 
 				var actual   = qActual.  ToArray();
 				var expected = qExpected.ToArray();
 
-				Assert.AreEqual(actual.Length, expected.Length);
+				Assert.That(expected, Has.Length.EqualTo(actual.Length));
 
 				for (var i = 0; i < actual.Length; i++)
 				{
-					Assert.GreaterOrEqual(0.01m, Math.Abs(actual[i] - expected[i]));
+					Assert.That(Math.Abs(actual[i] - expected[i]), Is.LessThan(0.01m));
 				}
 			}
 		}
@@ -737,7 +789,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestNoConvert_Byte([IncludeDataSources(false, TestProvName.AllSqlServer)] string context)
+		public void TestNoConvert_Byte([IncludeDataSources(false, TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataConnection(context))
 			using (db.CreateLocalTable(IntegerConverts.Seed))
@@ -748,13 +800,16 @@ namespace Tests.Linq
 
 				var res = query.Single();
 
-				Assert.AreEqual(1, res.Id);
-				Assert.False(db.LastQuery!.Contains(" Convert("));
+				Assert.Multiple(() =>
+				{
+					Assert.That(res.Id, Is.EqualTo(1));
+					Assert.That(db.LastQuery!, Does.Not.Contain(" Convert("));
+				});
 			}
 		}
 
 		[Test]
-		public void TestNoConvertWithExtension_Byte([IncludeDataSources(false, TestProvName.AllSqlServer)] string context)
+		public void TestNoConvertWithExtension_Byte([IncludeDataSources(false, TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataConnection(context))
 			using (db.CreateLocalTable(IntegerConverts.Seed))
@@ -765,13 +820,16 @@ namespace Tests.Linq
 
 				var res = query.Single();
 
-				Assert.AreEqual(1, res.Id);
-				Assert.False(db.LastQuery!.Contains(" Convert("));
+				Assert.Multiple(() =>
+				{
+					Assert.That(res.Id, Is.EqualTo(1));
+					Assert.That(db.LastQuery!, Does.Not.Contain(" Convert("));
+				});
 			}
 		}
 
 		[Test]
-		public void TestNoConvert_SByte([IncludeDataSources(false, TestProvName.AllSqlServer)] string context)
+		public void TestNoConvert_SByte([IncludeDataSources(false, TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataConnection(context))
 			using (db.CreateLocalTable(IntegerConverts.Seed))
@@ -782,13 +840,16 @@ namespace Tests.Linq
 
 				var res = query.Single();
 
-				Assert.AreEqual(1, res.Id);
-				Assert.False(db.LastQuery!.Contains(" Convert("));
+				Assert.Multiple(() =>
+				{
+					Assert.That(res.Id, Is.EqualTo(1));
+					Assert.That(db.LastQuery!, Does.Not.Contain(" Convert("));
+				});
 			}
 		}
 
 		[Test]
-		public void TestNoConvertWithExtension_SByte([IncludeDataSources(false, TestProvName.AllSqlServer)] string context)
+		public void TestNoConvertWithExtension_SByte([IncludeDataSources(false, TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataConnection(context))
 			using (db.CreateLocalTable(IntegerConverts.Seed))
@@ -799,13 +860,16 @@ namespace Tests.Linq
 
 				var res = query.Single();
 
-				Assert.AreEqual(1, res.Id);
-				Assert.False(db.LastQuery!.Contains(" Convert("));
+				Assert.Multiple(() =>
+				{
+					Assert.That(res.Id, Is.EqualTo(1));
+					Assert.That(db.LastQuery!, Does.Not.Contain(" Convert("));
+				});
 			}
 		}
 
 		[Test]
-		public void TestNoConvert_Int16([IncludeDataSources(false, TestProvName.AllSqlServer)] string context)
+		public void TestNoConvert_Int16([IncludeDataSources(false, TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataConnection(context))
 			using (db.CreateLocalTable(IntegerConverts.Seed))
@@ -816,13 +880,16 @@ namespace Tests.Linq
 
 				var res = query.Single();
 
-				Assert.AreEqual(1, res.Id);
-				Assert.False(db.LastQuery!.Contains(" Convert("));
+				Assert.Multiple(() =>
+				{
+					Assert.That(res.Id, Is.EqualTo(1));
+					Assert.That(db.LastQuery!, Does.Not.Contain(" Convert("));
+				});
 			}
 		}
 
 		[Test]
-		public void TestNoConvertWithExtension_Int16([IncludeDataSources(false, TestProvName.AllSqlServer)] string context)
+		public void TestNoConvertWithExtension_Int16([IncludeDataSources(false, TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataConnection(context))
 			using (db.CreateLocalTable(IntegerConverts.Seed))
@@ -833,13 +900,16 @@ namespace Tests.Linq
 
 				var res = query.Single();
 
-				Assert.AreEqual(1, res.Id);
-				Assert.False(db.LastQuery!.Contains(" Convert("));
+				Assert.Multiple(() =>
+				{
+					Assert.That(res.Id, Is.EqualTo(1));
+					Assert.That(db.LastQuery!, Does.Not.Contain(" Convert("));
+				});
 			}
 		}
 
 		[Test]
-		public void TestNoConvert_UInt16([IncludeDataSources(false, TestProvName.AllSqlServer)] string context)
+		public void TestNoConvert_UInt16([IncludeDataSources(false, TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataConnection(context))
 			using (db.CreateLocalTable(IntegerConverts.Seed))
@@ -850,13 +920,16 @@ namespace Tests.Linq
 
 				var res = query.Single();
 
-				Assert.AreEqual(1, res.Id);
-				Assert.False(db.LastQuery!.Contains(" Convert("));
+				Assert.Multiple(() =>
+				{
+					Assert.That(res.Id, Is.EqualTo(1));
+					Assert.That(db.LastQuery!, Does.Not.Contain(" Convert("));
+				});
 			}
 		}
 
 		[Test]
-		public void TestNoConvertWithExtension_UInt16([IncludeDataSources(false, TestProvName.AllSqlServer)] string context)
+		public void TestNoConvertWithExtension_UInt16([IncludeDataSources(false, TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataConnection(context))
 			using (db.CreateLocalTable(IntegerConverts.Seed))
@@ -867,13 +940,16 @@ namespace Tests.Linq
 
 				var res = query.Single();
 
-				Assert.AreEqual(1, res.Id);
-				Assert.False(db.LastQuery!.Contains(" Convert("));
+				Assert.Multiple(() =>
+				{
+					Assert.That(res.Id, Is.EqualTo(1));
+					Assert.That(db.LastQuery!, Does.Not.Contain(" Convert("));
+				});
 			}
 		}
 
 		[Test]
-		public void TestNoConvert_Int32([IncludeDataSources(false, TestProvName.AllSqlServer)] string context)
+		public void TestNoConvert_Int32([IncludeDataSources(false, TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataConnection(context))
 			using (db.CreateLocalTable(IntegerConverts.Seed))
@@ -884,13 +960,16 @@ namespace Tests.Linq
 
 				var res = query.Single();
 
-				Assert.AreEqual(1, res.Id);
-				Assert.False(db.LastQuery!.Contains(" Convert("));
+				Assert.Multiple(() =>
+				{
+					Assert.That(res.Id, Is.EqualTo(1));
+					Assert.That(db.LastQuery!, Does.Not.Contain(" Convert("));
+				});
 			}
 		}
 
 		[Test]
-		public void TestNoConvertWithExtension_Int32([IncludeDataSources(false, TestProvName.AllSqlServer)] string context)
+		public void TestNoConvertWithExtension_Int32([IncludeDataSources(false, TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataConnection(context))
 			using (db.CreateLocalTable(IntegerConverts.Seed))
@@ -901,13 +980,16 @@ namespace Tests.Linq
 
 				var res = query.Single();
 
-				Assert.AreEqual(1, res.Id);
-				Assert.False(db.LastQuery!.Contains(" Convert("));
+				Assert.Multiple(() =>
+				{
+					Assert.That(res.Id, Is.EqualTo(1));
+					Assert.That(db.LastQuery!, Does.Not.Contain(" Convert("));
+				});
 			}
 		}
 
 		[Test]
-		public void TestNoConvert_UInt32([IncludeDataSources(false, TestProvName.AllSqlServer)] string context)
+		public void TestNoConvert_UInt32([IncludeDataSources(false, TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataConnection(context))
 			using (db.CreateLocalTable(IntegerConverts.Seed))
@@ -918,13 +1000,16 @@ namespace Tests.Linq
 
 				var res = query.Single();
 
-				Assert.AreEqual(1, res.Id);
-				Assert.False(db.LastQuery!.Contains(" Convert("));
+				Assert.Multiple(() =>
+				{
+					Assert.That(res.Id, Is.EqualTo(1));
+					Assert.That(db.LastQuery!, Does.Not.Contain(" Convert("));
+				});
 			}
 		}
 
 		[Test]
-		public void TestNoConvertWithExtension_UInt32([IncludeDataSources(false, TestProvName.AllSqlServer)] string context)
+		public void TestNoConvertWithExtension_UInt32([IncludeDataSources(false, TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataConnection(context))
 			using (db.CreateLocalTable(IntegerConverts.Seed))
@@ -935,13 +1020,16 @@ namespace Tests.Linq
 
 				var res = query.Single();
 
-				Assert.AreEqual(1, res.Id);
-				Assert.False(db.LastQuery!.Contains(" Convert("));
+				Assert.Multiple(() =>
+				{
+					Assert.That(res.Id, Is.EqualTo(1));
+					Assert.That(db.LastQuery!, Does.Not.Contain(" Convert("));
+				});
 			}
 		}
 
 		[Test]
-		public void TestNoConvert_Int64([IncludeDataSources(false, TestProvName.AllSqlServer)] string context)
+		public void TestNoConvert_Int64([IncludeDataSources(false, TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataConnection(context))
 			using (db.CreateLocalTable(IntegerConverts.Seed))
@@ -952,13 +1040,16 @@ namespace Tests.Linq
 
 				var res = query.Single();
 
-				Assert.AreEqual(1, res.Id);
-				Assert.False(db.LastQuery!.Contains(" Convert("));
+				Assert.Multiple(() =>
+				{
+					Assert.That(res.Id, Is.EqualTo(1));
+					Assert.That(db.LastQuery!, Does.Not.Contain(" Convert("));
+				});
 			}
 		}
 
 		[Test]
-		public void TestNoConvertWithExtension_Int64([IncludeDataSources(false, TestProvName.AllSqlServer)] string context)
+		public void TestNoConvertWithExtension_Int64([IncludeDataSources(false, TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataConnection(context))
 			using (db.CreateLocalTable(IntegerConverts.Seed))
@@ -969,13 +1060,16 @@ namespace Tests.Linq
 
 				var res = query.Single();
 
-				Assert.AreEqual(1, res.Id);
-				Assert.False(db.LastQuery!.Contains(" Convert("));
+				Assert.Multiple(() =>
+				{
+					Assert.That(res.Id, Is.EqualTo(1));
+					Assert.That(db.LastQuery!, Does.Not.Contain(" Convert("));
+				});
 			}
 		}
 
 		[Test]
-		public void TestNoConvert_UInt64([IncludeDataSources(false, TestProvName.AllSqlServer)] string context)
+		public void TestNoConvert_UInt64([IncludeDataSources(false, TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataConnection(context))
 			using (db.CreateLocalTable(IntegerConverts.Seed))
@@ -986,13 +1080,16 @@ namespace Tests.Linq
 
 				var res = query.Single();
 
-				Assert.AreEqual(1, res.Id);
-				Assert.False(db.LastQuery!.Contains(" Convert("));
+				Assert.Multiple(() =>
+				{
+					Assert.That(res.Id, Is.EqualTo(1));
+					Assert.That(db.LastQuery!, Does.Not.Contain(" Convert("));
+				});
 			}
 		}
 
 		[Test]
-		public void TestNoConvertWithExtension_UInt64([IncludeDataSources(false, TestProvName.AllSqlServer)] string context)
+		public void TestNoConvertWithExtension_UInt64([IncludeDataSources(false, TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataConnection(context))
 			using (db.CreateLocalTable(IntegerConverts.Seed))
@@ -1003,8 +1100,11 @@ namespace Tests.Linq
 
 				var res = query.Single();
 
-				Assert.AreEqual(1, res.Id);
-				Assert.False(db.LastQuery!.Contains(" Convert("));
+				Assert.Multiple(() =>
+				{
+					Assert.That(res.Id, Is.EqualTo(1));
+					Assert.That(db.LastQuery!, Does.Not.Contain(" Convert("));
+				});
 			}
 		}
 
@@ -1015,13 +1115,16 @@ namespace Tests.Linq
 			using (db.CreateLocalTable(IntegerConverts.Seed))
 			{
 				var query = from x in db.GetTable<IntegerConverts>()
-							join y in db.GetTable<IntegerConverts>() on x.ByteN equals y.ByteN
+							join y in db.GetTable<IntegerConverts>() on new { x.ByteN } equals new { y.ByteN }
 							select x;
 
 				var res = query.Single();
 
-				Assert.AreEqual(1, res.Id);
-				Assert.False(db.LastQuery!.Contains(" Convert("));
+				Assert.Multiple(() =>
+				{
+					Assert.That(res.Id, Is.EqualTo(1));
+					Assert.That(db.LastQuery!, Does.Not.Contain(" Convert("));
+				});
 			}
 		}
 
@@ -1037,8 +1140,11 @@ namespace Tests.Linq
 
 				var res = query.Single();
 
-				Assert.AreEqual(1, res.Id);
-				Assert.False(db.LastQuery!.Contains(" Convert("));
+				Assert.Multiple(() =>
+				{
+					Assert.That(res.Id, Is.EqualTo(1));
+					Assert.That(db.LastQuery!, Does.Not.Contain(" Convert("));
+				});
 			}
 		}
 
@@ -1049,13 +1155,16 @@ namespace Tests.Linq
 			using (db.CreateLocalTable(IntegerConverts.Seed))
 			{
 				var query = from x in db.GetTable<IntegerConverts>()
-							join y in db.GetTable<IntegerConverts>() on x.SByteN equals y.SByteN
+							join y in db.GetTable<IntegerConverts>() on new { x.SByteN } equals new { y.SByteN }
 							select x;
 
 				var res = query.Single();
 
-				Assert.AreEqual(1, res.Id);
-				Assert.False(db.LastQuery!.Contains(" Convert("));
+				Assert.Multiple(() =>
+				{
+					Assert.That(res.Id, Is.EqualTo(1));
+					Assert.That(db.LastQuery!, Does.Not.Contain(" Convert("));
+				});
 			}
 		}
 
@@ -1071,8 +1180,11 @@ namespace Tests.Linq
 
 				var res = query.Single();
 
-				Assert.AreEqual(1, res.Id);
-				Assert.False(db.LastQuery!.Contains(" Convert("));
+				Assert.Multiple(() =>
+				{
+					Assert.That(res.Id, Is.EqualTo(1));
+					Assert.That(db.LastQuery!, Does.Not.Contain(" Convert("));
+				});
 			}
 		}
 
@@ -1083,13 +1195,16 @@ namespace Tests.Linq
 			using (db.CreateLocalTable(IntegerConverts.Seed))
 			{
 				var query = from x in db.GetTable<IntegerConverts>()
-							join y in db.GetTable<IntegerConverts>() on x.Int16N equals y.Int16N
+							join y in db.GetTable<IntegerConverts>() on new { x.Int16N } equals new { y.Int16N }
 							select x;
 
 				var res = query.Single();
 
-				Assert.AreEqual(1, res.Id);
-				Assert.False(db.LastQuery!.Contains(" Convert("));
+				Assert.Multiple(() =>
+				{
+					Assert.That(res.Id, Is.EqualTo(1));
+					Assert.That(db.LastQuery!, Does.Not.Contain(" Convert("));
+				});
 			}
 		}
 
@@ -1105,8 +1220,11 @@ namespace Tests.Linq
 
 				var res = query.Single();
 
-				Assert.AreEqual(1, res.Id);
-				Assert.False(db.LastQuery!.Contains(" Convert("));
+				Assert.Multiple(() =>
+				{
+					Assert.That(res.Id, Is.EqualTo(1));
+					Assert.That(db.LastQuery!, Does.Not.Contain(" Convert("));
+				});
 			}
 		}
 
@@ -1117,13 +1235,16 @@ namespace Tests.Linq
 			using (db.CreateLocalTable(IntegerConverts.Seed))
 			{
 				var query = from x in db.GetTable<IntegerConverts>()
-							join y in db.GetTable<IntegerConverts>() on x.UInt16N equals y.UInt16N
+							join y in db.GetTable<IntegerConverts>() on new { x.UInt16N } equals new { y.UInt16N }
 							select x;
 
 				var res = query.Single();
 
-				Assert.AreEqual(1, res.Id);
-				Assert.False(db.LastQuery!.Contains(" Convert("));
+				Assert.Multiple(() =>
+				{
+					Assert.That(res.Id, Is.EqualTo(1));
+					Assert.That(db.LastQuery!, Does.Not.Contain("CAST"));
+				});
 			}
 		}
 
@@ -1139,8 +1260,11 @@ namespace Tests.Linq
 
 				var res = query.Single();
 
-				Assert.AreEqual(1, res.Id);
-				Assert.False(db.LastQuery!.Contains(" Convert("));
+				Assert.Multiple(() =>
+				{
+					Assert.That(res.Id, Is.EqualTo(1));
+					Assert.That(db.LastQuery!, Does.Not.Contain("CAST"));
+				});
 			}
 		}
 
@@ -1151,13 +1275,16 @@ namespace Tests.Linq
 			using (db.CreateLocalTable(IntegerConverts.Seed))
 			{
 				var query = from x in db.GetTable<IntegerConverts>()
-							join y in db.GetTable<IntegerConverts>() on x.Int32N equals y.Int32N
+							join y in db.GetTable<IntegerConverts>() on new { x.Int32N } equals new { y.Int32N }
 							select x;
 
 				var res = query.Single();
 
-				Assert.AreEqual(1, res.Id);
-				Assert.False(db.LastQuery!.Contains(" Convert("));
+				Assert.Multiple(() =>
+				{
+					Assert.That(res.Id, Is.EqualTo(1));
+					Assert.That(db.LastQuery!, Does.Not.Contain("CAST"));
+				});
 			}
 		}
 
@@ -1173,8 +1300,11 @@ namespace Tests.Linq
 
 				var res = query.Single();
 
-				Assert.AreEqual(1, res.Id);
-				Assert.False(db.LastQuery!.Contains(" Convert("));
+				Assert.Multiple(() =>
+				{
+					Assert.That(res.Id, Is.EqualTo(1));
+					Assert.That(db.LastQuery!, Does.Not.Contain("CAST"));
+				});
 			}
 		}
 
@@ -1185,13 +1315,16 @@ namespace Tests.Linq
 			using (db.CreateLocalTable(IntegerConverts.Seed))
 			{
 				var query = from x in db.GetTable<IntegerConverts>()
-							join y in db.GetTable<IntegerConverts>() on x.UInt32N equals y.UInt32N
+							join y in db.GetTable<IntegerConverts>() on new { x.UInt32N } equals new { y.UInt32N }
 							select x;
 
 				var res = query.Single();
 
-				Assert.AreEqual(1, res.Id);
-				Assert.False(db.LastQuery!.Contains(" Convert("));
+				Assert.Multiple(() =>
+				{
+					Assert.That(res.Id, Is.EqualTo(1));
+					Assert.That(db.LastQuery!, Does.Not.Contain("CAST"));
+				});
 			}
 		}
 
@@ -1207,8 +1340,11 @@ namespace Tests.Linq
 
 				var res = query.Single();
 
-				Assert.AreEqual(1, res.Id);
-				Assert.False(db.LastQuery!.Contains(" Convert("));
+				Assert.Multiple(() =>
+				{
+					Assert.That(res.Id, Is.EqualTo(1));
+					Assert.That(db.LastQuery!, Does.Not.Contain("CAST"));
+				});
 			}
 		}
 
@@ -1219,13 +1355,16 @@ namespace Tests.Linq
 			using (db.CreateLocalTable(IntegerConverts.Seed))
 			{
 				var query = from x in db.GetTable<IntegerConverts>()
-							join y in db.GetTable<IntegerConverts>() on x.Int64N equals y.Int64N
+							join y in db.GetTable<IntegerConverts>() on new { x.Int64N } equals new { y.Int64N }
 							select x;
 
 				var res = query.Single();
 
-				Assert.AreEqual(1, res.Id);
-				Assert.False(db.LastQuery!.Contains(" Convert("));
+				Assert.Multiple(() =>
+				{
+					Assert.That(res.Id, Is.EqualTo(1));
+					Assert.That(db.LastQuery!, Does.Not.Contain("CAST"));
+				});
 			}
 		}
 
@@ -1241,8 +1380,11 @@ namespace Tests.Linq
 
 				var res = query.Single();
 
-				Assert.AreEqual(1, res.Id);
-				Assert.False(db.LastQuery!.Contains(" Convert("));
+				Assert.Multiple(() =>
+				{
+					Assert.That(res.Id, Is.EqualTo(1));
+					Assert.That(db.LastQuery!, Does.Not.Contain("CAST"));
+				});
 			}
 		}
 
@@ -1253,13 +1395,16 @@ namespace Tests.Linq
 			using (db.CreateLocalTable(IntegerConverts.Seed))
 			{
 				var query = from x in db.GetTable<IntegerConverts>()
-							join y in db.GetTable<IntegerConverts>() on x.UInt64N equals y.UInt64N
+							join y in db.GetTable<IntegerConverts>() on new { x.UInt64N } equals new { y.UInt64N }
 							select x;
 
 				var res = query.Single();
 
-				Assert.AreEqual(1, res.Id);
-				Assert.False(db.LastQuery!.Contains(" Convert("));
+				Assert.Multiple(() =>
+				{
+					Assert.That(res.Id, Is.EqualTo(1));
+					Assert.That(db.LastQuery!, Does.Not.Contain("CAST"));
+				});
 			}
 		}
 
@@ -1275,8 +1420,11 @@ namespace Tests.Linq
 
 				var res = query.Single();
 
-				Assert.AreEqual(1, res.Id);
-				Assert.False(db.LastQuery!.Contains(" Convert("));
+				Assert.Multiple(() =>
+				{
+					Assert.That(res.Id, Is.EqualTo(1));
+					Assert.That(db.LastQuery!, Does.Not.Contain("CAST"));
+				});
 			}
 		}
 		#endregion
@@ -1287,58 +1435,60 @@ namespace Tests.Linq
 		// and we need custom reference type that wraps something like int for test
 		[Test]
 		public void TryConvertConvertedStruct([IncludeDataSources(true,
+			TestProvName.AllClickHouse,
 			TestProvName.AllOracle12Plus,
 			TestProvName.AllSqlServer2012Plus
 			)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
-				Assert.AreEqual(123, db.Select(() => Sql.TryConvert("123", (int?)0)));
+				Assert.That(db.Select(() => Sql.TryConvert("123", (int?)0)), Is.EqualTo(123));
 			}
 		}
 
 		[Test]
 		public void TryConvertNotConvertedStruct([IncludeDataSources(true,
+			TestProvName.AllClickHouse,
 			TestProvName.AllOracle12Plus,
 			TestProvName.AllSqlServer2012Plus
 			)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
-				Assert.IsNull(db.Select(() => Sql.TryConvert("burp", (int?)0)));
+				Assert.That(db.Select(() => Sql.TryConvert("burp", (int?)0)), Is.Null);
 			}
 		}
 
 		[Test]
-		public void TryConvertConvertedClass([IncludeDataSources(true, TestProvName.AllSqlServer2012Plus)] string context)
+		public void TryConvertConvertedClass([IncludeDataSources(true, TestProvName.AllSqlServer2012Plus, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
-				Assert.AreEqual("345", db.Select(() => Sql.TryConvert(345, "")));
+				Assert.That(db.Select(() => Sql.TryConvert(345, "")), Is.EqualTo("345"));
 			}
 		}
 
 		[Test]
-		public void TryConvertOrDefaultConvertedStruct([IncludeDataSources(true, TestProvName.AllOracle12Plus)] string context)
+		public void TryConvertOrDefaultConvertedStruct([IncludeDataSources(true, TestProvName.AllOracle12Plus, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
-				Assert.AreEqual(123, db.Select(() => Sql.TryConvertOrDefault("123", (int?)100500)));
+				Assert.That(db.Select(() => Sql.TryConvertOrDefault("123", (int?)100500)), Is.EqualTo(123));
 			}
 		}
 
 		[Test]
-		public void TryConvertOrDefaultNotConvertedStruct([IncludeDataSources(true, TestProvName.AllOracle12Plus)] string context)
+		public void TryConvertOrDefaultNotConvertedStruct([IncludeDataSources(true, TestProvName.AllOracle12Plus, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
-				Assert.AreEqual(-10, db.Select(() => Sql.TryConvertOrDefault("burp", (int?)-10)));
+				Assert.That(db.Select(() => Sql.TryConvertOrDefault("burp", (int?)-10)), Is.EqualTo(-10));
 			}
 		}
 
 		#endregion
 
-		class ToStringConvertibleTypes
+		sealed class ToStringConvertibleTypes
 		{
 			public bool    Prop_bool    { get; set; }
 			public byte    Prop_byte    { get; set; }
@@ -1422,7 +1572,7 @@ namespace Tests.Linq
 			{
 				var sqlConverted = table.Select(x => new
 					{
-						Prop_bool             = Sql.AsSql(x.Prop_bool            .ToString()),
+						Prop_bool             = Sql.AsSql(x.Prop_bool            .ToString(CultureInfo.InvariantCulture)),
 						Prop_byte             = Sql.AsSql(x.Prop_byte            .ToString()),
 						Prop_char             = Sql.AsSql(x.Prop_char            .ToString()),
 						Prop_decimal          = Sql.AsSql(x.Prop_decimal         .ToString()),
@@ -1436,6 +1586,7 @@ namespace Tests.Linq
 						Prop_uint             = Sql.AsSql(x.Prop_uint            .ToString()),
 						Prop_ulong            = Sql.AsSql(x.Prop_ulong           .ToString()),
 						Prop_Guid             = Sql.AsSql(x.Prop_Guid            .ToString()),
+						Prop_DateTime         = Sql.AsSql(x.Prop_DateTime        .ToString()),
 						NullableProp_bool     = Sql.AsSql(x.NullableProp_bool    .ToString()),
 						NullableProp_byte     = Sql.AsSql(x.NullableProp_byte    .ToString()),
 						NullableProp_char     = Sql.AsSql(x.NullableProp_char    .ToString()),
@@ -1450,50 +1601,319 @@ namespace Tests.Linq
 						NullableProp_uint     = Sql.AsSql(x.NullableProp_uint    .ToString()),
 						NullableProp_ulong    = Sql.AsSql(x.NullableProp_ulong   .ToString()),
 						NullableProp_Guid     = Sql.AsSql(x.NullableProp_Guid    .ToString()),
-						Prop_DateTime         = Sql.AsSql(x.Prop_DateTime        .ToString()),
 						NullableProp_DateTime = Sql.AsSql(x.NullableProp_DateTime.ToString()),
 					})
 					.First();
 
 				var noSqlConverted = table.Select(x => new
 					{
-						Prop_bool            = x.Prop_bool ? "1" : "0",
-						Prop_byte            = x.Prop_byte            .ToString(CultureInfo.InvariantCulture),
-						Prop_char            = x.Prop_char            .ToString(CultureInfo.InvariantCulture),
-						Prop_decimal         = x.Prop_decimal         .ToString(CultureInfo.InvariantCulture),
-						Prop_double          = x.Prop_double          .ToString(CultureInfo.InvariantCulture),
-						Prop_short           = x.Prop_short           .ToString(CultureInfo.InvariantCulture),
-						Prop_int             = x.Prop_int             .ToString(CultureInfo.InvariantCulture),
-						Prop_long            = x.Prop_long            .ToString(CultureInfo.InvariantCulture),
-						Prop_sbyte           = x.Prop_sbyte           .ToString(CultureInfo.InvariantCulture),
-						Prop_float           = x.Prop_float           .ToString(CultureInfo.InvariantCulture),
-						Prop_ushort          = x.Prop_ushort          .ToString(CultureInfo.InvariantCulture),
-						Prop_uint            = x.Prop_uint            .ToString(CultureInfo.InvariantCulture),
-						Prop_ulong           = x.Prop_ulong           .ToString(CultureInfo.InvariantCulture),
-						Prop_Guid            = x.Prop_Guid            .ToString(),
-						NullableProp_bool    = x.NullableProp_bool == null ? "" : x.NullableProp_bool.Value ? "1" : "0",
-						NullableProp_byte    = x.NullableProp_byte    !.Value.ToString(CultureInfo.InvariantCulture),
-						NullableProp_char    = x.NullableProp_char    !.Value.ToString(CultureInfo.InvariantCulture),
-						NullableProp_decimal = x.NullableProp_decimal !.Value.ToString(CultureInfo.InvariantCulture),
-						NullableProp_double  = x.NullableProp_double  !.Value.ToString(CultureInfo.InvariantCulture),
-						NullableProp_short   = x.NullableProp_short   !.Value.ToString(CultureInfo.InvariantCulture),
-						NullableProp_int     = x.NullableProp_int     !.Value.ToString(CultureInfo.InvariantCulture),
-						NullableProp_long    = x.NullableProp_long    !.Value.ToString(CultureInfo.InvariantCulture),
-						NullableProp_sbyte   = x.NullableProp_sbyte   !.Value.ToString(CultureInfo.InvariantCulture),
-						NullableProp_float   = x.NullableProp_float   !.Value.ToString(CultureInfo.InvariantCulture),
-						NullableProp_ushort  = x.NullableProp_ushort  !.Value.ToString(CultureInfo.InvariantCulture),
-						NullableProp_uint    = x.NullableProp_uint    !.Value.ToString(CultureInfo.InvariantCulture),
-						NullableProp_ulong   = x.NullableProp_ulong   !.Value.ToString(CultureInfo.InvariantCulture),
-						NullableProp_Guid    = x.NullableProp_Guid    .ToString(),
-						Prop_DateTime         = Sql.AsSql(x.Prop_DateTime        .ToString()),
-						NullableProp_DateTime = Sql.AsSql(x.NullableProp_DateTime.ToString()),
+						Prop_bool             = x.Prop_bool ? "1" : "0",
+						Prop_byte             = x.Prop_byte            .ToString(CultureInfo.InvariantCulture),
+						Prop_char             = x.Prop_char            .ToString(CultureInfo.InvariantCulture),
+						Prop_decimal          = x.Prop_decimal         .ToString(CultureInfo.InvariantCulture),
+						Prop_double           = x.Prop_double          .ToString(CultureInfo.InvariantCulture),
+						Prop_short            = x.Prop_short           .ToString(CultureInfo.InvariantCulture),
+						Prop_int              = x.Prop_int             .ToString(CultureInfo.InvariantCulture),
+						Prop_long             = x.Prop_long            .ToString(CultureInfo.InvariantCulture),
+						Prop_sbyte            = x.Prop_sbyte           .ToString(CultureInfo.InvariantCulture),
+						Prop_float            = x.Prop_float           .ToString(CultureInfo.InvariantCulture),
+						Prop_ushort           = x.Prop_ushort          .ToString(CultureInfo.InvariantCulture),
+						Prop_uint             = x.Prop_uint            .ToString(CultureInfo.InvariantCulture),
+						Prop_ulong            = x.Prop_ulong           .ToString(CultureInfo.InvariantCulture),
+						Prop_Guid             = x.Prop_Guid            .ToString(),
+						Prop_DateTime         = x.Prop_DateTime        .ToString("yyyy-MM-dd HH:mm:ss.fffffff"),
+						NullableProp_bool     = x.NullableProp_bool == null ? "" : x.NullableProp_bool.Value ? "1" : "0",
+						NullableProp_byte     = x.NullableProp_byte    !.Value.ToString(CultureInfo.InvariantCulture),
+						NullableProp_char     = x.NullableProp_char    !.Value.ToString(CultureInfo.InvariantCulture),
+						NullableProp_decimal  = x.NullableProp_decimal !.Value.ToString(CultureInfo.InvariantCulture),
+						NullableProp_double   = x.NullableProp_double  !.Value.ToString(CultureInfo.InvariantCulture),
+						NullableProp_short    = x.NullableProp_short   !.Value.ToString(CultureInfo.InvariantCulture),
+						NullableProp_int      = x.NullableProp_int     !.Value.ToString(CultureInfo.InvariantCulture),
+						NullableProp_long     = x.NullableProp_long    !.Value.ToString(CultureInfo.InvariantCulture),
+						NullableProp_sbyte    = x.NullableProp_sbyte   !.Value.ToString(CultureInfo.InvariantCulture),
+						NullableProp_float    = x.NullableProp_float   !.Value.ToString(CultureInfo.InvariantCulture),
+						NullableProp_ushort   = x.NullableProp_ushort  !.Value.ToString(CultureInfo.InvariantCulture),
+						NullableProp_uint     = x.NullableProp_uint    !.Value.ToString(CultureInfo.InvariantCulture),
+						NullableProp_ulong    = x.NullableProp_ulong   !.Value.ToString(CultureInfo.InvariantCulture),
+						NullableProp_Guid     = x.NullableProp_Guid    !.Value.ToString(),
+						NullableProp_DateTime = x.NullableProp_DateTime!.Value.ToString("yyyy-MM-dd HH:mm:ss.fffffff"),
 					})
 					.First();
-
 
 				sqlConverted.Should().Be(noSqlConverted);
 			}
 		}
-		
+
+		#region Issue #4043
+
+		[Table("Issue4043")]
+		class Issue4043TableRaw
+		{
+			[Column] public int     Id    { get; set; }
+			[Column] public string? Value { get; set; }
+
+			public static readonly Issue4043TableRaw[] Data = new[]
+			{
+				new Issue4043TableRaw() { Id = 1, Value = /*lang=json,strict*/ "{\"Field1\": 1, \"Field2\": -1 }" }
+			};
+		}
+
+		[Table("Issue4043")]
+		class Issue4043Table
+		{
+			[Column] public int          Id    { get; set; }
+			[Column] public ValueObject? Value { get; set; }
+		}
+
+		[Table("Issue4043")]
+		class Issue4043ScalarTable
+		{
+			[Column] public ValueObject? Value { get; set; }
+		}
+
+		[Table("Issue4043")]
+		class Issue4043TableWithCtor
+		{
+			public Issue4043TableWithCtor(int Id, ValueObject? Value)
+			{
+				this.Id    = Id;
+				this.Value = Value;
+			}
+
+			[Column] public int          Id    { get; set; }
+			[Column] public ValueObject? Value { get; set; }
+		}
+
+		[Table("Issue4043")]
+		class Issue4043ScalarTableWithCtor
+		{
+			public Issue4043ScalarTableWithCtor(ValueObject? Value)
+			{
+				this.Value = Value;
+			}
+
+			[Column] public ValueObject? Value { get; set; }
+		}
+
+		class ValueObject
+		{
+			public int Field1 { get; set; }
+			public int Field2 { get; set; }
+		}
+
+		[Test]
+		public void TextExecuteTypeConverter([IncludeDataSources(ProviderName.SQLiteClassic)] string context)
+		{
+			var ms = new MappingSchema();
+			ms.SetConvertExpression<string, ValueObject?>(json => JsonSerializer.Deserialize<ValueObject>(json, (JsonSerializerOptions?)null));
+
+			using var db = GetDataConnection(context, ms);
+			using var _  = db.CreateLocalTable(Issue4043TableRaw.Data);
+
+			var result = db.Execute<Issue4043Table>("select Id, Value from Issue4043");
+
+			Assert.That(result, Is.Not.Null);
+			Assert.Multiple(() =>
+			{
+				Assert.That(result.Id, Is.EqualTo(1));
+				Assert.That(result.Value, Is.Not.Null);
+			});
+			Assert.Multiple(() =>
+			{
+				Assert.That(result.Value!.Field1, Is.EqualTo(1));
+				Assert.That(result.Value!.Field2, Is.EqualTo(-1));
+			});
+		}
+
+		[Test]
+		public void TextExecuteTypeConverterWithCtor([IncludeDataSources(ProviderName.SQLiteClassic)] string context)
+		{
+			var ms = new MappingSchema();
+			ms.SetConvertExpression<string, ValueObject?>(json => JsonSerializer.Deserialize<ValueObject>(json, (JsonSerializerOptions?)null));
+
+			using var db = GetDataConnection(context, ms);
+			using var _  = db.CreateLocalTable(Issue4043TableRaw.Data);
+
+			var result = db.Execute<Issue4043TableWithCtor>("select Id, Value from Issue4043");
+
+			Assert.That(result, Is.Not.Null);
+			Assert.Multiple(() =>
+			{
+				Assert.That(result.Id, Is.EqualTo(1));
+				Assert.That(result.Value, Is.Not.Null);
+			});
+			Assert.Multiple(() =>
+			{
+				Assert.That(result.Value!.Field1, Is.EqualTo(1));
+				Assert.That(result.Value!.Field2, Is.EqualTo(-1));
+			});
+		}
+
+		[Test]
+		public void TextExecuteScalarEntityTypeConverter([IncludeDataSources(ProviderName.SQLiteClassic)] string context)
+		{
+			var ms = new MappingSchema();
+			ms.SetConvertExpression<string, ValueObject?>(json => JsonSerializer.Deserialize<ValueObject>(json, (JsonSerializerOptions?)null));
+
+			using var db = GetDataConnection(context, ms);
+			using var _  = db.CreateLocalTable(Issue4043TableRaw.Data);
+
+			var result = db.Execute<Issue4043ScalarTable>("select Value from Issue4043");
+
+			Assert.That(result, Is.Not.Null);
+			Assert.That(result.Value, Is.Not.Null);
+			Assert.Multiple(() =>
+			{
+				Assert.That(result.Value!.Field1, Is.EqualTo(1));
+				Assert.That(result.Value!.Field2, Is.EqualTo(-1));
+			});
+		}
+
+		[Test]
+		public void TextExecuteScalarEntityTypeConverterWithCtor([IncludeDataSources(ProviderName.SQLiteClassic)] string context)
+		{
+			var ms = new MappingSchema();
+			ms.SetConvertExpression<string, ValueObject?>(json => JsonSerializer.Deserialize<ValueObject>(json, (JsonSerializerOptions?)null));
+
+			using var db = GetDataConnection(context, ms);
+			using var _  = db.CreateLocalTable(Issue4043TableRaw.Data);
+
+			var result = db.Execute<Issue4043ScalarTableWithCtor>("select Value from Issue4043");
+
+			Assert.That(result, Is.Not.Null);
+			Assert.That(result.Value, Is.Not.Null);
+			Assert.Multiple(() =>
+			{
+				Assert.That(result.Value!.Field1, Is.EqualTo(1));
+				Assert.That(result.Value!.Field2, Is.EqualTo(-1));
+			});
+		}
+
+		[Test]
+		public void TextExecuteScalar([IncludeDataSources(ProviderName.SQLiteClassic)] string context)
+		{
+			var ms = new MappingSchema();
+			ms.SetScalarType(typeof(ValueObject));
+			ms.SetConvertExpression<string, ValueObject?>(json => JsonSerializer.Deserialize<ValueObject>(json, (JsonSerializerOptions?)null));
+
+			using var db = GetDataConnection(context, ms);
+			using var _  = db.CreateLocalTable(Issue4043TableRaw.Data);
+
+			var result = db.Execute<ValueObject>("select Value from Issue4043");
+
+			Assert.That(result, Is.Not.Null);
+			Assert.Multiple(() =>
+			{
+				Assert.That(result.Field1, Is.EqualTo(1));
+				Assert.That(result.Field2, Is.EqualTo(-1));
+			});
+		}
+
+		[Test]
+		public void TextExecuteColumnConverter([IncludeDataSources( ProviderName.SQLiteClassic)] string context)
+		{
+			var ms = new MappingSchema();
+			new FluentMappingBuilder(ms)
+				.Entity<Issue4043Table>()
+				.Property(e => e.Value)
+				.HasConversion(o => JsonSerializer.Serialize(o, (JsonSerializerOptions?)null), json => JsonSerializer.Deserialize<ValueObject>(json, (JsonSerializerOptions?)null))
+				.Build();
+
+			using var db = GetDataConnection(context, ms);
+			using var _  = db.CreateLocalTable(Issue4043TableRaw.Data);
+
+			var result = db.Execute<Issue4043Table>("select Id, Value from Issue4043");
+
+			Assert.That(result, Is.Not.Null);
+			Assert.Multiple(() =>
+			{
+				Assert.That(result.Id, Is.EqualTo(1));
+				Assert.That(result.Value, Is.Not.Null);
+			});
+			Assert.Multiple(() =>
+			{
+				Assert.That(result.Value!.Field1, Is.EqualTo(1));
+				Assert.That(result.Value!.Field2, Is.EqualTo(-1));
+			});
+		}
+
+		[ActiveIssue(Details = "Not supported case as we cannot connect .ctor parameter to column")]
+		[Test]
+		public void TextExecuteColumnConverterWithCtor([IncludeDataSources(ProviderName.SQLiteClassic)] string context)
+		{
+			var ms = new MappingSchema();
+			new FluentMappingBuilder(ms)
+				.Entity<Issue4043TableWithCtor>()
+				.Property(e => e.Value)
+				.HasConversion(o => JsonSerializer.Serialize(o, (JsonSerializerOptions?)null), json => JsonSerializer.Deserialize<ValueObject>(json, (JsonSerializerOptions?)null))
+				.Build();
+
+			using var db = GetDataConnection(context, ms);
+			using var _  = db.CreateLocalTable(Issue4043TableRaw.Data);
+
+			var result = db.Execute<Issue4043TableWithCtor>("select Id, Value from Issue4043");
+
+			Assert.That(result, Is.Not.Null);
+			Assert.Multiple(() =>
+			{
+				Assert.That(result.Id, Is.EqualTo(1));
+				Assert.That(result.Value, Is.Not.Null);
+			});
+			Assert.Multiple(() =>
+			{
+				Assert.That(result.Value!.Field1, Is.EqualTo(1));
+				Assert.That(result.Value!.Field2, Is.EqualTo(-1));
+			});
+		}
+
+		[Test]
+		public void TextExecuteScalarEntityColumnConverter([IncludeDataSources(ProviderName.SQLiteClassic)] string context)
+		{
+			var ms = new MappingSchema();
+			new FluentMappingBuilder(ms)
+				.Entity<Issue4043ScalarTable>()
+				.Property(e => e.Value)
+				.HasConversion(o => JsonSerializer.Serialize(o, (JsonSerializerOptions?)null), json => JsonSerializer.Deserialize<ValueObject>(json, (JsonSerializerOptions?)null))
+				.Build();
+
+			using var db = GetDataConnection(context, ms);
+			using var _  = db.CreateLocalTable(Issue4043TableRaw.Data);
+
+			var result = db.Execute<Issue4043ScalarTable>("select Value from Issue4043");
+
+			Assert.That(result, Is.Not.Null);
+			Assert.That(result.Value, Is.Not.Null);
+			Assert.Multiple(() =>
+			{
+				Assert.That(result.Value!.Field1, Is.EqualTo(1));
+				Assert.That(result.Value!.Field2, Is.EqualTo(-1));
+			});
+		}
+
+		[ActiveIssue(Details = "Not supported case as we cannot connect .ctor parameter to column")]
+		[Test]
+		public void TextExecuteScalarEntityColumnConverterWithCtor([IncludeDataSources(ProviderName.SQLiteClassic)] string context)
+		{
+			var ms = new MappingSchema();
+			new FluentMappingBuilder(ms)
+				.Entity<Issue4043ScalarTableWithCtor>()
+				.Property(e => e.Value)
+				.HasConversion(o => JsonSerializer.Serialize(o, (JsonSerializerOptions?)null), json => JsonSerializer.Deserialize<ValueObject>(json, (JsonSerializerOptions?)null))
+				.Build();
+
+			using var db = GetDataConnection(context, ms);
+			using var _  = db.CreateLocalTable(Issue4043TableRaw.Data);
+
+			var result = db.Execute<Issue4043ScalarTableWithCtor>("select Value from Issue4043");
+
+			Assert.That(result, Is.Not.Null);
+			Assert.That(result.Value, Is.Not.Null);
+			Assert.Multiple(() =>
+			{
+				Assert.That(result.Value!.Field1, Is.EqualTo(1));
+				Assert.That(result.Value!.Field2, Is.EqualTo(-1));
+			});
+		}
+		#endregion
 	}
 }

@@ -2,17 +2,23 @@
 using System;
 using System.Collections.Concurrent;
 using System.Diagnostics;
+using System.Security.Authentication;
+
 using LinqToDB;
 using LinqToDB.Interceptors;
 using LinqToDB.Mapping;
 using LinqToDB.Remote;
 using LinqToDB.Remote.Grpc;
+
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+
 using NUnit.Framework;
+
 using ProtoBuf.Grpc.Server;
+
 using Tests.Model;
 using Tests.Model.Remote.Grpc;
 
@@ -33,21 +39,25 @@ namespace Tests.Remote.ServerContainer
 		{
 		}
 
+		private static string GetServiceUrl(int port) => $"https://localhost:{port}";
+
 		public ITestDataContext Prepare(
 			MappingSchema? ms,
 			IInterceptor? interceptor,
 			bool suppressSequentialAccess,
-			string configuration)
+			string configuration,
+			Func<DataOptions,DataOptions>? optionBuilder)
 		{
 			var service = OpenHost(ms, interceptor, suppressSequentialAccess);
 
 			service.SuppressSequentialAccess = suppressSequentialAccess;
+
 			if (interceptor != null)
 			{
 				service.AddInterceptor(interceptor);
 			}
 
-			var url = $"https://localhost:{GetPort()}";
+			var url = GetServiceUrl(GetPort());
 
 			var dx = new TestGrpcDataContext(
 				url,
@@ -56,13 +66,14 @@ namespace Tests.Remote.ServerContainer
 					service.SuppressSequentialAccess = false;
 					if (interceptor != null)
 						service.RemoveInterceptor();
-				})
-			{ Configuration = configuration };
+				},
+				optionBuilder)
+			{ ConfigurationString = configuration };
 
-			Debug.WriteLine(((IDataContext) dx).ContextID, "Provider ");
+			Debug.WriteLine(((IDataContext) dx).ConfigurationID, "Provider ");
 
 			if (ms != null)
-				dx.MappingSchema = new MappingSchema(dx.MappingSchema, ms);
+				dx.MappingSchema = MappingSchema.CombineSchemas(ms, dx.MappingSchema);
 
 			return dx;
 		}
@@ -70,6 +81,7 @@ namespace Tests.Remote.ServerContainer
 		private TestGrpcLinqService OpenHost(MappingSchema? ms, IInterceptor? interceptor, bool suppressSequentialAccess)
 		{
 			var port = GetPort();
+
 			if (_openHosts.TryGetValue(port, out var service))
 			{
 				service.MappingSchema = ms;
@@ -85,14 +97,16 @@ namespace Tests.Remote.ServerContainer
 				}
 
 				service = new TestGrpcLinqService(
-					new LinqService()
+					new TestLinqService()
 					{
 						AllowUpdates = true
 					},
 					interceptor,
 					suppressSequentialAccess
 					);
-				service.MappingSchema = ms;
+
+				if (ms != null)
+					service.MappingSchema = ms;
 
 				Startup.GrpcLinqService = service;
 
@@ -102,7 +116,7 @@ namespace Tests.Remote.ServerContainer
 				{
 					webBuilder.UseStartup<Startup>();
 
-					var url = $"https://localhost:{port}";
+					var url = GetServiceUrl(port);
 					webBuilder.UseUrls(url);
 				}).Build();
 

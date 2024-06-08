@@ -8,11 +8,7 @@ using System.Threading.Tasks;
 
 namespace LinqToDB.Linq
 {
-#if !NATIVE_ASYNC
-	using Async;
-#endif
-
-	class PersistentTable<T> : ITable<T>
+	sealed class PersistentTable<T> : ITable<T>
 		where T : notnull
 	{
 		private readonly IQueryable<T> _query;
@@ -33,11 +29,6 @@ namespace LinqToDB.Linq
 		}
 
 		public Expression Expression => _query.Expression;
-		Expression IExpressionQuery<T>.Expression
-		{
-			get => _query.Expression;
-			set => throw new NotImplementedException();
-		}
 
 		public string         SqlText     { get; } = null!;
 		public IDataContext   DataContext => null!;

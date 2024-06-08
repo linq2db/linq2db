@@ -2,14 +2,16 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
+
 using JetBrains.Annotations;
 
 namespace LinqToDB
 {
+	using Common;
 	using Expressions;
 	using Extensions;
 	using Linq;
-	using LinqToDB.Common;
+	using Linq.Builder;
 
 	/// <summary>
 	/// Provides API for compilation and caching of queries for reuse.
@@ -30,8 +32,7 @@ namespace LinqToDB
 		{
 			if (_compiledQuery == null)
 				lock (_sync)
-					if (_compiledQuery == null)
-						_compiledQuery = CompileQuery(_query);
+					_compiledQuery ??= CompileQuery(_query);
 
 			//TODO: pass preambles
 			return (TResult)_compiledQuery(args, null)!;
@@ -49,7 +50,7 @@ namespace LinqToDB
 			Expression CallTable(LambdaExpression query, Expression expr, ParameterExpression ps, ParameterExpression preambles, MethodType type);
 		}
 
-		class TableHelper<T> : ITableHelper
+		sealed class TableHelper<T> : ITableHelper
 			where T : notnull
 		{
 			public Expression CallTable(LambdaExpression query, Expression expr, ParameterExpression ps, ParameterExpression preambles, MethodType type)
@@ -69,7 +70,7 @@ namespace LinqToDB
 
 		static Func<object?[],object?[]?,object?> CompileQuery(LambdaExpression query)
 		{
-			var ps        = Expression.Parameter(typeof(object[]), "ps");
+			var ps        = ExpressionBuilder.ParametersParam;
 			var preambles = Expression.Parameter(typeof(object[]), "preambles");
 
 			var info = query.Body.Transform((query, ps, preambles), static (context, pi) =>
@@ -85,13 +86,21 @@ namespace LinqToDB
 
 							break;
 						}
+				}
 
+				return pi;
+			});
+
+			info = info.Transform((query, ps, preambles), static (context, pi) =>
+			{
+				switch (pi.NodeType)
+				{
 					case ExpressionType.Call :
 						{
 							var expr = (MethodCallExpression)pi;
 
 							if (expr.Method.DeclaringType == typeof(AsyncExtensions) &&
-								expr.Method.GetCustomAttributes(typeof(AsyncExtensions.ElementAsyncAttribute), true).Length != 0)
+								expr.Method.HasAttribute<AsyncExtensions.ElementAsyncAttribute>())
 							{
 								var type = expr.Type.GetGenericArguments()[0];
 

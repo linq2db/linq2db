@@ -57,67 +57,9 @@ namespace Tests.Extensions
 			}
 		}
 
-		[Test]
-		public void Option1([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
-		{
-			using (var db = GetDataContext(context))
-			{
-#pragma warning disable CS0618
-				db.QueryHints.Add(SqlServerTools.Sql.OptionRecompile);
-#pragma warning restore CS0618
-
-				var q = db.Parent.Select(p => p);
-
-				var list = q.ToList();
-
-				var ctx = db as DataConnection;
-
-				if (ctx != null)
-				{
-					Assert.That(ctx.LastQuery, Contains.Substring("OPTION"));
-				}
-
-				list = q.ToList();
-
-				if (ctx != null)
-				{
-					Assert.That(ctx.LastQuery, Contains.Substring("OPTION"));
-				}
-			}
-		}
-
-		[Test]
-		public void Option2([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
-		{
-			using (var db = GetDataContext(context))
-			{
-#pragma warning disable CS0618
-				db.NextQueryHints.Add(SqlServerTools.Sql.OptionRecompile);
-#pragma warning restore CS0618
-
-				var q = db.Parent.Select(p => p);
-
-				var list = q.ToList();
-
-				var ctx = db as DataConnection;
-
-				if (ctx != null)
-				{
-					Assert.That(ctx.LastQuery, Contains.Substring("OPTION"));
-				}
-
-				list = q.ToList();
-
-				if (ctx != null)
-				{
-					Assert.That(ctx.LastQuery, Is.Not.Contains("OPTION"));
-				}
-			}
-		}
-
 		[Repeat(100)]
 		[Test]
-		public void Issue3137([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		public void Issue3137([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			using var _ = new DisableBaseline("multi-threading");
 			var rnd = new Random();
@@ -146,17 +88,19 @@ namespace Tests.Extensions
 				await query.ToListAsync();
 				if (db is DataConnection dc) sql = dc.LastQuery!;
 
-				Assert.True(sql!.Contains(sharedHint), $"(1) expected {sharedHint}. Has alien hint: {sql.Contains("many")}");
-				Assert.True(sql.Contains(oneTimeHint), $"(1) expected {oneTimeHint}. Has alien hint: {sql.Contains("once")}");
+				Assert.That(sql, Is.Not.Null);
+				Assert.That(sql, Does.Contain(sharedHint), $"(1) expected {sharedHint}. Has alien hint: {sql.Contains("many")}");
+				Assert.That(sql, Does.Contain(oneTimeHint), $"(1) expected {oneTimeHint}. Has alien hint: {sql.Contains("once")}");
 
 				query = db.Parent.Where(r => r.ParentID == 11);
 				sql = db is DataConnection ? null : query.ToString();
 				await query.ToListAsync();
 				if (db is DataConnection dc2) sql = dc2.LastQuery!;
 
-				Assert.True(sql!.Contains(sharedHint), $"(2) expected {sharedHint}. Has alien hint: {sql.Contains("many")}");
-				Assert.False(sql.Contains(oneTimeHint), $"(2) expected no {oneTimeHint}");
-				Assert.False(sql.Contains("once"), $"(2) alien one-time hint found");
+				Assert.That(sql, Is.Not.Null);
+				Assert.That(sql, Does.Contain(sharedHint), $"(2) expected {sharedHint}. Has alien hint: {sql.Contains("many")}");
+				Assert.That(sql, Does.Not.Contain(oneTimeHint), $"(2) expected no {oneTimeHint}");
+				Assert.That(sql, Does.Not.Contain("once"), $"(2) alien one-time hint found");
 			}
 		}
 	}

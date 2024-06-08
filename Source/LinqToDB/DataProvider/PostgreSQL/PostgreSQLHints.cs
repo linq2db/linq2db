@@ -21,17 +21,17 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		public const string ForShare       = "FOR SHARE";
 		public const string ForKeyShare    = "FOR KEY SHARE";
 
-		public const string NoWait     = "NOWAIT";
-		public const string SkipLocked = "SKIP LOCKED";
+		public const string NoWait         = "NOWAIT";
+		public const string SkipLocked     = "SKIP LOCKED";
 
-		class SubQueryTableHintExtensionBuilder : ISqlQueryExtensionBuilder
+		sealed class SubQueryTableHintExtensionBuilder : ISqlQueryExtensionBuilder
 		{
-			void ISqlQueryExtensionBuilder.Build(ISqlBuilder sqlBuilder, StringBuilder stringBuilder, SqlQueryExtension sqlQueryExtension)
+			void ISqlQueryExtensionBuilder.Build(NullabilityContext nullability, ISqlBuilder sqlBuilder, StringBuilder stringBuilder, SqlQueryExtension sqlQueryExtension)
 			{
 				var hint = (string)((SqlValue)sqlQueryExtension.Arguments["hint"]).Value!;
 
 				if (hint is ForNoKeyUpdate or ForKeyShare && sqlBuilder.MappingSchema.ConfigurationList.Contains(ProviderName.PostgreSQL92))
-					return;
+					stringBuilder.Append("-- ");
 
 				stringBuilder.Append(hint);
 
@@ -44,7 +44,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 					else if (i > 0)
 						stringBuilder.Append(", ");
 
-					var id    = (Sql.SqlID)((SqlValue)sqlQueryExtension.Arguments[$"tableIDs.{i}"]).Value!;
+					var id    = (Sql.SqlID)((SqlValue)sqlQueryExtension.Arguments[FormattableString.Invariant($"tableIDs.{i}")]).Value!;
 					var alias = sqlBuilder.BuildSqlID(id);
 
 					stringBuilder.Append(alias);
@@ -52,7 +52,9 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 				if (sqlQueryExtension.Arguments.TryGetValue("hint2", out var h) && h is SqlValue { Value: string value })
 				{
-					if (value != SkipLocked || sqlBuilder.MappingSchema.ConfigurationList.Contains(ProviderName.PostgreSQL95))
+					if (value != SkipLocked
+						|| sqlBuilder.MappingSchema.ConfigurationList.Contains(ProviderName.PostgreSQL95)
+						|| sqlBuilder.MappingSchema.ConfigurationList.Contains(ProviderName.PostgreSQL15))
 					{
 						stringBuilder.Append(' ');
 						stringBuilder.Append(value);
@@ -73,7 +75,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		/// <param name="hint">SQL text, added to join in generated query.</param>
 		/// <param name="tableIDs">Table IDs.</param>
 		/// <returns>Query source with join hints.</returns>
-		[LinqTunnel, Pure]
+		[LinqTunnel, Pure, IsQueryable]
 		[Sql.QueryExtension(ProviderName.PostgreSQL, Sql.QueryExtensionScope.SubQueryHint, typeof(SubQueryTableHintExtensionBuilder))]
 		[Sql.QueryExtension(null,                    Sql.QueryExtensionScope.None,         typeof(NoneExtensionBuilder))]
 		public static IPostgreSQLSpecificQueryable<TSource> SubQueryTableHint<TSource>(
@@ -106,7 +108,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		/// <param name="hint2">NOWAIT | SKIP LOCKED</param>
 		/// <param name="tableIDs">Table IDs.</param>
 		/// <returns>Query source with join hints.</returns>
-		[LinqTunnel, Pure]
+		[LinqTunnel, Pure, IsQueryable]
 		[Sql.QueryExtension(ProviderName.PostgreSQL, Sql.QueryExtensionScope.SubQueryHint, typeof(SubQueryTableHintExtensionBuilder))]
 		[Sql.QueryExtension(null,                    Sql.QueryExtensionScope.None,         typeof(NoneExtensionBuilder))]
 		public static IPostgreSQLSpecificQueryable<TSource> SubQueryTableHint<TSource>(

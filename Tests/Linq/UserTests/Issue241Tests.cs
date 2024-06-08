@@ -18,7 +18,7 @@ namespace Tests.UserTests
 				jj      = jj.Where(x => x.CompanyName.Contains("t"));
 				var t1g = jj.GroupBy(_ => _).ToDictionary(_ => _.Key, _ => _.ToList());
 
-				Assert.GreaterOrEqual(t1g.Count, 1);
+				Assert.That(t1g, Is.Not.Empty);
 			}
 		}
 	}

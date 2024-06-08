@@ -6,8 +6,8 @@ variables:
     value: linq2db_binaries
   - name: artifact_linq2db_tools_binaries
     value: linq2db_tools_binaries
-  - name: artifact_linq2db_aspnet_binaries
-    value: linq2db_aspnet_binaries
+  - name: artifact_linq2db_extensions_binaries
+    value: linq2db_extensions_binaries
 
 # build on commits to important branches: 'release', 'master'
 trigger:
@@ -48,3 +48,4 @@ stages:
       experimental: false
       with_baselines: true
       mac_enabled: and(eq(variables['System.PullRequest.TargetBranch'], variables['release_branch']), succeeded()) # enable macos testing only for release
+      db_filter: '[all][metrics]'

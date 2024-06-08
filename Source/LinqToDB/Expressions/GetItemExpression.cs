@@ -1,14 +1,13 @@
 ﻿using System;
-using System.Linq;
 using System.Linq.Expressions;
-
-using LinqToDB.Linq.Builder;
-using LinqToDB.Mapping;
-using LinqToDB.Reflection;
 
 namespace LinqToDB.Expressions
 {
-	class GetItemExpression : Expression
+	using Linq.Builder;
+	using Mapping;
+	using Reflection;
+
+	sealed class GetItemExpression : Expression
 	{
 		public GetItemExpression(Expression expression, MappingSchema mappingSchema)
 		{

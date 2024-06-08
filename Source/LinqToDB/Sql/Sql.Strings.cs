@@ -14,15 +14,15 @@ namespace LinqToDB
 	{
 		#region StringAggregate
 
-		class StringAggSql2017Builder : IExtensionCallBuilder
+		sealed class StringAggSql2017Builder : IExtensionCallBuilder
 		{
 			public void Build(ISqExtensionBuilder builder)
 			{
 				ISqlExpression data;
 				if (builder.Arguments.Length == 2)
-					data = builder.GetExpression("source");
+					data = builder.GetExpression("source")!;
 				else
-					data = builder.GetExpression("selector");
+					data = builder.GetExpression("selector")!;
 
 				// https://github.com/linq2db/linq2db/issues/1765
 				var descriptor = QueryHelper.GetColumnDescriptor(data);
@@ -42,7 +42,7 @@ namespace LinqToDB
 			}
 		}
 
-		class StringAggSapHanaBuilder : IExtensionCallBuilder
+		sealed class StringAggSapHanaBuilder : IExtensionCallBuilder
 		{
 			public void Build(ISqExtensionBuilder builder)
 			{
@@ -54,6 +54,7 @@ namespace LinqToDB
 			}
 		}
 
+		[Extension(PN.SqlServer2022, "STRING_AGG({source}, {separator}){_}{aggregation_ordering?}",       IsAggregate = true, ChainPrecedence = 10, BuilderType = typeof(StringAggSql2017Builder))]
 		[Extension(PN.SqlServer2019, "STRING_AGG({source}, {separator}){_}{aggregation_ordering?}",       IsAggregate = true, ChainPrecedence = 10, BuilderType = typeof(StringAggSql2017Builder))]
 		[Extension(PN.SqlServer2017, "STRING_AGG({source}, {separator}){_}{aggregation_ordering?}",       IsAggregate = true, ChainPrecedence = 10, BuilderType = typeof(StringAggSql2017Builder))]
 		[Extension(PN.PostgreSQL,    "STRING_AGG({source}, {separator}{_}{order_by_clause?})",            IsAggregate = true, ChainPrecedence = 10)]
@@ -66,9 +67,11 @@ namespace LinqToDB
 		[Extension(PN.DB2LUW,        "LISTAGG({source}, {separator}){_}{aggregation_ordering?}",          IsAggregate = true, ChainPrecedence = 10)]
 		[Extension(PN.DB2zOS,        "LISTAGG({source}, {separator}){_}{aggregation_ordering?}",          IsAggregate = true, ChainPrecedence = 10)]
 		[Extension(PN.Firebird,      "LIST({source}, {separator})",                                       IsAggregate = true, ChainPrecedence = 10)]
+		[Extension(PN.ClickHouse,    "arrayStringConcat(groupArray({source}), {separator})",              IsAggregate = true, ChainPrecedence = 10, CanBeNull = false)]
+		[Extension("{source}",        TokenName = "aggregate")]
 		public static IAggregateFunctionNotOrdered<string?, string> StringAggregate(
 			[ExprParameter] this IQueryable<string?> source,
-			[ExprParameter] string separator)
+			[ExprParameter]      string              separator)
 		{
 			if (source    == null) throw new ArgumentNullException(nameof(source));
 			if (separator == null) throw new ArgumentNullException(nameof(separator));
@@ -82,6 +85,7 @@ namespace LinqToDB
 			return new AggregateFunctionNotOrderedImpl<string?, string>(query);
 		}
 
+		[Extension(PN.SqlServer2022, "STRING_AGG({selector}, {separator}){_}{aggregation_ordering?}",       IsAggregate = true, ChainPrecedence = 10, BuilderType = typeof(StringAggSql2017Builder))]
 		[Extension(PN.SqlServer2019, "STRING_AGG({selector}, {separator}){_}{aggregation_ordering?}",       IsAggregate = true, ChainPrecedence = 10, BuilderType = typeof(StringAggSql2017Builder))]
 		[Extension(PN.SqlServer2017, "STRING_AGG({selector}, {separator}){_}{aggregation_ordering?}",       IsAggregate = true, ChainPrecedence = 10, BuilderType = typeof(StringAggSql2017Builder))]
 		[Extension(PN.PostgreSQL,    "STRING_AGG({selector}, {separator}{_}{order_by_clause?})",            IsAggregate = true, ChainPrecedence = 10)]
@@ -94,14 +98,16 @@ namespace LinqToDB
 		[Extension(PN.DB2LUW,        "LISTAGG({selector}, {separator}){_}{aggregation_ordering?}",          IsAggregate = true, ChainPrecedence = 10)]
 		[Extension(PN.DB2zOS,        "LISTAGG({selector}, {separator}){_}{aggregation_ordering?}",          IsAggregate = true, ChainPrecedence = 10)]
 		[Extension(PN.Firebird,      "LIST({selector}, {separator})",                                       IsAggregate = true, ChainPrecedence = 10)]
+		[Extension(PN.ClickHouse,    "arrayStringConcat(groupArray({selector}), {separator})",              IsAggregate = true, ChainPrecedence = 10, CanBeNull = false)]
 		public static IAggregateFunctionNotOrdered<T, string> StringAggregate<T>(
-							this IEnumerable<T> source,
-			[ExprParameter] string separator,
-			[ExprParameter] Func<T, string?> selector)
+							this IEnumerable<T>   source,
+			[ExprParameter]      string           separator,
+			[ExprParameter]      Func<T, string?> selector)
 		{
 			throw new LinqException($"'{nameof(StringAggregate)}' is server-side method.");
 		}
 
+		[Extension(PN.SqlServer2022, "STRING_AGG({selector}, {separator}){_}{aggregation_ordering?}",       IsAggregate = true, ChainPrecedence = 10, BuilderType = typeof(StringAggSql2017Builder))]
 		[Extension(PN.SqlServer2019, "STRING_AGG({selector}, {separator}){_}{aggregation_ordering?}",       IsAggregate = true, ChainPrecedence = 10, BuilderType = typeof(StringAggSql2017Builder))]
 		[Extension(PN.SqlServer2017, "STRING_AGG({selector}, {separator}){_}{aggregation_ordering?}",       IsAggregate = true, ChainPrecedence = 10, BuilderType = typeof(StringAggSql2017Builder))]
 		[Extension(PN.PostgreSQL,    "STRING_AGG({selector}, {separator}{_}{order_by_clause?})",            IsAggregate = true, ChainPrecedence = 10)]
@@ -114,6 +120,7 @@ namespace LinqToDB
 		[Extension(PN.DB2LUW,        "LISTAGG({selector}, {separator}){_}{aggregation_ordering?}",          IsAggregate = true, ChainPrecedence = 10)]
 		[Extension(PN.DB2zOS,        "LISTAGG({selector}, {separator}){_}{aggregation_ordering?}",          IsAggregate = true, ChainPrecedence = 10)]
 		[Extension(PN.Firebird,      "LIST({selector}, {separator})",                                       IsAggregate = true, ChainPrecedence = 10)]
+		[Extension(PN.ClickHouse,    "arrayStringConcat(groupArray({selector}), {separator})",              IsAggregate = true, ChainPrecedence = 10, CanBeNull = false)]
 		public static IAggregateFunctionNotOrdered<T, string> StringAggregate<T>(
 							this IQueryable<T> source,
 			[ExprParameter] string separator,
@@ -132,6 +139,7 @@ namespace LinqToDB
 			return new AggregateFunctionNotOrderedImpl<T, string>(query);
 		}
 
+		[Extension(PN.SqlServer2022, "STRING_AGG({source}, {separator}){_}{aggregation_ordering?}",       IsAggregate = true, ChainPrecedence = 10, BuilderType = typeof(StringAggSql2017Builder))]
 		[Extension(PN.SqlServer2019, "STRING_AGG({source}, {separator}){_}{aggregation_ordering?}",       IsAggregate = true, ChainPrecedence = 10, BuilderType = typeof(StringAggSql2017Builder))]
 		[Extension(PN.SqlServer2017, "STRING_AGG({source}, {separator}){_}{aggregation_ordering?}",       IsAggregate = true, ChainPrecedence = 10, BuilderType = typeof(StringAggSql2017Builder))]
 		[Extension(PN.PostgreSQL,    "STRING_AGG({source}, {separator}{_}{order_by_clause?})",            IsAggregate = true, ChainPrecedence = 10)]
@@ -144,6 +152,7 @@ namespace LinqToDB
 		[Extension(PN.DB2LUW,        "LISTAGG({source}, {separator}){_}{aggregation_ordering?}",          IsAggregate = true, ChainPrecedence = 10)]
 		[Extension(PN.DB2zOS,        "LISTAGG({source}, {separator}){_}{aggregation_ordering?}",          IsAggregate = true, ChainPrecedence = 10)]
 		[Extension(PN.Firebird,      "LIST({source}, {separator})",                                       IsAggregate = true, ChainPrecedence = 10)]
+		[Extension(PN.ClickHouse,    "arrayStringConcat(groupArray({source}), {separator})",              IsAggregate = true, ChainPrecedence = 10, CanBeNull = false)]
 		public static IAggregateFunctionNotOrdered<string?, string> StringAggregate(
 			[ExprParameter] this IEnumerable<string?> source,
 			[ExprParameter] string separator)
@@ -155,9 +164,9 @@ namespace LinqToDB
 
 		#region ConcatStrings
 
-		class CommonConcatWsArgumentsBuilder : IExtensionCallBuilder
+		sealed class CommonConcatWsArgumentsBuilder : IExtensionCallBuilder
 		{
-			SqlExpression IsNullExpression(string isNullFormat, ISqlExpression value)
+			static SqlExpression IsNullExpression(string isNullFormat, ISqlExpression value)
 			{
 				return new SqlExpression(typeof(string), isNullFormat, value);
 			}
@@ -171,11 +180,11 @@ namespace LinqToDB
 				}
 				else if (arguments.Expressions.Count == 1 && builder.BuilderValue != null)
 				{
-					builder.ResultExpression = IsNullExpression((string)builder.BuilderValue, builder.ConvertExpressionToSql(arguments.Expressions[0]));
+					builder.ResultExpression = IsNullExpression((string)builder.BuilderValue, builder.ConvertExpressionToSql(arguments.Expressions[0])!);
 				}
 				else
 				{
-					var items = arguments.Expressions.Select(e => builder.ConvertExpressionToSql(e));
+					var items = arguments.Expressions.Select(e => builder.ConvertExpressionToSql(e)!);
 					foreach (var item in items)
 					{
 						builder.AddParameter("argument", item);
@@ -192,7 +201,7 @@ namespace LinqToDB
 
 			public void Build(ISqExtensionBuilder builder)
 			{
-				var separator = builder.GetExpression(0);
+				var separator = builder.GetExpression(0)!;
 				var arguments = (NewArrayExpression)builder.Arguments[1];
 				if (arguments.Expressions.Count == 0)
 				{
@@ -200,12 +209,12 @@ namespace LinqToDB
 				}
 				else if (arguments.Expressions.Count == 1)
 				{
-					builder.ResultExpression = IsNullExpression(builder.ConvertExpressionToSql(arguments.Expressions[0]));
+					builder.ResultExpression = IsNullExpression(builder.ConvertExpressionToSql(arguments.Expressions[0])!);
 				}
 				else
 				{
 					var items = arguments.Expressions.Select(e =>
-						IsNullExpression(StringConcatExpression(separator, builder.ConvertExpressionToSql(e)))
+						IsNullExpression(StringConcatExpression(separator, builder.ConvertExpressionToSql(e)!))
 					);
 
 					var concatenation =
@@ -216,7 +225,7 @@ namespace LinqToDB
 			}
 		}
 
-		class OldSqlServerConcatWsBuilder : BaseEmulationConcatWsBuilder
+		sealed class OldSqlServerConcatWsBuilder : BaseEmulationConcatWsBuilder
 		{
 			protected override SqlExpression IsNullExpression(ISqlExpression value)
 			{
@@ -237,7 +246,7 @@ namespace LinqToDB
 			}
 		}
 
-		class SqliteConcatWsBuilder : BaseEmulationConcatWsBuilder
+		sealed class SqliteConcatWsBuilder : BaseEmulationConcatWsBuilder
 		{
 			protected override SqlExpression IsNullExpression(ISqlExpression value)
 			{
@@ -262,15 +271,17 @@ namespace LinqToDB
 		/// <param name="separator">The string to use as a separator. <paramref name="separator" /> is included in the returned string only if <paramref name="arguments" /> has more than one element.</param>
 		/// <param name="arguments">A collection that contains the strings to concatenate.</param>
 		/// <returns></returns>
-		[Extension(PN.SqlServer2019, "CONCAT_WS({separator}, {argument, ', '})", BuilderType = typeof(CommonConcatWsArgumentsBuilder), BuilderValue = "ISNULL({0}, '')")]
-		[Extension(PN.SqlServer2017, "CONCAT_WS({separator}, {argument, ', '})", BuilderType = typeof(CommonConcatWsArgumentsBuilder), BuilderValue = "ISNULL({0}, '')")]
-		[Extension(PN.PostgreSQL,    "CONCAT_WS({separator}, {argument, ', '})", BuilderType = typeof(CommonConcatWsArgumentsBuilder), BuilderValue = null)]
-		[Extension(PN.MySql,         "CONCAT_WS({separator}, {argument, ', '})", BuilderType = typeof(CommonConcatWsArgumentsBuilder), BuilderValue = null)]
-		[Extension(PN.SqlServer,     "", BuilderType = typeof(OldSqlServerConcatWsBuilder))]
-		[Extension(PN.SQLite,        "", BuilderType = typeof(SqliteConcatWsBuilder))]
+		[Extension(PN.SqlServer2022, "CONCAT_WS({separator}, {argument, ', '})", BuilderType = typeof(CommonConcatWsArgumentsBuilder), BuilderValue = "ISNULL({0}, '')", IsAggregate = true)]
+		[Extension(PN.SqlServer2019, "CONCAT_WS({separator}, {argument, ', '})", BuilderType = typeof(CommonConcatWsArgumentsBuilder), BuilderValue = "ISNULL({0}, '')", IsAggregate = true)]
+		[Extension(PN.SqlServer2017, "CONCAT_WS({separator}, {argument, ', '})", BuilderType = typeof(CommonConcatWsArgumentsBuilder), BuilderValue = "ISNULL({0}, '')", IsAggregate = true)]
+		[Extension(PN.PostgreSQL,    "CONCAT_WS({separator}, {argument, ', '})", BuilderType = typeof(CommonConcatWsArgumentsBuilder), BuilderValue = null, IsAggregate = true)]
+		[Extension(PN.MySql,         "CONCAT_WS({separator}, {argument, ', '})", BuilderType = typeof(CommonConcatWsArgumentsBuilder), BuilderValue = null, IsAggregate = true)]
+		[Extension(PN.SqlServer,     "", BuilderType = typeof(OldSqlServerConcatWsBuilder), IsAggregate = true)]
+		[Extension(PN.SQLite,        "", BuilderType = typeof(SqliteConcatWsBuilder), IsAggregate = true)]
+		[Extension(PN.ClickHouse,   "arrayStringConcat([{arguments, ', '}], {separator})", IsAggregate = true, CanBeNull = false)]
 		public static string ConcatStrings(
-			[ExprParameter] string separator,
-							params string?[] arguments)
+			[ExprParameter(ParameterKind = ExprParameterKind.Values)]        string    separator,
+			[ExprParameter(ParameterKind = ExprParameterKind.Values)] params string?[] arguments)
 		{
 			return string.Join(separator, arguments.Where(a => a != null));
 		}

@@ -63,7 +63,7 @@ namespace Tests.UserTests
 						.FirstOrDefault())
 					.FirstOrDefault())
 				.ToList();
-			Assert.That(ret.Count, Is.EqualTo(2));
+			Assert.That(ret, Has.Count.EqualTo(2));
 		}
 
 		[Test]
@@ -102,11 +102,11 @@ namespace Tests.UserTests
 						.FirstOrDefault())
 					.FirstOrDefault())
 				.ToList();
-			Assert.That(ret.Count, Is.EqualTo(2));
+			Assert.That(ret, Has.Count.EqualTo(2));
 		}
 
 		[Test]
-		public void NestedDictionaryTest2([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
+		public void NestedDictionaryTest2([IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllClickHouse)] string context)
 		{
 			using var db = GetDataContext(context);
 			using var tbl1 = db.CreateLocalTable(new[]
@@ -147,11 +147,11 @@ namespace Tests.UserTests
 					})
 					.FirstOrDefault())
 				.ToList();
-			Assert.That(ret.Count, Is.EqualTo(2));
+			Assert.That(ret, Has.Count.EqualTo(2));
 		}
 
 		[Test]
-		public void NestedDictionaryTest3([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
+		public void NestedDictionaryTest3([IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllClickHouse)] string context)
 		{
 			using var db = GetDataContext(context);
 			using var tbl1 = db.CreateLocalTable(new[]
@@ -198,11 +198,11 @@ namespace Tests.UserTests
 					}
 				})
 				.ToList();
-			Assert.That(ret.Count, Is.EqualTo(2));
+			Assert.That(ret, Has.Count.EqualTo(2));
 		}
 
 		[Test]
-		public void NestedDictionaryTest3CrossApply([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
+		public void NestedDictionaryTest3CrossApply([IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllClickHouse)] string context)
 		{
 			using var db = GetDataContext(context);
 			using var tbl1 = db.CreateLocalTable(new[]
@@ -261,7 +261,7 @@ namespace Tests.UserTests
 					}
 				})
 				.ToList();
-			Assert.That(ret.Count, Is.EqualTo(2));
+			Assert.That(ret, Has.Count.EqualTo(2));
 		}
 
 		[Test]
@@ -300,7 +300,7 @@ namespace Tests.UserTests
 					}
 				})
 				.ToList();
-			Assert.That(ret.Count, Is.EqualTo(2));
+			Assert.That(ret, Has.Count.EqualTo(2));
 		}
 
 		[Test]
@@ -345,7 +345,7 @@ namespace Tests.UserTests
 					}
 				})
 				.ToList();
-			Assert.That(ret.Count, Is.EqualTo(2));
+			Assert.That(ret, Has.Count.EqualTo(2));
 		}
 	}
 }

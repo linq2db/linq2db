@@ -6,14 +6,11 @@
 // ---------------------------------------------------------------------------------------------------
 
 using LinqToDB;
-using LinqToDB.Configuration;
 using LinqToDB.Data;
-using LinqToDB.Expressions;
 using LinqToDB.Mapping;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 
 #pragma warning disable 1573, 1591
 #nullable enable
@@ -33,14 +30,14 @@ namespace Cli.T4.DB2
 			InitDataContext();
 		}
 
-		public TestDataDB(LinqToDBConnectionOptions options)
+		public TestDataDB(DataOptions options)
 			: base(options)
 		{
 			InitDataContext();
 		}
 
-		public TestDataDB(LinqToDBConnectionOptions<TestDataDB> options)
-			: base(options)
+		public TestDataDB(DataOptions<TestDataDB> options)
+			: base(options.Options)
 		{
 			InitDataContext();
 		}
@@ -67,13 +64,24 @@ namespace Cli.T4.DB2
 		public ITable<Personview>        Personviews         => this.GetTable<Personview>();
 
 		#region Table Functions
-		#region TestModule1TestTableFunction
-		private static readonly MethodInfo _testTableFunction = MemberHelper.MethodOf<TestDataDB>(ctx => ctx.TestModule1TestTableFunction(default));
+		#region TestTableFunction
+		[Sql.TableFunction("TEST_TABLE_FUNCTION", Schema = "DB2INST1")]
+		public ITable<TestTableFunctionResult> TestTableFunction(int? i)
+		{
+			return this.TableFromExpression<TestTableFunctionResult>(() => TestTableFunction(i));
+		}
 
+		public partial class TestTableFunctionResult
+		{
+			[Column("O")] public int? O { get; set; }
+		}
+		#endregion
+
+		#region TestModule1TestTableFunction
 		[Sql.TableFunction("TEST_TABLE_FUNCTION", Package = "TEST_MODULE1", Schema = "DB2INST1")]
 		public ITable<TestModule1TestTableFunctionResult> TestModule1TestTableFunction(int? i)
 		{
-			return this.GetTable<TestModule1TestTableFunctionResult>(this, _testTableFunction, i);
+			return this.TableFromExpression<TestModule1TestTableFunctionResult>(() => TestModule1TestTableFunction(i));
 		}
 
 		public partial class TestModule1TestTableFunctionResult
@@ -83,30 +91,13 @@ namespace Cli.T4.DB2
 		#endregion
 
 		#region TestModule2TestTableFunction
-		private static readonly MethodInfo _testTableFunction1 = MemberHelper.MethodOf<TestDataDB>(ctx => ctx.TestModule2TestTableFunction(default));
-
 		[Sql.TableFunction("TEST_TABLE_FUNCTION", Package = "TEST_MODULE2", Schema = "DB2INST1")]
 		public ITable<TestModule2TestTableFunctionResult> TestModule2TestTableFunction(int? i)
 		{
-			return this.GetTable<TestModule2TestTableFunctionResult>(this, _testTableFunction1, i);
+			return this.TableFromExpression<TestModule2TestTableFunctionResult>(() => TestModule2TestTableFunction(i));
 		}
 
 		public partial class TestModule2TestTableFunctionResult
-		{
-			[Column("O")] public int? O { get; set; }
-		}
-		#endregion
-
-		#region TestTableFunction
-		private static readonly MethodInfo _testTableFunction2 = MemberHelper.MethodOf<TestDataDB>(ctx => ctx.TestTableFunction(default));
-
-		[Sql.TableFunction("TEST_TABLE_FUNCTION", Schema = "DB2INST1")]
-		public ITable<TestTableFunctionResult> TestTableFunction(int? i)
-		{
-			return this.GetTable<TestTableFunctionResult>(this, _testTableFunction2, i);
-		}
-
-		public partial class TestTableFunctionResult
 		{
 			[Column("O")] public int? O { get; set; }
 		}
@@ -200,28 +191,6 @@ namespace Cli.T4.DB2
 		#endregion
 
 		#region Stored Procedures
-		#region TestModule1TestProcedure
-		public static int TestModule1TestProcedure(this TestDataDB dataConnection, int? i)
-		{
-			var parameters = new []
-			{
-				new DataParameter("I", i, DataType.Int32)
-			};
-			return dataConnection.ExecuteProc("DB2INST1.TEST_MODULE1.TEST_PROCEDURE", parameters);
-		}
-		#endregion
-
-		#region TestModule2TestProcedure
-		public static int TestModule2TestProcedure(this TestDataDB dataConnection, int? i)
-		{
-			var parameters = new []
-			{
-				new DataParameter("I", i, DataType.Int32)
-			};
-			return dataConnection.ExecuteProc("DB2INST1.TEST_MODULE2.TEST_PROCEDURE", parameters);
-		}
-		#endregion
-
 		#region Addissue792Record
 		public static int Addissue792Record(this TestDataDB dataConnection)
 		{
@@ -250,9 +219,39 @@ namespace Cli.T4.DB2
 			return dataConnection.ExecuteProc("DB2INST1.TEST_PROCEDURE", parameters);
 		}
 		#endregion
+
+		#region TestModule1TestProcedure
+		public static int TestModule1TestProcedure(this TestDataDB dataConnection, int? i)
+		{
+			var parameters = new []
+			{
+				new DataParameter("I", i, DataType.Int32)
+			};
+			return dataConnection.ExecuteProc("DB2INST1.TEST_MODULE1.TEST_PROCEDURE", parameters);
+		}
+		#endregion
+
+		#region TestModule2TestProcedure
+		public static int TestModule2TestProcedure(this TestDataDB dataConnection, int? i)
+		{
+			var parameters = new []
+			{
+				new DataParameter("I", i, DataType.Int32)
+			};
+			return dataConnection.ExecuteProc("DB2INST1.TEST_MODULE2.TEST_PROCEDURE", parameters);
+		}
+		#endregion
 		#endregion
 
 		#region Scalar Functions
+		#region TestFunction
+		[Sql.Function("DB2INST1.TEST_FUNCTION", ServerSideOnly = true)]
+		public static int? TestFunction(int? i)
+		{
+			throw new InvalidOperationException("Scalar function cannot be called outside of query");
+		}
+		#endregion
+
 		#region TestModule1TestFunction
 		[Sql.Function("DB2INST1.TEST_MODULE1.TEST_FUNCTION", ServerSideOnly = true)]
 		public static int? TestModule1TestFunction(int? i)
@@ -264,14 +263,6 @@ namespace Cli.T4.DB2
 		#region TestModule2TestFunction
 		[Sql.Function("DB2INST1.TEST_MODULE2.TEST_FUNCTION", ServerSideOnly = true)]
 		public static int? TestModule2TestFunction(int? i)
-		{
-			throw new InvalidOperationException("Scalar function cannot be called outside of query");
-		}
-		#endregion
-
-		#region TestFunction
-		[Sql.Function("DB2INST1.TEST_FUNCTION", ServerSideOnly = true)]
-		public static int? TestFunction(int? i)
 		{
 			throw new InvalidOperationException("Scalar function cannot be called outside of query");
 		}
@@ -367,7 +358,7 @@ namespace Cli.T4.DB2
 		/// <summary>
 		/// FK_SLAVETABLE_MASTERTABLE backreference
 		/// </summary>
-		[Association(ThisKey = nameof(ID1) + "," + nameof(ID1), OtherKey = nameof(Slavetable.ID222222222222222222222222) + "," + nameof(ID1))]
+		[Association(ThisKey = nameof(ID1) + "," + nameof(ID2), OtherKey = nameof(Slavetable.ID222222222222222222222222) + "," + nameof(Slavetable.ID1))]
 		public IEnumerable<Slavetable> Slavetables { get; set; } = null!;
 		#endregion
 	}
@@ -429,7 +420,7 @@ namespace Cli.T4.DB2
 		/// <summary>
 		/// FK_SLAVETABLE_MASTERTABLE
 		/// </summary>
-		[Association(CanBeNull = false, ThisKey = nameof(ID222222222222222222222222) + "," + nameof(ID222222222222222222222222), OtherKey = nameof(DB2.Mastertable.ID1) + "," + nameof(ID222222222222222222222222))]
+		[Association(CanBeNull = false, ThisKey = nameof(ID222222222222222222222222) + "," + nameof(ID1), OtherKey = nameof(DB2.Mastertable.ID1) + "," + nameof(DB2.Mastertable.ID2))]
 		public Mastertable Mastertable { get; set; } = null!;
 		#endregion
 	}

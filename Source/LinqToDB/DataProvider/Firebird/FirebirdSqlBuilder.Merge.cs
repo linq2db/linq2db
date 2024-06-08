@@ -1,11 +1,11 @@
-﻿namespace LinqToDB.DataProvider.Firebird
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+
+namespace LinqToDB.DataProvider.Firebird
 {
-	using LinqToDB.SqlQuery;
-	using System;
-	using System.Linq;
-	using System.Collections.Generic;
-	using System.Globalization;
-	using System.Text;
+	using SqlQuery;
 
 	public partial class FirebirdSqlBuilder
 	{
@@ -47,30 +47,40 @@
 				&& ConvertElement(rows[row][column]) is SqlValue sqlValue && sqlValue.Value != null;
 		}
 
-		protected override void BuildTypedExpression(SqlDataType dataType, ISqlExpression value)
+		// available since FB5
+		protected override void BuildMergeOperationDeleteBySource(NullabilityContext nullability, SqlMergeOperationClause operation)
 		{
-			if (dataType.Type.DbType == null && dataType.Type.DataType == DataType.NVarChar)
+			StringBuilder
+				.AppendLine()
+				.Append("WHEN NOT MATCHED BY SOURCE");
+
+			if (operation.Where != null)
 			{
-				var length = 0;
-				var typeRequired = false;
-				if (value is SqlValue sqlValue && sqlValue.Value is string stringValue)
-				{
-					typeRequired = true;
-					length = Encoding.UTF8.GetByteCount(stringValue);
-					if (length == 0)
-						length = 1;
-				}
-
-				if (typeRequired)
-					StringBuilder.Append("CAST(");
-
-				BuildExpression(value);
-
-				if (typeRequired)
-					StringBuilder.Append($" AS VARCHAR({length.ToString(CultureInfo.InvariantCulture)}))");
+				StringBuilder.Append(" AND ");
+				BuildSearchCondition(Precedence.Unknown, operation.Where, wrapCondition: true);
 			}
-			else
-				base.BuildTypedExpression(dataType, value);
+
+			StringBuilder.AppendLine(" THEN DELETE");
+		}
+
+		// available since FB5
+		protected override void BuildMergeOperationUpdateBySource(NullabilityContext nullability, SqlMergeOperationClause operation)
+		{
+			StringBuilder
+				.AppendLine()
+				.Append("WHEN NOT MATCHED BY SOURCE");
+
+			if (operation.Where != null)
+			{
+				StringBuilder.Append(" AND ");
+				BuildSearchCondition(Precedence.Unknown, operation.Where, wrapCondition: true);
+			}
+
+			StringBuilder.AppendLine(" THEN UPDATE");
+
+			var update = new SqlUpdateClause();
+			update.Items.AddRange(operation.Items);
+			BuildUpdateSet(null, update);
 		}
 	}
 }

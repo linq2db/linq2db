@@ -39,6 +39,15 @@ namespace LinqToDB.Scaffold
 		/// </list>
 		/// </summary>
 		public Func<SqlObjectName, bool, bool> LoadTableOrView { get; set; } = (_, _) => true;
+
+		/// <summary>
+		/// This option applied only to SQL Server 2016+ and, when enabled, removes history tables information for temporal tables from schema load results.
+		/// <list type="bullet">
+		/// <item>Default: <c>false</c></item>
+		/// <item>In T4 compability mode: <c>false</c></item>
+		/// </list>
+		/// </summary>
+		public bool IgnoreSystemHistoryTables { get; set; }
 		#endregion
 
 		#region Foreign Keys
@@ -71,6 +80,14 @@ namespace LinqToDB.Scaffold
 		/// </list>
 		/// </summary>
 		public ISet<string> Schemas { get; } = new HashSet<string>();
+		/// <summary>
+		/// List of default schemas. When <c>null</c>, use default schema information from database schema provider.
+		/// <list type="bullet">
+		/// <item>Default: <c>null</c></item>
+		/// <item>In T4 compability mode: <c>null</c></item>
+		/// </list>
+		/// </summary>
+		public ISet<string>? DefaultSchemas { get; set; }
 		/// <summary>
 		/// Specify how to treat <see cref="Catalogs"/> list, when it is not empty.
 		/// When <c>true</c>, load only specified catalogs, otherwise all load catalogs except specififed in <see cref="Catalogs"/>.
@@ -129,6 +146,14 @@ namespace LinqToDB.Scaffold
 		/// </summary>
 		public Func<SqlObjectName, bool> LoadProcedureSchema { get; set; } = _ => true;
 		/// <summary>
+		/// Delegate to filter loaded stored procedured by database name (only name and schema provided). Returns <c>true</c>, if stored procedure should be loaded.
+		/// <list type="bullet">
+		/// <item>Default: all stored procedures allowed.</item>
+		/// <item>In T4 compability mode: all stored procedures allowed</item>
+		/// </list>
+		/// </summary>
+		public Func<SqlObjectName, bool> LoadStoredProcedure { get; set; } = _ => true;
+		/// <summary>
 		/// Delegate to filter loaded table functions by database name (only name and schema provided). Returns <c>true</c>, if table function should be loaded.
 		/// <list type="bullet">
 		/// <item>Default: all table functions allowed.</item>
@@ -136,6 +161,22 @@ namespace LinqToDB.Scaffold
 		/// </list>
 		/// </summary>
 		public Func<SqlObjectName, bool> LoadTableFunction { get; set; } = _ => true;
+		/// <summary>
+		/// Delegate to filter loaded scalar functions by database name (only name and schema provided). Returns <c>true</c>, if scalar function should be loaded.
+		/// <list type="bullet">
+		/// <item>Default: all scalar functions allowed.</item>
+		/// <item>In T4 compability mode: all scalar functions allowed</item>
+		/// </list>
+		/// </summary>
+		public Func<SqlObjectName, bool> LoadScalarFunction { get; set; } = _ => true;
+		/// <summary>
+		/// Delegate to filter loaded aggregate functions by database name (only name and schema provided). Returns <c>true</c>, if aggregate function should be loaded.
+		/// <list type="bullet">
+		/// <item>Default: all aggregate functions allowed.</item>
+		/// <item>In T4 compability mode: all aggregate functions allowed</item>
+		/// </list>
+		/// </summary>
+		public Func<SqlObjectName, bool> LoadAggregateFunction { get; set; } = _ => true;
 
 		/// <summary>
 		/// Generate RETURN_VALUE stored procedure parameter for SQL Server.

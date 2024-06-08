@@ -6,6 +6,7 @@ using JetBrains.Annotations;
 
 namespace LinqToDB.DataProvider.SqlCe
 {
+	using Expressions;
 	using Linq;
 	using SqlProvider;
 
@@ -14,7 +15,7 @@ namespace LinqToDB.DataProvider.SqlCe
 	{
 	}
 
-	class SqlCeSpecificTable<TSource> : DatabaseSpecificTable<TSource>, ISqlCeSpecificTable<TSource>, ITable
+	sealed class SqlCeSpecificTable<TSource> : DatabaseSpecificTable<TSource>, ISqlCeSpecificTable<TSource>, ITable
 		where TSource : notnull
 	{
 		public SqlCeSpecificTable(ITable<TSource> table) : base(table)
@@ -26,7 +27,7 @@ namespace LinqToDB.DataProvider.SqlCe
 	{
 	}
 
-	class SqlCeSpecificQueryable<TSource> : DatabaseSpecificQueryable<TSource>, ISqlCeSpecificQueryable<TSource>, ITable
+	sealed class SqlCeSpecificQueryable<TSource> : DatabaseSpecificQueryable<TSource>, ISqlCeSpecificQueryable<TSource>, ITable
 	{
 		public SqlCeSpecificQueryable(IQueryable<TSource> queryable) : base(queryable)
 		{
@@ -35,20 +36,22 @@ namespace LinqToDB.DataProvider.SqlCe
 
 	public static partial class SqlServerTools
 	{
-		[LinqTunnel, Pure]
+		[LinqTunnel, Pure, IsQueryable]
 		[Sql.QueryExtension(null, Sql.QueryExtensionScope.None, typeof(NoneExtensionBuilder))]
 		public static ISqlCeSpecificTable<TSource> AsSqlCe<TSource>(this ITable<TSource> table)
 			where TSource : notnull
 		{
-			table.Expression = Expression.Call(
-				null,
-				MethodHelper.GetMethodInfo(AsSqlCe, table),
-				table.Expression);
+			var newTable = new Table<TSource>(table.DataContext,
+				Expression.Call(
+					null,
+					MethodHelper.GetMethodInfo(AsSqlCe, table),
+					table.Expression)
+			);
 
-			return new SqlCeSpecificTable<TSource>(table);
+			return new SqlCeSpecificTable<TSource>(newTable);
 		}
 
-		[LinqTunnel, Pure]
+		[LinqTunnel, Pure, IsQueryable]
 		[Sql.QueryExtension(null, Sql.QueryExtensionScope.None, typeof(NoneExtensionBuilder))]
 		public static ISqlCeSpecificQueryable<TSource> AsSqlCe<TSource>(this IQueryable<TSource> source)
 			where TSource : notnull

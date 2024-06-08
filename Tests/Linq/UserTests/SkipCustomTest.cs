@@ -52,21 +52,23 @@ namespace Tests.UserTests
 
 					var count = db.Insert(new TestTable() { Id = 1, Name = "John", Age = 15 });
 
-					Assert.Greater(count, 0);
+					if (!context.IsAnyOf(TestProvName.AllClickHouse))
+						Assert.That(count, Is.GreaterThan(0));
 
 					var r = db.GetTable<TestTable>().FirstOrDefault(t => t.Id == 1)!;
 
-					Assert.IsNotNull(r);
-					Assert.AreEqual(r.Age, 15);
+					Assert.That(r, Is.Not.Null);
+					Assert.That(r.Age, Is.EqualTo(15));
 
 					count = db.Insert(new TestTable() { Id = 2, Name = "Max", Age = 14 });
 
-					Assert.Greater(count, 0);
+					if (!context.IsAnyOf(TestProvName.AllClickHouse))
+						Assert.That(count, Is.GreaterThan(0));
 
 					r = db.GetTable<TestTable>().FirstOrDefault(t => t.Id == 2)!;
 
-					Assert.IsNotNull(r);
-					Assert.IsNull(r.Age);
+					Assert.That(r, Is.Not.Null);
+					Assert.That(r.Age, Is.Null);
 				}
 			}
 		}

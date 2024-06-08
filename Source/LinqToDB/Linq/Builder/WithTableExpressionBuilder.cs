@@ -6,9 +6,9 @@ namespace LinqToDB.Linq.Builder
 	using LinqToDB.Expressions;
 	using SqlQuery;
 
-	class WithTableExpressionBuilder : MethodCallBuilder
+	sealed class WithTableExpressionBuilder : MethodCallBuilder
 	{
-		private static readonly string[] MethodNames =
+		static readonly string[] MethodNames =
 		{
 			nameof(LinqExtensions.With),
 			nameof(LinqExtensions.WithTableExpression)
@@ -19,14 +19,14 @@ namespace LinqToDB.Linq.Builder
 			return methodCall.IsQueryable(MethodNames);
 		}
 
-		protected override IBuildContext BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
+		protected override BuildSequenceResult BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
 			var sequence = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
 			var table    = SequenceHelper.GetTableContext(sequence) ?? throw new LinqToDBException($"Cannot get table context from {sequence.GetType()}");
-			var value    = (string)methodCall.Arguments[1].EvaluateExpression()!;
+			var value    = builder.EvaluateExpression<string>(methodCall.Arguments[1]);
 
 			table.SqlTable.SqlTableType   = SqlTableType.Expression;
-			table.SqlTable.TableArguments = Array<ISqlExpression>.Empty;
+			table.SqlTable.TableArguments = [];
 
 			switch (methodCall.Method.Name)
 			{
@@ -34,7 +34,7 @@ namespace LinqToDB.Linq.Builder
 				case nameof(LinqExtensions.WithTableExpression) : table.SqlTable.Expression = value;                         break;
 			}
 
-			return sequence;
+			return BuildSequenceResult.FromContext(sequence);
 		}
 	}
 }

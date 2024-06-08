@@ -18,7 +18,7 @@ using LinqToDB.Mapping;
 
 namespace InformixDataContext
 {
-	public partial class TestdataidsDB : LinqToDB.Data.DataConnection
+	public partial class Testdatadb2DB : LinqToDB.Data.DataConnection
 	{
 		public ITable<Alltype>           Alltypes           { get { return this.GetTable<Alltype>(); } }
 		public ITable<Child>             Children           { get { return this.GetTable<Child>(); } }
@@ -38,28 +38,28 @@ namespace InformixDataContext
 		public ITable<Testmerge2>        Testmerge2         { get { return this.GetTable<Testmerge2>(); } }
 		public ITable<Testunique>        Testuniques        { get { return this.GetTable<Testunique>(); } }
 
-		public TestdataidsDB()
+		public Testdatadb2DB()
 		{
 			InitDataContext();
 			InitMappingSchema();
 		}
 
-		public TestdataidsDB(string configuration)
+		public Testdatadb2DB(string configuration)
 			: base(configuration)
 		{
 			InitDataContext();
 			InitMappingSchema();
 		}
 
-		public TestdataidsDB(LinqToDBConnectionOptions options)
+		public Testdatadb2DB(DataOptions options)
 			: base(options)
 		{
 			InitDataContext();
 			InitMappingSchema();
 		}
 
-		public TestdataidsDB(LinqToDBConnectionOptions<TestdataidsDB> options)
-			: base(options)
+		public Testdatadb2DB(DataOptions<Testdatadb2DB> options)
+			: base(options.Options)
 		{
 			InitDataContext();
 			InitMappingSchema();

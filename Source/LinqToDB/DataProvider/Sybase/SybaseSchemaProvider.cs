@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Globalization;
 using System.Linq;
 
 namespace LinqToDB.DataProvider.Sybase
@@ -9,7 +10,7 @@ namespace LinqToDB.DataProvider.Sybase
 	using Data;
 	using SchemaProvider;
 
-	class SybaseSchemaProvider : SchemaProviderBase
+	sealed class SybaseSchemaProvider : SchemaProviderBase
 	{
 		private readonly SybaseDataProvider _provider;
 		public SybaseSchemaProvider(SybaseDataProvider provider)
@@ -17,7 +18,7 @@ namespace LinqToDB.DataProvider.Sybase
 			_provider = provider;
 		}
 
-		protected override DataType GetDataType(string? dataType, string? columnType, int? length, int? prec, int? scale)
+		protected override DataType GetDataType(string? dataType, string? columnType, int? length, int? precision, int? scale)
 		{
 			switch (dataType)
 			{
@@ -157,7 +158,7 @@ WHERE
 				if (sql != null)
 					sql += "\nUNION ALL";
 
-				sql += string.Format(baseSql, i);
+				sql += string.Format(CultureInfo.InvariantCulture, baseSql, i);
 			}
 
 			sql = "SELECT * FROM (" + sql + ") as t WHERE ThisColumn IS NOT NULL";

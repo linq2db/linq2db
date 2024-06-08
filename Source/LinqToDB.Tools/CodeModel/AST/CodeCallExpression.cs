@@ -15,8 +15,9 @@ namespace LinqToDB.CodeModel
 			IEnumerable<CodeTypeToken>   genericArguments,
 			bool                         skipTypeArguments,
 			IEnumerable<ICodeExpression> parameters,
+			IEnumerable<SimpleTrivia>?   wrapTrivia,
 			IType                        returnType)
-			: base(extension, callee, method, genericArguments, skipTypeArguments, parameters)
+			: base(extension, callee, method, genericArguments, skipTypeArguments, parameters, wrapTrivia)
 		{
 			ReturnType = returnType;
 		}
@@ -28,8 +29,9 @@ namespace LinqToDB.CodeModel
 			IEnumerable<IType>           genericArguments,
 			bool                         skipTypeArguments,
 			IEnumerable<ICodeExpression> parameters,
+			IEnumerable<SimpleTrivia>?   wrapTrivia,
 			IType                        returnType)
-			: this(extension, callee, method, genericArguments.Select(static t => new CodeTypeToken(t)), skipTypeArguments, parameters, returnType)
+			: this(extension, callee, method, genericArguments.Select(static t => new CodeTypeToken(t)), skipTypeArguments, parameters, wrapTrivia, returnType)
 		{
 		}
 

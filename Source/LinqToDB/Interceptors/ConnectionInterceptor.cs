@@ -1,5 +1,4 @@
-﻿using System;
-using System.Data.Common;
+﻿using System.Data.Common;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -13,7 +12,7 @@ namespace LinqToDB.Interceptors
 
 		public virtual Task ConnectionOpenedAsync(ConnectionEventData eventData, DbConnection connection, CancellationToken cancellationToken)
 		{
-			return TaskEx.CompletedTask;
+			return Task.CompletedTask;
 		}
 
 		public virtual void ConnectionOpening(ConnectionEventData eventData, DbConnection connection)
@@ -22,7 +21,7 @@ namespace LinqToDB.Interceptors
 
 		public virtual Task ConnectionOpeningAsync(ConnectionEventData eventData, DbConnection connection, CancellationToken cancellationToken)
 		{
-			return TaskEx.CompletedTask;
+			return Task.CompletedTask;
 		}
 	}
 }

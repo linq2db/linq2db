@@ -18,7 +18,7 @@ namespace Tests.Linq
 	public class ComplexTests : TestBase
 	{
 		[Test]
-		public void Contains1([DataSources(TestProvName.AllAccess)] string context)
+		public void Contains1([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -61,7 +61,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Contains2([DataSources(TestProvName.AllAccess)] string context)
+		public void Contains2([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -119,7 +119,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Contains3([DataSources(TestProvName.AllSQLite, ProviderName.Access)] string context)
+		public void Contains3([DataSources(TestProvName.AllSQLite, ProviderName.Access, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -162,7 +162,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Contains4([DataSources(TestProvName.AllSQLite, ProviderName.Access)] string context)
+		public void Contains4([DataSources(TestProvName.AllSQLite, ProviderName.Access, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -215,7 +215,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Contains6([DataSources(ProviderName.Access)] string context)
+		public void Contains6([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -336,7 +336,7 @@ namespace Tests.Linq
 
 			using (var db = new TestDataConnection())
 			{
-				Assert.AreEqual(1, db.Parent.Count(final));
+				Assert.That(db.Parent.Count(final), Is.EqualTo(1));
 			}
 		}
 
@@ -514,7 +514,7 @@ namespace Tests.Linq
 //
 //				_ = db.Person.ToList();
 
-				Assert.That(res.Count, Is.EqualTo(1));
+				Assert.That(res, Has.Count.EqualTo(1));
 			}
 		}
 
@@ -557,12 +557,12 @@ namespace Tests.Linq
 			using (var users = db.CreateLocalTable<User>())
 			{
 				var query = users.Select(u => u.Residence!.City);
-				Assert.AreEqual(1, query.GetSelectQuery().Select.Columns.Count);
+				Assert.That(query.GetSelectQuery().Select.Columns, Has.Count.EqualTo(1));
 
 				query.ToList();
 
 				query = users.Select(u => u.Residence!.Street);
-				Assert.AreEqual(1, query.GetSelectQuery().Select.Columns.Count);
+				Assert.That(query.GetSelectQuery().Select.Columns, Has.Count.EqualTo(1));
 
 				query.ToList();
 			}
@@ -576,14 +576,19 @@ namespace Tests.Linq
 			{
 				var result = users.ToList();
 
-				Assert.AreEqual(1, result.Count);
-				Assert.AreEqual(User.TestData[0].Name, result[0].Name);
-				Assert.IsNotNull(result[0].Residence);
-				Assert.AreEqual(User.TestData[0].Residence!.Building, result[0].Residence!.Building);
-				Assert.AreEqual(User.TestData[0].Residence!.City, result[0].Residence!.City);
-				Assert.AreEqual(User.TestData[0].Residence!.Street, result[0].Residence!.Street);
+				Assert.That(result, Has.Count.EqualTo(1));
+				Assert.Multiple(() =>
+				{
+					Assert.That(result[0].Name, Is.EqualTo(User.TestData[0].Name));
+					Assert.That(result[0].Residence, Is.Not.Null);
+				});
+				Assert.Multiple(() =>
+				{
+					Assert.That(result[0].Residence!.Building, Is.EqualTo(User.TestData[0].Residence!.Building));
+					Assert.That(result[0].Residence!.City, Is.EqualTo(User.TestData[0].Residence!.City));
+					Assert.That(result[0].Residence!.Street, Is.EqualTo(User.TestData[0].Residence!.Street));
+				});
 			}
 		}
-
 	}
 }

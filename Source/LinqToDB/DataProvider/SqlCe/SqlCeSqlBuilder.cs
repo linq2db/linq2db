@@ -1,17 +1,19 @@
-﻿using System;
-using System.Data.Common;
+﻿using System.Data.Common;
+using System.Globalization;
+using System.Linq;
 using System.Text;
 
 namespace LinqToDB.DataProvider.SqlCe
 {
-	using SqlQuery;
-	using SqlProvider;
+	using Common;
 	using Mapping;
+	using SqlProvider;
+	using SqlQuery;
 
-	class SqlCeSqlBuilder : BasicSqlBuilder
+	sealed class SqlCeSqlBuilder : BasicSqlBuilder
 	{
-		public SqlCeSqlBuilder(IDataProvider? provider, MappingSchema mappingSchema, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
-			: base(provider, mappingSchema, sqlOptimizer, sqlProviderFlags)
+		public SqlCeSqlBuilder(IDataProvider? provider, MappingSchema mappingSchema, DataOptions dataOptions, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
+			: base(provider, mappingSchema, dataOptions, sqlOptimizer, sqlProviderFlags)
 		{
 		}
 
@@ -44,6 +46,17 @@ namespace LinqToDB.DataProvider.SqlCe
 		protected override bool SupportsColumnAliasesInSource => true;
 		protected override bool RequiresConstantColumnAliases => true;
 
+		protected override bool CanSkipRootAliases(SqlStatement statement)
+		{
+			if (statement.SelectQuery != null)
+			{
+				// SQL CE doesn't support multiple columns with the same name in SELECT clause
+				return false;
+			}
+
+			return base.CanSkipRootAliases(statement);
+		}
+
 		public override int CommandCount(SqlStatement statement)
 		{
 			if (statement is SqlTruncateTableStatement trun)
@@ -69,31 +82,41 @@ namespace LinqToDB.DataProvider.SqlCe
 			}
 		}
 
-		protected override void BuildDataTypeFromDataType(SqlDataType type, bool forCreateTable)
+		protected override void BuildDataTypeFromDataType(DbDataType type, bool forCreateTable, bool canBeNull)
 		{
-			switch (type.Type.DataType)
+			// https://learn.microsoft.com/en-us/previous-versions/sql/sql-server-2005/ms172424(v=sql.90)
+			switch (type.DataType)
 			{
-				case DataType.Guid          : StringBuilder.Append("UNIQUEIDENTIFIER");                                                             return;
-				case DataType.Char          : base.BuildDataTypeFromDataType(new SqlDataType(DataType.NChar,    type.Type.Length), forCreateTable); return;
-				case DataType.VarChar       : base.BuildDataTypeFromDataType(new SqlDataType(DataType.NVarChar, type.Type.Length), forCreateTable); return;
-				case DataType.SmallMoney    : StringBuilder.Append("Decimal(10, 4)");                                                               return;
+				case DataType.Guid          : StringBuilder.Append("UNIQUEIDENTIFIER");                                                                        return;
+				case DataType.Char          : base.BuildDataTypeFromDataType(new DbDataType(typeof(char), DataType.NChar, null, type.Length), forCreateTable, canBeNull); return;
+				case DataType.VarChar       : base.BuildDataTypeFromDataType(new DbDataType(typeof(string), DataType.NVarChar, null, type.Length), forCreateTable, canBeNull); return;
+				case DataType.SmallMoney    : StringBuilder.Append("Decimal(10, 4)");                                                                          return;
 				case DataType.DateTime2     :
 				case DataType.Time          :
 				case DataType.Date          :
-				case DataType.SmallDateTime : StringBuilder.Append("DateTime");                                                                     return;
+				case DataType.SmallDateTime : StringBuilder.Append("DateTime");                                                                                return;
 				case DataType.NVarChar:
-					if (type.Type.Length == null || type.Type.Length > 4000 || type.Type.Length < 1)
+					if (type.Length == null || type.Length > 4000 || type.Length < 1)
 					{
-						StringBuilder
-							.Append(type.Type.DataType)
-							.Append("(4000)");
+						StringBuilder.Append("NVarChar(4000)");
 						return;
 					}
 
 					break;
+
+				case DataType.Binary:
+					StringBuilder.Append("BINARY");
+					if (type.Length > 1 && type.Length <= 8000)
+						StringBuilder.Append(CultureInfo.InvariantCulture, $"({type.Length})");
+					return;
+				case DataType.VarBinary:
+					StringBuilder.Append("VARBINARY");
+					if (type.Length > 1 && type.Length <= 8000)
+						StringBuilder.Append(CultureInfo.InvariantCulture, $"({type.Length})");
+					return;
 			}
 
-			base.BuildDataTypeFromDataType(type, forCreateTable);
+			base.BuildDataTypeFromDataType(type, forCreateTable, canBeNull);
 		}
 
 		public override StringBuilder Convert(StringBuilder sb, string value, ConvertType convertType)
@@ -139,7 +162,7 @@ namespace LinqToDB.DataProvider.SqlCe
 			StringBuilder.Append("IDENTITY");
 		}
 
-		public override StringBuilder BuildObjectName(StringBuilder sb, SqlObjectName name, ConvertType objectType, bool escape, TableOptions tableOptions)
+		public override StringBuilder BuildObjectName(StringBuilder sb, SqlObjectName name, ConvertType objectType, bool escape, TableOptions tableOptions, bool withoutSuffix = false)
 		{
 			return escape ? Convert(sb, name.Name, objectType) : sb.Append(name.Name);
 		}

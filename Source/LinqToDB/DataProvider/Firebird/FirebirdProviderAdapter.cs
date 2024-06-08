@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Data;
 using System.Data.Common;
+using System.Linq.Expressions;
 
 namespace LinqToDB.DataProvider.Firebird
 {
@@ -50,20 +51,20 @@ namespace LinqToDB.DataProvider.Firebird
 			if (FbDecFloatType != null)
 			{
 				typeMapper.RegisterTypeWrapper<FbDecFloat>(FbDecFloatType);
-				MappingSchema.SetDataType(FbDecFloatType, new SqlDataType(DataType.DecFloat, FbDecFloatType, "DECFLOAT"));
+				MappingSchema.SetDataType(FbDecFloatType, new SqlDataType(DataType.DecFloat, FbDecFloatType));
 				// we don't register literal generation for decfloat as it looks like special values (inf, (s)nan are not supported in literals)
 			}
 
 			if (FbZonedDateTimeType != null)
 			{
 				typeMapper.RegisterTypeWrapper<FbZonedDateTime>(FbZonedDateTimeType);
-				MappingSchema.SetDataType(FbZonedDateTimeType, new SqlDataType(DataType.DateTimeOffset, FbZonedDateTimeType, "TIMESPAN WITH TIME ZONE"));
+				MappingSchema.SetDataType(FbZonedDateTimeType, new SqlDataType(DataType.DateTimeOffset, FbZonedDateTimeType));
 			}
 
 			if (FbZonedTimeType != null)
 			{
 				typeMapper.RegisterTypeWrapper<FbZonedTime>(FbZonedTimeType);
-				MappingSchema.SetDataType(FbZonedTimeType, new SqlDataType(DataType.TimeTZ, FbZonedTimeType, "TIME WITH TIME ZONE"));
+				MappingSchema.SetDataType(FbZonedTimeType, new SqlDataType(DataType.TimeTZ, FbZonedTimeType));
 			}
 
 			typeMapper.FinalizeMappings();
@@ -76,6 +77,8 @@ namespace LinqToDB.DataProvider.Firebird
 			ClearAllPools = typeMapper.BuildAction(typeMapper.MapActionLambda(() => FbConnection.ClearAllPools()));
 
 			IsDateOnlySupported = assembly.GetName().Version >= MinDateOnlyVersion;
+
+			_connectionFactory = typeMapper.BuildTypedFactory<string, FbConnection, DbConnection>((string connectionString) => new FbConnection(connectionString));
 		}
 
 		static readonly Lazy<FirebirdProviderAdapter> _lazy    = new (() => new ());
@@ -88,11 +91,18 @@ namespace LinqToDB.DataProvider.Firebird
 			}
 		}
 
+#region IDynamicProviderAdapter
+
 		public Type ConnectionType  { get; }
 		public Type DataReaderType  { get; }
 		public Type ParameterType   { get; }
 		public Type CommandType     { get; }
 		public Type TransactionType { get; }
+
+		readonly Func<string, DbConnection> _connectionFactory;
+		public DbConnection CreateConnection(string connectionString) => _connectionFactory(connectionString);
+
+#endregion
 
 		/// <summary>
 		/// FB client 7.10.0+.
@@ -117,28 +127,30 @@ namespace LinqToDB.DataProvider.Firebird
 		#region Wrappers
 
 		[Wrapper]
-		private class FbDecFloat
+		private sealed class FbDecFloat
 		{
 		}
 
 		[Wrapper]
-		private class FbZonedDateTime
+		private sealed class FbZonedDateTime
 		{
 		}
 
 		[Wrapper]
-		private class FbZonedTime
+		private sealed class FbZonedTime
 		{
 		}
 
 		[Wrapper]
-		private class FbConnection
+		private sealed class FbConnection
 		{
+			public FbConnection(string connectionString) => throw new NotImplementedException();
+
 			public static void ClearAllPools() => throw new NotImplementedException();
 		}
 
 		[Wrapper]
-		private class FbParameter
+		private sealed class FbParameter
 		{
 			public FbDbType FbDbType { get; set; }
 		}
@@ -162,7 +174,7 @@ namespace LinqToDB.DataProvider.Firebird
 			Text      = 13,
 			Time      = 14,
 			TimeStamp = 15,
-			VarChar       = 16,
+			VarChar   = 16,
 
 			// new in 7.10.0
 			TimeStampTZ   = 17,

@@ -1,7 +1,4 @@
-﻿using LinqToDB.Extensions;
-using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using System;
 using System.Linq.Expressions;
 using System.Reflection;
 
@@ -14,7 +11,7 @@ namespace LinqToDB.Linq.Builder
 
 	internal partial class MergeBuilder
 	{
-		internal class Using : MethodCallBuilder
+		internal sealed class Using : MethodCallBuilder
 		{
 			static readonly MethodInfo[] _supportedMethods = {UsingMethodInfo1, UsingMethodInfo2};
 
@@ -23,16 +20,23 @@ namespace LinqToDB.Linq.Builder
 				return methodCall.IsSameGenericMethod(_supportedMethods);
 			}
 
-			protected override IBuildContext BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
+			protected override BuildSequenceResult BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 			{
 				var mergeContext = (MergeContext)builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
 
-				var sourceContext         = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[1], new SelectQuery()));
-				var source                = new TableLikeQueryContext(sourceContext);
-				mergeContext.Sequences    = new IBuildContext[] { mergeContext.Sequence, source };
+				var sourceContext =
+					builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[1], new SelectQuery()));
+
+				var genericArgs = methodCall.Method.GetGenericArguments();
+
+				var source = new TableLikeQueryContext(
+					new ContextRefExpression(genericArgs[0], mergeContext.TargetContext, "target"),
+					new ContextRefExpression(genericArgs[1], sourceContext, "source"));
+
+				mergeContext.Sequences    = new[] { mergeContext.Sequence, source };
 				mergeContext.Merge.Source = source.Source;
 
-				return mergeContext;
+				return BuildSequenceResult.FromContext(mergeContext);
 			}
 		}
 	}

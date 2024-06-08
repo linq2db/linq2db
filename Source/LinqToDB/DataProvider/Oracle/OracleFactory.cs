@@ -1,18 +1,26 @@
-﻿using JetBrains.Annotations;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
+using JetBrains.Annotations;
 
 namespace LinqToDB.DataProvider.Oracle
 {
 	using Configuration;
 
 	[UsedImplicitly]
-	class OracleFactory : IDataProviderFactory
+	sealed class OracleFactory : IDataProviderFactory
 	{
 		IDataProvider IDataProviderFactory.GetDataProvider(IEnumerable<NamedValue> attributes)
 		{
-			var version      = attributes.FirstOrDefault(_ => _.Name == "version"     )?.Value;
-			var assemblyName = attributes.FirstOrDefault(_ => _.Name == "assemblyName")?.Value;
+			string? version      = null;
+			string? assemblyName = null;
+
+			foreach (var attr in attributes)
+			{
+				if (attr.Name == "version" && version == null)
+					version = attr.Value;
+				else if (attr.Name == "assemblyName" && assemblyName == null)
+					assemblyName = attr.Value;
+			}
 
 			var dialect = OracleVersion.v12;
 			if (version?.Contains("11") == true)

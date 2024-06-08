@@ -106,8 +106,7 @@ namespace LinqToDB.Tools.Mapper
 			if (memberName == null) throw new ArgumentNullException(nameof(memberName));
 			if (mapName    == null) throw new ArgumentNullException(nameof(mapName));
 
-			if (FromMappingDictionary == null)
-				FromMappingDictionary = new Dictionary<Type,Dictionary<string,string>>();
+			FromMappingDictionary ??= new Dictionary<Type,Dictionary<string,string>>();
 
 			if (!FromMappingDictionary.TryGetValue(type, out var dic))
 				FromMappingDictionary[type] = dic = new Dictionary<string,string>();
@@ -136,7 +135,7 @@ namespace LinqToDB.Tools.Mapper
 		/// <param name="mapName">Mapping name.</param>
 		/// <returns>Returns this mapper.</returns>
 		public MapperBuilder<TFrom,TTo> FromMapping(string memberName, string mapName)
-			=> FromMapping(typeof(TFrom), memberName, mapName);
+			=> FromMapping<TFrom>(memberName, mapName);
 
 		/// <summary>
 		/// Defines member name mapping for source types.
@@ -170,7 +169,7 @@ namespace LinqToDB.Tools.Mapper
 		/// <param name="mapping">Mapping parameters.</param>
 		/// <returns>Returns this mapper.</returns>
 		public MapperBuilder<TFrom,TTo> FromMapping(IReadOnlyDictionary<string,string> mapping)
-			=> FromMapping(typeof(TFrom), mapping);
+			=> FromMapping<TFrom>(mapping);
 
 		/// <summary>
 		/// Defines member name mapping for destination types.
@@ -186,8 +185,7 @@ namespace LinqToDB.Tools.Mapper
 		/// <returns>Returns this mapper.</returns>
 		public MapperBuilder<TFrom,TTo> ToMapping(Type type, string memberName, string mapName)
 		{
-			if (ToMappingDictionary == null)
-				ToMappingDictionary = new Dictionary<Type,Dictionary<string,string>>();
+			ToMappingDictionary ??= new Dictionary<Type,Dictionary<string,string>>();
 
 			if (!ToMappingDictionary.TryGetValue(type, out var dic))
 				ToMappingDictionary[type] = dic = new Dictionary<string,string>();
@@ -214,7 +212,7 @@ namespace LinqToDB.Tools.Mapper
 		/// <param name="mapName">Mapping name.</param>
 		/// <returns>Returns this mapper.</returns>
 		public MapperBuilder<TFrom,TTo> ToMapping(string memberName, string mapName)
-			=> ToMapping(typeof(TTo), memberName, mapName);
+			=> ToMapping<TTo>(memberName, mapName);
 
 		/// <summary>
 		/// Defines member name mapping for destination types.
@@ -248,7 +246,7 @@ namespace LinqToDB.Tools.Mapper
 		/// <param name="mapping">Mapping parameters.</param>
 		/// <returns>Returns this mapper.</returns>
 		public MapperBuilder<TFrom,TTo> ToMapping(IReadOnlyDictionary<string,string> mapping)
-			=> ToMapping(typeof(TTo), mapping);
+			=> ToMapping<TTo>(mapping);
 
 		/// <summary>
 		/// Defines member name mapping for source and destination types.
@@ -277,7 +275,7 @@ namespace LinqToDB.Tools.Mapper
 		/// <param name="mapName">Mapping name.</param>
 		/// <returns>Returns this mapper.</returns>
 		public MapperBuilder<TFrom,TTo> Mapping(string memberName, string mapName)
-			=> Mapping(typeof(TFrom), memberName, mapName).Mapping(typeof(TTo), memberName, mapName);
+			=> Mapping<TFrom>(memberName, mapName).Mapping<TTo>(memberName, mapName);
 
 		/// <summary>
 		/// Defines member name mapping for source and destination types.
@@ -311,7 +309,7 @@ namespace LinqToDB.Tools.Mapper
 		/// <param name="mapping">Mapping parameters.</param>
 		/// <returns>Returns this mapper.</returns>
 		public MapperBuilder<TFrom,TTo> Mapping(IReadOnlyDictionary<string,string> mapping)
-			=> Mapping(typeof(TFrom), mapping).Mapping(typeof(TFrom), mapping);
+			=> Mapping<TFrom>(mapping).Mapping<TTo>(mapping);
 
 		/// <summary>
 		/// Member mappers.
@@ -335,8 +333,7 @@ namespace LinqToDB.Tools.Mapper
 			if (toMember == null) throw new ArgumentNullException(nameof(toMember));
 			if (setter   == null) throw new ArgumentNullException(nameof(setter));
 
-			if (MemberMappers == null)
-				MemberMappers = new List<MemberMapperInfo>();
+			MemberMappers ??= new List<MemberMapperInfo>();
 
 			MemberMappers.Add(new MemberMapperInfo { ToMember = toMember, Setter = setter });
 

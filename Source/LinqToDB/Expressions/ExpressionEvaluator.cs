@@ -1,20 +1,13 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Runtime.CompilerServices;
-using System.Diagnostics.CodeAnalysis;
 
 namespace LinqToDB.Expressions
 {
-	using LinqToDB.Extensions;
-	using Reflection;
-	using Linq;
-	using Linq.Builder;
-	using Mapping;
-	using LinqToDB.Common;
-	using LinqToDB.Common.Internal;
+	using Common;
+	using Extensions;
 
 	/// <summary>
 	/// Internal API.
@@ -28,7 +21,43 @@ namespace LinqToDB.Expressions
 			return expr.EvaluateExpression() as T;
 		}
 
-		public static object? EvaluateExpression(this Expression? expr)
+		static bool IsSimpleEvaluatable(Expression? expr)
+		{
+			if (expr == null)
+				return true;
+
+			switch (expr.NodeType)
+			{
+				case ExpressionType.Default:
+					return true;
+
+				case ExpressionType.Constant:
+					return true;
+
+				case ExpressionType.MemberAccess:
+				{
+					var member = (MemberExpression) expr;
+
+					if (member.Member.MemberType != MemberTypes.Field &&
+					    member.Member.MemberType != MemberTypes.Property)
+					{
+						return false;
+					}
+
+					return IsSimpleEvaluatable(member.Expression);
+				}
+
+				case ExpressionType.Call:
+				{
+					var mc = (MethodCallExpression)expr;
+					return IsSimpleEvaluatable(mc.Object) && mc.Arguments.All(IsSimpleEvaluatable);
+				}
+			}
+
+			return false;
+		}
+
+		static object? EvaluateExpressionInternal(this Expression? expr)
 		{
 			if (expr == null)
 				return null;
@@ -36,31 +65,21 @@ namespace LinqToDB.Expressions
 			switch (expr.NodeType)
 			{
 				case ExpressionType.Default:
-					return !expr.Type.IsNullableType() ? Activator.CreateInstance(expr.Type) : null;
+					return ReflectionExtensions.GetDefaultValue(expr.Type);
 
 				case ExpressionType.Constant:
 					return ((ConstantExpression)expr).Value;
-
-				case ExpressionType.Convert:
-				case ExpressionType.ConvertChecked:
-				{
-					var unary = (UnaryExpression)expr;
-					var operand = unary.Operand.EvaluateExpression();
-					if (operand == null)
-						return null;
-					break;
-				}
 
 				case ExpressionType.MemberAccess:
 				{
 					var member = (MemberExpression) expr;
 
-					if (member.Member.IsFieldEx())
-						return ((FieldInfo)member.Member).GetValue(member.Expression.EvaluateExpression());
+					if (member.Member is FieldInfo fieldInfo)
+						return fieldInfo.GetValue(member.Expression.EvaluateExpressionInternal());
 
 					if (member.Member is PropertyInfo propertyInfo)
 					{
-						var obj = member.Expression.EvaluateExpression();
+						var obj = member.Expression.EvaluateExpressionInternal();
 						if (obj == null)
 						{
 							if (propertyInfo.IsNullableValueMember())
@@ -76,15 +95,28 @@ namespace LinqToDB.Expressions
 
 				case ExpressionType.Call:
 				{
-					var mc = (MethodCallExpression)expr;
-					var arguments = mc.Arguments.Select(EvaluateExpression).ToArray();
-					var instance  = mc.Object.EvaluateExpression();
+					var mc        = (MethodCallExpression)expr;
+					var arguments = mc.Arguments.Select(a => a.EvaluateExpressionInternal()).ToArray();
+					var instance  = mc.Object.EvaluateExpressionInternal();
 
 					if (instance == null && mc.Method.IsNullableGetValueOrDefault())
 						return null;
 
 					return mc.Method.Invoke(instance, arguments);
 				}
+			}
+
+			throw new InvalidOperationException($"Expression '{expr}' cannot be evaluated");
+		}
+
+		public static object? EvaluateExpression(this Expression? expr)
+		{
+			if (expr == null)
+				return null;
+
+			if (IsSimpleEvaluatable(expr))
+			{
+				return expr.EvaluateExpressionInternal();
 			}
 
 			var value = Expression.Lambda(expr).CompileExpression().DynamicInvoke();

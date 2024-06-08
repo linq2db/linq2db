@@ -8,8 +8,8 @@
 	GenerateDataTypes = true;
 	GenerateDbTypes   = true;
 
-	var solutionsPath = Host.ResolveAssemblyReference("$(SolutionDir)");
-	var path = $@"{solutionsPath}\Tests\Linq\bin\Debug\net472\Database\TestData.mdb";
+	var artifactsPath = Host.ResolveAssemblyReference("$(ArtifactsPath)");
+	var path = $@"{artifactsPath}\bin\Tests\Debug\net462\Database\TestData.mdb";
 	LoadAccessMetadata($"Provider=Microsoft.ACE.OLEDB.12.0;Data Source={path};Locale Identifier=1033;Persist Security Info=True");
 
 	GenerateModel();

@@ -7,6 +7,7 @@ namespace LinqToDB
 {
 	using Common;
 	using Linq.Builder;
+	using Common.Internal;
 	using Mapping;
 	using SqlQuery;
 
@@ -16,7 +17,7 @@ namespace LinqToDB
 		/// Defines custom query extension builder.
 		/// </summary>
 		[AttributeUsage(AttributeTargets.Method | AttributeTargets.Property, AllowMultiple = true)]
-		public class QueryExtensionAttribute : Attribute
+		public class QueryExtensionAttribute : MappingAttribute
 		{
 			public QueryExtensionAttribute(QueryExtensionScope scope, Type extensionBuilderType)
 			{
@@ -62,7 +63,6 @@ namespace LinqToDB
 				ExtensionArguments   = new [] { extensionArgument0, extensionArgument1 };
 			}
 
-			public string?             Configuration        { get; }
 			public QueryExtensionScope Scope                { get; }
 			/// <summary>
 			/// Instance of <see cref="ISqlExtensionBuilder"/>.
@@ -72,25 +72,26 @@ namespace LinqToDB
 
 			public virtual SqlQueryExtension GetExtension(List<SqlQueryExtensionData> parameters)
 			{
-				var ext = new SqlQueryExtension
+				var arguments = new Dictionary<string,ISqlExpression>();
+
+				foreach (var item in parameters)
+					arguments.Add(item.Name, item.SqlExpression!);
+
+				if (ExtensionArguments is not null)
+				{
+					arguments.Add(".ExtensionArguments.Count",  new SqlValue(ExtensionArguments.Length));
+
+					for (var i = 0; i < ExtensionArguments.Length; i++)
+						arguments.Add(FormattableString.Invariant($".ExtensionArguments.{i}"), new SqlValue(ExtensionArguments[i]));
+				}
+
+				return new SqlQueryExtension()
 				{
 					Configuration = Configuration,
 					Scope         = Scope,
 					BuilderType   = ExtensionBuilderType,
+					Arguments     = arguments
 				};
-
-				foreach (var item in parameters)
-					ext.Arguments.Add(item.Name, item.SqlExpression!);
-
-				if (ExtensionArguments is not null)
-				{
-					ext.Arguments.Add(".ExtensionArguments.Count",  new SqlValue(ExtensionArguments.Length));
-
-					for (var i = 0; i < ExtensionArguments.Length; i++)
-						ext.Arguments.Add($".ExtensionArguments.{i}", new SqlValue(ExtensionArguments[i]));
-				}
-
-				return ext;
 			}
 
 			public virtual void ExtendTable(SqlTable table, List<SqlQueryExtensionData> parameters)
@@ -121,10 +122,15 @@ namespace LinqToDB
 				{
 					case ExpressionType.MemberAccess : memberInfo = ((MemberExpression)    expression).Member; break;
 					case ExpressionType.Call         : memberInfo = ((MethodCallExpression)expression).Method; break;
-					default                          : return Array<QueryExtensionAttribute>.Empty;
+					default                          : return [];
 				}
 
-				return mapping.GetAttributes<QueryExtensionAttribute>(memberInfo.ReflectedType!, memberInfo, a => a.Configuration, inherit: true, exactForConfiguration: true);
+				return mapping.GetAttributes<QueryExtensionAttribute>(memberInfo.ReflectedType!, memberInfo, forFirstConfiguration: true);
+			}
+
+			public override string GetObjectID()
+			{
+				return FormattableString.Invariant($".{Configuration}.{(int)Scope}.{IdentifierBuilder.GetObjectID(ExtensionBuilderType)}.{IdentifierBuilder.GetObjectID(ExtensionArguments)}.");
 			}
 		}
 	}

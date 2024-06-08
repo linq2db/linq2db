@@ -3,7 +3,9 @@ using System.Linq;
 using System.Linq.Expressions;
 using FluentAssertions;
 using LinqToDB;
+using LinqToDB.Configuration;
 using LinqToDB.Data;
+using LinqToDB.DataProvider;
 using LinqToDB.Mapping;
 using Npgsql;
 using NpgsqlTypes;
@@ -56,14 +58,26 @@ namespace Tests.UserTests
 		[Test]
 		public void EnumEvaluationInFilter([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
 		{
-			using (var db = GetDataConnection(context))
-				db.Execute("DROP TABLE IF EXISTS \"User\";DROP TYPE IF EXISTS user_type_enum;CREATE TYPE user_type_enum AS ENUM('org', 'org_user');");
+			IDataProvider dataProvider;
+			string?       connectionString;
 
-			NpgsqlConnection.GlobalTypeMapper.MapEnum<UserTypeEnum>();
+			using (var db = GetDataConnection(context))
+			{
+				db.Execute("DROP TABLE IF EXISTS \"User\";DROP TYPE IF EXISTS user_type_enum;CREATE TYPE user_type_enum AS ENUM('org', 'org_user');");
+				dataProvider     = db.DataProvider;
+				connectionString = db.ConnectionString;
+			}
+
+			var builder = new NpgsqlDataSourceBuilder(connectionString);
+			builder.MapEnum<UserTypeEnum>();
+			var dataSource = builder.Build();
+
+			var options = new DataOptions()
+				.UseConnectionFactory(dataProvider, _ => dataSource.CreateConnection());
 
 			try
 			{
-				using var db = GetDataConnection(context);
+				using var db = GetDataConnection(options);
 				using var _  = db.CreateLocalTable(User.Data);
 
 				((NpgsqlConnection)db.Connection).ReloadTypes();
@@ -71,16 +85,22 @@ namespace Tests.UserTests
 				var user  = new User() { Id = 1, Type = UserTypeEnum.Organization };
 				var users = db.GetTable<User>().Where(x => x.InYourOrganization(user)).OrderBy(x => x.Id).Select(x => x.Id.ToString()).ToList();
 
-				Assert.AreEqual(2, users.Count);
-				Assert.AreEqual("1", users[0]);
-				Assert.AreEqual("3", users[1]);
+				Assert.That(users, Has.Count.EqualTo(2));
+				Assert.Multiple(() =>
+				{
+					Assert.That(users[0], Is.EqualTo("1"));
+					Assert.That(users[1], Is.EqualTo("3"));
+				});
 
 				user  = new User() { Id = 4, Type = UserTypeEnum.OrganizationUser, OrganizationId = 2 };
 				users = db.GetTable<User>().Where(x => x.InYourOrganization(user)).OrderBy(x => x.Id).Select(x => x.Id.ToString()).ToList();
 
-				Assert.AreEqual(2, users.Count);
-				Assert.AreEqual("2", users[0]);
-				Assert.AreEqual("4", users[1]);
+				Assert.That(users, Has.Count.EqualTo(2));
+				Assert.Multiple(() =>
+				{
+					Assert.That(users[0], Is.EqualTo("2"));
+					Assert.That(users[1], Is.EqualTo("4"));
+				});
 			}
 			finally
 			{

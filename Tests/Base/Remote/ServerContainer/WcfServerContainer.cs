@@ -35,7 +35,8 @@ namespace Tests.Remote.ServerContainer
 			MappingSchema? ms,
 			IInterceptor? interceptor,
 			bool suppressSequentialAccess,
-			string configuration)
+			string configuration,
+			Func<DataOptions,DataOptions>? optionBuilder)
 		{
 			var service = OpenHost(ms);
 
@@ -52,13 +53,14 @@ namespace Tests.Remote.ServerContainer
 					service.SuppressSequentialAccess = false;
 					if (interceptor != null)
 						service.RemoveInterceptor();
-				})
-			{ Configuration = configuration };
+				},
+				optionBuilder)
+			{ ConfigurationString = configuration };
 
-			Debug.WriteLine(((IDataContext)dx).ContextID, "Provider ");
+			Debug.WriteLine(((IDataContext)dx).ConfigurationID, "Provider ");
 
 			if (ms != null)
-				dx.MappingSchema = new MappingSchema(dx.MappingSchema, ms);
+				dx.MappingSchema = dx.MappingSchema == null ? ms : MappingSchema.CombineSchemas(ms, dx.MappingSchema);
 
 			return dx;
 		}
@@ -66,6 +68,7 @@ namespace Tests.Remote.ServerContainer
 		private TestWcfLinqService OpenHost(MappingSchema? ms)
 		{
 			var port = GetPort();
+
 			if (_openHosts.TryGetValue(port, out var service))
 			{
 				service.MappingSchema = ms;
@@ -80,8 +83,12 @@ namespace Tests.Remote.ServerContainer
 					return service;
 				}
 
-				var host = new ServiceHost(service = new TestWcfLinqService(new LinqService(), null, false) { AllowUpdates = true }, new Uri($"net.tcp://localhost:{GetPort()}"));
-				service.MappingSchema = ms;
+#pragma warning disable CA2000 // Dispose objects before losing scope
+				var host = new ServiceHost(service = new TestWcfLinqService(new TestLinqService(), null, false) { AllowUpdates = true }, new Uri($"net.tcp://localhost:{GetPort()}"));
+#pragma warning restore CA2000 // Dispose objects before losing scope
+
+				if (ms != null)
+					service.MappingSchema = ms;
 
 				host.Description.Behaviors.Add(new ServiceMetadataBehavior());
 				host.Description.Behaviors.Find<ServiceDebugBehavior>().IncludeExceptionDetailInFaults = true;

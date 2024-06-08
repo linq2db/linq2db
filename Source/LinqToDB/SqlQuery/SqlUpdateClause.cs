@@ -1,20 +1,21 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Text;
 
 namespace LinqToDB.SqlQuery
 {
-	public class SqlUpdateClause : IQueryElement, ISqlExpressionWalkable
+	public class SqlUpdateClause : IQueryElement
 	{
-		public SqlUpdateClause()
-		{
-			Items = new List<SqlSetExpression>();
-			Keys  = new List<SqlSetExpression>();
-		}
+		public List<SqlSetExpression> Items         { get; set; } = new();
+		public List<SqlSetExpression> Keys          { get; set; } = new();
+		public SqlTable?              Table         { get; set; }
+		public SqlTableSource?        TableSource   { get; set; }
+		public bool                   HasComparison { get; set; }
 
-		public List<SqlSetExpression> Items { get; }
-		public List<SqlSetExpression> Keys  { get; }
-		public SqlTable?              Table { get; set; }
+		public void Modify(SqlTable? table, SqlTableSource? tableSource)
+		{
+			Table       = table;
+			TableSource = tableSource;
+		}
 
 		#region Overrides
 
@@ -22,51 +23,44 @@ namespace LinqToDB.SqlQuery
 
 		public override string ToString()
 		{
-			return ((IQueryElement)this).ToString(new StringBuilder(), new Dictionary<IQueryElement,IQueryElement>()).ToString();
+			return this.ToDebugString();
 		}
 
 #endif
 
 		#endregion
 
-		#region ISqlExpressionWalkable Members
-
-		ISqlExpression? ISqlExpressionWalkable.Walk<TContext>(WalkOptions options, TContext context, Func<TContext, ISqlExpression, ISqlExpression> func)
-		{
-			if (Table != null)
-				((ISqlExpressionWalkable)Table).Walk(options, context, func);
-
-			foreach (var t in Items)
-				((ISqlExpressionWalkable)t).Walk(options, context, func);
-
-			foreach (var t in Keys)
-				((ISqlExpressionWalkable)t).Walk(options, context, func);
-
-			return null;
-		}
-
-		#endregion
-
 		#region IQueryElement Members
+
+#if DEBUG
+		public string DebugText => this.ToDebugString();
+#endif
 
 		public QueryElementType ElementType => QueryElementType.UpdateClause;
 
-		StringBuilder IQueryElement.ToString(StringBuilder sb, Dictionary<IQueryElement,IQueryElement> dic)
+		QueryElementTextWriter IQueryElement.ToString(QueryElementTextWriter writer)
 		{
-			sb.Append("SET ");
+			writer
+				.Append('\t');
 
-			((IQueryElement?)Table)?.ToString(sb, dic);
+			if (Table != null)
+				writer.AppendElement(Table);
+			if (TableSource != null)
+				writer.AppendElement(TableSource);
 
-			sb.AppendLine();
+			writer.AppendLine()
+				.Append("SET ")
+				.AppendLine();
 
-			foreach (var e in Items)
-			{
-				sb.Append('\t');
-				((IQueryElement)e).ToString(sb, dic);
-				sb.AppendLine();
-			}
+			using (writer.IndentScope())
+				foreach (var e in Items)
+				{
+					writer
+						.AppendElement(e)
+						.AppendLine();
+				}
 
-			return sb;
+			return writer;
 		}
 
 		#endregion

@@ -1,11 +1,10 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-	<Import Project="..\..\Build\linq2db.Source.props" />
 
 	<PropertyGroup>
 		<RootNamespace>LinqToDB.CLI</RootNamespace>
 		<AssemblyName>dotnet-linq2db</AssemblyName>
-		<TargetFrameworks>netcoreapp3.1</TargetFrameworks>
-		<DocumentationFile>bin\$(Configuration)\$(TargetFramework)\$(AssemblyName).xml</DocumentationFile>
+		<TargetFrameworks>net6.0;net7.0;net8.0</TargetFrameworks>
+		<DocumentationFile>$(ArtifactsPath)\bin\$(MSBuildProjectName)\$(Configuration)\$(TargetFramework)\$(AssemblyName).xml</DocumentationFile>
 		<OutputType>Exe</OutputType>
 		<WarningsAsErrors>true</WarningsAsErrors>
 		<SignAssembly>False</SignAssembly>
@@ -13,13 +12,22 @@
 	</PropertyGroup>
 
 	<Target Name="CopyHosts" AfterTargets="Build">
-		<Copy SourceFiles="$(MSBuildThisFileDirectory)..\..\Redist\CLI\dotnet-linq2db.win-x64.exe;$(MSBuildThisFileDirectory)..\..\Redist\CLI\dotnet-linq2db.win-x86.exe" DestinationFolder="bin\$(Configuration)\netcoreapp3.1" />
+		<Copy SourceFiles="$(SolutionDir)\Redist\CLI\net6.0\dotnet-linq2db.win-x64.exe;$(SolutionDir)\Redist\CLI\net6.0\dotnet-linq2db.win-x86.exe" DestinationFolder="$(ArtifactsPath)\bin\$(MSBuildProjectName)\$(Configuration)\net6.0" />
+		<Copy SourceFiles="$(SolutionDir)\Redist\CLI\net7.0\dotnet-linq2db.win-x64.exe;$(SolutionDir)\Redist\CLI\net7.0\dotnet-linq2db.win-x86.exe" DestinationFolder="$(ArtifactsPath)\bin\$(MSBuildProjectName)\$(Configuration)\net7.0" />
+		<Copy SourceFiles="$(SolutionDir)\Redist\CLI\net8.0\dotnet-linq2db.win-x64.exe;$(SolutionDir)\Redist\CLI\net8.0\dotnet-linq2db.win-x86.exe" DestinationFolder="$(ArtifactsPath)\bin\$(MSBuildProjectName)\$(Configuration)\net8.0" />
 
 		<!--cleanup for pack-->
 		<ItemGroup>
 			<JunkFiles
 				Condition="$(Configuration) == 'Release'"
-				Include="bin\Release\netcoreapp3.1\dotnet-linq2db.runtimeconfig.dev.json;bin\Release\netcoreapp3.1\*.pdb;bin\Release\netcoreapp3.1\*.xml;" />
+				Include="
+			$(ArtifactsPath)\bin\$(MSBuildProjectName)\Release\net6.0\*.xml;
+			$(ArtifactsPath)\bin\$(MSBuildProjectName)\Release\net6.0\*.pdb;
+			$(ArtifactsPath)\bin\$(MSBuildProjectName)\Release\net7.0\*.xml;
+			$(ArtifactsPath)\bin\$(MSBuildProjectName)\Release\net7.0\*.pdb;
+			$(ArtifactsPath)\bin\$(MSBuildProjectName)\Release\net8.0\*.xml;
+			$(ArtifactsPath)\bin\$(MSBuildProjectName)\Release\net8.0\*.pdb;"
+		/>
 		</ItemGroup>
 
 		<Delete Condition="$(Configuration) == 'Release'" Files="@(JunkFiles)" />
@@ -32,6 +40,10 @@
 	<ItemGroup>
 		<ProjectReference Include="..\LinqToDB.Tools\LinqToDB.Tools.csproj" />
 
+		<PackageReference Include="Microsoft.CodeAnalysis.CSharp" />
+		<PackageReference Include="Microsoft.Extensions.DependencyModel" />
+		<PackageReference Include="Mono.TextTemplating" />
+
 		<!--providers-->
 		<PackageReference Include="System.Data.SQLite.Core" />
 		<PackageReference Include="Microsoft.Data.SqlClient" />
@@ -42,11 +54,11 @@
 		<PackageReference Include="AdoNetCore.AseClient" />
 		<PackageReference Include="System.Data.Odbc" />
 		<PackageReference Include="System.Data.OleDb" />
-		<!--T4 support-->
-		<PackageReference Include="Mono.TextTemplating" />
-		<PackageReference Include="Microsoft.CodeAnalysis.CSharp" />
-		<!--interceptor dependencies resolve-->
-		<PackageReference Include="Microsoft.Extensions.DependencyModel" />
+		<PackageReference Include="ClickHouse.Client" />
+		<PackageReference Include="Octonica.ClickHouseClient" />
+	</ItemGroup>
 
+	<ItemGroup>
+		<AdditionalFiles Include="PublicAPI.*.txt" />
 	</ItemGroup>
 </Project>

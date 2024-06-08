@@ -6,18 +6,18 @@ using System.Threading;
 
 namespace LinqToDB.Common.Internal.Cache
 {
-	internal class CacheEntryHelper<TKey>
-			where TKey : notnull
+	internal sealed class CacheEntryHelper<TKey,TEntry>
+		where TKey : notnull
 	{
-		private static readonly AsyncLocal<CacheEntryStack<TKey>> _scopes = new ();
+		private static readonly AsyncLocal<CacheEntryStack<TKey,TEntry>> _scopes = new ();
 
-		internal static CacheEntryStack<TKey>? Scopes
+		internal static CacheEntryStack<TKey,TEntry>? Scopes
 		{
 			get => _scopes.Value;
 			set => _scopes.Value = value!;
 		}
 
-		internal static CacheEntry<TKey>? Current
+		internal static CacheEntry<TKey,TEntry>? Current
 		{
 			get
 			{
@@ -26,7 +26,7 @@ namespace LinqToDB.Common.Internal.Cache
 			}
 		}
 
-		internal static IDisposable EnterScope(CacheEntry<TKey> entry)
+		internal static IDisposable EnterScope(CacheEntry<TKey,TEntry> entry)
 		{
 			var scopes = GetOrCreateScopes();
 
@@ -36,23 +36,16 @@ namespace LinqToDB.Common.Internal.Cache
 			return scopeLease;
 		}
 
-		private static CacheEntryStack<TKey> GetOrCreateScopes()
+		private static CacheEntryStack<TKey,TEntry> GetOrCreateScopes()
 		{
-			var scopes = Scopes;
-			if (scopes == null)
-			{
-				scopes = CacheEntryStack<TKey>.Empty;
-				Scopes = scopes;
-			}
-
-			return scopes;
+			return Scopes ??= CacheEntryStack<TKey,TEntry>.Empty;
 		}
 
 		private sealed class ScopeLease : IDisposable
 		{
-			readonly CacheEntryStack<TKey> _cacheEntryStack;
+			readonly CacheEntryStack<TKey,TEntry> _cacheEntryStack;
 
-			public ScopeLease(CacheEntryStack<TKey> cacheEntryStack)
+			public ScopeLease(CacheEntryStack<TKey,TEntry> cacheEntryStack)
 			{
 				_cacheEntryStack = cacheEntryStack;
 			}

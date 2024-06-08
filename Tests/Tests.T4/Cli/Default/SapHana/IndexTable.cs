@@ -24,8 +24,8 @@ namespace Cli.Default.SapHana
 		/// <summary>
 		/// FK_Patient2_IndexTable backreference
 		/// </summary>
-		[Association(ThisKey = nameof(PkField1) + "," + nameof(PkField1), OtherKey = nameof(IndexTable2.PkField1) + "," + nameof(PkField1))]
-		public IndexTable2? Patient { get; set; }
+		[Association(ThisKey = nameof(PkField1) + "," + nameof(PkField2), OtherKey = nameof(SapHana.IndexTable2.PkField1) + "," + nameof(SapHana.IndexTable2.PkField2))]
+		public IndexTable2? IndexTable2 { get; set; }
 		#endregion
 	}
 }

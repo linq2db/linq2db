@@ -14,27 +14,29 @@ namespace Tests.xUpdate
 	[Order(10000)]
 	public class CreateTableTests : TestBase
 	{
-		class TestTable
+		sealed class TestTable
 		{
-			public int       ID;
-			public string?   Field1;
-			public string?   Field2;
-			public DateTime? CreatedOn;
+			public int       ID        { get; set; }
+			public string?   Field1    { get; set; }
+			public string?   Field2    { get; set; }
+			public DateTime? CreatedOn { get; set; }
 		}
 
 		[Test]
 		public void CreateTable1([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				db.MappingSchema.GetFluentMappingBuilder()
-					.Entity<TestTable>()
-						.Property(t => t.ID)
-							.IsIdentity()
-							.IsPrimaryKey()
-						.Property(t => t.Field1)
-							.HasLength(50);
+			var ms = new MappingSchema();
+			new FluentMappingBuilder(ms)
+				.Entity<TestTable>()
+					.Property(t => t.ID)
+						.IsIdentity()
+						.IsPrimaryKey()
+					.Property(t => t.Field1)
+						.HasLength(50)
+				.Build();
 
+			using (var db = GetDataContext(context, ms))
+			{
 				db.DropTable<TestTable>(throwExceptionIfNotExists:false);
 
 				var table = db.CreateTable<TestTable>();
@@ -47,16 +49,18 @@ namespace Tests.xUpdate
 		[Test]
 		public async Task CreateTable1Async([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				db.MappingSchema.GetFluentMappingBuilder()
-					.Entity<TestTable>()
-						.Property(t => t.ID)
-							.IsIdentity()
-							.IsPrimaryKey()
-						.Property(t => t.Field1)
-							.HasLength(50);
+			var ms = new MappingSchema();
+			new FluentMappingBuilder(ms)
+				.Entity<TestTable>()
+					.Property(t => t.ID)
+						.IsIdentity()
+						.IsPrimaryKey()
+					.Property(t => t.Field1)
+						.HasLength(50)
+				.Build();
 
+			using (var db = GetDataContext(context, ms))
+			{
 				await db.DropTableAsync<TestTable>(throwExceptionIfNotExists:false);
 
 				var table = await db.CreateTableAsync<TestTable>();
@@ -67,15 +71,17 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void CreateLocalTempTable1([IncludeDataSources(TestProvName.AllSqlServer2008Plus /*, ProviderName.DB2*/)] string context)
+		public void CreateLocalTempTable1([IncludeDataSources(TestProvName.AllSqlServer2008Plus/*, ProviderName.DB2*/)] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				db.MappingSchema.GetFluentMappingBuilder()
-					.Entity<TestTable>()
-						.Property(t => t.Field1)
-							.HasLength(50);
+			var ms = new MappingSchema();
+			new FluentMappingBuilder(ms)
+				.Entity<TestTable>()
+					.Property(t => t.Field1)
+						.HasLength(50)
+				.Build();
 
+			using (var db = GetDataContext(context, ms))
+			{
 				const string tableName = "TestTable";
 
 				try
@@ -110,19 +116,23 @@ namespace Tests.xUpdate
 			}
 		}
 
+		[ActiveIssue("https://github.com/Octonica/ClickHouseClient/issues/58", Configuration = ProviderName.ClickHouseOctonica)]
 		[Test]
 		public async Task CreateLocalTempTable1Async([IncludeDataSources(
 			TestProvName.AllSQLite,
+			TestProvName.AllClickHouse,
 			TestProvName.AllSqlServer2008Plus /*, ProviderName.DB2*/)]
 			string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				db.MappingSchema.GetFluentMappingBuilder()
-					.Entity<TestTable>()
-						.Property(t => t.Field1)
-							.HasLength(50);
+			var ms = new MappingSchema();
+			new FluentMappingBuilder(ms)
+				.Entity<TestTable>()
+					.Property(t => t.Field1)
+						.HasLength(50)
+				.Build();
 
+			using (var db = GetDataContext(context, ms))
+			{
 				const string tableName = "TestTable";
 
 				try
@@ -176,19 +186,21 @@ namespace Tests.xUpdate
 			Value2,
 		}
 
-		class TestEnumTable
+		sealed class TestEnumTable
 		{
 			public FieldType1 Field1;
 			[Column(DataType=DataType.Int32)]
 			public FieldType1? Field11;
 			public FieldType2? Field2;
+			[Column(DataType=DataType.VarChar, Configuration = ProviderName.ClickHouse)]
 			[Column(DataType=DataType.Char, Length=2)]
 			public FieldType2 Field21;
 			public FieldType3 Field3;
 		}
 
+		[ActiveIssue("https://github.com/Octonica/ClickHouseClient/issues/58", Configuration = ProviderName.ClickHouseOctonica)]
 		[Test]
-		public void CreateTableWithEnum([IncludeDataSources(TestProvName.AllSqlServer2012)] string context)
+		public void CreateTableWithEnum([IncludeDataSources(TestProvName.AllSqlServer2012, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -241,21 +253,24 @@ namespace Tests.xUpdate
 		[Test]
 		public void TestIssue160([DataSources] string context)
 		{
-			using (var conn = GetDataContext(context))
+			var ms = new MappingSchema();
+
+			new FluentMappingBuilder(ms)
+				.Entity<Aa>()
+					.HasTableName("aa")
+					.Property(t => t.bb).IsPrimaryKey()
+					.Property(t => t.cc)
+					.Property(t => t.dd).IsNotColumn()
+
+				.Entity<Qq>()
+					.HasTableName("aa")
+					.Property(t => t.bb).IsPrimaryKey()
+					.Property(t => t.cc)
+
+				.Build();
+
+			using (var conn = GetDataContext(context, ms))
 			{
-				conn.MappingSchema.GetFluentMappingBuilder()
-					.Entity<Aa>()
-						.HasTableName("aa")
-						.Property(t => t.bb).IsPrimaryKey()
-						.Property(t => t.cc)
-						.Property(t => t.dd).IsNotColumn()
-
-					.Entity<Qq>()
-						.HasTableName("aa")
-						.Property(t => t.bb).IsPrimaryKey()
-						.Property(t => t.cc)
-					;
-
 				try
 				{
 					conn.CreateTable<Qq>();
@@ -275,8 +290,11 @@ namespace Tests.xUpdate
 
 				var qq = conn.GetTable<Aa>().ToList().First();
 
-				Assert.That(qq.bb, Is.EqualTo(99));
-				Assert.That(qq.cc, Is.EqualTo("hallo"));
+				Assert.Multiple(() =>
+				{
+					Assert.That(qq.bb, Is.EqualTo(99));
+					Assert.That(qq.cc, Is.EqualTo("hallo"));
+				});
 
 				conn.DropTable<Qq>();
 			}
@@ -304,7 +322,7 @@ namespace Tests.xUpdate
 			}
 		}
 
-		class TestCreateFormat
+		sealed class TestCreateFormat
 		{
 			[Column(CreateFormat = "{0}{1}{2}{3}/* test */"), NotNull]
 			public int Field1;

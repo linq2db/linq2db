@@ -25,8 +25,8 @@ namespace LinqToDB.CodeModel
 			{
 				case CodeElementType.Namespace           : newNode = Visit((CodeNamespace           )node); break;
 				case CodeElementType.Identifier          : newNode = Visit((CodeIdentifier          )node); break;
-				case CodeElementType.Class               : newNode = Visit((CodeClass               )node); break;
-				case CodeElementType.Property            : newNode = Visit((CodeProperty            )node); break;
+				case CodeElementType.Class               : newNode = ConvertClass((CodeClass        )node); break;
+				case CodeElementType.Property            : newNode = ConvertProperty((CodeProperty  )node); break;
 				case CodeElementType.ReturnStatement     : newNode = Visit((CodeReturn              )node); break;
 				case CodeElementType.CallStatement       : newNode = Visit((CodeCallStatement       )node); break;
 				case CodeElementType.CallExpression      : newNode = Visit((CodeCallExpression      )node); break;
@@ -36,8 +36,8 @@ namespace LinqToDB.CodeModel
 				case CodeElementType.XmlComment          : newNode = Visit((CodeXmlComment          )node); break;
 				case CodeElementType.TypeReference       : newNode = Visit((CodeTypeReference       )node); break;
 				case CodeElementType.TypeToken           : newNode = Visit((CodeTypeToken           )node); break;
-				case CodeElementType.Parameter           : newNode = Visit((CodeParameter           )node); break;
-				case CodeElementType.Method              : newNode = Visit((CodeMethod              )node); break;
+				case CodeElementType.Parameter           : newNode = ConvertParameter((CodeParameter)node); break;
+				case CodeElementType.Method              : newNode = ConvertMethod((CodeMethod      )node); break;
 				case CodeElementType.EmptyLine           : newNode = Visit((CodeEmptyLine           )node); break;
 				case CodeElementType.Comment             : newNode = Visit((CodeComment             )node); break;
 				case CodeElementType.Attribute           : newNode = Visit((CodeAttribute           )node); break;
@@ -46,7 +46,9 @@ namespace LinqToDB.CodeModel
 				case CodeElementType.NameOf              : newNode = Visit((CodeNameOf              )node); break;
 				case CodeElementType.MemberAccess        : newNode = Visit((CodeMember              )node); break;
 				case CodeElementType.Lambda              : newNode = Visit((CodeLambda              )node); break;
+				case CodeElementType.UnaryOperation      : newNode = Visit((CodeUnary               )node); break;
 				case CodeElementType.BinaryOperation     : newNode = Visit((CodeBinary              )node); break;
+				case CodeElementType.TernaryOperation    : newNode = Visit((CodeTernary             )node); break;
 				case CodeElementType.File                : newNode = Visit((CodeFile                )node); break;
 				case CodeElementType.Pragma              : newNode = Visit((CodePragma              )node); break;
 				case CodeElementType.Import              : newNode = Visit((CodeImport              )node); break;
@@ -81,6 +83,60 @@ namespace LinqToDB.CodeModel
 
 			return newNode;
 		}
+
+		#region change-tracking clone
+		private ICodeElement ConvertClass(CodeClass node)
+		{
+			var converted = Visit(node);
+
+			if (node.ChangeHandler != null && converted != node && converted is CodeClass newNode)
+			{
+				newNode.ChangeHandler = node.ChangeHandler;
+				newNode.ChangeHandler.Invoke(newNode);
+			}
+
+			return converted;
+		}
+
+		private ICodeElement ConvertProperty(CodeProperty node)
+		{
+			var converted = Visit(node);
+
+			if (node.ChangeHandler != null && converted != node && converted is CodeProperty newNode)
+			{
+				newNode.ChangeHandler = node.ChangeHandler;
+				newNode.ChangeHandler.Invoke(newNode);
+			}
+
+			return converted;
+		}
+
+		private ICodeElement ConvertMethod(CodeMethod node)
+		{
+			var converted = Visit(node);
+
+			if (node.ChangeHandler != null && converted != node && converted is CodeMethod newNode)
+			{
+				newNode.ChangeHandler = node.ChangeHandler;
+				newNode.ChangeHandler.Invoke(newNode);
+			}
+
+			return converted;
+		}
+
+		private ICodeElement ConvertParameter(CodeParameter node)
+		{
+			var converted = Visit(node);
+
+			if (node.ChangeHandler != null && converted != node && converted is CodeParameter newNode)
+			{
+				newNode.ChangeHandler = node.ChangeHandler;
+				newNode.ChangeHandler.Invoke(newNode);
+			}
+
+			return converted;
+		}
+		#endregion
 
 		#region Node Visitors
 		protected virtual ICodeElement Visit(PropertyGroup group)
@@ -188,7 +244,7 @@ namespace LinqToDB.CodeModel
 			var exception = (ICodeExpression)Visit(statement.Exception);
 
 			if (exception != statement.Exception)
-				return new CodeThrowStatement(exception);
+				return new CodeThrowStatement(exception, ((ICodeStatement)statement).Before, ((ICodeStatement)statement).After);
 
 			return statement;
 		}
@@ -262,7 +318,7 @@ namespace LinqToDB.CodeModel
 			var rvalue = (ICodeExpression)Visit(statement.RValue);
 
 			if (rvalue != statement.RValue)
-				return new CodeAssignmentStatement(statement.LValue, rvalue);
+				return new CodeAssignmentStatement(statement.LValue, rvalue, ((ICodeStatement)statement).Before, ((ICodeStatement)statement).After);
 
 			return statement;
 		}
@@ -282,7 +338,7 @@ namespace LinqToDB.CodeModel
 			var task = (ICodeExpression)Visit(statement.Task);
 
 			if (task != statement.Task)
-				return new CodeAwaitStatement(task);
+				return new CodeAwaitStatement(task, ((ICodeStatement)statement).Before, ((ICodeStatement)statement).After);
 
 			return statement;
 		}
@@ -317,6 +373,16 @@ namespace LinqToDB.CodeModel
 			return file;
 		}
 
+		protected virtual ICodeElement Visit(CodeUnary expression)
+		{
+			var argument = (ICodeExpression)Visit(expression.Argument);
+
+			if (argument != expression.Argument)
+				return new CodeUnary(argument, expression.Operation);
+
+			return expression;
+		}
+
 		protected virtual ICodeElement Visit(CodeBinary expression)
 		{
 			var left  = (ICodeExpression)Visit(expression.Left );
@@ -325,6 +391,20 @@ namespace LinqToDB.CodeModel
 			if (left  != expression.Left ||
 				right != expression.Right)
 				return new CodeBinary(left, expression.Operation, right);
+
+			return expression;
+		}
+
+		protected virtual ICodeElement Visit(CodeTernary expression)
+		{
+			var condition = (ICodeExpression)Visit(expression.Condition);
+			var @true     = (ICodeExpression)Visit(expression.True     );
+			var @false    = (ICodeExpression)Visit(expression.False    );
+
+			if (condition != expression.Condition ||
+				@true     != expression.True      ||
+				@false    != expression.False)
+				return new CodeTernary(condition, @true, @false);
 
 			return expression;
 		}
@@ -496,7 +576,7 @@ namespace LinqToDB.CodeModel
 			var parameters = VisitReadOnlyList(call.Parameters);
 
 			if (parameters != call.Parameters)
-				return new CodeCallStatement(call.Extension, call.Callee, call.MethodName, call.TypeArguments, call.CanSkipTypeArguments, parameters);
+				return new CodeCallStatement(call.Extension, call.Callee, call.MethodName, call.TypeArguments, call.CanSkipTypeArguments, parameters, call.WrapTrivia, ((ICodeStatement)call).Before, ((ICodeStatement)call).After);
 
 			return call;
 		}
@@ -506,7 +586,7 @@ namespace LinqToDB.CodeModel
 			var parameters = VisitReadOnlyList(call.Parameters);
 
 			if (parameters != call.Parameters)
-				return new CodeCallExpression(call.Extension, call.Callee, call.MethodName, call.TypeArguments, call.CanSkipTypeArguments, parameters, call.ReturnType);
+				return new CodeCallExpression(call.Extension, call.Callee, call.MethodName, call.TypeArguments, call.CanSkipTypeArguments, parameters, call.WrapTrivia, call.ReturnType);
 
 			return call;
 		}
@@ -516,7 +596,7 @@ namespace LinqToDB.CodeModel
 			var expression = statement.Expression != null ? (ICodeExpression)Visit(statement.Expression) : null;
 
 			if (expression != statement.Expression)
-				return new CodeReturn(expression);
+				return new CodeReturn(expression, ((ICodeStatement)statement).Before, ((ICodeStatement)statement).After);
 
 			return statement;
 		}

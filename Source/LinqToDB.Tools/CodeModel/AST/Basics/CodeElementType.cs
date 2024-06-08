@@ -172,9 +172,17 @@
 		/// </summary>
 		This,
 		/// <summary>
+		/// Unary operation.
+		/// </summary>
+		UnaryOperation,
+		/// <summary>
 		/// Binary operation.
 		/// </summary>
 		BinaryOperation,
+		/// <summary>
+		/// Ternary operation.
+		/// </summary>
+		TernaryOperation,
 		/// <summary>
 		/// Type member access.
 		/// </summary>

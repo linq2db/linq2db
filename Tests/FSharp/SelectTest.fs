@@ -2,7 +2,9 @@
 
 open Tests.FSharp.Models
 
+open System.Linq
 open LinqToDB
+open NUnit.Framework
 open Tests.Tools
 
 let SelectField (db : IDataContext) =
@@ -13,8 +15,8 @@ let SelectField (db : IDataContext) =
     }
 
     let sql = q.ToString()
-    NUnitAssert.ThatIsLessThan(sql.IndexOf("First"), 0)
-    NUnitAssert.ThatIsGreaterThan(sql.IndexOf("LastName"), 0)
+    Assert.That(sql.IndexOf("First"), Is.LessThan 0)
+    Assert.That(sql.IndexOf("LastName"), Is.GreaterThan 0)
 
 let SelectFieldDeeplyComplexPerson (db : IDataContext) =
     let persons = db.GetTable<DeeplyComplexPerson>()
@@ -24,8 +26,8 @@ let SelectFieldDeeplyComplexPerson (db : IDataContext) =
     }
 
     let sql = q.ToString()
-    NUnitAssert.ThatIsLessThan(sql.IndexOf("First"), 0)
-    NUnitAssert.ThatIsGreaterThan(sql.IndexOf("LastName"), 0)
+    Assert.That(sql.IndexOf("First"), Is.LessThan 0)
+    Assert.That(sql.IndexOf("LastName"), Is.GreaterThan 0)
 
 
 let SelectLeftJoin (db : IDataContext) = 
@@ -42,4 +44,27 @@ let SelectLeftJoin (db : IDataContext) =
         headOrDefault
     }
 
-    NUnitAssert.IsNotNull(child)
+    Assert.That(child, Is.Not.Null)
+
+let Issue3699Test (db : IDataContext) =
+    let children = db.GetTable<Parent>()
+    let parents = db.GetTable<Parent>()
+    let pets = db.GetTable<Parent>()
+
+    let q =
+        parents
+            .Join(children,
+                (fun p -> p.ParentID),
+                (fun c -> c.ParentID),
+                (fun p c -> {| p = p; c = c |})
+            )
+            .GroupJoin(pets,
+                (fun o -> o.p.ParentID),
+                (fun pet -> pet.ParentID),
+                (fun o pets -> {| p = o.p; c = o.c; pets = pets |})
+            )
+            .SelectMany((fun o -> o.pets.DefaultIfEmpty()),
+                (fun o pet -> {| p = o.p; c = o.c; pet = pet |})
+            )
+
+    Assert.That(q.ToList(), Is.Not.Null)

@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using LinqToDB.Common;
 
 namespace LinqToDB.CodeModel
@@ -23,7 +24,11 @@ namespace LinqToDB.CodeModel
 		{
 			Name           = name;
 			ReturnType     = returnType;
-			_typeArguments = new (typeParameters ?? Array<CodeTypeToken>.Empty);
+			_typeArguments = new (typeParameters ?? []);
+
+			Name.OnChange += _ => ChangeHandler?.Invoke(this);
+			if (ReturnType != null)
+				ReturnType.Type.SetNameChangeHandler(_ => ChangeHandler?.Invoke(this));
 		}
 
 		public CodeMethod(CodeIdentifier name)
@@ -51,5 +56,10 @@ namespace LinqToDB.CodeModel
 		{
 			_typeArguments.Add(genericParameter);
 		}
+
+		/// <summary>
+		/// Internal change-tracking infrastructure. Single action instance is enough.
+		/// </summary>
+		internal Action<CodeMethod>? ChangeHandler { get; set; }
 	}
 }

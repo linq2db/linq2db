@@ -6,12 +6,12 @@ using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Reflection;
 using System.Runtime.InteropServices;
+
 using LinqToDB.CodeModel;
 using LinqToDB.Data;
 using LinqToDB.DataProvider.DB2;
 using LinqToDB.DataProvider.Oracle;
 using LinqToDB.DataProvider.PostgreSQL;
-using LinqToDB.DataProvider.SqlServer;
 using LinqToDB.Metadata;
 using LinqToDB.Naming;
 using LinqToDB.Scaffold;
@@ -44,7 +44,7 @@ namespace LinqToDB.CommandLine
 			// output folder
 			var output = Directory.GetCurrentDirectory();
 			if (options.Remove(General.Output, out value)) output = (string)value!;
-			
+
 			// overwrite existing files
 			var overwrite = false;
 			if (options.Remove(General.Overwrite, out value)) overwrite = (bool)value!;
@@ -53,19 +53,22 @@ namespace LinqToDB.CommandLine
 			var providerName = Enum.Parse<DatabaseType>((string)value!);
 			var provider     = providerName switch
 			{
-				DatabaseType.Access     => ProviderName.Access,
-				DatabaseType.DB2        => ProviderName.DB2,
-				DatabaseType.Firebird   => ProviderName.Firebird,
-				DatabaseType.Informix   => ProviderName.Informix,
-				DatabaseType.SQLServer  => ProviderName.SqlServer,
-				DatabaseType.MySQL      => ProviderName.MySql,
-				DatabaseType.Oracle     => ProviderName.Oracle,
-				DatabaseType.PostgreSQL => ProviderName.PostgreSQL,
-				DatabaseType.SqlCe      => ProviderName.SqlCe,
-				DatabaseType.SQLite     => ProviderName.SQLite,
-				DatabaseType.Sybase     => ProviderName.Sybase,
-				DatabaseType.SapHana    => ProviderName.SapHana,
-				_                       => throw new InvalidOperationException($"Unsupported provider: {providerName}")
+				DatabaseType.Access          => ProviderName.Access,
+				DatabaseType.DB2             => ProviderName.DB2,
+				DatabaseType.Firebird        => ProviderName.Firebird,
+				DatabaseType.Informix        => ProviderName.Informix,
+				DatabaseType.SQLServer       => ProviderName.SqlServer,
+				DatabaseType.MySQL           => ProviderName.MySql,
+				DatabaseType.Oracle          => ProviderName.Oracle,
+				DatabaseType.PostgreSQL      => ProviderName.PostgreSQL,
+				DatabaseType.SqlCe           => ProviderName.SqlCe,
+				DatabaseType.SQLite          => ProviderName.SQLite,
+				DatabaseType.Sybase          => ProviderName.Sybase,
+				DatabaseType.SapHana         => ProviderName.SapHana,
+				DatabaseType.ClickHouseMySql => ProviderName.ClickHouseMySql,
+				DatabaseType.ClickHouseHttp  => ProviderName.ClickHouseClient,
+				DatabaseType.ClickHouseTcp   => ProviderName.ClickHouseOctonica,
+				_                            => throw new InvalidOperationException($"Unsupported provider: {providerName}")
 			};
 
 			options.Remove(General.ConnectionString, out value);
@@ -133,13 +136,13 @@ namespace LinqToDB.CommandLine
 
 			var generator  = new Scaffolder(LanguageProviders.CSharp, HumanizerNameConverter.Instance, settings, interceptors);
 			var dataModel  = generator.LoadDataModel(schemaProvider, typeMappingsProvider);
-			var sqlBuilder = dc.DataProvider.CreateSqlBuilder(dc.MappingSchema);
+			var sqlBuilder = dc.DataProvider.CreateSqlBuilder(dc.MappingSchema, dc.Options);
 			var files      = generator.GenerateCodeModel(
 				sqlBuilder,
 				dataModel,
-				MetadataBuilders.GetAttributeBasedMetadataBuilder(generator.Language, sqlBuilder),
-				SqlBoolEqualityConverter.Create(generator.Language));
-			var sourceCode = generator.GenerateSourceCode(files);
+				MetadataBuilders.GetMetadataBuilder(generator.Language, settings.DataModel.Metadata),
+				new ProviderSpecificStructsEqualityFixer(generator.Language));
+			var sourceCode = generator.GenerateSourceCode(dataModel, files);
 
 			Directory.CreateDirectory(output);
 
@@ -172,33 +175,32 @@ namespace LinqToDB.CommandLine
 			// - allow user to specify provider discovery hints (e.g. provider path) for unmanaged providers
 			switch (provider)
 			{
-				case ProviderName.SQLite:
+				case ProviderName.ClickHouseMySql   :
+				case ProviderName.ClickHouseClient  :
+				case ProviderName.ClickHouseOctonica:
+				case ProviderName.SqlServer         :
+					break;
+				case ProviderName.SQLite            :
 					provider = ProviderName.SQLiteClassic;
 					break;
-				case ProviderName.SqlServer:
-					SqlServerTools.AutoDetectProvider = true;
-					SqlServerTools.Provider = SqlServerProvider.MicrosoftDataSqlClient;
+				case ProviderName.Firebird          :
 					break;
-				case ProviderName.Firebird:
-					// TODO: don't forget to add versioning here after Firebird versioning feature merged
+				case ProviderName.MySql             :
+					provider = "MySqlConnector";
 					break;
-				case ProviderName.MySql:
-					// TODO: remove provider hint after MySQL.Data support removed
-					provider = ProviderName.MySqlConnector;
-					break;
-				case ProviderName.Oracle:
+				case ProviderName.Oracle            :
 					OracleTools.AutoDetectProvider = true;
 					provider = ProviderName.OracleManaged;
 					break;
-				case ProviderName.PostgreSQL:
+				case ProviderName.PostgreSQL        :
 					PostgreSQLTools.AutoDetectProvider = true;
 					break;
-				case ProviderName.Sybase:
+				case ProviderName.Sybase            :
 					provider = ProviderName.SybaseManaged;
 					break;
-				case ProviderName.SqlCe:
+				case ProviderName.SqlCe             :
 				{
-					if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+					if (!OperatingSystem.IsWindows())
 					{
 						Console.Error.WriteLine($"SQL Server Compact Edition not supported on non-Windows platforms");
 						return null;
@@ -223,7 +225,7 @@ Possible reasons:
 				case ProviderName.SapHana:
 				{
 					var isOdbc = connectionString.Contains("HDBODBC", StringComparison.OrdinalIgnoreCase);
-					if (!isOdbc && !RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+					if (!isOdbc && !OperatingSystem.IsWindows())
 					{
 						Console.Error.WriteLine($"Only ODBC provider for SAP HANA supported on non-Windows platforms. Provided connection string doesn't look like HANA ODBC connection string.");
 						return null;
@@ -261,15 +263,13 @@ Possible reasons:
 					if (providerLocation == null || !File.Exists(providerLocation))
 					{
 						// we cannot add 90 Megabytes (compressed size) of native provider for single db just because we can
-						// note: we use IBM.Data.DB2.Core because Net.IBM.Data.Db2 and Net5.IBM.Data.Db2 require
-						// net6/net5 runtime and fail to load if .net core 3.1 runtime used to run tool (default runtime for tool)
-						Console.Error.WriteLine(@$"Cannot locate IBM.Data.DB2.Core.dll provider assembly.
-Due to huge size of it, we don't include IBM.Data.DB2 provider into installation.
+						Console.Error.WriteLine(@$"Cannot locate IBM.Data.Db2.dll provider assembly.
+Due to huge size of it, we don't include Net.IBM.Data.Db2 provider into installation.
 You need to install it manually and specify provider path using '--provider-location <path_to_assembly>' option.
 Provider could be downloaded from:
-- for Windows: https://www.nuget.org/packages/Net.IBM.Data.DB2.Core
-- for Linux: https://www.nuget.org/packages/Net.IBM.Data.DB2.Core-lnx
-- for macOS: https://www.nuget.org/packages/Net.IBM.Data.DB2.Core-osx");
+- for Windows: https://www.nuget.org/packages/Net.IBM.Data.Db2
+- for Linux: https://www.nuget.org/packages/Net.IBM.Data.Db2-lnx
+- for macOS: https://www.nuget.org/packages/Net.IBM.Data.Db2-osx");
 						return null;
 					}
 
@@ -279,7 +279,7 @@ Provider could be downloaded from:
 				}
 				case ProviderName.Access:
 				{
-					if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+					if (!OperatingSystem.IsWindows())
 					{
 						Console.Error.WriteLine($"MS Access not supported on non-Windows platforms");
 						return null;
@@ -358,7 +358,7 @@ Provider could be downloaded from:
 			status = null;
 
 			// currently we support multiarch only for Windows
-			if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+			if (!OperatingSystem.IsWindows())
 			{
 				Console.Out.WriteLine($"'{General.Architecture.Name}' parameter ignored for non-Windows system");
 				return false;
@@ -383,7 +383,7 @@ Provider could be downloaded from:
 			// we must use dll path as exe executed from other folder
 			var exePath = Path.Combine(Path.GetDirectoryName(GetType().Assembly.Location)!, exeName);
 
-			var childProcess = new Process();
+			using var childProcess = new Process();
 
 			childProcess.StartInfo.FileName               = exePath;
 			childProcess.StartInfo.UseShellExecute        = false;

@@ -1,14 +1,12 @@
-﻿using System;
-
-namespace LinqToDB.DataProvider.SqlServer
+﻿namespace LinqToDB.DataProvider.SqlServer
 {
-	using SqlProvider;
 	using Mapping;
+	using SqlProvider;
 
 	class SqlServer2014SqlBuilder : SqlServer2012SqlBuilder
 	{
-		public SqlServer2014SqlBuilder(IDataProvider? provider, MappingSchema mappingSchema, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
-			: base(provider, mappingSchema, sqlOptimizer, sqlProviderFlags)
+		public SqlServer2014SqlBuilder(IDataProvider? provider, MappingSchema mappingSchema, DataOptions dataOptions, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
+			: base(provider, mappingSchema, dataOptions, sqlOptimizer, sqlProviderFlags)
 		{
 		}
 
@@ -21,6 +19,6 @@ namespace LinqToDB.DataProvider.SqlServer
 			return new SqlServer2014SqlBuilder(this);
 		}
 
-		public override string  Name => ProviderName.SqlServer2014;
+		public override string Name => ProviderName.SqlServer2014;
 	}
 }

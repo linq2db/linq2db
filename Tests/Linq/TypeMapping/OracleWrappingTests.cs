@@ -47,13 +47,13 @@ namespace Tests.TypeMapping
 		}
 
 		[Wrapper]
-		internal class OracleParameter
+		internal sealed class OracleParameter
 		{
 			public OracleDbType OracleDbType { get; set; }
 		}
 
 		[Wrapper]
-		internal class OracleDataReader
+		internal sealed class OracleDataReader
 		{
 			public OracleDate GetOracleDate(int idx) => throw new NotImplementedException();
 		}
@@ -95,7 +95,7 @@ namespace Tests.TypeMapping
 
 			oracleMapper.FinalizeMappings();
 
-			var instance = new Oracle.ManagedDataAccess.Client.OracleParameter();
+			using var instance = new Oracle.ManagedDataAccess.Client.OracleParameter();
 
 			var setterAction = oracleMapper.Type<OracleParameter>().Member(p => p.OracleDbType).BuildSetter<DbParameter>();
 			setterAction(instance, OracleDbType.Blob);

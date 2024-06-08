@@ -7,7 +7,7 @@ namespace LinqToDB.Linq
 	using Builder;
 	using Common.Internal.Cache;
 
-	class CompiledTable<T>
+	sealed class CompiledTable<T>
 		where T : notnull
 	{
 		public CompiledTable(LambdaExpression lambda, Expression expression)
@@ -19,31 +19,37 @@ namespace LinqToDB.Linq
 		readonly LambdaExpression _lambda;
 		readonly Expression       _expression;
 
-		Query<T> GetInfo(IDataContext dataContext)
+		Query<T> GetInfo(IDataContext dataContext, object?[] parameterValues)
 		{
-			var contextID       = dataContext.ContextID;
-			var contextType     = dataContext.GetType();
-			var mappingSchemaID = dataContext.MappingSchema.ConfigurationID;
+			var configurationID = dataContext.ConfigurationID;
+			var dataOptions     = dataContext.Options;
 
 			var result = QueryRunner.Cache<T>.QueryCache.GetOrCreate(
-				(operation: "CT", contextID, contextType, mappingSchemaID, expression: _expression, dataContext.GetQueryFlags()),
-				(dataContext, lambda: _lambda),
+				(
+					operation: "CT",
+					configurationID,
+					expression : _expression,
+					queryFlags : dataContext.GetQueryFlags()
+				),
+				(dataContext, lambda: _lambda, dataOptions, parameterValues),
 				static (o, key, ctx) =>
 				{
-					o.SlidingExpiration = Common.Configuration.Linq.CacheSlidingExpiration;
-
-					var query = new Query<T>(ctx.dataContext, key.expression);
+					o.SlidingExpiration = ctx.dataOptions.LinqOptions.CacheSlidingExpirationOrDefault;
 
 					var optimizationContext = new ExpressionTreeOptimizationContext(ctx.dataContext);
-					var parametersContext = new ParametersContext(key.expression, optimizationContext, ctx.dataContext);
+					var exposed = ExpressionBuilder.ExposeExpression(key.expression, ctx.dataContext,
+						optimizationContext, ctx.parameterValues, optimizeConditions : false, compactBinary : true);
 
-					query = new ExpressionBuilder(query, optimizationContext, parametersContext, ctx.dataContext, key.expression, ctx.lambda.Parameters.ToArray())
+					var query               = new Query<T>(ctx.dataContext, exposed);
+
+					var parametersContext = new ParametersContext(exposed, ctx.parameterValues, optimizationContext, ctx.dataContext);
+
+					query = new ExpressionBuilder(query, optimizationContext, parametersContext, ctx.dataContext, exposed, ctx.lambda.Parameters.ToArray(), ctx.parameterValues)
 						.Build<T>();
 
-					query.ClearMemberQueryableInfo();
+					query.ClearDynamicQueryableInfo();
 					return query;
-				});
-
+				})!;
 
 			return result;
 		}
@@ -51,13 +57,13 @@ namespace LinqToDB.Linq
 		public IQueryable<T> Create(object[] parameters, object[] preambles)
 		{
 			var db = (IDataContext)parameters[0];
-			return new Table<T>(db, _expression) { Info = GetInfo(db), Parameters = parameters };
+			return new Table<T>(db, _expression) { Info = GetInfo(db, parameters), Parameters = parameters };
 		}
 
 		public T Execute(object[] parameters, object[] preambles)
 		{
 			var db    = (IDataContext)parameters[0];
-			var query = GetInfo(db);
+			var query = GetInfo(db, parameters);
 
 			return (T)query.GetElement(db, _expression, parameters, preambles)!;
 		}
@@ -65,7 +71,7 @@ namespace LinqToDB.Linq
 		public async Task<T> ExecuteAsync(object[] parameters, object[] preambles)
 		{
 			var db    = (IDataContext)parameters[0];
-			var query = GetInfo(db);
+			var query = GetInfo(db, parameters);
 
 			return (T)(await query.GetElementAsync(db, _expression, parameters, preambles, default).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext))!;
 		}

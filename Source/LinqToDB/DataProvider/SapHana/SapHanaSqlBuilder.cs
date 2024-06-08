@@ -1,17 +1,19 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Text;
 
 namespace LinqToDB.DataProvider.SapHana
 {
-	using SqlQuery;
-	using SqlProvider;
+	using Common;
 	using Mapping;
+	using SqlProvider;
+	using SqlQuery;
 
 	partial class SapHanaSqlBuilder : BasicSqlBuilder
 	{
-		public SapHanaSqlBuilder(IDataProvider? provider, MappingSchema mappingSchema, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
-			: base(provider, mappingSchema, sqlOptimizer, sqlProviderFlags)
+		public SapHanaSqlBuilder(IDataProvider? provider, MappingSchema mappingSchema, DataOptions dataOptions, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
+			: base(provider, mappingSchema, dataOptions, sqlOptimizer, sqlProviderFlags)
 		{
 		}
 
@@ -61,25 +63,23 @@ namespace LinqToDB.DataProvider.SapHana
 			if (createTable.StatementHeader == null)
 			{
 				AppendIndent().Append("CREATE COLUMN TABLE ");
-				BuildPhysicalTable(createTable.Table!, null);
+				BuildPhysicalTable(createTable.Table, null);
 			}
 			else
 			{
 				var name = WithStringBuilder(
-					new StringBuilder(),
-					() =>
+					static ctx =>
 					{
-						BuildPhysicalTable(createTable.Table!, null);
-						return StringBuilder.ToString();
-					});
+						ctx.this_.BuildPhysicalTable(ctx.createTable.Table, null);
+					}, (this_: this, createTable));
 
-				AppendIndent().AppendFormat(createTable.StatementHeader, name);
+				AppendIndent().AppendFormat(CultureInfo.InvariantCulture, createTable.StatementHeader, name);
 			}
 		}
 
-		protected override void BuildDataTypeFromDataType(SqlDataType type, bool forCreateTable)
+		protected override void BuildDataTypeFromDataType(DbDataType type, bool forCreateTable, bool canBeNull)
 		{
-			switch (type.Type.DataType)
+			switch (type.DataType)
 			{
 				case DataType.Int32         :
 				case DataType.UInt16        :
@@ -90,8 +90,10 @@ namespace LinqToDB.DataProvider.SapHana
 					return;
 				case DataType.DateTime2     :
 				case DataType.DateTime      :
-				case DataType.Time:
 					StringBuilder.Append("Timestamp");
+					return;
+				case DataType.Time:
+					StringBuilder.Append("Time");
 					return;
 				case DataType.SmallDateTime :
 					StringBuilder.Append("SecondDate");
@@ -111,16 +113,15 @@ namespace LinqToDB.DataProvider.SapHana
 				case DataType.NVarChar:
 				case DataType.VarChar:
 				case DataType.VarBinary:
-					if (type.Type.Length == null || type.Type.Length > 5000 || type.Type.Length < 1)
+					if (type.Length == null || type.Length > 5000 || type.Length < 1)
 					{
-						StringBuilder
-							.Append(type.Type.DataType)
-							.Append("(5000)");
+						StringBuilder.Append(CultureInfo.InvariantCulture, $"{type.DataType}(5000)");
+
 						return;
 					}
 					break;
 			}
-			base.BuildDataTypeFromDataType(type, forCreateTable);
+			base.BuildDataTypeFromDataType(type, forCreateTable, canBeNull);
 		}
 
 		protected override void BuildFromClause(SqlStatement statement, SelectQuery selectQuery)
@@ -181,7 +182,30 @@ namespace LinqToDB.DataProvider.SapHana
 			StringBuilder.Append(')');
 		}
 
-		public override StringBuilder BuildObjectName(StringBuilder sb, SqlObjectName name, ConvertType objectType, bool escape, TableOptions tableOptions)
+		protected override bool BuildJoinType(SqlJoinedTable join, SqlSearchCondition condition)
+		{
+			switch (join.JoinType)
+			{
+				case JoinType.CrossApply:
+					// join with function implies lateral keyword
+					if (join.Table.SqlTableType == SqlTableType.Function)
+						StringBuilder.Append("INNER JOIN ");
+					else
+						StringBuilder.Append("INNER JOIN LATERAL ");
+					return true;
+				case JoinType.OuterApply:
+					// join with function implies lateral keyword
+					if (join.Table.SqlTableType == SqlTableType.Function)
+						StringBuilder.Append("LEFT JOIN ");
+					else
+						StringBuilder.Append("LEFT JOIN LATERAL ");
+					return true;
+			}
+
+			return base.BuildJoinType(join, condition);
+		}
+
+		public override StringBuilder BuildObjectName(StringBuilder sb, SqlObjectName name, ConvertType objectType, bool escape, TableOptions tableOptions, bool withoutSuffix)
 		{
 			// <table_name> ::= [[<linked_server_name>.]<schema_name>.][library_name:]<identifier>
 			if (name.Server != null && name.Schema == null)

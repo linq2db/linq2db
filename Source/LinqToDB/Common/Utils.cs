@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Runtime.CompilerServices;
 
 namespace LinqToDB.Common
@@ -67,17 +68,14 @@ namespace LinqToDB.Common
 				var name = nameFunc(item);
 				if (!string.IsNullOrEmpty(name) && currentNames?.Contains(name!) != true && validatorFunc(name!, namesParameter))
 				{
-					if (currentNames == null)
-						currentNames = new HashSet<string>(comparer);
+					currentNames ??= new HashSet<string>(comparer);
 					currentNames.Add(name!);
 					nameSetter(item, name!, namesParameter);
 					continue;
 				}
 
-				if (currentNames == null)
-					currentNames = new HashSet<string>(comparer);
-				if (currentCounters == null)
-					currentCounters = new Dictionary<string, int>(comparer);
+				currentNames ??= new HashSet<string>(comparer);
+				currentCounters ??= new Dictionary<string, int>(comparer);
 
 				name = defaultName(item);
 
@@ -101,14 +99,14 @@ namespace LinqToDB.Common
 
 					if (!currentCounters.TryGetValue(name, out startDigit))
 					{
-						startDigit = int.Parse(prevName.Substring(prevName.Length - digitCount, digitCount));
+						startDigit = int.Parse(prevName.Substring(prevName.Length - digitCount, digitCount), NumberStyles.Integer, NumberFormatInfo.InvariantInfo);
 					}
 				}
 
 				string newName;
 				do
 				{
-					newName = name + startDigit;
+					newName = FormattableString.Invariant($"{name}{startDigit}");
 					++startDigit;
 				} while (currentNames.Contains(newName) || !validatorFunc(newName, namesParameter));
 
@@ -159,7 +157,6 @@ namespace LinqToDB.Common
 		}
 
 		public class ObjectReferenceEqualityComparer<T> : IEqualityComparer<T>
-			where T: notnull
 		{
 			public static IEqualityComparer<T> Default = new ObjectReferenceEqualityComparer<T>();
 

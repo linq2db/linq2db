@@ -12,7 +12,7 @@ namespace Tests.Linq
 	public class PaginationTests : TestBase
 	{
 		[Table]
-		class PaginationData
+		sealed class PaginationData
 		{
 			[Column] public int Id { get; set; }
 			[Column] public int Value { get; set; }
@@ -40,17 +40,22 @@ namespace Tests.Linq
 				var byKey1 = query.GetPageByCondition(pageSize, x => x.Id == pagination1.Items[1].Id);
 				var byKey2 = query.GetPageByCondition(pageSize, x => x.Id == pagination2.Items[pageSize - 1].Id, true);
 
-				Assert.That(byKey1.Page, Is.EqualTo(pagination1.Page));
-				Assert.That(byKey1.TotalCount, Is.EqualTo(pagination1.TotalCount));
+				Assert.Multiple(() =>
+				{
+					Assert.That(byKey1.Page, Is.EqualTo(pagination1.Page));
+					Assert.That(byKey1.TotalCount, Is.EqualTo(pagination1.TotalCount));
 
-				Assert.That(byKey2.Page, Is.EqualTo(pagination2.Page));
-				Assert.That(byKey2.TotalCount, Is.EqualTo(pagination2.TotalCount));
+					Assert.That(byKey2.Page, Is.EqualTo(pagination2.Page));
+					Assert.That(byKey2.TotalCount, Is.EqualTo(pagination2.TotalCount));
+				});
 
 				var pageNumber1 = query.GetPageNumberByCondition(pageSize, x => x.Id == pagination1.Items[1].Id);
 				var pageNumber2 = query.GetPageNumberByCondition(pageSize, x => x.Id == pagination2.Items[pageSize - 1].Id, true);
-				
-				Assert.That(pageNumber1, Is.EqualTo(pagination1.Page));
-				Assert.That(pageNumber2, Is.EqualTo(pagination2.Page));
+				Assert.Multiple(() =>
+				{
+					Assert.That(pageNumber1, Is.EqualTo(pagination1.Page));
+					Assert.That(pageNumber2, Is.EqualTo(pagination2.Page));
+				});
 
 				AreEqualWithComparer(pagination1.Items, byKey1.Items);
 				AreEqualWithComparer(pagination2.Items, byKey2.Items);
@@ -72,23 +77,28 @@ namespace Tests.Linq
 				var byKey1 = await query.GetPageByConditionAsync(pageSize, x => x.Id == pagination1.Items[1].Id);
 				var byKey2 = await query.GetPageByConditionAsync(pageSize, x => x.Id == pagination2.Items[pageSize - 1].Id, true);
 
-				Assert.That(byKey1.Page, Is.EqualTo(pagination1.Page));
-				Assert.That(byKey1.TotalCount, Is.EqualTo(pagination1.TotalCount));
+				Assert.Multiple(() =>
+				{
+					Assert.That(byKey1.Page, Is.EqualTo(pagination1.Page));
+					Assert.That(byKey1.TotalCount, Is.EqualTo(pagination1.TotalCount));
 
-				Assert.That(byKey2.Page, Is.EqualTo(pagination2.Page));
-				Assert.That(byKey2.TotalCount, Is.EqualTo(pagination2.TotalCount));
+					Assert.That(byKey2.Page, Is.EqualTo(pagination2.Page));
+					Assert.That(byKey2.TotalCount, Is.EqualTo(pagination2.TotalCount));
+				});
 
 				var pageNumber1 = await query.GetPageNumberByConditionAsync(pageSize, x => x.Id == pagination1.Items[1].Id);
 				var pageNumber2 = await query.GetPageNumberByConditionAsync(pageSize, x => x.Id == pagination2.Items[pageSize - 1].Id, true);
 
-				Assert.That(pageNumber1, Is.EqualTo(pagination1.Page));
-				Assert.That(pageNumber2, Is.EqualTo(pagination2.Page));
+				Assert.Multiple(() =>
+				{
+					Assert.That(pageNumber1, Is.EqualTo(pagination1.Page));
+					Assert.That(pageNumber2, Is.EqualTo(pagination2.Page));
+				});
 
 				AreEqualWithComparer(pagination1.Items, byKey1.Items);
 				AreEqualWithComparer(pagination2.Items, byKey2.Items);
 			}
 		}
-
 
 		[Test]
 		public void ApplyOrderBy([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
@@ -105,17 +115,23 @@ namespace Tests.Linq
 				var byKey1 = query.GetPageByCondition(pageSize, x => x.Id == pagination1.Items[1].Id);
 				var byKey2 = query.GetPageByCondition(pageSize, x => x.Id == pagination2.Items[pageSize - 1].Id, true);
 
-				Assert.That(byKey1.Page, Is.EqualTo(pagination1.Page));
-				Assert.That(byKey1.TotalCount, Is.EqualTo(pagination1.TotalCount));
+				Assert.Multiple(() =>
+				{
+					Assert.That(byKey1.Page, Is.EqualTo(pagination1.Page));
+					Assert.That(byKey1.TotalCount, Is.EqualTo(pagination1.TotalCount));
 
-				Assert.That(byKey2.Page, Is.EqualTo(pagination2.Page));
-				Assert.That(byKey2.TotalCount, Is.EqualTo(pagination2.TotalCount));
+					Assert.That(byKey2.Page, Is.EqualTo(pagination2.Page));
+					Assert.That(byKey2.TotalCount, Is.EqualTo(pagination2.TotalCount));
+				});
 
 				var pageNumber1 = query.GetPageNumberByCondition(pageSize, x => x.Id == pagination1.Items[1].Id);
 				var pageNumber2 = query.GetPageNumberByCondition(pageSize, x => x.Id == pagination2.Items[pageSize - 1].Id, true);
 
-				Assert.That(pageNumber1, Is.EqualTo(pagination1.Page));
-				Assert.That(pageNumber2, Is.EqualTo(pagination2.Page));
+				Assert.Multiple(() =>
+				{
+					Assert.That(pageNumber1, Is.EqualTo(pagination1.Page));
+					Assert.That(pageNumber2, Is.EqualTo(pagination2.Page));
+				});
 
 				AreEqualWithComparer(pagination1.Items, byKey1.Items);
 				AreEqualWithComparer(pagination2.Items, byKey2.Items);

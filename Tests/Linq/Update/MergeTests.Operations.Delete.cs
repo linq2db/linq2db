@@ -1,7 +1,7 @@
 ﻿using System.Linq;
 
 using LinqToDB;
-
+using LinqToDB.Linq;
 using NUnit.Framework;
 
 namespace Tests.xUpdate
@@ -33,7 +33,7 @@ namespace Tests.xUpdate
 
 				AssertRowCount(2, rows, context);
 
-				Assert.AreEqual(2, result.Count);
+				Assert.That(result, Has.Count.EqualTo(2));
 
 				AssertRow(InitialTargetData[0], result[0], null, null);
 				AssertRow(InitialTargetData[1], result[1], null, null);
@@ -66,7 +66,7 @@ namespace Tests.xUpdate
 
 				AssertRowCount(1, rows, context);
 
-				Assert.AreEqual(3, result.Count);
+				Assert.That(result, Has.Count.EqualTo(3));
 
 				AssertRow(InitialTargetData[0], result[0], null, null);
 				AssertRow(InitialTargetData[1], result[1], null, null);
@@ -98,7 +98,7 @@ namespace Tests.xUpdate
 
 				AssertRowCount(1, rows, context);
 
-				Assert.AreEqual(3, result.Count);
+				Assert.That(result, Has.Count.EqualTo(3));
 
 				AssertRow(InitialTargetData[0], result[0], null, null);
 				AssertRow(InitialTargetData[1], result[1], null, null);
@@ -110,7 +110,7 @@ namespace Tests.xUpdate
 		public void DeleteWithPredicatePartialSourceProjection_UnknownFieldInCondition([MergeDataContextSource(
 			TestProvName.AllOracle,
 			TestProvName.AllSybase, TestProvName.AllInformix,
-			TestProvName.AllSapHana, ProviderName.Firebird)]
+			TestProvName.AllSapHana, ProviderName.Firebird25)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -127,8 +127,8 @@ namespace Tests.xUpdate
 					.DeleteWhenMatchedAnd((t, s) => s.Field2 == 4)
 					.Merge())!;
 
-				Assert.IsInstanceOf<LinqToDBException>(exception);
-				Assert.That(exception.Message,  Does.EndWith(".Field2' cannot be converted to SQL."));
+				Assert.That(exception, Is.InstanceOf<LinqException>());
+				Assert.That(exception.Message,  Does.EndWith(".Field2' could not be converted to SQL."));
 			}
 		}
 
@@ -137,9 +137,10 @@ namespace Tests.xUpdate
 			TestProvName.AllOracle,
 			TestProvName.AllSybase,
 			TestProvName.AllSqlServer2008Plus,
+			TestProvName.AllPostgreSQL15Plus,
 			TestProvName.AllInformix,
 			TestProvName.AllSapHana,
-			ProviderName.Firebird)]
+			ProviderName.Firebird25)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -160,7 +161,7 @@ namespace Tests.xUpdate
 
 				AssertRowCount(2, rows, context);
 
-				Assert.AreEqual(2, result.Count);
+				Assert.That(result, Has.Count.EqualTo(2));
 
 				AssertRow(InitialTargetData[0], result[0], null, null);
 				AssertRow(InitialTargetData[1], result[1], null, null);
@@ -170,7 +171,7 @@ namespace Tests.xUpdate
 		[Test]
 		public void OtherSourceDelete([MergeDataContextSource(
 			TestProvName.AllOracle,
-			TestProvName.AllSybase, TestProvName.AllSapHana, ProviderName.Firebird)]
+			TestProvName.AllSybase, TestProvName.AllSapHana, ProviderName.Firebird25)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -190,7 +191,7 @@ namespace Tests.xUpdate
 
 				AssertRowCount(1, rows, context);
 
-				Assert.AreEqual(3, result.Count);
+				Assert.That(result, Has.Count.EqualTo(3));
 
 				AssertRow(InitialTargetData[0], result[0], null, null);
 				AssertRow(InitialTargetData[1], result[1], null, null);
@@ -201,7 +202,7 @@ namespace Tests.xUpdate
 		[Test]
 		public void OtherSourceDeletePartialSourceProjection_UnknownFieldInMatch([MergeDataContextSource(
 			TestProvName.AllOracle,
-			TestProvName.AllSybase, TestProvName.AllSapHana, ProviderName.Firebird)]
+			TestProvName.AllSybase, TestProvName.AllSapHana, ProviderName.Firebird25)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -218,8 +219,8 @@ namespace Tests.xUpdate
 					.DeleteWhenMatched()
 					.Merge())!;
 
-				Assert.IsInstanceOf<LinqToDBException>(exception);
-				Assert.That(exception.Message, Does.EndWith(".Field2' cannot be converted to SQL."));
+				Assert.That(exception, Is.InstanceOf<LinqException>());
+				Assert.That(exception.Message,  Does.EndWith(".Field2' could not be converted to SQL."));
 			}
 		}
 
@@ -227,7 +228,7 @@ namespace Tests.xUpdate
 		public void OtherSourceDeleteWithPredicate([MergeDataContextSource(
 			TestProvName.AllOracle,
 			TestProvName.AllSybase, TestProvName.AllInformix,
-			TestProvName.AllSapHana, ProviderName.Firebird)]
+			TestProvName.AllSapHana, ProviderName.Firebird25)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -247,7 +248,7 @@ namespace Tests.xUpdate
 
 				AssertRowCount(1, rows, context);
 
-				Assert.AreEqual(3, result.Count);
+				Assert.That(result, Has.Count.EqualTo(3));
 
 				AssertRow(InitialTargetData[0], result[0], null, null);
 				AssertRow(InitialTargetData[1], result[1], null, null);
@@ -259,7 +260,7 @@ namespace Tests.xUpdate
 		public void AnonymousSourceDeleteWithPredicate([MergeDataContextSource(
 			TestProvName.AllOracle,
 			TestProvName.AllSybase, TestProvName.AllInformix,
-			TestProvName.AllSapHana, ProviderName.Firebird)]
+			TestProvName.AllSapHana, ProviderName.Firebird25)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -287,7 +288,7 @@ namespace Tests.xUpdate
 
 				AssertRowCount(1, rows, context);
 
-				Assert.AreEqual(3, result.Count);
+				Assert.That(result, Has.Count.EqualTo(3));
 
 				AssertRow(InitialTargetData[0], result[0], null, null);
 				AssertRow(InitialTargetData[1], result[1], null, null);
@@ -300,7 +301,7 @@ namespace Tests.xUpdate
 		public void AnonymousListSourceDeleteWithPredicate([MergeDataContextSource(
 			TestProvName.AllOracle,
 			TestProvName.AllSybase, TestProvName.AllInformix,
-			TestProvName.AllSapHana, ProviderName.Firebird)]
+			TestProvName.AllSapHana, ProviderName.Firebird25)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -328,7 +329,7 @@ namespace Tests.xUpdate
 
 				AssertRowCount(1, rows, context);
 
-				Assert.AreEqual(3, result.Count);
+				Assert.That(result, Has.Count.EqualTo(3));
 
 				AssertRow(InitialTargetData[0], result[0], null, null);
 				AssertRow(InitialTargetData[1], result[1], null, null);
@@ -340,7 +341,7 @@ namespace Tests.xUpdate
 		public void DeleteReservedAndCaseNames([MergeDataContextSource(
 			TestProvName.AllOracle,
 			TestProvName.AllSybase, TestProvName.AllInformix,
-			TestProvName.AllSapHana, ProviderName.Firebird)]
+			TestProvName.AllSapHana, ProviderName.Firebird25)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -368,7 +369,7 @@ namespace Tests.xUpdate
 
 				AssertRowCount(1, rows, context);
 
-				Assert.AreEqual(3, result.Count);
+				Assert.That(result, Has.Count.EqualTo(3));
 
 				AssertRow(InitialTargetData[0], result[0], null, null);
 				AssertRow(InitialTargetData[1], result[1], null, null);
@@ -380,7 +381,7 @@ namespace Tests.xUpdate
 		public void DeleteReservedAndCaseNamesFromList([MergeDataContextSource(
 			TestProvName.AllOracle,
 			TestProvName.AllSybase, TestProvName.AllInformix,
-			TestProvName.AllSapHana, ProviderName.Firebird)]
+			TestProvName.AllSapHana, ProviderName.Firebird25)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -408,7 +409,7 @@ namespace Tests.xUpdate
 
 				AssertRowCount(1, rows, context);
 
-				Assert.AreEqual(3, result.Count);
+				Assert.That(result, Has.Count.EqualTo(3));
 
 				AssertRow(InitialTargetData[0], result[0], null, null);
 				AssertRow(InitialTargetData[1], result[1], null, null);
@@ -436,8 +437,8 @@ namespace Tests.xUpdate
 						.DeleteWhenMatched()
 						.Merge())!;
 
-				Assert.IsInstanceOf<LinqToDBException>(exception);
-				Assert.That(exception.Message, Does.EndWith(".Id' cannot be converted to SQL."));
+				Assert.That(exception, Is.InstanceOf<LinqException>());
+				Assert.That(exception.Message, Does.EndWith(".Id' could not be converted to SQL."));
 			}
 		}
 	}

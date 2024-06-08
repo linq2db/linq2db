@@ -1,25 +1,26 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace LinqToDB.Expressions
 {
-	using System.Collections;
-	using System.Diagnostics.CodeAnalysis;
-	using System.Threading;
-	using System.Threading.Tasks;
 	using Common;
-	using LinqToDB.Extensions;
+	using Extensions;
 
 	/// <summary>
 	/// Implements typed mappings support for dynamically loaded types.
 	/// </summary>
 	public sealed class TypeMapper
 	{
-		private static readonly Type[] _wrapperContructorParameters1 = new[] { typeof(object) };
-		private static readonly Type[] _wrapperContructorParameters2 = new[] { typeof(object), typeof(Delegate[]) };
+		private static readonly Type[] _wrapperConstructorParameters1 = [typeof(object)];
+		private static readonly Type[] _wrapperConstructorParameters2 = [typeof(object), typeof(Delegate[])];
 
 		// [type name] = originalType
 		private readonly IDictionary<string, Type>              _types                    = new Dictionary<string, Type>();
@@ -49,7 +50,7 @@ namespace LinqToDB.Expressions
 			if (_finalized)
 				throw new LinqToDBException($"Wrappers registration is not allowed after {nameof(FinalizeMappings)}() call");
 
-			var wrapperAttr = wrapperType.GetCustomAttribute<WrapperAttribute>(true);
+			var wrapperAttr = wrapperType.GetAttribute<WrapperAttribute>();
 
 			if ((wrapperAttr?.TypeName ?? wrapperType.Name) != originalType.Name)
 				throw new LinqToDBException($"Original and wraped types should have same type name. {wrapperType.Name} != {originalType.Name}");
@@ -91,8 +92,8 @@ namespace LinqToDB.Expressions
 			if (baseType != Enum.GetUnderlyingType(originalType))
 				throw new LinqToDBException($"Enums {wrapperType} and {originalType} have different base types: {baseType} vs {Enum.GetUnderlyingType(originalType)}");
 
-			var wrapperValues  = Enum.GetValues(wrapperType) .OfType<object>().Distinct().ToDictionary(_ => _.ToString()!, _ => _);
-			var originalValues = Enum.GetValues(originalType).OfType<object>().Distinct().ToDictionary(_ => _.ToString()!, _ => _);
+			var wrapperValues  = Enum.GetValues(wrapperType) .OfType<object>().Distinct().ToDictionary(v => string.Format(CultureInfo.InvariantCulture, "{0}", v), _ => _);
+			var originalValues = Enum.GetValues(originalType).OfType<object>().Distinct().ToDictionary(v => string.Format(CultureInfo.InvariantCulture, "{0}", v), _ => _);
 
 			var hasCommonMembers   = false;
 			var hasDifferentValues = false;
@@ -101,7 +102,7 @@ namespace LinqToDB.Expressions
 				if (originalValues.TryGetValue(kvp.Key, out var origValue))
 				{
 					hasCommonMembers = true;
-					if (Convert.ToInt64(kvp.Value) != Convert.ToInt64(origValue))
+					if (Convert.ToInt64(kvp.Value, CultureInfo.InvariantCulture) != Convert.ToInt64(origValue, CultureInfo.InvariantCulture))
 					{
 						hasDifferentValues = true;
 						break;
@@ -121,8 +122,8 @@ namespace LinqToDB.Expressions
 			if (hasDifferentValues)
 			{
 				// this should never happen, but it we will have such situation it is better to fail
-				if (wrapperType.GetCustomAttribute(typeof(FlagsAttribute)) != null
-					|| originalType.GetCustomAttribute(typeof(FlagsAttribute)) != null)
+				if (wrapperType.HasAttribute<FlagsAttribute>()
+					|| originalType.HasAttribute<FlagsAttribute>())
 					throw new LinqToDBException($"Flags enums {wrapperType} and {originalType} are not compatible by values");
 
 				// build dictionary-based converters
@@ -131,8 +132,8 @@ namespace LinqToDB.Expressions
 				var w2oType = typeof(Dictionary<,>).MakeGenericType(wrapperType, originalType);
 				var o2wType = typeof(Dictionary<,>).MakeGenericType(originalType, wrapperType);
 
-				var wrapperToOriginal = w2oType.GetConstructor(Array<Type>.Empty)!.Invoke(Array<object>.Empty);
-				var originalToWrapper = o2wType.GetConstructor(Array<Type>.Empty)!.Invoke(Array<object>.Empty);
+				var wrapperToOriginal = w2oType.GetConstructor([])!.Invoke([]);
+				var originalToWrapper = o2wType.GetConstructor([])!.Invoke([]);
 
 				var w2o = (IDictionary)wrapperToOriginal;
 				var o2w = (IDictionary)originalToWrapper;
@@ -204,11 +205,11 @@ namespace LinqToDB.Expressions
 				var eventsHandler = BuildWrapperEvents (wrapperType);
 
 				// pre-register factory, so we don't need to use concurrent dictionary to access factory later
-				var types = delegates != null ? _wrapperContructorParameters2 : _wrapperContructorParameters1;
+				var types = delegates != null ? _wrapperConstructorParameters2 : _wrapperConstructorParameters1;
 				var ctor = wrapperType.GetConstructor(types);
 
 				if (ctor == null)
-					throw new LinqToDBException($"Cannot find contructor ({string.Join(", ", types.Select(t => t.ToString()))}) in type {wrapperType}");
+					throw new LinqToDBException($"Cannot find constructor ({string.Join(", ", types.Select(t => t.ToString()))}) in type {wrapperType}");
 
 				var pInstance = Expression.Parameter(typeof(object));
 
@@ -464,7 +465,7 @@ namespace LinqToDB.Expressions
 			return mappedLambda;
 		}
 
-		class ReplaceTypesContext
+		sealed class ReplaceTypesContext
 		{
 			public ReplaceTypesContext(TypeMapper mapper, LambdaExpression lambda, ParameterExpression[] newParameters, bool mapConvert, bool ignoreMissingMembers)
 			{
@@ -494,7 +495,7 @@ namespace LinqToDB.Expressions
 			return newMembers[0];
 		}
 
-		Expression? ReplaceTypes(Expression expression, ReplaceTypesContext ctx)
+		static Expression? ReplaceTypes(Expression expression, ReplaceTypesContext ctx)
 		{
 			var converted = expression.Transform(ctx, static (context, e) =>
 			{
@@ -509,7 +510,7 @@ namespace LinqToDB.Expressions
 								break;
 
 							var ue   = (UnaryExpression)e;
-							var expr = context.Mapper.ReplaceTypes(ue.Operand, context)!;
+							var expr = ReplaceTypes(ue.Operand, context)!;
 							var type = context.Mapper.TryMapType(ue.Type, out var newType) ? newType : ue.Type;
 
 							if (ue.Method != null)
@@ -554,7 +555,7 @@ namespace LinqToDB.Expressions
 					case ExpressionType.Assign:
 						{
 							var be    = (BinaryExpression)e;
-							var left  = context.Mapper.ReplaceTypes(be.Left, context)!;
+							var left  = ReplaceTypes(be.Left, context)!;
 							var right = be.Right;
 
 							if (context.Mapper.TryMapType(right.Type, out var replacement))
@@ -589,7 +590,7 @@ namespace LinqToDB.Expressions
 
 							if (context.Mapper.TryMapType(ma.Expression.Type, out var replacement))
 							{
-								var expr = context.Mapper.ReplaceTypes(ma.Expression, context)!;
+								var expr = ReplaceTypes(ma.Expression, context)!;
 								if (expr.Type != replacement)
 									throw new LinqToDBException($"Invalid replacement of '{ma.Expression}' to type '{replacement.FullName}'.");
 
@@ -647,7 +648,7 @@ namespace LinqToDB.Expressions
 									throw new LinqToDBException($"Constructor not found in target type: {name}");
 								}
 
-								var newArguments  = ne.Arguments.Select(a => context.Mapper.ReplaceTypes(a, context)!);
+								var newArguments  = ne.Arguments.Select(a => ReplaceTypes(a, context)!);
 								if (ne.Members != null)
 								{
 									var newMembers = ne.Members.Select(m => ReplaceMember(m, replacement));
@@ -667,7 +668,7 @@ namespace LinqToDB.Expressions
 							var mi = (MemberInitExpression)e;
 							if (context.Mapper.TryMapType(mi.Type, out var replacement))
 							{
-								var newExpression = (NewExpression)context.Mapper.ReplaceTypes(mi.NewExpression, context)!;
+								var newExpression = (NewExpression)ReplaceTypes(mi.NewExpression, context)!;
 								var newBindings = mi.Bindings.Select(b =>
 								{
 									switch (b.BindingType)
@@ -676,7 +677,7 @@ namespace LinqToDB.Expressions
 											{
 												var mab = (MemberAssignment)b;
 												return Expression.Bind(ReplaceMember(mab.Member, replacement),
-													context.Mapper.ReplaceTypes(mab.Expression, context)!);
+													ReplaceTypes(mab.Expression, context)!);
 											}
 										case MemberBindingType.MemberBinding:
 											{
@@ -700,8 +701,8 @@ namespace LinqToDB.Expressions
 						{
 							var mc = (MethodCallExpression)e;
 
-							var methodName         = mc.Method.GetCustomAttribute<TypeWrapperNameAttribute>()?.Name ?? mc.Method.Name;
-							var customReturnMapper = context.Mapper.CreateTypeMapper(mc.Method.ReturnParameter.GetCustomAttribute<CustomMapperAttribute>()?.Mapper);
+							var methodName         = mc.Method.GetAttribute<TypeWrapperNameAttribute>()?.Name ?? mc.Method.Name;
+							var customReturnMapper = context.Mapper.CreateTypeMapper(mc.Method.ReturnParameter.GetAttribute<CustomMapperAttribute>()?.Mapper);
 
 							if (context.Mapper.TryMapType(mc.Method.DeclaringType!, out var replacement))
 							{
@@ -730,8 +731,8 @@ namespace LinqToDB.Expressions
 										throw new LinqToDBException($"Method not found in target type: {name}");
 									}
 
-									var newArguments  = mc.Arguments.Select(a => context.Mapper.ReplaceTypes(a, context)!);
-									var newMethodCall = Expression.Call(context.Mapper.ReplaceTypes(mc.Object!, context)!, methodName, typeArgs, newArguments.ToArray());
+									var newArguments  = mc.Arguments.Select(a => ReplaceTypes(a, context)!);
+									var newMethodCall = Expression.Call(ReplaceTypes(mc.Object!, context)!, methodName, typeArgs, newArguments.ToArray());
 
 									if (customReturnMapper != null)
 									{
@@ -769,8 +770,8 @@ namespace LinqToDB.Expressions
 										throw new LinqToDBException($"Method not found in target type: {name}");
 									}
 
-									var newArguments  = mc.Arguments.Select(a => context.Mapper.ReplaceTypes(a, context)!);
-									var newMethodCall = Expression.Call(context.Mapper.ReplaceTypes(mc.Object!, context), method, newArguments);
+									var newArguments  = mc.Arguments.Select(a => ReplaceTypes(a, context)!);
+									var newMethodCall = Expression.Call(ReplaceTypes(mc.Object!, context), method, newArguments);
 
 									if (customReturnMapper != null)
 									{
@@ -802,7 +803,7 @@ namespace LinqToDB.Expressions
 			return ctx.Aborted ? null : converted;
 		}
 
-		[return: NotNullIfNotNull("mapperType")]
+		[return: NotNullIfNotNull(nameof(mapperType))]
 		private ICustomMapper? CreateTypeMapper(Type? mapperType)
 		{
 			if (mapperType == null)
@@ -884,16 +885,16 @@ namespace LinqToDB.Expressions
 		public Expression MapExpression<T, TR>(Expression<Func<T, TR>> func, Expression p)
 			=> MapExpressionInternal(func, p);
 
-		public Expression MapExpression<T1, T2, TR>(Expression<Func<T1, T2, TR>> func, Expression p1, Expression p2) 
+		public Expression MapExpression<T1, T2, TR>(Expression<Func<T1, T2, TR>> func, Expression p1, Expression p2)
 			=> MapExpressionInternal(func, p1, p2);
 
-		public Expression MapExpression<T1, T2, T3, TR>(Expression<Func<T1, T2, T3, TR>> func, Expression p1, Expression p2, Expression p3) 
+		public Expression MapExpression<T1, T2, T3, TR>(Expression<Func<T1, T2, T3, TR>> func, Expression p1, Expression p2, Expression p3)
 			=> MapExpressionInternal(func, p1, p2, p3);
 
-		public Expression MapExpression<T1, T2, T3, T4, TR>(Expression<Func<T1, T2, T3, T4, TR>> func, Expression p1, Expression p2, Expression p3, Expression p4) 
+		public Expression MapExpression<T1, T2, T3, T4, TR>(Expression<Func<T1, T2, T3, T4, TR>> func, Expression p1, Expression p2, Expression p3, Expression p4)
 			=> MapExpressionInternal(func, p1, p2, p3, p4);
 
-		public Expression MapExpression<T1, T2, T3, T4, T5, TR>(Expression<Func<T1, T2, T3, T4, T5, TR>> func, Expression p1, Expression p2, Expression p3, Expression p4, Expression p5) 
+		public Expression MapExpression<T1, T2, T3, T4, T5, TR>(Expression<Func<T1, T2, T3, T4, T5, TR>> func, Expression p1, Expression p2, Expression p3, Expression p4, Expression p5)
 			=> MapExpressionInternal(func, p1, p2, p3, p4, p5);
 
 		#endregion
@@ -944,22 +945,22 @@ namespace LinqToDB.Expressions
 
 		#region BuildFunc
 
-		public Func<TR> BuildFunc<TR>(LambdaExpression lambda) => 
+		public Func<TR> BuildFunc<TR>(LambdaExpression lambda) =>
 			(Func<TR>)CorrectLambdaParameters(lambda, typeof(TR)).CompileExpression();
 
 		public Func<T, TR> BuildFunc<T, TR>(LambdaExpression lambda) =>
 			(Func<T, TR>)CorrectLambdaParameters(lambda, typeof(TR), typeof(T)).CompileExpression();
 
-		public Func<T1, T2, TR> BuildFunc<T1, T2, TR>(LambdaExpression lambda) => 
+		public Func<T1, T2, TR> BuildFunc<T1, T2, TR>(LambdaExpression lambda) =>
 			(Func<T1, T2, TR>)CorrectLambdaParameters(lambda, typeof(TR), typeof(T1), typeof(T2)).CompileExpression();
 
-		public Func<T1, T2, T3, TR> BuildFunc<T1, T2, T3, TR>(LambdaExpression lambda) => 
+		public Func<T1, T2, T3, TR> BuildFunc<T1, T2, T3, TR>(LambdaExpression lambda) =>
 			(Func<T1, T2, T3, TR>)CorrectLambdaParameters(lambda, typeof(TR), typeof(T1), typeof(T2), typeof(T3)).CompileExpression();
 
-		public Func<T1, T2, T3, T4, TR> BuildFunc<T1, T2, T3, T4, TR>(LambdaExpression lambda) => 
+		public Func<T1, T2, T3, T4, TR> BuildFunc<T1, T2, T3, T4, TR>(LambdaExpression lambda) =>
 			(Func<T1, T2, T3, T4, TR>)CorrectLambdaParameters(lambda, typeof(TR), typeof(T1), typeof(T2), typeof(T3), typeof(T4)).CompileExpression();
 
-		public Func<T1, T2, T3, T4, T5, TR> BuildFunc<T1, T2, T3, T4, T5, TR>(LambdaExpression lambda) => 
+		public Func<T1, T2, T3, T4, T5, TR> BuildFunc<T1, T2, T3, T4, T5, TR>(LambdaExpression lambda) =>
 			(Func<T1, T2, T3, T4, T5, TR>)CorrectLambdaParameters(lambda, typeof(TR), typeof(T1), typeof(T2), typeof(T3), typeof(T4), typeof(T5)).CompileExpression();
 
 		public Func<T1, T2, T3, T4, T5, T6, TR> BuildFunc<T1, T2, T3, T4, T5, T6, TR>(LambdaExpression lambda) =>
@@ -971,22 +972,22 @@ namespace LinqToDB.Expressions
 
 		#region BuildAction
 
-		public Action BuildAction(LambdaExpression lambda) => 
+		public Action BuildAction(LambdaExpression lambda) =>
 			(Action)CorrectLambdaParameters(lambda, null).CompileExpression();
 
 		public Action<T> BuildAction<T>(LambdaExpression lambda) =>
 			(Action<T>)CorrectLambdaParameters(lambda, null, typeof(T)).CompileExpression();
 
-		public Action<T1, T2> BuildAction<T1, T2>(LambdaExpression lambda) => 
+		public Action<T1, T2> BuildAction<T1, T2>(LambdaExpression lambda) =>
 			(Action<T1, T2>)CorrectLambdaParameters(lambda, null, typeof(T1), typeof(T2)).CompileExpression();
 
-		public Action<T1, T2, T3> BuildAction<T1, T2, T3>(LambdaExpression lambda) => 
+		public Action<T1, T2, T3> BuildAction<T1, T2, T3>(LambdaExpression lambda) =>
 			(Action<T1, T2, T3>)CorrectLambdaParameters(lambda, null, typeof(T1), typeof(T2), typeof(T3)).CompileExpression();
 
-		public Action<T1, T2, T3, T4> BuildAction<T1, T2, T3, T4>(LambdaExpression lambda) => 
+		public Action<T1, T2, T3, T4> BuildAction<T1, T2, T3, T4>(LambdaExpression lambda) =>
 			(Action<T1, T2, T3, T4>)CorrectLambdaParameters(lambda, null, typeof(T1), typeof(T2), typeof(T3), typeof(T4)).CompileExpression();
 
-		public Action<T1, T2, T3, T4, T5> BuildAction<T1, T2, T3, T4, T5>(LambdaExpression lambda) => 
+		public Action<T1, T2, T3, T4, T5> BuildAction<T1, T2, T3, T4, T5>(LambdaExpression lambda) =>
 			(Action<T1, T2, T3, T4, T5>)CorrectLambdaParameters(lambda, null, typeof(T1), typeof(T2), typeof(T3), typeof(T4), typeof(T5)).CompileExpression();
 
 		#endregion
@@ -1139,27 +1140,43 @@ namespace LinqToDB.Expressions
 		}
 
 		public Func<object> BuildFactory<TR>(Expression<Func<TR>> newFunc)
-			where TR : TypeWrapper
 		{
 			return (Func<object>)BuildFactoryImpl<TR>(newFunc, false);
 		}
 
 		public Func<T, object> BuildFactory<T, TR>(Expression<Func<T, TR>> newFunc)
-			where TR : TypeWrapper
 		{
 			return (Func<T, object>)BuildFactoryImpl<TR>(newFunc, false);
 		}
 
 		public Func<T1, T2, object> BuildFactory<T1, T2, TR>(Expression<Func<T1, T2, TR>> newFunc)
-			where TR : TypeWrapper
 		{
 			return (Func<T1, T2, object>)BuildFactoryImpl<TR>(newFunc, false);
 		}
 
 		public Func<T1, T2, T3, object> BuildFactory<T1, T2, T3, TR>(Expression<Func<T1, T2, T3, TR>> newFunc)
-			where TR : TypeWrapper
 		{
 			return (Func<T1, T2, T3, object>)BuildFactoryImpl<TR>(newFunc, false);
+		}
+
+		public Func<TRes> BuildTypedFactory<TR, TRes>(Expression<Func<TR>> newFunc)
+		{
+			return (Func<TRes>)BuildFactoryImpl<TR, TRes>(newFunc, false);
+		}
+
+		public Func<T, TRes> BuildTypedFactory<T, TR, TRes>(Expression<Func<T, TR>> newFunc)
+		{
+			return (Func<T, TRes>)BuildFactoryImpl<TR, TRes>(newFunc, false);
+		}
+
+		public Func<T1, T2, TRes> BuildTypedFactory<T1, T2, TR, TRes>(Expression<Func<T1, T2, TR>> newFunc)
+		{
+			return (Func<T1, T2, TRes>)BuildFactoryImpl<TR, TRes>(newFunc, false);
+		}
+
+		public Func<T1, T2, T3, TRes> BuildTypedFactory<T1, T2, T3, TR, TRes>(Expression<Func<T1, T2, T3, TR>> newFunc)
+		{
+			return (Func<T1, T2, T3, TRes>)BuildFactoryImpl<TR, TRes>(newFunc, false);
 		}
 
 		#endregion
@@ -1178,12 +1195,24 @@ namespace LinqToDB.Expressions
 			return BuildWrapperImpl(lambda, wrapResult, false)!;
 		}
 
+		private Delegate BuildFactoryImpl<T, TRes>(LambdaExpression lambda, bool wrapResult)
+		{
+			// TODO: here are two optimizations that could be done to make generated action a bit faster:
+			// 1. require caller to pass unwrapped instance, so we don't need to generate instance_ property access
+			// 2. generate wrapper constructor call instead of Wrap method call (will need null check of wrapped value)
+			var wrapperType = typeof(T);
+			if (!TryMapType(wrapperType, out var _))
+				throw new LinqToDBException($"Wrapper type {wrapperType} is not registered");
+
+			return BuildWrapperImpl(lambda, wrapResult, false, typeof(TRes))!;
+		}
+
 		private Delegate? BuildWrapper(LambdaExpression lambda, bool optional)
 		{
 			return BuildWrapperImpl(lambda, true, optional);
 		}
 
-		private Delegate? BuildWrapperImpl(LambdaExpression lambda, bool wrapResult, bool optional)
+		private Delegate? BuildWrapperImpl(LambdaExpression lambda, bool wrapResult, bool optional, Type? returnTypeOverride = null)
 		{
 			var mappedLambda = MapLambdaInternal(lambda, true, ignoreMissingMembers: optional);
 			if (optional && mappedLambda == null)
@@ -1233,10 +1262,10 @@ namespace LinqToDB.Expressions
 				}
 				else
 				{
-					expr = expr.Transform(returnType, static (returnType, e) =>
+					expr = expr.Transform((returnTypeOverride, returnType), static (ctx, e) =>
 					{
-						if (e.Type == returnType)
-							return Expression.Convert(e, typeof(object));
+						if (e.Type == ctx.returnType)
+							return Expression.Convert(e, ctx.returnTypeOverride ?? typeof(object));
 
 						return e;
 					});
@@ -1248,7 +1277,7 @@ namespace LinqToDB.Expressions
 
 		#endregion
 
-		[return: NotNullIfNotNull("instance")]
+		[return: NotNullIfNotNull(nameof(instance))]
 		public TR? Wrap<TR>(object? instance)
 			where TR: TypeWrapper
 		{
@@ -1258,7 +1287,7 @@ namespace LinqToDB.Expressions
 			return (TR)Wrap(typeof(TR), instance);
 		}
 
-		[return: NotNullIfNotNull("instance")]
+		[return: NotNullIfNotNull(nameof(instance))]
 		private object? Wrap(Type wrapperType, object? instance)
 		{
 			if (instance == null)

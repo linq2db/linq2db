@@ -7,8 +7,8 @@ using System.Linq.Expressions;
 
 namespace LinqToDB.Remote
 {
-	using Extensions;
 	using Expressions;
+	using Extensions;
 	using Linq;
 	using Mapping;
 	using SqlQuery;
@@ -21,8 +21,7 @@ namespace LinqToDB.Remote
 
 		public DataService()
 		{
-			if (_defaultMetadata == null)
-				_defaultMetadata = Tuple.Create(default(T)!, new MetadataInfo(MappingSchema.Default));
+			_defaultMetadata ??= Tuple.Create(default(T)!, new MetadataInfo(new DataOptions(), MappingSchema.Default));
 
 			_metadata = new MetadataProvider(_defaultMetadata.Item2);
 			_query    = new QueryProvider   (_defaultMetadata.Item2);
@@ -31,12 +30,12 @@ namespace LinqToDB.Remote
 
 		static Tuple<T,MetadataInfo>? _defaultMetadata;
 
-		public DataService(MappingSchema mappingSchema)
+		public DataService(DataOptions options, MappingSchema mappingSchema)
 		{
 			lock (_cache)
 			{
 				if (!_cache.TryGetValue(mappingSchema, out var data))
-					data = Tuple.Create(default(T)!, new MetadataInfo(mappingSchema));
+					data = Tuple.Create(default(T)!, new MetadataInfo(options, mappingSchema));
 
 				_metadata = new MetadataProvider(data.Item2);
 				_query    = new QueryProvider   (data.Item2);
@@ -67,21 +66,23 @@ namespace LinqToDB.Remote
 
 #region MetadataInfo
 
-		class TypeInfo
+		sealed class TypeInfo
 		{
 			public ResourceType     Type   = null!;
 			public SqlTable         Table  = null!;
 			public EntityDescriptor Mapper = null!;
 		}
 
-		class MetadataInfo
+		sealed class MetadataInfo
 		{
-			public MetadataInfo(MappingSchema mappingSchema)
+			public MetadataInfo(DataOptions options, MappingSchema mappingSchema)
 			{
+				_options       = options;
 				_mappingSchema = mappingSchema;
 				LoadMetadata();
 			}
 
+			readonly DataOptions   _options;
 			readonly MappingSchema _mappingSchema;
 
 			public readonly Dictionary<Type,TypeInfo>                   TypeDic     = new();
@@ -98,9 +99,9 @@ namespace LinqToDB.Remote
 					let t   = p.PropertyType
 					where typeof(ITable<>).IsSameOrParentOf(t)
 					let tt  = t.GetGenericArguments()[0]
-					let tbl = new SqlTable(_mappingSchema, tt)
+					let m   = _mappingSchema.GetEntityDescriptor(tt, _options.ConnectionOptions.OnEntityDescriptorCreated)
+					let tbl = new SqlTable(m)
 					where tbl.Fields.Any(f => f.IsPrimaryKey)
-					let m   = _mappingSchema.GetEntityDescriptor(tt)
 					select new
 					{
 						p.Name,
@@ -149,11 +150,12 @@ namespace LinqToDB.Remote
 					{
 						if (!TypeDic.ContainsKey(m.Type))
 						{
+							var ed = _mappingSchema.GetEntityDescriptor(item.Type, _options.ConnectionOptions.OnEntityDescriptorCreated);
 							GetTypeInfo(
 								m.Type,
 								item.Type,
-								new SqlTable(_mappingSchema, item.Type),
-								_mappingSchema.GetEntityDescriptor(item.Type));
+								new SqlTable(ed),
+								ed);
 						}
 					}
 				}
@@ -180,7 +182,7 @@ namespace LinqToDB.Remote
 
 					foreach (var field in table.Fields)
 					{
-						if (baseType != null && baseInfo!.Table[field.Name] != null)
+						if (baseType != null && baseInfo!.Table.FindFieldByMemberName(field.Name) != null)
 							continue;
 
 						var kind  = ResourcePropertyKind.Primitive;
@@ -213,7 +215,7 @@ namespace LinqToDB.Remote
 
 #region MetadataProvider
 
-		class MetadataProvider : IDataServiceMetadataProvider
+		sealed class MetadataProvider : IDataServiceMetadataProvider
 		{
 			public MetadataProvider(MetadataInfo data)
 			{
@@ -264,7 +266,7 @@ namespace LinqToDB.Remote
 
 #region QueryProvider
 
-		class QueryProvider : IDataServiceQueryProvider
+		sealed class QueryProvider : IDataServiceQueryProvider
 		{
 			public QueryProvider(MetadataInfo data)
 			{
@@ -334,18 +336,18 @@ namespace LinqToDB.Remote
 		{
 			public object Resource = null!;
 
-			public class Create : ResourceAction {}
-			public class Delete : ResourceAction {}
-			public class Reset  : ResourceAction {}
+			public sealed class Create : ResourceAction {}
+			public sealed class Delete : ResourceAction {}
+			public sealed class Reset  : ResourceAction {}
 
-			public class Update : ResourceAction
+			public sealed class Update : ResourceAction
 			{
 				public string  Property = null!;
 				public object? Value;
 			}
 		}
 
-		class UpdateProvider : IDataServiceUpdateProvider
+		sealed class UpdateProvider : IDataServiceUpdateProvider
 		{
 #region Init
 

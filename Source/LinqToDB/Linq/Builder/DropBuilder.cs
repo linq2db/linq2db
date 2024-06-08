@@ -6,7 +6,7 @@ namespace LinqToDB.Linq.Builder
 	using LinqToDB.Expressions;
 	using SqlQuery;
 
-	class DropBuilder : MethodCallBuilder
+	sealed class DropBuilder : MethodCallBuilder
 	{
 		#region DropBuilder
 
@@ -15,7 +15,7 @@ namespace LinqToDB.Linq.Builder
 			return methodCall.IsQueryable("Drop");
 		}
 
-		protected override IBuildContext BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
+		protected override BuildSequenceResult BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
 			var sequence = (TableBuilder.TableContext)builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
 
@@ -25,60 +25,48 @@ namespace LinqToDB.Linq.Builder
 			{
 				if (methodCall.Arguments[1].Type == typeof(bool))
 				{
-					ifExists = !(bool)methodCall.Arguments[1].EvaluateExpression()!;
+					ifExists = !(bool)builder.EvaluateExpression(methodCall.Arguments[1])!;
 				}
 			}
 
 			sequence.SqlTable.Set(ifExists, TableOptions.DropIfExists);
-			sequence.Statement = new SqlDropTableStatement(sequence.SqlTable);
 
-			return new DropContext(buildInfo.Parent, sequence);
+			return BuildSequenceResult.FromContext(new DropContext(buildInfo.Parent, sequence, new SqlDropTableStatement(sequence.SqlTable)));
 		}
 
 		#endregion
 
 		#region DropContext
 
-		class DropContext : SequenceContextBase
+		sealed class DropContext : SequenceContextBase
 		{
-			public DropContext(IBuildContext? parent, IBuildContext sequence)
+			readonly SqlDropTableStatement _dropTableStatement;
+
+			public DropContext(IBuildContext? parent, IBuildContext sequence,
+				SqlDropTableStatement         dropTableStatement)
 				: base(parent, sequence, null)
 			{
+				_dropTableStatement = dropTableStatement;
 			}
 
-			public override void BuildQuery<T>(Query<T> query, ParameterExpression queryParameter)
+			public override IBuildContext Clone(CloningContext context)
+			{
+				return new DropContext(null, context.CloneContext(Sequence), context.CloneElement(_dropTableStatement));
+			}
+
+			public override void SetRunQuery<T>(Query<T> query, Expression expr)
 			{
 				QueryRunner.SetNonQueryQuery(query);
 			}
 
-			public override Expression BuildExpression(Expression? expression, int level, bool enforceServerSide)
-			{
-				throw new NotImplementedException();
-			}
-
-			public override SqlInfo[] ConvertToSql(Expression? expression, int level, ConvertFlags flags)
-			{
-				throw new NotImplementedException();
-			}
-
-			public override SqlInfo[] ConvertToIndex(Expression? expression, int level, ConvertFlags flags)
-			{
-				throw new NotImplementedException();
-			}
-
-			public override IsExpressionResult IsExpression(Expression? expression, int level, RequestFor requestFlag)
-			{
-				throw new NotImplementedException();
-			}
-
-			public override IBuildContext GetContext(Expression? expression, int level, BuildInfo buildInfo)
+			public override IBuildContext? GetContext(Expression expression, BuildInfo buildInfo)
 			{
 				throw new NotImplementedException();
 			}
 
 			public override SqlStatement GetResultStatement()
 			{
-				return Sequence.GetResultStatement();
+				return _dropTableStatement;
 			}
 		}
 

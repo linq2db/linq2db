@@ -41,7 +41,7 @@ namespace LinqToDB.CodeModel
 			header.Freeze();
 
 			if (_rowsCount == 0)
-				return _generatedRows = Array<string>.Empty;
+				return _generatedRows = [];
 
 			var result = new string[_rowsCount];
 
@@ -85,8 +85,7 @@ namespace LinqToDB.CodeModel
 
 			_rowsCount++;
 
-			if (_data == null)
-				_data = (ColumnGroupData)header.CreateDataStorage();
+			_data ??= (ColumnGroupData)header.CreateDataStorage();
 
 			_data!.SetCurrentRowIndex(_rowsCount - 1);
 

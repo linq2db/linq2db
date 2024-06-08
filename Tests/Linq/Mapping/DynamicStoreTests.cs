@@ -12,7 +12,7 @@ namespace Tests.Mapping
 	public class DynamicStoreTests : TestBase
 	{
 		[Table("DynamicColumnsTestTable")]
-		class DynamicColumnsTestFullTable
+		sealed class DynamicColumnsTestFullTable
 		{
 			[Column]
 			public int Id { get; set; }
@@ -22,7 +22,7 @@ namespace Tests.Mapping
 		}
 
 		[Table("DynamicColumnsTestTable")]
-		class FluentMetadataBasedStore
+		sealed class FluentMetadataBasedStore
 		{
 			public int Id { get; set; }
 
@@ -32,7 +32,7 @@ namespace Tests.Mapping
 		}
 
 		[Table("DynamicColumnsTestTable")]
-		class AttributeMetadataBasedStore
+		sealed class AttributeMetadataBasedStore
 		{
 			[Column]
 			public int Id { get; set; }
@@ -56,7 +56,7 @@ namespace Tests.Mapping
 		}
 
 		[DynamicColumnAccessor(GetterMethod = nameof(GetProperty), SetterMethod = nameof(SetProperty))]
-		class InstanceGetterSetterMethods : CustomSetterGetterBase
+		sealed class InstanceGetterSetterMethods : CustomSetterGetterBase
 		{
 			private object GetProperty(string name, object defaultValue)
 			{
@@ -73,16 +73,16 @@ namespace Tests.Mapping
 		}
 
 		[DynamicColumnAccessor(GetterMethod = nameof(GetProperty), SetterMethod = nameof(SetProperty))]
-		class StaticGetterSetterMethods : CustomSetterGetterBase
+		sealed class StaticGetterSetterMethods : CustomSetterGetterBase
 		{
 			public static Dictionary<int, Dictionary<string, object>> InstanceValues { get; set; } = new Dictionary<int, Dictionary<string, object>>();
 
 			public static object GetProperty(StaticGetterSetterMethods instance, string name, object defaultValue)
 			{
-				if (!InstanceValues.ContainsKey(instance.Id))
+				if (!InstanceValues.TryGetValue(instance.Id, out var values))
 					return defaultValue;
 
-				if (!InstanceValues[instance.Id].TryGetValue(name, out var value))
+				if (!values.TryGetValue(name, out var value))
 					value = defaultValue;
 
 				return value;
@@ -90,17 +90,17 @@ namespace Tests.Mapping
 
 			private static void SetProperty(StaticGetterSetterMethods instance, string name, object value)
 			{
-				if (!InstanceValues.ContainsKey(instance.Id))
+				if (!InstanceValues.TryGetValue(instance.Id, out var values))
 				{
-					InstanceValues.Add(instance.Id, new Dictionary<string, object>());
+					InstanceValues.Add(instance.Id, values = new Dictionary<string, object>());
 				}
 
-				InstanceValues[instance.Id][name] = value;
+				values[name] = value;
 			}
 		}
 
 		[DynamicColumnAccessor(GetterExpressionMethod = nameof(GetPropertyExpression), SetterExpressionMethod =nameof(SetPropertyExpression))]
-		class InstanceGetterSetterExpressionMethods : CustomSetterGetterBase
+		sealed class InstanceGetterSetterExpressionMethods : CustomSetterGetterBase
 		{
 			public static Expression<Func<InstanceGetterSetterExpressionMethods, string, object, object>> GetPropertyExpression
 			{
@@ -130,7 +130,7 @@ namespace Tests.Mapping
 		}
 
 		[DynamicColumnAccessor(GetterExpressionMethod = nameof(GetPropertyExpression), SetterExpressionMethod = nameof(SetPropertyExpression))]
-		class StaticGetterSetterExpressionMethods : CustomSetterGetterBase
+		sealed class StaticGetterSetterExpressionMethods : CustomSetterGetterBase
 		{
 			public static Dictionary<int, Dictionary<string, object>> InstanceValues { get; set; } = new Dictionary<int, Dictionary<string, object>>();
 
@@ -149,10 +149,10 @@ namespace Tests.Mapping
 
 			public static object GetProperty(StaticGetterSetterExpressionMethods instance, string name, object defaultValue)
 			{
-				if (!InstanceValues.ContainsKey(instance.Id))
+				if (!InstanceValues.TryGetValue(instance.Id, out var values))
 					return defaultValue;
 
-				if (!InstanceValues[instance.Id].TryGetValue(name, out var value))
+				if (!values.TryGetValue(name, out var value))
 					value = defaultValue;
 
 				return value;
@@ -160,18 +160,18 @@ namespace Tests.Mapping
 
 			public static void SetProperty(StaticGetterSetterExpressionMethods instance, string name, object value)
 			{
-				if (!InstanceValues.ContainsKey(instance.Id))
+				if (!InstanceValues.TryGetValue(instance.Id, out var values))
 				{
-					InstanceValues.Add(instance.Id, new Dictionary<string, object>());
+					InstanceValues.Add(instance.Id, values = new Dictionary<string, object>());
 				}
 
-				InstanceValues[instance.Id][name] = value;
+				values[name] = value;
 			}
 		}
 
 		[DynamicColumnAccessor(GetterMethod = nameof(GetProperty), SetterMethod = nameof(SetProperty))]
 		[DynamicColumnAccessor(GetterMethod = nameof(GetSQLiteProperty), SetterMethod = nameof(SetSQLiteProperty), Configuration = ProviderName.SQLite)]
-		class SQLiteInstanceGetterSetterMethods : CustomSetterGetterBase
+		sealed class SQLiteInstanceGetterSetterMethods : CustomSetterGetterBase
 		{
 			public object GetSQLiteProperty(string name, object defaultValue)
 			{
@@ -202,7 +202,7 @@ namespace Tests.Mapping
 
 		[Table("DynamicColumnsTestTable")]
 		[DynamicColumnAccessor(GetterMethod = nameof(GetSQLiteProperty), SetterMethod = nameof(SetSQLiteProperty), Configuration = ProviderName.SQLite)]
-		class GetterSetterVsStorageMethods1
+		sealed class GetterSetterVsStorageMethods1
 		{
 			[Column]
 			public int Id { get; set; }
@@ -228,7 +228,7 @@ namespace Tests.Mapping
 
 		[Table("DynamicColumnsTestTable")]
 		[DynamicColumnAccessor(GetterMethod = nameof(GetProperty), SetterMethod = nameof(SetProperty))]
-		class GetterSetterVsStorageMethods2
+		sealed class GetterSetterVsStorageMethods2
 		{
 			[Column]
 			public int Id { get; set; }
@@ -255,7 +255,7 @@ namespace Tests.Mapping
 
 		[Table("DynamicColumnsTestTable")]
 		[DynamicColumnAccessor(GetterMethod = nameof(GetProperty), SetterMethod = nameof(SetProperty))]
-		class GetterSetterVsStorageMethodsConflict
+		sealed class GetterSetterVsStorageMethodsConflict
 		{
 			[Column]
 			public int Id { get; set; }
@@ -281,7 +281,7 @@ namespace Tests.Mapping
 		[DynamicColumnAccessor(
 			GetterMethod = nameof(GetProperty), SetterMethod = nameof(SetProperty),
 			GetterExpressionMethod = nameof(GetPropertyExpression), SetterExpressionMethod = nameof(SetPropertyExpression))]
-		class MultipleGetterSetterMethods
+		sealed class MultipleGetterSetterMethods
 		{
 			[Column]
 			public int Id { get; set; }
@@ -314,7 +314,7 @@ namespace Tests.Mapping
 
 		[Table("DynamicColumnsTestTable")]
 		[DynamicColumnAccessor]
-		class NoGetterSetterMethods
+		sealed class NoGetterSetterMethods
 		{
 			[Column]
 			public int Id { get; set; }
@@ -346,15 +346,16 @@ namespace Tests.Mapping
 		}
 
 		[Test]
-		public void TestDynamicColumnStoreFromMetadataReader([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		public void TestDynamicColumnStoreFromMetadataReader([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			var ms = new MappingSchema();
 
-			var builder = ms.GetFluentMappingBuilder();
+			var builder = new FluentMappingBuilder(ms);
 			builder.Entity<FluentMetadataBasedStore>()
 				.HasColumn(e => e.Id)
 				.Property(x => Sql.Property<string>(x, "Name"))
-				.Member(e => e.Values).HasAttribute(new DynamicColumnsStoreAttribute());
+				.Member(e => e.Values).HasAttribute(new DynamicColumnsStoreAttribute())
+				.Build();
 
 			using (var db = GetDataContext(context, ms))
 			using (db.CreateLocalTable<DynamicColumnsTestFullTable>())
@@ -365,24 +366,31 @@ namespace Tests.Mapping
 
 
 				var data = db.GetTable<FluentMetadataBasedStore>().ToList();
-				Assert.AreEqual(1, data.Count);
-				Assert.AreEqual(5, data[0].Id);
-				Assert.AreEqual(1, data[0].Values.Count);
-				Assert.AreEqual("Name", data[0].Values.Keys.Single());
-				Assert.AreEqual("test_name", data[0].Values["Name"]);
+				Assert.That(data, Has.Count.EqualTo(1));
+				Assert.Multiple(() =>
+				{
+					Assert.That(data[0].Id, Is.EqualTo(5));
+					Assert.That(data[0].Values, Has.Count.EqualTo(1));
+				});
+				Assert.Multiple(() =>
+				{
+					Assert.That(data[0].Values.Keys.Single(), Is.EqualTo("Name"));
+					Assert.That(data[0].Values["Name"], Is.EqualTo("test_name"));
+				});
 			}
 		}
 
 		[Test]
-		public void TestDynamicColumnStoreFluentExtension([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		public void TestDynamicColumnStoreFluentExtension([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			var ms = new MappingSchema();
 
-			var builder = ms.GetFluentMappingBuilder();
+			var builder = new FluentMappingBuilder(ms);
 			builder.Entity<FluentMetadataBasedStore>()
 				.HasColumn(e => e.Id)
 				.DynamicColumnsStore(e => e.Values)
-				.Property(x => Sql.Property<string>(x, "Name"));
+				.Property(x => Sql.Property<string>(x, "Name"))
+				.Build();
 
 			using (var db = GetDataContext(context, ms))
 			using (db.CreateLocalTable<DynamicColumnsTestFullTable>())
@@ -393,11 +401,17 @@ namespace Tests.Mapping
 
 
 				var data = db.GetTable<FluentMetadataBasedStore>().ToList();
-				Assert.AreEqual(1, data.Count);
-				Assert.AreEqual(5, data[0].Id);
-				Assert.AreEqual(1, data[0].Values.Count);
-				Assert.AreEqual("Name", data[0].Values.Keys.Single());
-				Assert.AreEqual("test_name", data[0].Values["Name"]);
+				Assert.That(data, Has.Count.EqualTo(1));
+				Assert.Multiple(() =>
+				{
+					Assert.That(data[0].Id, Is.EqualTo(5));
+					Assert.That(data[0].Values, Has.Count.EqualTo(1));
+				});
+				Assert.Multiple(() =>
+				{
+					Assert.That(data[0].Values.Keys.Single(), Is.EqualTo("Name"));
+					Assert.That(data[0].Values["Name"], Is.EqualTo("test_name"));
+				});
 			}
 		}
 
@@ -406,13 +420,14 @@ namespace Tests.Mapping
 		{
 			var ms = new MappingSchema();
 
-			var builder = ms.GetFluentMappingBuilder();
+			var builder = new FluentMappingBuilder(ms);
 			builder.Entity<FluentMetadataBasedStore>()
 				.HasColumn(e => e.Id)
 				.DynamicColumnsStore(e => e.Values)
 				.Property(x => Sql.Property<string>(x, "Name"))
 				.Entity<FluentMetadataBasedStore>(ProviderName.SQLite)
-				.DynamicColumnsStore(e => e.SQLiteValues);
+				.DynamicColumnsStore(e => e.SQLiteValues)
+				.Build();
 
 			using (var db = GetDataContext(context, ms))
 			using (db.CreateLocalTable<DynamicColumnsTestFullTable>())
@@ -423,12 +438,18 @@ namespace Tests.Mapping
 
 
 				var data = db.GetTable<FluentMetadataBasedStore>().ToList();
-				Assert.AreEqual(1, data.Count);
-				Assert.AreEqual(5, data[0].Id);
-				Assert.AreEqual(0, data[0].Values.Count);
-				Assert.AreEqual(1, data[0].SQLiteValues.Count);
-				Assert.AreEqual("Name", data[0].SQLiteValues.Keys.Single());
-				Assert.AreEqual("test_name", data[0].SQLiteValues["Name"]);
+				Assert.That(data, Has.Count.EqualTo(1));
+				Assert.Multiple(() =>
+				{
+					Assert.That(data[0].Id, Is.EqualTo(5));
+					Assert.That(data[0].Values, Is.Empty);
+					Assert.That(data[0].SQLiteValues, Has.Count.EqualTo(1));
+				});
+				Assert.Multiple(() =>
+				{
+					Assert.That(data[0].SQLiteValues.Keys.Single(), Is.EqualTo("Name"));
+					Assert.That(data[0].SQLiteValues["Name"], Is.EqualTo("test_name"));
+				});
 			}
 		}
 
@@ -437,9 +458,10 @@ namespace Tests.Mapping
 		{
 			var ms = new MappingSchema();
 
-			ms.GetFluentMappingBuilder()
+			new FluentMappingBuilder(ms)
 				.Entity<AttributeMetadataBasedStore>()
-				.Property(x => Sql.Property<string>(x, "Name"));
+				.Property(x => Sql.Property<string>(x, "Name"))
+				.Build();
 
 			using (var db = GetDataContext(context, ms))
 			using (db.CreateLocalTable<DynamicColumnsTestFullTable>())
@@ -449,25 +471,32 @@ namespace Tests.Mapping
 				db.Insert(obj);
 
 				var data = db.GetTable<AttributeMetadataBasedStore>().ToList();
-				Assert.AreEqual(1, data.Count);
-				Assert.AreEqual(5, data[0].Id);
-				Assert.AreEqual(0, data[0].Values.Count);
-				Assert.AreEqual(1, data[0].SQLiteValues.Count);
-				Assert.AreEqual("Name", data[0].SQLiteValues.Keys.Single());
-				Assert.AreEqual("test_name", data[0].SQLiteValues["Name"]);
+				Assert.That(data, Has.Count.EqualTo(1));
+				Assert.Multiple(() =>
+				{
+					Assert.That(data[0].Id, Is.EqualTo(5));
+					Assert.That(data[0].Values, Is.Empty);
+					Assert.That(data[0].SQLiteValues, Has.Count.EqualTo(1));
+				});
+				Assert.Multiple(() =>
+				{
+					Assert.That(data[0].SQLiteValues.Keys.Single(), Is.EqualTo("Name"));
+					Assert.That(data[0].SQLiteValues["Name"], Is.EqualTo("test_name"));
+				});
 			}
 		}
 
 		[Test]
-		public void DynamicColumnStoreIssue1521([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		public void DynamicColumnStoreIssue1521([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			var ms = new MappingSchema();
 
-			var builder = ms.GetFluentMappingBuilder();
+			var builder = new FluentMappingBuilder(ms);
 			builder.Entity<FluentMetadataBasedStore>()
 				.HasColumn(e => e.Id)
 				.DynamicColumnsStore(e => e.Values)
-				.Property(x => Sql.Property<string>(x, "Name"));
+				.Property(x => Sql.Property<string>(x, "Name"))
+				.Build();
 
 			using (var db = GetDataContext(context, ms))
 			using (db.CreateLocalTable<DynamicColumnsTestFullTable>())
@@ -477,22 +506,29 @@ namespace Tests.Mapping
 				db.Insert(obj);
 
 				var data = db.GetTable<FluentMetadataBasedStore>().ToList();
-				Assert.AreEqual(1, data.Count);
-				Assert.AreEqual(5, data[0].Id);
-				Assert.AreEqual(1, data[0].Values.Count);
-				Assert.AreEqual("Name", data[0].Values.Keys.Single());
-				Assert.AreEqual("test_name", data[0].Values["Name"]);
+				Assert.That(data, Has.Count.EqualTo(1));
+				Assert.Multiple(() =>
+				{
+					Assert.That(data[0].Id, Is.EqualTo(5));
+					Assert.That(data[0].Values, Has.Count.EqualTo(1));
+				});
+				Assert.Multiple(() =>
+				{
+					Assert.That(data[0].Values.Keys.Single(), Is.EqualTo("Name"));
+					Assert.That(data[0].Values["Name"], Is.EqualTo("test_name"));
+				});
 			}
 		}
 
 		[Test]
-		public void TestDynamicColumnStoreInstanceAccessors([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		public void TestDynamicColumnStoreInstanceAccessors([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			var ms = new MappingSchema();
 
-			ms.GetFluentMappingBuilder()
+			new FluentMappingBuilder(ms)
 				.Entity<InstanceGetterSetterMethods>()
-				.Property(x => Sql.Property<string>(x, "Name"));
+				.Property(x => Sql.Property<string>(x, "Name"))
+				.Build();
 
 			using (var db = GetDataContext(context, ms))
 			using (db.CreateLocalTable<DynamicColumnsTestFullTable>())
@@ -502,24 +538,31 @@ namespace Tests.Mapping
 				db.Insert(obj);
 
 				var data = db.GetTable<InstanceGetterSetterMethods>().ToList();
-				Assert.AreEqual(1, data.Count);
-				Assert.AreEqual(5, data[0].Id);
-				Assert.AreEqual(0, data[0].SQLiteValues.Count);
-				Assert.AreEqual(1, data[0].Values.Count);
-				Assert.AreEqual("Name", data[0].Values.Keys.Single());
-				Assert.AreEqual("test_name", data[0].Values["Name"]);
+				Assert.That(data, Has.Count.EqualTo(1));
+				Assert.Multiple(() =>
+				{
+					Assert.That(data[0].Id, Is.EqualTo(5));
+					Assert.That(data[0].SQLiteValues, Is.Empty);
+					Assert.That(data[0].Values, Has.Count.EqualTo(1));
+				});
+				Assert.Multiple(() =>
+				{
+					Assert.That(data[0].Values.Keys.Single(), Is.EqualTo("Name"));
+					Assert.That(data[0].Values["Name"], Is.EqualTo("test_name"));
+				});
 			}
 		}
 
 		[Test]
-		public void TestDynamicColumnStoreStaticAccessors([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		public void TestDynamicColumnStoreStaticAccessors([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			StaticGetterSetterMethods.InstanceValues.Clear();
 			var ms = new MappingSchema();
 
-			ms.GetFluentMappingBuilder()
+			new FluentMappingBuilder(ms)
 				.Entity<StaticGetterSetterMethods>()
-				.Property(x => Sql.Property<string>(x, "Name"));
+				.Property(x => Sql.Property<string>(x, "Name"))
+				.Build();
 
 			using (var db = GetDataContext(context, ms))
 			using (db.CreateLocalTable<DynamicColumnsTestFullTable>())
@@ -532,26 +575,36 @@ namespace Tests.Mapping
 				StaticGetterSetterMethods.InstanceValues.Clear();
 
 				var data = db.GetTable<StaticGetterSetterMethods>().ToList();
-				Assert.AreEqual(1, data.Count);
-				Assert.AreEqual(5, data[0].Id);
-				Assert.AreEqual(0, data[0].SQLiteValues.Count);
-				Assert.AreEqual(0, data[0].Values.Count);
-				Assert.AreEqual(1, StaticGetterSetterMethods.InstanceValues.Count);
-				Assert.AreEqual(5, StaticGetterSetterMethods.InstanceValues.Keys.Single());
-				Assert.AreEqual(1, StaticGetterSetterMethods.InstanceValues[5].Count);
-				Assert.AreEqual("Name", StaticGetterSetterMethods.InstanceValues[5].Keys.Single());
-				Assert.AreEqual("test_name", StaticGetterSetterMethods.InstanceValues[5]["Name"]);
+				Assert.That(data, Has.Count.EqualTo(1));
+				Assert.Multiple(() =>
+				{
+					Assert.That(data[0].Id, Is.EqualTo(5));
+					Assert.That(data[0].SQLiteValues, Is.Empty);
+					Assert.That(data[0].Values, Is.Empty);
+					Assert.That(StaticGetterSetterMethods.InstanceValues, Has.Count.EqualTo(1));
+				});
+				Assert.Multiple(() =>
+				{
+					Assert.That(StaticGetterSetterMethods.InstanceValues.Keys.Single(), Is.EqualTo(5));
+					Assert.That(StaticGetterSetterMethods.InstanceValues[5], Has.Count.EqualTo(1));
+				});
+				Assert.Multiple(() =>
+				{
+					Assert.That(StaticGetterSetterMethods.InstanceValues[5].Keys.Single(), Is.EqualTo("Name"));
+					Assert.That(StaticGetterSetterMethods.InstanceValues[5]["Name"], Is.EqualTo("test_name"));
+				});
 			}
 		}
 
 		[Test]
-		public void TestDynamicColumnStoreInstanceExpressionAccessors([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		public void TestDynamicColumnStoreInstanceExpressionAccessors([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			var ms = new MappingSchema();
 
-			ms.GetFluentMappingBuilder()
+			new FluentMappingBuilder(ms)
 				.Entity<InstanceGetterSetterExpressionMethods>()
-				.Property(x => Sql.Property<string>(x, "Name"));
+				.Property(x => Sql.Property<string>(x, "Name"))
+				.Build();
 
 			using (var db = GetDataContext(context, ms))
 			using (db.CreateLocalTable<DynamicColumnsTestFullTable>())
@@ -561,25 +614,32 @@ namespace Tests.Mapping
 				db.Insert(obj);
 
 				var data = db.GetTable<InstanceGetterSetterExpressionMethods>().ToList();
-				Assert.AreEqual(1, data.Count);
-				Assert.AreEqual(5, data[0].Id);
-				Assert.AreEqual(0, data[0].SQLiteValues.Count);
-				Assert.AreEqual(1, data[0].Values.Count);
-				Assert.AreEqual("Name", data[0].Values.Keys.Single());
-				Assert.AreEqual("test_name", data[0].Values["Name"]);
+				Assert.That(data, Has.Count.EqualTo(1));
+				Assert.Multiple(() =>
+				{
+					Assert.That(data[0].Id, Is.EqualTo(5));
+					Assert.That(data[0].SQLiteValues, Is.Empty);
+					Assert.That(data[0].Values, Has.Count.EqualTo(1));
+				});
+				Assert.Multiple(() =>
+				{
+					Assert.That(data[0].Values.Keys.Single(), Is.EqualTo("Name"));
+					Assert.That(data[0].Values["Name"], Is.EqualTo("test_name"));
+				});
 			}
 		}
 
 		[Test]
-		public void TestDynamicColumnStoreStaticExpressionAccessors([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		public void TestDynamicColumnStoreStaticExpressionAccessors([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			StaticGetterSetterExpressionMethods.InstanceValues.Clear();
 
 			var ms = new MappingSchema();
 
-			ms.GetFluentMappingBuilder()
+			new FluentMappingBuilder(ms)
 				.Entity<StaticGetterSetterExpressionMethods>()
-				.Property(x => Sql.Property<string>(x, "Name"));
+				.Property(x => Sql.Property<string>(x, "Name"))
+				.Build();
 
 			using (var db = GetDataContext(context, ms))
 			using (db.CreateLocalTable<DynamicColumnsTestFullTable>())
@@ -592,15 +652,24 @@ namespace Tests.Mapping
 				StaticGetterSetterExpressionMethods.InstanceValues.Clear();
 
 				var data = db.GetTable<StaticGetterSetterExpressionMethods>().ToList();
-				Assert.AreEqual(1, data.Count);
-				Assert.AreEqual(5, data[0].Id);
-				Assert.AreEqual(0, data[0].SQLiteValues.Count);
-				Assert.AreEqual(0, data[0].Values.Count);
-				Assert.AreEqual(1, StaticGetterSetterExpressionMethods.InstanceValues.Count);
-				Assert.AreEqual(5, StaticGetterSetterExpressionMethods.InstanceValues.Keys.Single());
-				Assert.AreEqual(1, StaticGetterSetterExpressionMethods.InstanceValues[5].Count);
-				Assert.AreEqual("Name", StaticGetterSetterExpressionMethods.InstanceValues[5].Keys.Single());
-				Assert.AreEqual("test_name", StaticGetterSetterExpressionMethods.InstanceValues[5]["Name"]);
+				Assert.That(data, Has.Count.EqualTo(1));
+				Assert.Multiple(() =>
+				{
+					Assert.That(data[0].Id, Is.EqualTo(5));
+					Assert.That(data[0].SQLiteValues, Is.Empty);
+					Assert.That(data[0].Values, Is.Empty);
+					Assert.That(StaticGetterSetterExpressionMethods.InstanceValues, Has.Count.EqualTo(1));
+				});
+				Assert.Multiple(() =>
+				{
+					Assert.That(StaticGetterSetterExpressionMethods.InstanceValues.Keys.Single(), Is.EqualTo(5));
+					Assert.That(StaticGetterSetterExpressionMethods.InstanceValues[5], Has.Count.EqualTo(1));
+				});
+				Assert.Multiple(() =>
+				{
+					Assert.That(StaticGetterSetterExpressionMethods.InstanceValues[5].Keys.Single(), Is.EqualTo("Name"));
+					Assert.That(StaticGetterSetterExpressionMethods.InstanceValues[5]["Name"], Is.EqualTo("test_name"));
+				});
 			}
 		}
 
@@ -609,9 +678,10 @@ namespace Tests.Mapping
 		{
 			var ms = new MappingSchema();
 
-			ms.GetFluentMappingBuilder()
+			new FluentMappingBuilder(ms)
 				.Entity<SQLiteInstanceGetterSetterMethods>()
-				.Property(x => Sql.Property<string>(x, "Name"));
+				.Property(x => Sql.Property<string>(x, "Name"))
+				.Build();
 
 			using (var db = GetDataContext(context, ms))
 			using (db.CreateLocalTable<DynamicColumnsTestFullTable>())
@@ -621,12 +691,18 @@ namespace Tests.Mapping
 				db.Insert(obj);
 
 				var data = db.GetTable<SQLiteInstanceGetterSetterMethods>().ToList();
-				Assert.AreEqual(1, data.Count);
-				Assert.AreEqual(5, data[0].Id);
-				Assert.AreEqual(0, data[0].Values.Count);
-				Assert.AreEqual(1, data[0].SQLiteValues.Count);
-				Assert.AreEqual("Name", data[0].SQLiteValues.Keys.Single());
-				Assert.AreEqual("test_name", data[0].SQLiteValues["Name"]);
+				Assert.That(data, Has.Count.EqualTo(1));
+				Assert.Multiple(() =>
+				{
+					Assert.That(data[0].Id, Is.EqualTo(5));
+					Assert.That(data[0].Values, Is.Empty);
+					Assert.That(data[0].SQLiteValues, Has.Count.EqualTo(1));
+				});
+				Assert.Multiple(() =>
+				{
+					Assert.That(data[0].SQLiteValues.Keys.Single(), Is.EqualTo("Name"));
+					Assert.That(data[0].SQLiteValues["Name"], Is.EqualTo("test_name"));
+				});
 			}
 		}
 
@@ -635,9 +711,10 @@ namespace Tests.Mapping
 		{
 			var ms = new MappingSchema();
 
-			ms.GetFluentMappingBuilder()
+			new FluentMappingBuilder(ms)
 				.Entity<GetterSetterVsStorageMethods1>()
-				.Property(x => Sql.Property<string>(x, "Name"));
+				.Property(x => Sql.Property<string>(x, "Name"))
+				.Build();
 
 			using (var db = GetDataContext(context, ms))
 			using (db.CreateLocalTable<DynamicColumnsTestFullTable>())
@@ -647,12 +724,18 @@ namespace Tests.Mapping
 				db.Insert(obj);
 
 				var data = db.GetTable<GetterSetterVsStorageMethods1>().ToList();
-				Assert.AreEqual(1, data.Count);
-				Assert.AreEqual(5, data[0].Id);
-				Assert.AreEqual(0, data[0].Values.Count);
-				Assert.AreEqual(1, data[0].SQLiteValues.Count);
-				Assert.AreEqual("Name", data[0].SQLiteValues.Keys.Single());
-				Assert.AreEqual("test_name", data[0].SQLiteValues["Name"]);
+				Assert.That(data, Has.Count.EqualTo(1));
+				Assert.Multiple(() =>
+				{
+					Assert.That(data[0].Id, Is.EqualTo(5));
+					Assert.That(data[0].Values, Is.Empty);
+					Assert.That(data[0].SQLiteValues, Has.Count.EqualTo(1));
+				});
+				Assert.Multiple(() =>
+				{
+					Assert.That(data[0].SQLiteValues.Keys.Single(), Is.EqualTo("Name"));
+					Assert.That(data[0].SQLiteValues["Name"], Is.EqualTo("test_name"));
+				});
 			}
 		}
 
@@ -661,9 +744,10 @@ namespace Tests.Mapping
 		{
 			var ms = new MappingSchema();
 
-			ms.GetFluentMappingBuilder()
+			new FluentMappingBuilder(ms)
 				.Entity<GetterSetterVsStorageMethods2>()
-				.Property(x => Sql.Property<string>(x, "Name"));
+				.Property(x => Sql.Property<string>(x, "Name"))
+				.Build();
 
 			using (var db = GetDataContext(context, ms))
 			using (db.CreateLocalTable<DynamicColumnsTestFullTable>())
@@ -673,22 +757,29 @@ namespace Tests.Mapping
 				db.Insert(obj);
 
 				var data = db.GetTable<GetterSetterVsStorageMethods2>().ToList();
-				Assert.AreEqual(1, data.Count);
-				Assert.AreEqual(5, data[0].Id);
-				Assert.AreEqual(0, data[0].Values.Count);
-				Assert.AreEqual(1, data[0].SQLiteValues.Count);
-				Assert.AreEqual("Name", data[0].SQLiteValues.Keys.Single());
-				Assert.AreEqual("test_name", data[0].SQLiteValues["Name"]);
+				Assert.That(data, Has.Count.EqualTo(1));
+				Assert.Multiple(() =>
+				{
+					Assert.That(data[0].Id, Is.EqualTo(5));
+					Assert.That(data[0].Values, Is.Empty);
+					Assert.That(data[0].SQLiteValues, Has.Count.EqualTo(1));
+				});
+				Assert.Multiple(() =>
+				{
+					Assert.That(data[0].SQLiteValues.Keys.Single(), Is.EqualTo("Name"));
+					Assert.That(data[0].SQLiteValues["Name"], Is.EqualTo("test_name"));
+				});
 			}
 		}
 
 		[Test]
-		public void TestDynamicColumnStoreGetterSetterVsStorageMethodsConflict([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		public void TestDynamicColumnStoreGetterSetterVsStorageMethodsConflict([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			var ms = new MappingSchema();
-			ms.GetFluentMappingBuilder()
+			new FluentMappingBuilder(ms)
 				.Entity<GetterSetterVsStorageMethodsConflict>()
-				.Property(x => Sql.Property<string>(x, "Name"));
+				.Property(x => Sql.Property<string>(x, "Name"))
+				.Build();
 
 			using (var db = GetDataContext(context, ms))
 			using (db.CreateLocalTable<DynamicColumnsTestFullTable>())
@@ -702,58 +793,68 @@ namespace Tests.Mapping
 		}
 
 		[Test]
-		public void TestDynamicColumnStoreExpressions([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		public void TestDynamicColumnStoreExpressions([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
-			var storage = new Dictionary<int, Dictionary<string, object>>();
+			var storage = new Dictionary<int, Dictionary<string, object?>>();
 
 			var ms = new MappingSchema();
-			var builder = ms.GetFluentMappingBuilder();
+			var builder = new FluentMappingBuilder(ms);
 
 			builder.Entity<CustomSetterGetterBase>()
 				.DynamicPropertyAccessors(
 					(instance, property, defaultValue) => Getter(storage, instance, property, defaultValue),
 					(instance, property, value) => Setter(storage, instance, property, value))
 				.HasColumn(e => e.Id)
-				.Property(x => Sql.Property<string>(x, "Name"));
+				.Property(x => Sql.Property<string>(x, "Name"))
+				.Build();
 
 			using (var db = GetDataContext(context, ms))
 			using (db.CreateLocalTable<DynamicColumnsTestFullTable>())
 			{
 				var obj = new CustomSetterGetterBase { Id = 5 };
-				storage.Add(5, new Dictionary<string, object>());
+				storage.Add(5, new Dictionary<string, object?>());
 				storage[5].Add("Name", "test_name");
 				db.Insert(obj);
 
 				var data = db.GetTable<CustomSetterGetterBase>().ToList();
-				Assert.AreEqual(1, data.Count);
-				Assert.AreEqual(5, data[0].Id);
-				Assert.AreEqual(0, data[0].SQLiteValues.Count);
-				Assert.AreEqual(0, data[0].Values.Count);
-				Assert.AreEqual(1, storage.Count);
-				Assert.AreEqual(5, storage.Keys.Single());
-				Assert.AreEqual(1, storage[5].Count);
-				Assert.AreEqual("Name", storage[5].Keys.Single());
-				Assert.AreEqual("test_name", storage[5]["Name"]);
+				Assert.That(data, Has.Count.EqualTo(1));
+				Assert.Multiple(() =>
+				{
+					Assert.That(data[0].Id, Is.EqualTo(5));
+					Assert.That(data[0].SQLiteValues, Is.Empty);
+					Assert.That(data[0].Values, Is.Empty);
+					Assert.That(storage, Has.Count.EqualTo(1));
+				});
+				Assert.Multiple(() =>
+				{
+					Assert.That(storage.Keys.Single(), Is.EqualTo(5));
+					Assert.That(storage[5], Has.Count.EqualTo(1));
+				});
+				Assert.Multiple(() =>
+				{
+					Assert.That(storage[5].Keys.Single(), Is.EqualTo("Name"));
+					Assert.That(storage[5]["Name"], Is.EqualTo("test_name"));
+				});
 			}
 		}
 
-		static object Getter(IDictionary<int, Dictionary<string, object>> storage, CustomSetterGetterBase instance, string property, object defaultValue)
+		static object? Getter(IDictionary<int, Dictionary<string, object?>> storage, CustomSetterGetterBase instance, string property, object? defaultValue)
 		{
-			if (!storage.ContainsKey(instance.Id))
+			if (!storage.TryGetValue(instance.Id, out var values))
 				return defaultValue;
 
-			if (!storage[instance.Id].TryGetValue(property, out var value))
+			if (!values.TryGetValue(property, out var value))
 				value = defaultValue;
 
 			return value;
 		}
 
-		static void Setter(IDictionary<int, Dictionary<string, object>> storage, CustomSetterGetterBase instance, string property, object value)
+		static void Setter(IDictionary<int, Dictionary<string, object?>> storage, CustomSetterGetterBase instance, string property, object? value)
 		{
-			if (!storage.ContainsKey(instance.Id))
-				storage.Add(instance.Id, new Dictionary<string, object>());
+			if (!storage.TryGetValue(instance.Id, out var values))
+				storage.Add(instance.Id, values = new Dictionary<string, object?>());
 
-			storage[instance.Id][property] = value;
+			values[property] = value;
 		}
 
 		[Test]
@@ -762,9 +863,10 @@ namespace Tests.Mapping
 			var ms = new MappingSchema();
 			ms.SetDefaultValue(typeof(string), "me_default");
 
-			ms.GetFluentMappingBuilder()
+			new FluentMappingBuilder(ms)
 				.Entity<AttributeMetadataBasedStore>()
-				.Property(x => Sql.Property<string>(x, "Name"));
+				.Property(x => Sql.Property<string>(x, "Name"))
+				.Build();
 
 			using (var db = GetDataContext(context, ms))
 			using (db.CreateLocalTable<DynamicColumnsTestFullTable>())
@@ -773,12 +875,18 @@ namespace Tests.Mapping
 				db.Insert(obj);
 
 				var data = db.GetTable<AttributeMetadataBasedStore>().ToList();
-				Assert.AreEqual(1, data.Count);
-				Assert.AreEqual(5, data[0].Id);
-				Assert.AreEqual(0, data[0].Values.Count);
-				Assert.AreEqual(1, data[0].SQLiteValues.Count);
-				Assert.AreEqual("Name", data[0].SQLiteValues.Keys.Single());
-				Assert.AreEqual("me_default", data[0].SQLiteValues["Name"]);
+				Assert.That(data, Has.Count.EqualTo(1));
+				Assert.Multiple(() =>
+				{
+					Assert.That(data[0].Id, Is.EqualTo(5));
+					Assert.That(data[0].Values, Is.Empty);
+					Assert.That(data[0].SQLiteValues, Has.Count.EqualTo(1));
+				});
+				Assert.Multiple(() =>
+				{
+					Assert.That(data[0].SQLiteValues.Keys.Single(), Is.EqualTo("Name"));
+					Assert.That(data[0].SQLiteValues["Name"], Is.EqualTo("me_default"));
+				});
 			}
 		}
 
@@ -788,9 +896,10 @@ namespace Tests.Mapping
 			var ms = new MappingSchema();
 			ms.SetDefaultValue(typeof(string), "accessor_def");
 
-			ms.GetFluentMappingBuilder()
+			new FluentMappingBuilder(ms)
 				.Entity<InstanceGetterSetterMethods>()
-				.Property(x => Sql.Property<string>(x, "Name"));
+				.Property(x => Sql.Property<string>(x, "Name"))
+				.Build();
 
 			using (var db = GetDataContext(context, ms))
 			using (db.CreateLocalTable<DynamicColumnsTestFullTable>())
@@ -799,22 +908,29 @@ namespace Tests.Mapping
 				db.Insert(obj);
 
 				var data = db.GetTable<InstanceGetterSetterMethods>().ToList();
-				Assert.AreEqual(1, data.Count);
-				Assert.AreEqual(5, data[0].Id);
-				Assert.AreEqual(0, data[0].SQLiteValues.Count);
-				Assert.AreEqual(1, data[0].Values.Count);
-				Assert.AreEqual("Name", data[0].Values.Keys.Single());
-				Assert.AreEqual("accessor_def", data[0].Values["Name"]);
+				Assert.That(data, Has.Count.EqualTo(1));
+				Assert.Multiple(() =>
+				{
+					Assert.That(data[0].Id, Is.EqualTo(5));
+					Assert.That(data[0].SQLiteValues, Is.Empty);
+					Assert.That(data[0].Values, Has.Count.EqualTo(1));
+				});
+				Assert.Multiple(() =>
+				{
+					Assert.That(data[0].Values.Keys.Single(), Is.EqualTo("Name"));
+					Assert.That(data[0].Values["Name"], Is.EqualTo("accessor_def"));
+				});
 			}
 		}
 
 		[Test]
-		public void TestDynamicColumnStoreMultipleGetterSetters([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		public void TestDynamicColumnStoreMultipleGetterSetters([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			var ms = new MappingSchema();
-			ms.GetFluentMappingBuilder()
+			new FluentMappingBuilder(ms)
 				.Entity<MultipleGetterSetterMethods>()
-				.Property(x => Sql.Property<string>(x, "Name"));
+				.Property(x => Sql.Property<string>(x, "Name"))
+				.Build();
 
 			using (var db = GetDataContext(context, ms))
 			using (db.CreateLocalTable<DynamicColumnsTestFullTable>())
@@ -828,12 +944,13 @@ namespace Tests.Mapping
 		}
 
 		[Test]
-		public void TestDynamicColumnStoreNoGetterSetters([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		public void TestDynamicColumnStoreNoGetterSetters([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			var ms = new MappingSchema();
-			ms.GetFluentMappingBuilder()
+			new FluentMappingBuilder(ms)
 				.Entity<NoGetterSetterMethods>()
-				.Property(x => Sql.Property<string>(x, "Name"));
+				.Property(x => Sql.Property<string>(x, "Name"))
+				.Build();
 
 			using (var db = GetDataContext(context, ms))
 			using (db.CreateLocalTable<DynamicColumnsTestFullTable>())

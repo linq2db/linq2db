@@ -22,14 +22,14 @@ namespace Cli.Default.SqlServerNorthwind
 		/// <summary>
 		/// FK_EmployeeTerritories_Employees
 		/// </summary>
-		[Association(CanBeNull = false, ThisKey = nameof(EmployeeId), OtherKey = nameof(SqlServerNorthwind.Employee.EmployeeId))]
-		public Employee Employee { get; set; } = null!;
+		[Association(CanBeNull = false, ThisKey = nameof(EmployeeId), OtherKey = nameof(Employee.EmployeeId))]
+		public Employee Employees { get; set; } = null!;
 
 		/// <summary>
 		/// FK_EmployeeTerritories_Territories
 		/// </summary>
-		[Association(CanBeNull = false, ThisKey = nameof(TerritoryId), OtherKey = nameof(SqlServerNorthwind.Territory.TerritoryId))]
-		public Territory Territory { get; set; } = null!;
+		[Association(CanBeNull = false, ThisKey = nameof(TerritoryId), OtherKey = nameof(Territory.TerritoryId))]
+		public Territory Territories { get; set; } = null!;
 		#endregion
 	}
 }

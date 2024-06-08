@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data.SqlTypes;
+using System.Globalization;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -10,12 +11,12 @@ namespace LinqToDB.Common
 {
 	using Expressions;
 	using Extensions;
-	using LinqToDB.Common.Internal;
+	using Internal;
 	using Mapping;
 
 	public static class ConvertBuilder
 	{
-		static readonly MethodInfo _defaultConverter = MemberHelper.MethodOf(() => ConvertDefault(null!, typeof(int)));
+		internal static readonly MethodInfo DefaultConverter = MemberHelper.MethodOf(() => ConvertDefault(null!, typeof(int)));
 
 		static object ConvertDefault(object value, Type conversionType)
 		{
@@ -42,6 +43,19 @@ namespace LinqToDB.Common
 				p = Expression.Convert(p, ptype);
 
 			return Expression.New(ctor, p);
+		}
+
+		static Expression? GetValueOrDefault(Type from, Type to, Expression p)
+		{
+			if (!from.IsNullable() || to != from.UnwrapNullableType())
+				return null;
+
+			var mi = from.GetMethod("GetValueOrDefault", BindingFlags.Instance | BindingFlags.Public, null, [], null);
+
+			if (mi == null)
+				return null;
+
+			return Expression.Call(p, mi);
 		}
 
 		static Expression? GetValue(Type from, Type to, Expression p)
@@ -120,7 +134,7 @@ namespace LinqToDB.Common
 			}
 		}
 
-		static Expression? GetConvertion(Type from, Type to, Expression p)
+		static Expression? GetConversion(Type from, Type to, Expression p)
 		{
 			if (IsConvertible(from) && IsConvertible(to) && to != typeof(bool) ||
 				from.IsAssignableFrom(to) && to.IsAssignableFrom(from))
@@ -129,11 +143,18 @@ namespace LinqToDB.Common
 		 	return null;
 		}
 
+		static readonly Type[] ParseParameters = new[] { typeof(string), typeof(IFormatProvider) };
+
 		static Expression? GetParse(Type from, Type to, Expression p)
 		{
 			if (from == typeof(string))
 			{
-				var mi = to.GetMethodEx("Parse", from);
+				var mi = to.GetMethodEx("Parse", ParseParameters);
+
+				if (mi != null)
+					return Expression.Call(mi, p, Expression.Property(null, typeof(CultureInfo), nameof(CultureInfo.InvariantCulture)));
+
+				mi = to.GetMethodEx("Parse", from);
 
 				if (mi != null)
 				{
@@ -154,11 +175,24 @@ namespace LinqToDB.Common
 			return null;
 		}
 
+		static readonly Type[] ToStringInvariantArgTypes = new[]{ typeof(IFormatProvider) };
+
+		static Expression? GetToStringInvariant(Type from, Type to, Expression p)
+		{
+			if (to == typeof(string) && !from.IsNullable())
+			{
+				var mi = from.GetMethodEx("ToString", ToStringInvariantArgTypes);
+				return mi != null ? Expression.Call(p, mi, Expression.Property(null, typeof(CultureInfo), nameof(CultureInfo.InvariantCulture))) : null;
+			}
+
+			return null;
+		}
+
 		static Expression? GetToString(Type from, Type to, Expression p)
 		{
 			if (to == typeof(string) && !from.IsNullable())
 			{
-				var mi = from.GetMethodEx("ToString", Array<Type>.Empty);
+				var mi = from.GetMethodEx("ToString", []);
 				return mi != null ? Expression.Call(p, mi) : null;
 			}
 
@@ -178,11 +212,12 @@ namespace LinqToDB.Common
 				{
 					var val = values.GetValue(i)!;
 					var lv  = (long)Convert.ChangeType(val, typeof(long), Thread.CurrentThread.CurrentCulture)!;
+					var lvs = lv.ToString(NumberFormatInfo.InvariantInfo);
 
-					dic[lv.ToString()] = val;
+					dic[lvs] = val;
 
 					if (lv > 0)
-						dic["+" + lv.ToString()] = val;
+						dic["+" + lvs] = val;
 				}
 
 				for (var i = 0; i < values.Length; i++)
@@ -200,7 +235,7 @@ namespace LinqToDB.Common
 				var expr = Expression.Switch(
 					p,
 					Expression.Convert(
-						Expression.Call(_defaultConverter,
+						Expression.Call(DefaultConverter,
 							Expression.Convert(p, typeof(string)),
 							Expression.Constant(to)),
 						to),
@@ -231,6 +266,7 @@ namespace LinqToDB.Common
 					return null;
 
 				var fromType = from;
+
 				if (fromType.IsNullable())
 					fromType = fromType.ToNullableUnderlying();
 
@@ -275,7 +311,7 @@ namespace LinqToDB.Common
 					var expr = Expression.Switch(
 						expression,
 						Expression.Convert(
-							Expression.Call(_defaultConverter,
+							Expression.Call(DefaultConverter,
 								Expression.Convert(expression, typeof(object)),
 								Expression.Constant(to)),
 							to),
@@ -305,7 +341,7 @@ namespace LinqToDB.Common
 			return null;
 		}
 
-		class EnumValues
+		sealed class EnumValues
 		{
 			public FieldInfo           Field = null!;
 			public MapValueAttribute[] Attrs = null!;
@@ -317,14 +353,13 @@ namespace LinqToDB.Common
 			{
 				var fromFields = from.GetFields()
 					.Where (f => (f.Attributes & EnumField) == EnumField)
-					.Select(f => new EnumValues { Field = f, Attrs = mappingSchema.GetAttributes<MapValueAttribute>(from, f, a => a.Configuration) })
+					.Select(f => new EnumValues { Field = f, Attrs = mappingSchema.GetAttributes<MapValueAttribute>(from, f) })
 					.ToList();
 
 				{
 					var valueType = to;
 					if (valueType.IsNullable())
 						valueType = valueType.ToNullableUnderlying();
-
 
 					var toTypeFields = fromFields
 						.Select(f => new { f.Field, Attrs = f.Attrs
@@ -349,7 +384,7 @@ namespace LinqToDB.Common
 						var expr = Expression.Switch(
 							expression,
 							Expression.Convert(
-								Expression.Call(_defaultConverter,
+								Expression.Call(DefaultConverter,
 									Expression.Convert(expression, typeof(object)),
 									Expression.Constant(to)),
 								to),
@@ -375,7 +410,7 @@ namespace LinqToDB.Common
 				{
 					var toFields = to.GetFields()
 						.Where (f => (f.Attributes & EnumField) == EnumField)
-						.Select(f => new EnumValues { Field = f, Attrs = mappingSchema.GetAttributes<MapValueAttribute>(to, f, a => a.Configuration) })
+						.Select(f => new EnumValues { Field = f, Attrs = mappingSchema.GetAttributes<MapValueAttribute>(to, f) })
 						.ToList();
 
 					var dic = new Dictionary<EnumValues,EnumValues>();
@@ -424,7 +459,9 @@ namespace LinqToDB.Common
 								Expression.Call(
 									_throwLinqToDBConvertException,
 									Expression.Constant(
-										string.Format("Mapping ambiguity. '{0}.{1}' can be mapped to either '{2}.{3}' or '{2}.{4}'.",
+										string.Format(
+											CultureInfo.InvariantCulture,
+											"Mapping ambiguity. '{0}.{1}' can be mapped to either '{2}.{3}' or '{2}.{4}'.",
 											from.FullName, fromAttrs[0].Field.Name,
 											to.FullName,
 											prev.To.Field.Name,
@@ -444,7 +481,7 @@ namespace LinqToDB.Common
 						var expr = Expression.Switch(
 							expression,
 							Expression.Convert(
-								Expression.Call(_defaultConverter,
+								Expression.Call(DefaultConverter,
 									Expression.Convert(expression, typeof(object)),
 									Expression.Constant(to)),
 								to),
@@ -486,13 +523,15 @@ namespace LinqToDB.Common
 				return Tuple.Create(ex, true);
 
 			ex =
-				GetConvertion(from, to, expr) ??
-				GetCtor      (from, to, expr) ??
-				GetValue     (from, to, expr) ??
-				GetOperator  (from, to, expr) ??
-				GetParse     (from, to, expr) ??
-				GetToString  (from, to, expr) ??
-				GetParseEnum (from, to, expr);
+				GetConversion       (from, to, expr) ??
+				GetCtor             (from, to, expr) ??
+				GetValueOrDefault   (from, to, expr) ??
+				GetValue            (from, to, expr) ??
+				GetOperator         (from, to, expr) ??
+				GetParse            (from, to, expr) ??
+				GetToStringInvariant(from, to, expr) ??
+				GetToString         (from, to, expr) ??
+				GetParseEnum        (from, to, expr);
 
 			return ex != null ? Tuple.Create(ex, false) : null;
 		}
@@ -535,8 +574,7 @@ namespace LinqToDB.Common
 
 		public static Tuple<LambdaExpression,LambdaExpression?,bool> GetConverter(MappingSchema? mappingSchema, Type from, Type to)
 		{
-			if (mappingSchema == null)
-				mappingSchema = MappingSchema.Default;
+			mappingSchema ??= MappingSchema.Default;
 
 			var p  = Expression.Parameter(from, "p");
 			var ne = null as LambdaExpression;
@@ -573,7 +611,7 @@ namespace LinqToDB.Common
 			{
 				var uto = to.ToNullableUnderlying();
 
-				var defex = Expression.Call(_defaultConverter,
+				var defex = Expression.Call(DefaultConverter,
 					Expression.Convert(p, typeof(object)),
 					Expression.Constant(uto)) as Expression;
 
@@ -586,7 +624,7 @@ namespace LinqToDB.Common
 			}
 			else
 			{
-				var defex = Expression.Call(_defaultConverter,
+				var defex = Expression.Call(DefaultConverter,
 					Expression.Convert(p, typeof(object)),
 					Expression.Constant(to)) as Expression;
 
@@ -615,7 +653,7 @@ namespace LinqToDB.Common
 			{
 				if ((field.Attributes & EnumField) == EnumField)
 				{
-					var attrs = mappingSchema.GetAttributes<MapValueAttribute>(type, field, static a => a.Configuration);
+					var attrs = mappingSchema.GetAttributes<MapValueAttribute>(type, field);
 
 					if (attrs.Length == 0)
 						allFieldsMapped = false;

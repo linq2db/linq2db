@@ -2,9 +2,9 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using LinqToDB.Configuration;
 using LinqToDB.Data;
 using LinqToDB.DataModel;
+using LinqToDB.Metadata;
 using LinqToDB.Naming;
 using LinqToDB.Schema;
 
@@ -35,6 +35,15 @@ namespace LinqToDB.Scaffold
 		/// </list>
 		/// </summary>
 		public bool GenerateDefaultSchema { get; set; }
+
+		/// <summary>
+		/// Specifies type of generated metadata source.
+		/// <list type="bullet">
+		/// <item>Default: <see cref="MetadataSource.Attributes"/></item>
+		/// <item>In T4 compability mode: <see cref="MetadataSource.Attributes"/></item>
+		/// </list>
+		/// </summary>
+		public MetadataSource Metadata { get; set; } = MetadataSource.Attributes;
 		#endregion
 
 		#region Entities
@@ -179,7 +188,7 @@ namespace LinqToDB.Scaffold
 		public bool HasConfigurationConstructor { get; set; } = true;
 
 		/// <summary>
-		/// Enables generation of data context constructor with non-generic <c>(<see cref="LinqToDBConnectionOptions"/> options)</c> parameter.
+		/// Enables generation of data context constructor with non-generic <c>(<see cref="DataOptions"/> options)</c> parameter.
 		/// <list type="bullet">
 		/// <item>Default: <c>false</c></item>
 		/// <item>In T4 compability mode: <c>true</c></item>
@@ -188,7 +197,7 @@ namespace LinqToDB.Scaffold
 		public bool HasUntypedOptionsConstructor { get; set; }
 
 		/// <summary>
-		/// Enables generation of data context constructor with generic <c>(<see cref="LinqToDBConnectionOptions{T}"/> options)</c> parameter,
+		/// Enables generation of data context constructor with generic <c>(<see cref="DataOptions{T}"/> options)</c> parameter,
 		/// where <c>T</c> is generated data context class.
 		/// <list type="bullet">
 		/// <item>Default: <c>true</c></item>
@@ -226,6 +235,15 @@ namespace LinqToDB.Scaffold
 		/// </list>
 		/// </summary>
 		public NormalizationOptions DataContextClassNameOptions { get; set; } = new() { Casing = NameCasing.Pascal, Transformation = NameTransformation.SplitByUnderscore, Pluralization = Pluralization.None };
+
+		/// <summary>
+		/// Enables generation of InitDataContext partial method on data context class.
+		/// <list type="bullet">
+		/// <item>Default: <c>true</c></item>
+		/// <item>In T4 compability mode: <c>true</c></item>
+		/// </list>
+		/// </summary>
+		public bool GenerateInitDataContextMethod { get; set; } = true;
 		#endregion
 
 		#region Associations
@@ -343,15 +361,6 @@ namespace LinqToDB.Scaffold
 		/// </list>
 		/// </summary>
 		public NormalizationOptions FunctionTupleResultPropertyNameOptions { get; set; } = new() { Casing = NameCasing.Pascal, Transformation = NameTransformation.SplitByUnderscore, Pluralization = Pluralization.None };
-
-		/// <summary>
-		/// Gets or sets name generation and normalization rules for field to store <see cref="MethodInfo"/> for table function mapping method.
-		/// <list type="bullet">
-		/// <item>Default: <see cref="NameCasing.CamelCase"/>, <see cref="NameTransformation.SplitByUnderscore"/>, <c>Prefix = "_"</c></item>
-		/// <item>In T4 compability mode: <see cref="NameCasing.CamelCase"/>, <see cref="NameTransformation.SplitByUnderscore"/>, <c>Prefix = "_"</c></item>
-		/// </list>
-		/// </summary>
-		public NormalizationOptions TableFunctionMethodInfoFieldNameOptions { get; set; } = new() { Casing = NameCasing.CamelCase, Transformation = NameTransformation.SplitByUnderscore, Pluralization = Pluralization.None, Prefix = "_" };
 
 		/// <summary>
 		/// Gets or sets name generation and normalization rules for custom mapping class for result record of stored procedure or table function.
@@ -490,7 +499,7 @@ namespace LinqToDB.Scaffold
 		/// <item>In T4 compability mode: <c>false</c></item>
 		/// </list>
 		/// </summary>
-		public bool GenerateIEquatable { get; set; } 
+		public bool GenerateIEquatable { get; set; }
 
 		/// <summary>
 		/// Provides base names for schema wrapper class and main data context property for additional schemas (when <see cref="GenerateSchemaAsType"/> option set).

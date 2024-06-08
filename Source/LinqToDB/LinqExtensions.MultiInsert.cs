@@ -1,14 +1,14 @@
-using System;
+﻿using System;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
 using JetBrains.Annotations;
-using LinqToDB.Async;
 
 namespace LinqToDB
 {
-	using Methods = LinqToDB.Reflection.Methods.LinqToDB.MultiInsert;
+	using Async;
+	using Methods = Reflection.Methods.LinqToDB.MultiInsert;
 
 	public static class MultiInsertExtensions
 	{
@@ -52,7 +52,7 @@ namespace LinqToDB
 			if (source == null) throw new ArgumentNullException(nameof(source));
 			if (target == null) throw new ArgumentNullException(nameof(target));
 			if (setter == null) throw new ArgumentNullException(nameof(setter));
-			
+
 			var query = ((MultiInsertQuery<TSource>)source).Query;
 
 			query = query.Provider.CreateQuery<TSource>(
@@ -143,7 +143,7 @@ namespace LinqToDB
 		public static int Insert<TSource>(this IMultiInsertInto<TSource> insert)
 		{
 			if (insert == null) throw new ArgumentNullException(nameof(insert));
-			
+
 			IQueryable query = ((MultiInsertQuery<TSource>)insert).Query;
 			query = LinqExtensions.ProcessSourceQueryable?.Invoke(query) ?? query;
 
@@ -164,7 +164,7 @@ namespace LinqToDB
 		public static Task<int> InsertAsync<TSource>(this IMultiInsertInto<TSource> insert, CancellationToken token = default)
 		{
 			if (insert == null) throw new ArgumentNullException(nameof(insert));
-			
+
 			IQueryable query = ((MultiInsertQuery<TSource>)insert).Query;
 			query = LinqExtensions.ProcessSourceQueryable?.Invoke(query) ?? query;
 
@@ -217,7 +217,7 @@ namespace LinqToDB
 				null,
 				Methods.InsertAll.MakeGenericMethod(typeof(TSource)),
 				query.Expression);
-			
+
 			if (query is IQueryProviderAsync queryAsync)
 				return queryAsync.ExecuteAsync<int>(expr, token);
 
@@ -262,18 +262,18 @@ namespace LinqToDB
 				null,
 				Methods.InsertFirst.MakeGenericMethod(typeof(TSource)),
 				query.Expression);
-			
+
 			if (query is IQueryProviderAsync queryAsync)
 				return queryAsync.ExecuteAsync<int>(expr, token);
 
 			return Task.Run(() => query.Provider.Execute<int>(expr), token);
-		}		
+		}
 
 		#endregion
 
 		#region Fluent state
 
-		public interface IMultiInsertSource<TSource> 
+		public interface IMultiInsertSource<TSource>
 			: IMultiInsertInto<TSource>
 			, IMultiInsertWhen<TSource>
 		{ }
@@ -287,13 +287,13 @@ namespace LinqToDB
 		public interface IMultiInsertElse<TSource>
 		{ }
 
-		private class MultiInsertQuery<TSource> : IMultiInsertSource<TSource>
+		private sealed class MultiInsertQuery<TSource> : IMultiInsertSource<TSource>
 		{
 			public readonly IQueryable<TSource> Query;
 
 			public MultiInsertQuery(IQueryable<TSource> query)
 			{
-				this.Query = query;
+				Query = query;
 			}
 		}
 

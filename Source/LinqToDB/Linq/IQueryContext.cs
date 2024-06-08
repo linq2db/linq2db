@@ -4,10 +4,10 @@
 
 	public interface IQueryContext
 	{
-		SqlStatement    Statement   { get; }
-		object?         Context     { get; set; }
-
-		SqlParameter[]? Parameters  { get; set; }
-		AliasesContext? Aliases     { get; set; }
+		SqlStatement    Statement       { get; }
+		object?         Context         { get; set; }
+		bool            IsContinuousRun { get; set; }
+		AliasesContext? Aliases         { get; set; }
+		DataOptions?    DataOptions     { get; }
 	}
 }

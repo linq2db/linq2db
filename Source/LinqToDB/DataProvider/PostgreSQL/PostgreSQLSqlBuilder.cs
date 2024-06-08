@@ -1,29 +1,29 @@
 ﻿using System;
 using System.Data;
-using System.Collections.Generic;
 using System.Data.Common;
 using System.Globalization;
 using System.Linq;
-using System.Text;
 using System.Net;
 using System.Net.NetworkInformation;
+using System.Text;
 
 namespace LinqToDB.DataProvider.PostgreSQL
 {
 	using Common;
-	using SqlQuery;
-	using SqlProvider;
+	using Common.Internal;
 	using Extensions;
 	using Mapping;
+	using SqlProvider;
+	using SqlQuery;
 
-	public class PostgreSQLSqlBuilder : BasicSqlBuilder
+	public partial class PostgreSQLSqlBuilder : BasicSqlBuilder<PostgreSQLOptions>
 	{
-		public PostgreSQLSqlBuilder(IDataProvider? provider, MappingSchema mappingSchema, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
-			: base(provider, mappingSchema, sqlOptimizer, sqlProviderFlags)
+		public PostgreSQLSqlBuilder(IDataProvider? provider, MappingSchema mappingSchema, DataOptions dataOptions, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
+			: base(provider, mappingSchema, dataOptions, sqlOptimizer, sqlProviderFlags)
 		{
 		}
 
-		PostgreSQLSqlBuilder(BasicSqlBuilder parentBuilder) : base(parentBuilder)
+		protected PostgreSQLSqlBuilder(BasicSqlBuilder parentBuilder) : base(parentBuilder)
 		{
 		}
 
@@ -33,7 +33,6 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		}
 
 		protected override bool IsRecursiveCteKeywordRequired => true;
-		protected override bool SupportsNullInColumn          => false;
 
 		protected override void BuildGetIdentity(SqlInsertClause insertClause)
 		{
@@ -58,21 +57,21 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			return "OFFSET {0} ";
 		}
 
-		protected override void BuildDataTypeFromDataType(SqlDataType type, bool forCreateTable)
+		protected override void BuildDataTypeFromDataType(DbDataType type, bool forCreateTable, bool canBeNull)
 		{
-			switch (type.Type.DataType)
+			switch (type.DataType)
 			{
 				case DataType.Decimal       :
 					StringBuilder.Append("decimal");
-					if (type.Type.Precision > 0)
+					if (type.Precision > 0)
 					{
 						StringBuilder
 							.Append('(')
-							.Append(type.Type.Precision.Value.ToString(NumberFormatInfo.InvariantInfo));
-						if (type.Type.Scale > 0)
+							.Append(type.Precision.Value.ToString(NumberFormatInfo.InvariantInfo));
+						if (type.Scale > 0)
 							StringBuilder
 								.Append(", ")
-								.Append(type.Type.Scale.Value.ToString(NumberFormatInfo.InvariantInfo));
+								.Append(type.Scale.Value.ToString(NumberFormatInfo.InvariantInfo));
 						StringBuilder
 							.Append(')');
 					}
@@ -89,8 +88,8 @@ namespace LinqToDB.DataProvider.PostgreSQL
 				case DataType.Text          : StringBuilder.Append("text");           break;
 				case DataType.NVarChar      :
 					StringBuilder.Append("VarChar");
-					if (type.Type.Length > 0)
-						StringBuilder.Append('(').Append(type.Type.Length.Value.ToString(NumberFormatInfo.InvariantInfo)).Append(')');
+					if (type.Length > 0)
+						StringBuilder.Append(CultureInfo.InvariantCulture, $"({type.Length})");
 					break;
 				case DataType.Json           : StringBuilder.Append("json");           break;
 				case DataType.BinaryJson     : StringBuilder.Append("jsonb");          break;
@@ -98,21 +97,21 @@ namespace LinqToDB.DataProvider.PostgreSQL
 				case DataType.Binary         :
 				case DataType.VarBinary      : StringBuilder.Append("bytea");          break;
 				case DataType.BitArray       :
-					if (type.Type.Length == 1)
+					if (type.Length == 1)
 						StringBuilder.Append("bit");
-					if (type.Type.Length > 1)
-						StringBuilder.Append("bit(").Append(type.Type.Length.Value.ToString(NumberFormatInfo.InvariantInfo)).Append(')');
+					if (type.Length > 1)
+						StringBuilder.Append(CultureInfo.InvariantCulture, $"bit({type.Length})");
 					else
 						StringBuilder.Append("bit varying");
 					break;
 				case DataType.NChar          :
 					StringBuilder.Append("character");
-					if (type.Type.Length > 1) // this is correct condition
-						StringBuilder.Append('(').Append(type.Type.Length.Value.ToString(NumberFormatInfo.InvariantInfo)).Append(')');
+					if (type.Length > 1) // this is correct condition
+						StringBuilder.Append(CultureInfo.InvariantCulture, $"({type.Length})");
 					break;
 					case DataType.Interval   : StringBuilder.Append("interval");       break;
 				case DataType.Udt            :
-					var udtType = type.Type.SystemType.ToNullableUnderlying();
+					var udtType = type.SystemType.ToNullableUnderlying();
 
 					var provider = DataProvider as PostgreSQLDataProvider;
 
@@ -125,13 +124,15 @@ namespace LinqToDB.DataProvider.PostgreSQL
 					else if (udtType == provider?.Adapter.NpgsqlPathType    ) StringBuilder.Append("path");
 					else if (udtType == provider?.Adapter.NpgsqlDateType    ) StringBuilder.Append("date");
 					else if (udtType == provider?.Adapter.NpgsqlDateTimeType) StringBuilder.Append("timestamp");
+					else if (udtType == provider?.Adapter.NpgsqlIntervalType) StringBuilder.Append("interval");
+					else if (udtType == provider?.Adapter.NpgsqlCidrType    ) StringBuilder.Append("cidr");
 					else if (udtType == typeof(PhysicalAddress) && provider != null && !provider.HasMacAddr8) StringBuilder.Append("macaddr");
 					else if (udtType == typeof(IPAddress)) StringBuilder.Append("inet");
-					else base.BuildDataTypeFromDataType(type, forCreateTable);
+					else base.BuildDataTypeFromDataType(type, forCreateTable, canBeNull);
 
 					break;
 
-				default                      : base.BuildDataTypeFromDataType(type, forCreateTable); break;
+				default                      : base.BuildDataTypeFromDataType(type, forCreateTable, canBeNull); break;
 			}
 		}
 
@@ -140,10 +141,18 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			return ReservedWords.IsReserved(word, ProviderName.PostgreSQL);
 		}
 
-		public static PostgreSQLIdentifierQuoteMode IdentifierQuoteMode = PostgreSQLIdentifierQuoteMode.Auto;
+		[Obsolete("Use PostgreSQLOptions.Default.IdentifierQuoteMode instead.")]
+		public static PostgreSQLIdentifierQuoteMode IdentifierQuoteMode
+		{
+			get => PostgreSQLOptions.Default.IdentifierQuoteMode;
+			set => PostgreSQLOptions.Default = PostgreSQLOptions.Default with { IdentifierQuoteMode = value };
+		}
 
 		public override StringBuilder Convert(StringBuilder sb, string value, ConvertType convertType)
 		{
+			// TODO: implement better quotation logic
+			// E.g. we currently don't handle quotes inside identifier
+			// https://www.postgresql.org/docs/current/sql-syntax-lexical.html#SQL-SYNTAX-IDENTIFIERS
 			switch (convertType)
 			{
 				case ConvertType.NameToQueryField     :
@@ -154,15 +163,33 @@ namespace LinqToDB.DataProvider.PostgreSQL
 				case ConvertType.NameToDatabase       :
 				case ConvertType.NameToSchema         :
 				case ConvertType.SequenceName         :
-					if (IdentifierQuoteMode != PostgreSQLIdentifierQuoteMode.None)
+					if (ProviderOptions.IdentifierQuoteMode != PostgreSQLIdentifierQuoteMode.None)
 					{
-						if (value.Length > 0 && value[0] == '"')
-							return sb.Append(value);
-
-						if (IdentifierQuoteMode == PostgreSQLIdentifierQuoteMode.Quote
+						// current logic limitations (hardly an issue as they represent quite exotic cases):
+						// - surrogate pairs/runes not handled
+						// - non-lowercase non-uppercase letters not handled
+						var quote =
+							// force quote enabled
+							ProviderOptions.IdentifierQuoteMode == PostgreSQLIdentifierQuoteMode.Quote
+							// only for Auto mode - contains upper-case letter
+							|| ProviderOptions.IdentifierQuoteMode == PostgreSQLIdentifierQuoteMode.Auto && value.Any(char.IsUpper)
+							// is a keyword
 							|| IsReserved(value)
-							|| value.Any(c => char.IsWhiteSpace(c) || IdentifierQuoteMode == PostgreSQLIdentifierQuoteMode.Auto && char.IsUpper(c)))
-							return sb.Append('"').Append(value).Append('"');
+							// starts from non-letter/underscore
+							|| (value.Length > 0 && value[0] != '_' && !char.IsLetter(value[0]))
+							// contains non-letter/underscore/digit(0-9 only)/$
+#if NET8_0_OR_GREATER
+							|| value.Skip(1).Any(c => !char.IsLetter(c) && !char.IsAsciiDigit(c) && c is not '_' and not '$')
+#else
+							|| value.Skip(1).Any(c => !char.IsLetter(c) && !(c >= '0' && c <= '9') && c is not '_' and not '$')
+#endif
+							;
+
+						if (quote)
+						{
+							// don't forget to duplicate quotes
+							return sb.Append('"').Append(value.Replace("\"", "\"\"")).Append('"');
+						}
 					}
 
 					break;
@@ -183,49 +210,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 		protected override void BuildInsertOrUpdateQuery(SqlInsertOrUpdateStatement insertOrUpdate)
 		{
-			BuildInsertQuery(insertOrUpdate, insertOrUpdate.Insert, true);
-
-			AppendIndent();
-			StringBuilder.Append("ON CONFLICT (");
-
-			var firstKey = true;
-			foreach (var expr in insertOrUpdate.Update.Keys)
-			{
-				if (!firstKey)
-					StringBuilder.Append(InlineComma);
-				firstKey = false;
-
-				BuildExpression(expr.Column, false, true);
-			}
-
-			if (insertOrUpdate.Update.Items.Count > 0)
-			{
-				StringBuilder.AppendLine(") DO UPDATE SET");
-
-				Indent++;
-
-				var first = true;
-
-				foreach (var expr in insertOrUpdate.Update.Items)
-				{
-					if (!first)
-						StringBuilder.AppendLine(Comma);
-					first = false;
-
-					AppendIndent();
-					BuildExpression(expr.Column, false, true);
-					StringBuilder.Append(" = ");
-					BuildExpression(expr.Expression!, true, true);
-				}
-
-				Indent--;
-
-				StringBuilder.AppendLine();
-			}
-			else
-			{
-				StringBuilder.AppendLine(") DO NOTHING");
-			}
+			BuildInsertOrUpdateQueryAsOnConflictUpdateOrNothing(insertOrUpdate);
 		}
 
 		public override ISqlExpression? GetIdentityExpression(SqlTable table)
@@ -238,11 +223,11 @@ namespace LinqToDB.DataProvider.PostgreSQL
 				{
 					var sequenceName = new SqlObjectName(attr.SequenceName, Server: table.TableName.Server, Database: table.TableName.Database, Schema: attr.Schema ?? table.TableName.Schema);
 
-					var sb = new StringBuilder();
-					sb.Append("nextval(");
-					MappingSchema.ConvertToSqlValue(sb, null, BuildObjectName(new StringBuilder(), sequenceName, ConvertType.SequenceName, true, TableOptions.NotSet).ToString());
-					sb.Append(')');
-					return new SqlExpression(sb.ToString(), Precedence.Primary);
+					using var sb = Pools.StringBuilder.Allocate();
+					sb.Value.Append("nextval(");
+					MappingSchema.ConvertToSqlValue(sb.Value, null, DataOptions, BuildObjectName(new (), sequenceName, ConvertType.SequenceName, true, TableOptions.NotSet).ToString());
+					sb.Value.Append(')');
+					return new SqlExpression(sb.Value.ToString(), Precedence.Primary);
 				}
 			}
 
@@ -286,7 +271,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			return base.BuildJoinType(join, condition);
 		}
 
-		public override StringBuilder BuildObjectName(StringBuilder sb, SqlObjectName name, ConvertType objectType, bool escape, TableOptions tableOptions)
+		public override StringBuilder BuildObjectName(StringBuilder sb, SqlObjectName name, ConvertType objectType, bool escape, TableOptions tableOptions, bool withoutSuffix = false)
 		{
 			var schemaName = tableOptions.HasIsTemporary() ? null : name.Schema;
 
@@ -335,7 +320,8 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 		protected override void BuildTruncateTableStatement(SqlTruncateTableStatement truncateTable)
 		{
-			var table = truncateTable.Table;
+			var nullability = NullabilityContext.NonQuery;
+			var table       = truncateTable.Table;
 
 			BuildTag(truncateTable);
 			AppendIndent();
@@ -356,11 +342,6 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		protected override void BuildDropTableStatement(SqlDropTableStatement dropTable)
 		{
 			BuildDropTableStatementIfExists(dropTable);
-		}
-
-		protected override void BuildMergeStatement(SqlMergeStatement merge)
-		{
-			throw new LinqToDBException($"{Name} provider doesn't support SQL MERGE statement");
 		}
 
 		protected override void BuildCreateTableCommand(SqlTable table)
@@ -413,17 +394,10 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 		public override string GetReserveSequenceValuesSql(int count, string sequenceName)
 		{
-			return $"SELECT nextval('{ConvertInline(sequenceName, ConvertType.SequenceName)}') FROM generate_series(1, {count.ToString(CultureInfo.InvariantCulture)})";
+			return FormattableString.Invariant($"SELECT nextval('{ConvertInline(sequenceName, ConvertType.SequenceName)}') FROM generate_series(1, {count})");
 		}
 
-		
-		protected override bool IsSqlValuesTableValueTypeRequired(SqlValuesTable source,
-			IReadOnlyList<ISqlExpression[]> rows, int row, int column)
-		{
-			return row < 0;
-		}
-
-		protected override void BuildQueryExtensions(SqlStatement statement)
+		protected override void BuildSubQueryExtensions(SqlStatement statement)
 		{
 			if (statement.SelectQuery?.SqlQueryExtensions is not null)
 			{
@@ -442,8 +416,48 @@ namespace LinqToDB.DataProvider.PostgreSQL
 					prefix += new string(buffer);
 				}
 
-				BuildQueryExtensions(StringBuilder, statement.SelectQuery!.SqlQueryExtensions, null, prefix, Environment.NewLine);
+				BuildQueryExtensions(StringBuilder, statement.SelectQuery.SqlQueryExtensions, null, prefix, Environment.NewLine, Sql.QueryExtensionScope.SubQueryHint);
 			}
+		}
+
+		protected override void BuildQueryExtensions(SqlStatement statement)
+		{
+			if (statement.SqlQueryExtensions is not null)
+			{
+				var len = StringBuilder.Length;
+
+				AppendIndent();
+
+				var prefix = Environment.NewLine;
+
+				if (StringBuilder.Length > len)
+				{
+					var buffer = new char[StringBuilder.Length - len];
+
+					StringBuilder.CopyTo(len, buffer, 0, StringBuilder.Length - len);
+
+					prefix += new string(buffer);
+				}
+
+				BuildQueryExtensions(StringBuilder, statement.SqlQueryExtensions, null, prefix, Environment.NewLine, Sql.QueryExtensionScope.QueryHint);
+			}
+		}
+
+		protected override void BuildTypedExpression(DbDataType dataType, ISqlExpression value)
+		{
+			var saveStep = BuildStep;
+			BuildStep = Step.TypedExpression;
+
+			BuildExpression(Precedence.Primary, value);
+			StringBuilder.Append("::");
+			BuildDataType(dataType, false, value.CanBeNullable(NullabilityContext));
+
+			BuildStep = saveStep;
+		}
+
+		protected override void BuildSql()
+		{
+			BuildSqlForUnion();
 		}
 	}
 }

@@ -2,11 +2,12 @@
 using System.IO;
 using System.Linq.Expressions;
 using System.Reflection;
-using LinqToDB.Common;
 
 namespace LinqToDB.DataProvider
 {
-	class AssemblyResolver
+	using Common;
+
+	sealed class AssemblyResolver
 	{
 		readonly string?   _path;
 		readonly string    _resolveName;

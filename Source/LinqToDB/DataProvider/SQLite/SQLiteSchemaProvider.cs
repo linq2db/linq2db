@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Data;
 
@@ -9,7 +10,7 @@ namespace LinqToDB.DataProvider.SQLite
 	using Data;
 	using SchemaProvider;
 
-	class SQLiteSchemaProvider : SchemaProviderBase
+	sealed class SQLiteSchemaProvider : SchemaProviderBase
 	{
 		public override DatabaseSchema GetSchema(DataConnection dataConnection, GetSchemaOptions? options = null)
 		{
@@ -142,12 +143,12 @@ namespace LinqToDB.DataProvider.SQLite
 			// Handle case where Foreign Key reference does not include a column name (Issue #784)
 			if (result.Any(fk => string.IsNullOrEmpty(fk.OtherColumn)))
 			{
-				var pks = GetPrimaryKeys(dataConnection, tables, options).ToDictionary(pk => string.Format("{0}:{1}", pk.TableID, pk.Ordinal), pk => pk.ColumnName);
+				var pks = GetPrimaryKeys(dataConnection, tables, options).ToDictionary(pk => string.Format(CultureInfo.InvariantCulture, "{0}:{1}", pk.TableID, pk.Ordinal), pk => pk.ColumnName);
 				foreach (var f in result.Where(fk => string.IsNullOrEmpty(fk.OtherColumn)))
 				{
-					var k = string.Format("{0}:{1}", f.OtherTableID, f.Ordinal);
-					if (pks.ContainsKey(k))
-						f.OtherColumn = pks[k];
+					var k = string.Format(CultureInfo.InvariantCulture, "{0}:{1}", f.OtherTableID, f.Ordinal);
+					if (pks.TryGetValue(k, out var column))
+						f.OtherColumn = column;
 				}
 			}
 			return result;
@@ -158,7 +159,7 @@ namespace LinqToDB.DataProvider.SQLite
 			return dbConnection.Connection.DataSource;
 		}
 
-		protected override DataType GetDataType(string? dataType, string? columnType, int? length, int? prec, int? scale)
+		protected override DataType GetDataType(string? dataType, string? columnType, int? length, int? precision, int? scale)
 		{
 			// note that sqlite doesn't have types (it has facets) so type name will contain anything
 			// user specified in create table statement

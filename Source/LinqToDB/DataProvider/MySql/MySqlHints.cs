@@ -2,6 +2,7 @@
 using System.Globalization;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Text;
 
 using JetBrains.Annotations;
 
@@ -10,6 +11,7 @@ namespace LinqToDB.DataProvider.MySql
 	using Expressions;
 	using Linq;
 	using SqlProvider;
+	using SqlQuery;
 
 	public static partial class MySqlHints
 	{
@@ -136,6 +138,16 @@ namespace LinqToDB.DataProvider.MySql
 			}
 		}
 
+		public static class SubQuery
+		{
+			public const string ForUpdate       = "FOR UPDATE";
+			public const string ForShare        = "FOR SHARE";
+			public const string LockInShareMode = "LOCK IN SHARE MODE";
+
+			public const string NoWait          = "NOWAIT";
+			public const string SkipLocked      = "SKIP LOCKED";
+		}
+
 		/// <summary>
 		/// Adds a query hint to the generated query.
 		/// </summary>
@@ -145,7 +157,7 @@ namespace LinqToDB.DataProvider.MySql
 		/// <param name="hint">SQL text, added to join in generated query.</param>
 		/// <param name="hintParameters">Table hint parameters.</param>
 		/// <returns>Table-like query source with table hints.</returns>
-		[LinqTunnel, Pure]
+		[LinqTunnel, Pure, IsQueryable]
 		[Sql.QueryExtension(ProviderName.MySql, Sql.QueryExtensionScope.QueryHint, typeof(HintWithParametersExtensionBuilder), " ", ", ")]
 		[Sql.QueryExtension(null,               Sql.QueryExtensionScope.None,      typeof(NoneExtensionBuilder))]
 		public static IMySqlSpecificQueryable<TSource> QueryBlockHint<TSource, TParam>(
@@ -198,18 +210,20 @@ namespace LinqToDB.DataProvider.MySql
 		/// <param name="table">Table-like query source.</param>
 		/// <param name="hint">SQL text, added as a database specific hint to generated query.</param>
 		/// <returns>Table-like query source with table hints.</returns>
-		[LinqTunnel, Pure]
+		[LinqTunnel, Pure, IsQueryable]
 		[Sql.QueryExtension(ProviderName.MySql, Sql.QueryExtensionScope.TableHint, typeof(TableSpecHintExtensionBuilder))]
 		[Sql.QueryExtension(null,               Sql.QueryExtensionScope.None,      typeof(NoneExtensionBuilder))]
 		public static IMySqlSpecificTable<TSource> TableHint<TSource>(this IMySqlSpecificTable<TSource> table, [SqlQueryDependent] string hint)
 			where TSource : notnull
 		{
-			table.Expression = Expression.Call(
-				null,
-				MethodHelper.GetMethodInfo(TableHint, table, hint),
-				table.Expression, Expression.Constant(hint));
+			var newTable = new Table<TSource>(table.DataContext,
+				Expression.Call(
+					null,
+					MethodHelper.GetMethodInfo(TableHint, table, hint),
+					table.Expression, Expression.Constant(hint))
+			);
 
-			return table;
+			return new MySqlSpecificTable<TSource>(newTable);
 		}
 
 		/// <summary>
@@ -221,7 +235,7 @@ namespace LinqToDB.DataProvider.MySql
 		/// <param name="hint">SQL text, added as a database specific hint to generated query.</param>
 		/// <param name="hintParameter">Table hint parameter.</param>
 		/// <returns>Table-like query source with table hints.</returns>
-		[LinqTunnel, Pure]
+		[LinqTunnel, Pure, IsQueryable]
 		[Sql.QueryExtension(ProviderName.MySql, Sql.QueryExtensionScope.TableHint, typeof(TableSpecHintExtensionBuilder))]
 		[Sql.QueryExtension(null,               Sql.QueryExtensionScope.None,      typeof(NoneExtensionBuilder))]
 		public static IMySqlSpecificTable<TSource> TableHint<TSource,TParam>(
@@ -230,12 +244,14 @@ namespace LinqToDB.DataProvider.MySql
 			[SqlQueryDependent] TParam        hintParameter)
 			where TSource : notnull
 		{
-			table.Expression = Expression.Call(
-				null,
-				MethodHelper.GetMethodInfo(TableHint, table, hint, hintParameter),
-				table.Expression, Expression.Constant(hint), Expression.Constant(hintParameter));
+			var newTable = new Table<TSource>(table.DataContext,
+				Expression.Call(
+					null,
+					MethodHelper.GetMethodInfo(TableHint, table, hint, hintParameter),
+					table.Expression, Expression.Constant(hint), Expression.Constant(hintParameter))
+			);
 
-			return table;
+			return new MySqlSpecificTable<TSource>(newTable);
 		}
 
 		/// <summary>
@@ -247,7 +263,7 @@ namespace LinqToDB.DataProvider.MySql
 		/// <param name="hint">SQL text, added as a database specific hint to generated query.</param>
 		/// <param name="hintParameters">Table hint parameters.</param>
 		/// <returns>Table-like query source with table hints.</returns>
-		[LinqTunnel, Pure]
+		[LinqTunnel, Pure, IsQueryable]
 		[Sql.QueryExtension(ProviderName.MySql, Sql.QueryExtensionScope.TableHint, typeof(TableSpecHintExtensionBuilder), " ", ", ")]
 		[Sql.QueryExtension(null,               Sql.QueryExtensionScope.None,      typeof(NoneExtensionBuilder))]
 		public static IMySqlSpecificTable<TSource> TableHint<TSource,TParam>(
@@ -256,14 +272,16 @@ namespace LinqToDB.DataProvider.MySql
 			[SqlQueryDependent] params TParam[] hintParameters)
 			where TSource : notnull
 		{
-			table.Expression = Expression.Call(
-				null,
-				MethodHelper.GetMethodInfo(TableHint, table, hint, hintParameters),
-				table.Expression,
-				Expression.Constant(hint),
-				Expression.NewArrayInit(typeof(TParam), hintParameters.Select(p => Expression.Constant(p, typeof(TParam)))));
+			var newTable = new Table<TSource>(table.DataContext,
+				Expression.Call(
+					null,
+					MethodHelper.GetMethodInfo(TableHint, table, hint, hintParameters),
+					table.Expression,
+					Expression.Constant(hint),
+					Expression.NewArrayInit(typeof(TParam), hintParameters.Select(p => Expression.Constant(p, typeof(TParam)))))
+			);
 
-			return table;
+			return new MySqlSpecificTable<TSource>(newTable);
 		}
 
 		#endregion
@@ -277,7 +295,7 @@ namespace LinqToDB.DataProvider.MySql
 		/// <param name="source">Query source.</param>
 		/// <param name="hint">SQL text, added as a database specific hint to generated query.</param>
 		/// <returns>Query source with table hints.</returns>
-		[LinqTunnel, Pure]
+		[LinqTunnel, Pure, IsQueryable]
 		[Sql.QueryExtension(ProviderName.MySql, Sql.QueryExtensionScope.TablesInScopeHint, typeof(TableSpecHintExtensionBuilder))]
 		[Sql.QueryExtension(null,               Sql.QueryExtensionScope.None,              typeof(NoneExtensionBuilder))]
 		public static IMySqlSpecificQueryable<TSource> TablesInScopeHint<TSource>(this IMySqlSpecificQueryable<TSource> source, [SqlQueryDependent] string hint)
@@ -301,7 +319,7 @@ namespace LinqToDB.DataProvider.MySql
 		/// <param name="hint">SQL text, added as a database specific hint to generated query.</param>
 		/// <param name="hintParameter">Table hint parameter.</param>
 		/// <returns>Query source with table hints.</returns>
-		[LinqTunnel, Pure]
+		[LinqTunnel, Pure, IsQueryable]
 		[Sql.QueryExtension(ProviderName.MySql, Sql.QueryExtensionScope.TablesInScopeHint, typeof(TableSpecHintExtensionBuilder))]
 		[Sql.QueryExtension(null,               Sql.QueryExtensionScope.None,              typeof(NoneExtensionBuilder))]
 		public static IMySqlSpecificQueryable<TSource> TablesInScopeHint<TSource,TParam>(
@@ -327,7 +345,7 @@ namespace LinqToDB.DataProvider.MySql
 		/// <param name="hint">SQL text, added as a database specific hint to generated query.</param>
 		/// <param name="hintParameters">Table hint parameters.</param>
 		/// <returns>Query source with table hints.</returns>
-		[LinqTunnel, Pure]
+		[LinqTunnel, Pure, IsQueryable]
 		[Sql.QueryExtension(ProviderName.MySql, Sql.QueryExtensionScope.TablesInScopeHint, typeof(TableSpecHintExtensionBuilder), " ", ", ")]
 		[Sql.QueryExtension(null,               Sql.QueryExtensionScope.None,              typeof(NoneExtensionBuilder))]
 		public static IMySqlSpecificQueryable<TSource> TablesInScopeHint<TSource>(
@@ -358,18 +376,20 @@ namespace LinqToDB.DataProvider.MySql
 		/// <param name="table">Table-like query source.</param>
 		/// <param name="hint">SQL text, added as a database specific hint to generated query.</param>
 		/// <returns>Table-like query source with index hints.</returns>
-		[LinqTunnel, Pure]
+		[LinqTunnel, Pure, IsQueryable]
 		[Sql.QueryExtension(ProviderName.MySql, Sql.QueryExtensionScope.IndexHint, typeof(HintExtensionBuilder))]
 		[Sql.QueryExtension(null,               Sql.QueryExtensionScope.None,      typeof(NoneExtensionBuilder))]
 		public static IMySqlSpecificTable<TSource> TableIndexHint<TSource>(this IMySqlSpecificTable<TSource> table, [SqlQueryDependent] string hint)
 			where TSource : notnull
 		{
-			table.Expression = Expression.Call(
-				null,
-				MethodHelper.GetMethodInfo(TableIndexHint, table, hint),
-				table.Expression, Expression.Constant(hint));
+			var newTable = new Table<TSource>(table.DataContext,
+				Expression.Call(
+					null,
+					MethodHelper.GetMethodInfo(TableIndexHint, table, hint),
+					table.Expression, Expression.Constant(hint))
+			);
 
-			return table;
+			return new MySqlSpecificTable<TSource>(newTable);
 		}
 
 		/// <summary>
@@ -381,7 +401,7 @@ namespace LinqToDB.DataProvider.MySql
 		/// <param name="hint">SQL text, added as a database specific hint to generated query.</param>
 		/// <param name="hintParameter">Table hint parameter.</param>
 		/// <returns>Table-like query source with index hints.</returns>
-		[LinqTunnel, Pure]
+		[LinqTunnel, Pure, IsQueryable]
 		[Sql.QueryExtension(ProviderName.MySql, Sql.QueryExtensionScope.IndexHint, typeof(HintWithParameterExtensionBuilder))]
 		[Sql.QueryExtension(null,               Sql.QueryExtensionScope.None,      typeof(NoneExtensionBuilder))]
 		public static IMySqlSpecificTable<TSource> TableIndexHint<TSource,TParam>(
@@ -390,12 +410,14 @@ namespace LinqToDB.DataProvider.MySql
 			[SqlQueryDependent] TParam        hintParameter)
 			where TSource : notnull
 		{
-			table.Expression = Expression.Call(
-				null,
-				MethodHelper.GetMethodInfo(TableIndexHint, table, hint, hintParameter),
-				table.Expression, Expression.Constant(hint), Expression.Constant(hintParameter));
+			var newTable = new Table<TSource>(table.DataContext,
+				Expression.Call(
+					null,
+					MethodHelper.GetMethodInfo(TableIndexHint, table, hint, hintParameter),
+					table.Expression, Expression.Constant(hint), Expression.Constant(hintParameter))
+			);
 
-			return table;
+			return new MySqlSpecificTable<TSource>(newTable);
 		}
 
 		/// <summary>
@@ -407,7 +429,7 @@ namespace LinqToDB.DataProvider.MySql
 		/// <param name="hint">SQL text, added as a database specific hint to generated query.</param>
 		/// <param name="hintParameters">Table hint parameters.</param>
 		/// <returns>Table-like query source with index hints.</returns>
-		[LinqTunnel, Pure]
+		[LinqTunnel, Pure, IsQueryable]
 		[Sql.QueryExtension(ProviderName.MySql, Sql.QueryExtensionScope.IndexHint, typeof(HintWithParametersExtensionBuilder))]
 		[Sql.QueryExtension(null,               Sql.QueryExtensionScope.None,      typeof(NoneExtensionBuilder))]
 		public static IMySqlSpecificTable<TSource> TableIndexHint<TSource,TParam>(
@@ -416,14 +438,16 @@ namespace LinqToDB.DataProvider.MySql
 			[SqlQueryDependent] params TParam[] hintParameters)
 			where TSource : notnull
 		{
-			table.Expression = Expression.Call(
-				null,
-				MethodHelper.GetMethodInfo(TableIndexHint, table, hint, hintParameters),
-				table.Expression,
-				Expression.Constant(hint),
-				Expression.NewArrayInit(typeof(TParam), hintParameters.Select(p => Expression.Constant(p, typeof(TParam)))));
+			var newTable = new Table<TSource>(table.DataContext,
+				Expression.Call(
+					null,
+					MethodHelper.GetMethodInfo(TableIndexHint, table, hint, hintParameters),
+					table.Expression,
+					Expression.Constant(hint),
+					Expression.NewArrayInit(typeof(TParam), hintParameters.Select(p => Expression.Constant(p, typeof(TParam)))))
+			);
 
-			return table;
+			return new MySqlSpecificTable<TSource>(newTable);
 		}
 
 		#endregion
@@ -437,7 +461,7 @@ namespace LinqToDB.DataProvider.MySql
 		/// <param name="source">Query source.</param>
 		/// <param name="hint">SQL text, added as a database specific hint to generated query.</param>
 		/// <returns>Query source with hints.</returns>
-		[LinqTunnel, Pure]
+		[LinqTunnel, Pure, IsQueryable]
 		[Sql.QueryExtension(ProviderName.MySql, Sql.QueryExtensionScope.SubQueryHint, typeof(HintExtensionBuilder))]
 		[Sql.QueryExtension(null,               Sql.QueryExtensionScope.None,         typeof(NoneExtensionBuilder))]
 		public static IMySqlSpecificQueryable<TSource> SubQueryHint<TSource>(this IMySqlSpecificQueryable<TSource> source, [SqlQueryDependent] string hint)
@@ -461,7 +485,7 @@ namespace LinqToDB.DataProvider.MySql
 		/// <param name="hint">SQL text, added as a database specific hint to generated query.</param>
 		/// <param name="hintParameter">Hint parameter.</param>
 		/// <returns>Query source with hints.</returns>
-		[LinqTunnel, Pure]
+		[LinqTunnel, Pure, IsQueryable]
 		[Sql.QueryExtension(ProviderName.MySql, Sql.QueryExtensionScope.SubQueryHint, typeof(HintWithParameterExtensionBuilder))]
 		[Sql.QueryExtension(null,               Sql.QueryExtensionScope.None,         typeof(NoneExtensionBuilder))]
 		public static IMySqlSpecificQueryable<TSource> SubQueryHint<TSource,TParam>(
@@ -490,7 +514,7 @@ namespace LinqToDB.DataProvider.MySql
 		/// <param name="hint">SQL text, added as a database specific hint to generated query.</param>
 		/// <param name="hintParameters">Table hint parameters.</param>
 		/// <returns>Table-like query source with hints.</returns>
-		[LinqTunnel, Pure]
+		[LinqTunnel, Pure, IsQueryable]
 		[Sql.QueryExtension(ProviderName.MySql, Sql.QueryExtensionScope.SubQueryHint, typeof(HintWithParametersExtensionBuilder))]
 		[Sql.QueryExtension(null,               Sql.QueryExtensionScope.None,         typeof(NoneExtensionBuilder))]
 		public static IMySqlSpecificQueryable<TSource> SubQueryHint<TSource, TParam>(
@@ -521,7 +545,7 @@ namespace LinqToDB.DataProvider.MySql
 		/// <param name="source">Query source.</param>
 		/// <param name="hint">SQL text, added as a database specific hint to generated query.</param>
 		/// <returns>Query source with hints.</returns>
-		[LinqTunnel, Pure]
+		[LinqTunnel, Pure, IsQueryable]
 		[Sql.QueryExtension(ProviderName.MySql, Sql.QueryExtensionScope.QueryHint, typeof(HintExtensionBuilder))]
 		[Sql.QueryExtension(null,               Sql.QueryExtensionScope.None,      typeof(NoneExtensionBuilder))]
 		public static IMySqlSpecificQueryable<TSource> QueryHint<TSource>(this IMySqlSpecificQueryable<TSource> source, [SqlQueryDependent] string hint)
@@ -545,7 +569,7 @@ namespace LinqToDB.DataProvider.MySql
 		/// <param name="hint">SQL text, added as a database specific hint to generated query.</param>
 		/// <param name="hintParameter">Hint parameter.</param>
 		/// <returns>Query source with hints.</returns>
-		[LinqTunnel, Pure]
+		[LinqTunnel, Pure, IsQueryable]
 		[Sql.QueryExtension(ProviderName.MySql, Sql.QueryExtensionScope.QueryHint, typeof(HintWithParameterExtensionBuilder))]
 		[Sql.QueryExtension(null,               Sql.QueryExtensionScope.None,      typeof(NoneExtensionBuilder))]
 		public static IMySqlSpecificQueryable<TSource> QueryHint<TSource,TParam>(
@@ -574,7 +598,7 @@ namespace LinqToDB.DataProvider.MySql
 		/// <param name="hint">SQL text, added as a database specific hint to generated query.</param>
 		/// <param name="hintParameters">Table hint parameters.</param>
 		/// <returns>Table-like query source with hints.</returns>
-		[LinqTunnel, Pure]
+		[LinqTunnel, Pure, IsQueryable]
 		[Sql.QueryExtension(ProviderName.MySql, Sql.QueryExtensionScope.QueryHint, typeof(HintWithParametersExtensionBuilder))]
 		[Sql.QueryExtension(null,               Sql.QueryExtensionScope.None,      typeof(NoneExtensionBuilder))]
 		public static IMySqlSpecificQueryable<TSource> QueryHint<TSource, TParam>(
@@ -592,6 +616,176 @@ namespace LinqToDB.DataProvider.MySql
 					currentSource.Expression,
 					Expression.Constant(hint),
 					Expression.NewArrayInit(typeof(TParam), hintParameters.Select(p => Expression.Constant(p))))));
+		}
+
+		#endregion
+
+		#region SubQueryTableHint
+
+		sealed class SubQueryTableHintExtensionBuilder : ISqlQueryExtensionBuilder
+		{
+			void ISqlQueryExtensionBuilder.Build(NullabilityContext nullability, ISqlBuilder sqlBuilder, StringBuilder stringBuilder, SqlQueryExtension sqlQueryExtension)
+			{
+				var hint    = (string)((SqlValue)sqlQueryExtension.Arguments["hint"]).Value!;
+				var idCount = (int)   ((SqlValue)sqlQueryExtension.Arguments["tableIDs.Count"]).Value!;
+
+				if ((hint is SubQuery.ForShare || idCount > 0) && sqlBuilder.MappingSchema.ConfigurationList.Contains(ProviderName.MariaDB10))
+					stringBuilder.Append("-- ");
+
+				stringBuilder.Append(hint);
+
+				for (var i = 0; i < idCount; i++)
+				{
+					if (i == 0)
+						stringBuilder.Append(" OF ");
+					else if (i > 0)
+						stringBuilder.Append(", ");
+
+					var id    = (Sql.SqlID)((SqlValue)sqlQueryExtension.Arguments[FormattableString.Invariant($"tableIDs.{i}")]).Value!;
+					var alias = sqlBuilder.BuildSqlID(id);
+
+					stringBuilder.Append(alias);
+				}
+
+				if (sqlQueryExtension.Arguments.TryGetValue("hint2", out var h) && h is SqlValue { Value: string value } && !string.IsNullOrWhiteSpace(value))
+				{
+					stringBuilder.Append(' ');
+					stringBuilder.Append(value);
+				}
+			}
+		}
+
+		/// <summary>
+		/// Adds subquery hint to a generated query.
+		/// </summary>
+		/// <typeparam name="TSource">Table record mapping class.</typeparam>
+		/// <param name="source">Query source.</param>
+		/// <param name="hint">SQL text, added to join in generated query.</param>
+		/// <param name="tableIDs">Table IDs.</param>
+		/// <returns>Query source with join hints.</returns>
+		[LinqTunnel, Pure, IsQueryable]
+		[Sql.QueryExtension(ProviderName.MySql, Sql.QueryExtensionScope.SubQueryHint, typeof(SubQueryTableHintExtensionBuilder))]
+		[Sql.QueryExtension(null,               Sql.QueryExtensionScope.None,         typeof(NoneExtensionBuilder))]
+		public static IMySqlSpecificQueryable<TSource> SubQueryTableHint<TSource>(
+			this                       IMySqlSpecificQueryable<TSource> source,
+			[SqlQueryDependent]        string                           hint,
+			[SqlQueryDependent] params Sql.SqlID[]                      tableIDs)
+			where TSource : notnull
+		{
+			var currentSource = LinqExtensions.ProcessSourceQueryable?.Invoke(source) ?? source;
+
+			return new MySqlSpecificQueryable<TSource>(currentSource.Provider.CreateQuery<TSource>(
+				Expression.Call(
+					null,
+					MethodHelper.GetMethodInfo(SubQueryTableHint, source, hint, tableIDs),
+					currentSource.Expression,
+					Expression.Constant(hint),
+					Expression.NewArrayInit(typeof(Sql.SqlID), tableIDs.Select(p => Expression.Constant(p))))));
+		}
+
+		/// <summary>
+		/// Adds subquery hint to a generated query.
+		/// </summary>
+		/// <typeparam name="TSource">Table record mapping class.</typeparam>
+		/// <param name="source">Query source.</param>
+		/// <param name="hint">SQL text, added to join in generated query.</param>
+		/// <param name="hint2">NOWAIT | SKIP LOCKED</param>
+		/// <param name="tableIDs">Table IDs.</param>
+		/// <returns>Query source with join hints.</returns>
+		[LinqTunnel, Pure, IsQueryable]
+		[Sql.QueryExtension(ProviderName.MySql, Sql.QueryExtensionScope.SubQueryHint, typeof(SubQueryTableHintExtensionBuilder))]
+		[Sql.QueryExtension(null,               Sql.QueryExtensionScope.None,         typeof(NoneExtensionBuilder))]
+		public static IMySqlSpecificQueryable<TSource> SubQueryTableHint<TSource>(
+			this                       IMySqlSpecificQueryable<TSource> source,
+			[SqlQueryDependent]        string                           hint,
+			[SqlQueryDependent]        string                           hint2,
+			[SqlQueryDependent] params Sql.SqlID[]                      tableIDs)
+			where TSource : notnull
+		{
+			var currentSource = LinqExtensions.ProcessSourceQueryable?.Invoke(source) ?? source;
+
+			return new MySqlSpecificQueryable<TSource>(currentSource.Provider.CreateQuery<TSource>(
+				Expression.Call(
+					null,
+					MethodHelper.GetMethodInfo(SubQueryTableHint, source, hint, hint2, tableIDs),
+					currentSource.Expression,
+					Expression.Constant(hint),
+					Expression.Constant(hint2),
+					Expression.NewArrayInit(typeof(Sql.SqlID), tableIDs.Select(p => Expression.Constant(p))))));
+		}
+
+		/// <summary>
+		/// Adds subquery hint to a generated query.
+		/// </summary>
+		/// <typeparam name="TSource">Table record mapping class.</typeparam>
+		/// <param name="table">Table-like query source.</param>
+		/// <param name="hint">SQL text, added to join in generated query.</param>
+		/// <param name="tableIDs">Table IDs.</param>
+		/// <returns>Query source with join hints.</returns>
+		[LinqTunnel, Pure, IsQueryable]
+		[Sql.QueryExtension(ProviderName.MySql, Sql.QueryExtensionScope.SubQueryHint, typeof(SubQueryTableHintExtensionBuilder))]
+		[Sql.QueryExtension(null,               Sql.QueryExtensionScope.None,         typeof(NoneExtensionBuilder))]
+		public static IMySqlSpecificTable<TSource> SubQueryTableHint<TSource>(
+			this                       IMySqlSpecificTable<TSource> table,
+			[SqlQueryDependent]        string                       hint,
+			[SqlQueryDependent] params Sql.SqlID[]                  tableIDs)
+			where TSource : notnull
+		{
+			var newTable = new Table<TSource>(table.DataContext,
+				Expression.Call(
+					null,
+					MethodHelper.GetMethodInfo(SubQueryTableHint, table, hint, tableIDs),
+					table.Expression,
+					Expression.Constant(hint),
+					Expression.NewArrayInit(typeof(Sql.SqlID), tableIDs.Select(p => Expression.Constant(p))))
+			);
+
+			return new MySqlSpecificTable<TSource>(newTable);
+		}
+
+		/// <summary>
+		/// Adds subquery hint to a generated query.
+		/// </summary>
+		/// <typeparam name="TSource">Table record mapping class.</typeparam>
+		/// <param name="table">Table-like query source.</param>
+		/// <param name="hint">SQL text, added to join in generated query.</param>
+		/// <param name="hint2">NOWAIT | SKIP LOCKED</param>
+		/// <param name="tableIDs">Table IDs.</param>
+		/// <returns>Query source with join hints.</returns>
+		[LinqTunnel, Pure, IsQueryable]
+		[Sql.QueryExtension(ProviderName.MySql, Sql.QueryExtensionScope.SubQueryHint, typeof(SubQueryTableHintExtensionBuilder))]
+		[Sql.QueryExtension(null,               Sql.QueryExtensionScope.None,         typeof(NoneExtensionBuilder))]
+		public static IMySqlSpecificTable<TSource> SubQueryTableHint<TSource>(
+			this                       IMySqlSpecificTable<TSource> table,
+			[SqlQueryDependent]        string                       hint,
+			[SqlQueryDependent]        string                       hint2,
+			[SqlQueryDependent] params Sql.SqlID[]                  tableIDs)
+			where TSource : notnull
+		{
+			var newTable = new Table<TSource>(table.DataContext,
+				Expression.Call(
+					null,
+					MethodHelper.GetMethodInfo(SubQueryTableHint, table, hint, hint2, tableIDs),
+					table.Expression,
+					Expression.Constant(hint),
+					Expression.Constant(hint2),
+					Expression.NewArrayInit(typeof(Sql.SqlID), tableIDs.Select(p => Expression.Constant(p))))
+			);
+
+			return new MySqlSpecificTable<TSource>(newTable);
+		}
+
+		[ExpressionMethod(nameof(LockInShareModeHintImpl))]
+		public static IMySqlSpecificQueryable<TSource> LockInShareModeHint<TSource>(
+			this   IMySqlSpecificQueryable<TSource> query)
+			where TSource : notnull
+		{
+			return SubQueryTableHint(query, SubQuery.LockInShareMode);
+		}
+		static Expression<Func<IMySqlSpecificQueryable<TSource>,IMySqlSpecificQueryable<TSource>>> LockInShareModeHintImpl<TSource>()
+			where TSource : notnull
+		{
+			return query => SubQueryTableHint(query, SubQuery.LockInShareMode);
 		}
 
 		#endregion

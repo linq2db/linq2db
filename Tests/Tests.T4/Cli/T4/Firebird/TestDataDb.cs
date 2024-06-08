@@ -8,15 +8,12 @@
 using FirebirdSql.Data.Types;
 using LinqToDB;
 using LinqToDB.Common;
-using LinqToDB.Configuration;
 using LinqToDB.Data;
-using LinqToDB.Expressions;
 using LinqToDB.Mapping;
 using System;
 using System.Data;
 using System.Linq;
 using System.Numerics;
-using System.Reflection;
 
 #pragma warning disable 1573, 1591
 #nullable enable
@@ -36,14 +33,14 @@ namespace Cli.T4.Firebird
 			InitDataContext();
 		}
 
-		public TestDataDB(LinqToDBConnectionOptions options)
+		public TestDataDB(DataOptions options)
 			: base(options)
 		{
 			InitDataContext();
 		}
 
-		public TestDataDB(LinqToDBConnectionOptions<TestDataDB> options)
-			: base(options)
+		public TestDataDB(DataOptions<TestDataDB> options)
+			: base(options.Options)
 		{
 			InitDataContext();
 		}
@@ -71,115 +68,41 @@ namespace Cli.T4.Firebird
 		public ITable<PersonView>        PersonViews         => this.GetTable<PersonView>();
 
 		#region Table Functions
-		#region TestPackage2TestTableFunction
-		private static readonly MethodInfo _testTableFunction = MemberHelper.MethodOf<TestDataDB>(ctx => ctx.TestPackage2TestTableFunction(default));
-
-		[Sql.TableFunction("TEST_TABLE_FUNCTION", Package = "TEST_PACKAGE2")]
-		public ITable<TestPackage2TestTableFunctionResult> TestPackage2TestTableFunction(int? i)
+		#region OutRefEnumTest
+		[Sql.TableFunction("OutRefEnumTest")]
+		public ITable<OutRefEnumTestResult> OutRefEnumTest(string? str, string? inInputoutputstr)
 		{
-			return this.GetTable<TestPackage2TestTableFunctionResult>(this, _testTableFunction, i);
+			return this.TableFromExpression<OutRefEnumTestResult>(() => OutRefEnumTest(str, inInputoutputstr));
 		}
 
-		public partial class TestPackage2TestTableFunctionResult
+		public partial class OutRefEnumTestResult
 		{
-			[Column("O")] public int? O { get; set; }
-		}
-		#endregion
-
-		#region PersonSelectByKey
-		private static readonly MethodInfo _personSelectByKey = MemberHelper.MethodOf<TestDataDB>(ctx => ctx.PersonSelectByKey(default));
-
-		[Sql.TableFunction("Person_SelectByKey")]
-		public ITable<PersonSelectByKeyResult> PersonSelectByKey(int? id)
-		{
-			return this.GetTable<PersonSelectByKeyResult>(this, _personSelectByKey, id);
-		}
-
-		public partial class PersonSelectByKeyResult
-		{
-			[Column("PERSONID"  )] public int?    PERSONID   { get; set; }
-			[Column("FIRSTNAME" )] public string? FIRSTNAME  { get; set; }
-			[Column("LASTNAME"  )] public string? LASTNAME   { get; set; }
-			[Column("MIDDLENAME")] public string? MIDDLENAME { get; set; }
-			[Column("GENDER"    )] public string? GENDER     { get; set; }
+			[Column("INPUTOUTPUTSTR")] public string? INPUTOUTPUTSTR { get; set; }
+			[Column("OUTPUTSTR"     )] public string? OUTPUTSTR      { get; set; }
 		}
 		#endregion
 
-		#region PersonSelectAll
-		private static readonly MethodInfo _personSelectAll = MemberHelper.MethodOf<TestDataDB>(ctx => ctx.PersonSelectAll());
-
-		[Sql.TableFunction("Person_SelectAll")]
-		public ITable<PersonSelectAllResult> PersonSelectAll()
+		#region OutRefTest
+		[Sql.TableFunction("OutRefTest")]
+		public ITable<OutRefTestResult> OutRefTest(int? id, int? inInputoutputid, string? str, string? inInputoutputstr)
 		{
-			return this.GetTable<PersonSelectAllResult>(this, _personSelectAll);
+			return this.TableFromExpression<OutRefTestResult>(() => OutRefTest(id, inInputoutputid, str, inInputoutputstr));
 		}
 
-		public partial class PersonSelectAllResult
+		public partial class OutRefTestResult
 		{
-			[Column("PERSONID"  )] public int?    PERSONID   { get; set; }
-			[Column("FIRSTNAME" )] public string? FIRSTNAME  { get; set; }
-			[Column("LASTNAME"  )] public string? LASTNAME   { get; set; }
-			[Column("MIDDLENAME")] public string? MIDDLENAME { get; set; }
-			[Column("GENDER"    )] public string? GENDER     { get; set; }
-		}
-		#endregion
-
-		#region PersonSelectByName
-		private static readonly MethodInfo _personSelectByName = MemberHelper.MethodOf<TestDataDB>(ctx => ctx.PersonSelectByName(default, default));
-
-		[Sql.TableFunction("Person_SelectByName")]
-		public ITable<PersonSelectByNameResult> PersonSelectByName(string? inFirstname, string? inLastname)
-		{
-			return this.GetTable<PersonSelectByNameResult>(this, _personSelectByName, inFirstname, inLastname);
-		}
-
-		public partial class PersonSelectByNameResult
-		{
-			[Column("PERSONID"  )] public int?    PERSONID   { get; set; }
-			[Column("FIRSTNAME" )] public string? FIRSTNAME  { get; set; }
-			[Column("LASTNAME"  )] public string? LASTNAME   { get; set; }
-			[Column("MIDDLENAME")] public string? MIDDLENAME { get; set; }
-			[Column("GENDER"    )] public string? GENDER     { get; set; }
-		}
-		#endregion
-
-		#region PersonInsert
-		private static readonly MethodInfo _personInsert = MemberHelper.MethodOf<TestDataDB>(ctx => ctx.PersonInsert(default, default, default, default));
-
-		[Sql.TableFunction("Person_Insert")]
-		public ITable<PersonInsertResult> PersonInsert(string? firstname, string? lastname, string? middlename, char? gender)
-		{
-			return this.GetTable<PersonInsertResult>(this, _personInsert, firstname, lastname, middlename, gender);
-		}
-
-		public partial class PersonInsertResult
-		{
-			[Column("PERSONID")] public int? PERSONID { get; set; }
-		}
-		#endregion
-
-		#region PersonInsertOutputParameter
-		private static readonly MethodInfo _personInsertOutputParameter = MemberHelper.MethodOf<TestDataDB>(ctx => ctx.PersonInsertOutputParameter(default, default, default, default));
-
-		[Sql.TableFunction("Person_Insert_OutputParameter")]
-		public ITable<PersonInsertOutputParameterResult> PersonInsertOutputParameter(string? firstname, string? lastname, string? middlename, char? gender)
-		{
-			return this.GetTable<PersonInsertOutputParameterResult>(this, _personInsertOutputParameter, firstname, lastname, middlename, gender);
-		}
-
-		public partial class PersonInsertOutputParameterResult
-		{
-			[Column("PERSONID")] public int? PERSONID { get; set; }
+			[Column("INPUTOUTPUTID" )] public int?    INPUTOUTPUTID  { get; set; }
+			[Column("INPUTOUTPUTSTR")] public string? INPUTOUTPUTSTR { get; set; }
+			[Column("OUTPUTID"      )] public int?    OUTPUTID       { get; set; }
+			[Column("OUTPUTSTR"     )] public string? OUTPUTSTR      { get; set; }
 		}
 		#endregion
 
 		#region PatientSelectAll
-		private static readonly MethodInfo _patientSelectAll = MemberHelper.MethodOf<TestDataDB>(ctx => ctx.PatientSelectAll());
-
 		[Sql.TableFunction("Patient_SelectAll")]
 		public ITable<PatientSelectAllResult> PatientSelectAll()
 		{
-			return this.GetTable<PatientSelectAllResult>(this, _patientSelectAll);
+			return this.TableFromExpression<PatientSelectAllResult>(() => PatientSelectAll());
 		}
 
 		public partial class PatientSelectAllResult
@@ -194,12 +117,10 @@ namespace Cli.T4.Firebird
 		#endregion
 
 		#region PatientSelectByName
-		private static readonly MethodInfo _patientSelectByName = MemberHelper.MethodOf<TestDataDB>(ctx => ctx.PatientSelectByName(default, default));
-
 		[Sql.TableFunction("Patient_SelectByName")]
 		public ITable<PatientSelectByNameResult> PatientSelectByName(string? firstname, string? lastname)
 		{
-			return this.GetTable<PatientSelectByNameResult>(this, _patientSelectByName, firstname, lastname);
+			return this.TableFromExpression<PatientSelectByNameResult>(() => PatientSelectByName(firstname, lastname));
 		}
 
 		public partial class PatientSelectByNameResult
@@ -211,47 +132,88 @@ namespace Cli.T4.Firebird
 		}
 		#endregion
 
-		#region OutRefTest
-		private static readonly MethodInfo _outRefTest = MemberHelper.MethodOf<TestDataDB>(ctx => ctx.OutRefTest(default, default, default, default));
-
-		[Sql.TableFunction("OutRefTest")]
-		public ITable<OutRefTestResult> OutRefTest(int? id, int? inInputoutputid, string? str, string? inInputoutputstr)
+		#region PersonInsert
+		[Sql.TableFunction("Person_Insert")]
+		public ITable<PersonInsertResult> PersonInsert(string? firstname, string? lastname, string? middlename, char? gender)
 		{
-			return this.GetTable<OutRefTestResult>(this, _outRefTest, id, inInputoutputid, str, inInputoutputstr);
+			return this.TableFromExpression<PersonInsertResult>(() => PersonInsert(firstname, lastname, middlename, gender));
 		}
 
-		public partial class OutRefTestResult
+		public partial class PersonInsertResult
 		{
-			[Column("INPUTOUTPUTID" )] public int?    INPUTOUTPUTID  { get; set; }
-			[Column("INPUTOUTPUTSTR")] public string? INPUTOUTPUTSTR { get; set; }
-			[Column("OUTPUTID"      )] public int?    OUTPUTID       { get; set; }
-			[Column("OUTPUTSTR"     )] public string? OUTPUTSTR      { get; set; }
+			[Column("PERSONID")] public int? PERSONID { get; set; }
 		}
 		#endregion
 
-		#region OutRefEnumTest
-		private static readonly MethodInfo _outRefEnumTest = MemberHelper.MethodOf<TestDataDB>(ctx => ctx.OutRefEnumTest(default, default));
-
-		[Sql.TableFunction("OutRefEnumTest")]
-		public ITable<OutRefEnumTestResult> OutRefEnumTest(string? str, string? inInputoutputstr)
+		#region PersonInsertOutputParameter
+		[Sql.TableFunction("Person_Insert_OutputParameter")]
+		public ITable<PersonInsertOutputParameterResult> PersonInsertOutputParameter(string? firstname, string? lastname, string? middlename, char? gender)
 		{
-			return this.GetTable<OutRefEnumTestResult>(this, _outRefEnumTest, str, inInputoutputstr);
+			return this.TableFromExpression<PersonInsertOutputParameterResult>(() => PersonInsertOutputParameter(firstname, lastname, middlename, gender));
 		}
 
-		public partial class OutRefEnumTestResult
+		public partial class PersonInsertOutputParameterResult
 		{
-			[Column("INPUTOUTPUTSTR")] public string? INPUTOUTPUTSTR { get; set; }
-			[Column("OUTPUTSTR"     )] public string? OUTPUTSTR      { get; set; }
+			[Column("PERSONID")] public int? PERSONID { get; set; }
+		}
+		#endregion
+
+		#region PersonSelectAll
+		[Sql.TableFunction("Person_SelectAll")]
+		public ITable<PersonSelectAllResult> PersonSelectAll()
+		{
+			return this.TableFromExpression<PersonSelectAllResult>(() => PersonSelectAll());
+		}
+
+		public partial class PersonSelectAllResult
+		{
+			[Column("PERSONID"  )] public int?    PERSONID   { get; set; }
+			[Column("FIRSTNAME" )] public string? FIRSTNAME  { get; set; }
+			[Column("LASTNAME"  )] public string? LASTNAME   { get; set; }
+			[Column("MIDDLENAME")] public string? MIDDLENAME { get; set; }
+			[Column("GENDER"    )] public string? GENDER     { get; set; }
+		}
+		#endregion
+
+		#region PersonSelectByKey
+		[Sql.TableFunction("Person_SelectByKey")]
+		public ITable<PersonSelectByKeyResult> PersonSelectByKey(int? id)
+		{
+			return this.TableFromExpression<PersonSelectByKeyResult>(() => PersonSelectByKey(id));
+		}
+
+		public partial class PersonSelectByKeyResult
+		{
+			[Column("PERSONID"  )] public int?    PERSONID   { get; set; }
+			[Column("FIRSTNAME" )] public string? FIRSTNAME  { get; set; }
+			[Column("LASTNAME"  )] public string? LASTNAME   { get; set; }
+			[Column("MIDDLENAME")] public string? MIDDLENAME { get; set; }
+			[Column("GENDER"    )] public string? GENDER     { get; set; }
+		}
+		#endregion
+
+		#region PersonSelectByName
+		[Sql.TableFunction("Person_SelectByName")]
+		public ITable<PersonSelectByNameResult> PersonSelectByName(string? inFirstname, string? inLastname)
+		{
+			return this.TableFromExpression<PersonSelectByNameResult>(() => PersonSelectByName(inFirstname, inLastname));
+		}
+
+		public partial class PersonSelectByNameResult
+		{
+			[Column("PERSONID"  )] public int?    PERSONID   { get; set; }
+			[Column("FIRSTNAME" )] public string? FIRSTNAME  { get; set; }
+			[Column("LASTNAME"  )] public string? LASTNAME   { get; set; }
+			[Column("MIDDLENAME")] public string? MIDDLENAME { get; set; }
+			[Column("GENDER"    )] public string? GENDER     { get; set; }
 		}
 		#endregion
 
 		#region ScalarDataReader
-		private static readonly MethodInfo _scalarDataReader = MemberHelper.MethodOf<TestDataDB>(ctx => ctx.ScalarDataReader());
-
 		[Sql.TableFunction("Scalar_DataReader")]
 		public ITable<ScalarDataReaderResult> ScalarDataReader()
 		{
-			return this.GetTable<ScalarDataReaderResult>(this, _scalarDataReader);
+			return this.TableFromExpression<ScalarDataReaderResult>(() => ScalarDataReader());
 		}
 
 		public partial class ScalarDataReaderResult
@@ -262,12 +224,10 @@ namespace Cli.T4.Firebird
 		#endregion
 
 		#region ScalarOutputParameter
-		private static readonly MethodInfo _scalarOutputParameter = MemberHelper.MethodOf<TestDataDB>(ctx => ctx.ScalarOutputParameter());
-
 		[Sql.TableFunction("Scalar_OutputParameter")]
 		public ITable<ScalarOutputParameterResult> ScalarOutputParameter()
 		{
-			return this.GetTable<ScalarOutputParameterResult>(this, _scalarOutputParameter);
+			return this.TableFromExpression<ScalarOutputParameterResult>(() => ScalarOutputParameter());
 		}
 
 		public partial class ScalarOutputParameterResult
@@ -278,12 +238,10 @@ namespace Cli.T4.Firebird
 		#endregion
 
 		#region ScalarReturnParameter
-		private static readonly MethodInfo _scalarReturnParameter = MemberHelper.MethodOf<TestDataDB>(ctx => ctx.ScalarReturnParameter());
-
 		[Sql.TableFunction("Scalar_ReturnParameter")]
 		public ITable<ScalarReturnParameterResult> ScalarReturnParameter()
 		{
-			return this.GetTable<ScalarReturnParameterResult>(this, _scalarReturnParameter);
+			return this.TableFromExpression<ScalarReturnParameterResult>(() => ScalarReturnParameter());
 		}
 
 		public partial class ScalarReturnParameterResult
@@ -293,12 +251,10 @@ namespace Cli.T4.Firebird
 		#endregion
 
 		#region TestTableFunction
-		private static readonly MethodInfo _testTableFunction1 = MemberHelper.MethodOf<TestDataDB>(ctx => ctx.TestTableFunction(default));
-
 		[Sql.TableFunction("TEST_TABLE_FUNCTION")]
 		public ITable<TestTableFunctionResult> TestTableFunction(int? i)
 		{
-			return this.GetTable<TestTableFunctionResult>(this, _testTableFunction1, i);
+			return this.TableFromExpression<TestTableFunctionResult>(() => TestTableFunction(i));
 		}
 
 		public partial class TestTableFunctionResult
@@ -308,12 +264,10 @@ namespace Cli.T4.Firebird
 		#endregion
 
 		#region TestV4Types
-		private static readonly MethodInfo _testV4Types = MemberHelper.MethodOf<TestDataDB>(ctx => ctx.TestV4Types(default, default, default, default, default));
-
 		[Sql.TableFunction("TEST_V4_TYPES")]
 		public ITable<TestV4TypesResult> TestV4Types(FbZonedDateTime? tstz, FbZonedTime? ttz, FbDecFloat? decfloat16, FbDecFloat? decfloat34, BigInteger? int128)
 		{
-			return this.GetTable<TestV4TypesResult>(this, _testV4Types, tstz, ttz, decfloat16, decfloat34, int128);
+			return this.TableFromExpression<TestV4TypesResult>(() => TestV4Types(tstz, ttz, decfloat16, decfloat34, int128));
 		}
 
 		public partial class TestV4TypesResult
@@ -327,15 +281,26 @@ namespace Cli.T4.Firebird
 		#endregion
 
 		#region TestPackage1TestTableFunction
-		private static readonly MethodInfo _testTableFunction2 = MemberHelper.MethodOf<TestDataDB>(ctx => ctx.TestPackage1TestTableFunction(default));
-
 		[Sql.TableFunction("TEST_TABLE_FUNCTION", Package = "TEST_PACKAGE1")]
 		public ITable<TestPackage1TestTableFunctionResult> TestPackage1TestTableFunction(int? i)
 		{
-			return this.GetTable<TestPackage1TestTableFunctionResult>(this, _testTableFunction2, i);
+			return this.TableFromExpression<TestPackage1TestTableFunctionResult>(() => TestPackage1TestTableFunction(i));
 		}
 
 		public partial class TestPackage1TestTableFunctionResult
+		{
+			[Column("O")] public int? O { get; set; }
+		}
+		#endregion
+
+		#region TestPackage2TestTableFunction
+		[Sql.TableFunction("TEST_TABLE_FUNCTION", Package = "TEST_PACKAGE2")]
+		public ITable<TestPackage2TestTableFunctionResult> TestPackage2TestTableFunction(int? i)
+		{
+			return this.TableFromExpression<TestPackage2TestTableFunctionResult>(() => TestPackage2TestTableFunction(i));
+		}
+
+		public partial class TestPackage2TestTableFunctionResult
 		{
 			[Column("O")] public int? O { get; set; }
 		}
@@ -434,43 +399,24 @@ namespace Cli.T4.Firebird
 		#endregion
 
 		#region Stored Procedures
-		#region TestPackage2TestProcedure
-		public static int TestPackage2TestProcedure(this TestDataDB dataConnection, int? i, out int? o)
+		#region AddIssue792Record
+		public static int AddIssue792Record(this TestDataDB dataConnection)
 		{
-			var parameters = new []
-			{
-				new DataParameter("I", i, DataType.Int32)
-				{
-					Size = 4
-				},
-				new DataParameter("O", null, DataType.Int32)
-				{
-					Direction = ParameterDirection.Output,
-					Size = 4
-				}
-			};
-			o = Converter.ChangeTypeTo<int?>(parameters[1].Value);
-			return dataConnection.ExecuteProc("TEST_PACKAGE2.TEST_PROCEDURE", parameters);
+			return dataConnection.ExecuteProc("\"AddIssue792Record\"");
 		}
 		#endregion
 
-		#region TestProcedure
-		public static int TestProcedure(this TestDataDB dataConnection, int? i, out int? o)
+		#region PersonDelete
+		public static int PersonDelete(this TestDataDB dataConnection, int? personid)
 		{
 			var parameters = new []
 			{
-				new DataParameter("I", i, DataType.Int32)
+				new DataParameter("PERSONID", personid, DataType.Int32)
 				{
-					Size = 4
-				},
-				new DataParameter("O", null, DataType.Int32)
-				{
-					Direction = ParameterDirection.Output,
 					Size = 4
 				}
 			};
-			o = Converter.ChangeTypeTo<int?>(parameters[1].Value);
-			return dataConnection.ExecuteProc("TEST_PROCEDURE", parameters);
+			return dataConnection.ExecuteProc("\"Person_Delete\"", parameters);
 		}
 		#endregion
 
@@ -504,24 +450,24 @@ namespace Cli.T4.Firebird
 		}
 		#endregion
 
-		#region PersonDelete
-		public static int PersonDelete(this TestDataDB dataConnection, int? personid)
+		#region TestProcedure
+		public static int TestProcedure(this TestDataDB dataConnection, int? i, out int? o)
 		{
 			var parameters = new []
 			{
-				new DataParameter("PERSONID", personid, DataType.Int32)
+				new DataParameter("I", i, DataType.Int32)
 				{
+					Size = 4
+				},
+				new DataParameter("O", null, DataType.Int32)
+				{
+					Direction = ParameterDirection.Output,
 					Size = 4
 				}
 			};
-			return dataConnection.ExecuteProc("\"Person_Delete\"", parameters);
-		}
-		#endregion
-
-		#region AddIssue792Record
-		public static int AddIssue792Record(this TestDataDB dataConnection)
-		{
-			return dataConnection.ExecuteProc("\"AddIssue792Record\"");
+			var ret = dataConnection.ExecuteProc("TEST_PROCEDURE", parameters);
+			o = Converter.ChangeTypeTo<int?>(parameters[1].Value);
+			return ret;
 		}
 		#endregion
 
@@ -540,8 +486,30 @@ namespace Cli.T4.Firebird
 					Size = 4
 				}
 			};
+			var ret = dataConnection.ExecuteProc("TEST_PACKAGE1.TEST_PROCEDURE", parameters);
 			o = Converter.ChangeTypeTo<int?>(parameters[1].Value);
-			return dataConnection.ExecuteProc("TEST_PACKAGE1.TEST_PROCEDURE", parameters);
+			return ret;
+		}
+		#endregion
+
+		#region TestPackage2TestProcedure
+		public static int TestPackage2TestProcedure(this TestDataDB dataConnection, int? i, out int? o)
+		{
+			var parameters = new []
+			{
+				new DataParameter("I", i, DataType.Int32)
+				{
+					Size = 4
+				},
+				new DataParameter("O", null, DataType.Int32)
+				{
+					Direction = ParameterDirection.Output,
+					Size = 4
+				}
+			};
+			var ret = dataConnection.ExecuteProc("TEST_PACKAGE2.TEST_PROCEDURE", parameters);
+			o = Converter.ChangeTypeTo<int?>(parameters[1].Value);
+			return ret;
 		}
 		#endregion
 		#endregion
@@ -563,6 +531,14 @@ namespace Cli.T4.Firebird
 		}
 		#endregion
 
+		#region TestFunction
+		[Sql.Function("TEST_FUNCTION", ServerSideOnly = true)]
+		public static int? TestFunction(int? i)
+		{
+			throw new InvalidOperationException("Scalar function cannot be called outside of query");
+		}
+		#endregion
+
 		#region TestPackage1TestFunction
 		[Sql.Function("TEST_PACKAGE1.TEST_FUNCTION", ServerSideOnly = true)]
 		public static int? TestPackage1TestFunction(int? i)
@@ -574,14 +550,6 @@ namespace Cli.T4.Firebird
 		#region TestPackage2TestFunction
 		[Sql.Function("TEST_PACKAGE2.TEST_FUNCTION", ServerSideOnly = true)]
 		public static int? TestPackage2TestFunction(int? i)
-		{
-			throw new InvalidOperationException("Scalar function cannot be called outside of query");
-		}
-		#endregion
-
-		#region TestFunction
-		[Sql.Function("TEST_FUNCTION", ServerSideOnly = true)]
-		public static int? TestFunction(int? i)
 		{
 			throw new InvalidOperationException("Scalar function cannot be called outside of query");
 		}
@@ -620,7 +588,7 @@ namespace Cli.T4.Firebird
 	{
 		[Column("DataTypeID", IsPrimaryKey = true)] public int       DataTypeID { get; set; } // integer
 		[Column("Binary_"                        )] public byte[]?   Binary     { get; set; } // blob
-		[Column("Boolean_"                       )] public char?     Boolean    { get; set; } // char(1)
+		[Column("Boolean_"                       )] public bool?     Boolean    { get; set; } // boolean
 		[Column("Byte_"                          )] public short?    Byte       { get; set; } // smallint
 		[Column("Bytes_"                         )] public byte[]?   Bytes      { get; set; } // blob
 		[Column("CHAR_"                          )] public char?     Char       { get; set; } // char(1)
@@ -695,7 +663,7 @@ namespace Cli.T4.Firebird
 		[Column("MoneyValue"    )] public decimal?  MoneyValue     { get; set; } // decimal(10,4)
 		[Column("DateTimeValue" )] public DateTime? DateTimeValue  { get; set; } // timestamp
 		[Column("DateTimeValue2")] public DateTime? DateTimeValue2 { get; set; } // timestamp
-		[Column("BoolValue"     )] public char?     BoolValue      { get; set; } // char(1)
+		[Column("BoolValue"     )] public bool?     BoolValue      { get; set; } // boolean
 		[Column("GuidValue"     )] public string?   GuidValue      { get; set; } // char(16)
 		[Column("BinaryValue"   )] public byte[]?   BinaryValue    { get; set; } // blob
 		[Column("SmallIntValue" )] public short?    SmallIntValue  { get; set; } // smallint
@@ -719,10 +687,10 @@ namespace Cli.T4.Firebird
 
 		#region Associations
 		/// <summary>
-		/// INTEG_15118
+		/// INTEG_18
 		/// </summary>
-		[Association(CanBeNull = false, ThisKey = nameof(PersonID), OtherKey = nameof(Firebird.Person.PersonID))]
-		public Person Person { get; set; } = null!;
+		[Association(CanBeNull = false, ThisKey = nameof(PersonID), OtherKey = nameof(Person.PersonID))]
+		public Person Integ { get; set; } = null!;
 		#endregion
 	}
 
@@ -743,10 +711,10 @@ namespace Cli.T4.Firebird
 		public Doctor? Doctor { get; set; }
 
 		/// <summary>
-		/// INTEG_15118 backreference
+		/// INTEG_18 backreference
 		/// </summary>
-		[Association(ThisKey = nameof(PersonID), OtherKey = nameof(Patient.PersonID))]
-		public Patient? Integ { get; set; }
+		[Association(ThisKey = nameof(PersonID), OtherKey = nameof(Firebird.Patient.PersonID))]
+		public Patient? Patient { get; set; }
 		#endregion
 	}
 
@@ -773,7 +741,7 @@ namespace Cli.T4.Firebird
 		[Column("Field4"                              )] public int?      Field4          { get; set; } // integer
 		[Column("Field5"                              )] public int?      Field5          { get; set; } // integer
 		[Column("FieldInt64"                          )] public long?     FieldInt64      { get; set; } // bigint
-		[Column("FieldBoolean"                        )] public char?     FieldBoolean    { get; set; } // char(1)
+		[Column("FieldBoolean"                        )] public bool?     FieldBoolean    { get; set; } // boolean
 		[Column("FieldString"                         )] public string?   FieldString     { get; set; } // varchar(20)
 		[Column("FieldNString"                        )] public string?   FieldNString    { get; set; } // varchar(20)
 		[Column("FieldChar"                           )] public char?     FieldChar       { get; set; } // char(1)
@@ -800,7 +768,7 @@ namespace Cli.T4.Firebird
 		[Column("Field4"                              )] public int?      Field4          { get; set; } // integer
 		[Column("Field5"                              )] public int?      Field5          { get; set; } // integer
 		[Column("FieldInt64"                          )] public long?     FieldInt64      { get; set; } // bigint
-		[Column("FieldBoolean"                        )] public char?     FieldBoolean    { get; set; } // char(1)
+		[Column("FieldBoolean"                        )] public bool?     FieldBoolean    { get; set; } // boolean
 		[Column("FieldString"                         )] public string?   FieldString     { get; set; } // varchar(20)
 		[Column("FieldNString"                        )] public string?   FieldNString    { get; set; } // varchar(20)
 		[Column("FieldChar"                           )] public char?     FieldChar       { get; set; } // char(1)

@@ -11,7 +11,7 @@ namespace Tests.UserTests
 	public class Issue2691Tests : TestBase
 	{
 		[Table("Issue2691Table")]
-		class IssueClass
+		sealed class IssueClass
 		{
 			[PrimaryKey]
 			public int Id { get; set; }
@@ -22,7 +22,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void TestBinaryLengthTranslation([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void TestBinaryLengthTranslation([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataConnection(context))
 			using (var table = db.CreateLocalTable<IssueClass>())
@@ -35,21 +35,24 @@ namespace Tests.UserTests
 				});
 
 				var qry1 = table.Select(x => Sql.Length(x.Data)).ToList();
-				Assert.That(db.LastQuery!.ToLower().Contains("length("));
+				Assert.That(db.LastQuery!.ToLowerInvariant(), Does.Contain("length("));
 
 				var qry2 = table.Select(x => x.Data!.Length).ToList();
-				Assert.That(db.LastQuery!.ToLower().Contains("length("));
+				Assert.That(db.LastQuery!.ToLowerInvariant(), Does.Contain("length("));
 
 				var qry3 = db.GetTable<IssueClass>().Select(x => Sql.Length(x.DataB)).ToList();
-				Assert.That(db.LastQuery!.ToLower().Contains("length("));
+				Assert.That(db.LastQuery!.ToLowerInvariant(), Does.Contain("length("));
 
 				var qry4 = db.GetTable<IssueClass>().Select(x => x.DataB!.Length).ToList();
-				Assert.That(db.LastQuery!.ToLower().Contains("length("));
+				Assert.Multiple(() =>
+				{
+					Assert.That(db.LastQuery!.ToLowerInvariant(), Does.Contain("length("));
 
-				Assert.AreEqual(5, qry1[0]);
-				Assert.AreEqual(5, qry2[0]);
-				Assert.AreEqual(6, qry3[0]);
-				Assert.AreEqual(6, qry4[0]);
+					Assert.That(qry1[0], Is.EqualTo(5));
+					Assert.That(qry2[0], Is.EqualTo(5));
+					Assert.That(qry3[0], Is.EqualTo(6));
+					Assert.That(qry4[0], Is.EqualTo(6));
+				});
 			}
 		}
 	}

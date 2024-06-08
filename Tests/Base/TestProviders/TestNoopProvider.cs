@@ -8,6 +8,8 @@ using LinqToDB;
 using LinqToDB.Common;
 using LinqToDB.Data;
 using LinqToDB.DataProvider;
+using LinqToDB.DataProvider.SQLite.Translation;
+using LinqToDB.Linq.Translation;
 using LinqToDB.Mapping;
 using LinqToDB.SchemaProvider;
 using LinqToDB.SqlProvider;
@@ -55,7 +57,7 @@ namespace Tests
 		}
 	}
 
-	internal class TestNoopDataReader : DbDataReader
+	internal sealed class TestNoopDataReader : DbDataReader
 	{
 		public override object this[int ordinal] => throw new NotImplementedException();
 		public override object this[string name] => throw new NotImplementedException();
@@ -92,7 +94,7 @@ namespace Tests
 		public override bool        Read           ()                                                                           => throw new NotImplementedException();
 	}
 
-	internal class TestNoopDbCommand : DbCommand
+	internal sealed class TestNoopDbCommand : DbCommand
 	{
 		private readonly DbParameterCollection _parameters = new TestNoopDbParameterCollection();
 
@@ -141,7 +143,7 @@ namespace Tests
 		protected override DbDataReader ExecuteDbDataReader(CommandBehavior behavior) => new TestNoopDbDataReader();
 	}
 
-	internal class TestNoopDbParameter : DbParameter
+	internal sealed class TestNoopDbParameter : DbParameter
 	{
 		public override DbType DbType { get; set; }
 
@@ -190,7 +192,7 @@ namespace Tests
 		public override void ResetDbType() => throw new NotImplementedException();
 	}
 
-	internal class TestNoopDbDataReader : DbDataReader
+	internal sealed class TestNoopDbDataReader : DbDataReader
 	{
 		public override int  Depth           => throw new NotImplementedException();
 		public override int  FieldCount      => throw new NotImplementedException();
@@ -230,7 +232,7 @@ namespace Tests
 		public override bool        Read           (                                                                          ) => false;
 	}
 
-	internal class TestNoopDbParameterCollection : DbParameterCollection
+	internal sealed class TestNoopDbParameterCollection : DbParameterCollection
 	{
 		private List<TestNoopDbParameter> _parameters = new ();
 
@@ -253,7 +255,7 @@ namespace Tests
 			_parameters.Clear();
 		}
 
-		public    override IEnumerator GetEnumerator(                                       ) => Array<IEnumerator>.Empty.GetEnumerator();
+		public    override IEnumerator GetEnumerator(                                       ) => Array.Empty<IEnumerator>().GetEnumerator();
 		public    override void        AddRange     (Array values                           ) => throw new NotImplementedException();
 		public    override bool        Contains     (string value                           ) => throw new NotImplementedException();
 		public    override bool        Contains     (object value                           ) => throw new NotImplementedException();
@@ -277,10 +279,14 @@ namespace Tests
 		Type IDynamicProviderAdapter.ParameterType   => typeof(TestNoopDbParameter);
 		Type IDynamicProviderAdapter.CommandType     => typeof(TestNoopDbCommand  );
 		Type IDynamicProviderAdapter.TransactionType => throw new NotImplementedException();
+
+		DbConnection IDynamicProviderAdapter.CreateConnection(string connectionString) => new TestNoopConnection(connectionString);
 	}
 
 	public class TestNoopProvider : DynamicDataProviderBase<TestNoopProviderAdapter>
 	{
+
+
 		public TestNoopProvider()
 			: base(TestProvName.NoopProvider, new MappingSchema(), new TestNoopProviderAdapter())
 		{
@@ -296,16 +302,18 @@ namespace Tests
 			// Just for triggering of static constructor
 		}
 
-		public override ISqlBuilder     CreateSqlBuilder (MappingSchema mappingSchema) => new TestNoopSqlBuilder(this, MappingSchema);
-		public override ISchemaProvider GetSchemaProvider(                           ) => throw new NotImplementedException();
-		public override ISqlOptimizer   GetSqlOptimizer  (                           ) => TestNoopSqlOptimizer.Instance;
-		public override TableOptions    SupportedTableOptions => TableOptions.None;
+		public override    ISqlBuilder       CreateSqlBuilder (MappingSchema mappingSchema, DataOptions dataOptions) => new TestNoopSqlBuilder(this, MappingSchema, dataOptions);
+		public override    ISchemaProvider   GetSchemaProvider()      => throw new NotImplementedException();
+		protected override IMemberTranslator CreateMemberTranslator() => new SQLiteMemberTranslator();
+
+		public override    ISqlOptimizer     GetSqlOptimizer  (DataOptions dataOptions) => TestNoopSqlOptimizer.Instance;
+		public override    TableOptions      SupportedTableOptions                      => TableOptions.None;
 	}
 
-	internal class TestNoopSqlBuilder : BasicSqlBuilder
+	internal sealed class TestNoopSqlBuilder : BasicSqlBuilder
 	{
-		public TestNoopSqlBuilder(IDataProvider provider, MappingSchema mappingSchema)
-			: base(provider, mappingSchema, TestNoopSqlOptimizer.Instance, new SqlProviderFlags())
+		public TestNoopSqlBuilder(IDataProvider provider, MappingSchema mappingSchema, DataOptions dataOptions)
+			: base(provider, mappingSchema, dataOptions, TestNoopSqlOptimizer.Instance, new SqlProviderFlags())
 		{
 		}
 
@@ -317,7 +325,7 @@ namespace Tests
 		}
 	}
 
-	internal class TestNoopSqlOptimizer : BasicSqlOptimizer
+	internal sealed class TestNoopSqlOptimizer : BasicSqlOptimizer
 	{
 		public static ISqlOptimizer Instance = new TestNoopSqlOptimizer();
 
@@ -325,5 +333,21 @@ namespace Tests
 			: base(new SqlProviderFlags())
 		{
 		}
+
+		public override SqlStatement TransformStatement(SqlStatement statement, DataOptions dataOptions, MappingSchema mappingSchema)
+		{
+			switch (statement.QueryType)
+			{
+				case QueryType.Update :
+				{
+					CorrectUpdateSetters((SqlUpdateStatement)statement);
+
+					break;
+				}
+			}
+
+			return statement;
+		}
 	}
+
 }

@@ -10,7 +10,7 @@ namespace Tests.Linq
 	public class NotMappedTests : TestBase
 	{
 		[Table]
-		class SuperClass
+		sealed class SuperClass
 		{
 			[Column, PrimaryKey] public int Id { get; set; }
 			[Column] public string? Value      { get; set; }
@@ -20,7 +20,7 @@ namespace Tests.Linq
 		}
 
 		[Table]
-		class Subclass1
+		sealed class Subclass1
 		{
 			[Column, PrimaryKey] public int Id { get; set; }
 			[Column] public int? ParentId      { get; set; }
@@ -31,7 +31,7 @@ namespace Tests.Linq
 		}
 
 		[Table]
-		class Subclass2
+		sealed class Subclass2
 		{
 			[Column, PrimaryKey] public int Id  { get; set; }
 			[Column] public int? ParentId       { get; set; }
@@ -66,7 +66,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestAutomapperGenerated([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void TestAutomapperGenerated([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			var testData = GenerateTestData();
 
@@ -104,11 +104,11 @@ namespace Tests.Linq
 		}
 		
 		[Test]
-		public void TestViaSelect([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void TestViaSelect([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			var testData = GenerateTestData();
 
-			using (var db = GetDataContext(context))
+			using (var db = GetDataContext(context, o => o.OmitUnsupportedCompareNulls(context)))
 			using (db.CreateLocalTable(testData.Item1))
 			using (db.CreateLocalTable(testData.Item2))
 			using (db.CreateLocalTable(testData.Item3))

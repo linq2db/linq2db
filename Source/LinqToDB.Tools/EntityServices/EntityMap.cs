@@ -22,6 +22,8 @@ namespace LinqToDB.Tools.EntityServices
 	public class EntityMap<T> : IEntityMap
 		where T : class
 	{
+		readonly object _syncRoot = new ();
+
 		public EntityMap(IDataContext dataContext)
 		{
 			_entities = new ConcurrentDictionary<T,EntityMapEntry<T>>(dataContext.GetKeyEqualityComparer<T>());
@@ -29,11 +31,7 @@ namespace LinqToDB.Tools.EntityServices
 
 		volatile ConcurrentDictionary<T,EntityMapEntry<T>> _entities;
 
-#if NET45
-		public IDictionary<T, EntityMapEntry<T>> Entities => _entities;
-#else
 		public IReadOnlyDictionary<T,EntityMapEntry<T>> Entities => _entities;
-#endif
 
 		void IEntityMap.MapEntity(EntityCreatedEventArgs args)
 		{
@@ -48,7 +46,7 @@ namespace LinqToDB.Tools.EntityServices
 
 		IEnumerable IEntityMap.GetEntities()
 		{
-			return _entities?.Values ?? (IEnumerable)Array<T>.Empty;
+			return _entities?.Values ?? (IEnumerable)Array.Empty<T>();
 		}
 
 		interface IKeyComparer
@@ -57,7 +55,9 @@ namespace LinqToDB.Tools.EntityServices
 			Expression<Func<T,bool>> GetPredicate(MappingSchema mappingSchema, object key);
 		}
 
-		class KeyComparer<TK> : IKeyComparer
+#pragma warning disable CA1812 // Avoid uninstantiated internal classes
+		sealed class KeyComparer<TK> : IKeyComparer
+#pragma warning restore CA1812 // Avoid uninstantiated internal classes
 		{
 			Func<TK,T>?           _mapper;
 			List<MemberAccessor>? _keyColumns;
@@ -87,7 +87,7 @@ namespace LinqToDB.Tools.EntityServices
 					_mapper = v =>
 					{
 						var e = entityDesc.TypeAccessor.CreateInstanceEx();
-						_keyColumns![0].Setter!(e, v);
+						_keyColumns![0].SetValue(e, v);
 						return (T)e;
 					};
 				}
@@ -147,9 +147,8 @@ namespace LinqToDB.Tools.EntityServices
 			if (key     == null) throw new ArgumentNullException(nameof(key));
 
 			if (_keyComparers == null)
-				lock (this)
-					if (_keyComparers == null)
-						_keyComparers = new ConcurrentDictionary<Type,IKeyComparer>();
+				lock (_syncRoot)
+					_keyComparers ??= new ConcurrentDictionary<Type,IKeyComparer>();
 
 			var keyComparer = _keyComparers.GetOrAdd(
 				key.GetType(),

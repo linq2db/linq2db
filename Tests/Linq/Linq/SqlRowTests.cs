@@ -30,9 +30,6 @@ namespace Tests.Linq
 			// SqlRow type can't be instantiated client-side, 
 			// it's purely a LINQ construct that is converted into SQl code.
 			
-			Action invokeRow = () => Row(1, 2);
-			invokeRow.Should().Throw<LinqToDBException>();
-
 			using var db   = GetDataContext(context);
 			using var ints = SetupIntsTable(db);
 
@@ -153,7 +150,7 @@ namespace Tests.Linq
 				.Should().Be(1);
 
 			ints.Count(i => Row(i.One, i.Two, i.Four) > Row(i.One, i.Five, i.Three))
-				.Should().Be(0);				
+				.Should().Be(0);
 
 			ints.Count(i => Row(i.One, i.Nil, i.Four) > Row(i.One, (int?)i.Two, i.Three))
 				.Should().Be(0);
@@ -178,7 +175,7 @@ namespace Tests.Linq
 				.Should().Be(1);
 
 			ints.Count(i => Row(i.One, i.Two, i.Four) >= Row(i.One, i.Five, i.Three))
-				.Should().Be(0);				
+				.Should().Be(0);
 
 			ints.Count(i => Row(i.One, i.Nil, i.Four) >= Row(i.One, (int?)i.Two, i.Three))
 				.Should().Be(0);
@@ -203,7 +200,7 @@ namespace Tests.Linq
 				.Should().Be(0);
 
 			ints.Count(i => Row(i.One, i.Two, i.Four) < Row(i.One, i.Five, i.Three))
-				.Should().Be(1);				
+				.Should().Be(1);
 
 			ints.Count(i => Row(i.One, i.Nil, i.One) < Row(i.One, (int?)i.Two, i.Three))
 				.Should().Be(0);
@@ -228,7 +225,7 @@ namespace Tests.Linq
 				.Should().Be(0);
 
 			ints.Count(i => Row(i.One, i.Two, i.Four) <= Row(i.One, i.Five, i.Three))
-				.Should().Be(1);				
+				.Should().Be(1);
 
 			ints.Count(i => Row(i.One, i.Nil, i.One) <= Row(i.One, (int?)i.Two, i.Three))
 				.Should().Be(0);
@@ -240,8 +237,9 @@ namespace Tests.Linq
 				.Should().Be(1);
 		}
 
+		// looks like ClickHouse treats IN as correlated subquery and cannot handle outer column references
 		[Test]
-		public void In([DataSources] string context)
+		public void In([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using var db   = GetDataContext(context);
 			using var ints = SetupIntsTable(db);
@@ -272,7 +270,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void NotIn([DataSources] string context)
+		public void NotIn([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using var db   = GetDataContext(context);
 			using var ints = SetupIntsTable(db);
@@ -424,7 +422,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void Overlaps(
-			[IncludeDataSources(true, TestProvName.AllOracle /* TestProvName.AllPostgreSQL, ProviderName.DB2 */)] string context)
+			[IncludeDataSources(true, TestProvName.AllOracle/*, TestProvName.AllClickHouse, TestProvName.AllPostgreSQL, ProviderName.DB2 */)] string context)
 		{
 			// Postgre and DB2 have support but needs to know the type of parameters explicitely,
 			// so this test wouldn't work without adding casts at every constant.
@@ -448,7 +446,7 @@ namespace Tests.Linq
 				  .Overlaps(Row(DT.Parse("2020-10-05"), TimeSpan.Parse("1"))))
 				.Should().Be(1);
 
-			ints.Count(i => Row(DT.Parse("2020-10-03"), TimeSpan.Parse("6"))
+			ints.Count(i => Row(DT.Parse("2020-10-03"), (TimeSpan?)TimeSpan.Parse("6"))
 				  .Overlaps(Row(DT.Parse("2020-10-05"), (TimeSpan?)null)))
 				.Should().Be(1);
 		}
@@ -456,9 +454,9 @@ namespace Tests.Linq
 		[Test]
 		public void EqualToSelect(
 			[IncludeDataSources(true,
-				TestProvName.AllMySql, 
-				TestProvName.AllOracle, 
-				TestProvName.AllPostgreSQL, 
+				TestProvName.AllMySql,
+				TestProvName.AllOracle,
+				TestProvName.AllPostgreSQL,
 				TestProvName.AllSQLite)] string context)
 		{
 			// This feature is not emulated when there's no native support.
@@ -480,6 +478,11 @@ namespace Tests.Linq
 				 select Row(y.One, y.One + 1, 3)))
 				.Should().Be(1);
 
+			ints.Count(x => (from y in ints2
+					where y.Nil == null
+					select Row(y.One, y.One + 1, 3)) == Row(x.One, x.Two, x.Three))
+				.Should().Be(1);
+
 			ints.Count(x => Row(x.One, x.Two, x.Three) !=
 				(from y in ints2
 				 where y.Nil == null
@@ -497,8 +500,8 @@ namespace Tests.Linq
 		[Test]
 		public void CompareToSelect(
 			[IncludeDataSources(true,
-				TestProvName.AllMySql, 
-				TestProvName.AllPostgreSQL, 
+				TestProvName.AllMySql,
+				TestProvName.AllPostgreSQL,
 				TestProvName.AllSQLite)] string context)
 		{
 			// This feature is not emulated when there's no native support.
@@ -533,7 +536,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void MixedTypes([DataSources] string context)
+		public void MixedTypes([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			var data = new[]
 			{
@@ -553,7 +556,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void UpdateRowLiteral(
-			[IncludeDataSources(true, ProviderName.DB2, TestProvName.AllPostgreSQL)] string context)
+			[IncludeDataSources(true, ProviderName.DB2, TestProvName.AllPostgreSQL, TestProvName.AllSQLite)] string context)
 		{
 			var data = new[]
 			{
@@ -577,11 +580,13 @@ namespace Tests.Linq
 					new Ints { One = 100, Two = 200, Three = 300, Four = 400, Five = 50, Nil = 600 });
 		}
 
+		// TODO: this test should be rewritten to use different table as values source as currently update optimizer removes subquery for most of providers
 		[Test]
 		public void UpdateRowSelect(
 			[IncludeDataSources(true,
-				ProviderName.DB2, 
+				ProviderName.DB2,
 				TestProvName.AllPostgreSQL95Plus,
+				TestProvName.AllSQLite,
 				TestProvName.AllOracle)] string context)
 		{
 			var data = new[]
@@ -596,13 +601,13 @@ namespace Tests.Linq
 			ints.Where(i => i.One == 10)
 				.Set(i => i.One, i => i.Two * 5)
 				.Set(
-					i => Row(i.Two, i.Three), 
+					i => Row(i.Two, i.Three),
 					i => (from j in ints
 						  where j.One == 1
 						  select Row(i.Two * 10, j.Three * 100))
 						 .Single())
 				.Set(
-					i => Row(i.Four, i.Nil), 
+					i => Row(i.Four, i.Nil),
 					i => db.SelectQuery(() => Row(i.One * i.Four, (int?)600))
 					       .Single())
 				.Update();
@@ -614,7 +619,7 @@ namespace Tests.Linq
 					new Ints { One = 100, Two = 200, Three = 300, Four = 400, Five = 50, Nil = 600 });
 		}
 
-		class Ints : IEquatable<Ints>
+		sealed class Ints : IEquatable<Ints>
 		{
 			public int  One   { get; set; }
 			public int  Two   { get; set; }
@@ -635,7 +640,7 @@ namespace Tests.Linq
 			}
 		}
 
-		class Mixed
+		sealed class Mixed
 		{
 			public int      Int    { get; set; }
 			public string?  Str    { get; set; }

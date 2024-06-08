@@ -308,10 +308,10 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 				AreEqual(
 					from p in Parent
-					where Array<int>.Empty.Contains(p.ParentID) || p.ParentID == 2
+					where Array.Empty<int>().Contains(p.ParentID) || p.ParentID == 2
 					select p,
 					from p in db.Parent
-					where Array<int>.Empty.Contains(p.ParentID) || p.ParentID == 2
+					where Array.Empty<int>().Contains(p.ParentID) || p.ParentID == 2
 					select p);
 		}
 
@@ -425,6 +425,7 @@ namespace Tests.Linq
 				TestProvName.AllInformix,
 				TestProvName.AllPostgreSQL,
 				TestProvName.AllSQLite,
+				TestProvName.AllSapHana,
 				TestProvName.AllAccess)]
 			string context)
 		{
@@ -445,7 +446,7 @@ namespace Tests.Linq
 			string context)
 		{
 			using (var db = GetDataContext(context))
-				Assert.AreNotEqual(Guid.Empty, (from p in db.Types select Sql.NewGuid()).First());
+				Assert.That((from p in db.Types select Sql.NewGuid()).First(), Is.Not.EqualTo(Guid.Empty));
 		}
 
 		[Test]
@@ -455,6 +456,7 @@ namespace Tests.Linq
 				TestProvName.AllInformix,
 				TestProvName.AllPostgreSQL,
 				TestProvName.AllSQLite,
+				TestProvName.AllSapHana,
 				TestProvName.AllAccess)]
 			string context)
 		{
@@ -484,22 +486,20 @@ namespace Tests.Linq
 		public void Count1([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
-				Assert.AreEqual(
-					   Child.Count(c => c.ParentID == 1),
-					db.Child.Count(c => c.ParentID == 1));
+				Assert.That(
+					db.Child.Count(c => c.ParentID == 1), Is.EqualTo(Child.Count(c => c.ParentID == 1)));
 		}
 
 		[Test]
 		public void Sum1([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
-				Assert.AreEqual(
-					   Child.Sum(c => c.ParentID),
-					db.Child.Sum(c => c.ParentID));
+				Assert.That(
+					db.Child.Sum(c => c.ParentID), Is.EqualTo(Child.Sum(c => c.ParentID)));
 		}
 
 		[ExpressionMethod("ChildCountExpression")]
-		public static int ChildCount(Parent parent)
+		private static int ChildCount(Parent parent)
 		{
 			throw new NotSupportedException();
 		}
@@ -512,7 +512,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Sum2([DataSources] string context)
+		public void Sum2([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -607,7 +607,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void MatchFtsTest([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		public void MatchFtsTest([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -616,18 +616,18 @@ namespace Tests.Linq
 					select c;
 
 				var str = q.ToString()!;
-				Assert.True(str.Contains(" matches "));
+				Assert.That(str, Does.Contain(" matches "));
 			}
 		}
 
 		[Table]
-		class TagsTable
+		sealed class TagsTable
 		{
 			[Column] public string? Name { get; set; }
 		}
 
 		[Test]
-		public void Issue3543Test([IncludeDataSources(true, TestProvName.AllSQLiteClassic)] string context)
+		public void Issue3543Test([IncludeDataSources(true, TestProvName.AllSQLiteClassic, TestProvName.AllClickHouse)] string context)
 		{
 			using var db = GetDataContext(context);
 			using var tags = db.CreateLocalTable<TagsTable>();
@@ -642,16 +642,18 @@ namespace Tests.Linq
 
 	public static class SqlLite
 	{
-		class MatchBuilder : Sql.IExtensionCallBuilder
+		sealed class MatchBuilder : Sql.IExtensionCallBuilder
 		{
 			public void Build(Sql.ISqExtensionBuilder builder)
 			{
-				if (!(builder.GetExpression("src") is SqlField field))
-					throw new InvalidOperationException("Can not get table");
+				var srcExpr = builder.GetExpression("src");
+				if (srcExpr == null)
+				{
+					builder.IsConvertible = false;
+					return;
+				}
 
-				var sqlTable = (SqlTable)field.Table!;
-
-				var newField = new SqlField(sqlTable, sqlTable.TableName.Name);
+				var newField = new SqlAnchor(srcExpr, SqlAnchor.AnchorKindEnum.TableAsSelfColumn);
 
 				builder.AddParameter("table_field", newField);
 			}

@@ -1,17 +1,14 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
 using System.Runtime.CompilerServices;
-using System.Text;
-using LinqToDB.Extensions;
 
 namespace LinqToDB.Common.Internal
 {
+	using Extensions;
+
 	public static class TypeExtensions
 	{
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static Type UnwrapNullableType(this Type type)
+		internal static Type UnwrapNullableType(this Type type)
 			=> Nullable.GetUnderlyingType(type) ?? type;
 
 		/// <summary>
@@ -20,9 +17,10 @@ namespace LinqToDB.Common.Internal
 		/// <param name="type">Type to test.</param>
 		/// <returns><c>true</c> if type is reference type or <see cref="Nullable{T}"/>.</returns>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static bool IsNullableType(this Type type)
+		internal static bool IsNullableType(this Type type)
 			=> !type.IsValueType || type.IsNullable();
 
+		// don't change visibility, used by linq2db.EntityFramework
 		public static bool IsInteger(this Type type)
 		{
 			type = type.UnwrapNullableType();
@@ -38,7 +36,7 @@ namespace LinqToDB.Common.Internal
 			       || type == typeof(char);
 		}
 
-		public static bool IsNumericType(this Type? type)
+		internal static bool IsNumericType(this Type? type)
 		{
 			if (type == null)
 				return false;
@@ -51,7 +49,7 @@ namespace LinqToDB.Common.Internal
 			       || type == typeof(double);
 		}
 
-		public static bool IsSignedInteger(this Type type)
+		internal static bool IsSignedInteger(this Type type)
 		{
 			return type    == typeof(int)
 			       || type == typeof(long)
@@ -59,7 +57,7 @@ namespace LinqToDB.Common.Internal
 			       || type == typeof(sbyte);
 		}
 
-		public static bool IsSignedType(this Type? type)
+		internal static bool IsSignedType(this Type? type)
 		{
 			return type != null &&
 			       (IsSignedInteger(type)

@@ -1,13 +1,11 @@
 ﻿using System;
+using System.Data.Common;
 using System.Linq;
 using System.Linq.Expressions;
-using System.Reflection;
 
 namespace LinqToDB.Data
 {
-	using System.Data.Common;
 	using DataProvider;
-	using Linq;
 	using SqlProvider;
 	using SqlQuery;
 
@@ -33,46 +31,19 @@ namespace LinqToDB.Data
 
 		bool? IDataContext.IsDBNullAllowed(DbDataReader reader, int idx)
 		{
-			return DataProvider.IsDBNullAllowed(reader, idx);
-		}
-
-		IDataContext IDataContext.Clone(bool forNestedQuery)
-		{
-			CheckAndThrowOnDisposed();
-
-			if (forNestedQuery && _connection != null && IsMarsEnabled)
-				return new DataConnection(DataProvider, _connection.Connection)
-				{
-					MappingSchema             = MappingSchema,
-					TransactionAsync          = TransactionAsync,
-					IsMarsEnabled             = IsMarsEnabled,
-					ConnectionString          = ConnectionString,
-					RetryPolicy               = RetryPolicy,
-					CommandTimeout            = CommandTimeout,
-					InlineParameters          = InlineParameters,
-					ThrowOnDisposed           = ThrowOnDisposed,
-					_queryHints               = _queryHints?.Count > 0 ? _queryHints.ToList() : null,
-					OnTraceConnection         = OnTraceConnection,
-					_commandInterceptor       = _commandInterceptor      .CloneAggregated(),
-					_connectionInterceptor    = _connectionInterceptor   .CloneAggregated(),
-					_dataContextInterceptor   = _dataContextInterceptor  .CloneAggregated(),
-					_entityServiceInterceptor = _entityServiceInterceptor.CloneAggregated(),
-				};
-
-			return (DataConnection)Clone();
+			return DataProvider.IsDBNullAllowed(Options, reader, idx);
 		}
 
 		string IDataContext.ContextName => DataProvider.Name;
-		int    IDataContext.ContextID   => DataProvider.ID;
 
-		Func<ISqlBuilder> IDataContext.CreateSqlProvider => () => DataProvider.CreateSqlBuilder(MappingSchema);
+		Func<ISqlBuilder> IDataContext.CreateSqlProvider => () => DataProvider.CreateSqlBuilder(MappingSchema, Options);
 
-		static Func<ISqlOptimizer> GetGetSqlOptimizer(IDataProvider dp)
+		static Func<DataOptions,ISqlOptimizer> GetGetSqlOptimizer(IDataProvider dp)
 		{
 			return dp.GetSqlOptimizer;
 		}
 
-		Func<ISqlOptimizer> IDataContext.GetSqlOptimizer => GetGetSqlOptimizer(DataProvider);
+		Func<DataOptions,ISqlOptimizer> IDataContext.GetSqlOptimizer => GetGetSqlOptimizer(DataProvider);
 
 		#endregion
 	}

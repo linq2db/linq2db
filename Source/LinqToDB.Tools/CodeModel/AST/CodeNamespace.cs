@@ -13,7 +13,7 @@ namespace LinqToDB.CodeModel
 		internal CodeNamespace(IReadOnlyList<CodeIdentifier> name, IEnumerable<IMemberGroup>? members)
 		{
 			Name     = name;
-			_members = new (members ?? Array<IMemberGroup>.Empty);
+			_members = new (members ?? []);
 		}
 
 		public CodeNamespace(IReadOnlyList<CodeIdentifier> name)

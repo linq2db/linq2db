@@ -12,7 +12,7 @@ namespace Tests.UserTests
 	public class Issue737Tests : TestBase
 	{
 		[Test]
-		public void Test([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		public void Test([IncludeDataSources(TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataConnection(context))
 			{
@@ -21,7 +21,7 @@ namespace Tests.UserTests
 			}
 		}
 
-		class QueryOne
+		sealed class QueryOne
 		{
 			readonly DataConnection _db;
 
@@ -34,7 +34,7 @@ namespace Tests.UserTests
 				=> _db.GetTable<Person>().SelectMany(x => _db.GetTable<Person>().Where(y => false), (x, y) => x);
 		}
 
-		class QueryTwo
+		sealed class QueryTwo
 		{
 			readonly DataConnection _db;
 

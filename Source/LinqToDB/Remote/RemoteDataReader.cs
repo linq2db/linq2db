@@ -1,14 +1,14 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Data;
+using System.Data.Common;
 
 namespace LinqToDB.Remote
 {
-	using System.Collections;
-	using System.Data.Common;
 	using Mapping;
 
-	class RemoteDataReader : DbDataReader
+	sealed class RemoteDataReader : DbDataReader
 	{
 		public RemoteDataReader(MappingSchema mappingSchema, LinqServiceResult result)
 		{

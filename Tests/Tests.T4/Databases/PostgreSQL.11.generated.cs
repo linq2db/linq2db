@@ -28,26 +28,22 @@ using NpgsqlTypes;
 
 namespace PostreSQL11DataContext
 {
-	public partial class TestdbDB : LinqToDB.Data.DataConnection
+	public partial class TestdataDB : LinqToDB.Data.DataConnection
 	{
 		public ITable<_testsamename>                  _testsamename             { get { return this.GetTable<_testsamename>(); } }
 		public ITable<AllType>                        AllTypes                  { get { return this.GetTable<AllType>(); } }
 		public ITable<Child>                          Children                  { get { return this.GetTable<Child>(); } }
 		public ITable<CollatedTable>                  CollatedTables            { get { return this.GetTable<CollatedTable>(); } }
-		public ITable<DestinationTable>               DestinationTables         { get { return this.GetTable<DestinationTable>(); } }
 		public ITable<Doctor>                         Doctors                   { get { return this.GetTable<Doctor>(); } }
 		public ITable<Entity>                         Entities                  { get { return this.GetTable<Entity>(); } }
 		public ITable<GrandChild>                     GrandChildren             { get { return this.GetTable<GrandChild>(); } }
 		public ITable<InheritanceChild>               InheritanceChildren       { get { return this.GetTable<InheritanceChild>(); } }
 		public ITable<InheritanceParent>              InheritanceParents        { get { return this.GetTable<InheritanceParent>(); } }
-		public ITable<InventoryResource>              InventoryResources        { get { return this.GetTable<InventoryResource>(); } }
 		/// <summary>
 		/// This is the Issue2023 matview
 		/// </summary>
 		public ITable<Issue2023>                      Issue2023                 { get { return this.GetTable<Issue2023>(); } }
 		public ITable<LinqDataType>                   LinqDataTypes             { get { return this.GetTable<LinqDataType>(); } }
-		public ITable<Metric>                         Metrics                   { get { return this.GetTable<Metric>(); } }
-		public ITable<NpgsqlRange>                    NpgsqlRanges              { get { return this.GetTable<NpgsqlRange>(); } }
 		public ITable<Parent>                         Parents                   { get { return this.GetTable<Parent>(); } }
 		public ITable<Patient>                        Patients                  { get { return this.GetTable<Patient>(); } }
 		/// <summary>
@@ -57,49 +53,45 @@ namespace PostreSQL11DataContext
 		public ITable<SameName>                       SameNames                 { get { return this.GetTable<SameName>(); } }
 		public ITable<SameName1>                      SameName1                 { get { return this.GetTable<SameName1>(); } }
 		public ITable<SameName2>                      SameName2                 { get { return this.GetTable<SameName2>(); } }
-		public ITable<Schedule>                       Schedules                 { get { return this.GetTable<Schedule>(); } }
 		public ITable<SequenceCustomNamingTest>       SequenceCustomNamingTests { get { return this.GetTable<SequenceCustomNamingTest>(); } }
 		public ITable<SequenceTest1>                  SequenceTest1             { get { return this.GetTable<SequenceTest1>(); } }
 		public ITable<SequenceTest2>                  SequenceTest2             { get { return this.GetTable<SequenceTest2>(); } }
 		public ITable<SequenceTest3>                  SequenceTest3             { get { return this.GetTable<SequenceTest3>(); } }
-		public ITable<TableWithData>                  TableWithData             { get { return this.GetTable<TableWithData>(); } }
-		public ITable<TagTestTable>                   TagTestTables             { get { return this.GetTable<TagTestTable>(); } }
-		public ITable<Test>                           Tests                     { get { return this.GetTable<Test>(); } }
 		public ITable<TestIdentity>                   TestIdentities            { get { return this.GetTable<TestIdentity>(); } }
 		public ITable<TestMerge1>                     TestMerge1                { get { return this.GetTable<TestMerge1>(); } }
 		public ITable<TestMerge2>                     TestMerge2                { get { return this.GetTable<TestMerge2>(); } }
+		public ITable<TestMergeIdentity>              TestMergeIdentities       { get { return this.GetTable<TestMergeIdentity>(); } }
 		public ITable<test_schema_Testsamename>       Testsamenames             { get { return this.GetTable<test_schema_Testsamename>(); } }
 		public ITable<test_schema_TestSchemaIdentity> TestSchemaIdentities      { get { return this.GetTable<test_schema_TestSchemaIdentity>(); } }
 		public ITable<test_schema_Testserialidentity> Testserialidentities      { get { return this.GetTable<test_schema_Testserialidentity>(); } }
-		public ITable<Tst>                            Tsts                      { get { return this.GetTable<Tst>(); } }
 
 		partial void InitMappingSchema()
 		{
 			MappingSchema.SetConvertExpression<object?[], TestFunctionParametersResult>(tuple => new TestFunctionParametersResult() { param2 = (int?)tuple[0], param3 = (int?)tuple[1] });
 		}
 
-		public TestdbDB()
+		public TestdataDB()
 		{
 			InitDataContext();
 			InitMappingSchema();
 		}
 
-		public TestdbDB(string configuration)
+		public TestdataDB(string configuration)
 			: base(configuration)
 		{
 			InitDataContext();
 			InitMappingSchema();
 		}
 
-		public TestdbDB(LinqToDBConnectionOptions options)
+		public TestdataDB(DataOptions options)
 			: base(options)
 		{
 			InitDataContext();
 			InitMappingSchema();
 		}
 
-		public TestdbDB(LinqToDBConnectionOptions<TestdbDB> options)
-			: base(options)
+		public TestdataDB(DataOptions<TestdataDB> options)
+			: base(options.Options)
 		{
 			InitDataContext();
 			InitMappingSchema();
@@ -112,22 +104,20 @@ namespace PostreSQL11DataContext
 
 		#region GetParentByID
 
-		[Sql.TableFunction(Schema="public", Name="\"GetParentByID\"")]
+		[Sql.TableFunction(Schema="public", Name="GetParentByID")]
 		public ITable<Parent> GetParentByID(int? id)
 		{
-			return this.GetTable<Parent>(this, (MethodInfo)MethodBase.GetCurrentMethod()!,
-				id);
+			return this.TableFromExpression(() => GetParentByID(id));
 		}
 
 		#endregion
 
 		#region TestTableFunction
 
-		[Sql.TableFunction(Schema="public", Name="\"TestTableFunction\"")]
+		[Sql.TableFunction(Schema="public", Name="TestTableFunction")]
 		public ITable<TestTableFunctionResult> TestTableFunction(int? param1)
 		{
-			return this.GetTable<TestTableFunctionResult>(this, (MethodInfo)MethodBase.GetCurrentMethod()!,
-				param1);
+			return this.TableFromExpression(() => TestTableFunction(param1));
 		}
 
 		public partial class TestTableFunctionResult
@@ -139,12 +129,10 @@ namespace PostreSQL11DataContext
 
 		#region TestTableFunction1
 
-		[Sql.TableFunction(Schema="public", Name="\"TestTableFunction1\"")]
+		[Sql.TableFunction(Schema="public", Name="TestTableFunction1")]
 		public ITable<TestTableFunction1Result> TestTableFunction1(int? param1, int? param2)
 		{
-			return this.GetTable<TestTableFunction1Result>(this, (MethodInfo)MethodBase.GetCurrentMethod()!,
-				param1,
-				param2);
+			return this.TableFromExpression(() => TestTableFunction1(param1, param2));
 		}
 
 		public partial class TestTableFunction1Result
@@ -157,61 +145,61 @@ namespace PostreSQL11DataContext
 
 		#region TestTableFunctionSchema
 
-		[Sql.TableFunction(Schema="public", Name="\"TestTableFunctionSchema\"")]
+		[Sql.TableFunction(Schema="public", Name="TestTableFunctionSchema")]
 		public ITable<TestTableFunctionSchemaResult> TestTableFunctionSchema()
 		{
-			return this.GetTable<TestTableFunctionSchemaResult>(this, (MethodInfo)MethodBase.GetCurrentMethod()!);
+			return this.TableFromExpression(() => TestTableFunctionSchema());
 		}
 
 		public partial class TestTableFunctionSchemaResult
 		{
-			public int?                        ID                  { get; set; }
-			public long?                       bigintDataType      { get; set; }
-			public decimal?                    numericDataType     { get; set; }
-			public short?                      smallintDataType    { get; set; }
-			public int?                        intDataType         { get; set; }
-			public decimal?                    moneyDataType       { get; set; }
-			public double?                     doubleDataType      { get; set; }
-			public float?                      realDataType        { get; set; }
-			public DateTime?                   timestampDataType   { get; set; }
-			public DateTimeOffset?             timestampTZDataType { get; set; }
-			public DateTime?                   dateDataType        { get; set; }
-			public TimeSpan?                   timeDataType        { get; set; }
-			public DateTimeOffset?             timeTZDataType      { get; set; }
-			public TimeSpan?                   intervalDataType    { get; set; }
-			public TimeSpan?                   intervalDataType2   { get; set; }
-			public char?                       charDataType        { get; set; }
-			public string?                     char20DataType      { get; set; }
-			public string?                     varcharDataType     { get; set; }
-			public string?                     textDataType        { get; set; }
-			public byte[]?                     binaryDataType      { get; set; }
-			public Guid?                       uuidDataType        { get; set; }
-			public BitArray?                   bitDataType         { get; set; }
-			public bool?                       booleanDataType     { get; set; }
-			public string?                     colorDataType       { get; set; }
-			public NpgsqlPoint?                pointDataType       { get; set; }
-			public NpgsqlLSeg?                 lsegDataType        { get; set; }
-			public NpgsqlBox?                  boxDataType         { get; set; }
-			public NpgsqlPath?                 pathDataType        { get; set; }
-			public NpgsqlPolygon?              polygonDataType     { get; set; }
-			public NpgsqlCircle?               circleDataType      { get; set; }
-			public NpgsqlLine?                 lineDataType        { get; set; }
-			public IPAddress?                  inetDataType        { get; set; }
-			public ValueTuple<IPAddress, int>? cidrDataType        { get; set; }
-			public PhysicalAddress?            macaddrDataType     { get; set; }
-			public PhysicalAddress?            macaddr8DataType    { get; set; }
-			public string?                     jsonDataType        { get; set; }
-			public string?                     jsonbDataType       { get; set; }
-			public string?                     xmlDataType         { get; set; }
-			public BitArray?                   varBitDataType      { get; set; }
-			public string[]?                   strarray            { get; set; }
-			public int[]?                      intarray            { get; set; }
-			public int[]?                      int2darray          { get; set; }
-			public long[]?                     longarray           { get; set; }
-			public TimeSpan[]?                 intervalarray       { get; set; }
-			public double[]?                   doublearray         { get; set; }
-			public decimal[]?                  numericarray        { get; set; }
-			public decimal[]?                  decimalarray        { get; set; }
+			public int?                         ID                  { get; set; }
+			public long?                        bigintDataType      { get; set; }
+			public decimal?                     numericDataType     { get; set; }
+			public short?                       smallintDataType    { get; set; }
+			public int?                         intDataType         { get; set; }
+			public decimal?                     moneyDataType       { get; set; }
+			public double?                      doubleDataType      { get; set; }
+			public float?                       realDataType        { get; set; }
+			public DateTime?                    timestampDataType   { get; set; }
+			public DateTimeOffset?              timestampTZDataType { get; set; }
+			public DateTime?                    dateDataType        { get; set; }
+			public TimeSpan?                    timeDataType        { get; set; }
+			public DateTimeOffset?              timeTZDataType      { get; set; }
+			public TimeSpan?                    intervalDataType    { get; set; }
+			public TimeSpan?                    intervalDataType2   { get; set; }
+			public char?                        charDataType        { get; set; }
+			public string?                      char20DataType      { get; set; }
+			public string?                      varcharDataType     { get; set; }
+			public string?                      textDataType        { get; set; }
+			public byte[]?                      binaryDataType      { get; set; }
+			public Guid?                        uuidDataType        { get; set; }
+			public BitArray?                    bitDataType         { get; set; }
+			public bool?                        booleanDataType     { get; set; }
+			public string?                      colorDataType       { get; set; }
+			public NpgsqlPoint?                 pointDataType       { get; set; }
+			public NpgsqlLSeg?                  lsegDataType        { get; set; }
+			public NpgsqlBox?                   boxDataType         { get; set; }
+			public NpgsqlPath?                  pathDataType        { get; set; }
+			public NpgsqlPolygon?               polygonDataType     { get; set; }
+			public NpgsqlCircle?                circleDataType      { get; set; }
+			public NpgsqlLine?                  lineDataType        { get; set; }
+			public IPAddress?                   inetDataType        { get; set; }
+			public ValueTuple<IPAddress, byte>? cidrDataType        { get; set; }
+			public PhysicalAddress?             macaddrDataType     { get; set; }
+			public PhysicalAddress?             macaddr8DataType    { get; set; }
+			public string?                      jsonDataType        { get; set; }
+			public string?                      jsonbDataType       { get; set; }
+			public string?                      xmlDataType         { get; set; }
+			public BitArray?                    varBitDataType      { get; set; }
+			public string[]?                    strarray            { get; set; }
+			public int[]?                       intarray            { get; set; }
+			public int[]?                       int2darray          { get; set; }
+			public long[]?                      longarray           { get; set; }
+			public TimeSpan[]?                  intervalarray       { get; set; }
+			public double[]?                    doublearray         { get; set; }
+			public decimal[]?                   numericarray        { get; set; }
+			public decimal[]?                   decimalarray        { get; set; }
 		}
 
 		#endregion
@@ -235,53 +223,53 @@ namespace PostreSQL11DataContext
 	[Table(Schema="public", Name="AllTypes")]
 	public partial class AllType
 	{
-		[Column(                       DataType=LinqToDB.DataType.Int32,          Precision=32, Scale=0), PrimaryKey, Identity] public int                         ID                  { get; set; } // integer
-		[Column("bigintDataType",      DataType=LinqToDB.DataType.Int64,          Precision=64, Scale=0), Nullable            ] public long?                       BigintDataType      { get; set; } // bigint
-		[Column("numericDataType",     DataType=LinqToDB.DataType.Decimal),                               Nullable            ] public decimal?                    NumericDataType     { get; set; } // numeric
-		[Column("smallintDataType",    DataType=LinqToDB.DataType.Int16,          Precision=16, Scale=0), Nullable            ] public short?                      SmallintDataType    { get; set; } // smallint
-		[Column("intDataType",         DataType=LinqToDB.DataType.Int32,          Precision=32, Scale=0), Nullable            ] public int?                        IntDataType         { get; set; } // integer
-		[Column("moneyDataType",       DataType=LinqToDB.DataType.Money),                                 Nullable            ] public decimal?                    MoneyDataType       { get; set; } // money
-		[Column("doubleDataType",      DataType=LinqToDB.DataType.Double,         Precision=53),          Nullable            ] public double?                     DoubleDataType      { get; set; } // double precision
-		[Column("realDataType",        DataType=LinqToDB.DataType.Single,         Precision=24),          Nullable            ] public float?                      RealDataType        { get; set; } // real
-		[Column("timestampDataType",   DataType=LinqToDB.DataType.DateTime2,      Precision=6),           Nullable            ] public DateTime?                   TimestampDataType   { get; set; } // timestamp (6) without time zone
-		[Column("timestampTZDataType", DataType=LinqToDB.DataType.DateTimeOffset, Precision=6),           Nullable            ] public DateTimeOffset?             TimestampTZDataType { get; set; } // timestamp (6) with time zone
-		[Column("dateDataType",        DataType=LinqToDB.DataType.Date,           Precision=0),           Nullable            ] public DateTime?                   DateDataType        { get; set; } // date
-		[Column("timeDataType",        DataType=LinqToDB.DataType.Time,           Precision=6),           Nullable            ] public TimeSpan?                   TimeDataType        { get; set; } // time without time zone
-		[Column("timeTZDataType",      DataType=LinqToDB.DataType.Time,           Precision=6),           Nullable            ] public DateTimeOffset?             TimeTZDataType      { get; set; } // time with time zone
-		[Column("intervalDataType",    DataType=LinqToDB.DataType.Interval,       Precision=6),           Nullable            ] public TimeSpan?                   IntervalDataType    { get; set; } // interval
-		[Column("intervalDataType2",   DataType=LinqToDB.DataType.Interval,       Precision=6),           Nullable            ] public TimeSpan?                   IntervalDataType2   { get; set; } // interval
-		[Column("charDataType",        DataType=LinqToDB.DataType.NChar,          Length=1),              Nullable            ] public char?                       CharDataType        { get; set; } // character(1)
-		[Column("char20DataType",      DataType=LinqToDB.DataType.NChar,          Length=20),             Nullable            ] public string?                     Char20DataType      { get; set; } // character(20)
-		[Column("varcharDataType",     DataType=LinqToDB.DataType.NVarChar,       Length=20),             Nullable            ] public string?                     VarcharDataType     { get; set; } // character varying(20)
-		[Column("textDataType",        DataType=LinqToDB.DataType.Text),                                  Nullable            ] public string?                     TextDataType        { get; set; } // text
-		[Column("binaryDataType",      DataType=LinqToDB.DataType.Binary),                                Nullable            ] public byte[]?                     BinaryDataType      { get; set; } // bytea
-		[Column("uuidDataType",        DataType=LinqToDB.DataType.Guid),                                  Nullable            ] public Guid?                       UuidDataType        { get; set; } // uuid
-		[Column("bitDataType",         DataType=LinqToDB.DataType.BitArray,       Length=3),              Nullable            ] public BitArray?                   BitDataType         { get; set; } // bit(3)
-		[Column("booleanDataType",     DataType=LinqToDB.DataType.Boolean),                               Nullable            ] public bool?                       BooleanDataType     { get; set; } // boolean
-		[Column("colorDataType",       DataType=LinqToDB.DataType.Enum),                                  Nullable            ] public string?                     ColorDataType       { get; set; } // color
-		[Column("pointDataType",       DataType=LinqToDB.DataType.Udt),                                   Nullable            ] public NpgsqlPoint?                PointDataType       { get; set; } // point
-		[Column("lsegDataType",        DataType=LinqToDB.DataType.Udt),                                   Nullable            ] public NpgsqlLSeg?                 LsegDataType        { get; set; } // lseg
-		[Column("boxDataType",         DataType=LinqToDB.DataType.Udt),                                   Nullable            ] public NpgsqlBox?                  BoxDataType         { get; set; } // box
-		[Column("pathDataType",        DataType=LinqToDB.DataType.Udt),                                   Nullable            ] public NpgsqlPath?                 PathDataType        { get; set; } // path
-		[Column("polygonDataType",     DataType=LinqToDB.DataType.Udt),                                   Nullable            ] public NpgsqlPolygon?              PolygonDataType     { get; set; } // polygon
-		[Column("circleDataType",      DataType=LinqToDB.DataType.Udt),                                   Nullable            ] public NpgsqlCircle?               CircleDataType      { get; set; } // circle
-		[Column("lineDataType",        DataType=LinqToDB.DataType.Udt),                                   Nullable            ] public NpgsqlLine?                 LineDataType        { get; set; } // line
-		[Column("inetDataType",        DataType=LinqToDB.DataType.Udt),                                   Nullable            ] public IPAddress?                  InetDataType        { get; set; } // inet
-		[Column("cidrDataType",        DataType=LinqToDB.DataType.Udt),                                   Nullable            ] public ValueTuple<IPAddress, int>? CidrDataType        { get; set; } // cidr
-		[Column("macaddrDataType",     DataType=LinqToDB.DataType.Udt),                                   Nullable            ] public PhysicalAddress?            MacaddrDataType     { get; set; } // macaddr
-		[Column("macaddr8DataType",    DataType=LinqToDB.DataType.Udt),                                   Nullable            ] public PhysicalAddress?            Macaddr8DataType    { get; set; } // macaddr8
-		[Column("jsonDataType",        DataType=LinqToDB.DataType.Json),                                  Nullable            ] public string?                     JsonDataType        { get; set; } // json
-		[Column("jsonbDataType",       DataType=LinqToDB.DataType.BinaryJson),                            Nullable            ] public string?                     JsonbDataType       { get; set; } // jsonb
-		[Column("xmlDataType",         DataType=LinqToDB.DataType.Xml),                                   Nullable            ] public string?                     XmlDataType         { get; set; } // xml
-		[Column("varBitDataType",      DataType=LinqToDB.DataType.BitArray),                              Nullable            ] public BitArray?                   VarBitDataType      { get; set; } // bit varying
-		[Column("strarray",            DataType=LinqToDB.DataType.Undefined),                             Nullable            ] public string[]?                   Strarray            { get; set; } // text[]
-		[Column("intarray",            DataType=LinqToDB.DataType.Undefined),                             Nullable            ] public int[]?                      Intarray            { get; set; } // integer[]
-		[Column("int2darray",          DataType=LinqToDB.DataType.Undefined),                             Nullable            ] public int[][]?                    Int2darray          { get; set; } // integer[][]
-		[Column("longarray",           DataType=LinqToDB.DataType.Undefined),                             Nullable            ] public long[]?                     Longarray           { get; set; } // bigint[]
-		[Column("intervalarray",       DataType=LinqToDB.DataType.Undefined),                             Nullable            ] public TimeSpan[]?                 Intervalarray       { get; set; } // interval[]
-		[Column("doublearray",         DataType=LinqToDB.DataType.Undefined),                             Nullable            ] public double[]?                   Doublearray         { get; set; } // double precision[]
-		[Column("numericarray",        DataType=LinqToDB.DataType.Undefined),                             Nullable            ] public decimal[]?                  Numericarray        { get; set; } // numeric[]
-		[Column("decimalarray",        DataType=LinqToDB.DataType.Undefined),                             Nullable            ] public decimal[]?                  Decimalarray        { get; set; } // numeric[]
+		[Column(                       DataType=LinqToDB.DataType.Int32,          Precision=32, Scale=0), PrimaryKey, Identity] public int                          ID                  { get; set; } // integer
+		[Column("bigintDataType",      DataType=LinqToDB.DataType.Int64,          Precision=64, Scale=0), Nullable            ] public long?                        BigintDataType      { get; set; } // bigint
+		[Column("numericDataType",     DataType=LinqToDB.DataType.Decimal),                               Nullable            ] public decimal?                     NumericDataType     { get; set; } // numeric
+		[Column("smallintDataType",    DataType=LinqToDB.DataType.Int16,          Precision=16, Scale=0), Nullable            ] public short?                       SmallintDataType    { get; set; } // smallint
+		[Column("intDataType",         DataType=LinqToDB.DataType.Int32,          Precision=32, Scale=0), Nullable            ] public int?                         IntDataType         { get; set; } // integer
+		[Column("moneyDataType",       DataType=LinqToDB.DataType.Money),                                 Nullable            ] public decimal?                     MoneyDataType       { get; set; } // money
+		[Column("doubleDataType",      DataType=LinqToDB.DataType.Double,         Precision=53),          Nullable            ] public double?                      DoubleDataType      { get; set; } // double precision
+		[Column("realDataType",        DataType=LinqToDB.DataType.Single,         Precision=24),          Nullable            ] public float?                       RealDataType        { get; set; } // real
+		[Column("timestampDataType",   DataType=LinqToDB.DataType.DateTime2,      Precision=6),           Nullable            ] public DateTime?                    TimestampDataType   { get; set; } // timestamp (6) without time zone
+		[Column("timestampTZDataType", DataType=LinqToDB.DataType.DateTimeOffset, Precision=6),           Nullable            ] public DateTimeOffset?              TimestampTZDataType { get; set; } // timestamp (6) with time zone
+		[Column("dateDataType",        DataType=LinqToDB.DataType.Date,           Precision=0),           Nullable            ] public DateTime?                    DateDataType        { get; set; } // date
+		[Column("timeDataType",        DataType=LinqToDB.DataType.Time,           Precision=6),           Nullable            ] public TimeSpan?                    TimeDataType        { get; set; } // time without time zone
+		[Column("timeTZDataType",      DataType=LinqToDB.DataType.Time,           Precision=6),           Nullable            ] public DateTimeOffset?              TimeTZDataType      { get; set; } // time with time zone
+		[Column("intervalDataType",    DataType=LinqToDB.DataType.Interval,       Precision=6),           Nullable            ] public TimeSpan?                    IntervalDataType    { get; set; } // interval
+		[Column("intervalDataType2",   DataType=LinqToDB.DataType.Interval,       Precision=6),           Nullable            ] public TimeSpan?                    IntervalDataType2   { get; set; } // interval
+		[Column("charDataType",        DataType=LinqToDB.DataType.NChar,          Length=1),              Nullable            ] public char?                        CharDataType        { get; set; } // character(1)
+		[Column("char20DataType",      DataType=LinqToDB.DataType.NChar,          Length=20),             Nullable            ] public string?                      Char20DataType      { get; set; } // character(20)
+		[Column("varcharDataType",     DataType=LinqToDB.DataType.NVarChar,       Length=20),             Nullable            ] public string?                      VarcharDataType     { get; set; } // character varying(20)
+		[Column("textDataType",        DataType=LinqToDB.DataType.Text),                                  Nullable            ] public string?                      TextDataType        { get; set; } // text
+		[Column("binaryDataType",      DataType=LinqToDB.DataType.Binary),                                Nullable            ] public byte[]?                      BinaryDataType      { get; set; } // bytea
+		[Column("uuidDataType",        DataType=LinqToDB.DataType.Guid),                                  Nullable            ] public Guid?                        UuidDataType        { get; set; } // uuid
+		[Column("bitDataType",         DataType=LinqToDB.DataType.BitArray,       Length=3),              Nullable            ] public BitArray?                    BitDataType         { get; set; } // bit(3)
+		[Column("booleanDataType",     DataType=LinqToDB.DataType.Boolean),                               Nullable            ] public bool?                        BooleanDataType     { get; set; } // boolean
+		[Column("colorDataType",       DataType=LinqToDB.DataType.Enum),                                  Nullable            ] public string?                      ColorDataType       { get; set; } // color
+		[Column("pointDataType",       DataType=LinqToDB.DataType.Udt),                                   Nullable            ] public NpgsqlPoint?                 PointDataType       { get; set; } // point
+		[Column("lsegDataType",        DataType=LinqToDB.DataType.Udt),                                   Nullable            ] public NpgsqlLSeg?                  LsegDataType        { get; set; } // lseg
+		[Column("boxDataType",         DataType=LinqToDB.DataType.Udt),                                   Nullable            ] public NpgsqlBox?                   BoxDataType         { get; set; } // box
+		[Column("pathDataType",        DataType=LinqToDB.DataType.Udt),                                   Nullable            ] public NpgsqlPath?                  PathDataType        { get; set; } // path
+		[Column("polygonDataType",     DataType=LinqToDB.DataType.Udt),                                   Nullable            ] public NpgsqlPolygon?               PolygonDataType     { get; set; } // polygon
+		[Column("circleDataType",      DataType=LinqToDB.DataType.Udt),                                   Nullable            ] public NpgsqlCircle?                CircleDataType      { get; set; } // circle
+		[Column("lineDataType",        DataType=LinqToDB.DataType.Udt),                                   Nullable            ] public NpgsqlLine?                  LineDataType        { get; set; } // line
+		[Column("inetDataType",        DataType=LinqToDB.DataType.Udt),                                   Nullable            ] public IPAddress?                   InetDataType        { get; set; } // inet
+		[Column("cidrDataType",        DataType=LinqToDB.DataType.Udt),                                   Nullable            ] public ValueTuple<IPAddress, byte>? CidrDataType        { get; set; } // cidr
+		[Column("macaddrDataType",     DataType=LinqToDB.DataType.Udt),                                   Nullable            ] public PhysicalAddress?             MacaddrDataType     { get; set; } // macaddr
+		[Column("macaddr8DataType",    DataType=LinqToDB.DataType.Udt),                                   Nullable            ] public PhysicalAddress?             Macaddr8DataType    { get; set; } // macaddr8
+		[Column("jsonDataType",        DataType=LinqToDB.DataType.Json),                                  Nullable            ] public string?                      JsonDataType        { get; set; } // json
+		[Column("jsonbDataType",       DataType=LinqToDB.DataType.BinaryJson),                            Nullable            ] public string?                      JsonbDataType       { get; set; } // jsonb
+		[Column("xmlDataType",         DataType=LinqToDB.DataType.Xml),                                   Nullable            ] public string?                      XmlDataType         { get; set; } // xml
+		[Column("varBitDataType",      DataType=LinqToDB.DataType.BitArray),                              Nullable            ] public BitArray?                    VarBitDataType      { get; set; } // bit varying
+		[Column("strarray",            DataType=LinqToDB.DataType.Undefined),                             Nullable            ] public string[]?                    Strarray            { get; set; } // text[]
+		[Column("intarray",            DataType=LinqToDB.DataType.Undefined),                             Nullable            ] public int[]?                       Intarray            { get; set; } // integer[]
+		[Column("int2darray",          DataType=LinqToDB.DataType.Undefined),                             Nullable            ] public int[][]?                     Int2darray          { get; set; } // integer[][]
+		[Column("longarray",           DataType=LinqToDB.DataType.Undefined),                             Nullable            ] public long[]?                      Longarray           { get; set; } // bigint[]
+		[Column("intervalarray",       DataType=LinqToDB.DataType.Undefined),                             Nullable            ] public TimeSpan[]?                  Intervalarray       { get; set; } // interval[]
+		[Column("doublearray",         DataType=LinqToDB.DataType.Undefined),                             Nullable            ] public double[]?                    Doublearray         { get; set; } // double precision[]
+		[Column("numericarray",        DataType=LinqToDB.DataType.Undefined),                             Nullable            ] public decimal[]?                   Numericarray        { get; set; } // numeric[]
+		[Column("decimalarray",        DataType=LinqToDB.DataType.Undefined),                             Nullable            ] public decimal[]?                   Decimalarray        { get; set; } // numeric[]
 	}
 
 	[Table(Schema="public", Name="Child")]
@@ -297,14 +285,6 @@ namespace PostreSQL11DataContext
 		[Column(DataType=LinqToDB.DataType.Int32,    Precision=32, Scale=0), NotNull] public int    Id              { get; set; } // integer
 		[Column(DataType=LinqToDB.DataType.NVarChar, Length=20),             NotNull] public string CaseSensitive   { get; set; } = null!; // character varying(20)
 		[Column(DataType=LinqToDB.DataType.NVarChar, Length=20),             NotNull] public string CaseInsensitive { get; set; } = null!; // character varying(20)
-	}
-
-	[Table(Schema="public", Name="DestinationTable")]
-	public partial class DestinationTable
-	{
-		[Column(DataType=LinqToDB.DataType.Int32, Precision=32, Scale=0), NotNull    ] public int     Id       { get; set; } // integer
-		[Column(DataType=LinqToDB.DataType.Int32, Precision=32, Scale=0), NotNull    ] public int     Value    { get; set; } // integer
-		[Column(DataType=LinqToDB.DataType.Text),                            Nullable] public string? ValueStr { get; set; } // text
 	}
 
 	[Table(Schema="public", Name="Doctor")]
@@ -355,13 +335,6 @@ namespace PostreSQL11DataContext
 		[Column(DataType=LinqToDB.DataType.NVarChar, Length=50),                Nullable         ] public string? Name                { get; set; } // character varying(50)
 	}
 
-	[Table(Schema="public", Name="InventoryResource")]
-	public partial class InventoryResource
-	{
-		[Column(DataType=LinqToDB.DataType.Guid),     PrimaryKey, NotNull] public Guid   Id     { get; set; } // uuid
-		[Column(DataType=LinqToDB.DataType.NVarChar),             NotNull] public string Status { get; set; } = null!; // character varying
-	}
-
 	/// <summary>
 	/// This is the Issue2023 matview
 	/// </summary>
@@ -392,42 +365,6 @@ namespace PostreSQL11DataContext
 		[Column(DataType=LinqToDB.DataType.Int32,     Precision=32, Scale=0), Nullable] public int?      IntValue       { get; set; } // integer
 		[Column(DataType=LinqToDB.DataType.Int64,     Precision=64, Scale=0), Nullable] public long?     BigIntValue    { get; set; } // bigint
 		[Column(DataType=LinqToDB.DataType.NVarChar,  Length=50),             Nullable] public string?   StringValue    { get; set; } // character varying(50)
-	}
-
-	[Table(Schema="public", Name="Metric")]
-	public partial class Metric
-	{
-		[Column(DataType=LinqToDB.DataType.Int32,  Precision=32, Scale=0), PrimaryKey,  Identity] public int     Id        { get; set; } // integer
-		[Column(DataType=LinqToDB.DataType.Int32,  Precision=32, Scale=0), NotNull              ] public int     RequestId { get; set; } // integer
-		[Column(DataType=LinqToDB.DataType.Double, Precision=53),             Nullable          ] public double? Value     { get; set; } // double precision
-	}
-
-	[Table(Schema="public", Name="NpgsqlRanges")]
-	public partial class NpgsqlRange
-	{
-		[Column(DataType=LinqToDB.DataType.Int32,     Precision=32, Scale=0), NotNull    ] public int                    Id              { get; set; } // integer
-		[Column(DataType=LinqToDB.DataType.Undefined),                           Nullable] public NpgsqlRange<int>?      Int4Range       { get; set; } // int4range
-		[Column(DataType=LinqToDB.DataType.Undefined),                           Nullable] public NpgsqlRange<int>?      Int4RangeN      { get; set; } // int4range
-		[Column(DataType=LinqToDB.DataType.Undefined),                           Nullable] public NpgsqlRange<long>?     Int8Range       { get; set; } // int8range
-		[Column(DataType=LinqToDB.DataType.Undefined),                           Nullable] public NpgsqlRange<long>?     Int8RangeN      { get; set; } // int8range
-		[Column(DataType=LinqToDB.DataType.Undefined),                           Nullable] public NpgsqlRange<decimal>?  NumRange        { get; set; } // numrange
-		[Column(DataType=LinqToDB.DataType.Undefined),                           Nullable] public NpgsqlRange<decimal>?  NumRangeN       { get; set; } // numrange
-		[Column(DataType=LinqToDB.DataType.Undefined),                           Nullable] public NpgsqlRange<DateTime>? TSRange         { get; set; } // tstzrange
-		[Column(DataType=LinqToDB.DataType.Undefined),                           Nullable] public NpgsqlRange<DateTime>? TSRangeN        { get; set; } // tstzrange
-		[Column(DataType=LinqToDB.DataType.Undefined),                           Nullable] public NpgsqlRange<DateTime>? TSTZRange       { get; set; } // tstzrange
-		[Column(DataType=LinqToDB.DataType.Undefined),                           Nullable] public NpgsqlRange<DateTime>? TSTZRangeN      { get; set; } // tstzrange
-		[Column(DataType=LinqToDB.DataType.Undefined),                           Nullable] public NpgsqlRange<DateTime>? DateRange       { get; set; } // daterange
-		[Column(DataType=LinqToDB.DataType.Undefined),                           Nullable] public NpgsqlRange<DateTime>? DateRangeN      { get; set; } // daterange
-		[Column(DataType=LinqToDB.DataType.Undefined),                           Nullable] public NpgsqlRange<DateTime>? TSRangePS       { get; set; } // tsrange
-		[Column(DataType=LinqToDB.DataType.Undefined),                           Nullable] public NpgsqlRange<DateTime>? TSRangePSN      { get; set; } // tsrange
-		[Column(DataType=LinqToDB.DataType.Undefined),                           Nullable] public NpgsqlRange<DateTime>? TSTZRangePS     { get; set; } // tstzrange
-		[Column(DataType=LinqToDB.DataType.Undefined),                           Nullable] public NpgsqlRange<DateTime>? TSTZRangePSN    { get; set; } // tstzrange
-		[Column(DataType=LinqToDB.DataType.Undefined),                           Nullable] public NpgsqlRange<DateTime>? DateRangePS     { get; set; } // daterange
-		[Column(DataType=LinqToDB.DataType.Undefined),                           Nullable] public NpgsqlRange<DateTime>? DateRangePSN    { get; set; } // daterange
-		[Column(DataType=LinqToDB.DataType.Undefined),                           Nullable] public object?                DoubleRange     { get; set; } // floatrange
-		[Column(DataType=LinqToDB.DataType.Undefined),                           Nullable] public object?                DoubleRangeN    { get; set; } // floatrange
-		[Column(DataType=LinqToDB.DataType.Undefined),                           Nullable] public NpgsqlRange<DateTime>? TSTZRangeAsDTO  { get; set; } // tstzrange
-		[Column(DataType=LinqToDB.DataType.Undefined),                           Nullable] public NpgsqlRange<DateTime>? TSTZRangeAsDTON { get; set; } // tstzrange
 	}
 
 	[Table(Schema="public", Name="Parent")]
@@ -542,15 +479,6 @@ namespace PostreSQL11DataContext
 		#endregion
 	}
 
-	[Table(Schema="public", Name="schedule")]
-	public partial class Schedule
-	{
-		[Column("id",            DataType=LinqToDB.DataType.Int32, Precision=32, Scale=0), PrimaryKey,  Identity] public int     Id           { get; set; } // integer
-		[Column("unit",          DataType=LinqToDB.DataType.Enum),                         NotNull              ] public string  Unit         { get; set; } = null!; // time_unit
-		[Column("unit_nullable", DataType=LinqToDB.DataType.Enum),                            Nullable          ] public string? UnitNullable { get; set; } // time_unit
-		[Column("amount",        DataType=LinqToDB.DataType.Int32, Precision=32, Scale=0), NotNull              ] public int     Amount       { get; set; } // integer
-	}
-
 	[Table(Schema="public", Name="SequenceCustomNamingTest")]
 	public partial class SequenceCustomNamingTest
 	{
@@ -577,27 +505,6 @@ namespace PostreSQL11DataContext
 	{
 		[Column(DataType=LinqToDB.DataType.Int32,    Precision=32, Scale=0), PrimaryKey, Identity] public int     ID    { get; set; } // integer
 		[Column(DataType=LinqToDB.DataType.NVarChar, Length=50),             Nullable            ] public string? Value { get; set; } // character varying(50)
-	}
-
-	[Table(Schema="public", Name="TableWithData")]
-	public partial class TableWithData
-	{
-		[Column(DataType=LinqToDB.DataType.Int32, Precision=32, Scale=0), NotNull    ] public int     Id       { get; set; } // integer
-		[Column(DataType=LinqToDB.DataType.Int32, Precision=32, Scale=0), NotNull    ] public int     Value    { get; set; } // integer
-		[Column(DataType=LinqToDB.DataType.Text),                            Nullable] public string? ValueStr { get; set; } // text
-	}
-
-	[Table(Schema="public", Name="TagTestTable")]
-	public partial class TagTestTable
-	{
-		[Column(DataType=LinqToDB.DataType.Int32, Precision=32, Scale=0), NotNull    ] public int     ID   { get; set; } // integer
-		[Column(DataType=LinqToDB.DataType.Text),                            Nullable] public string? Name { get; set; } // text
-	}
-
-	[Table(Schema="public", Name="test")]
-	public partial class Test
-	{
-		[Column("arr", DataType=LinqToDB.DataType.Undefined), Nullable] public Guid[]? Arr { get; set; } // uuid[]
 	}
 
 	[Table(Schema="public", Name="TestIdentity")]
@@ -662,6 +569,13 @@ namespace PostreSQL11DataContext
 		[Column(DataType=LinqToDB.DataType.Int32,          Precision=32, Scale=0),     Nullable         ] public int?            FieldEnumNumber { get; set; } // integer
 	}
 
+	[Table(Schema="public", Name="TestMergeIdentity")]
+	public partial class TestMergeIdentity
+	{
+		[Column(DataType=LinqToDB.DataType.Int32, Precision=32, Scale=0), PrimaryKey, Identity] public int  Id    { get; set; } // integer
+		[Column(DataType=LinqToDB.DataType.Int32, Precision=32, Scale=0), Nullable            ] public int? Field { get; set; } // integer
+	}
+
 	[Table(Schema="test_schema", Name="testsamename")]
 	public partial class test_schema_Testsamename
 	{
@@ -680,18 +594,12 @@ namespace PostreSQL11DataContext
 		[Column(DataType=LinqToDB.DataType.Int32, Precision=32, Scale=0), PrimaryKey, Identity] public int ID { get; set; } // integer
 	}
 
-	[Table(Schema="public", Name="tst")]
-	public partial class Tst
-	{
-		[Column("id", DataType=LinqToDB.DataType.Int32, Precision=32, Scale=0), NotNull] public int Id { get; set; } // integer
-	}
-
 	public static partial class SqlFunctions
 	{
 		#region AddIfNotExists
 
-		[Sql.Function(Name="\"public\".add_if_not_exists", ServerSideOnly=true)]
-		public static object? AddIfNotExists(string? p_name)
+		[Sql.Function(Name="public.add_if_not_exists", ServerSideOnly=true)]
+		public static object? AddIfNotExists(string? pName)
 		{
 			throw new InvalidOperationException();
 		}
@@ -700,7 +608,7 @@ namespace PostreSQL11DataContext
 
 		#region Addissue792record
 
-		[Sql.Function(Name="\"public\".addissue792record", ServerSideOnly=true)]
+		[Sql.Function(Name="public.addissue792record", ServerSideOnly=true)]
 		public static object? Addissue792record()
 		{
 			throw new InvalidOperationException();
@@ -710,18 +618,8 @@ namespace PostreSQL11DataContext
 
 		#region Bool
 
-		[Sql.Function(Name="\"public\".bool", ServerSideOnly=true)]
+		[Sql.Function(Name="public.bool", ServerSideOnly=true)]
 		public static string? Bool(int? param)
-		{
-			throw new InvalidOperationException();
-		}
-
-		#endregion
-
-		#region Floatrange
-
-		[Sql.Function(Name="\"public\".floatrange", ServerSideOnly=true)]
-		public static object? Floatrange(double? par6, double? par7, string? par8)
 		{
 			throw new InvalidOperationException();
 		}
@@ -740,7 +638,7 @@ namespace PostreSQL11DataContext
 
 		#region Issue1742Date
 
-		[Sql.Function(Name="\"public\".issue_1742_date", ServerSideOnly=true)]
+		[Sql.Function(Name="public.issue_1742_date", ServerSideOnly=true)]
 		public static int? Issue1742Date(DateTime? p1)
 		{
 			throw new InvalidOperationException();
@@ -750,7 +648,7 @@ namespace PostreSQL11DataContext
 
 		#region Issue1742Ts
 
-		[Sql.Function(Name="\"public\".issue_1742_ts", ServerSideOnly=true)]
+		[Sql.Function(Name="public.issue_1742_ts", ServerSideOnly=true)]
 		public static int? Issue1742Ts(DateTime? p1)
 		{
 			throw new InvalidOperationException();
@@ -760,7 +658,7 @@ namespace PostreSQL11DataContext
 
 		#region Issue1742Tstz
 
-		[Sql.Function(Name="\"public\".issue_1742_tstz", ServerSideOnly=true)]
+		[Sql.Function(Name="public.issue_1742_tstz", ServerSideOnly=true)]
 		public static int? Issue1742Tstz(DateTimeOffset? p1)
 		{
 			throw new InvalidOperationException();
@@ -770,8 +668,8 @@ namespace PostreSQL11DataContext
 
 		#region Reverse
 
-		[Sql.Function(Name="\"public\".reverse", ServerSideOnly=true)]
-		public static string? Reverse(string? par14)
+		[Sql.Function(Name="public.reverse", ServerSideOnly=true)]
+		public static string? Reverse(string? par7)
 		{
 			throw new InvalidOperationException();
 		}
@@ -780,18 +678,8 @@ namespace PostreSQL11DataContext
 
 		#region TestAvg
 
-		[Sql.Function(Name="\"public\".test_avg", ServerSideOnly=true, IsAggregate = true, ArgIndices = new[] { 0 })]
-		public static double? TestAvg<TSource>(this IEnumerable<TSource> src, Expression<Func<TSource, double?>> par16)
-		{
-			throw new InvalidOperationException();
-		}
-
-		#endregion
-
-		#region TestParameterTyping
-
-		[Sql.Function(Name="\"public\".test_parameter_typing", ServerSideOnly=true)]
-		public static short? TestParameterTyping(short? psmallint, int? pint, long? pbigint, decimal? pdecimal, float? pfloat, double? pdouble)
+		[Sql.Function(Name="public.test_avg", ServerSideOnly=true, IsAggregate = true, ArgIndices = new[] { 0 })]
+		public static double? TestAvg<TSource>(this IEnumerable<TSource> src, Expression<Func<TSource, double?>> par9)
 		{
 			throw new InvalidOperationException();
 		}
@@ -800,7 +688,7 @@ namespace PostreSQL11DataContext
 
 		#region TestFunctionParameters
 
-		[Sql.Function(Name="\"public\".\"TestFunctionParameters\"", ServerSideOnly=true)]
+		[Sql.Function(Name="public.\"TestFunctionParameters\"", ServerSideOnly=true)]
 		public static TestFunctionParametersResult? TestFunctionParameters(int? param1, int? param2)
 		{
 			throw new InvalidOperationException();
@@ -810,7 +698,7 @@ namespace PostreSQL11DataContext
 
 		#region TestScalarFunction
 
-		[Sql.Function(Name="\"public\".\"TestScalarFunction\"", ServerSideOnly=true)]
+		[Sql.Function(Name="public.\"TestScalarFunction\"", ServerSideOnly=true)]
 		public static string? TestScalarFunction(int? param)
 		{
 			throw new InvalidOperationException();
@@ -820,7 +708,7 @@ namespace PostreSQL11DataContext
 
 		#region TestSingleOutParameterFunction
 
-		[Sql.Function(Name="\"public\".\"TestSingleOutParameterFunction\"", ServerSideOnly=true)]
+		[Sql.Function(Name="public.\"TestSingleOutParameterFunction\"", ServerSideOnly=true)]
 		public static int? TestSingleOutParameterFunction(int? param1)
 		{
 			throw new InvalidOperationException();
@@ -861,18 +749,6 @@ namespace PostreSQL11DataContext
 				t.InheritanceParentId == InheritanceParentId);
 		}
 
-		public static InventoryResource? Find(this ITable<InventoryResource> table, Guid Id)
-		{
-			return table.FirstOrDefault(t =>
-				t.Id == Id);
-		}
-
-		public static Metric? Find(this ITable<Metric> table, int Id)
-		{
-			return table.FirstOrDefault(t =>
-				t.Id == Id);
-		}
-
 		public static Patient? Find(this ITable<Patient> table, int PersonID)
 		{
 			return table.FirstOrDefault(t =>
@@ -898,12 +774,6 @@ namespace PostreSQL11DataContext
 		}
 
 		public static SameName2? Find(this ITable<SameName2> table, int Id)
-		{
-			return table.FirstOrDefault(t =>
-				t.Id == Id);
-		}
-
-		public static Schedule? Find(this ITable<Schedule> table, int Id)
 		{
 			return table.FirstOrDefault(t =>
 				t.Id == Id);
@@ -946,6 +816,12 @@ namespace PostreSQL11DataContext
 		}
 
 		public static TestMerge2? Find(this ITable<TestMerge2> table, int Id)
+		{
+			return table.FirstOrDefault(t =>
+				t.Id == Id);
+		}
+
+		public static TestMergeIdentity? Find(this ITable<TestMergeIdentity> table, int Id)
 		{
 			return table.FirstOrDefault(t =>
 				t.Id == Id);

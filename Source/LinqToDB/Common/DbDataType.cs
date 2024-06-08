@@ -11,8 +11,11 @@ namespace LinqToDB.Common
 	/// <summary>
 	/// Stores database type attributes.
 	/// </summary>
+	[DebuggerDisplay("DbDataType: {ToString()}")]
 	public struct DbDataType : IEquatable<DbDataType>
 	{
+		public static readonly DbDataType Undefined = new (typeof(object), DataType.Undefined);
+
 		[DebuggerStepThrough]
 		public DbDataType(Type systemType) : this()
 		{
@@ -66,7 +69,7 @@ namespace LinqToDB.Common
 		internal static MethodInfo WithSetValuesMethodInfo =
 			MemberHelper.MethodOf<DbDataType>(dt => dt.WithSetValues(dt));
 
-		public DbDataType WithSetValues(DbDataType from)
+		public readonly DbDataType WithSetValues(DbDataType from)
 		{
 			return new DbDataType(
 				from.SystemType != typeof(object)   ? from.SystemType : SystemType,
@@ -77,18 +80,18 @@ namespace LinqToDB.Common
 				from.Scale     ?? Scale);
 		}
 
+		public readonly DbDataType WithoutSystemType(DbDataType       from) => new (SystemType, from.DataType, from.DbType, from.Length, from.Precision, from.Scale);
+		public readonly DbDataType WithoutSystemType(ColumnDescriptor from) => new (SystemType, from.DataType, from.DbType, from.Length, from.Precision, from.Scale);
 
-		public DbDataType WithoutSystemType(DbDataType       from) => new (SystemType, from.DataType, from.DbType, from.Length, from.Precision, from.Scale);
-		public DbDataType WithoutSystemType(ColumnDescriptor from) => new (SystemType, from.DataType, from.DbType, from.Length, from.Precision, from.Scale);
+		public readonly DbDataType WithSystemType    (Type     systemType           ) => new (systemType, DataType, DbType, Length, Precision, Scale);
+		public readonly DbDataType WithDataType      (DataType dataType             ) => new (SystemType, dataType, DbType, Length, Precision, Scale);
+		public readonly DbDataType WithDbType        (string?  dbName               ) => new (SystemType, DataType, dbName, Length, Precision, Scale);
+		public readonly DbDataType WithLength        (int?     length               ) => new (SystemType, DataType, DbType, length, Precision, Scale);
+		public readonly DbDataType WithPrecision     (int?     precision            ) => new (SystemType, DataType, DbType, Length, precision, Scale);
+		public readonly DbDataType WithScale         (int?     scale                ) => new (SystemType, DataType, DbType, Length, Precision, scale);
+		public readonly DbDataType WithPrecisionScale(int?     precision, int? scale) => new (SystemType, DataType, DbType, Length, precision, scale);
 
-		public DbDataType WithSystemType(Type     systemType) => new (systemType, DataType, DbType, Length, Precision, Scale);
-		public DbDataType WithDataType  (DataType dataType  ) => new (SystemType, dataType, DbType, Length, Precision, Scale);
-		public DbDataType WithDbType    (string?  dbName    ) => new (SystemType, DataType, dbName, Length, Precision, Scale);
-		public DbDataType WithLength    (int?     length    ) => new (SystemType, DataType, DbType, length, Precision, Scale);
-		public DbDataType WithPrecision (int?     precision ) => new (SystemType, DataType, DbType, Length, precision, Scale);
-		public DbDataType WithScale     (int?     scale     ) => new (SystemType, DataType, DbType, Length, Precision, scale);
-
-		public override string ToString()
+		public readonly override string ToString()
 		{
 			var dataTypeStr  = DataType == DataType.Undefined ? string.Empty : $", {DataType}";
 			var dbTypeStr    = string.IsNullOrEmpty(DbType)   ? string.Empty : $", \"{DbType}\"";
@@ -100,14 +103,23 @@ namespace LinqToDB.Common
 
 		#region Equality members
 
-		public bool Equals(DbDataType other)
+		public readonly bool Equals(DbDataType other)
 		{
 			return SystemType == other.SystemType
 				&& DataType   == other.DataType
 				&& Length     == other.Length
 				&& Precision  == other.Precision
 				&& Scale      == other.Scale
-				&& string.Equals(DbType, other.DbType);
+				&& string.Equals(DbType, other.DbType, StringComparison.Ordinal);
+		}
+
+		public readonly bool EqualsDbOnly(DbDataType other)
+		{
+			return DataType   == other.DataType
+				&& Length     == other.Length
+				&& Precision  == other.Precision
+				&& Scale      == other.Scale
+				&& string.Equals(DbType, other.DbType, StringComparison.Ordinal);
 		}
 
 		public override bool Equals(object? obj)
@@ -138,7 +150,7 @@ namespace LinqToDB.Common
 			return _hashCode.Value;
 		}
 
-		#endregion
+#endregion
 
 		#region Operators
 

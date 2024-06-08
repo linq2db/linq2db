@@ -10,7 +10,7 @@ namespace LinqToDB
 	/// Explicit data context <see cref="DataContext"/> transaction wrapper.
 	/// </summary>
 	[PublicAPI]
-	public class DataContextTransaction : IDisposable
+	public class DataContextTransaction : IDisposable, IAsyncDisposable
 	{
 		/// <summary>
 		/// Creates new transaction wrapper.
@@ -195,11 +195,28 @@ namespace LinqToDB
 			{
 				var db = DataContext.GetDataConnection();
 
-				db.RollbackTransaction();
+				db.DisposeTransaction();
 
 				_transactionCounter = 0;
 
 				DataContext.LockDbManagerCounter--;
+				DataContext.ReleaseQuery();
+			}
+		}
+
+		/// <inheritdoc cref="Dispose"/>
+		async ValueTask IAsyncDisposable.DisposeAsync()
+		{
+			if (_transactionCounter > 0)
+			{
+				var db = DataContext.GetDataConnection();
+
+				await db.DisposeTransactionAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+
+				_transactionCounter = 0;
+
+				DataContext.LockDbManagerCounter--;
+				await DataContext.ReleaseQueryAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 			}
 		}
 	}

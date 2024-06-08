@@ -9,7 +9,7 @@ namespace Tests.xUpdate
 	public class InsertIntoTests : TestBase
 	{
 		[Table]
-		class InsertTestClass
+		sealed class InsertTestClass
 		{
 			[Column(IsIdentity = true)] public int  Id         { get; set; }
 			[Column]                    public int  Value      { get; set; }
@@ -22,7 +22,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void InsertFromQuery([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void InsertFromQuery([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (var table = db.CreateLocalTable(InsertTestClass.Seed()))
@@ -35,13 +35,16 @@ namespace Tests.xUpdate
 				var source = table.Single();
 				var result = destTable.Single();
 
-				Assert.That(source.Value,      Is.EqualTo(result.Value));
-				Assert.That(source.OtherValue, Is.EqualTo(result.OtherValue));
+				Assert.Multiple(() =>
+				{
+					Assert.That(source.Value, Is.EqualTo(result.Value));
+					Assert.That(source.OtherValue, Is.EqualTo(result.OtherValue));
+				});
 			}
 		}
 
 		[Test]
-		public void InsertFromTable([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void InsertFromTable([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (var table = db.CreateLocalTable(InsertTestClass.Seed()))
@@ -54,13 +57,16 @@ namespace Tests.xUpdate
 				var source = table.Single();
 				var result = destTable.Single();
 
-				Assert.That(source.Value,      Is.EqualTo(result.Value));
-				Assert.That(source.OtherValue, Is.EqualTo(result.OtherValue));
+				Assert.Multiple(() =>
+				{
+					Assert.That(source.Value, Is.EqualTo(result.Value));
+					Assert.That(source.OtherValue, Is.EqualTo(result.OtherValue));
+				});
 			}
 		}
 
 		[Test]
-		public void InsertFromCTE([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void InsertFromCTE([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (var table = db.CreateLocalTable(InsertTestClass.Seed()))
@@ -73,13 +79,16 @@ namespace Tests.xUpdate
 				var source = table.Single();
 				var result = destTable.Single();
 
-				Assert.That(source.Value,      Is.EqualTo(result.Value));
-				Assert.That(source.OtherValue, Is.EqualTo(result.OtherValue));
+				Assert.Multiple(() =>
+				{
+					Assert.That(source.Value, Is.EqualTo(result.Value));
+					Assert.That(source.OtherValue, Is.EqualTo(result.OtherValue));
+				});
 			}
 		}
 
 		[Test]
-		public void InsertFromSql([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void InsertFromSql([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (var table = db.CreateLocalTable(InsertTestClass.Seed()))
@@ -93,13 +102,16 @@ namespace Tests.xUpdate
 				var source = table.Single();
 				var result = destTable.Single();
 
-				Assert.That(source.Value,      Is.EqualTo(result.Value));
-				Assert.That(result.OtherValue, Is.Null);
+				Assert.Multiple(() =>
+				{
+					Assert.That(source.Value, Is.EqualTo(result.Value));
+					Assert.That(result.OtherValue, Is.Null);
+				});
 			}
 		}
 
 		[Test]
-		public void InsertFromTableOverride([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void InsertFromTableOverride([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (var table = db.CreateLocalTable(InsertTestClass.Seed()))
@@ -116,8 +128,11 @@ namespace Tests.xUpdate
 				var source = table.Single();
 				var result = destTable.Single();
 
-				Assert.That(source.Value,      Is.EqualTo(result.Value - 2));
-				Assert.That(source.OtherValue, Is.EqualTo(result.OtherValue - 2));
+				Assert.Multiple(() =>
+				{
+					Assert.That(source.Value, Is.EqualTo(result.Value - 2));
+					Assert.That(source.OtherValue, Is.EqualTo(result.OtherValue - 2));
+				});
 			}
 		}
 	}

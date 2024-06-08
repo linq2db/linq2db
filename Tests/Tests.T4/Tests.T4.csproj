@@ -1,34 +1,23 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-	<Import Project="..\..\Build\linq2db.Tests.props" />
 
+	<Import Project="..\linq2db.TestProjects.props" />
+	
 	<PropertyGroup>
 		<AssemblyName>Tests.T4</AssemblyName>
-
-		<NoWarn>(NoWarn);618</NoWarn>
 	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="Npgsql" />
-		<PackageReference Include="FirebirdSql.Data.FirebirdClient" />
+		<ProjectCapability Remove="TestContainer" />
 
 		<Service Include="{508349b6-6b84-4df5-91f0-309beebad82d}" />
+
+		<PackageReference Update="MySql.Data" Aliases="" />
+		<PackageReference Update="MySqlConnector" Aliases="" />
 	</ItemGroup>
 
-	<ItemGroup Condition="'$(TargetFramework)' == 'net472'">
-		<Reference Include="System.ComponentModel.DataAnnotations" />
+	<ItemGroup Condition="'$(TargetFramework)' == 'net462'">
 		<Reference Include="PresentationCore" />
 		<Reference Include="PresentationFramework" />
-		<Reference Include="WindowsBase" />
-
-		<PackageReference Include="Microsoft.SqlServer.Types" />
-
-	</ItemGroup>
-	<ItemGroup Condition="'$(TargetFramework)' != 'net472'">
-		<!--nuget doesn't have strong name, so we use local self-signed copy-->
-		<!--<PackageReference Include="dotMorten.Microsoft.SqlServer.Types" />-->
-		<Reference Include="Microsoft.SqlServer.Types">
-			<HintPath>..\..\Redist\dotMorten.Microsoft.SqlServer.Types\Microsoft.SqlServer.Types.dll</HintPath>
-		</Reference>
 	</ItemGroup>
 
 	<ItemGroup>
@@ -36,7 +25,7 @@
 		<Content Include="Models\bbb.txt" />
 	</ItemGroup>
 
-	<ItemGroup Condition="'$(TargetFramework)' == 'net472'">
+	<ItemGroup Condition="'$(TargetFramework)' == 'net462'">
 		<Compile Update="WPF\ViewModel.generated.cs">
 			<DesignTime>True</DesignTime>
 			<AutoGen>True</AutoGen>
@@ -44,7 +33,7 @@
 		</Compile>
 	</ItemGroup>
 	
-	<ItemGroup Condition="'$(TargetFramework)' != 'net472'">
+	<ItemGroup Condition="'$(TargetFramework)' != 'net462'">
 		<Compile Remove="WPF\*.cs" />
 		<None Include="WPF\ViewModel.cs" />
 
@@ -56,6 +45,21 @@
 	</ItemGroup>
 
 	<ItemGroup>
+
+		<None Update="Cli\Fluent.tt">
+		  <LastGenOutput>Fluent.generated.cs</LastGenOutput>
+		  <Generator>TextTemplatingFileGenerator</Generator>
+		</None>
+
+		<None Update="Cli\NoMetadata.tt">
+		  <LastGenOutput>NoMetadata.generated.cs</LastGenOutput>
+		  <Generator>TextTemplatingFileGenerator</Generator>
+		</None>
+
+		<None Update="Cli\All.tt">
+		  <LastGenOutput>All.generated.cs</LastGenOutput>
+		  <Generator>TextTemplatingFileGenerator</Generator>
+		</None>
 
 		<None Update="Cli\Default.tt">
 		  <LastGenOutput>Default.generated.cs</LastGenOutput>
@@ -250,10 +254,25 @@
 	</ItemGroup>
 
 	<ItemGroup>
+		<Compile Update="Cli\All.generated.cs">
+		  <DependentUpon>All.tt</DependentUpon>
+		  <DesignTime>True</DesignTime>
+		  <AutoGen>True</AutoGen>
+		</Compile>
 		<Compile Update="Cli\Default.generated.cs">
 		  <DesignTime>True</DesignTime>
 		  <AutoGen>True</AutoGen>
 		  <DependentUpon>Default.tt</DependentUpon>
+		</Compile>
+		<Compile Update="Cli\Fluent.generated.cs">
+		  <DesignTime>True</DesignTime>
+		  <AutoGen>True</AutoGen>
+		  <DependentUpon>Fluent.tt</DependentUpon>
+		</Compile>
+		<Compile Update="Cli\NoMetadata.generated.cs">
+		  <DesignTime>True</DesignTime>
+		  <AutoGen>True</AutoGen>
+		  <DependentUpon>NoMetadata.tt</DependentUpon>
 		</Compile>
 		<Compile Update="Cli\T4.generated.cs">
 		  <DesignTime>True</DesignTime>

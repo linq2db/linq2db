@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 
 namespace LinqToDB.Tools
 {
@@ -38,7 +37,7 @@ namespace LinqToDB.Tools
 
 			IList<T>? sourceList = null;
 
-			var entityDescriptor = context.MappingSchema.GetEntityDescriptor(typeof(T));
+			var entityDescriptor = context.MappingSchema.GetEntityDescriptor(typeof(T), context.Options.ConnectionOptions.OnEntityDescriptorCreated);
 
 			foreach (var column in entityDescriptor.Columns)
 			{
@@ -49,7 +48,7 @@ namespace LinqToDB.Tools
 					if (sourceList.Count == 0)
 						return sourceList;
 
-					var sqlBuilder = context.DataProvider.CreateSqlBuilder(context.MappingSchema);
+					var sqlBuilder = context.DataProvider.CreateSqlBuilder(context.MappingSchema, context.Options);
 
 					var sequenceName = useSequenceName && column.SequenceName != null ? column.SequenceName.SequenceName : null;
 

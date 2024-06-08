@@ -5,6 +5,7 @@ using System.Reflection;
 
 using JetBrains.Annotations;
 
+using LinqToDB.Extensions;
 using LinqToDB.Reflection;
 using LinqToDB.Tools.Comparers;
 
@@ -23,14 +24,14 @@ namespace Tests.Tools
 			public virtual void M() {}
 		}
 
-		class B : A
+		sealed class B : A
 		{
 			public override int Overridable { get; set; }
 
 			public override void M() {}
 		}
 
-		class C : A
+		sealed class C : A
 		{
 		}
 
@@ -104,28 +105,28 @@ namespace Tests.Tools
 			var b  = typeof(B).GetMethod("M")!;
 			var b2 = b.GetBaseDefinition();
 
-			Assert.False(a.Equals(b), "MethodInfo fails");
-			Assert.True (a.Equals(b2), "MethodInfo fails");
+			Assert.That(a, Is.Not.EqualTo(b), "MethodInfo fails");
+			Assert.That(a, Is.EqualTo(b2), "MethodInfo fails");
 
-			Assert.False(a.MethodHandle.Equals(b.MethodHandle), "MethodHandle fails");
-			Assert.True(a.MethodHandle.Equals(b2.MethodHandle), "MethodHandle fails");
+			Assert.That(a.MethodHandle, Is.Not.EqualTo(b.MethodHandle), "MethodHandle fails");
+			Assert.Multiple(() =>
+			{
+				Assert.That(a.MethodHandle, Is.EqualTo(b2.MethodHandle), "MethodHandle fails");
 
-			Assert.False(EqualityComparer<RuntimeMethodHandle>.Default.Equals(a.MethodHandle, b.MethodHandle), "EqualityComparer fails");
-			Assert.True(EqualityComparer<RuntimeMethodHandle>.Default.Equals(a.MethodHandle, b2.MethodHandle), "EqualityComparer fails");
+				Assert.That(EqualityComparer<RuntimeMethodHandle>.Default.Equals(a.MethodHandle, b.MethodHandle), Is.False, "EqualityComparer fails");
+				Assert.That(EqualityComparer<RuntimeMethodHandle>.Default.Equals(a.MethodHandle, b2.MethodHandle), Is.True, "EqualityComparer fails");
 
-			Assert.False(comparer.Equals(a, b), "ComparerBuilder fails");
-			Assert.True(comparer.Equals(a, b2), "ComparerBuilder fails");
+				Assert.That(comparer.Equals(a, b), Is.False, "ComparerBuilder fails");
+				Assert.That(comparer.Equals(a, b2), Is.True, "ComparerBuilder fails");
+			});
 		}
 
 		[UsedImplicitly(ImplicitUseTargetFlags.WithMembers)]
-		class TestClass
+		sealed class TestClass
 		{
 			public int     Field1;
 			public int?    Field2;
 			public string? Prop2 { get; set; }
-
-			static int _n;
-			       int _field = ++_n;
 		}
 
 		[UsedImplicitly(ImplicitUseTargetFlags.WithMembers)]
@@ -141,8 +142,11 @@ namespace Tests.Tools
 		{
 			var eq = ComparerBuilder.GetEqualityComparer<TestClass?>();
 
-			Assert.That(eq.GetHashCode(new TestClass()), Is.Not.EqualTo(0));
-			Assert.That(eq.GetHashCode(null!),           Is.    EqualTo(0));
+			Assert.Multiple(() =>
+			{
+				Assert.That(eq.GetHashCode(new TestClass()), Is.Not.EqualTo(0));
+				Assert.That(eq.GetHashCode(null!), Is.EqualTo(0));
+			});
 		}
 
 		[Test]
@@ -150,11 +154,14 @@ namespace Tests.Tools
 		{
 			var eq = ComparerBuilder.GetEqualityComparer<TestClass?>();
 
-			Assert.That(eq.Equals(new TestClass(), new TestClass()), Is.True);
-			Assert.That(eq.Equals(null, null), Is.True);
-			Assert.That(eq.Equals(null, new TestClass()), Is.False);
-			Assert.That(eq.Equals(new TestClass(), null), Is.False);
-			Assert.That(eq.Equals(new TestClass(), new TestClass { Field1 = 1 }), Is.False);
+			Assert.Multiple(() =>
+			{
+				Assert.That(eq.Equals(new TestClass(), new TestClass()), Is.True);
+				Assert.That(eq.Equals(null, null), Is.True);
+				Assert.That(eq.Equals(null, new TestClass()), Is.False);
+				Assert.That(eq.Equals(new TestClass(), null), Is.False);
+				Assert.That(eq.Equals(new TestClass(), new TestClass { Field1 = 1 }), Is.False);
+			});
 		}
 
 		[Test]
@@ -162,17 +169,20 @@ namespace Tests.Tools
 		{
 			var eq = ComparerBuilder.GetEqualityComparer<TestStruct?>();
 
-			Assert.That(eq.Equals(new TestStruct(), new TestStruct()), Is.True);
-			Assert.That(eq.Equals(null, null), Is.True);
-			Assert.That(eq.Equals(null, new TestStruct()), Is.False);
-			Assert.That(eq.Equals(new TestStruct(), null), Is.False);
-			Assert.That(eq.Equals(new TestStruct(), new TestStruct { Field1 = 1 }), Is.False);
-			Assert.That(eq.Equals(new TestStruct() { Field1 = 1 }, new TestStruct { Field1 = 1 }), Is.True);
-			Assert.That(eq.Equals(new TestStruct() { Field2 = 1 }, new TestStruct { Field2 = 2 }), Is.False);
-			Assert.That(eq.Equals(new TestStruct() { Field2 = 1 }, new TestStruct { Field2 = 1 }), Is.True);
+			Assert.Multiple(() =>
+			{
+				Assert.That(eq.Equals(new TestStruct(), new TestStruct()), Is.True);
+				Assert.That(eq.Equals(null, null), Is.True);
+				Assert.That(eq.Equals(null, new TestStruct()), Is.False);
+				Assert.That(eq.Equals(new TestStruct(), null), Is.False);
+				Assert.That(eq.Equals(new TestStruct(), new TestStruct { Field1 = 1 }), Is.False);
+				Assert.That(eq.Equals(new TestStruct() { Field1 = 1 }, new TestStruct { Field1 = 1 }), Is.True);
+				Assert.That(eq.Equals(new TestStruct() { Field2 = 1 }, new TestStruct { Field2 = 2 }), Is.False);
+				Assert.That(eq.Equals(new TestStruct() { Field2 = 1 }, new TestStruct { Field2 = 1 }), Is.True);
+			});
 		}
 
-		class NoMemberClass
+		sealed class NoMemberClass
 		{
 		}
 
@@ -181,14 +191,17 @@ namespace Tests.Tools
 		{
 			var eq = ComparerBuilder.GetEqualityComparer<NoMemberClass?>();
 
-			Assert.That(eq.GetHashCode(new NoMemberClass()), Is.Not.EqualTo(0));
+			Assert.Multiple(() =>
+			{
+				Assert.That(eq.GetHashCode(new NoMemberClass()), Is.Not.EqualTo(0));
 
-			Assert.That(eq.Equals(new NoMemberClass(), new NoMemberClass()), Is.True);
-			Assert.That(eq.Equals(new NoMemberClass(), null), Is.False);
+				Assert.That(eq.Equals(new NoMemberClass(), new NoMemberClass()), Is.True);
+				Assert.That(eq.Equals(new NoMemberClass(), null), Is.False);
+			});
 		}
 
 		[UsedImplicitly(ImplicitUseTargetFlags.WithMembers)]
-		class OneMemberClass
+		sealed class OneMemberClass
 		{
 			public int Field1;
 		}
@@ -198,11 +211,14 @@ namespace Tests.Tools
 		{
 			var eq = ComparerBuilder.GetEqualityComparer<OneMemberClass?>();
 
-			Assert.That(eq.GetHashCode(new OneMemberClass()), Is.Not.EqualTo(0));
+			Assert.Multiple(() =>
+			{
+				Assert.That(eq.GetHashCode(new OneMemberClass()), Is.Not.EqualTo(0));
 
-			Assert.That(eq.Equals(new OneMemberClass(), new OneMemberClass()), Is.True);
-			Assert.That(eq.Equals(new OneMemberClass(), null), Is.False);
-			Assert.That(eq.Equals(new OneMemberClass(), new OneMemberClass { Field1 = 1 }), Is.False);
+				Assert.That(eq.Equals(new OneMemberClass(), new OneMemberClass()), Is.True);
+				Assert.That(eq.Equals(new OneMemberClass(), null), Is.False);
+				Assert.That(eq.Equals(new OneMemberClass(), new OneMemberClass { Field1 = 1 }), Is.False);
+			});
 		}
 
 		[Test]
@@ -279,12 +295,12 @@ namespace Tests.Tools
 		}
 
 		[AttributeUsage(AttributeTargets.Field | AttributeTargets.Property)]
-		class IdentifierAttribute : Attribute
+		sealed class IdentifierAttribute : Attribute
 		{
 		}
 
 		[UsedImplicitly(ImplicitUseTargetFlags.WithMembers)]
-		class TestClass2
+		sealed class TestClass2
 		{
 			[Identifier]
 			public int EntityType { get; set; }
@@ -297,7 +313,7 @@ namespace Tests.Tools
 		static IEnumerable<MemberAccessor> GetIdentifiers(TypeAccessor typeAccessor)
 		{
 			foreach (var member in typeAccessor.Members)
-				if (member.MemberInfo.GetCustomAttribute<IdentifierAttribute>() != null)
+				if (member.MemberInfo.HasAttribute<IdentifierAttribute>())
 					yield return member;
 		}
 

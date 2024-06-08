@@ -28,7 +28,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			}
 			catch { }
 
-			return Array<TypeInfo>.Empty;
+			return [];
 		}, true);
 
 		public static bool UpdateTypes()
@@ -77,13 +77,13 @@ namespace LinqToDB.DataProvider.SqlServer
 				return new TypeInfo()
 				{
 					Type     = type,
-					TypeName = type.Name.Substring(3).ToLower(),
+					TypeName = type.Name.Substring(3).ToLowerInvariant(),
 					Null     = getNullValue()
 				};
 			}
 		}
 
-		class TypeInfo
+		sealed class TypeInfo
 		{
 			public string  TypeName { get; set; } = null!;
 			public Type    Type     { get; set; } = null!;

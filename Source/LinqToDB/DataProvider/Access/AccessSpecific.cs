@@ -6,6 +6,7 @@ using JetBrains.Annotations;
 
 namespace LinqToDB.DataProvider.Access
 {
+	using Expressions;
 	using Linq;
 	using SqlProvider;
 
@@ -14,7 +15,7 @@ namespace LinqToDB.DataProvider.Access
 	{
 	}
 
-	class AccessSpecificTable<TSource> : DatabaseSpecificTable<TSource>, IAccessSpecificTable<TSource>, ITable
+	sealed class AccessSpecificTable<TSource> : DatabaseSpecificTable<TSource>, IAccessSpecificTable<TSource>, ITable
 		where TSource : notnull
 	{
 		public AccessSpecificTable(ITable<TSource> table) : base(table)
@@ -26,7 +27,7 @@ namespace LinqToDB.DataProvider.Access
 	{
 	}
 
-	class AccessSpecificQueryable<TSource> : DatabaseSpecificQueryable<TSource>, IAccessSpecificQueryable<TSource>, ITable
+	sealed class AccessSpecificQueryable<TSource> : DatabaseSpecificQueryable<TSource>, IAccessSpecificQueryable<TSource>, ITable
 	{
 		public AccessSpecificQueryable(IQueryable<TSource> queryable) : base(queryable)
 		{
@@ -35,20 +36,20 @@ namespace LinqToDB.DataProvider.Access
 
 	public static partial class AccessTools
 	{
-		[LinqTunnel, Pure]
+		[LinqTunnel, Pure, IsQueryable]
 		[Sql.QueryExtension(null, Sql.QueryExtensionScope.None, typeof(NoneExtensionBuilder))]
 		public static IAccessSpecificTable<TSource> AsAccess<TSource>(this ITable<TSource> table)
 			where TSource : notnull
 		{
-			table.Expression = Expression.Call(
+			var newTable = new Table<TSource>(table.DataContext, Expression.Call(
 				null,
 				MethodHelper.GetMethodInfo(AsAccess, table),
-				table.Expression);
+				table.Expression));
 
-			return new AccessSpecificTable<TSource>(table);
+			return new AccessSpecificTable<TSource>(newTable);
 		}
 
-		[LinqTunnel, Pure]
+		[LinqTunnel, Pure, IsQueryable]
 		[Sql.QueryExtension(null, Sql.QueryExtensionScope.None, typeof(NoneExtensionBuilder))]
 		public static IAccessSpecificQueryable<TSource> AsAccess<TSource>(this IQueryable<TSource> source)
 			where TSource : notnull

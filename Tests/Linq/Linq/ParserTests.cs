@@ -14,7 +14,7 @@ namespace Tests.Linq
 	public class ParserTests : TestBase
 	{
 		[Test]
-		public void Join6([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
+		public void Join6([IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataConnection(context))
 			{
@@ -37,9 +37,12 @@ namespace Tests.Linq
 		{
 			using (var db = new TestDataConnection())
 			{
-				Assert.IsNotNull(db.OracleXmlTable<Person>(() => "<xml/>"));
-				Assert.IsNotNull(db.OracleXmlTable<Person>("<xml/>"));
-				Assert.IsNotNull(db.OracleXmlTable(new[] { new Person() }));
+				Assert.Multiple(() =>
+				{
+					Assert.That(db.OracleXmlTable<Person>(() => "<xml/>"), Is.Not.Null);
+					Assert.That(db.OracleXmlTable<Person>("<xml/>"), Is.Not.Null);
+					Assert.That(db.OracleXmlTable(new[] { new Person() }), Is.Not.Null);
+				});
 			}
 		}
 	}

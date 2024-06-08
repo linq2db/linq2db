@@ -1,55 +1,58 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Data.Common;
+using System.Globalization;
 using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace LinqToDB.DataProvider.SQLite
 {
-	using System.Data.Common;
-	using System.Globalization;
 	using Common;
 	using Data;
+	using Linq.Translation;
 	using Mapping;
 	using SchemaProvider;
 	using SqlProvider;
+	using Translation;
 
-	class SQLiteDataProviderClassic : SQLiteDataProvider { public SQLiteDataProviderClassic() : base(ProviderName.SQLiteClassic) {} }
-	class SQLiteDataProviderMS      : SQLiteDataProvider { public SQLiteDataProviderMS()      : base(ProviderName.SQLiteMS)      {} }
+	sealed class SQLiteDataProviderClassic : SQLiteDataProvider { public SQLiteDataProviderClassic() : base(ProviderName.SQLiteClassic, SQLiteProvider.System   ) {} }
+	sealed class SQLiteDataProviderMS      : SQLiteDataProvider { public SQLiteDataProviderMS()      : base(ProviderName.SQLiteMS,      SQLiteProvider.Microsoft) {} }
 
+	/*
+	 * For now we don't have SQLite versioning as SQLite engine usually provided by ADO.NET provider as nuget dependency
+	 * and we should just support some sane number of latest releases:
+	 * System.Data.Sqlite: 1.0.115.5+ [3.37.0, 3.42.0]
+	 * Microsoft.Data.Sqlite: 6.0.0+  [3.35.5, 3.41.2]
+	 * where second version is version, shipped with latest provider release.
+	 * This means we don't support anything lower than SQLite 3.35.5 and could also implement/enable features from newer versions if they doesn't break compatibility
+	 * https://www.sqlite.org/changes.html
+	 */
 	public abstract class SQLiteDataProvider : DynamicDataProviderBase<SQLiteProviderAdapter>
 	{
-		/// <summary>
-		/// Creates the specified SQLite provider based on the provider name.
-		/// </summary>
-		/// <param name="name">If ProviderName.SQLite is provided,
-		/// the detection mechanism preferring System.Data.SQLite
-		/// to Microsoft.Data.Sqlite will be used.</param>
-		protected SQLiteDataProvider(string name)
-			: this(name, MappingSchemaInstance.Get(name))
+		protected SQLiteDataProvider(string name, SQLiteProvider provider)
+			: base(name, MappingSchemaInstance.Get(provider), SQLiteProviderAdapter.GetInstance(provider))
 		{
-		}
+			Provider = provider;
+			// currently enabled flags require at least 3.33.0 SQLite (for IsUpdateFromSupported)
 
-		protected SQLiteDataProvider(string name, MappingSchema mappingSchema)
-			: base(name, mappingSchema, SQLiteProviderAdapter.GetInstance(name))
-		{
 			SqlProviderFlags.IsSkipSupported                   = false;
 			SqlProviderFlags.IsSkipSupportedIfTake             = true;
-			SqlProviderFlags.IsInsertOrUpdateSupported         = false;
-			SqlProviderFlags.IsUpdateSetTableAliasSupported    = false;
 			SqlProviderFlags.IsCommonTableExpressionsSupported = true;
-			SqlProviderFlags.IsDistinctOrderBySupported        = true;
 			SqlProviderFlags.IsSubQueryOrderBySupported        = true;
-			SqlProviderFlags.IsDistinctSetOperationsSupported  = true;
-			SqlProviderFlags.IsUpdateFromSupported             = Adapter.SupportsUpdateFrom;
 			SqlProviderFlags.DefaultMultiQueryIsolationLevel   = IsolationLevel.Serializable;
 
-			if (Adapter.SupportsRowValue)
-			{
-				SqlProviderFlags.RowConstructorSupport = RowFeature.Equality        | RowFeature.Comparisons |
-				                                         RowFeature.CompareToSelect | RowFeature.Between     | RowFeature.Update;
-			}
+			// this actually requires compilation flag set
+			// System.Data.Sqlite enabled it in 2021
+			// MS use different runtime build without it enabled yet:
+			// https://github.com/ericsink/SQLitePCL.raw/issues/377
+			SqlProviderFlags.IsUpdateTakeSupported     = Provider == SQLiteProvider.System;
+			SqlProviderFlags.IsUpdateSkipTakeSupported = Provider == SQLiteProvider.System;
+
+			// 3.15.0
+			SqlProviderFlags.RowConstructorSupport = RowFeature.Equality        | RowFeature.Comparisons | RowFeature.UpdateLiteral |
+			                                         RowFeature.CompareToSelect | RowFeature.Between     | RowFeature.Update;
 
 			_sqlOptimizer = new SQLiteSqlOptimizer(SqlProviderFlags);
 
@@ -150,6 +153,8 @@ namespace LinqToDB.DataProvider.SQLite
 			SetCharFieldToType<char>("nchar", DataTools.GetCharExpression);
 		}
 
+		private SQLiteProvider Provider { get; }
+
 		private void SetSqliteField<T>(Expression<Func<DbDataReader, int, T>> expr, Type[] fieldTypes, params string[] typeNames)
 		{
 			foreach (var fieldType in fieldTypes)
@@ -180,8 +185,6 @@ namespace LinqToDB.DataProvider.SQLite
 			return typeName;
 		}
 
-		public override IExecutionScope? ExecuteScope(DataConnection dataConnection) => Adapter.DisposeCommandOnError ? new DisposeCommandOnExceptionRegion(dataConnection) : null;
-
 		public override TableOptions SupportedTableOptions =>
 			TableOptions.IsTemporary               |
 			TableOptions.IsLocalTemporaryStructure |
@@ -189,9 +192,14 @@ namespace LinqToDB.DataProvider.SQLite
 			TableOptions.CreateIfNotExists         |
 			TableOptions.DropIfExists;
 
-		public override ISqlBuilder CreateSqlBuilder(MappingSchema mappingSchema)
+		protected override IMemberTranslator CreateMemberTranslator()
 		{
-			return new SQLiteSqlBuilder(this, mappingSchema, GetSqlOptimizer(), SqlProviderFlags);
+			return new SQLiteMemberTranslator();
+		}
+
+		public override ISqlBuilder CreateSqlBuilder(MappingSchema mappingSchema, DataOptions dataOptions)
+		{
+			return new SQLiteSqlBuilder(this, mappingSchema, dataOptions, GetSqlOptimizer(dataOptions), SqlProviderFlags);
 		}
 
 		static class MappingSchemaInstance
@@ -199,32 +207,32 @@ namespace LinqToDB.DataProvider.SQLite
 			public static readonly MappingSchema ClassicMappingSchema   = new SQLiteMappingSchema.ClassicMappingSchema();
 			public static readonly MappingSchema MicrosoftMappingSchema = new SQLiteMappingSchema.MicrosoftMappingSchema();
 
-			public static MappingSchema Get(string name) => name == ProviderName.SQLiteClassic ? ClassicMappingSchema : MicrosoftMappingSchema;
+			public static MappingSchema Get(SQLiteProvider provider) => provider == SQLiteProvider.System ? ClassicMappingSchema : MicrosoftMappingSchema;
 		}
 
 		readonly ISqlOptimizer _sqlOptimizer;
 
-		public override ISqlOptimizer GetSqlOptimizer() => _sqlOptimizer;
+		public override ISqlOptimizer GetSqlOptimizer(DataOptions dataOptions) => _sqlOptimizer;
 
 		public override ISchemaProvider GetSchemaProvider()
 		{
 			return new SQLiteSchemaProvider();
 		}
 
-		public override bool? IsDBNullAllowed(DbDataReader reader, int idx)
+		public override bool? IsDBNullAllowed(DataOptions options, DbDataReader reader, int idx)
 		{
-			if (SQLiteTools.AlwaysCheckDbNull)
+			if (options.FindOrDefault(SQLiteOptions.Default).AlwaysCheckDbNull)
 				return true;
 
-			return base.IsDBNullAllowed(reader, idx);
+			return base.IsDBNullAllowed(options, reader, idx);
 		}
 
 		public override void SetParameter(DataConnection dataConnection, DbParameter parameter, string name, DbDataType dataType, object? value)
 		{
 			// handles situation, when char values were serialized as character hex value for some
 			// versions of Microsoft.Data.Sqlite
-			if (Name == ProviderName.SQLiteMS && value is char)
-				value = value.ToString();
+			if (Name == ProviderName.SQLiteMS && value is char chr)
+				value = chr.ToString();
 
 			if (value is Guid guid)
 			{
@@ -252,6 +260,13 @@ namespace LinqToDB.DataProvider.SQLite
 						}
 						break;
 				}
+			}
+
+			if (value is DateTime dt)
+			{
+				value = dt.ToString("yyyy-MM-dd HH:mm:ss.fff", DateTimeFormatInfo.InvariantInfo);
+				if (Name == ProviderName.SQLiteClassic)
+					dataType = dataType.WithDataType(DataType.VarChar);
 			}
 
 #if NET6_0_OR_GREATER
@@ -284,39 +299,42 @@ namespace LinqToDB.DataProvider.SQLite
 
 		#region BulkCopy
 
-		public override BulkCopyRowsCopied BulkCopy<T>(
-			ITable<T> table, BulkCopyOptions options, IEnumerable<T> source)
+		public override BulkCopyRowsCopied BulkCopy<T>(DataOptions options, ITable<T> table, IEnumerable<T> source)
 		{
 			return new SQLiteBulkCopy().BulkCopy(
-				options.BulkCopyType == BulkCopyType.Default ? SQLiteTools.DefaultBulkCopyType : options.BulkCopyType,
+				options.BulkCopyOptions.BulkCopyType == BulkCopyType.Default ?
+					options.FindOrDefault(SQLiteOptions.Default).BulkCopyType :
+					options.BulkCopyOptions.BulkCopyType,
 				table,
 				options,
 				source);
 		}
 
-		public override Task<BulkCopyRowsCopied> BulkCopyAsync<T>(
-			ITable<T> table, BulkCopyOptions options, IEnumerable<T> source, CancellationToken cancellationToken)
+		public override Task<BulkCopyRowsCopied> BulkCopyAsync<T>(DataOptions options, ITable<T> table,
+			IEnumerable<T> source, CancellationToken cancellationToken)
 		{
 			return new SQLiteBulkCopy().BulkCopyAsync(
-				options.BulkCopyType == BulkCopyType.Default ? SQLiteTools.DefaultBulkCopyType : options.BulkCopyType,
+				options.BulkCopyOptions.BulkCopyType == BulkCopyType.Default ?
+					options.FindOrDefault(SQLiteOptions.Default).BulkCopyType :
+					options.BulkCopyOptions.BulkCopyType,
 				table,
 				options,
 				source,
 				cancellationToken);
 		}
 
-#if NATIVE_ASYNC
-		public override Task<BulkCopyRowsCopied> BulkCopyAsync<T>(
-			ITable<T> table, BulkCopyOptions options, IAsyncEnumerable<T> source, CancellationToken cancellationToken)
+		public override Task<BulkCopyRowsCopied> BulkCopyAsync<T>(DataOptions options, ITable<T> table,
+			IAsyncEnumerable<T> source, CancellationToken cancellationToken)
 		{
 			return new SQLiteBulkCopy().BulkCopyAsync(
-				options.BulkCopyType == BulkCopyType.Default ? SQLiteTools.DefaultBulkCopyType : options.BulkCopyType,
+				options.BulkCopyOptions.BulkCopyType == BulkCopyType.Default ?
+					options.FindOrDefault(SQLiteOptions.Default).BulkCopyType :
+					options.BulkCopyOptions.BulkCopyType,
 				table,
 				options,
 				source,
 				cancellationToken);
 		}
-#endif
 
 		#endregion
 	}

@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 
 using LinqToDB;
 using LinqToDB.Common;
@@ -38,7 +39,7 @@ namespace Tests.xUpdate
 			{
 				db.GetTable<Person>()
 					.Merge()
-					.Using(Array<Person>.Empty)
+					.Using(Array.Empty<Person>())
 					.OnTargetKey()
 					.UpdateWhenMatched()
 					.InsertWhenNotMatched()
@@ -47,7 +48,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void MergeWithDelete([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
+		public void MergeWithDelete([IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllFirebird5Plus)] string context)
 		{
 			using (var db = GetDataConnection(context))
 			using (db.BeginTransaction())
@@ -64,7 +65,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void MergeWithDeletePredicate1([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
+		public void MergeWithDeletePredicate1([IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllFirebird5Plus)] string context)
 		{
 			using (var db = GetDataConnection(context))
 			using (db.BeginTransaction())
@@ -81,7 +82,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void MergeWithDeletePredicate3([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
+		public void MergeWithDeletePredicate3([IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllFirebird5Plus)] string context)
 		{
 			using (var db = GetDataConnection(context))
 			using (db.BeginTransaction())
@@ -115,7 +116,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void MergeWithDeletePredicate4([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
+		public void MergeWithDeletePredicate4([IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllFirebird5Plus)] string context)
 		{
 			using (var db = GetDataConnection(context))
 			using (db.BeginTransaction())
@@ -151,7 +152,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void MergeWithDeletePredicate5([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
+		public void MergeWithDeletePredicate5([IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllFirebird5Plus)] string context)
 		{
 			using (var db = GetDataConnection(context))
 			using (db.BeginTransaction())
@@ -168,7 +169,7 @@ namespace Tests.xUpdate
 
 		[Table("ALLTYPES", Configuration = ProviderName.DB2)]
 		[Table("AllTypes")]
-		class AllType
+		sealed class AllType
 		{
 			[PrimaryKey, Identity]
 			public int ID;
@@ -181,12 +182,16 @@ namespace Tests.xUpdate
 			public string? nvarcharDataType;
 		}
 
+		// PostgreSQL: ncharDataType field missing in AllTypes
 		// DB2: ncharDataType field missing in AllTypes
 		// Informix: install the latest server
 		[Test]
 		public void MergeChar1([MergeDataContextSource(
 			false,
-			ProviderName.DB2, TestProvName.AllSybase, TestProvName.AllInformix)]
+			ProviderName.DB2,
+			TestProvName.AllPostgreSQL15Plus,
+			TestProvName.AllSybase,
+			TestProvName.AllInformix)]
 			string context)
 		{
 			ResetAllTypesIdentity(context);
@@ -212,11 +217,15 @@ namespace Tests.xUpdate
 
 		// ASE: alltypes table must be fixed
 		// DB2: ncharDataType field missing in AllTypes
+		// PostgreSQL: ncharDataType field missing in AllTypes
 		// Informix: install the latest server
 		[Test]
 		public void MergeChar2([MergeDataContextSource(
 			false,
-			ProviderName.DB2, ProviderName.Sybase, TestProvName.AllInformix)]
+			ProviderName.DB2,
+			TestProvName.AllPostgreSQL15Plus,
+			ProviderName.Sybase,
+			TestProvName.AllInformix)]
 			string context)
 		{
 			using (var db = GetDataConnection(context))
@@ -242,12 +251,17 @@ namespace Tests.xUpdate
 
 		// extra test to check MergeChar* fixes (but we really need to implement excessive types tests for all providers)
 		// ASE: AllTypes table must be fixed
+		// PostgreSQL: ncharDataType field missing in AllTypes
 		// DB2: ncharDataType and nvarcharDataType fields missing in AllTypes
 		// Informix, SAP: looks like \0 terminates string
 		[Test]
 		public void MergeString([MergeDataContextSource(
 			false,
-			ProviderName.DB2, ProviderName.Sybase, TestProvName.AllInformix, TestProvName.AllSapHana)]
+			TestProvName.AllPostgreSQL15Plus,
+			ProviderName.DB2,
+			ProviderName.Sybase,
+			TestProvName.AllInformix,
+			TestProvName.AllSapHana)]
 			string context)
 		{
 			ResetAllTypesIdentity(context);
@@ -277,9 +291,12 @@ namespace Tests.xUpdate
 
 				var row = db.GetTable<AllType>().OrderByDescending(_ => _.ID).Take(1).Single();
 
-				Assert.AreEqual('\0', row.charDataType);
-				Assert.AreEqual("\0", row.ncharDataType);
-				Assert.AreEqual("test\0it", row.nvarcharDataType);
+				Assert.Multiple(() =>
+				{
+					Assert.That(row.charDataType, Is.EqualTo('\0'));
+					Assert.That(row.ncharDataType, Is.EqualTo("\0"));
+					Assert.That(row.nvarcharDataType, Is.EqualTo("test\0it"));
+				});
 			}
 		}
 	}

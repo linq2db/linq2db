@@ -1,11 +1,11 @@
-﻿using System;
-using System.Linq;
+﻿using System.Linq;
 using System.Linq.Expressions;
 
 using JetBrains.Annotations;
 
 namespace LinqToDB.DataProvider.SqlServer
 {
+	using Expressions;
 	using Linq;
 	using SqlProvider;
 
@@ -14,7 +14,7 @@ namespace LinqToDB.DataProvider.SqlServer
 	{
 	}
 
-	class SqlServerSpecificTable<TSource> : DatabaseSpecificTable<TSource>, ISqlServerSpecificTable<TSource>, ITable
+	sealed class SqlServerSpecificTable<TSource> : DatabaseSpecificTable<TSource>, ISqlServerSpecificTable<TSource>, ITable
 		where TSource : notnull
 	{
 		public SqlServerSpecificTable(ITable<TSource> table) : base(table)
@@ -26,7 +26,7 @@ namespace LinqToDB.DataProvider.SqlServer
 	{
 	}
 
-	class SqlServerSpecificQueryable<TSource> : DatabaseSpecificQueryable<TSource>, ISqlServerSpecificQueryable<TSource>, ITable
+	sealed class SqlServerSpecificQueryable<TSource> : DatabaseSpecificQueryable<TSource>, ISqlServerSpecificQueryable<TSource>, ITable
 	{
 		public SqlServerSpecificQueryable(IQueryable<TSource> queryable) : base(queryable)
 		{
@@ -35,21 +35,23 @@ namespace LinqToDB.DataProvider.SqlServer
 
 	public static partial class SqlServerTools
 	{
-		[LinqTunnel, Pure]
-		[LinqToDB.Sql.QueryExtension(null, LinqToDB.Sql.QueryExtensionScope.None, typeof(NoneExtensionBuilder))]
+		[LinqTunnel, Pure, IsQueryable]
+		[Sql.QueryExtension(null, Sql.QueryExtensionScope.None, typeof(NoneExtensionBuilder))]
 		public static ISqlServerSpecificTable<TSource> AsSqlServer<TSource>(this ITable<TSource> table)
 			where TSource : notnull
 		{
-			table.Expression = Expression.Call(
-				null,
-				MethodHelper.GetMethodInfo(AsSqlServer, table),
-				table.Expression);
+			var newTable = new Table<TSource>(table.DataContext,
+				Expression.Call(
+					null,
+					MethodHelper.GetMethodInfo(AsSqlServer, table),
+					table.Expression)
+			);
 
-			return new SqlServerSpecificTable<TSource>(table);
+			return new SqlServerSpecificTable<TSource>(newTable);
 		}
 
-		[LinqTunnel, Pure]
-		[LinqToDB.Sql.QueryExtension(null, LinqToDB.Sql.QueryExtensionScope.None, typeof(NoneExtensionBuilder))]
+		[LinqTunnel, Pure, IsQueryable]
+		[Sql.QueryExtension(null, Sql.QueryExtensionScope.None, typeof(NoneExtensionBuilder))]
 		public static ISqlServerSpecificQueryable<TSource> AsSqlServer<TSource>(this IQueryable<TSource> source)
 			where TSource : notnull
 		{

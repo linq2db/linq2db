@@ -256,7 +256,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void TestLoadWithInfiniteLoop([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void TestLoadWithInfiniteLoop([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -285,7 +285,7 @@ namespace Tests.UserTests
 					.LoadWith(i => i.PriceList)
 					.Where(f => f.Id == 1);
 
-				Assert.DoesNotThrow(() => _ = query.ToString());
+				Assert.DoesNotThrow(() => TestContext.WriteLine(query.ToString()));
 			}
 		}
 	}

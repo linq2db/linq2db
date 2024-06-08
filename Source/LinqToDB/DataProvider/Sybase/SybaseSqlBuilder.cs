@@ -1,19 +1,19 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Data;
-using System.Text;
 using System.Data.Common;
+using System.Text;
 
 namespace LinqToDB.DataProvider.Sybase
 {
-	using SqlQuery;
-	using SqlProvider;
+	using Common;
 	using Mapping;
+	using SqlProvider;
+	using SqlQuery;
 
-	partial class SybaseSqlBuilder : BasicSqlBuilder
+	sealed partial class SybaseSqlBuilder : BasicSqlBuilder
 	{
-		public SybaseSqlBuilder(IDataProvider? provider, MappingSchema mappingSchema, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
-			: base(provider, mappingSchema, sqlOptimizer, sqlProviderFlags)
+		public SybaseSqlBuilder(IDataProvider? provider, MappingSchema mappingSchema, DataOptions dataOptions, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
+			: base(provider, mappingSchema, dataOptions, sqlOptimizer, sqlProviderFlags)
 		{
 		}
 
@@ -50,32 +50,31 @@ namespace LinqToDB.DataProvider.Sybase
 			_isSelect = false;
 		}
 
-		protected override void BuildColumnExpression(SelectQuery? selectQuery, ISqlExpression expr, string? alias, ref bool addAlias)
+		protected override void BuildColumnExpression(SelectQuery? selectQuery, ISqlExpression expr, string? alias,
+			ref bool                                               addAlias)
 		{
 			base.BuildColumnExpression(selectQuery, expr, alias, ref addAlias);
 
 			if (_skipAliases) addAlias = false;
 		}
 
-		protected override void BuildDataTypeFromDataType(SqlDataType type, bool forCreateTable)
+		protected override void BuildDataTypeFromDataType(DbDataType type, bool forCreateTable, bool canBeNull)
 		{
-			switch (type.Type.DataType)
+			switch (type.DataType)
 			{
 				case DataType.Guid      : StringBuilder.Append("VARCHAR(36)"); return;
 				case DataType.DateTime2 : StringBuilder.Append("DateTime");    return;
 				case DataType.NVarChar  :
 					// yep, 5461...
-					if (type.Type.Length == null || type.Type.Length > 5461 || type.Type.Length < 1)
+					if (type.Length == null || type.Length > 5461 || type.Length < 1)
 					{
-						StringBuilder
-							.Append(type.Type.DataType)
-							.Append("(5461)");
+						StringBuilder.Append("NVarChar(5461)");
 						return;
 					}
 					break;
 			}
 
-			base.BuildDataTypeFromDataType(type, forCreateTable);
+			base.BuildDataTypeFromDataType(type, forCreateTable, canBeNull);
 		}
 
 		protected override void BuildCreateTableNullAttribute(SqlField field, DefaultNullable defaultNullable)
@@ -113,7 +112,8 @@ namespace LinqToDB.DataProvider.Sybase
 			StringBuilder.AppendLine();
 		}
 
-		protected override void BuildUpdateTableName(SelectQuery selectQuery, SqlUpdateClause updateClause)
+		protected override void BuildUpdateTableName(SelectQuery selectQuery,
+			SqlUpdateClause                                      updateClause)
 		{
 			if (updateClause.Table != null && (selectQuery.From.Tables.Count == 0 || updateClause.Table != selectQuery.From.Tables[0].Source))
 				BuildPhysicalTable(updateClause.Table, null);
@@ -230,14 +230,14 @@ namespace LinqToDB.DataProvider.Sybase
 			}
 		}
 
-		protected void BuildIdentityInsert(SqlTableSource table, bool enable)
+		private void BuildIdentityInsert(NullabilityContext nullability, SqlTableSource table, bool enable)
 		{
 			StringBuilder.Append("SET IDENTITY_INSERT ");
 			BuildTableName(table, true, false);
 			StringBuilder.AppendLine(enable ? " ON" : " OFF");
 		}
 
-		private string GetTablePhysicalName(string physicalName, TableOptions tableOptions)
+		private static string GetTablePhysicalName(string physicalName, TableOptions tableOptions)
 		{
 			if (physicalName.StartsWith("#") || !tableOptions.IsTemporaryOptionSet())
 				return physicalName;
@@ -260,19 +260,20 @@ namespace LinqToDB.DataProvider.Sybase
 			}
 		}
 
-		public override StringBuilder BuildObjectName(StringBuilder sb, SqlObjectName name, ConvertType objectType, bool escape, TableOptions tableOptions)
+		public override StringBuilder BuildObjectName(StringBuilder sb, SqlObjectName name, ConvertType objectType, bool escape, TableOptions tableOptions, bool withoutSuffix = false)
 		{
 			if (name.Database != null && IsTemporary(name.Name, tableOptions))
 				name = name with { Database = null };
 
 			name = name with { Name = GetTablePhysicalName(name.Name, tableOptions) };
 
-			return base.BuildObjectName(sb, name, objectType, escape, tableOptions);
+			return base.BuildObjectName(sb, name, objectType, escape, tableOptions, withoutSuffix: withoutSuffix);
 		}
 
 		protected override void BuildDropTableStatement(SqlDropTableStatement dropTable)
 		{
-			var table = dropTable.Table!;
+			var nullability = NullabilityContext.NonQuery;
+			var table       = dropTable.Table!;
 
 			BuildTag(dropTable);
 
@@ -296,6 +297,8 @@ namespace LinqToDB.DataProvider.Sybase
 
 		protected override void BuildStartCreateTableStatement(SqlCreateTableStatement createTable)
 		{
+			var nullability = NullabilityContext.NonQuery;
+
 			if (createTable.StatementHeader == null && createTable.Table!.TableOptions.HasCreateIfNotExists())
 			{
 				var table = createTable.Table;

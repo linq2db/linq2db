@@ -15,7 +15,7 @@
 
 ## Installation
 
-> Requres .NET Core 3.1 or higher.
+> Requires .NET 6 or higher.
 
 Install as global tool:
 
@@ -74,4 +74,3 @@ Scaffold configs (response files) are convenient in many ways:
 - you can store scaffolding options for your project in source control and share with other developers
 - with many options it is hard to work with command line
 - some options not available from CLI or hard to use due to CLI nature (e.g. various issues with escaping of parameters)
-

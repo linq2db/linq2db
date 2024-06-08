@@ -2,6 +2,9 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
+
+using FluentAssertions;
+
 using LinqToDB;
 using LinqToDB.Common;
 using LinqToDB.Expressions;
@@ -34,7 +37,9 @@ namespace Tests.UserTests
 
 			if (values == null || values.Length == 0)
 			{
-				throw new ArgumentNullException("values", "Values for \"In\" operation should not be empty");
+#pragma warning disable CA2208 // Instantiate argument exceptions correctly
+				throw new ArgumentNullException(nameof(values), "Values for \"In\" operation should not be empty");
+#pragma warning restore CA2208 // Instantiate argument exceptions correctly
 			}
 
 			foreach (var value in values)
@@ -107,5 +112,38 @@ namespace Tests.UserTests
 					GetParents(db, values2));
 			}
 		}
+
+		[Test]
+		public void TestCache([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var values1 = new int?[] { 1, 2, 3, null };
+				var values2 = new int?[] { 4, 5, 6, null };
+
+				var query11 = GetParents(db, values1);
+				var result11 = query11.ToArray();
+
+				var cm1 = query11.GetCacheMissCount();
+
+				var query12 = GetParents(db, values1);
+				var result12 = query12.ToArray();
+
+				query12.GetCacheMissCount().Should().Be(cm1);	
+
+
+				var query21  = GetParents(db, values2);
+				var result21 = query21.ToArray();
+
+				var cm2 = query21.GetCacheMissCount();
+
+				var query22  = GetParents(db, values2);
+				var result22 = query22.ToArray();
+
+				query22.GetCacheMissCount().Should().Be(cm2);	
+
+			}
+		}
+
 	}
 }

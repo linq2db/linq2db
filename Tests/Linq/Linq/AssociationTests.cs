@@ -1,9 +1,12 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
+
 using FluentAssertions;
+
 using LinqToDB;
 using LinqToDB.Mapping;
 
@@ -112,7 +115,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void SelectMany3([DataSources(TestProvName.AllAccess)] string context)
+		public void SelectMany3([DataSources(TestProvName.AllAccess, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -127,7 +130,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void SelectMany4([DataSources(TestProvName.AllAccess)] string context)
+		public void SelectMany4([DataSources(TestProvName.AllAccess, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -181,10 +184,13 @@ namespace Tests.Linq
 		public void GroupBy2([DataSources] string context)
 		{
 			using (new GuardGrouping(false))
-			using (var db = GetDataContext(context))
+			{
+				using var db = GetDataContext(context);
+
 				AreEqual(
 					(from ch in    Child group ch by ch.Parent1).ToList().Select(g => g.Key),
 					(from ch in db.Child group ch by ch.Parent1).ToList().Select(g => g.Key));
+			}
 		}
 
 		[Test]
@@ -257,14 +263,13 @@ namespace Tests.Linq
 			using (var db = new NorthwindDB(context))
 			{
 				var dd = GetNorthwindAsList(context);
-				Assert.AreEqual(
-					(from employee in dd.Employee where employee.Employees.Count > 0 select employee).FirstOrDefault(),
-					(from employee in db.Employee where employee.Employees.Count > 0 select employee).FirstOrDefault());
+				Assert.That(
+					(from employee in db.Employee where employee.Employees.Count > 0 select employee).FirstOrDefault(), Is.EqualTo((from employee in dd.Employee where employee.Employees.Count > 0 select employee).FirstOrDefault()));
 			}
 		}
 
 		[Test]
-		public void StackOverflow2([DataSources(ProviderName.SqlCe)] string context)
+		public void StackOverflow2([DataSources(ProviderName.SqlCe, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -273,7 +278,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void StackOverflow3([DataSources(ProviderName.SqlCe)] string context)
+		public void StackOverflow3([DataSources(ProviderName.SqlCe, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -282,7 +287,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void StackOverflow4([DataSources(ProviderName.SqlCe)] string context)
+		public void StackOverflow4([DataSources(ProviderName.SqlCe, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -293,10 +298,11 @@ namespace Tests.Linq
 		[Test]
 		public void DoubleJoin([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-				AreEqual(
-					from g in    GrandChild where g.Child!.Parent!.Value1 == 1 select g,
-					from g in db.GrandChild where g.Child!.Parent!.Value1 == 1 select g);
+			using var db = GetDataContext(context);
+
+			AreEqual(
+				from g in    GrandChild where g.Child!.Parent!.Value1 == 1 select g,
+				from g in db.GrandChild where g.Child!.Parent!.Value1 == 1 select g);
 		}
 
 		[Test]
@@ -378,8 +384,11 @@ namespace Tests.Linq
 
 				var list = q.ToList();
 
-				Assert.NotNull(list[0]);
-				Assert.Null   (list[1]);
+				Assert.Multiple(() =>
+				{
+					Assert.That(list[0], Is.Not.Null);
+					Assert.That(list[1], Is.Null);
+				});
 			}
 		}
 
@@ -398,8 +407,11 @@ namespace Tests.Linq
 
 				var list = q.ToList();
 
-				Assert.NotNull(list[0]);
-				Assert.Null   (list[1]);
+				Assert.Multiple(() =>
+				{
+					Assert.That(list[0], Is.Not.Null);
+					Assert.That(list[1], Is.Null);
+				});
 			}
 		}
 
@@ -418,9 +430,24 @@ namespace Tests.Linq
 
 				var list = q.ToList();
 
-				Assert.NotNull(list[0]);
-				Assert.Null   (list[1]);
+				Assert.Multiple(() =>
+				{
+					Assert.That(list[0], Is.Not.Null);
+					Assert.That(list[1], Is.Null);
+				});
 			}
+		}
+
+		[Test(Description = "CanBeNull=true association doesn't enforce nullability on referenced non-nullable columns")]
+		public void TestNullabilityPropagation([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			// left join makes t.Middle!.ParentID which means with default NULL comparison semantics we
+			// should generate following SQL:
+			// parent_id <> 4 or parent_id is null
+			var result = db.GetTable<Top>().Where(t => t.Middle!.ParentID != 4).ToArray();
+			Assert.That(result, Has.Length.EqualTo(14));
 		}
 
 		[Table(Name="Child", IsColumnAttributeRequired=false)]
@@ -451,7 +478,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void LetTest1([DataSources] string context)
+		public void LetTest1([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -464,7 +491,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void LetTest2([DataSources] string context)
+		public void LetTest2([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -486,7 +513,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void NullAssociation([DataSources] string context)
+		public void NullAssociation([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -495,7 +522,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void MultipleUse([IncludeDataSources(TestProvName.AllSqlServer, TestProvName.AllPostgreSQL93Plus, TestProvName.AllOracle12Plus)] string context)
+		public void MultipleUse([IncludeDataSources(TestProvName.AllSqlServer, TestProvName.AllPostgreSQL93Plus, TestProvName.AllOracle12Plus, TestProvName.AllMySql8Plus, TestProvName.AllSapHana)] string context)
 		{
 			using (var db = GetDataConnection(context))
 			{
@@ -543,21 +570,21 @@ namespace Tests.Linq
 					select new
 					{
 						n.ParentID,
-						Children = n.Children.ToList(),
-						//Children = n.Children//.Select(t => t).ToList(),
-						//Children = n.Children.Where(t => 1 == 1).ToList().ToList(),
+						Children1 = n.Children.ToList(),
+						Children2 = n.Children.Select(t => t).ToList(),
+						Children3 = n.Children.Where(t => 1 == 1).ToList().ToList(),
 					};
 
 				var list = q.ToList();
 
-				Assert.That(list.Count,       Is.GreaterThan(0));
-				Assert.That(list[0].Children, Is.Not.Null);
+				Assert.That(list,       Is.Not.Empty);
+				Assert.That(list[0].Children1, Is.Not.Null);
 			}
 		}
 
 		[Table("Parent")]
 		[UsedImplicitly]
-		class Parent170
+		sealed class Parent170
 		{
 			[Column] public int ParentID;
 			[Column] public int Value1;
@@ -571,7 +598,7 @@ namespace Tests.Linq
 
 		[Table("Child")]
 		[UsedImplicitly]
-		class Child170
+		sealed class Child170
 		{
 			[Column] public int ParentID;
 			[Column] public int ChildID;
@@ -615,7 +642,7 @@ namespace Tests.Linq
 
 		[Table("Child")]
 		[UsedImplicitly]
-		class StorageTestClass
+		sealed class StorageTestClass
 		{
 			[Column] public int ParentID;
 			[Column] public int ChildID;
@@ -641,6 +668,112 @@ namespace Tests.Linq
 			}
 		}
 
+		sealed class ParentContainer
+		{
+			public Parent? Value;
+
+			public void SetValue(Parent? value)
+			{
+				Value = value;
+			}
+		}
+
+		[Table("Child")]
+		[UsedImplicitly]
+		sealed class AssociationSetterExpressionTestClass
+		{
+			[Column] public int ParentID;
+			[Column] public int ChildID;
+
+			ParentContainer _parent = new ParentContainer();
+
+			[Association(ThisKey = "ParentID", OtherKey = "ParentID", CanBeNull = false, Storage = "_parent", AssociationSetterExpressionMethod = nameof(SetParentValue))]
+			public Parent? Parent
+			{
+				get => _parent.Value;
+				set => throw new InvalidOperationException();
+			}
+
+			[Association(ThisKey = "Parent2ID", OtherKey = "ParentID", CanBeNull = false)]
+			public Parent? Parent2 { get; set; }
+
+			public static Expression<Action<ParentContainer, Parent>> SetParentValue()
+			{
+				return static (ParentContainer container, Parent value) => container.SetValue(value);
+			}
+		}
+
+		[Test]
+		public void AssociationSetterExpressionTest([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var value = db.GetTable<AssociationSetterExpressionTestClass>().LoadWith(x => x.Parent).First();
+
+				Assert.That(value.Parent, Is.Not.Null);
+			}
+		}
+
+		// at the moment it must be generic because linq2db will infer entity type from generic arguments
+		sealed class ChildrenContainer<T> : IEnumerable<T> where T : Child
+		{
+			public List<T>? Value;
+
+			public IEnumerator<T> GetEnumerator()
+			{
+				return ((IEnumerable<T>)Value!).GetEnumerator();
+			}
+
+			public void SetValue(IEnumerable<T> value)
+			{
+				Value = value.ToList();
+			}
+
+			IEnumerator IEnumerable.GetEnumerator()
+			{
+				return ((IEnumerable)Value!).GetEnumerator();
+			}
+		}
+
+		[Table("Parent")]
+		[UsedImplicitly]
+		sealed class Issue3975TestClass
+		{
+			[Column] public int ParentID;
+
+			ChildrenContainer<Child> _children = new();
+
+			[Association(ThisKey = "ParentID", OtherKey = "ParentID", Storage = "_children", AssociationSetterExpressionMethod = nameof(SetChildrenValue))]
+			public ChildrenContainer<Child> Children
+			{
+				get => _children;
+				set => throw new InvalidOperationException();
+			}
+
+			public static Expression<Action<ChildrenContainer<Child>, IEnumerable<Child>>> SetChildrenValue()
+			{
+				return static (ChildrenContainer<Child> container, IEnumerable<Child> value) => container.SetValue(value);
+			}
+		}
+
+		[Test]
+		public void Issue3975Test([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				// we want to make sure the conversion is not possible because we want to bypass
+				// that conversion if the setter value parameter type (IEnumerable<Child> in this case)
+				// does not match the member type (ChildrenContainer<Child> in this case)
+				Assert.Throws<LinqToDB.Common.LinqToDBConvertException>(() =>
+					db.MappingSchema.ChangeType(new List<Child>(0), typeof(ChildrenContainer<Child>)),
+					"List<Child> should not be convertible to ChildrenContainer<Child>");
+
+				var value = db.GetTable<Issue3975TestClass>().LoadWith(x => x.Children).First();
+
+				Assert.That(value.Children.Value, Is.Not.Null);
+			}
+		}
+
 		[Test]
 		public void TestGenericAssociation1([DataSources(TestProvName.AllAccess, TestProvName.AllSQLite)] string context)
 		{
@@ -656,8 +789,11 @@ namespace Tests.Linq
 
 				var list = q.ToList();
 
-				Assert.NotNull(list[0]);
-				Assert.Null   (list[1]);
+				Assert.Multiple(() =>
+				{
+					Assert.That(list[0], Is.Not.Null);
+					Assert.That(list[1], Is.Null);
+				});
 			}
 		}
 
@@ -667,10 +803,11 @@ namespace Tests.Linq
 			var ids = new[] { 1, 5 };
 
 			var ms = new MappingSchema();
-			var mb = ms.GetFluentMappingBuilder();
+			var mb = new FluentMappingBuilder(ms);
 
 			mb.Entity<Top>()
-				.Association( t => t.MiddleRuntime, (t, m) => t.ParentID == m!.ParentID && m.ChildID > 1 );
+				.Association( t => t.MiddleRuntime, (t, m) => t.ParentID == m!.ParentID && m.ChildID > 1 )
+				.Build();
 
 			using (var db = GetDataContext(context, ms))
 			{
@@ -682,8 +819,11 @@ namespace Tests.Linq
 
 				var list = q.ToList();
 
-				Assert.NotNull(list[0]);
-				Assert.Null   (list[1]);
+				Assert.Multiple(() =>
+				{
+					Assert.That(list[0], Is.Not.Null);
+					Assert.That(list[1], Is.Null);
+				});
 			}
 		}
 
@@ -693,10 +833,11 @@ namespace Tests.Linq
 			var ids = new[] { 1, 5 };
 
 			var ms = new MappingSchema();
-			var mb = ms.GetFluentMappingBuilder();
+			var mb = new FluentMappingBuilder(ms);
 
 			mb.Entity<Top>()
-				.Association( t => t.MiddlesRuntime, (t, m) => t.ParentID == m.ParentID && m.ChildID > 1 );
+				.Association( t => t.MiddlesRuntime, (t, m) => t.ParentID == m.ParentID && m.ChildID > 1 )
+				.Build();
 
 			using (var db = GetDataContext(context, ms))
 			{
@@ -709,7 +850,7 @@ namespace Tests.Linq
 
 				var list = q.ToList();
 
-				Assert.AreEqual(1, list.Count);
+				Assert.That(list, Has.Count.EqualTo(1));
 			}
 		}
 
@@ -733,7 +874,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestGenericAssociation3([DataSources(ProviderName.SqlCe)] string context)
+		public void TestGenericAssociation3([DataSources(ProviderName.SqlCe, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -883,7 +1024,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void DistinctSelect([DataSources] string context)
+		public void DistinctSelect([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -897,14 +1038,127 @@ namespace Tests.Linq
 		[Test]
 		public void AssociationExpressionMethod([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
+			using var db = GetDataContext(context);
+			var _ = db.Parent.Select(p => p.ChildPredicate()).ToList();
+		}
+
+		[Table]
+		sealed class NotNullParent
+		{
+			[Column] public int ID { get; set; }
+
+			[Association(ExpressionPredicate = nameof(ChildPredicate), CanBeNull = false)]
+			public NotNullChild  ChildInner { get; set; } = null!;
+
+			[Association(ExpressionPredicate = nameof(ChildPredicate), CanBeNull = true)]
+			public NotNullChild? ChildOuter { get; set; }
+
+			static Expression<Func<NotNullParent, NotNullChild, bool>> ChildPredicate => (p, c) => p.ID == c.ParentID;
+
+			public static readonly NotNullParent[] Data = new[]
 			{
-				var _ = db.Parent.Select(p => p.ChildPredicate()).ToList();
-			}
+				new NotNullParent { ID = 1 },
+				new NotNullParent { ID = 2 },
+			};
+		}
+
+		[Table]
+		sealed class NotNullChild
+		{
+			[Column] public int ParentID { get; set; }
+
+			public static readonly NotNullChild[] Data = new[]
+			{
+				new NotNullChild { ParentID = 1 },
+			};
 		}
 
 		[Test]
-		public void ComplexQueryWithManyToMany([DataSources] string context)
+		public void AssociationExpressionNotNull([DataSources] string context)
+		{
+			using var db     = GetDataContext(context);
+			using var parent = db.CreateLocalTable(NotNullParent.Data);
+			using var child  = db.CreateLocalTable(NotNullChild.Data);
+
+			var query = parent.Select(p => new { ParentID = (int?)p.ChildInner.ParentID });
+
+			var result = query.ToArray();
+
+			Assert.That(result, Has.Length.EqualTo(1));
+			Assert.That(result[0].ParentID, Is.EqualTo(1));
+		}
+
+		[Test]
+		public void AssociationExpressionNull([DataSources] string context)
+		{
+			using var db     = GetDataContext(context);
+			using var parent = db.CreateLocalTable(NotNullParent.Data);
+			using var child  = db.CreateLocalTable(NotNullChild.Data);
+
+			var query = parent.OrderBy(_ => _.ID).Select(p => new { ParentID = (int?)p.ChildOuter!.ParentID });
+
+			var result = query.ToArray();
+
+			Assert.That(result, Has.Length.EqualTo(2));
+			Assert.Multiple(() =>
+			{
+				Assert.That(result[0].ParentID, Is.EqualTo(1));
+				Assert.That(result[1].ParentID, Is.Null);
+			});
+		}
+
+		[Test]
+		public void AssociationExpressionNotNullCount([DataSources] string context)
+		{
+			var parentData = new[]
+			{
+				new NotNullParent { ID = 1 },
+				new NotNullParent { ID = 2 },
+			};
+
+			var childData = new[]
+			{
+				new NotNullChild { ParentID = 1 },
+			};
+
+			using var db     = GetDataContext(context);
+			using var parent = db.CreateLocalTable(parentData);
+			using var child  = db.CreateLocalTable(childData);
+
+			var query = parent.Select(p => p.ChildInner.ParentID);
+
+			Assert.That(query.Count(), Is.EqualTo(1));
+		}
+
+		[Test]
+		public void AssociationExpressionNullCount([DataSources] string context)
+		{
+			var parentData = new[]
+			{
+				new NotNullParent { ID = 1 },
+				new NotNullParent { ID = 2 },
+			};
+
+			var childData = new[]
+			{
+				new NotNullChild { ParentID = 1 },
+			};
+
+			using var db     = GetDataContext(context);
+			using var parent = db.CreateLocalTable(parentData);
+			using var child  = db.CreateLocalTable(childData);
+
+			var query = parent.Select(p => p.ChildOuter!.ParentID);
+
+			Assert.Multiple(() =>
+			{
+				Assert.That(query.Count(), Is.EqualTo(2));
+				Assert.That(query.GetTableSource().Joins, Has.Count.EqualTo(1));
+			});
+		}
+
+		[Test]
+		public void ComplexQueryWithManyToMany([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -929,7 +1183,7 @@ namespace Tests.Linq
 				.Select(с => (int?)с.ChildID)
 				.FirstOrDefault();
 
-				Assert.AreEqual(11, result);
+				Assert.That(result, Is.EqualTo(11));
 			}
 		}
 
@@ -1011,7 +1265,7 @@ namespace Tests.Linq
 		}
 
 		[Table]
-		class Employee
+		sealed class Employee
 		{
 			[Column] public int  Id           { get; set; }
 			[Column] public int? DepartmentId { get; set; }
@@ -1023,7 +1277,7 @@ namespace Tests.Linq
 		}
 
 		[Table]
-		class Department
+		sealed class Department
 		{
 			[Column] public int     DepartmentId { get; set; }
 			[Column] public string? Name         { get; set; }
@@ -1041,17 +1295,17 @@ namespace Tests.Linq
 					.Select(e => new { e.Id, e.Department!.Name })
 					.ToList();
 
-				Assert.False(db.LastQuery!.Contains(" NOT"));
-				Assert.True(db.LastQuery!.Contains("AND [a_Department].[Deleted] = 0"));
+				Assert.That(db.LastQuery!, Does.Not.Contain(" NOT"));
+				Assert.That(db.LastQuery!, Does.Contain("AND [a_Department].[Deleted] = 0"));
 			}
 		}
 
-		class Entity1711
+		sealed class Entity1711
 		{
 			public long Id { get; set; }
 		}
 
-		class Relationship1711
+		sealed class Relationship1711
 		{
 			public long EntityId { get; set; }
 
@@ -1059,14 +1313,15 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Issue1711Test1([DataSources(TestProvName.AllAccess)] string context)
+		public void Issue1711Test1([DataSources(TestProvName.AllAccess, TestProvName.AllClickHouse)] string context)
 		{
 			var ms = new MappingSchema();
-			ms.GetFluentMappingBuilder()
+			new FluentMappingBuilder(ms)
 				.Entity<Entity1711>()
 				.HasTableName("Entity1711")
 				.HasPrimaryKey(x => Sql.Property<long>(x, "Id"))
-				.Association(x => Sql.Property<IQueryable<Relationship1711>>(x, "relationship"), e => e.Id, r => r.EntityId); ;
+				.Association(x => Sql.Property<IQueryable<Relationship1711>>(x, "relationship"), e => e.Id, r => r.EntityId)
+				.Build();
 
 			using (var db = GetDataContext(context, ms))
 			using (var entity = db.CreateLocalTable<Entity1711>())
@@ -1079,15 +1334,16 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Issue1711Test2([DataSources(TestProvName.AllAccess)] string context)
+		public void Issue1711Test2([DataSources(TestProvName.AllAccess, TestProvName.AllClickHouse)] string context)
 		{
 			var ms = new MappingSchema();
-			ms.GetFluentMappingBuilder()
+			new FluentMappingBuilder(ms)
 				.Entity<Entity1711>()
 				.HasTableName("Entity1711")
 				.HasPrimaryKey(x => Sql.Property<long>(x, "Id"))
 				.Association(x => Sql.Property<IQueryable<Relationship1711>>(x, "relationship"), (e, db) => db.GetTable<Relationship1711>()
-						.Where(r => r.Deleted == false && r.EntityId == e.Id));
+						.Where(r => r.Deleted == false && r.EntityId == e.Id))
+				.Build();
 
 			using (var db = GetDataContext(context, ms))
 			using (var entity = db.CreateLocalTable<Entity1711>())
@@ -1100,7 +1356,7 @@ namespace Tests.Linq
 		}
 
 		[Table]
-		class Issue1096Task
+		sealed class Issue1096Task
 		{
 			[Column]
 			public int Id { get; set; }
@@ -1116,7 +1372,7 @@ namespace Tests.Linq
 		}
 
 		[Table]
-		class Issue1096TaskStage
+		sealed class Issue1096TaskStage
 		{
 			[Column(IsPrimaryKey = true)]
 			public int Id { get; set; }
@@ -1144,12 +1400,15 @@ namespace Tests.Linq
 					.Select(t => new { t, t.ActualStage });
 				var res = query.ToArray();
 
-				Assert.AreEqual(1, res.Length);
-				Assert.AreEqual(1, res[0].t.Id);
-				Assert.AreEqual("bda.Requests", res[0].t.TargetName);
-				Assert.AreEqual(1, res[0].ActualStage.Id);
-				Assert.AreEqual(1, res[0].ActualStage.TaskId);
-				Assert.AreEqual(true, res[0].ActualStage.Actual);
+				Assert.That(res, Has.Length.EqualTo(1));
+				Assert.Multiple(() =>
+				{
+					Assert.That(res[0].t.Id, Is.EqualTo(1));
+					Assert.That(res[0].t.TargetName, Is.EqualTo("bda.Requests"));
+					Assert.That(res[0].ActualStage.Id, Is.EqualTo(1));
+					Assert.That(res[0].ActualStage.TaskId, Is.EqualTo(1));
+					Assert.That(res[0].ActualStage.Actual, Is.EqualTo(true));
+				});
 			}
 		}
 
@@ -1185,15 +1444,15 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Issue2981Test([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		public void Issue2981Test([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			using var db = GetDataContext(context);
-			using var t1 = db.CreateLocalTable<Issue2981Entity>(new[]
+			using var t1 = db.CreateLocalTable(new[]
 			{
 				new Issue2981Entity {OwnerId = 1},
 				new Issue2981Entity {OwnerId = 2}
 			});
-			using var t2 = db.CreateLocalTable<Issue2981OwnerEntity>(new[] {new Issue2981OwnerEntity {Id = 1}});
+			using var t2 = db.CreateLocalTable(new[] {new Issue2981OwnerEntity {Id = 1}});
 
 
 			var res = t1.Select(r => new {r.OwnerId, Id = (int?)r.Owner!.Id})
@@ -1254,7 +1513,6 @@ namespace Tests.Linq
 
 		#endregion
 
-		[ActiveIssue(2966)]
 		[Test(Description = "association over set query")]
 		public void Issue2966([DataSources] string context)
 		{
@@ -1309,7 +1567,11 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Issue3557Case1([DataSources(TestProvName.AllSapHana, TestProvName.AllSybase, TestProvName.AllInformix)] string context)
+		public void Issue3557Case1([DataSources(
+			TestProvName.AllClickHouse,
+			TestProvName.AllSapHana,
+			TestProvName.AllSybase,
+			TestProvName.AllInformix)] string context)
 		{
 			using var db = GetDataContext(context);
 			using var data = db.CreateLocalTable(Data.Records);
@@ -1326,17 +1588,24 @@ namespace Tests.Linq
 				.OrderBy(r => r.Id)
 				.ToList();
 
-			Assert.AreEqual(3, result.Count);
-			Assert.AreEqual(1, result[0].Id);
-			Assert.AreEqual(2, result[1].Id);
-			Assert.AreEqual(3, result[2].Id);
-			Assert.IsNull(null, result[0].Reason);
-			Assert.IsNull(null, result[1].Reason);
-			Assert.True(result[2].Reason == "прст1" || result[2].Reason == "прст2");
+			Assert.That(result, Has.Count.EqualTo(3));
+			Assert.Multiple(() =>
+			{
+				Assert.That(result[0].Id, Is.EqualTo(1));
+				Assert.That(result[1].Id, Is.EqualTo(2));
+				Assert.That(result[2].Id, Is.EqualTo(3));
+				Assert.That(result[0].Reason, Is.Null);
+				Assert.That(result[1].Reason, Is.Null);
+				Assert.That(result[2].Reason == "прст1" || result[2].Reason == "прст2", Is.True);
+			});
 		}
 
 		[Test]
-		public void Issue3557Case2([DataSources(TestProvName.AllSapHana, TestProvName.AllSybase, TestProvName.AllInformix)] string context)
+		public void Issue3557Case2([DataSources(
+			TestProvName.AllClickHouse,
+			TestProvName.AllSapHana,
+			TestProvName.AllSybase,
+			TestProvName.AllInformix)] string context)
 		{
 			using var db = GetDataContext(context);
 			using var data = db.CreateLocalTable(Data.Records);
@@ -1353,17 +1622,24 @@ namespace Tests.Linq
 				.OrderBy(r => r.Id)
 				.ToList();
 
-			Assert.AreEqual(3, result.Count);
-			Assert.AreEqual(1, result[0].Id);
-			Assert.AreEqual(2, result[1].Id);
-			Assert.AreEqual(3, result[2].Id);
-			Assert.AreEqual(string.Empty, result[0].Reason);
-			Assert.AreEqual(string.Empty, result[1].Reason);
-			Assert.True(result[2].Reason == "прст1" || result[2].Reason == "прст2");
+			Assert.That(result, Has.Count.EqualTo(3));
+			Assert.Multiple(() =>
+			{
+				Assert.That(result[0].Id, Is.EqualTo(1));
+				Assert.That(result[1].Id, Is.EqualTo(2));
+				Assert.That(result[2].Id, Is.EqualTo(3));
+				Assert.That(result[0].Reason, Is.EqualTo(string.Empty));
+				Assert.That(result[1].Reason, Is.EqualTo(string.Empty));
+				Assert.That(result[2].Reason == "прст1" || result[2].Reason == "прст2", Is.True);
+			});
 		}
 
 		[Test]
-		public void Issue3557Case3([DataSources(TestProvName.AllSapHana, TestProvName.AllSybase, TestProvName.AllInformix)] string context)
+		public void Issue3557Case3([DataSources(
+			TestProvName.AllClickHouse,
+			TestProvName.AllSapHana,
+			TestProvName.AllSybase,
+			TestProvName.AllInformix)] string context)
 		{
 			using var db = GetDataContext(context);
 			using var data = db.CreateLocalTable(Data.Records);
@@ -1380,15 +1656,251 @@ namespace Tests.Linq
 				.OrderBy(r => r.Id)
 				.ToList();
 
-			Assert.AreEqual(3, result.Count);
-			Assert.AreEqual(1, result[0].Id);
-			Assert.AreEqual(2, result[1].Id);
-			Assert.AreEqual(3, result[2].Id);
-			Assert.IsNull(null, result[0].Reason);
-			Assert.IsNull(null, result[1].Reason);
-			Assert.True(result[2].Reason == "прст1" || result[2].Reason == "прст2");
+			Assert.That(result, Has.Count.EqualTo(3));
+			Assert.Multiple(() =>
+			{
+				Assert.That(result[0].Id, Is.EqualTo(1));
+				Assert.That(result[1].Id, Is.EqualTo(2));
+				Assert.That(result[2].Id, Is.EqualTo(3));
+				Assert.That(result[0].Reason, Is.Null);
+				Assert.That(result[1].Reason, Is.Null);
+				Assert.That(result[2].Reason == "прст1" || result[2].Reason == "прст2", Is.True);
+			});
 		}
 		#endregion
+
+		[Test]
+		public void Issue3809Test([DataSources(TestProvName.AllClickHouse)] string context)
+		{
+			using var db = GetDataContext(context);
+			var actual = db.Parent.Select(a => new
+			{
+				a.ParentID,
+				ParentTest = a.ParentTest == null ? null : new
+				{
+					a.ParentTest.ParentID,
+					Children = a.ParentTest.Children.OrderBy(a => a.ChildID).Select(a => new
+					{
+						a.ParentID,
+						a.ChildID
+					})
+				}
+			}).Where(a => a.ParentTest == null || a.ParentTest.Children.Any(a => a.ChildID == 11)).ToArray();
+
+			var expected = Parent.Select(a => new
+			{
+				a.ParentID,
+				ParentTest = a.ParentTest == null ? null : new
+				{
+					a.ParentTest.ParentID,
+					Children = a.ParentTest.Children.OrderBy(a => a.ChildID).Select(a => new
+					{
+						a.ParentID,
+						a.ChildID
+					})
+				}
+			}).Where(a => a.ParentTest == null || a.ParentTest.Children.Any(a => a.ChildID == 11)).ToArray();
+			AreEqualWithComparer(expected, actual);
+		}
+
+		#region issue association correlation nullability
+
+		[Table]
+		class Table1
+		{
+			[PrimaryKey] public int  ID  { get; set; }
+			[Column    ] public int? ID2 { get; set; }
+
+			[Association(ThisKey = nameof(ID2), OtherKey = nameof(AssociationTests.Table2.ID))]
+			public Table2? Table2 { get; set; }
+
+			public static readonly Table1[] Data = new[]
+			{
+				new Table1() { ID = 1, ID2 = 1 },
+				new Table1() { ID = 2, ID2 = 2 },
+			};
+		}
+
+		[Table]
+		class Table2
+		{
+			[PrimaryKey] public int  ID  { get; set; }
+			[Column    ] public int? ID3 { get; set; }
+
+			[Association(ThisKey = nameof(ID3), OtherKey = nameof(AssociationTests.Table3.ID))]
+			public Table3? Table3 { get; set; }
+
+			public static readonly Table2[] Data = new[]
+			{
+				new Table2() { ID = 1, ID3 = 1 },
+			};
+		}
+
+		[Table]
+		class Table3
+		{
+			[PrimaryKey] public int ID { get; set; }
+
+			[Association(ThisKey = nameof(ID), OtherKey = nameof(AssociationTests.Table4.ID3))]
+			public IEnumerable<Table4> Table4 { get; set; } = null!;
+
+			public static readonly Table3[] Data = new[]
+			{
+				new Table3() { ID = 1 },
+			};
+		}
+
+		[Table]
+		class Table4
+		{
+			[PrimaryKey] public int  ID  { get; set; }
+			[Column    ] public int? ID3 { get; set; }
+
+			public static readonly Table4[] Data = new[]
+			{
+				new Table4() { ID = 1, ID3 = 1 },
+				new Table4() { ID = 2 },
+			};
+		}
+
+		[Test]
+		public void OptionalAssociationNonNullCorrelation([DataSources(TestProvName.AllClickHouse)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t1 = db.CreateLocalTable(Table1.Data);
+			using var t2 = db.CreateLocalTable(Table2.Data);
+			using var t3 = db.CreateLocalTable(Table3.Data);
+			using var t4 = db.CreateLocalTable(Table4.Data);
+
+			var query = t1
+				.LoadWith(r => r.Table2!.Table3!.Table4)
+				.AsQueryable();
+
+			query = query.Where(r => r.Table2!.Table3!.Table4.Select(u => u.ID).Any(id => id == r.ID));
+
+			AssertQuery(query);
+		}
+
+		[Test]
+		public void OptionalAssociationNonNullCorrelationWithProjection([DataSources(TestProvName.AllClickHouse)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t1 = db.CreateLocalTable(Table1.Data);
+			using var t2 = db.CreateLocalTable(Table2.Data);
+			using var t3 = db.CreateLocalTable(Table3.Data);
+			using var t4 = db.CreateLocalTable(Table4.Data);
+
+			var results = t1
+				.Where(r => r.Table2!.Table3!.Table4.Select(u => u.ID).Any(id => id == r.ID))
+				.Select(r => new
+					{
+						r.Table2,
+						r.Table2!.Table3,
+					} 
+				)
+				.ToList();
+
+			Assert.That(results, Has.Count.EqualTo(1));
+			Assert.That(results[0].Table2!.ID, Is.EqualTo(1));
+		}
+		#endregion
+
+		#region ViaInterface
+
+		public class MainEntity : IHasSubentities
+		{
+			[PrimaryKey]
+			public int Id { get; set; }
+
+			[Association(ThisKey = nameof(Id), OtherKey = nameof(SubEntity.MainEntityId))]
+			public ICollection<SubEntity> SubEntities { get; set; } = null!;
+		}
+
+		public interface IHasSubentities
+		{
+			ICollection<SubEntity> SubEntities { get; }
+		}
+
+		public class SubEntity
+		{
+			public int Id { get; set; }
+
+			public int MainEntityId { get; set; }
+
+			public MainEntity MainEntity { get; set; } = null!;
+		}
+
+		static IQueryable<T> OnlyWithSubEntities<T>(IQueryable<T> query)
+			where T : IHasSubentities
+		{
+			return query.Where(x => x.SubEntities.Any());
+		}
+
+		[Test]
+		public void ViaInterfaceAndExtension([DataSources(TestProvName.AllClickHouse)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var main = db.CreateLocalTable<MainEntity>();
+			using var sub = db.CreateLocalTable<SubEntity>();
+			
+			var query = OnlyWithSubEntities(db.GetTable<MainEntity>())
+				.Select(x => new
+				{
+					x.Id,
+					x.SubEntities.Count
+				});
+
+			var result = query.ToArray();
+		}
+
+		[Test]
+		public void ViaInterfaceOfType([DataSources(TestProvName.AllClickHouse)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var main = db.CreateLocalTable<MainEntity>();
+			using var sub = db.CreateLocalTable<SubEntity>();
+			
+			var query = db.GetTable<MainEntity>()
+				.OfType<IHasSubentities>()
+				.Select(x => new
+				{
+					x.SubEntities.Count
+				});
+
+			var result = query.ToArray();
+		}
+
+		[Test]
+		public void ViaInterfaceSelect([DataSources(TestProvName.AllClickHouse)] string context)
+		{
+			using var db   = GetDataContext(context);
+			using var main = db.CreateLocalTable<MainEntity>();
+			using var sub  = db.CreateLocalTable<SubEntity>();
+
+			var query = db.GetTable<MainEntity>()
+				.OfType<IHasSubentities>()
+				.Select(x => new { x.SubEntities });
+
+			var result = query.ToArray();
+		}
+
+		[ActiveIssue("Not supported yet. Needs analysis.")]
+		[Test]
+		public void ViaInterfaceLoadWith([DataSources(TestProvName.AllClickHouse)] string context)
+		{
+			using var db   = GetDataContext(context);
+			using var main = db.CreateLocalTable<MainEntity>();
+			using var sub  = db.CreateLocalTable<SubEntity>();
+
+			var query = db.GetTable<MainEntity>()
+				.OfType<IHasSubentities>()
+				.LoadWith(x => x.SubEntities);
+
+			var result = query.ToArray();
+		}
+
+		#endregion
+
 	}
 
 	public static class AssociationExtension

@@ -175,7 +175,7 @@ namespace Tests.Extensions
 
 			_ = q.ToList();
 
-			Assert.That(LastQuery, Contains.Substring($"{joinType.ToString().ToUpper()} {hint} JOIN"));
+			Assert.That(LastQuery, Contains.Substring($"{joinType.ToString().ToUpperInvariant()} {hint} JOIN"));
 		}
 
 		[Test]
@@ -257,7 +257,7 @@ namespace Tests.Extensions
 
 			_ = q.ToList();
 
-			Assert.That(LastQuery, Contains.Substring($"{joinType.ToString().ToUpper()} MERGE JOIN"));
+			Assert.That(LastQuery, Contains.Substring($"{joinType.ToString().ToUpperInvariant()} MERGE JOIN"));
 		}
 
 		[Test]
@@ -625,7 +625,7 @@ namespace Tests.Extensions
 
 			Assert.That(LastQuery, Contains.Substring("WITH (NoLock, NoWait)"));
 			Assert.That(LastQuery, Contains.Substring("WITH (HoldLock)"));
-			Assert.That(LastQuery, Contains.Substring("OPTION (FAST 10, RECOMPILE)"));
+			Assert.That(LastQuery, Contains.Substring("OPTION (RECOMPILE, FAST 10)"));
 		}
 
 		[Test]
@@ -831,7 +831,6 @@ namespace Tests.Extensions
 			Assert.That(LastQuery, Contains.Substring("OPTION (USE HINT('ASSUME_JOIN_PREDICATE_DEPENDS_ON_FILTERS'))"));
 		}
 
-
 		[Test]
 		public void OptionUseTableTest([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
 		{
@@ -856,6 +855,71 @@ namespace Tests.Extensions
 			_ = q.ToList();
 
 			Assert.That(LastQuery, Contains.Substring("OPTION (TABLE HINT(c_1, NoLock))"));
+		}
+
+		[Test]
+		public void SqlServerUnionAllTest([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q =
+				(
+					from p in db.Parent
+					select p
+				)
+				.Concat
+				(
+					from p in db.Child
+					select p.Parent
+				)
+				.AsSqlServer()
+				.OptionRecompile()
+			;
+
+			_ = q.ToList();
+
+			Assert.That(LastQuery, Should.Contain(
+				"UNION ALL",
+				"OPTION (RECOMPILE)"));
+		}
+
+		private void SubQueryTest1([IncludeDataSources(true, TestProvName.AllSqlServer2016Plus)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q =
+				from c in db.Child
+				select new
+				{
+					cc =
+					(
+						from c1 in db.Child
+						.AsSqlServer().WithNoLock()
+						where c1.ParentID == c.ParentID select c1
+					).Count()
+				};
+
+			_ = q.ToList();
+		}
+
+		[Test]
+		public void SubQueryTest2([IncludeDataSources(true, TestProvName.AllSqlServer2016Plus)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q =
+				from c in db.Child
+				select new
+				{
+					cc =
+					(
+						from c1 in db.Child
+						.AsSqlServer().WithNoLock()
+						where c1.ParentID == c.ParentID select c1.ChildID
+					).FirstOrDefault()
+				};
+
+			_ = q.ToList();
 		}
 	}
 }

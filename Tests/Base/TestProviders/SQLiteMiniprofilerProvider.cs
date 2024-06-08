@@ -17,7 +17,7 @@ namespace Tests
 		private readonly bool _mapped;
 
 		public SQLiteMiniprofilerProvider(bool mapped)
-			: base(ProviderName.SQLiteClassic)
+			: base(ProviderName.SQLiteClassic, SQLiteProvider.System)
 		{
 			_mapped = mapped;
 		}
@@ -43,9 +43,9 @@ namespace Tests
 
 			DataConnection.InsertProviderDetector(ProviderDetector);
 
-			IDataProvider? ProviderDetector(IConnectionStringSettings css, string connectionString)
+			IDataProvider? ProviderDetector(ConnectionOptions options)
 			{
-				return css.Name switch
+				return options.ConfigurationString switch
 				{
 					TestProvName.SQLiteClassicMiniProfilerMapped   => mpm,
 					TestProvName.SQLiteClassicMiniProfilerUnmapped => mpu,

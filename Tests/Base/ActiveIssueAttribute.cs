@@ -91,7 +91,7 @@ namespace Tests
 
 		HashSet<string> GetIssueConfigurations()
 		{
-			return _issueConfigurations ??= new HashSet<string>(Configurations ?? Array<string>.Empty);
+			return _issueConfigurations ??= new HashSet<string>(Configurations ?? []);
 		}
 
 		IEnumerable<TestMethod> ITestBuilder.BuildFrom(IMethodInfo method, Test? suite)

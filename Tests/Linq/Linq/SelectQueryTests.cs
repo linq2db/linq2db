@@ -9,7 +9,7 @@ namespace Tests.Linq
 	public class SelectQueryTests : TestBase
 	{
 		[Table]
-		class SampleClass
+		sealed class SampleClass
 		{
 			[Column] public int Id    { get; set; }
 			[Column] public int Value { get; set; }
@@ -172,5 +172,25 @@ namespace Tests.Linq
 			}
 		}
 
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4284")]
+		public void Select_GroupBy_SelectAgain([DataSources(ProviderName.Firebird25, TestProvName.AllAccess, TestProvName.AllSqlServer2017, ProviderName.SqlCe, TestProvName.AllMySql57, TestProvName.AllSybase)] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var query = db.Person
+					.GroupBy(g => g.LastName)
+					.Select(group => new
+					{
+						LastName         = group.Key,
+						Count            = group.Count(),
+						HighestFirstName = group.Max(x => x.FirstName)
+					})
+					.Where(summary => summary.Count > 5)
+					.Skip(1).Take(1)
+					.Select(x => new { Count = Sql.Ext.Count().Over().ToValue(), Value = x });
+
+				query.ToArray();
+			}
+		}
 	}
 }

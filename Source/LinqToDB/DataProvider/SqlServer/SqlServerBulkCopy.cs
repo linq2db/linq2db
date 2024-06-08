@@ -1,16 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace LinqToDB.DataProvider.SqlServer
 {
-	using System.Data;
-	using System.Threading;
 	using Data;
 	using SqlProvider;
 
-	class SqlServerBulkCopy : BasicBulkCopy
+	sealed class SqlServerBulkCopy : BasicBulkCopy
 	{
 		/// <remarks>
 		/// Settings based on https://www.jooq.org/doc/3.12/manual/sql-building/dsl-context/custom-settings/settings-inline-threshold/
@@ -30,9 +29,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		}
 
 		protected override BulkCopyRowsCopied ProviderSpecificCopy<T>(
-			ITable<T>       table,
-			BulkCopyOptions options,
-			IEnumerable<T>  source)
+			ITable<T> table, DataOptions options, IEnumerable<T> source)
 		{
 			var connections = TryGetProviderConnections(table);
 			if (connections.HasValue)
@@ -40,7 +37,7 @@ namespace LinqToDB.DataProvider.SqlServer
 				return ProviderSpecificCopyInternal(
 					connections.Value,
 					table,
-					options,
+					options.BulkCopyOptions,
 					(columns) => new BulkCopyReader<T>(connections.Value.DataConnection, columns, source));
 			}
 
@@ -48,10 +45,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		}
 
 		protected override Task<BulkCopyRowsCopied> ProviderSpecificCopyAsync<T>(
-			ITable<T>         table,
-			BulkCopyOptions   options,
-			IEnumerable<T>    source,
-			CancellationToken cancellationToken)
+			ITable<T> table, DataOptions options, IEnumerable<T> source, CancellationToken cancellationToken)
 		{
 			var connections = TryGetProviderConnections(table);
 			if (connections.HasValue)
@@ -59,7 +53,7 @@ namespace LinqToDB.DataProvider.SqlServer
 				return ProviderSpecificCopyInternalAsync(
 					connections.Value,
 					table,
-					options,
+					options.BulkCopyOptions,
 					(columns) => new BulkCopyReader<T>(connections.Value.DataConnection, columns, source),
 					cancellationToken);
 			}
@@ -67,12 +61,8 @@ namespace LinqToDB.DataProvider.SqlServer
 			return MultipleRowsCopyAsync(table, options, source, cancellationToken);
 		}
 
-#if NATIVE_ASYNC
 		protected override Task<BulkCopyRowsCopied> ProviderSpecificCopyAsync<T>(
-			ITable<T>           table,
-			BulkCopyOptions     options,
-			IAsyncEnumerable<T> source,
-			CancellationToken   cancellationToken)
+			ITable<T> table, DataOptions options, IAsyncEnumerable<T> source, CancellationToken cancellationToken)
 		{
 			var connections = TryGetProviderConnections(table);
 			if (connections.HasValue)
@@ -80,14 +70,13 @@ namespace LinqToDB.DataProvider.SqlServer
 				return ProviderSpecificCopyInternalAsync(
 					connections.Value,
 					table,
-					options,
+					options.BulkCopyOptions,
 					(columns) => new BulkCopyReader<T>(connections.Value.DataConnection, columns, source, cancellationToken),
 					cancellationToken);
 			}
 
 			return MultipleRowsCopyAsync(table, options, source, cancellationToken);
 		}
-#endif
 
 		private ProviderConnections? TryGetProviderConnections<T>(ITable<T> table)
 			where T : notnull
@@ -124,9 +113,9 @@ namespace LinqToDB.DataProvider.SqlServer
 			var dataConnection = providerConnections.DataConnection;
 			var connection     = providerConnections.ProviderConnection;
 			var transaction    = providerConnections.ProviderTransaction;
-			var ed             = table.DataContext.MappingSchema.GetEntityDescriptor(typeof(T));
+			var ed             = table.DataContext.MappingSchema.GetEntityDescriptor(typeof(T), dataConnection.Options.ConnectionOptions.OnEntityDescriptorCreated);
 			var columns        = ed.Columns.Where(c => !c.SkipOnInsert || options.KeepIdentity == true && c.IsIdentity).ToList();
-			var sb             = _provider.CreateSqlBuilder(table.DataContext.MappingSchema);
+			var sb             = _provider.CreateSqlBuilder(table.DataContext.MappingSchema, dataConnection.Options);
 			var rd             = createDataReader(columns);
 			var sqlopt         = SqlServerProviderAdapter.SqlBulkCopyOptions.Default;
 			var rc             = new BulkCopyRowsCopied();
@@ -144,7 +133,7 @@ namespace LinqToDB.DataProvider.SqlServer
 				{
 					bc.NotifyAfter = options.NotifyAfter;
 
-					bc.SqlRowsCopied += (sender, args) =>
+					bc.SqlRowsCopied += (_, args) =>
 					{
 						rc.RowsCopied = args.RowsCopied;
 						options.RowsCopiedCallback(rc);
@@ -171,7 +160,8 @@ namespace LinqToDB.DataProvider.SqlServer
 				await TraceActionAsync(
 					dataConnection,
 					() => "INSERT ASYNC BULK " + tableName + "(" + string.Join(", ", columns.Select(x => x.ColumnName)) + ")" + Environment.NewLine,
-					async () => {
+					async () =>
+					{
 						await bc.WriteToServerAsync(rd, cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 						return rd.Count;
 					}).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
@@ -184,6 +174,9 @@ namespace LinqToDB.DataProvider.SqlServer
 				if (options.NotifyAfter != 0 && options.RowsCopiedCallback != null)
 					options.RowsCopiedCallback(rc);
 			}
+
+			if (table.DataContext.CloseAfterUse)
+				await table.DataContext.CloseAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 
 			return rc;
 		}
@@ -198,9 +191,9 @@ namespace LinqToDB.DataProvider.SqlServer
 			var dataConnection = providerConnections.DataConnection;
 			var connection     = providerConnections.ProviderConnection;
 			var transaction    = providerConnections.ProviderTransaction;
-			var ed             = table.DataContext.MappingSchema.GetEntityDescriptor(typeof(T));
+			var ed             = table.DataContext.MappingSchema.GetEntityDescriptor(typeof(T), dataConnection.Options.ConnectionOptions.OnEntityDescriptorCreated);
 			var columns        = ed.Columns.Where(c => !c.SkipOnInsert || options.KeepIdentity == true && c.IsIdentity).ToList();
-			var sb             = _provider.CreateSqlBuilder(table.DataContext.MappingSchema);
+			var sb             = _provider.CreateSqlBuilder(table.DataContext.MappingSchema, dataConnection.Options);
 			var rd             = createDataReader(columns);
 			var sqlopt         = SqlServerProviderAdapter.SqlBulkCopyOptions.Default;
 			var rc             = new BulkCopyRowsCopied();
@@ -218,7 +211,7 @@ namespace LinqToDB.DataProvider.SqlServer
 				{
 					bc.NotifyAfter = options.NotifyAfter;
 
-					bc.SqlRowsCopied += (sender, args) =>
+					bc.SqlRowsCopied += (_, args) =>
 					{
 						rc.RowsCopied = args.RowsCopied;
 						options.RowsCopiedCallback(rc);
@@ -245,7 +238,8 @@ namespace LinqToDB.DataProvider.SqlServer
 				TraceAction(
 					dataConnection,
 					() => "INSERT BULK " + tableName + "(" + string.Join(", ", columns.Select(x => x.ColumnName)) + ")" + Environment.NewLine,
-					() => {
+					() =>
+					{
 						bc.WriteToServer(rd);
 						return rd.Count;
 					});
@@ -259,17 +253,21 @@ namespace LinqToDB.DataProvider.SqlServer
 					options.RowsCopiedCallback(rc);
 			}
 
+			if (table.DataContext.CloseAfterUse)
+				table.DataContext.Close();
+
 			return rc;
 		}
 
 		protected override BulkCopyRowsCopied MultipleRowsCopy<T>(
-			ITable<T> table, BulkCopyOptions options, IEnumerable<T> source)
+			ITable<T> table, DataOptions options, IEnumerable<T> source)
 		{
 			BulkCopyRowsCopied ret;
 
 			var helper = new MultipleRowsHelper<T>(table, options);
+			helper.SuppressCloseAfterUse = options.BulkCopyOptions.KeepIdentity == true;
 
-			if (options.KeepIdentity == true)
+			if (options.BulkCopyOptions.KeepIdentity == true)
 				helper.DataConnection.Execute("SET IDENTITY_INSERT " + helper.TableName + " ON");
 
 			switch (((SqlServerDataProvider)helper.DataConnection.DataProvider).Version)
@@ -278,20 +276,26 @@ namespace LinqToDB.DataProvider.SqlServer
 				default                     : ret = MultipleRowsCopy1(helper, source);     break;
 			}
 
-			if (options.KeepIdentity == true)
+			if (options.BulkCopyOptions.KeepIdentity == true)
+			{
 				helper.DataConnection.Execute("SET IDENTITY_INSERT " + helper.TableName + " OFF");
 
+				if (helper.OriginalContext.CloseAfterUse)
+					helper.OriginalContext.Close();
+			}
+
 			return ret;
 		}
 
 		protected override async Task<BulkCopyRowsCopied> MultipleRowsCopyAsync<T>(
-			ITable<T> table, BulkCopyOptions options, IEnumerable<T> source, CancellationToken cancellationToken)
+			ITable<T> table, DataOptions options, IEnumerable<T> source, CancellationToken cancellationToken)
 		{
 			BulkCopyRowsCopied ret;
 
 			var helper = new MultipleRowsHelper<T>(table, options);
+			helper.SuppressCloseAfterUse = options.BulkCopyOptions.KeepIdentity == true;
 
-			if (options.KeepIdentity == true)
+			if (options.BulkCopyOptions.KeepIdentity == true)
 				await helper.DataConnection.ExecuteAsync("SET IDENTITY_INSERT " + helper.TableName + " ON", cancellationToken)
 					.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 
@@ -307,22 +311,27 @@ namespace LinqToDB.DataProvider.SqlServer
 					break;
 			}
 
-			if (options.KeepIdentity == true)
+			if (options.BulkCopyOptions.KeepIdentity == true)
+			{
 				await helper.DataConnection.ExecuteAsync("SET IDENTITY_INSERT " + helper.TableName + " OFF", cancellationToken)
 					.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+
+				if (helper.OriginalContext.CloseAfterUse)
+					await helper.OriginalContext.CloseAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+			}
 
 			return ret;
 		}
 
-#if NATIVE_ASYNC
 		protected override async Task<BulkCopyRowsCopied> MultipleRowsCopyAsync<T>(
-			ITable<T> table, BulkCopyOptions options, IAsyncEnumerable<T> source, CancellationToken cancellationToken)
+			ITable<T> table, DataOptions options, IAsyncEnumerable<T> source, CancellationToken cancellationToken)
 		{
 			BulkCopyRowsCopied ret;
 
 			var helper = new MultipleRowsHelper<T>(table, options);
+			helper.SuppressCloseAfterUse = options.BulkCopyOptions.KeepIdentity == true;
 
-			if (options.KeepIdentity == true)
+			if (options.BulkCopyOptions.KeepIdentity == true)
 				await helper.DataConnection.ExecuteAsync("SET IDENTITY_INSERT " + helper.TableName + " ON", cancellationToken)
 					.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 
@@ -338,12 +347,16 @@ namespace LinqToDB.DataProvider.SqlServer
 					break;
 			}
 
-			if (options.KeepIdentity == true)
+			if (options.BulkCopyOptions.KeepIdentity == true)
+			{
 				await helper.DataConnection.ExecuteAsync("SET IDENTITY_INSERT " + helper.TableName + " OFF", cancellationToken)
 					.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 
+				if (helper.OriginalContext.CloseAfterUse)
+					await helper.OriginalContext.CloseAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+			}
+
 			return ret;
 		}
-#endif
 	}
 }

@@ -1,8 +1,9 @@
 ﻿using System;
-using LinqToDB.Common.Internal;
 
 namespace LinqToDB.Mapping
 {
+	using Common.Internal;
+
 	/// <summary>
 	/// Defines to which type linq2db should map record based on discriminator value. You can apply this attribute to
 	/// a base class or insterface, implemented by all child classes.
@@ -16,13 +17,6 @@ namespace LinqToDB.Mapping
 	[AttributeUsage(AttributeTargets.Class | AttributeTargets.Interface, AllowMultiple=true)]
 	public class InheritanceMappingAttribute : MappingAttribute
 	{
-		/// <summary>
-		/// Gets or sets mapping schema configuration name, for which this attribute should be taken into account.
-		/// <see cref="ProviderName"/> for standard names.
-		/// Attributes with <c>null</c> or empty string <see cref="Configuration"/> value applied to all configurations (if no attribute found for current configuration).
-		/// </summary>
-		public string? Configuration { get; set; }
-
 		/// <summary>
 		/// Gets or sets discriminator value.
 		/// </summary>

@@ -3,15 +3,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-
 using JetBrains.Annotations;
 
 namespace LinqToDB
 {
 	using Linq;
-#if !NATIVE_ASYNC
-	using Async;
-#endif
 
 	/// <summary>
 	/// Provides helper methods for asynchronous operations.
@@ -69,7 +65,7 @@ namespace LinqToDB
 		#endregion
 
 		[AttributeUsage(AttributeTargets.Method)]
-		internal class ElementAsyncAttribute : Attribute
+		internal sealed class ElementAsyncAttribute : Attribute
 		{
 		}
 
@@ -94,7 +90,7 @@ namespace LinqToDB
 			return new AsyncEnumerableAdapter<TSource>(source);
 		}
 
-		private class AsyncEnumerableAdapter<T> : IAsyncEnumerable<T>
+		private sealed class AsyncEnumerableAdapter<T> : IAsyncEnumerable<T>
 		{
 			private readonly IQueryable<T> _query;
 			public AsyncEnumerableAdapter(IQueryable<T> query)
@@ -102,13 +98,6 @@ namespace LinqToDB
 				_query = query ?? throw new ArgumentNullException(nameof(query));
 			}
 
-#if !NATIVE_ASYNC
-			IAsyncEnumerator<T> IAsyncEnumerable<T>.GetAsyncEnumerator(CancellationToken cancellationToken)
-			{
-				return new AsyncEnumeratorImpl<T>(_query.GetEnumerator(), cancellationToken);
-			}
-		}
-#else
 #pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
 			async IAsyncEnumerator<T> IAsyncEnumerable<T>.GetAsyncEnumerator(CancellationToken cancellationToken)
 #pragma warning restore CS1998 // Async method lacks 'await' operators and will run synchronously
@@ -121,7 +110,6 @@ namespace LinqToDB
 				}
 			}
 		}
-#endif
 #endregion
 
 		#region ForEachAsync
@@ -373,6 +361,5 @@ namespace LinqToDB
 		}
 
 		#endregion
-
 	}
 }

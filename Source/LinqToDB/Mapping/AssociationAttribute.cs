@@ -5,18 +5,20 @@ using JetBrains.Annotations;
 
 namespace LinqToDB.Mapping
 {
+	using Common.Internal;
+
 	/// <summary>
 	/// Defines relation between tables or views.
 	/// Could be applied to:
 	/// - instance properties and fields;
 	/// - instance and static methods.
-	/// 
+	///
 	/// For associations, defined using static methods, <c>this</c> mapping side defined by type of first parameter.
 	/// Also, optionally, you can pass data context object as extra method parameter.
-	/// 
+	///
 	/// Based on association type - to one or to multiple records - result type should be target record's mapping type or
 	/// <see cref="IEquatable{T}"/> collection.
-	/// 
+	///
 	/// By default associations are used only for joins generation in LINQ queries and will have <c>null</c> value for loaded
 	/// records. To load data into association, you should explicitly specify it in your query using <see cref="LinqExtensions.LoadWith{TEntity,TProperty}(System.Linq.IQueryable{TEntity},Expression{Func{TEntity,TProperty}})"/> method.
 	/// </summary>
@@ -28,16 +30,7 @@ namespace LinqToDB.Mapping
 		/// Creates attribute instance.
 		/// </summary>
 		public AssociationAttribute()
-		{
-			CanBeNull = true;
-		}
-
-		/// <summary>
-		/// Gets or sets mapping schema configuration name, for which this attribute should be taken into account.
-		/// <see cref="ProviderName"/> for standard names.
-		/// Attributes with <c>null</c> or empty string <see cref="Configuration"/> value applied to all configurations (if no attribute found for current configuration).
-		/// </summary>
-		public string?      Configuration       { get; set; }
+		{ }
 
 		/// <summary>
 		/// Gets or sets comma-separated list of association key members on this side of association.
@@ -77,7 +70,7 @@ namespace LinqToDB.Mapping
 		/// {
 		///     [Association(ExpressionQueryMethod = nameof(OtherImpl), CanBeNull = true)]
 		///     public SomeOtherEntity Other { get; set; }
-		/// 
+		///
 		///     public static Expression&lt;Func&lt;SomeEntity, IDataContext, IQueryable&lt;SomeOtherEntity&gt;&gt;&gt; OtherImpl()
 		///     {
 		///         return (e, db) =&gt; db.GetTable&lt;SomeOtherEntity&gt;().Where(se =&gt; se.Id == e.Id);
@@ -95,7 +88,7 @@ namespace LinqToDB.Mapping
 		/// <para>
 		/// <example>
 		/// <code>
-		/// var Expression&lt;Func&lt;SomeEntity, IDataContext, IQueryable&lt;SomeOtherEntity&gt;&gt;&gt; associationQuery;
+		/// Expression&lt;Func&lt;SomeEntity, IDataContext, IQueryable&lt;SomeOtherEntity&gt;&gt;&gt; associationQuery;
 		/// <para />
 		/// associationQuery = (e, db) =&gt; db.GetTable&lt;SomeOtherEntity&gt;().Where(se =&gt; se.Id == e.Id);
 		/// </code>
@@ -111,36 +104,57 @@ namespace LinqToDB.Mapping
 		public string?      Storage             { get; set; }
 
 		/// <summary>
+		/// Specifies static property or method without parameters, that returns a setter expression.
+		/// If is set, it will be used to set the storage member when using LoadWith().
+		/// Result of method should be Action which takes two parameters: the storage member and the value to assign to it.
+		/// <para>
+		/// <example>
+		/// <code>
+		/// public class SomeEntity
+		/// {
+		///     [Association(SetExpressionMethod = nameof(OtherImpl), CanBeNull = true)]
+		///     public SomeOtherEntity Other { get; set; }
+		///
+		///     public static Expression&lt;Action&lt;SomeContainerType,SomeOtherEntity&gt;&gt; OtherImpl()
+		///     {
+		///         return (container, value) =&gt; container.Value = value;
+		///     }
+		/// }
+		/// </code>
+		/// </example>
+		/// </para>
+		/// </summary>
+		public string? AssociationSetterExpressionMethod { get; set; }
+
+		/// <summary>
+		/// Specifies a setter expression. If is set, it will be used to set the storage member when using LoadWith().
+		/// Action takes two parameters: the storage member and the value to assign to it.
+		/// <para>
+		/// <example>
+		/// <code>
+		/// Expression&lt;Action&lt;SomeContainerType,SomeOtherEntity&gt;&gt; setContainerValue;
+		/// <para />
+		/// setContainerValue = (container, value) =&gt; container.Value = value;
+		/// </code>
+		/// </example>
+		/// </para>
+		/// </summary>
+		public Expression? AssociationSetterExpression { get; set; }
+
+		internal bool?      ConfiguredCanBeNull;
+		/// <summary>
 		/// Defines type of join:
 		/// - inner join for <c>CanBeNull = false</c>;
-		/// - left join for <c>CanBeNull = true</c>.
-		/// Default value: <c>true</c>.
+		/// - outer join for <c>CanBeNull = true</c>.
+		/// When using Configuration.UseNullableTypesMetadata, the default value
+		/// for associations (cardinality 1) is derived from nullability.
+		/// Otherwise the default value is <c>true</c> (for collections and when option is disabled).
 		/// </summary>
-		public bool         CanBeNull           { get; set; }
-
-		/// <summary>
-		/// This property is not used by linq2db and could be used for informational purposes.
-		/// </summary>
-		[Obsolete("This property is not used by linq2db and will be removed in future")]
-		public string?      KeyName             { get; set; }
-
-		/// <summary>
-		/// This property is not used by linq2db and could be used for informational purposes.
-		/// </summary>
-		[Obsolete("This property is not used by linq2db and will be removed in future")]
-		public string?      BackReferenceName   { get; set; }
-
-		/// <summary>
-		/// This property is not used by linq2db and could be used for informational purposes.
-		/// </summary>
-		[Obsolete("This property is not used by linq2db and will be removed in future")]
-		public bool         IsBackReference     { get; set; }
-
-		/// <summary>
-		/// This property is not used by linq2db and could be used for informational purposes.
-		/// </summary>
-		[Obsolete("This property is not used by linq2db and will be removed in future")]
-		public Relationship Relationship        { get; set; }
+		public bool         CanBeNull
+		{
+			get => ConfiguredCanBeNull ?? true;
+			set => ConfiguredCanBeNull = value;
+		}
 
 		/// <summary>
 		/// Gets or sets alias for association. Used in SQL generation process.
@@ -161,7 +175,7 @@ namespace LinqToDB.Mapping
 
 		public override string GetObjectID()
 		{
-			return $".{Configuration}.{ThisKey}.{OtherKey}.{ExpressionPredicate}.{QueryExpressionMethod}.{Storage}.{(CanBeNull?1:0)}.{AliasName}.";
+			return FormattableString.Invariant($".{Configuration}.{ThisKey}.{OtherKey}.{ExpressionPredicate}.{IdentifierBuilder.GetObjectID(Predicate)}.{QueryExpressionMethod}.{IdentifierBuilder.GetObjectID(QueryExpression)}.{Storage}.{AssociationSetterExpressionMethod}.{IdentifierBuilder.GetObjectID(AssociationSetterExpression)}.{(CanBeNull?1:0)}.{AliasName}.");
 		}
 	}
 }

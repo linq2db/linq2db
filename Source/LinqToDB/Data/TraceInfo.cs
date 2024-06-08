@@ -1,13 +1,12 @@
 ﻿using System;
-using System.Data;
 using System.Data.Common;
 using System.Diagnostics;
 using System.Linq;
 using System.Linq.Expressions;
-using System.Text;
 
 namespace LinqToDB.Data
 {
+	using Common.Internal;
 
 	/// <summary>
 	/// Tracing information for the <see cref="DataConnection"/> events.
@@ -108,8 +107,9 @@ namespace LinqToDB.Data
 					if (_sqlText != null)
 						return _sqlText;
 
-					var sqlProvider = DataConnection.DataProvider.CreateSqlBuilder(DataConnection.MappingSchema);
-					var sb          = new StringBuilder();
+					var sqlProvider = DataConnection.DataProvider.CreateSqlBuilder(DataConnection.MappingSchema, DataConnection.Options);
+					using var sbv    = Pools.StringBuilder.Allocate();
+					var sb           = sbv.Value;
 
 					sb.Append("-- ").Append(DataConnection.ConfigurationString);
 

@@ -29,13 +29,6 @@ namespace LinqToDB.Mapping
 		}
 
 		/// <summary>
-		/// Gets or sets mapping schema configuration name, for which this attribute should be taken into account.
-		/// <see cref="ProviderName"/> for standard names.
-		/// Attributes with <c>null</c> or empty string <see cref="Configuration"/> value applied to all configurations (if no attribute found for current configuration).
-		/// </summary>
-		public string? Configuration            { get; set; }
-
-		/// <summary>
 		/// Gets or sets name of table or view in database.
 		/// When not specified, name of class or interface will be used.
 		/// </summary>
@@ -98,7 +91,7 @@ namespace LinqToDB.Mapping
 
 		public override string GetObjectID()
 		{
-			return $".{Configuration}.{Name}.{Schema}.{Database}.{Server}.{(IsTemporary?'1':'0')}.{(int)TableOptions}.{(IsColumnAttributeRequired?'1':'0')}.{(IsView?'1':'0')}.";
+			return FormattableString.Invariant($".{Configuration}.{Name}.{Schema}.{Database}.{Server}.{(IsTemporary?'1':'0')}.{(int)TableOptions}.{(IsColumnAttributeRequired?'1':'0')}.{(IsView?'1':'0')}.");
 		}
 	}
 }

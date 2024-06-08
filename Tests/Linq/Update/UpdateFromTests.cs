@@ -77,7 +77,7 @@ namespace Tests.xUpdate
 
 		[Test]
 		public void UpdateTestWhere(
-			[DataSources(ProviderName.Access, TestProvName.AllMySql, ProviderName.SqlCe, TestProvName.AllInformix)]
+			[DataSources(ProviderName.Access, TestProvName.AllMySql, ProviderName.SqlCe, TestProvName.AllInformix, TestProvName.AllClickHouse)]
 			string context)
 		{
 			var data = GenerateData();
@@ -128,7 +128,7 @@ namespace Tests.xUpdate
 
 		[Test]
 		public void UpdateTestJoin(
-			[DataSources(ProviderName.SqlCe, TestProvName.AllInformix)]
+			[DataSources(ProviderName.SqlCe, TestProvName.AllInformix, TestProvName.AllClickHouse)]
 			string context)
 		{
 			var data = GenerateData();
@@ -230,8 +230,10 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSybase, "The Sybase ASE does not support the UPDATE statement with the TOP + ORDER BY clause.")]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllMySql, "MySql does not support Skip in update query")]
 		public void UpdateTestJoinSkipTake(
-			[DataSources(TestProvName.AllAccess, TestProvName.AllSqlServer2005, TestProvName.AllMySql, ProviderName.SqlCe, TestProvName.AllSybase)]
+			[DataSources(TestProvName.AllAccess, TestProvName.AllClickHouse, ProviderName.SqlCe)]
 			string context)
 		{
 			var data = GenerateData();
@@ -281,7 +283,7 @@ namespace Tests.xUpdate
 
 		[Test]
 		public void UpdateTestJoinTake(
-			[DataSources(TestProvName.AllAccess, TestProvName.AllSqlServer2005, TestProvName.AllMySql, ProviderName.SqlCe)]
+			[DataSources(TestProvName.AllAccess, TestProvName.AllSqlServer2005, TestProvName.AllMySql, TestProvName.AllClickHouse, ProviderName.SqlCe)]
 			string context)
 		{
 			var data = GenerateData();
@@ -331,7 +333,7 @@ namespace Tests.xUpdate
 
 		[Test]
 		public void UpdateTestAssociation(
-			[DataSources(ProviderName.SqlCe, TestProvName.AllInformix)]
+			[DataSources(ProviderName.SqlCe, TestProvName.AllInformix, TestProvName.AllClickHouse)]
 			string context)
 		{
 			var data = GenerateData();
@@ -345,18 +347,17 @@ namespace Tests.xUpdate
 					.Set(v => v.Value1, v => v.Relation!.RelatedValue3)
 					.Update();
 
-				Assert.AreEqual(1, affected);
+				Assert.That(affected, Is.EqualTo(1));
 
 				var updatedValue = forUpdates.Where(v => v.Relation!.RelatedValue1 == 11).Select(v => v.Value1).First();
 
-				Assert.AreEqual(13, updatedValue);
-
+				Assert.That(updatedValue, Is.EqualTo(13));
 			}
 		}
 
 		[Test]
 		public void UpdateTestAssociationAsUpdatable(
-			[DataSources(ProviderName.SqlCe, TestProvName.AllInformix)]
+			[DataSources(ProviderName.SqlCe, TestProvName.AllInformix, TestProvName.AllClickHouse)]
 			string context)
 		{
 			var data = GenerateData();
@@ -373,18 +374,17 @@ namespace Tests.xUpdate
 
 				var affected = updatable.Update();
 
-				Assert.AreEqual(1, affected);
+				Assert.That(affected, Is.EqualTo(1));
 
 				var updatedValue = forUpdates.Where(v => v.Relation!.RelatedValue1 == 11).Select(v => v.Value1).First();
 
-				Assert.AreEqual(13, updatedValue);
-
+				Assert.That(updatedValue, Is.EqualTo(13));
 			}
 		}
 
 		[Test]
 		public void UpdateTestAssociationSimple(
-			[DataSources(TestProvName.AllInformix)]
+			[DataSources(TestProvName.AllInformix, TestProvName.AllClickHouse)]
 			string context)
 		{
 			var data = GenerateData();
@@ -400,21 +400,24 @@ namespace Tests.xUpdate
 					.Set(v => v.Value3, v => 1)
 					.Update();
 
-				Assert.AreEqual(1, affected);
+				Assert.That(affected, Is.EqualTo(1));
 
 				var updatedValue = forUpdates.Where(v => v.Relation!.RelatedValue1 == 11)
 					.Select(v => new {v.Value1, v.Value2, v.Value3})
 					.First();
 
-				Assert.AreEqual(36, updatedValue.Value1);
-				Assert.AreEqual(36, updatedValue.Value2);
-				Assert.AreEqual(1,  updatedValue.Value3);
+				Assert.Multiple(() =>
+				{
+					Assert.That(updatedValue.Value1, Is.EqualTo(36));
+					Assert.That(updatedValue.Value2, Is.EqualTo(36));
+					Assert.That(updatedValue.Value3, Is.EqualTo(1));
+				});
 			}
 		}
 
 		[Test]
 		public void UpdateTestAssociationSimpleAsUpdatable(
-			[DataSources(TestProvName.AllInformix)]
+			[DataSources(TestProvName.AllInformix, TestProvName.AllClickHouse)]
 			string context)
 		{
 			var data = GenerateData();
@@ -433,15 +436,18 @@ namespace Tests.xUpdate
 
 				var affected = updatable.Update();
 
-				Assert.AreEqual(1, affected);
+				Assert.That(affected, Is.EqualTo(1));
 
 				var updatedValue = forUpdates.Where(v => v.Relation!.RelatedValue1 == 11)
 					.Select(v => new {v.Value1, v.Value2, v.Value3})
 					.First();
 
-				Assert.AreEqual(36, updatedValue.Value1);
-				Assert.AreEqual(36, updatedValue.Value2);
-				Assert.AreEqual(1,  updatedValue.Value3);
+				Assert.Multiple(() =>
+				{
+					Assert.That(updatedValue.Value1, Is.EqualTo(36));
+					Assert.That(updatedValue.Value2, Is.EqualTo(36));
+					Assert.That(updatedValue.Value3, Is.EqualTo(1));
+				});
 			}
 		}
 	}

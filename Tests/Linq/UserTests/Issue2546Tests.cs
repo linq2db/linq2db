@@ -8,7 +8,7 @@ namespace Tests.UserTests
 	[TestFixture]
 	public class Issue2546Tests : TestBase
 	{
-		class Issue2546Class
+		sealed class Issue2546Class
 		{
 			[Column] [PrimaryKey] public int Id { get; set; }
 			[Column] public string? Value { get; set; }
@@ -16,16 +16,17 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void TestContainerParameter([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		public void TestContainerParameter([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			var ms = new MappingSchema();
 
-			ms.GetFluentMappingBuilder()
+			new FluentMappingBuilder(ms)
 				.Entity<Issue2546Class>()
 				.Property(m => m.Value2)
 				.HasSkipOnInsert()
 				.HasSkipOnUpdate()
-				.IsExpression(x => Sql.Property<object>(x, "Value"));
+				.IsExpression(x => Sql.Property<object>(x, "Value"))
+				.Build();
 
 			var data = new[] { new Issue2546Class { Id = 1, Value = "Hello World" } };
 
@@ -39,7 +40,7 @@ namespace Tests.UserTests
 					where x.Value2 == container.Value2
 					select x).ToList();
 
-				Assert.That(something.Count, Is.EqualTo(1));
+				Assert.That(something, Has.Count.EqualTo(1));
 			}
 		}
 	}

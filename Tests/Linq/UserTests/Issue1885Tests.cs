@@ -33,7 +33,7 @@ namespace Tests.UserTests
 		public void TestGenericAssociationRuntime([IncludeDataSources(ProviderName.SqlCe, TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			var ms = new MappingSchema();
-			var mb = ms.GetFluentMappingBuilder();
+			var mb = new FluentMappingBuilder(ms);
 
 			var values = new[] { 1, 5 };
 
@@ -45,7 +45,8 @@ namespace Tests.UserTests
 						Ids = values,
 						Value = x.Data
 					})
-				);
+				)
+				.Build();
 
 			using (var db = GetDataContext(context, ms))
 			using (var u = db.CreateLocalTable<User>())
@@ -59,13 +60,16 @@ namespace Tests.UserTests
 
 				var list = q.ToList();
 
-				Assert.AreEqual(2, list.Count);
+				Assert.That(list, Has.Count.EqualTo(2));
 
-				Assert.AreEqual("Testing", list[0].Value);
-				Assert.AreEqual(values,    list[0].Ids);
+				Assert.Multiple(() =>
+				{
+					Assert.That(list[0].Value, Is.EqualTo("Testing"));
+					Assert.That(list[0].Ids, Is.EqualTo(values));
 
-				Assert.AreEqual("Testing", list[1].Value);
-				Assert.AreEqual(values,    list[1].Ids);
+					Assert.That(list[1].Value, Is.EqualTo("Testing"));
+					Assert.That(list[1].Ids, Is.EqualTo(values));
+				});
 			}
 		}
 

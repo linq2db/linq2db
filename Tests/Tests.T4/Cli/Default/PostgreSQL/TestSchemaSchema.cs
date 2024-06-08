@@ -23,13 +23,31 @@ namespace Cli.Default.PostgreSQL
 			private readonly IDataContext _dataContext;
 
 			public ITable<TestSchemaIdentity> TestSchemaIdentities => _dataContext.GetTable<TestSchemaIdentity>();
-			public ITable<Testserialidentity> Testserialidentities => _dataContext.GetTable<Testserialidentity>();
 			public ITable<Testsamename>       Testsamenames        => _dataContext.GetTable<Testsamename>();
+			public ITable<Testserialidentity> Testserialidentities => _dataContext.GetTable<Testserialidentity>();
 
 			public DataContext(IDataContext dataContext)
 			{
 				_dataContext = dataContext;
 			}
+		}
+
+		[Table("TestSchemaIdentity", Schema = "test_schema")]
+		public class TestSchemaIdentity
+		{
+			[Column("ID", IsPrimaryKey = true, IsIdentity = true, SkipOnInsert = true, SkipOnUpdate = true)] public int Id { get; set; } // integer
+		}
+
+		[Table("testsamename", Schema = "test_schema")]
+		public class Testsamename
+		{
+			[Column("id", IsPrimaryKey = true, IsIdentity = true, SkipOnInsert = true, SkipOnUpdate = true)] public int Id { get; set; } // integer
+		}
+
+		[Table("testserialidentity", Schema = "test_schema")]
+		public class Testserialidentity
+		{
+			[Column("ID", IsPrimaryKey = true, IsIdentity = true, SkipOnInsert = true, SkipOnUpdate = true)] public int Id { get; set; } // integer
 		}
 
 		#region Table Extensions
@@ -43,16 +61,6 @@ namespace Cli.Default.PostgreSQL
 			return table.FirstOrDefaultAsync(e => e.Id == id, cancellationToken);
 		}
 
-		public static Testserialidentity? Find(this ITable<Testserialidentity> table, int id)
-		{
-			return table.FirstOrDefault(e => e.Id == id);
-		}
-
-		public static Task<Testserialidentity?> FindAsync(this ITable<Testserialidentity> table, int id, CancellationToken cancellationToken = default)
-		{
-			return table.FirstOrDefaultAsync(e => e.Id == id, cancellationToken);
-		}
-
 		public static Testsamename? Find(this ITable<Testsamename> table, int id)
 		{
 			return table.FirstOrDefault(e => e.Id == id);
@@ -62,24 +70,16 @@ namespace Cli.Default.PostgreSQL
 		{
 			return table.FirstOrDefaultAsync(e => e.Id == id, cancellationToken);
 		}
+
+		public static Testserialidentity? Find(this ITable<Testserialidentity> table, int id)
+		{
+			return table.FirstOrDefault(e => e.Id == id);
+		}
+
+		public static Task<Testserialidentity?> FindAsync(this ITable<Testserialidentity> table, int id, CancellationToken cancellationToken = default)
+		{
+			return table.FirstOrDefaultAsync(e => e.Id == id, cancellationToken);
+		}
 		#endregion
-
-		[Table("TestSchemaIdentity", Schema = "test_schema")]
-		public class TestSchemaIdentity
-		{
-			[Column("ID", IsPrimaryKey = true, IsIdentity = true, SkipOnInsert = true, SkipOnUpdate = true)] public int Id { get; set; } // integer
-		}
-
-		[Table("testserialidentity", Schema = "test_schema")]
-		public class Testserialidentity
-		{
-			[Column("ID", IsPrimaryKey = true, IsIdentity = true, SkipOnInsert = true, SkipOnUpdate = true)] public int Id { get; set; } // integer
-		}
-
-		[Table("testsamename", Schema = "test_schema")]
-		public class Testsamename
-		{
-			[Column("id", IsPrimaryKey = true, IsIdentity = true, SkipOnInsert = true, SkipOnUpdate = true)] public int Id { get; set; } // integer
-		}
 	}
 }

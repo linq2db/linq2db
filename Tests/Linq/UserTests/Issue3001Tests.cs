@@ -57,7 +57,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void TestExpressionAssociation([IncludeDataSources(TestProvName.AllSQLite)]
+		public void TestExpressionAssociation([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)]
 			string context)
 		{
 			using var db          = GetDataContext(context);

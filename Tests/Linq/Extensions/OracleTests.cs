@@ -282,7 +282,7 @@ namespace Tests.Extensions
 
 			_ = q.ToList();
 
-			Assert.That(LastQuery, Contains.Substring("SELECT /*+ FULL(p@qb_1) FULL(p_1@qb_2) */"));
+			Assert.That(LastQuery, Contains.Substring("SELECT /*+ FULL(p@qb_1) FULL(p_2@qb_2) */"));
 			Assert.That(LastQuery, Contains.Substring("SELECT /*+ QB_NAME(qb_1) */"));
 			Assert.That(LastQuery, Contains.Substring("SELECT /*+ QB_NAME(qb_2) */"));
 		}
@@ -304,7 +304,7 @@ namespace Tests.Extensions
 
 			_ = q.ToList();
 
-			Assert.That(LastQuery, Contains.Substring("SELECT /*+ FULL(p_2.p) FULL(p_2.p_1) */"));
+			Assert.That(LastQuery, Contains.Substring("SELECT /*+ FULL(p_3.p) FULL(p_3.p_2) */"));
 		}
 
 		[Test]
@@ -456,7 +456,7 @@ namespace Tests.Extensions
 
 			_ = q.ToList();
 
-			Assert.That(LastQuery, Contains.Substring("SELECT /*+ NOCACHE(p_2.p_1.t1.p) NOCACHE(p_2.p_1.t1.c_1) FULL(p_2.p_1.c1) NOCACHE(p_2.p_1.c1) PARALLEL(p_2.p1) CLUSTER(p_2.c_2) CLUSTER(p_2.a_Parent) */"));
+			Assert.That(LastQuery, Contains.Substring("SELECT /*+ NOCACHE(p) NOCACHE(c_1) FULL(c1) NOCACHE(c1) CLUSTER(c_2) CLUSTER(a_Parent) PARALLEL(p1) */"));
 		}
 
 		[Test]
@@ -568,7 +568,7 @@ namespace Tests.Extensions
 			_ = q.ToList();
 
 			Assert.That(LastQuery, Contains.Substring("\tSELECT /*+ FULL(c_1) NOCACHE(c_1) */").Using(StringComparison.Ordinal));
-			Assert.That(LastQuery, Contains.Substring("SELECT /*+ FACT(c_2) FIRST_ROWS(10) ALL_ROWS */"));
+			Assert.That(LastQuery, Contains.Substring("SELECT /*+ FACT(c_2) ALL_ROWS FIRST_ROWS(10) */"));
 		}
 
 		[Test]
@@ -788,6 +788,41 @@ namespace Tests.Extensions
 			_ = q.ToList();
 
 			Assert.That(LastQuery, Contains.Substring("SELECT /*+ OPT_PARAM('star_transformation_enabled' 'true') */"));
+		}
+
+		[Test]
+		public void OracleUnionTest([IncludeDataSources(true, TestProvName.AllOracle)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q =
+				(
+					from p in db.Parent.TableID("cc")
+					select p
+				)
+				.AsOracle()
+				.Union
+				(
+					from p in db.Child
+					select p.Parent
+				)
+				.Union
+				(
+					from p in db.Parent
+					from c in db.Child.TableID("pp")
+						.AsSubQuery()
+						.AsOracle()
+					select p
+				)
+				.AsOracle()
+				.ContainersHint(OracleHints.Hint.NoParallel);
+
+			_ = q.ToList();
+
+
+			Assert.That(LastQuery, Should.Contain(
+				"ELECT /*+ CONTAINERS(DEFAULT_PDB_HINT='NO_PARALLEL')",
+				"UNION"));
 		}
 	}
 }

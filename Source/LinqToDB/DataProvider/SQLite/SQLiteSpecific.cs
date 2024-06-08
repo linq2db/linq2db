@@ -5,6 +5,7 @@ using JetBrains.Annotations;
 
 namespace LinqToDB.DataProvider.SQLite
 {
+	using Expressions;
 	using Linq;
 	using SqlProvider;
 
@@ -13,7 +14,7 @@ namespace LinqToDB.DataProvider.SQLite
 	{
 	}
 
-	class SQLiteSpecificTable<TSource> : DatabaseSpecificTable<TSource>, ISQLiteSpecificTable<TSource>, ITable
+	sealed class SQLiteSpecificTable<TSource> : DatabaseSpecificTable<TSource>, ISQLiteSpecificTable<TSource>, ITable
 		where TSource : notnull
 	{
 		public SQLiteSpecificTable(ITable<TSource> table) : base(table)
@@ -23,17 +24,19 @@ namespace LinqToDB.DataProvider.SQLite
 
 	public static partial class SQLiteTools
 	{
-		[LinqTunnel, Pure]
+		[LinqTunnel, Pure, IsQueryable]
 		[Sql.QueryExtension(null, Sql.QueryExtensionScope.None, typeof(NoneExtensionBuilder))]
 		public static ISQLiteSpecificTable<TSource> AsSQLite<TSource>(this ITable<TSource> table)
 			where TSource : notnull
 		{
-			table.Expression = Expression.Call(
-				null,
-				MethodHelper.GetMethodInfo(AsSQLite, table),
-				table.Expression);
+			var newTable = new Table<TSource>(table.DataContext,
+				Expression.Call(
+					null,
+					MethodHelper.GetMethodInfo(AsSQLite, table),
+					table.Expression)
+			);
 
-			return new SQLiteSpecificTable<TSource>(table);
+			return new SQLiteSpecificTable<TSource>(newTable);
 		}
 	}
 }

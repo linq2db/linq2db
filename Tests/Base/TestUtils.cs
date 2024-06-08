@@ -1,14 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
+using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading;
-using System.Diagnostics;
 
 using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.DataProvider.Firebird;
-
 
 namespace Tests
 {
@@ -37,7 +37,7 @@ namespace Tests
 			return Interlocked.Increment(ref _cnt);
 		}
 
-		public const string NO_SCHEMA_NAME = "UNUSED_SCHEMA";
+		public const string NO_SCHEMA_NAME   = "UNUSED_SCHEMA";
 		public const string NO_DATABASE_NAME = "UNUSED_DB";
 		public const string NO_SERVER_NAME   = "UNUSED_SERVER";
 
@@ -56,6 +56,7 @@ namespace Tests
 		[Sql.Expression("current server", ServerSideOnly = true, Configuration = ProviderName.DB2)]
 		[Sql.Function("current_database", ServerSideOnly = true, Configuration = ProviderName.PostgreSQL)]
 		[Sql.Function("DATABASE"        , ServerSideOnly = true, Configuration = ProviderName.MySql)]
+		[Sql.Function("currentDatabase" , ServerSideOnly = true, Configuration = ProviderName.ClickHouse)]
 		[Sql.Function("DB_NAME"         , ServerSideOnly = true)]
 		private static string DbName()
 		{
@@ -146,9 +147,13 @@ namespace Tests
 			return context switch
 			{
 				string when context.IsAnyOf(TestProvName.AllSQLite)   => "main",
-				string when context.IsAnyOf(TestProvName.AllAccess)   => "Database\\TestData",
+				// Access adds extension automatically to database name, but if there are
+				// dots in name, extension not added as dot treated as extension separator by Access
+				string when context.IsAnyOf(ProviderName.Access)      => "Database\\TestData",
+				string when context.IsAnyOf(ProviderName.AccessOdbc)  => "Database\\TestData.ODBC.mdb",
 				string when context.IsAnyOf(
 					TestProvName.AllMySql,
+					TestProvName.AllClickHouse,
 					TestProvName.AllPostgreSQL,
 					ProviderName.DB2,
 					TestProvName.AllSybase,
@@ -160,20 +165,7 @@ namespace Tests
 
 		public static bool ProviderNeedsTimeFix(this IDataContext db, string context)
 		{
-			if (context.IsAnyOf(TestProvName.AllMySql55))
-			{
-				// MySql versions prior to 5.6.4 do not store fractional seconds so we need to trim
-				// them from expected data too
-				var version = db.GetTable<LinqDataTypes>().Select(_ => MySqlVersion()).First();
-				var match = new Regex(@"^\d+\.\d+.\d+").Match(version);
-				if (match.Success)
-				{
-					var versionParts = match.Value.Split('.').Select(_ => int.Parse(_)).ToArray();
-
-					return (versionParts[0] * 10000 + versionParts[1] * 100 + versionParts[2] < 50604);
-				}
-			}
-			else if (context.IsAnyOf(ProviderName.AccessOdbc))
+			if (context.IsAnyOf(ProviderName.AccessOdbc))
 			{
 				// ODBC driver strips milliseconds from values on both save and load
 				return true;
@@ -188,7 +180,7 @@ namespace Tests
 			return fix ? new DateTime(value.Year, value.Month, value.Day, value.Hour, value.Minute, value.Second) : value;
 		}
 
-		class FirebirdTempTable<T> : TempTable<T>
+		sealed class FirebirdTempTable<T> : TempTable<T>
 			where T : notnull
 		{
 			public FirebirdTempTable(IDataContext db, string? tableName = null, string? databaseName = null, string? schemaName = null, TableOptions tableOptions = TableOptions.NotSet)
@@ -235,7 +227,7 @@ namespace Tests
 			}
 		}
 
-		public static TempTable<T> CreateLocalTable<T>(this IDataContext db, string? tableName = null, TableOptions tableOptions = TableOptions.NotSet)
+		public static TempTable<T> CreateLocalTable<T>(this IDataContext db, string? tableName = null, TableOptions tableOptions = TableOptions.CheckExistence)
 			where T : notnull
 		{
 			try
@@ -255,10 +247,10 @@ namespace Tests
 		public static TempTable<T> CreateLocalTable<T>(this IDataContext db, string? tableName, IEnumerable<T> items, bool insertInTransaction = false)
 			where T : notnull
 		{
-			var table = CreateLocalTable<T>(db, tableName, TableOptions.CheckExistence);
-
 			using (new DisableLogging())
 			{
+				var table = CreateLocalTable<T>(db, tableName, TableOptions.CheckExistence);
+
 				if (db is DataConnection dc)
 				{
 					// apply transaction only on insert, as not all dbs support DDL within transaction
@@ -273,9 +265,9 @@ namespace Tests
 				else
 					foreach (var item in items)
 						db.Insert(item, table.TableName);
-			}
 
-			return table;
+				return table;
+			}
 		}
 
 		public static TempTable<T> CreateLocalTable<T>(this IDataContext db, IEnumerable<T> items, bool insertInTransaction = false)
@@ -299,6 +291,7 @@ namespace Tests
 			};
 		}
 
+		[return: NotNullIfNotNull(nameof(s))]
 		public static string? Clean(this string? s)
 		{
 			return s?
@@ -307,6 +300,56 @@ namespace Tests
 				.Replace("\r", "")
 				.Replace("\n", "")
 				;
+		}
+
+		internal static string GetConfigName()
+		{
+#if NET6_0
+			return "NET60";
+#elif NET8_0
+			return "NET80";
+#elif NETFRAMEWORK
+			return "NETFX";
+#else
+#error Unknown framework
+#endif
+		}
+
+		public static void Log(Exception ex)
+		{
+			Log($"Exception: {ex.Message}");
+			Log(ex.StackTrace);
+		}
+
+		public static void Log(string? message)
+		{
+			var path = Path.GetTempPath();
+			File.AppendAllText(path + "linq2db.Tests." + GetConfigName() + ".log", (message ?? "") + Environment.NewLine);
+		}
+
+		public static string GetTableName(string context, [System.Runtime.CompilerServices.CallerMemberName] string? methodName = null)
+		{
+			var tableName  = "xxPerson";
+
+			if (context.IsAnyOf(TestProvName.AllFirebird))
+			{
+				tableName += "_f";
+
+				if (context.IsRemote())
+					tableName += "l";
+
+				tableName += "_" + methodName;
+			}
+
+			if (context.IsAnyOf(TestProvName.AllOracle))
+			{
+				tableName += "_o";
+
+				if (context.IsRemote())
+					tableName += "l";
+			}
+
+			return tableName;
 		}
 	}
 }

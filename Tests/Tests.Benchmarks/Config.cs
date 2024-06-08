@@ -16,9 +16,9 @@ namespace LinqToDB.Benchmarks
 
 		private static IConfig Create()
 		{
-			var net472 = Job.Default.WithRuntime(ClrRuntime.Net472).WithDefault().AsBaseline();
-			var core31 = Job.Default.WithRuntime(CoreRuntime.Core31).WithDefault();
-			var net60  = Job.Default.WithRuntime(CoreRuntime.Core60).WithDefault();
+			var netfx = Job.Default.WithRuntime(ClrRuntime.Net462).WithDefault().AsBaseline();
+			var net60 = Job.Default.WithRuntime(CoreRuntime.Core60).WithDefault();
+			var net80 = Job.Default.WithRuntime(CoreRuntime.Core80).WithDefault();
 
 			return new ManualConfig()
 				.AddLogger         (DefaultConfig.Instance.GetLoggers        ().ToArray())
@@ -29,7 +29,7 @@ namespace LinqToDB.Benchmarks
 				.AddExporter       (MarkdownExporter.GitHub)
 				.AddDiagnoser      (MemoryDiagnoser.Default)
 				.WithArtifactsPath (@"..\..\..")
-				.AddJob            (net472, core31, net60);
+				.AddJob            (netfx, net60, net80);
 		}
 
 		private static Job WithDefault(this Job job)
@@ -41,7 +41,7 @@ namespace LinqToDB.Benchmarks
 				//.WithMaxIterationCount(6);
 		}
 
-		class FilteredColumnProvider : IColumnProvider
+		sealed class FilteredColumnProvider : IColumnProvider
 		{
 			private readonly IColumnProvider _provider;
 			public FilteredColumnProvider(IColumnProvider provider)
@@ -53,14 +53,12 @@ namespace LinqToDB.Benchmarks
 			{
 				return _provider
 					.GetColumns(summary)
-					// Job is not useful at all, other columns could be enabled later if somebody will find them useful
 					.Where(c => c.ColumnName != "Job"
 							&& c.ColumnName != "Error"
-							&& c.ColumnName != "Gen 0"
-							&& c.ColumnName != "Gen 1"
-							&& c.ColumnName != "Gen 2"
-							&& c.ColumnName != "StdDev"
-							&& c.ColumnName != "RatioSD");
+							&& c.ColumnName != "Median"
+							&& !c.ColumnName.StartsWith("Gen")
+							&& !c.ColumnName.Contains("Ratio")
+							&& c.ColumnName != "StdDev");
 			}
 		}
 	}

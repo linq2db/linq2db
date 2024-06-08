@@ -7,12 +7,20 @@ namespace LinqToDB.DataProvider.Sybase
 	using Configuration;
 
 	[UsedImplicitly]
-	class SybaseFactory : IDataProviderFactory
+	sealed class SybaseFactory : IDataProviderFactory
 	{
 		IDataProvider IDataProviderFactory.GetDataProvider(IEnumerable<NamedValue> attributes)
 		{
-			var assemblyName = attributes.FirstOrDefault(_ => _.Name == "assemblyName");
-			return SybaseTools.GetDataProvider(null, assemblyName?.Value);
+			var assemblyName = attributes.FirstOrDefault(_ => _.Name == "assemblyName")?.Value;
+
+			var provider = assemblyName switch
+			{
+				SybaseProviderAdapter.NativeAssemblyName  => SybaseProvider.Unmanaged,
+				SybaseProviderAdapter.ManagedAssemblyName => SybaseProvider.DataAction,
+				_                                         => SybaseProvider.AutoDetect
+			};
+
+			return SybaseTools.GetDataProvider(provider);
 		}
 	}
 }
