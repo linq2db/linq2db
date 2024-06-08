@@ -8,6 +8,7 @@
 
 	<ItemGroup>
 		<Compile Include="..\Linq\DataProvider\OracleTests.cs" Link="OracleTests.cs" />
+		<Compile Include="..\Linq\DataProvider\PostgreSQLTests.cs" Link="PostgreSQLTests.cs" />
 		<Compile Include="..\Linq\DataProvider\SQLiteTests.cs" Link="SQLiteTests.cs" />
 		<Compile Include="..\Linq\DataProvider\SqlServerTests.cs" Link="SqlServerTests.cs" />
 		<Compile Include="..\Linq\Linq\ConcatUnionTests.cs" Link="ConcatUnionTests.cs" />
@@ -19,6 +20,7 @@
 		<Compile Include="..\Linq\UserTests\Issue2767Tests.cs" Link="Issue2767Tests.cs" />
 		<Compile Include="..\Linq\UserTests\Issue2787Tests.cs" Link="Issue2787Tests.cs" />
 		<Compile Include="..\Linq\UserTests\Issue2743Tests.cs" Link="Issue2743Tests.cs" />
+		<Compile Include="..\Linq\UserTests\Issue3342Tests.cs" Link="Issue3342Tests.cs" />
 	</ItemGroup>
 
 	<ItemGroup>
