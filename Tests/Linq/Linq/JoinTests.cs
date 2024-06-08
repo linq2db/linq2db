@@ -2947,7 +2947,7 @@ namespace Tests.Linq
 			[PrimaryKey, Identity] public int    SectorId { get; set; }
 			[Column,     NotNull ] public string SectorName { get; set; } = null!;
 
-			[Association(ThisKey = nameof(SectorId), OtherKey = nameof(UserPositionSectorDTO.SectorId), Relationship = Relationship.OneToMany)]
+			[Association(ThisKey = nameof(SectorId), OtherKey = nameof(UserPositionSectorDTO.SectorId))]
 			public List<UserPositionSectorDTO> UserPositionSectors { get; set; } = null!;
 		}
 
@@ -2955,24 +2955,23 @@ namespace Tests.Linq
 		[Test]
 		public void Issue2421([DataSources] string context)
 		{
-			using (var db                  = GetDataContext(context))
-			using (var users               = db.CreateLocalTable<UserDTO>())
-			using (var userPositions       = db.CreateLocalTable<UserPositionDTO>())
-			using (var userPositionSectors = db.CreateLocalTable<UserPositionSectorDTO>())
-			using (var positions           = db.CreateLocalTable<PositionDTO>())
-			using (var sectors             = db.CreateLocalTable<SectorDTO>())
-			{
-				var query = sectors
-					.Select(x => new
-					{
-						SectorId = x.SectorId,
-						UserId   = x.UserPositionSectors
-							.Where(y => y.UserPosition.PositionId == 1)
-							.Select(y => y.UserPosition.User.UserId)
-					});
+			using var db                  = GetDataContext(context);
+			using var users               = db.CreateLocalTable<UserDTO>();
+			using var userPositions       = db.CreateLocalTable<UserPositionDTO>();
+			using var userPositionSectors = db.CreateLocalTable<UserPositionSectorDTO>();
+			using var positions           = db.CreateLocalTable<PositionDTO>();
+			using var sectors             = db.CreateLocalTable<SectorDTO>();
 
-				var result = query.ToArray();
-			}
+			var query = sectors
+				.Select(x => new
+				{
+					SectorId = x.SectorId,
+					UserId   = x.UserPositionSectors
+						.Where(y => y.UserPosition.PositionId == 1)
+						.Select(y => y.UserPosition.User.UserId)
+				});
+
+			var result = query.ToArray();
 		}
 		#endregion
 
