@@ -154,7 +154,7 @@ namespace LinqToDB.Linq.Builder
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool IsForceOuter(this ProjectFlags flags)
 		{
-			return (flags & ProjectFlags. ForceOuterAssociation) != 0;
+			return (flags & ProjectFlags.ForceOuterAssociation) != 0;
 		}
 
 
