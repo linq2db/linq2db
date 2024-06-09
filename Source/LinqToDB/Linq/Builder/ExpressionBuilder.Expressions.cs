@@ -733,7 +733,7 @@ namespace LinqToDB.Linq.Builder
 						return converted;
 					}
 
-					if (attr.ServerSideOnly || _flags.IsSql() || attr.PreferServerSide)
+					if (attr.ServerSideOnly || _flags.IsSql() || attr.PreferServerSide || attr.IsWindowFunction || attr.IsAggregate)
 					{
 						var converted = Builder.ConvertExtension(attr, _context, node, _flags.SqlFlag());
 						if (!ReferenceEquals(converted, node))
@@ -872,13 +872,19 @@ namespace LinqToDB.Linq.Builder
 					return TranslateExpression(node);
 				}
 
+				var saveFlags      = _flags;
+
+				_flags |= ProjectFlags.ForceOuterAssociation;
+
 				var saveDescriptor = _columnDescriptor;
-				_columnDescriptor  = null;
+				_columnDescriptor = null;
 				var test           = Visit(node.Test);
 				_columnDescriptor  = saveDescriptor;
 
 				var ifTrue  = Visit(node.IfTrue);
 				var ifFalse = Visit(node.IfFalse);
+
+				_flags = saveFlags;
 
 				if (test is ConstantExpression { Value: bool boolValue })
 				{

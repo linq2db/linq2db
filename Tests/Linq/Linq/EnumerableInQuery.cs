@@ -85,5 +85,17 @@ namespace Tests.Linq
 			}
 		}
 
+		[Test]
+		public void EnumerableAsQueryable([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var resultQuery = Array.Empty<Model.Person>().AsQueryable();
+
+			var query = db.GetTable<Model.Person>()
+				.Where(_ => !resultQuery.Select(m => m.ID).Contains(_.ID));
+
+			AssertQuery(query);
+		}
 	}
 }

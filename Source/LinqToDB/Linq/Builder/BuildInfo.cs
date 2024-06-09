@@ -103,9 +103,12 @@ namespace LinqToDB.Linq.Builder
 
 		public ProjectFlags GetFlags(ProjectFlags withFlag)
 		{
+			var flags = withFlag;
+
 			if (IsTest)
-				return withFlag | ProjectFlags.Test;
-			return withFlag;
+				flags |= ProjectFlags.Test;
+
+			return flags;
 		}
 
 	}
