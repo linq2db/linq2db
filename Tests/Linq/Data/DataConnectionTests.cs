@@ -424,8 +424,11 @@ namespace Tests.Data
 		{
 			public DbConnection5(DataOptions options) : base(options)
 			{
-				Assert.That(options.DataContextOptions.CommandTimeout, Is.EqualTo(91));
-				Assert.That(CommandTimeout,                            Is.EqualTo(91));
+				Assert.Multiple(() =>
+				{
+					Assert.That(options.DataContextOptions.CommandTimeout, Is.EqualTo(91));
+					Assert.That(CommandTimeout,                            Is.EqualTo(91));
+				});
 			}
 		}
 
