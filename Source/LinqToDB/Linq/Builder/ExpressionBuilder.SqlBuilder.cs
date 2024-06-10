@@ -4426,7 +4426,7 @@ namespace LinqToDB.Linq.Builder
 			if ((flags & (ProjectFlags.Root | ProjectFlags.AggregationRoot | ProjectFlags.AssociationRoot | ProjectFlags.ExtractProjection | ProjectFlags.Table)) == 0)
 			{
 				// try to find already converted to SQL
-				var sqlKey = new SqlCacheKey(path, null, null, null, flags.SqlFlag());
+				var sqlKey = new SqlCacheKey(path, null, null, forContext?.SelectQuery, flags.SqlFlag());
 				if (_cachedSql.TryGetValue(sqlKey, out var cachedSql) && cachedSql is SqlPlaceholderExpression)
 				{
 					return cachedSql;
@@ -4435,7 +4435,7 @@ namespace LinqToDB.Linq.Builder
 
 			var shouldCache = !flags.IsTest() && null != path.Find(1, (_, e) => e is ContextRefExpression);
 
-			var key = new SqlCacheKey(path, null, null, null, flags);
+			var key = new SqlCacheKey(path, null, null, forContext?.SelectQuery, flags);
 
 			Expression? expression;
 
@@ -4784,12 +4784,12 @@ namespace LinqToDB.Linq.Builder
 					if ((flags.HasFlag(ProjectFlags.SQL) ||
 					     flags.HasFlag(ProjectFlags.Keys)) && expression is SqlPlaceholderExpression)
 					{
-						var anotherKey = new SqlCacheKey(path, null, null, null, ProjectFlags.Expression);
+						var anotherKey = new SqlCacheKey(path, null, null, forContext?.SelectQuery, ProjectFlags.Expression);
 						_expressionCache[anotherKey] = expression;
 
 						if (flags.HasFlag(ProjectFlags.Keys))
 						{
-							anotherKey                   = new SqlCacheKey(path, null, null, null, ProjectFlags.Expression | ProjectFlags.Keys);
+							anotherKey                   = new SqlCacheKey(path, null, null, forContext?.SelectQuery, ProjectFlags.Expression | ProjectFlags.Keys);
 							_expressionCache[anotherKey] = expression;
 						}
 					}
