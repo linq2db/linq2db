@@ -2726,9 +2726,9 @@ namespace Tests.Linq
 		#region Issue 4098
 		sealed class Transaction
 		{
-			                            public string? InvestorId   { get; set; }
+										public string? InvestorId   { get; set; }
 			[Column(CanBeNull = false)] public string SecurityClass { get; set; } = null!;
-			                            public int     Units        { get; set; }
+										public int     Units        { get; set; }
 
 			public static readonly Transaction[] Data = new []
 			{
@@ -2742,9 +2742,9 @@ namespace Tests.Linq
 		[Table(IsColumnAttributeRequired = false)]
 		sealed class InvestorPayment
 		{
-			                            public int     Id         { get; set; }
+										public int     Id         { get; set; }
 			[Column(CanBeNull = false)] public string  InvestorId { get; set; } = null!;
-			                            public int     NetPayment { get; set; }
+										public int     NetPayment { get; set; }
 
 			public static readonly InvestorPayment[] Data = new []
 			{
@@ -2755,8 +2755,8 @@ namespace Tests.Linq
 
 		sealed class PaymentEvent
 		{
-			                            public int     Id           { get; set; }
-			                            public string? Description  { get; set; }
+										public int     Id           { get; set; }
+										public string? Description  { get; set; }
 			[Column(CanBeNull = false)] public string SecurityClass { get; set; } = null!;
 
 			public static readonly PaymentEvent[] Data = new []
@@ -3096,6 +3096,198 @@ namespace Tests.Linq
 				};
 
 			AssertQuery(query);
+		}
+
+		[Sql.Expression("(COUNT_BIG(*) * 100E0 / SUM(COUNT_BIG(*)) OVER())", ServerSideOnly = true, IsAggregate = true)]
+		private static double CountPercentsAggregate()
+		{
+			throw new InvalidOperationException("This function should be used only in database code");
+		}
+
+		[Sql.Expression("(COUNT_BIG(*) * 100E0 / SUM(COUNT_BIG(*)) OVER())", ServerSideOnly = true, IsWindowFunction = true)]
+		private static double CountPercentsWindow()
+		{
+			throw new InvalidOperationException("This function should be used only in database code");
+		}
+
+		[Sql.Expression("(COUNT_BIG(*) * 100E0 / SUM(COUNT_BIG(*)) OVER())", ServerSideOnly = true)]
+		private static double CountPercentsNoAggregate()
+		{
+			throw new InvalidOperationException("This function should be used only in database code");
+		}
+
+		[Test]
+		public void CustomAggregate_Having_AsAggregate([IncludeDataSources(true, TestProvName.AllSqlServer)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var groupId = 2;
+
+			var query = db.Child
+				.GroupBy(c => new
+				{
+					id = new { c.ChildID },
+					group = c.Parent!.ParentID,
+				})
+				.Having(g => g.Key.group == groupId)
+				.Select(g => new
+				{
+					id = g.Key.id.ChildID,
+					reference = (int?)g.Key.group,
+					cnt = new
+					{
+						count = g.LongCount(),
+						percents = CountPercentsAggregate()
+					}
+				})
+				.OrderByDescending(_ => _.cnt.count);
+
+			query.Should().HaveCount(2);
+		}
+
+		[Test]
+		public void CustomAggregate_Having_AsWindow([IncludeDataSources(true, TestProvName.AllSqlServer)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var groupId = 2;
+
+			var query = db.Child
+				.GroupBy(c => new
+				{
+					id = new { c.ChildID },
+					group = c.Parent!.ParentID,
+				})
+				.Having(g => g.Key.group == groupId)
+				.Select(g => new
+				{
+					id = g.Key.id.ChildID,
+					reference = (int?)g.Key.group,
+					cnt = new
+					{
+						count = g.LongCount(),
+						percents = CountPercentsWindow()
+					}
+				})
+				.OrderByDescending(_ => _.cnt.count);
+
+			query.Should().HaveCount(2);
+		}
+
+		[Test]
+		public void CustomAggregate_Having_AsExpression([IncludeDataSources(true, TestProvName.AllSqlServer)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var groupId = 2;
+
+			var query = db.Child
+				.GroupBy(c => new
+				{
+					id = new { c.ChildID },
+					group = c.Parent!.ParentID,
+				})
+				.Having(g => g.Key.group == groupId)
+				.Select(g => new
+				{
+					id = g.Key.id.ChildID,
+					reference = (int?)g.Key.group,
+					cnt = new
+					{
+						count = g.LongCount(),
+						percents = CountPercentsNoAggregate()
+					}
+				})
+				.OrderByDescending(_ => _.cnt.count);
+
+			query.Should().HaveCount(2);
+		}
+
+		[Test]
+		public void CustomAggregate_Where_AsAggregate([IncludeDataSources(true, TestProvName.AllSqlServer)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var groupId = 2;
+
+			var query = db.Child
+				.GroupBy(c => new
+				{
+					id = new { c.ChildID },
+					group = c.Parent!.ParentID,
+				})
+				.Where(g => g.Key.group == groupId)
+				.Select(g => new
+				{
+					id = g.Key.id.ChildID,
+					reference = (int?)g.Key.group,
+					cnt = new
+					{
+						count = g.LongCount(),
+						percents = CountPercentsAggregate()
+					}
+				})
+				.OrderByDescending(_ => _.cnt.count);
+
+			query.Should().HaveCount(2);
+		}
+
+		[Test]
+		public void CustomAggregate_Where_AsWindow([IncludeDataSources(true, TestProvName.AllSqlServer)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var groupId = 2;
+
+			var query = db.Child
+				.GroupBy(c => new
+				{
+					id = new { c.ChildID },
+					group = c.Parent!.ParentID,
+				})
+				.Where(g => g.Key.group == groupId)
+				.Select(g => new
+				{
+					id = g.Key.id.ChildID,
+					reference = (int?)g.Key.group,
+					cnt = new
+					{
+						count = g.LongCount(),
+						percents = CountPercentsWindow()
+					}
+				})
+				.OrderByDescending(_ => _.cnt.count);
+
+			query.Should().HaveCount(2);
+		}
+
+		[Test]
+		public void CustomAggregate_Where_AsExpression([IncludeDataSources(true, TestProvName.AllSqlServer)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var groupId = 2;
+
+			var query = db.Child
+				.GroupBy(c => new
+				{
+					id = new { c.ChildID },
+					group = c.Parent!.ParentID,
+				})
+				.Where(g => g.Key.group == groupId)
+				.Select(g => new
+				{
+					id = g.Key.id.ChildID,
+					reference = (int?)g.Key.group,
+					cnt = new
+					{
+						count = g.LongCount(),
+						percents = CountPercentsNoAggregate()
+					}
+				})
+				.OrderByDescending(_ => _.cnt.count);
+
+			query.Should().HaveCount(2);
 		}
 	}
 }

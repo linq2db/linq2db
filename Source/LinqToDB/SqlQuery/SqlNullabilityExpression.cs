@@ -3,12 +3,10 @@ using System.Linq;
 
 namespace LinqToDB.SqlQuery
 {
-	using Mapping;
-
-	public class SqlNullabilityExpression : ISqlExpression
+	public class SqlNullabilityExpression : SqlExpressionBase
 	{
 		readonly bool           _isNullable;
-		public           ISqlExpression SqlExpression { get; private set; }
+		public   ISqlExpression SqlExpression { get; private set; }
 
 		public SqlNullabilityExpression(ISqlExpression sqlExpression, bool isNullable)
 		{
@@ -52,36 +50,7 @@ namespace LinqToDB.SqlQuery
 			SqlExpression = sqlExpression;
 		}
 
-		#region Overrides
-
-#if OVERRIDETOSTRING
-
-		public override string ToString()
-		{
-			return this.ToDebugString();
-		}
-
-#endif
-
-		#endregion
-
-		#region IEquatable<ISqlExpression> Members
-
-		internal static Func<ISqlExpression,ISqlExpression,bool> DefaultComparer = (x, y) => true;
-
-		bool IEquatable<ISqlExpression>.Equals(ISqlExpression? other)
-		{
-			if (other == null)
-				return false;
-
-			return SqlExpression.Equals(other, DefaultComparer);
-		}
-
-		#endregion
-
-		#region ISqlExpression Members
-
-		public bool Equals(ISqlExpression other, Func<ISqlExpression, ISqlExpression, bool> comparer)
+		public override bool Equals(ISqlExpression other, Func<ISqlExpression, ISqlExpression, bool> comparer)
 		{
 			if (ReferenceEquals(this, other))
 				return true;
@@ -92,29 +61,23 @@ namespace LinqToDB.SqlQuery
 			return SqlExpression.Equals(((SqlNullabilityExpression)other).SqlExpression, comparer);
 		}
 
-		public bool CanBeNullable(NullabilityContext nullability) => CanBeNull;
+		public override bool CanBeNullable(NullabilityContext nullability) => CanBeNull;
 
-		public bool  CanBeNull  => _isNullable;
-		public int   Precedence => SqlExpression.Precedence;
-		public Type? SystemType => SqlExpression.SystemType;
+		public          bool             CanBeNull   => _isNullable;
+		public override int              Precedence  => SqlExpression.Precedence;
+		public override Type?            SystemType  => SqlExpression.SystemType;
+		public override QueryElementType ElementType => QueryElementType.SqlNullabilityExpression;
 
 		public override int GetHashCode()
 		{
+			// ReSharper disable once NonReadonlyMemberInGetHashCode
 			return SqlExpression.GetHashCode();
 		}
 
-		#endregion
-
-		#region IQueryElement Members
-
-#if DEBUG
-		public string DebugText => this.ToDebugString();
-#endif
-		public QueryElementType ElementType => QueryElementType.SqlNullabilityExpression;
-
-		QueryElementTextWriter IQueryElement.ToString(QueryElementTextWriter writer)
+		public override QueryElementTextWriter ToString(QueryElementTextWriter writer)
 		{
 			writer
+				//.DebugAppendUniqueId(this)
 				.Append('(')
 				.AppendElement(SqlExpression)
 				.Append(")");
@@ -124,8 +87,5 @@ namespace LinqToDB.SqlQuery
 
 			return writer;
 		}
-
-		#endregion
-
 	}
 }

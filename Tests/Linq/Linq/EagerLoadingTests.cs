@@ -2510,11 +2510,14 @@ FROM
 			using var tc = db.CreateLocalTable(EntityC.Data);
 			using var td = db.CreateLocalTable(EntityD.Data);
 
-			var result = testCase == 1
-				? db.GetTable<EntityA>().Select(e => new { e.Id, ObjectBOptional = e.ObjectBOptional == null ? null : new { e.ObjectBOptional.Id, e.ObjectBOptional.ObjectC, ObjectsD = (EntityD[]?)null } }).ToList()
-				: testCase == 2
-					? db.GetTable<EntityA>().Select(e => new { e.Id, ObjectBOptional = e.ObjectBOptional == null ? null : new { e.ObjectBOptional.Id, ObjectC = (EntityC?)null, e.ObjectBOptional.ObjectsD } }).ToList()
-					: db.GetTable<EntityA>().Select(e => new { e.Id, ObjectBOptional = e.ObjectBOptional == null ? null : new { e.ObjectBOptional.Id, e.ObjectBOptional.ObjectC, e.ObjectBOptional.ObjectsD } }).ToList();
+			var query = testCase switch
+			{
+				1 => db.GetTable<EntityA>().Select(e => new { e.Id, ObjectBOptional = e.ObjectBOptional == null ? null : new { e.ObjectBOptional.Id, e.ObjectBOptional.ObjectC, ObjectsD = (EntityD[]?)null } }),
+				2 => db.GetTable<EntityA>().Select(e => new { e.Id, ObjectBOptional = e.ObjectBOptional == null ? null : new { e.ObjectBOptional.Id, ObjectC = (EntityC?)null, e.ObjectBOptional.ObjectsD } }),
+				_ => db.GetTable<EntityA>().Select(e => new { e.Id, ObjectBOptional = e.ObjectBOptional == null ? null : new { e.ObjectBOptional.Id, e.ObjectBOptional.ObjectC, e.ObjectBOptional.ObjectsD } })
+			};
+
+			var result = query.ToList();
 
 			var expected = new int?[][]
 			{

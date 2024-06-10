@@ -105,9 +105,9 @@ namespace LinqToDB
 			if (type == typeof(LinqOptions))        return (TSet?)(IOptionSet?)LinqOptions;
 			if (type == typeof(RetryPolicyOptions)) return (TSet?)(IOptionSet?)RetryPolicyOptions;
 			if (type == typeof(ConnectionOptions))  return (TSet?)(IOptionSet?)ConnectionOptions;
-			if (type == typeof(DataContextOptions)) return (TSet?)(IOptionSet?)_dataContextOptions;
-			if (type == typeof(BulkCopyOptions))    return (TSet?)(IOptionSet?)_bulkCopyOptions;
-			if (type == typeof(SqlOptions))         return (TSet?)(IOptionSet?)_sqlOptions;
+			if (type == typeof(DataContextOptions)) return (TSet?)(IOptionSet?)DataContextOptions;
+			if (type == typeof(BulkCopyOptions))    return (TSet?)(IOptionSet?)BulkCopyOptions;
+			if (type == typeof(SqlOptions))         return (TSet?)(IOptionSet?)SqlOptions;
 
 			return base.Find<TSet>();
 		}
