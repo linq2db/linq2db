@@ -2157,5 +2157,33 @@ namespace Tests.Linq
 				query.ToList();
 			}
 		}
+
+		[Test]
+		public void Issue_CompareQueries1([DataSources(TestProvName.AllClickHouse)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query1 = db.Person.Where(p => new int[] { 1, 2 }.Contains(p.ID)).Select(p => p.ID);
+			var query2 = db.Person.Where(p => new int[0].Contains(p.ID)).Select(p => p.ID);
+
+			var result1 = query1.Where(rec => !query2.Contains(rec)).Select(p => Sql.Ext.Count(p, Sql.AggregateModifier.None).ToValue()).Single() == 0;
+			var result2 = query2.Where(rec => !query1.Contains(rec)).Select(p => Sql.Ext.Count(p, Sql.AggregateModifier.None).ToValue()).Single() == 0;
+
+			Assert.That(result1 && result2, Is.False);
+		}
+
+		[Test]
+		public void Issue_CompareQueries2([DataSources(TestProvName.AllClickHouse)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query1 = db.Person.Where(p => new int[] { 1, 2 }.Contains(p.ID)).Select(p => p.ID);
+			var query2 = db.Person.Where(p => new int[] { 3 }.Contains(p.ID)).Select(p => p.ID);
+
+			var result1 = query1.Where(rec => !query2.Contains(rec)).Select(p => Sql.Ext.Count(p, Sql.AggregateModifier.None).ToValue()).Single() == 0;
+			var result2 = query2.Where(rec => !query1.Contains(rec)).Select(p => Sql.Ext.Count(p, Sql.AggregateModifier.None).ToValue()).Single() == 0;
+
+			Assert.That(result1 && result2, Is.False);
+		}
 	}
 }
