@@ -2137,5 +2137,25 @@ namespace Tests.Linq
 				return subquery;
 			}
 		}
+
+		[Test]
+		public void Issue_Filter_Checked([DataSources(TestProvName.AllClickHouse)] string context)
+		{
+			checked
+			{
+				using var db = GetDataContext(context);
+
+				var query = LinqExtensions.FullJoin(
+						db.Person.Select(_ => (int?)123).Take(1).GroupBy(_ => _!).Select(_ => new { _.Key, Count = _.Count() }),
+						db.Person.Select(_ => ((int?)null)!).Where(_ => false).GroupBy(_ => _!).Select(_ => new { _.Key, Count = _.Count() }),
+						(a1, a2) => a1.Count == a2.Count,
+						(a1, a2) => new { LeftCount = (int?)a1.Count, RightCount = (int?)a2.Count })
+					.Where(_ => _.LeftCount == null || _.RightCount == null);
+
+				// crashes
+				//AssertQuery(query);
+				query.ToList();
+			}
+		}
 	}
 }

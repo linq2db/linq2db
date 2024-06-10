@@ -209,7 +209,7 @@ namespace LinqToDB
 
 			private static Expression Transform(Expression e)
 			{
-				if (e.NodeType == ExpressionType.Convert || e.NodeType == ExpressionType.ConvertChecked)
+				if (e.NodeType is ExpressionType.Convert or ExpressionType.ConvertChecked)
 				{
 					var unary  = (UnaryExpression)e;
 					var method = _method.MakeGenericMethod(unary.Operand.Type, unary.Type);
