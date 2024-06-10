@@ -2044,5 +2044,98 @@ namespace Tests.Linq
 
 			AssertQuery(query);
 		}
+
+		[Test]
+		public void Issue_SubQueryFilter3([DataSources(TestProvName.AllClickHouse)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var filter1 = "John";
+			var filter2 = "Tester";
+
+			IQueryable<Model.Patient> query = db.Patient;
+
+			var whereParameter = Expression.Parameter(typeof(Model.Patient), "patient");
+
+			query = query.Where(
+				Expression.Lambda<Func<Model.Patient, bool>>(
+					Expression.AndAlso(
+						BuildFilterSubQuery(db, filter1, whereParameter),
+						BuildFilterSubQuery(db, filter2, whereParameter)),
+					whereParameter))
+				.OrderBy(r => r.PersonID);
+
+			AssertQuery(query);
+
+			static Expression BuildFilterSubQuery(
+				ITestDataContext db,
+				string filter,
+				ParameterExpression whereParameter)
+			{
+				// db.Person
+				//    .Where(p => p.FirstName.Contains(filter))
+				//    .Any(e => e.ID == subquery2.First())
+				var subquery2 = BuildFilterSubQuery2(db, whereParameter);
+
+				var subquery = db.Person.Where(p => p.FirstName.Contains(filter)).Expression;
+
+				subquery2 = Expression.Call(
+					typeof(Queryable),
+					nameof(Queryable.First),
+					[typeof(int)],
+					subquery2);
+
+				var anyParameter = Expression.Parameter(typeof(Model.Person), "e");
+
+				var predicate = Expression.Lambda<Func<Model.Person, bool>>(
+					Expression.Equal(
+						Expression.PropertyOrField(anyParameter, nameof(Model.Person.ID)),
+						subquery2),
+					anyParameter);
+
+				subquery = Expression.Call(
+					typeof(Queryable),
+					nameof(Queryable.Any),
+					[typeof(Model.Person)],
+					subquery,
+					predicate);
+
+				return subquery;
+			}
+
+			static Expression BuildFilterSubQuery2(ITestDataContext db, ParameterExpression whereParameter)
+			{
+				// db.Person.Where(p => p.ID == patient.PersonID).Select(p => p.ID)
+				var subquery = db.Person.Expression;
+
+				var personParameter = Expression.Parameter(typeof(Model.Person), "d");
+
+				var predicate = Expression.Lambda<Func<Model.Person, bool>>(
+					Expression.Equal(
+						Expression.PropertyOrField(personParameter, nameof(Model.Person.ID)),
+						Expression.PropertyOrField(whereParameter, nameof(Model.Patient.PersonID))),
+					personParameter);
+
+				subquery = Expression.Call(
+					typeof(Queryable),
+					nameof(Queryable.Where),
+					[typeof(Model.Person)],
+					subquery,
+					predicate);
+
+				var selector = Expression.Lambda<Func<Model.Person, int>>(
+					Expression.PropertyOrField(personParameter, nameof(Model.Person.ID)),
+					personParameter);
+
+				subquery = Expression.Call(
+					typeof(Queryable),
+					nameof(Queryable.Select),
+					[typeof(Model.Person), typeof(int)],
+					subquery,
+					selector);
+
+				return subquery;
+			}
+		}
 	}
 }
