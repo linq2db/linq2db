@@ -2046,7 +2046,15 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Issue_SubQueryFilter3([DataSources(TestProvName.AllClickHouse)] string context)
+		public void Issue_SubQueryFilter3([DataSources(
+			TestProvName.AllClickHouse, 
+			TestProvName.AllAccess, 
+			TestProvName.AllSapHana, 
+			TestProvName.AllFirebirdLess4, 
+			TestProvName.AllOracle, 
+			TestProvName.AllMySql57, 
+			TestProvName.AllSybase
+			)] string context)
 		{
 			using var db = GetDataContext(context);
 
