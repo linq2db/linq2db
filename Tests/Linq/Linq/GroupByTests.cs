@@ -3289,5 +3289,216 @@ namespace Tests.Linq
 
 			query.Should().HaveCount(2);
 		}
+
+		[Test]
+		public void Issue_WithToList([IncludeDataSources(true, TestProvName.AllSqlServer)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable<TestAggregateTable>();
+
+			var id  = Guid.NewGuid();
+			var id2 = Guid.NewGuid();
+
+			var now = DateTimeOffset.Now;
+
+			db.Insert(new TestAggregateTable()
+			{
+				Id          = id,
+				ReferenceId = null,
+				DateTime    = now
+			});
+
+			db.Insert(new TestAggregateTable()
+			{
+				Id          = id2,
+				ReferenceId = id,
+				DateTime    = now
+			});
+
+			var results = db
+				.GetTable<TestAggregateTable>()
+				.GroupBy(_ => new
+				{
+					key   = (Guid?)_.Reference!.Id,
+					sort  = _.ReferenceId,
+				})
+				.Select(_ => _.Key)
+				.OrderBy(_ => _.sort)
+				.ToList()
+				.Select(group => new
+				{
+					data = db.GetTable<TestAggregateTable>()
+						.GroupBy(_ => new
+						{
+							id    = new { _.Id },
+							group = _.Reference!.Id,
+							key   = new
+							{
+								hours   = ByHour(_.DateTime, TimeZoneInfo.Local.Id),
+								minutes = ByMinute(_.DateTime, TimeZoneInfo.Local.Id)
+							}
+						})
+						.Having(_ => _.Key.group == group.key)
+						.Select(_ => new
+						{
+							id        = _.Key.id.Id,
+							reference = (Guid?)_.Key.group,
+							cnt = new
+							{
+								count    = _.LongCount(),
+								percents = CountPercents()
+							},
+							x = _.Key.key
+						})
+						.OrderByDescending(_ => _.cnt.count)
+						.ToList()
+				}).ToList();
+
+			Assert.That(results, Has.Count.EqualTo(2));
+			Assert.Multiple(() =>
+			{
+				Assert.That(results[0].data, Has.Count.EqualTo(1));
+				Assert.That(results[1].data, Has.Count.EqualTo(1));
+			});
+
+			Assert.Multiple(() =>
+			{
+				Assert.That(results[0].data[0].id, Is.EqualTo(id));
+				Assert.That(results[0].data[0].reference, Is.Null);
+				Assert.That(results[0].data[0].cnt.count, Is.EqualTo(1));
+				Assert.That(results[0].data[0].cnt.percents, Is.EqualTo(100));
+				Assert.That(results[0].data[0].x.hours, Is.EqualTo(now.Hour));
+				Assert.That(results[0].data[0].x.minutes, Is.EqualTo(now.Minute));
+
+				Assert.That(results[1].data[0].id, Is.EqualTo(id2));
+				Assert.That(results[1].data[0].reference, Is.EqualTo(id));
+				Assert.That(results[1].data[0].cnt.count, Is.EqualTo(1));
+				Assert.That(results[1].data[0].cnt.percents, Is.EqualTo(100));
+				Assert.That(results[1].data[0].x.hours, Is.EqualTo(now.Hour));
+				Assert.That(results[1].data[0].x.minutes, Is.EqualTo(now.Minute));
+			});
+		}
+
+		[Test]
+		public void Issue_WithoutToList([IncludeDataSources(true, TestProvName.AllSqlServer)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable<TestAggregateTable>();
+
+			var id  = Guid.NewGuid();
+			var id2 = Guid.NewGuid();
+
+			var now = DateTimeOffset.Now;
+
+			db.Insert(new TestAggregateTable()
+			{
+				Id          = id,
+				ReferenceId = null,
+				DateTime    = now
+			});
+
+			db.Insert(new TestAggregateTable()
+			{
+				Id          = id2,
+				ReferenceId = id,
+				DateTime    = now
+			});
+
+			var results = db
+				.GetTable<TestAggregateTable>()
+				.GroupBy(_ => new
+				{
+					key   = (Guid?)_.Reference!.Id,
+					sort  = _.ReferenceId,
+				})
+				.Select(_ => _.Key)
+				.OrderBy(_ => _.sort)
+				.Select(group => new
+				{
+					data = db.GetTable<TestAggregateTable>()
+						.GroupBy(_ => new
+						{
+							id    = new { _.Id },
+							group = _.Reference!.Id,
+							key   = new
+							{
+								hours   = ByHour(_.DateTime, TimeZoneInfo.Local.Id),
+								minutes = ByMinute(_.DateTime, TimeZoneInfo.Local.Id)
+							}
+						})
+						.Having(_ => _.Key.group == group.key)
+						.Select(_ => new
+						{
+							id        = _.Key.id.Id,
+							reference = (Guid?)_.Key.group,
+							cnt = new
+							{
+								count    = _.LongCount(),
+								percents = CountPercents()
+							},
+							x = _.Key.key
+						})
+						.OrderByDescending(_ => _.cnt.count)
+						.ToList()
+				}).ToList();
+
+			Assert.That(results, Has.Count.EqualTo(2));
+			Assert.Multiple(() =>
+			{
+				Assert.That(results[0].data, Has.Count.EqualTo(1));
+				Assert.That(results[1].data, Has.Count.EqualTo(1));
+			});
+
+			Assert.Multiple(() =>
+			{
+				Assert.That(results[0].data[0].id, Is.EqualTo(id));
+				Assert.That(results[0].data[0].reference, Is.Null);
+				Assert.That(results[0].data[0].cnt.count, Is.EqualTo(1));
+				Assert.That(results[0].data[0].cnt.percents, Is.EqualTo(100));
+				Assert.That(results[0].data[0].x.hours, Is.EqualTo(now.Hour));
+				Assert.That(results[0].data[0].x.minutes, Is.EqualTo(now.Minute));
+
+				Assert.That(results[1].data[0].id, Is.EqualTo(id2));
+				Assert.That(results[1].data[0].reference, Is.EqualTo(id));
+				Assert.That(results[1].data[0].cnt.count, Is.EqualTo(1));
+				Assert.That(results[1].data[0].cnt.percents, Is.EqualTo(100));
+				Assert.That(results[1].data[0].x.hours, Is.EqualTo(now.Hour));
+				Assert.That(results[1].data[0].x.minutes, Is.EqualTo(now.Minute));
+			});
+		}
+
+		[Sql.Expression("COUNT_BIG(*) * 100E0 / SUM(COUNT_BIG(*)) OVER()", ServerSideOnly = true, Precedence = Precedence.Multiplicative, IsWindowFunction = true)]
+		public static double CountPercents()
+		{
+			throw new InvalidOperationException("This function should be used only in database code");
+		}
+
+		[Sql.Expression("DATEPART(minute, {0} AT TIME ZONE {1})", ServerSideOnly = true, IsNullable = Sql.IsNullableType.SameAsFirstParameter)]
+		public static int? ByMinute(DateTimeOffset? datetime, string tzId)
+		{
+			return datetime.HasValue ? ByMinute(datetime.Value, tzId) : null;
+		}
+
+		[Sql.Expression("DATEPART(hour, {0} AT TIME ZONE {1})", ServerSideOnly = true, IsNullable = Sql.IsNullableType.SameAsFirstParameter)]
+		static int? ByHour(DateTimeOffset? datetime, string tzId)
+		{
+			return datetime.HasValue ? ByHour(datetime.Value, tzId) : null;
+		}
+
+		[Table]
+		public class TestAggregateTable
+		{
+			[Column]
+			public Guid Id { get; set; }
+
+			[Column]
+			public Guid? ReferenceId { get; set; }
+
+			[Column]
+			public DateTimeOffset? DateTime { get; set; }
+
+			[Association(ThisKey = nameof(ReferenceId), OtherKey = nameof(Id), CanBeNull = true)]
+			public TestAggregateTable? Reference { get; set; }
+		}
 	}
 }

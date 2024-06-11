@@ -312,6 +312,7 @@ namespace LinqToDB.Expressions
 					break;
 
 				case ExpressionType.Convert:
+				case ExpressionType.ConvertChecked:
 				case ExpressionType.Throw:
 				case ExpressionType.Not:
 				case ExpressionType.TypeAs:
@@ -596,7 +597,7 @@ namespace LinqToDB.Expressions
 		{
 			if (memberExpression.Expression != null)
 			{
-				if (memberExpression.Expression.NodeType == ExpressionType.Convert
+				if (memberExpression.Expression.NodeType is ExpressionType.Convert or ExpressionType.ConvertChecked
 					|| memberExpression.Expression is BinaryExpression)
 				{
 					_stringBuilder.Append("(");
@@ -926,6 +927,22 @@ namespace LinqToDB.Expressions
 			// ReSharper disable once SwitchStatementMissingSomeCases
 			switch (unaryExpression.NodeType)
 			{
+				case ExpressionType.ConvertChecked:
+					_stringBuilder.Append("checked(" + unaryExpression.Type.ShortDisplayName() + ")");
+
+					if (unaryExpression.Operand is BinaryExpression)
+					{
+						_stringBuilder.Append("(");
+						Visit(unaryExpression.Operand);
+						_stringBuilder.Append(")");
+					}
+					else
+					{
+						Visit(unaryExpression.Operand);
+					}
+
+					break;
+
 				case ExpressionType.Convert:
 					_stringBuilder.Append("(" + unaryExpression.Type.ShortDisplayName() + ")");
 

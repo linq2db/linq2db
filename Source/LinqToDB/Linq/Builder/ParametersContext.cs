@@ -556,7 +556,8 @@ namespace LinqToDB.Linq.Builder
 
 						return e;
 					}
-					case ExpressionType.Convert:
+					case ExpressionType.Convert       :
+					case ExpressionType.ConvertChecked:
 					{
 						var ce = (UnaryExpression) e;
 						if (ce.Operand.Type.IsNullable() && !ce.Type.IsNullable())

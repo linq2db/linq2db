@@ -2145,5 +2145,53 @@ namespace Tests.Linq
 				return subquery;
 			}
 		}
+
+		[Test]
+		public void Issue_Filter_Checked([DataSources(TestProvName.AllClickHouse)] string context)
+		{
+			checked
+			{
+				using var db = GetDataContext(context);
+
+				var query = LinqExtensions.FullJoin(
+						db.Person.Select(_ => (int?)123).Take(1).GroupBy(_ => _!).Select(_ => new { _.Key, Count = _.Count() }),
+						db.Person.Select(_ => ((int?)null)!).Where(_ => false).GroupBy(_ => _!).Select(_ => new { _.Key, Count = _.Count() }),
+						(a1, a2) => a1.Count == a2.Count,
+						(a1, a2) => new { LeftCount = (int?)a1.Count, RightCount = (int?)a2.Count })
+					.Where(_ => _.LeftCount == null || _.RightCount == null);
+
+				// crashes
+				//AssertQuery(query);
+				query.ToList();
+			}
+		}
+
+		[Test]
+		public void Issue_CompareQueries1([DataSources(TestProvName.AllClickHouse)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query1 = db.Person.Where(p => new int[] { 1, 2 }.Contains(p.ID)).Select(p => p.ID);
+			var query2 = db.Person.Where(p => new int[0].Contains(p.ID)).Select(p => p.ID);
+
+			var result1 = query1.Where(rec => !query2.Contains(rec)).Select(p => Sql.Ext.Count(p, Sql.AggregateModifier.None).ToValue()).Single() == 0;
+			var result2 = query2.Where(rec => !query1.Contains(rec)).Select(p => Sql.Ext.Count(p, Sql.AggregateModifier.None).ToValue()).Single() == 0;
+
+			Assert.That(result1 && result2, Is.False);
+		}
+
+		[Test]
+		public void Issue_CompareQueries2([DataSources(TestProvName.AllClickHouse)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query1 = db.Person.Where(p => new int[] { 1, 2 }.Contains(p.ID)).Select(p => p.ID);
+			var query2 = db.Person.Where(p => new int[] { 3 }.Contains(p.ID)).Select(p => p.ID);
+
+			var result1 = query1.Where(rec => !query2.Contains(rec)).Select(p => Sql.Ext.Count(p, Sql.AggregateModifier.None).ToValue()).Single() == 0;
+			var result2 = query2.Where(rec => !query1.Contains(rec)).Select(p => Sql.Ext.Count(p, Sql.AggregateModifier.None).ToValue()).Single() == 0;
+
+			Assert.That(result1 && result2, Is.False);
+		}
 	}
 }
