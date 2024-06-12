@@ -50,23 +50,29 @@ namespace LinqToDB.DataProvider.Access.Translation
 
 				var partStr = datepart switch
 				{
-					Sql.DateParts.Year      => "yyyy",
-					Sql.DateParts.Quarter   => "q",
-					Sql.DateParts.Month     => "m",
-					Sql.DateParts.DayOfYear => "y",
-					Sql.DateParts.Day       => "d",
-					Sql.DateParts.Week      => "ww",
-					Sql.DateParts.WeekDay   => "w",
-					Sql.DateParts.Hour      => "h",
-					Sql.DateParts.Minute    => "n",
-					Sql.DateParts.Second    => "s",
-					_                       => null,
+					Sql.DateParts.Year        => "yyyy",
+					Sql.DateParts.Quarter     => "q",
+					Sql.DateParts.Month       => "m",
+					Sql.DateParts.DayOfYear   => "y",
+					Sql.DateParts.Day         => "d",
+					Sql.DateParts.Week        => "ww",
+					Sql.DateParts.WeekDay     => "w",
+					Sql.DateParts.Hour        => "h",
+					Sql.DateParts.Minute      => "n",
+					Sql.DateParts.Second      => "s",
+					Sql.DateParts.Millisecond => "s",
+					_                         => null,
 				};
 
 				if (partStr == null)
 					return null;
 
-				var resultExpression = factory.Function(factory.GetDbDataType(dateTimeExpression), "DateAdd", factory.Value(partStr), increment, dateTimeExpression);
+				var value = factory.Value(partStr);
+
+				if (datepart == Sql.DateParts.Millisecond)
+					value = factory.Div(value, 1000);
+
+				var resultExpression = factory.Function(factory.GetDbDataType(dateTimeExpression), "DateAdd", value, increment, dateTimeExpression);
 				return resultExpression;
 			}
 

@@ -231,7 +231,17 @@ namespace LinqToDB.DataProvider.Informix.Translation
 					}
 
 					case Sql.DateParts.Millisecond:
-						return null;
+					{
+						var result =
+							factory.Cast(
+								factory.Cast(
+									factory.Fragment(intervalType, Precedence.Primary, "{0}::datetime Second to Fraction", dateTimeExpression),
+									factory.GetDbDataType(typeof(string)).WithDataType(DataType.Char).WithLength(3)),
+								intDataType
+							);
+
+						return result;
+					}
 
 					default:
 						return null;

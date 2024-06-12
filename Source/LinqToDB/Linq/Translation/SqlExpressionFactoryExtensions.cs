@@ -98,6 +98,14 @@ namespace LinqToDB.Linq.Translation
 			return factory.Div(dbDataType, x, factory.Value(dbDataType, value));
 		}
 
+		public static ISqlExpression Div<T>(this ISqlExpressionFactory factory, ISqlExpression x, T value)
+			where T : struct
+		{
+			var dbDataType = factory.GetDbDataType(x);
+			return factory.Div(dbDataType, x, factory.Value(dbDataType, value));
+		}
+
+
 		public static ISqlExpression Multiply(this ISqlExpressionFactory factory, DbDataType dbDataType, ISqlExpression x, ISqlExpression y)
 		{
 			return new SqlBinaryExpression(dbDataType, x, "*", y, Precedence.Multiplicative);

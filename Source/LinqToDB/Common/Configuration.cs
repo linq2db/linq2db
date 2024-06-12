@@ -63,6 +63,11 @@ namespace LinqToDB.Common
 	public static class Configuration
 	{
 		/// <summary>
+		/// Fixes only partly working datediff and timespanpart calls in ExpressionBuilderSqlBuilder
+		/// </summary>
+		internal static bool DisableLegacySqlBuilderDateDiffCalls;
+
+		/// <summary>
 		/// If <c>true</c> - non-primitive and non-enum value types (structures) will be treated as scalar types (e.g. <see cref="DateTime"/>) during mapping;
 		/// otherwise they will be treated the same way as classes.
 		/// Default value: <c>true</c>.

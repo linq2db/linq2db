@@ -106,6 +106,10 @@ namespace LinqToDB.DataProvider.MySql.Translation
 						var microsecondFunc = factory.Div(intDataType, factory.Function(intDataType, "Microsecond", dateTimeExpression), 1000);
 						return microsecondFunc;
 					}
+					case Sql.DateParts.Microsecond:
+					{
+						return factory.Function(intDataType, "Microsecond", dateTimeExpression);
+					}
 					default:
 						return null;
 				}
@@ -139,6 +143,7 @@ namespace LinqToDB.DataProvider.MySql.Translation
 					case Sql.DateParts.Minute:      expStr = "Interval {0} Minute"; break;
 					case Sql.DateParts.Second:      expStr = "Interval {0} Second"; break;
 					case Sql.DateParts.Millisecond: expStr = "Interval {0} Millisecond"; break;
+					case Sql.DateParts.Microsecond: expStr = "Interval {0} Microsecond"; break;
 					default:
 						return null;
 				}
