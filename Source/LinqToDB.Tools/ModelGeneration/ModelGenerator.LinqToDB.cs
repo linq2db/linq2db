@@ -7,6 +7,8 @@ using System.Text;
 using LinqToDB.SqlProvider;
 using LinqToDB.SqlQuery;
 
+#pragma warning disable CA1861
+
 namespace LinqToDB.Tools.ModelGeneration
 {
 	/// <summary>
@@ -464,21 +466,21 @@ namespace LinqToDB.Tools.ModelGeneration
 					if (GenerateDataTypes && !GenerateLengthProperty.HasValue || GenerateLengthProperty == true)
 					{
 						if (c.Length != null)
-							ca.Parameters.Add("Length=" + (c.Length == int.MaxValue ? "int.MaxValue" : c.Length?.ToString()));
+							ca.Parameters.Add("Length=" + (c.Length == int.MaxValue ? "int.MaxValue" : c.Length?.ToString(CultureInfo.InvariantCulture)));
 						canBeReplaced = false;
 					}
 
 					if (GenerateDataTypes && !GeneratePrecisionProperty.HasValue || GeneratePrecisionProperty == true)
 					{
 						if (c.Precision != null)
-							ca.Parameters.Add($"Precision={c.Precision}");
+							ca.Parameters.Add(FormattableString.Invariant($"Precision={c.Precision}"));
 						canBeReplaced = false;
 					}
 
 					if (GenerateDataTypes && !GenerateScaleProperty.HasValue || GenerateScaleProperty == true)
 					{
 						if (c.Scale != null)
-							ca.Parameters.Add($"Scale={c.Scale}");
+							ca.Parameters.Add(FormattableString.Invariant($"Scale={c.Scale}"));
 						canBeReplaced = false;
 					}
 
@@ -509,7 +511,7 @@ namespace LinqToDB.Tools.ModelGeneration
 						var pka = new TAttribute { Name = "PrimaryKey" };
 
 						if (nPKs > 1)
-							pka.Parameters.Add(c.PrimaryKeyOrder.ToString());
+							pka.Parameters.Add(c.PrimaryKeyOrder.ToString(CultureInfo.InvariantCulture));
 
 						if (canBeReplaced)
 							c.Attributes.Remove(ca);
@@ -855,9 +857,9 @@ namespace LinqToDB.Tools.ModelGeneration
 						proc is { IsTableFunction: true, ResultException: not null })
 					.OrderBy(proc => proc.Name))
 				{
-					Action<IMemberGroup> addProcs = tp => procs.Members.Add(tp);
-					Action<IMemberGroup> addFuncs = tp => funcs.Members.Add(tp);
-					Action<IMemberGroup> addTabfs = tp => tabfs.Members.Add(tp);
+					Action<IMemberGroup> addProcs = procs.Members.Add;
+					Action<IMemberGroup> addFuncs = funcs.Members.Add;
+					Action<IMemberGroup> addTabfs = tabfs.Members.Add;
 
 					var thisDataContext = "this";
 
@@ -867,9 +869,9 @@ namespace LinqToDB.Tools.ModelGeneration
 					{
 						var si = schemas[p.Schema!];
 
-						addProcs        = tp => si.Procedures.    Members.Add(tp);
-						addFuncs        = tp => si.Functions.     Members.Add(tp);
-						addTabfs        = tp => si.TableFunctions.Members.Add(tp);
+						addProcs        = si.Procedures.    Members.Add;
+						addFuncs        = si.Functions.     Members.Add;
+						addTabfs        = si.TableFunctions.Members.Add;
 						thisDataContext = "_dataContext";
 					}
 
@@ -1017,7 +1019,7 @@ namespace LinqToDB.Tools.ModelGeneration
 						var retNo   = 0;
 
 						while (p.ProcParameters.Any(pp => pp.ParameterName == retName))
-							retName = $"ret{++retNo}";
+							retName = FormattableString.Invariant($"ret{++retNo}");
 
 						var hasOut = outputParameters.Any(pr => pr.IsOut || pr.IsResult);
 						var prefix = hasOut ? "var " + retName + " = " : "return ";
@@ -1025,7 +1027,7 @@ namespace LinqToDB.Tools.ModelGeneration
 						var cnt = 0;
 						var parametersVarName = "parameters";
 						while (p.ProcParameters.Where(par => !par.IsResult || !p.IsFunction).Any(par => par.ParameterName == parametersVarName))
-							parametersVarName = $"parameters{cnt++}";
+							parametersVarName = FormattableString.Invariant($"parameters{cnt++}");
 
 						var maxLenSchema = inputParameters.Max(pr => (int?)pr.SchemaName?.   Length) ?? 0;
 						var maxLenParam  = inputParameters.Max(pr => (int?)pr.ParameterName?.Length) ?? 0;
