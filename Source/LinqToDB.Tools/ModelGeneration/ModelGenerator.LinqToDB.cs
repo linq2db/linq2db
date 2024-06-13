@@ -8,6 +8,9 @@ using LinqToDB.SqlProvider;
 using LinqToDB.SqlQuery;
 
 #pragma warning disable CA1861
+#pragma warning disable RS0030
+#pragma warning disable CA1305
+#pragma warning disable CA1863
 
 namespace LinqToDB.Tools.ModelGeneration
 {
