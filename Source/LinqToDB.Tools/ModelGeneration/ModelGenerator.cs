@@ -4,6 +4,9 @@ using System.Globalization;
 using System.Linq;
 using System.Text;
 
+#pragma warning disable RS0030
+#pragma warning disable CA1305
+
 namespace LinqToDB.Tools.ModelGeneration
 {
 	/// <summary>
