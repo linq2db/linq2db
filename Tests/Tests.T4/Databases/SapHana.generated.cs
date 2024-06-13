@@ -85,7 +85,7 @@ namespace SapHanaDataContext
 		[Sql.TableFunction(Schema="TESTDB", Name="GetParentByID")]
 		public ITable<Parent> GetParentByID(int? id)
 		{
-			return this.TableFromExpression(() => GetParentByID(iD));
+			return this.TableFromExpression(() => GetParentByID(id));
 		}
 
 		#endregion

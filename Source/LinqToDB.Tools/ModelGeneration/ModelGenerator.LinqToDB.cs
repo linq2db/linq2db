@@ -984,14 +984,15 @@ namespace LinqToDB.Tools.ModelGeneration
 					{
 						p.BodyBuilders.Add(() => new[]
 						{
-							$"return {thisDataContext}.GetTable<{p.ResultTable!.TypeName}>(this, (MethodInfo)MethodBase.GetCurrentMethod(){(EnableNullableReferenceTypes ? "!" : "")}{(p.ProcParameters?.Count == 0 ? ");" : ",")}"
+//							$"return {thisDataContext}.GetTable<{p.ResultTable!.TypeName}>(this, (MethodInfo)MethodBase.GetCurrentMethod(){(EnableNullableReferenceTypes ? "!" : "")}{(p.ProcParameters?.Count == 0 ? ");" : ",")}",
+							$"return {thisDataContext}.TableFromExpression(() => {p.Name}({string.Join(", ", p.ProcParameters.Select(par => par.ParameterName))}));"
 						});
 
-						for (var idx = 0; idx < p.ProcParameters.Count; idx++)
-						{
-							var i = idx;
-							p.BodyBuilders.Add(() => new []{ "\t" + p.ProcParameters[i].ParameterName + (i + 1 == p.ProcParameters.Count ? ");" : ",") });
-						}
+//						for (var idx = 0; idx < p.ProcParameters.Count; idx++)
+//						{
+//							var i = idx;
+//							p.BodyBuilders.Add(() => new []{ "\t" + p.ProcParameters[i].ParameterName + (i + 1 == p.ProcParameters.Count ? ");" : ",") });
+//						}
 					}
 					else if (p.IsFunction)
 					{

@@ -17,17 +17,17 @@
 		</contentFiles>
 	</metadata>
 	<files>
-		<file src="..\Source\LinqToDB\bin\Release\net46\linq2db.dll"                       target="tools"                                   />
-		<file src="..\Tests\Linq\bin\Azure\net472\Humanizer.dll"                           target="tools"                                   />
-		<file src="..\Tests\Linq\bin\Azure\net472\MySqlConnector.dll"                      target="tools"                                   />
-		<file src="..\Tests\Linq\bin\Azure\net472\System.Memory.dll"                       target="tools"                                   />
-		<file src="..\Tests\Linq\bin\Azure\net472\System.Buffers.dll"                      target="tools"                                   />
-		<file src="..\Tests\Linq\bin\Azure\net472\System.Threading.Tasks.Extensions.dll"   target="tools"                                   />
-		<file src="..\Tests\Linq\bin\Azure\net472\System.Diagnostics.DiagnosticSource.dll" target="tools"                                   />
-		<file src="..\Tests\Linq\bin\Azure\net472\Microsoft.Bcl.AsyncInterfaces.dll"       target="tools"                                   />
+		<file src="t4bin\linq2db.dll"                             target="tools"                                   />
+		<file src="t4bin\Humanizer.dll"                           target="tools"                                   />
+		<file src="t4bin\MySqlConnector.dll"                      target="tools"                                   />
+		<file src="t4bin\System.Memory.dll"                       target="tools"                                   />
+		<file src="t4bin\System.Buffers.dll"                      target="tools"                                   />
+		<file src="t4bin\System.Threading.Tasks.Extensions.dll"   target="tools"                                   />
+		<file src="t4bin\System.Diagnostics.DiagnosticSource.dll" target="tools"                                   />
+		<file src="t4bin\Microsoft.Bcl.AsyncInterfaces.dll"       target="tools"                                   />
 
-		<file src="..\NuGet\ClickHouse\linq2db.ClickHouse.props"                           target="build\linq2db.ClickHouse.Client.props"   />
-		<file src="..\NuGet\ClickHouse\*.*"                           exclude="**\*.props" target="contentFiles\any\any\LinqToDB.Templates" />
-		<file src="..\NuGet\ClickHouse\*.*"                           exclude="**\*.props" target="content\LinqToDB.Templates"              />
+		<file src="NuGet\ClickHouse\linq2db.ClickHouse.props"     target="build\linq2db.ClickHouse.Client.props"   />
+		<file src="NuGet\ClickHouse\*.*"     exclude="**\*.props" target="contentFiles\any\any\LinqToDB.Templates" />
+		<file src="NuGet\ClickHouse\*.*"     exclude="**\*.props" target="content\LinqToDB.Templates"              />
 	</files>
 </package>
