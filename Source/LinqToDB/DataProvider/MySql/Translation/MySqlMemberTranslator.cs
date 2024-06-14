@@ -142,7 +142,7 @@ namespace LinqToDB.DataProvider.MySql.Translation
 					case Sql.DateParts.Hour:        expStr = "Interval {0} Hour"; break;
 					case Sql.DateParts.Minute:      expStr = "Interval {0} Minute"; break;
 					case Sql.DateParts.Second:      expStr = "Interval {0} Second"; break;
-					case Sql.DateParts.Millisecond: expStr = "Interval {0} Millisecond"; break;
+					case Sql.DateParts.Millisecond: expStr = "Interval ({0} * 1000) Microsecond"; break;
 					case Sql.DateParts.Microsecond: expStr = "Interval {0} Microsecond"; break;
 					default:
 						return null;
