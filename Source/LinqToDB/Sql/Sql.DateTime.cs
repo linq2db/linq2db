@@ -580,7 +580,7 @@ namespace LinqToDB
 				var startdate = builder.GetExpression(0);
 				var endDate   = builder.GetExpression(1);
 
-				builder.ResultExpression = new SqlExpression(typeof(long), builder.Expression + "(millisecond, {0}, {1}) * 10000", startdate!, endDate!);
+				builder.ResultExpression = new SqlExpression(typeof(long), "Cast(DateDiff(millisecond, {0}, {1}) * 10000 as BIGINT)", startdate!, endDate!);
 			}
 		}
 
@@ -690,7 +690,7 @@ namespace LinqToDB
 		[Extension(PN.MySql,        "TIMESTAMPDIFF", BuilderType = typeof(DateDiffIntervalBuilderMySql))]
 		[Extension(PN.DB2,          "",              BuilderType = typeof(DateDiffIntervalBuilderDB2))]
 		[Extension(PN.SapHana,      "",              BuilderType = typeof(DateDiffIntervalBuilderSapHana))]
-		[Extension(PN.Firebird,		"DateDiff",      BuilderType = typeof(DateDiffIntervalBuilderFirebird))]
+		[Extension(PN.Firebird,		"",              BuilderType = typeof(DateDiffIntervalBuilderFirebird))]
 		[Extension(PN.Sybase,		"DateDiff",      BuilderType = typeof(DateDiffIntervalBuilderSybase))]
 		[Extension(PN.SQLite,       "",              BuilderType = typeof(DateDiffIntervalBuilderSQLite))]
 		[Extension(PN.Oracle,       "",              BuilderType = typeof(DateDiffIntervalBuilderOracle))]
