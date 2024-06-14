@@ -243,7 +243,8 @@ namespace LinqToDB.Linq.Builder
 							else if (newExpr.ValueExpression.Type == typeof(object))
 								newExpr.ValueExpression = Expression.Convert(noConvert, memberType);
 
-							if (newExpr.ValueExpression.Type != memberType)
+							if (newExpr.ValueExpression.Type != memberType 
+							    && !(newExpr.ValueExpression.Type.IsNullable() && newExpr.ValueExpression.Type.ToNullableUnderlying() == memberType.ToNullableUnderlying()))
 							{
 								if (memberType.IsValueType ||
 								    !memberType.IsSameOrParentOf(newExpr.ValueExpression.Type))

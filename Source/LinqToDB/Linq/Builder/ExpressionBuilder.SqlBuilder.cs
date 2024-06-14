@@ -1290,7 +1290,7 @@ namespace LinqToDB.Linq.Builder
 
 			var currentContext = context;
 
-			if (attr.IsAggregate && checkAggregateRoot)
+			if ((attr.IsAggregate || attr.IsWindowFunction) && checkAggregateRoot)
 			{
 				var sequenceRef = new ContextRefExpression(context.ElementType, context);
 
@@ -4665,7 +4665,9 @@ namespace LinqToDB.Linq.Builder
 
 				expression   = MakeExpression(currentContext, unary.Operand, flags);
 				if (!flags.IsTable() && expression.Type != path.Type)
-					expression = Expression.Convert(expression, path.Type);
+				{
+					expression = Expression.MakeUnary(path.NodeType, expression, unary.Type, unary.Method);
+				}
 				doNotProcess = true;
 			}
 			else if (path.NodeType == ExpressionType.TypeAs && currentContext != null)
