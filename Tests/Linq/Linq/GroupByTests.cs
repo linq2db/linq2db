@@ -3468,13 +3468,13 @@ namespace Tests.Linq
 		}
 
 		[Sql.Expression("COUNT_BIG(*) * 100E0 / SUM(COUNT_BIG(*)) OVER()", ServerSideOnly = true, Precedence = Precedence.Multiplicative, IsWindowFunction = true)]
-		public static double CountPercents()
+		static double CountPercents()
 		{
 			throw new InvalidOperationException("This function should be used only in database code");
 		}
 
 		[Sql.Expression("DATEPART(minute, {0} AT TIME ZONE {1})", ServerSideOnly = true, IsNullable = Sql.IsNullableType.SameAsFirstParameter)]
-		public static int? ByMinute(DateTimeOffset? datetime, string tzId)
+		static int? ByMinute(DateTimeOffset? datetime, string tzId)
 		{
 			return datetime.HasValue ? ByMinute(datetime.Value, tzId) : null;
 		}
