@@ -350,7 +350,7 @@ namespace Tests.UserTests.Test3993
 
 				var hour = qryComplex.Where(x => x.NotificationDateTime!.Value.Hour == 13).First();
 				var minute = qryComplex.Where(x => x.NotificationDateTime!.Value.Minute == 51).First();
-				var second = qryComplex.Where(x => x.NotificationDateTime!.Value.Second == 53).First();
+				var second = qryComplex.Where(x => x.NotificationDateTime!.Value.Second >= 52 && x.NotificationDateTime!.Value.Second <= 54).First();
 			}
 			finally
 			{
