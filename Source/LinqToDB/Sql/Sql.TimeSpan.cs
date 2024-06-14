@@ -84,7 +84,7 @@ namespace LinqToDB
 				var partStr  = TimeSpanPartToStr(part);
 				var timeSpan = builder.GetExpression("timeSpan");
 
-				var tp = QueryHelper.GetDbDataType(timeSpan!, builder.Mapping);
+				var tp = timeSpan!.GetExpressionType();
 				var dt = tp.DataType;
 					
 				if (dt == DataType.Int64)
@@ -241,7 +241,7 @@ namespace LinqToDB
 				var date   = builder.GetExpression("date");
 				var timeSpan = builder.GetExpression("timeSpan", true);
 
-				var tp =  QueryHelper.GetDbDataType(timeSpan!, builder.Mapping);
+				var tp = timeSpan!.GetExpressionType();
 				var dt = tp.DataType;
 
 				if (dt == DataType.Int64)
@@ -278,7 +278,7 @@ namespace LinqToDB
 				var date   = builder.GetExpression("date");
 				var timeSpan = builder.GetExpression("timeSpan", true);
 
-				var tp =  QueryHelper.GetDbDataType(timeSpan!, builder.Mapping);
+				var tp = timeSpan!.GetExpressionType();
 				var dt = tp.DataType;
 
 				if (dt == DataType.Int64)
@@ -315,7 +315,7 @@ namespace LinqToDB
 				var date   = builder.GetExpression("date");
 				var timeSpan = builder.GetExpression("timeSpan", true);
 
-				var tp =  QueryHelper.GetDbDataType(timeSpan!, builder.Mapping);
+				var tp = timeSpan!.GetExpressionType();
 				var dt = tp.DataType;
 
 				if (dt == DataType.Int64)
