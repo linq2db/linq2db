@@ -57,7 +57,7 @@ namespace Tests.Linq
 		{
 			using (new PreloadGroups(false))
 			using (new GuardGrouping(false))
-			using (var db = GetDataContext(context))
+			using (var db = GetDataContext(context, o => o.OmitUnsupportedCompareNulls(context)))
 			{
 				var q =
 					from ch in db.GrandChild
@@ -125,7 +125,7 @@ namespace Tests.Linq
 		public void Simple6([DataSources] string context)
 		{
 			using (new GuardGrouping(false))
-			using (var db = GetDataContext(context))
+			using (var db = GetDataContext(context, o => o.OmitUnsupportedCompareNulls(context)))
 			{
 				var q    = db.GrandChild.GroupBy(ch => new { ch.ParentID, ch.ChildID }, ch => ch.GrandChildID);
 				var list = q.ToList();
@@ -3291,7 +3291,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Issue_WithToList([IncludeDataSources(true, TestProvName.AllSqlServer)] string context)
+		public void Issue_WithToList([IncludeDataSources(true, TestProvName.AllSqlServer2016Plus)] string context)
 		{
 			using var db = GetDataContext(context);
 			using var tb = db.CreateLocalTable<TestAggregateTable>();
@@ -3299,7 +3299,8 @@ namespace Tests.Linq
 			var id  = Guid.NewGuid();
 			var id2 = Guid.NewGuid();
 
-			var now = DateTimeOffset.Now;
+			var now = TestData.DateTimeOffsetUtc;
+			var tz  = "UTC";
 
 			db.Insert(new TestAggregateTable()
 			{
@@ -3334,8 +3335,8 @@ namespace Tests.Linq
 							group = _.Reference!.Id,
 							key   = new
 							{
-								hours   = ByHour(_.DateTime, TimeZoneInfo.Local.Id),
-								minutes = ByMinute(_.DateTime, TimeZoneInfo.Local.Id)
+								hours   = ByHour(_.DateTime, tz),
+								minutes = ByMinute(_.DateTime, tz)
 							}
 						})
 						.Having(_ => _.Key.group == group.key)
@@ -3380,7 +3381,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Issue_WithoutToList([IncludeDataSources(true, TestProvName.AllSqlServer)] string context)
+		public void Issue_WithoutToList([IncludeDataSources(true, TestProvName.AllSqlServer2016Plus)] string context)
 		{
 			using var db = GetDataContext(context);
 			using var tb = db.CreateLocalTable<TestAggregateTable>();
@@ -3388,7 +3389,8 @@ namespace Tests.Linq
 			var id  = Guid.NewGuid();
 			var id2 = Guid.NewGuid();
 
-			var now = DateTimeOffset.Now;
+			var now = TestData.DateTimeOffsetUtc;
+			var tz  = "UTC";
 
 			db.Insert(new TestAggregateTable()
 			{
@@ -3422,8 +3424,8 @@ namespace Tests.Linq
 							group = _.Reference!.Id,
 							key   = new
 							{
-								hours   = ByHour(_.DateTime, TimeZoneInfo.Local.Id),
-								minutes = ByMinute(_.DateTime, TimeZoneInfo.Local.Id)
+								hours   = ByHour(_.DateTime, tz),
+								minutes = ByMinute(_.DateTime, tz)
 							}
 						})
 						.Having(_ => _.Key.group == group.key)

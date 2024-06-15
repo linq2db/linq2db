@@ -2147,7 +2147,13 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Issue_Filter_Checked([DataSources(TestProvName.AllClickHouse)] string context)
+		public void Issue_Filter_Checked([DataSources(
+			TestProvName.AllAccess,
+			TestProvName.AllClickHouse,
+			TestProvName.AllSybase,
+			TestProvName.AllMySql,
+			ProviderName.SqlCe)]
+			string context)
 		{
 			checked
 			{
