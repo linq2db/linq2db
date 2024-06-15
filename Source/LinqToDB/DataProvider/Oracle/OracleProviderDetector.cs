@@ -129,15 +129,16 @@ namespace LinqToDB.DataProvider.Oracle
 			var fileName = typeof(OracleProviderDetector).Assembly.GetFileName();
 			var dirName  = Path.GetDirectoryName(fileName);
 
-			return canBeOracle && File.Exists(Path.Combine(dirName ?? ".", OracleProviderAdapter.ManagedAssemblyName + ".dll"))
-				? OracleProvider.Managed
-				: canBeDevart && File.Exists(Path.Combine(dirName ?? ".", OracleProviderAdapter.DevartAssemblyName + ".dll"))
-					? OracleProvider.Devart
-					: canBeOracle && File.Exists(Path.Combine(dirName ?? ".", OracleProviderAdapter.NativeAssemblyName + ".dll"))
-						? OracleProvider.Native
-						: canBeOracle
-							? OracleProvider.Managed
-							: OracleProvider.Devart;
+			if (canBeOracle && File.Exists(Path.Combine(dirName ?? ".", OracleProviderAdapter.ManagedAssemblyName + ".dll")))
+				return OracleProvider.Managed;
+
+			if (canBeDevart && File.Exists(Path.Combine(dirName ?? ".", OracleProviderAdapter.DevartAssemblyName + ".dll")))
+				return OracleProvider.Devart;
+
+			if (canBeOracle && File.Exists(Path.Combine(dirName ?? ".", OracleProviderAdapter.NativeAssemblyName + ".dll")))
+				return OracleProvider.Native;
+
+			return canBeOracle ? OracleProvider.Managed : OracleProvider.Devart;
 		}
 
 		public override OracleVersion? DetectServerVersion(DbConnection connection)
