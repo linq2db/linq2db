@@ -159,6 +159,11 @@ namespace LinqToDB.Linq.Builder
 				CreateSubQuery = true,
 			};
 
+			if (flags.IsForceOuter())
+			{
+				info.SourceCardinality = SourceCardinality.ZeroOrMany;
+			}
+
 			++_gettingSubquery;
 			var buildResult = TryBuildSequence(info);
 			--_gettingSubquery;
@@ -900,8 +905,8 @@ namespace LinqToDB.Linq.Builder
 							return SqlErrorExpression.EnsureError(error ?? expression, e.Type);
 						}
 
-						var trueSql  = (SqlPlaceholderExpression)ConvertToSqlExpr(context, e.IfTrue,  flags, columnDescriptor : columnDescriptor, isPureExpression : isPureExpression);
-						var falseSql = (SqlPlaceholderExpression)ConvertToSqlExpr(context, e.IfFalse, flags, columnDescriptor : columnDescriptor, isPureExpression : isPureExpression);
+						var trueSql  = (SqlPlaceholderExpression)ConvertToSqlExpr(context, e.IfTrue,  flags | ProjectFlags.ForceOuterAssociation, columnDescriptor : columnDescriptor, isPureExpression : isPureExpression);
+						var falseSql = (SqlPlaceholderExpression)ConvertToSqlExpr(context, e.IfFalse, flags | ProjectFlags.ForceOuterAssociation, columnDescriptor : columnDescriptor, isPureExpression : isPureExpression);
 
 						return CreatePlaceholder(context, new SqlConditionExpression(testPredicate, trueSql.Sql, falseSql.Sql), expression, alias: alias);
 
@@ -1568,7 +1573,8 @@ namespace LinqToDB.Linq.Builder
 					}
 					else if (e.Method.Name == "Contains")
 					{
-						if (e.Method.DeclaringType == typeof(Enumerable) ||
+						if (e.Method.DeclaringType  == typeof(Enumerable) ||
+						    (e.Method.DeclaringType == typeof(Queryable) && e.Arguments.Count == 2 && CanBeCompiled(e.Arguments[0], false)) ||
 							typeof(IList).IsSameOrParentOf(e.Method.DeclaringType!) ||
 							typeof(ICollection<>).IsSameOrParentOf(e.Method.DeclaringType!) ||
 							typeof(IReadOnlyCollection<>).IsSameOrParentOf(e.Method.DeclaringType!))
@@ -2888,7 +2894,7 @@ namespace LinqToDB.Linq.Builder
 					break;
 			}
 
-			throw new LinqException("'{0}' cannot be converted to SQL.", expression);
+			return null;
 		}
 
 		#endregion
@@ -4427,7 +4433,7 @@ namespace LinqToDB.Linq.Builder
 				}
 			}
 
-			var shouldCache = null != path.Find(1, (_, e) => e is ContextRefExpression);
+			var shouldCache = !flags.IsTest() && null != path.Find(1, (_, e) => e is ContextRefExpression);
 
 			var key = new SqlCacheKey(path, null, null, null, flags);
 

@@ -318,7 +318,7 @@ namespace LinqToDB.Linq.Builder
 				valueExpression = SequenceHelper.PrepareBody(inputValueLambda, currentRef.BuildContext);
 			}
 
-			if (aggregationType != AggregationType.Count || isDistinct)
+			if (aggregationType != AggregationType.Custom && aggregationType != AggregationType.Count || isDistinct)
 			{
 				if (valueExpression is ContextRefExpression && contextRef.BuildContext == groupByContext && typeof(IGrouping<,>).IsSameOrParentOf(valueExpression.Type))
 				{

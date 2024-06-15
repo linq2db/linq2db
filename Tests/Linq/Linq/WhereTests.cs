@@ -1996,5 +1996,53 @@ namespace Tests.Linq
 				});
 			}
 		}
+
+		[Test]
+		public void Issue_SubQueryFilter1([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var filter1 = "John";
+			var filter2 = "Tester";
+
+			var query = db
+				.Patient
+				.Where(_ =>
+					db.Person
+						.Where(e => e.FirstName.Contains(filter1))
+						.Any(e => e.ID == db.Patient.Select(d => d.PersonID)
+						.First()) ||
+					db.Person
+						.Where(e => e.FirstName.Contains(filter2))
+						.Any(e => e.ID == db.Patient.Select(d => d.PersonID)
+							.First()))
+				.OrderBy(p => p.PersonID);
+
+			AssertQuery(query);
+		}
+
+		[Test]
+		public void Issue_SubQueryFilter2([DataSources(TestProvName.AllClickHouse)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var filter1 = "John";
+			var filter2 = "Tester";
+
+			var query = db
+				.Patient
+				.Where(p =>
+					db.Person
+						.Where(e => e.ID == p.PersonID && e.FirstName.Contains(filter1))
+						.Any(e => e.ID == db.Patient.Select(d => d.PersonID)
+						.First()) ||
+					db.Person
+						.Where(e => e.ID == p.PersonID && e.FirstName.Contains(filter2))
+						.Any(e => e.ID == db.Patient.Select(d => d.PersonID)
+							.First()))
+				.OrderBy(p => p.PersonID);
+
+			AssertQuery(query);
+		}
 	}
 }

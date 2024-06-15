@@ -221,5 +221,18 @@ namespace LinqToDB.SqlQuery
 
 			return newElement;
 		}
+
+		protected override IQueryElement VisitInSubQueryPredicate(SqlPredicate.InSubQuery predicate)
+		{
+			var saveDisableOrderBy = _disableOrderBy;
+
+			_disableOrderBy = true;
+
+			var newElement = base.VisitInSubQueryPredicate(predicate);
+
+			_disableOrderBy = saveDisableOrderBy;
+
+			return newElement;
+		}
 	}
 }

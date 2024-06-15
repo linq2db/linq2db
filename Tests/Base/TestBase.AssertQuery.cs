@@ -243,6 +243,11 @@ namespace Tests
 				return TypeHelper.MakeMethodCall(Methods.Queryable.Where, mc.Arguments.ToArray());
 			}
 
+			if (mc.Method.Name == nameof(LinqExtensions.Having))
+			{
+				return TypeHelper.MakeMethodCall(Methods.Queryable.Where, mc.Arguments.ToArray());
+			}
+
 			if (mc.Method.Name == nameof(LinqExtensions.UnionAll))
 			{
 				return SetOperationRemap(MemberHelper.MethodOfGeneric<IQueryable<object>>(q => UnionAllImpl(q, q)));
