@@ -172,17 +172,20 @@ namespace LinqToDB.DataProvider.Firebird
 						base.BuildDataTypeFromDataType(type, forCreateTable, canBeNull);
 					break;
 
-				case DataType.Binary        :
-					if (type.Length == null || type.Length < 1)
-						StringBuilder.Append("CHAR CHARACTER SET OCTETS");
-					else
-						StringBuilder.Append(CultureInfo.InvariantCulture, $"CHAR({type.Length}) CHARACTER SET OCTETS");
+				case DataType.Binary when type.Length == null || type.Length < 1:
+                    StringBuilder.Append("CHAR CHARACTER SET OCTETS");
+                    break;
+
+				case DataType.Binary:
+                    StringBuilder.Append(CultureInfo.InvariantCulture, $"CHAR({type.Length}) CHARACTER SET OCTETS");
 					break;
-				case DataType.VarBinary     :
-					if (type.Length == null || type.Length > 32_765)
-						StringBuilder.Append("BLOB");
-					else
-						StringBuilder.Append(CultureInfo.InvariantCulture, $"VARCHAR({type.Length}) CHARACTER SET OCTETS");
+
+				case DataType.VarBinary when type.Length == null || type.Length > 32_765:
+					StringBuilder.Append("BLOB");
+                    break;
+
+				case DataType.VarBinary:
+					StringBuilder.Append(CultureInfo.InvariantCulture, $"VARCHAR({type.Length}) CHARACTER SET OCTETS");
 					break;
 
 				case DataType.Boolean       : StringBuilder.Append("BOOLEAN");                            break;
