@@ -40,17 +40,20 @@ namespace LinqToDB.DataProvider.Firebird
 			switch (type.DataType)
 			{
 				case DataType.Guid  : StringBuilder.Append("BINARY(16)"); break;
-				case DataType.Binary:
-					if (type.Length == null || type.Length < 1)
-						StringBuilder.Append("BINARY");
-					else
-						StringBuilder.Append(CultureInfo.InvariantCulture, $"BINARY({type.Length})");
+				case DataType.Binary when type.Length == null || type.Length < 1):
+					StringBuilder.Append("BINARY");
 					break;
+					
+				case DataType.Binary:
+					StringBuilder.Append(CultureInfo.InvariantCulture, $"BINARY({type.Length})");
+					break;
+					
+				case DataType.VarBinary when type.Length == null || type.Length > 32_765):
+					StringBuilder.Append("BLOB");
+					break;
+					
 				case DataType.VarBinary:
-					if (type.Length == null || type.Length > 32_765)
-						StringBuilder.Append("BLOB");
-					else
-						StringBuilder.Append(CultureInfo.InvariantCulture, $"VARBINARY({type.Length})");
+					StringBuilder.Append(CultureInfo.InvariantCulture, $"VARBINARY({type.Length})");
 					break;
 				default:
 					base.BuildDataTypeFromDataType(type, forCreateTable, canBeNull);
