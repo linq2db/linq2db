@@ -3296,8 +3296,8 @@ namespace Tests.Linq
 			using var db = GetDataContext(context);
 			using var tb = db.CreateLocalTable<TestAggregateTable>();
 
-			var id  = Guid.NewGuid();
-			var id2 = Guid.NewGuid();
+			var id  = TestData.Guid1;
+			var id2 = TestData.Guid2;
 
 			var now = TestData.DateTimeOffsetUtc;
 			var tz  = "UTC";
@@ -3386,8 +3386,8 @@ namespace Tests.Linq
 			using var db = GetDataContext(context);
 			using var tb = db.CreateLocalTable<TestAggregateTable>();
 
-			var id  = Guid.NewGuid();
-			var id2 = Guid.NewGuid();
+			var id  = TestData.Guid1;
+			var id2 = TestData.Guid2;
 
 			var now = TestData.DateTimeOffsetUtc;
 			var tz  = "UTC";
