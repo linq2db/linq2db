@@ -16,6 +16,8 @@ namespace Tests
 		[MaybeNull]
 		public DbCommand     Command    { get; private set; }
 
+		public event Action<DbCommand>? OnCommandSet;
+
 		private readonly bool _unwrap;
 
 		public SaveWrappedCommandInterceptor(bool unwrap)
@@ -27,6 +29,8 @@ namespace Tests
 		{
 			Parameters = command.Parameters.Cast<DbParameter>().ToArray();
 			Command    = _unwrap ? (DbCommand)((dynamic)command).WrappedCommand : command;
+
+			OnCommandSet?.Invoke(command);
 
 			return command;
 		}

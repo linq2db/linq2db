@@ -1445,10 +1445,14 @@ namespace Tests.Data
 			var unmapped  = type == ConnectionType.MiniProfilerNoMappings;
 
 			OracleDataProvider provider;
+			Type connectionType;
 			using (var db = GetDataConnection(context))
+			{
 				provider = new OracleTests.TestOracleDataProvider(db.DataProvider.Name, ((OracleDataProvider)db.DataProvider).Provider, ((OracleDataProvider)db.DataProvider).Version);
+				connectionType = ((OracleDataProvider)db.DataProvider).Adapter.ConnectionType;
+			}
 
-			using (var db = CreateDataConnection(provider, context, type, "Oracle.DataAccess.Client.OracleConnection, Oracle.DataAccess"))
+			using (var db = CreateDataConnection(provider, context, type, connectionType))
 			{
 				var trace = string.Empty;
 				db.OnTraceConnection += (TraceInfo ti) =>
@@ -1610,21 +1614,30 @@ namespace Tests.Data
 				// dbcommand properties
 				db.DisposeCommand();
 
+				// starting from v23 those properties available only on non-disposed command
+				void assertCommand(DbCommand command)
+				{
+					dynamic cmd = type == ConnectionType.Raw ? command : ((dynamic)command).WrappedCommand;
+
+					if (unmapped)
+					{
+						Assert.That(cmd.BindByName, Is.False);
+						Assert.That(cmd.InitialLONGFetchSize, Is.Zero);
+						Assert.That(cmd.ArrayBindCount, Is.Zero);
+					}
+					else
+					{
+						Assert.That(cmd.BindByName, Is.True);
+						Assert.That(cmd.InitialLONGFetchSize, Is.EqualTo(-1));
+						Assert.That(cmd.ArrayBindCount, Is.Zero);
+					}
+				}
+
+				commandInterceptor.OnCommandSet += assertCommand;
+
 				db.Execute<DateTimeOffset>("SELECT :p FROM SYS.DUAL", new DataParameter("p", dtoVal, DataType.DateTimeOffset));
 
-				dynamic cmd = commandInterceptor.Command!;
-				if (unmapped)
-				{
-					Assert.That(cmd.BindByName, Is.False);
-					Assert.That(cmd.InitialLONGFetchSize, Is.Zero);
-					Assert.That(cmd.ArrayBindCount, Is.Zero);
-				}
-				else
-				{
-					Assert.That(cmd.BindByName, Is.True);
-					Assert.That(cmd.InitialLONGFetchSize, Is.EqualTo(-1));
-					Assert.That(cmd.ArrayBindCount, Is.Zero);
-				}
+				commandInterceptor.OnCommandSet -= assertCommand;
 
 				void TestBulkCopy()
 				{

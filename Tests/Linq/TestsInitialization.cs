@@ -10,6 +10,8 @@ using LinqToDB.Tools.Activity;
 
 using NUnit.Framework;
 
+using Oracle.ManagedDataAccess.Client;
+
 using Tests;
 
 /// <summary>
@@ -57,6 +59,9 @@ public class TestsInitialization
 		// netcoreapp2.1 adds DbProviderFactories support, but providers should be registered by application itself
 		// this code allows to load assembly using factory without adding explicit reference to project
 		RegisterSqlCEFactory();
+
+		// enable ora11 protocol with v23 client
+		OracleConfiguration.SqlNetAllowedLogonVersionClient = OracleAllowedLogonVersionClient.Version11;
 
 #if NETFRAMEWORK && !AZURE
 		// configure assembly redirect for referenced assemblies to use version from GAC
