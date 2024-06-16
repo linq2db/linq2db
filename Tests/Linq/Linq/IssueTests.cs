@@ -699,12 +699,23 @@ namespace Tests.Linq
 			using(var db    = (DataConnection)GetDataContext(context))
 			using(var table = db.CreateLocalTable<TableWithGuid>())
 			{
-				Assert.That(db.LastQuery!, Does.Contain("\"Default\"  CHAR(16) CHARACTER SET OCTETS"));
-				Assert.That(db.LastQuery!, Does.Contain("\"Binary\"   CHAR(16) CHARACTER SET OCTETS"));
 				Assert.That(db.LastQuery!, Does.Contain("\"String\"   CHAR(38)"));
-				Assert.That(db.LastQuery!, Does.Contain("\"DefaultN\" CHAR(16) CHARACTER SET OCTETS"));
-				Assert.That(db.LastQuery!, Does.Contain("\"BinaryN\"  CHAR(16) CHARACTER SET OCTETS"));
 				Assert.That(db.LastQuery!, Does.Contain("\"StringN\"  CHAR(38)"));
+
+				if (context.IsAnyOf(TestProvName.AllFirebirdLess4))
+				{
+					Assert.That(db.LastQuery!, Does.Contain("\"Default\"  CHAR(16) CHARACTER SET OCTETS"));
+					Assert.That(db.LastQuery!, Does.Contain("\"Binary\"   CHAR(16) CHARACTER SET OCTETS"));
+					Assert.That(db.LastQuery!, Does.Contain("\"DefaultN\" CHAR(16) CHARACTER SET OCTETS"));
+					Assert.That(db.LastQuery!, Does.Contain("\"BinaryN\"  CHAR(16) CHARACTER SET OCTETS"));
+				}
+				else
+				{
+					Assert.That(db.LastQuery!, Does.Contain("\"Default\"  BINARY(16)"));
+					Assert.That(db.LastQuery!, Does.Contain("\"Binary\"   BINARY(16)"));
+					Assert.That(db.LastQuery!, Does.Contain("\"DefaultN\" BINARY(16)"));
+					Assert.That(db.LastQuery!, Does.Contain("\"BinaryN\"  BINARY(16)"));
+				}
 
 				db.InlineParameters = inlineParameters;
 

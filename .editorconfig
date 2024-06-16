@@ -686,3 +686,17 @@ dotnet_diagnostic.MA0152.severity = none
 dotnet_diagnostic.MA0153.severity = none
 # MA0154: Use langword in XML comment
 dotnet_diagnostic.MA0154.severity = none
+# MA0155: Do not use async void methods
+dotnet_diagnostic.MA0155.severity = none
+# MA0156: Use 'Async' suffix when a method returns IAsyncEnumerable<T>
+dotnet_diagnostic.MA0156.severity = none
+# MA0157: Do not use 'Async' suffix when a method does not return IAsyncEnumerable<T>
+dotnet_diagnostic.MA0157.severity = none
+# MA0158: Use System.Threading.Lock
+dotnet_diagnostic.MA0158.severity = none
+# MA0159: Use 'Order' instead of 'OrderBy'
+dotnet_diagnostic.MA0159.severity = none
+################################################################################################
+# LindhartAnalyserMissingAwaitWarningVariable: Possible unwanted Task returned from method.
+dotnet_diagnostic.LindhartAnalyserMissingAwaitWarningVariable.severity = error
+################################################################################################

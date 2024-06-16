@@ -18,7 +18,9 @@ namespace Tests.Linq
 		public void ManyFunctions(
 			[IncludeDataSources(
 				true,
-				TestProvName.AllOracle,
+				// native oracle provider crashes with AV
+				TestProvName.AllOracleManaged,
+				TestProvName.AllOracleDevart,
 				TestProvName.AllSqlServer2012Plus,
 				TestProvName.AllClickHouse,
 				TestProvName.AllPostgreSQL)]

@@ -1,7 +1,9 @@
-﻿using System.Text;
+﻿using System.Globalization;
+using System.Text;
 
 namespace LinqToDB.DataProvider.Firebird
 {
+	using Common;
 	using Mapping;
 	using SqlProvider;
 	using SqlQuery;
@@ -31,6 +33,33 @@ namespace LinqToDB.DataProvider.Firebird
 			}
 
 			return base.BuildJoinType(join, condition);
+		}
+
+		protected override void BuildDataTypeFromDataType(DbDataType type, bool forCreateTable, bool canBeNull)
+		{
+			switch (type.DataType)
+			{
+				case DataType.Guid  : StringBuilder.Append("BINARY(16)"); break;
+				case DataType.Binary when type.Length == null || type.Length < 1:
+					StringBuilder.Append("BINARY");
+					break;
+					
+				case DataType.Binary:
+					StringBuilder.Append(CultureInfo.InvariantCulture, $"BINARY({type.Length})");
+					break;
+					
+				case DataType.VarBinary when type.Length == null || type.Length > 32_765:
+					StringBuilder.Append("BLOB");
+					break;
+					
+				case DataType.VarBinary:
+					StringBuilder.Append(CultureInfo.InvariantCulture, $"VARBINARY({type.Length})");
+					break;
+				default:
+					base.BuildDataTypeFromDataType(type, forCreateTable, canBeNull);
+					break;
+			}
+			
 		}
 	}
 }
