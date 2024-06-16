@@ -42,13 +42,13 @@ namespace LinqToDB
 		{
 			switch (interceptor)
 			{
-				case ICommandInterceptor          cm : AddInterceptorImpl(interceptable, cm); break;
-				case IConnectionInterceptor       cn : AddInterceptorImpl(interceptable, cn); break;
-				case IDataContextInterceptor      dc : AddInterceptorImpl(interceptable, dc); break;
-				case IEntityServiceInterceptor    es : AddInterceptorImpl(interceptable, es); break;
-				case IUnwrapDataObjectInterceptor wr : AddInterceptorImpl(interceptable, wr); break;
-				case IEntityBindingInterceptor    ex : AddInterceptorImpl(interceptable, ex); break;
-				case IQueryExpressionInterceptor  ep:  AddInterceptorImpl(interceptable, ep); break;
+				case ICommandInterceptor          cm: AddInterceptorImpl(interceptable, cm); break;
+				case IConnectionInterceptor       cn: AddInterceptorImpl(interceptable, cn); break;
+				case IDataContextInterceptor      dc: AddInterceptorImpl(interceptable, dc); break;
+				case IEntityServiceInterceptor    es: AddInterceptorImpl(interceptable, es); break;
+				case IUnwrapDataObjectInterceptor wr: AddInterceptorImpl(interceptable, wr); break;
+				case IEntityBindingInterceptor    ex: AddInterceptorImpl(interceptable, ex); break;
+				case IQueryExpressionInterceptor  ep: AddInterceptorImpl(interceptable, ep); break;
 			}
 		}
 
@@ -90,22 +90,36 @@ namespace LinqToDB
 			}
 		}
 
-		internal static void RemoveInterceptor<T>(this IInterceptable<T> interceptable, IInterceptor interceptor)
+		internal static void RemoveInterceptorImpl(this IInterceptable interceptable, IInterceptor interceptor)
+		{
+			switch (interceptor)
+			{
+				case ICommandInterceptor          cm: RemoveInterceptorImpl(interceptable, cm); break;
+				case IConnectionInterceptor       cn: RemoveInterceptorImpl(interceptable, cn); break;
+				case IDataContextInterceptor      dc: RemoveInterceptorImpl(interceptable, dc); break;
+				case IEntityServiceInterceptor    es: RemoveInterceptorImpl(interceptable, es); break;
+				case IUnwrapDataObjectInterceptor wr: RemoveInterceptorImpl(interceptable, wr); break;
+				case IEntityBindingInterceptor    ex: RemoveInterceptorImpl(interceptable, ex); break;
+				case IQueryExpressionInterceptor  ep: RemoveInterceptorImpl(interceptable, ep); break;
+			}
+		}
+
+		internal static void RemoveInterceptorImpl<T>(this IInterceptable interceptable, T interceptor)
 			where T : IInterceptor
 		{
-			if (interceptor is T i)
+			if (interceptable is not IInterceptable<T> typedInterceptable)
+				throw new ArgumentException($"Context of type {interceptable.GetType()} doesn't support {typeof(T)} interceptor");
+
+			switch (typedInterceptable.Interceptor)
 			{
-				switch (interceptable.Interceptor)
-				{
-					case null :
-						break;
-					case AggregatedInterceptor<T> ae :
-						ae.Remove(i);
-						break;
-					case IInterceptor e when e == interceptor :
-						interceptable.Interceptor = default;
-						break;
-				}
+				case AggregatedInterceptor<T> ae:
+					ae.Remove(interceptor);
+					break;
+				case T e when ReferenceEquals(e, interceptor):
+					typedInterceptable.Interceptor = default;
+					break;
+				default:
+					break;
 			}
 		}
 	}
