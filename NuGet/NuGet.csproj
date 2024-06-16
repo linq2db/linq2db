@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
 		<TargetFramework>net472</TargetFramework>
 		<PlatformTarget>x64</PlatformTarget>
@@ -8,6 +8,7 @@
 		<ProjectReference Include="..\Source\LinqToDB\LinqToDB.csproj" />
 
 		<PackageReference Include="AdoNetCore.AseClient" />
+		<PackageReference Include="Humanizer.Core"       />
 
 		<PackageReference Include="IBM.Data.DB.Provider" GeneratePathProperty="true" />
 		<Reference Include="IBM.Data.DB2">

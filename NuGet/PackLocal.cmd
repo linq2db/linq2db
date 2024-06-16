@@ -16,6 +16,6 @@ cd ..
 rem call Build.cmd
 cd NuGet
 
-powershell ..\Build\BuildNuspecs.ps1 -path *.nuspec -buildPath ..\.build\nuspecs -version %VERSION%
+dotnet script BuildNuspecs.csx /path:*.nuspec /buildPath:..\.build\nuspecs /version:%VERSION%
 call Pack.cmd %SNUPKG%
 pause

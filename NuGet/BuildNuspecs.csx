@@ -99,7 +99,7 @@ foreach (var xmlPath in Directory.GetFiles(Path.GetDirectoryName(path) is [_, ..
 		switch (attr.Value.ToLower())
 		{
 			case var s when s.StartsWith("t4bin\\") :
-				attr.Value = t4binPath + attr.Value[3..];
+				attr.Value = t4binPath + attr.Value[5..];
 				break;
 			case var s when s.StartsWith("bin\\") :
 				attr.Value = string.Format(binPath + attr.Value[3..], releasePath);
@@ -145,7 +145,7 @@ foreach (var xmlPath in Directory.GetFiles(Path.GetDirectoryName(path) is [_, ..
 		}
 
 		if (value != null)
-			node.InnerText = value;
+			node.InnerText = value.Length > 20 ? $"\n\t\t\t{value}\n\t\t" : value;
 
 		return node;
 	}

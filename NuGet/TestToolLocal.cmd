@@ -10,7 +10,8 @@ SET NUGETS="..\.build\nugets"
 
 SET VERSION=0.0.%1
 
-powershell ..\Build\BuildNuspecs.ps1 -path linq2db.cli.nuspec -buildPath %NUSPECS% -version %VERSION%
+dotnet script BuildNuspecs.csx /path:linq2db.cli.nuspec /buildPath:%NUSPECS% /version:%VERSION%
+
 RMDIR %NUGETS% /S /Q
 MD %NUGETS%
 nuget.exe Pack %NUSPECS%\linq2db.cli.nuspec -OutputDirectory %NUGETS%
