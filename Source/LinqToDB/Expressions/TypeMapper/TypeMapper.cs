@@ -504,7 +504,8 @@ namespace LinqToDB.Expressions
 
 				switch (e.NodeType)
 				{
-					case ExpressionType.Convert  :
+					case ExpressionType.Convert        :
+					case ExpressionType.ConvertChecked :
 						{
 							if (!context.MapConvert)
 								break;

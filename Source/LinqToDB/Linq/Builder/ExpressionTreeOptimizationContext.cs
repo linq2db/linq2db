@@ -282,8 +282,8 @@ namespace LinqToDB.Linq.Builder
 					if (notExpression.Operand.NodeType == ExpressionType.Equal)
 					{
 						var equal = (BinaryExpression)notExpression.Operand;
-						if (equal.Left.NodeType  != ExpressionType.Convert &&
-						    equal.Right.NodeType != ExpressionType.Convert)
+						if (equal.Left.NodeType is not ExpressionType.Convert and not ExpressionType.ConvertChecked &&
+						    equal.Right.NodeType is not ExpressionType.Convert and not ExpressionType.ConvertChecked)
 						{
 							return new TransformInfo(Expression.NotEqual(equal.Left, equal.Right), false, true);
 						}
@@ -292,8 +292,8 @@ namespace LinqToDB.Linq.Builder
 					if (notExpression.Operand.NodeType == ExpressionType.NotEqual)
 					{
 						var notEqual = (BinaryExpression)notExpression.Operand;
-						if (notEqual.Left.NodeType  != ExpressionType.Convert &&
-						    notEqual.Right.NodeType != ExpressionType.Convert)
+						if (notEqual.Left.NodeType is not ExpressionType.Convert and not ExpressionType.ConvertChecked &&
+						    notEqual.Right.NodeType is not ExpressionType.Convert and not ExpressionType.ConvertChecked)
 						{
 							return new TransformInfo(Expression.Equal(notEqual.Left, notEqual.Right), false, true);
 						}

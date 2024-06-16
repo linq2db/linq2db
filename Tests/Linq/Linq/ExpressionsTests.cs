@@ -1114,7 +1114,7 @@ namespace Tests.Linq
 		{
 			using (var db = GetDataContext(context))
 			{
-				var left  = GetQuery(db, null);
+				var left  = GetQuery(db, 0);
 				var right = GetQuery(db, 2);
 
 				var cacheMiss = Query<Patient>.CacheMissCount;
@@ -1136,7 +1136,7 @@ namespace Tests.Linq
 		{
 			using (var db = GetDataContext(context))
 			{
-				var left  = GetQuery(db, null);
+				var left  = GetQuery(db, 0);
 				var right = GetQuery(db, 2);
 
 				Assert.That(

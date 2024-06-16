@@ -1055,7 +1055,7 @@ namespace LinqToDB.SqlProvider
 
 			if (predicate.SubQuery.Where.SearchCondition.Predicates is [SqlPredicate.FalsePredicate firstPredicate])
 			{
-				return firstPredicate;
+				return firstPredicate.MakeNot(predicate.IsNot);
 			}
 
 			return predicate;

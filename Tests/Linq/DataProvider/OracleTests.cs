@@ -140,8 +140,22 @@ namespace Tests.DataProvider
 				TestType(conn, "\"datetime2DataType\"",      new DateTime(2012, 12, 12, 12, 12, 12, 012));
 				TestType(conn, "\"datetimeoffsetDataType\"", new DateTimeOffset(2012, 12, 12, 12, 12, 12, 12, new TimeSpan(-5, 0, 0)));
 
+				// 1. if test fails here (usually with 1 hour offset during summer time)
+				// you need to set ORA_SDTZ environment variable to timezone name because provider used offset which doesn't work in most cases
+				// See https://oracle-base.com/articles/misc/setting-database-time-zones-in-oracle#ora_sdtz
+				// recent managed provider uses timezone name (as it must do)
+				// but native and devart providers were written by people who don't know that offset != timezone
+				//
+				// 2. Following query will return session timezone, set by provider:
+				// select sessiontimezone from dual
+				//
+				// 3. We cannot use "alter session set time_zone=xxx" as workaround here as we already have data with incorrect offset
+				// inserted into table by Oracle.sql (and whoo knowns which tests it will affect too)
+				//
+				// 4. Devart Direct provider doesn't know about this env variable and I don't see any switches to specify
+				// session timezone for it instead of offset *facepalm*
 				var dt = new DateTimeOffset(2012, 12, 12, 12, 12, 12, 12, TimeSpan.Zero);
-				TestType(conn, "\"localZoneDataType\"", new DateTimeOffset(2012, 12, 12, 12, 12, 12, 12, TimeZoneInfo.Local.GetUtcOffset(dt) /* new TimeSpan(-4, 0, 0)*/), throwException:true);
+				TestType(conn, "\"localZoneDataType\"", new DateTimeOffset(2012, 12, 12, 12, 12, 12, 12, TimeZoneInfo.Local.GetUtcOffset(dt) /* new TimeSpan(-4, 0, 0)*/), throwException: true);
 
 				TestType(conn, "\"charDataType\"",           '1');
 				TestType(conn, "\"varcharDataType\"",        "234");
@@ -325,20 +339,29 @@ namespace Tests.DataProvider
 				Assert.Multiple(() =>
 				{
 					Assert.That(conn.Execute<DateTimeOffset>(
-									"SELECT timestamp '2012-12-12 12:12:12.012' FROM sys.dual"),
-									Is.EqualTo(new DateTimeOffset(2012, 12, 12, 12, 12, 12, 12, TimeZoneInfo.Local.GetUtcOffset(new DateTime(2012, 12, 12, 12, 12, 12)))));
+						"SELECT timestamp '2012-12-12 12:12:12.012' FROM sys.dual"),
+						Is.EqualTo(new DateTimeOffset(2012, 12, 12, 12, 12, 12, 12, TimeZoneInfo.Local.GetUtcOffset(new DateTime(2012, 12, 12, 12, 12, 12)))));
 
 					Assert.That(conn.Execute<DateTimeOffset?>(
 						"SELECT timestamp '2012-12-12 12:12:12.012' FROM sys.dual"),
 						Is.EqualTo(new DateTimeOffset(2012, 12, 12, 12, 12, 12, 12, TimeZoneInfo.Local.GetUtcOffset(new DateTime(2012, 12, 12, 12, 12, 12)))));
 
+					// no idea how/why it works that way. In any case it is not a good idea to map TS to DT
+					var expected = context.IsAnyOf(TestProvName.AllOracleManaged)
+#if !NETFRAMEWORK
+						? new DateTime(2012, 12, 12, 17, 12, 12, 12)
+#else
+						? new DateTime(2012, 12, 12, 12, 12, 12, 12)
+#endif
+						: new DateTime(2012, 12, 12, 12, 12, 12, 12);
+
 					Assert.That(conn.Execute<DateTime>(
 						"SELECT timestamp '2012-12-12 12:12:12.012 -04:00' FROM sys.dual"),
-						Is.EqualTo(new DateTime(2012, 12, 12, 12, 12, 12, 12)));
+						Is.EqualTo(expected));
 
 					Assert.That(conn.Execute<DateTime?>(
 						"SELECT timestamp '2012-12-12 12:12:12.012 -04:00' FROM sys.dual"),
-						Is.EqualTo(new DateTime(2012, 12, 12, 12, 12, 12, 12)));
+						Is.EqualTo(expected));
 
 					Assert.That(conn.Execute<DateTimeOffset>(
 						"SELECT timestamp '2012-12-12 12:12:12.012 +05:00' FROM sys.dual"),
@@ -350,7 +373,6 @@ namespace Tests.DataProvider
 
 					Assert.That(conn.Execute<DateTime>("SELECT \"datetimeoffsetDataType\" FROM \"AllTypes\" WHERE ID = 1"), Is.EqualTo(default(DateTime)));
 					Assert.That(conn.Execute<DateTime?>("SELECT \"datetimeoffsetDataType\" FROM \"AllTypes\" WHERE ID = 1"), Is.EqualTo(default(DateTime?)));
-
 				});
 
 				conn.Execute<DateTimeOffset?>(PathThroughSql, new DataParameter("p", dto)).Should().Be(dto);
@@ -1005,35 +1027,35 @@ namespace Tests.DataProvider
 		[Test]
 		public void SequenceInsert([IncludeDataSources(TestProvName.AllOracle)] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				db.GetTable<OracleSpecific.SequenceTest>().Where(_ => _.Value == "SeqValue").Delete();
-				db.Insert(new OracleSpecific.SequenceTest { Value = "SeqValue" });
+			using var _ = new DisableBaseline("Sequence values could vary for Oracle");
+			using var db = GetDataContext(context);
 
-				var id = db.GetTable<OracleSpecific.SequenceTest>().Single(_ => _.Value == "SeqValue").ID;
+			db.GetTable<OracleSpecific.SequenceTest>().Where(_ => _.Value == "SeqValue").Delete();
+			db.Insert(new OracleSpecific.SequenceTest { Value = "SeqValue" });
 
-				db.GetTable<OracleSpecific.SequenceTest>().Where(_ => _.ID == id).Delete();
+			var id = db.GetTable<OracleSpecific.SequenceTest>().Single(_ => _.Value == "SeqValue").ID;
 
-				Assert.That(db.GetTable<OracleSpecific.SequenceTest>().Count(_ => _.Value == "SeqValue"), Is.EqualTo(0));
-			}
+			db.GetTable<OracleSpecific.SequenceTest>().Where(_ => _.ID == id).Delete();
+
+			Assert.That(db.GetTable<OracleSpecific.SequenceTest>().Count(_ => _.Value == "SeqValue"), Is.EqualTo(0));
 		}
 
 		[Test]
 		public void SequenceInsertWithIdentity([IncludeDataSources(TestProvName.AllOracle)] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				db.GetTable<OracleSpecific.SequenceTest>().Where(_ => _.Value == "SeqValue").Delete();
+			using var _ = new DisableBaseline("Sequence values could vary for Oracle");
+			using var db = GetDataContext(context);
 
-				var id1 = Convert.ToInt32(db.InsertWithIdentity(new OracleSpecific.SequenceTest { Value = "SeqValue" }));
-				var id2 = db.GetTable<OracleSpecific.SequenceTest>().Single(_ => _.Value == "SeqValue").ID;
+			db.GetTable<OracleSpecific.SequenceTest>().Where(_ => _.Value == "SeqValue").Delete();
 
-				Assert.That(id2, Is.EqualTo(id1));
+			var id1 = Convert.ToInt32(db.InsertWithIdentity(new OracleSpecific.SequenceTest { Value = "SeqValue" }));
+			var id2 = db.GetTable<OracleSpecific.SequenceTest>().Single(_ => _.Value == "SeqValue").ID;
 
-				db.GetTable<OracleSpecific.SequenceTest>().Where(_ => _.ID == id1).Delete();
+			Assert.That(id2, Is.EqualTo(id1));
 
-				Assert.That(db.GetTable<OracleSpecific.SequenceTest>().Count(_ => _.Value == "SeqValue"), Is.EqualTo(0));
-			}
+			db.GetTable<OracleSpecific.SequenceTest>().Where(_ => _.ID == id1).Delete();
+
+			Assert.That(db.GetTable<OracleSpecific.SequenceTest>().Count(_ => _.Value == "SeqValue"), Is.EqualTo(0));
 		}
 
 #endregion

@@ -1110,7 +1110,7 @@ namespace LinqToDB.Linq.Builder
 					var d = switchExpression.DefaultBody == null ||
 							switchExpression.DefaultBody is not UnaryExpression
 							{
-								NodeType : ExpressionType.Convert, Operand : MethodCallExpression { Method : var m }
+								NodeType : ExpressionType.Convert or ExpressionType.ConvertChecked, Operand : MethodCallExpression { Method : var m }
 							} || m != ConvertBuilder.DefaultConverter;
 
 					var ps = new ISqlExpression[switchExpression.Cases.Count * 2 + (d? 1 : 0)];
@@ -1290,7 +1290,7 @@ namespace LinqToDB.Linq.Builder
 
 			var currentContext = context;
 
-			if (attr.IsAggregate && checkAggregateRoot)
+			if ((attr.IsAggregate || attr.IsWindowFunction) && checkAggregateRoot)
 			{
 				var sequenceRef = new ContextRefExpression(context.ElementType, context);
 
@@ -1656,6 +1656,7 @@ namespace LinqToDB.Linq.Builder
 				}
 
 				case ExpressionType.Convert:
+				case ExpressionType.ConvertChecked:
 				{
 					var e = (UnaryExpression)expression;
 
@@ -2150,7 +2151,7 @@ namespace LinqToDB.Linq.Builder
 				_                                 => throw new InvalidOperationException(),
 			};
 
-			if ((left.NodeType == ExpressionType.Convert || right.NodeType == ExpressionType.Convert) && (op == SqlPredicate.Operator.Equal || op == SqlPredicate.Operator.NotEqual))
+			if ((left.NodeType is ExpressionType.Convert or ExpressionType.ConvertChecked || right.NodeType is ExpressionType.Convert or ExpressionType.ConvertChecked) && (op == SqlPredicate.Operator.Equal || op == SqlPredicate.Operator.NotEqual))
 			{
 				var p = ConvertEnumConversion(context!, left, op, right);
 				if (p != null)
@@ -2467,14 +2468,14 @@ namespace LinqToDB.Linq.Builder
 		// e.g. see https://github.com/linq2db/linq2db/issues/2041
 		private static bool RestoreCompare(ref Expression op1, ref Expression op2)
 		{
-			if (op1.NodeType == ExpressionType.Convert)
+			if (op1.NodeType is ExpressionType.Convert or ExpressionType.ConvertChecked)
 			{
 				var op1conv = (UnaryExpression)op1;
 
 				// handle char replaced with int
 				// (int)chr op CONST
 				if (op1.Type == typeof(int) && op1conv.Operand.Type == typeof(char)
-					&& (op2.NodeType == ExpressionType.Constant || op2.NodeType == ExpressionType.Convert))
+					&& (op2.NodeType is ExpressionType.Constant or ExpressionType.Convert or ExpressionType.ConvertChecked))
 				{
 					op1 = op1conv.Operand;
 					op2 = op2.NodeType == ExpressionType.Constant
@@ -2485,7 +2486,7 @@ namespace LinqToDB.Linq.Builder
 				// (int?)chr? op CONST
 				else if (op1.Type == typeof(int?) && op1conv.Operand.Type == typeof(char?)
 					&& (op2.NodeType == ExpressionType.Constant
-						|| (op2.NodeType == ExpressionType.Convert && ((UnaryExpression)op2).Operand.NodeType == ExpressionType.Convert)))
+						|| (op2.NodeType is ExpressionType.Convert or ExpressionType.ConvertChecked && ((UnaryExpression)op2).Operand.NodeType is ExpressionType.Convert or ExpressionType.ConvertChecked)))
 				{
 					op1 = op1conv.Operand;
 					op2 = op2.NodeType == ExpressionType.Constant
@@ -2507,7 +2508,7 @@ namespace LinqToDB.Linq.Builder
 				// here underlying type used
 				// (int?)enum? op (int?)enum
 				else if (op1conv.Operand.Type.IsNullable() && Nullable.GetUnderlyingType(op1conv.Operand.Type)!.IsEnum
-					&& op2.NodeType == ExpressionType.Convert
+					&& op2.NodeType is ExpressionType.Convert or ExpressionType.ConvertChecked
 					&& op2 is UnaryExpression op2conv2
 					&& op2conv2.Operand.NodeType == ExpressionType.Constant
 					&& op2conv2.Operand.Type == Nullable.GetUnderlyingType(op1conv.Operand.Type))
@@ -2518,7 +2519,7 @@ namespace LinqToDB.Linq.Builder
 				}
 				// https://github.com/linq2db/linq2db/issues/2039
 				// byte, sbyte and ushort comparison operands upcasted to int
-				else if (op2.NodeType == ExpressionType.Convert
+				else if (op2.NodeType is ExpressionType.Convert or ExpressionType.ConvertChecked
 					&& op2 is UnaryExpression op2conv1
 					&& op1conv.Operand.Type == op2conv1.Operand.Type
 					&& op1conv.Operand.Type != typeof(object))
@@ -2560,7 +2561,7 @@ namespace LinqToDB.Linq.Builder
 				operand = left;
 				value   = right;
 			}
-			else if (left.NodeType == ExpressionType.Convert && ((UnaryExpression)left).Operand is MemberExpression)
+			else if (left.NodeType is ExpressionType.Convert or ExpressionType.ConvertChecked && ((UnaryExpression)left).Operand is MemberExpression)
 			{
 				operand = ((UnaryExpression)left).Operand;
 				value   = right;
@@ -2570,12 +2571,12 @@ namespace LinqToDB.Linq.Builder
 				operand = right;
 				value   = left;
 			}
-			else if (right.NodeType == ExpressionType.Convert && ((UnaryExpression)right).Operand is MemberExpression)
+			else if (right.NodeType is ExpressionType.Convert or ExpressionType.ConvertChecked && ((UnaryExpression)right).Operand is MemberExpression)
 			{
 				operand = ((UnaryExpression)right).Operand;
 				value   = left;
 			}
-			else if (left.NodeType == ExpressionType.Convert)
+			else if (left.NodeType is ExpressionType.Convert or ExpressionType.ConvertChecked)
 			{
 				operand = ((UnaryExpression)left).Operand;
 				value   = right;
@@ -2633,7 +2634,7 @@ namespace LinqToDB.Linq.Builder
 						sqlvalue = MappingSchema.GetSqlValue(type, mapValue, null);
 					}
 
-					if (left.NodeType == ExpressionType.Convert)
+					if (left.NodeType is ExpressionType.Convert or ExpressionType.ConvertChecked)
 					{
 						l = ConvertToSql(context, operand);
 						r = sqlvalue;
@@ -2648,6 +2649,7 @@ namespace LinqToDB.Linq.Builder
 				}
 
 				case ExpressionType.Convert:
+				case ExpressionType.ConvertChecked:
 				{
 					value = ((UnaryExpression)value).Operand;
 
@@ -3748,7 +3750,7 @@ namespace LinqToDB.Linq.Builder
 					return Project(context, me, nextPath, nextPath.Count - 1, flags, body, strict);
 				}
 
-				if (memberExpression.Expression!.NodeType == ExpressionType.Convert)
+				if (memberExpression.Expression!.NodeType is ExpressionType.Convert or ExpressionType.ConvertChecked)
 				{
 					// going deeper
 					return Project(context, ((UnaryExpression)memberExpression.Expression).Operand, nextPath, nextPath.Count - 1, flags, body, strict);
@@ -4272,6 +4274,7 @@ namespace LinqToDB.Linq.Builder
 				}
 
 				case ExpressionType.Convert:
+				case ExpressionType.ConvertChecked:
 				{
 					var unaryExpression = (UnaryExpression)body;
 
@@ -4426,7 +4429,7 @@ namespace LinqToDB.Linq.Builder
 			if ((flags & (ProjectFlags.Root | ProjectFlags.AggregationRoot | ProjectFlags.AssociationRoot | ProjectFlags.ExtractProjection | ProjectFlags.Table)) == 0)
 			{
 				// try to find already converted to SQL
-				var sqlKey = new SqlCacheKey(path, null, null, null, flags.SqlFlag());
+				var sqlKey = new SqlCacheKey(path, null, null, forContext?.SelectQuery, flags.SqlFlag());
 				if (_cachedSql.TryGetValue(sqlKey, out var cachedSql) && cachedSql is SqlPlaceholderExpression)
 				{
 					return cachedSql;
@@ -4435,7 +4438,7 @@ namespace LinqToDB.Linq.Builder
 
 			var shouldCache = !flags.IsTest() && null != path.Find(1, (_, e) => e is ContextRefExpression);
 
-			var key = new SqlCacheKey(path, null, null, null, flags);
+			var key = new SqlCacheKey(path, null, null, forContext?.SelectQuery, flags);
 
 			Expression? expression;
 
@@ -4474,7 +4477,7 @@ namespace LinqToDB.Linq.Builder
 					return MakeExpression(currentContext, corrected, flags);
 				}
 
-				if (memberExpression.Expression.NodeType == ExpressionType.Convert)
+				if (memberExpression.Expression.NodeType is ExpressionType.Convert or ExpressionType.ConvertChecked)
 				{
 					var unary = (UnaryExpression)memberExpression.Expression;
 					if (unary.Operand is ContextRefExpression contextRef)
@@ -4656,13 +4659,15 @@ namespace LinqToDB.Linq.Builder
 					rootContext = contextRefExpression;
 				}
 			}
-			else if (path.NodeType == ExpressionType.Convert)
+			else if (path.NodeType is ExpressionType.Convert or ExpressionType.ConvertChecked)
 			{
 				var unary      = (UnaryExpression)path;
 
 				expression   = MakeExpression(currentContext, unary.Operand, flags);
 				if (!flags.IsTable() && expression.Type != path.Type)
-					expression = Expression.Convert(expression, path.Type);
+				{
+					expression = Expression.MakeUnary(path.NodeType, expression, unary.Type, unary.Method);
+				}
 				doNotProcess = true;
 			}
 			else if (path.NodeType == ExpressionType.TypeAs && currentContext != null)
@@ -4784,12 +4789,12 @@ namespace LinqToDB.Linq.Builder
 					if ((flags.HasFlag(ProjectFlags.SQL) ||
 					     flags.HasFlag(ProjectFlags.Keys)) && expression is SqlPlaceholderExpression)
 					{
-						var anotherKey = new SqlCacheKey(path, null, null, null, ProjectFlags.Expression);
+						var anotherKey = new SqlCacheKey(path, null, null, forContext?.SelectQuery, ProjectFlags.Expression);
 						_expressionCache[anotherKey] = expression;
 
 						if (flags.HasFlag(ProjectFlags.Keys))
 						{
-							anotherKey                   = new SqlCacheKey(path, null, null, null, ProjectFlags.Expression | ProjectFlags.Keys);
+							anotherKey                   = new SqlCacheKey(path, null, null, forContext?.SelectQuery, ProjectFlags.Expression | ProjectFlags.Keys);
 							_expressionCache[anotherKey] = expression;
 						}
 					}

@@ -2044,5 +2044,160 @@ namespace Tests.Linq
 
 			AssertQuery(query);
 		}
+
+		[Test]
+		public void Issue_SubQueryFilter3([DataSources(
+			TestProvName.AllClickHouse, 
+			TestProvName.AllAccess, 
+			TestProvName.AllSapHana, 
+			TestProvName.AllFirebirdLess4, 
+			TestProvName.AllOracle, 
+			TestProvName.AllMySql57, 
+			TestProvName.AllSybase
+			)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var filter1 = "John";
+			var filter2 = "Tester";
+
+			IQueryable<Model.Patient> query = db.Patient;
+
+			var whereParameter = Expression.Parameter(typeof(Model.Patient), "patient");
+
+			query = query.Where(
+				Expression.Lambda<Func<Model.Patient, bool>>(
+					Expression.AndAlso(
+						BuildFilterSubQuery(db, filter1, whereParameter),
+						BuildFilterSubQuery(db, filter2, whereParameter)),
+					whereParameter))
+				.OrderBy(r => r.PersonID);
+
+			AssertQuery(query);
+
+			static Expression BuildFilterSubQuery(
+				ITestDataContext db,
+				string filter,
+				ParameterExpression whereParameter)
+			{
+				// db.Person
+				//    .Where(p => p.FirstName.Contains(filter))
+				//    .Any(e => e.ID == subquery2.First())
+				var subquery2 = BuildFilterSubQuery2(db, whereParameter);
+
+				var subquery = db.Person.Where(p => p.FirstName.Contains(filter)).Expression;
+
+				subquery2 = Expression.Call(
+					typeof(Queryable),
+					nameof(Queryable.First),
+					[typeof(int)],
+					subquery2);
+
+				var anyParameter = Expression.Parameter(typeof(Model.Person), "e");
+
+				var predicate = Expression.Lambda<Func<Model.Person, bool>>(
+					Expression.Equal(
+						Expression.PropertyOrField(anyParameter, nameof(Model.Person.ID)),
+						subquery2),
+					anyParameter);
+
+				subquery = Expression.Call(
+					typeof(Queryable),
+					nameof(Queryable.Any),
+					[typeof(Model.Person)],
+					subquery,
+					predicate);
+
+				return subquery;
+			}
+
+			static Expression BuildFilterSubQuery2(ITestDataContext db, ParameterExpression whereParameter)
+			{
+				// db.Person.Where(p => p.ID == patient.PersonID).Select(p => p.ID)
+				var subquery = db.Person.Expression;
+
+				var personParameter = Expression.Parameter(typeof(Model.Person), "d");
+
+				var predicate = Expression.Lambda<Func<Model.Person, bool>>(
+					Expression.Equal(
+						Expression.PropertyOrField(personParameter, nameof(Model.Person.ID)),
+						Expression.PropertyOrField(whereParameter, nameof(Model.Patient.PersonID))),
+					personParameter);
+
+				subquery = Expression.Call(
+					typeof(Queryable),
+					nameof(Queryable.Where),
+					[typeof(Model.Person)],
+					subquery,
+					predicate);
+
+				var selector = Expression.Lambda<Func<Model.Person, int>>(
+					Expression.PropertyOrField(personParameter, nameof(Model.Person.ID)),
+					personParameter);
+
+				subquery = Expression.Call(
+					typeof(Queryable),
+					nameof(Queryable.Select),
+					[typeof(Model.Person), typeof(int)],
+					subquery,
+					selector);
+
+				return subquery;
+			}
+		}
+
+		[Test]
+		public void Issue_Filter_Checked([DataSources(
+			TestProvName.AllAccess,
+			TestProvName.AllClickHouse,
+			TestProvName.AllSybase,
+			TestProvName.AllMySql,
+			ProviderName.SqlCe)]
+			string context)
+		{
+			checked
+			{
+				using var db = GetDataContext(context);
+
+				var query = LinqExtensions.FullJoin(
+						db.Person.Select(_ => (int?)123).Take(1).GroupBy(_ => _!).Select(_ => new { _.Key, Count = _.Count() }),
+						db.Person.Select(_ => ((int?)null)!).Where(_ => false).GroupBy(_ => _!).Select(_ => new { _.Key, Count = _.Count() }),
+						(a1, a2) => a1.Count == a2.Count,
+						(a1, a2) => new { LeftCount = (int?)a1.Count, RightCount = (int?)a2.Count })
+					.Where(_ => _.LeftCount == null || _.RightCount == null);
+
+				// crashes
+				//AssertQuery(query);
+				query.ToList();
+			}
+		}
+
+		[Test]
+		public void Issue_CompareQueries1([DataSources(TestProvName.AllClickHouse)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query1 = db.Person.Where(p => new int[] { 1, 2 }.Contains(p.ID)).Select(p => p.ID);
+			var query2 = db.Person.Where(p => new int[0].Contains(p.ID)).Select(p => p.ID);
+
+			var result1 = query1.Where(rec => !query2.Contains(rec)).Select(p => Sql.Ext.Count(p, Sql.AggregateModifier.None).ToValue()).Single() == 0;
+			var result2 = query2.Where(rec => !query1.Contains(rec)).Select(p => Sql.Ext.Count(p, Sql.AggregateModifier.None).ToValue()).Single() == 0;
+
+			Assert.That(result1 && result2, Is.False);
+		}
+
+		[Test]
+		public void Issue_CompareQueries2([DataSources(TestProvName.AllClickHouse)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query1 = db.Person.Where(p => new int[] { 1, 2 }.Contains(p.ID)).Select(p => p.ID);
+			var query2 = db.Person.Where(p => new int[] { 3 }.Contains(p.ID)).Select(p => p.ID);
+
+			var result1 = query1.Where(rec => !query2.Contains(rec)).Select(p => Sql.Ext.Count(p, Sql.AggregateModifier.None).ToValue()).Single() == 0;
+			var result2 = query2.Where(rec => !query1.Contains(rec)).Select(p => Sql.Ext.Count(p, Sql.AggregateModifier.None).ToValue()).Single() == 0;
+
+			Assert.That(result1 && result2, Is.False);
+		}
 	}
 }

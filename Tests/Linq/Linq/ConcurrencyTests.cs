@@ -466,6 +466,7 @@ namespace Tests.Linq
 				.Entity<ConcurrencyTable<byte[]>>()
 					.HasTableName("ConcurrencyGuidBinary")
 					.Property(e => e.Stamp)
+						.HasDataType(DataType.Binary)
 						.HasLength(16)
 						.HasAttribute(new OptimisticLockPropertyAttribute(VersionBehavior.Guid))
 				.Build();
@@ -477,7 +478,7 @@ namespace Tests.Linq
 			var record = new ConcurrencyTable<byte[]>()
 			{
 				Id    = 1,
-				Stamp = Guid.NewGuid().ToByteArray(),
+				Stamp = TestData.Guid1.ToByteArray(),
 				Value = "initial"
 			};
 
@@ -497,13 +498,13 @@ namespace Tests.Linq
 
 			var dbStamp = record.Stamp;
 			record.Value = "value 3";
-			record.Stamp = Guid.NewGuid().ToByteArray();
+			record.Stamp = TestData.Guid2.ToByteArray();
 			cnt = db.UpdateOptimistic(record);
 			Assert.That(cnt, Is.EqualTo(0));
 			record.Stamp = dbStamp;
 			record.Value = "value 2";
 			AssertData(record, true);
-			record.Stamp = Guid.NewGuid().ToByteArray();
+			record.Stamp = TestData.Guid3.ToByteArray();
 
 			cnt = db.DeleteOptimistic(record);
 			Assert.That(cnt, Is.EqualTo(0));

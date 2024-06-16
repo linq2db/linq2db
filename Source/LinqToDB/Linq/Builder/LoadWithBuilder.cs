@@ -321,7 +321,8 @@ namespace LinqToDB.Linq.Builder
 						goto default;
 					}
 
-					case ExpressionType.Convert      :
+					case ExpressionType.Convert       :
+					case ExpressionType.ConvertChecked:
 					{
 						expression = ((UnaryExpression)expression).Operand;
 						break;

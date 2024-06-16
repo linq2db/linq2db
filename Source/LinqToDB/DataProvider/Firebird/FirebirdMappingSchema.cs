@@ -76,6 +76,8 @@ namespace LinqToDB.DataProvider.Firebird
 				else
 					sb.AppendFormat(CultureInfo.InvariantCulture, "{0:G17}", d);
 			});
+
+			SetConvertExpression((Guid g) => ReadGuidAsBinary(g), conversionType: ConversionType.FromDatabase);
 		}
 
 		static void BuildDateTime(StringBuilder stringBuilder, SqlDataType dt, DateTime value)
@@ -97,6 +99,20 @@ namespace LinqToDB.DataProvider.Firebird
 			stringBuilder.AppendFormat(CultureInfo.InvariantCulture, DATE_FORMAT, value, dt.Type.DbType ?? "date");
 		}
 #endif
+
+		static byte[] ReadGuidAsBinary(Guid guid)
+		{
+			var bytes = guid.ToByteArray();
+
+			if (BitConverter.IsLittleEndian)
+			{
+				Array.Reverse(bytes, 0, 4);
+				Array.Reverse(bytes, 4, 2);
+				Array.Reverse(bytes, 6, 2);
+			}
+
+			return bytes;
+		}
 
 		static void ConvertGuidToSql(StringBuilder sb, SqlDataType dataType, Guid value)
 		{

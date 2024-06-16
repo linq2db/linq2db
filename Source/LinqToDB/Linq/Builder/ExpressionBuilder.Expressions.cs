@@ -161,6 +161,7 @@ namespace LinqToDB.Linq.Builder
 								  or ExpressionType.ListInit
 								  or ExpressionType.Default
 								  or ExpressionType.Convert
+								  or ExpressionType.ConvertChecked
 								  or ExpressionType.Constant
 								  or ExpressionType.Parameter
 								  or ExpressionType.Not
@@ -401,7 +402,7 @@ namespace LinqToDB.Linq.Builder
 
 			protected override Expression VisitUnary(UnaryExpression node)
 			{
-				if (node.NodeType == ExpressionType.Convert)
+				if (node.NodeType is ExpressionType.Convert or ExpressionType.ConvertChecked)
 				{
 					if (_flags.IsExpression())
 					{

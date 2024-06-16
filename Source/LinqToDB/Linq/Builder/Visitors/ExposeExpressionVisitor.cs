@@ -722,6 +722,7 @@ namespace LinqToDB.Linq.Builder.Visitors
 				}
 
 				case ExpressionType.Convert:
+				case ExpressionType.ConvertChecked:
 				{
 					if (node.Method != null)
 					{

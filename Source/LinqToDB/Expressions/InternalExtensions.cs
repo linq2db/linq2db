@@ -318,7 +318,7 @@ namespace LinqToDB.Expressions
 			return expression?.NodeType switch
 			{
 				null                        => true,
-				ExpressionType.Convert      => IsEvaluable(((UnaryExpression)expression).Operand, mappingSchema),
+				ExpressionType.Convert or ExpressionType.ConvertChecked => IsEvaluable(((UnaryExpression)expression).Operand, mappingSchema),
 				ExpressionType.Default      => true,
 				// don't return true for closure classes
 				ExpressionType.Constant     => expression is ConstantExpression c && (c.Value == null || c.Value is string || c.Value.GetType().IsValueType),
@@ -357,7 +357,7 @@ namespace LinqToDB.Expressions
 			else if (e is UnaryExpression unaryExpression)
 			{
 				newExpr = unaryExpression.Update(OptimizeExpression(unaryExpression.Operand, mappingSchema));
-				if (newExpr.NodeType == ExpressionType.Convert && ((UnaryExpression)newExpr).Operand.NodeType == ExpressionType.Convert)
+				if (newExpr.NodeType is ExpressionType.Convert or ExpressionType.ConvertChecked && ((UnaryExpression)newExpr).Operand.NodeType is ExpressionType.Convert or ExpressionType.ConvertChecked)
 				{
 					// remove double convert
 					newExpr = Expression.Convert(
