@@ -86,7 +86,7 @@ namespace LinqToDB.DataProvider.ClickHouse.Translation
 								factory.Add(
 									longDataType,
 									factory.Function(longDataType, "toUnixTimestamp64Nano", dateTimeExpression),
-									factory.Cast(factory.Multiply(factory.GetDbDataType(increment), increment, 1000_000), longDataType)
+									factory.Function(longDataType, "toInt64", factory.Multiply(factory.GetDbDataType(increment), increment, 1000_000))
 								)
 							)
 						);
@@ -101,7 +101,7 @@ namespace LinqToDB.DataProvider.ClickHouse.Translation
 								factory.Add(
 									longDataType,
 									factory.Function(longDataType, "toUnixTimestamp64Nano", dateTimeExpression),
-									factory.Cast(factory.Multiply(factory.GetDbDataType(increment), increment, 1000), longDataType)
+									factory.Function(longDataType, "toInt64", factory.Multiply(factory.GetDbDataType(increment), increment, 1000))
 								)
 							)
 						);
@@ -116,7 +116,7 @@ namespace LinqToDB.DataProvider.ClickHouse.Translation
 								factory.Add(
 									longDataType,
 									factory.Function(longDataType, "toUnixTimestamp64Nano", dateTimeExpression),
-									factory.Cast(factory.Multiply(factory.GetDbDataType(increment), increment, 100), longDataType)
+									factory.Function(longDataType, "toInt64", factory.Multiply(factory.GetDbDataType(increment), increment, 100))
 								)
 							)
 						);
@@ -131,7 +131,7 @@ namespace LinqToDB.DataProvider.ClickHouse.Translation
 								factory.Add(
 									longDataType,
 									factory.Function(longDataType, "toUnixTimestamp64Nano", dateTimeExpression),
-									factory.Cast(increment, longDataType)
+									factory.Function(longDataType, "toInt64", increment)
 								)
 							)
 						);
