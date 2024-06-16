@@ -911,7 +911,7 @@ namespace LinqToDB.Linq.Builder
 
 			var simplified = expression.Transform(e =>
 			{
-				if (e.NodeType == ExpressionType.Convert && e.Type != typeof(object))
+				if (e.NodeType is ExpressionType.Convert or ExpressionType.ConvertChecked && e.Type != typeof(object))
 				{
 					if (((UnaryExpression)e).Operand is SqlPlaceholderExpression convertPlaceholder)
 					{

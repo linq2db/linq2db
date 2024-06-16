@@ -29,7 +29,7 @@ namespace LinqToDB.Linq.Builder
 			{
 				body = body.Transform(e =>
 				{
-					if (e.NodeType == ExpressionType.Convert
+					if (e.NodeType is ExpressionType.Convert or ExpressionType.ConvertChecked
 						&& ((UnaryExpression)e).Operand is ContextRefExpression contextRef
 						&& !e.Type.ToUnderlying().IsValueType)
 					{
@@ -642,7 +642,7 @@ namespace LinqToDB.Linq.Builder
 					return conditional.Update(newTest, newTrue, newFalse);
 				}
 
-				case { NodeType: ExpressionType.Convert }:
+				case { NodeType: ExpressionType.Convert or ExpressionType.ConvertChecked }:
 				{
 					var unary = (UnaryExpression)expression;
 					return unary.Update(RemapToNewPath(builder, unary.Operand, toPath, flags));
@@ -692,7 +692,7 @@ namespace LinqToDB.Linq.Builder
 		{
 			var newExpression = expression.Transform((expression, current, onContext), (ctx, e) =>
 			{
-				if (e.NodeType == ExpressionType.Convert)
+				if (e.NodeType is ExpressionType.Convert or ExpressionType.ConvertChecked)
 				{
 					if (((UnaryExpression)e).Operand is ContextRefExpression contextOperand)
 					{
@@ -726,7 +726,7 @@ namespace LinqToDB.Linq.Builder
 		{
 			var newExpression = expression.Transform((expression, current, onPath), (ctx, e) =>
 			{
-				if (e.NodeType == ExpressionType.Convert)
+				if (e.NodeType is ExpressionType.Convert or ExpressionType.ConvertChecked)
 				{
 					if (((UnaryExpression)e).Operand is ContextRefExpression contextOperand)
 					{
