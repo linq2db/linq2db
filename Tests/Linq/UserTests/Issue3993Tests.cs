@@ -32,7 +32,7 @@ namespace Tests.UserTests.Test3993
 		}
 
 		[Test]
-		public void TestIssue3993_Test1([IncludeDataSources(false, TestProvName.AllSqlServer2019, TestProvName.AllSqlServer2016Plus, TestProvName.AllSQLite, TestProvName.AllPostgreSQL, TestProvName.AllOracle, TestProvName.AllMariaDB, TestProvName.AllMySql, TestProvName.AllFirebird3Plus, TestProvName.AllInformix, TestProvName.AllClickHouse, TestProvName.AllSapHana, TestProvName.AllSybase)] string configuration)
+		public void TestIssue3993_Test1([IncludeDataSources(false, TestProvName.AllSqlServer2019, TestProvName.AllSqlServer2016Plus, TestProvName.AllSQLite, TestProvName.AllPostgreSQL, TestProvName.AllOracle, TestProvName.AllMariaDB, TestProvName.AllMySql, TestProvName.AllFirebird3Plus, TestProvName.AllInformix, TestProvName.AllClickHouse, TestProvName.AllSapHana)] string configuration)
 		{
 			MappingSchema ms;
 			Model.ITestDataContext? db = null;
