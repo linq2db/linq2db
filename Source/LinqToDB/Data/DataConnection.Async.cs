@@ -307,9 +307,9 @@ namespace LinqToDB.Data
 
 			if (interceptor != null)
 			{
-                await using (ActivityService.StartAndConfigureAwait(ActivityID.DataContextInterceptorOnClosedAsync))
-                    await interceptor.OnClosedAsync(new(this)).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
-            }
+				await using (ActivityService.StartAndConfigureAwait(ActivityID.DataContextInterceptorOnClosedAsync))
+					await interceptor.OnClosedAsync(new(this)).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+			}
 		}
 
 		/// <summary>
