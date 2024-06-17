@@ -856,6 +856,9 @@ namespace LinqToDB.Linq.Builder
 						if (e.Method == null && (e.IsLifted || e.Type == typeof(object)))
 							return placeholder;
 
+						if (e.Method == null && operandExpr is not SqlPlaceholderExpression)
+							return e;
+
 						if (e.Type == typeof(bool) && e.Operand.Type == typeof(SqlBoolean))
 							return placeholder;
 
@@ -890,7 +893,7 @@ namespace LinqToDB.Linq.Builder
 				{
 					var e = (ConditionalExpression)expression;
 
-					var testExpr  = ConvertToSqlExpr(context, e.Test,    flags.TestFlag(), columnDescriptor : columnDescriptor, isPureExpression : isPureExpression);
+					var testExpr  = ConvertToSqlExpr(context, e.Test,    flags.TestFlag(), columnDescriptor : null, isPureExpression : isPureExpression);
 					var trueExpr  = ConvertToSqlExpr(context, e.IfTrue,  flags.TestFlag(), columnDescriptor : columnDescriptor, isPureExpression : isPureExpression);
 					var falseExpr = ConvertToSqlExpr(context, e.IfFalse, flags.TestFlag(), columnDescriptor : columnDescriptor, isPureExpression : isPureExpression);
 
@@ -2090,6 +2093,8 @@ namespace LinqToDB.Linq.Builder
 
 					if (l is SqlValue lv && lv.Value == null || left.IsNullValue())
 					{
+						rightExpr = BuildSqlExpression(context, rightExpr, flags);
+
 						if (rightExpr is ConditionalExpression { Test: SqlPlaceholderExpression { Sql: SqlSearchCondition rightSearchCond } } && rightSearchCond.Predicates.Count == 1)
 						{
 							var rightPredicate  = rightSearchCond.Predicates[0];
@@ -2104,13 +2109,13 @@ namespace LinqToDB.Linq.Builder
 							}
 						}
 
-						rightExpr = BuildSqlExpression(context, rightExpr, flags);
-
 						return GenerateNullComparison(rightExpr, isNot);
 					}
 
 					if (r is SqlValue rv && rv.Value == null || right.IsNullValue())
 					{
+						leftExpr = BuildSqlExpression(context, leftExpr, flags);
+
 						if (leftExpr is ConditionalExpression { Test: SqlPlaceholderExpression { Sql: SqlSearchCondition leftSearchCond } } && leftSearchCond.Predicates.Count == 1)
 						{
 							var leftPredicate  = leftSearchCond.Predicates[0];
@@ -2124,8 +2129,6 @@ namespace LinqToDB.Linq.Builder
 								return CreatePlaceholder(context, new SqlSearchCondition(false, new SqlPredicate.IsNull(isnull.Expr1, !isnull.IsNot)), GetOriginalExpression());
 							}
 						}
-
-						leftExpr = BuildSqlExpression(context, leftExpr, flags);
 
 						return GenerateNullComparison(leftExpr, isNot);
 					}
@@ -2380,7 +2383,7 @@ namespace LinqToDB.Linq.Builder
 		{
 			switch (expression.NodeType)
 			{
-				case ExpressionType.Conditional:
+				/*case ExpressionType.Conditional:
 				{
 					var cond = (ConditionalExpression)expression;
 
@@ -2390,7 +2393,7 @@ namespace LinqToDB.Linq.Builder
 						return false;
 
 					return true;
-				}
+				}*/
 
 				case ExpressionType.Constant:
 				case ExpressionType.Default:
@@ -4266,7 +4269,7 @@ namespace LinqToDB.Linq.Builder
 						return new DefaultValueExpression(MappingSchema, truePath.Type);
 					}
 
-					var falsePath = new DefaultValueExpression(MappingSchema, truePath.Type);
+					var falsePath = Expression.Constant(null, truePath.Type);
 
 					var conditional = Expression.Condition(isPredicate, truePath, falsePath);
 

@@ -222,6 +222,9 @@ namespace LinqToDB.Linq.Builder
 
 		ParameterAccessor? PrepareConvertersAndCreateParameter(ValueTypeExpression newExpr, Expression valueExpression, string? name, ColumnDescriptor? columnDescriptor, bool doNotCheckCompatibility, BuildParameterType buildParameterType)
 		{
+			if (valueExpression.Type == typeof(void))
+				return null;
+
 			var originalAccessor = newExpr.ValueExpression;
 			if (buildParameterType != BuildParameterType.InPredicate)
 			{
