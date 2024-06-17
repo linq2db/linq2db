@@ -1868,7 +1868,7 @@ conn.Open();</code>
   </returns>
         </member>
         <member name="P:Sap.Data.Hana.HanaConnection.DbProviderFactory">
-            <!-- Badly formed XML file "d:\701\w\7hhepnmjzk\gen\out\happy-make-build\ntamd64-msvc2015-release\Interfaces\ADO.NET\Managed\v4.5\tmp\Edm.xml" cannot be included -->
+            <!-- Badly formed XML file "c:\j\701\w\2d4dpucd3h\gen\out\happy-make-build\ntamd64-msvc2022-release\Interfaces\ADO.NET\Managed\v4.5\tmp\Edm.xml" cannot be included -->
         </member>
         <member name="T:Sap.Data.Hana.HanaCredential">
             <summary>
@@ -2002,6 +2002,11 @@ conn.Open();</code>
    <para>Gets or sets the UserName connection property.</para>
   </summary>
         </member>
+        <member name="P:Sap.Data.Hana.HanaConnectionStringBuilder.UserID">
+            <summary>
+   <para>Gets or sets the UserName connection property.</para>
+  </summary>
+        </member>
         <member name="P:Sap.Data.Hana.HanaConnectionStringBuilder.Password">
             <summary>
    <para>Gets or sets the Password connection property.</para>
@@ -2048,11 +2053,6 @@ conn.Open();</code>
    <para>Gets or sets the PersistSecurityInfo connection property.</para>
   </summary>
         </member>
-        <member name="P:Sap.Data.Hana.HanaConnectionStringBuilder.DataFormatSupport">
-            <summary>
-   <para>Gets or sets the DataFormatSupport connection property.</para>
-  </summary>
-        </member>
         <member name="P:Sap.Data.Hana.HanaConnectionStringBuilder.ConnectionLifetime">
             <summary>
    <para>Gets or sets the ConnectionLifetime connection property.</para>
@@ -2082,6 +2082,140 @@ conn.Open();</code>
             <summary>
    <para>Gets or sets the InitString connection property.</para>
   </summary>
+        </member>
+        <member name="P:Sap.Data.Hana.HanaConnectionStringBuilder.CommunicationTimeout">
+            <!-- No matching elements were found for the following include tag --><include file="ConnectionStringBuilder.xml" path="doc/member[@name=&quot;CommunicationTimeout&quot;]/*"/>
+        </member>
+        <member name="P:Sap.Data.Hana.HanaConnectionStringBuilder.Compress">
+            <!-- No matching elements were found for the following include tag --><include file="ConnectionStringBuilder.xml" path="doc/member[@name=&quot;Compress&quot;]/*"/>
+        </member>
+        <member name="P:Sap.Data.Hana.HanaConnectionStringBuilder.DataFormatSupport">
+            <summary>
+   <para>Gets or sets the DataFormatSupport connection property.</para>
+  </summary>
+        </member>
+        <member name="P:Sap.Data.Hana.HanaConnectionStringBuilder.Key">
+            <!-- No matching elements were found for the following include tag --><include file="ConnectionStringBuilder.xml" path="doc/member[@name=&quot;Key&quot;]/*"/>
+        </member>
+        <member name="P:Sap.Data.Hana.HanaConnectionStringBuilder.NodeConnectTimeout">
+            <!-- No matching elements were found for the following include tag --><include file="ConnectionStringBuilder.xml" path="doc/member[@name=&quot;NodeConnectTimeout&quot;]/*"/>
+        </member>
+        <member name="P:Sap.Data.Hana.HanaConnectionStringBuilder.PacketSize">
+            <!-- No matching elements were found for the following include tag --><include file="ConnectionStringBuilder.xml" path="doc/member[@name=&quot;PacketSize&quot;]/*"/>
+        </member>
+        <member name="P:Sap.Data.Hana.HanaConnectionStringBuilder.PacketSizeLimit">
+            <!-- No matching elements were found for the following include tag --><include file="ConnectionStringBuilder.xml" path="doc/member[@name=&quot;PacketSizeLimit&quot;]/*"/>
+        </member>
+        <member name="P:Sap.Data.Hana.HanaConnectionStringBuilder.ProxyHostname">
+            <!-- No matching elements were found for the following include tag --><include file="ConnectionStringBuilder.xml" path="doc/member[@name=&quot;ProxyHostname&quot;]/*"/>
+        </member>
+        <member name="P:Sap.Data.Hana.HanaConnectionStringBuilder.ProxyHTTP">
+            <!-- No matching elements were found for the following include tag --><include file="ConnectionStringBuilder.xml" path="doc/member[@name=&quot;ProxyHTTP&quot;]/*"/>
+        </member>
+        <member name="P:Sap.Data.Hana.HanaConnectionStringBuilder.ProxyPassword">
+            <!-- No matching elements were found for the following include tag --><include file="ConnectionStringBuilder.xml" path="doc/member[@name=&quot;ProxyPassword&quot;]/*"/>
+        </member>
+        <member name="P:Sap.Data.Hana.HanaConnectionStringBuilder.ProxyPort">
+            <!-- No matching elements were found for the following include tag --><include file="ConnectionStringBuilder.xml" path="doc/member[@name=&quot;ProxyPort&quot;]/*"/>
+        </member>
+        <member name="P:Sap.Data.Hana.HanaConnectionStringBuilder.ProxySCPAccount">
+            <!-- No matching elements were found for the following include tag --><include file="ConnectionStringBuilder.xml" path="doc/member[@name=&quot;ProxySCPAccount&quot;]/*"/>
+        </member>
+        <member name="P:Sap.Data.Hana.HanaConnectionStringBuilder.ProxyUsername">
+            <!-- No matching elements were found for the following include tag --><include file="ConnectionStringBuilder.xml" path="doc/member[@name=&quot;ProxyUsername&quot;]/*"/>
+        </member>
+        <member name="P:Sap.Data.Hana.HanaConnectionStringBuilder.RouteDirectExecute">
+            <!-- No matching elements were found for the following include tag --><include file="ConnectionStringBuilder.xml" path="doc/member[@name=&quot;RouteDirectExecute&quot;]/*"/>
+        </member>
+        <member name="P:Sap.Data.Hana.HanaConnectionStringBuilder.SiteType">
+            <!-- No matching elements were found for the following include tag --><include file="ConnectionStringBuilder.xml" path="doc/member[@name=&quot;SiteType&quot;]/*"/>
+        </member>
+        <member name="P:Sap.Data.Hana.HanaConnectionStringBuilder.TraceFile">
+            <!-- No matching elements were found for the following include tag --><include file="ConnectionStringBuilder.xml" path="doc/member[@name=&quot;TraceFile&quot;]/*"/>
+        </member>
+        <member name="P:Sap.Data.Hana.HanaConnectionStringBuilder.TraceOptions">
+            <!-- No matching elements were found for the following include tag --><include file="ConnectionStringBuilder.xml" path="doc/member[@name=&quot;TraceOptions&quot;]/*"/>
+        </member>
+        <member name="P:Sap.Data.Hana.HanaConnectionStringBuilder.CSEKeyStorePassword">
+            <!-- No matching elements were found for the following include tag --><include file="ConnectionStringBuilder.xml" path="doc/member[@name=&quot;CSEKeyStorePassword&quot;]/*"/>
+        </member>
+        <member name="P:Sap.Data.Hana.HanaConnectionStringBuilder.AuthenticationMethods">
+            <!-- No matching elements were found for the following include tag --><include file="ConnectionStringBuilder.xml" path="doc/member[@name=&quot;AuthenticationMethods&quot;]/*"/>
+        </member>
+        <member name="P:Sap.Data.Hana.HanaConnectionStringBuilder.AuthenticationX509">
+            <!-- No matching elements were found for the following include tag --><include file="ConnectionStringBuilder.xml" path="doc/member[@name=&quot;AuthenticationX509&quot;]/*"/>
+        </member>
+        <member name="P:Sap.Data.Hana.HanaConnectionStringBuilder.AuthenticationX509Password">
+            <!-- No matching elements were found for the following include tag --><include file="ConnectionStringBuilder.xml" path="doc/member[@name=&quot;AuthenticationX509Password&quot;]/*"/>
+        </member>
+        <member name="P:Sap.Data.Hana.HanaConnectionStringBuilder.Encrypt">
+            <!-- No matching elements were found for the following include tag --><include file="ConnectionStringBuilder.xml" path="doc/member[@name=&quot;Encrypt&quot;]/*"/>
+        </member>
+        <member name="P:Sap.Data.Hana.HanaConnectionStringBuilder.SSLCryptoProvider">
+            <!-- No matching elements were found for the following include tag --><include file="ConnectionStringBuilder.xml" path="doc/member[@name=&quot;SSLCryptoProvider&quot;]/*"/>
+        </member>
+        <member name="P:Sap.Data.Hana.HanaConnectionStringBuilder.SSLHostNameInCertificate">
+            <!-- No matching elements were found for the following include tag --><include file="ConnectionStringBuilder.xml" path="doc/member[@name=&quot;SSLHostNameInCertificate&quot;]/*"/>
+        </member>
+        <member name="P:Sap.Data.Hana.HanaConnectionStringBuilder.SSLKeyStore">
+            <!-- No matching elements were found for the following include tag --><include file="ConnectionStringBuilder.xml" path="doc/member[@name=&quot;SSLKeyStore&quot;]/*"/>
+        </member>
+        <member name="P:Sap.Data.Hana.HanaConnectionStringBuilder.SSLKeyStorePassword">
+            <!-- No matching elements were found for the following include tag --><include file="ConnectionStringBuilder.xml" path="doc/member[@name=&quot;SSLKeyStorePassword&quot;]/*"/>
+        </member>
+        <member name="P:Sap.Data.Hana.HanaConnectionStringBuilder.SSLSNIHostname">
+            <!-- No matching elements were found for the following include tag --><include file="ConnectionStringBuilder.xml" path="doc/member[@name=&quot;SSLSNIHostname&quot;]/*"/>
+        </member>
+        <member name="P:Sap.Data.Hana.HanaConnectionStringBuilder.SSLSNIRequest">
+            <!-- No matching elements were found for the following include tag --><include file="ConnectionStringBuilder.xml" path="doc/member[@name=&quot;SSLSNIRequest&quot;]/*"/>
+        </member>
+        <member name="P:Sap.Data.Hana.HanaConnectionStringBuilder.SSLTrustStore">
+            <!-- No matching elements were found for the following include tag --><include file="ConnectionStringBuilder.xml" path="doc/member[@name=&quot;SSLTrustStore&quot;]/*"/>
+        </member>
+        <member name="P:Sap.Data.Hana.HanaConnectionStringBuilder.SSLUseDefaultTrustStore">
+            <!-- No matching elements were found for the following include tag --><include file="ConnectionStringBuilder.xml" path="doc/member[@name=&quot;SSLUseDefaultTrustStore&quot;]/*"/>
+        </member>
+        <member name="P:Sap.Data.Hana.HanaConnectionStringBuilder.SSLValidateCertificate">
+            <!-- No matching elements were found for the following include tag --><include file="ConnectionStringBuilder.xml" path="doc/member[@name=&quot;SSLValidateCertificate&quot;]/*"/>
+        </member>
+        <member name="P:Sap.Data.Hana.HanaConnectionStringBuilder.AbapVarCharMode">
+            <!-- No matching elements were found for the following include tag --><include file="ConnectionStringBuilder.xml" path="doc/member[@name=&quot;AbapVarCharMode&quot;]/*"/>
+        </member>
+        <member name="P:Sap.Data.Hana.HanaConnectionStringBuilder.ChopBlanks">
+            <!-- No matching elements were found for the following include tag --><include file="ConnectionStringBuilder.xml" path="doc/member[@name=&quot;ChopBlanks&quot;]/*"/>
+        </member>
+        <member name="P:Sap.Data.Hana.HanaConnectionStringBuilder.ChopBlanksInput">
+            <!-- No matching elements were found for the following include tag --><include file="ConnectionStringBuilder.xml" path="doc/member[@name=&quot;ChopBlanksInput&quot;]/*"/>
+        </member>
+        <member name="P:Sap.Data.Hana.HanaConnectionStringBuilder.ConnectTimeout">
+            <!-- No matching elements were found for the following include tag --><include file="ConnectionStringBuilder.xml" path="doc/member[@name=&quot;ConnectTimeout&quot;]/*"/>
+        </member>
+        <member name="P:Sap.Data.Hana.HanaConnectionStringBuilder.Distribution">
+            <!-- No matching elements were found for the following include tag --><include file="ConnectionStringBuilder.xml" path="doc/member[@name=&quot;Distribution&quot;]/*"/>
+        </member>
+        <member name="P:Sap.Data.Hana.HanaConnectionStringBuilder.EmptyTimestampIsNull">
+            <!-- No matching elements were found for the following include tag --><include file="ConnectionStringBuilder.xml" path="doc/member[@name=&quot;EmptyTimestampIsNull&quot;]/*"/>
+        </member>
+        <member name="P:Sap.Data.Hana.HanaConnectionStringBuilder.IgnoreTopology">
+            <!-- No matching elements were found for the following include tag --><include file="ConnectionStringBuilder.xml" path="doc/member[@name=&quot;IgnoreTopology&quot;]/*"/>
+        </member>
+        <member name="P:Sap.Data.Hana.HanaConnectionStringBuilder.Locale">
+            <!-- No matching elements were found for the following include tag --><include file="ConnectionStringBuilder.xml" path="doc/member[@name=&quot;Locale&quot;]/*"/>
+        </member>
+        <member name="P:Sap.Data.Hana.HanaConnectionStringBuilder.Prefetch">
+            <!-- No matching elements were found for the following include tag --><include file="ConnectionStringBuilder.xml" path="doc/member[@name=&quot;Prefetch&quot;]/*"/>
+        </member>
+        <member name="P:Sap.Data.Hana.HanaConnectionStringBuilder.Reconnect">
+            <!-- No matching elements were found for the following include tag --><include file="ConnectionStringBuilder.xml" path="doc/member[@name=&quot;Reconnect&quot;]/*"/>
+        </member>
+        <member name="P:Sap.Data.Hana.HanaConnectionStringBuilder.SplitBatchCommands">
+            <!-- No matching elements were found for the following include tag --><include file="ConnectionStringBuilder.xml" path="doc/member[@name=&quot;SplitBatchCommands&quot;]/*"/>
+        </member>
+        <member name="P:Sap.Data.Hana.HanaConnectionStringBuilder.StatementCacheSize">
+            <!-- No matching elements were found for the following include tag --><include file="ConnectionStringBuilder.xml" path="doc/member[@name=&quot;StatementCacheSize&quot;]/*"/>
+        </member>
+        <member name="P:Sap.Data.Hana.HanaConnectionStringBuilder.WebSocketURL">
+            <!-- No matching elements were found for the following include tag --><include file="ConnectionStringBuilder.xml" path="doc/member[@name=&quot;WebSocketURL&quot;]/*"/>
         </member>
         <member name="T:Sap.Data.Hana.HanaConsts">
             @internal
@@ -2391,7 +2525,7 @@ conn.Open();</code>
         </member>
         <member name="P:Sap.Data.Hana.HanaDataAdapter.TableMappings">
             <summary>
-            <para>Specifies a collection that provides the master mapping between a source table and a DataTable.</para>
+            <para>Specifies a collection that provides the mapping between a source table and a DataTable.</para>
         </summary><remarks>
             <para>The default value is an empty collection.</para>
             <para>When reconciling changes, the HanaDataAdapter uses the DataTableMappingCollection collection to associate the column names used by the data source with the column names used by the DataSet.</para>
@@ -3512,7 +3646,7 @@ DbConnection conn = factory.CreateConnection();</code>
         </returns><seealso cref="T:Sap.Data.Hana.HanaConnectionStringBuilder"/>
         </member>
         <member name="M:Sap.Data.Hana.HanaFactory.System#IServiceProvider#GetService(System.Type)">
-            <!-- Badly formed XML file "d:\701\w\7hhepnmjzk\gen\out\happy-make-build\ntamd64-msvc2015-release\Interfaces\ADO.NET\Managed\v4.5\tmp\Edm.xml" cannot be included -->
+            <!-- Badly formed XML file "c:\j\701\w\2d4dpucd3h\gen\out\happy-make-build\ntamd64-msvc2022-release\Interfaces\ADO.NET\Managed\v4.5\tmp\Edm.xml" cannot be included -->
         </member>
         <member name="P:Sap.Data.Hana.HanaFactory.CanCreateDataSourceEnumerator">
             <summary>

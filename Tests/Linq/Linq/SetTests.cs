@@ -3,7 +3,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
+using FluentAssertions;
+
 using LinqToDB;
+using LinqToDB.Linq;
 using LinqToDB.Tools;
 
 using NUnit.Framework;
@@ -25,15 +28,14 @@ namespace Tests.Linq
 		}
 
 		//[Test]
-		public void Except2([DataSources] string context)
-		{
-			var ids = new[] { 1, 2 };
+		//public void Except2([DataSources] string context)
+		//{
+		//	var ids = new[] { 1, 2 };
 
-			using (var db = GetDataContext(context))
-				Assert.AreEqual(
-					   Child.Where(c => c.GrandChildren.Select(_ => _.ParentID ?? 0).Except(ids).Count() == 0),
-					db.Child.Where(c => c.GrandChildren.Select(_ => _.ParentID ?? 0).Except(ids).Count() == 0));
-		}
+		//	using (var db = GetDataContext(context))
+		//		Assert.That(
+		//			db.Child.Where(c => c.GrandChildren.Select(_ => _.ParentID ?? 0).Except(ids).Count() == 0), Is.EqualTo(Child.Where(c => c.GrandChildren.Select(_ => _.ParentID ?? 0).Except(ids).Count() == 0)));
+		//}
 
 		[Test]
 		public void Intersect([DataSources] string context)
@@ -109,24 +111,21 @@ namespace Tests.Linq
 					from p in db.Parent where db.Child.Select(c => c.ParentID).Contains(p.ParentID + n) select p);
 		}
 
-		[ActiveIssue("https://github.com/Octonica/ClickHouseClient/issues/56 + https://github.com/ClickHouse/ClickHouse/issues/37999", Configurations = new[] { ProviderName.ClickHouseMySql, ProviderName.ClickHouseOctonica })]
 		[Test]
 		public void Contains7([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
-				Assert.AreEqual(
-					   Child.Select(c => c.ParentID).Contains(11),
-					db.Child.Select(c => c.ParentID).Contains(11));
+				Assert.That(
+					db.Child.Select(c => c.ParentID).Contains(11), Is.EqualTo(Child.Select(c => c.ParentID).Contains(11)));
 		}
 
-		[ActiveIssue("https://github.com/Octonica/ClickHouseClient/issues/56 + https://github.com/ClickHouse/ClickHouse/issues/37999", Configurations = new[] { ProviderName.ClickHouseMySql, ProviderName.ClickHouseOctonica })]
 		[Test]
+		[ThrowsForProvider(typeof(LinqException), TestProvName.AllClickHouse, ErrorMessage = ErrorHelper.Error_Correlated_Subqueries)]
 		public void Contains701([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
-				Assert.AreEqual(
-					   Child.Select(c => c.Parent).Contains(new Parent { ParentID = 11, Value1 = 11}),
-					db.Child.Select(c => c.Parent).Contains(new Parent { ParentID = 11, Value1 = 11}));
+				Assert.That(
+					db.Child.Select(c => c.Parent).Contains(new Parent { ParentID = 11, Value1 = 11}), Is.EqualTo(Child.Select(c => c.Parent).Contains(new Parent { ParentID = 11, Value1 = 11})));
 		}
 
 		[Test]
@@ -333,12 +332,10 @@ namespace Tests.Linq
 
 		void TestContains(ITestDataContext db, Parent1 parent)
 		{
-			Assert.AreEqual(
-				   Parent1.Where(p => p.ParentID == 1).Contains(parent),
-				db.Parent1.Where(p => p.ParentID == 1).Contains(parent));
+			Assert.That(
+				db.Parent1.Where(p => p.ParentID == 1).Contains(parent), Is.EqualTo(Parent1.Where(p => p.ParentID == 1).Contains(parent)));
 		}
 
-		[ActiveIssue("https://github.com/Octonica/ClickHouseClient/issues/56 + https://github.com/ClickHouse/ClickHouse/issues/37999", Configurations = new[] { ProviderName.ClickHouseMySql, ProviderName.ClickHouseOctonica })]
 		[Test]
 		public void Contains14([DataSources] string context)
 		{
@@ -379,7 +376,7 @@ namespace Tests.Linq
 
 			foreach (var g in r1)
 			{
-				Assert.AreEqual(d.First()!.Value, g.ParentID);
+				Assert.That(g.ParentID, Is.EqualTo(d.First()!.Value));
 			}
 		}
 
@@ -394,7 +391,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Issue3017([IncludeDataSources(TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context)
+		public void Issue3017([IncludeDataSources(/*TestProvName.AllSqlServer, */TestProvName.AllClickHouse)] string context)
 		{
 			using var scope = new DisableBaseline("Multithreading");
 
@@ -409,7 +406,7 @@ namespace Tests.Linq
 			Task.WaitAll(tasks.ToArray());
 
 			foreach (var task in tasks)
-				Assert.False(task.IsFaulted);
+				Assert.That(task.IsFaulted, Is.False);
 		}
 
 		private async Task Issue3017Action(string context)

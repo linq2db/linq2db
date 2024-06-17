@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 
 using LinqToDB;
 using LinqToDB.Data;
+using LinqToDB.DataProvider.SQLite;
 using LinqToDB.Mapping;
 using LinqToDB.Tools;
 
@@ -30,7 +31,7 @@ namespace OpenTelemetryExample
 			ActivityService.AddFactory(LinqToDBActivity.Create);
 
 			{
-				await using var db = new DataConnection(new DataOptions().UseSQLiteMicrosoft("Data Source=Northwind.MS.sqlite"));
+				await using var db = new DataConnection(new DataOptions().UseSQLite("Data Source=Northwind.MS.sqlite", SQLiteProvider.Microsoft));
 
 				await db.CreateTableAsync<Customer>(tableOptions:TableOptions.CheckExistence);
 

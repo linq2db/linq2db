@@ -4,7 +4,7 @@ using System.Diagnostics;
 using System.Linq;
 
 using LinqToDB;
-using LinqToDB.AspNet.Logging;
+using LinqToDB.Extensions.Logging;
 using LinqToDB.Data;
 using LinqToDB.DataProvider.SqlServer;
 
@@ -60,9 +60,7 @@ namespace Tests.Common
 			}
 
 			public IDisposable BeginScope<TState>(TState state)
-#if !NETFRAMEWORK
 				where TState : notnull
-#endif
 				=> new Disposable();
 
 			private sealed class Disposable : IDisposable
@@ -83,14 +81,14 @@ namespace Tests.Common
 
 			var extension = builder.Find<QueryTraceOptions>();
 
-			Assert.NotNull(extension?.WriteTrace);
+			Assert.That(extension?.WriteTrace, Is.Not.Null);
 
 			var expectedMessage = "this is a test log";
 			extension?.WriteTrace!(expectedMessage, "some category", TraceLevel.Info);
 
 			Assert.That(factory.Loggers, Has.One.Items);
 			var testLogger = factory.Loggers.Single();
-			Assert.Contains(expectedMessage, testLogger.Messages);
+			Assert.That(testLogger.Messages, Does.Contain(expectedMessage));
 		}
 
 		[Test]
@@ -105,14 +103,14 @@ namespace Tests.Common
 			builder = builder.UseDefaultLogging(services.BuildServiceProvider());
 
 			var extension = builder.Find<QueryTraceOptions>();
-			Assert.NotNull(extension?.WriteTrace);
+			Assert.That(extension?.WriteTrace, Is.Not.Null);
 
 			var expectedMessage = "this is a test log";
 			extension!.WriteTrace!(expectedMessage, "some category", TraceLevel.Info);
 
 			Assert.That(factory.Loggers, Has.One.Items);
 			var testLogger = factory.Loggers.Single();
-			Assert.Contains(expectedMessage, testLogger.Messages);
+			Assert.That(testLogger.Messages, Does.Contain(expectedMessage));
 		}
 
 		[Test]

@@ -29,8 +29,6 @@ namespace Cli.NoMetadata.MySql
 		public DateTime? TimestampDataType   { get; set; } // timestamp
 		public TimeSpan? TimeDataType        { get; set; } // time
 		public int?      YearDataType        { get; set; } // year
-		public int?      Year2DataType       { get; set; } // year
-		public int?      Year4DataType       { get; set; } // year
 		public char?     CharDataType        { get; set; } // char(1)
 		public string?   Char20DataType      { get; set; } // char(20)
 		public string?   VarcharDataType     { get; set; } // varchar(20)

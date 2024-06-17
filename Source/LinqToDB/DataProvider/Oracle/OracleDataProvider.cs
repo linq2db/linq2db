@@ -11,8 +11,10 @@ namespace LinqToDB.DataProvider.Oracle
 	using Common;
 	using Data;
 	using Extensions;
+	using Linq.Translation;
 	using Mapping;
 	using SqlProvider;
+	using Translation;
 
 	sealed class OracleDataProviderNative11  : OracleDataProvider { public OracleDataProviderNative11()  : base(ProviderName.Oracle11Native , OracleProvider.Native,  OracleVersion.v11) {} }
 	sealed class OracleDataProviderNative12  : OracleDataProvider { public OracleDataProviderNative12()  : base(ProviderName.OracleNative   , OracleProvider.Native,  OracleVersion.v12) {} }
@@ -29,13 +31,17 @@ namespace LinqToDB.DataProvider.Oracle
 			Provider = provider;
 			Version  = version;
 
-			SqlProviderFlags.IsIdentityParameterRequired       = true;
-			SqlProviderFlags.IsCommonTableExpressionsSupported = true;
-			SqlProviderFlags.IsSubQueryOrderBySupported        = true;
-			SqlProviderFlags.IsDistinctOrderBySupported        = false;
-			SqlProviderFlags.IsUpdateFromSupported             = false;
-			SqlProviderFlags.DefaultMultiQueryIsolationLevel   = IsolationLevel.ReadCommitted;
-			SqlProviderFlags.IsNamingQueryBlockSupported       = true;
+			SqlProviderFlags.IsIdentityParameterRequired                           = true;
+			SqlProviderFlags.IsCommonTableExpressionsSupported                     = true;
+			SqlProviderFlags.IsSubQueryOrderBySupported                            = true;
+			SqlProviderFlags.IsUpdateFromSupported                                 = false;
+			SqlProviderFlags.DefaultMultiQueryIsolationLevel                       = IsolationLevel.ReadCommitted;
+			SqlProviderFlags.IsNamingQueryBlockSupported                           = true;
+			SqlProviderFlags.IsRowNumberWithoutOrderBySupported                    = false;
+			SqlProviderFlags.IsSubqueryWithParentReferenceInJoinConditionSupported = false;
+			SqlProviderFlags.IsColumnSubqueryWithParentReferenceSupported          = false;
+			SqlProviderFlags.IsColumnSubqueryShouldNotContainParentIsNotNull       = true;
+			SqlProviderFlags.IsColumnSubqueryWithParentReferenceAndTakeSupported   = version >= OracleVersion.v12;
 
 			SqlProviderFlags.RowConstructorSupport = RowFeature.Equality | RowFeature.CompareToSelect | RowFeature.In |
 			                                         RowFeature.Update   | RowFeature.Overlaps;
@@ -77,8 +83,6 @@ namespace LinqToDB.DataProvider.Oracle
 				ReaderExpressions[new ReaderInfo { ToType = typeof(long),           FieldType = typeof(decimal),                        DataReaderType = Adapter.DataReaderType }] = Adapter.ReadOracleDecimalToLong;
 			if (Adapter.ReadOracleDecimalToDecimal != null)
 				ReaderExpressions[new ReaderInfo {                                  FieldType = typeof(decimal),                        DataReaderType = Adapter.DataReaderType }] = Adapter.ReadOracleDecimalToDecimal;
-			if (Adapter.ReadDateTimeOffsetFromOracleTimeStampLTZ != null)
-				ReaderExpressions[new ReaderInfo { ToType = typeof(DateTimeOffset), ProviderFieldType = Adapter.OracleTimeStampLTZType, DataReaderType = Adapter.DataReaderType }] = Adapter.ReadDateTimeOffsetFromOracleTimeStampLTZ;
 		}
 
 		public OracleProvider Provider { get; }
@@ -91,6 +95,16 @@ namespace LinqToDB.DataProvider.Oracle
 			TableOptions.IsTransactionTemporaryData |
 			TableOptions.CreateIfNotExists          |
 			TableOptions.DropIfExists;
+
+		protected override IMemberTranslator CreateMemberTranslator()
+		{
+			return new OracleMemberTranslator();
+		}
+
+		protected override IIdentifierService CreateIdentifierService()
+		{
+			return new IdentifierServiceSimple(Version <= OracleVersion.v11 ? 30 : 128);
+		}
 
 		public override ISqlBuilder CreateSqlBuilder(MappingSchema mappingSchema, DataOptions dataOptions)
 		{
@@ -361,7 +375,6 @@ namespace LinqToDB.DataProvider.Oracle
 				cancellationToken);
 		}
 
-#if NATIVE_ASYNC
 		public override Task<BulkCopyRowsCopied> BulkCopyAsync<T>(DataOptions options, ITable<T> table,
 			IAsyncEnumerable<T> source, CancellationToken cancellationToken)
 		{
@@ -377,7 +390,6 @@ namespace LinqToDB.DataProvider.Oracle
 				source,
 				cancellationToken);
 		}
-#endif
 
 		#endregion
 	}

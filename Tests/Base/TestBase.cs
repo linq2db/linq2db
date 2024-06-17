@@ -1,21 +1,23 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Linq.Expressions;
 using System.Text;
+using System.Data.Common;
+using System.Text.Json;
+using System.Text.Json.Serialization;
+using System.Threading;
+using System.Xml;
 
 using LinqToDB;
 using LinqToDB.Common;
 using LinqToDB.Data;
 using LinqToDB.Data.RetryPolicy;
 using LinqToDB.DataProvider.Informix;
-using LinqToDB.Expressions;
-using LinqToDB.Extensions;
 using LinqToDB.Interceptors;
-using LinqToDB.Linq;
 using LinqToDB.Mapping;
 using LinqToDB.Reflection;
 using LinqToDB.Tools;
@@ -26,6 +28,8 @@ using NUnit.Framework.Internal;
 
 namespace Tests
 {
+	using LinqToDB.FSharp;
+
 	using Model;
 	using Remote.ServerContainer;
 	using Tools;
@@ -53,9 +57,9 @@ namespace Tests
 			public static readonly Guid     Guid1                         = new ("bc7b663d-0fde-4327-8f92-5d8cc3a11d11");
 			public static readonly Guid     Guid2                         = new ("a948600d-de21-4f74-8ac2-9516b287076e");
 			public static readonly Guid     Guid3                         = new ("bd3973a5-4323-4dd8-9f4f-df9f93e2a627");
-			public static readonly Guid     Guid4                         = new("76b1c875-2287-4b82-a23b-7967c5eafed8");
-			public static readonly Guid     Guid5                         = new("656606a4-6e36-4431-add6-85f886a1c7c2");
-			public static readonly Guid     Guid6                         = new("66aa9df9-260f-4a2b-ac50-9ca8ce7ad725");
+			public static readonly Guid     Guid4                         = new ("76b1c875-2287-4b82-a23b-7967c5eafed8");
+			public static readonly Guid     Guid5                         = new ("656606a4-6e36-4431-add6-85f886a1c7c2");
+			public static readonly Guid     Guid6                         = new ("66aa9df9-260f-4a2b-ac50-9ca8ce7ad725");
 
 			public static byte[] Binary(int size)
 			{
@@ -138,16 +142,16 @@ namespace Tests
 				// Configuration.Linq.GenerateExpressionTest  = true;
 				var assemblyPath = Path.GetDirectoryName(typeof(TestBase).Assembly.Location)!;
 
-#if NET472
-				// this is needed for machine without GAC-ed sql types (e.g. machine without SQL Server installed or CI)
-				try
-				{
-					SqlServerTypes.Utilities.LoadNativeAssemblies(assemblyPath);
-				}
-				catch // this can fail during tests discovering with NUnitTestAdapter
-				{
-					// ignore
-				}
+#if NETFRAMEWORK
+			// this is needed for machine without GAC-ed sql types (e.g. machine without SQL Server installed or CI)
+			try
+			{
+				SqlServerTypes.Utilities.LoadNativeAssemblies(assemblyPath);
+			}
+			catch // this can fail during tests discovering with NUnitTestAdapter
+			{
+				// ignore
+			}
 #endif
 
 				Environment.CurrentDirectory = assemblyPath;
@@ -164,11 +168,11 @@ namespace Tests
 				var userDataProvidersJson =
 					File.Exists(userDataProvidersJsonFile) ? File.ReadAllText(userDataProvidersJsonFile) : null;
 
-				var configName = GetConfigName();
+				var configName = TestUtils.GetConfigName();
 
 #if AZURE
-				TestContext.WriteLine("Azure configuration detected.");
-				configName += ".Azure";
+			TestContext.WriteLine("Azure configuration detected.");
+			configName += ".Azure";
 #endif
 
 #if !DEBUG
@@ -178,13 +182,13 @@ namespace Tests
 
 				var testSettings = SettingsReader.Deserialize(configName, dataProvidersJson, userDataProvidersJson);
 
-				testSettings.Connections ??= new ();
+				testSettings.Connections ??= new();
 
 				CopyDatabases();
 
 				DisableRemoteContext = testSettings.DisableRemoteContext == true;
-				UserProviders        = new HashSet<string>(testSettings.Providers ?? Array<string>.Empty, StringComparer.OrdinalIgnoreCase);
-				SkipCategories       = new HashSet<string>(testSettings.Skip      ?? Array<string>.Empty, StringComparer.OrdinalIgnoreCase);
+				UserProviders        = new HashSet<string>(testSettings.Providers ?? [], StringComparer.OrdinalIgnoreCase);
+				SkipCategories       = new HashSet<string>(testSettings.Skip      ?? [], StringComparer.OrdinalIgnoreCase);
 
 				var logLevel   = testSettings.TraceLevel;
 				var traceLevel = TraceLevel.Info;
@@ -201,13 +205,13 @@ namespace Tests
 				TestContext.WriteLine("Connection strings:");
 				TestExternals.Log("Connection strings:");
 
-#if !NET472
+#if !NETFRAMEWORK
 				TxtSettings.Instance.DefaultConfiguration = "SQLiteMs";
 
-				foreach (var provider in testSettings.Connections /*.Where(c => UserProviders.Contains(c.Key))*/)
+				foreach (var provider in testSettings.Connections/*.Where(c => UserProviders.Contains(c.Key))*/)
 				{
 					if (string.IsNullOrWhiteSpace(provider.Value.ConnectionString))
-						throw new InvalidOperationException("ConnectionString should be provided");
+						throw new InvalidOperationException($"Provider: {provider.Key}. ConnectionString should be provided.");
 
 					TestContext.WriteLine($"\tName=\"{provider.Key}\", Provider=\"{provider.Value.Provider}\", ConnectionString=\"{provider.Value.ConnectionString}\"");
 
@@ -217,21 +221,21 @@ namespace Tests
 
 				DataConnection.DefaultSettings = TxtSettings.Instance;
 #else
-				foreach (var provider in testSettings.Connections)
+			foreach (var provider in testSettings.Connections)
+			{
+				var str = $"\tName=\"{provider.Key}\", Provider=\"{provider.Value.Provider}\", ConnectionString=\"{provider.Value.ConnectionString}\"";
+
+				TestContext.WriteLine(str);
+				TestExternals.Log(str);
+
+				if (provider.Value.ConnectionString != null)
 				{
-					var str = $"\tName=\"{provider.Key}\", Provider=\"{provider.Value.Provider}\", ConnectionString=\"{provider.Value.ConnectionString}\"";
-
-					TestContext.WriteLine(str);
-					TestExternals.Log(str);
-
-					if (provider.Value.ConnectionString != null)
-					{
-						DataConnection.AddOrSetConfiguration(
-							provider.Key,
-							provider.Value.ConnectionString,
-							provider.Value.Provider ?? "");
-					}
+					DataConnection.AddOrSetConfiguration(
+						provider.Key,
+						provider.Value.ConnectionString,
+						provider.Value.Provider ?? "");
 				}
+			}
 #endif
 
 				TestContext.WriteLine("Providers:");
@@ -248,21 +252,21 @@ namespace Tests
 				if (!string.IsNullOrEmpty(DefaultProvider))
 				{
 					DataConnection.DefaultConfiguration = DefaultProvider;
-#if !NET472
+#if !NETFRAMEWORK
 					TxtSettings.Instance.DefaultConfiguration = DefaultProvider;
 #endif
 				}
 
-#if NET472
-				LinqToDB.Remote.LinqService.TypeResolver = str =>
+#if NETFRAMEWORK
+			LinqToDB.Remote.LinqService.TypeResolver = str =>
+			{
+				return str switch
 				{
-					return str switch
-					{
-						"Tests.Model.Gender" => typeof(Gender),
-						"Tests.Model.Person" => typeof(Person),
-						_ => null,
-					};
+					"Tests.Model.Gender" => typeof(Gender),
+					"Tests.Model.Person" => typeof(Person),
+					_ => null,
 				};
+			};
 #endif
 
 				// baselines
@@ -279,7 +283,7 @@ namespace Tests
 			}
 			catch (Exception ex)
 			{
-				Log(ex);
+				TestUtils.Log(ex);
 				throw;
 			}
 		}
@@ -287,36 +291,9 @@ namespace Tests
 		static void CurrentDomainOnUnhandledException(object sender, UnhandledExceptionEventArgs e)
 		{
 			if (e.ExceptionObject is Exception ex)
-				Log(ex);
+				TestUtils.Log(ex);
 			else
-				Log(e.ExceptionObject.ToString());
-		}
-
-		static string GetConfigName()
-		{
-#if NETCOREAPP3_1
-			return "CORE31";
-#elif NET6_0
-			return "NET60";
-#elif NET7_0
-			return "NET70";
-#elif NET472
-			return "NET472";
-#else
-#error Unknown framework
-#endif
-		}
-
-		public static void Log(Exception ex)
-		{
-			Log($"Exception: {ex.Message}");
-			Log(ex.StackTrace);
-		}
-
-		static void Log(string? message)
-		{
-			var path = Path.GetTempPath();
-			File.AppendAllText(path + "linq2db.Tests." + GetConfigName() + ".log", (message ?? "") + Environment.NewLine);
+				TestUtils.Log(e.ExceptionObject.ToString());
 		}
 
 		static void CopyDatabases()
@@ -410,7 +387,7 @@ namespace Tests
 
 		public static readonly IReadOnlyList<string> Providers = CustomizationSupport.Interceptor.GetSupportedProviders(new List<string>
 		{
-#if NET472
+#if NETFRAMEWORK
 			// test providers with .net framework provider only
 			ProviderName.Sybase,
 			TestProvName.AllOracleNative,
@@ -448,7 +425,7 @@ namespace Tests
 			}
 
 			var str = configuration.StripRemote();
-			return _serverContainer.Prepare(ms, interceptor, suppressSequentialAccess, str, null);
+			return _serverContainer.Prepare(ms, interceptor, suppressSequentialAccess, str, opt => opt.UseFSharp());
 		}
 
 		protected ITestDataContext GetDataContext(string configuration, Func<DataOptions,DataOptions> dbOptionsBuilder)
@@ -459,7 +436,7 @@ namespace Tests
 			}
 
 			var str = configuration.StripRemote();
-			return _serverContainer.Prepare(null, null, false, str, dbOptionsBuilder);
+			return _serverContainer.Prepare(null, null, false, str, opt => dbOptionsBuilder(opt).UseFSharp());
 		}
 
 		protected TestDataConnection GetDataConnection(string configuration, Func<DataOptions,DataOptions> dbOptionsBuilder)
@@ -480,11 +457,8 @@ namespace Tests
 
 				options = options.UseMappingSchema(options.ConnectionOptions.MappingSchema == null ? _sequentialAccessSchema : MappingSchema.CombineSchemas(options.ConnectionOptions.MappingSchema, _sequentialAccessSchema));
 			}
-			else
-			if (configuration.IsAnyOf(TestProvName.AllMariaDB))
-				options = options.UseMappingSchema(options.ConnectionOptions.MappingSchema == null ? _mariaDBSchema : MappingSchema.CombineSchemas(options.ConnectionOptions.MappingSchema, _mariaDBSchema));
 
-			options = dbOptionsBuilder(options);
+			options = dbOptionsBuilder(options).UseFSharp();
 
 			var res = new TestDataConnection(options);
 
@@ -531,8 +505,6 @@ namespace Tests
 
 				options = options.UseMappingSchema(ms == null ? _sequentialAccessSchema : MappingSchema.CombineSchemas(ms, _sequentialAccessSchema));
 			}
-			else if (configuration.IsAnyOf(TestProvName.AllMariaDB))
-				options = options.UseMappingSchema(ms == null ? _mariaDBSchema : MappingSchema.CombineSchemas(ms, _mariaDBSchema));
 
 			if (interceptor != null)
 				options = options.UseInterceptor(interceptor);
@@ -540,6 +512,7 @@ namespace Tests
 			if (retryPolicy != null)
 				options = options.UseRetryPolicy(retryPolicy);
 
+			options = options.UseFSharp();
 			return new TestDataConnection(options);
 		}
 
@@ -548,18 +521,15 @@ namespace Tests
 			if (options.ConnectionOptions.ConfigurationString?.IsRemote() == true)
 				throw new InvalidOperationException($"Call {nameof(GetDataContext)} for remote context creation");
 
-			if (options.ConnectionOptions.ConfigurationString?.IsAnyOf(TestProvName.AllMariaDB) == true)
-				options = options.UseMappingSchema(options.ConnectionOptions.MappingSchema == null ? _mariaDBSchema : MappingSchema.CombineSchemas(options.ConnectionOptions.MappingSchema, _mariaDBSchema));
-
 			Debug.WriteLine(options.ConnectionOptions.ConfigurationString, "Provider ");
 
+			options = options.UseFSharp();
 			var res = new TestDataConnection(options);
 
 			return res;
 		}
 
 		private  static readonly MappingSchema _sequentialAccessSchema = new ("SequentialAccess");
-		internal static readonly MappingSchema _mariaDBSchema          = new (ProviderName.MariaDB);
 
 		protected static char GetParameterToken(string context)
 		{
@@ -582,12 +552,15 @@ namespace Tests
 		{
 			var list = persons.ToList();
 
-			Assert.AreEqual(1, list.Count);
+			Assert.That(list, Has.Count.EqualTo(1));
 
 			var person = list[0];
 
-			Assert.AreEqual(id, person.ID);
-			Assert.AreEqual(firstName, person.FirstName);
+			Assert.Multiple(() =>
+			{
+				Assert.That(person.ID, Is.EqualTo(id));
+				Assert.That(person.FirstName, Is.EqualTo(firstName));
+			});
 		}
 
 		protected void TestOneJohn(IQueryable<Person> persons)
@@ -599,8 +572,11 @@ namespace Tests
 		{
 			var person = persons.ToList().First(p => p.ID == id);
 
-			Assert.AreEqual(id, person.ID);
-			Assert.AreEqual(firstName, person.FirstName);
+			Assert.Multiple(() =>
+			{
+				Assert.That(person.ID, Is.EqualTo(id));
+				Assert.That(person.FirstName, Is.EqualTo(firstName));
+			});
 		}
 
 		protected void TestJohn(IQueryable<IPerson> persons)
@@ -640,6 +616,30 @@ namespace Tests
 
 		protected internal const int MaxPersonID = 4;
 
+
+		void InitPatientPerson()
+		{
+			if (_patient == null || _person == null)
+			{
+				using (new DisableLogging())
+				using (new DisableBaseline("Default Database"))
+				using (var db = new TestDataConnection())
+				{
+					var persons  = db.Person.ToList();
+					var patients = db.Patient.ToList();
+
+					foreach (var p in persons)
+						p.Patient = patients.SingleOrDefault(ps => p.ID == ps.PersonID);
+
+					foreach (var p in patients)
+						p.Person = persons.Single(ps => ps.ID == p.PersonID);
+
+					_patient = patients;
+					_person  = persons;
+				}
+			}
+		}
+
 		private   List<Person>?       _person;
 		protected IEnumerable<Person>  Person
 		{
@@ -647,16 +647,10 @@ namespace Tests
 			{
 				if (_person == null)
 				{
-					using (new DisableLogging())
-					using (new DisableBaseline("Default Database"))
-					using (var db = new TestDataConnection())
-						_person = db.Person.ToList();
-
-					foreach (var p in _person)
-						p.Patient = Patient.SingleOrDefault(ps => p.ID == ps.PersonID);
+					InitPatientPerson();
 				}
 
-				return _person;
+				return _person!;
 			}
 		}
 
@@ -667,16 +661,10 @@ namespace Tests
 			{
 				if (_patient == null)
 				{
-					using (new DisableLogging())
-					using (new DisableBaseline("Default Database"))
-					using (var db = new TestDataConnection())
-						_patient = db.Patient.ToList();
-
-					foreach (var p in _patient)
-						p.Person = Person.Single(ps => ps.ID == p.PersonID);
+					InitPatientPerson();
 				}
 
-				return _patient;
+				return _patient!;
 			}
 		}
 
@@ -903,7 +891,7 @@ namespace Tests
 
 		#region Northwind
 
-		public TestBaseNorthwind GetNorthwindAsList(string context)
+		protected TestBaseNorthwind GetNorthwindAsList(string context)
 		{
 			return new TestBaseNorthwind(context);
 		}
@@ -1229,9 +1217,9 @@ namespace Tests
 			AreEqual(t => t, expected, result, ComparerBuilder.GetEqualityComparer<T>(memberPredicate));
 		}
 
-		protected void AreEqual<T>(IEnumerable<T> expected, IEnumerable<T> result, IEqualityComparer<T> comparer)
+		protected void AreEqual<T>(IEnumerable<T> expected, IEnumerable<T> result, IEqualityComparer<T> comparer, bool allowEmpty = false)
 		{
-			AreEqual(t => t, expected, result, comparer);
+			AreEqual(t => t, expected, result, comparer, allowEmpty);
 		}
 
 		protected void AreEqual<T>(IEnumerable<T> expected, IEnumerable<T> result, IEqualityComparer<T> comparer, Func<IEnumerable<T>, IEnumerable<T>> sort)
@@ -1268,8 +1256,8 @@ namespace Tests
 			}
 
 			if (!allowEmpty)
-				Assert.AreNotEqual(0, expectedList.Count, "Expected list cannot be empty.");
-			Assert.AreEqual(expectedList.Count, resultList.Count, "Expected and result lists are different. Length: ");
+				Assert.That(expectedList, Is.Not.Empty, "Expected list cannot be empty.");
+			Assert.That(resultList, Has.Count.EqualTo(expectedList.Count), "Expected and result lists are different. Length: ");
 
 			var exceptExpectedList = resultList.  Except(expectedList, comparer).ToList();
 			var exceptResultList   = expectedList.Except(resultList,   comparer).ToList();
@@ -1292,8 +1280,11 @@ namespace Tests
 				}
 			}
 
-			Assert.AreEqual(0, exceptExpected, $"Expected Was{Environment.NewLine}{message}");
-			Assert.AreEqual(0, exceptResult  , $"Expect Result{Environment.NewLine}{message}");
+			Assert.Multiple(() =>
+			{
+				Assert.That(exceptExpected, Is.EqualTo(0), $"Expected Was{Environment.NewLine}{message}");
+				Assert.That(exceptResult, Is.EqualTo(0), $"Expect Result{Environment.NewLine}{message}");
+			});
 
 			LastQuery = lastQuery;
 		}
@@ -1303,8 +1294,11 @@ namespace Tests
 			var resultList   = result.ToList();
 			var expectedList = expected.ToList();
 
-			Assert.AreNotEqual(0, expectedList.Count);
-			Assert.AreEqual(expectedList.Count, resultList.Count, "Expected and result lists are different. Length: ");
+			Assert.Multiple(() =>
+			{
+				Assert.That(expectedList, Is.Not.Empty);
+				Assert.That(resultList, Has.Count.EqualTo(expectedList.Count), "Expected and result lists are different. Length: ");
+			});
 
 			for (var i = 0; i < resultList.Count; i++)
 			{
@@ -1321,8 +1315,11 @@ namespace Tests
 			var resultList   = result.ToList();
 			var expectedList = expected.ToList();
 
-			Assert.AreNotEqual(0, expectedList.Count);
-			Assert.AreEqual(expectedList.Count, resultList.Count);
+			Assert.Multiple(() =>
+			{
+				Assert.That(expectedList, Is.Not.Empty);
+				Assert.That(resultList, Has.Count.EqualTo(expectedList.Count));
+			});
 
 			var b = expectedList.SequenceEqual(resultList);
 
@@ -1330,75 +1327,14 @@ namespace Tests
 				for (var i = 0; i < resultList.Count; i++)
 					Debug.WriteLine("{0} {1} --- {2}", Equals(expectedList[i], resultList[i]) ? " " : "-", expectedList[i], resultList[i]);
 
-			Assert.IsTrue(b);
+			Assert.That(b, Is.True);
 		}
 
-		public T[] AssertQuery<T>(IQueryable<T> query)
-		{
-			var loaded  = new Dictionary<Type,Expression>();
-			var actual  = query.ToArray();
-			var expr    = query.Expression.Transform(
-				query,
-				static (ctx, e) => e is ConstantExpression { Value : null } ce && ce.Type == typeof(IDataContext)
-					? Expression.Constant(Internals.GetDataContext(ctx), typeof(IDataContext))
-					: e);
-			var lastQuery = LastQuery;
-
-			var newExpr = expr.Transform(loaded, static (loaded, e) =>
-			{
-				if (e.NodeType == ExpressionType.Call)
-				{
-					var mc = (MethodCallExpression)e;
-
-					if (mc.Method.IsGenericMethod && mc.Method.GetGenericMethodDefinition() == Methods.LinqToDB.AsSubQuery)
-						return mc.Arguments[0];
-
-					if (typeof(ITable<>).IsSameOrParentOf(mc.Type))
-					{
-						var entityType = mc.Method.ReturnType.GetGenericArguments()[0];
-
-						if (entityType != null)
-						{
-							if (!loaded.TryGetValue(entityType, out var itemsExpression))
-							{
-								var newCall = LinqToDB.Common.TypeHelper.MakeMethodCall(Methods.Queryable.ToArray, mc);
-								using (new DisableLogging())
-								using (new DisableBaseline("test infrastructure"))
-								{
-									var items = newCall.EvaluateExpression();
-									itemsExpression = Expression.Constant(items, entityType.MakeArrayType());
-									loaded.Add(entityType, itemsExpression);
-								}
-							}
-							var queryCall =
-								LinqToDB.Common.TypeHelper.MakeMethodCall(Methods.Enumerable.AsQueryable,
-									itemsExpression);
-							return queryCall;
-						}
-					}
-				}
-
-				return e;
-			})!;
-
-			var empty = LinqToDB.Common.Tools.CreateEmptyQuery<T>();
-			T[]? expected;
-
-			expected = empty.Provider.CreateQuery<T>(newExpr).ToArray();
-
-			if (actual.Length > 0 || expected.Length > 0)
-				AreEqual(expected, actual, ComparerBuilder.GetEqualityComparer<T>());
-
-			LastQuery = lastQuery;
-
-			return actual;
-		}
-
-		private static readonly char[] _newlineSeparators = new char[] { '\r', '\n' };
-
+		static readonly char[] _newlineSeparators = new char[] { '\r', '\n' };
+		
 		protected void CompareSql(string expected, string result)
 		{
-			Assert.AreEqual(normalize(expected), normalize(result));
+			Assert.That(normalize(result), Is.EqualTo(normalize(expected)));
 
 			static string normalize(string sql)
 			{
@@ -1412,13 +1348,13 @@ namespace Tests
 			return DataCache<LinqDataTypes>.Get(context);
 		}
 
-		public static TempTable<T> CreateTempTable<T>(IDataContext db, string tableName, string context)
+		protected static TempTable<T> CreateTempTable<T>(IDataContext db, string tableName, string context)
 			where T : notnull
 		{
 			return TempTable.Create<T>(db, GetTempTableName(tableName, context));
 		}
 
-		public static string GetTempTableName(string tableName, string context)
+		protected static string GetTempTableName(string tableName, string context)
 		{
 			var finalTableName = tableName;
 			switch (context)
@@ -1572,6 +1508,113 @@ namespace Tests
 
 			return options;
 		}
+
+		private static readonly JsonSerializerOptions _dumpObjectOptions = new JsonSerializerOptions { WriteIndented = true };
+		protected virtual void DumpObject(object? obj)
+		{
+			if (obj == null)
+				return;
+
+			TestContext.WriteLine(JsonSerializer.Serialize(obj, _dumpObjectOptions));
+		}
+
+		[SuppressMessage("ReSharper", "AccessToDisposedClosure")]
+		protected void ConcurrentRunner<TParam, TResult>(DataConnection dc, string context, int threadsPerParam, Func<DataConnection, TParam, TResult> queryFunc,
+			Action<TResult, TParam> checkAction, params TParam[] parameters)
+		{
+			var threadCount = threadsPerParam * parameters.Length;
+			if (threadCount <= 0)
+				throw new InvalidOperationException();
+
+			// maximum Provider pool count
+			const int poolCount = 10;
+
+			using var semaphore = new Semaphore(0, poolCount);
+
+			var threads = new Thread[threadCount];
+			var results = new Tuple<TParam, TResult, string, DbParameter[], Exception?>[threadCount];
+
+			for (var i = 0; i < threadCount; i++)
+			{
+				var param = parameters[i % parameters.Length];
+				var n = i;
+				threads[i] = new Thread(() =>
+				{
+					semaphore.WaitOne();
+					try
+					{
+						try
+						{
+							using (var threadDb = (DataConnection)GetDataContext(context))
+							{
+								var commandInterceptor = new SaveCommandInterceptor();
+								threadDb.AddInterceptor(commandInterceptor);
+
+								var result = queryFunc(threadDb, param);
+								results[n] = Tuple.Create(param, result, threadDb.LastQuery!, commandInterceptor.Parameters, (Exception?)null);
+							}
+						}
+						catch (Exception e)
+						{
+							results[n] = Tuple.Create(param, default(TResult), "", (DbParameter[]?)null, e)!;
+						}
+
+					}
+					finally
+					{
+						semaphore.Release();
+					}
+				});
+			}
+
+			for (int i = 0; i < threads.Length; i++)
+			{
+				threads[i].Start();
+			}
+
+			semaphore.Release(poolCount);
+
+			for (int i = 0; i < threads.Length; i++)
+			{
+				threads[i].Join();
+			}
+
+			for (int i = 0; i < threads.Length; i++)
+			{
+				var result = results[i];
+				if (result.Item5 != null)
+				{
+					TestContext.WriteLine($"Exception in query ({result.Item1}):\n\n{result.Item5}");
+					throw result.Item5;
+				}
+				try
+				{
+					checkAction(result.Item2, result.Item1);
+				}
+				catch
+				{
+					var testResult = queryFunc(dc, result!.Item1);
+
+					TestContext.WriteLine($"Failed query ({result.Item1}):\n");
+					if (result.Item4 != null)
+					{
+						var sb = new StringBuilder();
+						dc.DataProvider.CreateSqlBuilder(dc.MappingSchema, dc.Options).PrintParameters(dc, sb, result.Item4.OfType<DbParameter>());
+						TestContext.WriteLine(sb);
+					}
+					TestContext.WriteLine();
+					TestContext.WriteLine(result.Item3);
+
+					DumpObject(result.Item2);
+
+					DumpObject(testResult);
+
+
+					throw;
+				}
+			}
+		}
+
 	}
 
 	static class DataCache<T>

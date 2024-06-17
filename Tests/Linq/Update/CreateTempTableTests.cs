@@ -157,14 +157,9 @@ namespace Tests.xUpdate
 			}
 		}
 
-
 		[Test]
 		public async Task CreateTableAsyncCanceled([DataSources(false)] string context)
 		{
-#if !NETCOREAPP3_1
-			if (context.IsAnyOf(TestProvName.AllMySqlData))
-				Assert.Inconclusive("MySql.Data 8.0.33 handles cancellation token incorrectly");
-#endif
 			using var cts = new CancellationTokenSource();
 			cts.Cancel();
 			using (var db = GetDataContext(context))
@@ -185,10 +180,26 @@ namespace Tests.xUpdate
 							select t
 						).ToList();
 					}
-					Assert.Fail("Task should have been canceled but was not");
+					if (!context.IsAnyOf(TestProvName.AllMySqlData))
+					{
+						Assert.Fail("Task should have been canceled but was not");
+					}
 				}
-				catch (OperationCanceledException) { }
-
+				catch (OperationCanceledException)
+				{
+					if (context.IsAnyOf(TestProvName.AllMySqlData
+#if !NETFRAMEWORK
+						, TestProvName.AllOracleManaged
+#endif
+						))
+					{
+						Assert.Fail("Update test. Oracle developers evolved");
+					}
+				}
+				catch (Exception ex) when (ex.Message.Contains("ORA-01013") && context.IsAnyOf(TestProvName.AllOracleManaged))
+				{
+					// ~Aliens~ Oracle
+				}
 
 				var tableExists = true;
 				try
@@ -199,17 +210,13 @@ namespace Tests.xUpdate
 				{
 					tableExists = false;
 				}
-				Assert.AreEqual(false, tableExists);
+				Assert.That(tableExists, Is.EqualTo(false));
 			}
 		}
 
 		[Test]
 		public async Task CreateTableAsyncCanceled2([DataSources(false)] string context)
 		{
-#if !NETCOREAPP3_1
-			if (context.IsAnyOf(TestProvName.AllMySqlData))
-				Assert.Inconclusive("MySql.Data 8.0.33 handles cancellation token incorrectly");
-#endif
 			using var cts = new CancellationTokenSource();
 			using (var db = GetDataContext(context))
 			{
@@ -234,9 +241,26 @@ namespace Tests.xUpdate
 							select t
 						).ToList();
 					}
-					Assert.Fail("Task should have been canceled but was not");
+					if (!context.IsAnyOf(TestProvName.AllMySqlData))
+					{
+						Assert.Fail("Task should have been canceled but was not");
+					}
 				}
-				catch (OperationCanceledException) { }
+				catch (OperationCanceledException)
+				{
+					if (context.IsAnyOf(TestProvName.AllMySqlData
+#if !NETFRAMEWORK
+						, TestProvName.AllOracleManaged
+#endif
+						))
+					{
+						Assert.Fail("Update test. Oracle developers evolved");
+					}
+				}
+				catch (Exception ex) when (ex.Message.Contains("ORA-01013") && context.IsAnyOf(TestProvName.AllOracleManaged))
+				{
+					// ~Aliens~ Oracle
+				}
 
 				var tableExists = true;
 				try
@@ -247,7 +271,7 @@ namespace Tests.xUpdate
 				{
 					tableExists = false;
 				}
-				Assert.AreEqual(false, tableExists);
+				Assert.That(tableExists, Is.EqualTo(false));
 			}
 		}
 
@@ -343,17 +367,23 @@ namespace Tests.xUpdate
 			var records1 = table.OrderBy(r => r.Id).ToArray();
 			var records2 = tmp.OrderBy(r => r.Id).ToArray();
 
-			Assert.AreEqual(2, records1.Length);
-			Assert.AreEqual(1, records1[0].Id);
-			Assert.AreEqual("value", records1[0].Value);
-			Assert.AreEqual(2, records1[1].Id);
-			Assert.AreEqual("value 2", records1[1].Value);
+			Assert.That(records1, Has.Length.EqualTo(2));
+			Assert.Multiple(() =>
+			{
+				Assert.That(records1[0].Id, Is.EqualTo(1));
+				Assert.That(records1[0].Value, Is.EqualTo("value"));
+				Assert.That(records1[1].Id, Is.EqualTo(2));
+				Assert.That(records1[1].Value, Is.EqualTo("value 2"));
 
-			Assert.AreEqual(2, records2.Length);
-			Assert.AreEqual(1, records2[0].Id);
-			Assert.AreEqual("value", records2[0].Value);
-			Assert.AreEqual(2, records2[1].Id);
-			Assert.AreEqual("renamed 2", records2[1].Value);
+				Assert.That(records2, Has.Length.EqualTo(2));
+			});
+			Assert.Multiple(() =>
+			{
+				Assert.That(records2[0].Id, Is.EqualTo(1));
+				Assert.That(records2[0].Value, Is.EqualTo("value"));
+				Assert.That(records2[1].Id, Is.EqualTo(2));
+				Assert.That(records2[1].Value, Is.EqualTo("renamed 2"));
+			});
 		}
 
 		[Test]
@@ -382,7 +412,7 @@ namespace Tests.xUpdate
 				select t
 			).ToList();
 
-			Assert.That(list.Count, Is.EqualTo(1));
+			Assert.That(list, Has.Count.EqualTo(1));
 		}
 
 		[Test]
@@ -411,7 +441,7 @@ namespace Tests.xUpdate
 				select t
 			).ToList();
 
-			Assert.That(list.Count, Is.EqualTo(1));
+			Assert.That(list, Has.Count.EqualTo(1));
 		}
 
 		[Test]
@@ -440,7 +470,7 @@ namespace Tests.xUpdate
 				select t
 			).ToListAsync();
 
-			Assert.That(list.Count, Is.EqualTo(1));
+			Assert.That(list, Has.Count.EqualTo(1));
 		}
 
 		[Test]
@@ -469,7 +499,7 @@ namespace Tests.xUpdate
 				select t
 			).ToListAsync();
 
-			Assert.That(list.Count, Is.EqualTo(1));
+			Assert.That(list, Has.Count.EqualTo(1));
 		}
 	}
 }

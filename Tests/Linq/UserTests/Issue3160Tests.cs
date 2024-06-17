@@ -63,7 +63,7 @@ namespace Tests.UserTests
 						.FirstOrDefault())
 					.FirstOrDefault())
 				.ToList();
-			Assert.That(ret.Count, Is.EqualTo(2));
+			Assert.That(ret, Has.Count.EqualTo(2));
 		}
 
 		[Test]
@@ -102,7 +102,7 @@ namespace Tests.UserTests
 						.FirstOrDefault())
 					.FirstOrDefault())
 				.ToList();
-			Assert.That(ret.Count, Is.EqualTo(2));
+			Assert.That(ret, Has.Count.EqualTo(2));
 		}
 
 		[Test]
@@ -147,7 +147,7 @@ namespace Tests.UserTests
 					})
 					.FirstOrDefault())
 				.ToList();
-			Assert.That(ret.Count, Is.EqualTo(2));
+			Assert.That(ret, Has.Count.EqualTo(2));
 		}
 
 		[Test]
@@ -198,7 +198,7 @@ namespace Tests.UserTests
 					}
 				})
 				.ToList();
-			Assert.That(ret.Count, Is.EqualTo(2));
+			Assert.That(ret, Has.Count.EqualTo(2));
 		}
 
 		[Test]
@@ -261,7 +261,7 @@ namespace Tests.UserTests
 					}
 				})
 				.ToList();
-			Assert.That(ret.Count, Is.EqualTo(2));
+			Assert.That(ret, Has.Count.EqualTo(2));
 		}
 
 		[Test]
@@ -300,7 +300,7 @@ namespace Tests.UserTests
 					}
 				})
 				.ToList();
-			Assert.That(ret.Count, Is.EqualTo(2));
+			Assert.That(ret, Has.Count.EqualTo(2));
 		}
 
 		[Test]
@@ -345,7 +345,7 @@ namespace Tests.UserTests
 					}
 				})
 				.ToList();
-			Assert.That(ret.Count, Is.EqualTo(2));
+			Assert.That(ret, Has.Count.EqualTo(2));
 		}
 	}
 }

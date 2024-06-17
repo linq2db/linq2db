@@ -5,16 +5,15 @@ using System.Linq.Expressions;
 
 namespace LinqToDB.Linq.Builder
 {
-	using Extensions;
+	using Async;
+	using Common;
 	using LinqToDB.Expressions;
 	using SqlQuery;
-	using Common;
-	using Reflection;
 
 	sealed class FirstSingleBuilder : MethodCallBuilder
 	{
-		public  static readonly string[] MethodNames      = { "First"     , "FirstOrDefault"     , "Single"     , "SingleOrDefault"      };
-		private static readonly string[] MethodNamesAsync = { "FirstAsync", "FirstOrDefaultAsync", "SingleAsync", "SingleOrDefaultAsync" };
+		static readonly string[] MethodNames      = { "First"     , "FirstOrDefault"     , "Single"     , "SingleOrDefault"      };
+		static readonly string[] MethodNamesAsync = { "FirstAsync", "FirstOrDefaultAsync", "SingleAsync", "SingleOrDefaultAsync" };
 
 		protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
@@ -24,387 +23,297 @@ namespace LinqToDB.Linq.Builder
 		private static bool IsApplicable(MethodCallExpression methodCall)
 		{
 			return
-				methodCall.IsQueryable(MethodNames)           && methodCall.Arguments.Count == 1 ||
-				methodCall.IsAsyncExtension(MethodNamesAsync) && methodCall.Arguments.Count == 2;
+				methodCall.IsQueryable(MethodNames)           && methodCall.Arguments.Count <= 2 ||
+				methodCall.IsAsyncExtension(MethodNamesAsync) && methodCall.Arguments.Count <= 3;
 		}
 
-		protected override IBuildContext BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
+		public enum MethodKind
 		{
-			var sequence = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
-			var take     = 0;
+			First,
+			FirstOrDefault,
+			Single,
+			SingleOrDefault,
+		}
 
-			if (!buildInfo.IsSubQuery || builder.DataContext.SqlProviderFlags.IsSubQueryTakeSupported)
+		static MethodKind GetMethodKind(string methodName)
+		{
+			return methodName switch
 			{
-				switch (methodCall.Method.Name)
+				"First"                => MethodKind.First,
+				"FirstAsync"           => MethodKind.First,
+				"FirstOrDefault"       => MethodKind.FirstOrDefault,
+				"FirstOrDefaultAsync"  => MethodKind.FirstOrDefault,
+				"Single"               => MethodKind.Single,
+				"SingleAsync"          => MethodKind.Single,
+				"SingleOrDefault"      => MethodKind.SingleOrDefault,
+				"SingleOrDefaultAsync" => MethodKind.SingleOrDefault,
+				_ => throw new ArgumentOutOfRangeException(nameof(methodName), methodName, "Not supported method.")
+			};
+		}
+
+		protected override BuildSequenceResult BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
+		{
+			var argument = methodCall.Arguments[0];
+			var argumentCount = methodCall.Arguments.Count;
+
+			if (methodCall.IsAsyncExtension(MethodNamesAsync))
+				--argumentCount;
+
+			var cardinality = buildInfo.SourceCardinality;
+
+			if (buildInfo.SourceCardinality != SourceCardinality.Unknown)
+			{
+				cardinality &= ~SourceCardinality.Many;
+			}
+
+			cardinality |= SourceCardinality.One;
+			var methodKind = GetMethodKind(methodCall.Method.Name);
+
+			switch (methodKind)
+			{
+				case MethodKind.First:
+				case MethodKind.Single: 
+					break;
+
+				case MethodKind.FirstOrDefault:
+				case MethodKind.SingleOrDefault:
 				{
-					case "First"                :
-					case "FirstOrDefault"       :
-					case "FirstAsync"           :
-					case "FirstOrDefaultAsync"  :
-						take = 1;
-						break;
+					cardinality |= SourceCardinality.Zero;
+					break;
+				}
+			}
 
-					case "Single"               :
-					case "SingleOrDefault"      :
-					case "SingleAsync"          :
-					case "SingleOrDefaultAsync" :
-						if (!buildInfo.IsSubQuery)
-							if (buildInfo.SelectQuery.Select.TakeValue == null || buildInfo.SelectQuery.Select.TakeValue is SqlValue takeValue && (int)takeValue.Value! >= 2)
-								take = 2;
+			var buildResult = builder.TryBuildSequence(new BuildInfo(buildInfo, argument)
+			{
+				SourceCardinality = cardinality
+			});
 
-						break;
+			if (buildResult.BuildContext == null)
+				return BuildSequenceResult.Error(methodCall);
+
+			var sequence = buildResult.BuildContext;
+
+			if (argumentCount > 1)
+			{
+				var filterLambda = methodCall.Arguments[1].UnwrapLambda();
+				sequence = builder.BuildWhere(buildInfo.Parent, sequence, filterLambda, false, false, buildInfo.IsTest);
+
+				if (sequence == null)
+					return BuildSequenceResult.Error(methodCall);
+			}
+
+			sequence = new SubQueryContext(sequence);
+
+			var take = 0;
+
+			switch (methodKind)
+			{
+				case MethodKind.First          :
+				{
+					take        = 1;
+					break;
+				}
+				case MethodKind.FirstOrDefault :
+				{
+					take        = 1;
+					break;
+				}
+				case MethodKind.Single          :
+				case MethodKind.SingleOrDefault :
+				{
+					if (!buildInfo.IsSubQuery)
+					{
+						if (buildInfo.SelectQuery.Select.TakeValue is null or SqlValue { Value: >= 2 })
+						{
+							take = 2;
+						}
+					}
+
+					break;
 				}
 			}
 
 			if (take != 0)
 			{
-				var takeExpression = builder.DataOptions.LinqOptions.ParameterizeTakeSkip
-					? (ISqlExpression)new SqlParameter(new (typeof(int)), "take", take)
-					{
-						IsQueryParameter = !builder.DataContext.InlineParameters
-					}
-					: new SqlValue(take);
+				var takeExpression = new SqlValue(take);
 				builder.BuildTake(sequence, takeExpression, null);
 			}
 
-			return new FirstSingleContext(buildInfo.Parent, sequence, methodCall);
-		}
+			var canBeWeak = false;
 
-		protected override SequenceConvertInfo? Convert(
-			ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo, ParameterExpression? param)
-		{
-			var isAsync = methodCall.Method.Name.EndsWith("Async");
-
-			if (methodCall.Arguments.Count == (isAsync ? 3 : 2))
+			if (buildInfo.Parent != null && (cardinality & SourceCardinality.Zero) != 0)
 			{
-				var predicate = (LambdaExpression)methodCall.Arguments[1].Unwrap();
-				var info      = builder.ConvertSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]), predicate.Parameters[0], true);
-
-				if (info != null)
-				{
-					info.Expression = methodCall.Transform(
-						(methodCall, info, predicate),
-						static (context, ex) => ConvertMethod(context.methodCall, 0, context.info, context.predicate.Parameters[0], ex));
-					info.Parameter  = param;
-
-					return info;
-				}
-			}
-			else
-			{
-				var argument = methodCall.Arguments[0];
-				var info     = builder.ConvertSequence(new BuildInfo(buildInfo, argument), null, true);
-
-				if (info != null)
-				{
-					var prevGenericType = typeof(IEnumerable<>).GetGenericType(argument.Type);
-					var genericType     = typeof(IEnumerable<>).GetGenericType(info.Expression.Type);
-
-					if (genericType == null || prevGenericType == null)
-						throw new InvalidOperationException();
-
-					var newArgument = info.Expression;
-					var elementType = genericType.GetGenericArguments()[0];
-
-					if (typeof(ExpressionHolder<,>).IsSameOrParentOf(elementType))
-					{
-						var selectMethod = typeof(IQueryable<>).IsSameOrParentOf(info.Expression.Type)
-							? Methods.Queryable.Select
-							: Methods.Enumerable.Select;
-
-						var entityParam     = Expression.Parameter(elementType);
-						var selectCall = TypeHelper.MakeMethodCall(selectMethod, info.Expression,
-							Expression.Quote(
-								Expression.Lambda(
-									Expression.PropertyOrField(entityParam, nameof(ExpressionHolder<int, int>.ex)),
-									entityParam)
-							));
-
-						newArgument = selectCall;
-					}
-
-					info.Expression = methodCall.Update(methodCall.Object, new[] {newArgument});
-
-					info.Parameter = param;
-
-					return info;
-				}
+				sequence = new DefaultIfEmptyBuilder.DefaultIfEmptyContext(buildInfo.Parent, sequence, sequence, null, allowNullField: true);
+				canBeWeak = true;
 			}
 
-			return null;
+			return BuildSequenceResult.FromContext(new FirstSingleContext(buildInfo.Parent, sequence, methodKind, buildInfo.IsSubQuery, buildInfo.IsAssociation, canBeWeak, cardinality, buildInfo.IsTest));
 		}
 
 		public sealed class FirstSingleContext : SequenceContextBase
 		{
-			private readonly bool _orDefault;
-
-			public FirstSingleContext(IBuildContext? parent, IBuildContext sequence, MethodCallExpression methodCall)
+			public FirstSingleContext(IBuildContext? parent, IBuildContext sequence, MethodKind methodKind,
+				bool isSubQuery, bool isAssociation, bool canBeWeak, SourceCardinality cardinality, bool isTest)
 				: base(parent, sequence, null)
 			{
-				_methodCall = methodCall;
-				_orDefault  = _methodCall.Method.Name.Contains("OrDefault");
+				_methodKind   = methodKind;
+				IsSubQuery    = isSubQuery;
+				IsAssociation = isAssociation;
+				CanBeWeak     = canBeWeak;
+				Cardinality   = cardinality;
+				IsTest        = isTest;
 			}
 
-			readonly MethodCallExpression _methodCall;
+			readonly MethodKind _methodKind;
 
-			public override void BuildQuery<T>(Query<T> query, ParameterExpression queryParameter)
+			public bool              IsSubQuery    { get; }
+			public bool              IsAssociation { get; }
+			public bool              CanBeWeak     { get; }
+			public bool              IsTest        { get; }
+			public SourceCardinality Cardinality   { get; set; }
+
+			public override bool IsOptional => (Cardinality & SourceCardinality.Zero) != 0 || Cardinality == SourceCardinality.Unknown;
+
+			public override void SetRunQuery<T>(Query<T> query, Expression expr)
 			{
-				Sequence.BuildQuery(query, queryParameter);
+				var mapper = Builder.BuildMapper<T>(SelectQuery, expr);
 
-				switch (_methodCall.Method.Name.Replace("Async", ""))
+				QueryRunner.SetRunQuery(query, mapper);
+
+				switch (_methodKind)
 				{
-					case "First"           : GetFirstElement          (query); break;
-					case "FirstOrDefault"  : GetFirstOrDefaultElement (query); break;
-					case "Single"          : GetSingleElement         (query); break;
-					case "SingleOrDefault" : GetSingleOrDefaultElement(query); break;
+					case MethodKind.First           : GetFirstElement          (query); break;
+					case MethodKind.FirstOrDefault  : GetFirstOrDefaultElement (query); break;
+					case MethodKind.Single          : GetSingleElement         (query); break;
+					case MethodKind.SingleOrDefault : GetSingleOrDefaultElement(query); break;
 				}
 			}
 
 			static void GetFirstElement<T>(Query<T> query)
 			{
-				query.GetElement      = (db, expr, ps, preambles) => query.GetIEnumerable(db, expr, ps, preambles).First();
+				query.GetElement = (db, expr, ps, preambles) =>
+					query.GetResultEnumerable(db, expr, ps, preambles).First();
 
-				query.GetElementAsync = async (db, expr, ps, preambles, token) =>
-				{
-					var count = 0;
-					var obj   = default(T)!;
-
-					await query.GetForEachAsync(db, expr, ps, preambles,
-						r => { obj = r; count++; return false; }, token).ConfigureAwait(Configuration.ContinueOnCapturedContext);
-
-					return count > 0 ? obj : Array<T>.Empty.First();
-				};
+				query.GetElementAsync = query.GetElementAsync = async (db, expr, ps, preambles, token) =>
+					await query.GetResultEnumerable(db, expr, ps, preambles)
+						.FirstAsync(token).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 			}
 
 			static void GetFirstOrDefaultElement<T>(Query<T> query)
 			{
-				query.GetElement      = (db, expr, ps, preambles) => query.GetIEnumerable(db, expr, ps, preambles).FirstOrDefault();
+				query.GetElement = (db, expr, ps, preambles) =>
+					query.GetResultEnumerable(db, expr, ps, preambles).FirstOrDefault();
 
-				query.GetElementAsync = async (db, expr, ps, preambles, token) =>
-				{
-					var count = 0;
-					var obj   = default(T)!;
-
-					await query.GetForEachAsync(db, expr, ps, preambles, r => { obj = r; count++; return false; }, token).ConfigureAwait(Configuration.ContinueOnCapturedContext);
-
-					return count > 0 ? obj : Array<T>.Empty.FirstOrDefault();
-				};
+				query.GetElementAsync = query.GetElementAsync = async (db, expr, ps, preambles, token) =>
+					await query.GetResultEnumerable(db, expr, ps, preambles)
+						.FirstOrDefaultAsync(token).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 			}
 
 			static void GetSingleElement<T>(Query<T> query)
 			{
-				query.GetElement      = (db, expr, ps, preambles) => query.GetIEnumerable(db, expr, ps, preambles).Single();
+				query.GetElement = (db, expr, ps, preambles) =>
+					query.GetResultEnumerable(db, expr, ps, preambles).Single();
 
 				query.GetElementAsync = async (db, expr, ps, preambles, token) =>
-				{
-					var count = 0;
-					var obj   = default(T)!;
-
-					await query.GetForEachAsync(db, expr, ps, preambles,
-						r =>
-						{
-							if (count == 0)
-								obj = r;
-							count++;
-							return count == 1;
-						}, token).ConfigureAwait(Configuration.ContinueOnCapturedContext);
-
-					return count == 1 ? obj : new T[count].Single();
-				};
+					await query.GetResultEnumerable(db, expr, ps, preambles)
+						.SingleAsync(token).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 			}
 
 			static void GetSingleOrDefaultElement<T>(Query<T> query)
 			{
-				query.GetElement      = (db, expr, ps, preambles) => query.GetIEnumerable(db, expr, ps, preambles).SingleOrDefault();
+				query.GetElement = (db, expr, ps, preambles) =>
+					query.GetResultEnumerable(db, expr, ps, preambles).SingleOrDefault();
 
 				query.GetElementAsync = async (db, expr, ps, preambles, token) =>
-				{
-					var count = 0;
-					var obj   = default(T)!;
-
-					await query.GetForEachAsync(db, expr, ps, preambles,
-						r =>
-						{
-							if (count == 0)
-								obj = r;
-							count++;
-							return count == 1;
-						}, token).ConfigureAwait(Configuration.ContinueOnCapturedContext);
-
-					return count == 1 ? obj : new T[count].SingleOrDefault();
-				};
-			}
-
-			static object SequenceException()
-			{
-				return Array<object>.Empty.First();
+					await query.GetResultEnumerable(db, expr, ps, preambles)
+						.SingleOrDefaultAsync(token).ConfigureAwait(Configuration.ContinueOnCapturedContext);
 			}
 
 			bool _isJoinCreated;
+			bool _asSubquery;
 
 			void CreateJoin()
 			{
+				// sequence created in test mode and there can be no tables.
+				//
+				if (IsTest)
+					return;
+
+				if (_isJoinCreated  || _asSubquery)
+					return;
+
+				// process as subquery
+				if (Parent!.SelectQuery.From.Tables.Count == 0)
+				{
+					_asSubquery = true;
+					return;
+				}
+
 				if (!_isJoinCreated)
 				{
 					_isJoinCreated = true;
 
-					var join = SelectQuery.OuterApply();
+					var join = CanBeWeak ? SelectQuery.OuterApply() : SelectQuery.CrossApply();
+					join.JoinedTable.IsWeak      = Cardinality.HasFlag(SourceCardinality.Zero);
+					join.JoinedTable.Cardinality = Cardinality;
 
 					Parent!.SelectQuery.From.Tables[0].Joins.Add(join.JoinedTable);
 				}
 			}
 
-			int _checkNullIndex = -1;
-
-			int GetCheckNullIndex()
+			public override Expression MakeExpression(Expression path, ProjectFlags flags)
 			{
-				if (_checkNullIndex < 0)
+				if ((flags.IsAssociationRoot() || flags.IsRoot()) && SequenceHelper.IsSameContext(path, this))
 				{
-					//TODO: Check maybe we have to use DefaultIfEmptyContext
-					var q =
-						from col in SelectQuery.Select.Columns
-						where !col.CanBeNull
-						select SelectQuery.Select.Columns.IndexOf(col);
-
-					_checkNullIndex = q.DefaultIfEmpty(-1).First();
-
-					if (_checkNullIndex < 0)
-						_checkNullIndex = SelectQuery.Select.AddNew(new SqlValue(1), "is_empty");
-
-					_checkNullIndex = ConvertToParentIndex(_checkNullIndex, this);
+					return path;
 				}
 
-				return _checkNullIndex;
-			}
-
-			static bool HasSubQuery(IBuildContext context)
-			{
-				var ctx = context;
-
-				while (true)
+				if (!flags.IsTest() && IsSubQuery)
 				{
-					if (ctx is SelectContext sc)
+					CreateJoin();
+				}
+
+				var projected = base.MakeExpression(path, flags);
+
+				if (flags.IsTable())
+					return projected;
+
+				if (_asSubquery)
+				{
+					if (Parent == null)
+						return path;
+
+					projected = Builder.BuildSqlExpression(this, projected, ProjectFlags.SQL,
+						buildFlags : ExpressionBuilder.BuildFlags.ForceAssignments);
+
+					if (projected is SqlPlaceholderExpression placeholder)
 					{
-						foreach (var member in sc.Members.Values)
+						var column = Builder.ToColumns(this, placeholder);
+						if (column is SqlPlaceholderExpression)
 						{
-							if (member is MethodCallExpression mc
-								&& !IsApplicable(mc)
-								&& (context.Builder.IsSubQuery(ctx, mc) || EagerLoading.IsChainContainsNotSupported(mc)))
-							{
-								return true;
-							}
+							projected = ExpressionBuilder.CreatePlaceholder(Parent, SelectQuery, path);
 						}
-
-						return false;
-					}
-
-					if (ctx is SubQueryContext sub)
-					{
-						ctx = sub.SubQuery;
-					}
-					else if (ctx is PassThroughContext pass)
-					{
-						ctx = pass.Context;
+						else
+						{
+							projected = path;
+						}
 					}
 					else
 					{
-						break;
+						projected = path;
 					}
 				}
 
-				return false;
+				return projected;
 			}
 
-			public override Expression BuildExpression(Expression? expression, int level, bool enforceServerSide)
+			public override IBuildContext Clone(CloningContext context)
 			{
-				if (expression == null || level == 0)
+				return new FirstSingleContext(null, context.CloneContext(Sequence),
+					_methodKind, IsSubQuery, IsAssociation, CanBeWeak, Cardinality, false)
 				{
-					if (Builder.DataContext.SqlProviderFlags.IsApplyJoinSupported &&
-						Parent!.SelectQuery.GroupBy.IsEmpty &&
-						Parent.SelectQuery.From.Tables.Count > 0 &&
-						!HasSubQuery(Sequence))
-					{
-						CreateJoin();
-
-						var expr = Sequence.BuildExpression(expression, expression == null ? level : level + 1, enforceServerSide);
-
-						Expression defaultValue;
-
-						if (_orDefault)
-							defaultValue = Expression.Constant(expr.Type.GetDefaultValue(), expr.Type);
-						else
-							defaultValue = Expression.Convert(
-								Expression.Call(
-									null,
-									MemberHelper.MethodOf(() => SequenceException())),
-								expr.Type);
-
-						expr = Expression.Condition(
-							Expression.Call(
-								ExpressionBuilder.DataReaderParam,
-								ReflectionHelper.DataReader.IsDBNull,
-								ExpressionInstances.Int32Array(GetCheckNullIndex())),
-							defaultValue,
-							expr);
-
-						return expr;
-					}
-
-					if (expression == null)
-					{
-						if (   !Builder.DataContext.SqlProviderFlags.IsSubQueryColumnSupported
-						    || Sequence.IsExpression(null, level, RequestFor.Object).Result)
-						{
-							return Builder.BuildMultipleQuery(Parent!, _methodCall, enforceServerSide);
-						}
-
-						var idx = Parent!.SelectQuery.Select.Add(SelectQuery);
-						    idx = Parent.ConvertToParentIndex(idx, Parent);
-						return Builder.BuildSql(_methodCall.Type, idx, SelectQuery);
-					}
-
-					return null!; // ???
-				}
-
-				throw new NotImplementedException();
-			}
-
-			public override int ConvertToParentIndex(int index, IBuildContext context)
-			{
-				if (!_orDefault || Parent == null || SelectQuery.Select.Columns[index].CanBeNull)
-					return base.ConvertToParentIndex(index, context);
-
-				var column = SelectQuery.Select.Columns[index];
-
-				var idx = Parent.ConvertToParentIndex(index, context);
-
-				foreach (var col in Parent.SelectQuery.Select.Columns)
-				{
-					if (col.Expression == column)
-						col.Expression = new SqlExpression(col.SystemType, "{0}", column.Precedence, column) { CanBeNull = true };
-				}
-
-				return idx;
-			}
-
-			public override SqlInfo[] ConvertToSql(Expression? expression, int level, ConvertFlags flags)
-			{
-				return Sequence.ConvertToSql(expression, level + 1, flags);
-			}
-
-			public override SqlInfo[] ConvertToIndex(Expression? expression, int level, ConvertFlags flags)
-			{
-				return Sequence.ConvertToIndex(expression, level, flags);
-			}
-
-			public override IsExpressionResult IsExpression(Expression? expression, int level, RequestFor requestFlag)
-			{
-				return Sequence.IsExpression(expression, level, requestFlag);
-			}
-
-			public override IBuildContext GetContext(Expression? expression, int level, BuildInfo buildInfo)
-			{
-				throw new NotImplementedException();
+					_isJoinCreated = _isJoinCreated
+				};
 			}
 		}
 	}

@@ -78,9 +78,9 @@
 		public List<Parameter> Parameters;
 	}
 
-	LinqToDB.Data.DataConnection GetSapHanaConnection(string connectionString, string providerName = null)
+	LinqToDB.Data.DataConnection GetSapHanaConnection(string connectionString)
 	{
-		return LinqToDB.DataProvider.SapHana.SapHanaTools.CreateDataConnection(connectionString, providerName);
+		return LinqToDB.DataProvider.SapHana.SapHanaTools.CreateDataConnection(connectionString, LinqToDB.DataProvider.SapHana.SapHanaProvider.Unmanaged);
 	}
 
 	LinqToDB.Data.DataConnection GetSapHanaConnection(string server, string schema, string uid, string password)
@@ -93,9 +93,9 @@
 		LoadMetadata(dataConnection);
 	}
 
-	public void LoadSapHanaMetadata(string connectionString, string providerName = null)
+	public void LoadSapHanaMetadata(string connectionString)
 	{
-		using (var dataConnection = GetSapHanaConnection(connectionString, providerName))
+		using (var dataConnection = GetSapHanaConnection(connectionString))
 			LoadMetadata(dataConnection);
 	}
 

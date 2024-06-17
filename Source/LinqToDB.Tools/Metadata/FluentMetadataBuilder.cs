@@ -44,7 +44,7 @@ namespace LinqToDB.Metadata
 				parameters = new ICodeExpression[] { context.AST.Constant(metadata.Name.Value.Name, true) };
 			}
 			else
-				parameters = Array<ICodeExpression>.Empty;
+				parameters = [];
 
 			List<CodeAssignmentStatement>? initializers = null;
 
@@ -61,7 +61,7 @@ namespace LinqToDB.Metadata
 			if (metadata.IsTemporary                         ) (initializers ??= new()).Add(context.AST.Assign(WellKnownTypes.LinqToDB.Mapping.TableAttribute_IsTemporary              , context.AST.Constant(true                  , true)));
 			if (metadata.TableOptions  != TableOptions.NotSet) (initializers ??= new()).Add(context.AST.Assign(WellKnownTypes.LinqToDB.Mapping.TableAttribute_TableOptions             , context.AST.Constant(metadata.TableOptions , true)));
 
-			var attr = context.AST.New(WellKnownTypes.LinqToDB.Mapping.TableAttribute, parameters, initializers?.ToArray() ?? Array<CodeAssignmentStatement>.Empty);
+			var attr = context.AST.New(WellKnownTypes.LinqToDB.Mapping.TableAttribute, parameters, initializers?.ToArray() ?? []);
 
 			_entities.Add(entityBuilder.Type, (attr, new Dictionary<CodeReference, ICodeExpression?>()));
 		}
@@ -92,7 +92,7 @@ namespace LinqToDB.Metadata
 				parameters = new ICodeExpression[] { context.AST.Constant(metadata.Name, true) };
 			}
 			else
-				parameters = Array<ICodeExpression>.Empty;
+				parameters = [];
 
 			List<CodeAssignmentStatement>? initializers = null;
 
@@ -130,7 +130,7 @@ namespace LinqToDB.Metadata
 			if (metadata.IsDiscriminator     ) (initializers ??= new()).Add(context.AST.Assign(WellKnownTypes.LinqToDB.Mapping.ColumnAttribute_IsDiscriminator  , context.AST.Constant(true                 , true)));
 			if (metadata.Order        != null) (initializers ??= new()).Add(context.AST.Assign(WellKnownTypes.LinqToDB.Mapping.ColumnAttribute_Order            , context.AST.Constant(metadata.Order.Value , true)));
 
-			var attr = context.AST.New(WellKnownTypes.LinqToDB.Mapping.ColumnAttribute, parameters, initializers?.ToArray() ?? Array<CodeAssignmentStatement>.Empty);
+			var attr = context.AST.New(WellKnownTypes.LinqToDB.Mapping.ColumnAttribute, parameters, initializers?.ToArray() ?? []);
 
 			_entities[entityClass].members.Add(propertyBuilder.Property.Reference, attr);
 		}
@@ -177,7 +177,7 @@ namespace LinqToDB.Metadata
 			if (metadata.Name != null)
 				parameters = new ICodeExpression[] { context.AST.Constant(context.MakeFullyQualifiedRoutineName(metadata.Name.Value), true) };
 			else
-				parameters = Array<ICodeExpression>.Empty;
+				parameters = [];
 
 			List<CodeAssignmentStatement>? initializers = null;
 
@@ -197,7 +197,7 @@ namespace LinqToDB.Metadata
 
 			// Sql.FunctionAttribute.Precedence not generated, as we currenty don't allow expressions for function name in generator
 
-			var attr = context.AST.New(WellKnownTypes.LinqToDB.SqlFunctionAttribute, parameters, initializers?.ToArray() ?? Array<CodeAssignmentStatement>.Empty);
+			var attr = context.AST.New(WellKnownTypes.LinqToDB.SqlFunctionAttribute, parameters, initializers?.ToArray() ?? []);
 
 			// generate:
 			// builder.HasAttribute(() => Type.Method(defaults), attr);
@@ -211,7 +211,7 @@ namespace LinqToDB.Metadata
 
 			var fakeParameters = BuildDefaultArgs(context, methodBuilder.Method, metadata.IsAggregate == true);
 
-			var typeParams = metadata.IsAggregate == true ? new  IType[] { WellKnownTypes.System.Object } : Array<IType>.Empty;
+			var typeParams = metadata.IsAggregate == true ? new  IType[] { WellKnownTypes.System.Object } : [];
 
 			if (methodBuilder.Method.ReturnType != null)
 				lambda.Body().Append(context.AST.Return(context.AST.Call(new CodeTypeReference(context.NonTableFunctionsClass.Type), methodBuilder.Method.Name, methodBuilder.Method.ReturnType.Type, typeParams, false, fakeParameters)));
@@ -235,7 +235,7 @@ namespace LinqToDB.Metadata
 				parameters = new ICodeExpression[] { context.AST.Constant(metadata.Name.Value.Name, true) };
 			}
 			else
-				parameters = Array<ICodeExpression>.Empty;
+				parameters = [];
 
 			List<CodeAssignmentStatement>? initializers = null;
 
@@ -254,7 +254,7 @@ namespace LinqToDB.Metadata
 			if (metadata.ArgIndices != null && metadata.ArgIndices.Length > 0)
 				(initializers ??= new()).Add(context.AST.Assign(WellKnownTypes.LinqToDB.Sql_TableFunctionAttribute_ArgIndices, context.AST.Array(WellKnownTypes.System.Int32, true, true, BuildArgIndices(context, metadata.ArgIndices))));
 
-			var attr = context.AST.New(WellKnownTypes.LinqToDB.SqlTableFunctionAttribute, parameters, initializers?.ToArray() ?? Array<CodeAssignmentStatement>.Empty);
+			var attr = context.AST.New(WellKnownTypes.LinqToDB.SqlTableFunctionAttribute, parameters, initializers?.ToArray() ?? []);
 
 			// generate:
 			// builder.HasAttribute<TContext>(ctx => ctx.Method(defaults), attr);
@@ -304,7 +304,7 @@ namespace LinqToDB.Metadata
 		private static ICodeExpression[] BuildDefaultArgs(IDataModelGenerationContext context, CodeMethod method, bool replaceTArg)
 		{
 			if (method.Parameters.Count == 0)
-				return Array<ICodeExpression>.Empty;
+				return [];
 
 			var parameters = new ICodeExpression[method.Parameters.Count];
 			for (var i = 0; i < parameters.Length; i++)
@@ -443,7 +443,7 @@ namespace LinqToDB.Metadata
 			if (metadata.Alias         != null) (initializers ??= new()).Add(context.AST.Assign(WellKnownTypes.LinqToDB.Mapping.AssociationAttribute_AliasName, context.AST.Constant(metadata.Alias        , true)));
 			if (metadata.Storage       != null) (initializers ??= new()).Add(context.AST.Assign(WellKnownTypes.LinqToDB.Mapping.AssociationAttribute_Storage  , context.AST.Constant(metadata.Storage      , true)));
 
-			return context.AST.New(WellKnownTypes.LinqToDB.Mapping.AssociationAttribute, Array<ICodeExpression>.Empty, initializers?.ToArray() ?? Array<CodeAssignmentStatement>.Empty);
+			return context.AST.New(WellKnownTypes.LinqToDB.Mapping.AssociationAttribute, Array.Empty<ICodeExpression>(), initializers?.ToArray() ?? []);
 		}
 
 		void IMetadataBuilder.Complete(IDataModelGenerationContext context)

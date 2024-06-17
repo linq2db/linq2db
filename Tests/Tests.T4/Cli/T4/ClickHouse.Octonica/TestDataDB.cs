@@ -43,19 +43,20 @@ namespace Cli.T4.ClickHouse.Octonica
 
 		partial void InitDataContext();
 
-		public ITable<AllType>           AllTypes            => this.GetTable<AllType>();
-		public ITable<Child>             Children            => this.GetTable<Child>();
-		public ITable<CollatedTable>     CollatedTables      => this.GetTable<CollatedTable>();
-		public ITable<Doctor>            Doctors             => this.GetTable<Doctor>();
-		public ITable<GrandChild>        GrandChildren       => this.GetTable<GrandChild>();
-		public ITable<InheritanceChild>  InheritanceChildren => this.GetTable<InheritanceChild>();
-		public ITable<InheritanceParent> InheritanceParents  => this.GetTable<InheritanceParent>();
-		public ITable<LinqDataType>      LinqDataTypes       => this.GetTable<LinqDataType>();
-		public ITable<Parent>            Parents             => this.GetTable<Parent>();
-		public ITable<Patient>           Patients            => this.GetTable<Patient>();
-		public ITable<Person>            People              => this.GetTable<Person>();
-		public ITable<TestMerge1>        TestMerge1          => this.GetTable<TestMerge1>();
-		public ITable<TestMerge2>        TestMerge2          => this.GetTable<TestMerge2>();
+		public ITable<AllType>                 AllTypes                 => this.GetTable<AllType>();
+		public ITable<Child>                   Children                 => this.GetTable<Child>();
+		public ITable<CollatedTable>           CollatedTables           => this.GetTable<CollatedTable>();
+		public ITable<Doctor>                  Doctors                  => this.GetTable<Doctor>();
+		public ITable<GrandChild>              GrandChildren            => this.GetTable<GrandChild>();
+		public ITable<InheritanceChild>        InheritanceChildren      => this.GetTable<InheritanceChild>();
+		public ITable<InheritanceParent>       InheritanceParents       => this.GetTable<InheritanceParent>();
+		public ITable<LinqDataType>            LinqDataTypes            => this.GetTable<LinqDataType>();
+		public ITable<Parent>                  Parents                  => this.GetTable<Parent>();
+		public ITable<Patient>                 Patients                 => this.GetTable<Patient>();
+		public ITable<Person>                  People                   => this.GetTable<Person>();
+		public ITable<ReplacingMergeTreeTable> ReplacingMergeTreeTables => this.GetTable<ReplacingMergeTreeTable>();
+		public ITable<TestMerge1>              TestMerge1               => this.GetTable<TestMerge1>();
+		public ITable<TestMerge2>              TestMerge2               => this.GetTable<TestMerge2>();
 	}
 
 	[Table("AllTypes")]
@@ -113,6 +114,11 @@ namespace Cli.T4.ClickHouse.Octonica
 		public static Person? Find(this ITable<Person> table, int personId)
 		{
 			return table.FirstOrDefault(e => e.PersonID == personId);
+		}
+
+		public static ReplacingMergeTreeTable? Find(this ITable<ReplacingMergeTreeTable> table, uint id)
+		{
+			return table.FirstOrDefault(e => e.ID == id);
 		}
 
 		public static TestMerge1? Find(this ITable<TestMerge1> table, int id)
@@ -181,7 +187,7 @@ namespace Cli.T4.ClickHouse.Octonica
 		[Column("MoneyValue"                                              )] public decimal?        MoneyValue     { get; set; } // Decimal(18, 4)
 		[Column("DateTimeValue"                                           )] public DateTimeOffset? DateTimeValue  { get; set; } // DateTime64(3)
 		[Column("DateTimeValue2"                                          )] public DateTimeOffset? DateTimeValue2 { get; set; } // DateTime64(7)
-		[Column("BoolValue"                                               )] public byte?           BoolValue      { get; set; } // UInt8
+		[Column("BoolValue"                                               )] public bool?           BoolValue      { get; set; } // Bool
 		[Column("GuidValue"                                               )] public Guid?           GuidValue      { get; set; } // UUID
 		[Column("BinaryValue"                                             )] public string?         BinaryValue    { get; set; } // String
 		[Column("SmallIntValue"                                           )] public short?          SmallIntValue  { get; set; } // Int16
@@ -214,6 +220,13 @@ namespace Cli.T4.ClickHouse.Octonica
 		[Column("Gender"    , CanBeNull    = false                     )] public byte[]  Gender     { get; set; } = null!; // FixedString(1)
 	}
 
+	[Table("ReplacingMergeTreeTable")]
+	public partial class ReplacingMergeTreeTable
+	{
+		[Column("ID", IsPrimaryKey = true, SkipOnUpdate = true)] public uint           ID { get; set; } // UInt32
+		[Column("TS"                                          )] public DateTimeOffset TS { get; set; } // DateTime
+	}
+
 	[Table("TestMerge1")]
 	public partial class TestMerge1
 	{
@@ -224,7 +237,7 @@ namespace Cli.T4.ClickHouse.Octonica
 		[Column("Field4"                                                   )] public int?            Field4          { get; set; } // Int32
 		[Column("Field5"                                                   )] public int?            Field5          { get; set; } // Int32
 		[Column("FieldInt64"                                               )] public long?           FieldInt64      { get; set; } // Int64
-		[Column("FieldBoolean"                                             )] public byte?           FieldBoolean    { get; set; } // UInt8
+		[Column("FieldBoolean"                                             )] public bool?           FieldBoolean    { get; set; } // Bool
 		[Column("FieldString"                                              )] public string?         FieldString     { get; set; } // String
 		[Column("FieldNString"                                             )] public string?         FieldNString    { get; set; } // String
 		[Column("FieldChar"                                                )] public byte[]?         FieldChar       { get; set; } // FixedString(1)
@@ -252,7 +265,7 @@ namespace Cli.T4.ClickHouse.Octonica
 		[Column("Field4"                                                   )] public int?            Field4          { get; set; } // Int32
 		[Column("Field5"                                                   )] public int?            Field5          { get; set; } // Int32
 		[Column("FieldInt64"                                               )] public long?           FieldInt64      { get; set; } // Int64
-		[Column("FieldBoolean"                                             )] public byte?           FieldBoolean    { get; set; } // UInt8
+		[Column("FieldBoolean"                                             )] public bool?           FieldBoolean    { get; set; } // Bool
 		[Column("FieldString"                                              )] public string?         FieldString     { get; set; } // String
 		[Column("FieldNString"                                             )] public string?         FieldNString    { get; set; } // String
 		[Column("FieldChar"                                                )] public byte[]?         FieldChar       { get; set; } // FixedString(1)

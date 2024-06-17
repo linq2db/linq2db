@@ -31,11 +31,7 @@ namespace LinqToDB.Tools.EntityServices
 
 		volatile ConcurrentDictionary<T,EntityMapEntry<T>> _entities;
 
-#if NET45
-		public IDictionary<T, EntityMapEntry<T>> Entities => _entities;
-#else
 		public IReadOnlyDictionary<T,EntityMapEntry<T>> Entities => _entities;
-#endif
 
 		void IEntityMap.MapEntity(EntityCreatedEventArgs args)
 		{
@@ -50,7 +46,7 @@ namespace LinqToDB.Tools.EntityServices
 
 		IEnumerable IEntityMap.GetEntities()
 		{
-			return _entities?.Values ?? (IEnumerable)Array<T>.Empty;
+			return _entities?.Values ?? (IEnumerable)Array.Empty<T>();
 		}
 
 		interface IKeyComparer

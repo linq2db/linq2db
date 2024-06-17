@@ -2,10 +2,12 @@
 
 namespace LinqToDB.DataProvider.PostgreSQL
 {
+	using System.Data.Common;
+
 	using Configuration;
 	using Data;
 
-	sealed class PostgreSQLProviderDetector : ProviderDetectorBase<PostgreSQLProviderDetector.Provider,PostgreSQLVersion,NpgsqlProviderAdapter.NpgsqlConnection>
+	sealed class PostgreSQLProviderDetector : ProviderDetectorBase<PostgreSQLProviderDetector.Provider,PostgreSQLVersion>
 	{
 		internal enum Provider {}
 
@@ -13,10 +15,10 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		{
 		}
 
-		static readonly Lazy<IDataProvider> _postgreSQLDataProvider92 = DataConnection.CreateDataProvider<PostgreSQLDataProvider92>();
-		static readonly Lazy<IDataProvider> _postgreSQLDataProvider93 = DataConnection.CreateDataProvider<PostgreSQLDataProvider93>();
-		static readonly Lazy<IDataProvider> _postgreSQLDataProvider95 = DataConnection.CreateDataProvider<PostgreSQLDataProvider95>();
-		static readonly Lazy<IDataProvider> _postgreSQLDataProvider15 = DataConnection.CreateDataProvider<PostgreSQLDataProvider15>();
+		static readonly Lazy<IDataProvider> _postgreSQLDataProvider92 = CreateDataProvider<PostgreSQLDataProvider92>();
+		static readonly Lazy<IDataProvider> _postgreSQLDataProvider93 = CreateDataProvider<PostgreSQLDataProvider93>();
+		static readonly Lazy<IDataProvider> _postgreSQLDataProvider95 = CreateDataProvider<PostgreSQLDataProvider95>();
+		static readonly Lazy<IDataProvider> _postgreSQLDataProvider15 = CreateDataProvider<PostgreSQLDataProvider15>();
 
 		public override IDataProvider? DetectProvider(ConnectionOptions options)
 		{
@@ -87,9 +89,9 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			};
 		}
 
-		public override PostgreSQLVersion? DetectServerVersion(NpgsqlProviderAdapter.NpgsqlConnection connection)
+		public override PostgreSQLVersion? DetectServerVersion(DbConnection connection)
 		{
-			var postgreSqlVersion = connection.PostgreSqlVersion;
+			var postgreSqlVersion = NpgsqlProviderAdapter.GetInstance().ConnectionWrapper(connection).PostgreSqlVersion;
 
 			if (postgreSqlVersion.Major >= 15)
 				return PostgreSQLVersion.v15;
@@ -103,7 +105,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			return DefaultVersion;
 		}
 
-		protected override NpgsqlProviderAdapter.NpgsqlConnection CreateConnection(Provider provider, string connectionString)
+		protected override DbConnection CreateConnection(Provider provider, string connectionString)
 		{
 			return NpgsqlProviderAdapter.GetInstance().CreateConnection(connectionString);
 		}

@@ -4,6 +4,7 @@
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
@@ -16,16 +17,17 @@ namespace LinqToDB.Expressions
 {
 	using Extensions;
 	using Linq;
+	using Reflection;
 
 	/// <summary>
 	///     This API supports the linq2db infrastructure and is not intended to be used
 	///     directly from your code. This API may change or be removed in future releases.
 	/// </summary>
-	sealed class ExpressionEqualityComparer : IEqualityComparer<Expression>
+	public sealed class ExpressionEqualityComparer : IEqualityComparer<Expression>
 	{
-		public static IEqualityComparer<Expression> Instance { get; } = new ExpressionEqualityComparer();
+		public static ExpressionEqualityComparer Instance { get; } = new ExpressionEqualityComparer();
 
-		private ExpressionEqualityComparer()
+		ExpressionEqualityComparer()
 		{
 		}
 
@@ -53,6 +55,7 @@ namespace LinqToDB.Expressions
 					case ExpressionType.Quote:
 					case ExpressionType.TypeAs:
 					case ExpressionType.UnaryPlus:
+					case ExpressionType.Throw:
 					{
 						var unaryExpression = (UnaryExpression)obj;
 
@@ -89,6 +92,7 @@ namespace LinqToDB.Expressions
 					case ExpressionType.LeftShift:
 					case ExpressionType.ExclusiveOr:
 					case ExpressionType.Power:
+					case ExpressionType.Assign:
 					{
 						var binaryExpression = (BinaryExpression)obj;
 
@@ -111,7 +115,8 @@ namespace LinqToDB.Expressions
 						var constantExpression = (ConstantExpression)obj;
 
 						if (constantExpression.Value != null
-							&& !(constantExpression.Value is IQueryable))
+							&& constantExpression.Value is not IQueryable 
+							&& (constantExpression.Value is string or not IEnumerable))
 						{
 							hashCode += (hashCode * 397) ^ constantExpression.Value.GetHashCode();
 						}
@@ -135,7 +140,7 @@ namespace LinqToDB.Expressions
 					{
 						var memberExpression = (MemberExpression)obj;
 
-						hashCode += (hashCode * 397) ^ memberExpression.Member.GetHashCode();
+						hashCode += (hashCode * 397) ^ MemberInfoEqualityComparer.Default.GetHashCode(memberExpression.Member);
 						hashCode += (hashCode * 397) ^ GetHashCode(memberExpression.Expression);
 
 						break;
@@ -201,31 +206,7 @@ namespace LinqToDB.Expressions
 						var memberInitExpression = (MemberInitExpression)obj;
 
 						hashCode += (hashCode * 397) ^ GetHashCode(memberInitExpression.NewExpression);
-
-						for (var i = 0; i < memberInitExpression.Bindings.Count; i++)
-						{
-							var memberBinding = memberInitExpression.Bindings[i];
-
-							hashCode += (hashCode * 397) ^ memberBinding.Member.GetHashCode();
-							hashCode += (hashCode * 397) ^ (int)memberBinding.BindingType;
-
-							switch (memberBinding.BindingType)
-							{
-								case MemberBindingType.Assignment:
-									var memberAssignment = (MemberAssignment)memberBinding;
-									hashCode += (hashCode * 397) ^ GetHashCode(memberAssignment.Expression);
-									break;
-								case MemberBindingType.ListBinding:
-									var memberListBinding = (MemberListBinding)memberBinding;
-									for (var j = 0; j < memberListBinding.Initializers.Count; j++)
-									{
-										hashCode += (hashCode * 397) ^ GetHashCode(memberListBinding.Initializers[j].Arguments);
-									}
-									break;
-								default:
-									throw new NotImplementedException();
-							}
-						}
+						hashCode += (hashCode * 397) ^ GetHashCode(memberInitExpression.Bindings);
 
 						break;
 					}
@@ -257,25 +238,59 @@ namespace LinqToDB.Expressions
 						hashCode += (hashCode * 397) ^ obj.Type.GetHashCode();
 						break;
 					}
-//                    case ExpressionType.Extension:
-//                    {
-//                        if (obj is NullConditionalExpression nullConditionalExpression)
-//                        {
-//                            hashCode += (hashCode * 397) ^ GetHashCode(nullConditionalExpression.AccessOperation);
-//                        }
-//                        else if (obj is NullConditionalEqualExpression nullConditionalEqualExpression)
-//                        {
-//                            hashCode += (hashCode * 397) ^ GetHashCode(nullConditionalEqualExpression.OuterNullProtection);
-//                            hashCode += (hashCode * 397) ^ GetHashCode(nullConditionalEqualExpression.OuterKey);
-//                            hashCode += (hashCode * 397) ^ GetHashCode(nullConditionalEqualExpression.InnerKey);
-//                        }
-//                        else
-//                        {
-//                            hashCode += (hashCode * 397) ^ obj.GetHashCode();
-//                        }
-//
-//                        break;
-//                    }
+					case ExpressionType.Extension:
+					{
+						hashCode += (hashCode * 397) ^ obj.GetHashCode();
+						break;
+					}
+					case ChangeTypeExpression.ChangeTypeType:
+					{
+						hashCode += (hashCode * 397) ^ obj.GetHashCode();
+						break;
+					}
+					case ExpressionType.Block:
+					{
+						var blockExpression = (BlockExpression)obj;
+						for (var i = 0; i < blockExpression.Variables.Count; i++)
+						{
+							hashCode += (hashCode * 397) ^ GetHashCode(blockExpression.Variables[i]);
+						}
+
+						for (var i = 0; i < blockExpression.Expressions.Count; i++)
+						{
+							hashCode += (hashCode * 397) ^ GetHashCode(blockExpression.Expressions[i]);
+						}
+
+						break;
+					}
+					case ExpressionType.Index:
+					{
+						var indexExpression = (IndexExpression)obj;
+						hashCode += (hashCode * 397) ^ GetHashCode(indexExpression.Object);
+						for (var i = 0; i < indexExpression.Arguments.Count; i++)
+						{
+							hashCode += (hashCode * 397) ^ GetHashCode(indexExpression.Arguments[i]);
+						}
+
+						break;
+					}
+					case ExpressionType.Switch:
+					{
+						var switchExpression = (SwitchExpression)obj;
+
+						hashCode += (hashCode * 397) ^ GetHashCode(switchExpression.SwitchValue);
+
+						for (var i = 0; i < switchExpression.Cases.Count; i++)
+						{
+							var switchCase = switchExpression.Cases[i];
+							hashCode += (hashCode * 397) ^ GetHashCode(switchCase.TestValues);
+							hashCode += (hashCode * 397) ^ GetHashCode(switchCase.Body);
+						}
+
+						hashCode += (hashCode * 397) ^ GetHashCode(switchExpression.DefaultBody);
+
+						break;
+					}
 					default:
 						throw new NotImplementedException();
 				}
@@ -284,7 +299,52 @@ namespace LinqToDB.Expressions
 			}
 		}
 
-		private int GetHashCode<T>(IList<T> expressions)
+		int GetHashCode(IList<MemberBinding> bindings)
+		{
+			var hashCode = 0;
+			for (var i = 0; i < bindings.Count; i++)
+			{
+				var memberBinding = bindings[i];
+
+				hashCode += (hashCode * 397) ^ memberBinding.Member.GetHashCode();
+				hashCode += (hashCode * 397) ^ (int)memberBinding.BindingType;
+
+				switch (memberBinding.BindingType)
+				{
+					case MemberBindingType.Assignment:
+					{
+						var memberAssignment = (MemberAssignment)memberBinding;
+						hashCode += (hashCode * 397) ^ GetHashCode(memberAssignment.Expression);
+						break;
+					}
+					case MemberBindingType.ListBinding:
+					{
+						var memberListBinding = (MemberListBinding)memberBinding;
+						for (var j = 0; j < memberListBinding.Initializers.Count; j++)
+						{
+							hashCode += (hashCode * 397) ^
+							            GetHashCode(memberListBinding.Initializers[j].Arguments);
+						}
+
+						break;
+					}
+					case MemberBindingType.MemberBinding:
+					{
+						var memberMemberBinding = (MemberMemberBinding)memberBinding;
+
+						hashCode += (hashCode * 397) ^ GetHashCode(memberMemberBinding.Bindings);
+
+						break;
+					}
+					default:
+						throw new NotImplementedException();
+				}
+			}
+
+			return hashCode;
+		}
+
+		int GetHashCode<T>(IList<T> expressions)
 			where T : Expression
 		{
 			var hashCode = 0;
@@ -299,9 +359,9 @@ namespace LinqToDB.Expressions
 
 		public bool Equals(Expression? x, Expression? y) => new ExpressionComparer().Compare(x, y);
 
-		private sealed class ExpressionComparer
+		sealed class ExpressionComparer
 		{
-			private ScopedDictionary<ParameterExpression, ParameterExpression>? _parameterScope;
+			ScopedDictionary<ParameterExpression, ParameterExpression>? _parameterScope;
 
 			public bool Compare(Expression? a, Expression? b)
 			{
@@ -310,8 +370,7 @@ namespace LinqToDB.Expressions
 					return true;
 				}
 
-				if (a == null
-					|| b == null)
+				if (a == null || b == null)
 				{
 					return false;
 				}
@@ -362,6 +421,7 @@ namespace LinqToDB.Expressions
 					case ExpressionType.LeftShift:
 					case ExpressionType.ExclusiveOr:
 					case ExpressionType.Power:
+					case ExpressionType.Assign:
 						return CompareBinary((BinaryExpression)a, (BinaryExpression)b);
 					case ExpressionType.TypeIs:
 						return CompareTypeIs((TypeBinaryExpression)a, (TypeBinaryExpression)b);
@@ -389,36 +449,76 @@ namespace LinqToDB.Expressions
 						return CompareMemberInit((MemberInitExpression)a, (MemberInitExpression)b);
 					case ExpressionType.ListInit:
 						return CompareListInit((ListInitExpression)a, (ListInitExpression)b);
-//                    case ExpressionType.Extension:
-//                        return CompareExtension(a, b);
+					case ExpressionType.Extension:
+						return CompareExtension(a, b);
+					case ChangeTypeExpression.ChangeTypeType:
+						return a.Equals(b);
+					case ExpressionType.Block:
+						return CompareBlock((BlockExpression)a, (BlockExpression)b);
+					case ExpressionType.Throw:
+						return CompareUnary((UnaryExpression)a, (UnaryExpression)b);
+					case ExpressionType.Index:
+						return CompareIndex((IndexExpression)a, (IndexExpression)b);
+					case ExpressionType.Switch:
+						return CompareSwitch((SwitchExpression)a, (SwitchExpression)b);
 					default:
 						throw new NotImplementedException();
 				}
 			}
 
-			private bool CompareUnary(UnaryExpression a, UnaryExpression b)
+			bool CompareIndex(IndexExpression a, IndexExpression b)
+			{
+				return Equals(a.Indexer, b.Indexer)
+					&& Equals(a.Object, b.Object)
+					&& CompareExpressionList(a.Arguments, b.Arguments);
+			}
+
+			bool CompareSwitch(SwitchExpression a, SwitchExpression b)
+			{
+				if (! (Equals(a.SwitchValue, b.SwitchValue)
+						&& Equals(a.DefaultBody, b.DefaultBody)
+						&& Equals(a.Comparison, b.Comparison)
+						&& a.Cases.Count != b.Cases.Count))
+				{
+					return false;
+				}
+
+				for (var i = 0; i < a.Cases.Count; i++)
+				{
+					if (!Equals(a.Cases[i].Body, b.Cases[i].Body))
+						return false;
+					if (!Equals(a.Cases[i].Body, b.Cases[i].Body))
+						return false;
+					if (!CompareExpressionList(a.Cases[i].TestValues, b.Cases[i].TestValues))
+						return false;
+				}
+
+				return true;
+			}
+
+			bool CompareUnary(UnaryExpression a, UnaryExpression b)
 				=> Equals(a.Method, b.Method)
 				   && a.IsLifted == b.IsLifted
 				   && a.IsLiftedToNull == b.IsLiftedToNull
 				   && Compare(a.Operand, b.Operand);
 
-			private bool CompareBinary(BinaryExpression a, BinaryExpression b)
+			bool CompareBinary(BinaryExpression a, BinaryExpression b)
 				=> Equals(a.Method, b.Method)
 				   && a.IsLifted == b.IsLifted
 				   && a.IsLiftedToNull == b.IsLiftedToNull
 				   && Compare(a.Left, b.Left)
 				   && Compare(a.Right, b.Right);
 
-			private bool CompareTypeIs(TypeBinaryExpression a, TypeBinaryExpression b)
+			bool CompareTypeIs(TypeBinaryExpression a, TypeBinaryExpression b)
 				=> a.TypeOperand == b.TypeOperand
 				   && Compare(a.Expression, b.Expression);
 
-			private bool CompareConditional(ConditionalExpression a, ConditionalExpression b)
+			bool CompareConditional(ConditionalExpression a, ConditionalExpression b)
 				=> Compare(a.Test, b.Test)
 				   && Compare(a.IfTrue, b.IfTrue)
 				   && Compare(a.IfFalse, b.IfFalse);
 
-			private static bool CompareConstant(ConstantExpression a, ConstantExpression b)
+			static bool CompareConstant(ConstantExpression a, ConstantExpression b)
 			{
 				if (a.Value == b.Value)
 				{
@@ -437,14 +537,26 @@ namespace LinqToDB.Expressions
 					return false; // EnumerableQueries are opaque
 				}
 
-/*
-				if (a.IsEntityQueryable()
-					&& b.IsEntityQueryable()
-					&& a.Value.GetType() == b.Value.GetType())
+				if (a.Value is IEnumerable ae && b.Value is IEnumerable be)
 				{
+					var enum1 = ae.GetEnumerator();
+					var enum2 = be.GetEnumerator();
+					using (enum1 as IDisposable)
+					using (enum2 as IDisposable)
+					{
+						while (enum1.MoveNext())
+						{
+							if (!enum2.MoveNext() || !Equals(enum1.Current, enum2.Current))
+								return false;
+						}
+
+						if (enum2.MoveNext())
+							return false;
+					}
+
 					return true;
 				}
-*/
+
 				if (typeof(ExpressionQuery<>).IsSameOrParentOf(a.GetType())
 					&& typeof(ExpressionQuery<>).IsSameOrParentOf(b.GetType())
 					&& a.Value.GetType() == b.Value.GetType())
@@ -455,7 +567,7 @@ namespace LinqToDB.Expressions
 				return Equals(a.Value, b.Value);
 			}
 
-			private bool CompareParameter(ParameterExpression a, ParameterExpression b)
+			bool CompareParameter(ParameterExpression a, ParameterExpression b)
 			{
 				if (_parameterScope != null)
 				{
@@ -470,16 +582,16 @@ namespace LinqToDB.Expressions
 					   && a.Type == b.Type;
 			}
 
-			private bool CompareMemberAccess(MemberExpression a, MemberExpression b)
-				=> Equals(a.Member, b.Member)
+			bool CompareMemberAccess(MemberExpression a, MemberExpression b)
+				=> MemberInfoEqualityComparer.Default.Equals(a.Member, b.Member)
 				   && Compare(a.Expression, b.Expression);
 
-			private bool CompareMethodCall(MethodCallExpression a, MethodCallExpression b)
+			bool CompareMethodCall(MethodCallExpression a, MethodCallExpression b)
 				=> Equals(a.Method, b.Method)
 				   && Compare(a.Object, b.Object)
 				   && CompareExpressionList(a.Arguments, b.Arguments);
 
-			private bool CompareLambda(LambdaExpression a, LambdaExpression b)
+			bool CompareLambda(LambdaExpression a, LambdaExpression b)
 			{
 				var n = a.Parameters.Count;
 
@@ -516,12 +628,12 @@ namespace LinqToDB.Expressions
 				}
 			}
 
-			private bool CompareNew(NewExpression a, NewExpression b)
+			bool CompareNew(NewExpression a, NewExpression b)
 				=> Equals(a.Constructor, b.Constructor)
 				   && CompareExpressionList(a.Arguments, b.Arguments)
 				   && CompareMemberList(a.Members, b.Members);
 
-			private bool CompareExpressionList(IReadOnlyList<Expression>? a, IReadOnlyList<Expression>? b)
+			bool CompareExpressionList(IReadOnlyList<Expression>? a, IReadOnlyList<Expression>? b)
 			{
 				if (Equals(a, b))
 				{
@@ -550,7 +662,7 @@ namespace LinqToDB.Expressions
 				return true;
 			}
 
-			private static bool CompareMemberList(IReadOnlyList<MemberInfo>? a, IReadOnlyList<MemberInfo>? b)
+			static bool CompareMemberList(IReadOnlyList<MemberInfo>? a, IReadOnlyList<MemberInfo>? b)
 			{
 				if (ReferenceEquals(a, b))
 				{
@@ -579,45 +691,28 @@ namespace LinqToDB.Expressions
 				return true;
 			}
 
-			private bool CompareNewArray(NewArrayExpression a, NewArrayExpression b)
+			bool CompareNewArray(NewArrayExpression a, NewArrayExpression b)
 				=> CompareExpressionList(a.Expressions, b.Expressions);
 
-//            private bool CompareExtension(Expression a, Expression b)
-//            {
-//                if (a is NullConditionalExpression nullConditionalExpressionA
-//                    && b is NullConditionalExpression nullConditionalExpressionB)
-//                {
-//                    return Compare(
-//                        nullConditionalExpressionA.AccessOperation,
-//                        nullConditionalExpressionB.AccessOperation);
-//                }
-//
-//                if (a is NullConditionalEqualExpression nullConditionalEqualExpressionA
-//                    && b is NullConditionalEqualExpression nullConditionalEqualExpressionB)
-//                {
-//                    return Compare(
-//                               nullConditionalEqualExpressionA.OuterNullProtection,
-//                               nullConditionalEqualExpressionB.OuterNullProtection)
-//                           && Compare(
-//                               nullConditionalEqualExpressionA.OuterKey,
-//                               nullConditionalEqualExpressionB.OuterKey)
-//                           && Compare(
-//                               nullConditionalEqualExpressionA.InnerKey,
-//                               nullConditionalEqualExpressionB.InnerKey);
-//                }
-//
-//                return a.Equals(b);
-//            }
+			bool CompareExtension(Expression a, Expression b)
+			{
+				return a.Equals(b);
+			}
 
-			private bool CompareInvocation(InvocationExpression a, InvocationExpression b)
+			bool CompareBlock(BlockExpression a, BlockExpression b)
+			{
+				return CompareExpressionList(a.Variables, b.Variables) && CompareExpressionList(b.Expressions, a.Expressions);
+			}
+
+			bool CompareInvocation(InvocationExpression a, InvocationExpression b)
 				=> Compare(a.Expression, b.Expression)
 				   && CompareExpressionList(a.Arguments, b.Arguments);
 
-			private bool CompareMemberInit(MemberInitExpression a, MemberInitExpression b)
+			bool CompareMemberInit(MemberInitExpression a, MemberInitExpression b)
 				=> Compare(a.NewExpression, b.NewExpression)
 				   && CompareBindingList(a.Bindings, b.Bindings);
 
-			private bool CompareBindingList(IReadOnlyList<MemberBinding>? a, IReadOnlyList<MemberBinding>? b)
+			bool CompareBindingList(IReadOnlyList<MemberBinding>? a, IReadOnlyList<MemberBinding>? b)
 			{
 				if (ReferenceEquals(a, b))
 				{
@@ -646,7 +741,7 @@ namespace LinqToDB.Expressions
 				return true;
 			}
 
-			private bool CompareBinding(MemberBinding? a, MemberBinding? b)
+			bool CompareBinding(MemberBinding? a, MemberBinding? b)
 			{
 				if (a == b)
 				{
@@ -678,31 +773,30 @@ namespace LinqToDB.Expressions
 				};
 			}
 
-			private bool CompareMemberAssignment(MemberAssignment a, MemberAssignment b)
+			bool CompareMemberAssignment(MemberAssignment a, MemberAssignment b)
 				=> Equals(a.Member, b.Member)
 				   && Compare(a.Expression, b.Expression);
 
-			private bool CompareMemberListBinding(MemberListBinding a, MemberListBinding b)
+			bool CompareMemberListBinding(MemberListBinding a, MemberListBinding b)
 				=> Equals(a.Member, b.Member)
 				   && CompareElementInitList(a.Initializers, b.Initializers);
 
-			private bool CompareMemberMemberBinding(MemberMemberBinding a, MemberMemberBinding b)
+			bool CompareMemberMemberBinding(MemberMemberBinding a, MemberMemberBinding b)
 				=> Equals(a.Member, b.Member)
 				   && CompareBindingList(a.Bindings, b.Bindings);
 
-			private bool CompareListInit(ListInitExpression a, ListInitExpression b)
+			bool CompareListInit(ListInitExpression a, ListInitExpression b)
 				=> Compare(a.NewExpression, b.NewExpression)
 				   && CompareElementInitList(a.Initializers, b.Initializers);
 
-			private bool CompareElementInitList(IReadOnlyList<ElementInit>? a, IReadOnlyList<ElementInit>? b)
+			bool CompareElementInitList(IReadOnlyList<ElementInit>? a, IReadOnlyList<ElementInit>? b)
 			{
 				if (ReferenceEquals(a, b))
 				{
 					return true;
 				}
 
-				if (a == null
-					|| b == null)
+				if (a == null || b == null)
 				{
 					return false;
 				}
@@ -723,15 +817,15 @@ namespace LinqToDB.Expressions
 				return true;
 			}
 
-			private bool CompareElementInit(ElementInit a, ElementInit b)
+			bool CompareElementInit(ElementInit a, ElementInit b)
 				=> Equals(a.AddMethod, b.AddMethod)
 				   && CompareExpressionList(a.Arguments, b.Arguments);
 
-			private sealed class ScopedDictionary<TKey, TValue>
+			sealed class ScopedDictionary<TKey, TValue>
 				where TKey : notnull
 			{
-				private readonly ScopedDictionary<TKey, TValue>? _previous;
-				private readonly Dictionary<TKey, TValue> _map;
+				readonly ScopedDictionary<TKey, TValue>? _previous;
+				readonly Dictionary<TKey, TValue>        _map;
 
 				public ScopedDictionary(ScopedDictionary<TKey, TValue>? previous)
 				{

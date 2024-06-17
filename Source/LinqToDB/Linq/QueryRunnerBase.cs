@@ -5,28 +5,31 @@ using System.Threading.Tasks;
 
 namespace LinqToDB.Linq
 {
+	using Common.Internal;
 	using Data;
 	using SqlQuery;
 
 	abstract class QueryRunnerBase : IQueryRunner
 	{
-		protected QueryRunnerBase(Query query, int queryNumber, IDataContext dataContext, Expression expression, object?[]? parameters, object?[]? preambles)
+		protected QueryRunnerBase(Query query, int queryNumber, IDataContext dataContext, IDataContext parametersContext, Expression expression, object?[]? parameters, object?[]? preambles)
 		{
-			Query        = query;
-			DataContext  = dataContext;
-			Expression   = expression;
-			QueryNumber  = queryNumber;
-			Parameters   = parameters;
-			Preambles    = preambles;
+			Query             = query;
+			DataContext       = dataContext;
+			ParametersContext = parametersContext;
+			Expression        = expression;
+			QueryNumber       = queryNumber;
+			Parameters        = parameters;
+			Preambles         = preambles;
 		}
 
 		protected readonly Query    Query;
 
-		public IDataContext         DataContext      { get; }
-		public Expression           Expression       { get; }
-		public object?[]?           Parameters       { get; }
-		public object?[]?           Preambles        { get; }
-		public abstract Expression? MapperExpression { get; set; }
+		public          IDataContext DataContext       { get; }
+		public          IDataContext ParametersContext { get; }
+		public          Expression   Expression        { get; }
+		public          object?[]?   Parameters        { get; }
+		public          object?[]?   Preambles         { get; }
+		public abstract Expression?  MapperExpression  { get; set; }
 
 		public abstract int                    ExecuteNonQuery();
 		public abstract object?                ExecuteScalar  ();
@@ -44,15 +47,6 @@ namespace LinqToDB.Linq
 				DataContext.Close();
 		}
 
-#if !NATIVE_ASYNC
-		public virtual Task DisposeAsync()
-		{
-			if (DataContext.CloseAfterUse)
-				return DataContext.CloseAsync();
-
-			return TaskEx.CompletedTask;
-		}
-#else
 		public virtual ValueTask DisposeAsync()
 		{
 			if (DataContext.CloseAfterUse)
@@ -60,14 +54,12 @@ namespace LinqToDB.Linq
 
 			return default;
 		}
-#endif
-
 
 		protected virtual void SetCommand(bool forGetSqlText)
 		{
 			var parameterValues = new SqlParameterValues();
 
-			QueryRunner.SetParameters(Query, Expression, DataContext, Parameters, QueryNumber, parameterValues);
+			QueryRunner.SetParameters(Query, Expression, ParametersContext, Parameters, QueryNumber, parameterValues);
 
 			SetQuery(parameterValues, forGetSqlText);
 		}

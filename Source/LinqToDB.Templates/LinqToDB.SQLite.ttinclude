@@ -1,16 +1,12 @@
 <#@ include file="LinqToDB.ttinclude" once="true" #>
 <#@ import namespace="System.IO"                  #>
 <#
-	LinqToDB.DataProvider.SQLite.SQLiteTools.ResolveSQLite(typeof(System.Data.SQLite.SQLiteConnection).Assembly);
-
+	var beforeGenerateLinqToDBModel = BeforeGenerateLinqToDBModel;
+	BeforeGenerateLinqToDBModel = () =>
 	{
-		var beforeGenerateLinqToDBModel = BeforeGenerateLinqToDBModel;
-		BeforeGenerateLinqToDBModel = () =>
-		{
-			ConvertSQLiteMetadata();
-			beforeGenerateLinqToDBModel();
-		};
-	}
+		ConvertSQLiteMetadata();
+		beforeGenerateLinqToDBModel();
+	};
 #>
 <#+
 void ConvertSQLiteMetadata()
@@ -23,7 +19,7 @@ void ConvertSQLiteMetadata()
 
 LinqToDB.Data.DataConnection GetSQLiteConnection(string connectionString)
 {
-	return LinqToDB.DataProvider.SQLite.SQLiteTools.CreateDataConnection(connectionString);
+	return LinqToDB.DataProvider.SQLite.SQLiteTools.CreateDataConnection(connectionString, LinqToDB.DataProvider.SQLite.SQLiteProvider.System);
 }
 
 LinqToDB.Data.DataConnection GetSQLiteConnection(string path, string database)

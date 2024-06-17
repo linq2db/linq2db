@@ -97,7 +97,7 @@ namespace Tests.Linq
 		#region Group By Tests
 		// Group by tests are only done for Sql Server due to complexity of db variances in handling TZ
 		[Test]
-		public void GroupByDateTimeOffsetByDateTest([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus, TestProvName.AllClickHouse)] string context)
+		public void GroupByDateTimeOffsetByDateTest([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus, TestProvName.AllClickHouse, TestProvName.AllPostgreSQL)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable(Transaction.GetDbDataForContext(context)))
@@ -508,7 +508,6 @@ namespace Tests.Linq
 
 		#region DateAdd
 
-		[ActiveIssue("https://github.com/ClickHouse/ClickHouse/issues/55310", Configuration = ProviderName.ClickHouseMySql)]
 		[Test]
 		public void DateAddYear([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus, TestProvName.AllPostgreSQL, TestProvName.AllClickHouse)] string context)
 		{
@@ -519,7 +518,6 @@ namespace Tests.Linq
 					from t in db.GetTable<Transaction>()                 select Sql.AsSql(Sql.DateAdd(Sql.DateParts.Year, 11, t.TransactionDate))!.Value.Date);
 		}
 
-		[ActiveIssue("https://github.com/ClickHouse/ClickHouse/issues/55310", Configuration = ProviderName.ClickHouseMySql)]
 		[Test]
 		public void DateAddQuarter([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus, TestProvName.AllPostgreSQL, TestProvName.AllClickHouse)] string context)
 		{
@@ -530,7 +528,6 @@ namespace Tests.Linq
 					from t in db.GetTable<Transaction>()                 select Sql.AsSql(Sql.DateAdd(Sql.DateParts.Quarter, -1, t.TransactionDate))!.Value.Date);
 		}
 
-		[ActiveIssue("https://github.com/ClickHouse/ClickHouse/issues/55310", Configuration = ProviderName.ClickHouseMySql)]
 		[Test]
 		public void DateAddMonth([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus, TestProvName.AllPostgreSQL, TestProvName.AllClickHouse)] string context)
 		{
@@ -541,7 +538,6 @@ namespace Tests.Linq
 					from t in db.GetTable<Transaction>()                 select Sql.AsSql(Sql.DateAdd(Sql.DateParts.Month, 2, t.TransactionDate))!.Value.Date);
 		}
 
-		[ActiveIssue("https://github.com/ClickHouse/ClickHouse/issues/55310", Configuration = ProviderName.ClickHouseMySql)]
 		[Test]
 		public void DateAddDayOfYear([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus, TestProvName.AllPostgreSQL, TestProvName.AllClickHouse)] string context)
 		{
@@ -552,7 +548,6 @@ namespace Tests.Linq
 					from t in db.GetTable<Transaction>()                 select Sql.AsSql(Sql.DateAdd(Sql.DateParts.DayOfYear, 3, t.TransactionDate))!.Value.Date);
 		}
 
-		[ActiveIssue("https://github.com/ClickHouse/ClickHouse/issues/55310", Configuration = ProviderName.ClickHouseMySql)]
 		[Test]
 		public void DateAddDay([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus, TestProvName.AllPostgreSQL, TestProvName.AllClickHouse)] string context)
 		{
@@ -563,7 +558,6 @@ namespace Tests.Linq
 					from t in db.GetTable<Transaction>()                 select Sql.AsSql(Sql.DateAdd(Sql.DateParts.Day, 5, t.TransactionDate))!.Value.Date);
 		}
 
-		[ActiveIssue("https://github.com/ClickHouse/ClickHouse/issues/55310", Configuration = ProviderName.ClickHouseMySql)]
 		[Test]
 		public void DateAddWeek([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus, TestProvName.AllPostgreSQL, TestProvName.AllClickHouse)] string context)
 		{
@@ -574,7 +568,6 @@ namespace Tests.Linq
 					from t in db.GetTable<Transaction>()              select Sql.AsSql(Sql.DateAdd(Sql.DateParts.Week, -1, t.TransactionDate))!.Value.Date);
 		}
 
-		[ActiveIssue("https://github.com/ClickHouse/ClickHouse/issues/55310", Configuration = ProviderName.ClickHouseMySql)]
 		[Test]
 		public void DateAddWeekDay([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus, TestProvName.AllPostgreSQL, TestProvName.AllClickHouse)] string context)
 		{
@@ -595,7 +588,6 @@ namespace Tests.Linq
 					from t in db.GetTable<Transaction>()                 select Sql.AsSql(Sql.DateAdd(Sql.DateParts.Hour, 1, t.TransactionDate)!.Value.Hour));
 		}
 
-		[ActiveIssue("https://github.com/ClickHouse/ClickHouse/issues/55310", Configuration = ProviderName.ClickHouseMySql)]
 		[Test]
 		public void DateAddMinute([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus, TestProvName.AllPostgreSQL, TestProvName.AllClickHouse)] string context)
 		{
@@ -606,7 +598,6 @@ namespace Tests.Linq
 					from t in db.GetTable<Transaction>()                 select Sql.AsSql(Sql.DateAdd(Sql.DateParts.Minute, 5, t.TransactionDate))!.Value.Minute);
 		}
 
-		[ActiveIssue("https://github.com/ClickHouse/ClickHouse/issues/55310", Configuration = ProviderName.ClickHouseMySql)]
 		[Test]
 		public void DateAddSecond([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus, TestProvName.AllPostgreSQL, TestProvName.AllClickHouse)] string context)
 		{
@@ -617,7 +608,6 @@ namespace Tests.Linq
 					from t in db.GetTable<Transaction>()                 select Sql.AsSql(Sql.DateAdd(Sql.DateParts.Second, 41, t.TransactionDate))!.Value.Second);
 		}
 
-		[ActiveIssue("https://github.com/ClickHouse/ClickHouse/issues/55310", Configuration = ProviderName.ClickHouseMySql)]
 		[Test]
 		public void AddYears([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus, TestProvName.AllPostgreSQL, TestProvName.AllClickHouse)] string context)
 		{
@@ -628,7 +618,6 @@ namespace Tests.Linq
 					from t in db.GetTable<Transaction>()                 select Sql.AsSql(t.TransactionDate.AddYears(1)).Date);
 		}
 
-		[ActiveIssue("https://github.com/ClickHouse/ClickHouse/issues/55310", Configuration = ProviderName.ClickHouseMySql)]
 		[Test]
 		public void AddMonths([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus, TestProvName.AllPostgreSQL, TestProvName.AllClickHouse)] string context)
 		{
@@ -639,7 +628,6 @@ namespace Tests.Linq
 					from t in db.GetTable<Transaction>()                 select Sql.AsSql(t.TransactionDate.AddMonths(-2)).Date);
 		}
 
-		[ActiveIssue("https://github.com/ClickHouse/ClickHouse/issues/55310", Configuration = ProviderName.ClickHouseMySql)]
 		[Test]
 		public void AddDays([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus, TestProvName.AllPostgreSQL, TestProvName.AllClickHouse)] string context)
 		{
@@ -660,7 +648,6 @@ namespace Tests.Linq
 					from t in db.GetTable<Transaction>()                 select Sql.AsSql(t.TransactionDate.AddHours(22).Hour));
 		}
 
-		[ActiveIssue("https://github.com/ClickHouse/ClickHouse/issues/55310", Configuration = ProviderName.ClickHouseMySql)]
 		[Test]
 		public void AddMinutes([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus, TestProvName.AllPostgreSQL, TestProvName.AllClickHouse)] string context)
 		{
@@ -671,7 +658,6 @@ namespace Tests.Linq
 					from t in db.GetTable<Transaction>()                 select Sql.AsSql(t.TransactionDate.AddMinutes(-8)).Minute);
 		}
 
-		[ActiveIssue("https://github.com/ClickHouse/ClickHouse/issues/55310", Configuration = ProviderName.ClickHouseMySql)]
 		[Test]
 		public void AddSeconds([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus, TestProvName.AllPostgreSQL, TestProvName.AllClickHouse)] string context)
 		{
@@ -686,7 +672,6 @@ namespace Tests.Linq
 
 		#region DateAdd Expression
 
-		[ActiveIssue("https://github.com/ClickHouse/ClickHouse/issues/55310", Configuration = ProviderName.ClickHouseMySql)]
 		[Test]
 		public void DateAddYearExpression([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus, TestProvName.AllPostgreSQL, TestProvName.AllClickHouse)] string context)
 		{
@@ -700,7 +685,6 @@ namespace Tests.Linq
 					from t in db.GetTable<Transaction>()                 select Sql.AsSql(Sql.DateAdd(Sql.DateParts.Year, part1 + part2, t.TransactionDate))!.Value.Date);
 		}
 
-		[ActiveIssue("https://github.com/ClickHouse/ClickHouse/issues/55310", Configuration = ProviderName.ClickHouseMySql)]
 		[Test]
 		public void DateAddQuarterExpression([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus, TestProvName.AllPostgreSQL, TestProvName.AllClickHouse)] string context)
 		{
@@ -714,7 +698,6 @@ namespace Tests.Linq
 					from t in db.GetTable<Transaction>()                 select Sql.AsSql(Sql.DateAdd(Sql.DateParts.Quarter, part2 - part1, t.TransactionDate))!.Value.Date);
 		}
 
-		[ActiveIssue("https://github.com/ClickHouse/ClickHouse/issues/55310", Configuration = ProviderName.ClickHouseMySql)]
 		[Test]
 		public void DateAddMonthExpression([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus, TestProvName.AllPostgreSQL, TestProvName.AllClickHouse)] string context)
 		{
@@ -728,7 +711,6 @@ namespace Tests.Linq
 					from t in db.GetTable<Transaction>()                 select Sql.AsSql(Sql.DateAdd(Sql.DateParts.Month, part1 - part2, t.TransactionDate))!.Value.Date);
 		}
 
-		[ActiveIssue("https://github.com/ClickHouse/ClickHouse/issues/55310", Configuration = ProviderName.ClickHouseMySql)]
 		[Test]
 		public void DateAddDayOfYearExpression([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus, TestProvName.AllPostgreSQL, TestProvName.AllClickHouse)] string context)
 		{
@@ -742,7 +724,6 @@ namespace Tests.Linq
 					from t in db.GetTable<Transaction>()                 select Sql.AsSql(Sql.DateAdd(Sql.DateParts.DayOfYear, part1 - part2, t.TransactionDate))!.Value.Date);
 		}
 
-		[ActiveIssue("https://github.com/ClickHouse/ClickHouse/issues/55310", Configuration = ProviderName.ClickHouseMySql)]
 		[Test]
 		public void DateAddDayExpression([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus, TestProvName.AllPostgreSQL, TestProvName.AllClickHouse)] string context)
 		{
@@ -756,7 +737,6 @@ namespace Tests.Linq
 					from t in db.GetTable<Transaction>()                 select Sql.AsSql(Sql.DateAdd(Sql.DateParts.Day, part1 + part2, t.TransactionDate))!.Value.Date);
 		}
 
-		[ActiveIssue("https://github.com/ClickHouse/ClickHouse/issues/55310", Configuration = ProviderName.ClickHouseMySql)]
 		[Test]
 		public void DateAddWeekExpression([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus, TestProvName.AllPostgreSQL, TestProvName.AllClickHouse)] string context)
 		{
@@ -770,7 +750,6 @@ namespace Tests.Linq
 					from t in db.GetTable<Transaction>()                 select Sql.AsSql(Sql.DateAdd(Sql.DateParts.Week, part1 - part2, t.TransactionDate))!.Value.Date);
 		}
 
-		[ActiveIssue("https://github.com/ClickHouse/ClickHouse/issues/55310", Configuration = ProviderName.ClickHouseMySql)]
 		[Test]
 		public void DateAddWeekDayExpression([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus, TestProvName.AllPostgreSQL, TestProvName.AllClickHouse)] string context)
 		{
@@ -797,7 +776,6 @@ namespace Tests.Linq
 					from t in db.GetTable<Transaction>()                 select Sql.AsSql(Sql.DateAdd(Sql.DateParts.Hour, part2 - part1, t.TransactionDate)!.Value.Hour));
 		}
 
-		[ActiveIssue("https://github.com/ClickHouse/ClickHouse/issues/55310", Configuration = ProviderName.ClickHouseMySql)]
 		[Test]
 		public void DateAddMinuteExpression([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus, TestProvName.AllPostgreSQL, TestProvName.AllClickHouse)] string context)
 		{
@@ -811,7 +789,6 @@ namespace Tests.Linq
 					from t in db.GetTable<Transaction>()                 select Sql.AsSql(Sql.DateAdd(Sql.DateParts.Minute, part1 + part2, t.TransactionDate))!.Value.Minute);
 		}
 
-		[ActiveIssue("https://github.com/ClickHouse/ClickHouse/issues/55310", Configuration = ProviderName.ClickHouseMySql)]
 		[Test]
 		public void DateAddSecondExpression([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus, TestProvName.AllPostgreSQL, TestProvName.AllClickHouse)] string context)
 		{
@@ -825,7 +802,6 @@ namespace Tests.Linq
 					from t in db.GetTable<Transaction>()                 select Sql.AsSql(Sql.DateAdd(Sql.DateParts.Second, part1 + part2, t.TransactionDate))!.Value.Second);
 		}
 
-		[ActiveIssue("https://github.com/ClickHouse/ClickHouse/issues/55310", Configuration = ProviderName.ClickHouseMySql)]
 		[Test]
 		public void AddYearsExpression([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus, TestProvName.AllPostgreSQL, TestProvName.AllClickHouse)] string context)
 		{
@@ -839,7 +815,6 @@ namespace Tests.Linq
 					from t in db.GetTable<Transaction>()                 select Sql.AsSql(t.TransactionDate.AddYears(part1 - part2)).Date);
 		}
 
-		[ActiveIssue("https://github.com/ClickHouse/ClickHouse/issues/55310", Configuration = ProviderName.ClickHouseMySql)]
 		[Test]
 		public void AddMonthsExpression([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus, TestProvName.AllPostgreSQL, TestProvName.AllClickHouse)] string context)
 		{
@@ -853,7 +828,6 @@ namespace Tests.Linq
 					from t in db.GetTable<Transaction>()                 select Sql.AsSql(t.TransactionDate.AddMonths(part1 - part2)).Date);
 		}
 
-		[ActiveIssue("https://github.com/ClickHouse/ClickHouse/issues/55310", Configuration = ProviderName.ClickHouseMySql)]
 		[Test]
 		public void AddDaysExpression([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus, TestProvName.AllPostgreSQL, TestProvName.AllClickHouse)] string context)
 		{
@@ -880,7 +854,6 @@ namespace Tests.Linq
 					from t in db.GetTable<Transaction>()                 select Sql.AsSql(t.TransactionDate.AddHours(part1 + part2).Hour));
 		}
 
-		[ActiveIssue("https://github.com/ClickHouse/ClickHouse/issues/55310", Configuration = ProviderName.ClickHouseMySql)]
 		[Test]
 		public void AddMinutesExpression([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus, TestProvName.AllPostgreSQL, TestProvName.AllClickHouse)] string context)
 		{
@@ -894,7 +867,6 @@ namespace Tests.Linq
 					from t in db.GetTable<Transaction>()                 select Sql.AsSql(t.TransactionDate.AddMinutes(part1 - part2)).Minute);
 		}
 
-		[ActiveIssue("https://github.com/ClickHouse/ClickHouse/issues/55310", Configuration = ProviderName.ClickHouseMySql)]
 		[Test]
 		public void AddSecondsExpression([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus, TestProvName.AllPostgreSQL, TestProvName.AllClickHouse)] string context)
 		{
@@ -908,7 +880,6 @@ namespace Tests.Linq
 					from t in db.GetTable<Transaction>()                 select Sql.AsSql(t.TransactionDate.AddSeconds(part1 - part2)).Second);
 		}
 
-		[ActiveIssue("https://github.com/ClickHouse/ClickHouse/issues/55310", Configuration = ProviderName.ClickHouseMySql)]
 		[Test]
 		public void AddMillisecondsExpression([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus, TestProvName.AllPostgreSQL, TestProvName.AllClickHouse)]
 			string context)

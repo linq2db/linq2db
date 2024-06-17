@@ -1,9 +1,0 @@
-﻿{
-	"NET70.Azure": {
-		"Providers": [
-			// MySQL latest with MySql.Data and MySqlConnector providers
-			"MySql",
-			"MySqlConnector"
-		]
-	}
-}

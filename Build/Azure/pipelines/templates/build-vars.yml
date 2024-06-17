@@ -4,9 +4,10 @@ variables:
   release_branch: release
   baselines_master: master
   solution: 'linq2db.sln'
+  netfx_tfm: 'net462'
   build_configuration: 'Azure'
-  assemblyVersion: 5.4.1
+  assemblyVersion: 6.0.0
   ${{ if eq(variables['Build.SourceBranchName'], 'release') }}:
-    packageVersion: 5.4.1
+    packageVersion: 6.0.0-preview.1
   ${{ if ne(variables['Build.SourceBranchName'], 'release') }}:
-    packageVersion: 5.4.1
+    packageVersion: 6.0.0

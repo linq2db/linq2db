@@ -3,6 +3,9 @@
 
 	<PropertyGroup>
 		<SignAssembly>False</SignAssembly>
+
+		<!--to avoid conflicts with main solution-->
+		<ArtifactsProjectName>Examples_$(MSBuildProjectName)</ArtifactsProjectName>
 	</PropertyGroup>
 
 	<ItemGroup>

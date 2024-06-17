@@ -6,37 +6,25 @@
 	</PropertyGroup>
 
 	<ItemGroup>
+		<ProjectCapability Remove="TestContainer" />
+
 		<ProjectReference Include="..\Model\Tests.Model.csproj" />
 
 		<PackageReference Include="NUnit" />
+		<PackageReference Include="NUnit.Analyzers" />
 	</ItemGroup>
 
-	<ItemGroup>
-		<ProjectCapability Remove="TestContainer" />
-	</ItemGroup>
-
-	<ItemGroup Condition="'$(TargetFramework)' == 'net472' ">
+	<ItemGroup Condition="'$(TargetFramework)' == 'net462' ">
 		<Reference Include="Microsoft.CSharp" />
 		<Reference Include="System.ServiceModel" />
+
 		<PackageReference Include="MiniProfiler.Shared" />
-
 		<PackageReference Include="System.Text.Json" />
 	</ItemGroup>
 
-	<ItemGroup Condition=" '$(TargetFramework)' == 'netcoreapp3.1' ">
-		<!--netcoreapp31 needed due to very old transient depndency from oracle 2.19 provider-->
-		<PackageReference Include="System.Text.Json" />
-	</ItemGroup>
-
-	<ItemGroup Condition=" '$(TargetFramework)' != 'net472' ">
+	<ItemGroup Condition=" '$(TargetFramework)' != 'net462' ">
 		<PackageReference Include="protobuf-net.Grpc.AspNetCore" />
 		<PackageReference Include="MiniProfiler.Minimal" />
-	</ItemGroup>
-
-	<ItemGroup>
-		<Compile Update="TestProviders\TestNoopProvider.cs">
-			<SubType>Source</SubType>
-		</Compile>
 	</ItemGroup>
 
 </Project>

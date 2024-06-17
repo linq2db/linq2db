@@ -21,7 +21,7 @@ namespace LinqToDB
 		[Extension("", ServerSideOnly = true, BuilderType = typeof(NamedCollationBuilder))]
 		[return: NotNullIfNotNull(nameof(expr))]
 		public static string? Collate(this string? expr, [SqlQueryDependent] string collation)
-			=> throw new InvalidOperationException($"{nameof(Sql)}.{nameof(Sql.Collate)} is server-side only API.");
+			=> throw new InvalidOperationException($"{nameof(Sql)}.{nameof(Collate)} is server-side only API.");
 
 		internal sealed class NamedCollationBuilder : IExtensionCallBuilder
 		{
@@ -29,16 +29,15 @@ namespace LinqToDB
 
 			public void Build(ISqExtensionBuilder builder)
 			{
-				var expr = builder.GetExpression("expr");
+				var expr = builder.GetExpression("expr")!;
 				var collation = builder.GetValue<string>("collation");
 
 				if (!ValidateCollation(collation))
 					throw new InvalidOperationException($"Invalid collation: {collation}");
 
-				builder.ResultExpression = new SqlExpression(typeof(string), $"{{0}} COLLATE {collation}", Precedence.Primary, expr)
-				{
-					CanBeNull = expr.CanBeNull
-				};
+				builder.ResultExpression = new SqlExpression(typeof(string), $"{{0}} COLLATE {collation}",
+					Precedence.Primary, SqlFlags.IsPure, ParametersNullabilityType.IfAnyParameterNullable, null, expr);
+;
 			}
 
 			/// <summary>
@@ -56,13 +55,12 @@ namespace LinqToDB
 		{
 			public void Build(ISqExtensionBuilder builder)
 			{
-				var expr      = builder.GetExpression("expr");
+				var expr      = builder.GetExpression("expr")!;
 				var collation = builder.GetValue<string>("collation").Replace("\"", "\"\"");
 
-				builder.ResultExpression = new SqlExpression(typeof(string), $"{{0}} COLLATE \"{collation}\"", Precedence.Primary, expr)
-				{
-					CanBeNull = expr.CanBeNull
-				};
+				builder.ResultExpression = new SqlExpression(typeof(string), $"{{0}} COLLATE \"{collation}\"",
+					Precedence.Primary, SqlFlags.IsPure, ParametersNullabilityType.IfAnyParameterNullable, null,
+					expr);
 			}
 		}
 
@@ -70,14 +68,13 @@ namespace LinqToDB
 		{
 			public void Build(ISqExtensionBuilder builder)
 			{
-				var expr      = builder.GetExpression("expr");
+				var expr      = builder.GetExpression("expr")!;
 				var collation = builder.GetValue<string>("collation");
 
 				// collation cannot be parameter
-				builder.ResultExpression = new SqlExpression(typeof(string), $"COLLATION_KEY_BIT({{0}}, {{1}})", Precedence.Primary, expr, new SqlValue(typeof(string), collation))
-				{
-					CanBeNull = expr.CanBeNull
-				};
+				builder.ResultExpression = new SqlExpression(typeof(string), $"COLLATION_KEY_BIT({{0}}, {{1}})",
+					Precedence.Primary, SqlFlags.IsPure, ParametersNullabilityType.SameAsFirstParameter, null,
+					expr, new SqlValue(typeof(string), collation));
 			}
 		}
 	}

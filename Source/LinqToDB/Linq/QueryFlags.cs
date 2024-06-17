@@ -10,5 +10,10 @@ namespace LinqToDB.Linq
 		/// Bit set, when inline parameters enabled for connection.
 		/// </summary>
 		InlineParameters     = 0x02,
+
+		/// <summary>
+		/// Indicates that query contains expression, which have been expanded
+		/// </summary>
+		ExpandedQuery = 0x04
 	}
 }

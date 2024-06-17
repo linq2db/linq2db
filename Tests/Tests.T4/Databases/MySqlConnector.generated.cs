@@ -96,8 +96,6 @@ namespace MySqlConnectorDataContext
 		[Column("timestampDataType"),   Nullable            ] public DateTime? TimestampDataType   { get; set; } // timestamp
 		[Column("timeDataType"),        Nullable            ] public TimeSpan? TimeDataType        { get; set; } // time
 		[Column("yearDataType"),        Nullable            ] public int?      YearDataType        { get; set; } // year
-		[Column("year2DataType"),       Nullable            ] public int?      Year2DataType       { get; set; } // year
-		[Column("year4DataType"),       Nullable            ] public int?      Year4DataType       { get; set; } // year
 		[Column("charDataType"),        Nullable            ] public char?     CharDataType        { get; set; } // char(1)
 		[Column("char20DataType"),      Nullable            ] public string?   Char20DataType      { get; set; } // char(20)
 		[Column("varcharDataType"),     Nullable            ] public string?   VarcharDataType     { get; set; } // varchar(20)
@@ -340,7 +338,7 @@ namespace MySqlConnectorDataContext
 		[Column,        Nullable] public char?     FieldNChar      { get; set; } // char(1)
 		[Column,        Nullable] public float?    FieldFloat      { get; set; } // float
 		[Column,        Nullable] public double?   FieldDouble     { get; set; } // double
-		[Column,        Nullable] public DateTime? FieldDateTime   { get; set; } // datetime
+		[Column,        Nullable] public DateTime? FieldDateTime   { get; set; } // datetime(6)
 		[Column,        Nullable] public byte[]?   FieldBinary     { get; set; } // varbinary(20)
 		[Column,        Nullable] public string?   FieldGuid       { get; set; } // char(36)
 		[Column,        Nullable] public decimal?  FieldDecimal    { get; set; } // decimal(24,10)
@@ -367,7 +365,7 @@ namespace MySqlConnectorDataContext
 		[Column,        Nullable] public char?     FieldNChar      { get; set; } // char(1)
 		[Column,        Nullable] public float?    FieldFloat      { get; set; } // float
 		[Column,        Nullable] public double?   FieldDouble     { get; set; } // double
-		[Column,        Nullable] public DateTime? FieldDateTime   { get; set; } // datetime
+		[Column,        Nullable] public DateTime? FieldDateTime   { get; set; } // datetime(6)
 		[Column,        Nullable] public byte[]?   FieldBinary     { get; set; } // varbinary(20)
 		[Column,        Nullable] public string?   FieldGuid       { get; set; } // char(36)
 		[Column,        Nullable] public decimal?  FieldDecimal    { get; set; } // decimal(24,10)

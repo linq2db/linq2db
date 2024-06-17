@@ -8,6 +8,9 @@ indent_size = 4
 insert_final_newline = true
 end_of_line = crlf
 
+[*.fs]
+indent_style = space
+
 # Code files
 [*.{cs,csx,vb,vbx}]
 charset = utf-8-bom
@@ -344,6 +347,7 @@ dotnet_diagnostic.IDE0065.severity = none # IDE0065: Misplaced using directive
 dotnet_diagnostic.IDE0066.severity = none # IDE0066: Convert switch statement to expression
 dotnet_diagnostic.IDE0070.severity = none # IDE0070: Use 'System.HashCode.Combine'
 dotnet_diagnostic.IDE0072.severity = none # IDE0072: Add missing cases
+dotnet_diagnostic.IDE0074.severity = none # IDE0074: Use compound assignment
 dotnet_diagnostic.IDE0075.severity = none # IDE0075: Simplify conditional expression
 dotnet_diagnostic.IDE0078.severity = none # IDE0078: Use pattern matching
 dotnet_diagnostic.IDE0079.severity = none # IDE0079: Remove unnecessary suppression
@@ -680,3 +684,19 @@ dotnet_diagnostic.MA0151.severity = none
 dotnet_diagnostic.MA0152.severity = none
 # MA0153: Do not log symbols decorated with DataClassificationAttribute directly
 dotnet_diagnostic.MA0153.severity = none
+# MA0154: Use langword in XML comment
+dotnet_diagnostic.MA0154.severity = none
+# MA0155: Do not use async void methods
+dotnet_diagnostic.MA0155.severity = none
+# MA0156: Use 'Async' suffix when a method returns IAsyncEnumerable<T>
+dotnet_diagnostic.MA0156.severity = none
+# MA0157: Do not use 'Async' suffix when a method does not return IAsyncEnumerable<T>
+dotnet_diagnostic.MA0157.severity = none
+# MA0158: Use System.Threading.Lock
+dotnet_diagnostic.MA0158.severity = none
+# MA0159: Use 'Order' instead of 'OrderBy'
+dotnet_diagnostic.MA0159.severity = none
+################################################################################################
+# LindhartAnalyserMissingAwaitWarningVariable: Possible unwanted Task returned from method.
+dotnet_diagnostic.LindhartAnalyserMissingAwaitWarningVariable.severity = error
+################################################################################################

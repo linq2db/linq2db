@@ -5,7 +5,6 @@ using System.Data.SqlTypes;
 using System.Globalization;
 using System.Linq;
 using System.Numerics;
-using System.Text;
 
 namespace LinqToDB.SqlQuery
 {
@@ -191,10 +190,37 @@ namespace LinqToDB.SqlQuery
 			new TypeInfo(DataType.BitArray,          null,                  null,                  null,                    null)
 		);
 
-		public static int? GetMaxLength     (DataType dbType) { return _typeInfo[(int)dbType].MaxLength;      }
-		public static int? GetMaxPrecision  (DataType dbType) { return _typeInfo[(int)dbType].MaxPrecision;   }
-		public static int? GetMaxScale      (DataType dbType) { return _typeInfo[(int)dbType].MaxScale;       }
-		public static int? GetMaxDisplaySize(DataType dbType) { return _typeInfo[(int)dbType].MaxDisplaySize; }
+		public static int? GetMaxLength(DataType dbType)
+		{
+			var idx = (int)dbType;
+			if (idx >= _typeInfo.Length)
+				return null;
+			return _typeInfo[idx].MaxLength;
+		}
+
+		public static int? GetMaxPrecision(DataType dbType)
+		{
+			var idx = (int)dbType;
+			if (idx >= _typeInfo.Length)
+				return null;
+			return _typeInfo[idx].MaxPrecision;
+		}
+
+		public static int? GetMaxScale(DataType dbType)
+		{
+			var idx = (int)dbType;
+			if (idx >= _typeInfo.Length)
+				return null;
+			return _typeInfo[idx].MaxScale;
+		}
+
+		public static int? GetMaxDisplaySize(DataType dbType)
+		{
+			var idx = (int)dbType;
+			if (idx >= _typeInfo.Length)
+				return null;
+			return _typeInfo[idx].MaxDisplaySize;
+		}
 
 		public static SqlDataType GetDataType(DataType type)
 		{
@@ -368,7 +394,7 @@ namespace LinqToDB.SqlQuery
 
 		public override string ToString()
 		{
-			return ((IQueryElement)this).ToString(new StringBuilder(), new Dictionary<IQueryElement,IQueryElement>()).ToString();
+			return this.ToDebugString();
 		}
 
 #endif
@@ -379,15 +405,6 @@ namespace LinqToDB.SqlQuery
 
 		public int  Precedence => SqlQuery.Precedence.Primary;
 		public Type SystemType => Type.SystemType;
-
-		#endregion
-
-		#region ISqlExpressionWalkable Members
-
-		ISqlExpression ISqlExpressionWalkable.Walk<TContext>(WalkOptions options, TContext context, Func<TContext, ISqlExpression, ISqlExpression> func)
-		{
-			return func(context, this);
-		}
 
 		#endregion
 
@@ -405,6 +422,8 @@ namespace LinqToDB.SqlQuery
 
 		#region ISqlExpression Members
 
+		public bool CanBeNullable(NullabilityContext nullability) => CanBeNull;
+
 		public bool CanBeNull => false;
 
 		public bool Equals(ISqlExpression other, Func<ISqlExpression,ISqlExpression,bool> comparer)
@@ -416,21 +435,24 @@ namespace LinqToDB.SqlQuery
 
 		#region IQueryElement Members
 
+#if DEBUG
+		public string DebugText => this.ToDebugString();
+#endif
 		public QueryElementType ElementType => QueryElementType.SqlDataType;
 
-		StringBuilder IQueryElement.ToString(StringBuilder sb, Dictionary<IQueryElement,IQueryElement> dic)
+		QueryElementTextWriter IQueryElement.ToString(QueryElementTextWriter writer)
 		{
-			sb.AppendFormat(CultureInfo.InvariantCulture, $"{Type.DataType}");
+			writer.Append(Type.DataType);
 
 			if (!string.IsNullOrEmpty(Type.DbType))
-				sb.Append(CultureInfo.InvariantCulture, $":\"{Type.DbType}\"");
+				writer.Append(":\"").Append(Type.DbType).Append('"');
 
-			if (Type.Length != 0)
-				sb.Append(CultureInfo.InvariantCulture, $"({Type.Length})");
-			else if (Type.Precision != 0)
-				sb.Append(CultureInfo.InvariantCulture, $"({Type.Precision},{Type.Scale})");
+			if (Type.Length != null && Type.Length != 0)
+				writer.Append('(').Append(Type.Length).Append(')');
+			else if (Type.Precision != null && Type.Precision != 0)
+				writer.Append('(').Append(Type.Precision).Append(',').Append(Type.Scale).Append(')');
 
-			return sb;
+			return writer;
 		}
 
 		#endregion

@@ -28,7 +28,7 @@ namespace Cli.Fluent.MySql
 		public char?     FieldNChar      { get; set; } // char(1)
 		public float?    FieldFloat      { get; set; } // float
 		public double?   FieldDouble     { get; set; } // double
-		public DateTime? FieldDateTime   { get; set; } // datetime
+		public DateTime? FieldDateTime   { get; set; } // datetime(6)
 		public byte[]?   FieldBinary     { get; set; } // varbinary(20)
 		public string?   FieldGuid       { get; set; } // char(36)
 		public decimal?  FieldDecimal    { get; set; } // decimal(24,10)

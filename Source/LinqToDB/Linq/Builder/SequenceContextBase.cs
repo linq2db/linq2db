@@ -3,22 +3,20 @@ using System.Linq.Expressions;
 
 namespace LinqToDB.Linq.Builder
 {
+	using LinqToDB.Expressions;
+	using Mapping;
 	using SqlQuery;
 
 	[DebuggerDisplay("{BuildContextDebuggingHelper.GetContextInfo(this)}")]
-	abstract class SequenceContextBase : IBuildContext
+	abstract class SequenceContextBase : BuildContextBase
 	{
 		protected SequenceContextBase(IBuildContext? parent, IBuildContext[] sequences, LambdaExpression? lambda)
+			: base(sequences[0].Builder, sequences[0].ElementType, sequences[0].SelectQuery)
 		{
-			Parent      = parent;
-			Sequences   = sequences;
-			Builder     = sequences[0].Builder;
-			Lambda      = lambda;
-			SelectQuery = sequences[0].SelectQuery;
-
+			Parent          = parent;
+			Sequences       = sequences;
+			Body            = lambda == null ? null : SequenceHelper.PrepareBody(lambda, sequences);
 			Sequence.Parent = this;
-
-			Builder.Contexts.Add(this);
 		}
 
 		protected SequenceContextBase(IBuildContext? parent, IBuildContext sequence, LambdaExpression? lambda)
@@ -26,41 +24,41 @@ namespace LinqToDB.Linq.Builder
 		{
 		}
 
-#if DEBUG
-		public string SqlQueryText => SelectQuery?.SqlText ?? "";
-		public string Path => this.GetPath();
-#endif
+		public          IBuildContext[] Sequences     { get; set; }
+		public          Expression?     Body          { get; set; }
+		public          IBuildContext   Sequence      => Sequences[0];
+		public override MappingSchema   MappingSchema => Sequence.MappingSchema;
 
-		public IBuildContext?    Parent      { get; set; }
-		public IBuildContext[]   Sequences   { get; set; }
-		public ExpressionBuilder Builder     { get; set; }
-		public LambdaExpression? Lambda      { get; set; }
-		public SelectQuery       SelectQuery { get; set; }
-		public SqlStatement?     Statement   { get; set; }
-		public IBuildContext     Sequence => Sequences[0];
+		public override Expression? Expression => Body;
 
-		Expression? IBuildContext.Expression => Lambda;
-
-		public virtual void BuildQuery<T>(Query<T> query, ParameterExpression queryParameter)
+		public override Expression MakeExpression(Expression path, ProjectFlags flags)
 		{
-			var expr   = BuildExpression(null, 0, false);
-			var mapper = Builder.BuildMapper<T>(expr);
+			var newPath = SequenceHelper.CorrectExpression(path, this, Sequence);
+			var result = Builder.MakeExpression(Sequence, newPath, flags);
+
+			if (ExpressionEqualityComparer.Instance.Equals(newPath, result))
+				return path;
+
+			if (flags.IsTable())
+				return result;
+
+			result = SequenceHelper.CorrectExpression(result, Sequence, this);
+			return result;
+		}
+
+		public override void SetRunQuery<T>(Query<T> query, Expression expr)
+		{
+			var mapper = Builder.BuildMapper<T>(SelectQuery, expr);
 
 			QueryRunner.SetRunQuery(query, mapper);
 		}
 
-		public abstract Expression         BuildExpression(Expression? expression, int level, bool enforceServerSide);
-		public abstract SqlInfo[]          ConvertToSql   (Expression? expression, int level, ConvertFlags flags);
-		public abstract SqlInfo[]          ConvertToIndex (Expression? expression, int level, ConvertFlags flags);
-		public abstract IsExpressionResult IsExpression   (Expression? expression, int level, RequestFor requestFlag);
-		public abstract IBuildContext?     GetContext     (Expression? expression, int level, BuildInfo buildInfo);
-
-		public virtual SqlStatement GetResultStatement()
+		public override SqlStatement GetResultStatement()
 		{
 			return Sequence.GetResultStatement();
 		}
 
-		public void CompleteColumns()
+		public override void CompleteColumns()
 		{
 			foreach (var sequence in Sequences)
 			{
@@ -68,30 +66,15 @@ namespace LinqToDB.Linq.Builder
 			}
 		}
 
-		public virtual int ConvertToParentIndex(int index, IBuildContext context)
-		{
-			return Parent?.ConvertToParentIndex(index, context) ?? index;
-		}
-
-		public virtual void SetAlias(string? alias)
+		public override void SetAlias(string? alias)
 		{
 			if (SelectQuery.Select.Columns.Count == 1)
 			{
 				SelectQuery.Select.Columns[0].Alias = alias;
 			}
-		}
 
-		public virtual ISqlExpression? GetSubQuery(IBuildContext context)
-		{
-			return null;
-		}
-
-		protected bool IsSubQuery()
-		{
-			for (var p = Parent; p != null; p = p.Parent)
-				if (p.IsExpression(null, 0, RequestFor.SubQuery).Result)
-					return true;
-			return false;
+			if (SelectQuery.From.Tables.Count > 0)
+				SelectQuery.From.Tables[SelectQuery.From.Tables.Count - 1].Alias = alias;
 		}
 	}
 }

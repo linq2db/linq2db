@@ -58,7 +58,7 @@ namespace Tests.UserTests.Test4415
 			var qry2 = p.Where(x => qry.Contains(x.LanguageID));
 			var lst = qry2.ToList();
 
-			Assert.AreEqual(2, lst.Count);
+			Assert.That(lst, Has.Count.EqualTo(2));
 		}
 
 		[Test]
@@ -87,7 +87,7 @@ namespace Tests.UserTests.Test4415
 			var qry2 = p.Where(x => qry.Contains(x.LanguageID));
 			var lst = qry2.ToList();
 
-			Assert.AreEqual(1, lst.Count);
+			Assert.That(lst, Has.Count.EqualTo(1));
 		}
 
 		[Test]
@@ -120,7 +120,7 @@ namespace Tests.UserTests.Test4415
 			var qry2 = p.Where(x => qry.Contains(Sql.AsNotNull(x.LanguageID)));
 			var lst = qry2.ToList();
 
-			Assert.AreEqual(1, lst.Count);
+			Assert.That(lst, Has.Count.EqualTo(1));
 		}
 
 		[Test]
@@ -154,7 +154,7 @@ namespace Tests.UserTests.Test4415
 			var qry2 = p.Where(x => qry.Contains(x.LanguageID));
 			var lst = qry2.ToList();
 
-			Assert.AreEqual(1, lst.Count);
+			Assert.That(lst, Has.Count.EqualTo(1));
 		}
 
 		[Test]
@@ -193,7 +193,7 @@ namespace Tests.UserTests.Test4415
 			var qry2 = p.Where(x => qry.Contains(x.LanguageID));
 			var lst = qry2.ToList();
 
-			Assert.AreEqual(expected.Count, lst.Count);
+			Assert.That(lst, Has.Count.EqualTo(expected.Count));
 		}
 	}
 }

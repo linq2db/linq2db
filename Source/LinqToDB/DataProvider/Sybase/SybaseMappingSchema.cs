@@ -11,7 +11,11 @@ namespace LinqToDB.DataProvider.Sybase
 
 	sealed class SybaseMappingSchema : LockedMappingSchema
 	{
+#if SUPPORTS_COMPOSITE_FORMAT
+		private static readonly CompositeFormat TIME3_FORMAT = CompositeFormat.Parse("'{0:hh\\:mm\\:ss\\.fff}'");
+#else
 		private const string TIME3_FORMAT= "'{0:hh\\:mm\\:ss\\.fff}'";
+#endif
 
 		SybaseMappingSchema() : base(ProviderName.Sybase)
 		{
@@ -22,6 +26,8 @@ namespace LinqToDB.DataProvider.Sybase
 			SetValueToSqlConverter(typeof(Binary)  , (sb, _,_,v) => ConvertBinaryToSql  (sb, ((Binary)v).ToArray()));
 
 			SetDataType(typeof(string), new SqlDataType(DataType.NVarChar, typeof(string), 255));
+
+			SetDefaultValue(typeof(DateTime), new DateTime(1753, 1, 1));
 		}
 
 		static void ConvertBinaryToSql(StringBuilder stringBuilder, byte[] value)

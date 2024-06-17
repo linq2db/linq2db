@@ -1,0 +1,207 @@
+﻿<#@ template debug="false" hostspecific="false" language="C#" #>
+<#@ assembly name="System.Core" #>
+<#@ import namespace="System" #>
+<#@ import namespace="System.Linq" #>
+<#@ output extension=".generated.cs" #>
+using System;
+using System.Collections;
+using System.Collections.Generic;
+
+namespace LinqToDB;
+
+using LinqToDB.SqlQuery;
+using LinqToDB.Common.Internal;
+
+partial class Sql
+{
+<#
+	var MaxMemberCount = 10;
+#>
+	public static partial class SqlRow
+	{
+		public const int MaxMemberCount = <#= MaxMemberCount #>;
+
+		public static readonly Type[] Types = new []
+		{
+<#
+			foreach (var info in Enumerable.Range(1, MaxMemberCount))
+			{
+				var indexes = Enumerable.Range(1, info).ToArray();
+				var types = string.Join(",", indexes.Select(i => ""));
+#>
+				typeof(SqlRow<<#= types #>>),
+<#
+			} #>
+		};
+
+		internal static int CombineHashCodes(int h1, int h2)
+			=> (((h1 << 5) + h1) ^ h2);
+
+<#
+	for (var info = 3; info <= MaxMemberCount; info++)
+	{
+		var leftSide           = (info + 1) / 2;
+		var rightSide          = info - leftSide;
+		var leftNames          = Enumerable.Range(1, leftSide);
+		var rightNames         = Enumerable.Range(leftSide + 1, rightSide);
+		var allNames           = Enumerable.Range(1, info);
+		var leftCallArguments  = string.Join(", ", leftNames.Select(i => $"h{i}"));
+		var rightCallArguments = string.Join(", ", rightNames.Select(i => $"h{i}"));
+		var allParameters      = string.Join(", ", allNames.Select(i => $"int h{i}"));
+		var leftCall           = $"CombineHashCodes({leftCallArguments})";
+		string rightCall;
+		if (rightSide == 1)
+			rightCall = rightCallArguments;
+		else
+			rightCall = $"CombineHashCodes({rightCallArguments})";
+		var callStr = $"CombineHashCodes({leftCall}, {rightCall})";
+#>
+		internal static int CombineHashCodes(<#= allParameters #>)
+			=> <#= callStr #>;
+
+<#
+	}#>
+	}
+<#
+	foreach (var info in Enumerable.Range(1, MaxMemberCount))
+	{
+
+		var indexes        = Enumerable.Range(1, info).ToArray();
+		var types          = string.Join(", ", indexes.Select(i => $"T{i}"));
+		var parameters     = string.Join(", ", indexes.Select(i => $"T{i} value{i}"));
+		var equals         = string.Join("\r\n\t\t\t\t&& ", indexes.Select(i => $"_value{i}ValueComparer.Equals(Value{i}, otherRow.Value{i})"));
+		var hashCodes      = string.Join(",\r\n\t\t\t\t", indexes.Select(i => $"Value{i} is null ? 0 : _value{i}ValueComparer.GetHashCode(Value{i})"));
+		var hashCodesStr   = hashCodes;
+		if (info > 1)
+			hashCodesStr = $"SqlRow.CombineHashCodes({hashCodes})";
+
+#>
+
+	public class SqlRow<<#= types #>>: IComparable, IStructuralComparable
+	{
+		public SqlRow(<#= parameters #>)
+		{
+<#
+			foreach (var idx in indexes)
+			{
+#>
+			Value<#= idx #> = value<#= idx #>;
+<#
+			}
+#>
+		}
+
+<#
+	foreach (var idx in indexes)
+	{
+#>
+		public T<#= idx #> Value<#= idx #> { get; }
+<#
+	}
+#>
+
+<#
+	foreach (var idx in indexes)
+	{
+#>
+		static IEqualityComparer<T<#= idx #>> _value<#= idx #>ValueComparer = ValueComparer.GetDefaultValueComparer<T<#= idx #>>(true);
+<#
+	}
+#>
+
+		int IComparable.CompareTo(object obj)
+			=> ((IStructuralComparable) this).CompareTo(obj, (IComparer) Comparer<object>.Default);
+
+		int IStructuralComparable.CompareTo(object other, IComparer comparer)
+		{
+			if (other == null) return 1;
+
+			if (other is not SqlRow<<#= types #>> otherRow)
+				throw new ArgumentException("Argument is not SqlRow", nameof(other));
+<#
+	for (var i = 1; i <= indexes.Length; i++)
+	{
+		var compareStr = $"c = comparer.Compare(Value{i}, otherRow.Value{i});";
+		if (i == 1)
+			compareStr = "var " + compareStr;
+
+		var returnStr = (i == indexes.Length)? "return c;" : "if (c != 0) return c;";
+
+#>
+
+			<#= compareStr #>
+			<#= returnStr #>
+<#
+	}
+#>
+		}
+
+		public override bool Equals(object other)
+		{
+			if (other is not SqlRow<<#= types #>> otherRow)
+				return false;
+
+			return <#= equals #>;
+		}
+
+		public override int GetHashCode()
+			=> <#= hashCodesStr #>;
+
+		public static bool operator > (SqlRow<<#= types #>> x, SqlRow<<#= types #>> y)
+			=> ((IComparable)x).CompareTo(y) > 0;
+
+		public static bool operator < (SqlRow<<#= types #>> x, SqlRow<<#= types #>> y)
+			=> ((IComparable)x).CompareTo(y) < 0;
+
+		public static bool operator >= (SqlRow<<#= types #>> x, SqlRow<<#= types #>> y)
+			=> ((IComparable)x).CompareTo(y) >= 0;
+
+		public static bool operator <= (SqlRow<<#= types #>> x, SqlRow<<#= types #>> y)
+			=> ((IComparable)x).CompareTo(y) <= 0;
+
+	}
+<#
+	}
+#>
+
+	#region Constructor methods
+<#
+	foreach (var info in Enumerable.Range(1, MaxMemberCount))
+	{
+		var indexes        = Enumerable.Range(1, info).ToArray();
+		var types          = string.Join(", ", indexes.Select(i => "T" + i));
+		var parameters     = string.Join(", ", indexes.Select(i => "T" + i + " value" + i));
+		var parameterNames = string.Join(", ", indexes.Select(i => "value" + i));
+#>
+
+	[Extension("", BuilderType = typeof(RowBuilder), ServerSideOnly = true)]
+	public static SqlRow<<#= types #>> Row<<#= types #>>(<#= parameters #>)
+		=> new SqlRow<<#= types #>>(<#= parameterNames #>);
+<#
+	}
+#>
+
+	#endregion Constructor methods
+
+	#region Overlaps
+
+	// Note that SQL standard doesn't define OVERLAPS for all comparable data types, such as numbers.
+	// RDBMS only support OVERLAPS for date(-time) and interval types.
+<#
+	foreach (var info in Enumerable.Range(1, MaxMemberCount))
+	{
+		var indexes        = Enumerable.Range(1, info).ToArray();
+		var types          = string.Join(", ", indexes.Select(i => "T" + i));
+		var parameters     = string.Join(", ", indexes.Select(i => "T" + i + " value" + i));
+		var parameterNames = string.Join(", ", indexes.Select(i => "value" + i));
+#>
+
+	[Extension("",  "", IsPredicate = true, ServerSideOnly = true, Precedence = Precedence.Comparison, BuilderType = typeof(OverlapsBuilder))]
+	public static bool Overlaps<<#= types #>>(this SqlRow<<#= types #>> thisRow, SqlRow<<#= types #>> other)
+		=> throw new NotImplementedException();
+<#
+	}
+#>
+
+	#endregion Overlaps
+}

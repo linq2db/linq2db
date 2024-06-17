@@ -15,18 +15,10 @@ namespace LinqToDB.Tools
 	{
 		public abstract void Dispose();
 
-#if NATIVE_ASYNC
 		public virtual ValueTask DisposeAsync()
 		{
 			Dispose();
 			return default;
 		}
-#else
-		public virtual Task DisposeAsync()
-		{
-			Dispose();
-			return Task.FromResult(false);
-		}
-#endif
 	}
 }
