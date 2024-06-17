@@ -6,6 +6,7 @@ using FluentAssertions;
 
 using LinqToDB;
 using LinqToDB.Linq;
+using System.Linq.Expressions;
 
 namespace Tests.Linq
 {
@@ -219,6 +220,22 @@ namespace Tests.Linq
 							: p.Children.OrderBy(c => c.ChildID).FirstOrDefault();
 
 			AssertQuery(query);
+		}
+
+		[ExpressionMethod(nameof(DivideExpr))]
+		static double Divide(double value, double divisor) => divisor == 0 ? value : value / divisor;
+
+		static Expression<Func<double, double, double>> DivideExpr() => (double value, double divisor) => divisor == 0 ? value : value / divisor;
+
+		[Test]
+		public void Conditional_DoNotEvalueBothBranches([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			// Sql.AsSql to force ExpressionMethod translation
+			var result = db.Select(() => Divide(Sql.AsSql(20D), Sql.AsSql(0D)));
+
+			Assert.That(result, Is.EqualTo(20D));
 		}
 	}
 }
