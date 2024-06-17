@@ -36,7 +36,7 @@ namespace LinqToDB.DataProvider.Access.Translation
 				};
 
 				if (partStr == null)
-					return null;
+					throw new NotImplementedException($"TranslateDateTimeDatePart for datepart (${datepart}) not implemented");
 
 				var resultExpression = factory.Function(factory.GetDbDataType(typeof(int)), "DatePart", new SqlValue(typeof(string), partStr), dateTimeExpression);
 
@@ -65,7 +65,7 @@ namespace LinqToDB.DataProvider.Access.Translation
 				};
 
 				if (partStr == null)
-					return null;
+					throw new NotImplementedException($"TranslateDateTimeDateAdd for datepart (${datepart}) not implemented");
 
 				var value = factory.Value(partStr);
 
