@@ -4,6 +4,9 @@ using System.Threading;
 using System.Threading.Tasks;
 
 using LinqToDB;
+using LinqToDB.Common;
+using LinqToDB.Data;
+using LinqToDB.Tools.EntityServices;
 
 using NUnit.Framework;
 
@@ -11,9 +14,6 @@ using Tests.Linq;
 
 namespace Tests.Tools.EntityServices
 {
-	using LinqToDB.Common;
-	using LinqToDB.Data;
-	using LinqToDB.Tools.EntityServices;
 	using Model;
 
 	[TestFixture]

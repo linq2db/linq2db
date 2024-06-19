@@ -30,7 +30,7 @@ namespace Tests.UserTests
 			throw new InvalidOperationException("This function should be used only in database code");
 		}
 
-		[Test, ActiveIssue("Wrong Having detection")]
+		[Test]
 		public void NegativeWhereTest([SupportsAnalyticFunctionsContext] string context)
 		{
 			using (var db = GetDataContext(context))

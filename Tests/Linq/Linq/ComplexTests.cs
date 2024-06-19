@@ -590,5 +590,110 @@ namespace Tests.Linq
 				});
 			}
 		}
+
+		[ActiveIssue]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/940")]
+		public void FilterByComposite_Class([DataSources] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var users = db.CreateLocalTable(User.TestData);
+
+			var record = users.Where(u => u.Residence == User.TestData[0].Residence).Single();
+
+			Assert.Multiple(() =>
+			{
+				Assert.That(record.Name, Is.EqualTo("Freddy"));
+				Assert.That(record.Residence, Is.Not.Null);
+			});
+			Assert.Multiple(() =>
+			{
+				Assert.That(record.Residence!.Building, Is.EqualTo(User.TestData[0].Residence!.Building));
+				Assert.That(record.Residence.City, Is.EqualTo(User.TestData[0].Residence!.City));
+				Assert.That(record.Residence.Street, Is.EqualTo(User.TestData[0].Residence!.Street));
+			});
+		}
+
+		struct AddressStruct : IEquatable<AddressStruct>
+		{
+			public string? City { get; set; }
+			public string? Street { get; set; }
+			public int Building { get; set; }
+
+			public static bool operator ==(AddressStruct key1, AddressStruct key2)
+			{
+				return key1.City == key2.City && key1.Street == key2.Street && key1.Building == key2.Building;
+			}
+
+			public static bool operator !=(AddressStruct key1, AddressStruct key2)
+			{
+				return key1.City != key2.City || key1.Street != key2.Street || key1.Building != key2.Building;
+			}
+
+			public override int GetHashCode()
+			{
+				return City?.GetHashCode() ?? 0 ^ Street?.GetHashCode() ?? 0 ^ Building.GetHashCode();
+			}
+
+			public override bool Equals(object? obj)
+			{
+				if (obj is not AddressStruct other)
+					return false;
+
+				return Equals(other);
+			}
+
+			public bool Equals(AddressStruct other)
+			{
+				return City == other.City
+					&& Street == other.Street
+					&& Building == other.Building;
+			}
+		}
+
+		[Column("city", "Residence.City")]
+		[Column("user_name", "Name")]
+		class UserStruct
+		{
+			public string? Name;
+
+			[Column("street", ".Street")]
+			[Column("building_number", MemberName = ".Building")]
+			public AddressStruct Residence { get; set; }
+
+			public static readonly UserStruct[] TestData = new []
+			{
+				new UserStruct()
+				{
+					Name = "Freddy",
+					Residence = new AddressStruct()
+					{
+						Building = 13,
+						City     = "Springwood",
+						Street   = "Elm Street"
+					}
+				}
+			};
+		}
+
+		[ActiveIssue]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/940")]
+		public void FilterByComposite_Struct([DataSources] string context)
+		{
+			var ms = new MappingSchema();
+			ms.SetScalarType(typeof(AddressStruct), false);
+
+			using var db    = GetDataContext(context, ms);
+			using var users = db.CreateLocalTable(UserStruct.TestData);
+
+			var record = users.Where(u => u.Residence == UserStruct.TestData[0].Residence).Single();
+
+			Assert.Multiple(() =>
+			{
+				Assert.That(record.Name, Is.EqualTo("Freddy"));
+				Assert.That(record.Residence!.Building, Is.EqualTo(UserStruct.TestData[0].Residence.Building));
+				Assert.That(record.Residence.City, Is.EqualTo(UserStruct.TestData[0].Residence.City));
+				Assert.That(record.Residence.Street, Is.EqualTo(UserStruct.TestData[0].Residence.Street));
+			});
+		}
 	}
 }

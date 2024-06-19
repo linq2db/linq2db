@@ -97,11 +97,19 @@ namespace Tests.Linq
 		[Test]
 		public void LoadSingleWithOptions([DataSources] string context)
 		{
-
 			var ms = FSharp.MappingSchema.Initialize();
 
 			using (var db = GetDataContext(context, ms))
 				FSharp.WhereTest.LoadSingleWithOptions(db);
+		}
+
+		[ActiveIssue]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/195")]
+		public void BuiltInOptionsHandling([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			FSharp.WhereTest.LoadSingleWithOptions(db);
 		}
 
 		[Test]
