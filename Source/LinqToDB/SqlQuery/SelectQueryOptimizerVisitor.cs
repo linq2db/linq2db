@@ -1183,7 +1183,7 @@ namespace LinqToDB.SqlQuery
 			return optimized;
 		}
 
-		bool IsColumnExpressionAllowedToMoveUp(SelectQuery parentQuery, NullabilityContext nullability, SqlColumn column, ISqlExpression columnExpression, bool ignoreWhere)
+		bool IsColumnExpressionAllowedToMoveUp(SelectQuery parentQuery, NullabilityContext nullability, SqlColumn column, ISqlExpression columnExpression, bool ignoreWhere, bool inGrouping)
 		{
 			if (columnExpression.ElementType is QueryElementType.Column or QueryElementType.SqlRawSqlTable or QueryElementType.SqlField or QueryElementType.SqlValue or QueryElementType.SqlParameter)
 			{
@@ -1193,33 +1193,34 @@ namespace LinqToDB.SqlQuery
 			var underlying = QueryHelper.UnwrapExpression(columnExpression, false);
 			if (!ReferenceEquals(underlying, columnExpression))
 			{
-				return IsColumnExpressionAllowedToMoveUp(parentQuery, nullability, column, underlying, ignoreWhere);
+				return IsColumnExpressionAllowedToMoveUp(parentQuery, nullability, column, underlying, ignoreWhere, inGrouping);
 			}
 
 			if (underlying is SqlBinaryExpression binary)
 			{
 				if (QueryHelper.IsConstantFast(binary.Expr1))
 				{
-					return IsColumnExpressionAllowedToMoveUp(parentQuery, nullability, column, binary.Expr2, ignoreWhere);
+					return IsColumnExpressionAllowedToMoveUp(parentQuery, nullability, column, binary.Expr2, ignoreWhere, inGrouping);
 				}
 
 				if (QueryHelper.IsConstantFast(binary.Expr2))
 				{
-					return IsColumnExpressionAllowedToMoveUp(parentQuery, nullability, column, binary.Expr1, ignoreWhere);
+					return IsColumnExpressionAllowedToMoveUp(parentQuery, nullability, column, binary.Expr1, ignoreWhere, inGrouping);
 				}
 			}
 
-			var allowed = _movingComplexityVisitor.IsAllowedToMove(column, parent: parentQuery,
+			var allowed = _movingComplexityVisitor.IsAllowedToMove(column, parent : parentQuery,
 				nullability,
 				_expressionOptimizerVisitor,
 				_dataOptions,
 				_mappingSchema,
 				_evaluationContext,
+				// Elements which should be ignored while searching for usage
 				column.Parent,
-				_applySelect == parentQuery ? parentQuery.Where  : null,
-				_applySelect == parentQuery ? parentQuery.Select : null,
+				_applySelect == parentQuery ? parentQuery.Where : null,
+				!inGrouping && _applySelect == parentQuery ? parentQuery.Select : null,
 				ignoreWhere ? parentQuery.Where : null
-				);
+			);
 
 			return allowed;
 		}
@@ -1506,7 +1507,7 @@ namespace LinqToDB.SqlQuery
 						return false;
 					}
 
-					if (!IsColumnExpressionAllowedToMoveUp(parentQuery, nullability, column, column.Expression, ignoreWhere : true))
+					if (!IsColumnExpressionAllowedToMoveUp(parentQuery, nullability, column, column.Expression, ignoreWhere : true, inGrouping: !subQuery.GroupBy.IsEmpty))
 					{
 						// Column expression is complex and Column has more than one reference
 						return false;
@@ -1514,7 +1515,7 @@ namespace LinqToDB.SqlQuery
 				}
 				else
 				{
-					if (!IsColumnExpressionAllowedToMoveUp(parentQuery, nullability, column, column.Expression, ignoreWhere : false))
+					if (!IsColumnExpressionAllowedToMoveUp(parentQuery, nullability, column, column.Expression, ignoreWhere : false, inGrouping: !subQuery.GroupBy.IsEmpty))
 					{
 						// Column expression is complex and Column has more than one reference
 						return false;
