@@ -172,7 +172,6 @@ namespace Tests.Linq
 					select g.Count(ch => ch.ChildID > 20));
 		}
 
-		[ActiveIssue("The column ((expression)) must be in the GROUP BY list.", Configuration = TestProvName.AllInformix)]
 		[Test]
 		public void GroupBy21([DataSources(TestProvName.AllClickHouse)] string context)
 		{
@@ -192,7 +191,6 @@ namespace Tests.Linq
 					select g.Count(p => p.ParentID < 3));
 		}
 
-		[ActiveIssue("The column ((expression)) must be in the GROUP BY list.", Configuration = TestProvName.AllInformix)]
 		[Test]
 		public void GroupBy22([DataSources(TestProvName.AllClickHouse)] string context)
 		{
@@ -229,7 +227,6 @@ namespace Tests.Linq
 					select g.Count(p => p.ParentID < 3));
 		}
 
-		[ActiveIssue("The column ((expression)) must be in the GROUP BY list.", Configuration = TestProvName.AllInformix)]
 		[Test]
 		public void GroupBy3([DataSources(TestProvName.AllClickHouse)] string context)
 		{

@@ -431,10 +431,7 @@ namespace LinqToDB.Linq.Builder
 					if (info.MemberChain.Length == 0)
 						throw new LinqException("Object initializer expected for insert statement.");
 
-					if (info.MemberChain.Length != 1)
-						throw new InvalidOperationException();
-
-					var member = info.MemberChain[0];
+					var member = info.MemberChain[info.MemberChain.Length - 1];
 					var pe     = Expression.MakeMemberAccess(bodyPath, member);
 					var column = into.ConvertToSql(pe, 1, ConvertFlags.Field);
 					var expr   = info.Sql;

@@ -1,12 +1,14 @@
 ﻿using System.Linq;
 
+using LinqToDB;
+using LinqToDB.Common;
+using LinqToDB.Data;
+using LinqToDB.Tools.EntityServices;
+
 using NUnit.Framework;
 
 namespace Tests.Tools.EntityServices
 {
-	using LinqToDB.Common;
-	using LinqToDB.Data;
-	using LinqToDB.Tools.EntityServices;
 	using Model;
 
 	[TestFixture]

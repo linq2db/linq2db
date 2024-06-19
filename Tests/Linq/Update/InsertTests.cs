@@ -2345,9 +2345,9 @@ namespace Tests.xUpdate
 		public partial class TestInsertOrReplaceInfo
 		{
 			[Column("id"), PrimaryKey, NotNull]                   public int       Id        { get; set; } // bigint
-			[Column("name"), Nullable]                            public string?   Name      { get; set; } // character varying(100)
-			[Column("created_by", SkipOnUpdate = true), Nullable] public string?   CreatedBy { get; set; } // character varying(100)
-			[Column("updated_by", SkipOnInsert = true), Nullable] public string?   UpdatedBy { get; set; } // character varying(100)
+			[Column("name")]                            public string?   Name      { get; set; } // character varying(100)
+			[Column("created_by", SkipOnUpdate = true)] public string?   CreatedBy { get; set; } // character varying(100)
+			[Column("updated_by", SkipOnInsert = true)] public string?   UpdatedBy { get; set; } // character varying(100)
 		}
 
 		[Test]

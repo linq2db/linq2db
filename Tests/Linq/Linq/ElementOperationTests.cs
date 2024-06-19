@@ -94,8 +94,7 @@ namespace Tests.Linq
 			TestProvName.AllInformix,
 			TestProvName.AllOracle,
 			TestProvName.AllClickHouse,
-			TestProvName.AllSybase,
-			TestProvName.AllSapHana)]
+			TestProvName.AllSybase)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -147,7 +146,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void NestedFirstOrDefault3([DataSources(TestProvName.AllInformix, TestProvName.AllSapHana, TestProvName.AllOracle, TestProvName.AllClickHouse)]
+		public void NestedFirstOrDefault3([DataSources(TestProvName.AllInformix, TestProvName.AllOracle, TestProvName.AllClickHouse)]
 			string context)
 		{
 			using (var db = GetDataContext(context))

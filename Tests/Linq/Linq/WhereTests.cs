@@ -18,6 +18,8 @@ namespace Tests.Linq
 {
 	using Model;
 
+	using Org.BouncyCastle.Bcpg;
+
 	[TestFixture]
 	public class WhereTests : TestBase
 	{
@@ -1716,10 +1718,10 @@ namespace Tests.Linq
 			{
 				var cnt = db.Person
 					.Count(p => p.LastName + ", " + p.FirstName == $"{p.LastName}, {p.FirstName}"
-					            && "<" + p.LastName + ", " + p.FirstName + ">" == $"<{p.LastName}, {p.FirstName}>"
-					            && "<" + p.LastName + p.FirstName + ">" == $"<{p.LastName}{p.FirstName}>"
-					            && "<{p.LastName}, " + p.FirstName + " {" + p.LastName + "}" + ">" == $"<{{p.LastName}}, {p.FirstName} {{{p.LastName}}}>"
-					            && "{}" + p.LastName == $"{{}}{p.LastName}"
+								&& "<" + p.LastName + ", " + p.FirstName + ">" == $"<{p.LastName}, {p.FirstName}>"
+								&& "<" + p.LastName + p.FirstName + ">" == $"<{p.LastName}{p.FirstName}>"
+								&& "<{p.LastName}, " + p.FirstName + " {" + p.LastName + "}" + ">" == $"<{{p.LastName}}, {p.FirstName} {{{p.LastName}}}>"
+								&& "{}" + p.LastName == $"{{}}{p.LastName}"
 					);
 
 				Assert.That(cnt, Is.EqualTo(db.Person.Count()));
@@ -1999,6 +2001,200 @@ namespace Tests.Linq
 				Assert.AreEqual(1, Regex.Matches(sql, "IS NULL").Count, sql);
 				Assert.False(sql.Contains("IS NOT NULL"), sql);
 			}
+		}
+
+		#region Issue 2667
+		[Table("LinkedContracts", IsColumnAttributeRequired = false)]
+		public class LinkedContractsRaw
+		{
+			public int Id { get; set; }
+			public int FK { get; set; }
+
+			public static readonly LinkedContractsRaw[] Data = new []
+			{
+				new LinkedContractsRaw() { Id = 11, FK = 1 },
+				new LinkedContractsRaw() { Id = 22, FK = 2 }
+			};
+		}
+
+		[Table("Contract", IsColumnAttributeRequired = false)]
+		public class ContractRaw
+		{
+			public int Id { get; set; }
+			public bool? Bit01 { get; set; }
+
+			public static readonly ContractRaw[] Data = new []
+			{
+				new ContractRaw() { Id = 1 },
+				new ContractRaw() { Id = 2 }
+			};
+		}
+
+		[Table("LinkedContracts", IsColumnAttributeRequired = false)]
+		public class LinkedContracts
+		{
+			public int Id { get; set; }
+
+			public int FK { get; set; }
+
+			[Association(ThisKey = nameof(FK), OtherKey = nameof(Contract.Id))]
+			public Contract? Ref { get; set; }
+		}
+
+		[Table("Contract", IsColumnAttributeRequired = false)]
+		public class Contract
+		{
+			[Nullable] public bool Bit01 { get; set; }
+
+			public int Id { get; set; }
+		}
+
+		[Test]
+		public void Issue2667Test1([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (db.CreateLocalTable(ContractRaw.Data))
+			using (var linkedContracts = db.CreateLocalTable(LinkedContractsRaw.Data))
+			{
+				var linkedContract = db.GetTable<LinkedContracts>()
+					.LoadWith(linked => linked.Ref)
+					.Where(linked => linked.FK == 1)
+					.ToList();
+
+				Assert.IsNotNull(linkedContract[0].Ref);
+			}
+		}
+
+		[Test]
+		public void Issue2667Test2([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (var linkedContracts = db.CreateLocalTable(LinkedContractsRaw.Data))
+			using (db.CreateLocalTable(ContractRaw.Data))
+			{
+				var result = db.GetTable<LinkedContracts>()
+					.Where(linked => linked.FK == 1)
+					.Select(verträge => verträge.Ref)
+					.ToList();
+
+				Assert.That(result[0], Is.Not.Null);
+			}
+		}
+		#endregion
+
+		[Test]
+		public void Issue2897_ParensGeneration_Or([DataSources(false)] string context)
+		{
+			using (var db = new TestDataConnection(context))
+			{
+				db.Parent.Where(p => p.ParentID > 1 || p.ParentID > 2 || p.ParentID > 3).ToList();
+
+				var sql = db.LastQuery!;
+				Assert.False(sql.Contains("("), sql);
+				Assert.False(sql.Contains(")"), sql);
+			}
+		}
+
+		[Test]
+		public void Issue2897_ParensGeneration_And([DataSources(false)] string context)
+		{
+			using (var db = new TestDataConnection(context))
+			{
+				db.Parent.Where(p => p.ParentID > 1 && p.ParentID > 2 && p.ParentID > 3).ToList();
+
+				var sql = db.LastQuery!;
+				Assert.False(sql.Contains("("), sql);
+				Assert.False(sql.Contains(")"), sql);
+			}
+		}
+
+		[Test]
+		public void Issue2897_ParensGeneration_MixedFromAnd([DataSources(TestProvName.AllSQLite)] string context)
+		{
+			using (var db = new TestDataConnection(context))
+			{
+				db.Parent
+					.Where(p => p.ParentID > 1 && p.ParentID > 2 && (p.ParentID > 3 || p.ParentID > 4) && (p.ParentID > 5 || p.ParentID > 6 || p.ParentID > 7) && p.ParentID > 8 && p.ParentID > 9 && p.ParentID > 10 && (p.ParentID > 11 || p.ParentID > 12))
+					.ToList();
+
+				CompareSql(@"SELECT
+		p.""ParentID"",
+		p.""Value1""
+	FROM
+		""Parent"" p
+	WHERE
+		p.""ParentID"" > 1 AND
+		p.""ParentID"" > 2 AND
+		(p.""ParentID"" > 3 OR p.""ParentID"" > 4) AND
+		(p.""ParentID"" > 5 OR p.""ParentID"" > 6 OR p.""ParentID"" > 7) AND
+		p.""ParentID"" > 8 AND
+		p.""ParentID"" > 9 AND
+		p.""ParentID"" > 10 AND
+		(p.""ParentID"" > 11 OR p.""ParentID"" > 12)", db.LastQuery!);
+			}
+		}
+
+		[Test]
+		public void Issue2897_ParensGeneration_MixedFromOr([DataSources(TestProvName.AllSQLite)] string context)
+		{
+			using (var db = new TestDataConnection(context))
+			{
+				db.Parent
+					.Where(p => (p.ParentID > 1 || p.ParentID > 2) && (p.ParentID > 3 || p.ParentID > 4) && (p.ParentID > 5 || p.ParentID > 6 || p.ParentID > 7) && p.ParentID > 8 && p.ParentID > 9 && p.ParentID > 10 && (p.ParentID > 11 || p.ParentID > 12) && p.ParentID > 13)
+					.ToList();
+
+				CompareSql(@"SELECT
+		p.""ParentID"",
+		p.""Value1""
+	FROM
+		""Parent"" p
+	WHERE
+		(p.""ParentID"" > 1 OR p.""ParentID"" > 2) AND
+		(p.""ParentID"" > 3 OR p.""ParentID"" > 4) AND
+		(p.""ParentID"" > 5 OR p.""ParentID"" > 6 OR p.""ParentID"" > 7) AND
+		p.""ParentID"" > 8 AND
+		p.""ParentID"" > 9 AND
+		p.""ParentID"" > 10 AND
+		(p.""ParentID"" > 11 OR p.""ParentID"" > 12) AND
+		p.""ParentID"" > 13", db.LastQuery!);
+			}
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/1662")]
+		public void Boolean_NotFalse_AsTrue1([DataSources(false)] string context)
+		{
+			using var db = GetDataConnection(context);
+			db.Types.Where(r => r.BoolValue != false).ToList();
+
+			Assert.That(db.LastQuery, Does.Contain(" = "));
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/1662")]
+		public void Boolean_NotFalse_AsTrue2([DataSources(false)] string context)
+		{
+			using var db = GetDataConnection(context);
+			db.Types.Where(r => !r.BoolValue).ToList();
+
+			Assert.That(db.LastQuery, Does.Contain(" = "));
+		}
+
+		[Table]
+		sealed class NullableBool
+		{
+			[Column] public int   ID   { get; set; }
+			[Column] public bool? Bool { get; set; }
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/1662")]
+		public void NullableBoolean_NotFalse_AsNotTrue([DataSources(false, TestProvName.AllSybase)] string context)
+		{
+			using var db = GetDataConnection(context);
+			using var tb = db.CreateLocalTable<NullableBool>();
+
+			tb.Where(r => r.Bool != false).ToList();
+
+			Assert.That(db.LastQuery, Does.Contain(" = "));
+			Assert.That(db.LastQuery, Does.Contain("IS NULL"));
 		}
 	}
 }

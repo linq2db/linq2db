@@ -34,6 +34,8 @@ namespace Tests.DataProvider
 {
 	using Model;
 
+	using NuGet.Frameworks;
+
 	[TestFixture]
 	public class MySqlTests : DataProviderTestBase
 	{
@@ -2142,6 +2144,7 @@ namespace Tests.DataProvider
 			[Column(Length = 2000, DataType = DataType.VarChar)]   public string? VarChar   { get; set; }
 			[Column(Length = 2000, DataType = DataType.VarBinary)] public byte[]? VarBinary { get; set; }
 		}
+
 		[Test]
 		public void Issue3611([IncludeDataSources(false, TestProvName.AllMySql)] string context)
 		{
@@ -2155,6 +2158,38 @@ namespace Tests.DataProvider
 				Assert.True(db.LastQuery!.Contains("VARCHAR(2000)"));
 				Assert.True(db.LastQuery!.Contains("VARBINARY(2000)"));
 			}
+		}
+
+		[Table]
+		sealed class TinyIntTestTable
+		{
+			[Column(DbType = "tinyint(1)")]          public byte  Byte  { get; set; }
+			[Column(DbType = "tinyint(1) unsigned")] public sbyte SByte { get; set; }
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/86")]
+		public void TinyInt1IsByte([IncludeDataSources(false, TestProvName.AllMySql)] string context)
+		{
+			// TODO: when option implemented, update test with/without option set
+			using var db = GetDataConnection(context);
+			using var tb = db.CreateLocalTable<TinyIntTestTable>();
+
+			var schema = db.DataProvider.GetSchemaProvider().GetSchema(db, new GetSchemaOptions()
+			{
+				LoadTable = t => t.Name == nameof(TinyIntTestTable)
+			});
+
+			var table = schema.Tables.FirstOrDefault(t => t.TableName == nameof(TinyIntTestTable));
+
+			Assert.That(table, Is.Not.Null);
+
+			var byteColumn  = table!.Columns.FirstOrDefault(c => c.ColumnName == nameof(TinyIntTestTable.Byte));
+			var sbyteColumn = table.Columns.FirstOrDefault(c => c.ColumnName == nameof(TinyIntTestTable.SByte));
+
+			Assert.That(byteColumn, Is.Not.Null);
+			Assert.That(sbyteColumn, Is.Not.Null);
+			Assert.That(byteColumn! .SystemType, Is.EqualTo(typeof(byte)));
+			Assert.That(sbyteColumn!.SystemType, Is.EqualTo(typeof(sbyte)));
 		}
 	}
 

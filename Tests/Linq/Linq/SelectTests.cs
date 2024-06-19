@@ -1497,7 +1497,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void OuterApplyTest([IncludeDataSources(TestProvName.AllPostgreSQL95Plus, TestProvName.AllSqlServer2008Plus, TestProvName.AllOracle12Plus)] string context)
+		public void OuterApplyTest([IncludeDataSources(TestProvName.AllPostgreSQL95Plus, TestProvName.AllSqlServer2008Plus, TestProvName.AllOracle12Plus, TestProvName.AllMySql, TestProvName.AllSapHana)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{

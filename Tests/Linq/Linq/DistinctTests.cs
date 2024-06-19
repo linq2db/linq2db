@@ -6,6 +6,7 @@ using NUnit.Framework;
 
 namespace Tests.Linq
 {
+	using LinqToDB.Mapping;
 	using Model;
 
 	[TestFixture]
@@ -47,7 +48,6 @@ namespace Tests.Linq
 					(from p in db.Parent select new Parent { ParentID = p.Value1 ?? p.ParentID % 2, Value1 = p.Value1 }).Distinct());
 		}
 
-		[ActiveIssue("CI: SQL0418N  The statement was not processed because the statement contains an invalid use of one of the following: an untyped parameter marker, the DEFAULT keyword, or a null", Configuration = ProviderName.DB2)]
 		[Test]
 		public void Distinct5([DataSources] string context)
 		{
@@ -59,7 +59,6 @@ namespace Tests.Linq
 					(from p in db.Parent select new Parent { ParentID = p.Value1 ?? p.ParentID % 2, Value1 = id + 1 }).Distinct());
 		}
 
-		[ActiveIssue("CI: SQL0418N  The statement was not processed because the statement contains an invalid use of one of the following: an untyped parameter marker, the DEFAULT keyword, or a null", Configuration = ProviderName.DB2)]
 		[Test]
 		public void Distinct6([DataSources(TestProvName.AllInformix)] string context)
 		{
@@ -148,6 +147,195 @@ namespace Tests.Linq
 					from p in q2.Where(_ => _.ID == e.ID).DefaultIfEmpty()
 					select new { e.ID, p.SmallIntValue }
 					);
+			}
+		}
+
+		[Table]
+		public class DistinctOrderByTable
+		{
+			[PrimaryKey] public int    Id { get; set; }
+			[Column]     public int    F1 { get; set; }
+			[Column]     public string F2 { get; set; } = null!;
+			[Column]     public int    F3 { get; set; }
+
+			public static readonly DistinctOrderByTable[] Data = new[]
+			{
+				new DistinctOrderByTable() { Id = 8, F1 = 8, F2 = "8", F3 = 5 },
+				new DistinctOrderByTable() { Id = 3, F1 = 3, F2 = "3", F3 = 3 },
+				new DistinctOrderByTable() { Id = 2, F1 = 2, F2 = "2", F3 = 1 },
+				new DistinctOrderByTable() { Id = 6, F1 = 3, F2 = "3", F3 = 4 },
+				new DistinctOrderByTable() { Id = 1, F1 = 3, F2 = "3", F3 = 7 },
+				new DistinctOrderByTable() { Id = 5, F1 = 5, F2 = "5", F3 = 2 },
+				new DistinctOrderByTable() { Id = 7, F1 = 2, F2 = "2", F3 = 8 },
+				new DistinctOrderByTable() { Id = 4, F1 = 4, F2 = "4", F3 = 6 },
+			};
+		}
+
+		[Test]
+		public void DistinctOrderBy2([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (var t = db.CreateLocalTable(DistinctOrderByTable.Data))
+			{
+				var res = t.Select(_ => new { _.F1, _.F2 }).Distinct().OrderByDescending(_ => _.F1).Select(_ => _.F2).ToArray();
+
+				Assert.AreEqual(5, res.Length);
+				Assert.AreEqual("8", res[0]);
+				Assert.AreEqual("5", res[1]);
+				Assert.AreEqual("4", res[2]);
+				Assert.AreEqual("3", res[3]);
+				Assert.AreEqual("2", res[4]);
+			}
+		}
+
+		[Test]
+		public void DistinctOrderBySkipTake([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (var t = db.CreateLocalTable(DistinctOrderByTable.Data))
+			{
+				var res = t.Select(_ => new { _.F1, _.F2 }).Distinct().OrderByDescending(_ => _.F1).Select(_ => _.F2).Skip(1).Take(2).ToArray();
+
+				Assert.AreEqual(2, res.Length);
+				Assert.AreEqual("5", res[0]);
+				Assert.AreEqual("4", res[1]);
+			}
+		}
+
+		[Test]
+		public void DistinctOrderByTake([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (var t = db.CreateLocalTable(DistinctOrderByTable.Data))
+			{
+				var res = t.Select(_ => new { _.F1, _.F2 }).Distinct().OrderByDescending(_ => _.F1).Select(_ => _.F2).Take(2).ToArray();
+
+				Assert.AreEqual(2, res.Length);
+				Assert.AreEqual("8", res[0]);
+				Assert.AreEqual("5", res[1]);
+			}
+		}
+
+		[Test]
+		public void DistinctOrderBySkip([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (var t = db.CreateLocalTable(DistinctOrderByTable.Data))
+			{
+				var res = t.Select(_ => new { _.F1, _.F2 }).Distinct().OrderByDescending(_ => _.F1).Select(_ => _.F2).Skip(2).ToArray();
+
+				Assert.AreEqual(3, res.Length);
+				Assert.AreEqual("4", res[0]);
+				Assert.AreEqual("3", res[1]);
+				Assert.AreEqual("2", res[2]);
+			}
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/2943")]
+		public void OrderByDistinct([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (var t = db.CreateLocalTable(DistinctOrderByTable.Data))
+			{
+				var res = t.OrderByDescending(_ => _.F3).Select(_ => new { _.F1, _.F2 }).Distinct().Select(_ => _.F2).ToArray();
+
+				Assert.AreEqual(5, res.Length);
+				Assert.AreEqual("2", res[0]);
+				Assert.AreEqual("3", res[1]);
+				Assert.AreEqual("4", res[2]);
+				Assert.AreEqual("8", res[3]);
+				Assert.AreEqual("5", res[4]);
+			}
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/2943")]
+		public void OrderByDistinctSkipTake([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (var t = db.CreateLocalTable(DistinctOrderByTable.Data))
+			{
+				var res = t.OrderByDescending(_ => _.F3).Select(_ => new { _.F1, _.F2 }).Distinct().Select(_ => _.F2).Skip(1).Take(2).ToArray();
+
+				Assert.AreEqual(2, res.Length);
+				Assert.AreEqual("3", res[0]);
+				Assert.AreEqual("4", res[1]);
+			}
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/2943")]
+		public void OrderByDistinctTake([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (var t = db.CreateLocalTable(DistinctOrderByTable.Data))
+			{
+				var res = t.OrderByDescending(_ => _.F3).Select(_ => new { _.F1, _.F2 }).Distinct().Select(_ => _.F2).Take(2).ToArray();
+
+				Assert.AreEqual(2, res.Length);
+				Assert.AreEqual("2", res[0]);
+				Assert.AreEqual("3", res[1]);
+			}
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/2943")]
+		public void OrderByDistinctSkip([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (var t = db.CreateLocalTable(DistinctOrderByTable.Data))
+			{
+				var res = t.OrderByDescending(_ => _.F3).Select(_ => new { _.F1, _.F2 }).Distinct().Select(_ => _.F2).Skip(2).ToArray();
+
+				Assert.AreEqual(3, res.Length);
+				Assert.AreEqual("4", res[0]);
+				Assert.AreEqual("8", res[1]);
+				Assert.AreEqual("5", res[2]);
+			}
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/2943")]
+		public void OrderByDistinctSkipTakeFirst([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (var t = db.CreateLocalTable(DistinctOrderByTable.Data))
+			{
+				var res = t.OrderByDescending(_ => _.F3).Skip(1).Take(4).Select(_ => new { _.F1, _.F2 }).Distinct().Select(_ => _.F2).ToArray();
+
+				Assert.AreEqual(3, res.Length);
+				Assert.AreEqual("3", res[0]);
+				Assert.AreEqual("4", res[1]);
+				Assert.AreEqual("8", res[2]);
+			}
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/2943")]
+		public void OrderByDistinctTakeFirst([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (var t = db.CreateLocalTable(DistinctOrderByTable.Data))
+			{
+				var res = t.OrderByDescending(_ => _.F3).Take(5).Select(_ => new { _.F1, _.F2 }).Distinct().Select(_ => _.F2).ToArray();
+
+				Assert.AreEqual(4, res.Length);
+				Assert.AreEqual("2", res[0]);
+				Assert.AreEqual("3", res[1]);
+				Assert.AreEqual("4", res[2]);
+				Assert.AreEqual("8", res[3]);
+			}
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/2943")]
+		public void OrderByDistinctSkipFirst([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (var t = db.CreateLocalTable(DistinctOrderByTable.Data))
+			{
+				var res = t.OrderByDescending(_ => _.F3).Skip(2).Select(_ => new { _.F1, _.F2 }).Distinct().Select(_ => _.F2).ToArray();
+
+				Assert.AreEqual(5, res.Length);
+				Assert.AreEqual("4", res[0]);
+				Assert.AreEqual("8", res[1]);
+				Assert.AreEqual("3", res[2]);
+				Assert.AreEqual("5", res[3]);
+				Assert.AreEqual("2", res[4]);
 			}
 		}
 	}

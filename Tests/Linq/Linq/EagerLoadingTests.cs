@@ -910,7 +910,6 @@ FROM
 			}
 		}
 
-		[ActiveIssue("https://github.com/linq2db/linq2db/issues/3619", Configuration = TestProvName.AllClickHouse)]
 		[Test]
 		public void TestSelectGroupBy([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
@@ -927,7 +926,7 @@ FROM
 					{
 						Master = m,
 						Detail = dd,
-						FirstMaster = master.Where(mm => m.Id1 == dd.MasterId)
+						FirstMaster = master.Where(mm => mm.Id1 == dd.MasterId)
 							.AsEnumerable()
 							.GroupBy(_ => _.Id1)
 							.Select(_ => _.OrderBy(mm => mm.Id1).First())
@@ -940,7 +939,7 @@ FROM
 					{
 						Master = m,
 						Detail = dd,
-						FirstMaster = masterRecords.Where(mm => m.Id1 == dd.MasterId)
+						FirstMaster = masterRecords.Where(mm => mm.Id1 == dd.MasterId)
 							.GroupBy(_ => _.Id1)
 							.Select(_ => _.OrderBy(mm => mm.Id1).First())
 					};
@@ -1580,6 +1579,42 @@ FROM
 			Assert.AreEqual(1, result[0].Id);
 			Assert.AreEqual(1, result[0].Items.Count);
 			Assert.AreEqual(12, result[0].Items[0].Id);
+		}
+		#endregion
+
+		#region Issue 3806
+
+		[Table(IsColumnAttributeRequired = false)]
+		public class Issue3806Table
+		{
+			[PrimaryKey] public int Id { get; set; }
+
+			[Association(ThisKey = nameof(Id), OtherKey = nameof(Issue3806ItemTable.AssociationKey))]
+			public IEnumerable<Issue3806ItemTable> Items { get; set; } = null!;
+		}
+
+		[Table(IsColumnAttributeRequired = false)]
+		public class Issue3806ItemTable
+		{
+			[PrimaryKey] public int Id             { get; set; }
+			[Column    ] public int Value          { get; set; }
+			[Column    ] public int AssociationKey { get; set; }
+		}
+
+		[Test]
+		public void Issue3806Test([DataSources(false)] string context)
+		{
+			var queries = new SaveQueriesInterceptor();
+			using var db = GetDataContext(context);
+			db.AddInterceptor(queries);
+
+			using var table = db.CreateLocalTable<Issue3806Table>();
+			using var items = db.CreateLocalTable<Issue3806ItemTable>();
+
+			queries.Queries.Clear();
+			table.LoadWith(a => a.Items).Where(a => a.Id != 0).ToList();
+
+			Assert.AreEqual(1, queries.Queries.Count);
 		}
 		#endregion
 

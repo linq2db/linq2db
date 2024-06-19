@@ -427,7 +427,7 @@ namespace LinqToDB
 		}
 
 #if NATIVE_ASYNC
-		async ValueTask IAsyncDisposable.DisposeAsync()
+		public async ValueTask DisposeAsync()
 #else
 		async Task IAsyncDisposable.DisposeAsync()
 #endif

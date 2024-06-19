@@ -298,8 +298,8 @@ namespace Tests
 			return "CORE31";
 #elif NET6_0
 			return "NET60";
-#elif NET7_0
-			return "NET70";
+#elif NET8_0
+			return "NET80";
 #elif NET472
 			return "NET472";
 #else

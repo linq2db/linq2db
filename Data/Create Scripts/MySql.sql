@@ -179,7 +179,7 @@ CREATE TABLE `AllTypes`
 -- SKIP MySql BEGIN
 -- SKIP MySqlConnector BEGIN
 -- SKIP MariaDB BEGIN
-	year2DataType       year(2)                      NULL,
+	year2DataType       year(4)                      NULL,
 -- SKIP MariaDB END
 -- SKIP MySqlConnector END
 -- SKIP MySql END

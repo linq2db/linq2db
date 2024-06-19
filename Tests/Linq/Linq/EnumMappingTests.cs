@@ -10,6 +10,9 @@ using NUnit.Framework;
 namespace Tests.Linq
 {
 	using LinqToDB.Common;
+
+	using Microsoft.AspNetCore.Mvc.ModelBinding.Metadata;
+
 	using Model;
 
 	[TestFixture]
@@ -1711,7 +1714,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/363")]
 		public void EnumMappingWriteUndefinedValue([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -1735,7 +1738,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/363")]
 		public void EnumMappingReadUndefinedValue([DataSources] string context)
 		{
 			GetProviderName(context, out var isLinqService);
