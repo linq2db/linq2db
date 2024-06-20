@@ -3153,6 +3153,7 @@ namespace Tests.Linq
 			};
 		}
 
+		[ActiveIssue(TestProvName.AllOracle12)]
 		[Test]
 		public void Issue4160Test1([DataSources] string context)
 		{
