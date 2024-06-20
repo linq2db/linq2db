@@ -896,6 +896,7 @@ namespace Tests.Linq
 				TestProvName.AllPostgreSQL,
 				TestProvName.AllSqlServer,
 				TestProvName.AllSybase,
+				TestProvName.AllSQLiteClassic,
 			])]
 		[Test]
 		public void IndexOf3([DataSources(

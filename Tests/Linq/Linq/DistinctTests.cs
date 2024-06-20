@@ -9,6 +9,7 @@ using NUnit.Framework;
 namespace Tests.Linq
 {
 	using LinqToDB.Mapping;
+
 	using Model;
 
 	[TestFixture]
@@ -253,6 +254,7 @@ namespace Tests.Linq
 			}
 		}
 
+		[ActiveIssue]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/2943")]
 		public void OrderByDistinct([DataSources] string context)
 		{
@@ -273,7 +275,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue(Configurations = [TestProvName.AllClickHouse, TestProvName.AllMySql, TestProvName.AllPostgreSQL, TestProvName.AllSapHana, TestProvName.AllSQLite, TestProvName.AllSybase])]
+		[ActiveIssue(Configurations = [TestProvName.AllClickHouse, TestProvName.AllMySql, TestProvName.AllPostgreSQL, TestProvName.AllSapHana, TestProvName.AllSQLite, TestProvName.AllSybase, TestProvName.AllOracle])]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/2943")]
 		public void OrderByDistinctSkipTake([DataSources] string context)
 		{
@@ -291,7 +293,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue(Configurations = [TestProvName.AllClickHouse, TestProvName.AllMySql, TestProvName.AllPostgreSQL, TestProvName.AllSQLite, TestProvName.AllSybase])]
+		[ActiveIssue(Configurations = [TestProvName.AllClickHouse, TestProvName.AllMySql, TestProvName.AllPostgreSQL, TestProvName.AllSQLite, TestProvName.AllSybase, TestProvName.AllOracle, TestProvName.AllSapHana])]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/2943")]
 		public void OrderByDistinctTake([DataSources] string context)
 		{

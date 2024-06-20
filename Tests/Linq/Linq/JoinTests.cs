@@ -3177,7 +3177,7 @@ namespace Tests.Linq
 		}
 
 		// fails for DBs without outer apply
-		[ActiveIssue(Configurations = [TestProvName.AllAccess,TestProvName.AllFirebirdLess4, TestProvName.AllSybase])]
+		[ActiveIssue(Configurations = [TestProvName.AllAccess,TestProvName.AllFirebirdLess4, TestProvName.AllSybase, TestProvName.AllMySql57])]
 		[Test]
 		public void Issue4160Test2([DataSources] string context)
 		{

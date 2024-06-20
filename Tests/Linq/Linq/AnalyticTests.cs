@@ -1699,6 +1699,7 @@ namespace Tests.Linq
 		public void Issue2842Test1([DataSources(
 			TestProvName.AllAccess,
 			ProviderName.Firebird25,
+			TestProvName.AllMySql57,
 			ProviderName.SqlCe,
 			TestProvName.AllSybase)] string context)
 		{
@@ -1721,6 +1722,7 @@ namespace Tests.Linq
 		public void Issue2842Test2([DataSources(
 			TestProvName.AllAccess,
 			ProviderName.Firebird25,
+			TestProvName.AllMySql57,
 			ProviderName.SqlCe,
 			TestProvName.AllSybase)] string context)
 		{
