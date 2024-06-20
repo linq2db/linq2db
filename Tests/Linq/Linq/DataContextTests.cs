@@ -270,6 +270,11 @@ namespace Tests.Linq
 					foreach (var x in db.GetTable<Person>()) { }
 				}
 			}, Throws.Exception);
+
+			foreach (var db in dbs)
+			{
+				db.Dispose();
+			}
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/971")]
@@ -291,6 +296,11 @@ namespace Tests.Linq
 					foreach (var x in db.GetTable<Person>()) { }
 				}
 			}, Throws.Exception);
+
+			foreach (var db in dbs)
+			{
+				db.Dispose();
+			}
 		}
 
 		sealed class NewDataContext : DataContext
