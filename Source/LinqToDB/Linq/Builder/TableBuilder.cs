@@ -10,9 +10,11 @@ namespace LinqToDB.Linq.Builder
 	using Mapping;
 	using Reflection;
 
+	[BuildsExpression(ExpressionType.Call, ExpressionType.Constant, ExpressionType.MemberAccess)]
 	sealed partial class TableBuilder : ISequenceBuilder
 	{
-		int ISequenceBuilder.BuildCounter { get; set; }
+		public static bool CanBuild(Expression expr, BuildInfo info, ExpressionBuilder builder)
+			=> FindBuildContext(builder, info, out var _) != BuildContextType.None;
 
 		enum BuildContextType
 		{
@@ -75,11 +77,6 @@ namespace LinqToDB.Linq.Builder
 			}
 
 			return BuildContextType.None;
-		}
-
-		public bool CanBuild(ExpressionBuilder builder, BuildInfo buildInfo)
-		{
-			return FindBuildContext(builder, buildInfo, out var _) != BuildContextType.None;
 		}
 
 		static Expression ApplyQueryFilters(ExpressionBuilder builder, MappingSchema mappingSchema, Type entityType, Expression tableExpression)
