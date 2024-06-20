@@ -19,7 +19,7 @@ namespace Tests
 			[Column("startexpl") , Nullable                     ] public string   Startexpl   { get; set; } = null!;
 			[Column("level")     , NotNull                      ] public int      Level       { get; set; }
 			[Column("expl")      , NotNull                      ] public string   Description { get; set; } = null!;
-			[Column("date")      , NotNull                      ] public DateTime Date        { get; set; } = DateTime.Now;
+			[Column("date")      , NotNull                      ] public DateTime Date        { get; set; } = TestData.DateTime;
 			[Column("image")     , Nullable                     ] public string   Image       { get; set; } = null!;
 			[Column("video")     , Nullable                     ] public string   Video       { get; set; } = null!;
 			[Column("num")       , NotNull                      ] public int      Num         { get; set; }
@@ -29,7 +29,7 @@ namespace Tests
 			[Column("rest")      , NotNull                      ] public int      Rest        { get; set; }
 			[Column("weight")    , NotNull                      ] public int      Weight      { get; set; }
 			[Column("is_private"), NotNull                      ] public bool     IsPrivate   { get; set; }
-			[Column("timestamp"  , SkipOnUpdate = true), NotNull] public DateTime Timestamp   { get; set; } = DateTime.Now;
+			[Column("timestamp"  , SkipOnUpdate = true), NotNull] public DateTime Timestamp   { get; set; } = TestData.DateTime;
 
 			public static DBExercise[] Seed()
 			{
