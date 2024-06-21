@@ -886,7 +886,18 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue(Details = "Sql.CharIndex(string, string, int) have incorrect SQL logic for all providers (except HANA)")]
+		[ActiveIssue(Details = "Sql.CharIndex(string, string, int) have incorrect SQL logic for all providers (except HANA)",
+			Configurations =
+			[
+				TestProvName.AllClickHouse,
+				TestProvName.AllInformix,
+				TestProvName.AllMySql,
+				TestProvName.AllOracle,
+				TestProvName.AllPostgreSQL,
+				TestProvName.AllSqlServer,
+				TestProvName.AllSybase,
+				TestProvName.AllSQLiteClassic,
+			])]
 		[Test]
 		public void IndexOf3([DataSources(
 			ProviderName.DB2, TestProvName.AllFirebird,

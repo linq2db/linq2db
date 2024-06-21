@@ -921,5 +921,31 @@ namespace Tests.Extensions
 
 			_ = q.ToList();
 		}
+
+		[ActiveIssue]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4321")]
+		public void TablesInScopeHintWithTReferenceTest(
+			[IncludeDataSources(true, TestProvName.AllSqlServer)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q =
+			(
+				from c in db.Child
+				select new
+				{
+					c.ChildID,
+					c.Parent!.ParentID
+				}
+			)
+			.TablesInScopeHint(SqlServerHints.Table.NoLock);
+
+			_ = q.ToList();
+
+			var test = LastQuery?.Replace("\r", "");
+
+			Assert.That(test, Contains.Substring("[Child] [c_1] WITH (NoLock)"));
+			Assert.That(test, Contains.Substring("[Parent] [a_Parent] WITH (NoLock)"));
+		}
 	}
 }

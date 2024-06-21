@@ -634,6 +634,128 @@ namespace Tests.DataProvider
 			}
 		}
 
+		// there is no date type in sqlite and one of three other types could be used as storage:
+		// INTEGER: unixtime (not sure if it supports full 64 bits) without fractional seconds
+		// DOUBLE : "the number of days since noon in Greenwich on November 24, 4714 B.C. according to the proleptic Gregorian calendar." whatever it means O_O
+		// TEXT   : ISO8601 string ("YYYY-MM-DD HH:MM:SS.SSS"). Not sure why SQLite documentation specify this specific format, maybe they don't support other qualifiers from ISO8601
+		public class DateTimeTable
+		{ 
+			public DateTime DateTime { get; set; }
+		}
+
+		private MappingSchema ConfigureMapping(string columnType)
+		{
+			var ms = new MappingSchema();
+
+			new FluentMappingBuilder(ms)
+				.Entity<DateTimeTable>()
+					.Property(_ => _.DateTime)
+						.HasDbType(columnType)
+				.Build();
+
+			return ms;
+		}
+
+		[ActiveIssue]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/2107")]
+		public void DateTimeRoundtrip_Insert(
+			[IncludeDataSources(TestProvName.AllSQLite)] string       context,
+			[Values]                                     bool         inline,
+			[Values]                                     DateTimeKind kind,
+			[Values("TEXT", "REAL", "INTEGER")]          string       columnType)
+		{
+			// TODO: retest in V3 with newer provider version
+			// in v108 it:
+			// - cannot read data from int/double values into DateTime
+			// - custom converter could be registered, but it still will not work because provider will return
+			// year number instead of full date value (not sure if it is read bug or it is written into db incorrectly)
+			if (context.Contains("Classic") && columnType != "TEXT")
+				Assert.Inconclusive("System.Data.SQLite doesn't supports only ISO8601 dates as of v1.0.108");
+
+			using var db    = new DataConnection(context, ConfigureMapping(columnType));
+			using var table = db.CreateLocalTable<DateTimeTable>();
+
+			db.InlineParameters = inline;
+			// use 2040 to test unixtime don't overflow
+			var dt              = new DateTime(2040, 2, 29, 11, 12, 13, 456, kind);
+
+			table
+				.Insert(() => new DateTimeTable()
+				{
+					DateTime = dt
+				});
+
+			var sql = db.LastQuery!;
+
+			var result = table.Single();
+
+			var resultDt = result.DateTime;
+			if (kind == DateTimeKind.Utc)
+
+				Assert.That(sql.Contains("@"), Is.EqualTo(!inline));
+
+			if (kind == DateTimeKind.Utc)
+			{
+				// utc values returned as local
+				Assert.That(result.DateTime, Is.EqualTo(dt.ToLocalTime()));
+				// local/unspecified values returned as unspecified (makes sense)
+				Assert.That(result.DateTime.Kind, Is.EqualTo(DateTimeKind.Local));
+			}
+			else
+			{
+				Assert.That(result.DateTime, Is.EqualTo(dt));
+				// local/unspecified values returned as unspecified (makes sense)
+				Assert.That(result.DateTime.Kind, Is.EqualTo(DateTimeKind.Unspecified));
+			}
+		}
+
+		[ActiveIssue]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/2107")]
+		public void DateTimeRoundtrip_BulkCopy(
+			[IncludeDataSources(TestProvName.AllSQLite)] string       context,
+			[Values]                                     bool         inline,
+			[Values]                                     DateTimeKind kind,
+			[Values]                                     BulkCopyType copyType,
+			[Values("TEXT", "REAL", "INTEGER")]          string       columnType)
+		{
+			if (context.Contains("Classic") && columnType != "TEXT")
+				Assert.Inconclusive("System.Data.SQLite doesn't supports only ISO8601 dates as of v1.0.108");
+
+			using var db    = new DataConnection(context, ConfigureMapping(columnType));
+			using var table = db.CreateLocalTable<DateTimeTable>();
+
+			db.InlineParameters = inline;
+			var dt              = new DateTime(2040, 2, 29, 11, 12, 13, 456, kind);
+
+			db.BulkCopy(
+					new BulkCopyOptions { BulkCopyType = copyType },
+					new[]
+					{
+						new DateTimeTable()
+						{
+							DateTime = dt
+						}
+					});
+
+			var result = table.Single();
+
+			// don't assert sql, as InlineParameters ignored for some copy types
+
+			if (kind == DateTimeKind.Utc)
+			{
+				// utc values returned as local
+				Assert.That(result.DateTime, Is.EqualTo(dt.ToLocalTime()));
+				// local/unspecified values returned as unspecified (makes sense)
+				Assert.That(result.DateTime.Kind, Is.EqualTo(DateTimeKind.Local));
+			}
+			else
+			{
+				Assert.That(result.DateTime, Is.EqualTo(dt));
+				// local/unspecified values returned as unspecified (makes sense)
+				Assert.That(result.DateTime.Kind, Is.EqualTo(DateTimeKind.Unspecified));
+			}
+		}
+
 		// test to make sure our tests work with expected version of sqlite
 		// should be updated when we bump dependency
 		// also test matrix document should be updated too in that case (Build/Azure/README.md)
