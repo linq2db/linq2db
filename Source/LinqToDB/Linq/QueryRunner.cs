@@ -260,39 +260,24 @@ namespace LinqToDB.Linq
 			{
 				var providerValue = p.ValueAccessor(expression, parametersContext, parameters);
 
-				if (providerValue is IEnumerable vs)
+				DbDataType? dbDataType = null;
+
+				if (providerValue is IEnumerable items && p.ItemAccessor != null)
 				{
-					var type  = vs.GetType();
-					var etype = type.GetItemType();
+					var values = new List<object?>();
 
-					if (etype == null || etype == typeof(object) || etype.IsEnum ||
-						type.IsNullable() &&
-						etype.GetGenericArguments()[0].IsEnum)
+					foreach (var item in items)
 					{
-						var values = new List<object?>();
-
-						foreach (var v in vs)
-						{
-							providerValue = v;
-
-							if (v != null)
-							{
-								var valueType = v.GetType();
-
-								if (valueType.ToNullableUnderlying().IsEnum)
-									providerValue = query.GetConvertedEnum(valueType, v);
-							}
-
-							values.Add(providerValue);
-						}
-
-						providerValue = values;
+						values.Add(p.ItemAccessor(item));
+						dbDataType ??= p.DbDataTypeAccessor(expression, item, parametersContext, parameters);
 					}
+
+					providerValue = values;
 				}
 
-				var dbDataType = p.DbDataTypeAccessor(expression, parametersContext, parameters);
+				dbDataType ??= p.DbDataTypeAccessor(expression, null, parametersContext, parameters);
 
-				parameterValues.AddValue(p.SqlParameter, providerValue, p.SqlParameter.Type.WithSetValues(dbDataType));
+				parameterValues.AddValue(p.SqlParameter, providerValue, p.SqlParameter.Type.WithSetValues(dbDataType.Value));
 			}
 		}
 
@@ -325,7 +310,7 @@ namespace LinqToDB.Linq
 			}
 
 			var param = ParametersContext.CreateParameterAccessor(
-				dataContext, valueGetter, getter, dbDataTypeExpression, valueGetter, parametersExpression: null, name: field.Name.Replace('.', '_'));
+				dataContext, valueGetter, null, dbDataTypeExpression, valueGetter, parametersExpression: null, name: field.Name.Replace('.', '_'));
 
 			return param;
 		}

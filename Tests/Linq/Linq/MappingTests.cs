@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections;
+using System.Collections.Generic;
 using System.Linq;
 #if NETFRAMEWORK
 using System.ServiceModel;
@@ -814,6 +816,126 @@ namespace Tests.Linq
 			record = tb.Where(r => r.Field == 6).SingleOrDefault();
 			Assert.That(record, Is.Not.Null);
 			Assert.That(record!.TestAccess, Is.EqualTo(6));
+		}
+
+		struct RecordId
+		{
+			public RecordId(int value)
+			{
+				Value = value;
+			}
+
+			public int Value { get; set; }
+
+			public static RecordId  From(int value)  => new RecordId(value);
+			public static RecordId? From(int? value) => value == null ? null : new RecordId(value.Value);
+
+			public static implicit operator int?(RecordId? id) => id?.Value;
+		}
+
+		[Table("Parent")]
+		sealed class RecordTable
+		{
+			[Column] public int       ParentID { get; set; }
+			[Column] public RecordId? Value1   { get; set; }
+		}
+
+		private static MappingSchema SetupStructMapping()
+		{
+			var ms = new MappingSchema();
+
+			ms.SetConverter<RecordId, int>(id => id.Value);
+			ms.SetConverter<RecordId, int?>(id => id.Value);
+			ms.SetConverter<RecordId?, int>(id => id == (int?)null ? default : id.Value.Value);
+			ms.SetConverter<RecordId?, int?>(id => id?.Value);
+			ms.SetConverter<int, RecordId>(RecordId.From);
+			ms.SetConverter<int, RecordId?>(g => RecordId.From(g));
+			ms.SetConverter<int?, RecordId>(g => g == null ? default : RecordId.From((int)g));
+			ms.SetConverter<int?, RecordId?>(RecordId.From);
+
+			ms.SetConverter<RecordId, DataParameter>(id => new DataParameter { DataType = DataType.Int32, Value = id.Value });
+			ms.SetConverter<RecordId?, DataParameter>(id => new DataParameter { DataType = DataType.Int32, Value = id?.Value });
+
+			return ms;
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4539")]
+		public void StructMapping_Value([DataSources] string context, [Values] bool inline)
+		{
+			using var db = GetDataContext(context, SetupStructMapping());
+			db.InlineParameters = inline;
+
+			var tenderIds = new List<RecordId>() { new RecordId(5), new RecordId(3), new RecordId(4) };
+
+			var cnt = db.GetTable<RecordTable>().Where(i => i.Value1!.Value == tenderIds[0] || i.Value1!.Value == tenderIds[1] || i.Value1!.Value == tenderIds[2]).Count();
+
+			Assert.That(cnt, Is.EqualTo(2));
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4539")]
+		public void StructMapping_Collection([DataSources] string context, [Values] bool inline)
+		{
+			using var db = GetDataContext(context, SetupStructMapping());
+			db.InlineParameters = inline;
+
+			var tenderIds = new List<RecordId>() { new RecordId(5), new RecordId(3), new RecordId(4) };
+
+			var cnt = db.GetTable<RecordTable>().Where(i => tenderIds.Contains(i.Value1!.Value)).Count();
+
+			Assert.That(cnt, Is.EqualTo(2));
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4539")]
+		public void StructMapping_EmptyCollection([DataSources] string context, [Values] bool inline)
+		{
+			using var db = GetDataContext(context, SetupStructMapping());
+			db.InlineParameters = inline;
+
+			var tenderIds = new List<RecordId>();
+
+			var cnt = db.GetTable<RecordTable>().Where(i => tenderIds.Contains(i.Value1!.Value)).Count();
+
+			Assert.That(cnt, Is.EqualTo(0));
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4539")]
+		public void StructMapping_Enumerable([DataSources] string context, [Values] bool inline)
+		{
+			using var db = GetDataContext(context, SetupStructMapping());
+			db.InlineParameters = inline;
+
+			var tenderIds = new ArrayList() { new RecordId(5), new RecordId(3), new RecordId(4) };
+
+			var cnt = db.GetTable<RecordTable>().Where(i => tenderIds.Contains(i.Value1!.Value)).Count();
+
+			Assert.That(cnt, Is.EqualTo(2));
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4539")]
+		public void StructMapping_EmptyEnumerable([DataSources] string context, [Values] bool inline)
+		{
+			using var db = GetDataContext(context, SetupStructMapping());
+			db.InlineParameters = inline;
+
+			var tenderIds = new ArrayList();
+
+			var cnt = db.GetTable<RecordTable>().Where(i => tenderIds.Contains(i.Value1!.Value)).Count();
+
+			Assert.That(cnt, Is.EqualTo(0));
+		}
+
+		[ActiveIssue("Not supported case")]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4539")]
+		public void StructMapping_MixedEnumerable([DataSources] string context, [Values] bool inline)
+		{
+			using var db = GetDataContext(context, SetupStructMapping());
+			db.InlineParameters = inline;
+
+			var tenderIds = new ArrayList() { new RecordId(5), 3, new RecordId(4) };
+
+			var cnt = db.GetTable<RecordTable>().Where(i => tenderIds.Contains(i.Value1!.Value)).Count();
+
+			Assert.That(cnt, Is.EqualTo(2));
 		}
 	}
 }
