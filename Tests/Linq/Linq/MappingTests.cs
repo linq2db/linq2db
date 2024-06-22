@@ -17,6 +17,8 @@ namespace Tests.Linq
 {
 	using Model;
 
+	using NUnit.Framework.Constraints;
+
 	[TestFixture]
 	public class MappingTests : TestBase
 	{
@@ -840,58 +842,102 @@ namespace Tests.Linq
 			[Column] public RecordId? Value1   { get; set; }
 		}
 
-		private static MappingSchema SetupStructMapping()
+		private static MappingSchema SetupStructMapping(bool useExpressions, bool addNullCheck, bool mapNull)
 		{
-			var ms = new MappingSchema();
+			// use unique name to avoid mapping conflicts due to use of non-detectable mapping changes (e.g. defaultValue having different values)
+			var ms = new MappingSchema($"{useExpressions}{addNullCheck}{mapNull}");
 
-			ms.SetConverter<RecordId, int>(id => id.Value);
-			ms.SetConverter<RecordId, int?>(id => id.Value);
-			ms.SetConverter<RecordId?, int>(id => id == (int?)null ? default : id.Value.Value);
-			ms.SetConverter<RecordId?, int?>(id => id?.Value);
-			ms.SetConverter<int, RecordId>(RecordId.From);
-			ms.SetConverter<int, RecordId?>(g => RecordId.From(g));
-			ms.SetConverter<int?, RecordId>(g => g == null ? default : RecordId.From((int)g));
-			ms.SetConverter<int?, RecordId?>(RecordId.From);
+			// note that it affects only convert expressions and doesn't replace default type value
+			// which results in different behavior for expression-based and delegate-based mappings
+			// as delegate-based conversions doesn't have addNullCheck feature
+			var defaultValue = mapNull ? 6 : (int?)null;
 
-			ms.SetConverter<RecordId, DataParameter>(id => new DataParameter { DataType = DataType.Int32, Value = id.Value });
-			ms.SetConverter<RecordId?, DataParameter>(id => new DataParameter { DataType = DataType.Int32, Value = id?.Value });
+			if (useExpressions)
+			{
+				ms.SetConvertExpression<RecordId, int>(id => id.Value, addNullCheck: addNullCheck);
+				ms.SetConvertExpression<RecordId, int?>(id => id.Value, addNullCheck: addNullCheck);
+				ms.SetConvertExpression<int, RecordId>(value => RecordId.From(value), addNullCheck: addNullCheck);
+				ms.SetConvertExpression<int, RecordId?>(g => RecordId.From(g), addNullCheck: addNullCheck);
+				ms.SetConvertExpression<int?, RecordId>(g => g == null ? default : RecordId.From((int)g), addNullCheck: addNullCheck);
+				ms.SetConvertExpression<int?, RecordId?>(value => RecordId.From(value), addNullCheck: addNullCheck);
+				ms.SetConvertExpression<RecordId, DataParameter>(id => new DataParameter { DataType = DataType.Int32, Value = id.Value }, addNullCheck: addNullCheck);
+
+				ms.SetConvertExpression<RecordId?, int>(id => id == (int?)null ? (defaultValue ?? default) : id.Value.Value, addNullCheck: addNullCheck);
+				ms.SetConvertExpression<RecordId?, int?>(id => id != null ? id.Value : defaultValue, addNullCheck: addNullCheck);
+				ms.SetConvertExpression<RecordId?, DataParameter>(id => new DataParameter { DataType = DataType.Int32, Value = id != null ? id.Value : defaultValue }, addNullCheck: addNullCheck);
+			}
+			else
+			{
+				ms.SetConverter<RecordId, int>(id => id.Value);
+				ms.SetConverter<RecordId, int?>(id => id.Value);
+				ms.SetConverter<int, RecordId>(RecordId.From);
+				ms.SetConverter<int, RecordId?>(g => RecordId.From(g));
+				ms.SetConverter<int?, RecordId>(g => g == null ? default : RecordId.From((int)g));
+				ms.SetConverter<int?, RecordId?>(RecordId.From);
+				ms.SetConverter<RecordId, DataParameter>(id => new DataParameter { DataType = DataType.Int32, Value = id.Value });
+
+				ms.SetConverter<RecordId?, int>(id => id == (int?)null ? (defaultValue ?? default) : id.Value.Value);
+				ms.SetConverter<RecordId?, int?>(id => id?.Value ?? defaultValue);
+				ms.SetConverter<RecordId?, DataParameter>(id => new DataParameter { DataType = DataType.Int32, Value = id?.Value ?? defaultValue });
+			}
 
 			return ms;
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4539")]
-		public void StructMapping_Value([DataSources] string context, [Values] bool inline)
+		public void StructMapping_Value([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values] bool useExpressions, [Values] bool addNullCheck, [Values] bool mapNull)
 		{
-			using var db = GetDataContext(context, SetupStructMapping());
-			db.InlineParameters = inline;
+			using var db = GetDataContext(context, SetupStructMapping(useExpressions, addNullCheck, mapNull));
 
-			var tenderIds = new List<RecordId>() { new RecordId(5), new RecordId(3), new RecordId(4) };
+			var tenderIds = new List<RecordId?>() { new RecordId(5), new RecordId(3), new RecordId(4), null };
 
-			var cnt = db.GetTable<RecordTable>().Where(i => i.Value1!.Value == tenderIds[0] || i.Value1!.Value == tenderIds[1] || i.Value1!.Value == tenderIds[2]).Count();
+			var cnt = db.GetTable<RecordTable>().Where(i => i.Value1!.Value == tenderIds[0] || i.Value1!.Value == tenderIds[1] || i.Value1!.Value == tenderIds[2] || i.Value1!.Value == tenderIds[3]).Count();
 
-			Assert.That(cnt, Is.EqualTo(2));
+			Assert.That(cnt, Is.EqualTo(mapNull && !(useExpressions && addNullCheck) ? 3 : 4));
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4539")]
-		public void StructMapping_Collection([DataSources] string context, [Values] bool inline)
+		public void StructMapping_Value_IntList([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values] bool useExpressions, [Values] bool addNullCheck, [Values] bool mapNull)
 		{
-			using var db = GetDataContext(context, SetupStructMapping());
-			db.InlineParameters = inline;
+			using var db = GetDataContext(context, SetupStructMapping(useExpressions, addNullCheck, mapNull));
 
-			var tenderIds = new List<RecordId>() { new RecordId(5), new RecordId(3), new RecordId(4) };
+			var tenderIds = new List<int?>() { 5, 3, 4, null };
+
+			var cnt = db.GetTable<RecordTable>().Where(i => i.Value1!.Value == tenderIds[0] || i.Value1!.Value == tenderIds[1] || i.Value1!.Value == tenderIds[2] || i.Value1!.Value == tenderIds[3]).Count();
+
+			Assert.That(cnt, Is.EqualTo(mapNull && !(useExpressions && addNullCheck) ? 3 : 4));
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4539")]
+		public void StructMapping_Collection([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values] bool useExpressions, [Values] bool addNullCheck, [Values] bool mapNull)
+		{
+			using var db = GetDataContext(context, SetupStructMapping(useExpressions, addNullCheck, mapNull));
+
+			var tenderIds = new List<RecordId?>() { new RecordId(5), new RecordId(3), new RecordId(4), null };
 
 			var cnt = db.GetTable<RecordTable>().Where(i => tenderIds.Contains(i.Value1!.Value)).Count();
 
-			Assert.That(cnt, Is.EqualTo(2));
+			Assert.That(cnt, Is.EqualTo(mapNull && !(useExpressions && addNullCheck) ? 3 : 4));
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4539")]
-		public void StructMapping_EmptyCollection([DataSources] string context, [Values] bool inline)
+		public void StructMapping_Collection_IntList([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values] bool useExpressions, [Values] bool addNullCheck, [Values] bool mapNull)
 		{
-			using var db = GetDataContext(context, SetupStructMapping());
-			db.InlineParameters = inline;
+			using var db = GetDataContext(context, SetupStructMapping(useExpressions, addNullCheck, mapNull));
 
-			var tenderIds = new List<RecordId>();
+			var tenderIds = new List<int?>() { 5, 3, 4, null };
+
+			var cnt = db.GetTable<RecordTable>().Where(i => tenderIds.Contains(i.Value1!.Value)).Count();
+
+			Assert.That(cnt, Is.EqualTo(4));
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4539")]
+		public void StructMapping_EmptyCollection([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values] bool useExpressions, [Values] bool addNullCheck, [Values] bool mapNull)
+		{
+			using var db = GetDataContext(context, SetupStructMapping(useExpressions, addNullCheck, mapNull));
+
+			var tenderIds = new List<RecordId?>();
 
 			var cnt = db.GetTable<RecordTable>().Where(i => tenderIds.Contains(i.Value1!.Value)).Count();
 
@@ -899,23 +945,47 @@ namespace Tests.Linq
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4539")]
-		public void StructMapping_Enumerable([DataSources] string context, [Values] bool inline)
+		public void StructMapping_EmptyCollection_IntList([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values] bool useExpressions, [Values] bool addNullCheck, [Values] bool mapNull)
 		{
-			using var db = GetDataContext(context, SetupStructMapping());
-			db.InlineParameters = inline;
+			using var db = GetDataContext(context, SetupStructMapping(useExpressions, addNullCheck, mapNull));
 
-			var tenderIds = new ArrayList() { new RecordId(5), new RecordId(3), new RecordId(4) };
+			var tenderIds = new List<int?>();
 
 			var cnt = db.GetTable<RecordTable>().Where(i => tenderIds.Contains(i.Value1!.Value)).Count();
 
-			Assert.That(cnt, Is.EqualTo(2));
+			Assert.That(cnt, Is.EqualTo(0));
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4539")]
-		public void StructMapping_EmptyEnumerable([DataSources] string context, [Values] bool inline)
+		public void StructMapping_Enumerable([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values] bool useExpressions, [Values] bool addNullCheck, [Values] bool mapNull)
 		{
-			using var db = GetDataContext(context, SetupStructMapping());
-			db.InlineParameters = inline;
+			using var db = GetDataContext(context, SetupStructMapping(useExpressions, addNullCheck, mapNull));
+
+			var tenderIds = new ArrayList() { new RecordId(5), new RecordId(3), new RecordId(4), null };
+
+			var cnt = db.GetTable<RecordTable>().Where(i => tenderIds.Contains(i.Value1!.Value)).Count();
+
+			Assert.That(cnt, Is.EqualTo(mapNull && !(useExpressions && addNullCheck) ? 3 : 4));
+		}
+
+
+		[ActiveIssue("Not supported case")]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4539")]
+		public void StructMapping_Enumerable_IntList([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values] bool useExpressions, [Values] bool addNullCheck, [Values] bool mapNull)
+		{
+			using var db = GetDataContext(context, SetupStructMapping(useExpressions, addNullCheck, mapNull));
+
+			var tenderIds = new ArrayList() { 5, 3, 4, null };
+
+			var cnt = db.GetTable<RecordTable>().Where(i => tenderIds.Contains(i.Value1!.Value)).Count();
+
+			Assert.That(cnt, Is.EqualTo(mapNull && !(useExpressions && addNullCheck) ? 3 : 4));
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4539")]
+		public void StructMapping_EmptyEnumerable([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values] bool useExpressions, [Values] bool addNullCheck, [Values] bool mapNull)
+		{
+			using var db = GetDataContext(context, SetupStructMapping(useExpressions, addNullCheck, mapNull));
 
 			var tenderIds = new ArrayList();
 
@@ -926,16 +996,15 @@ namespace Tests.Linq
 
 		[ActiveIssue("Not supported case")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4539")]
-		public void StructMapping_MixedEnumerable([DataSources] string context, [Values] bool inline)
+		public void StructMapping_MixedEnumerable([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values] bool useExpressions, [Values] bool addNullCheck, [Values] bool mapNull)
 		{
-			using var db = GetDataContext(context, SetupStructMapping());
-			db.InlineParameters = inline;
+			using var db = GetDataContext(context, SetupStructMapping(useExpressions, addNullCheck, mapNull));
 
-			var tenderIds = new ArrayList() { new RecordId(5), 3, new RecordId(4) };
+			var tenderIds = new ArrayList() { new RecordId(5), 3, new RecordId(4), null };
 
 			var cnt = db.GetTable<RecordTable>().Where(i => tenderIds.Contains(i.Value1!.Value)).Count();
 
-			Assert.That(cnt, Is.EqualTo(2));
+			Assert.That(cnt, Is.EqualTo(mapNull && !(useExpressions && addNullCheck) ? 3 : 4));
 		}
 	}
 }

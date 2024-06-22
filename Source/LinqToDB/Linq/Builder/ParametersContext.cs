@@ -233,10 +233,10 @@ namespace LinqToDB.Linq.Builder
 
 		ParameterAccessor? PrepareConvertersAndCreateParameter(ValueTypeExpression newExpr, Expression valueExpression, string? name, ColumnDescriptor? columnDescriptor, bool doNotCheckCompatibility, BuildParameterType buildParameterType)
 		{
-			Type?       elementType   = null;
-			var buildElementConverter = buildParameterType == BuildParameterType.InPredicate;
+			Type? elementType     = null;
+			var   isParameterList = buildParameterType == BuildParameterType.InPredicate;
 
-			if (buildElementConverter)
+			if (isParameterList)
 			{
 				elementType = newExpr.ValueExpression.Type.GetItemType()
 					?? newExpr.ValueExpression.UnwrapConvert().Type.GetItemType()
@@ -246,7 +246,7 @@ namespace LinqToDB.Linq.Builder
 
 			var originalAccessor = newExpr.ValueExpression;
 			var valueType        = elementType ?? newExpr.ValueExpression.Type;
-			var valueGetter      = buildElementConverter ? ItemParameter : newExpr.ValueExpression;
+			var valueGetter      = isParameterList ? ItemParameter : newExpr.ValueExpression;
 
 			if (!newExpr.IsDataParameter)
 			{
@@ -263,10 +263,10 @@ namespace LinqToDB.Linq.Builder
 
 						if (noConvert.Type != typeof(object))
 							valueGetter = noConvert;
-						else if (!buildElementConverter && valueGetter.Type != valueExpression.Type)
+						else if (!isParameterList && valueGetter.Type != valueExpression.Type)
 							valueGetter = Expression.Convert(noConvert, valueExpression.Type);
 						else if (valueGetter.Type == typeof(object))
-							valueGetter = Expression.Convert(noConvert, memberType);
+							valueGetter = Expression.Convert(noConvert, elementType != null && elementType != typeof(object) ? elementType : memberType);
 
 						if (valueGetter.Type != memberType
 							&& !(valueGetter.Type.IsNullable() && valueGetter.Type.ToNullableUnderlying() == memberType.ToNullableUnderlying()))
@@ -345,30 +345,65 @@ namespace LinqToDB.Linq.Builder
 
 			if (typeof(DataParameter).IsSameOrParentOf(valueGetter.Type))
 			{
-				newExpr.DbDataTypeExpression = Expression.Property(valueGetter, Methods.LinqToDB.DataParameter.DbDataType);
+				var mustHandleNulls = MappingSchema.GetDefaultValue(valueType) == null;
 
-				if (columnDescriptor != null)
+				if (mustHandleNulls)
 				{
-					var dbDataType = columnDescriptor.GetDbDataType(false);
-					newExpr.DbDataTypeExpression = Expression.Call(Expression.Constant(dbDataType),
-						DbDataType.WithSetValuesMethodInfo, newExpr.DbDataTypeExpression);
-				}
+					// TODO: v7
+					// this branch is a workaround for MappingSchema.AddNullCheck working badly with DataParameter mappings
+					// should be removed after mappings configuration reworked
+					var nullValue = Expression.Constant(null, typeof(DataParameter));
+					var pobj      = Expression.Parameter(typeof(DataParameter));
 
-				valueGetter = Expression.Property(valueGetter, Methods.LinqToDB.DataParameter.Value);
+					newExpr.DbDataTypeExpression = Expression.Block(
+						new[] { pobj },
+						new Expression[]
+						{
+							Expression.Assign(pobj, valueGetter),
+							Expression.Condition(
+								Expression.NotEqual(pobj, nullValue),
+								Expression.Property(pobj, Methods.LinqToDB.DataParameter.DbDataType),
+								Expression.Constant(MappingSchema.GetDbDataType(valueType), typeof(DbDataType)))
+						});
+
+					valueGetter = Expression.Block(
+						new[] { pobj },
+						new Expression[]
+						{
+							Expression.Assign(pobj, valueGetter),
+							Expression.Condition(
+								Expression.NotEqual(pobj, nullValue),
+								Expression.Property(pobj, Methods.LinqToDB.DataParameter.Value),
+								Expression.Constant(null, typeof(object)))
+						});
+				}
+				else
+				{
+					newExpr.DbDataTypeExpression = Expression.Property(valueGetter, Methods.LinqToDB.DataParameter.DbDataType);
+
+					if (columnDescriptor != null)
+					{
+						var dbDataType = columnDescriptor.GetDbDataType(false);
+						newExpr.DbDataTypeExpression = Expression.Call(Expression.Constant(dbDataType),
+							DbDataType.WithSetValuesMethodInfo, newExpr.DbDataTypeExpression);
+					}
+
+					valueGetter = Expression.Property(valueGetter, Methods.LinqToDB.DataParameter.Value);
+				}
 			}
 
-			if (!buildElementConverter)
+			if (!isParameterList)
 				newExpr.ValueExpression = valueGetter;
 
 			name ??= columnDescriptor?.MemberName;
 
 			var p = CreateParameterAccessor(
-				DataContext, newExpr.ValueExpression, buildElementConverter ? valueGetter : null, newExpr.DbDataTypeExpression, valueExpression, ParametersExpression, name);
+				DataContext, newExpr.ValueExpression, isParameterList ? valueGetter : null, newExpr.DbDataTypeExpression, valueExpression, ParametersExpression, name);
 
 			return p;
 		}
 
-		public sealed class ValueTypeExpression
+		sealed class ValueTypeExpression
 		{
 			public Expression ValueExpression      = null!;
 			public Expression DbDataTypeExpression = null!;
@@ -427,7 +462,7 @@ namespace LinqToDB.Linq.Builder
 			return result;
 		}
 
-		public ValueTypeExpression ReplaceParameter(MappingSchema mappingSchema, Expression expression, ColumnDescriptor? columnDescriptor, bool forceConstant, Action<string>? setName)
+		ValueTypeExpression ReplaceParameter(MappingSchema mappingSchema, Expression expression, ColumnDescriptor? columnDescriptor, bool forceConstant, Action<string>? setName)
 		{
 			var result = new ValueTypeExpression
 			{
