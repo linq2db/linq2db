@@ -345,51 +345,16 @@ namespace LinqToDB.Linq.Builder
 
 			if (typeof(DataParameter).IsSameOrParentOf(valueGetter.Type))
 			{
-				var mustHandleNulls = MappingSchema.GetDefaultValue(valueType) == null;
+				newExpr.DbDataTypeExpression = Expression.Property(valueGetter, Methods.LinqToDB.DataParameter.DbDataType);
 
-				if (mustHandleNulls)
+				if (columnDescriptor != null)
 				{
-					// TODO: v7
-					// this branch is a workaround for MappingSchema.AddNullCheck working badly with DataParameter mappings
-					// should be removed after mappings configuration reworked
-					var nullValue = Expression.Constant(null, typeof(DataParameter));
-					var pobj      = Expression.Parameter(typeof(DataParameter));
-
-					newExpr.DbDataTypeExpression = Expression.Block(
-						new[] { pobj },
-						new Expression[]
-						{
-							Expression.Assign(pobj, valueGetter),
-							Expression.Condition(
-								Expression.NotEqual(pobj, nullValue),
-								Expression.Property(pobj, Methods.LinqToDB.DataParameter.DbDataType),
-								Expression.Constant(MappingSchema.GetDbDataType(valueType), typeof(DbDataType)))
-						});
-
-					valueGetter = Expression.Block(
-						new[] { pobj },
-						new Expression[]
-						{
-							Expression.Assign(pobj, valueGetter),
-							Expression.Condition(
-								Expression.NotEqual(pobj, nullValue),
-								Expression.Property(pobj, Methods.LinqToDB.DataParameter.Value),
-								Expression.Constant(null, typeof(object)))
-						});
+					var dbDataType = columnDescriptor.GetDbDataType(false);
+					newExpr.DbDataTypeExpression = Expression.Call(Expression.Constant(dbDataType),
+						DbDataType.WithSetValuesMethodInfo, newExpr.DbDataTypeExpression);
 				}
-				else
-				{
-					newExpr.DbDataTypeExpression = Expression.Property(valueGetter, Methods.LinqToDB.DataParameter.DbDataType);
 
-					if (columnDescriptor != null)
-					{
-						var dbDataType = columnDescriptor.GetDbDataType(false);
-						newExpr.DbDataTypeExpression = Expression.Call(Expression.Constant(dbDataType),
-							DbDataType.WithSetValuesMethodInfo, newExpr.DbDataTypeExpression);
-					}
-
-					valueGetter = Expression.Property(valueGetter, Methods.LinqToDB.DataParameter.Value);
-				}
+				valueGetter = Expression.Property(valueGetter, Methods.LinqToDB.DataParameter.Value);
 			}
 
 			if (!isParameterList)

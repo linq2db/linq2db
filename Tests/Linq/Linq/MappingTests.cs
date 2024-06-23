@@ -893,7 +893,7 @@ namespace Tests.Linq
 
 			var cnt = db.GetTable<RecordTable>().Where(i => i.Value1!.Value == tenderIds[0] || i.Value1!.Value == tenderIds[1] || i.Value1!.Value == tenderIds[2] || i.Value1!.Value == tenderIds[3]).Count();
 
-			Assert.That(cnt, Is.EqualTo(mapNull && !(useExpressions && addNullCheck) ? 3 : 4));
+			Assert.That(cnt, Is.EqualTo(mapNull ? 3 : 4));
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4539")]
@@ -905,7 +905,7 @@ namespace Tests.Linq
 
 			var cnt = db.GetTable<RecordTable>().Where(i => i.Value1!.Value == tenderIds[0] || i.Value1!.Value == tenderIds[1] || i.Value1!.Value == tenderIds[2] || i.Value1!.Value == tenderIds[3]).Count();
 
-			Assert.That(cnt, Is.EqualTo(mapNull && !(useExpressions && addNullCheck) ? 3 : 4));
+			Assert.That(cnt, Is.EqualTo(mapNull ? 3 : 4));
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4539")]
@@ -917,7 +917,7 @@ namespace Tests.Linq
 
 			var cnt = db.GetTable<RecordTable>().Where(i => tenderIds.Contains(i.Value1!.Value)).Count();
 
-			Assert.That(cnt, Is.EqualTo(mapNull && !(useExpressions && addNullCheck) ? 3 : 4));
+			Assert.That(cnt, Is.EqualTo(mapNull ? 3 : 4));
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4539")]
@@ -965,11 +965,10 @@ namespace Tests.Linq
 
 			var cnt = db.GetTable<RecordTable>().Where(i => tenderIds.Contains(i.Value1!.Value)).Count();
 
-			Assert.That(cnt, Is.EqualTo(mapNull && !(useExpressions && addNullCheck) ? 3 : 4));
+			Assert.That(cnt, Is.EqualTo(mapNull ? 3 : 4));
 		}
 
 
-		[ActiveIssue("Not supported case")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4539")]
 		public void StructMapping_Enumerable_IntList([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values] bool useExpressions, [Values] bool addNullCheck, [Values] bool mapNull)
 		{
@@ -977,9 +976,8 @@ namespace Tests.Linq
 
 			var tenderIds = new ArrayList() { 5, 3, 4, null };
 
-			var cnt = db.GetTable<RecordTable>().Where(i => tenderIds.Contains(i.Value1!.Value)).Count();
-
-			Assert.That(cnt, Is.EqualTo(mapNull && !(useExpressions && addNullCheck) ? 3 : 4));
+			// not supported case
+			Assert.That(() => db.GetTable<RecordTable>().Where(i => tenderIds.Contains(i.Value1!.Value)).Count(), Throws.TypeOf<InvalidCastException>());
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4539")]
@@ -994,7 +992,6 @@ namespace Tests.Linq
 			Assert.That(cnt, Is.EqualTo(0));
 		}
 
-		[ActiveIssue("Not supported case")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4539")]
 		public void StructMapping_MixedEnumerable([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values] bool useExpressions, [Values] bool addNullCheck, [Values] bool mapNull)
 		{
@@ -1002,9 +999,8 @@ namespace Tests.Linq
 
 			var tenderIds = new ArrayList() { new RecordId(5), 3, new RecordId(4), null };
 
-			var cnt = db.GetTable<RecordTable>().Where(i => tenderIds.Contains(i.Value1!.Value)).Count();
-
-			Assert.That(cnt, Is.EqualTo(mapNull && !(useExpressions && addNullCheck) ? 3 : 4));
+			// not supported case
+			Assert.That(() => db.GetTable<RecordTable>().Where(i => tenderIds.Contains(i.Value1!.Value)).Count(), Throws.TypeOf<InvalidCastException>());
 		}
 	}
 }
