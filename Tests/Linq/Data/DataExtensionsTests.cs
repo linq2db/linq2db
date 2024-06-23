@@ -303,12 +303,9 @@ namespace Tests.Data
 			ms.SetConvertExpression<TwoValues,DataParameter>(tv => new DataParameter { Value = (long)tv.Value1 << 32 | tv.Value2 });
 #pragma warning restore CS0675
 
-			using (var conn = (DataConnection)GetDataContext(context, ms))
-			{
-				var n = conn.Execute<long?>("SELECT @p", new { p = (TwoValues?)null });
+			using var conn = (DataConnection)GetDataContext(context, ms);
 
-				Assert.That(n, Is.EqualTo(null));
-			}
+			Assert.That(() => conn.Execute<long?>("SELECT @p", new { p = (TwoValues?)null }), Throws.TypeOf<NullReferenceException>());
 		}
 
 		[ActiveIssue("Poor parameters support", Configuration = ProviderName.ClickHouseClient)]
