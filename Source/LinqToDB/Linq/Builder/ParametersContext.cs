@@ -113,7 +113,7 @@ namespace LinqToDB.Linq.Builder
 			// do replacing again for registering parameterized constants
 			ApplyAccessors(expr, true);
 
-			if (!forceNew && !ReferenceEquals(newExpr.ValueExpression, expr))
+			if (!forceNew/* && !ReferenceEquals(newExpr.ValueExpression, expr)*/)
 			{
 				// check that expression is not just compilable expression
 				var hasAccessors = HasAccessors(expr);
@@ -382,7 +382,8 @@ namespace LinqToDB.Linq.Builder
 					// TODO: !!! Code should be synched with ReplaceParameter !!!
 					if (expr.NodeType == ExpressionType.ArrayIndex && ((BinaryExpression)expr).Left == ExpressionBuilder.ParametersParam)
 					{
-						return new TransformInfo(expr, true);
+						result = true;
+						return new TransformInfo(expr, result);
 					}
 
 					if (expr.NodeType == ExpressionType.Constant && context.paramContext.GetAccessorExpression(expr, out var _, false))
