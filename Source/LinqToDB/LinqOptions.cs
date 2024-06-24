@@ -206,7 +206,7 @@ namespace LinqToDB
 						.Add(TraceMapperExpression)
 						.Add(DoNotClearOrderBys)
 						.Add(OptimizeJoins)
-						.Add(CompareNullsAsValues)
+						.Add((int)CompareNulls)
 						.Add(GuardGrouping)
 						.Add(DisableQueryCache)
 						.Add(CacheSlidingExpiration)

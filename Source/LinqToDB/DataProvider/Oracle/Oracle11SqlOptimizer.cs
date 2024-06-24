@@ -2,6 +2,7 @@
 
 namespace LinqToDB.DataProvider.Oracle
 {
+	using Common;
 	using Mapping;
 	using SqlProvider;
 	using SqlQuery;
@@ -82,7 +83,7 @@ namespace LinqToDB.DataProvider.Oracle
 
 					if (query.Select.TakeValue != null && query.Select.OrderBy.IsEmpty && query.GroupBy.IsEmpty && !query.Select.IsDistinct)
 					{
-						query.Select.Where.EnsureConjunction().AddLessOrEqual(RowNumExpr, query.Select.TakeValue, false);
+						query.Select.Where.EnsureConjunction().AddLessOrEqual(RowNumExpr, query.Select.TakeValue, CompareNulls.LikeSql);
 
 						query.Select.Take(null, null);
 						return 0;
@@ -103,14 +104,14 @@ namespace LinqToDB.DataProvider.Oracle
 						if (query.Select.TakeValue != null)
 						{
 							processingQuery.Where.EnsureConjunction().AddLessOrEqual(RowNumExpr, new SqlBinaryExpression(query.Select.SkipValue.SystemType!,
-									query.Select.SkipValue, "+", query.Select.TakeValue), false);
+									query.Select.SkipValue, "+", query.Select.TakeValue), CompareNulls.LikeSql);
 						}
 
-						queries[queries.Count - 3].Where.SearchCondition.AddGreater(rnColumn, query.Select.SkipValue, false);
+						queries[queries.Count - 3].Where.SearchCondition.AddGreater(rnColumn, query.Select.SkipValue, CompareNulls.LikeSql);
 					}
 					else
 					{
-						processingQuery.Where.EnsureConjunction().AddLessOrEqual(RowNumExpr, query.Select.TakeValue!, false);
+						processingQuery.Where.EnsureConjunction().AddLessOrEqual(RowNumExpr, query.Select.TakeValue!, CompareNulls.LikeSql);
 					}
 
 					query.Select.SkipValue = null;

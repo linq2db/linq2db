@@ -22,9 +22,13 @@ namespace Tests.Linq
 			new Src { Id = 121, A = 2,    B = 1,    EnumA = ME.Two, EnumB = ME.One, CEnumA = CE.Two, CEnumB = CE.One },
 		};
 
-		private TempTable<Src> SetupSrcTable(IDataContext db)
+		private readonly MappingSchema mappingSchema = BuildMappingSchema();
+
+		private static MappingSchema BuildMappingSchema()
 		{
-			var entity = db.GetFluentMappingBuilder().Entity<Src>();
+			var ms = new MappingSchema();
+#pragma warning disable CA2263 // Prefer generic overload when type is known, but Enum.Parse<E> is not available in .net fx
+			var entity = new FluentMappingBuilder(ms).Entity<Src>();
 			entity.Property(e => e.CEnumA)
 				.HasDataType(DataType.VarChar)
 				.HasLength(20)
@@ -33,8 +37,9 @@ namespace Tests.Linq
 				.HasDataType(DataType.VarChar)
 				.HasLength(20)
 				.HasConversion(v => $"___{v}___", v => (CE)Enum.Parse(typeof(CE), v.Substring(3, v.Length - 6)));
-
-			return db.CreateLocalTable(Data);
+			entity.Build();
+#pragma warning restore CA2263 // Prefer generic overload when type is known
+			return ms;
 		}
 
 		private static readonly (Expression<Func<Src, bool>> where, int[] withoutNulls, int[] withNulls)[] _conditions 
@@ -96,8 +101,8 @@ namespace Tests.Linq
 			[Range(0, 35)]                              int index)
 		{
 			using var _   = new CompareNullsOption(withNullCompares);
-			using var db  = GetDataContext(context);
-			using var src = SetupSrcTable(db);
+			using var db  = GetDataContext(context, mappingSchema);
+			using var src = db.CreateLocalTable(Data);
 
 			var (where, withoutNulls, withNulls) = _conditions[index];
 
@@ -129,9 +134,8 @@ namespace Tests.Linq
 			[Values]                                    CompareNulls option)
 		{
 			using var _   = new CompareNullsOption(option);
-			using var db  = GetDataContext(context);
-			using var src = SetupSrcTable(db);
-			
+			using var db  = GetDataContext(context, mappingSchema);
+			using var src = db.CreateLocalTable(Data);
 			
 			// == null always translates to IS NULL
 			var result = src.Where(x => x.A == null).Count();
@@ -162,8 +166,7 @@ namespace Tests.Linq
 				new Src { Id = 2, Text = null  },
 			});
 			
-			
-			// == null always translates to IS NULL
+			// "" is the same as null in Oracle and == ""  should always translates to IS NULL
 			int result = src.Where(x => x.Text == "").Select(x => x.Id).FirstOrDefault();
 			result.Should().Be(2);
 

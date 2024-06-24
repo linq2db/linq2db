@@ -289,6 +289,11 @@ namespace LinqToDB.SqlQuery
 				if (options.CompareNulls == CompareNulls.LikeSql)
 					return this;
 
+				ISqlPredicate MakeWithoutNulls()
+				{
+					return new ExprExpr(Expr1, Operator, Expr2, null);
+				}
+
 				// CompareNulls.LikeSqlExceptParameters and CompareNulls.LikeCSharp 
 				// always sniffs parameters to == and != (for backward compatibility).
 				if (Operator == Operator.Equal || Operator == Operator.NotEqual)
