@@ -22,9 +22,9 @@
 			return statement;
 		}
 
-		public override bool IsParameterDependedElement(NullabilityContext nullability, IQueryElement element)
+		public override bool IsParameterDependedElement(NullabilityContext nullability, IQueryElement element, DataOptions dataOptions)
 		{
-			var result = base.IsParameterDependedElement(nullability, element);
+			var result = base.IsParameterDependedElement(nullability, element, dataOptions);
 			if (result)
 				return true;
 

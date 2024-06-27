@@ -1,4 +1,5 @@
-﻿using System;
+﻿using LinqToDB.Common;
+using System;
 using System.Collections.Generic;
 
 namespace LinqToDB.SqlQuery
@@ -283,13 +284,18 @@ namespace LinqToDB.SqlQuery
 				return new ExprExpr(Expr1, InvertOperator(Operator), Expr2, !WithNull);
 			}
 
-			public ISqlPredicate Reduce(NullabilityContext nullability, EvaluationContext context, bool insideNot)
-			{
+			public ISqlPredicate Reduce(NullabilityContext nullability, EvaluationContext context, bool insideNot, LinqOptions options)
+			{				
+				if (options.CompareNulls == CompareNulls.LikeSql)
+					return this;
+
 				ISqlPredicate MakeWithoutNulls()
 				{
 					return new ExprExpr(Expr1, Operator, Expr2, null);
 				}
 
+				// CompareNulls.LikeSqlExceptParameters and CompareNulls.LikeCSharp 
+				// always sniffs parameters to == and != (for backward compatibility).
 				if (Operator == Operator.Equal || Operator == Operator.NotEqual)
 				{
 					if (Expr1.TryEvaluateExpression(context, out var value1))
@@ -304,6 +310,9 @@ namespace LinqToDB.SqlQuery
 					}
 				}
 
+				// Only CompareNulls.LikeCSharp handles all conditions.
+				// Notice that it sometimes creates operands `WithNull: null` 
+				// when it wants an expression to work as LikeSql.
 				if (WithNull == null || nullability.IsEmpty)
 					return this;
 

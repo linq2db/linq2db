@@ -102,7 +102,7 @@ namespace LinqToDB.Linq
 
 					ei.Queries[0].AddParameterAccessor(param);
 
-					sqlQuery.Where.SearchCondition.AddEqual(field, param.SqlParameter, false);
+					sqlQuery.Where.SearchCondition.AddEqual(field, param.SqlParameter, CompareNulls.LikeSql);
 
 					if (field.CanBeNull)
 						sqlQuery.IsParameterDependent = true;

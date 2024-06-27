@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 
 namespace LinqToDB.Linq
 {
+	using Common;
 	using Common.Internal.Cache;
 	using SqlQuery;
 	using Tools;
@@ -56,7 +57,7 @@ namespace LinqToDB.Linq
 
 					ei.Queries[0].AddParameterAccessor(param);
 
-					deleteStatement.SelectQuery.Where.SearchCondition.AddEqual(field, param.SqlParameter, false);
+					deleteStatement.SelectQuery.Where.SearchCondition.AddEqual(field, param.SqlParameter, CompareNulls.LikeSql);
 
 					if (field.CanBeNull)
 						deleteStatement.IsParameterDependent = true;

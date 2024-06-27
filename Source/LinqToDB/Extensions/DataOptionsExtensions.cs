@@ -11,6 +11,7 @@ using JetBrains.Annotations;
 // ReSharper disable once CheckNamespace
 namespace LinqToDB
 {
+	using Common;
 	using Data;
 	using Data.RetryPolicy;
 	using DataProvider;
@@ -104,7 +105,7 @@ namespace LinqToDB
 		}
 
 		/// <summary>
-		/// If set to true nullable fields would be checked for IS NULL in Equal/NotEqual comparisons.
+		/// If set to LikeCSharp nullable fields would be checked for IS NULL in Equal/NotEqual comparisons.
 		/// This affects: Equal, NotEqual, Not Contains
 		/// Default value: <c>true</c>.
 		/// </summary>
@@ -137,9 +138,9 @@ namespace LinqToDB
 		/// </code>
 		/// </example>
 		[Pure]
-		public static LinqOptions WithCompareNullsAsValues(this LinqOptions options, bool compareNullsAsValues)
+		public static LinqOptions WithCompareNulls(this LinqOptions options, CompareNulls compareNulls)
 		{
-			return options with { CompareNullsAsValues = compareNullsAsValues };
+			return options with { CompareNulls = compareNulls };
 		}
 
 		/// <summary>
@@ -326,7 +327,7 @@ namespace LinqToDB
 		}
 
 		/// <summary>
-		/// If set to true nullable fields would be checked for IS NULL in Equal/NotEqual comparisons.
+		/// If set to LikeCSharp nullable fields would be checked for IS NULL in Equal/NotEqual comparisons.
 		/// This affects: Equal, NotEqual, Not Contains
 		/// Default value: <c>true</c>.
 		/// </summary>
@@ -359,9 +360,9 @@ namespace LinqToDB
 		/// </code>
 		/// </example>
 		[Pure]
-		public static DataOptions UseCompareNullsAsValues(this DataOptions options, bool compareNullsAsValues)
+		public static DataOptions UseCompareNulls(this DataOptions options, CompareNulls compareNulls)
 		{
-			return options.WithOptions<LinqOptions>(o => o with { CompareNullsAsValues = compareNullsAsValues });
+			return options.WithOptions<LinqOptions>(o => o with { CompareNulls = compareNulls });
 		}
 
 		/// <summary>

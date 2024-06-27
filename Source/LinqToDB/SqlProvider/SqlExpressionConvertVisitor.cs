@@ -238,8 +238,8 @@ namespace LinqToDB.SqlProvider
 			var caseExpression = new SqlCaseExpression(new DbDataType(typeof(int)),
 				new SqlCaseExpression.CaseItem[]
 				{
-					new(new SqlSearchCondition().AddGreater(element.Expression1, element.Expression2, DataOptions.LinqOptions.CompareNullsAsValues), new SqlValue(1)),
-					new(new SqlSearchCondition().AddEqual(element.Expression1, element.Expression2, DataOptions.LinqOptions.CompareNullsAsValues), new SqlValue(0))
+					new(new SqlSearchCondition().AddGreater(element.Expression1, element.Expression2, DataOptions.LinqOptions.CompareNulls), new SqlValue(1)),
+					new(new SqlSearchCondition().AddEqual(element.Expression1, element.Expression2, DataOptions.LinqOptions.CompareNulls), new SqlValue(0))
 				},
 				new SqlValue(-1));
 
@@ -968,7 +968,7 @@ namespace LinqToDB.SqlProvider
 				var testValue = testExpressions[i];
 				var expr      = subQuery.Select.Columns[i].Expression;
 
-				predicates.Add(new SqlPredicate.ExprExpr(testValue, SqlPredicate.Operator.Equal, expr, DataOptions.LinqOptions.CompareNullsAsValues ? true : null));
+				predicates.Add(new SqlPredicate.ExprExpr(testValue, SqlPredicate.Operator.Equal, expr, DataOptions.LinqOptions.CompareNulls == CompareNulls.LikeCSharp ? true : null));
 			}
 
 			subQuery.Select.Columns.Clear();
@@ -986,8 +986,8 @@ namespace LinqToDB.SqlProvider
 		public virtual ISqlPredicate ConvertBetweenPredicate(SqlPredicate.Between between)
 		{
 			var newPredicate = new SqlSearchCondition()
-				.AddGreaterOrEqual(between.Expr1, between.Expr2, false)
-				.AddLessOrEqual(between.Expr1, between.Expr3, false)
+				.AddGreaterOrEqual(between.Expr1, between.Expr2, CompareNulls.LikeSql)
+				.AddLessOrEqual(between.Expr1, between.Expr3, CompareNulls.LikeSql)
 				.MakeNot(between.IsNot);
 
 			return newPredicate;
@@ -1411,7 +1411,12 @@ namespace LinqToDB.SqlProvider
 		protected ISqlExpression ConvertToBooleanSearchCondition(ISqlExpression expression)
 		{
 			var sc = new SqlSearchCondition();
-			var predicate = new SqlPredicate.ExprExpr(expression, SqlPredicate.Operator.Equal, new SqlValue(0), DataOptions.LinqOptions.CompareNullsAsValues)
+			var predicate = new SqlPredicate.ExprExpr(
+					expression, 
+					SqlPredicate.Operator.Equal, 
+					new SqlValue(0), 
+					DataOptions.LinqOptions.CompareNulls == CompareNulls.LikeCSharp ? true : null
+				)
 				.MakeNot();
 
 			sc.Add(predicate);
