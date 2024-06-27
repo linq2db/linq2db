@@ -28,7 +28,7 @@ namespace LinqToDB.Linq.Builder
 
 			ISqlExpression expr;
 
-            var linqOptions = builder.DataContext.Options.LinqOptions;
+			var linqOptions = builder.DataContext.Options.LinqOptions;
 			var parameterize = !buildInfo.IsSubQuery && linqOptions.ParameterizeTakeSkip;
 
 			if (arg.NodeType == ExpressionType.Lambda)

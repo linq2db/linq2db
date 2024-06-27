@@ -659,22 +659,23 @@ namespace LinqToDB.Linq
 	{
 		public ParameterAccessor(
 			Func<Expression,IDataContext?,object?[]?,object?>    valueAccessor,
-			Func<Expression,IDataContext?,object?[]?,object?>    originalAccessor,
-			Func<Expression,IDataContext?,object?[]?,DbDataType> dbDataTypeAccessor,
+			Func<object?,object?>?                               itemAccessor,
+			Func<Expression,object?,IDataContext?,object?[]?,DbDataType> dbDataTypeAccessor,
 			SqlParameter                                         sqlParameter)
 		{
 			ValueAccessor      = valueAccessor;
-			OriginalAccessor   = originalAccessor;
+			ItemAccessor       = itemAccessor;
 			DbDataTypeAccessor = dbDataTypeAccessor;
 			SqlParameter       = sqlParameter;
 		}
 
-		public readonly Func<Expression,IDataContext?,object?[]?,object?>     ValueAccessor;
-		public readonly Func<Expression,IDataContext?,object?[]?,object?>     OriginalAccessor;
-		public readonly Func<Expression,IDataContext?,object?[]?,DbDataType>  DbDataTypeAccessor;
-		public readonly SqlParameter                                          SqlParameter;
+		public readonly Func<Expression,IDataContext?,object?[]?,object?>             ValueAccessor;
+		public readonly Func<object?,object?>?                                        ItemAccessor;
+		public readonly Func<Expression,object?,IDataContext?,object?[]?,DbDataType>  DbDataTypeAccessor;
+		public readonly SqlParameter                                                  SqlParameter;
 #if DEBUG
 		public Expression<Func<Expression,IDataContext?,object?[]?,object?>>? AccessorExpr;
+		public Expression<Func<object?,object?>>?                             ItemAccessorExpr;
 #endif
 	}
 }
