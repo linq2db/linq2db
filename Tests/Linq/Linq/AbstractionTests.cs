@@ -138,5 +138,153 @@ namespace Tests.Linq
 				GenericTest<SampleClass2>(db);
 			}
 		}
+
+		abstract class EntityBase
+		{
+			[PrimaryKey] public int ID { get; set; }
+		}
+
+		[Table]
+		sealed class Entity : EntityBase
+		{
+			[Column] public int Value { get; set; }
+		}
+
+		[ActiveIssue]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/848")]
+		public void InsertUsingRuntimeType([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable<Entity>();
+
+			EntityBase entity = new Entity()
+			{
+				ID    = 1,
+				Value = 2
+			};
+
+			db.Insert(entity);
+
+			var record = tb.Single();
+
+			Assert.Multiple(() =>
+			{
+				Assert.That(record.ID, Is.EqualTo(1));
+				Assert.That(record.Value, Is.EqualTo(2));
+			});
+		}
+
+		[ActiveIssue]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/848")]
+		public void UpdateUsingRuntimeType([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable<Entity>();
+
+			var entity = new Entity()
+			{
+				ID    = 1,
+				Value = 2
+			};
+
+			db.Insert(entity);
+
+			EntityBase newEntity = new Entity()
+			{
+				ID    = 1,
+				Value = 3
+			};
+
+			db.Update(newEntity);
+
+			var record = tb.Single();
+
+			Assert.Multiple(() =>
+			{
+				Assert.That(record.ID, Is.EqualTo(1));
+				Assert.That(record.Value, Is.EqualTo(3));
+			});
+		}
+
+		[Table("Parent")]
+		abstract class DetailsBase
+		{
+			[Column("ParentID")] public int ID { get; }
+		}
+
+		class Details : DetailsBase
+		{
+			[Column("Value1")] public int? Value { get; }
+		}
+
+		class Projection
+		{
+			public int ID { get; set; }
+			public DetailsBase Details { get; set; } = null!;
+		}
+
+		[ActiveIssue]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/1473")]
+		public void TransientAbstractMapping([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = from proj in (from b in (from b in db.GetTable<DetailsBase>() where b.ID == 2 || b.ID == 3 select b)
+									  join impl in db.GetTable<Details>() on b.ID equals impl.ID
+									  select new { b, Impl = impl })
+									  orderby proj.b.ID
+						select new Projection { ID = proj.b.ID, Details = proj.Impl };
+
+			var result = query.ToList();
+
+			Assert.That(result, Has.Count.EqualTo(2));
+
+			Assert.Multiple(() =>
+			{
+				Assert.That(result[0].ID, Is.EqualTo(2));
+				Assert.That(result[0].Details.ID, Is.EqualTo(2));
+				Assert.That(result[0].Details, Is.TypeOf<Details>());
+				Assert.That(((Details)result[0].Details).Value, Is.Null);
+
+				Assert.That(result[1].ID, Is.EqualTo(3));
+				Assert.That(result[1].Details.ID, Is.EqualTo(3));
+				Assert.That(result[1].Details, Is.TypeOf<Details>());
+				Assert.That(((Details)result[1].Details).Value, Is.EqualTo(3));
+			});
+		}
+
+		class Projection2
+		{
+			public int ID               { get; set; }
+			public Model.Parent Details { get; set; } = null!;
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/1473")]
+		public void MappingWithoutAbstracts([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			// query Details instead of DetailsBase
+			var query = from proj in (from b in (from b in db.Parent where b.ParentID == 2 || b.ParentID == 3 select b)
+									  join impl in db.Parent on b.ParentID equals impl.ParentID
+									  select new { b, Impl = impl })
+						orderby proj.b.ParentID
+						select new Projection2 { ID = proj.b.ParentID, Details = proj.Impl };
+
+			var result = query.ToList();
+
+			Assert.That(result, Has.Count.EqualTo(2));
+
+			Assert.Multiple(() =>
+			{
+				Assert.That(result[0].ID, Is.EqualTo(2));
+				Assert.That(result[0].Details.ParentID, Is.EqualTo(2));
+				Assert.That(result[0].Details.Value1, Is.Null);
+
+				Assert.That(result[1].ID, Is.EqualTo(3));
+				Assert.That(result[1].Details.ParentID, Is.EqualTo(3));
+				Assert.That(result[1].Details.Value1, Is.EqualTo(3));
+			});
+		}
 	}
 }

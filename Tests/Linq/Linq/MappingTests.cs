@@ -772,5 +772,48 @@ namespace Tests.Linq
 			Assert.That(ed.Columns[0].ColumnName, Is.EqualTo("PersonID"));
 		}
 		#endregion
+
+		sealed class StorageTable
+		{
+			public StorageTable()
+			{
+			}
+
+			private int _field;
+
+			[Column] public int Field => _field;
+
+			[NotColumn]
+			public int TestAccess
+			{
+				get => _field;
+				set => _field = value;
+			}
+		}
+
+		[ActiveIssue]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/279")]
+		public void StorageFieldTest([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable<StorageTable>();
+
+			// Insert + Select
+			db.Insert(new StorageTable() { TestAccess = 5 });
+
+			var record = tb.Single();
+			Assert.That(record.TestAccess, Is.EqualTo(5));
+
+			// update
+			tb.Where(r => r.Field == 5).Set(r => r.Field, 6).Update();
+
+			record = tb.Single();
+			Assert.That(record.TestAccess, Is.EqualTo(6));
+
+			// filter
+			record = tb.Where(r => r.Field == 6).SingleOrDefault();
+			Assert.That(record, Is.Not.Null);
+			Assert.That(record!.TestAccess, Is.EqualTo(6));
+		}
 	}
 }

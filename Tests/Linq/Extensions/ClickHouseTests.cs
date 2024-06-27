@@ -34,7 +34,6 @@ namespace Tests.Extensions
 			Assert.That(LastQuery, Contains.Substring(ClickHouseHints.Table.Final));
 		}
 
-		[ActiveIssue("FINAL on subquery doesn't from since 24.3, not yet sure if it is regression or valid change")]
 		[Test]
 		public void FinalSubQueryHintTest([IncludeDataSources(true, TestProvName.AllClickHouse)] string context)
 		{
@@ -235,7 +234,6 @@ namespace Tests.Extensions
 			Assert.That(LastQuery, Contains.Substring("ALL LEFT SEMI JOIN"));
 		}
 
-		[ActiveIssue("FINAL on subquery doesn't from since 24.3, not yet sure if it is regression or valid change")]
 		[Test]
 		public void ClickHouseUnionTest([IncludeDataSources(true, TestProvName.AllClickHouse)] string context)
 		{

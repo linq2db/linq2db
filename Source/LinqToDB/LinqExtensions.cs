@@ -660,11 +660,13 @@ namespace LinqToDB
 		/// <typeparam name="T">Type of result.</typeparam>
 		/// <param name="dataContext">Database connection context.</param>
 		/// <param name="selector">Value selection expression.</param>
+		/// <param name="token">Optional asynchronous operation cancellation token.</param>
 		/// <returns>Requested value.</returns>
 		[Pure]
 		public static async Task<T> SelectAsync<T>(
 			                this IDataContext   dataContext,
-			[InstantHandle] Expression<Func<T>> selector)
+			[InstantHandle] Expression<Func<T>> selector,
+			                CancellationToken token = default)
 		{
 			if (dataContext == null) throw new ArgumentNullException(nameof(dataContext));
 			if (selector    == null) throw new ArgumentNullException(nameof(selector));
@@ -679,7 +681,7 @@ namespace LinqToDB
 				read = true;
 				item = r;
 				return false;
-			}).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+			}, token).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 
 			if (read)
 				return item;
