@@ -105,8 +105,17 @@ namespace LinqToDB.SqlQuery.Visitors
 				{
 					if (IsDependsOnOuterSources())
 					{
-						errorMessage = ErrorHelper.Error_Correlated_Subqueries;
-						return false;
+						var isValied = false;
+						if (_providerFlags.IsSupportedSimpleCorrelatedSubqueries && IsSimpleCorrelatedSubquery(selectQuery))
+						{
+							isValied = true;
+						}
+
+						if (!isValied)
+						{
+							errorMessage = ErrorHelper.Error_Correlated_Subqueries;
+							return false;
+						}
 					}
 				}
 
@@ -174,6 +183,20 @@ namespace LinqToDB.SqlQuery.Visitors
 			}
 
 			errorMessage = null;
+			return true;
+		}
+
+		static bool IsSimpleCorrelatedSubquery(SelectQuery selectQuery)
+		{
+			if (selectQuery.Where.SearchCondition.IsOr)
+				return false;
+
+			if (selectQuery.Where.SearchCondition.Predicates.Any(p => p is SqlSearchCondition))
+				return false;
+
+			if (QueryHelper.IsDependsOnOuterSources(selectQuery, elementsToIgnore : new[] { selectQuery.Where }))
+				return false;
+
 			return true;
 		}
 
@@ -334,7 +357,7 @@ namespace LinqToDB.SqlQuery.Visitors
 			base.VisitSqlFromClause(element);
 
 			if (_columnSubqueryLevel != null)
-				_columnSubqueryLevel += 1;
+				_columnSubqueryLevel -= 1;
 
 			return element;
 		}

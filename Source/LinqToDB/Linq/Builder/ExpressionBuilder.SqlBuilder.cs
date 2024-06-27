@@ -17,11 +17,12 @@ namespace LinqToDB.Linq.Builder
 	using Common.Internal;
 	using Data;
 	using Extensions;
-	using Linq.Translation;
+	using Translation;
 	using LinqToDB.Expressions;
 	using Mapping;
 	using Reflection;
 	using SqlQuery;
+	using DataProvider;
 
 	partial class ExpressionBuilder
 	{
@@ -150,6 +151,74 @@ namespace LinqToDB.Linq.Builder
 
 		#region SubQueryToSql
 
+		/// <summary>
+		/// Checks that provider can handle limitation inside subquery. This function is tightly coupled with <see cref="SelectQueryOptimizerVisitor.OptimizeApply"/>
+		/// </summary>
+		/// <param name="context"></param>
+		/// <returns></returns>
+		public bool IsSupportedSubquery(IBuildContext parent, IBuildContext context, out string? errorMessage)
+		{
+			errorMessage = null;
+
+			if (!_validateSubqueries)
+				return true;
+
+			// No check during recursion. Cloning may fail
+			if (parent.Builder.IsRecursiveBuild)
+				return true;
+
+			if (!context.Builder.DataContext.SqlProviderFlags.IsApplyJoinSupported)
+			{
+				// We are trying to simulate what will be with query after optimizer's work
+				//
+				var cloningContext = new CloningContext();
+
+				var clonedParentContext = cloningContext.CloneContext(parent);
+				var clonedContext       = cloningContext.CloneContext(context);
+
+				cloningContext.UpdateContextParents();
+
+				var expr = parent.Builder.MakeExpression(clonedContext, new ContextRefExpression(clonedContext.ElementType, clonedContext), ProjectFlags.SQL);
+
+				expr = parent.Builder.ToColumns(clonedParentContext, expr);
+
+				SqlJoinedTable? fakeJoin = null;
+
+				// add fake join there is no still reference
+				if (null == clonedParentContext.SelectQuery.Find(e => e is SelectQuery sc && sc == clonedContext.SelectQuery))
+				{
+					fakeJoin = clonedContext.SelectQuery.OuterApply().JoinedTable;
+
+					clonedParentContext.SelectQuery.From.Tables[0].Joins.Add(fakeJoin);
+				}
+
+				using var visitor = QueryHelper.SelectOptimizer.Allocate();
+
+#if DEBUG
+
+				var sqlText = clonedParentContext.SelectQuery.ToDebugString();
+
+#endif
+
+				var optimizedQuery = (SelectQuery)visitor.Value.Optimize(
+					root : clonedParentContext.SelectQuery,
+					rootElement : clonedParentContext.SelectQuery,
+					providerFlags : parent.Builder.DataContext.SqlProviderFlags,
+					removeWeakJoins : false,
+					dataOptions : parent.Builder.DataOptions,
+					mappingSchema: context.MappingSchema,
+					evaluationContext : new EvaluationContext()
+				);
+
+				if (!SqlProviderHelper.IsValidQuery(optimizedQuery, parentQuery: null, fakeJoin: fakeJoin, forColumn: false, parent.Builder.DataContext.SqlProviderFlags, out errorMessage))
+				{
+					return false;
+				}
+			}
+
+			return true;
+		}
+
 		int _gettingSubquery;
 
 		public IBuildContext? GetSubQuery(IBuildContext context, Expression expr, ProjectFlags flags, out bool isSequence, out string? errorMessage)
@@ -174,7 +243,10 @@ namespace LinqToDB.Linq.Builder
 			{
 				if (_gettingSubquery == 0)
 				{
-					if (!SequenceHelper.IsSupportedSubquery(context, buildResult.BuildContext, out errorMessage))
+					++_gettingSubquery;
+					var isSupported = IsSupportedSubquery(context, buildResult.BuildContext, out errorMessage);
+					--_gettingSubquery;
+					if (!isSupported)
 						return null;
 				}
 			}
