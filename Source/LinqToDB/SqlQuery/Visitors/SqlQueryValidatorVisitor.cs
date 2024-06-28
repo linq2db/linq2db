@@ -119,19 +119,19 @@ namespace LinqToDB.SqlQuery.Visitors
 					}
 				}
 
-				if (!_providerFlags.IsSubQueryTakeSupported && selectQuery.Select.TakeValue != null)
+				if (!_providerFlags.IsSubQueryTakeSupported && selectQuery.Select.TakeValue != null && IsDependsOnOuterSources())
 				{
 					errorMessage = ErrorHelper.Error_Take_in_Subquery;
 					return false;
 				}
 
-				if (!_providerFlags.IsSubQuerySkipSupported && selectQuery.Select.SkipValue != null)
+				if (!_providerFlags.IsSubQuerySkipSupported && selectQuery.Select.SkipValue != null && IsDependsOnOuterSources())
 				{
 					errorMessage = ErrorHelper.Error_Skip_in_Subquery;
 					return false;
 				}
 
-				if (!_providerFlags.IsSubQueryOrderBySupported && !selectQuery.OrderBy.IsEmpty)
+				if (!_providerFlags.IsSubQueryOrderBySupported && !selectQuery.OrderBy.IsEmpty && IsDependsOnOuterSources())
 				{
 					errorMessage = ErrorHelper.Error_OrderBy_in_Subquery;
 					return false;
