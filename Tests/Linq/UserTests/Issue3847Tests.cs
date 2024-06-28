@@ -1,13 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.ComponentModel.DataAnnotations;
 using System.Linq;
-using System.Runtime.Serialization;
+
 using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.Mapping;
-using Newtonsoft.Json;
+
 using NUnit.Framework;
 
 namespace Tests.UserTests.Test3847
@@ -20,7 +18,6 @@ namespace Tests.UserTests.Test3847
 	[TestFixture]
 	public class Issue3847Tests : TestBase
 	{
-		[ActiveIssue]
 		[Test]
 		public void Test3847([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllSqlServer, TestProvName.AllPostgreSQL)] string configuration)
 		{

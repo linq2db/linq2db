@@ -3469,7 +3469,7 @@ namespace LinqToDB.SqlProvider
 
 		#region BuildValue
 
-		protected void BuildValue(DbDataType? dataType, object? value)
+		protected virtual void BuildValue(DbDataType? dataType, object? value)
 		{
 			if (value is Sql.SqlID id)
 				TryBuildSqlID(id);

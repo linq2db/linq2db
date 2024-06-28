@@ -40,12 +40,23 @@ namespace LinqToDB.Linq
 					var exposed = ExpressionBuilder.ExposeExpression(key.expression, ctx.dataContext,
 						optimizationContext, ctx.parameterValues, optimizeConditions : false, compactBinary : true);
 
-					var query               = new Query<T>(ctx.dataContext, exposed);
-
+					var query             = new Query<T>(ctx.dataContext, exposed);
 					var parametersContext = new ParametersContext(exposed, ctx.parameterValues, optimizationContext, ctx.dataContext);
 
-					query = new ExpressionBuilder(query, optimizationContext, parametersContext, ctx.dataContext, exposed, ctx.lambda.Parameters.ToArray(), ctx.parameterValues)
+					query = new ExpressionBuilder(query, false, optimizationContext, parametersContext, ctx.dataContext, exposed, ctx.lambda.Parameters.ToArray(), ctx.parameterValues)
 						.Build<T>();
+
+					if (query.ErrorExpression != null)
+					{
+						query = new Query<T>(ctx.dataContext, exposed);
+
+						query = new ExpressionBuilder(query, true, optimizationContext, parametersContext, ctx.dataContext, exposed, ctx.lambda.Parameters.ToArray(), ctx.parameterValues)
+							.Build<T>();
+
+						if (query.ErrorExpression != null)
+							throw query.ErrorExpression.CreateException();
+					}
+
 
 					query.ClearDynamicQueryableInfo();
 					return query;

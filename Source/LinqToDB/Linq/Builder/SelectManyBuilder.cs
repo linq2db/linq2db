@@ -122,7 +122,7 @@ namespace LinqToDB.Linq.Builder
 				join.JoinedTable.SqlQueryExtensions = jhc.Extensions;
 			}
 
-			if (buildInfo.Parent == null && !SequenceHelper.IsSupportedSubquery(sequence, collection, out var errorMessage))
+			if (buildInfo.Parent == null && !builder.IsSupportedSubquery(sequence, collection, out var errorMessage))
 				return BuildSequenceResult.Error(methodCall, errorMessage);
 
 			return BuildSequenceResult.FromContext(context);

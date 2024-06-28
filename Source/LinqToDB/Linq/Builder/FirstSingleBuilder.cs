@@ -147,7 +147,9 @@ namespace LinqToDB.Linq.Builder
 				canBeWeak = true;
 			}
 
-			return BuildSequenceResult.FromContext(new FirstSingleContext(buildInfo.Parent, sequence, methodKind, buildInfo.IsSubQuery, buildInfo.IsAssociation, canBeWeak, cardinality, buildInfo.IsTest));
+			var firstSingleContext = new FirstSingleContext(buildInfo.Parent, sequence, methodKind, buildInfo.IsSubQuery, buildInfo.IsAssociation, canBeWeak, cardinality, buildInfo.IsTest);
+
+			return BuildSequenceResult.FromContext(firstSingleContext);
 		}
 
 		public sealed class FirstSingleContext : SequenceContextBase

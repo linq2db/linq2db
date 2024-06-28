@@ -283,6 +283,7 @@ namespace LinqToDB.Linq
 					Tag                = firstStatement.Tag,
 					SqlQueryExtensions = firstStatement.SqlQueryExtensions
 				};
+				query.IsFinalized = false; 
 				SetNonQueryQuery2(query);
 			}
 			else
@@ -290,6 +291,7 @@ namespace LinqToDB.Linq
 				firstStatement.SelectQuery.Select.Columns.Clear();
 				firstStatement.SelectQuery.Select.Columns.Add(new SqlColumn(firstStatement.SelectQuery, new SqlExpression("1")));
 				query.Queries[0].Statement = new SqlSelectStatement(firstStatement.SelectQuery);
+				query.IsFinalized          = false;
 				SetQueryQuery2(query);
 			}
 
@@ -298,6 +300,7 @@ namespace LinqToDB.Linq
 				Statement  = new SqlSelectStatement(firstStatement.SelectQuery),
 				ParameterAccessors = query.Queries[0].ParameterAccessors.ToList(),
 			});
+			query.IsFinalized = false;
 		}
 	}
 }

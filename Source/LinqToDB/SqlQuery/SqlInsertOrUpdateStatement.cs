@@ -31,6 +31,7 @@ namespace LinqToDB.SqlQuery
 		public override QueryElementTextWriter ToString(QueryElementTextWriter writer)
 		{
 			writer
+				.AppendLine("/* insert or update */")
 				.AppendElement(Insert)
 				.AppendElement(Update);
 			return writer;
