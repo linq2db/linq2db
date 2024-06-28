@@ -201,13 +201,13 @@ namespace LinqToDB.Linq.Builder
 #endif
 
 				var optimizedQuery = (SelectQuery)visitor.Value.Optimize(
-					root : clonedParentContext.SelectQuery,
-					rootElement : clonedParentContext.SelectQuery,
-					providerFlags : parent.Builder.DataContext.SqlProviderFlags,
-					removeWeakJoins : false,
-					dataOptions : parent.Builder.DataOptions,
+					root: clonedParentContext.SelectQuery,
+					rootElement: clonedParentContext.SelectQuery,
+					providerFlags: parent.Builder.DataContext.SqlProviderFlags,
+					removeWeakJoins: false,
+					dataOptions: parent.Builder.DataOptions,
 					mappingSchema: context.MappingSchema,
-					evaluationContext : new EvaluationContext()
+					evaluationContext: new EvaluationContext()
 				);
 
 				if (!SqlProviderHelper.IsValidQuery(optimizedQuery, 
@@ -970,9 +970,9 @@ namespace LinqToDB.Linq.Builder
 				{
 					var e = (ConditionalExpression)expression;
 
-					var testExpr  = ConvertToSqlExpr(context, e.Test,    flags.TestFlag(), columnDescriptor : null, isPureExpression : isPureExpression);
-					var trueExpr  = ConvertToSqlExpr(context, e.IfTrue,  flags.TestFlag(), columnDescriptor : columnDescriptor, isPureExpression : isPureExpression);
-					var falseExpr = ConvertToSqlExpr(context, e.IfFalse, flags.TestFlag(), columnDescriptor : columnDescriptor, isPureExpression : isPureExpression);
+					var testExpr  = ConvertToSqlExpr(context, e.Test,    flags.TestFlag(), columnDescriptor: null, isPureExpression: isPureExpression);
+					var trueExpr  = ConvertToSqlExpr(context, e.IfTrue,  flags.TestFlag(), columnDescriptor: columnDescriptor, isPureExpression: isPureExpression);
+					var falseExpr = ConvertToSqlExpr(context, e.IfFalse, flags.TestFlag(), columnDescriptor: columnDescriptor, isPureExpression: isPureExpression);
 
 					if (testExpr is SqlPlaceholderExpression &&
 						trueExpr is SqlPlaceholderExpression &&
