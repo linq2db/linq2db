@@ -201,13 +201,13 @@ namespace LinqToDB.Linq.Builder
 #endif
 
 				var optimizedQuery = (SelectQuery)visitor.Value.Optimize(
-					root : clonedParentContext.SelectQuery,
-					rootElement : clonedParentContext.SelectQuery,
-					providerFlags : parent.Builder.DataContext.SqlProviderFlags,
-					removeWeakJoins : false,
-					dataOptions : parent.Builder.DataOptions,
+					root: clonedParentContext.SelectQuery,
+					rootElement: clonedParentContext.SelectQuery,
+					providerFlags: parent.Builder.DataContext.SqlProviderFlags,
+					removeWeakJoins: false,
+					dataOptions: parent.Builder.DataOptions,
 					mappingSchema: context.MappingSchema,
-					evaluationContext : new EvaluationContext()
+					evaluationContext: new EvaluationContext()
 				);
 
 				if (!SqlProviderHelper.IsValidQuery(optimizedQuery, parentQuery: null, fakeJoin: fakeJoin, forColumn: false, parent.Builder.DataContext.SqlProviderFlags, out errorMessage))
