@@ -2442,6 +2442,12 @@ namespace LinqToDB.SqlQuery
 									
 									if (!IsUniqueUsage(sq, testedColumn))
 									{
+										if (!processMultiColumn || join.JoinType == JoinType.Left)
+										{
+											isValid = false;
+											break;
+										};
+
 										if (_providerFlags.IsApplyJoinSupported)
 										{
 											MoveDuplicateUsageToSubQuery(sq);
