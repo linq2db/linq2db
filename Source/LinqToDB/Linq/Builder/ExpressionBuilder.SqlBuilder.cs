@@ -2455,18 +2455,6 @@ namespace LinqToDB.Linq.Builder
 		{
 			switch (expression.NodeType)
 			{
-				/*case ExpressionType.Conditional:
-				{
-					var cond = (ConditionalExpression)expression;
-
-					if (!CollectNullCompareExpressions(context, cond.IfTrue, result))
-						return false;
-					if (!CollectNullCompareExpressions(context, cond.IfFalse, result))
-						return false;
-
-					return true;
-				}*/
-
 				case ExpressionType.Constant:
 				case ExpressionType.Default:
 				{
