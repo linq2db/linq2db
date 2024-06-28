@@ -865,7 +865,7 @@ namespace LinqToDB.Linq.Builder
 				_flags |= ProjectFlags.ForceOuterAssociation;
 				try
 				{
-					var translated = TranslateExpression(node, useSql:true);
+					var translated = TranslateExpression(node, useSql: true);
 
 					if (translated is SqlPlaceholderExpression)
 						return translated;
