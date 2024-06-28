@@ -852,34 +852,18 @@ namespace LinqToDB.Linq.Builder
 					switch (expression.NodeType)
 					{
 						case ExpressionType.Add:
-						case ExpressionType.AddChecked: return CreatePlaceholder(context, new SqlBinaryExpression(t, l, "+", r, Precedence.Additive), expression, alias : alias);
-						case ExpressionType.And: return CreatePlaceholder(context, new SqlBinaryExpression(t, l, "&", r, Precedence.Bitwise), expression, alias : alias);
-						case ExpressionType.Divide: return CreatePlaceholder(context, new SqlBinaryExpression(t, l, "/", r, Precedence.Multiplicative), expression, alias : alias);
-						case ExpressionType.ExclusiveOr: return CreatePlaceholder(context, new SqlBinaryExpression(t, l, "^", r, Precedence.Bitwise), expression, alias : alias);
-						case ExpressionType.Modulo: return CreatePlaceholder(context, new SqlBinaryExpression(t, l, "%", r, Precedence.Multiplicative), expression, alias : alias);
+						case ExpressionType.AddChecked:      return CreatePlaceholder(context, new SqlBinaryExpression(t, l, "+", r, Precedence.Additive), expression, alias : alias);
+						case ExpressionType.And:             return CreatePlaceholder(context, new SqlBinaryExpression(t, l, "&", r, Precedence.Bitwise), expression, alias : alias);
+						case ExpressionType.Divide:          return CreatePlaceholder(context, new SqlBinaryExpression(t, l, "/", r, Precedence.Multiplicative), expression, alias : alias);
+						case ExpressionType.ExclusiveOr:     return CreatePlaceholder(context, new SqlBinaryExpression(t, l, "^", r, Precedence.Bitwise), expression, alias : alias);
+						case ExpressionType.Modulo:          return CreatePlaceholder(context, new SqlBinaryExpression(t, l, "%", r, Precedence.Multiplicative), expression, alias : alias);
 						case ExpressionType.Multiply:
 						case ExpressionType.MultiplyChecked: return CreatePlaceholder(context, new SqlBinaryExpression(t, l, "*", r, Precedence.Multiplicative), expression, alias : alias);
-						case ExpressionType.Or: return CreatePlaceholder(context, new SqlBinaryExpression(t, l, "|", r, Precedence.Bitwise), expression, alias : alias);
-						case ExpressionType.Power: return CreatePlaceholder(context, new SqlFunction(t, "Power", l, r), expression, alias : alias);
+						case ExpressionType.Or:              return CreatePlaceholder(context, new SqlBinaryExpression(t, l, "|", r, Precedence.Bitwise), expression, alias : alias);
+						case ExpressionType.Power:           return CreatePlaceholder(context, new SqlFunction(t, "Power", l, r), expression, alias : alias);
 						case ExpressionType.Subtract:
 						case ExpressionType.SubtractChecked: return CreatePlaceholder(context, new SqlBinaryExpression(t, l, "-", r, Precedence.Subtraction), expression, alias : alias);
-						case ExpressionType.Coalesce:
-						{
-							if (QueryHelper.UnwrapExpression(r, checkNullability: true) is SqlFunction c)
-							{
-								if (c.Name is "Coalesce" or PseudoFunctions.COALESCE)
-								{
-									var parms = new ISqlExpression[c.Parameters.Length + 1];
-
-									parms[0] = l;
-									c.Parameters.CopyTo(parms, 1);
-
-									return CreatePlaceholder(context, PseudoFunctions.MakeCoalesce(t, parms), expression, alias : alias);
-								}
-							}
-
-							return CreatePlaceholder(context, PseudoFunctions.MakeCoalesce(t, l, r), expression, alias : alias);
-						}
+						case ExpressionType.Coalesce:        return CreatePlaceholder(context, new SqlCoalesceExpression(l, r), expression, alias : alias);
 					}
 
 					break;
