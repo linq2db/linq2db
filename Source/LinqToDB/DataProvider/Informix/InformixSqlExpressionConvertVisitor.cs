@@ -143,14 +143,14 @@ namespace LinqToDB.DataProvider.Informix
 		{
 			var columnExpression = base.WrapColumnExpression(expr);
 
-			if (SqlProviderFlags != null && columnExpression.SystemType == typeof(bool) && QueryHelper.UnwrapNullablity(columnExpression) is not (SqlCastExpression or SqlColumn or SqlField))
+			if (SqlProviderFlags != null 
+			    && columnExpression.SystemType == typeof(bool)
+			    && QueryHelper.UnwrapNullablity(columnExpression) is not (SqlCastExpression or SqlColumn or SqlField))
 			{
 				columnExpression = new SqlCastExpression(columnExpression, new DbDataType(columnExpression.SystemType!, DataType.Boolean), null, isMandatory: true);
 			}
 
 			return columnExpression;
 		}
-
-
 	}
 }

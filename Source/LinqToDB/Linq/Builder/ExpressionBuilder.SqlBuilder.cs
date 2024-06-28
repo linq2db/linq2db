@@ -210,7 +210,12 @@ namespace LinqToDB.Linq.Builder
 					evaluationContext : new EvaluationContext()
 				);
 
-				if (!SqlProviderHelper.IsValidQuery(optimizedQuery, parentQuery: null, fakeJoin: fakeJoin, forColumn: false, parent.Builder.DataContext.SqlProviderFlags, out errorMessage))
+				if (!SqlProviderHelper.IsValidQuery(optimizedQuery, 
+					    parentQuery: null, 
+					    fakeJoin: fakeJoin, 
+					    forColumn: false, 
+					    parent.Builder.DataContext.SqlProviderFlags, 
+					    out errorMessage))
 				{
 					return false;
 				}
