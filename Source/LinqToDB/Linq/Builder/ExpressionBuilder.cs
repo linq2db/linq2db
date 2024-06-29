@@ -35,7 +35,7 @@ namespace LinqToDB.Linq.Builder
 		{
 			return FindBuilderImpl(info, this) is {} builder
 				? builder 
-				: throw new LinqException("Sequence '{0}' cannot be converted to SQL.", info.Expression);
+				: throw new LinqException($"Sequence '{SqlErrorExpression.PrepareExpressionString(info.Expression)}' cannot be converted to SQL.");
 		}
 
 		// Declaring a partial FindBuilderImpl so that the source generator doesn't change semantics
