@@ -154,7 +154,7 @@ namespace CodeGenerators
 				{
 					private static class Builder<T> where T: ISequenceBuilder, new()
 					{
-						public static T Instance = new();
+						public static readonly T Instance = new();
 					}
 
 					private static partial ISequenceBuilder? FindBuilderImpl(BuildInfo info, ExpressionBuilder builder)
