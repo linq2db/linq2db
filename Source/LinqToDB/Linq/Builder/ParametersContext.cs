@@ -44,7 +44,7 @@ namespace LinqToDB.Linq.Builder
 			ExpressionBuilder.ParametersParam
 		};
 
-		static ParameterExpression[] DbTypeAccessorParameters =
+		static readonly ParameterExpression[] DbTypeAccessorParameters =
 		{
 			ExpressionBuilder.ExpressionParam,
 			ItemParameter,
@@ -271,8 +271,7 @@ namespace LinqToDB.Linq.Builder
 						if (valueGetter.Type != memberType
 							&& !(valueGetter.Type.IsNullable() && valueGetter.Type.ToNullableUnderlying() == memberType.ToNullableUnderlying()))
 						{
-							if (memberType.IsValueType ||
-								!memberType.IsSameOrParentOf(valueGetter.Type))
+							if (memberType.IsValueType || !memberType.IsSameOrParentOf(valueGetter.Type))
 							{
 								var convertLambda = MappingSchema.GetConvertExpression(valueGetter.Type, memberType, checkNull: true, createDefault: false);
 								if (convertLambda != null)
@@ -302,14 +301,9 @@ namespace LinqToDB.Linq.Builder
 
 					newExpr.DbDataTypeExpression = Expression.Constant(newExpr.DataType);
 
-					if (name == null)
-					{
-						if (columnDescriptor.MemberName.Contains("."))
-							name = columnDescriptor.ColumnName;
-						else
-							name = columnDescriptor.MemberName;
-
-					}
+					name ??= columnDescriptor.MemberName.Contains(".")
+						? columnDescriptor.ColumnName
+						: columnDescriptor.MemberName;
 				}
 				else
 				{

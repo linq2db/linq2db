@@ -275,7 +275,7 @@ namespace LinqToDB.Linq
 					providerValue = values;
 				}
 
-				dbDataType ??= p.DbDataTypeAccessor(expression, null, parametersContext, parameters);
+				dbDataType ??= p.DbDataTypeAccessor(expression, arg2: null, parametersContext, parameters);
 
 				parameterValues.AddValue(p.SqlParameter, providerValue, p.SqlParameter.Type.WithSetValues(dbDataType.Value));
 			}
