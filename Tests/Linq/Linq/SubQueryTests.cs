@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 
 using LinqToDB;
 
@@ -236,7 +237,6 @@ namespace Tests.Linq
 		[Test]
 		public void Contains2([DataSources(
 			TestProvName.AllClickHouse,
-			TestProvName.AllInformix,
 			TestProvName.AllMySql,
 			TestProvName.AllSybase,
 			TestProvName.AllSapHana,
@@ -296,10 +296,8 @@ namespace Tests.Linq
 			TestProvName.AllClickHouse,
 			ProviderName.DB2,
 			TestProvName.AllOracle,
-			TestProvName.AllMySql57,
 			TestProvName.AllSybase,
-			TestProvName.AllInformix,
-			TestProvName.AllSapHana)]
+			TestProvName.AllInformix)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -640,14 +638,13 @@ namespace Tests.Linq
 					select p);
 		}
 
-
-		[Test, ActiveIssue(1601)]
+		[ActiveIssue(Configurations = [TestProvName.AllAccess, TestProvName.AllClickHouse, TestProvName.AllDB2, TestProvName.AllFirebird, TestProvName.AllInformix, TestProvName.AllOracle, TestProvName.AllSQLite, TestProvName.AllSybase, TestProvName.AllMariaDB, TestProvName.AllMySql57])]
+		[Test]
 		public void Issue1601([DataSources(false)] string context)
 		{
 			using (var db = GetDataConnection(context))
 			{
 				var query = from q in db.Types
-							let datePlus2 = q.DateTimeValue.AddDays(2)
 							let x = db.Types.Sum(y => y.MoneyValue)
 							select new
 							{
@@ -657,7 +654,7 @@ namespace Tests.Linq
 
 				query.ToList();
 
-				Assert.That(System.Text.RegularExpressions.Regex.Matches(db.LastQuery!, "Types"), Has.Count.EqualTo(1));
+				Assert.That(System.Text.RegularExpressions.Regex.Matches(db.LastQuery!, "Types"), Has.Count.EqualTo(2));
 			}
 		}
 

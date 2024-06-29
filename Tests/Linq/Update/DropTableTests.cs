@@ -2,6 +2,7 @@
 using System.Linq;
 
 using LinqToDB;
+using LinqToDB.Interceptors;
 using LinqToDB.Mapping;
 using NUnit.Framework;
 
@@ -122,6 +123,104 @@ namespace Tests.xUpdate
 				if (schema != TestUtils.NO_SCHEMA_NAME)
 					Assert.That(sql, Does.Contain(schema));
 			}
+		}
+
+
+		[Table]
+		sealed class Table
+		{
+			[Column] public int ID { get; set; }
+		}
+
+		// ! don't use it for other tests
+		sealed class NotTable
+		{
+			public int ID { get; set; }
+		}
+
+#pragma warning disable CA1064 // Exceptions should be public
+		sealed class CustomException() : Exception("You shall not pass!")
+#pragma warning restore CA1064 // Exceptions should be public
+		{
+		}
+
+		[Test]
+		public void DropTable_Existing([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			db.CreateTable<Table>();
+			db.DropTable<Table>(throwExceptionIfNotExists: true);
+		}
+
+		[Test]
+		public void DropTable_Missing_Ignore([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			db.DropTable<Table>(throwExceptionIfNotExists: false);
+		}
+
+		[Test]
+		public void DropTable_Missing_Fail([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			Assert.That(() => db.DropTable<Table>(throwExceptionIfNotExists: true), Throws.InstanceOf<Exception>());
+		}
+
+		[ActiveIssue]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/798")]
+		public void DropTable_Fail_NotFromExistCheck_EarlyError([DataSources] string context, [Values] bool throwIfNotExists)
+		{
+			using var db = GetDataContext(context, o => o.UseOnEntityDescriptorCreated((_, _) => throw new CustomException()));
+
+			Assert.That(() => db.DropTable<NotTable>(throwExceptionIfNotExists: throwIfNotExists), Throws.InstanceOf<CustomException>());
+		}
+
+		[ActiveIssue]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/798")]
+		public void DropTable_Fail_NotFromExistCheck_LateError([DataSources] string context, [Values] bool throwIfNotExists)
+		{
+			using var db = GetDataContext(context, o => o.UseConnectionString("BAD").UseOnEntityDescriptorCreated((_, _) => throw new CustomException()));
+
+			Assert.That(() => db.DropTable<NotTable>(throwExceptionIfNotExists: throwIfNotExists), Throws.InstanceOf<CustomException>());
+		}
+
+		[Test]
+		public void Drop_Existing([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			var t = db.CreateTable<Table>();
+			t.Drop(throwExceptionIfNotExists: true);
+		}
+
+		[Test]
+		public void Drop_Missing_Ignore([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			db.GetTable<Table>().Drop(throwExceptionIfNotExists: false);
+		}
+
+		[Test]
+		public void Drop_Missing_Fail([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			Assert.That(() => db.GetTable<Table>().Drop(throwExceptionIfNotExists: true), Throws.InstanceOf<Exception>());
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/798")]
+		public void Drop_Fail_NotFromExistCheck_EarlyError([DataSources] string context, [Values] bool throwIfNotExists)
+		{
+			using var db = GetDataContext(context, o => o.UseOnEntityDescriptorCreated((_, _) => throw new CustomException()));
+
+			Assert.That(() => db.GetTable<NotTable>().Drop(throwExceptionIfNotExists: throwIfNotExists), Throws.InstanceOf<CustomException>());
+		}
+
+		[ActiveIssue]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/798")]
+		public void Drop_Fail_NotFromExistCheck_LateError([DataSources] string context, [Values] bool throwIfNotExists)
+		{
+			using var db = GetDataContext(context, o => o.UseConnectionString("BAD").UseOnEntityDescriptorCreated((_, _) => throw new CustomException()));
+
+			Assert.That(() => db.GetTable<NotTable>().Drop(throwExceptionIfNotExists: throwIfNotExists), Throws.InstanceOf<CustomException>());
 		}
 	}
 }

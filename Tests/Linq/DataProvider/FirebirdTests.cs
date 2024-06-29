@@ -1169,6 +1169,124 @@ namespace Tests.DataProvider
 			[Column("MIDDLENAME", DataType = DataType.NVarChar, DbType = "varchar(50)")] public string? Middlename { get; set; }
 			[Column("GENDER"    , DataType = DataType.NChar   , DbType = "char(1)")    ] public string? Gender     { get; set; }
 		}
+
+		[Table]
+		sealed class BinaryMappingTable
+		{
+			[PrimaryKey] public int Id { get; set; }
+
+			[Column(DbType = "CHAR(6) CHARACTER SET OCTETS")] public string? String { get; set; }
+			[Column(DbType = "CHAR(6) CHARACTER SET OCTETS")] public char[] AsCharArray { get; set; } = null!;
+			[Column(DbType = "CHAR(6) CHARACTER SET OCTETS")] public byte[]? AsBinary { get; set; }
+
+			[NotColumn]
+			public string? StringAccessor
+			{
+				get => String == null ? null : string.Join(":", String.Select(c => ((ushort)c).ToString("X2")));
+				set => String = value == null ? null : string.Join("", value.Split(':').Select(c => (char)ushort.Parse(c, NumberStyles.HexNumber)));
+			}
+
+			[NotColumn]
+			public string? BinaryAccessor
+			{
+				get => AsBinary == null ? null : string.Join(":", AsBinary.Select(b => b.ToString("X2")));
+				set => AsBinary = value == null ? null : value.Split(':').Select(c => byte.Parse(c, NumberStyles.HexNumber)).ToArray();
+			}
+
+			[NotColumn]
+			public string CharArrayAccessor
+			{
+				get => string.Join(":", AsCharArray.Select(c => ((ushort)c).ToString("X2")));
+				set => AsCharArray = value.Split(':').Select(c => (char)ushort.Parse(c, NumberStyles.HexNumber)).ToArray();
+			}
+		}
+
+		[ActiveIssue]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/755")]
+		public void TestBinaryMapping_Binary([IncludeDataSources(false, TestProvName.AllFirebird)] string context)
+		{
+			using var db = GetDataConnection(context);
+			using var t  = db.CreateLocalTable<BinaryMappingTable>();
+
+			var mac1 = "00:FF:01:02:03:04";
+			var mac2 = "DE:AD:00:BE:EF:11";
+
+			db.Insert(new BinaryMappingTable()
+			{
+				Id                = 1,
+				BinaryAccessor    = mac1,
+			});
+
+			var record = t.Single();
+			Assert.That(record.BinaryAccessor, Is.EqualTo(mac1));
+
+			db.Update(new BinaryMappingTable()
+			{
+				Id                = 1,
+				BinaryAccessor    = mac2,
+			});
+
+			record = t.Single();
+			Assert.That(record.BinaryAccessor, Is.EqualTo(mac2));
+		}
+
+		[ActiveIssue]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/755")]
+		public void TestBinaryMapping_String([IncludeDataSources(false, TestProvName.AllFirebird)] string context)
+		{
+			using var db = GetDataConnection(context);
+			using var t  = db.CreateLocalTable<BinaryMappingTable>();
+
+			var mac1 = "00:FF:01:02:03:04";
+			var mac2 = "DE:AD:00:BE:EF:11";
+
+			db.Insert(new BinaryMappingTable()
+			{
+				Id                = 1,
+				StringAccessor    = mac1,
+			});
+
+			var record = t.Single();
+			Assert.That(record.StringAccessor, Is.EqualTo(mac1));
+
+			db.Update(new BinaryMappingTable()
+			{
+				Id                = 1,
+				StringAccessor    = mac2,
+			});
+
+			record = t.Single();
+			Assert.That(record.StringAccessor, Is.EqualTo(mac2));
+		}
+
+		[ActiveIssue]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/755")]
+		public void TestBinaryMapping_Char([IncludeDataSources(false, TestProvName.AllFirebird)] string context)
+		{
+			using var db = GetDataConnection(context);
+			using var t  = db.CreateLocalTable<BinaryMappingTable>();
+
+			var mac1 = "00:FF:01:02:03:04";
+			var mac2 = "DE:AD:00:BE:EF:11";
+
+			db.Insert(new BinaryMappingTable()
+			{
+				Id = 1,
+				CharArrayAccessor = mac1,
+			});
+
+			var record = t.Single();
+			Assert.That(record.CharArrayAccessor, Is.EqualTo(mac1));
+
+			db.Update(new BinaryMappingTable()
+			{
+				Id = 1,
+				CharArrayAccessor = mac2,
+			});
+
+			record = t.Single();
+			Assert.That(record.CharArrayAccessor, Is.EqualTo(mac2));
+		}
 	}
 
 	static class FirebirdModuleFunctions

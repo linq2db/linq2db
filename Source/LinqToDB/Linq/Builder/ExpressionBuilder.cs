@@ -19,6 +19,7 @@ namespace LinqToDB.Linq.Builder
 	using Tools;
 	using Translation;
 	using Visitors;
+	using DataProvider;
 
 	internal sealed partial class ExpressionBuilder : IExpressionEvaluator
 	{
@@ -53,7 +54,10 @@ namespace LinqToDB.Linq.Builder
 		#region Init
 
 		readonly Query                             _query;
+		bool                                       _validateSubqueries;
 		readonly IMemberTranslator                 _memberTranslator;
+		readonly IReadOnlyList<ISequenceBuilder>   _builders = _sequenceBuilders;
+		bool                                       _reorder;
 		readonly ExpressionTreeOptimizationContext _optimizationContext;
 		readonly ParametersContext                 _parametersContext;
 
@@ -68,6 +72,7 @@ namespace LinqToDB.Linq.Builder
 
 		public ExpressionBuilder(
 			Query                             query,
+			bool                              validateSubqueries,
 			ExpressionTreeOptimizationContext optimizationContext,
 			ParametersContext                 parametersContext,
 			IDataContext                      dataContext,
@@ -76,6 +81,7 @@ namespace LinqToDB.Linq.Builder
 			object?[]?                        parameterValues)
 		{
 			_query               = query;
+			_validateSubqueries  = validateSubqueries;
 
 			CompiledParameters = compiledParameters;
 			ParameterValues    = parameterValues;
@@ -118,8 +124,6 @@ namespace LinqToDB.Linq.Builder
 
 		#region Builder SQL
 
-		internal bool DisableDefaultIfEmpty;
-
 		public Query<T> Build<T>()
 		{
 			using var m = ActivityService.Start(ActivityID.Build);
@@ -135,28 +139,31 @@ namespace LinqToDB.Linq.Builder
 			List<Preamble>? preambles = null;
 			BuildQuery((Query<T>)_query, sequence, param, ref preambles, []);
 
-			foreach (var q in _query.Queries)
+			if (_query.ErrorExpression == null)
 			{
-				if (Tag?.Lines.Count > 0)
+				foreach (var q in _query.Queries)
 				{
-					(q.Statement.Tag ??= new()).Lines.AddRange(Tag.Lines);
+					if (Tag?.Lines.Count > 0)
+					{
+						(q.Statement.Tag ??= new()).Lines.AddRange(Tag.Lines);
+					}
+
+					if (SqlQueryExtensions != null)
+					{
+						(q.Statement.SqlQueryExtensions ??= new()).AddRange(SqlQueryExtensions);
+					}
 				}
 
-				if (SqlQueryExtensions != null)
-				{
-					(q.Statement.SqlQueryExtensions ??= new()).AddRange(SqlQueryExtensions);
-				}
+				_query.SetPreambles(preambles);
+				_query.SetParameterized(_parametersContext.GetParameterized());
+				_query.SetParametersDuplicates(_parametersContext.GetParameterDuplicates());
+				_query.SetDynamicAccessors(_parametersContext.GetDynamicAccessors());
 			}
-
-			_query.SetPreambles(preambles);
-			_query.SetParameterized(_parametersContext.GetParameterized());
-			_query.SetParametersDuplicates(_parametersContext.GetParameterDuplicates());
-			_query.SetDynamicAccessors(_parametersContext.GetDynamicAccessors());
 
 			return (Query<T>)_query;
 		}
 
-		void BuildQuery<T>(
+		bool BuildQuery<T>(
 			Query<T>            query,
 			IBuildContext       sequence,
 			ParameterExpression queryParameter,
@@ -167,7 +174,34 @@ namespace LinqToDB.Linq.Builder
 
 			var finalized = FinalizeProjection(query, sequence, expr, queryParameter, ref preambles, previousKeys);
 
+			var error = SequenceHelper.FindError(finalized);
+			if (error != null)
+			{
+				query.ErrorExpression = error;
+				return false;
+			}
+
+			using (ActivityService.Start(ActivityID.FinalizeQuery))
+			{
+				foreach (var queryInfo in query.Queries)
+				{
+					queryInfo.Statement = query.SqlOptimizer.Finalize(query.MappingSchema, queryInfo.Statement, query.DataOptions);
+
+					if (queryInfo.Statement.SelectQuery != null)
+					{
+						if (!SqlProviderHelper.IsValidQuery(queryInfo.Statement.SelectQuery, null, null, false, DataContext.SqlProviderFlags, out var errorMessage))
+						{
+							query.ErrorExpression = new SqlErrorExpression(Expression, errorMessage, Expression.Type);
+							return false;
+						}
+					}
+				}
+
+				query.IsFinalized = true;
+			}
+
 			sequence.SetRunQuery(query, finalized);
+			return true;
 		}
 
 		/// <summary>

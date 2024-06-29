@@ -6,6 +6,7 @@ using FluentAssertions;
 
 using LinqToDB;
 using LinqToDB.Linq;
+using System.Linq.Expressions;
 
 namespace Tests.Linq
 {
@@ -24,14 +25,14 @@ namespace Tests.Linq
 			public static ConditionalData[] Seed()
 			{
 				return Enumerable.Range(1, 10)
-					.Select(x => new ConditionalData {Id = x, StringProp = x % 3 == 0 ? null : "String" + x})
+					.Select(x => new ConditionalData { Id = x, StringProp = x % 3 == 0 ? null : "String" + x })
 					.ToArray();
 			}
 		}
 
 		class TestChildClass
 		{
-			public int? IntProp { get; set; }
+			public int?    IntProp    { get; set; }
 			public string? StringProp { get; set; }
 		}
 
@@ -45,11 +46,7 @@ namespace Tests.Linq
 			{
 				var query =
 					from p in table
-					select new
-					{
-						Id    = p.Id,
-						child = p.StringProp == "1" ? null : new TestChildClass {StringProp = p.StringProp}
-					};
+					select new { Id = p.Id, child = p.StringProp == "1" ? null : new TestChildClass { StringProp = p.StringProp } };
 
 				query = query.Where(x => x.child.StringProp!.Contains("2"));
 
@@ -68,11 +65,7 @@ namespace Tests.Linq
 			{
 				var query =
 					from p in table
-					select new
-					{
-						Id    = p.Id,
-						child = p.StringProp == "1" ? new TestChildClass {StringProp = p.StringProp} : null
-					};
+					select new { Id = p.Id, child = p.StringProp == "1" ? new TestChildClass { StringProp = p.StringProp } : null };
 
 				query = query.Where(x => x.child.StringProp!.Contains("2"));
 
@@ -94,8 +87,8 @@ namespace Tests.Linq
 					{
 						Id = p.Id,
 						child = p.StringProp == "1"
-							? new TestChildClass {StringProp = "2"}
-							: new TestChildClass {StringProp = p.StringProp}
+							? new TestChildClass { StringProp = "2" }
+							: new TestChildClass { StringProp = p.StringProp }
 					};
 
 				query = query.Where(x => x.child.StringProp!.Contains("2"));
@@ -117,9 +110,9 @@ namespace Tests.Linq
 					select new
 					{
 						Id = p.Id,
-						child = p.StringProp == "1" || p.StringProp == null ? new TestChildClass {StringProp = "2"} 
-							: p.StringProp == "2" ? new TestChildClass {StringProp = p.StringProp, IntProp       = 1} 
-							: new TestChildClass {StringProp                         = p.StringProp + "2", IntProp = 2} 
+						child = p.StringProp == "1" || p.StringProp == null ? new TestChildClass { StringProp = "2" }
+							: p.StringProp == "2" ? new TestChildClass { StringProp                           = p.StringProp, IntProp       = 1 }
+							: new TestChildClass { StringProp                                                 = p.StringProp + "2", IntProp = 2 }
 					};
 
 				query = query.Where(x => x.child.StringProp!.EndsWith("2") && x.child.IntProp == 2);
@@ -141,9 +134,9 @@ namespace Tests.Linq
 					select new
 					{
 						Id = p.Id,
-						child = p.StringProp == "1" ? new TestChildClass {StringProp = "2"} 
-							: p.StringProp   == "2" ? new TestChildClass {StringProp = p.StringProp} 
-							: new TestChildClass {StringProp                         = p.StringProp + "2"} 
+						child = p.StringProp == "1" ? new TestChildClass { StringProp = "2" }
+							: p.StringProp   == "2" ? new TestChildClass { StringProp = p.StringProp }
+							: new TestChildClass { StringProp                         = p.StringProp + "2" }
 					};
 
 				query = query.Where(m => m.child.StringProp!.Contains("2") && m.child.IntProp == 1);
@@ -167,8 +160,8 @@ namespace Tests.Linq
 					{
 						Id = p.Id,
 						child = p2 == null
-							? new TestChildClass {StringProp = "-1"}
-							: new TestChildClass {StringProp = p2.StringProp}
+							? new TestChildClass { StringProp = "-1" }
+							: new TestChildClass { StringProp = p2.StringProp }
 					};
 
 				query = query.Where(x => x.child.StringProp == "-1");
@@ -191,14 +184,8 @@ namespace Tests.Linq
 					{
 						Id = p.Id,
 						Sub = p == null
-							? new { Prop = new { V = "-1"} }
-							: new { Prop = p.StringProp!.Contains("1") ? new
-							{
-								V = "1"
-							} : new
-							{
-								V = "2"
-							}}
+							? new { Prop = new { V = "-1" } }
+							: new { Prop = p.StringProp!.Contains("1") ? new { V = "1" } : new { V = "2" } }
 					};
 
 				query = query.Where(x => x.Sub.Prop.V == "-1");
@@ -212,13 +199,72 @@ namespace Tests.Linq
 		{
 			using var db = GetDataContext(context);
 
-			var query = from p in db.Parent.LoadWith(p => p.Children)
-						select p.ParentID == 2
-							// this must be promoted to outer join
-							? p.Children.OrderBy(c => c.ChildID).First()
-							: p.Children.OrderBy(c => c.ChildID).FirstOrDefault();
+			var query =
+				from p in db.Parent.LoadWith(p => p.Children)
+				select p.ParentID == 2
+					// this must be promoted to outer join
+					? p.Children.OrderBy(c => c.ChildID).First()
+					: p.Children.OrderBy(c => c.ChildID).FirstOrDefault();
 
 			AssertQuery(query);
 		}
+
+		[ExpressionMethod(nameof(DivideExpr))]
+		static double Divide(double value, double divisor) => divisor == 0 ? value : value / divisor;
+
+		static Expression<Func<double, double, double>> DivideExpr() => (double value, double divisor) => divisor == 0 ? value : value / divisor;
+
+		[Test]
+		public void Conditional_DoNotEvalueBothBranches([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			// Sql.AsSql to force ExpressionMethod translation
+			var result = db.Select(() => Divide(Sql.AsSql(20D), Sql.AsSql(0D)));
+
+			Assert.That(result, Is.EqualTo(20D));
+		}
+
+		[Test]
+		public void ConditionInsideCondition_BoolWrapping([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query =
+				from p in db.Parent.LoadWith(p => p.Children)
+				select new
+				{
+					Value = (p.ParentID % 2 == 0)
+						? (p.ParentID   % 3 == 0)
+						: (p.ParentID   % 4 == 0)
+							? (p.ParentID   > 0)
+							: (p.ParentID   < 5)
+				};
+
+			AssertQuery(query);
+		}
+
+		[Test]
+		public void ConditionInsideCondition_BoolWrappingFilter([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query =
+				from p in db.Parent.LoadWith(p => p.Children)
+				select new
+				{
+					Value = (p.ParentID % 2 == 0)
+						? (p.ParentID   % 3 == 0)
+						: (p.ParentID   % 4 == 0)
+							? (p.ParentID   > 0)
+							: (p.ParentID   < 5)
+				}
+				into s
+				where s.Value
+				select s;
+
+			AssertQuery(query);
+		}
+
 	}
 }
