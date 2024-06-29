@@ -7,6 +7,7 @@
 	<LangVersion>latest</LangVersion>
 	<ManagePackageVersionsCentrally>false</ManagePackageVersionsCentrally> 
 	<EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>
+	<IsRoslynComponent>true</IsRoslynComponent>
   </PropertyGroup>
 
   <ItemGroup>
