@@ -56,8 +56,6 @@ namespace LinqToDB.Linq.Builder
 		readonly Query                             _query;
 		bool                                       _validateSubqueries;
 		readonly IMemberTranslator                 _memberTranslator;
-		readonly IReadOnlyList<ISequenceBuilder>   _builders = _sequenceBuilders;
-		bool                                       _reorder;
 		readonly ExpressionTreeOptimizationContext _optimizationContext;
 		readonly ParametersContext                 _parametersContext;
 
