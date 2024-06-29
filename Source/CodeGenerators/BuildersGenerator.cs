@@ -2,232 +2,263 @@
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Text;
 using System.Threading;
+
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
-[Generator]
-public class BuildersGenerator : IIncrementalGenerator
+namespace CodeGenerators
 {
-	enum BuilderKind { Any, Expr, AnyCall, Call }
-
-	public void Initialize(IncrementalGeneratorInitializationContext context)
+	[Generator]
+	public partial class BuildersGenerator : IIncrementalGenerator
 	{
-		var provider = context.SyntaxProvider
-			.CreateSyntaxProvider(IsSyntaxBuilder, GetInfos)
-			.Where(x => x.attrArgs != null || x.kind == BuilderKind.Any)
-			.SelectMany(Expand)
-			.Collect();
-
-		context.RegisterImplementationSourceOutput(provider, GenerateCode);
-	}
-
-	bool IsSyntaxBuilder(SyntaxNode syntax, CancellationToken _)
-	{
-		return syntax is AttributeSyntax attr 
-			&& GetName(attr.Name) is "BuildsExpression" or "BuildsMethodCall" or "BuildsAny";
-	}
-
-	string ToCode(ExpressionSyntax expr)
-	{
-		// Simplify nameof(..) syntax for better readability,
-		// so that identical cases are not duplicated,
-		// and to let us sort them properly.
-		if (expr is not InvocationExpressionSyntax { Expression: IdentifierNameSyntax { Identifier.Text: "nameof" } } invoke)
-			return expr.ToString();
-
-		return invoke.ArgumentList.Arguments[0].Expression switch
+		public void Initialize(IncrementalGeneratorInitializationContext context)
 		{
-			MemberAccessExpressionSyntax member => '"' + member.Name.Identifier.Text + '"',
-			IdentifierNameSyntax id => '"' + id.Identifier.Text + '"',
-			var unsupported => throw new NotSupportedException("Unsupported nameof value: " + unsupported)
-		};
-	}
+			var buildsAnyNodes = context.SyntaxProvider
+				.ForAttributeWithMetadataName(
+					"LinqToDB.Linq.Builder.BuildsAnyAttribute",
+					(_, _) => true,
+					TransformBuildsAny
+				)
+				.Collect();
 
-	(string? builder, AttributeArgumentListSyntax? attrArgs, BuilderKind kind) GetInfos(GeneratorSyntaxContext context, CancellationToken _)
-	{
-		var attr = (AttributeSyntax)context.Node;
-		// ClassDeclaration -> AttributeList -> Attribute
-		if (attr.Parent?.Parent is not ClassDeclarationSyntax @class) 
-			return (null, null, BuilderKind.Any);
-		
-		// Support for nested classes
-		var className = @class.Identifier.Text;
-		while (@class.Parent is ClassDeclarationSyntax parentClass)
-		{
-			@class = parentClass;
-			className = $"{@class.Identifier.Text}.{className}";
+			var buildsExpressionNodes = context.SyntaxProvider
+				.ForAttributeWithMetadataName(
+					"LinqToDB.Linq.Builder.BuildsExpressionAttribute",
+					(_, _) => true,
+					TransformBuildsExpression
+				)
+				.SelectMany((x, ct) => x)
+				.Collect();
+
+			var buildsMethodCallNodes = context.SyntaxProvider
+				.ForAttributeWithMetadataName(
+					"LinqToDB.Linq.Builder.BuildsMethodCallAttribute",
+					(_, _) => true,
+					TransformBuildsMethodCall
+				)
+				.SelectMany((x, ct) => x)
+				.Collect();
+
+			context
+				.RegisterImplementationSourceOutput(
+					buildsAnyNodes
+						.Combine(buildsExpressionNodes)
+						.Combine(buildsMethodCallNodes),
+					(spc, x) => GenerateCode(
+						spc,
+						x.Left.Left,
+						x.Left.Right,
+						x.Right
+					)
+				);
 		}
 
-		return (
-			className,
-			attr.ArgumentList,			
-			GetName(attr.Name) switch 
-			{
-				"BuildsAny" => BuilderKind.Any,
-				"BuildsMethodCall" => BuilderKind.Call,
-				_ => BuilderKind.Expr,
-			});
-	}
-
-	static string? GetName(NameSyntax name)
-	{
-		return name switch
+		static BuilderNode TransformBuildsAny(
+			GeneratorAttributeSyntaxContext context,
+			CancellationToken token)
 		{
-			SimpleNameSyntax s => s.Identifier.Text,
-			QualifiedNameSyntax q => q.Right.Identifier.Text,
-			_ => null
-		};
-	}
+			token.ThrowIfCancellationRequested();
 
-	IEnumerable<(string builder, string key, BuilderKind kind, string check)> Expand(
-		(string? builder, AttributeArgumentListSyntax? attr, BuilderKind kind) input,
-		CancellationToken _)
-	{
-		if (input.kind == BuilderKind.Any)
-			yield return (input.builder!, "", BuilderKind.Any, "CanBuild");
-		else
+			var symbol = (INamedTypeSymbol)context.TargetSymbol;
+			var className = symbol.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
+			return new(className, "", BuilderKind.Any, "CanBuild");
+		}
+
+		static EquatableReadOnlyList<BuilderNode> TransformBuildsExpression(
+			GeneratorAttributeSyntaxContext context,
+			CancellationToken token)
 		{
-			var expr = input.attr!.Arguments
-				.FirstOrDefault(a => a.NameEquals?.Name.Identifier.Text == "CanBuildName")
-				?.Expression;
-			
-			var check = expr != null 
-				? ToCode(expr).Trim('"')
-				: input.kind == BuilderKind.Call 
-				? "CanBuildMethod"
-				: "CanBuild";
-			
-			foreach (var x in input.attr.Arguments)
+			token.ThrowIfCancellationRequested();
+
+			var symbol = (INamedTypeSymbol)context.TargetSymbol;
+			var className = symbol.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
+			var check = context.Attributes[0].NamedArguments
+				.FirstOrDefault(a => a.Key == "CanBuildName")
+				.Value.Value?.ToString()
+				?? "CanBuild";
+
+			token.ThrowIfCancellationRequested();
+
+			var nodes = new List<BuilderNode>();
+			foreach (var argument in context.Attributes[0].ConstructorArguments)
 			{
-				if (x.NameEquals != null) continue;
-				var key = ToCode(x.Expression);
-				yield return (
-					input.builder!, 
-					key, 
-					input.kind == BuilderKind.Expr && key == "ExpressionType.Call" ? BuilderKind.AnyCall : input.kind,
-					check);
+				nodes.Add(new(
+					className,
+					((ExpressionType)(int)argument.Value!).ToString(),
+					BuilderKind.Expr,
+					check
+				));
 			}
+
+			return nodes.ToEquatableReadOnlyList();
 		}
-	}
 
-	void GenerateCode(
-		SourceProductionContext context, 
-		ImmutableArray<(string builder, string key, BuilderKind kind, string check)> values)
-	{
-		var sb = new StringBuilder("""
-			// <auto-generated />
-			#nullable enable
+		static EquatableReadOnlyList<BuilderNode> TransformBuildsMethodCall(
+			GeneratorAttributeSyntaxContext context,
+			CancellationToken token)
+		{
+			token.ThrowIfCancellationRequested();
+	
+			var symbol = (INamedTypeSymbol)context.TargetSymbol;
+			var className = symbol.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
+			var check = context.Attributes[0].NamedArguments
+				.FirstOrDefault(a => a.Key == "CanBuildName")
+				.Value.Value?.ToString()
+				?? "CanBuildMethod";
 
-			using LinqToDB.Expressions;
-			using System.Diagnostics.CodeAnalysis;
-			using System.Linq.Expressions;
-
-			namespace LinqToDB.Linq.Builder;
+			token.ThrowIfCancellationRequested();
 			
-			partial class ExpressionBuilder
+			var nodes = new List<BuilderNode>();
+			foreach (var argument in context.Attributes[0].ConstructorArguments)
 			{
-				private static class Builder<T> where T: ISequenceBuilder, new()
-				{
-					public static T Instance = new();
-				}
+				nodes.Add(new(
+					className,
+					argument.Value!.ToString(),
+					BuilderKind.Call,
+					check
+				));
+			}
 
-				private static partial ISequenceBuilder? FindBuilderImpl(BuildInfo info, ExpressionBuilder builder)
+			return nodes.ToEquatableReadOnlyList();
+		}
+
+		void GenerateCode(
+			SourceProductionContext context,
+			ImmutableArray<BuilderNode> anyNodes,
+			ImmutableArray<BuilderNode> expressionNodes,
+			ImmutableArray<BuilderNode> methodCallNodes)
+		{
+			var source =
+				$$"""
+				// <auto-generated />
+				#nullable enable
+
+				using LinqToDB.Expressions;
+				using System.Diagnostics.CodeAnalysis;
+				using System.Linq.Expressions;
+
+				namespace LinqToDB.Linq.Builder;
+			
+				partial class ExpressionBuilder
 				{
-					var expr = info.Expression = info.Expression.Unwrap();
-					switch (expr.NodeType)
+					private static class Builder<T> where T: ISequenceBuilder, new()
 					{
-
-			""");
-		foreach (var type in values
-			.Where(x => x.kind == BuilderKind.Expr)
-			.GroupBy(x => x.key))
-		{
-			sb.Append($$"""
-						case {{type.Key}}:
-
-			""");
-			foreach (var x in type)
-			{
-				sb.Append($$"""
-							if ({{x.builder}}.{{x.check}}(expr, info, builder))
-								return Builder<{{x.builder}}>.Instance;
-
-			""");
-			}
-			sb.Append("""
-							break;
-
-
-			""");
-		}
-		sb.Append("""
-						case ExpressionType.Call:
-							var call = (MethodCallExpression)expr;
-							switch (call.Method.Name)
-							{
-
-			""");
-		foreach (var method in values
-			.Where(x => x.kind == BuilderKind.Call)
-			.GroupBy(x => x.key)
-			.OrderBy(x => x.Key))
-		{
-			sb.Append($$"""
-								case {{method.Key}}:
-
-			""");
-			foreach (var x in method)
-			{
-				sb.Append($$"""
-									if ({{x.builder}}.{{x.check}}(call, info, builder))
-										return Builder<{{x.builder}}>.Instance;
-
-			""");
-			}
-			sb.Append("""
-									break;
-
-
-			""");
-		}
-		sb.Append("""
-							}
-
-			""");
-		foreach (var (builder, _, _, check) in values.Where(x => x.kind == BuilderKind.AnyCall))
-		{
-			sb.Append($$"""
-							if ({{builder}}.{{check}}(expr, info, builder))
-								return Builder<{{builder}}>.Instance;
-
-			""");
-
-		}
-		sb.Append("""
-
-							break;
+						public static T Instance = new();
 					}
 
+					private static partial ISequenceBuilder? FindBuilderImpl(BuildInfo info, ExpressionBuilder builder)
+					{
+						var expr = info.Expression = info.Expression.Unwrap();
+						switch (expr.NodeType)
+						{
+				{{RenderExpressionNodes(expressionNodes)}}
+							case ExpressionType.Call:
+							{
+								var call = (MethodCallExpression)expr;
+								switch (call.Method.Name)
+								{
+				{{RenderMethodCallNodes(methodCallNodes)}}
+								}
 
-			""");
-		foreach (var (builder, _, _, check) in values.Where(x => x.kind == BuilderKind.Any))
-		{
-			sb.Append($$"""
-					if ({{builder}}.{{check}}(info, builder))
-						return Builder<{{builder}}>.Instance;
+				{{RenderExpressionCallNodes(expressionNodes)}}
+								break;
+							}
+						}
 
-			""");
-
-		}
-		sb.Append("""
-
-					return null;
+				{{RenderAnyNodes(anyNodes)}}
+						return null;
+					}
 				}
-			}
-			""");
+				""";
 
-		context.AddSource("ExpressionBuilder.g.cs", sb.ToString());
+			context.AddSource("ExpressionBuilder.g.cs", source);
+		}
+
+		static string RenderExpressionNodes(ImmutableArray<BuilderNode> expressionNodes) =>
+			string.Join(
+				"",
+				expressionNodes
+					.Where(n => n.Key != "Call")
+					.GroupBy(n => n.Key)
+					.Select(g =>
+						$$"""
+									case ExpressionType.{{g.Key}}:
+
+						""" +
+						string.Join(
+							"",
+							g.Select(RenderExpressionNode)
+						) +
+						"""
+										break;
+
+
+						"""
+					)
+			);
+
+		static string RenderExpressionNode(BuilderNode n) =>
+			$$"""
+							if ({{n.Builder}}.{{n.Check}}(expr, info, builder))
+								return Builder<{{n.Builder}}>.Instance;
+
+
+			""";
+
+		static string RenderMethodCallNodes(ImmutableArray<BuilderNode> expressionNodes) =>
+			string.Join(
+				"",
+				expressionNodes
+					.GroupBy(n => n.Key)
+					.OrderBy(n => n.Key)
+					.Select(g =>
+						$$"""
+											case "{{g.Key}}":
+
+						""" +
+						string.Join(
+							"",
+							g.Select(RenderCallNode)
+						) +
+						"""
+												break;
+
+
+						"""
+					)
+			);
+
+		static string RenderCallNode(BuilderNode n) =>
+			$$"""
+									if ({{n.Builder}}.{{n.Check}}(call, info, builder))
+										return Builder<{{n.Builder}}>.Instance;
+
+
+			""";
+
+		static string RenderExpressionCallNodes(ImmutableArray<BuilderNode> expressionNodes) =>
+			string.Join(
+				"",
+				expressionNodes
+					.Where(n => n.Key == "Call")
+					.Select(RenderExpressionNode)
+			);
+
+		static string RenderAnyNodes(ImmutableArray<BuilderNode> anyNodes) =>
+			string.Join(
+				"",
+				anyNodes.Select(RenderAnyNode)
+			);
+
+		static string RenderAnyNode(BuilderNode n) =>
+			$$"""
+					if ({{n.Builder}}.{{n.Check}}(info, builder))
+						return Builder<{{n.Builder}}>.Instance;
+
+
+			""";
 	}
 }
