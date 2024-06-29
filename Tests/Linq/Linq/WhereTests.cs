@@ -2395,5 +2395,65 @@ namespace Tests.Linq
 			Assert.That(db.LastQuery, Does.Contain(" = "));
 			Assert.That(db.LastQuery, Does.Contain("IS NULL"));
 		}
+
+		#region Issue #4539
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/1662")]
+		public void Issue4539Test1([DataSources] string context)
+		{
+			using var db = GetDataConnection(context, TenderId.LinqToDbMapping());
+
+			var tenderIds = new List<int> { 1, 2 };
+			db.GetTable<Tender>().Where(i => tenderIds.Contains(i.Id.Value)).Any();
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/1662")]
+		public void Issue4539Test2([DataSources] string context)
+		{
+			using var db = GetDataConnection(context, TenderId.LinqToDbMapping());
+
+			TenderId? tenderId = new TenderId { Value = 1 };
+			db.GetTable<Tender>().Where(i => tenderId != null && i.Id == tenderId.Value.Value).Any();
+		}
+
+		[Table("Person")]
+		sealed class Tender
+		{
+			[Column("PersonID")]
+			public TenderId Id { get; set; }
+		}
+
+#pragma warning disable CS0660, CS0661 // Type defines operator == or operator != but does not override Object.Equals(object o)
+		struct TenderId
+#pragma warning restore CS0660, CS0661 // Type defines operator == or operator != but does not override Object.Equals(object o)
+		{
+			public int Value { get; set; }
+			public static TenderId From(int value) => new TenderId { Value = value };
+			public static TenderId? From(int? value) => value.HasValue ? new TenderId { Value = value.Value } : null;
+
+			public static bool operator ==(TenderId a, int b) => a.Value == b;
+			public static bool operator !=(TenderId a, int b) => !(a == b);
+
+			public static implicit operator string(TenderId tenderId) => tenderId.Value.ToString();
+
+			internal static MappingSchema LinqToDbMapping()
+			{
+				var ms = new MappingSchema();
+
+				ms.SetConverter<TenderId, int>(id => id.Value);
+				ms.SetConverter<TenderId, int?>(id => id.Value);
+				ms.SetConverter<TenderId?, int>(id => id?.Value ?? default);
+				ms.SetConverter<TenderId?, int?>(id => id?.Value);
+				ms.SetConverter<int, TenderId>(From);
+				ms.SetConverter<int, TenderId?>(g => From(g));
+				ms.SetConverter<int?, TenderId>(g => g == null ? default : From((int)g));
+				ms.SetConverter<int?, TenderId?>(From);
+
+				ms.SetConverter<TenderId, LinqToDB.Data.DataParameter>(id => new LinqToDB.Data.DataParameter { DataType = DataType.Int32, Value = id.Value });
+				ms.SetConverter<TenderId?, LinqToDB.Data.DataParameter>(id => new LinqToDB.Data.DataParameter { DataType = DataType.Int32, Value = id?.Value });
+
+				return ms;
+			}
+		}
+		#endregion
 	}
 }
