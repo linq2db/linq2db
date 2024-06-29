@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Linq;
 
+using LinqToDB.Interceptors;
+
 namespace LinqToDB.Tools.Activity
 {
 	/// <summary>
@@ -186,6 +188,9 @@ namespace LinqToDB.Tools.Activity
 						UnwrapDataObjectInterceptorUnwrapTransaction = new("    UnwrapTransaction"),
 						UnwrapDataObjectInterceptorUnwrapCommand     = new("    UnwrapCommand"),
 						UnwrapDataObjectInterceptorUnwrapDataReader  = new("    UnwrapDataReader")
+					),
+					ExceptionInterceptor            = new("  ExceptionInterceptor",
+						ExceptionInterceptorProcessException         = new("    ExceptionInterceptorProcessException")
 					)
 				),
 
@@ -336,6 +341,8 @@ namespace LinqToDB.Tools.Activity
 				ActivityID.UnwrapDataObjectInterceptorUnwrapTransaction => UnwrapDataObjectInterceptorUnwrapTransaction,
 				ActivityID.UnwrapDataObjectInterceptorUnwrapCommand     => UnwrapDataObjectInterceptorUnwrapCommand,
 				ActivityID.UnwrapDataObjectInterceptorUnwrapDataReader  => UnwrapDataObjectInterceptorUnwrapDataReader,
+
+				ActivityID.ExceptionInterceptorProcessException         => ExceptionInterceptorProcessException,
 
 				ActivityID.GetSqlText                                   => GetSqlText,
 				ActivityID.OnTraceInternal                              => OnTraceInternal,
@@ -497,6 +504,8 @@ namespace LinqToDB.Tools.Activity
 		static StatActivity UnwrapDataObjectInterceptorUnwrapCommand;
 		static StatActivity UnwrapDataObjectInterceptorUnwrapDataReader;
 
+		static StatActivity ExceptionInterceptorProcessException;
+
 		static StatActivity GetSqlText;
 
 		static StatActivity OnTraceInternal;
@@ -512,6 +521,7 @@ namespace LinqToDB.Tools.Activity
 		static StatActivitySum DataContextInterceptor;
 		static StatActivitySum EntityServiceInterceptor;
 		static StatActivitySum UnwrapDataObjectInterceptor;
+		static StatActivitySum ExceptionInterceptor;
 
 		static IStatActivity[] All;
 	}
