@@ -6,7 +6,6 @@ namespace LinqToDB.Linq.Builder
 	using LinqToDB.Expressions;
 
 	[BuildsMethodCall("HasUniqueKey")]
-	
 	sealed class HasUniqueKeyBuilder : MethodCallBuilder
 	{
 		public static bool CanBuildMethod(MethodCallExpression call, BuildInfo buildInfo, ExpressionBuilder builder)
