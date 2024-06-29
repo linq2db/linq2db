@@ -227,7 +227,7 @@ namespace LinqToDB.Linq.Builder
 
 				if (!flags.IsTest())
 				{
-					if (!SequenceHelper.IsSupportedSubquery(rootContext.BuildContext, sequence, out var errorMessage))
+					if (!IsSupportedSubquery(rootContext.BuildContext, sequence, out var errorMessage))
 						return new SqlErrorExpression(null, expression, errorMessage, expression.Type, true);
 				}
 

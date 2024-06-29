@@ -860,51 +860,52 @@ namespace LinqToDB.Linq.Builder
 
 			protected override Expression VisitConditional(ConditionalExpression node)
 			{
-				if (_flags.IsSql())
+				var saveFlags = _flags;
+
+				_flags |= ProjectFlags.ForceOuterAssociation;
+				try
 				{
-					var translated = TranslateExpression(node);
+					var translated = TranslateExpression(node, useSql: true);
 
 					if (translated is SqlPlaceholderExpression)
 						return translated;
-				}
 
-				if (IsForcedToConvert(node))
+					if (IsForcedToConvert(node))
+					{
+						return TranslateExpression(node);
+					}
+
+					var saveDescriptor = _columnDescriptor;
+					_columnDescriptor = null;
+					var test           = Visit(node.Test);
+					_columnDescriptor = saveDescriptor;
+
+					var ifTrue  = Visit(node.IfTrue);
+					var ifFalse = Visit(node.IfFalse);
+
+					if (test is ConstantExpression { Value: bool boolValue })
+					{
+						return boolValue ? ifTrue : ifFalse;
+					}
+
+					if (ifTrue is SqlGenericConstructorExpression && ifFalse is SqlPlaceholderExpression)
+						ifFalse = node.IfFalse;
+					else if (ifFalse is SqlGenericConstructorExpression && ifTrue is SqlPlaceholderExpression)
+						ifTrue = node.IfTrue;
+
+					if (test is SqlPlaceholderExpression   &&
+					    ifTrue is SqlPlaceholderExpression &&
+					    ifFalse is SqlPlaceholderExpression)
+					{
+						return TranslateExpression(node, useSql: true);
+					}
+
+					return node.Update(test, ifTrue, ifFalse);
+				}
+				finally
 				{
-					return TranslateExpression(node);
+					_flags = saveFlags;
 				}
-
-				var saveFlags      = _flags;
-
-				_flags |= ProjectFlags.ForceOuterAssociation;
-
-				var saveDescriptor = _columnDescriptor;
-				_columnDescriptor = null;
-				var test           = Visit(node.Test);
-				_columnDescriptor  = saveDescriptor;
-
-				var ifTrue  = Visit(node.IfTrue);
-				var ifFalse = Visit(node.IfFalse);
-
-				_flags = saveFlags;
-
-				if (test is ConstantExpression { Value: bool boolValue })
-				{
-					return boolValue ? ifTrue : ifFalse;
-				}
-
-				if (ifTrue is SqlGenericConstructorExpression && ifFalse is SqlPlaceholderExpression)
-					ifFalse = node.IfFalse;
-				else if (ifFalse is SqlGenericConstructorExpression && ifTrue is SqlPlaceholderExpression)
-					ifTrue = node.IfTrue;
-
-				if (test is SqlPlaceholderExpression   &&
-				    ifTrue is SqlPlaceholderExpression &&
-					ifFalse is SqlPlaceholderExpression)
-				{
-					return TranslateExpression(node, useSql : true);
-				}
-
-				return node.Update(test, ifTrue, ifFalse);
 			}
 
 			public override Expression VisitSqlDefaultIfEmptyExpression(SqlDefaultIfEmptyExpression node)

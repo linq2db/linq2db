@@ -232,12 +232,17 @@ namespace LinqToDB.Linq
 
 		static void FinalizeQuery(Query query)
 		{
+			if (query.IsFinalized)
+				return;
+
 			using var m = ActivityService.Start(ActivityID.FinalizeQuery);
 
 			foreach (var sql in query.Queries)
 			{
-				sql.Statement = query.SqlOptimizer.Finalize(query.MappingSchema, sql.Statement, query.DataOptions);
+				sql.Statement   = query.SqlOptimizer.Finalize(query.MappingSchema, sql.Statement, query.DataOptions);
 			}
+
+			query.IsFinalized = true;
 		}
 
 		static int EvaluateTakeSkipValue(Query query, Expression expr, IDataContext? db, object?[]? ps, int qn, ISqlExpression sqlExpr)
