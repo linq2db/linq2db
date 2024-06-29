@@ -75,22 +75,26 @@ namespace CodeGenerators
 
 			var symbol = (INamedTypeSymbol)context.TargetSymbol;
 			var className = symbol.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
-			var check = context.Attributes[0].NamedArguments
-				.FirstOrDefault(a => a.Key == "CanBuildName")
-				.Value.Value?.ToString()
-				?? "CanBuild";
-
-			token.ThrowIfCancellationRequested();
-
 			var nodes = new List<BuilderNode>();
-			foreach (var argument in context.Attributes[0].ConstructorArguments)
+
+			foreach (var attribute in context.Attributes)
 			{
-				nodes.Add(new(
-					className,
-					((ExpressionType)(int)argument.Value!).ToString(),
-					BuilderKind.Expr,
-					check
-				));
+				token.ThrowIfCancellationRequested();
+
+				var check = attribute.NamedArguments
+					.FirstOrDefault(a => a.Key == "CanBuildName")
+					.Value.Value?.ToString()
+					?? "CanBuild";
+
+				foreach (var argument in attribute.ConstructorArguments)
+				{
+					nodes.Add(new(
+						className,
+						((ExpressionType)(int)argument.Value!).ToString(),
+						BuilderKind.Expr,
+						check
+					));
+				}
 			}
 
 			return nodes.ToEquatableReadOnlyList();
@@ -104,22 +108,26 @@ namespace CodeGenerators
 	
 			var symbol = (INamedTypeSymbol)context.TargetSymbol;
 			var className = symbol.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
-			var check = context.Attributes[0].NamedArguments
-				.FirstOrDefault(a => a.Key == "CanBuildName")
-				.Value.Value?.ToString()
-				?? "CanBuildMethod";
-
-			token.ThrowIfCancellationRequested();
-			
 			var nodes = new List<BuilderNode>();
-			foreach (var argument in context.Attributes[0].ConstructorArguments)
+
+			foreach (var attribute in context.Attributes)
 			{
-				nodes.Add(new(
-					className,
-					argument.Value!.ToString(),
-					BuilderKind.Call,
-					check
-				));
+				var check = attribute.NamedArguments
+					.FirstOrDefault(a => a.Key == "CanBuildName")
+					.Value.Value?.ToString()
+					?? "CanBuildMethod";
+
+				token.ThrowIfCancellationRequested();
+
+				foreach (var argument in attribute.ConstructorArguments)
+				{
+					nodes.Add(new(
+						className,
+						argument.Value!.ToString(),
+						BuilderKind.Call,
+						check
+					));
+				}
 			}
 
 			return nodes.ToEquatableReadOnlyList();
