@@ -792,6 +792,17 @@ namespace LinqToDB.Linq.Builder
 
 					break;
 				}
+
+				case ExpressionType.Extension:
+				{
+					if (ex is DefaultValueExpression)
+					{
+						if (ex.Type.IsConstantable(false))
+							return false;
+					}
+
+					break;
+				}
 			}
 
 			return true;

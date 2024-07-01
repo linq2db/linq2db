@@ -1,6 +1,8 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+
 using LinqToDB;
 
 using NUnit.Framework;
@@ -8,7 +10,6 @@ using NUnit.Framework;
 namespace Tests.Linq
 {
 	using LinqToDB.Async;
-	using LinqToDB.Configuration;
 	using LinqToDB.Data;
 	using Model;
 	using Tools;
@@ -210,6 +211,95 @@ namespace Tests.Linq
 				db.KeepConnectionAlive = false;
 				db.GetTable<Person>().ToList();
 				Assert.That(db.CreateCalled, Is.EqualTo(2));
+			}
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/971")]
+		public void CloseAfterUse_DataContext([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			// test we don't leak connections here
+
+			// save connection to list to prevent it from being collected
+			var dbs = new List<IDataContext>();
+
+			for (var i = 0; i < 101; i++)
+			{
+				IDataContext db = GetDataContext(context);
+				db.CloseAfterUse = true;
+				dbs.Add(db);
+
+				foreach (var x in db.GetTable<Person>()) { }
+			}
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/971")]
+		public void CloseAfterUse_DataConnection([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			// test we don't leak connections here
+
+			// save connection to list to prevent it from being collected
+			var dbs = new List<IDataContext>();
+
+			// default pool size for SqlClient is 100
+			for (var i = 0; i < 101; i++)
+			{
+				IDataContext db = GetDataConnection(context);
+				db.CloseAfterUse = true;
+				dbs.Add(db);
+
+				foreach (var x in db.GetTable<Person>()) { }
+			}
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/971")]
+		public void DontCloseAfterUse_DataContext([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			// test we don't leak connections here
+
+			// save connection to list to prevent it from being collected
+			var dbs = new List<IDataContext>();
+
+			Assert.That(() =>
+			{
+				for (var i = 0; i < 101; i++)
+				{
+					IDataContext db = GetDataContext(context);
+					db.CloseAfterUse = false;
+					dbs.Add(db);
+
+					foreach (var x in db.GetTable<Person>()) { }
+				}
+			}, Throws.Exception);
+
+			foreach (var db in dbs)
+			{
+				db.Dispose();
+			}
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/971")]
+		public void DontCloseAfterUse_DataConnection([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			// test we don't leak connections here
+
+			// save connection to list to prevent it from being collected
+			var dbs = new List<IDataContext>();
+
+			Assert.That(() =>
+			{
+				for (var i = 0; i < 101; i++)
+				{
+					IDataContext db = GetDataConnection(context);
+					db.CloseAfterUse = false;
+					dbs.Add(db);
+
+					foreach (var x in db.GetTable<Person>()) { }
+				}
+			}, Throws.Exception);
+
+			foreach (var db in dbs)
+			{
+				db.Dispose();
 			}
 		}
 

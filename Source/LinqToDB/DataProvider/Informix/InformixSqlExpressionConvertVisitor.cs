@@ -139,16 +139,18 @@ namespace LinqToDB.DataProvider.Informix
 			return base.ConvertConversion(cast);
 		}
 
-		protected override ISqlExpression WrapBooleanExpression(ISqlExpression expr)
+		protected override ISqlExpression WrapColumnExpression(ISqlExpression expr)
 		{
-			var newExpr = base.WrapBooleanExpression(expr);
-			if (!ReferenceEquals(newExpr, expr))
+			var columnExpression = base.WrapColumnExpression(expr);
+
+			if (SqlProviderFlags != null 
+			    && columnExpression.SystemType == typeof(bool)
+			    && QueryHelper.UnwrapNullablity(columnExpression) is not (SqlCastExpression or SqlColumn or SqlField))
 			{
-				return new SqlCastExpression(newExpr, new DbDataType(expr.SystemType ?? typeof(bool), DataType.Boolean), null, isMandatory : true);
+				columnExpression = new SqlCastExpression(columnExpression, new DbDataType(columnExpression.SystemType!, DataType.Boolean), null, isMandatory: true);
 			}
 
-			return newExpr;
+			return columnExpression;
 		}
-
 	}
 }

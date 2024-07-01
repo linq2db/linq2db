@@ -92,7 +92,7 @@ namespace LinqToDB.SqlQuery.Visitors
 
 			if (!_providerFlags.IsCorrelatedSubQueryTakeSupported && selectQuery.Select.TakeValue != null)
 			{
-				if (IsDependsOnOuterSources())
+				if (_columnSubqueryLevel != null && IsDependsOnOuterSources())
 				{
 					errorMessage = ErrorHelper.Error_Take_in_Correlated_Subquery;
 					return false;
@@ -105,27 +105,45 @@ namespace LinqToDB.SqlQuery.Visitors
 				{
 					if (IsDependsOnOuterSources())
 					{
-						errorMessage = ErrorHelper.Error_Correlated_Subqueries;
-						return false;
+						var isValied = false;
+						if (_providerFlags.IsSupportedSimpleCorrelatedSubqueries && IsSimpleCorrelatedSubquery(selectQuery))
+						{
+							isValied = true;
+						}
+
+						if (!isValied)
+						{
+							errorMessage = ErrorHelper.Error_Correlated_Subqueries;
+							return false;
+						}
 					}
 				}
 
 				if (!_providerFlags.IsSubQueryTakeSupported && selectQuery.Select.TakeValue != null)
 				{
-					errorMessage = ErrorHelper.Error_Take_in_Subquery;
-					return false;
+					if (_parentQuery?.From.Tables.Count > 0 || IsDependsOnOuterSources())
+					{
+						errorMessage = ErrorHelper.Error_Take_in_Subquery;
+						return false;
+					}
 				}
 
 				if (!_providerFlags.IsSubQuerySkipSupported && selectQuery.Select.SkipValue != null)
 				{
-					errorMessage = ErrorHelper.Error_Skip_in_Subquery;
-					return false;
+					if (_parentQuery?.From.Tables.Count > 0 || IsDependsOnOuterSources())
+					{
+						errorMessage = ErrorHelper.Error_Skip_in_Subquery;
+						return false;
+					}
 				}
 
 				if (!_providerFlags.IsSubQueryOrderBySupported && !selectQuery.OrderBy.IsEmpty)
 				{
-					errorMessage = ErrorHelper.Error_OrderBy_in_Subquery;
-					return false;
+					if (_parentQuery?.From.Tables.Count > 0 || IsDependsOnOuterSources())
+					{
+						errorMessage = ErrorHelper.Error_OrderBy_in_Subquery;
+						return false;
+					}
 				}
 
 				if (!_providerFlags.IsSubqueryWithParentReferenceInJoinConditionSupported)
@@ -174,6 +192,20 @@ namespace LinqToDB.SqlQuery.Visitors
 			}
 
 			errorMessage = null;
+			return true;
+		}
+
+		static bool IsSimpleCorrelatedSubquery(SelectQuery selectQuery)
+		{
+			if (selectQuery.Where.SearchCondition.IsOr)
+				return false;
+
+			if (selectQuery.Where.SearchCondition.Predicates.Any(p => p is SqlSearchCondition))
+				return false;
+
+			if (QueryHelper.IsDependsOnOuterSources(selectQuery, elementsToIgnore : new[] { selectQuery.Where }))
+				return false;
+
 			return true;
 		}
 
@@ -334,7 +366,7 @@ namespace LinqToDB.SqlQuery.Visitors
 			base.VisitSqlFromClause(element);
 
 			if (_columnSubqueryLevel != null)
-				_columnSubqueryLevel += 1;
+				_columnSubqueryLevel -= 1;
 
 			return element;
 		}
