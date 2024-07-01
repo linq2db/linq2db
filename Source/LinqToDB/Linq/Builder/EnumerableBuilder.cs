@@ -13,19 +13,10 @@ namespace LinqToDB.Linq.Builder
 	[BuildsExpression(ExpressionType.Constant, ExpressionType.MemberAccess, ExpressionType.NewArrayInit)]
 	sealed class EnumerableBuilder : ISequenceBuilder
 	{
-		static readonly MethodInfo[] _containsMethodInfos = [Methods.Enumerable.Contains, Methods.Queryable.Contains];
-
 		public static bool CanBuild(Expression expr, BuildInfo info, ExpressionBuilder builder)
 		{
 			if (expr.NodeType == ExpressionType.NewArrayInit)
 				return true;
-
-			if (expr.NodeType == ExpressionType.Call)
-			{
-				var mc = (MethodCallExpression)expr;
-				if (mc.IsSameGenericMethod(_containsMethodInfos))
-					return false;
-			}
 
 			if (!typeof(IEnumerable<>).IsSameOrParentOf(expr.Type))
 				return false;

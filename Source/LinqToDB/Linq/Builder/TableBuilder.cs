@@ -10,11 +10,19 @@ namespace LinqToDB.Linq.Builder
 	using Mapping;
 	using Reflection;
 
-	[BuildsExpression(ExpressionType.Call, ExpressionType.Constant, ExpressionType.MemberAccess)]
+	[BuildsMethodCall("AsCte", "GetCte", "FromSql", "FromSqlScalar", CanBuildName = nameof(CanBuildKnownMethods))]
+	[BuildsMethodCall("GetTable", "TableFromExpression", CanBuildName = nameof(CanBuildTableMethods))]
+	[BuildsExpression(ExpressionType.Call, CanBuildName = nameof(CanBuildAttributedMethods))]
 	sealed partial class TableBuilder : ISequenceBuilder
 	{
-		public static bool CanBuild(Expression expr, BuildInfo info, ExpressionBuilder builder)
-			=> FindBuildContext(builder, info, out var _) != BuildContextType.None;
+		public static bool CanBuildKnownMethods(MethodCallExpression call, BuildInfo info, ExpressionBuilder builder)
+			=> true;
+
+		public static bool CanBuildTableMethods(MethodCallExpression call, BuildInfo info, ExpressionBuilder builder)
+			=> typeof(ITable<>).IsSameOrParentOf(call.Type);
+
+		public static bool CanBuildAttributedMethods(Expression expr, BuildInfo info, ExpressionBuilder builder)
+			=> ((MethodCallExpression)expr).Method.GetTableFunctionAttribute(builder.MappingSchema) != null;
 
 		enum BuildContextType
 		{
