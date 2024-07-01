@@ -22,6 +22,7 @@ All T4 properties use `LinqToDBT4` name prefix.
   - all other databases require native client installed or be a part of framework
 - `LinqToDBT4<DB>TemplatesPath`: defines path to folder with T4 templates for specific database. Also could be refedined if multiple T4 nugets with same database support installed, e.g. `linq2db.<DB>` nuget and `linq2db.t4models` nuget which contains support for all databases
   - `LinqToDBT4AccessTemplatesPath`: MS Access T4 templates
+  - `LinqToDBT4ClickHouseTemplatesPath`: ClickHouse T4 templates
   - `LinqToDBT4DB2TemplatesPath`: DB2 T4 templates
   - `LinqToDBT4FirebirdTemplatesPath`: Firebird T4 templates
   - `LinqToDBT4InformixTemplatesPath`: Informix T4 templates

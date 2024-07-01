@@ -148,7 +148,7 @@ namespace AccessDataContext
 		/// <summary>
 		/// PersonDoctor (Person)
 		/// </summary>
-		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false)]
+		[Association(ThisKey=nameof(PersonID), OtherKey=nameof(Person.PersonID), CanBeNull=false)]
 		public Person Person { get; set; } = null!;
 
 		#endregion
@@ -237,7 +237,7 @@ namespace AccessDataContext
 		/// <summary>
 		/// PersonPatient (Person)
 		/// </summary>
-		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false)]
+		[Association(ThisKey=nameof(PersonID), OtherKey=nameof(Person.PersonID), CanBeNull=false)]
 		public Person Person { get; set; } = null!;
 
 		#endregion
@@ -268,13 +268,13 @@ namespace AccessDataContext
 		/// <summary>
 		/// PersonDoctor_BackReference (Doctor)
 		/// </summary>
-		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=true)]
+		[Association(ThisKey=nameof(PersonID), OtherKey=nameof(Doctor.PersonID), CanBeNull=true)]
 		public Doctor? PersonDoctor { get; set; }
 
 		/// <summary>
 		/// PersonPatient_BackReference (Patient)
 		/// </summary>
-		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=true)]
+		[Association(ThisKey=nameof(PersonID), OtherKey=nameof(Patient.PersonID), CanBeNull=true)]
 		public Patient? PersonPatient { get; set; }
 
 		#endregion

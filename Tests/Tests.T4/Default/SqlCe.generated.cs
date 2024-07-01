@@ -26,15 +26,15 @@ namespace Default.SqlCe
 		public ITable<GrandChild>        GrandChildren       { get { return this.GetTable<GrandChild>(); } }
 		public ITable<InheritanceChild>  InheritanceChildren { get { return this.GetTable<InheritanceChild>(); } }
 		public ITable<InheritanceParent> InheritanceParents  { get { return this.GetTable<InheritanceParent>(); } }
-		public ITable<Issue695>          Issue695s           { get { return this.GetTable<Issue695>(); } }
+		public ITable<Issue695>          Issue695            { get { return this.GetTable<Issue695>(); } }
 		public ITable<Issue695Parent>    Issue695Parents     { get { return this.GetTable<Issue695Parent>(); } }
 		public ITable<LinqDataType>      LinqDataTypes       { get { return this.GetTable<LinqDataType>(); } }
 		public ITable<Parent>            Parents             { get { return this.GetTable<Parent>(); } }
 		public ITable<Patient>           Patients            { get { return this.GetTable<Patient>(); } }
 		public ITable<Person>            People              { get { return this.GetTable<Person>(); } }
 		public ITable<TestIdentity>      TestIdentities      { get { return this.GetTable<TestIdentity>(); } }
-		public ITable<TestMerge1>        TestMerge1s         { get { return this.GetTable<TestMerge1>(); } }
-		public ITable<TestMerge2>        TestMerge2s         { get { return this.GetTable<TestMerge2>(); } }
+		public ITable<TestMerge1>        TestMerge1          { get { return this.GetTable<TestMerge1>(); } }
+		public ITable<TestMerge2>        TestMerge2          { get { return this.GetTable<TestMerge2>(); } }
 
 		public TestDataDB()
 		{

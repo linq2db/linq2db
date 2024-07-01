@@ -2,6 +2,7 @@
 	<PropertyGroup>
 		<LinqToDBT4SharedTools>$(MSBuildThisFileDirectory)..\tools\</LinqToDBT4SharedTools>
 		<LinqToDBT4NpgsqlClientPath>$(MSBuildThisFileDirectory)..\tools\</LinqToDBT4NpgsqlClientPath>
+		<LinqToDBT4TemplatesPath>$(MSBuildThisFileDirectory)..\contentFiles\any\any\LinqToDB.Templates\</LinqToDBT4TemplatesPath>
 		<LinqToDBT4PostgreSQLTemplatesPath>$(MSBuildThisFileDirectory)..\contentFiles\any\any\LinqToDB.Templates\</LinqToDBT4PostgreSQLTemplatesPath>
 	</PropertyGroup>
 </Project>
