@@ -16,6 +16,8 @@ cd ..
 rem call Build.cmd
 cd NuGet
 
+dotnet tool install -g dotnet-script
 dotnet script BuildNuspecs.csx /path:*.nuspec /buildPath:..\.build\nuspecs /version:%VERSION%
+
 call Pack.cmd %SNUPKG%
 pause

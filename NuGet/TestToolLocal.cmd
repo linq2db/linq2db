@@ -10,6 +10,7 @@ SET NUGETS="..\.build\nugets"
 
 SET VERSION=0.0.%1
 
+dotnet tool install -g dotnet-script
 dotnet script BuildNuspecs.csx /path:linq2db.cli.nuspec /buildPath:%NUSPECS% /version:%VERSION%
 
 RMDIR %NUGETS% /S /Q

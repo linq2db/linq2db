@@ -7,7 +7,6 @@
 			This package includes a T4 template to generate data models for Access database and a reference to the linq2db nuget.
 		</summary>
 		<tags>linq linq2db Access LinqToDB ORM database DB SQL</tags>
-		<readme>README.md</readme>
 		<dependencies>
 			<group targetFramework="net462">
 				<dependency id="linq2db"           version="6.0.0" />

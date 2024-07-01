@@ -57,8 +57,8 @@ foreach (var xmlPath in Directory.GetFiles(Path.GetDirectoryName(path) is [_, ..
 
 	ns.AddNamespace("ns", nsUri);
 
-	var metadata = xml.SelectSingleNode("//ns:package/ns:metadata",         ns)!;
-	var files    = xml.SelectSingleNode("//ns:package/ns:files", ns)!;
+	var metadata = xml.SelectSingleNode("//ns:package/ns:metadata", ns)!;
+	var files    = xml.SelectSingleNode("//ns:package/ns:files",    ns)!;
 
 	SetMetadata  ("version",                  version);
 	SetDependency("linq2db",                  version);
@@ -68,30 +68,31 @@ foreach (var xmlPath in Directory.GetFiles(Path.GetDirectoryName(path) is [_, ..
 	SetMetadata  ("copyright",                "Copyright © 2024 " + authors);
 	SetMetadata  ("authors",                  authors);
 	SetMetadata  ("owners",                   authors);
+	SetMetadata  ("readme",                   "README.md");
 	SetMetadata  ("projectUrl",               "http://linq2db.com");
 	SetMetadata  ("icon",                     "images\\icon.png");
 	SetMetadata  ("requireLicenseAcceptance", "false");
 	SetMetadataA ("license",                  "MIT-LICENSE.txt", true,
-		GetAttribute("type",   "file"));
+		SetAttribute("type",   "file"));
 	SetMetadataA ("repository",               null,              true,
-		GetAttribute("type",   "git"),
-		GetAttribute("url",    "https://github.com/linq2db/linq2db.git"),
-		GetAttribute("branch", branch),
-		GetAttribute("commit", commit));
+		SetAttribute("type",   "git"),
+		SetAttribute("url",    "https://github.com/linq2db/linq2db.git"),
+		SetAttribute("branch", branch),
+		SetAttribute("commit", commit));
 	SetFile      (
-		GetAttribute("src",    @"root\MIT-LICENSE.txt"));
+		SetAttribute("src",    @"root\MIT-LICENSE.txt"));
 	SetFile      (
-		GetAttribute("src",    @"NuGet\icon.png"),
-		GetAttribute("target", @"images\icon.png"));
+		SetAttribute("src",    @"NuGet\icon.png"),
+		SetAttribute("target", @"images\icon.png"));
 
 	if (isT4)
 	{
 		SetFile(
-			GetAttribute("src",    @"NuGet\readme.T4.txt"),
-			GetAttribute("target", "readme.txt"));
+			SetAttribute("src",    @"NuGet\readme.T4.txt"),
+			SetAttribute("target", "readme.txt"));
 		SetFile(
-			GetAttribute("src",    @"NuGet\README.T4.md"),
-			GetAttribute("target", "README.md"));
+			SetAttribute("src",    @"NuGet\README.T4.md"),
+			SetAttribute("target", "README.md"));
 	}
 
 	foreach (XmlAttribute attr in xml.SelectNodes("//ns:file/@src", ns)!)
@@ -102,7 +103,7 @@ foreach (var xmlPath in Directory.GetFiles(Path.GetDirectoryName(path) is [_, ..
 				attr.Value = t4binPath + attr.Value[5..];
 				break;
 			case var s when s.StartsWith("bin\\") :
-				attr.Value = string.Format(binPath + attr.Value[3..], releasePath);
+				attr.Value = string.Format(binPath + attr.Value[3..].Replace("\\Release\\", "\\{0}\\"), releasePath);
 				break;
 			case var s when s.StartsWith("nuget\\") :
 				attr.Value = @"..\..\" + attr.Value;
@@ -166,7 +167,7 @@ foreach (var xmlPath in Directory.GetFiles(Path.GetDirectoryName(path) is [_, ..
 			attr.Value = value;
 	}
 
-	XmlAttribute GetAttribute(string name, string value)
+	XmlAttribute SetAttribute(string name, string value)
 	{
 		var attr = xml.CreateAttribute(name);
 		attr.Value = value;
@@ -326,6 +327,4 @@ if ($version) {
 		$xml.Save($buildPath + '\' + [System.IO.Path]::GetFileName($xmlPath))
 	}
 }
-
 */
-

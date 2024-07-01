@@ -8,7 +8,6 @@
 			IBM Data Server Provider for .NET will still need to be installed on development machine in order to connect to Informix from T4 templates.
 		</summary>
 		<tags>linq linq2db Informix LinqToDB ORM database DB SQL</tags>
-		<readme>README.md</readme>
 		<dependencies>
 			<dependency id="linq2db" version="6.0.0" />
 		</dependencies>

@@ -7,7 +7,6 @@
 			This package includes a T4 template to generate data models for Firebird database and references to the linq2db and FirebirdSql.Data.FirebirdClient nugets.
 		</summary>
 		<tags>linq linq2db Firebird LinqToDB ORM database DB SQL</tags>
-		<readme>README.md</readme>
 		<dependencies>
 			<dependency id="linq2db" version="6.0.0"                          />
 			<dependency id="FirebirdSql.Data.FirebirdClient" version="10.3.1" />
