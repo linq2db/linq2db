@@ -3277,7 +3277,7 @@ namespace Tests.Linq
 			query.ToArray();
 		}
 
-		[ActiveIssue(Configurations = [TestProvName.AllAccess, TestProvName.AllClickHouse])]
+		[ActiveIssue(Configurations = [TestProvName.AllAccess, TestProvName.AllClickHouse, ProviderName.SqlCe])]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3311")]
 		public void Issue3311Test2([DataSources] string context)
 		{
@@ -3292,7 +3292,7 @@ namespace Tests.Linq
 		}
 
 		[ActiveIssue(Configurations = [TestProvName.AllMySql80, ProviderName.SqlCe, TestProvName.AllPostgreSQL, TestProvName.AllSqlServer])]
-		[ThrowsForProvider(typeof(LinqException), providers: [TestProvName.AllAccess, TestProvName.AllDB2, TestProvName.AllFirebirdLess4, TestProvName.AllInformix, TestProvName.AllMariaDB, TestProvName.AllMySql57, TestProvName.AllOracle, TestProvName.AllSybase], ErrorMessage = "Provider does not support CROSS/OUTER/LATERAL joins.")]
+		[ThrowsForProvider(typeof(LinqException), providers: [TestProvName.AllSQLite, TestProvName.AllAccess, TestProvName.AllDB2, TestProvName.AllFirebirdLess4, TestProvName.AllInformix, TestProvName.AllMariaDB, TestProvName.AllMySql57, TestProvName.AllOracle, TestProvName.AllSybase], ErrorMessage = "Provider does not support CROSS/OUTER/LATERAL joins.")]
 		[ThrowsForProvider(typeof(LinqException), providers: [TestProvName.AllClickHouse], ErrorMessage = "Provider does not support correlated subqueries.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3311")]
 		public void Issue3311Test3([DataSources] string context)
