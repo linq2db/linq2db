@@ -275,7 +275,7 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/2549")]
 		public void DeleteTakeNotOrdered(
 			[DataSources(
 				TestProvName.AllAccess,
@@ -313,7 +313,7 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/2549")]
 		public void DeleteTakeOrdered([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
 			using (var db = GetDataContext(context))

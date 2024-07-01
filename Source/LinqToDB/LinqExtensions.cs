@@ -3563,7 +3563,7 @@ namespace LinqToDB
 		/// <returns>Common table expression.</returns>
 		[Pure]
 		[LinqTunnel]
-		public static IQueryable<TSource> AsCte<TSource>( this IQueryable<TSource> source)
+		public static IQueryable<TSource> AsCte<TSource>(this IQueryable<TSource> source)
 		{
 			if (source == null) throw new ArgumentNullException(nameof(source));
 

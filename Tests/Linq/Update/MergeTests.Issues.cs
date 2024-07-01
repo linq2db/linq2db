@@ -855,5 +855,23 @@ namespace Tests.xUpdate
 			AssertRow(InitialTargetData[3], result[3], null, null);
 			AssertRow(InitialSourceData[3], result[4], null, 216);
 		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/3589")]
+		public void Issue3589Test([MergeDataContextSource] string context)
+		{
+			// prepare data before fiters applied
+			using (var db1 = GetDataContext(context))
+				PrepareData(db1);
+
+			using var db = GetDataContext(context);
+
+			GetTarget(db)
+				.Merge()
+				.Using(GetSource1(db))
+				.On((a, b) => true)
+				.InsertWhenNotMatched()
+				.UpdateWhenMatched()
+				.Merge();
+		}
 	}
 }

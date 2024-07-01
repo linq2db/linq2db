@@ -324,5 +324,32 @@ namespace Tests.Linq
 			Assert.AreEqual(1, res.Length);
 			Assert.AreEqual(1, res[0].ID);
 		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/2156")]
+		public void Issue2156Test([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = from i in db.Person
+						join t in (db.Person.Where(x => x.FirstName != "Nameless One")) on i.ID equals t.ID into tj
+						from t in tj.DefaultIfEmpty()
+						join tg in db.Person on t.ID equals tg.ID into tgj
+						from tg in tgj.DefaultIfEmpty()
+						join u in db.Person on i.ID equals u.ID into uj
+						from u in uj.DefaultIfEmpty()
+						join p in db.Person on i.ID equals p.ID
+						join iSs in db.Person on i.ID equals iSs.ID
+						join e in db.Person on u.ID equals e.ID into ej
+						from e in ej.Take(1).DefaultIfEmpty()
+						where i.Patient!.Diagnosis != "Immortality"
+						select new { Issue = i, User = u, Project = p, Status = iSs, Email = e, IsHoliday = tgj.Any(x => x.FirstName == "John") };
+
+			var grouped = query
+				.Distinct()
+				.OrderBy(x => x.User)
+				.ToList()
+				.GroupBy(x => (x.User, x.Email))
+				.ToList();
+		}
 	}
 }

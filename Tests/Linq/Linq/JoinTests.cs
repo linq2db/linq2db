@@ -3135,5 +3135,44 @@ namespace Tests.Linq
 				return new DoNotExecuteDataReader();
 			}
 		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/3311")]
+		public void Issue3311Test1([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query =
+				from x in db.GetTable<Person>()
+				from apply in db.SelectQuery(() => Sql.AsSql(x.ID + 1))
+				select apply;
+
+			query.ToArray();
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/3311")]
+		public void Issue3311Test2([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query =
+				from x in db.GetTable<Person>()
+				from apply in db.SelectQuery(() => Sql.AsSql(x.ID + 1)).DefaultIfEmpty()
+				select apply;
+
+			query.ToArray();
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/3311")]
+		public void Issue3311Test3([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			(from u in db.Person
+			 from x in (from r in db.SelectQuery(() => 1)
+						from l in db.Patient.LeftJoin(l => l.PersonID == u.ID)
+						select l.PersonID).AsSubQuery()
+			 select new { u.ID, x, }
+			).ToList();
+		}
 	}
 }

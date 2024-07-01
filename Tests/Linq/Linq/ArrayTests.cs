@@ -8,6 +8,8 @@ using NUnit.Framework;
 
 namespace Tests.Linq
 {
+	using System;
+
 	using Model;
 
 	[TestFixture]
@@ -26,6 +28,13 @@ namespace Tests.Linq
 			[Column] public int[]?        Numbers     { get; set; }
 			[Column] public Gender[]?     StringEnums { get; set; }
 			[Column] public SimpleEnum[]? IntEnums    { get; set; }
+		}
+
+		[Table]
+		sealed class ArrayTTable<T>
+		{
+			[Column] public int Id { get; set; }
+			[Column] public T[]? Value { get; set; }
 		}
 
 		[Test]
@@ -131,5 +140,26 @@ namespace Tests.Linq
 
 			Assert.That(result, Is.Null);
 		}
+
+#if NET6_0_OR_GREATER
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/3929")]
+		public void TestDateOnly([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable<ArrayTTable<DateOnly>>();
+
+			var record = new ArrayTTable<DateOnly>()
+			{
+				Id    = 1,
+				Value = [TestData.DateOnly, TestData.DateOnly.AddDays(1)]
+			};
+
+			db.Insert(record);
+
+			var result = tb.Where(r => r.Id == 1).Single();
+
+			Assert.That(result.Value, Is.EqualTo(record.Value));
+		}
+#endif
 	}
 }
