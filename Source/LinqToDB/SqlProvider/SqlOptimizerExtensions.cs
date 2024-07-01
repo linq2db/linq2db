@@ -20,7 +20,7 @@
 				isAlreadyOptimizedAndConverted: false,
 				static () => NoopQueryParametersNormalizer.Instance);
 
-			var nullability = NullabilityContext.GetContext(statement.SelectQuery);
+			var nullability = NullabilityContext.NonQuery;
 
 			var newStatement = optimizationContext.OptimizeAndConvertAll(statement, nullability);
 
