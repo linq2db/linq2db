@@ -863,5 +863,75 @@ namespace Tests.Linq
 			AssertQuery(query);
 		}
 
+		[ActiveIssue(Configurations = [TestProvName.AllSybase, TestProvName.AllOracle])]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/3295")]
+		public void Issue3295Test1([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = (from x in db.Person
+						 let status = db.Patient.FirstOrDefault(y => y.PersonID == x.ID)
+						 select new
+						 {
+							 Id = status != null ? status.PersonID : x.ID,
+							 StatusName = status != null ? status.Diagnosis : "abc",
+						 }).Where(x => x.StatusName == "abc");
+
+			query.ToArray();
+		}
+
+		[ActiveIssue]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/3295")]
+		public void Issue3295Test2([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var expected = Parent
+				.Where(x => x.Children.Where(y => y.ChildID == 11).Select(y => y.ParentID).FirstOrDefault() == 0)
+				.Count();
+
+			var actual = db.Parent
+				.Where(x => x.Children.Where(y => y.ChildID == 11).Select(y => y.ParentID).FirstOrDefault() == 0)
+				.Count();
+
+			Assert.That(actual, Is.EqualTo(expected));
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/3334")]
+		public void Issue3334Test([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var subquery = db.GetTable<Person>();
+
+			var query = db.GetTable<Person>()
+					.Select(entity1 => new
+					{
+						Entity1 = entity1,
+						Entity2 = subquery.FirstOrDefault(entity2 => entity2.ID == entity1.ID)
+					})
+					.GroupJoin(db.GetTable<Person>(),
+						x => x.Entity2!.ID,
+						x => x.ID,
+						(x, y) => x);
+
+			var result = query.FirstOrDefault();
+		}
+
+		[ActiveIssue(Configurations = [TestProvName.AllSybase, TestProvName.AllDB2, TestProvName.AllAccess])]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/3365")]
+		public void Issue3365Test([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = db.Child.Select(x => new
+			{
+				Assignee = x.GrandChildren.Select(a => a.ParentID).FirstOrDefault()
+			});
+
+			var orderedQuery = query.OrderBy(x => x.Assignee);
+
+			orderedQuery.ToArray();
+		}
 	}
 }
