@@ -873,7 +873,30 @@ namespace LinqToDB.SqlProvider
 			return element;
 		}
 
+		protected override IQueryElement VisitSqlCoalesceExpression(SqlCoalesceExpression element)
+		{
+			var newElement = base.VisitSqlCoalesceExpression(element);
+			if (!ReferenceEquals(newElement, element))
+				return Visit(newElement);
+
+			var converted = ConvertCoalesce(element);
+
+			if (!ReferenceEquals(converted, element))
+				return Visit(Optimize(converted));
+
+			return element;
+		}
+
 		#endregion Visitor overrides
+
+		public virtual ISqlExpression ConvertCoalesce(SqlCoalesceExpression element)
+		{
+			if (SqlProviderFlags == null)
+				return element;
+
+			var type = QueryHelper.GetDbDataType(element.Expressions[0], MappingSchema);
+			return new SqlFunction(type, "Coalesce", element.Expressions);
+		}
 
 		public virtual ISqlExpression ConvertSqlExpression(SqlExpression element)
 		{
@@ -908,7 +931,6 @@ namespace LinqToDB.SqlProvider
 				case PseudoFunctions.TO_LOWER: return func.WithName("Lower");
 				case PseudoFunctions.TO_UPPER: return func.WithName("Upper");
 				case PseudoFunctions.REPLACE:  return func.WithName("Replace");
-				case PseudoFunctions.COALESCE: return func.WithName("Coalesce");
 			}
 
 			return func;
@@ -1517,19 +1539,19 @@ namespace LinqToDB.SqlProvider
 			return caseExpr;
 		}
 
-		protected ISqlExpression ConvertCoalesceToBinaryFunc(SqlFunction func, string funcName, bool supportsParameters = true)
+		protected ISqlExpression ConvertCoalesceToBinaryFunc(SqlCoalesceExpression coalesce, string funcName, bool supportsParameters = true)
 		{
-			var last = func.Parameters[func.Parameters.Length - 1];
+			var last = coalesce.Expressions[^1];
 			if (!supportsParameters && last is SqlParameter p1)
 				p1.IsQueryParameter = false;
 
-			for (int i = func.Parameters.Length - 2; i >= 0; i--)
+			for (int i = coalesce.Expressions.Length - 2; i >= 0; i--)
 			{
-				var param = func.Parameters[i];
+				var param = coalesce.Expressions[i];
 				if (!supportsParameters && param is SqlParameter p2)
 					p2.IsQueryParameter = false;
 
-				last = new SqlFunction(func.SystemType, funcName, param, last);
+				last = new SqlFunction(coalesce.SystemType!, funcName, param, last);
 			}
 			return last;
 		}

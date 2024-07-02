@@ -229,12 +229,21 @@ namespace LinqToDB.SqlQuery
 				{
 					var function = (SqlFunction)expr;
 
-					//TODO: unify function names and put in common constant storage
-					//For example it should be "$COALESCE$" and "$CASE$" do do not mix with user defined extension
-
-					if (function.Name is "Coalesce" or PseudoFunctions.COALESCE && function.Parameters.Length == 2)
+					//TODO: probably remove, we have SqlCoalesceExpression
+					if (function.Name is "Coalesce" || function.Parameters.Length == 2)
 					{
 						return GetColumnDescriptor(function.Parameters[0]);
+					}
+					break;
+				}
+				case QueryElementType.SqlCoalesce:
+				{
+					var coalesce = (SqlCoalesceExpression)expr;
+					foreach (var expression in coalesce.Expressions)
+					{
+						var descriptor = GetColumnDescriptor(expression);
+						if (descriptor != null)
+							return descriptor;
 					}
 					break;
 				}
