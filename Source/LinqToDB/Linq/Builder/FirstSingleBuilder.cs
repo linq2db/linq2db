@@ -10,22 +10,16 @@ namespace LinqToDB.Linq.Builder
 	using LinqToDB.Expressions;
 	using SqlQuery;
 
+	[BuildsMethodCall("First", "FirstOrDefault", "Single", "SingleOrDefault")]
+	[BuildsMethodCall("FirstAsync", "FirstOrDefaultAsync", "SingleAsync", "SingleOrDefaultAsync", 
+		CanBuildName = nameof(CanBuildAsyncMethod))]
 	sealed class FirstSingleBuilder : MethodCallBuilder
 	{
-		static readonly string[] MethodNames      = { "First"     , "FirstOrDefault"     , "Single"     , "SingleOrDefault"      };
-		static readonly string[] MethodNamesAsync = { "FirstAsync", "FirstOrDefaultAsync", "SingleAsync", "SingleOrDefaultAsync" };
+		public static bool CanBuildMethod(MethodCallExpression call, BuildInfo info, ExpressionBuilder builder)
+			=> call.IsQueryable() && call.Arguments.Count <= 2;
 
-		protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
-		{
-			return IsApplicable(methodCall);
-		}
-
-		private static bool IsApplicable(MethodCallExpression methodCall)
-		{
-			return
-				methodCall.IsQueryable(MethodNames)           && methodCall.Arguments.Count <= 2 ||
-				methodCall.IsAsyncExtension(MethodNamesAsync) && methodCall.Arguments.Count <= 3;
-		}
+		public static bool CanBuildAsyncMethod(MethodCallExpression call, BuildInfo info, ExpressionBuilder builder)
+			=> call.IsAsyncExtension() && call.Arguments.Count <= 3;
 
 		public enum MethodKind
 		{
@@ -56,7 +50,7 @@ namespace LinqToDB.Linq.Builder
 			var argument = methodCall.Arguments[0];
 			var argumentCount = methodCall.Arguments.Count;
 
-			if (methodCall.IsAsyncExtension(MethodNamesAsync))
+			if (methodCall.IsAsyncExtension())
 				--argumentCount;
 
 			var cardinality = buildInfo.SourceCardinality;

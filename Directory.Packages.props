@@ -10,6 +10,7 @@
 	-->
 	<ItemGroup Label="Build: Analyzers and Tools">
 		<PackageVersion Include="Meziantou.Analyzer"                                    Version="2.0.157"               />
+		<PackageVersion Include="Microsoft.CodeAnalysis.Analyzers"                      Version="3.3.4"                 />
 		<PackageVersion Include="Microsoft.CodeAnalysis.BannedApiAnalyzers"             Version="3.11.0-beta1.24225.1"  />
 		<PackageVersion Include="Microsoft.CodeAnalysis.NetAnalyzers"                   Version="9.0.0-preview.24225.1" />
 		<PackageVersion Include="Microsoft.CodeAnalysis.PublicApiAnalyzers"             Version="3.11.0-beta1.24225.1"  />
@@ -19,6 +20,7 @@
 	
 	<ItemGroup Label="Polyfills">
 		<PackageVersion Include="Microsoft.Bcl.AsyncInterfaces"                         Version="6.0.0"                 />
+		<PackageVersion Include="Microsoft.Bcl.HashCode"                                Version="1.1.1"                 />
 		<PackageVersion Include="Microsoft.CSharp"                                      Version="4.7.0"                 />
 		<PackageVersion Include="Nullability.Source"                                    Version="2.3.0"                 />
 		<PackageVersion Include="PolySharp"                                             Version="1.14.1"                />
