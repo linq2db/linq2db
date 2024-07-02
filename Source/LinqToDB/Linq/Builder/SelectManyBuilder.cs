@@ -57,7 +57,9 @@ namespace LinqToDB.Linq.Builder
 			if (collectionResult.BuildContext == null)
 				return collectionResult;
 
-			var collection = collectionResult.BuildContext;
+			var originalCollection = collectionResult.BuildContext;
+
+			var collection = originalCollection;
 
 			// DefaultIfEmptyContext wil handle correctly projecting NULL objects
 			//
@@ -131,7 +133,7 @@ namespace LinqToDB.Linq.Builder
 			var join = new SqlFromClause.Join(joinType, collection.SelectQuery, collectionAlias, false, null);
 			sequence.SelectQuery.From.Tables[0].Joins.Add(join.JoinedTable);
 
-			var jhc = SequenceHelper.GetJoinHintContext(collection);
+			var jhc = SequenceHelper.GetJoinHintContext(originalCollection);
 			if (jhc != null)
 			{
 				join.JoinedTable.SqlQueryExtensions = jhc.Extensions;
