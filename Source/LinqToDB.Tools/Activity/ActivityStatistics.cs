@@ -25,7 +25,6 @@ namespace LinqToDB.Tools.Activity
 				BuildSequence                       = new("        BuildSequence"),
 				BuildSequenceCanBuild               = new("          CanBuild"),
 				BuildSequenceBuild                  = new("          Build"),
-				ReorderBuilders                     = new("        ReorderBuilders"),
 				BuildQuery                          = new("        BuildQuery"),
 				FinalizeQuery                       = new("          FinalizeQuery"),
 				GetIEnumerable                      = new("  GetIEnumerable"),
@@ -247,7 +246,6 @@ namespace LinqToDB.Tools.Activity
 				ActivityID.BuildSequence                                => BuildSequence,
 				ActivityID.BuildSequenceCanBuild                        => BuildSequenceCanBuild,
 				ActivityID.BuildSequenceBuild                           => BuildSequenceBuild,
-				ActivityID.ReorderBuilders                              => ReorderBuilders,
 				ActivityID.BuildQuery                                   => BuildQuery,
 				ActivityID.FinalizeQuery                                => FinalizeQuery,
 				ActivityID.GetIEnumerable                               => GetIEnumerable,
@@ -405,7 +403,6 @@ namespace LinqToDB.Tools.Activity
 		static StatActivity BuildSequence;
 		static StatActivity BuildSequenceCanBuild;
 		static StatActivity BuildSequenceBuild;
-		static StatActivity ReorderBuilders;
 		static StatActivity BuildQuery;
 		static StatActivity FinalizeQuery;
 		static StatActivity GetIEnumerable;

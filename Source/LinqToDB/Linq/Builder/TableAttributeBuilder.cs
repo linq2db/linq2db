@@ -4,23 +4,19 @@ namespace LinqToDB.Linq.Builder
 {
 	using LinqToDB.Expressions;
 
+	[BuildsMethodCall(
+		nameof(LinqExtensions.TableName),
+		nameof(LinqExtensions.ServerName),
+		nameof(LinqExtensions.DatabaseName),
+		nameof(LinqExtensions.SchemaName),
+		nameof(TableExtensions.IsTemporary),
+		nameof(TableExtensions.TableOptions),
+		nameof(LinqExtensions.TableID)
+	)]
 	sealed class TableAttributeBuilder : MethodCallBuilder
 	{
-		static readonly string[] MethodNames =
-		{
-			nameof(LinqExtensions.TableName),
-			nameof(LinqExtensions.ServerName),
-			nameof(LinqExtensions.DatabaseName),
-			nameof(LinqExtensions.SchemaName),
-			nameof(TableExtensions.IsTemporary),
-			nameof(TableExtensions.TableOptions),
-			nameof(LinqExtensions.TableID),
-		};
-
-		protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
-		{
-			return methodCall.IsQueryable(MethodNames);
-		}
+		public static bool CanBuildMethod(MethodCallExpression call, BuildInfo info, ExpressionBuilder builder)
+			=> call.IsQueryable();
 
 		protected override BuildSequenceResult BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
