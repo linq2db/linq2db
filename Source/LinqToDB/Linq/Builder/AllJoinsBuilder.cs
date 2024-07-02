@@ -74,8 +74,15 @@ namespace LinqToDB.Linq.Builder
 				result.SetAlias(condition.Parameters[0].Name);
 			}
 
-			if (joinType == JoinType.Left || joinType == JoinType.Full)
-				result = new DefaultIfEmptyBuilder.DefaultIfEmptyContext(buildInfo.Parent, result, result, null, false, false);
+			if (joinType is JoinType.Left or JoinType.Full)
+			{
+				result = new DefaultIfEmptyBuilder.DefaultIfEmptyContext(buildInfo.Parent,
+					sequence : result,
+					nullabilitySequence : result,
+					defaultValue : null,
+					allowNullField : false,
+					isNullValidationDisabled : false);
+			}
 
 			return BuildSequenceResult.FromContext(result);
 		}
