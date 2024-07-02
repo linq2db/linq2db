@@ -913,9 +913,9 @@ namespace LinqToDB.Linq.Builder
 			return current;
 		}
 
-		public static bool IsDefaultIfEmpty(IBuildContext context)
+		public static DefaultIfEmptyBuilder.DefaultIfEmptyContext? GetDefaultIfEmptyContext(IBuildContext context)
 		{
-			return UnwrapSubqueryContext(context) is DefaultIfEmptyBuilder.DefaultIfEmptyContext;
+			return UnwrapSubqueryContext(context) as DefaultIfEmptyBuilder.DefaultIfEmptyContext;
 		}
 
 		public static Expression UnwrapDefaultIfEmpty(Expression expression)

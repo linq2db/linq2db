@@ -51,16 +51,14 @@ namespace LinqToDB.Linq.Builder
 
 			buildInfo.JoinType = joinType;
 
-			if (joinType == JoinType.Left || joinType == JoinType.Full)
-				sequence = new DefaultIfEmptyBuilder.DefaultIfEmptyContext(buildInfo.Parent, sequence, sequence, null, false);
-
 			sequence = new SubQueryContext(sequence);
+			var result = sequence;
 
 			if (methodCall.Arguments[conditionIndex] != null)
 			{
 				var condition = (LambdaExpression)methodCall.Arguments[conditionIndex].Unwrap();
 
-				var result = builder.BuildWhere(sequence, sequence,
+				result = builder.BuildWhere(result, result,
 					condition : condition, checkForSubQuery : false, enforceHaving : false,
 					isTest : buildInfo.IsTest);
 
@@ -74,10 +72,19 @@ namespace LinqToDB.Linq.Builder
 				}*/
 
 				result.SetAlias(condition.Parameters[0].Name);
-				return BuildSequenceResult.FromContext(result);
 			}
 
-			return BuildSequenceResult.FromContext(sequence);
+			if (joinType is JoinType.Left or JoinType.Full)
+			{
+				result = new DefaultIfEmptyBuilder.DefaultIfEmptyContext(buildInfo.Parent,
+					sequence : result,
+					nullabilitySequence : result,
+					defaultValue : null,
+					allowNullField : false,
+					isNullValidationDisabled : false);
+			}
+
+			return BuildSequenceResult.FromContext(result);
 		}
 	}
 }

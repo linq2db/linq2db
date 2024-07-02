@@ -494,6 +494,11 @@ namespace LinqToDB.SqlProvider
 
 			var result = base.VisitSqlQuery(selectQuery);
 
+			if (!ReferenceEquals(result, selectQuery))
+			{
+				_nullabilityContext.RegisterReplacement(selectQuery, (SelectQuery)result);
+			}
+
 			_isInsideNot = saveInsideNot;
 
 			return result;

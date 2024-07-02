@@ -56,6 +56,13 @@ namespace LinqToDB.SqlQuery
 			return _nullabilityCache.IsNullableSource(query, source);
 		}
 
+		public void RegisterReplacement(SelectQuery oldQuery, SelectQuery newQuery)
+		{
+			_nullabilityCache ??= new();
+
+			_nullabilityCache.RegisterReplacement(oldQuery, newQuery);
+		}
+
 		/// <summary>
 		/// Returns wether expression could contain null values or not.
 		/// </summary>
@@ -96,8 +103,9 @@ namespace LinqToDB.SqlQuery
 			[DebuggerDisplay("Q[{InQuery.SourceID}] -> TS[{Source.SourceID}]")]
 			record struct NullabilityKey(SelectQuery InQuery, ISqlTableSource Source);
 
-			Dictionary<NullabilityKey, bool>? _nullableSources;
-			HashSet<SelectQuery>? _processedQueries;
+			Dictionary<NullabilityKey, bool>?     _nullableSources;
+			HashSet<SelectQuery>?                 _processedQueries;
+			Dictionary<SelectQuery, SelectQuery>? _replacements;
 
 			/// <summary>
 			/// Returns nullability status of <paramref name="source"/> in specific <paramref name="inQuery"/>.
@@ -111,17 +119,62 @@ namespace LinqToDB.SqlQuery
 			/// </returns>
 			public bool? IsNullableSource(SelectQuery inQuery, ISqlTableSource source)
 			{
-				_nullableSources ??= new();
-				_processedQueries ??= new HashSet<SelectQuery>();
+				EnsureInitialized(inQuery);
 
-				ProcessQuery(new Stack<SelectQuery>(), inQuery);
-
-				if (_nullableSources.TryGetValue(new(inQuery, source), out var isNullable))
+				if (_nullableSources!.TryGetValue(new(inQuery, source), out var isNullable))
 				{
 					return isNullable;
 				}
 
+				if (_replacements != null && source is SelectQuery sourceQuery)
+				{
+					var oldSource  = GetReplacement(sourceQuery) ?? source;
+					var oldInQuery = GetReplacement(inQuery) ?? inQuery;
+
+					if (!ReferenceEquals(oldSource, source) || !ReferenceEquals(oldInQuery, inQuery))
+					{
+						if (_nullableSources!.TryGetValue(new(oldInQuery, oldSource), out isNullable))
+						{
+							return isNullable;
+						}
+					}
+				}
+
 				return null;
+			}
+
+			void EnsureInitialized(SelectQuery inQuery)
+			{
+				_nullableSources  ??= new();
+				_processedQueries ??= new HashSet<SelectQuery>();
+
+				ProcessQuery(new Stack<SelectQuery>(), inQuery);
+			}
+
+			public void RegisterReplacement(SelectQuery oldQuery, SelectQuery newQuery)
+			{
+				_replacements           ??= new();
+
+				_replacements[newQuery] = oldQuery;
+			}
+
+			public SelectQuery? GetReplacement(SelectQuery newQuery)
+			{
+				if (_replacements == null)
+					return null;
+
+				if (!_replacements.TryGetValue(newQuery, out var oldQuery)) 
+					return null;
+
+				while (true)
+				{
+					if (!_replacements.TryGetValue(oldQuery, out var foundOldQuery))
+						break;
+
+					oldQuery = foundOldQuery;
+				}
+
+				return oldQuery;
 			}
 
 			/// <summary>
