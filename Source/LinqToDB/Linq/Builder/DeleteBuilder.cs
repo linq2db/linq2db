@@ -8,19 +8,14 @@ namespace LinqToDB.Linq.Builder
 	using LinqToDB.Expressions;
 	using SqlQuery;
 
+	[BuildsMethodCall(
+		nameof(LinqExtensions.Delete),
+		nameof(LinqExtensions.DeleteWithOutput),
+		nameof(LinqExtensions.DeleteWithOutputInto))]
 	sealed class DeleteBuilder : MethodCallBuilder
 	{
-		static readonly string[] MethodNames =
-		{
-			nameof(LinqExtensions.Delete),
-			nameof(LinqExtensions.DeleteWithOutput),
-			nameof(LinqExtensions.DeleteWithOutputInto)
-		};
-
-		protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
-		{
-			return methodCall.IsQueryable(MethodNames);
-		}
+		public static bool CanBuildMethod(MethodCallExpression call, BuildInfo info, ExpressionBuilder builder)
+			=> call.IsQueryable();
 
 		protected override BuildSequenceResult BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
