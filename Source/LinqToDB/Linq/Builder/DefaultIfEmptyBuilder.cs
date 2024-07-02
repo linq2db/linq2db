@@ -8,12 +8,11 @@ namespace LinqToDB.Linq.Builder
 	using LinqToDB.Expressions;
 	using SqlQuery;
 
+	[BuildsMethodCall("DefaultIfEmpty")]
 	sealed class DefaultIfEmptyBuilder : MethodCallBuilder
 	{
-		protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
-		{
-			return methodCall.IsQueryable("DefaultIfEmpty");
-		}
+		public static bool CanBuildMethod(MethodCallExpression call, BuildInfo info, ExpressionBuilder builder)
+			=> call.IsQueryable();
 
 		static ReadOnlyCollection<Expression>? PrepareNoNullConditions(ExpressionBuilder builder, IBuildContext notNullHandlerSequence, IBuildContext sequence, IBuildContext nullabilitySequence, bool allowNullField)
 		{

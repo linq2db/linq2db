@@ -8,22 +8,18 @@ namespace LinqToDB.Linq.Builder
 	using Mapping;
 	using SqlQuery;
 
+	[BuildsMethodCall("Select")]
 	sealed class SelectBuilder : MethodCallBuilder
 	{
 		#region SelectBuilder
 
-		protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
+		public static bool CanBuildMethod(MethodCallExpression call, BuildInfo info, ExpressionBuilder builder)
 		{
-			if (methodCall.IsQueryable("Select"))
-			{
-				switch (((LambdaExpression)methodCall.Arguments[1].Unwrap()).Parameters.Count)
-				{
-					case 1 :
-					case 2 : return true;
-				}
-			}
-
-			return false;
+			if (!call.IsQueryable())
+				return false;
+			
+			 var lambda = (LambdaExpression)call.Arguments[1].Unwrap();
+			 return lambda.Parameters.Count is 1 or 2;
 		}
 
 		public override bool IsAggregationContext(ExpressionBuilder builder, BuildInfo buildInfo)

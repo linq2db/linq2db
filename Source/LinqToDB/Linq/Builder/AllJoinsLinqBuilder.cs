@@ -8,19 +8,23 @@ namespace LinqToDB.Linq.Builder
 	using LinqToDB.Expressions;
 	using SqlQuery;
 
+	[BuildsMethodCall("Join", "InnerJoin", "LeftJoin", "RightJoin", "FullJoin", "CrossJoin")]
 	sealed class AllJoinsLinqBuilder : MethodCallBuilder
 	{
-		static readonly string[] MethodNames4 = { "InnerJoin", "LeftJoin", "RightJoin", "FullJoin" };
-
-		protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
+		public static bool CanBuildMethod(MethodCallExpression call, BuildInfo info, ExpressionBuilder builder)
 		{
-			if (methodCall.Method.DeclaringType != typeof(LinqExtensions))
+			if (call.Method.DeclaringType != typeof(LinqExtensions))
 				return false;
 
-			return
-				methodCall.IsQueryable("Join"      ) && methodCall.Arguments.Count == 5 ||
-				methodCall.IsQueryable(MethodNames4) && methodCall.Arguments.Count == 4 ||
-				methodCall.IsQueryable("CrossJoin" ) && methodCall.Arguments.Count == 3;
+			if (!call.IsQueryable())
+				return false;
+
+			return call.Arguments.Count == (call.Method.Name switch
+			{
+				"Join" => 5,
+				"CrossJoin" => 3,
+				_ => 4,
+			});
 		}
 
 		protected override BuildSequenceResult BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)

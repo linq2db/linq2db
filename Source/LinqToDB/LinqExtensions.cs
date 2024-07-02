@@ -3256,31 +3256,6 @@ namespace LinqToDB
 
 		#endregion
 
-		#region GetContext
-
-		internal static readonly MethodInfo SetMethodInfo8 = MemberHelper.MethodOf(() => GetContext((IQueryable<int>)null!)).GetGenericMethodDefinition();
-
-		/// <summary>
-		/// Converts query to <see cref="ContextParser.Context"/> object, used by merge operation generator.
-		/// </summary>
-		/// <typeparam name="TSource">Source query record type.</typeparam>
-		/// <param name="source">Source query.</param>
-		/// <returns>Query context object.</returns>
-		internal static ContextParser.Context GetContext<TSource>(this IQueryable<TSource> source)
-		{
-			if (source == null) throw new ArgumentNullException(nameof(source));
-
-			var currentSource = ProcessSourceQueryable?.Invoke(source) ?? source;
-
-			return currentSource.Provider.Execute<ContextParser.Context>(
-				Expression.Call(
-					null,
-					SetMethodInfo8.MakeGenericMethod(typeof(TSource)),
-					currentSource.Expression));
-		}
-
-		#endregion
-
 		#region Stub helpers
 
 		internal static TOutput AsQueryable<TOutput,TInput>(TInput source)

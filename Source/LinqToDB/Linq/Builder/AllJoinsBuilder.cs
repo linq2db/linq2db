@@ -6,23 +6,15 @@ namespace LinqToDB.Linq.Builder
 	using LinqToDB.Expressions;
 	using SqlQuery;
 
+	[BuildsMethodCall("InnerJoin", "LeftJoin", "RightJoin", "FullJoin")]
+	[BuildsMethodCall("Join", CanBuildName = nameof(CanBuildJoin))]
 	sealed class AllJoinsBuilder : MethodCallBuilder
 	{
-		static readonly string[] RightNullableOnlyMethodNames    = { "RightJoin", "FullJoin" };
-		static readonly string[] NotRightNullableOnlyMethodNames = { "InnerJoin", "LeftJoin", "RightJoin", "FullJoin" };
+		public static bool CanBuildJoin(MethodCallExpression call, BuildInfo info, ExpressionBuilder builder)
+			=> call.IsQueryable() && call.Arguments.Count == 3;
 
-		protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
-		{
-			return IsMatchingMethod(methodCall, false);
-		}
-
-		internal static bool IsMatchingMethod(MethodCallExpression methodCall, bool rightNullableOnly)
-		{
-			return
-				methodCall.IsQueryable("Join") && methodCall.Arguments.Count == 3
-				|| !rightNullableOnly && methodCall.IsQueryable(NotRightNullableOnlyMethodNames) && methodCall.Arguments.Count == 2
-				|| rightNullableOnly  && methodCall.IsQueryable(RightNullableOnlyMethodNames)    && methodCall.Arguments.Count == 2;
-		}
+		public static bool CanBuildMethod(MethodCallExpression call, BuildInfo info, ExpressionBuilder builder)
+			=> call.IsQueryable() && call.Arguments.Count == 2;
 
 		protected override BuildSequenceResult BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{

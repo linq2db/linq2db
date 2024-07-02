@@ -6,12 +6,11 @@ namespace LinqToDB.Linq.Builder
 	using LinqToDB.Expressions;
 	using Reflection;
 
+	[BuildsMethodCall(nameof(LinqExtensions.IgnoreFilters))]
 	sealed class IgnoreFiltersBuilder : MethodCallBuilder
 	{
-		protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
-		{
-			return methodCall.IsSameGenericMethod(Methods.LinqToDB.IgnoreFilters);
-		}
+		public static bool CanBuildMethod(MethodCallExpression call, BuildInfo info, ExpressionBuilder builder)
+			=> call.IsSameGenericMethod(Methods.LinqToDB.IgnoreFilters);
 
 		protected override BuildSequenceResult BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{

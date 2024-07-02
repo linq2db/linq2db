@@ -4,12 +4,11 @@ namespace LinqToDB.Linq.Builder
 {
 	using LinqToDB.Expressions;
 
+	[BuildsMethodCall("Cast")]
 	sealed class CastBuilder : MethodCallBuilder
 	{
-		protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
-		{
-			return methodCall.IsQueryable("Cast");
-		}
+		public static bool CanBuildMethod(MethodCallExpression call, BuildInfo info, ExpressionBuilder builder)
+			=> call.IsQueryable();
 
 		protected override BuildSequenceResult BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
