@@ -80,26 +80,14 @@ namespace Tests.Linq
 			using var db = GetDataContext(context);
 
 			var query =
-				from p in db.Parent
+				from p in db.Parent.LoadWith(p => p.Children)
 				from c in p.Children.DefaultIfEmpty(new Child { ChildID = -100 })
-				select new { Parent = p, Child = c }
+				select new { Parent = p.ParentID, Child = c }
 				into s
 				where s.Child.ChildID < 0
 				select s;
 
-			var xx = query.ToList();
-
-			/*var exptected =
-				from p in Parent
-				select new
-				{
-					Sum = p.Children.DefaultIfEmpty(new Child { ParentID = -100 })
-						.Select(c => c.ParentID)
-						.Sum()
-				};
-
-
-			AreEqual(exptected, query);*/
+			AssertQuery(query);
 		}
 
 	}
