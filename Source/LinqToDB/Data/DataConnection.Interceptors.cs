@@ -30,23 +30,10 @@ namespace LinqToDB.Data
 			this.AddInterceptorImpl(interceptor);
 		}
 
-		/// <inheritdoc cref="IDataContext.AddInterceptor(IInterceptor)"/>
-		public void AddInterceptor<T>(T interceptor) where T : IInterceptor
-		{
-			this.AddInterceptorImpl(interceptor);
-		}
-
 		public Action<IInterceptor>? OnRemoveInterceptor { get; set; }
 
 		/// <inheritdoc cref="IDataContext.RemoveInterceptor(IInterceptor)"/>
 		public void RemoveInterceptor(IInterceptor interceptor)
-		{
-			this.RemoveInterceptorImpl(interceptor);
-			OnRemoveInterceptor?.Invoke(interceptor);
-		}
-
-		/// <inheritdoc cref="IDataContext.RemoveInterceptor(IInterceptor)"/>
-		public void RemoveInterceptor<T>(T interceptor) where T : IInterceptor
 		{
 			this.RemoveInterceptorImpl(interceptor);
 			OnRemoveInterceptor?.Invoke(interceptor);
