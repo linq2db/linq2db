@@ -1882,7 +1882,7 @@ namespace LinqToDB.Linq.Builder
 				var searchCondition = new SqlSearchCondition(isNot);
 				foreach (var placeholder in notNull)
 				{
-					var sql = SqlNullabilityExpression.ApplyNullability(placeholder.Sql, true);
+					var sql = placeholder.Sql;
 					searchCondition.Predicates.Add(new SqlPredicate.IsNull(sql, isNot));
 				}
 
