@@ -11,12 +11,20 @@ namespace LinqToDB.Linq.Builder
 
 	using Methods = Reflection.Methods.LinqToDB.MultiInsert;
 
+	[BuildsMethodCall(
+		nameof(MultiInsertExtensions.MultiInsert),
+		nameof(MultiInsertExtensions.Into),
+		nameof(MultiInsertExtensions.When),
+		nameof(MultiInsertExtensions.Else),
+		nameof(MultiInsertExtensions.Insert),
+		nameof(MultiInsertExtensions.InsertAll),
+		nameof(MultiInsertExtensions.InsertFirst))]
 	sealed class MultiInsertBuilder : MethodCallBuilder
 	{
 		#region MultiInsertBuilder
 
-		protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
-			=> methodCall.Method.DeclaringType == typeof(MultiInsertExtensions);
+		public static bool CanBuildMethod(MethodCallExpression call, BuildInfo info, ExpressionBuilder builder)
+			=> call.Method.DeclaringType == typeof(MultiInsertExtensions);
 
 		static readonly Dictionary<MethodInfo, Func<ExpressionBuilder, MethodCallExpression, BuildInfo, IBuildContext>> _methodBuilders = new()
 		{

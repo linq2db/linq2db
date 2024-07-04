@@ -63,7 +63,7 @@ namespace LinqToDB.SqlProvider
 		{
 			var newElement = base.VisitSqlColumnExpression(column, expression);
 
-			newElement = WrapBooleanExpression(newElement);
+			newElement = WrapBooleanExpression(newElement, includeFields: false);
 			if (!ReferenceEquals(newElement, expression))
 				expression = (ISqlExpression)Visit(Optimize(newElement));
 
@@ -82,7 +82,7 @@ namespace LinqToDB.SqlProvider
 
 			if (result.OutputColumns != null)
 			{
-				var newElements = VisitElements(result.OutputColumns, GetVisitMode(element), WrapBooleanExpression);
+				var newElements = VisitElements(result.OutputColumns, GetVisitMode(element), e => WrapBooleanExpression(e, includeFields : false));
 				if (!ReferenceEquals(newElements, result.OutputColumns))
 				{
 					return new SqlOutputClause()
@@ -106,11 +106,38 @@ namespace LinqToDB.SqlProvider
 			if (!ReferenceEquals(newElement, element))
 				return Visit(newElement);
 
-			var trueValue  = WrapBooleanExpression(element.TrueValue);
-			var falseValue = WrapBooleanExpression(element.FalseValue);
+			newElement = ConvertSqlCondition(element);
 
-			if (!ReferenceEquals(trueValue, element.TrueValue) || !ReferenceEquals(falseValue, element.FalseValue))
-				return Visit(NotifyReplaced(new SqlConditionExpression(element.Condition, trueValue, falseValue), element));
+			if (!ReferenceEquals(newElement, element))
+			{
+				return Visit(NotifyReplaced(newElement, element));
+			}
+
+			return element;
+		}
+
+		protected override SqlCaseExpression.CaseItem VisitCaseItem(SqlCaseExpression.CaseItem element)
+		{
+			var newElement = base.VisitCaseItem(element);
+
+			newElement = ConvertCaseItem(newElement);
+
+			return newElement;
+		}
+
+		protected override IQueryElement VisitSqlCaseExpression(SqlCaseExpression element)
+		{
+			var newElement = base.VisitSqlCaseExpression(element);
+
+			if (!ReferenceEquals(newElement, element))
+				return Visit(newElement);
+
+			newElement = ConvertSqlCaseExpression(element);
+
+			if (!ReferenceEquals(newElement, element))
+			{
+				return Visit(NotifyReplaced(newElement, element));
+			}
 
 			return element;
 		}
@@ -219,6 +246,7 @@ namespace LinqToDB.SqlProvider
 			}
 
 			var newPredicate = ConvertExprExprPredicate(predicate);
+
 			if (!ReferenceEquals(newPredicate, predicate))
 			{
 				newPredicate = Optimize(newPredicate);
@@ -264,12 +292,15 @@ namespace LinqToDB.SqlProvider
 
 			if (SqlProviderFlags is { SupportsBooleanComparison: false })
 			{
-				var expr1 = WrapBooleanExpression(predicate.Expr1);
-				var expr2 = WrapBooleanExpression(predicate.Expr2);
-
-				if (!ReferenceEquals(expr1, predicate.Expr1) || !ReferenceEquals(expr2, predicate.Expr2))
+				if (QueryHelper.UnwrapNullablity(predicate.Expr2) is not (SqlValue or SqlParameter) && QueryHelper.UnwrapNullablity(predicate.Expr1) is not (SqlValue or SqlParameter))
 				{
-					return new SqlPredicate.ExprExpr(expr1, predicate.Operator, expr2, predicate.WithNull);
+					var expr1 = WrapBooleanExpression(predicate.Expr1, includeFields : true);
+					var expr2 = WrapBooleanExpression(predicate.Expr2, includeFields : true);
+
+					if (!ReferenceEquals(expr1, predicate.Expr1) || !ReferenceEquals(expr2, predicate.Expr2))
+					{
+						return new SqlPredicate.ExprExpr(expr1, predicate.Operator, expr2, predicate.WithNull);
+					}
 				}
 			}
 
@@ -781,7 +812,7 @@ namespace LinqToDB.SqlProvider
 		{
 			var newElement = (SqlOrderByItem)base.VisitSqlOrderByItem(element);
 
-			var wrapped = WrapBooleanExpression(newElement.Expression);
+			var wrapped = WrapBooleanExpression(newElement.Expression, includeFields : false);
 
 			if (!ReferenceEquals(wrapped, newElement.Expression))
 			{
@@ -802,7 +833,7 @@ namespace LinqToDB.SqlProvider
 		{
 			var newElement = (SqlSetExpression)base.VisitSqlSetExpression(element);
 
-			var wrapped = newElement.Expression == null ? null : WrapBooleanExpression(newElement.Expression);
+			var wrapped = newElement.Expression == null ? null : WrapBooleanExpression(newElement.Expression, includeFields : false);
 
 			if (!ReferenceEquals(wrapped, newElement.Expression))
 			{
@@ -823,7 +854,7 @@ namespace LinqToDB.SqlProvider
 		{
 			var newItem = base.VisitSqlGroupByItem(element);
 
-			return WrapBooleanExpression(newItem);
+			return WrapBooleanExpression(newItem, includeFields: false);
 		}
 
 		protected override IQueryElement VisitSqlCastExpression(SqlCastExpression element)
@@ -1036,7 +1067,47 @@ namespace LinqToDB.SqlProvider
 			return element;
 		}
 
-		protected virtual ISqlExpression WrapBooleanExpression(ISqlExpression expr)
+		protected virtual ISqlExpression ConvertSqlCondition(SqlConditionExpression element)
+		{
+			var trueValue  = WrapBooleanExpression(element.TrueValue, includeFields : true);
+			var falseValue = WrapBooleanExpression(element.FalseValue, includeFields : true);
+
+			if (!ReferenceEquals(trueValue, element.TrueValue) || !ReferenceEquals(falseValue, element.FalseValue))
+			{
+				return new SqlConditionExpression(element.Condition, trueValue, falseValue);
+			}
+
+			return element;
+		}
+
+		protected virtual ISqlExpression ConvertSqlCaseExpression(SqlCaseExpression element)
+		{
+			if (element.ElseExpression != null)
+			{
+				var elseExpression = WrapBooleanExpression(element.ElseExpression, includeFields : true);
+
+				if (!ReferenceEquals(elseExpression, element.ElseExpression))
+				{
+					return new SqlCaseExpression(element.Type, element.Cases, elseExpression);
+				}
+			}
+
+			return element;
+		}
+
+		protected virtual SqlCaseExpression.CaseItem ConvertCaseItem(SqlCaseExpression.CaseItem newElement)
+		{
+			var resultExpr = WrapBooleanExpression(newElement.ResultExpression, includeFields : true);
+
+			if (!ReferenceEquals(resultExpr, newElement.ResultExpression))
+			{
+				newElement = new SqlCaseExpression.CaseItem(newElement.Condition, resultExpr);
+			}
+
+			return newElement;
+		}
+
+		protected virtual ISqlExpression WrapBooleanExpression(ISqlExpression expr, bool includeFields)
 		{
 			if (SqlProviderFlags == null)
 				return expr;
@@ -1044,16 +1115,21 @@ namespace LinqToDB.SqlProvider
 			if (expr.SystemType == typeof(bool))
 			{
 				var unwrapped = QueryHelper.UnwrapNullablity(expr);
-				if (unwrapped is ISqlPredicate predicate)
+				if (unwrapped is ISqlPredicate || includeFields && unwrapped.ElementType is QueryElementType.Column or QueryElementType.SqlField)
 				{
+					var predicate = unwrapped as ISqlPredicate ?? ConvertToBooleanSearchCondition(expr);
+
+					var trueValue  = new SqlValue(true);
+					var falseValue = new SqlValue(false);
+
 					if (expr.CanBeNullable(NullabilityContext))
 					{
-						var conditionExpr = new SqlConditionExpression(predicate, new SqlValue(true), new SqlValue(false));
+						var conditionExpr = new SqlConditionExpression(predicate, trueValue, falseValue);
 						expr = new SqlConditionExpression(new SqlPredicate.IsNull(expr, false), new SqlValue(QueryHelper.GetDbDataType(expr, MappingSchema), null), conditionExpr);
 					}
 					else
 					{
-						expr = new SqlConditionExpression(predicate, new SqlValue(true), new SqlValue(false));
+						expr = new SqlConditionExpression(predicate, trueValue, falseValue);
 					}
 
 					expr = (ISqlExpression)Visit(expr);
@@ -1408,16 +1484,20 @@ namespace LinqToDB.SqlProvider
 			return Div<int>(expr1, new SqlValue(value));
 		}
 
-		protected ISqlExpression ConvertToBooleanSearchCondition(ISqlExpression expression)
+		protected SqlSearchCondition ConvertToBooleanSearchCondition(ISqlExpression expression)
 		{
 			var sc = new SqlSearchCondition();
-			var predicate = new SqlPredicate.ExprExpr(
-					expression, 
-					SqlPredicate.Operator.Equal, 
-					new SqlValue(0), 
-					DataOptions.LinqOptions.CompareNulls == CompareNulls.LikeCSharp ? true : null
-				)
-				.MakeNot();
+
+			ISqlPredicate predicate;
+			if (expression.SystemType?.ToNullableUnderlying() == typeof(bool))
+			{
+				predicate = new SqlPredicate.IsTrue(expression, new SqlValue(true), new SqlValue(false), DataOptions.LinqOptions.CompareNulls == CompareNulls.LikeCSharp ? false : null, false);
+			}
+			else
+			{
+				predicate = new SqlPredicate.ExprExpr(expression, SqlPredicate.Operator.Equal, new SqlValue(0), DataOptions.LinqOptions.CompareNulls == CompareNulls.LikeCSharp ? true : null)
+					.MakeNot();
+			}
 
 			sc.Add(predicate);
 

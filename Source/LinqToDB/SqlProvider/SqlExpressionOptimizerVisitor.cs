@@ -140,6 +140,15 @@ namespace LinqToDB.SqlProvider
 				return boolValue ? element.TrueValue : element.FalseValue;
 			}
 
+			if (element.TrueValue is SqlConditionExpression trueConditional)
+			{
+				if (trueConditional.Condition.Equals(element.Condition, SqlExpression.DefaultComparer))
+				{
+					var newConditionExpression = new SqlConditionExpression(element.Condition, trueConditional.TrueValue, element.FalseValue);
+					return Visit(newConditionExpression);
+				}
+			}
+
 			if (element.FalseValue is SqlConditionExpression falseConditional)
 			{
 				var newCaseExpression = new SqlCaseExpression(QueryHelper.GetDbDataType(element.TrueValue, _mappingSchema),
@@ -485,6 +494,11 @@ namespace LinqToDB.SqlProvider
 			_isInsideNot = false;
 
 			var result = base.VisitSqlQuery(selectQuery);
+
+			if (!ReferenceEquals(result, selectQuery))
+			{
+				_nullabilityContext.RegisterReplacement(selectQuery, (SelectQuery)result);
+			}
 
 			_isInsideNot = saveInsideNot;
 

@@ -162,13 +162,15 @@ namespace LinqToDB.Linq.Builder
 
 			// process eager loading queries
 			var correctedEager = CompleteEagerLoadingExpressions(postProcessed, context, queryParameter, ref preambles, previousKeys);
+
+			if (SequenceHelper.HasError(correctedEager))
+				return correctedEager;
+
 			if (!ExpressionEqualityComparer.Instance.Equals(correctedEager, postProcessed))
 			{
 				// convert all missed references
 				postProcessed = FinalizeConstructors(context, correctedEager, false);
 			}
-
-			SequenceHelper.EnsureNoErrors(postProcessed);
 
 			var withColumns = ToColumns(context, postProcessed);
 			return withColumns;

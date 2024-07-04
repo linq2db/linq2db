@@ -10,7 +10,6 @@ namespace LinqToDB.Linq.Builder
 	using Mapping;
 	using LinqToDB.Expressions;
 	using SqlQuery;
-	using DataProvider;
 
 	internal static class SequenceHelper
 	{
@@ -889,71 +888,6 @@ namespace LinqToDB.Linq.Builder
 			return found;
 		}
 
-		/// <summary>
-		/// Checks that provider can handle limitation inside subquery. This function is tightly coupled with <see cref="SelectQueryOptimizerVisitor.OptimizeApply"/>
-		/// </summary>
-		/// <param name="context"></param>
-		/// <returns></returns>
-		public static bool IsSupportedSubquery(IBuildContext parent, IBuildContext context, out string? errorMessage)
-		{
-			errorMessage = null;
-
-			// No check during recursion. Cloning may fail
-			if (parent.Builder.IsRecursiveBuild)
-				return true;
-
-			if (!context.Builder.DataContext.SqlProviderFlags.IsApplyJoinSupported)
-			{
-				// We are trying to simulate what will be with query after optimizer's work
-				//
-				var cloningContext = new CloningContext();
-
-				var clonedParentContext = cloningContext.CloneContext(parent);
-				var clonedContext       = cloningContext.CloneContext(context);
-
-				 cloningContext.UpdateContextParents();
-
-				var expr = parent.Builder.MakeExpression(clonedContext, new ContextRefExpression(clonedContext.ElementType, clonedContext), ProjectFlags.SQL);
-
-				expr = parent.Builder.ToColumns(clonedParentContext, expr);
-
-				SqlJoinedTable? fakeJoin = null;
-
-				// add fake join there is no still reference
-				if (null == clonedParentContext.SelectQuery.Find(e => e is SelectQuery sc && sc == clonedContext.SelectQuery))
-				{
-				 	fakeJoin = clonedContext.SelectQuery.OuterApply().JoinedTable;
-				
-				    clonedParentContext.SelectQuery.From.Tables[0].Joins.Add(fakeJoin);
-				}
-
-				using var visitor = QueryHelper.SelectOptimizer.Allocate();
-
-				#if DEBUG
-
-				var sqlText = clonedParentContext.SelectQuery.ToDebugString();
-
-				#endif
-
-				var optimizedQuery = (SelectQuery)visitor.Value.Optimize(
-					root : clonedParentContext.SelectQuery,
-					rootElement : clonedParentContext.SelectQuery,
-					providerFlags : parent.Builder.DataContext.SqlProviderFlags,
-					removeWeakJoins : false,
-					dataOptions : parent.Builder.DataOptions,
-					mappingSchema: context.MappingSchema,
-					evaluationContext : new EvaluationContext()
-				);
-
-				if (!SqlProviderHelper.IsValidQuery(optimizedQuery, parentQuery: null, fakeJoin: fakeJoin, forColumn: false, parent.Builder.DataContext.SqlProviderFlags, out errorMessage))
-				{
-					return false;
-				}
-			}
-
-			return true;
-		}
-
 		public static bool HasDependencyWithOuter(SelectQuery selectQuery)
 		{
 			return QueryHelper.IsDependsOnOuterSources(selectQuery);
@@ -979,9 +913,9 @@ namespace LinqToDB.Linq.Builder
 			return current;
 		}
 
-		public static bool IsDefaultIfEmpty(IBuildContext context)
+		public static DefaultIfEmptyBuilder.DefaultIfEmptyContext? GetDefaultIfEmptyContext(IBuildContext context)
 		{
-			return UnwrapSubqueryContext(context) is DefaultIfEmptyBuilder.DefaultIfEmptyContext;
+			return UnwrapSubqueryContext(context) as DefaultIfEmptyBuilder.DefaultIfEmptyContext;
 		}
 
 		public static Expression UnwrapDefaultIfEmpty(Expression expression)
