@@ -11,7 +11,6 @@ namespace LinqToDB.SqlProvider
 	using SqlQuery;
 	using SqlQuery.Visitors;
 	using Mapping;
-	using System.Linq.Expressions;
 
 	public class SqlExpressionOptimizerVisitor : SqlQueryVisitor
 	{

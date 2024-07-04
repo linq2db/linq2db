@@ -2334,7 +2334,8 @@ namespace LinqToDB.Linq.Builder
 					}
 				}
 
-				// Force nullability
+				// Force nullability.
+				// TODO: Review. Actually it can be removed. Currently only strange NullableBoolTests.NullTest test fails.
 				if (QueryHelper.IsNullValue(lOriginal))
 				{
 					rOriginal = SqlNullabilityExpression.ApplyNullability(rOriginal, true);

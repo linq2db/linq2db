@@ -124,12 +124,12 @@ namespace LinqToDB.DataProvider.Access
 
 			if (element.Expressions.Length == 2)
 			{
-				return new SqlConditionExpression(new SqlPredicate.IsNull(element.Expressions[0], true), element.Expressions[0], element.Expressions[1]);
+				return new SqlConditionExpression(new SqlPredicate.IsNull(element.Expressions[0], false), element.Expressions[1], element.Expressions[0]);
 			}
 
 			if (element.Expressions.Length > 2)
 			{
-				return new SqlConditionExpression(new SqlPredicate.IsNull(element.Expressions[0], true), element.Expressions[0], new SqlCoalesceExpression(GetSubArray(element.Expressions)));
+				return new SqlConditionExpression(new SqlPredicate.IsNull(element.Expressions[0], false), new SqlCoalesceExpression(GetSubArray(element.Expressions)), element.Expressions[0]);
 			}
 
 			static ISqlExpression[] GetSubArray(ISqlExpression[] array)

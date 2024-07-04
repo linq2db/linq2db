@@ -447,6 +447,45 @@ namespace Tests.Linq
 					from p in db.Parent select Sql.AsSql(p.Children.Max(c => (int?)c.ChildID) ?? p.Value1));
 		}
 
+		class CoalesceNullableFields
+		{
+			[PrimaryKey]
+			public int Id { get; set; }
+
+			[Column] public int? Nullable1 { get; set; }
+			[Column] public int? Nullable2 { get; set; }
+			[Column] public int? Nullable3 { get; set; }
+
+			public static CoalesceNullableFields[] Seed()
+			{
+				return
+				[
+					new CoalesceNullableFields { Id = 1, Nullable1 = 10,   Nullable2 = null, Nullable3 = null },
+					new CoalesceNullableFields { Id = 2, Nullable1 = null, Nullable2 = 20,   Nullable3 = null },
+					new CoalesceNullableFields { Id = 3, Nullable1 = null, Nullable2 = null, Nullable3 = 30   },
+					new CoalesceNullableFields { Id = 4, Nullable1 = null, Nullable2 = null, Nullable3 = null  }
+				];
+			}
+		}
+
+		[Test]
+		public void CoalesceMany([DataSources] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(CoalesceNullableFields.Seed());
+
+			var query = table.Select(t => new
+			{
+				Value1 = t.Nullable1 ?? t.Nullable2 ?? t.Nullable3 ?? t.Id,
+				Value2 = t.Nullable2 ?? t.Nullable1 ?? t.Nullable3 ?? t.Id,
+				Value3 = t.Nullable2 ?? t.Nullable3 ?? t.Nullable1 ?? t.Id,
+				Value4 = t.Nullable3 ?? t.Nullable1 ?? t.Nullable2 ?? t.Id,
+				Value5 = t.Nullable3 ?? t.Nullable2 ?? t.Nullable1 ?? t.Id,
+			});
+
+			AssertQuery(query);
+		}
+
 		[Test]
 		public void Concatenation([DataSources] string context)
 		{

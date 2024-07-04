@@ -230,7 +230,7 @@ namespace LinqToDB.SqlQuery
 					var function = (SqlFunction)expr;
 
 					//TODO: probably remove, we have SqlCoalesceExpression
-					if (function.Name is "Coalesce" || function.Parameters.Length == 2)
+					if (function is { Name: "Coalesce", Parameters.Length: 2 })
 					{
 						return GetColumnDescriptor(function.Parameters[0]);
 					}
