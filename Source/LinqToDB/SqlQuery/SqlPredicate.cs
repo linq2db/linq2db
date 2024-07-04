@@ -321,39 +321,49 @@ namespace LinqToDB.SqlQuery
 
 				if (WithNull.Value)
 				{
-					if (Operator == Operator.Greater || Operator == Operator.Less)
-						return this;
-
-					if (Operator == Operator.NotEqual)
+					switch (Operator)
 					{
-						var search = new SqlSearchCondition(true)
-							.Add(MakeWithoutNulls())
-							.AddAnd(sc => sc
-								.Add(new IsNull(Expr1, false))
-								.Add(new IsNull(Expr2, true)))
-							.AddAnd(sc => sc
-								.Add(new IsNull(Expr1, true))
-								.Add(new IsNull(Expr2, false))
-							);
+						case Operator.NotEqual:
+						{
+							var search = new SqlSearchCondition(true)
+								.Add(MakeWithoutNulls())
+								.AddAnd(sc => sc
+									.Add(new IsNull(Expr1, false))
+									.Add(new IsNull(Expr2, true)))
+								.AddAnd(sc => sc
+									.Add(new IsNull(Expr1, true))
+									.Add(new IsNull(Expr2, false))
+								);
 					
-						return search;
-					}
-					else
-					{
-						var search = new SqlSearchCondition(true)
-							.Add(MakeWithoutNulls())
-							.AddAnd(sc => sc
-								.Add(new IsNull(Expr1, false))
-								.Add(new IsNull(Expr2, false))
-							);
+							return search;
+						}
+						case Operator.Equal:
+						{
+							var search = new SqlSearchCondition(true)
+								.Add(MakeWithoutNulls())
+								.AddAnd(sc => sc
+									.Add(new IsNull(Expr1, false))
+									.Add(new IsNull(Expr2, false))
+								);
 
-						return search;
+							return search;
+						}
+						default:
+							return this;
 					}
 				}
 				else
 				{
-					if (Operator == Operator.Equal)
-						return this;
+					if (Operator is Operator.Equal)
+					{
+						var search = new SqlSearchCondition(true)
+							.Add(MakeWithoutNulls())
+							.AddAnd(sc => sc
+								.Add(new IsNull(Expr1, false))
+								.Add(new IsNull(Expr2, false))
+							);
+						return search;
+					}
 
 					if (Operator == Operator.NotEqual)
 					{

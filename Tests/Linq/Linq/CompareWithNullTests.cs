@@ -1,4 +1,4 @@
-using FluentAssertions;
+﻿using FluentAssertions;
 using LinqToDB;
 using LinqToDB.Common;
 using LinqToDB.Mapping;
@@ -6,6 +6,8 @@ using NUnit.Framework;
 using System;
 using System.Linq;
 using System.Linq.Expressions;
+
+using LinqToDB.Expressions;
 
 namespace Tests.Linq
 {
@@ -106,13 +108,14 @@ namespace Tests.Linq
 
 			var (where, withoutNulls, withNulls) = _conditions[index];
 
+			var conditionStr = new ExpressionPrinter().PrintExpression(where);
+
 			var result = src
 				.Where(where)
 				.OrderBy(x => x.Id)
 				.Select(x => x.Id)
+				.TagQuery(conditionStr)
 				.ToList();
-
-			result.Should().Equal(withNullCompares ? withNulls : withoutNulls);
 
 			// CompareWithNullValues should behave exactly like C#
 			if (withNullCompares)
@@ -124,6 +127,8 @@ namespace Tests.Linq
 
 				result.Should().Equal(linqResult);
 			}
+
+			result.Should().Equal(withNullCompares ? withNulls : withoutNulls);
 		}
 
 		[Test]
