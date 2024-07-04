@@ -41,7 +41,6 @@ namespace LinqToDB.SqlProvider
 		{
 			Cleanup();
 			_evaluationContext  = evaluationContext;
-			_nullabilityContext = nullabilityContext;
 			_dataOptions        = dataOptions;
 			_mappingSchema      = mappingSchema;
 			_allowOptimize      = default;
@@ -49,6 +48,8 @@ namespace LinqToDB.SqlProvider
 			_isInsideNot        = isInsideNot;
 			_reduceBinary       = reduceBinary;
 			SetTransformationInfo(transformationInfo);
+
+			_nullabilityContext = nullabilityContext.WithTransformationInfo(GetTransformationInfo());
 
 			return ProcessElement(element);
 		}
@@ -494,11 +495,6 @@ namespace LinqToDB.SqlProvider
 			_isInsideNot = false;
 
 			var result = base.VisitSqlQuery(selectQuery);
-
-			if (!ReferenceEquals(result, selectQuery))
-			{
-				_nullabilityContext.RegisterReplacement(selectQuery, (SelectQuery)result);
-			}
 
 			_isInsideNot = saveInsideNot;
 
