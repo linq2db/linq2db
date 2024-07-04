@@ -996,9 +996,9 @@ namespace Tests.Data
 			}
 		}
 
-#endregion
+		#endregion
 
-#endregion
+		#endregion
 
 		#region IDataContextInterceptor
 
@@ -1604,7 +1604,7 @@ namespace Tests.Data
 
 		#region IExceptionInterceptor
 		[Test]
-		public void NonQueryExceptionIntercepted([DataSources] string context)
+		public void NonQueryExceptionIntercepted([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1617,7 +1617,7 @@ namespace Tests.Data
 		}
 
 		[Test]
-		public void ScalarExceptionIntercepted([DataSources] string context)
+		public void ScalarExceptionIntercepted([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1629,7 +1629,7 @@ namespace Tests.Data
 		}
 
 		[Test]
-		public void ReaderExceptionIntercepted([DataSources] string context)
+		public void ReaderExceptionIntercepted([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
