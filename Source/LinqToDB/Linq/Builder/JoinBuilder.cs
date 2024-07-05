@@ -8,19 +8,19 @@ namespace LinqToDB.Linq.Builder
 	using LinqToDB.Expressions;
 	using SqlQuery;
 
+	[BuildsMethodCall("Join")]
 	sealed class JoinBuilder : MethodCallBuilder
 	{
-		protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
+		public static bool CanBuildMethod(MethodCallExpression call, BuildInfo info, ExpressionBuilder builder)
 		{
-			if (methodCall.Method.DeclaringType == typeof(LinqExtensions) || !methodCall.IsQueryable("Join"))
+			if (call.Method.DeclaringType == typeof(LinqExtensions) || !call.IsQueryable())
 				return false;
 
 			// other overload for Join
-			if (methodCall.Arguments[2].Unwrap() is not LambdaExpression lambda)
+			if (call.Arguments[2].Unwrap() is not LambdaExpression lambda)
 				return false;
 
 			var body = lambda.Body.Unwrap();
-
 			if (body.NodeType == ExpressionType.MemberInit)
 			{
 				var mi = (MemberInitExpression)body;

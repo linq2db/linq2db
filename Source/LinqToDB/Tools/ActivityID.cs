@@ -22,7 +22,6 @@ namespace LinqToDB.Tools
 					BuildSequence,
 						BuildSequenceCanBuild,
 						BuildSequenceBuild,
-					ReorderBuilders,
 					BuildQuery,
 						FinalizeQuery,
 			GetIEnumerable,

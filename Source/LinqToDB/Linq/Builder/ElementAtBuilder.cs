@@ -7,14 +7,11 @@ namespace LinqToDB.Linq.Builder
 	using Reflection;
 	using LinqToDB.Expressions;
 
+	[BuildsMethodCall("ElementAt", "ElementAtOrDefault", "ElementAtAsync", "ElementAtOrDefaultAsync")]
 	sealed class ElementAtBuilder : MethodCallBuilder
 	{
-		static readonly string[] MethodNames = { "ElementAt", "ElementAtOrDefault", "ElementAtAsync", "ElementAtOrDefaultAsync" };
-
-		protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
-		{
-			return methodCall.IsQueryable(MethodNames);
-		}
+		public static bool CanBuildMethod(MethodCallExpression call, BuildInfo buildInfo, ExpressionBuilder builder)
+			=> call.IsQueryable();
 
 		public enum MethodKind
 		{
