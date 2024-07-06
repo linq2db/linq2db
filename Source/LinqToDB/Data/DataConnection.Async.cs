@@ -384,42 +384,33 @@ namespace LinqToDB.Data
 
 		protected virtual async Task<int> ExecuteNonQueryAsync(CancellationToken cancellationToken)
 		{
-			if (((IInterceptable<ICommandInterceptor>)this).Interceptor is { } cInterceptor)
+			try
 			{
-				Option<int> result;
-
-				await using (ActivityService.StartAndConfigureAwait(ActivityID.CommandInterceptorExecuteNonQueryAsync))
+				if (((IInterceptable<ICommandInterceptor>)this).Interceptor is { } cInterceptor)
 				{
-					result = await cInterceptor.ExecuteNonQueryAsync(new(this), _command!, Option<int>.None, cancellationToken)
-						.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
-				}
+					Option<int> result;
 
-				if (result.HasValue)
-					return result.Value;
-			}
-
-			if (((IInterceptable<IExceptionInterceptor>)this).Interceptor is { } eInterceptor)
-			{
-				try
-				{
-					await using (ActivityService.StartAndConfigureAwait(ActivityID.CommandExecuteNonQueryAsync))
+					await using (ActivityService.StartAndConfigureAwait(ActivityID.CommandInterceptorExecuteNonQueryAsync))
 					{
-						return await _command!.ExecuteNonQueryAsync(cancellationToken)
+						result = await cInterceptor.ExecuteNonQueryAsync(new(this), _command!, Option<int>.None, cancellationToken)
 							.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 					}
+
+					if (result.HasValue)
+						return result.Value;
 				}
-				catch (Exception ex)
+
+				await using (ActivityService.StartAndConfigureAwait(ActivityID.CommandExecuteNonQueryAsync))
 				{
-					using (ActivityService.Start(ActivityID.ExceptionInterceptorProcessException))
-						eInterceptor.ProcessException(new(this), ex);
-					throw;
+					return await _command!.ExecuteNonQueryAsync(cancellationToken)
+						.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 				}
 			}
-
-			await using (ActivityService.StartAndConfigureAwait(ActivityID.CommandExecuteNonQueryAsync))
+			catch (Exception ex) when (((IInterceptable<IExceptionInterceptor>)this).Interceptor is { } eInterceptor)
 			{
-				return await _command!.ExecuteNonQueryAsync(cancellationToken)
-					.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+				await using (ActivityService.StartAndConfigureAwait(ActivityID.ExceptionInterceptorProcessException))
+					eInterceptor.ProcessException(new(this), ex);
+				throw;
 			}
 		}
 
@@ -486,42 +477,33 @@ namespace LinqToDB.Data
 
 		protected virtual async Task<object?> ExecuteScalarAsync(CancellationToken cancellationToken)
 		{
-			if (((IInterceptable<ICommandInterceptor>)this).Interceptor is { } cInterceptor)
+			try
 			{
-				Option<object?> result;
-
-				await using (ActivityService.StartAndConfigureAwait(ActivityID.CommandInterceptorExecuteScalarAsync))
+				if (((IInterceptable<ICommandInterceptor>)this).Interceptor is { } cInterceptor)
 				{
-					result = await cInterceptor.ExecuteScalarAsync(new(this), _command!, Option<object?>.None, cancellationToken)
-						.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
-				}
+					Option<object?> result;
 
-				if (result.HasValue)
-					return result.Value;
-			}
-
-			if (((IInterceptable<IExceptionInterceptor>)this).Interceptor is { } eInterceptor)
-			{
-				try
-				{
-					await using (ActivityService.StartAndConfigureAwait(ActivityID.CommandExecuteScalarAsync))
+					await using (ActivityService.StartAndConfigureAwait(ActivityID.CommandInterceptorExecuteScalarAsync))
 					{
-						return await _command!.ExecuteScalarAsync(cancellationToken)
+						result = await cInterceptor.ExecuteScalarAsync(new(this), _command!, Option<object?>.None, cancellationToken)
 							.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 					}
+
+					if (result.HasValue)
+						return result.Value;
 				}
-				catch (Exception ex)
+
+				await using (ActivityService.StartAndConfigureAwait(ActivityID.CommandExecuteNonQueryAsync))
 				{
-					using (ActivityService.Start(ActivityID.ExceptionInterceptorProcessException))
-						eInterceptor.ProcessException(new(this), ex);
-					throw;
+					return await _command!.ExecuteScalarAsync(cancellationToken)
+						.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 				}
 			}
-
-			await using (ActivityService.StartAndConfigureAwait(ActivityID.CommandExecuteScalarAsync))
+			catch (Exception ex) when (((IInterceptable<IExceptionInterceptor>)this).Interceptor is { } eInterceptor)
 			{
-				return await _command!.ExecuteScalarAsync(cancellationToken)
-					.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+				await using (ActivityService.StartAndConfigureAwait(ActivityID.ExceptionInterceptorProcessException))
+					eInterceptor.ProcessException(new(this), ex);
+				throw;
 			}
 		}
 
@@ -589,63 +571,53 @@ namespace LinqToDB.Data
 			CommandBehavior   commandBehavior,
 			CancellationToken cancellationToken)
 		{
-			async Task<DbDataReader> Core(CommandBehavior commandBehavior, CancellationToken cancellationToken)
+			try
 			{
-				if (((IInterceptable<IExceptionInterceptor>)this).Interceptor is { } eInterceptor)
+				DbDataReader reader;
+
+				if (((IInterceptable<ICommandInterceptor>)this).Interceptor is { } cInterceptor)
 				{
-					try
+					Option<DbDataReader> result;
+
+					await using (ActivityService.StartAndConfigureAwait(ActivityID.CommandInterceptorExecuteReader))
+					{
+						result = await cInterceptor.ExecuteReaderAsync(new(this), _command!, commandBehavior, Option<DbDataReader>.None, cancellationToken)
+							.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+					}
+
+					if (!result.HasValue)
 					{
 						await using (ActivityService.StartAndConfigureAwait(ActivityID.CommandExecuteReaderAsync))
 						{
-							return await _command!.ExecuteReaderAsync(commandBehavior, cancellationToken)
+							reader = await _command!.ExecuteReaderAsync(commandBehavior, cancellationToken)
 								.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 						}
 					}
-					catch (Exception ex)
+					else
 					{
-						using (ActivityService.Start(ActivityID.ExceptionInterceptorProcessException))
-							eInterceptor.ProcessException(new(this), ex);
-						throw;
+						reader = result.Value;
 					}
+
+					await using (ActivityService.StartAndConfigureAwait(ActivityID.CommandInterceptorAfterExecuteReader))
+						cInterceptor.AfterExecuteReader(new(this), _command!, commandBehavior, reader);
 				}
 				else
 				{
-					await using (ActivityService.StartAndConfigureAwait(ActivityID.CommandExecuteReaderAsync))
-					{
-						return await _command!.ExecuteReaderAsync(commandBehavior, cancellationToken)
-							.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
-					}
+					reader = await _command!.ExecuteReaderAsync(commandBehavior, cancellationToken)
+						.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 				}
+
+				var wrapper = new DataReaderWrapper(this, reader, _command!);
+				_command = null;
+
+				return wrapper;
 			}
-
-			DbDataReader reader;
-
-			if (((IInterceptable<ICommandInterceptor>)this).Interceptor is { } cInterceptor)
+			catch (Exception ex) when (((IInterceptable<IExceptionInterceptor>)this).Interceptor is { } eInterceptor)
 			{
-				Option<DbDataReader> result;
-
-				await using (ActivityService.StartAndConfigureAwait(ActivityID.CommandInterceptorExecuteReader))
-					result = await cInterceptor.ExecuteReaderAsync(new(this), _command!, commandBehavior, Option<DbDataReader>.None, cancellationToken)
-						.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
-
-				reader = result.HasValue 
-					? result.Value 
-					: await Core(commandBehavior, cancellationToken)
-						.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
-
-				await using (ActivityService.StartAndConfigureAwait(ActivityID.CommandInterceptorAfterExecuteReader))
-					cInterceptor.AfterExecuteReader(new(this), _command!, commandBehavior, reader);
+				await using (ActivityService.StartAndConfigureAwait(ActivityID.ExceptionInterceptorProcessException))
+					eInterceptor.ProcessException(new(this), ex);
+				throw;
 			}
-			else
-			{
-				reader = await Core(commandBehavior, cancellationToken)
-					.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
-			}
-
-			var wrapper = new DataReaderWrapper(this, reader, _command!);
-			_command = null;
-
-			return wrapper;
 		}
 
 		internal async Task<DataReaderWrapper> ExecuteDataReaderAsync(
