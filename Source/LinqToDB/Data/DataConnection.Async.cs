@@ -603,8 +603,11 @@ namespace LinqToDB.Data
 				}
 				else
 				{
-					reader = await _command!.ExecuteReaderAsync(commandBehavior, cancellationToken)
-						.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+					await using (ActivityService.StartAndConfigureAwait(ActivityID.CommandExecuteReaderAsync))
+					{
+						reader = await _command!.ExecuteReaderAsync(commandBehavior, cancellationToken)
+							.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+					}
 				}
 
 				var wrapper = new DataReaderWrapper(this, reader, _command!);
