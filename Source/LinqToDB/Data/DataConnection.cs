@@ -1040,7 +1040,7 @@ namespace LinqToDB.Data
 					Option<object?> result;
 
 					using (ActivityService.Start(ActivityID.CommandInterceptorExecuteScalar))
-						result = cInterceptor.ExecuteScalar(new(this), command, Option<int>.None);
+						result = cInterceptor.ExecuteScalar(new(this), command, Option<object?>.None);
 
 					if (result.HasValue)
 						return result.Value;
