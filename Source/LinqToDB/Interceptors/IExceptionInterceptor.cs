@@ -5,7 +5,7 @@ namespace LinqToDB.Interceptors
 	public interface IExceptionInterceptor : IInterceptor
 	{
 		/// <summary>
-		///	Event, Triggered when an exception is thrown while executing a database command/query.
+		///	Event, triggered when an exception is thrown while executing a database command/query.
 		/// </summary>
 		/// <param name="exception">
 		/// The thrown <see cref="Exception" />.
