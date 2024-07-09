@@ -137,6 +137,9 @@ namespace LinqToDB.Tools
 		/// <summary>The <see cref="Interceptors.IUnwrapDataObjectInterceptor.UnwrapDataReader"/> method call.</summary>
 		UnwrapDataObjectInterceptorUnwrapDataReader,
 
+		/// <summary>The <see cref="Interceptors.IExceptionInterceptor.ProcessException"/> method call.</summary>
+		ExceptionInterceptorProcessException,
+
 		GetSqlText,
 
 			Materialization,
