@@ -481,6 +481,10 @@ namespace Tests.Linq
 				Value3 = t.Nullable2 ?? t.Nullable3 ?? t.Nullable1 ?? t.Id,
 				Value4 = t.Nullable3 ?? t.Nullable1 ?? t.Nullable2 ?? t.Id,
 				Value5 = t.Nullable3 ?? t.Nullable2 ?? t.Nullable1 ?? t.Id,
+
+				OptimalValue1 = Sql.AsSql((int?)t.Id  ?? t.Nullable1 ?? t.Nullable2 ?? t.Nullable3),
+				OptimalValue2 = Sql.AsSql(t.Nullable1 ?? (int?)t.Id  ?? t.Nullable2 ?? t.Nullable3),
+				OptimalValue3 = Sql.AsSql(t.Nullable1 ?? t.Nullable2 ?? (int?)t.Id  ?? t.Nullable3),
 			});
 
 			AssertQuery(query);
