@@ -46,14 +46,12 @@ namespace LinqToDB.DataProvider.Informix
 			return base.ConvertSqlBinaryExpression(element);
 		}
 
-		public override ISqlExpression ConvertSqlFunction(SqlFunction func)
+		public override ISqlExpression ConvertCoalesce(SqlCoalesceExpression element)
 		{
-			return func.Name switch
-			{
-				// passing parameter to NVL will result in "A syntax error has occurred." error from server
-				PseudoFunctions.COALESCE => ConvertCoalesceToBinaryFunc(func, "Nvl", supportsParameters: false),
-				_                        => base.ConvertSqlFunction(func),
-			};
+			if (SqlProviderFlags == null || element.SystemType == null)
+				return element;
+
+			return ConvertCoalesceToBinaryFunc(element, "Nvl", supportsParameters : false);
 		}
 
 		//TODO: Move everything to SQLBuilder
