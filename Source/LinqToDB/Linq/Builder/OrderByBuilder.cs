@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Linq.Expressions;
@@ -42,80 +41,44 @@ namespace LinqToDB.Linq.Builder
 
 			var sequence = sequenceResult.BuildContext;
 
-			var wrapped = false;
-
-			if (sequence.SelectQuery.Select.HasModifier)
-			{
-				sequence = new SubQueryContext(sequence);
-				wrapped = true;
-			}
-
 			var orderByProjectFlags = ProjectFlags.SQL | ProjectFlags.Keys;
 			var isContinuousOrder   = !sequence.SelectQuery.OrderBy.IsEmpty && methodCall.Method.Name.StartsWith("Then");
 			var lambda              = (LambdaExpression)methodCall.Arguments[1].Unwrap();
 
-			var byIndex = false;
-
-			List<SqlPlaceholderExpression> placeholders;
-			while (true)
+			if (!isContinuousOrder)
 			{
-				Expression sqlExpr;
+				if (!builder.DataContext.Options.LinqOptions.DoNotClearOrderBys && !sequence.SelectQuery.Select.HasModifier)
+					sequence.SelectQuery.OrderBy.Items.Clear();
 
-				var body = SequenceHelper.PrepareBody(lambda, sequence).Unwrap();
-
-				if (body is MethodCallExpression mc && mc.Method.DeclaringType == typeof(Sql) && mc.Method.Name == nameof(Sql.Ordinal))
-				{
-					sqlExpr = builder.ConvertToSqlExpr(sequence, mc.Arguments[0], orderByProjectFlags);
-					byIndex = true;
-				}
-				else
-				{
-					sqlExpr = builder.ConvertToSqlExpr(sequence, body, orderByProjectFlags);
-					byIndex = false;
-				}
-
-				if (!SequenceHelper.IsSqlReady(sqlExpr))
-				{
-					if (sqlExpr is SqlErrorExpression errorExpr)
-						return BuildSequenceResult.Error(methodCall, errorExpr.Message);
-					return BuildSequenceResult.Error(methodCall);
-				}
-
-				placeholders = ExpressionBuilder.CollectDistinctPlaceholders(sqlExpr);
-
-				// Do not create subquery for ThenByExtensions
-				//
-				if (wrapped || isContinuousOrder)
-					break;
-
-				// handle situation when order by uses complex field
-				//
-				var isComplex = false;
-
-				foreach (var placeholder in placeholders)
-				{
-					// immutable expressions will be removed later
-					//
-					var isImmutable = QueryHelper.IsConstant(placeholder.Sql);
-					if (isImmutable)
-						continue;
-
-					// possible we have to extend this list
-					//
-					isComplex = null != placeholder.Sql.Find(e => e.ElementType == QueryElementType.SqlQuery || e.ElementType == QueryElementType.SqlFunction);
-					if (isComplex)
-						break;
-				}
-
-				if (!isComplex)
-					break;
-
-				sequence = new SubQueryContext(sequence);
-				wrapped = true;
+				if (sequence is not SubQueryContext)
+					sequence = new SubQueryContext(sequence);
 			}
 
-			if (!isContinuousOrder && !builder.DataContext.Options.LinqOptions.DoNotClearOrderBys)
-				sequence.SelectQuery.OrderBy.Items.Clear();
+			Expression sqlExpr;
+
+			var body = SequenceHelper.PrepareBody(lambda, sequence).Unwrap();
+
+			bool byIndex;
+
+			if (body is MethodCallExpression mc && mc.Method.DeclaringType == typeof(Sql) && mc.Method.Name == nameof(Sql.Ordinal))
+			{
+				sqlExpr = builder.ConvertToSqlExpr(sequence, mc.Arguments[0], orderByProjectFlags);
+				byIndex = true;
+			}
+			else
+			{
+				sqlExpr = builder.ConvertToSqlExpr(sequence, body, orderByProjectFlags);
+				byIndex = false;
+			}
+
+			if (!SequenceHelper.IsSqlReady(sqlExpr))
+			{
+				if (sqlExpr is SqlErrorExpression errorExpr)
+					return BuildSequenceResult.Error(methodCall, errorExpr.Message);
+				return BuildSequenceResult.Error(methodCall);
+			}
+
+			var placeholders = ExpressionBuilder.CollectDistinctPlaceholders(sqlExpr);
 
 			foreach (var placeholder in placeholders)
 			{

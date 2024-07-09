@@ -170,16 +170,36 @@ namespace LinqToDB.DataProvider.SqlCe
 
 			statement.Visit(static e =>
 			{
-				if (e.ElementType == QueryElementType.SqlFunction)
+				switch (e.ElementType)
 				{
-					var sqlFunction = (SqlFunction)e;
-					foreach (var parameter in sqlFunction.Parameters)
+					case QueryElementType.SqlFunction:
 					{
-						if (parameter.ElementType == QueryElementType.SqlParameter &&
-						    parameter is SqlParameter sqlParameter)
+						var sqlFunction = (SqlFunction)e;
+						foreach (var parameter in sqlFunction.Parameters)
 						{
-							sqlParameter.IsQueryParameter = false;
+							if (parameter.ElementType == QueryElementType.SqlParameter &&
+							    parameter is SqlParameter sqlParameter)
+							{
+								sqlParameter.IsQueryParameter = false;
+							}
 						}
+
+						break;
+					}
+
+					case QueryElementType.SqlCoalesce:
+					{
+						var sqlCoalesce = (SqlCoalesceExpression)e;
+						foreach (var expression in sqlCoalesce.Expressions)
+						{
+							if (expression.ElementType == QueryElementType.SqlParameter &&
+							    expression is SqlParameter sqlParameter)
+							{
+								sqlParameter.IsQueryParameter = false;
+							}
+						}
+
+						break;
 					}
 				}
 			});
