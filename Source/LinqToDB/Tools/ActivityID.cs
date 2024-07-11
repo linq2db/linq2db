@@ -9,6 +9,7 @@ namespace LinqToDB.Tools
 	/// </summary>
 	public enum ActivityID
 	{
+		None = 0,
 		QueryProviderExecuteT,
 		QueryProviderExecute,
 		QueryProviderGetEnumeratorT,
