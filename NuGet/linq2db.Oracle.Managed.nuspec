@@ -16,11 +16,11 @@
 		<dependencies>
 			<group targetFramework="net462">
 				<dependency id="linq2db"                       version="6.0.0"    />
-				<dependency id="Oracle.ManagedDataAccess"      version="21.14.0"  />
+				<dependency id="Oracle.ManagedDataAccess"      version="21.15.0"  />
 			</group>
 			<group targetFramework="net472">
 				<dependency id="linq2db"                       version="6.0.0"    />
-				<dependency id="Oracle.ManagedDataAccess"      version="23.4.0"   />
+				<dependency id="Oracle.ManagedDataAccess"      version="23.5.0"   />
 			</group>
 			<group targetFramework="netstandard2.0">
 				<dependency id="linq2db"                       version="6.0.0"    />
@@ -28,7 +28,7 @@
 			</group>
 			<group targetFramework="netstandard2.1">
 				<dependency id="linq2db"                       version="6.0.0"    />
-				<dependency id="Oracle.ManagedDataAccess.Core" version="23.4.0"   />
+				<dependency id="Oracle.ManagedDataAccess.Core" version="23.5.0"   />
 			</group>
 		</dependencies>
 		<contentFiles>
