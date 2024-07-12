@@ -174,8 +174,12 @@ namespace LinqToDB.Linq.Builder
 
 				var newNode = TranslateExpression(node);
 
-				if (newNode is SqlErrorExpression)
+				if (newNode is SqlErrorExpression errorExpression)
+				{
+					if (errorExpression.IsCritical)
+						return errorExpression;
 					return base.Visit(node);
+				}
 
 				if (newNode is SqlPlaceholderExpression)
 					return newNode;

@@ -4767,7 +4767,7 @@ namespace LinqToDB.Linq.Builder
 				{
 					// Do recursive again
 					var convertedAgain = MakeExpression(currentContext, expression, flags);
-					if (convertedAgain is not SqlErrorExpression)
+					if (convertedAgain is not SqlErrorExpression errorExpression || errorExpression.IsCritical)
 						expression = convertedAgain;
 				}
 				else

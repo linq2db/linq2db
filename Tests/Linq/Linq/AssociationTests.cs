@@ -14,6 +14,8 @@ using NUnit.Framework;
 
 using JetBrains.Annotations;
 
+using LinqToDB.Linq;
+
 namespace Tests.Linq
 {
 	using Model;
@@ -1902,7 +1904,9 @@ namespace Tests.Linq
 		#endregion
 
 		#region Issue 3822
-		[ActiveIssue("ArgumentException : must be reducible node", Configurations = [TestProvName.AllAccess, TestProvName.AllSybase])]
+
+		[ThrowsForProvider(typeof(LinqException), providers: [TestProvName.AllAccess], ErrorMessage = "Provider does not support JOIN without condition.")]
+		[ThrowsForProvider(typeof(LinqException), providers: [TestProvName.AllSybase], ErrorMessage = "Provider has issue with JOIN to limited recordset.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3822")]
 		public void Issue3822Test([DataSources] string context)
 		{
