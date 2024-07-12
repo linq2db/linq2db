@@ -3,6 +3,8 @@ using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 
+using LinqToDB.SqlQuery.Visitors;
+
 namespace LinqToDB.SqlQuery
 {
 	/// <summary>
@@ -13,25 +15,34 @@ namespace LinqToDB.SqlQuery
 		/// <summary>
 		/// Context for non-select queries of places where we don't know select query.
 		/// </summary>
-		public static NullabilityContext NonQuery { get; } = new(null, null);
+		public static NullabilityContext NonQuery { get; } = new(null, null, null);
 
 		/// <summary>
 		/// Creates nullability context for provided query or empty context if query is <c>null</c>.
 		/// </summary>
 		public static NullabilityContext GetContext(SelectQuery? selectQuery) =>
-			selectQuery == null ? NonQuery : new NullabilityContext(selectQuery, null);
+			selectQuery == null ? NonQuery : new NullabilityContext(selectQuery, null, null);
 
 		/// <summary>
 		/// Creates nullability context for provided query.
 		/// </summary>
-		public NullabilityContext(SelectQuery inQuery) : this(inQuery, null)
+		public NullabilityContext(SelectQuery inQuery) : this(inQuery, null, null)
 		{
 		}
 
-		NullabilityContext(SelectQuery? inQuery, NullabilityCache? nullabilityCache)
+		NullabilityContext(SelectQuery? inQuery, NullabilityCache? nullabilityCache, SqlQueryVisitor.IVisitorTransformationInfo? transformationInfo)
 		{
-			InQuery           = inQuery;
-			_nullabilityCache = nullabilityCache;
+			InQuery             = inQuery;
+			_nullabilityCache   = nullabilityCache;
+			_transformationInfo = transformationInfo;
+		}
+
+		public NullabilityContext WithTransformationInfo(SqlQueryVisitor.IVisitorTransformationInfo? transformationInfo)
+		{
+			if (ReferenceEquals(transformationInfo, _transformationInfo))
+				return this;
+
+			return new NullabilityContext(InQuery, _nullabilityCache, transformationInfo);
 		}
 
 		/// <summary>
@@ -42,7 +53,8 @@ namespace LinqToDB.SqlQuery
 		[MemberNotNullWhen(false, nameof(InQuery))]
 		public bool             IsEmpty     => InQuery == null;
 
-		NullabilityCache? _nullabilityCache;
+		NullabilityCache?                                    _nullabilityCache;
+		readonly SqlQueryVisitor.IVisitorTransformationInfo? _transformationInfo;
 
 		bool? CanBeNullInternal(SelectQuery? query, ISqlTableSource source)
 		{
@@ -53,7 +65,7 @@ namespace LinqToDB.SqlQuery
 			}
 
 			_nullabilityCache ??= new();
-			return _nullabilityCache.IsNullableSource(query, source);
+			return _nullabilityCache.IsNullableSource(query, source, _transformationInfo);
 		}
 
 		/// <summary>
@@ -97,7 +109,7 @@ namespace LinqToDB.SqlQuery
 			record struct NullabilityKey(SelectQuery InQuery, ISqlTableSource Source);
 
 			Dictionary<NullabilityKey, bool>? _nullableSources;
-			HashSet<SelectQuery>? _processedQueries;
+			HashSet<SelectQuery>?             _processedQueries;
 
 			/// <summary>
 			/// Returns nullability status of <paramref name="source"/> in specific <paramref name="inQuery"/>.
@@ -109,19 +121,39 @@ namespace LinqToDB.SqlQuery
 			/// <item><c>null</c>: <paramref name="source"/> is not reachable/available in <paramref name="inQuery"/>.</item>
 			/// </list>
 			/// </returns>
-			public bool? IsNullableSource(SelectQuery inQuery, ISqlTableSource source)
+			public bool? IsNullableSource(SelectQuery inQuery, ISqlTableSource source, SqlQueryVisitor.IVisitorTransformationInfo? transformationInfo)
 			{
-				_nullableSources ??= new();
-				_processedQueries ??= new HashSet<SelectQuery>();
+				EnsureInitialized(inQuery);
 
-				ProcessQuery(new Stack<SelectQuery>(), inQuery);
-
-				if (_nullableSources.TryGetValue(new(inQuery, source), out var isNullable))
+				if (_nullableSources!.TryGetValue(new(inQuery, source), out var isNullable))
 				{
 					return isNullable;
 				}
 
+				if (transformationInfo != null)
+				{
+					var oldSource  = transformationInfo.GetOriginal(source) as ISqlTableSource;
+					var oldInQuery = transformationInfo.GetOriginal(inQuery) as ISqlTableSource; 
+
+					if ((!ReferenceEquals(oldSource, source) || !ReferenceEquals(oldInQuery, inQuery)) && oldInQuery is SelectQuery oldInQuerySelect && oldSource != null)
+					{
+						if (_nullableSources!.TryGetValue(new(oldInQuerySelect, oldSource), out isNullable))
+						{
+							return isNullable;
+						}
+					}
+
+				}
+
 				return null;
+			}
+
+			void EnsureInitialized(SelectQuery inQuery)
+			{
+				_nullableSources  ??= new();
+				_processedQueries ??= new HashSet<SelectQuery>();
+
+				ProcessQuery(new Stack<SelectQuery>(), inQuery);
 			}
 
 			/// <summary>

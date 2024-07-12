@@ -587,7 +587,7 @@ namespace Tests.Linq
 		sealed class Parent170
 		{
 			[Column] public int ParentID;
-			[Column] public int Value1;
+			[Column(CanBeNull = true)] public int Value1;
 
 			[Association(ThisKey = "ParentID", OtherKey = "Value1", CanBeNull = true)]
 			public Parent170? Parent;

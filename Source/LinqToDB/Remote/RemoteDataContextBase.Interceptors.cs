@@ -11,7 +11,8 @@ namespace LinqToDB.Remote
 		IInterceptable<IEntityServiceInterceptor>,
 		IInterceptable<IUnwrapDataObjectInterceptor>,
 		IInterceptable<IEntityBindingInterceptor>,
-		IInterceptable<IQueryExpressionInterceptor>
+		IInterceptable<IQueryExpressionInterceptor>,
+		IInterceptable<IExceptionInterceptor>
 	{
 		// remote context interceptors support is quite limited and supports only IDataContextInterceptor
 		// interceptors, but not other interceptors, including AggregatedInterceptor<T>
@@ -20,6 +21,7 @@ namespace LinqToDB.Remote
 		IUnwrapDataObjectInterceptor? IInterceptable<IUnwrapDataObjectInterceptor>.Interceptor { get; set; }
 		IEntityBindingInterceptor?    IInterceptable<IEntityBindingInterceptor>.   Interceptor { get; set; }
 		IQueryExpressionInterceptor?  IInterceptable<IQueryExpressionInterceptor>. Interceptor { get; set; }
+		IExceptionInterceptor?        IInterceptable<IExceptionInterceptor>.       Interceptor { get; set; }
 
 		/// <inheritdoc cref="IDataContext.AddInterceptor(IInterceptor)"/>
 		public void AddInterceptor(IInterceptor interceptor)
@@ -30,11 +32,7 @@ namespace LinqToDB.Remote
 		/// <inheritdoc cref="IDataContext.RemoveInterceptor(IInterceptor)"/>
 		public void RemoveInterceptor(IInterceptor interceptor)
 		{
-			((IInterceptable<IDataContextInterceptor>)     this).RemoveInterceptor(interceptor);
-			((IInterceptable<IEntityServiceInterceptor>)   this).RemoveInterceptor(interceptor);
-			((IInterceptable<IUnwrapDataObjectInterceptor>)this).RemoveInterceptor(interceptor);
-			((IInterceptable<IEntityBindingInterceptor>)   this).RemoveInterceptor(interceptor);
-			((IInterceptable<IQueryExpressionInterceptor>) this).RemoveInterceptor(interceptor);
+			this.RemoveInterceptorImpl(interceptor);
 		}
 	}
 }

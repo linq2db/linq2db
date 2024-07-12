@@ -66,11 +66,11 @@ namespace LinqToDB.Linq.Builder
 			}
 
 			if (joinType == JoinType.Right || joinType == JoinType.Full)
-				outerContext = new DefaultIfEmptyBuilder.DefaultIfEmptyContext(buildInfo.Parent, outerContext, outerContext, null, false);
+				outerContext = new DefaultIfEmptyBuilder.DefaultIfEmptyContext(buildInfo.Parent, outerContext, outerContext, null, false, false);
 			outerContext = new SubQueryContext(outerContext);
 
 			if (joinType == JoinType.Left || joinType == JoinType.Full)
-				innerContext = new DefaultIfEmptyBuilder.DefaultIfEmptyContext(buildInfo.Parent, innerContext, innerContext, null, false);
+				innerContext = new DefaultIfEmptyBuilder.DefaultIfEmptyContext(buildInfo.Parent, innerContext, innerContext, null, false, false);
 			innerContext = new SubQueryContext(innerContext);
 
 			var selector = methodCall.Arguments[^1].UnwrapLambda();

@@ -137,7 +137,7 @@ namespace LinqToDB.SqlQuery.Visitors
 					}
 				}
 
-				if (!_providerFlags.IsSubQueryOrderBySupported && !selectQuery.OrderBy.IsEmpty)
+				if (!_providerFlags.IsSubQueryOrderBySupported && !selectQuery.OrderBy.IsEmpty && IsDependsOnOuterSources())
 				{
 					if (_parentQuery?.From.Tables.Count > 0 || IsDependsOnOuterSources())
 					{

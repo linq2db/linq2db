@@ -56,22 +56,54 @@ namespace LinqToDB.Linq.Builder
 			if (collectionResult.BuildContext == null)
 				return collectionResult;
 
-			var collection = collectionResult.BuildContext;
+			var originalCollection = collectionResult.BuildContext;
+
+			var collection = originalCollection;
 
 			// DefaultIfEmptyContext wil handle correctly projecting NULL objects
 			//
 			if (collectionInfo.JoinType == JoinType.Full || collectionInfo.JoinType == JoinType.Right)
 			{
-				sequence = new DefaultIfEmptyBuilder.DefaultIfEmptyContext(buildInfo.Parent, sequence, collection, null, false);
+				sequence = new DefaultIfEmptyBuilder.DefaultIfEmptyContext(buildInfo.Parent, sequence, collection, null, false, false);
 			}
+
+			var collectionDefaultIfEmptyContext = SequenceHelper.GetDefaultIfEmptyContext(collection);
+			if (collectionDefaultIfEmptyContext != null)
+			{
+				collectionDefaultIfEmptyContext.IsNullValidationDisabled = true;
+			}
+
+			var isLeftJoin =
+				collectionDefaultIfEmptyContext != null ||
+				collectionInfo.JoinType         == JoinType.Left;
+
+			var joinType = collectionInfo.JoinType;
+			joinType = joinType switch
+			{
+				JoinType.Inner => isLeftJoin ? JoinType.OuterApply : JoinType.CrossApply,
+				JoinType.Auto => isLeftJoin ? JoinType.OuterApply : JoinType.CrossApply,
+				JoinType.Left => JoinType.OuterApply,
+				JoinType.Full => JoinType.FullApply,
+				JoinType.Right => JoinType.RightApply,
+				_ => joinType
+			};
 
 			var projected = builder.BuildSqlExpression(collection,
 				new ContextRefExpression(collection.ElementType, collection), buildInfo.GetFlags(),
 				buildFlags : ExpressionBuilder.BuildFlags.ForceAssignments);
 
+			var expanded = builder.MakeExpression(sequence, new ContextRefExpression(collection.ElementType, collection), ProjectFlags.ExtractProjection);
+
 			collection = new SubQueryContext(collection);
 
-			projected = builder.UpdateNesting(collection, projected);
+			if (collectionDefaultIfEmptyContext != null)
+			{
+				var collectionSelectContext = new SelectContext(buildInfo.Parent, builder, null, expanded, collection.SelectQuery, buildInfo.IsSubQuery);
+
+				collection = new DefaultIfEmptyBuilder.DefaultIfEmptyContext(sequence, collectionSelectContext, collection, collectionDefaultIfEmptyContext.DefaultValue,
+					allowNullField: joinType is not (JoinType.Right or JoinType.RightApply or JoinType.Full or JoinType.FullApply),
+					isNullValidationDisabled: false);
+			}
 
 			if (resultSelector == null)
 			{
@@ -82,7 +114,7 @@ namespace LinqToDB.Linq.Builder
 				resultExpression = SequenceHelper.ReplaceBody(resultSelector.Body, resultSelector.Parameters[0], sequence);
 				if (resultSelector.Parameters.Count > 1)
 				{
-					resultExpression = SequenceHelper.ReplaceBody(resultExpression, resultSelector.Parameters[1], new ScopeContext(collection, sequence));
+					resultExpression = SequenceHelper.ReplaceBody(resultExpression, resultSelector.Parameters[1], collection);
 				}
 			}
 
@@ -97,25 +129,10 @@ namespace LinqToDB.Linq.Builder
 				collection.SetAlias(collectionAlias);
 			}
 
-			var isLeftJoin =
-				SequenceHelper.IsDefaultIfEmpty(collection) ||
-				collectionInfo.JoinType == JoinType.Left;
-
-			var joinType = collectionInfo.JoinType;
-			joinType = joinType switch
-			{
-				JoinType.Inner => isLeftJoin ? JoinType.OuterApply : JoinType.CrossApply,
-				JoinType.Auto  => isLeftJoin ? JoinType.OuterApply : JoinType.CrossApply,
-				JoinType.Left  => JoinType.OuterApply,
-				JoinType.Full  => JoinType.FullApply,
-				JoinType.Right => JoinType.RightApply,
-				_ => joinType
-			};
-
 			var join = new SqlFromClause.Join(joinType, collection.SelectQuery, collectionAlias, false, null);
 			sequence.SelectQuery.From.Tables[0].Joins.Add(join.JoinedTable);
 
-			var jhc = SequenceHelper.GetJoinHintContext(collection);
+			var jhc = SequenceHelper.GetJoinHintContext(originalCollection);
 			if (jhc != null)
 			{
 				join.JoinedTable.SqlQueryExtensions = jhc.Extensions;
