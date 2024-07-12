@@ -4,6 +4,7 @@ using System.Linq;
 using System.Linq.Expressions;
 
 using LinqToDB;
+using LinqToDB.Linq;
 
 using NUnit.Framework;
 
@@ -918,7 +919,7 @@ namespace Tests.Linq
 			var result = query.FirstOrDefault();
 		}
 
-		[ActiveIssue(Configurations = [TestProvName.AllSybase, TestProvName.AllDB2, TestProvName.AllAccess])]
+		[ThrowsForProvider(typeof(LinqException), providers: [TestProvName.AllSybase], ErrorMessage = "Provider does not support CROSS/OUTER/LATERAL joins.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3365")]
 		public void Issue3365Test([DataSources] string context)
 		{
