@@ -78,11 +78,11 @@ namespace LinqToDB.DataProvider.Oracle
 				ReaderExpressions[new ReaderInfo { ToType = typeof(decimal), FieldType = typeof(decimal), DataReaderType = Adapter.DataReaderType }] = Adapter.ReadOracleDecimalToDecimalAdv;
 			}
 			if (Adapter.ReadOracleDecimalToInt != null)
-				ReaderExpressions[new ReaderInfo { ToType = typeof(int),     FieldType = typeof(decimal), ProviderFieldType = Adapter.OracleDecimalType, DataReaderType = Adapter.DataReaderType }] = Adapter.ReadOracleDecimalToInt;
+				ReaderExpressions[new ReaderInfo { ToType = typeof(int),            FieldType = typeof(decimal),                        DataReaderType = Adapter.DataReaderType }] = Adapter.ReadOracleDecimalToInt;
 			if (Adapter.ReadOracleDecimalToLong != null)
-				ReaderExpressions[new ReaderInfo { ToType = typeof(long),    FieldType = typeof(decimal), ProviderFieldType = Adapter.OracleDecimalType, DataReaderType = Adapter.DataReaderType }] = Adapter.ReadOracleDecimalToLong;
+				ReaderExpressions[new ReaderInfo { ToType = typeof(long),           FieldType = typeof(decimal),                        DataReaderType = Adapter.DataReaderType }] = Adapter.ReadOracleDecimalToLong;
 			if (Adapter.ReadOracleDecimalToDecimal != null)
-				ReaderExpressions[new ReaderInfo { ToType = typeof(decimal), FieldType = typeof(decimal), ProviderFieldType = Adapter.OracleDecimalType, DataReaderType = Adapter.DataReaderType }] = Adapter.ReadOracleDecimalToDecimal;
+				ReaderExpressions[new ReaderInfo {                                  FieldType = typeof(decimal),                        DataReaderType = Adapter.DataReaderType }] = Adapter.ReadOracleDecimalToDecimal;
 		}
 
 		public OracleProvider Provider { get; }
