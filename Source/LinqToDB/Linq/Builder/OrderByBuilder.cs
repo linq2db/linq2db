@@ -47,11 +47,18 @@ namespace LinqToDB.Linq.Builder
 
 			if (!isContinuousOrder)
 			{
+				var prevSequence = sequence;
+
 				if (!builder.DataContext.Options.LinqOptions.DoNotClearOrderBys && !sequence.SelectQuery.Select.HasModifier)
 					sequence.SelectQuery.OrderBy.Items.Clear();
 
 				if (sequence is not SubQueryContext)
 					sequence = new SubQueryContext(sequence);
+
+				if (builder.DataContext.Options.LinqOptions.DoNotClearOrderBys && !prevSequence.SelectQuery.OrderBy.IsEmpty && !prevSequence.SelectQuery.Select.HasModifier)
+				{
+					sequence.SelectQuery.OrderBy.Items.AddRange(prevSequence.SelectQuery.OrderBy.Items.Select(x => x.Clone()));
+				}
 			}
 
 			Expression sqlExpr;
