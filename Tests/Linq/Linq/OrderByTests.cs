@@ -182,7 +182,7 @@ namespace Tests.Linq
 
 				var result = qry.OrderBy(x => x.ch.ChildID).Select(x => x.ch);
 
-				AreEqual(expected, result);
+				AreSame(expected, result);
 			}
 		}
 
