@@ -153,12 +153,12 @@ namespace LinqToDB
 		/// </summary>
 		public const string MySql57MySqlConnector = "MySql.5.7.MySqlConnector";
 		/// <summary>
-		/// MySql 8.x using MySql.Data provider.
+		/// MySql 8+ using MySql.Data provider.
 		/// Used as configuration name for MySql mapping schema <see cref="MySqlMappingSchema.MySqlData80MappingSchema"/>.
 		/// </summary>
 		public const string MySql80MySqlData = "MySql.8.0.MySql.Data";
 		/// <summary>
-		/// MySql 8.x using MySqlConnector provider.
+		/// MySql 8+ using MySqlConnector provider.
 		/// Used as configuration name for MySql mapping schema <see cref="MySqlMappingSchema.MySqlConnector80MappingSchema"/>.
 		/// </summary>
 		public const string MySql80MySqlConnector = "MySql.8.0.MySqlConnector";
