@@ -126,12 +126,13 @@ namespace LinqToDB.Data
 				if (_connection == null)
 				{
 					DbConnection connection;
+
 					if (_connectionFactory != null)
 						connection = _connectionFactory(Options);
 					else
 						connection = DataProvider.CreateConnection(ConnectionString!);
 
-					_connection = AsyncFactory.Create(connection);
+					_connection = AsyncFactory.CreateAndSetDataContext(this, connection);
 
 					if (RetryPolicy != null)
 						_connection = new RetryingDbConnection(this, _connection, RetryPolicy);
@@ -140,6 +141,7 @@ namespace LinqToDB.Data
 				if (_connection.State == ConnectionState.Closed)
 				{
 					var interceptor = ((IInterceptable<IConnectionInterceptor>)this).Interceptor;
+
 					if (interceptor is not null)
 					{
 						await using (ActivityService.StartAndConfigureAwait(ActivityID.ConnectionInterceptorConnectionOpeningAsync))
@@ -147,7 +149,20 @@ namespace LinqToDB.Data
 								.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 					}
 
-					await _connection.OpenAsync(cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+					var activity = ActivityService.StartAndConfigureAwait(ActivityID.ConnectionOpenAsync);
+
+					if (activity is null)
+					{
+						await _connection.OpenAsync(cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+					}
+					else
+					{
+						await using (activity)
+						{
+							await _connection.OpenAsync(cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+							activity.AddQueryInfo(this, _connection.Connection, null);
+						}
+					}
 
 					_closeConnection = true;
 
@@ -210,7 +225,7 @@ namespace LinqToDB.Data
 
 		/// <summary>
 		/// Rollbacks started (if any) transaction, associated with connection.
-		/// If underlying provider doesn't support asynchonous commit, it will be performed synchonously.
+		/// If underlying provider doesn't support asynchronous commit, it will be performed synchronously.
 		/// </summary>
 		/// <param name="cancellationToken">Asynchronous operation cancellation token.</param>
 		/// <returns>Asynchronous operation completion task.</returns>
@@ -276,6 +291,7 @@ namespace LinqToDB.Data
 		public virtual async Task CloseAsync()
 		{
 			var interceptor = ((IInterceptable<IDataContextInterceptor>)this).Interceptor;
+
 			if (interceptor != null)
 			{
 				await using (ActivityService.StartAndConfigureAwait(ActivityID.DataContextInterceptorOnClosingAsync))
@@ -298,11 +314,26 @@ namespace LinqToDB.Data
 			{
 				if (_disposeConnection)
 				{
-					await _connection.DisposeAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+					var a = ActivityService.StartAndConfigureAwait(ActivityID.ConnectionDisposeAsync)?.AddQueryInfo(this, _connection.Connection, null);
+
+					if (a is null)
+						await _connection.DisposeAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+					else
+						await using (a)
+							await _connection.DisposeAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+
 					_connection = null;
 				}
 				else if (_closeConnection)
-					await _connection.CloseAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+				{
+					var a = ActivityService.StartAndConfigureAwait(ActivityID.ConnectionCloseAsync)?.AddQueryInfo(this, _connection.Connection, null);
+
+					if (a is null)
+						await _connection.CloseAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+					else
+						await using (a)
+							await _connection.CloseAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+				}
 			}
 
 			if (interceptor != null)
@@ -400,7 +431,7 @@ namespace LinqToDB.Data
 						return result.Value;
 				}
 
-				await using (ActivityService.StartAndConfigureAwait(ActivityID.CommandExecuteNonQueryAsync))
+				await using (ActivityService.StartAndConfigureAwait(ActivityID.CommandExecuteNonQueryAsync)?.AddQueryInfo(this, _command!.Connection!, _command))
 				{
 					return await _command!.ExecuteNonQueryAsync(cancellationToken)
 						.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
@@ -493,7 +524,7 @@ namespace LinqToDB.Data
 						return result.Value;
 				}
 
-				await using (ActivityService.StartAndConfigureAwait(ActivityID.CommandExecuteNonQueryAsync))
+				await using (ActivityService.StartAndConfigureAwait(ActivityID.CommandExecuteNonQueryAsync)?.AddQueryInfo(this, _command!.Connection!, _command))
 				{
 					return await _command!.ExecuteScalarAsync(cancellationToken)
 						.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
@@ -587,7 +618,7 @@ namespace LinqToDB.Data
 
 					if (!result.HasValue)
 					{
-						await using (ActivityService.StartAndConfigureAwait(ActivityID.CommandExecuteReaderAsync))
+						await using (ActivityService.StartAndConfigureAwait(ActivityID.CommandExecuteReaderAsync)?.AddQueryInfo(this, _command!.Connection!, _command))
 						{
 							reader = await _command!.ExecuteReaderAsync(commandBehavior, cancellationToken)
 								.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
@@ -603,7 +634,7 @@ namespace LinqToDB.Data
 				}
 				else
 				{
-					await using (ActivityService.StartAndConfigureAwait(ActivityID.CommandExecuteReaderAsync))
+					await using (ActivityService.StartAndConfigureAwait(ActivityID.CommandExecuteReaderAsync)?.AddQueryInfo(this, _command!.Connection!, _command))
 					{
 						reader = await _command!.ExecuteReaderAsync(commandBehavior, cancellationToken)
 							.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
