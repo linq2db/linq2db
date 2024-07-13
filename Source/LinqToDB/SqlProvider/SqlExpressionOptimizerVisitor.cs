@@ -41,7 +41,6 @@ namespace LinqToDB.SqlProvider
 		{
 			Cleanup();
 			_evaluationContext  = evaluationContext;
-			_nullabilityContext = nullabilityContext;
 			_dataOptions        = dataOptions;
 			_mappingSchema      = mappingSchema;
 			_allowOptimize      = default;
@@ -49,6 +48,8 @@ namespace LinqToDB.SqlProvider
 			_isInsideNot        = isInsideNot;
 			_reduceBinary       = reduceBinary;
 			SetTransformationInfo(transformationInfo);
+
+			_nullabilityContext = nullabilityContext.WithTransformationInfo(GetTransformationInfo());
 
 			return ProcessElement(element);
 		}
@@ -495,11 +496,6 @@ namespace LinqToDB.SqlProvider
 
 			var result = base.VisitSqlQuery(selectQuery);
 
-			if (!ReferenceEquals(result, selectQuery))
-			{
-				_nullabilityContext.RegisterReplacement(selectQuery, (SelectQuery)result);
-			}
-
 			_isInsideNot = saveInsideNot;
 
 			return result;
@@ -826,28 +822,6 @@ namespace LinqToDB.SqlProvider
 
 			switch (element.Name)
 			{
-				case PseudoFunctions.COALESCE:
-				{
-					var parms = element.Parameters;
-					if (parms.Length == 2)
-					{
-						if (parms[0] is SqlValue val1 && parms[1] is not SqlValue)
-							return new SqlFunction(element.SystemType, element.Name, element.IsAggregate, element.Precedence, QueryHelper.CreateSqlValue(val1.Value, QueryHelper.GetDbDataType(parms[1], _mappingSchema), parms[0]), parms[1])
-							{
-								DoNotOptimize = true,
-								CanBeNull     = element.CanBeNull
-							};
-						else if (parms[1] is SqlValue val2 && parms[0] is not SqlValue)
-							return new SqlFunction(element.SystemType, element.Name, element.IsAggregate, element.Precedence, parms[0], QueryHelper.CreateSqlValue(val2.Value, QueryHelper.GetDbDataType(parms[0], _mappingSchema), parms[1]))
-							{
-								DoNotOptimize = true,
-								CanBeNull     = element.CanBeNull
-							};
-					}
-
-					break;
-				}
-
 				case "EXISTS":
 				{
 					if (element.Parameters.Length == 1 && element.Parameters[0] is SelectQuery query && query.Select.Columns.Count > 0)
@@ -863,6 +837,59 @@ namespace LinqToDB.SqlProvider
 
 					break;
 				}
+			}
+
+			return element;
+		}
+
+		protected override IQueryElement VisitSqlCoalesceExpression(SqlCoalesceExpression element)
+		{
+			var newElement = base.VisitSqlCoalesceExpression(element);
+
+			if (!ReferenceEquals(newElement, element))
+				return Visit(newElement);
+
+			List<ISqlExpression>? newExpressions = null;
+
+			for (var i = 0; i < element.Expressions.Length; i++)
+			{
+				var expr = element.Expressions[i];
+
+				if (QueryHelper.UnwrapNullablity(expr) is SqlCoalesceExpression inner)
+				{
+					if (newExpressions == null)
+					{
+						newExpressions = new List<ISqlExpression>(element.Expressions.Length + inner.Expressions.Length - 1);
+						newExpressions.AddRange(element.Expressions.Take(i));
+					}
+
+					newExpressions.AddRange(inner.Expressions);
+				}
+				else if (!_nullabilityContext.IsEmpty && !expr.CanBeNullable(_nullabilityContext) && i != element.Expressions.Length - 1)
+				{
+					if (newExpressions == null)
+					{
+						newExpressions = new List<ISqlExpression>(element.Expressions.Length);
+						newExpressions.AddRange(element.Expressions.Take(i));
+					}
+
+					newExpressions.Add(expr);
+
+					// chain terminated early
+					break;
+				}
+				else 
+				{
+					newExpressions?.Add(expr);
+				}
+			}
+
+			if (newExpressions != null)
+			{
+				if (newExpressions.Count == 1)
+					return newExpressions[0];
+				if (newExpressions.Count > 0)
+					return Visit(new SqlCoalesceExpression(newExpressions.ToArray()));
 			}
 
 			return element;

@@ -12,7 +12,8 @@ namespace LinqToDB
 		IInterceptable<IEntityServiceInterceptor>,
 		IInterceptable<IUnwrapDataObjectInterceptor>,
 		IInterceptable<IEntityBindingInterceptor>,
-		IInterceptable<IQueryExpressionInterceptor>
+		IInterceptable<IQueryExpressionInterceptor>,
+		IInterceptable<IExceptionInterceptor>
 	{
 		AggregatedCommandInterceptor? _commandInterceptor;
 		ICommandInterceptor? IInterceptable<ICommandInterceptor>.Interceptor
@@ -63,6 +64,13 @@ namespace LinqToDB
 			set => _queryExpressionInterceptor = (AggregatedQueryExpressionInterceptor?)value;
 		}
 
+		AggregatedExceptionInterceptor? _exceptionInterceptor;
+		IExceptionInterceptor? IInterceptable<IExceptionInterceptor>.Interceptor
+		{
+			get => _exceptionInterceptor;
+			set => _exceptionInterceptor = (AggregatedExceptionInterceptor?)value;
+		}
+
 		/// <inheritdoc cref="IDataContext.AddInterceptor(IInterceptor)"/>
 		public void AddInterceptor(IInterceptor interceptor)
 		{
@@ -76,13 +84,14 @@ namespace LinqToDB
 
 			switch (interceptor)
 			{
-				case ICommandInterceptor          cm : Add(ref _commandInterceptor,          cm); break;
-				case IConnectionInterceptor       cn : Add(ref _connectionInterceptor,       cn); break;
-				case IDataContextInterceptor      dc : Add(ref _dataContextInterceptor,      dc); break;
-				case IEntityServiceInterceptor    es : Add(ref _entityServiceInterceptor,    es); break;
-				case IUnwrapDataObjectInterceptor wr : Add(ref _unwrapDataObjectInterceptor, wr); break;
-				case IEntityBindingInterceptor    ex : Add(ref _entityBindingInterceptor,    ex); break;
-				case IQueryExpressionInterceptor  ex : Add(ref _queryExpressionInterceptor,  ex); break;
+				case ICommandInterceptor          cm: Add(ref _commandInterceptor,          cm); break;
+				case IConnectionInterceptor       cn: Add(ref _connectionInterceptor,       cn); break;
+				case IDataContextInterceptor      dc: Add(ref _dataContextInterceptor,      dc); break;
+				case IEntityServiceInterceptor    es: Add(ref _entityServiceInterceptor,    es); break;
+				case IUnwrapDataObjectInterceptor wr: Add(ref _unwrapDataObjectInterceptor, wr); break;
+				case IEntityBindingInterceptor    ex: Add(ref _entityBindingInterceptor,    ex); break;
+				case IQueryExpressionInterceptor  ex: Add(ref _queryExpressionInterceptor,  ex); break;
+				case IExceptionInterceptor        ex: Add(ref _exceptionInterceptor,        ex); break;
 			}
 
 			void Add<TA,TI>(ref TA? aggregator, TI intercept)
@@ -115,13 +124,7 @@ namespace LinqToDB
 		{
 			Options = Options.RemoveInterceptor(interceptor);
 
-			((IInterceptable<ICommandInterceptor>)         this).RemoveInterceptor(interceptor);
-			((IInterceptable<IConnectionInterceptor>)      this).RemoveInterceptor(interceptor);
-			((IInterceptable<IDataContextInterceptor>)     this).RemoveInterceptor(interceptor);
-			((IInterceptable<IEntityServiceInterceptor>)   this).RemoveInterceptor(interceptor);
-			((IInterceptable<IUnwrapDataObjectInterceptor>)this).RemoveInterceptor(interceptor);
-			((IInterceptable<IEntityBindingInterceptor>)   this).RemoveInterceptor(interceptor);
-			((IInterceptable<IQueryExpressionInterceptor>) this).RemoveInterceptor(interceptor);
+			this.RemoveInterceptorImpl(interceptor);
 		}
 	}
 }

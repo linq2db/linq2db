@@ -117,6 +117,31 @@ namespace LinqToDB.DataProvider.Access
 			return result;
 		}
 
+		public override ISqlExpression ConvertCoalesce(SqlCoalesceExpression element)
+		{
+			if (SqlProviderFlags == null || element.SystemType == null)
+				return element;
+
+			if (element.Expressions.Length == 2)
+			{
+				return new SqlConditionExpression(new SqlPredicate.IsNull(element.Expressions[0], false), element.Expressions[1], element.Expressions[0]);
+			}
+
+			if (element.Expressions.Length > 2)
+			{
+				return new SqlConditionExpression(new SqlPredicate.IsNull(element.Expressions[0], false), new SqlCoalesceExpression(GetSubArray(element.Expressions)), element.Expressions[0]);
+			}
+
+			static ISqlExpression[] GetSubArray(ISqlExpression[] array)
+			{
+				var parms = new ISqlExpression[array.Length - 1];
+				Array.Copy(array, 1, parms, 0, parms.Length);
+				return parms;
+			};
+
+			return element;
+		}
+
 		public override ISqlExpression ConvertSqlFunction(SqlFunction func)
 		{
 			switch (func)
@@ -127,20 +152,6 @@ namespace LinqToDB.DataProvider.Access
 					return func.WithName("UCase");
 				case { Name: "Length" }:
 					return func.WithName("Len");
-
-				case {
-					Name: PseudoFunctions.COALESCE,
-					Parameters: [var p0, var p1],
-					SystemType: var type,
-				}:
-					return new SqlFunction(type, "IIF", new SqlSearchCondition { Predicates = { new SqlPredicate.IsNull(p0, false) } }, p1, p0);
-
-				case {
-					Name: PseudoFunctions.COALESCE,
-					Parameters: [var p0, ..] parms,
-					SystemType: var type,
-				}:
-					return new SqlFunction(type, PseudoFunctions.COALESCE, p0, new SqlFunction(type, PseudoFunctions.COALESCE, GetSubArray(parms)));
 
 				case {
 					Name: "CharIndex",
@@ -158,13 +169,6 @@ namespace LinqToDB.DataProvider.Access
 
 				default:
 					return base.ConvertSqlFunction(func);
-			};
-
-			static ISqlExpression[] GetSubArray(ISqlExpression[] array)
-			{
-				var parms = new ISqlExpression[array.Length - 1];
-				Array.Copy(array, 1, parms, 0, parms.Length);
-				return parms;
 			}
 		}
 

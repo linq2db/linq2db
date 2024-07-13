@@ -137,9 +137,6 @@ namespace LinqToDB.DataProvider.Oracle
 		{
 			switch (func)
 			{
-				case { Name: "Coalesce", Parameters.Length: 2 }:
-					return ConvertCoalesceToBinaryFunc(func, "Nvl");
-
 				case {
 					Name: "CharIndex",
 					Parameters: [var p0, var p1],

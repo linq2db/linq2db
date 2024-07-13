@@ -805,6 +805,14 @@ namespace LinqToDB.Linq.Builder
 					return false;
 				}
 
+				// Do not select from database simple constants
+				if (_flags.IsExpression() 
+				    && expr is ConstantExpression constantExpression 
+				    && (constantExpression.Value is null || constantExpression.Type.IsValueType))
+				{
+					return false;
+				}
+
 				var canBeCompiled = Builder.CanBeCompiled(expr, false);
 
 				// some types has custom converter, we have to handle them
