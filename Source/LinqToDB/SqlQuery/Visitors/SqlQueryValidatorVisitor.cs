@@ -118,7 +118,11 @@ namespace LinqToDB.SqlQuery.Visitors
 								if (_providerFlags.SupportedCorrelatedSubqueriesLevel == 0)
 									errorMessage = ErrorHelper.Error_Correlated_Subqueries;
 								else
-									errorMessage = string.Format(NumberFormatInfo.InvariantInfo, ErrorHelper.Error_Correlated_Subqueries_Level, _providerFlags.SupportedCorrelatedSubqueriesLevel);
+								{
+#pragma warning disable CA1863
+									errorMessage = string.Format(CultureInfo.InvariantCulture, ErrorHelper.Error_Correlated_Subqueries_Level, _providerFlags.SupportedCorrelatedSubqueriesLevel.Value);
+#pragma warning restore CA1863
+								}
 
 								return false;
 							}
