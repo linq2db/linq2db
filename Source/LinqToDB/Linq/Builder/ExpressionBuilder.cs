@@ -187,7 +187,7 @@ namespace LinqToDB.Linq.Builder
 
 					if (queryInfo.Statement.SelectQuery != null)
 					{
-						if (!SqlProviderHelper.IsValidQuery(queryInfo.Statement.SelectQuery, null, null, false, DataContext.SqlProviderFlags, out var errorMessage))
+						if (!SqlProviderHelper.IsValidQuery(queryInfo.Statement.SelectQuery, null, null, null, DataContext.SqlProviderFlags, out var errorMessage))
 						{
 							query.ErrorExpression = new SqlErrorExpression(Expression, errorMessage, Expression.Type);
 							return false;

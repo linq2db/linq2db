@@ -44,9 +44,10 @@ namespace LinqToDB.DataProvider.Sybase
 			SqlProviderFlags.IsDerivedTableOrderBySupported   = false;
 			SqlProviderFlags.IsUpdateTakeSupported            = true;
 
-			SqlProviderFlags.IsColumnSubqueryWithParentReferenceSupported = false;
-			SqlProviderFlags.IsCorrelatedSubQueryTakeSupported            = false;
-			SqlProviderFlags.IsJoinDerivedTableWithTakeInvalid            = true;
+			SqlProviderFlags.IsSupportedCorrelatedSubqueryInExpression = false;
+			SqlProviderFlags.SupportedCorrelatedSubqueriesLevel        = 1;
+			SqlProviderFlags.IsCorrelatedSubQueryTakeSupported         = false;
+			SqlProviderFlags.IsJoinDerivedTableWithTakeInvalid         = true;
 
 			SetCharField("char",  (r,i) => r.GetString(i).TrimEnd(' '));
 			SetCharField("nchar", (r,i) => r.GetString(i).TrimEnd(' '));

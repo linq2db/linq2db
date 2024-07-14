@@ -2291,7 +2291,7 @@ namespace LinqToDB.SqlQuery
 			return false;
 		}
 
-		static bool IsUniqueUsage(SelectQuery rootQuery, SqlColumn column)
+		static int CountUsage(SelectQuery rootQuery, SqlColumn column)
 		{
 			int counter = 0;
 
@@ -2301,7 +2301,7 @@ namespace LinqToDB.SqlQuery
 				if (e is SelectQuery sq && sq == column.Parent)
 					return false;
 
-				if (e == column)
+				if (Equals(e, column))
 				{
 					++counter;
 				}
@@ -2309,7 +2309,13 @@ namespace LinqToDB.SqlQuery
 				return counter < 2;
 			});
 
-			return counter <= 1;
+			return counter;
+		}
+
+		static bool IsInSelectPart(SelectQuery rootQuery, SqlColumn column)
+		{
+			var result = rootQuery.Select.HasElement(column);
+			return result;
 		}
 
 		static bool IsInsideAggregate(IQueryElement testedElement, SqlColumn column)
@@ -2425,22 +2431,19 @@ namespace LinqToDB.SqlQuery
 								if (!IsLimitedToOneRecord(sq, joinQuery, evaluationContext))
 									continue;
 
-								if (!SqlProviderHelper.IsValidQuery(joinQuery, parentQuery: sq, fakeJoin: null, forColumn: true, _providerFlags, out _))
+								if (!SqlProviderHelper.IsValidQuery(joinQuery, parentQuery: sq, fakeJoin: null, columnSubqueryLevel : 0, _providerFlags, out _))
 									continue;
-
-								if (_providerFlags.DoesNotSupportCorrelatedSubquery)
-								{
-									if (QueryHelper.IsDependsOnOuterSources(join))
-										continue;
-								}
 
 								var isValid = true;
 
 								foreach (var testedColumn in joinQuery.Select.Columns)
 								{
 									// where we can start analyzing that we can move join to subquery
-									
-									if (!IsUniqueUsage(sq, testedColumn))
+
+									var usageCount = CountUsage(sq, testedColumn);
+									var isUnique   = usageCount <= 1;
+
+									if (!isUnique)
 									{
 										if (_providerFlags.IsApplyJoinSupported)
 										{
@@ -2450,6 +2453,19 @@ namespace LinqToDB.SqlQuery
 											isValid = false;
 											break;
 										}	
+									}
+
+									if (usageCount == 1 && !IsInSelectPart(sq, testedColumn))
+									{
+										if (!_providerFlags.IsSupportedCorrelatedSubqueryInExpression)
+										{
+											MoveDuplicateUsageToSubQuery(sq);
+											// will be processed in the next step
+											ti = -1;
+
+											isValid = false;
+											break;
+										}
 									}
 
 									if (testedColumn.Expression is SqlFunction function)
@@ -2520,6 +2536,9 @@ namespace LinqToDB.SqlQuery
 			if (_version != currentVersion)
 			{
 				EnsureReferencesCorrected(selectQuery);
+
+				_columnNestingCorrector.CorrectColumnNesting(selectQuery);
+
 				return true;
 			}
 

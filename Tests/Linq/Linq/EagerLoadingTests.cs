@@ -1939,9 +1939,8 @@ FROM
 			[Column] public decimal Value { get; set; }
 		}
 
-		[ActiveIssue(Configurations = [TestProvName.AllAccess, TestProvName.AllClickHouse, TestProvName.AllDB2, TestProvName.AllInformix, TestProvName.AllSybase])]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3226")]
-		public void Issue3226Test1([DataSources] string context)
+		public void Issue3226Test1([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using var db = GetDataContext(context);
 			using var t1 = db.CreateLocalTable<Item>();

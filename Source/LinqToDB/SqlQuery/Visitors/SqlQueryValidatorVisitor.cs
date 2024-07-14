@@ -4,7 +4,6 @@ using System.Linq;
 
 namespace LinqToDB.SqlQuery.Visitors
 {
-	using Linq.Builder;
 	using SqlProvider;
 
 	public class SqlQueryValidatorVisitor : QueryElementVisitor
@@ -61,7 +60,7 @@ namespace LinqToDB.SqlQuery.Visitors
 		public bool IsValidQuery(IQueryElement element,
 			SelectQuery?                       parentQuery,
 			SqlJoinedTable?                    fakeJoin,
-			bool                               forColumn,
+			int?                               columnSubqueryLevel,
 			SqlProviderFlags                   providerFlags,
 			out string?                        errorMessage)
 		{
@@ -70,7 +69,7 @@ namespace LinqToDB.SqlQuery.Visitors
 			_parentQuery         = parentQuery;
 			_fakeJoin            = fakeJoin;
 			_providerFlags       = providerFlags;
-			_columnSubqueryLevel = forColumn ? 0 : null;
+			_columnSubqueryLevel = columnSubqueryLevel;
 
 			Visit(element);
 
@@ -101,20 +100,27 @@ namespace LinqToDB.SqlQuery.Visitors
 
 			if (_columnSubqueryLevel != null)
 			{
-				if (_providerFlags.DoesNotSupportCorrelatedSubquery)
+				if (_providerFlags.SupportedCorrelatedSubqueriesLevel != null)
 				{
-					if (IsDependsOnOuterSources())
+					if (_columnSubqueryLevel >= _providerFlags.SupportedCorrelatedSubqueriesLevel)
 					{
-						var isValied = false;
-						if (_providerFlags.IsSupportedSimpleCorrelatedSubqueries && IsSimpleCorrelatedSubquery(selectQuery))
+						if (IsDependsOnOuterSources())
 						{
-							isValied = true;
-						}
+							var isValied = false;
+							if (_providerFlags.IsSupportedSimpleCorrelatedSubqueries && IsSimpleCorrelatedSubquery(selectQuery))
+							{
+								isValied = true;
+							}
 
-						if (!isValied)
-						{
-							errorMessage = ErrorHelper.Error_Correlated_Subqueries;
-							return false;
+							if (!isValied)
+							{
+								if (_providerFlags.SupportedCorrelatedSubqueriesLevel == 0)
+									errorMessage = ErrorHelper.Error_Correlated_Subqueries;
+								else
+									errorMessage = string.Format(ErrorHelper.Error_Correlated_Subqueries_Level, _providerFlags.SupportedCorrelatedSubqueriesLevel);
+
+								return false;
+							}
 						}
 					}
 				}
@@ -169,8 +175,7 @@ namespace LinqToDB.SqlQuery.Visitors
 					}
 				}
 
-				var shouldCheckNesting = _columnSubqueryLevel            > 0     && !_providerFlags.IsColumnSubqueryWithParentReferenceSupported
-				                         || selectQuery.Select.TakeValue != null && !_providerFlags.IsColumnSubqueryWithParentReferenceAndTakeSupported;
+				var shouldCheckNesting = selectQuery.Select.TakeValue != null && !_providerFlags.IsColumnSubqueryWithParentReferenceAndTakeSupported;
 
 				if (shouldCheckNesting)
 				{
@@ -198,6 +203,12 @@ namespace LinqToDB.SqlQuery.Visitors
 		static bool IsSimpleCorrelatedSubquery(SelectQuery selectQuery)
 		{
 			if (selectQuery.Where.SearchCondition.IsOr)
+				return false;
+
+			if (selectQuery.Select.HasModifier)
+				return false;
+
+			if (selectQuery.Select.Columns.Any(c => QueryHelper.IsAggregationFunction(c.Expression)))
 				return false;
 
 			if (selectQuery.Where.SearchCondition.Predicates.Any(p => p is SqlSearchCondition))
@@ -290,7 +301,7 @@ namespace LinqToDB.SqlQuery.Visitors
 				    element.JoinType == JoinType.FullApply  ||
 				    element.JoinType == JoinType.RightApply)
 				{
-					if (_providerFlags.DoesNotSupportCorrelatedSubquery)
+					if (_providerFlags.SupportedCorrelatedSubqueriesLevel == 0)
 					{
 						SetInvalid(ErrorHelper.Error_Correlated_Subqueries);
 					}

@@ -167,7 +167,7 @@ namespace LinqToDB.Linq.Builder
 				if (ExpressionEqualityComparer.Instance.Equals(newPath, path))
 					return path;
 
-				if (flags.IsTraverse() || flags.IsRoot() || flags.IsTable() || flags.IsExtractProjection())
+				if (flags.IsTraverse() || flags.IsRoot() || flags.IsTable() || flags.IsExtractProjection() || flags.IsAggregationRoot())
 					return newPath;
 
 				if ((flags.IsSql() || flags.IsExpression()) && SequenceHelper.IsSpecialProperty(path, typeof(int?), NotNullPropName))

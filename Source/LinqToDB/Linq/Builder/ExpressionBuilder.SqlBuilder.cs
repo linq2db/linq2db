@@ -213,7 +213,7 @@ namespace LinqToDB.Linq.Builder
 				if (!SqlProviderHelper.IsValidQuery(optimizedQuery, 
 					    parentQuery: null, 
 					    fakeJoin: fakeJoin, 
-					    forColumn: false, 
+					    columnSubqueryLevel: null, 
 					    parent.Builder.DataContext.SqlProviderFlags, 
 					    out errorMessage))
 				{
@@ -4528,6 +4528,16 @@ namespace LinqToDB.Linq.Builder
 						corrected = Expression.Convert(corrected, path.Type);
 					}
 					return MakeExpression(currentContext, corrected, flags);
+				}
+
+				if (memberExpression.Member.IsNullableHasValueMember())
+				{
+					var corrected = MakeExpression(currentContext, memberExpression.Expression, flags);
+					if (corrected.Type != memberExpression.Expression.Type)
+					{
+						corrected = Expression.Convert(corrected, memberExpression.Expression.Type);
+					}
+					return memberExpression.Update(corrected);
 				}
 
 				if (memberExpression.Expression.NodeType is ExpressionType.Convert or ExpressionType.ConvertChecked)
