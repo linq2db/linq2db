@@ -5,8 +5,8 @@ docker stop hana2
 docker rm -f hana2
 
 REM use pull to get latest layers (run will use cached layers)
-docker pull saplabs/hanaexpress:2.00.072.00.20231123.1
-docker run -h hxehost -d --name hana2 -p 39017:39017 saplabs/hanaexpress:2.00.072.00.20231123.1 --agree-to-sap-license --passwords-url file:///hana/password.json
+docker pull saplabs/hanaexpress:latest
+docker run -h hxehost -d --name hana2 -p 39017:39017 saplabs/hanaexpress:latest --agree-to-sap-license --passwords-url file:///hana/password.json
 
 docker cp hana-password.json hana2:/hana/password.json
 docker exec hana2 sudo chmod 600 /hana/password.json

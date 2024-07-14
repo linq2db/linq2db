@@ -996,13 +996,13 @@ namespace Tests.Data
 			}
 		}
 
-#endregion
+		#endregion
 
-#endregion
+		#endregion
 
-#region IDataContextInterceptor
+		#region IDataContextInterceptor
 
-#region EntityCreated
+		#region EntityCreated
 		[Test]
 		public void EntityCreated_DataConnection_Or_RemoteContext([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
@@ -1037,8 +1037,8 @@ namespace Tests.Data
 			}
 		}
 
-#endregion
-#region OnClosing/OnClosed
+		#endregion
+		#region OnClosing/OnClosed
 
 		[Test]
 		public void CloseEvents_DataConnection_Or_RemoteContext([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
@@ -1602,6 +1602,45 @@ namespace Tests.Data
 
 		#endregion
 
+		#region IExceptionInterceptor
+		[Test]
+		public void NonQueryExceptionIntercepted([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				db.AddInterceptor(new TestExceptionInterceptor());
+
+				Assert.Throws<TestException>(() =>
+					db.GetTable<InterceptorsTestsTable>()
+						.Insert(() => new InterceptorsTestsTable()));
+			}
+		}
+
+		[Test]
+		public void ScalarExceptionIntercepted([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				db.AddInterceptor(new TestExceptionInterceptor());
+
+				Assert.Throws<TestException>(() =>
+					db.GetTable<InterceptorsTestsTable>().Count());
+			}
+		}
+
+		[Test]
+		public void ReaderExceptionIntercepted([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				db.AddInterceptor(new TestExceptionInterceptor());
+
+				Assert.Throws<TestException>(() =>
+					db.GetTable<InterceptorsTestsTable>().ToList());
+			}
+		}
+		#endregion
+
 		private sealed class TestCommandInterceptor : CommandInterceptor
 		{
 			public bool CommandInitializedTriggered { get; set; }
@@ -1783,5 +1822,15 @@ namespace Tests.Data
 		{
 			[Column, Identity] public int ID;
 		}
+
+		private sealed class TestExceptionInterceptor : ExceptionInterceptor
+		{
+			public override void ProcessException(ExceptionEventData eventData, Exception exception)
+			{
+				throw new TestException();
+			}
+		}
+
+		public sealed class TestException() : Exception("Test Exception");
 	}
 }

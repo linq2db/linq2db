@@ -10,7 +10,6 @@ namespace LinqToDB.Tools.Activity
 	/// </summary>
 	public class ActivityHierarchy : ActivityBase
 	{
-		readonly ActivityID              _activityID;
 		readonly string                  _name;
 		readonly Action<string>          _pushReport;
 		readonly ActivityHierarchy?      _parent;
@@ -37,8 +36,8 @@ namespace LinqToDB.Tools.Activity
 		/// A delegate that is called to provide a report when the root activity is disposed.
 		/// </param>
 		public ActivityHierarchy(ActivityID activityID, Action<string> pushReport)
+			: base(activityID)
 		{
-			_activityID = activityID;
 			_pushReport = pushReport;
 			_parent     = Current;
 			_name       = ActivityStatistics.GetStat(activityID).Name.TrimStart();
@@ -55,7 +54,7 @@ namespace LinqToDB.Tools.Activity
 				{
 					var p = _parent._children[^1];
 
-					if (p._activityID == _activityID)
+					if (p.ActivityID == ActivityID)
 						p._count++;
 					else
 						_parent._children.Add(this);

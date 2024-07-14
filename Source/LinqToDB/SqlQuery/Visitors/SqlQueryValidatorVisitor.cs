@@ -121,20 +121,29 @@ namespace LinqToDB.SqlQuery.Visitors
 
 				if (!_providerFlags.IsSubQueryTakeSupported && selectQuery.Select.TakeValue != null && IsDependsOnOuterSources())
 				{
-					errorMessage = ErrorHelper.Error_Take_in_Subquery;
-					return false;
+					if (_parentQuery?.From.Tables.Count > 0 || IsDependsOnOuterSources())
+					{
+						errorMessage = ErrorHelper.Error_Take_in_Subquery;
+						return false;
+					}
 				}
 
 				if (!_providerFlags.IsSubQuerySkipSupported && selectQuery.Select.SkipValue != null && IsDependsOnOuterSources())
 				{
-					errorMessage = ErrorHelper.Error_Skip_in_Subquery;
-					return false;
+					if (_parentQuery?.From.Tables.Count > 0 || IsDependsOnOuterSources())
+					{
+						errorMessage = ErrorHelper.Error_Skip_in_Subquery;
+						return false;
+					}
 				}
 
 				if (!_providerFlags.IsSubQueryOrderBySupported && !selectQuery.OrderBy.IsEmpty && IsDependsOnOuterSources())
 				{
-					errorMessage = ErrorHelper.Error_OrderBy_in_Subquery;
-					return false;
+					if (_parentQuery?.From.Tables.Count > 0 || IsDependsOnOuterSources())
+					{
+						errorMessage = ErrorHelper.Error_OrderBy_in_Subquery;
+						return false;
+					}
 				}
 
 				if (!_providerFlags.IsSubqueryWithParentReferenceInJoinConditionSupported)

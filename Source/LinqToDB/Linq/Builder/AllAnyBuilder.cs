@@ -6,17 +6,14 @@ namespace LinqToDB.Linq.Builder
 	using LinqToDB.Expressions;
 	using SqlQuery;
 
+	[BuildsMethodCall("All", "Any")]
+	[BuildsMethodCall("AllAsync", "AnyAsync", CanBuildName = nameof(CanBuildAsyncMethod))]
 	internal sealed class AllAnyBuilder : MethodCallBuilder
 	{
-		static readonly string[] MethodNames      = { "All"     , "Any"      };
-		static readonly string[] MethodNamesAsync = { "AllAsync", "AnyAsync" };
-
-		protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
-		{
-			return
-				methodCall.IsQueryable     (MethodNames     ) ||
-				methodCall.IsAsyncExtension(MethodNamesAsync);
-		}
+		public static bool CanBuildMethod(MethodCallExpression call, BuildInfo info, ExpressionBuilder builder)
+			=> call.IsQueryable();
+		public static bool CanBuildAsyncMethod(MethodCallExpression call, BuildInfo info, ExpressionBuilder builder)
+			=> call.IsAsyncExtension();
 
 		protected override BuildSequenceResult BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
