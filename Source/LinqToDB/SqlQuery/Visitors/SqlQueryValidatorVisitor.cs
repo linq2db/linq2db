@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
 using System.Linq;
 
 namespace LinqToDB.SqlQuery.Visitors
@@ -117,7 +118,7 @@ namespace LinqToDB.SqlQuery.Visitors
 								if (_providerFlags.SupportedCorrelatedSubqueriesLevel == 0)
 									errorMessage = ErrorHelper.Error_Correlated_Subqueries;
 								else
-									errorMessage = string.Format(ErrorHelper.Error_Correlated_Subqueries_Level, _providerFlags.SupportedCorrelatedSubqueriesLevel);
+									errorMessage = string.Format(NumberFormatInfo.InvariantInfo, ErrorHelper.Error_Correlated_Subqueries_Level, _providerFlags.SupportedCorrelatedSubqueriesLevel);
 
 								return false;
 							}
