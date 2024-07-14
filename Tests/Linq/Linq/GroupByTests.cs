@@ -2823,5 +2823,49 @@ namespace Tests.Linq
 					.Select(it   => it.Key));
 		}
 		#endregion
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/2821")]
+		public void Issue2821Test([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var currentDate = TestData.DateTime;
+
+			var query = db.Types2
+				.Where(o => (o.DateTimeValue ?? o.DateTimeValue2) <= currentDate && (!o.DateTimeValue2.HasValue || o.DateTimeValue2.Value >= currentDate));
+
+			query = from allowance in query
+					join t in (from x in query
+							   group x by x.ID into grp
+							   select new
+							   {
+								   ID = grp.Key,
+								   DateTimeValue2 = grp.Max(x => x.DateTimeValue2)
+							   })
+					on new { allowance.ID, allowance.DateTimeValue2 } equals new { t.ID, t.DateTimeValue2 }
+					select allowance;
+
+			query = query = query.OrderBy(x => x.DateTimeValue2);
+
+			query.ToList();
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4349")]
+		public void Issue4349Test([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = db.Parent
+				.Select(f1 => new { A = 0, B = f1.ParentID })
+				.GroupBy(r => new { r.A, r.B })
+				.Select(g => new
+				{
+					A = g.Key.A == 0 ? 0 : 1,
+					g.Key.B
+				})
+				.OrderBy(i => i.A);
+
+			query.ToList();
+		}
 	}
 }

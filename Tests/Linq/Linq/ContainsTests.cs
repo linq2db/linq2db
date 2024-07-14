@@ -1,11 +1,15 @@
-﻿using FluentAssertions;
-using LinqToDB;
-using LinqToDB.Tools;
-using LinqToDB.Mapping;
-using NUnit.Framework;
-using System;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
+
+using FluentAssertions;
+
+using LinqToDB;
+using LinqToDB.Mapping;
+using LinqToDB.Tools;
+
+using NUnit.Framework;
 
 namespace Tests.Linq
 {
@@ -328,6 +332,35 @@ namespace Tests.Linq
 
 			Assert.AreEqual(1, result.Length);
 			Assert.AreEqual(4, result[0].ID);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/2608")]
+		public void Issue2608Test([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var faze = new List<int>() { 11, 18, 19, 20, 21, 22, 23, 24, 26, 29, 28 };
+
+			var today = TestData.Date;
+			var code = 1;
+			var site = 2;
+			var table = db.Types2;
+
+			var query = (from ugovori in table.Where(x => x.BoolValue == false && ((x.IntValue == code && x.IntValue == site) || code == 0))
+						 join o in table.Where(x => x.BoolValue == false) on new { ugovori.IntValue } equals new { o.IntValue } into oo
+						 from o in oo
+						 join u in table.Where(x => x.BoolValue == false) on new { o.IntValue } equals new { u.IntValue }
+						 join r in table on new { c = u.IntValue!.Value, s = u.IntValue.Value, BoolValue = (bool?)false } equals new { c = r.IntValue!.Value, s = r.IntValue.Value, r.BoolValue }
+						 join f in table on new { r.IntValue } equals new { f.IntValue }
+
+						 select new
+						 {
+							 StatusPhase = short.Parse(f.StringValue!)
+						 });
+
+			query = query.Where(x => !faze.Contains(x.StatusPhase));
+
+			query.ToList();
 		}
 	}
 }

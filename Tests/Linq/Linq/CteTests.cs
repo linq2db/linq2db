@@ -2114,5 +2114,73 @@ namespace Tests.Linq
 			Assert.That(data[0].Patient!.Diagnosis, Is.Not.Null);
 			Assert.That(count, Is.EqualTo(4));
 		}
+
+		#region Issue 4366
+		sealed class Dto
+		{
+			public int id { get; set; }
+			public string name { get; set; } = null!;
+			public int? parent_id { get; set; }
+			public string? FullName;
+		}
+
+		class DtoMapped
+		{
+			public Dto Dto { get; set; } = null!;
+			public string? FullName;
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4366")]
+		public void Issue4366Test1([CteContextSource] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable<Dto>();
+
+			db.GetCte<Dto>(d =>
+			(from a in tb
+			 where a.parent_id == null
+			 select new Dto
+			 {
+				 id = a.id,
+				 parent_id = a.parent_id,
+				 name = a.name,
+				 FullName = a.name
+			 })
+			 .Concat(
+				from b in tb
+				from recur in d.InnerJoin(dd => dd.id == b.parent_id)
+				select new Dto
+				{
+					id = b.id,
+					parent_id = b.parent_id,
+					name = b.name,
+					FullName = recur.FullName + " > " + b.name
+				})).ToList();
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4366")]
+		public void Issue4366Test2([CteContextSource] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable<Dto>();
+
+			db.GetCte<DtoMapped>(d =>
+			(from a in tb
+			 where a.parent_id == null
+			 select new DtoMapped
+			 {
+				 Dto = a,
+				 FullName = a.name
+			 })
+			 .Concat(
+				from b in tb
+				from recur in d.InnerJoin(dd => dd.Dto.id == b.parent_id)
+				select new DtoMapped
+				{
+					Dto = b,
+					FullName = recur.FullName + " > " + b.name
+				})).ToList();
+		}
+		#endregion
 	}
 }

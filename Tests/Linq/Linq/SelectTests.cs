@@ -1832,5 +1832,20 @@ namespace Tests.Linq
 			Assert.That(query.GetSelectQuery().Select.Columns, Has.Count.EqualTo(3));
 		}
 		#endregion
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4520")]
+		public void Issue4520Test([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			db.Types2
+				.Where(i => i.ID == 1)
+				.Select(i =>
+				new
+				{
+					IsCurrent = !i.BoolValue.GetValueOrDefault() && i.IntValue == db.Types2.Where(p => p.ID == 2).Select(p => p.IntValue).FirstOrDefault()
+				})
+				.ToList();
+		}
 	}
 }

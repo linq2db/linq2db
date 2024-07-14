@@ -674,5 +674,58 @@ namespace Tests.Linq
 			Assert.That(record.Residence.City, Is.EqualTo(UserStruct.TestData[0].Residence.City));
 			Assert.That(record.Residence.Street, Is.EqualTo(UserStruct.TestData[0].Residence.Street));
 		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/2874")]
+		public void SelectCompositePropertyMapped_Class([DataSources] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var users = db.CreateLocalTable(User.TestData);
+
+			var residence = users.Select(u => u.Residence).Distinct().Single();
+
+			Assert.That(residence, Is.Not.Null);
+			Assert.That(residence!.Building, Is.EqualTo(User.TestData[0].Residence!.Building));
+			Assert.That(residence.City, Is.EqualTo(User.TestData[0].Residence!.City));
+			Assert.That(residence.Street, Is.EqualTo(User.TestData[0].Residence!.Street));
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/2874")]
+		public void SelectCompositePropertyMapped_Struct([DataSources] string context)
+		{
+			var ms = new MappingSchema();
+			ms.SetScalarType(typeof(AddressStruct), false);
+
+			using var db    = GetDataContext(context, ms);
+			using var users = db.CreateLocalTable(UserStruct.TestData);
+
+			var residence = users.Select(u => u.Residence).Distinct().Single();
+
+			Assert.That(residence.Building, Is.EqualTo(UserStruct.TestData[0].Residence.Building));
+			Assert.That(residence.City, Is.EqualTo(UserStruct.TestData[0].Residence.City));
+			Assert.That(residence.Street, Is.EqualTo(UserStruct.TestData[0].Residence.Street));
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4568")]
+		public void SelectCompositePropertyMapped_Class_OnlyRequredColumns([DataSources] string context)
+		{
+			using var db    = GetDataContext(context);
+
+			var query = db.GetTable<User>().Select(u => u.Residence);
+
+			Assert.AreEqual(3, query.GetSelectQuery().Select.Columns.Count);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4568")]
+		public void SelectCompositePropertyMapped_Struct_OnlyRequredColumns([DataSources] string context)
+		{
+			var ms = new MappingSchema();
+			ms.SetScalarType(typeof(AddressStruct), false);
+
+			using var db    = GetDataContext(context, ms);
+
+			var query = db.GetTable<UserStruct>().Select(u => u.Residence);
+
+			Assert.AreEqual(3, query.GetSelectQuery().Select.Columns.Count);
+		}
 	}
 }

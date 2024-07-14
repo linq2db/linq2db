@@ -3174,5 +3174,43 @@ namespace Tests.Linq
 			 select new { u.ID, x, }
 			).ToList();
 		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/2912")]
+		public void Issue2912Test1([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = (from employee in db.Parent
+						  let user = employee.Children.FirstOrDefault()
+						  select user != null ? user.ChildID : 0);
+			query.ToArray();
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/2912")]
+		public void Issue2912Test2([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = (from employee in db.Parent
+						  join x in db.GrandChild on employee.ParentID equals x.ParentID into y
+						  from names in y.DefaultIfEmpty()
+						  join x2 in db.Parent on employee.ParentID equals x2.ParentID into y2
+						  from user in y2.DefaultIfEmpty()
+						  select user.ParentID);
+			query.ToArray();
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/2912")]
+		public void Issue2912Test3([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = (from employee in db.Parent
+						 join x in db.GrandChild on employee.ParentID equals x.ParentID into y
+						  from names in y.DefaultIfEmpty()
+						  let user = employee.Children.FirstOrDefault()
+						  select user != null ? user.ChildID : 0);
+			query.ToArray();
+		}
 	}
 }

@@ -1907,5 +1907,38 @@ FROM
 				.ToList();
 		}
 		#endregion
+
+		#region Issue 4497
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4497")]
+		public void Issue4497Test1([DataSources(false)] string context)
+		{
+			using var db = GetDataConnection(context);
+
+			db.Person
+				.LeftJoin(
+					db.Patient,
+					(join, p) => join.ID == p.PersonID,
+					(join, p) => new { join, p })
+				.Where(i => i.p.PersonID != 0)
+				.ToList();
+
+			Assert.That(db.LastQuery, Does.Contain("LEFT JOIN"));
+			Assert.That(db.LastQuery, Does.Contain("IS NULL"));
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4497")]
+		public void Issue4497Test2([DataSources(false)] string context)
+		{
+			using var db = GetDataConnection(context);
+
+			db.Person
+				.LoadWith(p => p.Patient)
+				.Where(i => i.Patient!.PersonID != 0)
+				.ToList();
+
+			Assert.That(db.LastQuery, Does.Contain("LEFT JOIN"));
+			Assert.That(db.LastQuery, Does.Contain("IS NULL"));
+		}
+		#endregion
 	}
 }
