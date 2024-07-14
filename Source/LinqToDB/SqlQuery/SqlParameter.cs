@@ -92,7 +92,7 @@ namespace LinqToDB.SqlQuery
 
 		public override bool Equals(ISqlExpression other, Func<ISqlExpression, ISqlExpression, bool> comparer)
 		{
-			return ((ISqlExpression)this).Equals(other) && comparer(this, other);
+			return ReferenceEquals(this, other) && comparer(this, other);
 		}
 
 		#endregion
