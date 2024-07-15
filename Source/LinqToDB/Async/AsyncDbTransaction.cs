@@ -30,20 +30,26 @@ namespace LinqToDB.Async
 
 		public virtual void Commit  ()
 		{
-			using var a = ActivityService.Start(ActivityID.TransactionCommit)?.AddQueryInfo(DataConnection!, DataConnection!.Connection, null);
+			using var a = ActivityService.Start(ActivityID.TransactionCommit);
+			if (a != null && DataConnection != null)
+				a.AddQueryInfo(DataConnection, DataConnection.Connection, null);
 			Transaction.Commit();
 		}
 
 		public virtual void Rollback()
 		{
-			using var a = ActivityService.Start(ActivityID.TransactionRollback)?.AddQueryInfo(DataConnection!, DataConnection!.Connection, null);
+			using var a = ActivityService.Start(ActivityID.TransactionRollback);
+			if (a != null && DataConnection != null)
+				a.AddQueryInfo(DataConnection, DataConnection.Connection, null);
 			Transaction.Rollback();
 		}
 
 		public virtual Task CommitAsync(CancellationToken cancellationToken)
 		{
 #if NET6_0_OR_GREATER
-			var a = ActivityService.StartAndConfigureAwait(ActivityID.TransactionCommitAsync)?.AddQueryInfo(DataConnection!, DataConnection!.Connection, null);
+			var a = ActivityService.StartAndConfigureAwait(ActivityID.TransactionCommitAsync);
+			if (a != null && DataConnection != null)
+				a.AddQueryInfo(DataConnection, DataConnection.Connection, null);
 
 			if (a is null)
 				return Transaction.CommitAsync(cancellationToken);
@@ -56,7 +62,9 @@ namespace LinqToDB.Async
 					await transaction.CommitAsync(token).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 			}
 #else
-			using var a = ActivityService.Start(ActivityID.TransactionCommitAsync)?.AddQueryInfo(DataConnection!, DataConnection!.Connection, null);
+			using var a = ActivityService.Start(ActivityID.TransactionCommitAsync);
+			if (a != null && DataConnection != null)
+				a.AddQueryInfo(DataConnection, DataConnection.Connection, null);
 
 			Transaction.Commit();
 			return Task.CompletedTask;
@@ -66,7 +74,9 @@ namespace LinqToDB.Async
 		public virtual Task RollbackAsync(CancellationToken cancellationToken)
 		{
 #if NET6_0_OR_GREATER
-			var a = ActivityService.StartAndConfigureAwait(ActivityID.TransactionRollbackAsync)?.AddQueryInfo(DataConnection!, DataConnection!.Connection, null);
+			var a = ActivityService.StartAndConfigureAwait(ActivityID.TransactionRollbackAsync);
+			if (a != null && DataConnection != null)
+				a.AddQueryInfo(DataConnection, DataConnection.Connection, null);
 
 			if (a is null)
 				return Transaction.RollbackAsync(cancellationToken);
@@ -79,7 +89,9 @@ namespace LinqToDB.Async
 					await transaction.RollbackAsync(token).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 			}
 #else
-			using var a = ActivityService.Start(ActivityID.TransactionRollbackAsync)?.AddQueryInfo(DataConnection!, DataConnection!.Connection, null);
+			using var a = ActivityService.Start(ActivityID.TransactionRollbackAsync);
+			if (a != null && DataConnection != null)
+				a.AddQueryInfo(DataConnection, DataConnection.Connection, null);
 
 			Transaction.Rollback();
 			return Task.CompletedTask;
@@ -90,7 +102,10 @@ namespace LinqToDB.Async
 
 		public virtual void Dispose()
 		{
-			using var _ = ActivityService.Start(ActivityID.TransactionDispose)?.AddQueryInfo(DataConnection!, DataConnection!.Connection, null);
+			using var activity = ActivityService.Start(ActivityID.TransactionDispose);
+			if (activity != null && DataConnection != null)
+				activity.AddQueryInfo(DataConnection, DataConnection.Connection, null);
+
 			Transaction.Dispose();
 		}
 
@@ -101,7 +116,9 @@ namespace LinqToDB.Async
 		{
 			if (Transaction is IAsyncDisposable asyncDisposable)
 			{
-				var a = ActivityService.StartAndConfigureAwait(ActivityID.TransactionDisposeAsync)?.AddQueryInfo(DataConnection!, DataConnection!.Connection, null);
+				var a = ActivityService.StartAndConfigureAwait(ActivityID.TransactionDisposeAsync);
+				if (a != null && DataConnection != null)
+					a.AddQueryInfo(DataConnection, DataConnection.Connection, null);
 
 				if (a is null)
 					return asyncDisposable.DisposeAsync();
@@ -115,7 +132,9 @@ namespace LinqToDB.Async
 				}
 			}
 
-			using var _ = ActivityService.Start(ActivityID.TransactionDisposeAsync)?.AddQueryInfo(DataConnection!, DataConnection!.Connection, null);
+			using var activity = ActivityService.Start(ActivityID.TransactionDisposeAsync);
+			if (activity != null && DataConnection != null)
+				activity.AddQueryInfo(DataConnection, DataConnection.Connection, null);
 
 			Transaction.Dispose();
 			return default;

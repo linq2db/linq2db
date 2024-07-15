@@ -894,5 +894,34 @@ namespace Tests.xUpdate
 			AssertRow(InitialTargetData[3], result[3], null, null);
 			AssertRow(InitialSourceData[3], result[4], null, 216);
 		}
+
+		// merge into CTE supported only by SQL Server
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4338")]
+		public void Issue4338Test([IncludeDataSources(true, TestProvName.AllSqlServer2005)] string context)
+		{
+			// prepare data before fiters applied
+			using (var db1 = GetDataContext(context))
+				PrepareData(db1);
+
+			using var db = GetDataContext(context);
+
+			var values = new int[] { 11, 22 };
+
+			db
+				.GetTable<Child>()
+				.Where(ai => ai.Parent!.Value1 == -99)
+				.AsCte()
+				.Merge()
+				.Using(values.Select(u => new { Value1 = u }))
+				.On((dst, src) => dst.ParentID == src.Value1)
+				.InsertWhenNotMatchedAnd(
+					s => s.Value1 == -123,
+					s => new()
+					{
+						ParentID = 10,
+						ChildID = s.Value1
+					})
+				.Merge();
+		}
 	}
 }

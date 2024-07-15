@@ -412,6 +412,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 		#region CTE
 
 		protected override bool IsCteColumnListSupported => false;
+		protected override bool IsRecursiveCteKeywordRequired => true;
 
 		protected override void BuildCteBody(SelectQuery selectQuery)
 		{
