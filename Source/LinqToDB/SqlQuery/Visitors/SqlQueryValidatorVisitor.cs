@@ -130,7 +130,7 @@ namespace LinqToDB.SqlQuery.Visitors
 					}
 				}
 
-				if (!_providerFlags.IsSubQueryTakeSupported && selectQuery.Select.TakeValue != null)
+				if (!_providerFlags.IsSubQueryTakeSupported && selectQuery.Select.TakeValue != null && IsDependsOnOuterSources())
 				{
 					if (_parentQuery?.From.Tables.Count > 0 || IsDependsOnOuterSources())
 					{
@@ -139,7 +139,7 @@ namespace LinqToDB.SqlQuery.Visitors
 					}
 				}
 
-				if (!_providerFlags.IsSubQuerySkipSupported && selectQuery.Select.SkipValue != null)
+				if (!_providerFlags.IsSubQuerySkipSupported && selectQuery.Select.SkipValue != null && IsDependsOnOuterSources())
 				{
 					if (_parentQuery?.From.Tables.Count > 0 || IsDependsOnOuterSources())
 					{

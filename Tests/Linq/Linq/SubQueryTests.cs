@@ -639,7 +639,6 @@ namespace Tests.Linq
 					select p);
 		}
 
-		[ActiveIssue(Configurations = [TestProvName.AllAccess, TestProvName.AllClickHouse, TestProvName.AllDB2, TestProvName.AllFirebird, TestProvName.AllInformix, TestProvName.AllOracle, TestProvName.AllSQLite, TestProvName.AllSybase, TestProvName.AllMariaDB, TestProvName.AllMySql57])]
 		[Test]
 		public void Issue1601([DataSources(false)] string context)
 		{
