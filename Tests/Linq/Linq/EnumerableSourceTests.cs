@@ -972,9 +972,8 @@ namespace Tests.Linq
 		}
 
 #if NET6_0_OR_GREATER
-		[ActiveIssue]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3665")]
-		public void Issue3665Test1([DataSources] string context)
+		public void Issue3665Test1([DataSources(TestProvName.AllAccess)] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -988,9 +987,8 @@ namespace Tests.Linq
 			AssertQuery(query);
 		}
 
-		[ActiveIssue]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3665")]
-		public void Issue3665Test2([DataSources] string context)
+		public void Issue3665Test2([DataSources(TestProvName.AllAccess)] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -1008,9 +1006,8 @@ namespace Tests.Linq
 			Value3 = 3
 		}
 
-		[ActiveIssue(Configuration = TestProvName.AllAccess)]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3665")]
-		public void Issue3665Test3([DataSources] string context)
+		public void Issue3665Test3([DataSources(TestProvName.AllAccess)] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -1024,9 +1021,8 @@ namespace Tests.Linq
 			AssertQuery(query);
 		}
 
-		[ActiveIssue]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3665")]
-		public void Issue3665Test4([DataSources] string context)
+		public void Issue3665Test4([DataSources(TestProvName.AllAccess)] string context)
 		{
 			using var db = GetDataContext(context);
 

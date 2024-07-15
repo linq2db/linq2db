@@ -1986,7 +1986,6 @@ namespace Tests.Linq
 
 		#region Issue 3372
 
-		[ActiveIssue]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3372")]
 		public void Issue3372Test1([DataSources] string context)
 		{
@@ -2003,7 +2002,7 @@ namespace Tests.Linq
 
 			query.ToList();
 
-			Assert.That(query.GetSelectQuery().Select.Columns, Has.Count.EqualTo(2));
+			Assert.That(query.GetSelectQuery().Select.Columns, Has.Count.EqualTo(3));
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3372")]

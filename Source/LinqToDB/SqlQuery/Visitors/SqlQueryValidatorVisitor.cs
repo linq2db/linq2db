@@ -106,7 +106,7 @@ namespace LinqToDB.SqlQuery.Visitors
 
 				if (!_providerFlags.IsCorrelatedSubQueryTakeSupported && selectQuery.Select.TakeValue != null)
 				{
-					if (_columnSubqueryLevel != null && IsDependsOnOuterSources())
+					if (IsDependsOnOuterSources())
 					{
 						errorMessage = ErrorHelper.Error_Take_in_Correlated_Subquery;
 						return false;

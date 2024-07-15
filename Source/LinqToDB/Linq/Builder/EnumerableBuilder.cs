@@ -10,7 +10,7 @@ namespace LinqToDB.Linq.Builder
 	using Reflection;
 	using LinqToDB.Expressions;
 
-	[BuildsExpression(ExpressionType.Constant, ExpressionType.MemberAccess, ExpressionType.NewArrayInit)]
+	[BuildsExpression(ExpressionType.Constant, ExpressionType.Call, ExpressionType.MemberAccess, ExpressionType.NewArrayInit)]
 	sealed class EnumerableBuilder : ISequenceBuilder
 	{
 		public static bool CanBuild(Expression expr, BuildInfo info, ExpressionBuilder builder)
@@ -27,7 +27,8 @@ namespace LinqToDB.Linq.Builder
 			return expr.NodeType switch
 			{
 				ExpressionType.MemberAccess => CanBuildMemberChain(((MemberExpression)expr).Expression),
-				ExpressionType.Constant => ((ConstantExpression)expr).Value is IEnumerable,
+				ExpressionType.Constant     => ((ConstantExpression)expr).Value is IEnumerable,
+				ExpressionType.Call         => builder.CanBeCompiled(expr, false),
 				_ => false,
 			};
 

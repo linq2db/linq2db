@@ -146,7 +146,8 @@ namespace LinqToDB.SqlQuery
 						}
 					}
 
-					if (!select.GroupBy.IsEmpty && select.Columns.Count == 0)
+					// see Issue3311Test3
+					if ((!select.GroupBy.IsEmpty || select.From.Tables.Count == 0) && select.Columns.Count == 0)
 					{
 						select.AddNew(new SqlValue(1));
 					}
