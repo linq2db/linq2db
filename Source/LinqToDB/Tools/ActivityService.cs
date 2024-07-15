@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Data.Common;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 
@@ -6,6 +7,8 @@ using JetBrains.Annotations;
 
 namespace LinqToDB.Tools
 {
+	using Data;
+
 	/// <summary>
 	/// Provides API to register factory methods that return an Activity object or <c>null</c> for provided <see cref="ActivityID"/> event.
 	/// </summary>
@@ -40,6 +43,12 @@ namespace LinqToDB.Tools
 			{
 				return activity.DisposeAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 			}
+
+			internal AsyncDisposableWrapper AddQueryInfo(DataConnection context, DbConnection connection, DbCommand? command)
+			{
+				activity.AddQueryInfo(context, connection, command);
+				return this;
+			}
 		}
 
 		internal static AsyncDisposableWrapper? StartAndConfigureAwait(ActivityID activityID)
@@ -72,8 +81,22 @@ namespace LinqToDB.Tools
 			}
 		}
 
-		sealed class MultiActivity(IActivity?[] activities) : ActivityBase
+		sealed class MultiActivity(IActivity?[] activities) : ActivityBase(ActivityID.None)
 		{
+			public override IActivity AddTag(ActivityTagID key, object? value)
+			{
+				foreach (var activity in activities)
+					activity?.AddTag(key, value);
+				return this;
+			}
+
+			public override IActivity AddQueryInfo(DataConnection context, DbConnection connection, DbCommand? command)
+			{
+				foreach (var activity in activities)
+					activity?.AddQueryInfo(context, connection, command);
+				return this;
+			}
+
 			public override void Dispose()
 			{
 				foreach (var activity in activities)
