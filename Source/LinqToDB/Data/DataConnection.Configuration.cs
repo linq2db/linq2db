@@ -645,7 +645,7 @@ namespace LinqToDB.Data
 					// TODO: IT Look into.
 					return connection is IAsyncDbConnection asyncDbConnection
 						? asyncDbConnection
-						: AsyncFactory.Create(connection);
+						: AsyncFactory.CreateAndSetDataContext(dataConnection, connection);
 				}
 			}
 

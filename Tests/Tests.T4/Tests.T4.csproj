@@ -6,6 +6,7 @@
 	</PropertyGroup>
 
 	<ItemGroup Condition="'$(TargetFramework)' == 'net462'">
+		<Reference Include="WindowsBase" />
 		<Reference Include="PresentationCore" />
 		<Reference Include="PresentationFramework" />
 
