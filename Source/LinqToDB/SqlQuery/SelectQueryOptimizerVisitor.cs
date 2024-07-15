@@ -2384,9 +2384,6 @@ namespace LinqToDB.SqlQuery
 
 		bool MoveOuterJoinsToSubQuery(SelectQuery selectQuery, bool processMultiColumn)
 		{
-			if (!_providerFlags.IsSubQueryColumnSupported)
-				return false;
-
 			var currentVersion = _version;
 
 			EvaluationContext? evaluationContext = null;
@@ -2431,8 +2428,13 @@ namespace LinqToDB.SqlQuery
 								if (!IsLimitedToOneRecord(sq, joinQuery, evaluationContext))
 									continue;
 
-								if (!SqlProviderHelper.IsValidQuery(joinQuery, parentQuery: sq, fakeJoin: null, columnSubqueryLevel : 0, _providerFlags, out _))
-									continue;
+								var isNoTableQuery = joinQuery.From.Tables.Count == 0;
+
+								if (!isNoTableQuery)
+								{
+									if (!SqlProviderHelper.IsValidQuery(joinQuery, parentQuery : sq, fakeJoin : null, columnSubqueryLevel : 0, _providerFlags, out _))
+										continue;
+								}
 
 								var isValid = true;
 

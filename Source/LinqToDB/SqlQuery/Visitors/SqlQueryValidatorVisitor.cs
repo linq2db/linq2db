@@ -92,6 +92,12 @@ namespace LinqToDB.SqlQuery.Visitors
 
 			if (_columnSubqueryLevel != null)
 			{
+				if (!_providerFlags.IsSubQueryColumnSupported)
+				{
+					errorMessage = ErrorHelper.Error_Squbquery_in_Column;
+					return false;
+				}
+
 				if (!_providerFlags.IsSubQueryTakeSupported && selectQuery.Select.TakeValue != null)
 				{
 					errorMessage = ErrorHelper.Error_Take_in_Subquery;

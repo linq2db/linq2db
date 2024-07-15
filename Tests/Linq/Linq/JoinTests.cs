@@ -3277,7 +3277,6 @@ namespace Tests.Linq
 			query.ToArray();
 		}
 
-		[ActiveIssue(Configurations = [TestProvName.AllAccess, TestProvName.AllClickHouse, ProviderName.SqlCe])]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3311")]
 		public void Issue3311Test2([DataSources] string context)
 		{
