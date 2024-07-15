@@ -90,7 +90,9 @@ namespace LinqToDB.Async
 
 		public virtual void Dispose()
 		{
-			using var _ = ActivityService.Start(ActivityID.TransactionDispose)?.AddQueryInfo(DataConnection!, DataConnection!.Connection, null);
+			using var activity = ActivityService.Start(ActivityID.TransactionDispose);
+			if (activity != null && DataConnection != null)
+				activity.AddQueryInfo(DataConnection, DataConnection.Connection, null);
 			Transaction.Dispose();
 		}
 

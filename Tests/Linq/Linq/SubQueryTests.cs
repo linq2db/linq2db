@@ -640,6 +640,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		[ThrowsForProvider(typeof(LinqException), TestProvName.AllAccess, "Provider does not support JOIN without condition.")]
 		public void Issue1601([DataSources(false)] string context)
 		{
 			using (var db = GetDataConnection(context))

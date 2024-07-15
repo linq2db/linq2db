@@ -90,17 +90,23 @@ namespace LinqToDB.SqlQuery.Visitors
 				return isDependedOnOuterSources.Value;
 			}
 
-			if (!_providerFlags.IsCorrelatedSubQueryTakeSupported && selectQuery.Select.TakeValue != null)
-			{
-				if (_columnSubqueryLevel != null && IsDependsOnOuterSources())
-				{
-					errorMessage = ErrorHelper.Error_Take_in_Correlated_Subquery;
-					return false;
-				}
-			}
-
 			if (_columnSubqueryLevel != null)
 			{
+				if (!_providerFlags.IsSubQueryTakeSupported && selectQuery.Select.TakeValue != null)
+				{
+					errorMessage = ErrorHelper.Error_Take_in_Subquery;
+					return false;
+				}
+
+				if (!_providerFlags.IsCorrelatedSubQueryTakeSupported && selectQuery.Select.TakeValue != null)
+				{
+					if (_columnSubqueryLevel != null && IsDependsOnOuterSources())
+					{
+						errorMessage = ErrorHelper.Error_Take_in_Correlated_Subquery;
+						return false;
+					}
+				}
+
 				if (_providerFlags.SupportedCorrelatedSubqueriesLevel != null)
 				{
 					if (_columnSubqueryLevel >= _providerFlags.SupportedCorrelatedSubqueriesLevel)
