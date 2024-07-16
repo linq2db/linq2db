@@ -863,10 +863,10 @@ namespace Tests.Linq
 
 			AssertQuery(query);
 		}
-
-		[ActiveIssue(Configurations = [TestProvName.AllSybase, TestProvName.AllOracle])]
+		
+		[ActiveIssue(Configurations = [TestProvName.AllOracle], Details = "https://forums.oracle.com/ords/apexds/post/error-ora-12704-character-set-mismatch-in-case-statement-6917")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3295")]
-		public void Issue3295Test1([DataSources] string context)
+		public void Issue3295Test1([DataSources(TestProvName.AllSybase)] string context)
 		{
 			using var db = GetDataContext(context);
 
