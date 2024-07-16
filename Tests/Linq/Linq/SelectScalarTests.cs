@@ -3,6 +3,7 @@ using System.Linq;
 using System.Threading.Tasks;
 
 using LinqToDB;
+using LinqToDB.Linq;
 
 using NUnit.Framework;
 
@@ -231,6 +232,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		[ThrowsForProvider(typeof(LinqException), providers: [ProviderName.SqlCe], ErrorMessage = "Provider does not support columns with subqueries.")]
 		public void SubQueryTest([DataSources(TestProvName.AllAccess)]
 			string context)
 		{
