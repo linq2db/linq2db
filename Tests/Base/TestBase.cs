@@ -277,7 +277,7 @@ namespace Tests
 					if (Directory.Exists(baselinesPath))
 					{
 						BaselinesPath = baselinesPath;
-						StoreMetrics  = true;// testSettings.StoreMetrics;
+						StoreMetrics  = testSettings.StoreMetrics;
 					}
 				}
 			}
