@@ -876,7 +876,7 @@ namespace LinqToDB.Data
 						return result.Value;
 				}
 
-				using (ActivityService.Start(ActivityID.CommandExecuteNonQuery)?.AddQueryInfo(this, _command!.Connection!, _command))
+				using (ActivityService.Start(ActivityID.CommandExecuteNonQuery)?.AddQueryInfo(this, _command!.Connection, _command))
 					return command.ExecuteNonQuery();
 			}
 			catch (Exception ex) when (((IInterceptable<IExceptionInterceptor>)this).Interceptor is { } eInterceptor)
@@ -959,7 +959,7 @@ namespace LinqToDB.Data
 						return result.Value;
 				}
 
-				using (ActivityService.Start(ActivityID.CommandExecuteNonQuery)?.AddQueryInfo(this, _command!.Connection!, _command))
+				using (ActivityService.Start(ActivityID.CommandExecuteNonQuery)?.AddQueryInfo(this, _command!.Connection, _command))
 					return customExecute(command);
 			}
 			catch (Exception ex) when (((IInterceptable<IExceptionInterceptor>)this).Interceptor is { } eInterceptor)
@@ -1132,7 +1132,7 @@ namespace LinqToDB.Data
 
 					if (!result.HasValue)
 					{
-						using (ActivityService.Start(ActivityID.CommandExecuteReader)?.AddQueryInfo(this, _command!.Connection!, _command))
+						using (ActivityService.Start(ActivityID.CommandExecuteReader)?.AddQueryInfo(this, _command!.Connection, _command))
 							reader = _command!.ExecuteReader(commandBehavior);
 					}
 					else
@@ -1145,7 +1145,7 @@ namespace LinqToDB.Data
 				}
 				else
 				{
-					using (ActivityService.Start(ActivityID.CommandExecuteReader)?.AddQueryInfo(this, _command!.Connection!, _command))
+					using (ActivityService.Start(ActivityID.CommandExecuteReader)?.AddQueryInfo(this, _command!.Connection, _command))
 						reader = _command!.ExecuteReader(commandBehavior);
 				}
 

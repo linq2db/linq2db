@@ -46,7 +46,7 @@ namespace LinqToDB.Async
 		{
 			using var a = ActivityService.Start(ActivityID.ConnectionOpen);
 			Connection.Open();
-			a?.AddQueryInfo(DataConnection!, Connection, null);
+			a?.AddQueryInfo(DataConnection, Connection, null);
 		}
 
 		public virtual Task OpenAsync(CancellationToken cancellationToken)
@@ -56,9 +56,9 @@ namespace LinqToDB.Async
 			if (a is null)
 				return Connection.OpenAsync(cancellationToken);
 
-			return CallAwaitUsing(a, DataConnection!, Connection, cancellationToken);
+			return CallAwaitUsing(a, DataConnection, Connection, cancellationToken);
 
-			static async Task CallAwaitUsing(AsyncDisposableWrapper activity, DataConnection dataConnection, DbConnection connection, CancellationToken token)
+			static async Task CallAwaitUsing(AsyncDisposableWrapper activity, DataConnection? dataConnection, DbConnection connection, CancellationToken token)
 			{
 				await using (activity)
 				{
@@ -70,14 +70,14 @@ namespace LinqToDB.Async
 
 		public virtual void Close()
 		{
-			using var _ = ActivityService.Start(ActivityID.ConnectionClose)?.AddQueryInfo(DataConnection!, Connection, null);
+			using var _ = ActivityService.Start(ActivityID.ConnectionClose)?.AddQueryInfo(DataConnection, Connection, null);
 			Connection.Close();
 		}
 
 		public virtual Task CloseAsync()
 		{
 #if NET6_0_OR_GREATER
-			var a = ActivityService.StartAndConfigureAwait(ActivityID.ConnectionCloseAsync)?.AddQueryInfo(DataConnection!, Connection, null);
+			var a = ActivityService.StartAndConfigureAwait(ActivityID.ConnectionCloseAsync)?.AddQueryInfo(DataConnection, Connection, null);
 
 			if (a is null)
 				return Connection.CloseAsync();
@@ -90,7 +90,7 @@ namespace LinqToDB.Async
 					await connection.CloseAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 			}
 #else
-			using var _ = ActivityService.Start(ActivityID.ConnectionCloseAsync)?.AddQueryInfo(DataConnection!, Connection, null);
+			using var _ = ActivityService.Start(ActivityID.ConnectionCloseAsync)?.AddQueryInfo(DataConnection, Connection, null);
 
 			Close();
 			return Task.CompletedTask;
@@ -99,14 +99,14 @@ namespace LinqToDB.Async
 
 		public virtual IAsyncDbTransaction BeginTransaction()
 		{
-			using var a = ActivityService.Start(ActivityID.ConnectionBeginTransaction)?.AddQueryInfo(DataConnection!, Connection, null);
-			return AsyncFactory.Create(Connection.BeginTransaction());
+			using var a = ActivityService.Start(ActivityID.ConnectionBeginTransaction)?.AddQueryInfo(DataConnection, Connection, null);
+			return AsyncFactory.CreateAndSetDataContext(DataConnection, Connection.BeginTransaction());
 		}
 
 		public virtual IAsyncDbTransaction BeginTransaction(IsolationLevel isolationLevel)
 		{
-			using var a = ActivityService.Start(ActivityID.ConnectionBeginTransaction)?.AddQueryInfo(DataConnection!, Connection, null);
-			return AsyncFactory.Create(Connection.BeginTransaction(isolationLevel));
+			using var a = ActivityService.Start(ActivityID.ConnectionBeginTransaction)?.AddQueryInfo(DataConnection, Connection, null);
+			return AsyncFactory.CreateAndSetDataContext(DataConnection, Connection.BeginTransaction(isolationLevel));
 		}
 
 #if !NET6_0_OR_GREATER
@@ -124,23 +124,23 @@ namespace LinqToDB.Async
 #else
 		public virtual async ValueTask<IAsyncDbTransaction> BeginTransactionAsync(CancellationToken cancellationToken)
 		{
-			await using (ActivityService.StartAndConfigureAwait(ActivityID.ConnectionBeginTransactionAsync)?.AddQueryInfo(DataConnection!, Connection, null))
+			await using (ActivityService.StartAndConfigureAwait(ActivityID.ConnectionBeginTransactionAsync)?.AddQueryInfo(DataConnection, Connection, null))
 			{
 				var transaction = await Connection.BeginTransactionAsync(cancellationToken)
 					.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 
-				return AsyncFactory.Create(transaction);
+				return AsyncFactory.CreateAndSetDataContext(DataConnection, transaction);
 			}
 		}
 
 		public virtual async ValueTask<IAsyncDbTransaction> BeginTransactionAsync(IsolationLevel isolationLevel, CancellationToken cancellationToken)
 		{
-			await using (ActivityService.StartAndConfigureAwait(ActivityID.ConnectionBeginTransactionAsync)?.AddQueryInfo(DataConnection!, Connection, null))
+			await using (ActivityService.StartAndConfigureAwait(ActivityID.ConnectionBeginTransactionAsync)?.AddQueryInfo(DataConnection, Connection, null))
 			{
 				var transaction = await Connection.BeginTransactionAsync(isolationLevel, cancellationToken)
 					.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 
-				return AsyncFactory.Create(transaction);
+				return AsyncFactory.CreateAndSetDataContext(DataConnection, transaction);
 			}
 		}
 
@@ -150,7 +150,7 @@ namespace LinqToDB.Async
 
 		public virtual void Dispose()
 		{
-			using var _ = ActivityService.Start(ActivityID.ConnectionDispose)?.AddQueryInfo(DataConnection!, Connection, null);
+			using var _ = ActivityService.Start(ActivityID.ConnectionDispose)?.AddQueryInfo(DataConnection, Connection, null);
 			Connection.Dispose();
 		}
 
@@ -161,7 +161,7 @@ namespace LinqToDB.Async
 		{
 			if (Connection is IAsyncDisposable asyncDisposable)
 			{
-				var a = ActivityService.StartAndConfigureAwait(ActivityID.ConnectionDisposeAsync)?.AddQueryInfo(DataConnection!, Connection, null);
+				var a = ActivityService.StartAndConfigureAwait(ActivityID.ConnectionDisposeAsync)?.AddQueryInfo(DataConnection, Connection, null);
 
 				if (a is null)
 					return asyncDisposable.DisposeAsync();
