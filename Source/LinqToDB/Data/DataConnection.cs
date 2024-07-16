@@ -659,7 +659,7 @@ namespace LinqToDB.Data
 		/// </summary>
 		public DbConnection Connection => EnsureConnection().Connection;
 
-		internal DbConnection? CurrentConnection => _connection;
+		internal DbConnection? CurrentConnection => _connection?.Connection;
 
 		internal IAsyncDbConnection EnsureConnection(bool connect = true)
 		{
