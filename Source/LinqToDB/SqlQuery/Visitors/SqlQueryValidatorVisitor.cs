@@ -411,5 +411,44 @@ namespace LinqToDB.SqlQuery.Visitors
 
 			return expression;
 		}
+
+		protected override IQueryElement VisitSqlFunction(SqlFunction element)
+		{
+			var saveLevel = _columnSubqueryLevel;
+
+			_columnSubqueryLevel = null;
+
+			base.VisitSqlFunction(element);
+
+			_columnSubqueryLevel = saveLevel;
+
+			return element;
+		}
+
+		protected override IQueryElement VisitSqlConditionExpression(SqlConditionExpression element)
+		{
+			var saveLevel = _columnSubqueryLevel;
+
+			_columnSubqueryLevel = null;
+
+			base.VisitSqlConditionExpression(element);
+
+			_columnSubqueryLevel = saveLevel;
+
+			return element;
+		}
+
+		protected override IQueryElement VisitSqlCaseExpression(SqlCaseExpression element)
+		{
+			var saveLevel = _columnSubqueryLevel;
+
+			_columnSubqueryLevel = null;
+
+			base.VisitSqlCaseExpression(element);
+
+			_columnSubqueryLevel = saveLevel;
+
+			return element;
+		}
 	}
 }
