@@ -12,6 +12,7 @@
 		public const string Error_Join_ParentReference_Condition = "Provider does not support subqueries with JOIN which has reference to parent table in condition.";
 		public const string Error_Skip_in_Subquery               = "Provider does not support Skip value in subquery.";
 		public const string Error_OrderBy_in_Subquery            = "Provider does not support ORDER BY in subquery.";
+		public const string Error_Take_in_Derived                = "Provider does not support Take value in derived table.";
 		public const string Error_OrderBy_in_Derived             = "Provider does not support ORDER BY in derived table.";
 		public const string Error_MutiTable_Insert               = "Provider does not support multi-table insert.";
 		public const string Error_SqlRow_in_Update               = "Provider does not support SqlRow on the left-hand side of an UPDATE SET.";

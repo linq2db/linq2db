@@ -206,10 +206,21 @@ namespace LinqToDB.SqlQuery.Visitors
 			}
 			else
 			{
-				if (!_providerFlags.IsDerivedTableOrderBySupported && !selectQuery.OrderBy.IsEmpty)
+				var isDerived = _parentQuery != null && _parentQuery.From.Tables.Any(t => t.Source == selectQuery);
+
+				if (isDerived)
 				{
-					errorMessage = ErrorHelper.Error_OrderBy_in_Derived;
-					return false;
+					if (!_providerFlags.IsDerivedTableOrderBySupported && !selectQuery.OrderBy.IsEmpty)
+					{
+						errorMessage = ErrorHelper.Error_OrderBy_in_Derived;
+						return false;
+					}
+
+					if (!_providerFlags.IsDerivedTableTakeSupported && selectQuery.Select.TakeValue != null)
+					{
+						errorMessage = ErrorHelper.Error_Take_in_Derived;
+						return false;
+					}
 				}
 			}
 

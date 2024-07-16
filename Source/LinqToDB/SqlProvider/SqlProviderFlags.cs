@@ -72,6 +72,13 @@ namespace LinqToDB.SqlProvider
 		public bool        IsSubQueryTakeSupported        { get; set; }
 
 		/// <summary>
+		/// Indicates support for paging clause in derived table.
+		/// Default (set by <see cref="DataProviderBase"/>): <c>true</c>.
+		/// </summary>
+		[DataMember(Order = 60)]
+		public bool IsDerivedTableTakeSupported { get; set; }
+
+		/// <summary>
 		/// Indicates that provider has issue with any JOIN to subquery which has TOP statement.
 		/// Default <c>false</c>.
 		/// </summary>
@@ -526,6 +533,7 @@ namespace LinqToDB.SqlProvider
 				^ IsSkipSupported                                      .GetHashCode()
 				^ IsSkipSupportedIfTake                                .GetHashCode()
 				^ IsSubQueryTakeSupported                              .GetHashCode()
+				^ IsDerivedTableTakeSupported                          .GetHashCode()
 				^ IsJoinDerivedTableWithTakeInvalid                    .GetHashCode()
 				^ IsCorrelatedSubQueryTakeSupported                    .GetHashCode()
 				^ IsSupportsJoinWithoutCondition                       .GetHashCode()
@@ -588,6 +596,7 @@ namespace LinqToDB.SqlProvider
 				&& IsSkipSupported                                       == other.IsSkipSupported
 				&& IsSkipSupportedIfTake                                 == other.IsSkipSupportedIfTake
 				&& IsSubQueryTakeSupported                               == other.IsSubQueryTakeSupported
+				&& IsDerivedTableTakeSupported                           == other.IsDerivedTableTakeSupported
 				&& IsJoinDerivedTableWithTakeInvalid                     == other.IsJoinDerivedTableWithTakeInvalid
 				&& IsCorrelatedSubQueryTakeSupported                     == other.IsCorrelatedSubQueryTakeSupported
 				&& IsSupportsJoinWithoutCondition                        == other.IsSupportsJoinWithoutCondition

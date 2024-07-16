@@ -231,9 +231,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void SubQueryTest([DataSources(
-			TestProvName.AllAccess, TestProvName.AllInformix, ProviderName.SqlCe,
-			TestProvName.AllSybase, TestProvName.AllSapHana)]
+		public void SubQueryTest([DataSources(TestProvName.AllAccess)]
 			string context)
 		{
 			using (var db = GetDataContext(context))

@@ -5,6 +5,7 @@ using System.Linq.Expressions;
 
 using LinqToDB;
 using LinqToDB.Linq;
+using LinqToDB.SqlQuery;
 
 using NUnit.Framework;
 
@@ -187,6 +188,27 @@ namespace Tests.Linq
 				var chs2 = chilren.ToList();
 
 				Assert.That(chs2.Except(chs1).Count(), Is.EqualTo(chs2.Count));
+			}
+		}
+
+		[Test]
+		public void DerivedTake([DataSources]
+			string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				AssertQuery(db.Parent.Take(1).AsSubQuery());
+			}
+		}
+
+		[Test]
+		[ThrowsForProvider(typeof(SqlException), providers: [TestProvName.AllAccess, TestProvName.AllSybase], ErrorMessage = "Skip for subqueries is not supported")]
+		public void DerivedSkipTake([DataSources]
+			string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				AssertQuery(db.Parent.Skip(1).Take(1).AsSubQuery());
 			}
 		}
 
