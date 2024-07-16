@@ -431,7 +431,7 @@ namespace LinqToDB.Data
 						return result.Value;
 				}
 
-				await using (ActivityService.StartAndConfigureAwait(ActivityID.CommandExecuteNonQueryAsync)?.AddQueryInfo(this, _command!.Connection!, _command))
+				await using (ActivityService.StartAndConfigureAwait(ActivityID.CommandExecuteNonQueryAsync)?.AddQueryInfo(this, _command!.Connection, _command))
 				{
 					return await _command!.ExecuteNonQueryAsync(cancellationToken)
 						.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
@@ -524,7 +524,7 @@ namespace LinqToDB.Data
 						return result.Value;
 				}
 
-				await using (ActivityService.StartAndConfigureAwait(ActivityID.CommandExecuteNonQueryAsync)?.AddQueryInfo(this, _command!.Connection!, _command))
+				await using (ActivityService.StartAndConfigureAwait(ActivityID.CommandExecuteNonQueryAsync)?.AddQueryInfo(this, _command!.Connection, _command))
 				{
 					return await _command!.ExecuteScalarAsync(cancellationToken)
 						.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
@@ -618,7 +618,7 @@ namespace LinqToDB.Data
 
 					if (!result.HasValue)
 					{
-						await using (ActivityService.StartAndConfigureAwait(ActivityID.CommandExecuteReaderAsync)?.AddQueryInfo(this, _command!.Connection!, _command))
+						await using (ActivityService.StartAndConfigureAwait(ActivityID.CommandExecuteReaderAsync)?.AddQueryInfo(this, _command!.Connection, _command))
 						{
 							reader = await _command!.ExecuteReaderAsync(commandBehavior, cancellationToken)
 								.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
@@ -634,7 +634,7 @@ namespace LinqToDB.Data
 				}
 				else
 				{
-					await using (ActivityService.StartAndConfigureAwait(ActivityID.CommandExecuteReaderAsync)?.AddQueryInfo(this, _command!.Connection!, _command))
+					await using (ActivityService.StartAndConfigureAwait(ActivityID.CommandExecuteReaderAsync)?.AddQueryInfo(this, _command!.Connection, _command))
 					{
 						reader = await _command!.ExecuteReaderAsync(commandBehavior, cancellationToken)
 							.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);

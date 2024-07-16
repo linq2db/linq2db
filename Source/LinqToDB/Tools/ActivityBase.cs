@@ -31,12 +31,19 @@ namespace LinqToDB.Tools
 			return this;
 		}
 
-		public virtual IActivity AddQueryInfo(DataConnection context, DbConnection connection, DbCommand? command)
+		public virtual IActivity AddQueryInfo(DataConnection? context, DbConnection? connection, DbCommand? command)
 		{
-			AddTag(ActivityTagID.ConfigurationString, context.   ConfigurationString);
-			AddTag(ActivityTagID.DataProviderName,    context.   DataProvider.Name);
-			AddTag(ActivityTagID.DataSourceName,      connection.DataSource);
-			AddTag(ActivityTagID.DatabaseName,        connection.Database);
+			if (context != null)
+			{
+				AddTag(ActivityTagID.ConfigurationString, context.ConfigurationString);
+				AddTag(ActivityTagID.DataProviderName,    context.DataProvider.Name);
+			}
+
+			if (connection != null)
+			{
+				AddTag(ActivityTagID.DataSourceName, connection.DataSource);
+				AddTag(ActivityTagID.DatabaseName,   connection.Database);
+			}
 
 			if (command != null)
 			{

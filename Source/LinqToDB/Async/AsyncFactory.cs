@@ -111,7 +111,7 @@ namespace LinqToDB.Async
 			return connection;
 		}
 
-		internal static IAsyncDbTransaction CreateAndSetDataContext(DataConnection dataConnection, DbTransaction transaction)
+		internal static IAsyncDbTransaction CreateAndSetDataContext(DataConnection? dataConnection, DbTransaction transaction)
 		{
 			var t = Create(transaction);
 
@@ -119,12 +119,6 @@ namespace LinqToDB.Async
 				asyncDbTransaction.DataConnection = dataConnection;
 
 			return t;
-		}
-
-		private static async Task<IAsyncDbTransaction> Wrap<TTransaction>(Task<TTransaction> transaction)
-			where TTransaction: DbTransaction
-		{
-			return Create(await transaction.ConfigureAwait(Configuration.ContinueOnCapturedContext));
 		}
 
 		private static async ValueTask<IAsyncDbTransaction> WrapValue<TTransaction>(ValueTask<TTransaction> transaction)
