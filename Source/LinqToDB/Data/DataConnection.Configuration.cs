@@ -572,7 +572,7 @@ namespace LinqToDB.Data
 						dataConnection._closeConnection   = false;
 						dataConnection._disposeConnection = false;
 
-						dataConnection.TransactionAsync = AsyncFactory.CreateAndSetDataContext(dataConnection, transaction);
+						dataConnection.TransactionAsync = AsyncFactory.Create(transaction);
 						dataConnection.DataProvider     = provider;
 						dataConnection.MappingSchema    = provider.MappingSchema;
 

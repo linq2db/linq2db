@@ -100,13 +100,13 @@ namespace LinqToDB.Async
 		public virtual IAsyncDbTransaction BeginTransaction()
 		{
 			using var a = ActivityService.Start(ActivityID.ConnectionBeginTransaction)?.AddQueryInfo(DataConnection!, Connection, null);
-			return AsyncFactory.CreateAndSetDataContext(DataConnection!, Connection.BeginTransaction());
+			return AsyncFactory.Create(Connection.BeginTransaction());
 		}
 
 		public virtual IAsyncDbTransaction BeginTransaction(IsolationLevel isolationLevel)
 		{
 			using var a = ActivityService.Start(ActivityID.ConnectionBeginTransaction)?.AddQueryInfo(DataConnection!, Connection, null);
-			return AsyncFactory.CreateAndSetDataContext(DataConnection!, Connection.BeginTransaction(isolationLevel));
+			return AsyncFactory.Create(Connection.BeginTransaction(isolationLevel));
 		}
 
 #if !NET6_0_OR_GREATER
@@ -129,7 +129,7 @@ namespace LinqToDB.Async
 				var transaction = await Connection.BeginTransactionAsync(cancellationToken)
 					.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 
-				return AsyncFactory.CreateAndSetDataContext(DataConnection!, transaction);
+				return AsyncFactory.Create(transaction);
 			}
 		}
 
@@ -140,7 +140,7 @@ namespace LinqToDB.Async
 				var transaction = await Connection.BeginTransactionAsync(isolationLevel, cancellationToken)
 					.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 
-				return AsyncFactory.CreateAndSetDataContext(DataConnection!, transaction);
+				return AsyncFactory.Create(transaction);
 			}
 		}
 
