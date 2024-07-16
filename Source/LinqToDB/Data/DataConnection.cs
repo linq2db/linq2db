@@ -653,10 +653,13 @@ namespace LinqToDB.Data
 		IAsyncDbConnection?              _connection;
 		Func<DataOptions, DbConnection>? _connectionFactory;
 
+		// TODO: V6 remove it or replace with non-creating access + creation method if such public APIs needed
 		/// <summary>
 		/// Gets underlying database connection, used by current connection object.
 		/// </summary>
 		public DbConnection Connection => EnsureConnection().Connection;
+
+		internal DbConnection? CurrentConnection => _connection;
 
 		internal IAsyncDbConnection EnsureConnection(bool connect = true)
 		{
