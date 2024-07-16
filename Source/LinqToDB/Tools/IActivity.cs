@@ -21,6 +21,13 @@ namespace LinqToDB.Tools
 		/// <returns><see langword="this" /> for convenient chaining.</returns>
 		IActivity AddTag(ActivityTagID key, object? value);
 
-		IActivity AddQueryInfo(DataConnection context, DbConnection connection, DbCommand? command);
+		/// <summary>
+		/// Add connection and command tags to query activity.
+		/// </summary>
+		/// <param name="context">Linq To DB data context, associated with current activity.</param>
+		/// <param name="connection">ADO.NET database connection, associated with current activity.</param>
+		/// <param name="command">ADO.NET command, associated with current activity.</param>
+		/// <returns></returns>
+		IActivity AddQueryInfo(DataConnection? context, DbConnection? connection, DbCommand? command);
 	}
 }

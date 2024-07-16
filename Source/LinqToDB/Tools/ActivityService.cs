@@ -44,7 +44,7 @@ namespace LinqToDB.Tools
 				return activity.DisposeAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
 			}
 
-			internal AsyncDisposableWrapper AddQueryInfo(DataConnection context, DbConnection connection, DbCommand? command)
+			internal AsyncDisposableWrapper AddQueryInfo(DataConnection? context, DbConnection? connection, DbCommand? command)
 			{
 				activity.AddQueryInfo(context, connection, command);
 				return this;
@@ -90,7 +90,7 @@ namespace LinqToDB.Tools
 				return this;
 			}
 
-			public override IActivity AddQueryInfo(DataConnection context, DbConnection connection, DbCommand? command)
+			public override IActivity AddQueryInfo(DataConnection? context, DbConnection? connection, DbCommand? command)
 			{
 				foreach (var activity in activities)
 					activity?.AddQueryInfo(context, connection, command);
