@@ -188,14 +188,14 @@ namespace LinqToDB
 			if (source is ExpressionQuery<TSource> query)
 			{
 				var list = new List<TSource>();
-				await query.GetForEachAsync(list.Add, token).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+				await query.GetForEachAsync(list.Add, token).ConfigureAwait(false);
 				return list;
 			}
 
 			if (LinqExtensions.ExtensionsAdapter != null)
-				return await LinqExtensions.ExtensionsAdapter.ToListAsync(source, token).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+				return await LinqExtensions.ExtensionsAdapter.ToListAsync(source, token).ConfigureAwait(false);
 
-			return await GetTask(() => source.AsEnumerable().TakeWhile(_ => !token.IsCancellationRequested).ToList(), token).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+			return await GetTask(() => source.AsEnumerable().TakeWhile(_ => !token.IsCancellationRequested).ToList(), token).ConfigureAwait(false);
 		}
 
 		#endregion
@@ -216,22 +216,22 @@ namespace LinqToDB
 			if (source is ExpressionQuery<TSource> query)
 			{
 				var list = new List<TSource>();
-				await query.GetForEachAsync(list.Add, token).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+				await query.GetForEachAsync(list.Add, token).ConfigureAwait(false);
 				return list.ToArray();
 
 				//				var list = new List<TSource>();
 				//
 				//				using (var enumerator = query.GetAsyncEnumerable().GetEnumerator())
-				//					while (await enumerator.MoveNext(token).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext))
+				//					while (await enumerator.MoveNext(token).ConfigureAwait(false))
 				//						list.Add(enumerator.Current);
 				//
 				//				return list.ToArray();
 			}
 
 			if (LinqExtensions.ExtensionsAdapter != null)
-				return await LinqExtensions.ExtensionsAdapter.ToArrayAsync(source, token).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+				return await LinqExtensions.ExtensionsAdapter.ToArrayAsync(source, token).ConfigureAwait(false);
 
-			return await GetTask(() => source.AsEnumerable().TakeWhile(_ => !token.IsCancellationRequested).ToArray(), token).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+			return await GetTask(() => source.AsEnumerable().TakeWhile(_ => !token.IsCancellationRequested).ToArray(), token).ConfigureAwait(false);
 		}
 
 		#endregion
@@ -256,14 +256,14 @@ namespace LinqToDB
 			if (source is ExpressionQuery<TSource> query)
 			{
 				var dic = new Dictionary<TKey,TSource>();
-				await query.GetForEachAsync(item => dic.Add(keySelector(item), item), token).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+				await query.GetForEachAsync(item => dic.Add(keySelector(item), item), token).ConfigureAwait(false);
 				return dic;
 			}
 
 			if (LinqExtensions.ExtensionsAdapter != null)
-				return await LinqExtensions.ExtensionsAdapter.ToDictionaryAsync(source, keySelector, token).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+				return await LinqExtensions.ExtensionsAdapter.ToDictionaryAsync(source, keySelector, token).ConfigureAwait(false);
 
-			return await GetTask(() => source.AsEnumerable().TakeWhile(_ => !token.IsCancellationRequested).ToDictionary(keySelector), token).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+			return await GetTask(() => source.AsEnumerable().TakeWhile(_ => !token.IsCancellationRequested).ToDictionary(keySelector), token).ConfigureAwait(false);
 		}
 
 		/// <summary>
@@ -286,14 +286,14 @@ namespace LinqToDB
 			if (source is ExpressionQuery<TSource> query)
 			{
 				var dic = new Dictionary<TKey,TSource>(comparer);
-				await query.GetForEachAsync(item => dic.Add(keySelector(item), item), token).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+				await query.GetForEachAsync(item => dic.Add(keySelector(item), item), token).ConfigureAwait(false);
 				return dic;
 			}
 
 			if (LinqExtensions.ExtensionsAdapter != null)
-				return await LinqExtensions.ExtensionsAdapter.ToDictionaryAsync(source, keySelector, comparer, token).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+				return await LinqExtensions.ExtensionsAdapter.ToDictionaryAsync(source, keySelector, comparer, token).ConfigureAwait(false);
 
-			return await GetTask(() => source.AsEnumerable().TakeWhile(_ => !token.IsCancellationRequested).ToDictionary(keySelector, comparer), token).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+			return await GetTask(() => source.AsEnumerable().TakeWhile(_ => !token.IsCancellationRequested).ToDictionary(keySelector, comparer), token).ConfigureAwait(false);
 		}
 
 		/// <summary>
@@ -317,14 +317,14 @@ namespace LinqToDB
 			if (source is ExpressionQuery<TSource> query)
 			{
 				var dic = new Dictionary<TKey,TElement>();
-				await query.GetForEachAsync(item => dic.Add(keySelector(item), elementSelector(item)), token).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+				await query.GetForEachAsync(item => dic.Add(keySelector(item), elementSelector(item)), token).ConfigureAwait(false);
 				return dic;
 			}
 
 			if (LinqExtensions.ExtensionsAdapter != null)
-				return await LinqExtensions.ExtensionsAdapter.ToDictionaryAsync(source, keySelector, elementSelector, token).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+				return await LinqExtensions.ExtensionsAdapter.ToDictionaryAsync(source, keySelector, elementSelector, token).ConfigureAwait(false);
 
-			return await GetTask(() => source.AsEnumerable().TakeWhile(_ => !token.IsCancellationRequested).ToDictionary(keySelector, elementSelector), token).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+			return await GetTask(() => source.AsEnumerable().TakeWhile(_ => !token.IsCancellationRequested).ToDictionary(keySelector, elementSelector), token).ConfigureAwait(false);
 		}
 
 		/// <summary>
@@ -350,14 +350,14 @@ namespace LinqToDB
 			if (source is ExpressionQuery<TSource> query)
 			{
 				var dic = new Dictionary<TKey,TElement>(comparer);
-				await query.GetForEachAsync(item => dic.Add(keySelector(item), elementSelector(item)), token).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+				await query.GetForEachAsync(item => dic.Add(keySelector(item), elementSelector(item)), token).ConfigureAwait(false);
 				return dic;
 			}
 
 			if (LinqExtensions.ExtensionsAdapter != null)
-				return await LinqExtensions.ExtensionsAdapter.ToDictionaryAsync(source, keySelector, elementSelector, comparer, token).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+				return await LinqExtensions.ExtensionsAdapter.ToDictionaryAsync(source, keySelector, elementSelector, comparer, token).ConfigureAwait(false);
 
-			return await GetTask(() => source.AsEnumerable().TakeWhile(_ => !token.IsCancellationRequested).ToDictionary(keySelector, elementSelector, comparer), token).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+			return await GetTask(() => source.AsEnumerable().TakeWhile(_ => !token.IsCancellationRequested).ToDictionary(keySelector, elementSelector, comparer), token).ConfigureAwait(false);
 		}
 
 		#endregion

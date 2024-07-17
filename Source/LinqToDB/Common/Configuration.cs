@@ -71,6 +71,7 @@ namespace LinqToDB.Common
 		/// Defines value to pass to <see cref="Task.ConfigureAwait(bool)"/> method for all linq2db internal await operations.
 		/// Default value: <c>false</c>.
 		/// </summary>
+		[Obsolete("Value is ignored in v6. Will be removed in v7.")]
 		public static bool ContinueOnCapturedContext;
 
 		/// <summary>

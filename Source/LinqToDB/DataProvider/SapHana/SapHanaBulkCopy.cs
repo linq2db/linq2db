@@ -149,11 +149,11 @@ namespace LinqToDB.DataProvider.SapHana
 					() => (bc.CanWriteToServerAsync ? "INSERT ASYNC BULK " : "INSERT BULK ") + tableName + Environment.NewLine,
 					async () => {
 						if (bc.CanWriteToServerAsync)
-							await bc.WriteToServerAsync(rd, cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+							await bc.WriteToServerAsync(rd, cancellationToken).ConfigureAwait(false);
 						else
 							bc.WriteToServer(rd);
 						return rd.Count;
-					}).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+					}).ConfigureAwait(false);
 
 				if (rc.RowsCopied != rd.Count)
 				{
@@ -164,7 +164,7 @@ namespace LinqToDB.DataProvider.SapHana
 				}
 
 				if (table.DataContext.CloseAfterUse)
-					await table.DataContext.CloseAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+					await table.DataContext.CloseAsync().ConfigureAwait(false);
 
 				return rc;
 			}

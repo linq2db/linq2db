@@ -34,8 +34,8 @@ namespace LinqToDB.Interceptors
 				foreach (var interceptor in Interceptors)
 					await using (ActivityService.StartAndConfigureAwait(ActivityID.DataContextInterceptorOnClosingAsync))
 						await interceptor.OnClosingAsync(eventData)
-							.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
-			}).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+							.ConfigureAwait(false);
+			}).ConfigureAwait(false);
 		}
 
 		public async Task OnClosedAsync(DataContextEventData eventData)
@@ -45,8 +45,8 @@ namespace LinqToDB.Interceptors
 				foreach (var interceptor in Interceptors)
 					await using (ActivityService.StartAndConfigureAwait(ActivityID.DataContextInterceptorOnClosedAsync))
 						await interceptor.OnClosedAsync(eventData)
-							.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
-			}).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+							.ConfigureAwait(false);
+			}).ConfigureAwait(false);
 		}
 	}
 }

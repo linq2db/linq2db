@@ -8609,7 +8609,7 @@ static LinqToDB.AsyncExtensions.ToListAsync<TSource>(this System.Linq.IQueryable
 static LinqToDB.Common.Compilation.CompileExpression(this System.Linq.Expressions.LambdaExpression! expression) -> System.Delegate!
 static LinqToDB.Common.Compilation.CompileExpression<TDelegate>(this System.Linq.Expressions.Expression<TDelegate!>! expression) -> TDelegate!
 static LinqToDB.Common.Compilation.SetExpressionCompiler(System.Func<System.Linq.Expressions.LambdaExpression!, System.Delegate?>? compiler) -> void
-static LinqToDB.Common.Configuration.ContinueOnCapturedContext -> bool
+static LinqToDB.false -> bool
 static LinqToDB.Common.Configuration.Data.BulkCopyUseConnectionCommandTimeout -> bool
 static LinqToDB.Common.Configuration.Data.ThrowOnDisposed -> bool
 static LinqToDB.Common.Configuration.IsStructIsScalarType -> bool
