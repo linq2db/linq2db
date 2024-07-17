@@ -65,12 +65,30 @@ namespace LinqToDB.Linq.Builder
 					break;
 			}
 
-			if (joinType == JoinType.Right || joinType == JoinType.Full)
-				outerContext = new DefaultIfEmptyBuilder.DefaultIfEmptyContext(buildInfo.Parent, outerContext, outerContext, null, false, false);
+			if (joinType is JoinType.Right or JoinType.Full)
+			{
+				outerContext = new DefaultIfEmptyBuilder.DefaultIfEmptyContext(
+					buildInfo.Parent,
+					outerContext,
+					outerContext,
+					defaultValue: null,
+					allowNullField: false,
+					isNullValidationDisabled: false);
+			}
+
 			outerContext = new SubQueryContext(outerContext);
 
-			if (joinType == JoinType.Left || joinType == JoinType.Full)
-				innerContext = new DefaultIfEmptyBuilder.DefaultIfEmptyContext(buildInfo.Parent, innerContext, innerContext, null, false, false);
+			if (joinType is JoinType.Left or JoinType.Full)
+			{
+				innerContext = new DefaultIfEmptyBuilder.DefaultIfEmptyContext(
+					buildInfo.Parent,
+					innerContext,
+					innerContext,
+					defaultValue: null,
+					allowNullField: false,
+					isNullValidationDisabled: false);
+			}
+
 			innerContext = new SubQueryContext(innerContext);
 
 			var selector = methodCall.Arguments[^1].UnwrapLambda();
