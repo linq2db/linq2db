@@ -119,7 +119,7 @@ namespace Tests
 		private readonly CompareNulls _original = Configuration.Linq.CompareNulls;
 
 		public CompareNullsOption(bool enable)
-			: this(enable ? CompareNulls.LikeCSharp : CompareNulls.LikeSql)
+			: this(enable ? CompareNulls.LikeClr : CompareNulls.LikeSql)
 		{ }
 
 		public CompareNullsOption(CompareNulls value)

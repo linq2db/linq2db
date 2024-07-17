@@ -1021,7 +1021,7 @@ namespace LinqToDB.SqlProvider
 				var testValue = testExpressions[i];
 				var expr      = subQuery.Select.Columns[i].Expression;
 
-				predicates.Add(new SqlPredicate.ExprExpr(testValue, SqlPredicate.Operator.Equal, expr, DataOptions.LinqOptions.CompareNulls == CompareNulls.LikeCSharp ? true : null));
+				predicates.Add(new SqlPredicate.ExprExpr(testValue, SqlPredicate.Operator.Equal, expr, DataOptions.LinqOptions.CompareNulls == CompareNulls.LikeClr ? true : null));
 			}
 
 			subQuery.Select.Columns.Clear();
@@ -1513,11 +1513,11 @@ namespace LinqToDB.SqlProvider
 			ISqlPredicate predicate;
 			if (expression.SystemType?.ToNullableUnderlying() == typeof(bool))
 			{
-				predicate = new SqlPredicate.IsTrue(expression, new SqlValue(true), new SqlValue(false), DataOptions.LinqOptions.CompareNulls == CompareNulls.LikeCSharp ? false : null, false);
+				predicate = new SqlPredicate.IsTrue(expression, new SqlValue(true), new SqlValue(false), DataOptions.LinqOptions.CompareNulls == CompareNulls.LikeClr ? false : null, false);
 			}
 			else
 			{
-				predicate = new SqlPredicate.ExprExpr(expression, SqlPredicate.Operator.Equal, new SqlValue(0), DataOptions.LinqOptions.CompareNulls == CompareNulls.LikeCSharp ? true : null)
+				predicate = new SqlPredicate.ExprExpr(expression, SqlPredicate.Operator.Equal, new SqlValue(0), DataOptions.LinqOptions.CompareNulls == CompareNulls.LikeClr ? true : null)
 					.MakeNot();
 			}
 

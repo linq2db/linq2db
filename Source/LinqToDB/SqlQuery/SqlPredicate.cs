@@ -294,7 +294,7 @@ namespace LinqToDB.SqlQuery
 					return new ExprExpr(Expr1, Operator, Expr2, null);
 				}
 
-				// CompareNulls.LikeSqlExceptParameters and CompareNulls.LikeCSharp 
+				// CompareNulls.LikeSqlExceptParameters and CompareNulls.LikeClr 
 				// always sniffs parameters to == and != (for backward compatibility).
 				if (Operator == Operator.Equal || Operator == Operator.NotEqual)
 				{
@@ -310,9 +310,9 @@ namespace LinqToDB.SqlQuery
 					}
 				}
 
-				// Only CompareNulls.LikeCSharp handles all conditions.
+				// Only CompareNulls.LikeClr handles all conditions.
 				// Notice that it sometimes creates operands `WithNull: null` 
-				// when it wants an expression to work as LikeSql.
+				// when it wants specific expressions to work as LikeSql.
 				if (WithNull == null || nullability.IsEmpty)
 					return this;
 
@@ -354,42 +354,45 @@ namespace LinqToDB.SqlQuery
 				}
 				else
 				{
-					if (Operator is Operator.Equal)
+					switch (Operator)
 					{
-						var search = new SqlSearchCondition(true)
-							.Add(MakeWithoutNulls())
-							.AddAnd(sc => sc
+						case Operator.Equal: 
+						{
+							var search = new SqlSearchCondition(true)
+								.Add(MakeWithoutNulls())
+								.AddAnd(sc => sc
+									.Add(new IsNull(Expr1, false))
+									.Add(new IsNull(Expr2, false))
+								);
+
+							return search;
+						}
+						case Operator.NotEqual:
+						{
+							var search = new SqlSearchCondition(true)
+								.Add(MakeWithoutNulls())
+								.AddAnd(sc => sc
+									.Add(new IsNull(Expr1, false))
+									.Add(new IsNull(Expr2, true)))
+								.AddAnd(sc => sc
+									.Add(new IsNull(Expr1, true))
+									.Add(new IsNull(Expr2, false)));
+
+							return search;
+						}
+						default:
+						{
+							if (insideNot)
+								return this;
+
+							var search = new SqlSearchCondition(true)
+								.Add(MakeWithoutNulls())
 								.Add(new IsNull(Expr1, false))
-								.Add(new IsNull(Expr2, false))
-							);
-						return search;
-					}
+								.Add(new IsNull(Expr2, false));
 
-					if (Operator == Operator.NotEqual)
-					{
-						var search = new SqlSearchCondition(true)
-							.Add(MakeWithoutNulls())
-							.AddAnd(sc => sc
-								.Add(new IsNull(Expr1, false))
-								.Add(new IsNull(Expr2, true)))
-							.AddAnd(sc => sc
-								.Add(new IsNull(Expr1, true))
-								.Add(new IsNull(Expr2, false)));
-
-						return search;
-					}
-					else
-					{
-						if (insideNot)
-							return this;
-
-						var search = new SqlSearchCondition(true)
-							.Add(MakeWithoutNulls())
-							.Add(new IsNull(Expr1, false))
-							.Add(new IsNull(Expr2, false));
-
-						return search;
-					}
+							return search;
+						}
+					}					
 				}
 			}
 

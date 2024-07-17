@@ -230,7 +230,7 @@ namespace Tests.Linq
 			};
 
 			using var db = GetDataContext(context, o => o.WithOptions<LinqOptions>(
-				lo => lo with { CompareNulls = compareNullsAsValues ? CompareNulls.LikeCSharp : CompareNulls.LikeSql })
+				lo => lo with { CompareNulls = compareNullsAsValues ? CompareNulls.LikeClr : CompareNulls.LikeSql })
 			);
 			using var tt = db.CreateLocalTable(data);
 

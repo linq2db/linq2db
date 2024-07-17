@@ -150,7 +150,7 @@ namespace Tests.Linq
 			result = src.Where(x => x.A == default).Count();
 			result.Should().Be(2);
 
-			// LikeCSharp should obviously match.
+			// LikeClr should obviously match.
 			// LikeSqlExceptParameters sniffs parameters and should translate to IS NULL.
 			// LikeSql should translate straight to x.A = p, which should have no result.
 			int? p = null;

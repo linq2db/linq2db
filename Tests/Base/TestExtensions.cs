@@ -11,7 +11,7 @@ namespace Tests
 		public static DataOptions OmitUnsupportedCompareNulls(this DataOptions options, string context)
 		{
 			return options.WithOptions(options.LinqOptions.WithCompareNulls(
-				context.IsAnyOf(TestProvName.AllClickHouse) ? CompareNulls.LikeSql : CompareNulls.LikeCSharp));
+				context.IsAnyOf(TestProvName.AllClickHouse) ? CompareNulls.LikeSql : CompareNulls.LikeClr));
 		}
 	}
 }

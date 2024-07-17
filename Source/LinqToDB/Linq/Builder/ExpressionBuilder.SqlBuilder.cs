@@ -1192,7 +1192,7 @@ namespace LinqToDB.Linq.Builder
 							if (testValueExpr is not SqlPlaceholderExpression testPlaceholder)
 								return SqlErrorExpression.EnsureError(testValueExpr, switchExpression.Type);
 
-							sc.Add(new SqlPredicate.ExprExpr(sv, SqlPredicate.Operator.Equal, testPlaceholder.Sql, CompareNulls == CompareNulls.LikeCSharp ? true : null));
+							sc.Add(new SqlPredicate.ExprExpr(sv, SqlPredicate.Operator.Equal, testPlaceholder.Sql, CompareNulls == CompareNulls.LikeClr ? true : null));
 						}
 
 						ps[i * 2]     = sc;
@@ -1744,7 +1744,7 @@ namespace LinqToDB.Linq.Builder
 				var trueValue  = ConvertToSql(context, ExpressionInstances.True, columnDescriptor: descriptor);
 				var falseValue = ConvertToSql(context, ExpressionInstances.False, columnDescriptor: descriptor);
 
-				return new SqlPredicate.IsTrue(ex, trueValue, falseValue, DataOptions.LinqOptions.CompareNulls == CompareNulls.LikeCSharp ? false : null, false);
+				return new SqlPredicate.IsTrue(ex, trueValue, falseValue, DataOptions.LinqOptions.CompareNulls == CompareNulls.LikeClr ? false : null, false);
 			}
 
 			if (ex is ISqlPredicate expPredicate)
@@ -2327,7 +2327,7 @@ namespace LinqToDB.Linq.Builder
 						if (trueValue.ElementType  == QueryElementType.SqlValue &&
 						    falseValue.ElementType == QueryElementType.SqlValue)
 						{
-							var withNullValue = compareNulls == CompareNulls.LikeCSharp
+							var withNullValue = compareNulls == CompareNulls.LikeClr
 								? withNull
 								: (bool?)null;
 							predicate = new SqlPredicate.IsTrue(expression, trueValue, falseValue, withNullValue, isNot);
@@ -2350,7 +2350,7 @@ namespace LinqToDB.Linq.Builder
 
 				if (predicate == null)
 				{
-					if (compareNulls == CompareNulls.LikeCSharp)
+					if (compareNulls == CompareNulls.LikeClr)
 					{
 						if (lOriginal is SqlColumn colLeft)
 							lOriginal = SqlNullabilityExpression.ApplyNullability(lOriginal, NullabilityContext.GetContext(colLeft.Parent));
@@ -2367,7 +2367,7 @@ namespace LinqToDB.Linq.Builder
 					}
 
 					predicate = new SqlPredicate.ExprExpr(lOriginal, op, rOriginal,
-						compareNulls == CompareNulls.LikeCSharp
+						compareNulls == CompareNulls.LikeClr
 							? true
 							: null);
 				}
@@ -2934,7 +2934,7 @@ namespace LinqToDB.Linq.Builder
 						for (var i = 0; i < newArr.Expressions.Count; i++)
 							exprs[i] = ConvertToSql(context, newArr.Expressions[i], columnDescriptor: columnDescriptor);
 
-						return new SqlPredicate.InList(expr, DataOptions.LinqOptions.CompareNulls == CompareNulls.LikeCSharp ? false : null, false, exprs);
+						return new SqlPredicate.InList(expr, DataOptions.LinqOptions.CompareNulls == CompareNulls.LikeClr ? false : null, false, exprs);
 					}
 
 				default :
@@ -2944,7 +2944,7 @@ namespace LinqToDB.Linq.Builder
 						var p = ParametersContext.BuildParameter(context, arr, columnDescriptor, forceConstant : false,
 							buildParameterType : ParametersContext.BuildParameterType.InPredicate)!.SqlParameter;
 						p.IsQueryParameter = false;
-						return new SqlPredicate.InList(expr, DataOptions.LinqOptions.CompareNulls == CompareNulls.LikeCSharp ? false : null, false, p);
+						return new SqlPredicate.InList(expr, DataOptions.LinqOptions.CompareNulls == CompareNulls.LikeClr ? false : null, false, p);
 					}
 
 					break;

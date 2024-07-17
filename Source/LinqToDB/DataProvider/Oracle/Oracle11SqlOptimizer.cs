@@ -42,7 +42,8 @@ namespace LinqToDB.DataProvider.Oracle
 				{
 					var (a, op, b, withNull) = (SqlPredicate.ExprExpr)element;
 
-					// See ConvertPredicateImpl, we transform empty strings "" into null-handling expressions
+					// This condition matches OracleSqlExpressionConvertVisitor.ConvertExprExprPredicate, 
+					// where we transform empty strings "" into null-handling expressions.
 					if (withNull != null ||
 						(dataOptions.LinqOptions.CompareNulls != CompareNulls.LikeSql &&
 							op is SqlPredicate.Operator.Equal or SqlPredicate.Operator.NotEqual))

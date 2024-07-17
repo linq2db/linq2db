@@ -38,8 +38,8 @@ namespace LinqToDB.DataProvider.Oracle
 
 			// CompareNulls.LikeSql compiles as-is, no change
 			// CompareNulls.LikeSqlExceptParameters sniffs parameters to == and != and replaces by IS [NOT] NULL
-			// CompareNulls.LikeCSharp (withNull) always handles nulls.
-			// Note: LikeCSharp sometimes generates `withNull: null` expressions, in which case it works the
+			// CompareNulls.LikeClr (withNull) always handles nulls.
+			// Note: LikeClr sometimes generates `withNull: null` expressions, in which case it works the
 			//       same way as LikeSqlExceptParameters (for backward compatibility).
 
 			if (withNull != null 

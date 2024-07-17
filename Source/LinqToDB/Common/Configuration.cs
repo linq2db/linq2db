@@ -283,14 +283,14 @@ namespace LinqToDB.Common
 			}
 
 			/// <summary>
-			/// If set to LikeCSharp nullable fields would be checked for IS NULL in Equal/NotEqual comparisons.
-			/// If set to LikeSql comparisons are compiled straight to equivalent SQL operators, which consider
-			/// nulls values as not equal.
-			/// LikeSqlExceptParameters is a backward compatible option that works mostly as LikeSql, 
-			/// but sniffs parameters values and changes = into IS NULL when parameters are null.
-			/// Comparisons to literal null are always compiled into IS NULL.
+			/// If set to <see cref="CompareNulls.LikeClr" /> nullable fields would be checked for <c>IS NULL</c> in Equal/NotEqual comparisons.
+			/// If set to <see cref="CompareNulls.LikeSql" /> comparisons are compiled straight to equivalent SQL operators, 
+	  		/// which consider nulls values as not equal.
+			/// <see cref="CompareNulls.LikeSqlExceptParameters" /> is a backward compatible option that works mostly as <see cref="CompareNulls.LikeSql" />, 
+			/// but sniffs parameters value and changes = into <c>IS NULL</c> when parameters are null.
+			/// Comparisons to literal null are always compiled into <c>IS NULL</c>.
 			/// This affects: Equal, NotEqual, Not Contains
-			/// Default value: <c>LikeCSharp</c>.
+			/// Default value: <see cref="CompareNulls.LikeClr" />.
 			/// </summary>
 			/// <example>
 			/// <code>
@@ -309,7 +309,7 @@ namespace LinqToDB.Common
 			/// db.MyEntity.Where(e => ! filter.Contains(e.Value))
 			/// </code>
 			///
-			/// Would be converted to next queries under LikeCSharp:
+			/// Would be converted to next queries under <see cref="CompareNulls.LikeClr" />:
 			/// <code>
 			/// SELECT Value FROM MyEntity WHERE Value IS NULL OR Value != 10
 			///
@@ -330,11 +330,11 @@ namespace LinqToDB.Common
 				}
 			}
 			
+			[Obsolete("Use CompareNulls instead: true maps to LikeClr and false to LikeSqlExceptParameters"), EditorBrowsable(EditorBrowsableState.Never)]
 			public static bool CompareNullsAsValues 
 			{
-				get => CompareNulls == CompareNulls.LikeCSharp;
-				[Obsolete("Use CompareNulls instead: true maps to LikeCSharp and false to LikeSqlExceptParameters")]
-				set => CompareNulls = value ? CompareNulls.LikeCSharp : CompareNulls.LikeSqlExceptParameters;
+				get => CompareNulls == CompareNulls.LikeClr;				
+				set => CompareNulls = value ? CompareNulls.LikeClr : CompareNulls.LikeSqlExceptParameters;
 			}
 
 			/// <summary>

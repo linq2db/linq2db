@@ -1271,12 +1271,12 @@ namespace LinqToDB.SqlProvider
 						var sc = new SqlSearchCondition(true)
 							.AddAnd( sub => 
 								sub
-									.Add(new SqlPredicate.ExprExpr(sqlConditionExpression.TrueValue, op, valueExpression, _dataOptions.LinqOptions.CompareNulls == CompareNulls.LikeCSharp ? true : null))
+									.Add(new SqlPredicate.ExprExpr(sqlConditionExpression.TrueValue, op, valueExpression, _dataOptions.LinqOptions.CompareNulls == CompareNulls.LikeClr ? true : null))
 									.Add(sqlConditionExpression.Condition)
 							)
 							.AddAnd( sub => 
 								sub
-									.Add(new SqlPredicate.ExprExpr(sqlConditionExpression.FalseValue, op, valueExpression, _dataOptions.LinqOptions.CompareNulls == CompareNulls.LikeCSharp ? true : null))
+									.Add(new SqlPredicate.ExprExpr(sqlConditionExpression.FalseValue, op, valueExpression, _dataOptions.LinqOptions.CompareNulls == CompareNulls.LikeClr ? true : null))
 									.Add(sqlConditionExpression.Condition.MakeNot())
 								);
 
@@ -1414,7 +1414,7 @@ namespace LinqToDB.SqlProvider
 					if (current == null)
 						return SqlPredicate.False;
 
-					return new SqlPredicate.ExprExpr(compareTo1.Expression1, current.Value, compareTo1.Expression2, _dataOptions.LinqOptions.CompareNulls == CompareNulls.LikeCSharp ? true : null);
+					return new SqlPredicate.ExprExpr(compareTo1.Expression1, current.Value, compareTo1.Expression2, _dataOptions.LinqOptions.CompareNulls == CompareNulls.LikeClr ? true : null);
 				}
 			}
 
@@ -1438,7 +1438,7 @@ namespace LinqToDB.SqlProvider
 					if (current == null)
 						return SqlPredicate.False;
 
-					return new SqlPredicate.ExprExpr(compareTo2.Expression1, current.Value, compareTo2.Expression2, _dataOptions.LinqOptions.CompareNulls == CompareNulls.LikeCSharp ? true : null);
+					return new SqlPredicate.ExprExpr(compareTo2.Expression1, current.Value, compareTo2.Expression2, _dataOptions.LinqOptions.CompareNulls == CompareNulls.LikeClr ? true : null);
 				}
 			}
 

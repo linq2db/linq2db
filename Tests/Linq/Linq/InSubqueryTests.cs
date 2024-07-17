@@ -53,7 +53,7 @@ namespace Tests.Linq
 			return GetDataContext(context, o => o.WithOptions<LinqOptions>(lo => lo with 
 			{ 
 				PreferExistsForScalar = preferExists, 
-				CompareNulls = compareNullsAsValues ? CompareNulls.LikeCSharp : CompareNulls.LikeSql,
+				CompareNulls = compareNullsAsValues ? CompareNulls.LikeClr : CompareNulls.LikeSql,
 			}));
 		}
 
@@ -294,7 +294,7 @@ namespace Tests.Linq
 				.WithOptions<LinqOptions>(lo => lo with 
 				{ 
 					PreferExistsForScalar = preferExists, 
-					CompareNulls = compareNullsAsValues ? CompareNulls.LikeCSharp : CompareNulls.LikeSql,
+					CompareNulls = compareNullsAsValues ? CompareNulls.LikeCLR : CompareNulls.LikeSql,
 				})
 				.WithOptions<BulkCopyOptions>(bo => bo with { BulkCopyType = BulkCopyType.MultipleRows })
 			);

@@ -35,27 +35,27 @@ namespace LinqToDB.SqlQuery
 
 		public static SqlSearchCondition AddGreater(this SqlSearchCondition search,  ISqlExpression expr1, ISqlExpression expr2, CompareNulls compareNulls)
 		{
-			return search.Add(new SqlPredicate.ExprExpr(expr1, SqlPredicate.Operator.Greater, expr2, compareNulls == CompareNulls.LikeCSharp ? true : null));
+			return search.Add(new SqlPredicate.ExprExpr(expr1, SqlPredicate.Operator.Greater, expr2, compareNulls == CompareNulls.LikeClr ? true : null));
 		}
 
 		public static SqlSearchCondition AddGreaterOrEqual(this SqlSearchCondition search,  ISqlExpression expr1, ISqlExpression expr2, CompareNulls compareNulls)
 		{
-			return search.Add(new SqlPredicate.ExprExpr(expr1, SqlPredicate.Operator.GreaterOrEqual, expr2, compareNulls == CompareNulls.LikeCSharp ? true : null));
+			return search.Add(new SqlPredicate.ExprExpr(expr1, SqlPredicate.Operator.GreaterOrEqual, expr2, compareNulls == CompareNulls.LikeClr ? true : null));
 		}
 
 		public static SqlSearchCondition AddLess(this SqlSearchCondition search, ISqlExpression expr1, ISqlExpression expr2, CompareNulls compareNulls)
 		{
-			return search.Add(new SqlPredicate.ExprExpr(expr1, SqlPredicate.Operator.Less, expr2, compareNulls == CompareNulls.LikeCSharp ? true : null));
+			return search.Add(new SqlPredicate.ExprExpr(expr1, SqlPredicate.Operator.Less, expr2, compareNulls == CompareNulls.LikeClr ? true : null));
 		}
 		
 		public static SqlSearchCondition AddLessOrEqual(this SqlSearchCondition search,  ISqlExpression expr1, ISqlExpression expr2, CompareNulls compareNulls)
 		{
-			return search.Add(new SqlPredicate.ExprExpr(expr1, SqlPredicate.Operator.LessOrEqual, expr2, compareNulls == CompareNulls.LikeCSharp ? true : null));
+			return search.Add(new SqlPredicate.ExprExpr(expr1, SqlPredicate.Operator.LessOrEqual, expr2, compareNulls == CompareNulls.LikeClr ? true : null));
 		}
 
 		public static SqlSearchCondition AddEqual(this SqlSearchCondition search,  ISqlExpression expr1, ISqlExpression expr2, CompareNulls compareNulls)
 		{
-			return search.Add(new SqlPredicate.ExprExpr(expr1, SqlPredicate.Operator.Equal, expr2, compareNulls == CompareNulls.LikeCSharp ? true : null));
+			return search.Add(new SqlPredicate.ExprExpr(expr1, SqlPredicate.Operator.Equal, expr2, compareNulls == CompareNulls.LikeClr ? true : null));
 		}
 
 		public static SqlSearchCondition AddIsNull(this SqlSearchCondition search, ISqlExpression expr)
@@ -75,7 +75,7 @@ namespace LinqToDB.SqlQuery
 
 		public static SqlSearchCondition AddNotEqual(this SqlSearchCondition search,  ISqlExpression expr1, ISqlExpression expr2, CompareNulls compareNulls)
 		{
-			return search.Add(new SqlPredicate.ExprExpr(expr1, SqlPredicate.Operator.NotEqual, expr2, compareNulls == CompareNulls.LikeCSharp ? true : null));
+			return search.Add(new SqlPredicate.ExprExpr(expr1, SqlPredicate.Operator.NotEqual, expr2, compareNulls == CompareNulls.LikeClr ? true : null));
 		}
 	
 		public static SqlSearchCondition AddExists(this SqlSearchCondition search, SelectQuery selectQuery, bool isNot = false)

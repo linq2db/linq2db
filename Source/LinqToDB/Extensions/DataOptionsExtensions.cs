@@ -105,9 +105,14 @@ namespace LinqToDB
 		}
 
 		/// <summary>
-		/// If set to LikeCSharp nullable fields would be checked for IS NULL in Equal/NotEqual comparisons.
+		/// If set to <see cref="CompareNulls.LikeClr" /> nullable fields would be checked for <c>IS NULL</c> in Equal/NotEqual comparisons.
+		/// If set to <see cref="CompareNulls.LikeSql" /> comparisons are compiled straight to equivalent SQL operators, 
+		/// which consider nulls values as not equal.
+		/// <see cref="CompareNulls.LikeSqlExceptParameters" /> is a backward compatible option that works mostly as <see cref="CompareNulls.LikeSql" />, 
+		/// but sniffs parameters value and changes = into <c>IS NULL</c> when parameters are null.
+		/// Comparisons to literal null are always compiled into <c>IS NULL</c>.
 		/// This affects: Equal, NotEqual, Not Contains
-		/// Default value: <c>true</c>.
+		/// Default value: <see cref="CompareNulls.LikeClr" />.
 		/// </summary>
 		/// <example>
 		/// <code>
@@ -126,7 +131,7 @@ namespace LinqToDB
 		/// db.MyEntity.Where(e => ! filter.Contains(e.Value))
 		/// </code>
 		///
-		/// Would be converted to next queries:
+		/// Would be converted to next queries under <see cref="CompareNulls.LikeClr" />:
 		/// <code>
 		/// SELECT Value FROM MyEntity WHERE Value IS NULL OR Value != 10
 		///
@@ -141,6 +146,12 @@ namespace LinqToDB
 		public static LinqOptions WithCompareNulls(this LinqOptions options, CompareNulls compareNulls)
 		{
 			return options with { CompareNulls = compareNulls };
+		}
+
+		[Pure, Obsolete("Use WithCompareNulls instead: true maps to LikeClr and false to LikeSqlExceptParameters"), EditorBrowsable(EditorBrowsableState.Never)]
+		public static LinqOptions WithCompareNullsAsValues(this LinqOptions options, bool compareNullsAsValues)
+		{
+			return options with { CompareNullsAsValues = compareNullsAsValues };
 		}
 
 		/// <summary>
@@ -327,9 +338,14 @@ namespace LinqToDB
 		}
 
 		/// <summary>
-		/// If set to LikeCSharp nullable fields would be checked for IS NULL in Equal/NotEqual comparisons.
+		/// If set to <see cref="CompareNulls.LikeClr" /> nullable fields would be checked for <c>IS NULL</c> in Equal/NotEqual comparisons.
+		/// If set to <see cref="CompareNulls.LikeSql" /> comparisons are compiled straight to equivalent SQL operators, 
+		/// which consider nulls values as not equal.
+		/// <see cref="CompareNulls.LikeSqlExceptParameters" /> is a backward compatible option that works mostly as <see cref="CompareNulls.LikeSql" />, 
+		/// but sniffs parameters value and changes = into <c>IS NULL</c> when parameters are null.
+		/// Comparisons to literal null are always compiled into <c>IS NULL</c>.
 		/// This affects: Equal, NotEqual, Not Contains
-		/// Default value: <c>true</c>.
+		/// Default value: <see cref="CompareNulls.LikeClr" />.
 		/// </summary>
 		/// <example>
 		/// <code>
@@ -348,7 +364,7 @@ namespace LinqToDB
 		/// db.MyEntity.Where(e => ! filter.Contains(e.Value))
 		/// </code>
 		///
-		/// Would be converted to next queries:
+		/// Would be converted to next queries under <see cref="CompareNulls.LikeClr" />:
 		/// <code>
 		/// SELECT Value FROM MyEntity WHERE Value IS NULL OR Value != 10
 		///
@@ -363,6 +379,12 @@ namespace LinqToDB
 		public static DataOptions UseCompareNulls(this DataOptions options, CompareNulls compareNulls)
 		{
 			return options.WithOptions<LinqOptions>(o => o with { CompareNulls = compareNulls });
+		}
+
+		[Pure, Obsolete("Use UseCompareNulls instead: true maps to LikeClr and false to LikeSqlExceptParameters"), EditorBrowsable(EditorBrowsableState.Never)]
+		public static DataOptions UseCompareNullsAsValues(this DataOptions options, bool compareNullsAsValues)
+		{
+			return options.WithOptions<LinqOptions>(o => o with { CompareNullsAsValues = compareNullsAsValues });
 		}
 
 		/// <summary>
