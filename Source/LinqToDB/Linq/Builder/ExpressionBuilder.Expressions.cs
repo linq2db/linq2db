@@ -566,55 +566,68 @@ namespace LinqToDB.Linq.Builder
 
 			protected override Expression VisitMember(MemberExpression node)
 			{
-				var translatedMemberExpression = Builder.TranslateMember(_context, _flags, _columnDescriptor, _alias, node);
-
-				if (translatedMemberExpression != null)
-					return Visit(translatedMemberExpression);
-
-				var attr = node.Member.GetExpressionAttribute(MappingSchema);
-
-				if (attr != null)
+				var saveDescriptor = _columnDescriptor;
+				if (node.Member.DeclaringType != null)
 				{
-					if (attr.ServerSideOnly || _flags.IsSql() || attr.PreferServerSide)
-					{
-						var converted = Builder.ConvertExtension(attr, _context, node, _flags.SqlFlag());
-						if (!ReferenceEquals(converted, node))
-							return Visit(converted);
-					}
+					_columnDescriptor ??= MappingSchema.GetEntityDescriptor(node.Member.DeclaringType).FindColumnDescriptor(node.Member);
 				}
 
-				if (Builder.IsServerSideOnly(node, _flags.IsExpression()) || Builder.PreferServerSide(node, true))
+				try
 				{
-					var translatedForced = TranslateExpression(node, alias: node.Member.Name, useSql : true);
+					var translatedMemberExpression = Builder.TranslateMember(_context, _flags, _columnDescriptor, _alias, node);
 
-					if (!ExpressionEqualityComparer.Instance.Equals(translatedForced, node))
-						return translatedForced;
+					if (translatedMemberExpression != null)
+						return Visit(translatedMemberExpression);
+
+					var attr = node.Member.GetExpressionAttribute(MappingSchema);
+
+					if (attr != null)
+					{
+						if (attr.ServerSideOnly || _flags.IsSql() || attr.PreferServerSide)
+						{
+							var converted = Builder.ConvertExtension(attr, _context, node, _flags.SqlFlag());
+							if (!ReferenceEquals(converted, node))
+								return Visit(converted);
+						}
+					}
+
+					if (Builder.IsServerSideOnly(node, _flags.IsExpression()) || Builder.PreferServerSide(node, true))
+					{
+						var translatedForced = TranslateExpression(node, alias: node.Member.Name, useSql : true);
+
+						if (!ExpressionEqualityComparer.Instance.Equals(translatedForced, node))
+							return translatedForced;
+
+						return base.VisitMember(node);
+					}
+
+					var useSql = IsForcedToConvert(node) || _flags.IsSql();
+
+					var translated = TranslateExpression(node, alias: node.Member.Name, useSql : useSql);
+
+					if (!ExpressionEqualityComparer.Instance.Equals(translated, node))
+						return translated;
+
+					if (_flags.IsExpression())
+					{
+						var expr = Visit(node.Expression!);
+						if (!ExpressionEqualityComparer.Instance.Equals(expr, node.Expression))
+						{
+							return Expression.Condition(Expression.NotEqual(expr, Expression.Default(expr.Type)),
+								node.Update(expr), Expression.Default(node.Type));
+						}
+					}
+					else
+					{
+						return node;
+					}
 
 					return base.VisitMember(node);
 				}
-
-				var useSql = IsForcedToConvert(node) || _flags.IsSql();
-
-				var translated = TranslateExpression(node, alias: node.Member.Name, useSql : useSql);
-
-				if (!ExpressionEqualityComparer.Instance.Equals(translated, node))
-					return translated;
-
-				if (_flags.IsExpression())
+				finally
 				{
-					var expr = Visit(node.Expression!);
-					if (!ExpressionEqualityComparer.Instance.Equals(expr, node.Expression))
-					{
-						return Expression.Condition(Expression.NotEqual(expr, Expression.Default(expr.Type)),
-							node.Update(expr), Expression.Default(node.Type));
-					}
+					_columnDescriptor = saveDescriptor;
 				}
-				else
-				{
-					return node;
-				}
-
-				return base.VisitMember(node);
 			}
 
 			Expression ParseGenericConstructor(Expression expression)
