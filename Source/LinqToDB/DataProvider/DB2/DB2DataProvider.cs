@@ -31,7 +31,6 @@ namespace LinqToDB.DataProvider.DB2
 			SqlProviderFlags.IsCrossJoinSupported                      = false;
 			SqlProviderFlags.SupportedCorrelatedSubqueriesLevel        = 1;
 			SqlProviderFlags.IsRecursiveCTEJoinWithConditionSupported  = false;
-			SqlProviderFlags.IsSupportedCorrelatedSubqueryInExpression = false;
 
 			// Requires:
 			// DB2 LUW: 11.1+

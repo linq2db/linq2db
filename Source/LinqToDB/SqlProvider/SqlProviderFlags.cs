@@ -324,13 +324,6 @@ namespace LinqToDB.SqlProvider
 
 		/// <summary>
 		/// Provider supports column subqueries which references outer scope when nesting is more than 1
-		/// Default value: <c>true</c>.
-		/// </summary>
-		[DataMember(Order = 42), DefaultValue(true)]
-		public bool IsSupportedCorrelatedSubqueryInExpression { get; set; } = true;
-
-		/// <summary>
-		/// Provider supports column subqueries which references outer scope when nesting is more than 1
 		/// </summary>
 		/// <remarks>
 		/// Used only for Oracle 11. linq2db emulates Take(n) via 'ROWNUM' and it causes additional nesting.
@@ -569,7 +562,6 @@ namespace LinqToDB.SqlProvider
 				^ IsExistsPreferableForContains                        .GetHashCode()
 				^ IsRowNumberWithoutOrderBySupported                   .GetHashCode()
 				^ IsSubqueryWithParentReferenceInJoinConditionSupported.GetHashCode()
-				^ IsSupportedCorrelatedSubqueryInExpression            .GetHashCode()
 				^ IsColumnSubqueryWithParentReferenceAndTakeSupported  .GetHashCode()
 				^ IsColumnSubqueryShouldNotContainParentIsNotNull      .GetHashCode()
 				^ IsRecursiveCTEJoinWithConditionSupported             .GetHashCode()
@@ -632,7 +624,6 @@ namespace LinqToDB.SqlProvider
 				&& IsExistsPreferableForContains                         == other.IsExistsPreferableForContains
 				&& IsRowNumberWithoutOrderBySupported                    == other.IsRowNumberWithoutOrderBySupported
 				&& IsSubqueryWithParentReferenceInJoinConditionSupported == other.IsSubqueryWithParentReferenceInJoinConditionSupported
-				&& IsSupportedCorrelatedSubqueryInExpression             == other.IsSupportedCorrelatedSubqueryInExpression
 				&& IsColumnSubqueryWithParentReferenceAndTakeSupported   == other.IsColumnSubqueryWithParentReferenceAndTakeSupported
 				&& IsColumnSubqueryShouldNotContainParentIsNotNull       == other.IsColumnSubqueryShouldNotContainParentIsNotNull
 				&& IsRecursiveCTEJoinWithConditionSupported              == other.IsRecursiveCTEJoinWithConditionSupported

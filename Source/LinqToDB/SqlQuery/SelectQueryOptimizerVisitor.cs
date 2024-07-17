@@ -2319,6 +2319,12 @@ namespace LinqToDB.SqlQuery
 			return result;
 		}
 
+		static bool IsInOrderByPart(SelectQuery rootQuery, SqlColumn column)
+		{
+			var result = rootQuery.OrderBy.HasElement(column);
+			return result;
+		}
+
 		static bool IsInsideAggregate(IQueryElement testedElement, SqlColumn column)
 		{
 			bool result = false;
@@ -2466,7 +2472,8 @@ namespace LinqToDB.SqlQuery
 
 									if (usageCount == 1 && !IsInSelectPart(sq, testedColumn))
 									{
-										if (!_providerFlags.IsSupportedCorrelatedSubqueryInExpression)
+										var moveToSubquery = IsInOrderByPart(sq, testedColumn) && !_providerFlags.IsSubQueryOrderBySupported;
+										if (moveToSubquery)
 										{
 											MoveDuplicateUsageToSubQuery(sq);
 											// will be processed in the next step

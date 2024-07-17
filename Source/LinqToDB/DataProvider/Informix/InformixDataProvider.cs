@@ -27,11 +27,10 @@ namespace LinqToDB.DataProvider.Informix
 			SqlProviderFlags.IsSubQueryTakeSupported                   = false;
 			SqlProviderFlags.IsInsertOrUpdateSupported                 = false;
 			SqlProviderFlags.IsCommonTableExpressionsSupported         = true;
-			SqlProviderFlags.IsSubQueryOrderBySupported                = true;
+			SqlProviderFlags.IsSubQueryOrderBySupported                = false;
 			SqlProviderFlags.IsUpdateFromSupported                     = false;
 			SqlProviderFlags.RowConstructorSupport                     = RowFeature.Equality | RowFeature.In;
 			SqlProviderFlags.IsExistsPreferableForContains             = true;
-			SqlProviderFlags.IsSupportedCorrelatedSubqueryInExpression = false;
 			SqlProviderFlags.IsCorrelatedSubQueryTakeSupported         = false;
 
 			SetCharField("CHAR",  (r,i) => r.GetString(i).TrimEnd(' '));
