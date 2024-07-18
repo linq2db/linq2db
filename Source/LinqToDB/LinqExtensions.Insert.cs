@@ -39,15 +39,15 @@ namespace LinqToDB
 			if (target == null) throw new ArgumentNullException(nameof(target));
 			if (setter == null) throw new ArgumentNullException(nameof(setter));
 
-			IQueryable<TTarget> query = target;
+			var query = target.GetLinqToDBSource();
 
-			var items = query.Provider.CreateQuery<TTarget>(
-				Expression.Call(
-					null,
-					MethodHelper.GetMethodInfo(InsertWithOutput, target, setter),
-					query.Expression, Expression.Quote(setter)));
+			var expr = Expression.Call(
+				null,
+				MethodHelper.GetMethodInfo(InsertWithOutput, target, setter),
+				query.Expression,
+				Expression.Quote(setter));
 
-			return items.AsEnumerable().First();
+			return query.CreateQuery<TTarget>(expr).AsEnumerable().First();
 		}
 
 		/// <summary>
@@ -68,7 +68,7 @@ namespace LinqToDB
 		/// <item>MariaDB 10.5+</item>
 		/// </list>
 		/// </remarks>
-		public static Task<TTarget> InsertWithOutputAsync<TTarget>(
+		public static async Task<TTarget> InsertWithOutputAsync<TTarget>(
 			                this ITable<TTarget>      target,
 			[InstantHandle] Expression<Func<TTarget>> setter,
 							CancellationToken         token = default)
@@ -77,16 +77,18 @@ namespace LinqToDB
 			if (target == null) throw new ArgumentNullException(nameof(target));
 			if (setter == null) throw new ArgumentNullException(nameof(setter));
 
-			IQueryable<TTarget> query = target;
+			var query = target.GetLinqToDBSource();
 
-			var items = query.Provider.CreateQuery<TTarget>(
-				Expression.Call(
-					null,
-					MethodHelper.GetMethodInfo(InsertWithOutput, target, setter),
-					query.Expression, Expression.Quote(setter)));
+			var expr = Expression.Call(
+				null,
+				MethodHelper.GetMethodInfo(InsertWithOutput, target, setter),
+				query.Expression,
+				Expression.Quote(setter));
 
-			return items.AsAsyncEnumerable().FirstAsync(token);
-
+			return await query.CreateQuery<TTarget>(expr)
+				.AsAsyncEnumerable()
+				.FirstAsync(token)
+				.ConfigureAwait(false);
 		}
 
 		/// <summary>
@@ -114,15 +116,15 @@ namespace LinqToDB
 			if (target == null) throw new ArgumentNullException(nameof(target));
 			if (obj    == null) throw new ArgumentNullException(nameof(obj));
 
-			IQueryable<TTarget> query = target;
+			var query = target.GetLinqToDBSource();
 
-			var items = query.Provider.CreateQuery<TTarget>(
-				Expression.Call(
-					null,
-					MethodHelper.GetMethodInfo(InsertWithOutput, target, obj),
-					query.Expression, Expression.Constant(obj)));
+			var expr = Expression.Call(
+				null,
+				MethodHelper.GetMethodInfo(InsertWithOutput, target, obj),
+				query.Expression,
+				Expression.Constant(obj));
 
-			return items.AsEnumerable().First();
+			return query.CreateQuery<TTarget>(expr).AsEnumerable().First();
 		}
 
 		/// <summary>
@@ -143,7 +145,7 @@ namespace LinqToDB
 		/// <item>MariaDB 10.5+</item>
 		/// </list>
 		/// </remarks>
-		public static Task<TTarget> InsertWithOutputAsync<TTarget>(
+		public static async Task<TTarget> InsertWithOutputAsync<TTarget>(
 			           this ITable<TTarget>   target,
 			[InstantHandle] TTarget           obj,
 			                CancellationToken token = default)
@@ -152,15 +154,18 @@ namespace LinqToDB
 			if (target == null) throw new ArgumentNullException(nameof(target));
 			if (obj    == null) throw new ArgumentNullException(nameof(obj));
 
-			IQueryable<TTarget> query = target;
+			var query = target.GetLinqToDBSource();
 
-			var items = query.Provider.CreateQuery<TTarget>(
-				Expression.Call(
-					null,
-					MethodHelper.GetMethodInfo(InsertWithOutput, target, obj),
-					query.Expression, Expression.Constant(obj)));
+			var expr = Expression.Call(
+				null,
+				MethodHelper.GetMethodInfo(InsertWithOutput, target, obj),
+				query.Expression,
+				Expression.Constant(obj));
 
-			return items.AsAsyncEnumerable().SingleAsync(token);
+			return await query.CreateQuery<TTarget>(expr)
+				.AsAsyncEnumerable()
+				.FirstAsync(token)
+				.ConfigureAwait(false);
 		}
 
 		/// <summary>
@@ -193,15 +198,16 @@ namespace LinqToDB
 			if (setter           == null) throw new ArgumentNullException(nameof(setter));
 			if (outputExpression == null) throw new ArgumentNullException(nameof(outputExpression));
 
-			IQueryable<TTarget> query = target;
+			var query = target.GetLinqToDBSource();
 
-			var items = query.Provider.CreateQuery<TOutput>(
-				Expression.Call(
-					null,
-					MethodHelper.GetMethodInfo(InsertWithOutput, target, setter, outputExpression),
-					query.Expression, Expression.Quote(setter), Expression.Quote(outputExpression)));
+			var expr = Expression.Call(
+				null,
+				MethodHelper.GetMethodInfo(InsertWithOutput, target, setter, outputExpression),
+				query.Expression,
+				Expression.Quote(setter),
+				Expression.Quote(outputExpression));
 
-			return items.AsEnumerable().First();
+			return query.CreateQuery<TOutput>(expr).AsEnumerable().First();
 		}
 
 		/// <summary>
@@ -225,7 +231,7 @@ namespace LinqToDB
 		/// <item>MariaDB 10.5+</item>
 		/// </list>
 		/// </remarks>
-		public static Task<TOutput> InsertWithOutputAsync<TTarget,TOutput>(
+		public static async Task<TOutput> InsertWithOutputAsync<TTarget,TOutput>(
 			                this ITable<TTarget>              target,
 			[InstantHandle] Expression<Func<TTarget>>         setter,
 			                Expression<Func<TTarget,TOutput>> outputExpression,
@@ -237,15 +243,19 @@ namespace LinqToDB
 			if (setter           == null) throw new ArgumentNullException(nameof(setter));
 			if (outputExpression == null) throw new ArgumentNullException(nameof(outputExpression));
 
-			IQueryable<TTarget> query = target;
+			var query = target.GetLinqToDBSource();
 
-			var items = query.Provider.CreateQuery<TOutput>(
-				Expression.Call(
-					null,
-					MethodHelper.GetMethodInfo(InsertWithOutput, target, setter, outputExpression),
-					query.Expression, Expression.Quote(setter), Expression.Quote(outputExpression)));
+			var expr = Expression.Call(
+				null,
+				MethodHelper.GetMethodInfo(InsertWithOutput, target, setter, outputExpression),
+				query.Expression,
+				Expression.Quote(setter),
+				Expression.Quote(outputExpression));
 
-			return items.AsAsyncEnumerable().FirstAsync(token);
+			return await query.CreateQuery<TOutput>(expr)
+				.AsAsyncEnumerable()
+				.FirstAsync(token)
+				.ConfigureAwait(false);
 		}
 
 		/// <summary>
@@ -272,13 +282,16 @@ namespace LinqToDB
 			if (setter      == null) throw new ArgumentNullException(nameof(setter));
 			if (outputTable == null) throw new ArgumentNullException(nameof(outputTable));
 
-			IQueryable<TTarget> query = target;
+			var query = target.GetLinqToDBSource();
 
-			return query.Provider.Execute<int>(
-				Expression.Call(
-					null,
-					MethodHelper.GetMethodInfo(InsertWithOutputInto, target, setter, outputTable),
-					query.Expression, Expression.Quote(setter), ((IQueryable<TTarget>)outputTable).Expression));
+			var expr = Expression.Call(
+				null,
+				MethodHelper.GetMethodInfo(InsertWithOutputInto, target, setter, outputTable),
+				query.Expression,
+				Expression.Quote(setter),
+				((IQueryable<TTarget>)outputTable).Expression);
+
+			return query.Execute<int>(expr);
 		}
 
 		/// <summary>
@@ -296,7 +309,7 @@ namespace LinqToDB
 		/// <item>SQL Server 2005+</item>
 		/// </list>
 		/// </remarks>
-		public static Task<int> InsertWithOutputIntoAsync<TTarget>(
+		public static async Task<int> InsertWithOutputIntoAsync<TTarget>(
 			                this ITable<TTarget>      target,
 			[InstantHandle] Expression<Func<TTarget>> setter,
 			                ITable<TTarget>           outputTable,
@@ -307,15 +320,16 @@ namespace LinqToDB
 			if (setter      == null) throw new ArgumentNullException(nameof(setter));
 			if (outputTable == null) throw new ArgumentNullException(nameof(outputTable));
 
-			IQueryable<TTarget> query = target;
+			var query = target.GetLinqToDBSource();
 
-			var expr =
-				Expression.Call(
-					null,
-					MethodHelper.GetMethodInfo(InsertWithOutputInto, target, setter, outputTable),
-					query.Expression, Expression.Quote(setter), ((IQueryable<TTarget>)outputTable).Expression);
+			var expr = Expression.Call(
+				null,
+				MethodHelper.GetMethodInfo(InsertWithOutputInto, target, setter, outputTable),
+				query.Expression,
+				Expression.Quote(setter),
+				((IQueryable<TTarget>)outputTable).Expression);
 
-			return ((IQueryProviderAsync)query).ExecuteAsync<int>(expr, token);
+			return await query.ExecuteAsync<int>(expr, token).ConfigureAwait(false);
 		}
 
 		/// <summary>
@@ -348,14 +362,17 @@ namespace LinqToDB
 			if (outputTable      == null) throw new ArgumentNullException(nameof(outputTable));
 			if (outputExpression == null) throw new ArgumentNullException(nameof(outputExpression));
 
-			IQueryable<TTarget> query = target;
+			var query = target.GetLinqToDBSource();
 
-			return query.Provider.Execute<int>(
-				Expression.Call(
-					null,
-					MethodHelper.GetMethodInfo(InsertWithOutputInto, target, setter, outputTable, outputExpression),
-					query.Expression, Expression.Quote(setter), ((IQueryable<TOutput>)outputTable).Expression,
-					Expression.Quote(outputExpression)));
+			var expr = Expression.Call(
+				null,
+				MethodHelper.GetMethodInfo(InsertWithOutputInto, target, setter, outputTable, outputExpression),
+				query.Expression,
+				Expression.Quote(setter),
+				((IQueryable<TOutput>)outputTable).Expression,
+				Expression.Quote(outputExpression));
+
+			return query.Execute<int>(expr);
 		}
 
 		/// <summary>
@@ -376,7 +393,7 @@ namespace LinqToDB
 		/// <item>SQL Server 2005+</item>
 		/// </list>
 		/// </remarks>
-		public static Task<int> InsertWithOutputIntoAsync<TTarget,TOutput>(
+		public static async Task<int> InsertWithOutputIntoAsync<TTarget,TOutput>(
 			                this ITable<TTarget>              target,
 			[InstantHandle] Expression<Func<TTarget>>         setter,
 			                ITable<TOutput>                   outputTable,
@@ -390,16 +407,17 @@ namespace LinqToDB
 			if (outputTable      == null) throw new ArgumentNullException(nameof(outputTable));
 			if (outputExpression == null) throw new ArgumentNullException(nameof(outputExpression));
 
-			IQueryable<TTarget> query = target;
+			var query = target.GetLinqToDBSource();
 
-			var expr =
-				Expression.Call(
-					null,
-					MethodHelper.GetMethodInfo(InsertWithOutputInto, target, setter, outputTable, outputExpression),
-					query.Expression, Expression.Quote(setter), ((IQueryable<TOutput>)outputTable).Expression,
-					Expression.Quote(outputExpression));
+			var expr = Expression.Call(
+				null,
+				MethodHelper.GetMethodInfo(InsertWithOutputInto, target, setter, outputTable, outputExpression),
+				query.Expression,
+				Expression.Quote(setter),
+				((IQueryable<TOutput>)outputTable).Expression,
+				Expression.Quote(outputExpression));
 
-			return ((IQueryProviderAsync)query).ExecuteAsync<int>(expr, token);
+			return await query.ExecuteAsync<int>(expr, token).ConfigureAwait(false);
 		}
 
 		#region Many records
@@ -434,14 +452,16 @@ namespace LinqToDB
 			if (target           == null) throw new ArgumentNullException(nameof(target));
 			if (setter           == null) throw new ArgumentNullException(nameof(setter));
 
-			var currentSource = ProcessSourceQueryable?.Invoke(source) ?? source;
+			var currentSource = source.GetLinqToDBSource();
 
-			return currentSource.Provider.CreateQuery<TTarget>(
-					Expression.Call(
-						null,
-						MethodHelper.GetMethodInfo(InsertWithOutput, source, target, setter),
-						currentSource.Expression, ((IQueryable<TTarget>)target).Expression, Expression.Quote(setter)))
-				.AsEnumerable();
+			var expr = Expression.Call(
+				null,
+				MethodHelper.GetMethodInfo(InsertWithOutput, source, target, setter),
+				currentSource.Expression,
+				((IQueryable<TTarget>)target).Expression,
+				Expression.Quote(setter));
+
+			return currentSource.CreateQuery<TTarget>(expr);
 		}
 
 		/// <summary>
@@ -474,14 +494,16 @@ namespace LinqToDB
 			if (target == null) throw new ArgumentNullException(nameof(target));
 			if (setter == null) throw new ArgumentNullException(nameof(setter));
 
-			var currentSource = ProcessSourceQueryable?.Invoke(source) ?? source;
+			var currentSource = source.GetLinqToDBSource();
 
-			return currentSource.Provider.CreateQuery<TTarget>(
-					Expression.Call(
-						null,
-						MethodHelper.GetMethodInfo(InsertWithOutput, source, target, setter),
-						currentSource.Expression, ((IQueryable<TTarget>)target).Expression, Expression.Quote(setter)))
-				.AsAsyncEnumerable();
+			var expr = Expression.Call(
+				null,
+				MethodHelper.GetMethodInfo(InsertWithOutput, source, target, setter),
+				currentSource.Expression,
+				((IQueryable<TTarget>)target).Expression,
+				Expression.Quote(setter));
+
+			return currentSource.CreateQuery<TTarget>(expr).AsAsyncEnumerable();
 		}
 
 		/// <summary>
@@ -553,15 +575,17 @@ namespace LinqToDB
 			if (setter           == null) throw new ArgumentNullException(nameof(setter));
 			if (outputExpression == null) throw new ArgumentNullException(nameof(outputExpression));
 
-			var currentSource = ProcessSourceQueryable?.Invoke(source) ?? source;
+			var currentSource = source.GetLinqToDBSource();
 
-			return currentSource.Provider.CreateQuery<TOutput>(
-					Expression.Call(
-						null,
-						MethodHelper.GetMethodInfo(InsertWithOutput, source, target, setter, outputExpression),
-						currentSource.Expression, ((IQueryable<TTarget>)target).Expression, Expression.Quote(setter),
-						Expression.Quote(outputExpression)))
-				.AsEnumerable();
+			var expr = Expression.Call(
+				null,
+				MethodHelper.GetMethodInfo(InsertWithOutput, source, target, setter, outputExpression),
+				currentSource.Expression,
+				((IQueryable<TTarget>)target).Expression,
+				Expression.Quote(setter),
+				Expression.Quote(outputExpression));
+
+			return currentSource.CreateQuery<TOutput>(expr);
 		}
 
 		/// <summary>
@@ -599,15 +623,17 @@ namespace LinqToDB
 			if (setter           == null) throw new ArgumentNullException(nameof(setter));
 			if (outputExpression == null) throw new ArgumentNullException(nameof(outputExpression));
 
-			var currentSource = ProcessSourceQueryable?.Invoke(source) ?? source;
+			var currentSource = source.GetLinqToDBSource();
 
-			return currentSource.Provider.CreateQuery<TOutput>(
-					Expression.Call(
-						null,
-						MethodHelper.GetMethodInfo(InsertWithOutput, source, target, setter, outputExpression),
-						currentSource.Expression, ((IQueryable<TTarget>)target).Expression, Expression.Quote(setter),
-						Expression.Quote(outputExpression)))
-				.AsAsyncEnumerable();
+			var expr = Expression.Call(
+				null,
+				MethodHelper.GetMethodInfo(InsertWithOutput, source, target, setter, outputExpression),
+				currentSource.Expression,
+				((IQueryable<TTarget>)target).Expression,
+				Expression.Quote(setter),
+				Expression.Quote(outputExpression));
+
+			return currentSource.CreateQuery<TOutput>(expr).AsAsyncEnumerable();
 		}
 
 		/// <summary>
@@ -676,13 +702,17 @@ namespace LinqToDB
 			if (setter      == null) throw new ArgumentNullException(nameof(setter));
 			if (outputTable == null) throw new ArgumentNullException(nameof(outputTable));
 
-			var currentSource = ProcessSourceQueryable?.Invoke(source) ?? source;
+			var currentSource = source.GetLinqToDBSource();
 
-			return currentSource.Provider.Execute<int>(
-				Expression.Call(
-					null,
-					MethodHelper.GetMethodInfo(InsertWithOutputInto, source, target, setter, outputTable),
-					currentSource.Expression, ((IQueryable<TTarget>)target).Expression, Expression.Quote(setter), ((IQueryable<TTarget>)outputTable).Expression));
+			var expr = Expression.Call(
+				null,
+				MethodHelper.GetMethodInfo(InsertWithOutputInto, source, target, setter, outputTable),
+				currentSource.Expression,
+				((IQueryable<TTarget>)target).Expression,
+				Expression.Quote(setter),
+				((IQueryable<TTarget>)outputTable).Expression);
+
+			return currentSource.Execute<int>(expr);
 		}
 
 		/// <summary>
@@ -703,7 +733,7 @@ namespace LinqToDB
 		/// <item>SQL Server 2005+</item>
 		/// </list>
 		/// </remarks>
-		public static Task<int> InsertWithOutputIntoAsync<TSource,TTarget>(
+		public static async Task<int> InsertWithOutputIntoAsync<TSource,TTarget>(
 			                this IQueryable<TSource>          source,
 			                ITable<TTarget>                   target,
 			[InstantHandle] Expression<Func<TSource,TTarget>> setter,
@@ -716,18 +746,17 @@ namespace LinqToDB
 			if (setter      == null) throw new ArgumentNullException(nameof(setter));
 			if (outputTable == null) throw new ArgumentNullException(nameof(outputTable));
 
-			var currentSource = ProcessSourceQueryable?.Invoke(source) ?? source;
+			var currentSource = source.GetLinqToDBSource();
 
-			var expr =
-				Expression.Call(
-					null,
-					MethodHelper.GetMethodInfo(InsertWithOutputInto, source, target, setter, outputTable),
-					currentSource.Expression, ((IQueryable<TTarget>)target).Expression, Expression.Quote(setter), ((IQueryable<TTarget>)outputTable).Expression);
+			var expr = Expression.Call(
+				null,
+				MethodHelper.GetMethodInfo(InsertWithOutputInto, source, target, setter, outputTable),
+				currentSource.Expression,
+				((IQueryable<TTarget>)target).Expression,
+				Expression.Quote(setter),
+				((IQueryable<TTarget>)outputTable).Expression);
 
-			if (source is IQueryProviderAsync queryAsync)
-				return queryAsync.ExecuteAsync<int>(expr, token);
-
-			return Task.Run(() => source.Provider.Execute<int>(expr), token);
+			return await currentSource.ExecuteAsync<int>(expr, token).ConfigureAwait(false);
 		}
 
 		/// <summary>
@@ -765,14 +794,18 @@ namespace LinqToDB
 			if (outputTable      == null) throw new ArgumentNullException(nameof(outputTable));
 			if (outputExpression == null) throw new ArgumentNullException(nameof(outputExpression));
 
-			var currentSource = ProcessSourceQueryable?.Invoke(source) ?? source;
+			var currentSource = source.GetLinqToDBSource();
 
-			return source.Provider.Execute<int>(
-				Expression.Call(
-					null,
-					MethodHelper.GetMethodInfo(InsertWithOutputInto, source, target, setter, outputTable, outputExpression),
-					currentSource.Expression, ((IQueryable<TTarget>)target).Expression, Expression.Quote(setter),
-					((IQueryable<TOutput>)outputTable).Expression, Expression.Quote(outputExpression)));
+			var expr = Expression.Call(
+				null,
+				MethodHelper.GetMethodInfo(InsertWithOutputInto, source, target, setter, outputTable, outputExpression),
+				currentSource.Expression,
+				((IQueryable<TTarget>)target).Expression,
+				Expression.Quote(setter),
+				((IQueryable<TOutput>)outputTable).Expression,
+				Expression.Quote(outputExpression));
+
+			return currentSource.Execute<int>(expr);
 		}
 
 		/// <summary>
@@ -796,7 +829,7 @@ namespace LinqToDB
 		/// <item>SQL Server 2005+</item>
 		/// </list>
 		/// </remarks>
-		public static Task<int> InsertWithOutputIntoAsync<TSource,TTarget,TOutput>(
+		public static async Task<int> InsertWithOutputIntoAsync<TSource,TTarget,TOutput>(
 			                this IQueryable<TSource>          source,
 			                ITable<TTarget>                   target,
 			[InstantHandle] Expression<Func<TSource,TTarget>> setter,
@@ -812,19 +845,18 @@ namespace LinqToDB
 			if (outputTable      == null) throw new ArgumentNullException(nameof(outputTable));
 			if (outputExpression == null) throw new ArgumentNullException(nameof(outputExpression));
 
-			var currentSource = ProcessSourceQueryable?.Invoke(source) ?? source;
+			var currentSource = source.GetLinqToDBSource();
 
-			var expr =
-				Expression.Call(
-					null,
-					MethodHelper.GetMethodInfo(InsertWithOutputInto, source, target, setter, outputTable, outputExpression),
-					currentSource.Expression, ((IQueryable<TTarget>)target).Expression, Expression.Quote(setter),
-					((IQueryable<TOutput>)outputTable).Expression, Expression.Quote(outputExpression));
+			var expr = Expression.Call(
+				null,
+				MethodHelper.GetMethodInfo(InsertWithOutputInto, source, target, setter, outputTable, outputExpression),
+				currentSource.Expression,
+				((IQueryable<TTarget>)target).Expression,
+				Expression.Quote(setter),
+				((IQueryable<TOutput>)outputTable).Expression,
+				Expression.Quote(outputExpression));
 
-			if (currentSource is IQueryProviderAsync queryAsync)
-				return queryAsync.ExecuteAsync<int>(expr, token);
-
-			return Task.Run(() => currentSource.Provider.Execute<int>(expr), token);
+			return await currentSource.ExecuteAsync<int>(expr, token).ConfigureAwait(false);
 		}
 
 		/// <summary>
@@ -848,15 +880,14 @@ namespace LinqToDB
 		{
 			if (source == null) throw new ArgumentNullException(nameof(source));
 
-			var query = ((SelectInsertable<TSource,TTarget>)source).Query;
+			var query = ((SelectInsertable<TSource,TTarget>)source).Query.GetLinqToDBSource();
 
-			var items = query.Provider.CreateQuery<TTarget>(
-				Expression.Call(
-					null,
-					MethodHelper.GetMethodInfo(InsertWithOutput, source),
-					query.Expression));
+			var expr = Expression.Call(
+				null,
+				MethodHelper.GetMethodInfo(InsertWithOutput, source),
+				query.Expression);
 
-			return items.AsEnumerable().First();
+			return query.CreateQuery<TTarget>(expr).First();
 		}
 
 		/// <summary>
@@ -877,21 +908,23 @@ namespace LinqToDB
 		/// <item>MariaDB 10.5+</item>
 		/// </list>
 		/// </remarks>
-		public static Task<TTarget> InsertWithOutputAsync<TSource,TTarget>(
+		public static async Task<TTarget> InsertWithOutputAsync<TSource,TTarget>(
 			this ISelectInsertable<TSource,TTarget> source,
 			     CancellationToken                  token = default)
 		{
 			if (source == null) throw new ArgumentNullException(nameof(source));
 
-			var query = ((SelectInsertable<TSource,TTarget>)source).Query;
+			var query = ((SelectInsertable<TSource,TTarget>)source).Query.GetLinqToDBSource();
 
-			var items = query.Provider.CreateQuery<TTarget>(
-				Expression.Call(
-					null,
-					MethodHelper.GetMethodInfo(InsertWithOutput, source),
-					query.Expression));
+			var expr = Expression.Call(
+				null,
+				MethodHelper.GetMethodInfo(InsertWithOutput, source),
+				query.Expression);
 
-			return items.AsAsyncEnumerable().FirstAsync(token);
+			return await query.CreateQuery<TTarget>(expr)
+				.AsAsyncEnumerable()
+				.FirstAsync(token)
+				.ConfigureAwait(false);
 		}
 
 		/// <summary>
@@ -916,13 +949,15 @@ namespace LinqToDB
 			if (source      == null) throw new ArgumentNullException(nameof(source));
 			if (outputTable == null) throw new ArgumentNullException(nameof(outputTable));
 
-			var query = ((SelectInsertable<TSource,TTarget>)source).Query;
+			var query = ((SelectInsertable<TSource,TTarget>)source).Query.GetLinqToDBSource();
 
-			return query.Provider.Execute<int>(
-				Expression.Call(
-					null,
-					MethodHelper.GetMethodInfo(InsertWithOutputInto, source, outputTable),
-					query.Expression, ((IQueryable<TTarget>)outputTable).Expression));
+			var expr = Expression.Call(
+				null,
+				MethodHelper.GetMethodInfo(InsertWithOutputInto, source, outputTable),
+				query.Expression,
+				((IQueryable<TTarget>)outputTable).Expression);
+
+			return query.Execute<int>(expr);
 		}
 
 		/// <summary>
@@ -940,7 +975,7 @@ namespace LinqToDB
 		/// <item>SQL Server 2005+</item>
 		/// </list>
 		/// </remarks>
-		public static Task<int> InsertWithOutputIntoAsync<TSource,TTarget>(
+		public static async Task<int> InsertWithOutputIntoAsync<TSource,TTarget>(
 			this ISelectInsertable<TSource,TTarget> source,
 			     ITable<TTarget>                    outputTable,
 			     CancellationToken                  token = default)
@@ -950,18 +985,15 @@ namespace LinqToDB
 			if (source      == null) throw new ArgumentNullException(nameof(source));
 			if (outputTable == null) throw new ArgumentNullException(nameof(outputTable));
 
-			var query = ((SelectInsertable<TSource,TTarget>)source).Query;
+			var query = ((SelectInsertable<TSource,TTarget>)source).Query.GetLinqToDBSource();
 
-			var expr =
-				Expression.Call(
-					null,
-					MethodHelper.GetMethodInfo(InsertWithOutputInto, source, outputTable),
-					query.Expression, ((IQueryable<TTarget>)outputTable).Expression);
+			var expr = Expression.Call(
+				null,
+				MethodHelper.GetMethodInfo(InsertWithOutputInto, source, outputTable),
+				query.Expression,
+				((IQueryable<TTarget>)outputTable).Expression);
 
-			if (query is IQueryProviderAsync queryAsync)
-				return queryAsync.ExecuteAsync<int>(expr, token);
-
-			return Task.Run(() => query.Provider.Execute<int>(expr), token);
+			return await query.ExecuteAsync<int>(expr, token).ConfigureAwait(false);
 		}
 
 		#endregion
@@ -988,13 +1020,14 @@ namespace LinqToDB
 			if (source == null) throw new ArgumentNullException(nameof(source));
 
 			var query         = ((ValueInsertable<T>)source).Query;
-			var currentSource = ProcessSourceQueryable?.Invoke(query) ?? query;
+			var currentSource = query.GetLinqToDBSource();
 
-			return currentSource.Provider.CreateQuery<T>(
-				Expression.Call(
-					null,
-					MethodHelper.GetMethodInfo(InsertWithOutput, source),
-					currentSource.Expression)).AsEnumerable().First();
+			var expr = Expression.Call(
+				null,
+				MethodHelper.GetMethodInfo(InsertWithOutput, source),
+				currentSource.Expression);
+
+			return currentSource.CreateQuery<T>(expr).AsEnumerable().First();
 		}
 
 		/// <summary>
@@ -1014,18 +1047,22 @@ namespace LinqToDB
 		/// <item>MariaDB 10.5+</item>
 		/// </list>
 		/// </remarks>
-		public static Task<T> InsertWithOutputAsync<T>(this IValueInsertable<T> source, CancellationToken token = default)
+		public static async Task<T> InsertWithOutputAsync<T>(this IValueInsertable<T> source, CancellationToken token = default)
 		{
 			if (source == null) throw new ArgumentNullException(nameof(source));
 
 			var query         = ((ValueInsertable<T>)source).Query;
-			var currentSource = ProcessSourceQueryable?.Invoke(query) ?? query;
+			var currentSource = query.GetLinqToDBSource();
 
-			return currentSource.Provider.CreateQuery<T>(
-				Expression.Call(
-					null,
-					MethodHelper.GetMethodInfo(InsertWithOutput, source),
-					currentSource.Expression)).AsAsyncEnumerable().FirstAsync(token);
+			var expr = Expression.Call(
+				null,
+				MethodHelper.GetMethodInfo(InsertWithOutput, source),
+				currentSource.Expression);
+
+			return await currentSource.CreateQuery<T>(expr)
+				.AsAsyncEnumerable()
+				.FirstAsync(token)
+				.ConfigureAwait(false);
 		}
 
 		/// <summary>
@@ -1053,14 +1090,15 @@ namespace LinqToDB
 			if (outputExpression == null) throw new ArgumentNullException(nameof(outputExpression));
 
 			var query         = ((ValueInsertable<T>)source).Query;
-			var currentSource = ProcessSourceQueryable?.Invoke(query) ?? query;
+			var currentSource = query.GetLinqToDBSource();
 
-			return currentSource.Provider.CreateQuery<TOutput>(
-				Expression.Call(
-					null,
-					MethodHelper.GetMethodInfo(InsertWithOutput, source, outputExpression),
-					currentSource.Expression,
-					Expression.Quote(outputExpression))).AsEnumerable().First();
+			var expr = Expression.Call(
+				null,
+				MethodHelper.GetMethodInfo(InsertWithOutput, source, outputExpression),
+				currentSource.Expression,
+				Expression.Quote(outputExpression));
+
+			return currentSource.CreateQuery<TOutput>(expr).AsEnumerable().First();
 		}
 
 		/// <summary>
@@ -1083,20 +1121,24 @@ namespace LinqToDB
 		/// <item>MariaDB 10.5+</item>
 		/// </list>
 		/// </remarks>
-		public static Task<TOutput> InsertWithOutputAsync<T, TOutput>(this IValueInsertable<T> source, Expression<Func<T, TOutput>> outputExpression, CancellationToken token = default)
+		public static async Task<TOutput> InsertWithOutputAsync<T, TOutput>(this IValueInsertable<T> source, Expression<Func<T, TOutput>> outputExpression, CancellationToken token = default)
 		{
 			if (source == null) throw new ArgumentNullException(nameof(source));
 			if (outputExpression == null) throw new ArgumentNullException(nameof(outputExpression));
 
 			var query         = ((ValueInsertable<T>)source).Query;
-			var currentSource = ProcessSourceQueryable?.Invoke(query) ?? query;
+			var currentSource = query.GetLinqToDBSource();
 
-			return currentSource.Provider.CreateQuery<TOutput>(
-				Expression.Call(
-					null,
-					MethodHelper.GetMethodInfo(InsertWithOutput, source, outputExpression),
-					currentSource.Expression,
-					Expression.Quote(outputExpression))).AsAsyncEnumerable().FirstAsync(token);
+			var expr = Expression.Call(
+				null,
+				MethodHelper.GetMethodInfo(InsertWithOutput, source, outputExpression),
+				currentSource.Expression,
+				Expression.Quote(outputExpression));
+
+			return await currentSource.CreateQuery<TOutput>(expr)
+				.AsAsyncEnumerable()
+				.FirstAsync(token)
+				.ConfigureAwait(false);
 		}
 		#endregion
 	}

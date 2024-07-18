@@ -33,14 +33,14 @@ namespace LinqToDB
 		{
 			if (source == null) throw new ArgumentNullException(nameof(source));
 
-			var currentSource = ProcessSourceQueryable?.Invoke(source) ?? source;
+			var currentSource = source.GetLinqToDBSource();
 
-			return currentSource.Provider.CreateQuery<TSource>(
-					Expression.Call(
-						null,
-						MethodHelper.GetMethodInfo(DeleteWithOutput, source),
-						currentSource.Expression))
-				.AsEnumerable();
+			var expr = Expression.Call(
+				null,
+				MethodHelper.GetMethodInfo(DeleteWithOutput, source),
+				currentSource.Expression);
+
+			return currentSource.CreateQuery<TSource>(expr);
 		}
 
 		/// <summary>
@@ -64,13 +64,14 @@ namespace LinqToDB
 		{
 			if (source == null) throw new ArgumentNullException(nameof(source));
 
-			var currentSource = ProcessSourceQueryable?.Invoke(source) ?? source;
+			var currentSource = source.GetLinqToDBSource();
 
-			return currentSource.Provider.CreateQuery<TSource>(
-					Expression.Call(
-						null,
-						MethodHelper.GetMethodInfo(DeleteWithOutput, source),
-						currentSource.Expression))
+			var expr = Expression.Call(
+				null,
+				MethodHelper.GetMethodInfo(DeleteWithOutput, source),
+				currentSource.Expression);
+
+			return currentSource.CreateQuery<TSource>(expr)
 				.AsAsyncEnumerable();
 		}
 
@@ -127,15 +128,15 @@ namespace LinqToDB
 			if (source           == null) throw new ArgumentNullException(nameof(source));
 			if (outputExpression == null) throw new ArgumentNullException(nameof(outputExpression));
 
-			var currentSource = ProcessSourceQueryable?.Invoke(source) ?? source;
+			var currentSource = source.GetLinqToDBSource();
 
-			return currentSource.Provider.CreateQuery<TOutput>(
-					Expression.Call(
-						null,
-						MethodHelper.GetMethodInfo(DeleteWithOutput, source, outputExpression),
-						currentSource.Expression,
-						Expression.Quote(outputExpression)))
-				.AsEnumerable();
+			var expr = Expression.Call(
+				null,
+				MethodHelper.GetMethodInfo(DeleteWithOutput, source, outputExpression),
+				currentSource.Expression,
+				Expression.Quote(outputExpression));
+
+			return currentSource.CreateQuery<TOutput>(expr);
 		}
 
 		/// <summary>
@@ -164,14 +165,15 @@ namespace LinqToDB
 			if (source           == null) throw new ArgumentNullException(nameof(source));
 			if (outputExpression == null) throw new ArgumentNullException(nameof(outputExpression));
 
-			var currentSource = ProcessSourceQueryable?.Invoke(source) ?? source;
+			var currentSource = source.GetLinqToDBSource();
 
-			return currentSource.Provider.CreateQuery<TOutput>(
-					Expression.Call(
-						null,
-						MethodHelper.GetMethodInfo(DeleteWithOutput, source, outputExpression),
-						currentSource.Expression,
-						Expression.Quote(outputExpression)))
+			var expr = Expression.Call(
+				null,
+				MethodHelper.GetMethodInfo(DeleteWithOutput, source, outputExpression),
+				currentSource.Expression,
+				Expression.Quote(outputExpression));
+
+			return currentSource.CreateQuery<TOutput>(expr)
 				.AsAsyncEnumerable();
 		}
 
@@ -227,14 +229,15 @@ namespace LinqToDB
 			if (source      == null) throw new ArgumentNullException(nameof(source));
 			if (outputTable == null) throw new ArgumentNullException(nameof(outputTable));
 
-			var currentSource = ProcessSourceQueryable?.Invoke(source) ?? source;
+			var currentSource = source.GetLinqToDBSource();
 
-			return currentSource.Provider.Execute<int>(
-				Expression.Call(
-					null,
-					MethodHelper.GetMethodInfo(DeleteWithOutputInto, source, outputTable),
-					currentSource.Expression,
-					((IQueryable<TOutput>)outputTable).Expression));
+			var expr = Expression.Call(
+				null,
+				MethodHelper.GetMethodInfo(DeleteWithOutputInto, source, outputTable),
+				currentSource.Expression,
+				((IQueryable<TOutput>)outputTable).Expression);
+
+			return currentSource.Execute<int>(expr);
 		}
 
 		/// <summary>
@@ -252,7 +255,7 @@ namespace LinqToDB
 		/// <item>SQL Server 2005+</item>
 		/// </list>
 		/// </remarks>
-		public static Task<int> DeleteWithOutputIntoAsync<TSource,TOutput>(
+		public static async Task<int> DeleteWithOutputIntoAsync<TSource,TOutput>(
 			this IQueryable<TSource> source,
 			ITable<TOutput>          outputTable,
 			CancellationToken        token = default)
@@ -261,19 +264,15 @@ namespace LinqToDB
 			if (source      == null) throw new ArgumentNullException(nameof(source));
 			if (outputTable == null) throw new ArgumentNullException(nameof(outputTable));
 
-			var currentSource = ProcessSourceQueryable?.Invoke(source) ?? source;
+			var currentSource = source.GetLinqToDBSource();
 
-			var expr =
-				Expression.Call(
-					null,
-					MethodHelper.GetMethodInfo(DeleteWithOutputInto, source, outputTable),
-					currentSource.Expression,
-					((IQueryable<TOutput>)outputTable).Expression);
+			var expr = Expression.Call(
+				null,
+				MethodHelper.GetMethodInfo(DeleteWithOutputInto, source, outputTable),
+				currentSource.Expression,
+				((IQueryable<TOutput>)outputTable).Expression);
 
-			if (source is IQueryProviderAsync queryAsync)
-				return queryAsync.ExecuteAsync<int>(expr, token);
-
-			return Task.Run(() => source.Provider.Execute<int>(expr), token);
+			return await currentSource.ExecuteAsync<int>(expr, token).ConfigureAwait(false);
 		}
 
 		/// <summary>
@@ -302,15 +301,16 @@ namespace LinqToDB
 			if (outputTable      == null) throw new ArgumentNullException(nameof(outputTable));
 			if (outputExpression == null) throw new ArgumentNullException(nameof(outputExpression));
 
-			var currentSource = ProcessSourceQueryable?.Invoke(source) ?? source;
+			var currentSource = source.GetLinqToDBSource();
 
-			return source.Provider.Execute<int>(
-				Expression.Call(
-					null,
-					MethodHelper.GetMethodInfo(DeleteWithOutputInto, source, outputTable, outputExpression),
-					currentSource.Expression,
-					((IQueryable<TOutput>)outputTable).Expression,
-					Expression.Quote(outputExpression)));
+			var expr = Expression.Call(
+				null,
+				MethodHelper.GetMethodInfo(DeleteWithOutputInto, source, outputTable, outputExpression),
+				currentSource.Expression,
+				((IQueryable<TOutput>)outputTable).Expression,
+				Expression.Quote(outputExpression));
+
+			return currentSource.Execute<int>(expr);
 		}
 
 		/// <summary>
@@ -330,7 +330,7 @@ namespace LinqToDB
 		/// <item>SQL Server 2005+</item>
 		/// </list>
 		/// </remarks>
-		public static Task<int> DeleteWithOutputIntoAsync<TSource,TOutput>(
+		public static async Task<int> DeleteWithOutputIntoAsync<TSource,TOutput>(
 			this IQueryable<TSource>          source,
 			ITable<TOutput>                   outputTable,
 			Expression<Func<TSource,TOutput>> outputExpression,
@@ -341,20 +341,16 @@ namespace LinqToDB
 			if (outputTable      == null) throw new ArgumentNullException(nameof(outputTable));
 			if (outputExpression == null) throw new ArgumentNullException(nameof(outputExpression));
 
-			var currentSource = ProcessSourceQueryable?.Invoke(source) ?? source;
+			var currentSource = source.GetLinqToDBSource();
 
-			var expr =
-				Expression.Call(
-					null,
-					MethodHelper.GetMethodInfo(DeleteWithOutputInto, source, outputTable, outputExpression),
-					currentSource.Expression,
-					((IQueryable<TOutput>)outputTable).Expression,
-					Expression.Quote(outputExpression));
+			var expr = Expression.Call(
+				null,
+				MethodHelper.GetMethodInfo(DeleteWithOutputInto, source, outputTable, outputExpression),
+				currentSource.Expression,
+				((IQueryable<TOutput>)outputTable).Expression,
+				Expression.Quote(outputExpression));
 
-			if (currentSource is IQueryProviderAsync queryAsync)
-				return queryAsync.ExecuteAsync<int>(expr, token);
-
-			return Task.Run(() => currentSource.Provider.Execute<int>(expr), token);
+			return await currentSource.ExecuteAsync<int>(expr, token).ConfigureAwait(false);
 		}
 	}
 }

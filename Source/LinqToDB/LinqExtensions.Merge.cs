@@ -18,18 +18,15 @@ namespace LinqToDB
 	public static partial class LinqExtensions
 	{
 
-		private sealed class MergeQuery<TTarget, TSource> :
+		private sealed class MergeQuery<TTarget, TSource>(
+			IQueryable<TTarget> query
+		) :
 			IMergeableUsing<TTarget>,
 			IMergeableOn<TTarget, TSource>,
 			IMergeableSource<TTarget, TSource>,
 			IMergeable<TTarget, TSource>
 		{
-			public MergeQuery(IQueryable<TTarget> query)
-			{
-				Query = query;
-			}
-
-			public IQueryable<TTarget> Query { get; }
+			public IQueryable<TTarget> Query { get; } = query;
 		}
 
 		#region source/target configuration
@@ -45,6 +42,8 @@ namespace LinqToDB
 			 this IQueryable<TTarget> target)
 		{
 			if (target == null) throw new ArgumentNullException(nameof(target));
+
+
 
 			var query = target.Provider.CreateQuery<TTarget>(
 				Expression.Call(
@@ -906,15 +905,15 @@ namespace LinqToDB
 		{
 			if (merge == null) throw new ArgumentNullException(nameof(merge));
 
-			var mergeQuery = ((MergeQuery<TTarget, TSource>)merge).Query;
+			var mergeQuery   = ((MergeQuery<TTarget, TSource>)merge).Query;
+			var currentQuery = mergeQuery.GetLinqToDBSource();
 
-			var currentQuery = ProcessSourceQueryable?.Invoke(mergeQuery) ?? mergeQuery;
+			var expr = Expression.Call(
+				null,
+				ExecuteMergeMethodInfo.MakeGenericMethod(typeof(TTarget), typeof(TSource)),
+				currentQuery.Expression);
 
-			return currentQuery.Provider.Execute<int>(
-				Expression.Call(
-					null,
-					ExecuteMergeMethodInfo.MakeGenericMethod(typeof(TTarget), typeof(TSource)),
-					currentQuery.Expression));
+			return currentQuery.Execute<int>(expr);
 		}
 
 		/// <summary>
@@ -942,15 +941,15 @@ namespace LinqToDB
 			if (outputExpression == null) throw new ArgumentNullException(nameof(outputExpression));
 
 			var mergeQuery   = ((MergeQuery<TTarget, TSource>)merge).Query;
-			var currentQuery = ProcessSourceQueryable?.Invoke(mergeQuery) ?? mergeQuery;
+			var currentQuery = mergeQuery.GetLinqToDBSource();
 
-			return currentQuery.Provider.CreateQuery<TOutput>(
-				Expression.Call(
-					null,
-					Methods.LinqToDB.Merge.MergeWithOutput.MakeGenericMethod(typeof(TTarget), typeof(TSource), typeof(TOutput)),
-					currentQuery.Expression,
-					Expression.Quote(outputExpression)))
-				.AsEnumerable();
+			var expr = Expression.Call(
+				null,
+				Methods.LinqToDB.Merge.MergeWithOutput.MakeGenericMethod(typeof(TTarget), typeof(TSource), typeof(TOutput)),
+				currentQuery.Expression,
+				Expression.Quote(outputExpression));
+
+			return currentQuery.CreateQuery<TOutput>(expr).AsEnumerable();
 		}
 
 		/// <summary>
@@ -978,15 +977,15 @@ namespace LinqToDB
 			if (outputExpression == null) throw new ArgumentNullException(nameof(outputExpression));
 
 			var mergeQuery   = ((MergeQuery<TTarget, TSource>)merge).Query;
-			var currentQuery = ProcessSourceQueryable?.Invoke(mergeQuery) ?? mergeQuery;
+			var currentQuery = mergeQuery.GetLinqToDBSource();
 
-			return currentQuery.Provider.CreateQuery<TOutput>(
-				Expression.Call(
-					null,
-					MergeWithOutputSource.MakeGenericMethod(typeof(TTarget), typeof(TSource), typeof(TOutput)),
-					currentQuery.Expression,
-					Expression.Quote(outputExpression)))
-				.AsEnumerable();
+			var expr = Expression.Call(
+				null,
+				MergeWithOutputSource.MakeGenericMethod(typeof(TTarget), typeof(TSource), typeof(TOutput)),
+				currentQuery.Expression,
+				Expression.Quote(outputExpression));
+
+			return currentQuery.CreateQuery<TOutput>(expr).AsEnumerable();
 		}
 
 		/// <summary>
@@ -1014,15 +1013,15 @@ namespace LinqToDB
 			if (outputExpression == null) throw new ArgumentNullException(nameof(outputExpression));
 
 			var mergeQuery   = ((MergeQuery<TTarget, TSource>)merge).Query;
-			var currentQuery = ProcessSourceQueryable?.Invoke(mergeQuery) ?? mergeQuery;
+			var currentQuery = mergeQuery.GetLinqToDBSource();
 
-			return currentQuery.Provider.CreateQuery<TOutput>(
-				Expression.Call(
-					null,
-					Methods.LinqToDB.Merge.MergeWithOutput.MakeGenericMethod(typeof(TTarget), typeof(TSource), typeof(TOutput)),
-					currentQuery.Expression,
-					Expression.Quote(outputExpression)))
-				.AsAsyncEnumerable();
+			var expr = Expression.Call(
+				null,
+				Methods.LinqToDB.Merge.MergeWithOutput.MakeGenericMethod(typeof(TTarget), typeof(TSource), typeof(TOutput)),
+				currentQuery.Expression,
+				Expression.Quote(outputExpression));
+
+			return currentQuery.CreateQuery<TOutput>(expr).AsAsyncEnumerable();
 		}
 
 		/// <summary>
@@ -1050,15 +1049,15 @@ namespace LinqToDB
 			if (outputExpression == null) throw new ArgumentNullException(nameof(outputExpression));
 
 			var mergeQuery   = ((MergeQuery<TTarget,TSource>)merge).Query;
-			var currentQuery = ProcessSourceQueryable?.Invoke(mergeQuery) ?? mergeQuery;
+			var currentQuery = mergeQuery.GetLinqToDBSource();
 
-			return currentQuery.Provider.CreateQuery<TOutput>(
-				Expression.Call(
-					null,
-					MergeWithOutputSource.MakeGenericMethod(typeof(TTarget), typeof(TSource), typeof(TOutput)),
-					currentQuery.Expression,
-					Expression.Quote(outputExpression)))
-				.AsAsyncEnumerable();
+			var expr = Expression.Call(
+				null,
+				MergeWithOutputSource.MakeGenericMethod(typeof(TTarget), typeof(TSource), typeof(TOutput)),
+				currentQuery.Expression,
+				Expression.Quote(outputExpression));
+
+			return currentQuery.CreateQuery<TOutput>(expr).AsAsyncEnumerable();
 		}
 
 		/// <summary>
@@ -1090,17 +1089,16 @@ namespace LinqToDB
 			if (outputExpression == null) throw new ArgumentNullException(nameof(outputExpression));
 
 			var mergeQuery   = ((MergeQuery<TTarget, TSource>)merge).Query;
-			var currentQuery = ProcessSourceQueryable?.Invoke(mergeQuery) ?? mergeQuery;
+			var currentQuery = mergeQuery.GetLinqToDBSource();
 
-			return currentQuery.Provider.Execute<int>(
-				Expression.Call(
-					null,
-					Methods.LinqToDB.Merge.MergeWithOutputInto.MakeGenericMethod(typeof(TTarget), typeof(TSource), typeof(TOutput)),
-					currentQuery.Expression,
-					((IQueryable<TOutput>)outputTable).Expression,
-					Expression.Quote(outputExpression)
-				)
-			);
+			var expr = Expression.Call(
+				null,
+				Methods.LinqToDB.Merge.MergeWithOutputInto.MakeGenericMethod(typeof(TTarget), typeof(TSource), typeof(TOutput)),
+				currentQuery.Expression,
+				((IQueryable<TOutput>)outputTable).Expression,
+				Expression.Quote(outputExpression));
+
+			return currentQuery.Execute<int>(expr);
 		}
 
 		/// <summary>
@@ -1132,17 +1130,16 @@ namespace LinqToDB
 			if (outputExpression == null) throw new ArgumentNullException(nameof(outputExpression));
 
 			var mergeQuery   = ((MergeQuery<TTarget, TSource>)merge).Query;
-			var currentQuery = ProcessSourceQueryable?.Invoke(mergeQuery) ?? mergeQuery;
+			var currentQuery = mergeQuery.GetLinqToDBSource();
 
-			return currentQuery.Provider.Execute<int>(
-				Expression.Call(
-					null,
-					MergeWithOutputIntoSource.MakeGenericMethod(typeof(TTarget), typeof(TSource), typeof(TOutput)),
-					currentQuery.Expression,
-					((IQueryable<TOutput>)outputTable).Expression,
-					Expression.Quote(outputExpression)
-				)
-			);
+			var expr = Expression.Call(
+				null,
+				MergeWithOutputIntoSource.MakeGenericMethod(typeof(TTarget), typeof(TSource), typeof(TOutput)),
+				currentQuery.Expression,
+				((IQueryable<TOutput>)outputTable).Expression,
+				Expression.Quote(outputExpression));
+
+			return currentQuery.Execute<int>(expr);
 		}
 
 		/// <summary>
@@ -1176,7 +1173,7 @@ namespace LinqToDB
 			if (outputExpression == null) throw new ArgumentNullException(nameof(outputExpression));
 
 			var mergeQuery   = ((MergeQuery<TTarget, TSource>)merge).Query;
-			var currentQuery = ProcessSourceQueryable?.Invoke(mergeQuery) ?? mergeQuery;
+			var currentQuery = mergeQuery.GetLinqToDBSource();
 
 			var expr = Expression.Call(
 				null,
@@ -1186,10 +1183,7 @@ namespace LinqToDB
 				Expression.Quote(outputExpression)
 			);
 
-			if (currentQuery is IQueryProviderAsync query)
-				return query.ExecuteAsync<int>(expr, token);
-
-			return Task.Run(() => currentQuery.Provider.Execute<int>(expr), token);
+			return currentQuery.ExecuteAsync<int>(expr, token);
 		}
 
 		/// <summary>
@@ -1223,7 +1217,7 @@ namespace LinqToDB
 			if (outputExpression == null) throw new ArgumentNullException(nameof(outputExpression));
 
 			var mergeQuery   = ((MergeQuery<TTarget, TSource>)merge).Query;
-			var currentQuery = ProcessSourceQueryable?.Invoke(mergeQuery) ?? mergeQuery;
+			var currentQuery = mergeQuery.GetLinqToDBSource();
 
 			var expr = Expression.Call(
 				null,
@@ -1233,10 +1227,7 @@ namespace LinqToDB
 				Expression.Quote(outputExpression)
 			);
 
-			if (currentQuery is IQueryProviderAsync query)
-				return query.ExecuteAsync<int>(expr, token);
-
-			return Task.Run(() => currentQuery.Provider.Execute<int>(expr), token);
+			return currentQuery.ExecuteAsync<int>(expr, token);
 		}
 
 		#endregion
@@ -1256,19 +1247,15 @@ namespace LinqToDB
 		{
 			if (merge == null) throw new ArgumentNullException(nameof(merge));
 
-			var mergeQuery = ((MergeQuery<TTarget, TSource>)merge).Query;
-
-			var currentQuery = ProcessSourceQueryable?.Invoke(mergeQuery) ?? mergeQuery;
+			var mergeQuery   = ((MergeQuery<TTarget, TSource>)merge).Query;
+			var currentQuery = mergeQuery.GetLinqToDBSource();
 
 			var expr = Expression.Call(
 				null,
 				ExecuteMergeMethodInfo.MakeGenericMethod(typeof(TTarget), typeof(TSource)),
 				currentQuery.Expression);
 
-			if (currentQuery is IQueryProviderAsync query)
-				return query.ExecuteAsync<int>(expr, token);
-
-			return Task.Run(() => currentQuery.Provider.Execute<int>(expr), token);
+			return currentQuery.ExecuteAsync<int>(expr, token);
 		}
 		#endregion
 	}
