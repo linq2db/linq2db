@@ -275,16 +275,7 @@ namespace LinqToDB.Remote
 
 				public Task<bool> ReadAsync(CancellationToken cancellationToken)
 				{
-					if (cancellationToken.IsCancellationRequested)
-					{
-						var task = new TaskCompletionSource<bool>();
-#if NET6_0_OR_GREATER
-						task.SetCanceled(cancellationToken);
-#else
-						task.SetCanceled();
-#endif
-						return task.Task;
-					}
+					cancellationToken.ThrowIfCancellationRequested();
 
 					try
 					{
