@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Data.Common;
 using System.Diagnostics;
 using System.Linq.Expressions;
@@ -106,9 +107,9 @@ namespace LinqToDB
 
 		/// <summary>
 		/// If set to <see cref="CompareNulls.LikeClr" /> nullable fields would be checked for <c>IS NULL</c> in Equal/NotEqual comparisons.
-		/// If set to <see cref="CompareNulls.LikeSql" /> comparisons are compiled straight to equivalent SQL operators, 
+		/// If set to <see cref="CompareNulls.LikeSql" /> comparisons are compiled straight to equivalent SQL operators,
 		/// which consider nulls values as not equal.
-		/// <see cref="CompareNulls.LikeSqlExceptParameters" /> is a backward compatible option that works mostly as <see cref="CompareNulls.LikeSql" />, 
+		/// <see cref="CompareNulls.LikeSqlExceptParameters" /> is a backward compatible option that works mostly as <see cref="CompareNulls.LikeSql" />,
 		/// but sniffs parameters value and changes = into <c>IS NULL</c> when parameters are null.
 		/// Comparisons to literal null are always compiled into <c>IS NULL</c>.
 		/// This affects: Equal, NotEqual, Not Contains
@@ -339,9 +340,9 @@ namespace LinqToDB
 
 		/// <summary>
 		/// If set to <see cref="CompareNulls.LikeClr" /> nullable fields would be checked for <c>IS NULL</c> in Equal/NotEqual comparisons.
-		/// If set to <see cref="CompareNulls.LikeSql" /> comparisons are compiled straight to equivalent SQL operators, 
+		/// If set to <see cref="CompareNulls.LikeSql" /> comparisons are compiled straight to equivalent SQL operators,
 		/// which consider nulls values as not equal.
-		/// <see cref="CompareNulls.LikeSqlExceptParameters" /> is a backward compatible option that works mostly as <see cref="CompareNulls.LikeSql" />, 
+		/// <see cref="CompareNulls.LikeSqlExceptParameters" /> is a backward compatible option that works mostly as <see cref="CompareNulls.LikeSql" />,
 		/// but sniffs parameters value and changes = into <c>IS NULL</c> when parameters are null.
 		/// Comparisons to literal null are always compiled into <c>IS NULL</c>.
 		/// This affects: Equal, NotEqual, Not Contains
@@ -988,7 +989,7 @@ namespace LinqToDB
 		/// </para>
 		/// <para>
 		/// Translators can be used translate member expressions to SQL expressions.
-		/// </para>	
+		/// </para>
 		/// </summary>
 		/// <param name="options"></param>
 		/// <param name="translator"></param>
@@ -1014,7 +1015,7 @@ namespace LinqToDB
 		/// </para>
 		/// <para>
 		/// Translators can be used translate member expressions to SQL expressions.
-		/// </para>	
+		/// </para>
 		/// </summary>
 		/// <param name="options"></param>
 		/// <param name="translators"></param>
