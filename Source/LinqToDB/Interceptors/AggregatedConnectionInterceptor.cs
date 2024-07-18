@@ -26,8 +26,8 @@ namespace LinqToDB.Interceptors
 				foreach (var interceptor in Interceptors)
 					await using (ActivityService.StartAndConfigureAwait(ActivityID.ConnectionInterceptorConnectionOpeningAsync))
 						await interceptor.ConnectionOpeningAsync(eventData, connection, cancellationToken)
-							.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
-			}).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+							.ConfigureAwait(false);
+			}).ConfigureAwait(false);
 		}
 
 		public void ConnectionOpened(ConnectionEventData eventData, DbConnection connection)
@@ -47,8 +47,8 @@ namespace LinqToDB.Interceptors
 				foreach (var interceptor in Interceptors)
 					await using (ActivityService.StartAndConfigureAwait(ActivityID.ConnectionInterceptorConnectionOpenedAsync))
 						await interceptor.ConnectionOpenedAsync(eventData, connection, cancellationToken)
-							.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
-			}).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+							.ConfigureAwait(false);
+			}).ConfigureAwait(false);
 		}
 	}
 }

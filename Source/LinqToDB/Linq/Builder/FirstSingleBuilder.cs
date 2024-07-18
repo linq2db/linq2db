@@ -199,7 +199,7 @@ namespace LinqToDB.Linq.Builder
 
 				query.GetElementAsync = query.GetElementAsync = async (db, expr, ps, preambles, token) =>
 					await query.GetResultEnumerable(db, expr, ps, preambles)
-						.FirstAsync(token).ConfigureAwait(Configuration.ContinueOnCapturedContext);
+						.FirstAsync(token).ConfigureAwait(false);
 			}
 
 			static void GetFirstOrDefaultElement<T>(Query<T> query)
@@ -209,7 +209,7 @@ namespace LinqToDB.Linq.Builder
 
 				query.GetElementAsync = query.GetElementAsync = async (db, expr, ps, preambles, token) =>
 					await query.GetResultEnumerable(db, expr, ps, preambles)
-						.FirstOrDefaultAsync(token).ConfigureAwait(Configuration.ContinueOnCapturedContext);
+						.FirstOrDefaultAsync(token).ConfigureAwait(false);
 			}
 
 			static void GetSingleElement<T>(Query<T> query)
@@ -219,7 +219,7 @@ namespace LinqToDB.Linq.Builder
 
 				query.GetElementAsync = async (db, expr, ps, preambles, token) =>
 					await query.GetResultEnumerable(db, expr, ps, preambles)
-						.SingleAsync(token).ConfigureAwait(Configuration.ContinueOnCapturedContext);
+						.SingleAsync(token).ConfigureAwait(false);
 			}
 
 			static void GetSingleOrDefaultElement<T>(Query<T> query)
@@ -229,7 +229,7 @@ namespace LinqToDB.Linq.Builder
 
 				query.GetElementAsync = async (db, expr, ps, preambles, token) =>
 					await query.GetResultEnumerable(db, expr, ps, preambles)
-						.SingleOrDefaultAsync(token).ConfigureAwait(Configuration.ContinueOnCapturedContext);
+						.SingleOrDefaultAsync(token).ConfigureAwait(false);
 			}
 
 			bool _isJoinCreated;

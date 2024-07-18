@@ -166,7 +166,7 @@ namespace LinqToDB.DataProvider
 						options.ServerName   ?? table.ServerName,
 						options.TableOptions.Or(table.TableOptions),
 						cancellationToken)
-					.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+					.ConfigureAwait(false);
 
 				rowsCopied.RowsCopied++;
 
@@ -195,11 +195,11 @@ namespace LinqToDB.DataProvider
 
 			var rowsCopied = new BulkCopyRowsCopied();
 
-			await foreach (var item in source.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext).WithCancellation(cancellationToken))
+			await foreach (var item in source.ConfigureAwait(false).WithCancellation(cancellationToken))
 			{
 				await table.DataContext
 					.InsertAsync(item, options.TableName ?? table.TableName, options.DatabaseName ?? table.DatabaseName, options.SchemaName ?? table.SchemaName, options.ServerName ?? table.ServerName, options.TableOptions.Or(table.TableOptions), cancellationToken)
-					.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+					.ConfigureAwait(false);
 				rowsCopied.RowsCopied++;
 
 				if (options.NotifyAfter != 0 && options.RowsCopiedCallback != null && rowsCopied.RowsCopied % options.NotifyAfter == 0)
@@ -308,7 +308,7 @@ namespace LinqToDB.DataProvider
 
 			try
 			{
-				var count = await action().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+				var count = await action().ConfigureAwait(false);
 
 				if (dataConnection.TraceSwitchConnection.TraceInfo)
 				{
@@ -442,10 +442,10 @@ namespace LinqToDB.DataProvider
 						helper.RowsCopied.RowsCopied--;
 					}
 					finishFunction(helper);
-					if (!await helper.ExecuteAsync(cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext))
+					if (!await helper.ExecuteAsync(cancellationToken).ConfigureAwait(false))
 					{
 						if (!helper.SuppressCloseAfterUse && helper.OriginalContext.CloseAfterUse)
-							await helper.OriginalContext.CloseAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+							await helper.OriginalContext.CloseAsync().ConfigureAwait(false);
 
 						return helper.RowsCopied;
 					}
@@ -459,11 +459,11 @@ namespace LinqToDB.DataProvider
 			if (helper.CurrentCount > 0)
 			{
 				finishFunction(helper);
-				await helper.ExecuteAsync(cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+				await helper.ExecuteAsync(cancellationToken).ConfigureAwait(false);
 			}
 
 			if (!helper.SuppressCloseAfterUse && helper.OriginalContext.CloseAfterUse)
-				await helper.OriginalContext.CloseAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+				await helper.OriginalContext.CloseAsync().ConfigureAwait(false);
 
 			return helper.RowsCopied;
 		}
@@ -485,7 +485,7 @@ namespace LinqToDB.DataProvider
 
 			prepFunction(helper);
 
-			await foreach (var item in source.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext).WithCancellation(cancellationToken))
+			await foreach (var item in source.ConfigureAwait(false).WithCancellation(cancellationToken))
 			{
 				helper.LastRowParameterIndex = helper.ParameterIndex;
 				helper.LastRowStringIndex    = helper.StringBuilder.Length;
@@ -503,10 +503,10 @@ namespace LinqToDB.DataProvider
 						helper.RowsCopied.RowsCopied--;
 					}
 					finishFunction(helper);
-					if (!await helper.ExecuteAsync(cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext))
+					if (!await helper.ExecuteAsync(cancellationToken).ConfigureAwait(false))
 					{
 						if (!helper.SuppressCloseAfterUse && helper.OriginalContext.CloseAfterUse)
-							await helper.OriginalContext.CloseAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+							await helper.OriginalContext.CloseAsync().ConfigureAwait(false);
 
 						return helper.RowsCopied;
 					}
@@ -520,11 +520,11 @@ namespace LinqToDB.DataProvider
 			if (helper.CurrentCount > 0)
 			{
 				finishFunction(helper);
-				await helper.ExecuteAsync(cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+				await helper.ExecuteAsync(cancellationToken).ConfigureAwait(false);
 			}
 
 			if (!helper.SuppressCloseAfterUse && helper.OriginalContext.CloseAfterUse)
-				await helper.OriginalContext.CloseAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+				await helper.OriginalContext.CloseAsync().ConfigureAwait(false);
 
 			return helper.RowsCopied;
 		}

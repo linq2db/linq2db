@@ -174,7 +174,7 @@ namespace LinqToDB.Remote
 				try
 				{
 					var info = await client.GetInfoAsync(ConfigurationString, cancellationToken)
-						.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+						.ConfigureAwait(false);
 
 					var type = Type.GetType(info.MappingSchemaType)!;
 					var ms   = RemoteMappingSchema.GetOrCreate(ContextIDPrefix, type);
@@ -474,7 +474,7 @@ namespace LinqToDB.Remote
 				try
 				{
 					var data = LinqServiceSerializer.Serialize(SerializationMappingSchema, _queryBatch!.ToArray());
-					await client.ExecuteBatchAsync(ConfigurationString, data).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+					await client.ExecuteBatchAsync(ConfigurationString, data).ConfigureAwait(false);
 				}
 				finally
 				{
@@ -510,11 +510,11 @@ namespace LinqToDB.Remote
 			{
 				await using (ActivityService.StartAndConfigureAwait(ActivityID.DataContextInterceptorOnClosingAsync))
 					await ((IInterceptable<IDataContextInterceptor>)this).Interceptor.OnClosingAsync(new (this))
-						.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+						.ConfigureAwait(false);
 
 				await using (ActivityService.StartAndConfigureAwait(ActivityID.DataContextInterceptorOnClosedAsync))
 					await ((IInterceptable<IDataContextInterceptor>)this).Interceptor.OnClosedAsync (new (this))
-						.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+						.ConfigureAwait(false);
 			}
 		}
 

@@ -53,7 +53,7 @@ namespace LinqToDB.Async
 			static async Task CallAwaitUsing(AsyncDisposableWrapper activity, DbTransaction transaction, CancellationToken token)
 			{
 				await using (activity)
-					await transaction.CommitAsync(token).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+					await transaction.CommitAsync(token).ConfigureAwait(false);
 			}
 #else
 			using var a = ActivityService.Start(ActivityID.TransactionCommitAsync)?.AddQueryInfo(DataConnection, DataConnection?.CurrentConnection, null);
@@ -76,7 +76,7 @@ namespace LinqToDB.Async
 			static async Task CallAwaitUsing(AsyncDisposableWrapper activity, DbTransaction transaction, CancellationToken token)
 			{
 				await using (activity)
-					await transaction.RollbackAsync(token).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+					await transaction.RollbackAsync(token).ConfigureAwait(false);
 			}
 #else
 			using var a = ActivityService.Start(ActivityID.TransactionRollbackAsync)?.AddQueryInfo(DataConnection, DataConnection?.CurrentConnection, null);
@@ -111,7 +111,7 @@ namespace LinqToDB.Async
 				static async ValueTask CallAwaitUsing(AsyncDisposableWrapper activity, IAsyncDisposable disposable)
 				{
 					await using (activity)
-						await disposable.DisposeAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+						await disposable.DisposeAsync().ConfigureAwait(false);
 				}
 			}
 

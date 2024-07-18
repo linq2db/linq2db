@@ -41,7 +41,7 @@ namespace LinqToDB.Tools
 		{
 			public ConfiguredValueTaskAwaitable DisposeAsync()
 			{
-				return activity.DisposeAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+				return activity.DisposeAsync().ConfigureAwait(false);
 			}
 
 			internal AsyncDisposableWrapper AddQueryInfo(DataConnection? context, DbConnection? connection, DbCommand? command)
@@ -108,7 +108,7 @@ namespace LinqToDB.Tools
 			{
 				foreach (var activity in activities)
 					if (activity is not null)
-						await activity.DisposeAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+						await activity.DisposeAsync().ConfigureAwait(false);
 			}
 #pragma warning restore CA2215
 		}

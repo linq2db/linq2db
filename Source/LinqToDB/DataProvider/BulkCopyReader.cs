@@ -271,7 +271,7 @@ namespace LinqToDB.DataProvider
 
 		public override async Task<bool> ReadAsync(CancellationToken cancellationToken)
 		{
-			var b = await MoveNextAsync().ConfigureAwait(Configuration.ContinueOnCapturedContext);
+			var b = await MoveNextAsync().ConfigureAwait(false);
 
 			if (b)
 				Count++;
