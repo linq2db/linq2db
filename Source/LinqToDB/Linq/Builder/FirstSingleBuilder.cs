@@ -137,7 +137,14 @@ namespace LinqToDB.Linq.Builder
 
 			if (buildInfo.Parent != null && (cardinality & SourceCardinality.Zero) != 0)
 			{
-				sequence = new DefaultIfEmptyBuilder.DefaultIfEmptyContext(buildInfo.Parent, sequence, sequence, null, allowNullField: true, isNullValidationDisabled: false);
+				sequence = new DefaultIfEmptyBuilder.DefaultIfEmptyContext(
+					buildInfo.Parent,
+					sequence,
+					sequence,
+					defaultValue: null,
+					allowNullField: true,
+					isNullValidationDisabled: false);
+
 				canBeWeak = true;
 			}
 

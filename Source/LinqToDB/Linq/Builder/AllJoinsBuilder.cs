@@ -77,11 +77,11 @@ namespace LinqToDB.Linq.Builder
 			if (joinType is JoinType.Left or JoinType.Full)
 			{
 				result = new DefaultIfEmptyBuilder.DefaultIfEmptyContext(buildInfo.Parent,
-					sequence : result,
-					nullabilitySequence : result,
-					defaultValue : null,
-					allowNullField : false,
-					isNullValidationDisabled : false);
+					sequence: result,
+					nullabilitySequence: result,
+					defaultValue: null,
+					allowNullField: false,
+					isNullValidationDisabled: false);
 			}
 
 			return BuildSequenceResult.FromContext(result);
