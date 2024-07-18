@@ -43,8 +43,6 @@ namespace LinqToDB
 		{
 			if (target == null) throw new ArgumentNullException(nameof(target));
 
-
-
 			var query = target.Provider.CreateQuery<TTarget>(
 				Expression.Call(
 					null,
