@@ -68,8 +68,7 @@ namespace LinqToDB.Common
 		public static bool UseEnumValueNameForStringColumns = true;
 
 		/// <summary>
-		/// Defines value to pass to <see cref="Task.ConfigureAwait(bool)"/> method for all linq2db internal await operations.
-		/// Default value: <c>false</c>.
+		///	<b>Obsolete</b>: All <see cref="Task"/>s are now awaited using <c>ConfigureAwait(false)</c>. Please remove references to this property.
 		/// </summary>
 		[Obsolete("Value is ignored in v6. Will be removed in v7.")]
 		public static bool ContinueOnCapturedContext;
