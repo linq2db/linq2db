@@ -40,7 +40,7 @@ namespace LinqToDB
 				MethodHelper.GetMethodInfo(DeleteWithOutput, source),
 				currentSource.Expression);
 
-			return currentSource.CreateQuery<TSource>(expr);
+			return currentSource.CreateQuery<TSource>(expr).AsEnumerable();
 		}
 
 		/// <summary>
@@ -71,8 +71,7 @@ namespace LinqToDB
 				MethodHelper.GetMethodInfo(DeleteWithOutput, source),
 				currentSource.Expression);
 
-			return currentSource.CreateQuery<TSource>(expr)
-				.AsAsyncEnumerable();
+			return currentSource.CreateQuery<TSource>(expr).AsAsyncEnumerable();
 		}
 
 		/// <summary>
@@ -136,7 +135,7 @@ namespace LinqToDB
 				currentSource.Expression,
 				Expression.Quote(outputExpression));
 
-			return currentSource.CreateQuery<TOutput>(expr);
+			return currentSource.CreateQuery<TOutput>(expr).AsEnumerable();
 		}
 
 		/// <summary>
@@ -173,8 +172,7 @@ namespace LinqToDB
 				currentSource.Expression,
 				Expression.Quote(outputExpression));
 
-			return currentSource.CreateQuery<TOutput>(expr)
-				.AsAsyncEnumerable();
+			return currentSource.CreateQuery<TOutput>(expr).AsAsyncEnumerable();
 		}
 
 		/// <summary>

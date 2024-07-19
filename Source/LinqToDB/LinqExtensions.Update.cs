@@ -480,7 +480,7 @@ namespace LinqToDB
 				Expression.Quote(target),
 				Expression.Quote(setter));
 
-			return currentSource.CreateQuery<UpdateOutput<TTarget>>(expr);
+			return currentSource.CreateQuery<UpdateOutput<TTarget>>(expr).AsEnumerable();
 		}
 
 		/// <summary>
@@ -592,7 +592,7 @@ namespace LinqToDB
 				Expression.Quote(setter),
 				Expression.Quote(outputExpression));
 
-			return currentSource.CreateQuery<TOutput>(expr);
+			return currentSource.CreateQuery<TOutput>(expr).AsEnumerable();
 		}
 
 		/// <summary>
@@ -891,7 +891,7 @@ namespace LinqToDB
 				MethodHelper.GetMethodInfo(UpdateWithOutput, source, setter),
 				currentSource.Expression, Expression.Quote(setter));
 
-			return currentSource.CreateQuery<UpdateOutput<T>>(expr);
+			return currentSource.CreateQuery<UpdateOutput<T>>(expr).AsEnumerable();
 		}
 
 		/// <summary>
@@ -990,7 +990,7 @@ namespace LinqToDB
 				Expression.Quote(setter),
 				Expression.Quote(outputExpression));
 
-			return currentSource.CreateQuery<TOutput>(expr);
+			return currentSource.CreateQuery<TOutput>(expr).AsEnumerable();
 		}
 
 		/// <summary>
@@ -1259,7 +1259,7 @@ namespace LinqToDB
 				MethodHelper.GetMethodInfo(UpdateWithOutput, source),
 				currentSource.Expression);
 
-			return currentSource.CreateQuery<UpdateOutput<T>>(expr);
+			return currentSource.CreateQuery<UpdateOutput<T>>(expr).AsEnumerable();
 		}
 
 		/// <summary>
@@ -1348,7 +1348,7 @@ namespace LinqToDB
 				currentSource.Expression,
 				Expression.Quote(outputExpression));
 
-			return currentSource.CreateQuery<TOutput>(expr);
+			return currentSource.CreateQuery<TOutput>(expr).AsEnumerable();
 		}
 
 		/// <summary>

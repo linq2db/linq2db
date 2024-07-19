@@ -461,7 +461,7 @@ namespace LinqToDB
 				((IQueryable<TTarget>)target).Expression,
 				Expression.Quote(setter));
 
-			return currentSource.CreateQuery<TTarget>(expr);
+			return currentSource.CreateQuery<TTarget>(expr).AsEnumerable();
 		}
 
 		/// <summary>
@@ -585,7 +585,7 @@ namespace LinqToDB
 				Expression.Quote(setter),
 				Expression.Quote(outputExpression));
 
-			return currentSource.CreateQuery<TOutput>(expr);
+			return currentSource.CreateQuery<TOutput>(expr).AsEnumerable();
 		}
 
 		/// <summary>
