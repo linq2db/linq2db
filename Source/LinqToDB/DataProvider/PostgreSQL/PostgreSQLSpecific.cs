@@ -40,7 +40,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		public static IPostgreSQLSpecificQueryable<TSource> AsPostgreSQL<TSource>(this IQueryable<TSource> source)
 			where TSource : notnull
 		{
-			var currentSource = LinqExtensions.ProcessSourceQueryable?.Invoke(source) ?? source;
+			var currentSource = source.ProcessIQueryable();
 
 			return new PostgreSQLSpecificQueryable<TSource>(currentSource.Provider.CreateQuery<TSource>(
 				Expression.Call(

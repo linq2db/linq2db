@@ -55,7 +55,7 @@ namespace LinqToDB.DataProvider.MySql
 		public static IMySqlSpecificQueryable<TSource> AsMySql<TSource>(this IQueryable<TSource> source)
 			where TSource : notnull
 		{
-			var currentSource = LinqExtensions.ProcessSourceQueryable?.Invoke(source) ?? source;
+			var currentSource = source.ProcessIQueryable();
 
 			return new MySqlSpecificQueryable<TSource>(currentSource.Provider.CreateQuery<TSource>(
 				Expression.Call(

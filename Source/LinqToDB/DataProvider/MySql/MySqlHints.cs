@@ -166,7 +166,7 @@ namespace LinqToDB.DataProvider.MySql
 			[SqlQueryDependent] params TParam[]   hintParameters)
 			where TSource : notnull
 		{
-			var currentSource = LinqExtensions.ProcessSourceQueryable?.Invoke(source) ?? source;
+			var currentSource = source.ProcessIQueryable();
 
 			return new MySqlSpecificQueryable<TSource>(currentSource.Provider.CreateQuery<TSource>(
 				Expression.Call(
@@ -301,7 +301,7 @@ namespace LinqToDB.DataProvider.MySql
 		public static IMySqlSpecificQueryable<TSource> TablesInScopeHint<TSource>(this IMySqlSpecificQueryable<TSource> source, [SqlQueryDependent] string hint)
 			where TSource : notnull
 		{
-			var currentSource = LinqExtensions.ProcessSourceQueryable?.Invoke(source) ?? source;
+			var currentSource = source.ProcessIQueryable();
 
 			return new MySqlSpecificQueryable<TSource>(currentSource.Provider.CreateQuery<TSource>(
 				Expression.Call(
@@ -328,7 +328,7 @@ namespace LinqToDB.DataProvider.MySql
 			[SqlQueryDependent] TParam            hintParameter)
 			where TSource : notnull
 		{
-			var currentSource = LinqExtensions.ProcessSourceQueryable?.Invoke(source) ?? source;
+			var currentSource = source.ProcessIQueryable();
 
 			return new MySqlSpecificQueryable<TSource>(currentSource.Provider.CreateQuery<TSource>(
 				Expression.Call(
@@ -354,7 +354,7 @@ namespace LinqToDB.DataProvider.MySql
 			[SqlQueryDependent] params object[]   hintParameters)
 			where TSource : notnull
 		{
-			var currentSource = LinqExtensions.ProcessSourceQueryable?.Invoke(source) ?? source;
+			var currentSource = source.ProcessIQueryable();
 
 			return new MySqlSpecificQueryable<TSource>(currentSource.Provider.CreateQuery<TSource>(
 				Expression.Call(
@@ -467,7 +467,7 @@ namespace LinqToDB.DataProvider.MySql
 		public static IMySqlSpecificQueryable<TSource> SubQueryHint<TSource>(this IMySqlSpecificQueryable<TSource> source, [SqlQueryDependent] string hint)
 			where TSource : notnull
 		{
-			var currentSource = LinqExtensions.ProcessSourceQueryable?.Invoke(source) ?? source;
+			var currentSource = source.ProcessIQueryable();
 
 			return new MySqlSpecificQueryable<TSource>(currentSource.Provider.CreateQuery<TSource>(
 				Expression.Call(
@@ -494,7 +494,7 @@ namespace LinqToDB.DataProvider.MySql
 			[SqlQueryDependent] TParam            hintParameter)
 			where TSource : notnull
 		{
-			var currentSource = LinqExtensions.ProcessSourceQueryable?.Invoke(source) ?? source;
+			var currentSource = source.ProcessIQueryable();
 
 			return new MySqlSpecificQueryable<TSource>(currentSource.Provider.CreateQuery<TSource>(
 				Expression.Call(
@@ -523,7 +523,7 @@ namespace LinqToDB.DataProvider.MySql
 			[SqlQueryDependent] params            TParam[] hintParameters)
 			where TSource : notnull
 		{
-			var currentSource = LinqExtensions.ProcessSourceQueryable?.Invoke(source) ?? source;
+			var currentSource = source.ProcessIQueryable();
 
 			return new MySqlSpecificQueryable<TSource>(currentSource.Provider.CreateQuery<TSource>(
 				Expression.Call(
@@ -551,7 +551,7 @@ namespace LinqToDB.DataProvider.MySql
 		public static IMySqlSpecificQueryable<TSource> QueryHint<TSource>(this IMySqlSpecificQueryable<TSource> source, [SqlQueryDependent] string hint)
 			where TSource : notnull
 		{
-			var currentSource = LinqExtensions.ProcessSourceQueryable?.Invoke(source) ?? source;
+			var currentSource = source.ProcessIQueryable();
 
 			return new MySqlSpecificQueryable<TSource>(currentSource.Provider.CreateQuery<TSource>(
 				Expression.Call(
@@ -578,7 +578,7 @@ namespace LinqToDB.DataProvider.MySql
 			[SqlQueryDependent] TParam hintParameter)
 			where TSource : notnull
 		{
-			var currentSource = LinqExtensions.ProcessSourceQueryable?.Invoke(source) ?? source;
+			var currentSource = source.ProcessIQueryable();
 
 			return new MySqlSpecificQueryable<TSource>(currentSource.Provider.CreateQuery<TSource>(
 				Expression.Call(
@@ -607,7 +607,7 @@ namespace LinqToDB.DataProvider.MySql
 			[SqlQueryDependent] params TParam[] hintParameters)
 			where TSource : notnull
 		{
-			var currentSource = LinqExtensions.ProcessSourceQueryable?.Invoke(source) ?? source;
+			var currentSource = source.ProcessIQueryable();
 
 			return new MySqlSpecificQueryable<TSource>(currentSource.Provider.CreateQuery<TSource>(
 				Expression.Call(
@@ -672,7 +672,7 @@ namespace LinqToDB.DataProvider.MySql
 			[SqlQueryDependent] params Sql.SqlID[]                      tableIDs)
 			where TSource : notnull
 		{
-			var currentSource = LinqExtensions.ProcessSourceQueryable?.Invoke(source) ?? source;
+			var currentSource = source.ProcessIQueryable();
 
 			return new MySqlSpecificQueryable<TSource>(currentSource.Provider.CreateQuery<TSource>(
 				Expression.Call(
@@ -702,7 +702,7 @@ namespace LinqToDB.DataProvider.MySql
 			[SqlQueryDependent] params Sql.SqlID[]                      tableIDs)
 			where TSource : notnull
 		{
-			var currentSource = LinqExtensions.ProcessSourceQueryable?.Invoke(source) ?? source;
+			var currentSource = source.ProcessIQueryable();
 
 			return new MySqlSpecificQueryable<TSource>(currentSource.Provider.CreateQuery<TSource>(
 				Expression.Call(
