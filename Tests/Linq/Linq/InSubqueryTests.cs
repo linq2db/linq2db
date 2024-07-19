@@ -47,12 +47,12 @@ namespace Tests.Linq
 		{
 			return (value, compareNullsAsValues) => compareNullsAsValues || Sql.ToNullable(value) != null;
 		}
-		
+
 		ITestDataContext GetDataContext(string context, bool preferExists, bool compareNullsAsValues)
 		{
-			return GetDataContext(context, o => o.WithOptions<LinqOptions>(lo => lo with 
-			{ 
-				PreferExistsForScalar = preferExists, 
+			return GetDataContext(context, o => o.WithOptions<LinqOptions>(lo => lo with
+			{
+				PreferExistsForScalar = preferExists,
 				CompareNulls = compareNullsAsValues ? CompareNulls.LikeClr : CompareNulls.LikeSql,
 			}));
 		}
@@ -80,7 +80,7 @@ namespace Tests.Linq
 		{
 			using var db = GetDataContext(context, preferExists, compareNullsAsValues);
 
-			var query = 
+			var query =
 				from c in db.Child
 				where c.ParentID.In(db.Parent.Select(p => p.ParentID).Where(v => UseInQuery(v, compareNullsAsValues)))
 				select c;
@@ -93,9 +93,9 @@ namespace Tests.Linq
 		{
 			using var db = GetDataContext(context, preferExists, compareNullsAsValues);
 
-			var query = 
+			var query =
 				from c in db.GrandChild
-				where UseInQuery(c.ParentID, compareNullsAsValues) 
+				where UseInQuery(c.ParentID, compareNullsAsValues)
 					&& c.ParentID.In(db.Parent.Select(p => p.Value1).Where(v => UseInQuery(v, compareNullsAsValues)))
 				select c;
 
@@ -193,9 +193,9 @@ namespace Tests.Linq
 
 			var n = 1;
 
-			var query = 
-				from p in db.Parent 
-				where db.Child.Select(c => c.ParentID).Contains(p.ParentID + n) 
+			var query =
+				from p in db.Parent
+				where db.Child.Select(c => c.ParentID).Contains(p.ParentID + n)
 				select p;
 
 			AssertTest(query, preferExists);;
@@ -291,10 +291,10 @@ namespace Tests.Linq
 		public void Null_In_Null_Test1([DataSources] string context, [Values] bool preferExists, [Values] bool compareNullsAsValues)
 		{
 			using var db = GetDataContext(context, o => o
-				.WithOptions<LinqOptions>(lo => lo with 
-				{ 
-					PreferExistsForScalar = preferExists, 
-					CompareNulls = compareNullsAsValues ? CompareNulls.LikeCLR : CompareNulls.LikeSql,
+				.WithOptions<LinqOptions>(lo => lo with
+				{
+					PreferExistsForScalar = preferExists,
+					CompareNulls = compareNullsAsValues ? CompareNulls.LikeClr : CompareNulls.LikeSql,
 				})
 				.WithOptions<BulkCopyOptions>(bo => bo with { BulkCopyType = BulkCopyType.MultipleRows })
 			);
