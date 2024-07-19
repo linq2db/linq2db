@@ -64,7 +64,13 @@ namespace LinqToDB.Linq.Builder
 			//
 			if (collectionInfo.JoinType == JoinType.Full || collectionInfo.JoinType == JoinType.Right)
 			{
-				sequence = new DefaultIfEmptyBuilder.DefaultIfEmptyContext(buildInfo.Parent, sequence, collection, null, false, false);
+				sequence = new DefaultIfEmptyBuilder.DefaultIfEmptyContext(
+					buildInfo.Parent,
+					sequence,
+					collection,
+					defaultValue: null,
+					allowNullField: false,
+					isNullValidationDisabled: false);
 			}
 
 			var collectionDefaultIfEmptyContext = SequenceHelper.GetDefaultIfEmptyContext(collection);
@@ -88,9 +94,11 @@ namespace LinqToDB.Linq.Builder
 				_ => joinType
 			};
 
-			var projected = builder.BuildSqlExpression(collection,
-				new ContextRefExpression(collection.ElementType, collection), buildInfo.GetFlags(),
-				buildFlags : ExpressionBuilder.BuildFlags.ForceAssignments);
+			var projected = builder.BuildSqlExpression(
+				collection,
+				new ContextRefExpression(collection.ElementType, collection),
+				buildInfo.GetFlags(),
+				buildFlags: ExpressionBuilder.BuildFlags.ForceAssignments);
 
 			var expanded = builder.MakeExpression(sequence, new ContextRefExpression(collection.ElementType, collection), ProjectFlags.ExtractProjection);
 
@@ -100,7 +108,11 @@ namespace LinqToDB.Linq.Builder
 			{
 				var collectionSelectContext = new SelectContext(buildInfo.Parent, builder, null, expanded, collection.SelectQuery, buildInfo.IsSubQuery);
 
-				collection = new DefaultIfEmptyBuilder.DefaultIfEmptyContext(sequence, collectionSelectContext, collection, collectionDefaultIfEmptyContext.DefaultValue,
+				collection = new DefaultIfEmptyBuilder.DefaultIfEmptyContext(
+					sequence,
+					collectionSelectContext,
+					collection,
+					defaultValue: collectionDefaultIfEmptyContext.DefaultValue,
 					allowNullField: joinType is not (JoinType.Right or JoinType.RightApply or JoinType.Full or JoinType.FullApply),
 					isNullValidationDisabled: false);
 			}

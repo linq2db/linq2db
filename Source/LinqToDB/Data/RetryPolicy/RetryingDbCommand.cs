@@ -84,25 +84,25 @@ namespace LinqToDB.Data.RetryPolicy
 
 		protected override DbDataReader ExecuteDbDataReader(CommandBehavior behavior)
 		{
-			using var m = ActivityService.Start(ActivityID.CommandExecuteReader)?.AddQueryInfo(_dataConnection, _command.Connection!, _command);
+			using var m = ActivityService.Start(ActivityID.CommandExecuteReader)?.AddQueryInfo(_dataConnection, _command.Connection, _command);
 			return _policy.Execute(() => _command.ExecuteReader(behavior));
 		}
 
 		public override int ExecuteNonQuery()
 		{
-			using var m = ActivityService.Start(ActivityID.CommandExecuteNonQuery)?.AddQueryInfo(_dataConnection, _command.Connection!, _command);
+			using var m = ActivityService.Start(ActivityID.CommandExecuteNonQuery)?.AddQueryInfo(_dataConnection, _command.Connection, _command);
 			return _policy.Execute(_command.ExecuteNonQuery);
 		}
 
 		public override object? ExecuteScalar()
 		{
-			using var m = ActivityService.Start(ActivityID.CommandExecuteScalar)?.AddQueryInfo(_dataConnection, _command.Connection!, _command);
+			using var m = ActivityService.Start(ActivityID.CommandExecuteScalar)?.AddQueryInfo(_dataConnection, _command.Connection, _command);
 			return _policy.Execute(_command.ExecuteScalar);
 		}
 
 		protected override Task<DbDataReader> ExecuteDbDataReaderAsync(CommandBehavior behavior, CancellationToken cancellationToken)
 		{
-			var a = ActivityService.StartAndConfigureAwait(ActivityID.CommandExecuteReaderAsync)?.AddQueryInfo(_dataConnection, _command.Connection!, _command);
+			var a = ActivityService.StartAndConfigureAwait(ActivityID.CommandExecuteReaderAsync)?.AddQueryInfo(_dataConnection, _command.Connection, _command);
 
 			if (a is null)
 				return _policy.ExecuteAsync(ct => _command.ExecuteReaderAsync(behavior, ct), cancellationToken);
@@ -113,13 +113,13 @@ namespace LinqToDB.Data.RetryPolicy
 			{
 				await using (a)
 					return await _policy.ExecuteAsync(ct => _command.ExecuteReaderAsync(behavior, ct), cancellationToken)
-						.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+						.ConfigureAwait(false);
 			}
 		}
 
 		public override Task<int> ExecuteNonQueryAsync(CancellationToken cancellationToken)
 		{
-			var a = ActivityService.StartAndConfigureAwait(ActivityID.CommandExecuteNonQueryAsync)?.AddQueryInfo(_dataConnection, _command.Connection!, _command);
+			var a = ActivityService.StartAndConfigureAwait(ActivityID.CommandExecuteNonQueryAsync)?.AddQueryInfo(_dataConnection, _command.Connection, _command);
 
 			if (a is null)
 				return _policy.ExecuteAsync(_command.ExecuteNonQueryAsync, cancellationToken);
@@ -130,13 +130,13 @@ namespace LinqToDB.Data.RetryPolicy
 			{
 				await using (a)
 					return await _policy.ExecuteAsync(_command.ExecuteNonQueryAsync, cancellationToken)
-						.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+						.ConfigureAwait(false);
 			}
 		}
 
 		public override Task<object?> ExecuteScalarAsync(CancellationToken cancellationToken)
 		{
-			var a = ActivityService.StartAndConfigureAwait(ActivityID.CommandExecuteScalarAsync)?.AddQueryInfo(_dataConnection, _command.Connection!, _command);
+			var a = ActivityService.StartAndConfigureAwait(ActivityID.CommandExecuteScalarAsync)?.AddQueryInfo(_dataConnection, _command.Connection, _command);
 
 			if (a is null)
 				return _policy.ExecuteAsync(_command.ExecuteScalarAsync, cancellationToken);
@@ -147,7 +147,7 @@ namespace LinqToDB.Data.RetryPolicy
 			{
 				await using (a)
 					return await _policy.ExecuteAsync(_command.ExecuteScalarAsync, cancellationToken)
-						.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+						.ConfigureAwait(false);
 			}
 		}
 
