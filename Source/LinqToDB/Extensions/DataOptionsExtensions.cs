@@ -152,7 +152,7 @@ namespace LinqToDB
 		[Pure, Obsolete("Use WithCompareNulls instead: true maps to LikeClr and false to LikeSqlExceptParameters"), EditorBrowsable(EditorBrowsableState.Never)]
 		public static LinqOptions WithCompareNullsAsValues(this LinqOptions options, bool compareNullsAsValues)
 		{
-			return options with { CompareNullsAsValues = compareNullsAsValues };
+			return options.WithCompareNulls(compareNullsAsValues ? CompareNulls.LikeClr : CompareNulls.LikeSqlExceptParameters);
 		}
 
 		/// <summary>
@@ -385,7 +385,7 @@ namespace LinqToDB
 		[Pure, Obsolete("Use UseCompareNulls instead: true maps to LikeClr and false to LikeSqlExceptParameters"), EditorBrowsable(EditorBrowsableState.Never)]
 		public static DataOptions UseCompareNullsAsValues(this DataOptions options, bool compareNullsAsValues)
 		{
-			return options.WithOptions<LinqOptions>(o => o with { CompareNullsAsValues = compareNullsAsValues });
+			return options.UseCompareNulls(compareNullsAsValues ? CompareNulls.LikeClr : CompareNulls.LikeSqlExceptParameters);
 		}
 
 		/// <summary>
