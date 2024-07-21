@@ -3,6 +3,7 @@ using System.Linq;
 
 using LinqToDB;
 using LinqToDB.DataProvider.Oracle;
+using LinqToDB.Mapping;
 
 using NUnit.Framework;
 
@@ -821,8 +822,63 @@ namespace Tests.Extensions
 
 
 			Assert.That(LastQuery, Should.Contain(
-				"ELECT /*+ CONTAINERS(DEFAULT_PDB_HINT='NO_PARALLEL')",
+				"SELECT /*+ CONTAINERS(DEFAULT_PDB_HINT='NO_PARALLEL')",
 				"UNION"));
 		}
+
+		#region Issue 4163
+
+		[Test]
+		public void Issue4163Test([IncludeDataSources(true, TestProvName.AllOracle)] string context, [Values] bool compareNullsAsValues)
+		{
+			using var db = GetDataContext(context, o => o.UseCompareNullsAsValues(compareNullsAsValues));
+			using var tb = db.CreateLocalTable(Issue4163TableForCreate.Data);
+
+			var cnt = db.GetTable<Issue4163Table>().Where(r => r.Method != PaymentMethod.Unknown).Count();
+
+			Assert.That(cnt, Is.EqualTo(2));
+		}
+
+		[Table("Issue4163Table")]
+		sealed class Issue4163TableForCreate
+		{
+			[Column] public int Id { get; set; }
+			[Column(CanBeNull = true)] public PaymentMethod Method { get; set; }
+
+			public static readonly Issue4163TableForCreate[] Data = new[]
+			{
+				new Issue4163TableForCreate() { Id = 1, Method = PaymentMethod.Unknown },
+				new Issue4163TableForCreate() { Id = 2, Method = PaymentMethod.Cheque },
+				new Issue4163TableForCreate() { Id = 3, Method = PaymentMethod.EFT },
+			};
+		}
+
+		[Table("Issue4163Table")]
+		sealed class Issue4163Table
+		{
+			[Column] public int Id { get; set; }
+			[Column(CanBeNull = false)] public PaymentMethod Method { get; set; }
+
+			public static readonly Issue4163Table[] Data = new[]
+			{
+				new Issue4163Table() { Id = 1, Method = PaymentMethod.Unknown },
+				new Issue4163Table() { Id = 2, Method = PaymentMethod.Cheque },
+				new Issue4163Table() { Id = 3, Method = PaymentMethod.EFT },
+			};
+		}
+
+		enum PaymentMethod
+		{
+			[MapValue("")]
+			Unknown,
+
+			[MapValue("C")]
+			Cheque,
+
+			[MapValue("E")]
+			EFT
+		}
+
+		#endregion
 	}
 }
