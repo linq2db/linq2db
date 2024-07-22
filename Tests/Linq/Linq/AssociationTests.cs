@@ -196,7 +196,7 @@ namespace Tests.Linq
 			using (new GuardGrouping(false))
 			using (var db = GetDataContext(context))
 				AreEqual(
-					       (from ch in    Child group ch by ch.Parent1).ToList().      Select(g => g.Key),
+						   (from ch in    Child group ch by ch.Parent1).ToList().      Select(g => g.Key),
 					(await (from ch in db.Child group ch by ch.Parent1).ToListAsync()).Select(g => g.Key));
 		}
 
@@ -1965,11 +1965,38 @@ namespace Tests.Linq
 
 			// works fine
 			static Expression<Func<Issue4454Service, Issue4454Client, bool>> Client_ExprPr =>
-			    (s, c) => s.IdClient == s.Id;
+				(s, c) => s.IdClient == s.Id;
 
 			// always generates left join or outer apply (if query is more complicated)
 			static Expression<Func<Issue4454Service, IDataContext, IQueryable<Issue4454Client>>> Client_QExpr =>
 				(s, db) => db.GetTable<Issue4454Client>().Where(c => c.Id == s.IdClient);
+		}
+
+		#endregion
+
+		#region issue 4274
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4274")]
+		public void Issue4274Test([DataSources(false)] string context)
+		{
+			using var db = GetDataConnection(context);
+
+			var query1 = (
+					from serv in db.Patient
+					group serv by new { serv.PersonID } into gr
+					select new Patient
+					{
+						PersonID = gr.Key.PersonID,
+					}
+				);
+
+			var query2 = (
+					from serv in query1
+					where serv.Person.ID == 1
+					select serv
+				);
+
+			var result = query2.ToList();
 		}
 
 		#endregion

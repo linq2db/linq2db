@@ -10,6 +10,8 @@ using LinqToDB.DataProvider.Firebird;
 
 namespace Tests
 {
+	using System.IO;
+
 	using Model;
 #if NETFRAMEWORK
 	using Model.Remote.Wcf;
@@ -310,6 +312,28 @@ namespace Tests
 				.Replace("\r", "")
 				.Replace("\n", "")
 				;
+		}
+
+		public static void DeleteTestCases()
+		{
+			// sync logic with ExpressionTestGenerator.GenerateSource
+			var dir = Path.Combine(Path.GetTempPath(), "linq2db\\");
+			var fileName = Path.Combine(dir, FormattableString.Invariant($"ExpressionTest.0.cs"));
+
+			if (File.Exists(fileName))
+				File.Delete(fileName);
+		}
+
+		public static string? GetLastTestCase()
+		{
+			// sync logic with ExpressionTestGenerator.GenerateSource
+			var dir = Path.Combine(Path.GetTempPath(), "linq2db\\");
+			var fileName = Path.Combine(dir, FormattableString.Invariant($"ExpressionTest.0.cs"));
+
+			if (File.Exists(fileName))
+				return File.ReadAllText(fileName);
+
+			return null;
 		}
 	}
 }

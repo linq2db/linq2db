@@ -585,5 +585,21 @@ namespace Tests.DataProvider
 			}
 		}
 
+		#region issue 4581
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4581")]
+		public void Issue4581Test([IncludeDataSources(true, ProviderName.SqlCe)] string context)
+		{
+			using var db = GetDataContext(context);
+			db.CreateLocalTable<Issue4581Table>();
+
+			db.Insert(new Issue4581Table() { Value = new string('1', 5000) });
+		}
+
+		[Table]
+		sealed class Issue4581Table
+		{
+			[Column(DbType = "ntext")] public string? Value { get; set; }
+		}
+		#endregion
 	}
 }

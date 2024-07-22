@@ -357,6 +357,25 @@ namespace Tests.Linq
 			}
 		}
 
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4501")]
+		public void Issue4501Test([StringTestSources] string context)
+		{
+			var data = GenerateData();
+
+			using var db = GetDataContext(context);
+			using var table = db.CreateLocalTable(data);
+
+			var query = table
+				.GroupBy(x => x.Id)
+				.Select(g => new
+				{
+					Id = g.Key,
+					AggregatedDescription = g.StringAggregate(", ", x => x.Value1).ToValue()
+				});
+
+			query.ToList();
+		}
+
 		[Test]
 		public void ConcatStringsTest([
 			IncludeDataSources(

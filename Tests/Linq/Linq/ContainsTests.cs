@@ -362,5 +362,17 @@ namespace Tests.Linq
 
 			query.ToList();
 		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4317")]
+		public void Issue4317Test([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			int?[]? ids = null;
+
+			var res = db.Person.Where(p => ids == null || !ids.Any() || ids.Contains(p.ID)).Count();
+
+			Assert.That(res, Is.EqualTo(4));
+		}
 	}
 }

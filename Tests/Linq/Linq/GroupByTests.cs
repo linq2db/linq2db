@@ -2867,5 +2867,46 @@ namespace Tests.Linq
 
 			query.ToList();
 		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/3486")]
+		public void Issue3486Test1([DataSources(false)] string context)
+		{
+			using var db = GetDataConnection(context);
+
+			var query = (
+				from t in db.Person
+				group t by new { t.FirstName, t.LastName } into gr
+				select new
+				{
+					gr.Key.FirstName,
+					gr.Key.LastName,
+					Sum = gr.Sum(it => it.ID)
+				});
+
+			query.ToList();
+
+			db.LastQuery.Should().Contain("SELECT", Exactly.Once());
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/3486")]
+		public void Issue3486Test2([DataSources(false)] string context)
+		{
+			using var db = GetDataConnection(context);
+
+			var query = (
+				from t in db.Person
+				group t by new { t.FirstName, t.LastName } into gr
+				let common = gr.Key
+				select new
+				{
+					common.FirstName,
+					common.LastName,
+					Sum = gr.Sum(it => it.ID)
+				});
+
+			query.ToList();
+
+			db.LastQuery.Should().Contain("SELECT", Exactly.Once());
+		}
 	}
 }

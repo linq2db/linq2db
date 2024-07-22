@@ -1,13 +1,15 @@
-﻿using Tests.Model;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+
+using LinqToDB;
+using LinqToDB.Mapping;
+
+using NUnit.Framework;
 
 namespace Tests.Linq
 {
-	using System;
-	using System.Linq;
-
-	using LinqToDB;
-	using LinqToDB.Mapping;
-	using NUnit.Framework;
+	using Model;
 
 	[TestFixture]
 	public class AnalyticTests : TestBase
@@ -93,8 +95,8 @@ namespace Tests.Linq
 					};
 
 				var q = from sq in subq
-					where sq.Rank > 0
-					select sq;
+						where sq.Rank > 0
+						select sq;
 
 				var res = q.ToList();
 				Assert.IsNotEmpty(res);
@@ -1293,7 +1295,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void NestedQueries([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus, TestProvName.AllOracle, TestProvName.AllClickHouse)]string context)
+		public void NestedQueries([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus, TestProvName.AllOracle, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1306,11 +1308,11 @@ namespace Tests.Linq
 					};
 
 				var q2 = from q in q1.AsSubQuery()
-					select new
-					{
-						q.ParentID,
-						MaxValue = Sql.Ext.Min(q.MaxValue).Over().PartitionBy(q.ParentID).ToValue(),
-					};
+						 select new
+						 {
+							 q.ParentID,
+							 MaxValue = Sql.Ext.Min(q.MaxValue).Over().PartitionBy(q.ParentID).ToValue(),
+						 };
 
 				TestContext.WriteLine(q1.ToString());
 				TestContext.WriteLine(q2.ToString());
@@ -1323,9 +1325,9 @@ namespace Tests.Linq
 		[Table]
 		sealed class Position
 		{
-			[Column] public int  Group { get; set; }
-			[Column] public int  Order { get; set; }
-			[Column] public int? Id    { get; set; }
+			[Column] public int Group { get; set; }
+			[Column] public int Order { get; set; }
+			[Column] public int? Id { get; set; }
 
 			public static Position[] TestData = new []
 			{
@@ -1484,7 +1486,7 @@ namespace Tests.Linq
 			ProviderName.Firebird,
 			TestProvName.AllMySql55)] string context)
 		{
-			using (var db    = GetDataContext(context))
+			using (var db = GetDataContext(context))
 			using (var table = db.CreateLocalTable(Position.TestData))
 			{
 				var group = 7;
@@ -1524,7 +1526,7 @@ namespace Tests.Linq
 			ProviderName.Firebird,
 			TestProvName.AllMySql55)] string context)
 		{
-			using (var db    = GetDataContext(context))
+			using (var db = GetDataContext(context))
 			using (var table = db.CreateLocalTable(Position.TestData))
 			{
 				var group = 7;
@@ -1569,7 +1571,7 @@ namespace Tests.Linq
 			TestProvName.AllMySql55,
 			TestProvName.AllMariaDB)] string context)
 		{
-			using (var db    = GetDataContext(context))
+			using (var db = GetDataContext(context))
 			using (var table = db.CreateLocalTable(Position.TestData))
 			{
 				var group = 7;
@@ -1602,22 +1604,22 @@ namespace Tests.Linq
 		[Table]
 		sealed class Issue1799Table1
 		{
-			[Column] public int      EventUser { get; set; }
-			[Column] public int      ProcessID { get; set; }
+			[Column] public int EventUser { get; set; }
+			[Column] public int ProcessID { get; set; }
 			[Column] public DateTime EventTime { get; set; }
 		}
 
 		[Table]
 		sealed class Issue1799Table2
 		{
-			[Column] public int     UserId        { get; set; }
+			[Column] public int UserId { get; set; }
 			[Column] public string? UserGroups { get; set; }
 		}
 
 		[Table]
 		sealed class Issue1799Table3
 		{
-			[Column] public int     ProcessID   { get; set; }
+			[Column] public int ProcessID { get; set; }
 			[Column] public string? ProcessName { get; set; }
 		}
 
@@ -1664,10 +1666,10 @@ namespace Tests.Linq
 								 into g
 								 select new
 								 {
-									g.Key.User,
-									g.Key.ProcessName,
-									g.Key.UserGroups,
-									Sum = g.Sum(e => e.Diff) / 60
+									 g.Key.User,
+									 g.Key.ProcessName,
+									 g.Key.UserGroups,
+									 Sum = g.Sum(e => e.Diff) / 60
 								 };
 
 				finalQuery
@@ -1796,7 +1798,7 @@ namespace Tests.Linq
 				new() { ProcessID = 1, ProcessName = "One" },
 				new() { ProcessID = 2, ProcessName = "Two" },
 			};
-			using (var db    = GetDataContext(context))
+			using (var db = GetDataContext(context))
 			using (var table = db.CreateLocalTable(data))
 			{
 				var leads = table.Select(p => Sql.Ext.Lead(p.ProcessName, 1, "None")
@@ -1831,7 +1833,7 @@ namespace Tests.Linq
 				new() { ProcessID = 3, ProcessName = "Three" },
 				new() { ProcessID = 4, ProcessName = "Four" },
 			};
-			using (var db    = GetDataContext(context))
+			using (var db = GetDataContext(context))
 			using (var table = db.CreateLocalTable(data))
 			{
 				var leads = table.Select(p => Sql.Ext.Lead(p.ProcessName, 2)
@@ -1858,6 +1860,27 @@ namespace Tests.Linq
 
 				CollectionAssert.AreEqual(new string?[] { null, "One", "Two", "Three" }, lags);
 			}
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/3373")]
+		public void Issue3373Test([DataSources(TestProvName.AllSybase, TestProvName.AllAccess, ProviderName.Firebird, TestProvName.MySql55, ProviderName.SqlCe )] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var list = new List<int>() { 3 };
+
+			var query =
+						from t in db.Child
+						select new
+						{
+							Sum = Sql.Ext.Sum(list.Contains(t.ParentID) ? t.ChildID : 0)
+								.Over()
+								.PartitionBy(t.Parent!.Value1)
+								.OrderBy(t.ParentID)
+								.ToValue()
+						};
+
+			query.ToList();
 		}
 	}
 }
