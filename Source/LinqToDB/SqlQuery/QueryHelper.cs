@@ -225,17 +225,6 @@ namespace LinqToDB.SqlQuery
 					var nullability = (SqlNullabilityExpression)expr;
 					return GetColumnDescriptor(nullability.SqlExpression);
 				}
-				case QueryElementType.SqlFunction:
-				{
-					var function = (SqlFunction)expr;
-
-					//TODO: probably remove, we have SqlCoalesceExpression
-					if (function is { Name: "Coalesce", Parameters.Length: 2 })
-					{
-						return GetColumnDescriptor(function.Parameters[0]);
-					}
-					break;
-				}
 				case QueryElementType.SqlCoalesce:
 				{
 					var coalesce = (SqlCoalesceExpression)expr;

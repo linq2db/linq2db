@@ -541,7 +541,7 @@ namespace LinqToDB.Linq.Builder
 			{
 				return await _query.GetResultEnumerable(dataContext, expression, preambles, preambles)
 					.ToListAsync(cancellationToken)
-					.ConfigureAwait(Configuration.ContinueOnCapturedContext);
+					.ConfigureAwait(false);
 			}
 		}
 
@@ -574,7 +574,7 @@ namespace LinqToDB.Linq.Builder
 				var enumerator = _query.GetResultEnumerable(dataContext, expression, preambles, preambles)
 					.GetAsyncEnumerator(cancellationToken);
 
-				while (await enumerator.MoveNextAsync().ConfigureAwait(Configuration.ContinueOnCapturedContext))
+				while (await enumerator.MoveNextAsync().ConfigureAwait(false))
 				{
 					var e = enumerator.Current;
 					result.Add(e.Key, e.Detail);

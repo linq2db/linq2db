@@ -41,9 +41,9 @@ namespace LinqToDB.Interceptors
 				foreach (var interceptor in Interceptors)
 					await using (ActivityService.StartAndConfigureAwait(ActivityID.CommandInterceptorExecuteScalarAsync))
 						result = await interceptor.ExecuteScalarAsync(eventData, command, result, cancellationToken)
-							.ConfigureAwait(Configuration.ContinueOnCapturedContext);
+							.ConfigureAwait(false);
 				return result;
-			}).ConfigureAwait(Configuration.ContinueOnCapturedContext);
+			}).ConfigureAwait(false);
 		}
 
 		public Option<int> ExecuteNonQuery(CommandEventData eventData, DbCommand command, Option<int> result)
@@ -64,9 +64,9 @@ namespace LinqToDB.Interceptors
 				foreach (var interceptor in Interceptors)
 					await using (ActivityService.StartAndConfigureAwait(ActivityID.CommandInterceptorExecuteNonQueryAsync))
 						result = await interceptor.ExecuteNonQueryAsync(eventData, command, result, cancellationToken)
-							.ConfigureAwait(Configuration.ContinueOnCapturedContext);
+							.ConfigureAwait(false);
 				return result;
-			}).ConfigureAwait(Configuration.ContinueOnCapturedContext);
+			}).ConfigureAwait(false);
 		}
 
 		public Option<DbDataReader> ExecuteReader(CommandEventData eventData, DbCommand command, CommandBehavior commandBehavior, Option<DbDataReader> result)
@@ -87,9 +87,9 @@ namespace LinqToDB.Interceptors
 				foreach (var interceptor in Interceptors)
 					await using (ActivityService.StartAndConfigureAwait(ActivityID.CommandInterceptorExecuteReaderAsync))
 						result = await interceptor.ExecuteReaderAsync(eventData, command, commandBehavior, result, cancellationToken)
-							.ConfigureAwait(Configuration.ContinueOnCapturedContext);
+							.ConfigureAwait(false);
 				return result;
-			}).ConfigureAwait(Configuration.ContinueOnCapturedContext);
+			}).ConfigureAwait(false);
 		}
 
 		public void AfterExecuteReader(CommandEventData eventData, DbCommand command, CommandBehavior commandBehavior, DbDataReader dataReader)
@@ -119,8 +119,8 @@ namespace LinqToDB.Interceptors
 				foreach (var interceptor in Interceptors)
 					await using (ActivityService.StartAndConfigureAwait(ActivityID.CommandInterceptorBeforeReaderDisposeAsync))
 						await interceptor.BeforeReaderDisposeAsync(eventData, command, dataReader)
-							.ConfigureAwait(Configuration.ContinueOnCapturedContext);
-			}).ConfigureAwait(Configuration.ContinueOnCapturedContext);
+							.ConfigureAwait(false);
+			}).ConfigureAwait(false);
 		}
 	}
 }

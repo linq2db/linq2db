@@ -62,7 +62,7 @@ namespace LinqToDB.Async
 			{
 				await using (activity)
 				{
-					await connection.OpenAsync(token).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+					await connection.OpenAsync(token).ConfigureAwait(false);
 					activity.AddQueryInfo(dataConnection, connection, null);
 				}
 			}
@@ -87,7 +87,7 @@ namespace LinqToDB.Async
 			static async Task CallAwaitUsing(AsyncDisposableWrapper activity, DbConnection connection)
 			{
 				await using (activity)
-					await connection.CloseAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+					await connection.CloseAsync().ConfigureAwait(false);
 			}
 #else
 			using var _ = ActivityService.Start(ActivityID.ConnectionCloseAsync)?.AddQueryInfo(DataConnection, Connection, null);
@@ -127,7 +127,7 @@ namespace LinqToDB.Async
 			await using (ActivityService.StartAndConfigureAwait(ActivityID.ConnectionBeginTransactionAsync)?.AddQueryInfo(DataConnection, Connection, null))
 			{
 				var transaction = await Connection.BeginTransactionAsync(cancellationToken)
-					.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+					.ConfigureAwait(false);
 
 				return AsyncFactory.CreateAndSetDataContext(DataConnection, transaction);
 			}
@@ -138,7 +138,7 @@ namespace LinqToDB.Async
 			await using (ActivityService.StartAndConfigureAwait(ActivityID.ConnectionBeginTransactionAsync)?.AddQueryInfo(DataConnection, Connection, null))
 			{
 				var transaction = await Connection.BeginTransactionAsync(isolationLevel, cancellationToken)
-					.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+					.ConfigureAwait(false);
 
 				return AsyncFactory.CreateAndSetDataContext(DataConnection, transaction);
 			}
@@ -171,7 +171,7 @@ namespace LinqToDB.Async
 				static async ValueTask CallAwaitUsing(AsyncDisposableWrapper activity, IAsyncDisposable disposable)
 				{
 					await using (activity)
-						await disposable.DisposeAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+						await disposable.DisposeAsync().ConfigureAwait(false);
 				}
 			}
 

@@ -113,7 +113,7 @@ namespace LinqToDB.Data.RetryPolicy
 			{
 				await using (a)
 					return await _policy.ExecuteAsync(ct => _command.ExecuteReaderAsync(behavior, ct), cancellationToken)
-						.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+						.ConfigureAwait(false);
 			}
 		}
 
@@ -130,7 +130,7 @@ namespace LinqToDB.Data.RetryPolicy
 			{
 				await using (a)
 					return await _policy.ExecuteAsync(_command.ExecuteNonQueryAsync, cancellationToken)
-						.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+						.ConfigureAwait(false);
 			}
 		}
 
@@ -147,7 +147,7 @@ namespace LinqToDB.Data.RetryPolicy
 			{
 				await using (a)
 					return await _policy.ExecuteAsync(_command.ExecuteScalarAsync, cancellationToken)
-						.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+						.ConfigureAwait(false);
 			}
 		}
 
