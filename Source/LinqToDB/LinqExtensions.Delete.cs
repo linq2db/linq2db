@@ -253,7 +253,7 @@ namespace LinqToDB
 		/// <item>SQL Server 2005+</item>
 		/// </list>
 		/// </remarks>
-		public static async Task<int> DeleteWithOutputIntoAsync<TSource,TOutput>(
+		public static Task<int> DeleteWithOutputIntoAsync<TSource,TOutput>(
 			this IQueryable<TSource> source,
 			ITable<TOutput>          outputTable,
 			CancellationToken        token = default)
@@ -270,7 +270,7 @@ namespace LinqToDB
 				currentSource.Expression,
 				((IQueryable<TOutput>)outputTable).Expression);
 
-			return await currentSource.ExecuteAsync<int>(expr, token).ConfigureAwait(false);
+			return currentSource.ExecuteAsync<int>(expr, token);
 		}
 
 		/// <summary>
@@ -328,7 +328,7 @@ namespace LinqToDB
 		/// <item>SQL Server 2005+</item>
 		/// </list>
 		/// </remarks>
-		public static async Task<int> DeleteWithOutputIntoAsync<TSource,TOutput>(
+		public static Task<int> DeleteWithOutputIntoAsync<TSource,TOutput>(
 			this IQueryable<TSource>          source,
 			ITable<TOutput>                   outputTable,
 			Expression<Func<TSource,TOutput>> outputExpression,
@@ -348,7 +348,7 @@ namespace LinqToDB
 				((IQueryable<TOutput>)outputTable).Expression,
 				Expression.Quote(outputExpression));
 
-			return await currentSource.ExecuteAsync<int>(expr, token).ConfigureAwait(false);
+			return currentSource.ExecuteAsync<int>(expr, token);
 		}
 	}
 }

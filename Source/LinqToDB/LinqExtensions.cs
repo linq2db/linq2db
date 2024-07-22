@@ -352,7 +352,7 @@ namespace LinqToDB
 				Expression.Constant(hint),
 				Expression.NewArrayInit(typeof(object), hintParameters.Select(Expression.Constant)));
 
-            return currentSource.Provider.CreateQuery<TSource>(expr);
+			return currentSource.Provider.CreateQuery<TSource>(expr);
 		}
 
 		#endregion
@@ -550,7 +550,7 @@ namespace LinqToDB
 				Expression.Constant(hint),
 				Expression.NewArrayInit(typeof(TParam), hintParameters.Select(p => Expression.Constant(p))));
 
-            return currentSource.Provider.CreateQuery<TSource>(expr);
+			return currentSource.Provider.CreateQuery<TSource>(expr);
 		}
 
 		#endregion
@@ -733,7 +733,7 @@ namespace LinqToDB
 		/// <param name="source">Query that returns records to delete.</param>
 		/// <param name="token">Optional asynchronous operation cancellation token.</param>
 		/// <returns>Number of deleted records.</returns>
-		public static async Task<int> DeleteAsync<T>(this IQueryable<T> source, CancellationToken token = default)
+		public static Task<int> DeleteAsync<T>(this IQueryable<T> source, CancellationToken token = default)
 		{
 			if (source == null) throw new ArgumentNullException(nameof(source));
 
@@ -744,7 +744,7 @@ namespace LinqToDB
 				Methods.LinqToDB.Delete.DeleteQueryable.MakeGenericMethod(typeof(T)),
 				currentSource.Expression);
 
-			return await currentSource.ExecuteAsync<int>(expr, token).ConfigureAwait(false);
+			return currentSource.ExecuteAsync<int>(expr, token);
 		}
 
 		/// <summary>
@@ -779,7 +779,7 @@ namespace LinqToDB
 		/// <param name="predicate">Filter expression, to specify what records from source should be deleted.</param>
 		/// <param name="token">Optional asynchronous operation cancellation token.</param>
 		/// <returns>Number of deleted records.</returns>
-		public static async Task<int> DeleteAsync<T>(
+		public static Task<int> DeleteAsync<T>(
 			           this IQueryable<T>            source,
 			[InstantHandle] Expression<Func<T,bool>> predicate,
 			CancellationToken                        token = default)
@@ -794,7 +794,7 @@ namespace LinqToDB
 				Methods.LinqToDB.Delete.DeleteQueryablePredicate.MakeGenericMethod(typeof(T)),
 				currentSource.Expression, Expression.Quote(predicate));
 
-			return await currentSource.ExecuteAsync<int>(expr, token).ConfigureAwait(false);
+			return currentSource.ExecuteAsync<int>(expr, token);
 		}
 
 		#endregion
@@ -840,7 +840,7 @@ namespace LinqToDB
 		/// <param name="setter">Update expression. Uses record from source query as parameter. Expression supports only target table record new expression with field initializers.</param>
 		/// <param name="token">Optional asynchronous operation cancellation token.</param>
 		/// <returns>Number of updated records.</returns>
-		public static async Task<int> UpdateAsync<TSource,TTarget>(
+		public static Task<int> UpdateAsync<TSource,TTarget>(
 			                this IQueryable<TSource>          source,
 			                ITable<TTarget>                   target,
 			[InstantHandle] Expression<Func<TSource,TTarget>> setter,
@@ -858,7 +858,7 @@ namespace LinqToDB
 				Methods.LinqToDB.Update.UpdateTarget.MakeGenericMethod(typeof(TSource), typeof(TTarget)),
 				currentSource.Expression, ((IQueryable<TTarget>)target).Expression, Expression.Quote(setter));
 
-			return await currentSource.ExecuteAsync<int>(expr, token).ConfigureAwait(false);
+			return currentSource.ExecuteAsync<int>(expr, token);
 		}
 
 		/// <summary>
@@ -891,7 +891,7 @@ namespace LinqToDB
 		/// <param name="setter">Update expression. Uses updated record as parameter. Expression supports only target table record new expression with field initializers.</param>
 		/// <param name="token">Optional asynchronous operation cancellation token.</param>
 		/// <returns>Number of updated records.</returns>
-		public static async Task<int> UpdateAsync<T>(
+		public static Task<int> UpdateAsync<T>(
 			           this IQueryable<T>         source,
 			[InstantHandle] Expression<Func<T,T>> setter,
 			CancellationToken                     token = default)
@@ -906,7 +906,7 @@ namespace LinqToDB
 				Methods.LinqToDB.Update.UpdateSetter.MakeGenericMethod(typeof(T)),
 				currentSource.Expression, Expression.Quote(setter));
 
-			return await currentSource.ExecuteAsync<int>(expr, token).ConfigureAwait(false);
+			return currentSource.ExecuteAsync<int>(expr, token);
 		}
 
 		/// <summary>
@@ -945,7 +945,7 @@ namespace LinqToDB
 		/// <param name="setter">Update expression. Uses updated record as parameter. Expression supports only target table record new expression with field initializers.</param>
 		/// <param name="token">Optional asynchronous operation cancellation token.</param>
 		/// <returns>Number of updated records.</returns>
-		public static async Task<int> UpdateAsync<T>(
+		public static Task<int> UpdateAsync<T>(
 			           this IQueryable<T>            source,
 			[InstantHandle] Expression<Func<T,bool>> predicate,
 			[InstantHandle] Expression<Func<T,T>>    setter,
@@ -962,7 +962,7 @@ namespace LinqToDB
 				Methods.LinqToDB.Update.UpdatePredicateSetter.MakeGenericMethod(typeof(T)),
 				currentSource.Expression, Expression.Quote(predicate), Expression.Quote(setter));
 
-			return await currentSource.ExecuteAsync<int>(expr, token).ConfigureAwait(false);
+			return currentSource.ExecuteAsync<int>(expr, token);
 		}
 
 		/// <summary>
@@ -994,7 +994,7 @@ namespace LinqToDB
 		/// <param name="source">Update query.</param>
 		/// <param name="token">Optional asynchronous operation cancellation token.</param>
 		/// <returns>Number of updated records.</returns>
-		public static async Task<int> UpdateAsync<T>(this IUpdatable<T> source, CancellationToken token = default)
+		public static Task<int> UpdateAsync<T>(this IUpdatable<T> source, CancellationToken token = default)
 		{
 			if (source == null) throw new ArgumentNullException(nameof(source));
 
@@ -1007,7 +1007,7 @@ namespace LinqToDB
 				Methods.LinqToDB.Update.UpdateUpdatable.MakeGenericMethod(typeof(T)),
 				currentSource.Expression);
 
-			return await currentSource.ExecuteAsync<int>(expr, token).ConfigureAwait(false);
+			return currentSource.ExecuteAsync<int>(expr, token);
 		}
 
 		/// <summary>
@@ -1050,7 +1050,7 @@ namespace LinqToDB
 		/// <param name="setter">Update expression. Uses record from source query as parameter. Expression supports only target table record new expression with field initializers.</param>
 		/// <param name="token">Optional asynchronous operation cancellation token.</param>
 		/// <returns>Number of updated records.</returns>
-		public static async Task<int> UpdateAsync<TSource,TTarget>(
+		public static Task<int> UpdateAsync<TSource,TTarget>(
 			                this IQueryable<TSource>          source,
 			[InstantHandle] Expression<Func<TSource,TTarget>> target,
 			[InstantHandle] Expression<Func<TSource,TTarget>> setter,
@@ -1067,7 +1067,7 @@ namespace LinqToDB
 				Methods.LinqToDB.Update.UpdateTargetFuncSetter.MakeGenericMethod(typeof(TSource), typeof(TTarget)),
 				currentSource.Expression, Expression.Quote(target), Expression.Quote(setter));
 
-			return await currentSource.ExecuteAsync<int>(expr, token).ConfigureAwait(false);
+			return currentSource.ExecuteAsync<int>(expr, token);
 		}
 
 		internal sealed class Updatable<T> : IUpdatable<T>
@@ -1399,7 +1399,7 @@ namespace LinqToDB
 		/// <param name="setter">Insert expression. Expression supports only target table record new expression with field initializers.</param>
 		/// <param name="token">Optional asynchronous operation cancellation token.</param>
 		/// <returns>Number of affected records.</returns>
-		public static async Task<int> InsertAsync<T>(
+		public static Task<int> InsertAsync<T>(
 			                this ITable<T>      target,
 			[InstantHandle] Expression<Func<T>> setter,
 			CancellationToken                   token = default)
@@ -1415,7 +1415,7 @@ namespace LinqToDB
 				MethodHelper.GetMethodInfo(Insert, target, setter),
 				currentSource.Expression, Expression.Quote(setter));
 
-			return await currentSource.ExecuteAsync<int>(expr, token).ConfigureAwait(false);
+			return currentSource.ExecuteAsync<int>(expr, token);
 		}
 
 		/// <summary>
@@ -1496,7 +1496,7 @@ namespace LinqToDB
 		/// <param name="setter">Insert expression. Expression supports only target table record new expression with field initializers.</param>
 		/// <param name="token">Optional asynchronous operation cancellation token.</param>
 		/// <returns>Inserted record's identity value.</returns>
-		public static async Task<object> InsertWithIdentityAsync<T>(
+		public static Task<object> InsertWithIdentityAsync<T>(
 			                this ITable<T>      target,
 			[InstantHandle] Expression<Func<T>> setter,
 			CancellationToken                   token = default)
@@ -1512,7 +1512,7 @@ namespace LinqToDB
 				MethodHelper.GetMethodInfo(InsertWithIdentity, target, setter),
 				currentSource.Expression, Expression.Quote(setter));
 
-			return await currentSource.ExecuteAsync<object>(expr, token).ConfigureAwait(false);
+			return currentSource.ExecuteAsync<object>(expr, token);
 		}
 
 		/// <summary>
@@ -1529,7 +1529,9 @@ namespace LinqToDB
 			CancellationToken                   token = default)
 			where T : notnull
 		{
-			return target.DataContext.MappingSchema.ChangeTypeTo<int>(await InsertWithIdentityAsync(target, setter, token).ConfigureAwait(false));
+			return target.DataContext.MappingSchema.ChangeTypeTo<int>(
+				await InsertWithIdentityAsync(target, setter, token).ConfigureAwait(false)
+			);
 		}
 
 		/// <summary>
@@ -1546,7 +1548,9 @@ namespace LinqToDB
 			CancellationToken                   token = default)
 			where T : notnull
 		{
-			return target.DataContext.MappingSchema.ChangeTypeTo<long>(await InsertWithIdentityAsync(target, setter, token).ConfigureAwait(false));
+			return target.DataContext.MappingSchema.ChangeTypeTo<long>(
+				await InsertWithIdentityAsync(target, setter, token).ConfigureAwait(false)
+			);
 		}
 
 		/// <summary>
@@ -1563,7 +1567,9 @@ namespace LinqToDB
 			CancellationToken                   token = default)
 			where T : notnull
 		{
-			return target.DataContext.MappingSchema.ChangeTypeTo<decimal>(await InsertWithIdentityAsync(target, setter, token).ConfigureAwait(false));
+			return target.DataContext.MappingSchema.ChangeTypeTo<decimal>(
+				await InsertWithIdentityAsync(target, setter, token).ConfigureAwait(false)
+			);
 		}
 
 		#region ValueInsertable
@@ -1782,7 +1788,7 @@ namespace LinqToDB
 		/// <param name="source">Insert query.</param>
 		/// <param name="token">Optional asynchronous operation cancellation token.</param>
 		/// <returns>Number of affected records.</returns>
-		public static async Task<int> InsertAsync<T>( this IValueInsertable<T> source, CancellationToken token = default)
+		public static Task<int> InsertAsync<T>( this IValueInsertable<T> source, CancellationToken token = default)
 		{
 			if (source == null) throw new ArgumentNullException(nameof(source));
 
@@ -1794,7 +1800,7 @@ namespace LinqToDB
 				Methods.LinqToDB.Insert.VI.Insert.MakeGenericMethod(typeof(T)),
 				currentSource.Expression);
 
-			return await currentSource.ExecuteAsync<int>(expr, token).ConfigureAwait(false);
+			return currentSource.ExecuteAsync<int>(expr, token);
 		}
 
 		/// <summary>
@@ -1865,7 +1871,7 @@ namespace LinqToDB
 		/// <param name="source">Insert query.</param>
 		/// <param name="token">Optional asynchronous operation cancellation token.</param>
 		/// <returns>Inserted record's identity value.</returns>
-		public static async Task<object> InsertWithIdentityAsync<T>(
+		public static Task<object> InsertWithIdentityAsync<T>(
 			 this IValueInsertable<T> source, CancellationToken token = default)
 		{
 			if (source == null) throw new ArgumentNullException(nameof(source));
@@ -1878,7 +1884,7 @@ namespace LinqToDB
 				MethodHelper.GetMethodInfo(InsertWithIdentity, source),
 				currentSource.Expression);
 
-			return await currentSource.ExecuteAsync<object>(expr, token).ConfigureAwait(false);
+			return currentSource.ExecuteAsync<object>(expr, token);
 		}
 
 		/// <summary>
@@ -1974,7 +1980,7 @@ namespace LinqToDB
 		/// Expression supports only target table record new expression with field initializers.</param>
 		/// <param name="token">Optional asynchronous operation cancellation token.</param>
 		/// <returns>Number of affected records.</returns>
-		public static async Task<int> InsertAsync<TSource,TTarget>(
+		public static Task<int> InsertAsync<TSource,TTarget>(
 			                this IQueryable<TSource>          source,
 			                ITable<TTarget>                   target,
 			[InstantHandle] Expression<Func<TSource,TTarget>> setter,
@@ -1992,7 +1998,7 @@ namespace LinqToDB
 				MethodHelper.GetMethodInfo(Insert, source, target, setter),
 				currentSource.Expression, ((IQueryable<TTarget>)target).Expression, Expression.Quote(setter));
 
-			return await currentSource.ExecuteAsync<int>(expr, token).ConfigureAwait(false);
+			return currentSource.ExecuteAsync<int>(expr, token);
 		}
 
 		/// <summary>
@@ -2114,7 +2120,7 @@ namespace LinqToDB
 		/// Expression supports only target table record new expression with field initializers.</param>
 		/// <param name="token">Optional asynchronous operation cancellation token.</param>
 		/// <returns>Last inserted record's identity value.</returns>
-		public static async Task<object> InsertWithIdentityAsync<TSource,TTarget>(
+		public static Task<object> InsertWithIdentityAsync<TSource,TTarget>(
 			                this IQueryable<TSource>          source,
 			                ITable<TTarget>                   target,
 			[InstantHandle] Expression<Func<TSource,TTarget>> setter,
@@ -2132,7 +2138,7 @@ namespace LinqToDB
 				MethodHelper.GetMethodInfo(InsertWithIdentity, source, target, setter),
 				currentSource.Expression, ((IQueryable<TTarget>)target).Expression, Expression.Quote(setter));
 
-			return await currentSource.ExecuteAsync<object>(expr, token).ConfigureAwait(false);
+			return currentSource.ExecuteAsync<object>(expr, token);
 		}
 
 		/// <summary>
@@ -2387,7 +2393,7 @@ namespace LinqToDB
 		/// <param name="source">Insert query.</param>
 		/// <param name="token">Optional asynchronous operation cancellation token.</param>
 		/// <returns>Number of affected records.</returns>
-		public static async Task<int> InsertAsync<TSource,TTarget>(
+		public static Task<int> InsertAsync<TSource,TTarget>(
 			 this ISelectInsertable<TSource,TTarget> source, CancellationToken token = default)
 		{
 			if (source == null) throw new ArgumentNullException(nameof(source));
@@ -2400,7 +2406,7 @@ namespace LinqToDB
 				Methods.LinqToDB.Insert.SI.Insert.MakeGenericMethod(typeof(TSource), typeof(TTarget)),
 				currentSource.Expression);
 
-			return await currentSource.ExecuteAsync<int>(expr, token).ConfigureAwait(false);
+			return currentSource.ExecuteAsync<int>(expr, token);
 		}
 
 		/// <summary>
@@ -2478,7 +2484,7 @@ namespace LinqToDB
 		/// <param name="source">Insert query.</param>
 		/// <param name="token">Optional asynchronous operation cancellation token.</param>
 		/// <returns>Number of affected records.</returns>
-		public static async Task<object> InsertWithIdentityAsync<TSource,TTarget>(
+		public static Task<object> InsertWithIdentityAsync<TSource,TTarget>(
 			 this ISelectInsertable<TSource,TTarget> source, CancellationToken token = default)
 		{
 			if (source == null) throw new ArgumentNullException(nameof(source));
@@ -2491,7 +2497,7 @@ namespace LinqToDB
 				MethodHelper.GetMethodInfo(InsertWithIdentity, source),
 				currentSource.Expression);
 
-			return await currentSource.ExecuteAsync<object>(expr, token).ConfigureAwait(false);
+			return currentSource.ExecuteAsync<object>(expr, token);
 		}
 
 		/// <summary>
@@ -2601,7 +2607,7 @@ namespace LinqToDB
 		/// Accepts updated record as parameter.</param>
 		/// <param name="token">Optional asynchronous operation cancellation token.</param>
 		/// <returns>Number of affected records.</returns>
-		public static async Task<int> InsertOrUpdateAsync<T>(
+		public static Task<int> InsertOrUpdateAsync<T>(
 			                this ITable<T>          target,
 			[InstantHandle] Expression<Func<T>>     insertSetter,
 			[InstantHandle] Expression<Func<T,T?>>? onDuplicateKeyUpdateSetter,
@@ -2618,7 +2624,7 @@ namespace LinqToDB
 				_insertOrUpdateMethodInfo.MakeGenericMethod(typeof(T)),
 				currentSource.Expression, Expression.Quote(insertSetter), onDuplicateKeyUpdateSetter != null ? Expression.Quote(onDuplicateKeyUpdateSetter) : Expression.Constant(null, typeof(Expression<Func<T, T>>)));
 
-			return await currentSource.ExecuteAsync<int>(expr, token).ConfigureAwait(false);
+			return currentSource.ExecuteAsync<int>(expr, token);
 		}
 
 		static readonly MethodInfo _insertOrUpdateMethodInfo2 =
@@ -2679,7 +2685,7 @@ namespace LinqToDB
 		/// Expression supports only target table record new expression with field initializers for each key field. Assigned key field value will be used as key value by operation type selector.</param>
 		/// <param name="token">Optional asynchronous operation cancellation token.</param>
 		/// <returns>Number of affected records.</returns>
-		public static async Task<int> InsertOrUpdateAsync<T>(
+		public static Task<int> InsertOrUpdateAsync<T>(
 			                this ITable<T>          target,
 			[InstantHandle] Expression<Func<T>>     insertSetter,
 			[InstantHandle] Expression<Func<T,T?>>? onDuplicateKeyUpdateSetter,
@@ -2701,7 +2707,7 @@ namespace LinqToDB
 				onDuplicateKeyUpdateSetter != null ? Expression.Quote(onDuplicateKeyUpdateSetter) : Expression.Constant(null, typeof(Expression<Func<T, T>>)),
 				Expression.Quote(keySelector));
 
-			return await currentSource.ExecuteAsync<int>(expr, token).ConfigureAwait(false);
+			return currentSource.ExecuteAsync<int>(expr, token);
 		}
 
 		#endregion
@@ -2816,7 +2822,7 @@ namespace LinqToDB
 		/// <param name="resetIdentity">Performs reset identity column.</param>
 		/// <param name="token">Optional asynchronous operation cancellation token.</param>
 		/// <returns>Number of affected records. Usually <c>-1</c> as it is not data modification operation.</returns>
-		public static async Task<int> TruncateAsync<T>(
+		public static Task<int> TruncateAsync<T>(
 			this ITable<T>    target,
 			bool              resetIdentity = true,
 			CancellationToken token         = default)
@@ -2831,7 +2837,7 @@ namespace LinqToDB
 				_truncateMethodInfo.MakeGenericMethod(typeof(T)),
 				currentSource.Expression, ExpressionInstances.Boolean(resetIdentity));
 
-			return await currentSource.ExecuteAsync<int>(expr, token).ConfigureAwait(false);
+			return currentSource.ExecuteAsync<int>(expr, token);
 		}
 
 		#endregion
@@ -2993,7 +2999,7 @@ namespace LinqToDB
 		/// <exception cref="InvalidOperationException">Source query doesn't have record with specified index.</exception>
 		/// <returns>Record at specified position.</returns>
 		[Pure]
-		public static async Task<TSource> ElementAtAsync<TSource>(
+		public static Task<TSource> ElementAtAsync<TSource>(
 			           this IQueryable<TSource>   source,
 			[InstantHandle] Expression<Func<int>> index,
 			CancellationToken                     token = default)
@@ -3008,7 +3014,7 @@ namespace LinqToDB
 				Methods.LinqToDB.ElementAtLambda.MakeGenericMethod(typeof(TSource)),
 				currentSource.Expression, Expression.Quote(index));
 
-			return await currentSource.ExecuteAsync<TSource>(expr, token).ConfigureAwait(false);
+			return currentSource.ExecuteAsync<TSource>(expr, token);
 		}
 
 		static readonly MethodInfo _elementAtOrDefaultMethodInfo = MemberHelper.MethodOf(() => ElementAtOrDefault<int>(null!,null!)).GetGenericMethodDefinition();
@@ -3047,7 +3053,7 @@ namespace LinqToDB
 		/// <param name="token">Optional asynchronous operation cancellation token.</param>
 		/// <returns>Record at specified position or default value, if source query doesn't have record with such index.</returns>
 		[Pure]
-		public static async Task<TSource> ElementAtOrDefaultAsync<TSource>(
+		public static Task<TSource> ElementAtOrDefaultAsync<TSource>(
 			           this IQueryable<TSource>   source,
 			[InstantHandle] Expression<Func<int>> index,
 			                CancellationToken     token = default)
@@ -3062,7 +3068,7 @@ namespace LinqToDB
 				_elementAtOrDefaultMethodInfo.MakeGenericMethod(typeof(TSource)),
 				currentSource.Expression, Expression.Quote(index));
 
-			return await currentSource.ExecuteAsync<TSource>(expr, token).ConfigureAwait(false);
+			return currentSource.ExecuteAsync<TSource>(expr, token);
 		}
 
 		#endregion

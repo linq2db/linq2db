@@ -316,7 +316,7 @@ namespace LinqToDB
 		/// <item>SQL Server 2005+</item>
 		/// </list>
 		/// </remarks>
-		public static async Task<int> UpdateWithOutputIntoAsync<TSource,TTarget>(
+		public static Task<int> UpdateWithOutputIntoAsync<TSource,TTarget>(
 			                this IQueryable<TSource>          source,
 			                ITable<TTarget>                   target,
 			[InstantHandle] Expression<Func<TSource,TTarget>> setter,
@@ -339,7 +339,7 @@ namespace LinqToDB
 				Expression.Quote(setter),
 				((IQueryable<TTarget>)outputTable).Expression);
 
-			return await currentSource.ExecuteAsync<int>(expr, token).ConfigureAwait(false);
+			return currentSource.ExecuteAsync<int>(expr, token);
 		}
 
 		/// <summary>
@@ -412,7 +412,7 @@ namespace LinqToDB
 		/// <item>SQL Server 2005+</item>
 		/// </list>
 		/// </remarks>
-		public static async Task<int> UpdateWithOutputIntoAsync<TSource,TTarget,TOutput>(
+		public static Task<int> UpdateWithOutputIntoAsync<TSource,TTarget,TOutput>(
 			                this IQueryable<TSource>                          source,
 			                ITable<TTarget>                                   target,
 			[InstantHandle] Expression<Func<TSource,TTarget>>                 setter,
@@ -439,7 +439,7 @@ namespace LinqToDB
 				((IQueryable<TOutput>)outputTable).Expression,
 				Expression.Quote(outputExpression));
 
-			return await currentSource.ExecuteAsync<int>(expr, token).ConfigureAwait(false);
+			return currentSource.ExecuteAsync<int>(expr, token);
 		}
 
 		#endregion
@@ -735,7 +735,7 @@ namespace LinqToDB
 		/// <item>SQL Server 2005+</item>
 		/// </list>
 		/// </remarks>
-		public static async Task<int> UpdateWithOutputIntoAsync<TSource,TTarget>(
+		public static Task<int> UpdateWithOutputIntoAsync<TSource,TTarget>(
 			                this IQueryable<TSource>          source,
 			                Expression<Func<TSource,TTarget>> target,
 			[InstantHandle] Expression<Func<TSource,TTarget>> setter,
@@ -758,7 +758,7 @@ namespace LinqToDB
 				Expression.Quote(setter),
 				((IQueryable<TTarget>)outputTable).Expression);
 
-			return await currentSource.ExecuteAsync<int>(expr, token).ConfigureAwait(false);
+			return currentSource.ExecuteAsync<int>(expr, token);
 		}
 
 		/// <summary>
@@ -830,7 +830,7 @@ namespace LinqToDB
 		/// <item>SQL Server 2005+</item>
 		/// </list>
 		/// </remarks>
-		public static async Task<int> UpdateWithOutputIntoAsync<TSource,TTarget,TOutput>(
+		public static Task<int> UpdateWithOutputIntoAsync<TSource,TTarget,TOutput>(
 			                this IQueryable<TSource>                          source,
 			                Expression<Func<TSource,TTarget>>                 target,
 			[InstantHandle] Expression<Func<TSource,TTarget>>                 setter,
@@ -856,7 +856,7 @@ namespace LinqToDB
 				((IQueryable<TOutput>)outputTable).Expression,
 				Expression.Quote(outputExpression));
 
-			return await currentSource.ExecuteAsync<int>(expr, token).ConfigureAwait(false);
+			return currentSource.ExecuteAsync<int>(expr, token);
 		}
 
 		#endregion
@@ -1118,7 +1118,7 @@ namespace LinqToDB
 		/// <item>SQL Server 2005+</item>
 		/// </list>
 		/// </remarks>
-		public static async Task<int> UpdateWithOutputIntoAsync<T>(
+		public static Task<int> UpdateWithOutputIntoAsync<T>(
 			           this IQueryable<T>         source,
 			[InstantHandle] Expression<Func<T,T>> setter,
 			                ITable<T>             outputTable,
@@ -1138,7 +1138,7 @@ namespace LinqToDB
 				Expression.Quote(setter),
 				((IQueryable<T>)outputTable).Expression);
 
-			return await currentSource.ExecuteAsync<int>(expr, token).ConfigureAwait(false);
+			return currentSource.ExecuteAsync<int>(expr, token);
 		}
 
 		/// <summary>
@@ -1203,7 +1203,7 @@ namespace LinqToDB
 		/// <item>SQL Server 2005+</item>
 		/// </list>
 		/// </remarks>
-		public static async Task<int> UpdateWithOutputIntoAsync<T,TOutput>(
+		public static Task<int> UpdateWithOutputIntoAsync<T,TOutput>(
 			           this IQueryable<T>                 source,
 			[InstantHandle] Expression<Func<T,T>>         setter,
 			                ITable<TOutput>               outputTable,
@@ -1226,7 +1226,7 @@ namespace LinqToDB
 				((IQueryable<TOutput>)outputTable).Expression,
 				Expression.Quote(outputExpression));
 
-			return await currentSource.ExecuteAsync<int>(expr, token).ConfigureAwait(false);
+			return currentSource.ExecuteAsync<int>(expr, token);
 		}
 
 		#endregion
@@ -1467,7 +1467,7 @@ namespace LinqToDB
 		/// <item>SQL Server 2005+</item>
 		/// </list>
 		/// </remarks>
-		public static async Task<int> UpdateWithOutputIntoAsync<T>(
+		public static Task<int> UpdateWithOutputIntoAsync<T>(
 			           this IUpdatable<T>         source,
 			                ITable<T>             outputTable,
 			                CancellationToken     token = default)
@@ -1485,7 +1485,7 @@ namespace LinqToDB
 				currentSource.Expression,
 				((IQueryable<T>)outputTable).Expression);
 
-			return await currentSource.ExecuteAsync<int>(expr, token).ConfigureAwait(false);
+			return currentSource.ExecuteAsync<int>(expr, token);
 		}
 
 		/// <summary>
@@ -1546,7 +1546,7 @@ namespace LinqToDB
 		/// <item>SQL Server 2005+</item>
 		/// </list>
 		/// </remarks>
-		public static async Task<int> UpdateWithOutputIntoAsync<T,TOutput>(
+		public static Task<int> UpdateWithOutputIntoAsync<T,TOutput>(
 			           this IUpdatable<T>                 source,
 			                ITable<TOutput>               outputTable,
 			                Expression<Func<T,T,TOutput>> outputExpression,
@@ -1567,7 +1567,7 @@ namespace LinqToDB
 				((IQueryable<TOutput>)outputTable).Expression,
 				Expression.Quote(outputExpression));
 
-			return await currentSource.ExecuteAsync<int>(expr, token).ConfigureAwait(false);
+			return currentSource.ExecuteAsync<int>(expr, token);
 		}
 
 		#endregion
