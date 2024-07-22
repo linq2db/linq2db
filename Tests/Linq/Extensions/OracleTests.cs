@@ -2,6 +2,7 @@
 using System.Linq;
 
 using LinqToDB;
+using LinqToDB.Common;
 using LinqToDB.DataProvider.Oracle;
 using LinqToDB.Mapping;
 
@@ -829,9 +830,9 @@ namespace Tests.Extensions
 		#region Issue 4163
 
 		[Test]
-		public void Issue4163Test([IncludeDataSources(true, TestProvName.AllOracle)] string context, [Values] bool compareNullsAsValues)
+		public void Issue4163Test([IncludeDataSources(true, TestProvName.AllOracle)] string context, [Values] CompareNulls compareNulls)
 		{
-			using var db = GetDataContext(context, o => o.UseCompareNullsAsValues(compareNullsAsValues));
+			using var db = GetDataContext(context, o => o.UseCompareNulls(compareNulls));
 			using var tb = db.CreateLocalTable(Issue4163TableForCreate.Data);
 
 			var cnt = db.GetTable<Issue4163Table>().Where(r => r.Method != PaymentMethod.Unknown).Count();
