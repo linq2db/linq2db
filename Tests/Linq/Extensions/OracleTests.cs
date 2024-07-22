@@ -829,49 +829,86 @@ namespace Tests.Extensions
 
 		#region Issue 4163
 
-		[Test]
-		public void Issue4163Test([IncludeDataSources(true, TestProvName.AllOracle)] string context, [Values] CompareNulls compareNulls)
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4163")]
+		public void Issue4163Test1([IncludeDataSources(true, TestProvName.AllOracle)] string context, [Values] CompareNulls compareNulls)
 		{
 			using var db = GetDataContext(context, o => o.UseCompareNulls(compareNulls));
-			using var tb = db.CreateLocalTable(Issue4163TableForCreate.Data);
+			using var tb = db.CreateLocalTable(Issue4163TableExplicitNullability.Data);
 
-			var cnt = db.GetTable<Issue4163Table>().Where(r => r.Method != PaymentMethod.Unknown).Count();
+			var cnt = db.GetTable<Issue4163TableExplicitNullability>().Where(r => r.Method != PaymentMethod.Unknown).Count();
+
+			Assert.That(cnt, Is.EqualTo(2));
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4163")]
+		public void Issue4163Test2([IncludeDataSources(true, TestProvName.AllOracle)] string context, [Values] CompareNulls compareNulls)
+		{
+			using var db = GetDataContext(context, o => o.UseCompareNulls(compareNulls));
+			using var tb = db.CreateLocalTable(Issue4163TableExplicitNullability.Data);
+
+			var cnt = db.GetTable<Issue4163TableUnknownNullability>().Where(r => r.Method != PaymentMethod.Unknown).Count();
+
+			Assert.That(cnt, Is.EqualTo(2));
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4163")]
+		public void Issue4163Test3([IncludeDataSources(true, TestProvName.AllOracle)] string context, [Values] CompareNulls compareNulls)
+		{
+			using var db = GetDataContext(context, o => o.UseCompareNulls(compareNulls));
+			using var tb = db.CreateLocalTable(Issue4163TableExplicitNullability.Data);
+
+			var cnt = db.GetTable<Issue4163TableInferredNullability>().Where(r => r.Method != PaymentMethodWithNull.Unknown).Count();
 
 			Assert.That(cnt, Is.EqualTo(2));
 		}
 
 		[Table("Issue4163Table")]
-		sealed class Issue4163TableForCreate
+		sealed class Issue4163TableExplicitNullability
 		{
 			[Column] public int Id { get; set; }
 			[Column(CanBeNull = true)] public PaymentMethod Method { get; set; }
 
-			public static readonly Issue4163TableForCreate[] Data = new[]
+			public static readonly Issue4163TableExplicitNullability[] Data = new[]
 			{
-				new Issue4163TableForCreate() { Id = 1, Method = PaymentMethod.Unknown },
-				new Issue4163TableForCreate() { Id = 2, Method = PaymentMethod.Cheque },
-				new Issue4163TableForCreate() { Id = 3, Method = PaymentMethod.EFT },
+				new Issue4163TableExplicitNullability() { Id = 1, Method = PaymentMethod.Unknown },
+				new Issue4163TableExplicitNullability() { Id = 2, Method = PaymentMethod.Cheque },
+				new Issue4163TableExplicitNullability() { Id = 3, Method = PaymentMethod.EFT },
 			};
 		}
 
 		[Table("Issue4163Table")]
-		sealed class Issue4163Table
+		sealed class Issue4163TableUnknownNullability
 		{
 			[Column] public int Id { get; set; }
-			[Column(CanBeNull = false)] public PaymentMethod Method { get; set; }
+			[Column] public PaymentMethod Method { get; set; }
+		}
 
-			public static readonly Issue4163Table[] Data = new[]
-			{
-				new Issue4163Table() { Id = 1, Method = PaymentMethod.Unknown },
-				new Issue4163Table() { Id = 2, Method = PaymentMethod.Cheque },
-				new Issue4163Table() { Id = 3, Method = PaymentMethod.EFT },
-			};
+		[Table("Issue4163Table")]
+		sealed class Issue4163TableInferredNullability
+		{
+			[Column] public int Id { get; set; }
+			[Column] public PaymentMethodWithNull Method { get; set; }
 		}
 
 		enum PaymentMethod
 		{
 			[MapValue("")]
 			Unknown,
+
+			[MapValue("C")]
+			Cheque,
+
+			[MapValue("E")]
+			EFT
+		}
+
+		enum PaymentMethodWithNull
+		{
+			[MapValue("")]
+			Unknown,
+
+			[MapValue(null)]
+			Null = Unknown,
 
 			[MapValue("C")]
 			Cheque,
