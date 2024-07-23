@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Linq.Expressions;
 
 namespace LinqToDB.Linq.Builder
@@ -26,6 +26,7 @@ namespace LinqToDB.Linq.Builder
 		public BuildsExpressionAttribute(ExpressionType type) { }
 		public BuildsExpressionAttribute(ExpressionType type1, ExpressionType type2) { }
 		public BuildsExpressionAttribute(ExpressionType type1, ExpressionType type2, ExpressionType type3) { }
+		public BuildsExpressionAttribute(ExpressionType type1, ExpressionType type2, ExpressionType type3, ExpressionType type4) { }
 	}
 
 	[AttributeUsage(AttributeTargets.Class, Inherited = false, AllowMultiple = true)]

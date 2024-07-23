@@ -12,6 +12,8 @@ using NUnit.Framework;
 namespace Tests.Linq
 {
 	using FluentAssertions;
+
+	using LinqToDB.Data;
 	using LinqToDB.Linq;
 	using Model;
 
@@ -2072,6 +2074,81 @@ namespace Tests.Linq
 				Assert.That(result[0].EnumValue, Is.EqualTo(Issue4167Table.TaxType.NoTax));
 				Assert.That(result[1].EnumValue, Is.EqualTo(Issue4167Table.TaxType.NoTax));
 				Assert.That(result[2].EnumValue, Is.EqualTo(Issue4167Table.TaxType.NonResident));
+			});
+		}
+
+		[Test]
+		public void Issue2145Test1([CteContextSource] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var persons = new Person[]
+			{
+				new Person() { ID = 10, FirstName = "FN1", LastName = "LN1", Gender = Gender.Male },
+				new Person() { ID = 11, FirstName = "FN2", Gender = Gender.Female },
+			};
+
+			var cte = persons.AsQueryable().AsCte();
+
+			var query = from p in cte
+						where p.ID == 11
+						select p;
+
+			Assert.That(() => query.ToArray(), Throws.InvalidOperationException);
+		}
+
+		[Test]
+		public void Issue2145Test2([CteContextSource] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var persons = new Person[]
+			{
+				new Person() { ID = 10, FirstName = "FN1", LastName = "LN1", Gender = Gender.Male },
+				new Person() { ID = 11, FirstName = "FN2", Gender = Gender.Female },
+			};
+
+			var cte = persons.AsQueryable(db).AsCte();
+
+			var query = from p in cte
+						where p.ID == 11
+						select p;
+
+			var result = query.ToArray();
+
+			Assert.That(result, Has.Length.EqualTo(1));
+			Assert.Multiple(() =>
+			{
+				Assert.That(result[0].ID, Is.EqualTo(11));
+				Assert.That(result[0].FirstName, Is.EqualTo("FN2"));
+				Assert.That(result[0].LastName, Is.Null);
+				Assert.That(result[0].MiddleName, Is.Null);
+				Assert.That(result[0].Gender, Is.EqualTo(Gender.Female));
+			});
+
+			if (db is DataConnection dc)
+			{
+				Assert.That(dc.LastQuery, Contains.Substring("WITH"));
+			}
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/3407")]
+		public void Issue3407Test([CteContextSource] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var cte = db.Person.LoadWith(p => p.Patient).AsCte();
+
+			var data = cte.Where(r => r.ID == 2).ToList();
+
+			var count = cte.Count();
+
+			Assert.That(data, Has.Count.EqualTo(1));
+			Assert.That(data[0].Patient, Is.Not.Null);
+			Assert.Multiple(() =>
+			{
+				Assert.That(data[0].Patient!.Diagnosis, Is.Not.Null);
+				Assert.That(count, Is.EqualTo(4));
 			});
 		}
 	}

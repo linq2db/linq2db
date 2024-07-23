@@ -29,7 +29,7 @@ namespace Tests
 		[AllowNull]
 		public override string          ConnectionString { get; set; }
 		public override string          Database         { get; } = null!;
-		public override string          DataSource       => throw new NotImplementedException();
+		public override string          DataSource       => "fake";
 		public override string          ServerVersion    => throw new NotImplementedException();
 		public override ConnectionState State            => _state;
 
@@ -123,7 +123,7 @@ namespace Tests
 
 		protected override DbConnection? DbConnection
 		{
-			get => throw new NotImplementedException();
+			get => null;
 			set => throw new NotImplementedException();
 		}
 

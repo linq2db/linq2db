@@ -39,7 +39,7 @@ namespace LinqToDB.DataProvider.Oracle
 			SqlProviderFlags.IsNamingQueryBlockSupported                           = true;
 			SqlProviderFlags.IsRowNumberWithoutOrderBySupported                    = false;
 			SqlProviderFlags.IsSubqueryWithParentReferenceInJoinConditionSupported = false;
-			SqlProviderFlags.IsColumnSubqueryWithParentReferenceSupported          = false;
+			SqlProviderFlags.SupportedCorrelatedSubqueriesLevel                    = 1;
 			SqlProviderFlags.IsColumnSubqueryShouldNotContainParentIsNotNull       = true;
 			SqlProviderFlags.IsColumnSubqueryWithParentReferenceAndTakeSupported   = version >= OracleVersion.v12;
 

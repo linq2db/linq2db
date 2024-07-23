@@ -39,9 +39,9 @@ namespace LinqToDB.SqlQuery
 
 			column.Expression.VisitParentFirst(this, (v, e) =>
 			{
-				if (e is SelectQuery selectQuery)
+				if (e is SqlSelectClause selectClause)
 				{
-					foreach(var ec in selectQuery.Select.Columns)
+					foreach(var ec in selectClause.Columns)
 					{
 						_usedColumns.Add(ec);
 					}
