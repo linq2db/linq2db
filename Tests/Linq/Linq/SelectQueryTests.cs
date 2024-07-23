@@ -192,5 +192,43 @@ namespace Tests.Linq
 				query.ToArray();
 			}
 		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/2494")]
+		public void Issue2494Test1([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable<Issue2494Table>();
+
+			var query = db.SelectQuery(() => tb.Any()
+				? db.Insert(new Issue2494Table() { Value = 1 }, null, null, null, null, default)
+				: 0);
+
+			var res = query.ToArray();
+			Assert.That(res, Has.Length.EqualTo(0));
+			res = query.ToArray();
+			Assert.That(res, Has.Length.EqualTo(0));
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/2494")]
+		public void Issue2494Test2([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable<Issue2494Table>();
+
+			var query = db.SelectQuery(() => !tb.Any()
+				? db.Insert(new Issue2494Table() { Value = 1 }, null, null, null, null, default)
+				: 0);
+
+			var res = query.ToArray();
+			Assert.That(res, Has.Length.EqualTo(1));
+			res = query.ToArray();
+			Assert.That(res, Has.Length.EqualTo(2));
+		}
+
+		[Table]
+		sealed class Issue2494Table
+		{
+			[Column] public int Value { get; set; }
+		}
 	}
 }

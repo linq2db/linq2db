@@ -1236,5 +1236,34 @@ namespace Tests.Linq
 
 			orderedQuery.ToArray();
 		}
+
+		#region Issue 4184
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4184")]
+		public void Issue4184Test([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			
+			var subquery =
+				from p in db.Person
+				group p by p.ID
+				into gpItem
+				select new PcScanId(gpItem.Key, gpItem.Max(s => s.ID));
+
+			var query =
+				from ps in subquery
+				join pc in db.Patient on ps.PcId equals pc.PersonID
+				select new { pc, ps };
+
+			Assert.That(() => query.ToArray(), Throws.Exception.InstanceOf<LinqException>());
+		}
+
+		private record PcScanId(int pcId, int scanId)
+		{
+			public int PcId = pcId;
+			public int ScanId = scanId;
+		}
+
+		#endregion
 	}
 }

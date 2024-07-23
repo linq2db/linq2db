@@ -2129,5 +2129,43 @@ namespace Tests.Linq
 
 			resultingQuery.ToList();
 		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4225")]
+		public void Issue4225Test1([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query1 = db.Person.Select(x => new
+			{
+				person = (Person?)x,
+				patient = (Patient?)null
+			});
+			var query2 = db.Patient.Select(x => new
+			{
+				person = (Person?)null,
+				patient = (Patient?)x
+			});
+
+			var q = query1.UnionAll(query2).ToList();
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4225")]
+		public void Issue4225Test2([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query1 = db.Person.Select(x => new
+			{
+				person = x,
+				patient = (Patient?)null!
+			});
+			var query2 = db.Patient.Select(x => new
+			{
+				person = (Person?)null!,
+				patient = x
+			});
+
+			var q = query1.UnionAll(query2).ToList();
+		}
 	}
 }

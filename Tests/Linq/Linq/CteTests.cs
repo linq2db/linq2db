@@ -2216,5 +2216,72 @@ namespace Tests.Linq
 				})).ToList();
 		}
 		#endregion
+
+		#region Issue 1845
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/1845")]
+		public void Issue1845Test([CteContextSource] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var someCte = db.Person.Select(o => new CustomObject()
+			{
+				Value1 = o.FirstName,
+				Value2 = o.LastName,
+			}).AsCte();
+
+			var defaultValue1 = "Somebody";
+			var defaultValue2 = "Unimportant";
+			var defaultValue = new List<CustomObject>()
+			{
+				new CustomObject()
+				{
+					Value1 = defaultValue1,
+					Value2 = defaultValue2,
+				}
+			};
+
+			var query = someCte.Union(defaultValue).AsCte();
+
+			query.ToList();
+		}
+
+		sealed class CustomObject
+		{
+			public string? Value1 { get; set; }
+			public string? Value2 { get; set; }
+		}
+		#endregion
+
+		// TODO: it currently works, need to re-test with efcore integration
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4012")]
+		public void Issue4012Test([CteContextSource] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var cte1 = db.GetCte<Child>(cte =>
+			{
+				return db.Child
+				.Concat
+				(
+					from c in db.Child
+					from c2 in cte.InnerJoin(eh => c.ChildID == eh.ParentID)
+					select c
+				);
+			});
+			var cte2 = db.GetCte<Child>(cte =>
+			{
+				return db.Child
+				.Concat
+				(
+					from c in db.Child
+					from c2 in cte.InnerJoin(eh => c.ParentID == eh.ChildID)
+					select c
+				);
+			});
+
+			var result = cte1.Union(cte2);
+
+			var resultList = result.LoadWith(c => c.GrandChildren).ToList();
+		}
 	}
 }

@@ -32,8 +32,12 @@ using NUnit.Framework.Internal.Builders;
 
 namespace Tests.DataProvider
 {
+	using LinqToDB.DataProvider;
+
 	using Model;
 	using Npgsql;
+
+	using Tests.UserTests;
 
 	[TestFixture]
 	public class PostgreSQLTests : DataProviderTestBase
@@ -925,7 +929,7 @@ namespace Tests.DataProvider
 			[Column(DbType = "macaddr8", Configuration = TestProvName.PostgreSQL14)]
 			[Column(DbType = "macaddr8", Configuration = ProviderName.PostgreSQL15)]
 			[Column(DbType = "macaddr8", Configuration = TestProvName.PostgreSQL16)]
-			                                           public PhysicalAddress? macaddr8DataType         { get; set; }
+													   public PhysicalAddress? macaddr8DataType         { get; set; }
 			// json
 			[Column]                                   public string? jsonDataType                      { get; set; }
 			[NotColumn(Configuration = ProviderName.PostgreSQL92)]
@@ -2599,6 +2603,189 @@ $function$
 
 			Assert.That(db.LastQuery, Does.Contain($"\"{tableName.Replace("\"", "\"\"")}\""));
 		}
+
+		#region Issue 4556
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4556")]
+		public void Issue4556Test([IncludeDataSources(true, TestProvName.AllPostgreSQL15Plus)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb  = db.CreateLocalTable<Issue4556Table>();
+
+			var record = new Issue4556Table
+			{
+				Payload = "John",
+				Headers = new Dictionary<string, string>()
+				{
+					{ "key1", "value1" }
+				}
+			};
+
+			tb.Merge()
+				.Using(new Issue4556Table[] { record })
+				.OnTargetKey()
+				.InsertWhenNotMatched()
+				.Merge();
+		}
+
+		sealed class Issue4556Table
+		{
+			[PrimaryKey, Identity] public int Id { get; set; }
+
+			[Column(DataType = DataType.BinaryJson, DbType = "jsonb", Name = "Payload")]
+			public string? Payload { get; set; }
+
+			[Column(DataType = DataType.Json, DbType = "json", Name = "Headers")]
+			public Dictionary<string, string>? Headers { get; set; }
+		}
+		#endregion
+
+		#region 4487
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4487")]
+		public void Issue4487Test([IncludeDataSources(TestProvName.AllPostgreSQL95Plus)] string context)
+		{
+			IDataProvider dataProvider;
+			string?       connectionString;
+			using (var db = GetDataConnection(context))
+			{
+				dataProvider = db.DataProvider;
+				connectionString = db.ConnectionString;
+			}
+
+			using (var db1 = GetDataConnection(context))
+			{
+				try
+				{
+					db1.Execute(@"DROP TYPE IF EXISTS ""item_type_enum"";");
+					db1.Execute(@"CREATE TYPE ""item_type_enum"" AS ENUM (
+  'type1',
+  'type2',
+  'type3'
+)");
+					using var _ = db1.CreateLocalTable<Issue4487Table>();
+
+					var builder = new NpgsqlDataSourceBuilder(connectionString);
+					builder.MapEnum<Issue4487Enum>("item_type_enum");
+					var dataSource = builder.Build();
+
+					using var db = GetDataConnection(context, o => o.UseConnectionFactory(dataProvider, _ => dataSource.CreateConnection()));
+
+					db.GetTable<Issue4487Table>()
+						.Value(x => x.Id, 1)
+						.Value(x => x.Value, Issue4487Enum.Type1)
+						.Insert();
+
+					db.Execute("insert into \"Issue4487Table\"(\"Id\", \"Values\") values (2, '{type3,type2}')");
+
+					db.GetTable<Issue4487Table>()
+						.Value(x => x.Id, 3)
+						.Value(x => x.Values, [Issue4487Enum.Type1, Issue4487Enum.Type2])
+						.Insert();
+
+					var result = db.GetTable<Issue4487Table>().OrderBy(r => r.Id).ToArray();
+
+					Assert.That(result, Has.Length.EqualTo(3));
+
+					Assert.Multiple(() =>
+					{
+						Assert.That(result[0].Id, Is.EqualTo(1));
+						Assert.That(result[0].Value, Is.EqualTo(Issue4487Enum.Type1));
+						Assert.That(result[0].Values, Is.Null);
+
+						Assert.That(result[1].Id, Is.EqualTo(2));
+						Assert.That(result[1].Value, Is.Null);
+						Assert.That(result[1].Values, Is.EqualTo(new Issue4487Enum[] { Issue4487Enum.Type3, Issue4487Enum.Type2 }));
+
+						Assert.That(result[2].Id, Is.EqualTo(3));
+						Assert.That(result[2].Value, Is.Null);
+						Assert.That(result[2].Values, Is.EqualTo(new Issue4487Enum[] { Issue4487Enum.Type1, Issue4487Enum.Type2 }));
+					});
+				}
+				finally
+				{
+					db1.Execute(@"DROP TYPE IF EXISTS ""item_type_enum"";");
+				}
+			}
+		}
+
+		[Table]
+		sealed class Issue4487Table
+		{
+			[PrimaryKey] public int Id { get; set; }
+
+			[Column(DbType = "item_type_enum", DataType = DataType.Enum)] public Issue4487Enum? Value { get; set; }
+			[Column(DbType = "item_type_enum[]", DataType = DataType.Enum)] public Issue4487Enum[]? Values { get; set; }
+		}
+
+		[PgName("item_type_enum")]
+		enum Issue4487Enum
+		{
+			[PgName("type1")]
+			[MapValue("type1")]
+			Type1,
+			[PgName("type2")]
+			[MapValue("type2")]
+			Type2,
+			[PgName("type3")]
+			[MapValue("type3")]
+			Type3,
+		}
+		#endregion
+
+		#region issue 4250
+
+		[Sql.Expression("{point1} <-> {point2}", ServerSideOnly = true)]
+		static double Distance([ExprParameter] NpgsqlPoint? point1, [ExprParameter] NpgsqlPoint? point2) => throw new NotImplementedException();
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4250")]
+		public void Issue4250Test([IncludeDataSources(true, TestProvName.AllPostgreSQL)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			db.GetTable<AllTypes>().Select(r => Distance(r.pointDataType, r.pointDataType)).ToArray();
+		}
+
+		#endregion
+
+		#region issue 4348
+
+		[Sql.Expression("{0} @> '[{1}]'", ServerSideOnly = true, IsPredicate = true, InlineParameters = true)]
+		static bool JsonContains(string? json, int value) => throw new NotImplementedException();
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4348")]
+		public void Issue4348Test1([IncludeDataSources(true, TestProvName.AllPostgreSQL)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable<Issue4348Table>();
+
+			var storeId = 1;
+			tb
+				.Where(i => i.Value == null || JsonContains(i.Value, storeId))
+				.Select(i => i.Id)
+				.FirstOrDefault();
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4348")]
+		public void Issue4348Test2([IncludeDataSources(true, TestProvName.AllPostgreSQL)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable<Issue4348Table>();
+
+			var storeId = 1;
+			tb
+				.Where(i => storeId == 0 || i.Value == null || JsonContains(i.Value, storeId))
+				.Select(i => i.Id)
+				.FirstOrDefault();
+		}
+
+		[Table]
+		sealed class Issue4348Table
+		{
+			[PrimaryKey] public int Id { get; set; }
+			[Column(DbType = "jsonb")] public string? Value { get; set; }
+		}
+
+		#endregion
 	}
 
 	public static class TestPgAggregates

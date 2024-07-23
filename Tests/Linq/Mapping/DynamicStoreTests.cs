@@ -1,4 +1,5 @@
 ﻿using LinqToDB;
+using LinqToDB.Linq;
 using LinqToDB.Mapping;
 using NUnit.Framework;
 using System;
@@ -961,6 +962,85 @@ namespace Tests.Mapping
 				Assert.Throws<LinqToDBException>(() => db.Insert(obj));
 				Assert.Throws<LinqToDBException>(() => db.GetTable<NoGetterSetterMethods>().ToList());
 			}
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/3859")]
+		public void Issue3859Test1([DataSources] string context)
+		{
+			var ms = new MappingSchema();
+			new FluentMappingBuilder(ms)
+				.Entity<FluentMetadataBasedStore>()
+					.DynamicColumnsStore(x => x.Values)
+					.Property(x => x.Id).IsColumn()
+				.Build();
+
+			using var db = GetDataContext(context, ms);
+			using var tb = db.CreateLocalTable<FluentMetadataBasedStore>();
+
+			tb.Select(x => new
+			{
+				Value1 = x.Values["All"],
+				Value2 = x.Id
+			}).ToArray();
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/3859")]
+		public void Issue3859Test2([DataSources] string context)
+		{
+			var ms = new MappingSchema();
+			new FluentMappingBuilder(ms)
+				.Entity<FluentMetadataBasedStore>()
+					.DynamicColumnsStore(x => x.Values)
+					.Property(x => x.Id).IsColumn()
+				.Build();
+
+			using var db = GetDataContext(context, ms);
+			using var tb = db.CreateLocalTable<FluentMetadataBasedStore>();
+
+			var query = tb
+				.Select(x => new
+				{
+					Value1 = x.Values["All"],
+					Value2 = x.Id
+				})
+				.GroupBy(x => x.Value1,
+				(g, e) => new
+				{
+					Value1 = g,
+					Value2 = e.Count()
+				});
+
+			Assert.That(() => query.ToArray(), Throws.Exception.InstanceOf<LinqException>());
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/3859")]
+		public void Issue3859Test3([DataSources] string context)
+		{
+			var ms = new MappingSchema();
+			new FluentMappingBuilder(ms)
+				.Entity<FluentMetadataBasedStore>()
+					.DynamicColumnsStore(x => x.Values)
+					.Property(x => x.Id).IsColumn()
+				.Build();
+
+			using var db = GetDataContext(context, ms);
+			using var tb = db.CreateLocalTable<FluentMetadataBasedStore>();
+
+			var query = tb
+				.Select(x => new
+				{
+					Value1 = x.Values["All"],
+					Value2 = x.Id
+				})
+				.AsEnumerable()
+				.GroupBy(x => x.Value1,
+				(g, e) => new
+				{
+					Value1 = g,
+					Value2 = e.Count()
+				});
+
+			query.ToArray();
 		}
 	}
 }

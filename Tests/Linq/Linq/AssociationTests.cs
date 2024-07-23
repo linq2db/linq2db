@@ -2129,6 +2129,33 @@ namespace Tests.Linq
 			public int Position { get; set; }
 		}
 		#endregion
+
+		#region issue 4274
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4274")]
+		public void Issue4274Test([DataSources(false)] string context)
+		{
+			using var db = GetDataConnection(context);
+
+			var query1 = (
+					from serv in db.Patient
+					group serv by new { serv.PersonID } into gr
+					select new Patient
+					{
+						PersonID = gr.Key.PersonID,
+					}
+				);
+
+			var query2 = (
+					from serv in query1
+					where serv.Person.ID == 1
+					select serv
+				);
+
+			var result = query2.ToList();
+		}
+
+		#endregion
 	}
 
 	public static class AssociationExtension
