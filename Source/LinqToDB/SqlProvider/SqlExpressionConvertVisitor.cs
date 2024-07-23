@@ -769,7 +769,7 @@ namespace LinqToDB.SqlProvider
 			if (!ReferenceEquals(newPredicate, predicate))
 				return Visit(newPredicate);
 
-			var doNotSupportCorrelatedSubQueries = SqlProviderFlags.DoesNotSupportCorrelatedSubquery;
+			var doNotSupportCorrelatedSubQueries = SqlProviderFlags.SupportedCorrelatedSubqueriesLevel == 0;
 
 			var testExpression  = predicate.Expr1;
 			var valueExpression = predicate.SubQuery.Select.Columns[0].Expression;

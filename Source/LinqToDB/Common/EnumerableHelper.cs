@@ -185,7 +185,7 @@ namespace LinqToDB.Common
 			{
 				if (_finished) return false;
 
-				_isCurrent = await _source.MoveNextAsync().ConfigureAwait(Configuration.ContinueOnCapturedContext);
+				_isCurrent = await _source.MoveNextAsync().ConfigureAwait(false);
 				_current   = _isCurrent ? GetNewEnumerable() : null;
 				_finished  = !_isCurrent;
 
@@ -198,7 +198,7 @@ namespace LinqToDB.Common
 				yield return _source.Current;
 				while (++returned < _batchSize)
 				{
-					if (_finished || !await _source.MoveNextAsync().ConfigureAwait(Configuration.ContinueOnCapturedContext))
+					if (_finished || !await _source.MoveNextAsync().ConfigureAwait(false))
 					{
 						_finished = true;
 						yield break;

@@ -28,11 +28,6 @@ namespace LinqToDB.Linq.Builder
 
 			if (notNull.Count == 0)
 			{
-				/*
-				if (!allowNullField)
-					return null;
-					*/
-
 				if (builder.DataContext.SqlProviderFlags.IsAccessBuggyLeftJoinConstantNullability)
 				{
 					if (placeholders.Count == 0)
@@ -42,8 +37,13 @@ namespace LinqToDB.Linq.Builder
 				}
 				else
 				{
-					notNull.Add(SequenceHelper.CreateSpecialProperty(new ContextRefExpression(notNullHandlerSequence.ElementType, notNullHandlerSequence), typeof(int?),
-						DefaultIfEmptyContext.NotNullPropName));
+					notNull.Add(
+						SequenceHelper.CreateSpecialProperty(
+							new ContextRefExpression(notNullHandlerSequence.ElementType, notNullHandlerSequence),
+							typeof(int?),
+							DefaultIfEmptyContext.NotNullPropName
+						)
+					);
 				}
 
 			}
@@ -93,7 +93,13 @@ namespace LinqToDB.Linq.Builder
 					defaultValueContext.SelectQuery.Select.AddNew(new SqlValue(1));
 				}
 
-				var defaultIfEmptyContext = new DefaultIfEmptyContext(buildInfo.Parent, sequence, sequence, null, true, false);
+				var defaultIfEmptyContext = new DefaultIfEmptyContext(
+					buildInfo.Parent,
+					sequence,
+					sequence,
+					defaultValue: null,
+					allowNullField: true,
+					isNullValidationDisabled: false);
 
 				var notNullConditions = defaultIfEmptyContext.GetNotNullConditions();
 
@@ -167,7 +173,7 @@ namespace LinqToDB.Linq.Builder
 				if (ExpressionEqualityComparer.Instance.Equals(newPath, path))
 					return path;
 
-				if (flags.IsTraverse() || flags.IsRoot() || flags.IsTable() || flags.IsExtractProjection())
+				if (flags.IsTraverse() || flags.IsRoot() || flags.IsTable() || flags.IsExtractProjection() || flags.IsAggregationRoot())
 					return newPath;
 
 				if ((flags.IsSql() || flags.IsExpression()) && SequenceHelper.IsSpecialProperty(path, typeof(int?), NotNullPropName))

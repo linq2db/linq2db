@@ -124,7 +124,7 @@ namespace LinqToDB.Async
 		private static async ValueTask<IAsyncDbTransaction> WrapValue<TTransaction>(ValueTask<TTransaction> transaction)
 			where TTransaction : DbTransaction
 		{
-			return Create(await transaction.ConfigureAwait(Configuration.ContinueOnCapturedContext));
+			return Create(await transaction.ConfigureAwait(false));
 		}
 
 		private static Func<DbTransaction, IAsyncDbTransaction> TransactionFactory(Type type)

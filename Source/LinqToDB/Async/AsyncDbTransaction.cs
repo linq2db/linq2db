@@ -30,20 +30,20 @@ namespace LinqToDB.Async
 
 		public virtual void Commit  ()
 		{
-			using var a = ActivityService.Start(ActivityID.TransactionCommit)?.AddQueryInfo(DataConnection, DataConnection?.Connection, null);
+			using var a = ActivityService.Start(ActivityID.TransactionCommit)?.AddQueryInfo(DataConnection, DataConnection?.CurrentConnection, null);
 			Transaction.Commit();
 		}
 
 		public virtual void Rollback()
 		{
-			using var a = ActivityService.Start(ActivityID.TransactionRollback)?.AddQueryInfo(DataConnection, DataConnection?.Connection, null);
+			using var a = ActivityService.Start(ActivityID.TransactionRollback)?.AddQueryInfo(DataConnection, DataConnection?.CurrentConnection, null);
 			Transaction.Rollback();
 		}
 
 		public virtual Task CommitAsync(CancellationToken cancellationToken)
 		{
 #if NET6_0_OR_GREATER
-			var a = ActivityService.StartAndConfigureAwait(ActivityID.TransactionCommitAsync)?.AddQueryInfo(DataConnection, DataConnection?.Connection, null);
+			var a = ActivityService.StartAndConfigureAwait(ActivityID.TransactionCommitAsync)?.AddQueryInfo(DataConnection, DataConnection?.CurrentConnection, null);
 
 			if (a is null)
 				return Transaction.CommitAsync(cancellationToken);
@@ -53,10 +53,10 @@ namespace LinqToDB.Async
 			static async Task CallAwaitUsing(AsyncDisposableWrapper activity, DbTransaction transaction, CancellationToken token)
 			{
 				await using (activity)
-					await transaction.CommitAsync(token).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+					await transaction.CommitAsync(token).ConfigureAwait(false);
 			}
 #else
-			using var a = ActivityService.Start(ActivityID.TransactionCommitAsync)?.AddQueryInfo(DataConnection, DataConnection?.Connection, null);
+			using var a = ActivityService.Start(ActivityID.TransactionCommitAsync)?.AddQueryInfo(DataConnection, DataConnection?.CurrentConnection, null);
 
 			Transaction.Commit();
 			return Task.CompletedTask;
@@ -66,7 +66,7 @@ namespace LinqToDB.Async
 		public virtual Task RollbackAsync(CancellationToken cancellationToken)
 		{
 #if NET6_0_OR_GREATER
-			var a = ActivityService.StartAndConfigureAwait(ActivityID.TransactionRollbackAsync)?.AddQueryInfo(DataConnection, DataConnection?.Connection, null);
+			var a = ActivityService.StartAndConfigureAwait(ActivityID.TransactionRollbackAsync)?.AddQueryInfo(DataConnection, DataConnection?.CurrentConnection, null);
 
 			if (a is null)
 				return Transaction.RollbackAsync(cancellationToken);
@@ -76,10 +76,10 @@ namespace LinqToDB.Async
 			static async Task CallAwaitUsing(AsyncDisposableWrapper activity, DbTransaction transaction, CancellationToken token)
 			{
 				await using (activity)
-					await transaction.RollbackAsync(token).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+					await transaction.RollbackAsync(token).ConfigureAwait(false);
 			}
 #else
-			using var a = ActivityService.Start(ActivityID.TransactionRollbackAsync)?.AddQueryInfo(DataConnection, DataConnection?.Connection, null);
+			using var a = ActivityService.Start(ActivityID.TransactionRollbackAsync)?.AddQueryInfo(DataConnection, DataConnection?.CurrentConnection, null);
 
 			Transaction.Rollback();
 			return Task.CompletedTask;
@@ -90,7 +90,7 @@ namespace LinqToDB.Async
 
 		public virtual void Dispose()
 		{
-			using var _ = ActivityService.Start(ActivityID.TransactionDispose)?.AddQueryInfo(DataConnection, DataConnection?.Connection, null);
+			using var _ = ActivityService.Start(ActivityID.TransactionDispose)?.AddQueryInfo(DataConnection, DataConnection?.CurrentConnection, null);
 			Transaction.Dispose();
 		}
 
@@ -101,7 +101,7 @@ namespace LinqToDB.Async
 		{
 			if (Transaction is IAsyncDisposable asyncDisposable)
 			{
-				var a = ActivityService.StartAndConfigureAwait(ActivityID.TransactionDisposeAsync)?.AddQueryInfo(DataConnection, DataConnection?.Connection, null);
+				var a = ActivityService.StartAndConfigureAwait(ActivityID.TransactionDisposeAsync)?.AddQueryInfo(DataConnection, DataConnection?.CurrentConnection, null);
 
 				if (a is null)
 					return asyncDisposable.DisposeAsync();
@@ -111,11 +111,11 @@ namespace LinqToDB.Async
 				static async ValueTask CallAwaitUsing(AsyncDisposableWrapper activity, IAsyncDisposable disposable)
 				{
 					await using (activity)
-						await disposable.DisposeAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+						await disposable.DisposeAsync().ConfigureAwait(false);
 				}
 			}
 
-			using var _ = ActivityService.Start(ActivityID.TransactionDisposeAsync)?.AddQueryInfo(DataConnection, DataConnection?.Connection, null);
+			using var _ = ActivityService.Start(ActivityID.TransactionDisposeAsync)?.AddQueryInfo(DataConnection, DataConnection?.CurrentConnection, null);
 
 			Transaction.Dispose();
 			return default;

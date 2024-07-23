@@ -187,7 +187,7 @@ namespace LinqToDB.Linq.Builder
 
 				if (useExists)
 				{
-					if (Builder.DataContext.SqlProviderFlags.DoesNotSupportCorrelatedSubquery)
+					if (Builder.DataContext.SqlProviderFlags.SupportedCorrelatedSubqueriesLevel == 0)
 					{
 						return null;
 					}

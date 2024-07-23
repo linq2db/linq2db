@@ -185,7 +185,8 @@ namespace LinqToDB.Linq.Builder
 				SqlJoinedTable? fakeJoin = null;
 
 				// add fake join there is no still reference
-				if (null == clonedParentContext.SelectQuery.Find(e => e is SelectQuery sc && sc == clonedContext.SelectQuery))
+				if (clonedParentContext.SelectQuery.From.Tables.Count > 0 
+					&& clonedParentContext.SelectQuery.Find(e => e is SelectQuery sc && sc == clonedContext.SelectQuery) == null)
 				{
 					fakeJoin = clonedContext.SelectQuery.OuterApply().JoinedTable;
 
@@ -213,7 +214,7 @@ namespace LinqToDB.Linq.Builder
 				if (!SqlProviderHelper.IsValidQuery(optimizedQuery, 
 					    parentQuery: null, 
 					    fakeJoin: fakeJoin, 
-					    forColumn: false, 
+					    columnSubqueryLevel: null, 
 					    parent.Builder.DataContext.SqlProviderFlags, 
 					    out errorMessage))
 				{
@@ -4530,6 +4531,16 @@ namespace LinqToDB.Linq.Builder
 					return MakeExpression(currentContext, corrected, flags);
 				}
 
+				if (memberExpression.Member.IsNullableHasValueMember())
+				{
+					var corrected = MakeExpression(currentContext, memberExpression.Expression, flags);
+					if (corrected.Type != memberExpression.Expression.Type)
+					{
+						corrected = Expression.Convert(corrected, memberExpression.Expression.Type);
+					}
+					return memberExpression.Update(corrected);
+				}
+
 				if (memberExpression.Expression.NodeType is ExpressionType.Convert or ExpressionType.ConvertChecked)
 				{
 					var unary = (UnaryExpression)memberExpression.Expression;
@@ -4767,7 +4778,7 @@ namespace LinqToDB.Linq.Builder
 				{
 					// Do recursive again
 					var convertedAgain = MakeExpression(currentContext, expression, flags);
-					if (convertedAgain is not SqlErrorExpression)
+					if (convertedAgain is not SqlErrorExpression errorExpression || errorExpression.IsCritical)
 						expression = convertedAgain;
 				}
 				else
