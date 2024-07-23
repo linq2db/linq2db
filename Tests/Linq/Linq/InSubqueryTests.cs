@@ -57,7 +57,7 @@ namespace Tests.Linq
 
 			preferExists = preferExists || db.SqlProviderFlags.IsExistsPreferableForContains;
 
-			if (preferExists && !db.SqlProviderFlags.DoesNotSupportCorrelatedSubquery)
+			if (preferExists && db.SqlProviderFlags.SupportedCorrelatedSubqueriesLevel != 0)
 				Assert.That(sqlStr, Is.Not.Contains(" IN ").And.Contains("EXISTS"));
 			else
 				Assert.That(sqlStr, Is.Not.Contains("EXISTS").And.Contains(" IN "));
@@ -127,7 +127,7 @@ namespace Tests.Linq
 				where new { c.ParentID, Value = c.ParentID }.In(db.Parent.Select(p => new { p.ParentID, Value = p.Value1 ?? -1 }))
 				select c;
 
-			if (db.SqlProviderFlags.DoesNotSupportCorrelatedSubquery)
+			if (db.SqlProviderFlags.SupportedCorrelatedSubqueriesLevel == 0)
 			{
 				FluentActions.Invoking(() => AssertQuery(query)).Should().Throw<LinqException>();
 			}
@@ -147,7 +147,7 @@ namespace Tests.Linq
 				where new { c.ParentID, Value = c.ParentID }.In(db.Parent.Select(p => new { p.ParentID, Value = p.Value1!.Value }).Take(100))
 				select c;
 
-			if (db.SqlProviderFlags.DoesNotSupportCorrelatedSubquery)
+			if (db.SqlProviderFlags.SupportedCorrelatedSubqueriesLevel == 0)
 			{
 				FluentActions.Invoking(() => AssertQuery(query)).Should().Throw<LinqException>();
 			}
@@ -169,7 +169,7 @@ namespace Tests.Linq
 			if (compareNullsAsValues == false)
 				Assert.That(LastQuery, Is.Not.Contains(" IS NULL").And.Not.Contains("IS NOT NULL"));
 
-			if ((preferExists || db.SqlProviderFlags.IsExistsPreferableForContains) && !db.SqlProviderFlags.DoesNotSupportCorrelatedSubquery)
+			if ((preferExists || db.SqlProviderFlags.IsExistsPreferableForContains) && db.SqlProviderFlags.SupportedCorrelatedSubqueriesLevel != 0)
 				Assert.That(LastQuery, Is.Not.Contains(" IN ").And.Contains("EXISTS"));
 			else
 				Assert.That(LastQuery, Is.Not.Contains("EXISTS").And.Contains(" IN "));

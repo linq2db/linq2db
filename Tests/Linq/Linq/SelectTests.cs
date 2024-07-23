@@ -1983,5 +1983,46 @@ namespace Tests.Linq
 			}
 		}
 		#endregion
+
+		#region Issue 3372
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/3372")]
+		public void Issue3372Test1([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = db.Person
+					.Select(e => new
+					{
+						FirstName = e.FirstName,
+						MiddleName = e.Patient!.Person != null && e.Patient.Person.LastName != null
+							? new { Id = e.Patient.Person.LastName }
+							: null
+					});
+
+			query.ToList();
+
+			Assert.That(query.GetSelectQuery().Select.Columns, Has.Count.EqualTo(3));
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/3372")]
+		public void Issue3372Test2([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = db.Person
+					.Select(e => new
+					{
+						FirstName = e.FirstName,
+						MiddleName = e.Patient!.Person != null && e.Patient.Person.MiddleName != null
+							? new { Id = e.Patient.Person.MiddleName }
+							: null
+					});
+
+			query.ToList();
+
+			Assert.That(query.GetSelectQuery().Select.Columns, Has.Count.EqualTo(3));
+		}
+		#endregion
 	}
 }

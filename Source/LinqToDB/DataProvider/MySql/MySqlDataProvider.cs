@@ -44,8 +44,8 @@ namespace LinqToDB.DataProvider.MySql
 			SqlProviderFlags.IsWindowFunctionsSupported        = Version >= MySqlVersion.MySql80;
 
 			SqlProviderFlags.IsSubqueryWithParentReferenceInJoinConditionSupported = false;
-			SqlProviderFlags.IsColumnSubqueryWithParentReferenceSupported = false;
-			SqlProviderFlags.RowConstructorSupport             = RowFeature.Equality | RowFeature.Comparisons | RowFeature.CompareToSelect | RowFeature.In;
+			SqlProviderFlags.SupportedCorrelatedSubqueriesLevel                    = 1;
+			SqlProviderFlags.RowConstructorSupport                                 = RowFeature.Equality | RowFeature.Comparisons | RowFeature.CompareToSelect | RowFeature.In;
 
 			SqlProviderFlags.IsUpdateTakeSupported     = true;
 
