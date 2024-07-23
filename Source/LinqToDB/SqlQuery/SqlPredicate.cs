@@ -285,7 +285,7 @@ namespace LinqToDB.SqlQuery
 			}
 
 			public ISqlPredicate Reduce(NullabilityContext nullability, EvaluationContext context, bool insideNot, LinqOptions options)
-			{				
+			{
 				if (options.CompareNulls == CompareNulls.LikeSql)
 					return this;
 
@@ -294,7 +294,7 @@ namespace LinqToDB.SqlQuery
 					return new ExprExpr(Expr1, Operator, Expr2, null);
 				}
 
-				// CompareNulls.LikeSqlExceptParameters and CompareNulls.LikeClr 
+				// CompareNulls.LikeSqlExceptParameters and CompareNulls.LikeClr
 				// always sniffs parameters to == and != (for backward compatibility).
 				if (Operator == Operator.Equal || Operator == Operator.NotEqual)
 				{
@@ -311,7 +311,7 @@ namespace LinqToDB.SqlQuery
 				}
 
 				// Only CompareNulls.LikeClr handles all conditions.
-				// Notice that it sometimes creates operands `WithNull: null` 
+				// Notice that it sometimes creates operands `WithNull: null`
 				// when it wants specific expressions to work as LikeSql.
 				if (WithNull == null || nullability.IsEmpty)
 					return this;

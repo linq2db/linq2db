@@ -29,14 +29,14 @@ namespace LinqToDB.SqlProvider
 		}
 
 		public virtual IQueryElement Optimize(
-			EvaluationContext           evaluationContext, 
-			NullabilityContext          nullabilityContext, 
-			IVisitorTransformationInfo? transformationInfo, 
+			EvaluationContext           evaluationContext,
+			NullabilityContext          nullabilityContext,
+			IVisitorTransformationInfo? transformationInfo,
 			DataOptions                 dataOptions,
 			MappingSchema               mappingSchema,
-			IQueryElement               element,           
-			bool                        visitQueries,       
-			bool                        isInsideNot,        
+			IQueryElement               element,
+			bool                        visitQueries,
+			bool                        isInsideNot,
 			bool                        reduceBinary)
 		{
 			Cleanup();

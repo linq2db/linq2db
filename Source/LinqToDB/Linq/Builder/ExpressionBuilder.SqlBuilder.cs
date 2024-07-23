@@ -2096,8 +2096,6 @@ namespace LinqToDB.Linq.Builder
 			var leftExpr         = ConvertToSqlExpr(context, left,  keysFlag, columnDescriptor : columnDescriptor);
 			var rightExpr        = ConvertToSqlExpr(context, right, keysFlag, columnDescriptor : columnDescriptor);
 
-			var compareNulls = CompareNulls;
-
 			//SQLRow case when needs to add Single
 			//
 			if (leftExpr is SqlPlaceholderExpression { Sql: SqlRowExpression } && rightExpr is not SqlPlaceholderExpression)
@@ -2253,7 +2251,7 @@ namespace LinqToDB.Linq.Builder
 				case ExpressionType.Equal:
 				case ExpressionType.NotEqual:
 
-					if (Configuration.Linq.CompareNulls != CompareNulls.LikeSql &&
+					if (CompareNulls != CompareNulls.LikeSql &&
 						!context!.SelectQuery.IsParameterDependent &&
 						(l is SqlParameter && lOriginal.CanBeNullable(nullability) || r is SqlParameter && r.CanBeNullable(nullability)))
 					{
@@ -2327,7 +2325,7 @@ namespace LinqToDB.Linq.Builder
 						if (trueValue.ElementType  == QueryElementType.SqlValue &&
 						    falseValue.ElementType == QueryElementType.SqlValue)
 						{
-							var withNullValue = compareNulls == CompareNulls.LikeClr
+							var withNullValue = CompareNulls == CompareNulls.LikeClr
 								? withNull
 								: (bool?)null;
 							predicate = new SqlPredicate.IsTrue(expression, trueValue, falseValue, withNullValue, isNot);
@@ -2350,7 +2348,7 @@ namespace LinqToDB.Linq.Builder
 
 				if (predicate == null)
 				{
-					if (compareNulls == CompareNulls.LikeClr)
+					if (CompareNulls == CompareNulls.LikeClr)
 					{
 						if (lOriginal is SqlColumn colLeft)
 							lOriginal = SqlNullabilityExpression.ApplyNullability(lOriginal, NullabilityContext.GetContext(colLeft.Parent));
@@ -2367,7 +2365,7 @@ namespace LinqToDB.Linq.Builder
 					}
 
 					predicate = new SqlPredicate.ExprExpr(lOriginal, op, rOriginal,
-						compareNulls == CompareNulls.LikeClr
+						CompareNulls == CompareNulls.LikeClr
 							? true
 							: null);
 				}
