@@ -185,7 +185,8 @@ namespace LinqToDB.Linq.Builder
 				SqlJoinedTable? fakeJoin = null;
 
 				// add fake join there is no still reference
-				if (clonedParentContext.SelectQuery.From.Tables.Count > 0 && null == clonedParentContext.SelectQuery.Find(e => e is SelectQuery sc && sc == clonedContext.SelectQuery))
+				if (clonedParentContext.SelectQuery.From.Tables.Count > 0 
+					&& clonedParentContext.SelectQuery.Find(e => e is SelectQuery sc && sc == clonedContext.SelectQuery) == null)
 				{
 					fakeJoin = clonedContext.SelectQuery.OuterApply().JoinedTable;
 
