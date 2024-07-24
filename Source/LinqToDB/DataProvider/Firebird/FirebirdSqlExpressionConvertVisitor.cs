@@ -3,6 +3,7 @@
 namespace LinqToDB.DataProvider.Firebird
 {
 	using Extensions;
+	using LinqToDB.Common;
 	using SqlProvider;
 	using SqlQuery;
 
@@ -170,7 +171,7 @@ namespace LinqToDB.DataProvider.Firebird
 		{
 			if (predicate.ElementType == QueryElementType.ExprPredicate && predicate.Expr1 is SqlParameter p && p.Type.DataType != DataType.Boolean)
 			{
-				predicate = new SqlPredicate.ExprExpr(p, SqlPredicate.Operator.Equal, MappingSchema.GetSqlValue(p.Type, true), DataOptions.LinqOptions.CompareNullsAsValues ? true : null);
+				predicate = new SqlPredicate.ExprExpr(p, SqlPredicate.Operator.Equal, MappingSchema.GetSqlValue(p.Type, true), DataOptions.LinqOptions.CompareNulls == CompareNulls.LikeClr ? true : null);
 			}
 
 			return base.VisitExprPredicate(predicate);
