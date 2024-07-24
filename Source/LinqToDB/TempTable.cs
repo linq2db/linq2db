@@ -699,6 +699,7 @@ namespace LinqToDB
 			return _table.ExecuteAsyncEnumerable<TResult>(expression, cancellationToken);
 		}
 
+		Expression IQueryProviderAsync.Expression => ((IQueryable)_table).Expression;
 		#endregion
 
 		#region IExpressionQuery<T>

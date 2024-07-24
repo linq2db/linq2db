@@ -84,7 +84,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			[SqlQueryDependent] params Sql.SqlID[] tableIDs)
 			where TSource : notnull
 		{
-			var currentSource = LinqExtensions.ProcessSourceQueryable?.Invoke(source) ?? source;
+			var currentSource = source.ProcessIQueryable();
 
 			return new PostgreSQLSpecificQueryable<TSource>(currentSource.Provider.CreateQuery<TSource>(
 				Expression.Call(
@@ -118,7 +118,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			[SqlQueryDependent] params Sql.SqlID[] tableIDs)
 			where TSource : notnull
 		{
-			var currentSource = LinqExtensions.ProcessSourceQueryable?.Invoke(source) ?? source;
+			var currentSource = source.ProcessIQueryable();
 
 			return new PostgreSQLSpecificQueryable<TSource>(currentSource.Provider.CreateQuery<TSource>(
 				Expression.Call(

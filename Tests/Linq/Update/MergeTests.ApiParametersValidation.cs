@@ -190,12 +190,13 @@ namespace Tests.xUpdate
 		sealed class FakeTable<TEntity> : ITable<TEntity>
 			where TEntity : notnull
 		{
-			IDataContext   IExpressionQuery.DataContext => throw new NotImplementedException();
-			Expression     IExpressionQuery.Expression  => throw new NotImplementedException();
-			string         IExpressionQuery.SqlText     => throw new NotImplementedException();
-			Type           IQueryable.      ElementType => throw new NotImplementedException();
-			Expression     IQueryable.      Expression  => throw new NotImplementedException();
-			IQueryProvider IQueryable.      Provider    => new FakeQueryProvider();
+			IDataContext   IExpressionQuery.   DataContext => throw new NotImplementedException();
+			Expression     IExpressionQuery.   Expression  => throw new NotImplementedException();
+			string         IExpressionQuery.   SqlText     => throw new NotImplementedException();
+			Type           IQueryable.         ElementType => throw new NotImplementedException();
+			Expression     IQueryable.         Expression  => throw new NotImplementedException();
+			IQueryProvider IQueryable.         Provider    => new FakeQueryProvider();
+			Expression     IQueryProviderAsync.Expression  => throw new NotImplementedException();
 
 			Expression IExpressionQuery<TEntity>.Expression => Expression.Constant((ITable<TEntity>)this);
 
