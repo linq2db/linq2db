@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 
 namespace LinqToDB.Linq
 {
+	using Common;
 	using Common.Internal.Cache;
 	using Mapping;
 	using SqlQuery;
@@ -272,7 +273,7 @@ namespace LinqToDB.Linq
 			var wsc = firstStatement.SelectQuery.Where.EnsureConjunction();
 
 			foreach (var key in keys)
-				wsc.AddEqual(key.Column, key.Expression!, false);
+				wsc.AddEqual(key.Column, key.Expression!, CompareNulls.LikeSql);
 
 			// TODO! looks not working solution
 			if (firstStatement.Update.Items.Count > 0)

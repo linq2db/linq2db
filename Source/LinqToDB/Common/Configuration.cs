@@ -1,15 +1,15 @@
 ﻿using System;
+using System.ComponentModel;
 using System.Data;
 using System.Linq.Expressions;
 using System.Reflection;
+using System.Text;
 using System.Threading.Tasks;
 
 using JetBrains.Annotations;
 
 namespace LinqToDB.Common
 {
-	using System.Text;
-
 	using Data;
 	using Data.RetryPolicy;
 	using Linq;
@@ -283,9 +283,14 @@ namespace LinqToDB.Common
 			}
 
 			/// <summary>
-			/// If set to true nullable fields would be checked for IS NULL in Equal/NotEqual comparisons.
+			/// If set to <see cref="CompareNulls.LikeClr" /> nullable fields would be checked for <c>IS NULL</c> in Equal/NotEqual comparisons.
+			/// If set to <see cref="CompareNulls.LikeSql" /> comparisons are compiled straight to equivalent SQL operators,
+	  		/// which consider nulls values as not equal.
+			/// <see cref="CompareNulls.LikeSqlExceptParameters" /> is a backward compatible option that works mostly as <see cref="CompareNulls.LikeSql" />,
+			/// but sniffs parameters value and changes = into <c>IS NULL</c> when parameters are null.
+			/// Comparisons to literal null are always compiled into <c>IS NULL</c>.
 			/// This affects: Equal, NotEqual, Not Contains
-			/// Default value: <c>true</c>.
+			/// Default value: <see cref="CompareNulls.LikeClr" />.
 			/// </summary>
 			/// <example>
 			/// <code>
@@ -304,7 +309,7 @@ namespace LinqToDB.Common
 			/// db.MyEntity.Where(e => ! filter.Contains(e.Value))
 			/// </code>
 			///
-			/// Would be converted to next queries:
+			/// Would be converted to next queries under <see cref="CompareNulls.LikeClr" />:
 			/// <code>
 			/// SELECT Value FROM MyEntity WHERE Value IS NULL OR Value != 10
 			///
@@ -315,14 +320,21 @@ namespace LinqToDB.Common
 			/// SELECT Value FROM MyEntity WHERE Value IS NULL OR NOT Value IN (1, 2, 3)
 			/// </code>
 			/// </example>
-			public static bool CompareNullsAsValues
+			public static CompareNulls CompareNulls
 			{
-				get => Options.CompareNullsAsValues;
+				get => Options.CompareNulls;
 				set
 				{
-					if (Options.CompareNullsAsValues != value)
-						Options = Options with { CompareNullsAsValues = value };
+					if (Options.CompareNulls != value)
+						Options = Options with { CompareNulls = value };
 				}
+			}
+
+			[Obsolete("Use CompareNulls instead: true maps to LikeClr and false to LikeSqlExceptParameters"), EditorBrowsable(EditorBrowsableState.Never)]
+			public static bool CompareNullsAsValues
+			{
+				get => CompareNulls == CompareNulls.LikeClr;
+				set => CompareNulls = value ? CompareNulls.LikeClr : CompareNulls.LikeSqlExceptParameters;
 			}
 
 			/// <summary>

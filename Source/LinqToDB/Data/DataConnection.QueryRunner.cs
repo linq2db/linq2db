@@ -224,7 +224,7 @@ namespace LinqToDB.Data
 					{
 						if (!statement.IsParameterDependent)
 						{
-							if (sqlOptimizer.IsParameterDependent(NullabilityContext.NonQuery, statement))
+							if (sqlOptimizer.IsParameterDependent(NullabilityContext.NonQuery, statement, options))
 								statement.IsParameterDependent = true;
 						}
 					}
