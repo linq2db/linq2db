@@ -1197,7 +1197,7 @@ namespace LinqToDB.Linq.Builder
 					var column1 = _sequence1.SelectQuery.Select.Columns[i];
 					var column2 = _sequence2.SelectQuery.Select.Columns[i];
 
-					sc.AddEqual(column1.Expression, column2.Expression, Builder.DataOptions.LinqOptions.CompareNullsAsValues);
+					sc.AddEqual(column1.Expression, column2.Expression, Builder.DataOptions.LinqOptions.CompareNulls);
 				}
 
 				_sequence2.SelectQuery.Select.Columns.Clear();

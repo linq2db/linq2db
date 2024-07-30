@@ -1,4 +1,5 @@
 ﻿using LinqToDB;
+using LinqToDB.Common;
 
 namespace Tests
 {
@@ -9,7 +10,8 @@ namespace Tests
 		/// </summary>
 		public static DataOptions OmitUnsupportedCompareNulls(this DataOptions options, string context)
 		{
-			return options.WithOptions(options.LinqOptions.WithCompareNullsAsValues(!context.IsAnyOf(TestProvName.AllClickHouse)));
+			return options.WithOptions(options.LinqOptions.WithCompareNulls(
+				context.IsAnyOf(TestProvName.AllClickHouse) ? CompareNulls.LikeSql : CompareNulls.LikeClr));
 		}
 	}
 }

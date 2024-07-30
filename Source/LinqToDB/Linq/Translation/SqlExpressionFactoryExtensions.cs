@@ -197,22 +197,22 @@ namespace LinqToDB.Linq.Translation
 
 		public static ISqlPredicate Greater(this ISqlExpressionFactory factory, ISqlExpression expr1, ISqlExpression expr2)
 		{
-			return new SqlPredicate.ExprExpr(expr1, SqlPredicate.Operator.Greater, expr2, factory.DataOptions.LinqOptions.CompareNullsAsValues ? false : null);
+			return new SqlPredicate.ExprExpr(expr1, SqlPredicate.Operator.Greater, expr2, factory.DataOptions.LinqOptions.CompareNulls == CompareNulls.LikeClr ? false : null);
 		}
 
 		public static ISqlPredicate GreaterOrEqual(this ISqlExpressionFactory factory, ISqlExpression expr1, ISqlExpression expr2)
 		{
-			return new SqlPredicate.ExprExpr(expr1, SqlPredicate.Operator.GreaterOrEqual, expr2, factory.DataOptions.LinqOptions.CompareNullsAsValues ? true : null);
+			return new SqlPredicate.ExprExpr(expr1, SqlPredicate.Operator.GreaterOrEqual, expr2, factory.DataOptions.LinqOptions.CompareNulls == CompareNulls.LikeClr ? true : null);
 		}
 
 		public static ISqlPredicate Less(this ISqlExpressionFactory factory, ISqlExpression expr1, ISqlExpression expr2)
 		{
-			return new SqlPredicate.ExprExpr(expr1, SqlPredicate.Operator.Less, expr2, factory.DataOptions.LinqOptions.CompareNullsAsValues ? false : null);
+			return new SqlPredicate.ExprExpr(expr1, SqlPredicate.Operator.Less, expr2, factory.DataOptions.LinqOptions.CompareNulls == CompareNulls.LikeClr ? false : null);
 		}
 
 		public static ISqlPredicate LessOrEqual(this ISqlExpressionFactory factory, ISqlExpression expr1, ISqlExpression expr2)
 		{
-			return new SqlPredicate.ExprExpr(expr1, SqlPredicate.Operator.LessOrEqual, expr2, factory.DataOptions.LinqOptions.CompareNullsAsValues ? true : null);
+			return new SqlPredicate.ExprExpr(expr1, SqlPredicate.Operator.LessOrEqual, expr2, factory.DataOptions.LinqOptions.CompareNulls == CompareNulls.LikeClr ? true : null);
 		}
 
 		#endregion
