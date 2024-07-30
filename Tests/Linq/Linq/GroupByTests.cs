@@ -3615,5 +3615,42 @@ namespace Tests.Linq
 
 			db.LastQuery.Should().Contain("SELECT", Exactly.Once());
 		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/3250")]
+		public void Issue3250Test1([DataSources(false)] string context)
+		{
+			using var db = GetDataConnection(context);
+
+			var query = from s in db.Person
+						where s.LastName != "ERROR"
+						group s by 1 into g
+						where g.Count() > 0
+						select new
+						{
+							Message = $"{g.Count()} items have not been processed, e.g. #{g.Min(x => x.ID)}."
+						};
+
+			query.ToList();
+
+			db.LastQuery.Should().Contain("SELECT", Exactly.Once());
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/3250")]
+		public void Issue3250Test2([DataSources(false)] string context)
+		{
+			using var db = GetDataConnection(context);
+
+			var query = db.Person
+				.Where(s => s.LastName != "ERROR")
+				.Having(_ => Sql.Ext.Count().ToValue() > 0)
+				.Select(s => new
+				{
+					Message = $"{ Sql.Ext.Count().ToValue() } items have not been processed, e.g. #{ Sql.Ext.Min(s.ID).ToValue() }.",
+				});
+
+			query.ToList();
+
+			db.LastQuery.Should().Contain("SELECT", Exactly.Once());
+		}
 	}
 }

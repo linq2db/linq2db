@@ -1010,5 +1010,34 @@ namespace Tests.xUpdate
 			[Column(CanBeNull = false, Length = 1000)] public string DisplayName { get; set; } = null!;
 		}
 		#endregion
+
+		[ActiveIssue]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4584")]
+		public void Issue4584Test([MergeDataContextSource(false)] string context)
+		{
+			using var db = GetDataConnection(context);
+
+			var records = new Person[]
+			{
+				new Person() { ID = 123, FirstName = "first name", LastName = "last name" }
+			};
+
+			db
+				.Person
+				.Merge()
+				.Using(records)
+				.OnTargetKey()
+				.InsertWhenNotMatchedAnd(
+					s => s.ID == -123,
+					s => new()
+					{
+						FirstName = s.FirstName,
+						LastName = s.LastName,
+						Gender = s.Gender,
+					})
+				.Merge();
+
+			Assert.That(db.LastQuery!.Count(_ => _ == GetParameterToken(context)), Is.EqualTo(6));
+		}
 	}
 }

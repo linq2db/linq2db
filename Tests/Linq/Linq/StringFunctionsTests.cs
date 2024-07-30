@@ -607,5 +607,28 @@ namespace Tests.Linq
 			_ = (from p in db.Person where p.FirstName == "A" + p.FirstName + "B" select p).ToList();
 			Assert.That(db.LastQuery, Contains.Substring("Concat('A', `p`.`FirstName`, 'B')"));
 		}
+
+		[ActiveIssue]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/1916")]
+		public void Issue1916Test1([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var cnt = db.Person.Where(p => string.Concat(p.FirstName, p.MiddleName) != null).Count();
+
+			Assert.That(cnt, Is.EqualTo(4));
+		}
+
+		[ActiveIssue]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/1916")]
+		public void Issue1916Test2([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			// TODO: update nullability annotations for Sql.Concat to allow nullable parameters
+			var cnt = db.Person.Where(p => Sql.Concat(p.FirstName, p.MiddleName!) != null).Count();
+
+			Assert.That(cnt, Is.EqualTo(4));
+		}
 	}
 }

@@ -280,5 +280,52 @@ namespace Tests.Data
 			public Task<TResult> ExecuteAsync<TResult>(Func<CancellationToken, Task<TResult>> operation, CancellationToken cancellationToken = new CancellationToken()) => throw new NotImplementedException("ExecuteAsyncT");
 			public Task          ExecuteAsync(Func<CancellationToken, Task> operation, CancellationToken cancellationToken = new CancellationToken())                   => throw new NotImplementedException("ExecuteAsync");
 		}
+
+		#region Issue 3431
+
+		// issue reproduced on Open for MySqlConnector
+		[ActiveIssue]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/3431")]
+		public void Issue3431Test1([IncludeDataSources(TestProvName.AllMySqlConnector)] string context)
+		{
+			var connectionString = DataConnection.GetConnectionString(context);
+			var provider = DataConnection.GetDataProvider(context);
+
+			using var db = GetDataContext(
+				context,
+				o => o
+					.UseRetryPolicy(new Issue3431RetryPolicy())
+					.UseConnectionString(provider, "BAD" + connectionString));
+
+			db.Person.ToArray();
+		}
+
+		[ActiveIssue]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/3431")]
+		public async Task Issue3431Test2([IncludeDataSources(TestProvName.AllMySqlConnector)] string context)
+		{
+			var connectionString = DataConnection.GetConnectionString(context);
+			var provider = DataConnection.GetDataProvider(context);
+
+			using var db = GetDataContext(
+				context,
+				o => o
+					.UseRetryPolicy(new Issue3431RetryPolicy())
+					.UseConnectionString(provider, "BAD" + connectionString));
+
+			await db.Person.ToArrayAsync();
+		}
+
+		sealed class Issue3431RetryPolicy : RetryPolicyBase
+		{
+			public Issue3431RetryPolicy()
+				: base(1, default, 1, 1, default)
+			{
+			}
+
+			protected override bool ShouldRetryOn(Exception exception) => true;
+		}
+
+		#endregion
 	}
 }

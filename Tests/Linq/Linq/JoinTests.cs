@@ -3342,5 +3342,72 @@ namespace Tests.Linq
 			 select new { u.ID, x, }
 			).ToList();
 		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/3560")]
+		public void Issue3560Test1([DataSources(false, TestProvName.AllClickHouse)] string context, [Values] CompareNulls compareNulls)
+		{
+			using var db = GetDataConnection(context, o => o.UseCompareNulls(compareNulls));
+
+			var query = (from p1 in db.Person
+						 join p2 in db.Person on p1.MiddleName equals p2.MiddleName
+						 select new { p1, p2 });
+			query.ToArray();
+
+			var isNullCount = db.LastQuery!.Split(["IS NULL"], StringSplitOptions.None).Length - 1;
+			Assert.That(isNullCount, Is.EqualTo(compareNulls == CompareNulls.LikeSql ? 0 : 2));
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/3560")]
+		public void Issue3560Test2([DataSources(false, TestProvName.AllClickHouse, TestProvName.AllMySql)] string context, [Values] CompareNulls compareNulls)
+		{
+			using var db = GetDataConnection(context, o => o.UseCompareNulls(compareNulls));
+
+			// null + str => str
+			var query = (from p1 in db.Person
+						 join p2 in db.Person on p1.MiddleName equals p2.MiddleName + " Jr."
+						 select new { p1, p2 });
+			query.ToArray();
+
+			var isNullCount = db.LastQuery!.Split(["IS NULL"], StringSplitOptions.None).Length - 1;
+			Assert.Multiple(() =>
+			{
+				Assert.That(isNullCount, Is.EqualTo(0));
+				Assert.That(db.LastQuery, Does.Contain(" Jr."));
+			});
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/3560")]
+		public void Issue3560Test3([DataSources(false, TestProvName.AllClickHouse)] string context, [Values] CompareNulls compareNulls)
+		{
+			using var db = GetDataConnection(context, o => o.UseCompareNulls(compareNulls));
+
+			var query = (from p1 in db.Parent
+						 join p2 in db.Parent on p1.Value1 equals p2.Value1
+						 select new { p1, p2 });
+			query.ToArray();
+
+			var isNullCount = db.LastQuery!.Split(["IS NULL"], StringSplitOptions.None).Length - 1;
+			Assert.That(isNullCount, Is.EqualTo(compareNulls == CompareNulls.LikeSql ? 0 : 2));
+		}
+
+		[ActiveIssue]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/3560")]
+		public void Issue3560Test4([DataSources(false, TestProvName.AllClickHouse)] string context, [Values] CompareNulls compareNulls)
+		{
+			using var db = GetDataConnection(context, o => o.UseCompareNulls(compareNulls));
+
+			// null + int => null
+			var query = (from p1 in db.Parent
+						 join p2 in db.Parent on p1.Value1 equals p2.Value1 + 321
+						 select new { p1, p2 });
+			query.ToArray();
+
+			var isNullCount = db.LastQuery!.Split(["IS NULL"], StringSplitOptions.None).Length - 1;
+			Assert.Multiple(() =>
+			{
+				Assert.That(isNullCount, Is.EqualTo(compareNulls == CompareNulls.LikeSql ? 0 : 2));
+				Assert.That(db.LastQuery, Does.Contain(321));
+			});
+		}
 	}
 }
