@@ -1969,5 +1969,50 @@ namespace Tests.Linq
 			[Column] public int? ParentId { get; set; }
 		}
 		#endregion
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/3181")]
+		public void Issue3181Test1([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q = from t1 in db.Person
+					let t2 = new Person()
+					{
+						FirstName = t1.FirstName,
+					}
+					select new Person()
+					{
+						FirstName = t2.FirstName,
+						LastName = t2.LastName,
+						Gender = t2.Gender
+					};
+
+			var res = q.ToList();
+			Assert.That(res.All(r => r.LastName == null), Is.True);
+			Assert.That(res.All(r => r.Gender == default), Is.True);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/3181")]
+		public void Issue3181Test2([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q = from t2 in
+						from t1 in db.Person
+						select new Person()
+						{
+							FirstName = t1.FirstName,
+						}
+					select new Person()
+					{
+						FirstName = t2.FirstName,
+						LastName = t2.LastName,
+						Gender = t2.Gender
+					};
+
+			var res = q.ToList();
+			Assert.That(res.All(r => r.LastName == null), Is.True);
+			Assert.That(res.All(r => r.Gender == default), Is.True);
+		}
 	}
 }

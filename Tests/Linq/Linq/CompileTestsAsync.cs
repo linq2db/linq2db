@@ -756,5 +756,19 @@ namespace Tests.Linq
 
 			Assert.AreSame(result1[0], result2[0]);
 		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/3266")]
+		public async Task Issue3266Test([DataSources(false)] string context)
+		{
+			var query = CompiledQuery.Compile(
+				(ITestDataContext db, int id) =>  db.Person
+					.Where(p => p.ID == id)
+					.Set(p => p.LastName, "updated")
+					.UpdateAsync(default));
+
+			using var db  = GetDataContext(context);
+
+			await query(db, -1);
+		}
 	}
 }

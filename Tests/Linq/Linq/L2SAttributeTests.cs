@@ -9,12 +9,12 @@ using TableAttribute = System.ComponentModel.DataAnnotations.Schema.TableAttribu
 
 using LinqToDB;
 using LinqToDB.Common;
+using LinqToDB.Metadata;
 
 using NUnit.Framework;
 
 namespace Tests.Linq
 {
-	using LinqToDB.Metadata;
 	using Model;
 
 #if NET472
@@ -84,6 +84,24 @@ namespace Tests.Linq
 
 				db.GetTable<L2SPersons>().Delete(p => p.PersonID == ConvertTo<int>.From(id));
 			}
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/3691")]
+		public void Issue3691Test([DataSources] string context)
+		{
+			var ms = new LinqToDB.Mapping.MappingSchema();
+			ms.AddMetadataReader(new SystemComponentModelDataAnnotationsSchemaAttributeReader());
+#if NET472
+			ms.AddMetadataReader(new SystemDataLinqAttributeReader());
+#endif
+			using var db = GetDataContext(context, ms);
+			using var tb = db.CreateLocalTable<Issue3691Table>();
+		}
+
+		[Table("Issue3691Table")]
+		sealed class Issue3691Table
+		{
+			public int Id { get; set; }
 		}
 	}
 }

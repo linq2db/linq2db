@@ -14,6 +14,8 @@ namespace Tests.Linq
 	using LinqToDB.Data;
 	using Model;
 
+	using Org.BouncyCastle.Asn1.Cms;
+
 	[TestFixture]
 	public class ComplexTests : TestBase
 	{
@@ -727,5 +729,46 @@ namespace Tests.Linq
 
 			Assert.AreEqual(3, query.GetSelectQuery().Select.Columns.Count);
 		}
+
+		#region Issue 4139
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4139")]
+		public void Issue4139Test([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable(Issue4139Table.Data);
+
+			var records = tb.LoadWith(t => t.Parent!.Parent).OrderBy(r => r.Id).ToArray();
+
+			Assert.That(records.Count, Is.EqualTo(2));
+			Assert.That(records[0].Parent, Is.Null);
+			Assert.That(records[1].Parent, Is.Not.Null);
+			Assert.That(records[1].Parent!.ParentId, Is.EqualTo(1));
+			Assert.That(records[1].Parent!.Parent, Is.Not.Null);
+			Assert.That(records[1].Parent!.Parent!.Id, Is.EqualTo(1));
+		}
+
+		[Table]
+		sealed class Issue4139Table
+		{
+			[Column] public int Id { get; set; }
+
+			[Column("ParentId", ".ParentId")]
+			// TODO: missing ctor
+			//[Association(".Parent", ThisKey = ".ParentId", OtherKey = "Id")]
+			public Issue4139Parent? Parent { get; set; }
+
+			public static readonly Issue4139Table[] Data = new[]
+			{
+				new Issue4139Table() { Id = 1 },
+				new Issue4139Table() { Id = 2, Parent = new() { ParentId = 1 } }
+			};
+		}
+
+		sealed class Issue4139Parent
+		{
+			public int? ParentId { get; set; }
+			public Issue4139Table? Parent { get; set; }
+		}
+		#endregion
 	}
 }

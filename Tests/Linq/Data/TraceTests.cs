@@ -12,7 +12,12 @@ using NUnit.Framework;
 
 namespace Tests.Data
 {
+	using System.Collections;
+
 	using Model;
+
+	using Tests.DataProvider;
+
 	using Tools;
 
 	[TestFixture]
@@ -585,7 +590,6 @@ namespace Tests.Data
 					Assert.AreEqual(0, counters[TraceInfoStep.Error]);
 				}
 			}
-
 		}
 
 		[Test]
@@ -787,6 +791,21 @@ namespace Tests.Data
 
 			Assert.True(builderWriteCalled, "because the data connection should have used the action from the builder");
 			Assert.False(staticWriteCalled, "because the data connection should have used the action from the builder");
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/3663")]
+		public void Issue3663Test([DataSources(false)] string context)
+		{
+			using var db = GetDataConnection(context, o => o.UseTracing(Trace));
+			db.Person.ToArray();
+
+			db.Query<Person>(db.LastQuery!).ToArray();
+
+			static void Trace(TraceInfo trace)
+			{
+				_ = trace.Command?.CommandText;
+				_ = trace.SqlText;
+			}
 		}
 	}
 }

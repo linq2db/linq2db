@@ -511,7 +511,7 @@ namespace Tests.Linq
 					}
 
 					return CompareValues(x.ExtendedProperties, y.ExtendedProperties) &&
-					       CompareValues(y.ExtendedProperties, x.ExtendedProperties);
+						   CompareValues(y.ExtendedProperties, x.ExtendedProperties);
 				}
 
 				public int GetHashCode(SomeClassWithDynamic obj)
@@ -758,5 +758,21 @@ namespace Tests.Linq
 			public Dictionary<string, object?> Values { get; set; } = new();
 		}
 		#endregion
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/2817")]
+		public void Issue2817Test([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			IQueryable<Person> query = from p in db.Person
+				   orderby p.LastName
+				   select p;
+
+			query = ApplyFilterToGeneric(query);
+
+			query.ToList();
+
+			static IQueryable<T> ApplyFilterToGeneric<T>(IQueryable<T> query) => query.Where(p => Sql.Property<string>(p, "LastName") == "ministra");
+		}
 	}
 }

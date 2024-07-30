@@ -808,5 +808,52 @@ namespace Tests.Mapping
 			Assert.AreEqual(GenderEnum.Female, records[2].Gender);
 			Assert.AreEqual(GenderEnum.Male,   records[3].Gender);
 		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/3119")]
+		public void Issue3119Test()
+		{
+			var mb = new FluentMappingBuilder();
+
+			mb.Entity<Issue3119Entity>()
+				.Property(u => u.UserId)
+				.HasAttribute(new ColumnAttribute() { IsIdentity = true })
+				.HasAttribute(new ColumnAttribute() { IsPrimaryKey = true });
+
+			mb.Build();
+
+			var attrs = mb.MappingSchema.GetAttributes<ColumnAttribute>(typeof(Issue3119Entity), typeof(Issue3119Entity).GetProperty("UserId")!);
+
+			Assert.That(attrs, Has.Length.EqualTo(1));
+			Assert.That(attrs[0].IsIdentity, Is.True);
+			Assert.That(attrs[0].IsPrimaryKey, Is.True);
+		}
+
+		sealed class Issue3119Entity
+		{
+			public int UserId { get; set; }
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/3136")]
+		public void Issue3136Test()
+		{
+			const string configuration = "MyConfiguration";
+			var mb = new FluentMappingBuilder();
+
+			mb
+				.Entity<Issue3119Entity>()
+				.Property(u => u.UserId)
+				.Entity<Issue3119Entity>(configuration)
+				.HasAttribute(new ColumnAttribute() { IsIdentity = true });
+
+			mb.Build();
+
+			var attrs = mb.MappingSchema.GetAttributes<ColumnAttribute>(typeof(Issue3119Entity), typeof(Issue3119Entity).GetProperty("UserId")!);
+
+			Assert.That(attrs, Has.Length.EqualTo(2));
+			Assert.That(attrs[0].IsIdentity, Is.False);
+			Assert.That(attrs[0].Configuration, Is.Null);
+			Assert.That(attrs[1].IsIdentity, Is.True);
+			Assert.That(attrs[1].Configuration, Is.EqualTo(configuration));
+		}
 	}
 }

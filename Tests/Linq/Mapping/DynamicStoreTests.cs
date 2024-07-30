@@ -1,4 +1,5 @@
 ﻿using LinqToDB;
+using LinqToDB.Data;
 using LinqToDB.Linq;
 using LinqToDB.Mapping;
 using NUnit.Framework;
@@ -100,7 +101,7 @@ namespace Tests.Mapping
 			}
 		}
 
-		[DynamicColumnAccessor(GetterExpressionMethod = nameof(GetPropertyExpression), SetterExpressionMethod =nameof(SetPropertyExpression))]
+		[DynamicColumnAccessor(GetterExpressionMethod = nameof(GetPropertyExpression), SetterExpressionMethod = nameof(SetPropertyExpression))]
 		sealed class InstanceGetterSetterExpressionMethods : CustomSetterGetterBase
 		{
 			public static Expression<Func<InstanceGetterSetterExpressionMethods, string, object, object>> GetPropertyExpression
@@ -943,5 +944,40 @@ namespace Tests.Mapping
 
 			query.ToArray();
 		}
+
+		#region Issue 2953
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/2953")]
+		public void Issue2953Test1([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var result = db.FromSql<DbEntity>("SELECT * FROM Person WHERE PersonID = 1").ToArray();
+
+			Assert.That(result, Has.Length.EqualTo(1));
+			Assert.That(result[0].Properties.ContainsKey("FirstName"), Is.True);
+			Assert.That(result[0].Properties["FirstName"], Is.EqualTo("John"));
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/2953")]
+		public void Issue2953Test2([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			using var db = GetDataConnection(context);
+
+			var result = db.Query<DbEntity>("SELECT * FROM Person WHERE PersonID = 1").ToArray();
+
+			Assert.That(result, Has.Length.EqualTo(1));
+			Assert.That(result[0].Properties.ContainsKey("FirstName"), Is.True);
+			Assert.That(result[0].Properties["FirstName"], Is.EqualTo("John"));
+		}
+
+		[Table("Person")]
+		sealed class DbEntity
+		{
+			[Column] public int PersonID { get; set; }
+
+			[DynamicColumnsStore]
+			public Dictionary<string, object> Properties { get; set; } = new();
+		}
+		#endregion
 	}
 }

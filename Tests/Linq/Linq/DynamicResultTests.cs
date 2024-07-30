@@ -1,4 +1,5 @@
-﻿using System.Dynamic;
+﻿using System.Collections.Generic;
+using System.Dynamic;
 using System.Linq;
 using LinqToDB.Data;
 using LinqToDB.Mapping;
@@ -74,5 +75,49 @@ namespace Tests
 			}
 		}
 
+		[Test]
+		public void Issue3520Test([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllSqlServerSequentialAccess)] string context, [Values(1, 10)] int param)
+		{
+			var data = RawDynamicData.Seed();
+
+			using (var db = (DataConnection)GetDataContext(context))
+			using (db.CreateLocalTable(data))
+			{
+				var result = db.Query<MyObject>("select * from RawDynamicData where AId >= @param", new {param = param}).ToList();
+
+				var casted = result.Cast<dynamic>().Select(x =>
+						new RawDynamicData
+						{
+							AId = (int)x.AId,
+							AValue = (int)x.AValue,
+							BId = (int)x.BId,
+							BValue = (int)x.BValue
+						})
+					.ToArray();
+
+				AreEqualWithComparer(data.Where(x => x.AId >= param), casted);
+			}
+		}
+
+		class MyObject : DynamicObject
+		{
+			private Dictionary<string, object?> _data = new();
+			public override bool TryInvokeMember(InvokeMemberBinder binder, object?[]? args, out object? result)
+			{
+				return _data.TryGetValue(binder.Name, out result);
+			}
+			public override bool TryInvoke(InvokeBinder binder, object?[]? args, out object? result)
+			{
+				return base.TryInvoke(binder, args, out result);
+			}
+			public override bool TrySetMember(SetMemberBinder binder, object? value)
+			{
+				return _data.TryAdd(binder.Name, value);
+			}
+			public override bool TryGetMember(GetMemberBinder binder, out object? result)
+			{
+				return _data.TryGetValue(binder.Name, out result);
+			}
+		}
 	}
 }
