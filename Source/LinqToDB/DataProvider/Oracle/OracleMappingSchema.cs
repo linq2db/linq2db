@@ -76,7 +76,7 @@ namespace LinqToDB.DataProvider.Oracle
 			SetValueToSqlConverter(typeof(Binary),         (sb, _,_,v) => ConvertBinaryToSql  (sb,     ((Binary)v).ToArray()));
 
 #if NET6_0_OR_GREATER
-			SetValueToSqlConverter(typeof(DateOnly),       (sb,dt,_,v) => ConvertDateOnlyToSql(sb, dt, (DateOnly)v));
+			SetValueToSqlConverter(typeof(DateOnly),       (sb,dt,_,v) => ConvertDateOnlyToSql(sb, (DateOnly)v));
 #endif
 
 			// adds floating point special values support
@@ -204,7 +204,7 @@ namespace LinqToDB.DataProvider.Oracle
 		}
 
 #if NET6_0_OR_GREATER
-		static void ConvertDateOnlyToSql(StringBuilder stringBuilder, SqlDataType dataType, DateOnly value)
+		static void ConvertDateOnlyToSql(StringBuilder stringBuilder, DateOnly value)
 		{
 			stringBuilder.AppendFormat(CultureInfo.InvariantCulture, DATE_FORMAT, value);
 		}

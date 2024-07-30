@@ -74,7 +74,7 @@ namespace LinqToDB.DataProvider.DB2
 			SetConverter<string, DateTime>(ParseDateTime);
 
 #if NET6_0_OR_GREATER
-			SetValueToSqlConverter(typeof(DateOnly), (sb,dt,_,v) => ConvertDateOnlyToSql(sb, dt, (DateOnly)v));
+			SetValueToSqlConverter(typeof(DateOnly), (sb,dt,_,v) => ConvertDateOnlyToSql(sb, (DateOnly)v));
 			SetConverter<string, DateOnly>(ParseDateOnly);
 #endif
 		}
@@ -131,7 +131,7 @@ namespace LinqToDB.DataProvider.DB2
 		}
 
 #if NET6_0_OR_GREATER
-		static void ConvertDateOnlyToSql(StringBuilder stringBuilder, SqlDataType dt, DateOnly value)
+		static void ConvertDateOnlyToSql(StringBuilder stringBuilder, DateOnly value)
 		{
 			stringBuilder.Append('\'');
 			stringBuilder.AppendFormat(CultureInfo.InvariantCulture, DATE_FORMAT, value);

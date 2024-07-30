@@ -18,6 +18,12 @@ dotnet_diagnostic.ca1827.severity = error # CA1827: Do not use Count/LongCount w
 dotnet_diagnostic.ca2007.severity = error # CA2007: Do not directly await a Task
 dotnet_diagnostic.ca1829.severity = error # CA1829: Use Length/Count property instead of Enumerable.Count method
 
+dotnet_diagnostic.CA1823.severity = error # CA1823: Avoid unused private fields
+dotnet_diagnostic.IDE0051.severity = error # Remove unused private member
+dotnet_diagnostic.IDE0052.severity = error # Remove unread private member
+dotnet_diagnostic.IDE0060.severity = error # Remove unused parameter
+
+
 # ReSharper properties
 resharper_csharp_allow_far_alignment = true
 resharper_int_align_switch_sections = true

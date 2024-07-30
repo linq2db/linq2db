@@ -144,7 +144,7 @@ namespace LinqToDB.SqlQuery
 
 		#endregion
 
-		internal static SqlField FakeField(DbDataType dataType, string fieldName, bool canBeNull)
+		internal static SqlField FakeField(DbDataType dataType, string fieldName)
 		{
 			var field = new SqlField(fieldName, fieldName);
 			field.Type = dataType;
