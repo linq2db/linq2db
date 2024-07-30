@@ -8,7 +8,7 @@
 		<TreatWarningsAsErrors>true</TreatWarningsAsErrors>
 
 		<ArtifactsPath>$(MSBuildThisFileDirectory)..\..\.build</ArtifactsPath>
-		<ArtifactsPivots>$(Configuration)\$(TargetFramework)</ArtifactsPivots>
+		<ArtifactsPivots>$(Configuration)</ArtifactsPivots>
 
 		<ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
 
