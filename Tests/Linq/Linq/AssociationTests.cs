@@ -1984,6 +1984,28 @@ namespace Tests.Linq
 			public int Position { get; set; }
 		}
 		#endregion
+
+		[Test]
+		public void ManyAssociationEmptyCheck1([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var parents = db.Parent.Where(p => p.Children != null).ToArray();
+
+			Assert.That(parents, Has.Length.EqualTo(6));
+			Assert.That(parents.Any(p => p.ParentID == 5), Is.False);
+		}
+
+		[Test]
+		public void ManyAssociationEmptyCheck2([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var parents = db.Parent.Where(p => p.Children == null).ToArray();
+
+			Assert.That(parents, Has.Length.EqualTo(1));
+			Assert.That(parents[0].ParentID, Is.EqualTo(5));
+		}
 	}
 
 	public static class AssociationExtension
