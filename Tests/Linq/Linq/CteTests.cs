@@ -2162,5 +2162,32 @@ namespace Tests.Linq
 				Assert.That(count, Is.EqualTo(4));
 			});
 		}
+
+		[Test]
+		public void IssueCteDuplicateColumn([CteContextSource] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var cte1 = db.Parent
+				.Where(r => r.Value1 != null)
+				.Select(c => new DuplicateColumnRecord(c.ParentID, c.Value1!.Value))
+				.AsCte();
+
+			var cte2 = db.Parent
+				.Where(r => r.Value1 != null)
+				.Select(p => new DuplicateColumnRecord(p.ParentID, p.Value1!.Value))
+				.AsCte();
+
+			var cte3 = cte2
+				.Concat(
+				from record1 in cte2
+				join record2 in cte1 on record1.Id2 equals record2.Id1
+				select new DuplicateColumnRecord(record1.Id1, record2.Id2))
+				.AsCte();
+
+			cte3.ToArray();
+		}
+
+		private sealed record DuplicateColumnRecord(int Id1, int Id2);
 	}
 }
