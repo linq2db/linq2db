@@ -914,5 +914,130 @@ namespace Tests.xUpdate
 				.UpdateWhenMatched()
 				.Merge();
 		}
+
+		// merge into CTE supported only by SQL Server
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4338")]
+		public void Issue4338Test([IncludeDataSources(true, TestProvName.AllSqlServer2005)] string context)
+		{
+			// prepare data before fiters applied
+			using (var db1 = GetDataContext(context))
+				PrepareData(db1);
+
+			using var db = GetDataContext(context);
+
+			var values = new int[] { 11, 22 };
+
+			db
+				.GetTable<Child>()
+				.Where(ai => ai.Parent!.Value1 == -99)
+				.AsCte()
+				.Merge()
+				.Using(values.Select(u => new { Value1 = u }))
+				.On((dst, src) => dst.ParentID == src.Value1)
+				.InsertWhenNotMatchedAnd(
+					s => s.Value1 == -123,
+					s => new()
+					{
+						ParentID = 10,
+						ChildID = s.Value1
+					})
+				.Merge();
+		}
+
+		#region issue 2918
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/2918")]
+		public void Issue2918Test([MergeDataContextSource(TestProvName.AllSqlServer2016Minus, TestProvName.AllSybase, TestProvName.AllInformix)] string context)
+		{
+			// prepare data before fiters applied
+			using var db = GetDataContext(context);
+			using var t1 = db.CreateLocalTable<PatentAssessment>();
+			using var t2 = db.CreateLocalTable<PatentAssessmentTechnicalReviewer>();
+			using var t3 = db.CreateLocalTable<User>();
+
+			var userId = 1;
+
+			var query = from pa in t1
+						where t2.Any(patr => patr.UserId == userId && patr.PatentId == pa.PatentId)
+						select new PatentAssessment
+						{
+							PatentId = pa.PatentId,
+							TechnicalReviewersText = t2.LoadWith(patr => patr.User)
+														.Where(patr => patr.PatentId == pa.PatentId)
+														.StringAggregate("; ", patr => patr.User.DisplayName)
+														.OrderBy(patr => patr.User.DisplayName)
+														.ToValue()
+						};
+
+			t1
+				.Merge()
+				.Using(query)
+				.OnTargetKey()
+				.UpdateWhenMatched((target, source) => new PatentAssessment()
+				{
+					TechnicalReviewersText = source.TechnicalReviewersText
+				})
+				.Merge();
+		}
+
+		[Table]
+		sealed class PatentAssessment
+		{
+			[PrimaryKey] public int PatentId { get; set; }
+			[Column(Length = 1000)] public string? TechnicalReviewersText { get; set; }
+
+			[Association(ThisKey = nameof(PatentId), OtherKey = nameof(PatentAssessmentTechnicalReviewer.PatentId))]
+			public List<PatentAssessmentTechnicalReviewer> TechnicalReviewers { get; set; } = null!;
+		}
+
+		// use shorter name
+		[Table("Issue2918Table2")]
+		sealed class PatentAssessmentTechnicalReviewer
+		{
+			[Column] public int PatentId { get; set; }
+			[Column] public int UserId { get; set; }
+
+			[Association(ThisKey = nameof(PatentId), OtherKey = nameof(PatentAssessment.PatentId))]
+			public PatentAssessment PatentAssessment { get; set; } = null!;
+
+			[Association(ThisKey = nameof(UserId), OtherKey = nameof(User.Id))]
+			public User User { get; set; } = null!;
+		}
+
+		[Table]
+		sealed class User
+		{
+			[PrimaryKey] public int Id { get; set; }
+			[Column(CanBeNull = false, Length = 1000)] public string DisplayName { get; set; } = null!;
+		}
+		#endregion
+
+		[ActiveIssue]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4584")]
+		public void Issue4584Test([MergeDataContextSource(false)] string context)
+		{
+			using var db = GetDataConnection(context);
+
+			var records = new Person[]
+			{
+				new Person() { ID = 123, FirstName = "first name", LastName = "last name" }
+			};
+
+			db
+				.Person
+				.Merge()
+				.Using(records)
+				.OnTargetKey()
+				.InsertWhenNotMatchedAnd(
+					s => s.ID == -123,
+					s => new()
+					{
+						FirstName = s.FirstName,
+						LastName = s.LastName,
+						Gender = s.Gender,
+					})
+				.Merge();
+
+			Assert.That(db.LastQuery!.Count(_ => _ == GetParameterToken(context)), Is.EqualTo(6));
+		}
 	}
 }

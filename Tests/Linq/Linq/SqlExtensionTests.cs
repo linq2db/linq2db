@@ -1,8 +1,14 @@
 ﻿using System;
+using System.Collections;
+using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using System.Reflection;
 
 using LinqToDB;
+using LinqToDB.Expressions;
+using LinqToDB.Extensions;
+using LinqToDB.Mapping;
 using LinqToDB.SqlQuery;
 
 using NUnit.Framework;
@@ -374,7 +380,7 @@ namespace Tests.Linq
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
-					from t in    Types select           Sql.Ext.DatePart(Sql.DateParts.Year, t.DateTimeValue),
+					from t in Types select Sql.Ext.DatePart(Sql.DateParts.Year, t.DateTimeValue),
 					from t in db.Types select Sql.AsSql(Sql.Ext.DatePart(Sql.DateParts.Year, t.DateTimeValue)));
 		}
 
@@ -383,7 +389,7 @@ namespace Tests.Linq
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
-					from t in    Types select           Sql.Ext.DatePart(Sql.DateParts.Quarter, t.DateTimeValue),
+					from t in Types select Sql.Ext.DatePart(Sql.DateParts.Quarter, t.DateTimeValue),
 					from t in db.Types select Sql.AsSql(Sql.Ext.DatePart(Sql.DateParts.Quarter, t.DateTimeValue)));
 		}
 
@@ -392,7 +398,7 @@ namespace Tests.Linq
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
-					from t in    Types select           Sql.Ext.DatePart(Sql.DateParts.Month, t.DateTimeValue),
+					from t in Types select Sql.Ext.DatePart(Sql.DateParts.Month, t.DateTimeValue),
 					from t in db.Types select Sql.AsSql(Sql.Ext.DatePart(Sql.DateParts.Month, t.DateTimeValue)));
 		}
 
@@ -401,7 +407,7 @@ namespace Tests.Linq
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
-					from t in    Types select           Sql.Ext.DatePart(Sql.DateParts.DayOfYear, t.DateTimeValue),
+					from t in Types select Sql.Ext.DatePart(Sql.DateParts.DayOfYear, t.DateTimeValue),
 					from t in db.Types select Sql.AsSql(Sql.Ext.DatePart(Sql.DateParts.DayOfYear, t.DateTimeValue)));
 		}
 
@@ -410,7 +416,7 @@ namespace Tests.Linq
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
-					from t in    Types select           Sql.Ext.DatePart(Sql.DateParts.Day, t.DateTimeValue),
+					from t in Types select Sql.Ext.DatePart(Sql.DateParts.Day, t.DateTimeValue),
 					from t in db.Types select Sql.AsSql(Sql.Ext.DatePart(Sql.DateParts.Day, t.DateTimeValue)));
 		}
 
@@ -426,7 +432,7 @@ namespace Tests.Linq
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
-					from t in    Types select           Sql.Ext.DatePart(Sql.DateParts.WeekDay, t.DateTimeValue),
+					from t in Types select Sql.Ext.DatePart(Sql.DateParts.WeekDay, t.DateTimeValue),
 					from t in db.Types select Sql.AsSql(Sql.Ext.DatePart(Sql.DateParts.WeekDay, t.DateTimeValue)));
 		}
 
@@ -435,7 +441,7 @@ namespace Tests.Linq
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
-					from t in    Types select           Sql.Ext.DatePart(Sql.DateParts.Hour, t.DateTimeValue),
+					from t in Types select Sql.Ext.DatePart(Sql.DateParts.Hour, t.DateTimeValue),
 					from t in db.Types select Sql.AsSql(Sql.Ext.DatePart(Sql.DateParts.Hour, t.DateTimeValue)));
 		}
 
@@ -444,7 +450,7 @@ namespace Tests.Linq
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
-					from t in    Types select           Sql.Ext.DatePart(Sql.DateParts.Minute, t.DateTimeValue),
+					from t in Types select Sql.Ext.DatePart(Sql.DateParts.Minute, t.DateTimeValue),
 					from t in db.Types select Sql.AsSql(Sql.Ext.DatePart(Sql.DateParts.Minute, t.DateTimeValue)));
 		}
 
@@ -453,7 +459,7 @@ namespace Tests.Linq
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
-					from t in    Types select           Sql.Ext.DatePart(Sql.DateParts.Second, t.DateTimeValue),
+					from t in Types select Sql.Ext.DatePart(Sql.DateParts.Second, t.DateTimeValue),
 					from t in db.Types select Sql.AsSql(Sql.Ext.DatePart(Sql.DateParts.Second, t.DateTimeValue)));
 		}
 
@@ -467,6 +473,124 @@ namespace Tests.Linq
 		}
 
 
+		#endregion
+
+		#region Issue 4222
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4222")]
+		public void Issue4222Test1([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable<Entry>();
+
+			var ek = new EntryKey("default", 2007);
+			var result = tb.Where(e => KeyEquals(e, ek)).ToArray();
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4222")]
+		public void Issue4222Test2([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable<Entry>();
+
+			var ek = new EntryKey[]
+			{
+				new EntryKey("default", 2007),
+				new EntryKey("other", 2008)
+			};
+			var result = tb.Where(e => KeysEquals(e, ek)).ToArray();
+		}
+
+		[Sql.Extension(typeof(CompositeKeyEqualsExtensionBuilder), IsPredicate = true, ServerSideOnly = true)]
+		static bool KeyEquals<TKey>(IKeyProvider<TKey> entity, TKey value)
+			where TKey : notnull
+		{
+			throw new LinqToDBException($"{nameof(KeyEquals)} is not intended to be used directly");
+		}
+
+		[Sql.Extension(typeof(CompositeKeyEqualsExtensionBuilder), IsPredicate = true, ServerSideOnly = true)]
+		static bool KeysEquals<TKey>(IKeyProvider<TKey> entity, TKey[] values)
+			where TKey : notnull
+		{
+			throw new LinqToDBException($"{nameof(KeysEquals)} is not intended to be used directly");
+		}
+
+		class CompositeKeyEqualsExtensionBuilder : Sql.IExtensionCallBuilder
+		{
+			public void Build(Sql.ISqExtensionBuilder builder)
+			{
+				var entityType = builder.Arguments[0].Type;
+				var entityDescriptor = builder.DataContext.MappingSchema.GetEntityDescriptor(entityType);
+				var tableExp = builder.GetExpression(0)!;
+				var keyProviderType = entityType
+					.GetInterfaces()
+					.First(static i => i.IsConstructedGenericType && i.GetGenericTypeDefinition() == typeof(IKeyProvider<>));
+				var keyType = keyProviderType.GetGenericArguments().First();
+				var value = builder.Arguments[1].EvaluateExpression();
+
+				var left = new SqlRowExpression(
+					keyType.GetRuntimeProperties()
+						.Where(prop => !prop.HasAttribute<NotColumnAttribute>())
+						.Select(prop => entityType.GetProperties().First(eProp => eProp.Name.Equals(prop.Name)))
+						.Select(prop => new SqlField(entityDescriptor.Columns.First(c => c.MemberInfo == prop))
+						{
+							Table = ((SqlField)tableExp).Table
+						})
+					// .Select(fieldExp => new SqlExpression("{0}.{1}", tableExp, fieldExp)) // trying to make table.Field
+						.Cast<ISqlExpression>()
+						.ToArray());
+
+				if (value!.GetType().IsArray)
+				{
+					var values = new List<SqlRowExpression>();
+					foreach (var v in (IEnumerable)value)
+					{
+						var row = new SqlRowExpression(
+						keyType.GetRuntimeProperties()
+							.Where(prop => !prop.HasAttribute<NotColumnAttribute>())
+							.Select(prop => new SqlValue(prop.PropertyType, prop.GetValue(v)))
+							.Cast<ISqlExpression>()
+							.ToArray());
+						values.Add(row);
+					}
+					builder.ResultExpression = new SqlSearchCondition(false, new SqlPredicate.InList(left, null, false, values));
+				}
+				else
+				{
+					var right = new SqlRowExpression(
+						keyType.GetRuntimeProperties()
+							.Where(prop => !prop.HasAttribute<NotColumnAttribute>())
+							.Select(prop => new SqlValue(prop.PropertyType, prop.GetValue(value)))
+							.Cast<ISqlExpression>()
+							.ToArray());
+					builder.ResultExpression = new SqlSearchCondition(false, new SqlPredicate.ExprExpr(left, SqlPredicate.Operator.Equal, right, null));
+				}
+			}
+		}
+
+		interface IEntryKey
+		{
+			public string RecSrc { get; }
+			public int Value { get; }
+		}
+
+		record EntryKey(string RecSrc, int Value) : IEntryKey;
+
+		interface IKeyProvider<out TKey>
+			where TKey : notnull
+		{
+			[NotColumn]
+			public TKey Key { get; }
+		}
+
+		sealed class Entry : IKeyProvider<IEntryKey>, IEntryKey
+		{
+			public Guid Id { get; set; }
+			public string RecSrc { get; set; } = "default";
+			public int Value { get; set; }
+
+			public IEntryKey Key => this;
+		}
 		#endregion
 	}
 }

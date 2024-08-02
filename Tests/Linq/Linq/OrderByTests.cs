@@ -770,5 +770,30 @@ namespace Tests.Linq
 
 			Assert.That(q[0].ID, Is.EqualTo(enableConstantExpressionInOrderBy ? 1 : 3));
 		}
+
+		[ActiveIssue(Configurations = [TestProvName.AllOracle11, TestProvName.AllSqlServer2008Minus])]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4586")]
+		public void Issue4586Test([DataSources(false)] string context)
+		{
+			using var db  = GetDataConnection(context);
+
+			var result = db.Person.AsQueryable().Where(x => x.FirstName.StartsWith("J"))
+				.OrderBy(x => x.ID)
+				.Skip(1)
+				.Take(2)
+				.ToArray();
+
+			Assert.That(result, Has.Length.EqualTo(2));
+			Assert.Multiple(() =>
+			{
+				Assert.That(result[0].ID, Is.EqualTo(3));
+				Assert.That(result[1].ID, Is.EqualTo(4));
+			});
+
+			var selects = db.LastQuery!.Split(["SELECT"], StringSplitOptions.None).Length - 1;
+
+			Assert.That(selects, Is.EqualTo(1).Or.EqualTo(2).Or.EqualTo(3));
+			Assert.That(selects, Is.EqualTo(db.LastQuery.Split(["ORDER BY"], StringSplitOptions.None).Length - 1));
+		}
 	}
 }

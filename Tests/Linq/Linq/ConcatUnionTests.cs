@@ -2129,5 +2129,93 @@ namespace Tests.Linq
 
 			resultingQuery.ToList();
 		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4225")]
+		public void Issue4225Test1([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query1 = db.Person.Select(x => new
+			{
+				person = (Person?)x,
+				patient = (Patient?)null
+			});
+			var query2 = db.Patient.Select(x => new
+			{
+				person = (Person?)null,
+				patient = (Patient?)x
+			});
+
+			var q = query1.UnionAll(query2).ToList();
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4225")]
+		public void Issue4225Test2([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query1 = db.Person.Select(x => new
+			{
+				person = x,
+				patient = (Patient?)null!
+			});
+			var query2 = db.Patient.Select(x => new
+			{
+				person = (Person?)null!,
+				patient = x
+			});
+
+			var q = query1.UnionAll(query2).ToList();
+		}
+
+		#region Issue 4220
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4220")]
+		public void Issue4220Test([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var ta = db.CreateLocalTable<ConcreteA>();
+			using var tb = db.CreateLocalTable<ConcreteB>();
+
+			db.Insert(new ConcreteA { Id = 1, AOnly = "a only" });
+			db.Insert(new ConcreteB { Id = 2, BOnly = "b only" });
+
+			var result = ta.Select(e => new { A = (ConcreteA?)e, B = (ConcreteB?)null })
+				.UnionAll(tb.Select(e => new { A = (ConcreteA?)null, B = (ConcreteB?)e }))
+				.ToArray()
+				.Select(e => (Abstr?)e.A ?? e.B)
+				.OrderBy(e => e!.Id)
+				.ToArray()!;
+
+			Assert.That(result, Has.Length.EqualTo(2));
+
+			Assert.Multiple(() =>
+			{
+				Assert.That(result[0]!.Id, Is.EqualTo(1));
+				Assert.That(result[0], Is.InstanceOf<ConcreteA>());
+				Assert.That(((ConcreteA)result[0]!).AOnly, Is.EqualTo("a only"));
+
+				Assert.That(result[1]!.Id, Is.EqualTo(2));
+				Assert.That(result[1], Is.InstanceOf<ConcreteB>());
+				Assert.That(((ConcreteB)result[1]!).BOnly, Is.EqualTo("b only"));
+			});
+		}
+
+		record Abstr
+		{
+			[PrimaryKey] public int Id { get; set; }
+		}
+
+		[Table]
+		sealed record ConcreteA : Abstr
+		{
+			[Column] public string? AOnly { get; set; }
+		}
+
+		[Table]
+		sealed record ConcreteB : Abstr
+		{
+			[Column] public string? BOnly { get; set; }
+		}
+		#endregion
 	}
 }
