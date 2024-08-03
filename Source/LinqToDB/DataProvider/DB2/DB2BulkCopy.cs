@@ -80,7 +80,7 @@ namespace LinqToDB.DataProvider.DB2
 				if (connection != null)
 				{
 					var enumerator = source.GetAsyncEnumerator(cancellationToken);
-					await using (enumerator.ConfigureAwait(Configuration.ContinueOnCapturedContext))
+					await using (enumerator.ConfigureAwait(false))
 					{
 						// call the synchronous provider-specific implementation
 						return DB2BulkCopyShared.ProviderSpecificCopyImpl(
@@ -95,7 +95,7 @@ namespace LinqToDB.DataProvider.DB2
 				}
 			}
 
-			return await MultipleRowsCopyAsync(table, options, source, cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
+			return await MultipleRowsCopyAsync(table, options, source, cancellationToken).ConfigureAwait(false);
 		}
 
 		protected override BulkCopyRowsCopied MultipleRowsCopy<T>(ITable<T> table, DataOptions options, IEnumerable<T> source)

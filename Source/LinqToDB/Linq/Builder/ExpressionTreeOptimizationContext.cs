@@ -459,6 +459,13 @@ namespace LinqToDB.Linq.Builder
 					return node;
 				}
 
+				var tableFunction = node.Method.GetTableFunctionAttribute(_mappingSchema);
+				if (tableFunction != null)
+				{
+					_isServerSideOnly = true;
+					return node;
+				}
+
 				return base.VisitMethodCall(node);
 			}
 		}

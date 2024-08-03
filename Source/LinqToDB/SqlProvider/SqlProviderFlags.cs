@@ -72,6 +72,13 @@ namespace LinqToDB.SqlProvider
 		public bool        IsSubQueryTakeSupported        { get; set; }
 
 		/// <summary>
+		/// Indicates support for paging clause in derived table.
+		/// Default (set by <see cref="DataProviderBase"/>): <c>true</c>.
+		/// </summary>
+		[DataMember(Order = 60)]
+		public bool IsDerivedTableTakeSupported { get; set; }
+
+		/// <summary>
 		/// Indicates that provider has issue with any JOIN to subquery which has TOP statement.
 		/// Default <c>false</c>.
 		/// </summary>
@@ -298,12 +305,6 @@ namespace LinqToDB.SqlProvider
 		/// <summary>
 		/// Default value: <c>false</c>.
 		/// </summary>
-		[DataMember(Order = 38)]
-		public bool DoesNotSupportCorrelatedSubquery { get; set; }
-
-		/// <summary>
-		/// Default value: <c>false</c>.
-		/// </summary>
 		[DataMember(Order = 39)]
 		public bool IsExistsPreferableForContains   { get; set; }
 
@@ -320,13 +321,6 @@ namespace LinqToDB.SqlProvider
 		/// </summary>
 		[DataMember(Order = 41), DefaultValue(true)]
 		public bool IsSubqueryWithParentReferenceInJoinConditionSupported { get; set; } = true;
-
-		/// <summary>
-		/// Provider supports column subqueries which references outer scope when nesting is more than 1
-		/// Default value: <c>true</c>.
-		/// </summary>
-		[DataMember(Order = 42), DefaultValue(true)]
-		public bool IsColumnSubqueryWithParentReferenceSupported { get; set; } = true;
 
 		/// <summary>
 		/// Provider supports column subqueries which references outer scope when nesting is more than 1
@@ -493,6 +487,14 @@ namespace LinqToDB.SqlProvider
 		[DataMember(Order = 57)]
 		public bool IsSupportedSimpleCorrelatedSubqueries { get; set; }
 
+
+		/// <summary>
+		/// Provider supports correlated subqueris, but limited how deep in subquery outer reference
+		/// Default <c>null</c>. If this value is <c>0</c>c>, provider do not support correlated subqueries
+		/// </summary>
+		[DataMember(Order = 58)]
+		public int? SupportedCorrelatedSubqueriesLevel { get; set; }
+
 		public bool GetAcceptsTakeAsParameterFlag(SelectQuery selectQuery)
 		{
 			return AcceptsTakeAsParameter || AcceptsTakeAsParameterIfSkip && selectQuery.Select.SkipValue != null;
@@ -524,6 +526,7 @@ namespace LinqToDB.SqlProvider
 				^ IsSkipSupported                                      .GetHashCode()
 				^ IsSkipSupportedIfTake                                .GetHashCode()
 				^ IsSubQueryTakeSupported                              .GetHashCode()
+				^ IsDerivedTableTakeSupported                          .GetHashCode()
 				^ IsJoinDerivedTableWithTakeInvalid                    .GetHashCode()
 				^ IsCorrelatedSubQueryTakeSupported                    .GetHashCode()
 				^ IsSupportsJoinWithoutCondition                       .GetHashCode()
@@ -556,11 +559,9 @@ namespace LinqToDB.SqlProvider
 				^ OutputDeleteUseSpecialTable                          .GetHashCode()
 				^ OutputInsertUseSpecialTable                          .GetHashCode()
 				^ OutputUpdateUseSpecialTables                         .GetHashCode()
-				^ DoesNotSupportCorrelatedSubquery                     .GetHashCode()
 				^ IsExistsPreferableForContains                        .GetHashCode()
 				^ IsRowNumberWithoutOrderBySupported                   .GetHashCode()
 				^ IsSubqueryWithParentReferenceInJoinConditionSupported.GetHashCode()
-				^ IsColumnSubqueryWithParentReferenceSupported         .GetHashCode()
 				^ IsColumnSubqueryWithParentReferenceAndTakeSupported  .GetHashCode()
 				^ IsColumnSubqueryShouldNotContainParentIsNotNull      .GetHashCode()
 				^ IsRecursiveCTEJoinWithConditionSupported             .GetHashCode()
@@ -573,6 +574,7 @@ namespace LinqToDB.SqlProvider
 				^ IsUpdateTakeSupported                                .GetHashCode()
 				^ IsUpdateSkipTakeSupported                            .GetHashCode()
 				^ IsSupportedSimpleCorrelatedSubqueries                .GetHashCode()
+				^ SupportedCorrelatedSubqueriesLevel                 .GetHashCode()
 				^ CustomFlags.Aggregate(0, (hash, flag) => flag.GetHashCode() ^ hash);
 	}
 
@@ -586,6 +588,7 @@ namespace LinqToDB.SqlProvider
 				&& IsSkipSupported                                       == other.IsSkipSupported
 				&& IsSkipSupportedIfTake                                 == other.IsSkipSupportedIfTake
 				&& IsSubQueryTakeSupported                               == other.IsSubQueryTakeSupported
+				&& IsDerivedTableTakeSupported                           == other.IsDerivedTableTakeSupported
 				&& IsJoinDerivedTableWithTakeInvalid                     == other.IsJoinDerivedTableWithTakeInvalid
 				&& IsCorrelatedSubQueryTakeSupported                     == other.IsCorrelatedSubQueryTakeSupported
 				&& IsSupportsJoinWithoutCondition                        == other.IsSupportsJoinWithoutCondition
@@ -618,11 +621,9 @@ namespace LinqToDB.SqlProvider
 				&& OutputDeleteUseSpecialTable                           == other.OutputDeleteUseSpecialTable
 				&& OutputInsertUseSpecialTable                           == other.OutputInsertUseSpecialTable
 				&& OutputUpdateUseSpecialTables                          == other.OutputUpdateUseSpecialTables
-				&& DoesNotSupportCorrelatedSubquery                      == other.DoesNotSupportCorrelatedSubquery
 				&& IsExistsPreferableForContains                         == other.IsExistsPreferableForContains
 				&& IsRowNumberWithoutOrderBySupported                    == other.IsRowNumberWithoutOrderBySupported
 				&& IsSubqueryWithParentReferenceInJoinConditionSupported == other.IsSubqueryWithParentReferenceInJoinConditionSupported
-				&& IsColumnSubqueryWithParentReferenceSupported          == other.IsColumnSubqueryWithParentReferenceSupported
 				&& IsColumnSubqueryWithParentReferenceAndTakeSupported   == other.IsColumnSubqueryWithParentReferenceAndTakeSupported
 				&& IsColumnSubqueryShouldNotContainParentIsNotNull       == other.IsColumnSubqueryShouldNotContainParentIsNotNull
 				&& IsRecursiveCTEJoinWithConditionSupported              == other.IsRecursiveCTEJoinWithConditionSupported
@@ -635,6 +636,7 @@ namespace LinqToDB.SqlProvider
 				&& IsUpdateTakeSupported                                 == other.IsUpdateTakeSupported
 				&& IsUpdateSkipTakeSupported                             == other.IsUpdateSkipTakeSupported
 				&& IsSupportedSimpleCorrelatedSubqueries                 == other.IsSupportedSimpleCorrelatedSubqueries
+				&& SupportedCorrelatedSubqueriesLevel                    == other.SupportedCorrelatedSubqueriesLevel
 				// CustomFlags as List wasn't best idea
 				&& CustomFlags.Count                                     == other.CustomFlags.Count
 				&& (CustomFlags.Count                                    == 0

@@ -436,9 +436,9 @@ namespace LinqToDB
 			if (source == null) throw new ArgumentNullException(nameof(source));
 			if (expr   == null) throw new ArgumentNullException(nameof(expr));
 
-			var currentSource = LinqExtensions.ProcessSourceQueryable?.Invoke(source) ?? source;
+			var currentSource = source.GetLinqToDBSource();
 
-			return currentSource.Provider.Execute<double>(
+			return currentSource.Execute<double>(
 				Expression.Call(
 					null,
 					MethodHelper.GetMethodInfo(Average, source, expr, modifier),
@@ -478,9 +478,9 @@ namespace LinqToDB
 			if (expr1  == null) throw new ArgumentNullException(nameof(expr1));
 			if (expr2  == null) throw new ArgumentNullException(nameof(expr2));
 
-			var currentSource = LinqExtensions.ProcessSourceQueryable?.Invoke(source) ?? source;
+			var currentSource = source.GetLinqToDBSource();
 
-			return currentSource.Provider.Execute<decimal?>(
+			return currentSource.Execute<decimal?>(
 				Expression.Call(
 					null,
 					MethodHelper.GetMethodInfo(Corr, source, expr1, expr2),
@@ -516,9 +516,9 @@ namespace LinqToDB
 			if (source == null) throw new ArgumentNullException(nameof(source));
 			if (expr   == null) throw new ArgumentNullException(nameof(expr));
 
-			var currentSource = LinqExtensions.ProcessSourceQueryable?.Invoke(source) ?? source;
+			var currentSource = source.GetLinqToDBSource();
 
-			return currentSource.Provider.Execute<int>(
+			return currentSource.Execute<int>(
 				Expression.Call(
 					null,
 					MethodHelper.GetMethodInfo(CountExt, source, expr),
@@ -532,9 +532,9 @@ namespace LinqToDB
 			if (source == null) throw new ArgumentNullException(nameof(source));
 			if (expr   == null) throw new ArgumentNullException(nameof(expr));
 
-			var currentSource = LinqExtensions.ProcessSourceQueryable?.Invoke(source) ?? source;
+			var currentSource = source.GetLinqToDBSource();
 
-			return currentSource.Provider.Execute<int>(
+			return currentSource.Execute<int>(
 				Expression.Call(
 					null,
 					MethodHelper.GetMethodInfo(CountExt, source, expr, modifier),
@@ -582,9 +582,9 @@ namespace LinqToDB
 			if (source == null) throw new ArgumentNullException(nameof(source));
 			if (expr   == null) throw new ArgumentNullException(nameof(expr));
 
-			var currentSource = LinqExtensions.ProcessSourceQueryable?.Invoke(source) ?? source;
+			var currentSource = source.GetLinqToDBSource();
 
-			return currentSource.Provider.Execute<long>(
+			return currentSource.Execute<long>(
 				Expression.Call(
 					null,
 					MethodHelper.GetMethodInfo(LongCountExt, source, expr, modifier),
@@ -630,9 +630,9 @@ namespace LinqToDB
 			if (expr1  == null) throw new ArgumentNullException(nameof(expr1));
 			if (expr2  == null) throw new ArgumentNullException(nameof(expr2));
 
-			var currentSource = LinqExtensions.ProcessSourceQueryable?.Invoke(source) ?? source;
+			var currentSource = source.GetLinqToDBSource();
 
-			return currentSource.Provider.Execute<decimal>(
+			return currentSource.Execute<decimal>(
 				Expression.Call(
 					null,
 					MethodHelper.GetMethodInfo(CovarPop, source, expr1, expr2),
@@ -666,9 +666,9 @@ namespace LinqToDB
 			if (expr1  == null) throw new ArgumentNullException(nameof(expr1));
 			if (expr2  == null) throw new ArgumentNullException(nameof(expr2));
 
-			var currentSource = LinqExtensions.ProcessSourceQueryable?.Invoke(source) ?? source;
+			var currentSource = source.GetLinqToDBSource();
 
-			return currentSource.Provider.Execute<decimal>(
+			return currentSource.Execute<decimal>(
 				Expression.Call(
 					null,
 					MethodHelper.GetMethodInfo(CovarSamp, source, expr1, expr2),
@@ -708,7 +708,7 @@ namespace LinqToDB
 			throw new LinqException($"'{nameof(DenseRank)}' is server-side method.");
 		}
 
-		[Sql.Extension("FIRST_VALUE({expr}){_}{modifier?}", TokenName = FunctionToken, BuilderType = typeof(ApplyNullsModifier), ChainPrecedence = 1, IsWindowFunction = true, Configuration = ProviderName.SqlServer2022)]
+		[Sql.Extension("FIRST_VALUE({expr}){_}{modifier?}", TokenName = FunctionToken, BuilderType = typeof(ApplyNullsModifier), ChainPrecedence = 1, IsWindowFunction = true, Configuration = PN.SqlServer2022)]
 		[Sql.Extension("FIRST_VALUE({expr}{_}{modifier?})", TokenName = FunctionToken, BuilderType = typeof(ApplyNullsModifier), ChainPrecedence = 1, IsWindowFunction = true)]
 		public static IAggregateFunctionSelfContained<T> FirstValue<T>(this Sql.ISqlExtension? ext, [ExprParameter] T expr, [SqlQueryDependent] Sql.Nulls nulls)
 		{
@@ -745,7 +745,7 @@ namespace LinqToDB
 			throw new LinqException($"'{nameof(Lag)}' is server-side method.");
 		}
 
-		[Sql.Extension("LAST_VALUE({expr}){_}{modifier?}", TokenName = FunctionToken, BuilderType = typeof(ApplyNullsModifier), ChainPrecedence = 1, IsWindowFunction = true, Configuration = ProviderName.SqlServer2022)]
+		[Sql.Extension("LAST_VALUE({expr}){_}{modifier?}", TokenName = FunctionToken, BuilderType = typeof(ApplyNullsModifier), ChainPrecedence = 1, IsWindowFunction = true, Configuration = PN.SqlServer2022)]
 		[Sql.Extension("LAST_VALUE({expr}{_}{modifier?})", TokenName = FunctionToken, BuilderType = typeof(ApplyNullsModifier), ChainPrecedence = 1, IsWindowFunction = true)]
 		public static IAggregateFunctionSelfContained<T> LastValue<T>(this Sql.ISqlExtension? ext, [ExprParameter] T expr, [SqlQueryDependent] Sql.Nulls nulls)
 		{
@@ -808,9 +808,9 @@ namespace LinqToDB
 			if (source == null) throw new ArgumentNullException(nameof(source));
 			if (expr   == null) throw new ArgumentNullException(nameof(expr));
 
-			var currentSource = LinqExtensions.ProcessSourceQueryable?.Invoke(source) ?? source;
+			var currentSource = source.GetLinqToDBSource();
 
-			return currentSource.Provider.Execute<TV>(
+			return currentSource.Execute<TV>(
 				Expression.Call(
 					null,
 					MethodHelper.GetMethodInfo(Max, source, expr, modifier),
@@ -846,9 +846,9 @@ namespace LinqToDB
 			if (source == null) throw new ArgumentNullException(nameof(source));
 			if (expr   == null) throw new ArgumentNullException(nameof(expr));
 
-			var currentSource = LinqExtensions.ProcessSourceQueryable?.Invoke(source) ?? source;
+			var currentSource = source.GetLinqToDBSource();
 
-			return currentSource.Provider.Execute<long>(
+			return currentSource.Execute<long>(
 				Expression.Call(
 					null,
 					MethodHelper.GetMethodInfo(Median, source, expr),
@@ -878,9 +878,9 @@ namespace LinqToDB
 			if (source == null) throw new ArgumentNullException(nameof(source));
 			if (expr   == null) throw new ArgumentNullException(nameof(expr));
 
-			var currentSource = LinqExtensions.ProcessSourceQueryable?.Invoke(source) ?? source;
+			var currentSource = source.GetLinqToDBSource();
 
-			return currentSource.Provider.Execute<TV>(
+			return currentSource.Execute<TV>(
 				Expression.Call(
 					null,
 					MethodHelper.GetMethodInfo(Min, source, expr, modifier),
@@ -1052,9 +1052,9 @@ namespace LinqToDB
 			if (source == null) throw new ArgumentNullException(nameof(source));
 			if (expr   == null) throw new ArgumentNullException(nameof(expr));
 
-			var currentSource = LinqExtensions.ProcessSourceQueryable?.Invoke(source) ?? source;
+			var currentSource = source.GetLinqToDBSource();
 
-			return currentSource.Provider.Execute<double>(
+			return currentSource.Execute<double>(
 				Expression.Call(
 					null,
 					MethodHelper.GetMethodInfo(StdDev, source, expr, modifier),
@@ -1091,9 +1091,9 @@ namespace LinqToDB
 			if (source == null) throw new ArgumentNullException(nameof(source));
 			if (expr   == null) throw new ArgumentNullException(nameof(expr));
 
-			var currentSource = LinqExtensions.ProcessSourceQueryable?.Invoke(source) ?? source;
+			var currentSource = source.GetLinqToDBSource();
 
-			return currentSource.Provider.Execute<decimal>(
+			return currentSource.Execute<decimal>(
 				Expression.Call(
 					null,
 					MethodHelper.GetMethodInfo(StdDevPop, source, expr),
@@ -1122,9 +1122,9 @@ namespace LinqToDB
 			if (source == null) throw new ArgumentNullException(nameof(source));
 			if (expr   == null) throw new ArgumentNullException(nameof(expr));
 
-			var currentSource = LinqExtensions.ProcessSourceQueryable?.Invoke(source) ?? source;
+			var currentSource = source.GetLinqToDBSource();
 
-			return currentSource.Provider.Execute<decimal>(
+			return currentSource.Execute<decimal>(
 				Expression.Call(
 					null,
 					MethodHelper.GetMethodInfo(StdDevSamp, source, expr),
@@ -1165,9 +1165,9 @@ namespace LinqToDB
 			if (source == null) throw new ArgumentNullException(nameof(source));
 			if (expr   == null) throw new ArgumentNullException(nameof(expr));
 
-			var currentSource = LinqExtensions.ProcessSourceQueryable?.Invoke(source) ?? source;
+			var currentSource = source.GetLinqToDBSource();
 
-			return currentSource.Provider.Execute<decimal>(
+			return currentSource.Execute<decimal>(
 				Expression.Call(
 					null,
 					MethodHelper.GetMethodInfo(VarPop, source, expr),
@@ -1196,9 +1196,9 @@ namespace LinqToDB
 			if (source == null) throw new ArgumentNullException(nameof(source));
 			if (expr   == null) throw new ArgumentNullException(nameof(expr));
 
-			var currentSource = LinqExtensions.ProcessSourceQueryable?.Invoke(source) ?? source;
+			var currentSource = source.GetLinqToDBSource();
 
-			return currentSource.Provider.Execute<decimal>(
+			return currentSource.Execute<decimal>(
 				Expression.Call(
 					null,
 					MethodHelper.GetMethodInfo(VarSamp, source, expr),
@@ -1233,9 +1233,9 @@ namespace LinqToDB
 			if (source == null) throw new ArgumentNullException(nameof(source));
 			if (expr   == null) throw new ArgumentNullException(nameof(expr));
 
-			var currentSource = LinqExtensions.ProcessSourceQueryable?.Invoke(source) ?? source;
+			var currentSource = source.GetLinqToDBSource();
 
-			return currentSource.Provider.Execute<TV>(
+			return currentSource.Execute<TV>(
 				Expression.Call(
 					null,
 					MethodHelper.GetMethodInfo(Variance, source, expr, modifier),

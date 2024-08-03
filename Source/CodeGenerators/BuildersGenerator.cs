@@ -1,19 +1,18 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Linq.Expressions;
-using System.Text;
 using System.Threading;
 
 using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace CodeGenerators
 {
+	/// <summary></summary>
 	[Generator]
 	public partial class BuildersGenerator : IIncrementalGenerator
 	{
+		/// <summary></summary>
 		public void Initialize(IncrementalGeneratorInitializationContext context)
 		{
 			var buildsAnyNodes = context.SyntaxProvider
