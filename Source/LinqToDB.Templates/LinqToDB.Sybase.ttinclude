@@ -23,7 +23,7 @@ void GenerateSybaseTypes()
 			TypeName                = "SysObject",
 			DataContextPropertyName = "SysObjects",
 			BaseClass               = BaseEntityClass,
-			Columns                 = new Dictionary<string,Column>()
+			Columns                 = new Dictionary<string,IColumn>()
 			{
 				{ "name",      new Column(ModelType.Create<string>(false))   { Name = "name",      ColumnName = "name",      ColumnType = "varchar",  DbType = DbType.AnsiString,  /*Length = 255*/                  }},
 				{ "id",        new Column(ModelType.Create<int>(false))      { Name = "id",        ColumnName = "id",        ColumnType = "int",      DbType = DbType.Int32,                                         }},

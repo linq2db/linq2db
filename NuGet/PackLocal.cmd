@@ -13,8 +13,11 @@ GOTO :EOF
 )
 
 cd ..
-call Build.cmd
+rem call Build.cmd
 cd NuGet
 
-powershell ..\Build\BuildNuspecs.ps1 -path *.nuspec -buildPath ..\.build\nuspecs -version %VERSION%
+dotnet tool install -g dotnet-script
+dotnet script BuildNuspecs.csx /path:*.nuspec /buildPath:..\.build\nuspecs /version:%VERSION%
+
 call Pack.cmd %SNUPKG%
+pause

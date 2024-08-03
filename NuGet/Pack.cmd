@@ -43,6 +43,13 @@ nuget.exe Pack %NUSPECS%\linq2db.DB2.nuspec -OutputDirectory %NUGETS%
 if %errorlevel% neq 0 exit
 nuget.exe Pack %NUSPECS%\linq2db.DB2.Core.nuspec -OutputDirectory %NUGETS%
 if %errorlevel% neq 0 exit
+nuget.exe Pack %NUSPECS%\linq2db.ClickHouse.Client.nuspec         -OutputDirectory %NUGETS%
+if %errorlevel% neq 0 exit
+nuget.exe Pack %NUSPECS%\linq2db.ClickHouse.MySqlConnector.nuspec -OutputDirectory %NUGETS%
+if %errorlevel% neq 0 exit
+nuget.exe Pack %NUSPECS%\linq2db.ClickHouse.Octonica.nuspec       -OutputDirectory %NUGETS%
+if %errorlevel% neq 0 exit
+if %errorlevel% neq 0 exit
 nuget.exe Pack %NUSPECS%\linq2db.Firebird.nuspec -OutputDirectory %NUGETS%
 if %errorlevel% neq 0 exit
 nuget.exe Pack %NUSPECS%\linq2db.Informix.nuspec -OutputDirectory %NUGETS%

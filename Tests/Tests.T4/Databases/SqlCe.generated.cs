@@ -103,7 +103,7 @@ namespace SqlCeDataContext
 		/// <summary>
 		/// FK_Doctor_Person (Person)
 		/// </summary>
-		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false)]
+		[Association(ThisKey=nameof(SqlCeDataContext.Doctor.PersonID), OtherKey=nameof(SqlCeDataContext.Person.PersonID), CanBeNull=false)]
 		public Person Person { get; set; } = null!;
 
 		#endregion
@@ -145,7 +145,7 @@ namespace SqlCeDataContext
 		/// <summary>
 		/// FK_Issue695_Parent (Issue695Parent)
 		/// </summary>
-		[Association(ThisKey="ID", OtherKey="ID", CanBeNull=false)]
+		[Association(ThisKey=nameof(SqlCeDataContext.Issue695.ID), OtherKey=nameof(SqlCeDataContext.Issue695Parent.ID), CanBeNull=false)]
 		public Issue695Parent Issue695Parent { get; set; } = null!;
 
 		#endregion
@@ -161,7 +161,7 @@ namespace SqlCeDataContext
 		/// <summary>
 		/// FK_Issue695_Parent_BackReference (Issue695)
 		/// </summary>
-		[Association(ThisKey="ID", OtherKey="ID", CanBeNull=true)]
+		[Association(ThisKey=nameof(SqlCeDataContext.Issue695Parent.ID), OtherKey=nameof(SqlCeDataContext.Issue695.ID), CanBeNull=true)]
 		public Issue695? FKIssue695ParentBackReference { get; set; }
 
 		#endregion
@@ -201,7 +201,7 @@ namespace SqlCeDataContext
 		/// <summary>
 		/// FK_Patient_Person (Person)
 		/// </summary>
-		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false)]
+		[Association(ThisKey=nameof(SqlCeDataContext.Patient.PersonID), OtherKey=nameof(SqlCeDataContext.Person.PersonID), CanBeNull=false)]
 		public Person Person { get; set; } = null!;
 
 		#endregion
@@ -221,13 +221,13 @@ namespace SqlCeDataContext
 		/// <summary>
 		/// FK_Doctor_Person_BackReference (Doctor)
 		/// </summary>
-		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=true)]
+		[Association(ThisKey=nameof(SqlCeDataContext.Person.PersonID), OtherKey=nameof(SqlCeDataContext.Doctor.PersonID), CanBeNull=true)]
 		public Doctor? Doctor { get; set; }
 
 		/// <summary>
 		/// FK_Patient_Person_BackReference (Patient)
 		/// </summary>
-		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=true)]
+		[Association(ThisKey=nameof(SqlCeDataContext.Person.PersonID), OtherKey=nameof(SqlCeDataContext.Patient.PersonID), CanBeNull=true)]
 		public Patient? Patient { get; set; }
 
 		#endregion
@@ -364,7 +364,7 @@ namespace SqlCeDataContext
 		/// <summary>
 		/// FK_Doctor_Person
 		/// </summary>
-		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false)]
+		[Association(ThisKey=nameof(SqlCeDataContext.Doctor.PersonID), OtherKey=nameof(SqlCeDataContext.Person.PersonID), CanBeNull=false)]
 		public static IQueryable<Person> People(this Doctor obj, IDataContext db)
 		{
 			return db.GetTable<Person>().Where(c => c.PersonID == obj.PersonID);
@@ -373,7 +373,7 @@ namespace SqlCeDataContext
 		/// <summary>
 		/// FK_Doctor_Person
 		/// </summary>
-		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false)]
+		[Association(ThisKey=nameof(SqlCeDataContext.Doctor.PersonID), OtherKey=nameof(SqlCeDataContext.Person.PersonID), CanBeNull=false)]
 		public static Doctor Person(this Person obj, IDataContext db)
 		{
 			return db.GetTable<Doctor>().Where(c => c.PersonID == obj.PersonID).First();
@@ -386,7 +386,7 @@ namespace SqlCeDataContext
 		/// <summary>
 		/// FK_Issue695_Parent
 		/// </summary>
-		[Association(ThisKey="ID", OtherKey="ID", CanBeNull=false)]
+		[Association(ThisKey=nameof(SqlCeDataContext.Issue695.ID), OtherKey=nameof(SqlCeDataContext.Issue695Parent.ID), CanBeNull=false)]
 		public static IQueryable<Issue695Parent> Issue695Parents(this Issue695 obj, IDataContext db)
 		{
 			return db.GetTable<Issue695Parent>().Where(c => c.ID == obj.ID);
@@ -395,7 +395,7 @@ namespace SqlCeDataContext
 		/// <summary>
 		/// FK_Issue695_Parent
 		/// </summary>
-		[Association(ThisKey="ID", OtherKey="ID", CanBeNull=false)]
+		[Association(ThisKey=nameof(SqlCeDataContext.Issue695.ID), OtherKey=nameof(SqlCeDataContext.Issue695Parent.ID), CanBeNull=false)]
 		public static Issue695 Issue695Parent(this Issue695Parent obj, IDataContext db)
 		{
 			return db.GetTable<Issue695>().Where(c => c.ID == obj.ID).First();
@@ -408,7 +408,7 @@ namespace SqlCeDataContext
 		/// <summary>
 		/// FK_Issue695_Parent_BackReference
 		/// </summary>
-		[Association(ThisKey="ID", OtherKey="ID", CanBeNull=true)]
+		[Association(ThisKey=nameof(SqlCeDataContext.Issue695Parent.ID), OtherKey=nameof(SqlCeDataContext.Issue695.ID), CanBeNull=true)]
 		public static IQueryable<Issue695> FKIssue695ParentBackReferences(this Issue695Parent obj, IDataContext db)
 		{
 			return db.GetTable<Issue695>().Where(c => c.ID == obj.ID);
@@ -417,7 +417,7 @@ namespace SqlCeDataContext
 		/// <summary>
 		/// FK_Issue695_Parent_BackReference
 		/// </summary>
-		[Association(ThisKey="ID", OtherKey="ID", CanBeNull=true)]
+		[Association(ThisKey=nameof(SqlCeDataContext.Issue695Parent.ID), OtherKey=nameof(SqlCeDataContext.Issue695.ID), CanBeNull=true)]
 		public static Issue695Parent? FKIssue695ParentBackReference(this Issue695 obj, IDataContext db)
 		{
 			return db.GetTable<Issue695Parent>().Where(c => c.ID == obj.ID).FirstOrDefault();
@@ -430,7 +430,7 @@ namespace SqlCeDataContext
 		/// <summary>
 		/// FK_Patient_Person
 		/// </summary>
-		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false)]
+		[Association(ThisKey=nameof(SqlCeDataContext.Patient.PersonID), OtherKey=nameof(SqlCeDataContext.Person.PersonID), CanBeNull=false)]
 		public static IQueryable<Person> People0(this Patient obj, IDataContext db)
 		{
 			return db.GetTable<Person>().Where(c => c.PersonID == obj.PersonID);
@@ -439,7 +439,7 @@ namespace SqlCeDataContext
 		/// <summary>
 		/// FK_Patient_Person
 		/// </summary>
-		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false)]
+		[Association(ThisKey=nameof(SqlCeDataContext.Patient.PersonID), OtherKey=nameof(SqlCeDataContext.Person.PersonID), CanBeNull=false)]
 		public static Patient Person0(this Person obj, IDataContext db)
 		{
 			return db.GetTable<Patient>().Where(c => c.PersonID == obj.PersonID).First();
@@ -452,7 +452,7 @@ namespace SqlCeDataContext
 		/// <summary>
 		/// FK_Doctor_Person_BackReference
 		/// </summary>
-		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=true)]
+		[Association(ThisKey=nameof(SqlCeDataContext.Person.PersonID), OtherKey=nameof(SqlCeDataContext.Doctor.PersonID), CanBeNull=true)]
 		public static IQueryable<Doctor> Doctors(this Person obj, IDataContext db)
 		{
 			return db.GetTable<Doctor>().Where(c => c.PersonID == obj.PersonID);
@@ -461,7 +461,7 @@ namespace SqlCeDataContext
 		/// <summary>
 		/// FK_Doctor_Person_BackReference
 		/// </summary>
-		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=true)]
+		[Association(ThisKey=nameof(SqlCeDataContext.Person.PersonID), OtherKey=nameof(SqlCeDataContext.Doctor.PersonID), CanBeNull=true)]
 		public static Person? Doctor(this Doctor obj, IDataContext db)
 		{
 			return db.GetTable<Person>().Where(c => c.PersonID == obj.PersonID).FirstOrDefault();
@@ -470,7 +470,7 @@ namespace SqlCeDataContext
 		/// <summary>
 		/// FK_Patient_Person_BackReference
 		/// </summary>
-		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=true)]
+		[Association(ThisKey=nameof(SqlCeDataContext.Person.PersonID), OtherKey=nameof(SqlCeDataContext.Patient.PersonID), CanBeNull=true)]
 		public static IQueryable<Patient> Patients(this Person obj, IDataContext db)
 		{
 			return db.GetTable<Patient>().Where(c => c.PersonID == obj.PersonID);
@@ -479,7 +479,7 @@ namespace SqlCeDataContext
 		/// <summary>
 		/// FK_Patient_Person_BackReference
 		/// </summary>
-		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=true)]
+		[Association(ThisKey=nameof(SqlCeDataContext.Person.PersonID), OtherKey=nameof(SqlCeDataContext.Patient.PersonID), CanBeNull=true)]
 		public static Person? Patient(this Patient obj, IDataContext db)
 		{
 			return db.GetTable<Person>().Where(c => c.PersonID == obj.PersonID).FirstOrDefault();
