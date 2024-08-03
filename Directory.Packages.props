@@ -37,6 +37,12 @@
 		<PackageVersion Include="Microsoft.Extensions.DependencyModel"                  Version="8.0.1"                 />
 		<PackageVersion Include="Mono.TextTemplating"                                   Version="2.3.1"                 />
 		<PackageVersion Include="protobuf-net.Grpc"                                     Version="1.1.1"                 />
+
+		<!--temporary-->
+		<PackageVersion Include="linq2db"                                       Version="5.4.1"                />
+		<PackageVersion Condition="'$(TargetFramework)'=='netstandard2.0'" Include="Microsoft.EntityFrameworkCore.Relational" Version="3.1.32" />
+		<PackageVersion Condition="'$(TargetFramework)'=='net6.0'" Include="Microsoft.EntityFrameworkCore.Relational" Version="6.0.32" />
+		<PackageVersion Condition="'$(TargetFramework)'=='net8.0'" Include="Microsoft.EntityFrameworkCore.Relational" Version="8.0.7" />
 	</ItemGroup>
 
 	<ItemGroup Label="Released Dependencies" Condition=" '$(TargetFramework)' != 'net8.0' ">

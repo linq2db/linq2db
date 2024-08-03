@@ -302,8 +302,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "scripts", "scripts", "{49A3
 		Build\Azure\scripts\mac.docker.sh = Build\Azure\scripts\mac.docker.sh
 		Build\Azure\scripts\mac.informix14.sh = Build\Azure\scripts\mac.informix14.sh
 		Build\Azure\scripts\mac.mariadb11.sh = Build\Azure\scripts\mac.mariadb11.sh
-		Build\Azure\scripts\mac.mysql57.sh = Build\Azure\scripts\mac.mysql57.sh
 		Build\Azure\scripts\mac.mysql.sh = Build\Azure\scripts\mac.mysql.sh
+		Build\Azure\scripts\mac.mysql57.sh = Build\Azure\scripts\mac.mysql57.sh
 		Build\Azure\scripts\mac.pgsql11.sh = Build\Azure\scripts\mac.pgsql11.sh
 		Build\Azure\scripts\mac.pgsql12.sh = Build\Azure\scripts\mac.pgsql12.sh
 		Build\Azure\scripts\mac.pgsql13.sh = Build\Azure\scripts\mac.pgsql13.sh
@@ -311,8 +311,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "scripts", "scripts", "{49A3
 		Build\Azure\scripts\mac.pgsql15.sh = Build\Azure\scripts\mac.pgsql15.sh
 		Build\Azure\scripts\mac.pgsql16.sh = Build\Azure\scripts\mac.pgsql16.sh
 		Build\Azure\scripts\mariadb11.sh = Build\Azure\scripts\mariadb11.sh
-		Build\Azure\scripts\mysql57.sh = Build\Azure\scripts\mysql57.sh
 		Build\Azure\scripts\mysql.sh = Build\Azure\scripts\mysql.sh
+		Build\Azure\scripts\mysql57.sh = Build\Azure\scripts\mysql57.sh
 		Build\Azure\scripts\oracle11.sh = Build\Azure\scripts\oracle11.sh
 		Build\Azure\scripts\oracle12.sh = Build\Azure\scripts\oracle12.sh
 		Build\Azure\scripts\oracle18.sh = Build\Azure\scripts\oracle18.sh
@@ -390,8 +390,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "net60", "net60", "{AA850554
 		Build\Azure\net60\hana2.json = Build\Azure\net60\hana2.json
 		Build\Azure\net60\informix.json = Build\Azure\net60\informix.json
 		Build\Azure\net60\mariadb11.json = Build\Azure\net60\mariadb11.json
-		Build\Azure\net60\mysql57.json = Build\Azure\net60\mysql57.json
 		Build\Azure\net60\mysql.json = Build\Azure\net60\mysql.json
+		Build\Azure\net60\mysql57.json = Build\Azure\net60\mysql57.json
 		Build\Azure\net60\oracle11.json = Build\Azure\net60\oracle11.json
 		Build\Azure\net60\oracle12.json = Build\Azure\net60\oracle12.json
 		Build\Azure\net60\oracle18.json = Build\Azure\net60\oracle18.json
@@ -502,8 +502,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "net80", "net80", "{1ED95A47
 		Build\Azure\net80\hana2.json = Build\Azure\net80\hana2.json
 		Build\Azure\net80\informix.json = Build\Azure\net80\informix.json
 		Build\Azure\net80\mariadb11.json = Build\Azure\net80\mariadb11.json
-		Build\Azure\net80\mysql57.json = Build\Azure\net80\mysql57.json
 		Build\Azure\net80\mysql.json = Build\Azure\net80\mysql.json
+		Build\Azure\net80\mysql57.json = Build\Azure\net80\mysql57.json
 		Build\Azure\net80\oracle11.json = Build\Azure\net80\oracle11.json
 		Build\Azure\net80\oracle12.json = Build\Azure\net80\oracle12.json
 		Build\Azure\net80\oracle18.json = Build\Azure\net80\oracle18.json
@@ -536,6 +536,8 @@ EndProject
 Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "LinqToDB.FSharp", "Source\LinqToDB.FSharp\LinqToDB.FSharp.fsproj", "{2D70AE81-8240-42FD-B0FE-1825F1DA2F7B}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CodeGenerators", "Source\CodeGenerators\CodeGenerators.csproj", "{A8B8D5ED-6130-47E3-9386-89BEA7105F86}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "linq2db.EntityFrameworkCore", "Source\LinqToDB.EntityFrameworkCore\linq2db.EntityFrameworkCore.csproj", "{84A9EB0E-93E2-47E8-BDF6-378D26D8BFB9}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -639,6 +641,12 @@ Global
 		{A8B8D5ED-6130-47E3-9386-89BEA7105F86}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A8B8D5ED-6130-47E3-9386-89BEA7105F86}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A8B8D5ED-6130-47E3-9386-89BEA7105F86}.Release|Any CPU.Build.0 = Release|Any CPU
+		{84A9EB0E-93E2-47E8-BDF6-378D26D8BFB9}.Azure|Any CPU.ActiveCfg = Debug|Any CPU
+		{84A9EB0E-93E2-47E8-BDF6-378D26D8BFB9}.Azure|Any CPU.Build.0 = Debug|Any CPU
+		{84A9EB0E-93E2-47E8-BDF6-378D26D8BFB9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{84A9EB0E-93E2-47E8-BDF6-378D26D8BFB9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{84A9EB0E-93E2-47E8-BDF6-378D26D8BFB9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{84A9EB0E-93E2-47E8-BDF6-378D26D8BFB9}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -688,6 +696,7 @@ Global
 		{1ED95A47-B11F-4EA1-8916-B7BD2951417B} = {51E64464-E257-4984-A4D5-BF9FF8B7DF1D}
 		{2D70AE81-8240-42FD-B0FE-1825F1DA2F7B} = {AF93451E-198C-4A94-8EB4-C330D886E102}
 		{A8B8D5ED-6130-47E3-9386-89BEA7105F86} = {AF93451E-198C-4A94-8EB4-C330D886E102}
+		{84A9EB0E-93E2-47E8-BDF6-378D26D8BFB9} = {AF93451E-198C-4A94-8EB4-C330D886E102}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {15BBD7CE-1C8E-4407-9DCF-674982CEB3F7}
