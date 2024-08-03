@@ -98,7 +98,7 @@ namespace LinqToDB.EntityFrameworkCore
 
 			using (var dc = context.CreateLinqToDBConnection())
 			{
-				return await dc.BulkCopyAsync(options, source, cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+				return await dc.BulkCopyAsync(options, source, cancellationToken).ConfigureAwait(false);
 			}
 		}
 
@@ -124,7 +124,7 @@ namespace LinqToDB.EntityFrameworkCore
 
 			using (var dc = context.CreateLinqToDBConnection())
 			{
-				return await dc.BulkCopyAsync(maxBatchSize, source, cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+				return await dc.BulkCopyAsync(maxBatchSize, source, cancellationToken).ConfigureAwait(false);
 			}
 		}
 
@@ -145,7 +145,7 @@ namespace LinqToDB.EntityFrameworkCore
 
 			using (var dc = context.CreateLinqToDBConnection())
 			{
-				return await dc.BulkCopyAsync(source, cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+				return await dc.BulkCopyAsync(source, cancellationToken).ConfigureAwait(false);
 			}
 		}
 
@@ -168,7 +168,7 @@ namespace LinqToDB.EntityFrameworkCore
 
 			using (var dc = context.CreateLinqToDBConnection())
 			{
-				return await dc.BulkCopyAsync(options, source, cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+				return await dc.BulkCopyAsync(options, source, cancellationToken).ConfigureAwait(false);
 			}
 		}
 
@@ -194,7 +194,7 @@ namespace LinqToDB.EntityFrameworkCore
 
 			using (var dc = context.CreateLinqToDBConnection())
 			{
-				return await dc.BulkCopyAsync(maxBatchSize, source, cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+				return await dc.BulkCopyAsync(maxBatchSize, source, cancellationToken).ConfigureAwait(false);
 			}
 		}
 
@@ -215,7 +215,7 @@ namespace LinqToDB.EntityFrameworkCore
 
 			using (var dc = context.CreateLinqToDBConnection())
 			{
-				return await dc.BulkCopyAsync(source, cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+				return await dc.BulkCopyAsync(source, cancellationToken).ConfigureAwait(false);
 			}
 		}
 

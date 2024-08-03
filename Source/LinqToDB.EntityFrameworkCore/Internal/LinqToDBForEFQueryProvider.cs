@@ -167,8 +167,7 @@ namespace LinqToDB.EntityFrameworkCore.Internal
 		{
 			async IAsyncEnumerable<T> EnumerateAsyncEnumerable([EnumeratorCancellation] CancellationToken ct)
 			{
-				var asyncEnumerable = await QueryProvider.ExecuteAsyncEnumerable<T>(Expression, ct)
-					.ConfigureAwait(false);
+				var asyncEnumerable = await QueryProvider.ExecuteAsyncEnumerable<T>(Expression, ct).ConfigureAwait(false);
 				await foreach (var item in asyncEnumerable.WithCancellation(ct).ConfigureAwait(false))
 				{
 					yield return item;
