@@ -1,0 +1,19 @@
+﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+	<Import Project="$(MSBuildThisFileDirectory)\..\..\Directory.Build.props" />
+
+	<PropertyGroup>
+		<TargetFrameworks>net462;net6.0;net8.0</TargetFrameworks>
+		<Configurations>Debug;Release;Azure</Configurations>
+	</PropertyGroup>
+
+	<PropertyGroup Condition=" '$(Configuration)' == 'Azure' ">
+		<DefineConstants>$(DefineConstants);AZURE</DefineConstants>
+		<DebugSymbols>false</DebugSymbols>
+		<Optimize>true</Optimize>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<AdditionalFiles Include="$(MSBuildThisFileDirectory)\..\BannedSymbols.txt" />
+	</ItemGroup>
+
+</Project>

@@ -539,6 +539,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CodeGenerators", "Source\Co
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "linq2db.EntityFrameworkCore", "Source\LinqToDB.EntityFrameworkCore\linq2db.EntityFrameworkCore.csproj", "{84A9EB0E-93E2-47E8-BDF6-378D26D8BFB9}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Tests.EntityFrameworkCore", "Tests\EntityFrameworkCore\Tests.EntityFrameworkCore.csproj", "{AB90679A-18F7-41C3-8AD3-4AA0EC402A73}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Azure|Any CPU = Azure|Any CPU
@@ -647,6 +649,12 @@ Global
 		{84A9EB0E-93E2-47E8-BDF6-378D26D8BFB9}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{84A9EB0E-93E2-47E8-BDF6-378D26D8BFB9}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{84A9EB0E-93E2-47E8-BDF6-378D26D8BFB9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{AB90679A-18F7-41C3-8AD3-4AA0EC402A73}.Azure|Any CPU.ActiveCfg = Azure|Any CPU
+		{AB90679A-18F7-41C3-8AD3-4AA0EC402A73}.Azure|Any CPU.Build.0 = Azure|Any CPU
+		{AB90679A-18F7-41C3-8AD3-4AA0EC402A73}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AB90679A-18F7-41C3-8AD3-4AA0EC402A73}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AB90679A-18F7-41C3-8AD3-4AA0EC402A73}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{AB90679A-18F7-41C3-8AD3-4AA0EC402A73}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -697,6 +705,7 @@ Global
 		{2D70AE81-8240-42FD-B0FE-1825F1DA2F7B} = {AF93451E-198C-4A94-8EB4-C330D886E102}
 		{A8B8D5ED-6130-47E3-9386-89BEA7105F86} = {AF93451E-198C-4A94-8EB4-C330D886E102}
 		{84A9EB0E-93E2-47E8-BDF6-378D26D8BFB9} = {AF93451E-198C-4A94-8EB4-C330D886E102}
+		{AB90679A-18F7-41C3-8AD3-4AA0EC402A73} = {DF8DE665-05A2-4ACF-9799-8FC35E7F1525}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {15BBD7CE-1C8E-4407-9DCF-674982CEB3F7}
