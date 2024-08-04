@@ -45,10 +45,10 @@ namespace LinqToDB.EntityFrameworkCore
 	internal sealed class EFCoreMetadataReader : IMetadataReader
 	{
 #if EF6
-		private const string PgBinaryExpressionName = "PgBinaryExpression";
+		private const string PgBinaryExpressionName = "PostgresBinaryExpression";
 #elif !EF31
 		// renamed in 8.0.0
-		private const string PgBinaryExpressionName = "PostgresBinaryExpression";
+		private const string PgBinaryExpressionName = "PgBinaryExpression";
 #endif
 
 		private readonly string                                                       _objectId;
