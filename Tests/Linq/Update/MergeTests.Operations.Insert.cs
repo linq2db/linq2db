@@ -1860,5 +1860,20 @@ namespace Tests.xUpdate
 				});
 			}
 		}
+
+		[Test]
+		public void TestMergeWithInsertWhenNotMatchedConstant([MergeDataContextSource(TestProvName.AllInformix, ProviderName.Firebird)] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (db.CreateLocalTable<ReviewIndex>())
+			{
+				((ITable<IReviewIndex>)db.GetTable<ReviewIndex>())
+					.Merge()
+					.Using(ReviewIndex.Data)
+					.On(x => new { x.Id }, x => new { x.Id })
+					.InsertWhenNotMatched(s => s.Id, 1)
+					.Merge();
+			}
+		}
 	}
 }
