@@ -10,7 +10,7 @@
 		</tags>
 		<readme>README.md</readme>
 		<dependencies>
-			<group targetFramework="net462.0">
+			<group targetFramework="net462">
 				<dependency id="linq2db"     version="6.0.0"   />
 				<dependency id="FSharp.Core" version="8.0.301" />
 			</group>
@@ -27,7 +27,7 @@
 	</metadata>
 
 	<files>
-		<file src="..\Nuget\README.FSharp.md"                                               target="README.md"           />
+		<file src="..\..\NuGet\README.FSharp.md"                                     target="README.md"           />
 
 		<file src="..\bin\LinqToDB.FSharp\Release\net462\linq2db.FSharp.pdb"         target="lib\net462\"         />
 		<file src="..\bin\LinqToDB.FSharp\Release\net462\linq2db.FSharp.xml"         target="lib\net462\"         />
