@@ -46,6 +46,7 @@
 		<PackageVersion Condition="'$(TargetFramework)'=='net8.0'" Include="Microsoft.EntityFrameworkCore.Relational" Version="8.0.7" />
 
 		<PackageVersion Include="Microsoft.Extensions.Logging.Console" Version="8.0.0" />
+		<PackageVersion Include="EntityFrameworkCore.FSharp" Version="6.0.7" />
 
 		<PackageVersion Condition="'$(TargetFramework)'=='net462'" Include="Pomelo.EntityFrameworkCore.MySql" Version="3.2.7" />
 		<PackageVersion Condition="'$(TargetFramework)'=='net6.0'" Include="Pomelo.EntityFrameworkCore.MySql" Version="6.0.3" />

@@ -1,0 +1,26 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<WarningLevel>5</WarningLevel>
+		<DisableImplicitFSharpCoreReference>true</DisableImplicitFSharpCoreReference>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<None Include="Directory.Build.props" />
+		<Compile Include="Tests.fs" />
+	</ItemGroup>
+
+	<ItemGroup />
+
+	<ItemGroup>
+		<ProjectReference Include="..\..\Source\LinqToDB.EntityFrameworkCore\linq2db.EntityFrameworkCore.csproj" />
+
+		<PackageReference Include="NUnit3TestAdapter" />
+		<PackageReference Include="Microsoft.NET.Test.Sdk" />
+		<PackageReference Include="NUnit" />
+
+		<PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" />
+		<PackageReference Include="EntityFrameworkCore.FSharp" />
+	</ItemGroup>
+
+</Project>
