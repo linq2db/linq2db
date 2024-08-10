@@ -12,7 +12,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 	{
 		internal enum Dialect { }
 
-		public ClickHouseProviderDetector() : base(default, default)
+		public ClickHouseProviderDetector() : base()
 		{
 		}
 
