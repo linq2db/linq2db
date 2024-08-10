@@ -18,8 +18,7 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<!--<ProjectReference Include="..\LinqToDB\LinqToDB.csproj" />-->
-		<PackageReference Include="linq2db" />
+		<ProjectReference Include="..\LinqToDB\LinqToDB.csproj" />
 		<PackageReference Include="Microsoft.EntityFrameworkCore.Relational" />
 	</ItemGroup>
 

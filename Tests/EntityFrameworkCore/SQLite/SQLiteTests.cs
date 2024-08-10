@@ -1,5 +1,6 @@
 ﻿using System.Linq;
 using LinqToDB.Data;
+using LinqToDB.DataProvider.SQLite;
 using LinqToDB.EntityFrameworkCore.BaseTests;
 using LinqToDB.EntityFrameworkCore.Tests.SQLite.Models.Northwind;
 using Microsoft.EntityFrameworkCore;
@@ -41,7 +42,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests.SQLite
 		{
 			var optionsBuilder = new DbContextOptionsBuilder<NorthwindContext>();
 			optionsBuilder.UseSqlite("Data Source=northwind.db;");
-			optionsBuilder.UseLinqToDB(x => x.AddCustomOptions(o => o.UseSQLiteMicrosoft()));
+			optionsBuilder.UseLinqToDB(x => x.AddCustomOptions(o => o.UseSQLite(SQLiteProvider.Microsoft)));
 			optionsBuilder.UseLoggerFactory(TestUtils.LoggerFactory);
 
 			using var ctx = new NorthwindContext(optionsBuilder.Options);

@@ -145,6 +145,20 @@ jobs:
 
   - task: PublishPipelineArtifact@1
     inputs:
+      path: '$(Build.SourcesDirectory)/.build/bin/LinqToDB.FSharp/Release'
+      artifact: '$(artifact_linq2db_fsharp_binaries)'
+    displayName: Publish linq2db.FSharp build results
+    condition: and(succeeded(), ${{ parameters.for_nuget }})
+
+  - task: PublishPipelineArtifact@1
+    inputs:
+      path: '$(Build.SourcesDirectory)/.build/bin/LinqToDB.EntityFrameworkCore/Release'
+      artifact: '$(artifact_linq2db_efcore_binaries)'
+    displayName: Publish linq2db.EntityFrameworkCore build results
+    condition: and(succeeded(), ${{ parameters.for_nuget }})
+
+  - task: PublishPipelineArtifact@1
+    inputs:
       path: '$(Build.SourcesDirectory)/.build/bin/Tests/$(build_configuration)/$(netfx_tfm)'
       artifact: '$(netfx_tests)'
     displayName: Publish nuget artifacts part 1

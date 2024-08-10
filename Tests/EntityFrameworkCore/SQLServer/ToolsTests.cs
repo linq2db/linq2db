@@ -642,7 +642,6 @@ namespace LinqToDB.EntityFrameworkCore.Tests.SqlServer
 			}
 		}
 
-#if NETFRAMEWORK
 		[Test]
 		public async Task TestChangeTrackerTemporaryTable([Values(true, false)] bool enableFilter)
 		{
@@ -658,7 +657,6 @@ namespace LinqToDB.EntityFrameworkCore.Tests.SqlServer
 
 			ctx.Orders.Local.Should().BeEmpty();
 		}
-#endif
 
 		[Test]
 		public void NavigationProperties()

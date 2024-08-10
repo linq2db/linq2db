@@ -182,25 +182,39 @@ namespace LinqToDB.EntityFrameworkCore
 				ProviderName.SqlServer2017                                                => CreateSqlServerProvider(SqlServerVersion.v2017, connectionInfo.ConnectionString),
 				ProviderName.SqlServer2019                                                => CreateSqlServerProvider(SqlServerVersion.v2019, connectionInfo.ConnectionString),
 				ProviderName.SqlServer2022                                                => CreateSqlServerProvider(SqlServerVersion.v2022, connectionInfo.ConnectionString),
-				ProviderName.MySql or ProviderName.MySqlConnector or ProviderName.MariaDB => MySqlTools.GetDataProvider(provInfo.ProviderName),
+
+				ProviderName.MySql                                                        => MySqlTools.GetDataProvider(MySqlVersion.AutoDetect, MySqlProvider.AutoDetect, connectionInfo.ConnectionString),
+				ProviderName.MySql57                                                      => MySqlTools.GetDataProvider(MySqlVersion.MySql57, MySqlProvider.AutoDetect, connectionInfo.ConnectionString),
+				ProviderName.MySql80                                                      => MySqlTools.GetDataProvider(MySqlVersion.MySql80, MySqlProvider.AutoDetect, connectionInfo.ConnectionString),
+				ProviderName.MariaDB10                                                    => MySqlTools.GetDataProvider(MySqlVersion.MariaDB10, MySqlProvider.MySqlConnector, connectionInfo.ConnectionString),
+
 				ProviderName.PostgreSQL                                                   => CreatePostgreSqlProvider(PostgreSqlDefaultVersion, connectionInfo.ConnectionString),
 				ProviderName.PostgreSQL92                                                 => CreatePostgreSqlProvider(PostgreSQLVersion.v92, connectionInfo.ConnectionString),
 				ProviderName.PostgreSQL93                                                 => CreatePostgreSqlProvider(PostgreSQLVersion.v93, connectionInfo.ConnectionString),
 				ProviderName.PostgreSQL95                                                 => CreatePostgreSqlProvider(PostgreSQLVersion.v95, connectionInfo.ConnectionString),
 				ProviderName.PostgreSQL15                                                 => CreatePostgreSqlProvider(PostgreSQLVersion.v15, connectionInfo.ConnectionString),
-				ProviderName.SQLite or ProviderName.SQLiteMS                              => SQLiteTools.GetDataProvider(provInfo.ProviderName),
-				ProviderName.Firebird                                                     => FirebirdTools.GetDataProvider(),
+
+				ProviderName.SQLite or ProviderName.SQLiteMS                              => SQLiteTools.GetDataProvider(SQLiteProvider.Microsoft, connectionInfo.ConnectionString),
+
+				ProviderName.Firebird                                                     => FirebirdTools.GetDataProvider(FirebirdVersion.AutoDetect, connectionInfo.ConnectionString),
+				ProviderName.Firebird25                                                   => FirebirdTools.GetDataProvider(FirebirdVersion.v25, connectionInfo.ConnectionString),
+				ProviderName.Firebird3                                                    => FirebirdTools.GetDataProvider(FirebirdVersion.v3, connectionInfo.ConnectionString),
+				ProviderName.Firebird4                                                    => FirebirdTools.GetDataProvider(FirebirdVersion.v4, connectionInfo.ConnectionString),
+				ProviderName.Firebird5                                                    => FirebirdTools.GetDataProvider(FirebirdVersion.v5, connectionInfo.ConnectionString),
+
 				ProviderName.DB2 or ProviderName.DB2LUW                                   => DB2Tools.GetDataProvider(DB2Version.LUW),
 				ProviderName.DB2zOS                                                       => DB2Tools.GetDataProvider(DB2Version.zOS),
+
 				ProviderName.Oracle11Native                                               => OracleTools.GetDataProvider(OracleVersion.v11, OracleProvider.Native),
 				ProviderName.OracleNative                                                 => OracleTools.GetDataProvider(OracleVersion.v12, OracleProvider.Native),
 				ProviderName.Oracle11Managed                                              => OracleTools.GetDataProvider(OracleVersion.v11, OracleProvider.Managed),
 				ProviderName.Oracle or ProviderName.OracleManaged                         => OracleTools.GetDataProvider(OracleVersion.v12, OracleProvider.Managed),
 				ProviderName.Oracle11Devart                                               => OracleTools.GetDataProvider(OracleVersion.v11, OracleProvider.Devart),
 				ProviderName.OracleDevart                                                 => OracleTools.GetDataProvider(OracleVersion.v12, OracleProvider.Devart),
+
 				ProviderName.SqlCe                                                        => SqlCeTools.GetDataProvider(),
-				//case ProviderName.Access:
-				//	return new AccessDataProvider();
+
+				// TODO: missing: informix, access, sap hana, sybase, clickhouse
 				_                                                                         => throw new LinqToDBForEFToolsException($"Can not instantiate data provider '{provInfo.ProviderName}'."),
 			};
 		}
@@ -215,7 +229,7 @@ namespace LinqToDB.EntityFrameworkCore
 			return database.ProviderName switch
 			{
 				"Microsoft.EntityFrameworkCore.SqlServer"                                                   => new LinqToDBProviderInfo { ProviderName = ProviderName.SqlServer      },
-				"Pomelo.EntityFrameworkCore.MySql" or "Devart.Data.MySql.EFCore"                            => new LinqToDBProviderInfo { ProviderName = ProviderName.MySqlConnector },
+				"Pomelo.EntityFrameworkCore.MySql" or "Devart.Data.MySql.EFCore"                            => new LinqToDBProviderInfo { ProviderName = ProviderName.MySql          },
 				"MySql.Data.EntityFrameworkCore"                                                            => new LinqToDBProviderInfo { ProviderName = ProviderName.MySql          },
 				"Npgsql.EntityFrameworkCore.PostgreSQL" or "Devart.Data.PostgreSql.EFCore"                  => new LinqToDBProviderInfo { ProviderName = ProviderName.PostgreSQL     },
 				"Microsoft.EntityFrameworkCore.Sqlite" or "Devart.Data.SQLite.EFCore"                       => new LinqToDBProviderInfo { ProviderName = ProviderName.SQLite         },
@@ -258,7 +272,7 @@ namespace LinqToDB.EntityFrameworkCore
 		{
 			return extensions.GetType().Name switch
 			{
-				"MySqlOptionsExtension"                              => new LinqToDBProviderInfo { ProviderName = ProviderName.MySqlConnector },
+				"MySqlOptionsExtension"                              => new LinqToDBProviderInfo { ProviderName = ProviderName.MySql          },
 				"MySQLOptionsExtension"                              => new LinqToDBProviderInfo { ProviderName = ProviderName.MySql          },
 				"NpgsqlOptionsExtension" or "PgSqlOptionsExtension"  => new LinqToDBProviderInfo { ProviderName = ProviderName.PostgreSQL     },
 				"SqlServerOptionsExtension"                          => new LinqToDBProviderInfo { ProviderName = ProviderName.SqlServer      },
@@ -402,7 +416,7 @@ namespace LinqToDB.EntityFrameworkCore
 							modelType), toParam));
 
 				mappingSchema.SetValueToSqlConverter(modelType, (sb, dt, v)
-					=> sqlConverter.Convert(sb, mappingSchema, dt, dataOptions, converter.ConvertToProvider(v)));
+					=> sqlConverter.Convert(sb, mappingSchema, dt.Type, dataOptions, converter.ConvertToProvider(v)));
 			}
 		}
 

@@ -125,6 +125,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "NuGet", "NuGet", "{3A081B6E
 		NuGet\linq2db.Tools.nuspec = NuGet\linq2db.Tools.nuspec
 		NuGet\Pack.cmd = NuGet\Pack.cmd
 		NuGet\PackLocal.cmd = NuGet\PackLocal.cmd
+		NuGet\README.EF.md = NuGet\README.EF.md
 		NuGet\README.Extensions.md = NuGet\README.Extensions.md
 		NuGet\README.FSharp.md = NuGet\README.FSharp.md
 		NuGet\README.linq2db.md = NuGet\README.linq2db.md

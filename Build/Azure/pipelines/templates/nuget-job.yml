@@ -66,6 +66,18 @@ jobs:
       targetPath: '$(Build.SourcesDirectory)/.build/bin/LinqToDB.CLI/Release'
 
   - task: DownloadPipelineArtifact@2
+    displayName: Download LinqToDB.FSharp files
+    inputs:
+      artifactName: '$(artifact_linq2db_fsharp_binaries)'
+      targetPath: '$(Build.SourcesDirectory)/.build/bin/LinqToDB.FSharp/Release'
+
+  - task: DownloadPipelineArtifact@2
+    displayName: Download LinqToDB.EntityFrameworkCore files
+    inputs:
+      artifactName: '$(artifact_linq2db_efcore_binaries)'
+      targetPath: '$(Build.SourcesDirectory)/.build/bin/LinqToDB.EntityFrameworkCore/Release'
+
+  - task: DownloadPipelineArtifact@2
     displayName: Download test files (for t4 nugets)
     inputs:
       artifactName: '$(netfx_tests)'
