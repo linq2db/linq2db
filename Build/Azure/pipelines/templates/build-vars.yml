@@ -5,7 +5,8 @@ variables:
   baselines_master: master
   solution: 'linq2db.sln'
   netfx_tfm: 'net462'
-  build_configuration: 'Azure'
+  release_configuration: 'Release'
+  test_configuration: 'Azure'
   assemblyVersion: 6.0.0
   ${{ if eq(variables['Build.SourceBranchName'], 'release') }}:
     packageVersion: 6.0.0-preview.2

@@ -3,7 +3,6 @@
 
 	<PropertyGroup>
 		<TargetFrameworks>net462;net6.0;net8.0</TargetFrameworks>
-		<Configurations>Debug;Release;Azure</Configurations>
 		<DefineConstants Condition=" $(DB2STUB) == 'True' ">$(DefineConstants);DB2STUBS</DefineConstants>
 	</PropertyGroup>
 

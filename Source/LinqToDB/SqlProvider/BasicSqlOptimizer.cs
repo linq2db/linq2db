@@ -1871,8 +1871,10 @@ namespace LinqToDB.SqlProvider
 
 #if DEBUG
 			// ReSharper disable once NotAccessedVariable
-
 			var sqlText = startFrom.DebugText;
+#endif
+
+#if BUGCHECK
 
 			if (startFrom is SqlStatement statementBefore)
 				QueryHelper.DebugCheckNesting(statementBefore, false);
@@ -1883,7 +1885,9 @@ namespace LinqToDB.SqlProvider
 #if DEBUG
 			// ReSharper disable once NotAccessedVariable
 			var newSqlText = result.DebugText;
+#endif
 
+#if BUGCHECK
 			if (startFrom is SqlStatement statementAfter)
 				QueryHelper.DebugCheckNesting(statementAfter, false);
 #endif

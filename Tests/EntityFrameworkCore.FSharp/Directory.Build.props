@@ -3,7 +3,6 @@
 
 	<PropertyGroup>
 		<TargetFrameworks>net6.0;net8.0</TargetFrameworks>
-		<Configurations>Debug;Release;Azure</Configurations>
 	</PropertyGroup>
 
 	<PropertyGroup Condition=" '$(Configuration)' == 'Azure' ">

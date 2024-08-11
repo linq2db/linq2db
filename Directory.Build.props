@@ -2,6 +2,8 @@
 	<PropertyGroup>
 		<Version>6.0.0.0</Version>
 
+		<Configurations>Debug;Release;Azure</Configurations>
+
 		<Description>LINQ to DB is a data access technology that provides a run-time infrastructure for managing relational data as objects.</Description>
 		<Authors>Igor Tkachev, Ilya Chudin, Svyatoslav Danyliv, Dmitry Lukashenko</Authors>
 		<Company>linq2db.net</Company>
@@ -52,7 +54,7 @@
 	<PropertyGroup Label="Code Analysis Setup">
 		<RunAnalyzersDuringBuild>false</RunAnalyzersDuringBuild>
 		<!--enable on release build only to not slowdown development/testing-->
-		<RunAnalyzersDuringBuild Condition="$(Configuration) != 'Debug'">true</RunAnalyzersDuringBuild>
+		<RunAnalyzersDuringBuild Condition="$(Configuration) == 'Release'">true</RunAnalyzersDuringBuild>
 		<RunAnalyzersDuringLiveAnalysis>true</RunAnalyzersDuringLiveAnalysis>
 
 		<AnalysisLevel>preview-All</AnalysisLevel>

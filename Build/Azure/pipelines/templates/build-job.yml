@@ -32,43 +32,44 @@ jobs:
 
   - task: DotNetCoreCLI@2
     inputs:
-      command: 'build'
-      projects: '$(solution)'
-      arguments: '-property:ContinuousIntegrationBuild=true --configuration $(build_configuration)'
-    displayName: Build Solution
+      command: build
+      projects: $(solution)
+      arguments: --configuration $(test_configuration)
+    displayName: Build Solution for Tests
+    condition: and(succeeded(), ${{ parameters.for_tests }})
 
   - task: CmdLine@2
     inputs:
       script: |
-        dotnet publish Tests\Linq\Tests.csproj -f net6.0 -c $(build_configuration)
+        dotnet publish Tests\Linq\Tests.csproj -f net6.0 -c $(test_configuration)
         if %errorlevel% neq 0 exit
-        dotnet publish Tests\Linq\Tests.csproj -f net8.0 -c $(build_configuration)
+        dotnet publish Tests\Linq\Tests.csproj -f net8.0 -c $(test_configuration)
         if %errorlevel% neq 0 exit
-        dotnet publish Tests\Linq\Tests.csproj -f $(netfx_tfm) -c $(build_configuration) -a x86 -o .build\publish\Tests\$(build_configuration)\$(netfx_tfm)_x86
+        dotnet publish Tests\Linq\Tests.csproj -f $(netfx_tfm) -c $(test_configuration) -a x86 -o .build\publish\Tests\$(test_configuration)\$(netfx_tfm)_x86
         if %errorlevel% neq 0 exit
-        dotnet publish Tests\Linq\Tests.csproj -f $(netfx_tfm) -c $(build_configuration) -a x64 -o .build\publish\Tests\$(build_configuration)\$(netfx_tfm)_x64
+        dotnet publish Tests\Linq\Tests.csproj -f $(netfx_tfm) -c $(test_configuration) -a x64 -o .build\publish\Tests\$(test_configuration)\$(netfx_tfm)_x64
         if %errorlevel% neq 0 exit
-        dotnet publish Tests\Linq\Tests.csproj -f net6.0 -c $(build_configuration) -a x86 /p:DB2STUB=True -o .build\publish\Tests\$(build_configuration)\net6.0_x86
+        dotnet publish Tests\Linq\Tests.csproj -f net6.0 -c $(test_configuration) -a x86 /p:DB2STUB=True -o .build\publish\Tests\$(test_configuration)\net6.0_x86
         if %errorlevel% neq 0 exit
-        dotnet publish Tests\Linq\Tests.csproj -f net8.0 -c $(build_configuration) -a x86 /p:DB2STUB=True -o .build\publish\Tests\$(build_configuration)\net8.0_x86
+        dotnet publish Tests\Linq\Tests.csproj -f net8.0 -c $(test_configuration) -a x86 /p:DB2STUB=True -o .build\publish\Tests\$(test_configuration)\net8.0_x86
         if %errorlevel% neq 0 exit
         mkdir testing
         if %errorlevel% neq 0 exit
-        xcopy /i /s .build\publish\Tests\$(build_configuration)\$(netfx_tfm)_x86 testing\netfx
+        xcopy /i /s .build\publish\Tests\$(test_configuration)\$(netfx_tfm)_x86 testing\netfx
         if %errorlevel% neq 0 exit
-        xcopy /i /s .build\publish\Tests\$(build_configuration)\net6.0 testing\net60
+        xcopy /i /s .build\publish\Tests\$(test_configuration)\net6.0 testing\net60
         if %errorlevel% neq 0 exit
-        xcopy /i /s .build\publish\Tests\$(build_configuration)\net8.0 testing\net80
+        xcopy /i /s .build\publish\Tests\$(test_configuration)\net8.0 testing\net80
         if %errorlevel% neq 0 exit
-        xcopy /i /s .build\publish\Tests\$(build_configuration)\$(netfx_tfm)_x64 testing\netfxx64
+        xcopy /i /s .build\publish\Tests\$(test_configuration)\$(netfx_tfm)_x64 testing\netfxx64
         if %errorlevel% neq 0 exit
-        xcopy /i /s /y .build\bin\Tests\$(build_configuration)\$(netfx_tfm)\x86 testing\netfx\x86
+        xcopy /i /s /y .build\bin\Tests\$(test_configuration)\$(netfx_tfm)\x86 testing\netfx\x86
         if %errorlevel% neq 0 exit
-        xcopy /i /s /y .build\bin\Tests\$(build_configuration)\$(netfx_tfm)\x64 testing\netfxx64\x64
+        xcopy /i /s /y .build\bin\Tests\$(test_configuration)\$(netfx_tfm)\x64 testing\netfxx64\x64
         if %errorlevel% neq 0 exit
-        xcopy /i /s .build\publish\Tests\$(build_configuration)\net6.0_x86 testing\net60x86
+        xcopy /i /s .build\publish\Tests\$(test_configuration)\net6.0_x86 testing\net60x86
         if %errorlevel% neq 0 exit
-        xcopy /i /s .build\publish\Tests\$(build_configuration)\net8.0_x86 testing\net80x86
+        xcopy /i /s .build\publish\Tests\$(test_configuration)\net8.0_x86 testing\net80x86
         if %errorlevel% neq 0 exit
         copy DataProviders.json testing\netfx
         if %errorlevel% neq 0 exit
@@ -82,13 +83,13 @@ jobs:
         if %errorlevel% neq 0 exit
         copy DataProviders.json testing\net80x86
         if %errorlevel% neq 0 exit
-        xcopy /i Build\$(build_configuration)\netfx testing\configs\netfx
+        xcopy /i Build\$(test_configuration)\netfx testing\configs\netfx
         if %errorlevel% neq 0 exit
-        xcopy /i Build\$(build_configuration)\net60 testing\configs\net60
+        xcopy /i Build\$(test_configuration)\net60 testing\configs\net60
         if %errorlevel% neq 0 exit
-        xcopy /i Build\$(build_configuration)\net80 testing\configs\net80
+        xcopy /i Build\$(test_configuration)\net80 testing\configs\net80
         if %errorlevel% neq 0 exit
-        xcopy /i Build\$(build_configuration)\scripts testing\scripts
+        xcopy /i Build\$(test_configuration)\scripts testing\scripts
         if %errorlevel% neq 0 exit
         copy "Data\Create Scripts\Northwind.sql" testing\scripts\northwind.sql
         if %errorlevel% neq 0 exit
@@ -100,6 +101,13 @@ jobs:
       path: '$(Build.SourcesDirectory)/testing'
       artifact: test_artifacts
     condition: and(succeeded(), ${{ parameters.for_tests }})
+
+  - task: DotNetCoreCLI@2
+    inputs:
+      command: build
+      projects: $(solution)
+      arguments: -property:ContinuousIntegrationBuild=true --configuration $(build_configuration)
+    displayName: Build Solution for Release and Nuget
 
   - task: PublishPipelineArtifact@1
     inputs:
@@ -160,6 +168,6 @@ jobs:
   - task: PublishPipelineArtifact@1
     inputs:
       path: '$(Build.SourcesDirectory)/.build/bin/Tests/$(build_configuration)/$(netfx_tfm)'
-      artifact: '$(netfx_tests)'
+      artifact: '$(t4_binaries)'
     displayName: Publish nuget artifacts part 1
     condition: and(succeeded(), ${{ parameters.for_nuget }})

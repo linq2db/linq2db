@@ -183,7 +183,7 @@ namespace LinqToDB.SqlQuery
 				}
 			}
 
-#if DEBUG
+#if BUGCHECK
 
 			switch (col.Expression.ElementType)
 			{
