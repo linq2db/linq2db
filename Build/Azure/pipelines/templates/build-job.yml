@@ -106,7 +106,7 @@ jobs:
     inputs:
       command: build
       projects: $(solution)
-      arguments: -property:ContinuousIntegrationBuild=true --configuration $(build_configuration)
+      arguments: -property:ContinuousIntegrationBuild=true --configuration $(release_configuration)
     displayName: Build Solution for Release and Nuget
 
   - task: PublishPipelineArtifact@1
@@ -167,7 +167,7 @@ jobs:
 
   - task: PublishPipelineArtifact@1
     inputs:
-      path: '$(Build.SourcesDirectory)/.build/bin/Tests/$(build_configuration)/$(netfx_tfm)'
+      path: '$(Build.SourcesDirectory)/.build/bin/Tests/$(release_configuration)/$(netfx_tfm)'
       artifact: '$(t4_binaries)'
     displayName: Publish nuget artifacts part 1
     condition: and(succeeded(), ${{ parameters.for_nuget }})
