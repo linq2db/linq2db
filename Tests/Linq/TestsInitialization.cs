@@ -40,7 +40,7 @@ public class TestsInitialization
 
 		_doMetrics = true;
 #else
-		_doMetrics = TestBase.StoreMetrics == true;
+		_doMetrics = TestConfiguration.StoreMetrics == true;
 #endif
 
 		if (_doMetrics)
