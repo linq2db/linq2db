@@ -146,7 +146,7 @@ namespace LinqToDB.DataProvider.Oracle
 			ITable<T> table, DataOptions options, IAsyncEnumerable<T> source, CancellationToken cancellationToken)
 		{
 			var enumerator = source.GetAsyncEnumerator(cancellationToken);
-			await using (enumerator.ConfigureAwait(Configuration.ContinueOnCapturedContext))
+			await using (enumerator.ConfigureAwait(false))
 			{
 				// call the synchronous provider-specific implementation
 				return ProviderSpecificCopy(table, options, EnumerableHelper.AsyncToSyncEnumerable(enumerator));
@@ -298,10 +298,10 @@ namespace LinqToDB.DataProvider.Oracle
 
 				if (helper.CurrentCount >= helper.BatchSize)
 				{
-					if (!await ExecuteAsync(helper, list, cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext))
+					if (!await ExecuteAsync(helper, list, cancellationToken).ConfigureAwait(false))
 					{
 						if (!helper.SuppressCloseAfterUse && helper.OriginalContext.CloseAfterUse)
-							await helper.OriginalContext.CloseAsync().ConfigureAwait(Configuration.ContinueOnCapturedContext);
+							await helper.OriginalContext.CloseAsync().ConfigureAwait(false);
 
 						return helper.RowsCopied;
 					}
@@ -312,11 +312,11 @@ namespace LinqToDB.DataProvider.Oracle
 
 			if (helper.CurrentCount > 0)
 			{
-				await ExecuteAsync(helper, list, cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
+				await ExecuteAsync(helper, list, cancellationToken).ConfigureAwait(false);
 			}
 
 			if (!helper.SuppressCloseAfterUse && helper.OriginalContext.CloseAfterUse)
-				await helper.OriginalContext.CloseAsync().ConfigureAwait(Configuration.ContinueOnCapturedContext);
+				await helper.OriginalContext.CloseAsync().ConfigureAwait(false);
 
 			return helper.RowsCopied;
 		}
@@ -325,7 +325,7 @@ namespace LinqToDB.DataProvider.Oracle
 		{
 			var list = OracleMultipleRowsCopy2Prep(helper);
 
-			await foreach (var item in source.WithCancellation(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext))
+			await foreach (var item in source.WithCancellation(cancellationToken).ConfigureAwait(false))
 			{
 				list.Add(item!);
 
@@ -334,10 +334,10 @@ namespace LinqToDB.DataProvider.Oracle
 
 				if (helper.CurrentCount >= helper.BatchSize)
 				{
-					if (!await ExecuteAsync(helper, list, cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext))
+					if (!await ExecuteAsync(helper, list, cancellationToken).ConfigureAwait(false))
 					{
 						if (!helper.SuppressCloseAfterUse && helper.OriginalContext.CloseAfterUse)
-							await helper.OriginalContext.CloseAsync().ConfigureAwait(Configuration.ContinueOnCapturedContext);
+							await helper.OriginalContext.CloseAsync().ConfigureAwait(false);
 
 						return helper.RowsCopied;
 					}
@@ -348,11 +348,11 @@ namespace LinqToDB.DataProvider.Oracle
 
 			if (helper.CurrentCount > 0)
 			{
-				await ExecuteAsync(helper, list, cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
+				await ExecuteAsync(helper, list, cancellationToken).ConfigureAwait(false);
 			}
 
 			if (!helper.SuppressCloseAfterUse && helper.OriginalContext.CloseAfterUse)
-				await helper.OriginalContext.CloseAsync().ConfigureAwait(Configuration.ContinueOnCapturedContext);
+				await helper.OriginalContext.CloseAsync().ConfigureAwait(false);
 
 			return helper.RowsCopied;
 		}

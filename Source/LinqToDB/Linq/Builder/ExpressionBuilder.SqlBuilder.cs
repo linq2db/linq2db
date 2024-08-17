@@ -28,7 +28,7 @@ namespace LinqToDB.Linq.Builder
 	{
 		#region LinqOptions shortcuts
 
-		public bool CompareNullsAsValues => DataOptions.LinqOptions.CompareNullsAsValues;
+		public CompareNulls CompareNulls => DataOptions.LinqOptions.CompareNulls;
 
 		#endregion
 
@@ -185,7 +185,8 @@ namespace LinqToDB.Linq.Builder
 				SqlJoinedTable? fakeJoin = null;
 
 				// add fake join there is no still reference
-				if (clonedParentContext.SelectQuery.From.Tables.Count > 0 && null == clonedParentContext.SelectQuery.Find(e => e is SelectQuery sc && sc == clonedContext.SelectQuery))
+				if (clonedParentContext.SelectQuery.From.Tables.Count > 0 
+					&& clonedParentContext.SelectQuery.Find(e => e is SelectQuery sc && sc == clonedContext.SelectQuery) == null)
 				{
 					fakeJoin = clonedContext.SelectQuery.OuterApply().JoinedTable;
 
@@ -1192,7 +1193,7 @@ namespace LinqToDB.Linq.Builder
 							if (testValueExpr is not SqlPlaceholderExpression testPlaceholder)
 								return SqlErrorExpression.EnsureError(testValueExpr, switchExpression.Type);
 
-							sc.Add(new SqlPredicate.ExprExpr(sv, SqlPredicate.Operator.Equal, testPlaceholder.Sql, CompareNullsAsValues ? true : null));
+							sc.Add(new SqlPredicate.ExprExpr(sv, SqlPredicate.Operator.Equal, testPlaceholder.Sql, CompareNulls == CompareNulls.LikeClr ? true : null));
 						}
 
 						ps[i * 2]     = sc;
@@ -1744,7 +1745,7 @@ namespace LinqToDB.Linq.Builder
 				var trueValue  = ConvertToSql(context, ExpressionInstances.True, columnDescriptor: descriptor);
 				var falseValue = ConvertToSql(context, ExpressionInstances.False, columnDescriptor: descriptor);
 
-				return new SqlPredicate.IsTrue(ex, trueValue, falseValue, DataOptions.LinqOptions.CompareNullsAsValues ? false : null, false);
+				return new SqlPredicate.IsTrue(ex, trueValue, falseValue, DataOptions.LinqOptions.CompareNulls == CompareNulls.LikeClr ? false : null, false);
 			}
 
 			if (ex is ISqlPredicate expPredicate)
@@ -2096,8 +2097,6 @@ namespace LinqToDB.Linq.Builder
 			var leftExpr         = ConvertToSqlExpr(context, left,  keysFlag, columnDescriptor : columnDescriptor);
 			var rightExpr        = ConvertToSqlExpr(context, right, keysFlag, columnDescriptor : columnDescriptor);
 
-			var compareNullsAsValues = CompareNullsAsValues;
-
 			//SQLRow case when needs to add Single
 			//
 			if (leftExpr is SqlPlaceholderExpression { Sql: SqlRowExpression } && rightExpr is not SqlPlaceholderExpression)
@@ -2253,7 +2252,8 @@ namespace LinqToDB.Linq.Builder
 				case ExpressionType.Equal:
 				case ExpressionType.NotEqual:
 
-					if (!context!.SelectQuery.IsParameterDependent &&
+					if (CompareNulls != CompareNulls.LikeSql &&
+						!context!.SelectQuery.IsParameterDependent &&
 						(l is SqlParameter && lOriginal.CanBeNullable(nullability) || r is SqlParameter && r.CanBeNullable(nullability)))
 					{
 						context.SelectQuery.IsParameterDependent = true;
@@ -2326,7 +2326,7 @@ namespace LinqToDB.Linq.Builder
 						if (trueValue.ElementType  == QueryElementType.SqlValue &&
 						    falseValue.ElementType == QueryElementType.SqlValue)
 						{
-							var withNullValue = compareNullsAsValues
+							var withNullValue = CompareNulls == CompareNulls.LikeClr
 								? withNull
 								: (bool?)null;
 							predicate = new SqlPredicate.IsTrue(expression, trueValue, falseValue, withNullValue, isNot);
@@ -2349,7 +2349,7 @@ namespace LinqToDB.Linq.Builder
 
 				if (predicate == null)
 				{
-					if (compareNullsAsValues)
+					if (CompareNulls == CompareNulls.LikeClr)
 					{
 						if (lOriginal is SqlColumn colLeft)
 							lOriginal = SqlNullabilityExpression.ApplyNullability(lOriginal, NullabilityContext.GetContext(colLeft.Parent));
@@ -2366,7 +2366,7 @@ namespace LinqToDB.Linq.Builder
 					}
 
 					predicate = new SqlPredicate.ExprExpr(lOriginal, op, rOriginal,
-						compareNullsAsValues
+						CompareNulls == CompareNulls.LikeClr
 							? true
 							: null);
 				}
@@ -2933,7 +2933,7 @@ namespace LinqToDB.Linq.Builder
 						for (var i = 0; i < newArr.Expressions.Count; i++)
 							exprs[i] = ConvertToSql(context, newArr.Expressions[i], columnDescriptor: columnDescriptor);
 
-						return new SqlPredicate.InList(expr, DataOptions.LinqOptions.CompareNullsAsValues ? false : null, false, exprs);
+						return new SqlPredicate.InList(expr, DataOptions.LinqOptions.CompareNulls == CompareNulls.LikeClr ? false : null, false, exprs);
 					}
 
 				default :
@@ -2943,7 +2943,7 @@ namespace LinqToDB.Linq.Builder
 						var p = ParametersContext.BuildParameter(context, arr, columnDescriptor, forceConstant : false,
 							buildParameterType : ParametersContext.BuildParameterType.InPredicate)!.SqlParameter;
 						p.IsQueryParameter = false;
-						return new SqlPredicate.InList(expr, DataOptions.LinqOptions.CompareNullsAsValues ? false : null, false, p);
+						return new SqlPredicate.InList(expr, DataOptions.LinqOptions.CompareNulls == CompareNulls.LikeClr ? false : null, false, p);
 					}
 
 					break;
@@ -3101,7 +3101,7 @@ namespace LinqToDB.Linq.Builder
 											getSql(getSqlContext, m.DiscriminatorName),
 											SqlPredicate.Operator.NotEqual,
 											MappingSchema.GetSqlValue(m.Discriminator.MemberType, m.Code, m.Discriminator.GetDbDataType(true)),
-											DataOptions.LinqOptions.CompareNullsAsValues ? true : null)
+											withNull: true)
 									)
 								);
 							}
@@ -3119,7 +3119,7 @@ namespace LinqToDB.Linq.Builder
 												getSql(getSqlContext, m.DiscriminatorName),
 												SqlPredicate.Operator.Equal,
 												MappingSchema.GetSqlValue(m.Discriminator.MemberType, m.Code, m.Discriminator.GetDbDataType(true)),
-												DataOptions.LinqOptions.CompareNullsAsValues ? true : null)
+												withNull: true)
 										)
 									);
 								}
@@ -3141,7 +3141,7 @@ namespace LinqToDB.Linq.Builder
 							discriminatorSql,
 							SqlPredicate.Operator.Equal,
 							sqlValue,
-							DataOptions.LinqOptions.CompareNullsAsValues ? true : null)
+							withNull: true)
 					);
 				}
 				default:
@@ -3155,7 +3155,7 @@ namespace LinqToDB.Linq.Builder
 									getSql(getSqlContext, m.DiscriminatorName),
 									SqlPredicate.Operator.Equal,
 									MappingSchema.GetSqlValue(m.Discriminator.MemberType, m.Code, m.Discriminator.GetDbDataType(true)),
-									DataOptions.LinqOptions.CompareNullsAsValues ? true : null));
+									withNull: true));
 						}
 
 						return cond;
@@ -4528,6 +4528,16 @@ namespace LinqToDB.Linq.Builder
 						corrected = Expression.Convert(corrected, path.Type);
 					}
 					return MakeExpression(currentContext, corrected, flags);
+				}
+
+				if (memberExpression.Member.IsNullableHasValueMember())
+				{
+					var corrected = MakeExpression(currentContext, memberExpression.Expression, flags);
+					if (corrected.Type != memberExpression.Expression.Type)
+					{
+						corrected = Expression.Convert(corrected, memberExpression.Expression.Type);
+					}
+					return memberExpression.Update(corrected);
 				}
 
 				if (memberExpression.Member.IsNullableHasValueMember())

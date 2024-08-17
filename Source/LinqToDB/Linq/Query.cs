@@ -248,7 +248,7 @@ namespace LinqToDB.Linq
 			var preambles = new object[_preambles.Length];
 			for (var i = 0; i < preambles.Length; i++)
 			{
-				preambles[i] = await _preambles[i].ExecuteAsync(dc, rootExpression, ps, preambles, cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
+				preambles[i] = await _preambles[i].ExecuteAsync(dc, rootExpression, ps, preambles, cancellationToken).ConfigureAwait(false);
 			}
 
 			return preambles;

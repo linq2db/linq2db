@@ -1971,7 +1971,7 @@ FROM
 				.ToList();
 		}
 
-		[ActiveIssue(Configurations = [TestProvName.AllAccess, TestProvName.AllClickHouse, TestProvName.AllDB2, TestProvName.AllInformix, TestProvName.AllSybase])]
+		[ThrowsForProvider(typeof(LinqException), providers: [TestProvName.AllClickHouse], ErrorMessage = "Provider does not support correlated subqueries.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3226")]
 		public void Issue3226Test3([DataSources] string context)
 		{
@@ -1989,7 +1989,7 @@ FROM
 				.ToList();
 		}
 
-		[ActiveIssue(Configurations = [TestProvName.AllAccess, TestProvName.AllClickHouse, TestProvName.AllDB2, TestProvName.AllInformix, TestProvName.AllSybase])]
+		[ThrowsForProvider(typeof(LinqException), providers: [TestProvName.AllClickHouse], ErrorMessage = "Provider does not support correlated subqueries.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3226")]
 		public void Issue3226Test4([DataSources] string context)
 		{

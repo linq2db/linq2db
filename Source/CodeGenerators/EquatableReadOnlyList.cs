@@ -6,9 +6,11 @@ using System.Linq;
 
 namespace CodeGenerators
 {
+	/// <summary></summary>
 	[ExcludeFromCodeCoverage]
 	public static class EquatableReadOnlyList
 	{
+		/// <summary></summary>
 		public static EquatableReadOnlyList<T> ToEquatableReadOnlyList<T>(this IEnumerable<T>? enumerable)
 			=> new((enumerable as IReadOnlyList<T>) ?? enumerable?.ToArray());
 	}
@@ -23,12 +25,15 @@ namespace CodeGenerators
 	{
 		private IReadOnlyList<T> Collection => collection ?? [];
 
+		/// <summary></summary>
 		public bool Equals(EquatableReadOnlyList<T> other)
 			=> this.SequenceEqual(other);
 
+		/// <summary></summary>
 		public override bool Equals(object? obj)
 			=> obj is EquatableReadOnlyList<T> other && Equals(other);
 
+		/// <summary></summary>
 		public override int GetHashCode()
 		{
 			var hashCode = new HashCode();
@@ -45,12 +50,16 @@ namespace CodeGenerators
 		IEnumerator IEnumerable.GetEnumerator()
 			=> Collection.GetEnumerator();
 
+		/// <summary></summary>
 		public int Count => Collection.Count;
+		/// <summary></summary>
 		public T this[int index] => Collection[index];
 
+		/// <summary></summary>
 		public static bool operator ==(EquatableReadOnlyList<T> left, EquatableReadOnlyList<T> right)
 			=> left.Equals(right);
 
+		/// <summary></summary>
 		public static bool operator !=(EquatableReadOnlyList<T> left, EquatableReadOnlyList<T> right)
 			=> !left.Equals(right);
 	}

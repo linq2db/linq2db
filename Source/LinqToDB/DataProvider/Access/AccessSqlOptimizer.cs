@@ -173,9 +173,9 @@ namespace LinqToDB.DataProvider.Access
 
 								var countExpr = SqlFunction.CreateCount(typeof(int), existsQuery.From.Tables[0]);
 								if (!isNot)
-									newSearch.AddGreater(countExpr, new SqlValue(0), dataOptions.LinqOptions.CompareNullsAsValues);
+									newSearch.AddGreater(countExpr, new SqlValue(0), dataOptions.LinqOptions.CompareNulls);
 								else
-									newSearch.AddEqual(countExpr, new SqlValue(0), dataOptions.LinqOptions.CompareNullsAsValues);
+									newSearch.AddEqual(countExpr, new SqlValue(0), dataOptions.LinqOptions.CompareNulls);
 
 								existsQuery.Select.AddColumn(newSearch);
 
@@ -186,7 +186,7 @@ namespace LinqToDB.DataProvider.Access
 							{
 								var subquery = inSubQuery.SubQuery;
 								subquery.Where.EnsureConjunction()
-									.AddEqual(subquery.Select.Columns[0].Expression, inSubQuery.Expr1, dataOptions.LinqOptions.CompareNullsAsValues);
+									.AddEqual(subquery.Select.Columns[0].Expression, inSubQuery.Expr1, dataOptions.LinqOptions.CompareNulls);
 
 								subquery.Select.Columns.Clear();
 
@@ -196,9 +196,9 @@ namespace LinqToDB.DataProvider.Access
 								isNot = isNot != inSubQuery.IsNot;
 
 								if (!isNot)
-									newSearch.AddGreater(countExpr, new SqlValue(0), dataOptions.LinqOptions.CompareNullsAsValues);
+									newSearch.AddGreater(countExpr, new SqlValue(0), dataOptions.LinqOptions.CompareNulls);
 								else
-									newSearch.AddEqual(countExpr, new SqlValue(0), dataOptions.LinqOptions.CompareNullsAsValues);
+									newSearch.AddEqual(countExpr, new SqlValue(0), dataOptions.LinqOptions.CompareNulls);
 
 								subquery.Select.AddColumn(newSearch);
 
