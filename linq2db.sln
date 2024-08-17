@@ -28,6 +28,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{DF8DE665
 		DataProviders.json = DataProviders.json
 		Tests\Directory.Build.props = Tests\Directory.Build.props
 		Tests\linq2db.Providers.props = Tests\linq2db.Providers.props
+		Tests\linq2db.BasicTestProjects.props = Tests\linq2db.BasicTestProjects.props
 		Tests\linq2db.TestProjects.props = Tests\linq2db.TestProjects.props
 		UserDataProviders.json = UserDataProviders.json
 		Tests\UserDataProviders.json.template = Tests\UserDataProviders.json.template

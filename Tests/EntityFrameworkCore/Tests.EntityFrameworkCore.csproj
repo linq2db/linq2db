@@ -1,4 +1,5 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
+	<Import Project="..\linq2db.BasicTestProjects.props" />
 
 	<PropertyGroup>
 		<AssemblyName>linq2db.EntityFrameworkCore.Tests</AssemblyName>
@@ -6,24 +7,16 @@
 	</PropertyGroup>
 	
 	<ItemGroup>
-		<PackageReference Include="NUnit3TestAdapter" />
-		<PackageReference Include="Microsoft.NET.Test.Sdk" />
-		<PackageReference Include="NUnit" />
-		<PackageReference Include="NUnit.Analyzers" />
-		<PackageReference Include="FluentAssertions" />
+		<ProjectReference Include="..\..\Source\LinqToDB.EntityFrameworkCore\LinqToDB.EntityFrameworkCore.csproj" />
+		<ProjectReference Include="..\Base\Tests.Base.csproj" />
+
 		<PackageReference Include="Microsoft.Extensions.Logging.Console" />
 
 		<PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" />
-		
 		<PackageReference Include="Pomelo.EntityFrameworkCore.MySql" />
 		<PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL.NodaTime" />
 		<PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" />
 		<PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" />
-	</ItemGroup>
-
-	<ItemGroup>
-		<ProjectReference Include="..\..\Source\LinqToDB.EntityFrameworkCore\LinqToDB.EntityFrameworkCore.csproj" />
-		<ProjectReference Include="..\..\Source\LinqToDB.Tools\LinqToDB.Tools.csproj" />
 	</ItemGroup>
 
 </Project>

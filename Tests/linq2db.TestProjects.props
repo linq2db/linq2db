@@ -1,5 +1,6 @@
 ﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 
+	<Import Project="linq2db.BasicTestProjects.props" />
 	<Import Project="linq2db.Providers.props" />
 
 	<PropertyGroup>
@@ -28,9 +29,6 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="NUnit3TestAdapter" />
-		<PackageReference Include="Microsoft.NET.Test.Sdk" />
-		<PackageReference Include="FluentAssertions" />
 		<PackageReference Include="System.Linq.Dynamic.Core" />
 		<PackageReference Include="NodaTime" />
 		<!--don't remove, it is used for T4 nugets build-->

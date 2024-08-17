@@ -27,7 +27,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests.Logging
 		/// Adds a console logger named 'Console' to the factory.
 		/// </summary>
 		/// <param name="builder">The <see cref="ILoggingBuilder"/> to use.</param>
-		/// <param name="configure">A delegate to configure the <see cref="ConsoleLogger"/>.</param>
+		/// <param name="configure">A delegate to configure the console logger.</param>
 		public static ILoggingBuilder AddTestLogger(this ILoggingBuilder builder, Action<ConsoleLoggerOptions> configure)
 		{
 			ArgumentNullException.ThrowIfNull(configure);

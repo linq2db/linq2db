@@ -8,11 +8,12 @@ using Microsoft.Extensions.Options;
 namespace LinqToDB.EntityFrameworkCore.Tests.Logging
 {
 	/// <summary>
-	/// A provider of <see cref="ConsoleLogger"/> instances.
+	/// A provider of console logger instances.
 	/// </summary>
 	[ProviderAlias("Console")]
 	public sealed class TestLoggerProvider : ILoggerProvider, ISupportExternalScope
 	{
+
 		private readonly IOptionsMonitor<ConsoleLoggerOptions> _options;
 		private readonly ConcurrentDictionary<string, TestLogger> _loggers;
 
@@ -22,7 +23,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests.Logging
 		/// <summary>
 		/// Creates an instance of <see cref="TestLoggerProvider"/>.
 		/// </summary>
-		/// <param name="options">The options to create <see cref="ConsoleLogger"/> instances with.</param>
+		/// <param name="options">The options to create console logger instances with.</param>
 		public TestLoggerProvider(IOptionsMonitor<ConsoleLoggerOptions> options)
 		{
 			_options = options;
