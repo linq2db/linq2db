@@ -1,7 +1,8 @@
 ﻿using System.Threading.Tasks;
+
 using LinqToDB.Interceptors;
 
-namespace LinqToDB.EntityFrameworkCore.BaseTests.Interceptors
+namespace LinqToDB.EntityFrameworkCore.Tests.Interceptors
 {
 	public class TestDataContextInterceptor : TestInterceptor, IDataContextInterceptor
 	{

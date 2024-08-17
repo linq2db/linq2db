@@ -1,11 +1,12 @@
 ﻿using System;
+
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Configuration;
 using Microsoft.Extensions.Logging.Console;
 
-namespace LinqToDB.EntityFrameworkCore.BaseTests.Logging
+namespace LinqToDB.EntityFrameworkCore.Tests.Logging
 {
 	public static class TestLoggerExtensions
 	{

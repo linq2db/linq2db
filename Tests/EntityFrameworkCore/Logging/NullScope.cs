@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace LinqToDB.EntityFrameworkCore.BaseTests.Logging
+namespace LinqToDB.EntityFrameworkCore.Tests.Logging
 {
 	internal sealed class NullScope : IDisposable
 	{

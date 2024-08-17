@@ -2,10 +2,11 @@
 using System.Data.Common;
 using System.Threading;
 using System.Threading.Tasks;
+
 using LinqToDB.Common;
 using LinqToDB.Interceptors;
 
-namespace LinqToDB.EntityFrameworkCore.BaseTests.Interceptors
+namespace LinqToDB.EntityFrameworkCore.Tests.Interceptors
 {
 	public class TestCommandInterceptor : TestInterceptor, ICommandInterceptor
 	{

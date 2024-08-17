@@ -57,5 +57,4 @@ type Tests() =
                         CompanyInformation = cInfo
                         Person = partialPerson.Person
                     |}) )
-        //q.ToArray() |> ignore
         q.ToLinqToDB().ToString() |> ignore

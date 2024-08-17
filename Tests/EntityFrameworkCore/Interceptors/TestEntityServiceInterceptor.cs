@@ -1,6 +1,6 @@
 ﻿using LinqToDB.Interceptors;
 
-namespace LinqToDB.EntityFrameworkCore.BaseTests.Interceptors
+namespace LinqToDB.EntityFrameworkCore.Tests.Interceptors
 {
 	public class TestEntityServiceInterceptor : TestInterceptor, IEntityServiceInterceptor
 	{

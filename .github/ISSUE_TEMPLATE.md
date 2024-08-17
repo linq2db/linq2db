@@ -25,7 +25,9 @@ Partial code listings, or multiple fragments of code, will slow down our respons
 
 `Linq To DB` version: *?*
 
-`linq2db.EntityFramework` version (if used): *?*
+`linq2db.EntityFrameworkCore` version (if used): *?*
+
+`Entity Framework Core` provider with version (if used): *?*
 
 Database (with version): *?* (e.g. SQL Server 2019)
 

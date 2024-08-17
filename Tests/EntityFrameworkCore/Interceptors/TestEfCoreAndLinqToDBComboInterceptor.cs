@@ -2,8 +2,10 @@
 using System.Data.Common;
 using System.Threading;
 using System.Threading.Tasks;
+
 using LinqToDB.Common;
 using LinqToDB.Interceptors;
+
 using Microsoft.EntityFrameworkCore.Diagnostics;
 
 #if NETFRAMEWORK
@@ -12,7 +14,7 @@ using VTask = System.Threading.Tasks.Task;
 using VTask = System.Threading.Tasks.ValueTask;
 #endif
 
-namespace LinqToDB.EntityFrameworkCore.BaseTests.Interceptors
+namespace LinqToDB.EntityFrameworkCore.Tests.Interceptors
 {
 	public class TestEfCoreAndLinqToDBComboInterceptor : TestInterceptor, ICommandInterceptor, IDbCommandInterceptor
 	{

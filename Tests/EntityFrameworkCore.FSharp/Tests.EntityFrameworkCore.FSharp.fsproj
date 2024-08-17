@@ -10,15 +10,12 @@
 		<Compile Include="Tests.fs" />
 	</ItemGroup>
 
-	<ItemGroup />
-
 	<ItemGroup>
 		<ProjectReference Include="..\..\Source\LinqToDB.EntityFrameworkCore\LinqToDB.EntityFrameworkCore.csproj" />
 
 		<PackageReference Include="NUnit3TestAdapter" />
 		<PackageReference Include="Microsoft.NET.Test.Sdk" />
 		<PackageReference Include="NUnit" />
-
 		<PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" />
 		<PackageReference Include="EntityFrameworkCore.FSharp" />
 	</ItemGroup>

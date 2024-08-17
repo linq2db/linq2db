@@ -1,7 +1,8 @@
 ﻿using System;
+
 using Microsoft.Extensions.Logging;
 
-namespace LinqToDB.EntityFrameworkCore.BaseTests.Logging
+namespace LinqToDB.EntityFrameworkCore.Tests.Logging
 {
 	/// <summary>
 	/// Scope provider that does nothing.

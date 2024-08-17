@@ -1,8 +1,10 @@
 ﻿using System.Linq;
+
 using LinqToDB.Interceptors;
+
 using Microsoft.EntityFrameworkCore.Infrastructure;
 
-namespace LinqToDB.EntityFrameworkCore.BaseTests.Interceptors.Extensions
+namespace LinqToDB.EntityFrameworkCore.Tests.Interceptors.Extensions
 {
 	public static class LinqToDBContextOptionsBuilderExtensions
 	{

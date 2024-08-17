@@ -1,10 +1,11 @@
 ﻿using System;
 using System.Collections.Concurrent;
+
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Console;
 using Microsoft.Extensions.Options;
 
-namespace LinqToDB.EntityFrameworkCore.BaseTests.Logging
+namespace LinqToDB.EntityFrameworkCore.Tests.Logging
 {
 	/// <summary>
 	/// A provider of <see cref="ConsoleLogger"/> instances.

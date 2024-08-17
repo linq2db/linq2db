@@ -1,10 +1,11 @@
 ﻿using System;
 using System.Diagnostics;
 using System.Text;
+
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Console;
 
-namespace LinqToDB.EntityFrameworkCore.BaseTests.Logging
+namespace LinqToDB.EntityFrameworkCore.Tests.Logging
 {
 	internal sealed class TestLogger : ILogger
 	{
