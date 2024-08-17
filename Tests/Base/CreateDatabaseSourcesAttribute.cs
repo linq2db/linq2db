@@ -18,14 +18,14 @@ namespace Tests
 
 			try
 			{
-				if (!TestBase.UserProviders.Contains(TestBase.DefaultProvider!))
+				if (!TestConfiguration.UserProviders.Contains(TestConfiguration.DefaultProvider!))
 				{
 					// initialize default database, even if we don't run tests against it
 					// because it is used as source of test data
-					list.Add(TestBase.DefaultProvider!);
+					list.Add(TestConfiguration.DefaultProvider!);
 				}
 
-				foreach (var provider in TestBase.UserProviders.Where(p => !Providers.Contains(p) && TestBase.Providers.Contains(p)))
+				foreach (var provider in TestConfiguration.UserProviders.Where(p => !Providers.Contains(p) && TestConfiguration.Providers.Contains(p)))
 				{
 					list.Add(provider);
 				}

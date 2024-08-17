@@ -12,6 +12,6 @@ namespace Tests.Remote.ServerContainer
 	{
 		bool KeepSamePortBetweenThreads { get; set; }
 
-		ITestDataContext Prepare(MappingSchema? ms, IInterceptor? interceptor, bool suppressSequentialAccess, string configuration, Func<DataOptions,DataOptions>? optionBuilder);
+		ITestDataContext Prepare(MappingSchema? ms, IInterceptor? interceptor, string configuration, Func<DataOptions,DataOptions>? optionBuilder);
 	}
 }

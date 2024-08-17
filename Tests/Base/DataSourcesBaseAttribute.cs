@@ -29,20 +29,20 @@ namespace Tests
 			}
 		}
 
-		public IEnumerable GetData(IParameterInfo parameter)
+		IEnumerable IParameterDataSource.GetData(IParameterInfo parameter)
 		{
 			try
 			{
 				var skipAttrs = new HashSet<string>(
 					from a in parameter.Method.GetCustomAttributes<SkipCategoryAttribute>(true)
-					where a.ProviderName != null && TestBase.SkipCategories.Contains(a.Category)
+					where a.ProviderName != null && TestConfiguration.SkipCategories.Contains(a.Category)
 					select a.ProviderName);
 
 				var providers = skipAttrs.Count == 0 ?
 					GetProviders().ToList() :
 					GetProviders().Where(a => !skipAttrs.Contains(a)).ToList();
 
-				if (!NoLinqService && IncludeLinqService && !TestBase.DisableRemoteContext)
+				if (!NoLinqService && IncludeLinqService && !TestConfiguration.DisableRemoteContext)
 					providers.AddRange(providers.Select(p => p + TestBase.LinqServiceSuffix).ToList());
 
 				return CustomizationSupport.Interceptor.InterceptTestDataSources(this, parameter.Method, providers);

@@ -21,7 +21,7 @@ namespace Tests
 		{
 			try
 			{
-				return Providers.Intersect(TestBase.UserProviders);
+				return Providers.Intersect(TestConfiguration.UserProviders);
 			}
 			catch (Exception e)
 			{

@@ -21,7 +21,7 @@ namespace Tests
 		{
 			try
 			{
-				return TestBase.UserProviders.Where(p => !Providers.Contains(p) && TestBase.Providers.Contains(p));
+				return TestConfiguration.UserProviders.Where(p => !Providers.Contains(p) && TestConfiguration.Providers.Contains(p));
 			}
 			catch (Exception e)
 			{

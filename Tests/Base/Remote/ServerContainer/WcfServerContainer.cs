@@ -27,20 +27,14 @@ namespace Tests.Remote.ServerContainer
 
 		private ConcurrentDictionary<int, TestWcfLinqService> _openHosts = new();
 
-		public WcfServerContainer()
-		{
-		}
-
 		public ITestDataContext Prepare(
 			MappingSchema? ms,
 			IInterceptor? interceptor,
-			bool suppressSequentialAccess,
 			string configuration,
 			Func<DataOptions,DataOptions>? optionBuilder)
 		{
 			var service = OpenHost(ms);
 
-			service.SuppressSequentialAccess = suppressSequentialAccess;
 			if (interceptor != null)
 			{
 				service.AddInterceptor(interceptor);
@@ -50,7 +44,6 @@ namespace Tests.Remote.ServerContainer
 				GetPort(),
 				() =>
 				{
-					service.SuppressSequentialAccess = false;
 					if (interceptor != null)
 						service.RemoveInterceptor();
 				},
@@ -84,7 +77,7 @@ namespace Tests.Remote.ServerContainer
 				}
 
 #pragma warning disable CA2000 // Dispose objects before losing scope
-				var host = new ServiceHost(service = new TestWcfLinqService(new TestLinqService(), null, false) { AllowUpdates = true }, new Uri($"net.tcp://localhost:{GetPort()}"));
+				var host = new ServiceHost(service = new TestWcfLinqService(new LinqService(), null) { AllowUpdates = true }, new Uri($"net.tcp://localhost:{GetPort()}"));
 #pragma warning restore CA2000 // Dispose objects before losing scope
 
 				if (ms != null)
@@ -132,7 +125,6 @@ namespace Tests.Remote.ServerContainer
 
 			return Port + (Environment.CurrentManagedThreadId % 1000) + TestExternals.RunID;
 		}
-
 	}
 }
 #endif

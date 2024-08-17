@@ -23,12 +23,12 @@ namespace Tests
 		public string  Category     { get; }
 		public string? ProviderName { get; }
 
-		public void ApplyToTest(Test test)
+		void IApplyToTest.ApplyToTest(Test test)
 		{
 			if (test.RunState == RunState.NotRunnable || test.RunState == RunState.Explicit || ProviderName != null)
 				return;
 
-			if (TestBase.SkipCategories.Contains(Category))
+			if (TestConfiguration.SkipCategories.Contains(Category))
 			{
 				test.RunState = RunState.Explicit;
 				test.Properties.Set(PropertyNames.Category, Category);

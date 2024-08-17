@@ -16,10 +16,5 @@
 		/// Free-text search tests.
 		/// </summary>
 		public const string FTS = "FreeText";
-
-		/// <summary>
-		/// Explicit run tests.
-		/// </summary>
-		public const string Explicit = "Explicit";
 	}
 }

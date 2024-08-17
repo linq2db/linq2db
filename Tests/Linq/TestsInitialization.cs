@@ -124,8 +124,8 @@ public class TestsInitialization
 			Debug.WriteLine(str);
 			TestContext.Progress.WriteLine(str);
 
-			if (TestBase.StoreMetrics == true)
-				BaselinesWriter.WriteMetrics(TestBase.BaselinesPath!, str);
+			if (TestConfiguration.StoreMetrics == true)
+				BaselinesWriter.WriteMetrics(TestConfiguration.BaselinesPath!, str);
 		}
 	}
 }

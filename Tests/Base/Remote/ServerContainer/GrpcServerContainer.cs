@@ -35,22 +35,15 @@ namespace Tests.Remote.ServerContainer
 
 		private ConcurrentDictionary<int, TestGrpcLinqService> _openHosts = new();
 
-		public GrpcServerContainer()
-		{
-		}
-
 		private static string GetServiceUrl(int port) => $"https://localhost:{port}";
 
 		public ITestDataContext Prepare(
 			MappingSchema? ms,
 			IInterceptor? interceptor,
-			bool suppressSequentialAccess,
 			string configuration,
 			Func<DataOptions,DataOptions>? optionBuilder)
 		{
-			var service = OpenHost(ms, interceptor, suppressSequentialAccess);
-
-			service.SuppressSequentialAccess = suppressSequentialAccess;
+			var service = OpenHost(ms, interceptor);
 
 			if (interceptor != null)
 			{
@@ -63,7 +56,6 @@ namespace Tests.Remote.ServerContainer
 				url,
 				() =>
 				{
-					service.SuppressSequentialAccess = false;
 					if (interceptor != null)
 						service.RemoveInterceptor();
 				},
@@ -78,7 +70,7 @@ namespace Tests.Remote.ServerContainer
 			return dx;
 		}
 
-		private TestGrpcLinqService OpenHost(MappingSchema? ms, IInterceptor? interceptor, bool suppressSequentialAccess)
+		private TestGrpcLinqService OpenHost(MappingSchema? ms, IInterceptor? interceptor)
 		{
 			var port = GetPort();
 
@@ -97,13 +89,11 @@ namespace Tests.Remote.ServerContainer
 				}
 
 				service = new TestGrpcLinqService(
-					new TestLinqService()
+					new LinqService()
 					{
 						AllowUpdates = true
 					},
-					interceptor,
-					suppressSequentialAccess
-					);
+					interceptor);
 
 				if (ms != null)
 					service.MappingSchema = ms;
