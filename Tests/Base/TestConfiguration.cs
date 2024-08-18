@@ -193,5 +193,30 @@ namespace Tests
 			TestProvName.AllSapHana,
 			TestProvName.AllClickHouse
 		}.SplitAll()).ToList();
+
+		public static readonly IReadOnlyList<string> EFProviders = CustomizationSupport.Interceptor.GetSupportedProviders(new List<string>
+		{
+#if NETFRAMEWORK
+			// test providers with .net framework provider only
+			//ProviderName.Sybase,
+			//TestProvName.AllOracleNative,
+			//ProviderName.Informix,
+#endif
+			// multi-tfm providers
+			//ProviderName.SqlCe,
+			//TestProvName.AllAccess,
+			//ProviderName.DB2,
+			//ProviderName.InformixDB2,
+			TestProvName.AllSQLite,
+			//TestProvName.AllOracleManaged,
+			//TestProvName.AllOracleDevart,
+			//ProviderName.SybaseManaged,
+			//TestProvName.AllFirebird,
+			TestProvName.AllSqlServer,
+			TestProvName.AllPostgreSQL,
+			TestProvName.AllMySql,
+			//TestProvName.AllSapHana,
+			//TestProvName.AllClickHouse
+		}.SplitAll()).ToList();
 	}
 }

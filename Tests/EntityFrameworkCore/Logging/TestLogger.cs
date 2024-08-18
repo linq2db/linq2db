@@ -1,9 +1,12 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Text;
 
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Console;
+
+using Tests;
 
 namespace LinqToDB.EntityFrameworkCore.Tests.Logging
 {
@@ -37,11 +40,53 @@ namespace LinqToDB.EntityFrameworkCore.Tests.Logging
 
 			ArgumentNullException.ThrowIfNull(formatter);
 
+			LogBaselines(state);
+
 			var message = formatter(state, exception);
 
 			if (!string.IsNullOrEmpty(message) || exception != null)
 			{
 				WriteMessage(logLevel, _name, eventId.Id, message, exception);
+			}
+		}
+
+		private void LogBaselines<TState>(TState message)
+		{
+			string? parameters = null;
+			string? commandType = null;
+			string? commandText = null;
+			foreach (var kvp in (IEnumerable<KeyValuePair<string, object>>)(object)message!)
+			{
+				if (kvp.Key == "parameters")
+				{
+					parameters = kvp.Value.ToString();
+				}
+				else if (kvp.Key == "commandType")
+				{
+					commandType = kvp.Value.ToString();
+				}
+				else if (kvp.Key == "commandText")
+				{
+					commandText = kvp.Value.ToString();
+				}
+			}
+			if (!string.IsNullOrEmpty(parameters))
+			{
+				BaselinesManager.LogQuery($@"Parameters:
+{parameters}
+");
+			}
+			if (!string.IsNullOrEmpty(commandType) && commandType != "Text")
+			{
+				BaselinesManager.LogQuery($@"Command Type: {commandType}
+
+");
+			}
+			if (!string.IsNullOrEmpty(commandText))
+			{
+				BaselinesManager.LogQuery($@"{commandText}
+
+");
 			}
 		}
 

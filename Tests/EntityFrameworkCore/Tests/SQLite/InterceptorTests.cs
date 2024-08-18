@@ -2,6 +2,7 @@
 using System.Linq;
 
 using LinqToDB.Data;
+using LinqToDB.DataProvider.PostgreSQL;
 using LinqToDB.EntityFrameworkCore.Tests.Interceptors;
 using LinqToDB.EntityFrameworkCore.Tests.Interceptors.Extensions;
 using LinqToDB.EntityFrameworkCore.Tests.Models.Northwind;
@@ -112,10 +113,10 @@ namespace LinqToDB.EntityFrameworkCore.Tests.SQLite
 			}
 		}
 
-		[TearDown]
-		public void TearDown()
+		public override void OnAfterTest()
 		{
 			_dbConnection?.Close();
+			base.OnAfterTest();
 		}
 
 		[Test]

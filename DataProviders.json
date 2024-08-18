@@ -23,39 +23,17 @@
 {
 	"NETFX": {
 		"BasedOn": "LocalConnectionStrings",
-		"DefaultConfiguration": "SQLite.MS",
-		"Providers": [
-			"Access",
-			"Access.Odbc",
-			"SqlCe",
-			"SQLite.Classic",
-			"SQLite.Classic.MPU",
-			"SQLite.Classic.MPM",
-			"SQLite.MS",
-			"Northwind.SQLite",
-			"Northwind.SQLite.MS",
-			"TestNoopProvider"
-		]
+		"DefaultConfiguration": "SQLite.MS"
 	},
 
 	"NET60": {
 		"BasedOn": "LocalConnectionStrings",
-		"DefaultConfiguration": "SQLite.MS",
-		"Providers": [
-			"SQLite.MS",
-			"Northwind.SQLite.MS",
-			"TestNoopProvider"
-		]
+		"DefaultConfiguration": "SQLite.MS"
 	},
 
 	"NET80": {
 		"BasedOn": "LocalConnectionStrings",
-		"DefaultConfiguration": "SQLite.MS",
-		"Providers": [
-			"SQLite.MS",
-			"Northwind.SQLite.MS",
-			"TestNoopProvider"
-		]
+		"DefaultConfiguration": "SQLite.MS"
 	},
 
 	"NETFX.Azure": {

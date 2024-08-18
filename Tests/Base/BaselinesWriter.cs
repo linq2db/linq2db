@@ -15,7 +15,7 @@ namespace Tests
 
 		static string? _context;
 
-		internal static void Write(string baselinesPath, string baseline)
+		internal static void Write(string baselinesPath, string baseline, string? providerSuffix)
 		{
 			var test = TestExecutionContext.CurrentContext.CurrentTest;
 
@@ -24,7 +24,7 @@ namespace Tests
 			if (_context == null)
 				return;
 
-			var fixturePath = Path.Combine(baselinesPath, _context, test.ClassName!.Replace('.', Path.DirectorySeparatorChar));
+			var fixturePath = Path.Combine(baselinesPath, _context + providerSuffix, test.ClassName!.Replace('.', Path.DirectorySeparatorChar));
 			Directory.CreateDirectory(fixturePath);
 
 			var fileName = $"{NormalizeFileName(test.FullName)}.sql";

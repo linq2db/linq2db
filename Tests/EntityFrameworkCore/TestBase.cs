@@ -14,10 +14,14 @@ using Microsoft.Extensions.Logging.Console;
 
 using NUnit.Framework;
 
+using Tests;
+
 namespace LinqToDB.EntityFrameworkCore.Tests
 {
 	public abstract class TestBase
 	{
+		// bad analyzer
+#pragma warning disable NUnit1032 // An IDisposable field/property should be Disposed in a TearDown method
 		public static readonly ILoggerFactory LoggerFactory =
 			Microsoft.Extensions.Logging.LoggerFactory.Create(builder =>
 			{
@@ -31,6 +35,29 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 						o.FormatterName = ConsoleFormatterNames.Simple;
 					});
 			});
+#pragma warning restore NUnit1032 // An IDisposable field/property should be Disposed in a TearDown method
+
+		static TestBase()
+		{
+			try
+			{
+				// trigger settings preload
+				_ = TestConfiguration.StoreMetrics;
+
+				DatabaseUtils.CopyDatabases();
+			}
+			catch (Exception ex)
+			{
+				TestUtils.Log(ex);
+				throw;
+			}
+}
+
+		[TearDown]
+		public virtual void OnAfterTest()
+		{
+			BaselinesManager.Dump(".EF");
+		}
 
 		protected void AreEqual<T>(IEnumerable<T> expected, IEnumerable<T> result, bool allowEmpty = false)
 		{
