@@ -2,7 +2,9 @@
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Tests
+using Tests;
+
+namespace LinqToDB.EntityFrameworkCore.Tests
 {
 	[AttributeUsage(AttributeTargets.Parameter)]
 	public class EFDataSourcesAttribute : DataSourcesBaseAttribute

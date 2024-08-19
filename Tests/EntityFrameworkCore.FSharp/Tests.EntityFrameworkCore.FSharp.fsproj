@@ -8,16 +8,14 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<Compile Include="Tests.fs" />
+		<Compile Include="FSharpExtensions.fs" />
+		<Compile Include="FSharpContext.fs" />
+		<Compile Include="FSharpTestMethods.fs" />
 	</ItemGroup>
 
 	<ItemGroup>
 		<ProjectReference Include="..\..\Source\LinqToDB.EntityFrameworkCore\LinqToDB.EntityFrameworkCore.csproj" />
-
-		<PackageReference Include="NUnit" />
 		<PackageReference Include="EntityFrameworkCore.FSharp" />
-		<PackageReference Include="FSharp.Core" />
-		<PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" />
 	</ItemGroup>
 
 </Project>

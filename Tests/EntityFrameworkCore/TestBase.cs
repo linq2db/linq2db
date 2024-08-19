@@ -5,10 +5,12 @@ using System.Globalization;
 using System.Linq;
 using System.Text;
 
+using LinqToDB.Data;
 using LinqToDB.EntityFrameworkCore.Tests.Logging;
 using LinqToDB.Tools;
 using LinqToDB.Tools.Comparers;
 
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Console;
 
@@ -22,7 +24,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 	{
 		// bad analyzer
 #pragma warning disable NUnit1032 // An IDisposable field/property should be Disposed in a TearDown method
-		public static readonly ILoggerFactory LoggerFactory =
+		protected static readonly ILoggerFactory LoggerFactory =
 			Microsoft.Extensions.Logging.LoggerFactory.Create(builder =>
 			{
 				builder
@@ -51,7 +53,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 				TestUtils.Log(ex);
 				throw;
 			}
-}
+		}
 
 		[TearDown]
 		public virtual void OnAfterTest()

@@ -27,9 +27,10 @@ namespace LinqToDB.EntityFrameworkCore
 		/// <param name="optionsBuilder"></param>
 		/// <param name="linq2dbOptionsAction">Custom options action.</param>
 		/// <returns></returns>
-		public static DbContextOptionsBuilder UseLinqToDB(
-			this DbContextOptionsBuilder optionsBuilder,
+		public static TContext UseLinqToDB<TContext>(
+			this TContext optionsBuilder,
 			Action<LinqToDBContextOptionsBuilder>? linq2dbOptionsAction = null)
+			where TContext : DbContextOptionsBuilder
 		{
 			((IDbContextOptionsBuilderInfrastructure)optionsBuilder)
 				.AddOrUpdateExtension(GetOrCreateExtension(optionsBuilder));

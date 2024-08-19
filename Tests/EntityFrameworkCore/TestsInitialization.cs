@@ -1,4 +1,6 @@
-﻿using NUnit.Framework;
+﻿using LinqToDB.EntityFrameworkCore;
+
+using NUnit.Framework;
 
 /// <summary>
 /// 1. Don't add namespace to this class! It's intentional
@@ -10,6 +12,7 @@ public class TestsInitialization
 	[OneTimeSetUp]
 	public void TestAssemblySetup()
 	{
+		LinqToDBForEFTools.Initialize();
 	}
 
 	[OneTimeTearDown]
