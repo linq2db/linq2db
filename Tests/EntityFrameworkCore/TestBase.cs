@@ -7,12 +7,15 @@ using System.Text;
 
 using LinqToDB.Data;
 using LinqToDB.EntityFrameworkCore.Tests.Logging;
+using LinqToDB.Mapping;
 using LinqToDB.Tools;
 using LinqToDB.Tools.Comparers;
 
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Console;
+
+using NodaTime;
 
 using NUnit.Framework;
 
@@ -22,6 +25,8 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 {
 	public abstract class TestBase
 	{
+		protected static readonly MappingSchema NodaTimeSupport = new MappingSchema();
+
 		// bad analyzer
 #pragma warning disable NUnit1032 // An IDisposable field/property should be Disposed in a TearDown method
 		protected static readonly ILoggerFactory LoggerFactory =
@@ -47,6 +52,10 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 				_ = TestConfiguration.StoreMetrics;
 
 				DatabaseUtils.CopyDatabases();
+
+				NodaTimeSupport.SetConverter<LocalDateTime, DateTime>(timeStamp =>
+					new DateTime(timeStamp.Year, timeStamp.Month, timeStamp.Day, timeStamp.Hour,
+						timeStamp.Minute, timeStamp.Second, timeStamp.Millisecond));
 			}
 			catch (Exception ex)
 			{

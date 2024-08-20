@@ -5,7 +5,6 @@ using System.Threading.Tasks;
 
 using FluentAssertions;
 
-using LinqToDB.Data;
 using LinqToDB.EntityFrameworkCore.Tests.Models.Northwind;
 using LinqToDB.EntityFrameworkCore.Tests.SqlServer.Models.Northwind;
 using LinqToDB.Expressions;
@@ -23,7 +22,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests.SqlServer
 	public class ToolsTests : NorthwindContextTestBase
 	{
 		[Test]
-		public void TestToList([EFDataSources(TestProvName.AllPostgreSQL)] string provider, [Values] bool enableFilter)
+		public void TestToList([EFDataSources] string provider, [Values] bool enableFilter)
 		{
 			using var ctx = CreateContext(provider, enableFilter);
 
@@ -34,7 +33,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests.SqlServer
 		}
 
 		[Test]
-		public void TestShadowProperty([EFDataSources(TestProvName.AllPostgreSQL)] string provider, [Values] bool enableFilter)
+		public void TestShadowProperty([EFDataSources] string provider, [Values] bool enableFilter)
 		{
 			using var ctx = CreateContext(provider, enableFilter);
 
@@ -53,44 +52,37 @@ namespace LinqToDB.EntityFrameworkCore.Tests.SqlServer
 		}
 
 		[Test]
-		public void TestCallback([EFDataSources(TestProvName.AllPostgreSQL)] string provider, [Values] bool enableFilter)
+		public void TestCallback([EFDataSources] string provider, [Values] bool enableFilter)
 		{
 			using var ctx = CreateContext(provider, enableFilter);
 
-#pragma warning disable CA1866 // Use char overload
 			var query = ProductQuery(ctx)
 				.Where(pd => pd.ProductName.StartsWith("a"));
-#pragma warning restore CA1866 // Use char overload
 
 			query.Where(p => p.ProductName == "a").Delete();
 		}
 
-
 		[Test]
-		public void TestContextRetrieving([EFDataSources(TestProvName.AllPostgreSQL)] string provider, [Values] bool enableFilter)
+		public void TestContextRetrieving([EFDataSources] string provider, [Values] bool enableFilter)
 		{
 			using var ctx = CreateContext(provider, enableFilter);
 
-#pragma warning disable CA1866 // Use char overload
 			var query = ProductQuery(ctx)
 				.ToLinqToDB()
 				.Where(pd => pd.ProductName.StartsWith("a"));
-#pragma warning restore CA1866 // Use char overload
 		}
 
 		[Test]
-		public void TestDelete([EFDataSources(TestProvName.AllPostgreSQL)] string provider, [Values] bool enableFilter)
+		public void TestDelete([EFDataSources] string provider, [Values] bool enableFilter)
 		{
 			using var ctx = CreateContext(provider, enableFilter);
 
-#pragma warning disable CA1866 // Use char overload
 			var query = ProductQuery(ctx)
 				.Where(pd => pd.ProductName.StartsWith("a"));
-#pragma warning restore CA1866 // Use char overload
 		}
 
 		[Test]
-		public void TestNestingFunctions([EFDataSources(TestProvName.AllPostgreSQL)] string provider, [Values] bool enableFilter)
+		public void TestNestingFunctions([EFDataSources] string provider, [Values] bool enableFilter)
 		{
 			using var ctx = CreateContext(provider, enableFilter);
 
@@ -106,9 +98,9 @@ namespace LinqToDB.EntityFrameworkCore.Tests.SqlServer
 		}
 
 		[Test]
-		public void TestCreateFromOptions([EFDataSources(TestProvName.AllPostgreSQL)] string provider)
+		public void TestCreateFromOptions([EFDataSources] string provider)
 		{
-			var connectionString = DataConnection.GetConnectionString(provider);
+			var connectionString = GetConnectionString(provider);
 
 			var optionsBuilder = new DbContextOptionsBuilder<NorthwindContextBase>();
 
@@ -150,7 +142,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests.SqlServer
 		}
 
 		[Test]
-		public async Task TestTransaction([EFDataSources(TestProvName.AllPostgreSQL)] string provider, [Values] bool enableFilter)
+		public async Task TestTransaction([EFDataSources] string provider, [Values] bool enableFilter)
 		{
 			using var ctx = CreateContext(provider, enableFilter);
 			await using var transaction = await ctx.Database.BeginTransactionAsync();
@@ -171,7 +163,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests.SqlServer
 		}
 
 		[Test]
-		public void TestView([EFDataSources(TestProvName.AllPostgreSQL)] string provider, [Values] bool enableFilter)
+		public void TestView([EFDataSources] string provider, [Values] bool enableFilter)
 		{
 			using var ctx = CreateContext(provider, enableFilter);
 			using var db = ctx.CreateLinqToDBConnection();
@@ -187,7 +179,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests.SqlServer
 
 
 		[Test]
-		public void TestTransformation([EFDataSources(TestProvName.AllPostgreSQL)] string provider, [Values] bool enableFilter)
+		public void TestTransformation([EFDataSources] string provider, [Values] bool enableFilter)
 		{
 			using var ctx = CreateContext(provider, enableFilter);
 
@@ -204,7 +196,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests.SqlServer
 		}
 
 		[Test]
-		public void TestTransformationTable([EFDataSources(TestProvName.AllPostgreSQL)] string provider, [Values] bool enableFilter)
+		public void TestTransformationTable([EFDataSources] string provider, [Values] bool enableFilter)
 		{
 			using var ctx = CreateContext(provider, enableFilter);
 
@@ -221,7 +213,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests.SqlServer
 		}
 
 		[Test]
-		public void TestDemo2([EFDataSources(TestProvName.AllPostgreSQL)] string provider, [Values] bool enableFilter)
+		public void TestDemo2([EFDataSources] string provider, [Values] bool enableFilter)
 		{
 			using var ctx = CreateContext(provider, enableFilter);
 
@@ -239,7 +231,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests.SqlServer
 		}
 
 		[Test]
-		public void TestKey([EFDataSources(TestProvName.AllPostgreSQL)] string provider)
+		public void TestKey([EFDataSources] string provider)
 		{
 			using var ctx = CreateContext(provider);
 
@@ -257,7 +249,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests.SqlServer
 		}
 
 		[Test]
-		public void TestAssociations([EFDataSources(TestProvName.AllPostgreSQL)] string provider)
+		public void TestAssociations([EFDataSources] string provider)
 		{
 			using var ctx = CreateContext(provider);
 
@@ -275,7 +267,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests.SqlServer
 		}
 
 		[Test]
-		public void TestGlobalQueryFilters([EFDataSources(TestProvName.AllPostgreSQL)] string provider, [Values] bool enableFilter)
+		public void TestGlobalQueryFilters([EFDataSources] string provider, [Values] bool enableFilter)
 		{
 #if NET8_0
 			if (provider.IsAnyOf(TestProvName.AllMySql))
@@ -318,9 +310,8 @@ namespace LinqToDB.EntityFrameworkCore.Tests.SqlServer
 			}
 		}
 
-
 		[Test]
-		public async Task TestAsyncMethods([EFDataSources(TestProvName.AllPostgreSQL)] string provider, [Values] bool enableFilter)
+		public async Task TestAsyncMethods([EFDataSources] string provider, [Values] bool enableFilter)
 		{
 			using var ctx = CreateContext(provider, enableFilter);
 
@@ -339,7 +330,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests.SqlServer
 		}
 
 		[Test]
-		public async Task TestInclude([EFDataSources(TestProvName.AllPostgreSQL)] string provider, [Values] bool enableFilter)
+		public async Task TestInclude([EFDataSources] string provider, [Values] bool enableFilter)
 		{
 			using var ctx = CreateContext(provider, enableFilter);
 
@@ -351,12 +342,11 @@ namespace LinqToDB.EntityFrameworkCore.Tests.SqlServer
 				.ThenInclude(d => d.Product);
 
 			var expected = await query.ToArrayAsync();
-
 			var result = await query.ToLinqToDB().ToArrayAsync();
 		}
 
 		[Test]
-		public async Task TestEager([EFDataSources(TestProvName.AllPostgreSQL)] string provider, [Values] bool enableFilter)
+		public async Task TestEager([EFDataSources] string provider, [Values] bool enableFilter)
 		{
 			using var ctx = CreateContext(provider, enableFilter);
 
@@ -382,7 +372,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests.SqlServer
 		}
 
 		[Test]
-		public async Task TestIncludeString([EFDataSources(TestProvName.AllPostgreSQL)] string provider, [Values] bool enableFilter)
+		public async Task TestIncludeString([EFDataSources] string provider, [Values] bool enableFilter)
 		{
 			using var ctx = CreateContext(provider, enableFilter);
 
@@ -397,7 +387,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests.SqlServer
 		}
 
 		[Test]
-		public async Task TestLoadFilter([EFDataSources(TestProvName.AllPostgreSQL)] string provider, [Values] bool enableFilter)
+		public async Task TestLoadFilter([EFDataSources] string provider, [Values] bool enableFilter)
 		{
 			using var ctx = CreateContext(provider, enableFilter);
 
@@ -421,7 +411,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests.SqlServer
 		}
 
 		[Test]
-		public async Task TestGetTable([EFDataSources(TestProvName.AllPostgreSQL)] string provider, [Values] bool enableFilter)
+		public async Task TestGetTable([EFDataSources] string provider, [Values] bool enableFilter)
 		{
 			using var ctx = CreateContext(provider, enableFilter);
 
@@ -455,7 +445,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests.SqlServer
 		}
 
 		[Test]
-		public async Task TestContinuousQueries([EFDataSources(TestProvName.AllPostgreSQL)] string provider, [Values] bool enableFilter)
+		public async Task TestContinuousQueries([EFDataSources] string provider, [Values] bool enableFilter)
 		{
 			using var ctx = CreateContext(provider, enableFilter);
 
@@ -469,7 +459,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests.SqlServer
 		}
 
 		[Test]
-		public async Task TestChangeTracker([EFDataSources(TestProvName.AllPostgreSQL)] string provider, [Values] bool enableFilter)
+		public async Task TestChangeTracker([EFDataSources] string provider, [Values] bool enableFilter)
 		{
 			using var ctx = CreateContext(provider, enableFilter);
 
@@ -490,7 +480,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests.SqlServer
 		}
 
 		[Test]
-		public async Task TestChangeTrackerDisabled1([EFDataSources(TestProvName.AllPostgreSQL)] string provider, [Values] bool enableFilter)
+		public async Task TestChangeTrackerDisabled1([EFDataSources] string provider, [Values] bool enableFilter)
 		{
 			using var ctx = CreateContext(provider, enableFilter);
 
@@ -513,7 +503,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests.SqlServer
 		}
 
 		[Test]
-		public async Task TestChangeTrackerDisabled2([EFDataSources(TestProvName.AllPostgreSQL)] string provider, [Values] bool enableFilter)
+		public async Task TestChangeTrackerDisabled2([EFDataSources] string provider, [Values] bool enableFilter)
 		{
 			LinqToDBForEFTools.EnableChangeTracker = false;
 			try
@@ -559,7 +549,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests.SqlServer
 		}
 
 		[Test]
-		public void NavigationProperties([EFDataSources(TestProvName.AllPostgreSQL)] string provider)
+		public void NavigationProperties([EFDataSources] string provider)
 		{
 			using var ctx = CreateContext(provider);
 
@@ -584,7 +574,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests.SqlServer
 		}
 
 		[Test]
-		public async Task TestSetUpdate([EFDataSources(TestProvName.AllPostgreSQL)] string provider, [Values] bool enableFilter)
+		public async Task TestSetUpdate([EFDataSources] string provider, [Values] bool enableFilter)
 		{
 			using var ctx = CreateContext(provider, enableFilter);
 
@@ -651,7 +641,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests.SqlServer
 		}
 
 		[Test]
-		public async Task TestDeleteFrom([EFDataSources(TestProvName.AllPostgreSQL)] string provider)
+		public async Task TestDeleteFrom([EFDataSources] string provider)
 		{
 			using var ctx = CreateContext(provider);
 
@@ -667,7 +657,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests.SqlServer
 		}
 
 		[Test]
-		public void TestNullability([EFDataSources(TestProvName.AllPostgreSQL)] string provider, [Values] bool enableFilter)
+		public void TestNullability([EFDataSources] string provider, [Values] bool enableFilter)
 		{
 			using var ctx = CreateContext(provider, enableFilter);
 
@@ -681,7 +671,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests.SqlServer
 		}
 
 		[Test]
-		public void TestUpdate([EFDataSources(TestProvName.AllPostgreSQL)] string provider, [Values] bool enableFilter)
+		public void TestUpdate([EFDataSources] string provider, [Values] bool enableFilter)
 		{
 			using var ctx = CreateContext(provider, enableFilter);
 
@@ -689,12 +679,11 @@ namespace LinqToDB.EntityFrameworkCore.Tests.SqlServer
 			ctx.Employees.IgnoreQueryFilters().Where(e => e.EmployeeId == test).Update(x => new Employee
 			{
 				Address = x.Address
-
 			});
 		}
 
 		[Test]
-		public async Task TestUpdateAsync([EFDataSources(TestProvName.AllPostgreSQL)] string provider, [Values] bool enableFilter)
+		public async Task TestUpdateAsync([EFDataSources] string provider, [Values] bool enableFilter)
 		{
 			using var ctx = CreateContext(provider, enableFilter);
 
@@ -718,7 +707,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests.SqlServer
 		}
 
 		[Test]
-		public void TestForeignKey([EFDataSources(TestProvName.AllPostgreSQL)] string provider, [Values] bool enableFilter)
+		public void TestForeignKey([EFDataSources] string provider, [Values] bool enableFilter)
 		{
 			using var ctx = CreateContext(provider, enableFilter);
 
@@ -774,7 +763,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests.SqlServer
 		}
 
 		[Test]
-		public void TestTagWith([EFDataSources(TestProvName.AllPostgreSQL)] string provider, [Values] bool enableFilter)
+		public void TestTagWith([EFDataSources] string provider, [Values] bool enableFilter)
 		{
 			using var ctx = CreateContext(provider, enableFilter);
 
@@ -791,7 +780,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests.SqlServer
 
 #if !NETFRAMEWORK
 		[Test]
-		public void TestTemporalTables([EFDataSources(TestProvName.AllPostgreSQL)] string provider, [Values] bool enableFilter)
+		public void TestTemporalTables([EFDataSources] string provider, [Values] bool enableFilter)
 		{
 			using var ctx = CreateContext(provider, enableFilter);
 

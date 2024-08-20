@@ -3,10 +3,8 @@ using System.Linq;
 
 using FluentAssertions;
 
-using LinqToDB.Data;
 using LinqToDB.DataProvider.PostgreSQL;
 using LinqToDB.EntityFrameworkCore.Tests.Models.NpgSqlEntities;
-using LinqToDB.EntityFrameworkCore.Tests.PostgreSQL.Models;
 
 using Microsoft.EntityFrameworkCore;
 
@@ -20,11 +18,6 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 {
 	public class NpgSqlTests : ContextTestBase<NpgSqlEntitiesContext>
 	{
-		protected override DbContextOptionsBuilder<NpgSqlEntitiesContext> ProviderSetup(string provider, string connectionString, DbContextOptionsBuilder<NpgSqlEntitiesContext> optionsBuilder)
-		{
-			return optionsBuilder.UseNpgsql(connectionString, o => o.UseNodaTime());
-		}
-
 		protected override NpgSqlEntitiesContext CreateProviderContext(string provider, DbContextOptions<NpgSqlEntitiesContext> options)
 		{
 			return new NpgSqlEntitiesContext(options);

@@ -8,8 +8,6 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 using NUnit.Framework;
 
-using Tests;
-
 namespace LinqToDB.EntityFrameworkCore.Tests
 {
 	[TestFixture]

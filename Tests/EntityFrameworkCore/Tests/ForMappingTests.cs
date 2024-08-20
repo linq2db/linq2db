@@ -66,7 +66,6 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 			using var t2 = connection.CreateTempTable<NoIdentity>();
 		}
 
-
 		[Test]
 		public virtual void TestBulkCopyNoIdentity([EFDataSources] string provider)
 		{

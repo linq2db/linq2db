@@ -1,19 +1,12 @@
-﻿using System.Data.Common;
-using System.Linq;
+﻿using System.Linq;
 
-using LinqToDB.Data;
-using LinqToDB.DataProvider.PostgreSQL;
 using LinqToDB.EntityFrameworkCore.Tests.Interceptors;
 using LinqToDB.EntityFrameworkCore.Tests.Interceptors.Extensions;
 using LinqToDB.EntityFrameworkCore.Tests.Models.Northwind;
-using LinqToDB.EntityFrameworkCore.Tests.SQLite.Models.Northwind;
 
-using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 
 using NUnit.Framework;
-
-using Tests;
 
 namespace LinqToDB.EntityFrameworkCore.Tests
 {
@@ -58,7 +51,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 		}
 
 		[Test]
-		public void TestInterceptors([EFDataSources(TestProvName.AllPostgreSQL)] string provider)
+		public void TestInterceptors([EFDataSources] string provider)
 		{
 			using (var ctx = CreateContext(provider, optionsBuilderSetter: CreateNorthwindOptions))
 			{
@@ -84,7 +77,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 		}
 
 		[Test]
-		public void TestExplicitDataContextInterceptors([EFDataSources(TestProvName.AllPostgreSQL)] string provider)
+		public void TestExplicitDataContextInterceptors([EFDataSources] string provider)
 		{
 			using (var ctx = CreateContext(provider, optionsBuilderSetter: CreateNorthwindOptions))
 			using (var linqToDBContext = ctx.CreateLinqToDBContext())
@@ -109,7 +102,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 		}
 
 		[Test]
-		public void TestEfCoreSideOfComboInterceptor([EFDataSources(TestProvName.AllPostgreSQL)] string provider)
+		public void TestEfCoreSideOfComboInterceptor([EFDataSources] string provider)
 		{
 			using (var ctx = CreateContext(provider, optionsBuilderSetter: CreateNorthwindOptionsWithEfCoreInterceptorsOnly))
 			{
@@ -126,7 +119,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 		}
 
 		[Test]
-		public void TestLinqToDBSideOfComboInterceptor([EFDataSources(TestProvName.AllPostgreSQL)] string provider)
+		public void TestLinqToDBSideOfComboInterceptor([EFDataSources] string provider)
 		{
 			using (var ctx = CreateContext(provider, optionsBuilderSetter: CreateNorthwindOptionsWithEfCoreInterceptorsOnly))
 			{

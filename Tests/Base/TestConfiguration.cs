@@ -196,6 +196,11 @@ namespace Tests
 
 		public static readonly IReadOnlyList<string> EFProviders = CustomizationSupport.Interceptor.GetSupportedProviders(new List<string>
 		{
+			ProviderName.SQLiteMS,
+			TestProvName.AllSqlServerMS,
+			TestProvName.AllMySqlConnector,
+			TestProvName.AllPostgreSQL,
+
 #if NETFRAMEWORK
 			// test providers with .net framework provider only
 			//ProviderName.Sybase,
@@ -207,14 +212,12 @@ namespace Tests
 			//TestProvName.AllAccess,
 			//ProviderName.DB2,
 			//ProviderName.InformixDB2,
-			TestProvName.AllSQLite,
 			//TestProvName.AllOracleManaged,
 			//TestProvName.AllOracleDevart,
 			//ProviderName.SybaseManaged,
 			//TestProvName.AllFirebird,
-			TestProvName.AllSqlServer,
-			TestProvName.AllPostgreSQL,
-			TestProvName.AllMySql,
+			//TestProvName.AllSqlServer,
+			//TestProvName.AllMySql,
 			//TestProvName.AllSapHana,
 			//TestProvName.AllClickHouse
 		}.SplitAll()).ToList();
