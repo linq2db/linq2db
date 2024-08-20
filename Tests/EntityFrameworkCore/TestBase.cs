@@ -71,7 +71,17 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 		[TearDown]
 		public virtual void OnAfterTest()
 		{
-			BaselinesManager.Dump(".EF");
+			// as EF generates SQL differently, we cannot share baselines
+#if NETFRAMEWORK
+			BaselinesManager.Dump(".EF31");
+#elif NET6_0
+			BaselinesManager.Dump(".EF6");
+#elif NET8_0
+			BaselinesManager.Dump(".EF8");
+#else
+#error Unknown framework
+#endif
+			CustomTestContext.Release();
 		}
 
 		protected void AreEqual<T>(IEnumerable<T> expected, IEnumerable<T> result, bool allowEmpty = false)
