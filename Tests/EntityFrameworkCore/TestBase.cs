@@ -56,6 +56,10 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 				NodaTimeSupport.SetConverter<LocalDateTime, DateTime>(timeStamp =>
 					new DateTime(timeStamp.Year, timeStamp.Month, timeStamp.Day, timeStamp.Hour,
 						timeStamp.Minute, timeStamp.Second, timeStamp.Millisecond));
+
+#if NETFRAMEWORK
+				NodaTimeSupport.SetConverter<Instant, DateTime>(inst => inst.ToDateTimeUtc());
+#endif
 			}
 			catch (Exception ex)
 			{
