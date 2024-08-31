@@ -3,22 +3,27 @@
 	<PropertyGroup>
 		<AssemblyName>linq2db.EntityFrameworkCore</AssemblyName>
 		<RootNamespace>LinqToDB.EntityFrameworkCore</RootNamespace>
-		
-		<DocumentationFile>$(ArtifactsPath)\bin\$(MSBuildProjectName)\$(Configuration)\$(TargetFramework)\$(AssemblyName).xml</DocumentationFile>
 		<TargetFrameworks>netstandard2.0;net6.0;net8.0</TargetFrameworks>
+
+		<DocumentationFile>$(ArtifactsPath)\bin\$(MSBuildProjectName)\$(Configuration)\$(TargetFramework)\$(AssemblyName).xml</DocumentationFile>
 
 		<!--EF1001: use of internal EF API-->
 		<NoWarn>EF1001</NoWarn>
-
-		<Version Condition="'$(TargetFramework)'=='netstandard2.0'">$(EF3Version)</Version>
-		<Version Condition="'$(TargetFramework)'=='net6.0'">$(EF6Version)</Version>
-		<Version Condition="'$(TargetFramework)'=='net8.0'">$(EF8Version)</Version>
 	</PropertyGroup>
 
-	<PropertyGroup>
-		<DefineConstants Condition="'$(TargetFramework)'=='netstandard2.0'">EF31;$(DefineConstants)</DefineConstants>
-		<DefineConstants Condition="'$(TargetFramework)'=='net6.0'">EF6;$(DefineConstants)</DefineConstants>
-		<DefineConstants Condition="'$(TargetFramework)'=='net8.0'">EF8;$(DefineConstants)</DefineConstants>
+	<PropertyGroup Condition="'$(TargetFramework)'=='netstandard2.0'">
+		<AssemblyVersion>$(EF3Version)</AssemblyVersion>
+		<DefineConstants>EF31;$(DefineConstants)</DefineConstants>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(TargetFramework)'=='net6.0'">
+		<AssemblyVersion>$(EF6Version)</AssemblyVersion>
+		<DefineConstants>EF6;$(DefineConstants)</DefineConstants>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(TargetFramework)'=='net8.0'">
+		<AssemblyVersion>$(EF8Version)</AssemblyVersion>
+		<DefineConstants>EF8;$(DefineConstants)</DefineConstants>
 	</PropertyGroup>
 
 	<ItemGroup>

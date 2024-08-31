@@ -21,3 +21,7 @@ IF %NETFX% NEQ 0 (dotnet test .build/bin/Tests/%CONFIG%/net462/linq2db.Tests.dll
 IF %NET60%  NEQ 0 (dotnet test .build/bin/Tests/%CONFIG%/net6.0/linq2db.Tests.dll -f net6.0 -l %FORMAT%;LogFileName=net60.%FORMAT% %EXTRA%)
 IF %NET80%  NEQ 0 (dotnet test .build/bin/Tests/%CONFIG%/net8.0/linq2db.Tests.dll -f net8.0 -l %FORMAT%;LogFileName=net80.%FORMAT% %EXTRA%)
 
+IF %NETFX% NEQ 0 (dotnet test .build/bin/Tests.EntityFrameworkCore/%CONFIG%/net462/linq2db.EntityFrameworkCore.Tests.dll -f net462 -l %FORMAT%;LogFileName=net462.efcore.%FORMAT% %EXTRA%)
+IF %NET60%  NEQ 0 (dotnet test .build/bin/Tests.EntityFrameworkCore/%CONFIG%/net6.0/linq2db.EntityFrameworkCore.Tests.dll -f net6.0 -l %FORMAT%;LogFileName=net60.efcore.%FORMAT% %EXTRA%)
+IF %NET80%  NEQ 0 (dotnet test .build/bin/Tests.EntityFrameworkCore/%CONFIG%/net8.0/linq2db.EntityFrameworkCore.Tests.dll -f net8.0 -l %FORMAT%;LogFileName=net80.efcore.%FORMAT% %EXTRA%)
+

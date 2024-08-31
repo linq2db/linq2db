@@ -15,7 +15,9 @@
 
 	<ItemGroup>
 		<ProjectReference Include="..\..\Source\LinqToDB.EntityFrameworkCore\LinqToDB.EntityFrameworkCore.csproj" />
+		
 		<PackageReference Include="EntityFrameworkCore.FSharp" />
+		<PackageReference Include="FSharp.Core" />
 	</ItemGroup>
 
 </Project>
