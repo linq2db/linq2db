@@ -136,7 +136,7 @@
 
 	"AzureConnectionStrings": {
 		"BasedOn": "CommonConnectionStrings",
-		"BaselinesPath": "./../baselines",
+		"BaselinesPath": "./../../../baselines",
 		"Connections": {
 			"MySql.5.7"                 : { "Provider": "MySql.Data",                      "ConnectionString": "Server=localhost;Port=3306;Database=testdata;Uid=root;Pwd=root;charset=utf8;Allow User Variables=True;SslMode=None;"                                                 },
 			"MySqlConnector.5.7"        : { "Provider": "MySqlConnector",                  "ConnectionString": "Server=localhost;Port=3306;Database=testdataconnector;Uid=root;Pwd=root;charset=utf8;Allow User Variables=True;SslMode=None;AllowLoadLocalInfile=true;"              },

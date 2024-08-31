@@ -80,7 +80,7 @@ jobs:
   - task: DownloadPipelineArtifact@2
     displayName: Download test files (for t4 nugets)
     inputs:
-      artifactName: '$(t4_binaries)'
+      artifactName: '$(artifact_t4_binaries)'
       targetPath: '$(Build.SourcesDirectory)/.build/bin/Tests/$(release_configuration)/$(netfx_tfm)'
 
   - task: PowerShell@2

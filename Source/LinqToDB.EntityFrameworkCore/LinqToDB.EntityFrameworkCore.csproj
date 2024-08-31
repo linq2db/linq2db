@@ -9,6 +9,10 @@
 
 		<!--EF1001: use of internal EF API-->
 		<NoWarn>EF1001</NoWarn>
+
+		<Version Condition="'$(TargetFramework)'=='netstandard2.0'">$(EF3Version)</Version>
+		<Version Condition="'$(TargetFramework)'=='net6.0'">$(EF6Version)</Version>
+		<Version Condition="'$(TargetFramework)'=='net8.0'">$(EF8Version)</Version>
 	</PropertyGroup>
 
 	<PropertyGroup>

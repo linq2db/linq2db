@@ -1,6 +1,7 @@
 Param(
 	[Parameter(Mandatory=$true)][string]$path,
-	[Parameter(Mandatory=$true)][string]$version
+	[Parameter(Mandatory=$true)][string]$version,
+	[Parameter(Mandatory=$true)][string]$prop
 )
 
 $ErrorActionPreference = "Stop"
@@ -14,7 +15,7 @@ if ($version) {
 	$xml.PreserveWhitespace = $true
 	$save = $false
 
-	$xPath = "//PropertyGroup/Version"
+	$xPath = "//PropertyGroup/" + $prop
 	$nodes = $xml.SelectNodes($xPath)
 	foreach($node in $nodes) {
 		$node.InnerXml = $version

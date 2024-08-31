@@ -64,7 +64,7 @@ Legend:
 - `netfx`: .NET Framework (4.6.2)
 - `netcore`: .NET 6 OR .NET 8
 - :door: - Windows 2022
-- :penguin: - Linux (Ununtu 22.04)
+- :penguin: - Linux (Ununtu 24.04)
 - :green_apple: - MacOS 13 (MacOS testing currently disabled)
 
 | Database (version): provider \ Target framework (OS) | netfx :door: | netcore :door: | netcore :penguin: | netcore :green_apple: |
