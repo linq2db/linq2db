@@ -90,7 +90,7 @@ jobs:
         )
 
         FOR %%c IN (netfx net6.0 net8.0) DO (
-            xcopy /i Build/$(test_configuration)/%%c testing/configs/$configs
+            xcopy /i Build/$(test_configuration)/%%c testing/configs/%%c
             if %errorlevel% neq 0 exit
         )
 
