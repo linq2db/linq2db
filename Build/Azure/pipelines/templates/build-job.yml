@@ -78,26 +78,26 @@ jobs:
         REM prepare test artifacts with binaries and test configs
         FOR %%f IN ($(netfx_tfm) net6.0 net8.0) DO (
             FOR %%a IN (x86 x64) DO (
-                xcopy /i /s .build/bin/Tests/$(test_configuration)/%%f_%%a testing/%%f/main/%%a
+                xcopy /i /s .build\publish\Tests\$(test_configuration)\%%f_%%a testing\%%f\main\%%a
                 if %errorlevel% neq 0 exit
-                xcopy /i /s .build/bin/EFTests/$(test_configuration)/%%f_%%a testing/%%f/efcore/%%a
+                xcopy /i /s .build\publish\EFTests\$(test_configuration)\%%f_%%a testing\%%f\efcore\%%a
                 if %errorlevel% neq 0 exit
-                copy DataProviders.json testing/%%f/main/%%a
+                copy DataProviders.json testing\%%f\main\%%a
                 if %errorlevel% neq 0 exit
-                copy DataProviders.json testing/%%f/efcore/%%a
+                copy DataProviders.json testing\%%f\efcore\%%a
                 if %errorlevel% neq 0 exit
             )
         )
 
-        FOR %%c IN (netfx net6.0 net8.0) DO (
-            xcopy /i Build/$(test_configuration)/%%c testing/configs/%%c
+        FOR %%c IN (netfx net60 net80) DO (
+            xcopy /i Build\$(test_configuration)\%%c testing\configs\%%c
             if %errorlevel% neq 0 exit
         )
 
-        xcopy /i Build/$(test_configuration)/scripts testing/scripts
+        xcopy /i Build\$(test_configuration)\scripts testing\scripts
         if %errorlevel% neq 0 exit
 
-        copy "Data/Create Scripts/Northwind.sql" testing/scripts/northwind.sql
+        copy "Data\Create Scripts\Northwind.sql" testing\scripts\northwind.sql
         if %errorlevel% neq 0 exit
     condition: and(succeeded(), ${{ parameters.for_tests }})
     displayName: Build Test Artifacts
