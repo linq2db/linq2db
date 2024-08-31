@@ -28,14 +28,14 @@ steps:
 
 - task: CmdLine@2
   inputs:
-    script: 'cp $(System.DefaultWorkingDirectory)/configs/net60/$(config).json net60/UserDataProviders.json'
+    script: 'cp $(System.DefaultWorkingDirectory)/configs/net60/$(config).json net6.0/UserDataProviders.json'
     workingDirectory: '$(System.DefaultWorkingDirectory)'
   displayName: Copy test config
   condition: and(variables.title, eq(variables.net60, 'true'), succeeded())
 
 - task: CmdLine@2
   inputs:
-    script: 'cp $(System.DefaultWorkingDirectory)/configs/net80/$(config).json net80/UserDataProviders.json'
+    script: 'cp $(System.DefaultWorkingDirectory)/configs/net80/$(config).json net8.0/UserDataProviders.json'
     workingDirectory: '$(System.DefaultWorkingDirectory)'
   displayName: Copy .NET 8 test config
   condition: and(variables.title, eq(variables.net80, 'true'), succeeded())
@@ -88,11 +88,11 @@ steps:
   condition: and(variables.title, variables.script_local, eq(variables.net60, 'true'), succeeded())
   displayName: Setup tests
 
-- script: dotnet test ./net60/main/x64/linq2db.Tests.dll --filter "TestCategory != SkipCI" -f net60 -l trx $(extra)
+- script: dotnet test ./net6.0/main/x64/linq2db.Tests.dll --filter "TestCategory != SkipCI" -f net60 -l trx $(extra)
   condition: and(variables.title, eq(variables.net60, 'true'), succeeded())
   displayName: 'Tests (NET60): $(title)'
 
-- script: dotnet test ./net60/efcore/x64/linq2db.EntityFrameworkCore.Tests.dll --filter "TestCategory != SkipCI" -f net60 -l trx $(extra)
+- script: dotnet test ./net6.0/efcore/x64/linq2db.EntityFrameworkCore.Tests.dll --filter "TestCategory != SkipCI" -f net60 -l trx $(extra)
   condition: and(variables.title, eq(variables.net60, 'true'), succeeded())
   displayName: 'EF.Core Tests (NET60): $(title)'
 
@@ -103,11 +103,11 @@ steps:
   condition: and(variables.title, variables.script_local, eq(variables.net80, 'true'), succeeded())
   displayName: Setup tests
 
-- script: dotnet test ./net80/main/x64/linq2db.Tests.dll --filter "TestCategory != SkipCI" -f net80 -l trx $(extra)
+- script: dotnet test ./net8.0/main/x64/linq2db.Tests.dll --filter "TestCategory != SkipCI" -f net80 -l trx $(extra)
   condition: and(variables.title, eq(variables.net80, 'true'), succeeded())
   displayName: 'Tests (.NET 8): $(title)'
 
-- script: dotnet test ./net80/efcore/x64/linq2db.EntityFrameworkCore.Tests.dll --filter "TestCategory != SkipCI" -f net80 -l trx $(extra)
+- script: dotnet test ./net8.0/efcore/x64/linq2db.EntityFrameworkCore.Tests.dll --filter "TestCategory != SkipCI" -f net80 -l trx $(extra)
   condition: and(variables.title, eq(variables.net80, 'true'), succeeded())
   displayName: 'EF.Core Tests (.NET 8): $(title)'
 
