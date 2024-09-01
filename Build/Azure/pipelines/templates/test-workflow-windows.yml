@@ -187,7 +187,7 @@ steps:
   condition: and(variables.title, eq(variables.x86, 'true'), eq(variables.net80, 'true'), variables.psscript_local, succeeded())
   displayName: Execute NET 8 (x86) PowerShell Setup Script
 
-- script: dotnet test net8.0/main/x86/linq2db.Tests.dll --filter "TestCategory != SkipCI" -f net80 -l trx
+- script: dotnet test net8.0/main/x64/linq2db.Tests.dll --filter "TestCategory != SkipCI" -f net80 -l trx
   displayName: 'Tests (.NET 8 x64): $(title)'
   condition: and(eq(variables.net80, 'true'), ne(variables.x86, 'true'), variables.title, succeeded())
 
