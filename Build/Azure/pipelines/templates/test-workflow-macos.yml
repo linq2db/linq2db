@@ -84,7 +84,7 @@ steps:
 - task: CmdLine@2
   inputs:
     script: '$(System.DefaultWorkingDirectory)/scripts/$(script_local)'
-    workingDirectory: '$(System.DefaultWorkingDirectory)/net60/main/x64'
+    workingDirectory: '$(System.DefaultWorkingDirectory)/net6.0/main/x64'
   condition: and(variables.title, variables.script_local, eq(variables.net60, 'true'), succeeded())
   displayName: Setup tests
 
@@ -99,7 +99,7 @@ steps:
 - task: CmdLine@2
   inputs:
     script: '$(System.DefaultWorkingDirectory)/scripts/$(script_local)'
-    workingDirectory: '$(System.DefaultWorkingDirectory)/net80/main/x64'
+    workingDirectory: '$(System.DefaultWorkingDirectory)/net8.0/main/x64'
   condition: and(variables.title, variables.script_local, eq(variables.net80, 'true'), succeeded())
   displayName: Setup tests
 

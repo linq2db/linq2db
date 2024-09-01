@@ -150,7 +150,8 @@ namespace Tests
 		public const string AllSqlServer2019             = $"{ProviderName.SqlServer2019},{SqlServer2019MS},{AllSqlServerSequentialAccess},{AllSqlServerContained}";
 		public const string AllSqlServer2022             = $"{ProviderName.SqlServer2022},{SqlServer2022MS}";
 		public const string AllSqlServer2008Minus        = $"{AllSqlServer2005},{AllSqlServer2008}";
-		public const string AllSqlServer2019Minus        = $"{AllSqlServer2008Minus},{AllSqlServer2012},{AllSqlServer2014},{AllSqlServer2016},{AllSqlServer2017},{AllSqlServer2019}";
+		public const string AllSqlServer2014Minus        = $"{AllSqlServer2008Minus},{AllSqlServer2012},{AllSqlServer2014}";
+		public const string AllSqlServer2019Minus        = $"{AllSqlServer2014Minus},{AllSqlServer2016},{AllSqlServer2017},{AllSqlServer2019}";
 		public const string AllSqlServer2022Plus         = $"{AllSqlServer2022},{AllSqlAzure}";
 		public const string AllSqlServer2019Plus         = $"{AllSqlServer2019},{AllSqlServer2022Plus}";
 		public const string AllSqlServer2017Plus         = $"{AllSqlServer2017},{AllSqlServer2019Plus}";

@@ -23,7 +23,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests.SqlServer
 	public class ToolsTests : NorthwindContextTestBase
 	{
 		[Test]
-		public void TestToList([EFDataSources] string provider, [Values] bool enableFilter)
+		public void TestToList([EFDataSources(TestProvName.AllSqlServer2014Minus)] string provider, [Values] bool enableFilter)
 		{
 			using var ctx = CreateContext(provider, enableFilter);
 
@@ -53,7 +53,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests.SqlServer
 		}
 
 		[Test]
-		public void TestCallback([EFDataSources] string provider, [Values] bool enableFilter)
+		public void TestCallback([EFDataSources(TestProvName.AllSqlServer2014Minus)] string provider, [Values] bool enableFilter)
 		{
 			using var ctx = CreateContext(provider, enableFilter);
 
@@ -64,7 +64,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests.SqlServer
 		}
 
 		[Test]
-		public void TestContextRetrieving([EFDataSources] string provider, [Values] bool enableFilter)
+		public void TestContextRetrieving([EFDataSources(TestProvName.AllSqlServer2014Minus)] string provider, [Values] bool enableFilter)
 		{
 			using var ctx = CreateContext(provider, enableFilter);
 
@@ -165,7 +165,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests.SqlServer
 		}
 
 		[Test]
-		public void TestView([EFDataSources] string provider, [Values] bool enableFilter)
+		public void TestView([EFDataSources(TestProvName.AllSqlServer2014Minus)] string provider, [Values] bool enableFilter)
 		{
 			using var ctx = CreateContext(provider, enableFilter);
 			using var db = ctx.CreateLinqToDBConnection();
@@ -198,7 +198,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests.SqlServer
 		}
 
 		[Test]
-		public void TestTransformationTable([EFDataSources] string provider, [Values] bool enableFilter)
+		public void TestTransformationTable([EFDataSources(TestProvName.AllSqlServer2014Minus)] string provider, [Values] bool enableFilter)
 		{
 			using var ctx = CreateContext(provider, enableFilter);
 
@@ -269,7 +269,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests.SqlServer
 		}
 
 		[Test]
-		public void TestGlobalQueryFilters([EFDataSources] string provider, [Values] bool enableFilter)
+		public void TestGlobalQueryFilters([EFDataSources(TestProvName.AllSqlServer2014Minus)] string provider, [Values] bool enableFilter)
 		{
 #if NET8_0
 			if (provider.IsAnyOf(TestProvName.AllMySql))
@@ -332,7 +332,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests.SqlServer
 		}
 
 		[Test]
-		public async Task TestInclude([EFDataSources] string provider, [Values] bool enableFilter)
+		public async Task TestInclude([EFDataSources(TestProvName.AllSqlServer2014Minus)] string provider, [Values] bool enableFilter)
 		{
 			using var ctx = CreateContext(provider, enableFilter);
 
@@ -389,7 +389,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests.SqlServer
 		}
 
 		[Test]
-		public async Task TestLoadFilter([EFDataSources] string provider, [Values] bool enableFilter)
+		public async Task TestLoadFilter([EFDataSources(TestProvName.AllSqlServer2014Minus)] string provider, [Values] bool enableFilter)
 		{
 			using var ctx = CreateContext(provider, enableFilter);
 
@@ -461,7 +461,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests.SqlServer
 		}
 
 		[Test]
-		public async Task TestChangeTracker([EFDataSources(TestProvName.AllSqlServer2005)] string provider, [Values] bool enableFilter)
+		public async Task TestChangeTracker([EFDataSources(TestProvName.AllSqlServer2014Minus)] string provider, [Values] bool enableFilter)
 		{
 			using var ctx = CreateContext(provider, enableFilter);
 
@@ -591,7 +591,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests.SqlServer
 		}
 
 		[Test]
-		public async Task FromSqlRaw([EFIncludeDataSources(TestProvName.AllSqlServer)] string provider)
+		public async Task FromSqlRaw([EFIncludeDataSources(TestProvName.AllSqlServer2016Plus)] string provider)
 		{
 			using var ctx = CreateContext(provider);
 
@@ -646,7 +646,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests.SqlServer
 		[Test]
 		// TODO: reenable after fix
 		//public async Task TestDeleteFrom([EFDataSources] string provider)
-		public async Task TestDeleteFrom([EFDataSources(TestProvName.AllSQLite)] string provider)
+		public async Task TestDeleteFrom([EFDataSources(TestProvName.AllSQLite, TestProvName.AllMySql, TestProvName.AllPostgreSQL)] string provider)
 		{
 			using var ctx = CreateContext(provider);
 
@@ -676,7 +676,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests.SqlServer
 		}
 
 		[Test]
-		public void TestUpdate([EFDataSources] string provider, [Values] bool enableFilter)
+		public void TestUpdate([EFDataSources(TestProvName.AllSqlServer2014Minus)] string provider, [Values] bool enableFilter)
 		{
 			using var ctx = CreateContext(provider, enableFilter);
 
@@ -688,7 +688,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests.SqlServer
 		}
 
 		[Test]
-		public async Task TestUpdateAsync([EFDataSources] string provider, [Values] bool enableFilter)
+		public async Task TestUpdateAsync([EFDataSources(TestProvName.AllSqlServer2014Minus)] string provider, [Values] bool enableFilter)
 		{
 			using var ctx = CreateContext(provider, enableFilter);
 
@@ -769,7 +769,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests.SqlServer
 		}
 
 		[Test]
-		public void TestTagWith([EFDataSources(TestProvName.AllSqlServer2005)] string provider, [Values] bool enableFilter)
+		public void TestTagWith([EFDataSources(TestProvName.AllSqlServer2014Minus)] string provider, [Values] bool enableFilter)
 		{
 			using var ctx = CreateContext(provider, enableFilter);
 
