@@ -62,14 +62,22 @@ jobs:
     inputs:
       script: |
         ECHO ON
-        REM build main and ef.core tests for all TFMs/platforms
+        REM publish main and ef.core tests for all TFMs (without architecture!)
         FOR %%f IN ($(netfx_tfm) net6.0 net8.0) DO (
-            FOR %%a IN (x86 x64) DO (
-                dotnet publish Tests/Linq/Tests.csproj -f %%f -c $(test_configuration) -a %%a -o .build/publish/Tests/$(test_configuration)/%%f_%%a
-                if %errorlevel% neq 0 exit
-                dotnet publish Tests/EntityFrameworkCore/Tests.EntityFrameworkCore.csproj -f %%f -c $(test_configuration) -a %%a -o .build/publish/EFTests/$(test_configuration)/%%f_%%a
-                if %errorlevel% neq 0 exit
-            )
+            dotnet publish Tests/Linq/Tests.csproj -f %%f -c $(test_configuration) -o .build/publish/Tests/$(test_configuration)/%%f_x64
+            if %errorlevel% neq 0 exit
+            dotnet publish Tests/EntityFrameworkCore/Tests.EntityFrameworkCore.csproj -f %%f -c $(test_configuration) -o .build/publish/EFTests/$(test_configuration)/%%f_x64
+            if %errorlevel% neq 0 exit
+        )
+
+        REM publish main and ef.core tests for all TFMs for win-x86
+        FOR %%f IN ($(netfx_tfm) net6.0 net8.0) DO (
+            SET DB2STUB=False
+            IF %%f NEQ $(netfx_tfm) SET DB2STUB=True
+            dotnet publish Tests/Linq/Tests.csproj -f %%f -c $(test_configuration) -a x86 /p:DB2STUB=%DB2STUB% -o .build/publish/Tests/$(test_configuration)/%%f_x86
+            if %errorlevel% neq 0 exit
+            dotnet publish Tests/EntityFrameworkCore/Tests.EntityFrameworkCore.csproj -f %%f -c $(test_configuration) -a x86 -o .build/publish/EFTests/$(test_configuration)/%%f_x86
+            if %errorlevel% neq 0 exit
         )
 
         mkdir testing

@@ -28,7 +28,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 		}
 
 		[Test]
-		public void TestJsonConvert([EFIncludeDataSources(TestProvName.AllSqlServer)] string provider)
+		public void TestJsonConvert([EFIncludeDataSources(TestProvName.AllSqlServer2016Plus)] string provider)
 		{
 			// // converting from string, because usually JSON is stored as string, but it depends on DataProvider
 			// Mapping.MappingSchema.Default.SetConverter<string, LocalizedString>(v => JsonConvert.DeserializeObject<LocalizedString>(v));

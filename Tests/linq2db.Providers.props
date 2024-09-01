@@ -1,5 +1,5 @@
 ﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-	
+
 	<PropertyGroup>
 		<MSBuildWarningsAsMessages>$(MSBuildWarningsAsMessages);MSB3270</MSBuildWarningsAsMessages>
 		<!--8002: referenced assembly miss strong name-->
@@ -33,7 +33,7 @@
 		<Reference Include="Oracle.DataAccess">
 			<HintPath>$(MSBuildThisFileDirectory)\..\Redist\Oracle\Oracle.DataAccess.dll</HintPath>
 		</Reference>
-		
+
 		<!--<Reference Include="Devart.Data.Oracle">
 			<HintPath>$(MSBuildThisFileDirectory)\..\Redist\Devart\Devart.Data.Oracle.dll</HintPath>
 		</Reference>
@@ -47,7 +47,7 @@
 		<PackageReference Include="Octonica.ClickHouseClient" />
 		<PackageReference Include="System.Data.Odbc" />
 		<PackageReference Include="System.Data.OleDb" />
-		
+
 		<!--<PackageReference Include="Devart.Data.Oracle" />-->
 
 		<!--nuget doesn't have strong name, so we use local self-signed copy-->

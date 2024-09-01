@@ -3,8 +3,6 @@
 
 	<PropertyGroup>
 		<TargetFrameworks>net462;net6.0;net8.0</TargetFrameworks>
-		<DB2STUB>False</DB2STUB>
-		<DB2STUB Condition=" ('$(TargetFramework)' == 'net6.0' OR '$(TargetFramework)' == 'net8.0') AND '$(Platform)' == 'x86' ">True</DB2STUB>
 		<DefineConstants Condition=" $(DB2STUB) == 'True' ">$(DefineConstants);DB2STUBS</DefineConstants>
 	</PropertyGroup>
 
