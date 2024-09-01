@@ -4,7 +4,13 @@ parameters:
 steps:
 - checkout: none
 
-# .NET 6 and 8 SDK already installed https://github.com/actions/runner-images/blob/main/images/ubuntu/Ubuntu2204-Readme.md
+# .NET 8 SDK already installed https://github.com/actions/runner-images/blob/main/images/ubuntu/Ubuntu2204-Readme.md
+- task: UseDotNet@2
+  displayName: 'Install .NET 6'
+  inputs:
+    packageType: sdk
+    version: 6.x
+  condition: and(variables.title, eq(variables.net60, 'true'), succeeded())
 
 - task: CmdLine@2
   inputs:

@@ -72,6 +72,12 @@ jobs:
             )
         )
 
+        REM copy sqlite.interop.dll runtime, missing from publish for NETFX
+        copy .build\bin\Tests\$(test_configuration)\$(netfx_tfm)\x86\SQLite.Interop.dll testing\netfx\x86\x86
+        if %errorlevel% neq 0 exit
+        copy .build\bin\Tests\$(test_configuration)\$(netfx_tfm)\x64\SQLite.Interop.dll testing\netfx\x64\x64
+        if %errorlevel% neq 0 exit
+
         mkdir testing
         if %errorlevel% neq 0 exit
 
