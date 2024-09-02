@@ -1,13 +1,11 @@
 ﻿using System;
 using System.Diagnostics;
 using System.Linq;
-using System.Security.Cryptography;
 using System.Threading.Tasks;
 
 using FluentAssertions;
 
 using LinqToDB.EntityFrameworkCore.Tests.Models.Northwind;
-using LinqToDB.EntityFrameworkCore.Tests.SqlServer.Models.Northwind;
 using LinqToDB.Expressions;
 using LinqToDB.Mapping;
 
@@ -17,7 +15,9 @@ using NUnit.Framework;
 
 using Tests;
 
-namespace LinqToDB.EntityFrameworkCore.Tests.SqlServer
+using SQLServerNorthwindContext = LinqToDB.EntityFrameworkCore.Tests.SqlServer.Models.Northwind.NorthwindContext;
+
+namespace LinqToDB.EntityFrameworkCore.Tests
 {
 	[TestFixture]
 	public class ToolsTests : NorthwindContextTestBase
@@ -425,12 +425,12 @@ namespace LinqToDB.EntityFrameworkCore.Tests.SqlServer
 		[Test]
 		public void TestInMemory()
 		{
-			var optionsBuilder = new DbContextOptionsBuilder<NorthwindContext>();
+			var optionsBuilder = new DbContextOptionsBuilder<SQLServerNorthwindContext>();
 
 			optionsBuilder.UseInMemoryDatabase("sample");
 			optionsBuilder.UseLoggerFactory(LoggerFactory);
 
-			using var ctx = new NorthwindContext(optionsBuilder.Options);
+			using var ctx = new SQLServerNorthwindContext(optionsBuilder.Options);
 			ctx.Database.EnsureCreated();
 
 			Assert.Throws<LinqToDBForEFToolsException>(() =>
@@ -754,7 +754,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests.SqlServer
 				ctx.Database.SetCommandTimeout(commandTimeout);
 
 				var query = from p in ctx.Products
-							select NorthwindContext.ProcessLong(commandExecutionTime);
+							select SQLServerNorthwindContext.ProcessLong(commandExecutionTime);
 
 				var exception = Assert.Throws<Microsoft.Data.SqlClient.SqlException>(() =>
 					{

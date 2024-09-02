@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace LinqToDB.EntityFrameworkCore.Tests.SqlServer.Models.IssueModel
+namespace LinqToDB.EntityFrameworkCore.Tests.Models.IssueModel
 {
 	public sealed class Issue73Entity
 	{

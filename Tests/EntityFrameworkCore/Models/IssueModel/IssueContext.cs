@@ -1,6 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 
-namespace LinqToDB.EntityFrameworkCore.Tests.SqlServer.Models.IssueModel
+namespace LinqToDB.EntityFrameworkCore.Tests.Models.IssueModel
 {
 	public class IssueContext : DbContext
 	{

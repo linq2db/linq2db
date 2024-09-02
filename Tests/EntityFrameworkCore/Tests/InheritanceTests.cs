@@ -3,13 +3,13 @@
 using FluentAssertions;
 
 using LinqToDB.Data;
-using LinqToDB.EntityFrameworkCore.Tests.SqlServer.Models.Inheritance;
+using LinqToDB.EntityFrameworkCore.Tests.Models.Inheritance;
 
 using Microsoft.EntityFrameworkCore;
 
 using NUnit.Framework;
 
-namespace LinqToDB.EntityFrameworkCore.Tests.SqlServer
+namespace LinqToDB.EntityFrameworkCore.Tests
 {
 	[TestFixture]
 	public class InheritanceTests : ContextTestBase<InheritanceContext>

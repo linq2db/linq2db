@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace LinqToDB.EntityFrameworkCore.Tests.SqlServer.Models.IssueModel
+namespace LinqToDB.EntityFrameworkCore.Tests.Models.IssueModel
 {
 	public class Patent
 	{

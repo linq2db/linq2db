@@ -3,13 +3,13 @@
 using FluentAssertions;
 
 using LinqToDB.DataProvider.SqlServer;
-using LinqToDB.EntityFrameworkCore.Tests.SqlServer.Models.IssueModel;
+using LinqToDB.EntityFrameworkCore.Tests.Models.IssueModel;
 
 using Microsoft.EntityFrameworkCore;
 
 using NUnit.Framework;
 
-namespace LinqToDB.EntityFrameworkCore.Tests.SqlServer
+namespace LinqToDB.EntityFrameworkCore.Tests
 {
 	[TestFixture]
 	public class IssueTests : ContextTestBase<IssueContext>

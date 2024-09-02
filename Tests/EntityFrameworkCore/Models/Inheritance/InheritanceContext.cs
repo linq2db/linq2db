@@ -1,6 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 
-namespace LinqToDB.EntityFrameworkCore.Tests.SqlServer.Models.Inheritance
+namespace LinqToDB.EntityFrameworkCore.Tests.Models.Inheritance
 {
 	public abstract class BlogBase
 	{
