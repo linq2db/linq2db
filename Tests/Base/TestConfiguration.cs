@@ -197,9 +197,11 @@ namespace Tests
 		public static readonly IReadOnlyList<string> EFProviders = CustomizationSupport.Interceptor.GetSupportedProviders(new List<string>
 		{
 			ProviderName.SQLiteMS,
-			TestProvName.AllSqlServerMS,
+			// latest tested ef.core doesn't support older versions, leading to too many failing tests to disable
+			TestProvName.AllSqlServer2016PlusMS,
 			TestProvName.AllMySqlConnector,
-			TestProvName.AllPostgreSQL,
+			// latest tested ef.core doesn't support older versions, leading to too many failing tests to disable
+			TestProvName.AllPostgreSQL13Plus,
 
 #if NETFRAMEWORK
 			// test providers with .net framework provider only

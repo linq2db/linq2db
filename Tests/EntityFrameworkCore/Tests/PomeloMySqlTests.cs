@@ -9,7 +9,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 	public class PomeloMySqlTests : NorthwindContextTestBase
 	{
 		[Test]
-		public void SimpleProviderTest([EFDataSources(TestProvName.AllSqlServer2005)] string provider)
+		public void SimpleProviderTest([EFDataSources] string provider)
 		{
 			using var db = CreateContext(provider);
 

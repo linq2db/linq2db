@@ -67,7 +67,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 		}
 
 		[Test]
-		public virtual void TestBulkCopyNoIdentity([EFDataSources(TestProvName.AllSqlServer2005)] string provider)
+		public virtual void TestBulkCopyNoIdentity([EFDataSources] string provider)
 		{
 			using var context = CreateContext(provider);
 			using var connection = context.CreateLinqToDBConnection();
@@ -87,7 +87,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 
 		// postgres: cannot create such identity table
 		[Test]
-		public virtual void TestBulkCopyWithIdentity([EFDataSources(TestProvName.AllPostgreSQL, TestProvName.AllSqlServer2005)] string provider)
+		public virtual void TestBulkCopyWithIdentity([EFDataSources(TestProvName.AllPostgreSQL)] string provider)
 		{
 			using var context = CreateContext(provider);
 			using var connection = context.CreateLinqToDBConnection();
@@ -127,7 +127,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 		}
 
 		[Test]
-		public virtual void TestAmbiguousProperties([EFDataSources(TestProvName.AllSqlServer2005)] string provider)
+		public virtual void TestAmbiguousProperties([EFDataSources] string provider)
 		{
 			using var context = CreateContext(provider);
 
@@ -152,7 +152,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 		}
 
 		[Test]
-		public virtual void TestMappingSchemaCachedWithCustomSchema([EFDataSources(TestProvName.AllSqlServer2005)] string provider)
+		public virtual void TestMappingSchemaCachedWithCustomSchema([EFDataSources] string provider)
 		{
 			var ms = new MappingSchema("Test");
 			new FluentMappingBuilder(ms)
@@ -227,7 +227,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 		}
 
 		[Test]
-		public void TestDialectUse([EFIncludeDataSources(TestProvName.AllSqlServer2008Plus)] string provider)
+		public void TestDialectUse([EFIncludeDataSources(TestProvName.AllSqlServer)] string provider)
 		{
 			using var db = CreateContext(provider, o => o.UseSqlServer(SqlServerVersion.v2005));
 			using var dc = db.CreateLinqToDBConnectionDetached();

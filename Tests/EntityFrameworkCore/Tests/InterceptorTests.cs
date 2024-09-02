@@ -53,7 +53,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 		}
 
 		[Test]
-		public void TestInterceptors([EFDataSources(TestProvName.AllSqlServer2005)] string provider)
+		public void TestInterceptors([EFDataSources] string provider)
 		{
 			using (var ctx = CreateContext(provider, optionsBuilderSetter: CreateNorthwindOptions))
 			{
@@ -104,7 +104,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 		}
 
 		[Test]
-		public void TestEfCoreSideOfComboInterceptor([EFDataSources(TestProvName.AllSqlServer2005)] string provider)
+		public void TestEfCoreSideOfComboInterceptor([EFDataSources] string provider)
 		{
 			using (var ctx = CreateContext(provider, optionsBuilderSetter: CreateNorthwindOptionsWithEfCoreInterceptorsOnly))
 			{
