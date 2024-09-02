@@ -6,7 +6,5 @@
 	<NUnit>
 		<AssemblySelectLimit>1000000</AssemblySelectLimit>
 		<ShadowCopyFiles>false</ShadowCopyFiles>
-		<!--<Verbosity>5</Verbosity>-->
-		<!--<InternalTraceLevel>Debug</InternalTraceLevel>-->
 	</NUnit>
 </RunSettings>
