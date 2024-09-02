@@ -72,8 +72,8 @@ jobs:
 
         REM publish main and ef.core tests for all TFMs for win-x86
         FOR %%f IN ($(netfx_tfm) net6.0 net8.0) DO (
-            SET DB2STUB=False
-            IF %%f NEQ $(netfx_tfm) SET DB2STUB=True
+            SET DB2STUB=True
+            IF %%f EQU $(netfx_tfm) SET DB2STUB=False
             dotnet publish Tests/Linq/Tests.csproj -f %%f -c $(test_configuration) -a x86 /p:DB2STUB=%DB2STUB% -o .build/publish/Tests/$(test_configuration)/%%f_x86
             if %errorlevel% neq 0 exit
             dotnet publish Tests/EntityFrameworkCore/Tests.EntityFrameworkCore.csproj -f %%f -c $(test_configuration) -a x86 -o .build/publish/EFTests/$(test_configuration)/%%f_x86
