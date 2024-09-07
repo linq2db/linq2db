@@ -1097,9 +1097,9 @@ namespace LinqToDB
 		{
 			if (source  == null) throw new ArgumentNullException(nameof(source));
 
-			var currentSource = source.GetLinqToDBSource();
+			var currentSource = source.ProcessIQueryable();
 
-			var query = currentSource.CreateQuery<T>(
+			var query = currentSource.Provider.CreateQuery<T>(
 				Expression.Call(
 					null,
 					Methods.LinqToDB.Update.AsUpdatable.MakeGenericMethod(typeof(T)),
@@ -1128,14 +1128,14 @@ namespace LinqToDB
 			if (extract == null) throw new ArgumentNullException(nameof(extract));
 			if (update  == null) throw new ArgumentNullException(nameof(update));
 
-			var currentSource = source.GetLinqToDBSource();
+			var currentSource = source.ProcessIQueryable();
 
 			var expr = Expression.Call(
 				null,
 				Methods.LinqToDB.Update.SetQueryablePrev.MakeGenericMethod(typeof(T), typeof(TV)),
 				currentSource.Expression, Expression.Quote(extract), Expression.Quote(update));
 
-			var query = currentSource.CreateQuery<T>(expr);
+			var query = currentSource.Provider.CreateQuery<T>(expr);
 			return new Updatable<T>(query);
 		}
 
@@ -1249,14 +1249,14 @@ namespace LinqToDB
 			if (source  == null) throw new ArgumentNullException(nameof(source));
 			if (extract == null) throw new ArgumentNullException(nameof(extract));
 
-			var currentSource = source.GetLinqToDBSource();
+			var currentSource = source.ProcessIQueryable();
 
 			var expr = Expression.Call(
 				null,
 				Methods.LinqToDB.Update.SetQueryableValue.MakeGenericMethod(typeof(T), typeof(TV)),
 				currentSource.Expression, Expression.Quote(extract), Expression.Constant(value, typeof(TV)));
 
-			var query = currentSource.CreateQuery<T>(expr);
+			var query = currentSource.Provider.CreateQuery<T>(expr);
 
 			return new Updatable<T>(query);
 		}
@@ -1315,14 +1315,14 @@ namespace LinqToDB
 			if (source        == null) throw new ArgumentNullException(nameof(source));
 			if (setExpression == null) throw new ArgumentNullException(nameof(setExpression));
 
-			var currentSource = source.GetLinqToDBSource();
+			var currentSource = source.ProcessIQueryable();
 
 			var expr = Expression.Call(
 				null,
 				Methods.LinqToDB.Update.SetQueryableSetCustom.MakeGenericMethod(typeof(T)),
 				currentSource.Expression, Expression.Quote(setExpression));
 
-			var query = currentSource.CreateQuery<T>(expr);
+			var query = currentSource.Provider.CreateQuery<T>(expr);
 			return new Updatable<T>(query);
 		}
 
@@ -1603,14 +1603,14 @@ namespace LinqToDB
 		{
 			if (target == null) throw new ArgumentNullException(nameof(target));
 
-			var currentSource = target.GetLinqToDBSource();
+			var currentSource = target.ProcessIQueryable();
 
 			var expr = Expression.Call(
 				null,
 				MethodHelper.GetMethodInfo(Into, dataContext, target),
 				SqlQueryRootExpression.Create(dataContext), currentSource.Expression);
 
-			var v = currentSource.CreateQuery<T>(expr);
+			var v = currentSource.Provider.CreateQuery<T>(expr);
 			return new ValueInsertable<T>(v);
 		}
 
@@ -1625,14 +1625,14 @@ namespace LinqToDB
 		{
 			if (source == null) throw new ArgumentNullException(nameof(source));
 
-			var currentSource = source.GetLinqToDBSource();
+			var currentSource = source.ProcessIQueryable();
 
 			var expr = Expression.Call(
 				null,
 				Methods.LinqToDB.Insert.T.AsValueInsertable.MakeGenericMethod(typeof(T)),
 				currentSource.Expression);
 
-			var query = currentSource.CreateQuery<T>(expr);
+			var query = currentSource.Provider.CreateQuery<T>(expr);
 			return new ValueInsertable<T>(query);
 		}
 
@@ -1657,14 +1657,14 @@ namespace LinqToDB
 			if (field  == null) throw new ArgumentNullException(nameof(field));
 			if (value  == null) throw new ArgumentNullException(nameof(value));
 
-			var currentSource = source.GetLinqToDBSource();
+			var currentSource = source.ProcessIQueryable();
 
 			var expr = Expression.Call(
 				null,
 				MethodHelper.GetMethodInfo(Value, source, field, value),
 				currentSource.Expression, Expression.Quote(field), Expression.Quote(value));
 
-			var q = currentSource.CreateQuery<T>(expr);
+			var q = currentSource.Provider.CreateQuery<T>(expr);
 			return new ValueInsertable<T>(q);
 		}
 
@@ -1688,14 +1688,14 @@ namespace LinqToDB
 			if (source == null) throw new ArgumentNullException(nameof(source));
 			if (field  == null) throw new ArgumentNullException(nameof(field));
 
-			var currentSource = source.GetLinqToDBSource();
+			var currentSource = source.ProcessIQueryable();
 
 			var expr = Expression.Call(
 				null,
 				MethodHelper.GetMethodInfo(Value, source, field, value),
 				currentSource.Expression, Expression.Quote(field), Expression.Constant(value, typeof(TV)));
 
-			var q = currentSource.CreateQuery<T>(expr);
+			var q = currentSource.Provider.CreateQuery<T>(expr);
 			return new ValueInsertable<T>(q);
 		}
 
@@ -2258,14 +2258,14 @@ namespace LinqToDB
 			if (source == null) throw new ArgumentNullException(nameof(source));
 			if (target == null) throw new ArgumentNullException(nameof(target));
 
-			var currentSource = source.GetLinqToDBSource();
+			var currentSource = source.ProcessIQueryable();
 
 			var expr = Expression.Call(
 				null,
 				MethodHelper.GetMethodInfo(Into, source, target),
 				currentSource.Expression, ((IQueryable<TTarget>)target).Expression);
 
-			var q = currentSource.CreateQuery<TSource>(expr);
+			var q = currentSource.Provider.CreateQuery<TSource>(expr);
 			return new SelectInsertable<TSource,TTarget>(q);
 		}
 
@@ -3129,14 +3129,14 @@ namespace LinqToDB
 			if (source      == null) throw new ArgumentNullException(nameof(source));
 			if (keySelector == null) throw new ArgumentNullException(nameof(keySelector));
 
-			var currentSource = source.GetLinqToDBSource();
+			var currentSource = source.ProcessIQueryable();
 
 			var expr = Expression.Call(
 				null,
 				MethodHelper.GetMethodInfo(ThenOrBy, source, keySelector),
 				currentSource.Expression, Expression.Quote(keySelector));
 
-			return (IOrderedQueryable<TSource>)currentSource.CreateQuery<TSource>(expr);
+			return (IOrderedQueryable<TSource>)currentSource.Provider.CreateQuery<TSource>(expr);
 		}
 
 		/// <summary>
@@ -3157,14 +3157,14 @@ namespace LinqToDB
 			if (source      == null) throw new ArgumentNullException(nameof(source));
 			if (keySelector == null) throw new ArgumentNullException(nameof(keySelector));
 
-			var currentSource = source.GetLinqToDBSource();
+			var currentSource = source.ProcessIQueryable();
 
 			var expr = Expression.Call(
 				null,
 				MethodHelper.GetMethodInfo(ThenOrByDescending, source, keySelector),
 				currentSource.Expression, Expression.Quote(keySelector));
 
-			return (IOrderedQueryable<TSource>)currentSource.CreateQuery<TSource>(expr);
+			return (IOrderedQueryable<TSource>)currentSource.Provider.CreateQuery<TSource>(expr);
 		}
 
 		/// <summary>
