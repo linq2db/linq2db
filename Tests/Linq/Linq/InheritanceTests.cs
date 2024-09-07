@@ -228,7 +228,7 @@ namespace Tests.Linq
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
-					      ParentInheritance.OfType<ParentInheritance1>().Cast<ParentInheritanceBase>(),
+						  ParentInheritance.OfType<ParentInheritance1>().Cast<ParentInheritanceBase>(),
 					await db.ParentInheritance.OfType<ParentInheritance1>().Cast<ParentInheritanceBase>().ToListAsync());
 		}
 
@@ -1851,6 +1851,156 @@ namespace Tests.Linq
 		sealed class CreateTable2 : CreateTableBase
 		{
 			[Column] public int Field2 { get; set; }
+		}
+		#endregion
+
+		#region issue 3891
+		public class Name
+		{
+			public string? First { get; set; }
+			public string? Second { get; set; }
+		}
+
+		[Table("Base")]
+		[InheritanceMapping(Code = 1, Type = typeof(ChildBase))]
+		[Column(MemberName = "Name.First", Name = "Name_First")]
+		[Column(MemberName = "Name.Second", Name = "Name_Second")]
+		public abstract class Base
+		{
+			[Column, PrimaryKey]
+			public int Id { get; set; }
+
+			public Name? Name { get; set; }
+
+			[Column(IsDiscriminator = true)]
+			public int Type { get; set; }
+		}
+
+		[Table("Base")]
+		public class ChildBase : Base
+		{
+			public ChildBase()
+			{
+				Type = 1;
+			}
+
+			[Column(Name = "Test_ChildId")]
+			public int ChildId { get; set; }
+		}
+
+		public abstract class Base2
+		{
+			public int Id { get; set; }
+
+			public Name? Name { get; set; }
+
+			public int Type { get; set; }
+		}
+
+		public class ChildBase2 : Base2
+		{
+			public ChildBase2()
+			{
+				Type = 1;
+			}
+
+			public int ChildId { get; set; }
+		}
+
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/3891")]
+		public void Issue3891AttributesMapping([InsertOrUpdateDataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable<Base>();
+
+			var child = new ChildBase()
+			{
+				Id = 1,
+				ChildId = 2,
+				Name = new Name()
+				{
+					First = "First",
+					Second = "Second"
+				}
+			};
+
+			db.Insert(child);
+
+			var res = tb.Single();
+			Assert.That(res, Is.InstanceOf<ChildBase>());
+			var cb = (ChildBase)res;
+			Assert.That(cb.Id, Is.EqualTo(1));
+			Assert.That(cb.ChildId, Is.EqualTo(2));
+			Assert.That(cb.Name, Is.Not.Null);
+			Assert.That(cb.Name!.First, Is.EqualTo("First"));
+			Assert.That(cb.Name.Second, Is.EqualTo("Second"));
+
+			child.Name.First = "First1";
+			db.Update(child);
+
+			res = tb.Single();
+			Assert.That(res, Is.InstanceOf<ChildBase>());
+			cb = (ChildBase)res;
+			Assert.That(cb.Id, Is.EqualTo(1));
+			Assert.That(cb.ChildId, Is.EqualTo(2));
+			Assert.That(cb.Name, Is.Not.Null);
+			Assert.That(cb.Name!.First, Is.EqualTo("First1"));
+			Assert.That(cb.Name.Second, Is.EqualTo("Second"));
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/3891")]
+		public void Issue3891FluentMapping([InsertOrUpdateDataSources] string context)
+		{
+			var ms = new FluentMappingBuilder()
+				.Entity<Base2>()
+					.HasTableName("Base2")
+					.Inheritance(x => x.Type, 1, typeof(ChildBase2))
+					.Property(x => x.Id).IsPrimaryKey()
+					.Property(x => x.Name!.First).HasColumnName("Name_First")
+					.Property(x => x.Name!.Second).HasColumnName("Name_Second")
+				.Entity<ChildBase2>()
+					.HasTableName("Base2")
+					.Property(x => x.ChildId).HasColumnName("Test_ChildId")
+				.Build()
+				.MappingSchema;
+
+			using var db = GetDataContext(context, ms);
+			using var tb = db.CreateLocalTable<Base2>();
+
+			var child = new ChildBase2()
+			{
+				Id = 1,
+				ChildId = 2,
+				Name = new Name()
+				{
+					First = "First",
+					Second = "Second"
+				}
+			};
+
+			db.Insert(child);
+
+			var res = tb.Single();
+			Assert.That(res, Is.InstanceOf<ChildBase2>());
+			var cb = (ChildBase2)res;
+			Assert.That(cb.Id, Is.EqualTo(1));
+			Assert.That(cb.ChildId, Is.EqualTo(2));
+			Assert.That(cb.Name, Is.Not.Null);
+			Assert.That(cb.Name!.First, Is.EqualTo("First"));
+			Assert.That(cb.Name.Second, Is.EqualTo("Second"));
+
+			child.Name.First = "First1";
+			db.Update(child);
+
+			res = tb.Single();
+			Assert.That(res, Is.InstanceOf<ChildBase2>());
+			cb = (ChildBase2)res;
+			Assert.That(cb.Id, Is.EqualTo(1));
+			Assert.That(cb.ChildId, Is.EqualTo(2));
+			Assert.That(cb.Name, Is.Not.Null);
+			Assert.That(cb.Name!.First, Is.EqualTo("First1"));
+			Assert.That(cb.Name.Second, Is.EqualTo("Second"));
 		}
 		#endregion
 	}
