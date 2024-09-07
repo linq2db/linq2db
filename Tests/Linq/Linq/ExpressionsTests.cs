@@ -1166,8 +1166,60 @@ namespace Tests.Linq
 		}
 
 		#endregion
+
+		#region Issue 4613
+		[Table]
+		class Issue4613Service
+		{
+			[Column] public int IdContract { get; set; }
+		}
+
+		[Table]
+		class Issue4613Contract
+		{
+			[Column] public int Id { get; set; }
+		}
+
+		class Issue4613ServiceProjection
+		{
+			public int IdContract { get; set; }
+		}
+
+		static class Issue4613Expressions
+		{
+			[ExpressionMethod(nameof(ToServiceProjectionExpr))]
+			public static Issue4613ServiceProjection ToServiceProjection(Issue4613Service serv)
+				=> throw new NotImplementedException();
+
+			static Expression<Func<Issue4613Service, Issue4613ServiceProjection>> ToServiceProjectionExpr()
+				=> (serv) => new Issue4613ServiceProjection { IdContract = serv.IdContract };
+		}
+
+		[Test]
+		public void Issue4613Test([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t1 = db.CreateLocalTable<Issue4613Service>();
+			using var t2 = db.CreateLocalTable<Issue4613Contract>();
+
+			var query = (
+				from servProj in (
+				from serv in db.GetTable<Issue4613Service>()
+				select Issue4613Expressions.ToServiceProjection(serv))
+				join contract in db.GetTable<Issue4613Contract>() on servProj.IdContract equals contract.Id
+				select new
+				{
+					Contract = contract,
+					Service = servProj
+				});
+
+			query.ToList();
+		}
+
+		#endregion
 	}
 
+	#region Extensions
 	static class ExpressionTestExtensions
 	{
 		public sealed class LeftJoinInfo<TOuter,TInner>
@@ -1231,4 +1283,5 @@ namespace Tests.Linq
 		}
 		*/
 	}
+	#endregion
 }

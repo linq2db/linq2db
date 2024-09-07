@@ -622,5 +622,15 @@ namespace Tests.Linq
 
 			Assert.That(cnt, Is.EqualTo(4));
 		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4597")]
+		public void Issue4597Test([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			db.Parent
+				.Select(s => s.Children.StringAggregate(", ", l => l.ChildID.ToString()).ToValue())
+				.ToArray();
+		}
 	}
 }
