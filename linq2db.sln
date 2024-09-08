@@ -31,7 +31,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{DF8DE665
 		Tests\linq2db.BasicTestProjects.props = Tests\linq2db.BasicTestProjects.props
 		Tests\linq2db.TestProjects.props = Tests\linq2db.TestProjects.props
 		UserDataProviders.json = UserDataProviders.json
-		Tests\UserDataProviders.json.template = Tests\UserDataProviders.json.template
+		UserDataProviders.json.template = UserDataProviders.json.template
 	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Tests.Model", "Tests\Model\Tests.Model.csproj", "{EF534F71-A4E6-4019-8835-43BEE792C70A}"
