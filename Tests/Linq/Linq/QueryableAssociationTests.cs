@@ -1058,5 +1058,44 @@ WHERE
 				})
 				.ToList();
 		}
+
+		#region Issue 4596
+		sealed class Issue4596Form
+		{
+			public int Id { get; set; }
+			public char C1 { get; set; }
+
+			[Association(QueryExpressionMethod = nameof(ItemsImpl))]
+			public IEnumerable<Issue4596Item> Items { get; set; } = default!;
+
+			internal static Expression<Func<Issue4596Form, IDataContext, IQueryable<Issue4596Item>>> ItemsImpl()
+				=> (p, db) => db.GetTable<Issue4596Item>()
+				.Where(x => x.FormId == p.Id)
+				.OrderBy(x => p.C1 == 'T' ? x.OrderIndex : 0)
+				.ThenBy(x => p.C1 != 'T' ? x.Name1 : "")
+				.ThenBy(x => p.C1 != 'T' ? x.Name2 : "")
+				.ThenBy(x => p.C1 != 'T' ? x.Name3 : "");
+		}
+
+		sealed class Issue4596Item
+		{
+			public int Id { get; set; }
+			public int FormId { get; set; }
+			public int OrderIndex { get; set; }
+			public string? Name1 { get; set; }
+			public string? Name2 { get; set; }
+			public string? Name3 { get; set; }
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4596")]
+		public void Issue4596Test([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t1 = db.CreateLocalTable<Issue4596Form>();
+			using var t2 = db.CreateLocalTable<Issue4596Item>();
+
+			t1.LoadWith(x => x.Items).FirstOrDefault();
+		}
+		#endregion
 	}
 }
