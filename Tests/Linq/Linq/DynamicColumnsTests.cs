@@ -656,6 +656,8 @@ namespace Tests.Linq
 			ms.AddMetadataReader(new CustomMetadataReader());
 
 			using (var db = GetDataContext(context, ms))
+			using (db.CreateLocalTable<DynamicParent>())
+			using (db.CreateLocalTable<DynamicChild>())
 			{
 				Assert.DoesNotThrowAsync(async () =>
 				{
