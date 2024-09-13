@@ -1,19 +1,19 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace Tests.T4.Model
+namespace Tests.T4.Models
 {
 	/// <summary>
-	/// 
+	///
 	/// </summary>
 	partial class TestClass1
 	{
 		/// <summary>
-		/// 
+		///
 		/// </summary>
 		partial class CustomValidator
 		{
 			/// <summary>
-			/// 
+			///
 			/// </summary>
 			/// <param name="obj"></param>
 			/// <returns></returns>
@@ -23,7 +23,7 @@ namespace Tests.T4.Model
 			}
 
 			/// <summary>
-			/// 
+			///
 			/// </summary>
 			/// <param name="obj"></param>
 			/// <returns></returns>
