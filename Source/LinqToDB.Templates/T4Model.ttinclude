@@ -1,11 +1,12 @@
-<#@ assembly name="System.Core"                               #>
-<#@ assembly name="$(LinqToDBT4SharedTools)linq2db.dll"       #>
-<#@ assembly name="$(LinqToDBT4SharedTools)linq2db.Tools.dll" #>
-<#@ import namespace="System"                                 #>
-<#@ import namespace="System.Linq"                            #>
-<#@ import namespace="System.Collections.Generic"             #>
-<#@ import namespace="LinqToDB.Tools.ModelGeneration"         #>
-<#@ import namespace="LinqToDB.SchemaProvider"                #>
+<#@ assembly name="System.Core"                                               #>
+<#@ assembly name="$(LinqToDBT4SharedTools)linq2db.dll"                       #>
+<#@ assembly name="$(LinqToDBT4SharedTools)linq2db.Tools.dll"                 #>
+<#@ assembly name="$(LinqToDBT4SharedTools)Microsoft.Bcl.AsyncInterfaces.dll" #>
+<#@ import namespace="System"                                                 #>
+<#@ import namespace="System.Linq"                                            #>
+<#@ import namespace="System.Collections.Generic"                             #>
+<#@ import namespace="LinqToDB.Tools.ModelGeneration"                         #>
+<#@ import namespace="LinqToDB.SchemaProvider"                                #>
 <#+
 
 private ModelGenerator<Table,Procedure> _modelGenerator;

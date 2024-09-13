@@ -1,10 +1,11 @@
-<#@ assembly name="System.Core"                               #>
-<#@ assembly name="$(LinqToDBT4SharedTools)linq2db.dll"       #>
-<#@ assembly name="$(LinqToDBT4SharedTools)linq2db.Tools.dll" #>
-<#@ import   namespace="System.Reflection"                    #>
-<#@ import   namespace="System.IO"                            #>
-<#@ import   namespace="System.Linq"                          #>
-<#@ import   namespace="System.Runtime.InteropServices"       #>
+<#@ assembly name="System.Core"                                               #>
+<#@ assembly name="$(LinqToDBT4SharedTools)linq2db.dll"                       #>
+<#@ assembly name="$(LinqToDBT4SharedTools)linq2db.Tools.dll"                 #>
+<#@ assembly name="$(LinqToDBT4SharedTools)Microsoft.Bcl.AsyncInterfaces.dll" #>
+<#@ import   namespace="System.Reflection"                                    #>
+<#@ import   namespace="System.IO"                                            #>
+<#@ import   namespace="System.Linq"                                          #>
+<#@ import   namespace="System.Runtime.InteropServices"                       #>
 
 <#
 AppDomain.CurrentDomain.AssemblyResolve += (_, args) =>
@@ -14,10 +15,6 @@ AppDomain.CurrentDomain.AssemblyResolve += (_, args) =>
 	// ignore version mismatch
 	return AppDomain.CurrentDomain.GetAssemblies().FirstOrDefault(a => a.GetName().Name == requestedAssembly.Name);
 };
-
-//var sharedPath = Path.GetDirectoryName(GetAssemblyLocation(typeof(LinqToDB.Data.DataConnection).Assembly));
-//
-//LoadAssembly("Microsoft.Bcl.AsyncInterfaces", sharedPath);
 #>
 
 <#+

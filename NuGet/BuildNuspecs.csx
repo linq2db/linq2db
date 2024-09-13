@@ -109,13 +109,14 @@ foreach (var xmlPath in GetFiles(path))
 
 	if (isT4)
 	{
-		SetFile(SetAttribute("src", t4binPath + @"\linq2db.dll"),                       SetAttribute("target", "tools"));
-		SetFile(SetAttribute("src", t4binPath + @"\Humanizer.dll"),                     SetAttribute("target", "tools"));
-		SetFile(SetAttribute("src", t4binPath + @"\Microsoft.Bcl.AsyncInterfaces.dll"), SetAttribute("target", "tools"));
 		SetFile(SetAttribute("src", @"NuGet\readme.T4.txt"),                            SetAttribute("target", "readme.txt"));
 		SetFile(SetAttribute("src", @"NuGet\README.T4.md"),                             SetAttribute("target", "README.md"));
 		SetFile(SetAttribute("src", @"..\..\Source\LinqToDB.Templates\*.*"),            SetAttribute("target", @"contentFiles\any\any\LinqToDB.Templates"));
 		SetFile(SetAttribute("src", @"..\..\Source\LinqToDB.Templates\*.*"),            SetAttribute("target", @"content\LinqToDB.Templates"));
+		SetFile(SetAttribute("src", t4binPath + @"\linq2db.dll"),                       SetAttribute("target", "tools"));
+		SetFile(SetAttribute("src", t4binPath + @"\linq2db.Tools.dll"),                 SetAttribute("target", "tools"));
+		SetFile(SetAttribute("src", t4binPath + @"\Humanizer.dll"),                     SetAttribute("target", "tools"));
+		SetFile(SetAttribute("src", t4binPath + @"\Microsoft.Bcl.AsyncInterfaces.dll"), SetAttribute("target", "tools"));
 
 		{
 			var contentFilesNode = metadata.SelectSingleNode($"//ns:contentFiles", ns);
