@@ -49,21 +49,21 @@
 		<ArtifactsPivots>$(Configuration)\$(TargetFramework)</ArtifactsPivots>
 
 		<!-- templates pathes for linq2db solution -->
-		<LinqToDBT4SharedTools>$(SolutionDir)Tests\Linq\bin\Debug\net472\</LinqToDBT4SharedTools>
-
-		<LinqToDBT4ClickHouseClientPath>$(SolutionDir)Tests\Linq\bin\Debug\net472\</LinqToDBT4ClickHouseClientPath>
-		<LinqToDBT4DB2ClientPath>$(SolutionDir)Nuget\bin\Debug\net472\</LinqToDBT4DB2ClientPath>
-		<LinqToDBT4FirebirdClientPath>$(SolutionDir)Tests\Linq\bin\Debug\net472\</LinqToDBT4FirebirdClientPath>
-		<LinqToDBT4InformixClientPath>$(SolutionDir)Nuget\bin\Debug\net472\</LinqToDBT4InformixClientPath>
-		<LinqToDBT4MySqlConnectorClientPath>$(SolutionDir)Tests\Linq\bin\Debug\net472\</LinqToDBT4MySqlConnectorClientPath>
-		<LinqToDBT4OracleManagedClientPath>$(SolutionDir)Tests\Linq\bin\Debug\net472\</LinqToDBT4OracleManagedClientPath>
-		<LinqToDBT4NpgsqlClientPath>$(SolutionDir)Tests\Linq\bin\Debug\net472\</LinqToDBT4NpgsqlClientPath>
-		<LinqToDBT4SQLiteClientPath>$(SolutionDir)Tests\Linq\bin\Debug\net472\</LinqToDBT4SQLiteClientPath>
-		<LinqToDBT4SQLServerClientPath>$(SolutionDir)Tests\Linq\bin\Debug\net472\</LinqToDBT4SQLServerClientPath>
-		<LinqToDBT4SybaseDataActionClientPath>$(SolutionDir)Tests\Linq\bin\Debug\net472\</LinqToDBT4SybaseDataActionClientPath>
-		<LinqToDBT4SybaseClientPath>$(SolutionDir)Nuget\bin\Debug\net472\</LinqToDBT4SybaseClientPath>
-
+		<LinqToDBT4SharedTools>$(SolutionDir).build\bin\NuGet\Debug\</LinqToDBT4SharedTools>
 		<LinqToDBT4TemplatesPath>$(SolutionDir)Source\LinqToDB.Templates\</LinqToDBT4TemplatesPath>
+
+		<LinqToDBT4ClickHouseClientPath>$(LinqToDBT4SharedTools)</LinqToDBT4ClickHouseClientPath>
+		<LinqToDBT4DB2ClientPath>$(LinqToDBT4SharedTools)</LinqToDBT4DB2ClientPath>
+		<LinqToDBT4FirebirdClientPath>$(LinqToDBT4SharedTools)</LinqToDBT4FirebirdClientPath>
+		<LinqToDBT4InformixClientPath>$(LinqToDBT4SharedTools)</LinqToDBT4InformixClientPath>
+		<LinqToDBT4MySqlConnectorClientPath>$(LinqToDBT4SharedTools)</LinqToDBT4MySqlConnectorClientPath>
+		<LinqToDBT4OracleManagedClientPath>$(LinqToDBT4SharedTools)</LinqToDBT4OracleManagedClientPath>
+		<LinqToDBT4NpgsqlClientPath>$(LinqToDBT4SharedTools)</LinqToDBT4NpgsqlClientPath>
+		<LinqToDBT4SQLiteClientPath>$(LinqToDBT4SharedTools)</LinqToDBT4SQLiteClientPath>
+		<LinqToDBT4SQLServerClientPath>$(LinqToDBT4SharedTools)</LinqToDBT4SQLServerClientPath>
+		<LinqToDBT4SybaseDataActionClientPath>$(LinqToDBT4SharedTools)</LinqToDBT4SybaseDataActionClientPath>
+		<LinqToDBT4SybaseClientPath>$(LinqToDBT4SharedTools)</LinqToDBT4SybaseClientPath>
+
 		<LinqToDBT4AccessTemplatesPath>$(SolutionDir)Nuget\Access\</LinqToDBT4AccessTemplatesPath>
 		<LinqToDBT4ClickHouseTemplatesPath>$(SolutionDir)Nuget\ClickHouse\</LinqToDBT4ClickHouseTemplatesPath>
 		<LinqToDBT4DB2TemplatesPath>$(SolutionDir)Nuget\DB2\</LinqToDBT4DB2TemplatesPath>

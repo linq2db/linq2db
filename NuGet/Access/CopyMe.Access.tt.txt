@@ -5,6 +5,11 @@
 <#@ include file="$(LinqToDBT4AccessTemplatesPath)LinqToDB.Access.Tools.ttinclude" once="true" #>
 <#@ include file="$(LinqToDBT4TemplatesPath)PluralizationService.ttinclude"        once="true" #>
 <#
+	// Install linq2db nuget package.
+	// Install one of the following packages:
+	// - https://www.nuget.org/packages/System.Data.OleDb for OLE DB Access provider
+	// - https://www.nuget.org/packages/System.Data.Odbc  for ODBC Access provider
+	//
 	// See LinqToDB.Templates/README.md for more details.
 
 	// Configuring schema load process

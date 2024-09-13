@@ -1040,9 +1040,11 @@ namespace LinqToDB.Tools.ModelGeneration
 						{
 							p.BodyBuilders.Add(() =>
 							{
-								var code = new List<string>();
-								code.Add($"var {parametersVarName} = new []");
-								code.Add("{");
+								var code = new List<string>
+								{
+									$"var {parametersVarName} = new []",
+									"{"
+								};
 
 								for (var i = 0; i < inOrOutputParameters.Count; i++)
 								{
@@ -1056,28 +1058,31 @@ namespace LinqToDB.Tools.ModelGeneration
 									if (pr.IsOut || pr.IsResult)
 										extraInitializers.Add(Tuple.Create("Direction", pr.IsIn ? "ParameterDirection.InputOutput" : (pr.IsResult ? "ParameterDirection.ReturnValue" : "ParameterDirection.Output")));
 
-									if (pr.Size != null && pr.Size.Value != 0 /*&& pr.Size.Value is >= int.MinValue and <= int.MaxValue*/)
-										extraInitializers.Add(Tuple.Create("Size", pr.Size.Value!.ToString(CultureInfo.InvariantCulture)));
+									var size = pr.Size != null && pr.Size.Value != 0 /*&& pr.Size.Value is >= int.MinValue and <= int.MaxValue*/
+										? ", " + pr.Size.Value!.ToString(CultureInfo.InvariantCulture)
+										: "";
 
 									var endLine = i < inOrOutputParameters.Count - 1 && extraInitializers.Count == 0 ? "," : "";
 
 									if (hasInputValue)
 										code.Add(string.Format(
 											CultureInfo.InvariantCulture,
-											"\tnew DataParameter({0}, {1}{2}, {3}{4}){5}",
+											"\tnew DataParameter({0}, {1}{2}, {3}{4}{5}){6}",
 											ToStringLiteral(pr.SchemaName!),
 											LenDiff(maxLenSchema, pr.SchemaName!),
 											pr.ParameterName,
 											LenDiff(maxLenParam, pr.ParameterName!),
 											"LinqToDB.DataType." + pr.DataType,
+											size,
 											endLine));
 									else
 										code.Add(string.Format(
 											CultureInfo.InvariantCulture,
-											"\tnew DataParameter({0}, null, {1}{2}){3}",
+											"\tnew DataParameter({0}, null, {1}{2}{3}){4}",
 											ToStringLiteral(pr.SchemaName!),
 											LenDiff(maxLenParam, pr.ParameterName!),
 											"LinqToDB.DataType." + pr.DataType,
+											size,
 											endLine));
 
 									if (extraInitializers.Count > 0)

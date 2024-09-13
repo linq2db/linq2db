@@ -6,7 +6,9 @@
 
 	<ItemGroup>
 		<ProjectReference Include="..\Source\LinqToDB\LinqToDB.csproj" />
+		<ProjectReference Include="..\Source\LinqToDB.Tools\LinqToDB.Tools.csproj" />
 
+		<PackageReference Include="System.Data.OleDb"    />
 		<PackageReference Include="AdoNetCore.AseClient" />
 		<PackageReference Include="Humanizer.Core"       />
 

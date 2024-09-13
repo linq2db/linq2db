@@ -35,7 +35,7 @@
 		<PackageReference Include="NodaTime" />
 		<!--don't remove, it is used for T4 nugets build-->
 		<PackageReference Include="Humanizer.Core" />
-		<PackageReference Include="LinqKit" />		
+		<PackageReference Include="LinqKit" />
 	</ItemGroup>
 
 	<ItemGroup Condition=" '$(TargetFramework)' == 'net462' ">

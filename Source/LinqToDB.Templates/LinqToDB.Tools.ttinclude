@@ -15,9 +15,9 @@ AppDomain.CurrentDomain.AssemblyResolve += (_, args) =>
 	return AppDomain.CurrentDomain.GetAssemblies().FirstOrDefault(a => a.GetName().Name == requestedAssembly.Name);
 };
 
-var sharedPath = Path.GetDirectoryName(GetAssemblyLocation(typeof(LinqToDB.Data.DataConnection).Assembly));
-
-LoadAssembly("Microsoft.Bcl.AsyncInterfaces", sharedPath);
+//var sharedPath = Path.GetDirectoryName(GetAssemblyLocation(typeof(LinqToDB.Data.DataConnection).Assembly));
+//
+//LoadAssembly("Microsoft.Bcl.AsyncInterfaces", sharedPath);
 #>
 
 <#+

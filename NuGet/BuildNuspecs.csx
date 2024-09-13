@@ -42,7 +42,29 @@ var releasePath = File.Exists(Path.Combine(buildPath, "..", "bin", "NuGet", "Rel
 var binPath     = @"..\bin";
 var t4binPath   = @"..\bin\NuGet\" + releasePath;
 
-foreach (var xmlPath in Directory.GetFiles(Path.GetDirectoryName(path) is [_, ..] d ? d : ".", Path.GetFileName(path)))
+IEnumerable<string> GetFiles(string path)
+{
+	var dir = Path.GetDirectoryName(path);
+
+	if (dir is [_, ..] d)
+	{
+		if (dir.EndsWith("**"))
+		{
+			foreach (var subDir in Directory.GetDirectories(d = (dir[..^2] is [_, ..] sd ? sd : ".")))
+			foreach (var file in Directory.GetFiles(subDir, Path.GetFileName(path)))
+				yield return file;
+		}
+	}
+	else
+	{
+		d = ".";
+	}
+
+	foreach (var file in Directory.GetFiles(".", Path.GetFileName(path)))
+		yield return file;
+}
+
+foreach (var xmlPath in GetFiles(path))
 {
 	WriteLine($"Processing '{xmlPath}'...");
 
@@ -87,12 +109,36 @@ foreach (var xmlPath in Directory.GetFiles(Path.GetDirectoryName(path) is [_, ..
 
 	if (isT4)
 	{
-		SetFile(
-			SetAttribute("src",    @"NuGet\readme.T4.txt"),
-			SetAttribute("target", "readme.txt"));
-		SetFile(
-			SetAttribute("src",    @"NuGet\README.T4.md"),
-			SetAttribute("target", "README.md"));
+		SetFile(SetAttribute("src", t4binPath + @"\linq2db.dll"),                       SetAttribute("target", "tools"));
+		SetFile(SetAttribute("src", t4binPath + @"\Humanizer.dll"),                     SetAttribute("target", "tools"));
+		SetFile(SetAttribute("src", t4binPath + @"\Microsoft.Bcl.AsyncInterfaces.dll"), SetAttribute("target", "tools"));
+		SetFile(SetAttribute("src", @"NuGet\readme.T4.txt"),                            SetAttribute("target", "readme.txt"));
+		SetFile(SetAttribute("src", @"NuGet\README.T4.md"),                             SetAttribute("target", "README.md"));
+		SetFile(SetAttribute("src", @"..\..\Source\LinqToDB.Templates\*.*"),            SetAttribute("target", @"contentFiles\any\any\LinqToDB.Templates"));
+		SetFile(SetAttribute("src", @"..\..\Source\LinqToDB.Templates\*.*"),            SetAttribute("target", @"content\LinqToDB.Templates"));
+
+		{
+			var contentFilesNode = metadata.SelectSingleNode($"//ns:contentFiles", ns);
+			var filesNode = xml.CreateElement("files", nsUri);
+
+			if (contentFilesNode == null)
+			{
+				metadata.AppendChild(xml.CreateSignificantWhitespace("\t"));
+				metadata.AppendChild(contentFilesNode = xml.CreateElement("contentFiles", nsUri));
+				metadata.AppendChild(xml.CreateSignificantWhitespace("\n\t"));
+				contentFilesNode.AppendChild(xml.CreateSignificantWhitespace("\n\t\t\t"));
+			}
+			else
+			{
+				contentFilesNode.AppendChild(xml.CreateSignificantWhitespace("\t"));
+			}
+
+			contentFilesNode.AppendChild(filesNode);
+			contentFilesNode.AppendChild(xml.CreateSignificantWhitespace("\n\t\t"));
+
+			filesNode.Attributes.Append(SetAttribute("include",     "**\\*"));
+			filesNode.Attributes.Append(SetAttribute("buildAction", "None"));
+		}
 	}
 
 	foreach (XmlAttribute attr in xml.SelectNodes("//ns:file/@src", ns)!)
