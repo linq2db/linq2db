@@ -1,23 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Diagnostics;
-using System.Globalization;
-using System.IO;
+using System.Data.Common;
 using System.Linq;
-using System.Text;
 
 using LinqToDB.Data;
-using LinqToDB.DataProvider.SqlServer;
-using LinqToDB.EntityFrameworkCore.Tests.Logging;
-using LinqToDB.Tools;
-using LinqToDB.Tools.Comparers;
 
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Logging.Console;
-
-using NUnit.Framework;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 
 using Tests;
 
@@ -97,6 +86,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 					{
 						var cnb = new MySqlConnectionStringBuilder(connectionString);
 						cnb.Database += "_ef";
+						cnb.PersistSecurityInfo = true;
 						connectionString = cnb.ConnectionString;
 						break;
 					}
@@ -147,6 +137,9 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 
 			var optionsBuilder = new DbContextOptionsBuilder<TContext>();
 			optionsBuilder.UseLoggerFactory(LoggerFactory);
+
+			// 20 cached contexts is not enough for us when tests run for multiple providers
+			optionsBuilder.ConfigureWarnings(warnings => warnings.Ignore(CoreEventId.ManyServiceProvidersCreatedWarning));
 
 			optionsBuilder = ProviderSetup(provider, connectionString, optionsBuilder);
 
