@@ -124,5 +124,18 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 			gc = p.Children.FirstOrDefault(r => r.Id == 22);
 			Assert.That(gc, Is.Not.Null);
 		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4570")]
+		public void Issue4570Test([EFDataSources] string provider)
+		{
+			using var ctx = CreateContext(provider);
+
+			var result = (from ua in ctx.Parents
+						  where ua.ParentId == 55377
+						  && true && ( true || false)
+						  && ctx.Parents.Any()
+						  select 1).ToLinqToDB();
+			result.ToArray();
+		}
 	}
 }
