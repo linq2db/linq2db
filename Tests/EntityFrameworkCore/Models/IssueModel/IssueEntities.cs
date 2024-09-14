@@ -27,4 +27,9 @@ namespace LinqToDB.EntityFrameworkCore.Tests.Models.IssueModel
 
 		public Child Child { get; set; } = null!;
 	}
+
+	public class ShadowTable
+	{
+		public int Id { get; set; }
+	}
 }

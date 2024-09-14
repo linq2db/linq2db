@@ -137,5 +137,17 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 						  select 1).ToLinqToDB();
 			result.ToArray();
 		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/3174")]
+		public async ValueTask Issue3174Test([EFDataSources] string provider)
+		{
+			using var ctx = CreateContext(provider);
+			using var db = ctx.CreateLinqToDBContext();
+
+			var queryable = db.GetTable<ShadowTable>().OrderBy(p => p.Id).Skip(1).Take(2);
+			var linqUsers = await queryable.ToListAsyncLinqToDB();
+			using var tempUsers = await db.CreateTempTableAsync(queryable);
+			var result = tempUsers.ToList();
+		}
 	}
 }

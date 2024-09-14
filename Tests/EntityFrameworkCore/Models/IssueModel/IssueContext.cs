@@ -66,6 +66,13 @@ namespace LinqToDB.EntityFrameworkCore.Tests.Models.IssueModel
 				e.Property(e => e.ChildId);
 			});
 
+			modelBuilder.Entity<ShadowTable>(e =>
+			{
+				e.Property(e => e.Id).ValueGeneratedNever();
+				e.Property<bool>("IsDeleted").IsRequired();
+				e.HasQueryFilter(p => !EF.Property<bool>(p, "IsDeleted"));
+			});
+
 		}
 	}
 }
