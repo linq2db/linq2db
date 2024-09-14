@@ -10,6 +10,8 @@ using Microsoft.EntityFrameworkCore;
 
 using NUnit.Framework;
 
+using Tests;
+
 namespace LinqToDB.EntityFrameworkCore.Tests
 {
 	[TestFixture]
@@ -88,7 +90,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 #endif
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4603")]
-		public async ValueTask Issue4603Test([EFDataSources] string provider)
+		public async ValueTask Issue4603Test([EFDataSources(TestProvName.AllMySql57)] string provider)
 		{
 			using var ctx = CreateContext(provider);
 			using var linq2DbCtx = ctx.CreateLinqToDBContext();
@@ -148,6 +150,24 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 			var linqUsers = await queryable.ToListAsyncLinqToDB();
 			using var tempUsers = await db.CreateTempTableAsync(queryable);
 			var result = tempUsers.ToList();
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/3491")]
+		public void Issue3491Test([EFIncludeDataSources(TestProvName.AllPostgreSQL)] string provider)
+		{
+			using var ctx = CreateContext(provider);
+			using var db = ctx.CreateLinqToDBContext();
+
+			db
+				.GetTable<PostgreTable>()
+				.Where(x => x.Id == 1)
+				.Set(
+					d => Sql.Row(d.Title, d.SearchVector),
+					t => (from x in db.GetTable<PostgreTable>()
+						  where t.Id == x.Id
+						  select Sql.Row(t.Title, EF.Functions.ToTsVector("test")))
+						  .Single())
+			.Update();
 		}
 	}
 }

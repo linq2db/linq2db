@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
+
+using NpgsqlTypes;
 
 namespace LinqToDB.EntityFrameworkCore.Tests.Models.IssueModel
 {
@@ -31,5 +32,12 @@ namespace LinqToDB.EntityFrameworkCore.Tests.Models.IssueModel
 	public class ShadowTable
 	{
 		public int Id { get; set; }
+	}
+
+	public class PostgreTable
+	{
+		public int Id { get; set; }
+		public string Title { get; set; } = null!;
+		public NpgsqlTsVector? SearchVector { get; set; }
 	}
 }

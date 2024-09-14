@@ -10,6 +10,8 @@ namespace LinqToDB.EntityFrameworkCore.Tests.Models.IssueModel
 
 		public DbSet<Parent> Parents { get; set; } = null!;
 
+		public DbSet<PostgreTable> PostgreTestTable { get; set; } = null!;
+
 		public IssueContext(DbContextOptions options) : base(options)
 		{
 		}
@@ -71,6 +73,13 @@ namespace LinqToDB.EntityFrameworkCore.Tests.Models.IssueModel
 				e.Property(e => e.Id).ValueGeneratedNever();
 				e.Property<bool>("IsDeleted").IsRequired();
 				e.HasQueryFilter(p => !EF.Property<bool>(p, "IsDeleted"));
+			});
+
+			modelBuilder.Entity<PostgreTable>(e =>
+			{
+				e.Property(e => e.Id).ValueGeneratedNever();
+				e.Property(e => e.Title);
+				e.Property(e => e.SearchVector);
 			});
 
 		}
