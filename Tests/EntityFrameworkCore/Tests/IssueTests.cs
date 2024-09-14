@@ -1,4 +1,5 @@
 ﻿using System.Linq;
+using System.Threading.Tasks;
 
 using FluentAssertions;
 
@@ -17,6 +18,19 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 		protected override IssueContext CreateProviderContext(string provider, DbContextOptions<IssueContext> options)
 		{
 			return new IssueContext(options);
+		}
+
+		protected override void OnDatabaseCreated(string provider, IssueContext context)
+		{
+			base.OnDatabaseCreated(provider, context);
+			using var db = context.CreateLinqToDBContext();
+
+			db.Insert(new Parent() { Id = 1, ParentId = 2 });
+			db.Insert(new Parent() { Id = 2 });
+			db.Insert(new Child() { Id = 11, ParentId = 1 });
+			db.Insert(new Child() { Id = 12, ParentId = 2 });
+			db.Insert(new GrandChild() { Id = 21, ChildId = 11 });
+			db.Insert(new GrandChild() { Id = 22, ChildId = 12 });
 		}
 
 		[Test]
@@ -72,5 +86,43 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 			_ = ctx.Patents.AsNoTrackingWithIdentityResolution().ToLinqToDB().ToArray();
 		}
 #endif
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4603")]
+		public async ValueTask Issue4603Test([EFDataSources] string provider)
+		{
+			using var ctx = CreateContext(provider);
+			using var linq2DbCtx = ctx.CreateLinqToDBContext();
+
+			var cte = linq2DbCtx.GetCte<Parent>(
+				hierarchy =>
+				{
+					return (ctx.Parents
+					.Include(x=> x.Children)
+					.ThenInclude(x => x.GrandChildren)
+					.Select(@t => @t)).Concat(ctx.Parents.Join(hierarchy, o => o.ParentId, c => c.Id, (d, c) => d));
+				});
+
+			var cteResult = await cte.ToListAsyncLinqToDB();
+
+			Assert.That(cteResult, Has.Count.EqualTo(2));
+
+			var p = cteResult.FirstOrDefault(r => r.Id == 1);
+			Assert.That(p, Is.Not.Null);
+			Assert.That(p.Children, Has.Count.EqualTo(1));
+			var c = p.Children.FirstOrDefault(r => r.Id == 11);
+			Assert.That(c, Is.Not.Null);
+			Assert.That(c.GrandChildren, Has.Count.EqualTo(1));
+			var gc = p.Children.FirstOrDefault(r => r.Id == 21);
+			Assert.That(gc, Is.Not.Null);
+
+			p = cteResult.FirstOrDefault(r => r.Id == 2);
+			Assert.That(p, Is.Not.Null);
+			Assert.That(p.Children, Has.Count.EqualTo(1));
+			c = p.Children.FirstOrDefault(r => r.Id == 12);
+			Assert.That(c, Is.Not.Null);
+			Assert.That(c.GrandChildren, Has.Count.EqualTo(1));
+			gc = p.Children.FirstOrDefault(r => r.Id == 22);
+			Assert.That(gc, Is.Not.Null);
+		}
 	}
 }

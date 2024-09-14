@@ -8,6 +8,8 @@ namespace LinqToDB.EntityFrameworkCore.Tests.Models.IssueModel
 
 		public DbSet<Patent> Patents { get; set; } = null!;
 
+		public DbSet<Parent> Parents { get; set; } = null!;
+
 		public IssueContext(DbContextOptions options) : base(options)
 		{
 		}
@@ -45,6 +47,24 @@ namespace LinqToDB.EntityFrameworkCore.Tests.Models.IssueModel
 				.WithOne(pa => pa.Patent)
 				.HasForeignKey<PatentAssessment>(pa => pa.PatentId)
 				.OnDelete(DeleteBehavior.Restrict);
+
+			modelBuilder.Entity<Parent>(e =>
+			{
+				e.Property(e => e.Id).ValueGeneratedNever();
+				e.Property(e => e.ParentId);
+				e.HasMany(e => e.Children).WithOne(e => e.Parent).HasForeignKey(e => e.ParentId);
+			});
+			modelBuilder.Entity<Child>(e =>
+			{
+				e.Property(e => e.Id).ValueGeneratedNever();
+				e.Property(e => e.ParentId);
+				e.HasMany(e => e.GrandChildren).WithOne(e => e.Child).HasForeignKey(e => e.ChildId);
+			});
+			modelBuilder.Entity<GrandChild>(e =>
+			{
+				e.Property(e => e.Id).ValueGeneratedNever();
+				e.Property(e => e.ChildId);
+			});
 
 		}
 	}
