@@ -9,6 +9,8 @@ namespace LinqToDB.EntityFrameworkCore.Tests.Models.IssueModel
 		public int Id { get; set; }
 		public int? ParentId { get; set; }
 
+		public Parent ParentsParent { get; set; } = null!;
+		public ICollection<Parent> ParentChildren { get; set; } = null!;
 		public ICollection<Child> Children { get; set; } = null!;
 	}
 
@@ -32,12 +34,5 @@ namespace LinqToDB.EntityFrameworkCore.Tests.Models.IssueModel
 	public class ShadowTable
 	{
 		public int Id { get; set; }
-	}
-
-	public class PostgreTable
-	{
-		public int Id { get; set; }
-		public string Title { get; set; } = null!;
-		public NpgsqlTsVector? SearchVector { get; set; }
 	}
 }

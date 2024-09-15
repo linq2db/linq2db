@@ -1,10 +1,12 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using System.Threading.Tasks;
 
 using FluentAssertions;
 
 using LinqToDB.DataProvider.SqlServer;
 using LinqToDB.EntityFrameworkCore.Tests.Models.IssueModel;
+using LinqToDB.EntityFrameworkCore.Tests.PostgreSQL.Models.IssueModel;
 
 using Microsoft.EntityFrameworkCore;
 
@@ -15,24 +17,18 @@ using Tests;
 namespace LinqToDB.EntityFrameworkCore.Tests
 {
 	[TestFixture]
-	public class IssueTests : ContextTestBase<IssueContext>
+	public class IssueTests : ContextTestBase<IssueContextBase>
 	{
-		protected override IssueContext CreateProviderContext(string provider, DbContextOptions<IssueContext> options)
+		protected override IssueContextBase CreateProviderContext(string provider, DbContextOptions<IssueContextBase> options)
 		{
-			return new IssueContext(options);
-		}
-
-		protected override void OnDatabaseCreated(string provider, IssueContext context)
-		{
-			base.OnDatabaseCreated(provider, context);
-			using var db = context.CreateLinqToDBContext();
-
-			db.Insert(new Parent() { Id = 1, ParentId = 2 });
-			db.Insert(new Parent() { Id = 2 });
-			db.Insert(new Child() { Id = 11, ParentId = 1 });
-			db.Insert(new Child() { Id = 12, ParentId = 2 });
-			db.Insert(new GrandChild() { Id = 21, ChildId = 11 });
-			db.Insert(new GrandChild() { Id = 22, ChildId = 12 });
+			return provider switch
+			{
+				_ when provider.IsAnyOf(TestProvName.AllPostgreSQL) => new PostgreSQL.Models.IssueModel.IssueContext(options),
+				_ when provider.IsAnyOf(TestProvName.AllMySql) => new Pomelo.Models.IssueModel.IssueContext(options),
+				_ when provider.IsAnyOf(TestProvName.AllSQLite) => new SQLite.Models.IssueModel.IssueContext(options),
+				_ when provider.IsAnyOf(TestProvName.AllSqlServer) => new SqlServer.Models.IssueModel.IssueContext(options),
+				_ => throw new InvalidOperationException($"{nameof(CreateProviderContext)} is not implemented for provider {provider}")
+			};
 		}
 
 		[Test]
@@ -167,7 +163,59 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 						  where t.Id == x.Id
 						  select Sql.Row(t.Title, EF.Functions.ToTsVector("test")))
 						  .Single())
-			.Update();
+				.Update();
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4012")]
+		public void Issue4012Test([EFDataSources(TestProvName.AllMySql57)] string provider)
+		{
+			using var ctx = CreateContext(provider);
+			using var db = ctx.CreateLinqToDBContext();
+
+			var commentsHierarchyCteAns = db.GetCte<Parent>(commentHierarchy =>
+			{
+				return db.GetTable<Parent>()
+				.Concat
+				(
+					from c in db.GetTable<Parent>()
+					from c2 in commentHierarchy.InnerJoin(eh => c.Id == eh.ParentId)
+					select c
+				);
+			});
+			var commentsHierarchyCteDes = db.GetCte<Parent>(commentHierarchy =>
+			{
+				return db.GetTable<Parent>()
+				.Concat
+				(
+					from c in db.GetTable<Parent>()
+					from c2 in commentHierarchy.InnerJoin(eh => c.ParentId == eh.Id)
+					select c
+				);
+			});
+
+			var query = commentsHierarchyCteAns.Union(commentsHierarchyCteDes);
+
+			var result = query.LoadWith(c => c.Children).ToList();
+
+			Assert.That(result, Has.Count.EqualTo(2));
+
+			var p = result.FirstOrDefault(r => r.Id == 1);
+			Assert.That(p, Is.Not.Null);
+			Assert.That(p.Children, Has.Count.EqualTo(1));
+			var c = p.Children.FirstOrDefault(r => r.Id == 11);
+			Assert.That(c, Is.Not.Null);
+			Assert.That(c.GrandChildren, Has.Count.EqualTo(1));
+			var gc = p.Children.FirstOrDefault(r => r.Id == 21);
+			Assert.That(gc, Is.Not.Null);
+
+			p = result.FirstOrDefault(r => r.Id == 2);
+			Assert.That(p, Is.Not.Null);
+			Assert.That(p.Children, Has.Count.EqualTo(1));
+			c = p.Children.FirstOrDefault(r => r.Id == 12);
+			Assert.That(c, Is.Not.Null);
+			Assert.That(c.GrandChildren, Has.Count.EqualTo(1));
+			gc = p.Children.FirstOrDefault(r => r.Id == 22);
+			Assert.That(gc, Is.Not.Null);
 		}
 	}
 }

@@ -2,17 +2,17 @@
 
 namespace LinqToDB.EntityFrameworkCore.Tests.Models.IssueModel
 {
-	public class IssueContext : DbContext
+	public abstract class IssueContextBase : DbContext
 	{
 		public DbSet<Issue73Entity> Issue73Entities { get; set; } = null!;
 
 		public DbSet<Patent> Patents { get; set; } = null!;
 
 		public DbSet<Parent> Parents { get; set; } = null!;
+		public DbSet<Child> Children { get; set; } = null!;
+		public DbSet<GrandChild> GrandChildren { get; set; } = null!;
 
-		public DbSet<PostgreTable> PostgreTestTable { get; set; } = null!;
-
-		public IssueContext(DbContextOptions options) : base(options)
+		protected IssueContextBase(DbContextOptions options) : base(options)
 		{
 		}
 
@@ -42,7 +42,6 @@ namespace LinqToDB.EntityFrameworkCore.Tests.Models.IssueModel
 					},
 				]);
 			});
-
 			modelBuilder
 				.Entity<Patent>()
 				.HasOne(p => p.Assessment!)
@@ -53,19 +52,26 @@ namespace LinqToDB.EntityFrameworkCore.Tests.Models.IssueModel
 			modelBuilder.Entity<Parent>(e =>
 			{
 				e.Property(e => e.Id).ValueGeneratedNever();
-				e.Property(e => e.ParentId);
+				e.Property(e => e.ParentId).IsRequired(false);
 				e.HasMany(e => e.Children).WithOne(e => e.Parent).HasForeignKey(e => e.ParentId);
+				e.HasOne(e => e.ParentsParent).WithMany(e => e.ParentChildren).HasForeignKey(e => e.ParentId).OnDelete(DeleteBehavior.NoAction);
+
+				e.HasData(new Parent() { Id = 2 }, new Parent() { Id = 1, ParentId = 2 });
 			});
 			modelBuilder.Entity<Child>(e =>
 			{
 				e.Property(e => e.Id).ValueGeneratedNever();
 				e.Property(e => e.ParentId);
 				e.HasMany(e => e.GrandChildren).WithOne(e => e.Child).HasForeignKey(e => e.ChildId);
+
+				e.HasData(new Child() { Id = 11, ParentId = 1 }, new Child() { Id = 12, ParentId = 2 });
 			});
 			modelBuilder.Entity<GrandChild>(e =>
 			{
 				e.Property(e => e.Id).ValueGeneratedNever();
 				e.Property(e => e.ChildId);
+
+				e.HasData(new GrandChild() { Id = 21, ChildId = 11 }, new GrandChild() { Id = 22, ChildId = 12 });
 			});
 
 			modelBuilder.Entity<ShadowTable>(e =>
@@ -74,14 +80,6 @@ namespace LinqToDB.EntityFrameworkCore.Tests.Models.IssueModel
 				e.Property<bool>("IsDeleted").IsRequired();
 				e.HasQueryFilter(p => !EF.Property<bool>(p, "IsDeleted"));
 			});
-
-			modelBuilder.Entity<PostgreTable>(e =>
-			{
-				e.Property(e => e.Id).ValueGeneratedNever();
-				e.Property(e => e.Title);
-				e.Property(e => e.SearchVector);
-			});
-
 		}
 	}
 }
