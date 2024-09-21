@@ -9,6 +9,7 @@ using FluentAssertions;
 using LinqToDB.DataProvider.SqlServer;
 using LinqToDB.EntityFrameworkCore.Tests.Models.IssueModel;
 using LinqToDB.EntityFrameworkCore.Tests.PostgreSQL.Models.IssueModel;
+using LinqToDB.EntityFrameworkCore.Tests.SqlServer.Models.IssueModel;
 
 using Microsoft.EntityFrameworkCore;
 
@@ -401,6 +402,19 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 				})
 				.ToLinqToDB()
 				.ToArray();
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db.EntityFrameworkCore/issues/129")]
+		public void Issue129Test([EFIncludeDataSources(TestProvName.AllSqlServer)] string provider)
+		{
+			using var ctx = CreateContext(provider);
+			using var db = ctx.CreateLinqToDBContext();
+
+			var keyColumn = db.MappingSchema.GetEntityDescriptor(typeof(Issue129Table)).Columns.Single(c => c.ColumnName == nameof(Issue129Table.Key));
+
+			Assert.That(keyColumn.IsIdentity, Is.False);
+
+			using var t = db.CreateTempTable<Issue129Table>();
 		}
 	}
 
