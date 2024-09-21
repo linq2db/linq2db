@@ -39,6 +39,15 @@ namespace LinqToDB.EntityFrameworkCore.Tests.Models.IssueModel
 		public int Id { get; set; }
 	}
 
+	public class TypesTable
+	{
+		public int Id { get; set; }
+		public DateTimeOffset DateTimeOffset { get; set; }
+		public DateTimeOffset? DateTimeOffsetN { get; set; }
+		public DateTimeOffset DateTimeOffsetWithConverter { get; set; }
+		public DateTimeOffset? DateTimeOffsetNWithConverter { get; set; }
+	}
+
 	public class IdentityTable
 	{
 		[DatabaseGenerated(DatabaseGeneratedOption.Identity)] public int Id { get; private set; }

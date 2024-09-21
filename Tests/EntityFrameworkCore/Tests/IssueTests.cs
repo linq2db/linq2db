@@ -305,5 +305,36 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 			Assert.That(result, Has.Length.EqualTo(2));
 			Assert.That(result[0].Master, Is.EqualTo(result[1].Master));
 		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4625")]
+		public void Issue4625TestDefault([EFDataSources] string provider)
+		{
+			using var ctx = CreateContext(provider);
+
+			var result = ctx.Types
+				.ToLinqToDB()
+				.Where(x => x.Id == 2)
+				.Set(x => x.DateTimeOffset, TestData.DateTime)
+				.Set(x => x.DateTimeOffsetN, TestData.DateTime)
+				.Update();
+
+			Assert.That(result, Is.EqualTo(1));
+		}
+
+		[ActiveIssue]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4625")]
+		public void Issue4625TestWithConverter([EFDataSources] string provider)
+		{
+			using var ctx = CreateContext(provider);
+
+			var result = ctx.Types
+				.ToLinqToDB()
+				.Where(x => x.Id == 2)
+				.Set(x => x.DateTimeOffsetWithConverter, TestData.DateTime)
+				.Set(x => x.DateTimeOffsetNWithConverter, TestData.DateTime)
+				.Update();
+
+			Assert.That(result, Is.EqualTo(1));
+		}
 	}
 }

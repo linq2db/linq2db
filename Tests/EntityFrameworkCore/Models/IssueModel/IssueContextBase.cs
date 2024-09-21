@@ -1,4 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
+
+using Tests;
 
 namespace LinqToDB.EntityFrameworkCore.Tests.Models.IssueModel
 {
@@ -18,6 +21,8 @@ namespace LinqToDB.EntityFrameworkCore.Tests.Models.IssueModel
 
 		public DbSet<Master> Masters { get; set; } = null!;
 		public DbSet<Detail> Details { get; set; } = null!;
+
+		public DbSet<TypesTable> Types { get; set; } = null!;
 
 		protected IssueContextBase(DbContextOptions options) : base(options)
 		{
@@ -105,6 +110,20 @@ namespace LinqToDB.EntityFrameworkCore.Tests.Models.IssueModel
 			modelBuilder.Entity<Detail>(e =>
 			{
 				e.HasData(new Detail() { Id = 1, MasterId = 1 }, new Detail() { Id = 2, MasterId = 1 });
+			});
+
+			modelBuilder.Entity<TypesTable>(e =>
+			{
+				e.Property(e => e.DateTimeOffsetWithConverter).HasConversion(new DateTimeOffsetToBinaryConverter());
+				e.Property(e => e.DateTimeOffsetNWithConverter).HasConversion(new DateTimeOffsetToBinaryConverter());
+
+				e.HasData(
+					new TypesTable() { Id = 1 },
+					new TypesTable()
+					{
+						Id = 2,
+						DateTimeOffset = TestData.DateTimeOffset,
+						DateTimeOffsetN = TestData.DateTimeOffset });
 			});
 		}
 	}
