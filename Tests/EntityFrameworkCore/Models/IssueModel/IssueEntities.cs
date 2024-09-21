@@ -136,4 +136,27 @@ namespace LinqToDB.EntityFrameworkCore.Tests.Models.IssueModel
 		public int MasterId { get; set; }
 		public Master Master { get; set; } = null!;
 	}
+
+	#region Issue 122
+	public class Issue4627Container
+	{
+		public int Id { get; set; }
+		public virtual ICollection<Issue4627Item> Items { get; set; } = null!;
+		public virtual ICollection<Issue4627ChildItem> ChildItems { get; set; } = null!;
+	}
+
+	public class Issue4627Item
+	{
+		public int Id { get; set; }
+		public int ContainerId { get; set; }
+		public virtual Issue4627ChildItem Child { get; set; } = null!;
+		public virtual Issue4627Container Container { get; set; } = null!;
+	}
+
+	public class Issue4627ChildItem
+	{
+		public int Id { get; set; }
+		public virtual Issue4627Item Parent { get; set; } = null!;
+	}
+	#endregion
 }

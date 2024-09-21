@@ -385,6 +385,23 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 					  .ToLinqToDB()
 					  .ToArray();
 		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4627")]
+		public void Issue4627Test([EFDataSources] string provider)
+		{
+			using var ctx = CreateContext(provider);
+
+			_ = ctx.Containers
+				.Select(c => new
+				{
+					ChildItems = c.ChildItems.Select(ch => new
+					{
+						ContainerId = ch.Parent.ContainerId,
+					}),
+				})
+				.ToLinqToDB()
+				.ToArray();
+		}
 	}
 
 	#region Test Extensions

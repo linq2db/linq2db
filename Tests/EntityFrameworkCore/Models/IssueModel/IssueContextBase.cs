@@ -24,6 +24,8 @@ namespace LinqToDB.EntityFrameworkCore.Tests.Models.IssueModel
 
 		public DbSet<TypesTable> Types { get; set; } = null!;
 
+		public DbSet<Issue4627Container> Containers { get; set; } = null!;
+
 		protected IssueContextBase(DbContextOptions options) : base(options)
 		{
 		}
@@ -124,6 +126,33 @@ namespace LinqToDB.EntityFrameworkCore.Tests.Models.IssueModel
 						Id = 2,
 						DateTimeOffset = TestData.DateTimeOffset,
 						DateTimeOffsetN = TestData.DateTimeOffset });
+			});
+
+			modelBuilder.Entity<Issue4627Container>(e =>
+			{
+				e.HasKey(x => x.Id);
+				e.Property(x => x.Id).UseIdentityColumn();
+			});
+			modelBuilder.Entity<Issue4627Item>(e =>
+			{
+				e.HasKey(x => x.Id);
+				e.Property(x => x.Id).UseIdentityColumn();
+
+				e.HasOne(a => a.Container)
+					.WithMany(b => b.Items)
+					.IsRequired()
+					.HasForeignKey(a => a.ContainerId);
+			});
+			modelBuilder.Entity<Issue4627ChildItem>(e =>
+			{
+				e.HasKey(e => e.Id);
+				e.Property(e => e.Id).ValueGeneratedNever();
+
+				// semantically each ChildItem is also an Item, hence one-to-one relationship with Id as FK
+				e.HasOne(a => a.Parent)
+					.WithOne(b => b.Child)
+					.IsRequired()
+					.HasForeignKey<Issue4627ChildItem>(a => a.Id);
 			});
 		}
 	}
