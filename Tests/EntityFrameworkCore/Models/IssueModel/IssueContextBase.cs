@@ -16,6 +16,9 @@ namespace LinqToDB.EntityFrameworkCore.Tests.Models.IssueModel
 
 		public DbSet<Issue4624ItemTicketDate> Issue4624ItemTicketDates { get; set; } = null!;
 
+		public DbSet<Master> Masters { get; set; } = null!;
+		public DbSet<Detail> Details { get; set; } = null!;
+
 		protected IssueContextBase(DbContextOptions options) : base(options)
 		{
 		}
@@ -92,6 +95,17 @@ namespace LinqToDB.EntityFrameworkCore.Tests.Models.IssueModel
 			});
 			modelBuilder.Entity<Issue4624Entry>();
 			modelBuilder.Entity<Issue4624ItemTicketDate>();
+
+			modelBuilder.Entity<Master>(e =>
+			{
+				e.HasMany(e => e.Details).WithOne(e => e.Master).HasForeignKey(e => e.MasterId);
+
+				e.HasData(new Master() { Id = 1 });
+			});
+			modelBuilder.Entity<Detail>(e =>
+			{
+				e.HasData(new Detail() { Id = 1, MasterId = 1 }, new Detail() { Id = 2, MasterId = 1 });
+			});
 		}
 	}
 }

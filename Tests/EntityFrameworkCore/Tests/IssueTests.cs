@@ -271,7 +271,39 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 				});
 
 			var result = query.ToList();
+		}
 
+		[Test(Description = "https://github.com/linq2db/linq2db.EntityFrameworkCore/issues/66")]
+		public void Issue66TestNoTracking([EFDataSources] string provider, [Values] bool efFirst)
+		{
+			using var ctx = CreateContext(provider);
+
+			var result = efFirst
+				? ctx.Details.Include(d => d.Master).AsNoTracking().ToLinqToDB().ToArray()
+				: ctx.Details.Include(d => d.Master).ToLinqToDB().AsNoTracking().ToArray();
+
+			Assert.That(result, Has.Length.EqualTo(2));
+			if (efFirst)
+			{
+				Assert.That(result[0].Master, Is.Not.EqualTo(result[1].Master));
+			}
+			else
+			{
+				Assert.That(result[0].Master, Is.EqualTo(result[1].Master));
+			}
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db.EntityFrameworkCore/issues/66")]
+		public void Issue66TestWithTracking([EFDataSources] string provider, [Values] bool efFirst)
+		{
+			using var ctx = CreateContext(provider);
+
+			var result = efFirst
+				? ctx.Details.Include(d => d.Master).AsTracking().ToLinqToDB().ToArray()
+				: ctx.Details.Include(d => d.Master).ToLinqToDB().AsTracking().ToArray();
+
+			Assert.That(result, Has.Length.EqualTo(2));
+			Assert.That(result[0].Master, Is.EqualTo(result[1].Master));
 		}
 	}
 }

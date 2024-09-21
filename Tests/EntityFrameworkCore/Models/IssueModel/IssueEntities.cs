@@ -111,4 +111,19 @@ namespace LinqToDB.EntityFrameworkCore.Tests.Models.IssueModel
 		public ICollection<Issue4624Entry> Entries { get; set; }
 	}
 	#endregion
+
+	public class Master
+	{
+		public int Id { get; set; }
+
+		public ICollection<Detail> Details { get; set; } = null!;
+	}
+
+	public class Detail
+	{
+		public int Id { get; set; }
+
+		public int MasterId { get; set; }
+		public Master Master { get; set; } = null!;
+	}
 }
