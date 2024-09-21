@@ -14,6 +14,8 @@ namespace LinqToDB.EntityFrameworkCore.Tests.Models.IssueModel
 
 		public DbSet<IdentityTable> Identities { get; set; } = null!;
 
+		public DbSet<Issue4624ItemTicketDate> Issue4624ItemTicketDates { get; set; } = null!;
+
 		protected IssueContextBase(DbContextOptions options) : base(options)
 		{
 		}
@@ -82,6 +84,14 @@ namespace LinqToDB.EntityFrameworkCore.Tests.Models.IssueModel
 				e.Property<bool>("IsDeleted").IsRequired();
 				e.HasQueryFilter(p => !EF.Property<bool>(p, "IsDeleted"));
 			});
+
+			modelBuilder.Entity<Issue4624Item>(e =>
+			{
+				e.HasMany(e => e.ItemTicketDates).WithOne(e => e.Item).HasForeignKey(e => e.ItemId);
+				e.HasMany(e => e.Entries).WithOne(e => e.Item).HasForeignKey(e => e.AclItemId);
+			});
+			modelBuilder.Entity<Issue4624Entry>();
+			modelBuilder.Entity<Issue4624ItemTicketDate>();
 		}
 	}
 }

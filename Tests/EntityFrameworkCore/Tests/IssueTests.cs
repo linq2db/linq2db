@@ -249,5 +249,29 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 				Assert.That(result[1].Name, Is.EqualTo("Baz"));
 			});
 		}
+
+		[ActiveIssue]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4624")]
+		public void Issue4624Test([EFDataSources] string provider)
+		{
+			using var ctx = CreateContext(provider);
+
+			var query = ctx.Issue4624ItemTicketDates.ToLinqToDB()
+				.Where(p => p.Id < 1000)
+				.GroupBy(p => p.Item)
+				.Select(p => new
+				{
+					AclItemId = p.Key.Id,
+					AclItemName = p.Key.Name,
+					TotalEntryCount = p.Key.Entries.Sum(ec => ec.EntriesCount),
+					TotalEntryAllowed = p.Key.ItemTicketDates.Select(at => new
+					{
+						EntryCount = at.EntryCount
+					}).ToList()
+				});
+
+			var result = query.ToList();
+
+		}
 	}
 }
