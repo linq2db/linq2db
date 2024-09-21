@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Threading.Tasks;
 
 using FluentAssertions;
@@ -336,5 +338,47 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 
 			Assert.That(result, Is.EqualTo(1));
 		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4626")]
+		public void Issue4626Test([EFDataSources(TestProvName.AllSQLite, TestProvName.AllMariaDB, TestProvName.AllMySql57)] string provider)
+		{
+			using var ctx = CreateContext(provider);
+
+			_ = (from c in ctx.Parents
+					  select new
+					  {
+						  Key = c.Id,
+						  Subquery = (
+						  from p in c.Children
+						  group p by p.ParentId into g
+						  select new
+						  {
+							  Tag = g.Key,
+							  Sum = g.Sum(p => p.Id),
+							  Des1 = g.Issue4626AnyValue1(p => p.Name),
+							  Des2 = g.Issue4626AnyValue2(p => p.Name),
+							  Des3 = g.StringAggregate(", ", p => p.Name).ToValue(),
+						  }).ToArray()
+					  })
+					  .ToLinqToDB()
+					  .ToArray();
+		}
 	}
+
+	#region Test Extensions
+	public static class TestExtensions
+	{
+		[Sql.Function("ANY_VALUE", ServerSideOnly = true, IsAggregate = true, ArgIndices = new[] { 0 })]
+		public static TItem Issue4626AnyValue1<TSource, TItem>(this IEnumerable<TSource> src, Expression<Func<TSource, TItem>> value)
+		{
+			throw new InvalidOperationException();
+		}
+
+		[Sql.Extension("ANY_VALUE({value})", ServerSideOnly = true, IsAggregate = true)]
+		public static TItem Issue4626AnyValue2<TSource, TItem>(this IEnumerable<TSource> src, [ExprParameter] Expression<Func<TSource, TItem>> value)
+		{
+			throw new InvalidOperationException();
+		}
+	}
+	#endregion
 }

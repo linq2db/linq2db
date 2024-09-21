@@ -21,6 +21,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests.Models.IssueModel
 	{
 		public int Id { get; set; }
 		public int ParentId { get; set; }
+		public string? Name { get; set; }
 
 		public Parent Parent { get; set; } = null!;
 		public ICollection<GrandChild> GrandChildren { get; set; } = null!;
