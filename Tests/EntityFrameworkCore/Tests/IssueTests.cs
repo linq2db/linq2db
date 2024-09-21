@@ -217,5 +217,37 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 			gc = p.Children.FirstOrDefault(r => r.Id == 22);
 			Assert.That(gc, Is.Not.Null);
 		}
+
+#if NET6_0
+		[ActiveIssue(Configurations = [TestProvName.AllPostgreSQL, TestProvName.AllMySql])]
+#else
+		[ActiveIssue(TestProvName.AllPostgreSQL)]
+#endif
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4333")]
+		public void Issue4333Test([EFDataSources] string provider)
+		{
+			using var ctx = CreateContext(provider);
+			using var db = ctx.CreateLinqToDBContext();
+
+			var data = new[]
+			{
+				new IdentityTable() { Name = "Bar" },
+				new IdentityTable() { Name = "Baz" },
+			};
+
+			using var table = db.CreateTempTable(data);
+
+			var result = table.OrderBy(e => e.Id).ToArray();
+
+			Assert.That(result, Has.Length.EqualTo(2));
+
+			Assert.Multiple(() =>
+			{
+				Assert.That(result[0].Id, Is.EqualTo(1));
+				Assert.That(result[0].Name, Is.EqualTo("Bar"));
+				Assert.That(result[1].Id, Is.EqualTo(2));
+				Assert.That(result[1].Name, Is.EqualTo("Baz"));
+			});
+		}
 	}
 }

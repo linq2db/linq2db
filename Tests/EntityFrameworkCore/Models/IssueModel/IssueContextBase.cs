@@ -12,6 +12,8 @@ namespace LinqToDB.EntityFrameworkCore.Tests.Models.IssueModel
 		public DbSet<Child> Children { get; set; } = null!;
 		public DbSet<GrandChild> GrandChildren { get; set; } = null!;
 
+		public DbSet<IdentityTable> Identities { get; set; } = null!;
+
 		protected IssueContextBase(DbContextOptions options) : base(options)
 		{
 		}
