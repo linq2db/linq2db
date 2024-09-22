@@ -181,4 +181,22 @@ namespace LinqToDB.EntityFrameworkCore.Tests.Models.IssueModel
 		public virtual ICollection<Issue4628Base> Values { get; set; } = null!;
 	}
 	#endregion
+
+	#region Issue 4629
+	public class Issue4629Post
+	{
+		public int Id { get; set; }
+
+		public virtual ICollection<Issue4629Tag> Tags { get; set; } = null!;
+	}
+
+	public class Issue4629Tag
+	{
+		public int Id { get; set; }
+		public int PostId { get; set; }
+		public int Weight { get; set; }
+
+		public Issue4629Post Post { get; set; } = null!;
+	}
+	#endregion
 }

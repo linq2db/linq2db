@@ -468,6 +468,33 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 				Assert.That(typedValue.SomeValue, Is.EqualTo("Value 11"));
 			});
 		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4629")]
+		public void Issue4629Test([EFDataSources(TestProvName.AllMySql57)] string provider)
+		{
+			using var ctx = CreateContext(provider);
+
+			var posts = ctx.Issue4629Posts.AsQueryable()
+				.OrderBy(p => p.Tags.Sum(t => t.Weight))
+				.Where(p => p.Tags.Where(t => t.Weight > 1) // this line remove ORDER BY
+					.Sum(t => t.Weight) > 5)
+				.Take(10)
+				.Select(id => new
+				{
+					Count = Sql.Ext.Count().Over().ToValue(),
+					Id = id,
+				})
+				.ToLinqToDB().ToArray();
+
+			Assert.That(posts, Has.Length.EqualTo(2));
+			Assert.Multiple(() =>
+			{
+				Assert.That(posts[0].Id.Id, Is.EqualTo(2));
+				Assert.That(posts[0].Count, Is.EqualTo(2));
+				Assert.That(posts[1].Id.Id, Is.EqualTo(1));
+				Assert.That(posts[1].Count, Is.EqualTo(2));
+			});
+		}
 	}
 
 	#region Test Extensions

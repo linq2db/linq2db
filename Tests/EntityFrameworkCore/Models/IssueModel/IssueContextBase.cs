@@ -28,6 +28,9 @@ namespace LinqToDB.EntityFrameworkCore.Tests.Models.IssueModel
 
 		public DbSet<Issue4628Other> Issue4628Others { get; set; } = null!;
 
+		public DbSet<Issue4629Post> Issue4629Posts { get; set; } = null!;
+		public DbSet<Issue4629Tag> Issue4629Tags { get; set; } = null!;
+
 		protected IssueContextBase(DbContextOptions options) : base(options)
 		{
 		}
@@ -164,6 +167,23 @@ namespace LinqToDB.EntityFrameworkCore.Tests.Models.IssueModel
 			modelBuilder.Entity<Issue4628Inherited>(e =>
 			{
 				e.HasData(new Issue4628Inherited() { Id = 11, OtherId = 1, SomeValue = "Value 11" });
+			});
+
+			modelBuilder.Entity<Issue4629Post>(e =>
+			{
+				e.HasMany(e => e.Tags).WithOne(e => e.Post).HasForeignKey(e => e.PostId);
+
+				e.HasData(new Issue4629Post() { Id = 1 });
+				e.HasData(new Issue4629Post() { Id = 2 });
+			});
+			modelBuilder.Entity<Issue4629Tag>(e =>
+			{
+				e.HasData(new Issue4629Tag() { Id = 1, PostId = 1, Weight = 10 });
+				e.HasData(new Issue4629Tag() { Id = 2, PostId = 1, Weight = 7 });
+				e.HasData(new Issue4629Tag() { Id = 3, PostId = 2, Weight = 0 });
+				e.HasData(new Issue4629Tag() { Id = 4, PostId = 2, Weight = 6 });
+				e.HasData(new Issue4629Tag() { Id = 5, PostId = 2, Weight = 4 });
+				e.HasData(new Issue4629Tag() { Id = 6, PostId = 2, Weight = 3 });
 			});
 		}
 	}
