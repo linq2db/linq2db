@@ -495,6 +495,32 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 				Assert.That(posts[1].Count, Is.EqualTo(2));
 			});
 		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db.EntityFrameworkCore/issues/201")]
+		public void Issue201Test1([EFDataSources(TestProvName.AllMySql57)] string provider)
+		{
+			using var ctx = CreateContext(provider);
+
+			var res = ctx.Parents
+				.Where(x => x.Children.Select(y => y.IsActive).FirstOrDefault() == false)
+				.ToLinqToDB()
+				.Count();
+
+			Assert.That(res, Is.EqualTo(1));
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db.EntityFrameworkCore/issues/201")]
+		public void Issue201Test2([EFDataSources(TestProvName.AllMySql57)] string provider)
+		{
+			using var ctx = CreateContext(provider);
+
+			var res = ctx.Parents
+				.Where(x => !x.Children.Any(y => y.IsActive))
+				.ToLinqToDB()
+				.Count();
+
+			Assert.That(res, Is.EqualTo(1));
+		}
 	}
 
 	#region Test Extensions

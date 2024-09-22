@@ -83,7 +83,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests.Models.IssueModel
 				e.Property(e => e.ParentId);
 				e.HasMany(e => e.GrandChildren).WithOne(e => e.Child).HasForeignKey(e => e.ChildId);
 
-				e.HasData(new Child() { Id = 11, ParentId = 1 }, new Child() { Id = 12, ParentId = 2 });
+				e.HasData(new Child() { Id = 11, ParentId = 1, IsActive = true }, new Child() { Id = 12, ParentId = 2, IsActive = false });
 			});
 			modelBuilder.Entity<GrandChild>(e =>
 			{
