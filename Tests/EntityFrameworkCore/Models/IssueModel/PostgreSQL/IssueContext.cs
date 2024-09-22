@@ -12,6 +12,11 @@ namespace LinqToDB.EntityFrameworkCore.Tests.PostgreSQL.Models.IssueModel
 		{
 			base.OnModelCreating(modelBuilder);
 
+			modelBuilder.Entity<Issue155Table>(e =>
+			{
+				e.HasData(new Issue155Table() { Id = 1, Linked = [2] }, new Issue155Table() { Id = 2, Linked = [1, 3] }, new Issue155Table() { Id = 3, Linked = [1] });
+			});
+
 			modelBuilder.Entity<PostgreTable>(e =>
 			{
 				e.Property(e => e.Id).ValueGeneratedNever();

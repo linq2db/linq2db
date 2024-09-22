@@ -6,10 +6,12 @@ using System.Threading.Tasks;
 
 using FluentAssertions;
 
+using LinqToDB.DataProvider.PostgreSQL;
 using LinqToDB.DataProvider.SqlServer;
 using LinqToDB.EntityFrameworkCore.Tests.Models.IssueModel;
 using LinqToDB.EntityFrameworkCore.Tests.PostgreSQL.Models.IssueModel;
 using LinqToDB.EntityFrameworkCore.Tests.SqlServer.Models.IssueModel;
+using LinqToDB.Mapping;
 
 using Microsoft.EntityFrameworkCore;
 
@@ -415,6 +417,29 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 			Assert.That(keyColumn.IsIdentity, Is.False);
 
 			using var t = db.CreateTempTable<Issue129Table>();
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db.EntityFrameworkCore/issues/155")]
+		public void Issue155Test([EFIncludeDataSources(TestProvName.AllPostgreSQL)] string provider)
+		{
+			using var ctx = CreateContext(provider);
+			using var db = ctx.CreateLinqToDBConnection();
+
+			var fm = new FluentMappingBuilder();
+			fm.Entity<Issue155Table>()
+				.Property(e => e.LinkedFrom)
+				.HasAttribute(new ExpressionMethodAttribute((IDataContext db, Issue155Table e) => db.GetTable<Issue155Table>().Where(r => Sql.Ext.PostgreSQL().ValueIsEqualToAny(e.Id, r.Linked)).ArrayAggregate(r => r.Id, Sql.AggregateModifier.Distinct).ToValue()));
+			db.AddMappingSchema(fm.Build().MappingSchema);
+
+			var result = db.GetTable<Issue155Table>().Where(e => e.Id == 1).Single();
+			Assert.That(result.Linked, Has.Length.EqualTo(1));
+			Assert.Multiple(() =>
+			{
+				Assert.That(result.Linked[0], Is.EqualTo(2));
+				Assert.That(result.LinkedFrom, Has.Length.EqualTo(2));
+				Assert.That(result.LinkedFrom, Does.Contain(2));
+				Assert.That(result.LinkedFrom, Does.Contain(3));
+			});
 		}
 	}
 
