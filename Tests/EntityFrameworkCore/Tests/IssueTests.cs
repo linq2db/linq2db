@@ -521,6 +521,23 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 
 			Assert.That(res, Is.EqualTo(1));
 		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4630")]
+		public void Issue4630Test([EFDataSources(TestProvName.AllMySql57)] string provider)
+		{
+			using var ctx = CreateContext(provider);
+
+			var id = 2;
+
+			var res = ctx.Parents
+					.Select(x => new { Index = Sql.Ext.RowNumber().Over().OrderBy(x.Id).ToValue(), Id = x.Id })
+					.ToLinqToDB()
+					.Where(pb => pb.Id == id)
+					.Select(pb => pb.Index)
+					.FirstOrDefault();
+
+			Assert.That(res, Is.EqualTo(2));
+		}
 	}
 
 	#region Test Extensions
