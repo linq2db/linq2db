@@ -441,6 +441,33 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 				Assert.That(result.LinkedFrom, Does.Contain(3));
 			});
 		}
+
+		[ActiveIssue]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4628")]
+		public async ValueTask Issue4628Test([EFDataSources] string provider)
+		{
+			using var ctx = CreateContext(provider);
+
+			var res = await ctx.Issue4628Others
+				.Include(o => o.Values)
+				.ToArrayAsyncLinqToDB();
+
+			Assert.That(res, Has.Length.EqualTo(1));
+			Assert.Multiple(() =>
+			{
+				Assert.That(res[0].Id, Is.EqualTo(1));
+				Assert.That(res[0].Values, Has.Count.EqualTo(1));
+			});
+			var value = res[0].Values.Single();
+			Assert.That(value, Is.TypeOf<Issue4628Inherited>());
+			var typedValue = (Issue4628Inherited)value;
+			Assert.Multiple(() =>
+			{
+				Assert.That(typedValue.Id, Is.EqualTo(11));
+				Assert.That(typedValue.OtherId, Is.EqualTo(1));
+				Assert.That(typedValue.SomeValue, Is.EqualTo("Value 11"));
+			});
+		}
 	}
 
 	#region Test Extensions

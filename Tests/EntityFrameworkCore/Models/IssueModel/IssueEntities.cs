@@ -159,4 +159,26 @@ namespace LinqToDB.EntityFrameworkCore.Tests.Models.IssueModel
 		public virtual Issue4627Item Parent { get; set; } = null!;
 	}
 	#endregion
+
+	#region Issue 4628
+	public class Issue4628Base
+	{
+		public int Id { get; set; }
+		[ForeignKey("Other")]
+		public int OtherId { get; set; }
+		public Issue4628Other Other { get; set; } = null!;
+	}
+
+	public class Issue4628Inherited : Issue4628Base
+	{
+		public string? SomeValue { get; set; }
+	}
+
+	public class Issue4628Other
+	{
+		public int Id { get; set; }
+		[InverseProperty("Other")]
+		public virtual ICollection<Issue4628Base> Values { get; set; } = null!;
+	}
+	#endregion
 }

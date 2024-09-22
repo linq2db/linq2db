@@ -26,6 +26,8 @@ namespace LinqToDB.EntityFrameworkCore.Tests.Models.IssueModel
 
 		public DbSet<Issue4627Container> Containers { get; set; } = null!;
 
+		public DbSet<Issue4628Other> Issue4628Others { get; set; } = null!;
+
 		protected IssueContextBase(DbContextOptions options) : base(options)
 		{
 		}
@@ -153,6 +155,15 @@ namespace LinqToDB.EntityFrameworkCore.Tests.Models.IssueModel
 					.WithOne(b => b.Child)
 					.IsRequired()
 					.HasForeignKey<Issue4627ChildItem>(a => a.Id);
+			});
+
+			modelBuilder.Entity<Issue4628Other>(e =>
+			{
+				e.HasData(new Issue4628Other() { Id = 1 });
+			});
+			modelBuilder.Entity<Issue4628Inherited>(e =>
+			{
+				e.HasData(new Issue4628Inherited() { Id = 11, OtherId = 1, SomeValue = "Value 11" });
 			});
 		}
 	}
