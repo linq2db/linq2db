@@ -1012,6 +1012,7 @@ namespace LinqToDB.Linq
 			{ M(() => Math.Log10          (0)),  N(() => L<double,double>       ((double p)          => Sql.Log10  (p)!   .Value )) },
 
 			{ M(() => Math.Pow        (0,0) ), N(() => L<double,double,double>    ((double x,double y) => Sql.Power(x, y)!.Value )) },
+			{ M(() => Math.Pow        (0,0) ), N(() => L<decimal,decimal,decimal>    ((decimal x,decimal y) => Sql.Power(x, y)!.Value )) },
 
 			{ M(() => Sql.Round       (0m)  ), N(() => L<decimal?,decimal?>       ((decimal? d)          => Sql.Round(d, 0))) },
 			{ M(() => Sql.Round       (0.0) ), N(() => L<double?, double?>        ((double?  d)          => Sql.Round(d, 0))) },
