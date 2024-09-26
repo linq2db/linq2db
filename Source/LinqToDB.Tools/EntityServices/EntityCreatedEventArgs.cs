@@ -1,11 +1,11 @@
-﻿namespace LinqToDB
+﻿namespace LinqToDB.Tools.EntityServices
 {
 	public class EntityCreatedEventArgs
 	{
 		internal EntityCreatedEventArgs(IDataContext context, object entity)
 		{
 			DataContext = context;
-			Entity      = entity;
+			Entity = entity;
 		}
 
 		/// <summary>

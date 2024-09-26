@@ -3,9 +3,10 @@ using System.Collections;
 using System.Data;
 using System.Linq.Expressions;
 using System.Runtime.CompilerServices;
-using LinqToDB.Expressions;
 
-namespace LinqToDB.Benchmarks.TypeMapping
+using LinqToDB.Expressions.Types;
+
+namespace LinqToDB.Benchmarks.TestClasses
 {
 	public interface ITestClass
 	{

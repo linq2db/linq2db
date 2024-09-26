@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Text.RegularExpressions;
 
-namespace LinqToDB.CommandLine
+namespace LinqToDB.CommandLine.Options
 {
 	/// <summary>
 	/// Database object name filter.

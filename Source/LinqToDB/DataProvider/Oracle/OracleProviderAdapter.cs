@@ -12,6 +12,7 @@ namespace LinqToDB.DataProvider.Oracle
 	using Common;
 	using Data;
 	using Expressions;
+	using Expressions.Types;
 	using Mapping;
 
 	public class OracleProviderAdapter : IDynamicProviderAdapter
@@ -1234,16 +1235,15 @@ namespace LinqToDB.DataProvider.Oracle
 			[Wrapper]
 			public sealed class OracleLoaderRowsCopiedEventArgs : TypeWrapper
 			{
-				private static LambdaExpression[] Wrappers { get; }
-					= new LambdaExpression[]
-				{
-				// [0]: get RowsCopied
-				(Expression<Func<OracleLoaderRowsCopiedEventArgs, int>>)((OracleLoaderRowsCopiedEventArgs this_) => this_.RowsCopied),
-				// [1]: get Abort
-				(Expression<Func<OracleLoaderRowsCopiedEventArgs, bool>>)((OracleLoaderRowsCopiedEventArgs this_) => this_.Abort),
-				// [2]: set Abort
-				PropertySetter((OracleLoaderRowsCopiedEventArgs this_) => this_.Abort),
-				};
+				private static LambdaExpression[] Wrappers { get; } =
+				[
+					// [0]: get RowsCopied
+					(Expression<Func<OracleLoaderRowsCopiedEventArgs, int>>)((OracleLoaderRowsCopiedEventArgs this_) => this_.RowsCopied),
+					// [1]: get Abort
+					(Expression<Func<OracleLoaderRowsCopiedEventArgs, bool>>)((OracleLoaderRowsCopiedEventArgs this_) => this_.Abort),
+					// [2]: set Abort
+					PropertySetter((OracleLoaderRowsCopiedEventArgs this_) => this_.Abort),
+				];
 
 				public OracleLoaderRowsCopiedEventArgs(object instance, Delegate[] wrappers) : base(instance, wrappers)
 				{

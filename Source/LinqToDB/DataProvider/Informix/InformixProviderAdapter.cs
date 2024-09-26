@@ -8,6 +8,7 @@ namespace LinqToDB.DataProvider.Informix
 	using Common;
 	using DB2;
 	using Expressions;
+	using Expressions.Types;
 	using Extensions;
 	using Mapping;
 

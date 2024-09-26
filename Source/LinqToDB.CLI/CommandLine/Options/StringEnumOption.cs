@@ -1,4 +1,4 @@
-﻿namespace LinqToDB.CommandLine
+﻿namespace LinqToDB.CommandLine.Options
 {
 	/// <summary>
 	/// Defines single allowed value for <see cref="StringEnumCliOption"/> CLI option.

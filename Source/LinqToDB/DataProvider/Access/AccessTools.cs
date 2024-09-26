@@ -6,6 +6,7 @@ using System.Security;
 
 namespace LinqToDB.DataProvider.Access
 {
+	using Compatibility;
 	using Data;
 
 	/// <summary>

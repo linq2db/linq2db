@@ -12,6 +12,7 @@ namespace LinqToDB.Data
 {
 	using Common.Internal;
 	using DataProvider;
+	using Extensions;
 	using Infrastructure;
 	using Linq;
 	using SqlProvider;

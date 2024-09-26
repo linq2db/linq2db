@@ -3,7 +3,7 @@ using System.Collections;
 using System.Data;
 using System.Data.Common;
 
-namespace LinqToDB.Benchmarks.TestProvider
+namespace LinqToDB.Benchmarks.TestClasses.ProviderMocks
 {
 	public class MockDbDataReader : DbDataReader
 	{

@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Text;
 
+using LinqToDB.Tools.Helpers;
+
 namespace LinqToDB.CodeModel
 {
 	internal sealed class TypeParser : ITypeParser

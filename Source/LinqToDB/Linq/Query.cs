@@ -17,6 +17,7 @@ namespace LinqToDB.Linq
 	using Extensions;
 	using Interceptors;
 	using LinqToDB.Expressions;
+	using LinqToDB.Expressions.ExpressionVisitors;
 	using Mapping;
 	using SqlProvider;
 	using SqlQuery;

@@ -1,4 +1,4 @@
-﻿namespace LinqToDB.CommandLine
+﻿namespace LinqToDB.CommandLine.Commands
 {
 	/// <summary>
 	/// Command use example.

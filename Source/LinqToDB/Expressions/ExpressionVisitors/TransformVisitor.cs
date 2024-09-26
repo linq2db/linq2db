@@ -5,7 +5,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Runtime.CompilerServices;
 
-namespace LinqToDB.Expressions
+namespace LinqToDB.Expressions.ExpressionVisitors
 {
 	internal readonly struct TransformVisitor<TContext>
 	{

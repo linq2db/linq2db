@@ -10,6 +10,7 @@ using System.Threading.Tasks;
 namespace LinqToDB.Linq
 {
 	using Async;
+	using Compatibility.System;
 	using Data;
 	using Tools;
 	using Extensions;

@@ -8,6 +8,7 @@ using System.Reflection;
 using System.Runtime.InteropServices;
 
 using LinqToDB.CodeModel;
+using LinqToDB.CommandLine.Options;
 using LinqToDB.Data;
 using LinqToDB.DataProvider.DB2;
 using LinqToDB.DataProvider.Oracle;
@@ -17,7 +18,7 @@ using LinqToDB.Naming;
 using LinqToDB.Scaffold;
 using LinqToDB.Schema;
 
-namespace LinqToDB.CommandLine
+namespace LinqToDB.CommandLine.Commands
 {
 	partial class ScaffoldCommand : CliCommand
 	{

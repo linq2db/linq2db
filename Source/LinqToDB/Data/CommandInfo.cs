@@ -25,6 +25,7 @@ namespace LinqToDB.Data
 	using Common.Internal.Cache;
 	using Common.Internal;
 	using Common;
+	using Compatibility.System;
 	using Expressions;
 	using Extensions;
 	using Interceptors;

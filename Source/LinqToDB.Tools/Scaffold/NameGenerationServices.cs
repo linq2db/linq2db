@@ -4,8 +4,10 @@ using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+
 using LinqToDB.Naming;
 using LinqToDB.SqlQuery;
+using LinqToDB.Tools.Helpers;
 
 namespace LinqToDB.Scaffold.Internal
 {

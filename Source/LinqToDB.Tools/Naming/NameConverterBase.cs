@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 
+using LinqToDB.Tools.Helpers;
+
 namespace LinqToDB.Naming
 {
 	/// <summary>

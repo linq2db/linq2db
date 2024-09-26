@@ -2,7 +2,9 @@
 using System.Collections.Generic;
 using System.Linq;
 
-namespace LinqToDB.CommandLine
+using LinqToDB.CommandLine.Options;
+
+namespace LinqToDB.CommandLine.Commands
 {
 	/// <summary>
 	/// Base class for CLI commands.

@@ -1,11 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
-using LinqToDB.Benchmarks.TestProvider;
+
+using LinqToDB.Benchmarks.TestClasses.ProviderMocks;
 using LinqToDB.DataProvider;
 using LinqToDB.Mapping;
 
-namespace LinqToDB.Benchmarks.Mappings
+namespace LinqToDB.Benchmarks.TestClasses
 {
 	public class Db : Data.DataConnection
 	{
@@ -141,7 +142,7 @@ namespace LinqToDB.Benchmarks.Mappings
 		[Association(ThisKey = nameof(SalesOrderID), OtherKey = nameof(SalesOrderDetail.SalesOrderID))]
 		public List<SalesOrderDetail> SalesOrderDetails { get; set; } = null!;
 
-		[Association(ThisKey = nameof(CustomerID), OtherKey = nameof(Mappings.Customer.CustomerID))]
+		[Association(ThisKey = nameof(CustomerID), OtherKey = nameof(TestClasses.Customer.CustomerID))]
 		public Customer Customer { get; set; } = null!;
 
 		public static DataTable SchemaTable;

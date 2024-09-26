@@ -1,7 +1,7 @@
 ﻿using System;
 using LinqToDB.Mapping;
 
-namespace LinqToDB.Benchmarks.Mappings
+namespace LinqToDB.Benchmarks.TestClasses
 {
 	[Table("User")]
 	public class User

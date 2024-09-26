@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Globalization;
 
-namespace LinqToDB
+namespace LinqToDB.Tools.Helpers
 {
 	/// <summary>
 	/// Contains text helpers.

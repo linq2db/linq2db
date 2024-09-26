@@ -3,7 +3,7 @@ using System.Data;
 using System.Data.Common;
 using System.Diagnostics.CodeAnalysis;
 
-namespace LinqToDB.Benchmarks.TestProvider
+namespace LinqToDB.Benchmarks.TestClasses.ProviderMocks
 {
 	public class MockDbCommand : DbCommand
 	{

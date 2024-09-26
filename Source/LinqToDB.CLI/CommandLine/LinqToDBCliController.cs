@@ -1,4 +1,6 @@
-﻿namespace LinqToDB.CommandLine
+﻿using LinqToDB.CommandLine.Commands;
+
+namespace LinqToDB.CommandLine
 {
 	/// <summary>
 	/// CLI controller for current utility.

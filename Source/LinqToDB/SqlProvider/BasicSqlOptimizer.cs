@@ -9,6 +9,7 @@ namespace LinqToDB.SqlProvider
 {
 	using Common;
 	using Expressions;
+	using Expressions.ExpressionVisitors;
 	using Mapping;
 	using SqlQuery;
 	using SqlQuery.Visitors;

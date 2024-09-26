@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Data;
 
-namespace LinqToDB.Benchmarks.TestProvider
+namespace LinqToDB.Benchmarks.TestClasses.ProviderMocks
 {
 	public class QueryResult
 	{

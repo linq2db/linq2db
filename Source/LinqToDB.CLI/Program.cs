@@ -1,7 +1,7 @@
 ﻿using System;
 using LinqToDB.CommandLine;
 
-namespace LinqToDB.Tools
+namespace LinqToDB
 {
 	internal static class Program
 	{

@@ -2,7 +2,9 @@
 using System.Collections.Generic;
 using System.IO;
 
-namespace LinqToDB.CommandLine
+using LinqToDB.CommandLine.Options;
+
+namespace LinqToDB.CommandLine.Commands
 {
 	/// <summary>
 	/// Template command implementation.

@@ -1,7 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-
 		<AssemblyName>linq2db.Extensions</AssemblyName>
 		<RootNamespace>LinqToDB.Extensions</RootNamespace>
 
@@ -11,6 +10,9 @@
 
 		<IsAotCompatible Condition="$(TargetFramework) == 'net8.0'">true</IsAotCompatible>
 		<PolySharpIncludeRuntimeSupportedAttributes>true</PolySharpIncludeRuntimeSupportedAttributes>
+
+		<Title>Linq to DB Extensions</Title>
+		<Description>Linq to DB Extensions to integrate with Microsoft.Extensions.DependencyInjection</Description>
 	</PropertyGroup>
 
 	<ItemGroup>

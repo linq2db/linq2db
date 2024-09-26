@@ -3,7 +3,9 @@ using System.IO;
 using System.Linq;
 using System.Text.Json;
 
-namespace LinqToDB.CommandLine
+using LinqToDB.CommandLine.Commands;
+
+namespace LinqToDB.CommandLine.Options
 {
 	/// <summary>
 	/// Path to JSON file with CLI options.

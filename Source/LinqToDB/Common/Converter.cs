@@ -12,6 +12,7 @@ using JetBrains.Annotations;
 namespace LinqToDB.Common
 {
 	using Expressions;
+	using Expressions.ExpressionVisitors;
 	using Mapping;
 
 	/// <summary>

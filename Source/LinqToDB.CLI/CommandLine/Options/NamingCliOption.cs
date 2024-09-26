@@ -1,8 +1,10 @@
 ﻿using System.Collections.Generic;
 using System.Text.Json;
+
+using LinqToDB.CommandLine.Commands;
 using LinqToDB.Naming;
 
-namespace LinqToDB.CommandLine
+namespace LinqToDB.CommandLine.Options
 {
 	/// <summary>
 	/// Code identifier normalization/generation options. Not supported in CLI (JSON only).

@@ -2,7 +2,9 @@
 using System.Collections.Generic;
 using System.Text.Json;
 
-namespace LinqToDB.CommandLine
+using LinqToDB.CommandLine.Commands;
+
+namespace LinqToDB.CommandLine.Options
 {
 	/// <summary>
 	/// String-typed CLI option with fixed list of allowed values.

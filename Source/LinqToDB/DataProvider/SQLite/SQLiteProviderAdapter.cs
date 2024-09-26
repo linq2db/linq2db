@@ -4,7 +4,7 @@ using System.Linq.Expressions;
 
 namespace LinqToDB.DataProvider.SQLite
 {
-	using Expressions;
+	using Expressions.Types;
 
 	public class SQLiteProviderAdapter : IDynamicProviderAdapter
 	{

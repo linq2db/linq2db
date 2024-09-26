@@ -8,10 +8,11 @@ using System.Reflection;
 using Microsoft.SqlServer.Server;
 #endif
 
-namespace LinqToDB.Metadata
+namespace LinqToDB.DataProvider.SqlServer
 {
 	using Common;
 	using Extensions;
+	using Metadata;
 	using Mapping;
 
 	/// <summary>

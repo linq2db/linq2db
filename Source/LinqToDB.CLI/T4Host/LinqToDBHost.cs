@@ -1,6 +1,6 @@
 ﻿using System.Text;
 
-namespace LinqToDB
+namespace LinqToDB.T4Host
 {
 	/// <summary>
 	/// Base class for T4 template code.

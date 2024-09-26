@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using LinqToDB;
 using LinqToDB.Common;
 using LinqToDB.Expressions;
+using LinqToDB.Expressions.Types;
 using NUnit.Framework;
 
 namespace Tests.TypeMapping

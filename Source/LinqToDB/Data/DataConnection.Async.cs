@@ -9,6 +9,7 @@ namespace LinqToDB.Data
 {
 	using Async;
 	using Common;
+	using Compatibility.System;
 	using Interceptors;
 	using RetryPolicy;
 	using Tools;

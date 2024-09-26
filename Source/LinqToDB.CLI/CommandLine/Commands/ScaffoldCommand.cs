@@ -1,6 +1,6 @@
 ﻿using LinqToDB.Scaffold;
 
-namespace LinqToDB.CommandLine
+namespace LinqToDB.CommandLine.Commands
 {
 	/// <summary>
 	/// Scaffold command implementation.

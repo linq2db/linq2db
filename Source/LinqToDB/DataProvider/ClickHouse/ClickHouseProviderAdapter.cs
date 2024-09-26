@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 namespace LinqToDB.DataProvider.ClickHouse
 {
 	using Common;
-	using Expressions;
+	using Expressions.Types;
 	using Mapping;
 	using MySql;
 	using SqlQuery;

@@ -2,6 +2,9 @@
 using System.Collections.Generic;
 using System.Linq;
 
+using LinqToDB.CommandLine.Commands;
+using LinqToDB.CommandLine.Options;
+
 namespace LinqToDB.CommandLine
 {
 	/// <summary>

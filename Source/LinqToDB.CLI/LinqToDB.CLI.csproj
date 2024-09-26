@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<RootNamespace>LinqToDB.CLI</RootNamespace>
+		<RootNamespace>LinqToDB</RootNamespace>
 		<AssemblyName>dotnet-linq2db</AssemblyName>
 		<TargetFrameworks>net6.0;net8.0</TargetFrameworks>
 		<DocumentationFile>$(ArtifactsPath)\bin\$(MSBuildProjectName)\$(Configuration)\$(TargetFramework)\$(AssemblyName).xml</DocumentationFile>

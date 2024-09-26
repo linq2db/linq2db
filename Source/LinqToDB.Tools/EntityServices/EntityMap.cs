@@ -8,9 +8,13 @@ using System.Linq.Expressions;
 namespace LinqToDB.Tools.EntityServices
 {
 	using Common;
+
 	using LinqToDB.Expressions;
+
 	using Mapper;
+
 	using Mapping;
+
 	using Reflection;
 
 	interface IEntityMap
