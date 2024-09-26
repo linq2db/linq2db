@@ -1399,7 +1399,7 @@ namespace LinqToDB.Linq
 				#endregion
 			};
 
-#if DEBUG
+#if BUGCHECK
 
 			foreach (var membersValue in members.Values)
 			{

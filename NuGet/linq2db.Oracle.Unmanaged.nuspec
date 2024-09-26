@@ -21,7 +21,7 @@
 		<file src="..\Tests\Linq\bin\Azure\net472\Oracle.ManagedDataAccess.dll"      target="tools"                                   />
 		<file src="..\Tests\Linq\bin\Azure\net472\Microsoft.Bcl.AsyncInterfaces.dll" target="tools"                                   />
 
-		<file src="..\..\NuGet\Oracle\linq2db.Oracle.props"                             target="build\linq2db.Oracle.Unmanaged.props"    />
+		<file src="..\..\NuGet\Oracle\linq2db.Oracle.props"                     target="build\linq2db.Oracle.Unmanaged.props"                                                               />
 		<file src="..\..\NuGet\Oracle\*.*"                         exclude="**\*.props" target="contentFiles\any\any\LinqToDB.Templates" />
 		<file src="..\..\NuGet\Oracle\*.*"                         exclude="**\*.props" target="content\LinqToDB.Templates"              />
 	</files>

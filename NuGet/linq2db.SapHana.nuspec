@@ -20,7 +20,7 @@
 		<file src="..\Tests\Linq\bin\Azure\net472\Humanizer.dll"                     target="tools"                                   />
 		<file src="..\Tests\Linq\bin\Azure\net472\Microsoft.Bcl.AsyncInterfaces.dll" target="tools"                                   />
 
-		<file src="..\..\NuGet\SapHana\linq2db.SapHana.props"                           target="build"                                   />
+		<file src="..\..\NuGet\SapHana\linq2db.SapHana.props"                   target="build"                                                                                              />
 		<file src="..\..\NuGet\SapHana\*.*"                        exclude="**\*.props" target="contentFiles\any\any\LinqToDB.Templates" />
 		<file src="..\..\NuGet\SapHana\*.*"                        exclude="**\*.props" target="content\LinqToDB.Templates"              />
 	</files>

@@ -21,7 +21,7 @@
 		<file src="..\Tests\Linq\bin\Azure\net472\Microsoft.SqlServer.Types.dll"     target="tools"                                   />
 		<file src="..\Tests\Linq\bin\Azure\net472\Microsoft.Bcl.AsyncInterfaces.dll" target="tools"                                   />
 
-		<file src="..\..\NuGet\SqlServer\linq2db.SqlServer.props"                       target="build\linq2db.SqlServer.MS.props"        />
+		<file src="..\..\NuGet\SqlServer\linq2db.SqlServer.props"               target="build\linq2db.SqlServer.MS.props"                                                                   />
 		<file src="..\..\NuGet\SqlServer\*.*"                      exclude="**\*.props" target="contentFiles\any\any\LinqToDB.Templates" />
 		<file src="..\..\NuGet\SqlServer\*.*"                      exclude="**\*.props" target="content\LinqToDB.Templates"              />
 	</files>

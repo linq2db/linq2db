@@ -25,7 +25,7 @@
 		<file src="..\Tests\Linq\bin\Azure\net472\System.Diagnostics.DiagnosticSource.dll" target="tools"                                   />
 		<file src="..\Tests\Linq\bin\Azure\net472\Microsoft.Bcl.AsyncInterfaces.dll"       target="tools"                                   />
 
-		<file src="..\..\NuGet\MySql\linq2db.MySql.props"                                     target="build"                                   />
+		<file src="..\..\NuGet\MySql\linq2db.MySql.props"                             target="build"                                                                                              />
 		<file src="..\..\NuGet\MySql\*.*"                                exclude="**\*.props" target="contentFiles\any\any\LinqToDB.Templates" />
 		<file src="..\..\NuGet\MySql\*.*"                                exclude="**\*.props" target="content\LinqToDB.Templates"              />
 	</files>

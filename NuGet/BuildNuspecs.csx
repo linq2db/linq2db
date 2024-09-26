@@ -9,13 +9,15 @@ using LibGit2Sharp;
 
 WriteLine(Environment.CommandLine);
 
-var args        = GetArgs();
-var path        = GetArg(args, "path",      @"*.nuspec")!;
-var buildPath   = GetArg(args, "buildPath", @"..\.build\nuspecs")!;
-var version     = GetArg(args, "version",   mandatory : true)!;
-var branch      = GetArg(args, "branch");
-var authors     = "Igor Tkachev, Ilya Chudin, Svyatoslav Danyliv, Dmitry Lukashenko";
-var description = " is a data access technology that provides a run-time infrastructure for managing relational data as objects. Install this package if you want to use database model scaffolding using T4 templates (requires Visual Studio or Rider), otherwise you should use linq2db package.";
+var args           = GetArgs();
+var path           = GetArg(args, "path",           @"*.nuspec")!;
+var buildPath      = GetArg(args, "buildPath",      @"..\.build\nuspecs")!;
+var version        = GetArg(args, "version",        mandatory : true)!;
+var linq2DbVersion = GetArg(args, "linq2DbVersion", "version")!;
+var branch         = GetArg(args, "branch");
+var clean          = GetArg(args, "clean")
+var authors        = "Igor Tkachev, Ilya Chudin, Svyatoslav Danyliv, Dmitry Lukashenko";
+var description    = " is a data access technology that provides a run-time infrastructure for managing relational data as objects. Install this package if you want to use database model scaffolding using T4 templates (requires Visual Studio or Rider), otherwise you should use linq2db package.";
 
 string commit;
 
@@ -30,9 +32,12 @@ using (var repo = new Repository(".."))
 	WriteLine($"commit  : {commit}");
 }
 
-if (Directory.Exists(buildPath))
+
+if (clean.ToLower() is "1" or "true" && Directory.Exists(buildPath))
 	Directory.Delete(buildPath, true);
-Directory.CreateDirectory(buildPath);
+
+if (!Directory.Exists(buildPath))
+	Directory.CreateDirectory(buildPath);
 
 var releasePath = File.Exists(Path.Combine(buildPath, "..", "bin", "NuGet", "Release", "linq2db.dll"))
 	? "Release"
@@ -83,8 +88,8 @@ foreach (var xmlPath in GetFiles(path))
 	var files    = xml.SelectSingleNode("//ns:package/ns:files",    ns)!;
 
 	SetMetadata  ("version",                  version);
-	SetDependency("linq2db",                  version);
-	SetDependency("linq2db.t4models",         version);
+	SetDependency("linq2db",                  linq2DbVersion);
+	SetDependency("linq2db.t4models",         linq2DbVersion);
 	SetMetadata  ("description",              metadata.SelectSingleNode("//ns:title", ns)!.InnerText + description, false);
 	SetMetadata  ("releaseNotes",             "https://github.com/linq2db/linq2db/wiki/releases-and-roadmap#release-" + version.Replace(".", ""));
 	SetMetadata  ("copyright",                "Copyright © 2024 " + authors);

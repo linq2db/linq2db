@@ -12,7 +12,7 @@ namespace LinqToDB.DataProvider.Informix
 	{
 		internal enum Dialect { }
 
-		public InformixProviderDetector() : base(default, default)
+		public InformixProviderDetector() : base()
 		{
 		}
 

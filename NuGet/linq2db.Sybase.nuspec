@@ -21,7 +21,7 @@
 		<file src="..\Tests\Linq\bin\Azure\net472\AdoNetCore.AseClient.dll"          target="tools"                                   />
 		<file src="..\Tests\Linq\bin\Azure\net472\Microsoft.Bcl.AsyncInterfaces.dll" target="tools"                                   />
 
-		<file src="..\..\NuGet\Sybase\linq2db.Sybase.props"                             target="build"                                   />
+		<file src="..\..\NuGet\Sybase\linq2db.Sybase.props"                     target="build"                                                                                              />
 		<file src="..\..\NuGet\Sybase\*.*"                         exclude="**\*.props" target="contentFiles\any\any\LinqToDB.Templates" />
 		<file src="..\..\NuGet\Sybase\*.*"                         exclude="**\*.props" target="content\LinqToDB.Templates"              />
 	</files>
