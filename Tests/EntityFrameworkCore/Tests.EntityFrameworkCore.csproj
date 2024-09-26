@@ -1,0 +1,25 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+	<Import Project="..\linq2db.BasicTestProjects.props" />
+
+	<PropertyGroup>
+		<AssemblyName>linq2db.EntityFrameworkCore.Tests</AssemblyName>
+		<RootNamespace>LinqToDB.EntityFrameworkCore.Tests</RootNamespace>
+	</PropertyGroup>
+	
+	<ItemGroup>
+		<ProjectReference Include="..\..\Source\LinqToDB.EntityFrameworkCore\LinqToDB.EntityFrameworkCore.csproj" />
+		<ProjectReference Include="..\Base\Tests.Base.csproj" />
+
+		<PackageReference Include="Microsoft.Extensions.Logging.Console" />
+		<PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" />
+		<PackageReference Include="Pomelo.EntityFrameworkCore.MySql" />
+		<PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL.NodaTime" />
+		<PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" />
+		<PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" />
+	</ItemGroup>
+
+	<ItemGroup Condition="'$(TargetFramework)' != 'net462'">
+		<ProjectReference Include="..\EntityFrameworkCore.FSharp\Tests.EntityFrameworkCore.FSharp.fsproj" />
+	</ItemGroup>
+
+</Project>

@@ -37,6 +37,10 @@
 		<PackageVersion Include="Microsoft.Extensions.DependencyModel"                  Version="8.0.1"                 />
 		<PackageVersion Include="Mono.TextTemplating"                                   Version="2.3.1"                 />
 		<PackageVersion Include="protobuf-net.Grpc"                                     Version="1.1.1"                 />
+
+		<PackageVersion Condition="'$(TargetFramework)'=='netstandard2.0'" Include="Microsoft.EntityFrameworkCore.Relational" Version="3.1.32" />
+		<PackageVersion Condition="'$(TargetFramework)'=='net6.0'"         Include="Microsoft.EntityFrameworkCore.Relational" Version="6.0.32" />
+		<PackageVersion Condition="'$(TargetFramework)'=='net8.0'"         Include="Microsoft.EntityFrameworkCore.Relational" Version="8.0.7"  />
 	</ItemGroup>
 
 	<ItemGroup Label="Released Dependencies" Condition=" '$(TargetFramework)' != 'net8.0' ">
@@ -97,7 +101,26 @@
 		<PackageVersion Include="System.Linq.Dynamic.Core"                              Version="1.4.3"                 />
 		<PackageVersion Include="FSharp.Core"                                           Version="8.0.301"               />
 		<PackageVersion Include="LinqKit"                                               Version="1.3.0"                 />
-	</ItemGroup>
+
+		<PackageVersion Include="Microsoft.Extensions.Logging.Console"                  Version="8.0.0"                 />
+		<PackageVersion Include="EntityFrameworkCore.FSharp"                            Version="6.0.7"                 />
+
+		<PackageVersion Condition="'$(TargetFramework)'=='net462'" Include="Pomelo.EntityFrameworkCore.MySql"               Version="3.2.7"  />
+		<PackageVersion Condition="'$(TargetFramework)'=='net6.0'" Include="Pomelo.EntityFrameworkCore.MySql"               Version="6.0.3"  />
+		<PackageVersion Condition="'$(TargetFramework)'=='net8.0'" Include="Pomelo.EntityFrameworkCore.MySql"               Version="8.0.2"  />
+		<PackageVersion Condition="'$(TargetFramework)'=='net462'" Include="Npgsql.EntityFrameworkCore.PostgreSQL.NodaTime" Version="3.1.18" />
+		<PackageVersion Condition="'$(TargetFramework)'=='net6.0'" Include="Npgsql.EntityFrameworkCore.PostgreSQL.NodaTime" Version="6.0.29" />
+		<PackageVersion Condition="'$(TargetFramework)'=='net8.0'" Include="Npgsql.EntityFrameworkCore.PostgreSQL.NodaTime" Version="8.0.4"  />
+		<PackageVersion Condition="'$(TargetFramework)'=='net462'" Include="Microsoft.EntityFrameworkCore.Sqlite"           Version="3.1.32" />
+		<PackageVersion Condition="'$(TargetFramework)'=='net6.0'" Include="Microsoft.EntityFrameworkCore.Sqlite"           Version="6.0.32" />
+		<PackageVersion Condition="'$(TargetFramework)'=='net8.0'" Include="Microsoft.EntityFrameworkCore.Sqlite"           Version="8.0.7"  />
+		<PackageVersion Condition="'$(TargetFramework)'=='net462'" Include="Microsoft.EntityFrameworkCore.SqlServer"        Version="3.1.32" />
+		<PackageVersion Condition="'$(TargetFramework)'=='net6.0'" Include="Microsoft.EntityFrameworkCore.SqlServer"        Version="6.0.32" />
+		<PackageVersion Condition="'$(TargetFramework)'=='net8.0'" Include="Microsoft.EntityFrameworkCore.SqlServer"        Version="8.0.7"  />
+		<PackageVersion Condition="'$(TargetFramework)'=='net462'" Include="Microsoft.EntityFrameworkCore.InMemory"         Version="3.1.32" />
+		<PackageVersion Condition="'$(TargetFramework)'=='net6.0'" Include="Microsoft.EntityFrameworkCore.InMemory"         Version="6.0.32" />
+		<PackageVersion Condition="'$(TargetFramework)'=='net8.0'" Include="Microsoft.EntityFrameworkCore.InMemory"         Version="8.0.7"  />
+</ItemGroup>
 	
 	<ItemGroup Label="Testing" Condition=" '$(TargetFramework)' == 'net462' ">
 		<PackageVersion Include="System.Text.Json"                                      Version="8.0.4"                 />

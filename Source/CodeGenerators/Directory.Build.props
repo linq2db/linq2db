@@ -1,5 +1,7 @@
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 	<PropertyGroup>
+		<Configurations>Debug;Release;Azure</Configurations>
+		
 		<LangVersion>latest</LangVersion>
 		<Nullable>enable</Nullable>
 		<WarningLevel>9999</WarningLevel>

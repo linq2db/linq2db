@@ -27,7 +27,7 @@ namespace Tests.Linq
 		{
 			Test1(context);
 
-			if (DisableRemoteContext)
+			if (TestConfiguration.DisableRemoteContext)
 				Assert.Inconclusive("Remote context disabled");
 
 			using (var db = GetDataContext(context + LinqServiceSuffix))
@@ -40,7 +40,7 @@ namespace Tests.Linq
 		[Test]
 		public void Test1([DataSources(false)] string context)
 		{
-			if (DisableRemoteContext)
+			if (TestConfiguration.DisableRemoteContext)
 				Assert.Inconclusive("Remote context disabled");
 
 			using (var db = GetDataContext(context + LinqServiceSuffix))
@@ -58,7 +58,7 @@ namespace Tests.Linq
 
 		async Task TestForEachImpl(string context)
 		{
-			if (DisableRemoteContext)
+			if (TestConfiguration.DisableRemoteContext)
 				Assert.Inconclusive("Remote context disabled");
 
 			using (var db = GetDataContext(context + LinqServiceSuffix))
