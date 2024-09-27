@@ -191,7 +191,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Pow1([DataSources(ProviderName.SQLiteMS)] string context)
+		public void Pow([DataSources(ProviderName.SQLiteMS)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -200,12 +200,12 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Pow2([DataSources(ProviderName.SQLiteMS)] string context)
+		public void PowDecimal([DataSources(ProviderName.SQLiteMS)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
-					from t in from p in Types select Math.Floor((decimal)(8.7345*Math.Pow((double)p.MoneyValue, 2))) where t != 0 select t,
-					from t in from p in db.Types select Math.Floor((decimal)(8.7345*Math.Pow((double)p.MoneyValue, 2))) where t != 0 select t);
+					from t in from p in Types select Math.Floor(Sql.Power(p.MoneyValue, 3)) where t != 0 select t,
+					from t in from p in db.Types select Math.Floor(Sql.Power(p.MoneyValue, 3)) where t != 0 select t);
 		}
 
 		[Test]
