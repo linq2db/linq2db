@@ -204,8 +204,8 @@ namespace Tests.Linq
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
-					from t in from p in Types select Math.Floor(Sql.Power(p.MoneyValue, 3)) where t != 0 select t,
-					from t in from p in db.Types select Math.Floor(Sql.Power(p.MoneyValue, 3)) where t != 0 select t);
+					from t in from p in Types select Math.Floor(Sql.Power(p.MoneyValue, 3)!.Value) where t != 0 select t,
+					from t in from p in db.Types select Math.Floor(Sql.Power(p.MoneyValue, 3)!.Value) where t != 0 select t);
 		}
 
 		[Test]
