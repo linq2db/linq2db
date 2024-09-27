@@ -13,6 +13,7 @@ namespace LinqToDB.Expressions
 	using Mapping;
 	using Reflection;
 	using Tools;
+	using Infrastructure;
 
 	sealed class ConvertFromDataReaderExpression : Expression
 	{
@@ -342,7 +343,7 @@ namespace LinqToDB.Expressions
 
 		public override string ToString()
 		{
-			var result = $"ConvertFromDataReaderExpression<{_type.Name}>({_idx})";
+			var result = $"ConvertFromDataReaderExpression[{_type.ShortDisplayName()}]({_idx})";
 			if (CanBeNull == true || Type.IsNullable())
 				result += "?";
 			return result;

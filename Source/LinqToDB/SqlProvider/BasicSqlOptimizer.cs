@@ -231,7 +231,7 @@ namespace LinqToDB.SqlProvider
 					var tableKey = tableKeys[i];
 
 					found = true;
-					searchCondition.AddEqual(tableKey, compareKeys[i], dataOptions.LinqOptions.CompareNullsAsValues);
+					searchCondition.AddEqual(tableKey, compareKeys[i], dataOptions.LinqOptions.CompareNulls);
 				}
 			}
 
@@ -307,7 +307,7 @@ namespace LinqToDB.SqlProvider
 
 							var originalColumn = keysColumns[index];
 
-							sc.AddEqual((ISqlExpression)newField, originalColumn, dataOptions.LinqOptions.CompareNullsAsValues);
+							sc.AddEqual((ISqlExpression)newField, originalColumn, dataOptions.LinqOptions.CompareNulls);
 						}
 
 						if (!SqlProviderFlags.IsUpdateFromSupported)
@@ -783,7 +783,7 @@ namespace LinqToDB.SqlProvider
 				}
 
 				for (var i = 0; i < tableKeys.Count; i++)
-					wsc.AddEqual(copyKeys[i], tableKeys[i], false);
+					wsc.AddEqual(copyKeys[i], tableKeys[i], CompareNulls.LikeSql);
 
 				newDeleteStatement.SelectQuery.From.Table(copy).Where.SearchCondition.AddExists(deleteStatement.SelectQuery);
 				newDeleteStatement.With = deleteStatement.With;
@@ -1534,7 +1534,7 @@ namespace LinqToDB.SqlProvider
 			return false;
 		}
 
-		public virtual bool IsParameterDependedElement(NullabilityContext nullability, IQueryElement element)
+		public virtual bool IsParameterDependedElement(NullabilityContext nullability, IQueryElement element, DataOptions dataOptions)
 		{
 			switch (element.ElementType)
 			{
@@ -1630,7 +1630,7 @@ namespace LinqToDB.SqlProvider
 					if (searchString.Expr2.ElementType != QueryElementType.SqlValue)
 						return true;
 
-					return IsParameterDependedElement(nullability, searchString.CaseSensitive);
+					return IsParameterDependedElement(nullability, searchString.CaseSensitive, dataOptions);
 				}
 				case QueryElementType.SqlCase:
 				{
@@ -1672,10 +1672,10 @@ namespace LinqToDB.SqlProvider
 			return false;
 		}
 
-		public bool IsParameterDependent(NullabilityContext nullability, SqlStatement statement)
+		public bool IsParameterDependent(NullabilityContext nullability, SqlStatement statement, DataOptions dataOptions)
 		{
-			return null != statement.Find((optimizer : this, nullability),
-				static (ctx, e) => ctx.optimizer.IsParameterDependedElement(ctx.nullability, e));
+			return null != statement.Find((optimizer : this, nullability, dataOptions),
+				static (ctx, e) => ctx.optimizer.IsParameterDependedElement(ctx.nullability, e, ctx.dataOptions));
 		}
 
 		public virtual SqlStatement FinalizeStatement(SqlStatement statement, EvaluationContext context, DataOptions dataOptions, MappingSchema mappingSchema)
@@ -1840,16 +1840,21 @@ namespace LinqToDB.SqlProvider
 
 					if (query.Select.SkipValue != null)
 					{
-						processingQuery.Where.EnsureConjunction().AddGreater(rowNumberColumn, query.Select.SkipValue, false);
+						processingQuery.Where.EnsureConjunction().AddGreater(rowNumberColumn, query.Select.SkipValue, CompareNulls.LikeSql);
 
 						if (query.Select.TakeValue != null)
-							processingQuery.Where.SearchCondition.AddLessOrEqual(rowNumberColumn,
-								new SqlBinaryExpression(query.Select.SkipValue.SystemType!,
-									query.Select.SkipValue, "+", query.Select.TakeValue), false);
+							processingQuery.Where.SearchCondition.AddLessOrEqual(
+								rowNumberColumn,
+								new SqlBinaryExpression(
+									query.Select.SkipValue.SystemType!, 
+									query.Select.SkipValue, 
+									"+", 
+									query.Select.TakeValue), 
+								CompareNulls.LikeSql);
 					}
 					else
 					{
-						processingQuery.Where.EnsureConjunction().AddLessOrEqual(rowNumberColumn, query.Select.TakeValue!, false);
+						processingQuery.Where.EnsureConjunction().AddLessOrEqual(rowNumberColumn, query.Select.TakeValue!, CompareNulls.LikeSql);
 					}
 
 					query.Select.SkipValue = null;
@@ -1867,6 +1872,9 @@ namespace LinqToDB.SqlProvider
 #if DEBUG
 			// ReSharper disable once NotAccessedVariable
 			var sqlText = startFrom.DebugText;
+#endif
+
+#if BUGCHECK
 
 			if (startFrom is SqlStatement statementBefore)
 				QueryHelper.DebugCheckNesting(statementBefore, false);
@@ -1877,10 +1885,13 @@ namespace LinqToDB.SqlProvider
 #if DEBUG
 			// ReSharper disable once NotAccessedVariable
 			var newSqlText = result.DebugText;
+#endif
 
+#if BUGCHECK
 			if (startFrom is SqlStatement statementAfter)
 				QueryHelper.DebugCheckNesting(statementAfter, false);
 #endif
+
 			return result;
 		}
 
@@ -1941,7 +1952,7 @@ namespace LinqToDB.SqlProvider
 
 						q.Select.IsDistinct = false;
 						q.OrderBy.Items.Clear();
-						p.Select.Where.EnsureConjunction().AddEqual(rnColumn, new SqlValue(1), false);
+						p.Select.Where.EnsureConjunction().AddEqual(rnColumn, new SqlValue(1), CompareNulls.LikeSql);
 					}
 					else
 					{

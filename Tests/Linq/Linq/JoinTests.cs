@@ -6,13 +6,14 @@ using System.Data.Common;
 using System.Linq;
 
 using LinqToDB;
+using LinqToDB.Common;
 using LinqToDB.Interceptors;
+using LinqToDB.Linq;
 using LinqToDB.Mapping;
-using NUnit.Framework;
 
+using NUnit.Framework;
 namespace Tests.Linq
 {
-	using LinqToDB.Common;
 	using Model;
 
 	public static class EnumerableExtensions
@@ -1050,9 +1051,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue("HanaException : feature not supported: field or table alias is not allowed as an input of table functions", Configuration = TestProvName.AllSapHana)]
 		[Test]
-		public void ApplyJoin([IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllPostgreSQL93Plus, TestProvName.AllSapHana)] string context)
+		public void ApplyJoin([IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllPostgreSQL93Plus)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -3024,6 +3024,82 @@ namespace Tests.Linq
 		}
 		#endregion
 
+		#region issue 2421
+		[Table]
+		public class UserDTO
+		{
+			[PrimaryKey, Identity] public int     UserId { get; set; }
+			[Column,     Nullable] public string? UserName { get; set; }
+		}
+
+		[Table]
+		public class UserPositionDTO
+		{
+			[PrimaryKey, Identity] public int UserPositionId { get; set; }
+			[Column,     NotNull ] public int UserId         { get; set; }
+			[Column,     NotNull ] public int PositionId     { get; set; }
+
+			[Association(ThisKey = nameof(UserId), OtherKey = nameof(UserDTO.UserId), CanBeNull = false)]
+			public UserDTO User { get; set; } = null!;
+
+			[Association(ThisKey = nameof(PositionId), OtherKey = nameof(PositionDTO.PositionId), CanBeNull = false)]
+			public PositionDTO Position { get; set; } = null!;
+		}
+
+		[Table("UPS")]
+		public class UserPositionSectorDTO
+		{
+			[PrimaryKey, Identity] public int UserPositionSectorId { get; set; }
+			[Column,     NotNull ] public int UserPositionId       { get; set; }
+			[Column,     NotNull ] public int SectorId             { get; set; }
+
+			[Association(ThisKey = nameof(UserPositionId), OtherKey = nameof(UserPositionDTO.UserPositionId), CanBeNull = false)]
+			public UserPositionDTO UserPosition { get; set; } = null!;
+
+			[Association(ThisKey = nameof(SectorId), OtherKey = nameof(SectorDTO.SectorId), CanBeNull = false)]
+			public SectorDTO Sector { get; set; } = null!;
+		}
+
+		[Table]
+		public class PositionDTO
+		{
+			[PrimaryKey, Identity] public int    PositionId   { get; set; }
+			[Column,     NotNull ] public string PositionName { get; set; } = null!;
+		}
+
+		[Table]
+		public class SectorDTO
+		{
+			[PrimaryKey, Identity] public int    SectorId { get; set; }
+			[Column,     NotNull ] public string SectorName { get; set; } = null!;
+
+			[Association(ThisKey = nameof(SectorId), OtherKey = nameof(UserPositionSectorDTO.SectorId))]
+			public List<UserPositionSectorDTO> UserPositionSectors { get; set; } = null!;
+		}
+
+		// to sdanyliv: we generate same sql for sqlite and it works there, so fix should affect only access
+		[Test]
+		public void Issue2421([DataSources] string context)
+		{
+			using var db                  = GetDataContext(context);
+			using var users               = db.CreateLocalTable<UserDTO>();
+			using var userPositions       = db.CreateLocalTable<UserPositionDTO>();
+			using var userPositionSectors = db.CreateLocalTable<UserPositionSectorDTO>();
+			using var positions           = db.CreateLocalTable<PositionDTO>();
+			using var sectors             = db.CreateLocalTable<SectorDTO>();
+
+			var query = sectors
+				.Select(x => new
+				{
+					SectorId = x.SectorId,
+					UserId   = x.UserPositionSectors
+						.Where(y => y.UserPosition.PositionId == 1)
+						.Select(y => y.UserPosition.User.UserId)
+				});
+
+			var result = query.ToArray();
+		}
+		#endregion
 
 		[ActiveIssue(1224, Configurations = new[]
 		{
@@ -3049,6 +3125,77 @@ namespace Tests.Linq
 
 				Assert.That(count, Is.Not.EqualTo(0));
 			}
+		}
+
+		[Table]
+		private class Issue4160Person
+		{
+			[Column] public string Code { get; set; } = default!;
+
+			public static readonly Issue4160Person[] Data = new[]
+			{
+				new Issue4160Person() { Code = "SD" },
+				new Issue4160Person() { Code = "SD" },
+				new Issue4160Person() { Code = "SH" },
+			};
+		}
+
+		[Table]
+		private class Issue4160City
+		{
+			[Column] public string  Code { get; set; } = default!;
+			[Column] public string? Name { get; set; }
+
+			public static readonly Issue4160City[] Data = new[]
+			{
+				new Issue4160City() { Code = "SD", Name = "SYDNEY" },
+				new Issue4160City() { Code = "SD", Name = "SUNDAY" },
+				new Issue4160City() { Code = "SH", Name = "SYDHIP" }
+			};
+		}
+
+		[ActiveIssue(TestProvName.AllOracle12)]
+		[Test]
+		public void Issue4160Test1([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var persons = db.CreateLocalTable(Issue4160Person.Data);
+			using var cities  = db.CreateLocalTable(Issue4160City.Data);
+
+			var query = (
+			 from pe in persons
+			 select new
+			 {
+				 Value = (from cc in cities
+						  where cc.Code == pe.Code
+						  select cc.Name).FirstOrDefault()
+			 }).Distinct();
+
+			var data = query.ToList();
+
+			Assert.That(data, Has.Count.EqualTo(2));
+			// TODO: disable is_empty field generation for this query as it is not needed
+			//Assert.That(query.GetSelectQuery().Select.Columns.Count, Is.EqualTo(1));
+		}
+
+		// fails for DBs without outer apply
+		[ActiveIssue(Configurations = [TestProvName.AllAccess,TestProvName.AllFirebirdLess4, TestProvName.AllSybase, TestProvName.AllMySql57])]
+		[Test]
+		public void Issue4160Test2([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var persons = db.CreateLocalTable(Issue4160Person.Data);
+			using var cities  = db.CreateLocalTable(Issue4160City.Data);
+
+			var data = (
+				from pe in persons
+				from cc in cities.Where(cc => cc.Code == pe.Code).Take(1).DefaultIfEmpty()
+				select new
+				{
+					Value = cc.Name
+				}).Distinct().ToList();
+
+			Assert.That(data, Has.Count.EqualTo(2));
 		}
 
 		class t_ws_submissions
@@ -3115,6 +3262,47 @@ namespace Tests.Linq
 			{
 				return new DoNotExecuteDataReader();
 			}
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/3311")]
+		public void Issue3311Test1([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query =
+				from x in db.GetTable<Person>()
+				from apply in db.SelectQuery(() => Sql.AsSql(x.ID + 1))
+				select apply;
+
+			query.ToArray();
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/3311")]
+		public void Issue3311Test2([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query =
+				from x in db.GetTable<Person>()
+				from apply in db.SelectQuery(() => Sql.AsSql(x.ID + 1)).DefaultIfEmpty()
+				select apply;
+
+			query.ToArray();
+		}
+
+		[ThrowsForProvider(typeof(LinqException), providers: [TestProvName.AllSQLite, TestProvName.AllAccess, TestProvName.AllDB2, TestProvName.AllFirebirdLess4, TestProvName.AllInformix, TestProvName.AllMariaDB, TestProvName.AllMySql57, TestProvName.AllOracle11, TestProvName.AllSybase], ErrorMessage = "Provider does not support CROSS/OUTER/LATERAL joins.")]
+		[ThrowsForProvider(typeof(LinqException), providers: [TestProvName.AllClickHouse], ErrorMessage = "Provider does not support correlated subqueries.")]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/3311")]
+		public void Issue3311Test3([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			(from u in db.Person
+			 from x in (from r in db.SelectQuery(() => 1)
+						from l in db.Patient.LeftJoin(l => l.PersonID == u.ID)
+						select l.PersonID).AsSubQuery()
+			 select new { u.ID, x, }
+			).ToList();
 		}
 	}
 }

@@ -46,14 +46,12 @@ namespace LinqToDB.DataProvider.Informix
 			return base.ConvertSqlBinaryExpression(element);
 		}
 
-		public override ISqlExpression ConvertSqlFunction(SqlFunction func)
+		public override ISqlExpression ConvertCoalesce(SqlCoalesceExpression element)
 		{
-			return func.Name switch
-			{
-				// passing parameter to NVL will result in "A syntax error has occurred." error from server
-				PseudoFunctions.COALESCE => ConvertCoalesceToBinaryFunc(func, "Nvl", supportsParameters: false),
-				_                        => base.ConvertSqlFunction(func),
-			};
+			if (SqlProviderFlags == null || element.SystemType == null)
+				return element;
+
+			return ConvertCoalesceToBinaryFunc(element, "Nvl", supportsParameters : false);
 		}
 
 		//TODO: Move everything to SQLBuilder
@@ -139,16 +137,18 @@ namespace LinqToDB.DataProvider.Informix
 			return base.ConvertConversion(cast);
 		}
 
-		protected override ISqlExpression WrapBooleanExpression(ISqlExpression expr)
+		protected override ISqlExpression WrapColumnExpression(ISqlExpression expr)
 		{
-			var newExpr = base.WrapBooleanExpression(expr);
-			if (!ReferenceEquals(newExpr, expr))
+			var columnExpression = base.WrapColumnExpression(expr);
+
+			if (SqlProviderFlags != null 
+			    && columnExpression.SystemType == typeof(bool)
+			    && QueryHelper.UnwrapNullablity(columnExpression) is not (SqlCastExpression or SqlColumn or SqlField))
 			{
-				return new SqlCastExpression(newExpr, new DbDataType(expr.SystemType ?? typeof(bool), DataType.Boolean), null, isMandatory : true);
+				columnExpression = new SqlCastExpression(columnExpression, new DbDataType(columnExpression.SystemType!, DataType.Boolean), null, isMandatory: true);
 			}
 
-			return newExpr;
+			return columnExpression;
 		}
-
 	}
 }

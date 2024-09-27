@@ -232,12 +232,17 @@ namespace LinqToDB.Linq
 
 		static void FinalizeQuery(Query query)
 		{
+			if (query.IsFinalized)
+				return;
+
 			using var m = ActivityService.Start(ActivityID.FinalizeQuery);
 
 			foreach (var sql in query.Queries)
 			{
-				sql.Statement = query.SqlOptimizer.Finalize(query.MappingSchema, sql.Statement, query.DataOptions);
+				sql.Statement   = query.SqlOptimizer.Finalize(query.MappingSchema, sql.Statement, query.DataOptions);
 			}
+
+			query.IsFinalized = true;
 		}
 
 		static int EvaluateTakeSkipValue(Query query, Expression expr, IDataContext? db, object?[]? ps, int qn, ISqlExpression sqlExpr)
@@ -260,39 +265,24 @@ namespace LinqToDB.Linq
 			{
 				var providerValue = p.ValueAccessor(expression, parametersContext, parameters);
 
-				if (providerValue is IEnumerable vs)
+				DbDataType? dbDataType = null;
+
+				if (providerValue is IEnumerable items && p.ItemAccessor != null)
 				{
-					var type  = vs.GetType();
-					var etype = type.GetItemType();
+					var values = new List<object?>();
 
-					if (etype == null || etype == typeof(object) || etype.IsEnum ||
-						type.IsNullable() &&
-						etype.GetGenericArguments()[0].IsEnum)
+					foreach (var item in items)
 					{
-						var values = new List<object?>();
-
-						foreach (var v in vs)
-						{
-							providerValue = v;
-
-							if (v != null)
-							{
-								var valueType = v.GetType();
-
-								if (valueType.ToNullableUnderlying().IsEnum)
-									providerValue = query.GetConvertedEnum(valueType, v);
-							}
-
-							values.Add(providerValue);
-						}
-
-						providerValue = values;
+						values.Add(p.ItemAccessor(item));
+						dbDataType ??= p.DbDataTypeAccessor(expression, item, parametersContext, parameters);
 					}
+
+					providerValue = values;
 				}
 
-				var dbDataType = p.DbDataTypeAccessor(expression, parametersContext, parameters);
+				dbDataType ??= p.DbDataTypeAccessor(expression, null, parametersContext, parameters);
 
-				parameterValues.AddValue(p.SqlParameter, providerValue, p.SqlParameter.Type.WithSetValues(dbDataType));
+				parameterValues.AddValue(p.SqlParameter, providerValue, p.SqlParameter.Type.WithSetValues(dbDataType.Value));
 			}
 		}
 
@@ -325,7 +315,7 @@ namespace LinqToDB.Linq
 			}
 
 			var param = ParametersContext.CreateParameterAccessor(
-				dataContext, valueGetter, getter, dbDataTypeExpression, valueGetter, parametersExpression: null, name: field.Name.Replace('.', '_'));
+				dataContext, valueGetter, null, dbDataTypeExpression, valueGetter, parametersExpression: null, name: field.Name.Replace('.', '_'));
 
 			return param;
 		}
@@ -490,14 +480,14 @@ namespace LinqToDB.Linq
 				{
 #pragma warning disable CA2007
 					await using var runner = _dataContext.GetQueryRunner(_query, _dataContext, _queryNumber, _expression, _parameters, _preambles);
-					await using var dr     = await runner.ExecuteReaderAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
+					await using var dr     = await runner.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false);
 #pragma warning restore CA2007
 
 					var dataReader = dr.DataReader!;
 
 					cancellationToken.ThrowIfCancellationRequested();
 
-					if (await dataReader.ReadAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext))
+					if (await dataReader.ReadAsync(cancellationToken).ConfigureAwait(false))
 					{
 						DbDataReader origDataReader;
 
@@ -541,7 +531,7 @@ namespace LinqToDB.Linq
 							yield return res;
 							cancellationToken.ThrowIfCancellationRequested();
 						}
-						while (await dataReader.ReadAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext));
+						while (await dataReader.ReadAsync(cancellationToken).ConfigureAwait(false));
 					}
 				}
 			}
@@ -613,20 +603,20 @@ namespace LinqToDB.Linq
 				if (_queryRunner == null)
 				{
 					_queryRunner = _dataContext.GetQueryRunner(_query, _dataContext, _queryNumber, _expression, _ps, _preambles);
-					_dataReader  = await _queryRunner.ExecuteReaderAsync(_cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
+					_dataReader  = await _queryRunner.ExecuteReaderAsync(_cancellationToken).ConfigureAwait(false);
 
 					var skip = _skipAction?.Invoke(_query, _expression, _dataContext, _ps) ?? 0;
 
 					while (skip-- > 0)
 					{
-						if (!await _dataReader.ReadAsync(_cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext))
+						if (!await _dataReader.ReadAsync(_cancellationToken).ConfigureAwait(false))
 							return false;
 					}
 
 					_take = _takeAction?.Invoke(_query, _expression, _dataContext, _ps) ?? int.MaxValue;
 				}
 
-				if (_take-- > 0 && await _dataReader!.ReadAsync(_cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext))
+				if (_take-- > 0 && await _dataReader!.ReadAsync(_cancellationToken).ConfigureAwait(false))
 				{
 					DbDataReader dataReader;
 
@@ -664,10 +654,10 @@ namespace LinqToDB.Linq
 			public async ValueTask DisposeAsync()
 			{
 				if (_dataReader != null)
-					await _dataReader.DisposeAsync().ConfigureAwait(Configuration.ContinueOnCapturedContext);
+					await _dataReader.DisposeAsync().ConfigureAwait(false);
 
 				if (_queryRunner != null)
-					await _queryRunner.DisposeAsync().ConfigureAwait(Configuration.ContinueOnCapturedContext);
+					await _queryRunner.DisposeAsync().ConfigureAwait(false);
 
 				_queryRunner = null;
 				_dataReader  = null;
@@ -827,12 +817,12 @@ namespace LinqToDB.Linq
 			await using (ActivityService.StartAndConfigureAwait(ActivityID.ExecuteElementAsync))
 			{
 				var runner = dataContext.GetQueryRunner(query, dataContext, 0, expression, ps, preambles);
-				await using (runner.ConfigureAwait(Configuration.ContinueOnCapturedContext))
+				await using (runner.ConfigureAwait(false))
 				{
-					var dr = await runner.ExecuteReaderAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
-					await using (dr.ConfigureAwait(Configuration.ContinueOnCapturedContext))
+					var dr = await runner.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false);
+					await using (dr.ConfigureAwait(false))
 					{
-						if (await dr.ReadAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext))
+						if (await dr.ReadAsync(cancellationToken).ConfigureAwait(false))
 						{
 							DbDataReader dataReader;
 
@@ -893,8 +883,8 @@ namespace LinqToDB.Linq
 			await using (ActivityService.StartAndConfigureAwait(ActivityID.ExecuteScalarAsync))
 			{
 				var runner = dataContext.GetQueryRunner(query, dataContext, 0, expression, ps, preambles);
-				await using (runner.ConfigureAwait(Configuration.ContinueOnCapturedContext))
-					return await runner.ExecuteScalarAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
+				await using (runner.ConfigureAwait(false))
+					return await runner.ExecuteScalarAsync(cancellationToken).ConfigureAwait(false);
 			}
 		}
 
@@ -931,8 +921,8 @@ namespace LinqToDB.Linq
 			await using (ActivityService.StartAndConfigureAwait(ActivityID.ExecuteNonQueryAsync))
 			{
 				var runner = dataContext.GetQueryRunner(query, dataContext, 0, expression, ps, preambles);
-				await using (runner.ConfigureAwait(Configuration.ContinueOnCapturedContext))
-					return await runner.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
+				await using (runner.ConfigureAwait(false))
+					return await runner.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
 			}
 		}
 
@@ -976,16 +966,16 @@ namespace LinqToDB.Linq
 			await using (ActivityService.StartAndConfigureAwait(ActivityID.ExecuteNonQuery2Async))
 			{
 				var runner = dataContext.GetQueryRunner(query, dataContext, 0, expr, parameters, preambles);
-				await using (runner.ConfigureAwait(Configuration.ContinueOnCapturedContext))
+				await using (runner.ConfigureAwait(false))
 				{
-					var n = await runner.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
+					var n = await runner.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
 
 					if (n != 0)
 						return n;
 
 					runner.QueryNumber = 1;
 
-					return await runner.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
+					return await runner.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
 				}
 			}
 		}
@@ -1030,16 +1020,16 @@ namespace LinqToDB.Linq
 			await using (ActivityService.StartAndConfigureAwait(ActivityID.ExecuteScalarAlternativeAsync))
 			{
 				var runner = dataContext.GetQueryRunner(query, dataContext, 0, expr, parameters, preambles);
-				await using (runner.ConfigureAwait(Configuration.ContinueOnCapturedContext))
+				await using (runner.ConfigureAwait(false))
 				{
-					var n = await runner.ExecuteScalarAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
+					var n = await runner.ExecuteScalarAsync(cancellationToken).ConfigureAwait(false);
 
 					if (n != null)
 						return 0;
 
 					runner.QueryNumber = 1;
 
-					return await runner.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
+					return await runner.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
 				}
 			}
 		}

@@ -14,6 +14,8 @@ using NUnit.Framework;
 
 using JetBrains.Annotations;
 
+using LinqToDB.Linq;
+
 namespace Tests.Linq
 {
 	using Model;
@@ -587,7 +589,7 @@ namespace Tests.Linq
 		sealed class Parent170
 		{
 			[Column] public int ParentID;
-			[Column] public int Value1;
+			[Column(CanBeNull = true)] public int Value1;
 
 			[Association(ThisKey = "ParentID", OtherKey = "Value1", CanBeNull = true)]
 			public Parent170? Parent;
@@ -1901,6 +1903,87 @@ namespace Tests.Linq
 
 		#endregion
 
+		#region Issue 3822
+
+		[ThrowsForProvider(typeof(LinqException), providers: [TestProvName.AllAccess], ErrorMessage = "Provider does not support JOIN without condition.")]
+		[ThrowsForProvider(typeof(LinqException), providers: [TestProvName.AllSybase], ErrorMessage = "Provider has issue with JOIN to limited recordset.")]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/3822")]
+		public void Issue3822Test([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			using (db.CreateLocalTable(new[] { new Dog { Id = 1, OwnerId = 1 } }))
+			using (db.CreateLocalTable(new[] { new Human { Id = 1, HouseId = 1 } }))
+			using (db.CreateLocalTable(new[] { new House { Id = 1 } }))
+			using (db.CreateLocalTable(new[] { new Window { Id = 6, Position = 6 } }))
+			{
+				var windowId = db
+					.GetTable<Dog>()
+					.Select(x => x.House.WindowAtPosition(db, 6)!.Id)
+					.FirstOrDefault();
+
+				Assert.That(windowId, Is.EqualTo(6));
+			}
+		}
+
+		public class Dog
+		{
+			public int Id { get; set; }
+
+			public int OwnerId { get; set; }
+
+			[Association(ThisKey = nameof(OwnerId), OtherKey = nameof(Human.Id), CanBeNull = false)]
+			public Human Owner { get; set; } = null!;
+
+			[ExpressionMethod(nameof(HouseExpression), IsColumn = false)]
+			public House House { get; set; } = null!;
+
+			private static Expression<Func<Dog, House>> HouseExpression()
+			{
+				return entity => entity
+					.Owner
+					.House;
+			}
+		}
+
+		public class Human
+		{
+			public int Id { get; set; }
+
+			public int HouseId { get; set; }
+
+			[Association(ThisKey = nameof(HouseId), OtherKey = nameof(House.Id), CanBeNull = false)]
+			public House House { get; set; } = null!;
+		}
+
+		public class House
+		{
+			public int Id { get; set; }
+
+			[Association(QueryExpressionMethod = nameof(WindowAtPositionExpression), CanBeNull = true)]
+			public Window? WindowAtPosition(IDataContext db, int position)
+			{
+				return (_windowAtPositionExpression ??= WindowAtPositionExpression().Compile())(this, db, position).FirstOrDefault();
+			}
+
+			private static Func<House, IDataContext, int, IQueryable<Window?>>? _windowAtPositionExpression;
+
+			private static Expression<Func<House, IDataContext, int, IQueryable<Window?>>> WindowAtPositionExpression()
+			{
+				return (entity, db, position) => db
+					.GetTable<Window>()
+					.Where(x => x.Position == position)
+					.Take(1);
+			}
+		}
+
+		public class Window
+		{
+			public int Id { get; set; }
+
+			public int Position { get; set; }
+		}
+		#endregion
 	}
 
 	public static class AssociationExtension

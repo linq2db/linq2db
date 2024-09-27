@@ -912,7 +912,6 @@ FROM
 			}
 		}
 
-		[ActiveIssue("https://github.com/linq2db/linq2db/issues/3619", Configuration = TestProvName.AllClickHouse)]
 		[Test]
 		public void TestSelectGroupBy([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
@@ -929,7 +928,7 @@ FROM
 					{
 						Master = m,
 						Detail = dd,
-						FirstMaster = master.Where(mm => m.Id1 == dd.MasterId)
+						FirstMaster = master.Where(mm => mm.Id1 == dd.MasterId)
 							.AsEnumerable()
 							.GroupBy(_ => _.Id1)
 							.Select(_ => _.OrderBy(mm => mm.Id1).First())
@@ -942,7 +941,7 @@ FROM
 					{
 						Master = m,
 						Detail = dd,
-						FirstMaster = masterRecords.Where(mm => m.Id1 == dd.MasterId)
+						FirstMaster = masterRecords.Where(mm => mm.Id1 == dd.MasterId)
 							.GroupBy(_ => _.Id1)
 							.Select(_ => _.OrderBy(mm => mm.Id1).First())
 					};
@@ -1679,6 +1678,43 @@ FROM
 		}
 		#endregion
 
+		#region Issue 3806
+
+		[Table(IsColumnAttributeRequired = false)]
+		public class Issue3806Table
+		{
+			[PrimaryKey] public int Id { get; set; }
+
+			[Association(ThisKey = nameof(Id), OtherKey = nameof(Issue3806ItemTable.AssociationKey))]
+			public IEnumerable<Issue3806ItemTable> Items { get; set; } = null!;
+		}
+
+		[Table(IsColumnAttributeRequired = false)]
+		public class Issue3806ItemTable
+		{
+			[PrimaryKey] public int Id             { get; set; }
+			[Column    ] public int Value          { get; set; }
+			[Column    ] public int AssociationKey { get; set; }
+		}
+
+		[ActiveIssue]
+		[Test]
+		public void Issue3806Test([DataSources(false)] string context)
+		{
+			var queries = new SaveQueriesInterceptor();
+			using var db = GetDataContext(context);
+			db.AddInterceptor(queries);
+
+			using var table = db.CreateLocalTable<Issue3806Table>();
+			using var items = db.CreateLocalTable<Issue3806ItemTable>();
+
+			queries.Queries.Clear();
+			table.LoadWith(a => a.Items).Where(a => a.Id != 0).ToList();
+
+			Assert.That(queries.Queries, Has.Count.EqualTo(1));
+		}
+		#endregion
+
 		#region Issue 3799
 
 		[Table]
@@ -1883,6 +1919,94 @@ FROM
 				.LoadWith(p => p.Patient)
 				.ToList();
 		}
+
+		#region Issue 3226
+		[Table]
+		sealed class Item
+		{
+			[PrimaryKey] public int Id { get; set; }
+			[Column] public string? Text { get; set; }
+
+			[Association(ThisKey = nameof(Id), OtherKey = nameof(ItemValue.ItemId), CanBeNull = true)]
+			public IEnumerable<ItemValue> Values { get; set; } = null!;
+		}
+
+		[Table]
+		sealed class ItemValue
+		{
+			[Column] public int Id { get; set; }
+			[Column] public int ItemId { get; set; }
+			[Column] public decimal Value { get; set; }
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/3226")]
+		public void Issue3226Test1([DataSources(TestProvName.AllClickHouse)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t1 = db.CreateLocalTable<Item>();
+			using var t2 = db.CreateLocalTable<ItemValue>();
+
+			t1
+				.OrderBy(x => x.Values.Sum(y => y.Value))
+				.Select(x => new {
+					Id = x.Id,
+					Text = x.Text
+				})
+				.ToList();
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/3226")]
+		public void Issue3226Test2([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t1 = db.CreateLocalTable<Item>();
+			using var t2 = db.CreateLocalTable<ItemValue>();
+
+			t1
+				.Select(x => new {
+					Id = x.Id,
+					Text = x.Text,
+					Summary = x.Values.Select(y => new { Total = y.Value }).AsEnumerable()
+				})
+				.ToList();
+		}
+
+		[ThrowsForProvider(typeof(LinqException), providers: [TestProvName.AllClickHouse], ErrorMessage = "Provider does not support correlated subqueries.")]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/3226")]
+		public void Issue3226Test3([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t1 = db.CreateLocalTable<Item>();
+			using var t2 = db.CreateLocalTable<ItemValue>();
+
+			t1
+				.OrderBy(x => x.Values.Sum(y => y.Value))
+				.Select(x => new {
+					Id = x.Id,
+					Text = x.Text,
+					Summary = x.Values.Select(y => new { Total = y.Value }).AsEnumerable()
+				})
+				.ToList();
+		}
+
+		[ThrowsForProvider(typeof(LinqException), providers: [TestProvName.AllClickHouse], ErrorMessage = "Provider does not support correlated subqueries.")]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/3226")]
+		public void Issue3226Test4([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t1 = db.CreateLocalTable<Item>();
+			using var t2 = db.CreateLocalTable<ItemValue>();
+
+			t1
+				.OrderBy(x => x.Values.Sum(y => (decimal?)y.Value) ?? (decimal)0.0)
+				.Select(x => new {
+					Id = x.Id,
+					Text = x.Text,
+					Summary = x.Values.Select(y => new { Total = y.Value }).AsEnumerable()
+				})
+				.ToList();
+		}
+		#endregion
 
 		abstract class EntityBase
 		{

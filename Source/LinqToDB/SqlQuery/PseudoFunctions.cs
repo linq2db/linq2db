@@ -94,14 +94,5 @@ namespace LinqToDB.SqlQuery
 				ParametersNullabilityType.IfAnyParameterNullable, null, value, resultType);
 		}
 
-		/// <summary>
-		/// Function to return first non-null argument: <c>COALESCE(values...)</c>
-		/// </summary>
-		public const string COALESCE = "$Coalesce$";
-		public static SqlFunction MakeCoalesce(Type systemType, params ISqlExpression[] values)
-		{
-			return new SqlFunction(systemType, COALESCE, false, true, Precedence.Primary,
-				ParametersNullabilityType.IfAllParametersNullable, null, values);
-		}
 	}
 }

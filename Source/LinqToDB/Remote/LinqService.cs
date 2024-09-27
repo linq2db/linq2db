@@ -137,7 +137,7 @@ namespace LinqToDB.Remote
 					new QueryContext(query.Statement, query.DataOptions),
 					new SqlParameterValues(),
 					cancellationToken
-					).ConfigureAwait(Configuration.ContinueOnCapturedContext);
+					).ConfigureAwait(false);
 			}
 			catch (Exception exception)
 			{
@@ -201,7 +201,7 @@ namespace LinqToDB.Remote
 					new QueryContext(query.Statement, query.DataOptions),
 					null,
 					cancellationToken
-					).ConfigureAwait(Configuration.ContinueOnCapturedContext);
+					).ConfigureAwait(false);
 
 				var result = ProcessScalar(scalar);
 
@@ -299,7 +299,7 @@ namespace LinqToDB.Remote
 					new QueryContext(query.Statement, query.DataOptions),
 					SqlParameterValues.Empty,
 					cancellationToken
-					).ConfigureAwait(Configuration.ContinueOnCapturedContext);
+					).ConfigureAwait(false);
 
 				var ret = ProcessDataReaderWrapper(query, db, rd);
 
@@ -509,18 +509,18 @@ namespace LinqToDB.Remote
 #pragma warning restore CA2007
 
 				await db.BeginTransactionAsync(cancellationToken)
-					.ConfigureAwait(Configuration.ContinueOnCapturedContext);
+					.ConfigureAwait(false);
 
 				foreach (var query in queries)
 				{
 					if (query.QueryHints?.Count > 0) db.NextQueryHints.AddRange(query.QueryHints);
 
 					await DataConnection.QueryRunner.ExecuteNonQueryAsync(db, new QueryContext(query.Statement, query.DataOptions), null, cancellationToken)
-						.ConfigureAwait(Configuration.ContinueOnCapturedContext);
+						.ConfigureAwait(false);
 				}
 
 				await db.CommitTransactionAsync(cancellationToken)
-					.ConfigureAwait(Configuration.ContinueOnCapturedContext);
+					.ConfigureAwait(false);
 
 				return queryData.Length;
 			}

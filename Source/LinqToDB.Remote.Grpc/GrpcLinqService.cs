@@ -94,7 +94,7 @@ namespace LinqToDB.Remote.Grpc
 				return await _linqService.GetInfoAsync(
 					configuration.Configuration,
 					context.ServerCallContext?.CancellationToken ?? CancellationToken.None)
-					.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+					.ConfigureAwait(false);
 			}
 			catch (Exception exception) when (_transferInternalExceptionToClient)
 			{
@@ -110,7 +110,7 @@ namespace LinqToDB.Remote.Grpc
 					caq.Configuration,
 					caq.QueryData,
 					context.ServerCallContext?.CancellationToken ?? CancellationToken.None
-					).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+					).ConfigureAwait(false);
 			}
 			catch (Exception exception) when (_transferInternalExceptionToClient)
 			{
@@ -126,7 +126,7 @@ namespace LinqToDB.Remote.Grpc
 					caq.Configuration,
 					caq.QueryData,
 					context.ServerCallContext?.CancellationToken ?? CancellationToken.None
-					).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+					).ConfigureAwait(false);
 			}
 			catch (Exception exception) when (_transferInternalExceptionToClient)
 			{
@@ -142,7 +142,7 @@ namespace LinqToDB.Remote.Grpc
 					caq.Configuration,
 					caq.QueryData,
 					context.ServerCallContext?.CancellationToken ?? CancellationToken.None
-					).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+					).ConfigureAwait(false);
 			}
 			catch (Exception exception) when (_transferInternalExceptionToClient)
 			{
@@ -155,7 +155,7 @@ namespace LinqToDB.Remote.Grpc
 			try
 			{
 				return await _linqService.ExecuteBatchAsync(caq.Configuration, caq.QueryData)
-					.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+					.ConfigureAwait(false);
 			}
 			catch (Exception exception) when (_transferInternalExceptionToClient)
 			{

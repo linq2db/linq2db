@@ -101,13 +101,14 @@ namespace LinqToDB.DataProvider.MySql
 
 			return (provider, version) switch
 			{
-				(MySqlProvider.MySqlData, MySqlVersion.MySql57)        => _mySql57DataProvider.Value,
-				(MySqlProvider.MySqlData, MySqlVersion.MySql80)        => _mySql80DataProvider.Value,
-				(MySqlProvider.MySqlData, MySqlVersion.MariaDB10)      => _mariadb10DataProvider.Value,
-				(MySqlProvider.MySqlConnector, MySqlVersion.MySql57)   => _mySql57ConnectorDataProvider.Value,
-				(MySqlProvider.MySqlConnector, MySqlVersion.MySql80)   => _mySql80ConnectorDataProvider.Value,
-				(MySqlProvider.MySqlConnector, MySqlVersion.MariaDB10) => _mariadb10ConnectorDataProvider.Value,
-				_                                                      => _mySql57ConnectorDataProvider.Value,
+				(_,                            MySqlVersion.AutoDetect) => GetDataProvider(options, provider, DetectServerVersion(options, provider) ?? DefaultVersion),
+				(MySqlProvider.MySqlData,      MySqlVersion.MySql57)    => _mySql57DataProvider.Value,
+				(MySqlProvider.MySqlData,      MySqlVersion.MySql80)    => _mySql80DataProvider.Value,
+				(MySqlProvider.MySqlData,      MySqlVersion.MariaDB10)  => _mariadb10DataProvider.Value,
+				(MySqlProvider.MySqlConnector, MySqlVersion.MySql57)    => _mySql57ConnectorDataProvider.Value,
+				(MySqlProvider.MySqlConnector, MySqlVersion.MySql80)    => _mySql80ConnectorDataProvider.Value,
+				(MySqlProvider.MySqlConnector, MySqlVersion.MariaDB10)  => _mariadb10ConnectorDataProvider.Value,
+				_                                                       => _mySql57ConnectorDataProvider.Value,
 			};
 		}
 

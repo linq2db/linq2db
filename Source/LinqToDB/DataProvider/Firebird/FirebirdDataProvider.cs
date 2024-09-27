@@ -44,6 +44,8 @@ namespace LinqToDB.DataProvider.Firebird
 			SqlProviderFlags.IsUpdateTakeSupported     = true;
 			SqlProviderFlags.IsUpdateSkipTakeSupported = true;
 
+			SqlProviderFlags.SupportedCorrelatedSubqueriesLevel = 1;
+
 			SetCharField("CHAR", (r,i) => r.GetString(i).TrimEnd(' '));
 			SetCharFieldToType<char>("CHAR", DataTools.GetCharExpression);
 

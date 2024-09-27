@@ -465,7 +465,6 @@ namespace Tests.Data
 
 		// informix connection limits interfere with test
 		[Test]
-		[ActiveIssue("Fails due to connection limit for development version when run with nonmanaged provider", Configuration = ProviderName.SybaseManaged)]
 		public void MultipleConnectionsTest([DataSources(TestProvName.AllInformix)] string context)
 		{
 			using var psr = new Tests.Remote.ServerContainer.PortStatusRestorer(_serverContainer, false);

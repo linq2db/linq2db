@@ -162,9 +162,9 @@ namespace LinqToDB.DataProvider.SqlServer
 					() => "INSERT ASYNC BULK " + tableName + "(" + string.Join(", ", columns.Select(x => x.ColumnName)) + ")" + Environment.NewLine,
 					async () =>
 					{
-						await bc.WriteToServerAsync(rd, cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+						await bc.WriteToServerAsync(rd, cancellationToken).ConfigureAwait(false);
 						return rd.Count;
-					}).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+					}).ConfigureAwait(false);
 			}
 
 			if (rc.RowsCopied != rd.Count)
@@ -176,7 +176,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			}
 
 			if (table.DataContext.CloseAfterUse)
-				await table.DataContext.CloseAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+				await table.DataContext.CloseAsync().ConfigureAwait(false);
 
 			return rc;
 		}
@@ -297,27 +297,27 @@ namespace LinqToDB.DataProvider.SqlServer
 
 			if (options.BulkCopyOptions.KeepIdentity == true)
 				await helper.DataConnection.ExecuteAsync("SET IDENTITY_INSERT " + helper.TableName + " ON", cancellationToken)
-					.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+					.ConfigureAwait(false);
 
 			switch (((SqlServerDataProvider)helper.DataConnection.DataProvider).Version)
 			{
 				case SqlServerVersion.v2005:
 					ret = await MultipleRowsCopy2Async(helper, source, "", cancellationToken)
-						.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+						.ConfigureAwait(false);
 					break;
 				default:
 					ret = await MultipleRowsCopy1Async(helper, source, cancellationToken)
-						.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+						.ConfigureAwait(false);
 					break;
 			}
 
 			if (options.BulkCopyOptions.KeepIdentity == true)
 			{
 				await helper.DataConnection.ExecuteAsync("SET IDENTITY_INSERT " + helper.TableName + " OFF", cancellationToken)
-					.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+					.ConfigureAwait(false);
 
 				if (helper.OriginalContext.CloseAfterUse)
-					await helper.OriginalContext.CloseAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+					await helper.OriginalContext.CloseAsync().ConfigureAwait(false);
 			}
 
 			return ret;
@@ -333,27 +333,27 @@ namespace LinqToDB.DataProvider.SqlServer
 
 			if (options.BulkCopyOptions.KeepIdentity == true)
 				await helper.DataConnection.ExecuteAsync("SET IDENTITY_INSERT " + helper.TableName + " ON", cancellationToken)
-					.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+					.ConfigureAwait(false);
 
 			switch (((SqlServerDataProvider)helper.DataConnection.DataProvider).Version)
 			{
 				case SqlServerVersion.v2005:
 					ret = await MultipleRowsCopy2Async(helper, source, "", cancellationToken)
-						.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+						.ConfigureAwait(false);
 					break;
 				default:
 					ret = await MultipleRowsCopy1Async(helper, source, cancellationToken)
-						.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+						.ConfigureAwait(false);
 					break;
 			}
 
 			if (options.BulkCopyOptions.KeepIdentity == true)
 			{
 				await helper.DataConnection.ExecuteAsync("SET IDENTITY_INSERT " + helper.TableName + " OFF", cancellationToken)
-					.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+					.ConfigureAwait(false);
 
 				if (helper.OriginalContext.CloseAfterUse)
-					await helper.OriginalContext.CloseAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+					await helper.OriginalContext.CloseAsync().ConfigureAwait(false);
 			}
 
 			return ret;

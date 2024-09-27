@@ -597,20 +597,20 @@ namespace LinqToDB.DataProvider.MySql
 					{
 						var action = (Func<MySqlBulkCopy, IDataReader, CancellationToken, Task>)CompiledWrappers[12];
 #pragma warning disable RS0030 // API mapping must preserve type (IDataReader)
-						await action(this, dataReader, cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+						await action(this, dataReader, cancellationToken).ConfigureAwait(false);
 #pragma warning restore RS0030 //  API mapping must preserve type (IDataReader)
 					}
 					else if (CanWriteToServerAsync3)
-						await WriteToServerAsync3(dataReader, cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+						await WriteToServerAsync3(dataReader, cancellationToken).ConfigureAwait(false);
 					else if (CanWriteToServerAsync2)
 					{
 						var action = (Func<MySqlBulkCopy, IDataReader, CancellationToken, Task>)CompiledWrappers[10];
 #pragma warning disable RS0030 // API mapping must preserve type (IDataReader)
-						await action(this, dataReader, cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+						await action(this, dataReader, cancellationToken).ConfigureAwait(false);
 #pragma warning restore RS0030 //  API mapping must preserve type (IDataReader)
 					}
 					else if (CanWriteToServerAsync1)
-						await WriteToServerAsync1(dataReader, cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+						await WriteToServerAsync1(dataReader, cancellationToken).ConfigureAwait(false);
 					else
 						throw new InvalidOperationException("BulkCopy.WriteToServerAsync implementation not configured");
 				}

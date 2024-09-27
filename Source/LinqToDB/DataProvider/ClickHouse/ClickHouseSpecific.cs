@@ -55,7 +55,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 		public static IClickHouseSpecificQueryable<TSource> AsClickHouse<TSource>(this IQueryable<TSource> source)
 			where TSource : notnull
 		{
-			var currentSource = LinqExtensions.ProcessSourceQueryable?.Invoke(source) ?? source;
+			var currentSource = source.ProcessIQueryable();
 
 			return new ClickHouseSpecificQueryable<TSource>(currentSource.Provider.CreateQuery<TSource>(
 				Expression.Call(

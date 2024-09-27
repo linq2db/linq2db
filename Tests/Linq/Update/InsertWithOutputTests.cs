@@ -1352,5 +1352,48 @@ namespace Tests.xUpdate
 				Assert.That(x.Whatsov, Is.EqualTo(what.Whatsov));
 			});
 		}
+
+		#region Issue 3581
+
+		[Table]
+		sealed class Issue3581Table
+		{
+			[PrimaryKey] public int Id { get; set; }
+			[Column ]public string? Name { get; set; }
+
+			[Column("ExternalId", ".Id")]
+			[Column("Source", ".Source")]
+			public ExternalId? ExternalId { get; set; }
+		}
+
+		sealed class ExternalId
+		{
+			public string? Id { get; set; }
+			public string? Source { get; set; }
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/3581")]
+		public void Issue3581Test([IncludeDataSources(true, FeatureInsertOutputSingle)] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable<Issue3581Table>();
+
+			var row = new Issue3581Table {Id = 1, Name = "John Doe", ExternalId = new ExternalId() { Id = "1", Source = "unknown" } };
+			var created = table.InsertWithOutput(row);
+
+			Assert.That(created, Is.Not.Null);
+			Assert.Multiple(() =>
+			{
+				Assert.That(created.Id, Is.EqualTo(row.Id));
+				Assert.That(created.Name, Is.EqualTo(row.Name));
+				Assert.That(created.ExternalId, Is.Not.Null);
+			});
+			Assert.Multiple(() =>
+			{
+				Assert.That(created.ExternalId!.Id, Is.EqualTo(row.ExternalId.Id));
+				Assert.That(created.ExternalId.Source, Is.EqualTo(row.ExternalId.Source));
+			});
+		}
+		#endregion
 	}
 }

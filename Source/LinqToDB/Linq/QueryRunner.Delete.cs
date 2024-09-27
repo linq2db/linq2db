@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 
 namespace LinqToDB.Linq
 {
+	using Common;
 	using Common.Internal.Cache;
 	using SqlQuery;
 	using Tools;
@@ -56,7 +57,7 @@ namespace LinqToDB.Linq
 
 					ei.Queries[0].AddParameterAccessor(param);
 
-					deleteStatement.SelectQuery.Where.SearchCondition.AddEqual(field, param.SqlParameter, false);
+					deleteStatement.SelectQuery.Where.SearchCondition.AddEqual(field, param.SqlParameter, CompareNulls.LikeSql);
 
 					if (field.CanBeNull)
 						deleteStatement.IsParameterDependent = true;
@@ -145,7 +146,7 @@ namespace LinqToDB.Linq
 								return CreateQuery(context, key.tableName, key.serverName, key.databaseName, key.schemaName, key.tableOptions, key.type);
 							});
 
-					var result = await ei.GetElementAsync(dataContext, Expression.Constant(obj), null, null, token).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+					var result = await ei.GetElementAsync(dataContext, Expression.Constant(obj), null, null, token).ConfigureAwait(false);
 
 					return (int)result!;
 				}

@@ -79,9 +79,9 @@ namespace LinqToDB.Data
 				if (_dataConnection is IInterceptable<ICommandInterceptor> { Interceptor: {} interceptor })
 					await using (ActivityService.StartAndConfigureAwait(ActivityID.CommandInterceptorBeforeReaderDisposeAsync))
 						await interceptor.BeforeReaderDisposeAsync(new(_dataConnection), Command, DataReader)
-							.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+							.ConfigureAwait(false);
 
-				await DataReader.DisposeAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+				await DataReader.DisposeAsync().ConfigureAwait(false);
 				DataReader = null;
 			}
 
@@ -90,9 +90,9 @@ namespace LinqToDB.Data
 				OnBeforeCommandDispose?.Invoke(Command);
 
 				if (_dataConnection != null)
-					await _dataConnection.DataProvider.DisposeCommandAsync(Command).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+					await _dataConnection.DataProvider.DisposeCommandAsync(Command).ConfigureAwait(false);
 				else
-					await Command.DisposeAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+					await Command.DisposeAsync().ConfigureAwait(false);
 			}
 		}
 #else

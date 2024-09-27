@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 
 namespace LinqToDB.Linq
 {
+	using Common;
 	using Common.Internal.Cache;
 	using Mapping;
 	using SqlQuery;
@@ -241,7 +242,7 @@ namespace LinqToDB.Linq
 								return CreateQuery(context.dataContext, context.entityDescriptor, context.obj, null, key.tableName, key.serverName, key.databaseName, key.schema, key.tableOptions, key.type);
 							});
 
-					var result = await ei.GetElementAsync(dataContext, Expression.Constant(obj), null, null, token).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+					var result = await ei.GetElementAsync(dataContext, Expression.Constant(obj), null, null, token).ConfigureAwait(false);
 
 					return (int)result!;
 				}
@@ -272,7 +273,7 @@ namespace LinqToDB.Linq
 			var wsc = firstStatement.SelectQuery.Where.EnsureConjunction();
 
 			foreach (var key in keys)
-				wsc.AddEqual(key.Column, key.Expression!, false);
+				wsc.AddEqual(key.Column, key.Expression!, CompareNulls.LikeSql);
 
 			// TODO! looks not working solution
 			if (firstStatement.Update.Items.Count > 0)
@@ -283,6 +284,7 @@ namespace LinqToDB.Linq
 					Tag                = firstStatement.Tag,
 					SqlQueryExtensions = firstStatement.SqlQueryExtensions
 				};
+				query.IsFinalized = false; 
 				SetNonQueryQuery2(query);
 			}
 			else
@@ -290,6 +292,7 @@ namespace LinqToDB.Linq
 				firstStatement.SelectQuery.Select.Columns.Clear();
 				firstStatement.SelectQuery.Select.Columns.Add(new SqlColumn(firstStatement.SelectQuery, new SqlExpression("1")));
 				query.Queries[0].Statement = new SqlSelectStatement(firstStatement.SelectQuery);
+				query.IsFinalized          = false;
 				SetQueryQuery2(query);
 			}
 
@@ -298,6 +301,7 @@ namespace LinqToDB.Linq
 				Statement  = new SqlSelectStatement(firstStatement.SelectQuery),
 				ParameterAccessors = query.Queries[0].ParameterAccessors.ToList(),
 			});
+			query.IsFinalized = false;
 		}
 	}
 }

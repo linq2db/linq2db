@@ -13,9 +13,11 @@ uid: contributing
 |.\Data|Databases and database creation scripts for tests|
 |.\NuGet|LINQ to DB NuGet packages build files|
 |.\Redist| Binaries, unavailable officially at NuGet, used by tests and nugets|
+|.\Source\CodeGenerators| LINQ to DB internal source generators source code|
 |.\Source\LinqToDB| LINQ to DB source code|
-|.\Source\LinqToDB.Extensions| LINQ to DB Dependency Injection and Logging extensions library source code|
 |.\Source\LinqToDB.CLI| LINQ to DB CLI scaffold tool source code|
+|.\Source\LinqToDB.EntityFrameworkCore| LINQ to DB integration with Entity Framework Core source code|
+|.\Source\LinqToDB.Extensions| LINQ to DB Dependency Injection and Logging extensions library source code|
 |.\Source\LinqToDB.FSharp | F# support extension for Linq To DB|
 |.\Source\LinqToDB.Remote.Grpc| LINQ to DB Remote Context GRPC client/server source code|
 |.\Source\LinqToDB.Remote.Wcf| LINQ to DB Remote Context WCF client/server source code|
@@ -23,12 +25,14 @@ uid: contributing
 |.\Source\LinqToDB.Tools| LINQ to DB Tools source code|
 |.\Tests| Unit test projects folder|
 |.\Tests\Base|LINQ to DB testing framework|
+|.\Tests\EntityFrameworkCore|LINQ to DB EF.Core integration tests|
+|.\Tests\EntityFrameworkCore.FSharp|LINQ to DB EF.Core F# integration tests|
 |.\Tests\FSharp|F# models and tests|
 |.\Tests\Linq|Main project for LINQ to DB unit tests|
 |.\Tests\Model|Model classes for tests|
-|.\Tests\Tests.T4|T4 templates test project|
 |.\Tests\Tests.Benchmarks| Benchmarks|
 |.\Tests\Tests.PLayground| Test project for use with linq2db.playground.sln lite test solution. Used for work on specific test without full solution load|
+|.\Tests\Tests.T4|T4 templates test project|
 |.\Tests\VisualBasic|Visual Basic models and tests support|
 
 #### Solutions
@@ -46,6 +50,7 @@ Custom feature symbols:
 Custom debugging symbols:
 
 * `OVERRIDETOSTRING` - enables `ToString()` overrides for AST model (must be enabled in LinqToDB.csproj by renaming existing `OVERRIDETOSTRING1` define)
+* `BUGCHECK` - enables extra bugchecks in debug and ci test builds
 
 #### Test projects
 

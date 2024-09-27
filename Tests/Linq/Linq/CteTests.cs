@@ -12,6 +12,8 @@ using NUnit.Framework;
 namespace Tests.Linq
 {
 	using FluentAssertions;
+
+	using LinqToDB.Data;
 	using LinqToDB.Linq;
 	using Model;
 
@@ -1334,6 +1336,619 @@ namespace Tests.Linq
 				query.ToArray());
 		}
 
+		[Table]
+		private class Issue3360Table
+		{
+			[PrimaryKey] public int Id { get; set; }
+			// by default we generate N-literal, which is not compatible with (var)char
+			[Column(DataType = DataType.VarChar)] public string? Str { get; set; }
+		}
+
+		private class Issue3360Projection
+		{
+			public int     Id   { get; set; }
+			public string? Str  { get; set; }
+		}
+
+		// SqlException : Types don't match between the anchor and the recursive part in column "Str" of recursive query "cte".
+		[ActiveIssue]
+		[Test(Description = "Test that we type literal/parameter in set query column properly")]
+		public void Issue3360_TypeByOtherQuery([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable<Issue3360Table>();
+
+			var query = db.GetCte<Issue3360Projection>(cte =>
+			{
+				return tb.Select(p => new Issue3360Projection() { Id = p.Id, Str = p.Str })
+				.Concat(
+					from p in cte
+					join r in tb on p.Id equals r.Id + 1
+					select new Issue3360Projection() { Id = p.Id, Str = "Str" }
+					);
+			});
+
+			query.ToArray();
+
+			if (db is TestDataConnection dc)
+			{
+				dc.LastQuery!.Should().NotContain("N'");
+				dc.LastQuery!.ToUpperInvariant().Should().Contain("AS VARCHAR(MAX))", Exactly.Twice());
+			}
+		}
+
+		[ActiveIssue]
+		[Test(Description = "Test that we don't need typing for non-sqlserver providers")]
+		public void Issue3360_TypeByOtherQuery_DB2([IncludeDataSources(true, ProviderName.DB2)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable<Issue3360Table>();
+
+			var query = db.GetCte<Issue3360Projection>(cte =>
+			{
+				return tb.Select(p => new Issue3360Projection() { Id = p.Id, Str = p.Str })
+				.Concat(
+					from p in cte
+					join r in tb on p.Id equals r.Id + 1
+					select new Issue3360Projection() { Id = p.Id, Str = "Str" }
+					);
+			});
+
+			query.ToArray();
+		}
+
+		[ActiveIssue(Configurations = [TestProvName.AllClickHouse, TestProvName.AllSqlServer])]
+		[Test(Description = "Test that we don't need typing for non-sqlserver providers")]
+		public void Issue3360_TypeByOtherQuery_AllProviders([CteContextSource(ProviderName.DB2)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable<Issue3360Table>();
+
+			var query = db.GetCte<Issue3360Projection>(cte =>
+			{
+				return tb.Select(p => new Issue3360Projection() { Id = p.Id, Str = p.Str })
+				.Concat(
+					from p in cte
+					from r in tb
+					where p.Id == r.Id + 1
+					select new Issue3360Projection() { Id = p.Id, Str = "Str" }
+					);
+			});
+
+			query.ToArray();
+		}
+
+		[Table]
+		private class Issue3360WithEnum
+		{
+			[Column                                          ] public int     Id  { get; set; }
+			[Column(DataType = DataType.VarChar, Length = 50)] public StrEnum Str { get; set; }
+		}
+
+		enum StrEnum
+		{
+			[MapValue("THIS_IS_ONE")]
+			One = 1,
+			[MapValue("THIS_IS_TWO")]
+			Two
+		}
+
+		private class Issue3360WithEnumProjection
+		{
+			public int     Id  { get; set; }
+			public StrEnum Str { get; set; }
+		}
+
+		[ActiveIssue]
+		[Test(Description = "Test that we type literal/parameter in set query column properly")]
+		public void Issue3360_TypeStringEnum([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable<Issue3360WithEnum>();
+
+			var query = db.GetCte<Issue3360WithEnumProjection>(cte =>
+			{
+				return tb.Select(p => new Issue3360WithEnumProjection() { Id = p.Id, Str = p.Str })
+				.Concat(
+					from p in cte
+					join r in tb on p.Id equals r.Id + 1
+					select new Issue3360WithEnumProjection() { Id = p.Id, Str = StrEnum.Two }
+					);
+			});
+
+			query.ToArray();
+
+			if (db is TestDataConnection dc)
+			{
+				dc.LastQuery!.Should().NotContain("N'");
+				dc.LastQuery!.Should().Contain("'THIS_IS_TWO'");
+				dc.LastQuery!.ToUpperInvariant().Should().Contain("AS VARCHAR(MAX))", Exactly.Twice());
+			}
+		}
+
+		[ActiveIssue(Configurations = [TestProvName.AllClickHouse, TestProvName.AllPostgreSQL, TestProvName.AllSqlServer])]
+		[Test(Description = "Test that we don't need typing for non-sqlserver providers")]
+		public void Issue3360_TypeStringEnum_AllProviders([CteContextSource(ProviderName.DB2)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable<Issue3360WithEnum>();
+
+			var query = db.GetCte<Issue3360WithEnumProjection>(cte =>
+			{
+				return tb.Select(p => new Issue3360WithEnumProjection() { Id = p.Id, Str = p.Str })
+				.Concat(
+					from p in cte
+					join r in tb on p.Id equals r.Id + 1
+					select new Issue3360WithEnumProjection() { Id = p.Id, Str = StrEnum.Two }
+					);
+			});
+
+			query.ToArray();
+		}
+
+		[Test(Description = "Test that we don't need typing for non-sqlserver providers")]
+		public void Issue3360_TypeStringEnum_DB2([IncludeDataSources(true, ProviderName.DB2)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable<Issue3360WithEnum>();
+
+			var query = db.GetCte<Issue3360WithEnumProjection>(cte =>
+			{
+				return tb.Select(p => new Issue3360WithEnumProjection() { Id = p.Id, Str = p.Str })
+				.Concat(
+					from p in cte
+					from r in tb
+					where p.Id == r.Id + 1
+					select new Issue3360WithEnumProjection() { Id = p.Id, Str = StrEnum.Two }
+					);
+			});
+
+			query.ToArray();
+		}
+
+		[ActiveIssue]
+		[Test(Description = "Test that we type literal/parameter in set query column properly")]
+		public void Issue3360_TypeByProjectionProperty([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable<Issue3360Table>();
+
+			var query = db.GetCte<Issue3360Table>(cte =>
+			{
+				return tb.Select(p => new Issue3360Table() { Id = p.Id, Str = "Str1" })
+				.Concat(
+					from p in cte
+					join r in tb on p.Id equals r.Id + 1
+					select new Issue3360Table() { Id = p.Id, Str = "Str2" }
+					);
+			});
+
+			query.ToArray();
+			if (db is TestDataConnection dc)
+			{
+				dc.LastQuery!.Should().NotContain("N'");
+				dc.LastQuery!.ToUpperInvariant().Should().Contain("AS VARCHAR(MAX))", Exactly.Twice());
+			}
+		}
+
+		[ActiveIssue(Configuration = TestProvName.AllClickHouse)]
+		[Test(Description = "Test that we don't need typing for non-sqlserver providers")]
+		public void Issue3360_TypeByProjectionProperty_AllProviders([CteContextSource(ProviderName.DB2)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable<Issue3360Table>();
+
+			var query = db.GetCte<Issue3360Table>(cte =>
+			{
+				return tb.Select(p => new Issue3360Table() { Id = p.Id, Str = "Str1" })
+				.Concat(
+					from p in cte
+					join r in tb on p.Id equals r.Id + 1
+					select new Issue3360Table() { Id = p.Id, Str = "Str2" }
+					);
+			});
+
+			query.ToArray();
+		}
+
+		[ActiveIssue]
+		[Test(Description = "Test that we don't need typing for non-sqlserver providers")]
+		public void Issue3360_TypeByProjectionProperty_DB2([IncludeDataSources(true, ProviderName.DB2)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable<Issue3360Table>();
+
+			var query = db.GetCte<Issue3360Table>(cte =>
+			{
+				return tb.Select(p => new Issue3360Table() { Id = p.Id, Str = "Str1" })
+				.Concat(
+					from p in cte
+					from r in tb
+					where p.Id == r.Id + 1
+					select new Issue3360Table() { Id = p.Id, Str = "Str2" }
+					);
+			});
+
+			query.ToArray();
+		}
+
+		[Table]
+		private class Issue3360NullInAnchor
+		{
+			[Column                                          ] public int       Id    { get; set; }
+			[NotColumn(Configuration = ProviderName.Firebird)]
+			[NotColumn(Configuration = ProviderName.DB2)     ]
+			[Column                                          ] public Guid?     Guid  { get; set; }
+			[Column(DataType = DataType.VarChar, Length = 50)] public StrEnum?  Enum1 { get; set; }
+		}
+
+		[ActiveIssue(Configurations = [TestProvName.AllClickHouse, TestProvName.AllSqlServer])]
+		[Test(Description = "Test CTE columns typing")]
+		public void Issue3360_NullGuidInAnchor([CteContextSource(TestProvName.AllFirebird, ProviderName.DB2)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable<Issue3360NullInAnchor>();
+
+			var query = db.GetCte<Issue3360NullInAnchor>(cte =>
+			{
+				return tb.Select(p => new Issue3360NullInAnchor() { Id = p.Id, Guid = null })
+				.Concat(
+					from p in cte
+					join r in tb on p.Id equals r.Id + 100
+					select new Issue3360NullInAnchor() { Id = p.Id, Guid = r.Guid }
+					);
+			});
+
+			query.ToArray();
+		}
+
+		[ActiveIssue(Configurations = [TestProvName.AllClickHouse, TestProvName.AllPostgreSQL, TestProvName.AllSqlServer])]
+		[Test(Description = "Test CTE columns typing")]
+		public void Issue3360_NullEnumInAnchor([CteContextSource(ProviderName.DB2)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable<Issue3360NullInAnchor>();
+
+			var query = db.GetCte<Issue3360NullInAnchor>(cte =>
+			{
+				return tb.Select(p => new Issue3360NullInAnchor() { Id = p.Id, Enum1 = null })
+				.Concat(
+					from p in cte
+					join r in tb on p.Id equals r.Id + 100
+					select new Issue3360NullInAnchor() { Id = p.Id, Enum1 = StrEnum.One }
+					);
+			});
+
+			query.ToArray();
+		}
+
+		[Test(Description = "Test CTE columns typing")]
+		public void Issue3360_NullEnumInAnchor_DB2([IncludeDataSources(true, ProviderName.DB2)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable<Issue3360NullInAnchor>();
+
+			var query = db.GetCte<Issue3360NullInAnchor>(cte =>
+			{
+				return tb.Select(p => new Issue3360NullInAnchor() { Id = p.Id, Enum1 = null })
+				.Concat(
+					from p in cte
+					from r in tb
+					where p.Id == r.Id + 100
+					select new Issue3360NullInAnchor() { Id = p.Id, Enum1 = StrEnum.One }
+					);
+			});
+
+			query.ToArray();
+		}
+
+		#region InvalidColumnIndexMapping issue
+		public enum InvalidColumnIndexMappingEnum1
+		{
+			[MapValue("ENUM1_VALUE")]
+			Value
+		}
+
+		public enum InvalidColumnIndexMappingEnum2
+		{
+			[MapValue("ENUM2_VALUE")]
+			Value
+		}
+
+		[Table]
+		public class InvalidColumnIndexMappingTable1
+		{
+			[PrimaryKey] public Guid Id      { get; set; }
+			[Column    ] public Guid ChildId { get; set; }
+		}
+
+		[Table]
+		public class InvalidColumnIndexMappingTable2
+		{
+			[PrimaryKey                         ] public Guid                           Id    { get; set; }
+			[Column(DataType = DataType.VarChar)] public InvalidColumnIndexMappingEnum2 Enum2 { get; set; }
+		}
+
+		[Table]
+		public class InvalidColumnIndexMappingTable3
+		{
+			[PrimaryKey                         ] public Guid                           Id    { get; set; }
+			[Column(DataType = DataType.VarChar)] public InvalidColumnIndexMappingEnum1 Enum1 { get; set; }
+		}
+
+		[Table]
+		public class InvalidColumnIndexMappingTable4
+		{
+			[PrimaryKey] public Guid Id { get; set; }
+		}
+
+		private record InvalidColumnIndexMappingRecord(Guid Id, Guid? ChildId, InvalidColumnIndexMappingEnum1? Enum1, InvalidColumnIndexMappingEnum2? Enum2);
+
+		[ActiveIssue]
+		[Test(Description = "LinqToDBConvertException : Cannot convert value 'ENUM1_VALUE: System.String' to type 'Tests.Linq.CteTests+InvalidColumnIndexMappingEnum2'")]
+		public void Issue3360_InvalidColumnIndexMapping([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			using var table1 = db.CreateLocalTable<InvalidColumnIndexMappingTable1>();
+			using var table2 = db.CreateLocalTable<InvalidColumnIndexMappingTable2>();
+			using var table3 = db.CreateLocalTable<InvalidColumnIndexMappingTable3>();
+			using var table4 = db.CreateLocalTable<InvalidColumnIndexMappingTable4>();
+
+			db.Insert(new InvalidColumnIndexMappingTable1() { Id = TestData.Guid1, ChildId = TestData.Guid2 });
+			db.Insert(new InvalidColumnIndexMappingTable4() { Id = TestData.Guid2 });
+
+			var query = from node in db.GetCte<InvalidColumnIndexMappingRecord>(cte =>
+			{
+				return table1
+							.Select(s => new InvalidColumnIndexMappingRecord(s.Id, s.ChildId, null, null))
+							.Concat(
+								from t1 in table2
+								join t3 in table3 on t1.Id equals t3.Id
+								join parent in cte on t1.Id equals parent.ChildId
+								select new InvalidColumnIndexMappingRecord(t1.Id, null, t3.Enum1, t1.Enum2))
+							.Concat(
+								from t4 in table4
+								join parent in cte on t4.Id equals parent.ChildId
+								select new InvalidColumnIndexMappingRecord(t4.Id, null, InvalidColumnIndexMappingEnum1.Value, null))
+							;
+			})
+				join t2 in table2 on node.Id equals t2.Id into t2records
+				from table in t2records.DefaultIfEmpty()
+				select new InvalidColumnIndexMappingRecord(node.Id, node.ChildId, node.Enum1, node.Enum2);
+
+			var res = query.ToArray();
+		}
+
+		[Table]
+		public class Issue3360Table1
+		{
+			[PrimaryKey] public int                             Id    { get; set; }
+			[Column    ] public byte                            Byte  { get; set; }
+			[Column    ] public byte?                           ByteN { get; set; }
+			[Column    ] public Guid                            Guid  { get; set; }
+			[Column    ] public Guid?                           GuidN { get; set; }
+			[Column    ] public InvalidColumnIndexMappingEnum1  Enum  { get; set; }
+			[Column    ] public InvalidColumnIndexMappingEnum2? EnumN { get; set; }
+			[Column    ] public bool                            Bool  { get; set; }
+			[Column    ] public bool?                           BoolN { get; set; }
+
+			public static Issue3360Table1[] Items = new[]
+			{
+				new Issue3360Table1() { Id = 1 },
+				new Issue3360Table1() { Id = 2, Byte = 1, ByteN = 2, Guid = TestData.Guid1, GuidN = TestData.Guid2, Enum = InvalidColumnIndexMappingEnum1.Value, EnumN = InvalidColumnIndexMappingEnum2.Value, Bool = true, BoolN = false },
+				new Issue3360Table1() { Id = 4, Byte = 3, ByteN = 4, Guid = TestData.Guid3, GuidN = TestData.Guid1, Enum = InvalidColumnIndexMappingEnum1.Value, EnumN = InvalidColumnIndexMappingEnum2.Value, Bool = false, BoolN = true },
+			};
+		}
+
+		private record Issue3360NullsRecord(int Id, byte? Byte, byte? ByteN, Guid? Guid, Guid? GuidN, InvalidColumnIndexMappingEnum1? Enum, InvalidColumnIndexMappingEnum2? EnumN, bool? Bool, bool? BoolN);
+
+		[ActiveIssue(Configurations = [TestProvName.AllClickHouse, TestProvName.AllFirebird, TestProvName.AllMySql, TestProvName.AllPostgreSQL, TestProvName.AllSqlServer])]
+		[Test(Description = "null literals in anchor query (for known problematic types)")]
+		public void Issue3360_NullsInAnchor([CteContextSource] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(Issue3360Table1.Items);
+
+			var query = from record in db.GetCte<Issue3360NullsRecord>(cte =>
+			{
+				return table.Where(r => r.Id == 1)
+							.Select(r => new Issue3360NullsRecord(r.Id, null, null, null, null, null, null, null, null))
+							.Concat(
+								from r in table
+								join parent in cte on r.Id equals parent.Id + 1
+								select new Issue3360NullsRecord(r.Id, r.Byte, r.ByteN, r.Guid, r.GuidN, r.Enum, r.EnumN, r.Bool, r.BoolN));
+			})
+						orderby record.Id
+						select record;
+
+			var data = query.ToArray();
+
+			Assert.That(data, Has.Length.EqualTo(2));
+
+			Assert.Multiple(() =>
+			{
+				Assert.That(data[0].Id, Is.EqualTo(1));
+				Assert.That(data[0].Byte, Is.Null);
+				Assert.That(data[0].ByteN, Is.Null);
+				Assert.That(data[0].Guid, Is.Null);
+				Assert.That(data[0].GuidN, Is.Null);
+				Assert.That(data[0].Enum, Is.Null);
+				Assert.That(data[0].EnumN, Is.Null);
+				Assert.That(data[0].Bool, Is.Null);
+				Assert.That(data[0].BoolN, Is.Null);
+
+				Assert.That(data[1].Id, Is.EqualTo(2));
+				Assert.That(data[1].Byte, Is.EqualTo(1));
+				Assert.That(data[1].ByteN, Is.EqualTo(2));
+				Assert.That(data[1].Guid, Is.EqualTo(TestData.Guid1));
+				Assert.That(data[1].GuidN, Is.EqualTo(TestData.Guid2));
+				Assert.That(data[1].Enum, Is.EqualTo(InvalidColumnIndexMappingEnum1.Value));
+				Assert.That(data[1].EnumN, Is.EqualTo(InvalidColumnIndexMappingEnum2.Value));
+				Assert.That(data[1].Bool, Is.EqualTo(true));
+				Assert.That(data[1].BoolN, Is.EqualTo(false));
+			});
+		}
+
+		[ActiveIssue(Configurations = [TestProvName.AllClickHouse, TestProvName.AllFirebird, TestProvName.AllMySql, TestProvName.AllSqlServer])]
+		[Test(Description = "double columns in anchor query")]
+		public void Issue3360_DoubleColumnSelection([CteContextSource] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(Issue3360Table1.Items);
+
+			var query = from record in db.GetCte<Issue3360NullsRecord>(cte =>
+			{
+				return table.Where(r => r.Id == 2)
+							.Select(r => new Issue3360NullsRecord(r.Id, r.Byte, r.Byte, r.Guid, r.Guid, null, null, r.Bool, r.Bool))
+							.Concat(
+								from r in table
+								join parent in cte on r.Id equals parent.Id + 2
+								select new Issue3360NullsRecord(r.Id, r.Byte, r.ByteN, r.Guid, r.GuidN, r.Enum, r.EnumN, r.Bool, r.BoolN));
+			})
+						orderby record.Id
+						select record;
+
+			var data = query.ToArray();
+
+			Assert.That(data, Has.Length.EqualTo(2));
+
+			Assert.Multiple(() =>
+			{
+				Assert.That(data[0].Id, Is.EqualTo(2));
+				Assert.That(data[0].Byte, Is.EqualTo(1));
+				Assert.That(data[0].ByteN, Is.EqualTo(1));
+				Assert.That(data[0].Guid, Is.EqualTo(TestData.Guid1));
+				Assert.That(data[0].GuidN, Is.EqualTo(TestData.Guid1));
+				Assert.That(data[0].Enum, Is.Null);
+				Assert.That(data[0].EnumN, Is.Null);
+				Assert.That(data[0].Bool, Is.EqualTo(true));
+				Assert.That(data[0].BoolN, Is.EqualTo(true));
+
+				Assert.That(data[1].Id, Is.EqualTo(4));
+				Assert.That(data[1].Byte, Is.EqualTo(3));
+				Assert.That(data[1].ByteN, Is.EqualTo(4));
+				Assert.That(data[1].Guid, Is.EqualTo(TestData.Guid3));
+				Assert.That(data[1].GuidN, Is.EqualTo(TestData.Guid1));
+				Assert.That(data[1].Enum, Is.EqualTo(InvalidColumnIndexMappingEnum1.Value));
+				Assert.That(data[1].EnumN, Is.EqualTo(InvalidColumnIndexMappingEnum2.Value));
+				Assert.That(data[1].Bool, Is.EqualTo(false));
+				Assert.That(data[1].BoolN, Is.EqualTo(true));
+			});
+		}
+
+		[ActiveIssue(Configurations = [TestProvName.AllClickHouse, TestProvName.AllOracle, TestProvName.AllSqlServer])]
+		[Test(Description = "literals in anchor query")]
+		public void Issue3360_LiteralsInAnchor([CteContextSource] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(Issue3360Table1.Items);
+
+			var query = from record in db.GetCte<Issue3360NullsRecord>(cte =>
+			{
+				return table.Where(r => r.Id == 2)
+							.Select(r => new Issue3360NullsRecord(r.Id, 5, 5, new Guid("0B8AFE27-481C-442E-B8CF-729DDFEECE29"), new Guid("0B8AFE27-481C-442E-B8CF-729DDFEECE30"), InvalidColumnIndexMappingEnum1.Value, InvalidColumnIndexMappingEnum2.Value, true, false))
+							.Concat(
+								from r in table
+								join parent in cte on r.Id equals parent.Id + 2
+								select new Issue3360NullsRecord(r.Id, r.Byte, r.ByteN, r.Guid, r.GuidN, r.Enum, r.EnumN, r.Bool, r.BoolN));
+			})
+						orderby record.Id
+						select record;
+
+			var data = query.ToArray();
+
+			Assert.That(data, Has.Length.EqualTo(2));
+
+			Assert.Multiple(() =>
+			{
+				Assert.That(data[0].Id, Is.EqualTo(2));
+				Assert.That(data[0].Byte, Is.EqualTo(5));
+				Assert.That(data[0].ByteN, Is.EqualTo(5));
+				Assert.That(data[0].Guid, Is.EqualTo(new Guid("0B8AFE27-481C-442E-B8CF-729DDFEECE29")));
+				Assert.That(data[0].GuidN, Is.EqualTo(new Guid("0B8AFE27-481C-442E-B8CF-729DDFEECE30")));
+				Assert.That(data[0].Enum, Is.EqualTo(InvalidColumnIndexMappingEnum1.Value));
+				Assert.That(data[0].EnumN, Is.EqualTo(InvalidColumnIndexMappingEnum2.Value));
+				Assert.That(data[0].Bool, Is.EqualTo(true));
+				Assert.That(data[0].BoolN, Is.EqualTo(false));
+
+				Assert.That(data[1].Id, Is.EqualTo(4));
+				Assert.That(data[1].Byte, Is.EqualTo(3));
+				Assert.That(data[1].ByteN, Is.EqualTo(4));
+				Assert.That(data[1].Guid, Is.EqualTo(TestData.Guid3));
+				Assert.That(data[1].GuidN, Is.EqualTo(TestData.Guid1));
+				Assert.That(data[1].Enum, Is.EqualTo(InvalidColumnIndexMappingEnum1.Value));
+				Assert.That(data[1].EnumN, Is.EqualTo(InvalidColumnIndexMappingEnum2.Value));
+				Assert.That(data[1].Bool, Is.EqualTo(false));
+				Assert.That(data[1].BoolN, Is.EqualTo(true));
+			});
+		}
+
+		#endregion
+
+		[ActiveIssue]
+		[Test(Description = "Test that we type non-field union column properly")]
+		public void Issue2451_ComplexColumn([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = db.GetCte<Person>(cte =>
+			{
+				return db.Person.Select(p => new Person() { FirstName = p.FirstName })
+				.Concat(
+					from p in cte
+					join r in db.Person on p.FirstName equals r.LastName
+					select new Person() { FirstName = r.FirstName + '/' + r.LastName }
+					);
+			});
+
+			query.ToArray();
+
+			if (db is TestDataConnection dc)
+			{
+				dc.LastQuery!.Should().NotContain("Convert(VarChar");
+				dc.LastQuery!.ToUpperInvariant().Should().Contain("AS NVARCHAR(MAX))", Exactly.Twice());
+			}
+		}
+
+		[ActiveIssue(Configurations = [TestProvName.AllClickHouse, TestProvName.AllPostgreSQL, TestProvName.AllSqlServer])]
+		[Test(Description = "Test that other providers work")]
+		public void Issue2451_ComplexColumn_All([CteContextSource(ProviderName.DB2)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = db.GetCte<Person>(cte =>
+			{
+				return db.Person.Select(p => new Person() { FirstName = p.FirstName })
+				.Concat(
+					from p in cte
+					join r in db.Person on p.FirstName equals r.LastName
+					select new Person() { FirstName = r.FirstName + '/' + r.LastName }
+					);
+			});
+
+			query.ToArray();
+		}
+
+		[Test(Description = "Test that other providers work")]
+		public void Issue2451_ComplexColumn_DB2([IncludeDataSources(true, ProviderName.DB2)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = db.GetCte<Person>(cte =>
+			{
+				return db.Person.Select(p => new Person() { FirstName = p.FirstName })
+				.Concat(
+					from p in cte
+					from r in db.Person
+					where p.FirstName == r.LastName
+					select new Person() { FirstName = r.FirstName + '/' + r.LastName }
+					);
+			});
+
+			query.ToArray();
+		}
+
 		sealed class CteEntity<TEntity> where TEntity : class
 		{
 			public TEntity Entity   { get; set; } = null!;
@@ -1459,6 +2074,81 @@ namespace Tests.Linq
 				Assert.That(result[0].EnumValue, Is.EqualTo(Issue4167Table.TaxType.NoTax));
 				Assert.That(result[1].EnumValue, Is.EqualTo(Issue4167Table.TaxType.NoTax));
 				Assert.That(result[2].EnumValue, Is.EqualTo(Issue4167Table.TaxType.NonResident));
+			});
+		}
+
+		[Test]
+		public void Issue2145Test1([CteContextSource] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var persons = new Person[]
+			{
+				new Person() { ID = 10, FirstName = "FN1", LastName = "LN1", Gender = Gender.Male },
+				new Person() { ID = 11, FirstName = "FN2", Gender = Gender.Female },
+			};
+
+			var cte = persons.AsQueryable().AsCte();
+
+			var query = from p in cte
+						where p.ID == 11
+						select p;
+
+			Assert.That(() => query.ToArray(), Throws.InvalidOperationException);
+		}
+
+		[Test]
+		public void Issue2145Test2([CteContextSource] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var persons = new Person[]
+			{
+				new Person() { ID = 10, FirstName = "FN1", LastName = "LN1", Gender = Gender.Male },
+				new Person() { ID = 11, FirstName = "FN2", Gender = Gender.Female },
+			};
+
+			var cte = persons.AsQueryable(db).AsCte();
+
+			var query = from p in cte
+						where p.ID == 11
+						select p;
+
+			var result = query.ToArray();
+
+			Assert.That(result, Has.Length.EqualTo(1));
+			Assert.Multiple(() =>
+			{
+				Assert.That(result[0].ID, Is.EqualTo(11));
+				Assert.That(result[0].FirstName, Is.EqualTo("FN2"));
+				Assert.That(result[0].LastName, Is.Null);
+				Assert.That(result[0].MiddleName, Is.Null);
+				Assert.That(result[0].Gender, Is.EqualTo(Gender.Female));
+			});
+
+			if (db is DataConnection dc)
+			{
+				Assert.That(dc.LastQuery, Contains.Substring("WITH"));
+			}
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/3407")]
+		public void Issue3407Test([CteContextSource] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var cte = db.Person.LoadWith(p => p.Patient).AsCte();
+
+			var data = cte.Where(r => r.ID == 2).ToList();
+
+			var count = cte.Count();
+
+			Assert.That(data, Has.Count.EqualTo(1));
+			Assert.That(data[0].Patient, Is.Not.Null);
+			Assert.Multiple(() =>
+			{
+				Assert.That(data[0].Patient!.Diagnosis, Is.Not.Null);
+				Assert.That(count, Is.EqualTo(4));
 			});
 		}
 	}

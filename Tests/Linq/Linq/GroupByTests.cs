@@ -3001,6 +3001,34 @@ namespace Tests.Linq
 		}
 
 
+		[Test]
+		public void GroupByInOuterApply([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query =
+				from p in db.Parent
+				let cItems = p.Children.GroupBy(c => c.ParentID, (key, grouped) => new { Id = key, Count = grouped.Count() })
+				select new
+				{
+					p.ParentID, 
+					First = cItems.OrderBy(x => x.Count).ThenBy(x => x.Id).FirstOrDefault()
+				};
+
+			var selectQuery = query.GetSelectQuery();
+
+			TestContext.WriteLine(query.ToString());
+
+
+			// We check that grouping is left in the subquery
+
+			var sqlJoinedTable = selectQuery.From.Tables[0].Joins[0];
+			sqlJoinedTable.JoinType.Should().Be(JoinType.OuterApply);
+			var joinQuery = (SelectQuery)sqlJoinedTable.Table.Source;
+			joinQuery.GroupBy.IsEmpty.Should().BeTrue();
+			joinQuery.OrderBy.Items.Should().HaveCount(2);
+		}
+
 		#region issue 4256
 		[Test]
 		public void TestIssue4256AnonymousClass([DataSources] string context)

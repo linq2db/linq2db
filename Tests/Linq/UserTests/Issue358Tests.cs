@@ -152,7 +152,7 @@ namespace Tests.UserTests
 		[Test]
 		public void Test4WithoutComparasionNullCheck([DataSources] string context)
 		{
-			using var _  = new CompareNullsAsValuesOption(false);
+			using var _  = new CompareNullsOption(false);
 			using var db = GetDataContext(context);
 			var bigintFilter = new long?[] {2};
 

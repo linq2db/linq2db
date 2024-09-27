@@ -163,11 +163,11 @@ namespace LinqToDB.Remote
 			public override async ValueTask DisposeAsync()
 			{
 				if (_client is IAsyncDisposable asyncDisposable)
-					await asyncDisposable.DisposeAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+					await asyncDisposable.DisposeAsync().ConfigureAwait(false);
 				else if (_client is IDisposable disposable)
 					disposable.Dispose();
 
-				await base.DisposeAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+				await base.DisposeAsync().ConfigureAwait(false);
 			}
 
 			public override int ExecuteNonQuery()
@@ -275,16 +275,7 @@ namespace LinqToDB.Remote
 
 				public Task<bool> ReadAsync(CancellationToken cancellationToken)
 				{
-					if (cancellationToken.IsCancellationRequested)
-					{
-						var task = new TaskCompletionSource<bool>();
-#if NET6_0_OR_GREATER
-						task.SetCanceled(cancellationToken);
-#else
-						task.SetCanceled();
-#endif
-						return task.Task;
-					}
+					cancellationToken.ThrowIfCancellationRequested();
 
 					try
 					{
@@ -316,7 +307,7 @@ namespace LinqToDB.Remote
 					throw new LinqException("Incompatible batch operation.");
 
 				// preload _configurationInfo asynchronously if needed
-				await _dataContext.GetConfigurationInfoAsync(cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+				await _dataContext.GetConfigurationInfoAsync(cancellationToken).ConfigureAwait(false);
 
 				SetCommand(false);
 
@@ -333,7 +324,7 @@ namespace LinqToDB.Remote
 
 				_client = _dataContext.GetClient();
 
-				var ret = await _client.ExecuteReaderAsync(_dataContext.ConfigurationString, data, cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+				var ret = await _client.ExecuteReaderAsync(_dataContext.ConfigurationString, data, cancellationToken).ConfigureAwait(false);
 
 				var result = LinqServiceSerializer.DeserializeResult(_dataContext.SerializationMappingSchema, _dataContext.MappingSchema, _dataContext.Options, ret);
 				var reader = new RemoteDataReader(_dataContext.SerializationMappingSchema, result);
@@ -347,7 +338,7 @@ namespace LinqToDB.Remote
 					throw new LinqException("Incompatible batch operation.");
 
 				// preload _configurationInfo asynchronously if needed
-				await _dataContext.GetConfigurationInfoAsync(cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+				await _dataContext.GetConfigurationInfoAsync(cancellationToken).ConfigureAwait(false);
 
 				SetCommand(false);
 
@@ -365,7 +356,7 @@ namespace LinqToDB.Remote
 				_client = _dataContext.GetClient();
 
 				var ret = await _client.ExecuteScalarAsync(_dataContext.ConfigurationString, data, cancellationToken)
-					.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+					.ConfigureAwait(false);
 
 				object? result = null;
 				if (ret != null)
@@ -381,7 +372,7 @@ namespace LinqToDB.Remote
 			public override async Task<int> ExecuteNonQueryAsync(CancellationToken cancellationToken)
 			{
 				// preload _configurationInfo asynchronously if needed
-				await _dataContext.GetConfigurationInfoAsync(cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+				await _dataContext.GetConfigurationInfoAsync(cancellationToken).ConfigureAwait(false);
 
 				SetCommand(false);
 
@@ -405,7 +396,7 @@ namespace LinqToDB.Remote
 				_client = _dataContext.GetClient();
 
 				return await _client.ExecuteNonQueryAsync(_dataContext.ConfigurationString, data, cancellationToken)
-					.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+					.ConfigureAwait(false);
 			}
 		}
 	}

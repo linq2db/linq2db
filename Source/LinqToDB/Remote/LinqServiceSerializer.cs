@@ -1688,6 +1688,14 @@ namespace LinqToDB.Remote
 						break;
 					}
 
+					case QueryElementType.SqlCoalesce:
+					{
+						var elem = (SqlCoalesceExpression)e;
+
+						Append(elem.Expressions);
+						break;
+					}
+
 					default:
 						throw new InvalidOperationException($"Serialize not implemented for element {e.ElementType}");
 				}
@@ -2765,6 +2773,15 @@ namespace LinqToDB.Remote
 						var expr2 = Read<ISqlExpression>();
 
 						obj = new SqlCompareToExpression(expr1!, expr2!);
+
+						break;
+					}
+
+					case QueryElementType.SqlCoalesce:
+					{
+						var expressions = ReadArray<ISqlExpression>()!;
+
+						obj = new SqlCoalesceExpression(expressions);
 
 						break;
 					}

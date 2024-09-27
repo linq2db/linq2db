@@ -47,11 +47,16 @@ namespace LinqToDB
 	/// - removes left joins if joined table is not used in query.
 	/// Default value: <c>true</c>.
 	/// </param>
-	/// <param name="CompareNullsAsValues">
+	/// <param name="CompareNulls">
 	/// <summary>
-	/// If set to true nullable fields would be checked for IS NULL in Equal/NotEqual comparisons.
+	/// If set to <see cref="CompareNulls.LikeClr" /> nullable fields would be checked for <c>IS NULL</c> in Equal/NotEqual comparisons.
+	/// If set to <see cref="CompareNulls.LikeSql" /> comparisons are compiled straight to equivalent SQL operators, 
+	/// which consider nulls values as not equal.
+	/// <see cref="CompareNulls.LikeSqlExceptParameters" /> is a backward compatible option that works mostly as <see cref="CompareNulls.LikeSql" />, 
+	/// but sniffs parameters value and changes = into <c>IS NULL</c> when parameters are null.
+	/// Comparisons to literal null are always compiled into <c>IS NULL</c>.
 	/// This affects: Equal, NotEqual, Not Contains
-	/// Default value: <c>true</c>.
+	/// Default value: <see cref="CompareNulls.LikeClr" />.
 	/// </summary>
 	/// <example>
 	/// <code>
@@ -70,7 +75,7 @@ namespace LinqToDB
 	/// db.MyEntity.Where(e => ! filter.Contains(e.Value))
 	/// </code>
 	///
-	/// Would be converted to next queries:
+	/// Would be converted to next queries under <see cref="CompareNulls.LikeClr" />:
 	/// <code>
 	/// SELECT Value FROM MyEntity WHERE Value IS NULL OR Value != 10
 	///
@@ -148,21 +153,21 @@ namespace LinqToDB
 	/// </param>
 	public sealed record LinqOptions
 	(
-		bool      PreloadGroups           = false,
-		bool      IgnoreEmptyUpdate       = false,
-		bool      GenerateExpressionTest  = false,
-		bool      TraceMapperExpression   = false,
-		bool      DoNotClearOrderBys      = false,
-		bool      OptimizeJoins           = true,
-		bool      CompareNullsAsValues    = true,
-		bool      GuardGrouping           = true,
-		bool      DisableQueryCache       = false,
-		TimeSpan? CacheSlidingExpiration  = default,
-		bool      PreferApply             = true,
-		bool      KeepDistinctOrdered     = true,
-		bool      ParameterizeTakeSkip    = true,
-		bool      EnableContextSchemaEdit = false,
-		bool      PreferExistsForScalar   = default
+		bool         PreloadGroups           = false,
+		bool         IgnoreEmptyUpdate       = false,
+		bool         GenerateExpressionTest  = false,
+		bool         TraceMapperExpression   = false,
+		bool         DoNotClearOrderBys      = false,
+		bool         OptimizeJoins           = true,
+		CompareNulls CompareNulls            = CompareNulls.LikeClr,
+		bool         GuardGrouping           = true,
+		bool         DisableQueryCache       = false,
+		TimeSpan?    CacheSlidingExpiration  = default,
+		bool         PreferApply             = true,
+		bool         KeepDistinctOrdered     = true,
+		bool         ParameterizeTakeSkip    = true,
+		bool         EnableContextSchemaEdit = false,
+		bool         PreferExistsForScalar   = default
 		// If you add another parameter here, don't forget to update
 		// LinqOptions copy constructor and IConfigurationID.ConfigurationID.
 	)
@@ -180,7 +185,7 @@ namespace LinqToDB
 			TraceMapperExpression   = original.TraceMapperExpression;
 			DoNotClearOrderBys      = original.DoNotClearOrderBys;
 			OptimizeJoins           = original.OptimizeJoins;
-			CompareNullsAsValues    = original.CompareNullsAsValues;
+			CompareNulls            = original.CompareNulls;
 			GuardGrouping           = original.GuardGrouping;
 			DisableQueryCache       = original.DisableQueryCache;
 			CacheSlidingExpiration  = original.CacheSlidingExpiration;
@@ -206,7 +211,7 @@ namespace LinqToDB
 						.Add(TraceMapperExpression)
 						.Add(DoNotClearOrderBys)
 						.Add(OptimizeJoins)
-						.Add(CompareNullsAsValues)
+						.Add((int)CompareNulls)
 						.Add(GuardGrouping)
 						.Add(DisableQueryCache)
 						.Add(CacheSlidingExpiration)

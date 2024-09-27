@@ -167,15 +167,20 @@ namespace LinqToDB.Linq.Builder
 								  or ExpressionType.Not
 					|| node is SqlGenericConstructorExpression
 							or SqlEagerLoadExpression
-							or BinaryExpression)
+							or BinaryExpression
+							or SqlErrorExpression)
 				{
 					return base.Visit(node);
 				}
 
 				var newNode = TranslateExpression(node);
 
-				if (newNode is SqlErrorExpression)
+				if (newNode is SqlErrorExpression errorExpression)
+				{
+					if (errorExpression.IsCritical)
+						return errorExpression;
 					return base.Visit(node);
+				}
 
 				if (newNode is SqlPlaceholderExpression)
 					return newNode;
@@ -247,7 +252,7 @@ namespace LinqToDB.Linq.Builder
 				return TranslateExpression(node);
 			}
 
-			Expression TranslateExpression(Expression expression, string? alias = null, bool useSql = false)
+			Expression TranslateExpression(Expression expression, string? alias = null, bool useSql = false, bool doNotSuppressErrors = false)
 			{
 				var asSql = _flags.IsSql() || _forceSql || useSql;
 
@@ -275,7 +280,7 @@ namespace LinqToDB.Linq.Builder
 
 				if (SequenceHelper.HasError(translated))
 				{
-					if (translated is SqlErrorExpression { IsCritical: true })
+					if (translated is SqlErrorExpression errorExpression && (errorExpression.IsCritical || doNotSuppressErrors))
 						return translated;
 					return expression;
 				}
@@ -416,7 +421,7 @@ namespace LinqToDB.Linq.Builder
 					}
 
 					var translated = TranslateExpression(node);
-					if (!ExpressionEqualityComparer.Instance.Equals(translated, node))
+					if (!SequenceHelper.HasError(translated) && !ExpressionEqualityComparer.Instance.Equals(translated, node))
 						return Visit(translated);
 				}
 				else if (node.NodeType == ExpressionType.Not)
@@ -544,6 +549,9 @@ namespace LinqToDB.Linq.Builder
 
 				var newNode = TranslateExpression(node, useSql: true);
 
+				if (SequenceHelper.HasError(newNode))
+					return base.VisitBinary(node);
+
 				if (ExpressionEqualityComparer.Instance.Equals(newNode, node))
 				{
 					if (!doNotForce)
@@ -595,8 +603,8 @@ namespace LinqToDB.Linq.Builder
 					{
 						var translatedForced = TranslateExpression(node, alias: node.Member.Name, useSql : true);
 
-						if (!ExpressionEqualityComparer.Instance.Equals(translatedForced, node))
-							return translatedForced;
+					if (!SequenceHelper.HasError(translatedForced) && !ExpressionEqualityComparer.Instance.Equals(translatedForced, node))
+						return translatedForced;
 
 						return base.VisitMember(node);
 					}
@@ -605,8 +613,8 @@ namespace LinqToDB.Linq.Builder
 
 					var translated = TranslateExpression(node, alias: node.Member.Name, useSql : useSql);
 
-					if (!ExpressionEqualityComparer.Instance.Equals(translated, node))
-						return translated;
+				if (!ExpressionEqualityComparer.Instance.Equals(translated, node))
+					return Visit(translated);
 
 					if (_flags.IsExpression())
 					{
@@ -818,6 +826,14 @@ namespace LinqToDB.Linq.Builder
 					return false;
 				}
 
+				// Do not select from database simple constants
+				if (_flags.IsExpression() 
+				    && expr is ConstantExpression constantExpression 
+				    && (constantExpression.Value is null || constantExpression.Type.IsValueType))
+				{
+					return false;
+				}
+
 				var canBeCompiled = Builder.CanBeCompiled(expr, false);
 
 				// some types has custom converter, we have to handle them
@@ -873,51 +889,52 @@ namespace LinqToDB.Linq.Builder
 
 			protected override Expression VisitConditional(ConditionalExpression node)
 			{
-				if (_flags.IsSql())
+				var saveFlags = _flags;
+
+				_flags |= ProjectFlags.ForceOuterAssociation;
+				try
 				{
-					var translated = TranslateExpression(node);
+					var translated = TranslateExpression(node, useSql: true);
 
 					if (translated is SqlPlaceholderExpression)
 						return translated;
-				}
 
-				if (IsForcedToConvert(node))
+					if (IsForcedToConvert(node))
+					{
+						return TranslateExpression(node);
+					}
+
+					var saveDescriptor = _columnDescriptor;
+					_columnDescriptor = null;
+					var test           = Visit(node.Test);
+					_columnDescriptor = saveDescriptor;
+
+					var ifTrue  = Visit(node.IfTrue);
+					var ifFalse = Visit(node.IfFalse);
+
+					if (test is ConstantExpression { Value: bool boolValue })
+					{
+						return boolValue ? ifTrue : ifFalse;
+					}
+
+					if (ifTrue is SqlGenericConstructorExpression && ifFalse is SqlPlaceholderExpression)
+						ifFalse = node.IfFalse;
+					else if (ifFalse is SqlGenericConstructorExpression && ifTrue is SqlPlaceholderExpression)
+						ifTrue = node.IfTrue;
+
+					if (test is SqlPlaceholderExpression   &&
+					    ifTrue is SqlPlaceholderExpression &&
+					    ifFalse is SqlPlaceholderExpression)
+					{
+						return TranslateExpression(node, useSql: true);
+					}
+
+					return node.Update(test, ifTrue, ifFalse);
+				}
+				finally
 				{
-					return TranslateExpression(node);
+					_flags = saveFlags;
 				}
-
-				var saveFlags      = _flags;
-
-				_flags |= ProjectFlags.ForceOuterAssociation;
-
-				var saveDescriptor = _columnDescriptor;
-				_columnDescriptor = null;
-				var test           = Visit(node.Test);
-				_columnDescriptor  = saveDescriptor;
-
-				var ifTrue  = Visit(node.IfTrue);
-				var ifFalse = Visit(node.IfFalse);
-
-				_flags = saveFlags;
-
-				if (test is ConstantExpression { Value: bool boolValue })
-				{
-					return boolValue ? ifTrue : ifFalse;
-				}
-
-				if (ifTrue is SqlGenericConstructorExpression && ifFalse is SqlPlaceholderExpression)
-					ifFalse = node.IfFalse;
-				else if (ifFalse is SqlGenericConstructorExpression && ifTrue is SqlPlaceholderExpression)
-					ifTrue = node.IfTrue;
-
-				if (test is SqlPlaceholderExpression   &&
-				    ifTrue is SqlPlaceholderExpression &&
-					ifFalse is SqlPlaceholderExpression)
-				{
-					return TranslateExpression(node, useSql : true);
-				}
-
-				return node.Update(test, ifTrue, ifFalse);
 			}
 
 			public override Expression VisitSqlDefaultIfEmptyExpression(SqlDefaultIfEmptyExpression node)

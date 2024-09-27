@@ -4,25 +4,29 @@ namespace LinqToDB.Linq.Builder
 {
 	using LinqToDB.Expressions;
 
+	[BuildsMethodCall(nameof(DataExtensions.SelectQuery))]
 	sealed class SelectQueryBuilder : MethodCallBuilder
 	{
-		protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
-		{
-			return methodCall.IsSameGenericMethod(DataExtensions.SelectQueryMethodInfo);
-		}
+		public static bool CanBuildMethod(MethodCallExpression call, BuildInfo info, ExpressionBuilder builder)
+			=> call.IsSameGenericMethod(DataExtensions.SelectQueryMethodInfo);
 
 		protected override BuildSequenceResult BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
-			var sequence = new SelectContext(buildInfo.Parent,
+			var sequence = new SelectContext(
+				buildInfo.Parent,
 				builder,
 				null,
 				methodCall.Arguments[1].UnwrapLambda().Body,
-				buildInfo.SelectQuery, buildInfo.IsSubQuery);
+				buildInfo.SelectQuery, 
+				buildInfo.IsSubQuery);
 
 			var subquery = new SubQueryContext(sequence);
 
-			var translated = builder.BuildSqlExpression(subquery, new ContextRefExpression(subquery.ElementType, subquery),
-				ProjectFlags.SQL, buildFlags : ExpressionBuilder.BuildFlags.ForceAssignments);
+			var translated = builder.BuildSqlExpression(
+				subquery, 
+				new ContextRefExpression(subquery.ElementType, subquery),
+				ProjectFlags.SQL, 
+				buildFlags: ExpressionBuilder.BuildFlags.ForceAssignments);
 
 			return BuildSequenceResult.FromContext(subquery);
 		}

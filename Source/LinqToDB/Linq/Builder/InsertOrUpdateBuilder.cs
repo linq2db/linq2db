@@ -9,14 +9,13 @@ namespace LinqToDB.Linq.Builder
 	using Mapping;
 	using SqlQuery;
 
+	[BuildsMethodCall("InsertOrUpdate")]
 	sealed class InsertOrUpdateBuilder : MethodCallBuilder
 	{
 		#region InsertOrUpdateBuilder
 
-		protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
-		{
-			return methodCall.IsQueryable("InsertOrUpdate");
-		}
+		public static bool CanBuildMethod(MethodCallExpression call, BuildInfo info, ExpressionBuilder builder)
+			=> call.IsQueryable();
 
 		protected override BuildSequenceResult BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{

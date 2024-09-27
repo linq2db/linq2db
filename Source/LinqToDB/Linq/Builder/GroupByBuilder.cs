@@ -19,34 +19,31 @@ namespace LinqToDB.Linq.Builder
 	using Reflection;
 	using SqlQuery;
 
+	[BuildsMethodCall("GroupBy")]
 	sealed class GroupByBuilder : MethodCallBuilder
 	{
 		static readonly MethodInfo[] GroupingSetMethods = { Methods.LinqToDB.GroupBy.Rollup, Methods.LinqToDB.GroupBy.Cube, Methods.LinqToDB.GroupBy.GroupingSets };
 
 		#region Builder Methods
 
-		protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
+		public static bool CanBuildMethod(MethodCallExpression call, BuildInfo info, ExpressionBuilder builder)
 		{
-			if (!methodCall.IsQueryable("GroupBy"))
+			if (!call.IsQueryable())
 				return false;
 
-			var body = ((LambdaExpression)methodCall.Arguments[1].Unwrap()).Body.Unwrap();
-
-			if (body.NodeType == ExpressionType	.MemberInit)
+			var body = ((LambdaExpression)call.Arguments[1].Unwrap()).Body.Unwrap();
+			if (body.NodeType == ExpressionType.MemberInit)
 			{
 				var mi = (MemberInitExpression)body;
-				bool throwExpr;
-
-				if (mi.NewExpression.Arguments.Count > 0 || mi.Bindings.Count == 0)
-					throwExpr = true;
-				else
-					throwExpr = mi.Bindings.Any(b => b.BindingType != MemberBindingType.Assignment);
-
-				if (throwExpr)
+				if (mi.NewExpression.Arguments.Count > 0 || 
+					mi.Bindings.Count == 0 ||
+					mi.Bindings.Any(b => b.BindingType != MemberBindingType.Assignment))
+				{
 					throw new NotSupportedException($"Explicit construction of entity type '{body.Type}' in group by is not allowed.");
+				}
 			}
 
-			return (methodCall.Arguments[methodCall.Arguments.Count - 1].Unwrap().NodeType == ExpressionType.Lambda);
+			return (call.Arguments[call.Arguments.Count - 1].Unwrap().NodeType == ExpressionType.Lambda);
 		}
 
 		static IEnumerable<Expression> EnumGroupingSets(Expression expression)
@@ -733,7 +730,7 @@ namespace LinqToDB.Linq.Builder
 					public async ValueTask<bool> MoveNextAsync()
 					{
 						_grouped ??= (await _elements.ToListAsync(_cancellationToken)
-								.ConfigureAwait(Configuration.ContinueOnCapturedContext))
+								.ConfigureAwait(false))
 							.GroupBy(_groupingKey)
 							.GetEnumerator();
 

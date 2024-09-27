@@ -9,25 +9,24 @@ namespace LinqToDB.Linq.Builder
 	using Mapping;
 	using SqlQuery;
 
+	[BuildsMethodCall("Contains")]
+	[BuildsMethodCall("ContainsAsync", CanBuildName = nameof(CanBuildAsyncMethod))]
 	sealed class ContainsBuilder : MethodCallBuilder
 	{
-		static readonly string[] MethodNames      = { "Contains"      };
-		static readonly string[] MethodNamesAsync = { "ContainsAsync" };
-
-		protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
+		public static bool CanBuildMethod(MethodCallExpression call, BuildInfo info, ExpressionBuilder builder)
 		{
-			var result =
-				methodCall.IsQueryable     (MethodNames     ) && methodCall.Arguments.Count == 2 ||
-				methodCall.IsAsyncExtension(MethodNamesAsync) && methodCall.Arguments.Count == 3;
-
-			if (result)
-			{
+			return call.IsQueryable() 
+				&& call.Arguments.Count == 2
 				// Contains over constant works through ConvertPredicate
-				if (builder.CanBeCompiled(methodCall.Arguments[0], false))
-					result = false;
-			}
+				&& !builder.CanBeCompiled(call.Arguments[0], false);
+		}
 
-			return result;
+		public static bool CanBuildAsyncMethod(MethodCallExpression call, BuildInfo info, ExpressionBuilder builder)
+		{
+			return call.IsAsyncExtension() 
+				&& call.Arguments.Count == 3
+				// Contains over constant works through ConvertPredicate
+				&& !builder.CanBeCompiled(call.Arguments[0], false);
 		}
 
 		protected override BuildSequenceResult BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
@@ -188,7 +187,7 @@ namespace LinqToDB.Linq.Builder
 
 				if (useExists)
 				{
-					if (Builder.DataContext.SqlProviderFlags.DoesNotSupportCorrelatedSubquery)
+					if (Builder.DataContext.SqlProviderFlags.SupportedCorrelatedSubqueriesLevel == 0)
 					{
 						return null;
 					}

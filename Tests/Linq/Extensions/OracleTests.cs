@@ -2,7 +2,9 @@
 using System.Linq;
 
 using LinqToDB;
+using LinqToDB.Common;
 using LinqToDB.DataProvider.Oracle;
+using LinqToDB.Mapping;
 
 using NUnit.Framework;
 
@@ -821,8 +823,103 @@ namespace Tests.Extensions
 
 
 			Assert.That(LastQuery, Should.Contain(
-				"ELECT /*+ CONTAINERS(DEFAULT_PDB_HINT='NO_PARALLEL')",
+				"SELECT /*+ CONTAINERS(DEFAULT_PDB_HINT='NO_PARALLEL')",
 				"UNION"));
 		}
+
+		#region Issue 4163
+
+		[ActiveIssue(SkipForNonLinqService = true, Details = "CompareNulls.LikeClr optimization broken with remote context")]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4163")]
+		public void Issue4163Test1([IncludeDataSources(true, TestProvName.AllOracle)] string context, [Values] CompareNulls compareNulls)
+		{
+			using var db = GetDataContext(context, o => o.UseCompareNulls(compareNulls));
+			using var tb = db.CreateLocalTable(Issue4163TableExplicitNullability.Data);
+
+			var cnt = db.GetTable<Issue4163TableExplicitNullability>().Where(r => r.Method != PaymentMethod.Unknown).Count();
+
+			Assert.That(cnt, Is.EqualTo(2));
+		}
+
+		[ActiveIssue(Details = "MappingSchema/MappingSchema.GetCanBeNull require update to support by-value nullability information")]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4163")]
+		public void Issue4163Test2([IncludeDataSources(true, TestProvName.AllOracle)] string context, [Values] CompareNulls compareNulls)
+		{
+			using var db = GetDataContext(context, o => o.UseCompareNulls(compareNulls));
+			using var tb = db.CreateLocalTable(Issue4163TableExplicitNullability.Data);
+
+			var cnt = db.GetTable<Issue4163TableUnknownNullability>().Where(r => r.Method != PaymentMethod.Unknown).Count();
+
+			Assert.That(cnt, Is.EqualTo(2));
+		}
+
+		[ActiveIssue(SkipForNonLinqService = true, Details = "CompareNulls.LikeClr optimization broken with remote context")]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4163")]
+		public void Issue4163Test3([IncludeDataSources(true, TestProvName.AllOracle)] string context, [Values] CompareNulls compareNulls)
+		{
+			using var db = GetDataContext(context, o => o.UseCompareNulls(compareNulls));
+			using var tb = db.CreateLocalTable(Issue4163TableExplicitNullability.Data);
+
+			var cnt = db.GetTable<Issue4163TableInferredNullability>().Where(r => r.Method != PaymentMethodWithNull.Unknown).Count();
+
+			Assert.That(cnt, Is.EqualTo(2));
+		}
+
+		[Table("Issue4163Table")]
+		sealed class Issue4163TableExplicitNullability
+		{
+			[Column] public int Id { get; set; }
+			[Column(CanBeNull = true)] public PaymentMethod Method { get; set; }
+
+			public static readonly Issue4163TableExplicitNullability[] Data = new[]
+			{
+				new Issue4163TableExplicitNullability() { Id = 1, Method = PaymentMethod.Unknown },
+				new Issue4163TableExplicitNullability() { Id = 2, Method = PaymentMethod.Cheque },
+				new Issue4163TableExplicitNullability() { Id = 3, Method = PaymentMethod.EFT },
+			};
+		}
+
+		[Table("Issue4163Table")]
+		sealed class Issue4163TableUnknownNullability
+		{
+			[Column] public int Id { get; set; }
+			[Column] public PaymentMethod Method { get; set; }
+		}
+
+		[Table("Issue4163Table")]
+		sealed class Issue4163TableInferredNullability
+		{
+			[Column] public int Id { get; set; }
+			[Column] public PaymentMethodWithNull Method { get; set; }
+		}
+
+		enum PaymentMethod
+		{
+			[MapValue("")]
+			Unknown,
+
+			[MapValue("C")]
+			Cheque,
+
+			[MapValue("E")]
+			EFT
+		}
+
+		enum PaymentMethodWithNull
+		{
+			[MapValue("")]
+			Unknown,
+
+			[MapValue(null)]
+			Null = Unknown,
+
+			[MapValue("C")]
+			Cheque,
+
+			[MapValue("E")]
+			EFT
+		}
+
+		#endregion
 	}
 }

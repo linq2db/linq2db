@@ -9,12 +9,11 @@ namespace LinqToDB.Linq.Builder
 	using LinqToDB.Expressions;
 	using SqlQuery;
 
+	[BuildsExpression(ExpressionType.Call)]
 	sealed class QueryExtensionBuilder : MethodCallBuilder
 	{
-		protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
-		{
-			return Sql.QueryExtensionAttribute.GetExtensionAttributes(methodCall, builder.MappingSchema).Length > 0;
-		}
+		public static bool CanBuild(Expression expr, BuildInfo info, ExpressionBuilder builder)
+			=> Sql.QueryExtensionAttribute.GetExtensionAttributes(expr, builder.MappingSchema).Length > 0;
 
 		protected override BuildSequenceResult BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{

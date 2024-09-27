@@ -4,6 +4,7 @@ using System.Linq;
 
 using LinqToDB;
 using LinqToDB.Linq;
+using LinqToDB.Mapping;
 
 using NUnit.Framework;
 
@@ -1500,7 +1501,183 @@ namespace Tests.Linq
 
 #endregion
 
-		[ActiveIssue("SQL0245N  The invocation of routine \"DATE\" is ambiguous. The argument in position \"1\" does not have a best fit.", Configuration = ProviderName.DB2)]
+		#region DateAddViaTimeSpan
+
+		static TimeSpan?[] TimespansForTest()
+		{
+			return new TimeSpan?[]
+			{
+//				TimeSpan.FromMilliseconds(1),
+				TimeSpan.FromHours(1),
+				TimeSpan.FromMinutes(61),
+				TimeSpan.FromMinutes(120),
+				TimeSpan.FromSeconds(61),
+				TimeSpan.FromHours(24),
+				TimeSpan.FromHours(24) + TimeSpan.FromSeconds(1),
+				null
+			};
+		}
+
+		class DateTypes
+		{
+			[Column(CanBeNull = false, IsPrimaryKey = true)]
+			public int Id { get; set; }
+
+			[Column(DataType = DataType.DateTime, CanBeNull = false)]
+			public DateTime DateTime { get; set; }
+			[Column(DataType = DataType.DateTime, CanBeNull = true)]
+			public DateTime? DateTimeNullable { get; set; }
+
+			[Column(DataType = DataType.DateTime2, CanBeNull = false)]
+			[Column(DataType = DataType.DateTime, CanBeNull = false, Configuration = ProviderName.AccessOdbc)]
+			public DateTime DateTime2 { get; set; }
+
+			[Column(DataType = DataType.DateTime2, CanBeNull = true)]
+			[Column(DataType = DataType.DateTime, CanBeNull = true, Configuration = ProviderName.AccessOdbc)]
+			public DateTime? DateTime2Nullable { get; set; }
+
+			public static DateTypes[] Seed()
+			{
+				return new DateTypes[]
+				{
+					new DateTypes
+					{
+						Id = 1,
+						DateTime = TestData.DateTime,
+						DateTimeNullable = TestData.DateTime,
+						DateTime2 = TestData.DateTime,
+						DateTime2Nullable = TestData.DateTime,
+					},
+					new DateTypes
+					{
+						Id = 2,
+						DateTime = TestData.DateTime,
+						DateTimeNullable = null,
+						DateTime2 = TestData.DateTime,
+						DateTime2Nullable = null,
+					},
+				};
+			}
+		}
+
+		class DateTypesOffset
+		{
+			[Column(CanBeNull = false, IsPrimaryKey = true)]
+			public int Id { get; set; }
+
+			[Column(DataType = DataType.DateTimeOffset, CanBeNull = false)]
+			public DateTimeOffset DateTimeOffset { get; set; }
+
+			[Column(DataType = DataType.DateTimeOffset, CanBeNull = true)]
+			public DateTimeOffset? DateTimeOffsetNullable { get; set; }
+
+			public static DateTypesOffset[] Seed()
+			{
+				return new DateTypesOffset[]
+				{
+					new DateTypesOffset
+					{
+						Id = 1,
+						DateTimeOffset = TestData.DateTimeOffset,
+						DateTimeOffsetNullable = TestData.DateTimeOffset,
+					},
+					new DateTypesOffset
+					{
+						Id = 2,
+						DateTimeOffset = TestData.DateTimeOffset,
+						DateTimeOffsetNullable = null,
+					},
+				};
+			}
+		}
+
+		[ActiveIssue(Configurations = [TestProvName.AllAccess, TestProvName.AllClickHouse, TestProvName.AllDB2, TestProvName.AllFirebird, TestProvName.AllInformix, TestProvName.AllMySql, TestProvName.AllOracle, TestProvName.AllSapHana, ProviderName.SqlCe, TestProvName.AllSqlServer, TestProvName.AllSybase, TestProvName.AllSQLiteClassic])]
+		[Test(Description = "https://github.com/linq2db/linq2db/pull/2718")]
+		public void DateTimeAddTimeSpan([DataSources(ProviderName.SQLiteMS)] string context, [ValueSource(nameof(TimespansForTest))] TimeSpan? ts)
+		{
+			// something wrong with retrieving DateTime values for SQLite
+			if (context.StartsWith("SQLite") && context.EndsWith(".LinqService"))
+				return;
+
+			using (var db = GetDataContext(context))
+			using (var table = db.CreateLocalTable(DateTypes.Seed()))
+			{
+
+				var query =
+					from t in table
+					select new
+					{
+						Id = t.Id,
+
+						DateTime = t.DateTime + ts,
+						DateTimeNullable = t.DateTimeNullable + ts,
+						DateTime2 = t.DateTime2 + ts,
+						DateTime2Nullable = t.DateTime2Nullable + ts,
+
+
+						M_DateTime = t.DateTime - ts,
+						M_DateTimeNullable = t.DateTimeNullable - ts,
+						M_DateTime2 = t.DateTime2 - ts,
+						M_DateTime2Nullable = t.DateTime2Nullable - ts,
+
+						C_DateTime = ts == null ? null : t.DateTime + Sql.ToSql(ts),
+						C_DateTimeNullable = ts == null ? null : t.DateTimeNullable + Sql.ToSql(ts),
+						C_DateTime2 = ts == null ? null : t.DateTime2 + Sql.ToSql(ts),
+						C_DateTime2Nullable = ts == null ? null : t.DateTime2Nullable + Sql.ToSql(ts),
+					};
+
+				var concated = query.Concat(query);
+
+				AssertQuery(concated);
+			}
+		}
+
+		[ActiveIssue(Configurations = [TestProvName.AllClickHouse, TestProvName.AllMySql, TestProvName.AllOracle, TestProvName.AllSqlServer])]
+		[Test(Description = "https://github.com/linq2db/linq2db/pull/2718")]
+		public void DateTimeOffsetAddTimeSpan(
+			[DataSources(
+				TestProvName.AllAccess,
+				TestProvName.AllFirebird,
+				TestProvName.AllSQLite,
+				TestProvName.AllSqlServer2005,
+				ProviderName.DB2,
+				TestProvName.AllInformix,
+				TestProvName.AllSapHana,
+				TestProvName.AllSybase,
+				TestProvName.AllMySqlData, // TODO: mysql.data doesn't support DateTimeOffset
+				ProviderName.SqlCe)]
+			string context,
+			[ValueSource(nameof(TimespansForTest))] TimeSpan? ts)
+		{
+			using (var db = GetDataContext(context))
+			using (var table = db.CreateLocalTable(DateTypesOffset.Seed()))
+			{
+
+				var query =
+					from t in table
+					select new
+					{
+						Id = t.Id,
+
+						DateTimeOffset = t.DateTimeOffset + ts,
+						DateTimeOffsetNullable = t.DateTimeOffsetNullable + ts,
+
+
+						M_DateTimeOffset = t.DateTimeOffset - ts,
+						M_DateTimeOffsetNullable = t.DateTimeOffsetNullable - ts,
+
+						C_DateTimeOffset = t.DateTimeOffset + Sql.ToSql(ts),
+						C_DateTimeOffsetNullable = t.DateTimeOffsetNullable + Sql.ToSql(ts),
+					};
+
+				var concated = query.Concat(query);
+
+				AssertQuery(concated);
+			}
+		}
+
+		#endregion
+
 		[Test]
 		public void GetDateTest1([DataSources] string context)
 		{
@@ -1587,6 +1764,41 @@ namespace Tests.Linq
 					from t in    Types select           Sql.DateAdd(datePart, 5, t.DateTimeValue)!. Value.Date,
 					from t in db.Types select Sql.AsSql(Sql.DateAdd(datePart, 5, t.DateTimeValue))!.Value.Date);
 			}
+		}
+
+		[Table]
+		sealed class Issue2950Table
+		{
+			[PrimaryKey] public int Id { get; set; }
+			[Column(DataType = DataType.Date)] public DateTime? Date { get; set; }
+			[Column(DataType = DataType.Time)] public TimeSpan? Time { get; set; }
+
+			public static readonly Issue2950Table[] Data =
+			[
+				new Issue2950Table() { Id = 1 },
+				new Issue2950Table() { Id = 2, Date = TestData.Date },
+				new Issue2950Table() { Id = 3, Date = TestData.Date, Time = TestData.TimeOfDay },
+			];
+		}
+
+		[ActiveIssue]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/2950")]
+		public void Issue2950Test([IncludeDataSources(true, TestProvName.AllPostgreSQL)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable(Issue2950Table.Data);
+
+			var query = from x in tb
+						where x.Time!.Value.Hours >= 0
+						select new
+						{
+							Output = x.Time!.Value.Hours
+						};
+
+			var result = query.ToArray();
+
+			Assert.That(result, Has.Length.EqualTo(1));
+			Assert.That(result[0].Output, Is.EqualTo(TestData.TimeOfDay.Hours));
 		}
 	}
 }

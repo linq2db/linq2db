@@ -11,16 +11,13 @@ namespace LinqToDB.Linq.Builder
 	using LinqToDB.Expressions;
 	using SqlQuery;
 
+	[BuildsMethodCall("Concat", "UnionAll", "Union", "Except", "Intersect", "ExceptAll", "IntersectAll")]
 	internal sealed class SetOperationBuilder : MethodCallBuilder
 	{
-		static readonly string[] MethodNames = { "Concat", "UnionAll", "Union", "Except", "Intersect", "ExceptAll", "IntersectAll" };
+		public static bool CanBuildMethod(MethodCallExpression call, BuildInfo info, ExpressionBuilder builder)
+			=> call.Arguments.Count == 2 && call.IsQueryable();
 
 		#region Builder
-
-		protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
-		{
-			return methodCall.Arguments.Count == 2 && methodCall.IsQueryable(MethodNames);
-		}
 
 		protected override BuildSequenceResult BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
@@ -1200,7 +1197,7 @@ namespace LinqToDB.Linq.Builder
 					var column1 = _sequence1.SelectQuery.Select.Columns[i];
 					var column2 = _sequence2.SelectQuery.Select.Columns[i];
 
-					sc.AddEqual(column1.Expression, column2.Expression, Builder.DataOptions.LinqOptions.CompareNullsAsValues);
+					sc.AddEqual(column1.Expression, column2.Expression, Builder.DataOptions.LinqOptions.CompareNulls);
 				}
 
 				_sequence2.SelectQuery.Select.Columns.Clear();

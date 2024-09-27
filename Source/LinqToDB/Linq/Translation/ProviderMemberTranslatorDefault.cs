@@ -226,7 +226,12 @@ namespace LinqToDB.Linq.Translation
 		protected virtual ISqlExpression? TranslateConvertToBoolean(ITranslationContext translationContext, ISqlExpression sqlExpression, TranslationFlags translationFlags)
 		{
 			var sc = new SqlSearchCondition();
-			var predicate = new SqlPredicate.ExprExpr(sqlExpression, SqlPredicate.Operator.Equal, new SqlValue(0), translationContext.DataOptions.LinqOptions.CompareNullsAsValues)
+			var predicate = new SqlPredicate
+				.ExprExpr(
+					sqlExpression,
+					SqlPredicate.Operator.Equal, 
+					new SqlValue(0),
+					translationContext.DataOptions.LinqOptions.CompareNulls == CompareNulls.LikeClr ? true : null)
 				.MakeNot();
 
 			sc.Add(predicate);

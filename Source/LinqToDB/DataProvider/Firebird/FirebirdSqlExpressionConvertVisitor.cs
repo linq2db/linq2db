@@ -3,6 +3,7 @@
 namespace LinqToDB.DataProvider.Firebird
 {
 	using Extensions;
+	using LinqToDB.Common;
 	using SqlProvider;
 	using SqlQuery;
 
@@ -147,7 +148,7 @@ namespace LinqToDB.DataProvider.Firebird
 				if (cast.Type.DbType == nameof(Sql.Types.Bit) && cast.Expression is not ISqlPredicate)
 				{
 					var sc = new SqlSearchCondition()
-						.AddNotEqual(cast.Expression, new SqlValue(0), DataOptions.LinqOptions.CompareNullsAsValues);
+						.AddNotEqual(cast.Expression, new SqlValue(0), DataOptions.LinqOptions.CompareNulls);
 					return sc;
 
 				}
@@ -170,7 +171,7 @@ namespace LinqToDB.DataProvider.Firebird
 		{
 			if (predicate.ElementType == QueryElementType.ExprPredicate && predicate.Expr1 is SqlParameter p && p.Type.DataType != DataType.Boolean)
 			{
-				predicate = new SqlPredicate.ExprExpr(p, SqlPredicate.Operator.Equal, MappingSchema.GetSqlValue(p.Type, true), p.CanBeNull);
+				predicate = new SqlPredicate.ExprExpr(p, SqlPredicate.Operator.Equal, MappingSchema.GetSqlValue(p.Type, true), DataOptions.LinqOptions.CompareNulls == CompareNulls.LikeClr ? true : null);
 			}
 
 			return base.VisitExprPredicate(predicate);

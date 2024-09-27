@@ -322,7 +322,6 @@ namespace Tests.Linq
 			db.Parent.Where(p => GetChildrenFiltered(db, ChildFilter).Select(c => c.ParentID).Contains(p.ParentID)).ToList();
 		}
 
-		[ActiveIssue(Configuration = TestProvName.AllSybase, Details = "CI: sybase image needs utf-8 enabled")]
 		[Test]
 		public void TestInternationalParamName([DataSources] string context)
 		{

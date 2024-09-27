@@ -572,7 +572,7 @@ namespace LinqToDB.Data
 						dataConnection._closeConnection   = false;
 						dataConnection._disposeConnection = false;
 
-						dataConnection.TransactionAsync = AsyncFactory.Create(transaction);
+						dataConnection.TransactionAsync = AsyncFactory.CreateAndSetDataContext(dataConnection, transaction);
 						dataConnection.DataProvider     = provider;
 						dataConnection.MappingSchema    = provider.MappingSchema;
 
@@ -645,7 +645,7 @@ namespace LinqToDB.Data
 					// TODO: IT Look into.
 					return connection is IAsyncDbConnection asyncDbConnection
 						? asyncDbConnection
-						: AsyncFactory.Create(connection);
+						: AsyncFactory.CreateAndSetDataContext(dataConnection, connection);
 				}
 			}
 

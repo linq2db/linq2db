@@ -221,13 +221,17 @@ namespace LinqToDB.Linq.Builder
 
 				if (MappingSchema.IsScalarType(ElementType))
 				{
-					if (path.Type != ElementType)
+					var dbType = MappingSchema.GetDbDataType(ElementType);
+					if (dbType.DataType != DataType.Undefined)
 					{
-						path = ((ContextRefExpression)path).WithType(ElementType);
-					}
+						if (path.Type != ElementType)
+						{
+							path = ((ContextRefExpression)path).WithType(ElementType);
+						}
 
-					var specialProp = SequenceHelper.CreateSpecialProperty(path, ElementType, "item");
-					return Builder.MakeExpression(this, specialProp, flags);
+						var specialProp = SequenceHelper.CreateSpecialProperty(path, ElementType, "item");
+						return Builder.MakeExpression(this, specialProp, flags);
+					}
 				}
 
 				if (Table.FieldsLookup == null)

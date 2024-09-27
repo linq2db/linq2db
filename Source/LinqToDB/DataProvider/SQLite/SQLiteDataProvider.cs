@@ -50,6 +50,8 @@ namespace LinqToDB.DataProvider.SQLite
 			SqlProviderFlags.IsUpdateTakeSupported     = Provider == SQLiteProvider.System;
 			SqlProviderFlags.IsUpdateSkipTakeSupported = Provider == SQLiteProvider.System;
 
+			SqlProviderFlags.SupportedCorrelatedSubqueriesLevel = null;
+
 			// 3.15.0
 			SqlProviderFlags.RowConstructorSupport = RowFeature.Equality        | RowFeature.Comparisons | RowFeature.UpdateLiteral |
 			                                         RowFeature.CompareToSelect | RowFeature.Between     | RowFeature.Update;

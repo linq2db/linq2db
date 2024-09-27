@@ -117,7 +117,7 @@ namespace Tests.DataProvider
 
 			public IEnumerable<TestMethod> BuildFrom(IMethodInfo method, Test? suite)
 			{
-				var tests = UserProviders.Contains(_providerName) ?
+				var tests = TestConfiguration.UserProviders.Contains(_providerName) ?
 					new[]
 					{
 						new TypeTestData("bigintDataType", 0,   (n,t,c) => t.TestTypeEx<long?>             (c, n, DataType.Int64),   1000000),
@@ -187,7 +187,7 @@ namespace Tests.DataProvider
 
 					test.Properties.Set(PropertyNames.Category, _providerName);
 
-					if (!UserProviders.Contains(_providerName))
+					if (!TestConfiguration.UserProviders.Contains(_providerName))
 					{
 						test.RunState = RunState.Ignored;
 						test.Properties.Set(PropertyNames.SkipReason, "Provider is disabled. See DataProviders.json");
@@ -632,12 +632,17 @@ namespace Tests.DataProvider
 			}
 		}
 
+		private static SqlTable CreateSqlTable<T>(IDataContext dataContext)
+		{
+			return new SqlTable(dataContext.MappingSchema.GetEntityDescriptor(typeof(T), dataContext.Options.ConnectionOptions.OnEntityDescriptorCreated));
+		}
+
 		[Test]
 		public void SequenceInsertWithUserDefinedSequenceNameAttribute([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
 		{
 			using (var db = GetDataConnection(context))
 			{
-				var table = SqlTable.Create<PostgreSQLSpecific.SequenceTest1>(db);
+				var table = CreateSqlTable<PostgreSQLSpecific.SequenceTest1>(db);
 				Assert.That(table.SequenceAttributes, Is.Not.Null);
 				Assert.That(table.SequenceAttributes!, Has.Length.EqualTo(1));
 
@@ -651,7 +656,7 @@ namespace Tests.DataProvider
 		{
 			using (var db = GetDataConnection(context))
 			{
-				var table = SqlTable.Create<PostgreSQLSpecific.SequenceTest2>(db);
+				var table = CreateSqlTable<PostgreSQLSpecific.SequenceTest2>(db);
 				Assert.That(table.SequenceAttributes.IsNullOrEmpty());
 
 				db.Insert(new PostgreSQLSpecific.SequenceTest2 { Value = "SeqValue" });
@@ -2304,6 +2309,52 @@ namespace Tests.DataProvider
 
 				Assert.That(data.SequenceEqual(res), Is.True);
 			}
+		}
+
+		[ActiveIssue]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/3352")]
+		public void FunctionParameterTyping([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
+		{
+			var ms = new MappingSchema();
+
+			using var db = new TestDataConnection(context);
+
+			db.Execute(@"
+CREATE OR REPLACE        FUNCTION test_parameter_typing(psmallint smallint, pint integer, pbigint bigint, pdecimal decimal, pfloat real, pdouble double precision)
+ RETURNS smallint
+ LANGUAGE sql
+AS $function$
+   SELECT psmallint;
+$function$
+;");
+
+			short?   int16 = 1;
+			int?     int32 = 2;
+			long?    int64 = 3;
+			decimal? dec   = 4;
+			float?   fl    = 5;
+			double?  dbl   = 6;
+
+			db.Select(() => test_parameter_typing(int16, int32, int64, dec, fl, dbl));
+
+			int16 = null;
+			int32 = null;
+			int64 = null;
+			dec   = null;
+			fl    = null;
+			dbl   = null;
+
+			db.Select(() => test_parameter_typing(int16, int32, int64, dec, fl, dbl));
+
+			db.Select(() => test_parameter_typing(1, 2, 3, 4, 5, 6));
+
+			db.Select(() => test_parameter_typing(null, null, null, null, null, null));
+		}
+
+		[Sql.Function(ServerSideOnly = true)]
+		static short? test_parameter_typing(short? input1, int? input2, long? input3, decimal? input4, float? input5, double? input6)
+		{
+			throw new InvalidOperationException();
 		}
 
 		[Table]

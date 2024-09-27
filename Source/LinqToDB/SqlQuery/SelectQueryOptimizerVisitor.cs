@@ -146,7 +146,8 @@ namespace LinqToDB.SqlQuery
 						}
 					}
 
-					if (!select.GroupBy.IsEmpty && select.Columns.Count == 0)
+					// see Issue3311Test3
+					if ((!select.GroupBy.IsEmpty || select.From.Tables.Count == 0) && select.Columns.Count == 0)
 					{
 						select.AddNew(new SqlValue(1));
 					}
@@ -1183,7 +1184,7 @@ namespace LinqToDB.SqlQuery
 			return optimized;
 		}
 
-		bool IsColumnExpressionAllowedToMoveUp(SelectQuery parentQuery, NullabilityContext nullability, SqlColumn column, ISqlExpression columnExpression, bool ignoreWhere)
+		bool IsColumnExpressionAllowedToMoveUp(SelectQuery parentQuery, NullabilityContext nullability, SqlColumn column, ISqlExpression columnExpression, bool ignoreWhere, bool inGrouping)
 		{
 			if (columnExpression.ElementType is QueryElementType.Column or QueryElementType.SqlRawSqlTable or QueryElementType.SqlField or QueryElementType.SqlValue or QueryElementType.SqlParameter)
 			{
@@ -1193,33 +1194,34 @@ namespace LinqToDB.SqlQuery
 			var underlying = QueryHelper.UnwrapExpression(columnExpression, false);
 			if (!ReferenceEquals(underlying, columnExpression))
 			{
-				return IsColumnExpressionAllowedToMoveUp(parentQuery, nullability, column, underlying, ignoreWhere);
+				return IsColumnExpressionAllowedToMoveUp(parentQuery, nullability, column, underlying, ignoreWhere, inGrouping);
 			}
 
 			if (underlying is SqlBinaryExpression binary)
 			{
 				if (QueryHelper.IsConstantFast(binary.Expr1))
 				{
-					return IsColumnExpressionAllowedToMoveUp(parentQuery, nullability, column, binary.Expr2, ignoreWhere);
+					return IsColumnExpressionAllowedToMoveUp(parentQuery, nullability, column, binary.Expr2, ignoreWhere, inGrouping);
 				}
 
 				if (QueryHelper.IsConstantFast(binary.Expr2))
 				{
-					return IsColumnExpressionAllowedToMoveUp(parentQuery, nullability, column, binary.Expr1, ignoreWhere);
+					return IsColumnExpressionAllowedToMoveUp(parentQuery, nullability, column, binary.Expr1, ignoreWhere, inGrouping);
 				}
 			}
 
-			var allowed = _movingComplexityVisitor.IsAllowedToMove(column, parent: parentQuery,
+			var allowed = _movingComplexityVisitor.IsAllowedToMove(column, parent : parentQuery,
 				nullability,
 				_expressionOptimizerVisitor,
 				_dataOptions,
 				_mappingSchema,
 				_evaluationContext,
+				// Elements which should be ignored while searching for usage
 				column.Parent,
-				_applySelect == parentQuery ? parentQuery.Where  : null,
-				_applySelect == parentQuery ? parentQuery.Select : null,
+				_applySelect == parentQuery ? parentQuery.Where : null,
+				!inGrouping && _applySelect == parentQuery ? parentQuery.Select : null,
 				ignoreWhere ? parentQuery.Where : null
-				);
+			);
 
 			return allowed;
 		}
@@ -1506,7 +1508,7 @@ namespace LinqToDB.SqlQuery
 						return false;
 					}
 
-					if (!IsColumnExpressionAllowedToMoveUp(parentQuery, nullability, column, column.Expression, ignoreWhere : true))
+					if (!IsColumnExpressionAllowedToMoveUp(parentQuery, nullability, column, column.Expression, ignoreWhere : true, inGrouping: !subQuery.GroupBy.IsEmpty))
 					{
 						// Column expression is complex and Column has more than one reference
 						return false;
@@ -1514,7 +1516,7 @@ namespace LinqToDB.SqlQuery
 				}
 				else
 				{
-					if (!IsColumnExpressionAllowedToMoveUp(parentQuery, nullability, column, column.Expression, ignoreWhere : false))
+					if (!IsColumnExpressionAllowedToMoveUp(parentQuery, nullability, column, column.Expression, ignoreWhere : false, inGrouping: !subQuery.GroupBy.IsEmpty))
 					{
 						// Column expression is complex and Column has more than one reference
 						return false;
@@ -2290,7 +2292,7 @@ namespace LinqToDB.SqlQuery
 			return false;
 		}
 
-		static bool IsUniqueUsage(SelectQuery rootQuery, SqlColumn column)
+		static int CountUsage(SelectQuery rootQuery, SqlColumn column)
 		{
 			int counter = 0;
 
@@ -2300,7 +2302,7 @@ namespace LinqToDB.SqlQuery
 				if (e is SelectQuery sq && sq == column.Parent)
 					return false;
 
-				if (e == column)
+				if (Equals(e, column))
 				{
 					++counter;
 				}
@@ -2308,7 +2310,19 @@ namespace LinqToDB.SqlQuery
 				return counter < 2;
 			});
 
-			return counter <= 1;
+			return counter;
+		}
+
+		static bool IsInSelectPart(SelectQuery rootQuery, SqlColumn column)
+		{
+			var result = rootQuery.Select.HasElement(column);
+			return result;
+		}
+
+		static bool IsInOrderByPart(SelectQuery rootQuery, SqlColumn column)
+		{
+			var result = rootQuery.OrderBy.HasElement(column);
+			return result;
 		}
 
 		static bool IsInsideAggregate(IQueryElement testedElement, SqlColumn column)
@@ -2377,9 +2391,6 @@ namespace LinqToDB.SqlQuery
 
 		bool MoveOuterJoinsToSubQuery(SelectQuery selectQuery, bool processMultiColumn)
 		{
-			if (!_providerFlags.IsSubQueryColumnSupported)
-				return false;
-
 			var currentVersion = _version;
 
 			EvaluationContext? evaluationContext = null;
@@ -2424,12 +2435,11 @@ namespace LinqToDB.SqlQuery
 								if (!IsLimitedToOneRecord(sq, joinQuery, evaluationContext))
 									continue;
 
-								if (!SqlProviderHelper.IsValidQuery(joinQuery, parentQuery: sq, fakeJoin: null, forColumn: true, _providerFlags, out _))
-									continue;
+								var isNoTableQuery = joinQuery.From.Tables.Count == 0;
 
-								if (_providerFlags.DoesNotSupportCorrelatedSubquery)
+								if (!isNoTableQuery)
 								{
-									if (QueryHelper.IsDependsOnOuterSources(join))
+									if (!SqlProviderHelper.IsValidQuery(joinQuery, parentQuery : sq, fakeJoin : null, columnSubqueryLevel : 0, _providerFlags, out _))
 										continue;
 								}
 
@@ -2438,9 +2448,18 @@ namespace LinqToDB.SqlQuery
 								foreach (var testedColumn in joinQuery.Select.Columns)
 								{
 									// where we can start analyzing that we can move join to subquery
-									
-									if (!IsUniqueUsage(sq, testedColumn))
+
+									var usageCount = CountUsage(sq, testedColumn);
+									var isUnique   = usageCount <= 1;
+
+									if (!isUnique)
 									{
+										if (!processMultiColumn || join.JoinType == JoinType.Left)
+										{
+											isValid = false;
+											break;
+										};
+
 										if (_providerFlags.IsApplyJoinSupported)
 										{
 											MoveDuplicateUsageToSubQuery(sq);
@@ -2449,6 +2468,20 @@ namespace LinqToDB.SqlQuery
 											isValid = false;
 											break;
 										}	
+									}
+
+									if (usageCount == 1 && !IsInSelectPart(sq, testedColumn))
+									{
+										var moveToSubquery = IsInOrderByPart(sq, testedColumn) && !_providerFlags.IsSubQueryOrderBySupported;
+										if (moveToSubquery)
+										{
+											MoveDuplicateUsageToSubQuery(sq);
+											// will be processed in the next step
+											ti = -1;
+
+											isValid = false;
+											break;
+										}
 									}
 
 									if (testedColumn.Expression is SqlFunction function)
@@ -2519,6 +2552,9 @@ namespace LinqToDB.SqlQuery
 			if (_version != currentVersion)
 			{
 				EnsureReferencesCorrected(selectQuery);
+
+				_columnNestingCorrector.CorrectColumnNesting(selectQuery);
+
 				return true;
 			}
 
@@ -2667,7 +2703,7 @@ namespace LinqToDB.SqlQuery
 
 			protected override IQueryElement VisitExprExprPredicate(SqlPredicate.ExprExpr predicate)
 			{
-				IQueryElement reduced = predicate.Reduce(_nullability, _evaluationContext, _isInsideNot);
+				IQueryElement reduced = predicate.Reduce(_nullability, _evaluationContext, _isInsideNot, _dataOptions.LinqOptions);
 				if (!ReferenceEquals(reduced, predicate))
 				{
 					reduced = _optimizerVisitor.Optimize(_evaluationContext, _nullability, null, _dataOptions, _mappingSchema, reduced, false, _isInsideNot, true);

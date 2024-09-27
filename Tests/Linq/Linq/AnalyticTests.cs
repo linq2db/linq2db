@@ -1694,6 +1694,53 @@ namespace Tests.Linq
 			}
 		}
 
+		[ActiveIssue(Configurations = [TestProvName.AllSqlServer, TestProvName.AllOracle, TestProvName.AllSapHana])]
+		[Test]
+		public void Issue2842Test1([DataSources(
+			TestProvName.AllAccess,
+			ProviderName.Firebird25,
+			TestProvName.AllMySql57,
+			ProviderName.SqlCe,
+			TestProvName.AllSybase)] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var query =
+					from x in db.Person
+					select new
+					{
+						x.FirstName,
+						rank = Sql.Ext.Rank().Over().OrderBy(x.ID == 2).ToValue()
+					};
+
+				query
+					.ToList();
+			}
+		}
+
+		[Test]
+		public void Issue2842Test2([DataSources(
+			TestProvName.AllAccess,
+			ProviderName.Firebird25,
+			TestProvName.AllMySql57,
+			ProviderName.SqlCe,
+			TestProvName.AllSybase)] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var query =
+					from x in db.Person
+					select new
+					{
+						x.FirstName,
+						rank = Sql.Ext.Rank().Over().OrderBy(x.ID == 2 ? 1 : 0).ToValue()
+					};
+
+				query
+					.ToList();
+			}
+		}
+
 		[Test]
 		public void Issue1799Test2([DataSources(
 			TestProvName.AllSqlServer2008Minus,

@@ -21,22 +21,23 @@ namespace LinqToDB.DataProvider.Access
 	{
 		public AccessODBCDataProvider() : base(ProviderName.AccessOdbc, _mappingSchemaInstance, OdbcProviderAdapter.GetInstance())
 		{
-			SqlProviderFlags.AcceptsTakeAsParameter                       = false;
-			SqlProviderFlags.IsSkipSupported                              = false;
-			SqlProviderFlags.IsInsertOrUpdateSupported                    = false;
-			SqlProviderFlags.IsSubQuerySkipSupported                      = false;
-			SqlProviderFlags.IsSupportsJoinWithoutCondition               = false;
-			SqlProviderFlags.TakeHintsSupported                           = TakeHints.Percent;
-			SqlProviderFlags.IsCrossJoinSupported                         = false;
-			SqlProviderFlags.IsDistinctSetOperationsSupported             = false;
-			SqlProviderFlags.IsParameterOrderDependent                    = true;
-			SqlProviderFlags.IsUpdateFromSupported                        = false;
-			SqlProviderFlags.IsWindowFunctionsSupported                   = false;
-			SqlProviderFlags.IsColumnSubqueryWithParentReferenceSupported = false;
-			SqlProviderFlags.DefaultMultiQueryIsolationLevel              = IsolationLevel.Unspecified;
-			SqlProviderFlags.IsOuterJoinSupportsInnerJoin                 = false;
-			SqlProviderFlags.IsMultiTablesSupportsJoins                   = false;
-			SqlProviderFlags.IsAccessBuggyLeftJoinConstantNullability     = true;
+			SqlProviderFlags.AcceptsTakeAsParameter                   = false;
+			SqlProviderFlags.IsSkipSupported                          = false;
+			SqlProviderFlags.IsInsertOrUpdateSupported                = false;
+			SqlProviderFlags.IsSubQuerySkipSupported                  = false;
+			SqlProviderFlags.IsSubQueryOrderBySupported               = false;
+			SqlProviderFlags.IsSupportsJoinWithoutCondition           = false;
+			SqlProviderFlags.TakeHintsSupported                       = TakeHints.Percent;
+			SqlProviderFlags.IsCrossJoinSupported                     = false;
+			SqlProviderFlags.IsDistinctSetOperationsSupported         = false;
+			SqlProviderFlags.IsParameterOrderDependent                = true;
+			SqlProviderFlags.IsUpdateFromSupported                    = false;
+			SqlProviderFlags.IsWindowFunctionsSupported               = false;
+			SqlProviderFlags.SupportedCorrelatedSubqueriesLevel       = 1;
+			SqlProviderFlags.DefaultMultiQueryIsolationLevel          = IsolationLevel.Unspecified;
+			SqlProviderFlags.IsOuterJoinSupportsInnerJoin             = false;
+			SqlProviderFlags.IsMultiTablesSupportsJoins               = false;
+			SqlProviderFlags.IsAccessBuggyLeftJoinConstantNullability = true;
 
 			SqlProviderFlags.IsCountDistinctSupported       = false;
 			SqlProviderFlags.IsAggregationDistinctSupported = false;

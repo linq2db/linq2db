@@ -8,12 +8,11 @@ namespace LinqToDB.Linq.Builder
 	using LinqToDB.Expressions;
 	using SqlQuery;
 
+	[BuildsMethodCall("DefaultIfEmpty")]
 	sealed class DefaultIfEmptyBuilder : MethodCallBuilder
 	{
-		protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
-		{
-			return methodCall.IsQueryable("DefaultIfEmpty");
-		}
+		public static bool CanBuildMethod(MethodCallExpression call, BuildInfo info, ExpressionBuilder builder)
+			=> call.IsQueryable();
 
 		static ReadOnlyCollection<Expression>? PrepareNoNullConditions(ExpressionBuilder builder, IBuildContext notNullHandlerSequence, IBuildContext sequence, IBuildContext nullabilitySequence, bool allowNullField)
 		{
@@ -29,11 +28,6 @@ namespace LinqToDB.Linq.Builder
 
 			if (notNull.Count == 0)
 			{
-				/*
-				if (!allowNullField)
-					return null;
-					*/
-
 				if (builder.DataContext.SqlProviderFlags.IsAccessBuggyLeftJoinConstantNullability)
 				{
 					if (placeholders.Count == 0)
@@ -43,8 +37,13 @@ namespace LinqToDB.Linq.Builder
 				}
 				else
 				{
-					notNull.Add(SequenceHelper.CreateSpecialProperty(new ContextRefExpression(notNullHandlerSequence.ElementType, notNullHandlerSequence), typeof(int?),
-						DefaultIfEmptyContext.NotNullPropName));
+					notNull.Add(
+						SequenceHelper.CreateSpecialProperty(
+							new ContextRefExpression(notNullHandlerSequence.ElementType, notNullHandlerSequence),
+							typeof(int?),
+							DefaultIfEmptyContext.NotNullPropName
+						)
+					);
 				}
 
 			}
@@ -94,7 +93,13 @@ namespace LinqToDB.Linq.Builder
 					defaultValueContext.SelectQuery.Select.AddNew(new SqlValue(1));
 				}
 
-				var defaultIfEmptyContext = new DefaultIfEmptyContext(buildInfo.Parent, sequence, sequence, null, true);
+				var defaultIfEmptyContext = new DefaultIfEmptyContext(
+					buildInfo.Parent,
+					sequence,
+					sequence,
+					defaultValue: null,
+					allowNullField: true,
+					isNullValidationDisabled: false);
 
 				var notNullConditions = defaultIfEmptyContext.GetNotNullConditions();
 
@@ -113,7 +118,7 @@ namespace LinqToDB.Linq.Builder
 
 				if (!buildInfo.IsSubQuery)
 				{
-					if (!SequenceHelper.IsSupportedSubquery(resultSelectContext, resultSelectContext, out var errorMessage))
+					if (!builder.IsSupportedSubquery(resultSelectContext, resultSelectContext, out var errorMessage))
 						return BuildSequenceResult.Error(methodCall, errorMessage);
 				}
 
@@ -126,7 +131,7 @@ namespace LinqToDB.Linq.Builder
 					return buildResult;
 				var sequence = buildResult.BuildContext;
 
-				return BuildSequenceResult.FromContext(new DefaultIfEmptyContext(buildInfo.Parent, sequence, sequence, defaultValue, true));
+				return BuildSequenceResult.FromContext(new DefaultIfEmptyContext(buildInfo.Parent, sequence, sequence, defaultValue, true, false));
 			}
 		}
 
@@ -137,15 +142,17 @@ namespace LinqToDB.Linq.Builder
 
 			ReadOnlyCollection<Expression>? _notNullConditions;
 
-			public DefaultIfEmptyContext(IBuildContext? parent, IBuildContext sequence, IBuildContext nullabilitySequence, Expression? defaultValue, bool allowNullField)
+			public DefaultIfEmptyContext(IBuildContext? parent, IBuildContext sequence, IBuildContext nullabilitySequence, Expression? defaultValue, bool allowNullField, bool isNullValidationDisabled)
 				: base(parent, sequence, null)
 			{
-				_nullabilitySequence = nullabilitySequence;
-				_allowNullField      = allowNullField;
-				DefaultValue         = defaultValue;
+				_nullabilitySequence     = nullabilitySequence;
+				_allowNullField          = allowNullField;
+				DefaultValue             = defaultValue;
+				IsNullValidationDisabled = isNullValidationDisabled;
 			}
 
-			public Expression? DefaultValue { get; }
+			public bool        IsNullValidationDisabled { get; set; }
+			public Expression? DefaultValue             { get; }
 
 			public const string NotNullPropName = "not_null";
 
@@ -166,7 +173,7 @@ namespace LinqToDB.Linq.Builder
 				if (ExpressionEqualityComparer.Instance.Equals(newPath, path))
 					return path;
 
-				if (flags.IsTraverse() || flags.IsRoot() || flags.IsTable() || flags.IsExtractProjection())
+				if (flags.IsTraverse() || flags.IsRoot() || flags.IsTable() || flags.IsExtractProjection() || flags.IsAggregationRoot())
 					return newPath;
 
 				if ((flags.IsSql() || flags.IsExpression()) && SequenceHelper.IsSpecialProperty(path, typeof(int?), NotNullPropName))
@@ -179,7 +186,7 @@ namespace LinqToDB.Linq.Builder
 					return placeholder;
 				}
 
-				if (DefaultValue != null)
+				if (!IsNullValidationDisabled && DefaultValue != null)
 				{
 					var notNullConditions = GetNotNullConditions();
 
@@ -208,7 +215,7 @@ namespace LinqToDB.Linq.Builder
 
 				expr = SequenceHelper.CorrectTrackingPath(Builder, expr, path);
 
-				if (/*!flags.IsKeys() && */expr.UnwrapConvert() is not SqlEagerLoadExpression)
+				if (!IsNullValidationDisabled && /*!flags.IsKeys() && */expr.UnwrapConvert() is not SqlEagerLoadExpression)
 				{
 					if (expr is SqlPlaceholderExpression placeholder)
 					{
@@ -243,7 +250,12 @@ namespace LinqToDB.Linq.Builder
 
 			public override IBuildContext Clone(CloningContext context)
 			{
-				return new DefaultIfEmptyContext(null, context.CloneContext(Sequence), context.CloneContext(_nullabilitySequence), context.CloneExpression(DefaultValue), _allowNullField);
+				return new DefaultIfEmptyContext(null, 
+					context.CloneContext(Sequence), 
+					context.CloneContext(_nullabilitySequence), 
+					context.CloneExpression(DefaultValue), 
+					_allowNullField, 
+					IsNullValidationDisabled);
 			}
 
 			public override IBuildContext? GetContext(Expression expression, BuildInfo buildInfo)

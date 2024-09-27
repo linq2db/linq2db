@@ -5,17 +5,11 @@ namespace LinqToDB.Linq.Builder
 {
 	using LinqToDB.Expressions;
 
+	[BuildsAny]
 	sealed class ContextRefBuilder : ISequenceBuilder
 	{
-		public int BuildCounter { get; set; }
-
-		public bool CanBuild(ExpressionBuilder builder, BuildInfo buildInfo)
-		{
-			if (buildInfo.Expression is not ContextRefExpression contextRef)
-				return false;
-
-			return true;
-		}
+		public static bool CanBuild(BuildInfo buildInfo, ExpressionBuilder builder)
+			=> buildInfo.Expression is ContextRefExpression contextRef;
 
 		public BuildSequenceResult BuildSequence(ExpressionBuilder builder, BuildInfo buildInfo)
 		{
@@ -33,7 +27,7 @@ namespace LinqToDB.Linq.Builder
 
 			return BuildSequenceResult.NotSupported();
 		}
-
+		
 		public bool IsSequence(ExpressionBuilder builder, BuildInfo buildInfo)
 		{
 			return true;

@@ -122,7 +122,6 @@ namespace Tests.Linq
 					Where(c => c.ChildID != 1032));
 		}
 
-		[ActiveIssue("https://github.com/ClickHouse/ClickHouse/issues/23194", Configuration = TestProvName.AllClickHouse)]
 		[Test]
 		public void Concat5([DataSources(TestProvName.AllInformix)] string context)
 		{
@@ -137,7 +136,6 @@ namespace Tests.Linq
 					Where(c => c.ChildID != 1032));
 		}
 
-		[ActiveIssue("https://github.com/ClickHouse/ClickHouse/issues/23194", Configuration = TestProvName.AllClickHouse)]
 		[Test]
 		public void Concat501([DataSources(TestProvName.AllInformix)] string context)
 		{
@@ -242,7 +240,6 @@ namespace Tests.Linq
 					db.Child. Select(c => new { ID1 = c.ParentID, ID2 = c.ParentID + 1, ID3 = c.ChildID,  })));
 		}
 
-		[ActiveIssue("https://github.com/linq2db/linq2db/issues/3360", Configuration = TestProvName.AllClickHouse)]
 		[Test]
 		public void Concat851([DataSources] string context)
 		{
@@ -298,7 +295,6 @@ namespace Tests.Linq
 					db.Parent.Select(c => new Parent { ParentID = c.ParentID, Value1   = c.Value1   })));
 		}
 
-		[ActiveIssue("https://github.com/linq2db/linq2db/issues/3360", Configuration = TestProvName.AllClickHouse)]
 		[Test]
 		public void Concat89([DataSources(TestProvName.AllInformix)] string context)
 		{
@@ -1392,6 +1388,279 @@ namespace Tests.Linq
 		}
 
 		[Table]
+		private class Issue3360Table
+		{
+			[PrimaryKey                         ] public int     Id  { get; set; }
+			// by default we generate N-literal, which is not compatible with (var)char
+			[Column(DataType = DataType.VarChar)] public string? Str { get; set; }
+		}
+
+		[Test(Description = "Test that we type literal/parameter in set query column properly")]
+		public void Issue3360_TypeByOtherQuery([IncludeDataSources(true, TestProvName.AllSqlServer)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable<Issue3360Table>();
+
+			var query1 = tb.Select(p => new { p.Id, p.Str                });
+			var query2 = tb.Select(p => new { p.Id, Str = (string?)"str" });
+
+			query1.Concat(query2).ToArray();
+			if (db is TestDataConnection dc1)
+				dc1.LastQuery!.Should().NotContain("N'");
+
+			query2.Concat(query1).ToArray();
+			if (db is TestDataConnection dc2)
+				dc2.LastQuery!.Should().NotContain("N'");
+		}
+
+		[ActiveIssue(Configurations = [TestProvName.AllDB2])]
+		[Test(Description = "Test that we type literal/parameter in set query column properly")]
+		public void Issue3360_TypeByOtherQuery_AllProviders([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable<Issue3360Table>();
+
+			var query1 = tb.Select(p => new { p.Id, p.Str                });
+			var query2 = tb.Select(p => new { p.Id, Str = (string?)"str" });
+
+			query1.Concat(query2).ToArray();
+			query2.Concat(query1).ToArray();
+		}
+
+		[ActiveIssue]
+		[Test(Description = "Test that we type literal/parameter in set query column properly")]
+		public void Issue3360_TypeByProjectionProperty([IncludeDataSources(true, TestProvName.AllSqlServer)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable<Issue3360Table>();
+
+			var query1 = tb.Select(p => new Issue3360Table() { Id = p.Id, Str = (string?)"str1" });
+			var query2 = tb.Select(p => new Issue3360Table() { Id = p.Id, Str = (string?)"str2" });
+
+			query1.Concat(query2).ToArray();
+			if (db is TestDataConnection dc1)
+				dc1.LastQuery!.Should().NotContain("N'");
+
+			query2.Concat(query1).ToArray();
+			if (db is TestDataConnection dc2)
+				dc2.LastQuery!.Should().NotContain("N'");
+		}
+
+		[ActiveIssue(Configurations = [TestProvName.AllDB2])]
+		[Test(Description = "Test that non-sqlserver providers work too")]
+		public void Issue3360_TypeByProjectionProperty_AllProviders([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable<Issue3360Table>();
+
+			var query1 = tb.Select(p => new Issue3360Table() { Id = p.Id, Str = (string?)"str1" });
+			var query2 = tb.Select(p => new Issue3360Table() { Id = p.Id, Str = (string?)"str2" });
+
+			query1.Concat(query2).ToArray();
+			query2.Concat(query1).ToArray();
+		}
+
+		public enum InvalidColumnIndexMappingEnum1
+		{
+			[MapValue("ENUM1_VALUE")]
+			Value
+		}
+
+		public enum InvalidColumnIndexMappingEnum2
+		{
+			[MapValue("ENUM2_VALUE")]
+			Value
+		}
+
+		[Table]
+		public class Issue3360Table1
+		{
+			[PrimaryKey] public int                             Id    { get; set; }
+			[Column    ] public byte                            Byte  { get; set; }
+			[Column    ] public byte?                           ByteN { get; set; }
+			[Column]
+			[Column    ] public Guid                            Guid  { get; set; }
+			[Column    ] public Guid?                           GuidN { get; set; }
+			[Column    ] public InvalidColumnIndexMappingEnum1  Enum  { get; set; }
+			[Column    ] public InvalidColumnIndexMappingEnum2? EnumN { get; set; }
+			[Column    ] public bool                            Bool  { get; set; }
+			[Column    ] public bool?                           BoolN { get; set; }
+
+			public static Issue3360Table1[] Items = new[]
+			{
+				new Issue3360Table1() { Id = 1 },
+				new Issue3360Table1() { Id = 2, Byte = 1, ByteN = 2, Guid = TestData.Guid1, GuidN = TestData.Guid2, Enum = InvalidColumnIndexMappingEnum1.Value, EnumN = InvalidColumnIndexMappingEnum2.Value, Bool = true, BoolN = false },
+				new Issue3360Table1() { Id = 4, Byte = 3, ByteN = 4, Guid = TestData.Guid3, GuidN = TestData.Guid1, Enum = InvalidColumnIndexMappingEnum1.Value, EnumN = InvalidColumnIndexMappingEnum2.Value, Bool = false, BoolN = true },
+			};
+		}
+
+		private record Issue3360NullsRecord(int Id, byte? Byte, byte? ByteN, Guid? Guid, Guid? GuidN, InvalidColumnIndexMappingEnum1? Enum, InvalidColumnIndexMappingEnum2? EnumN, bool? Bool, bool? BoolN);
+
+		[ActiveIssue(Configuration = TestProvName.AllSybase, Details = "Update BoolN handling for sybase")]
+		[Test(Description = "null literals in first query")]
+		public void Issue3360_NullsInAnchor([DataSources] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(Issue3360Table1.Items);
+
+			var query = table.Where(r => r.Id == 1)
+				.Select(r => new Issue3360NullsRecord(r.Id, null, null, null, null, null, null, null, null))
+				.Concat(
+					table.Where(r => r.Id == 2)
+						.Select(r => new Issue3360NullsRecord(r.Id, r.Byte, r.ByteN, r.Guid, r.GuidN, r.Enum, r.EnumN, r.Bool, r.BoolN)))
+				.OrderBy(r => r.Id);
+
+			var data = query.ToArray();
+
+			Assert.That(data, Has.Length.EqualTo(2));
+
+			Assert.Multiple(() =>
+			{
+				Assert.That(data[0].Id, Is.EqualTo(1));
+				Assert.That(data[0].Byte, Is.Null);
+				Assert.That(data[0].ByteN, Is.Null);
+				Assert.That(data[0].Guid, Is.Null);
+				Assert.That(data[0].GuidN, Is.Null);
+				Assert.That(data[0].Enum, Is.Null);
+				Assert.That(data[0].EnumN, Is.Null);
+				Assert.That(data[0].Bool, Is.Null);
+			});
+			if (!context.IsAnyOf(TestProvName.AllSybase))
+				Assert.That(data[0].BoolN, Is.Null);
+
+			Assert.Multiple(() =>
+			{
+				Assert.That(data[1].Id, Is.EqualTo(2));
+				Assert.That(data[1].Byte, Is.EqualTo(1));
+				Assert.That(data[1].ByteN, Is.EqualTo(2));
+				Assert.That(data[1].Guid, Is.EqualTo(TestData.Guid1));
+				Assert.That(data[1].GuidN, Is.EqualTo(TestData.Guid2));
+				Assert.That(data[1].Enum, Is.EqualTo(InvalidColumnIndexMappingEnum1.Value));
+				Assert.That(data[1].EnumN, Is.EqualTo(InvalidColumnIndexMappingEnum2.Value));
+				Assert.That(data[1].Bool, Is.EqualTo(true));
+				Assert.That(data[1].BoolN, Is.EqualTo(false));
+			});
+		}
+
+		[ActiveIssue(Configuration = TestProvName.AllSybase, Details = "Update BoolN handling for sybase")]
+		[Test(Description = "double columns in first query")]
+		public void Issue3360_DoubleColumnSelection([DataSources] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(Issue3360Table1.Items);
+
+			var query = table.Where(r => r.Id == 2)
+				.Select(r => new Issue3360NullsRecord(r.Id, r.Byte, r.Byte, r.Guid, r.Guid, null, null, r.Bool, r.Bool))
+				.Concat(
+					table.Where(r => r.Id == 4)
+						.Select(r => new Issue3360NullsRecord(r.Id, r.Byte, r.ByteN, r.Guid, r.GuidN, r.Enum, r.EnumN, r.Bool, r.BoolN)))
+				.OrderBy(r => r.Id);
+
+			var data = query.ToArray();
+
+			Assert.That(data, Has.Length.EqualTo(2));
+
+			Assert.Multiple(() =>
+			{
+				Assert.That(data[0].Id, Is.EqualTo(2));
+				Assert.That(data[0].Byte, Is.EqualTo(1));
+				Assert.That(data[0].ByteN, Is.EqualTo(1));
+				Assert.That(data[0].Guid, Is.EqualTo(TestData.Guid1));
+				Assert.That(data[0].GuidN, Is.EqualTo(TestData.Guid1));
+				Assert.That(data[0].Enum, Is.Null);
+				Assert.That(data[0].EnumN, Is.Null);
+				Assert.That(data[0].Bool, Is.EqualTo(true));
+				Assert.That(data[0].BoolN, Is.EqualTo(true));
+
+				Assert.That(data[1].Id, Is.EqualTo(4));
+				Assert.That(data[1].Byte, Is.EqualTo(3));
+				Assert.That(data[1].ByteN, Is.EqualTo(4));
+				Assert.That(data[1].Guid, Is.EqualTo(TestData.Guid3));
+				Assert.That(data[1].GuidN, Is.EqualTo(TestData.Guid1));
+				Assert.That(data[1].Enum, Is.EqualTo(InvalidColumnIndexMappingEnum1.Value));
+				Assert.That(data[1].EnumN, Is.EqualTo(InvalidColumnIndexMappingEnum2.Value));
+				Assert.That(data[1].Bool, Is.EqualTo(false));
+				Assert.That(data[1].BoolN, Is.EqualTo(true));
+			});
+		}
+
+		[ActiveIssue(Configurations = [TestProvName.AllAccess, TestProvName.AllInformix, TestProvName.AllOracle, TestProvName.AllSybase])]
+		[Test(Description = "null literals in first query")]
+		public void Issue3360_LiteralsInFirstQuery([DataSources] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(Issue3360Table1.Items);
+
+			var query = table.Where(r => r.Id == 2)
+				.Select(r => new Issue3360NullsRecord(r.Id, 5, 5, new Guid("0B8AFE27-481C-442E-B8CF-729DDFEECE29"), new Guid("0B8AFE27-481C-442E-B8CF-729DDFEECE30"), InvalidColumnIndexMappingEnum1.Value, InvalidColumnIndexMappingEnum2.Value, true, false))
+				.Concat(
+					table.Where(r => r.Id == 4)
+						.Select(r => new Issue3360NullsRecord(r.Id, r.Byte, r.ByteN, r.Guid, r.GuidN, r.Enum, r.EnumN, r.Bool, r.BoolN)))
+				.OrderBy(r => r.Id);
+
+			var data = query.ToArray();
+
+			Assert.That(data, Has.Length.EqualTo(2));
+
+			Assert.Multiple(() =>
+			{
+				Assert.That(data[0].Id, Is.EqualTo(2));
+				Assert.That(data[0].Byte, Is.EqualTo(5));
+				Assert.That(data[0].ByteN, Is.EqualTo(5));
+				Assert.That(data[0].Guid, Is.EqualTo(new Guid("0B8AFE27-481C-442E-B8CF-729DDFEECE29")));
+				Assert.That(data[0].GuidN, Is.EqualTo(new Guid("0B8AFE27-481C-442E-B8CF-729DDFEECE30")));
+				Assert.That(data[0].Enum, Is.EqualTo(InvalidColumnIndexMappingEnum1.Value));
+				Assert.That(data[0].EnumN, Is.EqualTo(InvalidColumnIndexMappingEnum2.Value));
+				Assert.That(data[0].Bool, Is.EqualTo(true));
+				Assert.That(data[0].BoolN, Is.EqualTo(false));
+
+				Assert.That(data[1].Id, Is.EqualTo(4));
+				Assert.That(data[1].Byte, Is.EqualTo(3));
+				Assert.That(data[1].ByteN, Is.EqualTo(4));
+				Assert.That(data[1].Guid, Is.EqualTo(TestData.Guid3));
+				Assert.That(data[1].GuidN, Is.EqualTo(TestData.Guid1));
+				Assert.That(data[1].Enum, Is.EqualTo(InvalidColumnIndexMappingEnum1.Value));
+				Assert.That(data[1].EnumN, Is.EqualTo(InvalidColumnIndexMappingEnum2.Value));
+				Assert.That(data[1].Bool, Is.EqualTo(false));
+				Assert.That(data[1].BoolN, Is.EqualTo(true));
+			});
+		}
+
+
+		[Test(Description = "Test that we type non-field union column properly")]
+		public void Issue2451_ComplexColumn([IncludeDataSources(true, TestProvName.AllSqlServer)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query1 = db.Person.Select(p => new Person() { FirstName = p.FirstName });
+			var query2 = db.Person.Select(p => new Person() { FirstName = p.FirstName + '/' + p.LastName });
+
+			query1.Concat(query2).ToArray();
+
+			// too many things is wrong here:
+			// [p].[FirstName] + Convert(VarChar(4000), N'/') + [p].[LastName]
+			// 1. why we cast N-literal to varchar instead of varchar literal generation
+			// 2. why we even mention varchar in expression with N-columns only
+			if (db is TestDataConnection dc1)
+				dc1.LastQuery!.Should().NotContain("Convert(VarChar");
+			query2.Concat(query1).ToArray();
+			if (db is TestDataConnection dc2)
+				dc2.LastQuery!.Should().NotContain("Convert(VarChar");
+		}
+
+		[Test(Description = "Test that other providers work")]
+		public void Issue2451_ComplexColumn_All([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query1 = db.Person.Select(p => new Person() { FirstName = p.FirstName });
+			var query2 = db.Person.Select(p => new Person() { FirstName = p.FirstName + '/' + p.LastName });
+
+			query1.Concat(query2).ToArray();
+			query2.Concat(query1).ToArray();
+		}
+
+		[Table]
 		[Column(MemberName = $"{nameof(Name)}.{nameof(FullName.FirstName)}")]
 		[Column(MemberName = $"{nameof(Name)}.{nameof(FullName.LastName)}")]
 		public class ComplexPerson
@@ -1805,9 +2074,6 @@ namespace Tests.Linq
 			}
 		}
 
-		// ClickHouse developers themself doesn't know how their aliases work, so there will be no workaround
-		// from our side. User should use names carefully in queries
-		[ActiveIssue("https://github.com/ClickHouse/ClickHouse/issues/23194", Configuration = TestProvName.AllClickHouse)]
 		[Test]
 		public void Issue3369Test([DataSources] string context)
 		{

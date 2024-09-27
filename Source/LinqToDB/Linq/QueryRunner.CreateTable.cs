@@ -106,7 +106,7 @@ namespace LinqToDB.Linq
 
 					SetNonQueryQuery(query);
 
-					await query.GetElementAsync(dataContext, ExpressionInstances.UntypedNull, null, null, token).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+					await query.GetElementAsync(dataContext, ExpressionInstances.UntypedNull, null, null, token).ConfigureAwait(false);
 
 					ITable<T> table = new Table<T>(dataContext, tableDescriptor);
 
