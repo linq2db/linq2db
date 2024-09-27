@@ -27,7 +27,7 @@
 		}
 
 		#region Wrap Parameters
-		private static SqlStatement WrapParameters(SqlStatement statement, EvaluationContext context)
+		private static SqlStatement WrapParameters(SqlStatement statement)
 		{
 			// for some reason DB2 doesn't use parameter type information (not supported?) is some places, so
 			// we need to wrap parameter into CAST() to add type information explicitly
@@ -52,7 +52,7 @@
 
 		public override SqlStatement FinalizeStatement(SqlStatement statement, EvaluationContext context, DataOptions dataOptions, MappingSchema mappingSchema)
 		{
-			statement = WrapParameters(statement, context);
+			statement = WrapParameters(statement);
 			return base.FinalizeStatement(statement, context, dataOptions, mappingSchema);
 		}
 
