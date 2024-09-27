@@ -1,6 +1,5 @@
 parameters:
   enabled: false
-  experimental: false
   with_baselines: false
   test_matrix: []
   mac_enabled: false # disable by default, as macos docker is even slower than virtual machine
@@ -144,7 +143,7 @@ jobs:
   strategy:
     matrix:
       ${{ each test_config in parameters.test_matrix }}:
-        ${{ if and(eq(test_config.enabled, 'true'), eq(test_config.enable_os_windows, 'true'), eq(test_config.is_experimental, parameters.experimental)) }}:
+        ${{ if and(eq(test_config.enabled, 'true'), eq(test_config.enable_os_windows, 'true')) }}:
           ${{ test_config.name }}:
             title: ${{ test_config.title }}
             config: ${{ test_config.config_win }}
@@ -179,7 +178,7 @@ jobs:
   strategy:
     matrix:
       ${{ each test_config in parameters.test_matrix }}:
-        ${{ if and(eq(test_config.enabled, 'true'), eq(test_config.enable_os_ubuntu, 'true'), eq(test_config.is_experimental, parameters.experimental)) }}:
+        ${{ if and(eq(test_config.enabled, 'true'), eq(test_config.enable_os_ubuntu, 'true')) }}:
           ${{ test_config.name }}:
             title: ${{ test_config.title }}
             config: ${{ test_config.config_linux }}
@@ -211,7 +210,7 @@ jobs:
   strategy:
     matrix:
       ${{ each test_config in parameters.test_matrix }}:
-        ${{ if and(eq(test_config.enabled, 'true'), eq(test_config.enable_os_macos, 'true'), eq(test_config.is_experimental, parameters.experimental)) }}:
+        ${{ if and(eq(test_config.enabled, 'true'), eq(test_config.enable_os_macos, 'true')) }}:
           ${{ test_config.name }}:
             title: ${{ test_config.title }}
             config: ${{ test_config.config_macos }}

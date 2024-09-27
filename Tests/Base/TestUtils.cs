@@ -39,13 +39,6 @@ namespace Tests
 
 		public const string NO_SCHEMA_NAME   = "UNUSED_SCHEMA";
 		public const string NO_DATABASE_NAME = "UNUSED_DB";
-		public const string NO_SERVER_NAME   = "UNUSED_SERVER";
-
-		[Sql.Function("VERSION", ServerSideOnly = true)]
-		private static string MySqlVersion()
-		{
-			throw new InvalidOperationException();
-		}
 
 		[Sql.Function("DBINFO", ServerSideOnly = true)]
 		private static string DbInfo(string property)

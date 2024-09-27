@@ -2,10 +2,12 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json;
+using System.Reflection;
 
 using LinqToDB;
 using LinqToDB.DataProvider.Firebird;
 using LinqToDB.Mapping;
+using LinqToDB.Metadata;
 
 using NUnit.Framework;
 
@@ -782,6 +784,84 @@ namespace Tests.Linq
 			query.ToList();
 
 			static IQueryable<T> ApplyFilterToGeneric<T>(IQueryable<T> query) => query.Where(p => Sql.Property<string>(p, "LastName") == "ministra");
+		}
+
+		[Test]
+		public void Issue4602([DataSources] string context)
+		{
+			var ms = new MappingSchema();
+			ms.AddMetadataReader(new CustomMetadataReader());
+
+			using (var db = GetDataContext(context, ms))
+			using (db.CreateLocalTable<DynamicParent>())
+			using (db.CreateLocalTable<DynamicChild>())
+			{
+				Assert.DoesNotThrowAsync(async () =>
+				{
+					await db.GetTable<DynamicParent>()
+						.Where(it => it.Child!.ID == 123)
+						.ToArrayAsync();
+				});
+			}
+		}
+
+		public class DynamicParent
+		{
+			[Column, PrimaryKey, Identity]
+			public int ID { get; set; }
+
+			[Association(ThisKey = "ID", OtherKey = "ParentID")]
+			public DynamicChild? Child { get; set; }
+
+			[DynamicColumnsStore]
+			public IDictionary<string, object> ExtendedProperties { get; set; } = null!;
+		}
+
+		public class DynamicChild
+		{
+			[Column, PrimaryKey, Identity]
+			public int ID { get; set; }
+
+			[Association(ThisKey = "ParentID", OtherKey = "ID")]
+			public DynamicParent Parent { get; set; } = null!;
+
+			[DynamicColumnsStore]
+			public IDictionary<string, object> ExtendedProperties { get; set; } = null!;
+		}
+		
+		class CustomMetadataReader: IMetadataReader
+		{
+			public MappingAttribute[] GetAttributes(Type type)
+			{
+				return Array.Empty<MappingAttribute>();
+			}
+
+			public MappingAttribute[] GetAttributes(Type type, MemberInfo memberInfo)
+			{
+				if (type != typeof(DynamicChild) || memberInfo.Name != "ParentID")
+					return Array.Empty<MappingAttribute>();
+
+				return new[]
+				{
+					new ColumnAttribute("ParentID")
+				};
+			}
+
+			public MemberInfo[] GetDynamicColumns(Type type)
+			{
+				if (type != typeof(DynamicChild))
+					return Array.Empty<MemberInfo>();
+
+				return new[]
+				{
+					new DynamicColumnInfo(typeof(DynamicChild), typeof(int), "ParentID"),
+				};
+			}
+
+			public string GetObjectID()
+			{
+				return $".{nameof(CustomMetadataReader)}";
+			}
 		}
 	}
 }
