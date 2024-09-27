@@ -11,7 +11,7 @@ namespace LinqToDB.DataProvider.Access
 	{
 		internal enum Dialect { }
 
-		public AccessProviderDetector() : base(default, default)
+		public AccessProviderDetector() : base()
 		{
 		}
 

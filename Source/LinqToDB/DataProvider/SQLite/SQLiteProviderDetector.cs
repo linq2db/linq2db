@@ -12,7 +12,7 @@ namespace LinqToDB.DataProvider.SQLite
 	{
 		internal enum Dialect { }
 
-		public SQLiteProviderDetector() : base(default, default)
+		public SQLiteProviderDetector() : base()
 		{
 		}
 

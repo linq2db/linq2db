@@ -11,7 +11,7 @@ namespace LinqToDB.DataProvider.SapHana
 	{
 		internal enum Dialect { }
 
-		public SapHanaProviderDetector() : base(default, default)
+		public SapHanaProviderDetector() : base()
 		{
 		}
 
