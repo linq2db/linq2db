@@ -2310,7 +2310,7 @@ namespace Tests.DataProvider
 		[ActiveIssue]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4354")]
 		public void Issue4354Test(
-			// MySql.Data has enum, but it is not configuratble
+			// MySql.Data has enum, but it is not configurable
 			[IncludeDataSources(false, TestProvName.AllMySqlConnector)] string context,
 			[Values] MySqlConnectorGuidFormat format,
 			[Values] BulkCopyType copyType,
