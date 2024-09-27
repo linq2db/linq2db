@@ -210,10 +210,20 @@ namespace LinqToDB.DataProvider.Informix.Translation
 					}
 
 					case Sql.DateParts.Millisecond:
-						return null;
+					{
+						var result =
+							factory.Cast(
+								factory.Cast(
+									factory.Fragment(intervalType, Precedence.Primary, "{0}::datetime Second to Fraction", dateTimeExpression),
+									factory.GetDbDataType(typeof(string)).WithDataType(DataType.Char).WithLength(3)),
+								intDataType
+							);
+
+						return result;
+					}
 
 					default:
-						return null;
+						throw new NotImplementedException($"TranslateDateTimeDatePart for datepart (${datepart}) not implemented");
 				}
 			}
 
@@ -250,18 +260,18 @@ namespace LinqToDB.DataProvider.Informix.Translation
 					case Sql.DateParts.Hour: fragmentStr = "Hour to Hour"; break;
 					case Sql.DateParts.Minute: fragmentStr = "Minute to Minute"; break;
 					case Sql.DateParts.Second: fragmentStr = "Second to Second"; break;
-					case Sql.DateParts.Millisecond:
+					/*case Sql.DateParts.Millisecond:
 					{
-						/*fragmentStr = "Second to Fraction (3)";
+						fragmentStr = "Second to Fraction (3)";
 						multiplier  = factory.Value(intDataType, 1000);
-						break;*/
+						break;
 
 						// Non working code
 
 						return null;
-					}
+					}*/
 					default:
-						return null;
+						throw new NotImplementedException($"TranslateDateTimeDateAdd for datepart (${datepart}) not implemented");
 				}
 
 				var intervalExpr     = factory.Fragment(intervalType, "Interval ({0}) " + fragmentStr, increment);
