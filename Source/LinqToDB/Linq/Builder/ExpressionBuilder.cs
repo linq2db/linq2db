@@ -282,7 +282,7 @@ namespace LinqToDB.Linq.Builder
 
 			if (result.BuildContext != null)
 			{
-#if DEBUG
+#if BUGCHECK
 				if (!buildInfo.IsTest)
 					QueryHelper.DebugCheckNesting(result.BuildContext.GetResultStatement(), buildInfo.IsSubQuery);
 #endif
