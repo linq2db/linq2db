@@ -9,16 +9,19 @@ namespace LinqToDB.Linq.Builder
 	using Extensions;
 	using LinqToDB.Expressions;
 
+	[BuildsExpression(ExpressionType.Call)]
 	sealed class MethodChainBuilder : MethodCallBuilder
 	{
-		protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
+		public static bool CanBuild(Expression expr, BuildInfo buildInfo, ExpressionBuilder builder)
 		{
+			var methodCall = (MethodCallExpression)expr;
+
 			var functions = Sql.ExtensionAttribute.GetExtensionAttributes(methodCall, builder.MappingSchema);
 			if (functions.Length == 0)
 				return false;
 
 			var function = functions[0];
-			if (!(function.IsAggregate || function.IsWindowFunction))
+			if (function is { IsAggregate: false, IsWindowFunction: false })
 				return false;
 
 			if (typeof(Sql.IQueryableContainer).IsSameOrParentOf(methodCall.Method.ReturnType))

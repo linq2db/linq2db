@@ -12,6 +12,9 @@ namespace LinqToDB.Linq.Builder
 	using Mapping;
 	using SqlQuery;
 
+	[BuildsMethodCall("Average", "Min", "Max", "Sum", "Count", "LongCount")]
+	[BuildsMethodCall("AverageAsync", "MinAsync", "MaxAsync", "SumAsync", "CountAsync", "LongCountAsync", 
+		CanBuildName = nameof(CanBuildAsyncMethod))]
 	sealed class AggregationBuilder : MethodCallBuilder
 	{
 		enum AggregationType
@@ -24,14 +27,11 @@ namespace LinqToDB.Linq.Builder
 			Custom
 		}
 
-		static readonly string[] MethodNames      = { "Average"     , "Min"     , "Max"     , "Sum",      "Count"     , "LongCount"      };
-		static readonly string[] MethodNamesAsync = { "AverageAsync", "MinAsync", "MaxAsync", "SumAsync", "CountAsync", "LongCountAsync" };
+		public static bool CanBuildMethod(MethodCallExpression call, BuildInfo info, ExpressionBuilder builder)
+			=> call.IsQueryable();
 
-		public static Sql.ExpressionAttribute? GetAggregateDefinition(MethodCallExpression methodCall, MappingSchema mapping)
-		{
-			var function = methodCall.Method.GetExpressionAttribute(mapping);
-			return function != null  && function is not Sql.ExtensionAttribute && (function.IsAggregate || function.IsWindowFunction) ? function : null;
-		}
+		public static bool CanBuildAsyncMethod(MethodCallExpression call, BuildInfo info, ExpressionBuilder builder)
+			=> call.IsAsyncExtension();
 
 		static Type ExtractTaskType(Type taskType)
 		{
@@ -132,41 +132,10 @@ namespace LinqToDB.Linq.Builder
 			return aggregationType;
 		}
 
-		protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
-		{
-			if (methodCall.IsQueryable(MethodNames) || methodCall.IsAsyncExtension(MethodNamesAsync))
-				return true;
-
-			var definition = GetAggregateDefinition(methodCall, builder.MappingSchema);
-
-			if (definition != null)
-			{
-				if (methodCall.Arguments.Count > 0)
-				{
-					if (builder.IsSequence(new BuildInfo(buildInfo, methodCall.Arguments[0])))
-						return true;
-				}
-			}
-
-			return false;
-		}
-
 		public override bool IsAggregationContext(ExpressionBuilder builder, BuildInfo buildInfo)
-		{
-			return true;
-		}
+			=> true;
 
 		static string[] AllowedNames = [nameof(Queryable.Select), nameof(Queryable.Where), nameof(Queryable.Distinct)];
-
-		internal class AggregationInfo
-		{
-			public ISqlExpression?                DistinctValue      { get; set; }
-			public ISqlExpression?                ValueSqlExpression { get; set; }
-			public bool                           IsDistinct         { get; set; }
-			public GroupByBuilder.GroupByContext? GroupByContext     { get; set; }
-			public Expression?                    FilterExpression   { get; set; }
-			public Expression?                    ValueExpression    { get; set; }
-		}
 
 		bool GetSimplifiedAggregationInfo(
 			AggregationType                                        aggregationType, 
@@ -367,24 +336,11 @@ namespace LinqToDB.Linq.Builder
 			SqlPlaceholderExpression functionPlaceholder;
 			AggregationContext       context;
 
-			var functionName = methodCall.Method.Name;
-
-			AggregationType aggregationType;
-
-			int  argumentsCount;
-			Type returnType;
-			var  definition = GetAggregateDefinition(methodCall, builder.MappingSchema);
-
-			if (definition != null)
-			{
-				aggregationType = AggregationType.Custom;
-				returnType      = methodCall.Method.ReturnType;
-				argumentsCount  = methodCall.Arguments.Count;
-			}
-			else
-			{
-				aggregationType = GetAggregationType(methodCall, out argumentsCount, out functionName, out returnType);
-			}
+			AggregationType aggregationType = GetAggregationType(
+				methodCall,
+				out int argumentsCount,
+				out string functionName,
+				out Type returnType);
 
 			var sequenceArgument = builder.CorrectRoot(null, methodCall.Arguments[0]);
 
@@ -623,29 +579,8 @@ namespace LinqToDB.Linq.Builder
 						break;
 					}
 					case AggregationType.Custom:
-					{
-						if (definition != null)
-						{
-							var sqlExpr = definition.GetExpression((builder, context : placeholderSequence, flags: buildInfo.GetFlags()),
-								builder.DataContext,
-								builder,
-								placeholderSelect,
-								methodCall,
-								static (ctx, e, descriptor, inline) => ctx.builder.ConvertToExtensionSql(ctx.context, ctx.flags, e, descriptor, inline));
-
-							if (sqlExpr is not SqlPlaceholderExpression placeholder)
-								return BuildSequenceResult.Error(methodCall);
-
-							builder.RegisterExtensionAccessors(methodCall);
-
-							sql = builder.PosProcessCustomExpression(methodCall, placeholder.Sql, NullabilityContext.GetContext(placeholder.SelectQuery));
-						}
-						else
-						{
-							return BuildSequenceResult.Error(methodCall);
-						}
-
-						break;
+					{						
+						return BuildSequenceResult.Error(methodCall);						
 					}
 					
 				}
@@ -653,11 +588,8 @@ namespace LinqToDB.Linq.Builder
 				if (sql == null)
 					throw new InvalidOperationException();
 
-				if (definition == null)
-				{
-					var canBeNull = aggregationType != AggregationType.Count;
-					sql = new SqlFunction(returnType, functionName, true, sql) { CanBeNull = canBeNull };
-				}
+				var canBeNull = aggregationType != AggregationType.Count;
+				sql = new SqlFunction(returnType, functionName, true, sql) { CanBeNull = canBeNull };
 
 				functionPlaceholder = ExpressionBuilder.CreatePlaceholder(placeholderSequence, /*context*/sql, buildInfo.Expression, convertType: returnType);
 

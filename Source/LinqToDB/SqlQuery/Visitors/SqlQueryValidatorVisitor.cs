@@ -1,10 +1,10 @@
 ﻿using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
 using System.Linq;
 
 namespace LinqToDB.SqlQuery.Visitors
 {
-	using Linq.Builder;
 	using SqlProvider;
 
 	public class SqlQueryValidatorVisitor : QueryElementVisitor
@@ -61,7 +61,7 @@ namespace LinqToDB.SqlQuery.Visitors
 		public bool IsValidQuery(IQueryElement element,
 			SelectQuery?                       parentQuery,
 			SqlJoinedTable?                    fakeJoin,
-			bool                               forColumn,
+			int?                               columnSubqueryLevel,
 			SqlProviderFlags                   providerFlags,
 			out string?                        errorMessage)
 		{
@@ -70,7 +70,7 @@ namespace LinqToDB.SqlQuery.Visitors
 			_parentQuery         = parentQuery;
 			_fakeJoin            = fakeJoin;
 			_providerFlags       = providerFlags;
-			_columnSubqueryLevel = forColumn ? 0 : null;
+			_columnSubqueryLevel = columnSubqueryLevel;
 
 			Visit(element);
 
@@ -90,24 +90,12 @@ namespace LinqToDB.SqlQuery.Visitors
 				return isDependedOnOuterSources.Value;
 			}
 
-			if (!_providerFlags.IsCorrelatedSubQueryTakeSupported && selectQuery.Select.TakeValue != null)
-			{
-				if (IsDependsOnOuterSources())
-				{
-					errorMessage = ErrorHelper.Error_Take_in_Correlated_Subquery;
-					return false;
-				}
-			}
-
 			if (_columnSubqueryLevel != null)
 			{
-				if (_providerFlags.DoesNotSupportCorrelatedSubquery)
+				if (!_providerFlags.IsSubQueryColumnSupported)
 				{
-					if (IsDependsOnOuterSources())
-					{
-						errorMessage = ErrorHelper.Error_Correlated_Subqueries;
-						return false;
-					}
+					errorMessage = ErrorHelper.Error_Squbquery_in_Column;
+					return false;
 				}
 
 				if (!_providerFlags.IsSubQueryTakeSupported && selectQuery.Select.TakeValue != null)
@@ -116,16 +104,69 @@ namespace LinqToDB.SqlQuery.Visitors
 					return false;
 				}
 
-				if (!_providerFlags.IsSubQuerySkipSupported && selectQuery.Select.SkipValue != null)
+				if (!_providerFlags.IsCorrelatedSubQueryTakeSupported && selectQuery.Select.TakeValue != null)
 				{
-					errorMessage = ErrorHelper.Error_Skip_in_Subquery;
-					return false;
+					if (IsDependsOnOuterSources())
+					{
+						errorMessage = ErrorHelper.Error_Take_in_Correlated_Subquery;
+						return false;
+					}
 				}
 
-				if (!_providerFlags.IsSubQueryOrderBySupported && !selectQuery.OrderBy.IsEmpty)
+				if (_providerFlags.SupportedCorrelatedSubqueriesLevel != null)
 				{
-					errorMessage = ErrorHelper.Error_OrderBy_in_Subquery;
-					return false;
+					if (_columnSubqueryLevel >= _providerFlags.SupportedCorrelatedSubqueriesLevel)
+					{
+						if (IsDependsOnOuterSources())
+						{
+							var isValied = false;
+							if (_providerFlags.IsSupportedSimpleCorrelatedSubqueries && IsSimpleCorrelatedSubquery(selectQuery))
+							{
+								isValied = true;
+							}
+
+							if (!isValied)
+							{
+								if (_providerFlags.SupportedCorrelatedSubqueriesLevel == 0)
+									errorMessage = ErrorHelper.Error_Correlated_Subqueries;
+								else
+								{
+#pragma warning disable CA1863
+									errorMessage = string.Format(CultureInfo.InvariantCulture, ErrorHelper.Error_Correlated_Subqueries_Level, _providerFlags.SupportedCorrelatedSubqueriesLevel.Value);
+#pragma warning restore CA1863
+								}
+
+								return false;
+							}
+						}
+					}
+				}
+
+				if (!_providerFlags.IsSubQueryTakeSupported && selectQuery.Select.TakeValue != null && IsDependsOnOuterSources())
+				{
+					if (_parentQuery?.From.Tables.Count > 0 || IsDependsOnOuterSources())
+					{
+						errorMessage = ErrorHelper.Error_Take_in_Subquery;
+						return false;
+					}
+				}
+
+				if (!_providerFlags.IsSubQuerySkipSupported && selectQuery.Select.SkipValue != null && IsDependsOnOuterSources())
+				{
+					if (_parentQuery?.From.Tables.Count > 0 || IsDependsOnOuterSources())
+					{
+						errorMessage = ErrorHelper.Error_Skip_in_Subquery;
+						return false;
+					}
+				}
+
+				if (!_providerFlags.IsSubQueryOrderBySupported && !selectQuery.OrderBy.IsEmpty && IsDependsOnOuterSources())
+				{
+					if (_parentQuery?.From.Tables.Count > 0 || IsDependsOnOuterSources())
+					{
+						errorMessage = ErrorHelper.Error_OrderBy_in_Subquery;
+						return false;
+					}
 				}
 
 				if (!_providerFlags.IsSubqueryWithParentReferenceInJoinConditionSupported)
@@ -151,8 +192,7 @@ namespace LinqToDB.SqlQuery.Visitors
 					}
 				}
 
-				var shouldCheckNesting = _columnSubqueryLevel            > 0     && !_providerFlags.IsColumnSubqueryWithParentReferenceSupported
-				                         || selectQuery.Select.TakeValue != null && !_providerFlags.IsColumnSubqueryWithParentReferenceAndTakeSupported;
+				var shouldCheckNesting = selectQuery.Select.TakeValue != null && !_providerFlags.IsColumnSubqueryWithParentReferenceAndTakeSupported;
 
 				if (shouldCheckNesting)
 				{
@@ -166,14 +206,45 @@ namespace LinqToDB.SqlQuery.Visitors
 			}
 			else
 			{
-				if (!_providerFlags.IsDerivedTableOrderBySupported && !selectQuery.OrderBy.IsEmpty)
+				var isDerived = _parentQuery != null && _parentQuery.From.Tables.Any(t => t.Source == selectQuery);
+
+				if (isDerived)
 				{
-					errorMessage = ErrorHelper.Error_OrderBy_in_Derived;
-					return false;
+					if (!_providerFlags.IsDerivedTableOrderBySupported && !selectQuery.OrderBy.IsEmpty)
+					{
+						errorMessage = ErrorHelper.Error_OrderBy_in_Derived;
+						return false;
+					}
+
+					if (!_providerFlags.IsDerivedTableTakeSupported && selectQuery.Select.TakeValue != null)
+					{
+						errorMessage = ErrorHelper.Error_Take_in_Derived;
+						return false;
+					}
 				}
 			}
 
 			errorMessage = null;
+			return true;
+		}
+
+		static bool IsSimpleCorrelatedSubquery(SelectQuery selectQuery)
+		{
+			if (selectQuery.Where.SearchCondition.IsOr)
+				return false;
+
+			if (selectQuery.Select.HasModifier)
+				return false;
+
+			if (selectQuery.Select.Columns.Any(c => QueryHelper.IsAggregationFunction(c.Expression)))
+				return false;
+
+			if (selectQuery.Where.SearchCondition.Predicates.Any(p => p is SqlSearchCondition))
+				return false;
+
+			if (QueryHelper.IsDependsOnOuterSources(selectQuery, elementsToIgnore : new[] { selectQuery.Where }))
+				return false;
+
 			return true;
 		}
 
@@ -258,7 +329,7 @@ namespace LinqToDB.SqlQuery.Visitors
 				    element.JoinType == JoinType.FullApply  ||
 				    element.JoinType == JoinType.RightApply)
 				{
-					if (_providerFlags.DoesNotSupportCorrelatedSubquery)
+					if (_providerFlags.SupportedCorrelatedSubqueriesLevel == 0)
 					{
 						SetInvalid(ErrorHelper.Error_Correlated_Subqueries);
 					}
@@ -334,7 +405,7 @@ namespace LinqToDB.SqlQuery.Visitors
 			base.VisitSqlFromClause(element);
 
 			if (_columnSubqueryLevel != null)
-				_columnSubqueryLevel += 1;
+				_columnSubqueryLevel -= 1;
 
 			return element;
 		}
@@ -350,6 +421,45 @@ namespace LinqToDB.SqlQuery.Visitors
 			_columnSubqueryLevel = saveLevel;
 
 			return expression;
+		}
+
+		protected override IQueryElement VisitSqlFunction(SqlFunction element)
+		{
+			var saveLevel = _columnSubqueryLevel;
+
+			_columnSubqueryLevel = null;
+
+			base.VisitSqlFunction(element);
+
+			_columnSubqueryLevel = saveLevel;
+
+			return element;
+		}
+
+		protected override IQueryElement VisitSqlConditionExpression(SqlConditionExpression element)
+		{
+			var saveLevel = _columnSubqueryLevel;
+
+			_columnSubqueryLevel = null;
+
+			base.VisitSqlConditionExpression(element);
+
+			_columnSubqueryLevel = saveLevel;
+
+			return element;
+		}
+
+		protected override IQueryElement VisitSqlCaseExpression(SqlCaseExpression element)
+		{
+			var saveLevel = _columnSubqueryLevel;
+
+			_columnSubqueryLevel = null;
+
+			base.VisitSqlCaseExpression(element);
+
+			_columnSubqueryLevel = saveLevel;
+
+			return element;
 		}
 	}
 }

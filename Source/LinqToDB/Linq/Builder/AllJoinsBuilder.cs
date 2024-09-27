@@ -6,23 +6,15 @@ namespace LinqToDB.Linq.Builder
 	using LinqToDB.Expressions;
 	using SqlQuery;
 
+	[BuildsMethodCall("InnerJoin", "LeftJoin", "RightJoin", "FullJoin")]
+	[BuildsMethodCall("Join", CanBuildName = nameof(CanBuildJoin))]
 	sealed class AllJoinsBuilder : MethodCallBuilder
 	{
-		static readonly string[] RightNullableOnlyMethodNames    = { "RightJoin", "FullJoin" };
-		static readonly string[] NotRightNullableOnlyMethodNames = { "InnerJoin", "LeftJoin", "RightJoin", "FullJoin" };
+		public static bool CanBuildJoin(MethodCallExpression call, BuildInfo info, ExpressionBuilder builder)
+			=> call.IsQueryable() && call.Arguments.Count == 3;
 
-		protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
-		{
-			return IsMatchingMethod(methodCall, false);
-		}
-
-		internal static bool IsMatchingMethod(MethodCallExpression methodCall, bool rightNullableOnly)
-		{
-			return
-				methodCall.IsQueryable("Join") && methodCall.Arguments.Count == 3
-				|| !rightNullableOnly && methodCall.IsQueryable(NotRightNullableOnlyMethodNames) && methodCall.Arguments.Count == 2
-				|| rightNullableOnly  && methodCall.IsQueryable(RightNullableOnlyMethodNames)    && methodCall.Arguments.Count == 2;
-		}
+		public static bool CanBuildMethod(MethodCallExpression call, BuildInfo info, ExpressionBuilder builder)
+			=> call.IsQueryable() && call.Arguments.Count == 2;
 
 		protected override BuildSequenceResult BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
@@ -59,16 +51,14 @@ namespace LinqToDB.Linq.Builder
 
 			buildInfo.JoinType = joinType;
 
-			if (joinType == JoinType.Left || joinType == JoinType.Full)
-				sequence = new DefaultIfEmptyBuilder.DefaultIfEmptyContext(buildInfo.Parent, sequence, sequence, null, false);
-
 			sequence = new SubQueryContext(sequence);
+			var result = sequence;
 
 			if (methodCall.Arguments[conditionIndex] != null)
 			{
 				var condition = (LambdaExpression)methodCall.Arguments[conditionIndex].Unwrap();
 
-				var result = builder.BuildWhere(sequence, sequence,
+				result = builder.BuildWhere(result, result,
 					condition : condition, checkForSubQuery : false, enforceHaving : false,
 					isTest : buildInfo.IsTest);
 
@@ -82,10 +72,19 @@ namespace LinqToDB.Linq.Builder
 				}*/
 
 				result.SetAlias(condition.Parameters[0].Name);
-				return BuildSequenceResult.FromContext(result);
 			}
 
-			return BuildSequenceResult.FromContext(sequence);
+			if (joinType is JoinType.Left or JoinType.Full)
+			{
+				result = new DefaultIfEmptyBuilder.DefaultIfEmptyContext(buildInfo.Parent,
+					sequence: result,
+					nullabilitySequence: result,
+					defaultValue: null,
+					allowNullField: false,
+					isNullValidationDisabled: false);
+			}
+
+			return BuildSequenceResult.FromContext(result);
 		}
 	}
 }

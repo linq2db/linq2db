@@ -450,5 +450,23 @@ namespace Tests.xUpdate
 				});
 			}
 		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/2330")]
+		public void Issue2330Test([DataSources(TestProvName.AllClickHouse, ProviderName.SqlCe)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q = from w in db.Parent
+					join b in db.Child on w.ParentID equals b.ParentID
+					where b.ChildID == (from b2 in db.Child select b2.ParentID).Max()
+						// to avoid actual update
+						&& b.ChildID == -1
+					select new { w, b };
+
+			q.Update(db.Parent, obj => new Model.Parent()
+			{
+				Value1 = obj.b.ChildID
+			});
+		}
 	}
 }

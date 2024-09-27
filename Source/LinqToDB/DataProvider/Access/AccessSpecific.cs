@@ -54,7 +54,7 @@ namespace LinqToDB.DataProvider.Access
 		public static IAccessSpecificQueryable<TSource> AsAccess<TSource>(this IQueryable<TSource> source)
 			where TSource : notnull
 		{
-			var currentSource = LinqExtensions.ProcessSourceQueryable?.Invoke(source) ?? source;
+			var currentSource = source.ProcessIQueryable();
 
 			return new AccessSpecificQueryable<TSource>(currentSource.Provider.CreateQuery<TSource>(
 				Expression.Call(

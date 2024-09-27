@@ -300,7 +300,7 @@ namespace Tests.Linq
 		[Test]
 		public void ComparisionNullCheckOff([DataSources] string context)
 		{
-			using var _  = new CompareNullsAsValuesOption(false);
+			using var _  = new CompareNullsOption(false);
 			using var db = GetDataContext(context);
 			AreEqual(
 				   Parent.Where(p => p.Value1 != 1 && p.Value1 != null),
@@ -323,7 +323,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Coalesce1([DataSources] string context)
+		public void Coalesce([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				TestOneJohn(
@@ -336,21 +336,21 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Coalesce2([DataSources] string context)
+		public void Conditional1([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				Assert.That((from p in db.Parent where p.ParentID == 1 ? true : false select p).ToList(), Has.Count.EqualTo(1));
 		}
 
 		[Test]
-		public void Coalesce3([DataSources] string context)
+		public void Conditional2([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				Assert.That((from p in db.Parent where p.ParentID != 1 ? false : true select p).ToList(), Has.Count.EqualTo(1));
 		}
 
 		[Test]
-		public void Coalesce4([DataSources] string context)
+		public void Conditional3([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -359,14 +359,14 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Coalesce5([DataSources] string context)
+		public void Conditional4([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				Assert.That((from p in db.Parent where (p.Value1 == 1 ? 10 : 20) == 10 select p).ToList(), Has.Count.EqualTo(2));
 		}
 
 		[Test]
-		public void Coalesce6([DataSources] string context)
+		public void Conditional5([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -375,7 +375,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Coalesce7([DataSources] string context)
+		public void Conditional6([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -384,7 +384,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Conditional([DataSources] string context)
+		public void Conditional7([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				TestOneJohn(
@@ -397,7 +397,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Conditional2([DataSources] string context)
+		public void Conditional8([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				TestOneJohn(
@@ -410,7 +410,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Conditional3([DataSources] string context)
+		public void Conditional9([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				TestOneJohn(

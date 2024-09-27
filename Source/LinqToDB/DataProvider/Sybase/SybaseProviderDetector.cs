@@ -12,7 +12,7 @@ namespace LinqToDB.DataProvider.Sybase
 	{
 		internal enum Dialect { }
 
-		public SybaseProviderDetector() : base(default, default)
+		public SybaseProviderDetector() : base()
 		{
 		}
 

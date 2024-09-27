@@ -4,7 +4,7 @@ parameters:
 steps:
 - checkout: none
 
-# .NET 6 and 8 SDK already installed https://github.com/actions/runner-images/blob/main/images/ubuntu/Ubuntu2204-Readme.md
+# .NET 6/8 SDK already installed https://github.com/actions/runner-images/blob/main/images/ubuntu/Ubuntu2204-Readme.md
 
 - task: CmdLine@2
   inputs:
@@ -15,21 +15,21 @@ steps:
 
 - task: DownloadPipelineArtifact@2
   inputs:
-    artifactName: test_artifacts
+    artifactName: $(artifact_test_binaries)
     targetPath: '$(System.DefaultWorkingDirectory)'
   condition: and(variables.title, succeeded())
   displayName: Extract test files
 
 - task: CmdLine@2
   inputs:
-    script: 'cp $(System.DefaultWorkingDirectory)/configs/net60/$(config).json net60/UserDataProviders.json'
+    script: 'cp $(System.DefaultWorkingDirectory)/configs/net60/$(config).json net6.0/UserDataProviders.json'
     workingDirectory: '$(System.DefaultWorkingDirectory)'
   displayName: Copy .NET 6 test config
   condition: and(variables.title, eq(variables.net60, 'true'), succeeded())
 
 - task: CmdLine@2
   inputs:
-    script: 'cp $(System.DefaultWorkingDirectory)/configs/net80/$(config).json net80/UserDataProviders.json'
+    script: 'cp $(System.DefaultWorkingDirectory)/configs/net80/$(config).json net8.0/UserDataProviders.json'
     workingDirectory: '$(System.DefaultWorkingDirectory)'
   displayName: Copy .NET 8 test config
   condition: and(variables.title, eq(variables.net80, 'true'), succeeded())
@@ -58,24 +58,32 @@ steps:
 - task: CmdLine@2
   inputs:
     script: '$(System.DefaultWorkingDirectory)/scripts/$(script_local)'
-    workingDirectory: '$(System.DefaultWorkingDirectory)/net60'
+    workingDirectory: '$(System.DefaultWorkingDirectory)/net6.0/main/x64'
   condition: and(variables.title, variables.script_local, eq(variables.net60, 'true'), succeeded())
   displayName: Setup tests
 
-- script: dotnet test ./net60/linq2db.Tests.dll --filter "TestCategory != SkipCI" -f net60 -l trx $(extra)
+- script: dotnet test ./net6.0/main/x64/linq2db.Tests.dll --filter "TestCategory != SkipCI" -f net60 -l trx $(extra)
   condition: and(variables.title, eq(variables.net60, 'true'), succeeded())
   displayName: 'Tests (NET60): $(title)'
+
+- script: dotnet test ./net6.0/efcore/x64/linq2db.EntityFrameworkCore.Tests.dll --filter "TestCategory != SkipCI" -f net60 -l trx $(extra)
+  condition: and(variables.title, eq(variables.net60, 'true'), succeeded())
+  displayName: 'EF.Core Tests (NET60): $(title)'
 
 - task: CmdLine@2
   inputs:
     script: '$(System.DefaultWorkingDirectory)/scripts/$(script_local)'
-    workingDirectory: '$(System.DefaultWorkingDirectory)/net80'
+    workingDirectory: '$(System.DefaultWorkingDirectory)/net8.0/main/x64'
   condition: and(variables.title, variables.script_local, eq(variables.net80, 'true'), succeeded())
   displayName: Setup .NET 8 tests
 
-- script: dotnet test ./net80/linq2db.Tests.dll --filter "TestCategory != SkipCI" -f net80 -l trx $(extra)
+- script: dotnet test ./net8.0/main/x64/linq2db.Tests.dll --filter "TestCategory != SkipCI" -f net80 -l trx $(extra)
   condition: and(variables.title, eq(variables.net80, 'true'), succeeded())
   displayName: 'Tests (.NET 8): $(title)'
+
+- script: dotnet test ./net8.0/efcore/x64/linq2db.EntityFrameworkCore.Tests.dll --filter "TestCategory != SkipCI" -f net80 -l trx $(extra)
+  condition: and(variables.title, eq(variables.net80, 'true'), succeeded())
+  displayName: 'EF.Core Tests (.NET 8): $(title)'
 
 - task: PublishTestResults@2
   condition: and(variables.title, succeededOrFailed())

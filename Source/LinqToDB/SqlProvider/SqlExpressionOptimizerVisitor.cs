@@ -7,6 +7,7 @@ using System.Linq;
 
 namespace LinqToDB.SqlProvider
 {
+	using Common;
 	using Common.Internal;
 	using SqlQuery;
 	using SqlQuery.Visitors;
@@ -28,19 +29,18 @@ namespace LinqToDB.SqlProvider
 		}
 
 		public virtual IQueryElement Optimize(
-			EvaluationContext           evaluationContext, 
-			NullabilityContext          nullabilityContext, 
-			IVisitorTransformationInfo? transformationInfo, 
+			EvaluationContext           evaluationContext,
+			NullabilityContext          nullabilityContext,
+			IVisitorTransformationInfo? transformationInfo,
 			DataOptions                 dataOptions,
 			MappingSchema               mappingSchema,
-			IQueryElement               element,           
-			bool                        visitQueries,       
-			bool                        isInsideNot,        
+			IQueryElement               element,
+			bool                        visitQueries,
+			bool                        isInsideNot,
 			bool                        reduceBinary)
 		{
 			Cleanup();
 			_evaluationContext  = evaluationContext;
-			_nullabilityContext = nullabilityContext;
 			_dataOptions        = dataOptions;
 			_mappingSchema      = mappingSchema;
 			_allowOptimize      = default;
@@ -48,6 +48,8 @@ namespace LinqToDB.SqlProvider
 			_isInsideNot        = isInsideNot;
 			_reduceBinary       = reduceBinary;
 			SetTransformationInfo(transformationInfo);
+
+			_nullabilityContext = nullabilityContext.WithTransformationInfo(GetTransformationInfo());
 
 			return ProcessElement(element);
 		}
@@ -137,6 +139,15 @@ namespace LinqToDB.SqlProvider
 			if (TryEvaluate(element.Condition, out var value) && value is bool boolValue)
 			{
 				return boolValue ? element.TrueValue : element.FalseValue;
+			}
+
+			if (element.TrueValue is SqlConditionExpression trueConditional)
+			{
+				if (trueConditional.Condition.Equals(element.Condition, SqlExpression.DefaultComparer))
+				{
+					var newConditionExpression = new SqlConditionExpression(element.Condition, trueConditional.TrueValue, element.FalseValue);
+					return Visit(newConditionExpression);
+				}
 			}
 
 			if (element.FalseValue is SqlConditionExpression falseConditional)
@@ -811,28 +822,6 @@ namespace LinqToDB.SqlProvider
 
 			switch (element.Name)
 			{
-				case PseudoFunctions.COALESCE:
-				{
-					var parms = element.Parameters;
-					if (parms.Length == 2)
-					{
-						if (parms[0] is SqlValue val1 && parms[1] is not SqlValue)
-							return new SqlFunction(element.SystemType, element.Name, element.IsAggregate, element.Precedence, QueryHelper.CreateSqlValue(val1.Value, QueryHelper.GetDbDataType(parms[1], _mappingSchema), parms[0]), parms[1])
-							{
-								DoNotOptimize = true,
-								CanBeNull     = element.CanBeNull
-							};
-						else if (parms[1] is SqlValue val2 && parms[0] is not SqlValue)
-							return new SqlFunction(element.SystemType, element.Name, element.IsAggregate, element.Precedence, parms[0], QueryHelper.CreateSqlValue(val2.Value, QueryHelper.GetDbDataType(parms[0], _mappingSchema), parms[1]))
-							{
-								DoNotOptimize = true,
-								CanBeNull     = element.CanBeNull
-							};
-					}
-
-					break;
-				}
-
 				case "EXISTS":
 				{
 					if (element.Parameters.Length == 1 && element.Parameters[0] is SelectQuery query && query.Select.Columns.Count > 0)
@@ -848,6 +837,59 @@ namespace LinqToDB.SqlProvider
 
 					break;
 				}
+			}
+
+			return element;
+		}
+
+		protected override IQueryElement VisitSqlCoalesceExpression(SqlCoalesceExpression element)
+		{
+			var newElement = base.VisitSqlCoalesceExpression(element);
+
+			if (!ReferenceEquals(newElement, element))
+				return Visit(newElement);
+
+			List<ISqlExpression>? newExpressions = null;
+
+			for (var i = 0; i < element.Expressions.Length; i++)
+			{
+				var expr = element.Expressions[i];
+
+				if (QueryHelper.UnwrapNullablity(expr) is SqlCoalesceExpression inner)
+				{
+					if (newExpressions == null)
+					{
+						newExpressions = new List<ISqlExpression>(element.Expressions.Length + inner.Expressions.Length - 1);
+						newExpressions.AddRange(element.Expressions.Take(i));
+					}
+
+					newExpressions.AddRange(inner.Expressions);
+				}
+				else if (!_nullabilityContext.IsEmpty && !expr.CanBeNullable(_nullabilityContext) && i != element.Expressions.Length - 1)
+				{
+					if (newExpressions == null)
+					{
+						newExpressions = new List<ISqlExpression>(element.Expressions.Length);
+						newExpressions.AddRange(element.Expressions.Take(i));
+					}
+
+					newExpressions.Add(expr);
+
+					// chain terminated early
+					break;
+				}
+				else 
+				{
+					newExpressions?.Add(expr);
+				}
+			}
+
+			if (newExpressions != null)
+			{
+				if (newExpressions.Count == 1)
+					return newExpressions[0];
+				if (newExpressions.Count > 0)
+					return Visit(new SqlCoalesceExpression(newExpressions.ToArray()));
 			}
 
 			return element;
@@ -945,7 +987,7 @@ namespace LinqToDB.SqlProvider
 
 			if (_reduceBinary)
 			{
-				var reduced = predicate.Reduce(_nullabilityContext, _evaluationContext, _isInsideNot);
+				var reduced = predicate.Reduce(_nullabilityContext, _evaluationContext, _isInsideNot, _dataOptions.LinqOptions);
 
 				if (!ReferenceEquals(reduced, predicate))
 				{
@@ -1229,12 +1271,12 @@ namespace LinqToDB.SqlProvider
 						var sc = new SqlSearchCondition(true)
 							.AddAnd( sub => 
 								sub
-									.Add(new SqlPredicate.ExprExpr(sqlConditionExpression.TrueValue, op, valueExpression, _dataOptions.LinqOptions.CompareNullsAsValues ? true : null))
+									.Add(new SqlPredicate.ExprExpr(sqlConditionExpression.TrueValue, op, valueExpression, _dataOptions.LinqOptions.CompareNulls == CompareNulls.LikeClr ? true : null))
 									.Add(sqlConditionExpression.Condition)
 							)
 							.AddAnd( sub => 
 								sub
-									.Add(new SqlPredicate.ExprExpr(sqlConditionExpression.FalseValue, op, valueExpression, _dataOptions.LinqOptions.CompareNullsAsValues ? true : null))
+									.Add(new SqlPredicate.ExprExpr(sqlConditionExpression.FalseValue, op, valueExpression, _dataOptions.LinqOptions.CompareNulls == CompareNulls.LikeClr ? true : null))
 									.Add(sqlConditionExpression.Condition.MakeNot())
 								);
 
@@ -1372,7 +1414,7 @@ namespace LinqToDB.SqlProvider
 					if (current == null)
 						return SqlPredicate.False;
 
-					return new SqlPredicate.ExprExpr(compareTo1.Expression1, current.Value, compareTo1.Expression2, _dataOptions.LinqOptions.CompareNullsAsValues ? true : null);
+					return new SqlPredicate.ExprExpr(compareTo1.Expression1, current.Value, compareTo1.Expression2, _dataOptions.LinqOptions.CompareNulls == CompareNulls.LikeClr ? true : null);
 				}
 			}
 
@@ -1396,7 +1438,7 @@ namespace LinqToDB.SqlProvider
 					if (current == null)
 						return SqlPredicate.False;
 
-					return new SqlPredicate.ExprExpr(compareTo2.Expression1, current.Value, compareTo2.Expression2, _dataOptions.LinqOptions.CompareNullsAsValues ? true : null);
+					return new SqlPredicate.ExprExpr(compareTo2.Expression1, current.Value, compareTo2.Expression2, _dataOptions.LinqOptions.CompareNulls == CompareNulls.LikeClr ? true : null);
 				}
 			}
 

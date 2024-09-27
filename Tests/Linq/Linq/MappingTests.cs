@@ -9,6 +9,7 @@ using System.ServiceModel;
 using LinqToDB;
 using LinqToDB.Common;
 using LinqToDB.Data;
+using LinqToDB.Expressions;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
@@ -819,6 +820,173 @@ namespace Tests.Linq
 			Assert.That(record, Is.Not.Null);
 			Assert.That(record!.TestAccess, Is.EqualTo(6));
 		}
+
+		#region Issue 3060
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/3060")]
+		public void Issue3060Test([DataSources(TestProvName.AllAccess)] string context)
+		{
+			var ms = new MappingSchema();
+			ms.SetConvertExpression<byte[], Blob16AsGuidType>(x => new Blob16AsGuidType(x));
+			ms.SetConvertExpression<Blob16AsGuidType, byte[]?>(x => x.Bytes);
+			ms.SetConvertExpression<Blob16AsGuidType, DataParameter>(x => DataParameter.Blob(null, x.Bytes));
+
+			using var db = GetDataContext(context, ms);
+			using var tb = db.CreateLocalTable<Issue3060Table>();
+
+			var row = new Issue3060Table()
+			{
+				Uid = new Blob16AsGuidType(TestData.Guid1)
+			};
+
+			db.Update(row);
+		}
+
+		[Table]
+		sealed class Issue3060Table
+		{
+			[Column(DataType = DataType.Int64, Length = 8, Precision = 19, Scale = 0), PrimaryKey, NotNull] public long Id { get; set; }
+			[Column(DataType = DataType.VarBinary, Length = 16, Precision = 0, Scale = 0), Nullable] public Blob16AsGuidType? Uid { get; set; }
+		}
+
+		sealed class Blob16AsGuidType
+		{
+			public Blob16AsGuidType(byte[] value)
+			{
+				Bytes = value;
+			}
+
+			public Blob16AsGuidType(Guid value)
+			{
+				Guid = value;
+			}
+
+			private byte[]? _bytes;
+
+			public byte[]? Bytes
+			{
+				get { return _bytes; }
+				set
+				{
+					_bytes = value;
+					_guid = value == null ? Guid.Empty : new Guid(value);
+				}
+			}
+
+			private Guid _guid;
+
+			public Guid Guid
+			{
+				get { return _guid; }
+				set
+				{
+					_guid = value;
+					_bytes = value == Guid.Empty ? null : value.ToByteArray();
+				}
+			}
+		}
+		#endregion
+
+		#region Issue 3117
+
+		[ActiveIssue]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/3117")]
+		public void Issue3117Test1([DataSources(TestProvName.AllAccess)] string context)
+		{
+			var ms = new MappingSchema();
+			ms.SetGenericConvertProvider(typeof(IdConverter<>));
+
+			using var db = GetDataContext(context, ms);
+			using var tb = db.CreateLocalTable<User>();
+
+			var userId = new Id<User>(5);
+			db.InsertWithIdentity(new User(userId));
+
+			var users = db.GetTable<User>().ToList();
+			var user = db.GetTable<User>().FirstOrDefault(u => u.Id == userId);
+
+			var userIds = new[]{userId};
+			user = db.GetTable<User>().FirstOrDefault(u => userIds.Contains(u.Id));
+		}
+
+		[ActiveIssue]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/3117")]
+		public void Issue3117Test2([DataSources(TestProvName.AllAccess)] string context)
+		{
+			var ms = new MappingSchema();
+			ms.SetDataType(typeof(Id<User>), DataType.Int32);
+			ms.SetValueToSqlConverter(typeof(Id<User>), (sb, dt, v) => sb.Append(((Id<User>)v).Value));
+
+			using var db = GetDataContext(context, ms);
+			using var tb = db.CreateLocalTable<User>();
+
+			var userId = new Id<User>(5);
+			db.InsertWithIdentity(new User(userId));
+
+			var users = db.GetTable<User>().ToList();
+			var user = db.GetTable<User>().FirstOrDefault(u => u.Id == userId);
+
+			var userIds = new[]{userId};
+			user = db.GetTable<User>().FirstOrDefault(u => userIds.Contains(u.Id));
+		}
+
+		class Id<T> : IConvertible
+		{
+			public int Value { get; set; }
+
+			public Id(int id)
+			{
+				Value = id;
+			}
+
+			public Id(long id)
+			{
+				Value = (int)id;
+			}
+
+			public TypeCode GetTypeCode() => TypeCode.Int32;
+
+			public int ToInt32(IFormatProvider? provider) => Value;
+			public long ToInt64(IFormatProvider? provider) => Value;
+
+			public bool ToBoolean(IFormatProvider? provider) => throw new NotImplementedException();
+			public char ToChar(IFormatProvider? provider) => throw new NotImplementedException();
+			public sbyte ToSByte(IFormatProvider? provider) => throw new NotImplementedException();
+			public byte ToByte(IFormatProvider? provider) => throw new NotImplementedException();
+			public short ToInt16(IFormatProvider? provider) => throw new NotImplementedException();
+			public ushort ToUInt16(IFormatProvider? provider) => throw new NotImplementedException();
+			public uint ToUInt32(IFormatProvider? provider) => throw new NotImplementedException();
+			public ulong ToUInt64(IFormatProvider? provider) => throw new NotImplementedException();
+			public float ToSingle(IFormatProvider? provider) => throw new NotImplementedException();
+			public double ToDouble(IFormatProvider? provider) => throw new NotImplementedException();
+			public decimal ToDecimal(IFormatProvider? provider) => throw new NotImplementedException();
+			public DateTime ToDateTime(IFormatProvider? provider) => throw new NotImplementedException();
+			public string ToString(IFormatProvider? provider) => throw new NotImplementedException();
+
+			public object ToType(Type conversionType, IFormatProvider? provider) => Convert.ChangeType(Value, conversionType);
+			public static implicit operator int(Id<T> id) => (int)id.Value;
+			public static implicit operator long(Id<T> id) => id.Value;
+		}
+
+		[Table]
+		sealed class User
+		{
+			public User() { Id = new Id<User>(0); }
+			public User(Id<User> id) { Id = id; }
+
+			[Column(IsPrimaryKey = true, DataType = DataType.Int32, CanBeNull = false)]
+			public Id<User> Id { get; set; }
+		}
+
+		sealed class IdConverter<T> : IGenericInfoProvider
+		{
+			public void SetInfo(MappingSchema mappingSchema)
+			{
+				// just check call site and you will see it cannot work
+				mappingSchema.SetDataType(typeof(Id<T>), DataType.Int32);
+				mappingSchema.SetValueToSqlConverter(typeof(Id<T>), (sb, dt, o) => sb.Append(((Id<T>)o).Value));
+			}
+		}
+		#endregion
 
 		struct RecordId
 		{

@@ -1,6 +1,5 @@
 parameters:
   enabled: false
-  experimental: false
   with_baselines: false
   test_matrix: []
   mac_enabled: false # disable by default, as macos docker is even slower than virtual machine
@@ -136,6 +135,7 @@ jobs:
 
   displayName: 'Tests: Windows'
   dependsOn: create_baselines_branch
+  timeoutInMinutes: 90 # default: 60, max: 360
   condition: ${{ parameters.enabled }}
   variables:
     baselines_branch: $[ dependencies.create_baselines_branch.outputs['baselines_init.baselines_branch'] ]
@@ -143,7 +143,7 @@ jobs:
   strategy:
     matrix:
       ${{ each test_config in parameters.test_matrix }}:
-        ${{ if and(eq(test_config.enabled, 'true'), eq(test_config.enable_os_windows, 'true'), eq(test_config.is_experimental, parameters.experimental)) }}:
+        ${{ if and(eq(test_config.enabled, 'true'), eq(test_config.enable_os_windows, 'true')) }}:
           ${{ test_config.name }}:
             title: ${{ test_config.title }}
             config: ${{ test_config.config_win }}
@@ -168,6 +168,7 @@ jobs:
 - job: test_ubuntu_job
   pool:
     vmImage: 'ubuntu-22.04'
+  timeoutInMinutes: 90 # default: 60, max: 360
   displayName: 'Tests: Linux'
   dependsOn: create_baselines_branch
   condition: ${{ parameters.enabled }}
@@ -177,7 +178,7 @@ jobs:
   strategy:
     matrix:
       ${{ each test_config in parameters.test_matrix }}:
-        ${{ if and(eq(test_config.enabled, 'true'), eq(test_config.enable_os_ubuntu, 'true'), eq(test_config.is_experimental, parameters.experimental)) }}:
+        ${{ if and(eq(test_config.enabled, 'true'), eq(test_config.enable_os_ubuntu, 'true')) }}:
           ${{ test_config.name }}:
             title: ${{ test_config.title }}
             config: ${{ test_config.config_linux }}
@@ -200,6 +201,7 @@ jobs:
   pool:
     vmImage: 'macOS-13'
   displayName: 'Tests: MacOS'
+  timeoutInMinutes: 90 # default: 60, max: 360
   dependsOn: create_baselines_branch
   condition: and(eq(${{ parameters.enabled }}, 'true'), eq(${{ parameters.mac_enabled }}, 'true'))
   variables:
@@ -208,7 +210,7 @@ jobs:
   strategy:
     matrix:
       ${{ each test_config in parameters.test_matrix }}:
-        ${{ if and(eq(test_config.enabled, 'true'), eq(test_config.enable_os_macos, 'true'), eq(test_config.is_experimental, parameters.experimental)) }}:
+        ${{ if and(eq(test_config.enabled, 'true'), eq(test_config.enable_os_macos, 'true')) }}:
           ${{ test_config.name }}:
             title: ${{ test_config.title }}
             config: ${{ test_config.config_macos }}

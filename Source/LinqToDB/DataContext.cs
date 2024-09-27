@@ -357,7 +357,7 @@ namespace LinqToDB
 					if (_dataConnection.NextQueryHints.Count > 0) NextQueryHints.AddRange(_nextQueryHints!);
 
 					_dataConnection.OnRemoveInterceptor -= RemoveInterceptor;
-					await _dataConnection.DisposeAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+					await _dataConnection.DisposeAsync().ConfigureAwait(false);
 					_dataConnection = null;
 				}
 			}
@@ -392,7 +392,7 @@ namespace LinqToDB
 
 		public async ValueTask DisposeAsync()
 		{
-			await DisposeAsync(disposing: true).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+			await DisposeAsync(disposing: true).ConfigureAwait(false);
 		}
 
 		/// <summary>
@@ -430,7 +430,7 @@ namespace LinqToDB
 			if (_dataContextInterceptor != null)
 				await using (ActivityService.StartAndConfigureAwait(ActivityID.DataContextInterceptorOnClosingAsync))
 					await _dataContextInterceptor.OnClosingAsync(new(this))
-						.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+						.ConfigureAwait(false);
 
 			if (_dataConnection != null)
 			{
@@ -438,14 +438,14 @@ namespace LinqToDB
 				if (_dataConnection.NextQueryHints.Count > 0) (_nextQueryHints ??= new ()).AddRange(_dataConnection.NextQueryHints);
 
 				_dataConnection.OnRemoveInterceptor -= RemoveInterceptor;
-				await _dataConnection.DisposeAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+				await _dataConnection.DisposeAsync().ConfigureAwait(false);
 				_dataConnection = null;
 			}
 
 			if (_dataContextInterceptor != null)
 				await using (ActivityService.StartAndConfigureAwait(ActivityID.DataContextInterceptorOnClosedAsync))
 					await _dataContextInterceptor.OnClosedAsync(new (this))
-						.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+						.ConfigureAwait(false);
 		}
 
 		/// <summary>
@@ -488,7 +488,7 @@ namespace LinqToDB
 		{
 			var dct = new DataContextTransaction(this);
 
-			await dct.BeginTransactionAsync(level, cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+			await dct.BeginTransactionAsync(level, cancellationToken).ConfigureAwait(false);
 
 			return dct;
 		}
@@ -503,7 +503,7 @@ namespace LinqToDB
 		{
 			var dct = new DataContextTransaction(this);
 
-			await dct.BeginTransactionAsync(cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+			await dct.BeginTransactionAsync(cancellationToken).ConfigureAwait(false);
 
 			return dct;
 		}
@@ -534,8 +534,8 @@ namespace LinqToDB
 
 			public async ValueTask DisposeAsync()
 			{
-				await _queryRunner!.DisposeAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
-				await _dataContext!.ReleaseQueryAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+				await _queryRunner!.DisposeAsync().ConfigureAwait(false);
+				await _dataContext!.ReleaseQueryAsync().ConfigureAwait(false);
 
 				_queryRunner = null;
 				_dataContext = null;

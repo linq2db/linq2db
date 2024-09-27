@@ -9,6 +9,7 @@ namespace LinqToDB.Tools
 	/// </summary>
 	public enum ActivityID
 	{
+		None = 0,
 		QueryProviderExecuteT,
 		QueryProviderExecute,
 		QueryProviderGetEnumeratorT,
@@ -22,7 +23,6 @@ namespace LinqToDB.Tools
 					BuildSequence,
 						BuildSequenceCanBuild,
 						BuildSequenceBuild,
-					ReorderBuilders,
 					BuildQuery,
 						FinalizeQuery,
 			GetIEnumerable,
@@ -137,6 +137,9 @@ namespace LinqToDB.Tools
 		UnwrapDataObjectInterceptorUnwrapCommand,
 		/// <summary>The <see cref="Interceptors.IUnwrapDataObjectInterceptor.UnwrapDataReader"/> method call.</summary>
 		UnwrapDataObjectInterceptorUnwrapDataReader,
+
+		/// <summary>The <see cref="Interceptors.IExceptionInterceptor.ProcessException"/> method call.</summary>
+		ExceptionInterceptorProcessException,
 
 		GetSqlText,
 

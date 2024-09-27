@@ -125,7 +125,7 @@ namespace LinqToDB
 			if (LinqExtensions.ExtensionsAdapter != null)
 				return LinqExtensions.ExtensionsAdapter.<#= info.Method #>Async<#= info.GParams #>(source<#= paramName #>, token);
 
-			return GetTask<<#= info.RetType #>>(<#= info.Lambda #>, token);
+			return Task.Run<<#= info.RetType #>>(<#= info.Lambda #>, token);
 		}
 
 		#endregion

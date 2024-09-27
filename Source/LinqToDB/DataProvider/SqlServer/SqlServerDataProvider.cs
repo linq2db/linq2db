@@ -62,7 +62,6 @@ namespace LinqToDB.DataProvider.SqlServer
 			SqlProviderFlags.TakeHintsSupported                 = TakeHints.Percent | TakeHints.WithTies;
 			SqlProviderFlags.IsCommonTableExpressionsSupported  = true;
 			SqlProviderFlags.IsRowNumberWithoutOrderBySupported = false;
-			SqlProviderFlags.IsSubQueryTakeSupported            = version > SqlServerVersion.v2005;
 			SqlProviderFlags.IsCTESupportsOrdering              = false;
 			SqlProviderFlags.IsUpdateTakeSupported              = true;
 

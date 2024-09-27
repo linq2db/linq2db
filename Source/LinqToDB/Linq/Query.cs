@@ -31,7 +31,9 @@ namespace LinqToDB.Linq
 
 		internal readonly List<QueryInfo> Queries = new (1);
 
-		public IReadOnlyCollection<QueryInfo> GetQueries() => Queries;
+		public IReadOnlyCollection<QueryInfo> GetQueries()    => Queries;
+		public bool                           IsFinalized     { get; internal set; }
+		public SqlErrorExpression?            ErrorExpression { get; internal set; }
 
 		internal abstract void Init(IBuildContext parseContext, List<ParameterAccessor> sqlParameters);
 
@@ -246,7 +248,7 @@ namespace LinqToDB.Linq
 			var preambles = new object[_preambles.Length];
 			for (var i = 0; i < preambles.Length; i++)
 			{
-				preambles[i] = await _preambles[i].ExecuteAsync(dc, rootExpression, ps, preambles, cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
+				preambles[i] = await _preambles[i].ExecuteAsync(dc, rootExpression, ps, preambles, cancellationToken).ConfigureAwait(false);
 			}
 
 			return preambles;
@@ -592,7 +594,14 @@ namespace LinqToDB.Linq
 
 			try
 			{
-				query = new ExpressionBuilder(query, optimizationContext, parametersContext, dataContext, expr, null, null).Build<T>();
+				query = new ExpressionBuilder(query, false, optimizationContext, parametersContext, dataContext, expr, null, null).Build<T>();
+				if (query.ErrorExpression != null)
+				{
+					query = new Query<T>(dataContext, expr);
+					query = new ExpressionBuilder(query, true, optimizationContext, parametersContext, dataContext, expr, null, null).Build<T>();
+					if (query.ErrorExpression != null)
+						throw query.ErrorExpression.CreateException();
+				}
 			}
 			catch (Exception)
 			{

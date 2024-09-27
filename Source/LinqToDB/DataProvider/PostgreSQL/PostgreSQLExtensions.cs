@@ -70,7 +70,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			if (source  == null) throw new ArgumentNullException(nameof(source));
 			if (expr    == null) throw new ArgumentNullException(nameof(expr));
 
-			var currentSource = LinqExtensions.ProcessSourceQueryable?.Invoke(source) ?? source;
+			var currentSource = source.ProcessIQueryable();
 
 			var query = currentSource.Provider.CreateQuery<TV[]>(
 				Expression.Call(
@@ -87,7 +87,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			if (source  == null) throw new ArgumentNullException(nameof(source));
 			if (expr    == null) throw new ArgumentNullException(nameof(expr));
 
-			var currentSource = LinqExtensions.ProcessSourceQueryable?.Invoke(source) ?? source;
+			var currentSource = source.ProcessIQueryable();
 
 			var query = currentSource.Provider.CreateQuery<TV[]>(
 				Expression.Call(

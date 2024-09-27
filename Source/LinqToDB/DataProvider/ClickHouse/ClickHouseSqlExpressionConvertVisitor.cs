@@ -256,15 +256,6 @@ namespace LinqToDB.DataProvider.ClickHouse
 
 		public override ISqlExpression ConvertSqlFunction(SqlFunction func)
 		{
-			if (SqlProviderFlags != null)
-			{
-				switch (func)
-				{
-					case SqlFunction(_, PseudoFunctions.COALESCE) : 
-						return new SqlFunction(func.SystemType, "Coalesce", func.Parameters);
-				}
-			}
-
 			switch (func.Name)
 			{
 				case "MAX":
@@ -366,7 +357,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 										new SqlValue((byte)(toType.Scale ?? ClickHouseMappingSchema.DEFAULT_DECIMAL_SCALE)));
 
 						if (defaultValue != null)
-							newFunc = ConvertSqlFunction(PseudoFunctions.MakeCoalesce(toType.SystemType, newFunc, defaultValue));
+							newFunc = (ISqlExpression)Visit(new SqlCoalesceExpression(newFunc, defaultValue));
 
 						return newFunc;
 					}
@@ -381,7 +372,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 										new SqlValue((byte)(toType.Precision ?? ClickHouseMappingSchema.DEFAULT_DATETIME64_PRECISION)));
 
 						if (defaultValue != null)
-							newFunc = ConvertSqlFunction(PseudoFunctions.MakeCoalesce(toType.SystemType, newFunc, defaultValue));
+							newFunc = (ISqlExpression)Visit(new SqlCoalesceExpression(newFunc, defaultValue));
 
 						return newFunc;
 					}
@@ -389,10 +380,10 @@ namespace LinqToDB.DataProvider.ClickHouse
 					// default call template
 					default:
 					{
-						ISqlExpression newFunc = new SqlFunction(toType.SystemType, name + suffix, false, true, Precedence.Primary, ParametersNullabilityType.IfAnyParameterNullable, null, value);
+						ISqlExpression newFunc = new SqlFunction(toType.SystemType, name + suffix, false, true, Precedence.Primary, ParametersNullabilityType.IfAnyParameterNullable, true, value);
 
 						if (defaultValue != null)
-							newFunc = ConvertSqlFunction(PseudoFunctions.MakeCoalesce(toType.SystemType, newFunc, defaultValue));
+							newFunc = (ISqlExpression)Visit(new SqlCoalesceExpression(newFunc, defaultValue));
 
 						return newFunc;
 					}

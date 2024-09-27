@@ -2411,6 +2411,45 @@ namespace Tests.xUpdate
 				});
 			}
 		}
-#endregion
+		#endregion
+
+		#region Issue 3927
+		[Table]
+		sealed class Issue3927Table
+		{
+			[Column(DataType = DataType.Char, Length = 11), PrimaryKey, NotNull] public string SerialNumber { get; set; } = null!;
+			[Column(DataType = DataType.Int32)] public int PageNumber { get; set; }
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/3927")]
+		public void Issue3927Test1([DataSources(TestProvName.AllSybase, TestProvName.AllSapHana, TestProvName.AllMariaDB)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable<Issue3927Table>();
+
+			var serialNumber = "12345678901";
+			var pageNumber = 9;
+			tb
+				.Where(display => display.SerialNumber == serialNumber)
+				.Into(tb)
+				.Value(display => display.PageNumber, pageNumber)
+				.Insert();
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/3927")]
+		public void Issue3927Test2([DataSources(TestProvName.AllSybase, TestProvName.AllSapHana, TestProvName.AllMariaDB)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable<Issue3927Table>();
+
+			var serialNumber = "12345678901";
+			var pageNumber = 9;
+			tb
+				.Where(display => display.SerialNumber == serialNumber)
+				.Into(tb)
+				.Value(display => display.PageNumber, r => pageNumber)
+				.Insert();
+		}
+		#endregion
 	}
 }

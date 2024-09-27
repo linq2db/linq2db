@@ -7,16 +7,11 @@ namespace LinqToDB.Linq.Builder
 	using Mapping;
 	using SqlQuery;
 
+	[BuildsExpression(ExpressionType.Lambda)]
 	sealed class ScalarSelectBuilder : ISequenceBuilder
 	{
-		public int BuildCounter { get; set; }
-
-		public bool CanBuild(ExpressionBuilder builder, BuildInfo buildInfo)
-		{
-			return
-				buildInfo.Expression.NodeType == ExpressionType.Lambda &&
-				((LambdaExpression)buildInfo.Expression).Parameters.Count == 0;
-		}
+		public static bool CanBuild(Expression expr, BuildInfo info, ExpressionBuilder builder)
+			=> ((LambdaExpression)expr).Parameters.Count == 0;
 
 		public BuildSequenceResult BuildSequence(ExpressionBuilder builder, BuildInfo buildInfo)
 		{
@@ -24,9 +19,7 @@ namespace LinqToDB.Linq.Builder
 		}
 
 		public bool IsSequence(ExpressionBuilder builder, BuildInfo buildInfo)
-		{
-			return true;
-		}
+			=> true;
 
 		[DebuggerDisplay("{BuildContextDebuggingHelper.GetContextInfo(this)}")]
 		sealed class ScalarSelectContext : BuildContextBase

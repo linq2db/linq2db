@@ -196,7 +196,7 @@ namespace LinqToDB.DataProvider
 		public async Task<bool> ExecuteAsync(CancellationToken cancellationToken)
 		{
 			await DataConnection.ExecuteAsync(StringBuilder.AppendLine().ToString(), cancellationToken, Parameters.ToArray())
-				.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+				.ConfigureAwait(false);
 
 			if (Options.BulkCopyOptions.RowsCopiedCallback != null)
 			{

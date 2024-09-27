@@ -38,7 +38,7 @@ namespace Tests.UserTests
 
 			static IEnumerable TestData(CacheMode mode)
 			{
-				foreach (var provider in UserProviders.Where(p => p == TestProvName.NoopProvider))
+				foreach (var provider in TestConfiguration.UserProviders.Where(p => p == TestProvName.NoopProvider))
 					foreach (var cnt in new[] { 1, 2, 5, 10, 20 })
 						foreach (var set in new[]
 						{

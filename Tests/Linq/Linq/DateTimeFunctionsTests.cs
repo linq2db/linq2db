@@ -1765,5 +1765,40 @@ namespace Tests.Linq
 					from t in db.Types select Sql.AsSql(Sql.DateAdd(datePart, 5, t.DateTimeValue))!.Value.Date);
 			}
 		}
+
+		[Table]
+		sealed class Issue2950Table
+		{
+			[PrimaryKey] public int Id { get; set; }
+			[Column(DataType = DataType.Date)] public DateTime? Date { get; set; }
+			[Column(DataType = DataType.Time)] public TimeSpan? Time { get; set; }
+
+			public static readonly Issue2950Table[] Data =
+			[
+				new Issue2950Table() { Id = 1 },
+				new Issue2950Table() { Id = 2, Date = TestData.Date },
+				new Issue2950Table() { Id = 3, Date = TestData.Date, Time = TestData.TimeOfDay },
+			];
+		}
+
+		[ActiveIssue]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/2950")]
+		public void Issue2950Test([IncludeDataSources(true, TestProvName.AllPostgreSQL)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable(Issue2950Table.Data);
+
+			var query = from x in tb
+						where x.Time!.Value.Hours >= 0
+						select new
+						{
+							Output = x.Time!.Value.Hours
+						};
+
+			var result = query.ToArray();
+
+			Assert.That(result, Has.Length.EqualTo(1));
+			Assert.That(result[0].Output, Is.EqualTo(TestData.TimeOfDay.Hours));
+		}
 	}
 }

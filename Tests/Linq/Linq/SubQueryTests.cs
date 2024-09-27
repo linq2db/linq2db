@@ -4,6 +4,8 @@ using System.Linq;
 using System.Linq.Expressions;
 
 using LinqToDB;
+using LinqToDB.Linq;
+using LinqToDB.SqlQuery;
 
 using NUnit.Framework;
 
@@ -186,6 +188,27 @@ namespace Tests.Linq
 				var chs2 = chilren.ToList();
 
 				Assert.That(chs2.Except(chs1).Count(), Is.EqualTo(chs2.Count));
+			}
+		}
+
+		[Test]
+		public void DerivedTake([DataSources]
+			string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				AssertQuery(db.Parent.Take(1).AsSubQuery());
+			}
+		}
+
+		[Test]
+		[ThrowsForProvider(typeof(SqlException), providers: [TestProvName.AllAccess, TestProvName.AllSybase], ErrorMessage = "Skip for subqueries is not supported")]
+		public void DerivedSkipTake([DataSources]
+			string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				AssertQuery(db.Parent.Skip(1).Take(1).AsSubQuery());
 			}
 		}
 
@@ -638,8 +661,8 @@ namespace Tests.Linq
 					select p);
 		}
 
-		[ActiveIssue(Configurations = [TestProvName.AllAccess, TestProvName.AllClickHouse, TestProvName.AllDB2, TestProvName.AllFirebird, TestProvName.AllInformix, TestProvName.AllOracle, TestProvName.AllSQLite, TestProvName.AllSybase, TestProvName.AllMariaDB, TestProvName.AllMySql57])]
 		[Test]
+		[ThrowsForProvider(typeof(LinqException), TestProvName.AllAccess, "Provider does not support JOIN without condition.")]
 		public void Issue1601([DataSources(false)] string context)
 		{
 			using (var db = GetDataConnection(context))
@@ -862,118 +885,76 @@ namespace Tests.Linq
 
 			AssertQuery(query);
 		}
-
-		#region Issue 1700
-		[ActiveIssue(Configurations = [TestProvName.AllDB2, TestProvName.AllInformix, TestProvName.AllOracle, ProviderName.SqlCe, TestProvName.AllSybase])]
-		[Test(Description = "https://github.com/linq2db/linq2db/issues/1700")]
-		public void TestOuterApplySubFunction([DataSources(TestProvName.AllAccess, TestProvName.AllClickHouse)] string context)
+		
+		[ActiveIssue(Configurations = [TestProvName.AllOracle], Details = "https://forums.oracle.com/ords/apexds/post/error-ora-12704-character-set-mismatch-in-case-statement-6917")]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/3295")]
+		public void Issue3295Test1([DataSources(TestProvName.AllSybase)] string context)
 		{
-			var groupId = 5;
-
 			using var db = GetDataContext(context);
-			using var t1 = db.CreateLocalTable<Item>();
-			using var t2 = db.CreateLocalTable<ItemAppType>();
-			using var t3 = db.CreateLocalTable<AppType>();
-			using var t4 = db.CreateLocalTable<AppSubType>();
 
-			var items     = db.GetTable<Item>().AsQueryable();
-			var itemTypes = db.GetTable<ItemAppType>().AsQueryable();
-			var types     = db.GetTable<AppType>().AsQueryable();
-			var subTypes  = db.GetTable<AppSubType>().AsQueryable();
+			var query = (from x in db.Person
+						 let status = db.Patient.FirstOrDefault(y => y.PersonID == x.ID)
+						 select new
+						 {
+							 Id = status != null ? status.PersonID : x.ID,
+							 StatusName = status != null ? status.Diagnosis : "abc",
+						 }).Where(x => x.StatusName == "abc");
 
-			var data = (
-				from item in items.Where(i => i.GroupId == groupId)
-				let itemSubTypeDescription = SubFunction(itemTypes, types, subTypes, item)
-				select new { item.ItemId, Description1 = item.Description, Description2 = itemSubTypeDescription.Description });
-
-			var all_items = data.ToList();
+			query.ToArray();
 		}
 
-		[Table]
-		class ItemAppType
+		[ActiveIssue]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/3295")]
+		public void Issue3295Test2([DataSources] string context)
 		{
-			[Column] public int AppTypeId { get; set; }
-			[Column] public int ItemId  { get; set; }
+			using var db = GetDataContext(context);
+
+			var expected = Parent
+				.Where(x => x.Children.Where(y => y.ChildID == 11).Select(y => y.ParentID).FirstOrDefault() == 0)
+				.Count();
+
+			var actual = db.Parent
+				.Where(x => x.Children.Where(y => y.ChildID == 11).Select(y => y.ParentID).FirstOrDefault() == 0)
+				.Count();
+
+			Assert.That(actual, Is.EqualTo(expected));
 		}
 
-		[Table]
-		class Item
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/3334")]
+		public void Issue3334Test([DataSources] string context)
 		{
-			[Column] public int GroupId { get; set; }
-			[Column] public int ItemId  { get; set; }
-			[Column] public string? Description { get; set; }
-		}
+			using var db = GetDataContext(context);
 
-		[Table]
-		class AppType
-		{
-			[Column] public int AppTypeId { get; set; }
-			[Column] public DateTime CreatedDate { get; set; }
-		}
+			var subquery = db.GetTable<Person>();
 
-		[Table]
-		class AppSubType
-		{
-			[Column] public int AppTypeId { get; set; }
-			[Column] public int AppSubTypeId { get; set; }
-			[Column] public string? Description { get; set; }
-			[Column] public DateTime CreatedDate { get; set; }
-		}
-
-		[ExpressionMethod(nameof(SubFunctionImpl))]
-		static TSome SubFunction(IQueryable<ItemAppType> itemTypes, IQueryable<AppType> types, IQueryable<AppSubType> subTypes, Item item)
-		{
-			throw new NotImplementedException();
-		}
-
-		public class TSome
-		{
-			public int      AppSubTypeId           { get; set; }
-			public string?  Description            { get; set; }
-			public DateTime MaxSubtypeCreatedDate  { get; set; }
-			public DateTime MaxTypeCreatedDate     { get; set; }
-			public int      MaxTypeId              { get; set; }
-			public int      CountDistinctTypeId    { get; set; }
-			public int      CountDistinctSubTypeId { get; set; }
-		}
-
-		static Expression<Func<IQueryable<ItemAppType>, IQueryable<AppType>, IQueryable<AppSubType>, Item, TSome?>> SubFunctionImpl()
-		{
-			return (itemTypes, types, subTypes, item) => (
-					from sub in
-						from itemtype in itemTypes
-						from type in types.LeftJoin(t => t.AppTypeId == itemtype.AppTypeId)
-						from subtype in subTypes.LeftJoin(u => u.AppTypeId == type.AppTypeId)
-						where itemtype.ItemId == item.ItemId
-							  && type.AppTypeId == itemtype.AppTypeId
-							  && subtype.AppTypeId == type.AppTypeId
-						select new
-						{
-							subtype.Description,
-							subtype.AppSubTypeId,
-							subtypeCreatedDate = subtype.CreatedDate,
-							typeCreatedDate    = type.CreatedDate,
-							type.AppTypeId
-						}
-					group sub by new { sub.Description, sub.AppSubTypeId }
-					into grpby
-					select new TSome
+			var query = db.GetTable<Person>()
+					.Select(entity1 => new
 					{
-						AppSubTypeId           = grpby.Key.AppSubTypeId,
-						Description            = grpby.Key.Description,
-						MaxSubtypeCreatedDate  = grpby.Max(i => i.subtypeCreatedDate),
-						MaxTypeCreatedDate     = grpby.Max(i => i.typeCreatedDate),
-						MaxTypeId              = grpby.Max(i => i.AppTypeId),
-						CountDistinctTypeId    = grpby.CountExt(i => i.AppTypeId, Sql.AggregateModifier.Distinct),
-						CountDistinctSubTypeId = grpby.CountExt(i => i.AppSubTypeId, Sql.AggregateModifier.Distinct)
-					}
-				)
-				.OrderByDescending(ord1 => ord1.CountDistinctTypeId)
-				.ThenByDescending(ord2 => ord2.MaxSubtypeCreatedDate)
-				.ThenByDescending(ord3 => ord3.MaxTypeCreatedDate)
-				.ThenByDescending(ord4 => ord4.MaxTypeId)
-				.FirstOrDefault();
+						Entity1 = entity1,
+						Entity2 = subquery.FirstOrDefault(entity2 => entity2.ID == entity1.ID)
+					})
+					.GroupJoin(db.GetTable<Person>(),
+						x => x.Entity2!.ID,
+						x => x.ID,
+						(x, y) => x);
+
+			var result = query.FirstOrDefault();
 		}
-		#endregion
+
+		[ThrowsForProvider(typeof(LinqException), providers: [TestProvName.AllSybase], ErrorMessage = "Provider does not support CROSS/OUTER/LATERAL joins.")]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/3365")]
+		public void Issue3365Test([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = db.Child.Select(x => new
+			{
+				Assignee = x.GrandChildren.Select(a => a.ParentID).FirstOrDefault()
+			});
+
+			var orderedQuery = query.OrderBy(x => x.Assignee);
+
+			orderedQuery.ToArray();
+		}
 	}
 }

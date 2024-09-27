@@ -51,24 +51,24 @@ namespace OpenTelemetryExample
 
 		// This class is used to collect LinqToDB telemetry data.
 		//
-		sealed class LinqToDBActivity : IActivity
+		sealed class LinqToDBActivity : ActivityBase
 		{
 			readonly Activity _activity;
 
-			LinqToDBActivity(Activity activity)
+			LinqToDBActivity(ActivityID id, Activity activity) : base(id)
 			{
 				_activity = activity;
 			}
 
-			public void Dispose()
+			public override void Dispose()
 			{
 				_activity.Dispose();
 			}
 
-			public ValueTask DisposeAsync()
+			public override IActivity AddTag(ActivityTagID key, object? value)
 			{
-				Dispose();
-				return default;
+				_activity.SetTag(key.ToString(), value);
+				return this;
 			}
 
 			// This method is called by the ActivityService to create an instance of the LinqToDBActivity class.
@@ -76,7 +76,7 @@ namespace OpenTelemetryExample
 			public static IActivity? Create(ActivityID id)
 			{
 				var a = _activitySource.StartActivity(id.ToString());
-				return a == null ? null : new LinqToDBActivity(a);
+				return a == null ? null : new LinqToDBActivity(id, a);
 			}
 		}
 

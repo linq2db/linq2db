@@ -2,17 +2,25 @@
 	[Parameter(Mandatory=$true)][string]$path,
 	[Parameter(Mandatory=$true)][string]$buildPath,
 	[Parameter(Mandatory=$true)][string]$version,
-	[Parameter(Mandatory=$false)][string]$branch
+	[Parameter(Mandatory=$false)][string]$linq2DbVersion,
+	[Parameter(Mandatory=$false)][string]$branch,
+	[Parameter(Mandatory=$false)][string]$clean
 )
 
 $ErrorActionPreference = "Stop"
 Set-StrictMode -Version Latest
 
-if (Test-Path $buildPath) {
+if ($clean -and (Test-Path $buildPath)) {
 	Remove-Item $buildPath -Recurse
 }
 
-New-Item -Path $buildPath -ItemType Directory
+if (!(Test-Path $buildPath)) {
+	New-Item -Path $buildPath -ItemType Directory
+}
+
+if (!$linq2DbVersion){
+	$linq2DbVersion = $version
+}
 
 if ($version) {
 
@@ -35,13 +43,9 @@ if ($version) {
 		Select -expand node |
 		ForEach { $_.InnerText = $version }
 
-		Select-Xml -Xml $xml -XPath '//ns:dependency[@id="linq2db.t4models"]/@version' -Namespace $ns |
-		Select -expand node |
-		ForEach { $_.Value = $version }
-
 		Select-Xml -Xml $xml -XPath '//ns:dependency[@id="linq2db"]/@version' -Namespace $ns |
 		Select -expand node |
-		ForEach { $_.Value = $version }
+		ForEach { $_.Value = $linq2DbVersion }
 
 		$child = $xml.CreateElement('version', $nsUri)
 		$child.InnerText = $version

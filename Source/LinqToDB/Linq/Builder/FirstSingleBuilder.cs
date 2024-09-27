@@ -10,22 +10,16 @@ namespace LinqToDB.Linq.Builder
 	using LinqToDB.Expressions;
 	using SqlQuery;
 
+	[BuildsMethodCall("First", "FirstOrDefault", "Single", "SingleOrDefault")]
+	[BuildsMethodCall("FirstAsync", "FirstOrDefaultAsync", "SingleAsync", "SingleOrDefaultAsync", 
+		CanBuildName = nameof(CanBuildAsyncMethod))]
 	sealed class FirstSingleBuilder : MethodCallBuilder
 	{
-		static readonly string[] MethodNames      = { "First"     , "FirstOrDefault"     , "Single"     , "SingleOrDefault"      };
-		static readonly string[] MethodNamesAsync = { "FirstAsync", "FirstOrDefaultAsync", "SingleAsync", "SingleOrDefaultAsync" };
+		public static bool CanBuildMethod(MethodCallExpression call, BuildInfo info, ExpressionBuilder builder)
+			=> call.IsQueryable() && call.Arguments.Count <= 2;
 
-		protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
-		{
-			return IsApplicable(methodCall);
-		}
-
-		private static bool IsApplicable(MethodCallExpression methodCall)
-		{
-			return
-				methodCall.IsQueryable(MethodNames)           && methodCall.Arguments.Count <= 2 ||
-				methodCall.IsAsyncExtension(MethodNamesAsync) && methodCall.Arguments.Count <= 3;
-		}
+		public static bool CanBuildAsyncMethod(MethodCallExpression call, BuildInfo info, ExpressionBuilder builder)
+			=> call.IsAsyncExtension() && call.Arguments.Count <= 3;
 
 		public enum MethodKind
 		{
@@ -56,7 +50,7 @@ namespace LinqToDB.Linq.Builder
 			var argument = methodCall.Arguments[0];
 			var argumentCount = methodCall.Arguments.Count;
 
-			if (methodCall.IsAsyncExtension(MethodNamesAsync))
+			if (methodCall.IsAsyncExtension())
 				--argumentCount;
 
 			var cardinality = buildInfo.SourceCardinality;
@@ -143,11 +137,20 @@ namespace LinqToDB.Linq.Builder
 
 			if (buildInfo.Parent != null && (cardinality & SourceCardinality.Zero) != 0)
 			{
-				sequence = new DefaultIfEmptyBuilder.DefaultIfEmptyContext(buildInfo.Parent, sequence, sequence, null, allowNullField: true);
+				sequence = new DefaultIfEmptyBuilder.DefaultIfEmptyContext(
+					buildInfo.Parent,
+					sequence,
+					sequence,
+					defaultValue: null,
+					allowNullField: true,
+					isNullValidationDisabled: false);
+
 				canBeWeak = true;
 			}
 
-			return BuildSequenceResult.FromContext(new FirstSingleContext(buildInfo.Parent, sequence, methodKind, buildInfo.IsSubQuery, buildInfo.IsAssociation, canBeWeak, cardinality, buildInfo.IsTest));
+			var firstSingleContext = new FirstSingleContext(buildInfo.Parent, sequence, methodKind, buildInfo.IsSubQuery, buildInfo.IsAssociation, canBeWeak, cardinality, buildInfo.IsTest);
+
+			return BuildSequenceResult.FromContext(firstSingleContext);
 		}
 
 		public sealed class FirstSingleContext : SequenceContextBase
@@ -196,7 +199,7 @@ namespace LinqToDB.Linq.Builder
 
 				query.GetElementAsync = query.GetElementAsync = async (db, expr, ps, preambles, token) =>
 					await query.GetResultEnumerable(db, expr, ps, preambles)
-						.FirstAsync(token).ConfigureAwait(Configuration.ContinueOnCapturedContext);
+						.FirstAsync(token).ConfigureAwait(false);
 			}
 
 			static void GetFirstOrDefaultElement<T>(Query<T> query)
@@ -206,7 +209,7 @@ namespace LinqToDB.Linq.Builder
 
 				query.GetElementAsync = query.GetElementAsync = async (db, expr, ps, preambles, token) =>
 					await query.GetResultEnumerable(db, expr, ps, preambles)
-						.FirstOrDefaultAsync(token).ConfigureAwait(Configuration.ContinueOnCapturedContext);
+						.FirstOrDefaultAsync(token).ConfigureAwait(false);
 			}
 
 			static void GetSingleElement<T>(Query<T> query)
@@ -216,7 +219,7 @@ namespace LinqToDB.Linq.Builder
 
 				query.GetElementAsync = async (db, expr, ps, preambles, token) =>
 					await query.GetResultEnumerable(db, expr, ps, preambles)
-						.SingleAsync(token).ConfigureAwait(Configuration.ContinueOnCapturedContext);
+						.SingleAsync(token).ConfigureAwait(false);
 			}
 
 			static void GetSingleOrDefaultElement<T>(Query<T> query)
@@ -226,7 +229,7 @@ namespace LinqToDB.Linq.Builder
 
 				query.GetElementAsync = async (db, expr, ps, preambles, token) =>
 					await query.GetResultEnumerable(db, expr, ps, preambles)
-						.SingleOrDefaultAsync(token).ConfigureAwait(Configuration.ContinueOnCapturedContext);
+						.SingleOrDefaultAsync(token).ConfigureAwait(false);
 			}
 
 			bool _isJoinCreated;

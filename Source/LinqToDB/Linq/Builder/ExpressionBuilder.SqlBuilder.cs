@@ -17,17 +17,18 @@ namespace LinqToDB.Linq.Builder
 	using Common.Internal;
 	using Data;
 	using Extensions;
-	using Linq.Translation;
+	using Translation;
 	using LinqToDB.Expressions;
 	using Mapping;
 	using Reflection;
 	using SqlQuery;
+	using DataProvider;
 
 	partial class ExpressionBuilder
 	{
 		#region LinqOptions shortcuts
 
-		public bool CompareNullsAsValues => DataOptions.LinqOptions.CompareNullsAsValues;
+		public CompareNulls CompareNulls => DataOptions.LinqOptions.CompareNulls;
 
 		#endregion
 
@@ -150,6 +151,80 @@ namespace LinqToDB.Linq.Builder
 
 		#region SubQueryToSql
 
+		/// <summary>
+		/// Checks that provider can handle limitation inside subquery. This function is tightly coupled with <see cref="SelectQueryOptimizerVisitor.OptimizeApply"/>
+		/// </summary>
+		/// <param name="context"></param>
+		/// <returns></returns>
+		public bool IsSupportedSubquery(IBuildContext parent, IBuildContext context, out string? errorMessage)
+		{
+			errorMessage = null;
+
+			if (!_validateSubqueries)
+				return true;
+
+			// No check during recursion. Cloning may fail
+			if (parent.Builder.IsRecursiveBuild)
+				return true;
+
+			if (!context.Builder.DataContext.SqlProviderFlags.IsApplyJoinSupported)
+			{
+				// We are trying to simulate what will be with query after optimizer's work
+				//
+				var cloningContext = new CloningContext();
+
+				var clonedParentContext = cloningContext.CloneContext(parent);
+				var clonedContext       = cloningContext.CloneContext(context);
+
+				cloningContext.UpdateContextParents();
+
+				var expr = parent.Builder.MakeExpression(clonedContext, new ContextRefExpression(clonedContext.ElementType, clonedContext), ProjectFlags.SQL);
+
+				expr = parent.Builder.ToColumns(clonedParentContext, expr);
+
+				SqlJoinedTable? fakeJoin = null;
+
+				// add fake join there is no still reference
+				if (clonedParentContext.SelectQuery.From.Tables.Count > 0 
+					&& clonedParentContext.SelectQuery.Find(e => e is SelectQuery sc && sc == clonedContext.SelectQuery) == null)
+				{
+					fakeJoin = clonedContext.SelectQuery.OuterApply().JoinedTable;
+
+					clonedParentContext.SelectQuery.From.Tables[0].Joins.Add(fakeJoin);
+				}
+
+				using var visitor = QueryHelper.SelectOptimizer.Allocate();
+
+#if DEBUG
+
+				var sqlText = clonedParentContext.SelectQuery.ToDebugString();
+
+#endif
+
+				var optimizedQuery = (SelectQuery)visitor.Value.Optimize(
+					root: clonedParentContext.SelectQuery,
+					rootElement: clonedParentContext.SelectQuery,
+					providerFlags: parent.Builder.DataContext.SqlProviderFlags,
+					removeWeakJoins: false,
+					dataOptions: parent.Builder.DataOptions,
+					mappingSchema: context.MappingSchema,
+					evaluationContext: new EvaluationContext()
+				);
+
+				if (!SqlProviderHelper.IsValidQuery(optimizedQuery, 
+					    parentQuery: null, 
+					    fakeJoin: fakeJoin, 
+					    columnSubqueryLevel: null, 
+					    parent.Builder.DataContext.SqlProviderFlags, 
+					    out errorMessage))
+				{
+					return false;
+				}
+			}
+
+			return true;
+		}
+
 		int _gettingSubquery;
 
 		public IBuildContext? GetSubQuery(IBuildContext context, Expression expr, ProjectFlags flags, out bool isSequence, out string? errorMessage)
@@ -174,7 +249,10 @@ namespace LinqToDB.Linq.Builder
 			{
 				if (_gettingSubquery == 0)
 				{
-					if (!SequenceHelper.IsSupportedSubquery(context, buildResult.BuildContext, out errorMessage))
+					++_gettingSubquery;
+					var isSupported = IsSupportedSubquery(context, buildResult.BuildContext, out errorMessage);
+					--_gettingSubquery;
+					if (!isSupported)
 						return null;
 				}
 			}
@@ -780,34 +858,18 @@ namespace LinqToDB.Linq.Builder
 					switch (expression.NodeType)
 					{
 						case ExpressionType.Add:
-						case ExpressionType.AddChecked: return CreatePlaceholder(context, new SqlBinaryExpression(t, l, "+", r, Precedence.Additive), expression, alias : alias);
-						case ExpressionType.And: return CreatePlaceholder(context, new SqlBinaryExpression(t, l, "&", r, Precedence.Bitwise), expression, alias : alias);
-						case ExpressionType.Divide: return CreatePlaceholder(context, new SqlBinaryExpression(t, l, "/", r, Precedence.Multiplicative), expression, alias : alias);
-						case ExpressionType.ExclusiveOr: return CreatePlaceholder(context, new SqlBinaryExpression(t, l, "^", r, Precedence.Bitwise), expression, alias : alias);
-						case ExpressionType.Modulo: return CreatePlaceholder(context, new SqlBinaryExpression(t, l, "%", r, Precedence.Multiplicative), expression, alias : alias);
+						case ExpressionType.AddChecked:      return CreatePlaceholder(context, new SqlBinaryExpression(t, l, "+", r, Precedence.Additive), expression, alias : alias);
+						case ExpressionType.And:             return CreatePlaceholder(context, new SqlBinaryExpression(t, l, "&", r, Precedence.Bitwise), expression, alias : alias);
+						case ExpressionType.Divide:          return CreatePlaceholder(context, new SqlBinaryExpression(t, l, "/", r, Precedence.Multiplicative), expression, alias : alias);
+						case ExpressionType.ExclusiveOr:     return CreatePlaceholder(context, new SqlBinaryExpression(t, l, "^", r, Precedence.Bitwise), expression, alias : alias);
+						case ExpressionType.Modulo:          return CreatePlaceholder(context, new SqlBinaryExpression(t, l, "%", r, Precedence.Multiplicative), expression, alias : alias);
 						case ExpressionType.Multiply:
 						case ExpressionType.MultiplyChecked: return CreatePlaceholder(context, new SqlBinaryExpression(t, l, "*", r, Precedence.Multiplicative), expression, alias : alias);
-						case ExpressionType.Or: return CreatePlaceholder(context, new SqlBinaryExpression(t, l, "|", r, Precedence.Bitwise), expression, alias : alias);
-						case ExpressionType.Power: return CreatePlaceholder(context, new SqlFunction(t, "Power", l, r), expression, alias : alias);
+						case ExpressionType.Or:              return CreatePlaceholder(context, new SqlBinaryExpression(t, l, "|", r, Precedence.Bitwise), expression, alias : alias);
+						case ExpressionType.Power:           return CreatePlaceholder(context, new SqlFunction(t, "Power", l, r), expression, alias : alias);
 						case ExpressionType.Subtract:
 						case ExpressionType.SubtractChecked: return CreatePlaceholder(context, new SqlBinaryExpression(t, l, "-", r, Precedence.Subtraction), expression, alias : alias);
-						case ExpressionType.Coalesce:
-						{
-							if (QueryHelper.UnwrapExpression(r, checkNullability: true) is SqlFunction c)
-							{
-								if (c.Name is "Coalesce" or PseudoFunctions.COALESCE)
-								{
-									var parms = new ISqlExpression[c.Parameters.Length + 1];
-
-									parms[0] = l;
-									c.Parameters.CopyTo(parms, 1);
-
-									return CreatePlaceholder(context, PseudoFunctions.MakeCoalesce(t, parms), expression, alias : alias);
-								}
-							}
-
-							return CreatePlaceholder(context, PseudoFunctions.MakeCoalesce(t, l, r), expression, alias : alias);
-						}
+						case ExpressionType.Coalesce:        return CreatePlaceholder(context, new SqlCoalesceExpression(l, r), expression, alias : alias);
 					}
 
 					break;
@@ -856,6 +918,9 @@ namespace LinqToDB.Linq.Builder
 						if (e.Method == null && (e.IsLifted || e.Type == typeof(object)))
 							return placeholder;
 
+						if (e.Method == null && operandExpr is not SqlPlaceholderExpression)
+							return e;
+
 						if (e.Type == typeof(bool) && e.Operand.Type == typeof(SqlBoolean))
 							return placeholder;
 
@@ -890,9 +955,9 @@ namespace LinqToDB.Linq.Builder
 				{
 					var e = (ConditionalExpression)expression;
 
-					var testExpr  = ConvertToSqlExpr(context, e.Test,    flags.TestFlag(), columnDescriptor : columnDescriptor, isPureExpression : isPureExpression);
-					var trueExpr  = ConvertToSqlExpr(context, e.IfTrue,  flags.TestFlag(), columnDescriptor : columnDescriptor, isPureExpression : isPureExpression);
-					var falseExpr = ConvertToSqlExpr(context, e.IfFalse, flags.TestFlag(), columnDescriptor : columnDescriptor, isPureExpression : isPureExpression);
+					var testExpr  = ConvertToSqlExpr(context, e.Test,    flags.TestFlag(), columnDescriptor: null, isPureExpression: isPureExpression);
+					var trueExpr  = ConvertToSqlExpr(context, e.IfTrue,  flags.TestFlag(), columnDescriptor: columnDescriptor, isPureExpression: isPureExpression);
+					var falseExpr = ConvertToSqlExpr(context, e.IfFalse, flags.TestFlag(), columnDescriptor: columnDescriptor, isPureExpression: isPureExpression);
 
 					if (testExpr is SqlPlaceholderExpression &&
 						trueExpr is SqlPlaceholderExpression &&
@@ -1128,7 +1193,7 @@ namespace LinqToDB.Linq.Builder
 							if (testValueExpr is not SqlPlaceholderExpression testPlaceholder)
 								return SqlErrorExpression.EnsureError(testValueExpr, switchExpression.Type);
 
-							sc.Add(new SqlPredicate.ExprExpr(sv, SqlPredicate.Operator.Equal, testPlaceholder.Sql, CompareNullsAsValues ? true : null));
+							sc.Add(new SqlPredicate.ExprExpr(sv, SqlPredicate.Operator.Equal, testPlaceholder.Sql, CompareNulls == CompareNulls.LikeClr ? true : null));
 						}
 
 						ps[i * 2]     = sc;
@@ -1680,7 +1745,7 @@ namespace LinqToDB.Linq.Builder
 				var trueValue  = ConvertToSql(context, ExpressionInstances.True, columnDescriptor: descriptor);
 				var falseValue = ConvertToSql(context, ExpressionInstances.False, columnDescriptor: descriptor);
 
-				return new SqlPredicate.IsTrue(ex, trueValue, falseValue, DataOptions.LinqOptions.CompareNullsAsValues ? false : null, false);
+				return new SqlPredicate.IsTrue(ex, trueValue, falseValue, DataOptions.LinqOptions.CompareNulls == CompareNulls.LikeClr ? false : null, false);
 			}
 
 			if (ex is ISqlPredicate expPredicate)
@@ -1818,7 +1883,7 @@ namespace LinqToDB.Linq.Builder
 				var searchCondition = new SqlSearchCondition(isNot);
 				foreach (var placeholder in notNull)
 				{
-					var sql = SqlNullabilityExpression.ApplyNullability(placeholder.Sql, true);
+					var sql = placeholder.Sql;
 					searchCondition.Predicates.Add(new SqlPredicate.IsNull(sql, isNot));
 				}
 
@@ -2032,8 +2097,6 @@ namespace LinqToDB.Linq.Builder
 			var leftExpr         = ConvertToSqlExpr(context, left,  keysFlag, columnDescriptor : columnDescriptor);
 			var rightExpr        = ConvertToSqlExpr(context, right, keysFlag, columnDescriptor : columnDescriptor);
 
-			var compareNullsAsValues = CompareNullsAsValues;
-
 			//SQLRow case when needs to add Single
 			//
 			if (leftExpr is SqlPlaceholderExpression { Sql: SqlRowExpression } && rightExpr is not SqlPlaceholderExpression)
@@ -2090,6 +2153,8 @@ namespace LinqToDB.Linq.Builder
 
 					if (l is SqlValue lv && lv.Value == null || left.IsNullValue())
 					{
+						rightExpr = BuildSqlExpression(context, rightExpr, flags);
+
 						if (rightExpr is ConditionalExpression { Test: SqlPlaceholderExpression { Sql: SqlSearchCondition rightSearchCond } } && rightSearchCond.Predicates.Count == 1)
 						{
 							var rightPredicate  = rightSearchCond.Predicates[0];
@@ -2104,13 +2169,13 @@ namespace LinqToDB.Linq.Builder
 							}
 						}
 
-						rightExpr = BuildSqlExpression(context, rightExpr, flags);
-
 						return GenerateNullComparison(rightExpr, isNot);
 					}
 
 					if (r is SqlValue rv && rv.Value == null || right.IsNullValue())
 					{
+						leftExpr = BuildSqlExpression(context, leftExpr, flags);
+
 						if (leftExpr is ConditionalExpression { Test: SqlPlaceholderExpression { Sql: SqlSearchCondition leftSearchCond } } && leftSearchCond.Predicates.Count == 1)
 						{
 							var leftPredicate  = leftSearchCond.Predicates[0];
@@ -2124,8 +2189,6 @@ namespace LinqToDB.Linq.Builder
 								return CreatePlaceholder(context, new SqlSearchCondition(false, new SqlPredicate.IsNull(isnull.Expr1, !isnull.IsNot)), GetOriginalExpression());
 							}
 						}
-
-						leftExpr = BuildSqlExpression(context, leftExpr, flags);
 
 						return GenerateNullComparison(leftExpr, isNot);
 					}
@@ -2189,7 +2252,8 @@ namespace LinqToDB.Linq.Builder
 				case ExpressionType.Equal:
 				case ExpressionType.NotEqual:
 
-					if (!context!.SelectQuery.IsParameterDependent &&
+					if (CompareNulls != CompareNulls.LikeSql &&
+						!context!.SelectQuery.IsParameterDependent &&
 						(l is SqlParameter && lOriginal.CanBeNullable(nullability) || r is SqlParameter && r.CanBeNullable(nullability)))
 					{
 						context.SelectQuery.IsParameterDependent = true;
@@ -2262,7 +2326,7 @@ namespace LinqToDB.Linq.Builder
 						if (trueValue.ElementType  == QueryElementType.SqlValue &&
 						    falseValue.ElementType == QueryElementType.SqlValue)
 						{
-							var withNullValue = compareNullsAsValues
+							var withNullValue = CompareNulls == CompareNulls.LikeClr
 								? withNull
 								: (bool?)null;
 							predicate = new SqlPredicate.IsTrue(expression, trueValue, falseValue, withNullValue, isNot);
@@ -2270,7 +2334,8 @@ namespace LinqToDB.Linq.Builder
 					}
 				}
 
-				// Force nullability
+				// Force nullability.
+				// TODO: Review. Actually it can be removed. Currently only strange NullableBoolTests.NullTest test fails.
 				if (QueryHelper.IsNullValue(lOriginal))
 				{
 					rOriginal = SqlNullabilityExpression.ApplyNullability(rOriginal, true);
@@ -2284,7 +2349,7 @@ namespace LinqToDB.Linq.Builder
 
 				if (predicate == null)
 				{
-					if (compareNullsAsValues)
+					if (CompareNulls == CompareNulls.LikeClr)
 					{
 						if (lOriginal is SqlColumn colLeft)
 							lOriginal = SqlNullabilityExpression.ApplyNullability(lOriginal, NullabilityContext.GetContext(colLeft.Parent));
@@ -2301,7 +2366,7 @@ namespace LinqToDB.Linq.Builder
 					}
 
 					predicate = new SqlPredicate.ExprExpr(lOriginal, op, rOriginal,
-						compareNullsAsValues
+						CompareNulls == CompareNulls.LikeClr
 							? true
 							: null);
 				}
@@ -2380,18 +2445,6 @@ namespace LinqToDB.Linq.Builder
 		{
 			switch (expression.NodeType)
 			{
-				case ExpressionType.Conditional:
-				{
-					var cond = (ConditionalExpression)expression;
-
-					if (!CollectNullCompareExpressions(context, cond.IfTrue, result))
-						return false;
-					if (!CollectNullCompareExpressions(context, cond.IfFalse, result))
-						return false;
-
-					return true;
-				}
-
 				case ExpressionType.Constant:
 				case ExpressionType.Default:
 				{
@@ -2880,7 +2933,7 @@ namespace LinqToDB.Linq.Builder
 						for (var i = 0; i < newArr.Expressions.Count; i++)
 							exprs[i] = ConvertToSql(context, newArr.Expressions[i], columnDescriptor: columnDescriptor);
 
-						return new SqlPredicate.InList(expr, DataOptions.LinqOptions.CompareNullsAsValues ? false : null, false, exprs);
+						return new SqlPredicate.InList(expr, DataOptions.LinqOptions.CompareNulls == CompareNulls.LikeClr ? false : null, false, exprs);
 					}
 
 				default :
@@ -2890,7 +2943,7 @@ namespace LinqToDB.Linq.Builder
 						var p = ParametersContext.BuildParameter(context, arr, columnDescriptor, forceConstant : false,
 							buildParameterType : ParametersContext.BuildParameterType.InPredicate)!.SqlParameter;
 						p.IsQueryParameter = false;
-						return new SqlPredicate.InList(expr, DataOptions.LinqOptions.CompareNullsAsValues ? false : null, false, p);
+						return new SqlPredicate.InList(expr, DataOptions.LinqOptions.CompareNulls == CompareNulls.LikeClr ? false : null, false, p);
 					}
 
 					break;
@@ -3048,7 +3101,7 @@ namespace LinqToDB.Linq.Builder
 											getSql(getSqlContext, m.DiscriminatorName),
 											SqlPredicate.Operator.NotEqual,
 											MappingSchema.GetSqlValue(m.Discriminator.MemberType, m.Code, m.Discriminator.GetDbDataType(true)),
-											DataOptions.LinqOptions.CompareNullsAsValues ? true : null)
+											withNull: true)
 									)
 								);
 							}
@@ -3066,7 +3119,7 @@ namespace LinqToDB.Linq.Builder
 												getSql(getSqlContext, m.DiscriminatorName),
 												SqlPredicate.Operator.Equal,
 												MappingSchema.GetSqlValue(m.Discriminator.MemberType, m.Code, m.Discriminator.GetDbDataType(true)),
-												DataOptions.LinqOptions.CompareNullsAsValues ? true : null)
+												withNull: true)
 										)
 									);
 								}
@@ -3088,7 +3141,7 @@ namespace LinqToDB.Linq.Builder
 							discriminatorSql,
 							SqlPredicate.Operator.Equal,
 							sqlValue,
-							DataOptions.LinqOptions.CompareNullsAsValues ? true : null)
+							withNull: true)
 					);
 				}
 				default:
@@ -3102,7 +3155,7 @@ namespace LinqToDB.Linq.Builder
 									getSql(getSqlContext, m.DiscriminatorName),
 									SqlPredicate.Operator.Equal,
 									MappingSchema.GetSqlValue(m.Discriminator.MemberType, m.Code, m.Discriminator.GetDbDataType(true)),
-									DataOptions.LinqOptions.CompareNullsAsValues ? true : null));
+									withNull: true));
 						}
 
 						return cond;
@@ -4266,7 +4319,7 @@ namespace LinqToDB.Linq.Builder
 						return new DefaultValueExpression(MappingSchema, truePath.Type);
 					}
 
-					var falsePath = new DefaultValueExpression(MappingSchema, truePath.Type);
+					var falsePath = Expression.Constant(null, truePath.Type);
 
 					var conditional = Expression.Condition(isPredicate, truePath, falsePath);
 
@@ -4475,6 +4528,16 @@ namespace LinqToDB.Linq.Builder
 						corrected = Expression.Convert(corrected, path.Type);
 					}
 					return MakeExpression(currentContext, corrected, flags);
+				}
+
+				if (memberExpression.Member.IsNullableHasValueMember())
+				{
+					var corrected = MakeExpression(currentContext, memberExpression.Expression, flags);
+					if (corrected.Type != memberExpression.Expression.Type)
+					{
+						corrected = Expression.Convert(corrected, memberExpression.Expression.Type);
+					}
+					return memberExpression.Update(corrected);
 				}
 
 				if (memberExpression.Expression.NodeType is ExpressionType.Convert or ExpressionType.ConvertChecked)
@@ -4714,7 +4777,7 @@ namespace LinqToDB.Linq.Builder
 				{
 					// Do recursive again
 					var convertedAgain = MakeExpression(currentContext, expression, flags);
-					if (convertedAgain is not SqlErrorExpression)
+					if (convertedAgain is not SqlErrorExpression errorExpression || errorExpression.IsCritical)
 						expression = convertedAgain;
 				}
 				else

@@ -386,6 +386,11 @@ namespace LinqToDB.Linq.Builder
 				_associations    = saveAssociationsCache;
 			}
 
+			if (resultExpression is SqlErrorExpression errorExpression)
+			{
+				return errorExpression.WithType(eagerLoad.Type);
+			}
+
 			resultExpression = SqlAdjustTypeExpression.AdjustType(resultExpression, eagerLoad.Type, MappingSchema);
 
 			return resultExpression;
@@ -433,7 +438,8 @@ namespace LinqToDB.Linq.Builder
 
 			query.Init(sequence, _parametersContext.CurrentSqlParameters);
 
-			BuildQuery(query, sequence, queryParameter, ref preambles!, previousKeys);
+			if (!BuildQuery(query, sequence, queryParameter, ref preambles!, previousKeys))
+				return query.ErrorExpression!;
 
 			var idx      = preambles.Count;
 			var preamble = new Preamble<TKey, T>(query);
@@ -493,6 +499,10 @@ namespace LinqToDB.Linq.Builder
 			{
 				if (e.NodeType == ExpressionType.Extension && e is SqlEagerLoadExpression eagerLoad)
 				{
+					// Do not process eager loading fast mode
+					if (!_validateSubqueries)
+						return SqlErrorExpression.EnsureError(eagerLoad.SequenceExpression, e.Type);
+
 					eagerLoadingCache ??= new Dictionary<Expression, Expression>(ExpressionEqualityComparer.Instance);
 					if (!eagerLoadingCache.TryGetValue(eagerLoad.SequenceExpression, out var preambleExpression))
 					{
@@ -531,7 +541,7 @@ namespace LinqToDB.Linq.Builder
 			{
 				return await _query.GetResultEnumerable(dataContext, expression, preambles, preambles)
 					.ToListAsync(cancellationToken)
-					.ConfigureAwait(Configuration.ContinueOnCapturedContext);
+					.ConfigureAwait(false);
 			}
 		}
 
@@ -564,7 +574,7 @@ namespace LinqToDB.Linq.Builder
 				var enumerator = _query.GetResultEnumerable(dataContext, expression, preambles, preambles)
 					.GetAsyncEnumerator(cancellationToken);
 
-				while (await enumerator.MoveNextAsync().ConfigureAwait(Configuration.ContinueOnCapturedContext))
+				while (await enumerator.MoveNextAsync().ConfigureAwait(false))
 				{
 					var e = enumerator.Current;
 					result.Add(e.Key, e.Detail);

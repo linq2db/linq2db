@@ -459,6 +459,13 @@ namespace LinqToDB.Linq.Builder
 					return node;
 				}
 
+				var tableFunction = node.Method.GetTableFunctionAttribute(_mappingSchema);
+				if (tableFunction != null)
+				{
+					_isServerSideOnly = true;
+					return node;
+				}
+
 				return base.VisitMethodCall(node);
 			}
 		}
@@ -789,6 +796,17 @@ namespace LinqToDB.Linq.Builder
 
 					if (attr != null && !attr.ServerSideOnly)
 						return false;
+
+					break;
+				}
+
+				case ExpressionType.Extension:
+				{
+					if (ex is DefaultValueExpression)
+					{
+						if (ex.Type.IsConstantable(false))
+							return false;
+					}
 
 					break;
 				}

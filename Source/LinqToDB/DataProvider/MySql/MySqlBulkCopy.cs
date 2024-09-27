@@ -152,7 +152,7 @@ namespace LinqToDB.DataProvider.MySql
 #pragma warning disable CA2000 // Dispose objects before losing scope
 				var rd = new BulkCopyReader<T>(dataConnection, columns, batch);
 #pragma warning restore CA2000 // Dispose objects before losing scope
-				await using var _ = rd.ConfigureAwait(Configuration.ContinueOnCapturedContext);
+				await using var _ = rd.ConfigureAwait(false);
 
 				await TraceActionAsync(
 					dataConnection,
@@ -161,11 +161,11 @@ namespace LinqToDB.DataProvider.MySql
 					+ tableName + "(" + string.Join(", ", columns.Select(x => x.ColumnName)) + Environment.NewLine,
 					async () => {
 						if (bc.HasWriteToServerAsync)
-							await bc.WriteToServerAsync(rd, cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
+							await bc.WriteToServerAsync(rd, cancellationToken).ConfigureAwait(false);
 						else
 							bc.WriteToServer(rd);
 						return rd.Count;
-					}).ConfigureAwait(Configuration.ContinueOnCapturedContext);
+					}).ConfigureAwait(false);
 
 				rc.RowsCopied += rd.Count;
 			}
@@ -174,7 +174,7 @@ namespace LinqToDB.DataProvider.MySql
 				options.RowsCopiedCallback(rc);
 
 			if (table.DataContext.CloseAfterUse)
-				await table.DataContext.CloseAsync().ConfigureAwait(Configuration.ContinueOnCapturedContext);
+				await table.DataContext.CloseAsync().ConfigureAwait(false);
 
 			return rc;
 		}
@@ -289,23 +289,23 @@ namespace LinqToDB.DataProvider.MySql
 			// emulate missing BatchSize property
 			// this is needed, because MySql fails on big batches, so users should be able to limit batch size
 			var batches = EnumerableHelper.Batch(source, options.MaxBatchSize ?? int.MaxValue);
-			await foreach (var batch in batches.WithCancellation(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext))
+			await foreach (var batch in batches.WithCancellation(cancellationToken).ConfigureAwait(false))
 			{
 #pragma warning disable CA2000 // Dispose objects before losing scope
 				var rd = new BulkCopyReader<T>(dataConnection, columns, batch, cancellationToken);
 #pragma warning restore CA2000 // Dispose objects before losing scope
-				await using var _ = rd.ConfigureAwait(Configuration.ContinueOnCapturedContext);
+				await using var _ = rd.ConfigureAwait(false);
 
 				await TraceActionAsync(
 					dataConnection,
 					() => (bc.HasWriteToServerAsync ? "INSERT ASYNC BULK " : "INSERT BULK ") + tableName + "(" + string.Join(", ", columns.Select(x => x.ColumnName)) + Environment.NewLine,
 					async () => {
 						if (bc.HasWriteToServerAsync)
-							await bc.WriteToServerAsync(rd, cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
+							await bc.WriteToServerAsync(rd, cancellationToken).ConfigureAwait(false);
 						else
 							bc.WriteToServer(rd);
 						return rd.Count;
-					}).ConfigureAwait(Configuration.ContinueOnCapturedContext);
+					}).ConfigureAwait(false);
 
 				rc.RowsCopied += rd.Count;
 			}
@@ -314,7 +314,7 @@ namespace LinqToDB.DataProvider.MySql
 				options.RowsCopiedCallback(rc);
 
 			if (table.DataContext.CloseAfterUse)
-				await table.DataContext.CloseAsync().ConfigureAwait(Configuration.ContinueOnCapturedContext);
+				await table.DataContext.CloseAsync().ConfigureAwait(false);
 
 			return rc;
 		}

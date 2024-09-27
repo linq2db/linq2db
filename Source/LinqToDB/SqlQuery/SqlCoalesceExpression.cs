@@ -13,12 +13,12 @@ namespace LinqToDB.SqlQuery
 		public ISqlExpression[] Expressions { get; private set; }
 
 		public override int              Precedence  => SqlQuery.Precedence.LogicalDisjunction;
-		public override Type?            SystemType  => Expressions[^1].SystemType;
+		public override Type?            SystemType  => Expressions[0].SystemType;
 		public override QueryElementType ElementType => QueryElementType.SqlCoalesce;
 
 		public override QueryElementTextWriter ToString(QueryElementTextWriter writer)
 		{
-			writer.Append("$ISNULL$(");
+			writer.Append("$COALESCE$(");
 
 			for (var index = 0; index < Expressions.Length; index++)
 			{
