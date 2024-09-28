@@ -538,6 +538,27 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 
 			Assert.That(res, Is.EqualTo(2));
 		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4638")]
+		public void Issue4638Test([EFDataSources] string provider)
+		{
+			using var ctx = CreateContext(provider);
+
+			var query = ctx.Issue4624Items
+				.GroupBy(p => p.AclNameId)
+				.Select(p => new
+				{
+					Id = p.Key,
+					Items = p.Select(tx => new
+					{
+						tx.CfAllowValue,
+						tx.DateFrom
+					}).OrderBy(tx => tx.DateFrom).ToList()
+				});
+
+			var result1 = query.FirstOrDefault();
+			var result2 = query.ToLinqToDB().FirstOrDefault();
+		}
 	}
 
 	#region Test Extensions

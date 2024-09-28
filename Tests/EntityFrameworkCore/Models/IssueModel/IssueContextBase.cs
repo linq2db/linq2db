@@ -18,6 +18,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests.Models.IssueModel
 		public DbSet<IdentityTable> Identities { get; set; } = null!;
 
 		public DbSet<Issue4624ItemTicketDate> Issue4624ItemTicketDates { get; set; } = null!;
+		public DbSet<Issue4624Item> Issue4624Items { get; set; } = null!;
 
 		public DbSet<Master> Masters { get; set; } = null!;
 		public DbSet<Detail> Details { get; set; } = null!;
