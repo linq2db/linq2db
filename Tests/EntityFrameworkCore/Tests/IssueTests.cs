@@ -556,8 +556,21 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 					}).OrderBy(tx => tx.DateFrom).ToList()
 				});
 
-			var result1 = query.FirstOrDefault();
-			var result2 = query.ToLinqToDB().FirstOrDefault();
+			var result = query.ToLinqToDB().FirstOrDefault();
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db.EntityFrameworkCore/issues/340")]
+		public void Issue340Test([EFDataSources] string provider)
+		{
+			using var ctx = CreateContext(provider);
+
+			var query = ctx.Issue340Entities.Where(x => x.IsActive == true)
+				.Select(x => new
+				   {
+					   Id = x.Id
+				   });
+
+			_ = query.ToLinqToDB().ToList();
 		}
 	}
 

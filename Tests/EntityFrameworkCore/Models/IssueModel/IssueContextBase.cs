@@ -32,6 +32,8 @@ namespace LinqToDB.EntityFrameworkCore.Tests.Models.IssueModel
 		public DbSet<Issue4629Post> Issue4629Posts { get; set; } = null!;
 		public DbSet<Issue4629Tag> Issue4629Tags { get; set; } = null!;
 
+		public DbSet<Issue340Entity> Issue340Entities { get; set; } = null!;
+
 		protected IssueContextBase(DbContextOptions options) : base(options)
 		{
 		}
@@ -186,6 +188,8 @@ namespace LinqToDB.EntityFrameworkCore.Tests.Models.IssueModel
 				e.HasData(new Issue4629Tag() { Id = 5, PostId = 2, Weight = 4 });
 				e.HasData(new Issue4629Tag() { Id = 6, PostId = 2, Weight = 3 });
 			});
+
+			modelBuilder.Entity<Issue340Entity>();
 		}
 	}
 }

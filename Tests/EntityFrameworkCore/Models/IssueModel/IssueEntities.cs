@@ -200,4 +200,23 @@ namespace LinqToDB.EntityFrameworkCore.Tests.Models.IssueModel
 		public Issue4629Post Post { get; set; } = null!;
 	}
 	#endregion
+
+	#region Issue 340
+
+	public abstract class Issue340BaseEntity
+	{
+		public virtual Guid Id { get; set; }
+
+		public bool IsActive { get; set; } = true;
+	}
+
+	public class Issue340Entity : Issue340BaseEntity
+	{
+		[Key]
+		public new virtual long Id { get; set; }
+
+		public new bool? IsActive { get; set; } = true;
+	}
+
+	#endregion
 }
