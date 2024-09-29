@@ -18,7 +18,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests.SqlServer.Models.IssueModel
 					.ValueGeneratedOnAdd();
 			});
 
-			modelBuilder.Entity<Issue396Table>(e =>
+			modelBuilder.Entity<Issue4640Table>(e =>
 			{
 				e.Property(e => e.Items).HasColumnType("nvarchar(max)");
 			});

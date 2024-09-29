@@ -198,18 +198,18 @@ namespace LinqToDB.EntityFrameworkCore.Tests.Models.IssueModel
 
 			modelBuilder.Entity<Issue340Entity>();
 
-			modelBuilder.Entity<Issue396Table>(e =>
+			modelBuilder.Entity<Issue4640Table>(e =>
 			{
 				e.Property(e => e.Id).ValueGeneratedNever();
 
-				var converter = new ValueConverter<List<Issue396Items>?, string>(
+				var converter = new ValueConverter<List<Issue4640Items>?, string>(
 					v => JsonSerializer.Serialize(v, (JsonSerializerOptions?)null),
-					v => JsonSerializer.Deserialize<List<Issue396Items>>(v, (JsonSerializerOptions?)null));
+					v => JsonSerializer.Deserialize<List<Issue4640Items>>(v, (JsonSerializerOptions?)null));
 
 				e.Property(e => e.Items)
 					.HasConversion(converter)
 					.Metadata
-					.SetValueComparer(new ValueComparer<List<Issue396Items>?>(
+					.SetValueComparer(new ValueComparer<List<Issue4640Items>?>(
 						(c1, c2) => c1!.SequenceEqual(c2!),
 						c => c!.Aggregate(0, (a, v) => a ^ v.GetHashCode()),
 						c => c!.ToList()));

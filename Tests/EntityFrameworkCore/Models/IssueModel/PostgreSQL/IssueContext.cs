@@ -24,7 +24,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests.PostgreSQL.Models.IssueModel
 				e.Property(e => e.SearchVector);
 			});
 
-			modelBuilder.Entity<Issue396Table>(e =>
+			modelBuilder.Entity<Issue4640Table>(e =>
 			{
 				e.Property(e => e.Items).HasColumnType("text");
 			});

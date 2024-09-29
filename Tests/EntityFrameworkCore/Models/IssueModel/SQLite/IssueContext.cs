@@ -10,7 +10,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests.SQLite.Models.IssueModel
 		{
 			base.OnModelCreating(modelBuilder);
 
-			modelBuilder.Entity<Issue396Table>(e =>
+			modelBuilder.Entity<Issue4640Table>(e =>
 			{
 				e.Property(e => e.Items).HasColumnType("text");
 			});
