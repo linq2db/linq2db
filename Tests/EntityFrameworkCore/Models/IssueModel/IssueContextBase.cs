@@ -1,4 +1,9 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using System.Collections.Generic;
+using System.Linq;
+using System.Text.Json;
+
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 using Tests;
@@ -33,6 +38,8 @@ namespace LinqToDB.EntityFrameworkCore.Tests.Models.IssueModel
 		public DbSet<Issue4629Tag> Issue4629Tags { get; set; } = null!;
 
 		public DbSet<Issue340Entity> Issue340Entities { get; set; } = null!;
+
+		public DbSet<Issue4640Table> Issue4640 { get; set; } = null!;
 
 		protected IssueContextBase(DbContextOptions options) : base(options)
 		{
@@ -190,6 +197,23 @@ namespace LinqToDB.EntityFrameworkCore.Tests.Models.IssueModel
 			});
 
 			modelBuilder.Entity<Issue340Entity>();
+
+			modelBuilder.Entity<Issue396Table>(e =>
+			{
+				e.Property(e => e.Id).ValueGeneratedNever();
+
+				var converter = new ValueConverter<List<Issue396Items>?, string>(
+					v => JsonSerializer.Serialize(v, (JsonSerializerOptions?)null),
+					v => JsonSerializer.Deserialize<List<Issue396Items>>(v, (JsonSerializerOptions?)null));
+
+				e.Property(e => e.Items)
+					.HasConversion(converter)
+					.Metadata
+					.SetValueComparer(new ValueComparer<List<Issue396Items>?>(
+						(c1, c2) => c1!.SequenceEqual(c2!),
+						c => c!.Aggregate(0, (a, v) => a ^ v.GetHashCode()),
+						c => c!.ToList()));
+			});
 		}
 	}
 }

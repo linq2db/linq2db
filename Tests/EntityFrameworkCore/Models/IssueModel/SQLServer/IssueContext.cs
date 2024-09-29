@@ -17,6 +17,11 @@ namespace LinqToDB.EntityFrameworkCore.Tests.SqlServer.Models.IssueModel
 					.HasComputedColumnSql($"ISNULL({nameof(Issue129Table.Id)}, -1) PERSISTED")
 					.ValueGeneratedOnAdd();
 			});
+
+			modelBuilder.Entity<Issue396Table>(e =>
+			{
+				e.Property(e => e.Items).HasColumnType("nvarchar(max)");
+			});
 		}
 	}
 }

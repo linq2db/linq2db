@@ -572,6 +572,87 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 
 			_ = query.ToLinqToDB().ToList();
 		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4640")]
+		public void Issue4640Test([EFDataSources(TestProvName.AllMySql, TestProvName.AllSQLite, TestProvName.AllPostgreSQL14Minus)] string provider)
+		{
+			using var ctx = CreateContext(provider);
+
+			var items = new Issue4640Table[]
+			{
+				new Issue4640Table()
+				{
+					Id = 1,
+					Items =
+					[
+						new Issue4640Items() { Name = "record 1", Offset = -1 },
+						new Issue4640Items() { Name = "record 2", Offset = 20 },
+					]
+				}
+			};
+
+			ctx.Issue4640.ToLinqToDB()
+				.Merge()
+				.Using(items)
+				.On((t, s) => s.Id == t.Id)
+				.InsertWhenNotMatched(s => new Issue4640Table()
+				{
+					Id = s.Id,
+					Items = s.Items
+				})
+				.UpdateWhenMatched((t, s) => new Issue4640Table()
+				{
+					Items = s.Items,
+				}).Merge();
+
+			var record = ctx.Issue4640.ToLinqToDB().Single();
+
+			Assert.Multiple(() =>
+			{
+				Assert.That(record.Id, Is.EqualTo(1));
+				Assert.That(record.Items, Is.Not.Null);
+			});
+			Assert.That(record.Items, Has.Count.EqualTo(2));
+			Assert.Multiple(() =>
+			{
+				Assert.That(record.Items[0].Name, Is.EqualTo("record 1"));
+				Assert.That(record.Items[0].Offset, Is.EqualTo(-1));
+				Assert.That(record.Items[1].Name, Is.EqualTo("record 2"));
+				Assert.That(record.Items[1].Offset, Is.EqualTo(20));
+			});
+
+			items[0].Items![1] = new Issue4640Items() { Name = "record 3", Offset = 4 };
+
+			ctx.Issue4640.ToLinqToDB()
+				.Merge()
+				.Using(items)
+				.On((t, s) => s.Id == t.Id)
+				.InsertWhenNotMatched(s => new Issue4640Table()
+				{
+					Id = s.Id,
+					Items = s.Items
+				})
+				.UpdateWhenMatched((t, s) => new Issue4640Table()
+				{
+					Items = s.Items,
+				}).Merge();
+
+			record = ctx.Issue4640.ToLinqToDB().Single();
+
+			Assert.Multiple(() =>
+			{
+				Assert.That(record.Id, Is.EqualTo(1));
+				Assert.That(record.Items, Is.Not.Null);
+			});
+			Assert.That(record.Items, Has.Count.EqualTo(2));
+			Assert.Multiple(() =>
+			{
+				Assert.That(record.Items[0].Name, Is.EqualTo("record 1"));
+				Assert.That(record.Items[0].Offset, Is.EqualTo(-1));
+				Assert.That(record.Items[1].Name, Is.EqualTo("record 3"));
+				Assert.That(record.Items[1].Offset, Is.EqualTo(4));
+			});
+		}
 	}
 
 	#region Test Extensions

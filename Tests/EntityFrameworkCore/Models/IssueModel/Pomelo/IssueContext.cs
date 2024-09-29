@@ -6,5 +6,14 @@ namespace LinqToDB.EntityFrameworkCore.Tests.Pomelo.Models.IssueModel
 {
 	public class IssueContext(DbContextOptions options) : IssueContextBase(options)
 	{
+		protected override void OnModelCreating(ModelBuilder modelBuilder)
+		{
+			base.OnModelCreating(modelBuilder);
+
+			modelBuilder.Entity<Issue396Table>(e =>
+			{
+				e.Property(e => e.Items).HasColumnType("text");
+			});
+		}
 	}
 }

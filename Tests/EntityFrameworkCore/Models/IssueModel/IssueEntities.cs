@@ -219,4 +219,19 @@ namespace LinqToDB.EntityFrameworkCore.Tests.Models.IssueModel
 	}
 
 	#endregion
+
+	#region Issue 4640
+	public class Issue4640Table
+	{
+		public int Id { get; set; }
+		public List<Issue4640Items>? Items { get; set; }
+	}
+
+	public class Issue4640Items
+	{
+		public string? Name { get; set; }
+
+		public int? Offset { get; set; }
+	}
+	#endregion
 }
