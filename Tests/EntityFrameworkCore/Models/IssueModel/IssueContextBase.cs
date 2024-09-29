@@ -41,6 +41,11 @@ namespace LinqToDB.EntityFrameworkCore.Tests.Models.IssueModel
 
 		public DbSet<Issue4640Table> Issue4640 { get; set; } = null!;
 
+		public DbSet<Issue212Table> Issue212 { get; set; } = null!;
+
+		public DbSet<Issue4642Table1> Issue4642Table1 { get; set; } = null!;
+		public DbSet<Issue4642Table2> Issue4642Table2 { get; set; } = null!;
+
 		protected IssueContextBase(DbContextOptions options) : base(options)
 		{
 		}
@@ -213,6 +218,28 @@ namespace LinqToDB.EntityFrameworkCore.Tests.Models.IssueModel
 						(c1, c2) => c1!.SequenceEqual(c2!),
 						c => c!.Aggregate(0, (a, v) => a ^ v.GetHashCode()),
 						c => c!.ToList()));
+			});
+
+			modelBuilder.Entity<Issue212Table>(e =>
+			{
+				e.HasKey(x => new { x.Id, x.Value });
+				e.Property(x => x.Value)
+					.IsRequired(true)
+					.HasMaxLength(20)
+					.IsUnicode(false);
+			});
+
+			modelBuilder.Entity<Issue4642Table2>(builder =>
+			{
+				builder.HasKey(x => new { x.Id, x.SystemId });
+				builder.Property(x => x.SystemId)
+					.IsRequired(true)
+					.HasMaxLength(20)
+					.IsUnicode(false);
+			});
+			modelBuilder.Entity<Issue4642Table1>(builder =>
+			{
+				builder.HasKey(x => x.Id);
 			});
 		}
 	}

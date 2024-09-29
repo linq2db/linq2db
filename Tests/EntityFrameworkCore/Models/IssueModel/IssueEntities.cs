@@ -234,4 +234,27 @@ namespace LinqToDB.EntityFrameworkCore.Tests.Models.IssueModel
 		public int? Offset { get; set; }
 	}
 	#endregion
+
+	public class Issue212Table
+	{
+		public int Id { get; set; }
+		public string? Value { get; set; }
+		public DateTime Timestamp { get; set; }
+	}
+
+	#region Issue 4642
+	public class Issue4642Table1
+	{
+		public int Id { get; set; }
+	}
+
+	public class Issue4642Table2
+	{
+		public int Id { get; set; }
+
+		public string SystemId { get; set; } = null!;
+
+		public DateTime Timestamp { get; set; }
+	}
+	#endregion
 }

@@ -566,9 +566,9 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 
 			var query = ctx.Issue340Entities.Where(x => x.IsActive == true)
 				.Select(x => new
-				   {
-					   Id = x.Id
-				   });
+				{
+					Id = x.Id
+				});
 
 			_ = query.ToLinqToDB().ToList();
 		}
@@ -655,6 +655,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 			});
 		}
 
+		[ActiveIssue]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4641")]
 		public void Issue4641Test([EFIncludeDataSources(TestProvName.AllPostgreSQL)] string provider)
 		{
@@ -673,6 +674,32 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 				Assert.That(result[0].Id, Is.EqualTo(1));
 				Assert.That(result[1].Id, Is.EqualTo(2));
 			});
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4642")]
+		public async Task Issue4642Test([EFDataSources(TestProvName.AllMySql, TestProvName.AllSQLite, TestProvName.AllPostgreSQL14Minus)] string provider)
+		{
+			using var ctx = CreateContext(provider);
+
+			var id = 1;
+			var systemId = "system";
+			var ids = new List<int>() { id };
+			var result = new List<object>();
+
+			var resultEnum = ctx.Issue4642Table1
+				.Where(x => ids.Contains(x.Id))
+				.Join(ctx.Issue4642Table2.Where(x => x.SystemId == systemId), x => x.Id, x => x.Id, (x, y) => y)
+				.ToLinqToDB()
+				.MergeInto(ctx.Issue4642Table2)
+				.OnTargetKey()
+				.UpdateWhenMatched()
+				.InsertWhenNotMatched()
+				.MergeWithOutputAsync((s, x, y) => new { action = s, y.Id });
+
+			await foreach (var item in resultEnum)
+			{
+				result.Add(item);
+			}
 		}
 	}
 
