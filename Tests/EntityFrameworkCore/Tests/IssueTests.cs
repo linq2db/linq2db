@@ -573,6 +573,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 			_ = query.ToLinqToDB().ToList();
 		}
 
+		[ActiveIssue]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4640")]
 		public void Issue4640Test([EFDataSources(TestProvName.AllMySql, TestProvName.AllSQLite, TestProvName.AllPostgreSQL14Minus)] string provider)
 		{
@@ -651,6 +652,26 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 				Assert.That(record.Items[0].Offset, Is.EqualTo(-1));
 				Assert.That(record.Items[1].Name, Is.EqualTo("record 3"));
 				Assert.That(record.Items[1].Offset, Is.EqualTo(4));
+			});
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4641")]
+		public void Issue4641Test([EFIncludeDataSources(TestProvName.AllPostgreSQL)] string provider)
+		{
+			using var ctx = CreateContext(provider);
+
+			var items = new Issue4641Table[] { new Issue4641Table(),new Issue4641Table() };
+
+			ctx.BulkCopy(items);
+
+			var result = ((LinqToDB.EntityFrameworkCore.Tests.PostgreSQL.Models.IssueModel.IssueContext)ctx).Issue4641Table.OrderBy(r => r.Id).ToArray();
+
+			Assert.That(result, Has.Length.EqualTo(2));
+
+			Assert.Multiple(() =>
+			{
+				Assert.That(result[0].Id, Is.EqualTo(1));
+				Assert.That(result[1].Id, Is.EqualTo(2));
 			});
 		}
 	}

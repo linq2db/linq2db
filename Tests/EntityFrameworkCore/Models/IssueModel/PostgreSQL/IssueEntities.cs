@@ -19,4 +19,10 @@ namespace LinqToDB.EntityFrameworkCore.Tests.PostgreSQL.Models.IssueModel
 		[NotMapped]
 		public int[] LinkedFrom { get; set; } = null!;
 	}
+
+	public class Issue4641Table
+	{
+		public int Id { get; set; }
+		public string? Value { get; set; }
+	}
 }

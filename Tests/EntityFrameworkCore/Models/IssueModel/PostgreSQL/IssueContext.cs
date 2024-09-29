@@ -2,11 +2,14 @@
 
 using Microsoft.EntityFrameworkCore;
 
+using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
+
 namespace LinqToDB.EntityFrameworkCore.Tests.PostgreSQL.Models.IssueModel
 {
 	public class IssueContext(DbContextOptions options) : IssueContextBase(options)
 	{
 		public DbSet<PostgreTable> PostgreTestTable { get; set; } = null!;
+		public DbSet<Issue4641Table> Issue4641Table { get; set; } = null!;
 
 		protected override void OnModelCreating(ModelBuilder modelBuilder)
 		{
@@ -27,6 +30,11 @@ namespace LinqToDB.EntityFrameworkCore.Tests.PostgreSQL.Models.IssueModel
 			modelBuilder.Entity<Issue4640Table>(e =>
 			{
 				e.Property(e => e.Items).HasColumnType("text");
+			});
+
+			modelBuilder.Entity<Issue4641Table>(e =>
+			{
+				e.Property(e => e.Id).UseSerialColumn();
 			});
 		}
 	}
