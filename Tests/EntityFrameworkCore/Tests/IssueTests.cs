@@ -684,7 +684,6 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 			var id = 1;
 			var systemId = "system";
 			var ids = new List<int>() { id };
-			var result = new List<object>();
 
 			var resultEnum = ctx.Issue4642Table1
 				.Where(x => ids.Contains(x.Id))
@@ -698,8 +697,30 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 
 			await foreach (var item in resultEnum)
 			{
-				result.Add(item);
 			}
+		}
+
+		[ActiveIssue]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4643")]
+		public void Issue4643Test([EFIncludeDataSources(TestProvName.AllPostgreSQL14Minus)] string provider)
+		{
+			using var ctx = CreateContext(provider);
+			using var db = ctx.CreateLinqToDBConnection();
+
+			var item = new Issue4643Table()
+			{
+				Value = [DayOfWeek.Friday, DayOfWeek.Saturday]
+			};
+			db.Insert(item);
+
+			var result = ctx.Set<Issue4643Table>().ToLinqToDB().Single();
+
+			Assert.That(result.Value, Has.Length.EqualTo(2));
+			Assert.Multiple(() =>
+			{
+				Assert.That(result.Value[0], Is.EqualTo(DayOfWeek.Friday));
+				Assert.That(result.Value[1], Is.EqualTo(DayOfWeek.Saturday));
+			});
 		}
 	}
 

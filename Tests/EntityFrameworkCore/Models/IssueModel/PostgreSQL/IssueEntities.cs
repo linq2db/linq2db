@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations.Schema;
 
 using NpgsqlTypes;
@@ -24,5 +25,11 @@ namespace LinqToDB.EntityFrameworkCore.Tests.PostgreSQL.Models.IssueModel
 	{
 		public int Id { get; set; }
 		public string? Value { get; set; }
+	}
+
+	public class Issue4643Table
+	{
+		public int Id { get; set; }
+		public DayOfWeek[]? Value { get; set; }
 	}
 }

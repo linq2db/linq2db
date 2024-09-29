@@ -10,6 +10,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests.PostgreSQL.Models.IssueModel
 	{
 		public DbSet<PostgreTable> PostgreTestTable { get; set; } = null!;
 		public DbSet<Issue4641Table> Issue4641Table { get; set; } = null!;
+		public DbSet<Issue4643Table> Issue225Table { get; set; } = null!;
 
 		protected override void OnModelCreating(ModelBuilder modelBuilder)
 		{
@@ -36,6 +37,8 @@ namespace LinqToDB.EntityFrameworkCore.Tests.PostgreSQL.Models.IssueModel
 			{
 				e.Property(e => e.Id).UseSerialColumn();
 			});
+
+			modelBuilder.Entity<Issue4643Table>();
 		}
 	}
 }
