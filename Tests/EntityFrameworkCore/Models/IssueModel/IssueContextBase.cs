@@ -46,6 +46,9 @@ namespace LinqToDB.EntityFrameworkCore.Tests.Models.IssueModel
 		public DbSet<Issue4642Table1> Issue4642Table1 { get; set; } = null!;
 		public DbSet<Issue4642Table2> Issue4642Table2 { get; set; } = null!;
 
+		public DbSet<Issue4644Main> Issue4644Mains { get; set; } = null!;
+		public DbSet<Issue4644PricedItem> Issue4644Priced { get; set; } = null!;
+
 		protected IssueContextBase(DbContextOptions options) : base(options)
 		{
 		}
@@ -240,6 +243,18 @@ namespace LinqToDB.EntityFrameworkCore.Tests.Models.IssueModel
 			modelBuilder.Entity<Issue4642Table1>(builder =>
 			{
 				builder.HasKey(x => x.Id);
+			});
+
+			modelBuilder.Ignore<Issue4644EntityBase>();
+			modelBuilder.Entity<Issue4644BaseItem>(bb => {
+				bb.ToTable("Issue245MainDetails");
+			});
+			modelBuilder.Entity<Issue4644Main>(bb => {
+				bb.HasOne(m => m.Details)
+					.WithOne(d => d!.Main!);
+			});
+			modelBuilder.Entity<Issue4644PricedItem>(bb => {
+				bb.ToTable("Issue245PricedDetails");
 			});
 		}
 	}

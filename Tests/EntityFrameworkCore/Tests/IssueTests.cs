@@ -722,6 +722,15 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 				Assert.That(result.Value[1], Is.EqualTo(DayOfWeek.Saturday));
 			});
 		}
+
+		[ActiveIssue]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4644")]
+		public void Issue4644Test([EFDataSources] string provider)
+		{
+			using var ctx = CreateContext(provider);
+
+			ctx.Issue4644Priced.ToLinqToDB().ToList();
+		}
 	}
 
 	#region Test Extensions

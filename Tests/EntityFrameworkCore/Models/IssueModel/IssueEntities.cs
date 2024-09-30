@@ -257,4 +257,33 @@ namespace LinqToDB.EntityFrameworkCore.Tests.Models.IssueModel
 		public DateTime Timestamp { get; set; }
 	}
 	#endregion
+
+	#region Issue 4644
+	public abstract class Issue4644EntityBase
+	{
+		[Key, DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+		public int Id { get; set; }
+
+		public DateTime CreateDate { get; set; } = DateTimeOffset.Now.ToOffset(TimeSpan.FromHours(3)).DateTime;
+	}
+	public class Issue4644Main : Issue4644EntityBase
+	{
+		[StringLength(100)]
+		public string? Name { get; set; }
+		[InverseProperty(nameof(Issue4644BaseItem.Main))]
+		public Issue4644BaseItem? Details { get; set; }
+	}
+
+	public class Issue4644BaseItem : Issue4644EntityBase
+	{
+		public int MainId { get; set; }
+		[ForeignKey(nameof(MainId))]
+		public Issue4644Main? Main { get; set; }
+	}
+
+	public class Issue4644PricedItem : Issue4644BaseItem
+	{
+		public decimal Price { get; set; }
+	}
+	#endregion
 }
