@@ -136,9 +136,11 @@ namespace LinqToDB.Linq.Builder
 							{
 								param.SqlParameter.IsQueryParameter = false;
 							}
+
 							return new SqlPlaceholderExpression(null, param.SqlParameter, a);
 						}
 					}
+
 					return context.builder.ConvertToSqlExpr(context.context, a);
 				});
 
@@ -495,6 +497,7 @@ namespace LinqToDB.Linq.Builder
 				{
 					throw new LinqException($"Member '{expression}' is not a table column.");
 				}
+
 				return null;
 			}
 

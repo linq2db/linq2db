@@ -18,7 +18,6 @@ namespace LinqToDB.EntityFrameworkCore.Tests.Models.Shared
 				.UseOneIdSequence<long>("test", sn => $"nextval('{sn}')");
 		}
 
-
 		public DbSet<Entity> Entities { get; set; } = null!;
 		public DbSet<Detail> Details { get; set; } = null!;
 		public DbSet<SubDetail> SubDetails { get; set; } = null!;

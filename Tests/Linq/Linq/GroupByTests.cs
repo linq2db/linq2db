@@ -951,7 +951,6 @@ namespace Tests.Linq
 			AssertQuery(query);
 		}
 
-
 		[Test]
 		public void MaxInGroup([DataSources] string context)
 		{
@@ -979,7 +978,6 @@ namespace Tests.Linq
 			AssertQuery(query);
 		}
 
-
 		[Test]
 		public void AverageInGroup([DataSources] string context)
 		{
@@ -1006,7 +1004,6 @@ namespace Tests.Linq
 
 			AssertQuery(query);
 		}
-
 
 		[Test]
 		public void SelectMax([DataSources] string context)
@@ -2554,6 +2551,7 @@ namespace Tests.Linq
 			{
 				db.Person.GroupBy(p => p.ID).DisableGuard().ToDictionary(g => g.Key, g => g.Select(p => p.LastName).ToList());
 			}
+
 			Query.ClearCaches();
 		}
 
@@ -3000,7 +2998,6 @@ namespace Tests.Linq
 			AssertQuery(query);
 		}
 
-
 		[Test]
 		public void GroupByInOuterApply([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
@@ -3018,7 +3015,6 @@ namespace Tests.Linq
 			var selectQuery = query.GetSelectQuery();
 
 			TestContext.WriteLine(query.ToString());
-
 
 			// We check that grouping is left in the subquery
 

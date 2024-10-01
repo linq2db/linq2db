@@ -16,6 +16,7 @@ namespace LinqToDB.Common
 				string s = i.ToString("X2", NumberFormatInfo.InvariantInfo);
 				result[i] = ((uint)s[0]) + ((uint)s[1] << 16);
 			}
+
 			return result;
 		}
 

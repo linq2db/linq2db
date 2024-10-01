@@ -48,6 +48,7 @@ namespace LinqToDB.CommandLine.Options
 					errorDetails = $"option element should be a key=value string but got '{entry}'";
 					return null;
 				}
+
 				if (result.ContainsKey(parts[0]))
 				{
 					errorDetails = $"duplicate key '{parts[0]}'";

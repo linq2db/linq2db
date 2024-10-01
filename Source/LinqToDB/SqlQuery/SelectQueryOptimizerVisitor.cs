@@ -508,6 +508,7 @@ namespace LinqToDB.SqlQuery
 							{
 
 							}
+
 							if (index < op.SelectQuery.Select.Columns.Count)
 								op.SelectQuery.Select.Columns.RemoveAt(index);
 						}
@@ -1032,6 +1033,7 @@ namespace LinqToDB.SqlQuery
 							{
 								throw new InvalidOperationException("OrderBy not specified for limited recordset.");
 							}
+
 							orderByItems.Add(new SqlOrderByItem(sql.Select.Columns[0].Expression, false, false));
 						}
 					}
@@ -1356,6 +1358,7 @@ namespace LinqToDB.SqlQuery
 				{
 					tableSource.UniqueKeys.AddRange(subQueryTableSource.UniqueKeys);
 				}
+
 				if (subQuery.HasUniqueKeys)
 				{
 					tableSource.UniqueKeys.AddRange(subQuery.UniqueKeys);
@@ -2193,8 +2196,10 @@ namespace LinqToDB.SqlQuery
 								{
 									table.Joins.Insert(joinIndex + ij + 1, join.Table.Joins[ij]);
 								}
+
 								join.Table.Joins.Clear();
 							}
+
 							isModified = true;
 						}
 						else 

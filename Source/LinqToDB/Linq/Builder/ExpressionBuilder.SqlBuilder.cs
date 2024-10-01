@@ -1043,6 +1043,7 @@ namespace LinqToDB.Linq.Builder
 						{
 							sqlExpr = placeholderExpression.WithAlias(alias);
 						}
+
 						return sqlExpr;
 					}
 
@@ -1466,6 +1467,7 @@ namespace LinqToDB.Linq.Builder
 			{
 				return false;
 			}
+
 			return _optimizationContext.CanBeConstant(expr);
 		}
 
@@ -2320,6 +2322,7 @@ namespace LinqToDB.Linq.Builder
 							isNot = !isNot;
 							withNull = true;
 						}
+
 						var descriptor = QueryHelper.GetColumnDescriptor(expression);
 						var trueValue  = ConvertToSql(context, ExpressionInstances.True,  unwrap: false, columnDescriptor: descriptor);
 						var falseValue = ConvertToSql(context, ExpressionInstances.False, unwrap: false, columnDescriptor: descriptor);
@@ -2512,9 +2515,11 @@ namespace LinqToDB.Linq.Builder
 						value = sqlValue.Value as bool?;
 						return true;
 					}
+
 					return false;
 				}
 			}
+
 			return false;
 		}
 
@@ -2848,6 +2853,7 @@ namespace LinqToDB.Linq.Builder
 							context.Scale     = type.Scale;
 							return true;
 						}
+
 						return false;
 					}
 				}
@@ -3508,6 +3514,7 @@ namespace LinqToDB.Linq.Builder
 				if (sql is SqlPlaceholderExpression or SqlGenericConstructorExpression)
 					return sql;
 			}
+
 			return expr;
 		}
 
@@ -3574,6 +3581,7 @@ namespace LinqToDB.Linq.Builder
 							}
 						}
 					}
+
 					break;
 			}
 
@@ -4528,6 +4536,7 @@ namespace LinqToDB.Linq.Builder
 					{
 						corrected = Expression.Convert(corrected, path.Type);
 					}
+
 					return MakeExpression(currentContext, corrected, flags);
 				}
 
@@ -4538,6 +4547,7 @@ namespace LinqToDB.Linq.Builder
 					{
 						corrected = Expression.Convert(corrected, memberExpression.Expression.Type);
 					}
+
 					return memberExpression.Update(corrected);
 				}
 
@@ -4732,6 +4742,7 @@ namespace LinqToDB.Linq.Builder
 				{
 					expression = Expression.MakeUnary(path.NodeType, expression, unary.Type, unary.Method);
 				}
+
 				doNotProcess = true;
 			}
 			else if (path.NodeType == ExpressionType.TypeAs && currentContext != null)

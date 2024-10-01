@@ -57,7 +57,6 @@ namespace LinqToDB.Linq
 							throw query.ErrorExpression.CreateException();
 					}
 
-
 					query.ClearDynamicQueryableInfo();
 					return query;
 				})!;

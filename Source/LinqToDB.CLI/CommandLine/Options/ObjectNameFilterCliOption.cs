@@ -81,11 +81,13 @@ namespace LinqToDB.CommandLine.Options
 										errorDetails = $"duplicate 'name' property";
 										return null;
 									}
+
 									if (regex != null)
 									{
 										errorDetails = $"both 'name' and 'regex' properties specified";
 										return null;
 									}
+
 									if (property.Value.ValueKind != JsonValueKind.String)
 									{
 										errorDetails = $"'name' should be string but was '{property.Value.ValueKind}'";
@@ -100,11 +102,13 @@ namespace LinqToDB.CommandLine.Options
 										errorDetails = $"duplicate 'regex' property";
 										return null;
 									}
+
 									if (regex != null)
 									{
 										errorDetails = $"both 'name' and 'regex' properties specified";
 										return null;
 									}
+
 									if (property.Value.ValueKind != JsonValueKind.String)
 									{
 										errorDetails = $"'regex' should be string but was '{property.Value.ValueKind}'";

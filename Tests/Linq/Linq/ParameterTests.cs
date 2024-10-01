@@ -254,7 +254,6 @@ namespace Tests.Linq
 			}
 		}
 
-
 		static class AdditionalSql
 		{
 			[Sql.Expression("(({2} * ({1} - {0}) / {2}) * {0})", ServerSideOnly = true)]
@@ -1636,7 +1635,6 @@ namespace Tests.Linq
 						  select c).ToList();
 		}
 
-
 		int GetId(int id, int increment)
 		{
 			return id + increment;
@@ -1662,7 +1660,6 @@ namespace Tests.Linq
 				AssertQuery(query2);
 			}
 		}
-
 
 #if NET6_0_OR_GREATER
 		[Table]

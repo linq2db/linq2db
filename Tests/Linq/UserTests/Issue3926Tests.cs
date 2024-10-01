@@ -69,7 +69,6 @@ namespace Tests.UserTests
 			public List<DIALOG_CATEGORY> Categories { get; set; } = null!;
 		}
 
-
 		private static EntityMappingBuilder<T> MapDataObject<T>(FluentMappingBuilder builder, string tableName)
 			where T : GuidDataObject
 		{

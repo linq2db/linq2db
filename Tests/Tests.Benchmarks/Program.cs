@@ -287,7 +287,6 @@ namespace LinqToDB.Benchmarks
 			SelectBenchmark_Measure(b);
 		}
 
-
 		private static void SelectBenchmark_WarmUp(SelectBenchmark b)
 		{
 			for (var i = 0; i < 100; i++)

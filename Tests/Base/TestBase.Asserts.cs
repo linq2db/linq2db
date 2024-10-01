@@ -150,7 +150,6 @@ namespace Tests
 			Assert.That(b, Is.True);
 		}
 
-
 		void TestOnePerson(int id, string firstName, IQueryable<Person> persons)
 		{
 			var list = persons.ToList();

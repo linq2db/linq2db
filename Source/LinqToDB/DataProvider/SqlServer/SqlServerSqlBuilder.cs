@@ -349,6 +349,7 @@ namespace LinqToDB.DataProvider.SqlServer
 					{
 						StringBuilder.Append(CultureInfo.InvariantCulture, $"({type.Precision})");
 					}
+
 					return;
 			}
 

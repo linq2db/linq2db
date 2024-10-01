@@ -1036,7 +1036,6 @@ namespace Tests.Linq
 						.Select(c => c!.ChildID));
 		}
 
-
 		[Test]
 		public void AssociationExpressionMethod([DataSources] string context)
 		{
@@ -1455,7 +1454,6 @@ namespace Tests.Linq
 				new Issue2981Entity {OwnerId = 2}
 			});
 			using var t2 = db.CreateLocalTable(new[] {new Issue2981OwnerEntity {Id = 1}});
-
 
 			var res = t1.Select(r => new {r.OwnerId, Id = (int?)r.Owner!.Id})
 				.OrderBy(_ => _.OwnerId)

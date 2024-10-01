@@ -1294,6 +1294,7 @@ namespace Tests.Data
 				catch
 				{
 				}
+
 				Assert.That(trace, Does.Contain("DECLARE @p Clob("));
 
 				// provider-specific type classes

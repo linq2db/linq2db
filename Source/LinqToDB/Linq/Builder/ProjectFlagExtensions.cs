@@ -157,6 +157,5 @@ namespace LinqToDB.Linq.Builder
 			return (flags & ProjectFlags.ForceOuterAssociation) != 0;
 		}
 
-
 	}
 }

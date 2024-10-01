@@ -177,6 +177,7 @@ namespace LinqToDB.DataProvider.Oracle
 						case >= 7: format = TIMESTAMP7_FORMAT; break;
 						default  : format = TIMESTAMP6_FORMAT; break;
 					}
+
 					break;
 				case DataType.DateTimeOffset:
 					// just use UTC literal
@@ -193,6 +194,7 @@ namespace LinqToDB.DataProvider.Oracle
 						case >= 7: format = TIMESTAMPTZ7_FORMAT; break;
 						default  : format = TIMESTAMPTZ6_FORMAT; break;
 					}
+
 					break;
 				case DataType.DateTime:
 				default:

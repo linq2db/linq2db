@@ -252,6 +252,7 @@ namespace LinqToDB.CommandLine.Commands
 					Console.Out.WriteLine("{0}   default: {1}", indent, booleanOption.Default ? "true" : "false");
 					Console.Out.WriteLine("{0}   default (T4 mode): {1}", indent, booleanOption.T4Default ? "true" : "false");
 				}
+
 				if (option is StringCliOption stringOption)
 				{
 					if (stringOption.Default != null)
@@ -306,6 +307,7 @@ namespace LinqToDB.CommandLine.Commands
 				foreach (var example in option.Examples)
 					Console.Out.WriteLine("{0}{0}   {1}", indent, example);
 			}
+
 			if (option.JsonExamples != null)
 			{
 				Console.Out.WriteLine("{0}   JSON examples:", indent);
@@ -361,6 +363,7 @@ namespace LinqToDB.CommandLine.Commands
 				default                              :
 					throw new InvalidOperationException($"Unknown casing option: {options.Casing}");
 			}
+
 			printJsonProperty(indent, "case", value);
 
 			switch (options.Pluralization)
@@ -372,6 +375,7 @@ namespace LinqToDB.CommandLine.Commands
 				default                                 :
 					throw new InvalidOperationException($"Unknown pluralization option: {options.Pluralization}");
 			}
+
 			printJsonProperty(indent, "pluralization", value);
 
 			printJsonProperty(indent, "prefix", options.Prefix == null ? "null" : $"\"{options.Prefix}\"");
@@ -385,6 +389,7 @@ namespace LinqToDB.CommandLine.Commands
 				default:
 					throw new InvalidOperationException($"Unknown transformation option: {options.Transformation}");
 			}
+
 			printJsonProperty(indent, "transformation", value);
 
 			printJsonProperty(indent, "pluralize_if_ends_with_word_only", options.PluralizeOnlyIfLastWordIsText ? "true" : "false");

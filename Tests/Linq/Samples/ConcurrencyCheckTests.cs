@@ -118,7 +118,6 @@ namespace Tests.Samples
 					if (rowVersion == null)
 						return statement;
 
-
 					var newInsertStatement = Clone(statement);
 					var insertClause       = newInsertStatement.RequireInsertClause();
 					var field              = insertClause.Into!.FindFieldByMemberName(rowVersion.ColumnName)!;

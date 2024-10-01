@@ -2103,7 +2103,6 @@ namespace Tests.Linq
 			}
 		}
 
-
 		#endregion
 
 		#region ContainsProperty

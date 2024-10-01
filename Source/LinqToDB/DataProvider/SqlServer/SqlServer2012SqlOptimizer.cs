@@ -50,6 +50,7 @@ namespace LinqToDB.DataProvider.SqlServer
 						return new SqlOrderByClause(new[] { new SqlOrderByItem(new SqlValue(typeof(int), 1), false, false) });
 					}
 				}
+
 				return element;
 			});
 			return statement;

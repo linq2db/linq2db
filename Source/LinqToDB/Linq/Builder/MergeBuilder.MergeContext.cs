@@ -88,6 +88,7 @@ namespace LinqToDB.Linq.Builder
 
 					return sqlExpr;
 				}
+
 				return path;
 			}
 

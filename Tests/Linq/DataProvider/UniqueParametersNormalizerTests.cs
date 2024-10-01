@@ -58,7 +58,6 @@ namespace Tests.DataProvider
 			}
 		}
 
-
 		// Test sending a few unique strings that are 52 characters long
 		[Test]
 		public void NormalizeUniqueLongStrings()
@@ -280,6 +279,7 @@ namespace Tests.DataProvider
 				{
 					lastSql = info.SqlText;
 				}
+
 				defaultTrace(info);
 			};
 

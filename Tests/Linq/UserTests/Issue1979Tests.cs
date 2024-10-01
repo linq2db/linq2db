@@ -19,7 +19,6 @@ namespace Tests.UserTests
 			[Association(QueryExpressionMethod = nameof(TaggingImpl))]
 			public List<TaggingIssue> Tagging { get; set; } = null!;
 
-
 			public static Expression<Func<Issue, IDataContext, IQueryable<TaggingIssue>>> TaggingImpl()
 			{
 				return (y, db) => db.GetTable<TaggingIssue>().Where(_ => y.Id == _.TaggableId);

@@ -412,7 +412,6 @@ namespace Tests.Linq
 			AssertQuery(query);
 		}
 
-
 		[Test]
 		public void UsingDictionary([DataSources] string context, [Values] SetOperation operation)
 		{

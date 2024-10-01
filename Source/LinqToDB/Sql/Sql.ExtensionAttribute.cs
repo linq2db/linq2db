@@ -654,6 +654,7 @@ namespace LinqToDB
 								{
 									next = current.EvaluateExpression<IQueryableContainer>()!.Query.Expression;
 								}
+
 								break;
 							}
 					}
@@ -812,6 +813,7 @@ namespace LinqToDB
 												error = sqlExpr;
 												return null;
 											}
+
 											extension.AddParameter(name!, placeholder.Sql);
 										}
 									}
@@ -822,6 +824,7 @@ namespace LinqToDB
 											error = sqlExpression;
 											return null;
 										}
+
 										extension.AddParameter(name!, placeholder.Sql);
 									}
 							}

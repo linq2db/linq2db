@@ -49,7 +49,6 @@ namespace Tests.UserTests
 			public string Id { get; set; } = null!;
 		}
 
-
 		[Test]
 		public void DynamicColumn([IncludeDataSources(TestProvName.AllFirebird)] string context)
 		{

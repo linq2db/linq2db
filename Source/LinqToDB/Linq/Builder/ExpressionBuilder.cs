@@ -307,6 +307,7 @@ namespace LinqToDB.Linq.Builder
 
 				throw SqlErrorExpression.CreateException(errorExpr, buildResult.AdditionalDetails);
 			}
+
 			return buildResult.BuildContext;
 		}
 

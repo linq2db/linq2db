@@ -48,6 +48,7 @@ namespace Tests.UserTests
 				var data = db.GetTable<Test1585>();
 				ed1 = db.MappingSchema.GetEntityDescriptor(typeof(Test1585));
 			}
+
 			using (var db = GetDataContext(context, ms))
 			{
 				var data = db.GetTable<Test1585>();

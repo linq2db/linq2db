@@ -91,6 +91,7 @@ namespace LinqToDB.CommandLine.Options
 						errorDetails = $"JSON ({rawValue}): unknown property '{categoryProperty.Name}.{optionProperty.Name}'";
 						return null;
 					}
+
 					if (!categoryOptions.Contains(option))
 					{
 						errorDetails = $"JSON ({rawValue}): property '{categoryProperty.Name}' doesn't belong to '{optionProperty.Name}'";

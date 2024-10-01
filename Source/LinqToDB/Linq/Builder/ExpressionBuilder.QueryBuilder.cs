@@ -193,6 +193,7 @@ namespace LinqToDB.Linq.Builder
 					_info = new(Utils.ObjectReferenceEqualityComparer<SelectQuery>.Default);
 					BuildParentsInfo(rootQuery, _info);
 				}
+
 				return _info.TryGetValue(currentQuery, out parentQuery);
 			}
 
@@ -558,6 +559,7 @@ namespace LinqToDB.Linq.Builder
 			{
 				expression = GetRootContext(currentContext, memberExpression.Expression, isAggregation);
 			}
+
 			if (expression is MethodCallExpression methodCallExpression && methodCallExpression.IsQueryable())
 			{
 				if (isAggregation)
@@ -894,6 +896,7 @@ namespace LinqToDB.Linq.Builder
 							return PreferServerSide(newExpr, enforceServerSide);
 						}
 					}
+
 					break;
 				}
 			}
@@ -970,6 +973,7 @@ namespace LinqToDB.Linq.Builder
 					{
 						return new TransformInfo(new SqlReaderIsNullExpression(placeholderRight, e.NodeType == ExpressionType.NotEqual), false, true);
 					}
+
 					if (binary.Right.IsNullValue() && binary.Left is SqlPlaceholderExpression placeholderLeft)
 					{
 						return new TransformInfo(new SqlReaderIsNullExpression(placeholderLeft, e.NodeType == ExpressionType.NotEqual), false, true);

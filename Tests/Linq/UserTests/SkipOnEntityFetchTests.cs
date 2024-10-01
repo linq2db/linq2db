@@ -41,7 +41,6 @@ namespace Tests.UserTests
 			[Column]
 			public long FileSize { get; set; }
 
-
 			[Column]
 			public string ContentType { get; set; } = null!;
 		}
@@ -72,7 +71,6 @@ namespace Tests.UserTests
 				Assert.That(allExplicitGotId, Is.True);
 			}
 		}
-
 
 		[Test]
 		public void FirstOrDefaultTest([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)

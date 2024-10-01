@@ -53,6 +53,7 @@ namespace LinqToDB.DataProvider.Oracle
 						if (b.SystemType == typeof(string) && b.CanBeEvaluated(true))
 							return true;
 					}
+
 					break;
 				}
 			}

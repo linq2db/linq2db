@@ -135,6 +135,7 @@ namespace LinqToDB.SqlProvider
 				if (result.tableSource != null)
 					return result;
 			}
+
 			currentPath.Pop();
 
 			return default;
@@ -736,6 +737,7 @@ namespace LinqToDB.SqlProvider
 									context.StaticValue.newExpressions.Add(normalized);
 									return newIndex;
 								}
+
 								return idx;
 							});
 
@@ -747,6 +749,7 @@ namespace LinqToDB.SqlProvider
 						return newExpression;
 					}
 				}
+
 				return e;
 			});
 
@@ -1314,6 +1317,7 @@ namespace LinqToDB.SqlProvider
 
 						return column.Expression;
 					}
+
 					return e;
 				});
 
@@ -1663,6 +1667,7 @@ namespace LinqToDB.SqlProvider
 							break;
 						}
 					}
+
 					break;
 				}
 				case QueryElementType.SqlInlinedExpression:

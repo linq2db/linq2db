@@ -87,14 +87,17 @@ namespace LinqToDB.Benchmarks.Queries
 					{
 						soh.AccountNumber = reader.GetString(1);
 					}
+
 					if (!reader.IsDBNull(2))
 					{
 						soh.Comment = reader.GetString(2);
 					}
+
 					if (!reader.IsDBNull(3))
 					{
 						soh.CreditCardApprovalCode = reader.GetString(3);
 					}
+
 					soh.DueDate = reader.GetDateTime(4);
 					soh.Freight = reader.GetDecimal(5);
 					soh.ModifiedDate = reader.GetDateTime(6);
@@ -104,6 +107,7 @@ namespace LinqToDB.Benchmarks.Queries
 					{
 						soh.PurchaseOrderNumber = reader.GetString(9);
 					}
+
 					soh.RevisionNumber = reader.GetByte(10);
 					soh.Rowguid = reader.GetGuid(11);
 					soh.SalesOrderNumber = reader.GetString(12);
@@ -111,6 +115,7 @@ namespace LinqToDB.Benchmarks.Queries
 					{
 						soh.ShipDate = reader.GetDateTime(13);
 					}
+
 					soh.Status = reader.GetByte(14);
 					soh.SubTotal = reader.GetDecimal(15);
 					soh.TaxAmt = reader.GetDecimal(16);
@@ -120,10 +125,12 @@ namespace LinqToDB.Benchmarks.Queries
 					{
 						soh.SalesPersonID = reader.GetInt32(19);
 					}
+
 					if (!reader.IsDBNull(20))
 					{
 						soh.TerritoryID = reader.GetInt32(20);
 					}
+
 					soh.BillToAddressID = reader.GetInt32(21);
 					soh.ShipToAddressID = reader.GetInt32(22);
 					soh.ShipMethodID = reader.GetInt32(23);
@@ -131,16 +138,20 @@ namespace LinqToDB.Benchmarks.Queries
 					{
 						soh.CreditCardID = reader.GetInt32(24);
 					}
+
 					if (!reader.IsDBNull(25))
 					{
 						soh.CurrencyRateID = reader.GetInt32(25);
 					}
+
 					headers.Add(soh);
 				}
+
 				reader.Close();
 				reader.Dispose();
 				con.Close();
 			}
+
 			return headers;
 		}
 	}

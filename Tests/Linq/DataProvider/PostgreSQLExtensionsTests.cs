@@ -168,7 +168,6 @@ namespace Tests.DataProvider
 				
 				var selectResult = query.ToArray();
 
-
 				var query2 = from t in table
 					from v in db.Unnest(t.StrArray)
 					select new { t, v };
@@ -351,7 +350,6 @@ namespace Tests.DataProvider
 				Assert.That(allResult, Is.EqualTo(separateResult));
 			}
 		}
-
 
 	}
 }

@@ -1635,6 +1635,7 @@ namespace Tests.DataProvider
 						Assert.That(sql, Does.Contain("\t`TimeStamp`        TIMESTAMP         NOT NULL"));
 						Assert.That(sql, Does.Contain("\t`TimeStamp5`       TIMESTAMP(5)      NOT NULL"));
 					}
+
 					Assert.That(sql, Does.Contain("\t`Time`             TIME              NOT NULL"));
 					Assert.That(sql, Does.Contain("\t`TinyInt`          TINYINT           NOT NULL"));
 					Assert.That(sql, Does.Contain("\t`UnsignedTinyInt`  TINYINT UNSIGNED  NOT NULL"));

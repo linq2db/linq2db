@@ -33,7 +33,6 @@ namespace Tests.T4.Model
 			}
 		}
 
-
 		private void AddError(string name, string? errorMessage)
 		{
 		}

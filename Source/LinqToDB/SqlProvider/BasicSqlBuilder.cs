@@ -639,6 +639,7 @@ namespace LinqToDB.SqlProvider
 							firstField = false;
 							Convert(StringBuilder, field.PhysicalName, ConvertType.NameToQueryField);
 						}
+
 						StringBuilder.AppendLine(")");
 					}
 					else
@@ -3453,6 +3454,7 @@ namespace LinqToDB.SqlProvider
 				BuildExpression(value, buildTableName, checkParentheses, throwExceptionIfTableNotFound);
 				StringBuilder.Append(InlineComma);
 			}
+
 			StringBuilder.Length -= InlineComma.Length; // Note that SqlRow are never empty
 			StringBuilder.Append(')');
 		}
@@ -3481,6 +3483,7 @@ namespace LinqToDB.SqlProvider
 					{
 						throw new LinqToDBException($"Cannot convert value of type {value?.GetType()} to SQL");
 					}
+
 					BuildParameter(new SqlParameter(dataType.Value, "value", value));
 				}
 			}
@@ -4107,6 +4110,7 @@ namespace LinqToDB.SqlProvider
 
 					trimmed = PrintParameterValue(sb, item) || trimmed;
 				}
+
 				sb.Append('}');
 
 				return trimmed;

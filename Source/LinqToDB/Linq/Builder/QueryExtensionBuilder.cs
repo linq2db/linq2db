@@ -154,6 +154,7 @@ namespace LinqToDB.Linq.Builder
 
 							attr.ExtendSubQuery(queryToUpdate.SqlQueryExtensions ??= new(), list);
 						}
+
 						break;
 					}
 					case Sql.QueryExtensionScope.QueryHint:

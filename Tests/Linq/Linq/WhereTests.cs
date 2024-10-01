@@ -1876,7 +1876,6 @@ namespace Tests.Linq
 			}
 		}
 
-
 		#region issue 2424
 		sealed class Isue2424Table
 		{
@@ -2199,7 +2198,6 @@ namespace Tests.Linq
 
 			Assert.That(result1 && result2, Is.False);
 		}
-
 
 		#region Issue 2667
 		[Table("LinkedContracts", IsColumnAttributeRequired = false)]

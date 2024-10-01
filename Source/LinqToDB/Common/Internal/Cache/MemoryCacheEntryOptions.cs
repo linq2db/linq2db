@@ -62,6 +62,7 @@ namespace LinqToDB.Common.Internal.Cache
 						value,
 						"The sliding expiration value must be positive.");
 				}
+
 				_slidingExpiration = value;
 			}
 		}

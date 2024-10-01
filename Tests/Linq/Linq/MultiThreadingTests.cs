@@ -225,7 +225,6 @@ namespace Tests.Linq
 			}
 		}
 
-
 		/*
 		[Test]
 		public void EagerLoadingX([DataSources(false)] string context, [Values(1, 2, 3)] int p)
@@ -284,7 +283,6 @@ namespace Tests.Linq
 			}
 		}
 		*/
-
 
 	}
 }

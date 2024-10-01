@@ -119,6 +119,7 @@ namespace LinqToDB.Linq.Builder
 
 						return items[0];
 					}
+
 					break;
 				}
 			}
@@ -299,6 +300,7 @@ namespace LinqToDB.Linq.Builder
 							return new TransformInfo(Expression.Equal(notEqual.Left, notEqual.Right), false, true);
 						}
 					}
+
 					break;
 				}
 
@@ -995,6 +997,7 @@ namespace LinqToDB.Linq.Builder
 							return PreferServerSide(newExpr, enforceServerSide);
 						}
 					}
+
 					break;
 				}
 			}

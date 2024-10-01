@@ -19,7 +19,6 @@ namespace Tests.UserTests
 			public string Value = null!;
 		}
 
-
 		[Table(Name = "Person")]
 		public class Entity533
 		{
