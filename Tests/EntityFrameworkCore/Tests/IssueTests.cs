@@ -765,6 +765,74 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 
 			Assert.That(updated.Name, Is.EqualTo("new name"));
 		}
+
+		#region Issue 261
+		[ActiveIssue]
+		[Test(Description = "https://github.com/linq2db/linq2db.EntityFrameworkCore/issues/261")]
+		public void Issue261Test([EFDataSources] string provider)
+		{
+			using var ctx = CreateContext(provider);
+
+			Test<Issue261Table>();
+
+			void Test<T>()
+				where T: class
+			{
+				var connectionString = GetConnectionString(provider);
+				
+				var optionsBuilder = new DbContextOptionsBuilder();
+
+				optionsBuilder = provider switch
+				{
+					// UseNodaTime called due to bug in Npgsql v8, where UseNodaTime ignored, when UseNpgsql already called without it
+					_ when provider.IsAnyOf(TestProvName.AllPostgreSQL)
+						=> optionsBuilder.UseNpgsql(connectionString, o => o.UseNodaTime()).UseLinqToDB(builder => builder.AddCustomOptions(o => o.UseMappingSchema(NodaTimeSupport))),
+					_ when provider.IsAnyOf(TestProvName.AllMySql) => optionsBuilder
+#if !NETFRAMEWORK
+						.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString)),
+#else
+						.UseMySql(connectionString),
+#endif
+					_ when provider.IsAnyOf(TestProvName.AllSQLite) => optionsBuilder.UseSqlite(connectionString),
+					_ when provider.IsAnyOf(TestProvName.AllSqlServer) => optionsBuilder.UseSqlServer(connectionString),
+					_ => throw new InvalidOperationException($"{nameof(ProviderSetup)} is not implemented for provider {provider}")
+				};
+
+				using var ctx = new Issue261Context<T>(optionsBuilder.Options);
+
+				using (new DisableBaseline("create db"))
+				{
+					ctx.Database.EnsureDeleted();
+					ctx.Database.EnsureCreated();
+				}
+				using var db = ctx.CreateLinqToDBConnection();
+				var result = db.GetTable<T>().ToArray();
+			}
+		}
+
+		public sealed class Issue261Context<T>(DbContextOptions options) : DbContext(options)
+		{
+			protected override void OnModelCreating(ModelBuilder modelBuilder)
+			{
+				modelBuilder.Entity(typeof(T), x =>
+				{
+				});
+			}
+		}
+		#endregion
+
+		[ActiveIssue]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4653")]
+		public void Issue4653Test([EFDataSources] string provider)
+		{
+			using var ctx = CreateContext(provider);
+
+			var query = ctx.Masters.ToLinqToDB();
+
+			using var tr = ctx.Database.BeginTransaction();
+
+			query.ToArray();
+		}
 	}
 
 	#region Test Extensions

@@ -248,6 +248,8 @@ namespace LinqToDB.EntityFrameworkCore.Tests.Models.IssueModel
 				builder.HasKey(x => x.Id);
 			});
 
+			// disabled for now as it blocks tests execution
+#if !NETFRAMEWORK
 			modelBuilder.Ignore<Issue4644EntityBase>();
 			modelBuilder.Entity<Issue4644BaseItem>(bb => {
 				bb.ToTable("Issue245MainDetails");
@@ -259,6 +261,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests.Models.IssueModel
 			modelBuilder.Entity<Issue4644PricedItem>(bb => {
 				bb.ToTable("Issue245PricedDetails");
 			});
+#endif
 
 			modelBuilder.Entity<Issue4649Table>(b =>
 			{
