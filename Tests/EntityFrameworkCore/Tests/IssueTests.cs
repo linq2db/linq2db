@@ -731,6 +731,40 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 
 			ctx.Issue4644Priced.ToLinqToDB().ToList();
 		}
+
+		[ActiveIssue]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4649")]
+		public void Issue4649Test([EFDataSources] string provider)
+		{
+			using var ctx = CreateContext(provider);
+			using var db = ctx.CreateLinqToDBConnection();
+
+			var record = new Issue4649Table()
+			{
+				Id = -1,
+				Name = "initial name"
+			};
+
+			var id = db.InsertWithInt32Identity(record);
+
+			var inserted = ctx.Issue4649.Where(p => p.Id == id).Single();
+
+			Assert.That(inserted.Name, Is.EqualTo("initial name"));
+
+			var cnt = ctx.Issue4649.Where(d => d.Id == id).ToLinqToDB().Set(d => d.Name, "new name").Update();
+
+			Assert.That(cnt, Is.EqualTo(1));
+
+			var readByLinqToDB = ctx.Issue4649.Where(d => d.Id == id).ToLinqToDB().ToArray();
+
+			Assert.That(readByLinqToDB, Has.Length.EqualTo(1));
+
+			Assert.That(readByLinqToDB[0].Name, Is.EqualTo("new name"));
+
+			var updated = ctx.Issue4649.Where(p => p.Id == id).Single();
+
+			Assert.That(updated.Name, Is.EqualTo("new name"));
+		}
 	}
 
 	#region Test Extensions

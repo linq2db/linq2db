@@ -286,4 +286,10 @@ namespace LinqToDB.EntityFrameworkCore.Tests.Models.IssueModel
 		public decimal Price { get; set; }
 	}
 	#endregion
+
+	public class Issue4649Table
+	{
+		public int Id { get; set; }
+		public string? Name { get; set; }
+	}
 }

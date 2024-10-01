@@ -49,6 +49,9 @@ namespace LinqToDB.EntityFrameworkCore.Tests.Models.IssueModel
 		public DbSet<Issue4644Main> Issue4644Mains { get; set; } = null!;
 		public DbSet<Issue4644PricedItem> Issue4644Priced { get; set; } = null!;
 
+		public DbSet<Issue4649Table> Issue4649 { get; set; } = null!;
+
+
 		protected IssueContextBase(DbContextOptions options) : base(options)
 		{
 		}
@@ -255,6 +258,14 @@ namespace LinqToDB.EntityFrameworkCore.Tests.Models.IssueModel
 			});
 			modelBuilder.Entity<Issue4644PricedItem>(bb => {
 				bb.ToTable("Issue245PricedDetails");
+			});
+
+			modelBuilder.Entity<Issue4649Table>(b =>
+			{
+				b.HasKey(e => e.Id);
+
+				b.Property(e => e.Id)
+					.UseIdentityColumn();
 			});
 		}
 	}
