@@ -292,10 +292,4 @@ namespace LinqToDB.EntityFrameworkCore.Tests.Models.IssueModel
 		public int Id { get; set; }
 		public string? Name { get; set; }
 	}
-
-	public class Issue261Table
-	{
-		public int Id { get; set; }
-		public string? Name { get; set; }
-	}
 }
