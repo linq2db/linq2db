@@ -53,6 +53,9 @@ namespace LinqToDB.EntityFrameworkCore.Tests.Models.IssueModel
 
 		public DbSet<Issue4662Table> Issue4662 { get; set; } = null!;
 
+#if NET8_0_OR_GREATER
+		public DbSet<Issue4663Entity> Issue4663 { get; set; } = null!;
+#endif
 
 		protected IssueContextBase(DbContextOptions options) : base(options)
 		{
@@ -153,7 +156,8 @@ namespace LinqToDB.EntityFrameworkCore.Tests.Models.IssueModel
 					{
 						Id = 2,
 						DateTimeOffset = TestData.DateTimeOffset,
-						DateTimeOffsetN = TestData.DateTimeOffset });
+						DateTimeOffsetN = TestData.DateTimeOffset
+					});
 			});
 
 			modelBuilder.Entity<Issue4627Container>(e =>
@@ -253,14 +257,17 @@ namespace LinqToDB.EntityFrameworkCore.Tests.Models.IssueModel
 			// disabled for now as it blocks tests execution
 #if !NETFRAMEWORK
 			modelBuilder.Ignore<Issue4644EntityBase>();
-			modelBuilder.Entity<Issue4644BaseItem>(bb => {
+			modelBuilder.Entity<Issue4644BaseItem>(bb =>
+			{
 				bb.ToTable("Issue245MainDetails");
 			});
-			modelBuilder.Entity<Issue4644Main>(bb => {
+			modelBuilder.Entity<Issue4644Main>(bb =>
+			{
 				bb.HasOne(m => m.Details)
 					.WithOne(d => d!.Main!);
 			});
-			modelBuilder.Entity<Issue4644PricedItem>(bb => {
+			modelBuilder.Entity<Issue4644PricedItem>(bb =>
+			{
 				bb.ToTable("Issue245PricedDetails");
 			});
 #endif
@@ -279,6 +286,18 @@ namespace LinqToDB.EntityFrameworkCore.Tests.Models.IssueModel
 					.HasConversion<string>()
 					.HasMaxLength(50);
 			});
+
+#if NET8_0_OR_GREATER
+			modelBuilder.Entity<Issue4663Entity>(b =>
+			{
+				b.ComplexProperty(
+					cp => cp.Value,
+					cp =>
+					{
+						cp.Property(p => p.Value).HasColumnName("ColumnPropA");
+					});
+			});
+#endif
 		}
 	}
 }

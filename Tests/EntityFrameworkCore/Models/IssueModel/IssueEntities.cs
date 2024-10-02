@@ -298,4 +298,17 @@ namespace LinqToDB.EntityFrameworkCore.Tests.Models.IssueModel
 		public int Id { get; set; }
 		public DayOfWeek Value { get; set; }
 	}
+
+#if NET8_0_OR_GREATER
+	public sealed class Issue4663Entity
+	{
+		public required int Id { get; set; }
+		public MyComplexType Value { get; set; } = new MyComplexType("CT-1");
+
+		public class MyComplexType(string value)
+		{
+			public string Value { get; set; } = value;
+		}
+	}
+#endif
 }

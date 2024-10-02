@@ -792,6 +792,23 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 			ctx.SaveChanges();
 			ctx.Issue4662.ToLinqToDBTable().ToArray();
 		}
+
+#if NET8_0_OR_GREATER
+		[ActiveIssue]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4663")]
+		public void Issue4663Test([EFDataSources] string provider)
+		{
+			using var ctx = CreateContext(provider);
+
+			ctx.BulkCopy(
+				[new Issue4663Entity()
+				{
+					Id = 1,
+					Value = new Issue4663Entity.MyComplexType("SomeValue")
+				}]
+			);
+		}
+#endif
 	}
 
 	#region Test Extensions
