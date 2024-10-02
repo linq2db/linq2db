@@ -199,8 +199,9 @@ namespace Tests.Linq
 					from t in from p in db.Types select Math.Floor(Math.Pow((double)p.MoneyValue, 3)) where t != 0 select t);
 		}
 
+		// Sybase: https://stackoverflow.com/questions/25281843
 		[Test]
-		public void PowDecimal([DataSources(ProviderName.SQLiteMS)] string context)
+		public void PowDecimal([DataSources(ProviderName.SQLiteMS, TestProvName.AllSybase)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
