@@ -292,4 +292,10 @@ namespace LinqToDB.EntityFrameworkCore.Tests.Models.IssueModel
 		public int Id { get; set; }
 		public string? Name { get; set; }
 	}
+
+	public partial class Issue4662Table
+	{
+		public int Id { get; set; }
+		public DayOfWeek Value { get; set; }
+	}
 }

@@ -51,6 +51,8 @@ namespace LinqToDB.EntityFrameworkCore.Tests.Models.IssueModel
 
 		public DbSet<Issue4649Table> Issue4649 { get; set; } = null!;
 
+		public DbSet<Issue4662Table> Issue4662 { get; set; } = null!;
+
 
 		protected IssueContextBase(DbContextOptions options) : base(options)
 		{
@@ -269,6 +271,13 @@ namespace LinqToDB.EntityFrameworkCore.Tests.Models.IssueModel
 
 				b.Property(e => e.Id)
 					.UseIdentityColumn();
+			});
+
+			modelBuilder.Entity<Issue4662Table>(b =>
+			{
+				b.Property(e => e.Value)
+					.HasConversion<string>()
+					.HasMaxLength(50);
 			});
 		}
 	}

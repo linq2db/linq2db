@@ -778,6 +778,20 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 
 			query.ToArray();
 		}
+
+		[ActiveIssue]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4662")]
+		public void Issue4662Test([EFDataSources] string provider)
+		{
+			using var ctx = CreateContext(provider);
+
+			ctx.Issue4662.Add(new Issue4662Table()
+			{
+				Value = DayOfWeek.Wednesday
+			});
+			ctx.SaveChanges();
+			ctx.Issue4662.ToLinqToDBTable().ToArray();
+		}
 	}
 
 	#region Test Extensions
