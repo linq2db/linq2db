@@ -882,7 +882,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 		}
 
 		[ActiveIssue]
-		[Test(Description = "https://github.com/linq2db/linq2db.EntityFrameworkCore/issues/400")]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4671")]
 		public void Issue4671Test1([EFDataSources] string provider)
 		{
 			using var ctx = CreateContext(provider);
@@ -895,7 +895,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 		}
 
 		[ActiveIssue]
-		[Test(Description = "https://github.com/linq2db/linq2db.EntityFrameworkCore/issues/400")]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4671")]
 		public void Issue4671Test2([EFDataSources] string provider)
 		{
 			using var ctx = CreateContext(provider);
