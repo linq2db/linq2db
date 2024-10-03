@@ -311,4 +311,28 @@ namespace LinqToDB.EntityFrameworkCore.Tests.Models.IssueModel
 		}
 	}
 #endif
+
+	#region Issue 4666
+	public enum Issue4666EntityType { None, Type1, Type2 }
+
+	public class Issue4666BaseEntity
+	{
+		[Key]
+		[DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+		public int Id { get; set; }
+
+		public string? Description { get; set; }
+		public Issue4666EntityType Type { get; set; }
+	}
+
+	public class Issue4666Type1Entity : Issue4666BaseEntity
+	{
+		public string? Type1EntityProp { get; set; }
+	}
+
+	public class Issue4666Type2Entity : Issue4666BaseEntity
+	{
+		public string? Type2EntityProp { get; set; }
+	}
+	#endregion
 }

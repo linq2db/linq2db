@@ -57,6 +57,8 @@ namespace LinqToDB.EntityFrameworkCore.Tests.Models.IssueModel
 		public DbSet<Issue4663Entity> Issue4663 { get; set; } = null!;
 #endif
 
+		public DbSet<Issue4666BaseEntity> Issue4666 { get; set; } = null!;
+
 		protected IssueContextBase(DbContextOptions options) : base(options)
 		{
 		}
@@ -298,6 +300,14 @@ namespace LinqToDB.EntityFrameworkCore.Tests.Models.IssueModel
 					});
 			});
 #endif
+
+			modelBuilder.Entity<Issue4666BaseEntity>(builder =>
+			{
+				builder.HasDiscriminator(x => x.Type)
+					.HasValue<Issue4666BaseEntity>(Issue4666EntityType.None)
+					.HasValue<Issue4666Type1Entity>(Issue4666EntityType.Type1)
+					.HasValue<Issue4666Type2Entity>(Issue4666EntityType.Type2);
+			});
 		}
 	}
 }

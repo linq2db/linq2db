@@ -809,6 +809,31 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 			);
 		}
 #endif
+
+		[ActiveIssue]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4666")]
+		public void Issue4666Test([EFDataSources(TestProvName.AllSQLite, TestProvName.AllPostgreSQL14Minus, TestProvName.AllMySql)] string provider)
+		{
+			using var ctx = CreateContext(provider);
+			using var db = ctx.CreateLinqToDBConnection();
+
+			using var tempTable = db.CreateTempTable(
+			[
+				new Issue4666Type1Entity() { Id = 1, Description = "Test1", Type1EntityProp = "Prop1" },
+				new Issue4666Type1Entity() { Id = 2, Description = "Test2", Type1EntityProp = "Prop2" }
+			], tableName: "Issue4666Temp");
+
+			var destinationTable = db.GetTable<Issue4666Type1Entity>();
+
+			destinationTable
+				.Merge()
+				.Using(tempTable)
+				.On((target, source) => target.Id == source.Id)
+				.InsertWhenNotMatched()
+				.UpdateWhenMatched()
+				.DeleteWhenNotMatchedBySourceAnd(i => i.Type == Issue4666EntityType.Type1)
+				.Merge();
+		}
 	}
 
 	#region Test Extensions
