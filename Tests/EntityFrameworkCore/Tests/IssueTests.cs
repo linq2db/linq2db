@@ -862,6 +862,23 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 
 			ctx.Issue4668.ToLinqToDB().ToArray();
 		}
+
+		[ActiveIssue]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4669")]
+		public async Task Issue4669Test([EFDataSources] string provider)
+		{
+			using var ctx = CreateContext(provider);
+
+			var query = ctx.Children
+				.Where(x => x.Name!.Contains("Test"))
+				.OrderBy(x => x.Name);
+
+			await query.ToListAsyncLinqToDB();
+
+			await ctx.Children
+				.Where(p => p.Name!.StartsWith("Test"))
+				.ToListAsyncEF();
+		}
 	}
 
 	#region Test Extensions
