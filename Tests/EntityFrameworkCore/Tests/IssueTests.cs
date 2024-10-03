@@ -906,6 +906,38 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 
 			Assert.That(column.IsIdentity);
 		}
+
+		[Test]
+		public async Task IssueEnumTest([EFDataSources] string provider)
+		{
+			using var ctx = CreateContext(provider);
+
+			ctx.IssueEnum.AddRange(new IssueEnumTable[]
+				{
+					new IssueEnumTable
+					{
+						Value = StatusEnum.Completed
+					},
+					new IssueEnumTable
+					{
+						Value = StatusEnum.Pending
+					},
+					new IssueEnumTable
+					{
+						Value = StatusEnum.Rejected
+					},
+					new IssueEnumTable
+					{
+						Value = StatusEnum.Reviewed
+					},
+					new IssueEnumTable
+					{
+						Value = StatusEnum.Verified
+					},
+				});
+			ctx.SaveChanges();
+			await ctx.IssueEnum.ToListAsyncLinqToDB();
+		}
 	}
 
 	#region Test Extensions

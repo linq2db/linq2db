@@ -60,6 +60,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests.Models.IssueModel
 
 		public DbSet<Issue4666BaseEntity> Issue4666 { get; set; } = null!;
 		public DbSet<Issue4668Table> Issue4668 { get; set; } = null!;
+		public DbSet<IssueEnumTable> IssueEnum { get; set; } = null!;
 
 		protected IssueContextBase(DbContextOptions options) : base(options)
 		{
@@ -318,6 +319,8 @@ namespace LinqToDB.EntityFrameworkCore.Tests.Models.IssueModel
 			});
 
 			modelBuilder.Entity<Issue4671Entity1>();
+
+			modelBuilder.Entity<IssueEnumTable>();
 		}
 	}
 }

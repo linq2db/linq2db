@@ -370,4 +370,18 @@ namespace LinqToDB.EntityFrameworkCore.Tests.Models.IssueModel
 		public int Value { get; set; }
 	}
 	#endregion
+
+	public enum StatusEnum
+	{
+		Pending = 0,
+		Verified = 1,
+		Completed = 2,
+		Rejected = 3,
+		Reviewed = 4
+	}
+	public partial class IssueEnumTable
+	{
+		public int Id { get; set; }
+		public StatusEnum Value { get; set; }
+	}
 }
