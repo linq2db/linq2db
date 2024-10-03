@@ -1,5 +1,8 @@
 ﻿using System;
+using System.Data.Common;
 using System.Linq;
+
+using LinqToDB.Interceptors;
 
 using Microsoft.EntityFrameworkCore;
 
@@ -139,6 +142,84 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 		}
 #endif
 		#endregion
+
+		#region issue 306
+		[Test(Description = "https://github.com/linq2db/linq2db.EntityFrameworkCore/issues/306")]
+		public void Issue306Test([EFIncludeDataSources(TestProvName.AllSQLite)] string provider)
+		{
+			var interceptor = new DummyInterceptor();
+
+			var connectionString = GetConnectionString(provider);
+
+			var optionsBuilder = new DbContextOptionsBuilder();
+			optionsBuilder.UseSqlite(connectionString);
+			optionsBuilder.UseLinqToDB(builder =>
+			{
+				builder.AddInterceptor(interceptor);
+			});
+
+			using var ctx = new Issue306Context(optionsBuilder.Options);
+			using (new DisableBaseline("create db"))
+			{
+				ctx.Database.EnsureDeleted();
+				ctx.Database.EnsureCreated();
+			}
+
+			var id = 1;
+			var query = ctx.Set<Issue306Entity>().Where(e => e.Id == id).ToLinqToDB().ToArray();
+
+			Assert.That(interceptor.Count, Is.GreaterThan(0));
+		}
+
+		public class Issue306Entity
+		{
+			public int Id { get; set; }
+			public int Value { get; set; }
+		}
+
+		public class Issue306Context(DbContextOptions options) : DbContext(options)
+		{
+			protected override void OnModelCreating(ModelBuilder modelBuilder)
+			{
+				base.OnModelCreating(modelBuilder);
+
+				modelBuilder.Entity<Issue306Entity>(e =>
+				{
+					e.HasData(new Issue306Entity() { Id = 1, Value = 11 });
+				});
+			}
+		}
+
+		public class DummyInterceptor : UnwrapDataObjectInterceptor
+		{
+			public int Count { get; set; }
+
+			public override DbConnection UnwrapConnection(IDataContext dataContext, DbConnection connection)
+			{
+				Count++;
+				return connection;
+			}
+
+			public override DbTransaction UnwrapTransaction(IDataContext dataContext, DbTransaction transaction)
+			{
+				Count++;
+				return transaction;
+			}
+
+			public override DbCommand UnwrapCommand(IDataContext dataContext, DbCommand command)
+			{
+				Count++;
+				return command;
+			}
+
+			public override DbDataReader UnwrapDataReader(IDataContext dataContext, DbDataReader dataReader)
+			{
+				Count++;
+				return dataReader;
+			}
+		}
+		#endregion
+
 
 	}
 }
