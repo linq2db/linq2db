@@ -810,7 +810,6 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 		}
 #endif
 
-		[ActiveIssue]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4666")]
 		public void Issue4666Test([EFDataSources(TestProvName.AllSQLite, TestProvName.AllPostgreSQL14Minus, TestProvName.AllMySql)] string provider)
 		{
@@ -832,6 +831,26 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 				.InsertWhenNotMatched()
 				.UpdateWhenMatched()
 				.DeleteWhenNotMatchedBySourceAnd(i => i.Type == Issue4666EntityType.Type1)
+				.Merge();
+		}
+
+		[ActiveIssue]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4667")]
+		public void Issue4667Test([EFIncludeDataSources(TestProvName.AllPostgreSQL15Plus)] string provider)
+		{
+			using var ctx = CreateContext(provider);
+
+			var entities = new Issue4667Table[]
+			{
+				new Issue4667Table() { Id = 1, Payload = /*lang=json,strict*/ "{\"test\" : 1}", Headers = { { "property", "value" } } }
+			};
+
+			ctx.Set<Issue4667Table>()
+				.ToLinqToDBTable()
+				.Merge()
+				.Using(entities)
+				.OnTargetKey()
+				.InsertWhenNotMatched()
 				.Merge();
 		}
 	}

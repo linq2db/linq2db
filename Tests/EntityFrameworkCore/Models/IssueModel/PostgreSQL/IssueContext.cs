@@ -10,7 +10,8 @@ namespace LinqToDB.EntityFrameworkCore.Tests.PostgreSQL.Models.IssueModel
 	{
 		public DbSet<PostgreTable> PostgreTestTable { get; set; } = null!;
 		public DbSet<Issue4641Table> Issue4641Table { get; set; } = null!;
-		public DbSet<Issue4643Table> Issue225Table { get; set; } = null!;
+		public DbSet<Issue4643Table> Issue4643Table { get; set; } = null!;
+		public DbSet<Issue4667Table> Issue4667 { get; set; } = null!;
 
 		protected override void OnModelCreating(ModelBuilder modelBuilder)
 		{
@@ -39,6 +40,23 @@ namespace LinqToDB.EntityFrameworkCore.Tests.PostgreSQL.Models.IssueModel
 			});
 
 			modelBuilder.Entity<Issue4643Table>();
+
+			modelBuilder.Entity<Issue4667Table>(e =>
+			{
+				e.HasKey(x => x.Id);
+
+				e.Property(x => x.Id)
+					.HasColumnName("id")
+					.ValueGeneratedNever();
+
+				e.Property(x => x.Payload)
+					.HasColumnName("payload")
+					.HasColumnType("jsonb");
+
+				e.Property(x => x.Headers)
+					.HasColumnType("json")
+					.HasColumnName("headers");
+			});
 		}
 	}
 }

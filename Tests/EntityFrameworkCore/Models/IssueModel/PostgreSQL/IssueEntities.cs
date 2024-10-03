@@ -32,4 +32,11 @@ namespace LinqToDB.EntityFrameworkCore.Tests.PostgreSQL.Models.IssueModel
 		public int Id { get; set; }
 		public DayOfWeek[]? Value { get; set; }
 	}
+
+	public class Issue4667Table
+	{
+		public int Id { get; set; }
+		public string? Payload { get; set; }
+		public Dictionary<string, string> Headers { get; set; } = [];
+	}
 }
