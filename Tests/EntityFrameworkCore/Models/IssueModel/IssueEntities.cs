@@ -348,4 +348,26 @@ namespace LinqToDB.EntityFrameworkCore.Tests.Models.IssueModel
 		public int Value2 { get; set; }
 	}
 	#endregion
+
+	#region Issue 4671
+	[Table(nameof(Issue4671Entity1))]
+	public class Issue4671Entity1
+	{
+		[Key, DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+		public int Id { get; set; }
+
+		[Column]
+		public int Value { get; set; }
+	}
+
+	[Table(nameof(Issue4671Entity2))]
+	public class Issue4671Entity2
+	{
+		[Key, DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+		public int Id { get; set; }
+
+		[Column]
+		public int Value { get; set; }
+	}
+	#endregion
 }

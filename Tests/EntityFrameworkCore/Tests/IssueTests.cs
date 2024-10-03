@@ -12,6 +12,7 @@ using LinqToDB.EntityFrameworkCore.Tests.Models.IssueModel;
 using LinqToDB.EntityFrameworkCore.Tests.PostgreSQL.Models.IssueModel;
 using LinqToDB.EntityFrameworkCore.Tests.SqlServer.Models.IssueModel;
 using LinqToDB.Mapping;
+using LinqToDB.Tools;
 
 using Microsoft.EntityFrameworkCore;
 
@@ -878,6 +879,32 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 			await ctx.Children
 				.Where(p => p.Name!.StartsWith("Test"))
 				.ToListAsyncEF();
+		}
+
+		[ActiveIssue]
+		[Test(Description = "https://github.com/linq2db/linq2db.EntityFrameworkCore/issues/400")]
+		public void Issue4671Test1([EFDataSources] string provider)
+		{
+			using var ctx = CreateContext(provider);
+			using var db = ctx.CreateLinqToDBConnection();
+
+			var ed = db.MappingSchema.GetEntityDescriptor(typeof(Issue4671Entity1));
+			var column = ed.Columns.Single(c => c.ColumnName == nameof(Issue4671Entity1.Id));
+
+			Assert.That(column.IsIdentity);
+		}
+
+		[ActiveIssue]
+		[Test(Description = "https://github.com/linq2db/linq2db.EntityFrameworkCore/issues/400")]
+		public void Issue4671Test2([EFDataSources] string provider)
+		{
+			using var ctx = CreateContext(provider);
+			using var db = ctx.CreateLinqToDBConnection();
+
+			var ed = db.MappingSchema.GetEntityDescriptor(typeof(Issue4671Entity2));
+			var column = ed.Columns.Single(c => c.ColumnName == nameof(Issue4671Entity2.Id));
+
+			Assert.That(column.IsIdentity);
 		}
 	}
 

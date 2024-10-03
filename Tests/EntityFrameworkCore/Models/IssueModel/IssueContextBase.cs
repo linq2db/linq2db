@@ -316,6 +316,8 @@ namespace LinqToDB.EntityFrameworkCore.Tests.Models.IssueModel
 			{
 				builder.HasBaseType((Type?)null);
 			});
+
+			modelBuilder.Entity<Issue4671Entity1>();
 		}
 	}
 }
