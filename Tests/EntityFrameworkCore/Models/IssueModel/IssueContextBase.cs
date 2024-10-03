@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json;
 
@@ -58,6 +59,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests.Models.IssueModel
 #endif
 
 		public DbSet<Issue4666BaseEntity> Issue4666 { get; set; } = null!;
+		public DbSet<Issue4668Table> Issue4668 { get; set; } = null!;
 
 		protected IssueContextBase(DbContextOptions options) : base(options)
 		{
@@ -307,6 +309,12 @@ namespace LinqToDB.EntityFrameworkCore.Tests.Models.IssueModel
 					.HasValue<Issue4666BaseEntity>(Issue4666EntityType.None)
 					.HasValue<Issue4666Type1Entity>(Issue4666EntityType.Type1)
 					.HasValue<Issue4666Type2Entity>(Issue4666EntityType.Type2);
+			});
+
+			modelBuilder.Entity<Issue4668TableBase>();
+			modelBuilder.Entity<Issue4668Table>(builder =>
+			{
+				builder.HasBaseType((Type?)null);
 			});
 		}
 	}

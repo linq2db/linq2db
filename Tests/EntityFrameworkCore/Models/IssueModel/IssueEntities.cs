@@ -335,4 +335,17 @@ namespace LinqToDB.EntityFrameworkCore.Tests.Models.IssueModel
 		public string? Type2EntityProp { get; set; }
 	}
 	#endregion
+
+	#region Issue 4668
+	public class Issue4668TableBase
+	{
+		public int Id { get; set; }
+		public int Value { get; set; }
+	}
+
+	public class Issue4668Table : Issue4668TableBase
+	{
+		public int Value2 { get; set; }
+	}
+	#endregion
 }

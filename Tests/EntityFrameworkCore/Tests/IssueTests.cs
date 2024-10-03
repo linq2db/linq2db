@@ -853,6 +853,15 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 				.InsertWhenNotMatched()
 				.Merge();
 		}
+
+		[ActiveIssue]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4668")]
+		public void Issue4668Test([EFDataSources] string provider)
+		{
+			using var ctx = CreateContext(provider);
+
+			ctx.Issue4668.ToLinqToDB().ToArray();
+		}
 	}
 
 	#region Test Extensions
