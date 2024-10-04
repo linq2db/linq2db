@@ -2963,6 +2963,45 @@ $function$
 			var overload2 = functions.Where(f => f.Parameters.Any(p => p.ParameterName == "input2" && p.SystemType == typeof(short))).Single();
 			var overload3 = functions.Where(f => f.Parameters.Count == 3 && !f.Parameters.Any(p => p.ParameterName == "input2" && p.SystemType == typeof(short))).Single();
 		}
+
+		#region Issue 4672
+		[Table]
+		sealed class Issue4672Table
+		{
+			[Column(IsIdentity = true)] public int Id { get; set; }
+			[Column(DbType = "interval")] public NodaTime.Period? Interval { get; set; }
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4672")]
+		public void Issue4672Test([IncludeDataSources(TestProvName.AllPostgreSQL)] string context, [Values] bool inline, [Values] BulkCopyType copyType)
+		{
+			IDataProvider dataProvider;
+			string?       connectionString;
+			using (var db2 = GetDataConnection(context))
+			{
+				dataProvider = db2.DataProvider;
+				connectionString = db2.ConnectionString;
+			}
+
+			var builder = new NpgsqlDataSourceBuilder(connectionString);
+			builder.UseNodaTime();
+			var dataSource = builder.Build();
+
+			using var db = GetDataConnection(context, o => o.UseConnectionFactory(dataProvider, _ => dataSource.CreateConnection()));
+			using var tb = db.CreateLocalTable<Issue4672Table>();
+
+			db.InlineParameters = inline;
+
+			// https://github.com/npgsql/npgsql/issues/5867
+			var item = new Issue4672Table() { Id = 1, Interval = NodaTime.Period.FromTicks(TestData.Interval.Ticks).Normalize() };
+			db.BulkCopy(new BulkCopyOptions() { BulkCopyType = copyType }, [item]);
+
+			var record = tb.Single();
+
+			// Period equality is not correct
+			Assert.That(record.Interval!.Ticks, Is.EqualTo(item.Interval.Ticks));
+		}
+		#endregion
 	}
 
 	#region Extensions

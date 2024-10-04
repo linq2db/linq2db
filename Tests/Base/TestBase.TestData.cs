@@ -22,6 +22,7 @@ namespace Tests
 			public static readonly DateOnly DateOnly                      = new (2020, 2, 29);
 			public static readonly DateOnly DateOnlyAmbiguous             = new (2020, 8, 9);
 #endif
+			public static readonly TimeSpan Interval                      = new TimeSpan(-5, 17, 54, 55, 123).Add(TimeSpan.FromTicks(1234));
 			public static readonly TimeSpan TimeOfDay                     = new TimeSpan(0, 17, 54, 55, 123).Add(TimeSpan.FromTicks(1234));
 			public static readonly TimeSpan TimeOfDay4                    = new TimeSpan(0, 17, 54, 55, 123).Add(TimeSpan.FromTicks(1000));
 			public static readonly Guid     Guid1                         = new ("bc7b663d-0fde-4327-8f92-5d8cc3a11d11");
