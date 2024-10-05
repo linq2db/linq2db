@@ -2217,5 +2217,151 @@ namespace Tests.Linq
 			[Column] public string? BOnly { get; set; }
 		}
 		#endregion
+
+		#region Issue 4620
+		class Issue4620Client
+		{
+			public int Id { get; set; }
+			public string? Name { get; set; }
+
+			public static readonly Issue4620Client[] Data =
+			[
+				new Issue4620Client() { Id = 1, Name = "Client 1" },
+				new Issue4620Client() { Id = 2, Name = "Client 2" },
+			];
+		}
+
+		class Issue4620Contract
+		{
+			public int Id { get; set; }
+			public int IdClient { get; set; }
+
+			public static readonly Issue4620Contract[] Data =
+			[
+				new Issue4620Contract() { Id = 1, IdClient = 1 },
+				new Issue4620Contract() { Id = 2, IdClient = 2 },
+			];
+		}
+
+		[Table("Issue4620Table")]
+		class Issue4620Bill
+		{
+			[Column] public int Id { get; set; }
+
+			// either IdContract or IdClient will be null
+			[Column] public int? IdContract { get; set; }
+			[Column] public int? IdClient { get; set; }
+
+			[Column] public decimal Sum { get; set; }
+
+			public static readonly Issue4620Bill[] Data =
+			[
+				new Issue4620Bill() { Id = 1, IdClient = 1, IdContract = null },
+				new Issue4620Bill() { Id = 2, IdClient = null, IdContract = 2 },
+				new Issue4620Bill() { Id = 3 },
+				new Issue4620Bill() { Id = 4, IdClient = 1, IdContract = 2 },
+			];
+		}
+
+		interface Issue4620IBill
+		{
+			int Id { get; set; }
+			int? IdContract { get; set; }
+			int? IdClient { get; set; }
+			decimal Sum { get; set; }
+		}
+
+		interface Issue4620IBillWithClient : Issue4620IBill
+		{
+			public Issue4620Client Client { get; set; }
+		}
+
+		class Issue4620BillWithClient : Issue4620Bill
+		{
+			public Issue4620Client Client { get; set; } = null!;
+		}
+
+		[Table("Issue4620Table")]
+		class Issue4620LegacyBill : Issue4620Bill, Issue4620IBillWithClient
+		{
+			[Association(ThisKey = nameof(IdClient), OtherKey = nameof(Client.Id), CanBeNull = false)]
+			public Issue4620Client Client { get; set; } = null!;
+		}
+
+		[Table("Issue4620Table")]
+		class Issue4620ModernBill : Issue4620Bill, Issue4620IBillWithClient
+		{
+			[Association(ThisKey = nameof(IdContract), OtherKey = nameof(Contract.Id), CanBeNull = false)]
+			public Issue4620Contract Contract { get; set; } = null!;
+
+			[Association(ExpressionPredicate = nameof(ModernBill_Client_Expr), CanBeNull = false)]
+			public Issue4620Client Client { get; set; } = null!;
+
+			static Expression<Func<Issue4620ModernBill, Issue4620Client, bool>> ModernBill_Client_Expr
+				=> (b, cl) => b.Contract.IdClient == cl.Id;
+		}
+
+		[ActiveIssue]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4620")]
+		public void Issue4620Test1([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var _ = db.CreateLocalTable(Issue4620Bill.Data);
+			using var t1 = db.CreateLocalTable(Issue4620Client.Data);
+			using var t2 = db.CreateLocalTable(Issue4620Contract.Data);
+
+			var union = db.GetTable<Issue4620LegacyBill>().Where(b => b.IdClient != null)
+				.UnionAll<Issue4620IBillWithClient>(
+					db.GetTable<Issue4620ModernBill>().Where(b => b.IdContract != null));
+
+			var result = union.Select(b => new { Id = b.Id, b.Client.Name }).OrderBy(r => r.Id).ThenBy(r => r.Name).ToArray();
+
+			Assert.That(result, Has.Length.EqualTo(4));
+			Assert.Multiple(() =>
+			{
+				Assert.That(result[0].Id, Is.EqualTo(1));
+				Assert.That(result[0].Name, Is.EqualTo("Client 1"));
+				Assert.That(result[1].Id, Is.EqualTo(2));
+				Assert.That(result[1].Name, Is.EqualTo("Client 2"));
+				Assert.That(result[2].Id, Is.EqualTo(4));
+				Assert.That(result[2].Name, Is.EqualTo("Client 1"));
+				Assert.That(result[3].Id, Is.EqualTo(4));
+				Assert.That(result[3].Name, Is.EqualTo("Client 2"));
+			});
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4620")]
+		public void Issue4620Test2([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var _ = db.CreateLocalTable(Issue4620Bill.Data);
+			using var t1 = db.CreateLocalTable(Issue4620Client.Data);
+			using var t2 = db.CreateLocalTable(Issue4620Contract.Data);
+
+			var union = db
+					.GetTable<Issue4620LegacyBill>()
+					.Where(b => b.IdClient != null)
+					.Select(b => new Issue4620BillWithClient { Id = b.Id, IdClient = b.IdClient, IdContract = b.IdContract, Sum = b.Sum, Client = b.Client })
+				.UnionAll<Issue4620BillWithClient>(
+					db.GetTable<Issue4620ModernBill>()
+					.Where(b => b.IdContract != null)
+					.Select(b => new Issue4620BillWithClient { Id = b.Id, IdClient = b.IdClient, IdContract = b.IdContract, Sum = b.Sum, Client = b.Client }));
+
+			var result = union.Select(b => new { Id = b.Id, b.Client.Name }).OrderBy(r => r.Id).ThenBy(r => r.Name).ToArray();
+
+			Assert.That(result, Has.Length.EqualTo(4));
+			Assert.Multiple(() =>
+			{
+				Assert.That(result[0].Id, Is.EqualTo(1));
+				Assert.That(result[0].Name, Is.EqualTo("Client 1"));
+				Assert.That(result[1].Id, Is.EqualTo(2));
+				Assert.That(result[1].Name, Is.EqualTo("Client 2"));
+				Assert.That(result[2].Id, Is.EqualTo(4));
+				Assert.That(result[2].Name, Is.EqualTo("Client 1"));
+				Assert.That(result[3].Id, Is.EqualTo(4));
+				Assert.That(result[3].Name, Is.EqualTo("Client 2"));
+			});
+		}
+		#endregion
 	}
 }
