@@ -381,8 +381,35 @@ namespace Tests.Linq
 				new Issue3807Table() { Id = 3 },
 			];
 		}
+		#endregion
 
-#endregion
+		#region Issue 4622
+		public record Issue4674StockItem(string TenantId, string Code, string Description);
+		public record Issue4674StockRoomItem(string TenantId, string StockroomCode, string ItemCode, decimal Quantity);
+
+		static IQueryable<T2> Issue4674JoinTable<T2>(DataConnection db, Expression<Func<T2, bool>> joinExpression)
+		  where T2 : class
+		{
+			return db.GetTable<T2>().Where(joinExpression);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/discussions/4674")]
+		public void Issue4674Test([DataSources(false)] string context)
+		{
+			using var db = GetDataConnection(context);
+			using var t1 = db.CreateLocalTable<Issue4674StockItem>();
+			using var t2 = db.CreateLocalTable<Issue4674StockRoomItem>();
+
+			var qry = from a in t1
+					   from b in Issue4674JoinTable<Issue4674StockRoomItem>(db, b => b.TenantId == a.TenantId && b.StockroomCode == a.Code)
+					   select new { a.TenantId, a.Code, a.Description, b.StockroomCode, b.Quantity };
+
+			;
+			Assert.That(() => qry.ToArray(), Throws.InstanceOf<LinqException>()
+				.With.Message.Contain("The LINQ expression could not be converted to SQL."));
+		}
+		#endregion
+
 
 	}
 }
