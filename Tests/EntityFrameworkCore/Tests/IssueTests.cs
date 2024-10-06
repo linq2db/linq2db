@@ -881,7 +881,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 				.ToListAsyncEF();
 		}
 
-		[ActiveIssue]
+		[ActiveIssue(Configuration = TestProvName.AllPostgreSQL)]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4671")]
 		public void Issue4671Test1([EFDataSources] string provider)
 		{
@@ -892,6 +892,21 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 			var column = ed.Columns.Single(c => c.ColumnName == nameof(Issue4671Entity1.Id));
 
 			Assert.That(column.IsIdentity);
+
+			using var t1 = db.CreateLocalTable<Issue4671Entity1>();
+			using var t2 = db.CreateTempTable<Issue4671Entity1>($"{nameof(Issue4671Entity1)}TMP");
+
+			t1.Insert(() => new Issue4671Entity1() { Value = 1 });
+			t2.Insert(() => new Issue4671Entity1() { Value = 2 });
+
+			var res1 = t1.Single();
+			var res2 = t2.Single();
+
+			Assert.Multiple(() =>
+			{
+				Assert.That(res1.Id, Is.EqualTo(1));
+				Assert.That(res2.Id, Is.EqualTo(1));
+			});
 		}
 
 		[ActiveIssue]
@@ -905,6 +920,21 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 			var column = ed.Columns.Single(c => c.ColumnName == nameof(Issue4671Entity2.Id));
 
 			Assert.That(column.IsIdentity);
+
+			using var t1 = db.CreateLocalTable<Issue4671Entity2>();
+			using var t2 = db.CreateTempTable<Issue4671Entity2>($"{nameof(Issue4671Entity2)}TMP");
+
+			t1.Insert(() => new Issue4671Entity2() { Value = 1 });
+			t2.Insert(() => new Issue4671Entity2() { Value = 2 });
+
+			var res1 = t1.Single();
+			var res2 = t2.Single();
+
+			Assert.Multiple(() =>
+			{
+				Assert.That(res1.Id, Is.EqualTo(1));
+				Assert.That(res2.Id, Is.EqualTo(1));
+			});
 		}
 
 		[Test]
