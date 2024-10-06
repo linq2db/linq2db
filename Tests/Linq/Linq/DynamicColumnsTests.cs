@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.Json;
 using System.Reflection;
 
 using LinqToDB;
@@ -12,6 +13,8 @@ using NUnit.Framework;
 
 namespace Tests.Linq
 {
+	using LinqToDB.Data;
+
 	using Model;
 
 	[TestFixture]
@@ -513,7 +516,7 @@ namespace Tests.Linq
 					}
 
 					return CompareValues(x.ExtendedProperties, y.ExtendedProperties) &&
-					       CompareValues(y.ExtendedProperties, x.ExtendedProperties);
+						   CompareValues(y.ExtendedProperties, x.ExtendedProperties);
 				}
 
 				public int GetHashCode(SomeClassWithDynamic obj)
@@ -647,6 +650,140 @@ namespace Tests.Linq
 					.ToList();
 				});
 			}
+		}
+
+		#region Issue 4483
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4483")]
+		public void Issue4483Test1([IncludeDataSources(TestProvName.AllSqlServer2016Plus)] string context)
+		{
+			var ms = new MappingSchema();
+			var fm = new FluentMappingBuilder(ms);
+
+			const int readColCount = 5;
+			foreach (var col in Enumerable.Range(0, readColCount))
+			{
+				var colExpr = $"JSON_VALUE({nameof(TestJsonWrite.JsonData)}, '$.\"{col}\"') AS '{col}'";
+				fm.Entity<TestJsonRead>()
+					.Property(x => Sql.Property<float?>(x, col.ToString()))
+					.IsExpression(row => Sql.Expr<float?>(colExpr), isColumn: true)
+					;
+			}
+			fm.Build();
+
+			var testData = Enumerable.Range(0, 100)
+					.Select
+					(
+						f =>
+						{
+							var map = Enumerable.Range(0, 1000)
+								.Select(p => new KeyValuePair<string, int>(p.ToString(), p))
+								.ToDictionary(f => f.Key, f => f.Value);
+							return new TestJsonWrite
+							{
+								Id = Guid.NewGuid(),
+								JsonData = JsonSerializer.Serialize(map)
+							};
+						}
+					)
+					.ToDictionary(f => f.Id);
+
+			using var db = GetDataConnection(context, ms);
+			using var tb = db.CreateLocalTable(testData.Values);
+
+			var testRows = db.GetTable<TestJsonRead>().ToArray();
+			foreach (var testRow in testRows)
+			{
+				Assert.Multiple(() =>
+				{
+					Assert.That(testData, Does.ContainKey(testRow.Id));
+					Assert.That(testRow.Values, Has.Count.EqualTo(readColCount));
+				});
+			}
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4483")]
+		public void Issue4483Test2([IncludeDataSources(TestProvName.AllSqlServer2016Plus)] string context)
+		{
+			var ms = new MappingSchema();
+			var fm = new FluentMappingBuilder(ms);
+
+			const int readColCount = 5;
+			foreach (var col in Enumerable.Range(0, readColCount))
+			{
+				var colExpr = $"JSON_VALUE({nameof(TestJsonWrite.JsonData)}, '$.\"{col}\"') AS '{col}'";
+				fm.Entity<TestJsonRead>()
+					.Property(x => Sql.Property<string?>(x, col.ToString()))
+					.IsExpression(row => Sql.Expr<string?>(colExpr), isColumn: true)
+					;
+			}
+			fm.Build();
+
+			var testData = Enumerable.Range(0, 100)
+					.Select
+					(
+						f =>
+						{
+							var map = Enumerable.Range(0, 1000)
+								.Select(p => new KeyValuePair<string, int>(p.ToString(), p))
+								.ToDictionary(f => f.Key, f => f.Value);
+							return new TestJsonWrite
+							{
+								Id = Guid.NewGuid(),
+								JsonData = JsonSerializer.Serialize(map)
+							};
+						}
+					)
+					.ToDictionary(f => f.Id);
+
+			using var db = GetDataConnection(context, ms);
+			using var tb = db.CreateLocalTable(testData.Values);
+
+			var testRows = db.GetTable<TestJsonRead>().ToArray();
+			foreach (var testRow in testRows)
+			{
+				Assert.Multiple(() =>
+				{
+					Assert.That(testData, Does.ContainKey(testRow.Id));
+					Assert.That(testRow.Values, Has.Count.EqualTo(readColCount));
+				});
+			}
+		}
+
+		[Table]
+		class TestJsonWrite
+		{
+			[PrimaryKey]
+			public Guid Id { get; set; }
+
+			[Column(DbType = "NVARCHAR(MAX)")]
+			public string? JsonData { get; set; }
+		}
+
+		[Table(Name = nameof(TestJsonWrite))]
+		class TestJsonRead
+		{
+			[PrimaryKey]
+			public Guid Id { get; set; }
+
+			[DynamicColumnsStore]
+			public Dictionary<string, object?> Values { get; set; } = new();
+		}
+		#endregion
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/2817")]
+		public void Issue2817Test([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			IQueryable<Person> query = from p in db.Person
+				   orderby p.LastName
+				   select p;
+
+			query = ApplyFilterToGeneric(query);
+
+			query.ToList();
+
+			static IQueryable<T> ApplyFilterToGeneric<T>(IQueryable<T> query) => query.Where(p => Sql.Property<string>(p, "LastName") == "ministra");
 		}
 
 		[Test]

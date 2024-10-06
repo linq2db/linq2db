@@ -4,17 +4,16 @@ using System.Linq;
 using System.Linq.Expressions;
 
 using LinqToDB;
+using LinqToDB.Data;
 using LinqToDB.Expressions;
+using LinqToDB.Linq;
 using LinqToDB.Mapping;
 using LinqToDB.Tools;
 using NUnit.Framework;
+using FluentAssertions;
 
 namespace Tests.Linq
 {
-	using FluentAssertions;
-
-	using LinqToDB.Data;
-	using LinqToDB.Linq;
 	using Model;
 
 	public class CteTests : TestBase
@@ -666,7 +665,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void RecursiveTest([CteContextSource(true, ProviderName.DB2, TestProvName.AllClickHouse)] string context)
+		public void RecursiveTest([CteContextSource(true, ProviderName.DB2)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -788,7 +787,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void RecursiveTest2([CteContextSource(true, ProviderName.DB2, TestProvName.AllClickHouse)] string context)
+		public void RecursiveTest2([CteContextSource(true, ProviderName.DB2)] string context)
 		{
 			var hierarchyData = GeHirarchyData();
 
@@ -805,7 +804,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestDoubleRecursion([CteContextSource(true, ProviderName.DB2, TestProvName.AllClickHouse)] string context)
+		public void TestDoubleRecursion([CteContextSource(true, ProviderName.DB2)] string context)
 		{
 			var hierarchyData = GeHirarchyData();
 
@@ -830,7 +829,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void RecursiveCount([CteContextSource(true, ProviderName.DB2, TestProvName.AllClickHouse)] string context)
+		public void RecursiveCount([CteContextSource(true, ProviderName.DB2)] string context)
 		{
 			var hierarchyData = GeHirarchyData();
 
@@ -845,7 +844,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void RecursiveInsertInto([CteContextSource(true, ProviderName.DB2, TestProvName.AllClickHouse)] string context)
+		public void RecursiveInsertInto([CteContextSource(true, ProviderName.DB2)] string context)
 		{
 			var hierarchyData = GeHirarchyData();
 
@@ -1010,7 +1009,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestEmbedded([CteContextSource(TestProvName.AllClickHouse)] string context)
+		public void TestEmbedded([CteContextSource] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1024,7 +1023,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestCteOptimization([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
+		public void TestCteOptimization([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1043,7 +1042,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestRecursiveScalar([CteContextSource(TestProvName.AllClickHouse)] string context)
+		public void TestRecursiveScalar([CteContextSource] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1240,7 +1239,6 @@ namespace Tests.Linq
 
 		[Test(Description = "Test that we generate plain UNION without sub-queries (or query will be invalid)")]
 		public void Issue3359_MultipleSets([CteContextSource(
-			TestProvName.AllClickHouse,
 			TestProvName.AllOracle, // too many unions (ORA-32041: UNION ALL operation in recursive WITH clause must have only two branches)
 			TestProvName.AllPostgreSQL, // too many joins? (42P19: recursive reference to query "cte" must not appear within its non-recursive term)
 			ProviderName.DB2 // joins (SQL0345N  The fullselect of the recursive common table expression "cte" must be the UNION of two or more fullselects and cannot include column functions, GROUP BY clause, HAVING clause, ORDER BY clause, or an explicit join including an ON clause.)
@@ -1297,7 +1295,7 @@ namespace Tests.Linq
 		}
 
 		[Test(Description = "record type support")]
-		public void Issue3357_RecordClass([CteContextSource(TestProvName.AllClickHouse)] string context)
+		public void Issue3357_RecordClass([CteContextSource] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -1317,7 +1315,7 @@ namespace Tests.Linq
 		}
 
 		[Test(Description = "record type support")]
-		public void Issue3357_RecordLikeClass([CteContextSource(TestProvName.AllClickHouse)] string context)
+		public void Issue3357_RecordLikeClass([CteContextSource] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -1397,7 +1395,7 @@ namespace Tests.Linq
 			query.ToArray();
 		}
 
-		[ActiveIssue(Configurations = [TestProvName.AllClickHouse, TestProvName.AllSqlServer])]
+		[ActiveIssue(Configurations = [TestProvName.AllSqlServer])]
 		[Test(Description = "Test that we don't need typing for non-sqlserver providers")]
 		public void Issue3360_TypeByOtherQuery_AllProviders([CteContextSource(ProviderName.DB2)] string context)
 		{
@@ -1466,7 +1464,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue(Configurations = [TestProvName.AllClickHouse, TestProvName.AllPostgreSQL, TestProvName.AllSqlServer])]
+		[ActiveIssue(Configurations = [TestProvName.AllPostgreSQL, TestProvName.AllSqlServer])]
 		[Test(Description = "Test that we don't need typing for non-sqlserver providers")]
 		public void Issue3360_TypeStringEnum_AllProviders([CteContextSource(ProviderName.DB2)] string context)
 		{
@@ -1531,7 +1529,6 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue(Configuration = TestProvName.AllClickHouse)]
 		[Test(Description = "Test that we don't need typing for non-sqlserver providers")]
 		public void Issue3360_TypeByProjectionProperty_AllProviders([CteContextSource(ProviderName.DB2)] string context)
 		{
@@ -1582,7 +1579,7 @@ namespace Tests.Linq
 			[Column(DataType = DataType.VarChar, Length = 50)] public StrEnum?  Enum1 { get; set; }
 		}
 
-		[ActiveIssue(Configurations = [TestProvName.AllClickHouse, TestProvName.AllSqlServer])]
+		[ActiveIssue(Configurations = [TestProvName.AllSqlServer])]
 		[Test(Description = "Test CTE columns typing")]
 		public void Issue3360_NullGuidInAnchor([CteContextSource(TestProvName.AllFirebird, ProviderName.DB2)] string context)
 		{
@@ -1602,7 +1599,7 @@ namespace Tests.Linq
 			query.ToArray();
 		}
 
-		[ActiveIssue(Configurations = [TestProvName.AllClickHouse, TestProvName.AllPostgreSQL, TestProvName.AllSqlServer])]
+		[ActiveIssue(Configurations = [TestProvName.AllPostgreSQL, TestProvName.AllSqlServer])]
 		[Test(Description = "Test CTE columns typing")]
 		public void Issue3360_NullEnumInAnchor([CteContextSource(ProviderName.DB2)] string context)
 		{
@@ -1837,7 +1834,7 @@ namespace Tests.Linq
 			});
 		}
 
-		[ActiveIssue(Configurations = [TestProvName.AllClickHouse, TestProvName.AllOracle, TestProvName.AllSqlServer])]
+		[ActiveIssue(Configurations = [TestProvName.AllOracle, TestProvName.AllSqlServer])]
 		[Test(Description = "literals in anchor query")]
 		public void Issue3360_LiteralsInAnchor([CteContextSource] string context)
 		{
@@ -1911,7 +1908,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue(Configurations = [TestProvName.AllClickHouse, TestProvName.AllPostgreSQL, TestProvName.AllSqlServer])]
+		[ActiveIssue(Configurations = [TestProvName.AllPostgreSQL, TestProvName.AllSqlServer])]
 		[Test(Description = "Test that other providers work")]
 		public void Issue2451_ComplexColumn_All([CteContextSource(ProviderName.DB2)] string context)
 		{
@@ -1970,7 +1967,7 @@ namespace Tests.Linq
 		}
 
 		[Test(Description = "Recursive common table expression 'CTE' does not contain a top-level UNION ALL operator.")]
-		public void Issue2264([CteContextSource(TestProvName.AllClickHouse)] string context)
+		public void Issue2264([CteContextSource] string context)
 		{
 			using var db = GetDataContext(context);
 			using var tb = db.CreateLocalTable<TestFolder>();
@@ -2150,6 +2147,141 @@ namespace Tests.Linq
 				Assert.That(data[0].Patient!.Diagnosis, Is.Not.Null);
 				Assert.That(count, Is.EqualTo(4));
 			});
+		}
+
+		#region Issue 4366
+		sealed class Dto
+		{
+			public int id { get; set; }
+			public string name { get; set; } = null!;
+			public int? parent_id { get; set; }
+			public string? FullName;
+		}
+
+		class DtoMapped
+		{
+			public Dto Dto { get; set; } = null!;
+			public string? FullName;
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4366")]
+		public void Issue4366Test1([CteContextSource] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable<Dto>();
+
+			db.GetCte<Dto>(d =>
+			(from a in tb
+			 where a.parent_id == null
+			 select new Dto
+			 {
+				 id = a.id,
+				 parent_id = a.parent_id,
+				 name = a.name,
+				 FullName = a.name
+			 })
+			 .Concat(
+				from b in tb
+				from recur in d.InnerJoin(dd => dd.id == b.parent_id)
+				select new Dto
+				{
+					id = b.id,
+					parent_id = b.parent_id,
+					name = b.name,
+					FullName = recur.FullName + " > " + b.name
+				})).ToList();
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4366")]
+		public void Issue4366Test2([CteContextSource] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable<Dto>();
+
+			db.GetCte<DtoMapped>(d =>
+			(from a in tb
+			 where a.parent_id == null
+			 select new DtoMapped
+			 {
+				 Dto = a,
+				 FullName = a.name
+			 })
+			 .Concat(
+				from b in tb
+				from recur in d.InnerJoin(dd => dd.Dto.id == b.parent_id)
+				select new DtoMapped
+				{
+					Dto = b,
+					FullName = recur.FullName + " > " + b.name
+				})).ToList();
+		}
+		#endregion
+
+		#region Issue 1845
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/1845")]
+		public void Issue1845Test([CteContextSource] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var someCte = db.Person.Select(o => new CustomObject()
+			{
+				Value1 = o.FirstName,
+				Value2 = o.LastName,
+			}).AsCte();
+
+			var defaultValue1 = "Somebody";
+			var defaultValue2 = "Unimportant";
+			var defaultValue = new List<CustomObject>()
+			{
+				new CustomObject()
+				{
+					Value1 = defaultValue1,
+					Value2 = defaultValue2,
+				}
+			};
+
+			var query = someCte.Union(defaultValue).AsCte();
+
+			query.ToList();
+		}
+
+		sealed class CustomObject
+		{
+			public string? Value1 { get; set; }
+			public string? Value2 { get; set; }
+		}
+		#endregion
+
+		// TODO: it currently works, need to re-test with efcore integration
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4012")]
+		public void Issue4012Test([CteContextSource] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var cte1 = db.GetCte<Child>(cte =>
+			{
+				return db.Child
+				.Concat
+				(
+					from c in db.Child
+					from c2 in cte.InnerJoin(eh => c.ChildID == eh.ParentID)
+					select c
+				);
+			});
+			var cte2 = db.GetCte<Child>(cte =>
+			{
+				return db.Child
+				.Concat
+				(
+					from c in db.Child
+					from c2 in cte.InnerJoin(eh => c.ParentID == eh.ChildID)
+					select c
+				);
+			});
+
+			var result = cte1.Union(cte2);
+
+			var resultList = result.LoadWith(c => c.GrandChildren).ToList();
 		}
 	}
 }

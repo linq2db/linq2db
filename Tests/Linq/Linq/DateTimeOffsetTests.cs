@@ -1,9 +1,12 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices;
+
 using LinqToDB;
 using LinqToDB.Mapping;
 using LinqToDB.Tools;
+
 using NUnit.Framework;
 
 namespace Tests.Linq
@@ -1030,6 +1033,66 @@ namespace Tests.Linq
 					from t in Transaction.GetTestDataForContext(context) where           t.TransactionDate > TestData.DateTimeOffset.AddMinutes(200).ToUniversalTime() select t.TransactionId,
 					from t in db.GetTable<Transaction>()                 where Sql.AsSql(t.TransactionDate > TestData.DateTimeOffset.AddMinutes(200))                  select t.TransactionId);
 		}
+		#endregion
+
+		#region Issue 1855
+		[ActiveIssue(Configurations =
+		[
+			// type not mapped
+			TestProvName.AllAccess, TestProvName.AllDB2, TestProvName.AllInformix, TestProvName.AllSapHana,
+			ProviderName.SqlCe, TestProvName.AllSQLiteClassic, TestProvName.AllSybase,
+			// unknown type (2.5,3), value mapping (4, 5)
+			TestProvName.AllFirebird
+		])]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/1855")]
+		public void Issue1855Test([DataSources] string context, [Values(0, 1, 2, 3)] int testCase)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable<Issue1855Table>();
+
+			var dtoBase = new DateTimeOffset(2019,08,08,08,08,08, TimeSpan.Zero);
+			var id = 1;
+			var insert = tb
+					.Value(r => r.Id, 1)
+					.Value(r => r.SomeDateTimeOffset, dtoBase)
+					.Value(r => r.SomeNullableDateTimeOffset, dtoBase);
+
+			insert.Insert();
+
+			var interval = 10;
+			var clientSideIn = dtoBase.AddSeconds(interval);
+			List<Issue1855Table> result;
+			var query = tb.Where(r => r.Id == id);
+
+			if (testCase == 2)
+			{
+				result = query.Where(r => clientSideIn != r.SomeNullableDateTimeOffset).ToList();
+			}
+			else if (testCase == 3)
+			{
+				result = query.Where(r => clientSideIn != r.SomeDateTimeOffset).ToList();
+			}
+			else
+			{
+				result = query
+					.Where(
+						r => Sql.DateAdd(
+							Sql.DateParts.Second,
+							interval,
+							(testCase == 1 ? r.SomeNullableDateTimeOffset : r.SomeDateTimeOffset)) >= clientSideIn)
+					.ToList();
+			}
+
+			Assert.That(result, Is.Not.Empty);
+		}
+
+		sealed class Issue1855Table
+		{
+			[PrimaryKey] public int Id { get; set; }
+			public DateTimeOffset SomeDateTimeOffset { get; set; }
+			public DateTimeOffset? SomeNullableDateTimeOffset { get; set; }
+		}
+
 		#endregion
 	}
 }

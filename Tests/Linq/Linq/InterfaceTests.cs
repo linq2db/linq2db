@@ -1,7 +1,12 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
+using System.Linq.Expressions;
+
 using FluentAssertions;
+
 using LinqToDB;
 using LinqToDB.Mapping;
+
 using NUnit.Framework;
 
 namespace Tests.Linq
@@ -344,6 +349,42 @@ namespace Tests.Linq
 
 			Assert.That(results, Has.Length.EqualTo(1));
 			Assert.That(results[0].Id, Is.EqualTo(1));
+		}
+		#endregion
+
+		#region Issue 4607
+		interface IHasDeleted
+		{
+			bool Interface { get; set; }
+		}
+
+		class SomeTable : IHasDeleted
+		{
+			public bool ClassProp { get; set; }
+			public bool Interface { get; set; }
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4607")]
+		public void Issue4607Test([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable<SomeTable>();
+
+			var expr = Expression.MemberInit(
+				Expression.New(typeof(SomeTable)),
+				Expression.Bind(
+					typeof(SomeTable).GetProperty(nameof(SomeTable.ClassProp))!,
+					Expression.Constant(true)),
+				Expression.Bind(
+					typeof(IHasDeleted).GetProperty(nameof(IHasDeleted.Interface))!,
+					Expression.Constant(false)));
+
+			tb.Insert(Expression.Lambda<Func<SomeTable>>(expr));
+
+			var res = tb.Single();
+
+			Assert.That(res.ClassProp, Is.True);
+			Assert.That(res.Interface, Is.False);
 		}
 		#endregion
 	}

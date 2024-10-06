@@ -1984,6 +1984,21 @@ namespace Tests.Linq
 		}
 		#endregion
 
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4520")]
+		public void Issue4520Test([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			db.Types2
+				.Where(i => i.ID == 1)
+				.Select(i =>
+				new
+				{
+					IsCurrent = !i.BoolValue.GetValueOrDefault() && i.IntValue == db.Types2.Where(p => p.ID == 2).Select(p => p.IntValue).FirstOrDefault()
+				})
+				.ToList();
+		}
+
 		#region Issue 3372
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3372")]
@@ -2024,5 +2039,178 @@ namespace Tests.Linq
 			Assert.That(query.GetSelectQuery().Select.Columns, Has.Count.EqualTo(3));
 		}
 		#endregion
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4198")]
+		public void Issue4198Test([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q = db.GetTable<Person>().Select(a => new
+			{
+				Account = (Person)a
+			}).Where(cwa => cwa.Account.ID == 1);
+
+			var r = q.Count();
+		}
+
+		#region 4199
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4199")]
+		public void Issue4199Test1([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q = db.GetTable<IUserAccount>().Select(a => new
+			{
+				Account = (UserAccountImplicit)a
+			}).Where(cwa => cwa.Account.ID == 1);
+
+			var r = q.Count();
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4199")]
+		public void Issue4199Test2([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q = db.GetTable<IUserAccount>().Select(a => new
+			{
+				Account = (UserAccountExplicit)a
+			}).Where(cwa => cwa.Account.ID == 1);
+
+			var r = q.Count();
+		}
+
+		[Table("Person")]
+		sealed class UserAccountImplicit : IUserAccount
+		{
+			[Column("PersonID")]
+			public int ID { get; set; }
+		}
+
+		[Table("Person")]
+		sealed class UserAccountExplicit : IUserAccount
+		{
+			[Column("PersonID")]
+			public int ID { get; set; }
+
+			[NotColumn]
+			int IUserAccount.ID { get; }
+		}
+
+		interface IUserAccount
+		{
+			public int ID { get; }
+		}
+		#endregion
+
+		sealed record NullableIssue4200Record(int? Id);
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4200")]
+		public void Issue4200Test([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			int[] parentIds = { 1, 2, 3 };
+
+			var result = db.Person.Select(a => new NullableIssue4200Record(a.ID))
+				.Where(i => i.Id != null && parentIds.Contains(i.Id.Value))
+				.ToList();
+		}
+
+		#region issue 4192
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4192")]
+		public void Issue4192Test1([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable<Issue4192TableNotNullable>();
+
+			var resultQueryable = GetByParentId(tb, 12);
+			Assert.That(() => resultQueryable.ToList(), Throws.Exception);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4192")]
+		public void Issue4192Test2([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable<Issue4192TableNullable>();
+
+			var resultQueryable = GetByParentId(tb, 12);
+			var result = resultQueryable.ToList();
+		}
+
+		static IQueryable<T> GetByParentId<T>(IQueryable<T> items, int? parentId) where T : IWithParent
+		{
+			return items.Where(i => i.ParentId == parentId);
+		}
+
+		interface IWithParent { int? ParentId { get; } }
+
+		[Table]
+		sealed class Issue4192TableNotNullable : IWithParent
+		{
+			[Column] public string? Name { get; set; }
+			[Column] public int ParentId { get; set; }
+
+			int? IWithParent.ParentId => ParentId;
+		}
+
+		[Table]
+		sealed class Issue4192TableNullable : IWithParent
+		{
+			[Column] public string? Name { get; set; }
+			[Column] public int? ParentId { get; set; }
+		}
+		#endregion
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/3181")]
+		public void Issue3181Test1([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q = from t1 in db.Person
+					let t2 = new Person()
+					{
+						FirstName = t1.FirstName,
+					}
+					select new Person()
+					{
+						FirstName = t2.FirstName,
+						LastName = t2.LastName,
+						Gender = t2.Gender
+					};
+
+			var res = q.ToList();
+			Assert.Multiple(() =>
+			{
+				Assert.That(res.All(r => r.LastName == null), Is.True);
+				Assert.That(res.All(r => r.Gender == default), Is.True);
+			});
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/3181")]
+		public void Issue3181Test2([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q = from t2 in
+						from t1 in db.Person
+						select new Person()
+						{
+							FirstName = t1.FirstName,
+						}
+					select new Person()
+					{
+						FirstName = t2.FirstName,
+						LastName = t2.LastName,
+						Gender = t2.Gender
+					};
+
+			var res = q.ToList();
+			Assert.Multiple(() =>
+			{
+				Assert.That(res.All(r => r.LastName == null), Is.True);
+				Assert.That(res.All(r => r.Gender == default), Is.True);
+			});
+		}
 	}
 }

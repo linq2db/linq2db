@@ -698,3 +698,26 @@ CREATE TABLE "TestMergeIdentity"
 	"Field"  INT NULL
 )
 GO
+CREATE OR REPLACE FUNCTION overloads(input1 integer)
+ RETURNS integer
+ LANGUAGE sql
+AS $function$
+   SELECT input1;
+$function$
+;
+
+CREATE OR REPLACE FUNCTION overloads(input1 integer, input2 smallint)
+ RETURNS smallint
+ LANGUAGE sql
+AS $function$
+   SELECT input2;
+$function$
+;
+
+CREATE OR REPLACE FUNCTION overloads(input1 integer, input2 integer)
+ RETURNS smallint
+ LANGUAGE sql
+AS $function$
+   SELECT overloads(input2, input1::smallint);
+$function$
+;

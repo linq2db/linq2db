@@ -1173,5 +1173,57 @@ namespace Tests.xUpdate
 				table.Single(x => ((InheritedDefault3)x).Value3 == "Str3").Should().BeOfType<InheritedDefault3>();
 			}
 		}
+
+		[Table]
+		sealed class IdentityOnlyField
+		{
+			[Identity] public int Id { get; set; }
+		}
+
+		[Table]
+		sealed class SkipOnlyField
+		{
+			[Column(SkipOnInsert = true)] public int? Id { get; set; }
+		}
+
+		[ActiveIssue(Configurations = [TestProvName.AllClickHouse, TestProvName.AllDB2, TestProvName.AllFirebird, TestProvName.AllInformix, TestProvName.AllMySql, TestProvName.AllOracle, TestProvName.AllPostgreSQL, TestProvName.AllSapHana, ProviderName.SqlCe, TestProvName.AllSQLite, TestProvName.AllSqlServer])]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4615")]
+		public void BulkCopyAutoOnly([DataSources(false)] string context, [Values] BulkCopyType copyType)
+		{
+			var data = new IdentityOnlyField[]
+			{
+				new IdentityOnlyField()
+			};
+
+			using var db = new DataConnection(context);
+			using var table = db.CreateLocalTable<IdentityOnlyField>();
+
+			var options = GetDefaultBulkCopyOptions(context) with { BulkCopyType = copyType };
+			table.BulkCopy(options, data);
+
+			var item = table.Single();
+
+			Assert.That(item.Id, Is.EqualTo(1));
+		}
+
+		[ActiveIssue(Configurations = [TestProvName.AllClickHouse, TestProvName.AllDB2, TestProvName.AllFirebird, TestProvName.AllInformix, TestProvName.AllMySql, TestProvName.AllOracle, TestProvName.AllPostgreSQL, TestProvName.AllSapHana, ProviderName.SqlCe, TestProvName.AllSQLite, TestProvName.AllSqlServer])]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4615")]
+		public void BulkCopySkipOnly([DataSources(false)] string context, [Values] BulkCopyType copyType)
+		{
+			var data = new SkipOnlyField[]
+			{
+				new SkipOnlyField()
+			};
+
+			using var db = new DataConnection(context);
+			using var table = db.CreateLocalTable<SkipOnlyField>();
+
+			var options = GetDefaultBulkCopyOptions(context) with { BulkCopyType = copyType };
+			table.BulkCopy(options, data);
+
+			var item = table.Single();
+
+			Assert.That(item.Id, Is.Null);
+		}
 	}
 }
