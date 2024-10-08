@@ -34,7 +34,6 @@ namespace LinqToDB.Linq.Builder
 		IBuildContext? GetContext(Expression   expression, BuildInfo  buildInfo);
 		void           SetAlias(string?        alias);
 		SqlStatement   GetResultStatement();
-		void           CompleteColumns();
 		void           Detach();
 		bool           IsSingleElement       { get; }
 		bool           AutomaticAssociations { get; }

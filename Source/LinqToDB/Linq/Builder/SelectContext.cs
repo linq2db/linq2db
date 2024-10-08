@@ -226,10 +226,6 @@ namespace LinqToDB.Linq.Builder
 			return new SqlSelectStatement(SelectQuery);
 		}
 
-		public override void CompleteColumns()
-		{
-		}
-
 		public override IBuildContext? GetContext(Expression expression, BuildInfo buildInfo)
 		{
 			if (!buildInfo.CreateSubQuery)

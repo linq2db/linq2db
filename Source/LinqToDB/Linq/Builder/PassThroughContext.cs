@@ -50,11 +50,6 @@ namespace LinqToDB.Linq.Builder
 			return Context.GetResultStatement();
 		}
 
-		public override void CompleteColumns()
-		{
-			Context.CompleteColumns();
-		}
-
 		public override bool IsOptional => Context.IsOptional;
 
 		public override bool IsSingleElement => Context.IsSingleElement;

@@ -228,7 +228,7 @@ namespace Tests.Linq
 
 				Assert.Multiple(() =>
 				{
-					Assert.That(result.Count, Is.EqualTo(1));
+					Assert.That(result, Has.Count.EqualTo(1));
 					Assert.That(db.LastQuery, Does.Not.Contain("NULL"));
 				});
 			}

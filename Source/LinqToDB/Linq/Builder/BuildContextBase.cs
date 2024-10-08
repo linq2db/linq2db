@@ -55,17 +55,8 @@ namespace LinqToDB.Linq.Builder
 		public virtual bool IsSingleElement       => false;
 		public virtual bool AutomaticAssociations => true;
 
-		#region Obsolete
-
-		public virtual void CompleteColumns()
-		{
-		}
-
 		public virtual void Detach()
 		{
 		}
-
-		#endregion Obsolete
-
 	}
 }

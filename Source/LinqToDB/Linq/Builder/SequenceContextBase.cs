@@ -58,14 +58,6 @@ namespace LinqToDB.Linq.Builder
 			return Sequence.GetResultStatement();
 		}
 
-		public override void CompleteColumns()
-		{
-			foreach (var sequence in Sequences)
-			{
-				sequence.CompleteColumns();
-			}
-		}
-
 		public override void SetAlias(string? alias)
 		{
 			if (SelectQuery.Select.Columns.Count == 1)
