@@ -81,11 +81,6 @@ namespace LinqToDB.DataProvider.DB2
 				return cast.MakeMandatory();
 			}
 
-			if (cast.SystemType.ToUnderlying() == typeof(bool) && ReferenceEquals(cast, IsForPredicate))
-			{
-				return ConvertToBooleanSearchCondition(cast.Expression);
-			}
-
 			if (toType.SystemType == typeof(string) && argumentType.SystemType != typeof(string))
 			{
 				return new SqlFunction(cast.SystemType, "RTrim", new SqlFunction(typeof(string), "Char", argument));

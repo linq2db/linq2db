@@ -69,16 +69,16 @@ namespace LinqToDB.Linq.Builder
 
 			public override Expression MakeExpression(Expression path, ProjectFlags flags)
 			{
-				if (flags.HasFlag(ProjectFlags.Root) && SequenceHelper.IsSameContext(path, this))
-				{
-					return path;
-				}
-
+				
 				if (SequenceHelper.IsSameContext(path, this) 
-					&& (flags.IsExpression() || flags.IsExtractProjection())
+					&& (flags.IsRoot() || flags.IsExtractProjection() || flags.IsExpand() || flags.IsSubquery() || flags.IsAggregationRoot() || flags.IsExpand())
 				    && !path.Type.IsAssignableFrom(ElementType))
 				{
 					var result = GetGroupJoinCall();
+					if (result.Type != path.Type)
+					{
+						result = SqlAdjustTypeExpression.AdjustType(result, path.Type, MappingSchema);
+					}
 					return result;
 				}
 

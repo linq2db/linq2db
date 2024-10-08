@@ -17,7 +17,7 @@ namespace LinqToDB.Linq.Builder
 		static ReadOnlyCollection<Expression>? PrepareNoNullConditions(ExpressionBuilder builder, IBuildContext notNullHandlerSequence, IBuildContext sequence, IBuildContext nullabilitySequence, bool allowNullField)
 		{
 			var sequenceRef  = new ContextRefExpression(sequence.ElementType, sequence);
-			var translated   = builder.BuildSqlExpression(sequence, sequenceRef, ProjectFlags.SQL, buildFlags: ExpressionBuilder.BuildFlags.ForceAssignments);
+			var translated   = builder.BuildSqlExpression(sequence, sequenceRef);
 			var placeholders = ExpressionBuilder.CollectDistinctPlaceholders(translated);
 
 			var nullability = NullabilityContext.GetContext(nullabilitySequence.SelectQuery);
@@ -85,7 +85,7 @@ namespace LinqToDB.Linq.Builder
 				var defaultRef = new ContextRefExpression(defaultValueContext.ElementType, defaultValueContext);
 
 				// force to generate fields
-				var translated = builder.BuildSqlExpression(defaultValueContext, defaultRef, ProjectFlags.SQL, buildFlags : ExpressionBuilder.BuildFlags.ForceAssignments);
+				var translated = builder.BuildSqlExpression(defaultValueContext, defaultRef);
 				translated = builder.UpdateNesting(subqueryContext, translated);
 				if (defaultValueContext.SelectQuery.Select.Columns.Count == 0)
 				{
@@ -104,7 +104,7 @@ namespace LinqToDB.Linq.Builder
 				var notNullConditions = defaultIfEmptyContext.GetNotNullConditions();
 
 				var defaultIfEmptyRef = new ContextRefExpression(defaultIfEmptyContext.ElementType, defaultIfEmptyContext);
-				var defaultRefExpr = (Expression)defaultRef;
+				var defaultRefExpr    = (Expression)defaultRef;
 				if (defaultRefExpr.Type != defaultIfEmptyRef.Type)
 				{
 					defaultRefExpr = Expression.Convert(defaultRefExpr, defaultIfEmptyRef.Type);
@@ -206,16 +206,13 @@ namespace LinqToDB.Linq.Builder
 					return projectedDefault;
 				}
 
-				var expr = Builder.BuildSqlExpression(this, newPath, flags/*.SqlFlag()*/);
+				var expr = Builder.BuildExpression(this, newPath);
 
-				if (!flags.IsTest())
-				{
-					expr = Builder.UpdateNesting(this, expr);
-				}
+				expr = Builder.UpdateNesting(this, expr);
 
 				expr = SequenceHelper.CorrectTrackingPath(Builder, expr, path);
 
-				if (!IsNullValidationDisabled && /*!flags.IsKeys() && */expr.UnwrapConvert() is not SqlEagerLoadExpression)
+				if (!IsNullValidationDisabled && expr.UnwrapConvert() is not SqlEagerLoadExpression && !flags.IsAssociationRoot())
 				{
 					if (expr is SqlPlaceholderExpression placeholder)
 					{

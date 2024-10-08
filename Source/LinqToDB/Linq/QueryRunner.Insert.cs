@@ -10,6 +10,7 @@ namespace LinqToDB.Linq
 	using Mapping;
 	using SqlQuery;
 	using Tools;
+	using Infrastructure;
 
 	static partial class QueryRunner
 	{
@@ -47,12 +48,14 @@ namespace LinqToDB.Linq
 					Queries = { new QueryInfo { Statement = insertStatement } }
 				};
 
+				var accessorIdGenerator = new UniqueIdGenerator<ParameterAccessor>();
+
 				foreach (var field in sqlTable.Fields.Where(x => columnFilter == null || columnFilter(obj, x.ColumnDescriptor)))
 				{
 					if (field.IsInsertable && !field.ColumnDescriptor.ShouldSkip(obj!, descriptor, SkipModification.Insert))
 					{
-						var param = GetParameter(type, dataContext, field);
-						ei.Queries[0].AddParameterAccessor(param);
+						var param = GetParameter(accessorIdGenerator, type, dataContext, field);
+						ei.AddParameterAccessor(param);
 
 						insertStatement.Insert.Items.Add(new SqlSetExpression(field, param.SqlParameter));
 					}

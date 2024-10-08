@@ -354,7 +354,7 @@ namespace LinqToDB.Linq.Builder
 				additionalCondition,
 				inline, isOptional, loadwith, loadWithPath, out isOptional);
 
-			var correctedContext = tableContext.WithType(parentExactType);
+			var correctedContext = tableContext.WithType(queryMethod.Parameters[0].Type);
 
 			var body = queryMethod.GetBody(correctedContext);
 

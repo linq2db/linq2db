@@ -46,7 +46,7 @@ namespace LinqToDB.Linq.Builder
 
 					if (current is ContextRefExpression)
 					{
-						var testExpr = ctx.builder.ConvertToSqlExpr(ctx.context, e, ProjectFlags.SQL | ProjectFlags.Keys | ProjectFlags.Test);
+						var testExpr = ctx.builder.BuildSqlExpression(ctx.context, e, BuildPurpose.Sql, BuildFlags.ForKeys);
 						if (testExpr is SqlPlaceholderExpression or SqlGenericConstructorExpression)
 							ctx.dependencies.Add(e);
 
@@ -119,11 +119,7 @@ namespace LinqToDB.Linq.Builder
 
 		Expression ExpandContexts(IBuildContext context, Expression expression)
 		{
-			var projected = ExtractProjection(context, expression);
-
-			var lambdaResolver = new LambdaResolveVisitor(context);
-			projected = lambdaResolver.Visit(projected);
-
+			var projected = BuildExpandExpression(context, expression);
 			return projected;
 		}
 
@@ -249,7 +245,7 @@ namespace LinqToDB.Linq.Builder
 			CollectDependencies(buildContext, sequenceExpression, dependencies);
 
 			var clonedParentContext = cloningContext.CloneContext(buildContext);
-			clonedParentContext = new EagerContext(clonedParentContext, buildContext.ElementType);
+			clonedParentContext = new EagerContext(new SubQueryContext(clonedParentContext), buildContext.ElementType);
 
 			var correctedSequence  = cloningContext.CloneExpression(sequenceExpression);
 			var correctedPredicate = cloningContext.CloneExpression(eagerLoad.Predicate);
@@ -286,11 +282,12 @@ namespace LinqToDB.Linq.Builder
 			{
 				if (correctedPredicate != null)
 				{
-					var predicateSql = ConvertPredicate(clonedParentContext, correctedPredicate, ProjectFlags.SQL,
-						out var error);
+					var predicateExpr = BuildSqlExpression(clonedParentContext, correctedPredicate);
 
-					if (predicateSql == null)
-						throw error!.CreateException();
+					if (predicateExpr is not SqlPlaceholderExpression placeholder || placeholder.Sql is not ISqlPredicate predicateSql)
+					{
+						throw SqlErrorExpression.EnsureError(predicateExpr, correctedPredicate.Type).CreateException();
+					}
 
 					clonedParentContext.SelectQuery.Where.EnsureConjunction().Add(predicateSql);
 				}
@@ -331,43 +328,8 @@ namespace LinqToDB.Linq.Builder
 						Methods.Queryable.SelectManyProjection.MakeGenericMethod(mainType, detailType, keyDetailType),
 						sourceQuery, Expression.Quote(detailSelector), Expression.Quote(selector));
 
-				var saveExpressionCache = _expressionCache;
-
-				_expressionCache = saveExpressionCache.ToDictionary(p =>
-						new SqlCacheKey(
-							cloningContext.CorrectExpression(p.Key.Expression),
-							cloningContext.CorrectContext(p.Key.Context), p.Key.ColumnDescriptor,
-							cloningContext.CorrectElement(p.Key.SelectQuery), p.Key.Flags),
-					p => cloningContext.CorrectExpression(p.Value), SqlCacheKey.SqlCacheKeyComparer);
-
-				var saveColumnsCache = _columnCache;
-
-				_columnCache = _columnCache.ToDictionary(p =>
-						new ColumnCacheKey(
-							cloningContext.CorrectExpression(p.Key.Expression),
-							p.Key.ResultType,
-							cloningContext.CorrectElement(p.Key.SelectQuery),
-							cloningContext.CorrectElement(p.Key.ParentQuery)),
-					p => cloningContext.CorrectExpression(p.Value), ColumnCacheKey.ColumnCacheKeyComparer);
-
-				var saveAssociationsCache = _associations;
-
-				_associations = _associations?.ToDictionary(p =>
-						new SqlCacheKey(
-							cloningContext.CorrectExpression(p.Key.Expression),
-							cloningContext.CorrectContext(p.Key.Context), p.Key.ColumnDescriptor,
-							cloningContext.CorrectElement(p.Key.SelectQuery), p.Key.Flags),
-
-					p => cloningContext.CorrectExpression(p.Value), SqlCacheKey.SqlCacheKeyComparer);
-
-				var saveSqlCache = _cachedSql;
-
-				_cachedSql = _cachedSql.ToDictionary(p =>
-						new SqlCacheKey(
-							cloningContext.CorrectExpression(p.Key.Expression),
-							cloningContext.CorrectContext(p.Key.Context), p.Key.ColumnDescriptor,
-							cloningContext.CorrectElement(p.Key.SelectQuery), p.Key.Flags),
-					p => cloningContext.CorrectExpression(p.Value), SqlCacheKey.SqlCacheKeyComparer);
+				var saveVisitor = _buildVisitor;
+				_buildVisitor = _buildVisitor.Clone(cloningContext);
 
 				cloningContext.UpdateContextParents();
 
@@ -380,10 +342,7 @@ namespace LinqToDB.Linq.Builder
 					.MakeGenericMethod(mainKeyExpression.Type, detailType)
 					.Invoke(this, parameters)!;
 
-				_expressionCache = saveExpressionCache;
-				_columnCache     = saveColumnsCache;
-				_cachedSql       = saveSqlCache;
-				_associations    = saveAssociationsCache;
+				_buildVisitor = saveVisitor;
 			}
 
 			if (resultExpression is SqlErrorExpression errorExpression)
@@ -436,7 +395,8 @@ namespace LinqToDB.Linq.Builder
 		{
 			var query = new Query<KeyDetailEnvelope<TKey, T>>(DataContext, queryExpression);
 
-			query.Init(sequence, _parametersContext.CurrentSqlParameters);
+			query.Init(sequence);
+			query.SetParametersAccessors(_parametersContext.CurrentSqlParameters.ToList());
 
 			if (!BuildQuery(query, sequence, queryParameter, ref preambles!, previousKeys))
 				return query.ErrorExpression!;
@@ -471,7 +431,8 @@ namespace LinqToDB.Linq.Builder
 		{
 			var query = new Query<T>(DataContext, queryExpression);
 
-			query.Init(sequence, _parametersContext.CurrentSqlParameters);
+			query.Init(sequence);
+			query.SetParametersAccessors(_parametersContext.CurrentSqlParameters.ToList());
 
 			BuildQuery(query, sequence, queryParameter, ref preambles!, []);
 
@@ -500,7 +461,7 @@ namespace LinqToDB.Linq.Builder
 				if (e.NodeType == ExpressionType.Extension && e is SqlEagerLoadExpression eagerLoad)
 				{
 					// Do not process eager loading fast mode
-					if (!_validateSubqueries)
+					if (!ValidateSubqueries)
 						return SqlErrorExpression.EnsureError(eagerLoad.SequenceExpression, e.Type);
 
 					eagerLoadingCache ??= new Dictionary<Expression, Expression>(ExpressionEqualityComparer.Instance);
@@ -543,6 +504,14 @@ namespace LinqToDB.Linq.Builder
 					.ToListAsync(cancellationToken)
 					.ConfigureAwait(false);
 			}
+
+			public override void GetUsedParameters(ICollection<SqlParameter> parameters)
+			{
+				foreach (var query in _query.Queries)
+				{
+					QueryHelper.CollectParameters(query.Statement, parameters);
+				}
+			}
 		}
 
 		class Preamble<TKey, T> : Preamble
@@ -581,6 +550,14 @@ namespace LinqToDB.Linq.Builder
 				}
 
 				return result;
+			}
+
+			public override void GetUsedParameters(ICollection<SqlParameter> parameters)
+			{
+				foreach (var query in _query.Queries)
+				{
+					QueryHelper.CollectParameters(query.Statement, parameters);
+				}
 			}
 		}
 

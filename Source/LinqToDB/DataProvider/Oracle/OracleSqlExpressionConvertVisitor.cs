@@ -163,11 +163,6 @@ namespace LinqToDB.DataProvider.Oracle
 			var toType   = cast.ToType;
 			var argument = cast.Expression;
 
-			if (ftype == typeof(bool) && ReferenceEquals(cast, IsForPredicate))
-			{
-				return ConvertToBooleanSearchCondition(cast.Expression);
-			}
-
 			if (ftype == typeof(DateTime) || ftype == typeof(DateTimeOffset)
 #if NET6_0_OR_GREATER
 				|| ftype == typeof(DateOnly)

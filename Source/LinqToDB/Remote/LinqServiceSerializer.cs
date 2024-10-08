@@ -705,7 +705,8 @@ namespace LinqToDB.Remote
 				protected override IQueryElement VisitSqlValuesTable(SqlValuesTable element)
 				{
 					VisitElements(element.Fields, VisitMode.ReadOnly);
-					return base.VisitSqlValuesTable(element);
+					VisitListOfArrays(element.Rows, VisitMode.ReadOnly);
+					return element;
 				}
 
 				void RegisterInSerializer(IQueryElement element)

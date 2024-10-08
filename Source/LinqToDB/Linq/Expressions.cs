@@ -1013,26 +1013,6 @@ namespace LinqToDB.Linq
 
 			{ M(() => Math.Pow        (0,0) ), N(() => L<double,double,double>    ((double x,double y) => Sql.Power(x, y)!.Value )) },
 
-			{ M(() => Sql.Round       (0m)  ), N(() => L<decimal?,decimal?>       ((decimal? d)          => Sql.Round(d, 0))) },
-			{ M(() => Sql.Round       (0.0) ), N(() => L<double?, double?>        ((double?  d)          => Sql.Round(d, 0))) },
-
-			{ M(() => Sql.RoundToEven(0m)   ), N(() => L<decimal?,decimal?>       ((decimal? d)          => d - Sql.Floor(d) == 0.5m && Sql.Floor(d) % 2 == 0? Sql.Floor(d) : Sql.Round(d))) },
-			{ M(() => Sql.RoundToEven(0.0)  ), N(() => L<double?, double?>        ((double?  d)          => d - Sql.Floor(d) == 0.5  && Sql.Floor(d) % 2 == 0? Sql.Floor(d) : Sql.Round(d))) },
-
-			{ M(() => Sql.RoundToEven(0m, 0)), N(() => L<decimal?,int?,decimal?>((decimal? d,int? n) => d * 2 == Sql.Round(d * 2, n) && d != Sql.Round(d, n) ? Sql.Round(d / 2, n) * 2 : Sql.Round(d, n))) },
-			{ M(() => Sql.RoundToEven(0.0,0)), N(() => L<double?, int?,double?> ((double?  d,int? n) => d * 2 == Sql.Round(d * 2, n) && d != Sql.Round(d, n) ? Sql.Round(d / 2, n) * 2 : Sql.Round(d, n))) },
-
-			{ M(() => Math.Round     (0m)   ), N(() => L<decimal,decimal>         ( d    => Sql.RoundToEven(d)!.Value )) },
-			{ M(() => Math.Round     (0.0)  ), N(() => L<double, double>          ( d    => Sql.RoundToEven(d)!.Value )) },
-
-			{ M(() => Math.Round     (0m, 0)), N(() => L<decimal,int,decimal>   ((d,n) => Sql.RoundToEven(d, n)!.Value )) },
-			{ M(() => Math.Round     (0.0,0)), N(() => L<double, int,double>    ((d,n) => Sql.RoundToEven(d, n)!.Value )) },
-
-			{ M(() => Math.Round (0m,    MidpointRounding.ToEven)), N(() => L<decimal,MidpointRounding,decimal>      ((d,  p) => p == MidpointRounding.ToEven ? Sql.RoundToEven(d)!.  Value : Sql.Round(d)!.  Value )) },
-			{ M(() => Math.Round (0.0,   MidpointRounding.ToEven)), N(() => L<double, MidpointRounding,double>       ((d,  p) => p == MidpointRounding.ToEven ? Sql.RoundToEven(d)!.  Value : Sql.Round(d)!.  Value )) },
-
-			{ M(() => Math.Round (0m, 0, MidpointRounding.ToEven)), N(() => L<decimal,int,MidpointRounding,decimal>((d,n,p) => p == MidpointRounding.ToEven ? Sql.RoundToEven(d,n)!.Value : Sql.Round(d,n)!.Value )) },
-			{ M(() => Math.Round (0.0,0, MidpointRounding.ToEven)), N(() => L<double, int,MidpointRounding,double> ((d,n,p) => p == MidpointRounding.ToEven ? Sql.RoundToEven(d,n)!.Value : Sql.Round(d,n)!.Value )) },
 
 			{ M(() => Math.Sign  ((decimal)0)), N(() => L<decimal,int>(p => Sql.Sign(p)!.Value )) },
 			{ M(() => Math.Sign  ((double) 0)), N(() => L<double, int>(p => Sql.Sign(p)!.Value )) },
@@ -1373,27 +1353,6 @@ namespace LinqToDB.Linq
 					{ M(() => Sql.RoundToEven(0.0)  ), N(() => L<double?,double?>       ((double? v)          => (double?)Sql.RoundToEven((decimal)v!)))    },
 					{ M(() => Sql.RoundToEven(0.0,0)), N(() => L<double?,int?,double?>((double? v,int? p) => (double?)Sql.RoundToEven((decimal)v!, p))) },
 					{ M(() => Sql.Stuff("",0,0,"")), N(() => L<string?,int?,int?,string?,string?>((string? p0,int? p1,int? p2,string? p3) => AltStuff (p0,  p1, p2, p3)))             },
-				}},
-
-				#endregion
-
-				#region ClickHouse
-
-				{ ProviderName.ClickHouse, new Dictionary<MemberHelper.MemberInfoWithType,IExpressionInfo> {
-					{ M(() => DateTime.Now.Date      ), N(() => L<DateTime,DateTime>      ((DateTime obj)       => ClickHouseGetDate(obj)!.Value)) },
-					{ M(() => DateTimeOffset.Now.Date), N(() => L<DateTimeOffset,DateTime>((DateTimeOffset obj) => ClickHouseGetDate(obj)!.Value)) },
-
-					{ M(() => DateTimeOffset.Now.TimeOfDay), N(() => L<DateTimeOffset,TimeSpan>((DateTimeOffset obj) => ClickHouseGetTime(obj)!.Value)) },
-					{ M(() => DateTime.Now.TimeOfDay      ), N(() => L<DateTime,TimeSpan>      ((DateTime obj)       => ClickHouseGetTime(obj)!.Value)) },
-
-					// TODO:
-					// we shouldn't have this mapping, but currently Math.Round -> Sql.RoundToEven mapping ignores expression attribute on Sql.RoundToEven
-					// and maps it to expression
-					{ M(() => Sql.RoundToEven(0m)   ), N(() => L<decimal?,decimal?>     ( v   => ClickHouseRoundToEven(v))) },
-					{ M(() => Sql.RoundToEven(0.0)  ), N(() => L<double?, double?>      ( v   => ClickHouseRoundToEven(v))) },
-					{ M(() => Sql.RoundToEven(0m, 0)), N(() => L<decimal?,int?,decimal?>((v,p)=> ClickHouseRoundToEven(v, p))) },
-					{ M(() => Sql.RoundToEven(0.0,0)), N(() => L<double?, int?,double?> ((v,p)=> ClickHouseRoundToEven(v, p))) },
-
 				}},
 
 				#endregion
@@ -1775,28 +1734,6 @@ namespace LinqToDB.Linq
 				(DateTime?)null :
 				new DateTime(year.Value, month.Value, day.Value);
 		}
-
-		// ClickHouse
-		//
-		[Sql.Function("toDate32", ServerSideOnly = true, IsNullable = Sql.IsNullableType.IfAnyParameterNullable)]
-		private static DateTime? ClickHouseGetDate(DateTimeOffset? dto) => throw new InvalidOperationException();
-		[Sql.Function("toDate32", ServerSideOnly = true, IsNullable = Sql.IsNullableType.IfAnyParameterNullable)]
-		private static DateTime? ClickHouseGetDate(DateTime?       dt) => throw new InvalidOperationException();
-
-		// :-/
-		[Sql.Expression("toInt64((toUnixTimestamp64Nano(toDateTime64({0}, 7)) - toUnixTimestamp64Nano(toDateTime64(toDate32({0}), 7))) / 100)", ServerSideOnly = true, IsNullable = Sql.IsNullableType.IfAnyParameterNullable, Precedence = SqlQuery.Precedence.Primary)]
-		private static TimeSpan? ClickHouseGetTime(DateTimeOffset? dto) => throw new InvalidOperationException();
-		[Sql.Expression("toInt64((toUnixTimestamp64Nano(toDateTime64({0}, 7)) - toUnixTimestamp64Nano(toDateTime64(toDate32({0}), 7))) / 100)", ServerSideOnly = true, IsNullable = Sql.IsNullableType.IfAnyParameterNullable, Precedence = SqlQuery.Precedence.Primary)]
-		private static TimeSpan? ClickHouseGetTime(DateTime? dt) => throw new InvalidOperationException();
-
-		[Sql.Function("roundBankers", IsNullable = Sql.IsNullableType.SameAsFirstParameter)]
-		private static decimal? ClickHouseRoundToEven(decimal? value) => throw new InvalidOperationException();
-		[Sql.Function("roundBankers", IsNullable = Sql.IsNullableType.SameAsFirstParameter)]
-		private static double? ClickHouseRoundToEven(double? value) => throw new InvalidOperationException();
-		[Sql.Function("roundBankers", IsNullable = Sql.IsNullableType.IfAnyParameterNullable)]
-		private static decimal? ClickHouseRoundToEven(decimal? value, int? precision) => throw new InvalidOperationException();
-		[Sql.Function("roundBankers", IsNullable = Sql.IsNullableType.IfAnyParameterNullable)]
-		private static double? ClickHouseRoundToEven(double? value, int? precision) => throw new InvalidOperationException();
 
 		#endregion
 

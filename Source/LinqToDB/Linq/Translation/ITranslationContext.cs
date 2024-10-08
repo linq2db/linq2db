@@ -30,15 +30,23 @@ namespace LinqToDB.Linq.Translation
 		public SelectQuery       CurrentSelectQuery      { get; }
 		public string?           CurrentAlias            { get; }
 
-		SqlPlaceholderExpression CreatePlaceholder(SelectQuery selectQuery, ISqlExpression sqlExpression, Expression basedOn);
-		SqlErrorExpression CreateErrorExpression(Expression basedOn, string message);
+		SqlPlaceholderExpression CreatePlaceholder(SelectQuery    selectQuery, ISqlExpression sqlExpression,  Expression basedOn);
+		SqlErrorExpression       CreateErrorExpression(Expression basedOn,     string?        message = null, Type?      type = null);
 
 		public bool CanBeCompiled(Expression      expression, TranslationFlags translationFlags);
 		public bool IsServerSideOnly(Expression   expression, TranslationFlags translationFlags);
 		public bool IsPreferServerSide(Expression expression, TranslationFlags translationFlags);
 
-		bool    CanBeEvaluated(Expression  expression);
-		object? Evaluate(Expression        expression);
-		bool    TryEvaluate(ISqlExpression expression, out object? result);
+		bool    CanBeEvaluated(Expression     expression);
+		object? Evaluate(Expression           expression);
+		bool    TryEvaluate(ISqlExpression    expression, out object? result);
+
+		/// <summary>
+		/// Forces expression cache to compare expressions by value, not by reference.
+		/// </summary>
+		/// <param name="expression"></param>
+		void MarkAsNonParameter(Expression expression, object? currentValue);
+
+		public IDisposable UsingColumnDescriptor(ColumnDescriptor? columnDescriptor);
 	}
 }

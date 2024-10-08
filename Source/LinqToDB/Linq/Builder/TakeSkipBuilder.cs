@@ -31,13 +31,16 @@ namespace LinqToDB.Linq.Builder
 			if (arg.NodeType == ExpressionType.Lambda)
 			{
 				arg  = ((LambdaExpression)arg).Body.Unwrap();
-				expr = builder.ConvertToSql(sequence, arg);
+				if (!builder.TryConvertToSql(sequence, arg, out expr!))
+					return BuildSequenceResult.Error(arg);
 			}
 			else
 			{
 				// revert unwrap
 				arg  = methodCall.Arguments[1];
-				expr = builder.ConvertToSql(sequence, arg);
+
+				if (!builder.TryConvertToSql(sequence, arg, out expr!))
+					return BuildSequenceResult.Error(arg);
 
 				if (expr.ElementType == QueryElementType.SqlValue && builder.CanBeCompiled(methodCall.Arguments[1], false))
 				{

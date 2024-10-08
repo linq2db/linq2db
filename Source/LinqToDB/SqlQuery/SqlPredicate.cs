@@ -649,6 +649,9 @@ namespace LinqToDB.SqlQuery
 						return predicate;
 				}
 
+				if (!Expr1.CanBeNullable(nullability))
+					return predicate;
+
 				var search = new SqlSearchCondition(WithNull.Value);
 
 				search.Predicates.Add(predicate);

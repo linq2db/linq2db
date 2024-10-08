@@ -29,7 +29,7 @@ namespace LinqToDB.Linq.Builder
 
 			var root = methodCall.SkipMethodChain(builder.MappingSchema, out var isQueryable);
 
-			root = builder.MakeExpression(null, root, ProjectFlags.Root);
+			root = builder.BuildRootExpression(root);
 
 			if (root is ContextRefExpression)
 				return true;
@@ -68,7 +68,7 @@ namespace LinqToDB.Linq.Builder
 			IBuildContext? sequence;
 
 			root = builder.ConvertExpressionTree(root);
-			var rootContextref = builder.MakeExpression(null, root, ProjectFlags.Root) as ContextRefExpression;
+			var rootContextref = builder.BuildRootExpression(root) as ContextRefExpression;
 
 			var finalFunction = functions.First();
 
@@ -102,7 +102,7 @@ namespace LinqToDB.Linq.Builder
 			}
 			else
 			{
-				var rootContext = builder.GetRootContext(buildInfo.Parent, rootContextref, true);
+				var rootContext = builder.GetRootContext(rootContextref, true);
 
 				inAggregationContext = rootContext != null;
 
@@ -124,14 +124,14 @@ namespace LinqToDB.Linq.Builder
 			}
 
 			var sqlExpression = finalFunction.GetExpression(
-				(builder, context: placeholderSequence, forselect: placeholderSelect, flags: buildInfo.GetFlags()), 
+				(builder, context: placeholderSequence, forselect: placeholderSelect), 
 				builder.DataContext, 
 				builder, 
 				placeholderSelect, 
 				methodCall,
 				static (ctx, e, descriptor, inline) =>
 				{
-					var result = ctx.builder.ConvertToExtensionSql(ctx.context, ctx.flags, e, descriptor, inline);
+					var result = ctx.builder.ConvertToExtensionSql(ctx.context, e, descriptor, inline);
 					result = ctx.builder.UpdateNesting(ctx.forselect, result);
 					return result;
 				});
@@ -239,6 +239,8 @@ namespace LinqToDB.Linq.Builder
 					Placeholder = context.CloneExpression(Placeholder)
 				};
 			}
+
+			public override bool IsSingleElement => true;
 		}
 
 	}

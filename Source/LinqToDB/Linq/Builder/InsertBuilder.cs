@@ -84,7 +84,7 @@ namespace LinqToDB.Linq.Builder
 						var targetRef = new ContextRefExpression(genericArguments.Skip(1).FirstOrDefault() ?? sourceRef.Type,
 								insertContext.Into);
 
-						var sqlExpr = builder.ConvertToSqlExpr(sequence, sourceRef);
+						var sqlExpr = builder.BuildSqlExpression(sequence, sourceRef);
 
 						UpdateBuilder.ParseSetter(builder, targetRef, sqlExpr, insertContext.SetExpressions);
 					}
@@ -157,8 +157,7 @@ namespace LinqToDB.Linq.Builder
 					var sourceRef = new ContextRefExpression(sourceSequence.ElementType, sourceSequence);
 
 					var redirectedExpression = builder.BuildSqlExpression(
-						sourceSequence, sourceRef, ProjectFlags.SQL,
-						buildFlags: ExpressionBuilder.BuildFlags.ForceAssignments
+						sourceSequence, sourceRef
 					);
 
 					insertContext.QuerySequence = sourceSequence;
@@ -278,7 +277,7 @@ namespace LinqToDB.Linq.Builder
 
 						var outputExpressions = new List<UpdateBuilder.SetExpressionEnvelope>();
 
-						var sqlExpr = Builder.ConvertToSqlExpr(selectContext, outputRef);
+						var sqlExpr = Builder.BuildSqlExpression(selectContext, outputRef);
 						if (sqlExpr is SqlPlaceholderExpression)
 							outputExpressions.Add(new UpdateBuilder.SetExpressionEnvelope(sqlExpr, sqlExpr, false));
 						else

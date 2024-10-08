@@ -21,7 +21,7 @@ namespace LinqToDB.Linq.Builder
 
 			public override Expression MakeExpression(Expression path, ProjectFlags flags)
 			{
-				throw new InvalidOperationException();
+				return path;
 			}
 
 			public override IBuildContext Clone(CloningContext context)
@@ -55,7 +55,12 @@ namespace LinqToDB.Linq.Builder
 			var context = buildInfo.Parent ?? new SimpleSelectContext(builder, typeof(object), buildInfo.SelectQuery);
 
 			for (var i = 0; i < arguments.Count; i++)
-				sqlArguments[i] = builder.ConvertToSql(context, arguments[i]);
+			{
+				if (!builder.TryConvertToSql(context, arguments[i], out var arg))
+					return BuildSequenceResult.Error(arguments[i]);
+
+				sqlArguments[i] = arg;
+			}
 
 			return BuildSequenceResult.FromContext(new RawSqlContext(builder, buildInfo, methodCall.Method.GetGenericArguments()[0], isScalar, format, sqlArguments));
 		}

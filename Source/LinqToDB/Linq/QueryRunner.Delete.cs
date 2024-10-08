@@ -10,6 +10,7 @@ namespace LinqToDB.Linq
 	using Common.Internal.Cache;
 	using SqlQuery;
 	using Tools;
+	using Infrastructure;
 
 	static partial class QueryRunner
 	{
@@ -51,11 +52,13 @@ namespace LinqToDB.Linq
 				if (keys.Count == 0)
 					throw new LinqException($"Table '{sqlTable.NameForLogging}' does not have primary key.");
 
+				var accessorIdGenerator = new UniqueIdGenerator<ParameterAccessor>();
+
 				foreach (var field in keys)
 				{
-					var param = GetParameter(type, dataContext, field);
+					var param = GetParameter(accessorIdGenerator, type, dataContext, field);
 
-					ei.Queries[0].AddParameterAccessor(param);
+					ei.AddParameterAccessor(param);
 
 					deleteStatement.SelectQuery.Where.SearchCondition.AddEqual(field, param.SqlParameter, CompareNulls.LikeSql);
 

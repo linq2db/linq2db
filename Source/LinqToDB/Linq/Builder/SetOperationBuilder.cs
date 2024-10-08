@@ -65,8 +65,7 @@ namespace LinqToDB.Linq.Builder
 
 			if (setOperation != SetOperation.UnionAll)
 			{
-				var sqlExpr = builder.BuildSqlExpression(setContext, new ContextRefExpression(elementType, setContext),
-					buildInfo.GetFlags());
+				var sqlExpr = builder.BuildSqlExpression(setContext, new ContextRefExpression(elementType, setContext));
 			}
 
 			if (needsEmulation)
@@ -120,13 +119,7 @@ namespace LinqToDB.Linq.Builder
 
 			public override Expression MakeExpression(Expression path, ProjectFlags flags)
 			{
-				if (SequenceHelper.IsSameContext(path, this) &&
-				    (flags.HasFlag(ProjectFlags.Root) || flags.HasFlag(ProjectFlags.AssociationRoot)))
-				{
-					return path;
-				}
-
-				if (flags.IsRoot() || flags.IsTraverse())
+				if (flags.IsRoot() || flags.IsTraverse() || flags.IsAggregationRoot() || flags.IsAssociationRoot())
 					return path;
 
 				if (_setIdReference != null && ExpressionEqualityComparer.Instance.Equals(_setIdReference, path))
@@ -554,6 +547,32 @@ namespace LinqToDB.Linq.Builder
 					return true;
 				}
 
+				if (projection1.NodeType is ExpressionType.Convert or ExpressionType.ConvertChecked)
+				{
+					if (TryMergeProjections(((UnaryExpression)projection1).Operand, projection2, flags, out merged))
+					{
+						if (merged.Type != projection1.Type)
+						{
+							merged = Expression.Convert(merged, projection1.Type);
+						}
+
+						return true;
+					}
+				}
+
+				if (projection2.NodeType is ExpressionType.Convert or ExpressionType.ConvertChecked)
+				{
+					if (TryMergeProjections(projection1, ((UnaryExpression)projection2).Operand, flags, out merged))
+					{
+						if (merged.Type != projection2.Type)
+						{
+							merged = Expression.Convert(merged, projection2.Type);
+						}
+
+						return true;
+					}
+				}
+
 				if (TryMergeViaDifferencePredicate(projection1, projection2, out merged))
 					return true;
 
@@ -788,8 +807,9 @@ namespace LinqToDB.Linq.Builder
 
 				var setIdReference = GetSetIdReference();
 
-				var sqlValueLeft  = new SqlValue(_leftSetId!);
-				var sqlValueRight = new SqlValue(_rightSetId!);
+				var intDataType   = MappingSchema.GetDbDataType(typeof(int));
+				var sqlValueLeft  = new SqlValue(intDataType,_leftSetId!);
+				var sqlValueRight = new SqlValue(intDataType, _rightSetId!);
 
 				var leftRef  = new ContextRefExpression(_type, _sequence1);
 				var rightRef = new ContextRefExpression(_type, _sequence2);
@@ -1114,12 +1134,11 @@ namespace LinqToDB.Linq.Builder
 				var current = correctedPath;
 				do
 				{
-					var projected = Builder.BuildSqlExpression(context, current, ProjectFlags.Expression,
-						buildFlags : ExpressionBuilder.BuildFlags.ForceAssignments | ExpressionBuilder.BuildFlags.ForceDefaultIfEmpty);
+					var projected = Builder.BuildSqlExpression(context, current, buildPurpose: BuildPurpose.Expression, buildFlags: BuildFlags.ForceDefaultIfEmpty | BuildFlags.ForSetProjection);
 
-					projected = Builder.ExtractProjection(context, projected);
+					projected = Builder.BuildExtractExpression(context, projected);
 
-					var lambdaResolver = new LambdaResolveVisitor(context);
+					var lambdaResolver = new LambdaResolveVisitor(context, BuildPurpose.Sql);
 					projected = lambdaResolver.Visit(projected);
 
 					var optimizer = new ExpressionOptimizerVisitor();

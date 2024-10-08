@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 
 namespace LinqToDB.SqlQuery
 {
@@ -69,6 +70,32 @@ namespace LinqToDB.SqlQuery
 			{
 				if (TableSource is SelectQuery selectQuery)
 				{
+					if (Parent != null && Parent.TableSource is SelectQuery parentSelectQuery && parentSelectQuery.HasSetOperators)
+					{
+						if (parentSelectQuery.SetOperators.Any(so => so.SelectQuery == selectQuery))
+						{
+							var saveCount      = selectQuery.Select.Columns.Count;
+							var setColumnIndex = selectQuery.Select.Add(element);
+
+							// Column found, just return column from parent query.
+							if (saveCount == selectQuery.Select.Columns.Count)
+								return parentSelectQuery.Select.Columns[setColumnIndex];
+
+							var dbDataType = QueryHelper.GetDbDataTypeWithoutSchema(element);
+							var resultColumn = parentSelectQuery.Select.AddNewColumn(new SqlValue(dbDataType, null));
+
+							foreach (var so in parentSelectQuery.SetOperators)
+							{
+								if (so.SelectQuery != selectQuery)
+								{
+									so.SelectQuery.Select.AddNew(new SqlValue(dbDataType, null));
+								}
+							}
+
+							return resultColumn.Expression;
+						}
+					}
+
 					return selectQuery.Select.AddColumn(element);
 				}
 
@@ -77,7 +104,7 @@ namespace LinqToDB.SqlQuery
 
 		}
 
-		QueryNesting?      _parentQueryNesting;
+		QueryNesting? _parentQueryNesting;
 
 		public bool HasSelectQuery { get; private set; }
 
@@ -96,6 +123,11 @@ namespace LinqToDB.SqlQuery
 		{
 			Cleanup();
 			HasSelectQuery = false;
+
+			#if DEBUG
+			var beforeText = element.ToDebugString();
+			#endif
+
 			var result = Visit(element);
 			return result;
 		}

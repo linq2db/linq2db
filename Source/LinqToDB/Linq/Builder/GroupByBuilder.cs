@@ -153,7 +153,7 @@ namespace LinqToDB.Linq.Builder
 			var keyRef              = new ContextRefExpression(key.Body.Type, key);
 			var currentPlaceholders = new List<SqlPlaceholderExpression>();
 
-			if (!AppendGrouping(groupingSubquery, currentPlaceholders, builder, dataSequence, keyRef, groupingKind, buildInfo.GetFlags(), out var errorExpression))
+			if (!AppendGrouping(groupingSubquery, currentPlaceholders, builder, dataSequence, keyRef, groupingKind, out _, out var errorExpression))
 			{
 				return BuildSequenceResult.Error(errorExpression);
 			}
@@ -201,24 +201,29 @@ namespace LinqToDB.Linq.Builder
 		/// <param name="onSequence">Context from which level we want to get groping SQL.</param>
 		/// <param name="path">Actual expression which should be translated to grouping keys.</param>
 		/// <param name="groupingKind"></param>
-		/// <param name="flags"></param>
 		/// <param name="errorExpression"></param>
-		static bool AppendGrouping(IBuildContext sequence, List<SqlPlaceholderExpression> currentPlaceholders,
-			ExpressionBuilder builder, IBuildContext onSequence, Expression path, GroupingType groupingKind,
-			ProjectFlags flags, [NotNullWhen(false)] out Expression? errorExpression)
+		static bool AppendGrouping(
+			IBuildContext                        sequence, 
+			List<SqlPlaceholderExpression>       currentPlaceholders,
+			ExpressionBuilder                    builder,  
+			IBuildContext                        onSequence, 
+			Expression                           path, 
+			GroupingType                         groupingKind, 
+			out                      Expression  translated, 
+			[NotNullWhen(false)] out Expression? errorExpression)
 		{
+			translated = path;
 			errorExpression = null;
 
 			if (groupingKind == GroupingType.GroupBySets)
 			{
 				var hasSets  = false;
-				var expanded = builder.MakeExpression(onSequence, path, ProjectFlags.ExtractProjection);
+				var expanded = builder.BuildExtractExpression(onSequence, path);
 				foreach (var groupingSet in EnumGroupingSets(expanded))
 				{
 					hasSets = true;
 					var setExpr = builder.BuildSqlExpression(onSequence, groupingSet,
-						ProjectFlags.SQL | ProjectFlags.Keys,
-						buildFlags : ExpressionBuilder.BuildFlags.ForceAssignments);
+						buildPurpose: BuildPurpose.Sql, buildFlags: BuildFlags.ForKeys);
 
 					if (!SequenceHelper.IsSqlReady(setExpr))
 					{
@@ -238,41 +243,46 @@ namespace LinqToDB.Linq.Builder
 			}
 			else
 			{
-				var groupSqlExpr = builder.ConvertToSqlExpr(onSequence, path, flags.SqlFlag() | ProjectFlags.Keys);
-				
+				var groupSqlExpr = builder.BuildSqlExpression(onSequence, path, buildPurpose: BuildPurpose.Sql, buildFlags: BuildFlags.ForKeys);
+
 				if (!SequenceHelper.IsSqlReady(groupSqlExpr))
 				{
 					var sqLError = groupSqlExpr.Find(1, (_, e) => e is SqlErrorExpression);
-					errorExpression = sqLError ?? SqlErrorExpression.EnsureError(path, path.Type);
+					errorExpression = sqLError ?? SqlErrorExpression.EnsureError(groupSqlExpr, path.Type);
 					return false;
 				}
 
-				AppendGroupBy(builder, currentPlaceholders, sequence.SelectQuery, groupSqlExpr);
+				translated = AppendGroupBy(builder, path, currentPlaceholders, sequence.SelectQuery, groupSqlExpr);
 			}
 
 			return true;
 		}
 
-		static void AppendGroupBy(ExpressionBuilder builder, List<SqlPlaceholderExpression> currentPlaceholders, SelectQuery query, Expression groupByExpression)
+		static Expression AppendGroupBy(ExpressionBuilder builder, Expression path, List<SqlPlaceholderExpression> currentPlaceholders, SelectQuery query, Expression groupByExpression)
 		{
-			var placeholders = ExpressionBuilder.CollectDistinctPlaceholders(groupByExpression);
+			var placeholders = ExpressionBuildVisitor.CollectPlaceholdersStraightWithPath(groupByExpression, path, out var transformed);
 
 			// it is a case whe we do not group elements
 			if (placeholders.Count == 1 && QueryHelper.IsConstantFast(placeholders[0].Sql))
 			{
-				return;
+				return path;
 			}
 
 			foreach (var p in placeholders)
 			{
-				if (currentPlaceholders.Find(cp => ExpressionEqualityComparer.Instance.Equals(cp.Path, p.Path)) == null)
+				var found = currentPlaceholders.Find(cp => ExpressionEqualityComparer.Instance.Equals(cp.Path, p.Path));
+				if (found == null)
 				{
-					currentPlaceholders.Add(p);
+					found = builder.UpdateNesting(query, p);
+					currentPlaceholders.Add(found);
 
-					var updated = builder.UpdateNesting(query, p);
-					query.GroupBy.Items.Add(updated.Sql);
+					query.GroupBy.Items.Add(found.Sql);
 				}
+
+				transformed = transformed.Replace(p, found);
 			}
+
+			return transformed;
 		}
 
 		#endregion
@@ -337,51 +347,39 @@ namespace LinqToDB.Linq.Builder
 					return root;
 				}
 
-				var newFlags = flags;
-				if (newFlags.IsExpression())
-					newFlags = (newFlags & ~ProjectFlags.Expression) | ProjectFlags.SQL;
-
-				if (newFlags.IsKeys() && SequenceHelper.IsSameContext(path, this))
+				if (flags.IsKeys() && SequenceHelper.IsSameContext(path, this))
 				{
-					if (Body.Type != path.Type && newFlags.IsSql())
+					if (Body.Type != path.Type && flags.IsSql())
 					{
-						var resultExpr = Builder.ConvertToSqlExpr(this, Body, newFlags);
+						var resultExpr = Builder.BuildSqlExpression(this, Body);
 						return resultExpr;
 					}
 				}
 
-				newFlags |= ProjectFlags.Keys;
+				var result = base.MakeExpression(path, flags);
 
-				var result = base.MakeExpression(path, newFlags);
-
-				if (!ExpressionEqualityComparer.Instance.Equals(result, path))
+				if (flags.IsExpand() && !ExpressionEqualityComparer.Instance.Equals(result, path))
 				{
-					// project deeper
-					result = Builder.MakeExpression(this, result, newFlags);
+					result = Builder.BuildSqlExpression(this, result, BuildPurpose.Sql, BuildFlags.ForKeys);
 				}
 
-				if (newFlags.IsSql() || newFlags.IsExpression() || newFlags.IsExtractProjection())
+				if (!ExpressionEqualityComparer.Instance.Equals(result, path) && (flags.IsSql() || flags.IsExpression() || flags.IsExtractProjection()))
 				{
-					if (newFlags.IsExtractProjection())
-						newFlags = newFlags & ~ProjectFlags.ExtractProjection | ProjectFlags.SQL;
+					var prevResult = result;
+					result = Builder.BuildSqlExpression(this, result, BuildFlags.ForKeys);
+				}
 
-					result = Builder.ConvertToSqlExpr(this, result, newFlags);
-
-					if (!newFlags.IsTest())
+				// ReSharper disable once ConditionIsAlwaysTrueOrFalseAccordingToNullableAPIContract
+				if (GroupByContext != null && result is not SqlErrorExpression)
+				{
+					if (GroupByContext.SubQuery.SelectQuery.GroupBy.GroupingType != GroupingType.GroupBySets)
 					{
-						if (GroupByContext != null)
-						{
-							if (GroupByContext.SubQuery.SelectQuery.GroupBy.GroupingType != GroupingType.GroupBySets)
-							{
-								// appending missing keys
-								AppendGroupBy(Builder, GroupByContext.CurrentPlaceholders, GroupByContext.SubQuery.SelectQuery,
-									result);
-							}
-
-							// we return SQL nested as GroupByContext.SubQuery
-							result = Builder.UpdateNesting(GroupByContext.SubQuery, result);
-						}
+						// appending missing keys
+						result = AppendGroupBy(Builder, path, GroupByContext.CurrentPlaceholders, GroupByContext.SubQuery.SelectQuery, result);
 					}
+
+					// we return SQL nested as GroupByContext.SubQuery
+					result = Builder.UpdateNesting(GroupByContext.SubQuery, result);
 				}
 
 				return result;
@@ -456,31 +454,27 @@ namespace LinqToDB.Linq.Builder
 
 				if (isSameContext)
 				{
-					if (flags.IsExtractProjection())
-					{
-						if (path.Type == ElementType)
-							return MakeSubQueryExpression(path);
+					if (flags.IsRoot() || flags.IsTraverse() || flags.IsAggregationRoot() || flags.IsSubquery() || flags.IsExtractProjection())
 						return path;
+				}
+
+				if (isSameContext)
+				{
+					if (flags.IsExpand())
+					{
+						if (flags.IsMemberRoot())
+							return path;
+						return MakeSubQueryExpression(path);
 					}
-				}
-
-				if (isSameContext && (flags.IsRoot() || flags.IsTraverse()))
-				{
-					return path;
-				}
-
-				if (flags.IsAggregationRoot())
-				{
-					return path;
 				}
 
 				if (isSameContext && flags.IsKeys() && GetInterfaceGroupingType().IsSameOrParentOf(path.Type))
 				{
-					var result = Builder.MakeExpression(this, _keyRef, flags);
+					var result = Builder.BuildExpression(this, _keyRef);
 					return result;
 				}
 
-				if (isSameContext && flags.IsExpression()/* && GetInterfaceGroupingType().IsSameOrParentOf(path.Type)*/)
+				if (isSameContext && (flags.IsExpression()/* || flags.IsExtractProjection()*/)/* && GetInterfaceGroupingType().IsSameOrParentOf(path.Type)*/)
 				{
 					if (!IsGroupingGuardDisabled)
 					{
@@ -522,6 +516,11 @@ namespace LinqToDB.Linq.Builder
 
 				if (path is MemberExpression me)
 				{
+					if (flags.IsExtractProjection())
+					{
+						return path;
+					}
+
 					var currentMemberExpr = me;
 					var found             = false;
 					while (true)
@@ -545,21 +544,22 @@ namespace LinqToDB.Linq.Builder
 						var keyRef  = new ContextRefExpression(currentMemberExpr.Type, _key);
 						var keyPath = me.Replace(currentMemberExpr, keyRef);
 
-						if (flags.HasFlag(ProjectFlags.Root) || flags.HasFlag(ProjectFlags.AssociationRoot))
-						{
-							return new ContextRefExpression(path.Type, new ScopeContext(_key, this));
-						}
+						var result = Builder.BuildSqlExpression(_key, keyPath, BuildFlags.ForKeys);
 
-						var result = Builder.MakeExpression(_key, keyPath, flags);
+						if (result is SqlPlaceholderExpression placeholder)
+						{
+							// we need to update path to the same as in placeholder
+							result = placeholder.WithPath(path);
+						}
 
 						return result;
 					}
 				}
 
-				if (!isSameContext || !flags.IsSql())
+				if (path is MemberExpression { Expression: not null } memberExpression/* || !flags.IsSql()*/)
 				{
-					var root = Builder.GetRootContext(this, path, true);
-					if (root != null && typeof(IGrouping<,>).IsSameOrParentOf(root.Type))
+					var root = Builder.BuildAggregationRootExpression(memberExpression.Expression);
+					if (typeof(IGrouping<,>).IsSameOrParentOf(root.Type))
 					{
 						return path;
 					}

@@ -22,7 +22,7 @@ namespace LinqToDB.SqlQuery
 			Number = Interlocked.Increment(ref _columnCounter);
 
 			// useful for putting breakpoint when finding when SqlColumn was created
-			if (Number == 0)
+			if (Number is 0)
 			{
 
 			}
@@ -149,24 +149,6 @@ namespace LinqToDB.SqlQuery
 		{
 			if (nullability.CanBeNull(this))
 				return true;
-
-			if (Parent != null)
-			{
-				if (Parent.HasSetOperators)
-				{
-					var index = Parent.Select.Columns.IndexOf(this);
-					if (index < 0) return true;
-
-					foreach (var set in Parent.SetOperators)
-					{
-						if (index >= set.SelectQuery.Select.Columns.Count)
-							return true;
-
-						if (set.SelectQuery.Select.Columns[index].CanBeNullable(nullability))
-							return true;
-					}
-				}
-			}
 
 			return false;
 		}

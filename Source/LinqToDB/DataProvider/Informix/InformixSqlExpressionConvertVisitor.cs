@@ -87,14 +87,6 @@ namespace LinqToDB.DataProvider.Informix
 						break;
 					}
 
-					case TypeCode.Boolean  :
-					{
-						if (ReferenceEquals(cast, IsForPredicate))
-							return ConvertToBooleanSearchCondition(cast.Expression);
-						
-						break;
-					}
-
 					case TypeCode.UInt64   :
 						if (argument.SystemType!.IsFloatType())
 							argument = new SqlFunction(cast.SystemType, "Floor", argument);

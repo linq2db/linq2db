@@ -480,9 +480,15 @@ namespace LinqToDB.Expressions
 				return adjustType.Update(Transform(adjustType.Expression));
 			}
 
-			if (expr is PlaceholderExpression { PlaceholderType: PlaceholderType.Closure })
+			if (expr is PlaceholderExpression placeholder)
 			{
-				return expr;
+				if (placeholder.PlaceholderType is PlaceholderType.Closure or PlaceholderType.Converted)
+				{
+					return expr;
+				}
+
+				var inner = Transform(placeholder.InnerExpression);
+				return placeholder.Update(inner);
 			}
 
 			if (expr is SqlDefaultIfEmptyExpression defaultIfEmptyExpression)

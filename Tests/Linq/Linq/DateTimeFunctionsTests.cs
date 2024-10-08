@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 
 using LinqToDB;
+using LinqToDB.Data;
 using LinqToDB.Linq;
 using LinqToDB.Mapping;
 
@@ -193,8 +194,40 @@ namespace Tests.Linq
 			using (new DisableBaseline("Server-side date generation test"))
 			using (var db = GetDataContext(context))
 			{
-				var q = from p in db.Person where p.ID == 1 select new { Now = Sql.AsSql(DateTime.Now) };
+				var q = 
+					from p in db.Person 
+					where p.ID == 1 
+					select new { Now = Sql.AsSql(DateTime.Now) };
+
 				Assert.That(q.ToList().First().Now.Year, Is.EqualTo(DateTime.Now.Year));
+			}
+		}
+
+		[Test]
+		public void NullabilityCheck([DataSources(false)] string context)
+		{
+			using (var db = (TestDataConnection)GetDataContext(context))
+			{
+#pragma warning disable CS8073 // The result of the expression is always the same since a value of this type is never equal to 'null'
+				var q =
+					from p in db.Person
+					where p.ID == 1 && 
+					      (
+						      DateTime.Now != null  &&
+							  DateTime.UtcNow != null &&
+							  DateTimeOffset.Now != null &&
+							  DateTimeOffset.UtcNow != null &&
+							  Sql.CurrentTimestamp != null &&
+							  Sql.CurrentTimestampUtc != null &&
+							  Sql.CurrentTzTimestamp != null
+					      )
+					select p;
+#pragma warning restore CS8073 // The result of the expression is always the same since a value of this type is never equal to 'null'
+
+				var result = q.ToList();
+
+				Assert.That(result.Count, Is.EqualTo(1));
+				Assert.That(db.LastQuery, Does.Not.Contain("NULL"));
 			}
 		}
 

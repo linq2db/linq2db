@@ -24,6 +24,8 @@ namespace LinqToDB.SqlProvider
 
 		protected SqlProviderFlags SqlProviderFlags { get; }
 
+		public virtual bool RequiresCastingParametersForSetOperations => true;
+
 		#endregion
 
 		#region ISqlOptimizer Members
@@ -58,7 +60,7 @@ namespace LinqToDB.SqlProvider
 			statement = FinalizeInsert(statement);
 			statement = FinalizeSelect(statement);
 			statement = CorrectUnionOrderBy(statement);
-			statement = FixSetOperationNulls(statement);
+			statement = FixSetOperationValues(statement);
 
 			// provider specific query correction
 			statement = FinalizeStatement(statement, evaluationContext, dataOptions, mappingSchema);
@@ -516,32 +518,51 @@ namespace LinqToDB.SqlProvider
 				withStack: true);
 		}
 
-		static void CorrelateNullValueTypes(ref ISqlExpression toCorrect, ISqlExpression reference)
+		static void CorrelateValueTypes(bool castParameters, ref ISqlExpression toCorrect, ISqlExpression reference)
 		{
 			if (toCorrect.ElementType == QueryElementType.Column)
 			{
 				var column     = (SqlColumn)toCorrect;
 				var columnExpr = column.Expression;
-				CorrelateNullValueTypes(ref columnExpr, reference);
+				CorrelateValueTypes(castParameters, ref columnExpr, reference);
 				column.Expression = columnExpr;
 			}
-			else if (toCorrect.ElementType == QueryElementType.SqlValue)
+			else
 			{
-				var value = (SqlValue)toCorrect;
-				if (value.Value == null)
+				var unwrapped = QueryHelper.UnwrapNullablity(toCorrect);
+				if (unwrapped.ElementType == QueryElementType.SqlValue)
 				{
-					var suggested = QueryHelper.SuggestDbDataType(reference);
-					if (suggested != null)
+					var value = (SqlValue)unwrapped;
+					if (value.Value == null)
 					{
-						toCorrect = new SqlValue(suggested.Value, null);
+						var suggested = QueryHelper.SuggestDbDataType(reference);
+						if (suggested != null)
+						{
+							toCorrect = new SqlValue(suggested.Value, null);
+						}
 					}
+					else
+					{
+						var suggested = QueryHelper.SuggestDbDataType(reference);
+						if (suggested == null)
+							suggested = value.ValueType;
+						toCorrect = new SqlCastExpression(value, suggested.Value, null, true);
+					}
+				}
+				else if (castParameters && unwrapped.ElementType == QueryElementType.SqlParameter)
+				{
+					var parameter = (SqlParameter)unwrapped;
+					var suggested = QueryHelper.SuggestDbDataType(reference);
+					if (suggested == null)
+						suggested = parameter.Type;
+					toCorrect = new SqlCastExpression(parameter, suggested.Value, null, true);
 				}
 			}
 		}
 
-		protected virtual SqlStatement FixSetOperationNulls(SqlStatement statement)
+		protected virtual SqlStatement FixSetOperationValues(SqlStatement statement)
 		{
-			statement.VisitParentFirst(static e =>
+			statement.VisitParentFirst(this, static (ctx, e) =>
 			{
 				if (e.ElementType == QueryElementType.SqlQuery)
 				{
@@ -558,8 +579,8 @@ namespace LinqToDB.SqlProvider
 								var otherColumn = setOperator.SelectQuery.Select.Columns[i];
 								var otherExpr   = otherColumn.Expression;
 
-								CorrelateNullValueTypes(ref columnExpr, otherExpr);
-								CorrelateNullValueTypes(ref otherExpr, columnExpr);
+								CorrelateValueTypes(ctx.RequiresCastingParametersForSetOperations, ref columnExpr, otherExpr);
+								CorrelateValueTypes(ctx.RequiresCastingParametersForSetOperations, ref otherExpr, columnExpr);
 
 								otherColumn.Expression = otherExpr;
 							}
@@ -1874,8 +1895,10 @@ namespace LinqToDB.SqlProvider
 
 			var sqlText = startFrom.DebugText;
 
-			if (startFrom is SqlStatement statementBefore)
-				QueryHelper.DebugCheckNesting(statementBefore, false);
+			if (startFrom is SqlSelectStatement statementBefore)
+			{
+
+			}
 #endif
 
 			var result = visitor.Value.Optimize(startFrom, root, SqlProviderFlags, true, dataOptions, mappingSchema, evaluationContext);
@@ -1884,8 +1907,10 @@ namespace LinqToDB.SqlProvider
 			// ReSharper disable once NotAccessedVariable
 			var newSqlText = result.DebugText;
 
-			if (startFrom is SqlStatement statementAfter)
-				QueryHelper.DebugCheckNesting(statementAfter, false);
+			if (startFrom is SqlSelectStatement statementAfter)
+			{
+
+			}
 #endif
 
 			return result;

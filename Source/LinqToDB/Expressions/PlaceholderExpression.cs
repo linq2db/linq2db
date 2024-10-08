@@ -6,7 +6,8 @@ namespace LinqToDB.Expressions
 	public enum PlaceholderType
 	{
 		Closure,
-		Converted
+		Converted,
+		FailedToTranslate
 	}
 
 	public class PlaceholderExpression : Expression

@@ -6,7 +6,7 @@ namespace LinqToDB.SqlQuery
 	using Common;
 	using Common.Internal;
 
-	public class SqlValue : ISqlExpression
+	public class SqlValue : SqlExpressionBase
 	{
 		public SqlValue(Type systemType, object? value)
 		{
@@ -16,8 +16,8 @@ namespace LinqToDB.SqlQuery
 
 		public SqlValue(DbDataType valueType, object? value)
 		{
-			_valueType    = valueType;
-			Value         = value;
+			_valueType = valueType;
+			Value      = value;
 		}
 
 		public SqlValue(object value)
@@ -45,30 +45,42 @@ namespace LinqToDB.SqlQuery
 			}
 		}
 
-		Type ISqlExpression.SystemType => ValueType.SystemType;
-
 		#region Overrides
 
-#if OVERRIDETOSTRING
+		public override QueryElementType ElementType => QueryElementType.SqlValue;
 
-		public override string ToString()
+		public override QueryElementTextWriter ToString(QueryElementTextWriter writer)
 		{
-			return this.ToDebugString();
+			writer.DebugAppendUniqueId(this);
+
+			if (Value is null)
+			{
+				writer.Append("NULL");
+			}
+			else
+			{
+				if (Value is string strVal)
+				{
+					writer
+						.Append('\'')
+						.Append(strVal.Replace("\'", "''"))
+						.Append('\'');
+				}
+				else
+				{
+					writer.Append(Value);
+				}
+			}
+
+			return writer;
 		}
 
-#endif
+		public override int   Precedence => SqlQuery.Precedence.Primary;
+		public override Type? SystemType => ValueType.SystemType;
 
-		#endregion
+		public override bool CanBeNullable(NullabilityContext nullability) => CanBeNull;
 
-		#region ISqlExpression Members
-
-		public int Precedence => SqlQuery.Precedence.Primary;
-
-		#endregion
-
-		#region IEquatable<ISqlExpression> Members
-
-		bool IEquatable<ISqlExpression>.Equals(ISqlExpression? other)
+		public override bool Equals(ISqlExpression other, Func<ISqlExpression, ISqlExpression, bool> comparer)
 		{
 			if (this == other)
 				return true;
@@ -76,7 +88,8 @@ namespace LinqToDB.SqlQuery
 			return
 				other is SqlValue value           &&
 				ValueType.Equals(value.ValueType) &&
-				(Value == null && value.Value == null || Value != null && Value.Equals(value.Value));
+				(Value == null && value.Value == null || Value != null && Value.Equals(value.Value))
+				&& comparer(this, other);
 		}
 
 		int? _hashCode;
@@ -100,42 +113,7 @@ namespace LinqToDB.SqlQuery
 
 		#endregion
 
-		#region ISqlExpression Members
-
-		public bool CanBeNullable(NullabilityContext nullability) => CanBeNull;
-
 		public bool CanBeNull => Value == null;
-
-		public bool Equals(ISqlExpression other, Func<ISqlExpression,ISqlExpression,bool> comparer)
-		{
-			return ((ISqlExpression)this).Equals(other) && comparer(this, other);
-		}
-
-		#endregion
-
-		#region IQueryElement Members
-
-#if DEBUG
-		public string DebugText => this.ToDebugString();
-#endif
-
-		public QueryElementType ElementType => QueryElementType.SqlValue;
-
-		QueryElementTextWriter IQueryElement.ToString(QueryElementTextWriter writer)
-		{
-			return
-				Value == null ?
-					writer.Append("NULL") :
-				Value is string strVal ?
-					writer
-						.Append('\'')
-						.Append(strVal.Replace("\'", "''"))
-						.Append('\'')
-				:
-					writer.Append(Value);
-		}
-
-		#endregion
 
 		public void Deconstruct(out object? value)
 		{

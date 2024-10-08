@@ -92,7 +92,11 @@
 		{
 			if (cast.SystemType.ToUnderlying() == typeof(bool))
 			{
-				if (cast.Expression is not SqlSearchCondition and not SqlCaseExpression)
+				if (cast.IsMandatory && cast.Expression.SystemType?.ToNullableUnderlying() == typeof(bool))
+				{
+					// do nothing
+				}
+				else if (cast.Expression is not SqlSearchCondition and not SqlCaseExpression)
 				{
 					return ConvertBooleanToCase(cast.Expression, cast.ToType);
 				}

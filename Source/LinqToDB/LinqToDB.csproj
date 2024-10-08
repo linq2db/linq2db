@@ -146,9 +146,4 @@
 		<AdditionalFiles Include="PublicAPI/$(TargetFramework)/PublicAPI.*.txt" />
 	</ItemGroup>
 
-	<ItemGroup>
-	  <Compile Remove="Linq\Builder\ExpressionBuildVisitor.cs" />
-	  <Compile Remove="Linq\Translation\StringMemberTranslatorBase.cs" />
-	</ItemGroup>
-
 </Project>

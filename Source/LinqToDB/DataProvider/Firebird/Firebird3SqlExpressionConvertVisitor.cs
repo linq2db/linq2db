@@ -14,18 +14,14 @@ namespace LinqToDB.DataProvider.Firebird
 
 		protected override bool? GetCaseSensitiveParameter(SqlPredicate.SearchString predicate) => predicate.CaseSensitive.EvaluateBoolExpression(EvaluationContext);
 
-		protected override ISqlExpression ConvertConversion(SqlCastExpression cast)
+		public override IQueryElement ConvertCastToPredicate(SqlCastExpression castExpression)
 		{
-			var isNull = cast.Expression is SqlValue { Value: null } sqlValue;
+			var isNull = castExpression.Expression is SqlValue { Value: null };
 
-			if (!isNull
-				&& Type.GetTypeCode(cast.SystemType.ToUnderlying()) == TypeCode.Boolean
-				&& ReferenceEquals(cast, IsForPredicate))
-			{
-				return ConvertToBooleanSearchCondition(cast.Expression);
-			}
+			if (isNull)
+				return castExpression;
 
-			return base.ConvertConversion(cast);
+			return base.ConvertCastToPredicate(castExpression);
 		}
 	}
 }

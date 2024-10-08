@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data.Common;
+using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Linq.Expressions;
@@ -53,11 +54,12 @@ namespace LinqToDB.Linq.Builder
 
 		#region Init
 
-		readonly Query                             _query;
-		bool                                       _validateSubqueries;
-		readonly IMemberTranslator                 _memberTranslator;
-		readonly ExpressionTreeOptimizationContext _optimizationContext;
-		readonly ParametersContext                 _parametersContext;
+		readonly          Query                             _query;
+		internal readonly IMemberTranslator                 _memberTranslator;
+		readonly          ExpressionTreeOptimizationContext _optimizationContext;
+		readonly          ParametersContext                 _parametersContext;
+
+		ExpressionBuildVisitor _buildVisitor;
 
 		public ExpressionTreeOptimizationContext   OptimizationContext => _optimizationContext;
 		public ParametersContext                   ParametersContext   => _parametersContext;
@@ -65,6 +67,8 @@ namespace LinqToDB.Linq.Builder
 		public SqlComment?                      Tag;
 		public List<SqlQueryExtension>?         SqlQueryExtensions;
 		public List<TableBuilder.TableContext>? TablesInScope;
+
+		public bool ValidateSubqueries { get; }
 
 		public readonly DataOptions DataOptions;
 
@@ -78,8 +82,8 @@ namespace LinqToDB.Linq.Builder
 			ParameterExpression[]?            compiledParameters,
 			object?[]?                        parameterValues)
 		{
-			_query               = query;
-			_validateSubqueries  = validateSubqueries;
+			_query             = query;
+			ValidateSubqueries = validateSubqueries;
 
 			CompiledParameters = compiledParameters;
 			ParameterValues    = parameterValues;
@@ -88,6 +92,8 @@ namespace LinqToDB.Linq.Builder
 			OriginalExpression = expression;
 
 			_memberTranslator = ((IInfrastructure<IServiceProvider>)dataContext).Instance.GetRequiredService<IMemberTranslator>();
+
+			_buildVisitor = new ExpressionBuildVisitor(this);
 
 			if (DataOptions.DataContextOptions.MemberTranslators != null)
 			{
@@ -130,7 +136,7 @@ namespace LinqToDB.Linq.Builder
 
 			using var mq = ActivityService.Start(ActivityID.BuildQuery);
 
-			_query.Init(sequence, _parametersContext.CurrentSqlParameters);
+			_query.Init(sequence);
 
 			var param = Expression.Parameter(typeof(Query<T>), "info");
 
@@ -168,7 +174,7 @@ namespace LinqToDB.Linq.Builder
 			ref List<Preamble>? preambles,
 			Expression[]        previousKeys)
 		{
-			var expr = MakeExpression(sequence, new ContextRefExpression(typeof(T), sequence), ProjectFlags.Expression);
+			var expr = _buildVisitor.BuildExpression(sequence, new ContextRefExpression(typeof(T), sequence), buildPurpose: BuildPurpose.Expression);
 
 			var finalized = FinalizeProjection(query, sequence, expr, queryParameter, ref preambles, previousKeys);
 
@@ -195,6 +201,12 @@ namespace LinqToDB.Linq.Builder
 					}
 				}
 
+				if (ParametersContext.CurrentSqlParameters.Count > 0)
+				{
+					query.SetParametersAccessors(ParametersContext.CurrentSqlParameters.ToList());
+					FinalizeParameterAccessors(query, preambles);
+				}
+
 				query.IsFinalized = true;
 			}
 
@@ -202,10 +214,62 @@ namespace LinqToDB.Linq.Builder
 			return true;
 		}
 
+		void FinalizeParameterAccessors<T>(Query<T> query, List<Preamble>? preambles)
+		{
+			if (query.ParameterAccessors == null)
+				return;
+
+			var usedParameters = new HashSet<SqlParameter>();
+
+			foreach (var queryInfo in query.Queries)
+			{
+				queryInfo.Statement.VisitAll(x =>
+				{
+					if (x is SqlParameter p && p.AccessorId != null)
+						usedParameters.Add(p);
+				});
+
+				if (preambles?.Count > 0)
+				{
+					foreach (var preamble in preambles)
+					{
+						preamble.GetUsedParameters(usedParameters);
+					}
+				}
+			}
+
+			query.ParameterAccessors.RemoveAll(a => usedParameters.All(p => p.AccessorId != a.AccessorId));
+		}
+
+		Stack<Expression>? _recursiveBuildItems;
+
+		internal void PushRecursive(Expression expression)
+		{
+			_recursiveBuildItems ??= new();
+			_recursiveBuildItems.Push(expression);
+		}
+
+		internal void PopRecursive(Expression expression)
+		{
+			if (_recursiveBuildItems == null || _recursiveBuildItems.Count == 0 || !ReferenceEquals(expression, _recursiveBuildItems.Pop()))
+				throw new InvalidOperationException("Wrong Push/Pop for Recursive Build");
+		}
+
+		internal bool IsUnderRecursiveBuild(Expression expression)
+		{
+			if (_recursiveBuildItems == null || _recursiveBuildItems.Count == 0)
+				return false;
+
+			if (!_recursiveBuildItems.Contains(expression, ExpressionEqualityComparer.Instance))
+				return false;
+
+			return true;
+		}
+
 		/// <summary>
 		/// Used internally to avoid RecursiveCTE build failing
 		/// </summary>
-		internal bool IsRecursiveBuild { get; set; }
+		internal bool IsRecursiveBuild => _recursiveBuildItems?.Count > 0;
 
 		/// <summary>
 		/// Contains information from which expression sequence were built. Used for Eager Loading.
@@ -236,20 +300,28 @@ namespace LinqToDB.Linq.Builder
 		Expression UnwrapSequenceExpression(Expression expression)
 		{
 			var result = expression.Unwrap();
+
+			if (result is SqlDefaultIfEmptyExpression defaultIfEmpty)
+				result = UnwrapSequenceExpression(defaultIfEmpty.InnerExpression);
+
+			if (result.NodeType is ExpressionType.Conditional)
+			{
+				var newResult = RemoveNullPropagation(result, true);
+
+				if (!ReferenceEquals(newResult, result))
+					return UnwrapSequenceExpression(newResult);
+			}
+
 			return result;
 		}
 
 		Expression ExpandToRoot(Expression expression, BuildInfo buildInfo)
 		{
-			var flags = buildInfo.IsAggregation ? ProjectFlags.AggregationRoot : ProjectFlags.Root;
-
-			flags = buildInfo.GetFlags(flags) | ProjectFlags.Subquery;
-
 			expression = UnwrapSequenceExpression(expression);
 			Expression result;
 			do
 			{
-				result = MakeExpression(buildInfo.Parent, expression, flags);
+				result = buildInfo.IsAggregation ? BuildAggregationRootExpression(expression) : BuildSubqueryExpression(expression);
 				result = UnwrapSequenceExpression(result);
 
 				if (ExpressionEqualityComparer.Instance.Equals(expression, result))
@@ -278,14 +350,16 @@ namespace LinqToDB.Linq.Builder
 
 			using var mb = ActivityService.Start(ActivityID.BuildSequenceBuild);
 
+			#if DEBUG
+
+			Debug.WriteLine($"Building {builder.GetType().Name}");
+
+			#endif
+
 			var result = builder.BuildSequence(this, buildInfo);
 
 			if (result.BuildContext != null)
 			{
-#if DEBUG
-				if (!buildInfo.IsTest)
-					QueryHelper.DebugCheckNesting(result.BuildContext.GetResultStatement(), buildInfo.IsSubQuery);
-#endif
 				RegisterSequenceExpression(result.BuildContext, originalExpression);
 			}
 
@@ -374,7 +448,7 @@ namespace LinqToDB.Linq.Builder
 		{
 			using var visitor = _exposeVisitorPool.Allocate();
 
-			var result = visitor.Value.ExposeExpression(dataContext, optimizationContext, parameterValues, expression, false, optimizeConditions, compactBinary);
+			var result = visitor.Value.ExposeExpression(dataContext, optimizationContext, parameterValues, expression, false, optimizeConditions, compactBinary, isSingleConvert: false);
 
 			return result;
 		}

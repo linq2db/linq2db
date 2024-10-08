@@ -24,9 +24,7 @@ namespace LinqToDB.Linq.Builder
 
 			var translated = builder.BuildSqlExpression(
 				subquery, 
-				new ContextRefExpression(subquery.ElementType, subquery),
-				ProjectFlags.SQL, 
-				buildFlags: ExpressionBuilder.BuildFlags.ForceAssignments);
+				new ContextRefExpression(subquery.ElementType, subquery));
 
 			return BuildSequenceResult.FromContext(subquery);
 		}

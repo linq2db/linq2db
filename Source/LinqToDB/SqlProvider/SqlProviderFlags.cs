@@ -495,6 +495,13 @@ namespace LinqToDB.SqlProvider
 		[DataMember(Order = 58)]
 		public int? SupportedCorrelatedSubqueriesLevel { get; set; }
 
+		/// <summary>
+		/// Provider supports correlated DISTINCT FROM
+		/// Default <c>false</c>
+		/// </summary>
+		[DataMember(Order = 59)]
+		public bool IsDistinctFromSupported { get; set; }
+
 		public bool GetAcceptsTakeAsParameterFlag(SelectQuery selectQuery)
 		{
 			return AcceptsTakeAsParameter || AcceptsTakeAsParameterIfSkip && selectQuery.Select.SkipValue != null;
@@ -574,7 +581,8 @@ namespace LinqToDB.SqlProvider
 				^ IsUpdateTakeSupported                                .GetHashCode()
 				^ IsUpdateSkipTakeSupported                            .GetHashCode()
 				^ IsSupportedSimpleCorrelatedSubqueries                .GetHashCode()
-				^ SupportedCorrelatedSubqueriesLevel                 .GetHashCode()
+				^ SupportedCorrelatedSubqueriesLevel                   .GetHashCode()
+				^ IsDistinctFromSupported                              .GetHashCode()
 				^ CustomFlags.Aggregate(0, (hash, flag) => flag.GetHashCode() ^ hash);
 	}
 
@@ -637,6 +645,7 @@ namespace LinqToDB.SqlProvider
 				&& IsUpdateSkipTakeSupported                             == other.IsUpdateSkipTakeSupported
 				&& IsSupportedSimpleCorrelatedSubqueries                 == other.IsSupportedSimpleCorrelatedSubqueries
 				&& SupportedCorrelatedSubqueriesLevel                    == other.SupportedCorrelatedSubqueriesLevel
+				&& IsDistinctFromSupported                               == other.IsDistinctFromSupported
 				// CustomFlags as List wasn't best idea
 				&& CustomFlags.Count                                     == other.CustomFlags.Count
 				&& (CustomFlags.Count                                    == 0

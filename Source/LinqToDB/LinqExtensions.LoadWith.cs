@@ -757,7 +757,7 @@ namespace LinqToDB
 			MemberInfo[]?            loadWithPath)
 			where TSource : class
 		{
-			throw new InvalidOperationException();
+			return source;
 		}
 	}
 }

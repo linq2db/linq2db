@@ -1033,6 +1033,19 @@ namespace Tests.Linq
 
 			AssertQuery(query);
 		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/3665")]
+		public void Issue3665Test5([DataSources(TestProvName.AllAccess)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query =
+				from x in db.Person
+				from y in Enum.GetValues<Gender>()
+				select y;
+
+			AssertQuery(query);
+		}
 #endif
 	}
 }

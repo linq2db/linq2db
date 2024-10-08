@@ -12,6 +12,7 @@ namespace LinqToDB.Linq
 	using Mapping;
 	using SqlQuery;
 	using Tools;
+	using Infrastructure;
 
 	static partial class QueryRunner
 	{
@@ -73,12 +74,14 @@ namespace LinqToDB.Linq
 					.Where(f => f.IsUpdatable && !f.ColumnDescriptor.ShouldSkip(obj!, descriptor, SkipModification.Update) && (columnFilter == null || columnFilter(obj, f.ColumnDescriptor)))
 					.Except(keys);
 
+				var accessorIdGenerator = new UniqueIdGenerator<ParameterAccessor>();
+
 				var fieldCount = 0;
 				foreach (var field in fields)
 				{
-					var param = GetParameter(type, dataContext, field);
+					var param = GetParameter(accessorIdGenerator, type, dataContext, field);
 
-					ei.Queries[0].AddParameterAccessor(param);
+					ei.AddParameterAccessor(param);
 
 					updateStatement.Update.Items.Add(new SqlSetExpression(field, param.SqlParameter));
 
@@ -98,9 +101,9 @@ namespace LinqToDB.Linq
 
 				foreach (var field in keys)
 				{
-					var param = GetParameter(type, dataContext, field);
+					var param = GetParameter(accessorIdGenerator, type, dataContext, field);
 
-					ei.Queries[0].AddParameterAccessor(param);
+					ei.AddParameterAccessor(param);
 
 					sqlQuery.Where.SearchCondition.AddEqual(field, param.SqlParameter, CompareNulls.LikeSql);
 

@@ -30,13 +30,10 @@ namespace LinqToDB.Linq.Builder
 
 				if (table.ObjectType.IsSameOrParentOf(objectType))
 				{
-					if (!buildInfo.IsTest)
-					{
-						var predicate = builder.MakeIsPredicate(table, objectType);
+					var predicate = builder.MakeIsPredicate(table, objectType);
 
-						if (predicate.GetType() != typeof(SqlPredicate.Expr))
-							sequence.SelectQuery.Where.EnsureConjunction().Add(predicate);
-					}
+					if (predicate.GetType() != typeof(SqlPredicate.Expr))
+						sequence.SelectQuery.Where.EnsureConjunction().Add(predicate);
 
 					return BuildSequenceResult.FromContext(new OfTypeContext(sequence, objectType));
 				}
@@ -55,12 +52,9 @@ namespace LinqToDB.Linq.Builder
 
 						if (mapping.Count > 0)
 						{
-							if (!buildInfo.IsTest)
-							{
-								var predicate = MakeIsPredicate(builder, sequence, fromType, toType);
+							var predicate = MakeIsPredicate(builder, sequence, fromType, toType);
 
-								sequence.SelectQuery.Where.EnsureConjunction().Add(predicate);
-							}
+							sequence.SelectQuery.Where.EnsureConjunction().Add(predicate);
 
 							return BuildSequenceResult.FromContext(new OfTypeContext(sequence, toType));
 						}
@@ -85,7 +79,7 @@ namespace LinqToDB.Linq.Builder
 
 					var contextRef = new ContextRefExpression(member.DeclaringType!, context.context);
 					var expr       = Expression.MakeMemberAccess(contextRef, member);
-					var sql        = context.context.Builder.ConvertToSql(contextRef.BuildContext, expr);
+					var sql        = context.context.Builder.ConvertToSql(contextRef.BuildContext, expr, false);
 
 					return sql;
 				});

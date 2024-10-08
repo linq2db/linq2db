@@ -301,7 +301,7 @@ namespace LinqToDB.DataProvider.Informix.Translation
 			protected override ISqlExpression? TranslateSqlGetDate(ITranslationContext translationContext, TranslationFlags translationFlags)
 			{
 				var factory          = translationContext.ExpressionFactory;
-				var currentTimeStamp = factory.Fragment(factory.GetDbDataType(typeof(DateTime)), "CURRENT");
+				var currentTimeStamp = factory.NotNullFragment(factory.GetDbDataType(typeof(DateTime)), "CURRENT");
 				return currentTimeStamp;
 			}
 		}

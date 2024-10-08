@@ -24,6 +24,7 @@ namespace LinqToDB.Linq
 	using Reflection;
 	using SqlQuery;
 	using Tools;
+	using Infrastructure;
 
 	static partial class QueryRunner
 	{
@@ -259,9 +260,10 @@ namespace LinqToDB.Linq
 		internal static void SetParameters(
 			Query query, Expression expression, IDataContext? parametersContext, object?[]? parameters, int queryNumber, SqlParameterValues parameterValues)
 		{
-			var queryContext = query.Queries[queryNumber];
+			if (query.ParameterAccessors == null)
+				return;
 
-			foreach (var p in queryContext.ParameterAccessors)
+			foreach (var p in query.ParameterAccessors)
 			{
 				var providerValue = p.ValueAccessor(expression, parametersContext, parameters);
 
@@ -286,7 +288,7 @@ namespace LinqToDB.Linq
 			}
 		}
 
-		internal static ParameterAccessor GetParameter(Type type, IDataContext dataContext, SqlField field)
+		internal static ParameterAccessor GetParameter(IUniqueIdGenerator<ParameterAccessor> accessorIdGenerator, Type type, IDataContext dataContext, SqlField field)
 		{
 			Expression getter = Expression.Convert(
 				Expression.Property(
@@ -315,6 +317,7 @@ namespace LinqToDB.Linq
 			}
 
 			var param = ParametersContext.CreateParameterAccessor(
+				accessorIdGenerator,
 				dataContext, valueGetter, null, dbDataTypeExpression, valueGetter, parametersExpression: null, name: field.Name.Replace('.', '_'));
 
 			return param;

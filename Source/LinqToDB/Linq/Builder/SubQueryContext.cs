@@ -85,35 +85,29 @@ namespace LinqToDB.Linq.Builder
 
 			var corrected = SequenceHelper.CorrectExpression(path, this, SubQuery);
 
+			var result = Builder.BuildExpression(SubQuery, corrected);
+
 			if (flags.IsExtractProjection() || flags.IsTraverse() || flags.IsAggregationRoot() || flags.IsSubquery() || flags.IsTable() || flags.IsAssociationRoot() || flags.IsRoot())
 			{
-				var processed = Builder.MakeExpression(SubQuery, corrected, flags);
-				return processed;
+				return result;
 			}
 
-			var buildFlags = ExpressionBuilder.BuildFlags.None;
-			if (flags.IsSql())
-				buildFlags = ExpressionBuilder.BuildFlags.ForceAssignments;
-
-			var result = Builder.BuildSqlExpression(SubQuery, corrected, flags, buildFlags: buildFlags);
-
 			if (ExpressionEqualityComparer.Instance.Equals(corrected, result))
-				return path;
-
-			if (!flags.HasFlag(ProjectFlags.Test))
 			{
-				result = SequenceHelper.CorrectTrackingPath(Builder, result, path);
+				return path;
+			}
 
-				// correct all placeholders, they should target to appropriate SubQuery.SelectQuery
-				//
-				result = Builder.UpdateNesting(this, result);
-				result = SequenceHelper.CorrectSelectQuery(result, SelectQuery);
+			result = SequenceHelper.CorrectTrackingPath(Builder, result, path);
 
-				if (!flags.HasFlag(ProjectFlags.AssociationRoot))
-				{
-					// remap back, especially for Recursive CTE
-					result = SequenceHelper.ReplaceContext(result, SubQuery, this);
-				}
+			// correct all placeholders, they should target to appropriate SubQuery.SelectQuery
+			//
+			result = Builder.UpdateNesting(this, result);
+			result = SequenceHelper.CorrectSelectQuery(result, SelectQuery);
+
+			if (!flags.HasFlag(ProjectFlags.AssociationRoot))
+			{
+				// remap back, especially for Recursive CTE
+				result = SequenceHelper.ReplaceContext(result, SubQuery, this);
 			}
 
 			return result;

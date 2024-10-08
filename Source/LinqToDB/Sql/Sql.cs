@@ -446,7 +446,6 @@ namespace LinqToDB
 			return str.Substring(index, maxAllowedLength);
 		}
 
-		[Function(ServerSideOnly = true, IsPredicate = true)]
 		public static bool Like(string? matchExpression, string? pattern)
 		{
 #if !NETFRAMEWORK
@@ -1341,44 +1340,34 @@ namespace LinqToDB
 			return x == null || y == null ? null : Math.Pow(x.Value, y.Value);
 		}
 
-		[Function(IsNullable = IsNullableType.SameAsFirstParameter)]
-		[Function(PN.ClickHouse, "roundBankers", IsNullable = IsNullableType.SameAsFirstParameter)]
 		public static decimal? RoundToEven(decimal? value)
 		{
 			return value == null ? null : Math.Round(value.Value, MidpointRounding.ToEven);
 		}
 
-		[Function(IsNullable = IsNullableType.SameAsFirstParameter)]
-		[Function(PN.ClickHouse, "roundBankers", IsNullable = IsNullableType.SameAsFirstParameter)]
 		public static double? RoundToEven(double? value)
 		{
 			return value == null ? null : Math.Round(value.Value, MidpointRounding.ToEven);
 		}
 
-		[Function(IsNullable = IsNullableType.IfAnyParameterNullable)] public static decimal? Round(decimal? value) { return Round(value, 0); }
-		[Function(IsNullable = IsNullableType.IfAnyParameterNullable)] public static double?  Round(double?  value) { return Round(value, 0); }
+		public static decimal? Round(decimal? value) { return Round(value, 0); }
+		public static double?  Round(double?  value) { return Round(value, 0); }
 
-		[Function(IsNullable = IsNullableType.IfAnyParameterNullable)]
 		public static decimal? Round(decimal? value, int? precision)
 		{
 			return value == null || precision == null ? null : Math.Round(value.Value, precision.Value, MidpointRounding.AwayFromZero);
 		}
 
-		[Function(IsNullable = IsNullableType.IfAnyParameterNullable)]
 		public static double? Round(double? value, int? precision)
 		{
 			return value == null || precision == null ? null : Math.Round(value.Value, precision.Value, MidpointRounding.AwayFromZero);
 		}
 
-		[Function(IsNullable = IsNullableType.IfAnyParameterNullable)]
-		[Function(PN.ClickHouse, "roundBankers", IsNullable = IsNullableType.IfAnyParameterNullable)]
 		public static decimal? RoundToEven(decimal? value, int? precision)
 		{
 			return value == null || precision == null ? null : Math.Round(value.Value, precision.Value, MidpointRounding.ToEven);
 		}
 
-		[Function(IsNullable = IsNullableType.IfAnyParameterNullable)]
-		[Function(PN.ClickHouse, "roundBankers", IsNullable = IsNullableType.IfAnyParameterNullable)]
 		public static double? RoundToEven(double?  value, int? precision)
 		{
 			return value == null || precision == null ? null : Math.Round(value.Value, precision.Value, MidpointRounding.ToEven);

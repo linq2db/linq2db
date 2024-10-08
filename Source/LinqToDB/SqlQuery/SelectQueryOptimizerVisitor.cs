@@ -211,21 +211,22 @@ namespace LinqToDB.SqlQuery
 			_parentSelect = selectQuery;
 			_isInsideNot = false;
 
+			if (saveParent == null)
+			{
+#if DEBUG
+				var before = selectQuery.ToDebugString();
+#endif
+				// only once
+				_expressionOptimizerVisitor.Optimize(_evaluationContext, NullabilityContext.GetContext(selectQuery), null, _dataOptions, _mappingSchema, selectQuery, visitQueries: true, isInsideNot: false, reduceBinary: false);
+			}
+
 			var newQuery = (SelectQuery)base.VisitSqlQuery(selectQuery);
 
 			if (_correcting == null)
 			{
 				_parentSelect = selectQuery;
 
-				if (saveParent == null)
-				{
-#if DEBUG
-					var before = selectQuery.ToDebugString();
-#endif
-					// only once
-					_expressionOptimizerVisitor.Optimize(_evaluationContext, NullabilityContext.GetContext(selectQuery), null, _dataOptions, _mappingSchema, selectQuery, visitQueries : true, isInsideNot : false, reduceBinary: false);
-				}
-				else
+				if (saveParent != null)
 				{
 					OptimizeColumns(selectQuery);
 				}
@@ -1251,9 +1252,7 @@ namespace LinqToDB.SqlQuery
 
 			if (subQuery.HasSetOperators)
 			{
-				var newIndexes =
-					new Dictionary<ISqlExpression, int>(Utils.ObjectReferenceEqualityComparer<ISqlExpression>
-						.Default);
+				var newIndexes = new Dictionary<ISqlExpression, int>(Utils.ObjectReferenceEqualityComparer<ISqlExpression>.Default);
 
 				if (parentQuery.Select.Columns.Count == 0)
 				{
@@ -1294,10 +1293,6 @@ namespace LinqToDB.SqlQuery
 
 				if (havingDetected?.Count > 0)
 				{
-					// Should be checked earlier
-					if (havingDetected.Count != parentQuery.Where.SearchCondition.Predicates.Count)
-						throw new InvalidOperationException();
-
 					// move Where to Having
 					parentQuery.Having.SearchCondition.Predicates.InsertRange(0, parentQuery.Where.SearchCondition.Predicates);
 					parentQuery.Where.SearchCondition.Predicates.Clear();
@@ -1552,6 +1547,10 @@ namespace LinqToDB.SqlQuery
 			{
 				if (!parentQuery.Where.IsEmpty)
 				{
+					var searchCondition = parentQuery.Where.SearchCondition;
+					if (searchCondition.Predicates is [SqlSearchCondition subCondition])
+						searchCondition = subCondition;
+
 					foreach (var subColumn in subQuery.Select.Columns)
 					{
 						if (QueryHelper.IsAggregationFunction(subColumn.Expression))
@@ -1559,9 +1558,9 @@ namespace LinqToDB.SqlQuery
 							aggregates ??= new(Utils.ObjectReferenceEqualityComparer<ISqlExpression>.Default);
 							aggregates.Add(subColumn);
 
-							for (var i = 0; i < parentQuery.Where.SearchCondition.Predicates.Count; i++)
+							for (var i = 0; i < searchCondition.Predicates.Count; i++)
 							{
-								var p = parentQuery.Where.SearchCondition.Predicates[i];
+								var p = searchCondition.Predicates[i];
 								if (p.ElementType == QueryElementType.ExprExprPredicate)
 								{
 									if (p.HasElement(subColumn))
@@ -1579,7 +1578,7 @@ namespace LinqToDB.SqlQuery
 						}
 					}
 
-					if (havingDetected?.Count != parentQuery.Where.SearchCondition.Predicates.Count)
+					if (havingDetected?.Count != searchCondition.Predicates.Count)
 					{
 						// everything should be moved to having
 						return false;
@@ -2528,6 +2527,12 @@ namespace LinqToDB.SqlQuery
 									var queryToReplace = joinQuery;
 									var testedColumn   = joinQuery.Select.Columns[index];
 
+									if (join.JoinType is JoinType.OuterApply or JoinType.Left)
+									{
+										// LEFT JOIN is removed, we have to remember that value can be null
+										testedColumn.Expression = SqlNullabilityExpression.ApplyNullability(testedColumn.Expression, true);
+									}
+
 									// cloning if there are many columns
 									if (index > 0)
 									{
@@ -2812,7 +2817,7 @@ namespace LinqToDB.SqlQuery
 				if (ReferenceEquals(element, _predicate))
 					return base.Visit(element);
 
-				if (element is ISqlExpression sqlExpr)
+				if (element is ISqlExpression sqlExpr and not SqlSearchCondition)
 				{
 					if (QueryHelper.IsDependsOnSources(sqlExpr, _currentSources) && !QueryHelper.IsDependsOnOuterSources(sqlExpr, currentSources : _currentSources))
 					{

@@ -219,7 +219,7 @@ namespace LinqToDB.DataProvider.Firebird.Translation
 			protected override ISqlExpression? TranslateSqlGetDate(ITranslationContext translationContext, TranslationFlags translationFlags)
 			{
 				var factory = translationContext.ExpressionFactory;
-				return factory.Fragment(factory.GetDbDataType(typeof(DateTime)), "LOCALTIMESTAMP");
+				return factory.NotNullFragment(factory.GetDbDataType(typeof(DateTime)), "LOCALTIMESTAMP");
 			}
 		}
 

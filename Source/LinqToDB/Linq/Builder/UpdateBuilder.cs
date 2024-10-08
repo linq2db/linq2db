@@ -112,10 +112,10 @@ namespace LinqToDB.Linq.Builder
 					{
 						sequence = builder.BuildWhere(buildInfo.Parent, sequence,
 							condition : methodCall.Arguments[1].UnwrapLambda(), checkForSubQuery : false,
-							enforceHaving : false, isTest : buildInfo.IsTest);
+							enforceHaving : false, out var error);
 
 						if (sequence == null)
-							return BuildSequenceResult.Error(methodCall);
+							return BuildSequenceResult.Error(error ?? methodCall);
 
 						setterExpr = methodCall.Arguments[2].Unwrap();
 					}
@@ -192,7 +192,7 @@ namespace LinqToDB.Linq.Builder
 								// try to find in projection
 								//
 								var sequenceRefExpression = new ContextRefExpression(typeof(object), sequence);
-								var projection = builder.ExtractProjection(sequence, sequenceRefExpression);
+								var projection            = builder.BuildExtractExpression(sequence, sequenceRefExpression);
 
 								projection.Visit((builder, sequence, collectedTables, intoTableContext), (ctx, e) =>
 								{
@@ -236,7 +236,7 @@ namespace LinqToDB.Linq.Builder
 							var sequenceRef = new ContextRefExpression(sequenceTableContext.SqlTable.ObjectType, sequenceTableContext);
 							var intoRef     = new ContextRefExpression(sequenceTableContext.SqlTable.ObjectType, into);
 
-							var compareSearchCondition = builder.GenerateComparison(sequenceTableContext, sequenceRef, intoRef);
+							var compareSearchCondition = builder.GenerateComparison(sequenceTableContext, sequenceRef, intoRef, BuildPurpose.Sql);
 							sequenceTableContext.SelectQuery.Where.ConcatSearchCondition(compareSearchCondition);
 							updateStatement.Update.HasComparison = true;
 						}
@@ -327,9 +327,9 @@ namespace LinqToDB.Linq.Builder
 			if (targetTableContext is CteTableContext cteTable)
 			{
 				insertedContext = new CteTableContext(builder, null,
-					targetTableContext.SqlTable.ObjectType, outputSelectQuery, cteTable.CteContext, false);
+					targetTableContext.SqlTable.ObjectType, outputSelectQuery, cteTable.CteContext);
 				deletedContext = new CteTableContext(builder, null,
-					targetTableContext.SqlTable.ObjectType, outputSelectQuery, cteTable.CteContext, false);
+					targetTableContext.SqlTable.ObjectType, outputSelectQuery, cteTable.CteContext);
 			}
 			else
 			{
@@ -436,14 +436,15 @@ namespace LinqToDB.Linq.Builder
 						valueExpression = Expression.Convert(valueExpression, fieldExpression.Type);
 					}
 
-					var sqlExpr = builder.ConvertToSqlExpr(valuesContext, valueExpression, unwrap : false, columnDescriptor : columnDescriptor, forceParameter: envelope.ForceParameter);
+					using var savedDescriptor = builder.UsingColumnDescriptor(columnDescriptor);
+					var sqlExpr = builder.BuildSqlExpression(valuesContext, valueExpression, BuildPurpose.Sql, envelope.ForceParameter ? BuildFlags.ForceParameter : BuildFlags.None);
 
 					if (sqlExpr is not SqlPlaceholderExpression placeholder)
 					{
 						if (sqlExpr is SqlErrorExpression errorExpr)
 							throw errorExpr.CreateException();
 
-						throw SqlErrorExpression.CreateException(valueExpression, null);
+						throw SqlErrorExpression.CreateException(sqlExpr, null);
 					}
 
 					var sql = createColumns
@@ -489,7 +490,7 @@ namespace LinqToDB.Linq.Builder
 			else
 			{
 				var hasConversion = false;
-				var targetColumn  = builder.ConvertToSqlExpr(buildContext, fieldExpression);
+				var targetColumn  = builder.BuildSqlExpression(buildContext, fieldExpression);
 				if (targetColumn is SqlPlaceholderExpression placeholder)
 				{
 					var columnDescriptor = QueryHelper.GetColumnDescriptor(placeholder.Sql);
@@ -539,7 +540,7 @@ namespace LinqToDB.Linq.Builder
 
 			if (correctedSetter is not SqlGenericConstructorExpression)
 			{
-				correctedSetter = builder.ConvertToSqlExpr(targetRef.BuildContext, correctedSetter);
+				correctedSetter = builder.BuildSqlExpression(targetRef.BuildContext, correctedSetter);
 			}
 
 			if (correctedSetter is SqlGenericConstructorExpression generic)
@@ -706,7 +707,7 @@ namespace LinqToDB.Linq.Builder
 			{
 				// populate all accessible fields, especially for CTE
 				var queryRef  = new ContextRefExpression(querySequence.ElementType, querySequence);
-				var allFields = builder.ConvertToSqlExpr(querySequence, queryRef);
+				var allFields = builder.BuildSqlExpression(querySequence, queryRef);
 
 				if (allFields is not SqlGenericConstructorExpression constructorExpression)
 				{
@@ -762,11 +763,11 @@ namespace LinqToDB.Linq.Builder
 							: SequenceHelper.PrepareBody(OutputExpression, QuerySequence,
 								deletedContext, insertedContext);
 
-						var selectContext = new SelectContext(Parent, outputBody, insertedContext, false);
-						var outputRef     = new ContextRefExpression(path.Type, selectContext);
+						var selectContext     = new SelectContext(Parent, outputBody, insertedContext, false);
+						var outputRef         = new ContextRefExpression(path.Type, selectContext);
 						var outputExpressions = new List<SetExpressionEnvelope>();
 
-						var sqlExpr = Builder.ConvertToSqlExpr(selectContext, outputRef);
+						var sqlExpr = Builder.BuildSqlExpression(selectContext, outputRef);
 						sqlExpr = SequenceHelper.CorrectSelectQuery(sqlExpr, outputSelectQuery);
 
 						if (sqlExpr is SqlPlaceholderExpression)

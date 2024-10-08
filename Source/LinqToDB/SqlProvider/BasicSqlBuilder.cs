@@ -3060,7 +3060,7 @@ namespace LinqToDB.SqlProvider
 				case QueryElementType.SqlValue:
 					var sqlval = (SqlValue)expr;
 
-					BuildValue(sqlval.ValueType, sqlval.Value);
+					BuildSqlValue(sqlval);
 					break;
 
 				case QueryElementType.SqlExpression:
@@ -3313,7 +3313,7 @@ namespace LinqToDB.SqlProvider
 					if (sqlField == null || sqlField.Table == null)
 						throw new LinqToDBException("Cannot find Table or Column associated with expression");
 
-					var table = sqlField.Table as SqlTable;
+					var table = FindTable(sqlField.Table);
 					if (table == null)
 						throw new LinqToDBException("Cannot find table.");
 
@@ -3327,11 +3327,11 @@ namespace LinqToDB.SqlProvider
 					if (sqlField == null || sqlField.Table == null)
 						throw new LinqToDBException("Cannot find Table or Column associated with expression");
 
-					var table = sqlField.Table as SqlTable;
+					var table = FindTable(sqlField.Table);
 					if (table == null)
 						throw new LinqToDBException("Cannot find table.");
 
-					if (sqlField == table.All)
+					if (sqlField == sqlField.Table.All)
 					{
 						BuildExpression(new SqlField(table, table.TableName.Name));
 					}
@@ -3351,6 +3351,24 @@ namespace LinqToDB.SqlProvider
 			BuildExpression(anchor.SqlExpression, false, false, null, ref addAlias, false);
 
 			_disableAlias = saveDisableAlias;
+
+			SqlTable? FindTable(ISqlTableSource tableSource)
+			{
+				if (tableSource is SqlTable table)
+					return table;
+
+				var currentTable = tableSource;
+				while (currentTable is SelectQuery { From.Tables.Count: 1 } sc)
+				{
+					currentTable = sc.From.Tables[0].Source;
+					if (currentTable is SqlTable st)
+					{
+						return st;
+					}
+				}
+
+				return null;
+			}
 		}
 
 		protected virtual bool TryConvertParameterToSql(SqlParameterValue paramValue)
@@ -3484,6 +3502,11 @@ namespace LinqToDB.SqlProvider
 					BuildParameter(new SqlParameter(dataType.Value, "value", value));
 				}
 			}
+		}
+
+		public virtual void BuildSqlValue(SqlValue value)
+		{
+			BuildValue(value.ValueType, value.Value);
 		}
 
 		#endregion

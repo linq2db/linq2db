@@ -1837,7 +1837,7 @@ namespace Tests.Linq
 			});
 		}
 
-		[ActiveIssue(Configurations = [TestProvName.AllClickHouse, TestProvName.AllOracle, TestProvName.AllSqlServer])]
+		[ActiveIssue(Configurations = [TestProvName.AllClickHouse, TestProvName.AllOracle])]
 		[Test(Description = "literals in anchor query")]
 		public void Issue3360_LiteralsInAnchor([CteContextSource] string context)
 		{

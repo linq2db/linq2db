@@ -2168,7 +2168,7 @@ namespace Tests.Linq
 					orderby c.CategoryID descending
 					select c;
 
-				q.ToString()!.Should().Contain($"CONTAINS(PROPERTY([c_1].[Description], N'{property}'), @search)");
+				q.ToString()!.Should().Contain($"CONTAINS(PROPERTY([c_1].[Description], @property), @search)");
 			}
 		}
 
@@ -2187,7 +2187,7 @@ namespace Tests.Linq
 					orderby c.CategoryID descending
 					select c;
 
-				q.ToString()!.Should().Contain($"CONTAINS(PROPERTY([c_1].[Description], N'{property}'), @search, LANGUAGE @lang)");
+				q.ToString()!.Should().Contain($"CONTAINS(PROPERTY([c_1].[Description], @property), @search, LANGUAGE @lang)");
 			}
 		}
 
@@ -2206,7 +2206,7 @@ namespace Tests.Linq
 					orderby c.CategoryID descending
 					select c;
 
-				q.ToString()!.Should().Contain($"CONTAINS(PROPERTY([c_1].[CategoryName], N'{property}'), @search, LANGUAGE @lang)");
+				q.ToString()!.Should().Contain($"CONTAINS(PROPERTY([c_1].[CategoryName], @property), @search, LANGUAGE @lang)");
 			}
 		}
 		#endregion

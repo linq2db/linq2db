@@ -627,7 +627,7 @@ namespace Tests.Linq
 				FluentActions.Enumerating(() => query)
 					.Should()
 					.Throw<LinqException>()
-					.WithMessage("The LINQ expression 'Sql.Ordinal<string>(p.Name.LastName) == \"Some\"' could not be converted to SQL.");
+					.WithMessage("The LINQ expression 'Sql.Ordinal<string>(p.Name.LastName)' could not be converted to SQL.");
 			}
 		}
 

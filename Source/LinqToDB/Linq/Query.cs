@@ -14,13 +14,13 @@ namespace LinqToDB.Linq
 	using Builder;
 	using Common;
 	using Common.Logging;
-	using Extensions;
 	using Interceptors;
 	using LinqToDB.Expressions;
 	using Mapping;
 	using SqlProvider;
 	using SqlQuery;
 	using Tools;
+	using Infrastructure;
 
 	public abstract class Query
 	{
@@ -35,7 +35,7 @@ namespace LinqToDB.Linq
 		public bool                           IsFinalized     { get; internal set; }
 		public SqlErrorExpression?            ErrorExpression { get; internal set; }
 
-		internal abstract void Init(IBuildContext parseContext, List<ParameterAccessor> sqlParameters);
+		internal abstract void Init(IBuildContext parseContext);
 
 		internal Query(IDataContext dataContext, Expression? expression)
 		{
@@ -78,12 +78,26 @@ namespace LinqToDB.Linq
 
 		List<(Func<Expression, IDataContext?, object?[]?, object?> main, Func<Expression, IDataContext?, object?[]?, object?> substituted)>? _parametersDuplicates;
 		List<(Expression used, MappingSchema mappingSchema, Func<IDataContext, MappingSchema, Expression> accessorFunc)>?                    _dynamicAccessors;
+		List<ParameterAccessor>?                                                                                                             _parameterAccessors;
+
+		internal List<ParameterAccessor>? ParameterAccessors => _parameterAccessors;
+
+		internal void AddParameterAccessor(ParameterAccessor accessor)
+		{
+			_parameterAccessors ??= new List<ParameterAccessor>();
+			_parameterAccessors.Add(accessor);
+		}
 
 		internal bool IsFastCacheable => _dynamicAccessors == null;
 
 		internal void SetParameterized(List<Expression>? parameterized)
 		{
 			_parameterized = parameterized;
+		}
+
+		internal void SetParametersAccessors(List<ParameterAccessor>? parameterAccessors)
+		{
+			_parameterAccessors = parameterAccessors;
 		}
 
 		internal void SetParametersDuplicates(List<(Func<Expression, IDataContext?, object?[]?, object?> main, Func<Expression, IDataContext?, object?[]?, object?> substituted)>? parametersDuplicates)
@@ -267,14 +281,13 @@ namespace LinqToDB.Linq
 			DoNotCache = NoLinqCache.IsNoCache;
 		}
 
-		internal override void Init(IBuildContext parseContext, List<ParameterAccessor> sqlParameters)
+		internal override void Init(IBuildContext parseContext)
 		{
 			var statement = parseContext.GetResultStatement();
 
 			Queries.Add(new QueryInfo
 			{
 				Statement          = statement,
-				ParameterAccessors = sqlParameters,
 			});
 		}
 
@@ -560,7 +573,7 @@ namespace LinqToDB.Linq
 			}
 
 			using (var mc = ActivityService.Start(ActivityID.GetQueryCreate))
-				query = CreateQuery(optimizationContext, new ParametersContext(expr, null, optimizationContext, dataContext),
+				query = CreateQuery(optimizationContext, new ParametersContext(expr, optimizationContext, dataContext),
 					dataContext, expr);
 
 			if (useCache && !query.DoNotCache)
@@ -645,34 +658,29 @@ namespace LinqToDB.Linq
 		public bool            IsContinuousRun { get; set; }
 		public AliasesContext? Aliases         { get; set; }
 		public DataOptions?    DataOptions     { get; set; }
-
-		internal List<ParameterAccessor> ParameterAccessors = new ();
-
-		internal void AddParameterAccessor(ParameterAccessor accessor)
-		{
-			ParameterAccessors.Add(accessor);
-			accessor.SqlParameter.AccessorId = ParameterAccessors.Count - 1;
-		}
 	}
 
 	sealed class ParameterAccessor
 	{
 		public ParameterAccessor(
-			Func<Expression,IDataContext?,object?[]?,object?>    valueAccessor,
-			Func<object?,object?>?                               itemAccessor,
+			int                                                          accessorId,
+			Func<Expression,IDataContext?,object?[]?,object?>            valueAccessor,
+			Func<object?,object?>?                                       itemAccessor,
 			Func<Expression,object?,IDataContext?,object?[]?,DbDataType> dbDataTypeAccessor,
-			SqlParameter                                         sqlParameter)
+			SqlParameter                                                 sqlParameter)
 		{
+			AccessorId         = accessorId;
 			ValueAccessor      = valueAccessor;
 			ItemAccessor       = itemAccessor;
 			DbDataTypeAccessor = dbDataTypeAccessor;
 			SqlParameter       = sqlParameter;
 		}
 
-		public readonly Func<Expression,IDataContext?,object?[]?,object?>             ValueAccessor;
-		public readonly Func<object?,object?>?                                        ItemAccessor;
-		public readonly Func<Expression,object?,IDataContext?,object?[]?,DbDataType>  DbDataTypeAccessor;
-		public readonly SqlParameter                                                  SqlParameter;
+		public readonly int                                                          AccessorId;
+		public readonly Func<Expression,IDataContext?,object?[]?,object?>            ValueAccessor;
+		public readonly Func<object?,object?>?                                       ItemAccessor;
+		public readonly Func<Expression,object?,IDataContext?,object?[]?,DbDataType> DbDataTypeAccessor;
+		public readonly SqlParameter                                                 SqlParameter;
 #if DEBUG
 		public Expression<Func<Expression,IDataContext?,object?[]?,object?>>? AccessorExpr;
 		public Expression<Func<object?,object?>>?                             ItemAccessorExpr;

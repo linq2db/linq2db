@@ -1156,23 +1156,27 @@ namespace LinqToDB.SqlQuery
 				{
 					VisitListOfArrays(element.Rows, VisitMode.ReadOnly);
 
+					Visit(element.Source);
+
 					break;
 				}
 				case VisitMode.Modify:
 				{
 					VisitListOfArrays(element.Rows, VisitMode.Modify);
+					element.Modify(Visit(element.Source) as ISqlExpression);
 
 					break;
 				}
 				case VisitMode.Transform:
 				{
 					var rows = VisitListOfArrays(element.Rows, VisitMode.Transform);
+					var source = Visit(element.Source) as ISqlExpression;
 
-					if (ShouldReplace(element) || rows != element.Rows)
+					if (ShouldReplace(element) || rows != element.Rows || !ReferenceEquals(source, element.Source))
 					{
 						var newFields = CopyFields(element.Fields);
 
-						var sqlValuesTable = new SqlValuesTable(element.Source, element.ValueBuilders, newFields, rows);
+						var sqlValuesTable = new SqlValuesTable(source, element.ValueBuilders, newFields, rows);
 						if (element.FieldsLookup != null)
 						{
 							sqlValuesTable.FieldsLookup =

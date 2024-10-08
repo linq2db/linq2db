@@ -128,6 +128,8 @@ namespace LinqToDB.Linq.Translation
 			if (newExpression.Arguments.Count < 3)
 				return null;
 
+			using var descriptorScope = translationContext.UsingColumnDescriptor(null);
+
 			if (!translationContext.TranslateToSqlExpression(newExpression.Arguments[0], out var year)  ||
 				!translationContext.TranslateToSqlExpression(newExpression.Arguments[1], out var month) ||
 				!translationContext.TranslateToSqlExpression(newExpression.Arguments[2], out var day))
@@ -169,9 +171,11 @@ namespace LinqToDB.Linq.Translation
 			if (methodCall.Arguments.Count < 6)
 				return null;
 
-			if (!translationContext.TranslateToSqlExpression(methodCall.Arguments[0].UnwrapConvert(), out var year)  ||
-				!translationContext.TranslateToSqlExpression(methodCall.Arguments[1].UnwrapConvert(), out var month) ||
-				!translationContext.TranslateToSqlExpression(methodCall.Arguments[2].UnwrapConvert(), out var day)   ||
+			using var descriptorScope = translationContext.UsingColumnDescriptor(null);
+
+			if (!translationContext.TranslateToSqlExpression(methodCall.Arguments[0].UnwrapConvert(), out var year)   ||
+				!translationContext.TranslateToSqlExpression(methodCall.Arguments[1].UnwrapConvert(), out var month)  ||
+				!translationContext.TranslateToSqlExpression(methodCall.Arguments[2].UnwrapConvert(), out var day)    ||
 				!translationContext.TranslateToSqlExpression(methodCall.Arguments[3].UnwrapConvert(), out var hour)   ||
 				!translationContext.TranslateToSqlExpression(methodCall.Arguments[4].UnwrapConvert(), out var minute) ||
 				!translationContext.TranslateToSqlExpression(methodCall.Arguments[5].UnwrapConvert(), out var second))
@@ -194,6 +198,8 @@ namespace LinqToDB.Linq.Translation
 
 			if (newExpression.Arguments.Count < 3)
 				return null;
+
+			using var descriptorScope = translationContext.UsingColumnDescriptor(null);
 
 			if (!translationContext.TranslateToSqlExpression(newExpression.Arguments[0], out var year)  ||
 			    !translationContext.TranslateToSqlExpression(newExpression.Arguments[1], out var month) ||
@@ -235,6 +241,8 @@ namespace LinqToDB.Linq.Translation
 		{
 			if (methodCall.Arguments.Count < 3)
 				return null;
+
+			using var descriptorScope = translationContext.UsingColumnDescriptor(null);
 
 			if (!translationContext.TranslateToSqlExpression(methodCall.Arguments[0].UnwrapConvert(), out var year)  ||
 			    !translationContext.TranslateToSqlExpression(methodCall.Arguments[1].UnwrapConvert(), out var month) ||
@@ -379,6 +387,8 @@ namespace LinqToDB.Linq.Translation
 			if (dateExpr is not SqlPlaceholderExpression datePlaceholder)
 				return null;
 
+			using var descriptorScope = translationContext.UsingColumnDescriptor(null);
+
 			var converted = TranslateDateTimeDatePart(translationContext, translationFlags, datePlaceholder.Sql, datePart);
 			if (converted == null)
 				return null;
@@ -396,6 +406,8 @@ namespace LinqToDB.Linq.Translation
 			if (dateExpr is not SqlPlaceholderExpression datePlaceholder)
 				return null;
 
+			using var descriptorScope = translationContext.UsingColumnDescriptor(null);
+
 			var converted = TranslateDateTimeOffsetDatePart(translationContext, translationFlags, datePlaceholder.Sql, datePart);
 			if (converted == null)
 				return null;
@@ -408,6 +420,8 @@ namespace LinqToDB.Linq.Translation
 			var datePlaceholder = TranslateNoRequiredExpression(translationContext, methodCall.Object, translationFlags, false);
 			if (datePlaceholder == null)
 				return null;
+
+			using var descriptorScope = translationContext.UsingColumnDescriptor(null);
 
 			var incrementPlaceholder = TranslateNoRequiredExpression(translationContext, methodCall.Arguments[0].UnwrapConvert(), translationFlags, false);
 			if (incrementPlaceholder == null)
@@ -430,6 +444,8 @@ namespace LinqToDB.Linq.Translation
 			if (datePlaceholder == null)
 				return null;
 
+			using var descriptorScope = translationContext.UsingColumnDescriptor(null);
+
 			var incrementPlaceholder = TranslateNoRequiredExpression(translationContext, methodCall.Arguments[0].UnwrapConvert(), translationFlags, false);
 			if (incrementPlaceholder == null)
 				return null;
@@ -450,6 +466,8 @@ namespace LinqToDB.Linq.Translation
 			var datePlaceholder = TranslateNoRequiredExpression(translationContext, methodCall.Object, translationFlags, false);
 			if (datePlaceholder == null)
 				return null;
+
+			using var descriptorScope = translationContext.UsingColumnDescriptor(null);
 
 			var incrementPlaceholder = TranslateNoRequiredExpression(translationContext, methodCall.Arguments[0].UnwrapConvert(), translationFlags, false);
 			if (incrementPlaceholder == null)
@@ -475,6 +493,8 @@ namespace LinqToDB.Linq.Translation
 			if (datePlaceholder == null)
 				return null;
 
+			using var descriptorScope = translationContext.UsingColumnDescriptor(null);
+
 			var incrementPlaceholder = TranslateNoRequiredExpression(translationContext, methodCall.Arguments[1].UnwrapConvert(), translationFlags, false);
 			if (incrementPlaceholder == null)
 				return null;
@@ -498,6 +518,8 @@ namespace LinqToDB.Linq.Translation
 			var datePlaceholder = TranslateNoRequiredExpression(translationContext, methodCall.Arguments[2].UnwrapConvert(), translationFlags, false);
 			if (datePlaceholder == null)
 				return null;
+
+			using var descriptorScope = translationContext.UsingColumnDescriptor(null);
 
 			var incrementPlaceholder = TranslateNoRequiredExpression(translationContext, methodCall.Arguments[1].UnwrapConvert(), translationFlags, false);
 			if (incrementPlaceholder == null)
@@ -523,6 +545,8 @@ namespace LinqToDB.Linq.Translation
 			if (newExpression.Arguments.Count < 3)
 				return null;
 
+			using var descriptorScope = translationContext.UsingColumnDescriptor(null);
+
 			if (!translationContext.TranslateToSqlExpression(newExpression.Arguments[0], out var year)  ||
 			    !translationContext.TranslateToSqlExpression(newExpression.Arguments[1], out var month) ||
 			    !translationContext.TranslateToSqlExpression(newExpression.Arguments[2], out var day))
@@ -542,6 +566,8 @@ namespace LinqToDB.Linq.Translation
 		{
 			if (methodCall.Arguments.Count < 3)
 				return null;
+
+			using var descriptorScope = translationContext.UsingColumnDescriptor(null);
 
 			if (!translationContext.TranslateToSqlExpression(methodCall.Arguments[0].UnwrapConvert(), out var year)   ||
 			    !translationContext.TranslateToSqlExpression(methodCall.Arguments[1].UnwrapConvert(), out var month)  ||
@@ -564,6 +590,8 @@ namespace LinqToDB.Linq.Translation
 			if (placeholder == null)
 				return null;
 
+			using var descriptorScope = translationContext.UsingColumnDescriptor(null);
+
 			var converted = TranslateDateOnlyDatePart(translationContext, translationFlags, placeholder.Sql, datepart);
 			if (converted == null)
 				return null;
@@ -585,6 +613,8 @@ namespace LinqToDB.Linq.Translation
 			if (dateExpr is not SqlPlaceholderExpression datePlaceholder)
 				return null;
 
+			using var descriptorScope = translationContext.UsingColumnDescriptor(null);
+
 			var converted = TranslateDateOnlyDatePart(translationContext, translationFlags, datePlaceholder.Sql, datePart);
 			if (converted == null)
 				return null;
@@ -600,6 +630,8 @@ namespace LinqToDB.Linq.Translation
 			var datePlaceholder = TranslateNoRequiredExpression(translationContext, methodCall.Arguments[2].UnwrapConvert(), translationFlags, false);
 			if (datePlaceholder == null)
 				return null;
+
+			using var descriptorScope = translationContext.UsingColumnDescriptor(null);
 
 			var incrementPlaceholder = TranslateNoRequiredExpression(translationContext, methodCall.Arguments[1].UnwrapConvert(), translationFlags, false);
 			if (incrementPlaceholder == null)
@@ -694,7 +726,7 @@ namespace LinqToDB.Linq.Translation
 		protected virtual ISqlExpression? TranslateSqlGetDate(ITranslationContext translationContext, TranslationFlags translationFlags)
 		{
 			var factory       = translationContext.ExpressionFactory;
-			var currentTimeStamp = factory.Fragment(factory.GetDbDataType(typeof(DateTime)), "CURRENT_TIMESTAMP");
+			var currentTimeStamp = factory.NotNullFragment(factory.GetDbDataType(typeof(DateTime)), "CURRENT_TIMESTAMP");
 			return currentTimeStamp;
 		}
 

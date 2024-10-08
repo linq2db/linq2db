@@ -231,9 +231,12 @@ namespace LinqToDB.Expressions
 				return expr;
 			}
 
-			if (expr is PlaceholderExpression {PlaceholderType: PlaceholderType.Closure})
+			if (expr is PlaceholderExpression placeholder)
 			{
-				return expr;
+				if (placeholder.PlaceholderType is PlaceholderType.Closure or PlaceholderType.Converted)
+					return expr;
+
+				return placeholder.Update(Transform(placeholder.InnerExpression));
 			}
 
 			if (expr is SqlDefaultIfEmptyExpression defaultIfEmptyExpression)

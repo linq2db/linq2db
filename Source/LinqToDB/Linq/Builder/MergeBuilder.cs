@@ -136,7 +136,7 @@ namespace LinqToDB.Linq.Builder
 
 				if (!source.IsTargetAssociation(targetKeySelector))
 				{
-					var compareSearchCondition = builder.GenerateComparison(source.SourceContextRef.BuildContext, targetKeySelector, sourceKeySelector);
+					var compareSearchCondition = builder.GenerateComparison(source.SourceContextRef.BuildContext, targetKeySelector, sourceKeySelector, BuildPurpose.Sql);
 					searchCondition.Predicates.AddRange(compareSearchCondition.Predicates);
 				}
 				else
@@ -148,7 +148,7 @@ namespace LinqToDB.Linq.Builder
 
 					var correctedTargetKeySelector = targetKeySelector.Replace(source.TargetPropAccess, clonedContextRef);
 
-					var compareSearchCondition = builder.GenerateComparison(clonedTargetContext, correctedTargetKeySelector, sourceKeySelector);
+					var compareSearchCondition = builder.GenerateComparison(clonedTargetContext, correctedTargetKeySelector, sourceKeySelector, BuildPurpose.Sql);
 
 					var selectQuery = clonedTargetContext.SelectQuery;
 
@@ -170,7 +170,7 @@ namespace LinqToDB.Linq.Builder
 			}
 			else if (!source.IsTargetAssociation(condition))
 			{
-				builder.BuildSearchCondition(source.SourceContextRef.BuildContext, condition, ProjectFlags.SQL, searchCondition);
+				builder.BuildSearchCondition(source.SourceContextRef.BuildContext, condition, searchCondition);
 			}
 			else
 			{
@@ -181,7 +181,7 @@ namespace LinqToDB.Linq.Builder
 
 				var correctedCondition = condition.Replace(source.TargetPropAccess, clonedContextRef);
 
-				builder.BuildSearchCondition(clonedTargetContext, correctedCondition, ProjectFlags.SQL,
+				builder.BuildSearchCondition(clonedTargetContext, correctedCondition,
 					clonedTargetContext.SelectQuery.Where.EnsureConjunction());
 
 				var targetTable = GetTargetTable(targetContext);

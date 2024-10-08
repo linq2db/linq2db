@@ -112,6 +112,14 @@ namespace LinqToDB.DataProvider.SqlServer
 		{
 			cast = FloorBeforeConvert(cast);
 
+			if (cast.ToType.DataType == DataType.Decimal)
+			{
+				if (cast.ToType.Precision == null && cast.ToType.Scale == null)
+				{
+					cast = cast.WithToType(cast.ToType.WithPrecisionScale(38, 17));
+				}
+			}
+
 			return base.ConvertConversion(cast);
 		}
 	}

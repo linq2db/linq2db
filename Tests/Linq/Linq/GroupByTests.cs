@@ -530,19 +530,20 @@ namespace Tests.Linq
 			{
 				db.BeginTransaction();
 
-				var expected =
-					(
-						from ch in Child
-						group ch by ch.ParentID > 2 ? ch.ParentID > 3 ? "1" : "2" : "3"
-						into g select g
-					).ToList().OrderBy(p => p.Key).ToList();
-
 				var result =
 					(
 						from ch in db.Child
 						group ch by ch.ParentID > 2 ? ch.ParentID > 3 ? "1" : "2" : "3"
 						into g select g
 					).ToList().OrderBy(p => p.Key).ToList();
+
+				var expected =
+				(
+					from ch in Child
+					group ch by ch.ParentID > 2 ? ch.ParentID > 3 ? "1" : "2" : "3"
+					into g
+					select g
+				).ToList().OrderBy(p => p.Key).ToList();
 
 				AreEqual(expected[0], result[0]);
 				AreEqual(expected.Select(p => p.Key), result.Select(p => p.Key));
@@ -864,6 +865,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		[ThrowsForProvider(typeof(LinqException), TestProvName.AllClickHouse, ErrorMessage = ErrorHelper.Error_Correlated_Subqueries)]
 		public void CountInGroup([DataSources] string context)
 		{
 			var data = AggregationData.Data;
@@ -1902,6 +1904,17 @@ namespace Tests.Linq
 		{
 			using (var db = GetDataContext(context))
 			{
+				var query = from t in db.Types2
+					group t by new { Date = Sql.MakeDateTime(t.DateTimeValue!.Value.Year, t.DateTimeValue.Value.Month, 1) } into grp
+					select new
+					{
+						Total = grp.Sum(_ => _.MoneyValue),
+						year  = grp.Key.Date!.Value.Year,
+						month = grp.Key.Date.Value.Month
+					};
+
+				var result = query.ToList();
+
 				AreEqual(
 					from t in Types2
 					group t by new { Date = Sql.MakeDateTime(t.DateTimeValue!.Value.Year, t.DateTimeValue.Value.Month, 1) }   into grp

@@ -1,17 +1,26 @@
 ﻿using System;
 using System.Globalization;
 
-using LinqToDB.Common;
-using LinqToDB.SqlQuery;
-
 namespace LinqToDB.DataProvider.SQLite.Translation
 {
+	using Common;
+	using SqlQuery;
 	using Linq.Translation;
 
 	public class SQLiteMemberTranslator : ProviderMemberTranslatorDefault
 	{
 		class SqlTypesTranslation : SqlTypesTranslationDefault
 		{
+		}
+
+		protected override IMemberTranslator CreateSqlTypesTranslator()
+		{
+			return new SqlTypesTranslation();
+		}
+
+		protected override IMemberTranslator CreateDateMemberTranslator()
+		{
+			return new DateFunctionsTranslator();
 		}
 
 		public class DateFunctionsTranslator : DateFunctionsTranslatorBase
@@ -196,16 +205,5 @@ namespace LinqToDB.DataProvider.SQLite.Translation
 			}
 
 		}
-
-		protected override IMemberTranslator CreateSqlTypesTranslator()
-		{
-			return new SqlTypesTranslation();
-		}
-
-		protected override IMemberTranslator CreateDateMemberTranslator()
-		{
-			return new DateFunctionsTranslator();
-		}
-
 	}
 }

@@ -79,6 +79,24 @@ namespace LinqToDB.SqlQuery
 				if (column.Parent != null && CanBeNullInternal(InQuery, column.Parent) == true)
 					return true;
 
+				if (column.Parent != null)
+				{
+					if (column.Parent.HasSetOperators)
+					{
+						var index = column.Parent.Select.Columns.IndexOf(column);
+						if (index < 0) return true;
+
+						foreach (var set in column.Parent.SetOperators)
+						{
+							if (index >= set.SelectQuery.Select.Columns.Count)
+								return true;
+
+							if (set.SelectQuery.Select.Columns[index].CanBeNullable(this))
+								return true;
+						}
+					}
+				}
+
 				// otherwise check column expression nullability
 				return CanBeNull(column.Expression);
 			}
