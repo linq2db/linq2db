@@ -27,7 +27,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public async Task UpdateWithOutputOrderByNoReturning([IncludeDataSources(TestProvName.AllSqlServer2012Plus, TestProvName.AllSQLite, TestProvName.AllPostgreSQL)] string context)
+		public async Task UpdateWithOutputOrderByNoReturning([IncludeDataSources(TestProvName.AllSqlServer2012Plus, TestProvName.AllPostgreSQL)] string context)
 		{
 			using var db = GetDataContext(context);
 

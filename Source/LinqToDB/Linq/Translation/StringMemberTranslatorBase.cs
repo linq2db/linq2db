@@ -11,6 +11,9 @@ namespace LinqToDB.Linq.Translation
 		{
 			Registration.RegisterMethod(() => Sql.Like(null, null), TranslateLike);
 			Registration.RegisterMethod(() => Sql.Like(null, null, null), TranslateLike);
+#if NETFRAMEWORK
+			Registration.RegisterMethod(() => System.Data.Linq.SqlClient.SqlMethods.Like(null, null), TranslateLike);
+#endif
 		}
 
 		Expression? TranslateLike(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)
