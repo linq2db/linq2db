@@ -1893,9 +1893,6 @@ namespace LinqToDB.SqlProvider
 #if DEBUG
 			// ReSharper disable once NotAccessedVariable
 			var sqlText = startFrom.DebugText;
-#endif
-
-#if BUGCHECK
 
 			if (startFrom is SqlSelectStatement statementBefore)
 			{
@@ -1908,7 +1905,6 @@ namespace LinqToDB.SqlProvider
 #if DEBUG
 			// ReSharper disable once NotAccessedVariable
 			var newSqlText = result.DebugText;
-#endif
 
 			if (startFrom is SqlSelectStatement statementAfter)
 			{
