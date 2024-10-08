@@ -51,7 +51,7 @@ namespace Tests.Linq
 				nameof(ALLTYPE.TIMEDATATYPE)
 			)] string fieldName)
 		{
-			if (!UserProviders.Contains(ProviderName.SQLiteClassic))
+			if (!TestConfiguration.UserProviders.Contains(ProviderName.SQLiteClassic))
 				return;
 
 			using (var db = GetDataContext(ProviderName.SQLiteClassic))

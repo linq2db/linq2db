@@ -102,20 +102,20 @@ namespace LinqToDB.Linq.Builder
 				var parentParam = Expression.Parameter(parentType, "parent");
 				var childParam  = Expression.Parameter(objectType, association.GenerateAlias());
 
-				var parentAccessor = TypeAccessor.GetAccessor(parentType);
-				var parentOriginalAccessor = TypeAccessor.GetAccessor(parentOriginalType);
-				var childAccessor  = TypeAccessor.GetAccessor(objectType);
+				var parentMembers = GetMemberAccessors(parentType, mappingSchema);
+				var parentOriginalMembers = GetMemberAccessors(parentOriginalType, mappingSchema);
+				var childMembers = GetMemberAccessors(objectType, mappingSchema);
 
 				Expression? predicate = null;
 				for (var i = 0; i < association.ThisKey.Length; i++)
 				{
 					var parentName   = association.ThisKey[i];
-					var parentMember = parentAccessor.Members.Find(m => m.MemberInfo.Name == parentName);
+					var parentMember = parentMembers.Find(m => m.MemberInfo.Name == parentName);
 					var currentParentParam = (Expression)parentParam;
 
 					if (parentMember == null)
 					{
-						parentMember = parentOriginalAccessor.Members.Find(m => m.MemberInfo.Name == parentName);
+						parentMember = parentOriginalMembers.Find(m => m.MemberInfo.Name == parentName);
 						currentParentParam = Expression.Convert(currentParentParam, parentOriginalType);
 					}
 
@@ -124,7 +124,7 @@ namespace LinqToDB.Linq.Builder
 							parentType);
 
 					var childName = association.OtherKey[i];
-					var childMember = childAccessor.Members.Find(m => m.MemberInfo.Name == childName);
+					var childMember = childMembers.Find(m => m.MemberInfo.Name == childName);
 
 					if (childMember == null)
 						throw new LinqException("Association key '{0}' not found for type '{1}.", childName,
@@ -361,6 +361,15 @@ namespace LinqToDB.Linq.Builder
 			return body;
 		}
 
+		static List<MemberAccessor> GetMemberAccessors(Type type, MappingSchema mappingSchema)
+		{
+			var typeAccessor = TypeAccessor.GetAccessor(type);
+
+			var dynamicColumnAccessors = mappingSchema.GetDynamicColumns(type)
+				.Select(it => new MemberAccessor(typeAccessor, it, mappingSchema.GetEntityDescriptor(type)));
+
+			return typeAccessor.Members.Concat(dynamicColumnAccessors).ToList();
+		}
 	}
 
 }

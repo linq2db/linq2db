@@ -14,8 +14,6 @@ namespace Tests.Remote
 	{
 		private readonly LinqService    _linqService;
 
-		public bool SuppressSequentialAccess { get; set; }
-
 		public bool AllowUpdates
 		{
 			get => _linqService.AllowUpdates;
@@ -30,27 +28,11 @@ namespace Tests.Remote
 
 		public TestWcfLinqService(
 			LinqService linqService,
-			IInterceptor? interceptor,
-			bool suppressSequentialAccess)
+			IInterceptor? interceptor)
 			: base(linqService, true)
 		{
-			_linqService             = linqService;
-			_interceptor             = interceptor;
-			SuppressSequentialAccess = suppressSequentialAccess;
-
-		}
-
-		public DataConnection CreateDataContext(string? configuration)
-		{
-			var dc = _linqService.CreateDataContext(configuration);
-
-			if (!SuppressSequentialAccess && configuration?.IsAnyOf(TestProvName.AllSqlServerSequentialAccess) == true)
-				dc.AddInterceptor(SequentialAccessCommandInterceptor.Instance);
-
-			if (_interceptor != null)
-				dc.AddInterceptor(_interceptor);
-
-			return dc;
+			_linqService = linqService;
+			_interceptor = interceptor;
 		}
 
 		// for now we need only one test interceptor

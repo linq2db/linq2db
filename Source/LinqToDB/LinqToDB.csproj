@@ -14,6 +14,11 @@
 		<DefineConstants>OVERRIDETOSTRING;$(DefineConstants)</DefineConstants>
 	</PropertyGroup>
 
+	<PropertyGroup Condition="'$(Configuration)'=='Debug' OR '$(Configuration)'=='Azure'">
+		<!--bugchecks to run in debug and during CI tests to discover potential issues-->
+		<DefineConstants>BUGCHECK;$(DefineConstants)</DefineConstants>
+	</PropertyGroup>
+
 	<ItemGroup>
 		<!-- T4 support -->
 		<Service Include="{508349b6-6b84-4df5-91f0-309beebad82d}" />
