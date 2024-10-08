@@ -651,7 +651,10 @@ namespace LinqToDB.Linq.Builder
 						checkExpression = Expression.Convert(expression, expression.Type.AsNullable());
 					}
 
-					expression = Expression.Call(typeof(AggregationContext), nameof(AggregationContext.CheckNullValue), [_returnType],
+					expression = Expression.Call(
+						typeof(AggregationContext),
+						nameof(CheckNullValue),
+						[_returnType],
 						checkExpression,
 						Expression.Constant(_methodName)
 					);

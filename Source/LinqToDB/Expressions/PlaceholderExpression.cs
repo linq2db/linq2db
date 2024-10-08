@@ -7,7 +7,7 @@ namespace LinqToDB.Expressions
 	{
 		Closure,
 		Converted,
-		FailedToTranslate
+		FailedToTranslate,
 	}
 
 	public class PlaceholderExpression : Expression
