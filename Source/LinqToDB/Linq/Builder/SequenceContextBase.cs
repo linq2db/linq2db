@@ -34,7 +34,7 @@ namespace LinqToDB.Linq.Builder
 		public override Expression MakeExpression(Expression path, ProjectFlags flags)
 		{
 			var newPath = SequenceHelper.CorrectExpression(path, this, Sequence);
-			var result = Builder.BuildExpression(Sequence, newPath);
+			var result  = Builder.BuildExpression(Sequence, newPath);
 
 			if (ExpressionEqualityComparer.Instance.Equals(newPath, result))
 				return path;

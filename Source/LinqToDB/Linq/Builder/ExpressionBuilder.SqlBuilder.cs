@@ -306,9 +306,9 @@ namespace LinqToDB.Linq.Builder
 		{
 			var translatedExpr = BuildSqlExpression(context, expression, BuildPurpose.Sql, isPureExpression ? BuildFlags.FormatAsExpression : BuildFlags.None);
 
-			if (translatedExpr is SqlPlaceholderExpression placeholder)
+			if (translatedExpr is SqlPlaceholderExpression { Sql: var sql })
 			{
-				return placeholder.Sql;
+				return sql;
 			}
 
 			throw SqlErrorExpression.EnsureError(translatedExpr, expression.Type).CreateException();

@@ -361,8 +361,16 @@ namespace LinqToDB.Linq.Builder
 
 			name ??= columnDescriptor?.MemberName;
 
-			var p = CreateParameterAccessor(_accessorIdGenerator,
-				DataContext, newExpr.ValueExpression, isParameterList ? valueGetter : null, newExpr.DbDataTypeExpression, valueExpression, ParametersExpression, name);
+			var p = CreateParameterAccessor(
+				_accessorIdGenerator,
+				DataContext,
+				newExpr.ValueExpression,
+				isParameterList ? valueGetter : null,
+				newExpr.DbDataTypeExpression,
+				valueExpression,
+				ParametersExpression,
+				name
+			);
 
 			return p;
 		}

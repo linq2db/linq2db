@@ -70,7 +70,7 @@ namespace LinqToDB.SqlQuery
 			{
 				if (TableSource is SelectQuery selectQuery)
 				{
-					if (Parent != null && Parent.TableSource is SelectQuery parentSelectQuery && parentSelectQuery.HasSetOperators)
+					if (Parent is { TableSource: SelectQuery { HasSetOperators: true } parentSelectQuery })
 					{
 						if (parentSelectQuery.SetOperators.Any(so => so.SelectQuery == selectQuery))
 						{

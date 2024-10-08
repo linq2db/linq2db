@@ -21,7 +21,7 @@ namespace LinqToDB.Linq.Translation
 			using var disposable = translationContext.UsingTypeFromExpression(methodCall.Arguments[0], methodCall.Arguments[1]);
 
 			if (!translationContext.TranslateToSqlExpression(methodCall.Arguments[0], out var translatedField))
-				return translationContext.CreateErrorExpression(methodCall.Arguments[0], type : methodCall.Type);
+				return translationContext.CreateErrorExpression(methodCall.Arguments[0], type: methodCall.Type);
 
 			if (!translationContext.TranslateToSqlExpression(methodCall.Arguments[1], out var translatedValue))
 				return translationContext.CreateErrorExpression(methodCall.Arguments[1], type: methodCall.Type);

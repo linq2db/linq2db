@@ -556,9 +556,9 @@ namespace LinqToDB.Linq.Builder
 					}
 				}
 
-				if (path is MemberExpression { Expression: not null } memberExpression/* || !flags.IsSql()*/)
+				if (path is MemberExpression { Expression: { } expr } /* || !flags.IsSql()*/)
 				{
-					var root = Builder.BuildAggregationRootExpression(memberExpression.Expression);
+					var root = Builder.BuildAggregationRootExpression(expr);
 					if (typeof(IGrouping<,>).IsSameOrParentOf(root.Type))
 					{
 						return path;

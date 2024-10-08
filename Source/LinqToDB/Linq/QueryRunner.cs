@@ -318,7 +318,14 @@ namespace LinqToDB.Linq
 
 			var param = ParametersContext.CreateParameterAccessor(
 				accessorIdGenerator,
-				dataContext, valueGetter, null, dbDataTypeExpression, valueGetter, parametersExpression: null, name: field.Name.Replace('.', '_'));
+				dataContext,
+				valueGetter,
+				itemAccessorExpression: null,
+				dbDataTypeExpression,
+				valueGetter,
+				parametersExpression: null,
+				name: field.Name.Replace('.', '_')
+			);
 
 			return param;
 		}
