@@ -212,7 +212,9 @@ namespace LinqToDB.Linq.Builder
 
 				expr = SequenceHelper.CorrectTrackingPath(Builder, expr, path);
 
-				if (!IsNullValidationDisabled && expr.UnwrapConvert() is not SqlEagerLoadExpression && !flags.IsAssociationRoot())
+				if (!IsNullValidationDisabled
+					&& expr.UnwrapConvert() is not SqlEagerLoadExpression
+					&& !flags.IsAssociationRoot())
 				{
 					if (expr is SqlPlaceholderExpression placeholder)
 					{

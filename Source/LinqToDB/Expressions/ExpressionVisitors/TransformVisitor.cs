@@ -455,7 +455,7 @@ namespace LinqToDB.Expressions
 				case MemberBindingType.ListBinding:
 				{
 					var ml = (MemberListBinding) b;
-					var i  = TransformVisitor<TContext>.Transform(visitor, ml.Initializers, TransformElementInit);
+					var i  = Transform(visitor, ml.Initializers, TransformElementInit);
 
 					if (!ReferenceEquals(i, ml.Initializers))
 						ml = Expression.ListBind(ml.Member, i);
@@ -466,7 +466,7 @@ namespace LinqToDB.Expressions
 				case MemberBindingType.MemberBinding:
 				{
 					var mm = (MemberMemberBinding) b;
-					var bs = TransformVisitor<TContext>.Transform(visitor, mm.Bindings, Modify);
+					var bs = Transform(visitor, mm.Bindings, Modify);
 
 					if (!ReferenceEquals(bs, mm.Bindings))
 						mm = Expression.MemberBind(mm.Member, bs);
