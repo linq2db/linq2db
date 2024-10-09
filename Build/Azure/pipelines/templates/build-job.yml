@@ -1,6 +1,8 @@
 parameters:
   for_nuget: false
   for_tests: false
+  with_analyzers: true
+  with_examples: true
 
 jobs:
 - job: build_job
@@ -45,10 +47,11 @@ jobs:
 
   - task: DotNetCoreCLI@2
     inputs:
-      command: 'build'
+      command: build
       projects: 'Examples/Examples.sln'
       arguments: '--configuration Debug'
     displayName: Build Examples (verify)
+    condition: and(succeeded(), ${{ parameters.with_examples }})
 
   - task: DotNetCoreCLI@2
     inputs:
@@ -129,7 +132,7 @@ jobs:
     inputs:
       command: build
       projects: $(solution)
-      arguments: -property:ContinuousIntegrationBuild=true --configuration $(release_configuration)
+      arguments: -property:ContinuousIntegrationBuild=true -property:RunAnalyzersDuringBuild=$(with_analyzers) --configuration $(release_configuration)
     displayName: Build Solution for Release and Nuget
 
   - task: PublishPipelineArtifact@1
