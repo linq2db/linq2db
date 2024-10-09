@@ -22,7 +22,7 @@ namespace LinqToDB.Linq.Builder
 			var keySelector = methodCall.Arguments[1].UnwrapLambda();
 
 			var keyExpr = SequenceHelper.PrepareBody(keySelector, sequence);
-			var keySql  = builder.BuildSqlExpression(sequence, keyExpr, ProjectFlags.SQL);
+			var keySql  = builder.BuildSqlExpression(sequence, keyExpr);
 
 			var placeholders = ExpressionBuilder.CollectDistinctPlaceholders(keySql);
 

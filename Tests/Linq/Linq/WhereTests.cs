@@ -1741,7 +1741,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void NullableBooleanConditionEvaluationFalseTests([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context, [Values(true, null, false)] bool? value1)
+		public void NullableBooleanConditionEvaluationFalseTests([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse, TestProvName.AllSqlServer)] string context, [Values(true, null, false)] bool? value1)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1851,7 +1851,7 @@ namespace Tests.Linq
 
 				var str = query.ToString();
 
-				str.Should().NotContain("NULL");
+				str.Should().Contain("IS NOT NULL");
 			}
 		}
 
@@ -2374,7 +2374,10 @@ namespace Tests.Linq
 			using var db = GetDataConnection(context);
 			db.Types.Where(r => !r.BoolValue).ToList();
 
-			Assert.That(db.LastQuery, Does.Contain(" = "));
+			if (context.StartsWith(ProviderName.PostgreSQL))
+				Assert.That(db.LastQuery, Does.Not.Contain(" = "));
+			else
+				Assert.That(db.LastQuery, Does.Contain(" = "));
 		}
 
 		[Table]

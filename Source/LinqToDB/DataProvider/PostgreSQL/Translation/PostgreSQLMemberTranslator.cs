@@ -220,6 +220,34 @@ namespace LinqToDB.DataProvider.PostgreSQL.Translation
 			}
 		}
 
+		class MathMemberTranslator : MathMemberTranslatorBase
+		{
+			protected override ISqlExpression? TranslateRoundToEven(ITranslationContext translationContext, MethodCallExpression methodCall, ISqlExpression value, ISqlExpression? precision)
+			{
+				var factory     = translationContext.ExpressionFactory;
+				var decimalType = factory.GetDbDataType(typeof(decimal));
+
+				var valueType   = factory.GetDbDataType(value);
+				var shouldCast  = decimalType != valueType;
+
+				var valueCasted = value;
+				if (shouldCast)
+				{
+					valueCasted = factory.Cast(value, decimalType);
+				}
+
+				var result = base.TranslateRoundToEven(translationContext, methodCall, valueCasted, precision);
+
+				if (result != null && shouldCast)
+				{
+					result = factory.Cast(result, valueType);
+				}
+
+				return result;
+			}
+		}
+
+
 		protected override IMemberTranslator CreateSqlTypesTranslator()
 		{
 			return new SqlTypesTranslation();
@@ -228,6 +256,11 @@ namespace LinqToDB.DataProvider.PostgreSQL.Translation
 		protected override IMemberTranslator CreateDateMemberTranslator()
 		{
 			return new DateFunctionsTranslator();
+		}
+
+		protected override IMemberTranslator CreateMathMemberTranslator()
+		{
+			return new MathMemberTranslator();
 		}
 
 	}

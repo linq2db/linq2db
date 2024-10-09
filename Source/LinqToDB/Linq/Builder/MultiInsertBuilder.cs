@@ -100,7 +100,7 @@ namespace LinqToDB.Linq.Builder
 			if (condition != null)
 			{
 				var conditionExpr = source.PrepareSourceBody(condition);
-				builder.BuildSearchCondition(source, builder.ConvertExpression(conditionExpr), ProjectFlags.SQL, when!);
+				builder.BuildSearchCondition(source, builder.ConvertExpression(conditionExpr), when!);
 			}
 
 			var setterExpression = source.PrepareSourceBody(setterLambda);

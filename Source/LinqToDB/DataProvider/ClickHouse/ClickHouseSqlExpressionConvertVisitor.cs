@@ -263,14 +263,16 @@ namespace LinqToDB.DataProvider.ClickHouse
 				case "AVG":
 				case "SUM":
 				{
+					var canBeNullable = func.CanBeNullable(NullabilityContext);
+					var suffix        = canBeNullable ? "OrNull" : null;
+
 					// use standard-compatible aggregates
 					// https://github.com/ClickHouse/ClickHouse/pull/16123
 					if (func.IsAggregate && _providerOptions.UseStandardCompatibleAggregates)
 					{
-						return new SqlFunction(func.SystemType, func.Name.ToLowerInvariant() + "OrNull", true, func.IsPure, func.Precedence, ParametersNullabilityType.Nullable, null, func.Parameters)
+						return new SqlFunction(func.SystemType, func.Name.ToLowerInvariant() + suffix, true, func.IsPure, func.Precedence, func.NullabilityType, canBeNullable, func.Parameters)
 						{
 							DoNotOptimize = func.DoNotOptimize,
-							CanBeNull     = true
 						};
 					}
 

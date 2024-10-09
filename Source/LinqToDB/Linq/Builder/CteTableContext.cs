@@ -39,7 +39,7 @@ namespace LinqToDB.Linq.Builder
 		public LoadWithInfo  LoadWithRoot { get; set; } = new();
 		public MemberInfo[]? LoadWithPath { get; set; }
 
-		public CteTableContext(ExpressionBuilder builder, IBuildContext? parent, Type objectType, SelectQuery selectQuery, CteContext cteContext, bool isTest)
+		public CteTableContext(ExpressionBuilder builder, IBuildContext? parent, Type objectType, SelectQuery selectQuery, CteContext cteContext)
 			: this(builder, parent, objectType, selectQuery)
 		{
 			_objectType = objectType;
@@ -48,8 +48,7 @@ namespace LinqToDB.Linq.Builder
 			CteContext = cteContext;
 			CteTable   = new SqlCteTable(CteContext.CteClause, _objectType);
 
-			if (!isTest)
-				SelectQuery.From.Table(CteTable);
+			SelectQuery.From.Table(CteTable);
 		}
 
 		CteTableContext(ExpressionBuilder builder, IBuildContext? parent, Type objectType, SelectQuery selectQuery)
@@ -77,7 +76,7 @@ namespace LinqToDB.Linq.Builder
 			if (expr == null)
 				return this;
 
-			var context = Builder.BuildSequence(new BuildInfo(buildInfo, expr));
+			var context = new CteTableContext(Builder, Parent, ObjectType, new SelectQuery(), CteContext);
 
 			return context;
 		}
@@ -88,7 +87,7 @@ namespace LinqToDB.Linq.Builder
 
 		public override Expression MakeExpression(Expression path, ProjectFlags flags)
 		{
-			if (flags.HasFlag(ProjectFlags.Root) || flags.HasFlag(ProjectFlags.AssociationRoot) || flags.HasFlag(ProjectFlags.Table))
+			if (flags.IsRoot() || flags.IsAssociationRoot() || flags.IsTable() || flags.IsAggregationRoot() || flags.IsSubquery() || flags.IsTraverse())
 				return path;
 
 			if (flags.IsExtractProjection())
@@ -102,19 +101,16 @@ namespace LinqToDB.Linq.Builder
 			{
 				CteContext.InitQuery();
 
-				var translated = Builder.BuildSqlExpression(CteContext, ctePath, flags.SqlFlag(), buildFlags: ExpressionBuilder.BuildFlags.ForceAssignments);
+				var translated = Builder.BuildSqlExpression(CteContext, ctePath);
 
-				if (!flags.HasFlag(ProjectFlags.Test))
-				{
-					translated = SequenceHelper.ReplaceContext(translated, CteContext, this);
+				translated = SequenceHelper.ReplaceContext(translated, CteContext, this);
 
-					// replace tracking path back
-					translated = SequenceHelper.CorrectTrackingPath(translated, CteContext, this);
+				// replace tracking path back
+				translated = SequenceHelper.CorrectTrackingPath(translated, CteContext, this);
 
-					var placeholders = ExpressionBuilder.CollectPlaceholders(translated);
+				var placeholders = ExpressionBuilder.CollectPlaceholders(translated);
 
-					translated = RemapFields(translated, placeholders);
-				}
+				translated = RemapFields(translated, placeholders);
 
 				return translated;
 			}

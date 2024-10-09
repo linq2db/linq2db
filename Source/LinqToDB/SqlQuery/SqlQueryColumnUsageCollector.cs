@@ -120,7 +120,17 @@ namespace LinqToDB.SqlQuery
 		{
 			base.VisitExprExprPredicate(predicate);
 
-			if (QueryHelper.UnwrapNullablity(predicate.Expr1).ElementType == QueryElementType.SqlRow && QueryHelper.UnwrapNullablity(predicate.Expr2) is SelectQuery selectQuery2)
+			var unwrapped1 = QueryHelper.UnwrapNullablity(predicate.Expr1);
+			var unwrapped2 = QueryHelper.UnwrapNullablity(predicate.Expr2);
+
+			if (unwrapped1.ElementType == QueryElementType.SqlQuery)
+			{
+				foreach (var column in ((SelectQuery)unwrapped1).Select.Columns)
+				{
+					RegisterColumn(column);
+				}
+			}
+			else if (unwrapped1.ElementType == QueryElementType.SqlRow && unwrapped2 is SelectQuery selectQuery2)
 			{
 				foreach (var column in selectQuery2.Select.Columns)
 				{
@@ -128,7 +138,14 @@ namespace LinqToDB.SqlQuery
 				}
 			}
 
-			if (QueryHelper.UnwrapNullablity(predicate.Expr2).ElementType == QueryElementType.SqlRow && QueryHelper.UnwrapNullablity(predicate.Expr1) is SelectQuery selectQuery1)
+			if (unwrapped2.ElementType == QueryElementType.SqlQuery)
+			{
+				foreach (var column in ((SelectQuery)unwrapped2).Select.Columns)
+				{
+					RegisterColumn(column);
+				}
+			}
+			else if (unwrapped2.ElementType == QueryElementType.SqlRow && unwrapped1 is SelectQuery selectQuery1)
 			{
 				foreach (var column in selectQuery1.Select.Columns)
 				{

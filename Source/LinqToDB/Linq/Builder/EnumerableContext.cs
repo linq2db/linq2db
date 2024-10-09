@@ -18,7 +18,7 @@ namespace LinqToDB.Linq.Builder
 	sealed class EnumerableContext : BuildContextBase
 	{
 		readonly EntityDescriptor _entityDescriptor;
-		readonly bool _filedsDefined;
+		readonly bool _fieldsDefined;
 
 		public override Expression?    Expression    { get; }
 		public override MappingSchema  MappingSchema => Builder.MappingSchema;
@@ -30,11 +30,10 @@ namespace LinqToDB.Linq.Builder
 			Parent            = buildInfo.Parent;
 			_entityDescriptor = MappingSchema.GetEntityDescriptor(elementType, Builder.DataOptions.ConnectionOptions.OnEntityDescriptorCreated);
 
-			Table      = BuildValuesTable(buildInfo.Expression, out _filedsDefined);
+			Table      = BuildValuesTable(buildInfo.Expression, out _fieldsDefined);
 			Expression = buildInfo.Expression;
 
-			if (!buildInfo.IsTest)
-				SelectQuery.From.Table(Table);
+			SelectQuery.From.Table(Table);
 		}
 
 		EnumerableContext(ExpressionBuilder builder, MappingSchema mappingSchema, Expression expression, SelectQuery query, SqlValuesTable table, Type elementType)
@@ -70,10 +69,11 @@ namespace LinqToDB.Linq.Builder
 		{
 			if (MappingSchema.IsScalarType(ElementType))
 			{
-				var rows  = arrayExpression.Expressions.Select(e => new[] {Builder.ConvertToSql(Parent, e)}).ToList();
-				var contextRef = new ContextRefExpression(ElementType, this);
+				var rows        = arrayExpression.Expressions.Select(e => new[] {Builder.ConvertToSql(Parent, e, false)}).ToList();
+				var contextRef  = new ContextRefExpression(ElementType, this);
 				var specialProp = SequenceHelper.CreateSpecialProperty(contextRef, ElementType, "item");
-				var field = new SqlField(Table, "item") { Type = new DbDataType(ElementType)};
+				var field       = new SqlField(Table, "item") { Type = new DbDataType(ElementType)};
+
 				return new SqlValuesTable(new[] { field }, new[] { specialProp.Member }, rows);
 			}
 
@@ -106,14 +106,15 @@ namespace LinqToDB.Linq.Builder
 				foreach (var (member, column) in columnsInfo)
 				{
 					ISqlExpression sql;
+					using var      savedDescriptor = Builder.UsingColumnDescriptor(column);
 					if (members.TryGetValue(member, out var accessExpr))
 					{
-						sql = Builder.ConvertToSql(Parent, accessExpr, columnDescriptor: column);
+						sql = Builder.ConvertToSql(Parent, accessExpr, false);
 					}
 					else
 					{
 						var nullValue = Expression.Constant(MappingSchema.GetDefaultValue(ElementType), ElementType);
-						sql = Builder.ConvertToSql(Parent, nullValue, columnDescriptor: column);
+						sql = Builder.ConvertToSql(Parent, nullValue, false);
 					}
 
 					rowValues[idx] = sql;
@@ -147,7 +148,7 @@ namespace LinqToDB.Linq.Builder
 		{
 			if (SequenceHelper.IsSpecialProperty(path, ElementType, "item"))
 			{
-				var newField = BuildField(null, path);
+				var newField = BuildField(null, path, Builder.CurrentDescriptor);
 				return newField;
 			}
 
@@ -158,14 +159,14 @@ namespace LinqToDB.Linq.Builder
 					continue;
 				}
 
-				var newField = BuildField(column, path);
+				var newField = BuildField(column, path, null);
 				return newField;
 			}
 
 			return null;
 		}
 
-		SqlField BuildField(ColumnDescriptor? column, MemberExpression me)
+		SqlField BuildField(ColumnDescriptor? column, MemberExpression me, ColumnDescriptor? typeDescriptor)
 		{
 			var memberName = me.Member.Name;
 			if (!Table.FieldsLookup!.TryGetValue(me.Member, out var newField))
@@ -177,7 +178,7 @@ namespace LinqToDB.Linq.Builder
 					getter = Expression.Lambda(thisParam, thisParam);
 				}
 
-				var dbDataType = column?.GetDbDataType(true) ?? ColumnDescriptor.CalculateDbDataType(MappingSchema, me.Type);
+				var dbDataType = (column ?? typeDescriptor)?.GetDbDataType(true) ?? ColumnDescriptor.CalculateDbDataType(MappingSchema, me.Type);
 
 				var generator = new ExpressionGenerator();
 				if (typeof(DataParameter).IsSameOrParentOf(getter.Body.Type))
@@ -198,10 +199,16 @@ namespace LinqToDB.Linq.Builder
 						Expression.Convert(getter.Body, typeof(object))));
 				}
 
+				var toType = ElementType;
+				if (typeDescriptor != null)
+				{
+					toType = dbDataType.SystemType;
+				}
+
 				var param = Expression.Parameter(typeof(object), "e");
 
 				var body = generator.Build();
-				body = body.Replace(getter.Parameters[0], Expression.Convert(param, ElementType));
+				body = body.Replace(getter.Parameters[0], Expression.Convert(param, toType));
 
 				var getterLambda = Expression.Lambda<Func<object, ISqlExpression>>(body, param);
 				var getterFunc   = getterLambda.Compile();
@@ -216,13 +223,13 @@ namespace LinqToDB.Linq.Builder
 		{
 			if (SequenceHelper.IsSameContext(path, this))
 			{
-				if (flags.IsRoot() || flags.IsTable())
+				if (flags.IsRoot() || flags.IsTable() || flags.IsAssociationRoot() || flags.IsTraverse() || flags.IsAggregationRoot() || flags.IsExtractProjection())
 					return path;
 
-				if (MappingSchema.IsScalarType(ElementType))
+				if (MappingSchema.IsScalarType(ElementType) || Builder.CurrentDescriptor != null)
 				{
-					var dbType = MappingSchema.GetDbDataType(ElementType);
-					if (dbType.DataType != DataType.Undefined)
+					var dbType = Builder.CurrentDescriptor?.GetDbDataType(true) ?? MappingSchema.GetDbDataType(ElementType);
+					if (dbType.DataType != DataType.Undefined || ElementType.IsEnum)
 					{
 						if (path.Type != ElementType)
 						{
@@ -230,7 +237,7 @@ namespace LinqToDB.Linq.Builder
 						}
 
 						var specialProp = SequenceHelper.CreateSpecialProperty(path, ElementType, "item");
-						return Builder.MakeExpression(this, specialProp, flags);
+						return specialProp;
 					}
 				}
 
@@ -238,7 +245,7 @@ namespace LinqToDB.Linq.Builder
 					throw new InvalidOperationException("Enumerable fields are not defined.");
 
 				Expression result;
-				if (_filedsDefined)
+				if (_fieldsDefined)
 				{
 					var membersOrdered =
 						from f in Table.Fields

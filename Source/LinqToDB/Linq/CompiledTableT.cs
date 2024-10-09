@@ -41,7 +41,7 @@ namespace LinqToDB.Linq
 						optimizationContext, ctx.parameterValues, optimizeConditions : false, compactBinary : true);
 
 					var query             = new Query<T>(ctx.dataContext, exposed);
-					var parametersContext = new ParametersContext(exposed, ctx.parameterValues, optimizationContext, ctx.dataContext);
+					var parametersContext = new ParametersContext(exposed, optimizationContext, ctx.dataContext);
 
 					query = new ExpressionBuilder(query, false, optimizationContext, parametersContext, ctx.dataContext, exposed, ctx.lambda.Parameters.ToArray(), ctx.parameterValues)
 						.Build<T>();

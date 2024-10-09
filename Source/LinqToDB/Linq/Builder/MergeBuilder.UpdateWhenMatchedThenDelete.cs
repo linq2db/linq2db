@@ -57,12 +57,15 @@ namespace LinqToDB.Linq.Builder
 						var sourceExpr = ExpressionExtensions.GetMemberGetter(field.ColumnDescriptor.MemberInfo, sourceProp);
 						var targetExpr = ExpressionExtensions.GetMemberGetter(field.ColumnDescriptor.MemberInfo, targetProp);
 
-						var tgtExpr    = builder.ConvertToSql(mergeContext.SourceContext.SourceContextRef.BuildContext, targetExpr);
-						var srcExpr    = builder.ConvertToSql(mergeContext.SourceContext.SourceContextRef.BuildContext, sourceExpr);;
+						var tgtExpr = builder.ConvertToSql(mergeContext.SourceContext.SourceContextRef.BuildContext, targetExpr);
+						var srcExpr = builder.ConvertToSql(mergeContext.SourceContext.SourceContextRef.BuildContext, sourceExpr);;
 
 						operation.Items.Add(new SqlSetExpression(tgtExpr, srcExpr));
 					}
 				}
+
+				var saveIsSourceOuter = mergeContext.SourceContext.IsSourceOuter;
+				mergeContext.SourceContext.IsSourceOuter = false;
 
 				if (!predicate.IsNullValue())
 				{
@@ -71,8 +74,7 @@ namespace LinqToDB.Linq.Builder
 
 					operation.Where = new SqlSearchCondition();
 
-					builder.BuildSearchCondition(mergeContext.SourceContext, predicateConditionCorrected,
-						ProjectFlags.SQL, operation.Where);
+					builder.BuildSearchCondition(mergeContext.SourceContext, predicateConditionCorrected, operation.Where);
 				}
 
 				if (!deletePredicate.IsNullValue())
@@ -82,9 +84,10 @@ namespace LinqToDB.Linq.Builder
 
 					operation.WhereDelete = new SqlSearchCondition();
 
-					builder.BuildSearchCondition(mergeContext.SourceContext, deleteConditionCorrected,
-						ProjectFlags.SQL, operation.WhereDelete);
+					builder.BuildSearchCondition(mergeContext.SourceContext, deleteConditionCorrected, operation.WhereDelete);
 				}
+
+				mergeContext.SourceContext.IsSourceOuter = saveIsSourceOuter;
 
 				return BuildSequenceResult.FromContext(mergeContext);
 			}

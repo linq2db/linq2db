@@ -27,6 +27,7 @@ namespace LinqToDB.Linq.Builder.Visitors
 		bool                              _includeConvert;
 		bool                              _optimizeConditions;
 		bool                              _compactBinary;
+		bool                              _isSingleConvert;
 
 		public IDataContext  DataContext   => _dataContext;
 		public MappingSchema MappingSchema => _dataContext.MappingSchema;
@@ -39,7 +40,8 @@ namespace LinqToDB.Linq.Builder.Visitors
 			Expression                                  expression,
 			bool                                        includeConvert,
 			bool                                        optimizeConditions,
-			bool                                        compactBinary)
+			bool                                        compactBinary,
+			bool                                        isSingleConvert)
 		{
 			_dataContext         = dataContext;
 			_includeConvert      = includeConvert;
@@ -47,6 +49,7 @@ namespace LinqToDB.Linq.Builder.Visitors
 			_parameterValues     = parameterValues;
 			_optimizeConditions  = optimizeConditions;
 			_compactBinary       = compactBinary;
+			_isSingleConvert     = isSingleConvert;
 
 			return Visit(expression);
 		}
@@ -58,6 +61,7 @@ namespace LinqToDB.Linq.Builder.Visitors
 			_optimizationContext = default!;
 			_optimizeConditions  = default;
 			_compactBinary       = false;
+			_isSingleConvert     = false;
 
 			_allowedParameters?.Clear();
 
@@ -214,6 +218,9 @@ namespace LinqToDB.Linq.Builder.Visitors
 					node = node.Update(node.Object, newArguments);
 				}
 			}
+
+			if (_isSingleConvert)
+				return node;
 
 			var result = base.VisitMethodCall(node);
 			return result;

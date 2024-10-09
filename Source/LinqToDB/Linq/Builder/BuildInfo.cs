@@ -81,35 +81,5 @@ namespace LinqToDB.Linq.Builder
 
 			set => _isAggregation = value;
 		}
-
-		bool _isTest;
-
-		public bool IsTest
-		{
-			get
-			{
-				if (_isTest || SequenceInfo == null)
-					return _isTest;
-				return SequenceInfo.IsTest;
-			}
-
-			set => _isTest = value;
-		}
-
-		public ProjectFlags GetFlags()
-		{
-			return GetFlags(ProjectFlags.SQL);
-		}
-
-		public ProjectFlags GetFlags(ProjectFlags withFlag)
-		{
-			var flags = withFlag;
-
-			if (IsTest)
-				flags |= ProjectFlags.Test;
-
-			return flags;
-		}
-
 	}
 }

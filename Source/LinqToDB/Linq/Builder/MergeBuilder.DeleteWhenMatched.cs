@@ -31,11 +31,15 @@ namespace LinqToDB.Linq.Builder
 
 					operation.Where = new SqlSearchCondition();
 
+					var saveIsSourceOuter = mergeContext.SourceContext.IsSourceOuter;
+					mergeContext.SourceContext.IsSourceOuter = true;
+
 					builder.BuildSearchCondition(
 						mergeContext.SourceContext, 
 						conditionExpression, 
-						buildInfo.GetFlags(ProjectFlags.ForceOuterAssociation), 
 						operation.Where);
+
+					mergeContext.SourceContext.IsSourceOuter = saveIsSourceOuter;
 				}
 
 				return BuildSequenceResult.FromContext(mergeContext);

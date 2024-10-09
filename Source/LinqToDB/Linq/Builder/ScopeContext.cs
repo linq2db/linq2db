@@ -28,7 +28,7 @@ namespace LinqToDB.Linq.Builder
 		public override Expression MakeExpression(Expression path, ProjectFlags flags)
 		{
 			var correctedPath = SequenceHelper.CorrectExpression(path, this, Context);
-			var newExpr       = Builder.MakeExpression(Context, correctedPath, flags);
+			var newExpr       = Builder.BuildExpression(Context, correctedPath);
 
 			if (flags.IsTable())
 				return newExpr;
@@ -42,15 +42,9 @@ namespace LinqToDB.Linq.Builder
 			if (ExpressionEqualityComparer.Instance.Equals(newExpr, correctedPath))
 				return path;
 
-			if (!flags.IsTest())
+			if (flags.IsSql())
 			{
-				if (flags.IsSql())
-				{
-					newExpr = Builder.BuildSqlExpression(UpTo, newExpr, flags,
-						buildFlags : ExpressionBuilder.BuildFlags.ForceAssignments);
-
-					newExpr = Builder.UpdateNesting(UpTo, newExpr);
-				}
+				newExpr = Builder.BuildSqlExpression(UpTo, newExpr);
 			}
 
 			return newExpr;

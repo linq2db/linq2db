@@ -169,30 +169,37 @@ namespace LinqToDB.SqlQuery
 								return true;
 							}
 
-							switch (exprExpr.Operator)
+							try
 							{
-								case SqlPredicate.Operator.Greater:
-									result = comp1.CompareTo(comp2) > 0;
-									break;
-								case SqlPredicate.Operator.GreaterOrEqual:
-									result = comp1.CompareTo(comp2) >= 0;
-									break;
-								case SqlPredicate.Operator.NotGreater:
-									result = !(comp1.CompareTo(comp2) > 0);
-									break;
-								case SqlPredicate.Operator.Less:
-									result = comp1.CompareTo(comp2) < 0;
-									break;
-								case SqlPredicate.Operator.LessOrEqual:
-									result = comp1.CompareTo(comp2) <= 0;
-									break;
-								case SqlPredicate.Operator.NotLess:
-									result = !(comp1.CompareTo(comp2) < 0);
-									break;
+								switch (exprExpr.Operator)
+								{
+									case SqlPredicate.Operator.Greater:
+										result = comp1.CompareTo(comp2) > 0;
+										break;
+									case SqlPredicate.Operator.GreaterOrEqual:
+										result = comp1.CompareTo(comp2) >= 0;
+										break;
+									case SqlPredicate.Operator.NotGreater:
+										result = !(comp1.CompareTo(comp2) > 0);
+										break;
+									case SqlPredicate.Operator.Less:
+										result = comp1.CompareTo(comp2) < 0;
+										break;
+									case SqlPredicate.Operator.LessOrEqual:
+										result = comp1.CompareTo(comp2) <= 0;
+										break;
+									case SqlPredicate.Operator.NotLess:
+										result = !(comp1.CompareTo(comp2) < 0);
+										break;
 
-								default:
-									return false;
+									default:
+										return false;
 
+								}
+							}
+							catch 
+							{
+								return false;
 							}
 							break;
 						}
@@ -571,6 +578,31 @@ namespace LinqToDB.SqlQuery
 					}
 
 					return false;
+				}
+
+				case QueryElementType.IsDistinctPredicate:
+				{
+					var isDistinct = (SqlPredicate.IsDistinct)expr;
+					if (!isDistinct.Expr1.TryEvaluateExpression(context, out var value1) || !isDistinct.Expr2.TryEvaluateExpression(context, out var value2))
+						return false;
+
+					if (value1 == null)
+					{
+						result = value2 != null;
+					}
+					else if (value2 == null)
+					{
+						result = true;
+					}
+					else
+					{
+						result = !value1.Equals(value2);
+					}
+
+					if (isDistinct.IsNot)
+						result = !(bool)result;
+
+					return true;
 				}
 
 				default:

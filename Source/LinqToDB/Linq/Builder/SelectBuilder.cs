@@ -18,8 +18,8 @@ namespace LinqToDB.Linq.Builder
 			if (!call.IsQueryable())
 				return false;
 			
-			 var lambda = (LambdaExpression)call.Arguments[1].Unwrap();
-			 return lambda.Parameters.Count is 1 or 2;
+			var lambda = (LambdaExpression)call.Arguments[1].Unwrap();
+			return lambda.Parameters.Count is 1 or 2;
 		}
 
 		public override bool IsAggregationContext(ExpressionBuilder builder, BuildInfo buildInfo)
@@ -39,8 +39,7 @@ namespace LinqToDB.Linq.Builder
 			var sequence = buildResult.BuildContext;
 
 			// finalizing context
-			_ = builder.MakeExpression(sequence, new ContextRefExpression(sequence.ElementType, sequence),
-				ProjectFlags.ExtractProjection);
+			_ = builder.BuildExtractExpression(sequence, new ContextRefExpression(sequence.ElementType, sequence));
 
 			sequence.SetAlias(selector.Parameters[0].Name);
 

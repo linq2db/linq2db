@@ -51,7 +51,7 @@ namespace LinqToDB.Expressions
 
 			return new ContextRefExpression(Type, BuildContext, alias);
 		}
-
+		
 		protected override Expression Accept(ExpressionVisitor visitor)
 		{
 			if (visitor is ExpressionVisitorBase baseVisitor)

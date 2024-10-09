@@ -192,7 +192,26 @@ namespace LinqToDB.SqlQuery
 			{
 				case QueryElementType.Column:
 				{
-					return GetColumnDescriptor(((SqlColumn)expr).Expression);
+					var column = (SqlColumn)expr;
+					var result = GetColumnDescriptor(column.Expression);
+					if (result is not null)
+						return result;
+
+					if (column.Parent?.HasSetOperators == true)
+					{
+						var idx = column.Parent.Select.Columns.IndexOf(column);
+						if (idx >= 0)
+						{
+							foreach (var setOperator in column.Parent.SetOperators)
+							{
+								result = GetColumnDescriptor(setOperator.SelectQuery.Select.Columns[idx].Expression);
+								if (result is not null)
+									return result;
+							}
+						}
+					}
+
+					return null;
 				}
 				case QueryElementType.SqlField:
 				{
@@ -326,6 +345,12 @@ namespace LinqToDB.SqlQuery
 				result = mappingSchema.GetDbDataType(expr.SystemType ?? typeof(object));
 			}
 
+			return result;
+		}
+
+		public static DbDataType GetDbDataTypeWithoutSchema(ISqlExpression expr)
+		{
+			var result = GetDbDataType(expr);
 			return result;
 		}
 
@@ -508,6 +533,12 @@ namespace LinqToDB.SqlQuery
 		{
 			if (expr.ElementType == QueryElementType.SqlValue || expr.ElementType == QueryElementType.SqlParameter)
 				return true;
+
+			if (expr.ElementType == QueryElementType.SqlBinaryExpression)
+			{
+				var be = (SqlBinaryExpression)expr;
+				return IsConstantFast(be.Expr1) && IsConstantFast(be.Expr2);
+			}
 
 			if (expr.ElementType == QueryElementType.SqlNullabilityExpression)
 				return IsConstantFast(((SqlNullabilityExpression)expr).SqlExpression);
@@ -1626,14 +1657,6 @@ namespace LinqToDB.SqlQuery
 			});
 		}
 
-		public static void DebugCheckNesting(SqlStatement statement, bool isSubQuery)
-		{
-			// TODO: temporary disabled
-
-			// var checkVisitor = new SqlQueryNestingValidationVisitor(isSubQuery, statement);
-			// checkVisitor.Visit(statement);
-		}
-
 		public static bool? GetBoolValue(IQueryElement element, EvaluationContext evaluationContext)
 		{
 			if (element.TryEvaluateExpression(evaluationContext, out var value))
@@ -1667,6 +1690,15 @@ namespace LinqToDB.SqlQuery
 					if (ts == null && f != f.Table!.All)
 						throw new SqlException("Table '{0}' not found.", f.Table);
 				}
+			});
+		}
+
+		public static void CollectParameters(IQueryElement root, ICollection<SqlParameter> parameters)
+		{
+			root.VisitAll(x =>
+			{
+				if (x is SqlParameter p && p.AccessorId != null)
+					parameters.Add(p);
 			});
 		}
 	}

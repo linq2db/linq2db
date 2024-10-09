@@ -33,10 +33,10 @@ namespace LinqToDB.Linq.Builder
 			{
 				sequence = builder.BuildWhere(buildInfo.Parent, sequence,
 					condition : (LambdaExpression)methodCall.Arguments[1].Unwrap(), checkForSubQuery : false,
-					enforceHaving : false, isTest : buildInfo.IsTest);
+					enforceHaving : false, out var error);
 
 				if (sequence == null)
-					return BuildSequenceResult.Error(methodCall);
+					return BuildSequenceResult.Error(error ?? methodCall);
 			}
 
 			var deleteStatement = new SqlDeleteStatement(sequence.SelectQuery);
@@ -186,7 +186,7 @@ namespace LinqToDB.Linq.Builder
 						var outputRef         = new ContextRefExpression(path.Type, selectContext);
 						var outputExpressions = new List<UpdateBuilder.SetExpressionEnvelope>();
 
-						var sqlExpr = Builder.BuildSqlExpression(selectContext, outputRef, ProjectFlags.SQL);
+						var sqlExpr = Builder.BuildSqlExpression(selectContext, outputRef);
 						sqlExpr = SequenceHelper.CorrectSelectQuery(sqlExpr, outputSelectQuery);
 
 						if (sqlExpr is SqlPlaceholderExpression)

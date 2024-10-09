@@ -260,7 +260,7 @@ namespace LinqToDB.Linq.Builder
 
 					case ExpressionType.MemberAccess :
 					{
-						expression = builder.MakeExpression(context, expression, ProjectFlags.Traverse);
+						expression = builder.BuildTraverseExpression(expression).UnwrapConvert();
 
 						if (expression.NodeType != ExpressionType.MemberAccess)
 							break;
@@ -271,7 +271,7 @@ namespace LinqToDB.Linq.Builder
 
 						if (!isAssociation)
 						{
-							var projected = builder.MakeExpression(context, expression, ProjectFlags.Traverse);
+							var projected = builder.BuildTraverseExpression(expression);
 							if (ExpressionEqualityComparer.Instance.Equals(projected, expression))
 								throw new LinqToDBException($"Member '{expression}' is not an association.");
 							expression = projected;
@@ -301,7 +301,7 @@ namespace LinqToDB.Linq.Builder
 
 						if (expression is ContextRefExpression contextRef)
 						{
-							var newExpression = builder.MakeExpression(context, expression, ProjectFlags.Table);
+							var newExpression = builder.BuildTableExpression(expression);
 							if (!ReferenceEquals(newExpression, expression))
 							{
 								expression = newExpression;
