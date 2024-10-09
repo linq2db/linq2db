@@ -41,7 +41,7 @@ parameters:
 
 # OPERATION SYSTEM SELECTORS
 # - enable_os_windows  (true/false string) : enables testrun for windows 2022 image (windows-2022)
-# - enable_os_ubuntu   (true/false string) : enables testrun for Ubuntu 22.04 image (ubuntu-22.04)
+# - enable_os_ubuntu   (true/false string) : enables testrun for Ubuntu 24.04 image (ubuntu-24.04)
 # - enable_os_macos    (true/false string) : enables testrun for Mac OS image (macOS-13)
 
 # TARGET FRAMEWORK SELECTORS

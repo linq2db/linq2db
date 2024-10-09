@@ -123,7 +123,7 @@
 </ItemGroup>
 	
 	<ItemGroup Label="Testing" Condition=" '$(TargetFramework)' == 'net462' ">
-		<PackageVersion Include="System.Text.Json"                                      Version="8.0.4"                 />
+		<PackageVersion Include="System.Text.Json"                                      Version="8.0.5"                 />
 	</ItemGroup>
 
 	<ItemGroup Label="Benchmarks">
