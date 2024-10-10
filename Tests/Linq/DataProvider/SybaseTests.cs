@@ -380,7 +380,7 @@ namespace Tests.DataProvider
 		{
 			get
 			{
-				yield return new StringTestCase("'\u2000\u2001\u2002\u2003\uabab\u03bctest тест", "u&'''\\2000\\2001\\2002\\2003\\abab\\03bctest тест'", "Test case 1");
+				yield return new StringTestCase("'\u2000\u2001\u2002\u2003\uabab\u03bctst тест", "u&'''\\2000\\2001\\2002\\2003\\abab\\03bctst тест'", "Test case 1");
 				// this case fails for parameters, because driver terminates parameter value at \0 character
 				//yield return Tuple.Create("\0test", "char(0) + 'test'");
 			}
@@ -406,7 +406,6 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[SkipCI("We need to configure UTF-8 encoding for used docker image")]
 		[Test]
 		public void TestUnicodeString(
 			[IncludeDataSources(TestProvName.AllSybase)] string context,
@@ -1115,28 +1114,24 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[SkipCI("We need to configure UTF-8 encoding for used docker image")]
 		[Test]
 		public void BulkCopyAllTypesMultipleRows([IncludeDataSources(TestProvName.AllSybase)] string context)
 		{
 			BulkCopyAllTypes(context, BulkCopyType.MultipleRows);
 		}
 
-		[SkipCI("We need to configure UTF-8 encoding for used docker image")]
 		[Test]
 		public void BulkCopyAllTypesProviderSpecific([IncludeDataSources(TestProvName.AllSybase)] string context)
 		{
 			BulkCopyAllTypes(context, BulkCopyType.ProviderSpecific);
 		}
 
-		[SkipCI("We need to configure UTF-8 encoding for used docker image")]
 		[Test]
 		public async Task BulkCopyAllTypesMultipleRowsAsync([IncludeDataSources(TestProvName.AllSybase)] string context)
 		{
 			await BulkCopyAllTypesAsync(context, BulkCopyType.MultipleRows);
 		}
 
-		[SkipCI("We need to configure UTF-8 encoding for used docker image")]
 		[Test]
 		public async Task BulkCopyAllTypesProviderSpecificAsync([IncludeDataSources(TestProvName.AllSybase)] string context)
 		{
@@ -1146,27 +1141,32 @@ namespace Tests.DataProvider
 		[Test]
 		public void CreateAllTypes([IncludeDataSources(TestProvName.AllSybase)] string context)
 		{
-			using (var db = GetDataConnection(context))
+			var ms = new MappingSchema();
+			new FluentMappingBuilder(ms)
+				.Entity<AllType>()
+				.HasTableName("AllTypeCreateTest")
+				.Build();
+
+			using var db = GetDataConnection(context, ms);
+
+			new FluentMappingBuilder(db.MappingSchema)
+				.Entity<AllType>()
+					.HasTableName("AllTypeCreateTest")
+				.Build();
+
+			try
 			{
-				new FluentMappingBuilder(db.MappingSchema)
-					.Entity<AllType>()
-						.HasTableName("AllTypeCreateTest")
-					.Build();
-
-				try
-				{
-					db.DropTable<AllType>();
-				}
-				catch
-				{
-				}
-
-				var table = db.CreateTable<AllType>();
-
-				var list = table.ToList();
-
 				db.DropTable<AllType>();
 			}
+			catch
+			{
+			}
+
+			var table = db.CreateTable<AllType>();
+
+			var list = table.ToList();
+
+			db.DropTable<AllType>();
 		}
 
 		#endregion
