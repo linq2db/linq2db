@@ -805,9 +805,7 @@ namespace Tests.xUpdate
 
 				var result = table.OrderBy(_ => _.ID).ToList();
 
-				if (context.IsAnyOf(TestProvName.AllSybase))
-					Assert.That(rows, Is.EqualTo(3));
-				else if (context.IsAnyOf(TestProvName.AllOracleNative))
+				if (context.IsAnyOf(TestProvName.AllOracleNative))
 					Assert.That(rows, Is.EqualTo(-1));
 				else
 					Assert.That(rows, Is.EqualTo(2));
