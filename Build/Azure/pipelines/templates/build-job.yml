@@ -55,16 +55,9 @@ jobs:
 
   - task: DotNetCoreCLI@2
     inputs:
-      command: restore
-      projects: $(solution)
-    displayName: Restore Solution (temporary workaround)
-    condition: succeeded()
-
-  - task: DotNetCoreCLI@2
-    inputs:
       command: build
       projects: $(solution)
-      arguments: --configuration $(test_configuration) --no-restore
+      arguments: --configuration $(test_configuration)
     displayName: Build Solution for Tests
     condition: and(succeeded(), ${{ parameters.for_tests }})
 
