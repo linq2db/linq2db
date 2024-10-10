@@ -64,7 +64,7 @@ jobs:
     inputs:
       command: build
       projects: $(solution)
-      arguments: --configuration $(test_configuration)
+      arguments: --configuration $(test_configuration) --no-restore
     displayName: Build Solution for Tests
     condition: and(succeeded(), ${{ parameters.for_tests }})
 
