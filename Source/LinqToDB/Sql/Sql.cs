@@ -1341,6 +1341,13 @@ namespace LinqToDB
 			return x == null || y == null ? null : Math.Pow(x.Value, y.Value);
 		}
 
+		[Expression(PN.Access, "{0} ^ {1}", Precedence = Precedence.Multiplicative, IsNullable = IsNullableType.IfAnyParameterNullable)]
+		[Function(IsNullable = IsNullableType.IfAnyParameterNullable)]
+		public static decimal?  Power(decimal? x, decimal? y)
+		{
+			return x == null || y == null ? null : (decimal)Math.Pow((double)x.Value, (double)y.Value);
+		}
+
 		[Function(IsNullable = IsNullableType.SameAsFirstParameter)]
 		[Function(PN.ClickHouse, "roundBankers", IsNullable = IsNullableType.SameAsFirstParameter)]
 		public static decimal? RoundToEven(decimal? value)
