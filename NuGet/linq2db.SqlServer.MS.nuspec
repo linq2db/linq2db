@@ -14,7 +14,7 @@
 		<readme>README.md</readme>
 		<dependencies>
 			<dependency id="linq2db"                  version="6.0.0" />
-			<dependency id="Microsoft.Data.SqlClient" version="5.2.1" />
+			<dependency id="Microsoft.Data.SqlClient" version="5.2.2" />
 		</dependencies>
 		<contentFiles>
 			<files include="**\*" buildAction="None" />

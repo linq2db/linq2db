@@ -187,7 +187,7 @@ namespace Tests.Linq
 						.Where(x => Helper.GetField(x, i) == i);
 
 					var sqlStr = test.ToString();
-					TestContext.WriteLine(sqlStr);
+					TestContext.Out.WriteLine(sqlStr);
 				}
 
 				Assert.That(Query<ManyFields>.CacheMissCount - currentMiss, Is.EqualTo(5));

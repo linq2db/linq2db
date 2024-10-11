@@ -24,7 +24,7 @@ namespace Tests.UserTests
 
 			var count = await tmp.CountAsync();
 
-			TestContext.WriteLine(count);
+			TestContext.Out.WriteLine(count);
 		}
 	}
 }

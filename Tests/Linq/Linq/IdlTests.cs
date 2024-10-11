@@ -637,8 +637,8 @@ namespace Tests.Linq
 						select new { Rank = p.ID, p.FirstName, p.LastName });
 
 				var resultquery = (from x in query2 orderby x.Rank, x.FirstName, x.LastName select x).ToString()!;
-				
-				TestContext.WriteLine(resultquery);
+
+				TestContext.Out.WriteLine(resultquery);
 
 				var rqr = resultquery.LastIndexOf("ORDER BY", StringComparison.OrdinalIgnoreCase);
 				var rqp = (resultquery.Substring(rqr + "ORDER BY".Length).Split(',')).Select(p => p.Trim()).ToArray();

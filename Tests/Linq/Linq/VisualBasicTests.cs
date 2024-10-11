@@ -29,7 +29,7 @@ namespace Tests.Linq
 			{
 				var query = (IQueryable<Person>)CompilerServices.CompareString(db);
 				var str   = query.ToString();
-				TestContext.WriteLine(str);
+				TestContext.Out.WriteLine(str);
 				Assert.That(str, Does.Not.Contain("CASE"));
 			}
 		}
