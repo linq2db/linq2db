@@ -191,6 +191,7 @@ namespace LinqToDB.Linq.Builder
 			readonly Action<ExpressionBuildVisitor, TState> _stateSetter;
 			readonly TState                                 _savedState;
 
+			[DebuggerStepThrough]
 			public StateHolder(ExpressionBuildVisitor visitor, TState state, Func<ExpressionBuildVisitor, TState> stateAccessor, Action<ExpressionBuildVisitor, TState> stateSetter)
 			{
 				_visitor     = visitor;
@@ -200,6 +201,7 @@ namespace LinqToDB.Linq.Builder
 				_stateSetter(visitor, state);
 			}
 
+			[DebuggerStepThrough]
 			public void Dispose()
 			{
 				_stateSetter(_visitor, _savedState);
@@ -1118,7 +1120,8 @@ namespace LinqToDB.Linq.Builder
 			var transformed = attr.GetExpression((buildVisitor: this, context: rootContext),
 				Builder.DataContext,
 				this.Builder,
-				rootSelectQuery, expr,
+				rootSelectQuery, 
+				traversed,
 				static (context, e, descriptor, inline) =>
 					context.buildVisitor.ConvertToExtensionSql(context.context, e, descriptor, inline));
 
@@ -2552,20 +2555,17 @@ namespace LinqToDB.Linq.Builder
 
 					_columnDescriptor = saveColumnDescriptor;
 
-					if (!IsSame(left, node.Left) || !IsSame(right, node.Right))
+					if (node.NodeType is ExpressionType.Equal or ExpressionType.NotEqual)
 					{
-						if (node.NodeType is ExpressionType.Equal or ExpressionType.NotEqual)
+						if (HandleEquality(node.NodeType is ExpressionType.NotEqual, left, right, out var optimized)
+						    || HandleEquality(node.NodeType is ExpressionType.NotEqual, right, left, out optimized))
+
 						{
-							if (HandleEquality(node.NodeType is ExpressionType.NotEqual, left, right, out var optimized)
-							    || HandleEquality(node.NodeType is ExpressionType.NotEqual, right, left, out optimized))
+							optimized = Visit(optimized);
+							if (_buildPurpose is BuildPurpose.Sql && optimized is not SqlPlaceholderExpression)
+								return node;
 
-							{
-								optimized = Visit(optimized);
-								if (_buildPurpose is BuildPurpose.Sql && optimized is not SqlPlaceholderExpression)
-									return node;
-
-								return optimized;
-							}
+							return optimized;
 						}
 					}
 
