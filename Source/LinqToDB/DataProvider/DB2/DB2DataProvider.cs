@@ -157,6 +157,7 @@ namespace LinqToDB.DataProvider.DB2
 							value    = b ? 1 : 0;
 							dataType = dataType.WithDataType(DataType.Int16);
 						}
+
 						break;
 					}
 				case DataType.Guid       :
@@ -166,6 +167,7 @@ namespace LinqToDB.DataProvider.DB2
 							value    = g.ToByteArray();
 							dataType = dataType.WithDataType(DataType.VarBinary);
 						}
+
 						if (value == null)
 							dataType = dataType.WithDataType(DataType.VarBinary);
 						break;

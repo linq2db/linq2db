@@ -18,7 +18,6 @@ namespace Tests.UserTests
 			public virtual ICollection<Metric> Metrics { get; set; } = null!;
 		}
 
-
 		[Table]
 		public class Metric
 		{

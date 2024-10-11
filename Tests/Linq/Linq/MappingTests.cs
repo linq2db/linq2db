@@ -1136,7 +1136,6 @@ namespace Tests.Linq
 			Assert.That(cnt, Is.EqualTo(mapNull ? 3 : 4));
 		}
 
-
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4539")]
 		public void StructMapping_Enumerable_IntList([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values] bool useExpressions, [Values] bool addNullCheck, [Values] bool mapNull)
 		{

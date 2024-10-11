@@ -171,6 +171,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 					_npgsqlTypeMap.Add(dbType, type);
 					return true;
 				}
+
 				return false;
 			}
 		}

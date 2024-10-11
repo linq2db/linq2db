@@ -85,7 +85,6 @@ namespace Tests.Linq
 						OrderID3 = o3.OrderID,
 					};
 
-
 				var sql = q.ToString();
 
 				var q2 = from od in dd.OrderDetail
@@ -385,7 +384,6 @@ namespace Tests.Linq
 			}
 		}
 
-
 		[Test]
 		public void InnerJoin3([NorthwindDataContext] string context)
 		{
@@ -585,7 +583,6 @@ namespace Tests.Linq
 			}
 		}
 
-
 		[Table(Name = "Person")]
 		public class PersonEntity
 		{
@@ -597,7 +594,6 @@ namespace Tests.Linq
 			[Column]
 			public string? Name { get; set; }
 		}
-
 
 		[Table(Name = "Adress")]
 		public class AdressEntity

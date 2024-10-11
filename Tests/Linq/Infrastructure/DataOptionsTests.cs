@@ -83,7 +83,6 @@ namespace Tests.Infrastructure
 					OnTrace = ti => s1 = ti.SqlText
 				}));
 
-
 			_child = db1.Child.ToList();
 
 			Assert.That(s1, Is.Not.Null);

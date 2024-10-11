@@ -11,6 +11,7 @@ namespace LinqToDB.SqlQuery
 			{
 				return value;
 			}
+
 			return new SqlParameterValue(parameter.Value, parameter.Type);
 		}
 
@@ -147,6 +148,7 @@ namespace LinqToDB.SqlQuery
 							{
 								result = (value2 != null) && value1.Equals(value2);
 							}
+
 							break;
 						}
 						case SqlPredicate.Operator.NotEqual:
@@ -159,6 +161,7 @@ namespace LinqToDB.SqlQuery
 							{
 								result = value2 == null || !value1.Equals(value2);
 							}
+
 							break;
 						}
 						default:
@@ -201,6 +204,7 @@ namespace LinqToDB.SqlQuery
 							{
 								return false;
 							}
+
 							break;
 						}
 					}

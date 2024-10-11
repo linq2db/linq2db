@@ -21,7 +21,6 @@ namespace Tests.Linq
 			[Column]
 			public string? StringProp { get; set; }
 
-
 			public static ConditionalData[] Seed()
 			{
 				return Enumerable.Range(1, 10)
@@ -53,7 +52,6 @@ namespace Tests.Linq
 				AssertQuery(query);
 			}
 		}
-
 
 		[Test]
 		public void ViaConditionWithNull2([IncludeDataSources(false, TestProvName.AllSQLite)] string context)

@@ -239,7 +239,6 @@ namespace LinqToDB.CodeModel
 			else
 				FixName(_memberNames!, @class.Name, null, true);
 
-
 			var oldOverloads = _overloads;
 			_overloads       = new Dictionary<string, List<CodeMethod>>(_languageProvider.RawIdentifierEqualityComparer);
 

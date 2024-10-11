@@ -15,7 +15,6 @@ using System.Data.Common;
 using System.Threading;
 using System.Threading.Tasks;
 
-
 namespace Tests.UserTests
 {
 	[TestFixture]
@@ -108,7 +107,6 @@ namespace Tests.UserTests
 			[Column] public string? CategoryABC { get; set; }
 			[Column] public int AisleNumber { get; set; }
 		}
-
 
 		[Table]
 		public class RefResourceStorageShelfDTO

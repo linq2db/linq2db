@@ -60,6 +60,7 @@ namespace LinqToDB.Linq.Builder
 						ctx.dependencies.Add(binary.Left);
 						return false;
 					}
+
 					if (binary.Right is ContextRefExpression)
 					{
 						ctx.dependencies.Add(binary.Right);

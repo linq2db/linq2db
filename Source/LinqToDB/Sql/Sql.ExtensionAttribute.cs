@@ -654,6 +654,7 @@ namespace LinqToDB
 								{
 									next = current.EvaluateExpression<IQueryableContainer>()!.Query.Expression;
 								}
+
 								break;
 							}
 					}

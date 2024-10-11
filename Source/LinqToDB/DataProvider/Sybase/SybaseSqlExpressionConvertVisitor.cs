@@ -56,6 +56,7 @@ namespace LinqToDB.DataProvider.Sybase
 						query.From.Table(selectQuery);
 						return func.WithParameters([query]);
 					}
+
 					return func;
 				}
 

@@ -41,6 +41,7 @@ namespace LinqToDB.DataProvider.SapHana
 							')');
 					}
 				}
+
 				return x;
 			}).ToList();
 		}

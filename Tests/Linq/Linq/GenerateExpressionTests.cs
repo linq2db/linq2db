@@ -34,7 +34,6 @@ namespace Tests.Linq
 						!new[] { 111, 222 }.Contains(gc3.GrandChildID!.Value)
 				select new { p.ParentID, gc3 };
 
-
 				var test = result.GenerateTestString();
 
 				TestContext.Out.WriteLine(test);
@@ -52,7 +51,6 @@ namespace Tests.Linq
 					from gc1 in db.Person
 					where gc1.Gender == Model.Gender.Male
 					select gc1;
-
 
 				var test = q2.GenerateTestString();
 

@@ -449,7 +449,6 @@ namespace Tests.Linq
 			public SubItem1? ParentSubItem { get; set; }
 		}
 
-
 		sealed class SubItem2
 		{
 			[Column]
@@ -477,7 +476,6 @@ namespace Tests.Linq
 				Value = "Main2_" + i,
 				MainItemId = i
 			}).ToArray();
-
 
 			var subItems1 = Enumerable.Range(0, 20).Select(i => new SubItem1
 			{
@@ -628,7 +626,6 @@ namespace Tests.Linq
 
 				Assert.That(result1[0].SubItems1, Is.Not.Empty);
 
-
 				var query2 = filterQuery
 					.LoadWith(m => m.SubItems1.Where(e => e.ParentId % 2 == 0).OrderBy(_ => _.Id).Take(2),
 						e => e.Where(i => i.Value!.StartsWith("Sub1_")));
@@ -696,7 +693,6 @@ namespace Tests.Linq
 					.ThenLoad(s => s.SubSubItems, q => q.Where(c => c.Id == 1).Take(2));
 
 				var result2 = query2.ToArray();
-
 
 				var mainQuery = from s in db.GetTable<SubItem1>()
 					select s;
@@ -811,7 +807,6 @@ namespace Tests.Linq
 					.LoadWith(p => p.Children)
 					.LoadWith(p => p.ActiveChildren)
 					.ToArray();
-
 
 				Assert.That(result, Has.Length.EqualTo(1));
 				Assert.Multiple(() =>

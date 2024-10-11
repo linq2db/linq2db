@@ -389,6 +389,7 @@ namespace LinqToDB.Linq.Builder
 			{
 				return false;
 			}
+
 			return _optimizationContext.CanBeConstant(expr);
 		}
 
@@ -961,6 +962,7 @@ namespace LinqToDB.Linq.Builder
 							}
 						}
 					}
+
 					break;
 			}
 

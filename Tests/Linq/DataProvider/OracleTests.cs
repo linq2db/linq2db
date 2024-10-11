@@ -643,7 +643,6 @@ namespace Tests.DataProvider
 				var table    = db.GetTable<OracleSpecific.StringTest>();
 				var expected = table.Where(_ => _.KeyValue == "NullValues").ToList();
 
-
 				AreEqual(expected, table.Where(_ => string.IsNullOrEmpty(_.StringValue1)));
 				AreEqual(expected, table.Where(_ => string.IsNullOrEmpty(_.StringValue2)));
 
@@ -2785,6 +2784,7 @@ namespace Tests.DataProvider
 						var id = Convert.ToInt32(db.InsertWithIdentity(new Issue723Table() { StringValue = i.ToString() }));
 						Assert.That(id, Is.EqualTo(i));
 					}
+
 					Assert.That(db.LastQuery, Does.Contain($"{schema}.ISSUE723TABLE"));
 				}
 				finally
@@ -4075,6 +4075,7 @@ CREATE TABLE ""TABLE_A""(
 				finally
 				{
 					try { db.Execute("DROP SEQUENCE SEQ_A");    } catch { }
+
 					try { db.Execute("DROP TABLE \"TABLE_A\""); } catch { }
 				}
 			}

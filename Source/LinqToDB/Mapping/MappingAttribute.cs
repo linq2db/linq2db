@@ -89,6 +89,7 @@ namespace LinqToDB.Mapping
 						return false;
 					}
 				}
+
 				thisType = thisType.BaseType!;
 			}
 

@@ -243,6 +243,7 @@ namespace LinqToDB.Mapping
 						{
 							Schemas[0].SetDefaultValue(type, value, resetId: false);
 						}
+
 						return value;
 					}
 				}
@@ -302,6 +303,7 @@ namespace LinqToDB.Mapping
 						{
 							Schemas[0].SetCanBeNull(type, true, resetId: false);
 						}
+
 						return true;
 					}
 				}
@@ -1834,6 +1836,7 @@ namespace LinqToDB.Mapping
 				if (type != null)
 					return type;
 			}
+
 			return null;
 		}
 

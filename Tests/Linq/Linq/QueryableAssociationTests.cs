@@ -446,7 +446,6 @@ AS RETURN
 			}
 		}
 
-
 		public class SomeTableType
 		{
 			public int LargeNumberEntityId { get; set; }
@@ -837,7 +836,6 @@ WHERE
 					)(this, db, parameter1, parameter2, parameter3).FirstOrDefault();
 			}
 
-
 			public static Expression<Func<UserGroup, IDataContext, int, string?, decimal,  IQueryable<User>>> FirstUserWithMultipleParametersExpression()
 			{
 				return (p,db, _, __, ___) => db
@@ -849,7 +847,6 @@ WHERE
 			private static Func<UserGroup, IDataContext, int, string?, decimal, IQueryable<User>>? _firstUserWithMultipleParametersExpression;
 
 			private static Func<UserGroup, IDataContext, int, IQueryable<User>>? _usersWithLanguageExpression;
-
 
 			[Association(QueryExpressionMethod = nameof(FirstUserWithLanguageExpression), CanBeNull = true)]
 			public User? FirstUsersWithLanguage(IDataContext db, int languageId)

@@ -212,7 +212,6 @@ public class a_CreateData : TestBase
 					new GrandChild { ParentID = 4, ChildID = 42, GrandChildID = 424 }
 				});
 
-
 			db.BulkCopy(
 				options,
 				new[]
@@ -275,6 +274,7 @@ public class a_CreateData : TestBase
 					RunScript(script);
 					break;
 				}
+
 				throw new InvalidOperationException(context);
 		}
 	}

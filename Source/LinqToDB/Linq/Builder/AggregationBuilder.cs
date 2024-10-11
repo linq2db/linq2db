@@ -581,6 +581,7 @@ namespace LinqToDB.Linq.Builder
 
 							sql = valueSqlExpression;
 						}
+
 						break;
 					}
 					case AggregationType.Custom:

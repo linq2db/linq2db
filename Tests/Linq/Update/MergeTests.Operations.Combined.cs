@@ -781,7 +781,6 @@ namespace Tests.xUpdate
 			[PrimaryKey] public int ID { get; set; }
 		}
 
-
 		[Test]
 		public void InsertUpdatePKOnly([MergeDataContextSource] string context)
 		{

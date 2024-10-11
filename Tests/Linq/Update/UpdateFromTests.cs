@@ -41,7 +41,6 @@ namespace Tests.xUpdate
 			[Column] public int Value3 { get; set; }
 		}
 
-
 		private UpdatedEntities[] GenerateData()
 		{
 			return new UpdatedEntities[]

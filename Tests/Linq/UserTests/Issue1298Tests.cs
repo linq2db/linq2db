@@ -167,7 +167,6 @@ namespace Tests.UserTests
 				Assert.That(ref1, Is.Not.Null);
 			}
 
-
 		}
 	}
 }

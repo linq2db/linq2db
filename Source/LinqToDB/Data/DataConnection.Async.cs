@@ -218,6 +218,7 @@ namespace LinqToDB.Data
 							if (dataConnection._command != null)
 								dataConnection._command.Transaction = null;
 						}
+
 						return _;
 					}, cancellationToken)
 					.ConfigureAwait(false);
@@ -251,6 +252,7 @@ namespace LinqToDB.Data
 							if (dataConnection._command != null)
 								dataConnection._command.Transaction = null;
 						}
+
 						return _;
 					}, cancellationToken)
 					.ConfigureAwait(false);

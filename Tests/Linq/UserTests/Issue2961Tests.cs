@@ -95,7 +95,6 @@ namespace Tests.UserTests
 						LocationId      = l.Id
 					};
 
-
 				sqlCondos.Invoking(q => q.ToList()).Should().NotThrow();
 
 				var str = sqlCondos.ToString();

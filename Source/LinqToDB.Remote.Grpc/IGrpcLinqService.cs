@@ -3,7 +3,6 @@ using System.Threading.Tasks;
 using LinqToDB.Remote.Grpc.Dto;
 using ProtoBuf.Grpc;
 
-
 namespace LinqToDB.Remote.Grpc
 {
 	/// <summary>

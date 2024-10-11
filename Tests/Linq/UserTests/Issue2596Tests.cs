@@ -57,7 +57,6 @@ namespace Tests.UserTests
 			[Association(ThisKey = "Id", OtherKey = "CustomInvoiceId", CanBeNull = true)]
 			public ICollection<TypeBMeasures> TypeBMeasures { get; set; }
 
-
 			[Column, NotNull] public int PriceListId { get; set; } // integer
 
 			/// <summary>
@@ -78,12 +77,10 @@ namespace Tests.UserTests
 		{
 		}
 
-
 		[Table(Schema = "public", Name = "product_uom")]
 		public class ProductUnit : BaseEntity
 		{
 		}
-
 
 		[Table(Schema = "public", Name = "cups_ps")]
 		public class ServicePoint : BaseEntity
@@ -181,7 +178,6 @@ namespace Tests.UserTests
 		{
 		}
 
-
 		[Table(Schema = "public", Name = "invoice_line")]
 		public class InvoiceLine : BaseEntity
 		{
@@ -248,7 +244,6 @@ namespace Tests.UserTests
 		public class Product : BaseEntity
 		{
 		}
-
 
 		[Table(Schema = "public", Name = "product_pricelist")]
 		public class PriceList : BaseEntity

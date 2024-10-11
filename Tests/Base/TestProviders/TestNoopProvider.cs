@@ -249,7 +249,6 @@ namespace Tests
 			return _parameters.Count - 1;
 		}
 
-
 		public override void Clear()
 		{
 			_parameters.Clear();
@@ -285,7 +284,6 @@ namespace Tests
 
 	public class TestNoopProvider : DynamicDataProviderBase<TestNoopProviderAdapter>
 	{
-
 
 		public TestNoopProvider()
 			: base(TestProvName.NoopProvider, new MappingSchema(), new TestNoopProviderAdapter())

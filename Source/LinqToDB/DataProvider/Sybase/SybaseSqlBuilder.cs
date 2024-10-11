@@ -71,6 +71,7 @@ namespace LinqToDB.DataProvider.Sybase
 						StringBuilder.Append("NVarChar(5461)");
 						return;
 					}
+
 					break;
 			}
 

@@ -416,6 +416,7 @@ FROM RDB$FUNCTION_ARGUMENTS p
 				// decfloat(34)
 				dataTypes.Add(new DataTypeInfo { ProviderSpecific = true, TypeName = "decfloat", DataType = $"{FirebirdProviderAdapter.TypesNamespace}.FbDecFloat", CreateFormat = null, ProviderDbType = 22 });
 			}
+
 			if (!knownTypes.Contains("timestamp with time zone"))
 			{
 				// tstz
@@ -423,6 +424,7 @@ FROM RDB$FUNCTION_ARGUMENTS p
 				// tstzEx
 				dataTypes.Add(new DataTypeInfo { ProviderSpecific = true, TypeName = "timestamp with time zone", DataType = $"{FirebirdProviderAdapter.TypesNamespace}.FbZonedDateTime", ProviderDbType = 18 });
 			}
+
 			if (!knownTypes.Contains("time with time zone"))
 			{
 				//ttz

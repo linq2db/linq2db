@@ -247,7 +247,6 @@ namespace LinqToDB.DataProvider.PostgreSQL.Translation
 			}
 		}
 
-
 		protected override IMemberTranslator CreateSqlTypesTranslator()
 		{
 			return new SqlTypesTranslation();

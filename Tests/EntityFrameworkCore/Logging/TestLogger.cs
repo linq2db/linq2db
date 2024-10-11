@@ -70,18 +70,21 @@ namespace LinqToDB.EntityFrameworkCore.Tests.Logging
 					commandText = kvp.Value.ToString();
 				}
 			}
+
 			if (!string.IsNullOrEmpty(parameters))
 			{
 				BaselinesManager.LogQuery($@"Parameters:
 {parameters}
 ");
 			}
+
 			if (!string.IsNullOrEmpty(commandType) && commandType != "Text")
 			{
 				BaselinesManager.LogQuery($@"Command Type: {commandType}
 
 ");
 			}
+
 			if (!string.IsNullOrEmpty(commandText))
 			{
 				BaselinesManager.LogQuery($@"{commandText}
@@ -108,6 +111,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests.Logging
 			{
 				entry = default;
 			}
+
 			EnqueueMessage(entry);
 		}
 
@@ -327,6 +331,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests.Logging
 					{
 						builder.Append(" => ");
 					}
+
 					builder.Append(scope);
 				}, (stringBuilder, multiLine ? initialLength : -1));
 

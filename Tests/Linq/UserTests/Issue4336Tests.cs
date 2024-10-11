@@ -139,7 +139,6 @@ namespace Tests.UserTests
 		   let Quantity = vsopc.Quantity
 		   select new ViewCapacityAndOrderedByPeriodAndProductCategoryRow(op.Id, vpcc.Id, vpcc.Name, PeriodOrderLimit, Quantity, PeriodOrderLimit - Quantity);
 
-
 		IQueryable<ViewCapacityAndOrderedByPeriodRow> ViewCapacityAndOrderedByPeriod(IDataContext db) =>
 		   from v1 in ViewCapacityAndOrderedByPeriodAndProduct(db)
 		   from v2 in ViewCapacityAndOrderedByPeriodAndProductCategory(db).Where(o => o.OrderPeriodId == v1.OrderPeriodId && o.ProductCategoryId == v1.CategoryId).DefaultIfEmpty()

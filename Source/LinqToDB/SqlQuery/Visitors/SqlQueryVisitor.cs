@@ -235,6 +235,7 @@ namespace LinqToDB.SqlQuery.Visitors
 						replacement = current;
 						break;
 					}
+
 					replacement = element = current;
 				}
 
@@ -250,7 +251,6 @@ namespace LinqToDB.SqlQuery.Visitors
 			{
 				if (_newToOldLookup == null)
 					return element;
-
 
 				if (!_newToOldLookup.TryGetValue(element, out var oldElement))
 					return element;

@@ -156,7 +156,6 @@ namespace Tests.Linq
 						Values = g.StringAggregate(" -> ").OrderByDescending(e => e).ToValue(),
 					};
 
-
 				var expected = from t in data
 					group t.Value1 by new {t.Id, Value = t.Value1}
 					into g

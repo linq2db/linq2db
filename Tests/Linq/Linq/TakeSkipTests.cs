@@ -970,7 +970,6 @@ namespace Tests.Linq
 			}
 		}
 
-
 		sealed class TakeSkipClass
 		{
 			[Column(DataType = DataType.VarChar, Length = 10)]
@@ -1030,7 +1029,6 @@ namespace Tests.Linq
 				CheckTakeGlobalParams(db);
 			}
 		}
-
 
 		[Test]
 		public void DistinctTakeTest([DataSources] string context, [Values] bool withParameters)
@@ -1129,6 +1127,7 @@ namespace Tests.Linq
 					Assert.That(cn.LastQuery!.ToLowerInvariant(), Does.Not.Contain("iif"));
 					Assert.That(cn.LastQuery!.ToLowerInvariant(), Does.Not.Contain("case"));
 				}
+
 				CheckTakeGlobalParams(db);
 			}
 		}
@@ -1168,6 +1167,7 @@ namespace Tests.Linq
 					Assert.That(cn.LastQuery!.ToLowerInvariant(), Does.Not.Contain("iif"));
 					Assert.That(cn.LastQuery!.ToLowerInvariant(), Does.Not.Contain("case"));
 				}
+
 				CheckTakeGlobalParams(db);
 			}
 		}
@@ -1213,6 +1213,7 @@ namespace Tests.Linq
 					Assert.That(cn.LastQuery!.ToLowerInvariant(), Does.Not.Contain("iif"));
 					Assert.That(cn.LastQuery!.ToLowerInvariant(), Does.Not.Contain("case"));
 				}
+
 				CheckTakeGlobalParams(db);
 			}
 		}
@@ -1258,6 +1259,7 @@ namespace Tests.Linq
 					Assert.That(cn.LastQuery!.ToLowerInvariant(), Does.Not.Contain("iif"));
 					Assert.That(cn.LastQuery!.ToLowerInvariant(), Does.Not.Contain("case"));
 				}
+
 				CheckTakeGlobalParams(db);
 			}
 		}
@@ -1513,6 +1515,7 @@ namespace Tests.Linq
 					Assert.That(cn.LastQuery!.ToLowerInvariant(), Does.Not.Contain("iif"));
 					Assert.That(cn.LastQuery!.ToLowerInvariant(), Does.Not.Contain("case"));
 				}
+
 				CheckTakeGlobalParams(db);
 			}
 		}
@@ -1560,6 +1563,7 @@ namespace Tests.Linq
 					Assert.That(cn.LastQuery!.ToLowerInvariant(), Does.Not.Contain("iif"));
 					Assert.That(cn.LastQuery!.ToLowerInvariant(), Does.Not.Contain("case"));
 				}
+
 				CheckTakeGlobalParams(db);
 			}
 		}
@@ -1612,6 +1616,7 @@ namespace Tests.Linq
 					Assert.That(cn.LastQuery!.ToLowerInvariant(), Does.Not.Contain("iif"));
 					Assert.That(cn.LastQuery!.ToLowerInvariant(), Does.Not.Contain("case"));
 				}
+
 				CheckTakeGlobalParams(db);
 			}
 		}
@@ -1664,6 +1669,7 @@ namespace Tests.Linq
 					Assert.That(cn.LastQuery!.ToLowerInvariant(), Does.Not.Contain("iif"));
 					Assert.That(cn.LastQuery!.ToLowerInvariant(), Does.Not.Contain("case"));
 				}
+
 				CheckTakeGlobalParams(db);
 			}
 		}

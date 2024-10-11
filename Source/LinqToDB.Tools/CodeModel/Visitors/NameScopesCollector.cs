@@ -223,11 +223,13 @@ namespace LinqToDB.CodeModel
 							AddNameToCurrentScope(name, true);
 						}
 					}
+
 					if (type is GenericType generic)
 					{
 						foreach (var typeArg in generic.TypeArguments)
 							RegisterExternalType(typeArg);
 					}
+
 					break;
 				case TypeKind.Dynamic     :
 				case TypeKind.TypeArgument:

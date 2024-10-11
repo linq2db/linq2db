@@ -14,7 +14,6 @@ namespace Tests.Linq
 	using LinqToDB.Data;
 	using Model;
 
-
 	[TestFixture]
 	public class ConcatUnionTests : TestBase
 	{
@@ -645,7 +644,6 @@ namespace Tests.Linq
 
 			AssertQuery(query);
 		}
-
 
 		[Test]
 		public void ObjectUnion5([DataSources] string context)
@@ -1628,7 +1626,6 @@ namespace Tests.Linq
 			});
 		}
 
-
 		[Test(Description = "Test that we type non-field union column properly")]
 		public void Issue2451_ComplexColumn([IncludeDataSources(true, TestProvName.AllSqlServer)] string context)
 		{
@@ -1980,7 +1977,6 @@ namespace Tests.Linq
 				AssertQuery(query);
 			}
 		}
-
 
 		[InheritanceMapping(Code = 1, Type = typeof(SetEntityA))]
 		[InheritanceMapping(Code = 2, Type = typeof(SetEntityB))]

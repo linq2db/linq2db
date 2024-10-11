@@ -92,7 +92,6 @@ namespace LinqToDB.Linq.Builder
 			return lambdaExpression.GetBody(TargetPropAccess);
 		}
 
-
 		class CorrectingVisitor: ExpressionVisitorBase
 		{
 			public   ParameterExpression  TargetParam      { get; }
@@ -190,7 +189,6 @@ namespace LinqToDB.Linq.Builder
 				return context;
 			}
 		}
-
 
 		public Expression PrepareSelfTargetLambda(LambdaExpression lambdaExpression)
 		{

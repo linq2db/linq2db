@@ -55,6 +55,7 @@ namespace Tests.Linq
 				db.Execute($"DROP USER \"{schema}\" CASCADE");
 			}
 			catch { }
+
 			db.Execute($"CREATE USER \"{schema}\" IDENTIFIED BY \"secret_password\"");
 			db.Execute($"GRANT CREATE SEQUENCE TO \"{schema}\"");
 			db.Execute($"create sequence \"{schema}\".\"sq_test_user\"");

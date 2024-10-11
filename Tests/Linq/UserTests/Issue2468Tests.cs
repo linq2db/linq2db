@@ -93,7 +93,6 @@ namespace Tests.UserTests
 			Expressions.MapMember(type, toStringMethod, lambda);
 		}
 
-
 		static Issue2468Tests()
 		{
 			MapEnumToString<ColorEnum>();

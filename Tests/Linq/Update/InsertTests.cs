@@ -1851,6 +1851,7 @@ namespace Tests.xUpdate
 						var integritycount = await table.Where(p => p.FirstName == "Steven" && p.LastName == "King" && p.Gender == Gender.Male).CountAsync();
 						Assert.That(integritycount, Is.EqualTo(3));
 					}
+
 					await table.DropAsync();
 				}
 				finally
@@ -1890,7 +1891,6 @@ namespace Tests.xUpdate
 						PersonID = 2,
 						Diagnosis = "ABC2",
 					};
-
 
 					db.InsertOrReplace(person1, tableName: tableName, schemaName: schemaName);
 					db.InsertOrReplace(person2, tableName: tableName, schemaName: schemaName);
@@ -1938,7 +1938,6 @@ namespace Tests.xUpdate
 						PersonID = 2,
 						Diagnosis = "ABC2",
 					};
-
 
 					await db.InsertOrReplaceAsync(person1, tableName: tableName, schemaName: schemaName);
 					await db.InsertOrReplaceAsync(person2, tableName: tableName, schemaName: schemaName);

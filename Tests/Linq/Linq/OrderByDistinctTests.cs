@@ -438,7 +438,6 @@ namespace Tests.Linq
 
 		}
 
-
 		[Test]
 		public void DoubleOrderBy([DataSources(TestProvName.AllSybase)] string context)
 		{

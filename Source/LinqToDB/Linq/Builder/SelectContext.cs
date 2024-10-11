@@ -111,6 +111,7 @@ namespace LinqToDB.Linq.Builder
 						{
 							result = Expression.Convert(result, path.Type);
 						}
+
 						return result;
 					}
 
@@ -137,6 +138,7 @@ namespace LinqToDB.Linq.Builder
 								if (Builder.IsSequence(this, translated))
 									return translated;
 							}
+
 							return path;
 						}
 
@@ -189,6 +191,7 @@ namespace LinqToDB.Linq.Builder
 								if (Builder.IsSequence(this, result))
 									return result;
 							}
+
 							return path;
 						}
 					}

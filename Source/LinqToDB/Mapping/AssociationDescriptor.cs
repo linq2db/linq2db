@@ -247,6 +247,7 @@ namespace LinqToDB.Mapping
 							throw new LinqToDBException($"Method '{ExpressionPredicate}' for type '{type.Name}' should return expression");
 					}
 				}
+
 				if (predicate == null)
 					throw new LinqToDBException(
 						$"Member '{ExpressionPredicate}' for type '{type.Name}' should be static property or method");
