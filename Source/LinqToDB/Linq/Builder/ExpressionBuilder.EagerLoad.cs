@@ -284,7 +284,7 @@ namespace LinqToDB.Linq.Builder
 				{
 					var predicateExpr = BuildSqlExpression(clonedParentContext, correctedPredicate);
 
-					if (predicateExpr is not SqlPlaceholderExpression placeholder || placeholder.Sql is not ISqlPredicate predicateSql)
+					if (predicateExpr is not SqlPlaceholderExpression { Sql: ISqlPredicate predicateSql })
 					{
 						throw SqlErrorExpression.EnsureError(predicateExpr, correctedPredicate.Type).CreateException();
 					}

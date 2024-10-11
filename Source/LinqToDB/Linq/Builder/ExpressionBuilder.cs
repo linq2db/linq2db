@@ -225,7 +225,7 @@ namespace LinqToDB.Linq.Builder
 			{
 				queryInfo.Statement.VisitAll(x =>
 				{
-					if (x is SqlParameter p && p.AccessorId != null)
+					if (x is SqlParameter { AccessorId: not null } p)
 						usedParameters.Add(p);
 				});
 

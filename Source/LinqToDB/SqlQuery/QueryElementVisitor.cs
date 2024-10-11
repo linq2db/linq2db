@@ -1169,7 +1169,7 @@ namespace LinqToDB.SqlQuery
 				}
 				case VisitMode.Transform:
 				{
-					var rows = VisitListOfArrays(element.Rows, VisitMode.Transform);
+					var rows   = VisitListOfArrays(element.Rows, VisitMode.Transform);
 					var source = Visit(element.Source) as ISqlExpression;
 
 					if (ShouldReplace(element) || rows != element.Rows || !ReferenceEquals(source, element.Source))

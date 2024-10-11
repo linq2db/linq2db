@@ -243,9 +243,9 @@ namespace LinqToDB.Linq.Builder
 						}
 					}
 
-					if (placeholder.TrackingPath is MemberExpression me && me.Member.DeclaringType != null && me.Expression != null && me.Member.DeclaringType.IsAssignableFrom(toPath.Type))
+					if (placeholder.TrackingPath is MemberExpression { Member.DeclaringType: { } declaringType, Expression: not null} me && declaringType.IsAssignableFrom(toPath.Type))
 					{
-						var toPathConverted = EnsureType(toPath, me.Member.DeclaringType);
+						var toPathConverted = EnsureType(toPath, declaringType);
 						var newExpr         = (Expression)Expression.MakeMemberAccess(toPathConverted, me.Member);
 
 						return placeholder.WithTrackingPath(newExpr);
@@ -853,7 +853,7 @@ namespace LinqToDB.Linq.Builder
 			var contextRef = new ContextRefExpression(context.ElementType, context);
 
 			var rootContext =
-				context.Builder.BuildTableExpression( contextRef) as ContextRefExpression;
+				context.Builder.BuildTableExpression(contextRef) as ContextRefExpression;
 
 			var tableContext = rootContext?.BuildContext as ITableContext;
 

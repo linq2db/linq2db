@@ -76,11 +76,11 @@ namespace LinqToDB.SqlQuery
 			if (expression is SqlColumn column)
 			{
 				// if column comes from nullable subquery - column is always nullable
-				if (column.Parent != null && CanBeNullInternal(InQuery, column.Parent) == true)
-					return true;
-
 				if (column.Parent != null)
 				{
+					if (CanBeNullInternal(InQuery, column.Parent) is true)
+						return true;
+
 					if (column.Parent.HasSetOperators)
 					{
 						var index = column.Parent.Select.Columns.IndexOf(column);

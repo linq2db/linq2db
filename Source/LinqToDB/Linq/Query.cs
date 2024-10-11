@@ -573,8 +573,14 @@ namespace LinqToDB.Linq
 			}
 
 			using (var mc = ActivityService.Start(ActivityID.GetQueryCreate))
-				query = CreateQuery(optimizationContext, new ParametersContext(expr, optimizationContext, dataContext),
-					dataContext, expr);
+			{
+				query = CreateQuery(
+					optimizationContext,
+					 new ParametersContext(expr, optimizationContext, dataContext),
+					dataContext,
+					expr
+				);
+			}
 
 			if (useCache && !query.DoNotCache)
 			{

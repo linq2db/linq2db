@@ -75,11 +75,12 @@ namespace LinqToDB.Linq.Builder
 				    && !path.Type.IsAssignableFrom(ElementType))
 				{
 					var result = GetGroupJoinCall();
-					if (result.Type != path.Type)
+					if (result.Type == path.Type)
 					{
-						result = SqlAdjustTypeExpression.AdjustType(result, path.Type, MappingSchema);
+						return result;
 					}
-					return result;
+
+					return SqlAdjustTypeExpression.AdjustType(result, path.Type, MappingSchema);
 				}
 
 				return path;
