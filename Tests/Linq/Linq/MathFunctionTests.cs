@@ -199,6 +199,16 @@ namespace Tests.Linq
 					from t in from p in db.Types select Math.Floor(Math.Pow((double)p.MoneyValue, 3)) where t != 0 select t);
 		}
 
+		// Sybase: https://stackoverflow.com/questions/25281843
+		[Test]
+		public void PowDecimal([DataSources(ProviderName.SQLiteMS, TestProvName.AllSybase)] string context)
+		{
+			using (var db = GetDataContext(context))
+				AreEqual(
+					from t in from p in Types select Math.Floor(Sql.Power(p.MoneyValue, 3)!.Value) where t != 0 select t,
+					from t in from p in db.Types select Math.Floor(Sql.Power(p.MoneyValue, 3)!.Value) where t != 0 select t);
+		}
+
 		[Test]
 		public void Round1([DataSources(ProviderName.SQLiteMS)] string context)
 		{
