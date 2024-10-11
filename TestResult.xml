@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="utf-8" standalone="no"?>
+<test-run start-time="2024-10-11 12:11:18Z">
+  <command-line><![CDATA[C:\Users\sdanyliv\.dotnet\tools\.store\nunit.consolerunner.netcore\3.18.3\nunit.consolerunner.netcore\3.18.3\tools\net6.0\any\nunit3-console.dll C:\!Dev.Dans\GitHub\LinqToDB\linq2db\Tests\Linq\bin\Debug\net6.0\linq2db.Tests.dll]]></command-line>
+</test-run>

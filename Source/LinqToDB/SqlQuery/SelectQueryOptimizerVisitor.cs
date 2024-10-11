@@ -1341,6 +1341,12 @@ namespace LinqToDB.SqlQuery
 
 			foreach (var column in subQuery.Select.Columns)
 			{
+				// populating aliases
+				if (column.RawAlias != null && column.Expression is SqlColumn exprColumn)
+				{
+					exprColumn.RawAlias = column.RawAlias;
+				}
+
 				NotifyReplaced(column.Expression, column);
 			}
 

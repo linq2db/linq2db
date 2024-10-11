@@ -2207,7 +2207,7 @@ namespace LinqToDB.Linq.Builder
 						sql = Builder.BuildConstant(MappingSchema, node, _columnDescriptor);
 					}
 
-					var needParameter = sql == null && _buildPurpose is BuildPurpose.Sql;
+					var needParameter = sql == null && _buildPurpose is BuildPurpose.Sql || (_buildPurpose == BuildPurpose.Expression && _buildFlags.HasFlag(BuildFlags.ForSetProjection));
 					if (!needParameter)
 					{
 						if (null != node.Find(1, (_, x) => ReferenceEquals(x, ExpressionBuilder.ParametersParam)))
@@ -2495,6 +2495,17 @@ namespace LinqToDB.Linq.Builder
 				if (node.Left.IsNullValue() || node.Right.IsNullValue())
 					shouldSkipConversion = true;
 			}
+
+			// Handle client-side coalesce
+			if (_buildPurpose is BuildPurpose.Expression && node.NodeType == ExpressionType.Coalesce && !_buildFlags.HasFlag(BuildFlags.ForSetProjection))
+			{
+				var right = Visit(node.Right);
+				if (right is not SqlPlaceholderExpression)
+				{
+					return base.VisitBinary(node);
+				}
+			}
+
 
 			if (!shouldSkipConversion && TryConvertToSql(node, out var sqlResult))
 			{
