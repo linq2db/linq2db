@@ -1,4 +1,4 @@
-﻿namespace LinqToDB.Expressions
+﻿namespace LinqToDB.Expressions.Visitors
 {
 	internal sealed class WritableContext<T>
 	{

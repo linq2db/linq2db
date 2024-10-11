@@ -3,17 +3,13 @@ using System.Collections;
 using System.Data;
 using System.Linq.Expressions;
 using System.Runtime.CompilerServices;
-using LinqToDB.Expressions;
+
+using LinqToDB.Expressions.Types;
 
 namespace LinqToDB.Benchmarks.TypeMapping
 {
-	public interface ITestClass
-	{
-	}
-
-	public interface ITestClass2
-	{
-	}
+	public interface ITestClass;
+	public interface ITestClass2;
 
 	namespace Original
 	{

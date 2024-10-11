@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace LinqToDB.DataProvider.SapHana
 {
-	using Expressions;
+	using LinqToDB.Expressions.Types;
 
 	public class SapHanaProviderAdapter : IDynamicProviderAdapter
 	{

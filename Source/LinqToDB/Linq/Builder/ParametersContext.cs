@@ -6,14 +6,15 @@ using System.Linq.Expressions;
 
 namespace LinqToDB.Linq.Builder
 {
-	using Common;
-	using Data;
-	using Extensions;
+	using LinqToDB.Common;
+	using LinqToDB.Data;
 	using LinqToDB.Expressions;
-	using Mapping;
-	using Reflection;
-	using SqlQuery;
-	using Infrastructure;
+	using LinqToDB.Expressions.Visitors;
+	using LinqToDB.Extensions;
+	using LinqToDB.Infrastructure;
+	using LinqToDB.Mapping;
+	using LinqToDB.Reflection;
+	using LinqToDB.SqlQuery;
 
 	sealed class ParametersContext
 	{

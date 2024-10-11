@@ -7,11 +7,12 @@ using System.Threading.Tasks;
 
 namespace LinqToDB.Data
 {
-	using Async;
-	using Common;
-	using Interceptors;
-	using RetryPolicy;
-	using Tools;
+	using LinqToDB.Async;
+	using LinqToDB.Common;
+	using LinqToDB.Compatibility.System;
+	using LinqToDB.Data.RetryPolicy;
+	using LinqToDB.Interceptors;
+	using LinqToDB.Tools;
 
 	public partial class DataConnection
 	{

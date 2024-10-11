@@ -1,14 +1,13 @@
 ﻿using System;
 using System.Data;
 using System.Data.Common;
-using System.Linq.Expressions;
 
 namespace LinqToDB.DataProvider.Firebird
 {
-	using Common;
-	using Expressions;
-	using Mapping;
-	using SqlQuery;
+	using LinqToDB.Common;
+	using LinqToDB.Expressions.Types;
+	using LinqToDB.Mapping;
+	using LinqToDB.SqlQuery;
 
 	public class FirebirdProviderAdapter : IDynamicProviderAdapter
 	{

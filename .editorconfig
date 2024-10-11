@@ -54,6 +54,9 @@ dotnet_style_coalesce_expression = true:suggestion
 dotnet_style_null_propagation = true:suggestion
 dotnet_style_explicit_tuple_names = true:suggestion
 
+# Namespaces
+dotnet_style_namespace_match_folder = false
+
 # CSharp code style settings:
 [*.cs]
 # Newline settings
@@ -358,7 +361,6 @@ dotnet_diagnostic.IDE0083.severity = none # IDE0083: Use pattern matching (not o
 dotnet_diagnostic.IDE0090.severity = none # IDE0090: new expression can be simplified
 dotnet_diagnostic.IDE0100.severity = none # IDE0100: remove redundant equality
 dotnet_diagnostic.IDE0120.severity = none # IDE0120: Simplify LINQ expression
-dotnet_diagnostic.IDE0130.severity = none # IDE0130: Namespace does not match folder structure
 dotnet_diagnostic.IDE0150.severity = none # IDE0150: null check can be clarified
 dotnet_diagnostic.IDE0210.severity = none # IDE0210: convert to lol-level statements
 dotnet_diagnostic.IDE0220.severity = none # IDE0220: add explicit cast to MS implicity typed collections foreach

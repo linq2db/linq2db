@@ -11,8 +11,9 @@ using JetBrains.Annotations;
 
 namespace LinqToDB.Common
 {
-	using Expressions;
-	using Mapping;
+	using LinqToDB.Expressions;
+	using LinqToDB.Expressions.Visitors;
+	using LinqToDB.Mapping;
 
 	/// <summary>
 	/// Type conversion manager.

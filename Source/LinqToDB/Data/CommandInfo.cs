@@ -21,17 +21,18 @@ using JetBrains.Annotations;
 
 namespace LinqToDB.Data
 {
-	using Async;
-	using Common.Internal.Cache;
-	using Common.Internal;
-	using Common;
-	using Expressions;
-	using Extensions;
-	using Interceptors;
-	using Linq;
-	using Mapping;
-	using Reflection;
-	using Tools;
+	using LinqToDB.Async;
+	using LinqToDB.Common;
+	using LinqToDB.Common.Internal;
+	using LinqToDB.Common.Internal.Cache;
+	using LinqToDB.Compatibility.System;
+	using LinqToDB.Expressions;
+	using LinqToDB.Extensions;
+	using LinqToDB.Interceptors;
+	using LinqToDB.Linq;
+	using LinqToDB.Mapping;
+	using LinqToDB.Reflection;
+	using LinqToDB.Tools;
 
 	/// <summary>
 	/// Provides database connection command abstraction.

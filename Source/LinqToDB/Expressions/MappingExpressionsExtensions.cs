@@ -2,9 +2,9 @@
 using System.Linq.Expressions;
 using System.Reflection;
 
-namespace LinqToDB.Extensions
+namespace LinqToDB.Expressions
 {
-	using Common;
+	using LinqToDB.Extensions;
 
 	static class MappingExpressionsExtensions
 	{

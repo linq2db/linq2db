@@ -8,11 +8,12 @@ using System.Reflection;
 using Microsoft.SqlServer.Server;
 #endif
 
-namespace LinqToDB.Metadata
+namespace LinqToDB.DataProvider.SqlServer
 {
-	using Common;
-	using Extensions;
-	using Mapping;
+	using LinqToDB;
+	using LinqToDB.Extensions;
+	using LinqToDB.Mapping;
+	using LinqToDB.Metadata;
 
 	/// <summary>
 	/// Adds support for types and functions, defined in Microsoft.SqlServer.Types spatial types
@@ -66,15 +67,15 @@ namespace LinqToDB.Metadata
 		/// <param name="sqlUserDefinedTypeAttribute">SqlUserDefinedTypeAttribute type.</param>
 		public SystemDataSqlServerAttributeReader(Type sqlMethodAttribute, Type sqlUserDefinedTypeAttribute)
 		{
-			_sqlMethodAttribute          = sqlMethodAttribute;
+			_sqlMethodAttribute = sqlMethodAttribute;
 			_sqlUserDefinedTypeAttribute = sqlUserDefinedTypeAttribute;
-			_objectId                    = $".{_sqlMethodAttribute.AssemblyQualifiedName}.{_sqlUserDefinedTypeAttribute.AssemblyQualifiedName}.";
+			_objectId = $".{_sqlMethodAttribute.AssemblyQualifiedName}.{_sqlUserDefinedTypeAttribute.AssemblyQualifiedName}.";
 
 			var methodNameGetter = _sqlMethodAttribute.GetProperty("Name")!.GetMethod!;
-			_methodNameGetter    = attr => (string?)methodNameGetter.Invoke(attr, null);
+			_methodNameGetter = attr => (string?)methodNameGetter.Invoke(attr, null);
 
 			var udtNameGetter = _sqlUserDefinedTypeAttribute.GetProperty("Name")!.GetMethod!;
-			_typeNameGetter   = attr => (string?)udtNameGetter.Invoke(attr, null);
+			_typeNameGetter = attr => (string?)udtNameGetter.Invoke(attr, null);
 		}
 
 		static SystemDataSqlServerAttributeReader? TryCreate(string sqlMethodAttributeType, string sqlUserDefinedTypeAttributeType)

@@ -1,16 +1,17 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using System.Data.Common;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq.Expressions;
 using System.Runtime.CompilerServices;
 
 namespace LinqToDB.Linq.Builder
 {
-	using Extensions;
-	using Common;
+	using LinqToDB.Common;
 	using LinqToDB.Expressions;
-	using SqlQuery;
+	using LinqToDB.Expressions.Visitors;
+	using LinqToDB.Extensions;
+	using LinqToDB.SqlQuery;
 
 	internal partial class ExpressionBuilder
 	{

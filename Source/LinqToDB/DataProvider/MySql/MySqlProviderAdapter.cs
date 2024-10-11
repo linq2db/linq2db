@@ -9,9 +9,9 @@ using System.Threading.Tasks;
 
 namespace LinqToDB.DataProvider.MySql
 {
-	using Expressions;
-	using Mapping;
-	using SqlQuery;
+	using LinqToDB.Expressions.Types;
+	using LinqToDB.Mapping;
+	using LinqToDB.SqlQuery;
 
 	public abstract class MySqlProviderAdapter : IDynamicProviderAdapter
 	{

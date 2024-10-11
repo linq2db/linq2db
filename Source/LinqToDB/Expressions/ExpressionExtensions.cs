@@ -9,10 +9,11 @@ using JetBrains.Annotations;
 
 namespace LinqToDB.Expressions
 {
-	using Common;
-	using Extensions;
-	using Mapping;
-	using Reflection;
+	using LinqToDB.Common;
+	using LinqToDB.Expressions.Visitors;
+	using LinqToDB.Extensions;
+	using LinqToDB.Mapping;
+	using LinqToDB.Reflection;
 
 	public static class ExpressionExtensions
 	{

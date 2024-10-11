@@ -4,22 +4,22 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Runtime.CompilerServices;
 
-namespace LinqToDB.Expressions
+namespace LinqToDB.Expressions.Visitors
 {
-	internal readonly struct VisitActionVisitor<TContext>
+	internal readonly struct VisitFuncVisitor<TContext>
 	{
-		private readonly TContext?                     _context;
-		private readonly Action<TContext, Expression>? _func;
-		private readonly Action<Expression>?           _staticFunc;
+		private readonly TContext?                          _context;
+		private readonly Func<TContext, Expression, bool>? _func;
+		private readonly Func<Expression,bool>?            _staticFunc;
 
-		public VisitActionVisitor(TContext context, Action<TContext, Expression> func)
+		public VisitFuncVisitor(TContext context, Func<TContext, Expression, bool> func)
 		{
 			_context    = context;
 			_func       = func;
 			_staticFunc = null;
 		}
 
-		public VisitActionVisitor(Action<Expression> func)
+		public VisitFuncVisitor(Func<Expression, bool> func)
 		{
 			_context    = default;
 			_func       = null;
@@ -29,17 +29,17 @@ namespace LinqToDB.Expressions
 		/// <summary>
 		/// Creates reusable static visitor.
 		/// </summary>
-		public static VisitActionVisitor<object?> Create(Action<Expression> func)
+		public static VisitFuncVisitor<object?> Create(Func<Expression, bool> func)
 		{
-			return new VisitActionVisitor<object?>(func);
+			return new VisitFuncVisitor<object?>(func);
 		}
 
 		/// <summary>
 		/// Creates reusable visitor with static context.
 		/// </summary>
-		public static VisitActionVisitor<TContext> Create(TContext context, Action<TContext, Expression> func)
+		public static VisitFuncVisitor<TContext> Create(TContext context, Func<TContext, Expression, bool> func)
 		{
-			return new VisitActionVisitor<TContext>(context, func);
+			return new VisitFuncVisitor<TContext>(context, func);
 		}
 
 		static void Visit<T>(IEnumerable<T> source, Action<T> func)
@@ -57,7 +57,7 @@ namespace LinqToDB.Expressions
 
 		public void Visit(Expression? expr)
 		{
-			if (expr == null)
+			if (expr == null || (_staticFunc != null ? !_staticFunc(expr) : !_func!(_context!, expr)))
 				return;
 
 			switch (expr.NodeType)
@@ -144,6 +144,16 @@ namespace LinqToDB.Expressions
 				case ExpressionType.RuntimeVariables    : Visit(((RuntimeVariablesExpression)expr).Variables   ); break;
 				case ExpressionType.Loop                : Visit(((LoopExpression            )expr).Body        ); break;
 
+				case ExpressionType.MemberInit:
+				{
+					var e = (MemberInitExpression)expr;
+
+					Visit(e.NewExpression);
+					Visit(e.Bindings, MemberBindingVisit);
+
+					break;
+				}
+
 				case ExpressionType.Call:
 				{
 					var e = (MethodCallExpression)expr;
@@ -191,16 +201,6 @@ namespace LinqToDB.Expressions
 
 					Visit(e.NewExpression);
 					Visit(e.Initializers, ElementInitVisit);
-
-					break;
-				}
-
-				case ExpressionType.MemberInit:
-				{
-					var e = (MemberInitExpression)expr;
-
-					Visit(e.NewExpression);
-					Visit(e.Bindings, MemberVisit);
 
 					break;
 				}
@@ -256,27 +256,12 @@ namespace LinqToDB.Expressions
 				}
 
 				// final expressions
-				case ExpressionType.Parameter:
 				case ExpressionType.Default  :
+				case ExpressionType.Parameter:
 				case ExpressionType.Constant : break;
 
 				default:
 					throw new NotImplementedException($"Unhandled expression type: {expr.NodeType}");
-			}
-
-			if (_staticFunc != null)
-				_staticFunc(expr);
-			else
-				_func!(_context!, expr);
-		}
-
-		private void MemberVisit(MemberBinding b)
-		{
-			switch (b.BindingType)
-			{
-				case MemberBindingType.Assignment   : Visit(((MemberAssignment   )b).Expression                    ); break;
-				case MemberBindingType.ListBinding  : Visit(((MemberListBinding  )b).Initializers, ElementInitVisit); break;
-				case MemberBindingType.MemberBinding: Visit(((MemberMemberBinding)b).Bindings,     MemberVisit     ); break;
 			}
 		}
 
@@ -293,7 +278,17 @@ namespace LinqToDB.Expressions
 			Visit(cb.Body);
 		}
 
-		private void ElementInitVisit(ElementInit ei)
+		void MemberBindingVisit(MemberBinding b)
+		{
+			switch (b.BindingType)
+			{
+				case MemberBindingType.Assignment   : Visit(((MemberAssignment   )b).Expression                      ); break;
+				case MemberBindingType.ListBinding  : Visit(((MemberListBinding  )b).Initializers, ElementInitVisit  ); break;
+				case MemberBindingType.MemberBinding: Visit(((MemberMemberBinding)b).Bindings    , MemberBindingVisit); break;
+			}
+		}
+
+		void ElementInitVisit(ElementInit ei)
 		{
 			Visit(ei.Arguments);
 		}
@@ -318,10 +313,14 @@ namespace LinqToDB.Expressions
 			{
 				Visit(adjustType.Expression);
 			}
+			else if (expr is SqlPathExpression keyHolder)
+			{
+			}
 			else if (expr.CanReduce)
 			{
 				Visit(expr.Reduce());
-			}	
+			}
 		}
+
 	}
 }

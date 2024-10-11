@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Data.Common;
 using System.Globalization;
-using System.Linq;
 using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
@@ -12,12 +11,13 @@ using System.Text;
 
 namespace LinqToDB.Remote
 {
-	using Common.Internal;
-	using Data;
-	using Linq;
-	using DataProvider;
-	using SqlProvider;
-	using SqlQuery;
+	using LinqToDB.Common.Internal;
+	using LinqToDB.Data;
+	using LinqToDB.DataProvider;
+	using LinqToDB.Extensions;
+	using LinqToDB.Linq;
+	using LinqToDB.SqlProvider;
+	using LinqToDB.SqlQuery;
 
 	public abstract partial class RemoteDataContextBase
 	{

@@ -1,10 +1,9 @@
 ﻿using System;
 using System.Data.Common;
-using System.Linq.Expressions;
 
 namespace LinqToDB.DataProvider.SQLite
 {
-	using Expressions;
+	using LinqToDB.Expressions.Types;
 
 	public class SQLiteProviderAdapter : IDynamicProviderAdapter
 	{

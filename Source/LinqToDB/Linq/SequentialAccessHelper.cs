@@ -8,16 +8,18 @@ using System.Reflection;
 
 namespace LinqToDB.Linq
 {
-	using Common;
-	using Extensions;
-	using LinqToDB.Expressions;
-	using Internal;
-	using Reflection;
+	using LinqToDB.Common;
 	using LinqToDB.Common.Internal;
+	using LinqToDB.Expressions;
+	using LinqToDB.Expressions.Visitors;
+	using LinqToDB.Extensions;
+	using LinqToDB.Linq.Internal;
+	using LinqToDB.Reflection;
 
 	internal static class SequentialAccessHelper
 	{
 		private static readonly TransformVisitor<object?> _reducer = TransformVisitor<object?>.Create(Reducer);
+
 		private static Expression Reducer(Expression e)
 		{
 			return e is ConvertFromDataReaderExpression

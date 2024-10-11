@@ -9,11 +9,11 @@ using System.Threading.Tasks;
 
 namespace LinqToDB.DataProvider.ClickHouse
 {
-	using Common;
-	using Expressions;
-	using Mapping;
-	using MySql;
-	using SqlQuery;
+	using LinqToDB.Common;
+	using LinqToDB.DataProvider.MySql;
+	using LinqToDB.Expressions.Types;
+	using LinqToDB.Mapping;
+	using LinqToDB.SqlQuery;
 
 	public class ClickHouseProviderAdapter : IDynamicProviderAdapter
 	{

@@ -7,11 +7,12 @@ using System.Linq;
 
 namespace LinqToDB.SqlProvider
 {
-	using Common;
-	using Expressions;
-	using Mapping;
-	using SqlQuery;
-	using SqlQuery.Visitors;
+	using LinqToDB.Common;
+	using LinqToDB.Expressions;
+	using LinqToDB.Expressions.Visitors;
+	using LinqToDB.Mapping;
+	using LinqToDB.SqlQuery;
+	using LinqToDB.SqlQuery.Visitors;
 
 	public class BasicSqlOptimizer : ISqlOptimizer
 	{

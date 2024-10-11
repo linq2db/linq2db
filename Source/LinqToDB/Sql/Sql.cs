@@ -6,6 +6,7 @@ using System.Linq.Expressions;
 using System.Reflection;
 
 using JetBrains.Annotations;
+
 using PN = LinqToDB.ProviderName;
 
 // ReSharper disable CheckNamespace
@@ -13,11 +14,11 @@ using PN = LinqToDB.ProviderName;
 
 namespace LinqToDB
 {
-	using Mapping;
-	using Expressions;
-	using Linq;
-	using SqlQuery;
 	using LinqToDB.Common;
+	using LinqToDB.Expressions;
+	using LinqToDB.Expressions.Visitors;
+	using LinqToDB.Linq;
+	using LinqToDB.SqlQuery;
 
 	[PublicAPI]
 	public static partial class Sql

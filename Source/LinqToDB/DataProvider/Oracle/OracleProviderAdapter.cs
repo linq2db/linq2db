@@ -9,10 +9,11 @@ using System.Xml;
 
 namespace LinqToDB.DataProvider.Oracle
 {
-	using Common;
-	using Data;
-	using Expressions;
-	using Mapping;
+	using LinqToDB.Common;
+	using LinqToDB.Data;
+	using LinqToDB.Expressions;
+	using LinqToDB.Expressions.Types;
+	using LinqToDB.Mapping;
 
 	public class OracleProviderAdapter : IDynamicProviderAdapter
 	{

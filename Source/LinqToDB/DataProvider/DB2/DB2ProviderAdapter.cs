@@ -5,10 +5,11 @@ using System.Linq.Expressions;
 
 namespace LinqToDB.DataProvider.DB2
 {
-	using Common;
-	using Expressions;
-	using Extensions;
-	using Mapping;
+	using LinqToDB.Common;
+	using LinqToDB.Expressions;
+	using LinqToDB.Expressions.Types;
+	using LinqToDB.Extensions;
+	using LinqToDB.Mapping;
 
 	public class DB2ProviderAdapter : IDynamicProviderAdapter
 	{

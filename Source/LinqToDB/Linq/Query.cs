@@ -11,16 +11,16 @@ using System.Threading.Tasks;
 
 namespace LinqToDB.Linq
 {
-	using Builder;
-	using Common;
-	using Common.Logging;
-	using Interceptors;
+	using LinqToDB.Common;
+	using LinqToDB.Common.Logging;
 	using LinqToDB.Expressions;
-	using Mapping;
-	using SqlProvider;
-	using SqlQuery;
-	using Tools;
-	using Infrastructure;
+	using LinqToDB.Expressions.Visitors;
+	using LinqToDB.Interceptors;
+	using LinqToDB.Linq.Builder;
+	using LinqToDB.Mapping;
+	using LinqToDB.SqlProvider;
+	using LinqToDB.SqlQuery;
+	using LinqToDB.Tools;
 
 	public abstract class Query
 	{

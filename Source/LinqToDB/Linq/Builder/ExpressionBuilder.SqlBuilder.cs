@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Linq.Expressions;
@@ -10,15 +9,16 @@ using System.Runtime.CompilerServices;
 
 namespace LinqToDB.Linq.Builder
 {
-	using Common;
-	using Common.Internal;
-	using Data;
-	using DataProvider;
-	using Extensions;
+	using LinqToDB.Common;
+	using LinqToDB.Common.Internal;
+	using LinqToDB.Data;
+	using LinqToDB.DataProvider;
 	using LinqToDB.Expressions;
-	using Mapping;
-	using Reflection;
-	using SqlQuery;
+	using LinqToDB.Expressions.Visitors;
+	using LinqToDB.Extensions;
+	using LinqToDB.Mapping;
+	using LinqToDB.Reflection;
+	using LinqToDB.SqlQuery;
 
 	internal partial class ExpressionBuilder
 	{

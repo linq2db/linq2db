@@ -4,7 +4,6 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Data.Linq;
 using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Linq;
 using System.Linq.Expressions;
@@ -17,15 +16,16 @@ using JetBrains.Annotations;
 
 namespace LinqToDB.Mapping
 {
-	using Data;
-	using Common;
-	using Common.Internal;
-	using Common.Internal.Cache;
-	using Expressions;
-	using Extensions;
-	using Metadata;
-	using SqlProvider;
-	using SqlQuery;
+	using LinqToDB.Common;
+	using LinqToDB.Common.Internal;
+	using LinqToDB.Common.Internal.Cache;
+	using LinqToDB.Data;
+	using LinqToDB.Expressions;
+	using LinqToDB.Expressions.Visitors;
+	using LinqToDB.Extensions;
+	using LinqToDB.Metadata;
+	using LinqToDB.SqlProvider;
+	using LinqToDB.SqlQuery;
 
 	/// <summary>
 	/// Mapping schema.

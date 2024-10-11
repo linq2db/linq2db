@@ -5,11 +5,12 @@ using System.Linq.Expressions;
 
 namespace LinqToDB.DataProvider.Informix
 {
-	using Common;
-	using DB2;
-	using Expressions;
-	using Extensions;
-	using Mapping;
+	using LinqToDB.Common;
+	using LinqToDB.DataProvider.DB2;
+	using LinqToDB.Expressions;
+	using LinqToDB.Expressions.Types;
+	using LinqToDB.Extensions;
+	using LinqToDB.Mapping;
 
 	// Note on informix providers: there are actually 3 providers:
 	// - SQLI Provider(IBM.Data.Informix) : netfx only, no bulk copy

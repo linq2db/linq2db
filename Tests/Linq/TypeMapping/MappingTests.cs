@@ -5,9 +5,11 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
-using LinqToDB;
+
 using LinqToDB.Common;
 using LinqToDB.Expressions;
+using LinqToDB.Expressions.Types;
+
 using NUnit.Framework;
 
 namespace Tests.TypeMapping
@@ -19,9 +21,7 @@ namespace Tests.TypeMapping
 		public delegate string      ReturningDelegate           (string input);
 		public delegate SampleClass ReturningDelegateWithMapping(SampleClass input);
 
-		public interface ISampleClass
-		{
-		}
+		public interface ISampleClass;
 
 		public class SampleClass : ISampleClass
 		{

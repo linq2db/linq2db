@@ -11,10 +11,15 @@ using System.Xml;
 namespace LinqToDB.DataProvider.SqlServer
 {
 	using Common;
+
 	using Expressions;
+
 	using Extensions;
+
 	using Mapping;
+
 	using Metadata;
+
 	using SqlQuery;
 
 	sealed class SqlServerMappingSchema : LockedMappingSchema

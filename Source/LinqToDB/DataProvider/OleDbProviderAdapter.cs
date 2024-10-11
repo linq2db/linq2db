@@ -1,11 +1,10 @@
 ﻿using System;
 using System.Data;
 using System.Data.Common;
-using System.Linq.Expressions;
 
 namespace LinqToDB.DataProvider
 {
-	using Expressions;
+	using LinqToDB.Expressions.Types;
 
 	public class OleDbProviderAdapter : IDynamicProviderAdapter
 	{

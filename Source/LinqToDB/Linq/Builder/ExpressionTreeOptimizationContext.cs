@@ -9,11 +9,12 @@ using System.Runtime.CompilerServices;
 
 namespace LinqToDB.Linq.Builder
 {
-	using Common.Internal;
-	using Extensions;
+	using LinqToDB.Common.Internal;
 	using LinqToDB.Expressions;
-	using Mapping;
-	using SqlQuery;
+	using LinqToDB.Expressions.Visitors;
+	using LinqToDB.Extensions;
+	using LinqToDB.Mapping;
+	using LinqToDB.SqlQuery;
 
 	public class ExpressionTreeOptimizationContext
 	{
