@@ -112,7 +112,7 @@ namespace Tests.Linq
 				});
 
 				var proj1 = q.Select(v => v.OrderID);
-				TestContext.WriteLine(proj1.ToString());
+				TestContext.Out.WriteLine(proj1.ToString());
 				var sq1 = proj1.GetSelectQuery();
 				Assert.Multiple(() =>
 				{
@@ -121,7 +121,7 @@ namespace Tests.Linq
 				});
 
 				var proj2 = q.Select(v => v.OrderDate);
-				TestContext.WriteLine(proj2.ToString());
+				TestContext.Out.WriteLine(proj2.ToString());
 				var sq2 = proj2.GetSelectQuery();
 				Assert.Multiple(() =>
 				{
@@ -286,7 +286,7 @@ namespace Tests.Linq
 					join o1 in db.Order on e.OrderID equals o1.OrderID
 					select e;
 
-				TestContext.WriteLine(q2.ToString());
+				TestContext.Out.WriteLine(q2.ToString());
 				var ts = q2.GetTableSource();
 				Assert.That(ts.Joins, Has.Count.EqualTo(1));
 			}
@@ -341,11 +341,11 @@ namespace Tests.Linq
 						OrderID4 = o4.OrderID,
 					};
 
-				TestContext.WriteLine(q.ToString());
+				TestContext.Out.WriteLine(q.ToString());
 				Assert.That(q.GetTableSource().Joins, Has.Count.EqualTo(1));
 
 				var proj1 = q.Select(v => v.OrderID);
-				TestContext.WriteLine(proj1.ToString());
+				TestContext.Out.WriteLine(proj1.ToString());
 				Assert.That(proj1.GetTableSource().Joins, Has.Count.EqualTo(1));
 			}
 		}
@@ -516,7 +516,7 @@ namespace Tests.Linq
 						OrderID2 = o2.OrderID,
 					};
 
-				TestContext.WriteLine(q.ToString());
+				TestContext.Out.WriteLine(q.ToString());
 
 				Assert.That(q.GetTableSource().Joins, Has.Count.EqualTo(1), "Join not optimized");
 

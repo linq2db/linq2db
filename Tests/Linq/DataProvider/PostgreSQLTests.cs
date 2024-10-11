@@ -2259,7 +2259,7 @@ namespace Tests.DataProvider
 					};
 
 				var str = query.ToString();
-				TestContext.WriteLine(str);
+				TestContext.Out.WriteLine(str);
 			}
 		}
 
@@ -2276,7 +2276,7 @@ namespace Tests.DataProvider
 					};
 
 				var str = query.ToString();
-				TestContext.WriteLine(str);
+				TestContext.Out.WriteLine(str);
 			}
 		}
 

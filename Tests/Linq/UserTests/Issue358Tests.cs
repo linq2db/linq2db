@@ -35,7 +35,7 @@ namespace Tests.UserTests
 					select p;
 
 				var sql = qry.ToString()!;
-				TestContext.WriteLine(sql);
+				TestContext.Out.WriteLine(sql);
 
 				Assert.That(sql, Does.Contain("NULL"));
 			}
@@ -54,7 +54,7 @@ namespace Tests.UserTests
 					select p;
 
 				var sql = qry.ToString()!;
-				TestContext.WriteLine(sql);
+				TestContext.Out.WriteLine(sql);
 
 				Assert.That(sql, Does.Not.Contain("NULL"));
 			}
@@ -71,7 +71,7 @@ namespace Tests.UserTests
 					select p;
 
 				var sql = qry.ToString()!;
-				TestContext.WriteLine(sql);
+				TestContext.Out.WriteLine(sql);
 
 				Assert.That(sql, Does.Not.Contain("NULL"));
 			}
@@ -90,7 +90,7 @@ namespace Tests.UserTests
 					select p;
 
 				var sql = qry.ToString()!;
-				TestContext.WriteLine(sql);
+				TestContext.Out.WriteLine(sql);
 
 				Assert.That(sql, Does.Not.Contain("NULL"));
 			}
