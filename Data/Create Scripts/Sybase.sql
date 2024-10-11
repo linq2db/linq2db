@@ -6,6 +6,8 @@ CREATE DATABASE {DBNAME} ON default = '102400K'
 GO
 USE {DBNAME}
 GO
+sp_configure 'enable unicode normalization', 0
+GO
 CREATE TABLE InheritanceParent
 (
 	InheritanceParentId int          NOT NULL,
