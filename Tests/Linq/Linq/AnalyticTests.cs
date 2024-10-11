@@ -1339,8 +1339,8 @@ namespace Tests.Linq
 						MaxValue = Sql.Ext.Min(q.MaxValue).Over().PartitionBy(q.ParentID).ToValue(),
 					};
 
-				TestContext.WriteLine(q1.ToString());
-				TestContext.WriteLine(q2.ToString());
+				TestContext.Out.WriteLine(q1.ToString());
+				TestContext.Out.WriteLine(q2.ToString());
 
 				Assert.Multiple(() =>
 				{

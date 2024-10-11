@@ -16,10 +16,10 @@ stages:
 ##############
   - template: templates/build-job.yml
     parameters:
-      for_nuget: false
-      for_tests: true
-      with_analyzers: false
+      with_nugets: false
       with_examples: false
+      with_tests: true
+      with_analyzers: false
 
 #############
 # TEST JOBS #

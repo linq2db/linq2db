@@ -700,7 +700,7 @@ namespace Tests.Linq
 
 				var sql = q.ToString()!;
 
-				TestContext.WriteLine(sql);
+				TestContext.Out.WriteLine(sql);
 
 				Assert.Multiple(() =>
 				{
@@ -1161,7 +1161,7 @@ namespace Tests.Linq
 		[Test]
 		public void TestConditionalProjectionOptimization(
 			[IncludeDataSources(false, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context,
-			[Values(true, false)] bool includeChild,
+			[Values] bool includeChild,
 			[Values(1, 2)] int iteration)
 		{
 			using var db = GetDataContext(context);

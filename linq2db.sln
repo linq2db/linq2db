@@ -27,8 +27,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{DF8DE665
 		Tests\BannedSymbols.txt = Tests\BannedSymbols.txt
 		DataProviders.json = DataProviders.json
 		Tests\Directory.Build.props = Tests\Directory.Build.props
-		Tests\linq2db.Providers.props = Tests\linq2db.Providers.props
 		Tests\linq2db.BasicTestProjects.props = Tests\linq2db.BasicTestProjects.props
+		Tests\linq2db.Providers.props = Tests\linq2db.Providers.props
 		Tests\linq2db.TestProjects.props = Tests\linq2db.TestProjects.props
 		UserDataProviders.json = UserDataProviders.json
 		UserDataProviders.json.template = UserDataProviders.json.template
@@ -447,6 +447,7 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Local", "Local", "{6CB875B4-1799-4760-A734-091F34888A60}"
 	ProjectSection(SolutionItems) = preProject
 		Data\Setup Scripts\all.cmd = Data\Setup Scripts\all.cmd
+		Data\Setup Scripts\ase.sql = Data\Setup Scripts\ase.sql
 		Data\Setup Scripts\clickhouse.cmd = Data\Setup Scripts\clickhouse.cmd
 		Data\Setup Scripts\db2.cmd = Data\Setup Scripts\db2.cmd
 		Data\Setup Scripts\firebird25.cmd = Data\Setup Scripts\firebird25.cmd
@@ -484,10 +485,9 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Local", "Local", "{6CB875B4
 		Data\Setup Scripts\sqlserver2022-win.cmd = Data\Setup Scripts\sqlserver2022-win.cmd
 		Data\Setup Scripts\sqlserver2022.cmd = Data\Setup Scripts\sqlserver2022.cmd
 		Data\Setup Scripts\sybase-ase.cmd = Data\Setup Scripts\sybase-ase.cmd
-		Data\Setup Scripts\sybase-db.sql = Data\Setup Scripts\sybase-db.sql
-		Data\Setup Scripts\sybase-utf8.sql = Data\Setup Scripts\sybase-utf8.sql
 		Data\Setup Scripts\UserDataProviders.json = Data\Setup Scripts\UserDataProviders.json
 		Data\Setup Scripts\wait-err.cmd = Data\Setup Scripts\wait-err.cmd
+		Data\Setup Scripts\wait-exit.cmd = Data\Setup Scripts\wait-exit.cmd
 		Data\Setup Scripts\wait.cmd = Data\Setup Scripts\wait.cmd
 	EndProjectSection
 EndProject

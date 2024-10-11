@@ -64,7 +64,7 @@ namespace Tests.Linq
 				{
 					var sql = query.ToString()!;
 
-					TestContext.WriteLine(sql);
+					TestContext.Out.WriteLine(sql);
 
 					Assert.That(sql, Does.Contain("[r].[FTS5_TABLE] MATCH 'something'"));
 				}

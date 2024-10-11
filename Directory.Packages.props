@@ -9,11 +9,11 @@
 	over dependencies like linq2db.cli
 	-->
 	<ItemGroup Label="Build: Analyzers and Tools">
-		<PackageVersion Include="Meziantou.Analyzer"                                    Version="2.0.160"               />
-		<PackageVersion Include="Microsoft.CodeAnalysis.Analyzers"                      Version="3.11.0-beta1.24318.1"  />
-		<PackageVersion Include="Microsoft.CodeAnalysis.BannedApiAnalyzers"             Version="3.11.0-beta1.24318.1"  />
-		<PackageVersion Include="Microsoft.CodeAnalysis.NetAnalyzers"                   Version="9.0.0-preview.24318.1" />
-		<PackageVersion Include="Microsoft.CodeAnalysis.PublicApiAnalyzers"             Version="3.11.0-beta1.24318.1"  />
+		<PackageVersion Include="Meziantou.Analyzer"                                    Version="2.0.169"               />
+		<PackageVersion Include="Microsoft.CodeAnalysis.Analyzers"                      Version="3.11.0-beta1.24454.1"  />
+		<PackageVersion Include="Microsoft.CodeAnalysis.BannedApiAnalyzers"             Version="3.11.0-beta1.24454.1"  />
+		<PackageVersion Include="Microsoft.CodeAnalysis.NetAnalyzers"                   Version="9.0.0-preview.24454.1" />
+		<PackageVersion Include="Microsoft.CodeAnalysis.PublicApiAnalyzers"             Version="3.11.0-beta1.24454.1"  />
 		<PackageVersion Include="Microsoft.SourceLink.GitHub"                           Version="8.0.0"                 />
 		<PackageVersion Include="Lindhart.Analyser.MissingAwaitWarning"                 Version="3.1.0-beta"            />
 	</ItemGroup>
@@ -31,11 +31,11 @@
 	</ItemGroup>
 
 	<ItemGroup Label="Released Dependencies">
-		<PackageVersion Include="Grpc.Net.Client"                                       Version="2.63.0"                />
+		<PackageVersion Include="Grpc.Net.Client"                                       Version="2.66.0"                />
 		<PackageVersion Include="Humanizer.Core"                                        Version="2.14.1"                />
-		<PackageVersion Include="Microsoft.CodeAnalysis.CSharp"                         Version="4.10.0"                />
-		<PackageVersion Include="Microsoft.Extensions.DependencyModel"                  Version="8.0.1"                 />
-		<PackageVersion Include="Mono.TextTemplating"                                   Version="2.3.1"                 />
+		<PackageVersion Include="Microsoft.CodeAnalysis.CSharp"                         Version="4.11.0"                />
+		<PackageVersion Include="Microsoft.Extensions.DependencyModel"                  Version="8.0.2"                 />
+		<PackageVersion Include="Mono.TextTemplating"                                   Version="3.0.0"                 />
 		<PackageVersion Include="protobuf-net.Grpc"                                     Version="1.1.1"                 />
 
 		<PackageVersion Condition="'$(TargetFramework)'=='netstandard2.0'" Include="Microsoft.EntityFrameworkCore.Relational" Version="3.1.32" />
@@ -53,20 +53,20 @@
 	</ItemGroup>
 	
 	<ItemGroup Label="Released Dependencies" Condition=" '$(TargetFramework)' == 'net8.0' ">
-		<PackageVersion Include="Microsoft.Extensions.DependencyInjection"              Version="8.0.0"                 />
-		<PackageVersion Include="Microsoft.Extensions.Logging.Abstractions"             Version="8.0.1"                 />
+		<PackageVersion Include="Microsoft.Extensions.DependencyInjection"              Version="8.0.1"                 />
+		<PackageVersion Include="Microsoft.Extensions.Logging.Abstractions"             Version="8.0.2"                 />
 	</ItemGroup>
 
 	<ItemGroup Label="Database Providers">
 		<PackageVersion Include="AdoNetCore.AseClient"                                  Version="0.19.2"                />
-		<PackageVersion Include="ClickHouse.Client"                                     Version="7.5.1"                 />
+		<PackageVersion Include="ClickHouse.Client"                                     Version="7.8.0"                 />
 		<PackageVersion Include="Devart.Data.Oracle"                                    Version="10.3.21"               />
 		<PackageVersion Include="dotMorten.Microsoft.SqlServer.Types"                   Version="1.5.0"                 />
 		<!--<PackageVersion Include="dotMorten.Microsoft.SqlServer.Types"                   Version="2.5.0"                 />-->
 		<PackageVersion Include="FirebirdSql.Data.FirebirdClient"                       Version="10.3.1"                />
 		<PackageVersion Include="IBM.Data.DB.Provider"                                  Version="11.5.9000.4"           />
-		<PackageVersion Include="Microsoft.Data.SqlClient"                              Version="5.2.1"                 />
-		<PackageVersion Include="Microsoft.Data.Sqlite"                                 Version="8.0.7"                 />
+		<PackageVersion Include="Microsoft.Data.SqlClient"                              Version="5.2.2"                 />
+		<PackageVersion Include="Microsoft.Data.Sqlite"                                 Version="8.0.10"                />
 		<PackageVersion Include="Microsoft.SqlServer.Types"                             Version="160.1000.6"            />
 		<PackageVersion Include="MySqlConnector"                                        Version="2.3.7"                 />
 		<PackageVersion Include="MySql.Data"                                            Version="9.0.0"                 />
@@ -74,35 +74,36 @@
 		<PackageVersion Include="Net.IBM.Data.Db2"                                      Version="7.0.0.400"             />
 		<PackageVersion Include="Net.IBM.Data.Db2-lnx"                                  Version="7.0.0.400"             />
 		<PackageVersion Include="Net.IBM.Data.Db2-osx"                                  Version="7.0.0.400"             />
-		<PackageVersion Include="Npgsql"                                                Version="8.0.3"                 />
+		<PackageVersion Include="Npgsql"                                                Version="8.0.4"                 />
 		<!--as of 3.1.1 multiple introduced issues blocks update-->
 		<PackageVersion Include="Octonica.ClickHouseClient"                             Version="3.1.3"                 />
-		<PackageVersion Include="Oracle.ManagedDataAccess"                              Version="21.15.0"               />
-		<PackageVersion Include="Oracle.ManagedDataAccess.Core"                         Version="23.5.0"                />
-		<PackageVersion Include="System.Data.Odbc"                                      Version="8.0.0"                 />
-		<PackageVersion Include="System.Data.OleDb"                                     Version="8.0.0"                 />
+		<PackageVersion Include="Oracle.ManagedDataAccess"                              Version="21.16.0"               />
+		<PackageVersion Include="Oracle.ManagedDataAccess.Core"                         Version="23.6.0"                />
+		<PackageVersion Include="System.Data.Odbc"                                      Version="8.0.1"                 />
+		<PackageVersion Include="System.Data.OleDb"                                     Version="8.0.1"                 />
 		<PackageVersion Include="System.Data.SqlClient"                                 Version="4.8.6"                 />
-		<PackageVersion Include="System.Data.SQLite.Core"                               Version="1.0.118"               />
+		<PackageVersion Include="System.Data.SQLite.Core"                               Version="1.0.119"               />
 	</ItemGroup>
 
 	<ItemGroup Label="Testing">
-		<PackageVersion Include="FluentAssertions"                                      Version="6.12.0"                />
-		<PackageVersion Include="Microsoft.NET.Test.Sdk"                                Version="17.10.0"               />
-		<PackageVersion Include="NUnit"                                                 Version="4.1.0"                 />
-		<PackageVersion Include="NUnit.Analyzers"                                       Version="4.2.0"                 />
-		<PackageVersion Include="NUnit3TestAdapter"                                     Version="4.5.0"                 />
+		<PackageVersion Include="FluentAssertions"                                      Version="6.12.1"                />
+		<PackageVersion Include="Microsoft.NET.Test.Sdk"                                Version="17.11.1"               />
+		<PackageVersion Include="NUnit"                                                 Version="4.2.2"                 />
+		<PackageVersion Include="NUnit.Analyzers"                                       Version="4.3.0"                 />
+		<PackageVersion Include="NUnit3TestAdapter"                                     Version="4.6.0"                 />
 
-		<PackageVersion Include="Microsoft.AspNet.OData"                                Version="7.7.5"                 />
-		<PackageVersion Include="Microsoft.AspNetCore.OData"                            Version="8.2.5"                 />
+		<PackageVersion Include="Microsoft.AspNet.OData"                                Version="7.7.6"                 />
+		<PackageVersion Include="Microsoft.AspNetCore.OData" Condition="'$(TargetFramework)'!='net8.0'" Version="8.2.5" />
+		<PackageVersion Include="Microsoft.AspNetCore.OData" Condition="'$(TargetFramework)'=='net8.0'" Version="9.0.0" />
 		<PackageVersion Include="MiniProfiler.Shared"                                   Version="4.3.8"                 />
 		<PackageVersion Include="MiniProfiler.Minimal"                                  Version="4.3.8"                 />
-		<PackageVersion Include="NodaTime"                                              Version="3.1.11"                />
+		<PackageVersion Include="NodaTime"                                              Version="3.1.12"                />
 		<PackageVersion Include="protobuf-net.Grpc.AspNetCore"                          Version="1.1.1"                 />
-		<PackageVersion Include="System.Linq.Dynamic.Core"                              Version="1.4.3"                 />
-		<PackageVersion Include="FSharp.Core"                                           Version="8.0.301"               />
+		<PackageVersion Include="System.Linq.Dynamic.Core"                              Version="1.4.5"                 />
+		<PackageVersion Include="FSharp.Core"                                           Version="8.0.401"               />
 		<PackageVersion Include="LinqKit"                                               Version="1.3.0"                 />
 
-		<PackageVersion Include="Microsoft.Extensions.Logging.Console"                  Version="8.0.0"                 />
+		<PackageVersion Include="Microsoft.Extensions.Logging.Console"                  Version="8.0.1"                 />
 		<PackageVersion Include="EntityFrameworkCore.FSharp"                            Version="6.0.7"                 />
 
 		<PackageVersion Condition="'$(TargetFramework)'=='net462'" Include="Pomelo.EntityFrameworkCore.MySql"               Version="3.2.7"  />
@@ -110,16 +111,16 @@
 		<PackageVersion Condition="'$(TargetFramework)'=='net8.0'" Include="Pomelo.EntityFrameworkCore.MySql"               Version="8.0.2"  />
 		<PackageVersion Condition="'$(TargetFramework)'=='net462'" Include="Npgsql.EntityFrameworkCore.PostgreSQL.NodaTime" Version="3.1.18" />
 		<PackageVersion Condition="'$(TargetFramework)'=='net6.0'" Include="Npgsql.EntityFrameworkCore.PostgreSQL.NodaTime" Version="6.0.29" />
-		<PackageVersion Condition="'$(TargetFramework)'=='net8.0'" Include="Npgsql.EntityFrameworkCore.PostgreSQL.NodaTime" Version="8.0.4"  />
+		<PackageVersion Condition="'$(TargetFramework)'=='net8.0'" Include="Npgsql.EntityFrameworkCore.PostgreSQL.NodaTime" Version="8.0.8"  />
 		<PackageVersion Condition="'$(TargetFramework)'=='net462'" Include="Microsoft.EntityFrameworkCore.Sqlite"           Version="3.1.32" />
-		<PackageVersion Condition="'$(TargetFramework)'=='net6.0'" Include="Microsoft.EntityFrameworkCore.Sqlite"           Version="6.0.32" />
-		<PackageVersion Condition="'$(TargetFramework)'=='net8.0'" Include="Microsoft.EntityFrameworkCore.Sqlite"           Version="8.0.7"  />
+		<PackageVersion Condition="'$(TargetFramework)'=='net6.0'" Include="Microsoft.EntityFrameworkCore.Sqlite"           Version="6.0.35" />
+		<PackageVersion Condition="'$(TargetFramework)'=='net8.0'" Include="Microsoft.EntityFrameworkCore.Sqlite"           Version="8.0.10"  />
 		<PackageVersion Condition="'$(TargetFramework)'=='net462'" Include="Microsoft.EntityFrameworkCore.SqlServer"        Version="3.1.32" />
-		<PackageVersion Condition="'$(TargetFramework)'=='net6.0'" Include="Microsoft.EntityFrameworkCore.SqlServer"        Version="6.0.32" />
-		<PackageVersion Condition="'$(TargetFramework)'=='net8.0'" Include="Microsoft.EntityFrameworkCore.SqlServer"        Version="8.0.7"  />
+		<PackageVersion Condition="'$(TargetFramework)'=='net6.0'" Include="Microsoft.EntityFrameworkCore.SqlServer"        Version="6.0.35" />
+		<PackageVersion Condition="'$(TargetFramework)'=='net8.0'" Include="Microsoft.EntityFrameworkCore.SqlServer"        Version="8.0.10" />
 		<PackageVersion Condition="'$(TargetFramework)'=='net462'" Include="Microsoft.EntityFrameworkCore.InMemory"         Version="3.1.32" />
-		<PackageVersion Condition="'$(TargetFramework)'=='net6.0'" Include="Microsoft.EntityFrameworkCore.InMemory"         Version="6.0.32" />
-		<PackageVersion Condition="'$(TargetFramework)'=='net8.0'" Include="Microsoft.EntityFrameworkCore.InMemory"         Version="8.0.7"  />
+		<PackageVersion Condition="'$(TargetFramework)'=='net6.0'" Include="Microsoft.EntityFrameworkCore.InMemory"         Version="6.0.35" />
+		<PackageVersion Condition="'$(TargetFramework)'=='net8.0'" Include="Microsoft.EntityFrameworkCore.InMemory"         Version="8.0.10" />
 </ItemGroup>
 	
 	<ItemGroup Label="Testing" Condition=" '$(TargetFramework)' == 'net462' ">
@@ -127,14 +128,14 @@
 	</ItemGroup>
 
 	<ItemGroup Label="Benchmarks">
-		<PackageVersion Include="BenchmarkDotNet"                                       Version="0.13.12"               />
+		<PackageVersion Include="BenchmarkDotNet"                                       Version="0.14.0"                />
 		<PackageVersion Include="JetBrains.Profiler.Api"                                Version="1.1.8"                 />
 	</ItemGroup>
 
 	<ItemGroup Label="Examples">
 		<PackageVersion Include="linq2db.t4models"                                      Version="5.3.2"                 />
-		<PackageVersion Include="System.Configuration.ConfigurationManager"             Version="8.0.0"                 />
-		<PackageVersion Include="Microsoft.Extensions.ObjectPool"                       Version="8.0.7"                 />
+		<PackageVersion Include="System.Configuration.ConfigurationManager"             Version="8.0.1"                 />
+		<PackageVersion Include="Microsoft.Extensions.ObjectPool"                       Version="8.0.10"                />
 		<PackageVersion Include="OpenTelemetry"                                         Version="1.9.0"                 />
 		<PackageVersion Include="OpenTelemetry.Exporter.Console"                        Version="1.9.0"                 />
 	</ItemGroup>
