@@ -571,7 +571,7 @@ namespace Tests.Linq
 				var query = cte.Where(t => t.ChildID == var3 || var3 == null);
 				var str = query.ToString()!;
 
-				TestContext.WriteLine(str);
+				TestContext.Out.WriteLine(str);
 
 				Assert.That(str.Contains("WITH"), Is.EqualTo(true));
 			}
@@ -882,7 +882,7 @@ namespace Tests.Linq
 						q.Level
 					};
 
-				Assert.DoesNotThrow(() => TestContext.WriteLine(query.ToString()));
+				Assert.DoesNotThrow(() => TestContext.Out.WriteLine(query.ToString()));
 			}
 		}
 
@@ -1036,7 +1036,7 @@ namespace Tests.Linq
 					select c;
 
 				var sql = query.ToString();
-				TestContext.WriteLine(sql);
+				TestContext.Out.WriteLine(sql);
 
 				Assert.That(sql, Is.Not.Contains("WITH"));
 			}

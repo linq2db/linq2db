@@ -3030,7 +3030,7 @@ namespace Tests.Linq
 
 			var selectQuery = query.GetSelectQuery();
 
-			TestContext.WriteLine(query.ToString());
+			TestContext.Out.WriteLine(query.ToString());
 
 
 			// We check that grouping is left in the subquery

@@ -65,7 +65,7 @@ namespace Tests
 				});
 			}
 
-			for (int i = 0; i < threads.Length; i++)
+			for (var i = 0; i < threads.Length; i++)
 			{
 				threads[i].Start();
 			}
@@ -77,12 +77,12 @@ namespace Tests
 				threads[i].Join();
 			}
 
-			for (int i = 0; i < threads.Length; i++)
+			for (var i = 0; i < threads.Length; i++)
 			{
 				var result = results[i];
 				if (result.Item5 != null)
 				{
-					TestContext.WriteLine($"Exception in query ({result.Item1}):\n\n{result.Item5}");
+					TestContext.Out.WriteLine($"Exception in query ({result.Item1}):\n\n{result.Item5}");
 					throw result.Item5;
 				}
 				try
@@ -93,15 +93,15 @@ namespace Tests
 				{
 					var testResult = queryFunc(dc, result!.Item1);
 
-					TestContext.WriteLine($"Failed query ({result.Item1}):\n");
+					TestContext.Out.WriteLine($"Failed query ({result.Item1}):\n");
 					if (result.Item4 != null)
 					{
 						var sb = new StringBuilder();
 						dc.DataProvider.CreateSqlBuilder(dc.MappingSchema, dc.Options).PrintParameters(dc, sb, result.Item4.OfType<DbParameter>());
-						TestContext.WriteLine(sb);
+						TestContext.Out.WriteLine(sb);
 					}
-					TestContext.WriteLine();
-					TestContext.WriteLine(result.Item3);
+					TestContext.Out.WriteLine();
+					TestContext.Out.WriteLine(result.Item3);
 
 					DumpObject(result.Item2);
 
@@ -118,7 +118,7 @@ namespace Tests
 			if (obj == null)
 				return;
 
-			TestContext.WriteLine(JsonSerializer.Serialize(obj, _dumpObjectOptions));
+			TestContext.Out.WriteLine(JsonSerializer.Serialize(obj, _dumpObjectOptions));
 		}
 	}
 }

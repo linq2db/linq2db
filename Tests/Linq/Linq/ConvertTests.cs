@@ -683,7 +683,7 @@ namespace Tests.Linq
 		{
 			var r = db.Types.Select(_ => ServerConvert<TTo, TFrom>(value)).First();
 
-			TestContext.WriteLine($"Expected {expected} result {r}");
+			TestContext.Out.WriteLine($"Expected {expected} result {r}");
 
 			Assert.That(Math.Abs(LinqToDB.Common.Convert<TTo, decimal>.From(expected) - LinqToDB.Common.Convert<TTo, decimal>.From(r)), Is.LessThan(0.01m));
 		}

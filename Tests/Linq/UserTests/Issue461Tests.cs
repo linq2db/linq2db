@@ -84,7 +84,7 @@ namespace Tests.UserTests
 							  }).ToList();
 
 				if (db is DataConnection connection)
-					TestContext.WriteLine(connection.LastQuery);
+					TestContext.Out.WriteLine(connection.LastQuery);
 
 				var expected = from sep in Parent
 							   select new
@@ -119,7 +119,7 @@ namespace Tests.UserTests
 							  }).ToList();
 
 				if (db is DataConnection connection)
-					TestContext.WriteLine(connection.LastQuery);
+					TestContext.Out.WriteLine(connection.LastQuery);
 
 				var expected = from sep in Parent
 							   select new
@@ -154,7 +154,7 @@ namespace Tests.UserTests
 							  }).ToList();
 
 				if (db is DataConnection connection)
-					TestContext.WriteLine(connection.LastQuery);
+					TestContext.Out.WriteLine(connection.LastQuery);
 
 				var expected = from sep in Parent
 							   select new ValueValueHolder
@@ -189,7 +189,7 @@ namespace Tests.UserTests
 							  }).ToList();
 
 				if (db is DataConnection connection)
-					TestContext.WriteLine(connection.LastQuery);
+					TestContext.Out.WriteLine(connection.LastQuery);
 
 				var expected = from sep in Parent
 							   select new ValueValueHolder

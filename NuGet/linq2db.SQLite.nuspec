@@ -14,7 +14,7 @@
 		<readme>README.md</readme>
 		<dependencies>
 			<dependency id="linq2db"                 version="6.0.0"   />
-			<dependency id="System.Data.SQLite.Core" version="1.0.118" />
+			<dependency id="System.Data.SQLite.Core" version="1.0.119" />
 		</dependencies>
 		<contentFiles>
 			<files include="**\*" buildAction="None" />

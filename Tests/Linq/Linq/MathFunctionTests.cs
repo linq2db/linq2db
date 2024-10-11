@@ -339,8 +339,11 @@ namespace Tests.Linq
 					from t in from p in db.Types select Math.Round((double)p.MoneyValue, 1, MidpointRounding.ToEven) where t != 0 select Math.Round(t, 5));
 		}
 
+		// TODO: implement other MidpointRounding values (and remove NUnit4001 suppress)
 		[Test]
+#pragma warning disable NUnit4001
 		public void Round12([DataSources(TestProvName.AllSQLite)] string context, [Values(MidpointRounding.AwayFromZero, MidpointRounding.ToEven)] MidpointRounding mp)
+#pragma warning restore NUnit4001
 		{
 
 			using (var db = GetDataContext(context))

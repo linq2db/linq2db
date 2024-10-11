@@ -42,7 +42,7 @@ namespace Tests.Linq
 				var p   = "abc";
 				var sql = db.GetTable<Person>().Where(t => t.FirstName == p).ToString();
 
-				TestContext.WriteLine(sql);
+				TestContext.Out.WriteLine(sql);
 
 				Assert.That(sql, Contains.Substring("(3)").Or.Contains("(4000)"));
 			}
