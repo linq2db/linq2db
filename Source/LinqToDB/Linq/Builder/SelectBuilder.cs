@@ -47,11 +47,21 @@ namespace LinqToDB.Linq.Builder
 				? SequenceHelper.PrepareBody(selector, sequence)
 				: SequenceHelper.PrepareBody(selector, sequence, new CounterContext(sequence));
 
-			var context = new SelectContext (buildInfo.Parent, body, sequence, buildInfo.IsSubQuery);
+			var context       = new SelectContext (buildInfo.Parent, body, sequence, buildInfo.IsSubQuery);
+			var resultContext = (IBuildContext) context;
+
+			// finalizing context and checking if we need to wrap it into subquery
+			var translated = builder.BuildSqlExpressionForTest(context, new ContextRefExpression(context.ElementType, context));
+
+			if (SequenceHelper.ContainsAggregateOrWindowFunction(translated))
+			{
+				resultContext = new SubQueryContext(resultContext);
+			}
+
 #if DEBUG
 			context.Debug_MethodCall = methodCall;
 #endif
-			return BuildSequenceResult.FromContext(context);
+			return BuildSequenceResult.FromContext(resultContext);
 		}
 
 		#endregion

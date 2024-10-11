@@ -153,6 +153,11 @@ namespace LinqToDB.Linq.Builder
 			return _buildVisitor.BuildExpression(expression, BuildPurpose.AggregationRoot);
 		}
 
+		public Expression BuildSqlExpressionForTest(IBuildContext context, Expression expression)
+		{
+			return _buildVisitor.BuildExpression(context, expression, BuildPurpose.Sql, BuildFlags.ResetPrevious | BuildFlags.None);
+		}
+
 		public Expression ConvertToExtensionSql(IBuildContext context, Expression expression, ColumnDescriptor? columnDescriptor, bool? inlineParameters)
 		{
 			return _buildVisitor.ConvertToExtensionSql(context, expression, columnDescriptor, inlineParameters);

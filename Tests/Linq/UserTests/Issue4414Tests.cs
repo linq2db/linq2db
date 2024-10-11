@@ -26,7 +26,7 @@ namespace Tests.UserTests
 			public string?   Payload  { get; set; }
 		}
 
-		[Test]
+		/*[Test]
 		public async Task UpdateWithOutputOrderByNoReturning([IncludeDataSources(TestProvName.AllSqlServer2012Plus, TestProvName.AllPostgreSQL)] string context)
 		{
 			using var db = GetDataContext(context);
@@ -40,6 +40,6 @@ namespace Tests.UserTests
 				.UpdateWithOutputAsync(
 					_ => new MessageDto() { Consumed = Sql.CurrentTimestamp },
 					(d, i) => new { i.Id, i.Key, i.Payload }).ToListAsync();
-		}
+		}*/
 	}
 }

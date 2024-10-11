@@ -905,6 +905,7 @@ namespace LinqToDB.Linq.Builder
 				public override Expression VisitSqlGenericConstructorExpression(SqlGenericConstructorExpression node)
 				{
 					_stack.Push(Expression.Constant("construct"));
+					_stack.Push(Expression.Constant(node.Type));
 
 					if (node.Assignments.Count > 0)
 					{
@@ -954,6 +955,7 @@ namespace LinqToDB.Linq.Builder
 					}
 
 					_stack.Pop();
+					_stack.Pop();
 
 					return node;
 				}
@@ -978,6 +980,7 @@ namespace LinqToDB.Linq.Builder
 
 					_stack.Pop();
 					_stack.Pop();
+
 					return newNode;
 				}
 
@@ -990,6 +993,7 @@ namespace LinqToDB.Linq.Builder
 
 					_stack.Pop();
 					_stack.Pop();
+
 					return newNode;
 				}
 
@@ -1002,15 +1006,18 @@ namespace LinqToDB.Linq.Builder
 
 					_stack.Pop();
 					_stack.Pop();
+
 					return newNode;
 				}
 
 				protected override Expression VisitMemberInit(MemberInitExpression node)
 				{
 					_stack.Push(Expression.Constant("init"));
+					_stack.Push(Expression.Constant(node.NewExpression.Constructor));
 
 					var newExpr = base.VisitMemberInit(node);
 
+					_stack.Pop();
 					_stack.Pop();
 
 					return newExpr;
@@ -1028,23 +1035,10 @@ namespace LinqToDB.Linq.Builder
 
 						var nodeArgument = node.Arguments[i];
 
-						/*
-						if (_isDictionary && i == 0)
-						{
-							_stack.Push(nodeArgument);
-						}
-						*/
-
 						var arg = Visit(nodeArgument);
 
-						/*
-						if (_isDictionary && i == 0)
-						{
-							_stack.Pop();
-						}
-						*/
-
 						_stack.Pop();
+
 						arguments.Add(arg);
 					}
 
@@ -1078,6 +1072,50 @@ namespace LinqToDB.Linq.Builder
 					_stack.Pop();
 
 					return newExpr;
+				}
+
+				protected override Expression VisitNew(NewExpression node)
+				{
+					_stack.Push(Expression.Constant("new"));
+					_stack.Push(Expression.Constant(node.Constructor));
+
+					var args = new List<Expression>(node.Arguments.Count);
+
+					for (int i = 0; i < node.Arguments.Count; i++)
+					{
+						_stack.Push(Expression.Constant(i));
+						args.Add(Visit(node.Arguments[i]));
+						_stack.Pop();
+					}
+
+					var newNode = node.Update(args);
+
+					_stack.Pop();
+					_stack.Pop();
+
+					return newNode;
+				}
+
+				protected override Expression VisitNewArray(NewArrayExpression node)
+				{
+					_stack.Push(Expression.Constant("new array"));
+					_stack.Push(Expression.Constant(node.Type));
+
+					var args = new List<Expression>(node.Expressions.Count);
+
+					for (int i = 0; i < node.Expressions.Count; i++)
+					{
+						_stack.Push(Expression.Constant(i));
+						args.Add(Visit(node.Expressions[i]));
+						_stack.Pop();
+					}
+
+					var newNode = node.Update(args);
+
+					_stack.Pop();
+					_stack.Pop();
+
+					return newNode;
 				}
 
 				protected override Expression VisitMethodCall(MethodCallExpression node)
@@ -1134,7 +1172,7 @@ namespace LinqToDB.Linq.Builder
 				var current = correctedPath;
 				do
 				{
-					var projected = Builder.BuildSqlExpression(context, current, buildPurpose: BuildPurpose.Expression, buildFlags: BuildFlags.ForceDefaultIfEmpty | BuildFlags.ForSetProjection);
+					var projected = Builder.BuildSqlExpression(context, current, buildPurpose: BuildPurpose.Expression, buildFlags: BuildFlags.ForceDefaultIfEmpty | BuildFlags.ForSetProjection | BuildFlags.ResetPrevious);
 
 					projected = Builder.BuildExtractExpression(context, projected);
 

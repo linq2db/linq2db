@@ -1577,7 +1577,8 @@ namespace LinqToDB.SqlProvider
 			var sc = new SqlSearchCondition();
 
 			ISqlPredicate predicate;
-			if (expression.SystemType?.ToNullableUnderlying() == typeof(bool))
+			var dbType = QueryHelper.GetDbDataType(expression, MappingSchema);
+			if (dbType.SystemType.ToNullableUnderlying() == typeof(bool) || dbType.DataType == DataType.Boolean)
 			{
 				predicate = new SqlPredicate.IsTrue(expression, new SqlValue(true), new SqlValue(false), DataOptions.LinqOptions.CompareNulls == CompareNulls.LikeClr ? false : null, false);
 			}

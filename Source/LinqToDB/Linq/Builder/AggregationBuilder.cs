@@ -564,6 +564,8 @@ namespace LinqToDB.Linq.Builder
 						}
 						else
 						{
+							canBeNull = true;
+
 							if (valueExpression == null)
 								throw new InvalidOperationException();
 

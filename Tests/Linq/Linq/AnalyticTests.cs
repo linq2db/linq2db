@@ -106,6 +106,36 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		public void TestFunctionsInSubquery(
+			[IncludeDataSources(
+				true,
+				TestProvName.AllOracle,
+				TestProvName.AllSqlServer2012Plus,
+				TestProvName.AllClickHouse,
+				TestProvName.AllPostgreSQL)]
+			string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var subq =
+					from p in db.Parent
+					join c in db.Child on p.ParentID equals c.ParentID
+					let groupId = Sql.Ext.RowNumber().Over().PartitionBy(p.Value1, c.ChildID).OrderByDesc(p.Value1).ThenBy(c.ChildID).ThenByDesc(c.ParentID).ToValue()
+					select new
+					{
+						Sum = Sql.Ext.Sum(groupId).Over().PartitionBy(p.Value1, c.ChildID).OrderBy(p.Value1).ThenBy(c.ChildID).ThenBy(c.ParentID).ToValue(),
+					};
+
+				var q = from sq in subq
+					where sq.Sum > 0
+					select sq;
+
+				var res = q.ToList();
+				Assert.That(res, Is.Not.Empty);
+			}
+		}
+
+		[Test]
 		public void TestAvg([IncludeDataSources(true, TestProvName.AllSqlServer, TestProvName.AllOracle, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))

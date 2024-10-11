@@ -971,6 +971,19 @@ namespace LinqToDB.Linq.Builder
 			return false;
 		}
 
+		public static bool ContainsAggregateOrWindowFunction(Expression expression)
+		{
+			return null != expression.Find(1, (_, e) =>
+			{
+				if (e is SqlPlaceholderExpression placeholder)
+				{
+					return QueryHelper.ContainsAggregationOrWindowFunction(placeholder.Sql);
+				}
+
+				return false;
+			});
+		}
+
 		#region Special fields helpers
 
 		public static MemberExpression CreateSpecialProperty(Expression obj, Type type, string name)

@@ -14,57 +14,69 @@ namespace LinqToDB.Linq.Builder
 
 		protected override BuildSequenceResult BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
-			var buildResult = builder.TryBuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
+			var info        = new BuildInfo(buildInfo, methodCall.Arguments[0]);
+			var buildResult = builder.TryBuildSequence(info);
 
 			if (buildResult.BuildContext == null)
 				return buildResult;
 
-			var sequence = buildResult.BuildContext;
+			var saveInline = builder.DataContext.InlineParameters;
 
-			var arg      = methodCall.Arguments[1].Unwrap();
+			builder.DataContext.InlineParameters = info.InlineParameters ?? saveInline;
 
-			ISqlExpression expr;
-
-			var linqOptions = builder.DataContext.Options.LinqOptions;
-			var parameterize = !buildInfo.IsSubQuery && linqOptions.ParameterizeTakeSkip;
-
-			if (arg.NodeType == ExpressionType.Lambda)
+			try
 			{
-				arg  = ((LambdaExpression)arg).Body.Unwrap();
-				if (!builder.TryConvertToSql(sequence, arg, out expr!))
-					return BuildSequenceResult.Error(arg);
-			}
-			else
-			{
-				// revert unwrap
-				arg  = methodCall.Arguments[1];
+				var sequence = buildResult.BuildContext;
 
-				if (!builder.TryConvertToSql(sequence, arg, out expr!))
-					return BuildSequenceResult.Error(arg);
+				var arg      = methodCall.Arguments[1].Unwrap();
 
-				if (expr.ElementType == QueryElementType.SqlValue && builder.CanBeCompiled(methodCall.Arguments[1], false))
+				ISqlExpression expr;
+
+				var linqOptions  = builder.DataContext.Options.LinqOptions;
+				var parameterize = !buildInfo.IsSubQuery && linqOptions.ParameterizeTakeSkip;
+
+				if (arg.NodeType == ExpressionType.Lambda)
 				{
-					var param = builder.ParametersContext.BuildParameter(sequence, methodCall.Arguments[1], null, forceConstant : true, forceNew : true)!.SqlParameter;
-					param.Name             = methodCall.Method.Name == "Take" ? "take" : "skip";
-					param.IsQueryParameter = param.IsQueryParameter && parameterize;
-					expr                   = param;
+					arg  = ((LambdaExpression)arg).Body.Unwrap();
+					if (!builder.TryConvertToSql(sequence, arg, out expr!))
+						return BuildSequenceResult.Error(arg);
 				}
-			}
+				else
+				{
+					// revert unwrap
+					arg  = methodCall.Arguments[1];
 
-			if (methodCall.Method.Name == "Take")
+					if (!builder.TryConvertToSql(sequence, arg, out expr!))
+						return BuildSequenceResult.Error(arg);
+
+					if (expr.ElementType == QueryElementType.SqlValue && builder.CanBeCompiled(methodCall.Arguments[1], false))
+					{
+						var param = builder.ParametersContext.BuildParameter(sequence, methodCall.Arguments[1], null, forceConstant : true, forceNew : true)!.SqlParameter;
+						param.Name             = methodCall.Method.Name == "Take" ? "take" : "skip";
+						param.IsQueryParameter = param.IsQueryParameter && parameterize;
+						expr                   = param;
+					}
+				}
+
+				if (methodCall.Method.Name == "Take")
+				{
+					TakeHints? hints = null;
+					if (methodCall.Arguments.Count == 3 && methodCall.Arguments[2].Type == typeof(TakeHints))
+						hints = (TakeHints)builder.EvaluateExpression(methodCall.Arguments[2])!;
+
+					builder.BuildTake(sequence, expr, hints);
+				}
+				else
+				{
+					builder.BuildSkip(sequence, expr);
+				}
+
+				return BuildSequenceResult.FromContext(new TakeSkipContext(sequence));
+			}
+			finally
 			{
-				TakeHints? hints = null;
-				if (methodCall.Arguments.Count == 3 && methodCall.Arguments[2].Type == typeof(TakeHints))
-					hints = (TakeHints)builder.EvaluateExpression(methodCall.Arguments[2])!;
-
-				builder.BuildTake(sequence, expr, hints);
+				builder.DataContext.InlineParameters = saveInline;
 			}
-			else
-			{
-				builder.BuildSkip(sequence, expr);
-			}
-
-			return BuildSequenceResult.FromContext(new TakeSkipContext(sequence));
 		}
 
 		class TakeSkipContext : PassThroughContext

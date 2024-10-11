@@ -319,6 +319,11 @@ namespace LinqToDB.Linq.Builder
 			return _buildVisitor.UsingColumnDescriptor(columnDescriptor);
 		}
 
+		public IDisposable UsingBuildFlags(BuildFlags buildFlags)
+		{
+			return _buildVisitor.UsingBuildFlags(buildFlags);
+		}
+
 		public static SqlPlaceholderExpression CreatePlaceholder(IBuildContext? context, ISqlExpression sqlExpression,
 			Expression path, Type? convertType = null, string? alias = null, int? index = null, Expression? trackingPath = null)
 		{

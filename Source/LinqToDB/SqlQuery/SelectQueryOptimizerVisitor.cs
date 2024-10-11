@@ -383,6 +383,23 @@ namespace LinqToDB.SqlQuery
 			return result;
 		}
 
+		protected override IQueryElement VisitSqlNullabilityExpression(SqlNullabilityExpression element)
+		{
+			var sqlExpression = Visit(element.SqlExpression);
+			if (sqlExpression is SelectQuery { GroupBy.IsEmpty: true } selectQuery)
+			{
+				var nullabilityContext = NullabilityContext.GetContext(selectQuery);
+				if (selectQuery.Select.Columns.All(c => QueryHelper.ContainsAggregationFunction(c.Expression) && !c.Expression.CanBeNullable(nullabilityContext)))
+				{
+					return sqlExpression;
+				}
+			}
+
+			element.Modify((ISqlExpression)sqlExpression);
+
+			return element;
+		}
+
 		bool OptimizeUnions(SelectQuery selectQuery)
 		{
 			var isModified = false;
@@ -1448,7 +1465,48 @@ namespace LinqToDB.SqlQuery
 
 			foreach (var parentColumn in parentQuery.Select.Columns)
 			{
-				if (QueryHelper.ContainsAggregationFunction(parentColumn.Expression))
+				var containsAggregateFunction = false;
+				var containsWindowFunction    = false;
+				var isNotValid = false;
+
+				parentColumn.Expression.VisitAll(e =>
+				{
+					if (isNotValid)
+						return;
+
+					if (e is ISqlExpression sqlExpr)
+					{
+						var isWindowFunction = QueryHelper.IsWindowFunction(sqlExpr);
+						var isAggregationFunction = QueryHelper.IsAggregationFunction(sqlExpr);
+						if (isWindowFunction || isAggregationFunction)
+						{
+							containsWindowFunction    = containsWindowFunction    || isWindowFunction;
+							containsAggregateFunction = containsAggregateFunction || isAggregationFunction;
+
+							sqlExpr.VisitAll(se =>
+							{
+								if (isNotValid)
+									return;
+
+								if (se is SqlColumn column && column.Parent == subQuery)
+								{
+									if (QueryHelper.ContainsAggregationOrWindowFunction(column.Expression))
+									{
+										isNotValid = true;
+									}
+								}
+							});
+						}
+					}
+				});
+
+				if (isNotValid)
+				{
+					// not allowed to move complex expressions
+					return false;
+				}
+
+				if (containsAggregateFunction)
 				{
 					if (subQuery.Select.HasModifier || subQuery.HasSetOperators || !subQuery.GroupBy.IsEmpty || !subQuery.Having.IsEmpty)
 					{
@@ -1457,7 +1515,7 @@ namespace LinqToDB.SqlQuery
 					}
 				}
 
-				if (QueryHelper.ContainsWindowFunction(parentColumn.Expression))
+				if (containsWindowFunction)
 				{
 					if (subQuery.Select.HasModifier || subQuery.HasSetOperators || !subQuery.Where.IsEmpty || !subQuery.Having.IsEmpty || !subQuery.GroupBy.IsEmpty)
 					{
@@ -2520,18 +2578,14 @@ namespace LinqToDB.SqlQuery
 								table.Joins.RemoveAt(j);
 								joinQuery.Where.ConcatSearchCondition(join.Condition);
 
+								var isNullable = join.JoinType is JoinType.Left or JoinType.OuterApply;
+
 								// replacing column with subquery
 
 								for (var index = joinQuery.Select.Columns.Count - 1; index >= 0; index--)
 								{
 									var queryToReplace = joinQuery;
 									var testedColumn   = joinQuery.Select.Columns[index];
-
-									if (join.JoinType is JoinType.OuterApply or JoinType.Left)
-									{
-										// LEFT JOIN is removed, we have to remember that value can be null
-										testedColumn.Expression = SqlNullabilityExpression.ApplyNullability(testedColumn.Expression, true);
-									}
 
 									// cloning if there are many columns
 									if (index > 0)
@@ -2546,7 +2600,9 @@ namespace LinqToDB.SqlQuery
 										queryToReplace.Select.Columns.Add(sourceColumn);
 									}
 
-									NotifyReplaced(queryToReplace, testedColumn);
+									var replacement = isNullable ? SqlNullabilityExpression.ApplyNullability(queryToReplace, true) : queryToReplace;
+
+									NotifyReplaced(replacement, testedColumn);
 								}
 							}
 						}

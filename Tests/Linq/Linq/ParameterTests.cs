@@ -71,11 +71,30 @@ namespace Tests.Linq
 
 				Assert.Multiple(() =>
 				{
-#pragma warning disable CS0618 // Type or member is obsolete
 					Assert.That(query.GetStatement().CollectParameters(), Has.Length.EqualTo(1));
 					Assert.That(queryInlined.GetStatement().CollectParameters(), Is.Empty);
 				});
-#pragma warning restore CS0618 // Type or member is obsolete
+			}
+		}
+
+		[Test]
+		public void InlineWithSkipTake([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var id = 1;
+				var query = from t in db.Person
+					where t.ID == id
+					select t;
+
+				var queryInlined = query.InlineParameters().Skip(1).Take(2);
+				query = query.Skip(1).Take(2);
+
+				Assert.Multiple(() =>
+				{
+					Assert.That(query.GetStatement().CollectParameters(), Has.Length.EqualTo(3));
+					Assert.That(queryInlined.GetStatement().CollectParameters(), Is.Empty);
+				});
 			}
 		}
 
