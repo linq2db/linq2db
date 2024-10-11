@@ -169,18 +169,18 @@ namespace LinqToDB.Linq.Builder
 
 				SqlJoinedTable? fakeJoin = null;
 
+				using var snapshot = _buildVisitor.CreateSnapshot();
+
+				var expr = parent.Builder.BuildSqlExpression(clonedContext, new ContextRefExpression(clonedContext.ElementType, clonedContext));
+
 				// add fake join there is no still reference
-				if (clonedParentContext.SelectQuery.From.Tables.Count > 0 
-					&& clonedParentContext.SelectQuery.Find(e => e is SelectQuery sc && sc == clonedContext.SelectQuery) == null)
+				if (clonedParentContext.SelectQuery.From.Tables.Count                                                    > 0
+				    && clonedParentContext.SelectQuery.Find(e => e is SelectQuery sc && sc == clonedContext.SelectQuery) == null)
 				{
 					fakeJoin = clonedContext.SelectQuery.OuterApply().JoinedTable;
 
 					clonedParentContext.SelectQuery.From.Tables[0].Joins.Add(fakeJoin);
 				}
-
-				using var snapshot = _buildVisitor.CreateSnapshot();
-
-				var expr = parent.Builder.BuildSqlExpression(clonedContext, new ContextRefExpression(clonedContext.ElementType, clonedContext));
 
 				expr = parent.Builder.ToColumns(clonedParentContext, expr);
 

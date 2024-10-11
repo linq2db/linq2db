@@ -1145,6 +1145,7 @@ FROM
 
 		[Test]
 		[ThrowsForProvider(typeof(LinqException), TestProvName.AllClickHouse, ErrorMessage = ErrorHelper.Error_Correlated_Subqueries)]
+		[ThrowsForProvider(typeof(LinqException), TestProvName.AllAccess, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
 		public void TestAggregate([DataSources] string context)
 		{
 			var (masterRecords, detailRecords) = GenerateData();
@@ -1175,6 +1176,7 @@ FROM
 
 		[Test]
 		[ThrowsForProvider(typeof(LinqException), TestProvName.AllClickHouse, ErrorMessage = ErrorHelper.Error_Correlated_Subqueries)]
+		[ThrowsForProvider(typeof(LinqException), TestProvName.AllAccess, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
 		public void TestAggregateAverage([DataSources] string context)
 		{
 			var (masterRecords, detailRecords) = GenerateData();
@@ -2968,11 +2970,14 @@ FROM
 			using var tc = db.CreateLocalTable(EntityC.Data);
 			using var td = db.CreateLocalTable(EntityD.Data);
 
-			var result = testCase == 1
-				? db.GetTable<EntityA>().Select(e => new { e.Id, ObjectBOptional = e.ObjectBOptional == null ? null : new { e.ObjectBOptional.Id, e.ObjectBOptional.ObjectCRequired, ObjectsD = (EntityD[]?)null } }).ToList()
-				: testCase == 2
-					? db.GetTable<EntityA>().Select(e => new { e.Id, ObjectBOptional = e.ObjectBOptional == null ? null : new { e.ObjectBOptional.Id, ObjectCRequired = (EntityC)null!, e.ObjectBOptional.ObjectsD } }).ToList()
-					: db.GetTable<EntityA>().Select(e => new { e.Id, ObjectBOptional = e.ObjectBOptional == null ? null : new { e.ObjectBOptional.Id, e.ObjectBOptional.ObjectCRequired, e.ObjectBOptional.ObjectsD } }).ToList();
+			var query = testCase switch
+			{
+				1 => db.GetTable<EntityA>().Select(e => new { e.Id, ObjectBOptional = e.ObjectBOptional == null ? null : new { e.ObjectBOptional.Id, e.ObjectBOptional.ObjectCRequired, ObjectsD = (EntityD[]?)null } }),
+				2 => db.GetTable<EntityA>().Select(e => new { e.Id, ObjectBOptional = e.ObjectBOptional == null ? null : new { e.ObjectBOptional.Id, ObjectCRequired                             = (EntityC)null!, e.ObjectBOptional.ObjectsD } }),
+				_ => db.GetTable<EntityA>().Select(e => new { e.Id, ObjectBOptional = e.ObjectBOptional == null ? null : new { e.ObjectBOptional.Id, e.ObjectBOptional.ObjectCRequired, e.ObjectBOptional.ObjectsD } })
+			};
+
+			var result = query.ToList();
 
 			var expected = new int?[][]
 			{

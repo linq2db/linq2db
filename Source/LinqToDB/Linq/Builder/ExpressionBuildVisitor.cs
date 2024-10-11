@@ -2206,12 +2206,20 @@ namespace LinqToDB.Linq.Builder
 				{
 					ISqlExpression? sql = null;
 
+					var preferConvert = _buildPurpose is BuildPurpose.Sql || (_buildPurpose == BuildPurpose.Expression && _buildFlags.HasFlag(BuildFlags.ForSetProjection));
+
+					if (!preferConvert)
+					{
+						translated = null;
+						return false;
+					}
+
 					if (_columnDescriptor?.ValueConverter == null && Builder.CanBeConstant(node) && !_buildFlags.HasFlag(BuildFlags.ForceParameter))
 					{
 						sql = Builder.BuildConstant(MappingSchema, node, _columnDescriptor);
 					}
 
-					var needParameter = sql == null && _buildPurpose is BuildPurpose.Sql || (_buildPurpose == BuildPurpose.Expression && _buildFlags.HasFlag(BuildFlags.ForSetProjection));
+					var needParameter = sql == null;
 					if (!needParameter)
 					{
 						if (null != node.Find(1, (_, x) => ReferenceEquals(x, ExpressionBuilder.ParametersParam)))
