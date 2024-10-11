@@ -58,7 +58,7 @@ namespace Tests.Playground
 
 			sw.Stop();
 
-			TestContext.WriteLine($"------------------- Total: {sw.ElapsedMilliseconds} -----------------");
+			TestContext.Out.WriteLine($"------------------- Total: {sw.ElapsedMilliseconds} -----------------");
 		}
 	}
 }
