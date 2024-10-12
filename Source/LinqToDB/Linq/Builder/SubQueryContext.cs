@@ -80,9 +80,6 @@ namespace LinqToDB.Linq.Builder
 
 		public override Expression MakeExpression(Expression path, ProjectFlags flags)
 		{
-			if (flags.IsExtractProjection())
-				return path;
-
 			if (flags.IsRoot() && SequenceHelper.IsSameContext(path, this))
 				return path;
 

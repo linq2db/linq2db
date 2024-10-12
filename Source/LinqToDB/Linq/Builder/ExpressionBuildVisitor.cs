@@ -568,25 +568,50 @@ namespace LinqToDB.Linq.Builder
 			if (_foundRoot == null)
 				throw new InvalidOperationException("Called when root is not initialized.");
 
-			return new ExprCacheKey(path, null, _columnDescriptor, _foundRoot.BuildContext.SelectQuery, ProjectFlags.SQL);
+			return GetSqlCacheKey(path, _foundRoot.BuildContext.SelectQuery);
+		}
+
+		ExprCacheKey GetSqlCacheKey(Expression path, SelectQuery selectQuery)
+		{
+			return new ExprCacheKey(path, null, _columnDescriptor, selectQuery, ProjectFlags.SQL);
 		}
 
 		Expression RegisterTranslatedSql(Expression translated, Expression path)
 		{
-			if (_foundRoot != null && translated is SqlPlaceholderExpression placeholder)
+			if (_foundRoot != null)
+			{
+				translated = RegisterTranslatedSql(_foundRoot.BuildContext.SelectQuery, translated, path);
+			}
+
+			return translated;
+		}
+
+		Expression RegisterTranslatedSql(SelectQuery selectQuery, Expression translated, Expression path)
+		{
+			if (translated is SqlPlaceholderExpression placeholder)
 			{
 				if (_alias != null)
 					placeholder = placeholder.WithAlias(_alias);
 
 				translated = placeholder.WithTrackingPath(path);
 
-				var cacheKey = GetSqlCacheKey(path);
+				var cacheKey = GetSqlCacheKey(path, selectQuery);
 
 				if (!_translationCache.ContainsKey(cacheKey))
 					_translationCache.Add(cacheKey, translated);
 			}
 
 			return translated;
+		}
+
+		bool GetAlreadyTranslated(SelectQuery selectQuery, Expression path, [NotNullWhen(true)] out Expression? translated)
+		{
+			var cacheKey = GetSqlCacheKey(path, selectQuery);
+
+			if (_translationCache.TryGetValue(cacheKey, out translated))
+				return true;
+
+			return false;
 		}
 
 		protected override Expression VisitLambda<T>(Expression<T> node)
@@ -1080,6 +1105,8 @@ namespace LinqToDB.Linq.Builder
 			var rootContext     = context;
 			var rootSelectQuery = context.SelectQuery;
 
+			var traversed = BuildExpression(expr, BuildPurpose.Traverse);
+
 			var root = GetAggregationRootContext(expr);
 			if (root != null)
 			{
@@ -1109,11 +1136,15 @@ namespace LinqToDB.Linq.Builder
 				rootSelectQuery = groupBy.SubQuery.SelectQuery;
 			}
 
+
+			if (GetAlreadyTranslated(rootSelectQuery, traversed, out var translated))
+				return translated;
+
 			var transformed = attr.GetExpression((buildVisitor: this, context: rootContext),
 				Builder.DataContext,
 				this.Builder,
-				rootSelectQuery, 
-				expr,
+				rootSelectQuery,
+				traversed,
 				static (context, e, descriptor, inline) =>
 					context.buildVisitor.ConvertToExtensionSql(context.context, e, descriptor, inline));
 
@@ -1121,9 +1152,12 @@ namespace LinqToDB.Linq.Builder
 			{
 				Builder.RegisterExtensionAccessors(expr);
 
-				placeholder = placeholder.WithSql(Builder.PosProcessCustomExpression(expr, placeholder.Sql, NullabilityContext.GetContext(placeholder.SelectQuery)));
+				placeholder = placeholder.WithSql(Builder.PosProcessCustomExpression(traversed, placeholder.Sql, NullabilityContext.GetContext(placeholder.SelectQuery)));
+				placeholder = placeholder.WithPath(traversed);
 
-				return placeholder.WithPath(expr);
+				placeholder = (SqlPlaceholderExpression)RegisterTranslatedSql(rootSelectQuery, placeholder, traversed);
+
+				return placeholder;
 			}
 
 			if (attr.ServerSideOnly)
