@@ -2555,6 +2555,9 @@ namespace LinqToDB.Linq.Builder
 				return sqlResult;
 			}
 
+			if (HandleValue(node, out var sqlValue))
+				return Visit(sqlValue);
+
 			if (_buildPurpose is BuildPurpose.Expression)
 				return base.VisitBinary(node);
 
@@ -2567,9 +2570,6 @@ namespace LinqToDB.Linq.Builder
 				case ExpressionType.LessThan:
 				case ExpressionType.LessThanOrEqual:
 				{
-					if (HandleValue(node, out var sqlValue))
-						return Visit(sqlValue);
-
 					var saveColumnDescriptor = _columnDescriptor;
 					_columnDescriptor = null;
 
@@ -2619,9 +2619,6 @@ namespace LinqToDB.Linq.Builder
 				case ExpressionType.AndAlso:
 				case ExpressionType.OrElse:
 				{
-					if (HandleValue(node, out var sqlValue))
-						return Visit(sqlValue);
-
 					var left  = Visit(node.Left);
 					var right = Visit(node.Right);
 
