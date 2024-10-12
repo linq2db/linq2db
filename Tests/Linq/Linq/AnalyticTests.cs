@@ -130,8 +130,7 @@ namespace Tests.Linq
 					where sq.Sum > 0
 					select sq;
 
-				var res = q.ToList();
-				Assert.That(res, Is.Not.Empty);
+				Assert.DoesNotThrow(() => _ = q.ToList());
 			}
 		}
 

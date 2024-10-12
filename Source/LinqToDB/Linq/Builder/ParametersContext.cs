@@ -438,7 +438,7 @@ namespace LinqToDB.Linq.Builder
 		{
 			var result = new ValueTypeExpression
 			{
-				DataType             = columnDescriptor?.GetDbDataType(true) ?? new DbDataType(expression.Type),
+				DataType             = columnDescriptor?.GetDbDataType(true) ?? mappingSchema.GetDbDataType(expression.Type),
 				DbDataTypeExpression = Expression.Constant(mappingSchema.GetDbDataType(expression.UnwrapConvertToObject().Type), typeof(DbDataType)),
 			};
 
@@ -550,8 +550,11 @@ namespace LinqToDB.Linq.Builder
 					Expression.Convert(itemAccessorExpression, typeof(object)),
 					ItemParameter);
 
+			if (dbDataTypeAccessorExpression.Type != typeof(DbDataType))
+				dbDataTypeAccessorExpression = Expression.Convert(dbDataTypeAccessorExpression, typeof(DbDataType));
+
 			var dbDataTypeAccessor = Expression.Lambda<Func<Expression,object?,IDataContext?,object?[]?,DbDataType>>(
-				Expression.Convert(dbDataTypeAccessorExpression, typeof(DbDataType)),
+				dbDataTypeAccessorExpression,
 				DbTypeAccessorParameters);
 
 			var dataTypeAccessor = dbDataTypeAccessor.CompileExpression();

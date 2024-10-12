@@ -129,7 +129,7 @@ namespace LinqToDB.Linq.Builder
 
 			if (take != 0)
 			{
-				var takeExpression = new SqlValue(take);
+				var takeExpression = new SqlValue(sequence.MappingSchema.GetDbDataType(typeof(int)), take);
 				builder.BuildTake(sequence, takeExpression, null);
 			}
 
