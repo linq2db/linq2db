@@ -80,6 +80,9 @@ namespace LinqToDB.Linq.Builder
 
 		public override Expression MakeExpression(Expression path, ProjectFlags flags)
 		{
+			if (flags.IsExtractProjection())
+				return path;
+
 			if (flags.IsRoot() && SequenceHelper.IsSameContext(path, this))
 				return path;
 
@@ -87,7 +90,7 @@ namespace LinqToDB.Linq.Builder
 
 			var result = Builder.BuildExpression(SubQuery, corrected);
 
-			if (flags.IsExtractProjection() || flags.IsTraverse() || flags.IsAggregationRoot() || flags.IsSubquery() || flags.IsTable() || flags.IsAssociationRoot() || flags.IsRoot())
+			if (flags.IsTraverse() || flags.IsAggregationRoot() || flags.IsSubquery() || flags.IsTable() || flags.IsAssociationRoot() || flags.IsRoot())
 			{
 				return result;
 			}

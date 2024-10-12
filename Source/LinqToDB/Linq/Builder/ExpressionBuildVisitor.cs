@@ -350,12 +350,6 @@ namespace LinqToDB.Linq.Builder
 			return BuildExpression(expression, BuildPurpose.AggregationRoot);
 		}
 
-		public Expression BuildTraverse(Expression expression)
-		{
-			_foundRoot = null;
-			return BuildExpression(expression, BuildPurpose.Traverse);
-		}
-
 		static bool IsSame(Expression expr1, Expression expr2)
 		{
 			return ExpressionEqualityComparer.Instance.Equals(expr1, expr2);
@@ -1086,9 +1080,7 @@ namespace LinqToDB.Linq.Builder
 			var rootContext     = context;
 			var rootSelectQuery = context.SelectQuery;
 
-			var traversed = BuildTraverse(expr);
-
-			var root = GetAggregationRootContext(traversed);
+			var root = GetAggregationRootContext(expr);
 			if (root != null)
 			{
 				rootContext = root.BuildContext;
@@ -1121,7 +1113,7 @@ namespace LinqToDB.Linq.Builder
 				Builder.DataContext,
 				this.Builder,
 				rootSelectQuery, 
-				traversed,
+				expr,
 				static (context, e, descriptor, inline) =>
 					context.buildVisitor.ConvertToExtensionSql(context.context, e, descriptor, inline));
 
@@ -2197,9 +2189,10 @@ namespace LinqToDB.Linq.Builder
 
 		public bool HandleValue(Expression node, [NotNullWhen(true)] out Expression? translated)
 		{
+			translated = null;
+
 			if (_buildPurpose is not (BuildPurpose.Sql or BuildPurpose.Expression))
 			{
-				translated = null;
 				return false;
 			}
 
@@ -2279,11 +2272,6 @@ namespace LinqToDB.Linq.Builder
 
 			var traversed = BuildExpression(node, BuildPurpose.Traverse);
 
-			if (traversed is MethodCallExpression mc && mc.Method.Name == "FirstOrDefault")
-			{
-
-			}
-
 			var cacheRoot = GetCacheRootContext(traversed);
 
 			if (cacheRoot != null)
@@ -2292,11 +2280,6 @@ namespace LinqToDB.Linq.Builder
 			}
 			else
 			{
-				if (traversed is MethodCallExpression mc2 && mc2.Method.Name == "FirstOrDefault")
-				{
-
-				}
-
 				var root = BuildAggregationRoot(new ContextRefExpression(calculatedContext.ElementType, calculatedContext)) as ContextRefExpression;
 				if (root != null)
 					calculatedContext = root.BuildContext;
@@ -2312,7 +2295,7 @@ namespace LinqToDB.Linq.Builder
 
 			_disableSubqueries.Push(node);
 			_disableSubqueries.Push(traversed);
-			var ctx = GetSubQuery(traversed, out var isSequence, out var errorMessage);
+			var ctx = GetSubQuery(node, out var isSequence, out var errorMessage);
 			_disableSubqueries.Pop();
 			_disableSubqueries.Pop();
 
@@ -2323,8 +2306,8 @@ namespace LinqToDB.Linq.Builder
 					if (_buildPurpose is BuildPurpose.Expression)
 					{
 						// Trying to relax eager for First[OrDefault](predicate)
-						var prepared = PrepareSubqueryExpression(traversed);
-						if (!IsSame(prepared, traversed))
+						var prepared = PrepareSubqueryExpression(node);
+						if (!IsSame(prepared, node))
 						{
 							subqueryExpression = prepared;
 							return true;
@@ -2511,6 +2494,11 @@ namespace LinqToDB.Linq.Builder
 					shouldSkipConversion = true;
 			}
 
+			if (node.NodeType == ExpressionType.ArrayIndex && node.Left == ExpressionBuilder.ParametersParam)
+			{
+				return node;
+			}
+
 			// Handle client-side coalesce
 			if (_buildPurpose is BuildPurpose.Expression && node.NodeType == ExpressionType.Coalesce && !_buildFlags.HasFlag(BuildFlags.ForSetProjection))
 			{
@@ -2527,9 +2515,6 @@ namespace LinqToDB.Linq.Builder
 				return sqlResult;
 			}
 
-			if (HandleValue(node, out var sqlValue))
-				return Visit(sqlValue);
-
 			if (_buildPurpose is BuildPurpose.Expression)
 				return base.VisitBinary(node);
 
@@ -2542,6 +2527,9 @@ namespace LinqToDB.Linq.Builder
 				case ExpressionType.LessThan:
 				case ExpressionType.LessThanOrEqual:
 				{
+					if (HandleValue(node, out var sqlValue))
+						return Visit(sqlValue);
+
 					var saveColumnDescriptor = _columnDescriptor;
 					_columnDescriptor = null;
 
@@ -2591,6 +2579,9 @@ namespace LinqToDB.Linq.Builder
 				case ExpressionType.AndAlso:
 				case ExpressionType.OrElse:
 				{
+					if (HandleValue(node, out var sqlValue))
+						return Visit(sqlValue);
+
 					var left  = Visit(node.Left);
 					var right = Visit(node.Right);
 
