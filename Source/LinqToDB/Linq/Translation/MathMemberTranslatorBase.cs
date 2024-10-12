@@ -13,6 +13,7 @@ namespace LinqToDB.Linq.Translation
 			RegisterMax();
 			RegisterMin();
 			RegisterRound();
+			RgisterPow();
 		}
 
 		void RegisterMax()
@@ -74,6 +75,13 @@ namespace LinqToDB.Linq.Translation
 			Registration.RegisterMethod((decimal v) => Sql.RoundToEven(v, 0)                    , TranslateRoundToEvenMethod);
 			Registration.RegisterMethod((decimal v) => Sql.Round(v)                             , TranslateRoundAwayFromZero);
 			Registration.RegisterMethod((decimal v) => Sql.Round(v, 0)                          , TranslateRoundAwayFromZero);
+		}
+
+		void RgisterPow()
+		{
+			Registration.RegisterMethod((double  x, double  y) => Math.Pow(x, y), TranslatePow);
+			Registration.RegisterMethod((double  x, double  y) => Sql.Power(x, y), TranslatePow);
+			Registration.RegisterMethod((decimal x, decimal y) => Sql.Power(x, y), TranslatePow);
 		}
 
 		Expression? TranslateMaxMethod(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)
@@ -259,6 +267,25 @@ namespace LinqToDB.Linq.Translation
 			return translationContext.CreatePlaceholder(translationContext.CurrentSelectQuery, translated, methodCall);
 		}
 
+		Expression? TranslatePow(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)
+		{
+			if ((translationFlags & TranslationFlags.Expression) != 0 && translationContext.CanBeCompiled(methodCall, translationFlags))
+				return null;
+
+			if (!translationContext.TranslateToSqlExpression(methodCall.Arguments[0], out var translatedX))
+				return null;
+
+			if (!translationContext.TranslateToSqlExpression(methodCall.Arguments[1], out var translatedY))
+				return null;
+
+			var translated = TranslatePow(translationContext, methodCall, translatedX, translatedY);
+
+			if (translated == null)
+				return null;
+
+			return translationContext.CreatePlaceholder(translationContext.CurrentSelectQuery, translated, methodCall);
+		}
+
 
 		protected virtual ISqlExpression? TranslateRoundToEven(ITranslationContext translationContext, MethodCallExpression methodCall, ISqlExpression value, ISqlExpression? precision)
 		{
@@ -330,6 +357,36 @@ namespace LinqToDB.Linq.Translation
 			var result = precision != null
 				? factory.Function(valueType, "ROUND", value, precision)
 				: factory.Function(valueType, "ROUND", value);
+
+			return result;
+		}
+
+		protected virtual ISqlExpression? TranslatePow(ITranslationContext translationContext, MethodCallExpression methodCall, ISqlExpression xValue, ISqlExpression yValue)
+		{
+			var factory = translationContext.ExpressionFactory;
+
+			var xType      = factory.GetDbDataType(xValue);
+			var resultType = xType;
+
+			if (xType.SystemType == typeof(decimal))
+			{
+				xType  = factory.GetDbDataType(typeof(double));
+				xValue = factory.Cast(xValue, xType);
+			}
+
+			var yType        = factory.GetDbDataType(yValue);
+			var yValueResult = yValue;
+
+			if (!xType.EqualsDbOnly(yType))
+			{
+				yValueResult = factory.Cast(yValue, xType);
+			}
+
+			var result = factory.Function(xType, "Power", xValue, yValueResult);
+			if (!resultType.EqualsDbOnly(xType))
+			{
+				result = factory.Cast(result, resultType);
+			}
 
 			return result;
 		}

@@ -1333,16 +1333,12 @@ namespace LinqToDB
 			return value == null || newBase == null ? null : (decimal?)Math.Log((double)value.Value, (double)newBase.Value);
 		}
 
-		[Expression(PN.Access, "{0} ^ {1}", Precedence = Precedence.Multiplicative, IsNullable = IsNullableType.IfAnyParameterNullable)]
-		[Function(IsNullable = IsNullableType.IfAnyParameterNullable)]
-		public static double?  Power(double? x, double? y)
+		public static double? Power(double? x, double? y)
 		{
 			return x == null || y == null ? null : Math.Pow(x.Value, y.Value);
 		}
 
-		[Expression(PN.Access, "{0} ^ {1}", Precedence = Precedence.Multiplicative, IsNullable = IsNullableType.IfAnyParameterNullable)]
-		[Function(IsNullable = IsNullableType.IfAnyParameterNullable)]
-		public static decimal?  Power(decimal? x, decimal? y)
+		public static decimal? Power(decimal? x, decimal? y)
 		{
 			return x == null || y == null ? null : (decimal)Math.Pow((double)x.Value, (double)y.Value);
 		}

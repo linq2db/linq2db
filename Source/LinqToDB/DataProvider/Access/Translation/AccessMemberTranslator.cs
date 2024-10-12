@@ -212,6 +212,37 @@ namespace LinqToDB.DataProvider.Access.Translation
 
 				return result;
 			}
+
+			protected override ISqlExpression? TranslatePow(ITranslationContext translationContext, MethodCallExpression methodCall, ISqlExpression xValue, ISqlExpression yValue)
+			{
+				var factory = translationContext.ExpressionFactory;
+
+				var xType      = factory.GetDbDataType(xValue);
+				var resultType = xType;
+
+				if (xType.SystemType == typeof(decimal))
+				{
+					xType  = factory.GetDbDataType(typeof(double));
+					xValue = factory.Cast(xValue, xType);
+				}
+
+				var yType = factory.GetDbDataType(yValue);
+
+				if (!xType.EqualsDbOnly(yType))
+				{
+					yValue = factory.Cast(yValue, xType);
+				}
+
+				var result = factory.Binary(yType, xValue, "^", yValue);
+
+				if (!resultType.EqualsDbOnly(xType))
+				{
+					result = factory.Cast(result, resultType);
+				}
+
+				return result;
+			}
+
 		}
 
 
