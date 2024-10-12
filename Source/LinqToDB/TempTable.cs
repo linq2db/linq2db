@@ -7,16 +7,18 @@ using System.Linq.Expressions;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
+
 using JetBrains.Annotations;
 
 namespace LinqToDB
 {
-	using Async;
-	using Data;
-	using Expressions;
-	using Extensions;
-	using Linq;
-	using Mapping;
+	using LinqToDB.Async;
+	using LinqToDB.Data;
+	using LinqToDB.Extensions;
+	using LinqToDB.Internal.Expressions;
+	using LinqToDB.Internal.SqlQuery;
+	using LinqToDB.Linq;
+	using LinqToDB.Mapping;
 
 	// TODO: v6: obsolete methods with setTable parameter
 	// IT: ??? how to use anonymous types then?

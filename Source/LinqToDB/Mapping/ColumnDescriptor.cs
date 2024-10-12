@@ -6,12 +6,12 @@ using System.Reflection;
 
 namespace LinqToDB.Mapping
 {
-	using Common;
-	using Data;
-	using Expressions;
-	using Extensions;
-	using Reflection;
-	using SqlQuery;
+	using LinqToDB.Common;
+	using LinqToDB.Data;
+	using LinqToDB.Extensions;
+	using LinqToDB.Internal.Expressions;
+	using LinqToDB.Reflection;
+	using LinqToDB.SqlQuery;
 
 	/// <summary>
 	/// Stores mapping entity column descriptor.

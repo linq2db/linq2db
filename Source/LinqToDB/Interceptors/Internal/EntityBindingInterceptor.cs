@@ -1,9 +1,6 @@
-﻿using System.Collections.Generic;
-
-namespace LinqToDB.Interceptors.Internal
+﻿namespace LinqToDB.Interceptors.Internal
 {
-	using Expressions;
-	using Reflection;
+	using LinqToDB.Internal.Expressions;
 
 	public abstract class EntityBindingInterceptor : IEntityBindingInterceptor
 	{

@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 namespace LinqToDB.Linq
 {
 	using LinqToDB.Internal.Cache;
-	using LinqToDB.Expressions;
+	using LinqToDB.Internal.Expressions;
 	using LinqToDB.Internal.SqlQuery;
 	using LinqToDB.Tools;
 

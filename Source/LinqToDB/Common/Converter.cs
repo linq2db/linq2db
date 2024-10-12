@@ -11,8 +11,8 @@ using JetBrains.Annotations;
 
 namespace LinqToDB.Common
 {
-	using LinqToDB.Expressions;
-	using LinqToDB.Expressions.Visitors;
+	using LinqToDB.Internal.Expressions;
+	using LinqToDB.Internal.Expressions.Visitors;
 	using LinqToDB.Mapping;
 
 	/// <summary>

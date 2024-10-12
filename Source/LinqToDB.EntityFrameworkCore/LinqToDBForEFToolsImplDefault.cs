@@ -31,7 +31,7 @@ namespace LinqToDB.EntityFrameworkCore
 	using LinqToDB.DataProvider.SqlCe;
 	using LinqToDB.DataProvider.SQLite;
 	using LinqToDB.DataProvider.SqlServer;
-	using LinqToDB.Expressions;
+	using LinqToDB.Internal.Expressions;
 	using LinqToDB.Extensions;
 	using LinqToDB.Internal.Cache;
 	using LinqToDB.Mapping;

@@ -4,14 +4,14 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
+
 using JetBrains.Annotations;
 
 namespace LinqToDB
 {
-	using Expressions;
-	using Linq;
-	using Async;
-	using Reflection;
+	using LinqToDB.Internal.Expressions;
+	using LinqToDB.Linq;
+	using LinqToDB.Reflection;
 
 	using static LinqToDB.Reflection.Methods.LinqToDB.Merge;
 

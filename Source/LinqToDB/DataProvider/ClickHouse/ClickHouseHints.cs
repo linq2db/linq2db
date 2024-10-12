@@ -7,7 +7,7 @@ using JetBrains.Annotations;
 
 namespace LinqToDB.DataProvider.ClickHouse
 {
-	using LinqToDB.Expressions;
+	using LinqToDB.Internal.Expressions;
 	using LinqToDB.Internal.SqlQuery;
 	using LinqToDB.Linq;
 	using LinqToDB.Internal.SqlProvider;

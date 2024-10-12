@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace LinqToDB.DataProvider.MySql
 {
-	using LinqToDB.Expressions.Types;
+	using LinqToDB.Internal.Expressions.Types;
 	using LinqToDB.Mapping;
 	using LinqToDB.SqlQuery;
 

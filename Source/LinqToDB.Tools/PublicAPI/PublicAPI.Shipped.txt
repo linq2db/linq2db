@@ -687,7 +687,7 @@ LinqToDB.CodeModel.WellKnownTypes.LinqToDB
 LinqToDB.CodeModel.WellKnownTypes.LinqToDB.Common
 LinqToDB.CodeModel.WellKnownTypes.LinqToDB.Configuration
 LinqToDB.CodeModel.WellKnownTypes.LinqToDB.Data
-LinqToDB.CodeModel.WellKnownTypes.LinqToDB.Expressions
+LinqToDB.CodeModel.WellKnownTypes.LinqToDB.Internal.Expressions
 LinqToDB.CodeModel.WellKnownTypes.LinqToDB.Mapping
 LinqToDB.CodeModel.WellKnownTypes.LinqToDB.Tools
 LinqToDB.CodeModel.WellKnownTypes.LinqToDB.Tools.Comparers
@@ -11150,8 +11150,8 @@ static LinqToDB.CodeModel.WellKnownTypes.LinqToDB.DataExtensions_GetTable.get ->
 static LinqToDB.CodeModel.WellKnownTypes.LinqToDB.DataExtensions_QueryFromExpression.get -> LinqToDB.CodeModel.CodeIdentifier!
 static LinqToDB.CodeModel.WellKnownTypes.LinqToDB.DataExtensions_TableFromExpression.get -> LinqToDB.CodeModel.CodeIdentifier!
 static LinqToDB.CodeModel.WellKnownTypes.LinqToDB.DataType.get -> LinqToDB.CodeModel.IType!
-static LinqToDB.CodeModel.WellKnownTypes.LinqToDB.Expressions.MemberHelper.get -> LinqToDB.CodeModel.IType!
-static LinqToDB.CodeModel.WellKnownTypes.LinqToDB.Expressions.MemberHelper_MethodOf.get -> LinqToDB.CodeModel.CodeIdentifier!
+static LinqToDB.CodeModel.WellKnownTypes.LinqToDB.Internal.Expressions.MemberHelper.get -> LinqToDB.CodeModel.IType!
+static LinqToDB.CodeModel.WellKnownTypes.LinqToDB.Internal.Expressions.MemberHelper_MethodOf.get -> LinqToDB.CodeModel.CodeIdentifier!
 static LinqToDB.CodeModel.WellKnownTypes.LinqToDB.IDataContext.get -> LinqToDB.CodeModel.IType!
 static LinqToDB.CodeModel.WellKnownTypes.LinqToDB.IDataContext_MappingSchema.get -> LinqToDB.CodeModel.CodeReference!
 static LinqToDB.CodeModel.WellKnownTypes.LinqToDB.ITable(LinqToDB.CodeModel.IType! tableType) -> LinqToDB.CodeModel.IType!

@@ -6,7 +6,7 @@ using System.Linq.Expressions;
 
 namespace LinqToDB.Linq.Builder
 {
-	using LinqToDB.Expressions;
+	using LinqToDB.Internal.Expressions;
 	using LinqToDB.Extensions;
 	using LinqToDB.Internal.SqlQuery;
 	using LinqToDB.Mapping;

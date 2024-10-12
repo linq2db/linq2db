@@ -3,7 +3,7 @@ using System.Data.Common;
 
 namespace LinqToDB.DataProvider.SQLite
 {
-	using LinqToDB.Expressions.Types;
+	using LinqToDB.Internal.Expressions.Types;
 
 	public class SQLiteProviderAdapter : IDynamicProviderAdapter
 	{

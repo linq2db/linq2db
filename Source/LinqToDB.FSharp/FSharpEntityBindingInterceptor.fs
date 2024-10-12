@@ -8,7 +8,7 @@ open System.Linq
 open System.Linq.Expressions
 open System.Reflection
 
-open LinqToDB.Expressions
+open LinqToDB.Internal.Expressions
 open LinqToDB.Extensions
 open LinqToDB.Interceptors.Internal
 open LinqToDB.Reflection

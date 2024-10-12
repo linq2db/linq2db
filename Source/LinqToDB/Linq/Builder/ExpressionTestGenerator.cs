@@ -10,8 +10,8 @@ using System.Text;
 
 namespace LinqToDB.Linq.Builder
 {
-	using LinqToDB.Expressions;
-	using LinqToDB.Expressions.Visitors;
+	using LinqToDB.Internal.Expressions;
+	using LinqToDB.Internal.Expressions.Visitors;
 	using LinqToDB.Extensions;
 	using LinqToDB.Mapping;
 

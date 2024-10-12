@@ -3,7 +3,7 @@ using System.Globalization;
 
 namespace LinqToDB
 {
-	using LinqToDB.Expressions;
+	using LinqToDB.Internal.Expressions;
 	using LinqToDB.Internal.SqlQuery;
 	using LinqToDB.SqlQuery;
 

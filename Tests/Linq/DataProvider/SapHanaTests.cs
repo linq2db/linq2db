@@ -10,7 +10,7 @@ using LinqToDB;
 using LinqToDB.Common;
 using LinqToDB.Data;
 using LinqToDB.DataProvider.SapHana;
-using LinqToDB.Expressions;
+using LinqToDB.Internal.Expressions;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;

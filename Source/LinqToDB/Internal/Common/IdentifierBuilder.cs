@@ -13,7 +13,7 @@ namespace LinqToDB.Internal.Common
 {
 	using System.ComponentModel;
 
-	using LinqToDB.Expressions;
+	using LinqToDB.Internal.Expressions;
 	using LinqToDB.Linq;
 
 	/// <summary>

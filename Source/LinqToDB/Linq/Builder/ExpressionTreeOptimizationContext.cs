@@ -9,8 +9,8 @@ using System.Runtime.CompilerServices;
 
 namespace LinqToDB.Linq.Builder
 {
-	using LinqToDB.Expressions;
-	using LinqToDB.Expressions.Visitors;
+	using LinqToDB.Internal.Expressions;
+	using LinqToDB.Internal.Expressions.Visitors;
 	using LinqToDB.Extensions;
 	using LinqToDB.Internal.Common;
 	using LinqToDB.Internal.SqlQuery;

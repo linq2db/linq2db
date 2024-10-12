@@ -384,7 +384,7 @@ const LinqToDB.DataProvider.Sybase.SybaseProviderAdapter.ManagedClientNamespace 
 const LinqToDB.DataProvider.Sybase.SybaseProviderAdapter.NativeAssemblyName = "Sybase.AdoNet45.AseClient" -> string!
 const LinqToDB.DataProvider.Sybase.SybaseProviderAdapter.NativeClientNamespace = "Sybase.Data.AseClient" -> string!
 const LinqToDB.DataProvider.Sybase.SybaseProviderAdapter.NativeProviderFactoryName = "Sybase.Data.AseClient" -> string!
-const LinqToDB.Expressions.ChangeTypeExpression.ChangeTypeType = (System.Linq.Expressions.ExpressionType)1000 -> System.Linq.Expressions.ExpressionType
+const LinqToDB.Internal.Expressions.ChangeTypeExpression.ChangeTypeType = (System.Linq.Expressions.ExpressionType)1000 -> System.Linq.Expressions.ExpressionType
 const LinqToDB.LinqToDBConstants.Copyright = "© 2011-2024 linq2db.com" -> string!
 const LinqToDB.LinqToDBConstants.ProductDescription = "Linq to DB" -> string!
 const LinqToDB.LinqToDBConstants.ProductName = "Linq to DB" -> string!
@@ -3309,281 +3309,281 @@ LinqToDB.ExpressionMethodAttribute.IsColumn.get -> bool
 LinqToDB.ExpressionMethodAttribute.IsColumn.set -> void
 LinqToDB.ExpressionMethodAttribute.MethodName.get -> string?
 LinqToDB.ExpressionMethodAttribute.MethodName.set -> void
-LinqToDB.Expressions.ChangeTypeExpression
-LinqToDB.Expressions.ChangeTypeExpression.ChangeTypeExpression(System.Linq.Expressions.Expression! expression, System.Type! type) -> void
-LinqToDB.Expressions.ChangeTypeExpression.Expression.get -> System.Linq.Expressions.Expression!
-LinqToDB.Expressions.ChangeTypeExpression.Update(System.Linq.Expressions.Expression! expression) -> LinqToDB.Expressions.ChangeTypeExpression!
-LinqToDB.Expressions.CustomMapperAttribute
-LinqToDB.Expressions.CustomMapperAttribute.CustomMapperAttribute(System.Type! mapper) -> void
-LinqToDB.Expressions.DefaultValueExpression
-LinqToDB.Expressions.DefaultValueExpression.DefaultValueExpression(LinqToDB.Mapping.MappingSchema? mappingSchema, System.Type! type) -> void
-LinqToDB.Expressions.DefaultValueExpression.Equals(LinqToDB.Expressions.DefaultValueExpression! other) -> bool
-LinqToDB.Expressions.ExpressionConstants
-LinqToDB.Expressions.ExpressionEqualityComparer
-LinqToDB.Expressions.ExpressionEqualityComparer.Equals(System.Linq.Expressions.Expression? x, System.Linq.Expressions.Expression? y) -> bool
-LinqToDB.Expressions.ExpressionEqualityComparer.GetHashCode(System.Linq.Expressions.Expression? obj) -> int
-LinqToDB.Expressions.ExpressionEvaluator
-LinqToDB.Expressions.ExpressionExtensions
-LinqToDB.Expressions.ExpressionGenerator
-LinqToDB.Expressions.ExpressionGenerator.AddExpression(System.Linq.Expressions.Expression! expression) -> System.Linq.Expressions.Expression!
-LinqToDB.Expressions.ExpressionGenerator.AddVariable(System.Linq.Expressions.ParameterExpression! variable) -> System.Linq.Expressions.ParameterExpression!
-LinqToDB.Expressions.ExpressionGenerator.Assign(System.Linq.Expressions.Expression! left, System.Linq.Expressions.Expression! right) -> System.Linq.Expressions.Expression!
-LinqToDB.Expressions.ExpressionGenerator.AssignToVariable(System.Linq.Expressions.Expression! expression, string? name = null) -> System.Linq.Expressions.ParameterExpression!
-LinqToDB.Expressions.ExpressionGenerator.Build() -> System.Linq.Expressions.Expression!
-LinqToDB.Expressions.ExpressionGenerator.Condition(System.Linq.Expressions.Expression! test, System.Linq.Expressions.Expression! ifTrue, System.Linq.Expressions.Expression! ifFalse) -> System.Linq.Expressions.Expression!
-LinqToDB.Expressions.ExpressionGenerator.DeclareVariable(System.Type! type, string? name = null) -> System.Linq.Expressions.ParameterExpression!
-LinqToDB.Expressions.ExpressionGenerator.ExpressionGenerator() -> void
-LinqToDB.Expressions.ExpressionGenerator.ExpressionGenerator(LinqToDB.Expressions.TypeMapper! mapper) -> void
-LinqToDB.Expressions.ExpressionGenerator.IfThen(System.Linq.Expressions.Expression! test, System.Linq.Expressions.Expression! ifTrue) -> System.Linq.Expressions.Expression!
-LinqToDB.Expressions.ExpressionGenerator.IfThenElse(System.Linq.Expressions.Expression! test, System.Linq.Expressions.Expression! ifTrue, System.Linq.Expressions.Expression! ifFalse) -> System.Linq.Expressions.Expression!
-LinqToDB.Expressions.ExpressionGenerator.MapAction(System.Linq.Expressions.Expression<System.Action!>! action) -> System.Linq.Expressions.Expression!
-LinqToDB.Expressions.ExpressionGenerator.MapAction<T1, T2, T3, T4, T5>(System.Linq.Expressions.Expression<System.Action<T1, T2, T3, T4, T5>!>! action, System.Linq.Expressions.Expression! p1, System.Linq.Expressions.Expression! p2, System.Linq.Expressions.Expression! p3, System.Linq.Expressions.Expression! p4, System.Linq.Expressions.Expression! p5) -> System.Linq.Expressions.Expression!
-LinqToDB.Expressions.ExpressionGenerator.MapAction<T1, T2, T3, T4>(System.Linq.Expressions.Expression<System.Action<T1, T2, T3, T4>!>! action, System.Linq.Expressions.Expression! p1, System.Linq.Expressions.Expression! p2, System.Linq.Expressions.Expression! p3, System.Linq.Expressions.Expression! p4) -> System.Linq.Expressions.Expression!
-LinqToDB.Expressions.ExpressionGenerator.MapAction<T1, T2, T3>(System.Linq.Expressions.Expression<System.Action<T1, T2, T3>!>! action, System.Linq.Expressions.Expression! p1, System.Linq.Expressions.Expression! p2, System.Linq.Expressions.Expression! p3) -> System.Linq.Expressions.Expression!
-LinqToDB.Expressions.ExpressionGenerator.MapAction<T1, T2>(System.Linq.Expressions.Expression<System.Action<T1, T2>!>! action, System.Linq.Expressions.Expression! p1, System.Linq.Expressions.Expression! p2) -> System.Linq.Expressions.Expression!
-LinqToDB.Expressions.ExpressionGenerator.MapAction<T>(System.Linq.Expressions.Expression<System.Action<T>!>! action, System.Linq.Expressions.Expression! p) -> System.Linq.Expressions.Expression!
-LinqToDB.Expressions.ExpressionGenerator.MapExpression<T, TR>(System.Linq.Expressions.Expression<System.Func<T, TR>!>! func, System.Linq.Expressions.Expression! p) -> System.Linq.Expressions.Expression!
-LinqToDB.Expressions.ExpressionGenerator.MapExpression<T1, T2, T3, T4, T5, TR>(System.Linq.Expressions.Expression<System.Func<T1, T2, T3, T4, T5, TR>!>! func, System.Linq.Expressions.Expression! p1, System.Linq.Expressions.Expression! p2, System.Linq.Expressions.Expression! p3, System.Linq.Expressions.Expression! p4, System.Linq.Expressions.Expression! p5) -> System.Linq.Expressions.Expression!
-LinqToDB.Expressions.ExpressionGenerator.MapExpression<T1, T2, T3, T4, TR>(System.Linq.Expressions.Expression<System.Func<T1, T2, T3, T4, TR>!>! func, System.Linq.Expressions.Expression! p1, System.Linq.Expressions.Expression! p2, System.Linq.Expressions.Expression! p3, System.Linq.Expressions.Expression! p4) -> System.Linq.Expressions.Expression!
-LinqToDB.Expressions.ExpressionGenerator.MapExpression<T1, T2, T3, TR>(System.Linq.Expressions.Expression<System.Func<T1, T2, T3, TR>!>! func, System.Linq.Expressions.Expression! p1, System.Linq.Expressions.Expression! p2, System.Linq.Expressions.Expression! p3) -> System.Linq.Expressions.Expression!
-LinqToDB.Expressions.ExpressionGenerator.MapExpression<T1, T2, TR>(System.Linq.Expressions.Expression<System.Func<T1, T2, TR>!>! func, System.Linq.Expressions.Expression! p1, System.Linq.Expressions.Expression! p2) -> System.Linq.Expressions.Expression!
-LinqToDB.Expressions.ExpressionGenerator.MapExpression<TR>(System.Linq.Expressions.Expression<System.Func<TR>!>! func) -> System.Linq.Expressions.Expression!
-LinqToDB.Expressions.ExpressionGenerator.MemberAccess<T>(System.Linq.Expressions.Expression<System.Func<T, object!>!>! memberExpression, System.Linq.Expressions.Expression! obj) -> System.Linq.Expressions.MemberExpression!
-LinqToDB.Expressions.ExpressionGenerator.ResultExpression.get -> System.Linq.Expressions.Expression!
-LinqToDB.Expressions.ExpressionGenerator.Throw(System.Linq.Expressions.Expression! expression) -> System.Linq.Expressions.Expression!
-LinqToDB.Expressions.ExpressionGenerator.TryCatch(System.Linq.Expressions.Expression! body, params System.Linq.Expressions.CatchBlock![]! catchBlocks) -> System.Linq.Expressions.Expression!
-LinqToDB.Expressions.ExpressionHelper
-LinqToDB.Expressions.ExpressionInstances
-LinqToDB.Expressions.ExpressionPrinter
-LinqToDB.Expressions.ExpressionPrinter.ExpressionPrinter() -> void
-LinqToDB.Expressions.ExpressionVisitorBase
-LinqToDB.Expressions.ExpressionVisitorBase.ExpressionVisitorBase() -> void
-LinqToDB.Expressions.ICustomMapper
-LinqToDB.Expressions.ICustomMapper.CanMap(System.Linq.Expressions.Expression! expression) -> bool
-LinqToDB.Expressions.ICustomMapper.Map(System.Linq.Expressions.Expression! expression) -> System.Linq.Expressions.Expression!
-LinqToDB.Expressions.IExpressionEvaluator
-LinqToDB.Expressions.IExpressionEvaluator.CanBeEvaluated(System.Linq.Expressions.Expression! expression) -> bool
-LinqToDB.Expressions.IExpressionEvaluator.Evaluate(System.Linq.Expressions.Expression! expression) -> object?
-LinqToDB.Expressions.IGenericInfoProvider
-LinqToDB.Expressions.IGenericInfoProvider.SetInfo(LinqToDB.Mapping.MappingSchema! mappingSchema) -> void
-LinqToDB.Expressions.IPrintableExpression
-LinqToDB.Expressions.IPrintableExpression.Print(LinqToDB.Expressions.ExpressionPrinter! expressionPrinter) -> void
-LinqToDB.Expressions.IsQueryableAttribute
-LinqToDB.Expressions.IsQueryableAttribute.IsQueryableAttribute() -> void
-LinqToDB.Expressions.MemberHelper
-LinqToDB.Expressions.MemberHelper.MemberInfoWithType
-LinqToDB.Expressions.MemberHelper.MemberInfoWithType.Equals(LinqToDB.Expressions.MemberHelper.MemberInfoWithType other) -> bool
-LinqToDB.Expressions.MemberHelper.MemberInfoWithType.MemberInfo -> System.Reflection.MemberInfo!
-LinqToDB.Expressions.MemberHelper.MemberInfoWithType.MemberInfoWithType() -> void
-LinqToDB.Expressions.MemberHelper.MemberInfoWithType.MemberInfoWithType(System.Type? type, System.Reflection.MemberInfo! memberInfo) -> void
-LinqToDB.Expressions.MemberHelper.MemberInfoWithType.Type -> System.Type?
-LinqToDB.Expressions.PlaceholderExpression
-LinqToDB.Expressions.PlaceholderExpression.InnerExpression.get -> System.Linq.Expressions.Expression!
-LinqToDB.Expressions.PlaceholderExpression.PlaceholderExpression(System.Linq.Expressions.Expression! innerExpression, LinqToDB.Expressions.PlaceholderType placeholderType) -> void
-LinqToDB.Expressions.PlaceholderExpression.PlaceholderType.get -> LinqToDB.Expressions.PlaceholderType
-LinqToDB.Expressions.PlaceholderExpression.Update(System.Linq.Expressions.Expression! closureExpression) -> LinqToDB.Expressions.PlaceholderExpression!
-LinqToDB.Expressions.PlaceholderType
-LinqToDB.Expressions.PlaceholderType.Closure = 0 -> LinqToDB.Expressions.PlaceholderType
-LinqToDB.Expressions.PlaceholderType.Converted = 1 -> LinqToDB.Expressions.PlaceholderType
-LinqToDB.Expressions.SqlDefaultIfEmptyExpression
-LinqToDB.Expressions.SqlDefaultIfEmptyExpression.InnerExpression.get -> System.Linq.Expressions.Expression!
-LinqToDB.Expressions.SqlDefaultIfEmptyExpression.NotNullExpressions.get -> System.Collections.ObjectModel.ReadOnlyCollection<System.Linq.Expressions.Expression!>!
-LinqToDB.Expressions.SqlDefaultIfEmptyExpression.SqlDefaultIfEmptyExpression(System.Linq.Expressions.Expression! innerExpression, System.Collections.ObjectModel.ReadOnlyCollection<System.Linq.Expressions.Expression!>! notNullExpressions) -> void
-LinqToDB.Expressions.SqlDefaultIfEmptyExpression.Update(System.Linq.Expressions.Expression! innerExpression, System.Collections.ObjectModel.ReadOnlyCollection<System.Linq.Expressions.Expression!>! notNullExpressions) -> LinqToDB.Expressions.SqlDefaultIfEmptyExpression!
-LinqToDB.Expressions.SqlErrorExpression
-LinqToDB.Expressions.SqlErrorExpression.BuildContext.get -> object?
-LinqToDB.Expressions.SqlErrorExpression.CreateException() -> System.Exception!
-LinqToDB.Expressions.SqlErrorExpression.Expression.get -> System.Linq.Expressions.Expression?
-LinqToDB.Expressions.SqlErrorExpression.IsCritical.get -> bool
-LinqToDB.Expressions.SqlErrorExpression.Message.get -> string?
-LinqToDB.Expressions.SqlErrorExpression.ResultType.get -> System.Type!
-LinqToDB.Expressions.SqlErrorExpression.SqlErrorExpression(object? buildContext, System.Linq.Expressions.Expression! expression) -> void
-LinqToDB.Expressions.SqlErrorExpression.SqlErrorExpression(object? buildContext, System.Linq.Expressions.Expression? expression, string? message, System.Type! resultType, bool isCritical) -> void
-LinqToDB.Expressions.SqlErrorExpression.SqlErrorExpression(string! message, System.Type! resultType) -> void
-LinqToDB.Expressions.SqlErrorExpression.SqlErrorExpression(System.Linq.Expressions.Expression? expression, string? message, System.Type! resultType) -> void
-LinqToDB.Expressions.SqlErrorExpression.WithType(System.Type! type) -> LinqToDB.Expressions.SqlErrorExpression!
-LinqToDB.Expressions.SqlGenericConstructorExpression
-LinqToDB.Expressions.SqlGenericConstructorExpression.AppendAssignment(LinqToDB.Expressions.SqlGenericConstructorExpression.Assignment! assignment) -> LinqToDB.Expressions.SqlGenericConstructorExpression!
-LinqToDB.Expressions.SqlGenericConstructorExpression.Assignment
-LinqToDB.Expressions.SqlGenericConstructorExpression.Assignment.Assignment(System.Reflection.MemberInfo! memberInfo, System.Linq.Expressions.Expression! expression, bool isMandatory, bool isLoaded) -> void
-LinqToDB.Expressions.SqlGenericConstructorExpression.Assignment.Expression.get -> System.Linq.Expressions.Expression!
-LinqToDB.Expressions.SqlGenericConstructorExpression.Assignment.IsLoaded.get -> bool
-LinqToDB.Expressions.SqlGenericConstructorExpression.Assignment.IsMandatory.get -> bool
-LinqToDB.Expressions.SqlGenericConstructorExpression.Assignment.MemberInfo.get -> System.Reflection.MemberInfo!
-LinqToDB.Expressions.SqlGenericConstructorExpression.Assignment.WithExpression(System.Linq.Expressions.Expression! expression) -> LinqToDB.Expressions.SqlGenericConstructorExpression.Assignment!
-LinqToDB.Expressions.SqlGenericConstructorExpression.Assignment.WithMember(System.Reflection.MemberInfo! member) -> LinqToDB.Expressions.SqlGenericConstructorExpression.Assignment!
-LinqToDB.Expressions.SqlGenericConstructorExpression.Assignments.get -> System.Collections.ObjectModel.ReadOnlyCollection<LinqToDB.Expressions.SqlGenericConstructorExpression.Assignment!>!
-LinqToDB.Expressions.SqlGenericConstructorExpression.ConstructionRoot.get -> System.Linq.Expressions.Expression?
-LinqToDB.Expressions.SqlGenericConstructorExpression.Constructor.get -> System.Reflection.ConstructorInfo?
-LinqToDB.Expressions.SqlGenericConstructorExpression.ConstructorMethod.get -> System.Reflection.MethodInfo?
-LinqToDB.Expressions.SqlGenericConstructorExpression.ConstructType.get -> LinqToDB.Expressions.SqlGenericConstructorExpression.CreateType
-LinqToDB.Expressions.SqlGenericConstructorExpression.CreateType
-LinqToDB.Expressions.SqlGenericConstructorExpression.CreateType.Auto = 1 -> LinqToDB.Expressions.SqlGenericConstructorExpression.CreateType
-LinqToDB.Expressions.SqlGenericConstructorExpression.CreateType.Full = 2 -> LinqToDB.Expressions.SqlGenericConstructorExpression.CreateType
-LinqToDB.Expressions.SqlGenericConstructorExpression.CreateType.Incompatible = 0 -> LinqToDB.Expressions.SqlGenericConstructorExpression.CreateType
-LinqToDB.Expressions.SqlGenericConstructorExpression.CreateType.Keys = 3 -> LinqToDB.Expressions.SqlGenericConstructorExpression.CreateType
-LinqToDB.Expressions.SqlGenericConstructorExpression.CreateType.MemberInit = 5 -> LinqToDB.Expressions.SqlGenericConstructorExpression.CreateType
-LinqToDB.Expressions.SqlGenericConstructorExpression.CreateType.MethodCall = 6 -> LinqToDB.Expressions.SqlGenericConstructorExpression.CreateType
-LinqToDB.Expressions.SqlGenericConstructorExpression.CreateType.New = 4 -> LinqToDB.Expressions.SqlGenericConstructorExpression.CreateType
-LinqToDB.Expressions.SqlGenericConstructorExpression.Equals(LinqToDB.Expressions.SqlGenericConstructorExpression? other) -> bool
-LinqToDB.Expressions.SqlGenericConstructorExpression.MappingSchema.get -> LinqToDB.Mapping.MappingSchema?
-LinqToDB.Expressions.SqlGenericConstructorExpression.NewExpression.get -> System.Linq.Expressions.Expression?
-LinqToDB.Expressions.SqlGenericConstructorExpression.ObjectType.get -> System.Type!
-LinqToDB.Expressions.SqlGenericConstructorExpression.Parameter
-LinqToDB.Expressions.SqlGenericConstructorExpression.Parameter.Expression.get -> System.Linq.Expressions.Expression!
-LinqToDB.Expressions.SqlGenericConstructorExpression.Parameter.MemberInfo.get -> System.Reflection.MemberInfo?
-LinqToDB.Expressions.SqlGenericConstructorExpression.Parameter.Parameter(System.Linq.Expressions.Expression! expression, System.Reflection.ParameterInfo! parameterInfo, System.Reflection.MemberInfo? memberInfo) -> void
-LinqToDB.Expressions.SqlGenericConstructorExpression.Parameter.ParameterInfo.get -> System.Reflection.ParameterInfo!
-LinqToDB.Expressions.SqlGenericConstructorExpression.Parameter.ParameterType.get -> System.Type!
-LinqToDB.Expressions.SqlGenericConstructorExpression.Parameter.WithExpression(System.Linq.Expressions.Expression! expression) -> LinqToDB.Expressions.SqlGenericConstructorExpression.Parameter!
-LinqToDB.Expressions.SqlGenericConstructorExpression.Parameters.get -> System.Collections.ObjectModel.ReadOnlyCollection<LinqToDB.Expressions.SqlGenericConstructorExpression.Parameter!>!
-LinqToDB.Expressions.SqlGenericConstructorExpression.ReplaceAssignments(System.Collections.Generic.List<LinqToDB.Expressions.SqlGenericConstructorExpression.Assignment!>! assignment) -> LinqToDB.Expressions.SqlGenericConstructorExpression!
-LinqToDB.Expressions.SqlGenericConstructorExpression.ReplaceParameters(System.Collections.Generic.List<LinqToDB.Expressions.SqlGenericConstructorExpression.Parameter!>! parameters) -> LinqToDB.Expressions.SqlGenericConstructorExpression!
-LinqToDB.Expressions.SqlGenericConstructorExpression.SqlGenericConstructorExpression(LinqToDB.Expressions.SqlGenericConstructorExpression! basedOn) -> void
-LinqToDB.Expressions.SqlGenericConstructorExpression.SqlGenericConstructorExpression(LinqToDB.Expressions.SqlGenericConstructorExpression.CreateType createType, System.Type! objectType, System.Collections.ObjectModel.ReadOnlyCollection<LinqToDB.Expressions.SqlGenericConstructorExpression.Parameter!>? parameters, System.Collections.ObjectModel.ReadOnlyCollection<LinqToDB.Expressions.SqlGenericConstructorExpression.Assignment!>? assignments, LinqToDB.Mapping.MappingSchema? mappingSchema, System.Linq.Expressions.Expression? constructionRoot) -> void
-LinqToDB.Expressions.SqlGenericConstructorExpression.SqlGenericConstructorExpression(System.Linq.Expressions.MemberInitExpression! memberInitExpression) -> void
-LinqToDB.Expressions.SqlGenericConstructorExpression.SqlGenericConstructorExpression(System.Linq.Expressions.MethodCallExpression! methodCall) -> void
-LinqToDB.Expressions.SqlGenericConstructorExpression.SqlGenericConstructorExpression(System.Linq.Expressions.NewExpression! newExpression) -> void
-LinqToDB.Expressions.SqlGenericConstructorExpression.SqlGenericConstructorExpression(System.Type! objectType, System.Collections.ObjectModel.ReadOnlyCollection<System.Linq.Expressions.MemberBinding!>! bindings) -> void
-LinqToDB.Expressions.SqlGenericConstructorExpression.WithConstructionRoot(System.Linq.Expressions.Expression! constructionRoot) -> LinqToDB.Expressions.SqlGenericConstructorExpression!
-LinqToDB.Expressions.SqlGenericConstructorExpression.WithMappingSchema(LinqToDB.Mapping.MappingSchema? mappingSchema) -> LinqToDB.Expressions.SqlGenericConstructorExpression!
-LinqToDB.Expressions.SqlGenericParamAccessExpression
-LinqToDB.Expressions.SqlGenericParamAccessExpression.Constructor.get -> System.Linq.Expressions.Expression!
-LinqToDB.Expressions.SqlGenericParamAccessExpression.Equals(LinqToDB.Expressions.SqlGenericParamAccessExpression? other) -> bool
-LinqToDB.Expressions.SqlGenericParamAccessExpression.ParameterInfo.get -> System.Reflection.ParameterInfo!
-LinqToDB.Expressions.SqlGenericParamAccessExpression.ParamIndex.get -> int
-LinqToDB.Expressions.SqlGenericParamAccessExpression.ParamType.get -> System.Type!
-LinqToDB.Expressions.SqlGenericParamAccessExpression.SqlGenericParamAccessExpression(System.Linq.Expressions.Expression! constructor, System.Reflection.ParameterInfo! parameterInfo) -> void
-LinqToDB.Expressions.SqlGenericParamAccessExpression.Update(System.Linq.Expressions.Expression! constructor) -> LinqToDB.Expressions.SqlGenericParamAccessExpression!
-LinqToDB.Expressions.SqlPathExpression
-LinqToDB.Expressions.SqlPathExpression.Equals(LinqToDB.Expressions.SqlPathExpression? other) -> bool
-LinqToDB.Expressions.SqlPathExpression.Path.get -> System.Linq.Expressions.Expression![]!
-LinqToDB.Expressions.SqlPathExpression.Path.set -> void
-LinqToDB.Expressions.SqlPathExpression.SqlPathExpression(System.Linq.Expressions.Expression![]! path, System.Type! type) -> void
-LinqToDB.Expressions.SqlPathExpression.Update(System.Linq.Expressions.Expression![]! path) -> LinqToDB.Expressions.SqlPathExpression!
-LinqToDB.Expressions.SqlPathExpression.WithType(System.Type! type) -> LinqToDB.Expressions.SqlPathExpression!
-LinqToDB.Expressions.SqlPlaceholderExpression
-LinqToDB.Expressions.SqlPlaceholderExpression.Alias.get -> string?
-LinqToDB.Expressions.SqlPlaceholderExpression.Alias.set -> void
-LinqToDB.Expressions.SqlPlaceholderExpression.ConvertType.get -> System.Type!
-LinqToDB.Expressions.SqlPlaceholderExpression.Equals(LinqToDB.Expressions.SqlPlaceholderExpression! other) -> bool
-LinqToDB.Expressions.SqlPlaceholderExpression.Index.get -> int?
-LinqToDB.Expressions.SqlPlaceholderExpression.MakeNotNullable() -> LinqToDB.Expressions.SqlPlaceholderExpression!
-LinqToDB.Expressions.SqlPlaceholderExpression.MakeNullable() -> LinqToDB.Expressions.SqlPlaceholderExpression!
-LinqToDB.Expressions.SqlPlaceholderExpression.Path.get -> System.Linq.Expressions.Expression!
-LinqToDB.Expressions.SqlPlaceholderExpression.SelectQuery.get -> LinqToDB.Internal.SqlQuery.SelectQuery?
-LinqToDB.Expressions.SqlPlaceholderExpression.Sql.get -> LinqToDB.Internal.SqlQuery.ISqlExpression!
-LinqToDB.Expressions.SqlPlaceholderExpression.SqlPlaceholderExpression(LinqToDB.Internal.SqlQuery.SelectQuery? selectQuery, LinqToDB.Internal.SqlQuery.ISqlExpression! sql, System.Linq.Expressions.Expression! path, System.Type? convertType = null, string? alias = null, int? index = null, System.Linq.Expressions.Expression? trackingPath = null) -> void
-LinqToDB.Expressions.SqlPlaceholderExpression.TrackingPath.get -> System.Linq.Expressions.Expression?
-LinqToDB.Expressions.SqlPlaceholderExpression.WithAlias(string? alias) -> LinqToDB.Expressions.SqlPlaceholderExpression!
-LinqToDB.Expressions.SqlPlaceholderExpression.WithPath(System.Linq.Expressions.Expression! path) -> LinqToDB.Expressions.SqlPlaceholderExpression!
-LinqToDB.Expressions.SqlPlaceholderExpression.WithSelectQuery(LinqToDB.Internal.SqlQuery.SelectQuery! selectQuery) -> LinqToDB.Expressions.SqlPlaceholderExpression!
-LinqToDB.Expressions.SqlPlaceholderExpression.WithSql(LinqToDB.Internal.SqlQuery.ISqlExpression! sqlExpression) -> LinqToDB.Expressions.SqlPlaceholderExpression!
-LinqToDB.Expressions.SqlPlaceholderExpression.WithTrackingPath(System.Linq.Expressions.Expression! trackingPath) -> LinqToDB.Expressions.SqlPlaceholderExpression!
-LinqToDB.Expressions.SqlPlaceholderExpression.WithType(System.Type! type) -> LinqToDB.Expressions.SqlPlaceholderExpression!
-LinqToDB.Expressions.SqlQueryDependentAttribute
-LinqToDB.Expressions.SqlQueryDependentAttribute.SqlQueryDependentAttribute() -> void
-LinqToDB.Expressions.SqlQueryDependentAttributeHelper
-LinqToDB.Expressions.SqlQueryDependentParamsAttribute
-LinqToDB.Expressions.SqlQueryDependentParamsAttribute.SqlQueryDependentParamsAttribute() -> void
-LinqToDB.Expressions.SqlQueryRootExpression
-LinqToDB.Expressions.SqlQueryRootExpression.ContextType.get -> System.Type!
-LinqToDB.Expressions.SqlQueryRootExpression.Equals(LinqToDB.Expressions.SqlQueryRootExpression? other) -> bool
-LinqToDB.Expressions.SqlQueryRootExpression.MappingSchema.get -> LinqToDB.Mapping.MappingSchema!
-LinqToDB.Expressions.SqlQueryRootExpression.SqlQueryRootExpression(LinqToDB.Mapping.MappingSchema! mappingSchema, System.Type! contextType) -> void
-LinqToDB.Expressions.TagExpression
-LinqToDB.Expressions.TagExpression.InnerExpression.get -> System.Linq.Expressions.Expression!
-LinqToDB.Expressions.TagExpression.Tag.get -> object!
-LinqToDB.Expressions.TagExpression.TagExpression(System.Linq.Expressions.Expression! innerExpression, object! tag) -> void
-LinqToDB.Expressions.TagExpression.Update(System.Linq.Expressions.Expression! innerExpression, object! tag) -> LinqToDB.Expressions.TagExpression!
-LinqToDB.Expressions.TransformInfo
-LinqToDB.Expressions.TransformInfo.Continue -> bool
-LinqToDB.Expressions.TransformInfo.Expression -> System.Linq.Expressions.Expression!
-LinqToDB.Expressions.TransformInfo.Stop -> bool
-LinqToDB.Expressions.TransformInfo.TransformInfo() -> void
-LinqToDB.Expressions.TransformInfo.TransformInfo(System.Linq.Expressions.Expression! expression) -> void
-LinqToDB.Expressions.TransformInfo.TransformInfo(System.Linq.Expressions.Expression! expression, bool stop) -> void
-LinqToDB.Expressions.TransformInfo.TransformInfo(System.Linq.Expressions.Expression! expression, bool stop, bool continue) -> void
-LinqToDB.Expressions.TypeMapper
-LinqToDB.Expressions.TypeMapper.BuildAction(System.Linq.Expressions.LambdaExpression! lambda) -> System.Action!
-LinqToDB.Expressions.TypeMapper.BuildAction<T1, T2, T3, T4, T5>(System.Linq.Expressions.LambdaExpression! lambda) -> System.Action<T1, T2, T3, T4, T5>!
-LinqToDB.Expressions.TypeMapper.BuildAction<T1, T2, T3, T4>(System.Linq.Expressions.LambdaExpression! lambda) -> System.Action<T1, T2, T3, T4>!
-LinqToDB.Expressions.TypeMapper.BuildAction<T1, T2, T3>(System.Linq.Expressions.LambdaExpression! lambda) -> System.Action<T1, T2, T3>!
-LinqToDB.Expressions.TypeMapper.BuildAction<T1, T2>(System.Linq.Expressions.LambdaExpression! lambda) -> System.Action<T1, T2>!
-LinqToDB.Expressions.TypeMapper.BuildAction<T>(System.Linq.Expressions.LambdaExpression! lambda) -> System.Action<T>!
-LinqToDB.Expressions.TypeMapper.BuildFactory<T, TR>(System.Linq.Expressions.Expression<System.Func<T, TR>!>! newFunc) -> System.Func<T, object!>!
-LinqToDB.Expressions.TypeMapper.BuildFactory<T1, T2, T3, TR>(System.Linq.Expressions.Expression<System.Func<T1, T2, T3, TR>!>! newFunc) -> System.Func<T1, T2, T3, object!>!
-LinqToDB.Expressions.TypeMapper.BuildFactory<T1, T2, TR>(System.Linq.Expressions.Expression<System.Func<T1, T2, TR>!>! newFunc) -> System.Func<T1, T2, object!>!
-LinqToDB.Expressions.TypeMapper.BuildFactory<TR>(System.Linq.Expressions.Expression<System.Func<TR>!>! newFunc) -> System.Func<object!>!
-LinqToDB.Expressions.TypeMapper.BuildFunc<T, TR>(System.Linq.Expressions.LambdaExpression! lambda) -> System.Func<T, TR>!
-LinqToDB.Expressions.TypeMapper.BuildFunc<T1, T2, T3, T4, T5, T6, T7, TR>(System.Linq.Expressions.LambdaExpression! lambda) -> System.Func<T1, T2, T3, T4, T5, T6, T7, TR>!
-LinqToDB.Expressions.TypeMapper.BuildFunc<T1, T2, T3, T4, T5, T6, TR>(System.Linq.Expressions.LambdaExpression! lambda) -> System.Func<T1, T2, T3, T4, T5, T6, TR>!
-LinqToDB.Expressions.TypeMapper.BuildFunc<T1, T2, T3, T4, T5, TR>(System.Linq.Expressions.LambdaExpression! lambda) -> System.Func<T1, T2, T3, T4, T5, TR>!
-LinqToDB.Expressions.TypeMapper.BuildFunc<T1, T2, T3, T4, TR>(System.Linq.Expressions.LambdaExpression! lambda) -> System.Func<T1, T2, T3, T4, TR>!
-LinqToDB.Expressions.TypeMapper.BuildFunc<T1, T2, T3, TR>(System.Linq.Expressions.LambdaExpression! lambda) -> System.Func<T1, T2, T3, TR>!
-LinqToDB.Expressions.TypeMapper.BuildFunc<T1, T2, TR>(System.Linq.Expressions.LambdaExpression! lambda) -> System.Func<T1, T2, TR>!
-LinqToDB.Expressions.TypeMapper.BuildFunc<TR>(System.Linq.Expressions.LambdaExpression! lambda) -> System.Func<TR>!
-LinqToDB.Expressions.TypeMapper.BuildTypedFactory<T, TR, TRes>(System.Linq.Expressions.Expression<System.Func<T, TR>!>! newFunc) -> System.Func<T, TRes>!
-LinqToDB.Expressions.TypeMapper.BuildTypedFactory<T1, T2, T3, TR, TRes>(System.Linq.Expressions.Expression<System.Func<T1, T2, T3, TR>!>! newFunc) -> System.Func<T1, T2, T3, TRes>!
-LinqToDB.Expressions.TypeMapper.BuildTypedFactory<T1, T2, TR, TRes>(System.Linq.Expressions.Expression<System.Func<T1, T2, TR>!>! newFunc) -> System.Func<T1, T2, TRes>!
-LinqToDB.Expressions.TypeMapper.BuildTypedFactory<TR, TRes>(System.Linq.Expressions.Expression<System.Func<TR>!>! newFunc) -> System.Func<TRes>!
-LinqToDB.Expressions.TypeMapper.BuildWrappedFactory<T, TR>(System.Linq.Expressions.Expression<System.Func<T, TR!>!>! newFunc) -> System.Func<T, TR!>!
-LinqToDB.Expressions.TypeMapper.BuildWrappedFactory<T1, T2, T3, T4, T5, T6, TR>(System.Linq.Expressions.Expression<System.Func<T1, T2, T3, T4, T5, T6, TR!>!>! newFunc) -> System.Func<T1, T2, T3, T4, T5, T6, TR!>!
-LinqToDB.Expressions.TypeMapper.BuildWrappedFactory<T1, T2, T3, T4, T5, TR>(System.Linq.Expressions.Expression<System.Func<T1, T2, T3, T4, T5, TR!>!>! newFunc) -> System.Func<T1, T2, T3, T4, T5, TR!>!
-LinqToDB.Expressions.TypeMapper.BuildWrappedFactory<T1, T2, T3, T4, TR>(System.Linq.Expressions.Expression<System.Func<T1, T2, T3, T4, TR!>!>! newFunc) -> System.Func<T1, T2, T3, T4, TR!>!
-LinqToDB.Expressions.TypeMapper.BuildWrappedFactory<T1, T2, T3, TR>(System.Linq.Expressions.Expression<System.Func<T1, T2, T3, TR!>!>! newFunc) -> System.Func<T1, T2, T3, TR!>!
-LinqToDB.Expressions.TypeMapper.BuildWrappedFactory<T1, T2, TR>(System.Linq.Expressions.Expression<System.Func<T1, T2, TR!>!>! newFunc) -> System.Func<T1, T2, TR!>!
-LinqToDB.Expressions.TypeMapper.BuildWrappedFactory<TR>(System.Linq.Expressions.Expression<System.Func<TR!>!>! newFunc) -> System.Func<TR!>!
-LinqToDB.Expressions.TypeMapper.FinalizeMappings() -> void
-LinqToDB.Expressions.TypeMapper.MapAction(System.Linq.Expressions.Expression<System.Action!>! action) -> System.Linq.Expressions.Expression!
-LinqToDB.Expressions.TypeMapper.MapAction<T1, T2, T3, T4, T5>(System.Linq.Expressions.Expression<System.Action<T1, T2, T3, T4, T5>!>! action, System.Linq.Expressions.Expression! p1, System.Linq.Expressions.Expression! p2, System.Linq.Expressions.Expression! p3, System.Linq.Expressions.Expression! p4, System.Linq.Expressions.Expression! p5) -> System.Linq.Expressions.Expression!
-LinqToDB.Expressions.TypeMapper.MapAction<T1, T2, T3, T4>(System.Linq.Expressions.Expression<System.Action<T1, T2, T3, T4>!>! action, System.Linq.Expressions.Expression! p1, System.Linq.Expressions.Expression! p2, System.Linq.Expressions.Expression! p3, System.Linq.Expressions.Expression! p4) -> System.Linq.Expressions.Expression!
-LinqToDB.Expressions.TypeMapper.MapAction<T1, T2, T3>(System.Linq.Expressions.Expression<System.Action<T1, T2, T3>!>! action, System.Linq.Expressions.Expression! p1, System.Linq.Expressions.Expression! p2, System.Linq.Expressions.Expression! p3) -> System.Linq.Expressions.Expression!
-LinqToDB.Expressions.TypeMapper.MapAction<T1, T2>(System.Linq.Expressions.Expression<System.Action<T1, T2>!>! action, System.Linq.Expressions.Expression! p1, System.Linq.Expressions.Expression! p2) -> System.Linq.Expressions.Expression!
-LinqToDB.Expressions.TypeMapper.MapAction<T>(System.Linq.Expressions.Expression<System.Action<T>!>! action, System.Linq.Expressions.Expression! p) -> System.Linq.Expressions.Expression!
-LinqToDB.Expressions.TypeMapper.MapActionLambda(System.Linq.Expressions.Expression<System.Action!>! action) -> System.Linq.Expressions.LambdaExpression!
-LinqToDB.Expressions.TypeMapper.MapActionLambda<T1, T2, T3, T4, T5>(System.Linq.Expressions.Expression<System.Action<T1, T2, T3, T4, T5>!>! action) -> System.Linq.Expressions.LambdaExpression!
-LinqToDB.Expressions.TypeMapper.MapActionLambda<T1, T2, T3, T4>(System.Linq.Expressions.Expression<System.Action<T1, T2, T3, T4>!>! action) -> System.Linq.Expressions.LambdaExpression!
-LinqToDB.Expressions.TypeMapper.MapActionLambda<T1, T2, T3>(System.Linq.Expressions.Expression<System.Action<T1, T2, T3>!>! action) -> System.Linq.Expressions.LambdaExpression!
-LinqToDB.Expressions.TypeMapper.MapActionLambda<T1, T2>(System.Linq.Expressions.Expression<System.Action<T1, T2>!>! action) -> System.Linq.Expressions.LambdaExpression!
-LinqToDB.Expressions.TypeMapper.MapActionLambda<T>(System.Linq.Expressions.Expression<System.Action<T>!>! action) -> System.Linq.Expressions.LambdaExpression!
-LinqToDB.Expressions.TypeMapper.MapExpression<T, TR>(System.Linq.Expressions.Expression<System.Func<T, TR>!>! func, System.Linq.Expressions.Expression! p) -> System.Linq.Expressions.Expression!
-LinqToDB.Expressions.TypeMapper.MapExpression<T1, T2, T3, T4, T5, TR>(System.Linq.Expressions.Expression<System.Func<T1, T2, T3, T4, T5, TR>!>! func, System.Linq.Expressions.Expression! p1, System.Linq.Expressions.Expression! p2, System.Linq.Expressions.Expression! p3, System.Linq.Expressions.Expression! p4, System.Linq.Expressions.Expression! p5) -> System.Linq.Expressions.Expression!
-LinqToDB.Expressions.TypeMapper.MapExpression<T1, T2, T3, T4, TR>(System.Linq.Expressions.Expression<System.Func<T1, T2, T3, T4, TR>!>! func, System.Linq.Expressions.Expression! p1, System.Linq.Expressions.Expression! p2, System.Linq.Expressions.Expression! p3, System.Linq.Expressions.Expression! p4) -> System.Linq.Expressions.Expression!
-LinqToDB.Expressions.TypeMapper.MapExpression<T1, T2, T3, TR>(System.Linq.Expressions.Expression<System.Func<T1, T2, T3, TR>!>! func, System.Linq.Expressions.Expression! p1, System.Linq.Expressions.Expression! p2, System.Linq.Expressions.Expression! p3) -> System.Linq.Expressions.Expression!
-LinqToDB.Expressions.TypeMapper.MapExpression<T1, T2, TR>(System.Linq.Expressions.Expression<System.Func<T1, T2, TR>!>! func, System.Linq.Expressions.Expression! p1, System.Linq.Expressions.Expression! p2) -> System.Linq.Expressions.Expression!
-LinqToDB.Expressions.TypeMapper.MapExpression<TR>(System.Linq.Expressions.Expression<System.Func<TR>!>! func) -> System.Linq.Expressions.Expression!
-LinqToDB.Expressions.TypeMapper.MapLambda<T, TR>(System.Linq.Expressions.Expression<System.Func<T, TR>!>! func) -> System.Linq.Expressions.LambdaExpression!
-LinqToDB.Expressions.TypeMapper.MapLambda<T1, T2, T3, T4, T5, T6, T7, TR>(System.Linq.Expressions.Expression<System.Func<T1, T2, T3, T4, T5, T6, T7, TR>!>! func) -> System.Linq.Expressions.LambdaExpression!
-LinqToDB.Expressions.TypeMapper.MapLambda<T1, T2, T3, T4, T5, T6, TR>(System.Linq.Expressions.Expression<System.Func<T1, T2, T3, T4, T5, T6, TR>!>! func) -> System.Linq.Expressions.LambdaExpression!
-LinqToDB.Expressions.TypeMapper.MapLambda<T1, T2, T3, T4, T5, TR>(System.Linq.Expressions.Expression<System.Func<T1, T2, T3, T4, T5, TR>!>! func) -> System.Linq.Expressions.LambdaExpression!
-LinqToDB.Expressions.TypeMapper.MapLambda<T1, T2, T3, T4, TR>(System.Linq.Expressions.Expression<System.Func<T1, T2, T3, T4, TR>!>! func) -> System.Linq.Expressions.LambdaExpression!
-LinqToDB.Expressions.TypeMapper.MapLambda<T1, T2, T3, TR>(System.Linq.Expressions.Expression<System.Func<T1, T2, T3, TR>!>! func) -> System.Linq.Expressions.LambdaExpression!
-LinqToDB.Expressions.TypeMapper.MapLambda<T1, T2, TR>(System.Linq.Expressions.Expression<System.Func<T1, T2, TR>!>! func) -> System.Linq.Expressions.LambdaExpression!
-LinqToDB.Expressions.TypeMapper.MemberBuilder<T, TV>
-LinqToDB.Expressions.TypeMapper.MemberBuilder<T, TV>.BuildGetter<TBase>() -> System.Func<TBase, TV>!
-LinqToDB.Expressions.TypeMapper.MemberBuilder<T, TV>.BuildSetter<TBase>() -> System.Action<TBase, TV>!
-LinqToDB.Expressions.TypeMapper.RegisterTypeWrapper(System.Type! wrapperType, System.Type! originalType) -> void
-LinqToDB.Expressions.TypeMapper.RegisterTypeWrapper<TWrapper>(System.Type! originalType) -> void
-LinqToDB.Expressions.TypeMapper.Type<T>() -> LinqToDB.Expressions.TypeMapper.TypeBuilder<T>!
-LinqToDB.Expressions.TypeMapper.TypeBuilder<T>
-LinqToDB.Expressions.TypeMapper.TypeBuilder<T>.Member<TV>(System.Linq.Expressions.Expression<System.Func<T, TV>!>! memberExpression) -> LinqToDB.Expressions.TypeMapper.MemberBuilder<T, TV>!
-LinqToDB.Expressions.TypeMapper.TypeMapper() -> void
-LinqToDB.Expressions.TypeMapper.Wrap<TR>(object? instance) -> TR?
-LinqToDB.Expressions.TypeMapper.WrapTask<TR>(System.Threading.Tasks.Task! instanceTask, System.Type! instanceType, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<TR?>!
-LinqToDB.Expressions.TypeWrapper
-LinqToDB.Expressions.TypeWrapper.CompiledWrappers.get -> System.Delegate![]!
-LinqToDB.Expressions.TypeWrapper.instance_.get -> object!
-LinqToDB.Expressions.TypeWrapper.TypeWrapper() -> void
-LinqToDB.Expressions.TypeWrapper.TypeWrapper(object! instance, System.Delegate![]? wrappers) -> void
-LinqToDB.Expressions.TypeWrapperNameAttribute
-LinqToDB.Expressions.TypeWrapperNameAttribute.TypeWrapperNameAttribute(string! name) -> void
-LinqToDB.Expressions.ValueTaskToTaskMapper
-LinqToDB.Expressions.ValueTaskToTaskMapper.ValueTaskToTaskMapper() -> void
-LinqToDB.Expressions.WrapperAttribute
-LinqToDB.Expressions.WrapperAttribute.TypeName.get -> string?
-LinqToDB.Expressions.WrapperAttribute.WrapperAttribute() -> void
-LinqToDB.Expressions.WrapperAttribute.WrapperAttribute(string! typeName) -> void
+LinqToDB.Internal.Expressions.ChangeTypeExpression
+LinqToDB.Internal.Expressions.ChangeTypeExpression.ChangeTypeExpression(System.Linq.Expressions.Expression! expression, System.Type! type) -> void
+LinqToDB.Internal.Expressions.ChangeTypeExpression.Expression.get -> System.Linq.Expressions.Expression!
+LinqToDB.Internal.Expressions.ChangeTypeExpression.Update(System.Linq.Expressions.Expression! expression) -> LinqToDB.Internal.Expressions.ChangeTypeExpression!
+LinqToDB.Internal.Expressions.CustomMapperAttribute
+LinqToDB.Internal.Expressions.CustomMapperAttribute.CustomMapperAttribute(System.Type! mapper) -> void
+LinqToDB.Internal.Expressions.DefaultValueExpression
+LinqToDB.Internal.Expressions.DefaultValueExpression.DefaultValueExpression(LinqToDB.Mapping.MappingSchema? mappingSchema, System.Type! type) -> void
+LinqToDB.Internal.Expressions.DefaultValueExpression.Equals(LinqToDB.Internal.Expressions.DefaultValueExpression! other) -> bool
+LinqToDB.Internal.Expressions.ExpressionConstants
+LinqToDB.Internal.Expressions.ExpressionEqualityComparer
+LinqToDB.Internal.Expressions.ExpressionEqualityComparer.Equals(System.Linq.Expressions.Expression? x, System.Linq.Expressions.Expression? y) -> bool
+LinqToDB.Internal.Expressions.ExpressionEqualityComparer.GetHashCode(System.Linq.Expressions.Expression? obj) -> int
+LinqToDB.Internal.Expressions.ExpressionEvaluator
+LinqToDB.Internal.Expressions.ExpressionExtensions
+LinqToDB.Internal.Expressions.ExpressionGenerator
+LinqToDB.Internal.Expressions.ExpressionGenerator.AddExpression(System.Linq.Expressions.Expression! expression) -> System.Linq.Expressions.Expression!
+LinqToDB.Internal.Expressions.ExpressionGenerator.AddVariable(System.Linq.Expressions.ParameterExpression! variable) -> System.Linq.Expressions.ParameterExpression!
+LinqToDB.Internal.Expressions.ExpressionGenerator.Assign(System.Linq.Expressions.Expression! left, System.Linq.Expressions.Expression! right) -> System.Linq.Expressions.Expression!
+LinqToDB.Internal.Expressions.ExpressionGenerator.AssignToVariable(System.Linq.Expressions.Expression! expression, string? name = null) -> System.Linq.Expressions.ParameterExpression!
+LinqToDB.Internal.Expressions.ExpressionGenerator.Build() -> System.Linq.Expressions.Expression!
+LinqToDB.Internal.Expressions.ExpressionGenerator.Condition(System.Linq.Expressions.Expression! test, System.Linq.Expressions.Expression! ifTrue, System.Linq.Expressions.Expression! ifFalse) -> System.Linq.Expressions.Expression!
+LinqToDB.Internal.Expressions.ExpressionGenerator.DeclareVariable(System.Type! type, string? name = null) -> System.Linq.Expressions.ParameterExpression!
+LinqToDB.Internal.Expressions.ExpressionGenerator.ExpressionGenerator() -> void
+LinqToDB.Internal.Expressions.ExpressionGenerator.ExpressionGenerator(LinqToDB.Internal.Expressions.TypeMapper! mapper) -> void
+LinqToDB.Internal.Expressions.ExpressionGenerator.IfThen(System.Linq.Expressions.Expression! test, System.Linq.Expressions.Expression! ifTrue) -> System.Linq.Expressions.Expression!
+LinqToDB.Internal.Expressions.ExpressionGenerator.IfThenElse(System.Linq.Expressions.Expression! test, System.Linq.Expressions.Expression! ifTrue, System.Linq.Expressions.Expression! ifFalse) -> System.Linq.Expressions.Expression!
+LinqToDB.Internal.Expressions.ExpressionGenerator.MapAction(System.Linq.Expressions.Expression<System.Action!>! action) -> System.Linq.Expressions.Expression!
+LinqToDB.Internal.Expressions.ExpressionGenerator.MapAction<T1, T2, T3, T4, T5>(System.Linq.Expressions.Expression<System.Action<T1, T2, T3, T4, T5>!>! action, System.Linq.Expressions.Expression! p1, System.Linq.Expressions.Expression! p2, System.Linq.Expressions.Expression! p3, System.Linq.Expressions.Expression! p4, System.Linq.Expressions.Expression! p5) -> System.Linq.Expressions.Expression!
+LinqToDB.Internal.Expressions.ExpressionGenerator.MapAction<T1, T2, T3, T4>(System.Linq.Expressions.Expression<System.Action<T1, T2, T3, T4>!>! action, System.Linq.Expressions.Expression! p1, System.Linq.Expressions.Expression! p2, System.Linq.Expressions.Expression! p3, System.Linq.Expressions.Expression! p4) -> System.Linq.Expressions.Expression!
+LinqToDB.Internal.Expressions.ExpressionGenerator.MapAction<T1, T2, T3>(System.Linq.Expressions.Expression<System.Action<T1, T2, T3>!>! action, System.Linq.Expressions.Expression! p1, System.Linq.Expressions.Expression! p2, System.Linq.Expressions.Expression! p3) -> System.Linq.Expressions.Expression!
+LinqToDB.Internal.Expressions.ExpressionGenerator.MapAction<T1, T2>(System.Linq.Expressions.Expression<System.Action<T1, T2>!>! action, System.Linq.Expressions.Expression! p1, System.Linq.Expressions.Expression! p2) -> System.Linq.Expressions.Expression!
+LinqToDB.Internal.Expressions.ExpressionGenerator.MapAction<T>(System.Linq.Expressions.Expression<System.Action<T>!>! action, System.Linq.Expressions.Expression! p) -> System.Linq.Expressions.Expression!
+LinqToDB.Internal.Expressions.ExpressionGenerator.MapExpression<T, TR>(System.Linq.Expressions.Expression<System.Func<T, TR>!>! func, System.Linq.Expressions.Expression! p) -> System.Linq.Expressions.Expression!
+LinqToDB.Internal.Expressions.ExpressionGenerator.MapExpression<T1, T2, T3, T4, T5, TR>(System.Linq.Expressions.Expression<System.Func<T1, T2, T3, T4, T5, TR>!>! func, System.Linq.Expressions.Expression! p1, System.Linq.Expressions.Expression! p2, System.Linq.Expressions.Expression! p3, System.Linq.Expressions.Expression! p4, System.Linq.Expressions.Expression! p5) -> System.Linq.Expressions.Expression!
+LinqToDB.Internal.Expressions.ExpressionGenerator.MapExpression<T1, T2, T3, T4, TR>(System.Linq.Expressions.Expression<System.Func<T1, T2, T3, T4, TR>!>! func, System.Linq.Expressions.Expression! p1, System.Linq.Expressions.Expression! p2, System.Linq.Expressions.Expression! p3, System.Linq.Expressions.Expression! p4) -> System.Linq.Expressions.Expression!
+LinqToDB.Internal.Expressions.ExpressionGenerator.MapExpression<T1, T2, T3, TR>(System.Linq.Expressions.Expression<System.Func<T1, T2, T3, TR>!>! func, System.Linq.Expressions.Expression! p1, System.Linq.Expressions.Expression! p2, System.Linq.Expressions.Expression! p3) -> System.Linq.Expressions.Expression!
+LinqToDB.Internal.Expressions.ExpressionGenerator.MapExpression<T1, T2, TR>(System.Linq.Expressions.Expression<System.Func<T1, T2, TR>!>! func, System.Linq.Expressions.Expression! p1, System.Linq.Expressions.Expression! p2) -> System.Linq.Expressions.Expression!
+LinqToDB.Internal.Expressions.ExpressionGenerator.MapExpression<TR>(System.Linq.Expressions.Expression<System.Func<TR>!>! func) -> System.Linq.Expressions.Expression!
+LinqToDB.Internal.Expressions.ExpressionGenerator.MemberAccess<T>(System.Linq.Expressions.Expression<System.Func<T, object!>!>! memberExpression, System.Linq.Expressions.Expression! obj) -> System.Linq.Expressions.MemberExpression!
+LinqToDB.Internal.Expressions.ExpressionGenerator.ResultExpression.get -> System.Linq.Expressions.Expression!
+LinqToDB.Internal.Expressions.ExpressionGenerator.Throw(System.Linq.Expressions.Expression! expression) -> System.Linq.Expressions.Expression!
+LinqToDB.Internal.Expressions.ExpressionGenerator.TryCatch(System.Linq.Expressions.Expression! body, params System.Linq.Expressions.CatchBlock![]! catchBlocks) -> System.Linq.Expressions.Expression!
+LinqToDB.Internal.Expressions.ExpressionHelper
+LinqToDB.Internal.Expressions.ExpressionInstances
+LinqToDB.Internal.Expressions.ExpressionPrinter
+LinqToDB.Internal.Expressions.ExpressionPrinter.ExpressionPrinter() -> void
+LinqToDB.Internal.Expressions.ExpressionVisitorBase
+LinqToDB.Internal.Expressions.ExpressionVisitorBase.ExpressionVisitorBase() -> void
+LinqToDB.Internal.Expressions.ICustomMapper
+LinqToDB.Internal.Expressions.ICustomMapper.CanMap(System.Linq.Expressions.Expression! expression) -> bool
+LinqToDB.Internal.Expressions.ICustomMapper.Map(System.Linq.Expressions.Expression! expression) -> System.Linq.Expressions.Expression!
+LinqToDB.Internal.Expressions.IExpressionEvaluator
+LinqToDB.Internal.Expressions.IExpressionEvaluator.CanBeEvaluated(System.Linq.Expressions.Expression! expression) -> bool
+LinqToDB.Internal.Expressions.IExpressionEvaluator.Evaluate(System.Linq.Expressions.Expression! expression) -> object?
+LinqToDB.Internal.Expressions.IGenericInfoProvider
+LinqToDB.Internal.Expressions.IGenericInfoProvider.SetInfo(LinqToDB.Mapping.MappingSchema! mappingSchema) -> void
+LinqToDB.Internal.Expressions.IPrintableExpression
+LinqToDB.Internal.Expressions.IPrintableExpression.Print(LinqToDB.Internal.Expressions.ExpressionPrinter! expressionPrinter) -> void
+LinqToDB.Internal.Expressions.IsQueryableAttribute
+LinqToDB.Internal.Expressions.IsQueryableAttribute.IsQueryableAttribute() -> void
+LinqToDB.Internal.Expressions.MemberHelper
+LinqToDB.Internal.Expressions.MemberHelper.MemberInfoWithType
+LinqToDB.Internal.Expressions.MemberHelper.MemberInfoWithType.Equals(LinqToDB.Internal.Expressions.MemberHelper.MemberInfoWithType other) -> bool
+LinqToDB.Internal.Expressions.MemberHelper.MemberInfoWithType.MemberInfo -> System.Reflection.MemberInfo!
+LinqToDB.Internal.Expressions.MemberHelper.MemberInfoWithType.MemberInfoWithType() -> void
+LinqToDB.Internal.Expressions.MemberHelper.MemberInfoWithType.MemberInfoWithType(System.Type? type, System.Reflection.MemberInfo! memberInfo) -> void
+LinqToDB.Internal.Expressions.MemberHelper.MemberInfoWithType.Type -> System.Type?
+LinqToDB.Internal.Expressions.PlaceholderExpression
+LinqToDB.Internal.Expressions.PlaceholderExpression.InnerExpression.get -> System.Linq.Expressions.Expression!
+LinqToDB.Internal.Expressions.PlaceholderExpression.PlaceholderExpression(System.Linq.Expressions.Expression! innerExpression, LinqToDB.Internal.Expressions.PlaceholderType placeholderType) -> void
+LinqToDB.Internal.Expressions.PlaceholderExpression.PlaceholderType.get -> LinqToDB.Internal.Expressions.PlaceholderType
+LinqToDB.Internal.Expressions.PlaceholderExpression.Update(System.Linq.Expressions.Expression! closureExpression) -> LinqToDB.Internal.Expressions.PlaceholderExpression!
+LinqToDB.Internal.Expressions.PlaceholderType
+LinqToDB.Internal.Expressions.PlaceholderType.Closure = 0 -> LinqToDB.Internal.Expressions.PlaceholderType
+LinqToDB.Internal.Expressions.PlaceholderType.Converted = 1 -> LinqToDB.Internal.Expressions.PlaceholderType
+LinqToDB.Internal.Expressions.SqlDefaultIfEmptyExpression
+LinqToDB.Internal.Expressions.SqlDefaultIfEmptyExpression.InnerExpression.get -> System.Linq.Expressions.Expression!
+LinqToDB.Internal.Expressions.SqlDefaultIfEmptyExpression.NotNullExpressions.get -> System.Collections.ObjectModel.ReadOnlyCollection<System.Linq.Expressions.Expression!>!
+LinqToDB.Internal.Expressions.SqlDefaultIfEmptyExpression.SqlDefaultIfEmptyExpression(System.Linq.Expressions.Expression! innerExpression, System.Collections.ObjectModel.ReadOnlyCollection<System.Linq.Expressions.Expression!>! notNullExpressions) -> void
+LinqToDB.Internal.Expressions.SqlDefaultIfEmptyExpression.Update(System.Linq.Expressions.Expression! innerExpression, System.Collections.ObjectModel.ReadOnlyCollection<System.Linq.Expressions.Expression!>! notNullExpressions) -> LinqToDB.Internal.Expressions.SqlDefaultIfEmptyExpression!
+LinqToDB.Internal.Expressions.SqlErrorExpression
+LinqToDB.Internal.Expressions.SqlErrorExpression.BuildContext.get -> object?
+LinqToDB.Internal.Expressions.SqlErrorExpression.CreateException() -> System.Exception!
+LinqToDB.Internal.Expressions.SqlErrorExpression.Expression.get -> System.Linq.Expressions.Expression?
+LinqToDB.Internal.Expressions.SqlErrorExpression.IsCritical.get -> bool
+LinqToDB.Internal.Expressions.SqlErrorExpression.Message.get -> string?
+LinqToDB.Internal.Expressions.SqlErrorExpression.ResultType.get -> System.Type!
+LinqToDB.Internal.Expressions.SqlErrorExpression.SqlErrorExpression(object? buildContext, System.Linq.Expressions.Expression! expression) -> void
+LinqToDB.Internal.Expressions.SqlErrorExpression.SqlErrorExpression(object? buildContext, System.Linq.Expressions.Expression? expression, string? message, System.Type! resultType, bool isCritical) -> void
+LinqToDB.Internal.Expressions.SqlErrorExpression.SqlErrorExpression(string! message, System.Type! resultType) -> void
+LinqToDB.Internal.Expressions.SqlErrorExpression.SqlErrorExpression(System.Linq.Expressions.Expression? expression, string? message, System.Type! resultType) -> void
+LinqToDB.Internal.Expressions.SqlErrorExpression.WithType(System.Type! type) -> LinqToDB.Internal.Expressions.SqlErrorExpression!
+LinqToDB.Internal.Expressions.SqlGenericConstructorExpression
+LinqToDB.Internal.Expressions.SqlGenericConstructorExpression.AppendAssignment(LinqToDB.Internal.Expressions.SqlGenericConstructorExpression.Assignment! assignment) -> LinqToDB.Internal.Expressions.SqlGenericConstructorExpression!
+LinqToDB.Internal.Expressions.SqlGenericConstructorExpression.Assignment
+LinqToDB.Internal.Expressions.SqlGenericConstructorExpression.Assignment.Assignment(System.Reflection.MemberInfo! memberInfo, System.Linq.Expressions.Expression! expression, bool isMandatory, bool isLoaded) -> void
+LinqToDB.Internal.Expressions.SqlGenericConstructorExpression.Assignment.Expression.get -> System.Linq.Expressions.Expression!
+LinqToDB.Internal.Expressions.SqlGenericConstructorExpression.Assignment.IsLoaded.get -> bool
+LinqToDB.Internal.Expressions.SqlGenericConstructorExpression.Assignment.IsMandatory.get -> bool
+LinqToDB.Internal.Expressions.SqlGenericConstructorExpression.Assignment.MemberInfo.get -> System.Reflection.MemberInfo!
+LinqToDB.Internal.Expressions.SqlGenericConstructorExpression.Assignment.WithExpression(System.Linq.Expressions.Expression! expression) -> LinqToDB.Internal.Expressions.SqlGenericConstructorExpression.Assignment!
+LinqToDB.Internal.Expressions.SqlGenericConstructorExpression.Assignment.WithMember(System.Reflection.MemberInfo! member) -> LinqToDB.Internal.Expressions.SqlGenericConstructorExpression.Assignment!
+LinqToDB.Internal.Expressions.SqlGenericConstructorExpression.Assignments.get -> System.Collections.ObjectModel.ReadOnlyCollection<LinqToDB.Internal.Expressions.SqlGenericConstructorExpression.Assignment!>!
+LinqToDB.Internal.Expressions.SqlGenericConstructorExpression.ConstructionRoot.get -> System.Linq.Expressions.Expression?
+LinqToDB.Internal.Expressions.SqlGenericConstructorExpression.Constructor.get -> System.Reflection.ConstructorInfo?
+LinqToDB.Internal.Expressions.SqlGenericConstructorExpression.ConstructorMethod.get -> System.Reflection.MethodInfo?
+LinqToDB.Internal.Expressions.SqlGenericConstructorExpression.ConstructType.get -> LinqToDB.Internal.Expressions.SqlGenericConstructorExpression.CreateType
+LinqToDB.Internal.Expressions.SqlGenericConstructorExpression.CreateType
+LinqToDB.Internal.Expressions.SqlGenericConstructorExpression.CreateType.Auto = 1 -> LinqToDB.Internal.Expressions.SqlGenericConstructorExpression.CreateType
+LinqToDB.Internal.Expressions.SqlGenericConstructorExpression.CreateType.Full = 2 -> LinqToDB.Internal.Expressions.SqlGenericConstructorExpression.CreateType
+LinqToDB.Internal.Expressions.SqlGenericConstructorExpression.CreateType.Incompatible = 0 -> LinqToDB.Internal.Expressions.SqlGenericConstructorExpression.CreateType
+LinqToDB.Internal.Expressions.SqlGenericConstructorExpression.CreateType.Keys = 3 -> LinqToDB.Internal.Expressions.SqlGenericConstructorExpression.CreateType
+LinqToDB.Internal.Expressions.SqlGenericConstructorExpression.CreateType.MemberInit = 5 -> LinqToDB.Internal.Expressions.SqlGenericConstructorExpression.CreateType
+LinqToDB.Internal.Expressions.SqlGenericConstructorExpression.CreateType.MethodCall = 6 -> LinqToDB.Internal.Expressions.SqlGenericConstructorExpression.CreateType
+LinqToDB.Internal.Expressions.SqlGenericConstructorExpression.CreateType.New = 4 -> LinqToDB.Internal.Expressions.SqlGenericConstructorExpression.CreateType
+LinqToDB.Internal.Expressions.SqlGenericConstructorExpression.Equals(LinqToDB.Internal.Expressions.SqlGenericConstructorExpression? other) -> bool
+LinqToDB.Internal.Expressions.SqlGenericConstructorExpression.MappingSchema.get -> LinqToDB.Mapping.MappingSchema?
+LinqToDB.Internal.Expressions.SqlGenericConstructorExpression.NewExpression.get -> System.Linq.Expressions.Expression?
+LinqToDB.Internal.Expressions.SqlGenericConstructorExpression.ObjectType.get -> System.Type!
+LinqToDB.Internal.Expressions.SqlGenericConstructorExpression.Parameter
+LinqToDB.Internal.Expressions.SqlGenericConstructorExpression.Parameter.Expression.get -> System.Linq.Expressions.Expression!
+LinqToDB.Internal.Expressions.SqlGenericConstructorExpression.Parameter.MemberInfo.get -> System.Reflection.MemberInfo?
+LinqToDB.Internal.Expressions.SqlGenericConstructorExpression.Parameter.Parameter(System.Linq.Expressions.Expression! expression, System.Reflection.ParameterInfo! parameterInfo, System.Reflection.MemberInfo? memberInfo) -> void
+LinqToDB.Internal.Expressions.SqlGenericConstructorExpression.Parameter.ParameterInfo.get -> System.Reflection.ParameterInfo!
+LinqToDB.Internal.Expressions.SqlGenericConstructorExpression.Parameter.ParameterType.get -> System.Type!
+LinqToDB.Internal.Expressions.SqlGenericConstructorExpression.Parameter.WithExpression(System.Linq.Expressions.Expression! expression) -> LinqToDB.Internal.Expressions.SqlGenericConstructorExpression.Parameter!
+LinqToDB.Internal.Expressions.SqlGenericConstructorExpression.Parameters.get -> System.Collections.ObjectModel.ReadOnlyCollection<LinqToDB.Internal.Expressions.SqlGenericConstructorExpression.Parameter!>!
+LinqToDB.Internal.Expressions.SqlGenericConstructorExpression.ReplaceAssignments(System.Collections.Generic.List<LinqToDB.Internal.Expressions.SqlGenericConstructorExpression.Assignment!>! assignment) -> LinqToDB.Internal.Expressions.SqlGenericConstructorExpression!
+LinqToDB.Internal.Expressions.SqlGenericConstructorExpression.ReplaceParameters(System.Collections.Generic.List<LinqToDB.Internal.Expressions.SqlGenericConstructorExpression.Parameter!>! parameters) -> LinqToDB.Internal.Expressions.SqlGenericConstructorExpression!
+LinqToDB.Internal.Expressions.SqlGenericConstructorExpression.SqlGenericConstructorExpression(LinqToDB.Internal.Expressions.SqlGenericConstructorExpression! basedOn) -> void
+LinqToDB.Internal.Expressions.SqlGenericConstructorExpression.SqlGenericConstructorExpression(LinqToDB.Internal.Expressions.SqlGenericConstructorExpression.CreateType createType, System.Type! objectType, System.Collections.ObjectModel.ReadOnlyCollection<LinqToDB.Internal.Expressions.SqlGenericConstructorExpression.Parameter!>? parameters, System.Collections.ObjectModel.ReadOnlyCollection<LinqToDB.Internal.Expressions.SqlGenericConstructorExpression.Assignment!>? assignments, LinqToDB.Mapping.MappingSchema? mappingSchema, System.Linq.Expressions.Expression? constructionRoot) -> void
+LinqToDB.Internal.Expressions.SqlGenericConstructorExpression.SqlGenericConstructorExpression(System.Linq.Expressions.MemberInitExpression! memberInitExpression) -> void
+LinqToDB.Internal.Expressions.SqlGenericConstructorExpression.SqlGenericConstructorExpression(System.Linq.Expressions.MethodCallExpression! methodCall) -> void
+LinqToDB.Internal.Expressions.SqlGenericConstructorExpression.SqlGenericConstructorExpression(System.Linq.Expressions.NewExpression! newExpression) -> void
+LinqToDB.Internal.Expressions.SqlGenericConstructorExpression.SqlGenericConstructorExpression(System.Type! objectType, System.Collections.ObjectModel.ReadOnlyCollection<System.Linq.Expressions.MemberBinding!>! bindings) -> void
+LinqToDB.Internal.Expressions.SqlGenericConstructorExpression.WithConstructionRoot(System.Linq.Expressions.Expression! constructionRoot) -> LinqToDB.Internal.Expressions.SqlGenericConstructorExpression!
+LinqToDB.Internal.Expressions.SqlGenericConstructorExpression.WithMappingSchema(LinqToDB.Mapping.MappingSchema? mappingSchema) -> LinqToDB.Internal.Expressions.SqlGenericConstructorExpression!
+LinqToDB.Internal.Expressions.SqlGenericParamAccessExpression
+LinqToDB.Internal.Expressions.SqlGenericParamAccessExpression.Constructor.get -> System.Linq.Expressions.Expression!
+LinqToDB.Internal.Expressions.SqlGenericParamAccessExpression.Equals(LinqToDB.Internal.Expressions.SqlGenericParamAccessExpression? other) -> bool
+LinqToDB.Internal.Expressions.SqlGenericParamAccessExpression.ParameterInfo.get -> System.Reflection.ParameterInfo!
+LinqToDB.Internal.Expressions.SqlGenericParamAccessExpression.ParamIndex.get -> int
+LinqToDB.Internal.Expressions.SqlGenericParamAccessExpression.ParamType.get -> System.Type!
+LinqToDB.Internal.Expressions.SqlGenericParamAccessExpression.SqlGenericParamAccessExpression(System.Linq.Expressions.Expression! constructor, System.Reflection.ParameterInfo! parameterInfo) -> void
+LinqToDB.Internal.Expressions.SqlGenericParamAccessExpression.Update(System.Linq.Expressions.Expression! constructor) -> LinqToDB.Internal.Expressions.SqlGenericParamAccessExpression!
+LinqToDB.Internal.Expressions.SqlPathExpression
+LinqToDB.Internal.Expressions.SqlPathExpression.Equals(LinqToDB.Internal.Expressions.SqlPathExpression? other) -> bool
+LinqToDB.Internal.Expressions.SqlPathExpression.Path.get -> System.Linq.Expressions.Expression![]!
+LinqToDB.Internal.Expressions.SqlPathExpression.Path.set -> void
+LinqToDB.Internal.Expressions.SqlPathExpression.SqlPathExpression(System.Linq.Expressions.Expression![]! path, System.Type! type) -> void
+LinqToDB.Internal.Expressions.SqlPathExpression.Update(System.Linq.Expressions.Expression![]! path) -> LinqToDB.Internal.Expressions.SqlPathExpression!
+LinqToDB.Internal.Expressions.SqlPathExpression.WithType(System.Type! type) -> LinqToDB.Internal.Expressions.SqlPathExpression!
+LinqToDB.Internal.Expressions.SqlPlaceholderExpression
+LinqToDB.Internal.Expressions.SqlPlaceholderExpression.Alias.get -> string?
+LinqToDB.Internal.Expressions.SqlPlaceholderExpression.Alias.set -> void
+LinqToDB.Internal.Expressions.SqlPlaceholderExpression.ConvertType.get -> System.Type!
+LinqToDB.Internal.Expressions.SqlPlaceholderExpression.Equals(LinqToDB.Internal.Expressions.SqlPlaceholderExpression! other) -> bool
+LinqToDB.Internal.Expressions.SqlPlaceholderExpression.Index.get -> int?
+LinqToDB.Internal.Expressions.SqlPlaceholderExpression.MakeNotNullable() -> LinqToDB.Internal.Expressions.SqlPlaceholderExpression!
+LinqToDB.Internal.Expressions.SqlPlaceholderExpression.MakeNullable() -> LinqToDB.Internal.Expressions.SqlPlaceholderExpression!
+LinqToDB.Internal.Expressions.SqlPlaceholderExpression.Path.get -> System.Linq.Expressions.Expression!
+LinqToDB.Internal.Expressions.SqlPlaceholderExpression.SelectQuery.get -> LinqToDB.Internal.SqlQuery.SelectQuery?
+LinqToDB.Internal.Expressions.SqlPlaceholderExpression.Sql.get -> LinqToDB.Internal.SqlQuery.ISqlExpression!
+LinqToDB.Internal.Expressions.SqlPlaceholderExpression.SqlPlaceholderExpression(LinqToDB.Internal.SqlQuery.SelectQuery? selectQuery, LinqToDB.Internal.SqlQuery.ISqlExpression! sql, System.Linq.Expressions.Expression! path, System.Type? convertType = null, string? alias = null, int? index = null, System.Linq.Expressions.Expression? trackingPath = null) -> void
+LinqToDB.Internal.Expressions.SqlPlaceholderExpression.TrackingPath.get -> System.Linq.Expressions.Expression?
+LinqToDB.Internal.Expressions.SqlPlaceholderExpression.WithAlias(string? alias) -> LinqToDB.Internal.Expressions.SqlPlaceholderExpression!
+LinqToDB.Internal.Expressions.SqlPlaceholderExpression.WithPath(System.Linq.Expressions.Expression! path) -> LinqToDB.Internal.Expressions.SqlPlaceholderExpression!
+LinqToDB.Internal.Expressions.SqlPlaceholderExpression.WithSelectQuery(LinqToDB.Internal.SqlQuery.SelectQuery! selectQuery) -> LinqToDB.Internal.Expressions.SqlPlaceholderExpression!
+LinqToDB.Internal.Expressions.SqlPlaceholderExpression.WithSql(LinqToDB.Internal.SqlQuery.ISqlExpression! sqlExpression) -> LinqToDB.Internal.Expressions.SqlPlaceholderExpression!
+LinqToDB.Internal.Expressions.SqlPlaceholderExpression.WithTrackingPath(System.Linq.Expressions.Expression! trackingPath) -> LinqToDB.Internal.Expressions.SqlPlaceholderExpression!
+LinqToDB.Internal.Expressions.SqlPlaceholderExpression.WithType(System.Type! type) -> LinqToDB.Internal.Expressions.SqlPlaceholderExpression!
+LinqToDB.Internal.Expressions.SqlQueryDependentAttribute
+LinqToDB.Internal.Expressions.SqlQueryDependentAttribute.SqlQueryDependentAttribute() -> void
+LinqToDB.Internal.Expressions.SqlQueryDependentAttributeHelper
+LinqToDB.Internal.Expressions.SqlQueryDependentParamsAttribute
+LinqToDB.Internal.Expressions.SqlQueryDependentParamsAttribute.SqlQueryDependentParamsAttribute() -> void
+LinqToDB.Internal.Expressions.SqlQueryRootExpression
+LinqToDB.Internal.Expressions.SqlQueryRootExpression.ContextType.get -> System.Type!
+LinqToDB.Internal.Expressions.SqlQueryRootExpression.Equals(LinqToDB.Internal.Expressions.SqlQueryRootExpression? other) -> bool
+LinqToDB.Internal.Expressions.SqlQueryRootExpression.MappingSchema.get -> LinqToDB.Mapping.MappingSchema!
+LinqToDB.Internal.Expressions.SqlQueryRootExpression.SqlQueryRootExpression(LinqToDB.Mapping.MappingSchema! mappingSchema, System.Type! contextType) -> void
+LinqToDB.Internal.Expressions.TagExpression
+LinqToDB.Internal.Expressions.TagExpression.InnerExpression.get -> System.Linq.Expressions.Expression!
+LinqToDB.Internal.Expressions.TagExpression.Tag.get -> object!
+LinqToDB.Internal.Expressions.TagExpression.TagExpression(System.Linq.Expressions.Expression! innerExpression, object! tag) -> void
+LinqToDB.Internal.Expressions.TagExpression.Update(System.Linq.Expressions.Expression! innerExpression, object! tag) -> LinqToDB.Internal.Expressions.TagExpression!
+LinqToDB.Internal.Expressions.TransformInfo
+LinqToDB.Internal.Expressions.TransformInfo.Continue -> bool
+LinqToDB.Internal.Expressions.TransformInfo.Expression -> System.Linq.Expressions.Expression!
+LinqToDB.Internal.Expressions.TransformInfo.Stop -> bool
+LinqToDB.Internal.Expressions.TransformInfo.TransformInfo() -> void
+LinqToDB.Internal.Expressions.TransformInfo.TransformInfo(System.Linq.Expressions.Expression! expression) -> void
+LinqToDB.Internal.Expressions.TransformInfo.TransformInfo(System.Linq.Expressions.Expression! expression, bool stop) -> void
+LinqToDB.Internal.Expressions.TransformInfo.TransformInfo(System.Linq.Expressions.Expression! expression, bool stop, bool continue) -> void
+LinqToDB.Internal.Expressions.TypeMapper
+LinqToDB.Internal.Expressions.TypeMapper.BuildAction(System.Linq.Expressions.LambdaExpression! lambda) -> System.Action!
+LinqToDB.Internal.Expressions.TypeMapper.BuildAction<T1, T2, T3, T4, T5>(System.Linq.Expressions.LambdaExpression! lambda) -> System.Action<T1, T2, T3, T4, T5>!
+LinqToDB.Internal.Expressions.TypeMapper.BuildAction<T1, T2, T3, T4>(System.Linq.Expressions.LambdaExpression! lambda) -> System.Action<T1, T2, T3, T4>!
+LinqToDB.Internal.Expressions.TypeMapper.BuildAction<T1, T2, T3>(System.Linq.Expressions.LambdaExpression! lambda) -> System.Action<T1, T2, T3>!
+LinqToDB.Internal.Expressions.TypeMapper.BuildAction<T1, T2>(System.Linq.Expressions.LambdaExpression! lambda) -> System.Action<T1, T2>!
+LinqToDB.Internal.Expressions.TypeMapper.BuildAction<T>(System.Linq.Expressions.LambdaExpression! lambda) -> System.Action<T>!
+LinqToDB.Internal.Expressions.TypeMapper.BuildFactory<T, TR>(System.Linq.Expressions.Expression<System.Func<T, TR>!>! newFunc) -> System.Func<T, object!>!
+LinqToDB.Internal.Expressions.TypeMapper.BuildFactory<T1, T2, T3, TR>(System.Linq.Expressions.Expression<System.Func<T1, T2, T3, TR>!>! newFunc) -> System.Func<T1, T2, T3, object!>!
+LinqToDB.Internal.Expressions.TypeMapper.BuildFactory<T1, T2, TR>(System.Linq.Expressions.Expression<System.Func<T1, T2, TR>!>! newFunc) -> System.Func<T1, T2, object!>!
+LinqToDB.Internal.Expressions.TypeMapper.BuildFactory<TR>(System.Linq.Expressions.Expression<System.Func<TR>!>! newFunc) -> System.Func<object!>!
+LinqToDB.Internal.Expressions.TypeMapper.BuildFunc<T, TR>(System.Linq.Expressions.LambdaExpression! lambda) -> System.Func<T, TR>!
+LinqToDB.Internal.Expressions.TypeMapper.BuildFunc<T1, T2, T3, T4, T5, T6, T7, TR>(System.Linq.Expressions.LambdaExpression! lambda) -> System.Func<T1, T2, T3, T4, T5, T6, T7, TR>!
+LinqToDB.Internal.Expressions.TypeMapper.BuildFunc<T1, T2, T3, T4, T5, T6, TR>(System.Linq.Expressions.LambdaExpression! lambda) -> System.Func<T1, T2, T3, T4, T5, T6, TR>!
+LinqToDB.Internal.Expressions.TypeMapper.BuildFunc<T1, T2, T3, T4, T5, TR>(System.Linq.Expressions.LambdaExpression! lambda) -> System.Func<T1, T2, T3, T4, T5, TR>!
+LinqToDB.Internal.Expressions.TypeMapper.BuildFunc<T1, T2, T3, T4, TR>(System.Linq.Expressions.LambdaExpression! lambda) -> System.Func<T1, T2, T3, T4, TR>!
+LinqToDB.Internal.Expressions.TypeMapper.BuildFunc<T1, T2, T3, TR>(System.Linq.Expressions.LambdaExpression! lambda) -> System.Func<T1, T2, T3, TR>!
+LinqToDB.Internal.Expressions.TypeMapper.BuildFunc<T1, T2, TR>(System.Linq.Expressions.LambdaExpression! lambda) -> System.Func<T1, T2, TR>!
+LinqToDB.Internal.Expressions.TypeMapper.BuildFunc<TR>(System.Linq.Expressions.LambdaExpression! lambda) -> System.Func<TR>!
+LinqToDB.Internal.Expressions.TypeMapper.BuildTypedFactory<T, TR, TRes>(System.Linq.Expressions.Expression<System.Func<T, TR>!>! newFunc) -> System.Func<T, TRes>!
+LinqToDB.Internal.Expressions.TypeMapper.BuildTypedFactory<T1, T2, T3, TR, TRes>(System.Linq.Expressions.Expression<System.Func<T1, T2, T3, TR>!>! newFunc) -> System.Func<T1, T2, T3, TRes>!
+LinqToDB.Internal.Expressions.TypeMapper.BuildTypedFactory<T1, T2, TR, TRes>(System.Linq.Expressions.Expression<System.Func<T1, T2, TR>!>! newFunc) -> System.Func<T1, T2, TRes>!
+LinqToDB.Internal.Expressions.TypeMapper.BuildTypedFactory<TR, TRes>(System.Linq.Expressions.Expression<System.Func<TR>!>! newFunc) -> System.Func<TRes>!
+LinqToDB.Internal.Expressions.TypeMapper.BuildWrappedFactory<T, TR>(System.Linq.Expressions.Expression<System.Func<T, TR!>!>! newFunc) -> System.Func<T, TR!>!
+LinqToDB.Internal.Expressions.TypeMapper.BuildWrappedFactory<T1, T2, T3, T4, T5, T6, TR>(System.Linq.Expressions.Expression<System.Func<T1, T2, T3, T4, T5, T6, TR!>!>! newFunc) -> System.Func<T1, T2, T3, T4, T5, T6, TR!>!
+LinqToDB.Internal.Expressions.TypeMapper.BuildWrappedFactory<T1, T2, T3, T4, T5, TR>(System.Linq.Expressions.Expression<System.Func<T1, T2, T3, T4, T5, TR!>!>! newFunc) -> System.Func<T1, T2, T3, T4, T5, TR!>!
+LinqToDB.Internal.Expressions.TypeMapper.BuildWrappedFactory<T1, T2, T3, T4, TR>(System.Linq.Expressions.Expression<System.Func<T1, T2, T3, T4, TR!>!>! newFunc) -> System.Func<T1, T2, T3, T4, TR!>!
+LinqToDB.Internal.Expressions.TypeMapper.BuildWrappedFactory<T1, T2, T3, TR>(System.Linq.Expressions.Expression<System.Func<T1, T2, T3, TR!>!>! newFunc) -> System.Func<T1, T2, T3, TR!>!
+LinqToDB.Internal.Expressions.TypeMapper.BuildWrappedFactory<T1, T2, TR>(System.Linq.Expressions.Expression<System.Func<T1, T2, TR!>!>! newFunc) -> System.Func<T1, T2, TR!>!
+LinqToDB.Internal.Expressions.TypeMapper.BuildWrappedFactory<TR>(System.Linq.Expressions.Expression<System.Func<TR!>!>! newFunc) -> System.Func<TR!>!
+LinqToDB.Internal.Expressions.TypeMapper.FinalizeMappings() -> void
+LinqToDB.Internal.Expressions.TypeMapper.MapAction(System.Linq.Expressions.Expression<System.Action!>! action) -> System.Linq.Expressions.Expression!
+LinqToDB.Internal.Expressions.TypeMapper.MapAction<T1, T2, T3, T4, T5>(System.Linq.Expressions.Expression<System.Action<T1, T2, T3, T4, T5>!>! action, System.Linq.Expressions.Expression! p1, System.Linq.Expressions.Expression! p2, System.Linq.Expressions.Expression! p3, System.Linq.Expressions.Expression! p4, System.Linq.Expressions.Expression! p5) -> System.Linq.Expressions.Expression!
+LinqToDB.Internal.Expressions.TypeMapper.MapAction<T1, T2, T3, T4>(System.Linq.Expressions.Expression<System.Action<T1, T2, T3, T4>!>! action, System.Linq.Expressions.Expression! p1, System.Linq.Expressions.Expression! p2, System.Linq.Expressions.Expression! p3, System.Linq.Expressions.Expression! p4) -> System.Linq.Expressions.Expression!
+LinqToDB.Internal.Expressions.TypeMapper.MapAction<T1, T2, T3>(System.Linq.Expressions.Expression<System.Action<T1, T2, T3>!>! action, System.Linq.Expressions.Expression! p1, System.Linq.Expressions.Expression! p2, System.Linq.Expressions.Expression! p3) -> System.Linq.Expressions.Expression!
+LinqToDB.Internal.Expressions.TypeMapper.MapAction<T1, T2>(System.Linq.Expressions.Expression<System.Action<T1, T2>!>! action, System.Linq.Expressions.Expression! p1, System.Linq.Expressions.Expression! p2) -> System.Linq.Expressions.Expression!
+LinqToDB.Internal.Expressions.TypeMapper.MapAction<T>(System.Linq.Expressions.Expression<System.Action<T>!>! action, System.Linq.Expressions.Expression! p) -> System.Linq.Expressions.Expression!
+LinqToDB.Internal.Expressions.TypeMapper.MapActionLambda(System.Linq.Expressions.Expression<System.Action!>! action) -> System.Linq.Expressions.LambdaExpression!
+LinqToDB.Internal.Expressions.TypeMapper.MapActionLambda<T1, T2, T3, T4, T5>(System.Linq.Expressions.Expression<System.Action<T1, T2, T3, T4, T5>!>! action) -> System.Linq.Expressions.LambdaExpression!
+LinqToDB.Internal.Expressions.TypeMapper.MapActionLambda<T1, T2, T3, T4>(System.Linq.Expressions.Expression<System.Action<T1, T2, T3, T4>!>! action) -> System.Linq.Expressions.LambdaExpression!
+LinqToDB.Internal.Expressions.TypeMapper.MapActionLambda<T1, T2, T3>(System.Linq.Expressions.Expression<System.Action<T1, T2, T3>!>! action) -> System.Linq.Expressions.LambdaExpression!
+LinqToDB.Internal.Expressions.TypeMapper.MapActionLambda<T1, T2>(System.Linq.Expressions.Expression<System.Action<T1, T2>!>! action) -> System.Linq.Expressions.LambdaExpression!
+LinqToDB.Internal.Expressions.TypeMapper.MapActionLambda<T>(System.Linq.Expressions.Expression<System.Action<T>!>! action) -> System.Linq.Expressions.LambdaExpression!
+LinqToDB.Internal.Expressions.TypeMapper.MapExpression<T, TR>(System.Linq.Expressions.Expression<System.Func<T, TR>!>! func, System.Linq.Expressions.Expression! p) -> System.Linq.Expressions.Expression!
+LinqToDB.Internal.Expressions.TypeMapper.MapExpression<T1, T2, T3, T4, T5, TR>(System.Linq.Expressions.Expression<System.Func<T1, T2, T3, T4, T5, TR>!>! func, System.Linq.Expressions.Expression! p1, System.Linq.Expressions.Expression! p2, System.Linq.Expressions.Expression! p3, System.Linq.Expressions.Expression! p4, System.Linq.Expressions.Expression! p5) -> System.Linq.Expressions.Expression!
+LinqToDB.Internal.Expressions.TypeMapper.MapExpression<T1, T2, T3, T4, TR>(System.Linq.Expressions.Expression<System.Func<T1, T2, T3, T4, TR>!>! func, System.Linq.Expressions.Expression! p1, System.Linq.Expressions.Expression! p2, System.Linq.Expressions.Expression! p3, System.Linq.Expressions.Expression! p4) -> System.Linq.Expressions.Expression!
+LinqToDB.Internal.Expressions.TypeMapper.MapExpression<T1, T2, T3, TR>(System.Linq.Expressions.Expression<System.Func<T1, T2, T3, TR>!>! func, System.Linq.Expressions.Expression! p1, System.Linq.Expressions.Expression! p2, System.Linq.Expressions.Expression! p3) -> System.Linq.Expressions.Expression!
+LinqToDB.Internal.Expressions.TypeMapper.MapExpression<T1, T2, TR>(System.Linq.Expressions.Expression<System.Func<T1, T2, TR>!>! func, System.Linq.Expressions.Expression! p1, System.Linq.Expressions.Expression! p2) -> System.Linq.Expressions.Expression!
+LinqToDB.Internal.Expressions.TypeMapper.MapExpression<TR>(System.Linq.Expressions.Expression<System.Func<TR>!>! func) -> System.Linq.Expressions.Expression!
+LinqToDB.Internal.Expressions.TypeMapper.MapLambda<T, TR>(System.Linq.Expressions.Expression<System.Func<T, TR>!>! func) -> System.Linq.Expressions.LambdaExpression!
+LinqToDB.Internal.Expressions.TypeMapper.MapLambda<T1, T2, T3, T4, T5, T6, T7, TR>(System.Linq.Expressions.Expression<System.Func<T1, T2, T3, T4, T5, T6, T7, TR>!>! func) -> System.Linq.Expressions.LambdaExpression!
+LinqToDB.Internal.Expressions.TypeMapper.MapLambda<T1, T2, T3, T4, T5, T6, TR>(System.Linq.Expressions.Expression<System.Func<T1, T2, T3, T4, T5, T6, TR>!>! func) -> System.Linq.Expressions.LambdaExpression!
+LinqToDB.Internal.Expressions.TypeMapper.MapLambda<T1, T2, T3, T4, T5, TR>(System.Linq.Expressions.Expression<System.Func<T1, T2, T3, T4, T5, TR>!>! func) -> System.Linq.Expressions.LambdaExpression!
+LinqToDB.Internal.Expressions.TypeMapper.MapLambda<T1, T2, T3, T4, TR>(System.Linq.Expressions.Expression<System.Func<T1, T2, T3, T4, TR>!>! func) -> System.Linq.Expressions.LambdaExpression!
+LinqToDB.Internal.Expressions.TypeMapper.MapLambda<T1, T2, T3, TR>(System.Linq.Expressions.Expression<System.Func<T1, T2, T3, TR>!>! func) -> System.Linq.Expressions.LambdaExpression!
+LinqToDB.Internal.Expressions.TypeMapper.MapLambda<T1, T2, TR>(System.Linq.Expressions.Expression<System.Func<T1, T2, TR>!>! func) -> System.Linq.Expressions.LambdaExpression!
+LinqToDB.Internal.Expressions.TypeMapper.MemberBuilder<T, TV>
+LinqToDB.Internal.Expressions.TypeMapper.MemberBuilder<T, TV>.BuildGetter<TBase>() -> System.Func<TBase, TV>!
+LinqToDB.Internal.Expressions.TypeMapper.MemberBuilder<T, TV>.BuildSetter<TBase>() -> System.Action<TBase, TV>!
+LinqToDB.Internal.Expressions.TypeMapper.RegisterTypeWrapper(System.Type! wrapperType, System.Type! originalType) -> void
+LinqToDB.Internal.Expressions.TypeMapper.RegisterTypeWrapper<TWrapper>(System.Type! originalType) -> void
+LinqToDB.Internal.Expressions.TypeMapper.Type<T>() -> LinqToDB.Internal.Expressions.TypeMapper.TypeBuilder<T>!
+LinqToDB.Internal.Expressions.TypeMapper.TypeBuilder<T>
+LinqToDB.Internal.Expressions.TypeMapper.TypeBuilder<T>.Member<TV>(System.Linq.Expressions.Expression<System.Func<T, TV>!>! memberExpression) -> LinqToDB.Internal.Expressions.TypeMapper.MemberBuilder<T, TV>!
+LinqToDB.Internal.Expressions.TypeMapper.TypeMapper() -> void
+LinqToDB.Internal.Expressions.TypeMapper.Wrap<TR>(object? instance) -> TR?
+LinqToDB.Internal.Expressions.TypeMapper.WrapTask<TR>(System.Threading.Tasks.Task! instanceTask, System.Type! instanceType, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<TR?>!
+LinqToDB.Internal.Expressions.TypeWrapper
+LinqToDB.Internal.Expressions.TypeWrapper.CompiledWrappers.get -> System.Delegate![]!
+LinqToDB.Internal.Expressions.TypeWrapper.instance_.get -> object!
+LinqToDB.Internal.Expressions.TypeWrapper.TypeWrapper() -> void
+LinqToDB.Internal.Expressions.TypeWrapper.TypeWrapper(object! instance, System.Delegate![]? wrappers) -> void
+LinqToDB.Internal.Expressions.TypeWrapperNameAttribute
+LinqToDB.Internal.Expressions.TypeWrapperNameAttribute.TypeWrapperNameAttribute(string! name) -> void
+LinqToDB.Internal.Expressions.ValueTaskToTaskMapper
+LinqToDB.Internal.Expressions.ValueTaskToTaskMapper.ValueTaskToTaskMapper() -> void
+LinqToDB.Internal.Expressions.WrapperAttribute
+LinqToDB.Internal.Expressions.WrapperAttribute.TypeName.get -> string?
+LinqToDB.Internal.Expressions.WrapperAttribute.WrapperAttribute() -> void
+LinqToDB.Internal.Expressions.WrapperAttribute.WrapperAttribute(string! typeName) -> void
 LinqToDB.ExprParameterAttribute
 LinqToDB.ExprParameterAttribute.DoNotParameterize.get -> bool
 LinqToDB.ExprParameterAttribute.DoNotParameterize.set -> void
@@ -3757,7 +3757,7 @@ LinqToDB.Interceptors.IInterceptor
 LinqToDB.Interceptors.Internal.EntityBindingInterceptor
 LinqToDB.Interceptors.Internal.EntityBindingInterceptor.EntityBindingInterceptor() -> void
 LinqToDB.Interceptors.Internal.IEntityBindingInterceptor
-LinqToDB.Interceptors.Internal.IEntityBindingInterceptor.ConvertConstructorExpression(LinqToDB.Expressions.SqlGenericConstructorExpression! expression) -> LinqToDB.Expressions.SqlGenericConstructorExpression!
+LinqToDB.Interceptors.Internal.IEntityBindingInterceptor.ConvertConstructorExpression(LinqToDB.Internal.Expressions.SqlGenericConstructorExpression! expression) -> LinqToDB.Internal.Expressions.SqlGenericConstructorExpression!
 LinqToDB.Interceptors.IQueryExpressionInterceptor
 LinqToDB.Interceptors.IQueryExpressionInterceptor.ProcessExpression(System.Linq.Expressions.Expression! expression, LinqToDB.Interceptors.QueryExpressionArgs! args) -> System.Linq.Expressions.Expression!
 LinqToDB.Interceptors.IUnwrapDataObjectInterceptor
@@ -3817,7 +3817,7 @@ LinqToDB.Linq.Builder.ExpressionTreeOptimizationContext.ExpressionTreeOptimizati
 LinqToDB.Linq.Builder.ExpressionTreeOptimizationContext.IsServerSideOnly(System.Linq.Expressions.Expression! expr, bool inProjection) -> bool
 LinqToDB.Linq.Builder.ExpressionTreeOptimizationContext.MappingSchema.get -> LinqToDB.Mapping.MappingSchema!
 LinqToDB.Linq.Builder.ExpressionTreeOptimizationContext.OptimizeExpressionTree(System.Linq.Expressions.Expression! expression, bool inProjection) -> System.Linq.Expressions.Expression!
-LinqToDB.Linq.Builder.ExpressionTreeOptimizationContext.OptimizeExpressionTreeTransformer(System.Linq.Expressions.Expression! expr, bool inProjection) -> LinqToDB.Expressions.TransformInfo
+LinqToDB.Linq.Builder.ExpressionTreeOptimizationContext.OptimizeExpressionTreeTransformer(System.Linq.Expressions.Expression! expr, bool inProjection) -> LinqToDB.Internal.Expressions.TransformInfo
 LinqToDB.Linq.Builder.ExpressionTreeOptimizationContext.PreferServerSide(System.Linq.Expressions.Expression! expr, bool enforceServerSide) -> bool
 LinqToDB.Linq.Builder.IToSqlConverter
 LinqToDB.Linq.Builder.IToSqlConverter.ToSql(object! value) -> LinqToDB.Internal.SqlQuery.ISqlExpression!
@@ -3940,8 +3940,8 @@ LinqToDB.Linq.Translation.ISqlExpressionFactory.GetDbDataType(System.Type! type)
 LinqToDB.Linq.Translation.ITranslationContext
 LinqToDB.Linq.Translation.ITranslationContext.CanBeCompiled(System.Linq.Expressions.Expression! expression, LinqToDB.Linq.Translation.TranslationFlags translationFlags) -> bool
 LinqToDB.Linq.Translation.ITranslationContext.CanBeEvaluated(System.Linq.Expressions.Expression! expression) -> bool
-LinqToDB.Linq.Translation.ITranslationContext.CreateErrorExpression(System.Linq.Expressions.Expression! basedOn, string! message) -> LinqToDB.Expressions.SqlErrorExpression!
-LinqToDB.Linq.Translation.ITranslationContext.CreatePlaceholder(LinqToDB.Internal.SqlQuery.SelectQuery! selectQuery, LinqToDB.Internal.SqlQuery.ISqlExpression! sqlExpression, System.Linq.Expressions.Expression! basedOn) -> LinqToDB.Expressions.SqlPlaceholderExpression!
+LinqToDB.Linq.Translation.ITranslationContext.CreateErrorExpression(System.Linq.Expressions.Expression! basedOn, string! message) -> LinqToDB.Internal.Expressions.SqlErrorExpression!
+LinqToDB.Linq.Translation.ITranslationContext.CreatePlaceholder(LinqToDB.Internal.SqlQuery.SelectQuery! selectQuery, LinqToDB.Internal.SqlQuery.ISqlExpression! sqlExpression, System.Linq.Expressions.Expression! basedOn) -> LinqToDB.Internal.Expressions.SqlPlaceholderExpression!
 LinqToDB.Linq.Translation.ITranslationContext.CurrentAlias.get -> string?
 LinqToDB.Linq.Translation.ITranslationContext.CurrentColumnDescriptor.get -> LinqToDB.Mapping.ColumnDescriptor?
 LinqToDB.Linq.Translation.ITranslationContext.CurrentSelectQuery.get -> LinqToDB.Internal.SqlQuery.SelectQuery!
@@ -3960,14 +3960,14 @@ LinqToDB.Linq.Translation.MemberTranslatorBase.CombinedMemberTranslator -> LinqT
 LinqToDB.Linq.Translation.MemberTranslatorBase.MemberTranslatorBase() -> void
 LinqToDB.Linq.Translation.MemberTranslatorBase.Registration -> LinqToDB.Linq.Translation.TranslationRegistration!
 LinqToDB.Linq.Translation.MemberTranslatorBase.Translate(LinqToDB.Linq.Translation.ITranslationContext! translationContext, System.Linq.Expressions.Expression! memberExpression, LinqToDB.Linq.Translation.TranslationFlags translationFlags) -> System.Linq.Expressions.Expression?
-LinqToDB.Linq.Translation.MemberTranslatorBase.TranslateNoRequiredExpression(LinqToDB.Linq.Translation.ITranslationContext! translationContext, System.Linq.Expressions.Expression? objExpression, LinqToDB.Linq.Translation.TranslationFlags translationFlags, bool skipIfParameter = true) -> LinqToDB.Expressions.SqlPlaceholderExpression?
+LinqToDB.Linq.Translation.MemberTranslatorBase.TranslateNoRequiredExpression(LinqToDB.Linq.Translation.ITranslationContext! translationContext, System.Linq.Expressions.Expression? objExpression, LinqToDB.Linq.Translation.TranslationFlags translationFlags, bool skipIfParameter = true) -> LinqToDB.Internal.Expressions.SqlPlaceholderExpression?
 LinqToDB.Linq.Translation.ProviderMemberTranslatorDefault
 LinqToDB.Linq.Translation.ProviderMemberTranslatorDefault.ProcessConvertToBoolean(LinqToDB.Linq.Translation.ITranslationContext! translationContext, System.Linq.Expressions.MethodCallExpression! methodCall, LinqToDB.Linq.Translation.TranslationFlags translationFlags, out System.Linq.Expressions.Expression? translated) -> bool
 LinqToDB.Linq.Translation.ProviderMemberTranslatorDefault.ProcessGetValueOrDefault(LinqToDB.Linq.Translation.ITranslationContext! translationContext, System.Linq.Expressions.MethodCallExpression! methodCall, LinqToDB.Linq.Translation.TranslationFlags translationFlags, out System.Linq.Expressions.Expression? translated) -> bool
 LinqToDB.Linq.Translation.ProviderMemberTranslatorDefault.ProcessSqlConvert(LinqToDB.Linq.Translation.ITranslationContext! translationContext, System.Linq.Expressions.MethodCallExpression! methodCall, LinqToDB.Linq.Translation.TranslationFlags translationFlags, out System.Linq.Expressions.Expression? translated) -> bool
 LinqToDB.Linq.Translation.ProviderMemberTranslatorDefault.ProcessToString(LinqToDB.Linq.Translation.ITranslationContext! translationContext, System.Linq.Expressions.MethodCallExpression! methodCall, LinqToDB.Linq.Translation.TranslationFlags translationFlags, out System.Linq.Expressions.Expression? translated) -> bool
 LinqToDB.Linq.Translation.ProviderMemberTranslatorDefault.ProviderMemberTranslatorDefault() -> void
-LinqToDB.Linq.Translation.ProviderMemberTranslatorDefault.TranslateNoRequiredObjectExpression(LinqToDB.Linq.Translation.ITranslationContext! translationContext, System.Linq.Expressions.Expression? objExpression, LinqToDB.Linq.Translation.TranslationFlags translationFlags) -> LinqToDB.Expressions.SqlPlaceholderExpression?
+LinqToDB.Linq.Translation.ProviderMemberTranslatorDefault.TranslateNoRequiredObjectExpression(LinqToDB.Linq.Translation.ITranslationContext! translationContext, System.Linq.Expressions.Expression? objExpression, LinqToDB.Linq.Translation.TranslationFlags translationFlags) -> LinqToDB.Internal.Expressions.SqlPlaceholderExpression?
 LinqToDB.Linq.Translation.SqlExpressionFactoryExtensions
 LinqToDB.Linq.Translation.SqlTypesTranslationDefault
 LinqToDB.Linq.Translation.SqlTypesTranslationDefault.MakeSqlTypeExpression(LinqToDB.Linq.Translation.ITranslationContext! translationContext, System.Linq.Expressions.Expression! basedOn, System.Func<LinqToDB.Common.DbDataType, LinqToDB.Common.DbDataType>? correctFunc = null) -> System.Linq.Expressions.Expression!
@@ -5100,7 +5100,7 @@ LinqToDB.Sql.ExtensionAttribute.BuilderType.get -> System.Type?
 LinqToDB.Sql.ExtensionAttribute.BuilderType.set -> void
 LinqToDB.Sql.ExtensionAttribute.BuilderValue.get -> object?
 LinqToDB.Sql.ExtensionAttribute.BuilderValue.set -> void
-LinqToDB.Sql.ExtensionAttribute.BuildFunctionsChain<TContext>(TContext context, LinqToDB.IDataContext! dataContext, LinqToDB.Expressions.IExpressionEvaluator! evaluator, LinqToDB.Internal.SqlQuery.SelectQuery! query, System.Linq.Expressions.Expression! expr, LinqToDB.Sql.ExpressionAttribute.ConvertFunc<TContext>! converter, out System.Linq.Expressions.Expression? error) -> System.Collections.Generic.List<LinqToDB.Sql.SqlExtensionParam!>?
+LinqToDB.Sql.ExtensionAttribute.BuildFunctionsChain<TContext>(TContext context, LinqToDB.IDataContext! dataContext, LinqToDB.Internal.Expressions.IExpressionEvaluator! evaluator, LinqToDB.Internal.SqlQuery.SelectQuery! query, System.Linq.Expressions.Expression! expr, LinqToDB.Sql.ExpressionAttribute.ConvertFunc<TContext>! converter, out System.Linq.Expressions.Expression? error) -> System.Collections.Generic.List<LinqToDB.Sql.SqlExtensionParam!>?
 LinqToDB.Sql.ExtensionAttribute.ChainPrecedence.get -> int
 LinqToDB.Sql.ExtensionAttribute.ChainPrecedence.set -> void
 LinqToDB.Sql.ExtensionAttribute.ExtensionAttribute(string! configuration, string! expression) -> void
@@ -5119,11 +5119,11 @@ LinqToDB.Sql.ExtensionAttribute.ExtensionBuilder<TContext>.ConvertToSqlExpressio
 LinqToDB.Sql.ExtensionAttribute.ExtensionBuilder<TContext>.ConvertToSqlExpression(int precedence) -> LinqToDB.Internal.SqlQuery.ISqlExpression?
 LinqToDB.Sql.ExtensionAttribute.ExtensionBuilder<TContext>.DataContext.get -> LinqToDB.IDataContext!
 LinqToDB.Sql.ExtensionAttribute.ExtensionBuilder<TContext>.EvaluateExpression(System.Linq.Expressions.Expression! expression) -> object?
-LinqToDB.Sql.ExtensionAttribute.ExtensionBuilder<TContext>.Evaluator.get -> LinqToDB.Expressions.IExpressionEvaluator!
+LinqToDB.Sql.ExtensionAttribute.ExtensionBuilder<TContext>.Evaluator.get -> LinqToDB.Internal.Expressions.IExpressionEvaluator!
 LinqToDB.Sql.ExtensionAttribute.ExtensionBuilder<TContext>.Expression.get -> string!
 LinqToDB.Sql.ExtensionAttribute.ExtensionBuilder<TContext>.Expression.set -> void
 LinqToDB.Sql.ExtensionAttribute.ExtensionBuilder<TContext>.Extension.get -> LinqToDB.Sql.SqlExtension!
-LinqToDB.Sql.ExtensionAttribute.ExtensionBuilder<TContext>.ExtensionBuilder(TContext context, LinqToDB.Expressions.IExpressionEvaluator! evaluator, string? configuration, object? builderValue, LinqToDB.IDataContext! dataContext, LinqToDB.Internal.SqlQuery.SelectQuery! query, LinqToDB.Sql.SqlExtension! extension, LinqToDB.Sql.ExpressionAttribute.ConvertFunc<TContext>! converter, System.Reflection.MemberInfo! member, System.Linq.Expressions.Expression![]! arguments, LinqToDB.Sql.IsNullableType isNullable, bool? canBeNull) -> void
+LinqToDB.Sql.ExtensionAttribute.ExtensionBuilder<TContext>.ExtensionBuilder(TContext context, LinqToDB.Internal.Expressions.IExpressionEvaluator! evaluator, string? configuration, object? builderValue, LinqToDB.IDataContext! dataContext, LinqToDB.Internal.SqlQuery.SelectQuery! query, LinqToDB.Sql.SqlExtension! extension, LinqToDB.Sql.ExpressionAttribute.ConvertFunc<TContext>! converter, System.Reflection.MemberInfo! member, System.Linq.Expressions.Expression![]! arguments, LinqToDB.Sql.IsNullableType isNullable, bool? canBeNull) -> void
 LinqToDB.Sql.ExtensionAttribute.ExtensionBuilder<TContext>.GetExpression(int index, bool unwrap, bool? inlineParameters = null) -> LinqToDB.Internal.SqlQuery.ISqlExpression?
 LinqToDB.Sql.ExtensionAttribute.ExtensionBuilder<TContext>.GetExpression(string! argName, bool unwrap, bool? inlineParameters = null) -> LinqToDB.Internal.SqlQuery.ISqlExpression?
 LinqToDB.Sql.ExtensionAttribute.ExtensionBuilder<TContext>.GetObjectValue(int index) -> object!
@@ -7775,105 +7775,105 @@ override LinqToDB.DataProvider.WrapParametersVisitor.VisitSqlQuery(LinqToDB.Inte
 override LinqToDB.DataProvider.WrapParametersVisitor.VisitSqlSelectClause(LinqToDB.Internal.SqlQuery.SqlSelectClause! element) -> LinqToDB.Internal.SqlQuery.IQueryElement!
 override LinqToDB.DataProvider.WrapParametersVisitor.VisitSqlSetExpression(LinqToDB.Internal.SqlQuery.SqlSetExpression! element) -> LinqToDB.Internal.SqlQuery.IQueryElement!
 override LinqToDB.ExpressionMethodAttribute.GetObjectID() -> string!
-override LinqToDB.Expressions.ChangeTypeExpression.Equals(object? obj) -> bool
-override LinqToDB.Expressions.ChangeTypeExpression.GetHashCode() -> int
-override LinqToDB.Expressions.ChangeTypeExpression.NodeType.get -> System.Linq.Expressions.ExpressionType
-override LinqToDB.Expressions.ChangeTypeExpression.ToString() -> string!
-override LinqToDB.Expressions.ChangeTypeExpression.Type.get -> System.Type!
-override LinqToDB.Expressions.DefaultValueExpression.Accept(System.Linq.Expressions.ExpressionVisitor! visitor) -> System.Linq.Expressions.Expression!
-override LinqToDB.Expressions.DefaultValueExpression.CanReduce.get -> bool
-override LinqToDB.Expressions.DefaultValueExpression.Equals(object? obj) -> bool
-override LinqToDB.Expressions.DefaultValueExpression.GetHashCode() -> int
-override LinqToDB.Expressions.DefaultValueExpression.NodeType.get -> System.Linq.Expressions.ExpressionType
-override LinqToDB.Expressions.DefaultValueExpression.Reduce() -> System.Linq.Expressions.Expression!
-override LinqToDB.Expressions.DefaultValueExpression.ToString() -> string!
-override LinqToDB.Expressions.DefaultValueExpression.Type.get -> System.Type!
-override LinqToDB.Expressions.ExpressionPrinter.ToString() -> string!
-override LinqToDB.Expressions.ExpressionPrinter.Visit(System.Linq.Expressions.Expression? expression) -> System.Linq.Expressions.Expression?
-override LinqToDB.Expressions.ExpressionPrinter.VisitBinary(System.Linq.Expressions.BinaryExpression! binaryExpression) -> System.Linq.Expressions.Expression!
-override LinqToDB.Expressions.ExpressionPrinter.VisitBlock(System.Linq.Expressions.BlockExpression! blockExpression) -> System.Linq.Expressions.Expression!
-override LinqToDB.Expressions.ExpressionPrinter.VisitConditional(System.Linq.Expressions.ConditionalExpression! conditionalExpression) -> System.Linq.Expressions.Expression!
-override LinqToDB.Expressions.ExpressionPrinter.VisitConstant(System.Linq.Expressions.ConstantExpression! constantExpression) -> System.Linq.Expressions.Expression!
-override LinqToDB.Expressions.ExpressionPrinter.VisitDefault(System.Linq.Expressions.DefaultExpression! defaultExpression) -> System.Linq.Expressions.Expression!
-override LinqToDB.Expressions.ExpressionPrinter.VisitExtension(System.Linq.Expressions.Expression! extensionExpression) -> System.Linq.Expressions.Expression!
-override LinqToDB.Expressions.ExpressionPrinter.VisitGoto(System.Linq.Expressions.GotoExpression! gotoExpression) -> System.Linq.Expressions.Expression!
-override LinqToDB.Expressions.ExpressionPrinter.VisitIndex(System.Linq.Expressions.IndexExpression! indexExpression) -> System.Linq.Expressions.Expression!
-override LinqToDB.Expressions.ExpressionPrinter.VisitInvocation(System.Linq.Expressions.InvocationExpression! invocationExpression) -> System.Linq.Expressions.Expression!
-override LinqToDB.Expressions.ExpressionPrinter.VisitLabel(System.Linq.Expressions.LabelExpression! labelExpression) -> System.Linq.Expressions.Expression!
-override LinqToDB.Expressions.ExpressionPrinter.VisitLambda<T>(System.Linq.Expressions.Expression<T>! lambdaExpression) -> System.Linq.Expressions.Expression!
-override LinqToDB.Expressions.ExpressionPrinter.VisitLoop(System.Linq.Expressions.LoopExpression! loopExpression) -> System.Linq.Expressions.Expression!
-override LinqToDB.Expressions.ExpressionPrinter.VisitMember(System.Linq.Expressions.MemberExpression! memberExpression) -> System.Linq.Expressions.Expression!
-override LinqToDB.Expressions.ExpressionPrinter.VisitMemberInit(System.Linq.Expressions.MemberInitExpression! memberInitExpression) -> System.Linq.Expressions.Expression!
-override LinqToDB.Expressions.ExpressionPrinter.VisitMethodCall(System.Linq.Expressions.MethodCallExpression! methodCallExpression) -> System.Linq.Expressions.Expression!
-override LinqToDB.Expressions.ExpressionPrinter.VisitNew(System.Linq.Expressions.NewExpression! newExpression) -> System.Linq.Expressions.Expression!
-override LinqToDB.Expressions.ExpressionPrinter.VisitNewArray(System.Linq.Expressions.NewArrayExpression! newArrayExpression) -> System.Linq.Expressions.Expression!
-override LinqToDB.Expressions.ExpressionPrinter.VisitParameter(System.Linq.Expressions.ParameterExpression! parameterExpression) -> System.Linq.Expressions.Expression!
-override LinqToDB.Expressions.ExpressionPrinter.VisitSwitch(System.Linq.Expressions.SwitchExpression! switchExpression) -> System.Linq.Expressions.Expression!
-override LinqToDB.Expressions.ExpressionPrinter.VisitTry(System.Linq.Expressions.TryExpression! tryExpression) -> System.Linq.Expressions.Expression!
-override LinqToDB.Expressions.ExpressionPrinter.VisitTypeBinary(System.Linq.Expressions.TypeBinaryExpression! typeBinaryExpression) -> System.Linq.Expressions.Expression!
-override LinqToDB.Expressions.ExpressionPrinter.VisitUnary(System.Linq.Expressions.UnaryExpression! unaryExpression) -> System.Linq.Expressions.Expression!
-override LinqToDB.Expressions.ExpressionVisitorBase.Visit(System.Linq.Expressions.Expression? node) -> System.Linq.Expressions.Expression?
-override LinqToDB.Expressions.MemberHelper.MemberInfoWithType.Equals(object? obj) -> bool
-override LinqToDB.Expressions.MemberHelper.MemberInfoWithType.GetHashCode() -> int
-override LinqToDB.Expressions.PlaceholderExpression.Accept(System.Linq.Expressions.ExpressionVisitor! visitor) -> System.Linq.Expressions.Expression!
-override LinqToDB.Expressions.PlaceholderExpression.CanReduce.get -> bool
-override LinqToDB.Expressions.PlaceholderExpression.NodeType.get -> System.Linq.Expressions.ExpressionType
-override LinqToDB.Expressions.PlaceholderExpression.Reduce() -> System.Linq.Expressions.Expression!
-override LinqToDB.Expressions.PlaceholderExpression.ToString() -> string!
-override LinqToDB.Expressions.PlaceholderExpression.Type.get -> System.Type!
-override LinqToDB.Expressions.SqlDefaultIfEmptyExpression.Accept(System.Linq.Expressions.ExpressionVisitor! visitor) -> System.Linq.Expressions.Expression!
-override LinqToDB.Expressions.SqlDefaultIfEmptyExpression.CanReduce.get -> bool
-override LinqToDB.Expressions.SqlDefaultIfEmptyExpression.NodeType.get -> System.Linq.Expressions.ExpressionType
-override LinqToDB.Expressions.SqlDefaultIfEmptyExpression.Reduce() -> System.Linq.Expressions.Expression!
-override LinqToDB.Expressions.SqlDefaultIfEmptyExpression.ToString() -> string!
-override LinqToDB.Expressions.SqlDefaultIfEmptyExpression.Type.get -> System.Type!
-override LinqToDB.Expressions.SqlErrorExpression.Accept(System.Linq.Expressions.ExpressionVisitor! visitor) -> System.Linq.Expressions.Expression!
-override LinqToDB.Expressions.SqlErrorExpression.CanReduce.get -> bool
-override LinqToDB.Expressions.SqlErrorExpression.NodeType.get -> System.Linq.Expressions.ExpressionType
-override LinqToDB.Expressions.SqlErrorExpression.Reduce() -> System.Linq.Expressions.Expression!
-override LinqToDB.Expressions.SqlErrorExpression.ToString() -> string!
-override LinqToDB.Expressions.SqlErrorExpression.Type.get -> System.Type!
-override LinqToDB.Expressions.SqlGenericConstructorExpression.Accept(System.Linq.Expressions.ExpressionVisitor! visitor) -> System.Linq.Expressions.Expression!
-override LinqToDB.Expressions.SqlGenericConstructorExpression.Assignment.ToString() -> string!
-override LinqToDB.Expressions.SqlGenericConstructorExpression.CanReduce.get -> bool
-override LinqToDB.Expressions.SqlGenericConstructorExpression.Equals(object? obj) -> bool
-override LinqToDB.Expressions.SqlGenericConstructorExpression.GetHashCode() -> int
-override LinqToDB.Expressions.SqlGenericConstructorExpression.NodeType.get -> System.Linq.Expressions.ExpressionType
-override LinqToDB.Expressions.SqlGenericConstructorExpression.Parameter.ToString() -> string!
-override LinqToDB.Expressions.SqlGenericConstructorExpression.ToString() -> string!
-override LinqToDB.Expressions.SqlGenericConstructorExpression.Type.get -> System.Type!
-override LinqToDB.Expressions.SqlGenericParamAccessExpression.Accept(System.Linq.Expressions.ExpressionVisitor! visitor) -> System.Linq.Expressions.Expression!
-override LinqToDB.Expressions.SqlGenericParamAccessExpression.Equals(object? obj) -> bool
-override LinqToDB.Expressions.SqlGenericParamAccessExpression.GetHashCode() -> int
-override LinqToDB.Expressions.SqlGenericParamAccessExpression.NodeType.get -> System.Linq.Expressions.ExpressionType
-override LinqToDB.Expressions.SqlGenericParamAccessExpression.ToString() -> string!
-override LinqToDB.Expressions.SqlGenericParamAccessExpression.Type.get -> System.Type!
-override LinqToDB.Expressions.SqlPathExpression.Accept(System.Linq.Expressions.ExpressionVisitor! visitor) -> System.Linq.Expressions.Expression!
-override LinqToDB.Expressions.SqlPathExpression.CanReduce.get -> bool
-override LinqToDB.Expressions.SqlPathExpression.Equals(object? obj) -> bool
-override LinqToDB.Expressions.SqlPathExpression.GetHashCode() -> int
-override LinqToDB.Expressions.SqlPathExpression.NodeType.get -> System.Linq.Expressions.ExpressionType
-override LinqToDB.Expressions.SqlPathExpression.ToString() -> string!
-override LinqToDB.Expressions.SqlPathExpression.Type.get -> System.Type!
-override LinqToDB.Expressions.SqlPlaceholderExpression.Equals(object? obj) -> bool
-override LinqToDB.Expressions.SqlPlaceholderExpression.GetHashCode() -> int
-override LinqToDB.Expressions.SqlPlaceholderExpression.NodeType.get -> System.Linq.Expressions.ExpressionType
-override LinqToDB.Expressions.SqlPlaceholderExpression.ToString() -> string!
-override LinqToDB.Expressions.SqlPlaceholderExpression.Type.get -> System.Type!
-override LinqToDB.Expressions.SqlQueryDependentParamsAttribute.ExpressionsEqual<TContext>(TContext context, System.Linq.Expressions.Expression! expr1, System.Linq.Expressions.Expression! expr2, System.Func<TContext, System.Linq.Expressions.Expression!, System.Linq.Expressions.Expression!, bool>! comparer) -> bool
-override LinqToDB.Expressions.SqlQueryDependentParamsAttribute.SplitExpression(System.Linq.Expressions.Expression! expression) -> System.Collections.Generic.IEnumerable<System.Linq.Expressions.Expression!>!
-override LinqToDB.Expressions.SqlQueryRootExpression.Accept(System.Linq.Expressions.ExpressionVisitor! visitor) -> System.Linq.Expressions.Expression!
-override LinqToDB.Expressions.SqlQueryRootExpression.Equals(object? obj) -> bool
-override LinqToDB.Expressions.SqlQueryRootExpression.GetHashCode() -> int
-override LinqToDB.Expressions.SqlQueryRootExpression.NodeType.get -> System.Linq.Expressions.ExpressionType
-override LinqToDB.Expressions.SqlQueryRootExpression.ToString() -> string!
-override LinqToDB.Expressions.SqlQueryRootExpression.Type.get -> System.Type!
-override LinqToDB.Expressions.TagExpression.Accept(System.Linq.Expressions.ExpressionVisitor! visitor) -> System.Linq.Expressions.Expression!
-override LinqToDB.Expressions.TagExpression.CanReduce.get -> bool
-override LinqToDB.Expressions.TagExpression.NodeType.get -> System.Linq.Expressions.ExpressionType
-override LinqToDB.Expressions.TagExpression.Reduce() -> System.Linq.Expressions.Expression!
-override LinqToDB.Expressions.TagExpression.ToString() -> string!
-override LinqToDB.Expressions.TagExpression.Type.get -> System.Type!
+override LinqToDB.Internal.Expressions.ChangeTypeExpression.Equals(object? obj) -> bool
+override LinqToDB.Internal.Expressions.ChangeTypeExpression.GetHashCode() -> int
+override LinqToDB.Internal.Expressions.ChangeTypeExpression.NodeType.get -> System.Linq.Expressions.ExpressionType
+override LinqToDB.Internal.Expressions.ChangeTypeExpression.ToString() -> string!
+override LinqToDB.Internal.Expressions.ChangeTypeExpression.Type.get -> System.Type!
+override LinqToDB.Internal.Expressions.DefaultValueExpression.Accept(System.Linq.Expressions.ExpressionVisitor! visitor) -> System.Linq.Expressions.Expression!
+override LinqToDB.Internal.Expressions.DefaultValueExpression.CanReduce.get -> bool
+override LinqToDB.Internal.Expressions.DefaultValueExpression.Equals(object? obj) -> bool
+override LinqToDB.Internal.Expressions.DefaultValueExpression.GetHashCode() -> int
+override LinqToDB.Internal.Expressions.DefaultValueExpression.NodeType.get -> System.Linq.Expressions.ExpressionType
+override LinqToDB.Internal.Expressions.DefaultValueExpression.Reduce() -> System.Linq.Expressions.Expression!
+override LinqToDB.Internal.Expressions.DefaultValueExpression.ToString() -> string!
+override LinqToDB.Internal.Expressions.DefaultValueExpression.Type.get -> System.Type!
+override LinqToDB.Internal.Expressions.ExpressionPrinter.ToString() -> string!
+override LinqToDB.Internal.Expressions.ExpressionPrinter.Visit(System.Linq.Expressions.Expression? expression) -> System.Linq.Expressions.Expression?
+override LinqToDB.Internal.Expressions.ExpressionPrinter.VisitBinary(System.Linq.Expressions.BinaryExpression! binaryExpression) -> System.Linq.Expressions.Expression!
+override LinqToDB.Internal.Expressions.ExpressionPrinter.VisitBlock(System.Linq.Expressions.BlockExpression! blockExpression) -> System.Linq.Expressions.Expression!
+override LinqToDB.Internal.Expressions.ExpressionPrinter.VisitConditional(System.Linq.Expressions.ConditionalExpression! conditionalExpression) -> System.Linq.Expressions.Expression!
+override LinqToDB.Internal.Expressions.ExpressionPrinter.VisitConstant(System.Linq.Expressions.ConstantExpression! constantExpression) -> System.Linq.Expressions.Expression!
+override LinqToDB.Internal.Expressions.ExpressionPrinter.VisitDefault(System.Linq.Expressions.DefaultExpression! defaultExpression) -> System.Linq.Expressions.Expression!
+override LinqToDB.Internal.Expressions.ExpressionPrinter.VisitExtension(System.Linq.Expressions.Expression! extensionExpression) -> System.Linq.Expressions.Expression!
+override LinqToDB.Internal.Expressions.ExpressionPrinter.VisitGoto(System.Linq.Expressions.GotoExpression! gotoExpression) -> System.Linq.Expressions.Expression!
+override LinqToDB.Internal.Expressions.ExpressionPrinter.VisitIndex(System.Linq.Expressions.IndexExpression! indexExpression) -> System.Linq.Expressions.Expression!
+override LinqToDB.Internal.Expressions.ExpressionPrinter.VisitInvocation(System.Linq.Expressions.InvocationExpression! invocationExpression) -> System.Linq.Expressions.Expression!
+override LinqToDB.Internal.Expressions.ExpressionPrinter.VisitLabel(System.Linq.Expressions.LabelExpression! labelExpression) -> System.Linq.Expressions.Expression!
+override LinqToDB.Internal.Expressions.ExpressionPrinter.VisitLambda<T>(System.Linq.Expressions.Expression<T>! lambdaExpression) -> System.Linq.Expressions.Expression!
+override LinqToDB.Internal.Expressions.ExpressionPrinter.VisitLoop(System.Linq.Expressions.LoopExpression! loopExpression) -> System.Linq.Expressions.Expression!
+override LinqToDB.Internal.Expressions.ExpressionPrinter.VisitMember(System.Linq.Expressions.MemberExpression! memberExpression) -> System.Linq.Expressions.Expression!
+override LinqToDB.Internal.Expressions.ExpressionPrinter.VisitMemberInit(System.Linq.Expressions.MemberInitExpression! memberInitExpression) -> System.Linq.Expressions.Expression!
+override LinqToDB.Internal.Expressions.ExpressionPrinter.VisitMethodCall(System.Linq.Expressions.MethodCallExpression! methodCallExpression) -> System.Linq.Expressions.Expression!
+override LinqToDB.Internal.Expressions.ExpressionPrinter.VisitNew(System.Linq.Expressions.NewExpression! newExpression) -> System.Linq.Expressions.Expression!
+override LinqToDB.Internal.Expressions.ExpressionPrinter.VisitNewArray(System.Linq.Expressions.NewArrayExpression! newArrayExpression) -> System.Linq.Expressions.Expression!
+override LinqToDB.Internal.Expressions.ExpressionPrinter.VisitParameter(System.Linq.Expressions.ParameterExpression! parameterExpression) -> System.Linq.Expressions.Expression!
+override LinqToDB.Internal.Expressions.ExpressionPrinter.VisitSwitch(System.Linq.Expressions.SwitchExpression! switchExpression) -> System.Linq.Expressions.Expression!
+override LinqToDB.Internal.Expressions.ExpressionPrinter.VisitTry(System.Linq.Expressions.TryExpression! tryExpression) -> System.Linq.Expressions.Expression!
+override LinqToDB.Internal.Expressions.ExpressionPrinter.VisitTypeBinary(System.Linq.Expressions.TypeBinaryExpression! typeBinaryExpression) -> System.Linq.Expressions.Expression!
+override LinqToDB.Internal.Expressions.ExpressionPrinter.VisitUnary(System.Linq.Expressions.UnaryExpression! unaryExpression) -> System.Linq.Expressions.Expression!
+override LinqToDB.Internal.Expressions.ExpressionVisitorBase.Visit(System.Linq.Expressions.Expression? node) -> System.Linq.Expressions.Expression?
+override LinqToDB.Internal.Expressions.MemberHelper.MemberInfoWithType.Equals(object? obj) -> bool
+override LinqToDB.Internal.Expressions.MemberHelper.MemberInfoWithType.GetHashCode() -> int
+override LinqToDB.Internal.Expressions.PlaceholderExpression.Accept(System.Linq.Expressions.ExpressionVisitor! visitor) -> System.Linq.Expressions.Expression!
+override LinqToDB.Internal.Expressions.PlaceholderExpression.CanReduce.get -> bool
+override LinqToDB.Internal.Expressions.PlaceholderExpression.NodeType.get -> System.Linq.Expressions.ExpressionType
+override LinqToDB.Internal.Expressions.PlaceholderExpression.Reduce() -> System.Linq.Expressions.Expression!
+override LinqToDB.Internal.Expressions.PlaceholderExpression.ToString() -> string!
+override LinqToDB.Internal.Expressions.PlaceholderExpression.Type.get -> System.Type!
+override LinqToDB.Internal.Expressions.SqlDefaultIfEmptyExpression.Accept(System.Linq.Expressions.ExpressionVisitor! visitor) -> System.Linq.Expressions.Expression!
+override LinqToDB.Internal.Expressions.SqlDefaultIfEmptyExpression.CanReduce.get -> bool
+override LinqToDB.Internal.Expressions.SqlDefaultIfEmptyExpression.NodeType.get -> System.Linq.Expressions.ExpressionType
+override LinqToDB.Internal.Expressions.SqlDefaultIfEmptyExpression.Reduce() -> System.Linq.Expressions.Expression!
+override LinqToDB.Internal.Expressions.SqlDefaultIfEmptyExpression.ToString() -> string!
+override LinqToDB.Internal.Expressions.SqlDefaultIfEmptyExpression.Type.get -> System.Type!
+override LinqToDB.Internal.Expressions.SqlErrorExpression.Accept(System.Linq.Expressions.ExpressionVisitor! visitor) -> System.Linq.Expressions.Expression!
+override LinqToDB.Internal.Expressions.SqlErrorExpression.CanReduce.get -> bool
+override LinqToDB.Internal.Expressions.SqlErrorExpression.NodeType.get -> System.Linq.Expressions.ExpressionType
+override LinqToDB.Internal.Expressions.SqlErrorExpression.Reduce() -> System.Linq.Expressions.Expression!
+override LinqToDB.Internal.Expressions.SqlErrorExpression.ToString() -> string!
+override LinqToDB.Internal.Expressions.SqlErrorExpression.Type.get -> System.Type!
+override LinqToDB.Internal.Expressions.SqlGenericConstructorExpression.Accept(System.Linq.Expressions.ExpressionVisitor! visitor) -> System.Linq.Expressions.Expression!
+override LinqToDB.Internal.Expressions.SqlGenericConstructorExpression.Assignment.ToString() -> string!
+override LinqToDB.Internal.Expressions.SqlGenericConstructorExpression.CanReduce.get -> bool
+override LinqToDB.Internal.Expressions.SqlGenericConstructorExpression.Equals(object? obj) -> bool
+override LinqToDB.Internal.Expressions.SqlGenericConstructorExpression.GetHashCode() -> int
+override LinqToDB.Internal.Expressions.SqlGenericConstructorExpression.NodeType.get -> System.Linq.Expressions.ExpressionType
+override LinqToDB.Internal.Expressions.SqlGenericConstructorExpression.Parameter.ToString() -> string!
+override LinqToDB.Internal.Expressions.SqlGenericConstructorExpression.ToString() -> string!
+override LinqToDB.Internal.Expressions.SqlGenericConstructorExpression.Type.get -> System.Type!
+override LinqToDB.Internal.Expressions.SqlGenericParamAccessExpression.Accept(System.Linq.Expressions.ExpressionVisitor! visitor) -> System.Linq.Expressions.Expression!
+override LinqToDB.Internal.Expressions.SqlGenericParamAccessExpression.Equals(object? obj) -> bool
+override LinqToDB.Internal.Expressions.SqlGenericParamAccessExpression.GetHashCode() -> int
+override LinqToDB.Internal.Expressions.SqlGenericParamAccessExpression.NodeType.get -> System.Linq.Expressions.ExpressionType
+override LinqToDB.Internal.Expressions.SqlGenericParamAccessExpression.ToString() -> string!
+override LinqToDB.Internal.Expressions.SqlGenericParamAccessExpression.Type.get -> System.Type!
+override LinqToDB.Internal.Expressions.SqlPathExpression.Accept(System.Linq.Expressions.ExpressionVisitor! visitor) -> System.Linq.Expressions.Expression!
+override LinqToDB.Internal.Expressions.SqlPathExpression.CanReduce.get -> bool
+override LinqToDB.Internal.Expressions.SqlPathExpression.Equals(object? obj) -> bool
+override LinqToDB.Internal.Expressions.SqlPathExpression.GetHashCode() -> int
+override LinqToDB.Internal.Expressions.SqlPathExpression.NodeType.get -> System.Linq.Expressions.ExpressionType
+override LinqToDB.Internal.Expressions.SqlPathExpression.ToString() -> string!
+override LinqToDB.Internal.Expressions.SqlPathExpression.Type.get -> System.Type!
+override LinqToDB.Internal.Expressions.SqlPlaceholderExpression.Equals(object? obj) -> bool
+override LinqToDB.Internal.Expressions.SqlPlaceholderExpression.GetHashCode() -> int
+override LinqToDB.Internal.Expressions.SqlPlaceholderExpression.NodeType.get -> System.Linq.Expressions.ExpressionType
+override LinqToDB.Internal.Expressions.SqlPlaceholderExpression.ToString() -> string!
+override LinqToDB.Internal.Expressions.SqlPlaceholderExpression.Type.get -> System.Type!
+override LinqToDB.Internal.Expressions.SqlQueryDependentParamsAttribute.ExpressionsEqual<TContext>(TContext context, System.Linq.Expressions.Expression! expr1, System.Linq.Expressions.Expression! expr2, System.Func<TContext, System.Linq.Expressions.Expression!, System.Linq.Expressions.Expression!, bool>! comparer) -> bool
+override LinqToDB.Internal.Expressions.SqlQueryDependentParamsAttribute.SplitExpression(System.Linq.Expressions.Expression! expression) -> System.Collections.Generic.IEnumerable<System.Linq.Expressions.Expression!>!
+override LinqToDB.Internal.Expressions.SqlQueryRootExpression.Accept(System.Linq.Expressions.ExpressionVisitor! visitor) -> System.Linq.Expressions.Expression!
+override LinqToDB.Internal.Expressions.SqlQueryRootExpression.Equals(object? obj) -> bool
+override LinqToDB.Internal.Expressions.SqlQueryRootExpression.GetHashCode() -> int
+override LinqToDB.Internal.Expressions.SqlQueryRootExpression.NodeType.get -> System.Linq.Expressions.ExpressionType
+override LinqToDB.Internal.Expressions.SqlQueryRootExpression.ToString() -> string!
+override LinqToDB.Internal.Expressions.SqlQueryRootExpression.Type.get -> System.Type!
+override LinqToDB.Internal.Expressions.TagExpression.Accept(System.Linq.Expressions.ExpressionVisitor! visitor) -> System.Linq.Expressions.Expression!
+override LinqToDB.Internal.Expressions.TagExpression.CanReduce.get -> bool
+override LinqToDB.Internal.Expressions.TagExpression.NodeType.get -> System.Linq.Expressions.ExpressionType
+override LinqToDB.Internal.Expressions.TagExpression.Reduce() -> System.Linq.Expressions.Expression!
+override LinqToDB.Internal.Expressions.TagExpression.ToString() -> string!
+override LinqToDB.Internal.Expressions.TagExpression.Type.get -> System.Type!
 override LinqToDB.Interceptors.ConnectionOptionsConnectionInterceptor.ConnectionOpened(LinqToDB.Interceptors.ConnectionEventData eventData, System.Data.Common.DbConnection! connection) -> void
 override LinqToDB.Interceptors.ConnectionOptionsConnectionInterceptor.ConnectionOpenedAsync(LinqToDB.Interceptors.ConnectionEventData eventData, System.Data.Common.DbConnection! connection, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
 override LinqToDB.Interceptors.ConnectionOptionsConnectionInterceptor.ConnectionOpening(LinqToDB.Interceptors.ConnectionEventData eventData, System.Data.Common.DbConnection! connection) -> void
@@ -7956,11 +7956,11 @@ override LinqToDB.Reflection.VirtualPropertyInfoBase.MetadataToken.get -> int
 override LinqToDB.Reflection.VirtualPropertyInfoBase.Module.get -> System.Reflection.Module!
 override LinqToDB.Sql.EnumAttribute.GetObjectID() -> string!
 override LinqToDB.Sql.ExpressionAttribute.GetObjectID() -> string!
-override LinqToDB.Sql.ExtensionAttribute.GetExpression<TContext>(TContext context, LinqToDB.IDataContext! dataContext, LinqToDB.Expressions.IExpressionEvaluator! evaluator, LinqToDB.Internal.SqlQuery.SelectQuery! query, System.Linq.Expressions.Expression! expression, LinqToDB.Sql.ExpressionAttribute.ConvertFunc<TContext>! converter) -> System.Linq.Expressions.Expression!
+override LinqToDB.Sql.ExtensionAttribute.GetExpression<TContext>(TContext context, LinqToDB.IDataContext! dataContext, LinqToDB.Internal.Expressions.IExpressionEvaluator! evaluator, LinqToDB.Internal.SqlQuery.SelectQuery! query, System.Linq.Expressions.Expression! expression, LinqToDB.Sql.ExpressionAttribute.ConvertFunc<TContext>! converter) -> System.Linq.Expressions.Expression!
 override LinqToDB.Sql.ExtensionAttribute.GetObjectID() -> string!
-override LinqToDB.Sql.FunctionAttribute.GetExpression<TContext>(TContext context, LinqToDB.IDataContext! dataContext, LinqToDB.Expressions.IExpressionEvaluator! evaluator, LinqToDB.Internal.SqlQuery.SelectQuery! query, System.Linq.Expressions.Expression! expression, LinqToDB.Sql.ExpressionAttribute.ConvertFunc<TContext>! converter) -> System.Linq.Expressions.Expression!
+override LinqToDB.Sql.FunctionAttribute.GetExpression<TContext>(TContext context, LinqToDB.IDataContext! dataContext, LinqToDB.Internal.Expressions.IExpressionEvaluator! evaluator, LinqToDB.Internal.SqlQuery.SelectQuery! query, System.Linq.Expressions.Expression! expression, LinqToDB.Sql.ExpressionAttribute.ConvertFunc<TContext>! converter) -> System.Linq.Expressions.Expression!
 override LinqToDB.Sql.FunctionAttribute.GetObjectID() -> string!
-override LinqToDB.Sql.PropertyAttribute.GetExpression<TContext>(TContext context, LinqToDB.IDataContext! dataContext, LinqToDB.Expressions.IExpressionEvaluator! evaluator, LinqToDB.Internal.SqlQuery.SelectQuery! query, System.Linq.Expressions.Expression! expression, LinqToDB.Sql.ExpressionAttribute.ConvertFunc<TContext>! converter) -> System.Linq.Expressions.Expression!
+override LinqToDB.Sql.PropertyAttribute.GetExpression<TContext>(TContext context, LinqToDB.IDataContext! dataContext, LinqToDB.Internal.Expressions.IExpressionEvaluator! evaluator, LinqToDB.Internal.SqlQuery.SelectQuery! query, System.Linq.Expressions.Expression! expression, LinqToDB.Sql.ExpressionAttribute.ConvertFunc<TContext>! converter) -> System.Linq.Expressions.Expression!
 override LinqToDB.Sql.PropertyAttribute.GetObjectID() -> string!
 override LinqToDB.Sql.QueryExtensionAttribute.GetObjectID() -> string!
 override LinqToDB.Sql.SqlID.Equals(object? obj) -> bool
@@ -10409,88 +10409,88 @@ static LinqToDB.DataProvider.Sybase.SybaseTools.GetDataProvider(LinqToDB.DataPro
 static LinqToDB.DataProvider.Sybase.SybaseTools.ResolveSybase(string! path, string? assemblyName = null) -> void
 static LinqToDB.DataProvider.Sybase.SybaseTools.ResolveSybase(System.Reflection.Assembly! assembly) -> void
 static LinqToDB.DataProvider.Sybase.Translation.SybaseMemberTranslator.DateFunctionsTranslator.DatePartToStr(LinqToDB.Sql.DateParts part) -> string?
-static LinqToDB.Expressions.ExpressionEqualityComparer.Instance.get -> LinqToDB.Expressions.ExpressionEqualityComparer!
-static LinqToDB.Expressions.ExpressionEvaluator.EvaluateExpression(this System.Linq.Expressions.Expression? expr) -> object?
-static LinqToDB.Expressions.ExpressionEvaluator.EvaluateExpression<T>(this System.Linq.Expressions.Expression? expr) -> T?
-static LinqToDB.Expressions.ExpressionExtensions.Find(this System.Linq.Expressions.Expression? expr, System.Linq.Expressions.Expression! exprToFind) -> System.Linq.Expressions.Expression?
-static LinqToDB.Expressions.ExpressionExtensions.Find(this System.Linq.Expressions.Expression? expr, System.Linq.Expressions.Expression! exprToFind, System.Collections.Generic.IEqualityComparer<System.Linq.Expressions.Expression!>! comparer) -> System.Linq.Expressions.Expression?
-static LinqToDB.Expressions.ExpressionExtensions.Find<TContext>(this System.Linq.Expressions.Expression? expr, TContext context, System.Func<TContext, System.Linq.Expressions.Expression!, bool>! func) -> System.Linq.Expressions.Expression?
-static LinqToDB.Expressions.ExpressionExtensions.GetBody(this System.Linq.Expressions.LambdaExpression! lambda, params System.Linq.Expressions.Expression![]! replacement) -> System.Linq.Expressions.Expression!
-static LinqToDB.Expressions.ExpressionExtensions.GetBody(this System.Linq.Expressions.LambdaExpression! lambda, System.Collections.ObjectModel.ReadOnlyCollection<System.Linq.Expressions.Expression!>! replacement) -> System.Linq.Expressions.Expression!
-static LinqToDB.Expressions.ExpressionExtensions.GetBody(this System.Linq.Expressions.LambdaExpression! lambda, System.Linq.Expressions.Expression! exprToReplaceParameter) -> System.Linq.Expressions.Expression!
-static LinqToDB.Expressions.ExpressionExtensions.GetBody(this System.Linq.Expressions.LambdaExpression! lambda, System.Linq.Expressions.Expression! exprToReplaceParameter1, System.Linq.Expressions.Expression! exprToReplaceParameter2) -> System.Linq.Expressions.Expression!
-static LinqToDB.Expressions.ExpressionExtensions.GetBody(this System.Linq.Expressions.LambdaExpression! lambda, System.Linq.Expressions.Expression! exprToReplaceParameter1, System.Linq.Expressions.Expression! exprToReplaceParameter2, System.Linq.Expressions.Expression! exprToReplaceParameter3) -> System.Linq.Expressions.Expression!
-static LinqToDB.Expressions.ExpressionExtensions.GetCount<TContext>(this System.Linq.Expressions.Expression! expr, TContext context, System.Func<TContext, System.Linq.Expressions.Expression!, bool>! func) -> int
-static LinqToDB.Expressions.ExpressionExtensions.GetDebugView(this System.Linq.Expressions.Expression! expression) -> string!
-static LinqToDB.Expressions.ExpressionExtensions.GetMemberGetter(System.Reflection.MemberInfo! mi, System.Linq.Expressions.Expression! obj) -> System.Linq.Expressions.Expression!
-static LinqToDB.Expressions.ExpressionExtensions.Replace(this System.Linq.Expressions.Expression! expression, System.Collections.Generic.IReadOnlyDictionary<System.Linq.Expressions.Expression!, System.Linq.Expressions.Expression!>! replaceMap) -> System.Linq.Expressions.Expression!
-static LinqToDB.Expressions.ExpressionExtensions.Replace(this System.Linq.Expressions.Expression! expression, System.Linq.Expressions.Expression! toReplace, System.Linq.Expressions.Expression! replacedBy) -> System.Linq.Expressions.Expression!
-static LinqToDB.Expressions.ExpressionExtensions.Replace(this System.Linq.Expressions.Expression! expression, System.Linq.Expressions.Expression! toReplace, System.Linq.Expressions.Expression! replacedBy, System.Collections.Generic.IEqualityComparer<System.Linq.Expressions.Expression!>! equalityComparer) -> System.Linq.Expressions.Expression!
-static LinqToDB.Expressions.ExpressionExtensions.Transform(this System.Linq.Expressions.Expression? expr, System.Func<System.Linq.Expressions.Expression!, LinqToDB.Expressions.TransformInfo>! func) -> System.Linq.Expressions.Expression?
-static LinqToDB.Expressions.ExpressionExtensions.Transform(this System.Linq.Expressions.Expression? expr, System.Func<System.Linq.Expressions.Expression!, System.Linq.Expressions.Expression!>! func) -> System.Linq.Expressions.Expression?
-static LinqToDB.Expressions.ExpressionExtensions.Transform<TContext>(this System.Linq.Expressions.Expression? expr, TContext context, System.Func<TContext, System.Linq.Expressions.Expression!, LinqToDB.Expressions.TransformInfo>! func) -> System.Linq.Expressions.Expression?
-static LinqToDB.Expressions.ExpressionExtensions.Transform<TContext>(this System.Linq.Expressions.Expression? expr, TContext context, System.Func<TContext, System.Linq.Expressions.Expression!, System.Linq.Expressions.Expression!>! func) -> System.Linq.Expressions.Expression?
-static LinqToDB.Expressions.ExpressionExtensions.Visit<TContext>(this System.Linq.Expressions.Expression! expr, TContext context, System.Action<TContext, System.Linq.Expressions.Expression!>! func) -> void
-static LinqToDB.Expressions.ExpressionExtensions.Visit<TContext>(this System.Linq.Expressions.Expression! expr, TContext context, System.Func<TContext, System.Linq.Expressions.Expression!, bool>! func) -> void
-static LinqToDB.Expressions.ExpressionGenerator.Build(System.Action<LinqToDB.Expressions.ExpressionGenerator!>! buildFunc, LinqToDB.Expressions.TypeMapper? typeMapper = null) -> System.Linq.Expressions.Expression!
-static LinqToDB.Expressions.ExpressionGenerator.NoOpTypeMapper -> LinqToDB.Expressions.TypeMapper!
-static LinqToDB.Expressions.ExpressionHelper.Field(System.Linq.Expressions.Expression! obj, string! name) -> System.Linq.Expressions.MemberExpression!
-static LinqToDB.Expressions.ExpressionHelper.Field(System.Type! type, string! name) -> System.Linq.Expressions.MemberExpression!
-static LinqToDB.Expressions.ExpressionHelper.Property(System.Linq.Expressions.Expression! obj, string! name) -> System.Linq.Expressions.MemberExpression!
-static LinqToDB.Expressions.ExpressionHelper.Property(System.Type! type, string! name) -> System.Linq.Expressions.MemberExpression!
-static LinqToDB.Expressions.ExpressionHelper.PropertyOrField(System.Linq.Expressions.Expression! obj, string! name) -> System.Linq.Expressions.MemberExpression!
-static LinqToDB.Expressions.ExpressionHelper.PropertyOrField(System.Type! type, string! name, bool allowInherited = true) -> System.Linq.Expressions.MemberExpression!
-static LinqToDB.Expressions.ExpressionPrinter.Print(System.Linq.Expressions.Expression! expression) -> string!
-static LinqToDB.Expressions.ExpressionPrinter.PrintDebug(System.Linq.Expressions.Expression! expression) -> string!
-static LinqToDB.Expressions.MemberHelper.ConstructorOf(System.Linq.Expressions.Expression<System.Func<object!>!>! func) -> System.Reflection.ConstructorInfo!
-static LinqToDB.Expressions.MemberHelper.ConstructorOf<T>(System.Linq.Expressions.Expression<System.Func<T, object!>!>! func) -> System.Reflection.ConstructorInfo!
-static LinqToDB.Expressions.MemberHelper.FieldOf<T>(System.Linq.Expressions.Expression<System.Func<T, object?>!>! func) -> System.Reflection.FieldInfo!
-static LinqToDB.Expressions.MemberHelper.GetMemberInfo(System.Linq.Expressions.Expression! expr) -> System.Reflection.MemberInfo!
-static LinqToDB.Expressions.MemberHelper.GetMemberInfo(System.Linq.Expressions.LambdaExpression! func) -> System.Reflection.MemberInfo!
-static LinqToDB.Expressions.MemberHelper.GetMemberInfoWithType(System.Linq.Expressions.Expression! expr) -> LinqToDB.Expressions.MemberHelper.MemberInfoWithType
-static LinqToDB.Expressions.MemberHelper.GetMemberInfoWithType(System.Linq.Expressions.LambdaExpression! func) -> LinqToDB.Expressions.MemberHelper.MemberInfoWithType
-static LinqToDB.Expressions.MemberHelper.MemberOf<T, TMember>(System.Linq.Expressions.Expression<System.Func<T, TMember>!>! func) -> System.Reflection.MemberInfo!
-static LinqToDB.Expressions.MemberHelper.MemberOf<T>(System.Linq.Expressions.Expression<System.Func<T, object?>!>! func) -> System.Reflection.MemberInfo!
-static LinqToDB.Expressions.MemberHelper.MethodOf(System.Linq.Expressions.Expression<System.Action!>! func) -> System.Reflection.MethodInfo!
-static LinqToDB.Expressions.MemberHelper.MethodOf(System.Linq.Expressions.Expression<System.Func<object?>!>! func) -> System.Reflection.MethodInfo!
-static LinqToDB.Expressions.MemberHelper.MethodOf<T1, T2, T3, T4>(System.Linq.Expressions.Expression<System.Func<T1, T2, T3, T4, object?>!>! func) -> System.Reflection.MethodInfo!
-static LinqToDB.Expressions.MemberHelper.MethodOf<T1, T2, T3>(System.Linq.Expressions.Expression<System.Func<T1, T2, T3, object?>!>! func) -> System.Reflection.MethodInfo!
-static LinqToDB.Expressions.MemberHelper.MethodOf<T1, T2>(System.Linq.Expressions.Expression<System.Func<T1, T2, object?>!>! func) -> System.Reflection.MethodInfo!
-static LinqToDB.Expressions.MemberHelper.MethodOf<T>(System.Linq.Expressions.Expression<System.Func<T, object?>!>! func) -> System.Reflection.MethodInfo!
-static LinqToDB.Expressions.MemberHelper.MethodOfGeneric(System.Linq.Expressions.Expression<System.Action!>! func) -> System.Reflection.MethodInfo!
-static LinqToDB.Expressions.MemberHelper.MethodOfGeneric(System.Linq.Expressions.Expression<System.Func<object?>!>! func) -> System.Reflection.MethodInfo!
-static LinqToDB.Expressions.MemberHelper.MethodOfGeneric<T1, T2, T3, T4>(System.Linq.Expressions.Expression<System.Func<T1, T2, T3, T4, object?>!>! func) -> System.Reflection.MethodInfo!
-static LinqToDB.Expressions.MemberHelper.MethodOfGeneric<T1, T2, T3>(System.Linq.Expressions.Expression<System.Func<T1, T2, T3, object?>!>! func) -> System.Reflection.MethodInfo!
-static LinqToDB.Expressions.MemberHelper.MethodOfGeneric<T1, T2>(System.Linq.Expressions.Expression<System.Func<T1, T2, object?>!>! func) -> System.Reflection.MethodInfo!
-static LinqToDB.Expressions.MemberHelper.MethodOfGeneric<T>(System.Linq.Expressions.Expression<System.Func<T, object?>!>! func) -> System.Reflection.MethodInfo!
-static LinqToDB.Expressions.MemberHelper.PropertyOf(System.Linq.Expressions.Expression<System.Func<object?>!>! func) -> System.Reflection.PropertyInfo!
-static LinqToDB.Expressions.MemberHelper.PropertyOf<T>(System.Linq.Expressions.Expression<System.Func<T, object?>!>! func) -> System.Reflection.PropertyInfo!
-static LinqToDB.Expressions.PlaceholderExpression.Closure(System.Linq.Expressions.Expression! innerExpression) -> LinqToDB.Expressions.PlaceholderExpression!
-static LinqToDB.Expressions.SqlErrorExpression.CreateException(string! message) -> System.Exception!
-static LinqToDB.Expressions.SqlErrorExpression.CreateException(System.Linq.Expressions.Expression? expression, string? message) -> System.Exception!
-static LinqToDB.Expressions.SqlErrorExpression.EnsureError(object? context, System.Linq.Expressions.Expression! expression) -> LinqToDB.Expressions.SqlErrorExpression!
-static LinqToDB.Expressions.SqlErrorExpression.EnsureError(System.Linq.Expressions.Expression! expression, System.Type! resultType) -> LinqToDB.Expressions.SqlErrorExpression!
-static LinqToDB.Expressions.SqlErrorExpression.PrepareExpressionString(System.Linq.Expressions.Expression? expression) -> string!
-static LinqToDB.Expressions.SqlErrorExpression.ThrowError(System.Linq.Expressions.Expression! expression, string? message) -> void
-static LinqToDB.Expressions.SqlGenericConstructorExpression.Assignment.AssignmentComparer.get -> System.Collections.Generic.IEqualityComparer<LinqToDB.Expressions.SqlGenericConstructorExpression.Assignment!>!
-static LinqToDB.Expressions.SqlGenericConstructorExpression.Assignment.EmptyCollection -> System.Collections.ObjectModel.ReadOnlyCollection<LinqToDB.Expressions.SqlGenericConstructorExpression.Assignment!>!
-static LinqToDB.Expressions.SqlGenericConstructorExpression.FindMember(System.Collections.Generic.IReadOnlyCollection<LinqToDB.Reflection.MemberAccessor!>! members, System.Reflection.ParameterInfo! parameter) -> System.Reflection.MemberInfo?
-static LinqToDB.Expressions.SqlGenericConstructorExpression.FindMember(System.Type! inType, System.Reflection.ParameterInfo! parameter) -> System.Reflection.MemberInfo?
-static LinqToDB.Expressions.SqlGenericConstructorExpression.operator !=(LinqToDB.Expressions.SqlGenericConstructorExpression? left, LinqToDB.Expressions.SqlGenericConstructorExpression? right) -> bool
-static LinqToDB.Expressions.SqlGenericConstructorExpression.operator ==(LinqToDB.Expressions.SqlGenericConstructorExpression? left, LinqToDB.Expressions.SqlGenericConstructorExpression? right) -> bool
-static LinqToDB.Expressions.SqlGenericConstructorExpression.Parameter.EmptyCollection -> System.Collections.ObjectModel.ReadOnlyCollection<LinqToDB.Expressions.SqlGenericConstructorExpression.Parameter!>!
-static LinqToDB.Expressions.SqlGenericConstructorExpression.Parameter.ParameterComparer.get -> System.Collections.Generic.IEqualityComparer<LinqToDB.Expressions.SqlGenericConstructorExpression.Parameter!>!
-static LinqToDB.Expressions.SqlGenericParamAccessExpression.operator !=(LinqToDB.Expressions.SqlGenericParamAccessExpression? left, LinqToDB.Expressions.SqlGenericParamAccessExpression? right) -> bool
-static LinqToDB.Expressions.SqlGenericParamAccessExpression.operator ==(LinqToDB.Expressions.SqlGenericParamAccessExpression? left, LinqToDB.Expressions.SqlGenericParamAccessExpression? right) -> bool
-static LinqToDB.Expressions.SqlPathExpression.operator !=(LinqToDB.Expressions.SqlPathExpression? left, LinqToDB.Expressions.SqlPathExpression? right) -> bool
-static LinqToDB.Expressions.SqlPathExpression.operator ==(LinqToDB.Expressions.SqlPathExpression? left, LinqToDB.Expressions.SqlPathExpression? right) -> bool
-static LinqToDB.Expressions.SqlQueryDependentAttributeHelper.GetQueryDependentAttributes(System.Reflection.MethodInfo! method) -> System.Collections.Generic.IList<LinqToDB.Expressions.SqlQueryDependentAttribute?>?
-static LinqToDB.Expressions.SqlQueryRootExpression.Create(LinqToDB.IDataContext! dataContext) -> LinqToDB.Expressions.SqlQueryRootExpression!
-static LinqToDB.Expressions.SqlQueryRootExpression.Create(LinqToDB.IDataContext! dataContext, System.Type! contextType) -> LinqToDB.Expressions.SqlQueryRootExpression!
-static LinqToDB.Expressions.SqlQueryRootExpression.Create(LinqToDB.Mapping.MappingSchema! mappingSchema, System.Type! contextType) -> LinqToDB.Expressions.SqlQueryRootExpression!
-static LinqToDB.Expressions.SqlQueryRootExpression.operator !=(LinqToDB.Expressions.SqlQueryRootExpression? left, LinqToDB.Expressions.SqlQueryRootExpression? right) -> bool
-static LinqToDB.Expressions.SqlQueryRootExpression.operator ==(LinqToDB.Expressions.SqlQueryRootExpression? left, LinqToDB.Expressions.SqlQueryRootExpression? right) -> bool
-static LinqToDB.Expressions.TypeWrapper.PropertySetter<TI, TP>(System.Linq.Expressions.Expression<System.Func<TI, TP>!>! getter) -> System.Linq.Expressions.Expression<System.Action<TI, TP>!>!
+static LinqToDB.Internal.Expressions.ExpressionEqualityComparer.Instance.get -> LinqToDB.Internal.Expressions.ExpressionEqualityComparer!
+static LinqToDB.Internal.Expressions.ExpressionEvaluator.EvaluateExpression(this System.Linq.Expressions.Expression? expr) -> object?
+static LinqToDB.Internal.Expressions.ExpressionEvaluator.EvaluateExpression<T>(this System.Linq.Expressions.Expression? expr) -> T?
+static LinqToDB.Internal.Expressions.ExpressionExtensions.Find(this System.Linq.Expressions.Expression? expr, System.Linq.Expressions.Expression! exprToFind) -> System.Linq.Expressions.Expression?
+static LinqToDB.Internal.Expressions.ExpressionExtensions.Find(this System.Linq.Expressions.Expression? expr, System.Linq.Expressions.Expression! exprToFind, System.Collections.Generic.IEqualityComparer<System.Linq.Expressions.Expression!>! comparer) -> System.Linq.Expressions.Expression?
+static LinqToDB.Internal.Expressions.ExpressionExtensions.Find<TContext>(this System.Linq.Expressions.Expression? expr, TContext context, System.Func<TContext, System.Linq.Expressions.Expression!, bool>! func) -> System.Linq.Expressions.Expression?
+static LinqToDB.Internal.Expressions.ExpressionExtensions.GetBody(this System.Linq.Expressions.LambdaExpression! lambda, params System.Linq.Expressions.Expression![]! replacement) -> System.Linq.Expressions.Expression!
+static LinqToDB.Internal.Expressions.ExpressionExtensions.GetBody(this System.Linq.Expressions.LambdaExpression! lambda, System.Collections.ObjectModel.ReadOnlyCollection<System.Linq.Expressions.Expression!>! replacement) -> System.Linq.Expressions.Expression!
+static LinqToDB.Internal.Expressions.ExpressionExtensions.GetBody(this System.Linq.Expressions.LambdaExpression! lambda, System.Linq.Expressions.Expression! exprToReplaceParameter) -> System.Linq.Expressions.Expression!
+static LinqToDB.Internal.Expressions.ExpressionExtensions.GetBody(this System.Linq.Expressions.LambdaExpression! lambda, System.Linq.Expressions.Expression! exprToReplaceParameter1, System.Linq.Expressions.Expression! exprToReplaceParameter2) -> System.Linq.Expressions.Expression!
+static LinqToDB.Internal.Expressions.ExpressionExtensions.GetBody(this System.Linq.Expressions.LambdaExpression! lambda, System.Linq.Expressions.Expression! exprToReplaceParameter1, System.Linq.Expressions.Expression! exprToReplaceParameter2, System.Linq.Expressions.Expression! exprToReplaceParameter3) -> System.Linq.Expressions.Expression!
+static LinqToDB.Internal.Expressions.ExpressionExtensions.GetCount<TContext>(this System.Linq.Expressions.Expression! expr, TContext context, System.Func<TContext, System.Linq.Expressions.Expression!, bool>! func) -> int
+static LinqToDB.Internal.Expressions.ExpressionExtensions.GetDebugView(this System.Linq.Expressions.Expression! expression) -> string!
+static LinqToDB.Internal.Expressions.ExpressionExtensions.GetMemberGetter(System.Reflection.MemberInfo! mi, System.Linq.Expressions.Expression! obj) -> System.Linq.Expressions.Expression!
+static LinqToDB.Internal.Expressions.ExpressionExtensions.Replace(this System.Linq.Expressions.Expression! expression, System.Collections.Generic.IReadOnlyDictionary<System.Linq.Expressions.Expression!, System.Linq.Expressions.Expression!>! replaceMap) -> System.Linq.Expressions.Expression!
+static LinqToDB.Internal.Expressions.ExpressionExtensions.Replace(this System.Linq.Expressions.Expression! expression, System.Linq.Expressions.Expression! toReplace, System.Linq.Expressions.Expression! replacedBy) -> System.Linq.Expressions.Expression!
+static LinqToDB.Internal.Expressions.ExpressionExtensions.Replace(this System.Linq.Expressions.Expression! expression, System.Linq.Expressions.Expression! toReplace, System.Linq.Expressions.Expression! replacedBy, System.Collections.Generic.IEqualityComparer<System.Linq.Expressions.Expression!>! equalityComparer) -> System.Linq.Expressions.Expression!
+static LinqToDB.Internal.Expressions.ExpressionExtensions.Transform(this System.Linq.Expressions.Expression? expr, System.Func<System.Linq.Expressions.Expression!, LinqToDB.Internal.Expressions.TransformInfo>! func) -> System.Linq.Expressions.Expression?
+static LinqToDB.Internal.Expressions.ExpressionExtensions.Transform(this System.Linq.Expressions.Expression? expr, System.Func<System.Linq.Expressions.Expression!, System.Linq.Expressions.Expression!>! func) -> System.Linq.Expressions.Expression?
+static LinqToDB.Internal.Expressions.ExpressionExtensions.Transform<TContext>(this System.Linq.Expressions.Expression? expr, TContext context, System.Func<TContext, System.Linq.Expressions.Expression!, LinqToDB.Internal.Expressions.TransformInfo>! func) -> System.Linq.Expressions.Expression?
+static LinqToDB.Internal.Expressions.ExpressionExtensions.Transform<TContext>(this System.Linq.Expressions.Expression? expr, TContext context, System.Func<TContext, System.Linq.Expressions.Expression!, System.Linq.Expressions.Expression!>! func) -> System.Linq.Expressions.Expression?
+static LinqToDB.Internal.Expressions.ExpressionExtensions.Visit<TContext>(this System.Linq.Expressions.Expression! expr, TContext context, System.Action<TContext, System.Linq.Expressions.Expression!>! func) -> void
+static LinqToDB.Internal.Expressions.ExpressionExtensions.Visit<TContext>(this System.Linq.Expressions.Expression! expr, TContext context, System.Func<TContext, System.Linq.Expressions.Expression!, bool>! func) -> void
+static LinqToDB.Internal.Expressions.ExpressionGenerator.Build(System.Action<LinqToDB.Internal.Expressions.ExpressionGenerator!>! buildFunc, LinqToDB.Internal.Expressions.TypeMapper? typeMapper = null) -> System.Linq.Expressions.Expression!
+static LinqToDB.Internal.Expressions.ExpressionGenerator.NoOpTypeMapper -> LinqToDB.Internal.Expressions.TypeMapper!
+static LinqToDB.Internal.Expressions.ExpressionHelper.Field(System.Linq.Expressions.Expression! obj, string! name) -> System.Linq.Expressions.MemberExpression!
+static LinqToDB.Internal.Expressions.ExpressionHelper.Field(System.Type! type, string! name) -> System.Linq.Expressions.MemberExpression!
+static LinqToDB.Internal.Expressions.ExpressionHelper.Property(System.Linq.Expressions.Expression! obj, string! name) -> System.Linq.Expressions.MemberExpression!
+static LinqToDB.Internal.Expressions.ExpressionHelper.Property(System.Type! type, string! name) -> System.Linq.Expressions.MemberExpression!
+static LinqToDB.Internal.Expressions.ExpressionHelper.PropertyOrField(System.Linq.Expressions.Expression! obj, string! name) -> System.Linq.Expressions.MemberExpression!
+static LinqToDB.Internal.Expressions.ExpressionHelper.PropertyOrField(System.Type! type, string! name, bool allowInherited = true) -> System.Linq.Expressions.MemberExpression!
+static LinqToDB.Internal.Expressions.ExpressionPrinter.Print(System.Linq.Expressions.Expression! expression) -> string!
+static LinqToDB.Internal.Expressions.ExpressionPrinter.PrintDebug(System.Linq.Expressions.Expression! expression) -> string!
+static LinqToDB.Internal.Expressions.MemberHelper.ConstructorOf(System.Linq.Expressions.Expression<System.Func<object!>!>! func) -> System.Reflection.ConstructorInfo!
+static LinqToDB.Internal.Expressions.MemberHelper.ConstructorOf<T>(System.Linq.Expressions.Expression<System.Func<T, object!>!>! func) -> System.Reflection.ConstructorInfo!
+static LinqToDB.Internal.Expressions.MemberHelper.FieldOf<T>(System.Linq.Expressions.Expression<System.Func<T, object?>!>! func) -> System.Reflection.FieldInfo!
+static LinqToDB.Internal.Expressions.MemberHelper.GetMemberInfo(System.Linq.Expressions.Expression! expr) -> System.Reflection.MemberInfo!
+static LinqToDB.Internal.Expressions.MemberHelper.GetMemberInfo(System.Linq.Expressions.LambdaExpression! func) -> System.Reflection.MemberInfo!
+static LinqToDB.Internal.Expressions.MemberHelper.GetMemberInfoWithType(System.Linq.Expressions.Expression! expr) -> LinqToDB.Internal.Expressions.MemberHelper.MemberInfoWithType
+static LinqToDB.Internal.Expressions.MemberHelper.GetMemberInfoWithType(System.Linq.Expressions.LambdaExpression! func) -> LinqToDB.Internal.Expressions.MemberHelper.MemberInfoWithType
+static LinqToDB.Internal.Expressions.MemberHelper.MemberOf<T, TMember>(System.Linq.Expressions.Expression<System.Func<T, TMember>!>! func) -> System.Reflection.MemberInfo!
+static LinqToDB.Internal.Expressions.MemberHelper.MemberOf<T>(System.Linq.Expressions.Expression<System.Func<T, object?>!>! func) -> System.Reflection.MemberInfo!
+static LinqToDB.Internal.Expressions.MemberHelper.MethodOf(System.Linq.Expressions.Expression<System.Action!>! func) -> System.Reflection.MethodInfo!
+static LinqToDB.Internal.Expressions.MemberHelper.MethodOf(System.Linq.Expressions.Expression<System.Func<object?>!>! func) -> System.Reflection.MethodInfo!
+static LinqToDB.Internal.Expressions.MemberHelper.MethodOf<T1, T2, T3, T4>(System.Linq.Expressions.Expression<System.Func<T1, T2, T3, T4, object?>!>! func) -> System.Reflection.MethodInfo!
+static LinqToDB.Internal.Expressions.MemberHelper.MethodOf<T1, T2, T3>(System.Linq.Expressions.Expression<System.Func<T1, T2, T3, object?>!>! func) -> System.Reflection.MethodInfo!
+static LinqToDB.Internal.Expressions.MemberHelper.MethodOf<T1, T2>(System.Linq.Expressions.Expression<System.Func<T1, T2, object?>!>! func) -> System.Reflection.MethodInfo!
+static LinqToDB.Internal.Expressions.MemberHelper.MethodOf<T>(System.Linq.Expressions.Expression<System.Func<T, object?>!>! func) -> System.Reflection.MethodInfo!
+static LinqToDB.Internal.Expressions.MemberHelper.MethodOfGeneric(System.Linq.Expressions.Expression<System.Action!>! func) -> System.Reflection.MethodInfo!
+static LinqToDB.Internal.Expressions.MemberHelper.MethodOfGeneric(System.Linq.Expressions.Expression<System.Func<object?>!>! func) -> System.Reflection.MethodInfo!
+static LinqToDB.Internal.Expressions.MemberHelper.MethodOfGeneric<T1, T2, T3, T4>(System.Linq.Expressions.Expression<System.Func<T1, T2, T3, T4, object?>!>! func) -> System.Reflection.MethodInfo!
+static LinqToDB.Internal.Expressions.MemberHelper.MethodOfGeneric<T1, T2, T3>(System.Linq.Expressions.Expression<System.Func<T1, T2, T3, object?>!>! func) -> System.Reflection.MethodInfo!
+static LinqToDB.Internal.Expressions.MemberHelper.MethodOfGeneric<T1, T2>(System.Linq.Expressions.Expression<System.Func<T1, T2, object?>!>! func) -> System.Reflection.MethodInfo!
+static LinqToDB.Internal.Expressions.MemberHelper.MethodOfGeneric<T>(System.Linq.Expressions.Expression<System.Func<T, object?>!>! func) -> System.Reflection.MethodInfo!
+static LinqToDB.Internal.Expressions.MemberHelper.PropertyOf(System.Linq.Expressions.Expression<System.Func<object?>!>! func) -> System.Reflection.PropertyInfo!
+static LinqToDB.Internal.Expressions.MemberHelper.PropertyOf<T>(System.Linq.Expressions.Expression<System.Func<T, object?>!>! func) -> System.Reflection.PropertyInfo!
+static LinqToDB.Internal.Expressions.PlaceholderExpression.Closure(System.Linq.Expressions.Expression! innerExpression) -> LinqToDB.Internal.Expressions.PlaceholderExpression!
+static LinqToDB.Internal.Expressions.SqlErrorExpression.CreateException(string! message) -> System.Exception!
+static LinqToDB.Internal.Expressions.SqlErrorExpression.CreateException(System.Linq.Expressions.Expression? expression, string? message) -> System.Exception!
+static LinqToDB.Internal.Expressions.SqlErrorExpression.EnsureError(object? context, System.Linq.Expressions.Expression! expression) -> LinqToDB.Internal.Expressions.SqlErrorExpression!
+static LinqToDB.Internal.Expressions.SqlErrorExpression.EnsureError(System.Linq.Expressions.Expression! expression, System.Type! resultType) -> LinqToDB.Internal.Expressions.SqlErrorExpression!
+static LinqToDB.Internal.Expressions.SqlErrorExpression.PrepareExpressionString(System.Linq.Expressions.Expression? expression) -> string!
+static LinqToDB.Internal.Expressions.SqlErrorExpression.ThrowError(System.Linq.Expressions.Expression! expression, string? message) -> void
+static LinqToDB.Internal.Expressions.SqlGenericConstructorExpression.Assignment.AssignmentComparer.get -> System.Collections.Generic.IEqualityComparer<LinqToDB.Internal.Expressions.SqlGenericConstructorExpression.Assignment!>!
+static LinqToDB.Internal.Expressions.SqlGenericConstructorExpression.Assignment.EmptyCollection -> System.Collections.ObjectModel.ReadOnlyCollection<LinqToDB.Internal.Expressions.SqlGenericConstructorExpression.Assignment!>!
+static LinqToDB.Internal.Expressions.SqlGenericConstructorExpression.FindMember(System.Collections.Generic.IReadOnlyCollection<LinqToDB.Reflection.MemberAccessor!>! members, System.Reflection.ParameterInfo! parameter) -> System.Reflection.MemberInfo?
+static LinqToDB.Internal.Expressions.SqlGenericConstructorExpression.FindMember(System.Type! inType, System.Reflection.ParameterInfo! parameter) -> System.Reflection.MemberInfo?
+static LinqToDB.Internal.Expressions.SqlGenericConstructorExpression.operator !=(LinqToDB.Internal.Expressions.SqlGenericConstructorExpression? left, LinqToDB.Internal.Expressions.SqlGenericConstructorExpression? right) -> bool
+static LinqToDB.Internal.Expressions.SqlGenericConstructorExpression.operator ==(LinqToDB.Internal.Expressions.SqlGenericConstructorExpression? left, LinqToDB.Internal.Expressions.SqlGenericConstructorExpression? right) -> bool
+static LinqToDB.Internal.Expressions.SqlGenericConstructorExpression.Parameter.EmptyCollection -> System.Collections.ObjectModel.ReadOnlyCollection<LinqToDB.Internal.Expressions.SqlGenericConstructorExpression.Parameter!>!
+static LinqToDB.Internal.Expressions.SqlGenericConstructorExpression.Parameter.ParameterComparer.get -> System.Collections.Generic.IEqualityComparer<LinqToDB.Internal.Expressions.SqlGenericConstructorExpression.Parameter!>!
+static LinqToDB.Internal.Expressions.SqlGenericParamAccessExpression.operator !=(LinqToDB.Internal.Expressions.SqlGenericParamAccessExpression? left, LinqToDB.Internal.Expressions.SqlGenericParamAccessExpression? right) -> bool
+static LinqToDB.Internal.Expressions.SqlGenericParamAccessExpression.operator ==(LinqToDB.Internal.Expressions.SqlGenericParamAccessExpression? left, LinqToDB.Internal.Expressions.SqlGenericParamAccessExpression? right) -> bool
+static LinqToDB.Internal.Expressions.SqlPathExpression.operator !=(LinqToDB.Internal.Expressions.SqlPathExpression? left, LinqToDB.Internal.Expressions.SqlPathExpression? right) -> bool
+static LinqToDB.Internal.Expressions.SqlPathExpression.operator ==(LinqToDB.Internal.Expressions.SqlPathExpression? left, LinqToDB.Internal.Expressions.SqlPathExpression? right) -> bool
+static LinqToDB.Internal.Expressions.SqlQueryDependentAttributeHelper.GetQueryDependentAttributes(System.Reflection.MethodInfo! method) -> System.Collections.Generic.IList<LinqToDB.Internal.Expressions.SqlQueryDependentAttribute?>?
+static LinqToDB.Internal.Expressions.SqlQueryRootExpression.Create(LinqToDB.IDataContext! dataContext) -> LinqToDB.Internal.Expressions.SqlQueryRootExpression!
+static LinqToDB.Internal.Expressions.SqlQueryRootExpression.Create(LinqToDB.IDataContext! dataContext, System.Type! contextType) -> LinqToDB.Internal.Expressions.SqlQueryRootExpression!
+static LinqToDB.Internal.Expressions.SqlQueryRootExpression.Create(LinqToDB.Mapping.MappingSchema! mappingSchema, System.Type! contextType) -> LinqToDB.Internal.Expressions.SqlQueryRootExpression!
+static LinqToDB.Internal.Expressions.SqlQueryRootExpression.operator !=(LinqToDB.Internal.Expressions.SqlQueryRootExpression? left, LinqToDB.Internal.Expressions.SqlQueryRootExpression? right) -> bool
+static LinqToDB.Internal.Expressions.SqlQueryRootExpression.operator ==(LinqToDB.Internal.Expressions.SqlQueryRootExpression? left, LinqToDB.Internal.Expressions.SqlQueryRootExpression? right) -> bool
+static LinqToDB.Internal.Expressions.TypeWrapper.PropertySetter<TI, TP>(System.Linq.Expressions.Expression<System.Func<TI, TP>!>! getter) -> System.Linq.Expressions.Expression<System.Action<TI, TP>!>!
 static LinqToDB.ExtensionBuilderExtensions.Add(this LinqToDB.Sql.ISqExtensionBuilder! builder, LinqToDB.Internal.SqlQuery.ISqlExpression! left, int value) -> LinqToDB.Internal.SqlQuery.ISqlExpression!
 static LinqToDB.ExtensionBuilderExtensions.Add(this LinqToDB.Sql.ISqExtensionBuilder! builder, LinqToDB.Internal.SqlQuery.ISqlExpression! left, LinqToDB.Internal.SqlQuery.ISqlExpression! right, System.Type! type) -> LinqToDB.Internal.SqlQuery.ISqlExpression!
 static LinqToDB.ExtensionBuilderExtensions.Add<T>(this LinqToDB.Sql.ISqExtensionBuilder! builder, LinqToDB.Internal.SqlQuery.ISqlExpression! left, LinqToDB.Internal.SqlQuery.ISqlExpression! right) -> LinqToDB.Internal.SqlQuery.ISqlExpression!
@@ -10582,13 +10582,13 @@ static LinqToDB.Linq.Expressions.L<T1, T2, T3, TR>(System.Linq.Expressions.Expre
 static LinqToDB.Linq.Expressions.L<T1, T2, TR>(System.Linq.Expressions.Expression<System.Func<T1, T2, TR>!>! func) -> System.Linq.Expressions.LambdaExpression!
 static LinqToDB.Linq.Expressions.L<T1, TR>(System.Linq.Expressions.Expression<System.Func<T1, TR>!>! func) -> System.Linq.Expressions.LambdaExpression!
 static LinqToDB.Linq.Expressions.L<TR>(System.Linq.Expressions.Expression<System.Func<TR>!>! func) -> System.Linq.Expressions.LambdaExpression!
-static LinqToDB.Linq.Expressions.M<T>(System.Linq.Expressions.Expression<System.Func<T, object?>!>! func) -> LinqToDB.Expressions.MemberHelper.MemberInfoWithType
-static LinqToDB.Linq.Expressions.M<T>(System.Linq.Expressions.Expression<System.Func<T>!>! func) -> LinqToDB.Expressions.MemberHelper.MemberInfoWithType
+static LinqToDB.Linq.Expressions.M<T>(System.Linq.Expressions.Expression<System.Func<T, object?>!>! func) -> LinqToDB.Internal.Expressions.MemberHelper.MemberInfoWithType
+static LinqToDB.Linq.Expressions.M<T>(System.Linq.Expressions.Expression<System.Func<T>!>! func) -> LinqToDB.Internal.Expressions.MemberHelper.MemberInfoWithType
 static LinqToDB.Linq.Expressions.MapBinary(string! providerName, System.Linq.Expressions.ExpressionType nodeType, System.Type! leftType, System.Type! rightType, System.Linq.Expressions.LambdaExpression! expression) -> void
 static LinqToDB.Linq.Expressions.MapBinary(System.Linq.Expressions.ExpressionType nodeType, System.Type! leftType, System.Type! rightType, System.Linq.Expressions.LambdaExpression! expression) -> void
 static LinqToDB.Linq.Expressions.MapBinary<TLeft, TRight, TR>(string! providerName, System.Linq.Expressions.Expression<System.Func<TLeft, TRight, TR>!>! binaryExpression, System.Linq.Expressions.Expression<System.Func<TLeft, TRight, TR>!>! expression) -> void
 static LinqToDB.Linq.Expressions.MapBinary<TLeft, TRight, TR>(System.Linq.Expressions.Expression<System.Func<TLeft, TRight, TR>!>! binaryExpression, System.Linq.Expressions.Expression<System.Func<TLeft, TRight, TR>!>! expression) -> void
-static LinqToDB.Linq.Expressions.MapMember(string! providerName, LinqToDB.Expressions.MemberHelper.MemberInfoWithType memberInfoWithType, System.Linq.Expressions.LambdaExpression! expression) -> void
+static LinqToDB.Linq.Expressions.MapMember(string! providerName, LinqToDB.Internal.Expressions.MemberHelper.MemberInfoWithType memberInfoWithType, System.Linq.Expressions.LambdaExpression! expression) -> void
 static LinqToDB.Linq.Expressions.MapMember(string! providerName, System.Linq.Expressions.Expression<System.Func<object!>!>! memberInfo, System.Linq.Expressions.LambdaExpression! expression) -> void
 static LinqToDB.Linq.Expressions.MapMember(string! providerName, System.Reflection.MemberInfo! memberInfo, LinqToDB.Linq.IExpressionInfo! expressionInfo) -> void
 static LinqToDB.Linq.Expressions.MapMember(string! providerName, System.Reflection.MemberInfo! memberInfo, System.Linq.Expressions.LambdaExpression! expression) -> void
@@ -10688,7 +10688,7 @@ static LinqToDB.Linq.Translation.SqlExpressionFactoryExtensions.Sub(this LinqToD
 static LinqToDB.Linq.Translation.SqlExpressionFactoryExtensions.TypeExpression(this LinqToDB.Linq.Translation.ISqlExpressionFactory! factory, LinqToDB.Common.DbDataType dbDataType) -> LinqToDB.Internal.SqlQuery.ISqlExpression!
 static LinqToDB.Linq.Translation.SqlExpressionFactoryExtensions.Value<T>(this LinqToDB.Linq.Translation.ISqlExpressionFactory! factory, LinqToDB.Common.DbDataType dataType, T value) -> LinqToDB.Internal.SqlQuery.ISqlExpression!
 static LinqToDB.Linq.Translation.SqlExpressionFactoryExtensions.Value<T>(this LinqToDB.Linq.Translation.ISqlExpressionFactory! factory, T value) -> LinqToDB.Internal.SqlQuery.ISqlExpression!
-static LinqToDB.Linq.Translation.TranslationContextExtensions.CreatePlaceholder(this LinqToDB.Linq.Translation.ITranslationContext! translationContext, LinqToDB.Internal.SqlQuery.ISqlExpression! sqlExpression, System.Linq.Expressions.Expression! basedOn) -> LinqToDB.Expressions.SqlPlaceholderExpression!
+static LinqToDB.Linq.Translation.TranslationContextExtensions.CreatePlaceholder(this LinqToDB.Linq.Translation.ITranslationContext! translationContext, LinqToDB.Internal.SqlQuery.ISqlExpression! sqlExpression, System.Linq.Expressions.Expression! basedOn) -> LinqToDB.Internal.Expressions.SqlPlaceholderExpression!
 static LinqToDB.Linq.Translation.TranslationContextExtensions.GetDbDataType(this LinqToDB.Linq.Translation.ITranslationContext! translationContext, LinqToDB.Internal.SqlQuery.ISqlExpression! sqlExpression) -> LinqToDB.Common.DbDataType
 static LinqToDB.Linq.Translation.TranslationContextExtensions.TranslateToSqlExpression(this LinqToDB.Linq.Translation.ITranslationContext! translationContext, System.Linq.Expressions.Expression! expression, out LinqToDB.Internal.SqlQuery.ISqlExpression? translated) -> bool
 static LinqToDB.Linq.Translation.TranslationContextExtensions.TryEvaluate<T>(this LinqToDB.Linq.Translation.ITranslationContext! translationContext, System.Linq.Expressions.Expression! expression, out T result) -> bool
@@ -11487,17 +11487,17 @@ static readonly LinqToDB.Data.BulkCopyOptions.Empty -> LinqToDB.Data.BulkCopyOpt
 static readonly LinqToDB.Data.QueryTraceOptions.Empty -> LinqToDB.Data.QueryTraceOptions!
 static readonly LinqToDB.DataContextOptions.Empty -> LinqToDB.DataContextOptions!
 static readonly LinqToDB.DataProvider.NoopQueryParametersNormalizer.Instance -> LinqToDB.DataProvider.IQueryParametersNormalizer!
-static readonly LinqToDB.Expressions.ExpressionConstants.DataContextParam -> System.Linq.Expressions.ParameterExpression!
-static readonly LinqToDB.Expressions.ExpressionInstances.Constant0 -> System.Linq.Expressions.ConstantExpression!
-static readonly LinqToDB.Expressions.ExpressionInstances.Constant1 -> System.Linq.Expressions.ConstantExpression!
-static readonly LinqToDB.Expressions.ExpressionInstances.Constant26 -> System.Linq.Expressions.ConstantExpression!
-static readonly LinqToDB.Expressions.ExpressionInstances.Constant29 -> System.Linq.Expressions.ConstantExpression!
-static readonly LinqToDB.Expressions.ExpressionInstances.EmptyTypes -> System.Linq.Expressions.Expression!
-static readonly LinqToDB.Expressions.ExpressionInstances.False -> System.Linq.Expressions.ConstantExpression!
-static readonly LinqToDB.Expressions.ExpressionInstances.HashMultiplier -> System.Linq.Expressions.Expression!
-static readonly LinqToDB.Expressions.ExpressionInstances.NullIDataContext -> System.Linq.Expressions.Expression!
-static readonly LinqToDB.Expressions.ExpressionInstances.True -> System.Linq.Expressions.ConstantExpression!
-static readonly LinqToDB.Expressions.ExpressionInstances.UntypedNull -> System.Linq.Expressions.ConstantExpression!
+static readonly LinqToDB.Internal.Expressions.ExpressionConstants.DataContextParam -> System.Linq.Expressions.ParameterExpression!
+static readonly LinqToDB.Internal.Expressions.ExpressionInstances.Constant0 -> System.Linq.Expressions.ConstantExpression!
+static readonly LinqToDB.Internal.Expressions.ExpressionInstances.Constant1 -> System.Linq.Expressions.ConstantExpression!
+static readonly LinqToDB.Internal.Expressions.ExpressionInstances.Constant26 -> System.Linq.Expressions.ConstantExpression!
+static readonly LinqToDB.Internal.Expressions.ExpressionInstances.Constant29 -> System.Linq.Expressions.ConstantExpression!
+static readonly LinqToDB.Internal.Expressions.ExpressionInstances.EmptyTypes -> System.Linq.Expressions.Expression!
+static readonly LinqToDB.Internal.Expressions.ExpressionInstances.False -> System.Linq.Expressions.ConstantExpression!
+static readonly LinqToDB.Internal.Expressions.ExpressionInstances.HashMultiplier -> System.Linq.Expressions.Expression!
+static readonly LinqToDB.Internal.Expressions.ExpressionInstances.NullIDataContext -> System.Linq.Expressions.Expression!
+static readonly LinqToDB.Internal.Expressions.ExpressionInstances.True -> System.Linq.Expressions.ConstantExpression!
+static readonly LinqToDB.Internal.Expressions.ExpressionInstances.UntypedNull -> System.Linq.Expressions.ConstantExpression!
 static readonly LinqToDB.Reflection.MemberInfoEqualityComparer.Default -> LinqToDB.Reflection.MemberInfoEqualityComparer!
 static readonly LinqToDB.Reflection.Methods.ADONet.ConnectionString -> System.Reflection.PropertyInfo!
 static readonly LinqToDB.Reflection.Methods.ADONet.IsDBNull -> System.Reflection.MethodInfo!
@@ -11919,28 +11919,28 @@ virtual LinqToDB.DataProvider.UniqueParametersNormalizer.IsValidCharacter(char c
 virtual LinqToDB.DataProvider.UniqueParametersNormalizer.IsValidFirstCharacter(char chr) -> bool
 virtual LinqToDB.DataProvider.UniqueParametersNormalizer.MakeValidName(string! name) -> string!
 virtual LinqToDB.DataProvider.UniqueParametersNormalizer.MaxLength.get -> int
-virtual LinqToDB.Expressions.ExpressionPrinter.Append(string! value) -> LinqToDB.Expressions.ExpressionPrinter!
-virtual LinqToDB.Expressions.ExpressionPrinter.AppendLine() -> LinqToDB.Expressions.ExpressionPrinter!
-virtual LinqToDB.Expressions.ExpressionPrinter.AppendLine(string! value) -> System.Linq.Expressions.ExpressionVisitor!
-virtual LinqToDB.Expressions.ExpressionPrinter.AppendLines(string! value, bool skipFinalNewline = false) -> LinqToDB.Expressions.ExpressionPrinter!
-virtual LinqToDB.Expressions.ExpressionPrinter.GenerateBinaryOperator(System.Linq.Expressions.ExpressionType expressionType) -> string!
-virtual LinqToDB.Expressions.ExpressionPrinter.Indent() -> System.IDisposable!
-virtual LinqToDB.Expressions.ExpressionPrinter.PrintExpression(System.Linq.Expressions.Expression! expression, int? characterLimit = null) -> string!
-virtual LinqToDB.Expressions.ExpressionPrinter.PrintExpressionDebug(System.Linq.Expressions.Expression! expression) -> string!
-virtual LinqToDB.Expressions.ExpressionPrinter.VisitCollection<T>(System.Collections.Generic.IReadOnlyCollection<T!>! items, System.Action<LinqToDB.Expressions.ExpressionPrinter!>? joinAction = null) -> void
-virtual LinqToDB.Expressions.ExpressionVisitorBase.Cleanup() -> void
-virtual LinqToDB.Expressions.ExpressionVisitorBase.VisitChangeTypeExpression(LinqToDB.Expressions.ChangeTypeExpression! node) -> System.Linq.Expressions.Expression!
-virtual LinqToDB.Expressions.ExpressionVisitorBase.VisitDefaultValueExpression(LinqToDB.Expressions.DefaultValueExpression! node) -> System.Linq.Expressions.Expression!
-virtual LinqToDB.Expressions.ExpressionVisitorBase.VisitPlaceholderExpression(LinqToDB.Expressions.PlaceholderExpression! node) -> System.Linq.Expressions.Expression!
-virtual LinqToDB.Expressions.ExpressionVisitorBase.VisitSqlDefaultIfEmptyExpression(LinqToDB.Expressions.SqlDefaultIfEmptyExpression! node) -> System.Linq.Expressions.Expression!
-virtual LinqToDB.Expressions.ExpressionVisitorBase.VisitSqlGenericConstructorExpression(LinqToDB.Expressions.SqlGenericConstructorExpression! node) -> System.Linq.Expressions.Expression!
-virtual LinqToDB.Expressions.ExpressionVisitorBase.VisitSqlPlaceholderExpression(LinqToDB.Expressions.SqlPlaceholderExpression! node) -> System.Linq.Expressions.Expression!
-virtual LinqToDB.Expressions.ExpressionVisitorBase.VisitSqlQueryRootExpression(LinqToDB.Expressions.SqlQueryRootExpression! node) -> System.Linq.Expressions.Expression!
-virtual LinqToDB.Expressions.ExpressionVisitorBase.VisitTagExpression(LinqToDB.Expressions.TagExpression! node) -> System.Linq.Expressions.Expression!
-virtual LinqToDB.Expressions.SqlQueryDependentAttribute.ExpressionsEqual<TContext>(TContext context, System.Linq.Expressions.Expression! expr1, System.Linq.Expressions.Expression! expr2, System.Func<TContext, System.Linq.Expressions.Expression!, System.Linq.Expressions.Expression!, bool>! comparer) -> bool
-virtual LinqToDB.Expressions.SqlQueryDependentAttribute.ObjectsEqual(object? obj1, object? obj2) -> bool
-virtual LinqToDB.Expressions.SqlQueryDependentAttribute.PrepareForCache(System.Linq.Expressions.Expression! expression, LinqToDB.Expressions.IExpressionEvaluator! evaluator) -> System.Linq.Expressions.Expression!
-virtual LinqToDB.Expressions.SqlQueryDependentAttribute.SplitExpression(System.Linq.Expressions.Expression! expression) -> System.Collections.Generic.IEnumerable<System.Linq.Expressions.Expression!>!
+virtual LinqToDB.Internal.Expressions.ExpressionPrinter.Append(string! value) -> LinqToDB.Internal.Expressions.ExpressionPrinter!
+virtual LinqToDB.Internal.Expressions.ExpressionPrinter.AppendLine() -> LinqToDB.Internal.Expressions.ExpressionPrinter!
+virtual LinqToDB.Internal.Expressions.ExpressionPrinter.AppendLine(string! value) -> System.Linq.Expressions.ExpressionVisitor!
+virtual LinqToDB.Internal.Expressions.ExpressionPrinter.AppendLines(string! value, bool skipFinalNewline = false) -> LinqToDB.Internal.Expressions.ExpressionPrinter!
+virtual LinqToDB.Internal.Expressions.ExpressionPrinter.GenerateBinaryOperator(System.Linq.Expressions.ExpressionType expressionType) -> string!
+virtual LinqToDB.Internal.Expressions.ExpressionPrinter.Indent() -> System.IDisposable!
+virtual LinqToDB.Internal.Expressions.ExpressionPrinter.PrintExpression(System.Linq.Expressions.Expression! expression, int? characterLimit = null) -> string!
+virtual LinqToDB.Internal.Expressions.ExpressionPrinter.PrintExpressionDebug(System.Linq.Expressions.Expression! expression) -> string!
+virtual LinqToDB.Internal.Expressions.ExpressionPrinter.VisitCollection<T>(System.Collections.Generic.IReadOnlyCollection<T!>! items, System.Action<LinqToDB.Internal.Expressions.ExpressionPrinter!>? joinAction = null) -> void
+virtual LinqToDB.Internal.Expressions.ExpressionVisitorBase.Cleanup() -> void
+virtual LinqToDB.Internal.Expressions.ExpressionVisitorBase.VisitChangeTypeExpression(LinqToDB.Internal.Expressions.ChangeTypeExpression! node) -> System.Linq.Expressions.Expression!
+virtual LinqToDB.Internal.Expressions.ExpressionVisitorBase.VisitDefaultValueExpression(LinqToDB.Internal.Expressions.DefaultValueExpression! node) -> System.Linq.Expressions.Expression!
+virtual LinqToDB.Internal.Expressions.ExpressionVisitorBase.VisitPlaceholderExpression(LinqToDB.Internal.Expressions.PlaceholderExpression! node) -> System.Linq.Expressions.Expression!
+virtual LinqToDB.Internal.Expressions.ExpressionVisitorBase.VisitSqlDefaultIfEmptyExpression(LinqToDB.Internal.Expressions.SqlDefaultIfEmptyExpression! node) -> System.Linq.Expressions.Expression!
+virtual LinqToDB.Internal.Expressions.ExpressionVisitorBase.VisitSqlGenericConstructorExpression(LinqToDB.Internal.Expressions.SqlGenericConstructorExpression! node) -> System.Linq.Expressions.Expression!
+virtual LinqToDB.Internal.Expressions.ExpressionVisitorBase.VisitSqlPlaceholderExpression(LinqToDB.Internal.Expressions.SqlPlaceholderExpression! node) -> System.Linq.Expressions.Expression!
+virtual LinqToDB.Internal.Expressions.ExpressionVisitorBase.VisitSqlQueryRootExpression(LinqToDB.Internal.Expressions.SqlQueryRootExpression! node) -> System.Linq.Expressions.Expression!
+virtual LinqToDB.Internal.Expressions.ExpressionVisitorBase.VisitTagExpression(LinqToDB.Internal.Expressions.TagExpression! node) -> System.Linq.Expressions.Expression!
+virtual LinqToDB.Internal.Expressions.SqlQueryDependentAttribute.ExpressionsEqual<TContext>(TContext context, System.Linq.Expressions.Expression! expr1, System.Linq.Expressions.Expression! expr2, System.Func<TContext, System.Linq.Expressions.Expression!, System.Linq.Expressions.Expression!, bool>! comparer) -> bool
+virtual LinqToDB.Internal.Expressions.SqlQueryDependentAttribute.ObjectsEqual(object? obj1, object? obj2) -> bool
+virtual LinqToDB.Internal.Expressions.SqlQueryDependentAttribute.PrepareForCache(System.Linq.Expressions.Expression! expression, LinqToDB.Internal.Expressions.IExpressionEvaluator! evaluator) -> System.Linq.Expressions.Expression!
+virtual LinqToDB.Internal.Expressions.SqlQueryDependentAttribute.SplitExpression(System.Linq.Expressions.Expression! expression) -> System.Collections.Generic.IEnumerable<System.Linq.Expressions.Expression!>!
 virtual LinqToDB.InsertColumnFilter<T>.Invoke(T entity, LinqToDB.Mapping.ColumnDescriptor! column) -> bool
 virtual LinqToDB.InsertOrUpdateColumnFilter<T>.Invoke(T entity, LinqToDB.Mapping.ColumnDescriptor! column, bool isInsert) -> bool
 virtual LinqToDB.Interceptors.CommandInterceptor.AfterExecuteReader(LinqToDB.Interceptors.CommandEventData eventData, System.Data.Common.DbCommand! command, System.Data.CommandBehavior commandBehavior, System.Data.Common.DbDataReader! dataReader) -> void
@@ -11962,7 +11962,7 @@ virtual LinqToDB.Interceptors.DataContextInterceptor.OnClosedAsync(LinqToDB.Inte
 virtual LinqToDB.Interceptors.DataContextInterceptor.OnClosing(LinqToDB.Interceptors.DataContextEventData eventData) -> void
 virtual LinqToDB.Interceptors.DataContextInterceptor.OnClosingAsync(LinqToDB.Interceptors.DataContextEventData eventData) -> System.Threading.Tasks.Task!
 virtual LinqToDB.Interceptors.EntityServiceInterceptor.EntityCreated(LinqToDB.Interceptors.EntityCreatedEventData eventData, object! entity) -> object!
-virtual LinqToDB.Interceptors.Internal.EntityBindingInterceptor.ConvertConstructorExpression(LinqToDB.Expressions.SqlGenericConstructorExpression! expression) -> LinqToDB.Expressions.SqlGenericConstructorExpression!
+virtual LinqToDB.Interceptors.Internal.EntityBindingInterceptor.ConvertConstructorExpression(LinqToDB.Internal.Expressions.SqlGenericConstructorExpression! expression) -> LinqToDB.Internal.Expressions.SqlGenericConstructorExpression!
 virtual LinqToDB.Interceptors.UnwrapDataObjectInterceptor.UnwrapCommand(LinqToDB.IDataContext! dataContext, System.Data.Common.DbCommand! command) -> System.Data.Common.DbCommand!
 virtual LinqToDB.Interceptors.UnwrapDataObjectInterceptor.UnwrapConnection(LinqToDB.IDataContext! dataContext, System.Data.Common.DbConnection! connection) -> System.Data.Common.DbConnection!
 virtual LinqToDB.Interceptors.UnwrapDataObjectInterceptor.UnwrapDataReader(LinqToDB.IDataContext! dataContext, System.Data.Common.DbDataReader! dataReader) -> System.Data.Common.DbDataReader!
@@ -12070,7 +12070,7 @@ virtual LinqToDB.SchemaProvider.SchemaProviderBase.InitProvider(LinqToDB.Data.Da
 virtual LinqToDB.SchemaProvider.SchemaProviderBase.LoadProcedureTableSchema(LinqToDB.Data.DataConnection! dataConnection, LinqToDB.SchemaProvider.GetSchemaOptions! options, LinqToDB.SchemaProvider.ProcedureSchema! procedure, string! commandText, System.Collections.Generic.List<LinqToDB.SchemaProvider.TableSchema!>! tables) -> void
 virtual LinqToDB.SchemaProvider.SchemaProviderBase.ProcessSchema(LinqToDB.SchemaProvider.DatabaseSchema! databaseSchema, LinqToDB.SchemaProvider.GetSchemaOptions! schemaOptions) -> LinqToDB.SchemaProvider.DatabaseSchema!
 virtual LinqToDB.Sql.ExpressionAttribute.ConvertFunc<TContext>.Invoke(TContext context, System.Linq.Expressions.Expression! expression, LinqToDB.Mapping.ColumnDescriptor? columnDescriptor, bool? inlineParameters) -> System.Linq.Expressions.Expression!
-virtual LinqToDB.Sql.ExpressionAttribute.GetExpression<TContext>(TContext context, LinqToDB.IDataContext! dataContext, LinqToDB.Expressions.IExpressionEvaluator! evaluator, LinqToDB.Internal.SqlQuery.SelectQuery! query, System.Linq.Expressions.Expression! expression, LinqToDB.Sql.ExpressionAttribute.ConvertFunc<TContext>! converter) -> System.Linq.Expressions.Expression!
+virtual LinqToDB.Sql.ExpressionAttribute.GetExpression<TContext>(TContext context, LinqToDB.IDataContext! dataContext, LinqToDB.Internal.Expressions.IExpressionEvaluator! evaluator, LinqToDB.Internal.SqlQuery.SelectQuery! query, System.Linq.Expressions.Expression! expression, LinqToDB.Sql.ExpressionAttribute.ConvertFunc<TContext>! converter) -> System.Linq.Expressions.Expression!
 virtual LinqToDB.Sql.ExpressionAttribute.GetIsPredicate(System.Linq.Expressions.Expression! expression) -> bool
 virtual LinqToDB.Sql.QueryExtensionAttribute.ExtendJoin(System.Collections.Generic.List<LinqToDB.Internal.SqlQuery.SqlQueryExtension!>! extensions, System.Collections.Generic.List<LinqToDB.Linq.Builder.SqlQueryExtensionData!>! parameters) -> void
 virtual LinqToDB.Sql.QueryExtensionAttribute.ExtendQuery(System.Collections.Generic.List<LinqToDB.Internal.SqlQuery.SqlQueryExtension!>! extensions, System.Collections.Generic.List<LinqToDB.Linq.Builder.SqlQueryExtensionData!>! parameters) -> void
@@ -12440,20 +12440,20 @@ virtual LinqToDB.UpdateColumnFilter<T>.Invoke(T entity, LinqToDB.Mapping.ColumnD
 ~static LinqToDB.Sql.SqlRow<T1>.operator >=(LinqToDB.Sql.SqlRow<T1> x, LinqToDB.Sql.SqlRow<T1> y) -> bool
 ~static readonly LinqToDB.Sql.SqlRow.Types -> System.Type[]
 ~virtual LinqToDB.DataProvider.DataProviderOptions<T>.Equals(LinqToDB.DataProvider.DataProviderOptions<T>? other) -> bool
-LinqToDB.Expressions.ConstantPlaceholderExpression
-LinqToDB.Expressions.ConstantPlaceholderExpression.ConstantPlaceholderExpression(System.Type! constantType) -> void
-LinqToDB.Expressions.ConstantPlaceholderExpression.ConstantType.get -> System.Type!
-override LinqToDB.Expressions.ConstantPlaceholderExpression.CanReduce.get -> bool
-override LinqToDB.Expressions.ConstantPlaceholderExpression.Equals(object? obj) -> bool
-override LinqToDB.Expressions.ConstantPlaceholderExpression.GetHashCode() -> int
-override LinqToDB.Expressions.ConstantPlaceholderExpression.NodeType.get -> System.Linq.Expressions.ExpressionType
-override LinqToDB.Expressions.ConstantPlaceholderExpression.Reduce() -> System.Linq.Expressions.Expression!
-override LinqToDB.Expressions.ConstantPlaceholderExpression.ToString() -> string!
-override LinqToDB.Expressions.ConstantPlaceholderExpression.Type.get -> System.Type!
-override LinqToDB.Expressions.SqlQueryRootExpression.VisitChildren(System.Linq.Expressions.ExpressionVisitor! visitor) -> System.Linq.Expressions.Expression!
+LinqToDB.Internal.Expressions.ConstantPlaceholderExpression
+LinqToDB.Internal.Expressions.ConstantPlaceholderExpression.ConstantPlaceholderExpression(System.Type! constantType) -> void
+LinqToDB.Internal.Expressions.ConstantPlaceholderExpression.ConstantType.get -> System.Type!
+override LinqToDB.Internal.Expressions.ConstantPlaceholderExpression.CanReduce.get -> bool
+override LinqToDB.Internal.Expressions.ConstantPlaceholderExpression.Equals(object? obj) -> bool
+override LinqToDB.Internal.Expressions.ConstantPlaceholderExpression.GetHashCode() -> int
+override LinqToDB.Internal.Expressions.ConstantPlaceholderExpression.NodeType.get -> System.Linq.Expressions.ExpressionType
+override LinqToDB.Internal.Expressions.ConstantPlaceholderExpression.Reduce() -> System.Linq.Expressions.Expression!
+override LinqToDB.Internal.Expressions.ConstantPlaceholderExpression.ToString() -> string!
+override LinqToDB.Internal.Expressions.ConstantPlaceholderExpression.Type.get -> System.Type!
+override LinqToDB.Internal.Expressions.SqlQueryRootExpression.VisitChildren(System.Linq.Expressions.ExpressionVisitor! visitor) -> System.Linq.Expressions.Expression!
 override LinqToDB.Internal.SqlProvider.SqlExpressionConvertVisitor.VisitSqlColumnReference(LinqToDB.Internal.SqlQuery.SqlColumn! element) -> LinqToDB.Internal.SqlQuery.IQueryElement!
 override LinqToDB.Internal.SqlProvider.SqlExpressionConvertVisitor.VisitSqlFieldReference(LinqToDB.Internal.SqlQuery.SqlField! element) -> LinqToDB.Internal.SqlQuery.IQueryElement!
-virtual LinqToDB.Expressions.ExpressionVisitorBase.VisitConstantPlaceholder(LinqToDB.Expressions.ConstantPlaceholderExpression! node) -> System.Linq.Expressions.Expression!
+virtual LinqToDB.Internal.Expressions.ExpressionVisitorBase.VisitConstantPlaceholder(LinqToDB.Internal.Expressions.ConstantPlaceholderExpression! node) -> System.Linq.Expressions.Expression!
 LinqToDB.Reflection.ObjectFactory<T>
 override LinqToDB.DataProvider.Firebird.Firebird4SqlBuilder.BuildDataTypeFromDataType(LinqToDB.Common.DbDataType type, bool forCreateTable, bool canBeNull) -> void
 override LinqToDB.Internal.SqlQuery.SqlNullabilityExpression.CanBeNullable(LinqToDB.Internal.SqlQuery.NullabilityContext! nullability) -> bool

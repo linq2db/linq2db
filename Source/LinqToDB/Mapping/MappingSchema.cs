@@ -18,8 +18,8 @@ namespace LinqToDB.Mapping
 {
 	using LinqToDB.Common;
 	using LinqToDB.Data;
-	using LinqToDB.Expressions;
-	using LinqToDB.Expressions.Visitors;
+	using LinqToDB.Internal.Expressions;
+	using LinqToDB.Internal.Expressions.Visitors;
 	using LinqToDB.Extensions;
 	using LinqToDB.Internal.Cache;
 	using LinqToDB.Internal.Common;
@@ -27,6 +27,7 @@ namespace LinqToDB.Mapping
 	using LinqToDB.Metadata;
 	using LinqToDB.Internal.SqlProvider;
 	using LinqToDB.SqlQuery;
+	using LinqToDB.Expressions;
 
 	/// <summary>
 	/// Mapping schema.

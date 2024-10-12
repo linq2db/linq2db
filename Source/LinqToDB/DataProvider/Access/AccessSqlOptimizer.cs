@@ -2,7 +2,7 @@
 
 namespace LinqToDB.DataProvider.Access
 {
-	using LinqToDB.Expressions;
+	using LinqToDB.Internal.Expressions;
 	using LinqToDB.Internal.SqlQuery;
 	using LinqToDB.Mapping;
 	using LinqToDB.Internal.SqlProvider;

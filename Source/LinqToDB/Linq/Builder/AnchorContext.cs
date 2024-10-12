@@ -2,7 +2,7 @@
 
 namespace LinqToDB.Linq.Builder
 {
-	using LinqToDB.Expressions;
+	using LinqToDB.Internal.Expressions;
 	using LinqToDB.Internal.SqlQuery;
 
 	sealed class AnchorContext : SequenceContextBase

@@ -16,7 +16,7 @@ namespace LinqToDB.Linq
 	using LinqToDB.Common;
 	using LinqToDB.Common.Logging;
 	using LinqToDB.Data;
-	using LinqToDB.Expressions;
+	using LinqToDB.Internal.Expressions;
 	using LinqToDB.Extensions;
 	using LinqToDB.Infrastructure;
 	using LinqToDB.Interceptors;

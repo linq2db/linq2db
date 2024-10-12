@@ -7,7 +7,7 @@ using System.Reflection;
 
 namespace LinqToDB.Internal.Common
 {
-	using LinqToDB.Expressions;
+	using LinqToDB.Internal.Expressions;
 	using LinqToDB.Extensions;
 
 	abstract class ValueComparer : IEqualityComparer, IEqualityComparer<object>

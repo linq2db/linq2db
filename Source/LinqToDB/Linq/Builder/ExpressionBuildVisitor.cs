@@ -13,7 +13,7 @@ namespace LinqToDB.Linq.Builder
 {
 	using LinqToDB.Common;
 	using LinqToDB.Data;
-	using LinqToDB.Expressions;
+	using LinqToDB.Internal.Expressions;
 	using LinqToDB.Extensions;
 	using LinqToDB.Internal.Common;
 	using LinqToDB.Internal.SqlQuery;

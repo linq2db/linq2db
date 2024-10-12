@@ -4,7 +4,7 @@ using System.Text.RegularExpressions;
 
 namespace LinqToDB
 {
-	using LinqToDB.Expressions;
+	using LinqToDB.Internal.Expressions;
 	using LinqToDB.Internal.SqlQuery;
 	using LinqToDB.SqlQuery;
 

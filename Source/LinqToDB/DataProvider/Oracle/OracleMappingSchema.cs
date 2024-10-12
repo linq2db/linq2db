@@ -7,7 +7,7 @@ using System.Text;
 namespace LinqToDB.DataProvider.Oracle
 {
 	using LinqToDB.Common;
-	using LinqToDB.Expressions;
+	using LinqToDB.Internal.Expressions;
 	using LinqToDB.Mapping;
 	using LinqToDB.SqlQuery;
 

@@ -9,10 +9,11 @@ using System.Threading;
 
 namespace LinqToDB.Common
 {
-	using Expressions;
-	using Extensions;
-	using Internal;
-	using Mapping;
+	using LinqToDB.Extensions;
+	using LinqToDB.Internal.Common;
+	using LinqToDB.Internal.Expressions;
+	using LinqToDB.Linq.Translation;
+	using LinqToDB.Mapping;
 
 	public static class ConvertBuilder
 	{

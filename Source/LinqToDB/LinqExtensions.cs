@@ -15,7 +15,7 @@ namespace LinqToDB
 	using LinqToDB.Async;
 	using LinqToDB.Data;
 	using LinqToDB.DataProvider;
-	using LinqToDB.Expressions;
+	using LinqToDB.Internal.Expressions;
 	using LinqToDB.Internal.SqlProvider;
 	using LinqToDB.Linq;
 	using LinqToDB.Linq.Builder;

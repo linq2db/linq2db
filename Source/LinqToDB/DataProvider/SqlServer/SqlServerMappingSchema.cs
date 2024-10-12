@@ -12,7 +12,7 @@ namespace LinqToDB.DataProvider.SqlServer
 {
 	using LinqToDB.Common;
 	using LinqToDB.DataProvider;
-	using LinqToDB.Expressions;
+	using LinqToDB.Internal.Expressions;
 	using LinqToDB.Extensions;
 	using LinqToDB.Mapping;
 	using LinqToDB.SqlQuery;

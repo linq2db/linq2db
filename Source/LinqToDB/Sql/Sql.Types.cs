@@ -2,7 +2,7 @@
 
 namespace LinqToDB
 {
-	using Expressions;
+	using LinqToDB.Internal.Expressions;
 
 	public partial class Sql
 	{

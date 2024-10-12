@@ -7,8 +7,8 @@ using Microsoft.EntityFrameworkCore;
 
 namespace LinqToDB.EntityFrameworkCore
 {
-	using Expressions;
-	using Extensions;
+	using LinqToDB.Extensions;
+	using LinqToDB.Internal.Expressions;
 
 	public partial class LinqToDBForEFTools
 	{

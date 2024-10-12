@@ -3,7 +3,7 @@ using System.Reflection;
 
 using LinqToDB.EntityFrameworkCore.Tests.Models.Northwind;
 using LinqToDB.EntityFrameworkCore.Tests.SqlServer.Models.Northwind.Mapping;
-using LinqToDB.Expressions;
+using LinqToDB.Internal.Expressions;
 using LinqToDB.Extensions;
 
 using Microsoft.EntityFrameworkCore;

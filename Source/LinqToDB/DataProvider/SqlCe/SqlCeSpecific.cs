@@ -5,7 +5,7 @@ using JetBrains.Annotations;
 
 namespace LinqToDB.DataProvider.SqlCe
 {
-	using LinqToDB.Expressions;
+	using LinqToDB.Internal.Expressions;
 	using LinqToDB.Internal.SqlProvider;
 	using LinqToDB.Linq;
 

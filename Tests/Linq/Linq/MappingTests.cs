@@ -9,16 +9,15 @@ using System.ServiceModel;
 using LinqToDB;
 using LinqToDB.Common;
 using LinqToDB.Data;
-using LinqToDB.Expressions;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
 
 namespace Tests.Linq
 {
-	using Model;
+	using LinqToDB.Expressions;
 
-	using NUnit.Framework.Constraints;
+	using Model;
 
 	[TestFixture]
 	public class MappingTests : TestBase

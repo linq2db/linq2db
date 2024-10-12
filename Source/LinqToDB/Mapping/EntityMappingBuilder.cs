@@ -8,10 +8,8 @@ using JetBrains.Annotations;
 
 namespace LinqToDB.Mapping
 {
-	using Common;
-	using Expressions;
-	using Extensions;
-	using Reflection;
+	using LinqToDB.Extensions;
+	using LinqToDB.Internal.Expressions;
 
 	/// <summary>
 	/// Fluent mapping entity builder.

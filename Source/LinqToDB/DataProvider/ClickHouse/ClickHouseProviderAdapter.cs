@@ -11,7 +11,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 {
 	using LinqToDB.Common;
 	using LinqToDB.DataProvider.MySql;
-	using LinqToDB.Expressions.Types;
+	using LinqToDB.Internal.Expressions.Types;
 	using LinqToDB.Mapping;
 	using LinqToDB.SqlQuery;
 

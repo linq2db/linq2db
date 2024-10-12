@@ -1,9 +1,7 @@
-﻿using System.Collections.Generic;
-
-namespace LinqToDB.Interceptors.Internal
+﻿namespace LinqToDB.Interceptors.Internal
 {
-	using Expressions;
-	using Reflection;
+	using LinqToDB.Interceptors;
+	using LinqToDB.Internal.Expressions;
 
 	/// <summary>
 	/// Internal API.

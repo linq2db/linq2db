@@ -6,7 +6,7 @@ using System.Reflection;
 namespace LinqToDB.Data
 {
 	using LinqToDB.Common;
-	using LinqToDB.Expressions;
+	using LinqToDB.Internal.Expressions;
 
 	internal static class TransactionScopeHelper
 	{

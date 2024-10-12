@@ -3,9 +3,9 @@ using System.Linq.Expressions;
 
 namespace LinqToDB.Concurrency
 {
-	using Expressions;
-	using Mapping;
-	using Reflection;
+	using LinqToDB.Internal.Expressions;
+	using LinqToDB.Mapping;
+	using LinqToDB.Reflection;
 
 	/// <summary>
 	/// Implements built-in optimistic lock value generation strategies for updates.

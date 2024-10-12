@@ -9,7 +9,7 @@ using System.Reflection;
 
 namespace LinqToDB.Linq.Builder.Visitors
 {
-	using LinqToDB.Expressions;
+	using LinqToDB.Internal.Expressions;
 	using LinqToDB.Extensions;
 	using LinqToDB.Internal.Common;
 	using LinqToDB.Internal.SqlQuery;

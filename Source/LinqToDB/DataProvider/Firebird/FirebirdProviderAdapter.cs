@@ -5,7 +5,7 @@ using System.Data.Common;
 namespace LinqToDB.DataProvider.Firebird
 {
 	using LinqToDB.Common;
-	using LinqToDB.Expressions.Types;
+	using LinqToDB.Internal.Expressions.Types;
 	using LinqToDB.Mapping;
 	using LinqToDB.SqlQuery;
 

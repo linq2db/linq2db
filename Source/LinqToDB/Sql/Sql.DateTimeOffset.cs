@@ -3,7 +3,7 @@ using System.Globalization;
 
 namespace LinqToDB
 {
-	using Expressions;
+	using LinqToDB.Internal.Expressions;
 
 	using PN = ProviderName;
 

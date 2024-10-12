@@ -7,8 +7,8 @@ namespace LinqToDB.DataProvider.Informix
 {
 	using LinqToDB.Common;
 	using LinqToDB.DataProvider.DB2;
-	using LinqToDB.Expressions;
-	using LinqToDB.Expressions.Types;
+	using LinqToDB.Internal.Expressions;
+	using LinqToDB.Internal.Expressions.Types;
 	using LinqToDB.Extensions;
 	using LinqToDB.Mapping;
 

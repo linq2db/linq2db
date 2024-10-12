@@ -6,10 +6,11 @@ using System.Linq;
 namespace LinqToDB.Mapping
 {
 	using LinqToDB.Common;
-	using LinqToDB.Expressions;
+	using LinqToDB.Internal.Expressions;
 	using LinqToDB.Internal.Common;
 	using LinqToDB.Metadata;
 	using LinqToDB.SqlQuery;
+	using LinqToDB.Expressions;
 
 	class MappingSchemaInfo : IConfigurationID
 	{

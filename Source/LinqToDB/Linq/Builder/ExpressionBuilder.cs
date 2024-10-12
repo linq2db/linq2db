@@ -11,7 +11,7 @@ namespace LinqToDB.Linq.Builder
 {
 	using LinqToDB.Common;
 	using LinqToDB.DataProvider;
-	using LinqToDB.Expressions;
+	using LinqToDB.Internal.Expressions;
 	using LinqToDB.Extensions;
 	using LinqToDB.Infrastructure;
 	using LinqToDB.Internal.Common;

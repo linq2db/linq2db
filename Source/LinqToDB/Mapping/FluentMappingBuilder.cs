@@ -6,9 +6,8 @@ using System.Reflection;
 
 namespace LinqToDB.Mapping
 {
-	using Common;
-	using Expressions;
-	using Metadata;
+	using LinqToDB.Internal.Expressions;
+	using LinqToDB.Metadata;
 
 	/// <summary>
 	/// Fluent mapping builder.

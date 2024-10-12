@@ -11,8 +11,8 @@ namespace LinqToDB.DataProvider.Oracle
 {
 	using LinqToDB.Common;
 	using LinqToDB.Data;
-	using LinqToDB.Expressions;
-	using LinqToDB.Expressions.Types;
+	using LinqToDB.Internal.Expressions;
+	using LinqToDB.Internal.Expressions.Types;
 	using LinqToDB.Mapping;
 
 	public class OracleProviderAdapter : IDynamicProviderAdapter

@@ -17,7 +17,7 @@ namespace LinqToDB.Data
 	using LinqToDB.Data;
 	using LinqToDB.Data.RetryPolicy;
 	using LinqToDB.DataProvider;
-	using LinqToDB.Expressions;
+	using LinqToDB.Internal.Expressions;
 	using LinqToDB.Infrastructure;
 	using LinqToDB.Interceptors;
 	using LinqToDB.Internal.Common;

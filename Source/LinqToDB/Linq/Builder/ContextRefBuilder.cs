@@ -3,7 +3,7 @@ using System.Linq.Expressions;
 
 namespace LinqToDB.Linq.Builder
 {
-	using LinqToDB.Expressions;
+	using LinqToDB.Internal.Expressions;
 
 	[BuildsAny]
 	sealed class ContextRefBuilder : ISequenceBuilder

@@ -6,7 +6,7 @@ namespace LinqToDB.Linq.Builder
 {
 	using Extensions;
 	using Interceptors;
-	using LinqToDB.Expressions;
+	using LinqToDB.Internal.Expressions;
 	using Mapping;
 	using Reflection;
 

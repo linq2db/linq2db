@@ -6,7 +6,7 @@ using System.Reflection;
 namespace LinqToDB.Linq.Translation
 {
 	using Extensions;
-	using LinqToDB.Expressions;
+	using LinqToDB.Internal.Expressions;
 	using Mapping;
 
 	public class TranslationRegistration

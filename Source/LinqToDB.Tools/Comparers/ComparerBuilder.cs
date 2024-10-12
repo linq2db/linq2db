@@ -9,10 +9,10 @@ using JetBrains.Annotations;
 
 namespace LinqToDB.Tools.Comparers
 {
-	using Common;
-	using Expressions;
-	using Extensions;
-	using Reflection;
+	using LinqToDB.Common;
+	using LinqToDB.Extensions;
+	using LinqToDB.Internal.Expressions;
+	using LinqToDB.Reflection;
 
 	/// <summary>
 	/// Builds comparer functions and comparers.

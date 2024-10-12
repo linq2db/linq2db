@@ -7,12 +7,12 @@ using System.Reflection;
 
 namespace LinqToDB.Data
 {
-	using Common;
-	using Expressions;
-	using Extensions;
-	using Linq.Builder;
-	using Linq;
-	using Mapping;
+	using LinqToDB.Common;
+	using LinqToDB.Extensions;
+	using LinqToDB.Internal.Expressions;
+	using LinqToDB.Linq;
+	using LinqToDB.Linq.Builder;
+	using LinqToDB.Mapping;
 
 	sealed class RecordReaderBuilder
 	{

@@ -14,7 +14,7 @@ namespace LinqToDB.Remote
 	using LinqToDB.Common;
 	using LinqToDB.Data;
 	using LinqToDB.DataProvider;
-	using LinqToDB.Expressions;
+	using LinqToDB.Internal.Expressions;
 	using LinqToDB.Extensions;
 	using LinqToDB.Infrastructure;
 	using LinqToDB.Interceptors;

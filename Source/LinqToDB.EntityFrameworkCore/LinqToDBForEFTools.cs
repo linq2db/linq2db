@@ -18,14 +18,14 @@ using Microsoft.Extensions.Logging;
 
 namespace LinqToDB.EntityFrameworkCore
 {
-	using Async;
-	using Data;
-	using DataProvider;
-	using Expressions;
-	using Internal;
-	using Linq;
-	using Mapping;
-	using Metadata;
+	using LinqToDB.Async;
+	using LinqToDB.Data;
+	using LinqToDB.DataProvider;
+	using LinqToDB.EntityFrameworkCore.Internal;
+	using LinqToDB.Internal.Expressions;
+	using LinqToDB.Linq;
+	using LinqToDB.Mapping;
+	using LinqToDB.Metadata;
 
 	/// <summary>
 	/// EF Core <see cref="DbContext"/> extensions to call LINQ To DB functionality.
@@ -40,7 +40,7 @@ namespace LinqToDB.EntityFrameworkCore
 		/// </summary>
 		public static void Initialize()
 		{
-			var _ = _initialized.Value;
+			_ = _initialized.Value;
 		}
 
 		static bool InitializeInternal()

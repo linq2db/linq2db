@@ -6,10 +6,10 @@ using System.Reflection;
 
 namespace LinqToDB.Mapping
 {
-	using Expressions;
-	using Extensions;
-	using SqlQuery;
-	using Common;
+	using LinqToDB.Common;
+	using LinqToDB.Extensions;
+	using LinqToDB.Internal.Expressions;
+	using LinqToDB.SqlQuery;
 
 	/// <summary>
 	/// Column or association fluent mapping builder.

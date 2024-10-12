@@ -13,9 +13,9 @@ using static System.Linq.Expressions.Expression;
 
 namespace LinqToDB.Tools.Mapper
 {
-	using Expressions;
-	using Extensions;
-	using Reflection;
+	using LinqToDB.Extensions;
+	using LinqToDB.Internal.Expressions;
+	using LinqToDB.Reflection;
 
 	sealed class ExpressionBuilder
 	{

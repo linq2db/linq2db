@@ -5,15 +5,13 @@ using System.Linq.Expressions;
 
 namespace LinqToDB.DataProvider.PostgreSQL
 {
-	using Expressions;
-	using Linq;
-	using SqlQuery;
-	using Common;
-	using Mapping;
+	using LinqToDB.Common;
+	using LinqToDB.Internal.Expressions;
+	using LinqToDB.Linq;
+	using LinqToDB.Mapping;
+	using LinqToDB.SqlQuery;
 
-	public interface IPostgreSQLExtensions
-	{
-	}
+	public interface IPostgreSQLExtensions;
 
 	public static class PostgreSQLExtensions
 	{

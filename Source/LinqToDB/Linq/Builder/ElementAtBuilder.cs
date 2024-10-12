@@ -5,7 +5,7 @@ using System.Linq.Expressions;
 namespace LinqToDB.Linq.Builder
 {
 	using Reflection;
-	using LinqToDB.Expressions;
+	using LinqToDB.Internal.Expressions;
 
 	[BuildsMethodCall("ElementAt", "ElementAtOrDefault", "ElementAtAsync", "ElementAtOrDefaultAsync")]
 	sealed class ElementAtBuilder : MethodCallBuilder

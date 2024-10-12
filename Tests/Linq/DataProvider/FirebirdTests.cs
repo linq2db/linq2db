@@ -29,7 +29,7 @@ using NUnit.Framework;
 
 namespace Tests.DataProvider
 {
-	using LinqToDB.Expressions;
+	using LinqToDB.Internal.Expressions;
 	using Model;
 
 	[TestFixture]

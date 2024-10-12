@@ -22,12 +22,12 @@ using JetBrains.Annotations;
 namespace LinqToDB.Data
 {
 	using LinqToDB.Common;
-	using LinqToDB.Expressions;
 	using LinqToDB.Extensions;
 	using LinqToDB.Interceptors;
 	using LinqToDB.Internal.Async;
 	using LinqToDB.Internal.Cache;
 	using LinqToDB.Internal.Common;
+	using LinqToDB.Internal.Expressions;
 	using LinqToDB.Internal.SqlQuery;
 	using LinqToDB.Linq;
 	using LinqToDB.Linq.Translation;

@@ -7,7 +7,7 @@ using FluentAssertions;
 
 using LinqToDB;
 using LinqToDB.Common;
-using LinqToDB.Expressions;
+using LinqToDB.Internal.Expressions;
 using LinqToDB.Internal.SqlQuery;
 using NUnit.Framework;
 using Tests.Model;

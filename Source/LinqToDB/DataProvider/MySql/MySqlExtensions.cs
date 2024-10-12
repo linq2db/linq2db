@@ -2,12 +2,10 @@
 
 namespace LinqToDB.DataProvider.MySql
 {
-	using Expressions;
-	using Linq;
+	using LinqToDB.Internal.Expressions;
+	using LinqToDB.Linq;
 
-	public interface IMySqlExtensions
-	{
-	}
+	public interface IMySqlExtensions;
 
 	public static class MySqlExtensions
 	{

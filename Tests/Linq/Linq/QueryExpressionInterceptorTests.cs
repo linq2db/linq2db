@@ -9,7 +9,7 @@ using FluentAssertions;
 using LinqToDB;
 using LinqToDB.Configuration;
 using LinqToDB.Data;
-using LinqToDB.Expressions;
+using LinqToDB.Internal.Expressions;
 using LinqToDB.Interceptors;
 using LinqToDB.Mapping;
 

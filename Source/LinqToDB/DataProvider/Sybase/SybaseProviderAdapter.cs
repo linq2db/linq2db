@@ -5,7 +5,7 @@ using System.Linq.Expressions;
 
 namespace LinqToDB.DataProvider.Sybase
 {
-	using LinqToDB.Expressions.Types;
+	using LinqToDB.Internal.Expressions.Types;
 
 	public class SybaseProviderAdapter : IDynamicProviderAdapter
 	{

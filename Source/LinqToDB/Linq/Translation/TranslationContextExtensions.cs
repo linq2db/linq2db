@@ -5,7 +5,7 @@ using System.Linq.Expressions;
 namespace LinqToDB.Linq.Translation
 {
 	using LinqToDB.Common;
-	using LinqToDB.Expressions;
+	using LinqToDB.Internal.Expressions;
 	using LinqToDB.Internal.SqlQuery;
 
 	public static class TranslationContextExtensions

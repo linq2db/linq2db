@@ -8,10 +8,10 @@ using System.Reflection;
 
 namespace LinqToDB.Mapping
 {
-	using Common;
-	using Extensions;
-	using Linq.Builder;
-	using Expressions;
+	using LinqToDB.Common;
+	using LinqToDB.Extensions;
+	using LinqToDB.Internal.Expressions;
+	using LinqToDB.Linq.Builder;
 
 	/// <summary>
 	/// Stores association descriptor.

@@ -4,7 +4,7 @@ using System.Data.Common;
 
 namespace LinqToDB.DataProvider
 {
-	using LinqToDB.Expressions.Types;
+	using LinqToDB.Internal.Expressions.Types;
 
 	public class OleDbProviderAdapter : IDynamicProviderAdapter
 	{

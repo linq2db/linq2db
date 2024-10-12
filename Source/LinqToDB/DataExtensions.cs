@@ -11,7 +11,7 @@ using JetBrains.Annotations;
 namespace LinqToDB
 {
 	using LinqToDB.Common;
-	using LinqToDB.Expressions;
+	using LinqToDB.Internal.Expressions;
 	using LinqToDB.Extensions;
 	using LinqToDB.Internal.SqlQuery;
 	using LinqToDB.Linq;

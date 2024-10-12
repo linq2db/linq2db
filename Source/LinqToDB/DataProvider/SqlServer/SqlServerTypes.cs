@@ -4,9 +4,9 @@ using System.Reflection;
 
 namespace LinqToDB.DataProvider.SqlServer
 {
-	using Common;
-	using Expressions;
-	using Mapping;
+	using LinqToDB.Common;
+	using LinqToDB.Internal.Expressions;
+	using LinqToDB.Mapping;
 
 	internal static class SqlServerTypes
 	{

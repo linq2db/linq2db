@@ -8,7 +8,7 @@ using System.Linq.Expressions;
 namespace LinqToDB.Tools.EntityServices
 {
 	using Common;
-	using LinqToDB.Expressions;
+	using LinqToDB.Internal.Expressions;
 	using Mapper;
 	using Mapping;
 	using Reflection;

@@ -13,8 +13,8 @@ namespace LinqToDB.Linq
 {
 	using LinqToDB.Common;
 	using LinqToDB.Common.Logging;
-	using LinqToDB.Expressions;
-	using LinqToDB.Expressions.Visitors;
+	using LinqToDB.Internal.Expressions;
+	using LinqToDB.Internal.Expressions.Visitors;
 	using LinqToDB.Interceptors;
 	using LinqToDB.Linq.Builder;
 	using LinqToDB.Mapping;

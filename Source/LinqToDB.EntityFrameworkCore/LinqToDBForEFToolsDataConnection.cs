@@ -13,10 +13,10 @@ using Microsoft.Extensions.Caching.Memory;
 
 namespace LinqToDB.EntityFrameworkCore
 {
-	using Data;
-	using Expressions;
-	using Interceptors;
-	using Linq;
+	using LinqToDB.Data;
+	using LinqToDB.Interceptors;
+	using LinqToDB.Internal.Expressions;
+	using LinqToDB.Linq;
 
 	/// <summary>
 	/// Linq To DB EF.Core data connection.

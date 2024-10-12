@@ -3,7 +3,7 @@ using System.Reflection;
 
 namespace LinqToDB.Linq.Builder
 {
-	using LinqToDB.Expressions;
+	using LinqToDB.Internal.Expressions;
 	using Reflection;
 
 	[BuildsMethodCall("Distinct", nameof(LinqExtensions.SelectDistinct))]

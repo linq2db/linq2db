@@ -2,7 +2,7 @@
 
 namespace LinqToDB.Linq.Builder
 {
-	using LinqToDB.Expressions;
+	using LinqToDB.Internal.Expressions;
 
 	[BuildsMethodCall("AsUpdatable")]
 	sealed class AsUpdatableBuilder : MethodCallBuilder

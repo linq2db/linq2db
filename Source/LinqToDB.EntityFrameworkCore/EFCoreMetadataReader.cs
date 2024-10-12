@@ -25,7 +25,7 @@ using Microsoft.EntityFrameworkCore.Storage;
 namespace LinqToDB.EntityFrameworkCore
 {
 	using LinqToDB.Common;
-	using LinqToDB.Expressions;
+	using LinqToDB.Internal.Expressions;
 	using LinqToDB.Extensions;
 	using LinqToDB.Internal.Common;
 	using LinqToDB.Mapping;

@@ -14,7 +14,7 @@ using Microsoft.EntityFrameworkCore.Query.Internal;
 using Microsoft.EntityFrameworkCore.Query;
 #endif
 
-using LinqToDB.Expressions;
+using LinqToDB.Internal.Expressions;
 
 namespace LinqToDB.EntityFrameworkCore.Internal
 {

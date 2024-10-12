@@ -9,7 +9,7 @@ using JetBrains.Annotations;
 
 namespace LinqToDB.DataProvider.SqlServer
 {
-	using LinqToDB.Expressions;
+	using LinqToDB.Internal.Expressions;
 	using LinqToDB.Internal.SqlQuery;
 	using LinqToDB.Mapping;
 	using LinqToDB.SqlQuery;

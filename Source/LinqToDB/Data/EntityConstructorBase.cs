@@ -7,7 +7,7 @@ using System.Reflection;
 
 namespace LinqToDB.Data
 {
-	using LinqToDB.Expressions;
+	using LinqToDB.Internal.Expressions;
 	using LinqToDB.Extensions;
 	using LinqToDB.Interceptors;
 	using LinqToDB.Interceptors.Internal;

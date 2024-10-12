@@ -8,8 +8,8 @@ namespace LinqToDB.Linq.Builder
 {
 	using LinqToDB.Common;
 	using LinqToDB.Data;
-	using LinqToDB.Expressions;
-	using LinqToDB.Expressions.Visitors;
+	using LinqToDB.Internal.Expressions;
+	using LinqToDB.Internal.Expressions.Visitors;
 	using LinqToDB.Extensions;
 	using LinqToDB.Infrastructure;
 	using LinqToDB.Mapping;

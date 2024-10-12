@@ -5,8 +5,8 @@ using System.Reflection;
 
 namespace LinqToDB.Common
 {
-	using Mapping;
-	using Expressions;
+	using LinqToDB.Internal.Expressions;
+	using LinqToDB.Mapping;
 
 	/// <summary>
 	/// Stores database type attributes.

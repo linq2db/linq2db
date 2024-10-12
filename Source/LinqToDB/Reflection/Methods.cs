@@ -11,7 +11,7 @@ namespace LinqToDB.Reflection
 	using LinqToDB.Common;
 	using LinqToDB.Internal.Cache;
 	using LinqToDB.Data;
-	using LinqToDB.Expressions;
+	using LinqToDB.Internal.Expressions;
 	using LinqToDB.Extensions;
 	using LinqToDB.Internal.SqlQuery;
 	using LinqToDB.Linq;

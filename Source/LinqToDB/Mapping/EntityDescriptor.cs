@@ -7,12 +7,13 @@ using System.Reflection;
 
 namespace LinqToDB.Mapping
 {
-	using Common;
-	using Expressions;
-	using Extensions;
-	using Linq;
+	using LinqToDB.Common;
+	using LinqToDB.Extensions;
+	using LinqToDB.Internal.Expressions;
 	using LinqToDB.Internal.SqlQuery;
-	using Reflection;
+	using LinqToDB.Linq;
+	using LinqToDB.Linq.Translation;
+	using LinqToDB.Reflection;
 
 	/// <summary>
 	/// Stores mapping entity descriptor.

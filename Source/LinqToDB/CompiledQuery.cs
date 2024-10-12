@@ -7,11 +7,11 @@ using JetBrains.Annotations;
 
 namespace LinqToDB
 {
-	using Common;
-	using Expressions;
-	using Extensions;
-	using Linq;
-	using Linq.Builder;
+	using LinqToDB.Common;
+	using LinqToDB.Extensions;
+	using LinqToDB.Internal.Expressions;
+	using LinqToDB.Linq;
+	using LinqToDB.Linq.Builder;
 
 	/// <summary>
 	/// Provides API for compilation and caching of queries for reuse.

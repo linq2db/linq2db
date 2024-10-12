@@ -5,7 +5,7 @@ using System.Linq.Expressions;
 using System.Reflection;
 using LinqToDB;
 using LinqToDB.Data;
-using LinqToDB.Expressions;
+using LinqToDB.Internal.Expressions;
 using LinqToDB.Mapping;
 using LinqToDB.Reflection;
 using NUnit.Framework;

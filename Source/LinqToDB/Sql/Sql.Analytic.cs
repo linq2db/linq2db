@@ -7,8 +7,8 @@ using JetBrains.Annotations;
 
 namespace LinqToDB
 {
-	using Linq;
-	using Expressions;
+	using LinqToDB.Internal.Expressions;
+	using LinqToDB.Linq;
 
 	using PN = ProviderName;
 

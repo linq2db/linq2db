@@ -8,7 +8,7 @@ namespace LinqToDB.Linq.Builder
 {
 	using Extensions;
 	using Reflection;
-	using LinqToDB.Expressions;
+	using LinqToDB.Internal.Expressions;
 
 	[BuildsExpression(ExpressionType.Constant, ExpressionType.Call, ExpressionType.MemberAccess, ExpressionType.NewArrayInit)]
 	sealed class EnumerableBuilder : ISequenceBuilder

@@ -4,7 +4,7 @@ using System.Linq;
 using System.Linq.Expressions;
 
 using LinqToDB;
-using LinqToDB.Expressions;
+using LinqToDB.Internal.Expressions;
 using LinqToDB.Mapping;
 using LinqToDB.Tools;
 using NUnit.Framework;
