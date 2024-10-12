@@ -1,12 +1,10 @@
-﻿using System;
-
-namespace LinqToDB.DataProvider.SapHana
+﻿namespace LinqToDB.DataProvider.SapHana
 {
+	using Mapping;
 	using SqlProvider;
 	using SqlQuery;
-	using Mapping;
 
-	class SapHanaSqlOptimizer : BasicSqlOptimizer
+	sealed class SapHanaSqlOptimizer : BasicSqlOptimizer
 	{
 		public SapHanaSqlOptimizer(SqlProviderFlags sqlProviderFlags) : base(sqlProviderFlags)
 		{
@@ -66,6 +64,5 @@ namespace LinqToDB.DataProvider.SapHana
 				return sqlParameter;
 			}
 		}
-
 	}
 }
