@@ -19,7 +19,7 @@ namespace Tests.xUpdate
 			TestProvName.AllSqlServer,
 			TestProvName.AllInformix,
 			TestProvName.AllSapHana,
-			TestProvName.AllPostgreSQL15Plus)]
+			TestProvName.AllPostgreSQL)]
 			string context)
 		{
 			using (var db = GetDataContext(context, testLinqService : false))
