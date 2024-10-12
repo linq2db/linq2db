@@ -1,13 +1,15 @@
 ﻿using System.Collections.Generic;
+using System.ComponentModel;
 using System.Data.Common;
 using System.Text;
 
-namespace LinqToDB.SqlProvider
+namespace LinqToDB.Internal.SqlProvider
 {
 	using LinqToDB.Common;
 	using LinqToDB.Internal.SqlQuery;
 	using LinqToDB.Mapping;
 
+	[EditorBrowsable(EditorBrowsableState.Never)]
 	public interface ISqlBuilder
 	{
 		int  CommandCount(SqlStatement statement);
@@ -22,7 +24,7 @@ namespace LinqToDB.SqlProvider
 		/// <param name="tableOptions">Table options if called for table. Used to properly generate names for temporary tables.</param>
 		/// <param name="withoutSuffix">If object name have suffix, which could be detached from main name, this parameter disables suffix generation (enables generation of only main name part).</param>
 		/// <returns><paramref name="sb"/> parameter value.</returns>
-		StringBuilder BuildObjectName               (StringBuilder sb, SqlObjectName name, ConvertType objectType = ConvertType.NameToQueryTable, bool escape = true, TableOptions tableOptions = TableOptions.NotSet, bool withoutSuffix = false);
+		StringBuilder   BuildObjectName               (StringBuilder sb, SqlObjectName name, ConvertType objectType = ConvertType.NameToQueryTable, bool escape = true, TableOptions tableOptions = TableOptions.NotSet, bool withoutSuffix = false);
 		StringBuilder   BuildDataType                 (StringBuilder    sb,    DbDataType dataType);
 		string          ConvertInline                 (string           value, ConvertType convertType);
 		StringBuilder   Convert                       (StringBuilder    sb,    string      value, ConvertType convertType);

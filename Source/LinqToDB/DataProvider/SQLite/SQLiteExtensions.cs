@@ -5,9 +5,9 @@ using System.Linq.Expressions;
 
 namespace LinqToDB.DataProvider.SQLite
 {
-	using Data;
-	using Linq;
-	using SqlProvider;
+	using LinqToDB.Data;
+	using LinqToDB.Internal.SqlProvider;
+	using LinqToDB.Linq;
 
 	public interface ISQLiteExtensions
 	{

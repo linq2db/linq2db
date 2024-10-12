@@ -8,7 +8,7 @@ namespace LinqToDB.DataProvider.SQLite
 	using LinqToDB.Extensions;
 	using LinqToDB.Internal.SqlQuery;
 	using LinqToDB.Mapping;
-	using LinqToDB.SqlProvider;
+	using LinqToDB.Internal.SqlProvider;
 
 	public class SQLiteSqlBuilder : BasicSqlBuilder
 	{

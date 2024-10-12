@@ -1,8 +1,11 @@
-﻿namespace LinqToDB.SqlProvider
+﻿using System.ComponentModel;
+
+namespace LinqToDB.Internal.SqlProvider
 {
 	using LinqToDB.Internal.SqlQuery;
 	using LinqToDB.Mapping;
 
+	[EditorBrowsable(EditorBrowsableState.Never)]
 	public interface ISqlOptimizer
 	{
 		/// <summary>

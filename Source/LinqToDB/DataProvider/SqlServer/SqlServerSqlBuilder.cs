@@ -11,7 +11,7 @@ namespace LinqToDB.DataProvider.SqlServer
 	using LinqToDB.DataProvider;
 	using LinqToDB.Internal.SqlQuery;
 	using LinqToDB.Mapping;
-	using LinqToDB.SqlProvider;
+	using LinqToDB.Internal.SqlProvider;
 
 	abstract class SqlServerSqlBuilder : BasicSqlBuilder<SqlServerOptions>
 	{

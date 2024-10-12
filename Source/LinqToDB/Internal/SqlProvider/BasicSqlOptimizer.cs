@@ -1,18 +1,17 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Linq;
 
 // ReSharper disable InconsistentNaming
 
-namespace LinqToDB.SqlProvider
+namespace LinqToDB.Internal.SqlProvider
 {
 	using LinqToDB.Common;
 	using LinqToDB.Expressions;
 	using LinqToDB.Expressions.Visitors;
-	using LinqToDB.Mapping;
 	using LinqToDB.Internal.SqlQuery;
 	using LinqToDB.Internal.SqlQuery.Visitors;
+	using LinqToDB.Mapping;
 	using LinqToDB.SqlQuery;
 
 	public class BasicSqlOptimizer : ISqlOptimizer

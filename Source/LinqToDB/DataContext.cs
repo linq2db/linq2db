@@ -16,7 +16,7 @@ namespace LinqToDB
 	using LinqToDB.Internal.Common;
 	using LinqToDB.Linq;
 	using LinqToDB.Mapping;
-	using LinqToDB.SqlProvider;
+	using LinqToDB.Internal.SqlProvider;
 	using LinqToDB.Tools;
 
 	/// <summary>

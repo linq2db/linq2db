@@ -5,7 +5,7 @@ namespace LinqToDB.DataProvider.SQLite
 	using LinqToDB.Common;
 	using LinqToDB.Extensions;
 	using LinqToDB.Internal.SqlQuery;
-	using LinqToDB.SqlProvider;
+	using LinqToDB.Internal.SqlProvider;
 	using LinqToDB.SqlQuery;
 
 	public class SQLiteSqlExpressionConvertVisitor : SqlExpressionConvertVisitor

@@ -6,7 +6,7 @@ namespace LinqToDB.DataProvider.DB2
 	using LinqToDB.Common;
 	using LinqToDB.Internal.SqlQuery;
 	using LinqToDB.Mapping;
-	using LinqToDB.SqlProvider;
+	using LinqToDB.Internal.SqlProvider;
 
 	sealed class DB2LUWSqlBuilder : DB2SqlBuilderBase
 	{

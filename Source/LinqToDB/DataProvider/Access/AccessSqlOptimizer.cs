@@ -5,7 +5,7 @@ namespace LinqToDB.DataProvider.Access
 	using LinqToDB.Expressions;
 	using LinqToDB.Internal.SqlQuery;
 	using LinqToDB.Mapping;
-	using LinqToDB.SqlProvider;
+	using LinqToDB.Internal.SqlProvider;
 
 	class AccessSqlOptimizer : BasicSqlOptimizer
 	{

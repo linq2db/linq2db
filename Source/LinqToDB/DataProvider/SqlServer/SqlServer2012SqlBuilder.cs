@@ -2,7 +2,7 @@
 {
 	using LinqToDB.Internal.SqlQuery;
 	using LinqToDB.Mapping;
-	using LinqToDB.SqlProvider;
+	using LinqToDB.Internal.SqlProvider;
 
 	partial class SqlServer2012SqlBuilder : SqlServerSqlBuilder
 	{

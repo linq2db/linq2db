@@ -9,13 +9,13 @@ using System.Threading.Tasks;
 
 namespace LinqToDB.DataProvider.SQLite
 {
-	using Common;
-	using Data;
-	using Linq.Translation;
-	using Mapping;
-	using SchemaProvider;
-	using SqlProvider;
-	using Translation;
+	using LinqToDB.Common;
+	using LinqToDB.Data;
+	using LinqToDB.DataProvider.SQLite.Translation;
+	using LinqToDB.Internal.SqlProvider;
+	using LinqToDB.Linq.Translation;
+	using LinqToDB.Mapping;
+	using LinqToDB.SchemaProvider;
 
 	sealed class SQLiteDataProviderClassic : SQLiteDataProvider { public SQLiteDataProviderClassic() : base(ProviderName.SQLiteClassic, SQLiteProvider.System   ) {} }
 	sealed class SQLiteDataProviderMS      : SQLiteDataProvider { public SQLiteDataProviderMS()      : base(ProviderName.SQLiteMS,      SQLiteProvider.Microsoft) {} }

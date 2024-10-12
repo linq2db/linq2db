@@ -5,7 +5,7 @@ using System.Linq;
 
 namespace LinqToDB.Internal.SqlQuery.Visitors
 {
-	using LinqToDB.SqlProvider;
+	using LinqToDB.Internal.SqlProvider;
 
 	public class SqlQueryValidatorVisitor : QueryElementVisitor
 	{

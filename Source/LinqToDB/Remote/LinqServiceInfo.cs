@@ -2,7 +2,7 @@
 
 namespace LinqToDB.Remote
 {
-	using SqlProvider;
+	using LinqToDB.Internal.SqlProvider;
 
 	[DataContract]
 	public class LinqServiceInfo

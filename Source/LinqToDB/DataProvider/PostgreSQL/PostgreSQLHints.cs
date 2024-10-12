@@ -10,7 +10,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 	using LinqToDB.Expressions;
 	using LinqToDB.Internal.SqlQuery;
 	using LinqToDB.Linq;
-	using LinqToDB.SqlProvider;
+	using LinqToDB.Internal.SqlProvider;
 
 	// https://www.postgresql.org/docs/current/sql-select.html
 	//

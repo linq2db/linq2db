@@ -10,14 +10,14 @@ using System.Threading.Tasks;
 
 namespace LinqToDB.DataProvider.SqlServer
 {
-	using Common;
-	using Data;
-	using Extensions;
-	using Linq.Translation;
-	using Mapping;
-	using SchemaProvider;
-	using SqlProvider;
-	using Translation;
+	using LinqToDB.Common;
+	using LinqToDB.Data;
+	using LinqToDB.DataProvider.SqlServer.Translation;
+	using LinqToDB.Extensions;
+	using LinqToDB.Internal.SqlProvider;
+	using LinqToDB.Linq.Translation;
+	using LinqToDB.Mapping;
+	using LinqToDB.SchemaProvider;
 
 	sealed class SqlServerDataProvider2005SystemDataSqlClient    : SqlServerDataProvider { public SqlServerDataProvider2005SystemDataSqlClient   () : base(ProviderName.SqlServer2005, SqlServerVersion.v2005, SqlServerProvider.SystemDataSqlClient)    {} }
 	sealed class SqlServerDataProvider2008SystemDataSqlClient    : SqlServerDataProvider { public SqlServerDataProvider2008SystemDataSqlClient   () : base(ProviderName.SqlServer2008, SqlServerVersion.v2008, SqlServerProvider.SystemDataSqlClient)    {} }
@@ -150,16 +150,13 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		protected override IMemberTranslator CreateMemberTranslator()
 		{
-			if (Version >= SqlServerVersion.v2022)
-				return new SqlServer2022MemberTranslator();
-
-			if (Version >= SqlServerVersion.v2012)
-				return new SqlServer2012MemberTranslator();
-
-			if (Version == SqlServerVersion.v2005)
-				return new SqlServer2005MemberTranslator();
-
-			return new SqlServerMemberTranslator();
+			return Version switch
+			{
+				>= SqlServerVersion.v2022 => new SqlServer2022MemberTranslator(),
+				>= SqlServerVersion.v2012 => new SqlServer2012MemberTranslator(),
+				SqlServerVersion.v2005 => new SqlServer2005MemberTranslator(),
+				_ => new SqlServerMemberTranslator(),
+			};
 		}
 
 		public override ISqlBuilder CreateSqlBuilder(MappingSchema mappingSchema, DataOptions dataOptions)

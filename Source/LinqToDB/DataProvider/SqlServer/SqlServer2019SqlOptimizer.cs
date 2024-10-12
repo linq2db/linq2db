@@ -1,6 +1,6 @@
 ﻿namespace LinqToDB.DataProvider.SqlServer
 {
-	using SqlProvider;
+	using LinqToDB.Internal.SqlProvider;
 
 	class SqlServer2019SqlOptimizer : SqlServer2012SqlOptimizer
 	{

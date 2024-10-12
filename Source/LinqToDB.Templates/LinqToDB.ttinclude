@@ -3,7 +3,7 @@
 <#@ import namespace="System.Globalization"        #>
 <#@ import namespace="LinqToDB"                    #>
 <#@ import namespace="LinqToDB.Data"               #>
-<#@ import namespace="LinqToDB.SqlProvider"        #>
+<#@ import namespace="LinqToDB.Internal.SqlProvider"        #>
 <#@ import namespace="LinqToDB.Internal.SqlQuery"           #>
 <#@ include file="DataModel.ttinclude" once="true" #>
 <#
@@ -820,7 +820,7 @@ void GenerateTypesFromMetadata()
 					SqlBuilder.BuildObjectName(
 						new StringBuilder(),
 						new SqlObjectName(p.ProcedureName, Server: ServerName, Database: DatabaseName, Schema: p.Schema, Package: p.PackageName),
-						LinqToDB.SqlProvider.ConvertType.NameToProcedure,
+						LinqToDB.Internal.SqlProvider.ConvertType.NameToProcedure,
 						true,
 						LinqToDB.TableOptions.NotSet
 					).ToString();

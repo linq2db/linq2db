@@ -11,7 +11,7 @@ namespace LinqToDB.DataProvider
 	using LinqToDB.Data;
 	using LinqToDB.Extensions;
 	using LinqToDB.Mapping;
-	using LinqToDB.SqlProvider;
+	using LinqToDB.Internal.SqlProvider;
 	using LinqToDB.SqlQuery;
 
 	public class MultipleRowsHelper<T> : MultipleRowsHelper

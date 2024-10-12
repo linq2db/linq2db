@@ -18,7 +18,7 @@ namespace LinqToDB.Linq
 	using LinqToDB.Interceptors;
 	using LinqToDB.Linq.Builder;
 	using LinqToDB.Mapping;
-	using LinqToDB.SqlProvider;
+	using LinqToDB.Internal.SqlProvider;
 	using LinqToDB.Internal.SqlQuery;
 	using LinqToDB.Tools;
 

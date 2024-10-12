@@ -5,7 +5,7 @@ namespace LinqToDB.DataProvider.Informix
 	using LinqToDB.Common;
 	using LinqToDB.Extensions;
 	using LinqToDB.Internal.SqlQuery;
-	using LinqToDB.SqlProvider;
+	using LinqToDB.Internal.SqlProvider;
 	using LinqToDB.SqlQuery;
 
 	public class InformixSqlExpressionConvertVisitor : SqlExpressionConvertVisitor

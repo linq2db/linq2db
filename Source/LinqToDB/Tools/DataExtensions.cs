@@ -7,7 +7,7 @@ namespace LinqToDB.Tools
 	using LinqToDB.Common;
 	using LinqToDB.Data;
 	using LinqToDB.Mapping;
-	using LinqToDB.SqlProvider;
+	using LinqToDB.Internal.SqlProvider;
 
 	public static class DataExtensions
 	{

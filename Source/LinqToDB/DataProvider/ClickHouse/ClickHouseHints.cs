@@ -10,7 +10,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 	using LinqToDB.Expressions;
 	using LinqToDB.Internal.SqlQuery;
 	using LinqToDB.Linq;
-	using LinqToDB.SqlProvider;
+	using LinqToDB.Internal.SqlProvider;
 
 	public static partial class ClickHouseHints
 	{

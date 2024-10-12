@@ -22,7 +22,7 @@ namespace LinqToDB.DataProvider
 	using LinqToDB.Linq.Translation;
 	using LinqToDB.Mapping;
 	using LinqToDB.SchemaProvider;
-	using LinqToDB.SqlProvider;
+	using LinqToDB.Internal.SqlProvider;
 
 	public abstract class DataProviderBase : IDataProvider, IInfrastructure<IServiceProvider>
 	{

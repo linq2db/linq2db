@@ -3,7 +3,7 @@
 namespace LinqToDB.DataProvider.Sybase
 {
 	using LinqToDB.Extensions;
-	using LinqToDB.SqlProvider;
+	using LinqToDB.Internal.SqlProvider;
 	using LinqToDB.Internal.SqlQuery;
 
 	public class SybaseSqlExpressionConvertVisitor : SqlExpressionConvertVisitor

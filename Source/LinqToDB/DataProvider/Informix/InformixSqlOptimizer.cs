@@ -4,7 +4,7 @@ namespace LinqToDB.DataProvider.Informix
 {
 	using LinqToDB.Internal.SqlQuery;
 	using LinqToDB.Mapping;
-	using LinqToDB.SqlProvider;
+	using LinqToDB.Internal.SqlProvider;
 
 	sealed class InformixSqlOptimizer : BasicSqlOptimizer
 	{

@@ -6,7 +6,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 	using LinqToDB.Internal.Common;
 	using LinqToDB.Internal.SqlQuery;
 	using LinqToDB.Mapping;
-	using LinqToDB.SqlProvider;
+	using LinqToDB.Internal.SqlProvider;
 	using LinqToDB.SqlQuery;
 
 	public class ClickHouseSqlExpressionConvertVisitor : SqlExpressionConvertVisitor

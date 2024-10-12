@@ -12,13 +12,15 @@ using JetBrains.Annotations;
 
 namespace LinqToDB
 {
-	using Async;
-	using DataProvider;
-	using Expressions;
-	using Linq;
-	using Linq.Builder;
-	using Reflection;
-	using SqlProvider;
+	using LinqToDB.Async;
+	using LinqToDB.Data;
+	using LinqToDB.DataProvider;
+	using LinqToDB.Expressions;
+	using LinqToDB.Internal.SqlProvider;
+	using LinqToDB.Linq;
+	using LinqToDB.Linq.Builder;
+	using LinqToDB.Linq.Translation;
+	using LinqToDB.Reflection;
 
 	/// <summary>
 	/// Contains extension methods for LINQ queries.

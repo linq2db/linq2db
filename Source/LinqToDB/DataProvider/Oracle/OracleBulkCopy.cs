@@ -13,9 +13,9 @@ using System.Text;
 
 namespace LinqToDB.DataProvider.Oracle
 {
-	using Common;
-	using Data;
-	using SqlProvider;
+	using LinqToDB.Common;
+	using LinqToDB.Data;
+	using LinqToDB.Internal.SqlProvider;
 
 	sealed class OracleBulkCopy : BasicBulkCopy
 	{

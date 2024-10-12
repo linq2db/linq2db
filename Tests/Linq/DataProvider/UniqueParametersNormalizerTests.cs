@@ -14,7 +14,7 @@ using LinqToDB.DataProvider;
 using LinqToDB.Infrastructure;
 using LinqToDB.Mapping;
 using LinqToDB.SchemaProvider;
-using LinqToDB.SqlProvider;
+using LinqToDB.Internal.SqlProvider;
 
 using NUnit.Framework;
 

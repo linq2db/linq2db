@@ -801,7 +801,7 @@ LinqToDB.DataModel.DataContextModel.HasUntypedOptionsConstructor.get -> bool
 LinqToDB.DataModel.DataContextModel.HasUntypedOptionsConstructor.set -> void
 LinqToDB.DataModel.DataModelGenerator
 LinqToDB.DataModel.DataModelGenerator.ConvertToCodeModel() -> LinqToDB.CodeModel.CodeFile![]!
-LinqToDB.DataModel.DataModelGenerator.DataModelGenerator(LinqToDB.CodeModel.ILanguageProvider! languageProvider, LinqToDB.DataModel.DatabaseModel! dataModel, LinqToDB.Metadata.IMetadataBuilder? metadataBuilder, System.Func<string!, string!>! findMethodParameterNameNormalizer, LinqToDB.SqlProvider.ISqlBuilder! sqlBuilder, LinqToDB.Scaffold.ScaffoldOptions! options) -> void
+LinqToDB.DataModel.DataModelGenerator.DataModelGenerator(LinqToDB.CodeModel.ILanguageProvider! languageProvider, LinqToDB.DataModel.DatabaseModel! dataModel, LinqToDB.Metadata.IMetadataBuilder? metadataBuilder, System.Func<string!, string!>! findMethodParameterNameNormalizer, LinqToDB.Internal.SqlProvider.ISqlBuilder! sqlBuilder, LinqToDB.Scaffold.ScaffoldOptions! options) -> void
 LinqToDB.DataModel.EntityModel
 LinqToDB.DataModel.EntityModel.Class.get -> LinqToDB.DataModel.ClassModel!
 LinqToDB.DataModel.EntityModel.Class.set -> void
@@ -1328,7 +1328,7 @@ LinqToDB.Scaffold.FinalDataModel.StoredProcedures.get -> System.Collections.Gene
 LinqToDB.Scaffold.FinalDataModel.TableFunctions.get -> System.Collections.Generic.List<LinqToDB.DataModel.TableFunctionModel!>!
 LinqToDB.Scaffold.Internal.NameGenerationServices
 LinqToDB.Scaffold.Scaffolder
-LinqToDB.Scaffold.Scaffolder.GenerateCodeModel(LinqToDB.SqlProvider.ISqlBuilder! sqlBuilder, LinqToDB.DataModel.DatabaseModel! dataModel, LinqToDB.Metadata.IMetadataBuilder? metadataBuilder, params LinqToDB.CodeModel.ConvertCodeModelVisitor![]! modelConverters) -> LinqToDB.CodeModel.CodeFile![]!
+LinqToDB.Scaffold.Scaffolder.GenerateCodeModel(LinqToDB.Internal.SqlProvider.ISqlBuilder! sqlBuilder, LinqToDB.DataModel.DatabaseModel! dataModel, LinqToDB.Metadata.IMetadataBuilder? metadataBuilder, params LinqToDB.CodeModel.ConvertCodeModelVisitor![]! modelConverters) -> LinqToDB.CodeModel.CodeFile![]!
 LinqToDB.Scaffold.Scaffolder.GenerateSourceCode(LinqToDB.DataModel.DatabaseModel! dataModel, params LinqToDB.CodeModel.CodeFile![]! files) -> LinqToDB.Scaffold.SourceCodeFile![]!
 LinqToDB.Scaffold.Scaffolder.Language.get -> LinqToDB.CodeModel.ILanguageProvider!
 LinqToDB.Scaffold.Scaffolder.LoadDataModel(LinqToDB.Schema.ISchemaProvider! schemaProvider, LinqToDB.Schema.ITypeMappingProvider! typeMappingsProvider) -> LinqToDB.DataModel.DatabaseModel!

@@ -1,17 +1,19 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Data.SqlTypes;
 using System.Globalization;
 using System.Text;
 
-namespace LinqToDB.SqlProvider
+namespace LinqToDB.Internal.SqlProvider
 {
-	using Common;
-	using Extensions;
-	using Mapping;
-	
-	using ConverterType = Action<StringBuilder, LinqToDB.Common.DbDataType, DataOptions,object>;
+	using LinqToDB.Common;
+	using LinqToDB.Extensions;
+	using LinqToDB.Mapping;
 
+	using ConverterType = Action<StringBuilder, LinqToDB.Common.DbDataType, DataOptions, object>;
+
+	[EditorBrowsable(EditorBrowsableState.Never)]
 	public class ValueToSqlConverter
 	{
 		public ValueToSqlConverter()

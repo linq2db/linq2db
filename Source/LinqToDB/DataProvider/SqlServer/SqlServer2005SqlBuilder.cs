@@ -1,8 +1,8 @@
 ﻿namespace LinqToDB.DataProvider.SqlServer
 {
-	using Common;
-	using Mapping;
-	using SqlProvider;
+	using LinqToDB.Common;
+	using LinqToDB.Internal.SqlProvider;
+	using LinqToDB.Mapping;
 
 	sealed class SqlServer2005SqlBuilder : SqlServerSqlBuilder
 	{

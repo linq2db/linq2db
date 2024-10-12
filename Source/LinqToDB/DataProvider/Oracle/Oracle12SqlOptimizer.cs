@@ -2,7 +2,7 @@
 {
 	using LinqToDB.Internal.SqlQuery;
 	using LinqToDB.Mapping;
-	using LinqToDB.SqlProvider;
+	using LinqToDB.Internal.SqlProvider;
 
 	public class Oracle12SqlOptimizer : Oracle11SqlOptimizer
 	{

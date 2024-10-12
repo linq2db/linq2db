@@ -3,7 +3,7 @@
 	using LinqToDB.Internal.Common;
 	using LinqToDB.Internal.SqlQuery;
 	using LinqToDB.Internal.SqlQuery.Visitors;
-	using LinqToDB.SqlProvider;
+	using LinqToDB.Internal.SqlProvider;
 
 	public static class SqlProviderHelper
 	{

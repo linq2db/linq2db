@@ -5,7 +5,7 @@ namespace LinqToDB.DataProvider.Oracle
 	using LinqToDB.Common;
 	using LinqToDB.Extensions;
 	using LinqToDB.Internal.SqlQuery;
-	using LinqToDB.SqlProvider;
+	using LinqToDB.Internal.SqlProvider;
 
 	public class OracleSqlExpressionConvertVisitor : SqlExpressionConvertVisitor
 	{

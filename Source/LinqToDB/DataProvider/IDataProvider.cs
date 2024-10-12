@@ -12,7 +12,7 @@ namespace LinqToDB.DataProvider
 	using LinqToDB.Data;
 	using LinqToDB.Mapping;
 	using LinqToDB.SchemaProvider;
-	using LinqToDB.SqlProvider;
+	using LinqToDB.Internal.SqlProvider;
 
 	public interface IDataProvider
 	{

@@ -16,7 +16,7 @@ namespace LinqToDB.DataProvider
 	using LinqToDB.Data;
 	using LinqToDB.Internal.SqlQuery;
 	using LinqToDB.Mapping;
-	using LinqToDB.SqlProvider;
+	using LinqToDB.Internal.SqlProvider;
 
 	public class BasicBulkCopy
 	{

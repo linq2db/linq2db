@@ -3,7 +3,7 @@
 	using LinqToDB.Common;
 	using LinqToDB.Internal.SqlQuery;
 	using LinqToDB.Mapping;
-	using LinqToDB.SqlProvider;
+	using LinqToDB.Internal.SqlProvider;
 	using LinqToDB.SqlQuery;
 
 	sealed class MySql57SqlBuilder : MySqlSqlBuilder

@@ -6,9 +6,9 @@ using System.Text;
 
 namespace LinqToDB.DataProvider.DB2
 {
-	using Common;
-	using Mapping;
-	using SqlProvider;
+	using LinqToDB.Common;
+	using LinqToDB.Internal.SqlProvider;
+	using LinqToDB.Mapping;
 
 	sealed class DB2zOSSqlBuilder : DB2SqlBuilderBase
 	{

@@ -1,6 +1,6 @@
 ﻿namespace LinqToDB.DataProvider.Firebird
 {
-	using SqlProvider;
+	using LinqToDB.Internal.SqlProvider;
 
 	public class Firebird3SqlOptimizer : FirebirdSqlOptimizer
 	{

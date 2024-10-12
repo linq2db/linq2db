@@ -25,7 +25,7 @@ namespace LinqToDB.Mapping
 	using LinqToDB.Internal.Common;
 	using LinqToDB.Linq.Translation;
 	using LinqToDB.Metadata;
-	using LinqToDB.SqlProvider;
+	using LinqToDB.Internal.SqlProvider;
 	using LinqToDB.SqlQuery;
 
 	/// <summary>

@@ -1,8 +1,6 @@
-﻿using System;
-
-namespace LinqToDB
+﻿namespace LinqToDB
 {
-	using SqlProvider;
+	using LinqToDB.Internal.SqlProvider;
 
 	public partial class Sql
 	{

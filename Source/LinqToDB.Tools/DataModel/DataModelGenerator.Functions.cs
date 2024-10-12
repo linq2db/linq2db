@@ -3,7 +3,7 @@ using System.Text;
 using LinqToDB.Schema;
 using LinqToDB.CodeModel;
 using LinqToDB.Data;
-using LinqToDB.SqlProvider;
+using LinqToDB.Internal.SqlProvider;
 using LinqToDB.Internal.SqlQuery;
 
 namespace LinqToDB.DataModel

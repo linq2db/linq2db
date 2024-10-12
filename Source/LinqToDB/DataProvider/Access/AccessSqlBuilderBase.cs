@@ -9,7 +9,7 @@ namespace LinqToDB.DataProvider.Access
 	using LinqToDB.Extensions;
 	using LinqToDB.Internal.SqlQuery;
 	using LinqToDB.Mapping;
-	using LinqToDB.SqlProvider;
+	using LinqToDB.Internal.SqlProvider;
 	using LinqToDB.SqlQuery;
 
 	abstract class AccessSqlBuilderBase : BasicSqlBuilder

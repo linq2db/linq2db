@@ -9,7 +9,7 @@ namespace LinqToDB.DataProvider.SapHana
 	using LinqToDB.Expressions;
 	using LinqToDB.Internal.SqlQuery;
 	using LinqToDB.Mapping;
-	using LinqToDB.SqlProvider;
+	using LinqToDB.Internal.SqlProvider;
 
 	public class CalculationViewInputParametersExpressionAttribute : Sql.TableExpressionAttribute
 	{

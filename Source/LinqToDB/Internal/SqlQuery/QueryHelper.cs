@@ -10,7 +10,7 @@ namespace LinqToDB.Internal.SqlQuery
 	using LinqToDB.Common;
 	using LinqToDB.Internal.Common;
 	using LinqToDB.Mapping;
-	using LinqToDB.SqlProvider;
+	using LinqToDB.Internal.SqlProvider;
 	using LinqToDB.SqlQuery;
 
 	public static partial class QueryHelper

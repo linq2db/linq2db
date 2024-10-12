@@ -1,8 +1,8 @@
 ﻿namespace LinqToDB.DataProvider.SqlServer
 {
+	using LinqToDB.Internal.SqlProvider;
 	using LinqToDB.Internal.SqlQuery;
-	using Mapping;
-	using SqlProvider;
+	using LinqToDB.Mapping;
 
 	sealed class SqlServer2022SqlBuilder : SqlServer2019SqlBuilder
 	{

@@ -3,7 +3,7 @@ using System.Linq;
 using LinqToDB.CodeModel;
 using LinqToDB.Metadata;
 using LinqToDB.Scaffold;
-using LinqToDB.SqlProvider;
+using LinqToDB.Internal.SqlProvider;
 
 namespace LinqToDB.DataModel
 {

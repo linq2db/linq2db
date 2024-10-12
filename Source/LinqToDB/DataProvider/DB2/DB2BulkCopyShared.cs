@@ -5,8 +5,9 @@ using System.Linq;
 
 namespace LinqToDB.DataProvider.DB2
 {
-	using Common;
-	using Data;
+	using LinqToDB.Common;
+	using LinqToDB.Data;
+
 	using DB2BulkCopyOptions = DB2ProviderAdapter.DB2BulkCopyOptions;
 
 	// must be public to allow reuse by iSeries provider
@@ -61,7 +62,7 @@ namespace LinqToDB.DataProvider.DB2
 				bc.DestinationTableName = tableName;
 
 				for (var i = 0; i < columns.Count; i++)
-					bc.ColumnMappings.Add(bulkCopy.CreateColumnMapping(i, sqlBuilder.ConvertInline(columns[i].ColumnName, SqlProvider.ConvertType.NameToQueryField)));
+					bc.ColumnMappings.Add(bulkCopy.CreateColumnMapping(i, sqlBuilder.ConvertInline(columns[i].ColumnName, Internal.SqlProvider.ConvertType.NameToQueryField)));
 
 				traceAction(
 					dataConnection,

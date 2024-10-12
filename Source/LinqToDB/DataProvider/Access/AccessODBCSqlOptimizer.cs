@@ -1,10 +1,6 @@
-﻿using System;
-
-namespace LinqToDB.DataProvider.Access
+﻿namespace LinqToDB.DataProvider.Access
 {
-	using Mapping;
-	using SqlProvider;
-	using SqlQuery;
+	using LinqToDB.Internal.SqlProvider;
 
 	sealed class AccessODBCSqlOptimizer : AccessSqlOptimizer
 	{

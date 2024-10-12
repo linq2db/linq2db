@@ -12,7 +12,7 @@ namespace LinqToDB
 	using LinqToDB.Internal.Common;
 	using LinqToDB.Linq;
 	using LinqToDB.Mapping;
-	using LinqToDB.SqlProvider;
+	using LinqToDB.Internal.SqlProvider;
 
 	/// <summary>
 	/// Database connection abstraction interface.

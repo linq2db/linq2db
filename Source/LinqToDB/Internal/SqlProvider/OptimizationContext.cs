@@ -1,16 +1,17 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
 
+using LinqToDB.Common;
+using LinqToDB.DataProvider;
+using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Internal.SqlQuery.Visitors;
+using LinqToDB.Mapping;
 
-namespace LinqToDB.SqlProvider
+namespace LinqToDB.Internal.SqlProvider
 {
-	using LinqToDB.Common;
-	using LinqToDB.DataProvider;
-	using LinqToDB.Internal.SqlQuery;
-	using LinqToDB.Mapping;
-
+	[EditorBrowsable(EditorBrowsableState.Never)]
 	public class OptimizationContext
 	{
 		private IQueryParametersNormalizer?                      _parametersNormalizer;

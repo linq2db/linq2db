@@ -5,7 +5,7 @@ using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.DataProvider.Firebird;
 using LinqToDB.Mapping;
-using LinqToDB.SqlProvider;
+using LinqToDB.Internal.SqlProvider;
 using LinqToDB.Internal.SqlQuery;
 
 using NUnit.Framework;

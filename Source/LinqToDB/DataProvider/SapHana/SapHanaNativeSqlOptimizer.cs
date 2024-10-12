@@ -1,6 +1,6 @@
 ﻿namespace LinqToDB.DataProvider.SapHana
 {
-	using SqlProvider;
+	using LinqToDB.Internal.SqlProvider;
 
 	sealed class SapHanaNativeSqlOptimizer : SapHanaSqlOptimizer
 	{

@@ -13,7 +13,7 @@ namespace LinqToDB.Internal.SqlQuery
 	using LinqToDB.Internal.SqlQuery.Visitors;
 	using LinqToDB.Linq.Builder;
 	using LinqToDB.Mapping;
-	using LinqToDB.SqlProvider;
+	using LinqToDB.Internal.SqlProvider;
 	using LinqToDB.SqlQuery;
 
 	public class SelectQueryOptimizerVisitor : SqlQueryVisitor

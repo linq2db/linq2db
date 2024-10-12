@@ -4,7 +4,7 @@ namespace LinqToDB.DataProvider.MySql
 {
 	using LinqToDB.Extensions;
 	using LinqToDB.Internal.SqlQuery;
-	using LinqToDB.SqlProvider;
+	using LinqToDB.Internal.SqlProvider;
 	using LinqToDB.SqlQuery;
 
 	public class MySqlSqlExpressionConvertVisitor : SqlExpressionConvertVisitor

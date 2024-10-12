@@ -2,7 +2,7 @@
 {
 	using LinqToDB.Extensions;
 	using LinqToDB.Internal.SqlQuery;
-	using LinqToDB.SqlProvider;
+	using LinqToDB.Internal.SqlProvider;
 
 	public class DB2SqlExpressionConvertVisitor : SqlExpressionConvertVisitor
 	{

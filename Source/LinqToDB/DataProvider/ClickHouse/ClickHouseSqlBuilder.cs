@@ -9,7 +9,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 	using LinqToDB.Common;
 	using LinqToDB.Internal.SqlQuery;
 	using LinqToDB.Mapping;
-	using LinqToDB.SqlProvider;
+	using LinqToDB.Internal.SqlProvider;
 	using LinqToDB.SqlQuery;
 
 	sealed class ClickHouseSqlBuilder : BasicSqlBuilder

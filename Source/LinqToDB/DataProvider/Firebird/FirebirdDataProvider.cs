@@ -7,12 +7,12 @@ using System.Threading.Tasks;
 
 namespace LinqToDB.DataProvider.Firebird
 {
-	using Common;
-	using Data;
-	using Linq.Translation;
-	using Mapping;
-	using SqlProvider;
-	using Translation;
+	using LinqToDB.Common;
+	using LinqToDB.Data;
+	using LinqToDB.DataProvider.Firebird.Translation;
+	using LinqToDB.Internal.SqlProvider;
+	using LinqToDB.Linq.Translation;
+	using LinqToDB.Mapping;
 
 	sealed class FirebirdDataProvider25 : FirebirdDataProvider { public FirebirdDataProvider25() : base(ProviderName.Firebird25, FirebirdVersion.v25) { } }
 	sealed class FirebirdDataProvider3  : FirebirdDataProvider { public FirebirdDataProvider3()  : base(ProviderName.Firebird3,  FirebirdVersion.v3 ) { } }

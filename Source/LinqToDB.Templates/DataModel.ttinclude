@@ -91,7 +91,7 @@ public Func<ForeignKey, string> GetAssociationExtensionSingularName
 public LinqToDB.SchemaProvider.GetSchemaOptions GetSchemaOptions =
 	new LinqToDB.SchemaProvider.GetSchemaOptions();
 
-LinqToDB.SqlProvider.ISqlBuilder SqlBuilder;
+LinqToDB.Internal.SqlProvider.ISqlBuilder SqlBuilder;
 
 public Func<TableSchema,Table> LoadProviderSpecificTable = tableSchema => null;
 

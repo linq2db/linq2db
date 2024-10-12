@@ -5,9 +5,9 @@ using JetBrains.Annotations;
 
 namespace LinqToDB.DataProvider.SqlServer
 {
-	using Expressions;
-	using Linq;
-	using SqlProvider;
+	using LinqToDB.Expressions;
+	using LinqToDB.Internal.SqlProvider;
+	using LinqToDB.Linq;
 
 	public interface ISqlServerSpecificTable<out TSource> : ITable<TSource>
 		where TSource : notnull

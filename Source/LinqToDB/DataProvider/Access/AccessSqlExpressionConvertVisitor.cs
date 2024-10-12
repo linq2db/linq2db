@@ -6,7 +6,7 @@ namespace LinqToDB.DataProvider.Access
 	using LinqToDB.Extensions;
 	using LinqToDB.Internal.SqlQuery;
 	using LinqToDB.Linq;
-	using LinqToDB.SqlProvider;
+	using LinqToDB.Internal.SqlProvider;
 
 	public class AccessSqlExpressionConvertVisitor : SqlExpressionConvertVisitor
 	{

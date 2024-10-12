@@ -22,7 +22,7 @@ namespace LinqToDB.Remote
 	using LinqToDB.Internal.Common;
 	using LinqToDB.Linq.Translation;
 	using LinqToDB.Mapping;
-	using LinqToDB.SqlProvider;
+	using LinqToDB.Internal.SqlProvider;
 	using LinqToDB.Tools;
 
 	[PublicAPI]

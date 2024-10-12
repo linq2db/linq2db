@@ -1,10 +1,11 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 
-namespace LinqToDB.SqlProvider
+namespace LinqToDB.Internal.SqlProvider
 {
 	using LinqToDB.Common;
 	using LinqToDB.Extensions;
@@ -14,6 +15,7 @@ namespace LinqToDB.SqlProvider
 	using LinqToDB.Mapping;
 	using LinqToDB.SqlQuery;
 
+	[EditorBrowsable(EditorBrowsableState.Never)]
 	public class SqlExpressionConvertVisitor : SqlQueryVisitor
 	{
 		protected bool            IsInsideNot;

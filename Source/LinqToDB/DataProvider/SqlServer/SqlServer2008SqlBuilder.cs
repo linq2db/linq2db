@@ -2,7 +2,7 @@
 {
 	using LinqToDB.Internal.SqlQuery;
 	using LinqToDB.Mapping;
-	using LinqToDB.SqlProvider;
+	using LinqToDB.Internal.SqlProvider;
 
 	sealed partial class SqlServer2008SqlBuilder : SqlServerSqlBuilder
 	{

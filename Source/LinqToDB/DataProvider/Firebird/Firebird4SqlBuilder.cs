@@ -6,7 +6,7 @@ namespace LinqToDB.DataProvider.Firebird
 	using LinqToDB.Common;
 	using LinqToDB.Internal.SqlQuery;
 	using LinqToDB.Mapping;
-	using LinqToDB.SqlProvider;
+	using LinqToDB.Internal.SqlProvider;
 
 	public class Firebird4SqlBuilder : Firebird3SqlBuilder
 	{

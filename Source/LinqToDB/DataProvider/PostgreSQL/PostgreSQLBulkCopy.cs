@@ -7,11 +7,10 @@ using System.Threading.Tasks;
 
 namespace LinqToDB.DataProvider.PostgreSQL
 {
-	using Common;
-	using Data;
-	using Mapping;
-	using SqlProvider;
-	using SqlQuery;
+	using LinqToDB.Common;
+	using LinqToDB.Data;
+	using LinqToDB.Internal.SqlProvider;
+	using LinqToDB.Mapping;
 
 	sealed class PostgreSQLBulkCopy : BasicBulkCopy
 	{

@@ -7,9 +7,9 @@ using System.Threading.Tasks;
 
 namespace LinqToDB.DataProvider.Informix
 {
-	using Common;
-	using Data;
-	using SqlProvider;
+	using LinqToDB.Common;
+	using LinqToDB.Data;
+	using LinqToDB.Internal.SqlProvider;
 
 	sealed class InformixBulkCopy : BasicBulkCopy
 	{

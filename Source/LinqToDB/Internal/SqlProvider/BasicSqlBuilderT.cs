@@ -1,13 +1,11 @@
-﻿using System;
-
-namespace LinqToDB.SqlProvider
+﻿namespace LinqToDB.Internal.SqlProvider
 {
-	using Common;
-	using DataProvider;
-	using Mapping;
+	using LinqToDB.Common;
+	using LinqToDB.DataProvider;
+	using LinqToDB.Mapping;
 
 	public abstract class BasicSqlBuilder<T> : BasicSqlBuilder
-	where T : DataProviderOptions<T>, IOptionSet, new()
+		where T : DataProviderOptions<T>, IOptionSet, new()
 	{
 		protected BasicSqlBuilder(IDataProvider? provider, MappingSchema mappingSchema, DataOptions dataOptions, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
 			: base(provider, mappingSchema, dataOptions, sqlOptimizer, sqlProviderFlags)

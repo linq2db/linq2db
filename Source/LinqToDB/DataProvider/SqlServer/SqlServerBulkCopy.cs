@@ -6,8 +6,8 @@ using System.Threading.Tasks;
 
 namespace LinqToDB.DataProvider.SqlServer
 {
-	using Data;
-	using SqlProvider;
+	using LinqToDB.Data;
+	using LinqToDB.Internal.SqlProvider;
 
 	sealed class SqlServerBulkCopy : BasicBulkCopy
 	{

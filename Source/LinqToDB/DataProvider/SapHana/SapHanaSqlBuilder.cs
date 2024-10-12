@@ -8,7 +8,7 @@ namespace LinqToDB.DataProvider.SapHana
 	using LinqToDB.Common;
 	using LinqToDB.Internal.SqlQuery;
 	using LinqToDB.Mapping;
-	using LinqToDB.SqlProvider;
+	using LinqToDB.Internal.SqlProvider;
 
 	partial class SapHanaSqlBuilder : BasicSqlBuilder
 	{

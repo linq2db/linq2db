@@ -1,15 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Data.Common;
+﻿using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace LinqToDB.DataProvider.DB2
 {
-	using Data;
-	using Common;
-
-	using DB2BulkCopyOptions = DB2ProviderAdapter.DB2BulkCopyOptions;
+	using LinqToDB.Common;
+	using LinqToDB.Data;
 
 	sealed class DB2BulkCopy : BasicBulkCopy
 	{

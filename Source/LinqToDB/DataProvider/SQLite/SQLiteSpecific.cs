@@ -1,13 +1,12 @@
-﻿using System;
-using System.Linq.Expressions;
+﻿using System.Linq.Expressions;
 
 using JetBrains.Annotations;
 
 namespace LinqToDB.DataProvider.SQLite
 {
-	using Expressions;
-	using Linq;
-	using SqlProvider;
+	using LinqToDB.Expressions;
+	using LinqToDB.Internal.SqlProvider;
+	using LinqToDB.Linq;
 
 	public interface ISQLiteSpecificTable<out TSource> : ITable<TSource>
 		where TSource : notnull

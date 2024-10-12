@@ -1,7 +1,8 @@
-﻿using System;
+﻿using System.ComponentModel;
 
-namespace LinqToDB.SqlProvider
+namespace LinqToDB.Internal.SqlProvider
 {
+	[EditorBrowsable(EditorBrowsableState.Never)]
 	public class TableIDInfo
 	{
 		public TableIDInfo(string tableAlias, string tableName, string tableSpec)

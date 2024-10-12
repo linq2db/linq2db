@@ -1,7 +1,7 @@
 ﻿namespace LinqToDB.DataProvider.SapHana
 {
 	using LinqToDB.Internal.SqlQuery;
-	using LinqToDB.SqlProvider;
+	using LinqToDB.Internal.SqlProvider;
 
 	public class SapHanaSqlExpressionConvertVisitor : SqlExpressionConvertVisitor
 	{

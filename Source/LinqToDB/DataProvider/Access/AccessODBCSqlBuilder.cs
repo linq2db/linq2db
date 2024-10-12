@@ -1,12 +1,10 @@
-﻿using System;
-using System.Data.Common;
+﻿using System.Data.Common;
 using System.Text;
 
 namespace LinqToDB.DataProvider.Access
 {
-	using Mapping;
-	using SqlProvider;
-	using SqlQuery;
+	using LinqToDB.Internal.SqlProvider;
+	using LinqToDB.Mapping;
 
 	sealed class AccessODBCSqlBuilder : AccessSqlBuilderBase
 	{

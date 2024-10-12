@@ -1,6 +1,6 @@
 ﻿namespace LinqToDB.DataProvider.SqlServer
 {
-	using SqlProvider;
+	using LinqToDB.Internal.SqlProvider;
 
 	sealed class SqlServer2016SqlOptimizer : SqlServer2012SqlOptimizer
 	{

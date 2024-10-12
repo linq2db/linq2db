@@ -6,13 +6,13 @@ using System.Linq;
 
 namespace LinqToDB.DataProvider.SapHana
 {
-	using Common;
-	using Data;
-	using Extensions;
-	using Mapping;
-	using SqlProvider;
-	using Translation;
-	using Linq.Translation;
+	using LinqToDB.Common;
+	using LinqToDB.Data;
+	using LinqToDB.DataProvider.SapHana.Translation;
+	using LinqToDB.Extensions;
+	using LinqToDB.Internal.SqlProvider;
+	using LinqToDB.Linq.Translation;
+	using LinqToDB.Mapping;
 
 	public class SapHanaOdbcDataProvider : DynamicDataProviderBase<OdbcProviderAdapter>
 	{

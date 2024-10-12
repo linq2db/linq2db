@@ -4,7 +4,7 @@ namespace LinqToDB.DataProvider.SqlServer
 {
 	using LinqToDB.Internal.SqlQuery;
 	using LinqToDB.Mapping;
-	using LinqToDB.SqlProvider;
+	using LinqToDB.Internal.SqlProvider;
 
 	class SqlServer2016SqlBuilder : SqlServer2014SqlBuilder
 	{

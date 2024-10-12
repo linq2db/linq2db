@@ -1,4 +1,4 @@
-﻿namespace LinqToDB.SqlProvider
+﻿namespace LinqToDB.Internal.SqlProvider
 {
 	using LinqToDB.DataProvider;
 	using LinqToDB.Internal.SqlQuery;

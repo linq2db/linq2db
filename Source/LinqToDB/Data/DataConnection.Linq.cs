@@ -6,7 +6,7 @@ namespace LinqToDB.Data
 {
 	using LinqToDB.DataProvider;
 	using LinqToDB.Internal.SqlQuery;
-	using LinqToDB.SqlProvider;
+	using LinqToDB.Internal.SqlProvider;
 
 	public partial class DataConnection
 	{
