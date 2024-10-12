@@ -15,7 +15,6 @@ namespace Tests.xUpdate
 	// Regression tests converted from tests for previous version of Merge API to new API.
 	public partial class MergeTests
 	{
-		// ASE: just fails
 		[Test]
 		public void Merge([MergeDataContextSource(TestProvName.AllSybase)] string context)
 		{
@@ -31,7 +30,6 @@ namespace Tests.xUpdate
 			}
 		}
 
-		// ASE: just fails
 		[Test]
 		public void MergeWithEmptySource([MergeDataContextSource(TestProvName.AllOracle, TestProvName.AllSybase)] string context)
 		{
@@ -48,7 +46,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void MergeWithDelete([IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllFirebird5Plus)] string context)
+		public void MergeWithDelete([MergeNotMatchedBySourceDataContextSource(true)] string context)
 		{
 			using (var db = GetDataConnection(context))
 			using (db.BeginTransaction())
@@ -65,7 +63,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void MergeWithDeletePredicate1([IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllFirebird5Plus)] string context)
+		public void MergeWithDeletePredicate1([MergeNotMatchedBySourceDataContextSource(true)] string context)
 		{
 			using (var db = GetDataConnection(context))
 			using (db.BeginTransaction())
@@ -82,7 +80,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void MergeWithDeletePredicate3([IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllFirebird5Plus)] string context)
+		public void MergeWithDeletePredicate3([MergeNotMatchedBySourceDataContextSource(true)] string context)
 		{
 			using (var db = GetDataConnection(context))
 			using (db.BeginTransaction())
@@ -116,7 +114,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void MergeWithDeletePredicate4([IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllFirebird5Plus)] string context)
+		public void MergeWithDeletePredicate4([MergeNotMatchedBySourceDataContextSource(true)] string context)
 		{
 			using (var db = GetDataConnection(context))
 			using (db.BeginTransaction())
@@ -152,7 +150,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void MergeWithDeletePredicate5([IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllFirebird5Plus)] string context)
+		public void MergeWithDeletePredicate5([MergeNotMatchedBySourceDataContextSource(true)] string context)
 		{
 			using (var db = GetDataConnection(context))
 			using (db.BeginTransaction())

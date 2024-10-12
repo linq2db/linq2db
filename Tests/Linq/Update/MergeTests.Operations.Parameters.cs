@@ -10,7 +10,6 @@ namespace Tests.xUpdate
 {
 	public partial class MergeTests
 	{
-		// ASE: just fails
 		[Test]
 		public void TestParameters1([MergeDataContextSource(
 			false,
@@ -69,7 +68,6 @@ namespace Tests.xUpdate
 			}
 		}
 
-		// ASE: just fails
 		[Test]
 		public void TestParameters3([MergeDataContextSource(
 			false,
@@ -129,7 +127,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void TestParameters2([IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllFirebird5Plus)] string context)
+		public void TestParameters2([MergeNotMatchedBySourceDataContextSource(true)] string context)
 		{
 			using (var db = GetDataConnection(context))
 			{
@@ -314,7 +312,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void TestParametersInDeleteBySourceCondition([IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllFirebird5Plus)] string context)
+		public void TestParametersInDeleteBySourceCondition([MergeNotMatchedBySourceDataContextSource(true)] string context)
 		{
 			using (var db = GetDataConnection(context))
 			{
@@ -340,7 +338,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void TestParametersInUpdateBySourceCondition([IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllFirebird5Plus)] string context)
+		public void TestParametersInUpdateBySourceCondition([MergeNotMatchedBySourceDataContextSource(true)] string context)
 		{
 			using (var db = GetDataConnection(context))
 			{
@@ -452,7 +450,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void TestParametersInUpdateBySourceExpression([IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllFirebird5Plus)] string context)
+		public void TestParametersInUpdateBySourceExpression([MergeNotMatchedBySourceDataContextSource(true)] string context)
 		{
 			using (var db = GetDataConnection(context))
 			{
