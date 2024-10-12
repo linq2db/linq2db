@@ -1,8 +1,8 @@
 ﻿namespace LinqToDB.SqlProvider
 {
-	using DataProvider;
-	using Mapping;
-	using SqlQuery;
+	using LinqToDB.DataProvider;
+	using LinqToDB.Internal.SqlQuery;
+	using LinqToDB.Mapping;
 
 	internal static class SqlOptimizerExtensions
 	{

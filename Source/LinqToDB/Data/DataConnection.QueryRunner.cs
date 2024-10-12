@@ -14,9 +14,9 @@ namespace LinqToDB.Data
 	using LinqToDB.DataProvider;
 	using LinqToDB.Extensions;
 	using LinqToDB.Infrastructure;
+	using LinqToDB.Internal.SqlQuery;
 	using LinqToDB.Linq;
 	using LinqToDB.SqlProvider;
-	using LinqToDB.SqlQuery;
 	using LinqToDB.Tools;
 
 	public partial class DataConnection

@@ -5,11 +5,11 @@ using System.Reflection;
 
 namespace LinqToDB
 {
-	using Common;
-	using Linq.Builder;
-	using Common.Internal;
-	using Mapping;
-	using SqlQuery;
+	using LinqToDB.Common.Internal;
+	using LinqToDB.Internal.SqlQuery;
+	using LinqToDB.Linq.Builder;
+	using LinqToDB.Linq.Translation;
+	using LinqToDB.Mapping;
 
 	public partial class Sql
 	{

@@ -1,11 +1,9 @@
-﻿using System;
-using System.Linq;
-using System.Linq.Expressions;
+﻿using System.Linq.Expressions;
 
 namespace LinqToDB.Linq.Builder
 {
 	using LinqToDB.Expressions;
-	using SqlQuery;
+	using LinqToDB.Internal.SqlQuery;
 
 	partial class TableBuilder
 	{

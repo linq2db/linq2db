@@ -3,7 +3,7 @@
 namespace LinqToDB.Linq.Builder
 {
 	using LinqToDB.Expressions;
-	using SqlQuery;
+	using LinqToDB.Internal.SqlQuery;
 
 	[BuildsMethodCall(nameof(LinqExtensions.AsSubQuery))]
 	sealed class AsSubQueryBuilder : MethodCallBuilder

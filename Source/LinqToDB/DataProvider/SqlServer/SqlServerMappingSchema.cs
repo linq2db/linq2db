@@ -10,17 +10,12 @@ using System.Xml;
 
 namespace LinqToDB.DataProvider.SqlServer
 {
-	using Common;
-
-	using Expressions;
-
-	using Extensions;
-
-	using Mapping;
-
-	using Metadata;
-
-	using SqlQuery;
+	using LinqToDB.Common;
+	using LinqToDB.DataProvider;
+	using LinqToDB.Expressions;
+	using LinqToDB.Extensions;
+	using LinqToDB.Mapping;
+	using LinqToDB.SqlQuery;
 
 	sealed class SqlServerMappingSchema : LockedMappingSchema
 	{

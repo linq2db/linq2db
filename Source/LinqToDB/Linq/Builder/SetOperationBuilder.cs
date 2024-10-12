@@ -6,10 +6,11 @@ using System.Linq.Expressions;
 
 namespace LinqToDB.Linq.Builder
 {
-	using Common.Internal;
-	using Extensions;
+	using LinqToDB.Common.Internal;
 	using LinqToDB.Expressions;
-	using SqlQuery;
+	using LinqToDB.Extensions;
+	using LinqToDB.Internal.SqlQuery;
+	using LinqToDB.Mapping;
 
 	[BuildsMethodCall("Concat", "UnionAll", "Union", "Except", "Intersect", "ExceptAll", "IntersectAll")]
 	internal sealed class SetOperationBuilder : MethodCallBuilder

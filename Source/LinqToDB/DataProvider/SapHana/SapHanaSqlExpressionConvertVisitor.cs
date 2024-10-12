@@ -1,9 +1,7 @@
-﻿using System;
-
-namespace LinqToDB.DataProvider.SapHana
+﻿namespace LinqToDB.DataProvider.SapHana
 {
-	using SqlProvider;
-	using SqlQuery;
+	using LinqToDB.Internal.SqlQuery;
+	using LinqToDB.SqlProvider;
 
 	public class SapHanaSqlExpressionConvertVisitor : SqlExpressionConvertVisitor
 	{

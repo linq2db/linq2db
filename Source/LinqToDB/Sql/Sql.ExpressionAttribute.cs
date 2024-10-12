@@ -14,6 +14,7 @@ namespace LinqToDB
 	using LinqToDB.Expressions;
 	using LinqToDB.Expressions.Visitors;
 	using LinqToDB.Extensions;
+	using LinqToDB.Internal.SqlQuery;
 	using LinqToDB.Linq.Builder;
 	using LinqToDB.Mapping;
 	using LinqToDB.SqlQuery;
@@ -37,7 +38,7 @@ namespace LinqToDB
 			public ExpressionAttribute(string? expression)
 			{
 				Expression = expression;
-				Precedence = SqlQuery.Precedence.Primary;
+				Precedence = LinqToDB.SqlQuery.Precedence.Primary;
 				IsPure     = true;
 			}
 
@@ -52,7 +53,7 @@ namespace LinqToDB
 			{
 				Expression = expression;
 				ArgIndices = argIndices;
-				Precedence = SqlQuery.Precedence.Primary;
+				Precedence = LinqToDB.SqlQuery.Precedence.Primary;
 				IsPure     = true;
 			}
 
@@ -67,7 +68,7 @@ namespace LinqToDB
 			{
 				Configuration = configuration;
 				Expression    = expression;
-				Precedence    = SqlQuery.Precedence.Primary;
+				Precedence    = LinqToDB.SqlQuery.Precedence.Primary;
 				IsPure        = true;
 			}
 
@@ -85,7 +86,7 @@ namespace LinqToDB
 				Configuration = configuration;
 				Expression    = expression;
 				ArgIndices    = argIndices;
-				Precedence    = SqlQuery.Precedence.Primary;
+				Precedence    = LinqToDB.SqlQuery.Precedence.Primary;
 				IsPure        = true;
 			}
 

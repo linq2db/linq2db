@@ -2,7 +2,7 @@
 
 namespace LinqToDB.DataProvider.SqlServer
 {
-	using LinqToDB.SqlQuery;
+	using LinqToDB.Internal.SqlQuery;
 
 	public class SqlServer2012SqlExpressionConvertVisitor : SqlServer2008SqlExpressionConvertVisitor
 	{

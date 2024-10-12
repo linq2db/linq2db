@@ -6,11 +6,11 @@ using System.Linq.Expressions;
 
 namespace LinqToDB.Linq.Builder
 {
-	using Common.Internal;
-	using Extensions;
+	using LinqToDB.Common.Internal;
 	using LinqToDB.Expressions;
-	using Mapping;
-	using SqlQuery;
+	using LinqToDB.Extensions;
+	using LinqToDB.Internal.SqlQuery;
+	using LinqToDB.SqlQuery;
 
 	[BuildsMethodCall("Average", "Min", "Max", "Sum", "Count", "LongCount")]
 	[BuildsMethodCall("AverageAsync", "MinAsync", "MaxAsync", "SumAsync", "CountAsync", "LongCountAsync", 

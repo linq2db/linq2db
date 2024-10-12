@@ -4,7 +4,7 @@ using LinqToDB.Schema;
 using LinqToDB.CodeModel;
 using LinqToDB.Data;
 using LinqToDB.SqlProvider;
-using LinqToDB.SqlQuery;
+using LinqToDB.Internal.SqlQuery;
 
 namespace LinqToDB.DataModel
 {

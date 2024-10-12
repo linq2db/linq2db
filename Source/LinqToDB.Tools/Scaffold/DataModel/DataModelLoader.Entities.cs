@@ -7,7 +7,7 @@ using LinqToDB.Metadata;
 using LinqToDB.Naming;
 using LinqToDB.Scaffold.Internal;
 using LinqToDB.Schema;
-using LinqToDB.SqlQuery;
+using LinqToDB.Internal.SqlQuery;
 
 namespace LinqToDB.Scaffold
 {

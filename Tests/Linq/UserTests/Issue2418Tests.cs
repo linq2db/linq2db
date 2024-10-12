@@ -8,7 +8,7 @@ using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.Expressions;
 using LinqToDB.Mapping;
-using LinqToDB.SqlQuery;
+using LinqToDB.Internal.SqlQuery;
 using NUnit.Framework;
 
 namespace Tests.UserTests

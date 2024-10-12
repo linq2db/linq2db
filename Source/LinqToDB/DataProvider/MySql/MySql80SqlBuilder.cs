@@ -1,16 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Data.Common;
-using System.Globalization;
-using System.Linq;
-using System.Text;
+﻿using System.Text;
 
 namespace LinqToDB.DataProvider.MySql
 {
-	using Extensions;
-	using Mapping;
-	using SqlProvider;
-	using SqlQuery;
+	using LinqToDB.Internal.SqlQuery;
+	using LinqToDB.Mapping;
+	using LinqToDB.SqlProvider;
 
 	sealed class MySql80SqlBuilder : MySqlSqlBuilder
 	{

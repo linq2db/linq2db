@@ -1,13 +1,11 @@
-﻿using System;
-using System.Linq.Expressions;
+﻿using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace LinqToDB.Linq
 {
-	using Common.Internal;
-	using Data;
-	using SqlQuery;
+	using LinqToDB.Data;
+	using LinqToDB.Internal.SqlQuery;
 
 	abstract class QueryRunnerBase : IQueryRunner
 	{

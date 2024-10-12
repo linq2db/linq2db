@@ -4,8 +4,8 @@ using System.Linq.Expressions;
 
 namespace LinqToDB.Linq.Builder
 {
+	using LinqToDB.Internal.SqlQuery;
 	using LinqToDB.Mapping;
-	using SqlQuery;
 
 	[DebuggerDisplay("{BuildContextDebuggingHelper.GetContextInfo(this)}")]
 	abstract class BuildContextBase : IBuildContext

@@ -7,12 +7,12 @@ using System.Threading.Tasks;
 
 namespace LinqToDB.Linq
 {
-	using Common;
-	using Common.Internal.Cache;
-	using Mapping;
-	using SqlQuery;
-	using Tools;
-	using Infrastructure;
+	using LinqToDB.Common;
+	using LinqToDB.Common.Internal.Cache;
+	using LinqToDB.Infrastructure;
+	using LinqToDB.Internal.SqlQuery;
+	using LinqToDB.Mapping;
+	using LinqToDB.Tools;
 
 	static partial class QueryRunner
 	{

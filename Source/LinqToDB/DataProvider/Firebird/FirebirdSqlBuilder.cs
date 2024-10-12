@@ -11,11 +11,12 @@ using System.Text;
 
 namespace LinqToDB.DataProvider.Firebird
 {
-	using Common;
-	using Common.Internal;
-	using Mapping;
-	using SqlQuery;
-	using SqlProvider;
+	using LinqToDB.Common;
+	using LinqToDB.Common.Internal;
+	using LinqToDB.Internal.SqlQuery;
+	using LinqToDB.Mapping;
+	using LinqToDB.SqlProvider;
+	using LinqToDB.SqlQuery;
 
 	public partial class FirebirdSqlBuilder : BasicSqlBuilder<FirebirdOptions>
 	{

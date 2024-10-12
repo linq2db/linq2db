@@ -7,10 +7,11 @@ using System.Text;
 
 namespace LinqToDB.DataProvider.SqlServer
 {
-	using Common;
-	using Mapping;
-	using SqlProvider;
-	using SqlQuery;
+	using LinqToDB.Common;
+	using LinqToDB.DataProvider;
+	using LinqToDB.Internal.SqlQuery;
+	using LinqToDB.Mapping;
+	using LinqToDB.SqlProvider;
 
 	abstract class SqlServerSqlBuilder : BasicSqlBuilder<SqlServerOptions>
 	{

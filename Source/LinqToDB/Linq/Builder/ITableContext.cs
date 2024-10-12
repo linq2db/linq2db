@@ -3,7 +3,7 @@ using System.Reflection;
 
 namespace LinqToDB.Linq.Builder
 {
-	using LinqToDB.SqlQuery;
+	using LinqToDB.Internal.SqlQuery;
 
 	interface ITableContext : IBuildContext
 	{

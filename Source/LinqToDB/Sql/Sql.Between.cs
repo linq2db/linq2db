@@ -2,7 +2,7 @@
 
 namespace LinqToDB
 {
-	using SqlQuery;
+	using LinqToDB.Internal.SqlQuery;
 
 	partial class Sql
 	{

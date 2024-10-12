@@ -5,7 +5,7 @@ using JetBrains.Annotations;
 
 namespace LinqToDB
 {
-	using SqlQuery;
+	using LinqToDB.Internal.SqlQuery;
 
 	/// <summary>
 	/// Provides table mapping flags to specify temporary table kind if mapped table is temporary table

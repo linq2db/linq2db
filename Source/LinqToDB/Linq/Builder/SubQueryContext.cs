@@ -6,8 +6,8 @@ using System.Linq.Expressions;
 namespace LinqToDB.Linq.Builder
 {
 	using LinqToDB.Expressions;
-	using Mapping;
-	using SqlQuery;
+	using LinqToDB.Internal.SqlQuery;
+	using LinqToDB.Mapping;
 
 	[DebuggerDisplay("{BuildContextDebuggingHelper.GetContextInfo(this)}")]
 	class SubQueryContext : BuildContextBase

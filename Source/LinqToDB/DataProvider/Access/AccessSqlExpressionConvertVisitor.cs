@@ -2,10 +2,11 @@
 
 namespace LinqToDB.DataProvider.Access
 {
-	using Extensions;
-	using Linq;
-	using SqlProvider;
-	using SqlQuery;
+	using LinqToDB.DataProvider;
+	using LinqToDB.Extensions;
+	using LinqToDB.Internal.SqlQuery;
+	using LinqToDB.Linq;
+	using LinqToDB.SqlProvider;
 
 	public class AccessSqlExpressionConvertVisitor : SqlExpressionConvertVisitor
 	{

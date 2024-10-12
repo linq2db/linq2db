@@ -8,7 +8,7 @@ using LinqToDB.CodeModel;
 using LinqToDB.Metadata;
 using LinqToDB.Scaffold;
 using LinqToDB.SqlProvider;
-using LinqToDB.SqlQuery;
+using LinqToDB.Internal.SqlQuery;
 
 namespace LinqToDB.DataModel
 {

@@ -1,6 +1,7 @@
 ﻿namespace LinqToDB.DataProvider.SqlServer
 {
-	using SqlQuery;
+	using LinqToDB.Internal.SqlQuery;
+	using LinqToDB.SqlQuery;
 
 	partial class SqlServer2012SqlBuilder
 	{

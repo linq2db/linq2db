@@ -4,7 +4,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using JetBrains.Annotations;
 using LinqToDB.Linq;
-using LinqToDB.SqlQuery;
+using LinqToDB.Internal.SqlQuery;
 
 namespace Tests
 {

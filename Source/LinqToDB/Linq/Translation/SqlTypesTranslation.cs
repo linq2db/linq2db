@@ -4,8 +4,9 @@ using System.Reflection;
 
 namespace LinqToDB.Linq.Translation
 {
-	using Common;
-	using SqlQuery;
+	using LinqToDB.Common;
+	using LinqToDB.Internal.SqlQuery;
+	using LinqToDB.SqlQuery;
 
 	public class SqlTypesTranslationDefault : IMemberTranslator
 	{

@@ -4,9 +4,8 @@ using System.Linq.Expressions;
 
 namespace LinqToDB.Linq.Builder
 {
-	using Common;
 	using LinqToDB.Expressions;
-	using SqlQuery;
+	using LinqToDB.Internal.SqlQuery;
 
 	[BuildsMethodCall("Join", "InnerJoin", "LeftJoin", "RightJoin", "FullJoin", "CrossJoin")]
 	sealed class AllJoinsLinqBuilder : MethodCallBuilder

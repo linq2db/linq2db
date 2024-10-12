@@ -3,8 +3,9 @@ using System.Collections.Generic;
 
 namespace LinqToDB.SqlProvider
 {
-	using Common;
-	using SqlQuery;
+	using LinqToDB.Common;
+	using LinqToDB.Internal.SqlQuery;
+	using LinqToDB.SqlQuery;
 
 	public abstract partial class BasicSqlBuilder
 	{

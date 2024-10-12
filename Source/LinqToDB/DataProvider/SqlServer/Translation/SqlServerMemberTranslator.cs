@@ -4,9 +4,9 @@ using System.Linq.Expressions;
 
 namespace LinqToDB.DataProvider.SqlServer.Translation
 {
-	using Common;
-	using Linq.Translation;
-	using SqlQuery;
+	using LinqToDB.Common;
+	using LinqToDB.Internal.SqlQuery;
+	using LinqToDB.Linq.Translation;
 
 	public class SqlServerMemberTranslator : ProviderMemberTranslatorDefault
 	{

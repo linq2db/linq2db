@@ -8,10 +8,11 @@ using System.Numerics;
 
 namespace LinqToDB.SqlQuery
 {
-	using Common;
-	using Common.Internal;
-	using Extensions;
-	using Mapping;
+	using LinqToDB.Common;
+	using LinqToDB.Common.Internal;
+	using LinqToDB.Extensions;
+	using LinqToDB.Internal.SqlQuery;
+	using LinqToDB.Mapping;
 
 	public class SqlDataType : ISqlExpression, IEquatable<SqlDataType>
 	{
@@ -403,7 +404,7 @@ namespace LinqToDB.SqlQuery
 
 		#region ISqlExpression Members
 
-		public int  Precedence => SqlQuery.Precedence.Primary;
+		public int  Precedence => LinqToDB.SqlQuery.Precedence.Primary;
 		public Type SystemType => Type.SystemType;
 
 		#endregion

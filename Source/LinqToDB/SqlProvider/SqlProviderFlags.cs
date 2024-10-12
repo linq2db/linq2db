@@ -6,9 +6,9 @@ using System.Runtime.Serialization;
 
 namespace LinqToDB.SqlProvider
 {
-	using Common;
-	using DataProvider;
-	using SqlQuery;
+	using LinqToDB.Common;
+	using LinqToDB.DataProvider;
+	using LinqToDB.Internal.SqlQuery;
 
 	[DataContract]
 	public sealed class SqlProviderFlags

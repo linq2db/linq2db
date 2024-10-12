@@ -1,11 +1,10 @@
-﻿using System;
-using System.Linq;
+﻿using System.Linq;
 
 namespace LinqToDB.DataProvider.Sybase
 {
-	using SqlProvider;
-	using SqlQuery;
-	using Mapping;
+	using LinqToDB.Internal.SqlQuery;
+	using LinqToDB.Mapping;
+	using LinqToDB.SqlProvider;
 
 	sealed class SybaseSqlOptimizer : BasicSqlOptimizer
 	{

@@ -6,10 +6,10 @@ using System.Text;
 
 namespace LinqToDB.DataProvider.Oracle
 {
-	using Common;
-	using Expressions;
-	using Mapping;
-	using SqlQuery;
+	using LinqToDB.Common;
+	using LinqToDB.Expressions;
+	using LinqToDB.Mapping;
+	using LinqToDB.SqlQuery;
 
 	public sealed class OracleMappingSchema : LockedMappingSchema
 	{

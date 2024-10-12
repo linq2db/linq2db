@@ -7,11 +7,11 @@ using System.Reflection;
 
 namespace LinqToDB.Linq.Builder
 {
-	using Extensions;
 	using LinqToDB.Expressions;
-	using Mapping;
-	using Reflection;
-	using SqlQuery;
+	using LinqToDB.Extensions;
+	using LinqToDB.Internal.SqlQuery;
+	using LinqToDB.Mapping;
+	using LinqToDB.Reflection;
 
 	partial class TableBuilder
 	{

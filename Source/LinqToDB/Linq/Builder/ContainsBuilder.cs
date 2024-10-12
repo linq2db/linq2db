@@ -4,10 +4,10 @@ using System.Linq.Expressions;
 
 namespace LinqToDB.Linq.Builder
 {
-	using Extensions;
 	using LinqToDB.Expressions;
-	using Mapping;
-	using SqlQuery;
+	using LinqToDB.Extensions;
+	using LinqToDB.Internal.SqlQuery;
+	using LinqToDB.Mapping;
 
 	[BuildsMethodCall("Contains")]
 	[BuildsMethodCall("ContainsAsync", CanBuildName = nameof(CanBuildAsyncMethod))]

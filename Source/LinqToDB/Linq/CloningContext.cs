@@ -6,11 +6,11 @@ using System.Linq.Expressions;
 
 namespace LinqToDB.Linq
 {
-	using Builder;
-	using Common;
+	using LinqToDB.Common;
 	using LinqToDB.Expressions;
-	using SqlQuery;
-	
+	using LinqToDB.Internal.SqlQuery;
+	using LinqToDB.Linq.Builder;
+
 	class CloningContext
 	{
 		Dictionary<IQueryElement, IQueryElement> _queryElements    = new (Utils.ObjectReferenceEqualityComparer<IQueryElement>.Default);

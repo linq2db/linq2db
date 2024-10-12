@@ -2,7 +2,7 @@
 
 namespace LinqToDB.Linq.Builder
 {
-	using SqlQuery;
+	using LinqToDB.Internal.SqlQuery;
 
 	internal sealed class BuildInfo
 	{

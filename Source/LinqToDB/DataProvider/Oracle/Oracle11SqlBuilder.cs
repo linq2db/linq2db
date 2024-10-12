@@ -1,10 +1,8 @@
-﻿using System;
-
-namespace LinqToDB.DataProvider.Oracle
+﻿namespace LinqToDB.DataProvider.Oracle
 {
-	using Mapping;
-	using SqlQuery;
-	using SqlProvider;
+	using LinqToDB.Internal.SqlQuery;
+	using LinqToDB.Mapping;
+	using LinqToDB.SqlProvider;
 
 	sealed class Oracle11SqlBuilder : OracleSqlBuilderBase
 	{

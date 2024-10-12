@@ -3,9 +3,9 @@ using System.Linq.Expressions;
 
 namespace LinqToDB.DataProvider.ClickHouse.Translation
 {
-	using Common;
-	using Linq.Translation;
-	using SqlQuery;
+	using LinqToDB.Common;
+	using LinqToDB.Internal.SqlQuery;
+	using LinqToDB.Linq.Translation;
 
 	public class ClickHouseMemberTranslator : ProviderMemberTranslatorDefault
 	{

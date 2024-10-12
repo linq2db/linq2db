@@ -8,9 +8,9 @@ using System.Xml;
 
 namespace LinqToDB.DataProvider.SqlCe
 {
-	using Common;
-	using Mapping;
-	using SqlQuery;
+	using LinqToDB.Common;
+	using LinqToDB.Mapping;
+	using LinqToDB.SqlQuery;
 
 	public sealed class SqlCeMappingSchema : LockedMappingSchema
 	{

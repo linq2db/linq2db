@@ -1,15 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq.Expressions;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using System.Linq.Expressions;
 
 namespace LinqToDB.Linq.Builder
 {
 	using LinqToDB.Expressions;
-	using Extensions;
-	using Mapping;
-	using SqlQuery;
+	using LinqToDB.Extensions;
+	using LinqToDB.Internal.SqlQuery;
+	using LinqToDB.Mapping;
 
 	internal sealed class EagerLoading
 	{

@@ -6,10 +6,10 @@ using System.Linq.Expressions;
 
 namespace LinqToDB.Linq.Builder
 {
-	using Extensions;
-	using Mapping;
 	using LinqToDB.Expressions;
-	using SqlQuery;
+	using LinqToDB.Extensions;
+	using LinqToDB.Internal.SqlQuery;
+	using LinqToDB.Mapping;
 
 	internal static class SequenceHelper
 	{

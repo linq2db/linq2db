@@ -7,17 +7,17 @@ using System.Threading.Tasks;
 
 namespace LinqToDB.Remote
 {
-	using Common;
-	using Data;
-	using Expressions;
-	using Extensions;
-	using Linq;
-	using Mapping;
-	using SqlQuery;
-	using Tools;
-	using Infrastructure;
-	using Linq.Translation;
-	using Interceptors;
+	using LinqToDB.Common;
+	using LinqToDB.Data;
+	using LinqToDB.Expressions;
+	using LinqToDB.Extensions;
+	using LinqToDB.Infrastructure;
+	using LinqToDB.Interceptors;
+	using LinqToDB.Internal.SqlQuery;
+	using LinqToDB.Linq;
+	using LinqToDB.Linq.Translation;
+	using LinqToDB.Mapping;
+	using LinqToDB.Tools;
 
 	public class LinqService : ILinqService
 	{

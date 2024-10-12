@@ -2,7 +2,8 @@
 
 namespace LinqToDB.Mapping
 {
-	using SqlQuery;
+	using LinqToDB.Internal.SqlQuery;
+	using LinqToDB.SqlQuery;
 
 	/// <summary>
 	/// Configures mapping of mapping class member to database column.

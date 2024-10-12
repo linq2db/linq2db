@@ -4,7 +4,7 @@ using System.Linq.Expressions;
 namespace LinqToDB.Linq.Builder
 {
 	using LinqToDB.Mapping;
-	using LinqToDB.SqlQuery;
+	using LinqToDB.Internal.SqlQuery;
 
 	class EagerContext : BuildContextBase
 	{

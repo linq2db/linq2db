@@ -1,7 +1,7 @@
 ﻿using System.Reflection;
 using LinqToDB.Metadata;
 using LinqToDB.Schema;
-using LinqToDB.SqlQuery;
+using LinqToDB.Internal.SqlQuery;
 
 namespace LinqToDB.DataModel
 {

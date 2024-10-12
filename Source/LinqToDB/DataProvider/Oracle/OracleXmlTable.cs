@@ -8,11 +8,12 @@ using System.Text;
 
 namespace LinqToDB.DataProvider.Oracle
 {
-	using Common.Internal;
-	using Expressions;
-	using SqlProvider;
-	using Mapping;
-	using SqlQuery;
+	using LinqToDB.Common.Internal;
+	using LinqToDB.Expressions;
+	using LinqToDB.Internal.SqlQuery;
+	using LinqToDB.Mapping;
+	using LinqToDB.SqlProvider;
+	using LinqToDB.SqlQuery;
 
 	public static partial class OracleTools
 	{

@@ -5,7 +5,7 @@ using LinqToDB.CodeModel;
 using LinqToDB.DataModel;
 using LinqToDB.Naming;
 using LinqToDB.Schema;
-using LinqToDB.SqlQuery;
+using LinqToDB.Internal.SqlQuery;
 
 namespace LinqToDB.Scaffold
 {

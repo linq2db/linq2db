@@ -9,7 +9,7 @@ namespace Tests.UserTests
 	using LinqToDB;
 	using LinqToDB.Data;
 	using LinqToDB.Mapping;
-	using LinqToDB.SqlQuery;
+	using LinqToDB.Internal.SqlQuery;
 
 	[TestFixture]
 	public class Issue773Tests : TestBase

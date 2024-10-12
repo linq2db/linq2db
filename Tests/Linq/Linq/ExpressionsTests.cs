@@ -7,15 +7,16 @@ using System.Threading.Tasks;
 using FluentAssertions;
 
 using LinqToDB;
+using LinqToDB.Common;
+using LinqToDB.Data;
 using LinqToDB.Linq;
 using LinqToDB.Mapping;
 using LinqToDB.SqlQuery;
+
 using NUnit.Framework;
 
 namespace Tests.Linq
 {
-	using LinqToDB.Common;
-	using LinqToDB.Data;
 	using Model;
 
 	[TestFixture]

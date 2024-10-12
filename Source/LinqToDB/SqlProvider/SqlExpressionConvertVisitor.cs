@@ -6,12 +6,13 @@ using System.Linq;
 
 namespace LinqToDB.SqlProvider
 {
-	using Common;
-	using Extensions;
-	using Linq;
-	using Mapping;
-	using SqlQuery;
-	using SqlQuery.Visitors;
+	using LinqToDB.Common;
+	using LinqToDB.Extensions;
+	using LinqToDB.Internal.SqlQuery;
+	using LinqToDB.Internal.SqlQuery.Visitors;
+	using LinqToDB.Linq;
+	using LinqToDB.Mapping;
+	using LinqToDB.SqlQuery;
 
 	public class SqlExpressionConvertVisitor : SqlQueryVisitor
 	{

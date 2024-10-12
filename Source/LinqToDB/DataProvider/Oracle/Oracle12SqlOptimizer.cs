@@ -1,8 +1,8 @@
 ﻿namespace LinqToDB.DataProvider.Oracle
 {
-	using Mapping;
-	using SqlProvider;
-	using SqlQuery;
+	using LinqToDB.Internal.SqlQuery;
+	using LinqToDB.Mapping;
+	using LinqToDB.SqlProvider;
 
 	public class Oracle12SqlOptimizer : Oracle11SqlOptimizer
 	{

@@ -1,9 +1,9 @@
 ﻿namespace LinqToDB.DataProvider
 {
-	using Common.Internal;
-	using SqlQuery;
-	using SqlQuery.Visitors;
-	using SqlProvider;
+	using LinqToDB.Common.Internal;
+	using LinqToDB.Internal.SqlQuery;
+	using LinqToDB.Internal.SqlQuery.Visitors;
+	using LinqToDB.SqlProvider;
 
 	public static class SqlProviderHelper
 	{

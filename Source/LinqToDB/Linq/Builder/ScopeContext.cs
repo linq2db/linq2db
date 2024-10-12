@@ -4,7 +4,7 @@ namespace LinqToDB.Linq.Builder
 {
 	using LinqToDB.Expressions;
 	using LinqToDB.Mapping;
-	using LinqToDB.SqlQuery;
+	using LinqToDB.Internal.SqlQuery;
 
 	class ScopeContext : BuildContextBase
 	{

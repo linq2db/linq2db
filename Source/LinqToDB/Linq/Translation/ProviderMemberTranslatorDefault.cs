@@ -4,10 +4,10 @@ using System.Linq.Expressions;
 
 namespace LinqToDB.Linq.Translation
 {
-	using Common;
-	using Extensions;
+	using LinqToDB.Common;
 	using LinqToDB.Expressions;
-	using SqlQuery;
+	using LinqToDB.Extensions;
+	using LinqToDB.Internal.SqlQuery;
 
 	public abstract class ProviderMemberTranslatorDefault : MemberTranslatorBase
 	{

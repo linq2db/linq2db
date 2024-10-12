@@ -7,7 +7,7 @@ using LinqToDB.Common;
 using LinqToDB.Data;
 using LinqToDB.Linq;
 using LinqToDB.Mapping;
-using LinqToDB.SqlQuery;
+using LinqToDB.Internal.SqlQuery;
 
 using NUnit.Framework;
 using Tests.Model;

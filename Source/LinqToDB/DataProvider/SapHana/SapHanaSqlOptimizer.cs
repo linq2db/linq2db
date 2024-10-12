@@ -1,10 +1,8 @@
-﻿using System;
-
-namespace LinqToDB.DataProvider.SapHana
+﻿namespace LinqToDB.DataProvider.SapHana
 {
-	using SqlProvider;
-	using SqlQuery;
-	using Mapping;
+	using LinqToDB.Internal.SqlQuery;
+	using LinqToDB.Mapping;
+	using LinqToDB.SqlProvider;
 
 	class SapHanaSqlOptimizer : BasicSqlOptimizer
 	{

@@ -14,6 +14,7 @@ using NUnit.Framework;
 
 namespace Tests.Linq
 {
+	using LinqToDB.Internal.SqlQuery;
 	using LinqToDB.Linq;
 	using Model;
 

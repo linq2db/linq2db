@@ -6,10 +6,10 @@ using System.Linq.Expressions;
 
 namespace LinqToDB.DataProvider.SapHana
 {
-	using Expressions;
-	using Mapping;
-	using SqlProvider;
-	using SqlQuery;
+	using LinqToDB.Expressions;
+	using LinqToDB.Internal.SqlQuery;
+	using LinqToDB.Mapping;
+	using LinqToDB.SqlProvider;
 
 	public class CalculationViewInputParametersExpressionAttribute : Sql.TableExpressionAttribute
 	{

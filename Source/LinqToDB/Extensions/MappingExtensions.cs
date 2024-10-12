@@ -5,10 +5,10 @@ using System.Text;
 
 namespace LinqToDB.Extensions
 {
-	using Common;
-	using Data;
-	using Mapping;
-	using SqlQuery;
+	using LinqToDB.Common;
+	using LinqToDB.Data;
+	using LinqToDB.Internal.SqlQuery;
+	using LinqToDB.Mapping;
 
 	static class MappingExtensions
 	{
@@ -20,7 +20,7 @@ namespace LinqToDB.Extensions
 		}
 
 		public static SqlValue GetSqlValue<T>(this MappingSchema mappingSchema, DbDataType type, T originalValue)
-			where T: notnull
+			where T : notnull
 		{
 			var converter = mappingSchema.GetConverter<T, DataParameter>(ConversionType.ToDatabase);
 

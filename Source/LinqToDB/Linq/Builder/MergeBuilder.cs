@@ -5,9 +5,9 @@ using System.Reflection;
 
 namespace LinqToDB.Linq.Builder
 {
-	using Common;
+	using LinqToDB.Common;
 	using LinqToDB.Expressions;
-	using SqlQuery;
+	using LinqToDB.Internal.SqlQuery;
 
 	using static LinqToDB.Reflection.Methods.LinqToDB.Merge;
 

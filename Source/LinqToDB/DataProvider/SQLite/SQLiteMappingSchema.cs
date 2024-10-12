@@ -5,9 +5,9 @@ using System.Text;
 
 namespace LinqToDB.DataProvider.SQLite
 {
-	using Common;
-	using Mapping;
-	using SqlQuery;
+	using LinqToDB.Common;
+	using LinqToDB.Mapping;
+	using LinqToDB.SqlQuery;
 
 	public class SQLiteMappingSchema : LockedMappingSchema
 	{

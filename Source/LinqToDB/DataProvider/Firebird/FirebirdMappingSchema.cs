@@ -6,10 +6,10 @@ using System.Text;
 
 namespace LinqToDB.DataProvider.Firebird
 {
-	using Common;
-	using Data;
-	using Mapping;
-	using SqlQuery;
+	using LinqToDB.Common;
+	using LinqToDB.Data;
+	using LinqToDB.Mapping;
+	using LinqToDB.SqlQuery;
 
 	sealed class FirebirdMappingSchema : LockedMappingSchema
 	{

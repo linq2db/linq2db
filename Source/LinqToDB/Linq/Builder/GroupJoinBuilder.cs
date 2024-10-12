@@ -4,11 +4,11 @@ using System.Linq.Expressions;
 
 namespace LinqToDB.Linq.Builder
 {
-	using Reflection;
-	using SqlQuery;
-	using Common;
-	using Mapping;
+	using LinqToDB.Common;
 	using LinqToDB.Expressions;
+	using LinqToDB.Internal.SqlQuery;
+	using LinqToDB.Mapping;
+	using LinqToDB.Reflection;
 
 	[BuildsMethodCall("GroupJoin")]
 	sealed class GroupJoinBuilder : MethodCallBuilder

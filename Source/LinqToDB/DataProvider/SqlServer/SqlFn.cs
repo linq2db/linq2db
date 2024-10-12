@@ -9,10 +9,10 @@ using JetBrains.Annotations;
 
 namespace LinqToDB.DataProvider.SqlServer
 {
-	using Common;
-	using Expressions;
-	using Mapping;
-	using SqlQuery;
+	using LinqToDB.Expressions;
+	using LinqToDB.Internal.SqlQuery;
+	using LinqToDB.Mapping;
+	using LinqToDB.SqlQuery;
 
 	[PublicAPI]
 	public static class SqlFn

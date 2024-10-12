@@ -4,9 +4,10 @@ using System.Linq.Expressions;
 
 namespace LinqToDB.DataProvider.Informix.Translation
 {
-	using Common;
-	using Linq.Translation;
-	using SqlQuery;
+	using LinqToDB.Common;
+	using LinqToDB.Internal.SqlQuery;
+	using LinqToDB.Linq.Translation;
+	using LinqToDB.SqlQuery;
 
 	public class InformixMemberTranslator : ProviderMemberTranslatorDefault
 	{

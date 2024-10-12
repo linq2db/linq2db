@@ -14,7 +14,7 @@ namespace LinqToDB.Linq.Builder
 	using LinqToDB.Expressions.Visitors;
 	using LinqToDB.Extensions;
 	using LinqToDB.Mapping;
-	using LinqToDB.SqlQuery;
+	using LinqToDB.Internal.SqlQuery;
 
 	public class ExpressionTreeOptimizationContext
 	{

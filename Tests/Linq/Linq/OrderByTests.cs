@@ -5,7 +5,7 @@ using FluentAssertions;
 
 using LinqToDB;
 using LinqToDB.Linq;
-using LinqToDB.SqlQuery;
+using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Tools;
 
 using NUnit.Framework;

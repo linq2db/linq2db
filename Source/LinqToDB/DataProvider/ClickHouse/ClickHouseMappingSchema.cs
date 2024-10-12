@@ -9,9 +9,9 @@ using System.Text;
 
 namespace LinqToDB.DataProvider.ClickHouse
 {
-	using Common;
-	using Mapping;
-	using SqlQuery;
+	using LinqToDB.Common;
+	using LinqToDB.Mapping;
+	using LinqToDB.SqlQuery;
 
 	sealed class ClickHouseMappingSchema : LockedMappingSchema
 	{

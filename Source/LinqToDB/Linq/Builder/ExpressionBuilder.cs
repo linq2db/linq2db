@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data.Common;
-using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Linq.Expressions;
@@ -10,17 +9,17 @@ using System.Runtime.CompilerServices;
 
 namespace LinqToDB.Linq.Builder
 {
-	using Common;
-	using Common.Internal;
-	using Extensions;
-	using Infrastructure;
+	using LinqToDB.Common;
+	using LinqToDB.Common.Internal;
+	using LinqToDB.DataProvider;
 	using LinqToDB.Expressions;
-	using Mapping;
-	using SqlQuery;
-	using Tools;
-	using Translation;
-	using Visitors;
-	using DataProvider;
+	using LinqToDB.Extensions;
+	using LinqToDB.Infrastructure;
+	using LinqToDB.Internal.SqlQuery;
+	using LinqToDB.Linq.Builder.Visitors;
+	using LinqToDB.Linq.Translation;
+	using LinqToDB.Mapping;
+	using LinqToDB.Tools;
 
 	internal sealed partial class ExpressionBuilder : IExpressionEvaluator
 	{

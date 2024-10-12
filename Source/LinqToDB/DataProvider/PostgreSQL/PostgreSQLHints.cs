@@ -7,10 +7,10 @@ using JetBrains.Annotations;
 
 namespace LinqToDB.DataProvider.PostgreSQL
 {
-	using Expressions;
-	using Linq;
-	using SqlProvider;
-	using SqlQuery;
+	using LinqToDB.Expressions;
+	using LinqToDB.Internal.SqlQuery;
+	using LinqToDB.Linq;
+	using LinqToDB.SqlProvider;
 
 	// https://www.postgresql.org/docs/current/sql-select.html
 	//

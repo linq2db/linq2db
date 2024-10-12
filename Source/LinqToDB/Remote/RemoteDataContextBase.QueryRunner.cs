@@ -17,7 +17,7 @@ namespace LinqToDB.Remote
 	using LinqToDB.Extensions;
 	using LinqToDB.Linq;
 	using LinqToDB.SqlProvider;
-	using LinqToDB.SqlQuery;
+	using LinqToDB.Internal.SqlQuery;
 
 	public abstract partial class RemoteDataContextBase
 	{

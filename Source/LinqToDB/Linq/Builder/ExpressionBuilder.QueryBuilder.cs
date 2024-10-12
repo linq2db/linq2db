@@ -11,7 +11,7 @@ namespace LinqToDB.Linq.Builder
 	using LinqToDB.Expressions;
 	using LinqToDB.Expressions.Visitors;
 	using LinqToDB.Extensions;
-	using LinqToDB.SqlQuery;
+	using LinqToDB.Internal.SqlQuery;
 
 	internal partial class ExpressionBuilder
 	{

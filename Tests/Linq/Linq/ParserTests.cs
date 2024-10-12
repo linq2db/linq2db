@@ -2,7 +2,7 @@
 
 using LinqToDB;
 using LinqToDB.DataProvider.Oracle;
-using LinqToDB.SqlQuery;
+using LinqToDB.Internal.SqlQuery;
 
 using NUnit.Framework;
 

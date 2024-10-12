@@ -5,9 +5,9 @@ using System.Text;
 
 namespace LinqToDB.DataProvider.Access
 {
-	using Common;
-	using Mapping;
-	using SqlQuery;
+	using LinqToDB.Common;
+	using LinqToDB.Mapping;
+	using LinqToDB.SqlQuery;
 
 	sealed class AccessMappingSchema : LockedMappingSchema
 	{

@@ -14,7 +14,7 @@ namespace LinqToDB.Linq.Builder
 	using LinqToDB.Infrastructure;
 	using LinqToDB.Mapping;
 	using LinqToDB.Reflection;
-	using LinqToDB.SqlQuery;
+	using LinqToDB.Internal.SqlQuery;
 
 	sealed class ParametersContext
 	{

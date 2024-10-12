@@ -1,6 +1,6 @@
 ﻿namespace LinqToDB.DataProvider.SqlServer
 {
-	using LinqToDB.SqlQuery;
+	using LinqToDB.Internal.SqlQuery;
 	using Mapping;
 	using SqlProvider;
 

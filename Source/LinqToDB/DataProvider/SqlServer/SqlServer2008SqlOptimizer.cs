@@ -1,8 +1,8 @@
 ﻿namespace LinqToDB.DataProvider.SqlServer
 {
-	using Mapping;
-	using SqlProvider;
-	using SqlQuery;
+	using LinqToDB.Internal.SqlQuery;
+	using LinqToDB.Mapping;
+	using LinqToDB.SqlProvider;
 
 	sealed class SqlServer2008SqlOptimizer : SqlServerSqlOptimizer
 	{

@@ -10,12 +10,13 @@ using JetBrains.Annotations;
 
 namespace LinqToDB
 {
-	using Common;
-	using Expressions;
-	using Extensions;
-	using Linq;
-	using Mapping;
-	using SqlQuery;
+	using LinqToDB.Common;
+	using LinqToDB.Expressions;
+	using LinqToDB.Extensions;
+	using LinqToDB.Internal.SqlQuery;
+	using LinqToDB.Linq;
+	using LinqToDB.Mapping;
+	using LinqToDB.SqlQuery;
 
 	/// <summary>
 	/// Data context extension methods.

@@ -4,8 +4,9 @@ using System.Text.RegularExpressions;
 
 namespace LinqToDB
 {
-	using Expressions;
-	using SqlQuery;
+	using LinqToDB.Expressions;
+	using LinqToDB.Internal.SqlQuery;
+	using LinqToDB.SqlQuery;
 
 	public static partial class Sql
 	{

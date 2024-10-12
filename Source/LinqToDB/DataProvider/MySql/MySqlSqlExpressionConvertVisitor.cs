@@ -2,9 +2,23 @@
 
 namespace LinqToDB.DataProvider.MySql
 {
-	using Extensions;
-	using SqlProvider;
-	using SqlQuery;
+	using LinqToDB.Common;
+	using LinqToDB.Common.Internal;
+	using LinqToDB.Data;
+	using LinqToDB.Expressions;
+	using LinqToDB.Extensions;
+	using LinqToDB.Internal.SqlQuery;
+	using LinqToDB.Linq.Translation;
+	using LinqToDB.Mapping;
+	using LinqToDB.Reflection;
+	using LinqToDB.SqlQuery;
+	using LinqToDB.SqlProvider;
+	using LinqToDB.Common.Internal.Cache;
+	using LinqToDB.Tools;
+	using LinqToDB.Common.Logging;
+	using LinqToDB.Linq.Builder;
+	using LinqToDB.Infrastructure;
+	using LinqToDB.Interceptors;
 
 	public class MySqlSqlExpressionConvertVisitor : SqlExpressionConvertVisitor
 	{

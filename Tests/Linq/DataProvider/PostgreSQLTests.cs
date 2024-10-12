@@ -32,6 +32,8 @@ using NUnit.Framework.Internal.Builders;
 
 namespace Tests.DataProvider
 {
+	using LinqToDB.Internal.SqlQuery;
+
 	using Model;
 	using Npgsql;
 

@@ -9,7 +9,7 @@ using LinqToDB.Async;
 using LinqToDB.Interceptors;
 using LinqToDB.Linq;
 using LinqToDB.Mapping;
-using LinqToDB.SqlQuery;
+using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Tools;
 using LinqToDB.Tools.Comparers;
 using NUnit.Framework;

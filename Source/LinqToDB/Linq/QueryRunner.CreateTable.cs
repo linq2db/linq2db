@@ -1,13 +1,13 @@
-﻿using System;
-using System.Threading;
+﻿using System.Threading;
 using System.Threading.Tasks;
 
 namespace LinqToDB.Linq
 {
 	using LinqToDB.Expressions;
-	using Mapping;
-	using SqlQuery;
-	using Tools;
+	using LinqToDB.Internal.SqlQuery;
+	using LinqToDB.Mapping;
+	using LinqToDB.SqlQuery;
+	using LinqToDB.Tools;
 
 	static partial class QueryRunner
 	{

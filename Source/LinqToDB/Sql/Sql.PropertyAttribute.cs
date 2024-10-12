@@ -5,9 +5,9 @@ using System.Linq.Expressions;
 
 namespace LinqToDB
 {
-	using Expressions;
-	using Linq.Builder;
-	using SqlQuery;
+	using LinqToDB.Expressions;
+	using LinqToDB.Internal.SqlQuery;
+	using LinqToDB.Linq.Builder;
 
 	partial class Sql
 	{
@@ -79,7 +79,7 @@ namespace LinqToDB
 				if (string.IsNullOrEmpty(name))
 					throw new LinqToDBException($"Cannot retrieve property name for expression '{expression}'.");
 
-				var sqlExpr = new SqlExpression(expression.Type, name!, SqlQuery.Precedence.Primary, SqlFlags.IsPure,
+				var sqlExpr = new SqlExpression(expression.Type, name!, LinqToDB.SqlQuery.Precedence.Primary, SqlFlags.IsPure,
 					ToParametersNullabilityType(IsNullable), _canBeNull);
 
 				return ExpressionBuilder.CreatePlaceholder(query, sqlExpr, expression);

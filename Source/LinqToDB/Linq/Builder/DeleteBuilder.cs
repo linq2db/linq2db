@@ -6,7 +6,7 @@ using System.Linq.Expressions;
 namespace LinqToDB.Linq.Builder
 {
 	using LinqToDB.Expressions;
-	using SqlQuery;
+	using LinqToDB.Internal.SqlQuery;
 
 	[BuildsMethodCall(
 		nameof(LinqExtensions.Delete),

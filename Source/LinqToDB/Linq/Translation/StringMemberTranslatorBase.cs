@@ -3,7 +3,7 @@ using System.Linq.Expressions;
 
 namespace LinqToDB.Linq.Translation
 {
-	using SqlQuery;
+	using LinqToDB.Internal.SqlQuery;
 
 	public class StringMemberTranslatorBase : MemberTranslatorBase
 	{

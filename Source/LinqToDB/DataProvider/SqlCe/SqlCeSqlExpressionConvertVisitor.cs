@@ -2,10 +2,11 @@
 
 namespace LinqToDB.DataProvider.SqlCe
 {
-	using Extensions;
-	using SqlProvider;
-	using SqlQuery;
-	using Common;
+	using LinqToDB.Common;
+	using LinqToDB.Extensions;
+	using LinqToDB.Internal.SqlQuery;
+	using LinqToDB.SqlProvider;
+	using LinqToDB.SqlQuery;
 
 	public class SqlCeSqlExpressionConvertVisitor : SqlExpressionConvertVisitor
 	{

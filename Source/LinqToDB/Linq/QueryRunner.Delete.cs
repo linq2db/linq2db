@@ -6,11 +6,11 @@ using System.Threading.Tasks;
 
 namespace LinqToDB.Linq
 {
-	using Common;
-	using Common.Internal.Cache;
-	using SqlQuery;
-	using Tools;
-	using Infrastructure;
+	using LinqToDB.Common;
+	using LinqToDB.Common.Internal.Cache;
+	using LinqToDB.Infrastructure;
+	using LinqToDB.Internal.SqlQuery;
+	using LinqToDB.Tools;
 
 	static partial class QueryRunner
 	{

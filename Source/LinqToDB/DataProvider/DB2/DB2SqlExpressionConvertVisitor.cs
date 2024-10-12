@@ -1,10 +1,8 @@
-﻿using System;
-
-namespace LinqToDB.DataProvider.DB2
+﻿namespace LinqToDB.DataProvider.DB2
 {
-	using Extensions;
-	using SqlProvider;
-	using SqlQuery;
+	using LinqToDB.Extensions;
+	using LinqToDB.Internal.SqlQuery;
+	using LinqToDB.SqlProvider;
 
 	public class DB2SqlExpressionConvertVisitor : SqlExpressionConvertVisitor
 	{

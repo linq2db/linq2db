@@ -1,13 +1,11 @@
 ﻿using System;
 using System.Linq.Expressions;
 
-using LinqToDB.Mapping;
-
 namespace LinqToDB.Linq.Translation
 {
 	using LinqToDB.Expressions;
-
-	using SqlQuery;
+	using LinqToDB.Internal.SqlQuery;
+	using LinqToDB.Mapping;
 
 	[Flags]
 	public enum TranslationFlags

@@ -2,8 +2,8 @@
 
 namespace LinqToDB.DataProvider
 {
-	using SqlQuery;
-	using SqlQuery.Visitors;
+	using LinqToDB.Internal.SqlQuery;
+	using LinqToDB.Internal.SqlQuery.Visitors;
 
 	public class WrapParametersVisitor : SqlQueryVisitor
 	{

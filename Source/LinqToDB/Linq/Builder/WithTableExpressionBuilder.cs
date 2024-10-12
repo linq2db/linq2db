@@ -2,9 +2,8 @@
 
 namespace LinqToDB.Linq.Builder
 {
-	using Common;
 	using LinqToDB.Expressions;
-	using SqlQuery;
+	using LinqToDB.Internal.SqlQuery;
 
 	[BuildsMethodCall(nameof(LinqExtensions.With), nameof(LinqExtensions.WithTableExpression))]
 	sealed class WithTableExpressionBuilder : MethodCallBuilder

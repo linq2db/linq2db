@@ -7,12 +7,12 @@ using System.Linq.Expressions;
 
 namespace LinqToDB.Remote
 {
-	using Expressions;
-	using Extensions;
-	using Linq;
-	using Mapping;
-	using SqlQuery;
 	using LinqToDB.Common;
+	using LinqToDB.Expressions;
+	using LinqToDB.Extensions;
+	using LinqToDB.Internal.SqlQuery;
+	using LinqToDB.Linq;
+	using LinqToDB.Mapping;
 
 	public class DataService<T> : System.Data.Services.DataService<T>, IServiceProvider
 		where T : IDataContext

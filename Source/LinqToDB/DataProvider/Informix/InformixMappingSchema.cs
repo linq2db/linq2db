@@ -4,8 +4,9 @@ using System.Text;
 
 namespace LinqToDB.DataProvider.Informix
 {
-	using Mapping;
-	using SqlQuery;
+	using LinqToDB.Internal.SqlQuery;
+	using LinqToDB.Mapping;
+	using LinqToDB.SqlQuery;
 
 	sealed class InformixMappingSchema : LockedMappingSchema
 	{

@@ -2,7 +2,7 @@
 
 namespace LinqToDB.DataProvider.Informix
 {
-	using SqlQuery;
+	using LinqToDB.Internal.SqlQuery;
 
 	partial class InformixSqlBuilder
 	{

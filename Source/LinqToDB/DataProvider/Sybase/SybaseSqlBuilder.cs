@@ -5,10 +5,11 @@ using System.Text;
 
 namespace LinqToDB.DataProvider.Sybase
 {
-	using Common;
-	using Mapping;
-	using SqlProvider;
-	using SqlQuery;
+	using LinqToDB.Common;
+	using LinqToDB.Internal.SqlQuery;
+	using LinqToDB.Mapping;
+	using LinqToDB.SqlProvider;
+	using LinqToDB.SqlQuery;
 
 	sealed partial class SybaseSqlBuilder : BasicSqlBuilder
 	{

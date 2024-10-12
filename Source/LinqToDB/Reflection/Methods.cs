@@ -8,11 +8,14 @@ using System.Reflection;
 
 namespace LinqToDB.Reflection
 {
-	using Common;
-	using Expressions;
-	using Extensions;
-	using Linq;
-	using SqlQuery;
+	using LinqToDB.Common;
+	using LinqToDB.Common.Internal.Cache;
+	using LinqToDB.Data;
+	using LinqToDB.Expressions;
+	using LinqToDB.Extensions;
+	using LinqToDB.Internal.SqlQuery;
+	using LinqToDB.Linq;
+	using LinqToDB.Linq.Translation;
 
 	/// <summary>
 	/// This API supports the LinqToDB infrastructure and is not intended to be used  directly from your code.

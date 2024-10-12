@@ -13,10 +13,10 @@ using System.Text;
 
 namespace LinqToDB.DataProvider
 {
-	using Data;
-	using Mapping;
-	using SqlProvider;
-	using SqlQuery;
+	using LinqToDB.Data;
+	using LinqToDB.Internal.SqlQuery;
+	using LinqToDB.Mapping;
+	using LinqToDB.SqlProvider;
 
 	public class BasicBulkCopy
 	{

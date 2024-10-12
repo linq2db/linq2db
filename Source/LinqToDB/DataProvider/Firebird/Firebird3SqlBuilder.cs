@@ -1,10 +1,8 @@
-﻿using System.Text;
-
-namespace LinqToDB.DataProvider.Firebird
+﻿namespace LinqToDB.DataProvider.Firebird
 {
-	using Mapping;
-	using SqlProvider;
-	using SqlQuery;
+	using LinqToDB.Internal.SqlQuery;
+	using LinqToDB.Mapping;
+	using LinqToDB.SqlProvider;
 
 	public class Firebird3SqlBuilder : FirebirdSqlBuilder
 	{

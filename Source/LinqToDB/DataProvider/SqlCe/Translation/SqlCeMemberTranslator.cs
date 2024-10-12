@@ -4,9 +4,10 @@ using System.Linq.Expressions;
 
 namespace LinqToDB.DataProvider.SqlCe.Translation
 {
-	using Common;
-	using SqlQuery;
-	using Linq.Translation;
+	using LinqToDB.Common;
+	using LinqToDB.Internal.SqlQuery;
+	using LinqToDB.Linq.Translation;
+	using LinqToDB.SqlQuery;
 
 	public class SqlCeMemberTranslator : ProviderMemberTranslatorDefault
 	{

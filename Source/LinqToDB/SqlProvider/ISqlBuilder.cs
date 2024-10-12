@@ -1,13 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Data.Common;
 using System.Text;
 
 namespace LinqToDB.SqlProvider
 {
-	using Mapping;
-	using SqlQuery;
-	using Common;
+	using LinqToDB.Common;
+	using LinqToDB.Internal.SqlQuery;
+	using LinqToDB.Mapping;
 
 	public interface ISqlBuilder
 	{

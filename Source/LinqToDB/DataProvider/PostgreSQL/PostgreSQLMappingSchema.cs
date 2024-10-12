@@ -7,10 +7,10 @@ using System.Text;
 
 namespace LinqToDB.DataProvider.PostgreSQL
 {
-	using Common;
-	using Data;
-	using Mapping;
-	using SqlQuery;
+	using LinqToDB.Common;
+	using LinqToDB.Data;
+	using LinqToDB.Mapping;
+	using LinqToDB.SqlQuery;
 
 	sealed class PostgreSQLMappingSchema : LockedMappingSchema
 	{

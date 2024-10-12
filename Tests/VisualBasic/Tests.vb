@@ -20,7 +20,6 @@ Public Module VBTests
 		<Association(ThisKey:=NameOf(personid), OtherKey:=NameOf(Activity649.personid), CanBeNull:=False)> Public Property Activties As List(Of Activity649)
 	End Class
 
-
 	Public Function Issue649Test1(ByVal db As IDataContext) As IEnumerable(Of Object)
 		Return (From p In db.GetTable(Of Activity649)
 				Where p.added >= New Date(2017, 1, 1)

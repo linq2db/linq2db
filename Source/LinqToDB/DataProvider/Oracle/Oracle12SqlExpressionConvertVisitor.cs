@@ -1,5 +1,6 @@
 ﻿namespace LinqToDB.DataProvider.Oracle
 {
+	using LinqToDB.Internal.SqlQuery;
 	using LinqToDB.SqlQuery;
 
 	public class Oracle12SqlExpressionConvertVisitor : OracleSqlExpressionConvertVisitor

@@ -1,18 +1,18 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 
+using LinqToDB.Common;
+using LinqToDB.Common.Internal;
+using LinqToDB.Internal.SqlQuery;
+using LinqToDB.Internal.SqlQuery.Visitors;
+using LinqToDB.Mapping;
+using LinqToDB.SqlQuery;
+
 namespace LinqToDB.SqlProvider
 {
-	using Common;
-	using Common.Internal;
-	using SqlQuery;
-	using SqlQuery.Visitors;
-	using Mapping;
-
 	public class SqlExpressionOptimizerVisitor : SqlQueryVisitor
 	{
 		EvaluationContext           _evaluationContext  = default!;

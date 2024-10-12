@@ -5,9 +5,8 @@ using System.Linq.Expressions;
 
 namespace LinqToDB.Linq.Builder
 {
-	using Extensions;
 	using LinqToDB.Expressions;
-	using SqlQuery;
+	using LinqToDB.Internal.SqlQuery;
 
 	[BuildsExpression(ExpressionType.Call)]
 	sealed class QueryExtensionBuilder : MethodCallBuilder

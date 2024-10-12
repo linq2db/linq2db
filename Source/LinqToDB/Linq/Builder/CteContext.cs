@@ -1,13 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Linq.Expressions;
 
 namespace LinqToDB.Linq.Builder
 {
-	using SqlQuery;
-	using Common;
+	using LinqToDB.Common;
+	using LinqToDB.Common.Internal;
 	using LinqToDB.Expressions;
+	using LinqToDB.Internal.SqlQuery;
 	using LinqToDB.Mapping;
 
 	internal class CteContext : BuildContextBase

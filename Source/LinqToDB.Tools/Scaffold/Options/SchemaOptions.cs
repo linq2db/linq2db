@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Data;
 using LinqToDB.Schema;
-using LinqToDB.SqlQuery;
+using LinqToDB.Internal.SqlQuery;
 
 namespace LinqToDB.Scaffold
 {

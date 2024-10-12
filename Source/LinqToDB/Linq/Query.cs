@@ -19,7 +19,7 @@ namespace LinqToDB.Linq
 	using LinqToDB.Linq.Builder;
 	using LinqToDB.Mapping;
 	using LinqToDB.SqlProvider;
-	using LinqToDB.SqlQuery;
+	using LinqToDB.Internal.SqlQuery;
 	using LinqToDB.Tools;
 
 	public abstract class Query

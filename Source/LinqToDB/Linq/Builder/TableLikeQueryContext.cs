@@ -5,8 +5,8 @@ using System.Linq.Expressions;
 namespace LinqToDB.Linq.Builder
 {
 	using LinqToDB.Expressions;
-	using Mapping;
-	using SqlQuery;
+	using LinqToDB.Internal.SqlQuery;
+	using LinqToDB.Mapping;
 
 	sealed class TableLikeQueryContext : BuildContextBase
 	{

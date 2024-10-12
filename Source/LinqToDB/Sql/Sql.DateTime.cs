@@ -3,8 +3,9 @@ using System.Globalization;
 
 namespace LinqToDB
 {
-	using SqlQuery;
-	using Expressions;
+	using LinqToDB.Expressions;
+	using LinqToDB.Internal.SqlQuery;
+	using LinqToDB.SqlQuery;
 
 	using PN = ProviderName;
 

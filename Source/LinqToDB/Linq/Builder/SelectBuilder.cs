@@ -1,12 +1,10 @@
-﻿using System;
-using System.Diagnostics;
-using System.Linq.Expressions;
+﻿using System.Linq.Expressions;
 
 namespace LinqToDB.Linq.Builder
 {
 	using LinqToDB.Expressions;
-	using Mapping;
-	using SqlQuery;
+	using LinqToDB.Internal.SqlQuery;
+	using LinqToDB.Mapping;
 
 	[BuildsMethodCall("Select")]
 	sealed class SelectBuilder : MethodCallBuilder

@@ -17,6 +17,7 @@ namespace LinqToDB
 	using LinqToDB.Common;
 	using LinqToDB.Expressions;
 	using LinqToDB.Expressions.Visitors;
+	using LinqToDB.Internal.SqlQuery;
 	using LinqToDB.Linq;
 	using LinqToDB.SqlQuery;
 

@@ -1,13 +1,12 @@
 ﻿using System;
 using System.Data.Common;
-using System.Linq;
 using System.Linq.Expressions;
 
 namespace LinqToDB.Data
 {
-	using DataProvider;
-	using SqlProvider;
-	using SqlQuery;
+	using LinqToDB.DataProvider;
+	using LinqToDB.Internal.SqlQuery;
+	using LinqToDB.SqlProvider;
 
 	public partial class DataConnection
 	{

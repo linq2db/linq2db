@@ -1,8 +1,6 @@
-﻿using System.Linq.Expressions;
-
-namespace LinqToDB.Linq.Builder
+﻿namespace LinqToDB.Linq.Builder
 {
-	using SqlQuery;
+	using LinqToDB.Internal.SqlQuery;
 
 	public interface IToSqlConverter
 	{

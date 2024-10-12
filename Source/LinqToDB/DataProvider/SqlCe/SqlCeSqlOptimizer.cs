@@ -3,9 +3,10 @@ using System.Linq;
 
 namespace LinqToDB.DataProvider.SqlCe
 {
-	using Mapping;
-	using SqlProvider;
-	using SqlQuery;
+	using LinqToDB.Expressions;
+	using LinqToDB.Internal.SqlQuery;
+	using LinqToDB.Mapping;
+	using LinqToDB.SqlProvider;
 
 	sealed class SqlCeSqlOptimizer : BasicSqlOptimizer
 	{

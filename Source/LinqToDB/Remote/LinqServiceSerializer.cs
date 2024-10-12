@@ -10,10 +10,11 @@ using System.Text;
 
 namespace LinqToDB.Remote
 {
-	using Common;
-	using Extensions;
-	using Mapping;
-	using SqlQuery;
+	using LinqToDB.Common;
+	using LinqToDB.Extensions;
+	using LinqToDB.Internal.SqlQuery;
+	using LinqToDB.Mapping;
+	using LinqToDB.SqlQuery;
 
 	static class LinqServiceSerializer
 	{

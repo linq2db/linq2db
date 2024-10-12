@@ -4,7 +4,7 @@ using System.Diagnostics.CodeAnalysis;
 using LinqToDB.CodeModel;
 using LinqToDB.Metadata;
 using LinqToDB.Scaffold;
-using LinqToDB.SqlQuery;
+using LinqToDB.Internal.SqlQuery;
 
 namespace LinqToDB.DataModel
 {

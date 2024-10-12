@@ -4,10 +4,11 @@ using System.Linq;
 
 namespace LinqToDB.DataProvider
 {
-	using Common.Internal;
-	using Common;
-	using SqlQuery;
-	using SqlQuery.Visitors;
+	using LinqToDB.Common;
+	using LinqToDB.Common.Internal;
+	using LinqToDB.SqlQuery;
+	using LinqToDB.Internal.SqlQuery;
+	using LinqToDB.Internal.SqlQuery.Visitors;
 
 	public static class AliasesHelper
 	{

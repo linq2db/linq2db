@@ -2,9 +2,12 @@
 
 namespace LinqToDB.DataProvider.ClickHouse
 {
-	using Common;
-	using SqlProvider;
-	using SqlQuery;
+	using LinqToDB.Common;
+	using LinqToDB.Common.Internal;
+	using LinqToDB.Internal.SqlQuery;
+	using LinqToDB.Mapping;
+	using LinqToDB.SqlProvider;
+	using LinqToDB.SqlQuery;
 
 	public class ClickHouseSqlExpressionConvertVisitor : SqlExpressionConvertVisitor
 	{

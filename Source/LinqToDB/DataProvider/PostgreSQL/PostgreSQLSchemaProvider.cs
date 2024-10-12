@@ -6,16 +6,16 @@ using System.Globalization;
 using System.Linq;
 using System.Net;
 using System.Net.NetworkInformation;
-using System.Text;
 using System.Text.RegularExpressions;
 
 namespace LinqToDB.DataProvider.PostgreSQL
 {
-	using Common;
-	using Common.Internal;
-	using Data;
-	using SchemaProvider;
-	using SqlQuery;
+	using LinqToDB.Common;
+	using LinqToDB.Common.Internal;
+	using LinqToDB.Data;
+	using LinqToDB.Linq.Translation;
+	using LinqToDB.SchemaProvider;
+	using LinqToDB.SqlQuery;
 
 	public class PostgreSQLSchemaProvider : SchemaProviderBase
 	{

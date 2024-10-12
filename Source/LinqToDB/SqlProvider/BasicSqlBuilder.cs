@@ -14,12 +14,13 @@ using System.Text.RegularExpressions;
 
 namespace LinqToDB.SqlProvider
 {
-	using Common;
-	using Common.Internal;
-	using DataProvider;
-	using Extensions;
-	using Mapping;
-	using SqlQuery;
+	using LinqToDB.Common;
+	using LinqToDB.Common.Internal;
+	using LinqToDB.DataProvider;
+	using LinqToDB.Extensions;
+	using LinqToDB.Internal.SqlQuery;
+	using LinqToDB.Mapping;
+	using LinqToDB.SqlQuery;
 
 	public abstract partial class BasicSqlBuilder : ISqlBuilder
 	{

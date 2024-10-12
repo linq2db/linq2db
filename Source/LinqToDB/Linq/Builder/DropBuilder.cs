@@ -3,8 +3,9 @@ using System.Linq.Expressions;
 
 namespace LinqToDB.Linq.Builder
 {
+	using LinqToDB.Common.Internal.Cache;
 	using LinqToDB.Expressions;
-	using SqlQuery;
+	using LinqToDB.Internal.SqlQuery;
 
 	[BuildsMethodCall("Drop")]
 	sealed class DropBuilder : MethodCallBuilder

@@ -2,10 +2,13 @@
 
 namespace LinqToDB.DataProvider.Firebird
 {
-	using Extensions;
 	using LinqToDB.Common;
-	using SqlProvider;
-	using SqlQuery;
+	using LinqToDB.Expressions;
+	using LinqToDB.Extensions;
+	using LinqToDB.Internal.SqlQuery;
+	using LinqToDB.Mapping;
+	using LinqToDB.SqlProvider;
+	using LinqToDB.SqlQuery;
 
 	public class FirebirdSqlExpressionConvertVisitor : SqlExpressionConvertVisitor
 	{

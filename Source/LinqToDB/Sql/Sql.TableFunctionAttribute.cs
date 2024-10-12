@@ -5,10 +5,10 @@ using System.Linq.Expressions;
 
 namespace LinqToDB
 {
-	using Common.Internal;
-	using Mapping;
-	using SqlProvider;
-	using SqlQuery;
+	using LinqToDB.Common.Internal;
+	using LinqToDB.Internal.SqlQuery;
+	using LinqToDB.Mapping;
+	using LinqToDB.SqlProvider;
 
 	partial class Sql
 	{

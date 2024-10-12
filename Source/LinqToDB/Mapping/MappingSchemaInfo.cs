@@ -5,11 +5,11 @@ using System.Linq;
 
 namespace LinqToDB.Mapping
 {
-	using Common;
-	using Common.Internal;
-	using Expressions;
-	using Metadata;
-	using SqlQuery;
+	using LinqToDB.Common;
+	using LinqToDB.Common.Internal;
+	using LinqToDB.Expressions;
+	using LinqToDB.Metadata;
+	using LinqToDB.SqlQuery;
 
 	class MappingSchemaInfo : IConfigurationID
 	{

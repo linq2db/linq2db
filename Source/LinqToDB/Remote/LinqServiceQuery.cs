@@ -2,7 +2,7 @@
 
 namespace LinqToDB.Remote
 {
-	using SqlQuery;
+	using LinqToDB.Internal.SqlQuery;
 
 	public class LinqServiceQuery
 	{

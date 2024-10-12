@@ -11,8 +11,9 @@ namespace LinqToDB.SqlProvider
 	using LinqToDB.Expressions;
 	using LinqToDB.Expressions.Visitors;
 	using LinqToDB.Mapping;
+	using LinqToDB.Internal.SqlQuery;
+	using LinqToDB.Internal.SqlQuery.Visitors;
 	using LinqToDB.SqlQuery;
-	using LinqToDB.SqlQuery.Visitors;
 
 	public class BasicSqlOptimizer : ISqlOptimizer
 	{

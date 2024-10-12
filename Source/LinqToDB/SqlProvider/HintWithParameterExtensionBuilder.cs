@@ -1,10 +1,9 @@
-﻿using System;
-using System.Globalization;
+﻿using System.Globalization;
 using System.Text;
 
 namespace LinqToDB.SqlProvider
 {
-	using SqlQuery;
+	using LinqToDB.Internal.SqlQuery;
 
 	sealed class HintWithParameterExtensionBuilder : ISqlQueryExtensionBuilder
 	{

@@ -3,9 +3,9 @@ using System.Linq.Expressions;
 
 namespace LinqToDB.DataProvider.PostgreSQL.Translation
 {
-	using Common;
-	using SqlQuery;
-	using Linq.Translation;
+	using LinqToDB.Common;
+	using LinqToDB.Internal.SqlQuery;
+	using LinqToDB.Linq.Translation;
 
 	public class PostgreSQLMemberTranslator : ProviderMemberTranslatorDefault
 	{

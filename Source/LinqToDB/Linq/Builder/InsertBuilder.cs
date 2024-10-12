@@ -5,11 +5,11 @@ using System.Linq.Expressions;
 
 namespace LinqToDB.Linq.Builder
 {
-	using Extensions;
-	using SqlQuery;
-	using Common;
-	using LinqToDB.Expressions;
+	using LinqToDB.Common;
 	using LinqToDB.Data;
+	using LinqToDB.Expressions;
+	using LinqToDB.Extensions;
+	using LinqToDB.Internal.SqlQuery;
 
 	[BuildsMethodCall(
 		nameof(LinqExtensions.Insert), 

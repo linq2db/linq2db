@@ -1,13 +1,12 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 
 namespace LinqToDB.DataProvider.SQLite
 {
 	using LinqToDB.Common;
-	using Extensions;
-	using SqlProvider;
-	using SqlQuery;
+	using LinqToDB.Extensions;
+	using LinqToDB.Internal.SqlQuery;
+	using LinqToDB.SqlProvider;
+	using LinqToDB.SqlQuery;
 
 	public class SQLiteSqlExpressionConvertVisitor : SqlExpressionConvertVisitor
 	{

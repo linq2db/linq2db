@@ -7,8 +7,9 @@ using PN = LinqToDB.ProviderName;
 
 namespace LinqToDB
 {
-	using Linq;
-	using SqlQuery;
+	using LinqToDB.Internal.SqlQuery;
+	using LinqToDB.Linq;
+	using LinqToDB.SqlQuery;
 
 	public static partial class Sql
 	{

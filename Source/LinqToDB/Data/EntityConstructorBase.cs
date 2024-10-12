@@ -7,16 +7,16 @@ using System.Reflection;
 
 namespace LinqToDB.Data
 {
-	using Expressions;
-	using Extensions;
-	using Interceptors.Internal;
-	using Interceptors;
-	using Linq.Builder;
-	using Linq;
-	using Mapping;
-	using Reflection;
-	using SqlQuery;
-	using Tools;
+	using LinqToDB.Expressions;
+	using LinqToDB.Extensions;
+	using LinqToDB.Interceptors;
+	using LinqToDB.Interceptors.Internal;
+	using LinqToDB.Internal.SqlQuery;
+	using LinqToDB.Linq;
+	using LinqToDB.Linq.Builder;
+	using LinqToDB.Mapping;
+	using LinqToDB.Reflection;
+	using LinqToDB.Tools;
 
 	internal abstract class EntityConstructorBase
 	{

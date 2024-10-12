@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 
 namespace LinqToDB.Linq
 {
-	using SqlQuery;
+	using LinqToDB.Internal.SqlQuery;
 
 	abstract class Preamble
 	{

@@ -1,10 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 
 namespace LinqToDB.DataProvider.PostgreSQL
 {
-	using SqlQuery;
+	using LinqToDB.Internal.SqlQuery;
 
 	public partial class PostgreSQLSqlBuilder
 	{

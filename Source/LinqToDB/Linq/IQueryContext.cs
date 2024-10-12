@@ -1,6 +1,6 @@
 ﻿namespace LinqToDB.Linq
 {
-	using SqlQuery;
+	using LinqToDB.Internal.SqlQuery;
 
 	public interface IQueryContext
 	{

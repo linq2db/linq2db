@@ -6,13 +6,13 @@ using System.Reflection;
 
 namespace LinqToDB.Linq.Builder
 {
-	using Common;
-	using Data;
-	using Extensions;
+	using LinqToDB.Common;
+	using LinqToDB.Data;
 	using LinqToDB.Expressions;
-	using Mapping;
-	using Reflection;
-	using SqlQuery;
+	using LinqToDB.Extensions;
+	using LinqToDB.Internal.SqlQuery;
+	using LinqToDB.Mapping;
+	using LinqToDB.Reflection;
 
 	//TODO: review
 	sealed class EnumerableContext : BuildContextBase

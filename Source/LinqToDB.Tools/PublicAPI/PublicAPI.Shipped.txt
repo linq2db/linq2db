@@ -715,7 +715,7 @@ LinqToDB.DataModel.AdditionalSchemaModel.DataContextPropertyName.get -> string!
 LinqToDB.DataModel.AdditionalSchemaModel.DataContextPropertyName.set -> void
 LinqToDB.DataModel.AdditionalSchemaModel.WrapperClass.get -> LinqToDB.DataModel.ClassModel!
 LinqToDB.DataModel.AggregateFunctionModel
-LinqToDB.DataModel.AggregateFunctionModel.AggregateFunctionModel(LinqToDB.SqlQuery.SqlObjectName name, LinqToDB.DataModel.MethodModel! method, LinqToDB.Metadata.FunctionMetadata! metadata, LinqToDB.CodeModel.IType! returnType) -> void
+LinqToDB.DataModel.AggregateFunctionModel.AggregateFunctionModel(LinqToDB.Internal.SqlQuery.SqlObjectName name, LinqToDB.DataModel.MethodModel! method, LinqToDB.Metadata.FunctionMetadata! metadata, LinqToDB.CodeModel.IType! returnType) -> void
 LinqToDB.DataModel.AggregateFunctionModel.ReturnType.get -> LinqToDB.CodeModel.IType!
 LinqToDB.DataModel.AggregateFunctionModel.ReturnType.set -> void
 LinqToDB.DataModel.AssociationModel
@@ -846,10 +846,10 @@ LinqToDB.DataModel.FindTypes.OnTable = 256 -> LinqToDB.DataModel.FindTypes
 LinqToDB.DataModel.FindTypes.Query = 4 -> LinqToDB.DataModel.FindTypes
 LinqToDB.DataModel.FindTypes.Sync = 1 -> LinqToDB.DataModel.FindTypes
 LinqToDB.DataModel.FunctionModelBase
-LinqToDB.DataModel.FunctionModelBase.FunctionModelBase(LinqToDB.SqlQuery.SqlObjectName name, LinqToDB.DataModel.MethodModel! method) -> void
+LinqToDB.DataModel.FunctionModelBase.FunctionModelBase(LinqToDB.Internal.SqlQuery.SqlObjectName name, LinqToDB.DataModel.MethodModel! method) -> void
 LinqToDB.DataModel.FunctionModelBase.Method.get -> LinqToDB.DataModel.MethodModel!
 LinqToDB.DataModel.FunctionModelBase.Method.set -> void
-LinqToDB.DataModel.FunctionModelBase.Name.get -> LinqToDB.SqlQuery.SqlObjectName
+LinqToDB.DataModel.FunctionModelBase.Name.get -> LinqToDB.Internal.SqlQuery.SqlObjectName
 LinqToDB.DataModel.FunctionModelBase.Name.set -> void
 LinqToDB.DataModel.FunctionModelBase.Parameters.get -> System.Collections.Generic.List<LinqToDB.DataModel.FunctionParameterModel!>!
 LinqToDB.DataModel.FunctionParameterModel
@@ -901,7 +901,7 @@ LinqToDB.DataModel.IDataModelGenerationContext.LanguageProvider.get -> LinqToDB.
 LinqToDB.DataModel.IDataModelGenerationContext.MainDataContext.get -> LinqToDB.CodeModel.ClassBuilder!
 LinqToDB.DataModel.IDataModelGenerationContext.MainDataContextConstructors.get -> LinqToDB.CodeModel.ConstructorGroup!
 LinqToDB.DataModel.IDataModelGenerationContext.MainDataContextPartialMethods.get -> LinqToDB.CodeModel.MethodGroup!
-LinqToDB.DataModel.IDataModelGenerationContext.MakeFullyQualifiedRoutineName(LinqToDB.SqlQuery.SqlObjectName routineName) -> string!
+LinqToDB.DataModel.IDataModelGenerationContext.MakeFullyQualifiedRoutineName(LinqToDB.Internal.SqlQuery.SqlObjectName routineName) -> string!
 LinqToDB.DataModel.IDataModelGenerationContext.MetadataBuilder.get -> LinqToDB.Metadata.IMetadataBuilder?
 LinqToDB.DataModel.IDataModelGenerationContext.Model.get -> LinqToDB.DataModel.DatabaseModel!
 LinqToDB.DataModel.IDataModelGenerationContext.NonTableFunctionsClass.get -> LinqToDB.CodeModel.CodeClass!
@@ -965,11 +965,11 @@ LinqToDB.DataModel.ScalarFunctionModel.Return.get -> LinqToDB.CodeModel.IType?
 LinqToDB.DataModel.ScalarFunctionModel.Return.set -> void
 LinqToDB.DataModel.ScalarFunctionModel.ReturnTuple.get -> LinqToDB.DataModel.TupleModel?
 LinqToDB.DataModel.ScalarFunctionModel.ReturnTuple.set -> void
-LinqToDB.DataModel.ScalarFunctionModel.ScalarFunctionModel(LinqToDB.SqlQuery.SqlObjectName name, LinqToDB.DataModel.MethodModel! method, LinqToDB.Metadata.FunctionMetadata! metadata) -> void
+LinqToDB.DataModel.ScalarFunctionModel.ScalarFunctionModel(LinqToDB.Internal.SqlQuery.SqlObjectName name, LinqToDB.DataModel.MethodModel! method, LinqToDB.Metadata.FunctionMetadata! metadata) -> void
 LinqToDB.DataModel.ScalarFunctionModelBase
 LinqToDB.DataModel.ScalarFunctionModelBase.Metadata.get -> LinqToDB.Metadata.FunctionMetadata!
 LinqToDB.DataModel.ScalarFunctionModelBase.Metadata.set -> void
-LinqToDB.DataModel.ScalarFunctionModelBase.ScalarFunctionModelBase(LinqToDB.SqlQuery.SqlObjectName name, LinqToDB.DataModel.MethodModel! method, LinqToDB.Metadata.FunctionMetadata! metadata) -> void
+LinqToDB.DataModel.ScalarFunctionModelBase.ScalarFunctionModelBase(LinqToDB.Internal.SqlQuery.SqlObjectName name, LinqToDB.DataModel.MethodModel! method, LinqToDB.Metadata.FunctionMetadata! metadata) -> void
 LinqToDB.DataModel.SchemaModelBase
 LinqToDB.DataModel.SchemaModelBase.AggregateFunctions.get -> System.Collections.Generic.List<LinqToDB.DataModel.AggregateFunctionModel!>!
 LinqToDB.DataModel.SchemaModelBase.Entities.get -> System.Collections.Generic.List<LinqToDB.DataModel.EntityModel!>!
@@ -982,17 +982,17 @@ LinqToDB.DataModel.StoredProcedureModel.Results.get -> System.Collections.Generi
 LinqToDB.DataModel.StoredProcedureModel.Results.set -> void
 LinqToDB.DataModel.StoredProcedureModel.Return.get -> LinqToDB.DataModel.FunctionParameterModel?
 LinqToDB.DataModel.StoredProcedureModel.Return.set -> void
-LinqToDB.DataModel.StoredProcedureModel.StoredProcedureModel(LinqToDB.SqlQuery.SqlObjectName name, LinqToDB.DataModel.MethodModel! method) -> void
+LinqToDB.DataModel.StoredProcedureModel.StoredProcedureModel(LinqToDB.Internal.SqlQuery.SqlObjectName name, LinqToDB.DataModel.MethodModel! method) -> void
 LinqToDB.DataModel.TableFunctionModel
 LinqToDB.DataModel.TableFunctionModel.Metadata.get -> LinqToDB.Metadata.TableFunctionMetadata!
 LinqToDB.DataModel.TableFunctionModel.Metadata.set -> void
 LinqToDB.DataModel.TableFunctionModel.Result.get -> LinqToDB.DataModel.FunctionResult?
 LinqToDB.DataModel.TableFunctionModel.Result.set -> void
-LinqToDB.DataModel.TableFunctionModel.TableFunctionModel(LinqToDB.SqlQuery.SqlObjectName name, LinqToDB.DataModel.MethodModel! method, LinqToDB.Metadata.TableFunctionMetadata! metadata) -> void
+LinqToDB.DataModel.TableFunctionModel.TableFunctionModel(LinqToDB.Internal.SqlQuery.SqlObjectName name, LinqToDB.DataModel.MethodModel! method, LinqToDB.Metadata.TableFunctionMetadata! metadata) -> void
 LinqToDB.DataModel.TableFunctionModelBase
 LinqToDB.DataModel.TableFunctionModelBase.Error.get -> string?
 LinqToDB.DataModel.TableFunctionModelBase.Error.set -> void
-LinqToDB.DataModel.TableFunctionModelBase.TableFunctionModelBase(LinqToDB.SqlQuery.SqlObjectName name, LinqToDB.DataModel.MethodModel! method) -> void
+LinqToDB.DataModel.TableFunctionModelBase.TableFunctionModelBase(LinqToDB.Internal.SqlQuery.SqlObjectName name, LinqToDB.DataModel.MethodModel! method) -> void
 LinqToDB.DataModel.TupleFieldModel
 LinqToDB.DataModel.TupleFieldModel.DataType.get -> LinqToDB.DataType?
 LinqToDB.DataModel.TupleFieldModel.DataType.set -> void
@@ -1080,7 +1080,7 @@ LinqToDB.Metadata.EntityMetadata.IsTemporary.get -> bool
 LinqToDB.Metadata.EntityMetadata.IsTemporary.set -> void
 LinqToDB.Metadata.EntityMetadata.IsView.get -> bool
 LinqToDB.Metadata.EntityMetadata.IsView.set -> void
-LinqToDB.Metadata.EntityMetadata.Name.get -> LinqToDB.SqlQuery.SqlObjectName?
+LinqToDB.Metadata.EntityMetadata.Name.get -> LinqToDB.Internal.SqlQuery.SqlObjectName?
 LinqToDB.Metadata.EntityMetadata.Name.set -> void
 LinqToDB.Metadata.EntityMetadata.TableOptions.get -> LinqToDB.TableOptions
 LinqToDB.Metadata.EntityMetadata.TableOptions.set -> void
@@ -1104,7 +1104,7 @@ LinqToDB.Metadata.FunctionMetadata.IsPure.get -> bool?
 LinqToDB.Metadata.FunctionMetadata.IsPure.set -> void
 LinqToDB.Metadata.FunctionMetadata.IsWindowFunction.get -> bool?
 LinqToDB.Metadata.FunctionMetadata.IsWindowFunction.set -> void
-LinqToDB.Metadata.FunctionMetadata.Name.get -> LinqToDB.SqlQuery.SqlObjectName?
+LinqToDB.Metadata.FunctionMetadata.Name.get -> LinqToDB.Internal.SqlQuery.SqlObjectName?
 LinqToDB.Metadata.FunctionMetadata.Name.set -> void
 LinqToDB.Metadata.FunctionMetadata.PreferServerSide.get -> bool?
 LinqToDB.Metadata.FunctionMetadata.PreferServerSide.set -> void
@@ -1128,7 +1128,7 @@ LinqToDB.Metadata.TableFunctionMetadata.ArgIndices.get -> int[]?
 LinqToDB.Metadata.TableFunctionMetadata.ArgIndices.set -> void
 LinqToDB.Metadata.TableFunctionMetadata.Configuration.get -> string?
 LinqToDB.Metadata.TableFunctionMetadata.Configuration.set -> void
-LinqToDB.Metadata.TableFunctionMetadata.Name.get -> LinqToDB.SqlQuery.SqlObjectName?
+LinqToDB.Metadata.TableFunctionMetadata.Name.get -> LinqToDB.Internal.SqlQuery.SqlObjectName?
 LinqToDB.Metadata.TableFunctionMetadata.Name.set -> void
 LinqToDB.Metadata.TableFunctionMetadata.TableFunctionMetadata() -> void
 LinqToDB.Naming.HumanizerNameConverter
@@ -1353,23 +1353,23 @@ LinqToDB.Scaffold.SchemaOptions.IncludeCatalogs.get -> bool
 LinqToDB.Scaffold.SchemaOptions.IncludeCatalogs.set -> void
 LinqToDB.Scaffold.SchemaOptions.IncludeSchemas.get -> bool
 LinqToDB.Scaffold.SchemaOptions.IncludeSchemas.set -> void
-LinqToDB.Scaffold.SchemaOptions.LoadAggregateFunction.get -> System.Func<LinqToDB.SqlQuery.SqlObjectName, bool>!
+LinqToDB.Scaffold.SchemaOptions.LoadAggregateFunction.get -> System.Func<LinqToDB.Internal.SqlQuery.SqlObjectName, bool>!
 LinqToDB.Scaffold.SchemaOptions.LoadAggregateFunction.set -> void
 LinqToDB.Scaffold.SchemaOptions.LoadDatabaseName.get -> bool
 LinqToDB.Scaffold.SchemaOptions.LoadDatabaseName.set -> void
 LinqToDB.Scaffold.SchemaOptions.LoadedObjects.get -> LinqToDB.Schema.SchemaObjects
 LinqToDB.Scaffold.SchemaOptions.LoadedObjects.set -> void
-LinqToDB.Scaffold.SchemaOptions.LoadProcedureSchema.get -> System.Func<LinqToDB.SqlQuery.SqlObjectName, bool>!
+LinqToDB.Scaffold.SchemaOptions.LoadProcedureSchema.get -> System.Func<LinqToDB.Internal.SqlQuery.SqlObjectName, bool>!
 LinqToDB.Scaffold.SchemaOptions.LoadProcedureSchema.set -> void
 LinqToDB.Scaffold.SchemaOptions.LoadProceduresSchema.get -> bool
 LinqToDB.Scaffold.SchemaOptions.LoadProceduresSchema.set -> void
-LinqToDB.Scaffold.SchemaOptions.LoadScalarFunction.get -> System.Func<LinqToDB.SqlQuery.SqlObjectName, bool>!
+LinqToDB.Scaffold.SchemaOptions.LoadScalarFunction.get -> System.Func<LinqToDB.Internal.SqlQuery.SqlObjectName, bool>!
 LinqToDB.Scaffold.SchemaOptions.LoadScalarFunction.set -> void
-LinqToDB.Scaffold.SchemaOptions.LoadStoredProcedure.get -> System.Func<LinqToDB.SqlQuery.SqlObjectName, bool>!
+LinqToDB.Scaffold.SchemaOptions.LoadStoredProcedure.get -> System.Func<LinqToDB.Internal.SqlQuery.SqlObjectName, bool>!
 LinqToDB.Scaffold.SchemaOptions.LoadStoredProcedure.set -> void
-LinqToDB.Scaffold.SchemaOptions.LoadTableFunction.get -> System.Func<LinqToDB.SqlQuery.SqlObjectName, bool>!
+LinqToDB.Scaffold.SchemaOptions.LoadTableFunction.get -> System.Func<LinqToDB.Internal.SqlQuery.SqlObjectName, bool>!
 LinqToDB.Scaffold.SchemaOptions.LoadTableFunction.set -> void
-LinqToDB.Scaffold.SchemaOptions.LoadTableOrView.get -> System.Func<LinqToDB.SqlQuery.SqlObjectName, bool, bool>!
+LinqToDB.Scaffold.SchemaOptions.LoadTableOrView.get -> System.Func<LinqToDB.Internal.SqlQuery.SqlObjectName, bool, bool>!
 LinqToDB.Scaffold.SchemaOptions.LoadTableOrView.set -> void
 LinqToDB.Scaffold.SchemaOptions.PreferProviderSpecificTypes.get -> bool
 LinqToDB.Scaffold.SchemaOptions.PreferProviderSpecificTypes.set -> void
@@ -1385,8 +1385,8 @@ LinqToDB.Scaffold.SourceCodeFile.FileName.init -> void
 LinqToDB.Scaffold.SourceCodeFile.SourceCodeFile(LinqToDB.Scaffold.SourceCodeFile! original) -> void
 LinqToDB.Scaffold.SourceCodeFile.SourceCodeFile(string! FileName, string! Code) -> void
 LinqToDB.Schema.AggregateFunction
-LinqToDB.Schema.AggregateFunction.AggregateFunction(LinqToDB.SqlQuery.SqlObjectName Name, string? Description, System.Collections.Generic.IReadOnlyCollection<LinqToDB.Schema.Parameter!>! Parameters, LinqToDB.Schema.ScalarResult! Result) -> void
-LinqToDB.Schema.AggregateFunction.Deconstruct(out LinqToDB.SqlQuery.SqlObjectName Name, out string? Description, out System.Collections.Generic.IReadOnlyCollection<LinqToDB.Schema.Parameter!>! Parameters, out LinqToDB.Schema.ScalarResult! Result) -> void
+LinqToDB.Schema.AggregateFunction.AggregateFunction(LinqToDB.Internal.SqlQuery.SqlObjectName Name, string? Description, System.Collections.Generic.IReadOnlyCollection<LinqToDB.Schema.Parameter!>! Parameters, LinqToDB.Schema.ScalarResult! Result) -> void
+LinqToDB.Schema.AggregateFunction.Deconstruct(out LinqToDB.Internal.SqlQuery.SqlObjectName Name, out string? Description, out System.Collections.Generic.IReadOnlyCollection<LinqToDB.Schema.Parameter!>! Parameters, out LinqToDB.Schema.ScalarResult! Result) -> void
 LinqToDB.Schema.AggregateFunction.Equals(LinqToDB.Schema.AggregateFunction? other) -> bool
 LinqToDB.Schema.AggregateFunction.Result.get -> LinqToDB.Schema.ScalarResult!
 LinqToDB.Schema.AggregateFunction.Result.init -> void
@@ -1398,14 +1398,14 @@ LinqToDB.Schema.CallableKind.ScalarFunction = 0 -> LinqToDB.Schema.CallableKind
 LinqToDB.Schema.CallableKind.StoredProcedure = 3 -> LinqToDB.Schema.CallableKind
 LinqToDB.Schema.CallableKind.TableFunction = 2 -> LinqToDB.Schema.CallableKind
 LinqToDB.Schema.CallableObject
-LinqToDB.Schema.CallableObject.CallableObject(LinqToDB.Schema.CallableKind Kind, LinqToDB.SqlQuery.SqlObjectName Name, string? Description, System.Collections.Generic.IReadOnlyCollection<LinqToDB.Schema.Parameter!>! Parameters) -> void
+LinqToDB.Schema.CallableObject.CallableObject(LinqToDB.Schema.CallableKind Kind, LinqToDB.Internal.SqlQuery.SqlObjectName Name, string? Description, System.Collections.Generic.IReadOnlyCollection<LinqToDB.Schema.Parameter!>! Parameters) -> void
 LinqToDB.Schema.CallableObject.CallableObject(LinqToDB.Schema.CallableObject! original) -> void
-LinqToDB.Schema.CallableObject.Deconstruct(out LinqToDB.Schema.CallableKind Kind, out LinqToDB.SqlQuery.SqlObjectName Name, out string? Description, out System.Collections.Generic.IReadOnlyCollection<LinqToDB.Schema.Parameter!>! Parameters) -> void
+LinqToDB.Schema.CallableObject.Deconstruct(out LinqToDB.Schema.CallableKind Kind, out LinqToDB.Internal.SqlQuery.SqlObjectName Name, out string? Description, out System.Collections.Generic.IReadOnlyCollection<LinqToDB.Schema.Parameter!>! Parameters) -> void
 LinqToDB.Schema.CallableObject.Description.get -> string?
 LinqToDB.Schema.CallableObject.Description.init -> void
 LinqToDB.Schema.CallableObject.Kind.get -> LinqToDB.Schema.CallableKind
 LinqToDB.Schema.CallableObject.Kind.init -> void
-LinqToDB.Schema.CallableObject.Name.get -> LinqToDB.SqlQuery.SqlObjectName
+LinqToDB.Schema.CallableObject.Name.get -> LinqToDB.Internal.SqlQuery.SqlObjectName
 LinqToDB.Schema.CallableObject.Name.init -> void
 LinqToDB.Schema.CallableObject.Parameters.get -> System.Collections.Generic.IReadOnlyCollection<LinqToDB.Schema.Parameter!>!
 LinqToDB.Schema.CallableObject.Parameters.init -> void
@@ -1445,16 +1445,16 @@ LinqToDB.Schema.DatabaseType.Scale.get -> int?
 LinqToDB.Schema.DatabaseType.Scale.init -> void
 LinqToDB.Schema.ForeignKey
 LinqToDB.Schema.ForeignKey.<Clone>$() -> LinqToDB.Schema.ForeignKey!
-LinqToDB.Schema.ForeignKey.Deconstruct(out string! Name, out LinqToDB.SqlQuery.SqlObjectName Source, out LinqToDB.SqlQuery.SqlObjectName Target, out System.Collections.Generic.IReadOnlyList<LinqToDB.Schema.ForeignKeyColumnMapping!>! Relation) -> void
+LinqToDB.Schema.ForeignKey.Deconstruct(out string! Name, out LinqToDB.Internal.SqlQuery.SqlObjectName Source, out LinqToDB.Internal.SqlQuery.SqlObjectName Target, out System.Collections.Generic.IReadOnlyList<LinqToDB.Schema.ForeignKeyColumnMapping!>! Relation) -> void
 LinqToDB.Schema.ForeignKey.Equals(LinqToDB.Schema.ForeignKey? other) -> bool
-LinqToDB.Schema.ForeignKey.ForeignKey(string! Name, LinqToDB.SqlQuery.SqlObjectName Source, LinqToDB.SqlQuery.SqlObjectName Target, System.Collections.Generic.IReadOnlyList<LinqToDB.Schema.ForeignKeyColumnMapping!>! Relation) -> void
+LinqToDB.Schema.ForeignKey.ForeignKey(string! Name, LinqToDB.Internal.SqlQuery.SqlObjectName Source, LinqToDB.Internal.SqlQuery.SqlObjectName Target, System.Collections.Generic.IReadOnlyList<LinqToDB.Schema.ForeignKeyColumnMapping!>! Relation) -> void
 LinqToDB.Schema.ForeignKey.Name.get -> string!
 LinqToDB.Schema.ForeignKey.Name.init -> void
 LinqToDB.Schema.ForeignKey.Relation.get -> System.Collections.Generic.IReadOnlyList<LinqToDB.Schema.ForeignKeyColumnMapping!>!
 LinqToDB.Schema.ForeignKey.Relation.init -> void
-LinqToDB.Schema.ForeignKey.Source.get -> LinqToDB.SqlQuery.SqlObjectName
+LinqToDB.Schema.ForeignKey.Source.get -> LinqToDB.Internal.SqlQuery.SqlObjectName
 LinqToDB.Schema.ForeignKey.Source.init -> void
-LinqToDB.Schema.ForeignKey.Target.get -> LinqToDB.SqlQuery.SqlObjectName
+LinqToDB.Schema.ForeignKey.Target.get -> LinqToDB.Internal.SqlQuery.SqlObjectName
 LinqToDB.Schema.ForeignKey.Target.init -> void
 LinqToDB.Schema.ForeignKeyColumnMapping
 LinqToDB.Schema.ForeignKeyColumnMapping.<Clone>$() -> LinqToDB.Schema.ForeignKeyColumnMapping!
@@ -1544,11 +1544,11 @@ LinqToDB.Schema.ResultKind.Scalar = 2 -> LinqToDB.Schema.ResultKind
 LinqToDB.Schema.ResultKind.Tuple = 1 -> LinqToDB.Schema.ResultKind
 LinqToDB.Schema.ResultKind.Void = 0 -> LinqToDB.Schema.ResultKind
 LinqToDB.Schema.ScalarFunction
-LinqToDB.Schema.ScalarFunction.Deconstruct(out LinqToDB.SqlQuery.SqlObjectName Name, out string? Description, out System.Collections.Generic.IReadOnlyCollection<LinqToDB.Schema.Parameter!>! Parameters, out LinqToDB.Schema.Result! Result) -> void
+LinqToDB.Schema.ScalarFunction.Deconstruct(out LinqToDB.Internal.SqlQuery.SqlObjectName Name, out string? Description, out System.Collections.Generic.IReadOnlyCollection<LinqToDB.Schema.Parameter!>! Parameters, out LinqToDB.Schema.Result! Result) -> void
 LinqToDB.Schema.ScalarFunction.Equals(LinqToDB.Schema.ScalarFunction? other) -> bool
 LinqToDB.Schema.ScalarFunction.Result.get -> LinqToDB.Schema.Result!
 LinqToDB.Schema.ScalarFunction.Result.init -> void
-LinqToDB.Schema.ScalarFunction.ScalarFunction(LinqToDB.SqlQuery.SqlObjectName Name, string? Description, System.Collections.Generic.IReadOnlyCollection<LinqToDB.Schema.Parameter!>! Parameters, LinqToDB.Schema.Result! Result) -> void
+LinqToDB.Schema.ScalarFunction.ScalarFunction(LinqToDB.Internal.SqlQuery.SqlObjectName Name, string? Description, System.Collections.Generic.IReadOnlyCollection<LinqToDB.Schema.Parameter!>! Parameters, LinqToDB.Schema.Result! Result) -> void
 LinqToDB.Schema.ScalarResult
 LinqToDB.Schema.ScalarResult.Deconstruct(out string? Name, out LinqToDB.Schema.DatabaseType! Type, out bool Nullable) -> void
 LinqToDB.Schema.ScalarResult.Equals(LinqToDB.Schema.ScalarResult? other) -> bool
@@ -1570,14 +1570,14 @@ LinqToDB.Schema.SchemaObjects.TableFunction = 8 -> LinqToDB.Schema.SchemaObjects
 LinqToDB.Schema.SchemaObjects.View = 2 -> LinqToDB.Schema.SchemaObjects
 LinqToDB.Schema.Sequence
 LinqToDB.Schema.Sequence.<Clone>$() -> LinqToDB.Schema.Sequence!
-LinqToDB.Schema.Sequence.Deconstruct(out LinqToDB.SqlQuery.SqlObjectName? Name) -> void
+LinqToDB.Schema.Sequence.Deconstruct(out LinqToDB.Internal.SqlQuery.SqlObjectName? Name) -> void
 LinqToDB.Schema.Sequence.Equals(LinqToDB.Schema.Sequence? other) -> bool
-LinqToDB.Schema.Sequence.Name.get -> LinqToDB.SqlQuery.SqlObjectName?
+LinqToDB.Schema.Sequence.Name.get -> LinqToDB.Internal.SqlQuery.SqlObjectName?
 LinqToDB.Schema.Sequence.Name.init -> void
-LinqToDB.Schema.Sequence.Sequence(LinqToDB.SqlQuery.SqlObjectName? Name) -> void
+LinqToDB.Schema.Sequence.Sequence(LinqToDB.Internal.SqlQuery.SqlObjectName? Name) -> void
 LinqToDB.Schema.SqlServerDatabaseOptions
 LinqToDB.Schema.StoredProcedure
-LinqToDB.Schema.StoredProcedure.Deconstruct(out LinqToDB.SqlQuery.SqlObjectName Name, out string? Description, out System.Collections.Generic.IReadOnlyCollection<LinqToDB.Schema.Parameter!>! Parameters, out System.Exception? SchemaError, out System.Collections.Generic.IReadOnlyList<System.Collections.Generic.IReadOnlyList<LinqToDB.Schema.ResultColumn!>!>? ResultSets, out LinqToDB.Schema.Result! Result) -> void
+LinqToDB.Schema.StoredProcedure.Deconstruct(out LinqToDB.Internal.SqlQuery.SqlObjectName Name, out string? Description, out System.Collections.Generic.IReadOnlyCollection<LinqToDB.Schema.Parameter!>! Parameters, out System.Exception? SchemaError, out System.Collections.Generic.IReadOnlyList<System.Collections.Generic.IReadOnlyList<LinqToDB.Schema.ResultColumn!>!>? ResultSets, out LinqToDB.Schema.Result! Result) -> void
 LinqToDB.Schema.StoredProcedure.Equals(LinqToDB.Schema.StoredProcedure? other) -> bool
 LinqToDB.Schema.StoredProcedure.Result.get -> LinqToDB.Schema.Result!
 LinqToDB.Schema.StoredProcedure.Result.init -> void
@@ -1585,33 +1585,33 @@ LinqToDB.Schema.StoredProcedure.ResultSets.get -> System.Collections.Generic.IRe
 LinqToDB.Schema.StoredProcedure.ResultSets.init -> void
 LinqToDB.Schema.StoredProcedure.SchemaError.get -> System.Exception?
 LinqToDB.Schema.StoredProcedure.SchemaError.init -> void
-LinqToDB.Schema.StoredProcedure.StoredProcedure(LinqToDB.SqlQuery.SqlObjectName Name, string? Description, System.Collections.Generic.IReadOnlyCollection<LinqToDB.Schema.Parameter!>! Parameters, System.Exception? SchemaError, System.Collections.Generic.IReadOnlyList<System.Collections.Generic.IReadOnlyList<LinqToDB.Schema.ResultColumn!>!>? ResultSets, LinqToDB.Schema.Result! Result) -> void
+LinqToDB.Schema.StoredProcedure.StoredProcedure(LinqToDB.Internal.SqlQuery.SqlObjectName Name, string? Description, System.Collections.Generic.IReadOnlyCollection<LinqToDB.Schema.Parameter!>! Parameters, System.Exception? SchemaError, System.Collections.Generic.IReadOnlyList<System.Collections.Generic.IReadOnlyList<LinqToDB.Schema.ResultColumn!>!>? ResultSets, LinqToDB.Schema.Result! Result) -> void
 LinqToDB.Schema.Table
-LinqToDB.Schema.Table.Deconstruct(out LinqToDB.SqlQuery.SqlObjectName Name, out string? Description, out System.Collections.Generic.IReadOnlyCollection<LinqToDB.Schema.Column!>! Columns, out LinqToDB.Schema.Identity? Identity, out LinqToDB.Schema.PrimaryKey? PrimaryKey) -> void
+LinqToDB.Schema.Table.Deconstruct(out LinqToDB.Internal.SqlQuery.SqlObjectName Name, out string? Description, out System.Collections.Generic.IReadOnlyCollection<LinqToDB.Schema.Column!>! Columns, out LinqToDB.Schema.Identity? Identity, out LinqToDB.Schema.PrimaryKey? PrimaryKey) -> void
 LinqToDB.Schema.Table.Equals(LinqToDB.Schema.Table? other) -> bool
-LinqToDB.Schema.Table.Table(LinqToDB.SqlQuery.SqlObjectName Name, string? Description, System.Collections.Generic.IReadOnlyCollection<LinqToDB.Schema.Column!>! Columns, LinqToDB.Schema.Identity? Identity, LinqToDB.Schema.PrimaryKey? PrimaryKey) -> void
+LinqToDB.Schema.Table.Table(LinqToDB.Internal.SqlQuery.SqlObjectName Name, string? Description, System.Collections.Generic.IReadOnlyCollection<LinqToDB.Schema.Column!>! Columns, LinqToDB.Schema.Identity? Identity, LinqToDB.Schema.PrimaryKey? PrimaryKey) -> void
 LinqToDB.Schema.TableFunction
-LinqToDB.Schema.TableFunction.Deconstruct(out LinqToDB.SqlQuery.SqlObjectName Name, out string? Description, out System.Collections.Generic.IReadOnlyCollection<LinqToDB.Schema.Parameter!>! Parameters, out System.Exception? SchemaError, out System.Collections.Generic.IReadOnlyCollection<LinqToDB.Schema.ResultColumn!>? Result) -> void
+LinqToDB.Schema.TableFunction.Deconstruct(out LinqToDB.Internal.SqlQuery.SqlObjectName Name, out string? Description, out System.Collections.Generic.IReadOnlyCollection<LinqToDB.Schema.Parameter!>! Parameters, out System.Exception? SchemaError, out System.Collections.Generic.IReadOnlyCollection<LinqToDB.Schema.ResultColumn!>? Result) -> void
 LinqToDB.Schema.TableFunction.Equals(LinqToDB.Schema.TableFunction? other) -> bool
 LinqToDB.Schema.TableFunction.Result.get -> System.Collections.Generic.IReadOnlyCollection<LinqToDB.Schema.ResultColumn!>?
 LinqToDB.Schema.TableFunction.Result.init -> void
 LinqToDB.Schema.TableFunction.SchemaError.get -> System.Exception?
 LinqToDB.Schema.TableFunction.SchemaError.init -> void
-LinqToDB.Schema.TableFunction.TableFunction(LinqToDB.SqlQuery.SqlObjectName Name, string? Description, System.Collections.Generic.IReadOnlyCollection<LinqToDB.Schema.Parameter!>! Parameters, System.Exception? SchemaError, System.Collections.Generic.IReadOnlyCollection<LinqToDB.Schema.ResultColumn!>? Result) -> void
+LinqToDB.Schema.TableFunction.TableFunction(LinqToDB.Internal.SqlQuery.SqlObjectName Name, string? Description, System.Collections.Generic.IReadOnlyCollection<LinqToDB.Schema.Parameter!>! Parameters, System.Exception? SchemaError, System.Collections.Generic.IReadOnlyCollection<LinqToDB.Schema.ResultColumn!>? Result) -> void
 LinqToDB.Schema.TableLikeObject
 LinqToDB.Schema.TableLikeObject.Columns.get -> System.Collections.Generic.IReadOnlyCollection<LinqToDB.Schema.Column!>!
 LinqToDB.Schema.TableLikeObject.Columns.init -> void
-LinqToDB.Schema.TableLikeObject.Deconstruct(out LinqToDB.SqlQuery.SqlObjectName Name, out string? Description, out System.Collections.Generic.IReadOnlyCollection<LinqToDB.Schema.Column!>! Columns, out LinqToDB.Schema.Identity? Identity, out LinqToDB.Schema.PrimaryKey? PrimaryKey) -> void
+LinqToDB.Schema.TableLikeObject.Deconstruct(out LinqToDB.Internal.SqlQuery.SqlObjectName Name, out string? Description, out System.Collections.Generic.IReadOnlyCollection<LinqToDB.Schema.Column!>! Columns, out LinqToDB.Schema.Identity? Identity, out LinqToDB.Schema.PrimaryKey? PrimaryKey) -> void
 LinqToDB.Schema.TableLikeObject.Description.get -> string?
 LinqToDB.Schema.TableLikeObject.Description.init -> void
 LinqToDB.Schema.TableLikeObject.Identity.get -> LinqToDB.Schema.Identity?
 LinqToDB.Schema.TableLikeObject.Identity.init -> void
-LinqToDB.Schema.TableLikeObject.Name.get -> LinqToDB.SqlQuery.SqlObjectName
+LinqToDB.Schema.TableLikeObject.Name.get -> LinqToDB.Internal.SqlQuery.SqlObjectName
 LinqToDB.Schema.TableLikeObject.Name.init -> void
 LinqToDB.Schema.TableLikeObject.PrimaryKey.get -> LinqToDB.Schema.PrimaryKey?
 LinqToDB.Schema.TableLikeObject.PrimaryKey.init -> void
 LinqToDB.Schema.TableLikeObject.TableLikeObject(LinqToDB.Schema.TableLikeObject! original) -> void
-LinqToDB.Schema.TableLikeObject.TableLikeObject(LinqToDB.SqlQuery.SqlObjectName Name, string? Description, System.Collections.Generic.IReadOnlyCollection<LinqToDB.Schema.Column!>! Columns, LinqToDB.Schema.Identity? Identity, LinqToDB.Schema.PrimaryKey? PrimaryKey) -> void
+LinqToDB.Schema.TableLikeObject.TableLikeObject(LinqToDB.Internal.SqlQuery.SqlObjectName Name, string? Description, System.Collections.Generic.IReadOnlyCollection<LinqToDB.Schema.Column!>! Columns, LinqToDB.Schema.Identity? Identity, LinqToDB.Schema.PrimaryKey? PrimaryKey) -> void
 LinqToDB.Schema.TupleResult
 LinqToDB.Schema.TupleResult.Deconstruct(out System.Collections.Generic.IReadOnlyCollection<LinqToDB.Schema.ScalarResult!>! Fields, out bool Nullable) -> void
 LinqToDB.Schema.TupleResult.Equals(LinqToDB.Schema.TupleResult? other) -> bool
@@ -1630,9 +1630,9 @@ LinqToDB.Schema.TypeMapping.Deconstruct(out LinqToDB.CodeModel.IType! CLRType, o
 LinqToDB.Schema.TypeMapping.Equals(LinqToDB.Schema.TypeMapping? other) -> bool
 LinqToDB.Schema.TypeMapping.TypeMapping(LinqToDB.CodeModel.IType! CLRType, LinqToDB.DataType? DataType) -> void
 LinqToDB.Schema.View
-LinqToDB.Schema.View.Deconstruct(out LinqToDB.SqlQuery.SqlObjectName Name, out string? Description, out System.Collections.Generic.IReadOnlyCollection<LinqToDB.Schema.Column!>! Columns, out LinqToDB.Schema.Identity? Identity, out LinqToDB.Schema.PrimaryKey? PrimaryKey) -> void
+LinqToDB.Schema.View.Deconstruct(out LinqToDB.Internal.SqlQuery.SqlObjectName Name, out string? Description, out System.Collections.Generic.IReadOnlyCollection<LinqToDB.Schema.Column!>! Columns, out LinqToDB.Schema.Identity? Identity, out LinqToDB.Schema.PrimaryKey? PrimaryKey) -> void
 LinqToDB.Schema.View.Equals(LinqToDB.Schema.View? other) -> bool
-LinqToDB.Schema.View.View(LinqToDB.SqlQuery.SqlObjectName Name, string? Description, System.Collections.Generic.IReadOnlyCollection<LinqToDB.Schema.Column!>! Columns, LinqToDB.Schema.Identity? Identity, LinqToDB.Schema.PrimaryKey? PrimaryKey) -> void
+LinqToDB.Schema.View.View(LinqToDB.Internal.SqlQuery.SqlObjectName Name, string? Description, System.Collections.Generic.IReadOnlyCollection<LinqToDB.Schema.Column!>! Columns, LinqToDB.Schema.Identity? Identity, LinqToDB.Schema.PrimaryKey? PrimaryKey) -> void
 LinqToDB.Schema.VoidResult
 LinqToDB.Schema.VoidResult.Equals(LinqToDB.Schema.VoidResult? other) -> bool
 LinqToDB.Schema.VoidResult.VoidResult() -> void
@@ -11283,7 +11283,7 @@ static LinqToDB.Metadata.MetadataBuilders.GetMetadataBuilder(LinqToDB.CodeModel.
 static LinqToDB.Naming.NameConverterBase.NameParts.operator !=(LinqToDB.Naming.NameConverterBase.NameParts? left, LinqToDB.Naming.NameConverterBase.NameParts? right) -> bool
 static LinqToDB.Naming.NameConverterBase.NameParts.operator ==(LinqToDB.Naming.NameConverterBase.NameParts? left, LinqToDB.Naming.NameConverterBase.NameParts? right) -> bool
 static LinqToDB.Naming.NameConverterBase.NormalizeName(string! name) -> LinqToDB.Naming.NameConverterBase.NameParts!
-static LinqToDB.Scaffold.Internal.NameGenerationServices.GenerateAssociationName(System.Func<LinqToDB.SqlQuery.SqlObjectName, string!, bool>! isPrimaryKeyColumn, LinqToDB.SqlQuery.SqlObjectName thisTable, LinqToDB.SqlQuery.SqlObjectName otherTable, bool isBackReference, string![]! thisColumns, string! fkName, LinqToDB.Naming.NameTransformation transformationSettings, System.Collections.Generic.ISet<string!>! defaultSchemas) -> string!
+static LinqToDB.Scaffold.Internal.NameGenerationServices.GenerateAssociationName(System.Func<LinqToDB.Internal.SqlQuery.SqlObjectName, string!, bool>! isPrimaryKeyColumn, LinqToDB.Internal.SqlQuery.SqlObjectName thisTable, LinqToDB.Internal.SqlQuery.SqlObjectName otherTable, bool isBackReference, string![]! thisColumns, string! fkName, LinqToDB.Naming.NameTransformation transformationSettings, System.Collections.Generic.ISet<string!>! defaultSchemas) -> string!
 static LinqToDB.Scaffold.ScaffoldOptions.Default() -> LinqToDB.Scaffold.ScaffoldOptions!
 static LinqToDB.Scaffold.ScaffoldOptions.T4() -> LinqToDB.Scaffold.ScaffoldOptions!
 static LinqToDB.Scaffold.SourceCodeFile.operator !=(LinqToDB.Scaffold.SourceCodeFile? left, LinqToDB.Scaffold.SourceCodeFile? right) -> bool

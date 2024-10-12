@@ -3,9 +3,9 @@ using System.Globalization;
 
 namespace LinqToDB.DataProvider.SQLite.Translation
 {
-	using Common;
-	using SqlQuery;
-	using Linq.Translation;
+	using LinqToDB.Common;
+	using LinqToDB.Internal.SqlQuery;
+	using LinqToDB.Linq.Translation;
 
 	public class SQLiteMemberTranslator : ProviderMemberTranslatorDefault
 	{

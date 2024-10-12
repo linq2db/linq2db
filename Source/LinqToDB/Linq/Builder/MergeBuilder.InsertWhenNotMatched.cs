@@ -3,9 +3,9 @@ using System.Linq.Expressions;
 
 namespace LinqToDB.Linq.Builder
 {
-	using Data;
+	using LinqToDB.Data;
 	using LinqToDB.Expressions;
-	using SqlQuery;
+	using LinqToDB.Internal.SqlQuery;
 
 	using static LinqToDB.Reflection.Methods.LinqToDB.Merge;
 

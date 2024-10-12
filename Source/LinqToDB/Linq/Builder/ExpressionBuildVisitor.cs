@@ -11,15 +11,17 @@ using System.Reflection;
 
 namespace LinqToDB.Linq.Builder
 {
-	using Common;
-	using Data;
-	using Extensions;
-	using Translation;
-	using Mapping;
-	using Reflection;
-	using SqlQuery;
+	using LinqToDB.Common;
 	using LinqToDB.Common.Internal;
+	using LinqToDB.Data;
 	using LinqToDB.Expressions;
+	using LinqToDB.Extensions;
+	using LinqToDB.Internal.SqlQuery;
+	using LinqToDB.Linq.Translation;
+	using LinqToDB.Mapping;
+	using LinqToDB.Reflection;
+	using LinqToDB.SqlQuery;
+	using LinqToDB.SqlProvider;
 
 	[Flags]
 	public enum BuildPurpose

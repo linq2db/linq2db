@@ -6,9 +6,9 @@ using System.Reflection;
 namespace LinqToDB.Linq.Builder
 {
 	using LinqToDB.Expressions;
-	using Mapping;
-	using SqlQuery;
-	using Extensions;
+	using LinqToDB.Extensions;
+	using LinqToDB.Internal.SqlQuery;
+	using LinqToDB.Mapping;
 
 	// This class implements double functionality (scalar and member type selects)
 	// and could be implemented as two different classes.

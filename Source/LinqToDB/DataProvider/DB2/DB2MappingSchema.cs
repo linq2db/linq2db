@@ -5,9 +5,9 @@ using System.Text;
 
 namespace LinqToDB.DataProvider.DB2
 {
-	using Common;
-	using Mapping;
-	using SqlQuery;
+	using LinqToDB.Common;
+	using LinqToDB.Mapping;
+	using LinqToDB.SqlQuery;
 
 	sealed class DB2MappingSchema : LockedMappingSchema
 	{

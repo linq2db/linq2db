@@ -13,18 +13,23 @@ using System.Threading.Tasks;
 
 namespace LinqToDB.Linq
 {
-	using Builder;
-	using Common;
-	using Common.Internal.Cache;
-	using Common.Logging;
-	using Data;
-	using Extensions;
-	using Interceptors;
+	using LinqToDB.Common;
+	using LinqToDB.Common.Internal;
+	using LinqToDB.Data;
 	using LinqToDB.Expressions;
-	using Reflection;
-	using SqlQuery;
-	using Tools;
-	using Infrastructure;
+	using LinqToDB.Extensions;
+	using LinqToDB.Internal.SqlQuery;
+	using LinqToDB.Linq.Translation;
+	using LinqToDB.Mapping;
+	using LinqToDB.Reflection;
+	using LinqToDB.SqlQuery;
+	using LinqToDB.SqlProvider;
+	using LinqToDB.Common.Internal.Cache;
+	using LinqToDB.Tools;
+	using LinqToDB.Common.Logging;
+	using LinqToDB.Linq.Builder;
+	using LinqToDB.Infrastructure;
+	using LinqToDB.Interceptors;
 
 	static partial class QueryRunner
 	{

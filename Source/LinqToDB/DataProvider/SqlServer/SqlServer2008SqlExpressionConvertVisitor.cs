@@ -1,6 +1,6 @@
 ﻿namespace LinqToDB.DataProvider.SqlServer
 {
-	using SqlQuery;
+	using LinqToDB.Internal.SqlQuery;
 
 	public class SqlServer2008SqlExpressionConvertVisitor : SqlServer2005SqlExpressionConvertVisitor
 	{

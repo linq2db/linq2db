@@ -1,14 +1,12 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 
 namespace LinqToDB.Linq.Builder
 {
-	using Async;
-	using Common;
+	using LinqToDB.Async;
 	using LinqToDB.Expressions;
-	using SqlQuery;
+	using LinqToDB.Internal.SqlQuery;
 
 	[BuildsMethodCall("First", "FirstOrDefault", "Single", "SingleOrDefault")]
 	[BuildsMethodCall("FirstAsync", "FirstOrDefaultAsync", "SingleAsync", "SingleOrDefaultAsync", 

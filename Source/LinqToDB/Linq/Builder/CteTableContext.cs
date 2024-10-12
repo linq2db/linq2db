@@ -6,8 +6,8 @@ using System.Reflection;
 namespace LinqToDB.Linq.Builder
 {
 	using LinqToDB.Expressions;
-	using Mapping;
-	using SqlQuery;
+	using LinqToDB.Internal.SqlQuery;
+	using LinqToDB.Mapping;
 
 	internal sealed class CteTableContext: BuildContextBase, ITableContext
 	{

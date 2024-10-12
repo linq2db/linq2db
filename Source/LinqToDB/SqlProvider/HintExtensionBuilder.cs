@@ -1,9 +1,8 @@
-﻿using System;
-using System.Text;
+﻿using System.Text;
 
 namespace LinqToDB.SqlProvider
 {
-	using SqlQuery;
+	using LinqToDB.Internal.SqlQuery;
 
 	sealed class HintExtensionBuilder : ISqlQueryExtensionBuilder
 	{

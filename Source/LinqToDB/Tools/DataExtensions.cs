@@ -4,10 +4,10 @@ using System.Linq;
 
 namespace LinqToDB.Tools
 {
-	using Common;
-	using Data;
-	using Mapping;
-	using SqlProvider;
+	using LinqToDB.Common;
+	using LinqToDB.Data;
+	using LinqToDB.Mapping;
+	using LinqToDB.SqlProvider;
 
 	public static class DataExtensions
 	{
