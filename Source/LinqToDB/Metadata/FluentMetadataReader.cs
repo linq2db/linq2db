@@ -7,10 +7,9 @@ using System.Reflection;
 
 namespace LinqToDB.Metadata
 {
-	using Common;
-	using Common.Internal;
-	using Extensions;
-	using Mapping;
+	using LinqToDB.Extensions;
+	using LinqToDB.Internal.Common;
+	using LinqToDB.Mapping;
 
 	public class FluentMetadataReader : IMetadataReader
 	{

@@ -11,13 +11,13 @@ using System.Text;
 
 namespace LinqToDB.Remote
 {
-	using LinqToDB.Common.Internal;
 	using LinqToDB.Data;
 	using LinqToDB.DataProvider;
 	using LinqToDB.Extensions;
+	using LinqToDB.Internal.Common;
+	using LinqToDB.Internal.SqlQuery;
 	using LinqToDB.Linq;
 	using LinqToDB.SqlProvider;
-	using LinqToDB.Internal.SqlQuery;
 
 	public abstract partial class RemoteDataContextBase
 	{

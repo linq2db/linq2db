@@ -1,11 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 
 namespace LinqToDB.DataProvider.DB2
 {
-	using Common;
-	using Common.Internal;
-	using Data;
+	using LinqToDB.Common;
+	using LinqToDB.Data;
+	using LinqToDB.DataProvider;
+	using LinqToDB.Internal.Common;
 
 	/// <param name="BulkCopyType">
 	/// Default bulk copy mode, used for DB2 by <see cref="DataConnectionExtensions.BulkCopy{T}(DataConnection, IEnumerable{T})"/>

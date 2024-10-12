@@ -5,7 +5,7 @@ using System.Linq.Expressions;
 
 namespace LinqToDB
 {
-	using LinqToDB.Common.Internal;
+	using LinqToDB.Internal.Common;
 	using LinqToDB.Internal.SqlQuery;
 	using LinqToDB.Mapping;
 	using LinqToDB.SqlProvider;

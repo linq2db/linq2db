@@ -4,16 +4,15 @@ using System.Linq.Expressions;
 using System.Threading.Tasks;
 
 using LinqToDB;
+using LinqToDB.Common;
+using LinqToDB.Internal.Async;
 using LinqToDB.Mapping;
+using LinqToDB.Tools.Comparers;
 
 using NUnit.Framework;
 
-using LinqToDB.Tools.Comparers;
-using LinqToDB.Common;
-
 namespace Tests.xUpdate
 {
-	using LinqToDB.Async;
 
 	using Model;
 

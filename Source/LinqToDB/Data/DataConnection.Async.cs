@@ -9,9 +9,9 @@ namespace LinqToDB.Data
 {
 	using LinqToDB.Async;
 	using LinqToDB.Common;
-	using LinqToDB.Compatibility.System;
 	using LinqToDB.Data.RetryPolicy;
 	using LinqToDB.Interceptors;
+	using LinqToDB.Internal.Common;
 	using LinqToDB.Tools;
 
 	public partial class DataConnection

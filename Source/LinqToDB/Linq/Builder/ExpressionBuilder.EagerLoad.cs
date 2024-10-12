@@ -8,14 +8,14 @@ using System.Threading.Tasks;
 
 namespace LinqToDB.Linq.Builder
 {
-	using Async;
-	using Common;
-	using Common.Internal;
-	using Extensions;
-	using Reflection;
-	using SqlQuery;
+	using LinqToDB.Common;
 	using LinqToDB.Expressions;
+	using LinqToDB.Extensions;
+	using LinqToDB.Internal.Async;
+	using LinqToDB.Internal.Common;
 	using LinqToDB.Internal.SqlQuery;
+	using LinqToDB.Linq;
+	using LinqToDB.Reflection;
 
 	partial class ExpressionBuilder
 	{

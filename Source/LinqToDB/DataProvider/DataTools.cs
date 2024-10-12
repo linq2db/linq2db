@@ -8,7 +8,7 @@ using System.Text;
 
 namespace LinqToDB.DataProvider
 {
-	using Common.Internal;
+	using LinqToDB.Internal.Common;
 
 	public static class DataTools
 	{

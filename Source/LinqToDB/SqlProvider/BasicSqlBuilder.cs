@@ -15,9 +15,9 @@ using System.Text.RegularExpressions;
 namespace LinqToDB.SqlProvider
 {
 	using LinqToDB.Common;
-	using LinqToDB.Common.Internal;
 	using LinqToDB.DataProvider;
 	using LinqToDB.Extensions;
+	using LinqToDB.Internal.Common;
 	using LinqToDB.Internal.SqlQuery;
 	using LinqToDB.Mapping;
 	using LinqToDB.SqlQuery;

@@ -620,91 +620,91 @@ LinqToDB.Common.DbDataType.WithSystemType(System.Type! systemType) -> LinqToDB.C
 LinqToDB.Common.DefaultValue
 LinqToDB.Common.DefaultValue<T>
 LinqToDB.Common.EnumerableHelper
-LinqToDB.Common.Internal.Cache.CacheEntryExtensions
-LinqToDB.Common.Internal.Cache.CacheExtensions
-LinqToDB.Common.Internal.Cache.CacheItemPriority
-LinqToDB.Common.Internal.Cache.CacheItemPriority.High = 2 -> LinqToDB.Common.Internal.Cache.CacheItemPriority
-LinqToDB.Common.Internal.Cache.CacheItemPriority.Low = 0 -> LinqToDB.Common.Internal.Cache.CacheItemPriority
-LinqToDB.Common.Internal.Cache.CacheItemPriority.NeverRemove = 3 -> LinqToDB.Common.Internal.Cache.CacheItemPriority
-LinqToDB.Common.Internal.Cache.CacheItemPriority.Normal = 1 -> LinqToDB.Common.Internal.Cache.CacheItemPriority
-LinqToDB.Common.Internal.Cache.EvictionReason
-LinqToDB.Common.Internal.Cache.EvictionReason.Capacity = 5 -> LinqToDB.Common.Internal.Cache.EvictionReason
-LinqToDB.Common.Internal.Cache.EvictionReason.Expired = 3 -> LinqToDB.Common.Internal.Cache.EvictionReason
-LinqToDB.Common.Internal.Cache.EvictionReason.None = 0 -> LinqToDB.Common.Internal.Cache.EvictionReason
-LinqToDB.Common.Internal.Cache.EvictionReason.Removed = 1 -> LinqToDB.Common.Internal.Cache.EvictionReason
-LinqToDB.Common.Internal.Cache.EvictionReason.Replaced = 2 -> LinqToDB.Common.Internal.Cache.EvictionReason
-LinqToDB.Common.Internal.Cache.EvictionReason.TokenExpired = 4 -> LinqToDB.Common.Internal.Cache.EvictionReason
-LinqToDB.Common.Internal.Cache.ICacheEntry<TKey, TEntity>
-LinqToDB.Common.Internal.Cache.ICacheEntry<TKey, TEntity>.AbsoluteExpiration.get -> System.DateTimeOffset?
-LinqToDB.Common.Internal.Cache.ICacheEntry<TKey, TEntity>.AbsoluteExpiration.set -> void
-LinqToDB.Common.Internal.Cache.ICacheEntry<TKey, TEntity>.AbsoluteExpirationRelativeToNow.get -> System.TimeSpan?
-LinqToDB.Common.Internal.Cache.ICacheEntry<TKey, TEntity>.AbsoluteExpirationRelativeToNow.set -> void
-LinqToDB.Common.Internal.Cache.ICacheEntry<TKey, TEntity>.ExpirationTokens.get -> System.Collections.Generic.IList<LinqToDB.Common.Internal.Cache.IChangeToken!>!
-LinqToDB.Common.Internal.Cache.ICacheEntry<TKey, TEntity>.Key.get -> TKey
-LinqToDB.Common.Internal.Cache.ICacheEntry<TKey, TEntity>.PostEvictionCallbacks.get -> System.Collections.Generic.IList<LinqToDB.Common.Internal.Cache.PostEvictionCallbackRegistration<TKey>!>!
-LinqToDB.Common.Internal.Cache.ICacheEntry<TKey, TEntity>.Priority.get -> LinqToDB.Common.Internal.Cache.CacheItemPriority
-LinqToDB.Common.Internal.Cache.ICacheEntry<TKey, TEntity>.Priority.set -> void
-LinqToDB.Common.Internal.Cache.ICacheEntry<TKey, TEntity>.Size.get -> long?
-LinqToDB.Common.Internal.Cache.ICacheEntry<TKey, TEntity>.Size.set -> void
-LinqToDB.Common.Internal.Cache.ICacheEntry<TKey, TEntity>.SlidingExpiration.get -> System.TimeSpan?
-LinqToDB.Common.Internal.Cache.ICacheEntry<TKey, TEntity>.SlidingExpiration.set -> void
-LinqToDB.Common.Internal.Cache.ICacheEntry<TKey, TEntity>.Value.get -> TEntity?
-LinqToDB.Common.Internal.Cache.ICacheEntry<TKey, TEntity>.Value.set -> void
-LinqToDB.Common.Internal.Cache.IChangeToken
-LinqToDB.Common.Internal.Cache.IChangeToken.ActiveChangeCallbacks.get -> bool
-LinqToDB.Common.Internal.Cache.IChangeToken.HasChanged.get -> bool
-LinqToDB.Common.Internal.Cache.IChangeToken.RegisterChangeCallback(System.Action<object!>! callback, object! state) -> System.IDisposable!
-LinqToDB.Common.Internal.Cache.IMemoryCache<TKey, TEntry>
-LinqToDB.Common.Internal.Cache.IMemoryCache<TKey, TEntry>.CreateEntry(TKey key) -> LinqToDB.Common.Internal.Cache.ICacheEntry<TKey, TEntry>!
-LinqToDB.Common.Internal.Cache.IMemoryCache<TKey, TEntry>.Remove(TKey key) -> void
-LinqToDB.Common.Internal.Cache.IMemoryCache<TKey, TEntry>.TryGetValue(TKey key, out TEntry value) -> bool
-LinqToDB.Common.Internal.Cache.ISystemClock
-LinqToDB.Common.Internal.Cache.ISystemClock.UtcNow.get -> System.DateTimeOffset
-LinqToDB.Common.Internal.Cache.MemoryCache<TKey, TEntry>
-LinqToDB.Common.Internal.Cache.MemoryCache<TKey, TEntry>.Clear() -> void
-LinqToDB.Common.Internal.Cache.MemoryCache<TKey, TEntry>.Compact(double percentage) -> void
-LinqToDB.Common.Internal.Cache.MemoryCache<TKey, TEntry>.Count.get -> int
-LinqToDB.Common.Internal.Cache.MemoryCache<TKey, TEntry>.CreateEntry(TKey key) -> LinqToDB.Common.Internal.Cache.ICacheEntry<TKey, TEntry>!
-LinqToDB.Common.Internal.Cache.MemoryCache<TKey, TEntry>.Dispose() -> void
-LinqToDB.Common.Internal.Cache.MemoryCache<TKey, TEntry>.MemoryCache(LinqToDB.Common.Internal.Cache.MemoryCacheOptions! optionsAccessor) -> void
-LinqToDB.Common.Internal.Cache.MemoryCache<TKey, TEntry>.Remove(TKey key) -> void
-LinqToDB.Common.Internal.Cache.MemoryCache<TKey, TEntry>.TryGetValue(TKey key, out TEntry value) -> bool
-LinqToDB.Common.Internal.Cache.MemoryCache<TKey, TEntry>.~MemoryCache() -> void
-LinqToDB.Common.Internal.Cache.MemoryCacheEntryExtensions
-LinqToDB.Common.Internal.Cache.MemoryCacheEntryOptions<TKey>
-LinqToDB.Common.Internal.Cache.MemoryCacheEntryOptions<TKey>.AbsoluteExpiration.get -> System.DateTimeOffset?
-LinqToDB.Common.Internal.Cache.MemoryCacheEntryOptions<TKey>.AbsoluteExpiration.set -> void
-LinqToDB.Common.Internal.Cache.MemoryCacheEntryOptions<TKey>.AbsoluteExpirationRelativeToNow.get -> System.TimeSpan?
-LinqToDB.Common.Internal.Cache.MemoryCacheEntryOptions<TKey>.AbsoluteExpirationRelativeToNow.set -> void
-LinqToDB.Common.Internal.Cache.MemoryCacheEntryOptions<TKey>.ExpirationTokens.get -> System.Collections.Generic.IList<LinqToDB.Common.Internal.Cache.IChangeToken!>!
-LinqToDB.Common.Internal.Cache.MemoryCacheEntryOptions<TKey>.MemoryCacheEntryOptions() -> void
-LinqToDB.Common.Internal.Cache.MemoryCacheEntryOptions<TKey>.PostEvictionCallbacks.get -> System.Collections.Generic.IList<LinqToDB.Common.Internal.Cache.PostEvictionCallbackRegistration<TKey>!>!
-LinqToDB.Common.Internal.Cache.MemoryCacheEntryOptions<TKey>.Priority.get -> LinqToDB.Common.Internal.Cache.CacheItemPriority
-LinqToDB.Common.Internal.Cache.MemoryCacheEntryOptions<TKey>.Priority.set -> void
-LinqToDB.Common.Internal.Cache.MemoryCacheEntryOptions<TKey>.Size.get -> long?
-LinqToDB.Common.Internal.Cache.MemoryCacheEntryOptions<TKey>.Size.set -> void
-LinqToDB.Common.Internal.Cache.MemoryCacheEntryOptions<TKey>.SlidingExpiration.get -> System.TimeSpan?
-LinqToDB.Common.Internal.Cache.MemoryCacheEntryOptions<TKey>.SlidingExpiration.set -> void
-LinqToDB.Common.Internal.Cache.MemoryCacheOptions
-LinqToDB.Common.Internal.Cache.MemoryCacheOptions.Clock.get -> LinqToDB.Common.Internal.Cache.ISystemClock?
-LinqToDB.Common.Internal.Cache.MemoryCacheOptions.Clock.set -> void
-LinqToDB.Common.Internal.Cache.MemoryCacheOptions.CompactionPercentage.get -> double
-LinqToDB.Common.Internal.Cache.MemoryCacheOptions.CompactionPercentage.set -> void
-LinqToDB.Common.Internal.Cache.MemoryCacheOptions.ExpirationScanFrequency.get -> System.TimeSpan
-LinqToDB.Common.Internal.Cache.MemoryCacheOptions.ExpirationScanFrequency.set -> void
-LinqToDB.Common.Internal.Cache.MemoryCacheOptions.MemoryCacheOptions() -> void
-LinqToDB.Common.Internal.Cache.MemoryCacheOptions.SizeLimit.get -> long?
-LinqToDB.Common.Internal.Cache.MemoryCacheOptions.SizeLimit.set -> void
-LinqToDB.Common.Internal.Cache.PostEvictionCallbackRegistration<TKey>
-LinqToDB.Common.Internal.Cache.PostEvictionCallbackRegistration<TKey>.EvictionCallback.get -> LinqToDB.Common.Internal.Cache.PostEvictionDelegate<TKey>!
-LinqToDB.Common.Internal.Cache.PostEvictionCallbackRegistration<TKey>.EvictionCallback.set -> void
-LinqToDB.Common.Internal.Cache.PostEvictionCallbackRegistration<TKey>.PostEvictionCallbackRegistration() -> void
-LinqToDB.Common.Internal.Cache.PostEvictionCallbackRegistration<TKey>.State.get -> object?
-LinqToDB.Common.Internal.Cache.PostEvictionCallbackRegistration<TKey>.State.set -> void
-LinqToDB.Common.Internal.Cache.PostEvictionDelegate<TKey>
-LinqToDB.Common.Internal.Cache.SystemClock
-LinqToDB.Common.Internal.Cache.SystemClock.SystemClock() -> void
-LinqToDB.Common.Internal.Cache.SystemClock.UtcNow.get -> System.DateTimeOffset
+LinqToDB.Internal.Cache.CacheEntryExtensions
+LinqToDB.Internal.Cache.CacheExtensions
+LinqToDB.Internal.Cache.CacheItemPriority
+LinqToDB.Internal.Cache.CacheItemPriority.High = 2 -> LinqToDB.Internal.Cache.CacheItemPriority
+LinqToDB.Internal.Cache.CacheItemPriority.Low = 0 -> LinqToDB.Internal.Cache.CacheItemPriority
+LinqToDB.Internal.Cache.CacheItemPriority.NeverRemove = 3 -> LinqToDB.Internal.Cache.CacheItemPriority
+LinqToDB.Internal.Cache.CacheItemPriority.Normal = 1 -> LinqToDB.Internal.Cache.CacheItemPriority
+LinqToDB.Internal.Cache.EvictionReason
+LinqToDB.Internal.Cache.EvictionReason.Capacity = 5 -> LinqToDB.Internal.Cache.EvictionReason
+LinqToDB.Internal.Cache.EvictionReason.Expired = 3 -> LinqToDB.Internal.Cache.EvictionReason
+LinqToDB.Internal.Cache.EvictionReason.None = 0 -> LinqToDB.Internal.Cache.EvictionReason
+LinqToDB.Internal.Cache.EvictionReason.Removed = 1 -> LinqToDB.Internal.Cache.EvictionReason
+LinqToDB.Internal.Cache.EvictionReason.Replaced = 2 -> LinqToDB.Internal.Cache.EvictionReason
+LinqToDB.Internal.Cache.EvictionReason.TokenExpired = 4 -> LinqToDB.Internal.Cache.EvictionReason
+LinqToDB.Internal.Cache.ICacheEntry<TKey, TEntity>
+LinqToDB.Internal.Cache.ICacheEntry<TKey, TEntity>.AbsoluteExpiration.get -> System.DateTimeOffset?
+LinqToDB.Internal.Cache.ICacheEntry<TKey, TEntity>.AbsoluteExpiration.set -> void
+LinqToDB.Internal.Cache.ICacheEntry<TKey, TEntity>.AbsoluteExpirationRelativeToNow.get -> System.TimeSpan?
+LinqToDB.Internal.Cache.ICacheEntry<TKey, TEntity>.AbsoluteExpirationRelativeToNow.set -> void
+LinqToDB.Internal.Cache.ICacheEntry<TKey, TEntity>.ExpirationTokens.get -> System.Collections.Generic.IList<LinqToDB.Internal.Cache.IChangeToken!>!
+LinqToDB.Internal.Cache.ICacheEntry<TKey, TEntity>.Key.get -> TKey
+LinqToDB.Internal.Cache.ICacheEntry<TKey, TEntity>.PostEvictionCallbacks.get -> System.Collections.Generic.IList<LinqToDB.Internal.Cache.PostEvictionCallbackRegistration<TKey>!>!
+LinqToDB.Internal.Cache.ICacheEntry<TKey, TEntity>.Priority.get -> LinqToDB.Internal.Cache.CacheItemPriority
+LinqToDB.Internal.Cache.ICacheEntry<TKey, TEntity>.Priority.set -> void
+LinqToDB.Internal.Cache.ICacheEntry<TKey, TEntity>.Size.get -> long?
+LinqToDB.Internal.Cache.ICacheEntry<TKey, TEntity>.Size.set -> void
+LinqToDB.Internal.Cache.ICacheEntry<TKey, TEntity>.SlidingExpiration.get -> System.TimeSpan?
+LinqToDB.Internal.Cache.ICacheEntry<TKey, TEntity>.SlidingExpiration.set -> void
+LinqToDB.Internal.Cache.ICacheEntry<TKey, TEntity>.Value.get -> TEntity?
+LinqToDB.Internal.Cache.ICacheEntry<TKey, TEntity>.Value.set -> void
+LinqToDB.Internal.Cache.IChangeToken
+LinqToDB.Internal.Cache.IChangeToken.ActiveChangeCallbacks.get -> bool
+LinqToDB.Internal.Cache.IChangeToken.HasChanged.get -> bool
+LinqToDB.Internal.Cache.IChangeToken.RegisterChangeCallback(System.Action<object!>! callback, object! state) -> System.IDisposable!
+LinqToDB.Internal.Cache.IMemoryCache<TKey, TEntry>
+LinqToDB.Internal.Cache.IMemoryCache<TKey, TEntry>.CreateEntry(TKey key) -> LinqToDB.Internal.Cache.ICacheEntry<TKey, TEntry>!
+LinqToDB.Internal.Cache.IMemoryCache<TKey, TEntry>.Remove(TKey key) -> void
+LinqToDB.Internal.Cache.IMemoryCache<TKey, TEntry>.TryGetValue(TKey key, out TEntry value) -> bool
+LinqToDB.Internal.Cache.ISystemClock
+LinqToDB.Internal.Cache.ISystemClock.UtcNow.get -> System.DateTimeOffset
+LinqToDB.Internal.Cache.MemoryCache<TKey, TEntry>
+LinqToDB.Internal.Cache.MemoryCache<TKey, TEntry>.Clear() -> void
+LinqToDB.Internal.Cache.MemoryCache<TKey, TEntry>.Compact(double percentage) -> void
+LinqToDB.Internal.Cache.MemoryCache<TKey, TEntry>.Count.get -> int
+LinqToDB.Internal.Cache.MemoryCache<TKey, TEntry>.CreateEntry(TKey key) -> LinqToDB.Internal.Cache.ICacheEntry<TKey, TEntry>!
+LinqToDB.Internal.Cache.MemoryCache<TKey, TEntry>.Dispose() -> void
+LinqToDB.Internal.Cache.MemoryCache<TKey, TEntry>.MemoryCache(LinqToDB.Internal.Cache.MemoryCacheOptions! optionsAccessor) -> void
+LinqToDB.Internal.Cache.MemoryCache<TKey, TEntry>.Remove(TKey key) -> void
+LinqToDB.Internal.Cache.MemoryCache<TKey, TEntry>.TryGetValue(TKey key, out TEntry value) -> bool
+LinqToDB.Internal.Cache.MemoryCache<TKey, TEntry>.~MemoryCache() -> void
+LinqToDB.Internal.Cache.MemoryCacheEntryExtensions
+LinqToDB.Internal.Cache.MemoryCacheEntryOptions<TKey>
+LinqToDB.Internal.Cache.MemoryCacheEntryOptions<TKey>.AbsoluteExpiration.get -> System.DateTimeOffset?
+LinqToDB.Internal.Cache.MemoryCacheEntryOptions<TKey>.AbsoluteExpiration.set -> void
+LinqToDB.Internal.Cache.MemoryCacheEntryOptions<TKey>.AbsoluteExpirationRelativeToNow.get -> System.TimeSpan?
+LinqToDB.Internal.Cache.MemoryCacheEntryOptions<TKey>.AbsoluteExpirationRelativeToNow.set -> void
+LinqToDB.Internal.Cache.MemoryCacheEntryOptions<TKey>.ExpirationTokens.get -> System.Collections.Generic.IList<LinqToDB.Internal.Cache.IChangeToken!>!
+LinqToDB.Internal.Cache.MemoryCacheEntryOptions<TKey>.MemoryCacheEntryOptions() -> void
+LinqToDB.Internal.Cache.MemoryCacheEntryOptions<TKey>.PostEvictionCallbacks.get -> System.Collections.Generic.IList<LinqToDB.Internal.Cache.PostEvictionCallbackRegistration<TKey>!>!
+LinqToDB.Internal.Cache.MemoryCacheEntryOptions<TKey>.Priority.get -> LinqToDB.Internal.Cache.CacheItemPriority
+LinqToDB.Internal.Cache.MemoryCacheEntryOptions<TKey>.Priority.set -> void
+LinqToDB.Internal.Cache.MemoryCacheEntryOptions<TKey>.Size.get -> long?
+LinqToDB.Internal.Cache.MemoryCacheEntryOptions<TKey>.Size.set -> void
+LinqToDB.Internal.Cache.MemoryCacheEntryOptions<TKey>.SlidingExpiration.get -> System.TimeSpan?
+LinqToDB.Internal.Cache.MemoryCacheEntryOptions<TKey>.SlidingExpiration.set -> void
+LinqToDB.Internal.Cache.MemoryCacheOptions
+LinqToDB.Internal.Cache.MemoryCacheOptions.Clock.get -> LinqToDB.Internal.Cache.ISystemClock?
+LinqToDB.Internal.Cache.MemoryCacheOptions.Clock.set -> void
+LinqToDB.Internal.Cache.MemoryCacheOptions.CompactionPercentage.get -> double
+LinqToDB.Internal.Cache.MemoryCacheOptions.CompactionPercentage.set -> void
+LinqToDB.Internal.Cache.MemoryCacheOptions.ExpirationScanFrequency.get -> System.TimeSpan
+LinqToDB.Internal.Cache.MemoryCacheOptions.ExpirationScanFrequency.set -> void
+LinqToDB.Internal.Cache.MemoryCacheOptions.MemoryCacheOptions() -> void
+LinqToDB.Internal.Cache.MemoryCacheOptions.SizeLimit.get -> long?
+LinqToDB.Internal.Cache.MemoryCacheOptions.SizeLimit.set -> void
+LinqToDB.Internal.Cache.PostEvictionCallbackRegistration<TKey>
+LinqToDB.Internal.Cache.PostEvictionCallbackRegistration<TKey>.EvictionCallback.get -> LinqToDB.Internal.Cache.PostEvictionDelegate<TKey>!
+LinqToDB.Internal.Cache.PostEvictionCallbackRegistration<TKey>.EvictionCallback.set -> void
+LinqToDB.Internal.Cache.PostEvictionCallbackRegistration<TKey>.PostEvictionCallbackRegistration() -> void
+LinqToDB.Internal.Cache.PostEvictionCallbackRegistration<TKey>.State.get -> object?
+LinqToDB.Internal.Cache.PostEvictionCallbackRegistration<TKey>.State.set -> void
+LinqToDB.Internal.Cache.PostEvictionDelegate<TKey>
+LinqToDB.Internal.Cache.SystemClock
+LinqToDB.Internal.Cache.SystemClock.SystemClock() -> void
+LinqToDB.Internal.Cache.SystemClock.UtcNow.get -> System.DateTimeOffset
 LinqToDB.Common.Internal.IConfigurationID
 LinqToDB.Common.Internal.IConfigurationID.ConfigurationID.get -> int
 LinqToDB.Common.Internal.IdentifierBuilder
@@ -8703,34 +8703,34 @@ static LinqToDB.Common.DefaultValue<T>.Value.get -> T
 static LinqToDB.Common.DefaultValue<T>.Value.set -> void
 static LinqToDB.Common.EnumerableHelper.Batch<T>(System.Collections.Generic.IAsyncEnumerable<T>! source, int batchSize) -> System.Collections.Generic.IAsyncEnumerable<System.Collections.Generic.IAsyncEnumerable<T>!>!
 static LinqToDB.Common.EnumerableHelper.Batch<T>(System.Collections.Generic.IEnumerable<T>! source, int batchSize) -> System.Collections.Generic.IEnumerable<System.Collections.Generic.IEnumerable<T>!>!
-static LinqToDB.Common.Internal.Cache.CacheEntryExtensions.AddExpirationToken<TKey, TEntry>(this LinqToDB.Common.Internal.Cache.ICacheEntry<TKey, TEntry>! entry, LinqToDB.Common.Internal.Cache.IChangeToken! expirationToken) -> LinqToDB.Common.Internal.Cache.ICacheEntry<TKey, TEntry>!
-static LinqToDB.Common.Internal.Cache.CacheEntryExtensions.RegisterPostEvictionCallback<TKey, TEntry>(this LinqToDB.Common.Internal.Cache.ICacheEntry<TKey, TEntry>! entry, LinqToDB.Common.Internal.Cache.PostEvictionDelegate<TKey>! callback) -> LinqToDB.Common.Internal.Cache.ICacheEntry<TKey, TEntry>!
-static LinqToDB.Common.Internal.Cache.CacheEntryExtensions.RegisterPostEvictionCallback<TKey, TEntry>(this LinqToDB.Common.Internal.Cache.ICacheEntry<TKey, TEntry>! entry, LinqToDB.Common.Internal.Cache.PostEvictionDelegate<TKey>! callback, object? state) -> LinqToDB.Common.Internal.Cache.ICacheEntry<TKey, TEntry>!
-static LinqToDB.Common.Internal.Cache.CacheEntryExtensions.SetAbsoluteExpiration<TKey, TEntry>(this LinqToDB.Common.Internal.Cache.ICacheEntry<TKey, TEntry>! entry, System.DateTimeOffset absolute) -> LinqToDB.Common.Internal.Cache.ICacheEntry<TKey, TEntry>!
-static LinqToDB.Common.Internal.Cache.CacheEntryExtensions.SetAbsoluteExpiration<TKey, TEntry>(this LinqToDB.Common.Internal.Cache.ICacheEntry<TKey, TEntry>! entry, System.TimeSpan relative) -> LinqToDB.Common.Internal.Cache.ICacheEntry<TKey, TEntry>!
-static LinqToDB.Common.Internal.Cache.CacheEntryExtensions.SetOptions<TKey, TEntry>(this LinqToDB.Common.Internal.Cache.ICacheEntry<TKey, TEntry>! entry, LinqToDB.Common.Internal.Cache.MemoryCacheEntryOptions<TKey>! options) -> LinqToDB.Common.Internal.Cache.ICacheEntry<TKey, TEntry>!
-static LinqToDB.Common.Internal.Cache.CacheEntryExtensions.SetPriority<TKey, TEntry>(this LinqToDB.Common.Internal.Cache.ICacheEntry<TKey, TEntry>! entry, LinqToDB.Common.Internal.Cache.CacheItemPriority priority) -> LinqToDB.Common.Internal.Cache.ICacheEntry<TKey, TEntry>!
-static LinqToDB.Common.Internal.Cache.CacheEntryExtensions.SetSize<TKey, TEntry>(this LinqToDB.Common.Internal.Cache.ICacheEntry<TKey, TEntry>! entry, long size) -> LinqToDB.Common.Internal.Cache.ICacheEntry<TKey, TEntry>!
-static LinqToDB.Common.Internal.Cache.CacheEntryExtensions.SetSlidingExpiration<TKey, TEntry>(this LinqToDB.Common.Internal.Cache.ICacheEntry<TKey, TEntry>! entry, System.TimeSpan offset) -> LinqToDB.Common.Internal.Cache.ICacheEntry<TKey, TEntry>!
-static LinqToDB.Common.Internal.Cache.CacheEntryExtensions.SetValue<TKey, TEntry>(this LinqToDB.Common.Internal.Cache.ICacheEntry<TKey, TEntry>! entry, TEntry value) -> LinqToDB.Common.Internal.Cache.ICacheEntry<TKey, TEntry>!
-static LinqToDB.Common.Internal.Cache.CacheExtensions.Get<TKey, TItem>(this LinqToDB.Common.Internal.Cache.IMemoryCache<TKey, TItem>! cache, TKey key) -> TItem?
-static LinqToDB.Common.Internal.Cache.CacheExtensions.GetOrCreate<TItem, TKey, TContext>(this LinqToDB.Common.Internal.Cache.IMemoryCache<TKey, TItem>! cache, TKey key, TContext context, System.Func<LinqToDB.Common.Internal.Cache.ICacheEntry<TKey, TItem>!, TContext, TItem>! factory) -> TItem
-static LinqToDB.Common.Internal.Cache.CacheExtensions.GetOrCreate<TItem, TKey, TDerivedKey, TContext>(this LinqToDB.Common.Internal.Cache.IMemoryCache<TKey, TItem>! cache, TDerivedKey key, TContext context, System.Func<LinqToDB.Common.Internal.Cache.ICacheEntry<TKey, TItem>!, TDerivedKey, TContext, TItem>! factory) -> TItem
-static LinqToDB.Common.Internal.Cache.CacheExtensions.GetOrCreate<TKey, TItem>(this LinqToDB.Common.Internal.Cache.IMemoryCache<TKey, TItem>! cache, TKey key, System.Func<LinqToDB.Common.Internal.Cache.ICacheEntry<TKey, TItem>!, TItem>! factory) -> TItem
-static LinqToDB.Common.Internal.Cache.CacheExtensions.GetOrCreateAsync<TKey, TItem>(this LinqToDB.Common.Internal.Cache.IMemoryCache<TKey, TItem>! cache, TKey key, System.Func<LinqToDB.Common.Internal.Cache.ICacheEntry<TKey, TItem>!, System.Threading.Tasks.Task<TItem>!>! factory) -> System.Threading.Tasks.Task<TItem>!
-static LinqToDB.Common.Internal.Cache.CacheExtensions.Set<TKey, TItem>(this LinqToDB.Common.Internal.Cache.IMemoryCache<TKey, TItem>! cache, TKey key, TItem value) -> TItem
-static LinqToDB.Common.Internal.Cache.CacheExtensions.Set<TKey, TItem>(this LinqToDB.Common.Internal.Cache.IMemoryCache<TKey, TItem>! cache, TKey key, TItem value, LinqToDB.Common.Internal.Cache.IChangeToken! expirationToken) -> TItem
-static LinqToDB.Common.Internal.Cache.CacheExtensions.Set<TKey, TItem>(this LinqToDB.Common.Internal.Cache.IMemoryCache<TKey, TItem>! cache, TKey key, TItem value, LinqToDB.Common.Internal.Cache.MemoryCacheEntryOptions<TKey>? options) -> TItem
-static LinqToDB.Common.Internal.Cache.CacheExtensions.Set<TKey, TItem>(this LinqToDB.Common.Internal.Cache.IMemoryCache<TKey, TItem>! cache, TKey key, TItem value, System.DateTimeOffset absoluteExpiration) -> TItem
-static LinqToDB.Common.Internal.Cache.CacheExtensions.Set<TKey, TItem>(this LinqToDB.Common.Internal.Cache.IMemoryCache<TKey, TItem>! cache, TKey key, TItem value, System.TimeSpan absoluteExpirationRelativeToNow) -> TItem
-static LinqToDB.Common.Internal.Cache.MemoryCacheEntryExtensions.AddExpirationToken<TKey>(this LinqToDB.Common.Internal.Cache.MemoryCacheEntryOptions<TKey>! options, LinqToDB.Common.Internal.Cache.IChangeToken! expirationToken) -> LinqToDB.Common.Internal.Cache.MemoryCacheEntryOptions<TKey>!
-static LinqToDB.Common.Internal.Cache.MemoryCacheEntryExtensions.RegisterPostEvictionCallback<TKey>(this LinqToDB.Common.Internal.Cache.MemoryCacheEntryOptions<TKey>! options, LinqToDB.Common.Internal.Cache.PostEvictionDelegate<TKey>! callback) -> LinqToDB.Common.Internal.Cache.MemoryCacheEntryOptions<TKey>!
-static LinqToDB.Common.Internal.Cache.MemoryCacheEntryExtensions.RegisterPostEvictionCallback<TKey>(this LinqToDB.Common.Internal.Cache.MemoryCacheEntryOptions<TKey>! options, LinqToDB.Common.Internal.Cache.PostEvictionDelegate<TKey>! callback, object? state) -> LinqToDB.Common.Internal.Cache.MemoryCacheEntryOptions<TKey>!
-static LinqToDB.Common.Internal.Cache.MemoryCacheEntryExtensions.SetAbsoluteExpiration<TKey>(this LinqToDB.Common.Internal.Cache.MemoryCacheEntryOptions<TKey>! options, System.DateTimeOffset absolute) -> LinqToDB.Common.Internal.Cache.MemoryCacheEntryOptions<TKey>!
-static LinqToDB.Common.Internal.Cache.MemoryCacheEntryExtensions.SetAbsoluteExpiration<TKey>(this LinqToDB.Common.Internal.Cache.MemoryCacheEntryOptions<TKey>! options, System.TimeSpan relative) -> LinqToDB.Common.Internal.Cache.MemoryCacheEntryOptions<TKey>!
-static LinqToDB.Common.Internal.Cache.MemoryCacheEntryExtensions.SetPriority<TKey>(this LinqToDB.Common.Internal.Cache.MemoryCacheEntryOptions<TKey>! options, LinqToDB.Common.Internal.Cache.CacheItemPriority priority) -> LinqToDB.Common.Internal.Cache.MemoryCacheEntryOptions<TKey>!
-static LinqToDB.Common.Internal.Cache.MemoryCacheEntryExtensions.SetSize<TKey>(this LinqToDB.Common.Internal.Cache.MemoryCacheEntryOptions<TKey>! options, long size) -> LinqToDB.Common.Internal.Cache.MemoryCacheEntryOptions<TKey>!
-static LinqToDB.Common.Internal.Cache.MemoryCacheEntryExtensions.SetSlidingExpiration<TKey>(this LinqToDB.Common.Internal.Cache.MemoryCacheEntryOptions<TKey>! options, System.TimeSpan offset) -> LinqToDB.Common.Internal.Cache.MemoryCacheEntryOptions<TKey>!
+static LinqToDB.Internal.Cache.CacheEntryExtensions.AddExpirationToken<TKey, TEntry>(this LinqToDB.Internal.Cache.ICacheEntry<TKey, TEntry>! entry, LinqToDB.Internal.Cache.IChangeToken! expirationToken) -> LinqToDB.Internal.Cache.ICacheEntry<TKey, TEntry>!
+static LinqToDB.Internal.Cache.CacheEntryExtensions.RegisterPostEvictionCallback<TKey, TEntry>(this LinqToDB.Internal.Cache.ICacheEntry<TKey, TEntry>! entry, LinqToDB.Internal.Cache.PostEvictionDelegate<TKey>! callback) -> LinqToDB.Internal.Cache.ICacheEntry<TKey, TEntry>!
+static LinqToDB.Internal.Cache.CacheEntryExtensions.RegisterPostEvictionCallback<TKey, TEntry>(this LinqToDB.Internal.Cache.ICacheEntry<TKey, TEntry>! entry, LinqToDB.Internal.Cache.PostEvictionDelegate<TKey>! callback, object? state) -> LinqToDB.Internal.Cache.ICacheEntry<TKey, TEntry>!
+static LinqToDB.Internal.Cache.CacheEntryExtensions.SetAbsoluteExpiration<TKey, TEntry>(this LinqToDB.Internal.Cache.ICacheEntry<TKey, TEntry>! entry, System.DateTimeOffset absolute) -> LinqToDB.Internal.Cache.ICacheEntry<TKey, TEntry>!
+static LinqToDB.Internal.Cache.CacheEntryExtensions.SetAbsoluteExpiration<TKey, TEntry>(this LinqToDB.Internal.Cache.ICacheEntry<TKey, TEntry>! entry, System.TimeSpan relative) -> LinqToDB.Internal.Cache.ICacheEntry<TKey, TEntry>!
+static LinqToDB.Internal.Cache.CacheEntryExtensions.SetOptions<TKey, TEntry>(this LinqToDB.Internal.Cache.ICacheEntry<TKey, TEntry>! entry, LinqToDB.Internal.Cache.MemoryCacheEntryOptions<TKey>! options) -> LinqToDB.Internal.Cache.ICacheEntry<TKey, TEntry>!
+static LinqToDB.Internal.Cache.CacheEntryExtensions.SetPriority<TKey, TEntry>(this LinqToDB.Internal.Cache.ICacheEntry<TKey, TEntry>! entry, LinqToDB.Internal.Cache.CacheItemPriority priority) -> LinqToDB.Internal.Cache.ICacheEntry<TKey, TEntry>!
+static LinqToDB.Internal.Cache.CacheEntryExtensions.SetSize<TKey, TEntry>(this LinqToDB.Internal.Cache.ICacheEntry<TKey, TEntry>! entry, long size) -> LinqToDB.Internal.Cache.ICacheEntry<TKey, TEntry>!
+static LinqToDB.Internal.Cache.CacheEntryExtensions.SetSlidingExpiration<TKey, TEntry>(this LinqToDB.Internal.Cache.ICacheEntry<TKey, TEntry>! entry, System.TimeSpan offset) -> LinqToDB.Internal.Cache.ICacheEntry<TKey, TEntry>!
+static LinqToDB.Internal.Cache.CacheEntryExtensions.SetValue<TKey, TEntry>(this LinqToDB.Internal.Cache.ICacheEntry<TKey, TEntry>! entry, TEntry value) -> LinqToDB.Internal.Cache.ICacheEntry<TKey, TEntry>!
+static LinqToDB.Internal.Cache.CacheExtensions.Get<TKey, TItem>(this LinqToDB.Internal.Cache.IMemoryCache<TKey, TItem>! cache, TKey key) -> TItem?
+static LinqToDB.Internal.Cache.CacheExtensions.GetOrCreate<TItem, TKey, TContext>(this LinqToDB.Internal.Cache.IMemoryCache<TKey, TItem>! cache, TKey key, TContext context, System.Func<LinqToDB.Internal.Cache.ICacheEntry<TKey, TItem>!, TContext, TItem>! factory) -> TItem
+static LinqToDB.Internal.Cache.CacheExtensions.GetOrCreate<TItem, TKey, TDerivedKey, TContext>(this LinqToDB.Internal.Cache.IMemoryCache<TKey, TItem>! cache, TDerivedKey key, TContext context, System.Func<LinqToDB.Internal.Cache.ICacheEntry<TKey, TItem>!, TDerivedKey, TContext, TItem>! factory) -> TItem
+static LinqToDB.Internal.Cache.CacheExtensions.GetOrCreate<TKey, TItem>(this LinqToDB.Internal.Cache.IMemoryCache<TKey, TItem>! cache, TKey key, System.Func<LinqToDB.Internal.Cache.ICacheEntry<TKey, TItem>!, TItem>! factory) -> TItem
+static LinqToDB.Internal.Cache.CacheExtensions.GetOrCreateAsync<TKey, TItem>(this LinqToDB.Internal.Cache.IMemoryCache<TKey, TItem>! cache, TKey key, System.Func<LinqToDB.Internal.Cache.ICacheEntry<TKey, TItem>!, System.Threading.Tasks.Task<TItem>!>! factory) -> System.Threading.Tasks.Task<TItem>!
+static LinqToDB.Internal.Cache.CacheExtensions.Set<TKey, TItem>(this LinqToDB.Internal.Cache.IMemoryCache<TKey, TItem>! cache, TKey key, TItem value) -> TItem
+static LinqToDB.Internal.Cache.CacheExtensions.Set<TKey, TItem>(this LinqToDB.Internal.Cache.IMemoryCache<TKey, TItem>! cache, TKey key, TItem value, LinqToDB.Internal.Cache.IChangeToken! expirationToken) -> TItem
+static LinqToDB.Internal.Cache.CacheExtensions.Set<TKey, TItem>(this LinqToDB.Internal.Cache.IMemoryCache<TKey, TItem>! cache, TKey key, TItem value, LinqToDB.Internal.Cache.MemoryCacheEntryOptions<TKey>? options) -> TItem
+static LinqToDB.Internal.Cache.CacheExtensions.Set<TKey, TItem>(this LinqToDB.Internal.Cache.IMemoryCache<TKey, TItem>! cache, TKey key, TItem value, System.DateTimeOffset absoluteExpiration) -> TItem
+static LinqToDB.Internal.Cache.CacheExtensions.Set<TKey, TItem>(this LinqToDB.Internal.Cache.IMemoryCache<TKey, TItem>! cache, TKey key, TItem value, System.TimeSpan absoluteExpirationRelativeToNow) -> TItem
+static LinqToDB.Internal.Cache.MemoryCacheEntryExtensions.AddExpirationToken<TKey>(this LinqToDB.Internal.Cache.MemoryCacheEntryOptions<TKey>! options, LinqToDB.Internal.Cache.IChangeToken! expirationToken) -> LinqToDB.Internal.Cache.MemoryCacheEntryOptions<TKey>!
+static LinqToDB.Internal.Cache.MemoryCacheEntryExtensions.RegisterPostEvictionCallback<TKey>(this LinqToDB.Internal.Cache.MemoryCacheEntryOptions<TKey>! options, LinqToDB.Internal.Cache.PostEvictionDelegate<TKey>! callback) -> LinqToDB.Internal.Cache.MemoryCacheEntryOptions<TKey>!
+static LinqToDB.Internal.Cache.MemoryCacheEntryExtensions.RegisterPostEvictionCallback<TKey>(this LinqToDB.Internal.Cache.MemoryCacheEntryOptions<TKey>! options, LinqToDB.Internal.Cache.PostEvictionDelegate<TKey>! callback, object? state) -> LinqToDB.Internal.Cache.MemoryCacheEntryOptions<TKey>!
+static LinqToDB.Internal.Cache.MemoryCacheEntryExtensions.SetAbsoluteExpiration<TKey>(this LinqToDB.Internal.Cache.MemoryCacheEntryOptions<TKey>! options, System.DateTimeOffset absolute) -> LinqToDB.Internal.Cache.MemoryCacheEntryOptions<TKey>!
+static LinqToDB.Internal.Cache.MemoryCacheEntryExtensions.SetAbsoluteExpiration<TKey>(this LinqToDB.Internal.Cache.MemoryCacheEntryOptions<TKey>! options, System.TimeSpan relative) -> LinqToDB.Internal.Cache.MemoryCacheEntryOptions<TKey>!
+static LinqToDB.Internal.Cache.MemoryCacheEntryExtensions.SetPriority<TKey>(this LinqToDB.Internal.Cache.MemoryCacheEntryOptions<TKey>! options, LinqToDB.Internal.Cache.CacheItemPriority priority) -> LinqToDB.Internal.Cache.MemoryCacheEntryOptions<TKey>!
+static LinqToDB.Internal.Cache.MemoryCacheEntryExtensions.SetSize<TKey>(this LinqToDB.Internal.Cache.MemoryCacheEntryOptions<TKey>! options, long size) -> LinqToDB.Internal.Cache.MemoryCacheEntryOptions<TKey>!
+static LinqToDB.Internal.Cache.MemoryCacheEntryExtensions.SetSlidingExpiration<TKey>(this LinqToDB.Internal.Cache.MemoryCacheEntryOptions<TKey>! options, System.TimeSpan offset) -> LinqToDB.Internal.Cache.MemoryCacheEntryOptions<TKey>!
 static LinqToDB.Common.Internal.IdentifierBuilder.CreateNextID() -> int
 static LinqToDB.Common.Internal.IdentifierBuilder.GetObjectID(object? obj) -> string!
 static LinqToDB.Common.Internal.IdentifierBuilder.GetObjectID(System.Linq.Expressions.Expression? ex) -> int
@@ -11809,8 +11809,8 @@ virtual LinqToDB.Async.AsyncDbTransaction.Dispose() -> void
 virtual LinqToDB.Async.AsyncDbTransaction.DisposeAsync() -> System.Threading.Tasks.ValueTask
 virtual LinqToDB.Async.AsyncDbTransaction.Rollback() -> void
 virtual LinqToDB.Async.AsyncDbTransaction.RollbackAsync(System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task!
-virtual LinqToDB.Common.Internal.Cache.MemoryCache<TKey, TEntry>.Dispose(bool disposing) -> void
-virtual LinqToDB.Common.Internal.Cache.PostEvictionDelegate<TKey>.Invoke(TKey key, object? value, LinqToDB.Common.Internal.Cache.EvictionReason reason, object? state) -> void
+virtual LinqToDB.Internal.Cache.MemoryCache<TKey, TEntry>.Dispose(bool disposing) -> void
+virtual LinqToDB.Internal.Cache.PostEvictionDelegate<TKey>.Invoke(TKey key, object? value, LinqToDB.Internal.Cache.EvictionReason reason, object? state) -> void
 virtual LinqToDB.Common.OptionsContainer<T>.Find<TSet>() -> TSet?
 virtual LinqToDB.Common.OptionsContainer<T>.Get<TSet>() -> TSet!
 virtual LinqToDB.Common.OptionsContainer<T>.OptionSets.get -> System.Collections.Generic.IEnumerable<LinqToDB.Common.IOptionSet!>!

@@ -6,8 +6,8 @@ using System.Reflection;
 
 namespace LinqToDB.Linq.Builder
 {
-	using Common;
-	using LinqToDB.Common.Internal;
+	using LinqToDB.Internal.Common;
+	using LinqToDB.Linq.Translation;
 
 	[DebuggerDisplay("{ToDebugString()}")]
 	sealed class LoadWithInfo

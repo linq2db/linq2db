@@ -1,10 +1,9 @@
-﻿using System;
-
-namespace LinqToDB.DataProvider.Sybase
+﻿namespace LinqToDB.DataProvider.Sybase
 {
-	using Common;
-	using Common.Internal;
-	using Data;
+	using LinqToDB.Common;
+	using LinqToDB.Data;
+	using LinqToDB.DataProvider;
+	using LinqToDB.Internal.Common;
 
 	/// <param name="BulkCopyType">
 	/// Using <see cref="BulkCopyType.ProviderSpecific"/> mode with bit and identity fields could lead to following errors:

@@ -2,9 +2,9 @@
 
 namespace LinqToDB.DataProvider
 {
-	using Common;
-	using Common.Internal;
-	using Data;
+	using LinqToDB.Common;
+	using LinqToDB.Data;
+	using LinqToDB.Internal.Common;
 
 	/// <param name="BulkCopyType">
 	/// Default bulk copy mode, used by <see cref="DataConnectionExtensions.BulkCopy{T}(DataConnection, IEnumerable{T})"/>

@@ -3,12 +3,13 @@ using System.Data.Common;
 
 namespace LinqToDB.Data
 {
-	using Common.Internal;
-	using Common;
-	using DataProvider;
-	using Interceptors;
-	using Mapping;
-	using Remote;
+	using LinqToDB.Common;
+	using LinqToDB.DataProvider;
+	using LinqToDB.Interceptors;
+	using LinqToDB.Internal.Common;
+	using LinqToDB.Linq.Translation;
+	using LinqToDB.Mapping;
+	using LinqToDB.Remote;
 
 	/// <param name="ConfigurationString">
 	/// Gets configuration string name to use with <see cref="DataConnection"/> instance.

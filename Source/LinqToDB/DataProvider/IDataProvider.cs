@@ -8,11 +8,11 @@ using System.Threading.Tasks;
 
 namespace LinqToDB.DataProvider
 {
-	using Common;
-	using Data;
-	using Mapping;
-	using SchemaProvider;
-	using SqlProvider;
+	using LinqToDB.Common;
+	using LinqToDB.Data;
+	using LinqToDB.Mapping;
+	using LinqToDB.SchemaProvider;
+	using LinqToDB.SqlProvider;
 
 	public interface IDataProvider
 	{

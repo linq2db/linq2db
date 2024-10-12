@@ -4,7 +4,7 @@ using System.Linq.Expressions;
 
 namespace LinqToDB.Mapping
 {
-	using Common.Internal;
+	using LinqToDB.Internal.Common;
 
 	/// <summary>
 	/// Contains reference to filter function defined by <see cref="EntityMappingBuilder{T}.HasQueryFilter(Expression{Func{T, IDataContext, bool}})"/>

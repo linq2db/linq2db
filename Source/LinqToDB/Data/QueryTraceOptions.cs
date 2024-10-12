@@ -3,8 +3,8 @@ using System.Diagnostics;
 
 namespace LinqToDB.Data
 {
-	using Common;
-	using Common.Internal;
+	using LinqToDB.Common;
+	using LinqToDB.Internal.Common;
 
 	/// <param name="TraceLevel">
 	/// Gets custom trace level to use with <see cref="DataConnection"/> instance.

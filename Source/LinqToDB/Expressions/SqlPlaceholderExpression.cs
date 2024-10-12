@@ -3,8 +3,8 @@ using System.Linq.Expressions;
 
 namespace LinqToDB.Expressions
 {
-	using LinqToDB.Common.Internal;
 	using LinqToDB.Extensions;
+	using LinqToDB.Internal.Common;
 	using LinqToDB.Internal.SqlQuery;
 
 	public sealed class SqlPlaceholderExpression : Expression

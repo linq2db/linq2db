@@ -4,7 +4,7 @@ using System.Diagnostics.CodeAnalysis;
 namespace LinqToDB.Internal.SqlQuery
 {
 	using LinqToDB.Common;
-	using LinqToDB.Common.Internal;
+	using LinqToDB.Internal.Common;
 
 	public class SqlValue : SqlExpressionBase
 	{

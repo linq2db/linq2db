@@ -4,7 +4,7 @@ using System.Diagnostics.CodeAnalysis;
 
 namespace LinqToDB.Internal.SqlQuery
 {
-	using LinqToDB.Common.Internal;
+	using LinqToDB.Internal.Common;
 	using LinqToDB.Internal.SqlQuery.Visitors;
 
 	public static class QueryVisitorExtensions

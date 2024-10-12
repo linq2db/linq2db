@@ -8,7 +8,7 @@ using System.Text.RegularExpressions;
 namespace LinqToDB.Internal.SqlQuery
 {
 	using LinqToDB.Common;
-	using LinqToDB.Common.Internal;
+	using LinqToDB.Internal.Common;
 	using LinqToDB.Mapping;
 	using LinqToDB.SqlProvider;
 	using LinqToDB.SqlQuery;

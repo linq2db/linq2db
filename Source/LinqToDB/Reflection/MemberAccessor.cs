@@ -1,17 +1,17 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
-using System.Linq;
 
 namespace LinqToDB.Reflection
 {
-	using Common;
-	using Expressions;
-	using Extensions;
-	using Common.Internal;
-	using Mapping;
+	using LinqToDB.Common;
+	using LinqToDB.Expressions;
+	using LinqToDB.Extensions;
+	using LinqToDB.Internal.Common;
+	using LinqToDB.Mapping;
 
 	public class MemberAccessor
 	{

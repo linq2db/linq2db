@@ -9,8 +9,8 @@ using System.Numerics;
 namespace LinqToDB.SqlQuery
 {
 	using LinqToDB.Common;
-	using LinqToDB.Common.Internal;
 	using LinqToDB.Extensions;
+	using LinqToDB.Internal.Common;
 	using LinqToDB.Internal.SqlQuery;
 	using LinqToDB.Mapping;
 
@@ -404,7 +404,7 @@ namespace LinqToDB.SqlQuery
 
 		#region ISqlExpression Members
 
-		public int  Precedence => LinqToDB.SqlQuery.Precedence.Primary;
+		public int  Precedence => SqlQuery.Precedence.Primary;
 		public Type SystemType => Type.SystemType;
 
 		#endregion

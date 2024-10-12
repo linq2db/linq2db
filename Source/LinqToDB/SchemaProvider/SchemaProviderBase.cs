@@ -7,9 +7,10 @@ using System.Text;
 
 namespace LinqToDB.SchemaProvider
 {
-	using Common;
-	using Common.Internal;
-	using Data;
+	using LinqToDB.Common;
+	using LinqToDB.Data;
+	using LinqToDB.Internal.Common;
+	using LinqToDB.Linq.Translation;
 
 	public abstract class SchemaProviderBase : ISchemaProvider
 	{

@@ -5,8 +5,9 @@ using System.Security;
 
 namespace LinqToDB.DataProvider.Access
 {
-	using LinqToDB.Compatibility;
 	using LinqToDB.Data;
+	using LinqToDB.DataProvider;
+	using LinqToDB.Internal.Common;
 
 	/// <summary>
 	/// Contains Access provider management tools.

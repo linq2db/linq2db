@@ -6,7 +6,7 @@ using System.Linq.Expressions;
 
 namespace LinqToDB.Data
 {
-	using Common.Internal;
+	using LinqToDB.Internal.Common;
 
 	/// <summary>
 	/// Tracing information for the <see cref="DataConnection"/> events.

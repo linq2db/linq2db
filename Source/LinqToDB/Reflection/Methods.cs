@@ -9,7 +9,7 @@ using System.Reflection;
 namespace LinqToDB.Reflection
 {
 	using LinqToDB.Common;
-	using LinqToDB.Common.Internal.Cache;
+	using LinqToDB.Internal.Cache;
 	using LinqToDB.Data;
 	using LinqToDB.Expressions;
 	using LinqToDB.Extensions;

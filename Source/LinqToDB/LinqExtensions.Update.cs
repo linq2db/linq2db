@@ -6,11 +6,11 @@ using System.Threading;
 using System.Threading.Tasks;
 using JetBrains.Annotations;
 
+using LinqToDB.Internal.Async;
+using LinqToDB.Linq;
+
 namespace LinqToDB
 {
-	using Async;
-	using Linq;
-
 	public class UpdateOutput<T>
 	{
 		public T Deleted { get; set; } = default!;

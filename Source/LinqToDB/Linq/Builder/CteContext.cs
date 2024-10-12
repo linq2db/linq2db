@@ -5,9 +5,10 @@ using System.Linq.Expressions;
 namespace LinqToDB.Linq.Builder
 {
 	using LinqToDB.Common;
-	using LinqToDB.Common.Internal;
 	using LinqToDB.Expressions;
+	using LinqToDB.Internal.Common;
 	using LinqToDB.Internal.SqlQuery;
+	using LinqToDB.Linq;
 	using LinqToDB.Mapping;
 
 	internal class CteContext : BuildContextBase

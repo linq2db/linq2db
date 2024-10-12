@@ -10,9 +10,10 @@ using System.Threading.Tasks;
 namespace LinqToDB.Linq
 {
 	using LinqToDB.Async;
-	using LinqToDB.Compatibility.System;
 	using LinqToDB.Data;
 	using LinqToDB.Extensions;
+	using LinqToDB.Internal.Async;
+	using LinqToDB.Internal.Common;
 	using LinqToDB.Tools;
 
 	abstract class ExpressionQuery<T> : IExpressionQuery<T>, IAsyncEnumerable<T>

@@ -3,7 +3,7 @@ using System.Linq.Expressions;
 
 namespace LinqToDB.Linq.Builder
 {
-	using LinqToDB.Common.Internal.Cache;
+	using LinqToDB.Internal.Cache;
 	using LinqToDB.Expressions;
 	using LinqToDB.Internal.SqlQuery;
 

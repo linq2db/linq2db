@@ -3,18 +3,9 @@ using System.Net;
 using System.Threading.Tasks;
 
 using LinqToDB;
-using LinqToDB.Common.Internal;
 using LinqToDB.Data;
-using LinqToDB.DataProvider.MySql;
-using LinqToDB.DataProvider.SQLite;
-using LinqToDB.DataProvider.Access;
-using LinqToDB.DataProvider.ClickHouse;
-using LinqToDB.DataProvider.DB2;
-using LinqToDB.DataProvider.Oracle;
 using LinqToDB.DataProvider.SqlServer;
-using LinqToDB.DataProvider.Informix;
-using LinqToDB.DataProvider.SapHana;
-using LinqToDB.DataProvider.Sybase;
+using LinqToDB.Internal.Common;
 using LinqToDB.Mapping;
 
 using Microsoft.Data.SqlClient;

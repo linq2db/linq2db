@@ -4,8 +4,8 @@ using System.Threading.Tasks;
 
 namespace LinqToDB.Linq
 {
-	using Builder;
-	using Common.Internal.Cache;
+	using LinqToDB.Internal.Cache;
+	using LinqToDB.Linq.Builder;
 
 	sealed class CompiledTable<T>
 		where T : notnull

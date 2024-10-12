@@ -21,15 +21,16 @@ using JetBrains.Annotations;
 
 namespace LinqToDB.Data
 {
-	using LinqToDB.Async;
 	using LinqToDB.Common;
-	using LinqToDB.Common.Internal;
-	using LinqToDB.Common.Internal.Cache;
-	using LinqToDB.Compatibility.System;
 	using LinqToDB.Expressions;
 	using LinqToDB.Extensions;
 	using LinqToDB.Interceptors;
+	using LinqToDB.Internal.Async;
+	using LinqToDB.Internal.Cache;
+	using LinqToDB.Internal.Common;
+	using LinqToDB.Internal.SqlQuery;
 	using LinqToDB.Linq;
+	using LinqToDB.Linq.Translation;
 	using LinqToDB.Mapping;
 	using LinqToDB.Reflection;
 	using LinqToDB.Tools;

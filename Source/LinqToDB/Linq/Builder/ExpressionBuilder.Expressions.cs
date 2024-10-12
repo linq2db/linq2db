@@ -1,13 +1,14 @@
-﻿using System;
-using System.Diagnostics.CodeAnalysis;
+﻿using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Linq.Expressions;
 
 namespace LinqToDB.Linq.Builder
 {
-	using Common.Internal;
 	using LinqToDB.Expressions;
-	using Mapping;
+	using LinqToDB.Internal.Common;
+	using LinqToDB.Internal.SqlQuery;
+	using LinqToDB.Linq;
+	using LinqToDB.Mapping;
 
 	class LambdaResolveVisitor : ExpressionVisitorBase
 	{

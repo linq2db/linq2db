@@ -3,8 +3,8 @@ using System.Linq.Expressions;
 
 namespace LinqToDB.Expressions
 {
-	using Common.Internal;
-	using Mapping;
+	using LinqToDB.Internal.Common;
+	using LinqToDB.Mapping;
 
 	public class SqlQueryRootExpression : Expression, IEquatable<SqlQueryRootExpression>
 	{

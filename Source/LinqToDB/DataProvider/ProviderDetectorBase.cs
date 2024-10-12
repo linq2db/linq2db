@@ -4,9 +4,9 @@ using System.Data.Common;
 
 namespace LinqToDB.DataProvider
 {
-	using Common.Internal.Cache;
-	using Data;
-	using Tools;
+	using LinqToDB.Data;
+	using LinqToDB.Internal.Cache;
+	using LinqToDB.Tools;
 
 	abstract class ProviderDetectorBase<TProvider,TVersion>
 		where TProvider   : struct, Enum

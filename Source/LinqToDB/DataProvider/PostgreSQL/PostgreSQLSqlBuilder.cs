@@ -10,8 +10,9 @@ using System.Text;
 namespace LinqToDB.DataProvider.PostgreSQL
 {
 	using LinqToDB.Common;
-	using LinqToDB.Common.Internal;
+	using LinqToDB.DataProvider;
 	using LinqToDB.Extensions;
+	using LinqToDB.Internal.Common;
 	using LinqToDB.Internal.SqlQuery;
 	using LinqToDB.Mapping;
 	using LinqToDB.SqlProvider;

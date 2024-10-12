@@ -8,11 +8,11 @@ using JetBrains.Annotations;
 
 namespace LinqToDB
 {
-	using Common.Internal;
-	using Interceptors;
-	using Linq;
-	using Mapping;
-	using SqlProvider;
+	using LinqToDB.Interceptors;
+	using LinqToDB.Internal.Common;
+	using LinqToDB.Linq;
+	using LinqToDB.Mapping;
+	using LinqToDB.SqlProvider;
 
 	/// <summary>
 	/// Database connection abstraction interface.

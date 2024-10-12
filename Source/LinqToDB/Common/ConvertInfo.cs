@@ -5,9 +5,9 @@ using System.Linq.Expressions;
 
 namespace LinqToDB.Common
 {
-	using Data;
-	using Internal;
-	using Mapping;
+	using LinqToDB.Data;
+	using LinqToDB.Internal.Common;
+	using LinqToDB.Mapping;
 
 	sealed class ConvertInfo
 	{

@@ -13,11 +13,12 @@ using JetBrains.Annotations;
 namespace LinqToDB
 {
 	using LinqToDB.Common;
-	using LinqToDB.Common.Internal;
 	using LinqToDB.Expressions;
 	using LinqToDB.Extensions;
+	using LinqToDB.Internal.Common;
 	using LinqToDB.Internal.SqlQuery;
 	using LinqToDB.Linq.Builder;
+	using LinqToDB.Linq.Translation;
 	using LinqToDB.Mapping;
 	using LinqToDB.SqlQuery;
 

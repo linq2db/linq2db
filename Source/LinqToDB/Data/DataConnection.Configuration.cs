@@ -7,11 +7,11 @@ using System.Linq;
 
 namespace LinqToDB.Data
 {
-	using Async;
-	using Common.Internal;
-	using Configuration;
-	using DataProvider;
-	using RetryPolicy;
+	using LinqToDB.Async;
+	using LinqToDB.Configuration;
+	using LinqToDB.Data.RetryPolicy;
+	using LinqToDB.DataProvider;
+	using LinqToDB.Internal.Common;
 
 	public partial class DataConnection
 	{

@@ -3,7 +3,7 @@ using System.Threading.Tasks;
 
 namespace LinqToDB.Linq
 {
-	using LinqToDB.Common.Internal.Cache;
+	using LinqToDB.Internal.Cache;
 	using LinqToDB.Expressions;
 	using LinqToDB.Internal.SqlQuery;
 	using LinqToDB.Tools;

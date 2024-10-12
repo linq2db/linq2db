@@ -15,9 +15,8 @@ using JetBrains.Annotations;
 
 namespace LinqToDB.Extensions
 {
-	using Common;
-	using Common.Internal;
-	using Reflection;
+	using LinqToDB.Internal.Common;
+	using LinqToDB.Reflection;
 
 	[PublicAPI]
 	public static class ReflectionExtensions

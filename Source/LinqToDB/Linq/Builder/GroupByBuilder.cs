@@ -10,10 +10,10 @@ using System.Threading.Tasks;
 
 namespace LinqToDB.Linq.Builder
 {
-	using LinqToDB.Async;
 	using LinqToDB.Common;
 	using LinqToDB.Expressions;
 	using LinqToDB.Extensions;
+	using LinqToDB.Internal.Async;
 	using LinqToDB.Internal.SqlQuery;
 	using LinqToDB.Mapping;
 	using LinqToDB.Reflection;

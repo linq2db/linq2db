@@ -3,8 +3,8 @@ using System.Collections.Generic;
 
 namespace LinqToDB.Data
 {
-	using Common;
-	using Common.Internal;
+	using LinqToDB.Common;
+	using LinqToDB.Internal.Common;
 
 	/// <param name="MaxBatchSize">
 	/// Number of rows in each batch. At the end of each batch, the rows in the batch are sent to the server.

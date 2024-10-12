@@ -5,15 +5,15 @@ using System.Linq.Expressions;
 
 namespace LinqToDB.Expressions
 {
-	using Common;
-	using Common.Internal;
-	using Extensions;
-	using Interceptors;
-	using Linq;
-	using Mapping;
-	using Reflection;
-	using Tools;
-	using Infrastructure;
+	using LinqToDB.Common;
+	using LinqToDB.Extensions;
+	using LinqToDB.Infrastructure;
+	using LinqToDB.Interceptors;
+	using LinqToDB.Internal.Common;
+	using LinqToDB.Linq;
+	using LinqToDB.Mapping;
+	using LinqToDB.Reflection;
+	using LinqToDB.Tools;
 
 	sealed class ConvertFromDataReaderExpression : Expression
 	{

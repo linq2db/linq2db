@@ -2,7 +2,7 @@
 
 namespace LinqToDB.Mapping
 {
-	using Common.Internal;
+	using LinqToDB.Internal.Common;
 
 	/// <summary>
 	/// Defines to which type linq2db should map record based on discriminator value. You can apply this attribute to

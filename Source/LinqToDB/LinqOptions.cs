@@ -3,10 +3,10 @@ using System.Linq.Expressions;
 
 namespace LinqToDB
 {
-	using Common;
-	using Common.Internal;
-	using Data;
-	using Linq;
+	using LinqToDB.Common;
+	using LinqToDB.Data;
+	using LinqToDB.Internal.Common;
+	using LinqToDB.Linq;
 
 	/// <param name="PreloadGroups">
 	/// Controls how group data for LINQ queries ended with GroupBy will be loaded:

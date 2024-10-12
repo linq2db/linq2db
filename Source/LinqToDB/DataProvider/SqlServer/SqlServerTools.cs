@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Data;
 using System.Data.Common;
 using System.Reflection;
 using System.Text;
@@ -8,8 +7,9 @@ using JetBrains.Annotations;
 
 namespace LinqToDB.DataProvider.SqlServer
 {
-	using Data;
-	using Common.Internal;
+	using LinqToDB.Data;
+	using LinqToDB.DataProvider;
+	using LinqToDB.Internal.Common;
 
 	[PublicAPI]
 	public static partial class SqlServerTools

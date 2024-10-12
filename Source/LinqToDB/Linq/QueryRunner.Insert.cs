@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace LinqToDB.Linq
 {
-	using LinqToDB.Common.Internal.Cache;
+	using LinqToDB.Internal.Cache;
 	using LinqToDB.Infrastructure;
 	using LinqToDB.Internal.SqlQuery;
 	using LinqToDB.Mapping;

@@ -1,8 +1,6 @@
-﻿using System;
-
-namespace LinqToDB.Common
+﻿namespace LinqToDB.Common
 {
-	using Internal;
+	using LinqToDB.Internal.Common;
 
 	/// <summary>
 	/// <para>
@@ -13,7 +11,5 @@ namespace LinqToDB.Common
 	/// It is generally not used in application code.
 	/// </para>
 	/// </summary>
-	public interface IOptionSet : IConfigurationID
-	{
-	}
+	public interface IOptionSet : IConfigurationID;
 }

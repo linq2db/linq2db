@@ -8,9 +8,6 @@ using System.Linq.Expressions;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 
-#if !EF6 && !EF31
-using LinqToDB.Common.Internal;
-#endif
 using Microsoft.EntityFrameworkCore;
 #if !EF31
 using Microsoft.EntityFrameworkCore.Diagnostics;
@@ -27,17 +24,17 @@ using Microsoft.EntityFrameworkCore.Storage;
 
 namespace LinqToDB.EntityFrameworkCore
 {
-	using Common;
-	using Expressions;
-	using Extensions;
-	using Internal;
-	using Mapping;
-	using Metadata;
-	using Reflection;
-	using SqlQuery;
+	using LinqToDB.Common;
+	using LinqToDB.Expressions;
+	using LinqToDB.Extensions;
+	using LinqToDB.Internal.Common;
+	using LinqToDB.Mapping;
+	using LinqToDB.Metadata;
+	using LinqToDB.Reflection;
+	using LinqToDB.SqlQuery;
 
-	using EfSqlExpression = SqlExpression;
 	using EfExpressionPrinter = ExpressionPrinter;
+	using EfSqlExpression = SqlExpression;
 
 	/// <summary>
 	/// LINQ To DB metadata reader for EF.Core model.

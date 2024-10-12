@@ -17,12 +17,13 @@ using JetBrains.Annotations;
 namespace LinqToDB.Mapping
 {
 	using LinqToDB.Common;
-	using LinqToDB.Common.Internal;
-	using LinqToDB.Common.Internal.Cache;
 	using LinqToDB.Data;
 	using LinqToDB.Expressions;
 	using LinqToDB.Expressions.Visitors;
 	using LinqToDB.Extensions;
+	using LinqToDB.Internal.Cache;
+	using LinqToDB.Internal.Common;
+	using LinqToDB.Linq.Translation;
 	using LinqToDB.Metadata;
 	using LinqToDB.SqlProvider;
 	using LinqToDB.SqlQuery;

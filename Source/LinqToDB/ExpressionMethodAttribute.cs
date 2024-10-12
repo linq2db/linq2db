@@ -5,8 +5,8 @@ using JetBrains.Annotations;
 
 namespace LinqToDB
 {
-	using Common.Internal;
-	using Mapping;
+	using LinqToDB.Internal.Common;
+	using LinqToDB.Mapping;
 
 	/// <summary>
 	/// When applied to method or property, tells linq2db to replace them in queryable LINQ expression with another expression,

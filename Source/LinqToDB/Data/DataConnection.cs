@@ -7,20 +7,22 @@ using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Threading;
+
 using JetBrains.Annotations;
 
 namespace LinqToDB.Data
 {
-	using Async;
-	using Common.Internal;
-	using Common;
-	using DataProvider;
-	using Expressions;
-	using Infrastructure;
-	using Interceptors;
-	using Mapping;
-	using RetryPolicy;
-	using Tools;
+	using LinqToDB.Async;
+	using LinqToDB.Common;
+	using LinqToDB.Data;
+	using LinqToDB.Data.RetryPolicy;
+	using LinqToDB.DataProvider;
+	using LinqToDB.Expressions;
+	using LinqToDB.Infrastructure;
+	using LinqToDB.Interceptors;
+	using LinqToDB.Internal.Common;
+	using LinqToDB.Mapping;
+	using LinqToDB.Tools;
 
 	/// <summary>
 	/// Implements persistent database connection abstraction over different database engines.

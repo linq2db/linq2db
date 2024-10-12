@@ -2,8 +2,9 @@
 
 namespace LinqToDB.Linq.Builder
 {
-	using Common.Internal;
 	using LinqToDB.Expressions;
+	using LinqToDB.Internal.Common;
+	using LinqToDB.Internal.SqlQuery;
 
 	public static class EvaluationHelper
 	{

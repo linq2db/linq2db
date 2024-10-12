@@ -9,11 +9,13 @@ using System.Reflection;
 namespace LinqToDB.Linq
 {
 	using LinqToDB.Common;
-	using LinqToDB.Common.Internal;
 	using LinqToDB.Expressions;
 	using LinqToDB.Expressions.Visitors;
 	using LinqToDB.Extensions;
+	using LinqToDB.Internal.Common;
+	using LinqToDB.Internal.SqlQuery;
 	using LinqToDB.Linq.Internal;
+	using LinqToDB.Linq.Translation;
 	using LinqToDB.Reflection;
 
 	internal static class SequentialAccessHelper

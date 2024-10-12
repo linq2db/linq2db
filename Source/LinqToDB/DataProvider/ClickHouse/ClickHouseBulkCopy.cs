@@ -4,17 +4,16 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
+using LinqToDB.Common;
+using LinqToDB.Data;
+using LinqToDB.Extensions;
+using LinqToDB.Internal.Async;
+using LinqToDB.Internal.Common;
+using LinqToDB.SqlProvider;
 using LinqToDB.Tools;
 
 namespace LinqToDB.DataProvider.ClickHouse
 {
-	using Async;
-	using Common;
-	using Common.Internal;
-	using Data;
-	using Extensions;
-	using SqlProvider;
-
 	sealed class ClickHouseBulkCopy : BasicBulkCopy
 	{
 		private readonly ClickHouseDataProvider _provider;

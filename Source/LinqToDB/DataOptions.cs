@@ -1,17 +1,16 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 
 using JetBrains.Annotations;
 
 namespace LinqToDB
 {
-	using Common;
-	using Common.Internal;
-	using Data;
-	using Data.RetryPolicy;
-	using Remote;
-	using Interceptors;
+	using LinqToDB.Common;
+	using LinqToDB.Data;
+	using LinqToDB.Data.RetryPolicy;
+	using LinqToDB.Internal.Common;
+	using LinqToDB.Linq.Translation;
+	using LinqToDB.Remote;
 
 	/// <summary>
 	/// Immutable context configuration object.

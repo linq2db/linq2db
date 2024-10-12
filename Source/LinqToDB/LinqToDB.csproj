@@ -114,15 +114,16 @@
 			<DependentUpon>AsyncExtensions.tt</DependentUpon>
 		</Compile>
 
-		<None Update="Common\Internal\MutableTuple.tt">
+		<None Update="Internal\Common\MutableTuple.tt">
 			<Generator>TextTemplatingFileGenerator</Generator>
 			<LastGenOutput>MutableTuple.generated.cs</LastGenOutput>
 		</None>
-		<Compile Update="Common\Internal\MutableTuple.generated.cs">
+		<Compile Update="Internal\Common\MutableTuple.generated.cs">
 			<DesignTime>True</DesignTime>
 			<AutoGen>True</AutoGen>
 			<DependentUpon>MutableTuple.tt</DependentUpon>
 		</Compile>
+
 	</ItemGroup>
 
 	<ItemGroup Condition=" '$(TargetFramework)' == 'net462' ">

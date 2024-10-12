@@ -2,9 +2,9 @@
 
 namespace LinqToDB.Mapping
 {
-	using Common;
-	using Common.Internal;
-	using Reflection;
+	using LinqToDB.Common;
+	using LinqToDB.Internal.Common;
+	using LinqToDB.Reflection;
 
 	[AttributeUsage(AttributeTargets.Field | AttributeTargets.Property, Inherited = true)]
 	public class ValueConverterAttribute : MappingAttribute

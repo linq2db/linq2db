@@ -2,7 +2,7 @@
 
 namespace LinqToDB.Linq
 {
-	using Common.Internal;
+	using LinqToDB.Internal.Common;
 
 	sealed class CteTable<T> : ExpressionQuery<T>
 	{

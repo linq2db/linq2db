@@ -5,10 +5,10 @@ using System.Linq;
 namespace LinqToDB.DataProvider
 {
 	using LinqToDB.Common;
-	using LinqToDB.Common.Internal;
-	using LinqToDB.SqlQuery;
+	using LinqToDB.Internal.Common;
 	using LinqToDB.Internal.SqlQuery;
 	using LinqToDB.Internal.SqlQuery.Visitors;
+	using LinqToDB.SqlQuery;
 
 	public static class AliasesHelper
 	{

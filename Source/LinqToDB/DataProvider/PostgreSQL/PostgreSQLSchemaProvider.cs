@@ -11,8 +11,8 @@ using System.Text.RegularExpressions;
 namespace LinqToDB.DataProvider.PostgreSQL
 {
 	using LinqToDB.Common;
-	using LinqToDB.Common.Internal;
 	using LinqToDB.Data;
+	using LinqToDB.Internal.Common;
 	using LinqToDB.Linq.Translation;
 	using LinqToDB.SchemaProvider;
 	using LinqToDB.SqlQuery;

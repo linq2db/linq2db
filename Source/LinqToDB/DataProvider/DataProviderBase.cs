@@ -14,15 +14,15 @@ using System.Xml.Linq;
 
 namespace LinqToDB.DataProvider
 {
-	using Common;
-	using Common.Internal;
-	using Data;
-	using Expressions;
-	using Infrastructure;
-	using Linq.Translation;
-	using Mapping;
-	using SchemaProvider;
-	using SqlProvider;
+	using LinqToDB.Common;
+	using LinqToDB.Data;
+	using LinqToDB.Expressions;
+	using LinqToDB.Infrastructure;
+	using LinqToDB.Internal.Common;
+	using LinqToDB.Linq.Translation;
+	using LinqToDB.Mapping;
+	using LinqToDB.SchemaProvider;
+	using LinqToDB.SqlProvider;
 
 	public abstract class DataProviderBase : IDataProvider, IInfrastructure<IServiceProvider>
 	{

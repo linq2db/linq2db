@@ -14,22 +14,18 @@ using System.Threading.Tasks;
 namespace LinqToDB.Linq
 {
 	using LinqToDB.Common;
-	using LinqToDB.Common.Internal;
+	using LinqToDB.Common.Logging;
 	using LinqToDB.Data;
 	using LinqToDB.Expressions;
 	using LinqToDB.Extensions;
-	using LinqToDB.Internal.SqlQuery;
-	using LinqToDB.Linq.Translation;
-	using LinqToDB.Mapping;
-	using LinqToDB.Reflection;
-	using LinqToDB.SqlQuery;
-	using LinqToDB.SqlProvider;
-	using LinqToDB.Common.Internal.Cache;
-	using LinqToDB.Tools;
-	using LinqToDB.Common.Logging;
-	using LinqToDB.Linq.Builder;
 	using LinqToDB.Infrastructure;
 	using LinqToDB.Interceptors;
+	using LinqToDB.Internal.Cache;
+	using LinqToDB.Internal.SqlQuery;
+	using LinqToDB.Linq.Builder;
+	using LinqToDB.Linq.Translation;
+	using LinqToDB.Reflection;
+	using LinqToDB.Tools;
 
 	static partial class QueryRunner
 	{

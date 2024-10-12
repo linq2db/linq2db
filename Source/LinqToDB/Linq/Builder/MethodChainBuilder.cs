@@ -5,9 +5,11 @@ using System.Threading.Tasks;
 
 namespace LinqToDB.Linq.Builder
 {
-	using Common.Internal;
-	using Extensions;
 	using LinqToDB.Expressions;
+	using LinqToDB.Extensions;
+	using LinqToDB.Internal.Common;
+	using LinqToDB.Internal.SqlQuery;
+	using LinqToDB.Linq;
 
 	[BuildsExpression(ExpressionType.Call)]
 	sealed class MethodChainBuilder : MethodCallBuilder

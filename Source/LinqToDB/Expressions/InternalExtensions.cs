@@ -8,9 +8,10 @@ using System.Runtime.CompilerServices;
 
 namespace LinqToDB.Expressions
 {
-	using LinqToDB.Common.Internal;
+	using LinqToDB.Expressions;
 	using LinqToDB.Expressions.Visitors;
 	using LinqToDB.Extensions;
+	using LinqToDB.Internal.Common;
 	using LinqToDB.Linq;
 	using LinqToDB.Mapping;
 

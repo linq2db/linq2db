@@ -3,12 +3,13 @@ using System.Linq.Expressions;
 
 namespace LinqToDB.Remote
 {
-	using Common;
-	using Common.Internal;
-	using Common.Internal.Cache;
-	using Expressions;
-	using Extensions;
-	using Mapping;
+	using LinqToDB.Common;
+	using LinqToDB.Expressions;
+	using LinqToDB.Extensions;
+	using LinqToDB.Internal.Cache;
+	using LinqToDB.Internal.Common;
+	using LinqToDB.Internal.SqlQuery;
+	using LinqToDB.Mapping;
 
 	/// <summary>
 	/// Implements conversions support between raw values and string to support de-/serialization of remote data context

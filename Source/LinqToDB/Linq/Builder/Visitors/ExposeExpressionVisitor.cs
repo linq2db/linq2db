@@ -1,21 +1,21 @@
 ﻿using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 
 namespace LinqToDB.Linq.Builder.Visitors
 {
-	using Common;
-	using Extensions;
-	using Mapping;
-	using Reflection;
 	using LinqToDB.Expressions;
-	using LinqToDB.Common.Internal;
-	using System.Globalization;
+	using LinqToDB.Extensions;
+	using LinqToDB.Internal.Common;
+	using LinqToDB.Internal.SqlQuery;
+	using LinqToDB.Linq;
+	using LinqToDB.Mapping;
+	using LinqToDB.Reflection;
 
 	class ExposeExpressionVisitor : ExpressionVisitorBase, IExpressionEvaluator
 	{

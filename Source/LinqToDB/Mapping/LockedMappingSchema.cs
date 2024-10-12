@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace LinqToDB.Mapping
 {
-	using Common.Internal;
+	using LinqToDB.Internal.Common;
 
 	/// <summary>
 	/// Locked mapping schema.

@@ -3,7 +3,7 @@ using System.Linq.Expressions;
 
 namespace LinqToDB.Mapping
 {
-	using Common.Internal;
+	using LinqToDB.Internal.Common;
 
 	/// <summary>
 	/// Configure setter and getter methods for dynamic columns.

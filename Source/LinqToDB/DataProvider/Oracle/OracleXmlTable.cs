@@ -8,8 +8,8 @@ using System.Text;
 
 namespace LinqToDB.DataProvider.Oracle
 {
-	using LinqToDB.Common.Internal;
 	using LinqToDB.Expressions;
+	using LinqToDB.Internal.Common;
 	using LinqToDB.Internal.SqlQuery;
 	using LinqToDB.Mapping;
 	using LinqToDB.SqlProvider;

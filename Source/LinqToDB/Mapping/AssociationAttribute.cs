@@ -5,7 +5,7 @@ using JetBrains.Annotations;
 
 namespace LinqToDB.Mapping
 {
-	using Common.Internal;
+	using LinqToDB.Internal.Common;
 
 	/// <summary>
 	/// Defines relation between tables or views.

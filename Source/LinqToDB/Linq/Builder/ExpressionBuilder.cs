@@ -10,12 +10,13 @@ using System.Runtime.CompilerServices;
 namespace LinqToDB.Linq.Builder
 {
 	using LinqToDB.Common;
-	using LinqToDB.Common.Internal;
 	using LinqToDB.DataProvider;
 	using LinqToDB.Expressions;
 	using LinqToDB.Extensions;
 	using LinqToDB.Infrastructure;
+	using LinqToDB.Internal.Common;
 	using LinqToDB.Internal.SqlQuery;
+	using LinqToDB.Linq;
 	using LinqToDB.Linq.Builder.Visitors;
 	using LinqToDB.Linq.Translation;
 	using LinqToDB.Mapping;

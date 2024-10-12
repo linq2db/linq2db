@@ -3,9 +3,10 @@ using System.Collections.Generic;
 
 namespace LinqToDB.DataProvider.SQLite
 {
-	using Common;
-	using Common.Internal;
-	using Data;
+	using LinqToDB.Common;
+	using LinqToDB.Data;
+	using LinqToDB.DataProvider;
+	using LinqToDB.Internal.Common;
 
 	/// <param name="BulkCopyType">
 	/// Default bulk copy mode, used for SQLite by <see cref="DataConnectionExtensions.BulkCopy{T}(DataConnection, IEnumerable{T})"/>
