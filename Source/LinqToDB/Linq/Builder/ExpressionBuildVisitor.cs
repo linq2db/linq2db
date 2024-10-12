@@ -1286,6 +1286,11 @@ namespace LinqToDB.Linq.Builder
 						}
 						return result;
 					}
+
+					if (root is SqlErrorExpression error)
+					{
+						_foundRoot = null;
+					}
 				}
 			}
 			else
@@ -2258,9 +2263,7 @@ namespace LinqToDB.Linq.Builder
 				return false;
 
 			if (_disableSubqueries.Contains(node, ExpressionEqualityComparer.Instance))
-			{
 				return false;
-			}
 
 			if (Builder.CanBeCompiled(node, true))
 				return false;
@@ -2271,6 +2274,9 @@ namespace LinqToDB.Linq.Builder
 				calculatedContext = contextRef.BuildContext;
 
 			var traversed = BuildExpression(node, BuildPurpose.Traverse);
+
+			if (_disableSubqueries.Contains(traversed, ExpressionEqualityComparer.Instance))
+				return false;
 
 			var cacheRoot = GetCacheRootContext(traversed);
 
@@ -2290,11 +2296,11 @@ namespace LinqToDB.Linq.Builder
 			if (_translationCache.TryGetValue(cacheKey, out var alreadyTranslated))
 			{
 				subqueryExpression = alreadyTranslated;
-				return !IsSame(traversed, alreadyTranslated);
+				return !IsSame(node, alreadyTranslated);
 			}
 
-			_disableSubqueries.Push(node);
 			_disableSubqueries.Push(traversed);
+			_disableSubqueries.Push(node);
 			var ctx = GetSubQuery(node, out var isSequence, out var errorMessage);
 			_disableSubqueries.Pop();
 			_disableSubqueries.Pop();
@@ -2338,7 +2344,7 @@ namespace LinqToDB.Linq.Builder
 			var isCollection = !ctx.IsSingleElement;
 			if (isCollection && _buildPurpose is BuildPurpose.Expression)
 			{
-				var eager = new SqlEagerLoadExpression(traversed);
+				var eager = new SqlEagerLoadExpression(node);
 				subqueryExpression = SqlAdjustTypeExpression.AdjustType(eager, node.Type, MappingSchema);
 			}
 			else if (isCollection)
