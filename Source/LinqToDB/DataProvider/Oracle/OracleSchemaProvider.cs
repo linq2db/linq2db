@@ -1,9 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Data.Common;
+using System.Data;
 using System.Globalization;
 using System.Linq;
-using System.Data;
 
 namespace LinqToDB.DataProvider.Oracle
 {
@@ -549,6 +548,7 @@ WHERE SEQUENCE > 0 AND DATA_LEVEL = 0 AND OWNER = USER
 				case "XMLTYPE"                : return DataType.Xml;
 				case "ROWID"                  : return DataType.VarChar;
 				case "REF CURSOR"             : return DataType.Cursor;
+				case "BOOLEAN"                : return DataType.Boolean;
 				default:
 					if (dataType?.StartsWith("TIMESTAMP") == true)
 						return dataType.EndsWith("TIME ZONE") ? DataType.DateTimeOffset : DataType.DateTime2;

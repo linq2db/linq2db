@@ -552,7 +552,57 @@ CREATE TABLE "DataTypeTest"
 (
 	"DataTypeID"      INTEGER      NOT NULL PRIMARY KEY,
 	"Binary_"         RAW(50)          NULL,
+-- SKIP Oracle.23.Devart.Direct BEGIN
+-- SKIP Oracle.23.Devart.OCI BEGIN
+-- SKIP Oracle.23.Native BEGIN
+-- SKIP Oracle.23.Managed BEGIN
 	"Boolean_"        NUMBER(1,0)      NULL,
+-- SKIP Oracle.23.Devart.Direct END
+-- SKIP Oracle.23.Devart.OCI END
+-- SKIP Oracle.23.Native END
+-- SKIP Oracle.23.Managed END
+
+-- SKIP Oracle.21.Devart.Direct BEGIN
+-- SKIP Oracle.21.Devart.OCI BEGIN
+-- SKIP Oracle.21.Native BEGIN
+-- SKIP Oracle.21.Managed BEGIN
+-- SKIP Oracle.19.Devart.Direct BEGIN
+-- SKIP Oracle.19.Devart.OCI BEGIN
+-- SKIP Oracle.19.Native BEGIN
+-- SKIP Oracle.19.Managed BEGIN
+-- SKIP Oracle.18.Devart.Direct BEGIN
+-- SKIP Oracle.18.Devart.OCI BEGIN
+-- SKIP Oracle.18.Native BEGIN
+-- SKIP Oracle.18.Managed BEGIN
+-- SKIP Oracle.12.Devart.Direct BEGIN
+-- SKIP Oracle.12.Devart.OCI BEGIN
+-- SKIP Oracle.12.Native BEGIN
+-- SKIP Oracle.12.Managed BEGIN
+-- SKIP Oracle.11.Devart.Direct BEGIN
+-- SKIP Oracle.11.Devart.OCI BEGIN
+-- SKIP Oracle.11.Native BEGIN
+-- SKIP Oracle.11.Managed BEGIN
+	"Boolean_"        BOOLEAN          NULL,
+-- SKIP Oracle.21.Devart.Direct END
+-- SKIP Oracle.21.Devart.OCI END
+-- SKIP Oracle.21.Native END
+-- SKIP Oracle.21.Managed END
+-- SKIP Oracle.19.Devart.Direct END
+-- SKIP Oracle.19.Devart.OCI END
+-- SKIP Oracle.19.Native END
+-- SKIP Oracle.19.Managed END
+-- SKIP Oracle.18.Devart.Direct END
+-- SKIP Oracle.18.Devart.OCI END
+-- SKIP Oracle.18.Native END
+-- SKIP Oracle.18.Managed END
+-- SKIP Oracle.12.Devart.Direct END
+-- SKIP Oracle.12.Devart.OCI END
+-- SKIP Oracle.12.Native END
+-- SKIP Oracle.12.Managed END
+-- SKIP Oracle.11.Devart.Direct END
+-- SKIP Oracle.11.Devart.OCI END
+-- SKIP Oracle.11.Native END
+-- SKIP Oracle.11.Managed END
 	"Byte_"           NUMBER(3,0)      NULL,
 	"Bytes_"          BLOB             NULL,
 	"Char_"           NCHAR            NULL,
@@ -606,7 +656,59 @@ INSERT INTO "DataTypeTest"
 	 "Double_",         "Guid_",   "Int16_",     "Int32_",  "Int64_",    "Money_",   "SByte_",
 	 "Single_",       "Stream_",  "String_",    "UInt16_", "UInt32_",   "UInt64_",     "Xml_")
 VALUES
-	(SYS_GUID(),          1,      255, SYS_GUID(),     'B',   SYSDATE, 12345.67,
+	(SYS_GUID(),
+-- SKIP Oracle.23.Devart.Direct BEGIN
+-- SKIP Oracle.23.Devart.OCI BEGIN
+-- SKIP Oracle.23.Native BEGIN
+-- SKIP Oracle.23.Managed BEGIN
+	1
+-- SKIP Oracle.23.Devart.Direct END
+-- SKIP Oracle.23.Devart.OCI END
+-- SKIP Oracle.23.Native END
+-- SKIP Oracle.23.Managed END
+
+-- SKIP Oracle.21.Devart.Direct BEGIN
+-- SKIP Oracle.21.Devart.OCI BEGIN
+-- SKIP Oracle.21.Native BEGIN
+-- SKIP Oracle.21.Managed BEGIN
+-- SKIP Oracle.19.Devart.Direct BEGIN
+-- SKIP Oracle.19.Devart.OCI BEGIN
+-- SKIP Oracle.19.Native BEGIN
+-- SKIP Oracle.19.Managed BEGIN
+-- SKIP Oracle.18.Devart.Direct BEGIN
+-- SKIP Oracle.18.Devart.OCI BEGIN
+-- SKIP Oracle.18.Native BEGIN
+-- SKIP Oracle.18.Managed BEGIN
+-- SKIP Oracle.12.Devart.Direct BEGIN
+-- SKIP Oracle.12.Devart.OCI BEGIN
+-- SKIP Oracle.12.Native BEGIN
+-- SKIP Oracle.12.Managed BEGIN
+-- SKIP Oracle.11.Devart.Direct BEGIN
+-- SKIP Oracle.11.Devart.OCI BEGIN
+-- SKIP Oracle.11.Native BEGIN
+-- SKIP Oracle.11.Managed BEGIN
+	TRUE
+-- SKIP Oracle.21.Devart.Direct END
+-- SKIP Oracle.21.Devart.OCI END
+-- SKIP Oracle.21.Native END
+-- SKIP Oracle.21.Managed END
+-- SKIP Oracle.19.Devart.Direct END
+-- SKIP Oracle.19.Devart.OCI END
+-- SKIP Oracle.19.Native END
+-- SKIP Oracle.19.Managed END
+-- SKIP Oracle.18.Devart.Direct END
+-- SKIP Oracle.18.Devart.OCI END
+-- SKIP Oracle.18.Native END
+-- SKIP Oracle.18.Managed END
+-- SKIP Oracle.12.Devart.Direct END
+-- SKIP Oracle.12.Devart.OCI END
+-- SKIP Oracle.12.Native END
+-- SKIP Oracle.12.Managed END
+-- SKIP Oracle.11.Devart.Direct END
+-- SKIP Oracle.11.Devart.OCI END
+-- SKIP Oracle.11.Native END
+-- SKIP Oracle.11.Managed END
+,      255, SYS_GUID(),     'B',   SYSDATE, 12345.67,
 	   1234.567, SYS_GUID(),    32767,      32768, 1000000,   12.3456,      127,
 	   1234.123, SYS_GUID(), 'string',      32767,   32768, 200000000,
 	XMLTYPE('<root><element strattr="strvalue" intattr="12345"/></root>'))
@@ -628,7 +730,57 @@ CREATE TABLE "LinqDataTypes"
 	"MoneyValue"     decimal(10,4),
 	"DateTimeValue"  timestamp,
 	"DateTimeValue2" timestamp,
-	"BoolValue"      smallint,
+-- SKIP Oracle.23.Devart.Direct BEGIN
+-- SKIP Oracle.23.Devart.OCI BEGIN
+-- SKIP Oracle.23.Native BEGIN
+-- SKIP Oracle.23.Managed BEGIN
+	"BoolValue"              NUMBER(1,0)                    NULL,
+-- SKIP Oracle.23.Devart.Direct END
+-- SKIP Oracle.23.Devart.OCI END
+-- SKIP Oracle.23.Native END
+-- SKIP Oracle.23.Managed END
+
+-- SKIP Oracle.21.Devart.Direct BEGIN
+-- SKIP Oracle.21.Devart.OCI BEGIN
+-- SKIP Oracle.21.Native BEGIN
+-- SKIP Oracle.21.Managed BEGIN
+-- SKIP Oracle.19.Devart.Direct BEGIN
+-- SKIP Oracle.19.Devart.OCI BEGIN
+-- SKIP Oracle.19.Native BEGIN
+-- SKIP Oracle.19.Managed BEGIN
+-- SKIP Oracle.18.Devart.Direct BEGIN
+-- SKIP Oracle.18.Devart.OCI BEGIN
+-- SKIP Oracle.18.Native BEGIN
+-- SKIP Oracle.18.Managed BEGIN
+-- SKIP Oracle.12.Devart.Direct BEGIN
+-- SKIP Oracle.12.Devart.OCI BEGIN
+-- SKIP Oracle.12.Native BEGIN
+-- SKIP Oracle.12.Managed BEGIN
+-- SKIP Oracle.11.Devart.Direct BEGIN
+-- SKIP Oracle.11.Devart.OCI BEGIN
+-- SKIP Oracle.11.Native BEGIN
+-- SKIP Oracle.11.Managed BEGIN
+	"BoolValue"              BOOLEAN                        NULL,
+-- SKIP Oracle.21.Devart.Direct END
+-- SKIP Oracle.21.Devart.OCI END
+-- SKIP Oracle.21.Native END
+-- SKIP Oracle.21.Managed END
+-- SKIP Oracle.19.Devart.Direct END
+-- SKIP Oracle.19.Devart.OCI END
+-- SKIP Oracle.19.Native END
+-- SKIP Oracle.19.Managed END
+-- SKIP Oracle.18.Devart.Direct END
+-- SKIP Oracle.18.Devart.OCI END
+-- SKIP Oracle.18.Native END
+-- SKIP Oracle.18.Managed END
+-- SKIP Oracle.12.Devart.Direct END
+-- SKIP Oracle.12.Devart.OCI END
+-- SKIP Oracle.12.Native END
+-- SKIP Oracle.12.Managed END
+-- SKIP Oracle.11.Devart.Direct END
+-- SKIP Oracle.11.Devart.OCI END
+-- SKIP Oracle.11.Native END
+-- SKIP Oracle.11.Managed END
 	"GuidValue"      raw(16),
 	"BinaryValue"    blob         NULL,
 	"SmallIntValue"  smallint,
@@ -645,7 +797,57 @@ CREATE TABLE LinqDataTypesBC
 	MoneyValue     decimal(10,4),
 	DateTimeValue  timestamp,
 	DateTimeValue2 timestamp,
-	BoolValue      smallint,
+-- SKIP Oracle.23.Devart.Direct BEGIN
+-- SKIP Oracle.23.Devart.OCI BEGIN
+-- SKIP Oracle.23.Native BEGIN
+-- SKIP Oracle.23.Managed BEGIN
+	BoolValue              NUMBER(1,0)                    NULL,
+-- SKIP Oracle.23.Devart.Direct END
+-- SKIP Oracle.23.Devart.OCI END
+-- SKIP Oracle.23.Native END
+-- SKIP Oracle.23.Managed END
+
+-- SKIP Oracle.21.Devart.Direct BEGIN
+-- SKIP Oracle.21.Devart.OCI BEGIN
+-- SKIP Oracle.21.Native BEGIN
+-- SKIP Oracle.21.Managed BEGIN
+-- SKIP Oracle.19.Devart.Direct BEGIN
+-- SKIP Oracle.19.Devart.OCI BEGIN
+-- SKIP Oracle.19.Native BEGIN
+-- SKIP Oracle.19.Managed BEGIN
+-- SKIP Oracle.18.Devart.Direct BEGIN
+-- SKIP Oracle.18.Devart.OCI BEGIN
+-- SKIP Oracle.18.Native BEGIN
+-- SKIP Oracle.18.Managed BEGIN
+-- SKIP Oracle.12.Devart.Direct BEGIN
+-- SKIP Oracle.12.Devart.OCI BEGIN
+-- SKIP Oracle.12.Native BEGIN
+-- SKIP Oracle.12.Managed BEGIN
+-- SKIP Oracle.11.Devart.Direct BEGIN
+-- SKIP Oracle.11.Devart.OCI BEGIN
+-- SKIP Oracle.11.Native BEGIN
+-- SKIP Oracle.11.Managed BEGIN
+	BoolValue              BOOLEAN                        NULL,
+-- SKIP Oracle.21.Devart.Direct END
+-- SKIP Oracle.21.Devart.OCI END
+-- SKIP Oracle.21.Native END
+-- SKIP Oracle.21.Managed END
+-- SKIP Oracle.19.Devart.Direct END
+-- SKIP Oracle.19.Devart.OCI END
+-- SKIP Oracle.19.Native END
+-- SKIP Oracle.19.Managed END
+-- SKIP Oracle.18.Devart.Direct END
+-- SKIP Oracle.18.Devart.OCI END
+-- SKIP Oracle.18.Native END
+-- SKIP Oracle.18.Managed END
+-- SKIP Oracle.12.Devart.Direct END
+-- SKIP Oracle.12.Devart.OCI END
+-- SKIP Oracle.12.Native END
+-- SKIP Oracle.12.Managed END
+-- SKIP Oracle.11.Devart.Direct END
+-- SKIP Oracle.11.Devart.OCI END
+-- SKIP Oracle.11.Native END
+-- SKIP Oracle.11.Managed END
 	GuidValue      raw(16),
 	SmallIntValue  smallint,
 	IntValue       int          NULL,
@@ -738,7 +940,57 @@ CREATE TABLE "AllTypes"
 
 	"bigintDataType"           number(20,0)                   NULL,
 	"numericDataType"          numeric                        NULL,
-	"bitDataType"              number(1,0)                    NULL,
+-- SKIP Oracle.23.Devart.Direct BEGIN
+-- SKIP Oracle.23.Devart.OCI BEGIN
+-- SKIP Oracle.23.Native BEGIN
+-- SKIP Oracle.23.Managed BEGIN
+	"bitDataType"              NUMBER(1,0)                    NULL,
+-- SKIP Oracle.23.Devart.Direct END
+-- SKIP Oracle.23.Devart.OCI END
+-- SKIP Oracle.23.Native END
+-- SKIP Oracle.23.Managed END
+
+-- SKIP Oracle.21.Devart.Direct BEGIN
+-- SKIP Oracle.21.Devart.OCI BEGIN
+-- SKIP Oracle.21.Native BEGIN
+-- SKIP Oracle.21.Managed BEGIN
+-- SKIP Oracle.19.Devart.Direct BEGIN
+-- SKIP Oracle.19.Devart.OCI BEGIN
+-- SKIP Oracle.19.Native BEGIN
+-- SKIP Oracle.19.Managed BEGIN
+-- SKIP Oracle.18.Devart.Direct BEGIN
+-- SKIP Oracle.18.Devart.OCI BEGIN
+-- SKIP Oracle.18.Native BEGIN
+-- SKIP Oracle.18.Managed BEGIN
+-- SKIP Oracle.12.Devart.Direct BEGIN
+-- SKIP Oracle.12.Devart.OCI BEGIN
+-- SKIP Oracle.12.Native BEGIN
+-- SKIP Oracle.12.Managed BEGIN
+-- SKIP Oracle.11.Devart.Direct BEGIN
+-- SKIP Oracle.11.Devart.OCI BEGIN
+-- SKIP Oracle.11.Native BEGIN
+-- SKIP Oracle.11.Managed BEGIN
+	"bitDataType"              BOOLEAN                        NULL,
+-- SKIP Oracle.21.Devart.Direct END
+-- SKIP Oracle.21.Devart.OCI END
+-- SKIP Oracle.21.Native END
+-- SKIP Oracle.21.Managed END
+-- SKIP Oracle.19.Devart.Direct END
+-- SKIP Oracle.19.Devart.OCI END
+-- SKIP Oracle.19.Native END
+-- SKIP Oracle.19.Managed END
+-- SKIP Oracle.18.Devart.Direct END
+-- SKIP Oracle.18.Devart.OCI END
+-- SKIP Oracle.18.Native END
+-- SKIP Oracle.18.Managed END
+-- SKIP Oracle.12.Devart.Direct END
+-- SKIP Oracle.12.Devart.OCI END
+-- SKIP Oracle.12.Native END
+-- SKIP Oracle.12.Managed END
+-- SKIP Oracle.11.Devart.Direct END
+-- SKIP Oracle.11.Devart.OCI END
+-- SKIP Oracle.11.Native END
+-- SKIP Oracle.11.Managed END
 	"smallintDataType"         number(5,0)                    NULL,
 	"decimalDataType"          number(*,6)                    NULL,
 	"smallmoneyDataType"       number(10,4)                   NULL,
@@ -951,7 +1203,57 @@ CREATE TABLE "TestMerge1"
 	"Field5"	NUMBER	NULL,
 
 	"FieldInt64"      NUMBER(20, 0)               NULL,
-	"FieldBoolean"    NUMBER(1, 0)                NULL,
+-- SKIP Oracle.23.Devart.Direct BEGIN
+-- SKIP Oracle.23.Devart.OCI BEGIN
+-- SKIP Oracle.23.Native BEGIN
+-- SKIP Oracle.23.Managed BEGIN
+	"FieldBoolean"              NUMBER(1,0)                    NULL,
+-- SKIP Oracle.23.Devart.Direct END
+-- SKIP Oracle.23.Devart.OCI END
+-- SKIP Oracle.23.Native END
+-- SKIP Oracle.23.Managed END
+
+-- SKIP Oracle.21.Devart.Direct BEGIN
+-- SKIP Oracle.21.Devart.OCI BEGIN
+-- SKIP Oracle.21.Native BEGIN
+-- SKIP Oracle.21.Managed BEGIN
+-- SKIP Oracle.19.Devart.Direct BEGIN
+-- SKIP Oracle.19.Devart.OCI BEGIN
+-- SKIP Oracle.19.Native BEGIN
+-- SKIP Oracle.19.Managed BEGIN
+-- SKIP Oracle.18.Devart.Direct BEGIN
+-- SKIP Oracle.18.Devart.OCI BEGIN
+-- SKIP Oracle.18.Native BEGIN
+-- SKIP Oracle.18.Managed BEGIN
+-- SKIP Oracle.12.Devart.Direct BEGIN
+-- SKIP Oracle.12.Devart.OCI BEGIN
+-- SKIP Oracle.12.Native BEGIN
+-- SKIP Oracle.12.Managed BEGIN
+-- SKIP Oracle.11.Devart.Direct BEGIN
+-- SKIP Oracle.11.Devart.OCI BEGIN
+-- SKIP Oracle.11.Native BEGIN
+-- SKIP Oracle.11.Managed BEGIN
+	"FieldBoolean"              BOOLEAN                        NULL,
+-- SKIP Oracle.21.Devart.Direct END
+-- SKIP Oracle.21.Devart.OCI END
+-- SKIP Oracle.21.Native END
+-- SKIP Oracle.21.Managed END
+-- SKIP Oracle.19.Devart.Direct END
+-- SKIP Oracle.19.Devart.OCI END
+-- SKIP Oracle.19.Native END
+-- SKIP Oracle.19.Managed END
+-- SKIP Oracle.18.Devart.Direct END
+-- SKIP Oracle.18.Devart.OCI END
+-- SKIP Oracle.18.Native END
+-- SKIP Oracle.18.Managed END
+-- SKIP Oracle.12.Devart.Direct END
+-- SKIP Oracle.12.Devart.OCI END
+-- SKIP Oracle.12.Native END
+-- SKIP Oracle.12.Managed END
+-- SKIP Oracle.11.Devart.Direct END
+-- SKIP Oracle.11.Devart.OCI END
+-- SKIP Oracle.11.Native END
+-- SKIP Oracle.11.Managed END
 	"FieldString"     VARCHAR(20)                 NULL,
 	"FieldNString"    NVARCHAR2(20)               NULL,
 	"FieldChar"       CHAR(1)                     NULL,
@@ -977,7 +1279,57 @@ CREATE TABLE "TestMerge2"
 	"Field5"	NUMBER	NULL,
 
 	"FieldInt64"      NUMBER(20, 0)               NULL,
-	"FieldBoolean"    NUMBER(1, 0)                NULL,
+-- SKIP Oracle.23.Devart.Direct BEGIN
+-- SKIP Oracle.23.Devart.OCI BEGIN
+-- SKIP Oracle.23.Native BEGIN
+-- SKIP Oracle.23.Managed BEGIN
+	"FieldBoolean"              NUMBER(1,0)       NULL,
+-- SKIP Oracle.23.Devart.Direct END
+-- SKIP Oracle.23.Devart.OCI END
+-- SKIP Oracle.23.Native END
+-- SKIP Oracle.23.Managed END
+
+-- SKIP Oracle.21.Devart.Direct BEGIN
+-- SKIP Oracle.21.Devart.OCI BEGIN
+-- SKIP Oracle.21.Native BEGIN
+-- SKIP Oracle.21.Managed BEGIN
+-- SKIP Oracle.19.Devart.Direct BEGIN
+-- SKIP Oracle.19.Devart.OCI BEGIN
+-- SKIP Oracle.19.Native BEGIN
+-- SKIP Oracle.19.Managed BEGIN
+-- SKIP Oracle.18.Devart.Direct BEGIN
+-- SKIP Oracle.18.Devart.OCI BEGIN
+-- SKIP Oracle.18.Native BEGIN
+-- SKIP Oracle.18.Managed BEGIN
+-- SKIP Oracle.12.Devart.Direct BEGIN
+-- SKIP Oracle.12.Devart.OCI BEGIN
+-- SKIP Oracle.12.Native BEGIN
+-- SKIP Oracle.12.Managed BEGIN
+-- SKIP Oracle.11.Devart.Direct BEGIN
+-- SKIP Oracle.11.Devart.OCI BEGIN
+-- SKIP Oracle.11.Native BEGIN
+-- SKIP Oracle.11.Managed BEGIN
+	"FieldBoolean"              BOOLEAN           NULL,
+-- SKIP Oracle.21.Devart.Direct END
+-- SKIP Oracle.21.Devart.OCI END
+-- SKIP Oracle.21.Native END
+-- SKIP Oracle.21.Managed END
+-- SKIP Oracle.19.Devart.Direct END
+-- SKIP Oracle.19.Devart.OCI END
+-- SKIP Oracle.19.Native END
+-- SKIP Oracle.19.Managed END
+-- SKIP Oracle.18.Devart.Direct END
+-- SKIP Oracle.18.Devart.OCI END
+-- SKIP Oracle.18.Native END
+-- SKIP Oracle.18.Managed END
+-- SKIP Oracle.12.Devart.Direct END
+-- SKIP Oracle.12.Devart.OCI END
+-- SKIP Oracle.12.Native END
+-- SKIP Oracle.12.Managed END
+-- SKIP Oracle.11.Devart.Direct END
+-- SKIP Oracle.11.Devart.OCI END
+-- SKIP Oracle.11.Native END
+-- SKIP Oracle.11.Managed END
 	"FieldString"     VARCHAR(20)                 NULL,
 	"FieldNString"    NVARCHAR2(20)               NULL,
 	"FieldChar"       CHAR(1)                     NULL,
@@ -1069,7 +1421,7 @@ BEGIN
 		at."ntextDataType",
 
 		at."binaryDataType",
- 		at."bfileDataType",
+		at."bfileDataType",
 		at."guidDataType",
 
 		at."xmlDataType"
@@ -1245,7 +1597,7 @@ CREATE OR REPLACE FUNCTION TEST_TABLE_FUNCTION(i IN INT)
 RETURN tf_table PIPELINED IS
 BEGIN
   FOR r IN (SELECT * FROM "Person") LOOP
-    PIPE ROW(tf_type(i + 3));
+	PIPE ROW(tf_type(i + 3));
   END LOOP;
   RETURN;
 END;

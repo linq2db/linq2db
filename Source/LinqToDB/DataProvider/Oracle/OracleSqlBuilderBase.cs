@@ -26,13 +26,15 @@ namespace LinqToDB.DataProvider.Oracle
 
 		protected override void BuildSelectClause(SelectQuery selectQuery)
 		{
-			if (selectQuery.From.Tables.Count == 0)
+			if (FakeTable != null && selectQuery.From.Tables.Count == 0)
 			{
 				AppendIndent().Append("SELECT");
 				StartStatementQueryExtensions(selectQuery);
 				StringBuilder.AppendLine();
 				BuildColumns(selectQuery);
-				AppendIndent().Append("FROM SYS.DUAL").AppendLine();
+				AppendIndent().Append("FROM ");
+				BuildFakeTableName();
+				StringBuilder.AppendLine();
 			}
 			else
 				base.BuildSelectClause(selectQuery);
@@ -256,7 +258,7 @@ namespace LinqToDB.DataProvider.Oracle
 
 		protected override void BuildInsertOrUpdateQuery(SqlInsertOrUpdateStatement insertOrUpdate)
 		{
-			BuildInsertOrUpdateQueryAsMerge(insertOrUpdate, "FROM SYS.DUAL");
+			BuildInsertOrUpdateQueryAsMerge(insertOrUpdate, FakeTable == null ? null : "FROM SYS.DUAL");
 		}
 
 		public override string GetReserveSequenceValuesSql(int count, string sequenceName)
@@ -295,8 +297,6 @@ namespace LinqToDB.DataProvider.Oracle
 
 		protected override void BuildDropTableStatement(SqlDropTableStatement dropTable)
 		{
-			var nullability = NullabilityContext.NonQuery;
-
 			var identityField = dropTable.Table!.IdentityFields.Count > 0 ? dropTable.Table!.IdentityFields[0] : null;
 
 			if (identityField == null && dropTable.Table.TableOptions.HasDropIfExists() == false && dropTable.Table.TableOptions.HasIsTemporary() == false)
@@ -418,6 +418,8 @@ namespace LinqToDB.DataProvider.Oracle
 
 		protected override void BuildCommand(SqlStatement statement, int commandNumber)
 		{
+			var fromDual = FakeTable == null ? null : " FROM SYS.DUAL";
+
 			switch (Statement)
 			{
 				case SqlTruncateTableStatement truncate:
@@ -429,18 +431,19 @@ namespace LinqToDB.DataProvider.Oracle
 	l_value number;
 BEGIN
 	-- Select the next value of the sequence
-	EXECUTE IMMEDIATE 'SELECT {0}.NEXTVAL FROM dual' INTO l_value;
+	EXECUTE IMMEDIATE 'SELECT {0}.NEXTVAL{1}' INTO l_value;
 
 	-- Set a negative increment for the sequence, with value = the current value of the sequence
 	EXECUTE IMMEDIATE 'ALTER SEQUENCE {0} INCREMENT BY -' || l_value || ' MINVALUE 0';
 
 	-- Select once from the sequence, to take its current value back to 0
-	EXECUTE IMMEDIATE 'select {0}.NEXTVAL FROM dual' INTO l_value;
+	EXECUTE IMMEDIATE 'select {0}.NEXTVAL{1}' INTO l_value;
 
 	-- Set the increment back to 1
 	EXECUTE IMMEDIATE 'ALTER SEQUENCE {0} INCREMENT BY 1 MINVALUE 0';
 END;",
-							sequenceName)
+							sequenceName,
+							fromDual)
 						.AppendLine()
 						;
 
@@ -478,7 +481,7 @@ END;",
 							.Append(".NEXTVAL INTO :NEW.");
 						Convert(StringBuilder, _identityField!.PhysicalName, ConvertType.NameToQueryField);
 						StringBuilder
-							.Append(" FROM dual;")
+							.Append(fromDual)
 							.AppendLine  ()
 							.AppendLine  ("END;");
 					}
@@ -532,7 +535,7 @@ END;",
 			return sb;
 		}
 
-		void AppendSchemaPrefix(StringBuilder sb, string? schema)
+		protected void AppendSchemaPrefix(StringBuilder sb, string? schema)
 		{
 			if (schema != null)
 			{
@@ -640,7 +643,6 @@ END;",
 
 		protected override void BuildMultiInsertQuery(SqlMultiInsertStatement statement)
 		{
-			var nullability = NullabilityContext.NonQuery;
 			BuildMultiInsertClause(statement);
 			BuildSqlBuilder((SelectQuery)statement.Source.Source, Indent, skipAlias : false);
 		}
@@ -650,8 +652,6 @@ END;",
 			StringBuilder.AppendLine(statement.InsertType == MultiInsertType.First ? "INSERT FIRST" : "INSERT ALL");
 
 			Indent++;
-
-			var nullability = NullabilityContext.NonQuery;
 
 			if (statement.InsertType == MultiInsertType.Unconditional)
 			{
