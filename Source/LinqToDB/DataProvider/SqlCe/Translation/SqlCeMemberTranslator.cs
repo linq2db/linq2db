@@ -6,7 +6,7 @@ namespace LinqToDB.DataProvider.SqlCe.Translation
 {
 	using LinqToDB.Common;
 	using LinqToDB.Internal.SqlQuery;
-	using LinqToDB.Linq.Translation;
+	using LinqToDB.Internal.Linq.Translation;
 	using LinqToDB.SqlQuery;
 
 	public class SqlCeMemberTranslator : ProviderMemberTranslatorDefault

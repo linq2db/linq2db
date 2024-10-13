@@ -6,7 +6,7 @@ namespace LinqToDB.DataProvider.Firebird.Translation
 {
 	using LinqToDB.Common;
 	using LinqToDB.Internal.SqlQuery;
-	using LinqToDB.Linq.Translation;
+	using LinqToDB.Internal.Linq.Translation;
 
 	public class FirebirdMemberTranslator : ProviderMemberTranslatorDefault
 	{

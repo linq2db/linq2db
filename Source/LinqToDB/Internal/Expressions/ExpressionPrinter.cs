@@ -18,7 +18,7 @@ namespace LinqToDB.Internal.Expressions
 {
 	using LinqToDB.Common;
 	using LinqToDB.Infrastructure;
-	using LinqToDB.Linq.Translation;
+	using LinqToDB.Internal.Linq.Translation;
 
 	/// <summary>
 	///     <para>

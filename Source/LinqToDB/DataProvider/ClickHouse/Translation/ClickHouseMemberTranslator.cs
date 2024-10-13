@@ -5,7 +5,7 @@ namespace LinqToDB.DataProvider.ClickHouse.Translation
 {
 	using LinqToDB.Common;
 	using LinqToDB.Internal.SqlQuery;
-	using LinqToDB.Linq.Translation;
+	using LinqToDB.Internal.Linq.Translation;
 
 	public class ClickHouseMemberTranslator : ProviderMemberTranslatorDefault
 	{

@@ -13,7 +13,7 @@ namespace LinqToDB.DataProvider.SapHana
 	using LinqToDB.DataProvider.SapHana.Translation;
 	using LinqToDB.Extensions;
 	using LinqToDB.Internal.SqlProvider;
-	using LinqToDB.Linq.Translation;
+	using LinqToDB.Internal.Linq.Translation;
 	using LinqToDB.Mapping;
 
 	public class SapHanaDataProvider : DynamicDataProviderBase<SapHanaProviderAdapter>

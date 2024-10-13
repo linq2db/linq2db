@@ -7,7 +7,7 @@ namespace LinqToDB
 {
 	using LinqToDB.Internal.Common;
 	using LinqToDB.Internal.SqlQuery;
-	using LinqToDB.Linq.Builder;
+	using LinqToDB.Internal.Linq.Builder;
 	using LinqToDB.Mapping;
 
 	public partial class Sql

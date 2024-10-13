@@ -7,7 +7,9 @@ using JetBrains.Annotations;
 
 namespace LinqToDB.DataProvider.Oracle
 {
+	using LinqToDB.DataProvider;
 	using LinqToDB.Internal.Expressions;
+	using LinqToDB.Internal.Linq;
 	using LinqToDB.Internal.SqlProvider;
 	using LinqToDB.Linq;
 

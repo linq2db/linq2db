@@ -7,13 +7,14 @@ using System.Reflection;
 
 namespace LinqToDB.Data
 {
-	using LinqToDB.Internal.Expressions;
 	using LinqToDB.Extensions;
 	using LinqToDB.Interceptors;
 	using LinqToDB.Interceptors.Internal;
+	using LinqToDB.Internal.Expressions;
+	using LinqToDB.Internal.Linq;
+	using LinqToDB.Internal.Linq.Builder;
 	using LinqToDB.Internal.SqlQuery;
 	using LinqToDB.Linq;
-	using LinqToDB.Linq.Builder;
 	using LinqToDB.Mapping;
 	using LinqToDB.Reflection;
 	using LinqToDB.Tools;

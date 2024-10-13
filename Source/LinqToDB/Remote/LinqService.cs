@@ -15,7 +15,7 @@ namespace LinqToDB.Remote
 	using LinqToDB.Interceptors;
 	using LinqToDB.Internal.SqlQuery;
 	using LinqToDB.Linq;
-	using LinqToDB.Linq.Translation;
+	using LinqToDB.Internal.Linq.Translation;
 	using LinqToDB.Mapping;
 	using LinqToDB.Tools;
 

@@ -11,7 +11,7 @@ namespace LinqToDB.Mapping
 	using LinqToDB.Common;
 	using LinqToDB.Extensions;
 	using LinqToDB.Internal.Expressions;
-	using LinqToDB.Linq.Builder;
+	using LinqToDB.Internal.Linq.Builder;
 
 	/// <summary>
 	/// Stores association descriptor.

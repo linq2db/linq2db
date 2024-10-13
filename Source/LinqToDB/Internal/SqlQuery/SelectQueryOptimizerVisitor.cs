@@ -11,7 +11,7 @@ namespace LinqToDB.Internal.SqlQuery
 	using LinqToDB.DataProvider;
 	using LinqToDB.Extensions;
 	using LinqToDB.Internal.SqlQuery.Visitors;
-	using LinqToDB.Linq.Builder;
+	using LinqToDB.Internal.Linq.Builder;
 	using LinqToDB.Mapping;
 	using LinqToDB.Internal.SqlProvider;
 	using LinqToDB.SqlQuery;

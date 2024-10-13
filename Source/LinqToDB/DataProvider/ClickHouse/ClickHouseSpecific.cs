@@ -6,13 +6,12 @@ using JetBrains.Annotations;
 namespace LinqToDB.DataProvider.ClickHouse
 {
 	using LinqToDB.Internal.Expressions;
+	using LinqToDB.Internal.Linq;
 	using LinqToDB.Internal.SqlProvider;
 	using LinqToDB.Linq;
 
 	public interface IClickHouseSpecificTable<out TSource> : ITable<TSource>
-		where TSource : notnull
-	{
-	}
+		where TSource : notnull;
 
 	sealed class ClickHouseSpecificTable<TSource> : DatabaseSpecificTable<TSource>, IClickHouseSpecificTable<TSource>, ITable
 		where TSource : notnull
@@ -22,9 +21,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 		}
 	}
 
-	public interface IClickHouseSpecificQueryable<out TSource> : IQueryable<TSource>
-	{
-	}
+	public interface IClickHouseSpecificQueryable<out TSource> : IQueryable<TSource>;
 
 	sealed class ClickHouseSpecificQueryable<TSource> : DatabaseSpecificQueryable<TSource>, IClickHouseSpecificQueryable<TSource>, ITable
 	{

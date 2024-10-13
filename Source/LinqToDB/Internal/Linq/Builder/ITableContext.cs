@@ -1,0 +1,16 @@
+﻿using System;
+using System.Reflection;
+
+namespace LinqToDB.Internal.Linq.Builder
+{
+	using LinqToDB.Internal.SqlQuery;
+
+	interface ITableContext : IBuildContext
+	{
+		public Type     ObjectType { get; }
+		public SqlTable SqlTable { get; }
+
+		public LoadWithInfo  LoadWithRoot { get; set; }
+		public MemberInfo[]? LoadWithPath { get; set; }
+	}
+}

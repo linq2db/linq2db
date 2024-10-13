@@ -12,7 +12,7 @@ namespace LinqToDB.Mapping
 	using LinqToDB.Internal.Expressions;
 	using LinqToDB.Internal.SqlQuery;
 	using LinqToDB.Linq;
-	using LinqToDB.Linq.Translation;
+	using LinqToDB.Internal.Linq.Translation;
 	using LinqToDB.Reflection;
 
 	/// <summary>

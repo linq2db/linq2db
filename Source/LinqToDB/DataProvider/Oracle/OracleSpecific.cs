@@ -6,13 +6,12 @@ using JetBrains.Annotations;
 namespace LinqToDB.DataProvider.Oracle
 {
 	using LinqToDB.Internal.Expressions;
+	using LinqToDB.Internal.Linq;
 	using LinqToDB.Internal.SqlProvider;
 	using LinqToDB.Linq;
 
 	public interface IOracleSpecificTable<out TSource> : ITable<TSource>
-		where TSource : notnull
-	{
-	}
+		where TSource : notnull;
 
 	sealed class OracleSpecificTable<TSource> : DatabaseSpecificTable<TSource>, IOracleSpecificTable<TSource>, ITable
 		where TSource : notnull
@@ -22,9 +21,7 @@ namespace LinqToDB.DataProvider.Oracle
 		}
 	}
 
-	public interface IOracleSpecificQueryable<out TSource> : IQueryable<TSource>
-	{
-	}
+	public interface IOracleSpecificQueryable<out TSource> : IQueryable<TSource>;
 
 	sealed class OracleSpecificQueryable<TSource> : DatabaseSpecificQueryable<TSource>, IOracleSpecificQueryable<TSource>, ITable
 	{

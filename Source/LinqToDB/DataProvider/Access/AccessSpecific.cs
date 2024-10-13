@@ -6,13 +6,12 @@ using JetBrains.Annotations;
 namespace LinqToDB.DataProvider.Access
 {
 	using LinqToDB.Internal.Expressions;
+	using LinqToDB.Internal.Linq;
 	using LinqToDB.Internal.SqlProvider;
 	using LinqToDB.Linq;
 
 	public interface IAccessSpecificTable<out TSource> : ITable<TSource>
-		where TSource : notnull
-	{
-	}
+		where TSource : notnull;
 
 	sealed class AccessSpecificTable<TSource> : DatabaseSpecificTable<TSource>, IAccessSpecificTable<TSource>, ITable
 		where TSource : notnull
@@ -22,9 +21,7 @@ namespace LinqToDB.DataProvider.Access
 		}
 	}
 
-	public interface IAccessSpecificQueryable<out TSource> : IQueryable<TSource>
-	{
-	}
+	public interface IAccessSpecificQueryable<out TSource> : IQueryable<TSource>;
 
 	sealed class AccessSpecificQueryable<TSource> : DatabaseSpecificQueryable<TSource>, IAccessSpecificQueryable<TSource>, ITable
 	{

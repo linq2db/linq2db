@@ -7,7 +7,7 @@ namespace LinqToDB.Data
 	using LinqToDB.DataProvider;
 	using LinqToDB.Interceptors;
 	using LinqToDB.Internal.Common;
-	using LinqToDB.Linq.Translation;
+	using LinqToDB.Internal.Linq.Translation;
 	using LinqToDB.Mapping;
 	using LinqToDB.Remote;
 

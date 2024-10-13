@@ -13,7 +13,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 	using LinqToDB.Common;
 	using LinqToDB.Data;
 	using LinqToDB.Internal.Common;
-	using LinqToDB.Linq.Translation;
+	using LinqToDB.Internal.Linq.Translation;
 	using LinqToDB.SchemaProvider;
 	using LinqToDB.SqlQuery;
 

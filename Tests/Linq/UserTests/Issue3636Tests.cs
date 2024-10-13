@@ -5,7 +5,7 @@ using FluentAssertions;
 using LinqToDB;
 using LinqToDB.Interceptors;
 using LinqToDB.Linq;
-using LinqToDB.Linq.Builder;
+using LinqToDB.Internal.Linq.Builder;
 using LinqToDB.Mapping;
 using NUnit.Framework;
 using Tests.Model;

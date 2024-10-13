@@ -10,22 +10,14 @@ using System.Threading.Tasks;
 
 namespace LinqToDB.Data
 {
-	using LinqToDB.Common;
-	using LinqToDB.Data;
 	using LinqToDB.DataProvider;
-	using LinqToDB.Internal.Expressions;
 	using LinqToDB.Extensions;
 	using LinqToDB.Infrastructure;
 	using LinqToDB.Internal.Common;
-	using LinqToDB.Internal.SqlQuery;
-	using LinqToDB.Internal.SqlQuery.Visitors;
-	using LinqToDB.Linq;
-	using LinqToDB.Linq.Builder.Visitors;
-	using LinqToDB.Linq.Translation;
-	using LinqToDB.Mapping;
-	using LinqToDB.SchemaProvider;
+	using LinqToDB.Internal.Linq;
 	using LinqToDB.Internal.SqlProvider;
-	using LinqToDB.SqlQuery;
+	using LinqToDB.Internal.SqlQuery;
+	using LinqToDB.Linq;
 	using LinqToDB.Tools;
 
 	public partial class DataConnection

@@ -3,17 +3,14 @@ using System.Globalization;
 using System.Linq.Expressions;
 
 using LinqToDB.Common;
+using LinqToDB.Internal.Linq.Translation;
 using LinqToDB.Internal.SqlQuery;
 
 namespace LinqToDB.DataProvider.Access.Translation
 {
-	using Linq.Translation;
-
 	public class AccessMemberTranslator : ProviderMemberTranslatorDefault
 	{
-		class SqlTypesTranslation : SqlTypesTranslationDefault
-		{
-		}
+		class SqlTypesTranslation : SqlTypesTranslationDefault;
 
 		public class DateFunctionsTranslator : DateFunctionsTranslatorBase
 		{

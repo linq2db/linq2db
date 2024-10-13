@@ -9,7 +9,7 @@ namespace LinqToDB
 	using LinqToDB.Data;
 	using LinqToDB.Data.RetryPolicy;
 	using LinqToDB.Internal.Common;
-	using LinqToDB.Linq.Translation;
+	using LinqToDB.Internal.Linq.Translation;
 	using LinqToDB.Remote;
 
 	/// <summary>

@@ -8,7 +8,8 @@ using JetBrains.Annotations;
 
 namespace LinqToDB
 {
-	using Linq;
+	using LinqToDB.Internal.Linq;
+	using LinqToDB.Internal.Linq.Translation;
 
 	/// <summary>
 	/// Provides helper methods for asynchronous operations.

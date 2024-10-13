@@ -44,4 +44,4 @@ System.Data.Linq.Binary.Equals(System.Data.Linq.Binary? other) -> bool
 System.Data.Linq.Binary.Length.get -> int
 System.Data.Linq.Binary.ToArray() -> byte[]!
 virtual LinqToDB.DataProvider.DataProviderBase.DisposeCommandAsync(System.Data.Common.DbCommand! command) -> System.Threading.Tasks.ValueTask
-virtual LinqToDB.Linq.Translation.SqlTypesTranslationDefault.ConvertDateOnly(LinqToDB.Linq.Translation.ITranslationContext! translationContext, System.Linq.Expressions.MemberExpression! memberExpression, LinqToDB.Linq.Translation.TranslationFlags translationFlags) -> System.Linq.Expressions.Expression?
+virtual LinqToDB.Internal.Linq.Translation.SqlTypesTranslationDefault.ConvertDateOnly(LinqToDB.Internal.Linq.Translation.ITranslationContext! translationContext, System.Linq.Expressions.MemberExpression! memberExpression, LinqToDB.Internal.Linq.Translation.TranslationFlags translationFlags) -> System.Linq.Expressions.Expression?

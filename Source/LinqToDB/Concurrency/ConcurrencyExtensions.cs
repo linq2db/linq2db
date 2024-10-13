@@ -6,11 +6,11 @@ using System.Threading.Tasks;
 
 namespace LinqToDB.Concurrency
 {
-	using Expressions;
-	using Extensions;
-	using Linq;
-	using Mapping;
-	using Reflection;
+	using LinqToDB.Extensions;
+	using LinqToDB.Internal.Linq;
+	using LinqToDB.Linq;
+	using LinqToDB.Mapping;
+	using LinqToDB.Reflection;
 
 	public static class ConcurrencyExtensions
 	{

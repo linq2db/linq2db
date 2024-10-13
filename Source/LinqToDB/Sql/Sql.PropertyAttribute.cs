@@ -7,7 +7,7 @@ namespace LinqToDB
 {
 	using LinqToDB.Internal.Expressions;
 	using LinqToDB.Internal.SqlQuery;
-	using LinqToDB.Linq.Builder;
+	using LinqToDB.Internal.Linq.Builder;
 
 	partial class Sql
 	{

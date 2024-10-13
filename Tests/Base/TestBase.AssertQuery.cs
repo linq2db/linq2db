@@ -7,14 +7,13 @@ using System.Reflection;
 
 using LinqToDB;
 using LinqToDB.Common;
-using LinqToDB.Internal.Expressions;
 using LinqToDB.Extensions;
-using LinqToDB.Linq;
+using LinqToDB.Internal.Expressions;
+using LinqToDB.Internal.Linq;
+using LinqToDB.Internal.Linq.Translation;
+using LinqToDB.Internal.SqlQuery;
 using LinqToDB.Reflection;
-using LinqToDB.Tools;
 using LinqToDB.Tools.Comparers;
-
-using NUnit.Framework;
 
 namespace Tests
 {

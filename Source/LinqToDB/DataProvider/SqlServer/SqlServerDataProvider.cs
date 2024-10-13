@@ -15,7 +15,7 @@ namespace LinqToDB.DataProvider.SqlServer
 	using LinqToDB.DataProvider.SqlServer.Translation;
 	using LinqToDB.Extensions;
 	using LinqToDB.Internal.SqlProvider;
-	using LinqToDB.Linq.Translation;
+	using LinqToDB.Internal.Linq.Translation;
 	using LinqToDB.Mapping;
 	using LinqToDB.SchemaProvider;
 

@@ -6,13 +6,12 @@ using JetBrains.Annotations;
 namespace LinqToDB.DataProvider.MySql
 {
 	using LinqToDB.Internal.Expressions;
+	using LinqToDB.Internal.Linq;
 	using LinqToDB.Internal.SqlProvider;
 	using LinqToDB.Linq;
 
 	public interface IMySqlSpecificTable<out TSource> : ITable<TSource>
-		where TSource : notnull
-	{
-	}
+		where TSource : notnull;
 
 	sealed class MySqlSpecificTable<TSource> : DatabaseSpecificTable<TSource>, IMySqlSpecificTable<TSource>, ITable
 		where TSource : notnull
@@ -22,9 +21,7 @@ namespace LinqToDB.DataProvider.MySql
 		}
 	}
 
-	public interface IMySqlSpecificQueryable<out TSource> : IQueryable<TSource>
-	{
-	}
+	public interface IMySqlSpecificQueryable<out TSource> : IQueryable<TSource>;
 
 	sealed class MySqlSpecificQueryable<TSource> : DatabaseSpecificQueryable<TSource>, IMySqlSpecificQueryable<TSource>, ITable
 	{

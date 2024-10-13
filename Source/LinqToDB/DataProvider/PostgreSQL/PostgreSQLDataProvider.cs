@@ -15,7 +15,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 	using LinqToDB.Data;
 	using LinqToDB.DataProvider.PostgreSQL.Translation;
 	using LinqToDB.Internal.SqlProvider;
-	using LinqToDB.Linq.Translation;
+	using LinqToDB.Internal.Linq.Translation;
 	using LinqToDB.Mapping;
 
 	sealed class PostgreSQLDataProvider92 : PostgreSQLDataProvider { public PostgreSQLDataProvider92() : base(ProviderName.PostgreSQL92, PostgreSQLVersion.v92) {} }

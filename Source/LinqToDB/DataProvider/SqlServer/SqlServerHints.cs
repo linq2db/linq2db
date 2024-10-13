@@ -9,9 +9,10 @@ using JetBrains.Annotations;
 namespace LinqToDB.DataProvider.SqlServer
 {
 	using LinqToDB.Internal.Expressions;
+	using LinqToDB.Internal.Linq;
+	using LinqToDB.Internal.SqlProvider;
 	using LinqToDB.Internal.SqlQuery;
 	using LinqToDB.Linq;
-	using LinqToDB.Internal.SqlProvider;
 
 	/// <summary>
 	/// https://docs.microsoft.com/en-us/sql/t-sql/queries/hints-transact-sql

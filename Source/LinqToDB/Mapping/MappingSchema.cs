@@ -23,7 +23,7 @@ namespace LinqToDB.Mapping
 	using LinqToDB.Extensions;
 	using LinqToDB.Internal.Cache;
 	using LinqToDB.Internal.Common;
-	using LinqToDB.Linq.Translation;
+	using LinqToDB.Internal.Linq.Translation;
 	using LinqToDB.Metadata;
 	using LinqToDB.Internal.SqlProvider;
 	using LinqToDB.SqlQuery;

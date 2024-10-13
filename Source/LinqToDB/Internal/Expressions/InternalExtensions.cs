@@ -8,12 +8,12 @@ using System.Runtime.CompilerServices;
 
 namespace LinqToDB.Internal.Expressions
 {
-	using LinqToDB.Internal.Expressions;
-	using LinqToDB.Internal.Expressions.Visitors;
 	using LinqToDB.Extensions;
 	using LinqToDB.Internal.Common;
-	using LinqToDB.Linq;
+	using LinqToDB.Internal.Expressions.Visitors;
+	using LinqToDB.Internal.Linq;
 	using LinqToDB.Mapping;
+	using LinqToDB.Tools;
 
 	/// <summary>
 	/// Internal API.

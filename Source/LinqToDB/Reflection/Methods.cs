@@ -9,13 +9,13 @@ using System.Reflection;
 namespace LinqToDB.Reflection
 {
 	using LinqToDB.Common;
-	using LinqToDB.Internal.Cache;
 	using LinqToDB.Data;
-	using LinqToDB.Internal.Expressions;
 	using LinqToDB.Extensions;
+	using LinqToDB.Internal.Cache;
+	using LinqToDB.Internal.Expressions;
+	using LinqToDB.Internal.Linq.Translation;
 	using LinqToDB.Internal.SqlQuery;
 	using LinqToDB.Linq;
-	using LinqToDB.Linq.Translation;
 
 	/// <summary>
 	/// This API supports the LinqToDB infrastructure and is not intended to be used  directly from your code.
@@ -360,7 +360,7 @@ namespace LinqToDB.Reflection
 
 			internal static class Exceptions
 			{
-				public static readonly MethodInfo DefaultInheritanceMappingException = MemberHelper.MethodOf(() => Linq.Exceptions.DefaultInheritanceMappingException(null!, null!));
+				public static readonly MethodInfo DefaultInheritanceMappingException = MemberHelper.MethodOf(() => Internal.Linq.Exceptions.DefaultInheritanceMappingException(null!, null!));
 			}
 
 			internal static class Sql

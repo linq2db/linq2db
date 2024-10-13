@@ -6,7 +6,7 @@ namespace LinqToDB
 	using LinqToDB.Data;
 	using LinqToDB.Interceptors;
 	using LinqToDB.Internal.Common;
-	using LinqToDB.Linq.Translation;
+	using LinqToDB.Internal.Linq.Translation;
 	using LinqToDB.Remote;
 
 	/// <param name="CommandTimeout">

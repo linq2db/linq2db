@@ -8,9 +8,10 @@ using JetBrains.Annotations;
 namespace LinqToDB.DataProvider.ClickHouse
 {
 	using LinqToDB.Internal.Expressions;
+	using LinqToDB.Internal.Linq;
+	using LinqToDB.Internal.SqlProvider;
 	using LinqToDB.Internal.SqlQuery;
 	using LinqToDB.Linq;
-	using LinqToDB.Internal.SqlProvider;
 
 	public static partial class ClickHouseHints
 	{

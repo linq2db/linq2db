@@ -17,7 +17,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 	using LinqToDB.Data;
 	using LinqToDB.DataProvider.ClickHouse.Translation;
 	using LinqToDB.Internal.SqlProvider;
-	using LinqToDB.Linq.Translation;
+	using LinqToDB.Internal.Linq.Translation;
 	using LinqToDB.Mapping;
 	using LinqToDB.SchemaProvider;
 

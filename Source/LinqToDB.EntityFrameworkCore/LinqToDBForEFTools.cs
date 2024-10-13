@@ -23,6 +23,7 @@ namespace LinqToDB.EntityFrameworkCore
 	using LinqToDB.DataProvider;
 	using LinqToDB.EntityFrameworkCore.Internal;
 	using LinqToDB.Internal.Expressions;
+	using LinqToDB.Internal.Linq;
 	using LinqToDB.Linq;
 	using LinqToDB.Mapping;
 	using LinqToDB.Metadata;

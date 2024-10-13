@@ -13,7 +13,7 @@ namespace LinqToDB.DataProvider.Oracle
 	using LinqToDB.DataProvider.Oracle.Translation;
 	using LinqToDB.Extensions;
 	using LinqToDB.Internal.SqlProvider;
-	using LinqToDB.Linq.Translation;
+	using LinqToDB.Internal.Linq.Translation;
 	using LinqToDB.Mapping;
 
 	sealed class OracleDataProviderNative11  : OracleDataProvider { public OracleDataProviderNative11()  : base(ProviderName.Oracle11Native , OracleProvider.Native,  OracleVersion.v11) {} }

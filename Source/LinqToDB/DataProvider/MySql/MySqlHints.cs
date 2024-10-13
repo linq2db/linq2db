@@ -8,10 +8,12 @@ using JetBrains.Annotations;
 
 namespace LinqToDB.DataProvider.MySql
 {
+	using LinqToDB.DataProvider;
 	using LinqToDB.Internal.Expressions;
+	using LinqToDB.Internal.Linq;
+	using LinqToDB.Internal.SqlProvider;
 	using LinqToDB.Internal.SqlQuery;
 	using LinqToDB.Linq;
-	using LinqToDB.Internal.SqlProvider;
 
 	public static partial class MySqlHints
 	{

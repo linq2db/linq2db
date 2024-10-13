@@ -2,9 +2,12 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
+
 using JetBrains.Annotations;
-using LinqToDB.Linq;
+
+using LinqToDB.Internal.Linq;
 using LinqToDB.Internal.SqlQuery;
+using LinqToDB.Linq;
 
 namespace Tests
 {

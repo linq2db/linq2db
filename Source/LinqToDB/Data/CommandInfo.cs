@@ -28,9 +28,9 @@ namespace LinqToDB.Data
 	using LinqToDB.Internal.Cache;
 	using LinqToDB.Internal.Common;
 	using LinqToDB.Internal.Expressions;
+	using LinqToDB.Internal.Linq;
+	using LinqToDB.Internal.Linq.Translation;
 	using LinqToDB.Internal.SqlQuery;
-	using LinqToDB.Linq;
-	using LinqToDB.Linq.Translation;
 	using LinqToDB.Mapping;
 	using LinqToDB.Reflection;
 	using LinqToDB.Tools;

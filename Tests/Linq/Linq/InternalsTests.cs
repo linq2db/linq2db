@@ -1,7 +1,11 @@
 ﻿using System.Linq;
+
 using LinqToDB;
-using LinqToDB.Linq;
+using LinqToDB.Internal.Cache;
+using LinqToDB.Internal.Linq;
+using LinqToDB.Internal.Linq.Translation;
 using LinqToDB.Mapping;
+
 using NUnit.Framework;
 
 namespace Tests.Linq

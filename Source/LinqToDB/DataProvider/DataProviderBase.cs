@@ -19,7 +19,7 @@ namespace LinqToDB.DataProvider
 	using LinqToDB.Internal.Expressions;
 	using LinqToDB.Infrastructure;
 	using LinqToDB.Internal.Common;
-	using LinqToDB.Linq.Translation;
+	using LinqToDB.Internal.Linq.Translation;
 	using LinqToDB.Mapping;
 	using LinqToDB.SchemaProvider;
 	using LinqToDB.Internal.SqlProvider;

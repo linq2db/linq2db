@@ -10,9 +10,9 @@ namespace LinqToDB.DataProvider.Informix
 	using LinqToDB.Common;
 	using LinqToDB.Data;
 	using LinqToDB.DataProvider.Informix.Translation;
+	using LinqToDB.Internal.Linq;
+	using LinqToDB.Internal.Linq.Translation;
 	using LinqToDB.Internal.SqlProvider;
-	using LinqToDB.Linq.Internal;
-	using LinqToDB.Linq.Translation;
 	using LinqToDB.Mapping;
 
 	sealed class InformixDataProviderInformix : InformixDataProvider { public InformixDataProviderInformix() : base(ProviderName.Informix,    InformixProvider.Informix) {} }

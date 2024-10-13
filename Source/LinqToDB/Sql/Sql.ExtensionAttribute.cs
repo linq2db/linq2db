@@ -17,8 +17,8 @@ namespace LinqToDB
 	using LinqToDB.Extensions;
 	using LinqToDB.Internal.Common;
 	using LinqToDB.Internal.SqlQuery;
-	using LinqToDB.Linq.Builder;
-	using LinqToDB.Linq.Translation;
+	using LinqToDB.Internal.Linq.Builder;
+	using LinqToDB.Internal.Linq.Translation;
 	using LinqToDB.Mapping;
 	using LinqToDB.SqlQuery;
 

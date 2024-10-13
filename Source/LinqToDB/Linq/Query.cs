@@ -13,13 +13,15 @@ namespace LinqToDB.Linq
 {
 	using LinqToDB.Common;
 	using LinqToDB.Common.Logging;
+	using LinqToDB.Extensions;
+	using LinqToDB.Interceptors;
 	using LinqToDB.Internal.Expressions;
 	using LinqToDB.Internal.Expressions.Visitors;
-	using LinqToDB.Interceptors;
-	using LinqToDB.Linq.Builder;
-	using LinqToDB.Mapping;
+	using LinqToDB.Internal.Linq;
+	using LinqToDB.Internal.Linq.Builder;
 	using LinqToDB.Internal.SqlProvider;
 	using LinqToDB.Internal.SqlQuery;
+	using LinqToDB.Mapping;
 	using LinqToDB.Tools;
 
 	public abstract class Query

@@ -11,7 +11,7 @@ namespace LinqToDB.DataProvider.Firebird
 	using LinqToDB.Data;
 	using LinqToDB.DataProvider.Firebird.Translation;
 	using LinqToDB.Internal.SqlProvider;
-	using LinqToDB.Linq.Translation;
+	using LinqToDB.Internal.Linq.Translation;
 	using LinqToDB.Mapping;
 
 	sealed class FirebirdDataProvider25 : FirebirdDataProvider { public FirebirdDataProvider25() : base(ProviderName.Firebird25, FirebirdVersion.v25) { } }

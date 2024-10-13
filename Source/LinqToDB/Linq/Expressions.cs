@@ -26,7 +26,7 @@ namespace LinqToDB.Linq
 	using LinqToDB.Internal.Common;
 	using LinqToDB.Internal.Expressions;
 	using LinqToDB.Internal.SqlQuery;
-	using LinqToDB.Linq.Translation;
+	using LinqToDB.Internal.Linq.Translation;
 	using LinqToDB.Mapping;
 	using LinqToDB.SqlQuery;
 

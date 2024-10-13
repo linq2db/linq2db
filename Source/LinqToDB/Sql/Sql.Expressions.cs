@@ -8,12 +8,12 @@ using JetBrains.Annotations;
 namespace LinqToDB
 {
 	using LinqToDB.Common;
-	using LinqToDB.Internal.Expressions;
 	using LinqToDB.Extensions;
 	using LinqToDB.Internal.Common;
+	using LinqToDB.Internal.Expressions;
+	using LinqToDB.Internal.SqlProvider;
 	using LinqToDB.Internal.SqlQuery;
 	using LinqToDB.Mapping;
-	using LinqToDB.Internal.SqlProvider;
 	using LinqToDB.SqlQuery;
 
 	public partial class Sql
@@ -555,7 +555,7 @@ namespace LinqToDB
 		{
 			public void Build(ISqExtensionBuilder builder)
 			{
-				Linq.Builder.TableBuilder.PrepareRawSqlArguments(builder.Arguments[0],
+				Internal.Linq.Builder.TableBuilder.PrepareRawSqlArguments(builder.Arguments[0],
 					builder.Arguments.Length > 1 ? builder.Arguments[1] : null,
 					out var format, out var arguments);
 

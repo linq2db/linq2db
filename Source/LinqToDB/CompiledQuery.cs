@@ -10,8 +10,8 @@ namespace LinqToDB
 	using LinqToDB.Common;
 	using LinqToDB.Extensions;
 	using LinqToDB.Internal.Expressions;
-	using LinqToDB.Linq;
-	using LinqToDB.Linq.Builder;
+	using LinqToDB.Internal.Linq;
+	using LinqToDB.Internal.Linq.Builder;
 
 	/// <summary>
 	/// Provides API for compilation and caching of queries for reuse.
