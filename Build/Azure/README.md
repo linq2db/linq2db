@@ -138,16 +138,17 @@ Legend:
 |`ProviderName.MySql80`|Latest MySQL using MySQL.Data||
 |`TestProvName.MySql80Connector`|Latest MySQL using MySqlConnector||
 |`TestProvName.MariaDB11Connector`|Latest MariaDB using MySqlConnector||
-|`ProviderName.PostgreSQL92`|PostgreSQL 9.2-|PGSQL 9 not tested by CI|
-|`ProviderName.PostgreSQL93`|PostgreSQL [9.3-9.5)|PGSQL 9 not tested by CI|
-|`ProviderName.PostgreSQL95`|PostgreSQL 9.5+|PGSQL 9 not tested by CI|
-|`TestProvName.PostgreSQL10`|PostgreSQL 10|Not tested by CI|
-|`TestProvName.PostgreSQL11`|PostgreSQL 11||
-|`TestProvName.PostgreSQL12`|PostgreSQL 12||
+|`ProviderName.PostgreSQL92`|PostgreSQL 9.2-|PGSQL 9 not tested by CI (EOL)|
+|`ProviderName.PostgreSQL93`|PostgreSQL [9.3-9.5)|PGSQL 9 not tested by CI (EOL)|
+|`ProviderName.PostgreSQL95`|PostgreSQL 9.5+|PGSQL 9 not tested by CI (EOL)|
+|`TestProvName.PostgreSQL10`|PostgreSQL 10|Not tested by CI (EOL)|
+|`TestProvName.PostgreSQL11`|PostgreSQL 11|Not tested by CI (EOL)|
+|`TestProvName.PostgreSQL12`|PostgreSQL 12|Not tested by CI (EOL)|
 |`TestProvName.PostgreSQL13`|PostgreSQL 13||
 |`TestProvName.PostgreSQL14`|PostgreSQL 14||
 |`ProviderName.PostgreSQL15`|PostgreSQL 15||
 |`TestProvName.PostgreSQL16`|PostgreSQL 16||
+|`TestProvName.PostgreSQL17`|PostgreSQL 17||
 |`ProviderName.Firebird25`|Firebird 2.5||
 |`TestProvName.Firebird3`|Firebird 3.0||
 |`TestProvName.Firebird4`|Firebird 4.0||

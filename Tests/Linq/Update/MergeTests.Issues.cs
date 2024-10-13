@@ -692,7 +692,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void TestMergeWithInterfaces18([IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllFirebird5Plus)] string context)
+		public void TestMergeWithInterfaces18([MergeNotMatchedBySourceDataContextSource] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable<ReviewIndex>())
@@ -707,7 +707,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void TestMergeWithInterfaces19([IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllFirebird5Plus)] string context)
+		public void TestMergeWithInterfaces19([MergeNotMatchedBySourceDataContextSource] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable<ReviewIndex>())
@@ -722,7 +722,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void TestMergeWithInterfaces20([IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllFirebird5Plus)] string context)
+		public void TestMergeWithInterfaces20([MergeNotMatchedBySourceDataContextSource] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable<ReviewIndex>())
@@ -737,7 +737,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void TestMergeWithInterfaces21([IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllFirebird5Plus)] string context)
+		public void TestMergeWithInterfaces21([MergeNotMatchedBySourceDataContextSource] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable<ReviewIndex>())
