@@ -109,7 +109,7 @@ namespace Tests.xUpdate
 		[Test]
 		public void DeleteWithPredicatePartialSourceProjection_UnknownFieldInCondition([MergeDataContextSource(
 			TestProvName.AllOracle,
-			TestProvName.AllSybase, TestProvName.AllInformix,
+			TestProvName.AllInformix,
 			TestProvName.AllSapHana, ProviderName.Firebird25)]
 			string context)
 		{
@@ -202,7 +202,7 @@ namespace Tests.xUpdate
 		[Test]
 		public void OtherSourceDeletePartialSourceProjection_UnknownFieldInMatch([MergeDataContextSource(
 			TestProvName.AllOracle,
-			TestProvName.AllSybase, TestProvName.AllSapHana, ProviderName.Firebird25)]
+			TestProvName.AllSapHana, ProviderName.Firebird25)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -419,8 +419,7 @@ namespace Tests.xUpdate
 
 		[Test]
 		public void DeleteFromPartialSourceProjection_MissingKeyField([MergeDataContextSource(
-			TestProvName.AllOracle,
-			TestProvName.AllSybase, TestProvName.AllSapHana)]
+			TestProvName.AllOracle, TestProvName.AllSapHana)]
 			string context)
 		{
 			using (var db = GetDataContext(context))

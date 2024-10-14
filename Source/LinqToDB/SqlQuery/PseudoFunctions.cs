@@ -9,6 +9,8 @@ namespace LinqToDB.SqlQuery
 	/// </summary>
 	public static class PseudoFunctions
 	{
+		public const string MERGE_ACTION = "$merge_action$";
+
 		/// <summary>
 		/// Function to convert text parameter to lowercased form: <c>TO_LOWER(string)</c>
 		/// </summary>

@@ -53,7 +53,7 @@ namespace LinqToDB.Linq.Builder
 
 			if (kind != MergeKind.Merge)
 			{
-				var actionField   = SqlField.FakeField(new DbDataType(typeof(string)), "$action", false);
+				var actionField   = SqlField.FakeField(new DbDataType(typeof(string)), PseudoFunctions.MERGE_ACTION, false);
 
 				var (deletedContext, insertedContext, deletedTable, insertedTable) = UpdateBuilder.CreateDeletedInsertedContexts(builder, mergeContext.TargetContext, out var outputContext);
 
