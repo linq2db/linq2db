@@ -40,7 +40,7 @@ namespace LinqToDB.Linq.Builder
 		{
 			if (node is { NodeType: ExpressionType.Not, Operand.NodeType: ExpressionType.Not })
 			{
-				return Visit(node.Operand);
+				return Visit(((UnaryExpression)node.Operand).Operand);
 			}
 
 			return base.VisitUnary(node);
