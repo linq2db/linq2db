@@ -1,12 +1,11 @@
-﻿using System;
-using System.Globalization;
+﻿using System.Globalization;
 using System.Linq.Expressions;
 
 namespace LinqToDB.DataProvider.SapHana.Translation
 {
 	using Common;
-	using SqlQuery;
 	using Linq.Translation;
+	using SqlQuery;
 
 	public class SapHanaMemberTranslator : ProviderMemberTranslatorDefault
 	{

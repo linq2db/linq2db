@@ -16,9 +16,9 @@ namespace LinqToDB.DataProvider.SapHana
 
 			var provider = assemblyName switch
 			{
-				SapHanaProviderAdapter.AssemblyName => SapHanaProvider.Unmanaged,
-				OdbcProviderAdapter.AssemblyName    => SapHanaProvider.ODBC,
-				_                                   => SapHanaProvider.AutoDetect
+				SapHanaProviderAdapter.UnmanagedAssemblyName => SapHanaProvider.Unmanaged,
+				OdbcProviderAdapter.AssemblyName             => SapHanaProvider.ODBC,
+				_                                            => SapHanaProvider.AutoDetect
 			};
 
 			return SapHanaTools.GetDataProvider(provider);

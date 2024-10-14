@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 
 namespace LinqToDB.DataProvider.SapHana
 {
@@ -28,8 +27,7 @@ namespace LinqToDB.DataProvider.SapHana
 		{
 		}
 
-		protected override IdentifierBuilder CreateID(IdentifierBuilder builder) => builder
-			;
+		protected override IdentifierBuilder CreateID(IdentifierBuilder builder) => builder;
 
 		#region IEquatable implementation
 
