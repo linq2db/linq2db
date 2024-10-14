@@ -1471,7 +1471,10 @@ namespace LinqToDB.SqlQuery
 		[return: NotNullIfNotNull(nameof(sqlExpression))]
 		public static ISqlExpression? SimplifyColumnExpression(ISqlExpression? sqlExpression)
 		{
-			switch (sqlExpression)
+			if (sqlExpression == null)
+				return null;
+
+			switch (UnwrapNullablity(sqlExpression))
 			{
 				case SelectQuery
 				{

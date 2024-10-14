@@ -377,11 +377,14 @@ namespace LinqToDB.Linq.Builder
 
 		public Expression FinalizeConstructors(IBuildContext context, Expression inputExpression, bool deduplicate)
 		{
+			var optimizerVisitor = new ExpressionTreeOptimizerVisitor();
+			var optimized        = optimizerVisitor.Visit(inputExpression);
+
 			using var finalizeVisitor = _finalizeVisitorPool.Allocate();
-			var generator       = new ExpressionGenerator();
+			var       generator       = new ExpressionGenerator();
 
 			// Runs SqlGenericConstructorExpression deduplication and generating actual initializers
-			var expression = finalizeVisitor.Value.Finalize(inputExpression, context, generator);
+			var expression = finalizeVisitor.Value.Finalize(optimized, context, generator);
 
 			generator.AddExpression(expression);
 

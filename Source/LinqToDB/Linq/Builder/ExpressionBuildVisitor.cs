@@ -2488,13 +2488,9 @@ namespace LinqToDB.Linq.Builder
 
 					if (_buildPurpose is BuildPurpose.Root)
 					{
-						if (newNode.Type != node.Type)
-						{
-							return node;
-						}
-
 						if (newNode.Type != node.Type && !(node.Type.IsSameOrParentOf(newNode.Type) || newNode.Type.IsSameOrParentOf(node.Type)))
 						{
+							_foundRoot = node;
 							return node;
 						}
 					}
@@ -2590,7 +2586,6 @@ namespace LinqToDB.Linq.Builder
 					return base.VisitBinary(node);
 				}
 			}
-
 
 			if (!shouldSkipConversion && TryConvertToSql(node, out var sqlResult))
 			{

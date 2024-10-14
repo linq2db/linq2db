@@ -2285,7 +2285,7 @@ namespace LinqToDB.SqlQuery
 
 		protected override ISqlExpression VisitSqlColumnExpression(SqlColumn column, ISqlExpression expression)
 		{
-			expression      = base.VisitSqlColumnExpression(column, expression);
+			expression = base.VisitSqlColumnExpression(column, expression);
 
 			expression = QueryHelper.SimplifyColumnExpression(expression);
 
