@@ -25,6 +25,8 @@ namespace LinqToDB.DataProvider.Oracle
 			var dialect = OracleVersion.v12;
 			if (version?.Contains("11") == true)
 				dialect = OracleVersion.v11;
+			else if (version?.Contains("23") == true)
+				dialect = OracleVersion.v23;
 
 			var provider = OracleProvider.Managed;
 			if (assemblyName == OracleProviderAdapter.DevartAssemblyName)

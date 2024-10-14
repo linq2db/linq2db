@@ -18,10 +18,13 @@ namespace LinqToDB.DataProvider.Oracle
 
 	sealed class OracleDataProviderNative11  : OracleDataProvider { public OracleDataProviderNative11()  : base(ProviderName.Oracle11Native , OracleProvider.Native,  OracleVersion.v11) {} }
 	sealed class OracleDataProviderNative12  : OracleDataProvider { public OracleDataProviderNative12()  : base(ProviderName.OracleNative   , OracleProvider.Native,  OracleVersion.v12) {} }
+	sealed class OracleDataProviderNative23 : OracleDataProvider { public OracleDataProviderNative23()  : base(ProviderName.Oracle23Native   , OracleProvider.Native,  OracleVersion.v23) {} }
 	sealed class OracleDataProviderDevart11  : OracleDataProvider { public OracleDataProviderDevart11()  : base(ProviderName.Oracle11Devart , OracleProvider.Devart,  OracleVersion.v11) {} }
 	sealed class OracleDataProviderDevart12  : OracleDataProvider { public OracleDataProviderDevart12()  : base(ProviderName.OracleDevart   , OracleProvider.Devart,  OracleVersion.v12) {} }
+	sealed class OracleDataProviderDevart23 : OracleDataProvider { public OracleDataProviderDevart23()  : base(ProviderName.Oracle23Devart   , OracleProvider.Devart,  OracleVersion.v23) {} }
 	sealed class OracleDataProviderManaged11 : OracleDataProvider { public OracleDataProviderManaged11() : base(ProviderName.Oracle11Managed, OracleProvider.Managed, OracleVersion.v11) {} }
 	sealed class OracleDataProviderManaged12 : OracleDataProvider { public OracleDataProviderManaged12() : base(ProviderName.OracleManaged  , OracleProvider.Managed, OracleVersion.v12) {} }
+	sealed class OracleDataProviderManaged23 : OracleDataProvider { public OracleDataProviderManaged23() : base(ProviderName.Oracle23Managed  , OracleProvider.Managed, OracleVersion.v23) {} }
 
 	public abstract class OracleDataProvider : DynamicDataProviderBase<OracleProviderAdapter>
 	{
@@ -42,12 +45,11 @@ namespace LinqToDB.DataProvider.Oracle
 			SqlProviderFlags.SupportedCorrelatedSubqueriesLevel                    = 1;
 			SqlProviderFlags.IsColumnSubqueryShouldNotContainParentIsNotNull       = true;
 			SqlProviderFlags.IsColumnSubqueryWithParentReferenceAndTakeSupported   = version >= OracleVersion.v12;
+			SqlProviderFlags.IsApplyJoinSupported                                  = version >= OracleVersion.v12;
 
 			SqlProviderFlags.RowConstructorSupport = RowFeature.Equality | RowFeature.CompareToSelect | RowFeature.In |
 			                                         RowFeature.Update   | RowFeature.Overlaps;
 
-			if (version >= OracleVersion.v12)
-				SqlProviderFlags.IsApplyJoinSupported          = true;
 
 			SqlProviderFlags.MaxInListValuesCount              = 1000;
 
@@ -58,6 +60,8 @@ namespace LinqToDB.DataProvider.Oracle
 
 			if (version == OracleVersion.v11)
 				_sqlOptimizer = new Oracle11SqlOptimizer(SqlProviderFlags);
+			else if (version == OracleVersion.v23)
+				_sqlOptimizer = new Oracle23SqlOptimizer(SqlProviderFlags);
 			else
 				_sqlOptimizer = new Oracle12SqlOptimizer(SqlProviderFlags);
 
@@ -111,6 +115,7 @@ namespace LinqToDB.DataProvider.Oracle
 			return Version switch
 			{
 				OracleVersion.v11 => new Oracle11SqlBuilder(this, mappingSchema, dataOptions, GetSqlOptimizer(dataOptions), SqlProviderFlags),
+				OracleVersion.v23 => new Oracle23SqlBuilder(this, mappingSchema, dataOptions, GetSqlOptimizer(dataOptions), SqlProviderFlags),
 				_                 => new Oracle12SqlBuilder(this, mappingSchema, dataOptions, GetSqlOptimizer(dataOptions), SqlProviderFlags),
 			};
 		}
@@ -121,9 +126,12 @@ namespace LinqToDB.DataProvider.Oracle
 			{
 				(OracleProvider.Native, OracleVersion.v11)  => new OracleMappingSchema.Native11MappingSchema(),
 				(OracleProvider.Native, OracleVersion.v12)  => new OracleMappingSchema.NativeMappingSchema(),
+				(OracleProvider.Native, OracleVersion.v23)  => new OracleMappingSchema.Native23MappingSchema(),
 				(OracleProvider.Devart, OracleVersion.v11)  => new OracleMappingSchema.Devart11MappingSchema(),
 				(OracleProvider.Devart, OracleVersion.v12)  => new OracleMappingSchema.DevartMappingSchema(),
+				(OracleProvider.Devart, OracleVersion.v23)  => new OracleMappingSchema.Devart23MappingSchema(),
 				(OracleProvider.Managed, OracleVersion.v11) => new OracleMappingSchema.Managed11MappingSchema(),
+				(OracleProvider.Managed, OracleVersion.v23) => new OracleMappingSchema.Managed23MappingSchema(),
 				_                                           => new OracleMappingSchema.ManagedMappingSchema(),
 			};
 		}
@@ -183,11 +191,10 @@ namespace LinqToDB.DataProvider.Oracle
 
 		public override IQueryParametersNormalizer GetQueryParameterNormalizer()
 		{
-			// TODO: versioning support
 			// currently we cannot enable Oracle122ParametersNormalizer
 			// as we don't have Version for Oracle 12.2 or higher
 			// also see https://github.com/linq2db/linq2db/issues/4219
-			return new Oracle11ParametersNormalizer();
+			return Version > OracleVersion.v12 ? new Oracle122ParametersNormalizer() : new Oracle11ParametersNormalizer();
 		}
 
 		public override void SetParameter(DataConnection dataConnection, DbParameter parameter, string name, DbDataType dataType, object? value)
@@ -201,12 +208,6 @@ namespace LinqToDB.DataProvider.Oracle
 						var zone = (dto.Offset < TimeSpan.Zero ? "-" : "+") + dto.Offset.ToString("hh\\:mm", DateTimeFormatInfo.InvariantInfo);
 						value    = Adapter.CreateOracleTimeStampTZ(dto, zone);
 					}
-					break;
-
-				case DataType.Boolean  :
-					dataType = dataType.WithDataType(DataType.Byte);
-					if (value is bool boolValue)
-						value = boolValue ? (byte)1 : (byte)0;
 					break;
 
 				case DataType.Guid     :
@@ -266,9 +267,9 @@ namespace LinqToDB.DataProvider.Oracle
 			switch (dataType.DataType)
 			{
 				case DataType.DateTimeOffset : if (type == typeof(DateTimeOffset)) return Adapter.OracleTimeStampTZType ?? Adapter.OracleTimeStampType; break;
-				case DataType.Boolean        : if (type == typeof(bool))           return typeof(byte);                                                 break;
-				case DataType.Guid           : if (type == typeof(Guid))           return typeof(byte[]);                                               break;
-				case DataType.Int16          : if (type == typeof(bool))           return typeof(short);                                                break;
+				case DataType.Boolean        : if (Version < OracleVersion.v23 && type == typeof(bool)) return typeof(byte);                            break;
+				case DataType.Guid           : if (type == typeof(Guid))                                return typeof(byte[]);                          break;
+				case DataType.Int16          : if (type == typeof(bool))                                return typeof(short);                           break;
 			}
 
 			return base.ConvertParameterType(type, dataType);
