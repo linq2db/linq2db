@@ -35,6 +35,8 @@ namespace LinqToDB.Linq.Builder
 
 		protected virtual bool OptimizeColumns => true;
 
+		public bool IsSelectWrapper { get; set; }
+
 		protected virtual int GetIndex(int index, ISqlExpression column)
 		{
 			throw new NotImplementedException();
@@ -75,7 +77,7 @@ namespace LinqToDB.Linq.Builder
 		public override IBuildContext Clone(CloningContext context)
 		{
 			var selectQuery = context.CloneElement(SelectQuery);
-			return new SubQueryContext(context.CloneContext(SubQuery), selectQuery, false);
+			return new SubQueryContext(context.CloneContext(SubQuery), selectQuery, false) { IsSelectWrapper = IsSelectWrapper };
 		}
 
 		public override Expression MakeExpression(Expression path, ProjectFlags flags)

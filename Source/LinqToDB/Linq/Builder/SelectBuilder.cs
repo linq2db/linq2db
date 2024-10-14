@@ -42,6 +42,8 @@ namespace LinqToDB.Linq.Builder
 			_ = builder.BuildExtractExpression(sequence, new ContextRefExpression(sequence.ElementType, sequence));
 
 			sequence.SetAlias(selector.Parameters[0].Name);
+			sequence = new SubQueryContext(sequence) { IsSelectWrapper = true };
+			sequence.SetAlias(selector.Parameters[0].Name);
 
 			var body = selector.Parameters.Count == 1
 				? SequenceHelper.PrepareBody(selector, sequence)
@@ -49,14 +51,6 @@ namespace LinqToDB.Linq.Builder
 
 			var context       = new SelectContext (buildInfo.Parent, body, sequence, buildInfo.IsSubQuery);
 			var resultContext = (IBuildContext) context;
-
-			// finalizing context and checking if we need to wrap it into subquery
-			var translated = builder.BuildSqlExpressionForTest(context, new ContextRefExpression(context.ElementType, context));
-
-			if (SequenceHelper.ContainsAggregateOrWindowFunction(translated))
-			{
-				resultContext = new SubQueryContext(resultContext);
-			}
 
 #if DEBUG
 			context.Debug_MethodCall = methodCall;

@@ -444,7 +444,7 @@ namespace LinqToDB.Linq.Builder
 #if DEBUG
 			if (!IsSame(translated, expression))
 			{
-				Debug.WriteLine($"Translated: {expression} => {translated}");
+				Debug.WriteLine($"--> Translated: {expression} => {translated}");
 			}
 #endif
 
@@ -613,6 +613,22 @@ namespace LinqToDB.Linq.Builder
 
 			return false;
 		}
+
+#if DEBUG
+		[DebuggerStepThrough]
+		[return: NotNullIfNotNull(nameof(node))]
+		public override Expression? Visit(Expression? node)
+		{
+			var newNode = base.Visit(node);
+
+			if (newNode != null && node != null && !IsSame(newNode, node!))
+			{
+				Debug.WriteLine($"--> Node  {_buildPurpose}, {_buildFlags}, {node.NodeType}, \t {node} \t\t -> {newNode}");
+			}
+
+			return newNode;
+		}
+#endif
 
 		protected override Expression VisitLambda<T>(Expression<T> node)
 		{
@@ -1105,8 +1121,6 @@ namespace LinqToDB.Linq.Builder
 			var rootContext     = context;
 			var rootSelectQuery = context.SelectQuery;
 
-			var traversed = BuildExpression(expr, BuildPurpose.Traverse);
-
 			var root = GetAggregationRootContext(expr);
 			if (root != null)
 			{
@@ -1114,19 +1128,43 @@ namespace LinqToDB.Linq.Builder
 			}
 			else
 			{
-				//if (attr.IsAggregate || attr.IsWindowFunction)
+				var findAggregationRoot = attr.IsAggregate || attr.IsWindowFunction;
+				
+				if (!findAggregationRoot)
+				{
+					// handling old stuff of backward compatibility
+					var current = context;
+					while (true)
+					{
+						if (current is SelectContext { InnerContext: SubQueryContext { IsSelectWrapper: true } } selectContext)
+						{
+							current = selectContext.InnerContext;
+						}
+						else if (current is SubQueryContext { IsSelectWrapper: true } subQuery)
+						{
+							current = subQuery.SubQuery;
+						}
+						else if (current is GroupByBuilder.GroupByContext)
+						{
+							findAggregationRoot = true;
+							break;
+						}
+						else
+							break;
+					}
+				}
+
+				if (findAggregationRoot)
 				{
 					if (expr is MethodCallExpression { Method.IsStatic: true, Arguments: [ContextRefExpression contextRef, ..] })
 					{
 						rootContext = contextRef.BuildContext;
 					}
-					else
+
+					_ = BuildAggregationRoot(new ContextRefExpression(rootContext.ElementType, rootContext));
+					if (_foundRoot != null)
 					{
-						_ = BuildAggregationRoot(new ContextRefExpression(context.ElementType, context));
-						if (_foundRoot != null)
-						{
-							rootContext = _foundRoot.BuildContext;
-						}
+						rootContext = _foundRoot.BuildContext;
 					}
 				}
 			}
@@ -1136,15 +1174,14 @@ namespace LinqToDB.Linq.Builder
 				rootSelectQuery = groupBy.SubQuery.SelectQuery;
 			}
 
-
-			if (GetAlreadyTranslated(rootSelectQuery, traversed, out var translated))
+			if (GetAlreadyTranslated(rootSelectQuery, expr, out var translated))
 				return translated;
 
 			var transformed = attr.GetExpression((buildVisitor: this, context: rootContext),
 				Builder.DataContext,
 				this.Builder,
 				rootSelectQuery,
-				traversed,
+				expr,
 				static (context, e, descriptor, inline) =>
 					context.buildVisitor.ConvertToExtensionSql(context.context, e, descriptor, inline));
 
@@ -1152,10 +1189,10 @@ namespace LinqToDB.Linq.Builder
 			{
 				Builder.RegisterExtensionAccessors(expr);
 
-				placeholder = placeholder.WithSql(Builder.PosProcessCustomExpression(traversed, placeholder.Sql, NullabilityContext.GetContext(placeholder.SelectQuery)));
-				placeholder = placeholder.WithPath(traversed);
+				placeholder = placeholder.WithSql(Builder.PosProcessCustomExpression(expr, placeholder.Sql, NullabilityContext.GetContext(placeholder.SelectQuery)));
+				placeholder = placeholder.WithPath(expr);
 
-				placeholder = (SqlPlaceholderExpression)RegisterTranslatedSql(rootSelectQuery, placeholder, traversed);
+				placeholder = (SqlPlaceholderExpression)RegisterTranslatedSql(rootSelectQuery, placeholder, expr);
 
 				return placeholder;
 			}
@@ -2293,7 +2330,7 @@ namespace LinqToDB.Linq.Builder
 #endif
 			subqueryExpression = null;
 
-			if (BuildContext == null || _buildPurpose is BuildPurpose.SubQuery/* or BuildPurpose.Expand || _buildFlags.HasFlag(BuildFlags.ForExpanding)*/)
+			if (BuildContext == null || _buildPurpose is BuildPurpose.SubQuery)
 				return false;
 
 			if (_disableSubqueries.Contains(node, ExpressionEqualityComparer.Instance))
@@ -2332,6 +2369,8 @@ namespace LinqToDB.Linq.Builder
 				subqueryExpression = alreadyTranslated;
 				return !IsSame(node, alreadyTranslated);
 			}
+
+			using var snapshot = CreateSnapshot();
 
 			_disableSubqueries.Push(traversed);
 			_disableSubqueries.Push(node);
@@ -2397,12 +2436,15 @@ namespace LinqToDB.Linq.Builder
 					_buildFlags |= BuildFlags.ForExpanding;
 					if (testExpression is SqlPlaceholderExpression placeholder)
 					{
+						snapshot.Accept();
 						subqueryExpression = placeholder;
 						return true;
 					}
 
 					return false;
 				}
+
+				snapshot.Accept();
 			}
 
 			if (!isCollection)

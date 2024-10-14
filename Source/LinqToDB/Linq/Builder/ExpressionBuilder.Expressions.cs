@@ -23,6 +23,11 @@ namespace LinqToDB.Linq.Builder
 			_buildPurpose = buildPurpose;
 		}
 
+		internal override Expression VisitSqlEagerLoadExpression(SqlEagerLoadExpression node)
+		{
+			return node;
+		}
+
 		protected override Expression VisitMember(MemberExpression node)
 		{
 			if (_inLambda)
@@ -151,11 +156,6 @@ namespace LinqToDB.Linq.Builder
 		public Expression BuildAggregationRootExpression(Expression expression)
 		{
 			return _buildVisitor.BuildExpression(expression, BuildPurpose.AggregationRoot);
-		}
-
-		public Expression BuildSqlExpressionForTest(IBuildContext context, Expression expression)
-		{
-			return _buildVisitor.BuildExpression(context, expression, BuildPurpose.Sql, BuildFlags.ResetPrevious | BuildFlags.None);
 		}
 
 		public Expression ConvertToExtensionSql(IBuildContext context, Expression expression, ColumnDescriptor? columnDescriptor, bool? inlineParameters)

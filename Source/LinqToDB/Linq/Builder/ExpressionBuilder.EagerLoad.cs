@@ -119,7 +119,12 @@ namespace LinqToDB.Linq.Builder
 
 		Expression ExpandContexts(IBuildContext context, Expression expression)
 		{
+			//var before = new ExpressionPrinter().PrintExpression(expression);
+
 			var projected = BuildExpandExpression(context, expression);
+
+			//var after = new ExpressionPrinter().PrintExpression(projected);
+
 			return projected;
 		}
 

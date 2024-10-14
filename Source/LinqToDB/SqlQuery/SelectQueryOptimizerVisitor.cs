@@ -2445,6 +2445,11 @@ namespace LinqToDB.SqlQuery
 					}
 				}
 
+				if (selectQuery.From.Tables is [{ Source: SelectQuery baseQuery }])
+				{
+					return ProviderOuterCanHandleSeveralColumnsQuery(baseQuery);
+				}
+
 				// provider can handle this query
 				return true;
 			}

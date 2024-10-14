@@ -153,13 +153,6 @@ namespace LinqToDB.Linq.Builder
 			var keyRef              = new ContextRefExpression(key.Body.Type, key);
 			var currentPlaceholders = new List<SqlPlaceholderExpression>();
 
-			if (!AppendGrouping(groupingSubquery, currentPlaceholders, builder, dataSequence, keyRef, groupingKind, out _, out var errorExpression))
-			{
-				return BuildSequenceResult.Error(errorExpression);
-			}
-
-			groupingSubquery.SelectQuery.GroupBy.GroupingType = groupingKind;
-
 			var element = new ElementContext(buildInfo.Parent, elementSelector, dataSubquery, buildInfo.IsSubQuery);
 			var groupBy = new GroupByContext(groupingSubquery, sequenceExpr, groupingType, key, keyRef, currentPlaceholders, element,
 				!builder.DataOptions.LinqOptions.GuardGrouping || builder.IsGroupingGuardDisabled, true);
@@ -169,15 +162,24 @@ namespace LinqToDB.Linq.Builder
 			// Will be used for completing GroupBy part
 			key.GroupByContext = groupBy;
 
+			groupingSubquery.SelectQuery.GroupBy.GroupingType = groupingKind;
+
+			var groupContextRef = new ContextRefExpression(groupBy.GetInterfaceGroupingType(), groupBy);
+			var keyExpr         = Expression.PropertyOrField(groupContextRef, nameof(IGrouping<int, int>.Key));
+
+			var groupingKeys = builder.BuildSqlExpression(groupBy, keyExpr, BuildFlags.ForKeys);
+
+			if (groupingKeys is SqlErrorExpression)
+			{
+				return BuildSequenceResult.Error(groupingKeys);
+			}
+
 #if DEBUG
 			Debug.WriteLine("BuildMethodCall GroupBy:\n" + groupBy.SelectQuery);
 #endif
 
 			if (resultSelector != null)
 			{
-				var groupContextRef = new ContextRefExpression(groupBy.GetInterfaceGroupingType(), groupBy);
-				var keyExpr         = Expression.PropertyOrField(groupContextRef, nameof(IGrouping<int, int>.Key));
-
 				var newBody = resultSelector.Body.Replace(resultSelector.Parameters[0], keyExpr);
 
 				if (resultSelector.Parameters.Count > 1)
@@ -199,7 +201,7 @@ namespace LinqToDB.Linq.Builder
 		/// <param name="currentPlaceholders"></param>
 		/// <param name="builder"></param>
 		/// <param name="onSequence">Context from which level we want to get groping SQL.</param>
-		/// <param name="path">Actual expression which should be translated to grouping keys.</param>
+		/// <param name="groupingExpr">Actual expression which should be translated to grouping keys.</param>
 		/// <param name="groupingKind"></param>
 		/// <param name="errorExpression"></param>
 		static bool AppendGrouping(
@@ -207,19 +209,19 @@ namespace LinqToDB.Linq.Builder
 			List<SqlPlaceholderExpression>       currentPlaceholders,
 			ExpressionBuilder                    builder,  
 			IBuildContext                        onSequence, 
-			Expression                           path, 
+			Expression path,
+			Expression                           groupingExpr, 
 			GroupingType                         groupingKind, 
 			out                      Expression  translated, 
 			[NotNullWhen(false)] out Expression? errorExpression)
 		{
-			translated = path;
 			errorExpression = null;
+			translated      = groupingExpr;
 
 			if (groupingKind == GroupingType.GroupBySets)
 			{
 				var hasSets  = false;
-				var expanded = builder.BuildExtractExpression(onSequence, path);
-				foreach (var groupingSet in EnumGroupingSets(expanded))
+				foreach (var groupingSet in EnumGroupingSets(groupingExpr))
 				{
 					hasSets = true;
 					var setExpr = builder.BuildSqlExpression(onSequence, groupingSet,
@@ -227,7 +229,7 @@ namespace LinqToDB.Linq.Builder
 
 					if (!SequenceHelper.IsSqlReady(setExpr))
 					{
-						errorExpression = SqlErrorExpression.EnsureError(setExpr, path.Type);
+						errorExpression = SqlErrorExpression.EnsureError(setExpr, groupingExpr.Type);
 						return false;
 					}
 
@@ -239,20 +241,18 @@ namespace LinqToDB.Linq.Builder
 				}
 
 				if (!hasSets)
-					throw new LinqException($"Invalid grouping sets expression '{path}'.");
+					throw new LinqException($"Invalid grouping sets expression '{groupingExpr}'.");
 			}
 			else
 			{
-				var groupSqlExpr = builder.BuildSqlExpression(onSequence, path, buildPurpose: BuildPurpose.Sql, buildFlags: BuildFlags.ForKeys);
-
-				if (!SequenceHelper.IsSqlReady(groupSqlExpr))
+				if (!SequenceHelper.IsSqlReady(groupingExpr))
 				{
-					var sqLError = groupSqlExpr.Find(1, (_, e) => e is SqlErrorExpression);
-					errorExpression = sqLError ?? SqlErrorExpression.EnsureError(groupSqlExpr, path.Type);
+					var sqLError = groupingExpr.Find(1, (_, e) => e is SqlErrorExpression);
+					errorExpression = sqLError ?? SqlErrorExpression.EnsureError(groupingExpr, groupingExpr.Type);
 					return false;
 				}
 
-				translated = AppendGroupBy(builder, path, currentPlaceholders, sequence.SelectQuery, groupSqlExpr);
+				translated = AppendGroupBy(builder, path, currentPlaceholders, sequence.SelectQuery, groupingExpr);
 			}
 
 			return true;
@@ -356,26 +356,26 @@ namespace LinqToDB.Linq.Builder
 					}
 				}
 
-				var result = base.MakeExpression(path, flags);
+				var projected = base.MakeExpression(path, flags);
+				var result    = projected;
 
-				if (flags.IsExpand() && !ExpressionEqualityComparer.Instance.Equals(result, path))
+				if (flags.IsAggregationRoot() || flags.IsTraverse())
+					return result;
+
+				if (!ExpressionEqualityComparer.Instance.Equals(result, path) && (flags.IsSql() || flags.IsExpression() || flags.IsExtractProjection() || flags.IsExpand()))
 				{
 					result = Builder.BuildSqlExpression(this, result, BuildPurpose.Sql, BuildFlags.ForKeys);
-				}
 
-				if (!ExpressionEqualityComparer.Instance.Equals(result, path) && (flags.IsSql() || flags.IsExpression() || flags.IsExtractProjection()))
-				{
-					var prevResult = result;
-					result = Builder.BuildSqlExpression(this, result, BuildFlags.ForKeys);
-				}
-
-				// ReSharper disable once ConditionIsAlwaysTrueOrFalseAccordingToNullableAPIContract
-				if (GroupByContext != null && result is not SqlErrorExpression)
-				{
-					if (GroupByContext.SubQuery.SelectQuery.GroupBy.GroupingType != GroupingType.GroupBySets)
+					if (GroupByContext.SubQuery.SelectQuery.GroupBy.IsEmpty || GroupByContext.SubQuery.SelectQuery.GroupBy.GroupingType != GroupingType.GroupBySets)
 					{
 						// appending missing keys
-						result = AppendGroupBy(Builder, path, GroupByContext.CurrentPlaceholders, GroupByContext.SubQuery.SelectQuery, result);
+						if (!AppendGrouping(GroupByContext.SubQuery, GroupByContext.CurrentPlaceholders, Builder, GroupByContext.SubQuery, path, result,
+							    GroupByContext.SubQuery.SelectQuery.GroupBy.GroupingType, out var translated, out var error))
+						{
+							return path;
+						}
+
+						result = translated;
 					}
 
 					// we return SQL nested as GroupByContext.SubQuery
@@ -450,6 +450,11 @@ namespace LinqToDB.Linq.Builder
 
 			public override Expression MakeExpression(Expression path, ProjectFlags flags)
 			{
+				if (path.ToString() == "Ref(GroupByContext[ID:63](145)(SC)::IGrouping`2)")
+				{
+
+				}
+
 				var isSameContext = SequenceHelper.IsSameContext(path, this);
 
 				if (isSameContext)
@@ -460,10 +465,11 @@ namespace LinqToDB.Linq.Builder
 
 				if (isSameContext)
 				{
-					if (flags.IsExpand())
+					if (flags.IsExpand() && !flags.IsSql())
 					{
 						if (flags.IsMemberRoot())
 							return path;
+
 						return MakeSubQueryExpression(path);
 					}
 				}
