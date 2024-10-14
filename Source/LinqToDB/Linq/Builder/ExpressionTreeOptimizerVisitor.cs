@@ -16,10 +16,10 @@ namespace LinqToDB.Linq.Builder
 			if (test is ConstantExpression constantExpr)
 			{
 				if (constantExpr.Value is true)
-					return Visit(node.IfTrue);
+					return trueExpr;
 
 				if (constantExpr.Value is false)
-					return Visit(node.IfFalse);
+					return falseExpr;
 			}
 			else if (node.Test.NodeType is ExpressionType.Equal or ExpressionType.NotEqual)
 			{
