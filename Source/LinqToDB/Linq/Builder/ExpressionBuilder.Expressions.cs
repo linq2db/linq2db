@@ -13,18 +13,22 @@ namespace LinqToDB.Linq.Builder
 	{
 		readonly IBuildContext _context;
 		readonly BuildPurpose  _buildPurpose;
+		readonly bool          _includingEager;
 		bool                   _inLambda;
 
 		public ExpressionBuilder Builder => _context.Builder;
 
-		public LambdaResolveVisitor(IBuildContext context, BuildPurpose buildPurpose)
+		public LambdaResolveVisitor(IBuildContext context, BuildPurpose buildPurpose, bool includingEager)
 		{
-			_context           = context;
-			_buildPurpose = buildPurpose;
+			_context             = context;
+			_buildPurpose        = buildPurpose;
+			_includingEager = includingEager;
 		}
 
 		internal override Expression VisitSqlEagerLoadExpression(SqlEagerLoadExpression node)
 		{
+			if (_includingEager)
+				return base.VisitSqlEagerLoadExpression(node);
 			return node;
 		}
 

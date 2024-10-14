@@ -1480,6 +1480,7 @@ namespace LinqToDB.SqlQuery
 				{
 					Select.Columns: [{ Expression: var expr }],
 					From.Tables: [],
+					HasSetOperators: false
 				}:
 					return SimplifyColumnExpression(expr);
 

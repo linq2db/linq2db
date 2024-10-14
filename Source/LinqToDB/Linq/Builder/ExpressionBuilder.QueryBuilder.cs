@@ -90,7 +90,7 @@ namespace LinqToDB.Linq.Builder
 			{
 				var translated = _context.Builder.BuildSqlExpression(_context, local, buildPurpose : BuildPurpose.Expression, buildFlags : BuildFlags.ForceDefaultIfEmpty);
 
-				var lambdaResolver = new LambdaResolveVisitor(_context, BuildPurpose.Expression);
+				var lambdaResolver = new LambdaResolveVisitor(_context, BuildPurpose.Expression, false);
 				translated = lambdaResolver.Visit(translated);
 
 				return translated;

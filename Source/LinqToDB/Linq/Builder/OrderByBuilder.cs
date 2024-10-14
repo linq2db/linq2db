@@ -54,9 +54,36 @@ namespace LinqToDB.Linq.Builder
 				if (sequence is not SubQueryContext)
 					sequence = new SubQueryContext(sequence);
 
-				if (builder.DataContext.Options.LinqOptions.DoNotClearOrderBys && !prevSequence.SelectQuery.OrderBy.IsEmpty && !prevSequence.SelectQuery.Select.HasModifier)
+				if (builder.DataContext.Options.LinqOptions.DoNotClearOrderBys)
 				{
-					sequence.SelectQuery.OrderBy.Items.AddRange(prevSequence.SelectQuery.OrderBy.Items.Select(x => x.Clone()));
+					var isValid = true;
+					while (true)
+					{
+						if (prevSequence.SelectQuery.Select.HasModifier)
+						{
+							isValid = false;
+							break;
+						}
+
+						if (!prevSequence.SelectQuery.OrderBy.IsEmpty)
+							break;
+
+						if (prevSequence is SubQueryContext { IsSelectWrapper: true } subQuery)
+						{
+							prevSequence = subQuery.SubQuery;
+						}
+						else if (prevSequence is SelectContext { InnerContext: not null } selectContext)
+						{
+							prevSequence = selectContext.InnerContext;
+						}
+						else
+							break;
+					}
+
+					if (isValid && !prevSequence.SelectQuery.OrderBy.IsEmpty)
+					{
+						sequence.SelectQuery.OrderBy.Items.AddRange(prevSequence.SelectQuery.OrderBy.Items.Select(x => x.Clone()));
+					}
 				}
 			}
 

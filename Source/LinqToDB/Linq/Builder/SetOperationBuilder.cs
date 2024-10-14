@@ -1176,7 +1176,7 @@ namespace LinqToDB.Linq.Builder
 
 					projected = Builder.BuildExtractExpression(context, projected);
 
-					var lambdaResolver = new LambdaResolveVisitor(context, BuildPurpose.Sql);
+					var lambdaResolver = new LambdaResolveVisitor(context, BuildPurpose.Sql, true);
 					projected = lambdaResolver.Visit(projected);
 
 					var optimizer = new ExpressionOptimizerVisitor();
