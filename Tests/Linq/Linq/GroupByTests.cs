@@ -866,6 +866,7 @@ namespace Tests.Linq
 
 		[Test]
 		[ThrowsForProvider(typeof(LinqException), TestProvName.AllClickHouse, ErrorMessage = ErrorHelper.Error_Correlated_Subqueries)]
+		[ThrowsForProvider(typeof(LinqException), TestProvName.AllAccess, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
 		public void CountInGroup([DataSources] string context)
 		{
 			var data = AggregationData.Data;
@@ -901,6 +902,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		[ThrowsForProvider(typeof(LinqException), TestProvName.AllAccess, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
 		public void SumInGroup([DataSources] string context)
 		{
 			var data = AggregationData.Data;
@@ -927,6 +929,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		[ThrowsForProvider(typeof(LinqException), TestProvName.AllAccess, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
 		public void MinInGroup([DataSources] string context)
 		{
 			var data = AggregationData.Data;
@@ -955,6 +958,7 @@ namespace Tests.Linq
 
 
 		[Test]
+		[ThrowsForProvider(typeof(LinqException), TestProvName.AllAccess, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
 		public void MaxInGroup([DataSources] string context)
 		{
 			var data = AggregationData.Data;
@@ -983,6 +987,7 @@ namespace Tests.Linq
 
 
 		[Test]
+		[ThrowsForProvider(typeof(LinqException), TestProvName.AllAccess, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
 		public void AverageInGroup([DataSources] string context)
 		{
 			var data = AggregationData.Data;
@@ -1756,6 +1761,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		[ThrowsForProvider(typeof(LinqException), TestProvName.AllAccess, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
 		public void InnerQuery([DataSources(ProviderName.SqlCe, TestProvName.AllSapHana, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -1967,6 +1973,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		[ThrowsForProvider(typeof(LinqException), TestProvName.AllAccess, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
 		public void FirstGroupBy([DataSources] string context)
 		{
 			using (new GuardGrouping(false))
@@ -2278,6 +2285,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		[ThrowsForProvider(typeof(LinqException), TestProvName.AllAccess, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
 		public void Issue672Test([DataSources(TestProvName.AllSybase)] string context)
 		{
 			using (new GuardGrouping(false))
