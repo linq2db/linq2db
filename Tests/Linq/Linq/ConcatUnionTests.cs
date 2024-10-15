@@ -548,6 +548,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		[ThrowsForProvider(typeof(LinqException), TestProvName.AllAccess, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
 		public void Union541([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
