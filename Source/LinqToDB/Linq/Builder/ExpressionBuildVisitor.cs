@@ -2560,16 +2560,30 @@ namespace LinqToDB.Linq.Builder
 			return expression.Find(1, (_, n) => n is ContextRefExpression or SqlPlaceholderExpression) != null;
 		}
 
+		static bool IsPrimitiveConstant(Expression expression)
+		{
+			return expression.NodeType == ExpressionType.Constant && (expression.Type == typeof(int) || expression.Type == typeof(bool));
+		}
+
 		protected override Expression VisitBinary(BinaryExpression node)
 		{
 			if (BuildContext == null || _buildPurpose is not (BuildPurpose.Sql or BuildPurpose.Expression or BuildPurpose.Expand))
 				return base.VisitBinary(node);
 
 			var shouldSkipConversion = false;
-			if (_buildPurpose is BuildPurpose.Expression && node.NodeType == ExpressionType.Equal || node.NodeType == ExpressionType.NotEqual)
+			if (_buildPurpose is BuildPurpose.Expression)
 			{
-				if (node.Left.IsNullValue() || node.Right.IsNullValue())
-					shouldSkipConversion = true;
+				if (node.NodeType == ExpressionType.Equal || node.NodeType == ExpressionType.NotEqual)
+				{
+					// Small tuning of final Expression generation
+					//
+					if (node.Left.IsNullValue() || node.Right.IsNullValue())
+						shouldSkipConversion = true;
+					else if (SequenceHelper.IsSpecialProperty(node.Left, out _, out _) || SequenceHelper.IsSpecialProperty(node.Right, out _, out _))
+						shouldSkipConversion = true;
+					else if (IsPrimitiveConstant(node.Left) || IsPrimitiveConstant(node.Right))
+						shouldSkipConversion = true;
+				}
 			}
 
 			if (node.NodeType == ExpressionType.ArrayIndex && node.Left == ExpressionBuilder.ParametersParam)

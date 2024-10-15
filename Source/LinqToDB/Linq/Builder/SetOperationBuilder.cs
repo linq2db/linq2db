@@ -70,7 +70,10 @@ namespace LinqToDB.Linq.Builder
 
 			if (needsEmulation)
 			{
-				return BuildSequenceResult.FromContext(setContext.Emulate());
+				var emulated = setContext.Emulate(out var error);
+				if (emulated != null)
+					return BuildSequenceResult.FromContext(emulated);
+				return BuildSequenceResult.Error(error!);
 			}
 
 			return BuildSequenceResult.FromContext(setContext);
@@ -129,7 +132,8 @@ namespace LinqToDB.Linq.Builder
 
 				if (ReferenceEquals(_pathMapping, null))
 				{
-					InitializeProjections();
+					if (!InitializeProjections(out var error))
+						return SqlErrorExpression.EnsureError(error, path.Type);
 				}
 
 				Expression projection1;
@@ -612,15 +616,21 @@ namespace LinqToDB.Linq.Builder
 				return false;
 			}
 
-			void InitializeProjections()
+			bool InitializeProjections([NotNullWhen(false)] out SqlErrorExpression? error)
 			{
+				error = null;
 				var ref1 = new ContextRefExpression(ElementType, _sequence1);
 
-				_projection1 = BuildProjectionExpression(ref1, _sequence1, out var placeholders1, out var eager1);
+				if (!BuildProjectionExpression(ref1, _sequence1, out var projection1, out var placeholders1, out var eager1, out error))
+					return false;
 
 				var ref2 = new ContextRefExpression(ElementType, _sequence2);
 
-				_projection2 = BuildProjectionExpression(ref2, _sequence2, out var placeholders2, out var eager2);
+				if (!BuildProjectionExpression(ref2, _sequence2, out var projection2, out var placeholders2, out var eager2, out error))
+					return false;
+
+				_projection1 = projection1;
+				_projection2 = projection2;
 
 				var pathMapping = new Dictionary<Expression[], (SqlPlaceholderExpression placeholder1, SqlPlaceholderExpression placeholder2)>(PathComparer.Instance);
 
@@ -640,7 +650,7 @@ namespace LinqToDB.Linq.Builder
 					case SetOperation.IntersectAll:
 						break;
 					default:
-						throw new ArgumentOutOfRangeException();
+						throw new ArgumentOutOfRangeException($"Invalid SetOperation {_setOperation}");
 				}
 
 				foreach (var (placeholder, path) in placeholders1)
@@ -750,6 +760,8 @@ namespace LinqToDB.Linq.Builder
 					_projection1 = ReplaceEagerExpressions(_projection1, eagerMapping);
 					_projection2 = ReplaceEagerExpressions(_projection2, eagerMapping);
 				}
+
+				return true;
 			}
 
 			static Expression ReplaceEagerExpressions(Expression expression, Dictionary<SqlEagerLoadExpression, SqlEagerLoadExpression> raplacements)
@@ -1163,9 +1175,13 @@ namespace LinqToDB.Linq.Builder
 				}
 			}
 
-			Expression BuildProjectionExpression(Expression path, IBuildContext context,
-				out List<(SqlPlaceholderExpression placeholder, Expression[] path)> foundPlaceholders,
-				out List<SqlEagerLoadExpression> foundEager)
+			bool BuildProjectionExpression(
+				Expression                                                                                path, 
+				IBuildContext                                                                             context,
+				[NotNullWhen(true)] out  Expression?                                                      projection,
+				[NotNullWhen(true)] out  List<(SqlPlaceholderExpression placeholder, Expression[] path)>? foundPlaceholders,
+				[NotNullWhen(true)] out  List<SqlEagerLoadExpression>?                                    foundEager,
+				[NotNullWhen(false)] out SqlErrorExpression?                                              error)
 			{
 				var correctedPath = SequenceHelper.ReplaceContext(path, this, context);
 
@@ -1174,7 +1190,18 @@ namespace LinqToDB.Linq.Builder
 				{
 					var projected = Builder.BuildSqlExpression(context, current, buildPurpose: BuildPurpose.Expression, buildFlags: BuildFlags.ForceDefaultIfEmpty | BuildFlags.ForSetProjection | BuildFlags.ResetPrevious);
 
+					error = SequenceHelper.FindError(projected);
+
+					if (error != null)
+					{
+						projection = null;
+						foundPlaceholders = null;
+						foundEager = null;
+						return false;
+					}
+
 					projected = Builder.BuildExtractExpression(context, projected);
+
 
 					var lambdaResolver = new LambdaResolveVisitor(context, BuildPurpose.Sql, true);
 					projected = lambdaResolver.Visit(projected);
@@ -1192,10 +1219,10 @@ namespace LinqToDB.Linq.Builder
 				var withPath    = pathBuilder.Visit(current);
 
 				foundPlaceholders = pathBuilder.FoundPlaceholders;
-
 				foundEager = pathBuilder.FoundEager;
+				projection = withPath;
 
-				return withPath;
+				return true;
 			}
 
 			// For Set we have to ensure hat columns are not optimized
@@ -1225,11 +1252,15 @@ namespace LinqToDB.Linq.Builder
 				return this;
 			}
 
-			public IBuildContext Emulate()
+			public IBuildContext? Emulate(out SqlErrorExpression? error)
 			{
+				error = null;
 				// ReSharper disable once ConditionIsAlwaysTrueOrFalseAccordingToNullableAPIContract
 				if (_projection1 == null)
-					InitializeProjections();
+				{
+					if (!InitializeProjections(out error))
+						return null;
+				}
 
 				var sequence = _sequence1;
 				var query    = _sequence2;
