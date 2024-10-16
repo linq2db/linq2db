@@ -87,21 +87,21 @@ foreach (var xmlPath in GetFiles(path))
 	var metadata = xml.SelectSingleNode("//ns:package/ns:metadata", ns)!;
 	var files    = xml.SelectSingleNode("//ns:package/ns:files",    ns)!;
 
-	SetMetadata  ("version",                  version);
-	SetDependency("linq2db",                  linq2DbVersion);
-	SetDependency("linq2db.t4models",         linq2DbVersion);
-	SetMetadata  ("description",              metadata.SelectSingleNode("//ns:title", ns)!.InnerText + description, false);
-	SetMetadata  ("releaseNotes",             "https://github.com/linq2db/linq2db/wiki/releases-and-roadmap#release-" + version.Replace(".", ""));
-	SetMetadata  ("copyright",                "Copyright © 2024 " + authors);
-	SetMetadata  ("authors",                  authors);
-	SetMetadata  ("owners",                   authors);
-	SetMetadata  ("readme",                   "README.md");
-	SetMetadata  ("projectUrl",               "http://linq2db.com");
-	SetMetadata  ("icon",                     "images\\icon.png");
-	SetMetadata  ("requireLicenseAcceptance", "false");
-	SetMetadataA ("license",                  "MIT-LICENSE.txt", true,
+	SetMetadata  ("version",                  version,        true);
+	SetDependency("linq2db",                  linq2DbVersion, true);
+	SetDependency("linq2db.t4models",         linq2DbVersion, true);
+	SetMetadata  ("description",              metadata.SelectSingleNode("//ns:title", ns)!.InnerText + description,                               false);
+	SetMetadata  ("releaseNotes",             "https://github.com/linq2db/linq2db/wiki/releases-and-roadmap#release-" + version.Replace(".", ""), true);
+	SetMetadata  ("copyright",                "Copyright © 2024 " + authors, true);
+	SetMetadata  ("authors",                  authors,                       true);
+	SetMetadata  ("owners",                   authors,                       true);
+	SetMetadata  ("readme",                   "README.md",                   true);
+	SetMetadata  ("projectUrl",               "http://linq2db.com",          true);
+	SetMetadata  ("icon",                     "images\\icon.png",            true);
+	SetMetadata  ("requireLicenseAcceptance", "false",                       true);
+	SetMetadata  ("license",                  "MIT-LICENSE.txt",             true,
 		SetAttribute("type",   "file"));
-	SetMetadataA ("repository",               null,              true,
+	SetMetadata  ("repository",               null,                          true,
 		SetAttribute("type",   "git"),
 		SetAttribute("url",    "https://github.com/linq2db/linq2db.git"),
 		SetAttribute("branch", branch),
@@ -182,7 +182,7 @@ foreach (var xmlPath in GetFiles(path))
 		return node;
 	}
 
-	XmlNode SetMetadata(string name, string? value, bool update = true)
+	XmlNode SetMetadata(string name, string? value, bool update = true, params XmlAttribute[] attrs)
 	{
 		var node = metadata.SelectSingleNode($"//ns:{name}", ns);
 
@@ -199,13 +199,6 @@ foreach (var xmlPath in GetFiles(path))
 
 		if (value != null)
 			node.InnerText = value.Length > 20 ? $"\n\t\t\t{value}\n\t\t" : value;
-
-		return node;
-	}
-
-	XmlNode SetMetadataA(string name, string? value, bool update, params XmlAttribute[] attrs)
-	{
-		var node = SetMetadata(name, value, update);
 
 		foreach (var attr in attrs)
 			node.Attributes!.Append(attr);
@@ -244,139 +237,3 @@ Dictionary<string,string?> GetArgs() =>
 	.Select(a => { WriteLine($"{a.Key} : {a.Value}"); return a; })
 	.ToDictionary(a => a.Key, a => (string?)a.Value);
 
-
-/*
-
-$ErrorActionPreference = "Stop"
-Set-StrictMode -Version Latest
-
-
-function Set-File {
-	param (
-		[Parameter(Mandatory=$true)][string]$src,
-		[Parameter(Mandatory=$true)][string]$target
-	)
-
-	$xml.package.files.AppendChild($xml.CreateSignificantWhitespace("`n`t`t"))
-	$child      = $xml.CreateElement('file', $nsUri)
-	$attr       = $xml.CreateAttribute('src')
-	$attr.Value = $src
-	$child.Attributes.Append($attr)
-	$attr       = $xml.CreateAttribute('target')
-	$attr.Value = $target
-	$child.Attributes.Append($attr)
-	$xml.package.files.AppendChild($child)
-}
-
-function Set-Metadata {
-	param (
-		[Parameter(Mandatory=$true)][string]$name,
-		[Parameter(Mandatory=$true)][string]$value
-	)
-
-	$xml.package.metadata.AppendChild($xml.CreateSignificantWhitespace("`n`t`t"))
-	$child           = $xml.CreateElement($name, $nsUri)
-	$child.InnerText = $value
-	$xml.package.metadata.AppendChild($child)
-}
-
-if (Test-Path $buildPath) {
-	Remove-Item $buildPath -Recurse
-}
-
-New-Item -Path $buildPath -ItemType Directory
-
-if ($version) {
-
-	$nsUri          = 'http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd'
-	$authors        = 'Igor Tkachev, Ilya Chudin, Svyatoslav Danyliv, Dmitry Lukashenko'
-	$description    = ' is a data access technology that provides a run-time infrastructure for managing relational data as objects. Install this package only if you want to use database model scaffolding using T4 templates (requires Visual Studio or Rider), otherwise you should use linq2db package.'
-	$ns             = @{ns=$nsUri}
-	$dotlessVersion = $version -replace '\.',''
-	$commit         = (git rev-parse HEAD)
-	if (-not $branch) {
-		$branch = (git rev-parse --abbrev-ref HEAD)
-	}
-
-	Get-ChildItem $path | ForEach {
-		$xmlPath = Resolve-Path $_.FullName
-
-		$isT4 = Select-String -Path $xmlPath -Pattern "content\LinqToDB.Templates" -SimpleMatch -Quiet
-
-		$xml = [xml]::new()
-		$xml.PreserveWhitespace = $true
-		$xml.Load("$xmlPath")
-
-		Select-Xml -Xml $xml -XPath '//ns:metadata/ns:version' -Namespace $ns |
-		Select -expand node |
-		ForEach { $_.InnerText = $version }
-
-		Select-Xml -Xml $xml -XPath '//ns:dependency[@id="linq2db.t4models"]/@version' -Namespace $ns |
-		Select -expand node |
-		ForEach { $_.Value = $version }
-
-		Select-Xml -Xml $xml -XPath '//ns:dependency[@id="linq2db"]/@version' -Namespace $ns |
-		Select -expand node |
-		ForEach { $_.Value = $version }
-
-		Set-Metadata -name 'version' -value $version
-
-		$descNodes = Select-Xml -Xml $xml -XPath '//ns:metadata/ns:description' -Namespace $ns
-		if ($descNodes -eq $null) {
-			Set-Metadata -name 'description' -value ($xml.package.metadata.title + $description)
-		}
-
-		Set-Metadata -name 'releaseNotes'             -value ('https://github.com/linq2db/linq2db/wiki/releases-and-roadmap#release-' + $dotlessVersion)
-		Set-Metadata -name 'copyright'                -value ('Copyright © 2024 ' + $authors)
-		Set-Metadata -name 'authors'                  -value $authors
-		Set-Metadata -name 'owners'                   -value $authors
-		Set-Metadata -name 'projectUrl'               -value 'http://linq2db.com'
-		Set-Metadata -name 'icon'                     -value 'images\icon.png'
-		Set-Metadata -name 'requireLicenseAcceptance' -value 'false'
-
-		$xml.package.metadata.AppendChild($xml.CreateSignificantWhitespace("`n`t`t"))
-		$child = $xml.CreateElement('license', $nsUri)
-		$attr = $xml.CreateAttribute('type')
-		$attr.Value = 'file'
-		$child.Attributes.Append($attr)
-		$child.InnerText = 'MIT-LICENSE.txt'
-		$xml.package.metadata.AppendChild($child)
-
-		$xml.package.metadata.AppendChild($xml.CreateSignificantWhitespace("`n`t`t"))
-		$child = $xml.CreateElement('repository', $nsUri)
-		$attr = $xml.CreateAttribute('type')
-		$attr.Value = 'git'
-		$child.Attributes.Append($attr)
-		$attr = $xml.CreateAttribute('url')
-		$attr.Value = 'https://github.com/linq2db/linq2db.git'
-		$child.Attributes.Append($attr)
-		$attr = $xml.CreateAttribute('branch')
-		$attr.Value = $branch
-		$child.Attributes.Append($attr)
-		$attr = $xml.CreateAttribute('commit')
-		$attr.Value = $commit
-		$child.Attributes.Append($attr)
-		$xml.package.metadata.AppendChild($child)
-
-		$xml.package.files.AppendChild($xml.CreateSignificantWhitespace("`n`t`t"))
-		$child = $xml.CreateElement('file', $nsUri)
-		$attr = $xml.CreateAttribute('src')
-		$attr.Value = '..\..\MIT-LICENSE.txt'
-		$child.Attributes.Append($attr)
-		$xml.package.files.AppendChild($child)
-
-		if ($isT4 -eq $true) {
-			Set-File -src '..\..\NuGet\readme.T4.txt' -target 'readme.txt'
-			Set-File -src '..\..\NuGet\README.T4.md'  -target 'README.md'
-		}
-
-		Set-File -src '..\..\NuGet\icon.png' -target 'images\icon.png'
-
-		$xml.package.metadata.AppendChild($xml.CreateSignificantWhitespace("`n`t"))
-		$xml.package.files.AppendChild($xml.CreateSignificantWhitespace("`n`t"))
-
-		Write-Host "Patched $xmlPath"
-		$xml.Save($buildPath + '\' + [System.IO.Path]::GetFileName($xmlPath))
-	}
-}
-*/

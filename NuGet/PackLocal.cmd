@@ -21,23 +21,13 @@ GOTO :EOF
 cd ..\NuGet\
 
 cd ..
-rem call Build.cmd
+call Build.cmd
 
 dotnet tool install -g dotnet-script
-dotnet script BuildNuspecs.csx /path:**\*.nuspec /buildPath:..\.build\nuspecs /version:%VERSION%
-
-
-
-/*
-powershell ..\Build\BuildNuspecs.ps1 -path *.nuspec -buildPath ..\.build\nuspecs -version %VERSION% -clean true
-
-powershell ..\Build\BuildNuspecs.ps1 -path linq2db.EntityFrameworkCore.v3.nuspec -buildPath ..\.build\nuspecs -version %EF3_VERSION% -linq2DbVersion %VERSION%
-powershell ..\Build\BuildNuspecs.ps1 -path linq2db.EntityFrameworkCore.v6.nuspec -buildPath ..\.build\nuspecs -version %EF6_VERSION% -linq2DbVersion %VERSION%
-powershell ..\Build\BuildNuspecs.ps1 -path linq2db.EntityFrameworkCore.v8.nuspec -buildPath ..\.build\nuspecs -version %EF8_VERSION% -linq2DbVersion %VERSION%
-
-*/
-
-
+dotnet script BuildNuspecs.csx /path:**\*.nuspec /buildPath:..\.build\nuspecs /version:%VERSION% /clean:true
+dotnet script BuildNuspecs.csx /path:linq2db.EntityFrameworkCore.v3.nuspec /buildPath:..\.build\nuspecs /version:%EF3_VERSION% /linq2DbVersion:%VERSION%
+dotnet script BuildNuspecs.csx /path:linq2db.EntityFrameworkCore.v6.nuspec /buildPath:..\.build\nuspecs /version:%EF6_VERSION% /linq2DbVersion:%VERSION%
+dotnet script BuildNuspecs.csx /path:linq2db.EntityFrameworkCore.v8.nuspec /buildPath:..\.build\nuspecs /version:%EF8_VERSION% /linq2DbVersion:%VERSION%
 
 call Pack.cmd %SNUPKG%
 pause
