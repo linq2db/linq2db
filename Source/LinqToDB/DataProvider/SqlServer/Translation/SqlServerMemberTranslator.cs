@@ -172,11 +172,16 @@ namespace LinqToDB.DataProvider.SqlServer.Translation
 			}
 		}
 
-		class MathMemberTranslator : MathMemberTranslatorBase
+		public class SqlServerMathMemberTranslator : MathMemberTranslatorBase
 		{
 			protected override ISqlExpression? TranslateRoundAwayFromZero(ITranslationContext translationContext, MethodCallExpression methodCall, ISqlExpression value, ISqlExpression? precision)
 			{
 				return base.TranslateRoundAwayFromZero(translationContext, methodCall, value, precision ?? translationContext.ExpressionFactory.Value(0));
+			}
+
+			protected override ISqlExpression? TranslateRoundToEven(ITranslationContext translationContext, MethodCallExpression methodCall, ISqlExpression value, ISqlExpression? precision)
+			{
+				return base.TranslateRoundToEven(translationContext, methodCall, value, precision ?? translationContext.ExpressionFactory.Value(0));
 			}
 		}
 
@@ -192,7 +197,7 @@ namespace LinqToDB.DataProvider.SqlServer.Translation
 
 		protected override IMemberTranslator CreateMathMemberTranslator()
 		{
-			return new MathMemberTranslator();
+			return new SqlServerMathMemberTranslator();
 		}
 
 		protected override ISqlExpression? TranslateNewGuidMethod(ITranslationContext translationContext, TranslationFlags translationFlags)

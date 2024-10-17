@@ -7,7 +7,7 @@ namespace LinqToDB.DataProvider.SqlServer.Translation
 
 	public class SqlServer2022MemberTranslator : SqlServer2012MemberTranslator
 	{
-		protected class SqlServer2022MathMemberTranslator : MathMemberTranslatorBase
+		protected class SqlServer2022MathMemberTranslator : SqlServerMathMemberTranslator
 		{
 			protected override ISqlExpression? TranslateMaxMethod(ITranslationContext translationContext, MethodCallExpression methodCall, ISqlExpression xValue, ISqlExpression yValue)
 			{
