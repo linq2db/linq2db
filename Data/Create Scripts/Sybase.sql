@@ -1,14 +1,9 @@
 ﻿USE master
 GO
--- for bulk copy transactions support, must be called from master
-sp_dboption tempdb, 'ddl in tran', 'true'
-GO
-
 DROP DATABASE {DBNAME}
 GO
 CREATE DATABASE {DBNAME} ON default = '102400K'
 GO
-
 USE {DBNAME}
 GO
 sp_configure 'enable unicode normalization', 0

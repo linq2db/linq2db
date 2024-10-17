@@ -4,7 +4,14 @@ parameters:
 steps:
 - checkout: none
 
-# .NET 6/8 SDK already installed https://github.com/actions/runner-images/blob/main/images/ubuntu/Ubuntu2204-Readme.md
+# .NET 8 SDK already installed https://github.com/actions/runner-images/blob/main/images/ubuntu/Ubuntu2204-Readme.md
+
+- task: UseDotNet@2
+  displayName: 'Install .NET 6'
+  inputs:
+    packageType: sdk
+    version: 6.x
+  condition: and(variables.title, eq(variables.net60, 'true'), succeeded())
 
 - task: CmdLine@2
   inputs:
@@ -69,6 +76,13 @@ steps:
 - script: dotnet test ./net6.0/efcore/x64/linq2db.EntityFrameworkCore.Tests.dll --filter "TestCategory != SkipCI" -f net60 -l trx $(extra)
   condition: and(variables.title, eq(variables.net60, 'true'), succeeded())
   displayName: 'EF.Core Tests (NET60): $(title)'
+
+- task: UseDotNet@2
+  displayName: 'Use .NET 8'
+  inputs:
+    packageType: sdk
+    version: 8.x
+  condition: and(variables.title, eq(variables.net80, 'true'), succeeded())
 
 - task: CmdLine@2
   inputs:

@@ -41,7 +41,7 @@ parameters:
 
 # OPERATION SYSTEM SELECTORS
 # - enable_os_windows  (true/false string) : enables testrun for windows 2022 image (windows-2022)
-# - enable_os_ubuntu   (true/false string) : enables testrun for Ubuntu 22.04 image (ubuntu-22.04)
+# - enable_os_ubuntu   (true/false string) : enables testrun for Ubuntu 24.04 image (ubuntu-24.04)
 # - enable_os_macos    (true/false string) : enables testrun for Mac OS image (macOS-13)
 
 # TARGET FRAMEWORK SELECTORS
@@ -333,42 +333,6 @@ jobs:
             enabled: false
 
 # PostgreSQL
-        - name: PostgreSQL11
-          title: PostgreSQL 11
-          config_linux: pgsql11
-          config_macos: pgsql11
-          script_linux_global: pgsql11.sh
-          script_macos_global: mac.pgsql11.sh
-          install_docker_macos: true
-          enable_os_windows: false
-          enable_os_ubuntu: true
-          enable_os_macos: true
-          enable_fw_netfx: false
-          enable_fw_net60: true
-          enable_fw_net80: true
-          ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[postgresql.all]')) }}:
-            enabled: true
-          ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[postgresql.all]'))) }}:
-            enabled: false
-
-        - name: PostgreSQL12
-          title: PostgreSQL 12
-          config_linux: pgsql12
-          config_macos: pgsql12
-          script_linux_global: pgsql12.sh
-          script_macos_global: mac.pgsql12.sh
-          install_docker_macos: true
-          enable_os_windows: false
-          enable_os_ubuntu: true
-          enable_os_macos: true
-          enable_fw_netfx: false
-          enable_fw_net60: true
-          enable_fw_net80: true
-          ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[postgresql.all]')) }}:
-            enabled: true
-          ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[postgresql.all]'))) }}:
-            enabled: false
-
         - name: PostgreSQL13
           title: PostgreSQL 13
           config_linux: pgsql13
@@ -429,6 +393,24 @@ jobs:
           config_macos: pgsql16
           script_linux_global: pgsql16.sh
           script_macos_global: mac.pgsql16.sh
+          install_docker_macos: true
+          enable_os_windows: false
+          enable_os_ubuntu: true
+          enable_os_macos: true
+          enable_fw_netfx: false
+          enable_fw_net60: true
+          enable_fw_net80: true
+          ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[postgresql.all]')) }}:
+            enabled: true
+          ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[postgresql.all]'))) }}:
+            enabled: false
+
+        - name: PostgreSQL17
+          title: PostgreSQL 17
+          config_linux: pgsql17
+          config_macos: pgsql17
+          script_linux_global: pgsql17.sh
+          script_macos_global: mac.pgsql17.sh
           install_docker_macos: true
           enable_os_windows: false
           enable_os_ubuntu: true
@@ -527,7 +509,7 @@ jobs:
           script_macos_global: sqlserver.2017.sh
           install_docker_macos: true
           enable_os_windows: true
-          enable_os_ubuntu: true
+          enable_os_ubuntu: false # true ; disabled temporary (I hope) till MS fix crash in linux version
           enable_os_macos: true
           enable_fw_netfx: true
           enable_fw_net60: true

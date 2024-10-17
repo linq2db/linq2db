@@ -10,10 +10,10 @@ namespace Tests.UserTests
 	{
 		[Test]
 		public void Issue1750Test(
-			[IncludeDataSources(false, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context, 
-			[Values(true, false)] bool includeX, 
-			[Values(true, false)] bool includeY,
-			[Values(true, false)] bool includeZ)
+			[IncludeDataSources(false, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context,
+			[Values] bool includeX,
+			[Values] bool includeY,
+			[Values] bool includeZ)
 		{
 			using (var db = GetDataContext(context))
 			{

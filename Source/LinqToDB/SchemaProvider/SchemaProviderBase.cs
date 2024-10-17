@@ -627,7 +627,8 @@ namespace LinqToDB.SchemaProvider
 						{
 							case "size"       :
 							case "length"     : paramValues[i] = length; break;
-							case "max length" : paramValues[i] = length == int.MaxValue ? "max" : length?.ToString(NumberFormatInfo.InvariantInfo); break;
+							// -1: https://learn.microsoft.com/en-us/sql/relational-databases/system-information-schema-views/parameters-transact-sql
+							case "max length" : paramValues[i] = length is int.MaxValue or -1 ? "max" : length?.ToString(NumberFormatInfo.InvariantInfo); break;
 							case "precision"  : paramValues[i] = precision;   break;
 							case "scale"      : paramValues[i] = scale.HasValue || paramNames.Length == 2 ? scale : precision; break;
 						}

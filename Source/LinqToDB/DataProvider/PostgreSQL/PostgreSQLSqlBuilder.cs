@@ -156,6 +156,9 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			switch (convertType)
 			{
 				case ConvertType.NameToQueryField     :
+					if (value == PseudoFunctions.MERGE_ACTION)
+						return sb.Append("merge_action()");
+					goto case ConvertType.NameToQueryFieldAlias;
 				case ConvertType.NameToQueryFieldAlias:
 				case ConvertType.NameToQueryTable     :
 				case ConvertType.NameToProcedure      :

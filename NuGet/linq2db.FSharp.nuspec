@@ -11,7 +11,7 @@
 		<dependencies>
 			<group targetFramework="net462.0">
 				<dependency id="linq2db"     version="6.0.0"   />
-				<dependency id="FSharp.Core" version="8.0.301" />
+				<dependency id="FSharp.Core" version="8.0.401" />
 			</group>
 			<group targetFramework="netstandard2.0">
 				<dependency id="linq2db"     version="6.0.0"   />

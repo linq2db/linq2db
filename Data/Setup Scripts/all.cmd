@@ -73,6 +73,10 @@ echo ========== PostgreSQL 16 ==========
 
 call pgsql16.cmd
 
+echo ========== PostgreSQL 17 ==========
+
+call pgsql17.cmd
+
 echo ========== SAP Hana ==========
 
 call saphana2.cmd

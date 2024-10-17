@@ -9,7 +9,7 @@
 		<tags>linq linq2db Npgsql PostgreSQL LinqToDB ORM database DB SQL</tags>
 		<dependencies>
 			<dependency id="linq2db" version="6.0.0"  />
-			<dependency id="Npgsql"  version="8.0.3"  />
+			<dependency id="Npgsql"  version="8.0.4"  />
 		</dependencies>
 		<contentFiles>
 			<files include="**\*" buildAction="None" />

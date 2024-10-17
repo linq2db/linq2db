@@ -13,6 +13,10 @@ using NUnit.Framework;
 
 using Tests.Model;
 
+// as helper assert could be called from anywhere including multi-threading tests, we shouldn't use Assert.Multiple in helpers
+// https://github.com/nunit/nunit/issues/4814
+#pragma warning disable NUnit2045 // Use Assert.Multiple
+
 namespace Tests
 {
 	partial class TestBase
@@ -100,11 +104,8 @@ namespace Tests
 				}
 			}
 
-			Assert.Multiple(() =>
-			{
-				Assert.That(exceptExpected, Is.EqualTo(0), $"Expected Was{Environment.NewLine}{message}");
-				Assert.That(exceptResult, Is.EqualTo(0), $"Expect Result{Environment.NewLine}{message}");
-			});
+			Assert.That(exceptExpected, Is.EqualTo(0), $"Expected Was{Environment.NewLine}{message}");
+			Assert.That(exceptResult, Is.EqualTo(0), $"Expect Result{Environment.NewLine}{message}");
 
 			LastQuery = lastQuery;
 		}
@@ -114,11 +115,8 @@ namespace Tests
 			var resultList   = result.ToList();
 			var expectedList = expected.ToList();
 
-			Assert.Multiple(() =>
-			{
-				Assert.That(expectedList, Is.Not.Empty);
-				Assert.That(resultList, Has.Count.EqualTo(expectedList.Count), "Expected and result lists are different. Length: ");
-			});
+			Assert.That(expectedList, Is.Not.Empty);
+			Assert.That(resultList, Has.Count.EqualTo(expectedList.Count), "Expected and result lists are different. Length: ");
 
 			for (var i = 0; i < resultList.Count; i++)
 			{
@@ -135,11 +133,8 @@ namespace Tests
 			var resultList   = result.ToList();
 			var expectedList = expected.ToList();
 
-			Assert.Multiple(() =>
-			{
-				Assert.That(expectedList, Is.Not.Empty);
-				Assert.That(resultList, Has.Count.EqualTo(expectedList.Count));
-			});
+			Assert.That(expectedList, Is.Not.Empty);
+			Assert.That(resultList, Has.Count.EqualTo(expectedList.Count));
 
 			var b = expectedList.SequenceEqual(resultList);
 
@@ -159,11 +154,8 @@ namespace Tests
 
 			var person = list[0];
 
-			Assert.Multiple(() =>
-			{
-				Assert.That(person.ID, Is.EqualTo(id));
-				Assert.That(person.FirstName, Is.EqualTo(firstName));
-			});
+			Assert.That(person.ID, Is.EqualTo(id));
+			Assert.That(person.FirstName, Is.EqualTo(firstName));
 		}
 
 		protected void TestOneJohn(IQueryable<Person> persons)
@@ -175,11 +167,8 @@ namespace Tests
 		{
 			var person = persons.ToList().First(p => p.ID == id);
 
-			Assert.Multiple(() =>
-			{
-				Assert.That(person.ID, Is.EqualTo(id));
-				Assert.That(person.FirstName, Is.EqualTo(firstName));
-			});
+			Assert.That(person.ID, Is.EqualTo(id));
+			Assert.That(person.FirstName, Is.EqualTo(firstName));
 		}
 
 		protected void TestJohn(IQueryable<IPerson> persons)

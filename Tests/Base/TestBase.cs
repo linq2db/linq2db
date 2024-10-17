@@ -25,8 +25,8 @@ namespace Tests
 
 			try
 			{
-				TestContext.WriteLine("Tests started in {0}...", Environment.CurrentDirectory);
-				TestContext.WriteLine("CLR Version: {0}...", Environment.Version);
+				TestContext.Out.WriteLine("Tests started in {0}...", Environment.CurrentDirectory);
+				TestContext.Out.WriteLine("CLR Version: {0}...", Environment.Version);
 
 				var traceCount = 0;
 
@@ -57,7 +57,7 @@ namespace Tests
 						if (traceCount < TRACES_LIMIT || level == TraceLevel.Error)
 						{
 							ctx.Set(CustomTestContext.LIMITED, true);
-							TestContext.WriteLine("{0}: {1}", name, message);
+							TestContext.Out.WriteLine("{0}: {1}", name, message);
 							Debug.WriteLine(message, name);
 						}
 

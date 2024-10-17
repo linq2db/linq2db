@@ -397,7 +397,7 @@ namespace Tests.Linq
 					orderby pp.ParentID
 					select p;
 
-				TestContext.WriteLine(secondOrder.ToString());
+				TestContext.Out.WriteLine(secondOrder.ToString());
 
 				var selectQuery = secondOrder.GetSelectQuery();
 				Assert.That(selectQuery.OrderBy.Items, Has.Count.EqualTo(2));
@@ -423,7 +423,7 @@ namespace Tests.Linq
 					orderby p.ParentID descending
 					select p;
 
-				TestContext.WriteLine(secondOrder.ToString());
+				TestContext.Out.WriteLine(secondOrder.ToString());
 			
 				var selectQuery = secondOrder.GetSelectQuery();
 				Assert.That(selectQuery.OrderBy.Items, Has.Count.EqualTo(1));
