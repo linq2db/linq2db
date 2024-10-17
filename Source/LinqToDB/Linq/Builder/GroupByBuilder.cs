@@ -167,7 +167,7 @@ namespace LinqToDB.Linq.Builder
 			var groupContextRef = new ContextRefExpression(groupBy.GetInterfaceGroupingType(), groupBy);
 			var keyExpr         = Expression.PropertyOrField(groupContextRef, nameof(IGrouping<int, int>.Key));
 
-			var groupingKeys = builder.BuildSqlExpression(groupBy, keyExpr, BuildFlags.ForKeys);
+			var groupingKeys = builder.BuildSqlExpression(groupBy, keyExpr, BuildPurpose.Sql, BuildFlags.ForKeys);
 
 			if (groupingKeys is SqlErrorExpression)
 			{
@@ -365,6 +365,9 @@ namespace LinqToDB.Linq.Builder
 				if (!ExpressionEqualityComparer.Instance.Equals(result, path) && (flags.IsSql() || flags.IsExpression() || flags.IsExtractProjection() || flags.IsExpand()))
 				{
 					result = Builder.BuildSqlExpression(this, result, BuildPurpose.Sql, BuildFlags.ForKeys);
+
+					if (result is SqlErrorExpression)
+						return SqlErrorExpression.EnsureError(result, path.Type);
 
 					if (GroupByContext.SubQuery.SelectQuery.GroupBy.IsEmpty || GroupByContext.SubQuery.SelectQuery.GroupBy.GroupingType != GroupingType.GroupBySets)
 					{

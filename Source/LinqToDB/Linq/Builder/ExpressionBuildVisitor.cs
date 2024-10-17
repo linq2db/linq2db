@@ -1460,8 +1460,10 @@ namespace LinqToDB.Linq.Builder
 									return Visit(association);
 							}
 						}
-
 					}
+
+					if (_buildPurpose is BuildPurpose.Sql && translated is SqlErrorExpression)
+						return translated;
 				}
 
 				if (BuildContext != null && _buildPurpose is not BuildPurpose.Traverse)
@@ -1709,6 +1711,16 @@ namespace LinqToDB.Linq.Builder
 		public override Expression VisitSqlDefaultIfEmptyExpression(SqlDefaultIfEmptyExpression node)
 		{
 			var innerExpression = Visit(node.InnerExpression);
+
+			if (innerExpression is SqlDefaultIfEmptyExpression defaultIfEmptyExpression)
+			{
+				var notNullConditions = node.NotNullExpressions
+					.Concat(defaultIfEmptyExpression.NotNullExpressions)
+					.Distinct(ExpressionEqualityComparer.Instance)
+					.ToList();
+				var newNode = node.Update(defaultIfEmptyExpression.InnerExpression, notNullConditions.AsReadOnly());
+				return Visit(newNode);
+			}
 
 			if (_buildPurpose is BuildPurpose.Expression && _buildFlags.HasFlag(BuildFlags.ForceDefaultIfEmpty))
 			{
