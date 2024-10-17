@@ -2,6 +2,7 @@
 using System.Linq;
 using FluentAssertions;
 using LinqToDB;
+using LinqToDB.Linq;
 using LinqToDB.Mapping;
 using NUnit.Framework;
 
@@ -143,7 +144,8 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void EagerLoadingTest([DataSources(TestProvName.AllAccess, TestProvName.AllClickHouse)] string context)
+		[ThrowsForProvider(typeof(LinqException), TestProvName.AllAccess, TestProvName.AllFirebirdLess4, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
+		public void EagerLoadingTest([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable<InternalEmail>(new[] { new InternalEmail { Id = 10, UserId = 1, RequestId = 1 } }))
