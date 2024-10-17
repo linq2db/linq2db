@@ -170,6 +170,9 @@ namespace LinqToDB.Linq.Builder
 
 					if (flags.IsExpression())
 						result = Builder.Project(this, path, null, 0, flags, Body, strict: false);
+
+					if (flags.IsSql())
+						return path;
 				}
 
 				if (!ReferenceEquals(result, Body))

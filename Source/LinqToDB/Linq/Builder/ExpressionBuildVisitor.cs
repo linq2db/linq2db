@@ -2070,6 +2070,11 @@ namespace LinqToDB.Linq.Builder
 						return Visit(contextRef.WithType(node.Type));
 					}
 
+					if (_buildPurpose == BuildPurpose.Expression && !_buildFlags.HasFlag(BuildFlags.ForSetProjection))
+					{
+						return base.VisitUnary(node);
+					}
+
 					var operandExpr = Visit(node.Operand);
 
 					if (_buildPurpose is BuildPurpose.Sql && operandExpr is SqlDefaultIfEmptyExpression defaultIfEmpty)
