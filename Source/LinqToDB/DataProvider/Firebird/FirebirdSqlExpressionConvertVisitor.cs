@@ -95,6 +95,9 @@ namespace LinqToDB.DataProvider.Firebird
 					expr = new SqlExpression(typeof(bool),
 						predicate.IsNot ? "{0} NOT STARTING WITH {1}" : "{0} STARTING WITH {1}",
 						Precedence.Comparison,
+						SqlFlags.IsPredicate,
+						ParametersNullabilityType.IfAnyParameterNullable,
+						null,
 						TryConvertToValue(
 							caseSensitive == false
 								? PseudoFunctions.MakeToLower(predicate.Expr1)
