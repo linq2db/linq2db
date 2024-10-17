@@ -43,6 +43,7 @@ namespace LinqToDB.DataProvider.Firebird
 
 			SqlProviderFlags.IsUpdateTakeSupported     = true;
 			SqlProviderFlags.IsUpdateSkipTakeSupported = true;
+			SqlProviderFlags.IsDistinctFromSupported   = true;
 
 			SqlProviderFlags.SupportedCorrelatedSubqueriesLevel = 1;
 

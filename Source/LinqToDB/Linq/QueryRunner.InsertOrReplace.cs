@@ -12,6 +12,7 @@ namespace LinqToDB.Linq
 	using Mapping;
 	using SqlQuery;
 	using Tools;
+	using Infrastructure;
 
 	static partial class QueryRunner
 	{
@@ -62,6 +63,8 @@ namespace LinqToDB.Linq
 
 				var supported = ei.SqlProviderFlags.IsInsertOrUpdateSupported && ei.SqlProviderFlags.CanCombineParameters;
 
+				var accessorIdGenerator = new UniqueIdGenerator<ParameterAccessor>();
+
 				// Insert.
 				//
 				foreach (var field in sqlTable.Fields)
@@ -72,8 +75,8 @@ namespace LinqToDB.Linq
 						{
 							if (!supported || !fieldDic.TryGetValue(field, out param))
 							{
-								param = GetParameter(type, dataContext, field);
-								ei.Queries[0].AddParameterAccessor(param);
+								param = GetParameter(accessorIdGenerator, type, dataContext, field);
+								ei.AddParameterAccessor(param);
 
 								if (supported)
 									fieldDic.Add(field, param);
@@ -121,8 +124,8 @@ namespace LinqToDB.Linq
 
 					if (!supported || !fieldDic.TryGetValue(field, out param))
 					{
-						param = GetParameter(type, dataContext, field);
-						ei.Queries[0].AddParameterAccessor(param);
+						param = GetParameter(accessorIdGenerator, type, dataContext, field);
+						ei.AddParameterAccessor(param);
 
 						if (supported)
 							fieldDic.Add(field, param);
@@ -265,7 +268,6 @@ namespace LinqToDB.Linq
 			query.Queries.Add(new QueryInfo
 			{
 				Statement          = insertStatement,
-				ParameterAccessors = query.Queries[0].ParameterAccessors
 			});
 
 			var keys = firstStatement.Update.Keys;
@@ -299,7 +301,6 @@ namespace LinqToDB.Linq
 			query.Queries.Add(new QueryInfo
 			{
 				Statement  = new SqlSelectStatement(firstStatement.SelectQuery),
-				ParameterAccessors = query.Queries[0].ParameterAccessors.ToList(),
 			});
 			query.IsFinalized = false;
 		}

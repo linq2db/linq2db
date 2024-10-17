@@ -7,13 +7,11 @@ using System.Reflection;
 
 namespace LinqToDB.Linq.Builder
 {
-	using Common;
 	using Extensions;
 	using LinqToDB.Expressions;
 	using Mapping;
 	using Reflection;
 	using SqlQuery;
-	using Tools;
 
 	partial class TableBuilder
 	{
@@ -56,8 +54,7 @@ namespace LinqToDB.Linq.Builder
 				EntityDescriptor = mappingSchema.GetEntityDescriptor(ObjectType, Builder.DataOptions.ConnectionOptions.OnEntityDescriptorCreated);
 				SqlTable         = new SqlTable(EntityDescriptor);
 
-				if (!buildInfo.IsTest || buildInfo.IsSubQuery)
-					SelectQuery.From.Table(SqlTable);
+				SelectQuery.From.Table(SqlTable);
 
 				Init(true);
 			}
@@ -139,7 +136,8 @@ namespace LinqToDB.Linq.Builder
 							return new SqlPlaceholderExpression(null, param.SqlParameter, a);
 						}
 					}
-					return context.builder.ConvertToSqlExpr(context.context, a);
+
+					return context.builder.BuildSqlExpression(context.context, a);
 				});
 
 				builder.RegisterExtensionAccessors(mc);
@@ -181,13 +179,25 @@ namespace LinqToDB.Linq.Builder
 
 			public override Expression MakeExpression(Expression path, ProjectFlags flags)
 			{
-				if (flags.IsRoot() || flags.IsAssociationRoot() || flags.IsExtractProjection() || flags.IsAggregationRoot())
+				if (flags.IsRoot() || flags.IsAssociationRoot() || flags.IsAggregationRoot() || flags.IsTraverse() || flags.IsExtractProjection() || flags.IsSubquery())
 					return path;
 
 				if (SequenceHelper.IsSameContext(path, this))
 				{
 					if (flags.IsTable())
 						return path;
+
+					// Expand is initiated by Eager Loading but there is need to expand in case when we need comparison
+					if (flags.IsExpand() && !flags.IsKeys())
+						return path;
+
+					if (flags.IsSubquery() && !(path.Type.IsSameOrParentOf(ElementType) || ElementType.IsSameOrParentOf(path.Type)))
+					{
+						var expr = Builder.GetSequenceExpression(this);
+						if (expr == null)
+							return path;
+						return expr;
+					}
 
 					// Eager load case
 					if (path.Type.IsEnumerableType(ElementType))
@@ -223,14 +233,22 @@ namespace LinqToDB.Linq.Builder
 
 				if (sql != null)
 				{
-					if (flags.HasFlag(ProjectFlags.Table))
+					if (flags.IsTable())
 					{
-						var root = Builder.GetRootContext(this, path, false);
-						return root ?? path;
+						if (path is MemberExpression memberExpression && SequenceHelper.IsSameContext(memberExpression.Expression, this))
+						{
+							return ((ContextRefExpression)memberExpression.Expression!).WithType(path.Type);
+						}
+						return path;
 					}
 				}
 
 				if (sql == null)
+				{
+					return path;
+				}
+
+				if (flags.IsExtractProjection())
 				{
 					return path;
 				}
@@ -254,28 +272,10 @@ namespace LinqToDB.Linq.Builder
 
 			public override bool IsOptional { get; }
 
-			#region GetContext
-
-			public override IBuildContext? GetContext(Expression expression, BuildInfo buildInfo)
-			{
-				if (!buildInfo.CreateSubQuery || buildInfo.IsTest)
-					return this;
-
-				var expr = Builder.GetSequenceExpression(this);
-				if (expr == null)
-					return this;
-
-				var context = Builder.BuildSequence(new BuildInfo(buildInfo, expr));
-
-				return context;
-			}
-
 			public override SqlStatement GetResultStatement()
 			{
 				return new SqlSelectStatement(SelectQuery);
 			}
-
-			#endregion
 
 			#region SetAlias
 

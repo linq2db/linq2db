@@ -127,9 +127,16 @@ namespace Tests.Linq
 		public void ClientCoalesce1([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
+			{
+				var query = from p in db.Parent select p.Value1 ?? GetDefault1();
+
+				query = query.Where(x => x > 10);
+				query.ToList();
+
 				AreEqual(
-					from p in    Parent select p.Value1 ?? GetDefault1(),
+					from p in Parent select p.Value1    ?? GetDefault1(),
 					from p in db.Parent select p.Value1 ?? GetDefault1());
+			}
 		}
 
 		static int GetDefault2(int n)

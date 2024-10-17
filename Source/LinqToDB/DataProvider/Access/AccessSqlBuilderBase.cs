@@ -68,7 +68,6 @@ namespace LinqToDB.DataProvider.Access
 				case '%': expr = new SqlBinaryExpression(expr.SystemType, expr.Expr1, "MOD", expr.Expr2, Precedence.Additive - 1); break;
 				case '&': expr = new SqlBinaryExpression(expr.SystemType, expr.Expr1, "AND", expr.Expr2, Precedence.Bitwise); break;
 				case '|': expr = new SqlBinaryExpression(expr.SystemType, expr.Expr1, "OR" , expr.Expr2, Precedence.Bitwise); break;
-				case '^': throw new SqlException("Operator '{0}' is not supported by the {1}.", expr.Operation, GetType().Name);
 			}
 
 			base.BuildBinaryExpression(expr);

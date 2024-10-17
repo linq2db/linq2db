@@ -243,9 +243,9 @@ namespace LinqToDB.Linq.Builder
 						}
 					}
 
-					if (placeholder.TrackingPath is MemberExpression me && me.Member.DeclaringType != null && me.Member.DeclaringType.IsAssignableFrom(toPath.Type))
+					if (placeholder.TrackingPath is MemberExpression { Member.DeclaringType: { } declaringType, Expression: not null} me && declaringType.IsAssignableFrom(toPath.Type))
 					{
-						var toPathConverted = EnsureType(toPath, me.Member.DeclaringType);
+						var toPathConverted = EnsureType(toPath, declaringType);
 						var newExpr         = (Expression)Expression.MakeMemberAccess(toPathConverted, me.Member);
 
 						return placeholder.WithTrackingPath(newExpr);
@@ -809,7 +809,7 @@ namespace LinqToDB.Linq.Builder
 
 		public static ITableContext? GetTableOrCteContext(ExpressionBuilder builder, Expression pathExpression)
 		{
-			var rootContext = builder.MakeExpression(null, pathExpression, ProjectFlags.Table) as ContextRefExpression;
+			var rootContext = builder.BuildTableExpression(pathExpression) as ContextRefExpression;
 
 			var tableContext = rootContext?.BuildContext as ITableContext;
 
@@ -818,7 +818,7 @@ namespace LinqToDB.Linq.Builder
 
 		public static TableBuilder.TableContext? GetTableContext(ExpressionBuilder builder, Expression pathExpression)
 		{
-			var rootContext = builder.MakeExpression(null, pathExpression, ProjectFlags.Table) as ContextRefExpression;
+			var rootContext = builder.BuildTableExpression(pathExpression) as ContextRefExpression;
 
 			var tableContext = rootContext?.BuildContext as TableBuilder.TableContext;
 
@@ -829,8 +829,7 @@ namespace LinqToDB.Linq.Builder
 		{
 			var contextRef = new ContextRefExpression(context.ElementType, context);
 
-			var rootContext =
-				context.Builder.MakeExpression(context, contextRef, ProjectFlags.Table) as ContextRefExpression;
+			var rootContext = context.Builder.BuildTableExpression(contextRef) as ContextRefExpression;
 
 			var tableContext = rootContext?.BuildContext as TableBuilder.TableContext;
 
@@ -842,7 +841,7 @@ namespace LinqToDB.Linq.Builder
 			var contextRef = new ContextRefExpression(context.ElementType, context);
 
 			var rootContext =
-				context.Builder.MakeExpression(context, contextRef, ProjectFlags.Table) as ContextRefExpression;
+				context.Builder.BuildTableExpression(contextRef) as ContextRefExpression;
 
 			var tableContext = rootContext?.BuildContext as CteTableContext;
 
@@ -854,7 +853,7 @@ namespace LinqToDB.Linq.Builder
 			var contextRef = new ContextRefExpression(context.ElementType, context);
 
 			var rootContext =
-				context.Builder.MakeExpression(context, contextRef, ProjectFlags.Table) as ContextRefExpression;
+				context.Builder.BuildTableExpression(contextRef) as ContextRefExpression;
 
 			var tableContext = rootContext?.BuildContext as ITableContext;
 
@@ -970,6 +969,19 @@ namespace LinqToDB.Linq.Builder
 				return true;
 
 			return false;
+		}
+
+		public static bool ContainsAggregateOrWindowFunction(Expression expression)
+		{
+			return null != expression.Find(1, (_, e) =>
+			{
+				if (e is SqlPlaceholderExpression placeholder)
+				{
+					return QueryHelper.ContainsAggregationOrWindowFunction(placeholder.Sql);
+				}
+
+				return false;
+			});
 		}
 
 		#region Special fields helpers

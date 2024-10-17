@@ -33,7 +33,7 @@ namespace LinqToDB.Linq.Builder
 				builder.RegisterCteContext(cteContext, methodCall);
 			}
 
-			var cteTableContext = new CteTableContext(builder, buildInfo.Parent, elementType, buildInfo.SelectQuery, cteContext, buildInfo.IsTest);
+			var cteTableContext = new CteTableContext(builder, buildInfo.Parent, elementType, buildInfo.SelectQuery, cteContext);
 
 			return BuildSequenceResult.FromContext(cteTableContext);
 		}
@@ -60,7 +60,7 @@ namespace LinqToDB.Linq.Builder
 				{
 					if (e == lambda.Parameters[0])
 					{
-						var cteTableContext    = new CteTableContext(builder, null, elementType, new SelectQuery(), cteContext, buildInfo.IsTest);
+						var cteTableContext    = new CteTableContext(builder, null, elementType, new SelectQuery(), cteContext);
 						var cteTableContextRef = new ContextRefExpression(e.Type, cteTableContext);
 						return cteTableContextRef;
 					}
@@ -72,7 +72,7 @@ namespace LinqToDB.Linq.Builder
 				builder.RegisterCteContext(cteContext, methodCall);
 			}
 
-			var cteTableContext = new CteTableContext(builder, buildInfo.Parent, elementType, buildInfo.SelectQuery, cteContext, buildInfo.IsTest);
+			var cteTableContext = new CteTableContext(builder, buildInfo.Parent, elementType, buildInfo.SelectQuery, cteContext);
 
 			return BuildSequenceResult.FromContext(cteTableContext);
 		}

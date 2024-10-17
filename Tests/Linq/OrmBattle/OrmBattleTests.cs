@@ -861,8 +861,8 @@ namespace Tests.OrmBattle
 					{
 						Year = yg.Key,
 						MonthGroups =
-						from o in yg
-						group o by o.OrderDate!.Value.Month
+						from order in yg
+						group order by order.OrderDate!.Value.Month
 						into mg
 						select new {Month = mg.Key, Order = mg}
 					}

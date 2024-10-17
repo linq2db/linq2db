@@ -803,6 +803,7 @@ namespace LinqToDB
 									sqlExpression = converter(context, arg, null, inlineParameters);
 
 								foreach (var name in names)
+								{
 									if (sqlExpressions != null)
 									{
 										foreach (var sqlExpr in sqlExpressions)
@@ -812,6 +813,7 @@ namespace LinqToDB
 												error = sqlExpr;
 												return null;
 											}
+
 											extension.AddParameter(name!, placeholder.Sql);
 										}
 									}
@@ -822,8 +824,10 @@ namespace LinqToDB
 											error = sqlExpression;
 											return null;
 										}
+
 										extension.AddParameter(name!, placeholder.Sql);
 									}
+								}
 							}
 						}
 					}

@@ -12,6 +12,8 @@
 
 		}
 
+		public override bool RequiresCastingParametersForSetOperations => false;
+
 		public override SqlExpressionConvertVisitor CreateConvertVisitor(bool allowModify)
 		{
 			return new SQLiteSqlExpressionConvertVisitor(allowModify);

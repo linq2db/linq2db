@@ -1,10 +1,8 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Linq.Expressions;
-using System.Reflection;
 
 namespace LinqToDB.Linq.Builder
 {
@@ -15,14 +13,14 @@ namespace LinqToDB.Linq.Builder
 	using Mapping;
 	using Reflection;
 	using SqlQuery;
+	using Infrastructure;
 
 	sealed class ParametersContext
 	{
-		readonly object?[]? _parameterValues;
+		readonly IUniqueIdGenerator<ParameterAccessor> _accessorIdGenerator = new UniqueIdGenerator<ParameterAccessor>();
 
-		public ParametersContext(Expression parametersExpression, object?[]? parameterValues, ExpressionTreeOptimizationContext optimizationContext, IDataContext dataContext)
+		public ParametersContext(Expression parametersExpression, ExpressionTreeOptimizationContext optimizationContext, IDataContext dataContext)
 		{
-			_parameterValues     = parameterValues;
 			ParametersExpression = parametersExpression;
 			OptimizationContext  = optimizationContext;
 			DataContext          = dataContext;
@@ -91,9 +89,7 @@ namespace LinqToDB.Linq.Builder
 
 		internal void AddCurrentSqlParameter(ParameterAccessor parameterAccessor)
 		{
-			var idx = CurrentSqlParameters.Count;
 			CurrentSqlParameters.Add(parameterAccessor);
-			parameterAccessor.SqlParameter.AccessorId = idx;
 		}
 
 		internal enum BuildParameterType
@@ -366,7 +362,15 @@ namespace LinqToDB.Linq.Builder
 			name ??= columnDescriptor?.MemberName;
 
 			var p = CreateParameterAccessor(
-				DataContext, newExpr.ValueExpression, isParameterList ? valueGetter : null, newExpr.DbDataTypeExpression, valueExpression, ParametersExpression, name);
+				_accessorIdGenerator,
+				DataContext,
+				newExpr.ValueExpression,
+				isParameterList ? valueGetter : null,
+				newExpr.DbDataTypeExpression,
+				valueExpression,
+				ParametersExpression,
+				name
+			);
 
 			return p;
 		}
@@ -434,7 +438,7 @@ namespace LinqToDB.Linq.Builder
 		{
 			var result = new ValueTypeExpression
 			{
-				DataType             = columnDescriptor?.GetDbDataType(true) ?? new DbDataType(expression.Type),
+				DataType             = columnDescriptor?.GetDbDataType(true) ?? mappingSchema.GetDbDataType(expression.Type),
 				DbDataTypeExpression = Expression.Constant(mappingSchema.GetDbDataType(expression.UnwrapConvertToObject().Type), typeof(DbDataType)),
 			};
 
@@ -511,6 +515,7 @@ namespace LinqToDB.Linq.Builder
 		#endregion
 
 		internal static ParameterAccessor CreateParameterAccessor(
+			IUniqueIdGenerator   accessorIdGenerator,
 			IDataContext         dataContext,
 			Expression           accessorExpression,
 			Expression?          itemAccessorExpression,
@@ -545,8 +550,11 @@ namespace LinqToDB.Linq.Builder
 					Expression.Convert(itemAccessorExpression, typeof(object)),
 					ItemParameter);
 
+			if (dbDataTypeAccessorExpression.Type != typeof(DbDataType))
+				dbDataTypeAccessorExpression = Expression.Convert(dbDataTypeAccessorExpression, typeof(DbDataType));
+
 			var dbDataTypeAccessor = Expression.Lambda<Func<Expression,object?,IDataContext?,object?[]?,DbDataType>>(
-				Expression.Convert(dbDataTypeAccessorExpression, typeof(DbDataType)),
+				dbDataTypeAccessorExpression,
 				DbTypeAccessorParameters);
 
 			var dataTypeAccessor = dbDataTypeAccessor.CompileExpression();
@@ -557,12 +565,15 @@ namespace LinqToDB.Linq.Builder
 					? new DbDataType(accessorExpression.Type)
 					: dataTypeAccessor(parametersExpression, null, dataContext, null);
 
+			var accessorId = accessorIdGenerator.GetNext();
 			return new ParameterAccessor(
+					accessorId,
 					mapper.CompileExpression(),
 					itemMapper?.CompileExpression(),
 					dataTypeAccessor,
 					new SqlParameter(parameterType, name, null)
 					{
+						AccessorId = accessorId,
 						IsQueryParameter = !dataContext.InlineParameters
 					}
 				)

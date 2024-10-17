@@ -15,14 +15,15 @@ namespace LinqToDB.SqlProvider
 
 	public class SqlExpressionOptimizerVisitor : SqlQueryVisitor
 	{
-		EvaluationContext  _evaluationContext  = default!;
-		NullabilityContext _nullabilityContext = default!;
-		DataOptions        _dataOptions        = default!;
-		MappingSchema      _mappingSchema      = default!;
-		ISqlPredicate?     _allowOptimize;
-		bool               _visitQueries;
-		bool               _isInsideNot;
-		bool               _reduceBinary;
+		EvaluationContext           _evaluationContext  = default!;
+		NullabilityContext          _nullabilityContext = default!;
+		DataOptions                 _dataOptions        = default!;
+		MappingSchema               _mappingSchema      = default!;
+		ICollection<ISqlPredicate>? _allowOptimizeList;
+		ISqlPredicate?              _allowOptimize;
+		bool                        _visitQueries;
+		bool                        _isInsideNot;
+		bool                        _reduceBinary;
 
 		public SqlExpressionOptimizerVisitor(bool allowModify) : base(allowModify ? VisitMode.Modify : VisitMode.Transform, null)
 		{
@@ -40,13 +41,14 @@ namespace LinqToDB.SqlProvider
 			bool                        reduceBinary)
 		{
 			Cleanup();
-			_evaluationContext  = evaluationContext;
-			_dataOptions        = dataOptions;
-			_mappingSchema      = mappingSchema;
-			_allowOptimize      = default;
-			_visitQueries       = visitQueries;
-			_isInsideNot        = isInsideNot;
-			_reduceBinary       = reduceBinary;
+			_evaluationContext = evaluationContext;
+			_dataOptions       = dataOptions;
+			_mappingSchema     = mappingSchema;
+			_allowOptimize     = default;
+			_allowOptimizeList = default;
+			_visitQueries      = visitQueries;
+			_isInsideNot       = isInsideNot;
+			_reduceBinary      = reduceBinary;
 			SetTransformationInfo(transformationInfo);
 
 			_nullabilityContext = nullabilityContext.WithTransformationInfo(GetTransformationInfo());
@@ -64,6 +66,7 @@ namespace LinqToDB.SqlProvider
 			_dataOptions        = default!;
 			_mappingSchema      = default!;
 			_allowOptimize      = default;
+			_allowOptimizeList  = default;
 		}
 
 		[return: NotNullIfNotNull(nameof(element))]
@@ -280,15 +283,38 @@ namespace LinqToDB.SqlProvider
 			return element;
 		}
 
+		bool IsAllowedToOptimizePredicate(ISqlPredicate testPredicate, ISqlPredicate replacement)
+		{
+			if (replacement is SqlSearchCondition)
+				return true;
+
+			if (_allowOptimize == testPredicate)
+				return true;
+			if (_allowOptimizeList?.Contains(testPredicate) == true)
+				return true;
+
+			return false;
+		}
+
 		protected override IQueryElement VisitSqlSearchCondition(SqlSearchCondition element)
 		{
+			var saveAllowToOptimize = _allowOptimizeList;
+			_allowOptimizeList = element.Predicates;
+
 			var newElement = base.VisitSqlSearchCondition(element);
+
+			_allowOptimizeList = saveAllowToOptimize;
 
 			if (!ReferenceEquals(newElement, element))
 				return Visit(newElement);
 
-			if (ReferenceEquals(_allowOptimize, element) && element.Predicates.Count == 1)
-				return element.Predicates[0];
+			if (element.Predicates.Count == 1)
+			{
+				if (IsAllowedToOptimizePredicate(element, element.Predicates[0]))
+				{
+					return element.Predicates[0];
+				}
+			}
 
 			if (GetVisitMode(element) == VisitMode.Modify)
 			{
@@ -907,7 +933,9 @@ namespace LinqToDB.SqlProvider
 
 			if (!predicate.Expr1.CanBeNullable(_nullabilityContext))
 			{
-				return SqlPredicate.MakeBool(predicate.IsNot);
+				//TODO: Exception for Row, find time to analyze why it's needed
+				if (predicate.Expr1.ElementType != QueryElementType.SqlRow)
+					return SqlPredicate.MakeBool(predicate.IsNot);
 			}
 
 			if (TryEvaluate(predicate.Expr1, out var value))
@@ -1366,14 +1394,14 @@ namespace LinqToDB.SqlProvider
 		{
 			if (TryEvaluateNoParameters(isTrue.Expr1, out var result) && result is bool boolValue)
 			{
-				return SqlPredicate.MakeBool(boolValue == isTrue.IsNot);
+				return SqlPredicate.MakeBool(boolValue != isTrue.IsNot);
 			}
 
 			if (isTrue.Expr1 is SqlConditionExpression or SqlCaseExpression)
 			{
 				if (!isTrue.IsNot)
 				{
-					var predicate = ProcessComparisonWithCase(isTrue.TrueValue, isTrue.Expr1, SqlPredicate.Operator.Equal);
+					var predicate = ProcessComparisonWithCase(isTrue.Expr1, isTrue.TrueValue, SqlPredicate.Operator.Equal);
 					if (predicate != null)
 						return predicate.MakeNot(isTrue.IsNot);
 				}

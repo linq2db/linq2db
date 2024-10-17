@@ -60,7 +60,9 @@ namespace LinqToDB.Extensions
 			if (systemType == typeof(object) && originalValue != null)
 				systemType = originalValue.GetType();
 
-			var valueDbType = originalValue == null ? columnType ?? new DbDataType(systemType) : new DbDataType(systemType);
+			var valueDbType = originalValue == null
+				? columnType ?? mappingSchema.GetDbDataType(systemType)
+				: mappingSchema.GetDbDataType(systemType);
 
 			return new SqlValue(valueDbType, originalValue);
 		}

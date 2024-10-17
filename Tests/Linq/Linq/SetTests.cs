@@ -298,7 +298,7 @@ namespace Tests.Linq
 					select new
 					{
 						g.Key.LastName,
-						//cnt = g.Where(t => t.Employee.FirstName.Contains("an")).Count(),
+						cnt = g.Where(t => t.Employee.FirstName.Contains("an")).Count(),
 					};
 
 				q.ToList();

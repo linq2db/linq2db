@@ -84,5 +84,27 @@ namespace Tests
 			return queryInternal.GetExpression()!;
 		}
 
+		public static SqlParameter[] CollectParameters(this SqlStatement statement)
+		{
+			var parametersHash = new HashSet<SqlParameter>();
+
+			statement.VisitAll(parametersHash, static (parametersHash, expr) =>
+			{
+				switch (expr.ElementType)
+				{
+					case QueryElementType.SqlParameter:
+					{
+						var p = (SqlParameter)expr;
+						if (p.IsQueryParameter)
+							parametersHash.Add(p);
+
+						break;
+					}
+				}
+			});
+
+			return parametersHash.ToArray();
+		}
+
 	}
 }

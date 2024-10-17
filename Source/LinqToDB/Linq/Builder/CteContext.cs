@@ -49,9 +49,9 @@ namespace LinqToDB.Linq.Builder
 			if (_isRecursiveCall)
 				return;
 
-			var saveRecursiveBuild = Builder.IsRecursiveBuild;
+			var thisRef = new ContextRefExpression(ElementType, this);
 
-			Builder.IsRecursiveBuild = true;
+			Builder.PushRecursive(thisRef);
 
 			var cteBuildInfo = new BuildInfo((IBuildContext?)null, Expression!, new SelectQuery());
 
@@ -68,18 +68,16 @@ namespace LinqToDB.Linq.Builder
 
 			if (_recursiveMap.Count > 0)
 			{
-				var subQueryExpr = new ContextRefExpression(SubqueryContext.ElementType, SubqueryContext);
-				var buildFlags = ExpressionBuilder.BuildFlags.ForceAssignments;
+				var subQueryExpr = new ContextRefExpression(cteInnerQueryContext.ElementType, cteInnerQueryContext);
 
-				var all = Builder.BuildSqlExpression(SubqueryContext, subQueryExpr, ProjectFlags.SQL,
-					buildFlags : buildFlags);
+				var all = Builder.BuildSqlExpression(cteInnerQueryContext, subQueryExpr);
 
 				var cteExpr = subQueryExpr.WithContext(this);
 
 				PostProcessExpression(all, cteExpr);
 			}
 
-			Builder.IsRecursiveBuild = saveRecursiveBuild;
+			Builder.PopRecursive(thisRef);
 		}
 
 		public override Expression MakeExpression(Expression path, ProjectFlags flags)
@@ -116,24 +114,19 @@ namespace LinqToDB.Linq.Builder
 			if (SubqueryContext == null || CteInnerQueryContext == null)
 				throw new InvalidOperationException();
 
-			var subqueryPath  = SequenceHelper.CorrectExpression(path, this, SubqueryContext);
+			var subqueryPath  = SequenceHelper.CorrectExpression(path, this, CteInnerQueryContext);
 			var correctedPath = subqueryPath;
 
 			if (!ReferenceEquals(subqueryPath, path))
 			{
 				_isRecursiveCall = true;
 
-				var buildFlags = ExpressionBuilder.BuildFlags.ForceAssignments;
-				correctedPath = Builder.BuildSqlExpression(SubqueryContext, correctedPath, flags.SqlFlag(), buildFlags: buildFlags);
+				correctedPath = Builder.BuildSqlExpression(CteInnerQueryContext, correctedPath);
 
 				_isRecursiveCall = false;
 
-				if (!flags.HasFlag(ProjectFlags.Test))
-				{
-					var postProcessed = PostProcessExpression(correctedPath, path);
-
-					return postProcessed;
-				}
+				var postProcessed = PostProcessExpression(correctedPath, path);
+				return postProcessed;
 			}
 
 			return correctedPath;
