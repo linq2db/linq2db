@@ -313,5 +313,43 @@ namespace Tests.Linq
 				}
 			});
 		}
+
+		[Test]
+		public async Task ToLookupAsyncTest([DataSources] string context)
+		{
+			await using var db = GetDataContext(context);
+
+			var q =
+				from c in db.Child
+				orderby c.ParentID, c.ChildID
+				select c;
+
+			var g1 = (await q.ToListAsync()).ToLookup(c => c.ParentID);
+			var g2 = await db.Child.ToLookupAsync(c => c.ParentID);
+
+			Assert.That(g1.Count, Is.EqualTo(g2.Count));
+
+			foreach (var g in g1)
+				AreEqual(g1[g.Key], g2[g.Key]);
+		}
+
+		[Test]
+		public async Task ToLookupElementAsyncTest([DataSources] string context)
+		{
+			await using var db = GetDataContext(context);
+
+			var q =
+				from c in db.Child
+				orderby c.ParentID, c.ChildID
+				select c;
+
+			var g1 = (await q.ToListAsync()).ToLookup(c => c.ParentID, c => c.ChildID);
+			var g2 = await db.Child.ToLookupAsync(c => c.ParentID, c => c.ChildID);
+
+			Assert.That(g1.Count, Is.EqualTo(g2.Count));
+
+			foreach (var g in g1)
+				AreEqual(g1[g.Key], g2[g.Key]);
+		}
 	}
 }
