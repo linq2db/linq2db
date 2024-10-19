@@ -482,7 +482,7 @@ END;",
 						Convert(StringBuilder, _identityField!.PhysicalName, ConvertType.NameToQueryField);
 						StringBuilder
 							.Append(fromDual)
-							.AppendLine  ()
+							.AppendLine  (";")
 							.AppendLine  ("END;");
 					}
 

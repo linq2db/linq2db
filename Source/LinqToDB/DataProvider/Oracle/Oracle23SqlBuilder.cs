@@ -36,27 +36,37 @@ namespace LinqToDB.DataProvider.Oracle
 			{
 				BuildTag(dropTable);
 
+				StringBuilder
+					.AppendLine(@"BEGIN");
+
+				Indent++;
+
 				var exists = dropTable.Table.TableOptions.HasDropIfExists() ? "IF EXISTS " : null;
 				StringBuilder
-					.Append(CultureInfo.InvariantCulture, $"DROP TRIGGER {exists}");
+					.Append(CultureInfo.InvariantCulture, $"\tEXECUTE IMMEDIATE 'DROP TRIGGER {exists}");
 
 				AppendSchemaPrefix(StringBuilder, dropTable.Table!.TableName.Schema);
 				Convert(StringBuilder, MakeIdentityTriggerName(dropTable.Table.TableName.Name), ConvertType.TriggerName);
 
 				StringBuilder
-					.AppendLine(";")
-					.Append(CultureInfo.InvariantCulture, $"DROP SEQUENCE {exists}");
+					.AppendLine("';")
+					.Append(CultureInfo.InvariantCulture, $"\tEXECUTE IMMEDIATE 'DROP SEQUENCE {exists}");
 
 				AppendSchemaPrefix(StringBuilder, dropTable.Table!.TableName.Schema);
 				Convert(StringBuilder, MakeIdentitySequenceName(dropTable.Table.TableName.Name), ConvertType.SequenceName);
 
 				StringBuilder
-					.AppendLine(";")
-					.Append(CultureInfo.InvariantCulture, $"DROP TABLE {exists}");
+					.AppendLine("';")
+					.Append(CultureInfo.InvariantCulture, $"\tEXECUTE IMMEDIATE 'DROP TABLE {exists}");
 				BuildPhysicalTable(dropTable.Table, null);
 				StringBuilder
-					.AppendLine(";")
+					.AppendLine("';")
 					;
+
+				Indent--;
+
+				StringBuilder
+					.AppendLine(@"END;");
 			}
 		}
 
@@ -70,19 +80,6 @@ namespace LinqToDB.DataProvider.Oracle
 
 		protected override void BuildStartCreateTableStatement(SqlCreateTableStatement createTable)
 		{
-			if (createTable.StatementHeader == null && (createTable.Table.TableOptions.HasCreateIfNotExists() || createTable.Table.TableOptions.HasIsTemporary()))
-			{
-				if (createTable.Table!.IdentityFields.Count > 0)
-				{
-					AppendIndent().AppendLine(@"BEGIN");
-
-					Indent++;
-
-					AppendIndent().AppendLine(@"EXECUTE IMMEDIATE '");
-					Indent++;
-				}
-			}
-
 			if (createTable.StatementHeader == null)
 			{
 				AppendIndent();
@@ -115,25 +112,6 @@ namespace LinqToDB.DataProvider.Oracle
 					AppendIndent().AppendLine(table.TableOptions.HasIsTransactionTemporaryData()
 						? "ON COMMIT DELETE ROWS"
 						: "ON COMMIT PRESERVE ROWS");
-				}
-
-				if (createTable.Table!.IdentityFields.Count > 0)
-				{
-					Indent--;
-
-					AppendIndent()
-						.AppendLine("';");
-
-					Indent--;
-
-					StringBuilder
-						.AppendLine("EXCEPTION")
-						.AppendLine("\tWHEN OTHERS THEN")
-						.AppendLine("\t\tIF SQLCODE != -955 THEN")
-						.AppendLine("\t\t\tRAISE;")
-						.AppendLine("\t\tEND IF;")
-						.AppendLine("END;")
-						;
 				}
 			}
 		}

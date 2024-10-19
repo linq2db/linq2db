@@ -797,15 +797,15 @@ CREATE TABLE LinqDataTypesBC
 	MoneyValue     decimal(10,4),
 	DateTimeValue  timestamp,
 	DateTimeValue2 timestamp,
--- SKIP Oracle.23.Devart.Direct BEGIN
--- SKIP Oracle.23.Devart.OCI BEGIN
--- SKIP Oracle.23.Native BEGIN
--- SKIP Oracle.23.Managed BEGIN
-	BoolValue              NUMBER(1,0)                    NULL,
--- SKIP Oracle.23.Devart.Direct END
--- SKIP Oracle.23.Devart.OCI END
--- SKIP Oracle.23.Native END
--- SKIP Oracle.23.Managed END
+-- don't use BOOLEAN, see BulkCopy21 test notes
+	BoolValue      number(1,0)  NULL,
+	GuidValue      raw(16),
+	SmallIntValue  smallint,
+	IntValue       int          NULL,
+	BigIntValue    number(20,0) NULL,
+	StringValue    VARCHAR2(50) NULL
+)
+/
 
 -- SKIP Oracle.21.Devart.Direct BEGIN
 -- SKIP Oracle.21.Devart.OCI BEGIN
@@ -827,7 +827,14 @@ CREATE TABLE LinqDataTypesBC
 -- SKIP Oracle.11.Devart.OCI BEGIN
 -- SKIP Oracle.11.Native BEGIN
 -- SKIP Oracle.11.Managed BEGIN
-	BoolValue              BOOLEAN                        NULL,
+DROP tABLE IF EXISTS BooleanBulk
+/
+
+CREATE TABLE BooleanBulk
+(
+	ID             int,
+	BoolValue      BOOLEAN  NULL
+)
 -- SKIP Oracle.21.Devart.Direct END
 -- SKIP Oracle.21.Devart.OCI END
 -- SKIP Oracle.21.Native END
@@ -848,12 +855,6 @@ CREATE TABLE LinqDataTypesBC
 -- SKIP Oracle.11.Devart.OCI END
 -- SKIP Oracle.11.Native END
 -- SKIP Oracle.11.Managed END
-	GuidValue      raw(16),
-	SmallIntValue  smallint,
-	IntValue       int          NULL,
-	BigIntValue    number(20,0) NULL,
-	StringValue    VARCHAR2(50) NULL
-)
 /
 
 CREATE SEQUENCE SequenceTestSeq

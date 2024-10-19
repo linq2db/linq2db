@@ -213,6 +213,7 @@ namespace Tests
 		public const string AllOracle19            = $"{Oracle19Native},{Oracle19Managed},{Oracle19DevartOCI},{Oracle19DevartDirect}";
 		public const string AllOracle21            = $"{Oracle21Native},{Oracle21Managed},{Oracle21DevartOCI},{Oracle21DevartDirect}";
 		public const string AllOracle23            = $"{ProviderName.Oracle23Native},{ProviderName.Oracle23Managed},{Oracle23DevartOCI},{Oracle23DevartDirect}";
+		public const string AllOracle23Plus        = AllOracle23;
 		public const string AllOracle12Plus        = $"{AllOracle12},{AllOracle18},{AllOracle19},{AllOracle21},{AllOracle23}";
 		public const string AllOracle21Minus       = $"{AllOracle11},{AllOracle12},{AllOracle18},{AllOracle19},{AllOracle21}";
 
