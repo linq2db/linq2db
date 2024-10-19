@@ -1153,7 +1153,7 @@ namespace LinqToDB.SqlProvider
 					StringBuilder.Append(InlineComma);
 			}
 
-			if (!string.IsNullOrEmpty(fromDummyTable))
+			if (fromDummyTable != null)
 				StringBuilder.Append(' ').Append(fromDummyTable);
 
 			StringBuilder.Append(") ").Append(sourceAlias).AppendLine(" ON");

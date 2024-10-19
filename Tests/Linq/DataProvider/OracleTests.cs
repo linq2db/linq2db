@@ -1685,8 +1685,9 @@ namespace Tests.DataProvider
 				await BulkCopy1Async(context, BulkCopyType.ProviderSpecific);
 		}
 
-		// we use copy of table with all-uppercase names to be able to use it with native
-		// bulk copy with ODP.NET provider
+		// we use copy of table with all-uppercase names to be able to:
+		// 1. use it with native bulk copy with ODP.NET provider
+		// 2. use it with Oracle 23 with non-BOOLEAN column type as provider doesn't support it in native bulk copy
 		[Table("LINQDATATYPESBC")]
 		public class LinqDataTypesBC
 		{
@@ -1776,6 +1777,33 @@ namespace Tests.DataProvider
 					db.GetTable<LinqDataTypesBC>().Delete();
 				}
 			}
+		}
+
+		[Table("BOOLEANBULK")]
+		public class BooleanBulk
+		{
+			[PrimaryKey]          public int       ID        { get; set; }
+			[Column("BOOLVALUE")] public bool?     BoolValue { get; set; }
+		}
+
+		[Test(Description = "Negative test to detect when Oracle provider fix BOOLEAN type support in BulkCopy")]
+		public void BooleanTypeNativeBulkCopy([IncludeDataSources(TestProvName.AllOracle23Plus)] string context)
+		{
+			using var db = GetDataConnection(context);
+			db.GetTable<BooleanBulk>().Delete();
+
+			Assert.That(() =>
+			{
+				db.BulkCopy(
+					new BulkCopyOptions { MaxBatchSize = 1, BulkCopyType = BulkCopyType.ProviderSpecific },
+					new[]
+					{
+						new BooleanBulk { ID = 1                    },
+						new BooleanBulk { ID = 2, BoolValue = true  },
+						new BooleanBulk { ID = 3, BoolValue = false },
+					});
+				// ORA-50031: Unsupported column datatype
+			}, Throws.Exception.InstanceOf<OracleException>().With.Property("Number").EqualTo(50031));
 		}
 
 		[Test]
