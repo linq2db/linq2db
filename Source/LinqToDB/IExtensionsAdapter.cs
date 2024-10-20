@@ -334,29 +334,5 @@ namespace LinqToDB
 			CancellationToken                  token);
 
 		#endregion AverageAsync
-
-		#region ToLookup
-/*
-		ILookup<TKey,TSource> ToLookup<TSource,TKey>(
-			IEnumerable<TSource> source,
-			Func<TSource,TKey>   keySelector);
-
-		ILookup<TKey,TSource> ToLookup<TSource,TKey>(
-			IEnumerable<TSource>     source,
-			Func<TSource,TKey>       keySelector,
-			IEqualityComparer<TKey>? comparer);
-
-		ILookup<TKey,TElement> ToLookup<TSource,TKey,TElement>(
-			IEnumerable<TSource>   source,
-			Func<TSource,TKey>     keySelector,
-			Func<TSource,TElement> elementSelector);
-
-		ILookup<TKey,TElement> ToLookup<TSource,TKey,TElement>(
-			IEnumerable<TSource>     source,
-			Func<TSource,TKey>       keySelector,
-			Func<TSource,TElement>   elementSelector,
-			IEqualityComparer<TKey>? comparer);
-*/
-		#endregion
 	}
 }
