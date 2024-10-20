@@ -327,7 +327,7 @@ namespace Tests.Linq
 			var g1 = (await q.ToListAsync()).ToLookup(c => c.ParentID);
 			var g2 = await db.Child.ToLookupAsync(c => c.ParentID);
 
-			Assert.That(g1.Count, Is.EqualTo(g2.Count));
+			Assert.That(g1.Count, Has.Count.EqualTo(g2.Count));
 
 			foreach (var g in g1)
 				AreEqual(g1[g.Key], g2[g.Key]);
@@ -346,7 +346,7 @@ namespace Tests.Linq
 			var g1 = (await q.ToListAsync()).ToLookup(c => c.ParentID, c => c.ChildID);
 			var g2 = await db.Child.ToLookupAsync(c => c.ParentID, c => c.ChildID);
 
-			Assert.That(g1.Count, Is.EqualTo(g2.Count));
+			Assert.That(g1.Count, Has.Count.EqualTo(g2.Count));
 
 			foreach (var g in g1)
 				AreEqual(g1[g.Key], g2[g.Key]);
