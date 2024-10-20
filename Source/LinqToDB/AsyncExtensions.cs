@@ -446,7 +446,20 @@ namespace LinqToDB
 
 		#region ToLookupAsync
 
-		public static Task<ILookup<TKey,TSource>> ToLookupAsync<TSource, TKey>(
+		/// <summary>
+		/// Asynchronously creates a <see cref="ILookup{TKey,TElement}"/> from an <see cref="IEnumerable{T}"/>
+		/// according to a specified key selector function.
+		/// </summary>
+		/// <typeparam name="TSource">The type of the elements of <c>source</c>.</typeparam>
+		/// <typeparam name="TKey">The type of the key returned by <c>keySelector</c>.</typeparam>
+		/// <param name="source">The <see cref="IQueryable{T}"/> to create a <see cref="ILookup{TKey,TElement}"/> from.</param>
+		/// <param name="keySelector">A function to extract a key from each element.</param>
+		/// <param name="token">Optional asynchronous operation cancellation token.</param>
+		/// <returns>
+		/// A <see cref="ILookup{TKey,TElement}"/> that contains keys and values.
+		/// The values within each group are in the same order as in <c>source</c>.
+		/// </returns>
+		public static Task<ILookup<TKey,TSource>> ToLookupAsync<TSource,TKey>(
 			this IQueryable<TSource> source,
 			Func<TSource,TKey>       keySelector,
 			CancellationToken        token = default)
@@ -455,7 +468,21 @@ namespace LinqToDB
 			return ToLookupAsync(source, keySelector, null, token);
 		}
 
-		public static async Task<ILookup<TKey,TSource>> ToLookupAsync<TSource, TKey>(
+		/// <summary>
+		/// Asynchronously creates a <see cref="ILookup{TKey,TElement}"/> from an <see cref="IEnumerable{T}"/>
+		/// according to a specified key selector function.
+		/// </summary>
+		/// <typeparam name="TSource">The type of the elements of <c>source</c>.</typeparam>
+		/// <typeparam name="TKey">The type of the key returned by <c>keySelector</c>.</typeparam>
+		/// <param name="source">The <see cref="IQueryable{T}"/> to create a <see cref="ILookup{TKey,TElement}"/> from.</param>
+		/// <param name="keySelector">A function to extract a key from each element.</param>
+		/// <param name="comparer">An <see cref="IEqualityComparer{T}"/> to compare keys.</param>
+		/// <param name="token">Optional asynchronous operation cancellation token.</param>
+		/// <returns>
+		/// A <see cref="ILookup{TKey,TElement}"/> that contains keys and values.
+		/// The values within each group are in the same order as in <c>source</c>.
+		/// </returns>
+		public static async Task<ILookup<TKey,TSource>> ToLookupAsync<TSource,TKey>(
 			this IQueryable<TSource> source,
 			Func<TSource,TKey>       keySelector,
 			IEqualityComparer<TKey>? comparer,
@@ -472,7 +499,22 @@ namespace LinqToDB
 			return await Task.Run(() => source.AsEnumerable().ToLookupWithToken(keySelector, comparer, token), token).ConfigureAwait(false);
 		}
 
-		public static Task<ILookup<TKey,TElement>> ToLookupAsync<TSource, TKey, TElement>(
+		/// <summary>
+		/// Asynchronously creates a <see cref="ILookup{TKey,TElement}"/> from an <see cref="IEnumerable{T}"/>
+		/// according to a specified key selector function.
+		/// </summary>
+		/// <typeparam name="TSource">The type of the elements of <c>source</c>.</typeparam>
+		/// <typeparam name="TKey">The type of the key returned by <c>keySelector</c>.</typeparam>
+		/// <typeparam name="TElement">The type of the value returned by <c>elementSelector</c>.</typeparam>
+		/// <param name="source">The <see cref="IQueryable{T}"/> to create a <see cref="ILookup{TKey,TElement}"/> from.</param>
+		/// <param name="keySelector">A function to extract a key from each element.</param>
+		/// <param name="elementSelector">A transform function to produce a result element value from each element.</param>
+		/// <param name="token">Optional asynchronous operation cancellation token.</param>
+		/// <returns>
+		/// A <see cref="ILookup{TKey,TElement}"/> that contains keys and values.
+		/// The values within each group are in the same order as in <c>source</c>.
+		/// </returns>
+		public static Task<ILookup<TKey,TElement>> ToLookupAsync<TSource,TKey,TElement>(
 			this IQueryable<TSource> source,
 			Func<TSource,TKey>       keySelector,
 			Func<TSource,TElement>   elementSelector,
@@ -482,7 +524,23 @@ namespace LinqToDB
 			return ToLookupAsync(source, keySelector, elementSelector, null, token);
 		}
 
-		public static async Task<ILookup<TKey,TElement>> ToLookupAsync<TSource, TKey, TElement>(
+		/// <summary>
+		/// Asynchronously creates a <see cref="ILookup{TKey,TElement}"/> from an <see cref="IEnumerable{T}"/>
+		/// according to a specified key selector function.
+		/// </summary>
+		/// <typeparam name="TSource">The type of the elements of <c>source</c>.</typeparam>
+		/// <typeparam name="TKey">The type of the key returned by <c>keySelector</c>.</typeparam>
+		/// <typeparam name="TElement">The type of the value returned by <c>elementSelector</c>.</typeparam>
+		/// <param name="source">The <see cref="IQueryable{T}"/> to create a <see cref="ILookup{TKey,TElement}"/> from.</param>
+		/// <param name="keySelector">A function to extract a key from each element.</param>
+		/// <param name="comparer">An <see cref="IEqualityComparer{T}"/> to compare keys.</param>
+		/// <param name="elementSelector">A transform function to produce a result element value from each element.</param>
+		/// <param name="token">Optional asynchronous operation cancellation token.</param>
+		/// <returns>
+		/// A <see cref="ILookup{TKey,TElement}"/> that contains keys and values.
+		/// The values within each group are in the same order as in <c>source</c>.
+		/// </returns>
+		public static async Task<ILookup<TKey,TElement>> ToLookupAsync<TSource,TKey,TElement>(
 			this IQueryable<TSource> source,
 			Func<TSource,TKey>       keySelector,
 			Func<TSource,TElement>   elementSelector,
