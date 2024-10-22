@@ -1,0 +1,29 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<AssemblyName>linq2db.EntityFrameworkCore</AssemblyName>
+		<RootNamespace>LinqToDB.EntityFrameworkCore</RootNamespace>
+		<TargetFrameworks>net8.0</TargetFrameworks>
+
+		<DocumentationFile>$(ArtifactsPath)\bin\$(MSBuildProjectName)\$(Configuration)\$(TargetFramework)\$(AssemblyName).xml</DocumentationFile>
+
+		<!--EF1001: use of internal EF API-->
+		<NoWarn>EF1001</NoWarn>
+	</PropertyGroup>
+
+	<PropertyGroup>
+		<AssemblyVersion>$(EF9Version)</AssemblyVersion>
+		<DefineConstants>EF9;$(DefineConstants)</DefineConstants>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\LinqToDB\LinqToDB.csproj" />
+		<PackageReference Include="Microsoft.EntityFrameworkCore.Relational" VersionOverride="9.0.0-rc.2.24474.1" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<AdditionalFiles Include="PublicAPI/PublicAPI.*.txt" />
+		<AdditionalFiles Include="PublicAPI/$(TargetFramework)/PublicAPI.*.txt" />
+	</ItemGroup>
+
+</Project>

@@ -177,7 +177,12 @@ namespace LinqToDB.EntityFrameworkCore
 			if (!valid)
 				return entity;
 
-			entry = retrieved ?? _stateManager.StartTrackingFromQuery(_lastEntityType, entity, ValueBuffer.Empty);
+			entry = retrieved ?? _stateManager.StartTrackingFromQuery(_lastEntityType, entity,
+#if !EF31 && !EF6 && !EF8
+				Snapshot.Empty);
+#else
+				ValueBuffer.Empty);
+#endif
 
 			return entry.Entity;
 		}

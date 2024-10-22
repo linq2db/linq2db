@@ -45,6 +45,13 @@ jobs:
       arguments: -path $(Build.SourcesDirectory)/Directory.Build.props -version $(ef8AssemblyVersion) -prop EF8Version
     displayName: Update EF.Core 8 integration assembly version
 
+  - task: PowerShell@2
+    inputs:
+      filePath: '$(Build.SourcesDirectory)/Build/SetVersion.ps1'
+      workingDirectory: '$(Build.SourcesDirectory)'
+      arguments: -path $(Build.SourcesDirectory)/Directory.Build.props -version $(ef9AssemblyVersion) -prop EF9Version
+    displayName: Update EF.Core 9 integration assembly version
+
   - task: DotNetCoreCLI@2
     inputs:
       command: build
@@ -191,6 +198,13 @@ jobs:
       path: '$(Build.SourcesDirectory)/.build/bin/LinqToDB.EntityFrameworkCore/Release'
       artifact: '$(artifact_linq2db_efcore_binaries)'
     displayName: Publish linq2db.EntityFrameworkCore build results
+    condition: and(succeeded(), ${{ parameters.with_nugets }})
+
+  - task: PublishPipelineArtifact@1
+    inputs:
+      path: '$(Build.SourcesDirectory)/.build/bin/LinqToDB.EntityFrameworkCore.STS/Release'
+      artifact: '$(artifact_linq2db_efcore_sts_binaries)'
+    displayName: Publish linq2db.EntityFrameworkCore.STS build results
     condition: and(succeeded(), ${{ parameters.with_nugets }})
 
   - task: PublishPipelineArtifact@1
