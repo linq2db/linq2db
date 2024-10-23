@@ -11,10 +11,6 @@
 		<ProjectReference Include="..\VisualBasic\Tests.VisualBasic.vbproj" />
 	</ItemGroup>
 
-	<ItemGroup Label="Override Transient Vulnerable Deps">
-		<PackageReference Include="System.Private.Uri" VersionOverride="4.3.2" />
-	</ItemGroup>
-
 	<ItemGroup Condition=" '$(TargetFramework)' == 'net462' ">
 		<Reference Include="Sap.Data.Hana.v4.5">
 			<HintPath>..\..\Redist\SapHana\v4.5\Sap.Data.Hana.v4.5.dll</HintPath>
