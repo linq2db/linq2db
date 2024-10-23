@@ -5,6 +5,7 @@ This directory contains test configs and setup scripts for test jobs on Azure Pi
 - `netfx` folder stores test job configs for .NET 4.6.2 Windows tests
 - `net60` folder stores test job configs for `net6.0` test runs for Windows, Linux and MacOS
 - `net80` folder stores test job configs for `net8.0` test runs for Windows, Linux and MacOS
+- `net90` folder stores test job configs for `net9.0` test runs for Windows, Linux and MacOS
 - `scripts` folder stores test job setup scripts (`*.cmd` for Windows jobs, `*.sh` for Linux and MacOS, `*.ps1` for PowerShell scripts)
 
 ## Azure Pipelines

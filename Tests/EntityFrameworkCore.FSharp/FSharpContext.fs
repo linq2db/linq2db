@@ -15,7 +15,7 @@ type WithIdentity = {
 type AppDbContext(options: DbContextOptions<AppDbContext>) =
     inherit DbContext(options)
 
-    [<DefaultValue>] val mutable WithIdentity : DbSet<WithIdentity>
+    [<DefaultValue(false)>] val mutable WithIdentity : DbSet<WithIdentity>
     member this.CompaniesInformation
         with get() = this.WithIdentity
         and set v = this.WithIdentity <- v

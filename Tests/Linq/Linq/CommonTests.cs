@@ -354,7 +354,7 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 				AreEqual(
 					from p in    Person where string.Concat(p.FirstName, " ", 1, 2) == "John 12" select p.FirstName,
-					from p in db.Person where string.Concat(p.FirstName, " ", 1, 2) == "John 12" select p.FirstName);
+					from p in db.Person where string.Concat(new object[] { p.FirstName, " ", 1, 2 }) == "John 12" select p.FirstName);
 		}
 
 		enum PersonID

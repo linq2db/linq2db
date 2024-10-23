@@ -199,7 +199,9 @@ namespace Tests
 			ProviderName.SQLiteMS,
 			// latest tested ef.core doesn't support older versions, leading to too many failing tests to disable
 			TestProvName.AllSqlServer2016PlusMS,
+#if !NET9_0
 			TestProvName.AllMySqlConnector,
+#endif
 			// latest tested ef.core doesn't support older versions, leading to too many failing tests to disable
 			TestProvName.AllPostgreSQL13Plus,
 

@@ -48,6 +48,7 @@ parameters:
 # - enable_fw_netfx    (true/false string) : enables testrun against .net framework 4.6.2
 # - enable_fw_net60    (true/false string) : enables testrun against .net 6.0
 # - enable_fw_net80    (true/false string) : enables testrun against .net 8.0
+# - enable_fw_net90    (true/false string) : enables testrun against .net 9.0
 
 # TEST CONFIG SELECTOR
 # - config_win   (string) : contains name of test config json file for windows runs (without extension)
@@ -92,6 +93,7 @@ jobs:
           enable_fw_netfx: true
           enable_fw_net60: false # see SQLite_2
           enable_fw_net80: false # see SQLite_2
+          enable_fw_net90: false # see SQLite_2
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlite.all]')) }}:
             enabled: true
           ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlite.all]'))) }}:
@@ -108,6 +110,7 @@ jobs:
           enable_fw_netfx: false # see SQLite_2
           enable_fw_net60: true
           enable_fw_net80: true
+          enable_fw_net90: true
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlite.all]')) }}:
             enabled: true
           ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlite.all]'))) }}:
@@ -124,6 +127,7 @@ jobs:
           enable_fw_netfx: true
           enable_fw_net60: false # see SQLiteExtras_2
           enable_fw_net80: false # see SQLiteExtras_2
+          enable_fw_net90: false # see SQLiteExtras_2
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlite.all]')) }}:
             enabled: true
           ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlite.all]'))) }}:
@@ -140,6 +144,7 @@ jobs:
           enable_fw_netfx: false # see SQLiteExtras_1
           enable_fw_net60: true
           enable_fw_net80: true
+          enable_fw_net90: true
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlite.all]')) }}:
             enabled: true
           ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlite.all]'))) }}:
@@ -155,6 +160,7 @@ jobs:
           enable_fw_netfx: true
           enable_fw_net60: false # see Access_MDB_2
           enable_fw_net80: false # see Access_MDB_3
+          enable_fw_net90: false # see Access_MDB_3
           x86: true
           extra: --arch x86
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[access.all]')) }}:
@@ -171,6 +177,7 @@ jobs:
           enable_fw_netfx: false # see Access_MDB_1
           enable_fw_net60: true
           enable_fw_net80: false # see Access_MDB_3
+          enable_fw_net90: false # see Access_MDB_3
           x86: true
           extra: --arch x86
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[access.all]')) }}:
@@ -187,6 +194,7 @@ jobs:
           enable_fw_netfx: false # see Access_MDB_1
           enable_fw_net60: false # see Access_MDB_2
           enable_fw_net80: true
+          enable_fw_net90: true
           x86: true
           extra: --arch x86
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[access.all]')) }}:
@@ -204,6 +212,7 @@ jobs:
           enable_fw_netfx: true
           enable_fw_net60: false # see Access_ACE_2
           enable_fw_net80: false # see Access_ACE_3
+          enable_fw_net90: false # see Access_ACE_3
           x86: true
           extra: --arch x86
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[access.all]')) }}:
@@ -221,6 +230,7 @@ jobs:
           enable_fw_netfx: false # see Access_ACE_1
           enable_fw_net60: true
           enable_fw_net80: false # see Access_ACE_3
+          enable_fw_net90: false # see Access_ACE_3
           x86: true
           extra: --arch x86
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[access.all]')) }}:
@@ -238,6 +248,7 @@ jobs:
           enable_fw_netfx: false # see Access_ACE_1
           enable_fw_net60: false # see Access_ACE_2
           enable_fw_net80: true
+          enable_fw_net90: true
           x86: true
           extra: --arch x86
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[access.all]')) }}:
@@ -255,6 +266,7 @@ jobs:
           enable_fw_netfx: true
           enable_fw_net60: true
           enable_fw_net80: true
+          enable_fw_net90: true
           extra: --arch x64
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[access.all]')) }}:
             enabled: true
@@ -272,6 +284,7 @@ jobs:
           enable_fw_netfx: true
           enable_fw_net60: true
           enable_fw_net80: true
+          enable_fw_net90: true
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlce.all]')) }}:
             enabled: true
           ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlce.all]'))) }}:
@@ -291,6 +304,7 @@ jobs:
           enable_fw_netfx: false
           enable_fw_net60: true
           enable_fw_net80: true
+          enable_fw_net90: true
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[mysql.all]')) }}:
             enabled: true
           ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[mysql.all]'))) }}:
@@ -309,6 +323,7 @@ jobs:
           enable_fw_netfx: false
           enable_fw_net60: true
           enable_fw_net80: true
+          enable_fw_net90: true
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[mysql.all]')) }}:
             enabled: true
           ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[mysql.all]'))) }}:
@@ -327,6 +342,7 @@ jobs:
           enable_fw_netfx: false
           enable_fw_net60: true
           enable_fw_net80: true
+          enable_fw_net90: true
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[mysql.all]')) }}:
             enabled: true
           ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[mysql.all]'))) }}:
@@ -346,6 +362,7 @@ jobs:
           enable_fw_netfx: false
           enable_fw_net60: true
           enable_fw_net80: true
+          enable_fw_net90: true
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[postgresql.all]')) }}:
             enabled: true
           ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[postgresql.all]'))) }}:
@@ -364,6 +381,7 @@ jobs:
           enable_fw_netfx: false
           enable_fw_net60: true
           enable_fw_net80: true
+          enable_fw_net90: true
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[postgresql.all]')) }}:
             enabled: true
           ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[postgresql.all]'))) }}:
@@ -382,6 +400,7 @@ jobs:
           enable_fw_netfx: false
           enable_fw_net60: true
           enable_fw_net80: true
+          enable_fw_net90: true
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[postgresql.all]')) }}:
             enabled: true
           ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[postgresql.all]'))) }}:
@@ -400,6 +419,7 @@ jobs:
           enable_fw_netfx: false
           enable_fw_net60: true
           enable_fw_net80: true
+          enable_fw_net90: true
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[postgresql.all]')) }}:
             enabled: true
           ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[postgresql.all]'))) }}:
@@ -418,6 +438,7 @@ jobs:
           enable_fw_netfx: false
           enable_fw_net60: true
           enable_fw_net80: true
+          enable_fw_net90: true
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[postgresql.all]')) }}:
             enabled: true
           ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[postgresql.all]'))) }}:
@@ -434,6 +455,7 @@ jobs:
           enable_fw_netfx: true
           enable_fw_net60: true
           enable_fw_net80: true
+          enable_fw_net90: true
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlserver.all]')) }}:
             enabled: true
           ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlserver.all]'))) }}:
@@ -449,6 +471,7 @@ jobs:
           enable_fw_netfx: true
           enable_fw_net60: true
           enable_fw_net80: true
+          enable_fw_net90: true
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlserver.all]')) }}:
             enabled: true
           ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlserver.all]'))) }}:
@@ -464,6 +487,7 @@ jobs:
           enable_fw_netfx: true
           enable_fw_net60: true
           enable_fw_net80: true
+          enable_fw_net90: true
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlserver.all]')) }}:
             enabled: true
           ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlserver.all]'))) }}:
@@ -479,6 +503,7 @@ jobs:
           enable_fw_netfx: true
           enable_fw_net60: true
           enable_fw_net80: true
+          enable_fw_net90: true
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlserver.all]')) }}:
             enabled: true
           ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlserver.all]'))) }}:
@@ -494,6 +519,7 @@ jobs:
           enable_fw_netfx: true
           enable_fw_net60: true
           enable_fw_net80: true
+          enable_fw_net90: true
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlserver.all]')) }}:
             enabled: true
           ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlserver.all]'))) }}:
@@ -514,6 +540,7 @@ jobs:
           enable_fw_netfx: true
           enable_fw_net60: true
           enable_fw_net80: true
+          enable_fw_net90: true
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlserver.all]')) }}:
             enabled: true
           ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlserver.all]'))) }}:
@@ -534,6 +561,7 @@ jobs:
           enable_fw_netfx: true
           enable_fw_net60: false # see SqlServer2019_2
           enable_fw_net80: false # see SqlServer2019_3
+          enable_fw_net90: false # see SqlServer2019_3
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlserver.all]'), contains(parameters.db_filter, '[sqlserver.2019]')) }}:
             enabled: true
           ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlserver.all]'), contains(parameters.db_filter, '[sqlserver.2019]'))) }}:
@@ -554,6 +582,7 @@ jobs:
           enable_fw_netfx: false # see SqlServer2019_1
           enable_fw_net60: true
           enable_fw_net80: false # see SqlServer2019_3
+          enable_fw_net90: false # see SqlServer2019_3
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlserver.all]'), contains(parameters.db_filter, '[sqlserver.2019]')) }}:
             enabled: true
           ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlserver.all]'), contains(parameters.db_filter, '[sqlserver.2019]'))) }}:
@@ -574,6 +603,7 @@ jobs:
           enable_fw_netfx: false # see SqlServer2019_1
           enable_fw_net60: false # see SqlServer2019_2
           enable_fw_net80: true
+          enable_fw_net90: true
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlserver.all]'), contains(parameters.db_filter, '[sqlserver.2019]')) }}:
             enabled: true
           ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlserver.all]'), contains(parameters.db_filter, '[sqlserver.2019]'))) }}:
@@ -595,6 +625,7 @@ jobs:
           enable_fw_netfx: true
           enable_fw_net60: false # see SqlServer2019Extras_2
           enable_fw_net80: false # see SqlServer2019Extras_3
+          enable_fw_net90: false # see SqlServer2019Extras_3
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlserver.all]'), contains(parameters.db_filter, '[sqlserver.2019]')) }}:
             enabled: true
           ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlserver.all]'), contains(parameters.db_filter, '[sqlserver.2019]'))) }}:
@@ -615,6 +646,7 @@ jobs:
           enable_fw_netfx: false # see SqlServer2019Extras_1
           enable_fw_net60: true
           enable_fw_net80: false # see SqlServer2019Extras_3
+          enable_fw_net90: false # see SqlServer2019Extras_3
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlserver.all]'), contains(parameters.db_filter, '[sqlserver.2019]')) }}:
             enabled: true
           ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlserver.all]'), contains(parameters.db_filter, '[sqlserver.2019]'))) }}:
@@ -635,6 +667,7 @@ jobs:
           enable_fw_netfx: false # see SqlServer2019Extras_1
           enable_fw_net60: false # see SqlServer2019Extras_2
           enable_fw_net80: true
+          enable_fw_net90: true
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlserver.all]'), contains(parameters.db_filter, '[sqlserver.2019]')) }}:
             enabled: true
           ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlserver.all]'), contains(parameters.db_filter, '[sqlserver.2019]'))) }}:
@@ -655,6 +688,7 @@ jobs:
           enable_fw_netfx: true
           enable_fw_net60: true
           enable_fw_net80: true
+          enable_fw_net90: true
           ${{ if and(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlserver.all]'), contains(parameters.db_filter, '[sqlserver.2022]')), not(contains(parameters.db_filter, '[metrics]'))) }}:
             enabled: true
           ${{ if not(and(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sqlserver.all]'), contains(parameters.db_filter, '[sqlserver.2022]')), not(contains(parameters.db_filter, '[metrics]')))) }}:
@@ -675,6 +709,7 @@ jobs:
           enable_fw_net472: true
           enable_fw_net60: true
           enable_fw_net80: true
+          enable_fw_net90: true
           ${{ if contains(parameters.db_filter, '[metrics]') }}:
             enabled: true
           ${{ if not(contains(parameters.db_filter, '[metrics]')) }}:
@@ -694,6 +729,7 @@ jobs:
           enable_fw_netfx: false
           enable_fw_net60: true
           enable_fw_net80: true
+          enable_fw_net90: true
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sybase.ase.all]')) }}:
             enabled: true
           ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[sybase.ase.all]'))) }}:
@@ -713,6 +749,7 @@ jobs:
           enable_fw_netfx: false
           enable_fw_net60: true
           enable_fw_net80: true
+          enable_fw_net90: true
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[oracle.all]')) }}:
             enabled: true
           ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[oracle.all]'))) }}:
@@ -731,6 +768,7 @@ jobs:
           enable_fw_netfx: false
           enable_fw_net60: true
           enable_fw_net80: true
+          enable_fw_net90: true
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[oracle.all]')) }}:
             enabled: true
           ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[oracle.all]'))) }}:
@@ -749,6 +787,7 @@ jobs:
           enable_fw_netfx: false
           enable_fw_net60: true
           enable_fw_net80: true
+          enable_fw_net90: true
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[oracle.all]')) }}:
             enabled: true
           ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[oracle.all]'))) }}:
@@ -767,6 +806,7 @@ jobs:
           enable_fw_netfx: false
           enable_fw_net60: true
           enable_fw_net80: true
+          enable_fw_net90: true
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[oracle.all]')) }}:
             enabled: true
           ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[oracle.all]'))) }}:
@@ -785,6 +825,7 @@ jobs:
           enable_fw_netfx: false
           enable_fw_net60: true
           enable_fw_net80: true
+          enable_fw_net90: true
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[oracle.all]')) }}:
             enabled: true
           ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[oracle.all]'))) }}:
@@ -803,6 +844,7 @@ jobs:
           enable_fw_netfx: false
           enable_fw_net60: true
           enable_fw_net80: true
+          enable_fw_net90: true
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[oracle.all]')) }}:
             enabled: true
           ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[oracle.all]'))) }}:
@@ -822,6 +864,7 @@ jobs:
           enable_fw_netfx: false
           enable_fw_net60: true
           enable_fw_net80: true
+          enable_fw_net90: true
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[firebird.all]')) }}:
             enabled: true
           ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[firebird.all]'))) }}:
@@ -840,6 +883,7 @@ jobs:
           enable_fw_netfx: false
           enable_fw_net60: true
           enable_fw_net80: true
+          enable_fw_net90: true
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[firebird.all]')) }}:
             enabled: true
           ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[firebird.all]'))) }}:
@@ -858,6 +902,7 @@ jobs:
           enable_fw_netfx: false
           enable_fw_net60: true
           enable_fw_net80: true
+          enable_fw_net90: true
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[firebird.all]')) }}:
             enabled: true
           ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[firebird.all]'))) }}:
@@ -876,6 +921,7 @@ jobs:
           enable_fw_netfx: false
           enable_fw_net60: true
           enable_fw_net80: true
+          enable_fw_net90: true
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[firebird.all]')) }}:
             enabled: true
           ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[firebird.all]'))) }}:
@@ -897,6 +943,7 @@ jobs:
           enable_fw_netfx: false
           enable_fw_net60: true
           enable_fw_net80: true
+          enable_fw_net90: true
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[db2.all]')) }}:
             enabled: true
           ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[db2.all]'))) }}:
@@ -918,6 +965,7 @@ jobs:
           enable_fw_netfx: false
           enable_fw_net60: true
           enable_fw_net80: true
+          enable_fw_net90: true
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[informix.all]')) }}:
             enabled: true
           ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[informix.all]'))) }}:
@@ -937,6 +985,7 @@ jobs:
           enable_fw_netfx: false
           enable_fw_net60: true
           enable_fw_net80: true
+          enable_fw_net90: true
           docker_login: false
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[saphana.all]')) }}:
             enabled: true
@@ -957,6 +1006,7 @@ jobs:
           enable_fw_netfx: false
           enable_fw_net60: true
           enable_fw_net80: true
+          enable_fw_net90: true
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[clickhouse.all]')) }}:
             enabled: true
           ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[clickhouse.all]'))) }}:
@@ -975,6 +1025,7 @@ jobs:
           enable_fw_netfx: false
           enable_fw_net60: true
           enable_fw_net80: true
+          enable_fw_net90: true
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[clickhouse.all]')) }}:
             enabled: true
           ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[clickhouse.all]'))) }}:
@@ -993,6 +1044,7 @@ jobs:
           enable_fw_netfx: false
           enable_fw_net60: true
           enable_fw_net80: true
+          enable_fw_net90: true
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[clickhouse.all]')) }}:
             enabled: true
           ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[clickhouse.all]'))) }}:

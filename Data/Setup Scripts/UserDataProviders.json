@@ -1,8 +1,8 @@
 ﻿{
 	"NETFX" :
 	{
-		"BasedOn"              : "User.Providers",
-		"DefaultConfiguration" : "SQLite.MS",
+		"BasedOn": "User.Providers",
+		"DefaultConfiguration": "SQLite.MS",
 		"Providers"            :
 		[
 			"- Access.Odbc",
@@ -15,8 +15,8 @@
 
 	"NET60" :
 	{
-		"BasedOn"              : "User.Providers",
-		"DefaultConfiguration" : "SQLite.MS",
+		"BasedOn": "User.Providers",
+		"DefaultConfiguration": "SQLite.MS",
 		"Providers"            :
 		[
 			"- Access*"
@@ -25,14 +25,16 @@
 
 	"NET80" :
 	{
-		"BasedOn" : "NET60"
+		"BasedOn": "NET60"
 	},
 
-	"User.Providers":
-	{
-		"BasedOn"   : "LocalConnectionStrings",
-		"Providers" :
-		[
+	"NET90": {
+		"BasedOn": "NET60"
+	},
+
+	"User.Providers": {
+		"BasedOn": "LocalConnectionStrings",
+		"Providers": [
 			"---", // remove all providers
 			"+++", // add all tested providers
 			"- Informix",
@@ -63,8 +65,7 @@
 			"Northwind.SQLite.MS",
 			"TestNoopProvider"
 		],
-		"Connections" :
-		{
+		"Connections": {
 		}
 	}
 }

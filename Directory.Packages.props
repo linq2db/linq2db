@@ -36,11 +36,12 @@
 		<PackageVersion Include="Microsoft.CodeAnalysis.CSharp"                         Version="4.11.0"                />
 		<PackageVersion Include="Microsoft.Extensions.DependencyModel"                  Version="8.0.2"                 />
 		<PackageVersion Include="Mono.TextTemplating"                                   Version="3.0.0"                 />
-		<PackageVersion Include="protobuf-net.Grpc"                                     Version="1.1.1"                 />
+		<PackageVersion Include="protobuf-net.Grpc"                                     Version="1.2.2"                 />
+		<PackageVersion Include="protobuf-net"                                          Version="3.2.30"                />
 
 		<PackageVersion Condition="'$(TargetFramework)'=='netstandard2.0'" Include="Microsoft.EntityFrameworkCore.Relational" Version="3.1.32" />
-		<PackageVersion Condition="'$(TargetFramework)'=='net6.0'"         Include="Microsoft.EntityFrameworkCore.Relational" Version="6.0.32" />
-		<PackageVersion Condition="'$(TargetFramework)'=='net8.0'"         Include="Microsoft.EntityFrameworkCore.Relational" Version="8.0.7"  />
+		<PackageVersion Condition="'$(TargetFramework)'=='net6.0'"         Include="Microsoft.EntityFrameworkCore.Relational" Version="6.0.35" />
+		<PackageVersion Condition="'$(TargetFramework)'=='net8.0'"         Include="Microsoft.EntityFrameworkCore.Relational" Version="8.0.10"  />
 	</ItemGroup>
 
 	<ItemGroup Label="Released Dependencies" Condition=" '$(TargetFramework)' != 'net8.0' ">
@@ -59,7 +60,7 @@
 
 	<ItemGroup Label="Database Providers">
 		<PackageVersion Include="AdoNetCore.AseClient"                                  Version="0.19.2"                />
-		<PackageVersion Include="ClickHouse.Client"                                     Version="7.8.0"                 />
+		<PackageVersion Include="ClickHouse.Client"                                     Version="7.8.2"                 />
 		<PackageVersion Include="Devart.Data.Oracle"                                    Version="10.3.21"               />
 		<PackageVersion Include="dotMorten.Microsoft.SqlServer.Types"                   Version="1.5.0"                 />
 		<!--<PackageVersion Include="dotMorten.Microsoft.SqlServer.Types"                   Version="2.5.0"                 />-->
@@ -98,12 +99,14 @@
 		<PackageVersion Include="MiniProfiler.Shared"                                   Version="4.3.8"                 />
 		<PackageVersion Include="MiniProfiler.Minimal"                                  Version="4.3.8"                 />
 		<PackageVersion Include="NodaTime"                                              Version="3.1.12"                />
-		<PackageVersion Include="protobuf-net.Grpc.AspNetCore"                          Version="1.1.1"                 />
+		<PackageVersion Include="protobuf-net.Grpc.AspNetCore"                          Version="1.2.2"                 />
 		<PackageVersion Include="System.Linq.Dynamic.Core"                              Version="1.4.5"                 />
-		<PackageVersion Include="FSharp.Core"                                           Version="8.0.401"               />
+		<PackageVersion Condition="'$(TargetFramework)'=='net9.0'" Include="FSharp.Core" Version="9.0.100-beta.24466.6" />
+		<PackageVersion Condition="'$(TargetFramework)'!='net9.0'" Include="FSharp.Core" Version="8.0.401"              />
 		<PackageVersion Include="LinqKit"                                               Version="1.3.0"                 />
 
-		<PackageVersion Include="Microsoft.Extensions.Logging.Console"                  Version="8.0.1"                 />
+		<PackageVersion Condition="'$(TargetFramework)'=='net9.0'" Include="Microsoft.Extensions.Logging.Console"  Version="9.0.0-rc.2.24473.5" />
+		<PackageVersion Condition="'$(TargetFramework)'!='net9.0'" Include="Microsoft.Extensions.Logging.Console"  Version="8.0.1"              />
 		<PackageVersion Include="EntityFrameworkCore.FSharp"                            Version="6.0.7"                 />
 
 		<PackageVersion Condition="'$(TargetFramework)'=='net462'" Include="Pomelo.EntityFrameworkCore.MySql"               Version="3.2.7"  />
@@ -111,16 +114,20 @@
 		<PackageVersion Condition="'$(TargetFramework)'=='net8.0'" Include="Pomelo.EntityFrameworkCore.MySql"               Version="8.0.2"  />
 		<PackageVersion Condition="'$(TargetFramework)'=='net462'" Include="Npgsql.EntityFrameworkCore.PostgreSQL.NodaTime" Version="3.1.18" />
 		<PackageVersion Condition="'$(TargetFramework)'=='net6.0'" Include="Npgsql.EntityFrameworkCore.PostgreSQL.NodaTime" Version="6.0.29" />
-		<PackageVersion Condition="'$(TargetFramework)'=='net8.0'" Include="Npgsql.EntityFrameworkCore.PostgreSQL.NodaTime" Version="8.0.8"  />
+		<PackageVersion Condition="'$(TargetFramework)'=='net8.0'" Include="Npgsql.EntityFrameworkCore.PostgreSQL.NodaTime" Version="8.0.10"  />
+		<PackageVersion Condition="'$(TargetFramework)'=='net9.0'" Include="Npgsql.EntityFrameworkCore.PostgreSQL.NodaTime" Version="9.0.0-rc.2" />
 		<PackageVersion Condition="'$(TargetFramework)'=='net462'" Include="Microsoft.EntityFrameworkCore.Sqlite"           Version="3.1.32" />
 		<PackageVersion Condition="'$(TargetFramework)'=='net6.0'" Include="Microsoft.EntityFrameworkCore.Sqlite"           Version="6.0.35" />
 		<PackageVersion Condition="'$(TargetFramework)'=='net8.0'" Include="Microsoft.EntityFrameworkCore.Sqlite"           Version="8.0.10"  />
+		<PackageVersion Condition="'$(TargetFramework)'=='net9.0'" Include="Microsoft.EntityFrameworkCore.Sqlite"           Version="9.0.0-rc.2.24474.1" />
 		<PackageVersion Condition="'$(TargetFramework)'=='net462'" Include="Microsoft.EntityFrameworkCore.SqlServer"        Version="3.1.32" />
 		<PackageVersion Condition="'$(TargetFramework)'=='net6.0'" Include="Microsoft.EntityFrameworkCore.SqlServer"        Version="6.0.35" />
 		<PackageVersion Condition="'$(TargetFramework)'=='net8.0'" Include="Microsoft.EntityFrameworkCore.SqlServer"        Version="8.0.10" />
+		<PackageVersion Condition="'$(TargetFramework)'=='net9.0'" Include="Microsoft.EntityFrameworkCore.SqlServer"        Version="9.0.0-rc.2.24474.1" />
 		<PackageVersion Condition="'$(TargetFramework)'=='net462'" Include="Microsoft.EntityFrameworkCore.InMemory"         Version="3.1.32" />
 		<PackageVersion Condition="'$(TargetFramework)'=='net6.0'" Include="Microsoft.EntityFrameworkCore.InMemory"         Version="6.0.35" />
 		<PackageVersion Condition="'$(TargetFramework)'=='net8.0'" Include="Microsoft.EntityFrameworkCore.InMemory"         Version="8.0.10" />
+		<PackageVersion Condition="'$(TargetFramework)'=='net9.0'" Include="Microsoft.EntityFrameworkCore.InMemory"         Version="9.0.0-rc.2.24474.1" />
 </ItemGroup>
 	
 	<ItemGroup Label="Testing" Condition=" '$(TargetFramework)' == 'net462' ">
