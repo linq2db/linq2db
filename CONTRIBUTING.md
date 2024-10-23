@@ -54,9 +54,7 @@ Custom debugging symbols:
 
 #### Test projects
 
-Tests targets: `net462`, `net6.0`, `net8.0`. In general we test 3 configurations: lowest supported .NET Framework, lowest supported .NET version, highest supported .NET version
-
-Tests targets (efcore integration library): `net462`, `net6.0`, `net8.0`, `net9.0`
+Tests targets: `net462`, `net6.0`, `net8.0`, `net9.0`. In general we test 3 configurations: lowest supported .NET Framework, lowest supported .NET version, highest supported .NET version.
 
 Custom symbols:
 
