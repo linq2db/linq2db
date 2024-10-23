@@ -1,5 +1,6 @@
-<#@ include file="LinqToDB.ttinclude" once="true" #>
-<#@ import namespace="System.IO"                  #>
+<#@ include file="LinqToDB.ttinclude"       once="true" #>
+<#@ include file="LinqToDB.Tools.ttinclude" once="true" #>
+<#@ import namespace="System.IO"                        #>
 <#+
 LinqToDB.Data.DataConnection GetAccessConnection(string connectionString)
 {
@@ -7,6 +8,11 @@ LinqToDB.Data.DataConnection GetAccessConnection(string connectionString)
 }
 
 LinqToDB.Data.DataConnection GetAccessConnection(string path, string database)
+{
+	return GetAccessConnection(string.Format("Provider=Microsoft.ACE.OLEDB.12.0;Data Source={0};Locale Identifier=1033;Persist Security Info=True", Path.Combine(path, database)));
+}
+
+LinqToDB.Data.DataConnection GetAccessJetConnection(string path, string database)
 {
 	return GetAccessConnection(string.Format("Provider=Microsoft.Jet.OLEDB.4.0;Data Source={0};Locale Identifier=1033;Jet OLEDB:Engine Type=5;Persist Security Info=True", Path.Combine(path, database)));
 }
@@ -20,6 +26,12 @@ public void LoadAccessMetadata(string connectionString)
 public void LoadAccessMetadata(string path, string database)
 {
 	using(var dataConnection = GetAccessConnection(path, database))
+		LoadMetadata(dataConnection);
+}
+
+public void LoadAccessJetMetadata(string path, string database)
+{
+	using(var dataConnection = GetAccessJetConnection(path, database))
 		LoadMetadata(dataConnection);
 }
 #>
