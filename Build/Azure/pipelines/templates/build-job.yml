@@ -17,6 +17,13 @@ jobs:
   
   # .NET 6 and 8 SDKs already installed https://github.com/actions/runner-images/blob/main/images/windows/Windows2022-Readme.md
 
+  - task: UseDotNet@2
+    displayName: 'Install .NET 9 SDK'
+    inputs:
+      packageType: sdk
+      includePreviewVersions: true
+      version: 9.x
+
   - task: PowerShell@2
     inputs:
       filePath: '$(Build.SourcesDirectory)/Build/SetVersion.ps1'
