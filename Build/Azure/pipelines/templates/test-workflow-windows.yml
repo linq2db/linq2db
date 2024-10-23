@@ -255,14 +255,13 @@ steps:
   condition: and(variables.title, eq(variables.x86, 'true'), eq(variables.net90, 'true'), variables.psscript_local, succeeded())
   displayName: Execute NET 9 (x86) PowerShell Setup Script
 
-# disabled till NET 9 release, when we switch from NET8 to NET9 testing
-# - script: dotnet test net9.0/main/x64/linq2db.Tests.dll --filter "TestCategory != SkipCI" -f net90 -l trx
-#   displayName: 'Tests (.NET 9 x64): $(title)'
-#   condition: and(eq(variables.net90, 'true'), ne(variables.x86, 'true'), variables.title, succeeded())
+- script: dotnet test net9.0/main/x64/linq2db.Tests.dll --filter "TestCategory != SkipCI" -f net90 -l trx
+  displayName: 'Tests (.NET 9 x64): $(title)'
+  condition: and(eq(variables.net90, 'true'), ne(variables.x86, 'true'), variables.title, succeeded())
 
-# - script: dotnet test net9.0/main/x86/linq2db.Tests.dll --filter "TestCategory != SkipCI" -f net90 -l trx
-#   displayName: 'Tests (.NET 9 x86): $(title)'
-#   condition: and(eq(variables.net90, 'true'), eq(variables.x86, 'true'), variables.title, succeeded())
+- script: dotnet test net9.0/main/x86/linq2db.Tests.dll --filter "TestCategory != SkipCI" -f net90 -l trx
+  displayName: 'Tests (.NET 9 x86): $(title)'
+  condition: and(eq(variables.net90, 'true'), eq(variables.x86, 'true'), variables.title, succeeded())
 
 - script: dotnet test net9.0/efcore/x64/linq2db.EntityFrameworkCore.Tests.dll --filter "TestCategory != SkipCI" -f net90 -l trx
   displayName: 'EF.Core Tests (.NET 9 x64): $(title)'

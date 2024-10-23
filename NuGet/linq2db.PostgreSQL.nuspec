@@ -14,7 +14,7 @@
 		<readme>README.md</readme>
 		<dependencies>
 			<dependency id="linq2db" version="6.0.0"  />
-			<dependency id="Npgsql"  version="8.0.4"  />
+			<dependency id="Npgsql"  version="8.0.5"  />
 		</dependencies>
 		<contentFiles>
 			<files include="**\*" buildAction="None" />

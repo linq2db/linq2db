@@ -21,6 +21,10 @@
 				<dependency id="linq2db"                version="6.0.0"  />
 				<dependency id="Microsoft.Data.Sqlite"  version="8.0.10" />
 			</group>
+			<group targetFramework="net8.0">
+				<dependency id="linq2db"                version="6.0.0"  />
+				<dependency id="Microsoft.Data.Sqlite"  version="9.0.0-rc.2.24474.1" />
+			</group>
 		</dependencies>
 		<contentFiles>
 			<files include="**\*" buildAction="None" />
