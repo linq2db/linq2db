@@ -37,6 +37,7 @@ parameters:
 # - extra   (string, optional)            : specify additional dotnet test arguments, e.g. "--arch x86"
 # - x86     (true/false string, optional) : windows-only, install dotnet sdk x86
 # - enabled (true/false string, required) : enables/disables test matrix entry completely for current run
+# - retries (numbler, optional)           : specify number of test run retries on failue, use only for unstable runs like access and oracle
 
 
 # OPERATION SYSTEM SELECTORS
@@ -75,7 +76,6 @@ jobs:
   - template: test-jobs.yml
     parameters:
       enabled: ${{ parameters.enabled }}
-      experimental: ${{ parameters.experimental }}
       with_baselines: ${{ parameters.with_baselines }}
 #      mac_enabled: ${{ parameters.mac_enabled }}
 # TODO: disable for now as it fails always due to small stack
@@ -268,6 +268,7 @@ jobs:
           enable_fw_net80: true
           enable_fw_net90: true
           extra: --arch x64
+          retries: 2 # x64 provider could crash with AV
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[access.all]')) }}:
             enabled: true
           ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[access.all]'))) }}:
@@ -788,6 +789,7 @@ jobs:
           enable_fw_net60: true
           enable_fw_net80: true
           enable_fw_net90: true
+          retries: 2 # provider has issue with resource management
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[oracle.all]')) }}:
             enabled: true
           ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[oracle.all]'))) }}:
@@ -807,6 +809,7 @@ jobs:
           enable_fw_net60: true
           enable_fw_net80: true
           enable_fw_net90: true
+          retries: 2 # provider has issue with resource management
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[oracle.all]')) }}:
             enabled: true
           ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[oracle.all]'))) }}:
@@ -826,6 +829,7 @@ jobs:
           enable_fw_net60: true
           enable_fw_net80: true
           enable_fw_net90: true
+          retries: 2 # provider has issue with resource management
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[oracle.all]')) }}:
             enabled: true
           ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[oracle.all]'))) }}:
@@ -845,6 +849,7 @@ jobs:
           enable_fw_net60: true
           enable_fw_net80: true
           enable_fw_net90: true
+          retries: 2 # provider has issue with resource management
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[oracle.all]')) }}:
             enabled: true
           ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[oracle.all]'))) }}:
