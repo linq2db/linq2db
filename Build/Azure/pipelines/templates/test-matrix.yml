@@ -581,6 +581,7 @@ jobs:
           enable_fw_net60: true
           enable_fw_net80: true
           enable_fw_net90: true
+          retry: true # provider has issue with resource management
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[oracle.all]')) }}:
             enabled: true
           ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[oracle.all]'))) }}:

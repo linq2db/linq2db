@@ -157,7 +157,7 @@ jobs:
             net80: ${{ test_config.enable_fw_net80 }}
             net90: ${{ test_config.enable_fw_net90 }}
             x86: ${{ test_config.x86 }}
-            retries: ${{ test_config.retries }}
+            retry: ${{ test_config.retry }}
 
   steps:
   - template: test-workflow-windows.yml
@@ -191,7 +191,7 @@ jobs:
             net60: ${{ test_config.enable_fw_net60 }}
             net80: ${{ test_config.enable_fw_net80 }}
             net90: ${{ test_config.enable_fw_net90 }}
-            retries: ${{ test_config.retries }}
+            retry: ${{ test_config.retry }}
 
   steps:
   - template: test-workflow-linux.yml
@@ -226,7 +226,7 @@ jobs:
             net60: ${{ test_config.enable_fw_net60 }}
             net80: ${{ test_config.enable_fw_net80 }}
             net90: ${{ test_config.enable_fw_net90 }}
-            retries: ${{ test_config.retries }}
+            retry: ${{ test_config.retry }}
 
   steps:
   - template: test-workflow-macos.yml

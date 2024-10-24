@@ -13,6 +13,9 @@ steps:
     version: 6.x
   condition: and(variables.title, eq(variables.net60, 'true'), succeeded())
 
+- task: NuGetToolInstaller@1
+  displayName: 'Install Nuget'
+  
 - task: CmdLine@2
   inputs:
     script: 'git clone https://$(BASELINES_GH_PAT)@github.com/linq2db/linq2db.baselines.git baselines && cd baselines && git checkout -b $(baselines_branch) origin/$(baselines_branch) && cd ..'
