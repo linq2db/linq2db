@@ -157,10 +157,7 @@ jobs:
             net80: ${{ test_config.enable_fw_net80 }}
             net90: ${{ test_config.enable_fw_net90 }}
             x86: ${{ test_config.x86 }}
-            ${{ if eq(test_config.retries, '') }}:
-              retries: 0
-            ${{ if ne(test_config.retries, '') }}:
-              retries: ${{ test_config.retries }}
+            retries: ${{ test_config.retries }}
 
   steps:
   - template: test-workflow-windows.yml
@@ -194,10 +191,7 @@ jobs:
             net60: ${{ test_config.enable_fw_net60 }}
             net80: ${{ test_config.enable_fw_net80 }}
             net90: ${{ test_config.enable_fw_net90 }}
-            ${{ if eq(test_config.retries, '') }}:
-              retries: 0
-            ${{ if ne(test_config.retries, '') }}:
-              retries: ${{ test_config.retries }}
+            retries: ${{ test_config.retries }}
 
   steps:
   - template: test-workflow-linux.yml
@@ -232,10 +226,7 @@ jobs:
             net60: ${{ test_config.enable_fw_net60 }}
             net80: ${{ test_config.enable_fw_net80 }}
             net90: ${{ test_config.enable_fw_net90 }}
-            ${{ if eq(test_config.retries, '') }}:
-              retries: 0
-            ${{ if ne(test_config.retries, '') }}:
-              retries: ${{ test_config.retries }}
+            retries: ${{ test_config.retries }}
 
   steps:
   - template: test-workflow-macos.yml

@@ -96,9 +96,13 @@ steps:
   displayName: Setup tests
 
 - script: dotnet test ./net6.0/main/x64/linq2db.Tests.dll --filter "TestCategory != SkipCI" -f net60 -l trx $(extra)
-  condition: and(variables.title, eq(variables.net60, 'true'), succeeded())
+  condition: and(variables.title, eq(variables.net60, 'true'), succeeded(), ne(variables.retry, 'true'))
   displayName: 'Tests (NET60): $(title)'
-  retryCountOnTaskFailure: $(retries)
+
+- script: dotnet test ./net6.0/main/x64/linq2db.Tests.dll --filter "TestCategory != SkipCI" -f net60 -l trx $(extra)
+  condition: and(variables.title, eq(variables.net60, 'true'), succeeded(), eq(variables.retry, 'true'))
+  displayName: 'Tests (NET60): $(title)'
+  retryCountOnTaskFailure: 2
 
 - script: dotnet test ./net6.0/efcore/x64/linq2db.EntityFrameworkCore.Tests.dll --filter "TestCategory != SkipCI" -f net60 -l trx $(extra)
   condition: and(variables.title, eq(variables.net60, 'true'), succeeded())
@@ -112,9 +116,13 @@ steps:
   displayName: Setup tests
 
 - script: dotnet test ./net8.0/main/x64/linq2db.Tests.dll --filter "TestCategory != SkipCI" -f net80 -l trx $(extra)
-  condition: and(variables.title, eq(variables.net80, 'true'), succeeded())
+  condition: and(variables.title, eq(variables.net80, 'true'), succeeded(), ne(variables.retry, 'true'))
   displayName: 'Tests (.NET 8): $(title)'
-  retryCountOnTaskFailure: $(retries)
+
+- script: dotnet test ./net8.0/main/x64/linq2db.Tests.dll --filter "TestCategory != SkipCI" -f net80 -l trx $(extra)
+  condition: and(variables.title, eq(variables.net80, 'true'), succeeded(), eq(variables.retry, 'true'))
+  displayName: 'Tests (.NET 8): $(title)'
+  retryCountOnTaskFailure: 2
 
 - script: dotnet test ./net8.0/efcore/x64/linq2db.EntityFrameworkCore.Tests.dll --filter "TestCategory != SkipCI" -f net80 -l trx $(extra)
   condition: and(variables.title, eq(variables.net80, 'true'), succeeded())
@@ -136,9 +144,13 @@ steps:
   displayName: Setup .NET 9 tests
 
 - script: dotnet test ./net9.0/main/x64/linq2db.Tests.dll --filter "TestCategory != SkipCI" -f net90 -l trx $(extra)
-  condition: and(variables.title, eq(variables.net90, 'true'), succeeded())
+  condition: and(variables.title, eq(variables.net90, 'true'), succeeded(), ne(variables.retry, 'true'))
   displayName: 'Tests (.NET 9): $(title)'
-  retryCountOnTaskFailure: $(retries)
+
+- script: dotnet test ./net9.0/main/x64/linq2db.Tests.dll --filter "TestCategory != SkipCI" -f net90 -l trx $(extra)
+  condition: and(variables.title, eq(variables.net90, 'true'), succeeded(), eq(variables.retry, 'true'))
+  displayName: 'Tests (.NET 9): $(title)'
+  retryCountOnTaskFailure: 2
 
 - script: dotnet test ./net9.0/efcore/x64/linq2db.EntityFrameworkCore.Tests.dll --filter "TestCategory != SkipCI" -f net90 -l trx $(extra)
   condition: and(variables.title, eq(variables.net90, 'true'), succeeded())
