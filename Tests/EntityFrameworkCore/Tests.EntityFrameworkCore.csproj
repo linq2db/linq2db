@@ -6,6 +6,8 @@
 		<RootNamespace>LinqToDB.EntityFrameworkCore.Tests</RootNamespace>
 
 		<TargetFrameworks>net462;net6.0;net8.0</TargetFrameworks>
+
+		<MSBuildWarningsAsMessages>$(MSBuildWarningsAsMessages);MSB3277</MSBuildWarningsAsMessages>
 	</PropertyGroup>
 	
 	<ItemGroup>
