@@ -1,4 +1,4 @@
-﻿#if !NETFRAMEWORK
+﻿#if !NETFRAMEWORK && !NET9_0
 using Microsoft.EntityFrameworkCore;
 using LinqToDB.EntityFrameworkCore.FSharp;
 using EntityFrameworkCore.FSharp;

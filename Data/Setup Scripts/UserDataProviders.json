@@ -28,6 +28,9 @@
 		"BasedOn" : "NET60"
 	},
 
+	"NET90": {
+		"BasedOn": "NET60"
+	},
 	"User.Providers":
 	{
 		"BasedOn"   : "LocalConnectionStrings",

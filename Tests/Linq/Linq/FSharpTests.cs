@@ -116,7 +116,7 @@ namespace Tests.Linq
 		public void LoadSingleCLIMutable([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
-				FSharp.WhereTest.LoadSingleCLIMutable(db, null);
+				FSharp.WhereTest.LoadSingleCLIMutable(db);
 		}
 
 		[Test]

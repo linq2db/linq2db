@@ -24,6 +24,10 @@
 				<dependency id="linq2db"           version="6.0.0" />
 				<dependency id="System.Data.OleDb" version="8.0.1" />
 			</group>
+			<group targetFramework="net9.0">
+				<dependency id="linq2db"           version="6.0.0" />
+				<dependency id="System.Data.OleDb" version="9.0.0-rc.2.24473.5" />
+			</group>
 		</dependencies>
 		<contentFiles>
 			<files include="**\*" buildAction="None" />

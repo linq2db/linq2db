@@ -36,6 +36,11 @@
 		"DefaultConfiguration": "SQLite.MS"
 	},
 
+	"NET90": {
+		"BasedOn": "LocalConnectionStrings",
+		"DefaultConfiguration": "SQLite.MS"
+	},
+
 	"NETFX.Azure": {
 		"BasedOn": "AzureConnectionStrings",
 		"DefaultConfiguration": "SQLite.MS",
@@ -49,6 +54,12 @@
 	},
 
 	"NET80.Azure": {
+		"BasedOn": "AzureConnectionStrings",
+		"DefaultConfiguration": "SQLite.MS",
+		"TraceLevel": "Info"
+	},
+
+	"NET90.Azure": {
 		"BasedOn": "AzureConnectionStrings",
 		"DefaultConfiguration": "SQLite.MS",
 		"TraceLevel": "Info"

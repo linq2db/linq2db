@@ -135,7 +135,7 @@ jobs:
 
   displayName: 'Tests: Windows'
   dependsOn: create_baselines_branch
-  timeoutInMinutes: 90 # default: 60, max: 360
+  timeoutInMinutes: 180 # default: 60, max: 360
   condition: ${{ parameters.enabled }}
   variables:
     baselines_branch: $[ dependencies.create_baselines_branch.outputs['baselines_init.baselines_branch'] ]
@@ -155,7 +155,9 @@ jobs:
             netfx: ${{ test_config.enable_fw_netfx }}
             net60: ${{ test_config.enable_fw_net60 }}
             net80: ${{ test_config.enable_fw_net80 }}
+            net90: ${{ test_config.enable_fw_net90 }}
             x86: ${{ test_config.x86 }}
+            retry: ${{ test_config.retry }}
 
   steps:
   - template: test-workflow-windows.yml
@@ -168,7 +170,7 @@ jobs:
 - job: test_ubuntu_job
   pool:
     vmImage: 'ubuntu-24.04'
-  timeoutInMinutes: 90 # default: 60, max: 360
+  timeoutInMinutes: 180 # default: 60, max: 360
   displayName: 'Tests: Linux'
   dependsOn: create_baselines_branch
   condition: ${{ parameters.enabled }}
@@ -188,6 +190,8 @@ jobs:
             extra: ${{ test_config.extra }}
             net60: ${{ test_config.enable_fw_net60 }}
             net80: ${{ test_config.enable_fw_net80 }}
+            net90: ${{ test_config.enable_fw_net90 }}
+            retry: ${{ test_config.retry }}
 
   steps:
   - template: test-workflow-linux.yml
@@ -201,7 +205,7 @@ jobs:
   pool:
     vmImage: 'macOS-13'
   displayName: 'Tests: MacOS'
-  timeoutInMinutes: 90 # default: 60, max: 360
+  timeoutInMinutes: 180 # default: 60, max: 360
   dependsOn: create_baselines_branch
   condition: and(eq(${{ parameters.enabled }}, 'true'), eq(${{ parameters.mac_enabled }}, 'true'))
   variables:
@@ -221,6 +225,8 @@ jobs:
             extra: ${{ test_config.extra }}
             net60: ${{ test_config.enable_fw_net60 }}
             net80: ${{ test_config.enable_fw_net80 }}
+            net90: ${{ test_config.enable_fw_net90 }}
+            retry: ${{ test_config.retry }}
 
   steps:
   - template: test-workflow-macos.yml

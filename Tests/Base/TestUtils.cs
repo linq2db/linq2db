@@ -301,6 +301,8 @@ namespace Tests
 			return "NET60";
 #elif NET8_0
 			return "NET80";
+#elif NET9_0
+			return "NET90";
 #elif NETFRAMEWORK
 			return "NETFX";
 #else
