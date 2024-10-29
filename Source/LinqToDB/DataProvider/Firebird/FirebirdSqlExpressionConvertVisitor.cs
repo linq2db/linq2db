@@ -117,9 +117,12 @@ namespace LinqToDB.DataProvider.Firebird
 					{
 						expr = new SqlExpression(typeof(bool),
 							predicate.IsNot ? "{0} NOT CONTAINING {1}" : "{0} CONTAINING {1}",
-							Precedence.Comparison,
+							precedence : Precedence.Comparison,
+							flags : SqlFlags.IsPredicate,
+							nullabilityType : ParametersNullabilityType.IfAnyParameterNullable,
+							canBeNull : null,
 							TryConvertToValue(predicate.Expr1, EvaluationContext),
-							TryConvertToValue(predicate.Expr2, EvaluationContext)) {CanBeNull = false};
+							TryConvertToValue(predicate.Expr2, EvaluationContext)) { CanBeNull = false };
 					}
 					else
 					{
@@ -163,6 +166,14 @@ namespace LinqToDB.DataProvider.Firebird
 			else if (cast.SystemType.ToUnderlying() == typeof(Guid) && cast.Expression.SystemType?.ToUnderlying() == typeof(string))
 			{
 				return new SqlFunction(cast.SystemType, "CHAR_TO_UUID", false, true, Precedence.Primary, ParametersNullabilityType.IfAnyParameterNullable, null, cast.Expression);
+			}
+			else if (cast.ToType.DataType == DataType.Decimal)
+			{
+				if (cast.ToType.Precision == null && cast.ToType.Scale == null)
+				{
+					//TODO: check default precision and scale
+					cast = cast.WithToType(cast.ToType.WithPrecisionScale(18, 12));
+				}
 			}
 
 			cast = FloorBeforeConvert(cast);

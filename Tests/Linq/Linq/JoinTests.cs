@@ -374,6 +374,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		[ThrowsForProvider(typeof(LinqException), TestProvName.AllAccess, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
 		public void GroupJoin5([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -398,6 +399,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		[ThrowsForProvider(typeof(LinqException), TestProvName.AllAccess, TestProvName.AllFirebirdLess4, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
 		public void GroupJoin51([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -424,7 +426,8 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void GroupJoin52([DataSources(TestProvName.AllClickHouse, TestProvName.AllAccess)] string context)
+		[ThrowsForProvider(typeof(LinqException), TestProvName.AllAccess, TestProvName.AllFirebirdLess4, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
+		public void GroupJoin52([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -440,6 +443,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		[ThrowsForProvider(typeof(LinqException), TestProvName.AllAccess, TestProvName.AllFirebirdLess4, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
 		public void GroupJoin53([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -456,6 +460,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		[ThrowsForProvider(typeof(LinqException), TestProvName.AllAccess, TestProvName.AllFirebirdLess4, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
 		public void GroupJoin54([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -554,6 +559,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		[ThrowsForProvider(typeof(LinqException), TestProvName.AllAccess, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
 		public void GroupJoin8([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))

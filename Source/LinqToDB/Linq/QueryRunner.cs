@@ -265,32 +265,50 @@ namespace LinqToDB.Linq
 
 			foreach (var p in query.ParameterAccessors)
 			{
-				var providerValue = p.ValueAccessor(expression, parametersContext, parameters);
+				var clientValue   = p.ClientValueAccessor(expression, parametersContext, parameters);
+				var providerValue = clientValue;
 
 				DbDataType? dbDataType = null;
 
-				if (providerValue is IEnumerable items && p.ItemAccessor != null)
+				if (p.ItemAccessor != null && clientValue is IEnumerable items)
 				{
 					var values = new List<object?>();
 
 					foreach (var item in items)
 					{
 						values.Add(p.ItemAccessor(item));
-						dbDataType ??= p.DbDataTypeAccessor(expression, item, parametersContext, parameters);
+
+						if (dbDataType == null && p.DbDataTypeAccessor != null)
+						{
+							dbDataType = p.DbDataTypeAccessor(item);
+						}
 					}
 
 					providerValue = values;
 				}
+				else
+				{
+					if (p.ClientToProviderConverter != null)
+						providerValue = p.ClientToProviderConverter(clientValue); 
 
-				dbDataType ??= p.DbDataTypeAccessor(expression, null, parametersContext, parameters);
+					if (dbDataType == null && p.DbDataTypeAccessor != null)
+					{
+						dbDataType = p.DbDataTypeAccessor(clientValue);
+					}
+				}
 
-				parameterValues.AddValue(p.SqlParameter, providerValue, p.SqlParameter.Type.WithSetValues(dbDataType.Value));
+				if (dbDataType != null)
+					dbDataType = p.SqlParameter.Type.WithSetValues(dbDataType.Value);
+				else
+					dbDataType = p.SqlParameter.Type;
+
+				parameterValues.AddValue(p.SqlParameter, providerValue, clientValue, dbDataType.Value);
 			}
 		}
 
 		internal static ParameterAccessor GetParameter(IUniqueIdGenerator<ParameterAccessor> accessorIdGenerator, Type type, IDataContext dataContext, SqlField field)
 		{
-			Expression getter = Expression.Convert(
+			Expression clientValueGetter = Expression.Convert(
 				Expression.Property(
 					Expression.Convert(ExpressionBuilder.ExpressionParam, typeof(ConstantExpression)),
 					ReflectionHelper.Constant.Value),
@@ -299,30 +317,52 @@ namespace LinqToDB.Linq
 			var descriptor    = field.ColumnDescriptor;
 			var dbValueLambda = descriptor.GetDbParamLambda();
 
-			Expression? dbDataTypeExpression;
+			var        clientValueParameter = Expression.Parameter(typeof(object), "clientValue");
+			Expression providerValueGetter  = Expression.Convert(clientValueParameter, clientValueGetter.Type);
+			providerValueGetter = InternalExtensions.ApplyLambdaToExpression(dbValueLambda, providerValueGetter);
 
-			var valueGetter = InternalExtensions.ApplyLambdaToExpression(dbValueLambda, getter);
+			Expression? dbDataTypeExpression = null;
+			DbDataType  dbDataType;
 
-			if (typeof(DataParameter).IsSameOrParentOf(valueGetter.Type))
+			if (typeof(DataParameter).IsSameOrParentOf(providerValueGetter.Type))
 			{
-				dbDataTypeExpression = Expression.Call(Expression.Constant(field.ColumnDescriptor.GetDbDataType(false)),
-					DbDataType.WithSetValuesMethodInfo,
-					Expression.Property(valueGetter, Methods.LinqToDB.DataParameter.DbDataType));
-				valueGetter          = Expression.Property(valueGetter, Methods.LinqToDB.DataParameter.Value);
+				dbDataType           = field.ColumnDescriptor.GetDbDataType(false);
+				dbDataTypeExpression = Expression.Property(providerValueGetter, Methods.LinqToDB.DataParameter.DbDataType);
+				providerValueGetter  = Expression.Property(providerValueGetter, Methods.LinqToDB.DataParameter.Value);
 			}
 			else
 			{
-				var dbDataType       = field.ColumnDescriptor.GetDbDataType(true).WithSystemType(valueGetter.Type);
-				dbDataTypeExpression = Expression.Constant(dbDataType);
+				dbDataType = field.ColumnDescriptor.GetDbDataType(true).WithSystemType(providerValueGetter.Type);
+			}
+
+			Func<object?, object?>? providerValueFunc = null;
+			if (providerValueGetter.UnwrapConvert() != clientValueParameter)
+			{
+				providerValueGetter = ParametersContext.CorrectAccessorExpression(providerValueGetter, dataContext);
+				if (providerValueGetter.Type != typeof(object))
+					providerValueGetter = Expression.Convert(providerValueGetter, typeof(object));
+
+				var providerValueConverter = Expression.Lambda<Func<object?, object?>>(providerValueGetter, clientValueParameter);
+				providerValueFunc = providerValueConverter.CompileExpression();
+			}
+
+			Func<object?, DbDataType>? dbDataTypeFunc = null;
+			if (dbDataTypeExpression != null)
+			{
+				dbDataTypeExpression = ParametersContext.CorrectAccessorExpression(dbDataTypeExpression, dataContext);
+				var dbDataTypeLambda = Expression.Lambda<Func<object?, DbDataType>>(dbDataTypeExpression, clientValueParameter);
+				dbDataTypeFunc = dbDataTypeLambda.CompileExpression();
 			}
 
 			var param = ParametersContext.CreateParameterAccessor(
 				accessorIdGenerator,
 				dataContext,
-				valueGetter,
-				itemAccessorExpression: null,
-				dbDataTypeExpression,
-				valueGetter,
+				clientValueGetter,
+				providerValueFunc,
+				itemProviderConvertFunc: null,
+				dbDataType, 
+				dbDataTypeFunc,
+				providerValueGetter,
 				parametersExpression: null,
 				name: field.Name.Replace('.', '_')
 			);

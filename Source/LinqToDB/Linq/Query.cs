@@ -669,27 +669,29 @@ namespace LinqToDB.Linq
 	sealed class ParameterAccessor
 	{
 		public ParameterAccessor(
-			int                                                          accessorId,
-			Func<Expression,IDataContext?,object?[]?,object?>            valueAccessor,
-			Func<object?,object?>?                                       itemAccessor,
-			Func<Expression,object?,IDataContext?,object?[]?,DbDataType> dbDataTypeAccessor,
-			SqlParameter                                                 sqlParameter)
+			int                                               accessorId,
+			Func<Expression,IDataContext?,object?[]?,object?> clientValueAccessor,
+			Func<object?,object?>?                            clientToProviderConverter,
+			Func<object?,object?>?                            itemAccessor,
+			Func<object?,DbDataType>?                         dbDataTypeAccessor,
+			SqlParameter                                      sqlParameter)
 		{
-			AccessorId         = accessorId;
-			ValueAccessor      = valueAccessor;
-			ItemAccessor       = itemAccessor;
-			DbDataTypeAccessor = dbDataTypeAccessor;
-			SqlParameter       = sqlParameter;
+			AccessorId                = accessorId;
+			ClientToProviderConverter = clientToProviderConverter;
+			ClientValueAccessor       = clientValueAccessor;
+			ItemAccessor              = itemAccessor;
+			DbDataTypeAccessor        = dbDataTypeAccessor;
+			SqlParameter              = sqlParameter;
 		}
 
-		public readonly int                                                          AccessorId;
-		public readonly Func<Expression,IDataContext?,object?[]?,object?>            ValueAccessor;
-		public readonly Func<object?,object?>?                                       ItemAccessor;
-		public readonly Func<Expression,object?,IDataContext?,object?[]?,DbDataType> DbDataTypeAccessor;
-		public readonly SqlParameter                                                 SqlParameter;
+		public readonly int                                               AccessorId;
+		public readonly Func<Expression,IDataContext?,object?[]?,object?> ClientValueAccessor;
+		public readonly Func<object?,object?>?                            ClientToProviderConverter;
+		public readonly Func<object?,object?>?                            ItemAccessor;
+		public readonly Func<object?,DbDataType>?                         DbDataTypeAccessor;
+		public readonly SqlParameter                                      SqlParameter;
 #if DEBUG
 		public Expression<Func<Expression,IDataContext?,object?[]?,object?>>? AccessorExpr;
-		public Expression<Func<object?,object?>>?                             ItemAccessorExpr;
 #endif
 	}
 }

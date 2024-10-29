@@ -1059,7 +1059,9 @@ namespace Tests.Linq
 
 			var tenderIds = new List<RecordId?>() { new RecordId(5), new RecordId(3), new RecordId(4), null };
 
-			var cnt = db.GetTable<RecordTable>().Where(i => i.Value1!.Value == tenderIds[0] || i.Value1!.Value == tenderIds[1] || i.Value1!.Value == tenderIds[2] || i.Value1!.Value == tenderIds[3]).Count();
+			var cnt = db.GetTable<RecordTable>()
+				.Where(i => i.Value1!.Value == tenderIds[0] || i.Value1!.Value == tenderIds[1] || i.Value1!.Value == tenderIds[2] || i.Value1!.Value == tenderIds[3])
+				.Count();
 
 			Assert.That(cnt, Is.EqualTo(mapNull ? 3 : 4));
 		}

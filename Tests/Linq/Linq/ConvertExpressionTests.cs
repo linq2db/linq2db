@@ -269,6 +269,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		[ThrowsForProvider(typeof(LinqException), TestProvName.AllAccess, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
 		public void LetTest4([DataSources(TestProvName.AllInformix, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -299,6 +300,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		[ThrowsForProvider(typeof(LinqException), TestProvName.AllAccess, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
 		public void LetTest41([DataSources(TestProvName.AllInformix, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -329,6 +331,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		[ThrowsForProvider(typeof(LinqException), TestProvName.AllAccess, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
 		public void LetTest5([DataSources(TestProvName.AllOracle11, TestProvName.AllInformix, TestProvName.AllSybase, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -359,6 +362,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		[ThrowsForProvider(typeof(LinqException), TestProvName.AllAccess, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
 		public void LetTest6([DataSources(TestProvName.AllOracle11, TestProvName.AllInformix, TestProvName.AllSybase, TestProvName.AllClickHouse)] string context)
 		{
 			//LinqToDB.Common.Configuration.Linq.GenerateExpressionTest = true;
@@ -402,6 +406,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		[ThrowsForProvider(typeof(LinqException), TestProvName.AllAccess, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
 		public void LetTest61([DataSources(TestProvName.AllOracle11, TestProvName.AllInformix, TestProvName.AllSybase, TestProvName.AllClickHouse)] string context)
 		{
 			//LinqToDB.Common.Configuration.Linq.GenerateExpressionTest = true;
@@ -480,6 +485,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		[ThrowsForProvider(typeof(LinqException), TestProvName.AllAccess, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
 		public void LetTest71([DataSources(TestProvName.AllOracle11, TestProvName.AllInformix, TestProvName.AllSybase, ProviderName.Access, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -514,6 +520,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		[ThrowsForProvider(typeof(LinqException), TestProvName.AllAccess, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
 		public void LetTest8([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -544,6 +551,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		[ThrowsForProvider(typeof(LinqException), TestProvName.AllAccess, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
 		public void LetTest9([DataSources(TestProvName.AllSybase)] string context)
 		{
 			using (var db = GetDataContext(context))

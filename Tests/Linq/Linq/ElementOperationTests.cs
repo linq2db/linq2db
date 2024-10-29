@@ -137,6 +137,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		[ThrowsForProvider(typeof(LinqException), TestProvName.AllAccess, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
 		public void NestedFirstOrDefault2([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -157,7 +158,7 @@ namespace Tests.Linq
 
 		[Test]
 		[ThrowsForProvider(typeof(LinqException), TestProvName.AllClickHouse, ErrorMessage = ErrorHelper.Error_Correlated_Subqueries)]
-		[ThrowsForProvider(typeof(LinqException), TestProvName.AllSQLite, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
+		[ThrowsForProvider(typeof(LinqException), TestProvName.AllSQLite, TestProvName.AllAccess, TestProvName.AllFirebirdLess4, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
 		public void NestedFirstOrDefault4([DataSources(TestProvName.AllInformix, TestProvName.AllPostgreSQL9)] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -167,6 +168,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		[ThrowsForProvider(typeof(LinqException), TestProvName.AllAccess, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
 		public void NestedFirstOrDefault5([DataSources] string context)
 		{
 			using var db = GetDataContext(context);

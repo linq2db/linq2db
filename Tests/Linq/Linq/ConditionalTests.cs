@@ -195,6 +195,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		[ThrowsForProvider(typeof(LinqException), TestProvName.AllAccess, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
 		public void CrossToOuterApply([DataSources] string context)
 		{
 			using var db = GetDataContext(context);

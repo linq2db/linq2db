@@ -11,7 +11,7 @@ namespace LinqToDB.SqlQuery
 			{
 				return value;
 			}
-			return new SqlParameterValue(parameter.Value, parameter.Type);
+			return new SqlParameterValue(parameter.Value, parameter.Value, parameter.Type);
 		}
 
 		public static bool TryEvaluateExpression(this IQueryElement expr, EvaluationContext context, out object? result)
@@ -101,7 +101,9 @@ namespace LinqToDB.SqlQuery
 
 					var parameterValue = sqlParameter.GetParameterValue(context.ParameterValues);
 
-					result = parameterValue.ProviderValue;
+					result = parameterValue.ClientValue;
+					if (parameterValue.ProviderValue is null)
+						result = null;
 					return true;
 				}
 
