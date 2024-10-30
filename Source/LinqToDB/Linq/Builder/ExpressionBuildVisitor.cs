@@ -2639,7 +2639,9 @@ namespace LinqToDB.Linq.Builder
 				case ExpressionType.LessThanOrEqual:
 				{
 					var saveColumnDescriptor = _columnDescriptor;
+					var saveAlias            = _alias;
 					_columnDescriptor = null;
+					_alias            = null;
 
 					var saveFlags = _buildFlags;
 					_buildFlags |= BuildFlags.ForKeys;
@@ -2650,6 +2652,7 @@ namespace LinqToDB.Linq.Builder
 					_buildFlags = saveFlags;
 
 					_columnDescriptor = saveColumnDescriptor;
+					_alias            = saveAlias;
 
 					if (node.NodeType is ExpressionType.Equal or ExpressionType.NotEqual)
 					{
