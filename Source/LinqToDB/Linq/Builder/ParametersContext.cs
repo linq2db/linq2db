@@ -102,6 +102,9 @@ namespace LinqToDB.Linq.Builder
 			string?            alias                   = null,
 			BuildParameterType buildParameterType      = BuildParameterType.Default)
 		{
+			if (columnDescriptor is null && expr is ConstantExpression { Value: null })
+				return null;
+
 			string? name = alias;
 
 			var newExpr = ReplaceParameter(context?.MappingSchema ?? MappingSchema, expr, columnDescriptor, forceConstant, nm => name = nm);

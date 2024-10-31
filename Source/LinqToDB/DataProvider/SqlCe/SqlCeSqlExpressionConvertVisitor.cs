@@ -138,9 +138,9 @@ namespace LinqToDB.DataProvider.SqlCe
 			var toType = cast.ToType;
 			var argument = cast.Expression;
 
-			switch (Type.GetTypeCode(cast.SystemType.ToUnderlying()))
+			switch (toType.DataType)
 			{
-				case TypeCode.UInt64:
+				case DataType.UInt64:
 				{
 					var argumentType = QueryHelper.GetDbDataType(argument, MappingSchema);
 
@@ -151,7 +151,10 @@ namespace LinqToDB.DataProvider.SqlCe
 
 					break;
 				}
-				case TypeCode.DateTime:
+
+				case DataType.Time:
+				case DataType.DateTime:
+				{
 					var type1 = argument.SystemType!.ToUnderlying();
 
 					if (IsTimeDataType(toType))
@@ -178,6 +181,7 @@ namespace LinqToDB.DataProvider.SqlCe
 					}
 
 					break;
+				}
 			}
 
 			return base.ConvertConversion(cast);
