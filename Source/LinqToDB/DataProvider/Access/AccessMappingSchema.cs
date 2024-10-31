@@ -45,6 +45,7 @@ namespace LinqToDB.DataProvider.Access
 			SetConvertExpression((string v) => decimal.Parse(v, NumberFormatInfo.InvariantInfo));
 			SetConvertExpression((string v) => float.Parse(v, NumberFormatInfo.InvariantInfo));
 			SetConvertExpression((string v) => double.Parse(v, NumberFormatInfo.InvariantInfo));
+			SetConvertExpression((string v) => v == "-1");
 		}
 
 		static void ConvertBinaryToSql(StringBuilder stringBuilder, byte[] value)
