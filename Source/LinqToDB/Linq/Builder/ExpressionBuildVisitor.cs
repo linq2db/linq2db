@@ -1712,6 +1712,8 @@ namespace LinqToDB.Linq.Builder
 		{
 			var innerExpression = Visit(node.InnerExpression);
 
+			using var saveAlias = UsingAlias(null);
+
 			if (innerExpression is SqlDefaultIfEmptyExpression defaultIfEmptyExpression)
 			{
 				var notNullConditions = node.NotNullExpressions
@@ -2668,7 +2670,9 @@ namespace LinqToDB.Linq.Builder
 						}
 					}
 
+					_alias = null;
 					var compareExpr = ConvertCompareExpression(node.NodeType, node.Left, node.Right, node);
+					_alias = saveAlias;
 
 					if (!IsSame(compareExpr, node))
 					{
