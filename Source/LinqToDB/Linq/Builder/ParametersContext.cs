@@ -236,8 +236,8 @@ namespace LinqToDB.Linq.Builder
 					?? typeof(object);
 			}
 
-			var originalAccessor  = newExpr.ValueExpression;
-			var valueType         = elementType ?? newExpr.ValueExpression.Type;
+			var originalAccessor = newExpr.ValueExpression;
+			var valueType        = elementType ?? newExpr.ValueExpression.Type;
 
 			var        objParam            = ItemParameter;
 			Expression providerValueGetter = Expression.Convert(objParam, valueType);

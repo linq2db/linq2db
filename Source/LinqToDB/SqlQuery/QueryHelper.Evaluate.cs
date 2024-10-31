@@ -101,7 +101,11 @@ namespace LinqToDB.SqlQuery
 
 					var parameterValue = sqlParameter.GetParameterValue(context.ParameterValues);
 
+					if (parameterValue.ClientValue is null && parameterValue.ProviderValue is not null)
+						return false;
+
 					result = parameterValue.ClientValue;
+
 					if (parameterValue.ProviderValue is null)
 						result = null;
 					return true;
