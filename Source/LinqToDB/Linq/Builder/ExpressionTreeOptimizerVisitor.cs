@@ -2,6 +2,7 @@
 using System.Linq.Expressions;
 
 using LinqToDB.Expressions;
+using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Linq.Builder
 {
@@ -26,8 +27,8 @@ namespace LinqToDB.Linq.Builder
 				var binary  = (BinaryExpression)node.Test;
 				var isEqual = node.Test.NodeType is ExpressionType.Equal;
 
-				if (binary.Left.Type == typeof(bool) && binary.Right.Type == typeof(bool) &&
-					(HandleBoolean(binary.Left, binary.Right, isEqual, out var result) || HandleBoolean(binary.Right, binary.Left, isEqual, out result)))
+				if (HandleConditionalOptimization(binary.Left, binary.Right, isEqual, out var result) ||
+				    HandleConditionalOptimization(binary.Right, binary.Left, isEqual, out result))
 				{
 					test = result;
 				}
@@ -46,16 +47,35 @@ namespace LinqToDB.Linq.Builder
 			return base.VisitUnary(node);
 		}
 
-		bool HandleBoolean(Expression left, Expression right, bool isEqual, [NotNullWhen(true)] out Expression? result)
+		bool HandleConditionalOptimization(Expression left, Expression right, bool isEqual, [NotNullWhen(true)] out Expression? result)
 		{
 			if (left is ConstantExpression { Value: bool boolValue })
 			{
 				result = isEqual == boolValue ? right : Expression.Not(right);
 				return true;
+			} 
+			
+			if (left is ConditionalExpression conditional)
+			{
+				if (right.IsNullValue() || right is SqlPlaceholderExpression p && p.Sql.IsNullValue())
+				{
+					if (conditional.IfTrue is SqlGenericConstructorExpression)
+					{
+						result = !isEqual ? conditional.Test : Expression.Not(conditional.Test);
+						return true;
+					}
+
+					if (conditional.IfFalse is SqlGenericConstructorExpression)
+					{
+						result = isEqual ? conditional.Test : Expression.Not(conditional.Test);
+						return true;
+					}
+				}
 			}
 
 			result = null;
 			return false;
 		}
+
 	}
 }
