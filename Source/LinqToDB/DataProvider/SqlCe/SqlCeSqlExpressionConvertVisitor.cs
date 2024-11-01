@@ -182,9 +182,21 @@ namespace LinqToDB.DataProvider.SqlCe
 
 					break;
 				}
+
+				case  DataType.Decimal:
+				{
+					if (cast.ToType.Precision == null && cast.ToType.Scale == null)
+					{
+						cast = cast.WithToType(cast.ToType.WithPrecisionScale(38, 17));
+						return cast;
+					}
+
+					break;
+				}
 			}
 
 			return base.ConvertConversion(cast);
 		}
 	}
+
 }
