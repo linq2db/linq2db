@@ -151,7 +151,7 @@ namespace LinqToDB.DataProvider.Firebird
 		{
 			if (cast.SystemType.ToUnderlying() == typeof(bool))
 			{
-				if (cast.Type.DbType == nameof(Sql.Types.Bit) && cast.Expression is not ISqlPredicate)
+				if ((cast.Type.DbType == nameof(Sql.Types.Bit) || cast.Type.DataType == DataType.Boolean) && cast.Expression is not ISqlPredicate)
 				{
 					var sc = new SqlSearchCondition()
 						.AddNotEqual(cast.Expression, new SqlValue(0), DataOptions.LinqOptions.CompareNulls);

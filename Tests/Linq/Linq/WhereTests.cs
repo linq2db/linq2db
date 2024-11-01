@@ -2374,7 +2374,7 @@ namespace Tests.Linq
 			using var db = GetDataConnection(context);
 			db.Types.Where(r => !r.BoolValue).ToList();
 
-			if (context.StartsWith(ProviderName.PostgreSQL))
+			if (context.StartsWith(ProviderName.PostgreSQL) || context.StartsWith(ProviderName.Firebird) && !context.StartsWith(ProviderName.Firebird25))
 				Assert.That(db.LastQuery, Does.Not.Contain(" = "));
 			else
 				Assert.That(db.LastQuery, Does.Contain(" = "));
