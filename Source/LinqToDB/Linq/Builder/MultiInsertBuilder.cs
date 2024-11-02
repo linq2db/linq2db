@@ -207,8 +207,10 @@ namespace LinqToDB.Linq.Builder
 				QuerySource          = source;
 			}
 
-			public TableLikeQueryContext   QuerySource          { get; }
-			public SqlMultiInsertStatement MultiInsertStatement { get; }
+			public          TableLikeQueryContext   QuerySource          { get; }
+			public          SqlMultiInsertStatement MultiInsertStatement { get; }
+
+			public override bool IsSingleElement => true;
 
 			public override MappingSchema MappingSchema => QuerySource.TargetContextRef.BuildContext.MappingSchema;
 
