@@ -174,7 +174,7 @@ namespace LinqToDB.DataProvider.Firebird
 				if (cast.ToType.Precision == null && cast.ToType.Scale == null)
 				{
 					//TODO: check default precision and scale
-					cast = cast.WithToType(cast.ToType.WithPrecisionScale(18, 12));
+					cast = cast.WithToType(cast.ToType.WithPrecisionScale(18, 10));
 				}
 			}
 
