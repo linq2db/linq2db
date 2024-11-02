@@ -917,6 +917,8 @@ namespace LinqToDB.Linq.Builder
 			if (_buildPurpose is BuildPurpose.Root or BuildPurpose.AggregationRoot or BuildPurpose.AssociationRoot or BuildPurpose.Table)
 				return node;
 
+			using var saveDescriptor = UsingColumnDescriptor(null);
+			using var saveAlias      = UsingAlias(null);
 			return base.VisitNew(node);
 		}
 
@@ -938,11 +940,15 @@ namespace LinqToDB.Linq.Builder
 			}
 
 			var saveDisableNew = _disableNew;
+			var saveAlias      = _alias;
+
 			_disableNew = node.NewExpression;
+			_alias      = null;
 
 			var newExpression = base.VisitMemberInit(node);
 
 			_disableNew = saveDisableNew;
+			_alias      = saveAlias;
 
 			if (!IsSame(newExpression, node))
 				return Visit(newExpression);
