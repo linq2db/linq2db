@@ -559,6 +559,11 @@ namespace LinqToDB.Linq.Builder
 						readerExpression = Expression.Convert(readerExpression, placeholder.Type);
 					}
 
+					if (!canBeNull && readerExpression.Type == typeof(string) && DataContext.SqlProviderFlags.DoesProviderTreatsEmptyStringAsNull)
+					{
+						readerExpression = Expression.Coalesce(readerExpression, ExpressionInstances.EmptyString);
+					}
+
 					return new TransformInfo(readerExpression);
 				}
 

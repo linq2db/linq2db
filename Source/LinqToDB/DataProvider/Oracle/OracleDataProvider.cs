@@ -43,6 +43,7 @@ namespace LinqToDB.DataProvider.Oracle
 			SqlProviderFlags.IsColumnSubqueryShouldNotContainParentIsNotNull       = true;
 			SqlProviderFlags.IsColumnSubqueryWithParentReferenceAndTakeSupported   = version >= OracleVersion.v12;
 			SqlProviderFlags.IsDistinctFromSupported                               = true;
+			SqlProviderFlags.DoesProviderTreatsEmptyStringAsNull                   = true;
 
 			SqlProviderFlags.RowConstructorSupport = RowFeature.Equality | RowFeature.CompareToSelect | RowFeature.In |
 			                                         RowFeature.Update   | RowFeature.Overlaps;

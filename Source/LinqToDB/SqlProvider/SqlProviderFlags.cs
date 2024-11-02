@@ -502,6 +502,14 @@ namespace LinqToDB.SqlProvider
 		[DataMember(Order = 59)]
 		public bool IsDistinctFromSupported { get; set; }
 
+		/// <summary>
+		/// Provider treats empty string as <c>null</c> in queries.
+		/// It is specific behaviour only for Oracle.
+		/// Default <c>false</c>
+		/// </summary>
+		[DataMember(Order = 61)]
+		public bool DoesProviderTreatsEmptyStringAsNull { get; set; }
+
 		public bool GetAcceptsTakeAsParameterFlag(SelectQuery selectQuery)
 		{
 			return AcceptsTakeAsParameter || AcceptsTakeAsParameterIfSkip && selectQuery.Select.SkipValue != null;
@@ -583,6 +591,7 @@ namespace LinqToDB.SqlProvider
 				^ IsSupportedSimpleCorrelatedSubqueries                .GetHashCode()
 				^ SupportedCorrelatedSubqueriesLevel                   .GetHashCode()
 				^ IsDistinctFromSupported                              .GetHashCode()
+				^ DoesProviderTreatsEmptyStringAsNull                  .GetHashCode()
 				^ CustomFlags.Aggregate(0, (hash, flag) => flag.GetHashCode() ^ hash);
 	}
 
@@ -646,6 +655,7 @@ namespace LinqToDB.SqlProvider
 				&& IsSupportedSimpleCorrelatedSubqueries                 == other.IsSupportedSimpleCorrelatedSubqueries
 				&& SupportedCorrelatedSubqueriesLevel                    == other.SupportedCorrelatedSubqueriesLevel
 				&& IsDistinctFromSupported                               == other.IsDistinctFromSupported
+				&& DoesProviderTreatsEmptyStringAsNull                   == other.DoesProviderTreatsEmptyStringAsNull
 				// CustomFlags as List wasn't best idea
 				&& CustomFlags.Count                                     == other.CustomFlags.Count
 				&& (CustomFlags.Count                                    == 0
