@@ -30,10 +30,10 @@ namespace LinqToDB.DataProvider.Oracle
 			// Comparisons to a literal constant "" are always converted to IS [NOT] NULL (same as == null or == default)
 			if (op is SqlPredicate.Operator.Equal or SqlPredicate.Operator.NotEqual)
 			{
-				if (a is SqlValue { Value: string { Length: 0 } })
-					return new SqlPredicate.IsNull(b, isNot: op == SqlPredicate.Operator.NotEqual);
-				if (b is SqlValue { Value: string { Length: 0 } })
-					return new SqlPredicate.IsNull(a, isNot: op == SqlPredicate.Operator.NotEqual);
+				if (QueryHelper.UnwrapNullablity(a) is SqlValue { Value: string { Length: 0 } })
+					return new SqlPredicate.IsNull(SqlNullabilityExpression.ApplyNullability(b, true), isNot: op == SqlPredicate.Operator.NotEqual);
+				if (QueryHelper.UnwrapNullablity(b) is SqlValue { Value: string { Length: 0 } })
+					return new SqlPredicate.IsNull(SqlNullabilityExpression.ApplyNullability(a, true), isNot: op == SqlPredicate.Operator.NotEqual);
 			}
 
 			// CompareNulls.LikeSql compiles as-is, no change
@@ -69,10 +69,10 @@ namespace LinqToDB.DataProvider.Oracle
 				{
 					SqlPredicate.Operator.NotGreater     or
 					SqlPredicate.Operator.LessOrEqual    or
-					SqlPredicate.Operator.Equal          => new SqlPredicate.IsNull(x, isNot: false),
+					SqlPredicate.Operator.Equal          => new SqlPredicate.IsNull(SqlNullabilityExpression.ApplyNullability(x, true), isNot: false),
 					SqlPredicate.Operator.NotLess        or
 					SqlPredicate.Operator.Greater        or
-					SqlPredicate.Operator.NotEqual       => new SqlPredicate.IsNull(x, isNot: true),
+					SqlPredicate.Operator.NotEqual       => new SqlPredicate.IsNull(SqlNullabilityExpression.ApplyNullability(x, true), isNot: true),
 					SqlPredicate.Operator.GreaterOrEqual => new SqlPredicate.ExprExpr(
 						// Always true
 						new SqlValue(1), SqlPredicate.Operator.Equal, new SqlValue(1), withNull: null),
