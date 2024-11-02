@@ -97,7 +97,7 @@ namespace LinqToDB.Linq.Translation
 
 			var valueType = factory.GetDbDataType(value);
 
-			return factory.Function(valueType, "REPLACE", value, factory.EnsureType(oldValue, valueType), factory.EnsureType(oldValue, valueType));
+			return factory.Function(valueType, "REPLACE", value, factory.EnsureType(oldValue, valueType), factory.EnsureType(newValue, valueType));
 		}
 
 		public virtual ISqlExpression? TranslateStringFormat(ITranslationContext translationContext, MethodCallExpression methodCall, string format, IList<ISqlExpression> arguments, TranslationFlags translationFlags)
