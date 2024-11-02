@@ -151,12 +151,14 @@ namespace LinqToDB.DataProvider.Firebird
 		{
 			if (cast.SystemType.ToUnderlying() == typeof(bool))
 			{
-				if ((cast.Type.DbType == nameof(Sql.Types.Bit) || cast.Type.DataType == DataType.Boolean) && cast.Expression is not ISqlPredicate)
+				if (cast.Type.DataType == DataType.Boolean && cast.Expression is not ISqlPredicate)
 				{
-					var sc = new SqlSearchCondition()
-						.AddNotEqual(cast.Expression, new SqlValue(0), DataOptions.LinqOptions.CompareNulls);
-					return sc;
+					if (cast.Expression is SqlValue)
+						return cast.Expression;
 
+					var sc = new SqlSearchCondition()
+						.AddNotEqual(cast.Expression, new SqlValue(QueryHelper.GetDbDataType(cast.Expression, MappingSchema), 0), DataOptions.LinqOptions.CompareNulls);
+					return sc;
 				}
 			}
 			else if (cast.SystemType.ToUnderlying() == typeof(string) && cast.Expression.SystemType?.ToUnderlying() == typeof(Guid))
