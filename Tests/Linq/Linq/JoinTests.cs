@@ -426,7 +426,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[ThrowsForProvider(typeof(LinqException), TestProvName.AllAccess, TestProvName.AllFirebirdLess4, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
+		[ThrowsForProvider(typeof(LinqException), TestProvName.AllAccess, ProviderName.Firebird25, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
 		public void GroupJoin52([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
