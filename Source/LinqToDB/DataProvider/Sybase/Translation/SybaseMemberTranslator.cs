@@ -160,6 +160,22 @@ namespace LinqToDB.DataProvider.Sybase.Translation
 			return new DateFunctionsTranslator();
 		}
 
+		protected override IMemberTranslator CreateStringMemberTranslator()
+		{
+			return new SybaseStingMemberTranslator();
+		}
+
+		class SybaseStingMemberTranslator : StringMemberTranslatorBase
+		{
+			public override ISqlExpression? TranslateReplace(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, ISqlExpression value, ISqlExpression oldValue,
+				ISqlExpression                                   newValue)
+			{
+				var func = base.TranslateReplace(translationContext, methodCall, translationFlags, value, oldValue, newValue) as SqlFunction;
+
+				return func?.WithName("Str_Replace");
+			}
+		}
+
 		protected override ISqlExpression? TranslateNewGuidMethod(ITranslationContext translationContext, TranslationFlags translationFlags)
 		{
 			var factory  = translationContext.ExpressionFactory;

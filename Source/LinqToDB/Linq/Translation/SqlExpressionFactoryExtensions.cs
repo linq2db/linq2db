@@ -208,6 +208,15 @@ namespace LinqToDB.Linq.Translation
 			return new SqlDataType(dbDataType);
 		}
 
+		public static ISqlExpression EnsureType(this ISqlExpressionFactory factory, ISqlExpression expression, DbDataType dbDataType)
+		{
+			var expressionType = factory.GetDbDataType(expression);
+			if (expressionType.Equals(dbDataType))
+				return expression;
+
+			return factory.Cast(expression, dbDataType);
+		}
+
 		#region Predicates
 
 		public static ISqlPredicate Equal(this ISqlExpressionFactory factory, ISqlExpression expr1, ISqlExpression expr2)
