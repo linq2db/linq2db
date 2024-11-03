@@ -242,8 +242,9 @@ namespace LinqToDB.Linq.Builder
 			var originalAccessor = newExpr.ValueExpression;
 			var valueType        = elementType ?? newExpr.ValueExpression.Type;
 
-			var        objParam            = ItemParameter;
-			Expression providerValueGetter = Expression.Convert(objParam, valueType);
+			var        objParam                   = ItemParameter;
+			Expression defaultProviderValueGetter = Expression.Convert(objParam, valueType);
+			var        providerValueGetter        = defaultProviderValueGetter;
 
 			if (!newExpr.IsDataParameter)
 			{
@@ -359,7 +360,7 @@ namespace LinqToDB.Linq.Builder
 
 			Func<object?, object?>? providerValueFunc = null;
 
-			if (providerValueGetter.UnwrapConvert() != objParam)
+			if (!ReferenceEquals(providerValueGetter, defaultProviderValueGetter))
 			{
 				providerValueGetter = CorrectAccessorExpression(providerValueGetter, DataContext);
 				if (providerValueGetter.Type != typeof(object))
