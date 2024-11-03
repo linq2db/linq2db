@@ -1,5 +1,6 @@
 ﻿using System.Linq;
 using LinqToDB;
+using LinqToDB.Linq;
 using LinqToDB.Mapping;
 using NUnit.Framework;
 
@@ -45,6 +46,7 @@ namespace Tests.Linq
 
 		[ActiveIssue(Configuration = TestProvName.AllInformix, Details = "Informix interval cannot be created from non-literal value")]
 		[Test]
+		[ThrowsForProvider(typeof(LinqException), TestProvName.AllSybase, ErrorMessage = ErrorHelper.Error_JoinToDerivedTableWithTakeInvalid)]
 		public void SubQueryTest([DataSources(TestProvName.AllAccess)] string context)
 		{
 			var data = GenerateData();
