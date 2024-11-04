@@ -968,6 +968,41 @@ namespace Tests.Linq
 			}
 		}
 
+		[Test]
+		public void ConcatConditions([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var query1 =
+					from c in db.Child
+					from p in db.Parent.Where(p => p.ParentID == c.ParentID).DefaultIfEmpty()
+					select new
+					{
+						Parent1 = Sql.ToNullable(p.ParentID) == null
+							? null
+							: new { ParentID = p.ParentID, Value1 = p.Value1 },
+						Parent2 = Sql.ToNullable(p.ParentID) == null
+							? null
+							: new Parent { ParentID = p.ParentID, Value1 = p.Value1, Children = p.Children.ToList() }
+					};
+
+				var query2 =
+					from c in db.Child
+					from p in db.Parent.Where(p => p.ParentID == c.ParentID).DefaultIfEmpty()
+					select new
+					{
+						Parent1 = Sql.ToNullable(p.ParentID) == null
+							? null
+							: new { ParentID = p.ParentID, Value1 = p.Value1 },
+						Parent2 = (Parent?)null
+					};
+
+				var query = query1.Concat(query2);
+
+				AssertQuery(query);
+			}
+		}
+
 		[Table("ConcatTest")]
 		[InheritanceMapping(Code = 0, Type = typeof(BaseEntity), IsDefault = true)]
 		[InheritanceMapping(Code = 1, Type = typeof(DerivedEntity))]
