@@ -119,7 +119,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Contains3([DataSources(TestProvName.AllSQLite, ProviderName.Access, TestProvName.AllClickHouse)] string context)
+		public void Contains3([DataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -162,7 +162,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Contains4([DataSources(TestProvName.AllSQLite, ProviderName.Access, TestProvName.AllClickHouse)] string context)
+		public void Contains4([DataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{

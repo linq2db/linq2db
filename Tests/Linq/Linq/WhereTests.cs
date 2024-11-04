@@ -795,8 +795,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void CheckLeftJoin3([DataSources(ProviderName.Access)]
-			string context)
+		public void CheckLeftJoin3([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(

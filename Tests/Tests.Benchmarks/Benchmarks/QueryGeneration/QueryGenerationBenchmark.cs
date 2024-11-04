@@ -22,7 +22,7 @@ namespace LinqToDB.Benchmarks.QueryGeneration
 			if (_dataProviders.Count > 0)
 				return;
 
-			_dataProviders.Add(ProviderName.Access,   new AccessOleDbDataProvider());
+			_dataProviders.Add(ProviderName.Access,   AccessTools.GetDataProvider(provider: AccessProvider.OleDb));
 			_dataProviders.Add(ProviderName.Firebird, FirebirdTools.GetDataProvider(FirebirdVersion.v5));
 
 			/*

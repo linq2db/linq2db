@@ -432,7 +432,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Test3([DataSources(ProviderName.Access)] string context)
+		public void Test3([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				Assert.That(
@@ -557,7 +557,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Test9([DataSources(ProviderName.Access)] string context)
+		public void Test9([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -588,7 +588,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Test91([DataSources(ProviderName.Access)] string context)
+		public void Test91([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{

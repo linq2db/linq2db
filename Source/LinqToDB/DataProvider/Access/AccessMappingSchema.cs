@@ -86,20 +86,11 @@ namespace LinqToDB.DataProvider.Access
 		}
 #endif
 
-		internal static readonly AccessMappingSchema Instance = new ();
+		private static readonly AccessMappingSchema Instance = new ();
 
-		public sealed class OleDbMappingSchema : LockedMappingSchema
-		{
-			public OleDbMappingSchema() : base(ProviderName.Access, Instance)
-			{
-			}
-		}
-
-		public sealed class OdbcMappingSchema : LockedMappingSchema
-		{
-			public OdbcMappingSchema() : base(ProviderName.AccessOdbc, Instance)
-			{
-			}
-		}
+		public sealed class JetOleDbMappingSchema () : LockedMappingSchema(ProviderName.AccessJetOleDb, Instance);
+		public sealed class JetOdbcDbMappingSchema() : LockedMappingSchema(ProviderName.AccessJetOdbc , Instance);
+		public sealed class AceOleDbMappingSchema () : LockedMappingSchema(ProviderName.AccessAceOleDb, Instance);
+		public sealed class AceOdbcDbMappingSchema() : LockedMappingSchema(ProviderName.AccessAceOdbc , Instance);
 	}
 }

@@ -964,7 +964,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void FourTableJoin([DataSources(ProviderName.Access, TestProvName.AllClickHouse)] string context)
+		public void FourTableJoin([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -1937,7 +1937,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void SqlRightJoinWithInnerJoinOnLeftWithConditions([DataSources(ProviderName.Access, TestProvName.AllSQLite)] string context)
+		public void SqlRightJoinWithInnerJoinOnLeftWithConditions([DataSources(TestProvName.AllSQLite)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
