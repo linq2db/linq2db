@@ -1555,8 +1555,8 @@ namespace Tests.DataProvider
 			[Column                                                              ] public long BigInt;
 			[Column                                                              ] public ulong UnsignedBigInt;
 			[Column                                                              ] public decimal Decimal;
-			[Column(Precision = 15)                                              ] public decimal Decimal15_0;
-			[Column(Scale = 5)                                                   ] public decimal Decimal10_5;
+			[Column(Precision = 15, Scale = 0)                                   ] public decimal Decimal15_0;
+			[Column(Precision = 10, Scale = 5)                                   ] public decimal Decimal10_5;
 			[Column(Precision = 20, Scale = 2)                                   ] public decimal Decimal20_2;
 			[Column                                                              ] public float Float;
 			[Column(Precision = 10)                                              ] public float Float10;
@@ -1644,8 +1644,8 @@ namespace Tests.DataProvider
 					Assert.That(sql, Does.Contain("\t`UnsignedInt`      INT UNSIGNED      NOT NULL"));
 					Assert.That(sql, Does.Contain("\t`BigInt`           BIGINT            NOT NULL"));
 					Assert.That(sql, Does.Contain("\t`UnsignedBigInt`   BIGINT UNSIGNED   NOT NULL"));
-					Assert.That(sql, Does.Contain("\t`Decimal`          DECIMAL           NOT NULL"));
-					Assert.That(sql, Does.Contain("\t`Decimal15_0`      DECIMAL(15)       NOT NULL"));
+					Assert.That(sql, Does.Contain("\t`Decimal`          DECIMAL(29, 10)   NOT NULL"));
+					Assert.That(sql, Does.Contain("\t`Decimal15_0`      DECIMAL(15, 0)    NOT NULL"));
 					Assert.That(sql, Does.Contain("\t`Decimal10_5`      DECIMAL(10, 5)    NOT NULL"));
 					Assert.That(sql, Does.Contain("\t`Decimal20_2`      DECIMAL(20, 2)    NOT NULL"));
 					Assert.That(sql, Does.Contain("\t`Float`            FLOAT             NOT NULL"));

@@ -902,7 +902,7 @@ namespace LinqToDB.Linq.Builder
 					if (HandleSqlRelated(node, out translated))
 						return Visit(translated);
 
-					if (_buildPurpose is BuildPurpose.Sql)
+					if (_buildPurpose is BuildPurpose.Sql || _buildFlags.HasFlag(BuildFlags.ForSetProjection))
 					{
 						var generic = Builder.ParseGenericConstructor(node, ProjectFlags.SQL, _columnDescriptor);
 						if (!IsSame(generic, node))
@@ -2889,17 +2889,31 @@ namespace LinqToDB.Linq.Builder
 			return base.VisitBinary(node);
 		}
 
+		static Expression SimplifyConvert(Expression expression)
+		{
+			expression = expression.UnwrapConvert();
+			if (expression.NodeType == ExpressionType.TypeAs)
+			{
+				var unary = (UnaryExpression)expression;
+				if (unary.Operand.NodeType is ExpressionType.Convert or ExpressionType.ConvertChecked)
+					return SimplifyConvert(unary.Operand);
+			}
+
+			return expression;
+		}
+
 		bool HandleEquality(bool isNot, Expression expr1, Expression expr2, [NotNullWhen(true)] out Expression? result)
 		{
 			if (IsNull(expr1) == true)
 			{
-				if (expr2 is SqlGenericConstructorExpression)
+				var unwrapped2 = SimplifyConvert(expr2);
+				if (unwrapped2 is SqlGenericConstructorExpression)
 				{
 					result = ExpressionInstances.Boolean(isNot);
 					return true;
 				}
 
-				if (expr2 is SqlDefaultIfEmptyExpression defaultIfEmpty)
+				if (unwrapped2 is SqlDefaultIfEmptyExpression defaultIfEmpty)
 				{
 					var testCondition = defaultIfEmpty.NotNullExpressions.Select(SequenceHelper.MakeNotNullCondition).Aggregate(Expression.AndAlso);
 					if (!isNot)
@@ -2908,7 +2922,7 @@ namespace LinqToDB.Linq.Builder
 					return true;
 				}
 
-				if (expr2 is ConditionalExpression conditional)
+				if (unwrapped2 is ConditionalExpression conditional)
 				{
 					if (IsNull(conditional.IfTrue) == true)
 					{

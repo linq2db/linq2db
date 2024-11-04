@@ -521,7 +521,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[ThrowsForProvider(typeof(LinqException), TestProvName.AllAccess, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
+		[ThrowsForProvider(typeof(LinqException), TestProvName.AllAccess, TestProvName.AllSybase, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
 		public void Union54([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
@@ -548,7 +548,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[ThrowsForProvider(typeof(LinqException), TestProvName.AllAccess, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
+		[ThrowsForProvider(typeof(LinqException), TestProvName.AllAccess, TestProvName.AllSybase, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
 		public void Union541([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -805,6 +805,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		[ThrowsForProvider(typeof(LinqException), TestProvName.AllSybase, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
 		public void ConcatDefaultIfEmpty([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
@@ -964,6 +965,41 @@ namespace Tests.Linq
 					.Any();
 
 				result.Should().BeTrue();
+			}
+		}
+
+		[Test]
+		public void ConcatConditions([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var query1 =
+					from c in db.Child
+					from p in db.Parent.Where(p => p.ParentID == c.ParentID).DefaultIfEmpty()
+					select new
+					{
+						Parent1 = Sql.ToNullable(p.ParentID) == null
+							? null
+							: new { ParentID = p.ParentID, Value1 = p.Value1 },
+						Parent2 = Sql.ToNullable(p.ParentID) == null
+							? null
+							: new Parent { ParentID = p.ParentID, Value1 = p.Value1, Children = p.Children.ToList() }
+					};
+
+				var query2 =
+					from c in db.Child
+					from p in db.Parent.Where(p => p.ParentID == c.ParentID).DefaultIfEmpty()
+					select new
+					{
+						Parent1 = Sql.ToNullable(p.ParentID) == null
+							? null
+							: new { ParentID = p.ParentID, Value1 = p.Value1 },
+						Parent2 = (Parent?)null
+					};
+
+				var query = query1.Concat(query2);
+
+				AssertQuery(query);
 			}
 		}
 

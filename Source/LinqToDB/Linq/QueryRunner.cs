@@ -317,8 +317,10 @@ namespace LinqToDB.Linq
 			var descriptor    = field.ColumnDescriptor;
 			var dbValueLambda = descriptor.GetDbParamLambda();
 
-			var        clientValueParameter = Expression.Parameter(typeof(object), "clientValue");
-			Expression providerValueGetter  = Expression.Convert(clientValueParameter, clientValueGetter.Type);
+			var        clientValueParameter       = Expression.Parameter(typeof(object), "clientValue");
+			Expression defaultProviderValueGetter = Expression.Convert(clientValueParameter, clientValueGetter.Type);
+			var        providerValueGetter        = defaultProviderValueGetter;
+
 			providerValueGetter = InternalExtensions.ApplyLambdaToExpression(dbValueLambda, providerValueGetter);
 
 			Expression? dbDataTypeExpression = null;
@@ -336,7 +338,7 @@ namespace LinqToDB.Linq
 			}
 
 			Func<object?, object?>? providerValueFunc = null;
-			if (providerValueGetter.UnwrapConvert() != clientValueParameter)
+			if (!ReferenceEquals(providerValueGetter, defaultProviderValueGetter))
 			{
 				providerValueGetter = ParametersContext.CorrectAccessorExpression(providerValueGetter, dataContext);
 				if (providerValueGetter.Type != typeof(object))

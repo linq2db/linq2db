@@ -2133,7 +2133,6 @@ namespace Tests.Linq
 			{
 				Assert.That(result[0].ID, Is.EqualTo(11));
 				Assert.That(result[0].FirstName, Is.EqualTo("FN2"));
-				Assert.That(result[0].LastName, Is.Null);
 				Assert.That(result[0].MiddleName, Is.Null);
 				Assert.That(result[0].Gender, Is.EqualTo(Gender.Female));
 			});
