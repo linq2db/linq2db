@@ -440,29 +440,34 @@ namespace Tests.DataProvider
 			AccessVersion version;
 			string providerName;
 
+			string expectedName;
+			string? expectedExtension = null;
 			if (cs.Contains("Microsoft.Jet.OLEDB.4.0"))
 			{
 				version = AccessVersion.Jet;
 				providerName = "Microsoft.Jet.OLEDB.4.0";
+				expectedName = "TestDatabase.mdb";
 			}
 			else
 			{
 				version = AccessVersion.Ace;
 				providerName = "Microsoft.ACE.OLEDB.12.0";
+				expectedName = "TestDatabase.accdb";
+				expectedExtension = ".accdb";
 			}
 
 			AccessTools.CreateDatabase("TestDatabase", deleteIfExists: true, version: version);
-			Assert.That(File.Exists("TestDatabase.mdb"), Is.True);
+			Assert.That(File.Exists(expectedName), Is.True);
 
-			var connectionString = $"Provider={providerName};Data Source=TestDatabase.mdb;Locale Identifier=1033;Persist Security Info=True";
+			var connectionString = $"Provider={providerName};Data Source={expectedName};Locale Identifier=1033;Persist Security Info=True";
 			using (var db = new DataConnection(AccessTools.GetDataProvider(version, AccessProvider.AutoDetect, connectionString), connectionString))
 			{
 				db.CreateTable<SqlCeTests.CreateTableTest>();
 				db.DropTable<SqlCeTests.CreateTableTest>();
 			}
 
-			AccessTools.DropDatabase("TestDatabase");
-			Assert.That(File.Exists("TestDatabase.mdb"), Is.False);
+			AccessTools.DropDatabase("TestDatabase", expectedExtension);
+			Assert.That(File.Exists(expectedName), Is.False);
 		}
 
 		[Test]

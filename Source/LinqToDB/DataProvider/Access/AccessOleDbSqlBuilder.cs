@@ -8,7 +8,7 @@ namespace LinqToDB.DataProvider.Access
 
 	sealed class AccessOleDbSqlBuilder : AccessSqlBuilderBase
 	{
-		public AccessOleDbSqlBuilder(AccessDataProvider? provider, MappingSchema mappingSchema, DataOptions dataOptions, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
+		public AccessOleDbSqlBuilder(IDataProvider? provider, MappingSchema mappingSchema, DataOptions dataOptions, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
 			: base(provider, mappingSchema, dataOptions, sqlOptimizer, sqlProviderFlags)
 		{
 		}

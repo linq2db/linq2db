@@ -452,6 +452,7 @@ namespace Tests.DataProvider
 			}
 		}
 
+		[Table(Name = "CreateTableTest", Schema = "IgnoreSchema", Database = "TestDatabase.accdb", Configuration = ProviderName.AccessAceOleDb)]
 		[Table(Name = "CreateTableTest", Schema = "IgnoreSchema", Database = "TestDatabase")]
 		public class CreateTableTest
 		{

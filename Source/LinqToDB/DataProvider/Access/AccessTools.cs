@@ -128,11 +128,11 @@ namespace LinqToDB.DataProvider.Access
 		/// Removes database file by database name.
 		/// </summary>
 		/// <param name="databaseName">Name of database to remove.</param>
-		public static void DropDatabase(string databaseName)
+		public static void DropDatabase(string databaseName, string? extension = null)
 		{
 			if (databaseName == null) throw new ArgumentNullException(nameof(databaseName));
 
-			DataTools.DropFileDatabase(databaseName, ".mdb");
+			DataTools.DropFileDatabase(databaseName, extension ?? ".mdb");
 		}
 
 		#endregion
