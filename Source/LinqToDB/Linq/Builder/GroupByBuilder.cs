@@ -453,11 +453,6 @@ namespace LinqToDB.Linq.Builder
 
 			public override Expression MakeExpression(Expression path, ProjectFlags flags)
 			{
-				if (path.ToString() == "Ref(GroupByContext[ID:63](145)(SC)::IGrouping`2)")
-				{
-
-				}
-
 				var isSameContext = SequenceHelper.IsSameContext(path, this);
 
 				if (isSameContext)
