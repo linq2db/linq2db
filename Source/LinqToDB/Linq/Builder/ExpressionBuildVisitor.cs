@@ -902,7 +902,7 @@ namespace LinqToDB.Linq.Builder
 					if (HandleSqlRelated(node, out translated))
 						return Visit(translated);
 
-					if (_buildPurpose is BuildPurpose.Sql)
+					if (_buildPurpose is BuildPurpose.Sql || _buildFlags.HasFlag(BuildFlags.ForSetProjection))
 					{
 						var generic = Builder.ParseGenericConstructor(node, ProjectFlags.SQL, _columnDescriptor);
 						if (!IsSame(generic, node))
