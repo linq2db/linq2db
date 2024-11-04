@@ -135,7 +135,7 @@ jobs:
 
   displayName: 'Tests: Windows'
   dependsOn: create_baselines_branch
-  timeoutInMinutes: 90 # default: 60, max: 360
+  timeoutInMinutes: 120 # default: 60, max: 360
   condition: ${{ parameters.enabled }}
   variables:
     baselines_branch: $[ dependencies.create_baselines_branch.outputs['baselines_init.baselines_branch'] ]
@@ -168,7 +168,7 @@ jobs:
 - job: test_ubuntu_job
   pool:
     vmImage: 'ubuntu-24.04'
-  timeoutInMinutes: 90 # default: 60, max: 360
+  timeoutInMinutes: 120 # default: 60, max: 360
   displayName: 'Tests: Linux'
   dependsOn: create_baselines_branch
   condition: ${{ parameters.enabled }}
@@ -201,7 +201,7 @@ jobs:
   pool:
     vmImage: 'macOS-13'
   displayName: 'Tests: MacOS'
-  timeoutInMinutes: 90 # default: 60, max: 360
+  timeoutInMinutes: 120 # default: 60, max: 360
   dependsOn: create_baselines_branch
   condition: and(eq(${{ parameters.enabled }}, 'true'), eq(${{ parameters.mac_enabled }}, 'true'))
   variables:
