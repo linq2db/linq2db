@@ -466,7 +466,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void DateTimeArray2([DataSources] string context)
+		public void DateTimeArray2([DataSources(TestProvName.AllAccessOleDb)] string context)
 		{
 			var arr = new DateTime?[] { new DateTime(2001, 1, 11, 1, 11, 21, 100), new DateTime(2012, 11, 7, 19, 19, 29, 90) };
 
@@ -477,7 +477,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void DateTimeArray3([DataSources] string context)
+		public void DateTimeArray3([DataSources(TestProvName.AllAccessOleDb)] string context)
 		{
 			var arr = new List<DateTime?> { new DateTime(2001, 1, 11, 1, 11, 21, 100) };
 
