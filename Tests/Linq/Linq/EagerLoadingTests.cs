@@ -1145,7 +1145,7 @@ FROM
 
 		[Test]
 		[ThrowsForProvider(typeof(LinqException), TestProvName.AllClickHouse, ErrorMessage = ErrorHelper.Error_Correlated_Subqueries)]
-		[ThrowsForProvider(typeof(LinqException), TestProvName.AllAccess, TestProvName.AllFirebirdLess4, TestProvName.AllMySql57, TestProvName.AllSybase, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
+		[ThrowsForProvider(typeof(LinqException), TestProvName.AllAccess, TestProvName.AllFirebirdLess4, TestProvName.AllMySql57, TestProvName.AllSybase, TestProvName.AllOracle11, TestProvName.AllMariaDB, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
 		public void TestAggregate([DataSources] string context)
 		{
 			var (masterRecords, detailRecords) = GenerateData();
@@ -1176,7 +1176,7 @@ FROM
 
 		[Test]
 		[ThrowsForProvider(typeof(LinqException), TestProvName.AllClickHouse, ErrorMessage = ErrorHelper.Error_Correlated_Subqueries)]
-		[ThrowsForProvider(typeof(LinqException), TestProvName.AllAccess, TestProvName.AllFirebirdLess4, TestProvName.AllMySql57, TestProvName.AllSybase, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
+		[ThrowsForProvider(typeof(LinqException), TestProvName.AllAccess, TestProvName.AllFirebirdLess4, TestProvName.AllMySql57, TestProvName.AllSybase, TestProvName.AllOracle11, TestProvName.AllMariaDB, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
 		public void TestAggregateAverage([DataSources] string context)
 		{
 			var (masterRecords, detailRecords) = GenerateData();
