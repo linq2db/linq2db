@@ -7,19 +7,11 @@ namespace LinqToDB.DataProvider.Firebird
 	using Configuration;
 
 	[UsedImplicitly]
-	sealed class FirebirdFactory : IDataProviderFactory
+	sealed class FirebirdFactory : DataProviderFactoryBase
 	{
-		IDataProvider IDataProviderFactory.GetDataProvider(IEnumerable<NamedValue> attributes)
+		public override IDataProvider GetDataProvider(IEnumerable<NamedValue> attributes)
 		{
-			string? versionName = null;
-
-			foreach (var attr in attributes)
-			{
-				if (attr.Name == "version" && versionName == null)
-					versionName = attr.Value;
-			}
-
-			var version = versionName switch
+			var version = GetVersion(attributes) switch
 			{
 				"2.5" => FirebirdVersion.v25,
 				"3"   => FirebirdVersion.v3,

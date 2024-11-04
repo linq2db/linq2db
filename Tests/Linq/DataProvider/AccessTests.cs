@@ -18,6 +18,8 @@ using NUnit.Framework;
 
 namespace Tests.DataProvider
 {
+	using System.Runtime.Serialization;
+
 	using Model;
 
 	[TestFixture]
@@ -47,13 +49,13 @@ namespace Tests.DataProvider
 
 		protected override string? PassNullSql(DataConnection dc, out int paramCount)
 		{
-			paramCount = dc.DataProvider.Name == ProviderName.AccessOdbc ? 3 : 1;
-			return dc.DataProvider.Name == ProviderName.AccessOdbc
+			paramCount = dc.DataProvider.Name.IsAnyOf(TestProvName.AllAccessOdbc) ? 3 : 1;
+			return dc.DataProvider.Name.IsAnyOf(TestProvName.AllAccessOdbc)
 				? "SELECT ID FROM {1} WHERE ? IS NULL AND {0} IS NULL OR ? IS NOT NULL AND {0} = ?"
 				: base.PassNullSql(dc, out paramCount);
 		}
 		protected override string PassValueSql(DataConnection dc) =>
-			dc.DataProvider.Name == ProviderName.AccessOdbc
+			dc.DataProvider.Name.IsAnyOf(TestProvName.AllAccessOdbc)
 				? "SELECT ID FROM {1} WHERE {0} = ?"
 				: base.PassValueSql(dc);
 
@@ -62,7 +64,7 @@ namespace Tests.DataProvider
 		{
 			using (var conn = GetDataConnection(context))
 			{
-				var isODBC = conn.DataProvider.Name == ProviderName.AccessOdbc;
+				var isODBC = conn.DataProvider.Name.IsAnyOf(TestProvName.AllAccessOdbc);
 				Assert.Multiple(() =>
 				{
 					Assert.That(TestType<bool>(conn, "bitDataType", DataType.Boolean, skipDefaultNull: isODBC), Is.EqualTo(true));
@@ -145,7 +147,7 @@ namespace Tests.DataProvider
 			using (var conn = GetDataConnection(context))
 			{
 				// ODBC driver doesn't support null parameter in select
-				var isODBC = conn.DataProvider.Name == ProviderName.AccessOdbc;
+				var isODBC = conn.DataProvider.Name.IsAnyOf(TestProvName.AllAccessOdbc);
 
 				TestSimple<bool   >(conn, true, DataType.Boolean   , isODBC);
 				TestSimple<sbyte  >(conn, 1   , DataType.SByte     , isODBC);
@@ -432,25 +434,28 @@ namespace Tests.DataProvider
 		}
 
 		[Test]
-		public void CreateDatabase([IncludeDataSources(ProviderName.Access)] string context)
+		public void CreateDatabase([IncludeDataSources(TestProvName.AllAccessOleDb)] string context)
 		{
 			var cs = DataConnection.GetConnectionString(context);
-			string? providerName = null;
+			AccessVersion version;
+			string providerName;
 
 			if (cs.Contains("Microsoft.Jet.OLEDB.4.0"))
+			{
+				version = AccessVersion.Jet;
 				providerName = "Microsoft.Jet.OLEDB.4.0";
-			else if (cs.Contains("Microsoft.ACE.OLEDB.12.0"))
-				providerName = "Microsoft.ACE.OLEDB.12.0";
-			else if (cs.Contains("Microsoft.ACE.OLEDB.15.0"))
-				providerName = "Microsoft.ACE.OLEDB.15.0";
+			}
 			else
-				Assert.Inconclusive($"Provider not supported by test: {cs}");
+			{
+				version = AccessVersion.Ace;
+				providerName = "Microsoft.ACE.OLEDB.12.0";
+			}
 
-			AccessTools.CreateDatabase("TestDatabase", deleteIfExists: true, provider: providerName!);
+			AccessTools.CreateDatabase("TestDatabase", deleteIfExists: true, version: version);
 			Assert.That(File.Exists("TestDatabase.mdb"), Is.True);
 
 			var connectionString = $"Provider={providerName};Data Source=TestDatabase.mdb;Locale Identifier=1033;Persist Security Info=True";
-			using (var db = new DataConnection(AccessTools.GetDataProvider(AccessProvider.AutoDetect, connectionString), connectionString))
+			using (var db = new DataConnection(AccessTools.GetDataProvider(version, AccessProvider.AutoDetect, connectionString), connectionString))
 			{
 				db.CreateTable<SqlCeTests.CreateTableTest>();
 				db.DropTable<SqlCeTests.CreateTableTest>();
@@ -531,7 +536,7 @@ namespace Tests.DataProvider
 
 			for (var i = 0; i < 1000; i++)
 			{
-				using (var db = AccessTools.CreateDataConnection(cs, AccessProvider.AutoDetect))
+				using (var db = AccessTools.CreateDataConnection(cs))
 				{
 					var list = db.GetTable<Person>().Where(p => p.ID > 0).ToList();
 				}
@@ -574,7 +579,7 @@ namespace Tests.DataProvider
 
 		[Test]
 		public void TestParametersWrapping(
-			[IncludeDataSources(ProviderName.AccessOdbc)] string context,
+			[IncludeDataSources(TestProvName.AllAccessOdbc)] string context,
 			[Values] bool hasDistinct,
 			[Values] bool hasFrom,
 			[Values] bool hasValue,

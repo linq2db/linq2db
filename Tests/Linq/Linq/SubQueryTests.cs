@@ -539,7 +539,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void SubSub22([DataSources(
-			ProviderName.SqlCe, ProviderName.Access, ProviderName.DB2,
+			ProviderName.SqlCe, ProviderName.DB2,
 			TestProvName.AllClickHouse,
 			TestProvName.AllOracle, TestProvName.AllSapHana)]
 			string context)

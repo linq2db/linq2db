@@ -1565,11 +1565,13 @@ namespace Tests.Linq
 			public DateTime? DateTimeNullable { get; set; }
 
 			[Column(DataType = DataType.DateTime2, CanBeNull = false)]
-			[Column(DataType = DataType.DateTime, CanBeNull = false, Configuration = ProviderName.AccessOdbc)]
+			[Column(DataType = DataType.DateTime, CanBeNull = false, Configuration = ProviderName.AccessAceOdbc)]
+			[Column(DataType = DataType.DateTime, CanBeNull = false, Configuration = ProviderName.AccessJetOdbc)]
 			public DateTime DateTime2 { get; set; }
 
 			[Column(DataType = DataType.DateTime2, CanBeNull = true)]
-			[Column(DataType = DataType.DateTime, CanBeNull = true, Configuration = ProviderName.AccessOdbc)]
+			[Column(DataType = DataType.DateTime, CanBeNull = true, Configuration = ProviderName.AccessAceOdbc)]
+			[Column(DataType = DataType.DateTime, CanBeNull = true, Configuration = ProviderName.AccessJetOdbc)]
 			public DateTime? DateTime2Nullable { get; set; }
 
 			public static DateTypes[] Seed()

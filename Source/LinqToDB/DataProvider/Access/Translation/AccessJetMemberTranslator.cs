@@ -5,19 +5,19 @@ using LinqToDB.SqlQuery;
 
 namespace LinqToDB.DataProvider.Access.Translation
 {
-	public class AccessOleDbMemberTranslator : AccessMemberTranslator
+	public class AccessJetMemberTranslator : AccessMemberTranslator
 	{
 		protected override IMemberTranslator CreateStringMemberTranslator()
 		{
-			return new AccessOleDbStringMemberTranslator();
+			return new AccessJetStringMemberTranslator();
 		}
 
-		class AccessOleDbStringMemberTranslator : StringMemberTranslatorBase
+		class AccessJetStringMemberTranslator : StringMemberTranslatorBase
 		{
 			public override ISqlExpression? TranslateReplace(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, ISqlExpression value, ISqlExpression oldValue,
 				ISqlExpression                                   newValue)
 			{
-				// OledDb provider does not support REPLACE function
+				// JET provider does not support REPLACE function
 				return null;
 			}
 		}

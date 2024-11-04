@@ -43,6 +43,7 @@ namespace LinqToDB.DataProvider.Access
 
 		public override ISqlExpression EscapeLikeCharacters(ISqlExpression expression, ref ISqlExpression? escape)
 		{
+			// TODO: implement for ACE engine, as it has REPLACE
 			throw new LinqException("Access does not support `Replace` function which is required for such query.");
 		}
 

@@ -255,8 +255,7 @@ namespace Tests.Linq
 			[DataSources(
 				ProviderName.DB2,
 				TestProvName.AllInformix,
-				TestProvName.AllSQLite,
-				ProviderName.Access)]
+				TestProvName.AllSQLite)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -467,7 +466,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void DateTimeArray2([DataSources(ProviderName.Access)] string context)
+		public void DateTimeArray2([DataSources] string context)
 		{
 			var arr = new DateTime?[] { new DateTime(2001, 1, 11, 1, 11, 21, 100), new DateTime(2012, 11, 7, 19, 19, 29, 90) };
 
@@ -478,7 +477,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void DateTimeArray3([DataSources(ProviderName.Access)] string context)
+		public void DateTimeArray3([DataSources] string context)
 		{
 			var arr = new List<DateTime?> { new DateTime(2001, 1, 11, 1, 11, 21, 100) };
 

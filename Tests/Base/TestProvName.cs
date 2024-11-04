@@ -170,7 +170,9 @@ namespace Tests
 		#endregion
 
 		#region Access
-		public const string AllAccess              = "Access,Access.Odbc";
+		public const string AllAccess      = $"{AllAccessOleDb},{AllAccessOdbc}";
+		public const string AllAccessOleDb = $"{ProviderName.AccessJetOleDb},{ProviderName.AccessAceOleDb}";
+		public const string AllAccessOdbc  = $"{ProviderName.AccessJetOdbc},{ProviderName.AccessAceOdbc}";
 		#endregion
 
 		#region Oracle

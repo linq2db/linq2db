@@ -318,7 +318,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void OrderBySelectMany1([DataSources(ProviderName.Access)] string context)
+		public void OrderBySelectMany1([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -360,7 +360,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void OrderBySelectMany3([DataSources(ProviderName.Access)] string context)
+		public void OrderBySelectMany3([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -382,7 +382,7 @@ namespace Tests.Linq
 
 		[Test]
 		[ThrowsForProvider(typeof(LinqException), TestProvName.AllClickHouse, ErrorMessage = ErrorHelper.Error_Correlated_Subqueries)]
-		public void OrderByContinuous([DataSources(ProviderName.Access)] string context)
+		public void OrderByContinuous([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -408,7 +408,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void OrderByContinuousDuplicates([DataSources(ProviderName.Access)] string context)
+		public void OrderByContinuousDuplicates([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{

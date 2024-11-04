@@ -284,7 +284,6 @@ namespace Tests.xUpdate
 				TestProvName.AllClickHouse,
 				ProviderName.SqlCe,
 				ProviderName.DB2,
-				ProviderName.Access,
 				TestProvName.AllSapHana)]
 			string context)
 		{

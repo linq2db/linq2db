@@ -77,7 +77,7 @@ namespace Tests.xUpdate
 
 		[Test]
 		public void UpdateTestWhere(
-			[DataSources(ProviderName.Access, TestProvName.AllMySql, ProviderName.SqlCe, TestProvName.AllInformix, TestProvName.AllClickHouse)]
+			[DataSources(TestProvName.AllMySql, ProviderName.SqlCe, TestProvName.AllInformix, TestProvName.AllClickHouse)]
 			string context)
 		{
 			var data = GenerateData();

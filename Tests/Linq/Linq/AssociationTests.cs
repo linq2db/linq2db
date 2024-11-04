@@ -830,7 +830,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestGenericAssociationRuntimeMany([DataSources(ProviderName.Access, TestProvName.AllSQLite)] string context)
+		public void TestGenericAssociationRuntimeMany([DataSources(TestProvName.AllSQLite)] string context)
 		{
 			var ids = new[] { 1, 5 };
 

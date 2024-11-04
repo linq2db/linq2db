@@ -1,22 +1,8 @@
 ﻿{
 	"NET80.Azure": {
 		"Providers": [
-			//"Access", x64 oledb provider crashes with AVE https://github.com/dotnet/runtime/issues/46187
-			"Access.Odbc"
-		],
-		"Connections": {
-			"Access": {
-				"ConnectionString": "Provider=Microsoft.ACE.OLEDB.12.0;Data Source=Database\\TestData.mdb;Locale Identifier=1033;Persist Security Info=True"
-			},
-			"Access.Data": {
-				"ConnectionString": "Provider=Microsoft.ACE.OLEDB.12.0;Data Source=Database\\Data\\TestData.mdb;Locale Identifier=1033;Persist Security Info=True"
-			},
-			"Access.Odbc": {
-				"ConnectionString": "Driver={Microsoft Access Driver (*.mdb, *.accdb)};Dbq=Database\\TestData.ODBC.mdb;ExtendedAnsiSQL=1"
-			},
-			"Access.Odbc.Data": {
-				"ConnectionString": "Driver={Microsoft Access Driver (*.mdb, *.accdb)};Dbq=Database\\TestData.ODBC.mdb;ExtendedAnsiSQL=1"
-			}
-		}
+			"Access.Ace.OleDb",
+			"Access.Ace.Odbc"
+		]
 	}
 }
