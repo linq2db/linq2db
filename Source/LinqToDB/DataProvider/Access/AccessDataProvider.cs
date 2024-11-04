@@ -26,7 +26,7 @@ namespace LinqToDB.DataProvider.Access
 	public abstract class AccessDataProvider : DynamicDataProviderBase<AccessProviderAdapter>
 	{
 		protected AccessDataProvider(string name, AccessVersion version, AccessProvider provider)
-			: base(ProviderName.Access, MappingSchemaInstance.Get(version, provider), AccessProviderAdapter.GetInstance(provider))
+			: base(name, MappingSchemaInstance.Get(version, provider), AccessProviderAdapter.GetInstance(provider))
 		{
 			Version  = version;
 			Provider = provider;

@@ -101,10 +101,11 @@ namespace Tests.Data
 		public void TestAccessOleDb([IncludeDataSources(TestProvName.AllAccessOleDb)] string context, [Values] ConnectionType type)
 		{
 			var unmapped = type == ConnectionType.MiniProfilerNoMappings;
+			var connectionString = DataConnection.GetConnectionString(context);
 #if NETFRAMEWORK
-			using (var db = CreateDataConnection(AccessTools.GetDataProvider(provider: AccessProvider.OleDb), context, type, cs => new System.Data.OleDb.OleDbConnection(cs)))
+			using (var db = CreateDataConnection(AccessTools.GetDataProvider(provider: AccessProvider.OleDb, connectionString: connectionString), context, type, cs => new System.Data.OleDb.OleDbConnection(cs)))
 #else
-			using (var db = CreateDataConnection(AccessTools.GetDataProvider(provider: AccessProvider.OleDb), context, type, "System.Data.OleDb.OleDbConnection, System.Data.OleDb"))
+			using (var db = CreateDataConnection(AccessTools.GetDataProvider(provider: AccessProvider.OleDb, connectionString: connectionString), context, type, "System.Data.OleDb.OleDbConnection, System.Data.OleDb"))
 #endif
 			{
 				var trace = string.Empty;
@@ -143,7 +144,8 @@ namespace Tests.Data
 		public void TestAccessOleDbSchema([IncludeDataSources(TestProvName.AllAccessOleDb)] string context, [Values] ConnectionType type)
 		{
 			var unmapped = type == ConnectionType.MiniProfilerNoMappings;
-			using (var db = CreateDataConnection(AccessTools.GetDataProvider(provider: AccessProvider.OleDb), context, type, cs => new System.Data.OleDb.OleDbConnection(cs)))
+			var connectionString = DataConnection.GetConnectionString(context);
+			using (var db = CreateDataConnection(AccessTools.GetDataProvider(provider: AccessProvider.OleDb, connectionString: connectionString), context, type, cs => new System.Data.OleDb.OleDbConnection(cs)))
 			{
 				// TODO: reenable for .net, when issue with OleDb transactions under .net core fixed
 				// assert custom schema table access
@@ -157,10 +159,11 @@ namespace Tests.Data
 		public void TestAccessODBC([IncludeDataSources(TestProvName.AllAccessOdbc)] string context, [Values] ConnectionType type)
 		{
 			var unmapped = type == ConnectionType.MiniProfilerNoMappings;
+			var connectionString = DataConnection.GetConnectionString(context);
 #if NETFRAMEWORK
-			using (var db = CreateDataConnection(AccessTools.GetDataProvider(provider: AccessProvider.ODBC), context, type, cs => new System.Data.Odbc.OdbcConnection(cs)))
+			using (var db = CreateDataConnection(AccessTools.GetDataProvider(provider: AccessProvider.ODBC, connectionString: connectionString), context, type, cs => new System.Data.Odbc.OdbcConnection(cs)))
 #else
-			using (var db = CreateDataConnection(AccessTools.GetDataProvider(provider: AccessProvider.ODBC), context, type, "System.Data.Odbc.OdbcConnection, System.Data.Odbc"))
+			using (var db = CreateDataConnection(AccessTools.GetDataProvider(provider: AccessProvider.ODBC, connectionString: connectionString), context, type, "System.Data.Odbc.OdbcConnection, System.Data.Odbc"))
 #endif
 			{
 				var trace = string.Empty;
