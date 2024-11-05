@@ -3,7 +3,9 @@
 	<PropertyGroup>
 		<RootNamespace>LinqToDB.CLI</RootNamespace>
 		<AssemblyName>dotnet-linq2db</AssemblyName>
-		<TargetFrameworks>net6.0;net8.0</TargetFrameworks>
+		<TargetFrameworks>net6.0;net8.0;net9.0</TargetFrameworks>
+		<!--don't uncomment, used to generate x86 apphosts manually
+		<PlatformTarget>x86</PlatformTarget>-->
 		<DocumentationFile>$(ArtifactsPath)\bin\$(MSBuildProjectName)\$(Configuration)\$(TargetFramework)\$(AssemblyName).xml</DocumentationFile>
 		<OutputType>Exe</OutputType>
 		<WarningsAsErrors>true</WarningsAsErrors>
@@ -14,6 +16,7 @@
 	<Target Name="CopyHosts" AfterTargets="Build">
 		<Copy SourceFiles="$(SolutionDir)\Redist\CLI\net6.0\dotnet-linq2db.win-x64.exe;$(SolutionDir)\Redist\CLI\net6.0\dotnet-linq2db.win-x86.exe" DestinationFolder="$(ArtifactsPath)\bin\$(MSBuildProjectName)\$(Configuration)\net6.0" />
 		<Copy SourceFiles="$(SolutionDir)\Redist\CLI\net8.0\dotnet-linq2db.win-x64.exe;$(SolutionDir)\Redist\CLI\net8.0\dotnet-linq2db.win-x86.exe" DestinationFolder="$(ArtifactsPath)\bin\$(MSBuildProjectName)\$(Configuration)\net8.0" />
+		<Copy SourceFiles="$(SolutionDir)\Redist\CLI\net9.0\dotnet-linq2db.win-x64.exe;$(SolutionDir)\Redist\CLI\net9.0\dotnet-linq2db.win-x86.exe" DestinationFolder="$(ArtifactsPath)\bin\$(MSBuildProjectName)\$(Configuration)\net9.0" />
 
 		<!--cleanup for pack-->
 		<ItemGroup>
@@ -23,7 +26,9 @@
 			$(ArtifactsPath)\bin\$(MSBuildProjectName)\Release\net6.0\*.xml;
 			$(ArtifactsPath)\bin\$(MSBuildProjectName)\Release\net6.0\*.pdb;
 			$(ArtifactsPath)\bin\$(MSBuildProjectName)\Release\net8.0\*.xml;
-			$(ArtifactsPath)\bin\$(MSBuildProjectName)\Release\net8.0\*.pdb;"
+			$(ArtifactsPath)\bin\$(MSBuildProjectName)\Release\net8.0\*.pdb;
+			$(ArtifactsPath)\bin\$(MSBuildProjectName)\Release\net9.0\*.xml;
+			$(ArtifactsPath)\bin\$(MSBuildProjectName)\Release\net9.0\*.pdb;"
 		/>
 		</ItemGroup>
 

@@ -22,6 +22,7 @@
 			</group>
 			<group targetFramework="net6.0" />
 			<group targetFramework="net8.0" />
+			<group targetFramework="net9.0" />
 		</dependencies>
 	</metadata>
 
@@ -40,5 +41,8 @@
 		<file src="..\bin\LinqToDB\Release\net8.0\linq2db.pdb"         target="lib\net8.0\"         />
 		<file src="..\bin\LinqToDB\Release\net8.0\linq2db.xml"         target="lib\net8.0\"         />
 		<file src="..\bin\LinqToDB\Release\net8.0\linq2db.dll"         target="lib\net8.0\"         />
+		<file src="..\bin\LinqToDB\Release\net9.0\linq2db.pdb"         target="lib\net9.0\"         />
+		<file src="..\bin\LinqToDB\Release\net9.0\linq2db.xml"         target="lib\net9.0\"         />
+		<file src="..\bin\LinqToDB\Release\net9.0\linq2db.dll"         target="lib\net9.0\"         />
 	</files>
 </package>

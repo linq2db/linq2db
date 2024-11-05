@@ -155,6 +155,7 @@ jobs:
             netfx: ${{ test_config.enable_fw_netfx }}
             net60: ${{ test_config.enable_fw_net60 }}
             net80: ${{ test_config.enable_fw_net80 }}
+            net90: ${{ test_config.enable_fw_net90 }}
             x86: ${{ test_config.x86 }}
             retry: ${{ test_config.retry }}
 
@@ -188,6 +189,7 @@ jobs:
             extra: ${{ test_config.extra }}
             net60: ${{ test_config.enable_fw_net60 }}
             net80: ${{ test_config.enable_fw_net80 }}
+            net90: ${{ test_config.enable_fw_net90 }}
             retry: ${{ test_config.retry }}
 
   steps:
@@ -221,6 +223,7 @@ jobs:
             extra: ${{ test_config.extra }}
             net60: ${{ test_config.enable_fw_net60 }}
             net80: ${{ test_config.enable_fw_net80 }}
+            net90: ${{ test_config.enable_fw_net90 }}
             retry: ${{ test_config.retry }}
 
   steps:

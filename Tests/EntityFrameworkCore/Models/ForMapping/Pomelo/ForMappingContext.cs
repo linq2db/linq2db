@@ -16,8 +16,10 @@ namespace LinqToDB.EntityFrameworkCore.Tests.Pomelo.Models.ForMapping
 			{
 				b.HasKey(e => e.Id);
 
+#if !NET9_0
 				b.Property(e => e.Id)
 					.UseMySqlIdentityColumn();
+#endif
 			});
 
 			modelBuilder.Entity<NoIdentity>(b =>

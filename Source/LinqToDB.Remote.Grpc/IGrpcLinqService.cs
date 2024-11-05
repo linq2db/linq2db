@@ -1,45 +1,44 @@
-﻿using System.ServiceModel;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 using LinqToDB.Remote.Grpc.Dto;
 using ProtoBuf.Grpc;
-
+using ProtoBuf.Grpc.Configuration;
 
 namespace LinqToDB.Remote.Grpc
 {
 	/// <summary>
-	/// grpc-based remote context service contract.
+	/// GRPC-based remote context service contract.
 	/// </summary>
-	[ServiceContract]
+	[Service]
 	public interface IGrpcLinqService
 	{
-		[OperationContract(Name = "GetInfo")]
+		[Operation("GetInfo")]
 		LinqServiceInfo GetInfo(GrpcConfiguration configuration, CallContext context = default);
 
-		[OperationContract(Name = "ExecuteNonQuery")]
+		[Operation("ExecuteNonQuery")]
 		GrpcInt ExecuteNonQuery(GrpcConfigurationQuery caq, CallContext context = default);
 
-		[OperationContract(Name = "ExecuteScalar")]
+		[Operation("ExecuteScalar")]
 		GrpcString ExecuteScalar(GrpcConfigurationQuery caq, CallContext context = default);
 
-		[OperationContract(Name = "ExecuteReader")]
+		[Operation("ExecuteReader")]
 		GrpcString ExecuteReader(GrpcConfigurationQuery caq, CallContext context = default);
 
-		[OperationContract(Name = "ExecuteBatch")]
+		[Operation("ExecuteBatch")]
 		GrpcInt ExecuteBatch(GrpcConfigurationQuery caq, CallContext context = default);
 
-		[OperationContract(Name = "GetInfoAsync")]
+		[Operation("GetInfoAsync")]
 		Task<LinqServiceInfo> GetInfoAsync(GrpcConfiguration configuration, CallContext context = default);
 
-		[OperationContract(Name = "ExecuteNonQueryAsync")]
+		[Operation("ExecuteNonQueryAsync")]
 		Task<GrpcInt> ExecuteNonQueryAsync(GrpcConfigurationQuery caq, CallContext context = default);
 
-		[OperationContract(Name = "ExecuteScalarAsync")]
+		[Operation("ExecuteScalarAsync")]
 		Task<GrpcString> ExecuteScalarAsync(GrpcConfigurationQuery caq, CallContext context = default);
 
-		[OperationContract(Name = "ExecuteReaderAsync")]
+		[Operation("ExecuteReaderAsync")]
 		Task<GrpcString> ExecuteReaderAsync(GrpcConfigurationQuery caq, CallContext context = default);
 
-		[OperationContract(Name = "ExecuteBatchAsync")]
+		[Operation("ExecuteBatchAsync")]
 		Task<GrpcInt> ExecuteBatchAsync(GrpcConfigurationQuery caq, CallContext context = default);
 	}
 }
