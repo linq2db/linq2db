@@ -25,6 +25,7 @@ namespace LinqToDB.Linq
 	using SqlQuery;
 	using Tools;
 	using Infrastructure;
+	using LinqToDB.Common.Internal;
 
 	static partial class QueryRunner
 	{
@@ -158,9 +159,31 @@ namespace LinqToDB.Linq
 
 				Expression expression;
 
+				expression = _expression.Transform(
+					ctx,
+					static (context, e) =>
+					{
+						if (e is SqlQueryRootExpression root)
+						{
+							if (((IConfigurationID)root.MappingSchema).ConfigurationID ==
+							    ((IConfigurationID)context.Context.MappingSchema).ConfigurationID)
+							{
+								var lambda      = (LambdaExpression)context.Expression;
+								var contextExpr = (Expression)Expression.PropertyOrField(lambda.Parameters[0], nameof(IQueryRunner.DataContext));
+
+								if (contextExpr.Type != e.Type)
+									contextExpr = Expression.Convert(contextExpr, e.Type);
+								return contextExpr;
+							}
+						}
+
+						return e;
+					});
+
+
 				if (slowMode)
 				{
-					expression = _expression.Transform(
+					expression = expression.Transform(
 						ctx,
 						static (context, e) =>
 						{
@@ -172,7 +195,7 @@ namespace LinqToDB.Linq
 				}
 				else
 				{
-					expression = _expression.Transform(
+					expression = expression.Transform(
 						ctx,
 						static (context, e) =>
 						{

@@ -39,7 +39,12 @@ namespace LinqToDB.Linq.Builder
 
 		protected override BuildSequenceResult BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
-			var sequence = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
+			var buildResult = builder.TryBuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
+
+			if (buildResult.BuildContext == null)
+				return buildResult;
+
+			var sequence = buildResult.BuildContext;
 
 			ExtractSequence(ref sequence, out var insertContext);
 

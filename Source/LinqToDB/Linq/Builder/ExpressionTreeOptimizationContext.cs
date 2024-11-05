@@ -663,6 +663,12 @@ namespace LinqToDB.Linq.Builder
 					return node;
 				}
 
+				if (node.Method.DeclaringType == typeof(DataExtensions))
+				{
+					CanBeCompiledFlag = false;
+					return node;
+				}
+
 				if (_optimizationContext.IsServerSideOnly(node, false))
 					CanBeCompiledFlag = false;
 

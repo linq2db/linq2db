@@ -395,13 +395,19 @@ namespace LinqToDB.Linq.Builder.Visitors
 		{
 			if (_optimizeConditions)
 			{
-				if (IsCompilable(node.Test))
+				var test    = Visit(node.Test);
+				var ifTrue  = Visit(node.IfTrue);
+				var ifFalse = Visit(node.IfFalse);
+
+				if (IsCompilable(test))
 				{
-					if (EvaluateExpression(node.Test) is bool testValue)
+					if (EvaluateExpression(test) is bool testValue)
 					{
-						return Visit(testValue ? node.IfTrue : node.IfFalse);
+						return Visit(testValue ? ifTrue : ifFalse);
 					}
 				}
+
+				return node.Update(test, ifTrue, ifFalse);
 			}
 
 			return base.VisitConditional(node);
