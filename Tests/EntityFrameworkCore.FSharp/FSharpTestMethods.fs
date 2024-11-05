@@ -28,3 +28,11 @@ let TestLeftJoin(context: AppDbContext) =
                     Person = partialPerson.Person
                 |}) )
     q.ToLinqToDB().ToString() |> ignore
+
+let Issue4646TestEF(context: AppDbContext) =
+    let record = { Id = 0; Value = Option.None; ValueN = Option.None } : Issue4646Table
+    context.Set<Issue4646Table>().Add record |> ignore
+
+let Issue4646TestLinqToDB(context: AppDbContext) =
+    let record = { Id = 0; Value = Option.None; ValueN = Option.None } : Issue4646Table
+    context.CreateLinqToDBConnection().Insert record |> ignore
