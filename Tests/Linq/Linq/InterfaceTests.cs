@@ -383,8 +383,11 @@ namespace Tests.Linq
 
 			var res = tb.Single();
 
-			Assert.That(res.ClassProp, Is.True);
-			Assert.That(res.Interface, Is.False);
+			Assert.Multiple(() =>
+			{
+				Assert.That(res.ClassProp, Is.True);
+				Assert.That(res.Interface, Is.False);
+			});
 		}
 		#endregion
 	}

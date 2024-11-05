@@ -1930,11 +1930,17 @@ namespace Tests.Linq
 			var res = tb.Single();
 			Assert.That(res, Is.InstanceOf<ChildBase>());
 			var cb = (ChildBase)res;
-			Assert.That(cb.Id, Is.EqualTo(1));
-			Assert.That(cb.ChildId, Is.EqualTo(2));
-			Assert.That(cb.Name, Is.Not.Null);
-			Assert.That(cb.Name!.First, Is.EqualTo("First"));
-			Assert.That(cb.Name.Second, Is.EqualTo("Second"));
+			Assert.Multiple(() =>
+			{
+				Assert.That(cb.Id, Is.EqualTo(1));
+				Assert.That(cb.ChildId, Is.EqualTo(2));
+				Assert.That(cb.Name, Is.Not.Null);
+			});
+			Assert.Multiple(() =>
+			{
+				Assert.That(cb.Name!.First, Is.EqualTo("First"));
+				Assert.That(cb.Name.Second, Is.EqualTo("Second"));
+			});
 
 			child.Name.First = "First1";
 			db.Update(child);
@@ -1942,11 +1948,17 @@ namespace Tests.Linq
 			res = tb.Single();
 			Assert.That(res, Is.InstanceOf<ChildBase>());
 			cb = (ChildBase)res;
-			Assert.That(cb.Id, Is.EqualTo(1));
-			Assert.That(cb.ChildId, Is.EqualTo(2));
-			Assert.That(cb.Name, Is.Not.Null);
-			Assert.That(cb.Name!.First, Is.EqualTo("First1"));
-			Assert.That(cb.Name.Second, Is.EqualTo("Second"));
+			Assert.Multiple(() =>
+			{
+				Assert.That(cb.Id, Is.EqualTo(1));
+				Assert.That(cb.ChildId, Is.EqualTo(2));
+				Assert.That(cb.Name, Is.Not.Null);
+			});
+			Assert.Multiple(() =>
+			{
+				Assert.That(cb.Name!.First, Is.EqualTo("First1"));
+				Assert.That(cb.Name.Second, Is.EqualTo("Second"));
+			});
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3891")]
@@ -1984,11 +1996,17 @@ namespace Tests.Linq
 			var res = tb.Single();
 			Assert.That(res, Is.InstanceOf<ChildBase2>());
 			var cb = (ChildBase2)res;
-			Assert.That(cb.Id, Is.EqualTo(1));
-			Assert.That(cb.ChildId, Is.EqualTo(2));
-			Assert.That(cb.Name, Is.Not.Null);
-			Assert.That(cb.Name!.First, Is.EqualTo("First"));
-			Assert.That(cb.Name.Second, Is.EqualTo("Second"));
+			Assert.Multiple(() =>
+			{
+				Assert.That(cb.Id, Is.EqualTo(1));
+				Assert.That(cb.ChildId, Is.EqualTo(2));
+				Assert.That(cb.Name, Is.Not.Null);
+			});
+			Assert.Multiple(() =>
+			{
+				Assert.That(cb.Name!.First, Is.EqualTo("First"));
+				Assert.That(cb.Name.Second, Is.EqualTo("Second"));
+			});
 
 			child.Name.First = "First1";
 			db.Update(child);
@@ -1996,11 +2014,17 @@ namespace Tests.Linq
 			res = tb.Single();
 			Assert.That(res, Is.InstanceOf<ChildBase2>());
 			cb = (ChildBase2)res;
-			Assert.That(cb.Id, Is.EqualTo(1));
-			Assert.That(cb.ChildId, Is.EqualTo(2));
-			Assert.That(cb.Name, Is.Not.Null);
-			Assert.That(cb.Name!.First, Is.EqualTo("First1"));
-			Assert.That(cb.Name.Second, Is.EqualTo("Second"));
+			Assert.Multiple(() =>
+			{
+				Assert.That(cb.Id, Is.EqualTo(1));
+				Assert.That(cb.ChildId, Is.EqualTo(2));
+				Assert.That(cb.Name, Is.Not.Null);
+			});
+			Assert.Multiple(() =>
+			{
+				Assert.That(cb.Name!.First, Is.EqualTo("First1"));
+				Assert.That(cb.Name.Second, Is.EqualTo("Second"));
+			});
 		}
 		#endregion
 	}
