@@ -1255,7 +1255,7 @@ namespace Tests.Linq
 				from p in db.Person
 				where p.ID == 1
 				select new { p.ID, Name = "  " + p.FirstName + " " } into pp
-				where pp.Name.TrimStart(' ', 'J') == "ohn "
+				where pp.Name.TrimStart(new char[]{ ' ', 'J' }) == "ohn "
 				select pp;
 			Assert.That(q.ToList().First().ID, Is.EqualTo(1));
 		}
@@ -1274,7 +1274,7 @@ namespace Tests.Linq
 				from p in db.Person
 				where p.ID == 1
 				select new { p.ID, Name = "  " + p.FirstName + " " } into pp
-				where pp.Name.TrimEnd(' ', 'n') == "  Joh"
+				where pp.Name.TrimEnd(new char[]{ ' ', 'n' }) == "  Joh"
 				select pp;
 			Assert.That(q.ToList().First().ID, Is.EqualTo(1));
 		}

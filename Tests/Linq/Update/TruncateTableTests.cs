@@ -67,7 +67,12 @@ namespace Tests.xUpdate
 
 				var r = table.OrderBy(t => t.ID).Skip(1).Single();
 
-				Assert.That(r.ID, Is.EqualTo(id));
+				// Oracle sequence is not guaranted to be sequential
+				// (in short sequence values generated in batches that could be discarded for whatever reason leading to gaps)
+				if (context.IsAnyOf(TestProvName.AllOracle))
+					Assert.That(r.ID, Is.GreaterThanOrEqualTo(id));
+				else
+					Assert.That(r.ID, Is.EqualTo(id));
 
 				table.Drop();
 			}

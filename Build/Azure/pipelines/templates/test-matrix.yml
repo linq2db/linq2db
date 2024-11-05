@@ -37,7 +37,7 @@ parameters:
 # - extra   (string, optional)            : specify additional dotnet test arguments, e.g. "--arch x86"
 # - x86     (true/false string, optional) : windows-only, install dotnet sdk x86
 # - enabled (true/false string, required) : enables/disables test matrix entry completely for current run
-
+# - retry   (true/false string, optional) : specify that test run should retry on failue, use only for unstable runs like access and oracle
 
 # OPERATION SYSTEM SELECTORS
 # - enable_os_windows  (true/false string) : enables testrun for windows 2022 image (windows-2022)
@@ -67,14 +67,12 @@ parameters:
 # - script_macos_local (string) : contains name of local shell setup script for MacOS runs (with extension)
 
 # MISC
-# - docker_login         (true/false string) : enables docker hub authentication for testrun image download
 # - install_docker_macos (true/false string) : enables pre-installation of docker for macos testruns
 
 jobs:
   - template: test-jobs.yml
     parameters:
       enabled: ${{ parameters.enabled }}
-      experimental: ${{ parameters.experimental }}
       with_baselines: ${{ parameters.with_baselines }}
 #      mac_enabled: ${{ parameters.mac_enabled }}
 # TODO: disable for now as it fails always due to small stack
@@ -256,6 +254,7 @@ jobs:
           enable_fw_net60: true
           enable_fw_net80: true
           extra: --arch x64
+          retry: true # x64 provider could crash with AV
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[access.all]')) }}:
             enabled: true
           ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[access.all]'))) }}:
@@ -731,6 +730,7 @@ jobs:
           enable_fw_netfx: false
           enable_fw_net60: true
           enable_fw_net80: true
+          retry: true # provider has issue with resource management
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[oracle.all]')) }}:
             enabled: true
           ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[oracle.all]'))) }}:
@@ -749,6 +749,7 @@ jobs:
           enable_fw_netfx: false
           enable_fw_net60: true
           enable_fw_net80: true
+          retry: true # provider has issue with resource management
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[oracle.all]')) }}:
             enabled: true
           ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[oracle.all]'))) }}:
@@ -767,6 +768,7 @@ jobs:
           enable_fw_netfx: false
           enable_fw_net60: true
           enable_fw_net80: true
+          retry: true # provider has issue with resource management
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[oracle.all]')) }}:
             enabled: true
           ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[oracle.all]'))) }}:
@@ -785,6 +787,7 @@ jobs:
           enable_fw_netfx: false
           enable_fw_net60: true
           enable_fw_net80: true
+          retry: true # provider has issue with resource management
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[oracle.all]')) }}:
             enabled: true
           ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[oracle.all]'))) }}:
@@ -803,6 +806,7 @@ jobs:
           enable_fw_netfx: false
           enable_fw_net60: true
           enable_fw_net80: true
+          retry: true # provider has issue with resource management
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[oracle.all]')) }}:
             enabled: true
           ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[oracle.all]'))) }}:
@@ -929,7 +933,9 @@ jobs:
           config_linux: hana2
           config_macos: hana2
           script_linux_global: hana2.sh
+          script_macos_global: mac.hana2.sh
           script_linux_local: hana2.tests.sh
+          script_macos_local: hana2.tests.sh
           install_docker_macos: true
           enable_os_windows: false
           enable_os_ubuntu: true
@@ -937,7 +943,6 @@ jobs:
           enable_fw_netfx: false
           enable_fw_net60: true
           enable_fw_net80: true
-          docker_login: false
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[saphana.all]')) }}:
             enabled: true
           ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[saphana.all]'))) }}:

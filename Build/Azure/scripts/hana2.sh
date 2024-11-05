@@ -16,10 +16,10 @@ git clone https://github.com/linq2db/linq2db.ci.git ~/linq2db_ci
 
 retries=0
 until docker logs hana2 | grep -q 'Startup finished'; do
-    sleep 5
+    sleep 10
     retries=`expr $retries + 1`
     echo waiting for hana2 to start
-    if [ $retries -gt 100 ]; then
+    if [ $retries -gt 300 ]; then
         echo hana2 not started or takes too long to start
         exit 1
     fi;
@@ -82,6 +82,12 @@ cat <<-EOJSON > HanaDataProviders.json
         ]
     },
     "NET80.Azure": {
+        "BasedOn": "BASE.Azure",
+        "Providers": [
+            "SapHana.Odbc"
+        ]
+    },
+    "NET90.Azure": {
         "BasedOn": "BASE.Azure",
         "Providers": [
             "SapHana.Odbc"
