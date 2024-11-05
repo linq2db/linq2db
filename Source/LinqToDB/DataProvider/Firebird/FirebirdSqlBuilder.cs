@@ -161,7 +161,7 @@ namespace LinqToDB.DataProvider.Firebird
 
 					// type for UUID, e.g. see https://firebirdsql.org/refdocs/langrefupd25-intfunc-gen_uuid.html
 					StringBuilder.Append(" CHARACTER SET UNICODE_FSS");
-					                                                                                      break;
+																										  break;
 
 				case DataType.Guid          : StringBuilder.Append("CHAR(16) CHARACTER SET OCTETS");      break;
 				case DataType.NChar         :
@@ -173,16 +173,16 @@ namespace LinqToDB.DataProvider.Firebird
 					break;
 
 				case DataType.Binary when type.Length == null || type.Length < 1:
-                    StringBuilder.Append("CHAR CHARACTER SET OCTETS");
-                    break;
+					StringBuilder.Append("CHAR CHARACTER SET OCTETS");
+					break;
 
 				case DataType.Binary:
-                    StringBuilder.Append(CultureInfo.InvariantCulture, $"CHAR({type.Length}) CHARACTER SET OCTETS");
+					StringBuilder.Append(CultureInfo.InvariantCulture, $"CHAR({type.Length}) CHARACTER SET OCTETS");
 					break;
 
 				case DataType.VarBinary when type.Length == null || type.Length > 32_765:
 					StringBuilder.Append("BLOB");
-                    break;
+					break;
 
 				case DataType.VarBinary:
 					StringBuilder.Append(CultureInfo.InvariantCulture, $"VARCHAR({type.Length}) CHARACTER SET OCTETS");

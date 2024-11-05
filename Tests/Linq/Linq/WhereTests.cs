@@ -1611,7 +1611,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Issue1755Test1([DataSources] string context, [Values(1, 2)] int id, [Values(null, true, false)] bool? flag)
+		public void Issue1755Test1([DataSources] string context, [Values(1, 2)] int id, [Values] bool? flag)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1622,7 +1622,7 @@ namespace Tests.Linq
 
 				var sql = results.ToString()!;
 
-				TestContext.WriteLine(sql);
+				TestContext.Out.WriteLine(sql);
 
 				AreEqual(
 					from c in db.Parent.AsEnumerable()
@@ -1639,7 +1639,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Issue1755Test2([DataSources] string context, [Values(1, 2)] int id, [Values(null, true, false)] bool? flag)
+		public void Issue1755Test2([DataSources] string context, [Values(1, 2)] int id, [Values] bool? flag)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1723,7 +1723,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void NullableBooleanConditionEvaluationTrueTests([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context, [Values(true, null, false)] bool? value1)
+		public void NullableBooleanConditionEvaluationTrueTests([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context, [Values] bool? value1)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1732,7 +1732,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void NullableBooleanConditionEvaluationTrueTestsNot([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context, [Values(true, null, false)] bool? value1)
+		public void NullableBooleanConditionEvaluationTrueTestsNot([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context, [Values] bool? value1)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1741,7 +1741,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void NullableBooleanConditionEvaluationFalseTests([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context, [Values(true, null, false)] bool? value1)
+		public void NullableBooleanConditionEvaluationFalseTests([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context, [Values] bool? value1)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1750,7 +1750,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void NullableBooleanConditionEvaluationFalseTestsNot([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context, [Values(true, null, false)] bool? value1)
+		public void NullableBooleanConditionEvaluationFalseTestsNot([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context, [Values] bool? value1)
 		{
 			using (var db = GetDataContext(context))
 			{

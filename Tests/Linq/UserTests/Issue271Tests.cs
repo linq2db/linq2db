@@ -35,7 +35,7 @@ namespace Tests.UserTests
 
 				var str = q.ToString()!;
 
-				TestContext.WriteLine(str);
+				TestContext.Out.WriteLine(str);
 
 				Assert.That(str, Does.Not.Contain("N'CharValue'"));
 				Assert.That(str, Does.Not.Contain("N'VarCharValue'"));
@@ -67,7 +67,7 @@ namespace Tests.UserTests
 
 				var str = q.ToString()!;
 
-				TestContext.WriteLine(str);
+				TestContext.Out.WriteLine(str);
 
 				Assert.That(str, Does.Not.Contain("N'CharValue'"));
 				Assert.That(str, Does.Not.Contain("N'VarCharValue'"));

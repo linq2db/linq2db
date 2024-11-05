@@ -64,16 +64,16 @@ Legend:
 - `netfx`: .NET Framework (4.6.2)
 - `netcore`: .NET 6 OR .NET 8
 - :door: - Windows 2022
-- :penguin: - Linux (Ununtu 22.04)
+- :penguin: - Linux (Ununtu 24.04)
 - :green_apple: - MacOS 13 (MacOS testing currently disabled)
 
 | Database (version): provider \ Target framework (OS) | netfx :door: | netcore :door: | netcore :penguin: | netcore :green_apple: |
 |:---|:---:|:---:|:---:|:---:|
 |TestNoopProvider<sup>[1](#notes)</sup>|:heavy_check_mark:|:heavy_check_mark:|:heavy_check_mark:|:heavy_check_mark:|
-|SQLite [3.40.1](https://www.sqlite.org/releaselog/3_40_1.html)<br>[Microsoft.Data.SQLite](https://www.nuget.org/packages/Microsoft.Data.SQLite/)<br>with NorthwindDB Tests|:heavy_check_mark:|:heavy_check_mark:|:heavy_check_mark:|:heavy_check_mark:|
-|SQLite [3.42.0](https://www.sqlite.org/releaselog/3_42_0.html)<br>[System.Data.SQLite](https://www.nuget.org/packages/System.Data.SQLite.Core/)<br>with NorthwindDB Tests|:heavy_check_mark:|:heavy_check_mark:|:heavy_check_mark:|:heavy_check_mark:|
-|SQLite [3.42.0](https://www.sqlite.org/releaselog/3_42_0.html)<br>[System.Data.SQLite](https://www.nuget.org/packages/System.Data.SQLite.Core/)<br>with [MiniProfiler](https://www.nuget.org/packages/MiniProfiler.Shared/)<br>without mappings to underlying provider|:heavy_check_mark:|:heavy_check_mark:|:heavy_check_mark:|:heavy_check_mark:|
-|SQLite [3.42.0](https://www.sqlite.org/releaselog/3_42_0.html)<br>[System.Data.SQLite](https://www.nuget.org/packages/System.Data.SQLite.Core/)<br>with [MiniProfiler](https://www.nuget.org/packages/MiniProfiler.Shared/)<br>with mappings to underlying provider|:heavy_check_mark:|:heavy_check_mark:|:heavy_check_mark:|:heavy_check_mark:|
+|SQLite [3.41.2](https://www.sqlite.org/releaselog/3_41_2.html)<br>[Microsoft.Data.SQLite](https://www.nuget.org/packages/Microsoft.Data.SQLite/)<br>with NorthwindDB Tests|:heavy_check_mark:|:heavy_check_mark:|:heavy_check_mark:|:heavy_check_mark:|
+|SQLite [3.46.1](https://www.sqlite.org/releaselog/3_46_1.html)<br>[System.Data.SQLite](https://www.nuget.org/packages/System.Data.SQLite.Core/)<br>with NorthwindDB Tests|:heavy_check_mark:|:heavy_check_mark:|:heavy_check_mark:|:heavy_check_mark:|
+|SQLite [3.46.1](https://www.sqlite.org/releaselog/3_46_1.html)<br>[System.Data.SQLite](https://www.nuget.org/packages/System.Data.SQLite.Core/)<br>with [MiniProfiler](https://www.nuget.org/packages/MiniProfiler.Shared/)<br>without mappings to underlying provider|:heavy_check_mark:|:heavy_check_mark:|:heavy_check_mark:|:heavy_check_mark:|
+|SQLite [3.46.1](https://www.sqlite.org/releaselog/3_46_1.html)<br>[System.Data.SQLite](https://www.nuget.org/packages/System.Data.SQLite.Core/)<br>with [MiniProfiler](https://www.nuget.org/packages/MiniProfiler.Shared/)<br>with mappings to underlying provider|:heavy_check_mark:|:heavy_check_mark:|:heavy_check_mark:|:heavy_check_mark:|
 |MySQL 5.7<br>[MySql.Data](https://www.nuget.org/packages/MySql.Data/)|:x:|:x:|:heavy_check_mark:|:heavy_check_mark:|
 |MySQL 5.7<br>[MySqlConnector](https://www.nuget.org/packages/MySqlConnector/)|:x:|:x:|:heavy_check_mark:|:heavy_check_mark:|
 |MySQL 8.0<br>[MySql.Data](https://www.nuget.org/packages/MySql.Data/)|:x:|:x:|:heavy_check_mark:|:heavy_check_mark:|
@@ -138,16 +138,17 @@ Legend:
 |`ProviderName.MySql80`|Latest MySQL using MySQL.Data||
 |`TestProvName.MySql80Connector`|Latest MySQL using MySqlConnector||
 |`TestProvName.MariaDB11Connector`|Latest MariaDB using MySqlConnector||
-|`ProviderName.PostgreSQL92`|PostgreSQL 9.2-|PGSQL 9 not tested by CI|
-|`ProviderName.PostgreSQL93`|PostgreSQL [9.3-9.5)|PGSQL 9 not tested by CI|
-|`ProviderName.PostgreSQL95`|PostgreSQL 9.5+|PGSQL 9 not tested by CI|
-|`TestProvName.PostgreSQL10`|PostgreSQL 10|Not tested by CI|
-|`TestProvName.PostgreSQL11`|PostgreSQL 11||
-|`TestProvName.PostgreSQL12`|PostgreSQL 12||
+|`ProviderName.PostgreSQL92`|PostgreSQL 9.2-|PGSQL 9 not tested by CI (EOL)|
+|`ProviderName.PostgreSQL93`|PostgreSQL [9.3-9.5)|PGSQL 9 not tested by CI (EOL)|
+|`ProviderName.PostgreSQL95`|PostgreSQL 9.5+|PGSQL 9 not tested by CI (EOL)|
+|`TestProvName.PostgreSQL10`|PostgreSQL 10|Not tested by CI (EOL)|
+|`TestProvName.PostgreSQL11`|PostgreSQL 11|Not tested by CI (EOL)|
+|`TestProvName.PostgreSQL12`|PostgreSQL 12|Not tested by CI (EOL)|
 |`TestProvName.PostgreSQL13`|PostgreSQL 13||
 |`TestProvName.PostgreSQL14`|PostgreSQL 14||
 |`ProviderName.PostgreSQL15`|PostgreSQL 15||
 |`TestProvName.PostgreSQL16`|PostgreSQL 16||
+|`TestProvName.PostgreSQL17`|PostgreSQL 17||
 |`ProviderName.Firebird25`|Firebird 2.5||
 |`TestProvName.Firebird3`|Firebird 3.0||
 |`TestProvName.Firebird4`|Firebird 4.0||

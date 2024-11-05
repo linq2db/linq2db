@@ -68,6 +68,7 @@
 			//"PostgreSQL.14",
 			//"PostgreSQL.15",
 			//"PostgreSQL.16",
+			//"PostgreSQL.17",
 
 			// OleDB and ODBC MS Access providers
 			//"Access",
@@ -191,6 +192,7 @@
 			//"PostgreSQL.14",
 			//"PostgreSQL.15",
 			//"PostgreSQL.16",
+			//"PostgreSQL.17",
 
 			// OleDB and ODBC MS Access providers
 			//"Access",
@@ -306,6 +308,7 @@
 			//"PostgreSQL.14",
 			//"PostgreSQL.15",
 			//"PostgreSQL.16",
+			//"PostgreSQL.17",
 
 			// OleDB and ODBC MS Access providers
 			//"Access",
@@ -638,6 +641,10 @@
 			"PostgreSQL.16": {
 				"Provider": "Npgsql",
 				"ConnectionString": "Server=localhost;Port=5416;Database=testdata;User Id=postgres;Password=Password12!;Pooling=true;MinPoolSize=10;MaxPoolSize=100;"
+			},
+			"PostgreSQL.17": {
+				"Provider": "Npgsql",
+				"ConnectionString": "Server=localhost;Port=5417;Database=testdata;User Id=postgres;Password=Password12!;Pooling=true;MinPoolSize=10;MaxPoolSize=100;"
 			},
 
 			"Sybase": {

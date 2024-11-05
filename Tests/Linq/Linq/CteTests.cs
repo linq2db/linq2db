@@ -29,9 +29,8 @@ namespace Tests.Linq
 			TestProvName.AllOracle,
 			TestProvName.AllClickHouse,
 			TestProvName.AllMySqlWithCTE,
-			// TODO: v14
-			//TestProvName.AllInformix,
-			// Will be supported in SQL 8.0 - ProviderName.MySql
+			TestProvName.AllInformix,
+			TestProvName.AllSapHana,
 		}.SelectMany(_ => _.Split(',')).ToArray();
 
 		public class CteContextSourceAttribute : IncludeDataSourcesAttribute
@@ -571,12 +570,13 @@ namespace Tests.Linq
 				var query = cte.Where(t => t.ChildID == var3 || var3 == null);
 				var str = query.ToString()!;
 
-				TestContext.WriteLine(str);
+				TestContext.Out.WriteLine(str);
 
 				Assert.That(str.Contains("WITH"), Is.EqualTo(true));
 			}
 		}
 
+		[ActiveIssue(3015, Configurations = [TestProvName.AllSapHana, TestProvName.AllInformix])]
 		[Test]
 		public void TestInsert([CteContextSource(true, ProviderName.DB2)] string context)
 		{
@@ -611,6 +611,7 @@ namespace Tests.Linq
 		}
 
 		// MariaDB support expected in v10.6 : https://jira.mariadb.org/browse/MDEV-18511
+		[ActiveIssue(3015, Configurations = [TestProvName.AllSapHana, TestProvName.AllInformix])]
 		[Test]
 		public void TestDelete([CteContextSource(TestProvName.AllFirebird, ProviderName.DB2, TestProvName.AllMariaDB, TestProvName.AllClickHouse)] string context)
 		{
@@ -631,7 +632,7 @@ namespace Tests.Linq
 		}
 
 		// MariaDB support expected in v10.6 : https://jira.mariadb.org/browse/MDEV-18511
-		[ActiveIssue(Configuration = TestProvName.AllOracle, Details = "Oracle needs special syntax for CTE + UPDATE")]
+		[ActiveIssue(3015, Configurations = [TestProvName.AllOracle, TestProvName.AllSapHana, TestProvName.AllInformix], Details = "Oracle needs special syntax for CTE + UPDATE")]
 		[Test]
 		public void TestUpdate(
 			[CteContextSource(TestProvName.AllFirebird, ProviderName.DB2, TestProvName.AllClickHouse, TestProvName.AllOracle, TestProvName.AllMariaDB)]
@@ -666,7 +667,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void RecursiveTest([CteContextSource(true, ProviderName.DB2, TestProvName.AllClickHouse)] string context)
+		public void RecursiveTest([CteContextSource(true, ProviderName.DB2, TestProvName.AllClickHouse, TestProvName.AllInformix, TestProvName.AllSapHana)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -787,6 +788,7 @@ namespace Tests.Linq
 			}
 		}
 
+		[ActiveIssue(3015, Configuration = TestProvName.AllSapHana)]
 		[Test]
 		public void RecursiveTest2([CteContextSource(true, ProviderName.DB2, TestProvName.AllClickHouse)] string context)
 		{
@@ -804,6 +806,7 @@ namespace Tests.Linq
 			}
 		}
 
+		[ActiveIssue(3015, Configuration = TestProvName.AllSapHana)]
 		[Test]
 		public void TestDoubleRecursion([CteContextSource(true, ProviderName.DB2, TestProvName.AllClickHouse)] string context)
 		{
@@ -829,6 +832,7 @@ namespace Tests.Linq
 			}
 		}
 
+		[ActiveIssue(3015, Configuration = TestProvName.AllSapHana)]
 		[Test]
 		public void RecursiveCount([CteContextSource(true, ProviderName.DB2, TestProvName.AllClickHouse)] string context)
 		{
@@ -844,6 +848,7 @@ namespace Tests.Linq
 			}
 		}
 
+		[ActiveIssue(3015, Configurations = [TestProvName.AllSapHana, TestProvName.AllInformix])]
 		[Test]
 		public void RecursiveInsertInto([CteContextSource(true, ProviderName.DB2, TestProvName.AllClickHouse)] string context)
 		{
@@ -882,7 +887,7 @@ namespace Tests.Linq
 						q.Level
 					};
 
-				Assert.DoesNotThrow(() => TestContext.WriteLine(query.ToString()));
+				Assert.DoesNotThrow(() => TestContext.Out.WriteLine(query.ToString()));
 			}
 		}
 
@@ -1036,12 +1041,13 @@ namespace Tests.Linq
 					select c;
 
 				var sql = query.ToString();
-				TestContext.WriteLine(sql);
+				TestContext.Out.WriteLine(sql);
 
 				Assert.That(sql, Is.Not.Contains("WITH"));
 			}
 		}
 
+		[ActiveIssue(3015, Configuration = TestProvName.AllSapHana)]
 		[Test]
 		public void TestRecursiveScalar([CteContextSource(TestProvName.AllClickHouse)] string context)
 		{
@@ -1241,6 +1247,8 @@ namespace Tests.Linq
 		[Test(Description = "Test that we generate plain UNION without sub-queries (or query will be invalid)")]
 		public void Issue3359_MultipleSets([CteContextSource(
 			TestProvName.AllClickHouse,
+			TestProvName.AllInformix,
+			TestProvName.AllSapHana,
 			TestProvName.AllOracle, // too many unions (ORA-32041: UNION ALL operation in recursive WITH clause must have only two branches)
 			TestProvName.AllPostgreSQL, // too many joins? (42P19: recursive reference to query "cte" must not appear within its non-recursive term)
 			ProviderName.DB2 // joins (SQL0345N  The fullselect of the recursive common table expression "cte" must be the UNION of two or more fullselects and cannot include column functions, GROUP BY clause, HAVING clause, ORDER BY clause, or an explicit join including an ON clause.)
@@ -1296,6 +1304,7 @@ namespace Tests.Linq
 			public string LastName  { get; }
 		}
 
+		[ActiveIssue(3015, Configuration = TestProvName.AllSapHana)]
 		[Test(Description = "record type support")]
 		public void Issue3357_RecordClass([CteContextSource(TestProvName.AllClickHouse)] string context)
 		{
@@ -1316,6 +1325,7 @@ namespace Tests.Linq
 				query.ToArray());
 		}
 
+		[ActiveIssue(3015, Configuration = TestProvName.AllSapHana)]
 		[Test(Description = "record type support")]
 		public void Issue3357_RecordLikeClass([CteContextSource(TestProvName.AllClickHouse)] string context)
 		{
@@ -1397,7 +1407,7 @@ namespace Tests.Linq
 			query.ToArray();
 		}
 
-		[ActiveIssue(Configurations = [TestProvName.AllClickHouse, TestProvName.AllSqlServer])]
+		[ActiveIssue(3015, Configurations = [TestProvName.AllClickHouse, TestProvName.AllSqlServer, TestProvName.AllSapHana])]
 		[Test(Description = "Test that we don't need typing for non-sqlserver providers")]
 		public void Issue3360_TypeByOtherQuery_AllProviders([CteContextSource(ProviderName.DB2)] string context)
 		{
@@ -1466,7 +1476,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue(Configurations = [TestProvName.AllClickHouse, TestProvName.AllPostgreSQL, TestProvName.AllSqlServer])]
+		[ActiveIssue(3015, Configurations = [TestProvName.AllClickHouse, TestProvName.AllPostgreSQL, TestProvName.AllSqlServer, TestProvName.AllSapHana])]
 		[Test(Description = "Test that we don't need typing for non-sqlserver providers")]
 		public void Issue3360_TypeStringEnum_AllProviders([CteContextSource(ProviderName.DB2)] string context)
 		{
@@ -1531,7 +1541,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue(Configuration = TestProvName.AllClickHouse)]
+		[ActiveIssue(3015, Configurations = [TestProvName.AllClickHouse, TestProvName.AllSapHana])]
 		[Test(Description = "Test that we don't need typing for non-sqlserver providers")]
 		public void Issue3360_TypeByProjectionProperty_AllProviders([CteContextSource(ProviderName.DB2)] string context)
 		{
@@ -1582,7 +1592,7 @@ namespace Tests.Linq
 			[Column(DataType = DataType.VarChar, Length = 50)] public StrEnum?  Enum1 { get; set; }
 		}
 
-		[ActiveIssue(Configurations = [TestProvName.AllClickHouse, TestProvName.AllSqlServer])]
+		[ActiveIssue(3015, Configurations = [TestProvName.AllClickHouse, TestProvName.AllSqlServer, TestProvName.AllSapHana])]
 		[Test(Description = "Test CTE columns typing")]
 		public void Issue3360_NullGuidInAnchor([CteContextSource(TestProvName.AllFirebird, ProviderName.DB2)] string context)
 		{
@@ -1602,7 +1612,7 @@ namespace Tests.Linq
 			query.ToArray();
 		}
 
-		[ActiveIssue(Configurations = [TestProvName.AllClickHouse, TestProvName.AllPostgreSQL, TestProvName.AllSqlServer])]
+		[ActiveIssue(3015, Configurations = [TestProvName.AllClickHouse, TestProvName.AllPostgreSQL, TestProvName.AllSqlServer, TestProvName.AllSapHana])]
 		[Test(Description = "Test CTE columns typing")]
 		public void Issue3360_NullEnumInAnchor([CteContextSource(ProviderName.DB2)] string context)
 		{
@@ -1743,7 +1753,7 @@ namespace Tests.Linq
 
 		private record Issue3360NullsRecord(int Id, byte? Byte, byte? ByteN, Guid? Guid, Guid? GuidN, InvalidColumnIndexMappingEnum1? Enum, InvalidColumnIndexMappingEnum2? EnumN, bool? Bool, bool? BoolN);
 
-		[ActiveIssue(Configurations = [TestProvName.AllClickHouse, TestProvName.AllFirebird, TestProvName.AllMySql, TestProvName.AllPostgreSQL, TestProvName.AllSqlServer])]
+		[ActiveIssue(3015, Configurations = [TestProvName.AllClickHouse, TestProvName.AllFirebird, TestProvName.AllMySql, TestProvName.AllPostgreSQL, TestProvName.AllSqlServer, TestProvName.AllSapHana])]
 		[Test(Description = "null literals in anchor query (for known problematic types)")]
 		public void Issue3360_NullsInAnchor([CteContextSource] string context)
 		{
@@ -1790,7 +1800,7 @@ namespace Tests.Linq
 			});
 		}
 
-		[ActiveIssue(Configurations = [TestProvName.AllClickHouse, TestProvName.AllFirebird, TestProvName.AllMySql, TestProvName.AllSqlServer])]
+		[ActiveIssue(3015, Configurations = [TestProvName.AllClickHouse, TestProvName.AllFirebird, TestProvName.AllMySql, TestProvName.AllSqlServer, TestProvName.AllSapHana])]
 		[Test(Description = "double columns in anchor query")]
 		public void Issue3360_DoubleColumnSelection([CteContextSource] string context)
 		{
@@ -1839,7 +1849,7 @@ namespace Tests.Linq
 
 		[ActiveIssue(Configurations = [TestProvName.AllClickHouse, TestProvName.AllOracle, TestProvName.AllSqlServer])]
 		[Test(Description = "literals in anchor query")]
-		public void Issue3360_LiteralsInAnchor([CteContextSource] string context)
+		public void Issue3360_LiteralsInAnchor([CteContextSource(TestProvName.AllInformix, TestProvName.AllSapHana)] string context)
 		{
 			using var db    = GetDataContext(context);
 			using var table = db.CreateLocalTable(Issue3360Table1.Items);
@@ -1911,7 +1921,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue(Configurations = [TestProvName.AllClickHouse, TestProvName.AllPostgreSQL, TestProvName.AllSqlServer])]
+		[ActiveIssue(3015, Configurations = [TestProvName.AllClickHouse, TestProvName.AllPostgreSQL, TestProvName.AllSqlServer, TestProvName.AllSapHana])]
 		[Test(Description = "Test that other providers work")]
 		public void Issue2451_ComplexColumn_All([CteContextSource(ProviderName.DB2)] string context)
 		{
@@ -1969,6 +1979,7 @@ namespace Tests.Linq
 			public TestFolder? Parent { get; set; }
 		}
 
+		[ActiveIssue(3015, Configuration = TestProvName.AllSapHana)]
 		[Test(Description = "Recursive common table expression 'CTE' does not contain a top-level UNION ALL operator.")]
 		public void Issue2264([CteContextSource(TestProvName.AllClickHouse)] string context)
 		{
@@ -2003,6 +2014,7 @@ namespace Tests.Linq
 			query.ToArray();
 		}
 
+		[ActiveIssue(3015, Configurations = [TestProvName.AllSapHana, TestProvName.AllInformix])]
 		[Test]
 		public void Issue3945([CteContextSource] string context)
 		{

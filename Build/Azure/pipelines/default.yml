@@ -21,8 +21,10 @@ stages:
 ##############
   - template: templates/build-job.yml
     parameters:
-      for_nuget: true
-      for_tests: eq(variables['System.PullRequest.TargetBranch'], variables['release_branch'])
+      with_nugets: true
+      with_examples: true
+      with_tests: eq(variables['System.PullRequest.TargetBranch'], variables['release_branch'])
+      with_analyzers: true
 
 #############
 # NUGET JOB #

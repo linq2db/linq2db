@@ -72,7 +72,7 @@ namespace Tests
 
 				DataConnection.TurnTraceSwitchOn(traceLevel);
 
-				TestContext.WriteLine("Connection strings:");
+				TestContext.Out.WriteLine("Connection strings:");
 				TestExternals.Log("Connection strings:");
 
 #if !NETFRAMEWORK
@@ -83,7 +83,7 @@ namespace Tests
 					if (string.IsNullOrWhiteSpace(provider.Value.ConnectionString))
 						throw new InvalidOperationException($"Provider: {provider.Key}. ConnectionString should be provided.");
 
-					TestContext.WriteLine($"\tName=\"{provider.Key}\", Provider=\"{provider.Value.Provider}\", ConnectionString=\"{provider.Value.ConnectionString}\"");
+					TestContext.Out.WriteLine($"\tName=\"{provider.Key}\", Provider=\"{provider.Value.Provider}\", ConnectionString=\"{provider.Value.ConnectionString}\"");
 
 					TxtSettings.Instance.AddConnectionString(
 						provider.Key, provider.Value.Provider ?? "", provider.Value.ConnectionString);
@@ -95,7 +95,7 @@ namespace Tests
 				{
 					var str = $"\tName=\"{provider.Key}\", Provider=\"{provider.Value.Provider}\", ConnectionString=\"{provider.Value.ConnectionString}\"";
 
-					TestContext.WriteLine(str);
+					TestContext.Out.WriteLine(str);
 					TestExternals.Log(str);
 
 					if (provider.Value.ConnectionString != null)
@@ -108,12 +108,12 @@ namespace Tests
 				}
 #endif
 
-				TestContext.WriteLine("Providers:");
+				TestContext.Out.WriteLine("Providers:");
 				TestExternals.Log("Providers:");
 
 				foreach (var userProvider in UserProviders)
 				{
-					TestContext.WriteLine($"\t{userProvider}");
+					TestContext.Out.WriteLine($"\t{userProvider}");
 					TestExternals.Log($"\t{userProvider}");
 				}
 
@@ -154,7 +154,7 @@ namespace Tests
 
 			while (!File.Exists(fileName))
 			{
-				TestContext.WriteLine($"File not found: {fileName}");
+				TestContext.Out.WriteLine($"File not found: {fileName}");
 
 				path = Path.GetDirectoryName(path);
 
@@ -164,7 +164,7 @@ namespace Tests
 				fileName = Path.GetFullPath(Path.Combine(path, findFileName));
 			}
 
-			TestContext.WriteLine($"Base path found: {fileName}");
+			TestContext.Out.WriteLine($"Base path found: {fileName}");
 
 			return fileName;
 		}

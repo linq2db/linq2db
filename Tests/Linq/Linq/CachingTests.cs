@@ -65,7 +65,7 @@ namespace Tests.Linq
 					};
 
 				var sql = query.ToString();
-				TestContext.WriteLine(sql);
+				TestContext.Out.WriteLine(sql);
 
 				Assert.That(sql, Contains.Substring(funcName).And.Contains(fieldName));
 			}
@@ -118,7 +118,7 @@ namespace Tests.Linq
 					select cc;
 
 				var sql = query.ToString()!;
-				TestContext.WriteLine(sql);
+				TestContext.Out.WriteLine(sql);
 
 				Assert.Multiple(() =>
 				{
@@ -150,7 +150,7 @@ namespace Tests.Linq
 					select cc;
 
 				var sql = query.ToString()!;
-				TestContext.WriteLine(sql);
+				TestContext.Out.WriteLine(sql);
 
 				Assert.Multiple(() =>
 				{
@@ -177,7 +177,7 @@ namespace Tests.Linq
 					select new {c1, c2};
 
 				var sql = query.ToString();
-				TestContext.WriteLine(sql);
+				TestContext.Out.WriteLine(sql);
 
 				if (takeHint.HasFlag(TakeHints.Percent))
 					Assert.That(sql, Contains.Substring("PERCENT"));

@@ -84,9 +84,7 @@ namespace Tests.Linq
 			new StringTestTable()
 		};
 
-		// Sybase: need to configure sybase docker image to use utf8 character set
 		// CH: We don't perform trimming of FixedString type
-		[ActiveIssue(Configurations = new[] { TestProvName.AllSybase } )]
 		[Test]
 		public void StringTrimming([DataSources(TestProvName.AllInformix, TestProvName.AllClickHouse)] string context)
 		{

@@ -111,7 +111,7 @@ namespace LinqToDB.DataProvider.SapHana
 
 			if (options.KeepIdentity == true) hanaOptions |= SapHanaProviderAdapter.HanaBulkCopyOptions.KeepIdentity;
 
-			using (var bc = _provider.Adapter.CreateBulkCopy(connection, hanaOptions, transaction))
+			using (var bc = _provider.Adapter.CreateBulkCopy!(connection, hanaOptions, transaction))
 			{
 				if (options.NotifyAfter != 0 && options.RowsCopiedCallback != null)
 				{
@@ -140,7 +140,7 @@ namespace LinqToDB.DataProvider.SapHana
 				bc.DestinationTableName = tableName;
 
 				for (var i = 0; i < columns.Count; i++)
-					bc.ColumnMappings.Add(_provider.Adapter.CreateBulkCopyColumnMapping(i, columns[i].ColumnName));
+					bc.ColumnMappings.Add(_provider.Adapter.CreateBulkCopyColumnMapping!(i, columns[i].ColumnName));
 
 				var rd = createDataReader(columns);
 
@@ -188,7 +188,7 @@ namespace LinqToDB.DataProvider.SapHana
 
 			if (options.KeepIdentity == true) hanaOptions |= SapHanaProviderAdapter.HanaBulkCopyOptions.KeepIdentity;
 
-			using (var bc = _provider.Adapter.CreateBulkCopy(connection, hanaOptions, transaction))
+			using (var bc = _provider.Adapter.CreateBulkCopy!(connection, hanaOptions, transaction))
 			{
 				if (options.NotifyAfter != 0 && options.RowsCopiedCallback != null)
 				{
@@ -217,7 +217,7 @@ namespace LinqToDB.DataProvider.SapHana
 				bc.DestinationTableName = tableName;
 
 				for (var i = 0; i < columns.Count; i++)
-					bc.ColumnMappings.Add(_provider.Adapter.CreateBulkCopyColumnMapping(i, columns[i].ColumnName));
+					bc.ColumnMappings.Add(_provider.Adapter.CreateBulkCopyColumnMapping!(i, columns[i].ColumnName));
 
 				var rd = createDataReader(columns);
 

@@ -204,7 +204,7 @@ namespace Tests.Linq
 				var p   = 123.456m;
 				var sql = db.GetTable<AllTypes>().Where(t => t.DecimalDataType == p).ToString();
 
-				TestContext.WriteLine(sql);
+				TestContext.Out.WriteLine(sql);
 
 				Assert.That(sql, Contains.Substring("(6, 3)"));
 			}
@@ -219,7 +219,7 @@ namespace Tests.Linq
 				var p   = new byte[] { 0, 1, 2 };
 				var sql = db.GetTable<AllTypes>().Where(t => t.BinaryDataType == p).ToString();
 
-				TestContext.WriteLine(sql);
+				TestContext.Out.WriteLine(sql);
 
 				Assert.That(sql, Contains.Substring("(3)").Or.Contains("Blob").Or.Contains("(8000)"));
 			}
@@ -1482,72 +1482,61 @@ namespace Tests.Linq
 
 		private void TestRunner(string context, int thread)
 		{
-			using (var db = GetDataContext(context))
-			{
-				_params[thread] = 1;
-				var persons = Query(db, thread);
+			// don't use Assert.Multiple in multi-threading tests
+#pragma warning disable NUnit2045 // Use Assert.Multiple
+			using var db = GetDataContext(context);
+			_params[thread] = 1;
+			var persons = Query(db, thread);
 
-				Assert.That(persons, Has.Count.EqualTo(1));
-				Assert.That(persons[0].ID, Is.EqualTo(1));
+			Assert.That(persons, Has.Count.EqualTo(1));
+			Assert.That(persons[0].ID, Is.EqualTo(1));
 
-				_params[thread] = 2;
-				persons = Query(db, thread);
+			_params[thread] = 2;
+			persons = Query(db, thread);
 
-				Assert.That(persons, Has.Count.EqualTo(3));
-				Assert.Multiple(() =>
-				{
-					Assert.That(persons.Count(_ => _.ID == 1), Is.EqualTo(1));
-					Assert.That(persons.Count(_ => _.ID == 2), Is.EqualTo(1));
-					Assert.That(persons.Count(_ => _.ID == 4), Is.EqualTo(1));
-				});
+			Assert.That(persons, Has.Count.EqualTo(3));
+			Assert.That(persons.Count(_ => _.ID == 1), Is.EqualTo(1));
+			Assert.That(persons.Count(_ => _.ID == 2), Is.EqualTo(1));
+			Assert.That(persons.Count(_ => _.ID == 4), Is.EqualTo(1));
 
-				_params[thread] = 3;
-				persons = Query(db, thread);
+			_params[thread] = 3;
+			persons = Query(db, thread);
 
-				Assert.That(persons, Has.Count.EqualTo(2));
-				Assert.Multiple(() =>
-				{
-					Assert.That(persons.Count(_ => _.ID == 2), Is.EqualTo(1));
-					Assert.That(persons.Count(_ => _.ID == 3), Is.EqualTo(1));
-				});
+			Assert.That(persons, Has.Count.EqualTo(2));
+			Assert.That(persons.Count(_ => _.ID == 2), Is.EqualTo(1));
+			Assert.That(persons.Count(_ => _.ID == 3), Is.EqualTo(1));
 
-				_params[thread] = 1;
-				persons = Query(db, thread);
+			_params[thread] = 1;
+			persons = Query(db, thread);
 
-				Assert.That(persons, Has.Count.EqualTo(1));
-				Assert.That(persons[0].ID, Is.EqualTo(1));
+			Assert.That(persons, Has.Count.EqualTo(1));
+			Assert.That(persons[0].ID, Is.EqualTo(1));
 
-				_params[thread] = 3;
-				persons = Query(db, thread);
+			_params[thread] = 3;
+			persons = Query(db, thread);
 
-				Assert.That(persons, Has.Count.EqualTo(2));
-				Assert.Multiple(() =>
-				{
-					Assert.That(persons.Count(_ => _.ID == 2), Is.EqualTo(1));
-					Assert.That(persons.Count(_ => _.ID == 3), Is.EqualTo(1));
-				});
+			Assert.That(persons, Has.Count.EqualTo(2));
+			Assert.That(persons.Count(_ => _.ID == 2), Is.EqualTo(1));
+			Assert.That(persons.Count(_ => _.ID == 3), Is.EqualTo(1));
 
-				_params[thread] = 2;
-				persons = Query(db, thread);
+			_params[thread] = 2;
+			persons = Query(db, thread);
 
-				Assert.That(persons, Has.Count.EqualTo(3));
-				Assert.Multiple(() =>
-				{
-					Assert.That(persons.Count(_ => _.ID == 1), Is.EqualTo(1));
-					Assert.That(persons.Count(_ => _.ID == 2), Is.EqualTo(1));
-					Assert.That(persons.Count(_ => _.ID == 4), Is.EqualTo(1));
-				});
-			}
+			Assert.That(persons, Has.Count.EqualTo(3));
+			Assert.That(persons.Count(_ => _.ID == 1), Is.EqualTo(1));
+			Assert.That(persons.Count(_ => _.ID == 2), Is.EqualTo(1));
+			Assert.That(persons.Count(_ => _.ID == 4), Is.EqualTo(1));
 
 			List<Person> Query(ITestDataContext db, int thread)
 			{
 				return db.Person
-					.Where(_ => 
+					.Where(_ =>
 					 GetQueryT1(db, thread).Select(p => p.ID).Contains(_.ID) &&
 					(GetQueryT2(db, thread).Select(p => p.ID).Contains(_.ID) ||
 					 GetQueryT3(db, thread).Select(p => p.ID).Contains(_.ID)))
 					.ToList();
 			}
+#pragma warning restore NUnit2045 // Use Assert.Multiple
 		}
 
 		private IQueryable<Person> GetQueryT1(ITestDataContext db, int thread)
