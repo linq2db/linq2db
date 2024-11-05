@@ -7,12 +7,12 @@ using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Reflection;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Xml;
 using System.Xml.Linq;
-using System.Reflection;
 
 using FluentAssertions;
 
@@ -25,9 +25,9 @@ using LinqToDB.DataProvider.Oracle;
 using LinqToDB.Interceptors;
 using LinqToDB.Linq;
 using LinqToDB.Linq.Internal;
+using LinqToDB.Mapping;
 using LinqToDB.SchemaProvider;
 using LinqToDB.Tools;
-using LinqToDB.Mapping;
 
 using NUnit.Framework;
 
@@ -4507,5 +4507,90 @@ END convert_bool;");
 		}
 
 		#endregion
+
+
+		#region Issue 1999
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/1999")]
+		public void Issue1999Test1([IncludeDataSources(TestProvName.AllOracle)] string context)
+		{
+			using var db = GetDataConnection(context);
+
+			var blob = new byte[40_000];
+			for (var i = 0; i < blob.Length; i++) blob[i] = (byte)(i % 256);
+
+			var pIn = new DataParameter("pIn", blob, DataType.Blob);
+			var pOut = new DataParameter("pOut", null, DataType.Blob) { Direction = ParameterDirection.Output };
+
+			db.Execute("CREATE OR REPLACE PROCEDURE ISSUE1999(pIn IN BLOB, pOut OUT BLOB) AS BEGIN pOut := pIn; END;");
+
+			try
+			{
+				db.ExecuteProc("ISSUE1999", pIn, pOut);
+
+				Assert.That(pOut.Value, Is.EqualTo(blob));
+			}
+			finally
+			{
+				db.Execute("DROP PROCEDURE ISSUE1999");
+			}
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/1999")]
+		public void Issue1999Test2([IncludeDataSources(TestProvName.AllOracle)] string context)
+		{
+			using var db = GetDataConnection(context);
+
+			var blob = new byte[40_000];
+			for (var i = 0; i < blob.Length; i++) blob[i] = (byte)(i % 256);
+
+			var pIn = new DataParameter("pIn", blob, "BLOB");
+			var pOut = new DataParameter("pOut", null, DataType.Blob) { Direction = ParameterDirection.Output };
+
+			db.Execute("CREATE OR REPLACE PROCEDURE ISSUE1999(pIn IN BLOB, pOut OUT BLOB) AS BEGIN pOut := pIn; END;");
+
+			try
+			{
+				db.ExecuteProc("ISSUE1999", pIn, pOut);
+
+				Assert.That(pOut.Value, Is.EqualTo(blob));
+			}
+			finally
+			{
+				db.Execute("DROP PROCEDURE ISSUE1999");
+			}
+		}
+		#endregion
+
+		[ActiveIssue]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/2365")]
+		public void Issue2365Test([IncludeDataSources(TestProvName.AllOracle)] string context)
+		{
+			using var db = GetDataConnection(context);
+
+			var table = db.DataProvider.GetSchemaProvider().GetSchema(db).Tables.Single(t => t.TableName == "AllTypes");
+
+			Assert.Multiple(() =>
+			{
+				foreach (var column in table.Columns)
+				{
+					if (column.ColumnName is "charDataType")
+					{
+						Assert.That(column.Length, Is.EqualTo(1));
+					}
+					else if (column.ColumnName is "char20DataType" or "varcharDataType" or "ncharDataType" or "nvarcharDataType")
+					{
+						Assert.That(column.Length, Is.EqualTo(20));
+					}
+					else if (column.ColumnName is "guidDataType")
+					{
+						Assert.That(column.Length, Is.EqualTo(16));
+					}
+					else
+					{
+						Assert.That(column.Length, Is.Null);
+					}
+				}
+			});
+		}
 	}
 }

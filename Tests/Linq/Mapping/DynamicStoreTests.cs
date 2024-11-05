@@ -1,4 +1,6 @@
 ﻿using LinqToDB;
+using LinqToDB.Data;
+using LinqToDB.Linq;
 using LinqToDB.Mapping;
 using NUnit.Framework;
 using System;
@@ -99,7 +101,7 @@ namespace Tests.Mapping
 			}
 		}
 
-		[DynamicColumnAccessor(GetterExpressionMethod = nameof(GetPropertyExpression), SetterExpressionMethod =nameof(SetPropertyExpression))]
+		[DynamicColumnAccessor(GetterExpressionMethod = nameof(GetPropertyExpression), SetterExpressionMethod = nameof(SetPropertyExpression))]
 		sealed class InstanceGetterSetterExpressionMethods : CustomSetterGetterBase
 		{
 			public static Expression<Func<InstanceGetterSetterExpressionMethods, string, object, object>> GetPropertyExpression
@@ -962,5 +964,127 @@ namespace Tests.Mapping
 				Assert.Throws<LinqToDBException>(() => db.GetTable<NoGetterSetterMethods>().ToList());
 			}
 		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/3859")]
+		public void Issue3859Test1([DataSources] string context)
+		{
+			var ms = new MappingSchema();
+			new FluentMappingBuilder(ms)
+				.Entity<FluentMetadataBasedStore>()
+					.DynamicColumnsStore(x => x.Values)
+					.Property(x => x.Id).IsColumn()
+				.Build();
+
+			using var db = GetDataContext(context, ms);
+			using var tb = db.CreateLocalTable<FluentMetadataBasedStore>();
+
+			tb.Select(x => new
+			{
+				Value1 = x.Values["All"],
+				Value2 = x.Id
+			}).ToArray();
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/3859")]
+		public void Issue3859Test2([DataSources] string context)
+		{
+			var ms = new MappingSchema();
+			new FluentMappingBuilder(ms)
+				.Entity<FluentMetadataBasedStore>()
+					.DynamicColumnsStore(x => x.Values)
+					.Property(x => x.Id).IsColumn()
+				.Build();
+
+			using var db = GetDataContext(context, ms);
+			using var tb = db.CreateLocalTable<FluentMetadataBasedStore>();
+
+			var query = tb
+				.Select(x => new
+				{
+					Value1 = x.Values["All"],
+					Value2 = x.Id
+				})
+				.GroupBy(x => x.Value1,
+				(g, e) => new
+				{
+					Value1 = g,
+					Value2 = e.Count()
+				});
+
+			Assert.That(() => query.ToArray(), Throws.Exception.InstanceOf<LinqException>());
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/3859")]
+		public void Issue3859Test3([DataSources] string context)
+		{
+			var ms = new MappingSchema();
+			new FluentMappingBuilder(ms)
+				.Entity<FluentMetadataBasedStore>()
+					.DynamicColumnsStore(x => x.Values)
+					.Property(x => x.Id).IsColumn()
+				.Build();
+
+			using var db = GetDataContext(context, ms);
+			using var tb = db.CreateLocalTable<FluentMetadataBasedStore>();
+
+			var query = tb
+				.Select(x => new
+				{
+					Value1 = x.Values["All"],
+					Value2 = x.Id
+				})
+				.AsEnumerable()
+				.GroupBy(x => x.Value1,
+				(g, e) => new
+				{
+					Value1 = g,
+					Value2 = e.Count()
+				});
+
+			query.ToArray();
+		}
+
+		#region Issue 2953
+		[ActiveIssue]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/2953")]
+		public void Issue2953Test1([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var result = db.FromSql<DbEntity>("SELECT * FROM Person WHERE PersonID = 1").ToArray();
+
+			Assert.That(result, Has.Length.EqualTo(1));
+			Assert.Multiple(() =>
+			{
+				Assert.That(result[0].Properties.ContainsKey("FirstName"), Is.True);
+				Assert.That(result[0].Properties["FirstName"], Is.EqualTo("John"));
+			});
+		}
+
+		[ActiveIssue]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/2953")]
+		public void Issue2953Test2([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			using var db = GetDataConnection(context);
+
+			var result = db.Query<DbEntity>("SELECT * FROM Person WHERE PersonID = 1").ToArray();
+
+			Assert.That(result, Has.Length.EqualTo(1));
+			Assert.Multiple(() =>
+			{
+				Assert.That(result[0].Properties.ContainsKey("FirstName"), Is.True);
+				Assert.That(result[0].Properties["FirstName"], Is.EqualTo("John"));
+			});
+		}
+
+		[Table("Person")]
+		sealed class DbEntity
+		{
+			[Column] public int PersonID { get; set; }
+
+			[DynamicColumnsStore]
+			public Dictionary<string, object> Properties { get; set; } = new();
+		}
+		#endregion
 	}
 }

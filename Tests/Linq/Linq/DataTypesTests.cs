@@ -1,21 +1,15 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Data.Linq;
-using System.Globalization;
+using System.IO;
 using System.Linq;
-using System.Linq.Expressions;
-using System.Threading;
 
 using LinqToDB;
+using LinqToDB.Data;
 using LinqToDB.Mapping;
-using LinqToDB.Extensions;
 
 using NUnit.Framework;
 
 namespace Tests.Linq
 {
-	using LinqToDB.Common;
-	using LinqToDB.Data;
 	using Model;
 
 	// TODO: delete this test when we implement type tests for all databases similar to CLickHouse tests
@@ -248,6 +242,58 @@ namespace Tests.Linq
 				Assert.That(records[1].Column, Is.EqualTo(data[1].Column));
 				Assert.That(records[1].ColumnNullable, Is.EqualTo(data[1].ColumnNullable));
 			});
+		}
+		#endregion
+
+		#region Issue 1918
+		[ActiveIssue(Configurations = [
+			// cannot create table, DataType.Blob not mapped
+			TestProvName.AllAccess, TestProvName.AllClickHouse, TestProvName.AllPostgreSQL, ProviderName.SqlCe,
+			TestProvName.AllSqlServer, TestProvName.AllSybase,
+			// fails on insert
+			TestProvName.AllSQLite, TestProvName.AllSapHana, TestProvName.AllOracle, TestProvName.AllInformix, TestProvName.AllFirebird,
+			// fails on select
+			TestProvName.AllMySql, ProviderName.DB2
+			])]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/1918")]
+		public void Issue1918Test([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable<Issue1918Table>();
+
+			using (var stream = new MemoryStream())
+			{
+				var entity = new Issue1918Table()
+				{
+					Id = 1,
+					Blob = stream
+				};
+
+				db.Insert(entity);
+				stream.WriteByte(1);
+				stream.Flush();
+				stream.WriteByte(2);
+			}
+
+			var record = tb.Single();
+
+			Assert.Multiple(() =>
+			{
+				Assert.That(record.Id, Is.EqualTo(1));
+				Assert.That(record.Blob, Is.Not.Null);
+			});
+
+			using var ms = new MemoryStream();
+			record.Blob!.CopyTo(ms);
+			var data = ms.ToArray();
+			Assert.That(data, Is.EqualTo(new byte[] { 1, 2 }));
+		}
+
+		[Table("Issue4163Table")]
+		sealed class Issue1918Table
+		{
+			[Column] public int Id { get; set; }
+			[Column(DataType = DataType.Blob)] public Stream? Blob { get; set; }
 		}
 		#endregion
 	}

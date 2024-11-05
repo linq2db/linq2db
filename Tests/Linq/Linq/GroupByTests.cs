@@ -3551,5 +3551,127 @@ namespace Tests.Linq
 			[Association(ThisKey = nameof(ReferenceId), OtherKey = nameof(Id), CanBeNull = true)]
 			public TestAggregateTable? Reference { get; set; }
 		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/2821")]
+		public void Issue2821Test([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var currentDate = TestData.DateTime;
+
+			var query = db.Types2
+				.Where(o => (o.DateTimeValue ?? o.DateTimeValue2) <= currentDate && (!o.DateTimeValue2.HasValue || o.DateTimeValue2.Value >= currentDate));
+
+			query = from allowance in query
+					join t in (from x in query
+							   group x by x.ID into grp
+							   select new
+							   {
+								   ID = grp.Key,
+								   DateTimeValue2 = grp.Max(x => x.DateTimeValue2)
+							   })
+					on new { allowance.ID, allowance.DateTimeValue2 } equals new { t.ID, t.DateTimeValue2 }
+					select allowance;
+
+			query = query = query.OrderBy(x => x.DateTimeValue2);
+
+			query.ToList();
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4349")]
+		public void Issue4349Test([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = db.Parent
+				.Select(f1 => new { A = 0, B = f1.ParentID })
+				.GroupBy(r => new { r.A, r.B })
+				.Select(g => new
+				{
+					A = g.Key.A == 0 ? 0 : 1,
+					g.Key.B
+				})
+				.OrderBy(i => i.A);
+
+			query.ToList();
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/3486")]
+		public void Issue3486Test1([DataSources(false)] string context)
+		{
+			using var db = GetDataConnection(context);
+
+			var query = (
+				from t in db.Person
+				group t by new { t.FirstName, t.LastName } into gr
+				select new
+				{
+					gr.Key.FirstName,
+					gr.Key.LastName,
+					Sum = gr.Sum(it => it.ID)
+				});
+
+			query.ToList();
+
+			db.LastQuery.Should().Contain("SELECT", Exactly.Once());
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/3486")]
+		public void Issue3486Test2([DataSources(false)] string context)
+		{
+			using var db = GetDataConnection(context);
+
+			var query = (
+				from t in db.Person
+				group t by new { t.FirstName, t.LastName } into gr
+				let common = gr.Key
+				select new
+				{
+					common.FirstName,
+					common.LastName,
+					Sum = gr.Sum(it => it.ID)
+				});
+
+			query.ToList();
+
+			db.LastQuery.Should().Contain("SELECT", Exactly.Once());
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/3250")]
+		public void Issue3250Test1([DataSources(false)] string context)
+		{
+			using var db = GetDataConnection(context);
+
+			var query = from s in db.Person
+						where s.LastName != "ERROR"
+						group s by 1 into g
+						where g.Count() > 0
+						select new
+						{
+							Message = $"{g.Count()} items have not been processed, e.g. #{g.Min(x => x.ID)}."
+						};
+
+			query.ToList();
+
+			db.LastQuery.Should().Contain("SELECT", Exactly.Once());
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/3250")]
+		public void Issue3250Test2([DataSources(false)] string context)
+		{
+			using var db = GetDataConnection(context);
+
+			var query = db.Person
+				.Where(s => s.LastName != "ERROR")
+				.Having(_ => Sql.Ext.Count().ToValue() > 0)
+				.Select(s => new
+				{
+					Message = $"{ Sql.Ext.Count().ToValue() } items have not been processed, e.g. #{ Sql.Ext.Min(s.ID).ToValue() }.",
+				});
+
+			query.ToList();
+
+			db.LastQuery.Should().Contain("SELECT", Exactly.Once());
+		}
 	}
 }

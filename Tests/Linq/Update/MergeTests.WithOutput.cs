@@ -697,5 +697,23 @@ namespace Tests.xUpdate
 				record.SourceId.Should().Be(6);
 			}
 		}
+
+		[Test]
+		public void Issue4213Test([IncludeDataSources(false, TestProvName.AllSqlServer2008Plus)] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				db.Person.Where(x => x.FirstName == "unknown").AsCte()
+					.Merge()
+					.Using(db.Child)
+					.On((dest, src) => dest.ID == src.ChildID)
+					.UpdateWhenMatched((dest, temp) => new Model.Person()
+					{
+						MiddleName = "unpdated"
+					})
+					.MergeWithOutput((a, d, i) => i.Gender)
+					.ToArray();
+			}
+		}
 	}
 }

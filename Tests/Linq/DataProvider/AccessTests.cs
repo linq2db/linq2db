@@ -702,5 +702,72 @@ namespace Tests.DataProvider
 			}
 		}
 		#endregion
+
+		#region Issue 3893
+		// use characters from https://learn.microsoft.com/en-us/office/troubleshoot/access/error-using-special-characters
+		private static readonly string[] _identifiers =
+		[
+			" leading_space",
+			"char `",
+			"char !",
+			"char .",
+			"char ]",
+			"char [",
+			"char \r",
+			"char \t",
+			"char \b",
+			"char \n",
+			"char >",
+			"char <",
+			"char *",
+			"char :",
+			"char ^",
+			"char +",
+			"char \\",
+			"char /",
+			"char =",
+			"char &",
+			"char '",
+			"char \"",
+			"char @",
+			"char #",
+			"char %",
+			"char $",
+			"char ;",
+			"char ?",
+			"char {",
+			"char }",
+			"char -",
+			"char ~",
+			"char |",
+		];
+
+		[ActiveIssue]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/3893")]
+		public void Issue3893Test([IncludeDataSources(TestProvName.AllAccess)] string context, [ValueSource(nameof(_identifiers))] string columName)
+		{
+			var builder = new FluentMappingBuilder(new MappingSchema())
+				.Entity<Issue3893Table>()
+					.Property(x => x.Id)
+					.HasColumnName(columName)
+				.Build();
+
+			using var db = GetDataConnection(context, builder.MappingSchema);
+
+			using var tb = db.CreateLocalTable<Issue3893Table>();
+
+			var schema = db.DataProvider.GetSchemaProvider().GetSchema(db);
+			var table = schema.Tables.Single(t => t.TableName == nameof(Issue3893Table));
+			var column = table.Columns.Single();
+
+			Assert.That(column.ColumnName, Is.EqualTo(columName));
+		}
+
+		[Table]
+		sealed class Issue3893Table
+		{
+			public int Id { get; set; }
+		}
+		#endregion
 	}
 }

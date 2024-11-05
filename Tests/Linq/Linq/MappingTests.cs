@@ -2,6 +2,8 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
+
 #if NETFRAMEWORK
 using System.ServiceModel;
 #endif
@@ -17,8 +19,6 @@ using NUnit.Framework;
 namespace Tests.Linq
 {
 	using Model;
-
-	using NUnit.Framework.Constraints;
 
 	[TestFixture]
 	public class MappingTests : TestBase
@@ -1172,5 +1172,220 @@ namespace Tests.Linq
 			// not supported case
 			Assert.That(() => db.GetTable<RecordTable>().Where(i => tenderIds.Contains(i.Value1!.Value)).Count(), Throws.TypeOf<InvalidCastException>());
 		}
+
+		#region Issue 4437
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4437")]
+		public void Issue4437Test1([IncludeDataSources(false, TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataConnection(context);
+			using var tb = db.CreateLocalTable(new Issue4437Record[] { new("value") });
+
+			var result = db.GetTable<Issue4437Record>().ToArray();
+
+			Assert.That(result, Has.Length.EqualTo(1));
+			Assert.That(result[0].SomeColumn, Is.EqualTo("value"));
+		}
+
+		[ActiveIssue]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4437")]
+		public void Issue4437Test2([IncludeDataSources(false, TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataConnection(context);
+			using var tb = db.CreateLocalTable(new Issue4437Record[] { new("value") });
+
+			var result = db.Query<Issue4437Record>("select some_column from test4437").ToArray();
+
+			Assert.That(result, Has.Length.EqualTo(1));
+			Assert.That(result[0].SomeColumn, Is.EqualTo("value"));
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4437")]
+		public void Issue4437Test3([IncludeDataSources(false, TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataConnection(context);
+			using var tb = db.CreateLocalTable(new Issue4437Record[] { new("value") });
+
+			var result = db.Query<Issue4437Record>("select some_column as SomeColumn from test4437").ToArray();
+
+			Assert.That(result, Has.Length.EqualTo(1));
+			Assert.That(result[0].SomeColumn, Is.EqualTo("value"));
+		}
+
+		[Table("test4437")]
+		sealed record Issue4437Record([property: Column("some_column")] string SomeColumn);
+		#endregion
+
+		#region Issue 1833
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/1833")]
+		public void Issue1833Test1([DataSources] string context)
+		{
+			var fb = new FluentMappingBuilder()
+				.Entity<MyPerson>()
+					.Ignore(e => e.MiddleName)
+					.HasAttribute(e => e.MiddleName, new ExpressionMethodAttribute(nameof(MyPerson.FullName)) {IsColumn = true})
+				.Build();
+
+			using var db = GetDataContext(context, fb.MappingSchema);
+
+			var record = db.GetTable<MyPerson>().Where(e => e.ID == 1).Single();
+
+			Assert.That(record.MiddleName, Is.EqualTo($"{record.FirstName}:{record.LastName}"));
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/1833")]
+		public void Issue1833Test2([DataSources] string context)
+		{
+			var entityDescriptor = MappingSchema.Default.GetEntityDescriptor(typeof(MyPerson));
+			var columnDescriptor = entityDescriptor.Columns.Single(c => c.MemberName == nameof(MyPerson.MiddleName));
+
+			var fb = new FluentMappingBuilder().Entity<MyPerson>();
+			fb.HasAttribute(columnDescriptor.MemberInfo, new NotColumnAttribute());
+			fb.HasAttribute(columnDescriptor.MemberInfo, new ExpressionMethodAttribute(nameof(MyPerson.FullName)) { IsColumn = true });
+
+			using var db = GetDataContext(context, fb.Build().MappingSchema);
+
+			var record = db.GetTable<MyPerson>().Where(e => e.ID == 1).Single();
+
+			Assert.That(record.MiddleName, Is.EqualTo($"{record.FirstName}:{record.LastName}"));
+		}
+
+		[Table("Person")]
+		sealed class MyPerson
+		{
+			[Column("PersonID"), PrimaryKey] public int ID { get; set; }
+			[Column(CanBeNull = false)] public string FirstName { get; set; } = null!;
+			[Column(CanBeNull = false)] public string LastName { get; set; } = null!;
+			[Column] public string? MiddleName { get; set; }
+			public static Expression<Func<MyPerson, string>> FullName() => e => $"{e.FirstName}:{e.LastName}";
+		}
+		#endregion
+
+		#region Issue 2362
+		[ActiveIssue]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/2362")]
+		public void Issue2362Test1([DataSources] string context, [Values] bool value)
+		{
+			var fb = new FluentMappingBuilder()
+				.Entity<Issue2362Table>()
+					.Property(p => p.Value)
+					.HasConversion(
+						cs => cs ? "+" : "",
+						db => db == "+");
+
+			using var db = GetDataContext(context, fb.Build().MappingSchema);
+			using var tb = db.CreateLocalTable(Issue2362Raw.Data);
+
+			var res = db.GetTable<Issue2362Table>().Where(r => r.Value == value).OrderBy(r => r.Id).ToArray();
+
+			if (value)
+			{
+				Assert.That(res, Has.Length.EqualTo(1));
+				Assert.That(res[0].Value, Is.True);
+			}
+			else
+			{
+				Assert.That(res, Has.Length.EqualTo(3));
+				Assert.Multiple(() =>
+				{
+					Assert.That(res[0].Value, Is.False);
+					Assert.That(res[1].Value, Is.False);
+					Assert.That(res[2].Value, Is.False);
+				});
+			}
+		}
+
+		[ActiveIssue]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/2362")]
+		public void Issue2362Test2([DataSources] string context, [Values] bool value)
+		{
+			var fb = new FluentMappingBuilder()
+				.Entity<Issue2362Table>()
+					.Property(p => p.Value)
+					.IsNullable()
+					.HasConversion(
+						cs => cs ? "+" : "",
+						db => db == "+");
+
+			using var db = GetDataContext(context, fb.Build().MappingSchema);
+			using var tb = db.CreateLocalTable(Issue2362Raw.Data);
+
+			var res = db.GetTable<Issue2362Table>().Where(r => r.Value == value).OrderBy(r => r.Id).ToArray();
+
+			if (value)
+			{
+				Assert.That(res, Has.Length.EqualTo(1));
+				Assert.That(res[0].Value, Is.True);
+			}
+			else
+			{
+				Assert.That(res, Has.Length.EqualTo(3));
+				Assert.Multiple(() =>
+				{
+					Assert.That(res[0].Value, Is.False);
+					Assert.That(res[1].Value, Is.False);
+					Assert.That(res[2].Value, Is.False);
+				});
+			}
+		}
+
+		[ActiveIssue]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/2362")]
+		public void Issue2362Test3([DataSources] string context, [Values] bool value)
+		{
+			var fb = new FluentMappingBuilder()
+				.Entity<Issue2362Table>()
+					.Property(p => p.Value)
+					.IsNullable()
+					.HasDataType(DataType.Char)
+					.HasLength(4)
+					.HasConversion(
+						cs => cs ? "+" : "",
+						db => db == "+");
+
+			using var db = GetDataContext(context, fb.Build().MappingSchema);
+			using var tb = db.CreateLocalTable(Issue2362Raw.Data);
+
+			var res = db.GetTable<Issue2362Table>().Where(r => r.Value == value).OrderBy(r => r.Id).ToArray();
+
+			if (value)
+			{
+				Assert.That(res, Has.Length.EqualTo(1));
+				Assert.That(res[0].Value, Is.True);
+			}
+			else
+			{
+				Assert.That(res, Has.Length.EqualTo(3));
+				Assert.Multiple(() =>
+				{
+					Assert.That(res[0].Value, Is.False);
+					Assert.That(res[1].Value, Is.False);
+					Assert.That(res[2].Value, Is.False);
+				});
+			}
+		}
+
+		[Table("Issue2362Table")]
+		sealed class Issue2362Table
+		{
+			[Column] public int Id { get; set; }
+			[Column] public bool Value { get; set; }
+		}
+
+		[Table("Issue2362Table")]
+		sealed class Issue2362Raw
+		{
+			[Column] public int Id { get; set; }
+			[Column(DataType = DataType.Char, Length = 4)] public string? Value { get; set; }
+
+			public static readonly Issue2362Raw[] Data =
+			[
+				new Issue2362Raw() { Id = 1, Value = null },
+				new Issue2362Raw() { Id = 2, Value = "+" },
+				new Issue2362Raw() { Id = 3, Value = "    " },
+				new Issue2362Raw() { Id = 4, Value = "" },
+			];
+		}
+		#endregion
 	}
 }

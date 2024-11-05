@@ -1,11 +1,17 @@
-﻿using LinqToDB;
-using LinqToDB.Tools;
-using NUnit.Framework;
-using System;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
+
 using FluentAssertions;
 
+using LinqToDB;
+using LinqToDB.Mapping;
+using LinqToDB.Tools;
+
+using NUnit.Framework;
+
 using static LinqToDB.Sql;
+
 using DT = System.DateTime;
 using DTO = System.DateTimeOffset;
 
@@ -648,5 +654,86 @@ namespace Tests.Linq
 			public double   Double { get; set; }
 			public bool     Bool   { get; set; }
 		}
+
+		#region Issue 3631
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/3631")]
+		public void Issue3631Test1([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable(Issue3631Table.Data);
+
+			var result = tb
+					.Where(x => Row(x.Country, x.State).In(Row("US", "CA"), Row("US", "NY")))
+					.ToList();
+		}
+
+		[ActiveIssue]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/3631")]
+		public void Issue3631Test2([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable(Issue3631Table.Data);
+
+			var items = new List<(string Country, string State)>();
+			items.Add(("US", "CA"));
+			items.Add(("US", "NY"));
+			var rows = items.Select(item => Row(item.Country, item.State)).ToList();
+
+			var result = tb
+					.Where(x => Row(x.Country, x.State).In(rows))
+					.ToList();
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/3631")]
+		public void Issue3631Test3([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable(Issue3631Table.Data);
+
+			var items = new List<(string Country, string State)>();
+			items.Add(("US", "CA"));
+			items.Add(("US", "NY"));
+
+			var result = tb
+					.Where(x => Row(x.Country, x.State).In(items.Select(item => Row(item.Country, item.State))))
+					.ToList();
+		}
+
+		// missing API
+		//[Test(Description = "https://github.com/linq2db/linq2db/issues/3631")]
+		//public void Issue3631Test4([DataSources] string context)
+		//{
+		//	using var db = GetDataContext(context);
+		//	using var tb = db.CreateLocalTable(Issue3631Table.Data);
+
+		//	var items = new List<(string Country, string State)>();
+		//	items.Add(("US", "CA"));
+		//	items.Add(("US", "NY"));
+
+		//	var result = tb
+		//			.Where(x => Row(x.Country, x.State).In(items))
+		//			.ToList();
+		//}
+
+		[Table]
+		sealed class Issue3631Table
+		{
+			[Column(Length = 2), NotNull] public string Country { get; set; } = null!;
+			[Column(Length = 2), NotNull] public string State { get; set; } = null!;
+
+			public static readonly Issue3631Table[] Data = new[]
+			{
+				new Issue3631Table() { Country = "US", State = "AL" },
+				new Issue3631Table() { Country = "US", State = "AZ" },
+				new Issue3631Table() { Country = "US", State = "CA" },
+				new Issue3631Table() { Country = "US", State = "FL" },
+				new Issue3631Table() { Country = "US", State = "IN" },
+				new Issue3631Table() { Country = "US", State = "OH" },
+				new Issue3631Table() { Country = "US", State = "NY" },
+				new Issue3631Table() { Country = "CA", State = "AB" },
+				new Issue3631Table() { Country = "CA", State = "ON" },
+			};
+		}
+		#endregion
 	}
 }

@@ -12,7 +12,12 @@ using NUnit.Framework;
 
 namespace Tests.Data
 {
+	using System.Collections;
+
 	using Model;
+
+	using Tests.DataProvider;
+
 	using Tools;
 
 	[TestFixture]
@@ -643,7 +648,6 @@ namespace Tests.Data
 					});
 				}
 			}
-
 		}
 
 		[Test]
@@ -866,6 +870,22 @@ namespace Tests.Data
 				Assert.That(builderWriteCalled, Is.True, "because the data connection should have used the action from the builder");
 				Assert.That(staticWriteCalled, Is.False, "because the data connection should have used the action from the builder");
 			});
+		}
+
+		[ActiveIssue(Configurations = [TestProvName.AllOracle, TestProvName.AllSQLiteClassic, TestProvName.AllSybase])]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/3663")]
+		public void Issue3663Test([DataSources(false)] string context)
+		{
+			using var db = GetDataConnection(context, o => o.UseTracing(Trace));
+			db.Person.ToArray();
+
+			db.Query<Person>(db.LastQuery!).ToArray();
+
+			static void Trace(TraceInfo trace)
+			{
+				_ = trace.Command?.CommandText;
+				_ = trace.SqlText;
+			}
 		}
 	}
 }

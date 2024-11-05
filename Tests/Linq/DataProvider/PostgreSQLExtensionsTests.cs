@@ -1,6 +1,10 @@
 ﻿using System;
 using System.Linq;
+using System.Linq.Expressions;
+
 using LinqToDB;
+using LinqToDB.Common;
+using LinqToDB.Data;
 using LinqToDB.DataProvider.PostgreSQL;
 using LinqToDB.Mapping;
 using NUnit.Framework;
@@ -293,6 +297,61 @@ namespace Tests.DataProvider
 				var result = query.ToArray();
 			}
 		}
+
+		#region 4562
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4562")]
+		public void Issue4562Test([IncludeDataSources(TestProvName.AllPostgreSQL95Plus)] string context)
+		{
+			using var db = GetDataConnection(context);
+			using var tb = db.CreateLocalTable<Issue4562Table>();
+
+			// arrays support missing now
+			db.Execute("INSERT INTO \"Issue4562Table\"(\"Id\", \"Statuses\") VALUES(1, '{1, 2, 1, 3, 4}')");
+			db.Execute("INSERT INTO \"Issue4562Table\"(\"Id\", \"Statuses\") VALUES(2, '{1, 4}')");
+
+			var notAcceptedStatuses = new StatusType[] { StatusType.Value2, StatusType.Value3 };
+
+			var result = tb.Where(x => !Sql.Ext.PostgreSQL().Overlaps(x.Statuses!, notAcceptedStatuses)).ToArray();
+
+			Assert.That(result, Has.Length.EqualTo(1));
+			Assert.Multiple(() =>
+			{
+				Assert.That(result[0].Id, Is.EqualTo(2));
+				Assert.That(result[0].Statuses, Is.Not.Null);
+			});
+			Assert.That(result[0].Statuses, Has.Length.EqualTo(2));
+			Assert.Multiple(() =>
+			{
+				Assert.That(result[0].Statuses![0], Is.EqualTo(StatusType.Value1));
+				Assert.That(result[0].Statuses![1], Is.EqualTo(StatusType.Value4));
+			});
+		}
+
+		[Table]
+		sealed class Issue4562Table
+		{
+			[PrimaryKey] public int Id { get; set; }
+			[Column(DbType = "integer[]"), ValueConverter(ConverterType = typeof(Issue4562Converter))] public StatusType[]? Statuses { get; set; }
+
+			sealed class Issue4562Converter : IValueConverter
+			{
+				bool IValueConverter.HandlesNulls => true;
+
+				LambdaExpression IValueConverter.FromProviderExpression => (StatusType[] x) => x.Select(y => (int)y).ToArray();
+
+				LambdaExpression IValueConverter.ToProviderExpression => (int[] x) => x.Select(y => (StatusType)y).ToArray();
+			}
+		}
+
+		enum StatusType
+		{
+			Value1,
+			Value2,
+			Value3,
+			Value4,
+		}
+		#endregion
 
 		[Test]
 		public void GenerateSeries([IncludeDataSources(TestProvName.AllPostgreSQL95Plus)] string context)

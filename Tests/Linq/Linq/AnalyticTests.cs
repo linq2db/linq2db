@@ -1,15 +1,17 @@
-﻿using FluentAssertions;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 
-using Tests.Model;
+using FluentAssertions;
+
+using LinqToDB;
+using LinqToDB.Mapping;
+
+using NUnit.Framework;
 
 namespace Tests.Linq
 {
-	using System;
-	using System.Linq;
-
-	using LinqToDB;
-	using LinqToDB.Mapping;
-	using NUnit.Framework;
+	using Model;
 
 	[TestFixture]
 	public class AnalyticTests : TestBase
@@ -1976,6 +1978,27 @@ namespace Tests.Linq
 				.OrderByDescending(_ => _.key)
 				.Take(100)
 				.ToList();
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/3373")]
+		public void Issue3373Test([DataSources(TestProvName.AllMySql57, ProviderName.Firebird25, TestProvName.AllSybase, TestProvName.AllAccess, ProviderName.Firebird, ProviderName.SqlCe )] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var list = new List<int>() { 3 };
+
+			var query =
+						from t in db.Child
+						select new
+						{
+							Sum = Sql.Ext.Sum(list.Contains(t.ParentID) ? t.ChildID : 0)
+								.Over()
+								.PartitionBy(t.Parent!.Value1)
+								.OrderBy(t.ParentID)
+								.ToValue()
+						};
+
+			query.ToList();
 		}
 	}
 }

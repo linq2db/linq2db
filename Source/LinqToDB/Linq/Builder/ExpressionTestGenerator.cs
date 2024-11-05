@@ -16,7 +16,7 @@ namespace LinqToDB.Linq.Builder
 
 	sealed class ExpressionTestGenerator
 	{
-		readonly bool          _mangleNames;
+		readonly bool          _mangleNames; 
 		readonly StringBuilder _exprBuilder = new ();
 		readonly IDataContext  _dataContext;
 

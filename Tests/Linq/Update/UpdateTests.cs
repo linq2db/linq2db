@@ -1938,5 +1938,16 @@ namespace Tests.xUpdate
 				.Set(r => r.MoneyValue, value)
 				.Update();
 		}
+
+		[Test]
+		public void Issue4136Test([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var someExternalDependency = 10;
+			db.Types
+				.Where(p => p.ID == -1)
+				.Update(p => new LinqDataTypes { BoolValue = p.BoolValue || someExternalDependency > 0 });
+		}
 	}
 }

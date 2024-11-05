@@ -468,5 +468,78 @@ namespace Tests.xUpdate
 				Value1 = obj.b.ChildID
 			});
 		}
+
+		#region Issue 2815
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/2815")]
+		public void Issue2815Test([DataSources(false)] string context)
+		{
+			using var db = GetDataConnection(context);
+			using var t1 = db.CreateLocalTable<Issue2815Table1>();
+			using var t2 = db.CreateLocalTable<Issue2815Table2>();
+			using var t3 = db.CreateLocalTable<Issue2815Table3>();
+
+			var query = (from ext in t1
+						 from source in t2.LeftJoin(c => c.ISO == ext.SRC_BIC)
+						 from destination in t2.LeftJoin(c => c.ISO == ext.DES_BIC)
+						 let sepa = source.SEPA && destination.SEPA
+							? source.ISO == destination.ISO
+								? EnumType.Sepa
+								: EnumType.SepaCrossBorder
+							: EnumType.Foreign
+						 from channel in t3.LeftJoin(c => c.TreasuryCenter == ext.TREA_CENT
+							&& c.BIC == ext.SRC_BIC
+							&& c.Sepa == sepa)
+						 where ext.NOT_HANDLED == 2 && ext.TRANS_CHANNEL == null
+						 select channel);
+
+			query.Update(t1, x => new Issue2815Table1()
+			{
+				TRANS_CHANNEL = ((TransChannel?)x.Trans_Channel) ?? TransChannel.Swift,
+				IDF = x.Idf
+			});
+		}
+
+		enum EnumType
+		{
+			Sepa,
+			SepaCrossBorder,
+			Foreign
+		}
+
+		enum TransChannel
+		{
+			Swift
+		}
+
+		[Table]
+		sealed class Issue2815Table1
+		{
+			[Column] public int SRC_BIC { get; set; }
+			[Column] public int DES_BIC { get; set; }
+			[Column] public int IDF { get; set; }
+			[Column] public int TREA_CENT { get; set; }
+			[Column] public int NOT_HANDLED { get; set; }
+			[Column] public TransChannel? TRANS_CHANNEL { get; set; }
+		}
+
+		[Table]
+		sealed class Issue2815Table2
+		{
+			[Column] public int ISO { get; set; }
+			[Column] public bool SEPA { get; set; }
+		}
+
+		[Table]
+		sealed class Issue2815Table3
+		{
+			[Column] public int TreasuryCenter { get; set; }
+			[Column] public int BIC { get; set; }
+			[Column] public EnumType Sepa { get; set; }
+			[Column] public TransChannel Trans_Channel { get; set; }
+			[Column] public int Idf { get; set; }
+		}
+
+		#endregion
 	}
 }

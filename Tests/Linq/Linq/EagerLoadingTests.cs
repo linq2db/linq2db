@@ -3053,5 +3053,218 @@ FROM
 				}
 			}
 		}
+
+		#region Issue 4497
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4497")]
+		public void Issue4497Test1([DataSources(false)] string context)
+		{
+			using var db = GetDataConnection(context);
+
+			db.Person
+				.LeftJoin(
+					db.Patient,
+					(join, p) => join.ID == p.PersonID,
+					(join, p) => new { join, p })
+				.Where(i => i.p.PersonID != 0)
+				.ToList();
+
+			Assert.That(db.LastQuery, Does.Contain("LEFT JOIN"));
+			Assert.That(db.LastQuery, Does.Contain("IS NULL"));
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4497")]
+		public void Issue4497Test2([DataSources(false)] string context)
+		{
+			using var db = GetDataConnection(context);
+
+			db.Person
+				.LoadWith(p => p.Patient)
+				.Where(i => i.Patient!.PersonID != 0)
+				.ToList();
+
+			Assert.That(db.LastQuery, Does.Contain("LEFT JOIN"));
+			Assert.That(db.LastQuery, Does.Contain("IS NULL"));
+		}
+		#endregion
+
+		#region Issue 4585
+		[ActiveIssue]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4497")]
+		public void Issue4585Test([DataSources] string context)
+		{
+			var fluentMappingBuilder = new FluentMappingBuilder(new MappingSchema());
+
+			fluentMappingBuilder
+				.Entity<Issue4585TableNested>()
+				.Property(x => x.Id)
+				.Property(x => x.Code);
+
+			fluentMappingBuilder
+				.Entity<Issue4585TableBase>()
+				.Inheritance(x => x.TypeId, HierarchyType.Type1, typeof(Issue4585Table))
+				.Property(t => t.Data).HasColumnName("data")
+				.Property(t => t.Id).IsPrimaryKey()
+				.Property(t => t.TypeId).IsDiscriminator()
+				.Build();
+
+			fluentMappingBuilder.Entity<Issue4585Table>()
+				.Property(x => x.SomeField)
+				.Property(x => x.NestedTypeId)
+				.Association(x => x.Nested, x => x.NestedTypeId, x => x!.Id);
+
+			using var db = GetDataConnection(context, fluentMappingBuilder.MappingSchema);
+
+			using var table = db.CreateLocalTable<Issue4585TableBase>();
+			using var table1 = db.CreateLocalTable<Issue4585TableNested>();
+
+			var list      = db.GetTable<Issue4585Table>()
+				.LoadWith(x => x.Nested)
+				.ToList();
+		}
+
+		class Issue4585TableBase
+		{
+			public int Id { get; set; }
+			public string Data { get; set; } = null!;
+			public HierarchyType TypeId { get; set; }
+		}
+
+		enum HierarchyType
+		{
+			Type1 = 0,
+			Type2 = 1
+		}
+
+		sealed class Issue4585Table : Issue4585TableBase
+		{
+			public string? SomeField { get; set; }
+			public int? NestedTypeId { get; set; }
+			public Issue4585TableNested? Nested { get; set; }
+		}
+
+		sealed class Issue4585TableNested
+		{
+			public int Id { get; set; }
+			public string Code { get; set; } = null!;
+		}
+		#endregion
+
+		#region Issue 3140
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/3140")]
+		public void Issue3140Test1([DataSources(false)] string context)
+		{
+			using var db = GetDataConnection(context);
+			using var t1 = db.CreateLocalTable<Issue3140Parent>();
+			using var t2 = db.CreateLocalTable<Issue3140Child>();
+
+			var query = from p in t1
+						select new Issue3140Parent()
+						{
+							Id = p.Id,
+							Child = new Issue3140Child()
+							{
+								Id = p.Child!.Id,
+								Name = p.Child!.Name,
+							}
+						};
+
+			query.ToArray();
+
+			var selects = db.LastQuery!.Split(["SELECT"], StringSplitOptions.None).Length - 1;
+			var joins = db.LastQuery.Split(["LEFT JOIN"], StringSplitOptions.None).Length - 1;
+
+			Assert.Multiple(() =>
+			{
+				Assert.That(selects, Is.EqualTo(1));
+				Assert.That(joins, Is.EqualTo(1));
+			});
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/3140")]
+		public void Issue3140Test2([DataSources(false)] string context)
+		{
+			using var db = GetDataConnection(context);
+			using var t1 = db.CreateLocalTable<Issue3140Parent>();
+			using var t2 = db.CreateLocalTable<Issue3140Child>();
+
+			var query = t1
+				.LoadWith(
+					p => p.Child,
+					c => c.Select(x => new Issue3140Child() { Id = x.Id, Name = x.Name }));
+
+			query.ToArray();
+
+			var selects = db.LastQuery!.Split(["SELECT"], StringSplitOptions.None).Length - 1;
+			var joins = db.LastQuery.Split(["LEFT JOIN"], StringSplitOptions.None).Length - 1;
+
+			Assert.Multiple(() =>
+			{
+				Assert.That(selects, Is.EqualTo(1));
+				Assert.That(joins, Is.EqualTo(1));
+			});
+		}
+
+		sealed class Issue3140Parent
+		{
+			[PrimaryKey] public int Id { get; set; }
+			public int ChildId { get; set; }
+			[Association(ThisKey = nameof(ChildId), OtherKey = nameof(Issue3140Child.Id))] public Issue3140Child? Child { get; set; }
+		}
+
+		sealed class Issue3140Child
+		{
+			[PrimaryKey] public int Id { get; set; }
+			public string? Name { get; set; }
+		}
+		#endregion
+
+		#region Issue 4588
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4588")]
+		public void Issue4588Test([DataSources(false)] string context)
+		{
+			using var db = GetDataConnection(context);
+			using var t1 = db.CreateLocalTable<Order>();
+			using var t2 = db.CreateLocalTable<SubOrder>();
+			using var t3 = db.CreateLocalTable<SubOrderDetail>();
+
+			db.GetTable<Order>()
+				.Where(x => x.Name!.StartsWith("cat"))
+				.LoadWith(x => x.SubOrders)
+				.ThenLoad(x => x.SubOrderDetails)
+				.OrderBy(x => x.Id)
+				.Skip(100)
+				.Take(10)
+				.ToArray();
+		}
+
+		sealed class Order
+		{
+			public int Id { get; set; }
+			public string? Name { get; set; }
+			[Association(ThisKey = nameof(Id), OtherKey = nameof(SubOrder.OrderId))]
+			public List<SubOrder> SubOrders { get; set; } = null!;
+		}
+
+		sealed class SubOrder
+		{
+			public int Id { get; set; }
+			public int OrderId { get; set; }
+			[Association(ThisKey = nameof(OrderId), OtherKey = nameof(Order.Id))]
+			public Order? Order { get; set; }
+			[Association(ThisKey = nameof(Id), OtherKey = nameof(SubOrderDetail.SubOrderId))]
+			public List<SubOrderDetail> SubOrderDetails { get; set; } = null!;
+		}
+
+		sealed class SubOrderDetail
+		{
+			public int Id { get; set; }
+			public int SubOrderId { get; set; }
+			[Association(ThisKey = nameof(SubOrderId), OtherKey = nameof(SubOrder.Id))]
+			public SubOrder? SubOrder { get; set; }
+			public string? Code { get; set; }
+			public DateTime Date { get; set; }
+			public bool IsActive { get; set; }
+		}
+		#endregion
 	}
 }

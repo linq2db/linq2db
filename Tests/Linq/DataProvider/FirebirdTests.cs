@@ -1289,6 +1289,8 @@ namespace Tests.DataProvider
 		}
 	}
 
+	#region Extensions
+
 	static class FirebirdModuleFunctions
 	{
 		[Sql.Function("TEST_FUNCTION", ServerSideOnly = true)]
@@ -1393,4 +1395,6 @@ namespace Tests.DataProvider
 			public BigInteger?      COL_INT_128    { get; set; }
 		}
 	}
+
+	#endregion
 }

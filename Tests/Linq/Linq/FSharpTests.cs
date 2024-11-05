@@ -230,5 +230,75 @@ namespace Tests.Linq
 			using var db = GetDataContext(context);
 			FSharp.Issue3743.Issue3743Test2(db, 1);
 		}
+
+		[ActiveIssue]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4132")]
+		public void Issue4132Test1([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			FSharp.Issue4132.Issue4132Test1(db);
+		}
+
+		[ActiveIssue]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4132")]
+		public void Issue4132Test2([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			FSharp.Issue4132.Issue4132Test2(db);
+		}
+
+		[ActiveIssue]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/1813")]
+		public void Issue1813Test1([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			FSharp.Issue1813.Issue1813Test1(db);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/1813")]
+		public void Issue1813Test2([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			FSharp.Issue1813.Issue1813Test2(db);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/1813")]
+		public void Issue1813Test3([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			FSharp.Issue1813.Issue1813Test3(db);
+		}
+
+		[ActiveIssue]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/1813")]
+		public void Issue1813Test4([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			FSharp.Issue1813.Issue1813Test4(db);
+		}
+
+		[ActiveIssue]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/1813")]
+		public void Issue1813Test5([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			FSharp.Issue1813.Issue1813Test5(db);
+		}
+
+		[ActiveIssue]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/1813")]
+		public void Issue1813Test6([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			FSharp.Issue1813.Issue1813Test6(db);
+		}
+
+		[ActiveIssue]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/1813")]
+		public void Issue1813Test7([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			FSharp.Issue1813.Issue1813Test7(db);
+		}
 	}
 }

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using System.Linq.Dynamic.Core;
 using System.Linq.Expressions;
 
 using FluentAssertions;
@@ -10,6 +11,8 @@ using LinqToDB.Linq;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
+
+using Tests.Model;
 
 namespace Tests.Linq
 {
@@ -310,5 +313,57 @@ namespace Tests.Linq
 			}
 		}
 
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4496")]
+		public void Issue4496Test([DataSources] string context)
+		{
+			var builder = new FluentMappingBuilder(new MappingSchema());
+
+			builder
+				.Entity<Child>()
+				.HasQueryFilter((IQueryable<Child> q, IDataContext ctx) => q.InnerJoin(
+					ctx.GetTable<Parent>(),
+					(p, u) => p.ParentID == u.ParentID && u.Value1 > 5,
+					(p, u) => p)
+				.Distinct());
+
+			builder.Build();
+
+			using var db = GetDataContext(context, builder.MappingSchema);
+
+			var query = db.Child.Where(x => x.ChildID > 30);
+
+			query.ToArray();
+
+			// StackOverflow on query comparison
+			query.ToArray();
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4508")]
+		public void Issue4508Test([DataSources] string context)
+		{
+			var builder = new FluentMappingBuilder(new MappingSchema());
+
+			var id = 0;
+
+			builder
+				.Entity<Person>()
+				.HasQueryFilter((q, ctx) =>
+				{
+					var idCopy = id++;
+					return q.Where(p => p.ID > idCopy);
+				});
+
+			builder.Build();
+
+			using var db = GetDataContext(context, builder.MappingSchema);
+
+			var query = db.Person;
+
+			var arr1 = query.ToArray();
+
+			var arr2 = query.ToArray();
+
+			Assert.That(arr1, Has.Length.EqualTo(arr2.Length + 1));
+		}
 	}
 }

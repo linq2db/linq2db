@@ -637,5 +637,93 @@ namespace Tests.DataProvider
 			}
 		}
 
+		#region issue 4581
+		[ActiveIssue]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4581")]
+		public void Issue4581Test([IncludeDataSources(true, ProviderName.SqlCe)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable<Issue4581Table>();
+
+			db.Insert(new Issue4581Table() { Value = new string('1', 5000) });
+		}
+
+		[Table]
+		sealed class Issue4581Table
+		{
+			[Column(DbType = "ntext")] public string? Value { get; set; }
+		}
+		#endregion
+
+		#region 4574
+#if NETFRAMEWORK
+		[ActiveIssue]
+#endif
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4574")]
+		public void Issue4574Test([IncludeDataSources(ProviderName.SqlCe)] string context, [Values] BulkCopyType copyType)
+		{
+			using var db = GetDataConnection(context);
+			using var tb = db.CreateLocalTable<Issue4574Table>();
+
+			var items = Enumerable.Range(1, 1000).Select(_ => new Issue4574Table() { ReserveId = Guid.NewGuid(), TableId = Guid.NewGuid() }).ToArray();
+
+			tb.BulkCopy(new BulkCopyOptions() { BulkCopyType = copyType }, items);
+		}
+
+		[Table]
+		internal sealed class Issue4574Table
+		{
+			[Column] public Guid ReserveId { get; set; }
+			[Column] public Guid TableId { get; set; }
+		}
+		#endregion
+
+		#region 4436
+		[ActiveIssue]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4436")]
+		public void Issue4436Test([IncludeDataSources(ProviderName.SqlCe)] string context)
+		{
+			using var db = GetDataConnection(context);
+			using var tb = db.CreateLocalTable<Issue4436Table>();
+
+			var items = new Issue4436Table[]
+			{
+				new Issue4436Table()
+			};
+
+			tb.BulkCopy(items);
+		}
+
+		[Table]
+		internal sealed class Issue4436Table
+		{
+			[Column] public string? Value1 { get; set; }
+			[Column(DataType = DataType.NText)] public string? Value2 { get; set; }
+		}
+		#endregion
+
+		#region 4438
+		[ActiveIssue]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4438")]
+		public void Issue4438Test([IncludeDataSources(ProviderName.SqlCe)] string context)
+		{
+			using var db = GetDataConnection(context);
+			using var tb = db.CreateLocalTable<Issue4438Table>();
+
+			var items = new Issue4438Table[]
+			{
+				new Issue4438Table() { Value = 1m },
+				new Issue4438Table() { Value = 0.1m },
+			};
+
+			tb.BulkCopy(items);
+		}
+
+		[Table]
+		internal sealed class Issue4438Table
+		{
+			[Column(Precision = 4, Scale = 2)] public decimal Value { get; set; }
+		}
+		#endregion
 	}
 }

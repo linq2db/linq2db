@@ -144,6 +144,7 @@ namespace LinqToDB.DataProvider.Access
 
 		public override StringBuilder Convert(StringBuilder sb, string value, ConvertType convertType)
 		{
+			// https://learn.microsoft.com/en-us/office/troubleshoot/access/error-using-special-characters
 			switch (convertType)
 			{
 				case ConvertType.NameToQueryParameter:

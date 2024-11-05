@@ -9,10 +9,12 @@ namespace Tests
 			// offset 40 is not used by any timezone, so we can detect tz handling issues, which could be hidden when offset match current TZ
 			public static readonly DateTimeOffset DateTimeOffset          = new DateTimeOffset(2020, 2, 29, 17, 54, 55, 123, TimeSpan.FromMinutes(40)).AddTicks(1234);
 			public static readonly DateTimeOffset DateTimeOffsetUtc       = new DateTimeOffset(2020, 2, 29, 17, 9, 55, 123, TimeSpan.Zero).AddTicks(1234);
+			public static readonly DateTimeOffset DateTimeOffset6Utc      = new DateTimeOffset(2020, 2, 29, 17, 9, 55, 123, TimeSpan.Zero).AddTicks(1230);
 			public static readonly DateTime DateTime                      = new DateTime(2020, 2, 29, 17, 54, 55, 123).AddTicks(1234);
 			public static readonly DateTime DateTime0                     = new DateTime(2020, 2, 29, 17, 54, 55);
 			public static readonly DateTime DateTime3                     = new DateTime(2020, 2, 29, 17, 54, 55, 123);
 			public static readonly DateTime DateTimeUtc                   = new DateTime(2020, 2, 29, 17, 54, 55, 123, DateTimeKind.Utc).AddTicks(1234);
+			public static readonly DateTime DateTime6Utc                  = new DateTime(2020, 2, 29, 17, 54, 55, 123, DateTimeKind.Utc).AddTicks(1230);
 			public static readonly DateTime DateTime4Utc                  = new DateTime(2020, 2, 29, 17, 54, 55, 123, DateTimeKind.Utc).AddTicks(1000);
 			public static readonly DateTime Date                          = new (2020, 2, 29);
 			public static readonly DateTime DateAmbiguous                 = new (2020, 8, 9);
@@ -20,6 +22,7 @@ namespace Tests
 			public static readonly DateOnly DateOnly                      = new (2020, 2, 29);
 			public static readonly DateOnly DateOnlyAmbiguous             = new (2020, 8, 9);
 #endif
+			public static readonly TimeSpan Interval                      = new TimeSpan(-5, 17, 54, 55, 123).Add(TimeSpan.FromTicks(1234));
 			public static readonly TimeSpan TimeOfDay                     = new TimeSpan(0, 17, 54, 55, 123).Add(TimeSpan.FromTicks(1234));
 			public static readonly TimeSpan TimeOfDay4                    = new TimeSpan(0, 17, 54, 55, 123).Add(TimeSpan.FromTicks(1000));
 			public static readonly Guid     Guid1                         = new ("bc7b663d-0fde-4327-8f92-5d8cc3a11d11");
