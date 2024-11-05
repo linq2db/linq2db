@@ -2906,36 +2906,52 @@ namespace LinqToDB.Linq.Builder
 		{
 			if (IsNull(expr1) == true)
 			{
-				var unwrapped2 = SimplifyConvert(expr2);
-				if (unwrapped2 is SqlGenericConstructorExpression)
+				if (expr2 is SqlAdjustTypeExpression)
 				{
-					result = ExpressionInstances.Boolean(isNot);
-					return true;
-				}
-
-				if (unwrapped2 is SqlDefaultIfEmptyExpression defaultIfEmpty)
-				{
-					var testCondition = defaultIfEmpty.NotNullExpressions.Select(SequenceHelper.MakeNotNullCondition).Aggregate(Expression.AndAlso);
-					if (!isNot)
-						testCondition = Expression.Not(testCondition);
-					result = testCondition;
-					return true;
-				}
-
-				if (unwrapped2 is ConditionalExpression conditional)
-				{
-					if (IsNull(conditional.IfTrue) == true)
+					// Usually SqlAdjustTypeExpression is created during collection navigation property translation or EagerLoading, so we can transform null equality to Any
+					var elementType = expr2.Type.TryGetElementType(typeof(IEnumerable<>));
+					if (elementType != null)
 					{
+						result = Expression.Call(typeof(Enumerable), nameof(Enumerable.Any), [elementType], expr2);
 						if (!isNot)
-						{
-							result = conditional.Test;
-						}
-						else
-						{
-							result = Expression.Not(conditional.Test);
-						}
+							result = Expression.Not(result);
 
 						return true;
+					}
+				}
+				else
+				{
+					var unwrapped2 = SimplifyConvert(expr2);
+					if (unwrapped2 is SqlGenericConstructorExpression)
+					{
+						result = ExpressionInstances.Boolean(isNot);
+						return true;
+					}
+
+					if (unwrapped2 is SqlDefaultIfEmptyExpression defaultIfEmpty)
+					{
+						var testCondition = defaultIfEmpty.NotNullExpressions.Select(SequenceHelper.MakeNotNullCondition).Aggregate(Expression.AndAlso);
+						if (!isNot)
+							testCondition = Expression.Not(testCondition);
+						result = testCondition;
+						return true;
+					}
+
+					if (unwrapped2 is ConditionalExpression conditional)
+					{
+						if (IsNull(conditional.IfTrue) == true)
+						{
+							if (!isNot)
+							{
+								result = conditional.Test;
+							}
+							else
+							{
+								result = Expression.Not(conditional.Test);
+							}
+
+							return true;
+						}
 					}
 				}
 			}
