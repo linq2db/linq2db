@@ -57,7 +57,7 @@ namespace Tests.xUpdate
 		[Test]
 		public async Task KeepIdentity_SkipOnInsertTrue(
 			[DataSources(false, TestProvName.AllClickHouse)] string context,
-			[Values(null, true, false)                     ] bool? keepIdentity,
+			[Values                                        ] bool? keepIdentity,
 			[Values                                        ] BulkCopyType copyType,
 			[Values(0, 1, 2)                               ] int asyncMode) // 0 == sync, 1 == async, 2 == async with IAsyncEnumerable
 		{
@@ -146,10 +146,10 @@ namespace Tests.xUpdate
 		[Test]
 		public async Task KeepIdentity_SkipOnInsertFalse(
 			[DataSources(false, TestProvName.AllClickHouse)]
-		                                string       context,
-			[Values(null, true, false)] bool?        keepIdentity,
-			[Values]                    BulkCopyType copyType,
-			[Values(0, 1, 2)]           int          asyncMode) // 0 == sync, 1 == async, 2 == async with IAsyncEnumerable
+		                      string       context,
+			[Values] bool?    keepIdentity,
+			[Values]          BulkCopyType copyType,
+			[Values(0, 1, 2)] int          asyncMode) // 0 == sync, 1 == async, 2 == async with IAsyncEnumerable
 		{
 			if ((context == ProviderName.Sybase) && copyType == BulkCopyType.ProviderSpecific && keepIdentity != true)
 				Assert.Inconclusive("Sybase native bulk copy doesn't support identity insert (despite documentation)");

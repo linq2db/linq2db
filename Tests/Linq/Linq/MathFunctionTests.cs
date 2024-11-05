@@ -199,6 +199,16 @@ namespace Tests.Linq
 					from t in from p in db.Types select Math.Floor(Math.Pow((double)p.MoneyValue, 3)) where t != 0 select t);
 		}
 
+		// Sybase: https://stackoverflow.com/questions/25281843
+		[Test]
+		public void PowDecimal([DataSources(ProviderName.SQLiteMS, TestProvName.AllSybase)] string context)
+		{
+			using (var db = GetDataContext(context))
+				AreEqual(
+					from t in from p in Types select Math.Floor(Sql.Power(p.MoneyValue, 3)!.Value) where t != 0 select t,
+					from t in from p in db.Types select Math.Floor(Sql.Power(p.MoneyValue, 3)!.Value) where t != 0 select t);
+		}
+
 		[Test]
 		public void Round1([DataSources(ProviderName.SQLiteMS)] string context)
 		{
@@ -329,8 +339,11 @@ namespace Tests.Linq
 					from t in from p in db.Types select Math.Round((double)p.MoneyValue, 1, MidpointRounding.ToEven) where t != 0 select Math.Round(t, 5));
 		}
 
+		// TODO: implement other MidpointRounding values (and remove NUnit4001 suppress)
 		[Test]
+#pragma warning disable NUnit4001
 		public void Round12([DataSources(TestProvName.AllSQLite)] string context, [Values(MidpointRounding.AwayFromZero, MidpointRounding.ToEven)] MidpointRounding mp)
+#pragma warning restore NUnit4001
 		{
 
 			using (var db = GetDataContext(context))

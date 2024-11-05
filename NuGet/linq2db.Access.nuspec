@@ -22,7 +22,7 @@
 			</group>
 			<group targetFramework="net8.0">
 				<dependency id="linq2db"           version="6.0.0" />
-				<dependency id="System.Data.OleDb" version="8.0.0" />
+				<dependency id="System.Data.OleDb" version="8.0.1" />
 			</group>
 		</dependencies>
 		<contentFiles>

@@ -150,12 +150,10 @@ namespace Tests.UserTests
 				builder.Entity<TestEntity>().Property(_ => _.Id).IsColumn().Build();
 				semaphore2.WaitOne();
 
-				Assert.Multiple(() =>
-				{
-					Assert.That(ms.GetAttributes<ColumnAttribute>(typeof(TestEntity), typeof(TestEntity).GetProperty("Id")!), Is.Not.Empty);
-					Assert.That(ms.GetAttributes<ColumnAttribute>(typeof(TestEntity), typeof(TestEntity).GetProperty("Value")!), Is.Not.Empty);
-				});
-
+#pragma warning disable NUnit2045 // Use Assert.Multiple
+				Assert.That(ms.GetAttributes<ColumnAttribute>(typeof(TestEntity), typeof(TestEntity).GetProperty("Id")!), Is.Not.Empty);
+#pragma warning restore NUnit2045 // Use Assert.Multiple
+				Assert.That(ms.GetAttributes<ColumnAttribute>(typeof(TestEntity), typeof(TestEntity).GetProperty("Value")!), Is.Not.Empty);
 			}
 			finally
 			{
@@ -181,11 +179,10 @@ namespace Tests.UserTests
 				builder.Entity<TestEntity>().Property(_ => _.Value).IsColumn().Build();
 				semaphore2.WaitOne();
 
-				Assert.Multiple(() =>
-				{
-					Assert.That(ms.GetAttributes<ColumnAttribute>(typeof(TestEntity), typeof(TestEntity).GetProperty("Id")!), Is.Not.Empty);
-					Assert.That(ms.GetAttributes<ColumnAttribute>(typeof(TestEntity), typeof(TestEntity).GetProperty("Value")!), Is.Not.Empty);
-				});
+#pragma warning disable NUnit2045 // Use Assert.Multiple
+				Assert.That(ms.GetAttributes<ColumnAttribute>(typeof(TestEntity), typeof(TestEntity).GetProperty("Id")!), Is.Not.Empty);
+#pragma warning restore NUnit2045 // Use Assert.Multiple
+				Assert.That(ms.GetAttributes<ColumnAttribute>(typeof(TestEntity), typeof(TestEntity).GetProperty("Value")!), Is.Not.Empty);
 			}
 			finally
 			{

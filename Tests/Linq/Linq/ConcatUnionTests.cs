@@ -687,7 +687,7 @@ namespace Tests.Linq
 
 				foreach (var item in q)
 				{
-					TestContext.WriteLine(item);
+					TestContext.Out.WriteLine(item);
 				}
 			}
 		}
@@ -728,7 +728,7 @@ namespace Tests.Linq
 				var fullJoinSql = fullJoin.ToString(); // BLToolkit.Data.Linq.LinqException : Types in Concat are constructed incompatibly.
 				Assert.That(fullJoinSql, Is.Not.Null);
 
-				TestContext.Write(fullJoinSql);
+				TestContext.Out.Write(fullJoinSql);
 			}
 		}
 

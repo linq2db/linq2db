@@ -357,7 +357,7 @@ FROM
 
 			var query = db.Person.LoadWith(p => p.Patient).AsQueryable();
 			var sql   = query.ToString()!;
-			TestContext.WriteLine(sql);
+			TestContext.Out.WriteLine(sql);
 
 			sql.Should().NotContain("LoadWithQueryable");
 

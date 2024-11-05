@@ -503,7 +503,7 @@ WHERE
 					x.SomeValue.Value
 				});
 
-				TestContext.WriteLine(q.ToString());
+				TestContext.Out.WriteLine(q.ToString());
 
 				var select = q.GetSelectQuery();
 

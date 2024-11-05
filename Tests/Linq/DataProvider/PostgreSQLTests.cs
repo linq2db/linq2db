@@ -929,7 +929,8 @@ namespace Tests.DataProvider
 			[Column(DbType = "macaddr8", Configuration = TestProvName.PostgreSQL14)]
 			[Column(DbType = "macaddr8", Configuration = ProviderName.PostgreSQL15)]
 			[Column(DbType = "macaddr8", Configuration = TestProvName.PostgreSQL16)]
-													   public PhysicalAddress? macaddr8DataType         { get; set; }
+			[Column(DbType = "macaddr8", Configuration = TestProvName.PostgreSQL17)]
+			                                           public PhysicalAddress? macaddr8DataType         { get; set; }
 			// json
 			[Column]                                   public string? jsonDataType                      { get; set; }
 			[NotColumn(Configuration = ProviderName.PostgreSQL92)]
@@ -2263,7 +2264,7 @@ namespace Tests.DataProvider
 					};
 
 				var str = query.ToString();
-				TestContext.WriteLine(str);
+				TestContext.Out.WriteLine(str);
 			}
 		}
 
@@ -2280,7 +2281,7 @@ namespace Tests.DataProvider
 					};
 
 				var str = query.ToString();
-				TestContext.WriteLine(str);
+				TestContext.Out.WriteLine(str);
 			}
 		}
 

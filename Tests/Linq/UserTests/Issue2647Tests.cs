@@ -33,7 +33,7 @@ namespace Tests.UserTests
 
 				query.ToList();
 				var sql = query.ToString();
-				TestContext.WriteLine(sql);
+				TestContext.Out.WriteLine(sql);
 
 				var selectQuery = query.GetSelectQuery();
 				Assert.That(selectQuery.OrderBy.Items, Has.Count.EqualTo(2));

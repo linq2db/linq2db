@@ -1,6 +1,8 @@
 parameters:
-  for_nuget: false
-  for_tests: false
+  with_nugets: false
+  with_examples: false
+  with_tests: false
+  with_analyzers: false
 
 jobs:
 - job: build_job
@@ -45,10 +47,11 @@ jobs:
 
   - task: DotNetCoreCLI@2
     inputs:
-      command: 'build'
+      command: build
       projects: 'Examples/Examples.sln'
       arguments: '--configuration Debug'
     displayName: Build Examples (verify)
+    condition: and(succeeded(), ${{ parameters.with_examples }})
 
   - task: DotNetCoreCLI@2
     inputs:
@@ -56,7 +59,8 @@ jobs:
       projects: $(solution)
       arguments: --configuration $(test_configuration)
     displayName: Build Solution for Tests
-    condition: and(succeeded(), ${{ parameters.for_tests }})
+    condition: and(succeeded(), ${{ parameters.with_tests }})
+    retryCountOnTaskFailure: 1 # temporary workaround for https://github.com/dotnet/sdk/issues/44080
 
   - task: CmdLine@2
     inputs:
@@ -115,82 +119,83 @@ jobs:
 
         copy "Data\Create Scripts\Northwind.sql" testing\scripts\northwind.sql
         if %errorlevel% neq 0 exit
-    condition: and(succeeded(), ${{ parameters.for_tests }})
+    condition: and(succeeded(), ${{ parameters.with_tests }})
     displayName: Build Test Artifacts
 
   - task: PublishPipelineArtifact@1
     inputs:
       path: '$(Build.SourcesDirectory)/testing'
       artifact: $(artifact_test_binaries)
-    condition: and(succeeded(), ${{ parameters.for_tests }})
+    condition: and(succeeded(), ${{ parameters.with_tests }})
     displayName: Publish Test Artifacts
 
   - task: DotNetCoreCLI@2
     inputs:
       command: build
       projects: $(solution)
-      arguments: -property:ContinuousIntegrationBuild=true --configuration $(release_configuration)
+      arguments: -property:ContinuousIntegrationBuild=true -property:RunAnalyzersDuringBuild=$(with_analyzers) --configuration $(release_configuration)
     displayName: Build Solution for Release and Nuget
+    condition: and(succeeded(), ${{ parameters.with_nugets }})
 
   - task: PublishPipelineArtifact@1
     inputs:
       path: '$(Build.SourcesDirectory)/.build/bin/LinqToDB/Release'
       artifact: '$(artifact_linq2db_binaries)'
     displayName: Publish linq2db build results
-    condition: and(succeeded(), ${{ parameters.for_nuget }})
+    condition: and(succeeded(), ${{ parameters.with_nugets }})
 
   - task: PublishPipelineArtifact@1
     inputs:
       path: '$(Build.SourcesDirectory)/.build/bin/LinqToDB.Tools/Release'
       artifact: '$(artifact_linq2db_tools_binaries)'
     displayName: Publish linq2db.Tools build results
-    condition: and(succeeded(), ${{ parameters.for_nuget }})
+    condition: and(succeeded(), ${{ parameters.with_nugets }})
 
   - task: PublishPipelineArtifact@1
     inputs:
       path: '$(Build.SourcesDirectory)/.build/bin/LinqToDB.Extensions/Release'
       artifact: '$(artifact_linq2db_extensions_binaries)'
     displayName: Publish linq2db.Extensions build results
-    condition: and(succeeded(), ${{ parameters.for_nuget }})
+    condition: and(succeeded(), ${{ parameters.with_nugets }})
 
   - task: PublishPipelineArtifact@1
     inputs:
       path: '$(Build.SourcesDirectory)/.build/bin/LinqToDB.Remote.Wcf/Release'
       artifact: '$(artifact_linq2db_remote_wcf_binaries)'
     displayName: Publish linq2db.remote.Wcf build results
-    condition: and(succeeded(), ${{ parameters.for_nuget }})
+    condition: and(succeeded(), ${{ parameters.with_nugets }})
 
   - task: PublishPipelineArtifact@1
     inputs:
       path: '$(Build.SourcesDirectory)/.build/bin/LinqToDB.Remote.Grpc/Release'
       artifact: '$(artifact_linq2db_remote_grpc_binaries)'
     displayName: Publish linq2db.remote.Grpc build results
-    condition: and(succeeded(), ${{ parameters.for_nuget }})
+    condition: and(succeeded(), ${{ parameters.with_nugets }})
 
   - task: PublishPipelineArtifact@1
     inputs:
       path: '$(Build.SourcesDirectory)/.build/bin/LinqToDB.CLI/Release'
       artifact: '$(artifact_linq2db_cli_binaries)'
     displayName: Publish linq2db.CLI build results
-    condition: and(succeeded(), ${{ parameters.for_nuget }})
+    condition: and(succeeded(), ${{ parameters.with_nugets }})
 
   - task: PublishPipelineArtifact@1
     inputs:
       path: '$(Build.SourcesDirectory)/.build/bin/LinqToDB.FSharp/Release'
       artifact: '$(artifact_linq2db_fsharp_binaries)'
     displayName: Publish linq2db.FSharp build results
-    condition: and(succeeded(), ${{ parameters.for_nuget }})
+    condition: and(succeeded(), ${{ parameters.with_nugets }})
 
   - task: PublishPipelineArtifact@1
     inputs:
       path: '$(Build.SourcesDirectory)/.build/bin/LinqToDB.EntityFrameworkCore/Release'
       artifact: '$(artifact_linq2db_efcore_binaries)'
     displayName: Publish linq2db.EntityFrameworkCore build results
-    condition: and(succeeded(), ${{ parameters.for_nuget }})
+    condition: and(succeeded(), ${{ parameters.with_nugets }})
 
   - task: PublishPipelineArtifact@1
     inputs:
       path: '$(Build.SourcesDirectory)/.build/bin/Tests/$(release_configuration)/$(netfx_tfm)'
       artifact: '$(artifact_t4_binaries)'
     displayName: Publish nuget artifacts part 1
-    condition: and(succeeded(), ${{ parameters.for_nuget }})
+    condition: and(succeeded(), ${{ parameters.with_nugets }})

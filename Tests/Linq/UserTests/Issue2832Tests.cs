@@ -99,7 +99,7 @@ namespace Tests.UserTests
 					select new {spt.Id};
 
 				var sql = query.ToString();
-				TestContext.WriteLine(sql);
+				TestContext.Out.WriteLine(sql);
 
 				var sourcesCount = QueryHelper.EnumerateAccessibleSources(query.GetSelectQuery()).Count(s => s.ElementType == QueryElementType.SqlQuery);
 
