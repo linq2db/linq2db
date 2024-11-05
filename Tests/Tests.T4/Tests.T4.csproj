@@ -4,6 +4,8 @@
 	
 	<PropertyGroup>
 		<AssemblyName>Tests.T4</AssemblyName>
+
+		<MSBuildWarningsAsMessages>$(MSBuildWarningsAsMessages);MSB3277</MSBuildWarningsAsMessages>
 	</PropertyGroup>
 
 	<ItemGroup>
