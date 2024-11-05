@@ -1,10 +1,12 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 	<Import Project="..\linq2db.BasicTestProjects.props" />
-	
+
 	<PropertyGroup>
 		<TargetFrameworks>net6.0;net8.0</TargetFrameworks>
 		<WarningLevel>5</WarningLevel>
 		<DisableImplicitFSharpCoreReference>true</DisableImplicitFSharpCoreReference>
+
+		<MSBuildWarningsAsMessages>$(MSBuildWarningsAsMessages);MSB3277</MSBuildWarningsAsMessages>
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -15,7 +17,7 @@
 
 	<ItemGroup>
 		<ProjectReference Include="..\..\Source\LinqToDB.EntityFrameworkCore\LinqToDB.EntityFrameworkCore.csproj" />
-		
+
 		<PackageReference Include="EntityFrameworkCore.FSharp" />
 		<PackageReference Include="FSharp.Core" />
 	</ItemGroup>
