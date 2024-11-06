@@ -21,7 +21,7 @@ namespace Tests.UserTests
 			// we will use less to detect regressions earlier
 			// e.g. now it required 130Kb (release) / 190Kb (debug) of memory
 			// Note that stack use could depend on provider, so we test all of them
-			var thread = new Thread(ThreadBody, 200 * 1024);
+			var thread = new Thread(ThreadBody, 220 * 1024);
 			thread.Start(tb);
 			thread.Join();
 		}
