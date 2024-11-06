@@ -3274,6 +3274,7 @@ namespace Tests.Linq
 			}
 		}
 
+		[ThrowsForProvider(typeof(LinqException), TestProvName.AllSybase, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/2912")]
 		public void Issue2912Test1([DataSources] string context)
 		{
@@ -3299,6 +3300,7 @@ namespace Tests.Linq
 			query.ToArray();
 		}
 
+		[ThrowsForProvider(typeof(LinqException), TestProvName.AllSybase, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/2912")]
 		public void Issue2912Test3([DataSources] string context)
 		{

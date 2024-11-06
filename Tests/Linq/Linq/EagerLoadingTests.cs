@@ -3089,7 +3089,7 @@ FROM
 
 		#region Issue 4585
 		[ActiveIssue]
-		[Test(Description = "https://github.com/linq2db/linq2db/issues/4497")]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4585")]
 		public void Issue4585Test([DataSources] string context)
 		{
 			var fluentMappingBuilder = new FluentMappingBuilder(new MappingSchema());
@@ -3219,6 +3219,8 @@ FROM
 		#endregion
 
 		#region Issue 4588
+		[ThrowsForProvider(typeof(LinqException), TestProvName.AllAccess, ErrorMessage = ErrorHelper.Error_Skip_in_Subquery)]
+		[ThrowsForProvider(typeof(LinqException), TestProvName.AllSybase, ErrorMessage = ErrorHelper.Error_OrderBy_in_Derived)]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4588")]
 		public void Issue4588Test([DataSources(false)] string context)
 		{

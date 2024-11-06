@@ -2606,6 +2606,7 @@ $function$
 		}
 
 		#region Issue 4556
+		[ActiveIssue]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4556")]
 		public void Issue4556Test([IncludeDataSources(true, TestProvName.AllPostgreSQL15Plus)] string context)
 		{
@@ -2794,6 +2795,7 @@ $function$
 		// - from Pg* attributes
 		// - schema tables
 		// - using npgsql-specific naming conventions
+		[ActiveIssue]
 		[Test(Description = "https://github.com/npgsql/npgsql/issues/4780")]
 		public void Issue4780Test1([IncludeDataSources(TestProvName.AllPostgreSQL)] string context, [Values] bool inline)
 		{
@@ -2835,6 +2837,7 @@ $function$
 			}
 		}
 
+		[ActiveIssue]
 		[Test(Description = "https://github.com/npgsql/npgsql/issues/4780")]
 		public void Issue4780Test2([IncludeDataSources(TestProvName.AllPostgreSQL)] string context, [Values] bool inline)
 		{

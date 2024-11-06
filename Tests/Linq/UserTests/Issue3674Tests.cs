@@ -8,8 +8,6 @@ using NUnit.Framework;
 
 namespace Tests.UserTests
 {
-	// test handling of DefaultExpression in queries
-	// roslyn compiler replaces default with constant value, so we need to restore it from constant before execution
 	[TestFixture]
 	public class Issue3674Tests : TestBase
 	{

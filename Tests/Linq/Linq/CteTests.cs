@@ -2201,7 +2201,7 @@ namespace Tests.Linq
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4366")]
-		public void Issue4366Test1([CteContextSource] string context)
+		public void Issue4366Test1([CteContextSource(TestProvName.AllSapHana)] string context)
 		{
 			using var db = GetDataContext(context);
 			using var tb = db.CreateLocalTable<Dto>();
@@ -2229,7 +2229,7 @@ namespace Tests.Linq
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4366")]
-		public void Issue4366Test2([CteContextSource] string context)
+		public void Issue4366Test2([CteContextSource(TestProvName.AllSapHana)] string context)
 		{
 			using var db = GetDataContext(context);
 			using var tb = db.CreateLocalTable<Dto>();

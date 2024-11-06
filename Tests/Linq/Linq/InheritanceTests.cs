@@ -15,8 +15,6 @@ namespace Tests.Linq
 {
 	using Model;
 
-	using Org.BouncyCastle.Crypto.Agreement;
-
 	[TestFixture]
 	public class InheritanceTests : TestBase
 	{

@@ -3111,8 +3111,7 @@ namespace Tests.xUpdate
 			});
 		}
 
-		[ActiveIssue]
-		[Test]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4253")]
 		public void Issue4253Test([IncludeDataSources(true, FeatureUpdateOutputWithoutOldSingle)] string context)
 		{
 			using var db = GetDataContext(context);
