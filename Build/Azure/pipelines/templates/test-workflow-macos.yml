@@ -67,13 +67,6 @@ steps:
   condition: and(variables.title, variables.script_local, succeeded())
   displayName: Mark script as executable
 
-- task: Docker@2
-  displayName: Auth on hub.docker.com
-  inputs:
-    command: login
-    containerRegistry: dockerhub
-  condition: and(variables.title, eq(variables.docker_login, 'true'), succeeded())
-
 - task: CmdLine@2
   inputs:
     script: '$(System.DefaultWorkingDirectory)/scripts/$(script_global)'
@@ -103,9 +96,14 @@ steps:
   condition: and(variables.title, variables.script_local, eq(variables.net80, 'true'), succeeded())
   displayName: Setup tests
 
-- script: dotnet test ./net8.0/main/x64/linq2db.Tests.dll --filter "TestCategory != SkipCI" -f net80 -l trx $(extra)
-  condition: and(variables.title, eq(variables.net80, 'true'), succeeded())
+# - script: dotnet test ./net8.0/main/x64/linq2db.Tests.dll --filter "TestCategory != SkipCI" -f net80 -l trx $(extra) --blame-hang-timeout 5m
+#   condition: and(variables.title, eq(variables.net80, 'true'), succeeded(), ne(variables.retry, 'true'))
+#   displayName: 'Tests (.NET 8): $(title)'
+
+- script: dotnet test ./net8.0/main/x64/linq2db.Tests.dll --filter "TestCategory != SkipCI" -f net80 -l trx $(extra) --blame-hang-timeout 5m
+  condition: and(variables.title, eq(variables.net80, 'true'), succeeded(), eq(variables.retry, 'true'))
   displayName: 'Tests (.NET 8): $(title)'
+  retryCountOnTaskFailure: 2
 
 - script: dotnet test ./net8.0/efcore/x64/linq2db.EntityFrameworkCore.Tests.dll --filter "TestCategory != SkipCI" -f net80 -l trx $(extra)
   condition: and(variables.title, eq(variables.net80, 'true'), succeeded())

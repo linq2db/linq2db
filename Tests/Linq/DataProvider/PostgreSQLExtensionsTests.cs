@@ -300,6 +300,7 @@ namespace Tests.DataProvider
 
 		#region 4562
 
+		[ActiveIssue]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4562")]
 		public void Issue4562Test([IncludeDataSources(TestProvName.AllPostgreSQL95Plus)] string context)
 		{

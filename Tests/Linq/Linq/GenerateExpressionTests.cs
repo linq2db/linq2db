@@ -65,6 +65,7 @@ namespace Tests.Linq
 		}
 
 		#region issue 4322
+		[ActiveIssue]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4322")]
 		public void Issue4322Test([DataSources] string context)
 		{

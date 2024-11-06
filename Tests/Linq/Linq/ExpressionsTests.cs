@@ -1184,7 +1184,7 @@ namespace Tests.Linq
 				=> (serv) => new Issue4613ServiceProjection { IdContract = serv.IdContract };
 		}
 
-		[Test]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4613")]
 		public void Issue4613Test([DataSources] string context)
 		{
 			using var db = GetDataContext(context);

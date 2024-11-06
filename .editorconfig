@@ -369,6 +369,7 @@ dotnet_diagnostic.IDE0290.severity = none # IDE0290: Use primary constructor
 dotnet_diagnostic.IDE0300.severity = none # IDE0300: Collection initialization can be simplified
 dotnet_diagnostic.IDE0301.severity = none # IDE0301: Collection initialization can be simplified
 dotnet_diagnostic.IDE0305.severity = none # IDE0305: Collection initialization can be simplified
+dotnet_diagnostic.IDE0330.severity = none # IDE0330: Use Lock class (TODO: needs polyfill)
 dotnet_diagnostic.IDE1006.severity = none # IDE1006: Naming rule violation
 
 dotnet_diagnostic.CS1998.severity = error # CS1998: Async method lacks 'await' operators and will run synchronously
@@ -697,6 +698,16 @@ dotnet_diagnostic.MA0157.severity = none
 dotnet_diagnostic.MA0158.severity = none
 # MA0159: Use 'Order' instead of 'OrderBy'
 dotnet_diagnostic.MA0159.severity = none
+# MA0160: Use ContainsKey instead of TryGetValue
+dotnet_diagnostic.MA0160.severity = none
+# MA0161: UseShellExecute must be explicitly set
+dotnet_diagnostic.MA0161.severity = none
+# MA0162: Use Process.Start overload with ProcessStartInfo
+dotnet_diagnostic.MA0162.severity = none
+# MA0163: UseShellExecute must be false when redirecting standard input or output
+dotnet_diagnostic.MA0163.severity = none
+# MA0164: Use parentheses to make not pattern clearer
+dotnet_diagnostic.MA0164.severity = none
 ################################################################################################
 # LindhartAnalyserMissingAwaitWarningVariable: Possible unwanted Task returned from method.
 dotnet_diagnostic.LindhartAnalyserMissingAwaitWarningVariable.severity = error

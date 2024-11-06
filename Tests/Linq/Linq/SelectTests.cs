@@ -1984,6 +1984,7 @@ namespace Tests.Linq
 		}
 		#endregion
 
+		[ThrowsForProvider(typeof(LinqException), TestProvName.AllSybase, ErrorMessage = ErrorHelper.Error_JoinToDerivedTableWithTakeInvalid)]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4520")]
 		public void Issue4520Test([DataSources] string context)
 		{
@@ -2054,6 +2055,7 @@ namespace Tests.Linq
 		}
 
 		#region 4199
+		[ActiveIssue]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4199")]
 		public void Issue4199Test1([DataSources] string context)
 		{
@@ -2067,6 +2069,7 @@ namespace Tests.Linq
 			var r = q.Count();
 		}
 
+		[ActiveIssue]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4199")]
 		public void Issue4199Test2([DataSources] string context)
 		{

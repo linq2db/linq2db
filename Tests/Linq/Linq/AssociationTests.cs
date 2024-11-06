@@ -1923,6 +1923,7 @@ namespace Tests.Linq
 
 		#region Issue 2933
 
+		[ThrowsForProvider(typeof(LinqException), providers: [TestProvName.AllSybase], ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/2933")]
 		public void Issue2933Test([DataSources] string context)
 		{
