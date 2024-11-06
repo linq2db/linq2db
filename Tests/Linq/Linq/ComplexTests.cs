@@ -733,7 +733,7 @@ namespace Tests.Linq
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4568")]
-		public void SelectCompositePropertyMapped_Class_OnlyRequredColumns([DataSources] string context)
+		public void SelectCompositePropertyMapped_Class_OnlyRequiredColumns([DataSources] string context)
 		{
 			using var db    = GetDataContext(context);
 
@@ -743,7 +743,7 @@ namespace Tests.Linq
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4568")]
-		public void SelectCompositePropertyMapped_Struct_OnlyRequredColumns([DataSources] string context)
+		public void SelectCompositePropertyMapped_Struct_OnlyRequiredColumns([DataSources] string context)
 		{
 			var ms = new MappingSchema();
 			ms.SetScalarType(typeof(AddressStruct), false);

@@ -605,7 +605,14 @@ namespace LinqToDB.SqlProvider
 							case int     i when i == 0  :
 							case long    l when l == 0  :
 							case decimal d when d == 0  :
-							case string  s when s.Length == 0: return element.Expr2;
+							case string  s when s.Length == 0:
+							{
+								var elementType = QueryHelper.GetDbDataType(element, _mappingSchema);
+								var expr2Type   = QueryHelper.GetDbDataType(element.Expr2, _mappingSchema);
+								if (!elementType.Equals(expr2Type))
+									return new SqlCastExpression(element.Expr2, elementType, null);
+								return element.Expr2;
+							}
 						}
 					}
 

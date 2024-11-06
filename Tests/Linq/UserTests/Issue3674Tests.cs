@@ -14,7 +14,7 @@ namespace Tests.UserTests
 	public class Issue3674Tests : TestBase
 	{
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3674")]
-		public void Test([DataSources(false)] string context)
+		public void InThread([DataSources(false)] string context)
 		{
 			using var db = GetDataContext((string)context!);
 			using var tb = db.CreateLocalTable<Entity>();
@@ -26,6 +26,15 @@ namespace Tests.UserTests
 			var thread = new Thread(ThreadBody, 200 * 1024);
 			thread.Start(tb);
 			thread.Join();
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/3674")]
+		public void WithoutThread([DataSources(false)] string context)
+		{
+			using var db = GetDataContext((string)context!);
+			using var tb = db.CreateLocalTable<Entity>();
+
+			ThreadBody(tb);
 		}
 
 		void ThreadBody(object? context)

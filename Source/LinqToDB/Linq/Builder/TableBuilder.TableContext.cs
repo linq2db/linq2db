@@ -212,7 +212,7 @@ namespace LinqToDB.Linq.Builder
 						return tablePlaceholder;
 					}
 
-					Expression fullEntity = Builder.BuildFullEntityExpression(MappingSchema, path, ElementType, flags);
+					Expression fullEntity = Builder.BuildFullEntityExpression(MappingSchema, path, path.Type, flags);
 					// Entity can contain calculated columns which should be exposed
 					fullEntity = Builder.ConvertExpressionTree(fullEntity);
 
@@ -245,6 +245,16 @@ namespace LinqToDB.Linq.Builder
 
 				if (sql == null)
 				{
+					if (flags.IsSqlOrExpression())
+					{
+						Expression fullEntity = Builder.BuildFullEntityExpression(MappingSchema, new ContextRefExpression(ElementType, this), ElementType, flags);
+
+						var projected = Builder.Project(this, path, null, -1, flags, fullEntity, true);
+
+						if (projected is not SqlErrorExpression)
+							return projected;
+					}
+
 					return path;
 				}
 

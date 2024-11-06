@@ -472,11 +472,11 @@ namespace LinqToDB.Linq.Builder
 			List<SetExpressionEnvelope> envelopes,
 			bool                        forceParameters)
 		{
-			var correctedField = builder.ParseGenericConstructor(fieldExpression, ProjectFlags.SQL, null);
+			var correctedField = builder.BuildSqlExpression(buildContext, fieldExpression);
 
 			if (correctedField is SqlGenericConstructorExpression fieldGeneric)
 			{
-				var correctedValue = builder.ParseGenericConstructor(valueExpression, ProjectFlags.SQL, null);
+				var correctedValue = builder.BuildSqlExpression(buildContext, valueExpression);
 
 				if (correctedValue is not SqlGenericConstructorExpression valueGeneric)
 					throw SqlErrorExpression.CreateException(valueExpression, null);
@@ -496,12 +496,16 @@ namespace LinqToDB.Linq.Builder
 			{
 				var hasConversion = false;
 				var targetColumn  = builder.BuildSqlExpression(buildContext, fieldExpression);
+
+				ColumnDescriptor? columnDescriptor = null;
 				if (targetColumn is SqlPlaceholderExpression placeholder)
 				{
-					var columnDescriptor = QueryHelper.GetColumnDescriptor(placeholder.Sql);
+					columnDescriptor = QueryHelper.GetColumnDescriptor(placeholder.Sql);
 
 					hasConversion = columnDescriptor?.ValueConverter != null;
 				}
+
+				using var saveDescriptor = builder.UsingColumnDescriptor(columnDescriptor);
 
 				if (hasConversion)
 				{
@@ -509,7 +513,7 @@ namespace LinqToDB.Linq.Builder
 				}
 				else
 				{
-					var correctedValue = builder.ParseGenericConstructor(valueExpression, ProjectFlags.SQL, null);
+					var correctedValue = builder.BuildSqlExpression(buildContext, valueExpression);
 
 					if (correctedValue is SqlGenericConstructorExpression valueGeneric)
 					{

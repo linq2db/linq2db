@@ -1661,7 +1661,7 @@ namespace LinqToDB.Linq.Builder
 			}
 
 			if (!doNotBuild)
-				_associations[key] = associationExpression;
+				_associations.Add(key, associationExpression);
 
 			return associationExpression;
 		}
@@ -2395,8 +2395,6 @@ namespace LinqToDB.Linq.Builder
 				return !IsSame(node, alreadyTranslated);
 			}
 
-			using var snapshot = CreateSnapshot();
-
 			_disableSubqueries.Push(traversed);
 			_disableSubqueries.Push(node);
 			var ctx = GetSubQuery(node, out var isSequence, out var errorMessage);
@@ -2407,6 +2405,8 @@ namespace LinqToDB.Linq.Builder
 			{
 				if (isSequence)
 				{
+					ctx?.Detach();
+
 					if (_buildPurpose is BuildPurpose.Expression)
 					{
 						// Trying to relax eager for First[OrDefault](predicate)
@@ -2444,6 +2444,7 @@ namespace LinqToDB.Linq.Builder
 			{
 				var eager = new SqlEagerLoadExpression(node);
 				subqueryExpression = SqlAdjustTypeExpression.AdjustType(eager, node.Type, MappingSchema);
+				ctx.Detach();
 			}
 			else if (isCollection)
 			{
@@ -2461,15 +2462,14 @@ namespace LinqToDB.Linq.Builder
 					_buildFlags |= BuildFlags.ForExpanding;
 					if (testExpression is SqlPlaceholderExpression placeholder)
 					{
-						snapshot.Accept();
+						//snapshot.Accept();
 						subqueryExpression = placeholder;
 						return true;
 					}
 
+					ctx.Detach();
 					return false;
 				}
-
-				snapshot.Accept();
 			}
 
 			if (!isCollection)
@@ -2637,6 +2637,19 @@ namespace LinqToDB.Linq.Builder
 			if (_buildPurpose is BuildPurpose.Expression)
 				return base.VisitBinary(node);
 
+			if (HandleBinary(node, out var translated))
+				return translated; // Do not Visit again
+
+			var exposed = Builder.ConvertSingleExpression(node, false);
+
+			if (!IsSame(exposed, node))
+				return Visit(exposed);
+			
+			return base.VisitBinary(node);
+		}
+
+		bool HandleBinary(BinaryExpression node, out Expression translated)
+		{
 			switch (node.NodeType)
 			{
 				case ExpressionType.Equal:
@@ -2646,114 +2659,27 @@ namespace LinqToDB.Linq.Builder
 				case ExpressionType.LessThan:
 				case ExpressionType.LessThanOrEqual:
 				{
-					var saveColumnDescriptor = _columnDescriptor;
-					var saveAlias            = _alias;
-					_columnDescriptor = null;
-					_alias            = null;
-
-					var saveFlags = _buildFlags;
-					_buildFlags |= BuildFlags.ForKeys;
-
-					var left  = Visit(node.Left);
-					var right = Visit(node.Right);
-
-					_buildFlags = saveFlags;
-
-					_columnDescriptor = saveColumnDescriptor;
-					_alias            = saveAlias;
-
-					if (node.NodeType is ExpressionType.Equal or ExpressionType.NotEqual)
-					{
-						if (HandleEquality(node.NodeType is ExpressionType.NotEqual, left, right, out var optimized)
-						    || HandleEquality(node.NodeType is ExpressionType.NotEqual, right, left, out optimized))
-
-						{
-							optimized = Visit(optimized);
-							if (_buildPurpose is BuildPurpose.Sql && optimized is not SqlPlaceholderExpression)
-								return node;
-
-							return optimized;
-						}
-					}
-
-					_alias = null;
-					var compareExpr = ConvertCompareExpression(node.NodeType, node.Left, node.Right, node);
-					_alias = saveAlias;
-
-					if (!IsSame(compareExpr, node))
-					{
-						if (compareExpr is SqlErrorExpression error)
-						{
-							if (_buildPurpose is BuildPurpose.Expand || _buildFlags.HasFlag(BuildFlags.ForExpanding))
-								return base.VisitBinary(node);
-
-							if (_buildPurpose is BuildPurpose.Sql && error.Message is null)
-								return node;
-						}
-
-						return Visit(compareExpr);
-					}
-
-					break;
+					return HandleBinaryComparison(node, out translated);
 				}
 
 				case ExpressionType.AndAlso:
 				case ExpressionType.OrElse:
 				{
-					var left  = Visit(node.Left);
-					var right = Visit(node.Right);
-
-					ISqlPredicate? leftPredicate  = null;
-					ISqlPredicate? rightPredicate = null;
-
-					if (left is SqlPlaceholderExpression leftPlaceholder)
-					{
-						leftPredicate = ConvertExpressionToPredicate(leftPlaceholder.Sql);
-					}
-
-					if (right is SqlPlaceholderExpression rightPlaceholder)
-					{
-						rightPredicate = ConvertExpressionToPredicate(rightPlaceholder.Sql);
-					}
-
-					if (leftPredicate != null && rightPredicate != null)
-					{
-						var condition = new SqlSearchCondition(node.NodeType is ExpressionType.OrElse or ExpressionType.Or);
-						condition.Predicates.Add(leftPredicate);
-						condition.Predicates.Add(rightPredicate);
-						return CreatePlaceholder(condition, node);
-					}
-
-					if (_buildPurpose == BuildPurpose.Sql)
-					{
-						if (leftPredicate == null)
-						{
-							if (left is SqlErrorExpression leftError)
-								return leftError.WithType(node.Type);
-							return SqlErrorExpression.EnsureError(node.Left, node.Type);
-						}
-
-						if (rightPredicate == null)
-						{
-							if (right is SqlErrorExpression rightError)
-								return rightError.WithType(node.Type);
-							return SqlErrorExpression.EnsureError(node.Right, node.Type);
-						}
-					}
-
-					break;
+					return HandleBinaryLogical(node, out translated);
 				}
 
 				case ExpressionType.ArrayIndex:
 				{
-					if (HandleSqlRelated(node, out var translated))
+					if (HandleSqlRelated(node, out translated!))
 					{
-						return Visit(translated);
+						translated = Visit(translated);
+						return true;
 					}
 
-					if (HandleValue(node, out translated))
+					if (HandleValue(node, out translated!))
 					{
-						return Visit(translated);
+						translated = Visit(translated);
+						return true;
 					}
 
 					break;
@@ -2779,114 +2705,273 @@ namespace LinqToDB.Linq.Builder
 				case ExpressionType.SubtractChecked:
 				case ExpressionType.Coalesce:
 				{
-					var left  = node.Left;
-					var right = node.Right;
+					return HandleBinaryMath(node, out translated);
+				}
+			}
 
-					var shouldCheckColumn = node.Left.Type.ToNullableUnderlying() == node.Right.Type.ToNullableUnderlying();
+			translated = node;
+			return false;
+		}
 
-					if (shouldCheckColumn)
+		bool HandleBinaryComparison(BinaryExpression node, out Expression translated)
+		{
+			translated = node;
+
+			var saveColumnDescriptor = _columnDescriptor;
+			var saveAlias            = _alias;
+			_columnDescriptor = null;
+			_alias            = null;
+
+			var saveFlags = _buildFlags;
+			_buildFlags |= BuildFlags.ForKeys;
+
+			var left  = Visit(node.Left);
+			var right = Visit(node.Right);
+
+			_buildFlags = saveFlags;
+
+			_columnDescriptor = saveColumnDescriptor;
+			_alias            = saveAlias;
+
+			if (node.NodeType is ExpressionType.Equal or ExpressionType.NotEqual)
+			{
+				if (HandleEquality(node.NodeType is ExpressionType.NotEqual, left, right, out var optimized)
+				    || HandleEquality(node.NodeType is ExpressionType.NotEqual, right, left, out optimized))
+
+				{
+					optimized = Visit(optimized);
+					if (_buildPurpose is BuildPurpose.Sql && optimized is not SqlPlaceholderExpression)
+						return true;
+
+					translated = optimized;
+					return true;
+				}
+			}
+
+			_alias = null;
+			var compareExpr = ConvertCompareExpression(node.NodeType, node.Left, node.Right, node);
+			_alias = saveAlias;
+
+			if (!IsSame(compareExpr, node))
+			{
+				if (compareExpr is SqlErrorExpression error)
+				{
+					if (_buildPurpose is BuildPurpose.Expand || _buildFlags.HasFlag(BuildFlags.ForExpanding))
 					{
-						right = right.Unwrap();
+						translated = base.VisitBinary(node);
+						return true;
+					}
+
+					if (_buildPurpose is BuildPurpose.Sql && error.Message is null)
+					{
+						return true;
+					}
+				}
+
+				translated = Visit(compareExpr);
+				return true;
+			}
+
+			return false;
+		}
+
+		bool HandleBinaryLogical(BinaryExpression node, out Expression translated)
+		{
+			translated = node;
+
+			var stack = new Stack<Expression>();
+
+			var items  = new List<Expression>();
+			var binary = node;
+
+			stack.Push(binary.Right);
+			stack.Push(binary.Left);
+			while (stack.Count > 0)
+			{
+				var item = stack.Pop();
+				if (item.NodeType == node.NodeType)
+				{
+					binary = (BinaryExpression)item;
+					stack.Push(binary.Right);
+					stack.Push(binary.Left);
+				}
+				else
+					items.Add(item);
+			}
+
+			var predicates = new List<ISqlPredicate?>(items.Count);
+			var hasError   = false;
+
+			foreach (var predicateExpr in items)
+			{
+				var            translatedPredicate = Visit(predicateExpr);
+				ISqlPredicate? predicateSql        = null;
+
+				if (translatedPredicate is SqlPlaceholderExpression placeholder)
+				{
+					predicateSql = ConvertExpressionToPredicate(placeholder.Sql);
+				}
+
+				if (predicateSql is null )
+				{
+					if (_buildPurpose is BuildPurpose.Sql)
+					{
+						if (translatedPredicate is SqlErrorExpression)
+							translated = SqlErrorExpression.EnsureError(translatedPredicate, typeof(bool));
+						else
+							translated = SqlErrorExpression.EnsureError(predicateExpr, typeof(bool));
+						return true;
+					}
+
+					hasError = true;
+				}
+
+				predicates.Add(predicateSql);
+			}
+
+
+			translated = node;
+
+			if (hasError)
+			{
+				// replace translated nodes
+				for (var index = 0; index < predicates.Count; index++)
+				{
+					var predicateSql = predicates[index];
+					var itemNode     = items[index];
+					if (predicateSql is not null)
+					{
+						if (predicateSql is not ISqlExpression sqlExpr)
+						{
+							sqlExpr = new SqlSearchCondition(false, predicateSql);
+						}
+						var placeholder = CreatePlaceholder(sqlExpr, itemNode);
+						translated = translated.Replace(itemNode, placeholder);
 					}
 					else
 					{
-						left  = left.Unwrap();
-						right = right.Unwrap();
-					}
-
-					ColumnDescriptor? columnDescriptor = null;
-					switch (node.NodeType)
-					{
-						case ExpressionType.Add:
-						case ExpressionType.AddChecked:
-						case ExpressionType.And:
-						case ExpressionType.Divide:
-						case ExpressionType.ExclusiveOr:
-						case ExpressionType.Modulo:
-						case ExpressionType.Multiply:
-						case ExpressionType.MultiplyChecked:
-						case ExpressionType.Or:
-						case ExpressionType.Power:
-						case ExpressionType.Subtract:
-						case ExpressionType.SubtractChecked:
-						case ExpressionType.Coalesce:
+						var translatedNode = Visit(itemNode);
+						if (!ReferenceEquals(itemNode, translatedNode))
 						{
-							columnDescriptor = SuggestColumnDescriptor(left);
-							break;
-						}
-						case ExpressionType.Equal:
-						case ExpressionType.NotEqual:
-						case ExpressionType.GreaterThan:
-						case ExpressionType.GreaterThanOrEqual:
-						case ExpressionType.LessThan:
-						case ExpressionType.LessThanOrEqual:
-						{
-							columnDescriptor = SuggestColumnDescriptor(left);
-							break;
+							translated = translated.Replace(itemNode, translatedNode);
 						}
 					}
-
-					if (left.Type != right.Type)
-					{
-						if (!left.Type.IsEnum && right.Type.IsEnum)
-						{
-							// do nothing
-						}
-						else if (left.Type.ToNullableUnderlying() != right.Type.ToNullableUnderlying())
-							columnDescriptor = null;
-					}
-
-					var saveColumnDescriptor = _columnDescriptor;
-					_columnDescriptor = columnDescriptor;
-
-					var leftExpr  = UpdateNesting(Visit(left));
-					var rightExpr = UpdateNesting(Visit(right));
-
-					_columnDescriptor = saveColumnDescriptor;
-
-					if (leftExpr is not SqlPlaceholderExpression leftPlaceholder || rightExpr is not SqlPlaceholderExpression rightPlaceholder)
-					{
-						if (leftExpr is SqlErrorExpression leftError)
-							return leftError.WithType(node.Type);
-
-						if (rightExpr is SqlErrorExpression rightError)
-							return rightError.WithType(node.Type);
-
-						return base.VisitBinary(node);
-					}
-
-					var l = leftPlaceholder.Sql;
-					var r = rightPlaceholder.Sql;
-					var t = node.Type;
-
-					switch (node.NodeType)
-					{
-						case ExpressionType.Add:
-						case ExpressionType.AddChecked:      return CreatePlaceholder(new SqlBinaryExpression(t, l, "+", r, Precedence.Additive), node);
-						case ExpressionType.And:             return CreatePlaceholder(new SqlBinaryExpression(t, l, "&", r, Precedence.Bitwise), node);
-						case ExpressionType.Divide:          return CreatePlaceholder(new SqlBinaryExpression(t, l, "/", r, Precedence.Multiplicative), node);
-						case ExpressionType.ExclusiveOr:     return CreatePlaceholder(new SqlBinaryExpression(t, l, "^", r, Precedence.Bitwise), node);
-						case ExpressionType.Modulo:          return CreatePlaceholder(new SqlBinaryExpression(t, l, "%", r, Precedence.Multiplicative), node);
-						case ExpressionType.Multiply:
-						case ExpressionType.MultiplyChecked: return CreatePlaceholder(new SqlBinaryExpression(t, l, "*", r, Precedence.Multiplicative), node);
-						case ExpressionType.Or:              return CreatePlaceholder(new SqlBinaryExpression(t, l, "|", r, Precedence.Bitwise), node);
-						case ExpressionType.Power:           return CreatePlaceholder(new SqlFunction(t, "Power", l, r), node);
-						case ExpressionType.Subtract:
-						case ExpressionType.SubtractChecked: return CreatePlaceholder(new SqlBinaryExpression(t, l, "-", r, Precedence.Subtraction), node);
-						case ExpressionType.Coalesce:        return CreatePlaceholder(new SqlCoalesceExpression(l, r), node);
-					}
-
-					break;
 				}
 
+				return true;
 			}
 
-			var exposed = Builder.ConvertSingleExpression(node, false);
+			var condition = new SqlSearchCondition(node.NodeType is ExpressionType.OrElse or ExpressionType.Or, predicates!);
+			translated = CreatePlaceholder(condition, node);
 
-			if (!IsSame(exposed, node))
-				return Visit(exposed);
-			
-			return base.VisitBinary(node);
+			return true;
+		}
+
+		bool HandleBinaryMath(BinaryExpression node, out Expression translated)
+		{
+			translated = node;
+
+			var left  = node.Left;
+			var right = node.Right;
+
+			var shouldCheckColumn = node.Left.Type.ToNullableUnderlying() == node.Right.Type.ToNullableUnderlying();
+
+			if (shouldCheckColumn)
+			{
+				right = right.Unwrap();
+			}
+			else
+			{
+				left  = left.Unwrap();
+				right = right.Unwrap();
+			}
+
+			ColumnDescriptor? columnDescriptor = null;
+			switch (node.NodeType)
+			{
+				case ExpressionType.Add:
+				case ExpressionType.AddChecked:
+				case ExpressionType.And:
+				case ExpressionType.Divide:
+				case ExpressionType.ExclusiveOr:
+				case ExpressionType.Modulo:
+				case ExpressionType.Multiply:
+				case ExpressionType.MultiplyChecked:
+				case ExpressionType.Or:
+				case ExpressionType.Power:
+				case ExpressionType.Subtract:
+				case ExpressionType.SubtractChecked:
+				case ExpressionType.Coalesce:
+				{
+					columnDescriptor = SuggestColumnDescriptor(left);
+					break;
+				}
+				case ExpressionType.Equal:
+				case ExpressionType.NotEqual:
+				case ExpressionType.GreaterThan:
+				case ExpressionType.GreaterThanOrEqual:
+				case ExpressionType.LessThan:
+				case ExpressionType.LessThanOrEqual:
+				{
+					columnDescriptor = SuggestColumnDescriptor(left);
+					break;
+				}
+			}
+
+			if (left.Type != right.Type)
+			{
+				if (!left.Type.IsEnum && right.Type.IsEnum)
+				{
+					// do nothing
+				}
+				else if (left.Type.ToNullableUnderlying() != right.Type.ToNullableUnderlying())
+					columnDescriptor = null;
+			}
+
+			var saveColumnDescriptor = _columnDescriptor;
+			_columnDescriptor = columnDescriptor;
+
+			var leftExpr  = UpdateNesting(Visit(left));
+			var rightExpr = UpdateNesting(Visit(right));
+
+			_columnDescriptor = saveColumnDescriptor;
+
+			if (leftExpr is not SqlPlaceholderExpression leftPlaceholder || rightExpr is not SqlPlaceholderExpression rightPlaceholder)
+			{
+				if (leftExpr is SqlErrorExpression leftError)
+					translated = leftError.WithType(node.Type);
+				else if (rightExpr is SqlErrorExpression rightError)
+					translated = rightError.WithType(node.Type);
+				else
+					translated = base.VisitBinary(node);
+
+				return true;
+			}
+
+			var l = leftPlaceholder.Sql;
+			var r = rightPlaceholder.Sql;
+			var t = node.Type;
+
+			switch (node.NodeType)
+			{
+				case ExpressionType.Add:
+				case ExpressionType.AddChecked:      translated = CreatePlaceholder(new SqlBinaryExpression(t, l, "+", r, Precedence.Additive), node); break;
+				case ExpressionType.And:             translated = CreatePlaceholder(new SqlBinaryExpression(t, l, "&", r, Precedence.Bitwise), node); break;
+				case ExpressionType.Divide:          translated = CreatePlaceholder(new SqlBinaryExpression(t, l, "/", r, Precedence.Multiplicative), node); break;
+				case ExpressionType.ExclusiveOr:     translated = CreatePlaceholder(new SqlBinaryExpression(t, l, "^", r, Precedence.Bitwise), node); break;
+				case ExpressionType.Modulo:          translated = CreatePlaceholder(new SqlBinaryExpression(t, l, "%", r, Precedence.Multiplicative), node); break;
+				case ExpressionType.Multiply:
+				case ExpressionType.MultiplyChecked: translated = CreatePlaceholder(new SqlBinaryExpression(t, l, "*", r, Precedence.Multiplicative), node); break;
+				case ExpressionType.Or:              translated = CreatePlaceholder(new SqlBinaryExpression(t, l, "|", r, Precedence.Bitwise), node); break;
+				case ExpressionType.Power:           translated = CreatePlaceholder(new SqlFunction(t, "Power", l, r), node); break;
+				case ExpressionType.Subtract:
+				case ExpressionType.SubtractChecked: translated = CreatePlaceholder(new SqlBinaryExpression(t, l, "-", r, Precedence.Subtraction), node); break;
+				case ExpressionType.Coalesce:        translated = CreatePlaceholder(new SqlCoalesceExpression(l, r), node); break;
+				default:                      
+					return false;
+			}
+
+			return true;
 		}
 
 		static Expression SimplifyConvert(Expression expression)
@@ -3207,11 +3292,13 @@ namespace LinqToDB.Linq.Builder
 
 		#region ConvertCompare
 
-		public SqlSearchCondition? TryGenerateComparison(
-			IBuildContext? context, 
-			Expression     left,
-			Expression     right,
-			BuildPurpose?  buildPurpose = default)
+		public bool TryGenerateComparison(
+			IBuildContext?                               context, 
+			Expression                                   left,
+			Expression                                   right,
+			[NotNullWhen(true)] out  SqlSearchCondition? searchCondition,
+			[NotNullWhen(false)] out SqlErrorExpression? error,
+			BuildPurpose?                                buildPurpose = default)
 		{
 			using var saveBuildContext = UsingBuildContext(context);
 			using var saveBuildPurpose = UsingBuildPurpose(buildPurpose ?? _buildPurpose);
@@ -3219,9 +3306,16 @@ namespace LinqToDB.Linq.Builder
 			var expr = ConvertCompareExpression(ExpressionType.Equal, left, right);
 
 			if (expr is SqlPlaceholderExpression { Sql: SqlSearchCondition sc })
-				return sc;
+			{
+				searchCondition = sc;
+				error           = null;
+				return true;
+			}
 
-			return null;
+			searchCondition = null;
+			error           = SqlErrorExpression.EnsureError(expr, typeof(bool));
+
+			return false;
 		}
 
 		static ISqlExpression ApplyExpressionNullability(ISqlExpression sqlExpression, NullabilityContext nullabilityContext)
@@ -3252,6 +3346,7 @@ namespace LinqToDB.Linq.Builder
 
 			if (expr is SqlPlaceholderExpression { Sql: SqlSearchCondition sc })
 				return sc;
+
 			if (expr is SqlErrorExpression error)
 				throw error.CreateException();
 

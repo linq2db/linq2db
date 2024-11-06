@@ -56,7 +56,7 @@ namespace LinqToDB.Linq.Builder
 				return buildResult;
 			var sequence = buildResult.BuildContext;
 
-			ITableContext? table = null;
+			ILoadWithContext? table = null;
 
 			LoadWithInfo lastLoadWith;
 
@@ -158,7 +158,7 @@ namespace LinqToDB.Linq.Builder
 			return BuildSequenceResult.FromContext(loadWithSequence);
 		}
 
-		static (ITableContext? context, LoadWithInfo[] info)? ExtractAssociations(ExpressionBuilder builder, ITableContext? parentContext, Expression expression, Expression? stopExpression)
+		static (ILoadWithContext? context, LoadWithInfo[] info)? ExtractAssociations(ExpressionBuilder builder, ILoadWithContext? parentContext, Expression expression, Expression? stopExpression)
 		{
 			var currentExpression = expression;
 
@@ -193,10 +193,10 @@ namespace LinqToDB.Linq.Builder
 			return (context, loadWithInfos);
 		}
 
-		static (ITableContext? context, List<MemberInfo> members) GetAssociations(ExpressionBuilder builder, ITableContext? parentContext, Expression expression, Expression? stopExpression)
+		static (ILoadWithContext? context, List<MemberInfo> members) GetAssociations(ExpressionBuilder builder, ILoadWithContext? parentContext, Expression expression, Expression? stopExpression)
 		{
-			ITableContext? context    = parentContext;
-			MemberInfo?    lastMember = null;
+			ILoadWithContext? context    = parentContext;
+			MemberInfo?       lastMember = null;
 
 			var members = new List<MemberInfo>();
 			var stop    = false;

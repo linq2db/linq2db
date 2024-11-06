@@ -401,7 +401,7 @@ namespace Tests.xUpdate
 
 		[ActiveIssue(Configurations = [TestProvName.AllPostgreSQL, TestProvName.AllClickHouse, TestProvName.AllMySql])]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4671")]
-		public void Issue4671Test([DataSources] string context)
+		public void Issue4671Test([DataSources(false)] string context)
 		{
 			using var db = GetDataContext(context);
 

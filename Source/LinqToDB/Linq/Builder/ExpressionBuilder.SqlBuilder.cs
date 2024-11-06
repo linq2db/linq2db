@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Linq.Expressions;
@@ -498,13 +497,15 @@ namespace LinqToDB.Linq.Builder
 			return Expression.Lambda(body, param);
 		}
 
-		public SqlSearchCondition? TryGenerateComparison(
-			IBuildContext? context,
-			Expression     left,
-			Expression     right,
-			BuildPurpose?  buildPurpose = default)
+		public bool TryGenerateComparison(
+			IBuildContext?                               context,
+			Expression                                   left,
+			Expression                                   right,
+			[NotNullWhen(true)] out  SqlSearchCondition? searchCondition,
+			[NotNullWhen(false)] out SqlErrorExpression? error,
+			BuildPurpose?                                buildPurpose = default)
 		{
-			return _buildVisitor.TryGenerateComparison(context, left, right, buildPurpose);
+			return _buildVisitor.TryGenerateComparison(context, left, right, out searchCondition, out error, buildPurpose);
 		}
 
 		public SqlSearchCondition GenerateComparison(
@@ -1299,6 +1300,11 @@ namespace LinqToDB.Linq.Builder
 							return new DefaultValueExpression(MappingSchema, member.GetMemberType());
 						}
 
+						if (body is SqlAdjustTypeExpression adjustType)
+						{
+							return Project(context, path, nextPath, nextIndex, flags, adjustType.Expression, strict);
+						}
+
 						if (body is SqlGenericConstructorExpression genericConstructor)
 						{
 							Expression? bodyExpresion = null;
@@ -1597,14 +1603,6 @@ namespace LinqToDB.Linq.Builder
 					{
 						var expr = (path ?? next)!;
 
-						/*
-						if (expr.Type.IsValueType)
-						{
-							var placeholder = CreatePlaceholder(context, new SqlValue(expr.Type, null), expr);
-							return placeholder;
-						}
-						*/
-
 						return new DefaultValueExpression(MappingSchema, expr.Type);
 					}
 
@@ -1616,39 +1614,8 @@ namespace LinqToDB.Linq.Builder
 				{
 					var expr = (path ?? next)!;
 
-					/*
-					if (expr.Type.IsValueType)
-					{
-						var placeholder = CreatePlaceholder(context, new SqlValue(expr.Type, null), expr);
-						return placeholder;
-					}
-					*/
-
 					return new DefaultValueExpression(MappingSchema, expr.Type);
 				}
-
-				/*
-				case ExpressionType.Constant:
-				{
-					var cnt = (ConstantExpression)body;
-					if (cnt.Value == null)
-					{
-						var expr = (path ?? next)!;
-
-						var placeholder = CreatePlaceholder(context, new SqlValue(expr.Type, null), expr);
-
-						return placeholder;
-					}
-
-					return body;
-				}
-
-				case ExpressionType.Default:
-				{
-					var placeholder = CreatePlaceholder(context, new SqlValue(body.Type, null), body);
-					return placeholder;
-				}
-				*/
 
 				case ExpressionType.Call:
 				{
@@ -1656,6 +1623,11 @@ namespace LinqToDB.Linq.Builder
 
 					if (mc.Method.IsStatic)
 					{
+						if (mc.Method.Name == nameof(Sql.Alias) && mc.Method.DeclaringType == typeof(Sql))
+						{
+							return Project(context, path, nextPath, nextIndex, flags, mc.Arguments[0], strict);
+						}
+
 						var parameters = mc.Method.GetParameters();
 
 						for (var i = 0; i < parameters.Length; i++)

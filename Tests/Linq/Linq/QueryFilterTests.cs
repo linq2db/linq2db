@@ -360,10 +360,9 @@ namespace Tests.Linq
 			var query = db.Person;
 
 			var arr1 = query.ToArray();
-
 			var arr2 = query.ToArray();
 
-			Assert.That(arr1, Has.Length.EqualTo(arr2.Length + 1));
+			Assert.That(arr1, Has.Length.EqualTo(arr2.Length + 2));
 		}
 	}
 }

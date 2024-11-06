@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Reflection;
 
 namespace LinqToDB.Linq.Builder
 {
@@ -83,7 +84,7 @@ namespace LinqToDB.Linq.Builder
 
 		#region Context
 
-		internal sealed class SetOperationContext : SubQueryContext
+		internal sealed class SetOperationContext : SubQueryContext, ILoadWithContext
 		{
 			public SetOperationContext(SetOperation setOperation, SelectQuery selectQuery, SubQueryContext sequence1, SubQueryContext sequence2,
 				MethodCallExpression                methodCall)
@@ -122,7 +123,7 @@ namespace LinqToDB.Linq.Builder
 
 			public override Expression MakeExpression(Expression path, ProjectFlags flags)
 			{
-				if (flags.IsRoot() || flags.IsTraverse() || flags.IsAggregationRoot() || flags.IsAssociationRoot())
+				if (flags.IsRoot() || flags.IsTraverse() || flags.IsAggregationRoot() || flags.IsAssociationRoot() || flags.IsTable())
 					return path;
 
 				if (_setIdReference != null && ExpressionEqualityComparer.Instance.Equals(_setIdReference, path))
@@ -1299,6 +1300,9 @@ namespace LinqToDB.Linq.Builder
 
 				return SubQuery;
 			}
+
+			public LoadWithInfo  LoadWithRoot { get; set; } = new();
+			public MemberInfo[]? LoadWithPath { get; set; }
 		}
 
 		#endregion
