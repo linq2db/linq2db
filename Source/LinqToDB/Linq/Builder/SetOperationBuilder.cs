@@ -196,7 +196,7 @@ namespace LinqToDB.Linq.Builder
 
 					if (projection1 is SqlErrorExpression || projection2 is SqlErrorExpression)
 					{
-						return ExpressionBuilder.CreateSqlError(this, path);
+						return ExpressionBuilder.CreateSqlError(path);
 					}
 				}
 

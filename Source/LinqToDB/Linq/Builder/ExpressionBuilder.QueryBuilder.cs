@@ -331,9 +331,9 @@ namespace LinqToDB.Linq.Builder
 			return _buildVisitor.CreateSnapshot();
 		}
 
-		public static SqlErrorExpression CreateSqlError(IBuildContext? context, Expression expression)
+		public static SqlErrorExpression CreateSqlError(Expression expression)
 		{
-			return new SqlErrorExpression(context, expression);
+			return new SqlErrorExpression(expression);
 		}
 
 		public static bool HasError(Expression expression)

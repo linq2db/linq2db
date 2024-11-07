@@ -77,6 +77,12 @@ namespace LinqToDB.Linq.Builder
 				return null;
 			}
 
+			if (QueryHelper.ContainsWindowFunction(sc))
+			{
+				error = new SqlErrorExpression(expr, ErrorHelper.Error_WindowFuncstionsInSearchCondition, expr.Type);
+				return null;
+			}
+
 			if (enforceHaving)
 				buildSequence.SelectQuery.Having.ConcatSearchCondition(sc);
 			else
@@ -1355,7 +1361,7 @@ namespace LinqToDB.Linq.Builder
 							}
 
 							if (strict)
-								return CreateSqlError(null, nextPath![0]);
+								return CreateSqlError(nextPath![0]);
 
 							return new DefaultValueExpression(null, nextPath![0].Type);
 						}
@@ -1452,7 +1458,7 @@ namespace LinqToDB.Linq.Builder
 						return ne;
 
 					if (strict)
-						return CreateSqlError(null, nextPath![0]);
+						return CreateSqlError(nextPath![0]);
 
 					return new DefaultValueExpression(MappingSchema, nextPath![0].Type);
 				}
@@ -1467,7 +1473,7 @@ namespace LinqToDB.Linq.Builder
 						if (next is SqlGenericParamAccessExpression paramAccess)
 						{
 							if (paramAccess.ParamIndex >= ne.Arguments.Count)
-								return CreateSqlError(context, nextPath![0]);
+								return CreateSqlError(nextPath![0]);
 
 							return Project(context, path, nextPath, nextIndex - 1, flags, ne.Arguments[paramAccess.ParamIndex], strict);
 						}
@@ -1553,7 +1559,7 @@ namespace LinqToDB.Linq.Builder
 					}
 
 					if (strict)
-						return CreateSqlError(null, nextPath![0]);
+						return CreateSqlError(nextPath![0]);
 
 					return new DefaultValueExpression(MappingSchema, nextPath![0].Type);
 
@@ -1649,7 +1655,7 @@ namespace LinqToDB.Linq.Builder
 						return Project(context, path, nextPath, nextIndex - 1, flags, ma, strict);
 					}*/
 
-					return new SqlErrorExpression(context, mc);
+					return new SqlErrorExpression(mc);
 				}
 
 				case ExpressionType.TypeAs:
@@ -1689,7 +1695,7 @@ namespace LinqToDB.Linq.Builder
 				}
 			}
 
-			return CreateSqlError(context, next!);
+			return CreateSqlError(next!);
 		}
 
 		public Expression ParseGenericConstructor(Expression createExpression, ProjectFlags flags, ColumnDescriptor? columnDescriptor, bool force = false)

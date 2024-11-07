@@ -122,7 +122,7 @@ namespace LinqToDB.DataProvider.Oracle
 				var converted = converter(context, exp, null, null);
 
 				if (converted is not SqlPlaceholderExpression placeholder)
-					throw SqlErrorExpression.EnsureError(null, converted).CreateException();
+					throw SqlErrorExpression.EnsureError(converted).CreateException();
 
 				var arg = placeholder.Sql;
 

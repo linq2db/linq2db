@@ -1642,7 +1642,7 @@ namespace LinqToDB.Linq.Builder
 				if (!Builder.IsSupportedSubquery(rootContext.BuildContext, sequence, out var errorMessage))
 				{
 					sequence.Detach();
-					return new SqlErrorExpression(null, expression, errorMessage, expression.Type, true);
+					return new SqlErrorExpression(expression, errorMessage, expression.Type, true);
 				}
 
 				snapshot.Accept();
@@ -3547,7 +3547,7 @@ namespace LinqToDB.Linq.Builder
 					if (found == null && strict)
 					{
 						// fail fast and prepare correct error expression
-						return new SqlErrorExpression(BuildContext, Expression.MakeMemberAccess(right, leftAssignment.MemberInfo));
+						return new SqlErrorExpression(Expression.MakeMemberAccess(right, leftAssignment.MemberInfo));
 					}
 
 					var rightExpression = found?.Expression;
@@ -3585,7 +3585,7 @@ namespace LinqToDB.Linq.Builder
 					if (strict)
 					{
 						// fail fast and prepare correct error expression
-						return new SqlErrorExpression(BuildContext, Expression.MakeMemberAccess(left, rightAssignment.MemberInfo));
+						return new SqlErrorExpression(Expression.MakeMemberAccess(left, rightAssignment.MemberInfo));
 					}
 
 					var leftExpression = Expression.Default(rightAssignment.Expression.Type);

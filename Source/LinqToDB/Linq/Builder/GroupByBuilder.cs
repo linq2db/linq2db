@@ -265,7 +265,7 @@ namespace LinqToDB.Linq.Builder
 			// it is a case whe we do not group elements
 			if (placeholders.Count == 1 && QueryHelper.IsConstantFast(placeholders[0].Sql))
 			{
-				return path;
+				return groupByExpression;
 			}
 
 			foreach (var p in placeholders)

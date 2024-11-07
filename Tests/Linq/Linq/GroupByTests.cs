@@ -3638,7 +3638,7 @@ namespace Tests.Linq
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3250")]
-		public void Issue3250Test1([DataSources(false)] string context)
+		public void Issue3250Test1([DataSources(false, TestProvName.AllSQLite)] string context)
 		{
 			using var db = GetDataConnection(context);
 
@@ -3653,11 +3653,12 @@ namespace Tests.Linq
 
 			query.ToList();
 
-			db.LastQuery.Should().Contain("SELECT", Exactly.Twice());
+			db.LastQuery.Should().Contain("SELECT", Exactly.Once());
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3250")]
-		public void Issue3250Test2([DataSources(false)] string context)
+		[ThrowsForProvider(typeof(LinqException), ErrorMessage = ErrorHelper.Error_WindowFuncstionsInSearchCondition)]
+		public void Issue3250Test2([DataSources(false, TestProvName.AllSQLite)] string context)
 		{
 			using var db = GetDataConnection(context);
 

@@ -1307,13 +1307,13 @@ namespace LinqToDB.SqlQuery
 			{
 				parentQuery.GroupBy.Items.InsertRange(0, subQuery.GroupBy.Items);
 				parentQuery.GroupBy.GroupingType = subQuery.GroupBy.GroupingType;
+			}
 
-				if (havingDetected?.Count > 0)
-				{
-					// move Where to Having
-					parentQuery.Having.SearchCondition.Predicates.InsertRange(0, parentQuery.Where.SearchCondition.Predicates);
-					parentQuery.Where.SearchCondition.Predicates.Clear();
-				}
+			if (havingDetected?.Count > 0)
+			{
+				// move Where to Having
+				parentQuery.Having.SearchCondition.Predicates.InsertRange(0, parentQuery.Where.SearchCondition.Predicates);
+				parentQuery.Where.SearchCondition.Predicates.Clear();
 			}
 
 			if (!subQuery.Where.IsEmpty)
@@ -1561,7 +1561,7 @@ namespace LinqToDB.SqlQuery
 
 				if (QueryHelper.ContainsAggregationFunction(column.Expression))
 				{
-					if (subQuery.GroupBy.IsEmpty || parentQuery.Having.HasElement(column) || parentQuery.Select.GroupBy.HasElement(column))
+					if (parentQuery.Having.HasElement(column) || parentQuery.Select.GroupBy.HasElement(column))
 					{
 						// aggregate moving not allowed
 						return false;
@@ -1605,9 +1605,11 @@ namespace LinqToDB.SqlQuery
 
 			HashSet<ISqlExpression>? aggregates = null;
 
+			if (!subQuery.GroupBy.IsEmpty && !parentQuery.GroupBy.IsEmpty)
+				return false;
+
 			// Check possible moving Where to Having
 			//
-			if (!subQuery.GroupBy.IsEmpty)
 			{
 				if (!parentQuery.Where.IsEmpty)
 				{
@@ -1644,8 +1646,14 @@ namespace LinqToDB.SqlQuery
 
 					if (havingDetected?.Count != searchCondition.Predicates.Count)
 					{
-						// everything should be moved to having
-						return false;
+						if (parentQuery.GroupBy.IsEmpty && !subQuery.GroupBy.IsEmpty)
+						{
+							// everything should be moved to having
+							return false;
+						}
+
+						// do not move to having
+						havingDetected = null;
 					}
 				}
 			}

@@ -456,7 +456,7 @@ namespace LinqToDB.Linq.Builder
 
 				if (placeholder == null)
 				{
-					return ExpressionBuilder.CreateSqlError(this, SubstitutedExpression);
+					return ExpressionBuilder.CreateSqlError(SubstitutedExpression);
 				}
 
 				// forcing making column
