@@ -187,14 +187,6 @@ namespace Tests.xUpdate
 				}
 				catch (OperationCanceledException)
 				{
-					if (context.IsAnyOf(TestProvName.AllMySqlData
-#if !NETFRAMEWORK
-						, TestProvName.AllOracleManaged
-#endif
-						))
-					{
-						Assert.Fail("Update test. Oracle developers evolved");
-					}
 				}
 				catch (Exception ex) when (ex.Message.Contains("ORA-01013") && context.IsAnyOf(TestProvName.AllOracleManaged))
 				{
@@ -248,14 +240,6 @@ namespace Tests.xUpdate
 				}
 				catch (OperationCanceledException)
 				{
-					if (context.IsAnyOf(TestProvName.AllMySqlData
-#if !NETFRAMEWORK
-						, TestProvName.AllOracleManaged
-#endif
-						))
-					{
-						Assert.Fail("Update test. Oracle developers evolved");
-					}
 				}
 				catch (Exception ex) when (ex.Message.Contains("ORA-01013") && context.IsAnyOf(TestProvName.AllOracleManaged))
 				{

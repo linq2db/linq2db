@@ -4,6 +4,8 @@
 	<PropertyGroup>
 		<AssemblyName>linq2db.Tests.FSharp</AssemblyName>
 		<WarningLevel>5</WarningLevel>
+
+		<MSBuildWarningsAsMessages>$(MSBuildWarningsAsMessages);MSB3277</MSBuildWarningsAsMessages>
 	</PropertyGroup>
 
 	<ItemGroup>

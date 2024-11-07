@@ -3,6 +3,8 @@
 
 	<PropertyGroup>
 		<AssemblyName>linq2db.Tests</AssemblyName>
+
+		<MSBuildWarningsAsMessages>$(MSBuildWarningsAsMessages);MSB3277</MSBuildWarningsAsMessages>
 	</PropertyGroup>
 
 	<ItemGroup>
