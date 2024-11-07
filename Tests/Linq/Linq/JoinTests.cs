@@ -3361,8 +3361,9 @@ namespace Tests.Linq
 			using var db = GetDataConnection(context, o => o.UseCompareNulls(compareNulls));
 
 			var query = (from p1 in db.Person
-						 join p2 in db.Person on p1.MiddleName equals p2.MiddleName
+						 join p2 in db.Person on new { p1.MiddleName } equals new { p2.MiddleName }
 						 select new { p1, p2 });
+
 			query.ToArray();
 
 			var isNullCount = db.LastQuery!.Split(["IS NULL"], StringSplitOptions.None).Length - 1;
@@ -3394,7 +3395,7 @@ namespace Tests.Linq
 			using var db = GetDataConnection(context, o => o.UseCompareNulls(compareNulls));
 
 			var query = (from p1 in db.Parent
-						 join p2 in db.Parent on p1.Value1 equals p2.Value1
+						 join p2 in db.Parent on new { p1.Value1 } equals new { p2.Value1 }
 						 select new { p1, p2 });
 			query.ToArray();
 

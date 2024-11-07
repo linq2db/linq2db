@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 
+using LinqToDB.Common;
+
 namespace LinqToDB.Linq.Builder
 {
 	using LinqToDB.Expressions;
@@ -84,7 +86,7 @@ namespace LinqToDB.Linq.Builder
 			bool allowNullComparison = outerKeySelector is SqlGenericConstructorExpression ||
 			                           innerKeySelector is SqlGenericConstructorExpression;
 
-			if (!allowNullComparison)
+			if (!allowNullComparison && builder.CompareNulls is CompareNulls.LikeClr or CompareNulls.LikeSqlExceptParameters)
 				compareSearchCondition = QueryHelper.CorrectComparisonForJoin(compareSearchCondition);
 
 			join.JoinedTable.Condition = compareSearchCondition;

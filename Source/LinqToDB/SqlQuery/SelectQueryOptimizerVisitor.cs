@@ -1561,7 +1561,7 @@ namespace LinqToDB.SqlQuery
 
 				if (QueryHelper.ContainsAggregationFunction(column.Expression))
 				{
-					if (parentQuery.Having.HasElement(column) || parentQuery.Select.GroupBy.HasElement(column))
+					if (subQuery.GroupBy.IsEmpty || parentQuery.Having.HasElement(column) || parentQuery.Select.GroupBy.HasElement(column))
 					{
 						// aggregate moving not allowed
 						return false;

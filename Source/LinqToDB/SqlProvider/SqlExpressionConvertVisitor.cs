@@ -912,6 +912,8 @@ namespace LinqToDB.SqlProvider
 
 			if (!ReferenceEquals(wrapped, newElement.Expression))
 			{
+				if (wrapped != null)
+					wrapped = (ISqlExpression)Optimize(wrapped);
 				if (GetVisitMode(newElement) == VisitMode.Modify)
 				{
 					newElement.Expression = wrapped;

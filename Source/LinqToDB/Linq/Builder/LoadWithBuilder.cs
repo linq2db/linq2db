@@ -87,7 +87,7 @@ namespace LinqToDB.Linq.Builder
 				else
 				{
 					if (sequence is LoadWithContext lw)
-						table = lw.RegisterContext as ITableContext;
+						table = lw.RegisterContext as ILoadWithContext;
 				}
 
 				var path = SequenceHelper.PrepareBody(selector, sequence);
@@ -309,7 +309,7 @@ namespace LinqToDB.Linq.Builder
 							else
 							{
 								stop    = true;
-								context = contextRef.BuildContext as ITableContext;
+								context = contextRef.BuildContext as ILoadWithContext;
 							}
 
 							break;

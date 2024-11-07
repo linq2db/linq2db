@@ -428,13 +428,13 @@ namespace Tests.Linq
 		{
 			using (var db = new DataConnection())
 			{
-				var res =
+				var query =
 					from rc in db.GetTable<TestEntity>()
 					join li in db.GetTable<LookupEntity>() on rc.Id equals li.InnerEntity!.Id
 					where rc.EntityType == TestEntityType.Type1
 					select rc;
 
-				var _ = res.ToList();
+				var _ = query.ToList();
 			}
 		}
 

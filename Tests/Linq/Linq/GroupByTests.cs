@@ -3653,7 +3653,7 @@ namespace Tests.Linq
 
 			query.ToList();
 
-			db.LastQuery.Should().Contain("SELECT", Exactly.Once());
+			db.LastQuery.Should().Contain("SELECT", Exactly.Twice());
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3250")]

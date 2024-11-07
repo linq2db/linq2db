@@ -3663,7 +3663,7 @@ namespace LinqToDB.Linq.Builder
 				leftExpr = Builder.UpdateNesting(BuildContext, leftExpr);
 				rightExpr = Builder.UpdateNesting(BuildContext, rightExpr);
 
-				var compareNullsAsValues = Builder.CompareNulls == CompareNulls.LikeClr;
+				var compareNullsAsValues = Builder.CompareNulls is CompareNulls.LikeClr or CompareNulls.LikeSqlExceptParameters;
 
 				//SQLRow case when needs to add Single
 				//
@@ -4930,6 +4930,13 @@ namespace LinqToDB.Linq.Builder
 			++_gettingSubquery;
 			var buildResult = Builder.TryBuildSequence(info);
 			--_gettingSubquery;
+
+			if (expr is ContextRefExpression contextRef && ReferenceEquals(contextRef.BuildContext, buildResult.BuildContext))
+			{
+				errorMessage = null;
+				isSequence   = false;
+				return null;
+			}
 
 			isSequence = buildResult.IsSequence;
 
