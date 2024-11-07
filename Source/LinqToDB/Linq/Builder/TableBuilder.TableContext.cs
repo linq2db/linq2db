@@ -245,7 +245,7 @@ namespace LinqToDB.Linq.Builder
 
 				if (sql == null)
 				{
-					if (flags.IsSqlOrExpression())
+					if (flags.IsSqlOrExpression() && !me.IsAssociation(MappingSchema))
 					{
 						Expression fullEntity = Builder.BuildFullEntityExpression(MappingSchema, new ContextRefExpression(ElementType, this), ElementType, flags);
 
