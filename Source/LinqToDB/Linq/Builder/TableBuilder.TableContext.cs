@@ -212,7 +212,7 @@ namespace LinqToDB.Linq.Builder
 						return tablePlaceholder;
 					}
 
-					Expression fullEntity = Builder.BuildFullEntityExpression(MappingSchema, path, path.Type, flags);
+					Expression fullEntity = Builder.BuildFullEntityExpression(MappingSchema, path, ElementType, flags);
 					// Entity can contain calculated columns which should be exposed
 					fullEntity = Builder.ConvertExpressionTree(fullEntity);
 
