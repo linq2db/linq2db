@@ -917,7 +917,7 @@ namespace Tests.xUpdate
 
 		// merge into CTE supported only by SQL Server
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4338")]
-		public void Issue4338Test([IncludeDataSources(true, TestProvName.AllSqlServer2005)] string context)
+		public void Issue4338Test([IncludeDataSources(true, TestProvName.AllSqlServer)] string context)
 		{
 			// prepare data before fiters applied
 			using (var db1 = GetDataContext(context))
