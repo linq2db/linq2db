@@ -3657,7 +3657,7 @@ namespace Tests.Linq
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3250")]
-		[ThrowsForProvider(typeof(LinqException), ErrorMessage = ErrorHelper.Error_WindowFuncstionsInSearchCondition)]
+		[ThrowsForProvider(typeof(LinqException), ErrorMessage = ErrorHelper.Error_WindowFunctionsInSearchCondition)]
 		public void Issue3250Test2([DataSources(false, TestProvName.AllSQLite)] string context)
 		{
 			using var db = GetDataConnection(context);

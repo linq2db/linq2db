@@ -18,7 +18,7 @@
 		public const string Error_SqlRow_in_Update               = "Provider does not support SqlRow on the left-hand side of an UPDATE SET.";
 		public const string Error_SqlRow_in_Update_Value         = "Provider does not support SqlRow literal on the right-hand side of an UPDATE SET.";
 
-		public const string Error_WindowFuncstionsInSearchCondition = "Window functions cannot be used in search condition.";
+		public const string Error_WindowFunctionsInSearchCondition = "Window functions cannot be used in search condition.";
 
 		// Oracle
 		public const string Error_ColumnSubqueryShouldNotContainParentIsNotNull = "Column expression should not contain parent's IS NOT NULL condition.";
