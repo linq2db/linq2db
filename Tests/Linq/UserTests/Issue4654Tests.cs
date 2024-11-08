@@ -14,7 +14,7 @@ namespace Tests.UserTests
 		[Table("Issue4654Customer")]
 		public class Customer
 		{
-			[Identity] public int Id { get; set; }
+			[Identity, PrimaryKey] public int Id { get; set; }
 			[Column] public string? Name { get; set; }
 			[Association(ThisKey = nameof(Id), OtherKey = nameof(Order.CustomerId))]
 			public ICollection<Order>? Orders { get; set; }
@@ -23,7 +23,7 @@ namespace Tests.UserTests
 		[Table("Issue4654Order")]
 		public class Order
 		{
-			[Identity] public int Id { get; set; }
+			[Identity, PrimaryKey] public int Id { get; set; }
 			[Column] public string ProductName { get; set; } = null!;
 			[Column] public int Quantity { get; set; }
 			[Column] public int CustomerId { get; set; }
@@ -34,7 +34,7 @@ namespace Tests.UserTests
 		[Table("Issue4654Product")]
 		public class Product
 		{
-			[Identity] public int Id { get; set; }
+			[Identity, PrimaryKey] public int Id { get; set; }
 			[Column] public string Name { get; set; } = null!;
 			[Column] public decimal Price { get; set; }
 		}

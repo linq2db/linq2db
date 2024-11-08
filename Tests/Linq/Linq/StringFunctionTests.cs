@@ -382,15 +382,15 @@ namespace Tests.Linq
 
 		[Test]
 		public void ContainsValueAll([DataSources] string context,
-			[Values("n", "-", "*", "?", "#", "%", "[", "]", "[]", "[[", "]]")]string toTest)
+			[Values("n", "-", "*", "?", "#", "%", "[", "]", "[]", "[[", "]]")] string toTest)
 		{
-			using (var db = GetDataContext(context))
-			{
-				var s  = "123" + toTest + "456";
+			using var db = GetDataContext(context);
+			db.InlineParameters = true;
 
-				db.Person.Count(p => p.ID == 1 && s.Contains(Sql.ToSql(toTest))).Should().Be(1);
-				db.Person.Count(p => p.ID == 1 && !s.Contains(Sql.ToSql(toTest))).Should().Be(0);
-			}
+			var s  = "123" + toTest + "456";
+
+			db.Person.Count(p => p.ID == 1 && s.Contains(Sql.ToSql(toTest))).Should().Be(1);
+			db.Person.Count(p => p.ID == 1 && !s.Contains(Sql.ToSql(toTest))).Should().Be(0);
 		}
 
 
@@ -398,12 +398,12 @@ namespace Tests.Linq
 		public void ContainsParameterAll([DataSources] string context,
 			[Values("n", "-", "*", "?", "#", "%", "[", "]", "[]", "[[", "]]")]string toTest)
 		{
-			using (var db = GetDataContext(context))
-			{
-				var s  = "123" + toTest + "456";
+			using var db = GetDataContext(context);
+			db.InlineParameters = false;
 
-				db.Person.Count(p => p.ID == 1 && s.Contains(toTest)).Should().Be(1);
-			}
+			var s  = "123" + toTest + "456";
+
+			db.Person.Count(p => p.ID == 1 && s.Contains(toTest)).Should().Be(1);
 		}
 
 		[Test]
