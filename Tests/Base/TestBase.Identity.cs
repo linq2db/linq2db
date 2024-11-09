@@ -228,9 +228,9 @@ CREATE COLUMN TABLE ""AllTypes""
 					case string prov when prov.IsAnyOf(TestProvName.AllSybase):
 						sql = new[]
 						{
-						$"sp_chgattribute AllTypes, 'identity_burn_max', 0, '{lastValue}'",
-						$"sp_chgattribute KeepIdentityTest, 'identity_burn_max', 0, '{keepIdentityLastValue}'"
-					};
+							$"sp_chgattribute AllTypes, 'identity_burn_max', 0, '{lastValue}'",
+							$"sp_chgattribute KeepIdentityTest, 'identity_burn_max', 0, '{keepIdentityLastValue}'"
+						};
 						break;
 					case string prov when prov.IsAnyOf(TestProvName.AllSQLite):
 						sql = new[] { $"UPDATE sqlite_sequence SET seq = {lastValue} WHERE name = 'AllTypes'" };

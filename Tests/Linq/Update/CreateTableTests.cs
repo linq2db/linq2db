@@ -392,16 +392,15 @@ namespace Tests.xUpdate
 		[Table(nameof(Issue4671Entity))]
 		public class Issue4671Entity
 		{
-			[Identity]
+			[Identity, PrimaryKey]
 			public int Id { get; set; }
 
 			[Column]
 			public int Value { get; set; }
 		}
 
-		[ActiveIssue(Configurations = [TestProvName.AllPostgreSQL, TestProvName.AllClickHouse, TestProvName.AllMySql])]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4671")]
-		public void Issue4671Test([DataSources(false)] string context)
+		public void Issue4671Test([DataSources(false, TestProvName.AllClickHouse)] string context)
 		{
 			using var db = GetDataContext(context);
 
