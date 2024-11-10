@@ -1598,7 +1598,6 @@ namespace Tests.Linq
 			TestUpdateAndFind(db.GetTable<Issue4364_BaseThing>().Where(x => x.Type == 101 || x.Type == 102).Cast<Issue4364_IntermediateThing>());
 		}
 
-		[ActiveIssue]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4364")]
 		public void Issue4364Test42([DataSources] string context)
 		{

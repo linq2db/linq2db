@@ -163,8 +163,6 @@ namespace Tests.Linq
 			}
 		}
 
-
-		[ActiveIssue("https://github.com/DarkWanderer/ClickHouse.Client/issues/153 HttpIOException : The response ended prematurely", Configuration = ProviderName.ClickHouseClient)]
 		[Test, Order(100)]
 		public void ConcurrentTestWithOptmization([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{

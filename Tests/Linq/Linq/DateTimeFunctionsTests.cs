@@ -152,7 +152,7 @@ namespace Tests.Linq
 		[ActiveIssue("Test is broken")]
 		[Test]
 		public void CurrentTimestampUtcClientSideParameter(
-			[IncludeDataSources(true, TestProvName.AllFirebird, ProviderName.SqlCe, TestProvName.AllClickHouse)]
+			[IncludeDataSources(true, TestProvName.AllFirebird, ProviderName.SqlCe)]
 			string context)
 		{
 			using (new DisableBaseline("Server-side date generation test"))

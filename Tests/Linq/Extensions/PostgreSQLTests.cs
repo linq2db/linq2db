@@ -219,8 +219,6 @@ namespace Tests.Extensions
 				")"));
 		}
 
-		// TODO: EF.core issue, without it it works
-		[ActiveIssue]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4333")]
 		public void Issue4333Test([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
 		{

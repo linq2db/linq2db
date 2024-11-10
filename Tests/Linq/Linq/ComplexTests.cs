@@ -591,7 +591,6 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/940")]
 		public void FilterByComposite_Class([DataSources] string context)
 		{
@@ -675,7 +674,6 @@ namespace Tests.Linq
 			};
 		}
 
-		[ActiveIssue]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/940")]
 		public void FilterByComposite_Struct([DataSources] string context)
 		{

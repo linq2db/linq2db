@@ -644,7 +644,6 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[ActiveIssue("Update to new JSON type implementation")]
 		[Test]
 		public async ValueTask TestJSONType([ClickHouseDataSources(false)] string context)
 		{

@@ -221,7 +221,6 @@ namespace Tests.Linq
 
 		// ProviderName.SqlServer2014 disabled due to:
 		// https://connect.microsoft.com/SQLServer/feedback/details/3139577/performace-regression-for-compatibility-level-2014-for-specific-query
-		[ActiveIssue("ClickHouse performs slow leading to timeout with specified provider", Configuration = ProviderName.ClickHouseOctonica)]
 		[Test]
 		public void MultipleSelect11([IncludeDataSources(
 			TestProvName.AllSqlServer2008, TestProvName.AllSqlServer2012, TestProvName.AllSqlServer2019, TestProvName.AllSapHana, TestProvName.AllClickHouse)]
@@ -1442,8 +1441,6 @@ namespace Tests.Linq
 			}
 		}
 
-		// IFX: Informix needs type hint for NULL value
-		[ActiveIssue(Configurations = new[] { TestProvName.AllInformix })]
 		[Test]
 		public void Select_TernaryNullableValue([DataSources] string context, [Values(null, 0, 1)] int? value)
 		{
@@ -1456,8 +1453,6 @@ namespace Tests.Linq
 			}
 		}
 
-		// IFX: Informix needs type hint for NULL value
-		[ActiveIssue(Configurations = new[] { TestProvName.AllInformix })]
 		[Test]
 		public void Select_TernaryNullableValueReversed([DataSources] string context, [Values(null, 0, 1)] int? value)
 		{
@@ -1470,9 +1465,7 @@ namespace Tests.Linq
 			}
 		}
 
-		// INFORMIX needs type hint in select
 		[Test]
-		[ActiveIssue(Configurations = new[] { TestProvName.AllInformix })]
 		public void Select_TernaryNullableValue_Nested([DataSources] string context, [Values(null, 0, 1)] int? value)
 		{
 			// mapping fails and fallbacks to slow-mapper
@@ -1484,9 +1477,7 @@ namespace Tests.Linq
 			}
 		}
 
-		// INFORMIX needs type hint in select
 		[Test]
-		[ActiveIssue(Configurations = new[] { TestProvName.AllInformix })]
 		public void Select_TernaryNullableValueReversed_Nested([DataSources] string context, [Values(null, 0, 1)] int? value)
 		{
 			// mapping fails and fallbacks to slow-mapper

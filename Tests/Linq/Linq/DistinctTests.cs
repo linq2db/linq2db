@@ -235,7 +235,6 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue]
 		[Test]
 		public void DistinctOrderBySkip([DataSources] string context)
 		{
@@ -275,7 +274,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue(Configurations = [TestProvName.AllClickHouse, TestProvName.AllMySql, TestProvName.AllPostgreSQL, TestProvName.AllSapHana, TestProvName.AllSQLite, TestProvName.AllSybase, TestProvName.AllOracle])]
+		[ActiveIssue(Configurations = [TestProvName.AllClickHouse, TestProvName.AllMySql, TestProvName.AllPostgreSQL, TestProvName.AllSapHana, TestProvName.AllSQLite, TestProvName.AllSybase])]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/2943")]
 		public void OrderByDistinctSkipTake([DataSources] string context)
 		{
@@ -293,7 +292,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue(Configurations = [TestProvName.AllClickHouse, TestProvName.AllMySql, TestProvName.AllPostgreSQL, TestProvName.AllSQLite, TestProvName.AllSybase, TestProvName.AllOracle, TestProvName.AllSapHana])]
+		[ActiveIssue(Configurations = [TestProvName.AllClickHouse, TestProvName.AllMySql, TestProvName.AllPostgreSQL, TestProvName.AllSQLite, TestProvName.AllSybase, TestProvName.AllSapHana])]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/2943")]
 		public void OrderByDistinctTake([DataSources] string context)
 		{

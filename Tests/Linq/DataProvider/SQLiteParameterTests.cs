@@ -65,7 +65,7 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[ActiveIssue("Improving MappingSchema needed.")]
+		[ActiveIssue("Improving MappingSchema needed.", Configuration = ProviderName.SQLiteMS)]
 		[Test]
 		public void DoubleParameterization([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{

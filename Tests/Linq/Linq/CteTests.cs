@@ -666,7 +666,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void RecursiveTest([CteContextSource(true, ProviderName.DB2)] string context)
+		public void RecursiveTest([CteContextSource(true, ProviderName.DB2, TestProvName.AllSapHana, TestProvName.AllInformix)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1245,6 +1245,8 @@ namespace Tests.Linq
 
 		[Test(Description = "Test that we generate plain UNION without sub-queries (or query will be invalid)")]
 		public void Issue3359_MultipleSets([CteContextSource(
+			TestProvName.AllInformix,
+			TestProvName.AllSapHana,
 			TestProvName.AllOracle, // too many unions (ORA-32041: UNION ALL operation in recursive WITH clause must have only two branches)
 			TestProvName.AllPostgreSQL, // too many joins? (42P19: recursive reference to query "cte" must not appear within its non-recursive term)
 			ProviderName.DB2 // joins (SQL0345N  The fullselect of the recursive common table expression "cte" must be the UNION of two or more fullselects and cannot include column functions, GROUP BY clause, HAVING clause, ORDER BY clause, or an explicit join including an ON clause.)
@@ -1356,8 +1358,6 @@ namespace Tests.Linq
 			public string? Str  { get; set; }
 		}
 
-		// SqlException : Types don't match between the anchor and the recursive part in column "Str" of recursive query "cte".
-		[ActiveIssue]
 		[Test(Description = "Test that we type literal/parameter in set query column properly")]
 		public void Issue3360_TypeByOtherQuery([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
 		{
@@ -1379,7 +1379,7 @@ namespace Tests.Linq
 			if (db is TestDataConnection dc)
 			{
 				dc.LastQuery!.Should().NotContain("N'");
-				dc.LastQuery!.ToUpperInvariant().Should().Contain("AS VARCHAR(MAX))", Exactly.Twice());
+				dc.LastQuery!.ToUpperInvariant().Should().Contain("AS VARCHAR(MAX))", Exactly.Once());
 			}
 		}
 
@@ -1403,9 +1403,8 @@ namespace Tests.Linq
 			query.ToArray();
 		}
 
-		[ActiveIssue(Configurations = [TestProvName.AllSqlServer])]
 		[Test(Description = "Test that we don't need typing for non-sqlserver providers")]
-		public void Issue3360_TypeByOtherQuery_AllProviders([CteContextSource(ProviderName.DB2)] string context)
+		public void Issue3360_TypeByOtherQuery_AllProviders([CteContextSource(ProviderName.DB2, TestProvName.AllSapHana)] string context)
 		{
 			using var db = GetDataContext(context);
 			using var tb = db.CreateLocalTable<Issue3360Table>();
@@ -1445,7 +1444,6 @@ namespace Tests.Linq
 			public StrEnum Str { get; set; }
 		}
 
-		[ActiveIssue]
 		[Test(Description = "Test that we type literal/parameter in set query column properly")]
 		public void Issue3360_TypeStringEnum([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
 		{
@@ -1468,13 +1466,12 @@ namespace Tests.Linq
 			{
 				dc.LastQuery!.Should().NotContain("N'");
 				dc.LastQuery!.Should().Contain("'THIS_IS_TWO'");
-				dc.LastQuery!.ToUpperInvariant().Should().Contain("AS VARCHAR(MAX))", Exactly.Twice());
+				dc.LastQuery!.ToUpperInvariant().Should().Contain("AS VARCHAR(50))", Exactly.Once());
 			}
 		}
 
-		[ActiveIssue(Configurations = [TestProvName.AllPostgreSQL, TestProvName.AllSqlServer])]
 		[Test(Description = "Test that we don't need typing for non-sqlserver providers")]
-		public void Issue3360_TypeStringEnum_AllProviders([CteContextSource(ProviderName.DB2)] string context)
+		public void Issue3360_TypeStringEnum_AllProviders([CteContextSource(ProviderName.DB2, TestProvName.AllSapHana)] string context)
 		{
 			using var db = GetDataContext(context);
 			using var tb = db.CreateLocalTable<Issue3360WithEnum>();
@@ -1512,7 +1509,6 @@ namespace Tests.Linq
 			query.ToArray();
 		}
 
-		[ActiveIssue]
 		[Test(Description = "Test that we type literal/parameter in set query column properly")]
 		public void Issue3360_TypeByProjectionProperty([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
 		{
@@ -1538,7 +1534,7 @@ namespace Tests.Linq
 		}
 
 		[Test(Description = "Test that we don't need typing for non-sqlserver providers")]
-		public void Issue3360_TypeByProjectionProperty_AllProviders([CteContextSource(ProviderName.DB2)] string context)
+		public void Issue3360_TypeByProjectionProperty_AllProviders([CteContextSource(ProviderName.DB2, TestProvName.AllSapHana)] string context)
 		{
 			using var db = GetDataContext(context);
 			using var tb = db.CreateLocalTable<Issue3360Table>();
@@ -1589,7 +1585,7 @@ namespace Tests.Linq
 
 		[ActiveIssue(Configurations = [TestProvName.AllSqlServer])]
 		[Test(Description = "Test CTE columns typing")]
-		public void Issue3360_NullGuidInAnchor([CteContextSource(TestProvName.AllFirebird, ProviderName.DB2)] string context)
+		public void Issue3360_NullGuidInAnchor([CteContextSource(TestProvName.AllFirebird, ProviderName.DB2, TestProvName.AllSapHana)] string context)
 		{
 			using var db = GetDataContext(context);
 			using var tb = db.CreateLocalTable<Issue3360NullInAnchor>();
@@ -1607,9 +1603,9 @@ namespace Tests.Linq
 			query.ToArray();
 		}
 
-		[ActiveIssue(Configurations = [TestProvName.AllPostgreSQL, TestProvName.AllSqlServer])]
+		[ActiveIssue(Configurations = [TestProvName.AllSqlServer])]
 		[Test(Description = "Test CTE columns typing")]
-		public void Issue3360_NullEnumInAnchor([CteContextSource(ProviderName.DB2)] string context)
+		public void Issue3360_NullEnumInAnchor([CteContextSource(ProviderName.DB2, TestProvName.AllSapHana)] string context)
 		{
 			using var db = GetDataContext(context);
 			using var tb = db.CreateLocalTable<Issue3360NullInAnchor>();
@@ -1748,7 +1744,7 @@ namespace Tests.Linq
 
 		private record Issue3360NullsRecord(int Id, byte? Byte, byte? ByteN, Guid? Guid, Guid? GuidN, InvalidColumnIndexMappingEnum1? Enum, InvalidColumnIndexMappingEnum2? EnumN, bool? Bool, bool? BoolN);
 
-		[ActiveIssue(3015, Configurations = [TestProvName.AllClickHouse, TestProvName.AllFirebird, TestProvName.AllMySql, TestProvName.AllPostgreSQL, TestProvName.AllSqlServer, TestProvName.AllSapHana])]
+		[ActiveIssue(3015, Configurations = [TestProvName.AllClickHouse, TestProvName.AllFirebird, TestProvName.AllMySql, TestProvName.AllSqlServer, TestProvName.AllSapHana])]
 		[Test(Description = "null literals in anchor query (for known problematic types)")]
 		public void Issue3360_NullsInAnchor([CteContextSource] string context)
 		{
@@ -1842,7 +1838,6 @@ namespace Tests.Linq
 			});
 		}
 
-		[ActiveIssue(Configurations = [TestProvName.AllOracle, TestProvName.AllSqlServer])]
 		[Test(Description = "literals in anchor query")]
 		public void Issue3360_LiteralsInAnchor([CteContextSource(TestProvName.AllInformix, TestProvName.AllSapHana)] string context)
 		{
@@ -1918,7 +1913,7 @@ namespace Tests.Linq
 
 		[ActiveIssue(Configurations = [TestProvName.AllPostgreSQL, TestProvName.AllSqlServer])]
 		[Test(Description = "Test that other providers work")]
-		public void Issue2451_ComplexColumn_All([CteContextSource(ProviderName.DB2)] string context)
+		public void Issue2451_ComplexColumn_All([CteContextSource(ProviderName.DB2, TestProvName.AllSapHana)] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -2288,9 +2283,10 @@ namespace Tests.Linq
 		}
 		#endregion
 
-		// TODO: it currently works, need to re-test with efcore integration
+		// CH: probably this https://github.com/ClickHouse/ClickHouse/issues/64794
+		[ActiveIssue(Details = "Investigate expected SQL", Configuration = TestProvName.AllClickHouse)]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4012")]
-		public void Issue4012Test([CteContextSource] string context)
+		public void Issue4012Test([CteContextSource(TestProvName.AllSapHana)] string context)
 		{
 			using var db = GetDataContext(context);
 

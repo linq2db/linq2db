@@ -1466,7 +1466,6 @@ namespace Tests.Linq
 			query2.Concat(query1).ToArray();
 		}
 
-		[ActiveIssue]
 		[Test(Description = "Test that we type literal/parameter in set query column properly")]
 		public void Issue3360_TypeByProjectionProperty([IncludeDataSources(true, TestProvName.AllSqlServer)] string context)
 		{
@@ -1623,7 +1622,7 @@ namespace Tests.Linq
 			});
 		}
 
-		[ActiveIssue(Configurations = [TestProvName.AllAccess, TestProvName.AllInformix, TestProvName.AllOracle, TestProvName.AllSybase])]
+		[ActiveIssue(Configurations = [TestProvName.AllSybase])]
 		[Test(Description = "null literals in first query")]
 		public void Issue3360_LiteralsInFirstQuery([DataSources] string context)
 		{
