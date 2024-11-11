@@ -1342,8 +1342,25 @@ namespace LinqToDB.Linq.Builder
 									if (assignment.MemberInfo.ReflectedType != member.ReflectedType && assignment.MemberInfo.Name == member.Name)
 									{
 										var mi = assignment.MemberInfo.ReflectedType!.GetMemberEx(member);
-										if (mi != null && MemberInfoEqualityComparer.Default.Equals(assignment.MemberInfo, mi))
+										if (mi != null && mi.GetMemberType() == member.GetMemberType() && MemberInfoEqualityComparer.Default.Equals(assignment.MemberInfo, mi))
 										{
+											if (member.ReflectedType?.IsInterface == true && assignment.MemberInfo.ReflectedType?.IsClass == true && member is PropertyInfo propInfo && assignment.MemberInfo is PropertyInfo classPropinfo)
+											{
+												// Validating that interface property is pointing to the correct class property
+
+												var interfaceMap               = assignment.MemberInfo.ReflectedType.GetInterfaceMap(member.ReflectedType);
+												var interfacePropertyGetMethod = propInfo.GetGetMethod();
+												var classPropertyGetMethod     = classPropinfo.GetGetMethod();
+
+												var methodIndex             = Array.IndexOf(interfaceMap.InterfaceMethods, interfacePropertyGetMethod);
+												var classImplementingMethod = interfaceMap.TargetMethods[methodIndex];
+
+												var isBackingProperty = classPropertyGetMethod == classImplementingMethod;
+
+												if (!isBackingProperty)
+													continue;
+											}
+
 											bodyExpresion = assignment.Expression;
 											break;
 										}
