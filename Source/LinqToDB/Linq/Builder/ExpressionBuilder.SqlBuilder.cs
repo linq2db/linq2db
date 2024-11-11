@@ -49,10 +49,6 @@ namespace LinqToDB.Linq.Builder
 				{
 					buildSequence = groupByContext.SubQuery;
 				}
-				else
-				{
-					enforceHaving = false;
-				}
 			}
 
 			if (!enforceHaving)
@@ -77,7 +73,7 @@ namespace LinqToDB.Linq.Builder
 				return null;
 			}
 
-			if (QueryHelper.ContainsWindowFunction(sc))
+			if (!enforceHaving && QueryHelper.ContainsWindowFunction(sc))
 			{
 				error = new SqlErrorExpression(expr, ErrorHelper.Error_WindowFuncstionsInSearchCondition, expr.Type);
 				return null;
