@@ -685,7 +685,7 @@ namespace Tests.Linq
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3631")]
-		public void Issue3631Test3([DataSources] string context)
+		public void Issue3631Test3([DataSources(TestProvName.AllAccess, TestProvName.AllSqlServer, TestProvName.AllSybase, ProviderName.SqlCe)] string context)
 		{
 			using var db = GetDataContext(context);
 			using var tb = db.CreateLocalTable(Issue3631Table.Data);
