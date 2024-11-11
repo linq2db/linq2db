@@ -9,10 +9,12 @@ namespace LinqToDB.SqlQuery
 	{
 		public SqlColumn(SelectQuery? parent, ISqlExpression expression, string? alias)
 		{
+#if DEBUG
 			if (expression is SqlSearchCondition)
 			{
 
 			}
+#endif
 
 			Parent      = parent;
 			_expression = expression ?? throw new ArgumentNullException(nameof(expression));
