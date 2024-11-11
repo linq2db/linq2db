@@ -413,22 +413,9 @@ namespace LinqToDB.Linq.Builder
 				var fieldExpression = envelope.FieldExpression;
 				var valueExpression = envelope.ValueExpression;
 
-				if (fieldExpression.IsSqlRow())
-				{
-					var row = fieldExpression.GetSqlRowValues()
-						.Select(e => GetFieldExpression(e, false))
-						.ToArray();
-
-					var rowExpression = new SqlRowExpression(row);
-
-					setExpression = new SqlSetExpression(rowExpression, null);
-				}
-				else
-				{
-					var column = GetFieldExpression(fieldExpression, valueExpression == null);
-					columnDescriptor = QueryHelper.GetColumnDescriptor(column);
-					setExpression    = new SqlSetExpression(column, null);
-				}
+				var column = GetFieldExpression(fieldExpression, valueExpression == null);
+				columnDescriptor = QueryHelper.GetColumnDescriptor(column);
+				setExpression    = new SqlSetExpression(column, null);
 
 				if (valueExpression != null)
 				{
