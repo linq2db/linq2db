@@ -881,7 +881,11 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 				.ToListAsyncEF();
 		}
 
+#if NET6_0
 		[ActiveIssue(Configurations = [TestProvName.AllPostgreSQL, TestProvName.AllMySql])]
+#else
+		[ActiveIssue(Configuration = TestProvName.AllPostgreSQL)]
+#endif
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4671")]
 		public void Issue4671Test1([EFDataSources] string provider)
 		{
