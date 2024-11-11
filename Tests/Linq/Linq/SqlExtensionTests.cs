@@ -522,6 +522,23 @@ namespace Tests.Linq
 				var entityType = builder.Arguments[0].Type;
 				var entityDescriptor = builder.DataContext.MappingSchema.GetEntityDescriptor(entityType);
 				var tableExp = builder.GetExpression(0)!;
+
+				ISqlTableSource? table = null;
+
+				if (tableExp is SqlField field)
+				{
+					if (field.Table is SqlTable sqlTable)
+						table = sqlTable;
+					else if (field.Table is SelectQuery select)
+						table = select.From.Tables[0].Source;
+				}
+
+				if (table == null)
+				{
+					builder.IsConvertible = false;
+					return;
+				}
+
 				var keyProviderType = entityType
 					.GetInterfaces()
 					.First(static i => i.IsConstructedGenericType && i.GetGenericTypeDefinition() == typeof(IKeyProvider<>));
@@ -534,7 +551,7 @@ namespace Tests.Linq
 						.Select(prop => entityType.GetProperties().First(eProp => eProp.Name.Equals(prop.Name)))
 						.Select(prop => new SqlField(entityDescriptor.Columns.First(c => c.MemberInfo == prop))
 						{
-							Table = ((SqlField)tableExp).Table
+							Table = table
 						})
 					// .Select(fieldExp => new SqlExpression("{0}.{1}", tableExp, fieldExp)) // trying to make table.Field
 						.Cast<ISqlExpression>()
