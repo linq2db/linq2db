@@ -550,6 +550,9 @@ namespace LinqToDB.Linq.Builder
 
 						var result = Builder.BuildSqlExpression(_key, keyPath, BuildFlags.ForKeys);
 
+						if (ExpressionEqualityComparer.Instance.Equals(result, keyPath))
+							return SqlErrorExpression.EnsureError(path);
+
 						if (result is SqlPlaceholderExpression placeholder)
 						{
 							// we need to update path to the same as in placeholder
