@@ -841,7 +841,6 @@ namespace Tests.Extensions
 			Assert.That(cnt, Is.EqualTo(2));
 		}
 
-		[ActiveIssue(Details = "MappingSchema/MappingSchema.GetCanBeNull require update to support by-value nullability information")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4163")]
 		public void Issue4163Test2([IncludeDataSources(true, TestProvName.AllOracle)] string context, [Values] CompareNulls compareNulls)
 		{

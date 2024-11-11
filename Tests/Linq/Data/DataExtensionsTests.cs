@@ -293,7 +293,6 @@ namespace Tests.Data
 			}
 		}
 
-		[ActiveIssue("Poor parameters support", Configuration = ProviderName.ClickHouseClient)]
 		[Test]
 		public void TestDataParameterMapping2([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{

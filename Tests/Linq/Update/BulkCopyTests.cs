@@ -1186,7 +1186,7 @@ namespace Tests.xUpdate
 			[Column(SkipOnInsert = true)] public int? Id { get; set; }
 		}
 
-		[ActiveIssue(Configurations = [TestProvName.AllClickHouse, TestProvName.AllDB2, TestProvName.AllFirebird, TestProvName.AllInformix, TestProvName.AllMySql, TestProvName.AllOracle, TestProvName.AllPostgreSQL, TestProvName.AllSapHana, ProviderName.SqlCe, TestProvName.AllSQLite, TestProvName.AllSqlServer])]
+		[ActiveIssue(Configurations = [TestProvName.AllClickHouse, TestProvName.AllDB2, TestProvName.AllFirebird, TestProvName.AllInformix, TestProvName.AllMySql, TestProvName.AllOracle, TestProvName.AllPostgreSQL, TestProvName.AllSapHana, ProviderName.SqlCe, TestProvName.AllSQLite, TestProvName.AllSqlServer, TestProvName.AllSybase])]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4615")]
 		public void BulkCopyAutoOnly([DataSources(false)] string context, [Values] BulkCopyType copyType)
 		{
@@ -1206,7 +1206,7 @@ namespace Tests.xUpdate
 			Assert.That(item.Id, Is.EqualTo(1));
 		}
 
-		[ActiveIssue(Configurations = [TestProvName.AllClickHouse, TestProvName.AllDB2, TestProvName.AllFirebird, TestProvName.AllInformix, TestProvName.AllMySql, TestProvName.AllOracle, TestProvName.AllPostgreSQL, TestProvName.AllSapHana, ProviderName.SqlCe, TestProvName.AllSQLite, TestProvName.AllSqlServer])]
+		[ActiveIssue(Configurations = [TestProvName.AllClickHouse, TestProvName.AllDB2, TestProvName.AllFirebird, TestProvName.AllInformix, TestProvName.AllMySql, TestProvName.AllOracle, TestProvName.AllPostgreSQL, TestProvName.AllSapHana, ProviderName.SqlCe, TestProvName.AllSQLite, TestProvName.AllSqlServer, TestProvName.AllSybase])]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4615")]
 		public void BulkCopySkipOnly([DataSources(false)] string context, [Values] BulkCopyType copyType)
 		{

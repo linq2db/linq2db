@@ -96,7 +96,8 @@ steps:
 
 - script: dotnet test $(netfx_tfm)/efcore/x86/linq2db.EntityFrameworkCore.Tests.dll --filter "TestCategory != SkipCI" -f $(netfx_tfm) -l trx $(extra) --blame-hang-timeout 5m
   displayName: 'EF.Core Tests (NETFX): $(title)'
-  condition: and(eq(variables.netfx, 'true'), eq(variables.x86, 'true'), variables.title, succeeded())
+  #condition: and(eq(variables.netfx, 'true'), eq(variables.x86, 'true'), variables.title, succeeded())
+  condition: and(eq(variables.netfx, 'true'), eq(variables.x86, 'true'), variables.title)
 
 - task: CmdLine@2
   inputs:
@@ -123,7 +124,8 @@ steps:
 
 - script: dotnet test $(netfx_tfm)/efcore/x64/linq2db.EntityFrameworkCore.Tests.dll --filter "TestCategory != SkipCI" -f $(netfx_tfm) -l trx --arch x64 --blame-hang-timeout 5m
   displayName: 'EF.Core Tests (NETFX x64): $(title)'
-  condition: and(eq(variables.netfx, 'true'), ne(variables.x86, 'true'), variables.title, succeeded())
+  #condition: and(eq(variables.netfx, 'true'), ne(variables.x86, 'true'), variables.title, succeeded())
+  condition: and(eq(variables.netfx, 'true'), ne(variables.x86, 'true'), variables.title)
 
 - task: CmdLine@2
   inputs:
@@ -173,11 +175,13 @@ steps:
 
 - script: dotnet test net6.0/efcore/x64/linq2db.EntityFrameworkCore.Tests.dll --filter "TestCategory != SkipCI" -f net60 -l trx --blame-hang-timeout 5m
   displayName: 'EF.Core Tests (NET60): $(title)'
-  condition: and(eq(variables.net60, 'true'), ne(variables.x86, 'true'), variables.title, succeeded())
+  #condition: and(eq(variables.net60, 'true'), ne(variables.x86, 'true'), variables.title, succeeded())
+  condition: and(eq(variables.net60, 'true'), ne(variables.x86, 'true'), variables.title)
 
 - script: dotnet test net6.0/efcore/x86/linq2db.EntityFrameworkCore.Tests.dll --filter "TestCategory != SkipCI" -f net60 -l trx --blame-hang-timeout 5m
   displayName: 'EF.Core Tests (NET60 x86): $(title)'
-  condition: and(eq(variables.net60, 'true'), eq(variables.x86, 'true'), variables.title, succeeded())
+  #condition: and(eq(variables.net60, 'true'), eq(variables.x86, 'true'), variables.title, succeeded())
+  condition: and(eq(variables.net60, 'true'), eq(variables.x86, 'true'), variables.title)
 
 - task: CmdLine@2
   inputs:
@@ -227,11 +231,13 @@ steps:
 
 - script: dotnet test net8.0/efcore/x64/linq2db.EntityFrameworkCore.Tests.dll --filter "TestCategory != SkipCI" -f net80 -l trx --blame-hang-timeout 5m
   displayName: 'EF.Core Tests (.NET 8 x64): $(title)'
-  condition: and(eq(variables.net80, 'true'), ne(variables.x86, 'true'), variables.title, succeeded())
+  #condition: and(eq(variables.net80, 'true'), ne(variables.x86, 'true'), variables.title, succeeded())
+  condition: and(eq(variables.net80, 'true'), ne(variables.x86, 'true'), variables.title)
 
 - script: dotnet test net8.0/efcore/x86/linq2db.EntityFrameworkCore.Tests.dll --filter "TestCategory != SkipCI" -f net80 -l trx --blame-hang-timeout 5m
   displayName: 'EF.Core Tests (.NET 8 x86): $(title)'
-  condition: and(eq(variables.net80, 'true'), eq(variables.x86, 'true'), variables.title, succeeded())
+  #condition: and(eq(variables.net80, 'true'), eq(variables.x86, 'true'), variables.title, succeeded())
+  condition: and(eq(variables.net80, 'true'), eq(variables.x86, 'true'), variables.title)
 
 - task: PublishTestResults@2
   condition: and(variables.title, succeededOrFailed())

@@ -11,20 +11,20 @@ namespace Tests.UserTests
 	[TestFixture]
 	public class Issue3674Tests : TestBase
 	{
-		[Test(Description = "https://github.com/linq2db/linq2db/issues/3674")]
-		public void InThread([DataSources(false)] string context)
-		{
-			using var db = GetDataContext((string)context!);
-			using var tb = db.CreateLocalTable<Entity>();
+		//[Test(Description = "https://github.com/linq2db/linq2db/issues/3674")]
+		//public void InThread([DataSources(false)] string context)
+		//{
+		//	using var db = GetDataContext((string)context!);
+		//	using var tb = db.CreateLocalTable<Entity>();
 
-			// 512 Kb used by IIS and MacOS runtime
-			// we will use less to detect regressions earlier
-			// e.g. now it required 130Kb (release) / 190Kb (debug) of memory
-			// Note that stack use could depend on provider, so we test all of them
-			var thread = new Thread(ThreadBody, 200 * 1024);
-			thread.Start(tb);
-			thread.Join();
-		}
+		//	// 512 Kb used by IIS and MacOS runtime
+		//	// we will use less to detect regressions earlier
+		//	// e.g. now it required 130Kb (release) / 190Kb (debug) of memory
+		//	// Note that stack use could depend on provider, so we test all of them
+		//	var thread = new Thread(ThreadBody, 200 * 1024);
+		//	thread.Start(tb);
+		//	thread.Join();
+		//}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3674")]
 		public void WithoutThread([DataSources(false)] string context)

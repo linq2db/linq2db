@@ -771,7 +771,6 @@ namespace Tests.Linq
 			Assert.That(q[0].ID, Is.EqualTo(enableConstantExpressionInOrderBy ? 1 : 3));
 		}
 
-		[ActiveIssue(Configurations = [TestProvName.AllOracle11, TestProvName.AllSqlServer2008Minus])]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4586")]
 		public void Issue4586Test([DataSources(false)] string context)
 		{

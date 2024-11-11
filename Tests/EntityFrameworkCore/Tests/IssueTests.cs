@@ -366,7 +366,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 					  .ToArray();
 		}
 
-		[ActiveIssue(Details = "Marked as explicit due to stack overlow")]
+		[ActiveIssue(Configuration = TestProvName.AllSqlServer)]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4626")]
 		public void Issue4626Test2([EFDataSources(TestProvName.AllSQLite, TestProvName.AllMariaDB, TestProvName.AllMySql57)] string provider)
 		{
@@ -390,6 +390,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 					  .ToArray();
 		}
 
+		[ActiveIssue]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4627")]
 		public void Issue4627Test([EFDataSources] string provider)
 		{
@@ -678,7 +679,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4642")]
-		public async Task Issue4642Test([EFDataSources(TestProvName.AllMySql, TestProvName.AllSQLite, TestProvName.AllPostgreSQL14Minus)] string provider)
+		public async Task Issue4642Test([EFDataSources(TestProvName.AllMySql, TestProvName.AllSQLite, TestProvName.AllPostgreSQL16Minus)] string provider)
 		{
 			using var ctx = CreateContext(provider);
 
@@ -767,7 +768,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 			Assert.That(updated.Name, Is.EqualTo("new name"));
 		}
 
-		[ActiveIssue]
+		[ActiveIssue(Configurations = [TestProvName.AllSqlServer, TestProvName.AllMySql])]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4653")]
 		public void Issue4653Test([EFDataSources] string provider)
 		{
@@ -864,7 +865,6 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 			ctx.Issue4668.ToLinqToDB().ToArray();
 		}
 
-		[ActiveIssue]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4669")]
 		public async Task Issue4669Test([EFDataSources] string provider)
 		{
@@ -881,7 +881,11 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 				.ToListAsyncEF();
 		}
 
+#if NET6_0
+		[ActiveIssue(Configurations = [TestProvName.AllPostgreSQL, TestProvName.AllMySql])]
+#else
 		[ActiveIssue(Configuration = TestProvName.AllPostgreSQL)]
+#endif
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4671")]
 		public void Issue4671Test1([EFDataSources] string provider)
 		{

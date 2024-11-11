@@ -75,7 +75,7 @@ namespace LinqToDB.Linq.Builder
 
 			if (!enforceHaving && QueryHelper.ContainsWindowFunction(sc))
 			{
-				error = new SqlErrorExpression(expr, ErrorHelper.Error_WindowFuncstionsInSearchCondition, expr.Type);
+				error = new SqlErrorExpression(expr, ErrorHelper.Error_WindowFunctionsInSearchCondition, expr.Type);
 				return null;
 			}
 

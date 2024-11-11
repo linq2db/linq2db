@@ -930,7 +930,7 @@ namespace Tests.Linq
 			});
 		}
 
-		[ActiveIssue(Configurations = [TestProvName.AllSQLite, TestProvName.AllFirebird])]
+		[ActiveIssue(Configurations = [TestProvName.AllSQLite])]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4469")]
 		public void Issue4469Test2([DataSources] string context, [Values] bool inline)
 		{

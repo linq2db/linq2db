@@ -2279,7 +2279,6 @@ namespace Tests.Linq
 		}
 		#endregion
 
-		[ActiveIssue]
 		[Test]
 		public void Issue2897_ParensGeneration_Or([DataSources(false)] string context)
 		{

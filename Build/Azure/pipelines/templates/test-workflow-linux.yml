@@ -79,7 +79,8 @@ steps:
   retryCountOnTaskFailure: 2
 
 - script: dotnet test ./net6.0/efcore/x64/linq2db.EntityFrameworkCore.Tests.dll --filter "TestCategory != SkipCI" -f net60 -l trx $(extra) --blame-hang-timeout 5m
-  condition: and(variables.title, eq(variables.net60, 'true'), succeeded())
+  #condition: and(variables.title, eq(variables.net60, 'true'), succeeded())
+  condition: and(variables.title, eq(variables.net60, 'true'))
   displayName: 'EF.Core Tests (NET60): $(title)'
 
 - task: UseDotNet@2
@@ -106,7 +107,8 @@ steps:
   retryCountOnTaskFailure: 2
 
 - script: dotnet test ./net8.0/efcore/x64/linq2db.EntityFrameworkCore.Tests.dll --filter "TestCategory != SkipCI" -f net80 -l trx $(extra) --blame-hang-timeout 5m
-  condition: and(variables.title, eq(variables.net80, 'true'), succeeded())
+  #condition: and(variables.title, eq(variables.net80, 'true'), succeeded())
+  condition: and(variables.title, eq(variables.net80, 'true'))
   displayName: 'EF.Core Tests (.NET 8): $(title)'
 
 - task: PublishTestResults@2

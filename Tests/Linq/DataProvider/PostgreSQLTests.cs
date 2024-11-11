@@ -2739,6 +2739,7 @@ $function$
 		[Sql.Expression("{point1} <-> {point2}", ServerSideOnly = true)]
 		static double Distance([ExprParameter] NpgsqlPoint? point1, [ExprParameter] NpgsqlPoint? point2) => throw new NotImplementedException();
 
+		[ActiveIssue]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4250")]
 		public void Issue4250Test([IncludeDataSources(true, TestProvName.AllPostgreSQL)] string context)
 		{

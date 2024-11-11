@@ -179,7 +179,6 @@ namespace Tests.Linq
 			Assert.That(res[2].Array.Count(), Is.EqualTo(0));
 		}
 
-		[ActiveIssue]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3807")]
 		public void Issue3807Test2([IncludeDataSources(TestProvName.AllSqlServer2016Plus)] string context)
 		{
@@ -206,7 +205,6 @@ namespace Tests.Linq
 			});
 		}
 
-		[ActiveIssue]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3807")]
 		public void Issue3807Test3([IncludeDataSources(TestProvName.AllSqlServer2016Plus)] string context)
 		{
@@ -233,7 +231,6 @@ namespace Tests.Linq
 			});
 		}
 
-		[ActiveIssue]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3807")]
 		public void Issue3807Test4([IncludeDataSources(TestProvName.AllSqlServer2016Plus)] string context)
 		{
@@ -260,7 +257,6 @@ namespace Tests.Linq
 			});
 		}
 
-		[ActiveIssue]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3807")]
 		public void Issue3807Test12([IncludeDataSources(TestProvName.AllSqlServer2016Plus)] string context)
 		{
@@ -287,7 +283,6 @@ namespace Tests.Linq
 			});
 		}
 
-		[ActiveIssue]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3807")]
 		public void Issue3807Test13([IncludeDataSources(TestProvName.AllSqlServer2016Plus)] string context)
 		{

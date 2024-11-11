@@ -1913,7 +1913,7 @@ FROM
 		}
 		#endregion
 
-		[Test, ActiveIssue(4060)]
+		[Test]
 		public void Issue4060([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
@@ -3219,7 +3219,7 @@ FROM
 		#endregion
 
 		#region Issue 4588
-		[ThrowsForProvider(typeof(LinqException), TestProvName.AllAccess, ErrorMessage = ErrorHelper.Error_Skip_in_Subquery)]
+		[ThrowsForProvider(typeof(SqlException), TestProvName.AllAccess, ErrorMessage = "Skip for subqueries is not supported")]
 		[ThrowsForProvider(typeof(LinqException), TestProvName.AllSybase, ErrorMessage = ErrorHelper.Error_OrderBy_in_Derived)]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4588")]
 		public void Issue4588Test([DataSources(false)] string context)

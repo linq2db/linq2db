@@ -1841,8 +1841,8 @@ namespace Tests.DataProvider
 			[Column                                                  ] public long BigInt;
 			[Column                                                  ] public ulong UnsignedBigInt;
 			[Column                                                  ] public decimal Decimal;
-			[Column(Precision = 15)                                  ] public decimal Decimal15_0;
-			[Column(Scale = 5)                                       ] public decimal Decimal10_5;
+			[Column(Precision = 15, Scale = 0)                       ] public decimal Decimal15_0;
+			[Column(Precision = 10, Scale = 5)                       ] public decimal Decimal10_5;
 			[Column(Precision = 20, Scale = 2)                       ] public decimal Decimal20_2;
 			[Column                                                  ] public float Float;
 			[Column(Precision = 10)                                  ] public float Float10;

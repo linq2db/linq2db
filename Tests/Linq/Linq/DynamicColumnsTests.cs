@@ -670,6 +670,8 @@ namespace Tests.Linq
 			}
 			fm.Build();
 
+			var id = 0;
+
 			var testData = Enumerable.Range(0, 100)
 					.Select
 					(
@@ -680,7 +682,7 @@ namespace Tests.Linq
 								.ToDictionary(f => f.Key, f => f.Value);
 							return new TestJsonWrite
 							{
-								Id = Guid.NewGuid(),
+								Id = id++,
 								JsonData = JsonSerializer.Serialize(map)
 							};
 						}
@@ -718,6 +720,8 @@ namespace Tests.Linq
 			}
 			fm.Build();
 
+			var id = 0;
+
 			var testData = Enumerable.Range(0, 100)
 					.Select
 					(
@@ -728,7 +732,7 @@ namespace Tests.Linq
 								.ToDictionary(f => f.Key, f => f.Value);
 							return new TestJsonWrite
 							{
-								Id = Guid.NewGuid(),
+								Id = id++,
 								JsonData = JsonSerializer.Serialize(map)
 							};
 						}
@@ -753,7 +757,7 @@ namespace Tests.Linq
 		class TestJsonWrite
 		{
 			[PrimaryKey]
-			public Guid Id { get; set; }
+			public int Id { get; set; }
 
 			[Column(DbType = "NVARCHAR(MAX)")]
 			public string? JsonData { get; set; }
@@ -763,7 +767,7 @@ namespace Tests.Linq
 		class TestJsonRead
 		{
 			[PrimaryKey]
-			public Guid Id { get; set; }
+			public int Id { get; set; }
 
 			[DynamicColumnsStore]
 			public Dictionary<string, object?> Values { get; set; } = new();
