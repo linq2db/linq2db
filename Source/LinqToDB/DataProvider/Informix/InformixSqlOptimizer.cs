@@ -92,6 +92,7 @@ namespace LinqToDB.DataProvider.Informix
 			// 1. query is top-level SET select
 			// 2. column in SET nullable
 			// 3. column is first part of SET is not nullable
+			// 4. column is field
 			if (statement.QueryType == QueryType.Select && statement.SelectQuery?.HasSetOperators == true)
 			{
 				var query = statement.SelectQuery;
@@ -103,7 +104,7 @@ namespace LinqToDB.DataProvider.Informix
 				{
 					var column = query.Select.Columns[i];
 
-					if (column.Expression.CanBeNullable(nullabilityContext))
+					if (column.Expression.ElementType != QueryElementType.SqlField || column.Expression.CanBeNullable(nullabilityContext))
 						continue;
 
 					foreach (var setOperator in query.SetOperators)
