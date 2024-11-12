@@ -550,7 +550,7 @@ namespace LinqToDB.Linq.Builder
 
 						var result = Builder.BuildSqlExpression(_key, keyPath, BuildFlags.ForKeys);
 
-						if (ExpressionEqualityComparer.Instance.Equals(result, keyPath))
+						if (ExpressionEqualityComparer.Instance.Equals(result, keyPath) && flags.IsSqlOrExpression())
 							return SqlErrorExpression.EnsureError(path);
 
 						if (result is SqlPlaceholderExpression placeholder)
