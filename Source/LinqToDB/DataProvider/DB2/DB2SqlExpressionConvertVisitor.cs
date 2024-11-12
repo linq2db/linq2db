@@ -70,17 +70,12 @@ namespace LinqToDB.DataProvider.DB2
 		{
 			cast = FloorBeforeConvert(cast);
 
-			if (cast.IsMandatory)
-				return cast;
-
 			var argument = cast.Expression;
 
 			var isNull = argument is SqlValue sqlValue && sqlValue.Value == null;
 
 			if (isNull)
-			{
 				return cast.MakeMandatory();
-			}
 
 			var toType       = cast.ToType;
 			var argumentType = QueryHelper.GetDbDataType(cast.Expression, MappingSchema);
@@ -96,7 +91,7 @@ namespace LinqToDB.DataProvider.DB2
 			if (toType.Precision > 0)
 				return new SqlFunction(cast.SystemType, toType.DataType.ToString(), argument, new SqlValue(toType.Precision), new SqlValue(toType.Scale ?? 0));
 
-			if (QueryHelper.UnwrapNullablity(argument) is SqlParameter param)
+			if (!cast.IsMandatory && QueryHelper.UnwrapNullablity(argument) is SqlParameter param)
 			{
 				if (toType.Equals(param.Type))
 					return param;
