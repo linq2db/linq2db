@@ -2132,7 +2132,7 @@ namespace Tests.Linq
 		#endregion
 
 		[Test]
-		public void ManyAssociationEmptyCheck1([DataSources] string context)
+		public void ManyAssociationEmptyCheck1([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -2143,7 +2143,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void ManyAssociationEmptyCheck2([DataSources] string context)
+		public void ManyAssociationEmptyCheck2([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using var db = GetDataContext(context);
 
