@@ -70,9 +70,10 @@ namespace LinqToDB.DataProvider.DB2
 		{
 			cast = FloorBeforeConvert(cast);
 
-			var toType       = cast.ToType;
-			var argument     = cast.Expression;
-			var argumentType = QueryHelper.GetDbDataType(cast.Expression, MappingSchema);
+			if (cast.IsMandatory)
+				return cast;
+
+			var argument = cast.Expression;
 
 			var isNull = argument is SqlValue sqlValue && sqlValue.Value == null;
 
@@ -80,6 +81,9 @@ namespace LinqToDB.DataProvider.DB2
 			{
 				return cast.MakeMandatory();
 			}
+
+			var toType       = cast.ToType;
+			var argumentType = QueryHelper.GetDbDataType(cast.Expression, MappingSchema);
 
 			if (toType.SystemType == typeof(string) && argumentType.SystemType != typeof(string))
 			{
