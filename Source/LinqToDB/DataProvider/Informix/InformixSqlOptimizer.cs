@@ -96,18 +96,19 @@ namespace LinqToDB.DataProvider.Informix
 			{
 				var query = statement.SelectQuery;
 
-				var firstSet = query.SetOperators[0];
+				var firstSet           = query.SetOperators[0];
+				var nullabilityContext = NullabilityContext.GetContext(statement.SelectQuery);
 
 				for (var i = 0; i < query.Select.Columns.Count; i++)
 				{
 					var column = query.Select.Columns[i];
 
-					if (column.Expression.CanBeNullable(NullabilityContext.NonQuery))
+					if (column.Expression.CanBeNullable(nullabilityContext))
 						continue;
 
 					foreach (var setOperator in query.SetOperators)
 					{
-						if (!setOperator.SelectQuery.Select.Columns[i].Expression.CanBeNullable(NullabilityContext.NonQuery))
+						if (!setOperator.SelectQuery.Select.Columns[i].Expression.CanBeNullable(nullabilityContext))
 							continue;
 
 						var expression    = column.Expression;
