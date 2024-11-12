@@ -60,7 +60,7 @@ namespace LinqToDB.SqlProvider
 			statement = FinalizeInsert(statement);
 			statement = FinalizeSelect(statement);
 			statement = CorrectUnionOrderBy(statement);
-			statement = FixSetOperationValues(statement);
+			statement = FixSetOperationValues(mappingSchema, statement);
 
 			// provider specific query correction
 			statement = FinalizeStatement(statement, evaluationContext, dataOptions, mappingSchema);
@@ -560,7 +560,7 @@ namespace LinqToDB.SqlProvider
 			}
 		}
 
-		protected virtual SqlStatement FixSetOperationValues(SqlStatement statement)
+		protected virtual SqlStatement FixSetOperationValues(MappingSchema mappingSchema, SqlStatement statement)
 		{
 			statement.VisitParentFirst(this, static (ctx, e) =>
 			{

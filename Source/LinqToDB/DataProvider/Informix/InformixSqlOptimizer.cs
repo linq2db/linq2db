@@ -68,7 +68,6 @@ namespace LinqToDB.DataProvider.Informix
 		{
 			statement.VisitAll(SetQueryParameter);
 
-			// TODO: test if it works and enable support with type-cast like it is done for Firebird
 			// Informix doesn't support parameters in select list
 			var ignore = statement.QueryType == QueryType.Insert && statement.SelectQuery!.From.Tables.Count == 0;
 			if (!ignore)
@@ -79,6 +78,47 @@ namespace LinqToDB.DataProvider.Informix
 				});
 
 			return base.Finalize(mappingSchema, statement, dataOptions);
+		}
+
+		protected override SqlStatement FixSetOperationValues(MappingSchema mappingSchema, SqlStatement statement)
+		{
+			statement = base.FixSetOperationValues(mappingSchema, statement);
+
+			// IBM.Data.Db2 provider has a bug, where it could type nullable column in set as non-nullable, because first
+			// part of set use non-nullable column
+			// see test: Issue4220Test
+			// as workaround we apply "NVL(x, NULL)" wrap to force column being nullable
+			// Required pre-conditions:
+			// 1. query is top-level SET select
+			// 2. column in SET nullable
+			// 3. column is first part of SET is not nullable
+			if (statement.QueryType == QueryType.Select && statement.SelectQuery?.HasSetOperators == true)
+			{
+				var query = statement.SelectQuery;
+
+				var firstSet = query.SetOperators[0];
+
+				for (var i = 0; i < query.Select.Columns.Count; i++)
+				{
+					var column = query.Select.Columns[i];
+
+					if (column.Expression.CanBeNullable(NullabilityContext.NonQuery))
+						continue;
+
+					foreach (var setOperator in query.SetOperators)
+					{
+						if (!setOperator.SelectQuery.Select.Columns[i].Expression.CanBeNullable(NullabilityContext.NonQuery))
+							continue;
+
+						var expression    = column.Expression;
+						var dbType        = QueryHelper.GetDbDataType(expression, mappingSchema);
+						column.Expression = new SqlFunction(dbType, "NVL", expression, new SqlValue(dbType, null)) { CanBeNull = true };
+						break;
+					}
+				}
+			}
+
+			return statement;
 		}
 
 		public override SqlStatement TransformStatement(SqlStatement statement, DataOptions dataOptions, MappingSchema mappingSchema)
