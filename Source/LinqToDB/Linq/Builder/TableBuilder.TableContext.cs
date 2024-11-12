@@ -212,14 +212,19 @@ namespace LinqToDB.Linq.Builder
 						return tablePlaceholder;
 					}
 
-					Expression fullEntity = Builder.BuildFullEntityExpression(MappingSchema, path, ElementType, flags);
-					// Entity can contain calculated columns which should be exposed
-					fullEntity = Builder.ConvertExpressionTree(fullEntity);
+					if (path.Type.IsAssignableFrom(ElementType))
+					{
+						Expression fullEntity = Builder.BuildFullEntityExpression(MappingSchema, path, ElementType, flags);
+						// Entity can contain calculated columns which should be exposed
+						fullEntity = Builder.ConvertExpressionTree(fullEntity);
 
-					if (fullEntity.Type != path.Type)
-						fullEntity = Expression.Convert(fullEntity, path.Type);
+						if (fullEntity.Type != path.Type)
+							fullEntity = Expression.Convert(fullEntity, path.Type);
 
-					return fullEntity;
+						return fullEntity;
+					}
+
+					return path;
 				}
 
 				Expression member;

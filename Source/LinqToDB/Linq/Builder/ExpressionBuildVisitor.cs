@@ -3350,7 +3350,7 @@ namespace LinqToDB.Linq.Builder
 			if (expr is SqlErrorExpression error)
 				throw error.CreateException();
 
-			throw new SqlErrorExpression($"Could not compare '{left}' with {right}", typeof(bool)).CreateException();
+			throw new SqlErrorExpression($"Could not compare '{SqlErrorExpression.PrepareExpressionString(left)}' with {SqlErrorExpression.PrepareExpressionString(right)}", typeof(bool)).CreateException();
 		}
 
 		Expression ConvertCompareExpression(ExpressionType nodeType, Expression left, Expression right, Expression? originalExpression = null)
