@@ -14,7 +14,7 @@
 		<readme>README.md</readme>
 		<dependencies>
 			<dependency id="linq2db"        version="6.0.0" />
-			<dependency id="MySqlConnector" version="2.3.7" />
+			<dependency id="MySqlConnector" version="2.4.0" />
 		</dependencies>
 		<contentFiles>
 			<files include="**\*" buildAction="None" />

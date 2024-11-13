@@ -9,8 +9,8 @@
 		<readme>README.md</readme>
 		<dependencies>
 			<group targetFramework="net8.0">
-				<dependency id="Microsoft.EntityFrameworkCore.Relational" version="9.0.0-rc.2.24474.1" />
-				<dependency id="linq2db"                                  version="6.0.0"              />
+				<dependency id="Microsoft.EntityFrameworkCore.Relational" version="9.0.0" />
+				<dependency id="linq2db"                                  version="6.0.0" />
 			</group>
 		</dependencies>
 	</metadata>
