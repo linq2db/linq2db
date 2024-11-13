@@ -212,7 +212,7 @@ namespace LinqToDB.Linq.Builder
 						return tablePlaceholder;
 					}
 
-					if (path.Type.IsAssignableFrom(ElementType))
+					if (path.Type.IsAssignableFrom(ElementType) || ElementType.IsAssignableFrom(path.Type))
 					{
 						Expression fullEntity = Builder.BuildFullEntityExpression(MappingSchema, path, ElementType, flags);
 						// Entity can contain calculated columns which should be exposed
