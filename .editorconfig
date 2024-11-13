@@ -707,6 +707,8 @@ dotnet_diagnostic.MA0162.severity = none
 dotnet_diagnostic.MA0163.severity = none
 # MA0164: Use parentheses to make not pattern clearer
 dotnet_diagnostic.MA0164.severity = none
+# MA0165: Make interpolated string
+dotnet_diagnostic.MA0165.severity = none
 ################################################################################################
 # LindhartAnalyserMissingAwaitWarningVariable: Possible unwanted Task returned from method.
 dotnet_diagnostic.LindhartAnalyserMissingAwaitWarningVariable.severity = error

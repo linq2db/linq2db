@@ -78,6 +78,8 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 			BaselinesManager.Dump(".EF6");
 #elif NET8_0
 			BaselinesManager.Dump(".EF8");
+#elif NET9_0
+			BaselinesManager.Dump(".EF9");
 #else
 #error Unknown framework
 #endif

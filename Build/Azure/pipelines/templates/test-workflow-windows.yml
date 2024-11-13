@@ -25,6 +25,15 @@ steps:
   env:
     PROCESSOR_ARCHITECTURE: x86
 
+- task: UseDotNet@2
+  displayName: 'Install .NET 9 (x86)'
+  inputs:
+    packageType: sdk
+    version: 9.x
+  condition: and(variables.title, eq(variables.net90, 'true'), eq(variables.x86, 'true'), succeeded())
+  env:
+    PROCESSOR_ARCHITECTURE: x86
+
 - task: CmdLine@2
   inputs:
     script: 'git clone https://$(BASELINES_GH_PAT)@github.com/linq2db/linq2db.baselines.git baselines && cd baselines && git checkout -b $(baselines_branch) origin/$(baselines_branch) && cd ..'
@@ -56,6 +65,12 @@ steps:
     script: 'copy $(System.DefaultWorkingDirectory)\configs\net80\$(config).json $(System.DefaultWorkingDirectory)\net8.0\UserDataProviders.json'
   displayName: Copy .NET 8 test config
   condition: and(variables.title, eq(variables.net80, 'true'), succeeded())
+
+- task: CmdLine@2
+  inputs:
+    script: 'copy $(System.DefaultWorkingDirectory)\configs\net90\$(config).json $(System.DefaultWorkingDirectory)\net9.0\UserDataProviders.json'
+  displayName: Copy .NET 9 test config
+  condition: and(variables.title, eq(variables.net90, 'true'), succeeded())
 
 - task: CmdLine@2
   inputs:
@@ -155,20 +170,20 @@ steps:
 
 - script: dotnet test net6.0/main/x64/linq2db.Tests.dll --filter "TestCategory != SkipCI" -f net60 -l trx --blame-hang-timeout 5m
   displayName: 'Tests (NET60): $(title)'
-  condition: and(eq(variables.net60, 'true'), ne(variables.x86, 'true'), variables.title, succeeded(), ne(variables.retry, 'true'))
+  condition: and(eq(variables.net60, 'true'), ne(variables.x86, 'true'), variables.title, succeeded(), ne(variables.retry, 'true'), ${{ parameters.full_run }})
 
 - script: dotnet test net6.0/main/x64/linq2db.Tests.dll --filter "TestCategory != SkipCI" -f net60 -l trx --blame-hang-timeout 5m
   displayName: 'Tests (NET60): $(title)'
-  condition: and(eq(variables.net60, 'true'), ne(variables.x86, 'true'), variables.title, succeeded(), eq(variables.retry, 'true'))
+  condition: and(eq(variables.net60, 'true'), ne(variables.x86, 'true'), variables.title, succeeded(), eq(variables.retry, 'true'), ${{ parameters.full_run }})
   retryCountOnTaskFailure: 2
 
 - script: dotnet test net6.0/main/x86/linq2db.Tests.dll --filter "TestCategory != SkipCI" -f net60 -l trx --blame-hang-timeout 5m
   displayName: 'Tests (NET60 x86): $(title)'
-  condition: and(eq(variables.net60, 'true'), eq(variables.x86, 'true'), variables.title, succeeded(), ne(variables.retry, 'true'))
+  condition: and(eq(variables.net60, 'true'), eq(variables.x86, 'true'), variables.title, succeeded(), ne(variables.retry, 'true'), ${{ parameters.full_run }})
 
 - script: dotnet test net6.0/main/x86/linq2db.Tests.dll --filter "TestCategory != SkipCI" -f net60 -l trx --blame-hang-timeout 5m
   displayName: 'Tests (NET60 x86): $(title)'
-  condition: and(eq(variables.net60, 'true'), eq(variables.x86, 'true'), variables.title, succeeded(), eq(variables.retry, 'true'))
+  condition: and(eq(variables.net60, 'true'), eq(variables.x86, 'true'), variables.title, succeeded(), eq(variables.retry, 'true'), ${{ parameters.full_run }})
   retryCountOnTaskFailure: 2
 
 - script: dotnet test net6.0/efcore/x64/linq2db.EntityFrameworkCore.Tests.dll --filter "TestCategory != SkipCI" -f net60 -l trx --blame-hang-timeout 5m
@@ -209,20 +224,20 @@ steps:
 
 - script: dotnet test net8.0/main/x64/linq2db.Tests.dll --filter "TestCategory != SkipCI" -f net80 -l trx --blame-hang-timeout 5m
   displayName: 'Tests (.NET 8 x64): $(title)'
-  condition: and(eq(variables.net80, 'true'), ne(variables.x86, 'true'), variables.title, succeeded(), ne(variables.retry, 'true'))
+  condition: and(eq(variables.net80, 'true'), ne(variables.x86, 'true'), variables.title, succeeded(), ne(variables.retry, 'true'), ${{ parameters.full_run }})
 
 - script: dotnet test net8.0/main/x64/linq2db.Tests.dll --filter "TestCategory != SkipCI" -f net80 -l trx --blame-hang-timeout 5m
   displayName: 'Tests (.NET 8 x64): $(title)'
-  condition: and(eq(variables.net80, 'true'), ne(variables.x86, 'true'), variables.title, succeeded(), eq(variables.retry, 'true'))
+  condition: and(eq(variables.net80, 'true'), ne(variables.x86, 'true'), variables.title, succeeded(), eq(variables.retry, 'true'), ${{ parameters.full_run }})
   retryCountOnTaskFailure: 2
 
 - script: dotnet test net8.0/main/x86/linq2db.Tests.dll --filter "TestCategory != SkipCI" -f net80 -l trx --blame-hang-timeout 5m
   displayName: 'Tests (.NET 8 x86): $(title)'
-  condition: and(eq(variables.net80, 'true'), eq(variables.x86, 'true'), variables.title, succeeded(), ne(variables.retry, 'true'))
+  condition: and(eq(variables.net80, 'true'), eq(variables.x86, 'true'), variables.title, succeeded(), ne(variables.retry, 'true'), ${{ parameters.full_run }})
 
 - script: dotnet test net8.0/main/x86/linq2db.Tests.dll --filter "TestCategory != SkipCI" -f net80 -l trx --blame-hang-timeout 5m
   displayName: 'Tests (.NET 8 x86): $(title)'
-  condition: and(eq(variables.net80, 'true'), eq(variables.x86, 'true'), variables.title, succeeded(), eq(variables.retry, 'true'))
+  condition: and(eq(variables.net80, 'true'), eq(variables.x86, 'true'), variables.title, succeeded(), eq(variables.retry, 'true'), ${{ parameters.full_run }})
   retryCountOnTaskFailure: 2
 
 - script: dotnet test net8.0/efcore/x64/linq2db.EntityFrameworkCore.Tests.dll --filter "TestCategory != SkipCI" -f net80 -l trx --blame-hang-timeout 5m
@@ -232,6 +247,67 @@ steps:
 - script: dotnet test net8.0/efcore/x86/linq2db.EntityFrameworkCore.Tests.dll --filter "TestCategory != SkipCI" -f net80 -l trx --blame-hang-timeout 5m
   displayName: 'EF.Core Tests (.NET 8 x86): $(title)'
   condition: and(eq(variables.net80, 'true'), eq(variables.x86, 'true'), variables.title, succeeded())
+
+- task: UseDotNet@2
+  displayName: 'Use .NET 9'
+  inputs:
+    packageType: sdk
+    version: 9.x
+  condition: and(variables.title, eq(variables.net90, 'true'), succeeded())
+
+- task: CmdLine@2
+  inputs:
+    script: '$(System.DefaultWorkingDirectory)/scripts/$(script_local)'
+    workingDirectory: '$(System.DefaultWorkingDirectory)/net9.0/main/x64'
+  condition: and(variables.title, ne(variables.x86, 'true'), eq(variables.net90, 'true'), variables.script_local, succeeded())
+  displayName: Execute NET 9 (x64) Setup Script
+
+- task: CmdLine@2
+  inputs:
+    script: '$(System.DefaultWorkingDirectory)/scripts/$(script_local)'
+    workingDirectory: '$(System.DefaultWorkingDirectory)/net9.0/main/x86'
+  condition: and(variables.title, eq(variables.x86, 'true'), eq(variables.net90, 'true'), variables.script_local, succeeded())
+  displayName: Execute NET 9 (x86) Setup Script
+
+- task: PowerShell@2
+  inputs:
+    filePath: '$(System.DefaultWorkingDirectory)/scripts/$(psscript_local)'
+    workingDirectory: '$(System.DefaultWorkingDirectory)/net9.0/main/x64'
+  condition: and(variables.title, ne(variables.x86, 'true'), eq(variables.net90, 'true'), variables.psscript_local, succeeded())
+  displayName: Execute NET 9 (x64) PowerShell Setup Script
+
+- task: PowerShell@2
+  inputs:
+    filePath: '$(System.DefaultWorkingDirectory)/scripts/$(psscript_local)'
+    workingDirectory: '$(System.DefaultWorkingDirectory)/net9.0/main/x86'
+  condition: and(variables.title, eq(variables.x86, 'true'), eq(variables.net90, 'true'), variables.psscript_local, succeeded())
+  displayName: Execute NET 9 (x86) PowerShell Setup Script
+
+- script: dotnet test net9.0/main/x64/linq2db.Tests.dll --filter "TestCategory != SkipCI" -f net90 -l trx --blame-hang-timeout 5m
+  displayName: 'Tests (.NET 9 x64): $(title)'
+  condition: and(eq(variables.net90, 'true'), ne(variables.x86, 'true'), variables.title, succeeded(), ne(variables.retry, 'true'))
+
+- script: dotnet test net9.0/main/x64/linq2db.Tests.dll --filter "TestCategory != SkipCI" -f net90 -l trx --blame-hang-timeout 5m
+  displayName: 'Tests (.NET 9 x64): $(title)'
+  condition: and(eq(variables.net90, 'true'), ne(variables.x86, 'true'), variables.title, succeeded(), eq(variables.retry, 'true'))
+  retryCountOnTaskFailure: 2
+
+- script: dotnet test net9.0/main/x86/linq2db.Tests.dll --filter "TestCategory != SkipCI" -f net90 -l trx --blame-hang-timeout 5m
+  displayName: 'Tests (.NET 9 x86): $(title)'
+  condition: and(eq(variables.net90, 'true'), eq(variables.x86, 'true'), variables.title, succeeded(), ne(variables.retry, 'true'))
+
+- script: dotnet test net9.0/main/x86/linq2db.Tests.dll --filter "TestCategory != SkipCI" -f net90 -l trx --blame-hang-timeout 5m
+  displayName: 'Tests (.NET 9 x86): $(title)'
+  condition: and(eq(variables.net90, 'true'), eq(variables.x86, 'true'), variables.title, succeeded(), eq(variables.retry, 'true'))
+  retryCountOnTaskFailure: 2
+
+- script: dotnet test net9.0/efcore/x64/linq2db.EntityFrameworkCore.Tests.dll --filter "TestCategory != SkipCI" -f net90 -l trx --blame-hang-timeout 5m
+  displayName: 'EF.Core Tests (.NET 9 x64): $(title)'
+  condition: and(eq(variables.net90, 'true'), ne(variables.x86, 'true'), variables.title, succeeded())
+
+- script: dotnet test net9.0/efcore/x86/linq2db.EntityFrameworkCore.Tests.dll --filter "TestCategory != SkipCI" -f net90 -l trx --blame-hang-timeout 5m
+  displayName: 'EF.Core Tests (.NET 9 x86): $(title)'
+  condition: and(eq(variables.net90, 'true'), eq(variables.x86, 'true'), variables.title, succeeded())
 
 - task: PublishTestResults@2
   condition: and(variables.title, succeededOrFailed())
