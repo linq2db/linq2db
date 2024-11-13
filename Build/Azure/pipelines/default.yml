@@ -41,4 +41,5 @@ stages:
       enabled: and(eq(variables['System.PullRequest.TargetBranch'], variables['release_branch']), succeeded())
       with_baselines: true
       mac_enabled: true
+      full_run: true
       db_filter: '[all][metrics]'

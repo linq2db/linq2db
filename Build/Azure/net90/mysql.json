@@ -1,0 +1,8 @@
+﻿{
+	"NET90.Azure": {
+		"Providers": [
+			"MySql.8.0",
+			"MySqlConnector.8.0"
+		]
+	}
+}

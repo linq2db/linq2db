@@ -4,6 +4,7 @@
 		<EF3Version>3.0.0.0</EF3Version>
 		<EF6Version>6.0.0.0</EF6Version>
 		<EF8Version>8.0.0.0</EF8Version>
+		<EF9Version>9.0.0.0</EF9Version>
 
 		<Configurations>Debug;Release;Azure</Configurations>
 
@@ -48,7 +49,7 @@
 		<ProduceReferenceAssembly>true</ProduceReferenceAssembly>
 
 		<!--feature flags-->
-		<DefineConstants Condition=" $(TargetFramework) == 'net8.0' ">SUPPORTS_COMPOSITE_FORMAT;$(DefineConstants)</DefineConstants>
+		<DefineConstants Condition=" $([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net8.0')) ">SUPPORTS_COMPOSITE_FORMAT;$(DefineConstants)</DefineConstants>
 
 		<ArtifactsPath>$(MSBuildThisFileDirectory).build</ArtifactsPath>
 		<ArtifactsPivots>$(Configuration)\$(TargetFramework)</ArtifactsPivots>

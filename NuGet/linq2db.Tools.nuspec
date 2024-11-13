@@ -25,6 +25,10 @@
 				<dependency id="linq2db"        version="6.0.0"  />
 				<dependency id="Humanizer.Core" version="2.14.1" />
 			</group>
+			<group targetFramework="net9.0">
+				<dependency id="linq2db"        version="6.0.0"  />
+				<dependency id="Humanizer.Core" version="2.14.1" />
+			</group>
 		</dependencies>
 	</metadata>
 
@@ -43,5 +47,8 @@
 		<file src="bin\LinqToDB.Tools\{0}\net8.0\linq2db.Tools.pdb"         target="lib\net8.0\"         />
 		<file src="bin\LinqToDB.Tools\{0}\net8.0\linq2db.Tools.xml"         target="lib\net8.0\"         />
 		<file src="bin\LinqToDB.Tools\{0}\net8.0\linq2db.Tools.dll"         target="lib\net8.0\"         />
+		<file src="bin\LinqToDB.Tools\{0}\net9.0\linq2db.Tools.pdb"         target="lib\net9.0\"         />
+		<file src="bin\LinqToDB.Tools\{0}\net9.0\linq2db.Tools.xml"         target="lib\net9.0\"         />
+		<file src="bin\LinqToDB.Tools\{0}\net9.0\linq2db.Tools.dll"         target="lib\net9.0\"         />
 	</files>
 </package>

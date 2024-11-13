@@ -11,16 +11,17 @@
 		<dependencies>
 			<group targetFramework="net462">
 				<dependency id="System.ValueTuple"                 version="4.5.0" />
-				<dependency id="Microsoft.Bcl.AsyncInterfaces"     version="8.0.0" />
+				<dependency id="Microsoft.Bcl.AsyncInterfaces"     version="9.0.0" />
 			</group>
 			<group targetFramework="netstandard2.0">
-				<dependency id="Microsoft.Bcl.AsyncInterfaces"     version="8.0.0" />
+				<dependency id="Microsoft.Bcl.AsyncInterfaces"     version="9.0.0" />
 				<dependency id="Microsoft.CSharp"                  version="4.7.0" />
 				<dependency id="System.ComponentModel.Annotations" version="5.0.0" />
 				<dependency id="System.Data.DataSetExtensions"     version="4.5.0" />
 			</group>
 			<group targetFramework="net6.0" />
 			<group targetFramework="net8.0" />
+			<group targetFramework="net9.0" />
 		</dependencies>
 	</metadata>
 	<files>
@@ -38,5 +39,8 @@
 		<file src="bin\LinqToDB\{0}\net8.0\linq2db.pdb"         target="lib\net8.0\"         />
 		<file src="bin\LinqToDB\{0}\net8.0\linq2db.xml"         target="lib\net8.0\"         />
 		<file src="bin\LinqToDB\{0}\net8.0\linq2db.dll"         target="lib\net8.0\"         />
+		<file src="bin\LinqToDB\{0}\net9.0\linq2db.pdb"         target="lib\net9.0\"         />
+		<file src="bin\LinqToDB\{0}\net9.0\linq2db.xml"         target="lib\net9.0\"         />
+		<file src="bin\LinqToDB\{0}\net9.0\linq2db.dll"         target="lib\net9.0\"         />
 	</files>
 </package>

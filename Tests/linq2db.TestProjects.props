@@ -57,4 +57,9 @@
 		<PackageReference Include="Microsoft.AspNetCore.OData" />
 	</ItemGroup>
 
+	<ItemGroup Condition=" '$(TargetFramework)' == 'net6.0' ">
+		<PackageReference Include="Microsoft.OData.Edm" />
+		<PackageReference Include="Microsoft.OData.Core" />
+	</ItemGroup>
+
 </Project>

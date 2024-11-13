@@ -5,7 +5,6 @@ open Tests.FSharp.Models
 open System.Linq
 open LinqToDB
 open NUnit.Framework
-open Tests.Tools
 
 let SelectField (db : IDataContext) =
     let persons = db.GetTable<Person>()
@@ -14,7 +13,7 @@ let SelectField (db : IDataContext) =
         select p.LastName
     }
 
-    let sql = q.ToString()
+    let sql = "" + q.ToString()
     Assert.That(sql.IndexOf("First"), Is.LessThan 0)
     Assert.That(sql.IndexOf("LastName"), Is.GreaterThan 0)
 
@@ -25,7 +24,7 @@ let SelectFieldDeeplyComplexPerson (db : IDataContext) =
         select p.Name.LastName.Value
     }
 
-    let sql = q.ToString()
+    let sql = "" + q.ToString()
     Assert.That(sql.IndexOf("First"), Is.LessThan 0)
     Assert.That(sql.IndexOf("LastName"), Is.GreaterThan 0)
 

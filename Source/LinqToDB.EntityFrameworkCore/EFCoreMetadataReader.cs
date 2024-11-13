@@ -542,9 +542,9 @@ namespace LinqToDB.EntityFrameworkCore
 
 		sealed class SqlTransparentExpression : EfSqlExpression
 		{
-			public Expression Expression { get; }
+			public ConstantExpression Expression { get; }
 
-			public SqlTransparentExpression(Expression expression, RelationalTypeMapping? typeMapping) : base(expression.Type, typeMapping)
+			public SqlTransparentExpression(ConstantExpression expression, RelationalTypeMapping? typeMapping) : base(expression.Type, typeMapping)
 			{
 				Expression = expression;
 			}
@@ -561,6 +561,26 @@ namespace LinqToDB.EntityFrameworkCore
 				expressionPrinter.Print(Expression);
 #endif
 			}
+
+#if !EF31 && !EF6 && !EF8
+			private static readonly ConstructorInfo _ctor = typeof(SqlTransparentExpression).GetConstructor([typeof(ExceptExpression), typeof(RelationalTypeMapping)])
+				?? throw new InvalidOperationException();
+
+			private static readonly MethodInfo _constantExpressionFactoryMethod = typeof(Expression).GetMethod(nameof(Constant), [typeof(object), typeof(Type)])
+				?? throw new InvalidOperationException();
+
+
+			public override Expression Quote()
+			{
+				// not tested
+#pragma warning disable EF9100 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
+				return New(
+					_ctor,
+					Call(_constantExpressionFactoryMethod, Constant(Expression.Value), Constant(Expression.Type)),
+					RelationalExpressionQuotingUtilities.QuoteTypeMapping(TypeMapping));
+#pragma warning restore EF9100 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
+			}
+#endif
 
 			private bool Equals(SqlTransparentExpression other)
 			{

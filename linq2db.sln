@@ -382,6 +382,56 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Tests.EntityFrameworkCore",
 EndProject
 Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "Tests.EntityFrameworkCore.FSharp", "Tests\EntityFrameworkCore.FSharp\Tests.EntityFrameworkCore.FSharp.fsproj", "{4038D99A-C6F2-4B72-AC9B-373424701C9A}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LinqToDB.EntityFrameworkCore.STS", "Source\LinqToDB.EntityFrameworkCore\LinqToDB.EntityFrameworkCore.STS.csproj", "{1F06A522-FE25-4E95-8834-0293A55BD2DA}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "net90", "net90", "{B39B3628-49C1-4DCE-BB1B-2CC270FE7C52}"
+	ProjectSection(SolutionItems) = preProject
+		Build\Azure\net90\access.ace.json = Build\Azure\net90\access.ace.json
+		Build\Azure\net90\access.ace.x64.json = Build\Azure\net90\access.ace.x64.json
+		Build\Azure\net90\access.mdb.json = Build\Azure\net90\access.mdb.json
+		Build\Azure\net90\clickhouse.client.json = Build\Azure\net90\clickhouse.client.json
+		Build\Azure\net90\clickhouse.mysql.json = Build\Azure\net90\clickhouse.mysql.json
+		Build\Azure\net90\clickhouse.octonica.json = Build\Azure\net90\clickhouse.octonica.json
+		Build\Azure\net90\db2.json = Build\Azure\net90\db2.json
+		Build\Azure\net90\firebird25.json = Build\Azure\net90\firebird25.json
+		Build\Azure\net90\firebird3.json = Build\Azure\net90\firebird3.json
+		Build\Azure\net90\firebird4.json = Build\Azure\net90\firebird4.json
+		Build\Azure\net90\firebird5.json = Build\Azure\net90\firebird5.json
+		Build\Azure\net90\hana2.json = Build\Azure\net90\hana2.json
+		Build\Azure\net90\informix.json = Build\Azure\net90\informix.json
+		Build\Azure\net90\mariadb11.json = Build\Azure\net90\mariadb11.json
+		Build\Azure\net90\mysql.json = Build\Azure\net90\mysql.json
+		Build\Azure\net90\mysql57.json = Build\Azure\net90\mysql57.json
+		Build\Azure\net90\oracle11.json = Build\Azure\net90\oracle11.json
+		Build\Azure\net90\oracle12.json = Build\Azure\net90\oracle12.json
+		Build\Azure\net90\oracle18.json = Build\Azure\net90\oracle18.json
+		Build\Azure\net90\oracle19.json = Build\Azure\net90\oracle19.json
+		Build\Azure\net90\oracle21.json = Build\Azure\net90\oracle21.json
+		Build\Azure\net90\oracle23.json = Build\Azure\net90\oracle23.json
+		Build\Azure\net90\pgsql13.json = Build\Azure\net90\pgsql13.json
+		Build\Azure\net90\pgsql14.json = Build\Azure\net90\pgsql14.json
+		Build\Azure\net90\pgsql15.json = Build\Azure\net90\pgsql15.json
+		Build\Azure\net90\pgsql16.json = Build\Azure\net90\pgsql16.json
+		Build\Azure\net90\pgsql17.json = Build\Azure\net90\pgsql17.json
+		Build\Azure\net90\sqlce.json = Build\Azure\net90\sqlce.json
+		Build\Azure\net90\sqlite.extras.json = Build\Azure\net90\sqlite.extras.json
+		Build\Azure\net90\sqlite.json = Build\Azure\net90\sqlite.json
+		Build\Azure\net90\sqlserver.2005.json = Build\Azure\net90\sqlserver.2005.json
+		Build\Azure\net90\sqlserver.2008.json = Build\Azure\net90\sqlserver.2008.json
+		Build\Azure\net90\sqlserver.2012.json = Build\Azure\net90\sqlserver.2012.json
+		Build\Azure\net90\sqlserver.2014.json = Build\Azure\net90\sqlserver.2014.json
+		Build\Azure\net90\sqlserver.2016.json = Build\Azure\net90\sqlserver.2016.json
+		Build\Azure\net90\sqlserver.2017.json = Build\Azure\net90\sqlserver.2017.json
+		Build\Azure\net90\sqlserver.2019.json = Build\Azure\net90\sqlserver.2019.json
+		Build\Azure\net90\sqlserver.2022.json = Build\Azure\net90\sqlserver.2022.json
+		Build\Azure\net90\sqlserver.2022.metrics.json = Build\Azure\net90\sqlserver.2022.metrics.json
+		Build\Azure\net90\sqlserver.extras.json = Build\Azure\net90\sqlserver.extras.json
+		Build\Azure\net90\sqlserver.fts.2019.json = Build\Azure\net90\sqlserver.fts.2019.json
+		Build\Azure\net90\sybase.json = Build\Azure\net90\sybase.json
+	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tests.EntityFrameworkCore.STS", "Tests\EntityFrameworkCore\Tests.EntityFrameworkCore.STS.csproj", "{094CACC0-4F0A-47C0-A74D-CEDF7D0CC755}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Azure|Any CPU = Azure|Any CPU
@@ -507,6 +557,18 @@ Global
 		{4038D99A-C6F2-4B72-AC9B-373424701C9A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{4038D99A-C6F2-4B72-AC9B-373424701C9A}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{4038D99A-C6F2-4B72-AC9B-373424701C9A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1F06A522-FE25-4E95-8834-0293A55BD2DA}.Azure|Any CPU.ActiveCfg = Azure|Any CPU
+		{1F06A522-FE25-4E95-8834-0293A55BD2DA}.Azure|Any CPU.Build.0 = Azure|Any CPU
+		{1F06A522-FE25-4E95-8834-0293A55BD2DA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1F06A522-FE25-4E95-8834-0293A55BD2DA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1F06A522-FE25-4E95-8834-0293A55BD2DA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1F06A522-FE25-4E95-8834-0293A55BD2DA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{094CACC0-4F0A-47C0-A74D-CEDF7D0CC755}.Azure|Any CPU.ActiveCfg = Azure|Any CPU
+		{094CACC0-4F0A-47C0-A74D-CEDF7D0CC755}.Azure|Any CPU.Build.0 = Azure|Any CPU
+		{094CACC0-4F0A-47C0-A74D-CEDF7D0CC755}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{094CACC0-4F0A-47C0-A74D-CEDF7D0CC755}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{094CACC0-4F0A-47C0-A74D-CEDF7D0CC755}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{094CACC0-4F0A-47C0-A74D-CEDF7D0CC755}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -541,6 +603,9 @@ Global
 		{84A9EB0E-93E2-47E8-BDF6-378D26D8BFB9} = {AF93451E-198C-4A94-8EB4-C330D886E102}
 		{AB90679A-18F7-41C3-8AD3-4AA0EC402A73} = {DF8DE665-05A2-4ACF-9799-8FC35E7F1525}
 		{4038D99A-C6F2-4B72-AC9B-373424701C9A} = {DF8DE665-05A2-4ACF-9799-8FC35E7F1525}
+		{1F06A522-FE25-4E95-8834-0293A55BD2DA} = {AF93451E-198C-4A94-8EB4-C330D886E102}
+		{B39B3628-49C1-4DCE-BB1B-2CC270FE7C52} = {51E64464-E257-4984-A4D5-BF9FF8B7DF1D}
+		{094CACC0-4F0A-47C0-A74D-CEDF7D0CC755} = {DF8DE665-05A2-4ACF-9799-8FC35E7F1525}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {15BBD7CE-1C8E-4407-9DCF-674982CEB3F7}
