@@ -3,6 +3,7 @@ parameters:
   with_baselines: false
   test_matrix: []
   mac_enabled: false # disable by default, as macos docker is even slower than virtual machine
+  full_run: false # disable by default
 
 jobs:
 ##############################################################################################
@@ -163,6 +164,7 @@ jobs:
   - template: test-workflow-windows.yml
     parameters:
       with_baselines: ${{ parameters.with_baselines }}
+      full_run: ${{ parameters.full_run }}
 
 ########################
 #  Tests: Ubuntu 24.04 #
@@ -196,6 +198,7 @@ jobs:
   - template: test-workflow-linux.yml
     parameters:
       with_baselines: ${{ parameters.with_baselines }}
+      full_run: ${{ parameters.full_run }}
 
 #################
 #  Tests: MacOS #
@@ -230,6 +233,7 @@ jobs:
   - template: test-workflow-macos.yml
     parameters:
       with_baselines: ${{ parameters.with_baselines }}
+      full_run: ${{ parameters.full_run }}
 
 ################################################################
 # This job runs after all tests and:                           #

@@ -21,7 +21,6 @@ jobs:
     displayName: 'Install .NET 9 SDK'
     inputs:
       packageType: sdk
-      includePreviewVersions: true
       version: 9.x
 
   - task: PowerShell@2

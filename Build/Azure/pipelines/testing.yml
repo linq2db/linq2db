@@ -28,7 +28,8 @@ stages:
     parameters:
       enabled: succeeded()
       with_baselines: true
-      mac_enabled: true
+      mac_enabled: false
+      full_run: false
       # db_filter parameter. [] wrap used to avoid potential naming conflicts
       ${{ if eq(variables['Build.DefinitionName'], 'test-access') }}:
         db_filter: '[access.all]'

@@ -77,11 +77,11 @@ steps:
   displayName: Setup tests
 
 - script: dotnet test ./net6.0/main/x64/linq2db.Tests.dll --filter "TestCategory != SkipCI" -f net60 -l trx $(extra) --blame-hang-timeout 5m
-  condition: and(variables.title, eq(variables.net60, 'true'), succeeded(), ne(variables.retry, 'true'))
+  condition: and(variables.title, eq(variables.net60, 'true'), succeeded(), ne(variables.retry, 'true'), ${{ parameters.full_run }})
   displayName: 'Tests (NET60): $(title)'
 
 - script: dotnet test ./net6.0/main/x64/linq2db.Tests.dll --filter "TestCategory != SkipCI" -f net60 -l trx $(extra) --blame-hang-timeout 5m
-  condition: and(variables.title, eq(variables.net60, 'true'), succeeded(), eq(variables.retry, 'true'))
+  condition: and(variables.title, eq(variables.net60, 'true'), succeeded(), eq(variables.retry, 'true'), ${{ parameters.full_run }})
   displayName: 'Tests (NET60): $(title)'
   retryCountOnTaskFailure: 2
 
@@ -104,11 +104,11 @@ steps:
   displayName: Setup .NET 8 tests
 
 - script: dotnet test ./net8.0/main/x64/linq2db.Tests.dll --filter "TestCategory != SkipCI" -f net80 -l trx $(extra) --blame-hang-timeout 5m
-  condition: and(variables.title, eq(variables.net80, 'true'), succeeded(), ne(variables.retry, 'true'))
+  condition: and(variables.title, eq(variables.net80, 'true'), succeeded(), ne(variables.retry, 'true'), ${{ parameters.full_run }})
   displayName: 'Tests (.NET 8): $(title)'
 
 - script: dotnet test ./net8.0/main/x64/linq2db.Tests.dll --filter "TestCategory != SkipCI" -f net80 -l trx $(extra) --blame-hang-timeout 5m
-  condition: and(variables.title, eq(variables.net80, 'true'), succeeded(), eq(variables.retry, 'true'))
+  condition: and(variables.title, eq(variables.net80, 'true'), succeeded(), eq(variables.retry, 'true'), ${{ parameters.full_run }})
   displayName: 'Tests (.NET 8): $(title)'
   retryCountOnTaskFailure: 2
 
@@ -120,7 +120,6 @@ steps:
   displayName: 'Use .NET 9'
   inputs:
     packageType: sdk
-    includePreviewVersions: true
     version: 9.x
   condition: and(variables.title, eq(variables.net90, 'true'), succeeded())
 

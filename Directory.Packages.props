@@ -103,7 +103,7 @@
 
 		<PackageVersion Include="Microsoft.AspNet.OData"                                Version="7.7.7"                 />
 		<PackageVersion Include="Microsoft.AspNetCore.OData" Condition="'$(TargetFramework)'!='net8.0' AND '$(TargetFramework)'!='net9.0'" Version="8.2.6" />
-		<PackageVersion Include="Microsoft.AspNetCore.OData" Condition="'$(TargetFramework)'=='net8.0' OR '$(TargetFramework)'=='net9.0'"  Version="9.0.0" />
+		<PackageVersion Include="Microsoft.AspNetCore.OData" Condition="'$(TargetFramework)'=='net8.0' OR '$(TargetFramework)'=='net9.0'"  Version="9.1.0" />
 		<PackageVersion Include="MiniProfiler.Shared"                                   Version="4.3.8"                 />
 		<PackageVersion Include="MiniProfiler.Minimal"                                  Version="4.3.8"                 />
 		<PackageVersion Include="NodaTime"                                              Version="3.2.0"                 />
