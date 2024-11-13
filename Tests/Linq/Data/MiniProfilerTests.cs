@@ -79,7 +79,9 @@ namespace Tests.Data
 			private static DbConnection GetConnection(string configurationString)
 			{
 #pragma warning disable CA2000 // Dispose objects before losing scope
+#pragma warning disable CS0618 // Type or member is obsolete
 				var dbConnection = new SqlConnection(GetConnectionString(configurationString));
+#pragma warning restore CS0618 // Type or member is obsolete
 #pragma warning restore CA2000 // Dispose objects before losing scope
 				return new ProfiledDbConnection(dbConnection, MiniProfiler.Current);
 			}

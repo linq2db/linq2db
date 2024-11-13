@@ -54,7 +54,7 @@ Custom debugging symbols:
 
 #### Test projects
 
-Tests targets: `net462`, `net6.0`, `net8.0`. In general we test 3 configurations: lowest supported .NET Framework, lowest supported .NET version, highest supported .NET version
+Tests targets: `net462`, `net6.0`, `net8.0`, `net9.0`. In general we test 3 configurations: lowest supported .NET Framework, lowest supported .NET version, highest supported .NET version.
 
 Custom symbols:
 
@@ -67,12 +67,12 @@ You can use solution to build and run tests. Also you can build whole solution o
 * `.\Build.cmd` - builds all the projects in the solution for Debug, Release and Azure configurations
 * `.\Compile.cmd` - builds LinqToDB project for Debug and Release configurations
 * `.\Clean.cmd` - cleanups solution projects for Debug, Release and Azure configurations
-* `.\Test.cmd` - build `Debug` configuration and run tests for `net462`, `net6.0` and `net8.0` targets. You can set other configuration by passing it as first parameter, disable test targets by passing 0 to second (for `net462`), third (for `net6.0`) or fourth (for `net8.0`) parameter and format (default:html) as 5th parameter.
+* `.\Test.cmd` - build `Debug` configuration and run tests for `net462`, `net6.0`, `net8.0` and `net9.0` targets. You can set other configuration by passing it as first parameter, disable test targets by passing 0 to second (for `net462`), third (for `net6.0`), fourth (for `net8.0`) or fifth (for `net9.0`) parameter and format (default:html) as 6th parameter.
 
 Example of running `Release` build tests for `net6.0` only with `trx` as output:
 
 ```cmd
-test.cmd Release 0 1 0 trx
+test.cmd Release 0 1 0 0 trx
 ```
 
 ### Different platforms support
@@ -236,6 +236,28 @@ The `[User]DataProviders.json` is a regular JSON file:
         ]
     },
 
+    // .net 9.0 test configuration
+    "NET90" :
+    {
+        "BasedOn"              : "LocalConnectionStrings",
+        "Providers"            :
+        [
+            "SQLite.MS",
+            "Northwind.SQLite.MS",
+            "SqlServer.2014",
+            "SqlServer.2012",
+            "SqlServer.2008",
+            "SqlServer.2005",
+            "SqlServer.Azure",
+            "Firebird.5",
+            "MySql.8.0",
+            "MariaDB.11",
+            "PostgreSQL",
+            "SqlServer.Northwind",
+            "TestNoopProvider"
+        ]
+    },
+
     // list of connection strings for all providers
     "LocalConnectionStrings":
     {
@@ -269,6 +291,7 @@ It builds solution, generate and publish nugets and runs tests for:
   * .Net 4.6.2
   * .Net 6.0 (Windows, Linux and MacOS)
   * .Net 8.0 (Windows, Linux and MacOS)
+  * .Net 9.0 (Windows, Linux and MacOS)
 For more details check [readme](https://github.com/linq2db/linq2db/blob/master/Build/Azure/README.md)
 
 CI builds are done for all branches and PRs.

@@ -3,6 +3,7 @@ parameters:
   with_baselines: false
   test_matrix: []
   mac_enabled: false # disable by default, as macos docker is even slower than virtual machine
+  full_run: false # disable by default
 
 jobs:
 ##############################################################################################
@@ -155,6 +156,7 @@ jobs:
             netfx: ${{ test_config.enable_fw_netfx }}
             net60: ${{ test_config.enable_fw_net60 }}
             net80: ${{ test_config.enable_fw_net80 }}
+            net90: ${{ test_config.enable_fw_net90 }}
             x86: ${{ test_config.x86 }}
             retry: ${{ test_config.retry }}
 
@@ -162,6 +164,7 @@ jobs:
   - template: test-workflow-windows.yml
     parameters:
       with_baselines: ${{ parameters.with_baselines }}
+      full_run: ${{ parameters.full_run }}
 
 ########################
 #  Tests: Ubuntu 24.04 #
@@ -188,12 +191,14 @@ jobs:
             extra: ${{ test_config.extra }}
             net60: ${{ test_config.enable_fw_net60 }}
             net80: ${{ test_config.enable_fw_net80 }}
+            net90: ${{ test_config.enable_fw_net90 }}
             retry: ${{ test_config.retry }}
 
   steps:
   - template: test-workflow-linux.yml
     parameters:
       with_baselines: ${{ parameters.with_baselines }}
+      full_run: ${{ parameters.full_run }}
 
 #################
 #  Tests: MacOS #
@@ -221,12 +226,14 @@ jobs:
             extra: ${{ test_config.extra }}
             net60: ${{ test_config.enable_fw_net60 }}
             net80: ${{ test_config.enable_fw_net80 }}
+            net90: ${{ test_config.enable_fw_net90 }}
             retry: ${{ test_config.retry }}
 
   steps:
   - template: test-workflow-macos.yml
     parameters:
       with_baselines: ${{ parameters.with_baselines }}
+      full_run: ${{ parameters.full_run }}
 
 ################################################################
 # This job runs after all tests and:                           #

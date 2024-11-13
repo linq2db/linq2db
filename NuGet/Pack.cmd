@@ -5,7 +5,7 @@ RMDIR %NUGETS% /S /Q
 MD %NUGETS%
 
 REM build binary nugets (with debug support)
-FOR %%n IN (linq2db linq2db.Extensions linq2db.Tools linq2db.Remote.Grpc linq2db.Remote.Wcf linq2db.FSharp linq2db.EntityFrameworkCore.v3 linq2db.EntityFrameworkCore.v6 linq2db.EntityFrameworkCore.v8) DO (
+FOR %%n IN (linq2db linq2db.Extensions linq2db.Tools linq2db.Remote.Grpc linq2db.Remote.Wcf linq2db.FSharp linq2db.EntityFrameworkCore.v3 linq2db.EntityFrameworkCore.v6 linq2db.EntityFrameworkCore.v8 linq2db.EntityFrameworkCore.v9) DO (
     IF [%1] EQU [snupkg] (
         nuget.exe Pack %NUSPECS%\%%n.nuspec -OutputDirectory %NUGETS% -Symbols -SymbolPackageFormat snupkg
         IF %ERRORLEVEL% NEQ 0 EXIT /b %ERRORLEVEL%
