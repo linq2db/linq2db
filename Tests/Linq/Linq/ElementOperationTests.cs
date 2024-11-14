@@ -160,7 +160,7 @@ namespace Tests.Linq
 
 		[Test]
 		[ThrowsForProvider(typeof(LinqException), TestProvName.AllClickHouse, ErrorMessage = ErrorHelper.Error_Correlated_Subqueries)]
-		[ThrowsForProvider(typeof(LinqException), TestProvName.AllSQLite, TestProvName.AllAccess, TestProvName.AllFirebirdLess4, TestProvName.AllMySql57, TestProvName.AllSybase, TestProvName.AllOracle11, TestProvName.AllMariaDB, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
+		[ThrowsForProvider(typeof(LinqException), TestProvName.AllSQLite, TestProvName.AllAccess, TestProvName.AllFirebirdLess4, TestProvName.AllMySql57, TestProvName.AllSybase, TestProvName.AllOracle11, TestProvName.AllMariaDB, TestProvName.AllDB2, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
 		public void NestedFirstOrDefault4([DataSources(TestProvName.AllInformix, TestProvName.AllPostgreSQL9)] string context)
 		{
 			using (var db = GetDataContext(context))
