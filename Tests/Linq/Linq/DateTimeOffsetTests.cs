@@ -1038,14 +1038,17 @@ namespace Tests.Linq
 		#region Issue 1855
 		[ActiveIssue(Configurations =
 		[
-			// type not mapped
-			TestProvName.AllAccess, TestProvName.AllDB2, TestProvName.AllInformix, TestProvName.AllSapHana,
-			ProviderName.SqlCe, TestProvName.AllSQLiteClassic, TestProvName.AllSybase,
-			// unknown type (2.5,3), value mapping (4, 5)
+			// caused by difference in how DTO parameter stored into database by provider
+			TestProvName.AllSQLiteClassic,
+			// for FB we need to map DTO parameters to FbzonedDateTime : https://github.com/FirebirdSQL/NETProvider/issues/1189
 			TestProvName.AllFirebird
 		])]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/1855")]
-		public void Issue1855Test([DataSources] string context, [Values(0, 1, 2, 3)] int testCase)
+		public void Issue1855Test(
+			// DateTimeOffset not mapped
+			[DataSources(TestProvName.AllFirebirdLess4, TestProvName.AllAccess, TestProvName.AllDB2, TestProvName.AllSybase, ProviderName.SqlCe, TestProvName.AllSapHana, TestProvName.AllInformix)]
+				string context,
+			[Values(0, 1, 2, 3)] int testCase)
 		{
 			using var db = GetDataContext(context);
 			using var tb = db.CreateLocalTable<Issue1855Table>();

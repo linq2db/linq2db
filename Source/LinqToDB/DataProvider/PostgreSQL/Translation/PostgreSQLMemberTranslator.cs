@@ -166,11 +166,6 @@ namespace LinqToDB.DataProvider.PostgreSQL.Translation
 				return resultExpression;
 			}
 
-			protected override ISqlExpression? TranslateDateTimeOffsetDateAdd(ITranslationContext translationContext, TranslationFlags translationFlag, ISqlExpression dateTimeExpression, ISqlExpression increment, Sql.DateParts datepart)
-			{
-				return TranslateDateTimeDateAdd(translationContext, translationFlag, dateTimeExpression, increment, datepart);
-			}
-
 			protected override ISqlExpression? TranslateMakeDateTime(
 				ITranslationContext translationContext,
 				DbDataType          resulType,
@@ -207,16 +202,6 @@ namespace LinqToDB.DataProvider.PostgreSQL.Translation
 				);
 
 				return resultExpression;
-			}
-
-			protected override ISqlExpression? TranslateDateOnlyDateAdd(ITranslationContext translationContext, TranslationFlags translationFlag, ISqlExpression dateTimeExpression, ISqlExpression increment, Sql.DateParts datepart)
-			{
-				return TranslateDateTimeDateAdd(translationContext, translationFlag, dateTimeExpression, increment, datepart);
-			}
-
-			protected override ISqlExpression? TranslateDateOnlyDatePart(ITranslationContext translationContext, TranslationFlags translationFlag, ISqlExpression dateTimeExpression, Sql.DateParts datepart)
-			{
-				return TranslateDateTimeDatePart(translationContext, translationFlag, dateTimeExpression, datepart);
 			}
 		}
 
