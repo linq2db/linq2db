@@ -309,11 +309,13 @@ steps:
 
 - script: dotnet test net9.0/efcore/x64/linq2db.EntityFrameworkCore.Tests.dll --filter "TestCategory != SkipCI" -f net90 -l trx --blame-hang-timeout 5m
   displayName: 'EF.Core Tests (.NET 9 x64): $(title)'
-  condition: and(eq(variables.net90, 'true'), ne(variables.x86, 'true'), variables.title, succeeded())
+  #condition: and(eq(variables.net90, 'true'), ne(variables.x86, 'true'), variables.title, succeeded())
+  condition: and(eq(variables.net90, 'true'), ne(variables.x86, 'true'), variables.title)
 
 - script: dotnet test net9.0/efcore/x86/linq2db.EntityFrameworkCore.Tests.dll --filter "TestCategory != SkipCI" -f net90 -l trx --blame-hang-timeout 5m
   displayName: 'EF.Core Tests (.NET 9 x86): $(title)'
-  condition: and(eq(variables.net90, 'true'), eq(variables.x86, 'true'), variables.title, succeeded())
+  #condition: and(eq(variables.net90, 'true'), eq(variables.x86, 'true'), variables.title, succeeded())
+  condition: and(eq(variables.net90, 'true'), eq(variables.x86, 'true'), variables.title)
 
 - task: PublishTestResults@2
   condition: and(variables.title, succeededOrFailed())
