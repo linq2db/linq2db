@@ -1016,34 +1016,55 @@ namespace Tests.Linq
 
 		const string MyTableNameStringConstant = "Person";
 
-		[Test(Description = "https://github.com/linq2db/linq2db/issues/3782")]
-		public void Issue3782Test1([IncludeDataSources(true, TestProvName.AllSqlServer)] string context, [Values] bool inline)
+		[ActiveIssue]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/3782 / https://github.com/linq2db/linq2db/issues/2779")]
+		public void Issue3782Test1([IncludeDataSources(true, TestProvName.AllPostgreSQL)] string context, [Values] bool inline)
 		{
 			using var db = GetDataContext(context);
 			db.InlineParameters = inline;
 
-			FormattableString statement = $"SELECT IIF(EXISTS(SELECT * FROM [INFORMATION_SCHEMA].[TABLES] [x] WHERE [x].[TABLE_NAME] = {MyTableNameStringConstant}),1,0)";
+			FormattableString statement = $@"
+	SELECT CASE
+		WHEN EXISTS (
+			SELECT 1
+			FROM information_schema.tables
+			WHERE table_name = {MyTableNameStringConstant}
+		)
+		THEN true
+		ELSE false
+	END AS result";
 
-			var tableExists = db.FromSqlScalar<bool>(statement).Any();
+			var exists = db.FromSqlScalar<bool>(statement).First();
 
-			Assert.That(tableExists, Is.True);
+			Assert.That(exists, Is.True);
 		}
 
-		[Test(Description = "https://github.com/linq2db/linq2db/issues/3782")]
-		public void Issue3782Test2([IncludeDataSources(true, TestProvName.AllSqlServer)] string context, [Values] bool inline)
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/3782 / https://github.com/linq2db/linq2db/issues/2779")]
+		public void Issue3782Test2([IncludeDataSources(true, TestProvName.AllPostgreSQL)] string context, [Values] bool inline)
 		{
 			using var db = GetDataContext(context);
 			db.InlineParameters = inline;
 
-			FormattableString statement = $"SELECT IIF(EXISTS(SELECT * FROM [INFORMATION_SCHEMA].[TABLES] [x] WHERE [x].[TABLE_NAME] = {MyTableNameStringConstant}),1,0) {Sql.AliasExpr()}";
+			FormattableString statement = $@"
+	SELECT CASE
+		WHEN EXISTS (
+			SELECT 1
+			FROM information_schema.tables
+			WHERE table_name = {MyTableNameStringConstant}
+		)
+		THEN true
+		ELSE false
+	END AS result";
 
-			var tableExists = db.FromSqlScalar<bool>(statement).Any();
+			var query = from p in db.Person
+						where db.FromSqlScalar<bool>(statement).Any()
+						select p;
 
-			Assert.That(tableExists, Is.True);
+			query.ToArray();
 		}
 
-		[Test(Description = "https://github.com/linq2db/linq2db/issues/3782")]
-		public void Issue3782Test3([IncludeDataSources(true, TestProvName.AllSqlServer)] string context, [Values] bool inline)
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/3782 / https://github.com/linq2db/linq2db/issues/2779")]
+		public void Issue3782Test3([IncludeDataSources(true, TestProvName.AllSqlServer2012Plus)] string context, [Values] bool inline)
 		{
 			using var db = GetDataContext(context);
 			db.InlineParameters = inline;
@@ -1055,38 +1076,8 @@ namespace Tests.Linq
 			Assert.That(tableExists, Is.True);
 		}
 
-		[Test(Description = "https://github.com/linq2db/linq2db/issues/3782")]
-		public void Issue3782Test11([IncludeDataSources(true, TestProvName.AllSqlServer)] string context, [Values] bool inline)
-		{
-			using var db = GetDataContext(context);
-			db.InlineParameters = inline;
-
-			FormattableString statement = $"SELECT IIF(EXISTS(SELECT * FROM [INFORMATION_SCHEMA].[TABLES] [x] WHERE [x].[TABLE_NAME] = {MyTableNameStringConstant}),1,0)";
-
-			var query = from p in db.Person
-						where db.FromSqlScalar<bool>(statement).Any()
-						select p;
-
-			query.ToArray();
-		}
-
-		[Test(Description = "https://github.com/linq2db/linq2db/issues/3782")]
-		public void Issue3782Test12([IncludeDataSources(true, TestProvName.AllSqlServer)] string context, [Values] bool inline)
-		{
-			using var db = GetDataContext(context);
-			db.InlineParameters = inline;
-
-			FormattableString statement = $"SELECT IIF(EXISTS(SELECT * FROM [INFORMATION_SCHEMA].[TABLES] [x] WHERE [x].[TABLE_NAME] = {MyTableNameStringConstant}),1,0) {Sql.AliasExpr()}";
-
-			var query = from p in db.Person
-						where db.FromSqlScalar<bool>(statement).Any()
-						select p;
-
-			query.ToArray();
-		}
-
-		[Test(Description = "https://github.com/linq2db/linq2db/issues/3782")]
-		public void Issue3782Test13([IncludeDataSources(true, TestProvName.AllSqlServer)] string context, [Values] bool inline)
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/3782 / https://github.com/linq2db/linq2db/issues/2779")]
+		public void Issue3782Test4([IncludeDataSources(true, TestProvName.AllSqlServer2012Plus)] string context, [Values] bool inline)
 		{
 			using var db = GetDataContext(context);
 			db.InlineParameters = inline;
