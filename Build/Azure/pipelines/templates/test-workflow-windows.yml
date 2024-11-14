@@ -291,20 +291,24 @@ steps:
 
 - script: dotnet test net9.0/main/x64/linq2db.Tests.dll --filter "TestCategory != SkipCI" -f net90 -l trx --blame-hang-timeout 5m
   displayName: 'Tests (.NET 9 x64): $(title)'
-  condition: and(eq(variables.net90, 'true'), ne(variables.x86, 'true'), variables.title, succeeded(), ne(variables.retry, 'true'))
+  #condition: and(eq(variables.net90, 'true'), ne(variables.x86, 'true'), variables.title, succeeded(), ne(variables.retry, 'true'))
+  condition: and(eq(variables.net90, 'true'), ne(variables.x86, 'true'), variables.title, ne(variables.retry, 'true'))
 
 - script: dotnet test net9.0/main/x64/linq2db.Tests.dll --filter "TestCategory != SkipCI" -f net90 -l trx --blame-hang-timeout 5m
   displayName: 'Tests (.NET 9 x64): $(title)'
-  condition: and(eq(variables.net90, 'true'), ne(variables.x86, 'true'), variables.title, succeeded(), eq(variables.retry, 'true'))
+  #condition: and(eq(variables.net90, 'true'), ne(variables.x86, 'true'), variables.title, succeeded(), eq(variables.retry, 'true'))
+  condition: and(eq(variables.net90, 'true'), ne(variables.x86, 'true'), variables.title, eq(variables.retry, 'true'))
   retryCountOnTaskFailure: 2
 
 - script: dotnet test net9.0/main/x86/linq2db.Tests.dll --filter "TestCategory != SkipCI" -f net90 -l trx --blame-hang-timeout 5m
   displayName: 'Tests (.NET 9 x86): $(title)'
-  condition: and(eq(variables.net90, 'true'), eq(variables.x86, 'true'), variables.title, succeeded(), ne(variables.retry, 'true'))
+  #condition: and(eq(variables.net90, 'true'), eq(variables.x86, 'true'), variables.title, succeeded(), ne(variables.retry, 'true'))
+  condition: and(eq(variables.net90, 'true'), eq(variables.x86, 'true'), variables.title, ne(variables.retry, 'true'))
 
 - script: dotnet test net9.0/main/x86/linq2db.Tests.dll --filter "TestCategory != SkipCI" -f net90 -l trx --blame-hang-timeout 5m
   displayName: 'Tests (.NET 9 x86): $(title)'
-  condition: and(eq(variables.net90, 'true'), eq(variables.x86, 'true'), variables.title, succeeded(), eq(variables.retry, 'true'))
+  #condition: and(eq(variables.net90, 'true'), eq(variables.x86, 'true'), variables.title, succeeded(), eq(variables.retry, 'true'))
+  condition: and(eq(variables.net90, 'true'), eq(variables.x86, 'true'), variables.title, eq(variables.retry, 'true'))
   retryCountOnTaskFailure: 2
 
 - script: dotnet test net9.0/efcore/x64/linq2db.EntityFrameworkCore.Tests.dll --filter "TestCategory != SkipCI" -f net90 -l trx --blame-hang-timeout 5m
