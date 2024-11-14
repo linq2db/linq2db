@@ -1514,7 +1514,7 @@ namespace LinqToDB.SqlQuery
 
 				if (containsAggregateFunction)
 				{
-					if (subQuery.Select.HasModifier || subQuery.HasSetOperators || !subQuery.GroupBy.IsEmpty || !subQuery.Having.IsEmpty)
+					if (subQuery.Select.HasModifier || subQuery.HasSetOperators || !subQuery.GroupBy.IsEmpty)
 					{
 						// not allowed to move to parent if it has aggregates
 						return false;

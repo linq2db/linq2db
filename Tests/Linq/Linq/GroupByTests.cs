@@ -3638,7 +3638,7 @@ namespace Tests.Linq
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3250")]
-		public void Issue3250Test1([DataSources(false, TestProvName.AllSQLite)] string context)
+		public void Issue3250Test1([DataSources(false)] string context)
 		{
 			using var db = GetDataConnection(context);
 
@@ -3657,7 +3657,7 @@ namespace Tests.Linq
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3250")]
-		public void Issue3250Test2([DataSources(false, TestProvName.AllSQLite)] string context)
+		public void Issue3250Test2([DataSources(false)] string context)
 		{
 			using var db = GetDataConnection(context);
 
