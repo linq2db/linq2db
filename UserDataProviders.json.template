@@ -433,8 +433,10 @@
 			//"PostgreSQL.17",
 
 			// OleDB and ODBC MS Access providers
-			//"Access",
-			//"Access.Odbc",
+			//"Access.Jet.OleDb",
+			//"Access.Ace.OleDb",
+			//"Access.Jet.Odbc",
+			//"Access.Ace.Odbc",
 
 			// SAP/Sybase ASE
 			//"Sybase.Managed",
