@@ -3422,5 +3422,56 @@ namespace Tests.Linq
 				Assert.That(db.LastQuery, Does.Contain(321));
 			});
 		}
+
+		#region Issue 4714
+		public class YearMap
+		{
+			public DateTime StartDate { get; set; }
+			public DateTime EndDate { get; set; }
+			public int Year { get; set; }
+		}
+
+		public class Sample
+		{
+			public int SampleId { get; set; }
+		}
+
+		public class Source
+		{
+			public int Key1 { get; set; }
+			public int Key2 { get; set; }
+		}
+
+		public class SelectionMap
+		{
+			public int Key1 { get; set; }
+			public int Key2 { get; set; }
+			public decimal SelectionProperty { get; set; }
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4714")]
+		public void Issue4714Test([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var sampleTable = db.CreateLocalTable<Sample>();
+			using var sourceTable = db.CreateLocalTable<Source>();
+			using var selectionMap = db.CreateLocalTable<SelectionMap>();
+			using var yearTable = db.CreateLocalTable<YearMap>();
+
+			var sampleIds = sampleTable.Select(entity => entity.SampleId);
+
+			var sourcesBySelection = sourceTable
+				.InnerJoin(selectionMap,
+					(source, map) => source.Key1 == map.Key1 && source.Key2 == map.Key2,
+					(source, map) => map.SelectionProperty)
+				.CrossJoin(sampleIds, (selection, id) => new { Selection = selection, Id = id });
+
+			var failure = yearTable
+				.SelectMany(
+					year => sourcesBySelection,
+					(year, source) => new { source.Id, year.Year, year.StartDate, year.EndDate })
+				.ToList();
+		}
+		#endregion
 	}
 }

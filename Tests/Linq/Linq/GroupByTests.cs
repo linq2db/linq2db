@@ -866,7 +866,7 @@ namespace Tests.Linq
 
 		[Test]
 		[ThrowsForProvider(typeof(LinqException), TestProvName.AllClickHouse, ErrorMessage = ErrorHelper.Error_Correlated_Subqueries)]
-		[ThrowsForProvider(typeof(LinqException), TestProvName.AllAccess, TestProvName.AllFirebirdLess4, TestProvName.AllMySql57, TestProvName.AllSybase, TestProvName.AllOracle11, TestProvName.AllMariaDB, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
+		[ThrowsForProvider(typeof(LinqException), TestProvName.AllAccess, TestProvName.AllFirebirdLess4, TestProvName.AllMySql57, TestProvName.AllSybase, TestProvName.AllOracle11, TestProvName.AllMariaDB, TestProvName.AllDB2, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
 		public void CountInGroup([DataSources] string context)
 		{
 			var data = AggregationData.Data;
@@ -3638,7 +3638,7 @@ namespace Tests.Linq
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3250")]
-		public void Issue3250Test1([DataSources(false, TestProvName.AllSQLite)] string context)
+		public void Issue3250Test1([DataSources(false)] string context)
 		{
 			using var db = GetDataConnection(context);
 
@@ -3657,7 +3657,7 @@ namespace Tests.Linq
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3250")]
-		public void Issue3250Test2([DataSources(false, TestProvName.AllSQLite)] string context)
+		public void Issue3250Test2([DataSources(false)] string context)
 		{
 			using var db = GetDataConnection(context);
 

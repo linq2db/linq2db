@@ -695,7 +695,9 @@ namespace Tests.Extensions
 			{
 				_ = q.ToList();
 			}
+#pragma warning disable CS0618 // Type or member is obsolete
 			catch (System.Data.SqlClient.SqlException    ex) when (ex.Number == 8622) {}
+#pragma warning restore CS0618 // Type or member is obsolete
 			catch (Microsoft.Data.SqlClient.SqlException ex) when (ex.Number == 8622) {}
 #if NETFRAMEWORK
 			catch (System.ServiceModel.FaultException    ex) when (ex.Message.Contains("8622")) {}
@@ -722,7 +724,9 @@ namespace Tests.Extensions
 			{
 				_ = q.ToList();
 			}
+#pragma warning disable CS0618 // Type or member is obsolete
 			catch (System.Data.SqlClient.SqlException    ex) when (ex.Number == 8622) {}
+#pragma warning restore CS0618 // Type or member is obsolete
 			catch (Microsoft.Data.SqlClient.SqlException ex) when (ex.Number == 8622) {}
 #if NETFRAMEWORK
 			catch (System.ServiceModel.FaultException    ex) when (ex.Message.Contains("8622")) { }
@@ -748,7 +752,9 @@ namespace Tests.Extensions
 			{
 				_ = q.ToList();
 			}
+#pragma warning disable CS0618 // Type or member is obsolete
 			catch (System.Data.SqlClient.SqlException    ex) when (ex.Number == 8622) {}
+#pragma warning restore CS0618 // Type or member is obsolete
 			catch (Microsoft.Data.SqlClient.SqlException ex) when (ex.Number == 8622) {}
 #if NETFRAMEWORK
 			catch (System.ServiceModel.FaultException    ex) when (ex.Message.Contains("8622")) { }
@@ -770,11 +776,13 @@ namespace Tests.Extensions
 					.WithForceSeek("IX_ChildIndex", c => c.ParentID)
 				select p;
 
+#pragma warning disable CS0618 // Type or member is obsolete
 			try
 			{
 				_ = q.ToList();
 			}
 			catch (System.Data.SqlClient.SqlException    ex) when (ex.Number == 8622) {}
+#pragma warning restore CS0618 // Type or member is obsolete
 			catch (Microsoft.Data.SqlClient.SqlException ex) when (ex.Number == 8622) {}
 #if NETFRAMEWORK
 			catch (System.ServiceModel.FaultException    ex) when (ex.Message.Contains("8622")) { }
