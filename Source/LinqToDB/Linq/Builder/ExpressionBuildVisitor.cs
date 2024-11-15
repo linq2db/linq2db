@@ -1193,7 +1193,7 @@ namespace LinqToDB.Linq.Builder
 
 			var transformed = attr.GetExpression((buildVisitor: this, context: rootContext),
 				Builder.DataContext,
-				this.Builder,
+				Builder,
 				rootSelectQuery,
 				expr,
 				static (context, e, descriptor, inline) =>

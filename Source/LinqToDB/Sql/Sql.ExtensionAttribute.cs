@@ -27,7 +27,7 @@ namespace LinqToDB
 		Values
 	}
 
-	[AttributeUsage(AttributeTargets.Parameter)]
+	[AttributeUsage(AttributeTargets.Parameter, AllowMultiple = false)]
 	[MeansImplicitUse]
 	public class ExprParameterAttribute : Attribute
 	{
@@ -719,15 +719,16 @@ namespace LinqToDB
 						var arg   = arguments[i];
 						var param = parameters[i];
 
-						bool? inlineParameters = null;
+						var inlineParameters = InlineParameters;
 
 						var names = new HashSet<string>();
-						foreach (var a in param.GetAttributes<ExprParameterAttribute>())
+						var paramAttr = param.GetAttribute<ExprParameterAttribute>();
+						if (paramAttr != null)
 						{
-							if (a.DoNotParameterize)
+							if (paramAttr.DoNotParameterize)
 								inlineParameters = true;
 
-							names.Add(a.Name ?? param.Name!);
+							names.Add(paramAttr.Name ?? param.Name!);
 						}
 
 						if (names.Count > 0)

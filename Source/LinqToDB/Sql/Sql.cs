@@ -1054,7 +1054,7 @@ namespace LinqToDB
 			{
 				var expressionStr = Expression;
 				PrepareParameterValues(context, dataContext.MappingSchema, expression, ref expressionStr, true,
-					out var knownExpressions, true, out _, converter);
+					out var knownExpressions, true, InlineParameters, out _, converter);
 
 				var arr = new ISqlExpression[knownExpressions.Count];
 
@@ -1064,7 +1064,7 @@ namespace LinqToDB
 				{
 					var pair      = knownExpressions[i];
 
-					var converted = converter(context, pair.expression!, null, pair.parameter?.DoNotParameterize);
+					var converted = converter(context, pair.expression!, null, InlineParameters || pair.parameter?.DoNotParameterize == true);
 
 					if (converted is not SqlPlaceholderExpression placeholder)
 						return converted;

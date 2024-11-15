@@ -124,10 +124,10 @@ namespace LinqToDB.Linq.Builder
 			}
 
 			var sqlExpression = finalFunction.GetExpression(
-				(builder, context: placeholderSequence, forselect: placeholderSelect), 
-				builder.DataContext, 
-				builder, 
-				placeholderSelect, 
+				(builder, context: placeholderSequence, forselect: placeholderSelect),
+				builder.DataContext,
+				builder,
+				placeholderSelect,
 				methodCall,
 				static (ctx, e, descriptor, inline) =>
 				{
