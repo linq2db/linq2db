@@ -872,7 +872,6 @@ namespace Tests.Data
 			});
 		}
 
-		[ActiveIssue(Configurations = [TestProvName.AllOracle, TestProvName.AllSQLiteClassic, TestProvName.AllSybase])]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3663")]
 		public void Issue3663Test([DataSources(false)] string context)
 		{

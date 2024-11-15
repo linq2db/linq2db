@@ -403,10 +403,9 @@ namespace LinqToDB.Data
 				finally
 				{
 					stopwatch.Stop();
+
 					if (disposeReader)
 					{
-						rd.Dispose();
-
 						if (DataConnection.TraceSwitchConnection.TraceInfo)
 						{
 							DataConnection.OnTraceConnection(new TraceInfo(DataConnection, TraceInfoStep.Completed, TraceOperation.DisposeQuery, isAsync: false)
@@ -418,6 +417,8 @@ namespace LinqToDB.Data
 								RecordsAffected = rowCount
 							});
 						}
+
+						rd.Dispose();
 					}
 				}
 		}
