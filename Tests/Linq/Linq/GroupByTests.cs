@@ -1833,6 +1833,60 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		public void EmptySetAggregateNullability([DataSources(false)] string context)
+		{
+			using var db = GetDataConnection(context);
+
+			var query = from parent in db.Parent
+						where parent.ParentID == -1
+						group parent by Sql.GroupBy.None into gr
+						select new
+						{
+							Min = gr.Min(p => p.ParentID),
+							Max = gr.Max(p => p.ParentID),
+							Avg = gr.Average(p => p.ParentID),
+							Sum = gr.Sum(p => p.ParentID),
+							Count = gr.Count(),
+						};
+
+			// aggregates (except count) return null on empty set
+			var result = query.AsSubQuery().Where(r => r.Min != 0).ToArray();
+			Assert.Multiple(() =>
+			{
+				Assert.That(result, Has.Length.EqualTo(1));
+				Assert.That(db.LastQuery, Contains.Substring("IS NULL"));
+			});
+
+			result = query.AsSubQuery().Where(r => r.Max != 0).ToArray();
+			Assert.Multiple(() =>
+			{
+				Assert.That(result, Has.Length.EqualTo(1));
+				Assert.That(db.LastQuery, Contains.Substring("IS NULL"));
+			});
+
+			result = query.AsSubQuery().Where(r => r.Avg != 0).ToArray();
+			Assert.Multiple(() =>
+			{
+				Assert.That(result, Has.Length.EqualTo(1));
+				Assert.That(db.LastQuery, Contains.Substring("IS NULL"));
+			});
+
+			result = query.AsSubQuery().Where(r => r.Sum != 0).ToArray();
+			Assert.Multiple(() =>
+			{
+				Assert.That(result, Has.Length.EqualTo(1));
+				Assert.That(db.LastQuery, Contains.Substring("IS NULL"));
+			});
+
+			result = query.AsSubQuery().Where(r => r.Count != 0).ToArray();
+			Assert.Multiple(() =>
+			{
+				Assert.That(result, Has.Length.EqualTo(0));
+				Assert.That(db.LastQuery, Does.Not.Contains("IS NULL"));
+			});
+		}
+
+		[Test]
 		public void GroupByExpression([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
