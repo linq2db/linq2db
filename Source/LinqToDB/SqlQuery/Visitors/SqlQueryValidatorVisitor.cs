@@ -131,9 +131,7 @@ namespace LinqToDB.SqlQuery.Visitors
 									errorMessage = ErrorHelper.Error_Correlated_Subqueries;
 								else
 								{
-#pragma warning disable CA1863
 									errorMessage = string.Format(CultureInfo.InvariantCulture, ErrorHelper.Error_Correlated_Subqueries_Level, _providerFlags.SupportedCorrelatedSubqueriesLevel.Value);
-#pragma warning restore CA1863
 								}
 
 								return false;

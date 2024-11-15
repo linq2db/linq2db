@@ -287,3 +287,6 @@ M:System.Convert.ToUInt64(System.Object); use overload with IFormatProvider para
 M:System.Convert.ToUInt64(System.String); use overload with IFormatProvider parameter
 M:System.Convert.ChangeType(System.Object,System.Type); use overload with IFormatProvider parameter
 M:System.Convert.ChangeType(System.Object,System.TypeCode); use overload with IFormatProvider parameter
+
+# GetInterfaceMap => GetInterfaceMapEx
+M:System.Type.GetInterfaceMap(System.Type); use GetInterfaceMapEx extension

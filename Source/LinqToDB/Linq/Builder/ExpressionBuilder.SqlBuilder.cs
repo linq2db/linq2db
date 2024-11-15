@@ -1348,7 +1348,7 @@ namespace LinqToDB.Linq.Builder
 											{
 												// Validating that interface property is pointing to the correct class property
 
-												var interfaceMap               = assignment.MemberInfo.ReflectedType.GetInterfaceMap(member.ReflectedType);
+												var interfaceMap               = assignment.MemberInfo.ReflectedType.GetInterfaceMapEx(member.ReflectedType);
 												var interfacePropertyGetMethod = propInfo.GetGetMethod();
 												var classPropertyGetMethod     = classPropinfo.GetGetMethod();
 

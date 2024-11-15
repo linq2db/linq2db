@@ -215,6 +215,7 @@ dotnet_diagnostic.CA1510.severity = none # CA1510: use throw helpers
 dotnet_diagnostic.CA1511.severity = none # CA1511: use throw helpers
 dotnet_diagnostic.CA1512.severity = none # CA1512: use throw helpers
 dotnet_diagnostic.CA1513.severity = none # CA1513: use throw helpers
+dotnet_diagnostic.CA1863.severity = none # CA1863: use CompositeFormat
 dotnet_diagnostic.CA1864.severity = none # CA1864: Prefer the 'IDictionary.TryAdd(TKey, TValue)' method
 dotnet_diagnostic.CA1866.severity = none # CA1866: Use 'string.Method(char)' instead of 'string.Method(string)' for string with single char
 dotnet_diagnostic.CA1700.severity = none # CA1700: Do not name enum values 'Reserved'
