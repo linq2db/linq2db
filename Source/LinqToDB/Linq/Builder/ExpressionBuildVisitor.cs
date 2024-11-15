@@ -60,7 +60,6 @@ namespace LinqToDB.Linq.Builder
 		BuildPurpose               _buildPurpose;
 		BuildFlags                 _buildFlags;
 		IBuildContext?             _buildContext;
-		ContextRefExpression?      _foundRoot;
 		ColumnDescriptor?          _columnDescriptor;
 		string?                    _alias;
 		Stack<Expression>          _disableSubqueries = new();
@@ -98,6 +97,8 @@ namespace LinqToDB.Linq.Builder
 		public MappingSchema     MappingSchema     => BuildContext?.MappingSchema ?? Builder.MappingSchema;
 		public DataOptions       DataOptions       => Builder.DataOptions;
 		public ColumnDescriptor? CurrentDescriptor => _columnDescriptor;
+
+		ContextRefExpression? FoundRoot { get; set; }
 
 		public ExpressionBuildVisitor Clone(CloningContext cloningContext)
 		{
@@ -328,25 +329,25 @@ namespace LinqToDB.Linq.Builder
 
 		public Expression BuildSubquery(Expression expression)
 		{
-			_foundRoot = null;
+			FoundRoot = null;
 			return BuildExpression(expression, BuildPurpose.SubQuery);
 		}
 
 		public Expression BuildRoot(Expression expression)
 		{
-			_foundRoot = null;
+			FoundRoot = null;
 			return BuildExpression(expression, BuildPurpose.Root);
 		}
 
 		public Expression BuildAssociationRoot(Expression expression)
 		{
-			_foundRoot = null;
+			FoundRoot = null;
 			return BuildExpression(expression, BuildPurpose.AssociationRoot);
 		}
 
 		public Expression BuildAggregationRoot(Expression expression)
 		{
-			_foundRoot = null;
+			FoundRoot = null;
 			return BuildExpression(expression, BuildPurpose.AggregationRoot);
 		}
 
@@ -439,7 +440,11 @@ namespace LinqToDB.Linq.Builder
 				return translated;
 			}
 
+			var saveRoot = FoundRoot;
+
 			translated = context.MakeExpression(expression, flags);
+
+			FoundRoot = saveRoot;
 
 #if DEBUG
 			if (!IsSame(translated, expression))
@@ -565,10 +570,10 @@ namespace LinqToDB.Linq.Builder
 
 		ExprCacheKey GetSqlCacheKey(Expression path)
 		{
-			if (_foundRoot == null)
+			if (FoundRoot == null)
 				throw new InvalidOperationException("Called when root is not initialized.");
 
-			return GetSqlCacheKey(path, _foundRoot.BuildContext.SelectQuery);
+			return GetSqlCacheKey(path, FoundRoot.BuildContext.SelectQuery);
 		}
 
 		ExprCacheKey GetSqlCacheKey(Expression path, SelectQuery selectQuery)
@@ -578,9 +583,9 @@ namespace LinqToDB.Linq.Builder
 
 		Expression RegisterTranslatedSql(Expression translated, Expression path)
 		{
-			if (_foundRoot != null)
+			if (FoundRoot != null)
 			{
-				translated = RegisterTranslatedSql(_foundRoot.BuildContext.SelectQuery, translated, path);
+				translated = RegisterTranslatedSql(FoundRoot.BuildContext.SelectQuery, translated, path);
 			}
 
 			return translated;
@@ -753,7 +758,7 @@ namespace LinqToDB.Linq.Builder
 			if (_buildPurpose == BuildPurpose.Traverse)
 			{
 				var newNode = base.VisitMethodCall(node);
-				_foundRoot = null;
+				FoundRoot = null;
 				return newNode;
 			}
 
@@ -791,9 +796,9 @@ namespace LinqToDB.Linq.Builder
 					}
 				}
 
-				if (_foundRoot != null && _foundRoot.BuildContext.AutomaticAssociations)
+				if (FoundRoot != null && FoundRoot.BuildContext.AutomaticAssociations)
 				{
-					var association = TryCreateAssociation(node, _foundRoot, BuildContext);
+					var association = TryCreateAssociation(node, FoundRoot, BuildContext);
 					if (!IsSame(association, node))
 						return Visit(association);
 				}
@@ -852,6 +857,9 @@ namespace LinqToDB.Linq.Builder
 				if (HandleFormat(node, out var translatedFormat))
 					return Visit(translatedFormat);
 
+				if (HandleConstructorMethods(node, out var translatedConstructor))
+					return Visit(translatedConstructor);
+
 				if (node.Type == typeof(bool))
 				{
 					var translatedPredicate = ConvertPredicateMethod(node);
@@ -868,7 +876,7 @@ namespace LinqToDB.Linq.Builder
 				return base.VisitMethodCall(node);
 			}
 
-			_foundRoot = null;
+			FoundRoot = null;
 			return node;
 		}
 
@@ -1168,9 +1176,9 @@ namespace LinqToDB.Linq.Builder
 					}
 
 					_ = BuildAggregationRoot(new ContextRefExpression(rootContext.ElementType, rootContext));
-					if (_foundRoot != null)
+					if (FoundRoot != null)
 					{
-						rootContext = _foundRoot.BuildContext;
+						rootContext = FoundRoot.BuildContext;
 					}
 				}
 			}
@@ -1334,7 +1342,7 @@ namespace LinqToDB.Linq.Builder
 					return node;
 			}
 
-			_foundRoot = null;
+			FoundRoot = null;
 			if (node.Expression != null)
 			{
 				Expression root;
@@ -1366,20 +1374,20 @@ namespace LinqToDB.Linq.Builder
 
 					if (root is SqlErrorExpression error)
 					{
-						_foundRoot = null;
+						FoundRoot = null;
 					}
 				}
 			}
 			else
 			{
-				_foundRoot = null;
+				FoundRoot = null;
 			}
 
 			var saveAlias = _alias;
 			try
 			{
 				_alias = node.Member.Name;
-				var context = _foundRoot;
+				var context = FoundRoot;
 
 				if (context != null)
 				{
@@ -1781,7 +1789,7 @@ namespace LinqToDB.Linq.Builder
 			if (!IsSqlOrExpression() || BuildContext == null)
 			{
 				var newNode = base.VisitConditional(node);
-				_foundRoot = null;
+				FoundRoot = null;
 				return newNode;
 			}
 
@@ -2288,6 +2296,23 @@ namespace LinqToDB.Linq.Builder
 			return false;
 		}
 
+		public bool HandleConstructorMethods(MethodCallExpression node, [NotNullWhen(true)] out Expression? translated)
+		{
+			/*if (node.Method.IsStatic)
+			{
+				var shouldHandle = node.Method.DeclaringType == typeof(Tuple) && node.Method.Name == nameof(Tuple.Create);
+
+				if (shouldHandle)
+				{
+					translated = Builder.ParseGenericConstructor(node, ProjectFlags.SQL, _columnDescriptor, true);
+					return !ReferenceEquals(node, translated);
+				}
+			}*/
+
+			translated = null;
+			return false;
+		}
+
 		public bool HandleValue(Expression node, [NotNullWhen(true)] out Expression? translated)
 		{
 			translated = null;
@@ -2504,10 +2529,10 @@ namespace LinqToDB.Linq.Builder
 			{
 				if (_buildPurpose is BuildPurpose.Root or BuildPurpose.AssociationRoot or BuildPurpose.AggregationRoot)
 				{
-					_foundRoot = node;
+					FoundRoot = node;
 
 					if (newNode is ContextRefExpression newRef)
-						_foundRoot = newRef;
+						FoundRoot = newRef;
 					else
 						return node;
 
@@ -2515,7 +2540,7 @@ namespace LinqToDB.Linq.Builder
 					{
 						if (newNode.Type != node.Type && !(node.Type.IsSameOrParentOf(newNode.Type) || newNode.Type.IsSameOrParentOf(node.Type)))
 						{
-							_foundRoot = node;
+							FoundRoot = node;
 							return node;
 						}
 					}
@@ -2543,7 +2568,7 @@ namespace LinqToDB.Linq.Builder
 				}
 			}
 
-			_foundRoot = node;
+			FoundRoot = node;
 
 			return base.VisitContextRefExpression(node);
 		}
@@ -4974,9 +4999,9 @@ namespace LinqToDB.Linq.Builder
 
 			var testExpression = BuildExpression(expr, BuildPurpose.Traverse);
 
-			if (_foundRoot != null)
+			if (FoundRoot != null)
 			{
-				context = _foundRoot.BuildContext;
+				context = FoundRoot.BuildContext;
 			}
 
 			var cacheKey = new SubqueryCacheKey(context.SelectQuery, testExpression);
