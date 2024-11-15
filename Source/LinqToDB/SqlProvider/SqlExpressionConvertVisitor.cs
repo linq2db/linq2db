@@ -908,6 +908,22 @@ namespace LinqToDB.SqlProvider
 		{
 			var newElement = (SqlSetExpression)base.VisitSqlSetExpression(element);
 
+			while (newElement.Column is SqlCastExpression cast)
+			{
+				var newColumn = cast.Expression;
+				var newValue  = newElement.Expression == null ? null : new SqlCastExpression(newElement.Expression, QueryHelper.GetDbDataType(newColumn, MappingSchema), null, false);
+
+				if (GetVisitMode(newElement) == VisitMode.Modify)
+				{
+					newElement.Column     = newColumn;
+					newElement.Expression = newValue;
+				}
+				else
+				{
+					newElement = new SqlSetExpression(newColumn, newValue);
+				}
+			}
+
 			var wrapped = newElement.Expression == null ? null : WrapBooleanExpression(newElement.Expression, includeFields : false);
 
 			if (!ReferenceEquals(wrapped, newElement.Expression))

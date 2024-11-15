@@ -459,7 +459,7 @@ namespace LinqToDB.Linq.Builder
 			List<SetExpressionEnvelope> envelopes,
 			bool                        forceParameters)
 		{
-			var correctedField = builder.BuildSqlExpression(buildContext, fieldExpression.UnwrapConvert());
+			var correctedField = builder.BuildSqlExpression(buildContext, fieldExpression);
 
 			if (correctedField is SqlGenericConstructorExpression fieldGeneric)
 			{

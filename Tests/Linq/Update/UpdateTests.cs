@@ -1224,7 +1224,7 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test()]
+		[Test]
 		public void UpdateMultipleColumns([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -1259,6 +1259,46 @@ namespace Tests.xUpdate
 					Assert.That(udt.SmallIntValue, Is.Not.EqualTo(ldt.SmallIntValue));
 				});
 			}
+		}
+
+		[Test]
+		public void UpdateWithTypeConversion([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var _ = new RestoreBaseTables(db);
+
+			var id = 1001;
+
+			db.Types
+				.Value(t => t.ID, id)
+				.Value(t => t.MoneyValue, () => 100)
+				.Value(t => t.SmallIntValue, () => 200)
+				.Insert()
+				;
+
+			// use column with other type as value to have conversion in SQL
+			// because constants/parameters already typed by target on query build
+			db.Types
+				.Where(t => t.ID == id)
+				.Set(t => t.SmallIntValue, t => t.MoneyValue)
+				.Set(t => t.MoneyValue, t => t.SmallIntValue)
+				.Update()
+				;
+			db.Types
+				.Where(t => t.ID == id)
+				.Set(t => t.SmallIntValue, t => t.MoneyValue)
+				.Set(t => t.MoneyValue, t => t.SmallIntValue)
+				.Update()
+				;
+
+			var udt = db.Types.Single(t => t.ID == id);
+
+			Assert.Multiple(() =>
+			{
+				// MySql doesn't know how update should work
+				Assert.That(udt.MoneyValue, Is.EqualTo(context.IsAnyOf(TestProvName.AllMySql) ? 100 : 200));
+				Assert.That(udt.SmallIntValue, Is.EqualTo(100));
+			});
 		}
 
 		[Test]
