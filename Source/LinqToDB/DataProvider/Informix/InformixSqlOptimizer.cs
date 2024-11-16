@@ -125,6 +125,7 @@ namespace LinqToDB.DataProvider.Informix
 
 		public override SqlStatement TransformStatement(SqlStatement statement, DataOptions dataOptions, MappingSchema mappingSchema)
 		{
+			statement = base.TransformStatement(statement, dataOptions, mappingSchema);
 			statement = CorrectMultiTableQueries(statement);
 
 			switch (statement.QueryType)

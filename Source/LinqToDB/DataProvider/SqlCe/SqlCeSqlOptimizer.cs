@@ -20,6 +20,8 @@ namespace LinqToDB.DataProvider.SqlCe
 
 		public override SqlStatement TransformStatement(SqlStatement statement, DataOptions dataOptions, MappingSchema mappingSchema)
 		{
+			statement = base.TransformStatement(statement, dataOptions, mappingSchema);
+
 			// This function mutates statement which is allowed only in this place
 			CorrectSkipAndColumns(statement);
 

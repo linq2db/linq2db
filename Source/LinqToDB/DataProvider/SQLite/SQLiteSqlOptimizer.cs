@@ -21,6 +21,8 @@
 
 		public override SqlStatement TransformStatement(SqlStatement statement, DataOptions dataOptions, MappingSchema mappingSchema)
 		{
+			statement = base.TransformStatement(statement, dataOptions, mappingSchema);
+
 			switch (statement.QueryType)
 			{
 				case QueryType.Delete :
@@ -39,19 +41,6 @@
 					else
 					{
 						statement = GetAlternativeUpdate((SqlUpdateStatement)statement, dataOptions, mappingSchema);
-					}
-
-					if (statement is SqlUpdateStatement { Output.HasOutput: true } updateStatement)
-					{
-						updateStatement.Output = updateStatement.Output.Convert(1, (_, e) =>
-						{
-							if (e is SqlAnchor { AnchorKind: SqlAnchor.AnchorKindEnum.Inserted } anchor)
-							{
-								return anchor.SqlExpression;
-							}
-
-							return e;
-						});
 					}
 
 					break;

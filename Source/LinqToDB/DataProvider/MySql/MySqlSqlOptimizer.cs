@@ -17,6 +17,8 @@
 
 		public override SqlStatement TransformStatement(SqlStatement statement, DataOptions dataOptions, MappingSchema mappingSchema)
 		{
+			statement = base.TransformStatement(statement, dataOptions, mappingSchema);
+
 			return statement.QueryType switch
 			{
 				QueryType.Update => CorrectMySqlUpdate((SqlUpdateStatement)statement, dataOptions, mappingSchema),

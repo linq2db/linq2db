@@ -260,8 +260,6 @@ namespace LinqToDB.Linq.Builder
 			if (updateType == UpdateTypeEnum.UpdateOutput)
 			{
 				updateContext.OutputExpression = outputExpression;
-				updateContext.DeletedContext   = deletedContext;
-				updateContext.InsertedContext  = insertedContext;
 
 				return BuildSequenceResult.FromContext(updateContext);
 			}
@@ -483,6 +481,12 @@ namespace LinqToDB.Linq.Builder
 			List<SetExpressionEnvelope> envelopes,
 			bool                        forceParameters)
 		{
+			if (fieldExpression.NodeType is ExpressionType.Convert or ExpressionType.ConvertChecked)
+			{
+				fieldExpression = ((UnaryExpression)fieldExpression).Operand;
+				valueExpression = Expression.Convert(valueExpression, fieldExpression.Type);
+			}
+
 			var correctedField = builder.BuildSqlExpression(buildContext, fieldExpression);
 
 			if (correctedField is SqlGenericConstructorExpression fieldGeneric)
@@ -657,8 +661,8 @@ namespace LinqToDB.Linq.Builder
 			public List<SetExpressionEnvelope> SetExpressions { get; } = new ();
 
 			public LambdaExpression? OutputExpression { get; set; }
-			public IBuildContext?    DeletedContext   { get; set; }
-			public IBuildContext?    InsertedContext  { get; set; }
+
+			public SelectQuery? OutputQuery { get; set; }
 
 			public void FinalizeSetters()
 			{
@@ -748,12 +752,13 @@ namespace LinqToDB.Linq.Builder
 
 					if (UpdateType == UpdateTypeEnum.UpdateOutput)
 					{
-						if (DeletedContext == null || InsertedContext == null || LastBuildInfo == null || TargetTable == null)
+						if (TargetTable == null)
 							throw new InvalidOperationException();
 
 						UpdateStatement.Output ??= new SqlOutputClause();
 
-						var outputSelectQuery = DeletedContext.SelectQuery;
+						OutputQuery ??= new SelectQuery();
+						var outputSelectQuery = OutputQuery;
 
 						var insertedDeletedRoot = QuerySequence;
 						if (TablePath != null)

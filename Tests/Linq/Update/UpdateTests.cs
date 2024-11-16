@@ -1292,12 +1292,12 @@ namespace Tests.xUpdate
 				;
 
 			var udt = db.Types.Single(t => t.ID == id);
-			 
+
 			Assert.Multiple(() =>
 			{
 				// MySql doesn't know how update should work
-				Assert.That(udt.MoneyValue, Is.EqualTo(context.IsAnyOf(TestProvName.AllMySql) ? 100 : 200));
-				Assert.That(udt.SmallIntValue, Is.EqualTo(100));
+				Assert.That(udt.MoneyValue, Is.EqualTo(100));
+				Assert.That(udt.SmallIntValue, Is.EqualTo(context.IsAnyOf(TestProvName.AllMySql) ? 100 : 200));
 			});
 		}
 
