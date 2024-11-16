@@ -1348,7 +1348,7 @@ namespace LinqToDB.Linq.Builder
 				Expression root;
 				using (var savedFlags = UsingBuildFlags(BuildFlags.ForMemberRoot))
 				{
-					root = _buildPurpose is BuildPurpose.Expression or BuildPurpose.Sql or BuildPurpose.SubQuery or BuildPurpose.Extract
+					root = _buildPurpose is BuildPurpose.Expression or BuildPurpose.Sql or BuildPurpose.SubQuery or BuildPurpose.Extract or BuildPurpose.Table
 						? BuildRoot(node.Expression)
 						: Visit(node.Expression);
 

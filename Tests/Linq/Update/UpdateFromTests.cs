@@ -501,6 +501,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/2815")]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllClickHouse, "Correlated UPDATE not supported by ClickHouse")]
 		public void Issue2815Test2([DataSources(false)] string context)
 		{
 			using var db = GetDataConnection(context);
