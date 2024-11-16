@@ -390,5 +390,39 @@ namespace Tests.Linq
 			});
 		}
 		#endregion
+
+		#region Issue 4715
+		interface IExplicitInterface
+		{
+			int ExplicitProperty { get; set; }
+		}
+
+		interface IImplicitInterface
+		{
+			int ImplicitProperty { get; set; }
+		}
+
+		class Issue4715Table : IExplicitInterface, IImplicitInterface
+		{
+			public int Id { get; set; }
+			public int ImplicitProperty { get; set; }
+			int IExplicitInterface.ExplicitProperty { get; set; }
+		}
+
+		[ActiveIssue]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4715")]
+		public void Issue4715Test()
+		{
+			var ms = new MappingSchema();
+			var ed = ms.GetEntityDescriptor(typeof(Issue4715Table));
+
+			Assert.That(ed.Columns, Has.Count.EqualTo(2));
+			Assert.Multiple(() =>
+			{
+				Assert.That(ed.Columns.Any(c => c.ColumnName == "Id"), Is.True);
+				Assert.That(ed.Columns.Any(c => c.ColumnName == "ImplicitProperty"), Is.True);
+			});
+		}
+		#endregion
 	}
 }
