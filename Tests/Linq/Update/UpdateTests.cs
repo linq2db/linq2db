@@ -1292,7 +1292,7 @@ namespace Tests.xUpdate
 				;
 
 			var udt = db.Types.Single(t => t.ID == id);
-
+			 
 			Assert.Multiple(() =>
 			{
 				// MySql doesn't know how update should work
