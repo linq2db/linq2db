@@ -431,6 +431,8 @@ namespace LinqToDB.Linq.Builder
 					inputFilterLambda = methodCall.Arguments[1].UnwrapLambda();
 				}
 
+				var isNonGrouping = false;
+
 				if (GetSimplifiedAggregationInfo(
 						aggregationType,
 						returnType,
@@ -450,6 +452,7 @@ namespace LinqToDB.Linq.Builder
 					placeholderSequence = groupByContext.SubQuery;
 					placeholderSelect   = groupByContext.Element.SelectQuery;
 					sequence            = groupByContext;
+					isNonGrouping       = groupByContext.SubQuery.SelectQuery.GroupBy.IsEmpty;
 				}
 				else 
 				{
@@ -542,6 +545,9 @@ namespace LinqToDB.Linq.Builder
 					{
 						if (isSimple)
 						{
+							if (isNonGrouping)
+								canBeNull = true;
+
 							if (valueExpression == null)
 								throw new InvalidOperationException();
 
@@ -642,9 +648,13 @@ namespace LinqToDB.Linq.Builder
 				return maybeNull.Value;
 			}
 
-			Expression GenerateNullCheckIfNeeded(Expression expression)
+			Expression GenerateNullCheckIfNeeded(Expression expression, SelectQuery currentQuery)
 			{
-				if ((_aggregationType != AggregationType.Sum && _aggregationType != AggregationType.Count) && !expression.Type.IsNullableType())
+				if (
+					_aggregationType != AggregationType.Sum 
+					&& _aggregationType != AggregationType.Count 
+					&& !expression.Type.IsNullableType() 
+					&& !Placeholder.Sql.CanBeNullable(NullabilityContext.GetContext(currentQuery)))
 				{
 					var checkExpression = expression;
 
@@ -667,7 +677,7 @@ namespace LinqToDB.Linq.Builder
 
 			public override void SetRunQuery<T>(Query<T> query, Expression expr)
 			{
-				expr = GenerateNullCheckIfNeeded(expr);
+				expr = GenerateNullCheckIfNeeded(expr, SelectQuery);
 
 				var mapper = Builder.BuildMapper<object>(SelectQuery, expr);
 
@@ -707,7 +717,7 @@ namespace LinqToDB.Linq.Builder
 				var result = (Expression)Placeholder;
 
 				if (flags.IsExpression())
-					result = GenerateNullCheckIfNeeded(result);
+					result = GenerateNullCheckIfNeeded(result, OuterJoinParentQuery ?? SelectQuery);
 
 				return result;
 			}
