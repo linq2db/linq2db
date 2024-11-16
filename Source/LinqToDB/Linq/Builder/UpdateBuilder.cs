@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Reflection;
 
 namespace LinqToDB.Linq.Builder
 {
@@ -170,7 +171,8 @@ namespace LinqToDB.Linq.Builder
 							throw new LinqException("Cannot retrieve Table for update.");
 						}
 
-						updateContext.TargetTable = tableContext;
+						updateContext.TablePath = body;
+						updateContext.TargetTable   = tableContext;
 					}
 					else
 					{
@@ -188,37 +190,13 @@ namespace LinqToDB.Linq.Builder
 
 						if (sequenceTableContext == null)
 						{
-							// trying to detect join table
+							// trying to detect join table in projection
 							//
-							var collectedTables = new HashSet<ITableContext>();
 
-							if (collectedTables.Count == 0)
-							{
-								// try to find in projection
-								//
-								var sequenceRefExpression = new ContextRefExpression(typeof(object), sequence);
-								var projection            = builder.BuildExtractExpression(sequence, sequenceRefExpression);
+							var sequenceRefExpression = new ContextRefExpression(sequence.ElementType, sequence);
+							var projection            = builder.BuildExtractExpression(sequence, sequenceRefExpression);
 
-								projection.Visit((builder, sequence, collectedTables, intoTableContext), (ctx, e) =>
-								{
-									if (e is MemberExpression or ContextRefExpression)
-									{
-										var tableCtx = SequenceHelper.GetTableOrCteContext(ctx.builder, e);
-										if (tableCtx != null && tableCtx.ObjectType == ctx.intoTableContext.ObjectType)
-										{
-											ctx.collectedTables.Add(tableCtx);
-										}
-									}
-									else if (e is SqlGenericConstructorExpression { ConstructionRoot: not null } constructor)
-									{
-										var tableCtx = SequenceHelper.GetTableOrCteContext(builder, constructor.ConstructionRoot);
-										if (tableCtx != null && tableCtx.ObjectType == ctx.intoTableContext.ObjectType)
-										{
-											ctx.collectedTables.Add(tableCtx);
-										}
-									}
-								});
-							}
+							var collectedTables = CollectTables(builder, projection, sequenceRefExpression, intoTableContext.ObjectType);
 
 							if (collectedTables.Count == 0)
 								throw new LinqToDBException("Could not find join table for update query.");
@@ -226,7 +204,10 @@ namespace LinqToDB.Linq.Builder
 							if (collectedTables.Count > 1)
 								throw new LinqToDBException("Could not find join table for update query. Ambiguous tables.");
 
-							sequenceTableContext = collectedTables.First();
+							var tuple = collectedTables.First();
+
+							updateContext.TablePath = tuple.path;
+							sequenceTableContext    = tuple.context;
 						}
 
 						if (QueryHelper.IsEqualTables(sequenceTableContext.SqlTable, intoTableContext.SqlTable, false))
@@ -320,6 +301,49 @@ namespace LinqToDB.Linq.Builder
 
 				return BuildSequenceResult.FromContext(updateContext);
 			}
+		}
+
+		HashSet<(ITableContext context, Expression path)> CollectTables(ExpressionBuilder builder, Expression expr, Expression rooExpr, Type objectType)
+		{
+			var result = new HashSet<(ITableContext context, Expression path)>();
+
+			Expression Combine(Expression current, List<MemberInfo> path)
+			{
+				return path.Aggregate(current, (e, m) => Expression.MakeMemberAccess(e, m));
+			}
+
+			void Collect(Expression current, List<MemberInfo> path)
+			{
+				if (current is ContextRefExpression)
+				{
+					var tableCtx = SequenceHelper.GetTableOrCteContext(builder, current);
+					if (tableCtx != null && tableCtx.ObjectType == objectType)
+					{
+						result.Add((tableCtx, Combine(rooExpr, path)));
+					}
+				}
+				else if (current is SqlGenericConstructorExpression constructor)
+				{
+					foreach (var assignment in constructor.Assignments)
+					{
+						path.Add(assignment.MemberInfo);
+						Collect(assignment.Expression, path);
+						path.RemoveAt(path.Count - 1);
+					}
+				}
+				else
+				{
+					var parsed = builder.ParseGenericConstructor(current, ProjectFlags.SQL, null);
+					if (!ReferenceEquals(parsed, current))
+					{
+						Collect(parsed, path);
+					}
+				}
+			}
+
+			Collect(expr, new List<MemberInfo>());
+
+			return result;
 		}
 
 		public static (IBuildContext deleted, IBuildContext inserted, SqlTable deletedTable, SqlTable insertedTable) CreateDeletedInsertedContexts(ExpressionBuilder builder, ITableContext targetTableContext, out IBuildContext outputContext)
@@ -606,6 +630,8 @@ namespace LinqToDB.Linq.Builder
 			public SqlUpdateStatement         UpdateStatement { get; }
 			public UpdateTypeEnum             UpdateType      { get; set; }
 
+			public Expression? TablePath { get; set; }
+
 			public ITableContext? TargetTable
 			{
 				get => _targetTable;
@@ -701,32 +727,10 @@ namespace LinqToDB.Linq.Builder
 
 			static Expression BuildDefaultOutputExpression(ExpressionBuilder builder, Type outputType, IBuildContext querySequence, IBuildContext insertedContext, IBuildContext deletedContext)
 			{
-				// populate all accessible fields, especially for CTE
-				var queryRef  = new ContextRefExpression(querySequence.ElementType, querySequence);
-				var allFields = builder.BuildSqlExpression(querySequence, queryRef);
+				var returnType   = typeof(UpdateOutput<>).MakeGenericType(outputType);
 
-				if (allFields is not SqlGenericConstructorExpression constructorExpression)
-				{
-					throw new InvalidOperationException();
-				}
-
-				var querySequenceRef = new ContextRefExpression(constructorExpression.Type, querySequence);
-				var found = FindForRightProjectionPath(constructorExpression, querySequenceRef, outputType)
-					.ToList();
-
-				if (found.Count == 0)
-					throw new LinqToDBException("Could not find appropriate table in expression");
-				if (found.Count > 1)
-					throw new LinqToDBException("Ambiguous tables in expression");
-
-				var (foundPath, foundGeneric) = found.First();
-
-				var insertedRef = new ContextRefExpression(outputType, insertedContext, "inserted");
-				var deletedRef  = new ContextRefExpression(outputType, deletedContext, "deleted");
-				var returnType  = typeof(UpdateOutput<>).MakeGenericType(outputType);
-
-				var insertedExpr = builder.RemapToNewPath(foundPath, foundGeneric, insertedRef);
-				var deletedExpr  = builder.RemapToNewPath(foundPath, foundGeneric, deletedRef);
+				var insertedExpr = new ContextRefExpression(outputType, insertedContext);
+				var deletedExpr  = new ContextRefExpression(outputType, deletedContext);
 
 				return
 					// new UpdateOutput<T> { Deleted = deleted, Inserted = inserted, }
@@ -751,13 +755,18 @@ namespace LinqToDB.Linq.Builder
 
 						var outputSelectQuery = DeletedContext.SelectQuery;
 
-						var insertedContext = InsertedContext;
-						var deletedContext  = DeletedContext;
+						var insertedDeletedRoot = QuerySequence;
+						if (TablePath != null)
+						{
+							insertedDeletedRoot = new SelectContext(Parent, TablePath, QuerySequence, QuerySequence.SelectQuery, false);
+						}
+
+						var insertedContext = new AnchorContext(Parent, insertedDeletedRoot, SqlAnchor.AnchorKindEnum.Inserted);
+						var deletedContext  = new AnchorContext(Parent, insertedDeletedRoot, SqlAnchor.AnchorKindEnum.Deleted);
 
 						var outputBody = OutputExpression == null
 							? BuildDefaultOutputExpression(Builder, TargetTable.ObjectType, QuerySequence, insertedContext, deletedContext)
-							: SequenceHelper.PrepareBody(OutputExpression, QuerySequence,
-								deletedContext, insertedContext);
+							: SequenceHelper.PrepareBody(OutputExpression, QuerySequence, deletedContext, insertedContext);
 
 						var selectContext     = new SelectContext(Parent, outputBody, insertedContext, false);
 						var outputRef         = new ContextRefExpression(path.Type, selectContext);

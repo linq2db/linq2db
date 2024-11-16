@@ -386,7 +386,6 @@ namespace LinqToDB.SqlProvider
 				{
 					item.Expression = QueryHelper.SimplifyColumnExpression(item.Expression);
 				});
-
 			}
 
 			return statement;

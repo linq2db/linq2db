@@ -16,13 +16,8 @@ namespace LinqToDB.Linq.Builder
 
 		public override Expression MakeExpression(Expression path, ProjectFlags flags)
 		{
-			if (SequenceHelper.IsSameContext(path, this) && flags.HasFlag(ProjectFlags.Root))
-			{
+			if (!flags.IsSqlOrExpression())
 				return path;
-			}
-
-			if (!flags.HasFlag(ProjectFlags.SQL))
-				return base.MakeExpression(path, flags);
 
 			var correctedPath = SequenceHelper.CorrectExpression(path, this, Sequence);
 
@@ -37,7 +32,10 @@ namespace LinqToDB.Linq.Builder
 				return e;
 			});
 
-			return converted;
+			var remapped = SequenceHelper.CorrectTrackingPath(Builder, converted, path);
+			remapped = SequenceHelper.ReplacePlaceholdersPathByTrackingPath(remapped);
+
+			return remapped;
 		}
 
 		public override IBuildContext Clone(CloningContext context)
