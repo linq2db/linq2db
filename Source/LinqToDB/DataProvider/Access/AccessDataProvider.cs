@@ -35,7 +35,6 @@ namespace LinqToDB.DataProvider.Access
 			SqlProviderFlags.IsSkipSupported                          = false;
 			SqlProviderFlags.IsInsertOrUpdateSupported                = false;
 			SqlProviderFlags.IsSubQuerySkipSupported                  = false;
-			SqlProviderFlags.IsSubQueryOrderBySupported               = false;
 			SqlProviderFlags.IsSupportsJoinWithoutCondition           = false;
 			SqlProviderFlags.TakeHintsSupported                       = TakeHints.Percent;
 			SqlProviderFlags.IsCrossJoinSupported                     = false;

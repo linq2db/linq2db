@@ -75,7 +75,7 @@ namespace LinqToDB.DataProvider.Oracle
 		protected SqlStatement ReplaceTakeSkipWithRowNum(SqlStatement statement, bool onlySubqueries)
 		{
 			return QueryHelper.WrapQuery(
-				(object?)null,
+				statement,
 				statement,
 				static (_, query, _) =>
 				{
@@ -94,8 +94,33 @@ namespace LinqToDB.DataProvider.Oracle
 
 					return 1;
 				},
-				static (_, queries) =>
+				static (statement, queries) =>
 				{
+					if (statement.SelectQuery == queries[^1])
+					{
+						// move orderby to root
+						for (var i = queries.Count - 1; i > 0; i--)
+						{
+							var innerQuery = queries[i];
+							var outerQuery = queries[i - 1];
+							foreach (var item in innerQuery.Select.OrderBy.Items)
+							{
+								foreach (var c in innerQuery.Select.Columns)
+								{
+									if (c.Expression.Equals(item.Expression))
+									{
+										outerQuery.OrderBy.Items.Add(new SqlOrderByItem(c, item.IsDescending, item.IsPositioned));
+										break;
+									}
+								}
+							}
+						}
+
+						// cleanup unnecessary intermediate copy to have ordering only on root query
+						for (var i = 1; i < queries.Count - 1; i++)
+							queries[i].OrderBy.Items.Clear();
+					}
+
 					var query = queries[queries.Count - 1];
 					var processingQuery = queries[queries.Count - 2];
 

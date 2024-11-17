@@ -1388,15 +1388,6 @@ namespace LinqToDB.SqlQuery
 					var subQueryTableSource = subQuery.From.Tables[i];
 					parentQuery.From.Tables.Insert(idx + 1, subQueryTableSource);
 				}
-
-				// Move joins to last table
-				//
-				if (tableSource.Joins.Count > 0)
-				{
-					var lastTableSource = subQuery.From.Tables[^1];
-					lastTableSource.Joins.InsertRange(0, tableSource.Joins);
-					tableSource.Joins.Clear();
-				}
 			}
 
 			ApplySubQueryExtensions(parentQuery, subQuery);

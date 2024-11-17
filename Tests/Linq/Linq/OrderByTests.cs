@@ -777,7 +777,7 @@ namespace Tests.Linq
 			using var db  = GetDataConnection(context);
 
 			var result = db.Person.AsQueryable().Where(x => x.FirstName.StartsWith("J"))
-				.OrderBy(x => x.ID)
+				.OrderByDescending(x => x.ID)
 				.Skip(1)
 				.Take(2)
 				.ToArray();
@@ -786,13 +786,20 @@ namespace Tests.Linq
 			Assert.Multiple(() =>
 			{
 				Assert.That(result[0].ID, Is.EqualTo(3));
-				Assert.That(result[1].ID, Is.EqualTo(4));
+				Assert.That(result[1].ID, Is.EqualTo(1));
 			});
 
 			var selects = db.LastQuery!.Split(["SELECT"], StringSplitOptions.None).Length - 1;
 
 			Assert.That(selects, Is.EqualTo(1).Or.EqualTo(2).Or.EqualTo(3));
-			Assert.That(selects, Is.EqualTo(db.LastQuery.Split(["ORDER BY"], StringSplitOptions.None).Length - 1));
+
+			var expectedOrders = selects switch
+			{
+				1 => 1,
+				_ => 2
+			};
+
+			Assert.That(expectedOrders, Is.EqualTo(db.LastQuery.Split(["ORDER BY"], StringSplitOptions.None).Length - 1));
 		}
 	}
 }
