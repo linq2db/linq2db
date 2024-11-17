@@ -1079,8 +1079,6 @@ namespace LinqToDB.SqlQuery
 			{
 				case VisitMode.ReadOnly:
 				{
-					Visit(element.InsertedTable);
-					Visit(element.DeletedTable);
 					Visit(element.OutputTable);
 
 					VisitElements(element.OutputColumns, VisitMode.ReadOnly);
@@ -1094,8 +1092,6 @@ namespace LinqToDB.SqlQuery
 				}
 				case VisitMode.Modify:
 				{
-					var insertedTable = (SqlTable?)Visit(element.InsertedTable);
-					var deletedTable  = (SqlTable?)Visit(element.DeletedTable);
 					var outputTable   = (SqlTable?)Visit(element.OutputTable);
 
 					VisitElements(element.OutputColumns, VisitMode.Modify);
@@ -1105,21 +1101,17 @@ namespace LinqToDB.SqlQuery
 						VisitElements(element.OutputItems, VisitMode.Modify);
 					}
 
-					element.Modify(insertedTable, deletedTable, outputTable);
+					element.Modify(outputTable);
 
 					break;
 				}
 				case VisitMode.Transform:
 				{
-					var insertedTable = (SqlTable?)Visit(element.InsertedTable);
-					var deletedTable  = (SqlTable?)Visit(element.DeletedTable);
 					var outputTable   = (SqlTable?)Visit(element.OutputTable);
 					var outputColumns = VisitElements(element.OutputColumns, VisitMode.Transform);
 					var outputItems   = element.HasOutputItems ? VisitElements(element.OutputItems, VisitMode.Transform) : null;
 
 					if (ShouldReplace(element)                                 ||
-					    !ReferenceEquals(element.InsertedTable, insertedTable) ||
-					    !ReferenceEquals(element.DeletedTable, deletedTable)   ||
 					    !ReferenceEquals(element.OutputTable, outputTable)     ||
 					    element.OutputColumns != outputColumns                 ||
 					    (element.HasOutputItems && element.OutputItems != outputItems)
@@ -1127,8 +1119,6 @@ namespace LinqToDB.SqlQuery
 					{
 						var newElement = NotifyReplaced(new SqlOutputClause()
 						{
-							InsertedTable = insertedTable,
-							DeletedTable  = deletedTable,
 							OutputTable   = outputTable,
 							OutputColumns = element.OutputColumns != outputColumns ? outputColumns : outputColumns?.ToList(),
 							OutputItems   = element.HasOutputItems ? (element.OutputItems != outputItems!

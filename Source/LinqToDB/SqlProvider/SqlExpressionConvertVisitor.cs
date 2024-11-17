@@ -86,8 +86,6 @@ namespace LinqToDB.SqlProvider
 				{
 					return new SqlOutputClause()
 					{
-						DeletedTable = result.DeletedTable, 
-						InsertedTable = result.InsertedTable,
 						OutputTable = result.OutputTable,
 						OutputItems = result.OutputItems,
 						OutputColumns = newElements

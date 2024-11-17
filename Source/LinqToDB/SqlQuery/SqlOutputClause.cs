@@ -7,8 +7,6 @@ namespace LinqToDB.SqlQuery
 	{
 		List<SqlSetExpression>? _outputItems;
 
-		public SqlTable?             InsertedTable { get; set; }
-		public SqlTable?             DeletedTable  { get; set; }
 		public SqlTable?             OutputTable   { get; set; }
 		public List<ISqlExpression>? OutputColumns { get; set; }
 
@@ -20,10 +18,8 @@ namespace LinqToDB.SqlQuery
 			set => _outputItems = value;
 		}
 
-		public void Modify(SqlTable? insertedTable, SqlTable? deletedTable, SqlTable? outputTable)
+		public void Modify(SqlTable? outputTable)
 		{
-			InsertedTable = insertedTable;
-			DeletedTable  = deletedTable;
 			OutputTable   = outputTable;
 		}
 

@@ -250,12 +250,9 @@ namespace LinqToDB.Linq.Builder
 			if (updateContext.TargetTable == null)
 				throw new InvalidOperationException();
 
-			var (deletedContext, insertedContext, deletedTable, insertedTable) = CreateDeletedInsertedContexts(builder, updateContext.TargetTable, out _);
+			var (deletedContext, insertedContext) = CreateDeletedInsertedContexts(builder, updateContext.TargetTable, out _);
 
 			updateStatement.Output = new SqlOutputClause();
-
-			updateStatement.Output.DeletedTable  = deletedTable;
-			updateStatement.Output.InsertedTable = insertedTable;
 
 			if (updateType == UpdateTypeEnum.UpdateOutput)
 			{
@@ -344,7 +341,7 @@ namespace LinqToDB.Linq.Builder
 			return result;
 		}
 
-		public static (IBuildContext deleted, IBuildContext inserted, SqlTable deletedTable, SqlTable insertedTable) CreateDeletedInsertedContexts(ExpressionBuilder builder, ITableContext targetTableContext, out IBuildContext outputContext)
+		public static (IBuildContext deleted, IBuildContext inserted) CreateDeletedInsertedContexts(ExpressionBuilder builder, ITableContext targetTableContext, out IBuildContext outputContext)
 		{
 			// create separate query for output
 			var outputSelectQuery = new SelectQuery();
@@ -368,16 +365,10 @@ namespace LinqToDB.Linq.Builder
 
 			outputSelectQuery.From.Tables.Clear();
 
-			var deletedTable = ((ITableContext)deletedContext).SqlTable;
-			var insertedTable = ((ITableContext)insertedContext).SqlTable;
+			insertedContext = new AnchorContext(null, insertedContext, SqlAnchor.AnchorKindEnum.Inserted);
+			deletedContext  = new AnchorContext(null, deletedContext, SqlAnchor.AnchorKindEnum.Deleted);
 
-			if (builder.DataContext.SqlProviderFlags.OutputUpdateUseSpecialTables)
-			{
-				insertedContext = new AnchorContext(null, insertedContext, SqlAnchor.AnchorKindEnum.Inserted);
-				deletedContext  = new AnchorContext(null, deletedContext, SqlAnchor.AnchorKindEnum.Deleted);
-			}
-
-			return (deletedContext, insertedContext, deletedTable, insertedTable);
+			return (deletedContext, insertedContext);
 		}
 
 		public enum UpdateTypeEnum

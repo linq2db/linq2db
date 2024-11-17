@@ -900,12 +900,6 @@ namespace LinqToDB.SqlProvider
 				AppendIndent()
 					.AppendLine(OutputKeyword);
 
-				if (output.InsertedTable?.SqlTableType == SqlTableType.SystemTable)
-					output.InsertedTable.TableName = output.InsertedTable.TableName with { Name = InsertedOutputTable };
-
-				if (output.DeletedTable?.SqlTableType == SqlTableType.SystemTable)
-					output.DeletedTable.TableName  = output.DeletedTable.TableName  with { Name = DeletedOutputTable  };
-
 				++Indent;
 
 				var first = true;

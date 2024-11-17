@@ -76,8 +76,6 @@ namespace LinqToDB.Linq.Builder
 					deletedContext = new AnchorContext(null,
 						new TableBuilder.TableContext(builder, sequence.MappingSchema, outputSelectQuery, deletedTable, false),
 						SqlAnchor.AnchorKindEnum.Deleted);
-
-					deleteStatement.Output.DeletedTable = deletedTable;
 				}
 
 				if (deleteType == DeleteContext.DeleteTypeEnum.DeleteOutputInto)

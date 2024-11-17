@@ -55,13 +55,9 @@ namespace LinqToDB.Linq.Builder
 			{
 				var actionField   = SqlField.FakeField(new DbDataType(typeof(string)), PseudoFunctions.MERGE_ACTION, false);
 
-				var (deletedContext, insertedContext, deletedTable, insertedTable) = UpdateBuilder.CreateDeletedInsertedContexts(builder, mergeContext.TargetContext, out var outputContext);
+				var (deletedContext, insertedContext) = UpdateBuilder.CreateDeletedInsertedContexts(builder, mergeContext.TargetContext, out var outputContext);
 
-				mergeContext.Merge.Output = new SqlOutputClause()
-				{
-					InsertedTable = insertedTable,
-					DeletedTable  = deletedTable,
-				};
+				mergeContext.Merge.Output = new SqlOutputClause();
 
 				mergeContext.OutputContext = outputContext;
 

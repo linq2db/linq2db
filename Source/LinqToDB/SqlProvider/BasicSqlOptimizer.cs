@@ -619,41 +619,52 @@ namespace LinqToDB.SqlProvider
 
 		protected virtual void CorrectOutputTables(SqlStatement statement)
 		{
+			SqlOutputClause CorrectOuputClause(SqlOutputClause output, SqlTable? originalTable)
+			{
+				var result = output.Convert(1, (_, e) =>
+				{
+					if (e is SqlAnchor anchor)
+					{
+						if (anchor.AnchorKind    == SqlAnchor.AnchorKindEnum.Inserted && (!SqlProviderFlags.OutputInsertUseSpecialTable || !SqlProviderFlags.OutputUpdateUseSpecialTables)
+						    || anchor.AnchorKind == SqlAnchor.AnchorKindEnum.Deleted  && (!SqlProviderFlags.OutputDeleteUseSpecialTable || !SqlProviderFlags.OutputUpdateUseSpecialTables)
+						   )
+						{
+							var resultExpression = anchor.SqlExpression;
+
+							if (anchor is { AnchorKind: SqlAnchor.AnchorKindEnum.Inserted })
+							{
+								if (QueryHelper.GetUnderlyingField(anchor.SqlExpression) is { } field)
+								{
+									resultExpression = field;
+									if (field.Table != originalTable)
+									{
+										var newField = originalTable?.Fields.FirstOrDefault(f => f.PhysicalName == field.PhysicalName);
+										if (newField != null)
+										{
+											resultExpression = newField;
+										}
+									}
+								}
+							}
+
+							return resultExpression;
+						}
+					}
+
+					return e;
+				});
+				return result;
+			}
+
 			if (!SqlProviderFlags.OutputDeleteUseSpecialTable || !SqlProviderFlags.OutputUpdateUseSpecialTables || !SqlProviderFlags.OutputInsertUseSpecialTable) 
 			{
 				if (statement is SqlUpdateStatement { Output.HasOutput: true } updateStatement)
 				{
-					updateStatement.Output = updateStatement.Output.Convert(1, (_, e) =>
-					{
-						if (e is SqlAnchor anchor)
-						{
-							if (anchor.AnchorKind    == SqlAnchor.AnchorKindEnum.Inserted && (!SqlProviderFlags.OutputInsertUseSpecialTable || !SqlProviderFlags.OutputUpdateUseSpecialTables)
-							    || anchor.AnchorKind == SqlAnchor.AnchorKindEnum.Deleted  && (!SqlProviderFlags.OutputDeleteUseSpecialTable || !SqlProviderFlags.OutputUpdateUseSpecialTables)
-							   )
-							{
-								var resultExpression = anchor.SqlExpression;
-								
-								if (anchor is { AnchorKind: SqlAnchor.AnchorKindEnum.Inserted })
-								{
-									if (QueryHelper.GetUnderlyingField(anchor.SqlExpression) is { } field)
-									{
-										resultExpression = field;
-										if (field.Table != updateStatement.Update.Table)
-										{
-											var newField = updateStatement.Update.Table?.Fields.FirstOrDefault(f => f.PhysicalName == field.PhysicalName);
-											if (newField != null)
-											{
-												resultExpression = newField;
-											}
-										}
-									}
-								}
-								return resultExpression;
-							}
-						}
-
-						return e;
-					});
+					updateStatement.Output = CorrectOuputClause(updateStatement.Output, updateStatement.Update.Table);
+				}
+				else if (statement is SqlInsertStatement { Output.HasOutput: true } insertStatement)
+				{
+					insertStatement.Output = CorrectOuputClause(insertStatement.Output, null);
 				}
 			}
 		}
