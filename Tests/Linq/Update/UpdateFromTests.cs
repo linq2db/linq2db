@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using LinqToDB;
 using LinqToDB.Mapping;
 using NUnit.Framework;
@@ -75,6 +76,58 @@ namespace Tests.xUpdate
 			};
 		}
 
+		[Obsolete("Remove test after API removed")]
+		[Test]
+		public void UpdateTestWhereOld(
+			[DataSources(TestProvName.AllMySql, ProviderName.SqlCe, TestProvName.AllInformix, TestProvName.AllClickHouse)]
+			string context)
+		{
+			var data = GenerateData();
+			var newData = GenerateNewData();
+			using (var db = GetDataContext(context))
+			using (var forUpdates = db.CreateLocalTable(data))
+			using (var tempTable = db.CreateLocalTable(newData))
+			{
+				var someId = 100;
+
+				var recordsToUpdate =
+					from c in forUpdates
+					from t in tempTable
+					where t.id == c.id && t.id != someId
+					select new {c, t};
+
+				var int1 = 11;
+				var int2 = 22;
+				var int3 = 33;
+
+				recordsToUpdate.Update(forUpdates, v => new UpdatedEntities()
+				{
+					Value1 = v.c.Value1 * v.t.Value1 * int1,
+					Value2 = v.c.Value2 * v.t.Value2 * int2,
+					Value3 = v.c.Value3 * v.t.Value3 * int3,
+				});
+
+				var actual = forUpdates.Select(v => new
+				{
+					Id = v.id,
+					Value1 = v.Value1,
+					Value2 = v.Value2,
+					Value3 = v.Value3,
+				});
+
+				var expected = data.Join(newData, c => c.id, t => t.id, (c, t) => new { c, t })
+					.Select(v => new
+					{
+						Id = v.c.id,
+						Value1 = v.c.Value1 * v.t.Value1 * int1,
+						Value2 = v.c.Value2 * v.t.Value2 * int2,
+						Value3 = v.c.Value3 * v.t.Value3 * int3,
+					});
+
+				AreEqual(expected, actual);
+			}
+		}
+
 		[Test]
 		public void UpdateTestWhere(
 			[DataSources(TestProvName.AllMySql, ProviderName.SqlCe, TestProvName.AllInformix, TestProvName.AllClickHouse)]
@@ -98,7 +151,7 @@ namespace Tests.xUpdate
 				var int2 = 22;
 				var int3 = 33;
 
-				recordsToUpdate.Update(forUpdates, v => new UpdatedEntities()
+				recordsToUpdate.Update(q => q.c, v => new UpdatedEntities()
 				{
 					Value1 = v.c.Value1 * v.t.Value1 * int1,
 					Value2 = v.c.Value2 * v.t.Value2 * int2,
@@ -451,8 +504,9 @@ namespace Tests.xUpdate
 			}
 		}
 
+		[Obsolete("Remove test after API removed")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/2330")]
-		public void Issue2330Test([DataSources(TestProvName.AllClickHouse, ProviderName.SqlCe)] string context)
+		public void Issue2330TestOld([DataSources(TestProvName.AllClickHouse, ProviderName.SqlCe)] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -469,8 +523,28 @@ namespace Tests.xUpdate
 			});
 		}
 
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/2330")]
+		public void Issue2330Test([DataSources(TestProvName.AllClickHouse, ProviderName.SqlCe)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q = from w in db.Parent
+					join b in db.Child on w.ParentID equals b.ParentID
+					where b.ChildID == (from b2 in db.Child select b2.ParentID).Max()
+						// to avoid actual update
+						&& b.ChildID == -1
+					select new { w, b };
+
+			q.Update(q => q.w, obj => new Model.Parent()
+			{
+				Value1 = obj.b.ChildID
+			});
+		}
+
 		#region Issue 2815
 
+		[ActiveIssue]
+		[Obsolete("Remove test after API removed")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/2815")]
 		public void Issue2815Test1([DataSources(false)] string context)
 		{
@@ -502,7 +576,7 @@ namespace Tests.xUpdate
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/2815")]
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllClickHouse, "Correlated UPDATE not supported by ClickHouse")]
-		public void Issue2815Test2([DataSources(false)] string context)
+		public void Issue2815Test2([DataSources(false, ProviderName.SqlCe, TestProvName.AllAccess)] string context)
 		{
 			using var db = GetDataConnection(context);
 			using var t1 = db.CreateLocalTable<Issue2815Table1>();

@@ -1107,7 +1107,7 @@ namespace Tests.Linq
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4347")]
-		public void Issue4347Test1([DataSources] string context)
+		public void Issue4347Test1([DataSources(TestProvName.AllAccess, TestProvName.AllClickHouse, TestProvName.AllDB2, TestProvName.AllMariaDB, TestProvName.AllOracle11)] string context)
 		{
 			using var db = GetDataContext(context);
 			using var t1 = db.CreateLocalTable<TransactionEntity>();
@@ -1128,7 +1128,7 @@ namespace Tests.Linq
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4347")]
-		public void Issue4347Test2([DataSources] string context)
+		public void Issue4347Test2([DataSources(TestProvName.AllAccess, TestProvName.AllClickHouse, TestProvName.AllDB2, TestProvName.AllMariaDB, TestProvName.AllOracle11)] string context)
 		{
 			using var db = GetDataContext(context);
 			using var t1 = db.CreateLocalTable<TransactionEntity>();

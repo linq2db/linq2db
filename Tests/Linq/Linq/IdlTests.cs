@@ -546,6 +546,20 @@ namespace Tests.Linq
 			}
 		}
 
+		[Obsolete("Remove test after API removed")]
+		[Test]
+		public void TestUpdateWithTargetByAssociationPropertyOld([IdlProviders(TestProvName.AllClickHouse)] string context)
+		{
+			TestUpdateByAssociationPropertyOld(context, true);
+		}
+
+		[Obsolete("Remove test after API removed")]
+		[Test]
+		public void TestSetUpdateWithoutTargetByAssociationPropertyOld([IdlProviders(TestProvName.AllClickHouse)] string context)
+		{
+			TestUpdateByAssociationPropertyOld(context, false);
+		}
+
 		[Test]
 		public void TestUpdateWithTargetByAssociationProperty([IdlProviders(TestProvName.AllClickHouse)] string context)
 		{
@@ -556,6 +570,42 @@ namespace Tests.Linq
 		public void TestSetUpdateWithoutTargetByAssociationProperty([IdlProviders(TestProvName.AllClickHouse)] string context)
 		{
 			TestUpdateByAssociationProperty(context, false);
+		}
+
+		[Obsolete("Remove test after API removed")]
+		private void TestUpdateByAssociationPropertyOld(string context, bool useUpdateWithTarget)
+		{
+			using (var db = GetDataConnection(context))
+			{
+				const int childId = 10000;
+				const int parentId = 20000;
+
+				try
+				{
+					db.Parent.Insert(() => new Parent { ParentID = parentId });
+					db.Child.Insert(() => new Child { ChildID = childId, ParentID = parentId });
+
+					var parents = from child in db.Child
+								  where child.ChildID == childId
+								  select child.Parent;
+
+					if (useUpdateWithTarget)
+					{
+						// this failed for MySql and SQLite but works with MS SQL
+						Assert.DoesNotThrow(() => parents.Update(db.Parent, x => new Parent { Value1 = 5 }));
+					}
+					else
+					{
+						// this works with MySql but failed for SQLite and MS SQL
+						Assert.DoesNotThrow(() => parents.Set(x => x.Value1, 5).Update());
+					}
+				}
+				finally
+				{
+					db.Child.Delete(x => x.ChildID == childId);
+					db.Parent.Delete(x => x.ParentID == parentId);
+				}
+			}
 		}
 
 		private void TestUpdateByAssociationProperty(string context, bool useUpdateWithTarget)
@@ -577,7 +627,7 @@ namespace Tests.Linq
 					if (useUpdateWithTarget)
 					{
 						// this failed for MySql and SQLite but works with MS SQL
-						Assert.DoesNotThrow(() => parents.Update(db.Parent, x => new Parent { Value1 = 5 }));
+						Assert.DoesNotThrow(() => parents.Update(q => q, x => new Parent { Value1 = 5 }));
 					}
 					else
 					{

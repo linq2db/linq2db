@@ -498,9 +498,9 @@ namespace Tests.Extensions
 			Assert.That(LastQuery, Contains.Substring("INSERT /*+ FULL(c_1) ALL_ROWS FIRST_ROWS(10) */ INTO "));
 		}
 
+		[Obsolete("Remove test after API removed")]
 		[Test]
-
-		public void UpdateTest([IncludeDataSources(true, TestProvName.AllOracle)] string context)
+		public void UpdateTestOld([IncludeDataSources(true, TestProvName.AllOracle)] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -512,6 +512,26 @@ namespace Tests.Extensions
 			.QueryHint(OracleHints.Hint.AllRows)
 			.QueryHint(OracleHints.Hint.FirstRows(10))
 			.Update(db.Child, c => new()
+			{
+				ChildID = c.ChildID * 2
+			});
+
+			Assert.That(LastQuery, Contains.Substring("UPDATE /*+ ALL_ROWS FIRST_ROWS(10) */"));
+		}
+
+		[Test]
+		public void UpdateTest([IncludeDataSources(true, TestProvName.AllOracle)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			(
+				from c in db.Child//.TableHint(Hints.TableHint.Full)
+				where c.ParentID < -1111
+				select c
+			)
+			.QueryHint(OracleHints.Hint.AllRows)
+			.QueryHint(OracleHints.Hint.FirstRows(10))
+			.Update(q => q, c => new()
 			{
 				ChildID = c.ChildID * 2
 			});
