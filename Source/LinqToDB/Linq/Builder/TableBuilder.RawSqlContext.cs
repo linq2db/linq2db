@@ -100,7 +100,7 @@ namespace LinqToDB.Linq.Builder
 
 					for (var i = 0; i < array.Length; i++)
 					{
-						Expression expr = Expression.Constant(array[i], typeof(object));
+						Expression expr = Expression.Constant(array[i], array[i]?.GetType() ?? typeof(object));
 						args[i] = expr;
 					}
 
