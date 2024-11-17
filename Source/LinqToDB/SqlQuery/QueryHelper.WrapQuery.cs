@@ -85,6 +85,28 @@ namespace LinqToDB.SqlQuery
 				// Idea that this will stop Replacer to modify newRootQuery
 				NotifyReplaced(newRootQuery, newRootQuery);
 
+				// preserve ordering
+				for (var i = queries.Count - 1; i > 0; i--)
+				{
+					var innerQuery = queries[i];
+					var outerQuery = queries[i - 1];
+					foreach (var item in innerQuery.Select.OrderBy.Items)
+					{
+						foreach (var c in innerQuery.Select.Columns)
+						{
+							if (c.Expression.Equals(item.Expression))
+							{
+								outerQuery.OrderBy.Items.Add(new SqlOrderByItem(c, item.IsDescending, item.IsPositioned));
+								break;
+							}
+						}
+					}
+				}
+
+				// cleanup unnecessary intermediate copy to have ordering only on root query
+				for (var i = 1; i < queries.Count - 1; i++)
+					queries[i].OrderBy.Items.Clear();
+
 				OnWrap(Context, queries);
 
 				return newRootQuery;
