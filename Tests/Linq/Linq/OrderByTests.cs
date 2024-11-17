@@ -795,7 +795,7 @@ namespace Tests.Linq
 
 			var expectedOrders = selects switch
 			{
-				1 => 1
+				1 => 1,
 				_ => 2
 			};
 
