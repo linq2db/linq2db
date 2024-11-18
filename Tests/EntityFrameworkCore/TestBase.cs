@@ -155,6 +155,20 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 			});
 		}
 
+		// use TFM-specific suffix to avoid database conflicts on parallel runs
+#if NETFRAMEWORK
+		private const string DB_SUFFIX = "ef31";
+#elif NET6_0
+		private const string DB_SUFFIX = "ef6";
+#elif NET8_0
+		private const string DB_SUFFIX = "ef8";
+#elif NET9_0
+		private const string DB_SUFFIX = "ef9";
+#else
+#error Unknown framework
+#endif
+
+
 		protected virtual string GetConnectionString(string provider)
 		{
 			var efProvider = provider + ".EF";
@@ -172,14 +186,14 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 					case var _ when provider.IsAnyOf(TestProvName.AllSqlServer):
 					{
 						var cnb = new Microsoft.Data.SqlClient.SqlConnectionStringBuilder(connectionString);
-						cnb.InitialCatalog += ".ef";
+						cnb.InitialCatalog += $".{DB_SUFFIX}";
 						connectionString = cnb.ConnectionString;
 						break;
 					}
 					case var _ when provider.IsAnyOf(TestProvName.AllPostgreSQL):
 					{
 						var cnb = new Npgsql.NpgsqlConnectionStringBuilder(connectionString);
-						cnb.Database += "_ef";
+						cnb.Database += $"_{DB_SUFFIX}";
 						connectionString = cnb.ConnectionString;
 						break;
 					}
@@ -187,7 +201,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 					case var _ when provider.IsAnyOf(TestProvName.AllMySql):
 					{
 						var cnb = new MySqlConnectionStringBuilder(connectionString);
-						cnb.Database += "_ef";
+						cnb.Database += $"_{DB_SUFFIX}";
 						cnb.PersistSecurityInfo = true;
 						connectionString = cnb.ConnectionString;
 						break;
@@ -196,7 +210,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 					case var _ when provider.IsAnyOf(TestProvName.AllSQLite):
 					{
 						var cnb = new Microsoft.Data.Sqlite.SqliteConnectionStringBuilder(connectionString);
-						cnb.DataSource = $"sqlite.{provider}.ef.db";
+						cnb.DataSource = $"sqlite.{provider}.{DB_SUFFIX}.db";
 						connectionString = cnb.ConnectionString;
 						break;
 					}

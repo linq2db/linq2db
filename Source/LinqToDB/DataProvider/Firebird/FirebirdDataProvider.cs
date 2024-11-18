@@ -32,6 +32,7 @@ namespace LinqToDB.DataProvider.Firebird
 			SqlProviderFlags.IsDistinctSetOperationsSupported  = false;
 			SqlProviderFlags.IsUpdateFromSupported             = false;
 			SqlProviderFlags.OutputUpdateUseSpecialTables      = true;
+			SqlProviderFlags.OutputMergeUseSpecialTables       = true;
 			SqlProviderFlags.IsExistsPreferableForContains     = true;
 			SqlProviderFlags.IsWindowFunctionsSupported        = Version >= FirebirdVersion.v3;
 			SqlProviderFlags.IsApplyJoinSupported              = Version >= FirebirdVersion.v4;

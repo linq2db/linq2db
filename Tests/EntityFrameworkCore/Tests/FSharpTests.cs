@@ -66,7 +66,8 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 			});
 		}
 
-		[Test(Description = "https://github.com/linq2db/linq2db.EntityFrameworkCore/issues/260")]
+		[ActiveIssue]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4646")]
 		public void Issue4646TestEF([EFDataSources] string provider)
 		{
 			using var ctx = CreateContext(provider);

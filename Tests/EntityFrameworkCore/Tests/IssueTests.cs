@@ -207,6 +207,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 
 			var p = result.FirstOrDefault(r => r.Id == 1);
 			Assert.That(p, Is.Not.Null);
+			Assert.That(p.Children, Is.Not.Null);
 			Assert.That(p.Children, Has.Count.EqualTo(1));
 			var c = p.Children.FirstOrDefault(r => r.Id == 11);
 			Assert.That(c, Is.Not.Null);
@@ -216,6 +217,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 
 			p = result.FirstOrDefault(r => r.Id == 2);
 			Assert.That(p, Is.Not.Null);
+			Assert.That(p.Children, Is.Not.Null);
 			Assert.That(p.Children, Has.Count.EqualTo(1));
 			c = p.Children.FirstOrDefault(r => r.Id == 12);
 			Assert.That(c, Is.Not.Null);
