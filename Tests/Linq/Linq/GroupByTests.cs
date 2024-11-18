@@ -1850,38 +1850,38 @@ namespace Tests.Linq
 						};
 
 			// aggregates (except count) return null on empty set
-			var result = query.AsSubQuery().Where(r => r.Min != 0).ToArray();
+			var result = query.AsSubQuery().Where(r => r.Min != 0).Count();
 			Assert.Multiple(() =>
 			{
-				Assert.That(result, Has.Length.EqualTo(1));
+				Assert.That(result, Is.EqualTo(1));
 				Assert.That(db.LastQuery, Contains.Substring("IS NULL"));
 			});
 
-			result = query.AsSubQuery().Where(r => r.Max != 0).ToArray();
+			result = query.AsSubQuery().Where(r => r.Max != 0).Count();
 			Assert.Multiple(() =>
 			{
-				Assert.That(result, Has.Length.EqualTo(1));
+				Assert.That(result, Is.EqualTo(1));
 				Assert.That(db.LastQuery, Contains.Substring("IS NULL"));
 			});
 
-			result = query.AsSubQuery().Where(r => r.Avg != 0).ToArray();
+			result = query.AsSubQuery().Where(r => r.Avg != 0).Count();
 			Assert.Multiple(() =>
 			{
-				Assert.That(result, Has.Length.EqualTo(1));
+				Assert.That(result, Is.EqualTo(1));
 				Assert.That(db.LastQuery, Contains.Substring("IS NULL"));
 			});
 
-			result = query.AsSubQuery().Where(r => r.Sum != 0).ToArray();
+			result = query.AsSubQuery().Where(r => r.Sum != 0).Count();
 			Assert.Multiple(() =>
 			{
-				Assert.That(result, Has.Length.EqualTo(1));
+				Assert.That(result, Is.EqualTo(1));
 				Assert.That(db.LastQuery, Contains.Substring("IS NULL"));
 			});
 
-			result = query.AsSubQuery().Where(r => r.Count != 0).ToArray();
+			result = query.AsSubQuery().Where(r => r.Count != 0).Count();
 			Assert.Multiple(() =>
 			{
-				Assert.That(result, Has.Length.EqualTo(0));
+				Assert.That(result, Is.EqualTo(0));
 				Assert.That(db.LastQuery, Does.Not.Contains("IS NULL"));
 			});
 		}

@@ -503,6 +503,10 @@ namespace LinqToDB.Linq.Builder
 					}
 				}
 
+				/* notes on aggregate nullability:
+				 * in SQL aggregates are nullable on empty set (query without groupby) or when aggregated expression is nullable
+				 *    exception: COUNT aggregate
+				 */
 				bool? canBeNull = null;
 
 				switch (aggregationType)
@@ -590,8 +594,8 @@ namespace LinqToDB.Linq.Builder
 						break;
 					}
 					case AggregationType.Custom:
-					{						
-						return BuildSequenceResult.Error(methodCall);						
+					{
+						return BuildSequenceResult.Error(methodCall);
 					}
 					
 				}
@@ -648,13 +652,14 @@ namespace LinqToDB.Linq.Builder
 				return maybeNull.Value;
 			}
 
-			Expression GenerateNullCheckIfNeeded(Expression expression, SelectQuery currentQuery)
+			Expression GenerateNullCheckIfNeeded(Expression expression)
 			{
+				// in LINQ Min, Max, Avg aggregates throw exception on empty set(so Sum and Count are exceptions which return 0)
 				if (
-					_aggregationType != AggregationType.Sum 
-					&& _aggregationType != AggregationType.Count 
-					&& !expression.Type.IsNullableType() 
-					&& !Placeholder.Sql.CanBeNullable(NullabilityContext.GetContext(currentQuery)))
+					_aggregationType != AggregationType.Sum
+					&& _aggregationType != AggregationType.Count
+					&& !expression.Type.IsNullableType()
+					)
 				{
 					var checkExpression = expression;
 
@@ -677,7 +682,7 @@ namespace LinqToDB.Linq.Builder
 
 			public override void SetRunQuery<T>(Query<T> query, Expression expr)
 			{
-				expr = GenerateNullCheckIfNeeded(expr, SelectQuery);
+				expr = GenerateNullCheckIfNeeded(expr);
 
 				var mapper = Builder.BuildMapper<object>(SelectQuery, expr);
 
@@ -717,7 +722,7 @@ namespace LinqToDB.Linq.Builder
 				var result = (Expression)Placeholder;
 
 				if (flags.IsExpression())
-					result = GenerateNullCheckIfNeeded(result, OuterJoinParentQuery ?? SelectQuery);
+					result = GenerateNullCheckIfNeeded(result);
 
 				return result;
 			}
