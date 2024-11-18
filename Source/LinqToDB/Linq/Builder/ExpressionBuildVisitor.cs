@@ -514,6 +514,9 @@ namespace LinqToDB.Linq.Builder
 			if (_buildFlags.HasFlag(BuildFlags.ForMemberRoot))
 				flags |= ProjectFlags.MemberRoot;
 
+			if (_buildFlags.HasFlag(BuildFlags.ForSetProjection))
+				flags |= ProjectFlags.ForSetProjection;
+
 			return flags;
 		}
 

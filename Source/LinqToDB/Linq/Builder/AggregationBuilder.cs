@@ -721,7 +721,8 @@ namespace LinqToDB.Linq.Builder
 
 				var result = (Expression)Placeholder;
 
-				if (flags.IsExpression())
+				// We do not need this check for UNION/UNION ALL queries
+				if (flags.IsExpression() && !flags.IsForSetProjection())
 					result = GenerateNullCheckIfNeeded(result);
 
 				return result;

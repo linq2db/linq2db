@@ -110,5 +110,12 @@ namespace LinqToDB.Linq.Builder
 			return (flags & ProjectFlags.MemberRoot) != 0;
 		}
 
+		[DebuggerStepThrough]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static bool IsForSetProjection(this ProjectFlags flags)
+		{
+			return (flags & ProjectFlags.ForSetProjection) != 0;
+		}
+
 	}
 }

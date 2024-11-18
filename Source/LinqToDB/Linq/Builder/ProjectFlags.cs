@@ -43,6 +43,7 @@ namespace LinqToDB.Linq.Builder
 
 		Expand = 1 << 13,
 
-		MemberRoot = 1 << 14
+		MemberRoot = 1 << 14,
+		ForSetProjection = 1 << 15,
 	}
 }
