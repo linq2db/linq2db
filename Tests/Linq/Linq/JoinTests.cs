@@ -3188,8 +3188,7 @@ namespace Tests.Linq
 			//Assert.That(query.GetSelectQuery().Select.Columns.Count, Is.EqualTo(1));
 		}
 
-		// fails for DBs without outer apply
-		[ActiveIssue(Configurations = [TestProvName.AllAccess, ProviderName.Firebird25, TestProvName.AllSybase, TestProvName.AllMySql57, TestProvName.AllSybase])]
+		[ThrowsForProvider(typeof(LinqException), [TestProvName.AllAccess, ProviderName.Firebird25, TestProvName.AllSybase, TestProvName.AllMySql57], ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
 		[Test]
 		public void Issue4160Test2([DataSources] string context)
 		{
