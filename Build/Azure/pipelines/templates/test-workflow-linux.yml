@@ -95,7 +95,8 @@ steps:
   inputs:
     packageType: sdk
     version: 8.x
-  condition: and(variables.title, eq(variables.net80, 'true'), succeeded())
+  #condition: and(variables.title, eq(variables.net80, 'true'), succeeded())
+  condition: and(variables.title, eq(variables.net80, 'true'))
 
 - task: CmdLine@2
   inputs:
@@ -123,13 +124,15 @@ steps:
   inputs:
     packageType: sdk
     version: 9.x
-  condition: and(variables.title, eq(variables.net90, 'true'), succeeded())
+  #condition: and(variables.title, eq(variables.net90, 'true'), succeeded())
+  condition: and(variables.title, eq(variables.net90, 'true'))
 
 - task: CmdLine@2
   inputs:
     script: '$(System.DefaultWorkingDirectory)/scripts/$(script_local)'
     workingDirectory: '$(System.DefaultWorkingDirectory)/net9.0/main/x64'
-  condition: and(variables.title, variables.script_local, eq(variables.net90, 'true'), succeeded())
+  #condition: and(variables.title, variables.script_local, eq(variables.net90, 'true'), succeeded())
+  condition: and(variables.title, variables.script_local, eq(variables.net90, 'true'))
   displayName: Setup .NET 9 tests
 
 - script: dotnet test ./net9.0/main/x64/linq2db.Tests.dll --filter "TestCategory != SkipCI" -f net90 -l trx $(extra) --blame-hang-timeout 5m
