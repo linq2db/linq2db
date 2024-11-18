@@ -656,11 +656,10 @@ namespace LinqToDB.SqlProvider
 				return result;
 			}
 
-			// currently DeleteBuilder don't use Anchor if OutputDeleteUseSpecialTable is not set
-			//if (!SqlProviderFlags.OutputDeleteUseSpecialTable && statement is SqlDeleteStatement { Output.HasOutput: true } deleteStatement)
-			//{
-			//	deleteStatement.Output = CorrectOutputClause(deleteStatement.Output, deleteStatement.Table);
-			//}
+			if (!SqlProviderFlags.OutputDeleteUseSpecialTable && statement is SqlDeleteStatement { Output.HasOutput: true } deleteStatement)
+			{
+				deleteStatement.Output = CorrectOutputClause(deleteStatement.Output, deleteStatement.Table);
+			}
 
 			if (!SqlProviderFlags.OutputUpdateUseSpecialTables && statement is SqlUpdateStatement { Output.HasOutput: true } updateStatement)
 			{
