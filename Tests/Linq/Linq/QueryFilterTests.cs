@@ -341,35 +341,40 @@ namespace Tests.Linq
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4508")]
 		public void Issue4508Test([DataSources] string context)
 		{
-			var builder = new FluentMappingBuilder(new MappingSchema());
+			Test(context);
+			Test(context);
 
-			var id = 0;
+			void Test(string context)
+			{
+				var builder = new FluentMappingBuilder(new MappingSchema());
 
-			builder
-				.Entity<Person>()
-				.HasQueryFilter((q, ctx) =>
-				{
-					var idCopy = id++;
-					return q.Where(p => p.ID > idCopy);
-				});
+				var id = 0;
 
-			builder.Build();
+				builder
+					.Entity<Person>()
+					.HasQueryFilter((q, ctx) =>
+					{
+						var idCopy = id++;
+						return q.Where(p => p.ID > idCopy);
+					});
 
-			using var db = GetDataContext(context, builder.MappingSchema);
+				builder.Build();
+				using var db = GetDataContext(context, builder.MappingSchema);
 
-			var query = db.Person;
+				var query = db.Person;
 
-			var arr1 = query.ToArray();
-			var arr2 = query.ToArray();
+				var arr1 = query.ToArray();
+				var arr2 = query.ToArray();
 
-			Assert.That(arr1, Has.Length.EqualTo(arr2.Length + 2));
+				Assert.That(arr1, Has.Length.EqualTo(arr2.Length + 2));
 
-			id = 0;
+				id = 0;
 
-			arr1 = query.ToArray();
-			arr2 = query.ToArray();
+				arr1 = query.ToArray();
+				arr2 = query.ToArray();
 
-			Assert.That(arr1, Has.Length.EqualTo(arr2.Length + 2));
+				Assert.That(arr1, Has.Length.EqualTo(arr2.Length + 2));
+			}
 		}
 	}
 }
