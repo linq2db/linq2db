@@ -9,6 +9,7 @@ namespace LinqToDB.SqlProvider
 {
 	using Common;
 	using Expressions;
+	using Linq;
 	using Mapping;
 	using SqlQuery;
 	using SqlQuery.Visitors;
@@ -619,15 +620,13 @@ namespace LinqToDB.SqlProvider
 
 		protected virtual void CorrectOutputTables(SqlStatement statement)
 		{
-			SqlOutputClause CorrectOutputClause(SqlOutputClause output, SqlTable? originalTable)
+			SqlOutputClause CorrectOutputClause(SqlOutputClause output, ISqlTableSource? originalTable)
 			{
 				var result = output.Convert(1, (_, e) =>
 				{
 					if (e is SqlAnchor anchor)
 					{
-						if (anchor.AnchorKind    == SqlAnchor.AnchorKindEnum.Inserted && (!SqlProviderFlags.OutputInsertUseSpecialTable || !SqlProviderFlags.OutputUpdateUseSpecialTables)
-						    || anchor.AnchorKind == SqlAnchor.AnchorKindEnum.Deleted  && (!SqlProviderFlags.OutputDeleteUseSpecialTable || !SqlProviderFlags.OutputUpdateUseSpecialTables)
-						   )
+						if (anchor.AnchorKind is SqlAnchor.AnchorKindEnum.Inserted or SqlAnchor.AnchorKindEnum.Deleted)
 						{
 							var resultExpression = anchor.SqlExpression;
 
@@ -638,7 +637,7 @@ namespace LinqToDB.SqlProvider
 									resultExpression = field;
 									if (field.Table != originalTable)
 									{
-										var newField = originalTable?.Fields.FirstOrDefault(f => f.PhysicalName == field.PhysicalName);
+										var newField = (originalTable as SqlTable)?.Fields.FirstOrDefault(f => f.PhysicalName == field.PhysicalName);
 										if (newField != null)
 										{
 											resultExpression = newField;
@@ -669,6 +668,11 @@ namespace LinqToDB.SqlProvider
 			if (!SqlProviderFlags.OutputInsertUseSpecialTable && statement is SqlInsertStatement { Output.HasOutput: true } insertStatement)
 			{
 				insertStatement.Output = CorrectOutputClause(insertStatement.Output, null);
+			}
+
+			if (!SqlProviderFlags.OutputMergeUseSpecialTables && statement is SqlMergeStatement { Output.HasOutput: true } mergeStatement)
+			{
+				mergeStatement.Output = CorrectOutputClause(mergeStatement.Output, mergeStatement.Target);
 			}
 		}
 

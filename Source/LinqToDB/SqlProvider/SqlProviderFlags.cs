@@ -16,7 +16,7 @@ namespace LinqToDB.SqlProvider
 		/// <summary>
 		/// Flags for use by external providers.
 		/// </summary>
-		[DataMember(Order = 1)]
+		[DataMember(Order =  1)]
 		public List<string> CustomFlags { get; set; } = new List<string>();
 
 		/// <summary>
@@ -104,7 +104,7 @@ namespace LinqToDB.SqlProvider
 		/// Indicates support for skip clause in column expression subquery.
 		/// Default (set by <see cref="DataProviderBase"/>): <c>true</c>.
 		/// </summary>
-		[DataMember(Order =  13)]
+		[DataMember(Order = 13)]
 		public bool        IsSubQuerySkipSupported        { get; set; }
 
 		/// <summary>
@@ -193,6 +193,13 @@ namespace LinqToDB.SqlProvider
 		/// </summary>
 		[DataMember(Order = 26)]
 		public bool        OutputUpdateUseSpecialTables   { get; set; }
+		/// <summary>
+		/// If <c>true</c>, OUTPUT clause supports both OLD and NEW data in MERGE statement using tables with special names.
+		/// Otherwise only current record fields (after all changes) available using target table.
+		/// Default (set by <see cref="DataProviderBase"/>): <c>false</c>.
+		/// </summary>
+		[DataMember(Order = 38)]
+		public bool        OutputMergeUseSpecialTables    { get; set; }
 
 		/// <summary>
 		/// Indicates support for CROSS JOIN.
@@ -574,6 +581,7 @@ namespace LinqToDB.SqlProvider
 				^ OutputDeleteUseSpecialTable                          .GetHashCode()
 				^ OutputInsertUseSpecialTable                          .GetHashCode()
 				^ OutputUpdateUseSpecialTables                         .GetHashCode()
+				^ OutputMergeUseSpecialTables                          .GetHashCode()
 				^ IsExistsPreferableForContains                        .GetHashCode()
 				^ IsRowNumberWithoutOrderBySupported                   .GetHashCode()
 				^ IsSubqueryWithParentReferenceInJoinConditionSupported.GetHashCode()
@@ -638,6 +646,7 @@ namespace LinqToDB.SqlProvider
 				&& OutputDeleteUseSpecialTable                           == other.OutputDeleteUseSpecialTable
 				&& OutputInsertUseSpecialTable                           == other.OutputInsertUseSpecialTable
 				&& OutputUpdateUseSpecialTables                          == other.OutputUpdateUseSpecialTables
+				&& OutputMergeUseSpecialTables                           == other.OutputMergeUseSpecialTables
 				&& IsExistsPreferableForContains                         == other.IsExistsPreferableForContains
 				&& IsRowNumberWithoutOrderBySupported                    == other.IsRowNumberWithoutOrderBySupported
 				&& IsSubqueryWithParentReferenceInJoinConditionSupported == other.IsSubqueryWithParentReferenceInJoinConditionSupported
