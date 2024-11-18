@@ -619,7 +619,7 @@ namespace LinqToDB.SqlProvider
 
 		protected virtual void CorrectOutputTables(SqlStatement statement)
 		{
-			SqlOutputClause CorrectOuputClause(SqlOutputClause output, SqlTable? originalTable)
+			SqlOutputClause CorrectOutputClause(SqlOutputClause output, SqlTable? originalTable)
 			{
 				var result = output.Convert(1, (_, e) =>
 				{
@@ -656,16 +656,20 @@ namespace LinqToDB.SqlProvider
 				return result;
 			}
 
-			if (!SqlProviderFlags.OutputDeleteUseSpecialTable || !SqlProviderFlags.OutputUpdateUseSpecialTables || !SqlProviderFlags.OutputInsertUseSpecialTable) 
+			// currently DeleteBuilder don't use Anchor if OutputDeleteUseSpecialTable is not set
+			//if (!SqlProviderFlags.OutputDeleteUseSpecialTable && statement is SqlDeleteStatement { Output.HasOutput: true } deleteStatement)
+			//{
+			//	deleteStatement.Output = CorrectOutputClause(deleteStatement.Output, deleteStatement.Table);
+			//}
+
+			if (!SqlProviderFlags.OutputUpdateUseSpecialTables && statement is SqlUpdateStatement { Output.HasOutput: true } updateStatement)
 			{
-				if (statement is SqlUpdateStatement { Output.HasOutput: true } updateStatement)
-				{
-					updateStatement.Output = CorrectOuputClause(updateStatement.Output, updateStatement.Update.Table);
-				}
-				else if (statement is SqlInsertStatement { Output.HasOutput: true } insertStatement)
-				{
-					insertStatement.Output = CorrectOuputClause(insertStatement.Output, null);
-				}
+				updateStatement.Output = CorrectOutputClause(updateStatement.Output, updateStatement.Update.Table);
+			}
+
+			if (!SqlProviderFlags.OutputInsertUseSpecialTable && statement is SqlInsertStatement { Output.HasOutput: true } insertStatement)
+			{
+				insertStatement.Output = CorrectOutputClause(insertStatement.Output, null);
 			}
 		}
 

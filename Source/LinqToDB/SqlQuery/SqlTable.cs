@@ -315,24 +315,6 @@ namespace LinqToDB.SqlQuery
 
 		#endregion
 
-		#region System tables
-
-		internal static SqlTable Inserted(EntityDescriptor entityDescriptor)
-			=> new (entityDescriptor)
-			{
-				TableName    = new ("INSERTED"),
-				SqlTableType = SqlTableType.SystemTable,
-			};
-
-		internal static SqlTable Deleted(EntityDescriptor entityDescriptor)
-			=> new (entityDescriptor)
-			{
-				TableName    = new ("DELETED"),
-				SqlTableType = SqlTableType.SystemTable,
-			};
-
-		#endregion
-
 		internal static SqlTable Create<T>(IDataContext dataContext)
 		{
 			return new SqlTable(dataContext.MappingSchema.GetEntityDescriptor(typeof(T), dataContext.Options.ConnectionOptions.OnEntityDescriptorCreated));
