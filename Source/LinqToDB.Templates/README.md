@@ -437,12 +437,12 @@ GetFK("Orders", "FK_Orders_Customers").MemberName      = "Customers";
 GetFK("Orders", "FK_Orders_Customers").AssociationType = AssociationType.OneToMany;
 
 SetTable(string tableName,
-	string TypeName = null,
-	string DataContextPropertyName = null)
+    string TypeName = null,
+    string DataContextPropertyName = null)
 
-	.Column(string columnName, string MemberName = null, string Type = null, bool? IsNullable = null)
-	.FK    (string fkName,     string MemberName = null, AssociationType? AssociationType = null)
-	;
+    .Column(string columnName, string MemberName = null, string Type = null, bool? IsNullable = null)
+    .FK    (string fkName,     string MemberName = null, AssociationType? AssociationType = null)
+    ;
 
 // Adds extra namespace to usings
 Model.Usings.Add("MyNamespace");
@@ -450,12 +450,12 @@ Model.Usings.Add("MyNamespace");
 // Replaces all property names for columns where name is '<TableName>' + 'ID' with 'ID' 
 // and adds a base interface to the generated class.
 foreach (var t in Tables.Values)
-	foreach (var c in t.Columns.Values)
-		if (c.IsPrimaryKey && c.MemberName == t.TypeName + "ID")
-		{
-			c.MemberName = "ID";
-			t.Interfaces.Add("IIdentifiable");
-		}
+    foreach (var c in t.Columns.Values)
+        if (c.IsPrimaryKey && c.MemberName == t.TypeName + "ID")
+        {
+            c.MemberName = "ID";
+            t.Interfaces.Add("IIdentifiable");
+        }
 ```
 
 ## Useful members and data structures
@@ -472,81 +472,81 @@ ForeignKey GetForeignKey(string tableName, string fkName);
 
 public class Table
 {
-	public string Schema;
-	public string TableName;
-	public string DataContextPropertyName;
-	public bool   IsView;
-	public string Description;
-	public string AliasPropertyName;
-	public string AliasTypeName;
-	public string TypeName;
+    public string Schema;
+    public string TableName;
+    public string DataContextPropertyName;
+    public bool   IsView;
+    public string Description;
+    public string AliasPropertyName;
+    public string AliasTypeName;
+    public string TypeName;
 
-	public Dictionary<string,Column>     Columns;
-	public Dictionary<string,ForeignKey> ForeignKeys;
+    public Dictionary<string,Column>     Columns;
+    public Dictionary<string,ForeignKey> ForeignKeys;
 }
 
 public partial class Column : Property
 {
-	public string    ColumnName; // Column name in database
-	public bool      IsNullable;
-	public bool      IsIdentity;
-	public string    ColumnType; // Type of the column in database
-	public DbType    DbType;
-	public string    Description;
-	public bool      IsPrimaryKey;
-	public int       PrimaryKeyOrder;
-	public bool      SkipOnUpdate;
-	public bool      SkipOnInsert;
-	public bool      IsDuplicateOrEmpty;
-	public string    AliasName;
-	public string    MemberName;
+    public string    ColumnName; // Column name in database
+    public bool      IsNullable;
+    public bool      IsIdentity;
+    public string    ColumnType; // Type of the column in database
+    public DbType    DbType;
+    public string    Description;
+    public bool      IsPrimaryKey;
+    public int       PrimaryKeyOrder;
+    public bool      SkipOnUpdate;
+    public bool      SkipOnInsert;
+    public bool      IsDuplicateOrEmpty;
+    public string    AliasName;
+    public string    MemberName;
 }
 
 public enum AssociationType
 {
-	Auto,
-	OneToOne,
-	OneToMany,
-	ManyToOne,
+    Auto,
+    OneToOne,
+    OneToMany,
+    ManyToOne,
 }
 
 public partial class ForeignKey : Property
 {
-	public string           KeyName;
-	public Table            OtherTable;
-	public List<Column>     ThisColumns;
-	public List<Column>     OtherColumns;
-	public bool             CanBeNull;
-	public ForeignKey       BackReference;
-	public string           MemberName;
-	public AssociationType  AssociationType;
+    public string           KeyName;
+    public Table            OtherTable;
+    public List<Column>     ThisColumns;
+    public List<Column>     OtherColumns;
+    public bool             CanBeNull;
+    public ForeignKey       BackReference;
+    public string           MemberName;
+    public AssociationType  AssociationType;
 }
 
 public partial class Procedure : Method
 {
-	public string          Schema;
-	public string          ProcedureName;
-	public bool            IsFunction;
-	public bool            IsTableFunction;
-	public bool            IsDefaultSchema;
+    public string          Schema;
+    public string          ProcedureName;
+    public bool            IsFunction;
+    public bool            IsTableFunction;
+    public bool            IsDefaultSchema;
 
-	public Table           ResultTable;
-	public Exception       ResultException;
-	public List<Table>     SimilarTables;
-	public List<Parameter> ProcParameters;
+    public Table           ResultTable;
+    public Exception       ResultException;
+    public List<Table>     SimilarTables;
+    public List<Parameter> ProcParameters;
 }
 
 public class Parameter
 {
-	public string   SchemaName;
-	public string   SchemaType;
-	public bool     IsIn;
-	public bool     IsOut;
-	public bool     IsResult;
-	public int?     Size;
-	public string   ParameterName;
-	public string   ParameterType;
-	public Type     SystemType;
-	public string   DataType;
+    public string   SchemaName;
+    public string   SchemaType;
+    public bool     IsIn;
+    public bool     IsOut;
+    public bool     IsResult;
+    public int?     Size;
+    public string   ParameterName;
+    public string   ParameterType;
+    public Type     SystemType;
+    public string   DataType;
 }
 ```

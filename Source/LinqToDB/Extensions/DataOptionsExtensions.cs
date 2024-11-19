@@ -1134,7 +1134,7 @@ namespace LinqToDB
 		/// <param name="write">Callback, may not be called depending on the trace level.</param>
 		/// <returns>The builder instance so calls can be chained.</returns>
 		[Pure]
-		public static DataOptions UseTraceWith(this DataOptions options, Action<string?,string?,TraceLevel> write)
+		public static DataOptions UseTraceWith(this DataOptions options, Action<string,string,TraceLevel> write)
 		{
 			return options.WithOptions<QueryTraceOptions>(o => o with { WriteTrace = write });
 		}

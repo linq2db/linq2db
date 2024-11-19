@@ -9,7 +9,7 @@
 			linq fsharp linq2db LinqToDB aspnetcore ORM database DB SQL SqlServer Access SqlCe SqlServerCe MySql Firebird SQLite Sybase Oracle PostgreSQL DB2 Informix SapHana
 		</tags>
 		<dependencies>
-			<group targetFramework="net462.0">
+			<group targetFramework="net462">
 				<dependency id="linq2db"     version="6.0.0"   />
 				<dependency id="FSharp.Core" version="8.0.403" />
 			</group>

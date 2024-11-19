@@ -3,6 +3,8 @@
 #r "nuget:LibGit2Sharp, 0.30.0"
 
 using System.Xml;
+using System.Diagnostics.CodeAnalysis;
+
 using LibGit2Sharp;
 
 #nullable enable
@@ -13,9 +15,9 @@ var args           = GetArgs();
 var path           = GetArg(args, "path",           @"*.nuspec")!;
 var buildPath      = GetArg(args, "buildPath",      @"..\.build\nuspecs")!;
 var version        = GetArg(args, "version",        mandatory : true)!;
-var linq2DbVersion = GetArg(args, "linq2DbVersion", "version")!;
+var linq2DbVersion = GetArg(args, "linq2DbVersion", version)!;
+var clean          = GetArg(args, "clean",          "0");
 var branch         = GetArg(args, "branch");
-var clean          = GetArg(args, "clean")
 var authors        = "Igor Tkachev, Ilya Chudin, Svyatoslav Danyliv, Dmitry Lukashenko";
 var description    = " is a data access technology that provides a run-time infrastructure for managing relational data as objects. Install this package if you want to use database model scaffolding using T4 templates (requires Visual Studio or Rider), otherwise you should use linq2db package.";
 
@@ -88,8 +90,8 @@ foreach (var xmlPath in GetFiles(path))
 	var files    = xml.SelectSingleNode("//ns:package/ns:files",    ns)!;
 
 	SetMetadata  ("version",                  version,        true);
-	SetDependency("linq2db",                  linq2DbVersion, true);
-	SetDependency("linq2db.t4models",         linq2DbVersion, true);
+	SetDependency("linq2db",                  linq2DbVersion);
+	SetDependency("linq2db.t4models",         linq2DbVersion);
 	SetMetadata  ("description",              metadata.SelectSingleNode("//ns:title", ns)!.InnerText + description,                               false);
 	SetMetadata  ("releaseNotes",             "https://github.com/linq2db/linq2db/wiki/releases-and-roadmap#release-" + version.Replace(".", ""), true);
 	SetMetadata  ("copyright",                "Copyright © 2024 " + authors, true);
@@ -220,6 +222,7 @@ foreach (var xmlPath in GetFiles(path))
 	}
 }
 
+[return: NotNullIfNotNull(nameof(defaultValue))]
 string? GetArg(Dictionary<string,string?> args, string key, string? defaultValue = null, bool mandatory = false) =>
 	args.TryGetValue(key, out var value) ? value : !mandatory ? defaultValue : throw new ArgumentException($"Argument '{key}' is required.");
 
