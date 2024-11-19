@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Reflection;
 
 using FluentAssertions;
 
@@ -392,35 +393,79 @@ namespace Tests.Linq
 		#endregion
 
 		#region Issue 4715
-		interface IExplicitInterface
+		interface IExplicitInterface<T> where T: IExplicitInterface<T>
 		{
-			int ExplicitProperty { get; set; }
+			int ExplicitPropertyRW { get; set; }
+			int ExplicitPropertyRO { get; }
 		}
 
-		interface IImplicitInterface
+		interface IImplicitInterface<T> where T : IImplicitInterface<T>
 		{
-			int ImplicitProperty { get; set; }
+			int ImplicitPropertyRW { get; set; }
+			int ImplicitPropertyRO { get; }
 		}
 
-		class Issue4715Table : IExplicitInterface, IImplicitInterface
+		class Issue4715Table : IExplicitInterface<Issue4715Table>, IImplicitInterface<Issue4715Table>
 		{
 			public int Id { get; set; }
-			public int ImplicitProperty { get; set; }
-			int IExplicitInterface.ExplicitProperty { get; set; }
+			public int ImplicitPropertyRW { get; set; }
+			public int ImplicitPropertyRO => 11;
+			int IExplicitInterface<Issue4715Table>.ExplicitPropertyRW { get; set; }
+			int IExplicitInterface<Issue4715Table>.ExplicitPropertyRO => 22;
 		}
 
-		[ActiveIssue]
-		[Test(Description = "https://github.com/linq2db/linq2db/issues/4715")]
-		public void Issue4715Test()
+		private static MappingSchema ConfigureIssue4715Mapping()
 		{
-			var ms = new MappingSchema();
-			var ed = ms.GetEntityDescriptor(typeof(Issue4715Table));
+			return new FluentMappingBuilder()
+				.Entity<Issue4715Table>()
+				// when fixed - we should have better API to configure those two columns
+				.HasAttribute(typeof(Issue4715Table).GetProperty("Tests.Linq.InterfaceTests.IExplicitInterface<Tests.Linq.InterfaceTests.Issue4715Table>.ExplicitPropertyRW", BindingFlags.NonPublic | BindingFlags.Instance)!, new ColumnAttribute("Prop3"))
+				.HasAttribute(typeof(Issue4715Table).GetProperty("Tests.Linq.InterfaceTests.IExplicitInterface<Tests.Linq.InterfaceTests.Issue4715Table>.ExplicitPropertyRO", BindingFlags.NonPublic | BindingFlags.Instance)!, new ColumnAttribute("Prop4"))
+				.Property(x => x.ImplicitPropertyRW).HasColumnName("Prop1")
+				.Property(x => x.ImplicitPropertyRO).HasColumnName("Prop2")
+				.Build()
+				.MappingSchema;
+		}
 
-			Assert.That(ed.Columns, Has.Count.EqualTo(2));
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4715")]
+		public void Issue4715TestDescriptor()
+		{
+			var ed = ConfigureIssue4715Mapping().GetEntityDescriptor(typeof(Issue4715Table));
+
+			Assert.That(ed.Columns, Has.Count.EqualTo(5));
 			Assert.Multiple(() =>
 			{
 				Assert.That(ed.Columns.Any(c => c.ColumnName == "Id"), Is.True);
-				Assert.That(ed.Columns.Any(c => c.ColumnName == "ImplicitProperty"), Is.True);
+				Assert.That(ed.Columns.Any(c => c.ColumnName == "Prop1"), Is.True);
+				Assert.That(ed.Columns.Any(c => c.ColumnName == "Prop2"), Is.True);
+				Assert.That(ed.Columns.Any(c => c.ColumnName == "Prop3"), Is.True);
+				Assert.That(ed.Columns.Any(c => c.ColumnName == "Prop4"), Is.True);
+			});
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4715")]
+		public void Issue4715TestMapping([DataSources] string context)
+		{
+			using var db = GetDataContext(context, ConfigureIssue4715Mapping());
+			using var tb = db.CreateLocalTable<Issue4715Table>();
+
+			var record = new Issue4715Table()
+			{
+				Id = 1,
+				ImplicitPropertyRW = 2
+			};
+
+			((IExplicitInterface<Issue4715Table>)record).ExplicitPropertyRW = 3;
+
+			db.Insert(record);
+
+			var result = tb.Single();
+
+			Assert.Multiple(() =>
+			{
+				Assert.That(result.Id, Is.EqualTo(1));
+				Assert.That(result.ImplicitPropertyRW, Is.EqualTo(2));
+				Assert.That(((IExplicitInterface<Issue4715Table>)result).ExplicitPropertyRW, Is.EqualTo(3));
 			});
 		}
 		#endregion
