@@ -2315,5 +2315,172 @@ namespace Tests.Linq
 
 			var resultList = result.LoadWith(c => c.GrandChildren).ToList();
 		}
+
+		#region Issue 4717
+		[Table]
+		public record Issue4717Address
+		{
+			[PrimaryKey] public int Id { get; set; }
+			[Column] public string? Address1 { get; set; }
+			[Column] public string? City { get; set; }
+			[Column] public string? State { get; set; }
+			[Column] public string? Zip { get; set; }
+		}
+
+		[Table]
+		public class Issue4717Warehouse
+		{
+			[PrimaryKey] public int Id { get; set; }
+			[Column] public string? Name { get; set; }
+			[Column] public int AddressId { get; set; }
+		}
+
+		[Table]
+		public record Issue4717UnitOfMeasure
+		{
+			[PrimaryKey] public int Id { get; set; }
+			[Column] public string? Name { get; set; }
+			[Column] public string? Abbreviation { get; set; }
+		}
+
+		[Table]
+		public record Issue4717Product
+		{
+			[PrimaryKey] public int Id { get; set; }
+			[Column] public string? Description { get; set; }
+			[Column] public string? Sku { get; set; }
+			[Column] public int UnitOfMeasureId { get; set; }
+		}
+
+		[Table]
+		[Table("Issue4717ProductIncludedProduc", Configuration = ProviderName.Oracle11Native)]
+		[Table("Issue4717ProductIncludedProduc", Configuration = ProviderName.Oracle11Managed)]
+		[Table("Issue4717ProductIncludedProduc", Configuration = TestProvName.Oracle11DevartOCI)]
+		[Table("Issue4717ProductIncludedProduc", Configuration = TestProvName.Oracle11DevartDirect)]
+		[Table("Issue4717ProductIncludedProduct", Configuration = ProviderName.Firebird25)]
+		[Table("Issue4717ProductIncludedProduct", Configuration = ProviderName.Firebird3)]
+		public record Issue4717ProductIncludedProductMapping
+		{
+			[PrimaryKey] public int ProductId { get; set; }
+			[PrimaryKey] public int IncludedProductId { get; set; }
+			[Column] public decimal Quantity { get; set; }
+		}
+
+		[Table]
+		[Table("Issue4717WarehouseProductMappi", Configuration = ProviderName.Oracle11Native)]
+		[Table("Issue4717WarehouseProductMappi", Configuration = ProviderName.Oracle11Managed)]
+		[Table("Issue4717WarehouseProductMappi", Configuration = TestProvName.Oracle11DevartOCI)]
+		[Table("Issue4717WarehouseProductMappi", Configuration = TestProvName.Oracle11DevartDirect)]
+		[Table("Issue4717WarehouseProductMappin", Configuration = ProviderName.Firebird25)]
+		[Table("Issue4717WarehouseProductMappin", Configuration = ProviderName.Firebird3)]
+		public record Issue4717WarehouseProductMapping
+		{
+			[PrimaryKey] public int WarehouseId { get; set; }
+			[PrimaryKey] public int ProductId { get; set; }
+			[Column(Precision = 10, Scale = 0)] public decimal StockOnHand { get; set; }
+		}
+
+		[ThrowsForProvider(typeof(LinqException), TestProvName.AllClickHouse, ErrorMessage = ErrorHelper.Error_Correlated_Subqueries)]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4717")]
+		public void Issue4717Test([CteContextSource] string context)
+		{
+			using var db = GetDataContext(context);
+
+			using var addressTable = db.CreateLocalTable<Issue4717Address>();
+			using var warehouseTable = db.CreateLocalTable<Issue4717Warehouse>();
+			using var unitOfMeasureTable = db.CreateLocalTable<Issue4717UnitOfMeasure>();
+			using var productTable = db.CreateLocalTable<Issue4717Product>();
+			using var productIncludedProductMappingTable = db.CreateLocalTable<Issue4717ProductIncludedProductMapping>();
+			using var warehouseProductMappingTable = db.CreateLocalTable<Issue4717WarehouseProductMapping>();
+
+			addressTable.Insert(() => new Issue4717Address()
+			{
+				Id = 1,
+				Address1 = "123 Test St",
+				City = "Test City",
+				State = "TS",
+				Zip = "12345"
+			});
+
+			warehouseTable.Insert(() => new Issue4717Warehouse()
+			{
+				Id = 1,
+				Name = "Test Warehouse",
+				AddressId = 1
+			});
+
+			unitOfMeasureTable.Insert(() => new Issue4717UnitOfMeasure()
+			{
+				Id = 1,
+				Name = "Test Warehouse",
+				Abbreviation = "ea"
+			});
+
+			var productId = 1;
+			productTable.Insert(() => new Issue4717Product()
+			{
+				Id = productId,
+				Sku = "123-SKU",
+				Description = "Test 123 Sku",
+				UnitOfMeasureId = 1
+			});
+
+			var includedProductId = 2;
+			productTable.Insert(() => new Issue4717Product()
+			{
+				Id = includedProductId,
+				Sku = "ABC-SKU",
+				Description = "Test ABC Sku",
+				UnitOfMeasureId = 1
+			});
+
+			productIncludedProductMappingTable.Insert(() => new Issue4717ProductIncludedProductMapping()
+			{
+				ProductId = productId,
+				IncludedProductId = includedProductId,
+				Quantity = 10
+			});
+
+			warehouseProductMappingTable.Insert(() => new Issue4717WarehouseProductMapping
+			{
+				WarehouseId = 1,
+				ProductId = productId,
+				StockOnHand = 10
+			});
+
+			var sourceQuery = from w in warehouseTable
+							  select new
+							  {
+								  ProductId = productId,
+								  WarehouseId = w.Id,
+							  };
+
+			sourceQuery = sourceQuery.AsCte();
+			var query = from source in sourceQuery
+						join includedProductMapping in productIncludedProductMappingTable on source.ProductId equals includedProductMapping.ProductId
+						select new
+						{
+							source.ProductId,
+							first = (from wp in warehouseProductMappingTable
+									 where wp.WarehouseId == source.WarehouseId
+									 select (decimal?)wp.StockOnHand
+									 ).FirstOrDefault() ?? 0,
+							sum = (from wp in warehouseProductMappingTable
+								   where wp.WarehouseId == source.WarehouseId
+								   select (decimal?)wp.StockOnHand
+								   ).Sum() ?? 0,
+						};
+
+			var result = query.ToList();
+
+			Assert.That(result, Has.Count.EqualTo(1));
+			Assert.Multiple(() =>
+			{
+				Assert.That(result[0].ProductId, Is.EqualTo(1));
+				Assert.That(result[0].first, Is.EqualTo(10));
+				Assert.That(result[0].sum, Is.EqualTo(10));
+			});
+		}
+		#endregion
 	}
 }

@@ -18,6 +18,7 @@ namespace LinqToDB.SqlProvider
 	using Common.Internal;
 	using DataProvider;
 	using Extensions;
+	using Infrastructure;
 	using Mapping;
 	using SqlQuery;
 
@@ -1584,7 +1585,16 @@ namespace LinqToDB.SqlProvider
 			{
 				StringBuilder.AppendLine(Comma).AppendLine();
 
-				BuildCreateTablePrimaryKey(createTable, ConvertInline("PK_" + createTable.Table.TableName.Name, ConvertType.NameToQueryTable),
+				var pkName = "PK_" + createTable.Table.TableName.Name;
+
+				if (DataProvider != null)
+				{
+					var iIdentifierService = ((IInfrastructure<IServiceProvider>)DataProvider).Instance.GetRequiredService<IIdentifierService>();
+
+					pkName = IdentifiersHelper.TruncateIdentifier(iIdentifierService, IdentifierKind.PrimaryKey, pkName);
+				}
+
+				BuildCreateTablePrimaryKey(createTable, ConvertInline(pkName, ConvertType.NameToQueryTable),
 					pk.Select(f => ConvertInline(f.Field.PhysicalName, ConvertType.NameToQueryField)));
 			}
 
