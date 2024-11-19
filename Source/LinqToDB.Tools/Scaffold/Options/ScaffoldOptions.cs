@@ -14,6 +14,7 @@ namespace LinqToDB.Scaffold
 		public SchemaOptions         Schema         { get; } = new ();
 		public DataModelOptions      DataModel      { get; } = new ();
 		public CodeGenerationOptions CodeGeneration { get; } = new ();
+		public ProviderOptions ProviderOptions { get; } = new ();
 
 		/// <summary>
 		/// Gets default scaffold options.

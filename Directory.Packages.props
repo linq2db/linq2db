@@ -115,17 +115,17 @@
 		<PackageVersion Include="System.Text.Json"                                      Version="7.0.3"         />
 	</ItemGroup>
 
-	<ItemGroup Condition=" '$(TargetFramework)' == 'net6.0' OR '$(TargetFramework)' == 'net7.0' ">
+	<ItemGroup Condition=" '$(TargetFramework)' == 'net6.0' OR '$(TargetFramework)' == 'net7.0'  OR '$(TargetFramework)' == 'net8.0'">
 		<PackageVersion Include="System.Data.Odbc"                                      Version="7.0.0"         />
 		<PackageVersion Include="System.Data.OleDb"                                     Version="7.0.0"         />
 		<PackageVersion Include="Microsoft.Extensions.DependencyModel"                  Version="7.0.0"         />
 	</ItemGroup>
 
-	<ItemGroup Condition=" '$(TargetFramework)' == 'net7.0' ">
-		<PackageVersion Include="Npgsql"                                                Version="8.0.0-rc.2"    />
+	<ItemGroup Condition=" '$(TargetFramework)' == 'net7.0'   OR '$(TargetFramework)' == 'net8.0'">
+		<PackageVersion Include="Npgsql"                                                Version="8.0.0"    />
 	</ItemGroup>
 
-	<ItemGroup Condition=" '$(TargetFramework)' != 'net7.0' ">
+	<ItemGroup Condition=" '$(TargetFramework)' != 'net7.0' AND '$(TargetFramework)' != 'net8.0'">
 		<PackageVersion Include="Npgsql"                                                Version="7.0.6"         />
 	</ItemGroup>
 

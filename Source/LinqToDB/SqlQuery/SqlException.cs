@@ -3,7 +3,9 @@ using System.Runtime.Serialization;
 
 namespace LinqToDB.SqlQuery
 {
+#if !NET8_0_OR_GREATER
 	[Serializable]
+#endif
 	public class SqlException : Exception
 	{
 		public SqlException()
@@ -31,11 +33,12 @@ namespace LinqToDB.SqlQuery
 			: base(innerException.Message, innerException)
 		{
 		}
-
+#if !NET8_0_OR_GREATER
 		protected SqlException(SerializationInfo info, StreamingContext context)
 			: base(info, context)
 		{
 		}
+#endif
 	}
 }
 

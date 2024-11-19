@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Runtime.Serialization;
 
 namespace LinqToDB.Common
@@ -10,7 +10,9 @@ namespace LinqToDB.Common
 	/// This class is the base class for exceptions that may occur during
 	/// execution of the namespace members.
 	/// </remarks>
+#if !NET8_0_OR_GREATER
 	[Serializable]
+#endif
 	public class LinqToDBConvertException : LinqToDBException
 	{
 		/// <summary>
@@ -62,7 +64,7 @@ namespace LinqToDB.Common
 			: base(innerException.Message, innerException)
 		{
 		}
-
+#if !NET8_0_OR_GREATER
 		/// <summary>
 		/// Initializes a new instance of the <see cref="LinqToDBConvertException"/> class
 		/// with serialized data.
@@ -76,6 +78,7 @@ namespace LinqToDB.Common
 			: base(info, context)
 		{
 		}
+#endif
 
 		/// <summary>
 		/// Gets name of misconfigured column, which caused exception.

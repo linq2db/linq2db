@@ -3,7 +3,7 @@
 	<PropertyGroup>
 		<RootNamespace>LinqToDB.CLI</RootNamespace>
 		<AssemblyName>dotnet-linq2db</AssemblyName>
-		<TargetFrameworks>netcoreapp3.1;net6.0;net7.0</TargetFrameworks>
+		<TargetFrameworks>netcoreapp3.1;net6.0;net7.0;net8.0</TargetFrameworks>
 		<DocumentationFile>bin\$(Configuration)\$(TargetFramework)\$(AssemblyName).xml</DocumentationFile>
 		<OutputType>Exe</OutputType>
 		<WarningsAsErrors>true</WarningsAsErrors>
@@ -18,12 +18,13 @@
 		<Copy SourceFiles="$(MSBuildThisFileDirectory)..\..\Redist\CLI\netcoreapp3.1\dotnet-linq2db.win-x64.exe;$(MSBuildThisFileDirectory)..\..\Redist\CLI\netcoreapp3.1\dotnet-linq2db.win-x86.exe" DestinationFolder="bin\$(Configuration)\netcoreapp3.1" />
 		<Copy SourceFiles="$(MSBuildThisFileDirectory)..\..\Redist\CLI\net6.0\dotnet-linq2db.win-x64.exe;$(MSBuildThisFileDirectory)..\..\Redist\CLI\net6.0\dotnet-linq2db.win-x86.exe" DestinationFolder="bin\$(Configuration)\net6.0" />
 		<Copy SourceFiles="$(MSBuildThisFileDirectory)..\..\Redist\CLI\net7.0\dotnet-linq2db.win-x64.exe;$(MSBuildThisFileDirectory)..\..\Redist\CLI\net7.0\dotnet-linq2db.win-x86.exe" DestinationFolder="bin\$(Configuration)\net7.0" />
+		<!--<Copy SourceFiles="$(MSBuildThisFileDirectory)..\..\Redist\CLI\net8.0\dotnet-linq2db.win-x64.exe;$(MSBuildThisFileDirectory)..\..\Redist\CLI\net8.0\dotnet-linq2db.win-x86.exe" DestinationFolder="bin\$(Configuration)\net8.0" />-->
 
 		<!--cleanup for pack-->
 		<ItemGroup>
 			<JunkFiles
 				Condition="$(Configuration) == 'Release'"
-				Include="bin\Release\netcoreapp3.1\dotnet-linq2db.runtimeconfig.dev.json;bin\Release\netcoreapp3.1\*.pdb;bin\Release\netcoreapp3.1\*.xml;bin\Release\net6.0\dotnet-linq2db.runtimeconfig.dev.json;bin\Release\net6.0\*.pdb;bin\Release\net6.0\*.xml;bin\Release\net7.0\dotnet-linq2db.runtimeconfig.dev.json;bin\Release\net7.0\*.pdb;bin\Release\net7.0\*.xml;" />
+				Include="bin\Release\netcoreapp3.1\dotnet-linq2db.runtimeconfig.dev.json;bin\Release\netcoreapp3.1\*.pdb;bin\Release\netcoreapp3.1\*.xml;bin\Release\net6.0\dotnet-linq2db.runtimeconfig.dev.json;bin\Release\net6.0\*.pdb;bin\Release\net6.0\*.xml;bin\Release\net7.0\dotnet-linq2db.runtimeconfig.dev.json;bin\Release\net7.0\*.pdb;bin\Release\net7.0\*.xml;bin\Release\net8.0\dotnet-linq2db.runtimeconfig.dev.json;bin\Release\net8.0\*.pdb;bin\Release\net8.0\*.xml;" />
 		</ItemGroup>
 
 		<Delete Condition="$(Configuration) == 'Release'" Files="@(JunkFiles)" />

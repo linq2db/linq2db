@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "LinqToDB.CLI": {
+      "commandName": "Project",
+      "commandLineArgs": "scaffold -i \"C:\\Users\\puma\\source\\repos\\jetex\\Intranet\\DataIntegration\\Jet.DI.AS400Sync\\Jet.DI.AS400Sync.FolderWatcher.DBModel\\database.json\""
+    }
+  }
+}

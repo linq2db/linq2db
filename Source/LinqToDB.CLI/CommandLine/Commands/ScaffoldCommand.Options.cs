@@ -102,7 +102,8 @@ JSON file example:
 					new (false, false, DatabaseType.SapHana        .ToString(), "SAP HANA"                                                  ),
 					new (false, false, DatabaseType.ClickHouseMySql.ToString(), "ClickHouse (MySql interface)"                              ),
 					new (false, false, DatabaseType.ClickHouseHttp .ToString(), "ClickHouse (HTTP(S) interface)"                            ),
-					new (false, false, DatabaseType.ClickHouseTcp  .ToString(), "ClickHouse (TCP/binary interface)"                         ));
+					new (false, false, DatabaseType.ClickHouseTcp  .ToString(), "ClickHouse (TCP/binary interface)"                         ),
+					new (false, false, DatabaseType.Custom		   .ToString(), "Custom provider (requires provider-name and provider-location)"));
 
 			/// <summary>
 			/// Database provider location option.
@@ -118,6 +119,51 @@ Supported databases:
 - SQL Server Compact Edition : value is a full path to System.Data.SqlServerCe.dll assembly from Private folder of SQL CE installation
 - SAP HANA                   : value is a full path to Sap.Data.Hana.Core.v2.1.dll assembly from HDB client installation folder
 - IBM DB2 and Informix       : value is a full path to IBM.Data.DB2.Core.dll assembly in DB2 provider folder",
+					null,
+					null,
+					null,
+					null);
+
+			/// <summary>
+			/// Custom Provider name option.
+			/// </summary>
+			public static readonly CliOption ProviderName = new StringCliOption(
+					"provider-name",
+					null,
+					false,
+					false,
+					"custom database provider name",
+					@"Allows user to specify custom provider unique name.",
+					null,
+					null,
+					null,
+					null);
+
+			/// <summary>
+			/// ProviderDetector option.
+			/// </summary>
+			public static readonly CliOption ProviderDetectorClass = new StringCliOption(
+					"provider-detector-class",
+					null,
+					false,
+					false,
+					"provider detector class",
+					@"Allows user to specify class where to find implementation of provider detector.",
+					null,
+					null,
+					null,
+					null);
+
+			/// <summary>
+			/// ProviderDetector option.
+			/// </summary>
+			public static readonly CliOption ProviderDetectorMethod = new StringCliOption(
+					"provider-detector-method",
+					null,
+					false,
+					false,
+					"provider detector method",
+					@"Allows user to specify method name for provider detector.",
 					null,
 					null,
 					null,
@@ -1866,6 +1912,8 @@ string // also you can put aggregate function name as string directly to list
 			ClickHouseMySql,
 			ClickHouseHttp,
 			ClickHouseTcp,
+			//Added for External Provider
+			Custom
 		}
 
 		public static CliCommand Instance { get; } = new ScaffoldCommand();

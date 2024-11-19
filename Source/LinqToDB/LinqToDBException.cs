@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Runtime.Serialization;
 
 namespace LinqToDB
@@ -10,7 +10,9 @@ namespace LinqToDB
 	/// This class is the base class for exceptions that may occur during
 	/// execution of the namespace members.
 	/// </remarks>
+#if !NET8_0_OR_GREATER
 	[Serializable]
+#endif
 	public class LinqToDBException : Exception
 	{
 		/// <summary>
@@ -63,7 +65,7 @@ namespace LinqToDB
 			: base(innerException.Message, innerException)
 		{
 		}
-
+#if !NET8_0_OR_GREATER
 		/// <summary>
 		/// Initializes a new instance of the <see cref="LinqToDBException"/> class
 		/// with serialized data.
@@ -77,5 +79,6 @@ namespace LinqToDB
 			: base(info, context)
 		{
 		}
+#endif
 	}
 }
