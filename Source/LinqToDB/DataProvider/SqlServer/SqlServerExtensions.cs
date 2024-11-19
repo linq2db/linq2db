@@ -727,7 +727,7 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		static Expression<Func<ISqlServerExtensions, object?, string, string, bool>> ContainsPropertyImpl1()
 		{
-			return (ext, column, property, search) => Sql.Expr<bool>($"CONTAINS(PROPERTY({column}, {Sql.ToSql(property)}), {search})");
+			return (ext, column, property, search) => Sql.Expr<bool>($"CONTAINS(PROPERTY({column}, {property}), {search})");
 		}
 
 		/// <summary>
@@ -748,7 +748,7 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		static Expression<Func<ISqlServerExtensions, object?, string, string, string, bool>> ContainsPropertyImpl2()
 		{
-			return (ext, column, property, search, language) => Sql.Expr<bool>($"CONTAINS(PROPERTY({column}, {Sql.ToSql(property)}), {search}, LANGUAGE {language})");
+			return (ext, column, property, search, language) => Sql.Expr<bool>($"CONTAINS(PROPERTY({column}, {property}), {search}, LANGUAGE {language})");
 		}
 
 		/// <summary>
@@ -769,7 +769,7 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		static Expression<Func<ISqlServerExtensions, object?, string, string, int, bool>> ContainsPropertyImpl3()
 		{
-			return (ext, column, property, search, language) => Sql.Expr<bool>($"CONTAINS(PROPERTY({column}, {Sql.ToSql(property)}), {search}, LANGUAGE {language})");
+			return (ext, column, property, search, language) => Sql.Expr<bool>($"CONTAINS(PROPERTY({column}, {property}), {search}, LANGUAGE {language})");
 		}
 
 		#endregion
