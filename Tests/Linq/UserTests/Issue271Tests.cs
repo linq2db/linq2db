@@ -35,13 +35,13 @@ namespace Tests.UserTests
 
 				var str = q.ToString()!;
 
-				TestContext.WriteLine(str);
+				TestContext.Out.WriteLine(str);
 
-				Assert.False(str.Contains("N'CharValue'"));
-				Assert.False(str.Contains("N'VarCharValue'"));
+				Assert.That(str, Does.Not.Contain("N'CharValue'"));
+				Assert.That(str, Does.Not.Contain("N'VarCharValue'"));
 
-				Assert.True(str.Contains("N'NCharValue'"));
-				Assert.True(str.Contains("N'NVarCharValue'"));
+				Assert.That(str, Does.Contain("N'NCharValue'"));
+				Assert.That(str, Does.Contain("N'NVarCharValue'"));
 			}
 
 		}
@@ -67,13 +67,13 @@ namespace Tests.UserTests
 
 				var str = q.ToString()!;
 
-				TestContext.WriteLine(str);
+				TestContext.Out.WriteLine(str);
 
-				Assert.False(str.Contains("N'CharValue'"));
-				Assert.False(str.Contains("N'VarCharValue'"));
+				Assert.That(str, Does.Not.Contain("N'CharValue'"));
+				Assert.That(str, Does.Not.Contain("N'VarCharValue'"));
 
-				Assert.True(str.Contains("N'NCharValue'"));
-				Assert.True(str.Contains("N'NVarCharValue'"));
+				Assert.That(str, Does.Contain("N'NCharValue'"));
+				Assert.That(str, Does.Contain("N'NVarCharValue'"));
 			}
 		}
 	}

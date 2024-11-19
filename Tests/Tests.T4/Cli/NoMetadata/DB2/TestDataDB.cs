@@ -7,10 +7,8 @@
 
 using LinqToDB;
 using LinqToDB.Data;
-using LinqToDB.Expressions;
 using System;
 using System.Linq;
-using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -56,11 +54,9 @@ namespace Cli.NoMetadata.DB2
 
 		#region Table Functions
 		#region TestTableFunction
-		private static readonly MethodInfo _testTableFunction = MemberHelper.MethodOf<TestDataDB>(ctx => ctx.TestTableFunction(default));
-
 		public IQueryable<TestTableFunctionResult> TestTableFunction(int? i)
 		{
-			return this.GetTable<TestTableFunctionResult>(this, _testTableFunction, i);
+			return this.QueryFromExpression<TestTableFunctionResult>(() => TestTableFunction(i));
 		}
 
 		public partial class TestTableFunctionResult
@@ -70,11 +66,9 @@ namespace Cli.NoMetadata.DB2
 		#endregion
 
 		#region TestModule1TestTableFunction
-		private static readonly MethodInfo _testTableFunction1 = MemberHelper.MethodOf<TestDataDB>(ctx => ctx.TestModule1TestTableFunction(default));
-
 		public IQueryable<TestModule1TestTableFunctionResult> TestModule1TestTableFunction(int? i)
 		{
-			return this.GetTable<TestModule1TestTableFunctionResult>(this, _testTableFunction1, i);
+			return this.QueryFromExpression<TestModule1TestTableFunctionResult>(() => TestModule1TestTableFunction(i));
 		}
 
 		public partial class TestModule1TestTableFunctionResult
@@ -84,11 +78,9 @@ namespace Cli.NoMetadata.DB2
 		#endregion
 
 		#region TestModule2TestTableFunction
-		private static readonly MethodInfo _testTableFunction2 = MemberHelper.MethodOf<TestDataDB>(ctx => ctx.TestModule2TestTableFunction(default));
-
 		public IQueryable<TestModule2TestTableFunctionResult> TestModule2TestTableFunction(int? i)
 		{
-			return this.GetTable<TestModule2TestTableFunctionResult>(this, _testTableFunction2, i);
+			return this.QueryFromExpression<TestModule2TestTableFunctionResult>(() => TestModule2TestTableFunction(i));
 		}
 
 		public partial class TestModule2TestTableFunctionResult

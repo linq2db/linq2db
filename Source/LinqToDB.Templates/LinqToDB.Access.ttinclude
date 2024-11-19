@@ -6,11 +6,6 @@ LinqToDB.Data.DataConnection GetAccessConnection(string connectionString)
 	return LinqToDB.DataProvider.Access.AccessTools.CreateDataConnection(connectionString);
 }
 
-LinqToDB.Data.DataConnection GetAccessConnectionForProvider(string connectionString, string providerName)
-{
-	return LinqToDB.DataProvider.Access.AccessTools.CreateDataConnection(connectionString, providerName);
-}
-
 LinqToDB.Data.DataConnection GetAccessConnection(string path, string database)
 {
 	return GetAccessConnection(string.Format("Provider=Microsoft.Jet.OLEDB.4.0;Data Source={0};Locale Identifier=1033;Jet OLEDB:Engine Type=5;Persist Security Info=True", Path.Combine(path, database)));
@@ -19,12 +14,6 @@ LinqToDB.Data.DataConnection GetAccessConnection(string path, string database)
 public void LoadAccessMetadata(string connectionString)
 {
 	using (var dataConnection = GetAccessConnection(connectionString))
-		LoadMetadata(dataConnection);
-}
-
-public void LoadAccessMetadataByProvider(string connectionString, string providerName)
-{
-	using (var dataConnection = GetAccessConnectionForProvider(connectionString, providerName))
 		LoadMetadata(dataConnection);
 }
 

@@ -41,8 +41,8 @@ namespace Tests.UserTests
 
 						var records = db.GetTable<TableTest1064Renamed>().ToList();
 
-						Assert.AreEqual(1, records.Count);
-						Assert.AreEqual(123, records[0].Column1064);
+						Assert.That(records, Has.Count.EqualTo(1));
+						Assert.That(records[0].Column1064, Is.EqualTo(123));
 					}
 					finally
 					{

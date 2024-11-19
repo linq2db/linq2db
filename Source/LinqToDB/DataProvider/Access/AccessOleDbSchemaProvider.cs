@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Globalization;
 using System.Linq;
 using System.Text.RegularExpressions;
 
@@ -24,12 +25,20 @@ namespace LinqToDB.DataProvider.Access
 		// see https://github.com/linq2db/linq2db.LINQPad/issues/10
 		// we create separate connection for GetSchema calls to workaround provider bug
 		// logic not applied if active transaction present - user must remove transaction if he has issues
+		// also it could fail to work when context uses external connection instance
 		private static TResult ExecuteOnNewConnection<TResult>(DataConnection dataConnection, Func<DataConnection, TResult> action)
 		{
 			if (dataConnection.Transaction != null)
 				return action(dataConnection);
-			else using (var newConnection = (DataConnection)dataConnection.Clone())
-					return action(newConnection);
+
+			using var newConnection = new DataConnection(dataConnection.Options);
+
+			// user configured external connection: use it
+			// there is no big value in support for such edge case
+			if (newConnection.Connection == dataConnection.Connection)
+				return action(dataConnection);
+
+			return action(newConnection);
 		}
 
 		protected override IReadOnlyCollection<ForeignKeyInfo> GetForeignKeys(DataConnection dataConnection,
@@ -37,7 +46,7 @@ namespace LinqToDB.DataProvider.Access
 		{
 			var connection = _provider.TryGetProviderConnection(dataConnection, dataConnection.Connection);
 			if (connection == null)
-				return Array<ForeignKeyInfo>.Empty;
+				return [];
 
 			// this method (GetOleDbSchemaTable) could crash application hard with AV:
 			// https://github.com/linq2db/linq2db.LINQPad/issues/23
@@ -293,8 +302,8 @@ namespace LinqToDB.DataProvider.Access
 
 					if (paramValues.All(v => v != null))
 					{
-						var format = $"{dbType}({string.Join(", ", Enumerable.Range(0, paramValues.Length).Select(i => $"{{{i}}}"))})";
-						dbType     = string.Format(format, paramValues);
+						var format = $"{dbType}({string.Join(", ", Enumerable.Range(0, paramValues.Length).Select(i => FormattableString.Invariant($"{{{i}}}")))})";
+						dbType     = string.Format(CultureInfo.InvariantCulture, format, paramValues);
 					}
 				}
 			}

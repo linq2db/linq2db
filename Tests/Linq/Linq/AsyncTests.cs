@@ -9,6 +9,8 @@ using NUnit.Framework;
 
 namespace Tests.Linq
 {
+	using LinqToDB.Async;
+
 	using Model;
 	using UserTests;
 
@@ -25,20 +27,26 @@ namespace Tests.Linq
 		{
 			Test1(context);
 
-			using (var db = GetDataContext(context + ".LinqService"))
+			if (TestConfiguration.DisableRemoteContext)
+				Assert.Inconclusive("Remote context disabled");
+
+			using (var db = GetDataContext(context + LinqServiceSuffix))
 			{
 				var list = await db.Parent.ToArrayAsync();
-				Assert.That(list.Length, Is.Not.EqualTo(0));
+				Assert.That(list, Is.Not.Empty);
 			}
 		}
 
 		[Test]
 		public void Test1([DataSources(false)] string context)
 		{
-			using (var db = GetDataContext(context + ".LinqService"))
+			if (TestConfiguration.DisableRemoteContext)
+				Assert.Inconclusive("Remote context disabled");
+
+			using (var db = GetDataContext(context + LinqServiceSuffix))
 			{
 				var list = db.Parent.ToArrayAsync().Result;
-				Assert.That(list.Length, Is.Not.EqualTo(0));
+				Assert.That(list, Is.Not.Empty);
 			}
 		}
 
@@ -50,13 +58,16 @@ namespace Tests.Linq
 
 		async Task TestForEachImpl(string context)
 		{
-			using (var db = GetDataContext(context + ".LinqService"))
+			if (TestConfiguration.DisableRemoteContext)
+				Assert.Inconclusive("Remote context disabled");
+
+			using (var db = GetDataContext(context + LinqServiceSuffix))
 			{
 				var list = new List<Parent>();
 
 				await db.Parent.ForEachAsync(list.Add);
 
-				Assert.That(list.Count, Is.Not.EqualTo(0));
+				Assert.That(list, Is.Not.Empty);
 			}
 		}
 
@@ -72,7 +83,12 @@ namespace Tests.Linq
 			{
 				conn.InlineParameters = true;
 
-				var sql = conn.Person.Where(p => p.ID == 1).Select(p => p.Name).Take(1).ToString()!;
+				var sql = conn.Person
+					.Where(p => p.ID == 1)
+					.Select(p => p.FirstName)
+					.Take(1)
+					.ToString()!;
+
 				sql = string.Join(Environment.NewLine, sql.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries)
 					.Where(line => !line.StartsWith("--")));
 
@@ -89,7 +105,12 @@ namespace Tests.Linq
 			{
 				conn.InlineParameters = true;
 
-				var sql = conn.Person.Where(p => p.ID == 1).Select(p => p.Name).Take(1).ToString()!;
+				var sql = conn.Person
+					.Where(p => p.ID == 1)
+					.Select(p => p.FirstName)
+					.Take(1)
+					.ToString()!;
+
 				sql = string.Join(Environment.NewLine, sql.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries)
 					.Where(line => !line.StartsWith("--")));
 
@@ -111,7 +132,12 @@ namespace Tests.Linq
 			{
 				conn.InlineParameters = true;
 
-				var sql = conn.Person.Where(p => p.ID == 1).Select(p => p.Name).Take(1).ToString()!;
+				var sql = conn.Person
+					.Where(p => p.ID == 1)
+					.Select(p => p.FirstName)
+					.Take(1)
+					.ToString()!;
+
 				sql = string.Join(Environment.NewLine, sql.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries)
 					.Where(line => !line.StartsWith("--")));
 
@@ -121,6 +147,30 @@ namespace Tests.Linq
 
 					Assert.That(list[0], Is.EqualTo("John"));
 				}
+			}
+		}
+
+		[Test]
+		public async Task TestQueryToAsyncEnumerable([DataSources(false)] string context)
+		{
+			await TestQueryToAsyncEnumerableImpl(context);
+		}
+
+		async Task TestQueryToAsyncEnumerableImpl(string context)
+		{
+			using (var conn = GetDataConnection(context))
+			{
+				conn.InlineParameters = true;
+
+				var sql = conn.Person.Where(p => p.ID == 1).Select(p => p.Name).Take(1).ToString()!;
+				sql = string.Join(Environment.NewLine, sql.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries)
+					.Where(line => !line.StartsWith("--")));
+
+				var list = await conn.SetCommand(sql)
+					.QueryToAsyncEnumerable<string>()
+					.ToListAsync();
+
+				Assert.That(list[0], Is.EqualTo("John"));
 			}
 		}
 
@@ -135,7 +185,6 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue("https://github.com/Octonica/ClickHouseClient/issues/56 + https://github.com/ClickHouse/ClickHouse/issues/37999", Configurations = new[] { ProviderName.ClickHouseMySql, ProviderName.ClickHouseOctonica })]
 		[Test]
 		public async Task ContainsAsyncTest([DataSources] string context)
 		{
@@ -228,19 +277,14 @@ namespace Tests.Linq
 		[Test]
 		public void CancellableAsyncEnumerableTest([DataSources] string context)
 		{
-#if NETFRAMEWORK
-			if (context.IsAnyOf(ProviderName.ClickHouseMySql))
-				Assert.Inconclusive("MySqlConnector 0.x handles cancellation token incorrectly. Fixed in 1.x : https://github.com/mysql-net/MySqlConnector/issues/931");
-#endif
-#if !NETCOREAPP3_1
-			if (context.IsAnyOf(TestProvName.AllMySqlData))
-				Assert.Inconclusive("MySql.Data 8.0.33 handles cancellation token incorrectly");
-#endif
 			using var cts = new CancellationTokenSource();
 			var cancellationToken = cts.Token;
 			cts.Cancel();
+
 			using var db = GetDataContext(context);
+
 			var resultQuery = db.Parent.AsAsyncEnumerable().WithCancellation(cancellationToken);
+
 			Assert.ThrowsAsync<OperationCanceledException>(async () =>
 			{
 				try
@@ -250,9 +294,21 @@ namespace Tests.Linq
 				}
 				catch (OperationCanceledException)
 				{
+#if !NETFRAMEWORK
+					if (context.IsAnyOf(TestProvName.AllOracleManaged) && !context.IsRemote())
+					{
+						Assert.Fail("Update test. Oracle developers evolved");
+					}
+#endif
+
 					// this casts any exception that inherits from OperationCanceledException
 					//   to a OperationCanceledException to pass the assert check above
 					//   (needed for TaskCanceledException)
+					throw new OperationCanceledException();
+				}
+				catch (Exception ex) when (ex.Message.Contains("ORA-01013") && context.IsAnyOf(TestProvName.AllOracleManaged))
+				{
+					// ~Aliens~ Oracle
 					throw new OperationCanceledException();
 				}
 			});

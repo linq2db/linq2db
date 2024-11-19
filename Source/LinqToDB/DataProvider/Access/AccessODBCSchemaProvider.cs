@@ -1,5 +1,7 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Data;
+using System.Globalization;
 using System.Linq;
 
 namespace LinqToDB.DataProvider.Access
@@ -22,7 +24,7 @@ namespace LinqToDB.DataProvider.Access
 			IEnumerable<TableSchema> tables, GetSchemaOptions options)
 		{
 			// https://github.com/dotnet/runtime/issues/35442
-			return Array<ForeignKeyInfo>.Empty;
+			return [];
 		}
 
 		protected override List<TableInfo> GetTables(DataConnection dataConnection, GetSchemaOptions options)
@@ -66,7 +68,7 @@ namespace LinqToDB.DataProvider.Access
 			IEnumerable<TableSchema> tables, GetSchemaOptions options)
 		{
 			// https://github.com/dotnet/runtime/issues/35442
-			return Array<PrimaryKeyInfo>.Empty;
+			return [];
 		}
 
 		protected override List<ColumnInfo> GetColumns(DataConnection dataConnection, GetSchemaOptions options)
@@ -176,8 +178,8 @@ namespace LinqToDB.DataProvider.Access
 
 					if (paramValues.All(v => v != null))
 					{
-						var format = $"{dbType}({string.Join(", ", Enumerable.Range(0, paramValues.Length).Select(i => $"{{{i}}}"))})";
-						dbType     = string.Format(format, paramValues);
+						var format = $"{dbType}({string.Join(", ", Enumerable.Range(0, paramValues.Length).Select(i => FormattableString.Invariant($"{{{i}}}")))})";
+						dbType     = string.Format(CultureInfo.InvariantCulture, format, paramValues);
 					}
 				}
 			}

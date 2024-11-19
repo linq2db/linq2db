@@ -1,11 +1,13 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using System.Linq.Expressions;
-using LinqToDB.Common;
 
 namespace LinqToDB.Expressions
 {
+	using Common;
+
 	/// <summary>
 	/// Used for controlling query caching of custom SQL Functions.
 	/// Parameter with this attribute will be evaluated on client side before generating SQL.
@@ -32,7 +34,7 @@ namespace LinqToDB.Expressions
 			if (obj1 is RawSqlString str1 && obj2 is RawSqlString str2)
 				return str1.Format == str2.Format;
 
-			if (obj1 is IEnumerable list1 && obj2 is IEnumerable list2)
+			if (obj1 is not string and IEnumerable list1 && obj2 is IEnumerable list2)
 			{
 				var enum1 = list1.GetEnumerator();
 				var enum2 = list2.GetEnumerator();
@@ -75,9 +77,40 @@ namespace LinqToDB.Expressions
 		/// </summary>
 		/// <param name="expression">Expression for caching.</param>
 		/// <returns>Ready to cache expression.</returns>
-		public virtual Expression PrepareForCache(Expression expression)
+		public virtual Expression PrepareForCache(Expression expression, IExpressionEvaluator evaluator)
 		{
-			return Expression.Constant(expression.EvaluateExpression());
+			if (expression.NodeType == ExpressionType.Constant)
+				return expression;
+
+			if (expression.NodeType == ExpressionType.NewArrayInit)
+			{
+				var arrayInit   = (NewArrayExpression)expression;
+				var elementType = arrayInit.Type.GetElementType() ?? throw new InvalidOperationException();
+
+				Expression[]? newExpressions = null;
+
+				for (var i = 0; i < arrayInit.Expressions.Count; i++)
+				{
+					var arg      = arrayInit.Expressions[i];
+					var newValue = PrepareForCache(arg, evaluator);
+					if (!ReferenceEquals(newValue, arg))
+					{
+						newExpressions ??= arrayInit.Expressions.ToArray();
+
+						newExpressions[i] = newValue;
+					}
+				}
+
+				if (newExpressions != null)
+					return arrayInit.Update(newExpressions);
+
+				return expression;
+			}
+
+			if (evaluator.CanBeEvaluated(expression))
+				return Expression.Constant(evaluator.Evaluate(expression), expression.Type);
+
+			return expression;
 		}
 
 		/// <summary>

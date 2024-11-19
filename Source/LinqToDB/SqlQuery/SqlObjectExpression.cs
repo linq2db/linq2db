@@ -1,20 +1,16 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Runtime.CompilerServices;
-using System.Text;
 
 namespace LinqToDB.SqlQuery
 {
-	using Linq.Builder;
-	using Extensions;
+	using LinqToDB.Extensions;
 	using Mapping;
-	using Reflection;
 
 	public class SqlObjectExpression : ISqlExpression
 	{
-		readonly SqlInfo[] _infoParameters;
+		readonly SqlGetValue[] _infoParameters;
 
-		public SqlObjectExpression(MappingSchema mappingSchema, SqlInfo[] infoParameters)
+		public SqlObjectExpression(MappingSchema mappingSchema, SqlGetValue[] infoParameters)
 		{
 			MappingSchema   = mappingSchema;
 			_infoParameters = infoParameters;
@@ -23,13 +19,22 @@ namespace LinqToDB.SqlQuery
 		public SqlValue GetSqlValue(object obj, int index)
 		{
 			var p  = _infoParameters[index];
-			var mi = p.MemberChain[p.MemberChain.Length - 1];
 
-			var ta        = TypeAccessor.GetAccessor(mi.DeclaringType!);
-			var valueType = mi.GetMemberType();
-			var value     = ta[mi.Name].GetValue(obj);
+			object? value;
 
-			return MappingSchema.GetSqlValue(valueType, value);
+			if (p.ColumnDescriptor != null)
+			{
+				return MappingSchema.GetSqlValueFromObject(p.ColumnDescriptor, obj);
+			}
+
+			if (p.GetValueFunc != null)
+			{
+				value = p.GetValueFunc(obj);
+			}
+			else
+				throw new InvalidOperationException();
+
+			return MappingSchema.GetSqlValue(p.ValueType, value, null);
 		}
 
 		public Type? SystemType => null;
@@ -41,24 +46,10 @@ namespace LinqToDB.SqlQuery
 
 		public override string ToString()
 		{
-			return ((IQueryElement)this).ToString(new StringBuilder(), new Dictionary<IQueryElement, IQueryElement>()).ToString();
+			return this.ToDebugString();
 		}
 
 #endif
-
-		#endregion
-
-		#region ISqlExpressionWalkable Members
-
-		ISqlExpression ISqlExpressionWalkable.Walk<TContext>(WalkOptions options, TContext context, Func<TContext, ISqlExpression, ISqlExpression> func)
-		{
-			for (var i = 0; i < _infoParameters.Length; i++)
-			{
-				var parameter = _infoParameters[i];
-				_infoParameters[i] = parameter.WithSql(parameter.Sql.Walk(options, context, func)!);
-			}
-			return func(context, this);
-		}
 
 		#endregion
 
@@ -73,17 +64,26 @@ namespace LinqToDB.SqlQuery
 
 		#region ISqlExpression Members
 
+		public bool CanBeNullable(NullabilityContext nullability)
+		{
+			if (_canBeNull.HasValue)
+				return _canBeNull.Value;
+
+			foreach (var parameter in _infoParameters)
+				if (parameter.Sql.CanBeNullable(nullability))
+					return true;
+
+			return false;
+		}
+
 		private bool? _canBeNull;
+
 		public bool CanBeNull
 		{
 			get
 			{
 				if (_canBeNull.HasValue)
 					return _canBeNull.Value;
-
-				foreach (var parameter in _infoParameters)
-					if (parameter.Sql.CanBeNull)
-						return true;
 
 				return false;
 			}
@@ -107,30 +107,32 @@ namespace LinqToDB.SqlQuery
 
 		#region IQueryElement Members
 
+#if DEBUG
+		public string DebugText => this.ToDebugString();
+#endif
 		public QueryElementType ElementType => QueryElementType.SqlObjectExpression;
 
-		StringBuilder IQueryElement.ToString(StringBuilder sb, Dictionary<IQueryElement, IQueryElement> dic)
+		QueryElementTextWriter IQueryElement.ToString(QueryElementTextWriter writer)
 		{
-			sb.Append('(');
-			foreach (var parameter in _infoParameters)
+			writer.Append('(');
+
+			for (var index = 0; index < _infoParameters.Length; index++)
 			{
-				parameter.Sql.ToString(sb, dic)
-					.Append(", ");
+				var parameter = _infoParameters[index];
+				writer.AppendElement(parameter.Sql);
+				if (index < _infoParameters.Length - 1)
+					writer.Append(", ");
 			}
 
-			if (_infoParameters.Length > 0)
-				sb.Length -= 2;
+			writer.Append(')');
 
-			sb.Append(')');
-
-			return sb;
+			return writer;
 		}
 
 		#endregion
 
-
 		public MappingSchema MappingSchema { get; }
-		internal SqlInfo[] InfoParameters => _infoParameters;
 
+		internal SqlGetValue[] InfoParameters => _infoParameters;
 	}
 }

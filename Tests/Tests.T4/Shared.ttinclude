@@ -1,41 +1,10 @@
-﻿<#@ assembly name="$(SolutionDir)Tests\Linq\bin\Debug\net472\linq2db.dll"                       #>
-<#@ assembly name="$(SolutionDir)Tests\Linq\bin\Debug\net472\Microsoft.Bcl.AsyncInterfaces.dll" #>
-<#@ assembly name="$(SolutionDir)Tests\Linq\bin\Debug\net472\linq2db.Tests.Base.dll"            #>
-<#@ include file="..\..\Source\LinqToDB.Templates\PluralizationService.ttinclude" once="true"   #>
+﻿<#@ assembly name="$(ArtifactsPath)\bin\Tests\Debug\net462\linq2db.dll"                       #>
+<#@ assembly name="$(ArtifactsPath)\bin\Tests\Debug\net462\Microsoft.Bcl.AsyncInterfaces.dll" #>
+<#@ assembly name="$(ArtifactsPath)\bin\Tests\Debug\net462\linq2db.Tests.Base.dll"            #>
+<#@ include file="..\..\Source\LinqToDB.Templates\PluralizationService.ttinclude" once="true" #>
+<#@ include file="ConnectionStrings.ttinclude"                                    once="true" #>
 <#@ import namespace="System.IO" #>
 <#
 	EnableNullableReferenceTypes = true;
 	GenerateDatabaseInfo         = false;
-#>
-<#+
-	string GetConnectionString(string config)
-	{
-		var path = System.IO.Path.GetFullPath(Host.ResolvePath(@"..\.."));
-
-		var settings = Tests.Tools.SettingsReader.Deserialize(
-			"NET472",
-			File.ReadAllText(GetFilePath(path, "DataProviders.json")),
-			File.ReadAllText(GetFilePath(path, "UserDataProviders.json")));
-
-		return settings.Connections[config].ConnectionString;
-	}
-
-	string GetFilePath(string basePath, string findFileName)
-	{
-		var fileName = Path.GetFullPath(Path.Combine(basePath, findFileName));
-
-		string path = basePath;
-
-		while (!File.Exists(fileName))
-		{
-			path = Path.GetDirectoryName(path);
-
-			if (path == null)
-				return null;
-
-			fileName = Path.GetFullPath(Path.Combine(path, findFileName));
-		}
-
-		return fileName;
-	}
 #>

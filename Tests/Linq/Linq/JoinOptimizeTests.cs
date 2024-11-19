@@ -55,10 +55,10 @@ namespace Tests.Linq
 						OrderID2 = od2.OrderID,
 					};
 
-				Assert.AreEqual(q, q2);
+				Assert.That(q2, Is.EqualTo(q));
 
 				var ts = q.GetTableSource();
-				Assert.AreEqual(1, ts.Joins.Count);
+				Assert.That(ts.Joins, Has.Count.EqualTo(1));
 			}
 		}
 		[Test]
@@ -104,24 +104,32 @@ namespace Tests.Linq
 						OrderID3 = o3.OrderID,
 					};
 
-				Assert.AreEqual(q, q2);
+				Assert.Multiple(() =>
+				{
+					Assert.That(q2, Is.EqualTo(q));
 
-				Assert.AreEqual(1, q.GetTableSource().Joins.Count);
+					Assert.That(q.GetTableSource().Joins, Has.Count.EqualTo(1));
+				});
 
 				var proj1 = q.Select(v => v.OrderID);
-				TestContext.WriteLine(proj1.ToString());
+				TestContext.Out.WriteLine(proj1.ToString());
 				var sq1 = proj1.GetSelectQuery();
-				Assert.AreEqual(1, sq1.GetTableSource().Joins.Count);
-				Assert.AreEqual(0, sq1.GetWhere().Conditions.Count);
+				Assert.Multiple(() =>
+				{
+					Assert.That(sq1.GetTableSource().Joins, Has.Count.EqualTo(1));
+					Assert.That(sq1.GetWhere().Predicates, Is.Empty);
+				});
 
 				var proj2 = q.Select(v => v.OrderDate);
-				TestContext.WriteLine(proj2.ToString());
+				TestContext.Out.WriteLine(proj2.ToString());
 				var sq2 = proj2.GetSelectQuery();
-				Assert.AreEqual(1, sq2.GetTableSource().Joins.Count);
-				Assert.AreEqual(0, sq2.GetWhere().Conditions.Count);
+				Assert.Multiple(() =>
+				{
+					Assert.That(sq2.GetTableSource().Joins, Has.Count.EqualTo(1));
+					Assert.That(sq2.GetWhere().Predicates, Is.Empty);
+				});
 			}
 		}
-
 
 		[Test]
 		public void InnerJoinFalse([NorthwindDataContext] string context)
@@ -159,10 +167,10 @@ namespace Tests.Linq
 						OrderID2 = od2.OrderID,
 					};
 
-				Assert.AreEqual(q, q2);
+				Assert.That(q2, Is.EqualTo(q));
 
 				var ts = q.GetTableSource();
-				Assert.AreEqual(1, ts.Joins.Count);
+				Assert.That(ts.Joins, Has.Count.EqualTo(1));
 			}
 		}
 
@@ -222,11 +230,14 @@ namespace Tests.Linq
 						OrderID4 = o4 == null ? 0 : o4.OrderID,
 					};
 
-				Assert.AreEqual(q, q2);
+				Assert.That(q2, Is.EqualTo(q));
 
 				var ts = q.GetTableSource();
-				Assert.AreEqual(2, ts.Joins.Count(j => j.JoinType == JoinType.Inner));
-				Assert.AreEqual(3, ts.Joins.Count(j => j.JoinType == JoinType.Left));
+				Assert.Multiple(() =>
+				{
+					Assert.That(ts.Joins.Count(j => j.JoinType == JoinType.Inner), Is.EqualTo(2));
+					Assert.That(ts.Joins.Count(j => j.JoinType == JoinType.Left), Is.EqualTo(3));
+				});
 			}
 		}
 
@@ -247,10 +258,10 @@ namespace Tests.Linq
 						OrderID2 = o2.OrderID,
 					};
 
-				Assert.AreEqual(1, q.GetTableSource().Joins.Count);
+				Assert.That(q.GetTableSource().Joins, Has.Count.EqualTo(1));
 
 				var proj1 = q.Select(v => v.OrderID);
-				Assert.AreEqual(1, proj1.GetTableSource().Joins.Count);
+				Assert.That(proj1.GetTableSource().Joins, Has.Count.EqualTo(1));
 			}
 		}
 
@@ -275,9 +286,9 @@ namespace Tests.Linq
 					join o1 in db.Order on e.OrderID equals o1.OrderID
 					select e;
 
-				TestContext.WriteLine(q2.ToString());
+				TestContext.Out.WriteLine(q2.ToString());
 				var ts = q2.GetTableSource();
-				Assert.AreEqual(1, ts.Joins.Count);
+				Assert.That(ts.Joins, Has.Count.EqualTo(1));
 			}
 		}
 
@@ -302,10 +313,10 @@ namespace Tests.Linq
 
 				var str = q.ToString();
 
-				Assert.AreEqual(1, q.GetTableSource().Joins.Count);
+				Assert.That(q.GetTableSource().Joins, Has.Count.EqualTo(1));
 
 				var proj1 = q.Select(v => v.OrderID);
-				Assert.AreEqual(1, proj1.GetTableSource().Joins.Count);
+				Assert.That(proj1.GetTableSource().Joins, Has.Count.EqualTo(1));
 			}
 		}
 
@@ -330,12 +341,12 @@ namespace Tests.Linq
 						OrderID4 = o4.OrderID,
 					};
 
-				TestContext.WriteLine(q.ToString());
-				Assert.AreEqual(1, q.GetTableSource().Joins.Count);
+				TestContext.Out.WriteLine(q.ToString());
+				Assert.That(q.GetTableSource().Joins, Has.Count.EqualTo(1));
 
 				var proj1 = q.Select(v => v.OrderID);
-				TestContext.WriteLine(proj1.ToString());
-				Assert.AreEqual(1, proj1.GetTableSource().Joins.Count);
+				TestContext.Out.WriteLine(proj1.ToString());
+				Assert.That(proj1.GetTableSource().Joins, Has.Count.EqualTo(1));
 			}
 		}
 
@@ -357,14 +368,20 @@ namespace Tests.Linq
 					};
 
 				var sql = q.GetSelectQuery();
-				Assert.AreEqual(1, sql.GetTableSource().Joins.Count);
-				Assert.AreEqual(2, sql.GetTableSource().Joins.First().Condition.Conditions.Count);
-				Assert.AreEqual(0, sql.GetWhere().Conditions.Count);
+				Assert.That(sql.GetTableSource().Joins, Has.Count.EqualTo(1));
+				Assert.Multiple(() =>
+				{
+					Assert.That(sql.GetTableSource().Joins.First().Condition.Predicates, Has.Count.EqualTo(2));
+					Assert.That(sql.GetWhere().Predicates, Is.Empty);
+				});
 
 				var proj1 = q.Select(v => v.OrderID);
 				var sql1 = proj1.GetSelectQuery();
-				Assert.AreEqual(1, sql1.GetTableSource().Joins.Count);
-				Assert.AreEqual(0, sql1.GetWhere().Conditions.Count);
+				Assert.Multiple(() =>
+				{
+					Assert.That(sql1.GetTableSource().Joins, Has.Count.EqualTo(1));
+					Assert.That(sql1.GetWhere().Predicates, Is.Empty);
+				});
 			}
 		}
 
@@ -389,7 +406,7 @@ namespace Tests.Linq
 						OrderID3 = o3.OrderID,
 					};
 
-				Assert.AreEqual(1, q.GetTableSource().Joins.Count);
+				Assert.That(q.GetTableSource().Joins, Has.Count.EqualTo(1));
 			}
 		}
 
@@ -411,7 +428,7 @@ namespace Tests.Linq
 					};
 
 				var ts = q.GetTableSource();
-				Assert.AreEqual(1, ts.Joins.Count(j => j.JoinType == JoinType.Left));
+				Assert.That(ts.Joins.Count(j => j.JoinType == JoinType.Left), Is.EqualTo(1));
 			}
 		}
 
@@ -433,7 +450,7 @@ namespace Tests.Linq
 					};
 
 				var ts = q.GetTableSource();
-				Assert.AreEqual(2, ts.Joins.Count(j => j.JoinType == JoinType.Left));
+				Assert.That(ts.Joins.Count(j => j.JoinType == JoinType.Left), Is.EqualTo(2));
 			}
 		}
 
@@ -454,19 +471,19 @@ namespace Tests.Linq
 						OrderID2 = o2.OrderID,
 					};
 
-				Assert.AreEqual(1, q.GetTableSource().Joins.Count, "Join not optimized");
+				Assert.That(q.GetTableSource().Joins, Has.Count.EqualTo(1), "Join not optimized");
 
 				var qw = q.Where(v => v.OrderDate != null);
-				Assert.AreEqual(2, qw.GetTableSource().Joins.Count, "If LEFT join is used in where condition - it can not be optimized");
+				Assert.That(qw.GetTableSource().Joins, Has.Count.EqualTo(2), "If LEFT join is used in where condition - it can not be optimized");
 
 				var proj1 = q.Select(v => v.OrderID1);
-				Assert.AreEqual(1, proj1.GetTableSource().Joins.Count);
+				Assert.That(proj1.GetTableSource().Joins, Has.Count.EqualTo(1));
 
 				var proj2 = qw.Select(v => v.OrderID1);
-				Assert.AreEqual(1, proj2.GetTableSource().Joins.Count);
+				Assert.That(proj2.GetTableSource().Joins, Has.Count.EqualTo(1));
 
 				var proj3 = q.Select(v => v.OrderID);
-				Assert.AreEqual(0, proj3.GetTableSource().Joins.Count, "All joins should be optimized");
+				Assert.That(proj3.GetTableSource().Joins, Is.Empty, "All joins should be optimized");
 			}
 		}
 
@@ -499,27 +516,27 @@ namespace Tests.Linq
 						OrderID2 = o2.OrderID,
 					};
 
-				TestContext.WriteLine(q.ToString());
+				TestContext.Out.WriteLine(q.ToString());
 
-				Assert.AreEqual(1, q.GetTableSource().Joins.Count, "Join not optimized");
+				Assert.That(q.GetTableSource().Joins, Has.Count.EqualTo(1), "Join not optimized");
 
 				var ts = q.GetTableSource();
-				Assert.AreEqual(1, ts.Joins.Count, "Join should be optimized");
+				Assert.That(ts.Joins, Has.Count.EqualTo(1), "Join should be optimized");
 
 #pragma warning disable CS0472 // comparison of int with null
 				var qw = q.Where(v => v.OrderID1 != null);
 #pragma warning restore CS0472
 				var str = qw.ToString();
-				Assert.AreEqual(2, qw.GetTableSource().Joins.Count, "If LEFT join is used in where condition - it can not be optimized");
+				Assert.That(qw.GetTableSource().Joins, Has.Count.EqualTo(2), "If LEFT join is used in where condition - it can not be optimized");
 
 				var proj1 = q.Select(v => v.OrderID1);
-				Assert.AreEqual(1, proj1.GetTableSource().Joins.Count);
+				Assert.That(proj1.GetTableSource().Joins, Has.Count.EqualTo(1));
 
 				var proj2 = qw.Select(v => v.OrderID1);
-				Assert.AreEqual(1, proj2.GetTableSource().Joins.Count);
+				Assert.That(proj2.GetTableSource().Joins, Has.Count.EqualTo(1));
 
 				var proj3 = q.Select(v => v.OrderID);
-				Assert.AreEqual(0, proj3.GetTableSource().Joins.Count, "All joins should be optimized");
+				Assert.That(proj3.GetTableSource().Joins, Is.Empty, "All joins should be optimized");
 			}
 		}
 
@@ -532,19 +549,19 @@ namespace Tests.Linq
 					join od2 in db.Order on od.EmployeeID equals od2.OrderID
 					select od;
 
-				Assert.AreEqual(1, q1.GetTableSource().Joins.Count);
+				Assert.That(q1.GetTableSource().Joins, Has.Count.EqualTo(1));
 
 				var q2 = from od in db.Order
 					join od2 in db.Order on od.OrderID equals od2.EmployeeID
 					select od;
 
-				Assert.AreEqual(1, q2.GetTableSource().Joins.Count);
+				Assert.That(q2.GetTableSource().Joins, Has.Count.EqualTo(1));
 
 				var q3 = from od in db.Order
 					join od2 in db.Order on new {ID1 = od.OrderID, ID2 = od.EmployeeID!.Value} equals new {ID1 = od2.EmployeeID!.Value, ID2 = od2.OrderID}
 					select od;
 
-				Assert.AreEqual(1, q3.GetTableSource().Joins.Count);
+				Assert.That(q3.GetTableSource().Joins, Has.Count.EqualTo(1));
 
 			}
 		}
@@ -558,13 +575,13 @@ namespace Tests.Linq
 					join od2 in db.Order on od.OrderID equals od2.OrderID
 					select od;
 
-				Assert.AreEqual(0, q1.GetTableSource().Joins.Count);
+				Assert.That(q1.GetTableSource().Joins, Is.Empty);
 
 				var q2 = from od in db.Order
 					join od2 in db.Order on new {od.OrderID, od.EmployeeID} equals new {od2.OrderID, od2.EmployeeID}
 					select od;
 
-				Assert.AreEqual(0, q2.GetTableSource().Joins.Count);
+				Assert.That(q2.GetTableSource().Joins, Is.Empty);
 			}
 		}
 
@@ -603,7 +620,7 @@ namespace Tests.Linq
 						 on p.Id equals a.Id //PK column
 						 select p;
 
-				Assert.AreEqual(1, query.GetTableSource().Joins.Count);
+				Assert.That(query.GetTableSource().Joins, Has.Count.EqualTo(1));
 			}
 		}
 
@@ -618,7 +635,7 @@ namespace Tests.Linq
 						 on p.Id equals a.Id //PK column
 						 select p;
 
-				Assert.AreEqual(0, query.GetTableSource().Joins.Count);
+				Assert.That(query.GetTableSource().Joins, Is.Empty);
 			}
 		}
 
@@ -633,7 +650,7 @@ namespace Tests.Linq
 					on p.Id equals a.Id //PK column
 					select p;
 
-				Assert.AreEqual(1, query.GetTableSource().Joins.Count);
+				Assert.That(query.GetTableSource().Joins, Has.Count.EqualTo(1));
 			}
 		}
 	}

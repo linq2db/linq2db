@@ -48,7 +48,6 @@ namespace Tests.UserTests
 
 			[Column]
 			[Column(Configuration = ProviderName.DB2, DbType = "char")]
-			[Column(Configuration = ProviderName.Firebird, DbType = "char(1)")]
 			public bool Actual { get; set; }
 		}
 
@@ -73,9 +72,12 @@ namespace Tests.UserTests
 						});
 					var res = query.ToArray();
 
-					Assert.AreEqual(1, res.Length);
-					Assert.IsNotNull(res[0].Instance);
-					Assert.AreEqual(2, res[0].ActualStageId);
+					Assert.That(res, Has.Length.EqualTo(1));
+					Assert.Multiple(() =>
+					{
+						Assert.That(res[0].Instance, Is.Not.Null);
+						Assert.That(res[0].ActualStageId, Is.EqualTo(2));
+					});
 				}
 			}
 		}
@@ -101,9 +103,12 @@ namespace Tests.UserTests
 						});
 					var res = query.ToArray();
 
-					Assert.AreEqual(1, res.Length);
-					Assert.IsNotNull(res[0].Instance);
-					Assert.AreEqual(2, res[0].ActualStageId);
+					Assert.That(res, Has.Length.EqualTo(1));
+					Assert.Multiple(() =>
+					{
+						Assert.That(res[0].Instance, Is.Not.Null);
+						Assert.That(res[0].ActualStageId, Is.EqualTo(2));
+					});
 
 
 					var query2 = db.GetTable<Task>()
@@ -115,9 +120,12 @@ namespace Tests.UserTests
 
 					var res2 = query2.OrderBy(_ => _.Instance.Id).ToArray();
 
-					Assert.AreEqual(2, res2.Length);
-					Assert.IsNotNull(res2[0].Instance);
-					Assert.AreEqual(2, res2[0].ActualStageId);
+					Assert.That(res2, Has.Length.EqualTo(2));
+					Assert.Multiple(() =>
+					{
+						Assert.That(res2[0].Instance, Is.Not.Null);
+						Assert.That(res2[0].ActualStageId, Is.EqualTo(2));
+					});
 				}
 			}
 		}

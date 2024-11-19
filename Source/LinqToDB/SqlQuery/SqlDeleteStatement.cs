@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace LinqToDB.SqlQuery
 {
@@ -28,36 +26,19 @@ namespace LinqToDB.SqlQuery
 
 		public SqlOutputClause? Output { get; set; }
 
-		public override ISqlExpression? Walk<TContext>(WalkOptions options, TContext context, Func<TContext, ISqlExpression, ISqlExpression> func)
+		public override QueryElementTextWriter ToString(QueryElementTextWriter writer)
 		{
-			With?.Walk(options, context, func);
+			writer
+				.AppendTag(Tag)
+				.AppendElement(With)
+				.Append("DELETE FROM ")
+				.AppendElement(Table)
+				.AppendLine()
+				.AppendElement(SelectQuery)
+				.AppendLine()
+				.AppendElement(Output);
 
-			Table       = ((ISqlExpressionWalkable?)Table)?.Walk(options, context, func) as SqlTable;
-			SelectQuery = (SelectQuery)SelectQuery.Walk(options, context, func);
-
-			return base.Walk(options, context, func);
-		}
-
-		public override StringBuilder ToString(StringBuilder sb, Dictionary<IQueryElement,IQueryElement> dic)
-		{
-			sb.Append("DELETE FROM ");
-
-			((IQueryElement?)Table)?.ToString(sb, dic);
-
-			sb.AppendLine();
-
-			return sb;
-		}
-
-		public override void WalkQueries<TContext>(TContext context, Func<TContext, SelectQuery, SelectQuery> func)
-		{
-			if (SelectQuery != null)
-			{
-				var newQuery = func(context, SelectQuery);
-
-				if (!ReferenceEquals(newQuery, SelectQuery))
-					SelectQuery = newQuery;
-			}
+			return writer;
 		}
 
 	}

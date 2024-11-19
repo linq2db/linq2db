@@ -1,6 +1,8 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+
 using LinqToDB;
 
 using NUnit.Framework;
@@ -8,7 +10,6 @@ using NUnit.Framework;
 namespace Tests.Linq
 {
 	using LinqToDB.Async;
-	using LinqToDB.Configuration;
 	using LinqToDB.Data;
 	using Model;
 	using Tools;
@@ -49,13 +50,13 @@ namespace Tests.Linq
 		{
 			using (var ctx = new DataContext(context))
 			{
-				NUnit.Framework.TestContext.WriteLine(ctx.GetTable<Person>().ToString());
+				NUnit.Framework.TestContext.Out.WriteLine(ctx.GetTable<Person>().ToString());
 
 				var q =
 					from s in ctx.GetTable<Person>()
 					select s.FirstName;
 
-				NUnit.Framework.TestContext.WriteLine(q.ToString());
+				NUnit.Framework.TestContext.Out.WriteLine(q.ToString());
 			}
 		}
 
@@ -71,7 +72,7 @@ namespace Tests.Linq
 
 		// Access and SAP HANA ODBC provider detectors use connection string sniffing
 		[Test]
-		public void ProviderConnectionStringConstructorTest1([DataSources(false, ProviderName.Access, ProviderName.SapHanaOdbc)] string context)
+		public void ProviderConnectionStringConstructorTest1([DataSources(false, TestProvName.AllAccess, ProviderName.SapHanaOdbc)] string context)
 		{
 			using (var db = (TestDataConnection)GetDataContext(context))
 			{
@@ -85,7 +86,9 @@ namespace Tests.Linq
 			using (var db = (TestDataConnection)GetDataContext(context))
 			using (var db1 = new DataContext(db.DataProvider.Name, "BAD"))
 			{
-				NUnitAssert.ThrowsAny(() => db1.GetTable<Child>().ToList(), typeof(ArgumentException), typeof(InvalidOperationException));
+				Assert.That(
+					() => db1.GetTable<Child>().ToList(),
+					Throws.TypeOf<ArgumentException>().Or.TypeOf<InvalidOperationException>());
 			}
 		}
 
@@ -96,8 +99,11 @@ namespace Tests.Linq
 			using (var db = (TestDataConnection)GetDataContext(context))
 			using (var db1 = new DataContext(db.DataProvider.Name, db.ConnectionString!))
 			{
-				Assert.AreEqual(db.DataProvider.Name, db1.DataProvider.Name);
-				Assert.AreEqual(db.ConnectionString, db1.ConnectionString);
+				Assert.Multiple(() =>
+				{
+					Assert.That(db1.DataProvider.Name, Is.EqualTo(db.DataProvider.Name));
+					Assert.That(db1.ConnectionString, Is.EqualTo(db.ConnectionString));
+				});
 
 				AreEqual(
 					db.GetTable<Child>().OrderBy(_ => _.ChildID).ToList(),
@@ -175,9 +181,9 @@ namespace Tests.Linq
 			{
 				db.KeepConnectionAlive = true;
 				db.CommandTimeout = 10;
-				Assert.Null(db.DataConnection);
+				Assert.That(db.DataConnection, Is.Null);
 				db.GetTable<Person>().ToList();
-				Assert.NotNull(db.DataConnection);
+				Assert.That(db.DataConnection, Is.Not.Null);
 				Assert.That(db.DataConnection!.CommandTimeout, Is.EqualTo(10));
 
 				db.CommandTimeout = -10;
@@ -195,40 +201,105 @@ namespace Tests.Linq
 		{
 			using (var db = new NewDataContext(context))
 			{
-				Assert.AreEqual(0, db.CreateCalled);
+				Assert.That(db.CreateCalled, Is.EqualTo(0));
 
 				db.KeepConnectionAlive = true;
 				db.GetTable<Person>().ToList();
-				Assert.AreEqual(1, db.CreateCalled);
+				Assert.That(db.CreateCalled, Is.EqualTo(1));
 				db.GetTable<Person>().ToList();
-				Assert.AreEqual(1, db.CreateCalled);
+				Assert.That(db.CreateCalled, Is.EqualTo(1));
 				db.KeepConnectionAlive = false;
 				db.GetTable<Person>().ToList();
-				Assert.AreEqual(2, db.CreateCalled);
+				Assert.That(db.CreateCalled, Is.EqualTo(2));
 			}
 		}
 
-		[Test]
-		public void TestCloneConnection([DataSources(false)] string context)
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/971")]
+		public void CloseAfterUse_DataContext([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
-			using (var db = new NewDataContext(context))
+			// test we don't leak connections here
+
+			// save connection to list to prevent it from being collected
+			var dbs = new List<IDataContext>();
+
+			for (var i = 0; i < 101; i++)
 			{
-				Assert.AreEqual(0, db.CloneCalled);
-				using (new NewDataContext(context))
+				IDataContext db = GetDataContext(context);
+				db.CloseAfterUse = true;
+				dbs.Add(db);
+
+				foreach (var x in db.GetTable<Person>()) { }
+			}
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/971")]
+		public void CloseAfterUse_DataConnection([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			// test we don't leak connections here
+
+			// save connection to list to prevent it from being collected
+			var dbs = new List<IDataContext>();
+
+			// default pool size for SqlClient is 100
+			for (var i = 0; i < 101; i++)
+			{
+				IDataContext db = GetDataConnection(context);
+				db.CloseAfterUse = true;
+				dbs.Add(db);
+
+				foreach (var x in db.GetTable<Person>()) { }
+			}
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/971")]
+		public void DontCloseAfterUse_DataContext([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			// test we don't leak connections here
+
+			// save connection to list to prevent it from being collected
+			var dbs = new List<IDataContext>();
+
+			Assert.That(() =>
+			{
+				for (var i = 0; i < 101; i++)
 				{
-					using (((IDataContext)db).Clone(true))
-					{
-						Assert.False(db.IsMarsEnabled);
-						Assert.AreEqual(0, db.CloneCalled);
+					IDataContext db = GetDataContext(context);
+					db.CloseAfterUse = false;
+					dbs.Add(db);
 
-						// create and preserve underlying dataconnection
-						db.KeepConnectionAlive = true;
-						db.GetTable<Person>().ToList();
-
-						using (((IDataContext)db).Clone(true))
-							Assert.AreEqual(db.IsMarsEnabled ? 1 : 0, db.CloneCalled);
-					}
+					foreach (var x in db.GetTable<Person>()) { }
 				}
+			}, Throws.Exception);
+
+			foreach (var db in dbs)
+			{
+				db.Dispose();
+			}
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/971")]
+		public void DontCloseAfterUse_DataConnection([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			// test we don't leak connections here
+
+			// save connection to list to prevent it from being collected
+			var dbs = new List<IDataContext>();
+
+			Assert.That(() =>
+			{
+				for (var i = 0; i < 101; i++)
+				{
+					IDataContext db = GetDataConnection(context);
+					db.CloseAfterUse = false;
+					dbs.Add(db);
+
+					foreach (var x in db.GetTable<Person>()) { }
+				}
+			}, Throws.Exception);
+
+			foreach (var db in dbs)
+			{
+				db.Dispose();
 			}
 		}
 
@@ -240,18 +311,11 @@ namespace Tests.Linq
 			}
 
 			public int CreateCalled;
-			public int CloneCalled;
 
 			protected override DataConnection CreateDataConnection(DataOptions options)
 			{
 				CreateCalled++;
 				return base.CreateDataConnection(options);
-			}
-
-			protected override DataConnection CloneDataConnection(DataConnection currentConnection, DataOptions options)
-			{
-				CloneCalled++;
-				return base.CloneDataConnection(currentConnection, options);
 			}
 		}
 

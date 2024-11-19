@@ -96,8 +96,7 @@ namespace OracleDataContext
 		[Sql.TableFunction(Schema="MANAGED", Package="TEST_PACKAGE1", Name="TEST_TABLE_FUNCTION")]
 		public ITable<TestTableFUNCTIONResult> TestPACKAGE1TestTableFunction(decimal? i)
 		{
-			return this.GetTable<TestTableFUNCTIONResult>(this, (MethodInfo)MethodBase.GetCurrentMethod()!,
-				i);
+			return this.TableFromExpression(() => TestPACKAGE1TestTableFunction(i));
 		}
 
 		public partial class TestTableFUNCTIONResult
@@ -112,8 +111,7 @@ namespace OracleDataContext
 		[Sql.TableFunction(Schema="MANAGED", Package="TEST_PACKAGE2", Name="TEST_TABLE_FUNCTION")]
 		public ITable<TestTableFUNCTIONResult0> TestPACKAGE2TestTableFunction(decimal? i)
 		{
-			return this.GetTable<TestTableFUNCTIONResult0>(this, (MethodInfo)MethodBase.GetCurrentMethod()!,
-				i);
+			return this.TableFromExpression(() => TestPACKAGE2TestTableFunction(i));
 		}
 
 		public partial class TestTableFUNCTIONResult0
@@ -128,8 +126,7 @@ namespace OracleDataContext
 		[Sql.TableFunction(Schema="MANAGED", Name="TEST_TABLE_FUNCTION")]
 		public ITable<TestTableFUNCTIONResult1> TestTableFunction(decimal? i)
 		{
-			return this.GetTable<TestTableFUNCTIONResult1>(this, (MethodInfo)MethodBase.GetCurrentMethod()!,
-				i);
+			return this.TableFromExpression(() => TestTableFunction(i));
 		}
 
 		public partial class TestTableFUNCTIONResult1
@@ -500,7 +497,7 @@ namespace OracleDataContext
 		#region Associations
 
 		/// <summary>
-		/// SYS_C007192_BackReference (MANAGED.t_test_user_contract)
+		/// SYS_C007123_BackReference (MANAGED.t_test_user_contract)
 		/// </summary>
 		[Association(ThisKey="UserId", OtherKey="UserId", CanBeNull=true)]
 		public IEnumerable<TTestUserContract> Syscs { get; set; } = null!;
@@ -519,7 +516,7 @@ namespace OracleDataContext
 		#region Associations
 
 		/// <summary>
-		/// SYS_C007192 (MANAGED.t_test_user)
+		/// SYS_C007123 (MANAGED.t_test_user)
 		/// </summary>
 		[Association(ThisKey="UserId", OtherKey="UserId", CanBeNull=false)]
 		public TTestUser User { get; set; } = null!;
@@ -529,58 +526,6 @@ namespace OracleDataContext
 
 	public static partial class XeDBStoredProcedures
 	{
-		#region TestPACKAGE1TestProcedure
-
-		public static int TestPACKAGE1TestProcedure(this XeDB dataConnection, decimal? i, out decimal? o)
-		{
-			var parameters = new []
-			{
-				new DataParameter("I", i, LinqToDB.DataType.Decimal)
-				{
-					Size = 22
-				},
-				new DataParameter("O", null, LinqToDB.DataType.Decimal)
-				{
-					Direction = ParameterDirection.Output,
-					Size      = 22
-				}
-			};
-
-			var ret = dataConnection.ExecuteProc("MANAGED.TEST_PACKAGE1.TEST_PROCEDURE", parameters);
-
-			o = Converter.ChangeTypeTo<decimal?>(parameters[1].Value);
-
-			return ret;
-		}
-
-		#endregion
-
-		#region TestPACKAGE2TestProcedure
-
-		public static int TestPACKAGE2TestProcedure(this XeDB dataConnection, decimal? i, out decimal? o)
-		{
-			var parameters = new []
-			{
-				new DataParameter("I", i, LinqToDB.DataType.Decimal)
-				{
-					Size = 22
-				},
-				new DataParameter("O", null, LinqToDB.DataType.Decimal)
-				{
-					Direction = ParameterDirection.Output,
-					Size      = 22
-				}
-			};
-
-			var ret = dataConnection.ExecuteProc("MANAGED.TEST_PACKAGE2.TEST_PROCEDURE", parameters);
-
-			o = Converter.ChangeTypeTo<decimal?>(parameters[1].Value);
-
-			return ret;
-		}
-
-		#endregion
-
 		#region ADDISSUE792RECORD
 
 		public static int ADDISSUE792RECORD(this XeDB dataConnection)
@@ -729,6 +674,58 @@ namespace OracleDataContext
 
 		#endregion
 
+		#region TestPACKAGE1TestProcedure
+
+		public static int TestPACKAGE1TestProcedure(this XeDB dataConnection, decimal? i, out decimal? o)
+		{
+			var parameters = new []
+			{
+				new DataParameter("I", i, LinqToDB.DataType.Decimal)
+				{
+					Size = 22
+				},
+				new DataParameter("O", null, LinqToDB.DataType.Decimal)
+				{
+					Direction = ParameterDirection.Output,
+					Size      = 22
+				}
+			};
+
+			var ret = dataConnection.ExecuteProc("MANAGED.TEST_PACKAGE1.TEST_PROCEDURE", parameters);
+
+			o = Converter.ChangeTypeTo<decimal?>(parameters[1].Value);
+
+			return ret;
+		}
+
+		#endregion
+
+		#region TestPACKAGE2TestProcedure
+
+		public static int TestPACKAGE2TestProcedure(this XeDB dataConnection, decimal? i, out decimal? o)
+		{
+			var parameters = new []
+			{
+				new DataParameter("I", i, LinqToDB.DataType.Decimal)
+				{
+					Size = 22
+				},
+				new DataParameter("O", null, LinqToDB.DataType.Decimal)
+				{
+					Direction = ParameterDirection.Output,
+					Size      = 22
+				}
+			};
+
+			var ret = dataConnection.ExecuteProc("MANAGED.TEST_PACKAGE2.TEST_PROCEDURE", parameters);
+
+			o = Converter.ChangeTypeTo<decimal?>(parameters[1].Value);
+
+			return ret;
+		}
+
+		#endregion
+
 		#region TestProcedure
 
 		public static int TestProcedure(this XeDB dataConnection, decimal? i, out decimal? o)
@@ -758,26 +755,6 @@ namespace OracleDataContext
 
 	public static partial class SqlFunctions
 	{
-		#region TestPACKAGE1TestFunction
-
-		[Sql.Function(Name="MANAGED.TEST_PACKAGE1.TEST_FUNCTION", ServerSideOnly=true)]
-		public static decimal? TestPACKAGE1TestFunction(decimal? i)
-		{
-			throw new InvalidOperationException();
-		}
-
-		#endregion
-
-		#region TestPACKAGE2TestFunction
-
-		[Sql.Function(Name="MANAGED.TEST_PACKAGE2.TEST_FUNCTION", ServerSideOnly=true)]
-		public static decimal? TestPACKAGE2TestFunction(decimal? i)
-		{
-			throw new InvalidOperationException();
-		}
-
-		#endregion
-
 		#region PatientSelectall
 
 		[Sql.Function(Name="MANAGED.PATIENT_SELECTALL", ServerSideOnly=true)]
@@ -882,6 +859,26 @@ namespace OracleDataContext
 
 		[Sql.Function(Name="MANAGED.TEST_FUNCTION", ServerSideOnly=true)]
 		public static decimal? TestFunction(decimal? i)
+		{
+			throw new InvalidOperationException();
+		}
+
+		#endregion
+
+		#region TestPACKAGE1TestFunction
+
+		[Sql.Function(Name="MANAGED.TEST_PACKAGE1.TEST_FUNCTION", ServerSideOnly=true)]
+		public static decimal? TestPACKAGE1TestFunction(decimal? i)
+		{
+			throw new InvalidOperationException();
+		}
+
+		#endregion
+
+		#region TestPACKAGE2TestFunction
+
+		[Sql.Function(Name="MANAGED.TEST_PACKAGE2.TEST_FUNCTION", ServerSideOnly=true)]
+		public static decimal? TestPACKAGE2TestFunction(decimal? i)
 		{
 			throw new InvalidOperationException();
 		}

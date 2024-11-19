@@ -2,17 +2,25 @@
 	[Parameter(Mandatory=$true)][string]$path,
 	[Parameter(Mandatory=$true)][string]$buildPath,
 	[Parameter(Mandatory=$true)][string]$version,
-	[Parameter(Mandatory=$false)][string]$branch
+	[Parameter(Mandatory=$false)][string]$linq2DbVersion,
+	[Parameter(Mandatory=$false)][string]$branch,
+	[Parameter(Mandatory=$false)][string]$clean
 )
 
 $ErrorActionPreference = "Stop"
 Set-StrictMode -Version Latest
 
-if (Test-Path $buildPath) {
+if ($clean -and (Test-Path $buildPath)) {
 	Remove-Item $buildPath -Recurse
 }
 
-New-Item -Path $buildPath -ItemType Directory
+if (!(Test-Path $buildPath)) {
+	New-Item -Path $buildPath -ItemType Directory
+}
+
+if (!$linq2DbVersion){
+	$linq2DbVersion = $version
+}
 
 if ($version) {
 
@@ -35,13 +43,9 @@ if ($version) {
 		Select -expand node |
 		ForEach { $_.InnerText = $version }
 
-		Select-Xml -Xml $xml -XPath '//ns:dependency[@id="linq2db.t4models"]/@version' -Namespace $ns |
-		Select -expand node |
-		ForEach { $_.Value = $version }
-
 		Select-Xml -Xml $xml -XPath '//ns:dependency[@id="linq2db"]/@version' -Namespace $ns |
 		Select -expand node |
-		ForEach { $_.Value = $version }
+		ForEach { $_.Value = $linq2DbVersion }
 
 		$child = $xml.CreateElement('version', $nsUri)
 		$child.InnerText = $version
@@ -52,7 +56,7 @@ if ($version) {
 		$xml.package.metadata.AppendChild($child)
 
 		$child = $xml.CreateElement('copyright', $nsUri)
-		$child.InnerText = 'Copyright © 2023 ' + $authors
+		$child.InnerText = 'Copyright © 2024 ' + $authors
 		$xml.package.metadata.AppendChild($child)
 
 		$child = $xml.CreateElement('authors', $nsUri)
@@ -72,7 +76,7 @@ if ($version) {
 
 		$child = $xml.CreateElement('file', $nsUri)
 		$attr = $xml.CreateAttribute('src')
-		$attr.Value = '..\MIT-LICENSE.txt'
+		$attr.Value = '..\..\MIT-LICENSE.txt'
 		$child.Attributes.Append($attr)
 		$xml.package.files.AppendChild($child)
 
@@ -87,7 +91,7 @@ if ($version) {
 
 		$child = $xml.CreateElement('file', $nsUri)
 		$attr = $xml.CreateAttribute('src')
-		$attr.Value = '..\NuGet\icon64.png'
+		$attr.Value = '..\..\NuGet\icon.png'
 		$child.Attributes.Append($attr)
 		$attr = $xml.CreateAttribute('target')
 		$attr.Value = 'images\icon.png'

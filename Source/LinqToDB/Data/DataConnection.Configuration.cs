@@ -13,7 +13,7 @@ namespace LinqToDB.Data
 	using DataProvider;
 	using RetryPolicy;
 
-	public partial class DataConnection : IConfigurationID
+	public partial class DataConnection
 	{
 		static class Configuration
 		{
@@ -193,19 +193,19 @@ namespace LinqToDB.Data
 		static DataConnection()
 		{
 			// lazy registration of embedded providers using detectors
-			AddProviderDetector(LinqToDB.DataProvider.Access    .AccessTools    .ProviderDetector);
-			AddProviderDetector(LinqToDB.DataProvider.DB2       .DB2Tools       .ProviderDetector);
-			AddProviderDetector(LinqToDB.DataProvider.Firebird  .FirebirdTools  .ProviderDetector);
-			AddProviderDetector(LinqToDB.DataProvider.Informix  .InformixTools  .ProviderDetector);
-			AddProviderDetector(LinqToDB.DataProvider.MySql     .MySqlTools     .ProviderDetector);
+			AddProviderDetector(LinqToDB.DataProvider.Access    .AccessTools    .ProviderDetector.DetectProvider);
+			AddProviderDetector(LinqToDB.DataProvider.DB2       .DB2Tools       .ProviderDetector.DetectProvider);
+			AddProviderDetector(LinqToDB.DataProvider.Firebird  .FirebirdTools  .ProviderDetector.DetectProvider);
+			AddProviderDetector(LinqToDB.DataProvider.Informix  .InformixTools  .ProviderDetector.DetectProvider);
+			AddProviderDetector(LinqToDB.DataProvider.MySql     .MySqlTools     .ProviderDetector.DetectProvider);
 			AddProviderDetector(LinqToDB.DataProvider.Oracle    .OracleTools    .ProviderDetector.DetectProvider);
 			AddProviderDetector(LinqToDB.DataProvider.PostgreSQL.PostgreSQLTools.ProviderDetector.DetectProvider);
-			AddProviderDetector(LinqToDB.DataProvider.SapHana   .SapHanaTools   .ProviderDetector);
+			AddProviderDetector(LinqToDB.DataProvider.SapHana   .SapHanaTools   .ProviderDetector.DetectProvider);
 			AddProviderDetector(LinqToDB.DataProvider.SqlCe     .SqlCeTools     .ProviderDetector);
-			AddProviderDetector(LinqToDB.DataProvider.SQLite    .SQLiteTools    .ProviderDetector);
+			AddProviderDetector(LinqToDB.DataProvider.SQLite    .SQLiteTools    .ProviderDetector.DetectProvider);
 			AddProviderDetector(LinqToDB.DataProvider.SqlServer .SqlServerTools .ProviderDetector.DetectProvider);
-			AddProviderDetector(LinqToDB.DataProvider.Sybase    .SybaseTools    .ProviderDetector);
-			AddProviderDetector(LinqToDB.DataProvider.ClickHouse.ClickHouseTools.ProviderDetector);
+			AddProviderDetector(LinqToDB.DataProvider.Sybase    .SybaseTools    .ProviderDetector.DetectProvider);
+			AddProviderDetector(LinqToDB.DataProvider.ClickHouse.ClickHouseTools.ProviderDetector.DetectProvider);
 
 			var section = DefaultSettings;
 
@@ -387,17 +387,6 @@ namespace LinqToDB.Data
 
 			_defaultDataOptions = null;
 			ConnectionOptionsByConfigurationString.Clear();
-		}
-
-		internal static Lazy<IDataProvider> CreateDataProvider<T>()
-			where T : IDataProvider, new()
-		{
-			return new(() =>
-			{
-				var provider = new T();
-				AddDataProvider(provider);
-				return provider;
-			}, true);
 		}
 
 		public static void AddOrSetConfiguration(
@@ -583,7 +572,7 @@ namespace LinqToDB.Data
 						dataConnection._closeConnection   = false;
 						dataConnection._disposeConnection = false;
 
-						dataConnection.TransactionAsync = AsyncFactory.Create(transaction);
+						dataConnection.TransactionAsync = AsyncFactory.CreateAndSetDataContext(dataConnection, transaction);
 						dataConnection.DataProvider     = provider;
 						dataConnection.MappingSchema    = provider.MappingSchema;
 
@@ -656,7 +645,7 @@ namespace LinqToDB.Data
 					// TODO: IT Look into.
 					return connection is IAsyncDbConnection asyncDbConnection
 						? asyncDbConnection
-						: AsyncFactory.Create(connection);
+						: AsyncFactory.CreateAndSetDataContext(dataConnection, connection);
 				}
 			}
 

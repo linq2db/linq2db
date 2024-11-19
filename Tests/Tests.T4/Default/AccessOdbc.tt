@@ -5,9 +5,10 @@
 <#
 	NamespaceName     = "Default.Access.Odbc";
 	DataContextName   = "TestDataDB";
-	var solutionsPath = Host.ResolveAssemblyReference("$(SolutionDir)");
-	var path = $@"{solutionsPath}\Tests\Linq\bin\Debug\net472\Database\TestData.ODBC.mdb";
-	LoadAccessMetadataByProvider($"Driver={{Microsoft Access Driver (*.mdb, *.accdb)}};Dbq={path};ExtendedAnsiSQL=1", LinqToDB.ProviderName.AccessOdbc);
+	var artifactsPath = Host.ResolveAssemblyReference("$(ArtifactsPath)");
+	var path          = $@"{artifactsPath}\bin\Tests\Debug\net462\Database\TestData.ODBC.mdb";
+
+	LoadAccessMetadata($"Driver={{Microsoft Access Driver (*.mdb, *.accdb)}};Dbq={path};ExtendedAnsiSQL=1");
 
 	GenerateModel();
 #>

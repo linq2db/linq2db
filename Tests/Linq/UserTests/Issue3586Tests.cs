@@ -92,7 +92,6 @@ namespace Tests.UserTests
 			[Column] public Guid ResourcePointID { get; set; }
 		}
 
-		[ActiveIssue("Reservations field causes error")]
 		[Test]
 		public void ComplexWhereWithAny([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{

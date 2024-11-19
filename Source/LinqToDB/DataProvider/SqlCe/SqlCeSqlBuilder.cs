@@ -1,12 +1,14 @@
-﻿using System;
-using System.Data.Common;
+﻿using System.Data.Common;
+using System.Globalization;
+using System.Linq;
 using System.Text;
 
 namespace LinqToDB.DataProvider.SqlCe
 {
+	using Common;
 	using Mapping;
-	using SqlQuery;
 	using SqlProvider;
+	using SqlQuery;
 
 	sealed class SqlCeSqlBuilder : BasicSqlBuilder
 	{
@@ -44,6 +46,17 @@ namespace LinqToDB.DataProvider.SqlCe
 		protected override bool SupportsColumnAliasesInSource => true;
 		protected override bool RequiresConstantColumnAliases => true;
 
+		protected override bool CanSkipRootAliases(SqlStatement statement)
+		{
+			if (statement.SelectQuery != null)
+			{
+				// SQL CE doesn't support multiple columns with the same name in SELECT clause
+				return false;
+			}
+
+			return base.CanSkipRootAliases(statement);
+		}
+
 		public override int CommandCount(SqlStatement statement)
 		{
 			if (statement is SqlTruncateTableStatement trun)
@@ -69,25 +82,23 @@ namespace LinqToDB.DataProvider.SqlCe
 			}
 		}
 
-		protected override void BuildDataTypeFromDataType(SqlDataType type, bool forCreateTable, bool canBeNull)
+		protected override void BuildDataTypeFromDataType(DbDataType type, bool forCreateTable, bool canBeNull)
 		{
 			// https://learn.microsoft.com/en-us/previous-versions/sql/sql-server-2005/ms172424(v=sql.90)
-			switch (type.Type.DataType)
+			switch (type.DataType)
 			{
 				case DataType.Guid          : StringBuilder.Append("UNIQUEIDENTIFIER");                                                                        return;
-				case DataType.Char          : base.BuildDataTypeFromDataType(new SqlDataType(DataType.NChar,    type.Type.Length), forCreateTable, canBeNull); return;
-				case DataType.VarChar       : base.BuildDataTypeFromDataType(new SqlDataType(DataType.NVarChar, type.Type.Length), forCreateTable, canBeNull); return;
+				case DataType.Char          : base.BuildDataTypeFromDataType(new DbDataType(typeof(char), DataType.NChar, null, type.Length), forCreateTable, canBeNull); return;
+				case DataType.VarChar       : base.BuildDataTypeFromDataType(new DbDataType(typeof(string), DataType.NVarChar, null, type.Length), forCreateTable, canBeNull); return;
 				case DataType.SmallMoney    : StringBuilder.Append("Decimal(10, 4)");                                                                          return;
 				case DataType.DateTime2     :
 				case DataType.Time          :
 				case DataType.Date          :
 				case DataType.SmallDateTime : StringBuilder.Append("DateTime");                                                                                return;
 				case DataType.NVarChar:
-					if (type.Type.Length == null || type.Type.Length > 4000 || type.Type.Length < 1)
+					if (type.Length == null || type.Length > 4000 || type.Length < 1)
 					{
-						StringBuilder
-							.Append(type.Type.DataType)
-							.Append("(4000)");
+						StringBuilder.Append("NVarChar(4000)");
 						return;
 					}
 
@@ -95,13 +106,13 @@ namespace LinqToDB.DataProvider.SqlCe
 
 				case DataType.Binary:
 					StringBuilder.Append("BINARY");
-					if (type.Type.Length > 1 && type.Type.Length <= 8000)
-						StringBuilder.AppendFormat("({0})", type.Type.Length);
+					if (type.Length > 1 && type.Length <= 8000)
+						StringBuilder.Append(CultureInfo.InvariantCulture, $"({type.Length})");
 					return;
 				case DataType.VarBinary:
 					StringBuilder.Append("VARBINARY");
-					if (type.Type.Length > 1 && type.Type.Length <= 8000)
-						StringBuilder.AppendFormat("({0})", type.Type.Length);
+					if (type.Length > 1 && type.Length <= 8000)
+						StringBuilder.Append(CultureInfo.InvariantCulture, $"({type.Length})");
 					return;
 			}
 

@@ -1,13 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Text;
 using System.Data.Common;
+using System.Text;
 
 namespace LinqToDB.DataProvider.Sybase
 {
-	using SqlQuery;
-	using SqlProvider;
+	using Common;
 	using Mapping;
+	using SqlProvider;
+	using SqlQuery;
 
 	sealed partial class SybaseSqlBuilder : BasicSqlBuilder
 	{
@@ -49,26 +50,25 @@ namespace LinqToDB.DataProvider.Sybase
 			_isSelect = false;
 		}
 
-		protected override void BuildColumnExpression(SelectQuery? selectQuery, ISqlExpression expr, string? alias, ref bool addAlias)
+		protected override void BuildColumnExpression(SelectQuery? selectQuery, ISqlExpression expr, string? alias,
+			ref bool                                               addAlias)
 		{
 			base.BuildColumnExpression(selectQuery, expr, alias, ref addAlias);
 
 			if (_skipAliases) addAlias = false;
 		}
 
-		protected override void BuildDataTypeFromDataType(SqlDataType type, bool forCreateTable, bool canBeNull)
+		protected override void BuildDataTypeFromDataType(DbDataType type, bool forCreateTable, bool canBeNull)
 		{
-			switch (type.Type.DataType)
+			switch (type.DataType)
 			{
 				case DataType.Guid      : StringBuilder.Append("VARCHAR(36)"); return;
 				case DataType.DateTime2 : StringBuilder.Append("DateTime");    return;
 				case DataType.NVarChar  :
 					// yep, 5461...
-					if (type.Type.Length == null || type.Type.Length > 5461 || type.Type.Length < 1)
+					if (type.Length == null || type.Length > 5461 || type.Length < 1)
 					{
-						StringBuilder
-							.Append(type.Type.DataType)
-							.Append("(5461)");
+						StringBuilder.Append("NVarChar(5461)");
 						return;
 					}
 					break;
@@ -112,7 +112,8 @@ namespace LinqToDB.DataProvider.Sybase
 			StringBuilder.AppendLine();
 		}
 
-		protected override void BuildUpdateTableName(SelectQuery selectQuery, SqlUpdateClause updateClause)
+		protected override void BuildUpdateTableName(SelectQuery selectQuery,
+			SqlUpdateClause                                      updateClause)
 		{
 			if (updateClause.Table != null && (selectQuery.From.Tables.Count == 0 || updateClause.Table != selectQuery.From.Tables[0].Source))
 				BuildPhysicalTable(updateClause.Table, null);
@@ -229,7 +230,7 @@ namespace LinqToDB.DataProvider.Sybase
 			}
 		}
 
-		private void BuildIdentityInsert(SqlTableSource table, bool enable)
+		private void BuildIdentityInsert(NullabilityContext nullability, SqlTableSource table, bool enable)
 		{
 			StringBuilder.Append("SET IDENTITY_INSERT ");
 			BuildTableName(table, true, false);
@@ -271,7 +272,8 @@ namespace LinqToDB.DataProvider.Sybase
 
 		protected override void BuildDropTableStatement(SqlDropTableStatement dropTable)
 		{
-			var table = dropTable.Table!;
+			var nullability = NullabilityContext.NonQuery;
+			var table       = dropTable.Table!;
 
 			BuildTag(dropTable);
 
@@ -295,6 +297,8 @@ namespace LinqToDB.DataProvider.Sybase
 
 		protected override void BuildStartCreateTableStatement(SqlCreateTableStatement createTable)
 		{
+			var nullability = NullabilityContext.NonQuery;
+
 			if (createTable.StatementHeader == null && createTable.Table!.TableOptions.HasCreateIfNotExists())
 			{
 				var table = createTable.Table;

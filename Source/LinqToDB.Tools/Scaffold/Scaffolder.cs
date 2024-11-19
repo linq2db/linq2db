@@ -134,7 +134,7 @@ namespace LinqToDB.Scaffold
 					var parsedName = Language.TypeParser.ParseNamespaceOrRegularTypeName(name, false);
 					if (parsedName.Length > 0)
 					{
-						var scope = parsedName.Length > 1 ? parsedName.Take(parsedName.Length - 1).ToArray() : Array<CodeIdentifier>.Empty;
+						var scope = parsedName.Length > 1 ? parsedName.Take(parsedName.Length - 1).ToArray() : [];
 						if (!nameScopes.ScopesWithNames.TryGetValue(scope, out var names))
 							nameScopes.ScopesWithNames.Add(scope, names = new HashSet<CodeIdentifier>(Language.IdentifierEqualityComparer));
 						names.Add(parsedName[parsedName.Length - 1]);

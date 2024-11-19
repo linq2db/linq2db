@@ -13,37 +13,37 @@
 		<tags>linq linq2db MySql LinqToDB ORM database DB SQL</tags>
 		<readme>README.md</readme>
 		<dependencies>
-			<dependency id="linq2db"    version="5.0.0" />
-			<dependency id="MySql.Data" version="8.1.0" />
+			<dependency id="linq2db"    version="6.0.0" />
+			<dependency id="MySql.Data" version="9.1.0" />
 		</dependencies>
 		<contentFiles>
 			<files include="**\*" buildAction="None" />
 		</contentFiles>
 	</metadata>
 	<files>
-		<file src="..\Nuget\README.T4.md"                                                  target="README.md"                                                                                          />
+		<file src="..\..\NuGet\README.T4.md"                                            target="README.md"                                                                                          />
 
-		<file src="..\Source\LinqToDB\bin\Release\net46\linq2db.dll"                       target="tools"                                                                                              />
-		<file src="..\Tests\Linq\bin\Azure\net472\Humanizer.dll"                           target="tools"                                                                                              />
-		<file src="..\Tests\Linq\bin\Azure\net472\MySqlConnector.dll"                      target="tools"                                                                                              />
-		<file src="..\Tests\Linq\bin\Azure\net472\System.Memory.dll"                       target="tools"                                                                                              />
-		<file src="..\Tests\Linq\bin\Azure\net472\System.Buffers.dll"                      target="tools"                                                                                              />
-		<file src="..\Tests\Linq\bin\Azure\net472\System.Threading.Tasks.Extensions.dll"   target="tools"                                                                                              />
-		<file src="..\Tests\Linq\bin\Azure\net472\System.Diagnostics.DiagnosticSource.dll" target="tools"                                                                                              />
-		<file src="..\Tests\Linq\bin\Azure\net472\Microsoft.Bcl.AsyncInterfaces.dll"       target="tools"                                                                                              />
+		<file src="..\bin\LinqToDB\Release\net462\linq2db.dll"                          target="tools"                                                                                              />
+		<file src="..\bin\Tests\Release\net462\Humanizer.dll"                           target="tools"                                                                                              />
+		<file src="..\bin\Tests\Release\net462\MySqlConnector.dll"                      target="tools"                                                                                              />
+		<file src="..\bin\Tests\Release\net462\System.Memory.dll"                       target="tools"                                                                                              />
+		<file src="..\bin\Tests\Release\net462\System.Buffers.dll"                      target="tools"                                                                                              />
+		<file src="..\bin\Tests\Release\net462\System.Threading.Tasks.Extensions.dll"   target="tools"                                                                                              />
+		<file src="..\bin\Tests\Release\net462\System.Diagnostics.DiagnosticSource.dll" target="tools"                                                                                              />
+		<file src="..\bin\Tests\Release\net462\Microsoft.Bcl.AsyncInterfaces.dll"       target="tools"                                                                                              />
 
-		<file src="..\NuGet\MySql\linq2db.MySql.props"                                     target="build"                                                                                              />
+		<file src="..\..\NuGet\MySql\linq2db.MySql.props"                               target="build"                                                                                              />
 
-		<file src="..\NuGet\MySql\*.*"                                                     target="contentFiles\any\any\LinqToDB.Templates"                          exclude="**\*.props"              />
-		<file src="..\NuGet\t4models\*.ttinclude"                                          target="contentFiles\any\any\LinqToDB.Templates"                                                            />
-		<file src="..\Source\LinqToDB.Templates\*.ttinclude"                               target="contentFiles\any\any\LinqToDB.Templates"                          exclude="**\LinqToDB.*.ttinclude" />
-		<file src="..\Source\LinqToDB.Templates\LinqToDB.Tools.ttinclude"                  target="contentFiles\any\any\LinqToDB.Templates\LinqToDB.Tools.ttinclude"                                   />
-		<file src="..\Source\LinqToDB.Templates\*.MySql.ttinclude"                         target="contentFiles\any\any\LinqToDB.Templates"                                                            />
+		<file src="..\..\NuGet\MySql\*.*"                                               target="contentFiles\any\any\LinqToDB.Templates"                          exclude="**\*.props"              />
+		<file src="..\..\NuGet\t4models\*.ttinclude"                                    target="contentFiles\any\any\LinqToDB.Templates"                                                            />
+		<file src="..\..\Source\LinqToDB.Templates\*.ttinclude"                         target="contentFiles\any\any\LinqToDB.Templates"                          exclude="**\LinqToDB.*.ttinclude" />
+		<file src="..\..\Source\LinqToDB.Templates\LinqToDB.Tools.ttinclude"            target="contentFiles\any\any\LinqToDB.Templates\LinqToDB.Tools.ttinclude"                                   />
+		<file src="..\..\Source\LinqToDB.Templates\*.MySql.ttinclude"                   target="contentFiles\any\any\LinqToDB.Templates"                                                            />
 
-		<file src="..\NuGet\MySql\*.*"                                                     target="content\LinqToDB.Templates"                                       exclude="**\*.props"              />
-		<file src="..\NuGet\t4models\*.ttinclude"                                          target="content\LinqToDB.Templates"                                                                         />
-		<file src="..\Source\LinqToDB.Templates\*.ttinclude"                               target="content\LinqToDB.Templates"                                       exclude="**\LinqToDB.*.ttinclude" />
-		<file src="..\Source\LinqToDB.Templates\LinqToDB.Tools.ttinclude"                  target="content\LinqToDB.Templates\LinqToDB.Tools.ttinclude"                                                />
-		<file src="..\Source\LinqToDB.Templates\*.MySql.ttinclude"                         target="content\LinqToDB.Templates"                                                                         />
+		<file src="..\..\NuGet\MySql\*.*"                                               target="content\LinqToDB.Templates"                                       exclude="**\*.props"              />
+		<file src="..\..\NuGet\t4models\*.ttinclude"                                    target="content\LinqToDB.Templates"                                                                         />
+		<file src="..\..\Source\LinqToDB.Templates\*.ttinclude"                         target="content\LinqToDB.Templates"                                       exclude="**\LinqToDB.*.ttinclude" />
+		<file src="..\..\Source\LinqToDB.Templates\LinqToDB.Tools.ttinclude"            target="content\LinqToDB.Templates\LinqToDB.Tools.ttinclude"                                                />
+		<file src="..\..\Source\LinqToDB.Templates\*.MySql.ttinclude"                   target="content\LinqToDB.Templates"                                                                         />
 	</files>
 </package>

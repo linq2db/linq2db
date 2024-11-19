@@ -17,12 +17,6 @@ Action AfterGenerateLinqToDBModel  = () => {};
 public Func<Table,MemberBase> GenerateProviderSpecificTable = _ => null;
 public Func<Parameter, bool>  GenerateProcedureDbType       = _ => false;
 
-static bool GenerateLinqToDBConnectionOptionsConstructors
-{
-	get { return GenerateDataOptionsConstructors;  }
-	set { GenerateDataOptionsConstructors = value; }
-}
-
 static bool GenerateDataOptionsConstructors = true;
 bool   GenerateObsoleteAttributeForAliases  = false;
 bool   GenerateFindExtensions               = true;
@@ -691,10 +685,11 @@ void GenerateTypesFromMetadata()
 		var tabfs = new MemberGroup { Region = "Table Functions" };
 
 		var currentContext = DataContextObject;
-		foreach (var p in Procedures.Values.Where(
-			proc => proc.IsLoaded || proc.IsFunction && !proc.IsTableFunction ||
-			proc.IsTableFunction && proc.ResultException != null
-			))
+		foreach (var p in Procedures.Values
+			.Where(proc =>
+				proc.IsLoaded || proc.IsFunction && !proc.IsTableFunction ||
+				proc.IsTableFunction && proc.ResultException != null)
+			.OrderBy(proc => proc.Name))
 		{
 			Action<MemberGroup> addProcs = tp => procs.Members.Add(tp);
 			Action<MemberGroup> addFuncs = tp => funcs.Members.Add(tp);
@@ -812,14 +807,8 @@ void GenerateTypesFromMetadata()
 			{
 				p.BodyBuilders.Add(() => new[]
 				{
-					string.Format("return {0}.GetTable<{1}>(this, (MethodInfo)MethodBase.GetCurrentMethod(){2}{3}", thisDataContext, p.ResultTable.TypeName, EnableNullableReferenceTypes ? "!" : "", p.ProcParameters.Count == 0 ? ");" : ",")
+					string.Format("return {0}.TableFromExpression(() => {1}({2}));", thisDataContext, p.Name, string.Join(", ", p.ProcParameters.Select(par => par.ParameterName)))
 				});
-
-				for (var idx = 0; idx < p.ProcParameters.Count; idx++)
-				{
-					var i = idx;
-					p.BodyBuilders.Add(() => new []{ "\t" + p.ProcParameters[i].ParameterName + (i + 1 == p.ProcParameters.Count ? ");" : ",") });
-				}
 			}
 			else if (p.IsFunction)
 			{

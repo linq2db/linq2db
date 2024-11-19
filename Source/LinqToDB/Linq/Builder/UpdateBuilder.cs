@@ -1,49 +1,62 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Linq.Expressions;
-using System.Reflection;
 
 namespace LinqToDB.Linq.Builder
 {
+	using Common;
 	using Extensions;
 	using LinqToDB.Expressions;
+	using Mapping;
 	using SqlQuery;
-	using Common;
 
+	[BuildsMethodCall(
+		nameof(LinqExtensions.Update), 
+		nameof(LinqExtensions.UpdateWithOutput), 
+		nameof(LinqExtensions.UpdateWithOutputInto))]
 	sealed class UpdateBuilder : MethodCallBuilder
 	{
-		static readonly string[] _methods =
-		{
-			nameof(LinqExtensions.Update),
-			nameof(LinqExtensions.UpdateWithOutput),
-			nameof(LinqExtensions.UpdateWithOutputInto)
-		};
-
 		#region Update
 
-		protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
+		public static bool CanBuildMethod(MethodCallExpression call, BuildInfo info, ExpressionBuilder builder)
+			=> call.IsQueryable();
+
+		static void ExtractSequence(BuildInfo buildInfo, ref IBuildContext sequence, out UpdateContext updateContext)
 		{
-			return methodCall.IsQueryable(_methods);
+			if (sequence is UpdateContext current)
+			{
+				sequence      = current.QuerySequence;
+				updateContext = current;
+			}
+			else
+			{
+				updateContext = new UpdateContext(sequence, UpdateTypeEnum.Update, new SqlUpdateStatement(sequence.SelectQuery));
+			}
+
+			updateContext.LastBuildInfo = buildInfo;
 		}
 
-		protected override IBuildContext BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
+		protected override BuildSequenceResult BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
 			var updateType = methodCall.Method.Name switch
 			{
-				nameof(LinqExtensions.UpdateWithOutput)     => UpdateType.UpdateOutput,
-				nameof(LinqExtensions.UpdateWithOutputInto) => UpdateType.UpdateOutputInto,
-				_                                           => UpdateType.Update,
+				nameof(LinqExtensions.UpdateWithOutput)     => UpdateTypeEnum.UpdateOutput,
+				nameof(LinqExtensions.UpdateWithOutputInto) => UpdateTypeEnum.UpdateOutputInto,
+				_                                           => UpdateTypeEnum.Update,
 			};
 
-			var sequence         = builder.BuildSequence(new (buildInfo, methodCall.Arguments[0]));
-			var updateStatement  = sequence.Statement as SqlUpdateStatement ?? new SqlUpdateStatement(sequence.SelectQuery);
+			var sequence = builder.BuildSequence(new (buildInfo, methodCall.Arguments[0]));
+
+			ExtractSequence(buildInfo, ref sequence, out var updateContext);
+			updateContext.UpdateType = updateType;
+
+			var updateStatement  = updateContext.UpdateStatement;
 			var genericArguments = methodCall.Method.GetGenericArguments();
 			var outputExpression = (LambdaExpression?)methodCall.GetArgumentByName("outputExpression")?.Unwrap();
 
 			Type? objectType;
-
-			sequence.Statement = updateStatement;
 
 			static LambdaExpression? RewriteOutputExpression(LambdaExpression? expr)
 			{
@@ -63,10 +76,18 @@ namespace LinqToDB.Linq.Builder
 				case OutputMethod.IUpdatable:
 				{
 					// int Update<T>(this IUpdateable<T> source)
-					CheckAssociation(sequence);
 
-					objectType       = genericArguments[0];
-					outputExpression = RewriteOutputExpression(outputExpression);
+					objectType                = genericArguments[0];
+					outputExpression          = RewriteOutputExpression(outputExpression);
+
+					if (updateContext.TargetTable == null)
+					{
+						var tableContext = SequenceHelper.GetTableOrCteContext(sequence);
+						if (tableContext == null)
+							throw new LinqToDBException("Cannot find target table for UPDATE statement");
+
+						updateContext.TargetTable = tableContext;
+					}
 
 					break;
 				}
@@ -75,31 +96,46 @@ namespace LinqToDB.Linq.Builder
 				{
 					// int Update<T>(this IQueryable<T> source, Expression<Func<T,T>> setter)
 					// int Update<T>(this IQueryable<T> source, Expression<Func<T,bool>> predicate, Expression<Func<T,T>> setter)
-					CheckAssociation(sequence);
+					//
 
-					var expr = methodCall.Arguments[1].Unwrap();
-
-					if (expr is LambdaExpression lex && lex.ReturnType == typeof(bool))
+					if (updateContext.TargetTable == null)
 					{
-						sequence = builder.BuildWhere(buildInfo.Parent, sequence, (LambdaExpression)methodCall.Arguments[1].Unwrap(), false);
-						expr     = methodCall.Arguments[2].Unwrap();
+						var tableContext = SequenceHelper.GetTableOrCteContext(sequence);
+						if (tableContext == null)
+							throw new LinqToDBException("Cannot find target table for UPDATE statement");
+
+						updateContext.TargetTable = tableContext;
+					}
+
+					var setterExpr = methodCall.Arguments[1].Unwrap();
+					if (setterExpr is LambdaExpression && methodCall.Arguments.Count == 3 && updateType == UpdateTypeEnum.Update)
+					{
+						sequence = builder.BuildWhere(buildInfo.Parent, sequence,
+							condition : methodCall.Arguments[1].UnwrapLambda(), checkForSubQuery : false,
+							enforceHaving : false, isTest : buildInfo.IsTest);
+
+						if (sequence == null)
+							return BuildSequenceResult.Error(methodCall);
+
+						setterExpr = methodCall.Arguments[2].Unwrap();
 					}
 
 					if (sequence.SelectQuery.Select.SkipValue != null || !sequence.SelectQuery.Select.OrderBy.IsEmpty)
 						sequence = new SubQueryContext(sequence);
 
+					if (setterExpr is LambdaExpression lambda)
+					{
+						setterExpr = SequenceHelper.PrepareBody(lambda, sequence);
+					}
+
+					updateContext.QuerySequence = sequence;
 					updateStatement.SelectQuery = sequence.SelectQuery;
-					sequence.Statement = updateStatement;
+					objectType                  = genericArguments[0];
 
-					BuildSetter(
-						builder,
-						buildInfo,
-						(LambdaExpression)expr,
-						sequence,
-						updateStatement.Update.Items,
-						sequence);
+					var targetRef = new ContextRefExpression(objectType, updateContext.TargetTable);
 
-					objectType       = genericArguments[0];
+					ParseSetter(builder, targetRef, setterExpr, updateContext.SetExpressions);
+
 					outputExpression = RewriteOutputExpression(outputExpression);
 
 					break;
@@ -109,50 +145,108 @@ namespace LinqToDB.Linq.Builder
 				{
 					// int Update<TSource,TTarget>(this IQueryable<TSource> source, ITable<TTarget> target, Expression<Func<TSource,TTarget>> setter)
 					// int Update<TSource,TTarget>(this IQueryable<TSource> source, Expression<Func<TSource,TTarget>> target, Expression<Func<TSource,TTarget>> setter)
+					//
 
+					objectType = genericArguments[1];
 					var expr = methodCall.Arguments[1].Unwrap();
 					IBuildContext into;
 
-					if (expr is LambdaExpression expression)
+					var setter     = methodCall.Arguments[2].UnwrapLambda();
+					var setterExpr = SequenceHelper.PrepareBody(setter, sequence);
+
+					if (expr is LambdaExpression lambda)
 					{
-						var body  = expression.Body;
-						var level = body.GetLevel(builder.MappingSchema);
+						var body = SequenceHelper.PrepareBody(lambda, sequence);
 
-						var tableInfo = sequence.IsExpression(body, level, RequestFor.Table);
+						var tableContext = SequenceHelper.GetTableOrCteContext(builder, body);
 
-						if (tableInfo.Result == false)
-							throw new LinqException("Expression '{0}' must be a table.", body);
+						if (tableContext == null)
+						{
+							throw new LinqException("Cannot retrieve Table for update.");
+						}
 
-						into = tableInfo.Context!;
+						updateContext.TargetTable = tableContext;
 					}
 					else
 					{
 						into = builder.BuildSequence(new BuildInfo(buildInfo, expr, new SelectQuery()));
+						var sequenceTableContext = SequenceHelper.GetTableOrCteContext(sequence);
+						var intoTableContext     = SequenceHelper.GetTableOrCteContext(into);
+
+						if (intoTableContext == null)
+						{
+							throw new LinqException("Cannot retrieve Table for update.");
+						}
+
+						if (intoTableContext.SqlTable.SqlQueryExtensions?.Count > 0)
+							throw new LinqToDBException("Could not update table which has Query extensions.");
+
+						if (sequenceTableContext == null)
+						{
+							// trying to detect join table
+							//
+							var collectedTables = new HashSet<ITableContext>();
+
+							if (collectedTables.Count == 0)
+							{
+								// try to find in projection
+								//
+								var sequenceRefExpression = new ContextRefExpression(typeof(object), sequence);
+								var projection = builder.ExtractProjection(sequence, sequenceRefExpression);
+
+								projection.Visit((builder, sequence, collectedTables, intoTableContext), (ctx, e) =>
+								{
+									if (e is MemberExpression or ContextRefExpression)
+									{
+										var tableCtx = SequenceHelper.GetTableOrCteContext(ctx.builder, e);
+										if (tableCtx != null && tableCtx.ObjectType == ctx.intoTableContext.ObjectType)
+										{
+											ctx.collectedTables.Add(tableCtx);
+										}
+									}
+									else if (e is SqlGenericConstructorExpression { ConstructionRoot: not null } constructor)
+									{
+										var tableCtx = SequenceHelper.GetTableOrCteContext(builder, constructor.ConstructionRoot);
+										if (tableCtx != null && tableCtx.ObjectType == ctx.intoTableContext.ObjectType)
+										{
+											ctx.collectedTables.Add(tableCtx);
+										}
+									}
+								});
+							}
+
+							if (collectedTables.Count == 0)
+								throw new LinqToDBException("Could not find join table for update query.");
+
+							if (collectedTables.Count > 1)
+								throw new LinqToDBException("Could not find join table for update query. Ambiguous tables.");
+
+							sequenceTableContext = collectedTables.First();
+						}
+
+						if (QueryHelper.IsEqualTables(sequenceTableContext.SqlTable, intoTableContext.SqlTable, false))
+						{
+							intoTableContext = sequenceTableContext;
+						}
+						else
+						{
+							// create join between tables
+							//
+
+							var sequenceRef = new ContextRefExpression(sequenceTableContext.SqlTable.ObjectType, sequenceTableContext);
+							var intoRef     = new ContextRefExpression(sequenceTableContext.SqlTable.ObjectType, into);
+
+							var compareSearchCondition = builder.GenerateComparison(sequenceTableContext, sequenceRef, intoRef);
+							sequenceTableContext.SelectQuery.Where.ConcatSearchCondition(compareSearchCondition);
+							updateStatement.Update.HasComparison = true;
+						}
+
+						updateContext.TargetTable = intoTableContext;
 					}
 
-					sequence.ConvertToIndex(null, 0, ConvertFlags.All);
+					var targetRef = new ContextRefExpression(objectType, updateContext.TargetTable);
 
-					new SelectQueryOptimizer(builder.DataContext.SqlProviderFlags, builder.DataContext.Options, updateStatement, updateStatement.SelectQuery, 0)
-						.ResolveWeakJoins();
-
-					updateStatement.SelectQuery.Select.Columns.Clear();
-
-					BuildSetter(
-						builder,
-						buildInfo,
-						(LambdaExpression)methodCall.Arguments[2].Unwrap(),
-						into,
-						updateStatement.Update.Items,
-						sequence);
-
-					updateStatement.SelectQuery.Select.Columns.Clear();
-
-					foreach (var item in updateStatement.Update.Items)
-						updateStatement.SelectQuery.Select.Columns.Add(new SqlColumn(updateStatement.SelectQuery, item.Expression!));
-
-					updateStatement.Update.Table = ((TableBuilder.TableContext)into!).SqlTable;
-
-					objectType       = genericArguments[1];
+					ParseSetter(builder, targetRef, setterExpr, updateContext.SetExpressions);
 
 					break;
 				}
@@ -161,55 +255,29 @@ namespace LinqToDB.Linq.Builder
 					throw new InvalidOperationException("Unknown Output Method");
 			}
 
-			if (updateStatement.Update.Items.Count == 0)
+			if (updateContext.SetExpressions.Count == 0)
 				throw new LinqToDBException("Update query has no setters defined.");
 
-			if (updateType == UpdateType.Update)
-				return new UpdateContext(buildInfo.Parent, sequence);
+			if (updateType == UpdateTypeEnum.Update)
+				return BuildSequenceResult.FromContext(updateContext);
 
-			var ed            = builder.MappingSchema.GetEntityDescriptor(objectType, builder.DataOptions.ConnectionOptions.OnEntityDescriptorCreated);
-			var insertedTable = builder.DataContext.SqlProviderFlags.OutputUpdateUseSpecialTables ? SqlTable.Inserted(ed) : updateStatement.GetUpdateTable();
-			var deletedTable  = SqlTable.Deleted(ed);
+			if (updateContext.TargetTable == null)
+				throw new InvalidOperationException();
 
-			if (insertedTable == null)
-				throw new InvalidOperationException("Cannot find target table for UPDATE statement");
+			var (deletedContext, insertedContext, deletedTable, insertedTable) = CreateDeletedInsertedContexts(builder, updateContext.TargetTable, out _);
 
 			updateStatement.Output = new SqlOutputClause();
 
-			if (builder.DataContext.SqlProviderFlags.OutputUpdateUseSpecialTables)
+			updateStatement.Output.DeletedTable  = deletedTable;
+			updateStatement.Output.InsertedTable = insertedTable;
+
+			if (updateType == UpdateTypeEnum.UpdateOutput)
 			{
-				updateStatement.Output.InsertedTable = insertedTable;
-				updateStatement.Output.DeletedTable  = deletedTable;
-			}
+				updateContext.OutputExpression = outputExpression;
+				updateContext.DeletedContext   = deletedContext;
+				updateContext.InsertedContext  = insertedContext;
 
-			if (updateType == UpdateType.UpdateOutput)
-			{
-				static LambdaExpression BuildDefaultOutputExpression(Type outputType)
-				{
-					var param1 = Expression.Parameter(outputType, "source");
-					var param2 = Expression.Parameter(outputType, "deleted");
-					var param3 = Expression.Parameter(outputType, "inserted");
-					var returnType = typeof(UpdateOutput<>).MakeGenericType(outputType);
-
-					return Expression.Lambda(
-						// (source, deleted, inserted) => new UpdateOutput<T> { Deleted = deleted, Inserted = inserted, }
-						Expression.MemberInit(
-							Expression.New(returnType),
-							Expression.Bind(returnType.GetProperty(nameof(UpdateOutput<object>.Deleted))!, param2),
-							Expression.Bind(returnType.GetProperty(nameof(UpdateOutput<object>.Inserted))!, param3)),
-						param1, param2, param3);
-				}
-
-				outputExpression ??= BuildDefaultOutputExpression(objectType);
-
-				var outputContext = new UpdateOutputContext(
-					buildInfo.Parent,
-					outputExpression,
-					sequence,
-					new TableBuilder.TableContext(builder, new SelectQuery(), deletedTable),
-					new TableBuilder.TableContext(builder, new SelectQuery(), insertedTable));
-
-				return outputContext;
+				return BuildSequenceResult.FromContext(updateContext);
 			}
 			else // updateType == UpdateType.UpdateOutputInto
 			{
@@ -228,24 +296,64 @@ namespace LinqToDB.Linq.Builder
 				var outputTable = methodCall.GetArgumentByName("outputTable")!;
 				var destination = builder.BuildSequence(new BuildInfo(buildInfo, outputTable, new SelectQuery()));
 
+				var destinationContext = SequenceHelper.GetTableContext(destination);
+				if (destinationContext == null)
+					throw new InvalidOperationException();
+
+				var destinationRef = new ContextRefExpression(destinationContext.ObjectType, destinationContext);
+
 				outputExpression ??= BuildDefaultOutputExpression(objectType);
 
-				BuildSetterWithContext(
-					builder,
-					buildInfo,
-					outputExpression,
-					destination,
-					updateStatement.Output.OutputItems,
-					sequence,
-					new TableBuilder.TableContext(builder, new SelectQuery(), deletedTable),
-					new TableBuilder.TableContext(builder, new SelectQuery(), insertedTable));
+				var outputBody = SequenceHelper.PrepareBody(outputExpression, sequence, deletedContext, insertedContext);
 
-				updateStatement.Output.OutputTable = ((TableBuilder.TableContext)destination).SqlTable;
-				return new UpdateContext(buildInfo.Parent, sequence);
+				var outputExpressions = new List<SetExpressionEnvelope>();
+				ParseSetter(builder, destinationRef, outputBody, outputExpressions);
+
+				InitializeSetExpressions(builder, destinationContext, sequence, outputExpressions, updateStatement.Output.OutputItems, false);
+
+				updateStatement.Output.OutputTable = destinationContext.SqlTable;
+
+				return BuildSequenceResult.FromContext(updateContext);
 			}
 		}
 
-		enum UpdateType
+		public static (IBuildContext deleted, IBuildContext inserted, SqlTable deletedTable, SqlTable insertedTable) CreateDeletedInsertedContexts(ExpressionBuilder builder, ITableContext targetTableContext, out IBuildContext outputContext)
+		{
+			// create separate query for output
+			var outputSelectQuery = new SelectQuery();
+
+			IBuildContext deletedContext;
+			IBuildContext insertedContext;
+			if (targetTableContext is CteTableContext cteTable)
+			{
+				insertedContext = new CteTableContext(builder, null,
+					targetTableContext.SqlTable.ObjectType, outputSelectQuery, cteTable.CteContext, false);
+				deletedContext = new CteTableContext(builder, null,
+					targetTableContext.SqlTable.ObjectType, outputSelectQuery, cteTable.CteContext, false);
+			}
+			else
+			{
+				insertedContext = new TableBuilder.TableContext(builder, targetTableContext.MappingSchema, outputSelectQuery, targetTableContext.SqlTable, false);
+				deletedContext  = new TableBuilder.TableContext(builder, targetTableContext.MappingSchema, outputSelectQuery, targetTableContext.SqlTable, false);
+			}
+
+			outputContext = deletedContext;
+
+			outputSelectQuery.From.Tables.Clear();
+
+			var deletedTable = ((ITableContext)deletedContext).SqlTable;
+			var insertedTable = ((ITableContext)insertedContext).SqlTable;
+
+			if (builder.DataContext.SqlProviderFlags.OutputUpdateUseSpecialTables)
+			{
+				insertedContext = new AnchorContext(null, insertedContext, SqlAnchor.AnchorKindEnum.Inserted);
+				deletedContext  = new AnchorContext(null, deletedContext, SqlAnchor.AnchorKindEnum.Deleted);
+			}
+
+			return (deletedContext, insertedContext, deletedTable, insertedTable);
+		}
+
+		public enum UpdateTypeEnum
 		{
 			Update,
 			UpdateOutput,
@@ -273,457 +381,478 @@ namespace LinqToDB.Linq.Builder
 			};
 		}
 
-		static void CheckAssociation(IBuildContext sequence)
-		{
-			if (sequence is SelectContext ctx && ctx.IsScalar)
-			{
-				var res = ctx.IsExpression(null, 0, RequestFor.Association);
-
-				if (res.Result)
-				{
-					var atc = res.Context!.IsExpression(null, 0, RequestFor.Table);
-					if (atc.Result && atc.Context is TableBuilder.TableContext tableContext)
-					{
-						ctx.Statement!.RequireUpdateClause().Table = tableContext.SqlTable;
-					}
-				}
-				else
-				{
-					res = ctx.IsExpression(null, 0, RequestFor.Table);
-
-					if (res.Result && res.Context is TableBuilder.TableContext tc)
-					{
-						if (ctx.Statement!.SelectQuery!.From.Tables.Count == 0 || ctx.Statement.SelectQuery.From.Tables[0].Source != tc.SelectQuery)
-							ctx.Statement.RequireUpdateClause().Table = tc.SqlTable;
-					}
-				}
-			}
-		}
-
 		#endregion
 
 		#region Helpers
 
-		internal static void BuildSetter(
-			ExpressionBuilder builder,
-			BuildInfo buildInfo,
-			LambdaExpression setter,
-			IBuildContext into,
-			List<SqlSetExpression> items,
-			IBuildContext sequence)
+		internal static void InitializeSetExpressions(
+			ExpressionBuilder           builder,
+			IBuildContext               fieldsContext,
+			IBuildContext               valuesContext,
+			List<SetExpressionEnvelope> envelopes,
+			List<SqlSetExpression>      items,
+			bool                        createColumns
+			)
 		{
-			BuildSetterWithContext(builder, buildInfo, setter, into, items, sequence);
+			ISqlExpression GetFieldExpression(Expression fieldExpr, bool isPureExpression)
+			{
+				var sql = builder.ConvertToSql(fieldsContext, fieldExpr, isPureExpression : isPureExpression);
+				return sql;
+			}
+
+			SqlSetExpression  setExpression;
+			ColumnDescriptor? columnDescriptor = null;
+
+			foreach (var envelope in envelopes)
+			{
+				var fieldExpression = envelope.FieldExpression;
+				var valueExpression = envelope.ValueExpression;
+
+				if (fieldExpression.IsSqlRow())
+				{
+					var row = fieldExpression.GetSqlRowValues()
+						.Select(e => GetFieldExpression(e, false))
+						.ToArray();
+
+					var rowExpression = new SqlRowExpression(row);
+
+					setExpression = new SqlSetExpression(rowExpression, null);
+				}
+				else
+				{
+					var column = GetFieldExpression(fieldExpression, valueExpression == null);
+					columnDescriptor = QueryHelper.GetColumnDescriptor(column);
+					setExpression    = new SqlSetExpression(column, null);
+				}
+
+				if (valueExpression != null)
+				{
+					if (valueExpression.Unwrap() is LambdaExpression lambda)
+					{
+						valueExpression = lambda.Body;
+					}
+					else if (fieldExpression.Type != valueExpression.Type)
+					{
+						valueExpression = Expression.Convert(valueExpression, fieldExpression.Type);
+					}
+
+					var sqlExpr = builder.ConvertToSqlExpr(valuesContext, valueExpression, unwrap : false, columnDescriptor : columnDescriptor, forceParameter: envelope.ForceParameter);
+
+					if (sqlExpr is not SqlPlaceholderExpression placeholder)
+					{
+						if (sqlExpr is SqlErrorExpression errorExpr)
+							throw errorExpr.CreateException();
+
+						throw SqlErrorExpression.CreateException(valueExpression, null);
+					}
+
+					var sql = createColumns
+						? valuesContext.SelectQuery.Select.AddNewColumn(placeholder.Sql)
+						: placeholder.Sql;
+
+					setExpression.Expression = sql;
+				}
+
+				items.Add(setExpression);
+			}
 		}
 
-		internal static void BuildSetterWithContext(
-			ExpressionBuilder      builder,
-			BuildInfo              buildInfo,
-			LambdaExpression       setter,
-			IBuildContext          into,
-			List<SqlSetExpression> items,
-			params IBuildContext[] sequences)
+		static void ParseSet(
+			ExpressionBuilder           builder,
+			IBuildContext               buildContext,
+			Expression                  targetPath,
+			Expression                  fieldExpression,
+			Expression                  valueExpression,
+			List<SetExpressionEnvelope> envelopes,
+			bool                        forceParameters)
 		{
-			var ctx = new ExpressionContext(buildInfo.Parent, sequences, setter);
+			var correctedField = builder.ParseGenericConstructor(fieldExpression, ProjectFlags.SQL, null);
 
-			void BuildSetter(MemberExpression memberExpression, Expression expression)
+			if (correctedField is SqlGenericConstructorExpression fieldGeneric)
 			{
-				var column     = into.ConvertToSql(memberExpression, 1, ConvertFlags.Field);
-				var columnExpr = column[0].Sql;
-				var expr       = builder.ConvertToSqlExpression(ctx, expression, QueryHelper.GetColumnDescriptor(columnExpr), false);
+				var correctedValue = builder.ParseGenericConstructor(valueExpression, ProjectFlags.SQL, null);
 
-				if (expr.ElementType == QueryElementType.SqlParameter)
+				if (correctedValue is not SqlGenericConstructorExpression valueGeneric)
+					throw SqlErrorExpression.CreateException(valueExpression, null);
+
+				var pairs =
+					from f in fieldGeneric.Assignments
+					join v in valueGeneric.Assignments on f.MemberInfo equals v.MemberInfo
+					select (f, v);
+
+				foreach (var (f, v) in pairs)
 				{
-					var parm  = (SqlParameter)expr;
-					var field = QueryHelper.GetUnderlyingField(columnExpr);
-
-					if (parm.Type.DataType == DataType.Undefined)
-						parm.Type = parm.Type.WithDataType(field!.Type.DataType);
+					var currentPath = Expression.MakeMemberAccess(targetPath, f.MemberInfo);
+					ParseSet(builder, buildContext, currentPath, f.Expression, v.Expression, envelopes, false);
 				}
-
-				items.Add(new SqlSetExpression(columnExpr, expr));
-			}
-
-			void BuildNew(NewExpression expression, Expression path)
-			{
-				for (var i = 0; i < expression.Members!.Count; i++)
-				{
-					var member   = expression.Members[i];
-					var argument = expression.Arguments[i];
-
-					if (member is MethodInfo mi)
-						member = mi.GetPropertyInfo();
-
-					var pe = Expression.MakeMemberAccess(path, member);
-
-					if (argument is NewExpression newExpr && newExpr.Type.IsAnonymous())
-					{
-						BuildNew(newExpr, Expression.MakeMemberAccess(path, member));
-					}
-					else if (argument is MemberInitExpression initExpr && !into.IsExpression(pe, 1, RequestFor.Field).Result)
-					{
-						BuildMemberInit(initExpr, Expression.MakeMemberAccess(path, member));
-					}
-					else
-					{
-						BuildSetter(pe, argument);
-					}
-				}
-			}
-
-			void BuildMemberInit(MemberInitExpression expression, Expression path)
-			{
-				foreach (var binding in expression.Bindings)
-				{
-					var member = binding.Member;
-
-					if (member is MethodInfo mi)
-						member = mi.GetPropertyInfo();
-
-					if (binding is MemberAssignment ma)
-					{
-						var pe = Expression.MakeMemberAccess(path, member);
-
-						if (ma.Expression is NewExpression newExpr && newExpr.Type.IsAnonymous())
-						{
-							BuildNew(newExpr, Expression.MakeMemberAccess(path, member));
-						}
-						else if (ma.Expression is MemberInitExpression initExpr && !into.IsExpression(pe, 1, RequestFor.Field).Result)
-						{
-							BuildMemberInit(initExpr, Expression.MakeMemberAccess(path, member));
-						}
-						else
-						{
-							BuildSetter(pe, ma.Expression);
-						}
-					}
-					else
-						throw new InvalidOperationException();
-				}
-			}
-
-			var bodyPath = Expression.Parameter(setter.Body.Type, "p");
-			var bodyExpr = setter.Body;
-
-			if (bodyExpr.NodeType == ExpressionType.New && bodyExpr.Type.IsAnonymous())
-			{
-				var ex = (NewExpression)bodyExpr;
-				var p  = sequences[0].Parent;
-
-				BuildNew(ex, bodyPath);
-
-				builder.ReplaceParent(ctx, p);
-			}
-			else if (bodyExpr.NodeType == ExpressionType.MemberInit)
-			{
-				var ex = (MemberInitExpression)bodyExpr;
-				var p  = sequences[0].Parent;
-
-				BuildMemberInit(ex, bodyPath);
-
-				builder.ReplaceParent(ctx, p);
 			}
 			else
 			{
-				var sqlInfo = ctx.ConvertToSql(bodyExpr, 0, ConvertFlags.All);
-
-				foreach (var info in sqlInfo)
+				var hasConversion = false;
+				var targetColumn  = builder.ConvertToSqlExpr(buildContext, fieldExpression);
+				if (targetColumn is SqlPlaceholderExpression placeholder)
 				{
-					if (info.MemberChain.Length == 0)
-						throw new LinqException("Object initializer expected for insert statement.");
+					var columnDescriptor = QueryHelper.GetColumnDescriptor(placeholder.Sql);
 
-					if (info.MemberChain.Length != 1)
-						throw new InvalidOperationException();
+					hasConversion = columnDescriptor?.ValueConverter != null;
+				}
 
-					var member = info.MemberChain[0];
-					var pe     = Expression.MakeMemberAccess(bodyPath, member);
-					var column = into.ConvertToSql(pe, 1, ConvertFlags.Field);
-					var expr   = info.Sql;
+				if (hasConversion)
+				{
+					envelopes.Add(new SetExpressionEnvelope(correctedField.UnwrapConvert(), valueExpression, true));
+				}
+				else
+				{
+					var correctedValue = builder.ParseGenericConstructor(valueExpression, ProjectFlags.SQL, null);
 
-					items.Add(new SqlSetExpression(column[0].Sql, expr));
+					if (correctedValue is SqlGenericConstructorExpression valueGeneric)
+					{
+						foreach (var assignment in valueGeneric.Assignments)
+						{
+							var currentPath = Expression.MakeMemberAccess(targetPath, assignment.MemberInfo);
+							ParseSet(builder, buildContext, currentPath, currentPath, assignment.Expression, envelopes, false);
+						}
+					}
+					else
+						envelopes.Add(new SetExpressionEnvelope(correctedField.UnwrapConvert(), valueExpression, forceParameters));
 				}
 			}
 		}
 
 		internal static void ParseSet(
-			ExpressionBuilder               builder,
-			BuildInfo                       buildInfo,
-			LambdaExpression                extract,
-			LambdaExpression                update,
-			IBuildContext                   fieldsContext,
-			IBuildContext                   valuesContext,
-			SqlTable?                       table,
-			List<SqlSetExpression>          items)
+			ContextRefExpression        targetRef,
+			Expression                  fieldExpression,
+			Expression                  valueExpression,
+			List<SetExpressionEnvelope> envelopes,
+			bool                        forceParameters)
 		{
-			extract = (LambdaExpression)builder.ConvertExpression(extract);
-			var ext = extract.Body.Unwrap();
+			ParseSet(targetRef.BuildContext.Builder, targetRef.BuildContext, targetRef, fieldExpression, valueExpression, envelopes, forceParameters);
+		}
 
-			var sp  = fieldsContext.Parent;
-			var ctx = new ExpressionContext(buildInfo.Parent, fieldsContext, extract);
+		internal static void ParseSetter(
+			ExpressionBuilder           builder,
+			ContextRefExpression        targetRef,
+			Expression                  setterExpression,
+			List<SetExpressionEnvelope> envelopes)
+		{
+			var correctedSetter = builder.ParseGenericConstructor(setterExpression, ProjectFlags.SQL, null);
 
-			builder.ReplaceParent(ctx, sp);
-
-			Mapping.ColumnDescriptor? columnDescriptor = null;
-			SqlSetExpression 		  setExpression;
-
-			if (ext.IsSqlRow())
+			if (correctedSetter is not SqlGenericConstructorExpression)
 			{
-				var row = ext.GetSqlRowValues()
-					.Select(GetField)
-					.ToArray();
+				correctedSetter = builder.ConvertToSqlExpr(targetRef.BuildContext, correctedSetter);
+			}
 
-				var rowExpression = new SqlRow(row);
+			if (correctedSetter is SqlGenericConstructorExpression generic)
+			{
+				foreach (var assignment in generic.Assignments)
+				{
+					var memberAccess = Expression.MakeMemberAccess(targetRef, assignment.MemberInfo);
 
-				setExpression = new SqlSetExpression(rowExpression, null);
+					ParseSet(builder, targetRef.BuildContext, memberAccess, memberAccess, assignment.Expression, envelopes, false);
+				}
 			}
 			else
 			{
-				var column = GetField(ext);
-				columnDescriptor = QueryHelper.GetColumnDescriptor(column);
-				setExpression    = new SqlSetExpression(column, null);
-			}
+				if (correctedSetter is SqlPlaceholderExpression { Sql: SqlValue { Value: null } })
+					return;
 
-			sp  = valuesContext.Parent;
-			ctx = new ExpressionContext(buildInfo.Parent, valuesContext, update);
-			setExpression.Expression = builder.ConvertToSqlExpression(ctx, update.Body, columnDescriptor, false);
-			builder.ReplaceParent(ctx, sp);
-			items.Add(setExpression);
+				if (correctedSetter is ConstantExpression { Value: null })
+					return;
 
-			ISqlExpression GetField(Expression fieldExpr)
-			{
-				var sql   = ctx.ConvertToSql(fieldExpr, 0, ConvertFlags.Field);
-				var field = sql.Select(s => QueryHelper.GetUnderlyingField(s.Sql)).FirstOrDefault(f => f != null);
-
-				if (sql.Length != 1)
-					throw new LinqException($"Expression '{extract}' can not be used as Update Field.");
-
-				return table != null && field != null ? table.FindFieldByMemberName(field.Name)! : sql[0].Sql;
+				throw new NotImplementedException();
 			}
 		}
 
-		internal static void ParseSet(
-			ExpressionBuilder               builder,
-			LambdaExpression                extract,
-			MethodCallExpression            updateMethod,
-			int                             valueIndex,
-			IBuildContext                   select,
-			List<SqlSetExpression> items)
+		[DebuggerDisplay("{FieldExpression} = {ValueExpression}")]
+		public sealed class SetExpressionEnvelope
 		{
-			var ext        = extract.Body.Unwrap();
-			var rootObject = builder.GetRootObject(ext);
-
-			ISqlExpression columnSql;
-			MemberInfo     member;
-
-			if (ext.NodeType == ExpressionType.MemberAccess)
+			public SetExpressionEnvelope(Expression fieldExpression, Expression? valueExpression, bool forceParameter)
 			{
-				var body = (MemberExpression)ext;
-
-				member = body.Member;
-
-				if (!member.IsPropertyEx() && !member.IsFieldEx() || rootObject != extract.Parameters[0])
-					throw new LinqException("Member expression expected for the 'Set' statement.");
-
-				if (member is MethodInfo info)
-					member = info.GetPropertyInfo();
-
-				var columnExpr = body;
-				var column     = select.ConvertToSql(columnExpr, 1, ConvertFlags.Field);
-
-				if (column.Length == 0)
-					throw new LinqException("Member '{0}.{1}' is not a table column.", member.DeclaringType?.Name, member.Name);
-				columnSql = column[0].Sql;
-			}
-			else
-			{
-				member = MemberHelper.GetMemberInfo(ext);
-				if (member == null)
-					throw new LinqException("Member expression expected for the 'Set' statement.");
-
-				var memberExpr = Expression.MakeMemberAccess(rootObject, member);
-				var column     = select.ConvertToSql(memberExpr, 1, ConvertFlags.Field);
-				if (column.Length == 0)
-					throw new LinqException($"Expression '{ext}' is not a table column.");
-				columnSql = column[0].Sql;
+				FieldExpression = fieldExpression;
+				ValueExpression = valueExpression;
+				ForceParameter  = forceParameter;
 			}
 
-			var columnDescriptor = QueryHelper.GetColumnDescriptor(columnSql);
+			public Expression  FieldExpression { get; }
+			public Expression? ValueExpression { get; }
+			public bool        ForceParameter  { get; }
 
-			// Note: this ParseSet overload doesn't support a SqlRow value.
-			// This overload is called for a constants, e.g. `Set(x => x.Name, "Doe")`.
-			// SqlRow can't be constructed as C# values, they can only be used inside expressions, so the call
-			// `Set(x => SqlRow(x.Name, x.Age), SqlRow("Doe", 18))`
-			// is not possible (2nd SqlRow would be called at runtime and throw).
-			// This is useless anyway, as `Set(x => x.Name, "Doe").Set(x => x.Age, 18)` generates simpler SQL anyway.
+			public SetExpressionEnvelope WithValueExpression(Expression? valueExpression)
+			{
+				if (valueExpression == null || ValueExpression == null)
+				{
+					if (ReferenceEquals(ValueExpression, valueExpression))
+						return this;
+				}
+				else if (ExpressionEqualityComparer.Instance.Equals(ValueExpression, valueExpression))
+					return this;
 
-			var p = builder.ParametersContext.BuildParameter(updateMethod.Arguments[valueIndex], columnDescriptor, true);
-
-			items.Add(new SqlSetExpression(columnSql, p.SqlParameter));
+				return new SetExpressionEnvelope(FieldExpression, valueExpression, ForceParameter);
+			}
 		}
 
 		#endregion
 
 		#region UpdateContext
 
-		sealed class UpdateContext : SequenceContextBase
+		public sealed class UpdateContext : PassThroughContext
 		{
-			public UpdateContext(IBuildContext? parent, IBuildContext sequence)
-				: base(parent, sequence, null)
+			ITableContext? _targetTable;
+
+			public UpdateContext(IBuildContext querySequence, UpdateTypeEnum updateType, SqlUpdateStatement updateStatement)
+				: base(querySequence, querySequence.SelectQuery)
 			{
+				UpdateStatement = updateStatement;
+				UpdateType      = updateType;
 			}
 
-			public override void BuildQuery<T>(Query<T> query, ParameterExpression queryParameter)
+			public SqlUpdateStatement         UpdateStatement { get; }
+			public UpdateTypeEnum             UpdateType      { get; set; }
+
+			public ITableContext? TargetTable
 			{
-				QueryRunner.SetNonQueryQuery(query);
-			}
-
-			public override Expression BuildExpression(Expression? expression, int level, bool enforceServerSide)
-			{
-				throw new NotImplementedException();
-			}
-
-			public override SqlInfo[] ConvertToSql(Expression? expression, int level, ConvertFlags flags)
-			{
-				throw new NotImplementedException();
-			}
-
-			public override SqlInfo[] ConvertToIndex(Expression? expression, int level, ConvertFlags flags)
-			{
-				throw new NotImplementedException();
-			}
-
-			public override IsExpressionResult IsExpression(Expression? expression, int level, RequestFor requestFlag)
-			{
-				throw new NotImplementedException();
-			}
-
-			public override IBuildContext GetContext(Expression? expression, int level, BuildInfo buildInfo)
-			{
-				throw new NotImplementedException();
-			}
-		}
-
-		sealed class UpdateOutputContext : SelectContext
-		{
-			public UpdateOutputContext(
-				IBuildContext?     parent,
-				LambdaExpression   lambda,
-				IBuildContext      source,
-				IBuildContext      deletedTable,
-				IBuildContext      insertedTable)
-				: base(parent, lambda, source, deletedTable, insertedTable)
-			{
-				Statement = source.Statement;
-
-				Sequence[0].SelectQuery.Select.Columns.Clear();
-				Sequence[1].SelectQuery = Sequence[0].SelectQuery;
-				Sequence[2].SelectQuery = Sequence[0].SelectQuery;
-			}
-
-			public override void BuildQuery<T>(Query<T> query, ParameterExpression queryParameter)
-			{
-				var updateStatement = (SqlUpdateStatement)Statement!;
-
-				var expr   = BuildExpression(null, 0, false);
-				var mapper = Builder.BuildMapper<T>(expr);
-
-				if (updateStatement.SelectQuery.From.Tables.Count > 0
-					&& updateStatement.SelectQuery.From.Tables[0].Source is SelectQuery sourceQuery
-					&& sourceQuery.Select.Columns.Count > 0)
+				get => _targetTable;
+				set
 				{
-					// TODO: better fix?
-					// for "UPDATE qry FROM qry(T)" we must check that output doesn't include missing field from qry
-					// e.g. see Issue3044UpdateOutputWithTake2 test and TableWithData.Value field
-					var setColumns = new HashSet<string>();
+					_targetTable = value;
 
-					foreach (var col in sourceQuery.Select.Columns)
-						setColumns.Add(col.Alias!);
+					UpdateStatement.Update.Table = _targetTable?.SqlTable;
+				}
+			}
 
-					var columns = new List<ISqlExpression>(Sequence[0].SelectQuery.Select.Columns.Count);
+			public IBuildContext QuerySequence
+			{
+				get => Context;
+				set
+				{
+					Context     = value;
+					SelectQuery = Context.SelectQuery;
+				}
+			}
 
-					foreach (var c in Sequence[0].SelectQuery.Select.Columns)
+			public BuildInfo?                  LastBuildInfo  { get; set; }
+			public List<SetExpressionEnvelope> SetExpressions { get; } = new ();
+
+			public LambdaExpression? OutputExpression { get; set; }
+			public IBuildContext?    DeletedContext   { get; set; }
+			public IBuildContext?    InsertedContext  { get; set; }
+
+			public void FinalizeSetters()
+			{
+				var update = UpdateStatement.Update;
+
+				if (update.Items.Count > 0 || LastBuildInfo == null)
+					return;
+
+				if (TargetTable == null)
+				{
+					throw new LinqToDBException("Update query has no defined target table.");
+				}
+
+				var tableContext = TargetTable;
+
+				update.Table                = tableContext?.SqlTable;
+				UpdateStatement.SelectQuery = QuerySequence.SelectQuery;
+
+				SetExpressions.RemoveDuplicatesFromTail((s1, s2) =>
+					ExpressionEqualityComparer.Instance.Equals(s1.FieldExpression, s2.FieldExpression));
+
+				InitializeSetExpressions(Builder, TargetTable, QuerySequence, SetExpressions, update.Items, true);
+			}
+
+			public override void SetRunQuery<T>(Query<T> query, Expression expr)
+			{
+				switch (UpdateType)
+				{
+					case UpdateTypeEnum.Update:
 					{
-						if (c.Expression is SqlField f && !setColumns.Contains(f.PhysicalName))
-							columns.Add(new SqlExpression(c.Expression.SystemType!, $"NULL /* {f.PhysicalName} */"));
+						QueryRunner.SetNonQueryQuery(query);
+						break;
+					}
+					case UpdateTypeEnum.UpdateOutput:
+					{
+						var mapper = Builder.BuildMapper<T>(SelectQuery, expr);
+						QueryRunner.SetRunQuery(query, mapper);
+						break;
+					}
+					case UpdateTypeEnum.UpdateOutputInto:
+					{
+						QueryRunner.SetNonQueryQuery(query);
+						break;
+					}
+					default:
+						throw new InvalidOperationException($"Unexpected update type: {UpdateType}");
+				}
+			}
+
+			static IEnumerable<(Expression path, SqlGenericConstructorExpression generic)> FindForRightProjectionPath(SqlGenericConstructorExpression generic, Expression currentPath, Type objecType)
+			{
+				if (generic.Type == objecType)
+					yield return (currentPath, generic);
+
+				// search for nesting
+				foreach (var assignment in generic.Assignments)
+				{
+					if (assignment.Expression is SqlGenericConstructorExpression subGeneric)
+					{
+						var newPath = Expression.MakeMemberAccess(currentPath, assignment.MemberInfo);
+						foreach (var sub in FindForRightProjectionPath(subGeneric, newPath, objecType))
+							yield return sub;
+					}
+				}
+			}
+
+			static Expression BuildDefaultOutputExpression(ExpressionBuilder builder, Type outputType, IBuildContext querySequence, IBuildContext insertedContext, IBuildContext deletedContext)
+			{
+				// populate all accessible fields, especially for CTE
+				var queryRef  = new ContextRefExpression(querySequence.ElementType, querySequence);
+				var allFields = builder.ConvertToSqlExpr(querySequence, queryRef);
+
+				if (allFields is not SqlGenericConstructorExpression constructorExpression)
+				{
+					throw new InvalidOperationException();
+				}
+
+				var querySequenceRef = new ContextRefExpression(constructorExpression.Type, querySequence);
+				var found = FindForRightProjectionPath(constructorExpression, querySequenceRef, outputType)
+					.ToList();
+
+				if (found.Count == 0)
+					throw new LinqToDBException("Could not find appropriate table in expression");
+				if (found.Count > 1)
+					throw new LinqToDBException("Ambiguous tables in expression");
+
+				var (foundPath, foundGeneric) = found.First();
+
+				var insertedRef = new ContextRefExpression(outputType, insertedContext, "inserted");
+				var deletedRef  = new ContextRefExpression(outputType, deletedContext, "deleted");
+				var returnType  = typeof(UpdateOutput<>).MakeGenericType(outputType);
+
+				var insertedExpr = builder.RemapToNewPath(foundPath, foundGeneric, insertedRef);
+				var deletedExpr  = builder.RemapToNewPath(foundPath, foundGeneric, deletedRef);
+
+				return
+					// new UpdateOutput<T> { Deleted = deleted, Inserted = inserted, }
+					Expression.MemberInit(
+						Expression.New(returnType),
+						Expression.Bind(returnType.GetProperty(nameof(UpdateOutput<object>.Deleted))!, deletedExpr),
+						Expression.Bind(returnType.GetProperty(nameof(UpdateOutput<object>.Inserted))!, insertedExpr));
+			}
+
+			public override Expression MakeExpression(Expression path, ProjectFlags flags)
+			{
+				if (SequenceHelper.IsSameContext(path, this) && flags.HasFlag(ProjectFlags.Expression))
+				{
+					FinalizeSetters();
+
+					if (UpdateType == UpdateTypeEnum.UpdateOutput)
+					{
+						if (DeletedContext == null || InsertedContext == null || LastBuildInfo == null || TargetTable == null)
+							throw new InvalidOperationException();
+
+						UpdateStatement.Output ??= new SqlOutputClause();
+
+						var outputSelectQuery = DeletedContext.SelectQuery;
+
+						var insertedContext = InsertedContext;
+						var deletedContext  = DeletedContext;
+
+						var outputBody = OutputExpression == null
+							? BuildDefaultOutputExpression(Builder, TargetTable.ObjectType, QuerySequence, insertedContext, deletedContext)
+							: SequenceHelper.PrepareBody(OutputExpression, QuerySequence,
+								deletedContext, insertedContext);
+
+						var selectContext = new SelectContext(Parent, outputBody, insertedContext, false);
+						var outputRef     = new ContextRefExpression(path.Type, selectContext);
+						var outputExpressions = new List<SetExpressionEnvelope>();
+
+						var sqlExpr = Builder.ConvertToSqlExpr(selectContext, outputRef);
+						sqlExpr = SequenceHelper.CorrectSelectQuery(sqlExpr, outputSelectQuery);
+
+						if (sqlExpr is SqlPlaceholderExpression)
+							outputExpressions.Add(new SetExpressionEnvelope(sqlExpr, sqlExpr, false));
 						else
-							columns.Add(c.Expression);
+							ParseSetter(Builder, outputRef, sqlExpr, outputExpressions);
+
+						var setItems = new List<SqlSetExpression>();
+						InitializeSetExpressions(Builder, selectContext, selectContext, outputExpressions, setItems, false);
+
+						UpdateStatement.Output!.OutputColumns = setItems.Select(c => c.Column).ToList();
+
+						return sqlExpr;
 					}
 
-					updateStatement.Output!.OutputColumns = columns;
-
-					QueryRunner.SetRunQuery(query, mapper);
+					return Expression.Default(path.Type);
 				}
-				else
-				{
 
-					var columns = new List<ISqlExpression>(Sequence[0].SelectQuery.Select.Columns.Count);
+				return base.MakeExpression(path, flags);
+			}
 
-					foreach (var c in Sequence[0].SelectQuery.Select.Columns)
-						columns.Add(c.Expression);
+			public override IBuildContext Clone(CloningContext context)
+			{
+				throw new NotImplementedException();
+			}
 
-					updateStatement.Output!.OutputColumns = columns;
-
-					QueryRunner.SetRunQuery(query, mapper);
-				}
+			public override SqlStatement GetResultStatement()
+			{
+				return UpdateStatement;
 			}
 		}
+
 		#endregion
 
 		#region Set
 
+		[BuildsMethodCall(nameof(LinqExtensions.Set))]
 		internal sealed class Set : MethodCallBuilder
 		{
-			protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
-			{
-				return methodCall.IsQueryable(nameof(LinqExtensions.Set));
-			}
+			public static bool CanBuildMethod(MethodCallExpression call, BuildInfo info, ExpressionBuilder builder)
+				=> call.IsQueryable();
 
-			protected override IBuildContext BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
+			protected override BuildSequenceResult BuildMethodCall(ExpressionBuilder builder,
+				MethodCallExpression                                                 methodCall, BuildInfo buildInfo)
 			{
 				var sequence = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
 
-				//if (sequence.SelectQuery.Select.SkipValue != null || !sequence.SelectQuery.Select.OrderBy.IsEmpty)
-				//	sequence = new SubQueryContext(sequence);
+				ExtractSequence(buildInfo, ref sequence, out var updateContext);
 
-				var extract  = (LambdaExpression)methodCall.Arguments[1].Unwrap();
-				var update   =  methodCall.Arguments.Count > 2 ? methodCall.Arguments[2].Unwrap() : null;
+				var extract  = methodCall.Arguments[1].UnwrapLambda();
+				var update   = methodCall.Arguments.Count > 2 ? methodCall.Arguments[2] : null;
 
-				var updateStatement = sequence.Statement as SqlUpdateStatement ?? new SqlUpdateStatement(sequence.SelectQuery);
-				sequence.Statement  = updateStatement;
+				var extractExpr = SequenceHelper.PrepareBody(extract, sequence);
+				if (updateContext.TargetTable == null)
+				{
+					var tableContext = SequenceHelper.GetTableOrCteContext(builder, extractExpr);
+					updateContext.TargetTable = tableContext;
+				}
 
 				if (update == null)
 				{
+					if (updateContext.TargetTable == null)
+					{
+						var tableContext = SequenceHelper.GetTableOrCteContext(sequence);
+						updateContext.TargetTable = tableContext;
+					}
+
 					// we have first lambda as whole update field part
-					var sp     = sequence.Parent;
-					var ctx    = new ExpressionContext(buildInfo.Parent, sequence, extract);
-					var expr   = builder.ConvertToSqlExpression(ctx, extract.Body, null, true);
 
-					builder.ReplaceParent(ctx, sp);
-
-					updateStatement.Update.Items.Add(new SqlSetExpression(expr, null));
+					updateContext.SetExpressions.Add(new SetExpressionEnvelope(extractExpr, null, false));
 				}
-				else if (update.NodeType == ExpressionType.Lambda)
-					ParseSet(
-						builder,
-						buildInfo,
-						extract,
-						(LambdaExpression)update,
-						sequence,
-						sequence,
-						updateStatement.Update.Table,
-						updateStatement.Update.Items);
 				else
-					ParseSet(
-						builder,
-						extract,
-						methodCall,
-						2,
-						sequence,
-						updateStatement.Update.Items);
+				{
+					var updateExpr      = update;
+					var forceParameters = true;
 
-				// TODO: remove in v4?
-				updateStatement.Update.Items.RemoveDuplicatesFromTail((s1, s2) => s1.Column.Equals(s2.Column));
+					if (updateExpr.Unwrap() is LambdaExpression lambda)
+					{
+						forceParameters = false;
+						updateExpr      = SequenceHelper.PrepareBody(lambda, sequence);
+					}
 
-				return sequence;
+					ParseSet(builder, sequence, extractExpr, extractExpr, updateExpr, updateContext.SetExpressions, forceParameters);
+				}
+
+				return BuildSequenceResult.FromContext(updateContext);
 			}
 		}
 

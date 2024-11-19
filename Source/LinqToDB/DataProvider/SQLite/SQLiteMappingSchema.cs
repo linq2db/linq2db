@@ -12,19 +12,21 @@ namespace LinqToDB.DataProvider.SQLite
 	public class SQLiteMappingSchema : LockedMappingSchema
 	{
 		internal const string DATE_FORMAT_RAW  = "yyyy-MM-dd";
+#if SUPPORTS_COMPOSITE_FORMAT
+		private static readonly CompositeFormat DATE_FORMAT     = CompositeFormat.Parse("'{0:yyyy-MM-dd}'");
+		private static readonly CompositeFormat DATETIME_FORMAT = CompositeFormat.Parse("'{0:yyyy-MM-dd HH:mm:ss.fff}'");
+#else
 		private  const string DATE_FORMAT      = "'{0:yyyy-MM-dd}'";
-		private  const string DATETIME0_FORMAT = "'{0:yyyy-MM-dd HH:mm:ss}'";
-		private  const string DATETIME1_FORMAT = "'{0:yyyy-MM-dd HH:mm:ss.f}'";
-		private  const string DATETIME2_FORMAT = "'{0:yyyy-MM-dd HH:mm:ss.ff}'";
-		private  const string DATETIME3_FORMAT = "'{0:yyyy-MM-dd HH:mm:ss.fff}'";
+		private  const string DATETIME_FORMAT = "'{0:yyyy-MM-dd HH:mm:ss.fff}'";
+#endif
 
 		SQLiteMappingSchema() : base(ProviderName.SQLite)
 		{
 			SetConvertExpression<string,TimeSpan>(s => DateTime.Parse(s, null, DateTimeStyles.NoCurrentDateDefault).TimeOfDay);
 
-			SetValueToSqlConverter(typeof(Guid),     (sb,dt,_,v) => ConvertGuidToSql    (sb, dt, (Guid)v));
-			SetValueToSqlConverter(typeof(DateTime), (sb, _,_,v) => ConvertDateTimeToSql(sb, (DateTime)v));
-			SetValueToSqlConverter(typeof(string),   (sb, _,_,v) => ConvertStringToSql  (sb, v.ToString()!));
+			SetValueToSqlConverter(typeof(Guid),     (sb, dt,_,v) => ConvertGuidToSql    (sb, dt, (Guid)v));
+			SetValueToSqlConverter(typeof(DateTime), (sb, dt,_,v) => ConvertDateTimeToSql(sb, dt, (DateTime)v));
+			SetValueToSqlConverter(typeof(string),   (sb, _,_,v) => ConvertStringToSql  (sb, (string)v));
 			SetValueToSqlConverter(typeof(char),     (sb, _,_,v) => ConvertCharToSql    (sb, (char)v));
 			SetValueToSqlConverter(typeof(byte[]),   (sb, _,_,v) => ConvertBinaryToSql  (sb, (byte[])v));
 			SetValueToSqlConverter(typeof(Binary),   (sb, _,_,v) => ConvertBinaryToSql  (sb, ((Binary)v).ToArray()));
@@ -47,7 +49,7 @@ namespace LinqToDB.DataProvider.SQLite
 					or (_, "TEXT"):
 					stringBuilder
 						// ToUpperInvariant to match Microsoft.Data.SQLite behavior
-						.AppendFormat("'{0}'", value.ToString().ToUpperInvariant());
+						.Append(CultureInfo.InvariantCulture, $"'{value.ToString().ToUpperInvariant()}'");
 					break;
 				default:
 					ConvertBinaryToSql(stringBuilder, value.ToByteArray());
@@ -63,25 +65,17 @@ namespace LinqToDB.DataProvider.SQLite
 				.Append('\'');
 		}
 
-		static void ConvertDateTimeToSql(StringBuilder stringBuilder, DateTime value)
+		static void ConvertDateTimeToSql(StringBuilder stringBuilder, SqlDataType dataType, DateTime value)
 		{
+#if SUPPORTS_COMPOSITE_FORMAT
+			CompositeFormat format;
+#else
 			string format;
-			if (value.Millisecond == 0)
-			{
-				format = value.Hour == 0 && value.Minute == 0 && value.Second == 0 ?
-					DATE_FORMAT :
-					DATETIME0_FORMAT;
-			}
-			// TODO: code below should be gone after we implement proper date/time support for sqlite
-			// This actually doesn't make sense and exists only for our tests to work in cases where literals
-			// compared as strings
-			// E.g. see DateTimeArray2/DateTimeArray3 tests
-			else if (value.Millisecond % 100 == 0)
-				format = DATETIME1_FORMAT;
-			else if (value.Millisecond % 10 == 0)
-				format = DATETIME2_FORMAT;
+#endif
+			if (dataType.Type.DataType == DataType.Date)
+				format = DATE_FORMAT;
 			else
-				format = DATETIME3_FORMAT;
+				format = DATETIME_FORMAT;
 
 			stringBuilder.AppendFormat(CultureInfo.InvariantCulture, format, value);
 		}
@@ -96,11 +90,7 @@ namespace LinqToDB.DataProvider.SQLite
 		static readonly Action<StringBuilder, int> AppendConversionAction = AppendConversion;
 		static void AppendConversion(StringBuilder stringBuilder, int value)
 		{
-			stringBuilder
-				.Append("char(")
-				.Append(value)
-				.Append(')')
-				;
+			stringBuilder.Append(CultureInfo.InvariantCulture, $"char({value})");
 		}
 
 		static void ConvertStringToSql(StringBuilder stringBuilder, string value)

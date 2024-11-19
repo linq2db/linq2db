@@ -1,6 +1,6 @@
 ﻿using System;
-using System.Diagnostics.CodeAnalysis;
-using System.Globalization;
+
+using LinqToDB.Common;
 
 namespace LinqToDB.SqlQuery
 {
@@ -9,16 +9,16 @@ namespace LinqToDB.SqlQuery
 	/// </summary>
 	public static class PseudoFunctions
 	{
+		public const string MERGE_ACTION = "$merge_action$";
+
 		/// <summary>
 		/// Function to convert text parameter to lowercased form: <c>TO_LOWER(string)</c>
 		/// </summary>
 		public const string TO_LOWER = "$ToLower$";
 		public static SqlFunction MakeToLower(ISqlExpression value)
 		{
-			return new SqlFunction(typeof(string), TO_LOWER, false, true, value)
-			{
-				CanBeNull = value.CanBeNull
-			};
+			return new SqlFunction(typeof(string), TO_LOWER, false, true, Precedence.Primary,
+				ParametersNullabilityType.IfAnyParameterNullable, null, value);
 		}
 
 		/// <summary>
@@ -27,22 +27,29 @@ namespace LinqToDB.SqlQuery
 		public const string TO_UPPER = "$ToUpper$";
 		public static SqlFunction MakeToUpper(ISqlExpression value)
 		{
-			return new SqlFunction(typeof(string), TO_UPPER, false, true, value)
-			{
-				CanBeNull = value.CanBeNull
-			};
+			return new SqlFunction(typeof(string), TO_UPPER, false, true, Precedence.Primary,
+				ParametersNullabilityType.IfAnyParameterNullable, null, value);
+		}
+
+		/// <summary>
+		/// Creates cast expression: <c>CAST(value AS to_type)</c>
+		/// </summary>
+		public static SqlCastExpression MakeCast(ISqlExpression value, DbDataType toType, SqlDataType? fromType = null)
+		{
+			return new SqlCastExpression(value, toType, fromType);
 		}
 
 		/// <summary>
 		/// Function to convert value from one type to another: <c>CONVERT(to_type, from_type, value) { CanBeNull = value.CanBeNull }</c>
 		/// </summary>
-		public const string CONVERT = "$Convert$";
-		public static SqlFunction MakeConvert(SqlDataType toType, SqlDataType fromType, ISqlExpression value)
+		public const string CONVERT_FORMAT = "$Convert_Format$";
+
+		/// <summary>
+		/// Function to convert value from one type to another: <c>CONVERT(to_type, from_type, value) { CanBeNull = value.CanBeNull, DoNotOptimize = true }</c>
+		/// </summary>
+		public static SqlCastExpression MakeMandatoryCast(ISqlExpression value, DbDataType toType, SqlDataType? fromType = null)
 		{
-			return new SqlFunction(toType.SystemType, CONVERT, false, true, toType, fromType, value)
-			{
-				CanBeNull = value.CanBeNull
-			};
+			return new SqlCastExpression(value, toType, fromType, true);
 		}
 
 		/// <summary>
@@ -65,10 +72,8 @@ namespace LinqToDB.SqlQuery
 		public const string TRY_CONVERT_OR_DEFAULT = "$TryConvertOrDefault$";
 		public static SqlFunction MakeTryConvertOrDefault(SqlDataType toType, SqlDataType fromType, ISqlExpression value, ISqlExpression defaultValue)
 		{
-			return new SqlFunction(toType.SystemType, TRY_CONVERT_OR_DEFAULT, false, true, toType, fromType, value, defaultValue)
-			{
-				CanBeNull = value.CanBeNull || defaultValue.CanBeNull
-			};
+			return new SqlFunction(toType.SystemType, TRY_CONVERT_OR_DEFAULT, false, true, Precedence.Primary,
+				ParametersNullabilityType.IfAnyParameterNullable, null, toType, fromType, value, defaultValue);
 		}
 
 		/// <summary>
@@ -77,10 +82,8 @@ namespace LinqToDB.SqlQuery
 		public const string REPLACE = "$Replace$";
 		public static SqlFunction MakeReplace(ISqlExpression value, ISqlExpression oldSubstring, ISqlExpression newSubstring)
 		{
-			return new SqlFunction(typeof(string), REPLACE, false, true, value, oldSubstring, newSubstring)
-			{
-				CanBeNull = value.CanBeNull || oldSubstring.CanBeNull || newSubstring.CanBeNull
-			};
+			return new SqlFunction(typeof(string), REPLACE, false, true, Precedence.Primary,
+				ParametersNullabilityType.IfAnyParameterNullable, null, value, oldSubstring, newSubstring);
 		}
 
 		/// <summary>
@@ -89,28 +92,9 @@ namespace LinqToDB.SqlQuery
 		public const string REMOVE_CONVERT = "$Convert_Remover$";
 		public static SqlFunction MakeRemoveConvert(ISqlExpression value, SqlDataType resultType)
 		{
-			return new SqlFunction(resultType.SystemType, REMOVE_CONVERT, false, true, value, resultType)
-			{
-				CanBeNull = value.CanBeNull
-			};
+			return new SqlFunction(resultType.SystemType, REMOVE_CONVERT, false, true, Precedence.Primary,
+				ParametersNullabilityType.IfAnyParameterNullable, null, value, resultType);
 		}
 
-		/// <summary>
-		/// Function to return first non-null argument: <c>COALESCE(values...)</c>
-		/// </summary>
-		public const string COALESCE = "$Coalesce$";
-		public static SqlFunction MakeCoalesce(Type systemType, params ISqlExpression[] values)
-		{
-			var canBeNull = true;
-
-			foreach (var value in values)
-				if (!value.CanBeNull)
-					canBeNull = false;
-
-			return new SqlFunction(systemType, COALESCE, false, true, values)
-			{
-				CanBeNull = canBeNull
-			};
-		}
 	}
 }

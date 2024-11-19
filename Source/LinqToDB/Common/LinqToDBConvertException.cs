@@ -10,9 +10,7 @@ namespace LinqToDB.Common
 	/// This class is the base class for exceptions that may occur during
 	/// execution of the namespace members.
 	/// </remarks>
-#if !NET8_0_OR_GREATER
 	[Serializable]
-#endif
 	public class LinqToDBConvertException : LinqToDBException
 	{
 		/// <summary>
@@ -64,21 +62,6 @@ namespace LinqToDB.Common
 			: base(innerException.Message, innerException)
 		{
 		}
-#if !NET8_0_OR_GREATER
-		/// <summary>
-		/// Initializes a new instance of the <see cref="LinqToDBConvertException"/> class
-		/// with serialized data.
-		/// </summary>
-		/// <param name="info">The object that holds the serialized object data.</param>
-		/// <param name="context">The contextual information about the source or
-		/// destination.</param>
-		/// <remarks>This constructor is called during deserialization to
-		/// reconstitute the exception object transmitted over a stream.</remarks>
-		protected LinqToDBConvertException(SerializationInfo info, StreamingContext context)
-			: base(info, context)
-		{
-		}
-#endif
 
 		/// <summary>
 		/// Gets name of misconfigured column, which caused exception.

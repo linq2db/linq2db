@@ -73,23 +73,35 @@ namespace PostreSQLDataContext
 
 		#region GetParentByID
 
-		[Sql.TableFunction(Schema="public", Name="\"GetParentByID\"")]
+		[Sql.TableFunction(Schema="public", Name="GetParentByID")]
 		public ITable<Parent> GetParentByID(int? id)
 		{
-			return this.GetTable<Parent>(this, (MethodInfo)MethodBase.GetCurrentMethod()!,
-				id);
+			return this.TableFromExpression(() => GetParentByID(id));
+		}
+
+		#endregion
+
+		#region TestTableFunction
+
+		[Sql.TableFunction(Schema="public", Name="TestTableFunction")]
+		public ITable<TestTableFunctionResult> TestTableFunction(int? param1)
+		{
+			return this.TableFromExpression(() => TestTableFunction(param1));
+		}
+
+		public partial class TestTableFunctionResult
+		{
+			[Column("param2")] public int? Param2 { get; set; }
 		}
 
 		#endregion
 
 		#region TestTableFunction1
 
-		[Sql.TableFunction(Schema="public", Name="\"TestTableFunction1\"")]
+		[Sql.TableFunction(Schema="public", Name="TestTableFunction1")]
 		public ITable<TestTableFunction1Result> TestTableFunction1(int? param1, int? param2)
 		{
-			return this.GetTable<TestTableFunction1Result>(this, (MethodInfo)MethodBase.GetCurrentMethod()!,
-				param1,
-				param2);
+			return this.TableFromExpression(() => TestTableFunction1(param1, param2));
 		}
 
 		public partial class TestTableFunction1Result
@@ -100,28 +112,12 @@ namespace PostreSQLDataContext
 
 		#endregion
 
-		#region TestTableFunction
-
-		[Sql.TableFunction(Schema="public", Name="\"TestTableFunction\"")]
-		public ITable<TestTableFunctionResult> TestTableFunction(int? param1)
-		{
-			return this.GetTable<TestTableFunctionResult>(this, (MethodInfo)MethodBase.GetCurrentMethod()!,
-				param1);
-		}
-
-		public partial class TestTableFunctionResult
-		{
-			[Column("param2")] public int? Param2 { get; set; }
-		}
-
-		#endregion
-
 		#region TestTableFunctionSchema
 
-		[Sql.TableFunction(Schema="public", Name="\"TestTableFunctionSchema\"")]
+		[Sql.TableFunction(Schema="public", Name="TestTableFunctionSchema")]
 		public ITable<TestTableFunctionSchemaResult> TestTableFunctionSchema()
 		{
-			return this.GetTable<TestTableFunctionSchemaResult>(this, (MethodInfo)MethodBase.GetCurrentMethod()!);
+			return this.TableFromExpression(() => TestTableFunctionSchema());
 		}
 
 		public partial class TestTableFunctionSchemaResult
@@ -158,7 +154,7 @@ namespace PostreSQLDataContext
 			[Column("circleDataType")     ] public NpgsqlCircle?     CircleDataType      { get; set; }
 			[Column("lineDataType")       ] public NpgsqlLine?       LineDataType        { get; set; }
 			[Column("inetDataType")       ] public NpgsqlInet?       InetDataType        { get; set; }
-			[Column("cidrDataType")       ] public NpgsqlInet?       CidrDataType        { get; set; }
+			[Column("cidrDataType")       ] public NpgsqlCidr?       CidrDataType        { get; set; }
 			[Column("macaddrDataType")    ] public PhysicalAddress?  MacaddrDataType     { get; set; }
 			[Column("macaddr8DataType")   ] public PhysicalAddress?  Macaddr8DataType    { get; set; }
 			[Column("jsonDataType")       ] public string?           JsonDataType        { get; set; }
@@ -228,7 +224,7 @@ namespace PostreSQLDataContext
 		[Column("circleDataType",      DataType=LinqToDB.DataType.Udt),                                   Nullable            ] public NpgsqlCircle?     CircleDataType      { get; set; } // circle
 		[Column("lineDataType",        DataType=LinqToDB.DataType.Udt),                                   Nullable            ] public NpgsqlLine?       LineDataType        { get; set; } // line
 		[Column("inetDataType",        DataType=LinqToDB.DataType.Udt),                                   Nullable            ] public NpgsqlInet?       InetDataType        { get; set; } // inet
-		[Column("cidrDataType",        DataType=LinqToDB.DataType.Udt),                                   Nullable            ] public NpgsqlInet?       CidrDataType        { get; set; } // cidr
+		[Column("cidrDataType",        DataType=LinqToDB.DataType.Udt),                                   Nullable            ] public NpgsqlCidr?       CidrDataType        { get; set; } // cidr
 		[Column("macaddrDataType",     DataType=LinqToDB.DataType.Udt),                                   Nullable            ] public PhysicalAddress?  MacaddrDataType     { get; set; } // macaddr
 		[Column("macaddr8DataType",    DataType=LinqToDB.DataType.Udt),                                   Nullable            ] public PhysicalAddress?  Macaddr8DataType    { get; set; } // macaddr8
 		[Column("jsonDataType",        DataType=LinqToDB.DataType.Json),                                  Nullable            ] public string?           JsonDataType        { get; set; } // json
@@ -571,7 +567,7 @@ namespace PostreSQLDataContext
 	{
 		#region AddIfNotExists
 
-		[Sql.Function(Name="\"public\".add_if_not_exists", ServerSideOnly=true)]
+		[Sql.Function(Name="public.add_if_not_exists", ServerSideOnly=true)]
 		public static object? AddIfNotExists(string? pName)
 		{
 			throw new InvalidOperationException();
@@ -581,7 +577,7 @@ namespace PostreSQLDataContext
 
 		#region Addissue792record
 
-		[Sql.Function(Name="\"public\".addissue792record", ServerSideOnly=true)]
+		[Sql.Function(Name="public.addissue792record", ServerSideOnly=true)]
 		public static object? Addissue792record()
 		{
 			throw new InvalidOperationException();
@@ -591,7 +587,7 @@ namespace PostreSQLDataContext
 
 		#region Bool
 
-		[Sql.Function(Name="\"public\".bool", ServerSideOnly=true)]
+		[Sql.Function(Name="public.bool", ServerSideOnly=true)]
 		public static string? Bool(int? param)
 		{
 			throw new InvalidOperationException();
@@ -611,7 +607,7 @@ namespace PostreSQLDataContext
 
 		#region Issue1742Date
 
-		[Sql.Function(Name="\"public\".issue_1742_date", ServerSideOnly=true)]
+		[Sql.Function(Name="public.issue_1742_date", ServerSideOnly=true)]
 		public static int? Issue1742Date(DateTime? p1)
 		{
 			throw new InvalidOperationException();
@@ -621,7 +617,7 @@ namespace PostreSQLDataContext
 
 		#region Issue1742Ts
 
-		[Sql.Function(Name="\"public\".issue_1742_ts", ServerSideOnly=true)]
+		[Sql.Function(Name="public.issue_1742_ts", ServerSideOnly=true)]
 		public static int? Issue1742Ts(DateTime? p1)
 		{
 			throw new InvalidOperationException();
@@ -631,7 +627,7 @@ namespace PostreSQLDataContext
 
 		#region Issue1742Tstz
 
-		[Sql.Function(Name="\"public\".issue_1742_tstz", ServerSideOnly=true)]
+		[Sql.Function(Name="public.issue_1742_tstz", ServerSideOnly=true)]
 		public static int? Issue1742Tstz(DateTimeOffset? p1)
 		{
 			throw new InvalidOperationException();
@@ -641,7 +637,7 @@ namespace PostreSQLDataContext
 
 		#region Reverse
 
-		[Sql.Function(Name="\"public\".reverse", ServerSideOnly=true)]
+		[Sql.Function(Name="public.reverse", ServerSideOnly=true)]
 		public static string? Reverse(string? par7)
 		{
 			throw new InvalidOperationException();
@@ -651,7 +647,7 @@ namespace PostreSQLDataContext
 
 		#region TestAvg
 
-		[Sql.Function(Name="\"public\".test_avg", ServerSideOnly=true, IsAggregate = true, ArgIndices = new[] { 0 })]
+		[Sql.Function(Name="public.test_avg", ServerSideOnly=true, IsAggregate = true, ArgIndices = new[] { 0 })]
 		public static double? TestAvg<TSource>(this IEnumerable<TSource> src, Expression<Func<TSource, double?>> par9)
 		{
 			throw new InvalidOperationException();
@@ -661,7 +657,7 @@ namespace PostreSQLDataContext
 
 		#region TestFunctionParameters
 
-		[Sql.Function(Name="\"public\".\"TestFunctionParameters\"", ServerSideOnly=true)]
+		[Sql.Function(Name="public.\"TestFunctionParameters\"", ServerSideOnly=true)]
 		public static TestFunctionParametersResult? TestFunctionParameters(int? param1, int? param2)
 		{
 			throw new InvalidOperationException();
@@ -671,7 +667,7 @@ namespace PostreSQLDataContext
 
 		#region TestScalarFunction
 
-		[Sql.Function(Name="\"public\".\"TestScalarFunction\"", ServerSideOnly=true)]
+		[Sql.Function(Name="public.\"TestScalarFunction\"", ServerSideOnly=true)]
 		public static string? TestScalarFunction(int? param)
 		{
 			throw new InvalidOperationException();
@@ -681,7 +677,7 @@ namespace PostreSQLDataContext
 
 		#region TestSingleOutParameterFunction
 
-		[Sql.Function(Name="\"public\".\"TestSingleOutParameterFunction\"", ServerSideOnly=true)]
+		[Sql.Function(Name="public.\"TestSingleOutParameterFunction\"", ServerSideOnly=true)]
 		public static int? TestSingleOutParameterFunction(int? param1)
 		{
 			throw new InvalidOperationException();

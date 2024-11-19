@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Reflection;
-using System.Text;
 
 namespace LinqToDB.Metadata
 {
@@ -52,9 +52,9 @@ namespace LinqToDB.Metadata
 		private MappingAttribute[] GetAllAttributes(Type? sourceType, ICustomAttributeProvider attributeProvider)
 		{
 			if (sourceType == null)
-				return _types  .TryGetValue((Type      )attributeProvider, out var typeAttributes  ) ? typeAttributes   : Array<MappingAttribute>.Empty;
+				return _types  .TryGetValue((Type      )attributeProvider, out var typeAttributes  ) ? typeAttributes   : [];
 			else
-				return _members.TryGetValue((MemberInfo)attributeProvider, out var memberAttributes) ? memberAttributes : Array<MappingAttribute>.Empty;
+				return _members.TryGetValue((MemberInfo)attributeProvider, out var memberAttributes) ? memberAttributes : [];
 		}
 
 		public MappingAttribute[] GetAttributes(Type type)
@@ -72,9 +72,9 @@ namespace LinqToDB.Metadata
 		public MemberInfo[] GetDynamicColumns(Type type)
 		{
 			if (_dynamicColumns.TryGetValue(type, out var dynamicColumns))
-					return dynamicColumns;
+				return dynamicColumns;
 
-			return Array<MemberInfo>.Empty;
+			return [];
 		}
 
 		/// <summary>
@@ -99,7 +99,7 @@ namespace LinqToDB.Metadata
 				sb.Value.Append('.')
 					.Append(IdentifierBuilder.GetObjectID(type.Key))
 					.Append('.')
-					.Append(type.Value.Length)
+					.Append(type.Value.Length.ToString(NumberFormatInfo.InvariantInfo))
 					.Append('.')
 					;
 
@@ -114,7 +114,7 @@ namespace LinqToDB.Metadata
 					.Append('.')
 					.Append(member.Key.Name)
 					.Append('.')
-					.Append(member.Value.Length)
+					.Append(member.Value.Length.ToString(NumberFormatInfo.InvariantInfo))
 					.Append('.')
 					;
 
@@ -129,7 +129,7 @@ namespace LinqToDB.Metadata
 					.Append('.')
 					.Append(column.Key.Name)
 					.Append('.')
-					.Append(column.Value.Length)
+					.Append(column.Value.Length.ToString(NumberFormatInfo.InvariantInfo))
 					.Append('.')
 					;
 

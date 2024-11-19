@@ -25,6 +25,8 @@ namespace LinqToDB.DataProvider.Oracle
 		BulkCopyType        BulkCopyType                   = BulkCopyType.MultipleRows,
 		AlternativeBulkCopy AlternativeBulkCopy            = AlternativeBulkCopy.InsertAll,
 		bool                DontEscapeLowercaseIdentifiers = false
+		// If you add another parameter here, don't forget to update
+		// OracleOptions copy constructor and CreateID method.
 	)
 		: DataProviderOptions<OracleOptions>(BulkCopyType)
 	{

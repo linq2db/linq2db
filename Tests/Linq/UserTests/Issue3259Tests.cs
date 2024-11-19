@@ -48,20 +48,20 @@ namespace Tests.UserTests
 			Day
 		}
 
-		[Sql.Extension("Sum({expr})", IsAggregate = true)]
-		public static TV SumCustom<T, TV>(IEnumerable<T> items, [ExprParameter] Expression<Func<T, TV>> expr)
+		[Sql.Extension("Sum({expr})", IsAggregate = true, ServerSideOnly = true)]
+		private static TV SumCustom<T, TV>(IEnumerable<T> items, [ExprParameter] Expression<Func<T, TV>> expr)
 		{
 			throw new NotImplementedException();
 		}
 
-		[Sql.Extension("Sum({items})", IsAggregate = true)]
-		public static T SumCustom<T>([ExprParameter] IEnumerable<T> items)
+		[Sql.Extension("Sum({items})", IsAggregate = true, ServerSideOnly = true)]
+		private static T SumCustom<T>([ExprParameter] IEnumerable<T> items)
 		{
 			throw new NotImplementedException();
 		}
 
 		[Test]
-		public void SubqueryAggregation([DataSources(ProviderName.SqlCe, TestProvName.AllSybase, TestProvName.AllClickHouse)] string context)
+		public void SubqueryAggregation([IncludeDataSources(TestProvName.AllPostgreSQL, TestProvName.AllSQLite, TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			var ms      = new MappingSchema();
 			var builder = new FluentMappingBuilder(ms);

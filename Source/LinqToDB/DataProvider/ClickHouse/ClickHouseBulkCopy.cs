@@ -1,9 +1,10 @@
 ﻿using System;
-using System.Text;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+
+using LinqToDB.Tools;
 
 namespace LinqToDB.DataProvider.ClickHouse
 {
@@ -35,13 +36,11 @@ namespace LinqToDB.DataProvider.ClickHouse
 			return MultipleRowsCopy1Async(table, options, source, cancellationToken);
 		}
 
-#if NATIVE_ASYNC
 		protected override Task<BulkCopyRowsCopied> MultipleRowsCopyAsync<T>(
 			ITable<T> table, DataOptions options, IAsyncEnumerable<T> source, CancellationToken cancellationToken)
 		{
 			return MultipleRowsCopy1Async(table, options, source, cancellationToken);
 		}
-#endif
 
 		protected override BulkCopyRowsCopied ProviderSpecificCopy<T>(
 			ITable<T> table, DataOptions options, IEnumerable<T> source)
@@ -52,13 +51,11 @@ namespace LinqToDB.DataProvider.ClickHouse
 			{
 				if (_provider.Adapter.OctonicaCreateWriter != null)
 					return ProviderSpecificOctonicaBulkCopy(connections.Value, table, options.BulkCopyOptions, source);
-#if NATIVE_ASYNC
 				if (_provider.Adapter.OctonicaCreateWriterAsync != null)
 					return SafeAwaiter.Run(() => ProviderSpecificOctonicaBulkCopyAsync(connections.Value, table, options.BulkCopyOptions, source, default));
 
 				if (_provider.Adapter.ClientBulkCopyCreator != null)
 					return SafeAwaiter.Run(() => ProviderSpecificClientBulkCopyAsync(connections.Value, table, options, columns => new BulkCopyReader<T>(connections.Value.DataConnection, columns, source), default));
-#endif
 			}
 
 			return MultipleRowsCopy(table, options, source);
@@ -83,7 +80,6 @@ namespace LinqToDB.DataProvider.ClickHouse
 			return MultipleRowsCopyAsync(table, options, source, cancellationToken);
 		}
 
-#if NATIVE_ASYNC
 		protected override Task<BulkCopyRowsCopied> ProviderSpecificCopyAsync<T>(
 			ITable<T> table, DataOptions options, IAsyncEnumerable<T> source, CancellationToken cancellationToken)
 		{
@@ -102,7 +98,6 @@ namespace LinqToDB.DataProvider.ClickHouse
 
 			return MultipleRowsCopyAsync(table, options, source, cancellationToken);
 		}
-#endif
 
 		private ProviderConnections? TryGetProviderConnections<T>(ITable<T> table)
 			where T : notnull
@@ -276,12 +271,8 @@ namespace LinqToDB.DataProvider.ClickHouse
 
 			var sql = cmd.Value.ToString();
 
-			var bc = await _provider.Adapter.OctonicaCreateWriterAsync!(connection, sql, cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
-#if NATIVE_ASYNC
-			await using (bc.ConfigureAwait(Configuration.ContinueOnCapturedContext))
-#else
-			await using (bc)
-#endif
+			var bc = await _provider.Adapter.OctonicaCreateWriterAsync!(connection, sql, cancellationToken).ConfigureAwait(false);
+			await using (bc.ConfigureAwait(false))
 			{
 				for (var i = 0; i < columnTypes.Length; i++)
 				{
@@ -324,9 +315,9 @@ namespace LinqToDB.DataProvider.ClickHouse
 						() => sql,
 						async () =>
 						{
-							await bc.WriteTableAsync(data, rows, cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
+							await bc.WriteTableAsync(data, rows, cancellationToken).ConfigureAwait(false);
 							return rows;
-						}).ConfigureAwait(Configuration.ContinueOnCapturedContext);
+						}).ConfigureAwait(false);
 
 					// there is no notifications from provider, so we ignore NotifyAfter value
 					if (options.NotifyAfter != 0 && options.RowsCopiedCallback != null)
@@ -336,7 +327,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 						if (rc.Abort)
 						{
 							if (table.DataContext.CloseAfterUse)
-								await table.DataContext.CloseAsync().ConfigureAwait(Configuration.ContinueOnCapturedContext);
+								await table.DataContext.CloseAsync().ConfigureAwait(false);
 
 							return rc;
 						}
@@ -345,19 +336,18 @@ namespace LinqToDB.DataProvider.ClickHouse
 					clear = true;
 				}
 
-				await bc.EndWriteAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
+				await bc.EndWriteAsync(cancellationToken).ConfigureAwait(false);
 
 				if (options.NotifyAfter != 0 && options.RowsCopiedCallback != null)
 					options.RowsCopiedCallback(rc);
 
 				if (table.DataContext.CloseAfterUse)
-					await table.DataContext.CloseAsync().ConfigureAwait(Configuration.ContinueOnCapturedContext);
+					await table.DataContext.CloseAsync().ConfigureAwait(false);
 
 				return rc;
 			}
 		}
 
-#if NATIVE_ASYNC
 		private async Task<BulkCopyRowsCopied> ProviderSpecificOctonicaBulkCopyAsync<T>(
 			ProviderConnections providerConnections,
 			ITable<T> table,
@@ -397,8 +387,8 @@ namespace LinqToDB.DataProvider.ClickHouse
 			var sql = cmd.Value.ToString();
 
 			// thanks C#! (sarcasm)
-			var bc = await _provider.Adapter.OctonicaCreateWriterAsync!(connection, sql, cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
-			await using (bc.ConfigureAwait(Configuration.ContinueOnCapturedContext))
+			var bc = await _provider.Adapter.OctonicaCreateWriterAsync!(connection, sql, cancellationToken).ConfigureAwait(false);
+			await using (bc.ConfigureAwait(false))
 			{
 				for (var i = 0; i < columnTypes.Length; i++)
 				{
@@ -415,7 +405,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 				// as alternative to EnumerableHelper.Batch we can use MaxBlockSize, but it will not make difference
 				var batches = EnumerableHelper.Batch(source, options.MaxBatchSize ?? int.MaxValue);
 
-				await foreach (var batch in batches.WithCancellation(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext))
+				await foreach (var batch in batches.WithCancellation(cancellationToken).ConfigureAwait(false))
 				{
 					int rows = 0;
 
@@ -423,7 +413,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 						foreach (var list in data)
 							list.Clear();
 
-					await foreach (var record in batch.WithCancellation(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext))
+					await foreach (var record in batch.WithCancellation(cancellationToken).ConfigureAwait(false))
 					{
 						for (var i = 0; i < columns.Count; i++)
 						{
@@ -443,9 +433,9 @@ namespace LinqToDB.DataProvider.ClickHouse
 						() => sql,
 						async () =>
 						{
-							await bc.WriteTableAsync(data, rows, cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
+							await bc.WriteTableAsync(data, rows, cancellationToken).ConfigureAwait(false);
 							return rows;
-						}).ConfigureAwait(Configuration.ContinueOnCapturedContext);
+						}).ConfigureAwait(false);
 
 					// there is no notifications from provider, so we ignore NotifyAfter value
 					if (options.NotifyAfter != 0 && options.RowsCopiedCallback != null)
@@ -455,7 +445,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 						if (rc.Abort)
 						{
 							if (table.DataContext.CloseAfterUse)
-								await table.DataContext.CloseAsync().ConfigureAwait(Configuration.ContinueOnCapturedContext);
+								await table.DataContext.CloseAsync().ConfigureAwait(false);
 
 							return rc;
 						}
@@ -464,18 +454,17 @@ namespace LinqToDB.DataProvider.ClickHouse
 					clear = true;
 				}
 
-				await bc.EndWriteAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
+				await bc.EndWriteAsync(cancellationToken).ConfigureAwait(false);
 
 				if (options.NotifyAfter != 0 && options.RowsCopiedCallback != null)
 					options.RowsCopiedCallback(rc);
 
 				if (table.DataContext.CloseAfterUse)
-					await table.DataContext.CloseAsync().ConfigureAwait(Configuration.ContinueOnCapturedContext);
+					await table.DataContext.CloseAsync().ConfigureAwait(false);
 
 				return rc;
 			}
 		}
-#endif
 
 #endregion
 
@@ -503,17 +492,30 @@ namespace LinqToDB.DataProvider.ClickHouse
 			{
 				if (copyOptions.WithoutSession)
 				{
-					var cnBuilder         = _provider.Adapter.CreateClientConnectionStringBuilder!(connection.ConnectionString);
+					var cnBuilder = _provider.Adapter.CreateClientConnectionStringBuilder!(connection.ConnectionString);
 
 					if (cnBuilder.UseSession)
 					{
 						cnBuilder.UseSession = false;
-						connection           = _provider.Adapter.CreateConnection!(cnBuilder.ToString());
+						connection           = _provider.Adapter.CreateConnection(cnBuilder.ToString());
 						disposeConnection    = true;
 
-						options.ConnectionOptions.ConnectionInterceptor?.ConnectionOpening(new(null), connection);
-						await connection.OpenAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
-						options.ConnectionOptions.ConnectionInterceptor?.ConnectionOpened(new(null), connection);
+						if (options.ConnectionOptions.ConnectionInterceptor == null)
+						{
+							await connection.OpenAsync(cancellationToken).ConfigureAwait(false);
+						}
+						else
+						{
+							await using (ActivityService.StartAndConfigureAwait(ActivityID.ConnectionInterceptorConnectionOpeningAsync))
+								await options.ConnectionOptions.ConnectionInterceptor.ConnectionOpeningAsync(new(null), connection, cancellationToken)
+									.ConfigureAwait(false);
+
+							await connection.OpenAsync(cancellationToken).ConfigureAwait(false);
+
+							await using (ActivityService.StartAndConfigureAwait(ActivityID.ConnectionInterceptorConnectionOpenedAsync))
+								await options.ConnectionOptions.ConnectionInterceptor.ConnectionOpenedAsync(new(null), connection, cancellationToken)
+									.ConfigureAwait(false);
+						}
 					}
 				}
 
@@ -529,6 +531,13 @@ namespace LinqToDB.DataProvider.ClickHouse
 				if (copyOptions.MaxDegreeOfParallelism != null)
 					bc.MaxDegreeOfParallelism = copyOptions.MaxDegreeOfParallelism.Value;
 
+				if (bc.HasInitAsync)
+				{
+					// no escaping?
+					bc.ColumnNames = columns.Select(c => c.ColumnName).ToArray();
+					await bc.InitAsync().ConfigureAwait(false);
+				}
+
 				var rd = createDataReader(columns);
 
 				await TraceActionAsync(
@@ -536,9 +545,9 @@ namespace LinqToDB.DataProvider.ClickHouse
 					() => "INSERT ASYNC BULK " + tableName + "(" + string.Join(", ", columns.Select(x => x.ColumnName)) + ")" + Environment.NewLine,
 					async () =>
 					{
-						await bc.WriteToServerAsync(rd, cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
+						await bc.WriteToServerAsync(rd, cancellationToken).ConfigureAwait(false);
 						return rd.Count;
-					}).ConfigureAwait(Configuration.ContinueOnCapturedContext);
+					}).ConfigureAwait(false);
 
 				rc.RowsCopied = bc.RowsWritten;
 
@@ -550,8 +559,8 @@ namespace LinqToDB.DataProvider.ClickHouse
 				// actually currently DisposeAsync is not implemented in Client provider and we can call Dispose with same effect
 				if (disposeConnection)
 				{
-#if NETSTANDARD2_1PLUS
-					await connection.DisposeAsync().ConfigureAwait(Configuration.ContinueOnCapturedContext);
+#if NET6_0_OR_GREATER
+					await connection.DisposeAsync().ConfigureAwait(false);
 #else
 					connection.Dispose();
 #endif
@@ -559,7 +568,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 			}
 
 			if (table.DataContext.CloseAfterUse)
-				await table.DataContext.CloseAsync().ConfigureAwait(Configuration.ContinueOnCapturedContext);
+				await table.DataContext.CloseAsync().ConfigureAwait(false);
 
 			return rc;
 		}

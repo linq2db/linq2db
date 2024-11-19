@@ -9,12 +9,11 @@ using System.Threading.Tasks;
 using System.Transactions;
 
 using LinqToDB;
-using LinqToDB.AspNet;
+using LinqToDB.Extensions.DependencyInjection;
 using LinqToDB.Data;
 using LinqToDB.DataProvider;
 using LinqToDB.DataProvider.DB2;
 using LinqToDB.DataProvider.SqlServer;
-using LinqToDB.Data.RetryPolicy;
 using LinqToDB.Interceptors;
 using LinqToDB.Mapping;
 
@@ -37,8 +36,11 @@ namespace Tests.Data
 
 			using (var conn = new DataConnection(dataProvider, connectionString))
 			{
-				Assert.That(conn.Connection.State,    Is.EqualTo(ConnectionState.Open));
-				Assert.That(conn.ConfigurationString, Is.Null);
+				Assert.Multiple(() =>
+				{
+					Assert.That(conn.Connection.State, Is.EqualTo(ConnectionState.Open));
+					Assert.That(conn.ConfigurationString, Is.Null);
+				});
 			}
 		}
 
@@ -47,8 +49,11 @@ namespace Tests.Data
 		{
 			using (var conn = new DataConnection())
 			{
-				Assert.That(conn.Connection.State,    Is.EqualTo(ConnectionState.Open));
-				Assert.That(conn.ConfigurationString, Is.EqualTo(DataConnection.DefaultConfiguration));
+				Assert.Multiple(() =>
+				{
+					Assert.That(conn.Connection.State, Is.EqualTo(ConnectionState.Open));
+					Assert.That(conn.ConfigurationString, Is.EqualTo(DataConnection.DefaultConfiguration));
+				});
 			}
 		}
 
@@ -62,8 +67,11 @@ namespace Tests.Data
 		{
 			using (var conn = GetDataConnection(context))
 			{
-				Assert.That(conn.Connection.State,    Is.EqualTo(ConnectionState.Open));
-				Assert.That(conn.ConfigurationString, Is.EqualTo(context));
+				Assert.Multiple(() =>
+				{
+					Assert.That(conn.Connection.State, Is.EqualTo(ConnectionState.Open));
+					Assert.That(conn.ConfigurationString, Is.EqualTo(context));
+				});
 
 				if (context.EndsWith(".2005"))
 				{
@@ -87,19 +95,6 @@ namespace Tests.Data
 				var gender = dbm.Execute<Gender>("select 'M'");
 
 				Assert.That(gender, Is.EqualTo(Gender.Male));
-			}
-		}
-
-		[Test]
-		public void CloneTest([DataSources(false)] string context)
-		{
-			using (var con = GetDataConnection(context))
-			{
-				var dbName = con.Connection.Database;
-
-				for (var i = 0; i < 150; i++)
-					using (var clone = (DataConnection)con.Clone())
-						dbName = clone.Connection.Database;
 			}
 		}
 
@@ -279,11 +274,17 @@ namespace Tests.Data
 					null,
 					async (args, cn, се) => await Task.Run(() => openedAsync = true)));
 
-				Assert.False(opened);
-				Assert.False(openedAsync);
-				Assert.That(conn.Connection.State, Is.EqualTo(ConnectionState.Open));
-				Assert.True(opened);
-				Assert.False(openedAsync);
+				Assert.Multiple(() =>
+				{
+					Assert.That(opened, Is.False);
+					Assert.That(openedAsync, Is.False);
+					Assert.That(conn.Connection.State, Is.EqualTo(ConnectionState.Open));
+				});
+				Assert.Multiple(() =>
+				{
+					Assert.That(opened, Is.True);
+					Assert.That(openedAsync, Is.False);
+				});
 			}
 		}
 
@@ -300,11 +301,17 @@ namespace Tests.Data
 					null,
 					async (args, cn, ct) => await Task.Run(() => openedAsync = true, ct)));
 
-				Assert.False(opened);
-				Assert.False(openedAsync);
+				Assert.Multiple(() =>
+				{
+					Assert.That(opened, Is.False);
+					Assert.That(openedAsync, Is.False);
+				});
 				await conn.SelectAsync(() => 1);
-				Assert.False(opened);
-				Assert.True(openedAsync);
+				Assert.Multiple(() =>
+				{
+					Assert.That(opened, Is.False);
+					Assert.That(openedAsync, Is.True);
+				});
 			}
 		}
 
@@ -333,8 +340,11 @@ namespace Tests.Data
 			collection.AddLinqToDB((serviceProvider, options) => options.UseConfigurationString(context));
 			var provider = collection.BuildServiceProvider();
 			var con = provider.GetService<IDataContext>()!;
-			Assert.True(con is DataConnection);
-			Assert.That(((DataConnection)con).ConfigurationString, Is.EqualTo(context));
+			Assert.Multiple(() =>
+			{
+				Assert.That(con is DataConnection, Is.True);
+				Assert.That(((DataConnection)con).ConfigurationString, Is.EqualTo(context));
+			});
 		}
 
 		[Test]
@@ -355,6 +365,28 @@ namespace Tests.Data
 			collection.AddLinqToDBContext<DbConnection3>((serviceProvider, options) => options.UseConfigurationString(context));
 			var provider = collection.BuildServiceProvider();
 			var con = provider.GetService<DbConnection3>()!;
+			Assert.That(con.ConfigurationString, Is.EqualTo(context));
+		}
+
+		[Test]
+		public void TestServiceCollection_Issue4326_Positive([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			var collection = new ServiceCollection();
+			collection.AddLinqToDBContext<IDataContext, DbConnection1>((serviceProvider, options) => options.UseConfigurationString(context));
+			var provider = collection.BuildServiceProvider();
+			var con = provider.GetService<IDataContext>()!;
+			Assert.That(con, Is.TypeOf<DbConnection1>());
+			Assert.That(con.ConfigurationString, Is.EqualTo(context));
+		}
+
+		[Test]
+		public void TestServiceCollection_Issue4326_Compat([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			var collection = new ServiceCollection();
+			collection.AddLinqToDBContext<IDataContext, DbConnection4>((serviceProvider, options) => options.UseConfigurationString(context));
+			var provider = collection.BuildServiceProvider();
+			var con = provider.GetService<IDataContext>()!;
+			Assert.That(con, Is.TypeOf<DbConnection4>());
 			Assert.That(con.ConfigurationString, Is.EqualTo(context));
 		}
 
@@ -381,6 +413,39 @@ namespace Tests.Data
 			}
 		}
 
+		public class DbConnection4 : DataConnection
+		{
+			public DbConnection4(DataOptions<IDataContext> options) : base(options.Options)
+			{
+			}
+		}
+
+		public class DbConnection5 : DataConnection
+		{
+			public DbConnection5(DataOptions options) : base(options)
+			{
+				Assert.Multiple(() =>
+				{
+					Assert.That(options.DataContextOptions.CommandTimeout, Is.EqualTo(91));
+					Assert.That(CommandTimeout,                            Is.EqualTo(91));
+				});
+			}
+		}
+
+		[Test]
+		public void TestServiceCollection_Issue4476([DataSources(false)] string context)
+		{
+			var collection = new ServiceCollection();
+
+			collection.AddLinqToDBContext<DbConnection5>((_, options) =>
+				options.UseConfigurationString(context).WithOptions<DataContextOptions>(o => o with { CommandTimeout = 91 }));
+
+			var provider = collection.BuildServiceProvider();
+			var con      = provider.GetService<DbConnection5>()!;
+
+			Assert.That(con.ConfigurationString, Is.EqualTo(context));
+		}
+
 		[Test]
 		public void TestSettingsPerDb([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
@@ -391,13 +456,15 @@ namespace Tests.Data
 			var serviceProvider = collection.BuildServiceProvider();
 			var c1 = serviceProvider.GetService<DbConnection1>()!;
 			var c2 = serviceProvider.GetService<DbConnection2>()!;
-			Assert.That(c1.ConfigurationString, Is.EqualTo(context));
-			Assert.That(c2.ConfigurationString, Is.EqualTo(DataConnection.DefaultConfiguration));
+			Assert.Multiple(() =>
+			{
+				Assert.That(c1.ConfigurationString, Is.EqualTo(context));
+				Assert.That(c2.ConfigurationString, Is.EqualTo(DataConnection.DefaultConfiguration));
+			});
 		}
 
 		// informix connection limits interfere with test
 		[Test]
-		[ActiveIssue("Fails due to connection limit for development version when run with nonmanaged provider", Configuration = ProviderName.SybaseManaged)]
 		public void MultipleConnectionsTest([DataSources(TestProvName.AllInformix)] string context)
 		{
 			using var psr = new Tests.Remote.ServerContainer.PortStatusRestorer(_serverContainer, false);
@@ -493,11 +560,17 @@ namespace Tests.Data
 					}, ct),
 					null));
 
-				Assert.False(open);
-				Assert.False(openAsync);
-				Assert.That(conn.Connection.State, Is.EqualTo(ConnectionState.Open));
-				Assert.True(open);
-				Assert.False(openAsync);
+				Assert.Multiple(() =>
+				{
+					Assert.That(open, Is.False);
+					Assert.That(openAsync, Is.False);
+					Assert.That(conn.Connection.State, Is.EqualTo(ConnectionState.Open));
+				});
+				Assert.Multiple(() =>
+				{
+					Assert.That(open, Is.True);
+					Assert.That(openAsync, Is.False);
+				});
 			}
 		}
 
@@ -522,11 +595,17 @@ namespace Tests.Data
 					}, ct),
 					null));
 
-				Assert.False(open);
-				Assert.False(openAsync);
+				Assert.Multiple(() =>
+				{
+					Assert.That(open, Is.False);
+					Assert.That(openAsync, Is.False);
+				});
 				await conn.SelectAsync(() => 1);
-				Assert.False(open);
-				Assert.True(openAsync);
+				Assert.Multiple(() =>
+				{
+					Assert.That(open, Is.False);
+					Assert.That(openAsync, Is.True);
+				});
 			}
 		}
 
@@ -547,8 +626,8 @@ namespace Tests.Data
 				finally
 				{
 					var time = DateTimeOffset.Now - start;
-					Assert.True(time >= TimeSpan.FromSeconds(30));
-					Assert.True(time < TimeSpan.FromSeconds(32));
+					Assert.That(time, Is.GreaterThanOrEqualTo(TimeSpan.FromSeconds(30)));
+					Assert.That(time, Is.LessThan(TimeSpan.FromSeconds(32)));
 				}
 
 				start = DateTimeOffset.Now;
@@ -561,591 +640,16 @@ namespace Tests.Data
 				finally
 				{
 					var time = DateTimeOffset.Now - start;
-					Assert.True(time >= TimeSpan.FromSeconds(10));
-					Assert.True(time < TimeSpan.FromSeconds(12));
+					Assert.That(time, Is.GreaterThanOrEqualTo(TimeSpan.FromSeconds(10)));
+					Assert.That(time, Is.LessThan(TimeSpan.FromSeconds(12)));
 				}
 
 				start = DateTimeOffset.Now;
 				db.CommandTimeout = 0;
 				db.Update(forUpdate);
 				var time2 = DateTimeOffset.Now - start;
-				Assert.True(time2 >= TimeSpan.FromSeconds(60));
-				Assert.True(time2 < TimeSpan.FromSeconds(62));
-			}
-		}
-
-		[Test]
-		public void TestCloneOnEntityCreated([DataSources(false)] string context)
-		{
-			using (var db = GetDataConnection(context))
-			{
-				var personsCount = db.GetTable<Person>().Count();
-
-				_ = db.GetTable<Person>().ToList();
-
-				var interceptor = new TestEntityServiceInterceptor();
-
-				db.AddInterceptor(interceptor);
-
-				_ = db.GetTable<Person>().ToList();
-				Assert.AreEqual(personsCount, interceptor.EntityCreatedCallCounter);
-
-				using (var cdb = (DataConnection)((IDataContext)db).Clone(true))
-				{
-					interceptor.EntityCreatedCallCounter = 0;
-					_ = cdb.GetTable<Person>().ToList();
-					Assert.AreEqual(personsCount, interceptor.EntityCreatedCallCounter);
-
-					interceptor.EntityCreatedCallCounter = 0;
-					_ = db.GetTable<Person>().ToList();
-					Assert.AreEqual(personsCount, interceptor.EntityCreatedCallCounter);
-
-					_ = cdb.GetTable<Person>().ToList();
-					Assert.AreEqual(personsCount * 2, interceptor.EntityCreatedCallCounter);
-				}
-
-				using (var cdb = (DataConnection)((IDataContext)db).Clone(true))
-				{
-					interceptor.EntityCreatedCallCounter = 0;
-					_ = cdb.GetTable<Person>().ToList();
-
-					Assert.AreEqual(personsCount, interceptor.EntityCreatedCallCounter);
-				}
-			}
-		}
-
-		sealed class TestEntityServiceInterceptor : EntityServiceInterceptor
-		{
-			public int EntityCreatedCallCounter { get; set; }
-			public override object EntityCreated(EntityCreatedEventData eventData, object entity)
-			{
-				EntityCreatedCallCounter++;
-				return base.EntityCreated(eventData, entity);
-			}
-		}
-
-		sealed class TestDataContextInterceptor : DataContextInterceptor
-		{
-			public int OnClosingCallCounter { get; set; }
-			public int OnClosedCallCounter { get; set; }
-			public int OnClosedAsyncCallCounter { get; set; }
-			public int OnClosingAsyncCallCounter { get; set; }
-
-			public override void OnClosing(DataContextEventData eventData)
-			{
-				OnClosingCallCounter++;
-				base.OnClosing(eventData);
-				}
-
-			public override void OnClosed(DataContextEventData eventData)
-				{
-				OnClosedCallCounter++;
-				base.OnClosed(eventData);
-			}
-
-			public override Task OnClosedAsync(DataContextEventData eventData)
-			{
-				OnClosedAsyncCallCounter++;
-				return base.OnClosedAsync(eventData);
-				}
-
-			public override Task OnClosingAsync(DataContextEventData eventData)
-			{
-				OnClosingAsyncCallCounter++;
-				return base.OnClosingAsync(eventData);
-			}
-		}
-
-		sealed class TestRetryPolicy : IRetryPolicy
-		{
-			TResult       IRetryPolicy.Execute<TResult>     (Func<TResult> operation                                                              ) => operation();
-			void          IRetryPolicy.Execute              (Action operation                                                                     ) => operation();
-			Task<TResult> IRetryPolicy.ExecuteAsync<TResult>(Func<CancellationToken, Task<TResult>> operation, CancellationToken cancellationToken) => operation(cancellationToken);
-			Task          IRetryPolicy.ExecuteAsync         (Func<CancellationToken, Task> operation, CancellationToken cancellationToken         ) => operation(cancellationToken);
-		}
-
-		[Test]
-		public void TestCloneCommandTimeout([DataSources(false)] string context)
-		{
-			using (var db = GetDataConnection(context))
-			{
-				// to enable MARS-enabled cloning branch
-				var _ = db.Connection;
-
-				Assert.AreEqual(-1, db.CommandTimeout);
-
-				using (var cdb = (DataConnection)((IDataContext)db).Clone(true))
-				{
-					Assert.AreEqual(-1, cdb.CommandTimeout);
-				}
-
-				db.CommandTimeout = 0;
-
-				Assert.AreEqual(0, db.CommandTimeout);
-
-				using (var cdb = (DataConnection)((IDataContext)db).Clone(true))
-				{
-					Assert.AreEqual(0, cdb.CommandTimeout);
-				}
-
-				db.CommandTimeout = 10;
-
-				Assert.AreEqual(10, db.CommandTimeout);
-
-				using (var cdb = (DataConnection)((IDataContext)db).Clone(true))
-				{
-					Assert.AreEqual(10, cdb.CommandTimeout);
-				}
-
-				db.CommandTimeout = -5;
-				Assert.AreEqual(-1, db.CommandTimeout);
-
-				using (var cdb = (DataConnection)((IDataContext)db).Clone(true))
-				{
-					Assert.AreEqual(-1, cdb.CommandTimeout);
-				}
-			}
-		}
-
-		[Test]
-		public void TestCloneInlineParameters([DataSources(false)] string context)
-		{
-			using (var db = GetDataConnection(context))
-			{
-				// to enable MARS-enabled cloning branch
-				var _ = db.Connection;
-
-				Assert.False(db.InlineParameters);
-
-				using (var cdb = (DataConnection)((IDataContext)db).Clone(true))
-				{
-					Assert.False(cdb.InlineParameters);
-				}
-
-				db.InlineParameters = true;
-
-				Assert.True(db.InlineParameters);
-
-				using (var cdb = (DataConnection)((IDataContext)db).Clone(true))
-				{
-					Assert.True(cdb.InlineParameters);
-				}
-
-				db.InlineParameters = false;
-				Assert.False(db.InlineParameters);
-
-				using (var cdb = (DataConnection)((IDataContext)db).Clone(true))
-				{
-					Assert.False(cdb.InlineParameters);
-				}
-			}
-		}
-
-		[Test]
-		public void TestCloneQueryHints([DataSources(false)] string context)
-		{
-			using (var db = GetDataConnection(context))
-			{
-				// to enable MARS-enabled cloning branch
-				var _ = db.Connection;
-
-				Assert.AreEqual(0, db.QueryHints.Count);
-
-				using (var cdb = (DataConnection)((IDataContext)db).Clone(true))
-				{
-					Assert.AreEqual(0, cdb.QueryHints.Count);
-				}
-
-				db.QueryHints.Add("test");
-
-				Assert.AreEqual(1, db.QueryHints.Count);
-				Assert.AreEqual("test", db.QueryHints[0]);
-
-				using (var cdb = (DataConnection)((IDataContext)db).Clone(true))
-				{
-					Assert.AreEqual(1, cdb.QueryHints.Count);
-					Assert.AreEqual("test", cdb.QueryHints[0]);
-
-					db.QueryHints.Clear();
-
-					Assert.AreEqual(1, cdb.QueryHints.Count);
-					Assert.AreEqual("test", cdb.QueryHints[0]);
-				}
-
-				Assert.AreEqual(0, db.QueryHints.Count);
-
-				using (var cdb = (DataConnection)((IDataContext)db).Clone(true))
-				{
-					Assert.AreEqual(0, cdb.QueryHints.Count);
-				}
-			}
-		}
-
-		[Test]
-		public void TestCloneThrowOnDisposed([DataSources(false)] string context)
-		{
-			using (var db = GetDataConnection(context))
-			{
-				// to enable MARS-enabled cloning branch
-				var _ = db.Connection;
-
-				Assert.IsNull(db.ThrowOnDisposed);
-
-				using (var cdb = (DataConnection)((IDataContext)db).Clone(true))
-				{
-					Assert.IsNull(cdb.ThrowOnDisposed);
-				}
-
-				db.ThrowOnDisposed = false;
-
-				Assert.False(db.ThrowOnDisposed);
-
-				using (var cdb = (DataConnection)((IDataContext)db).Clone(true))
-				{
-					Assert.False(cdb.ThrowOnDisposed);
-				}
-
-				db.ThrowOnDisposed = true;
-
-				Assert.True(db.ThrowOnDisposed);
-
-				using (var cdb = (DataConnection)((IDataContext)db).Clone(true))
-				{
-					Assert.True(cdb.ThrowOnDisposed);
-				}
-
-				db.ThrowOnDisposed = null;
-				Assert.IsNull(db.ThrowOnDisposed);
-
-				using (var cdb = (DataConnection)((IDataContext)db).Clone(true))
-				{
-					Assert.IsNull(cdb.ThrowOnDisposed);
-				}
-			}
-		}
-
-		[Test]
-		public void TestCloneOnClosingOnClosed([DataSources(false)] string context)
-		{
-			var interceptor = new TestDataContextInterceptor();
-
-			using (var db = GetDataConnection(context))
-			{
-				// to enable MARS-enabled cloning branch
-				var _ = db.Connection;
-
-				Assert.AreEqual(0, interceptor.OnClosingCallCounter);
-				Assert.AreEqual(0, interceptor.OnClosedCallCounter);
-				db.Close();
-				Assert.AreEqual(0, interceptor.OnClosingCallCounter);
-				Assert.AreEqual(0, interceptor.OnClosedCallCounter);
-				_ = db.Connection;
-
-				using (var cdb = (DataConnection)((IDataContext)db).Clone(true))
-				{
-					_ = cdb.Connection;
-					Assert.AreEqual(0, interceptor.OnClosingCallCounter);
-					Assert.AreEqual(0, interceptor.OnClosedCallCounter);
-					cdb.Close();
-					Assert.AreEqual(0, interceptor.OnClosingCallCounter);
-					Assert.AreEqual(0, interceptor.OnClosedCallCounter);
-				}
-
-				_ = db.Connection;
-				db.AddInterceptor(interceptor);
-				Assert.AreEqual(0, interceptor.OnClosingCallCounter);
-				Assert.AreEqual(0, interceptor.OnClosedCallCounter);
-				db.Close();
-				Assert.AreEqual(1, interceptor.OnClosingCallCounter);
-				Assert.AreEqual(1, interceptor.OnClosedCallCounter);
-				_ = db.Connection;
-
-				using (var cdb = (DataConnection)((IDataContext)db).Clone(true))
-				{
-					interceptor.OnClosingCallCounter = 0;
-					interceptor.OnClosedCallCounter = 0;
-					_ = cdb.Connection;
-					Assert.AreEqual(0, interceptor.OnClosingCallCounter);
-					Assert.AreEqual(0, interceptor.OnClosedCallCounter);
-					cdb.Close();
-					Assert.AreEqual(1, interceptor.OnClosingCallCounter);
-					Assert.AreEqual(1, interceptor.OnClosedCallCounter);
-
-					interceptor.OnClosingCallCounter = 0;
-					interceptor.OnClosedCallCounter = 0;
-					_ = cdb.Connection;
-					cdb.Close();
-					Assert.AreEqual(1, interceptor.OnClosingCallCounter);
-					Assert.AreEqual(1, interceptor.OnClosedCallCounter);
-				}
-
-				interceptor.OnClosingCallCounter = 0;
-				interceptor.OnClosedCallCounter = 0;
-				_ = db.Connection;
-				Assert.AreEqual(0, interceptor.OnClosingCallCounter);
-				Assert.AreEqual(0, interceptor.OnClosedCallCounter);
-				db.Close();
-				Assert.AreEqual(1, interceptor.OnClosingCallCounter);
-				Assert.AreEqual(1, interceptor.OnClosedCallCounter);
-				_ = db.Connection;
-
-				using (var cdb = (DataConnection)((IDataContext)db).Clone(true))
-				{
-					_ = cdb.Connection;
-					Assert.AreEqual(1, interceptor.OnClosingCallCounter);
-					Assert.AreEqual(1, interceptor.OnClosedCallCounter);
-					cdb.Close();
-					Assert.AreEqual(2, interceptor.OnClosingCallCounter);
-					Assert.AreEqual(2, interceptor.OnClosedCallCounter);
-				}
-			}
-		}
-
-		[Test]
-		public void TestCloneOnBeforeConnectionOpenOnConnectionOpened([DataSources(false)] string context)
-		{
-			var open   = 0;
-			var opened = 0;
-
-			using (var db = GetDataConnection(context))
-			{
-				Assert.AreEqual(0, open);
-				Assert.AreEqual(0, opened);
-				var _ = db.Connection;
-				Assert.AreEqual(0, open);
-				Assert.AreEqual(0, opened);
-
-				using (var cdb = (DataConnection)((IDataContext)db).Clone(true))
-				{
-					Assert.AreEqual(0, open);
-					Assert.AreEqual(0, opened);
-					_ = cdb.Connection;
-					Assert.AreEqual(0, open);
-					Assert.AreEqual(0, opened);
-				}
-
-				db.Close();
-				db.AddInterceptor(new TestConnectionInterceptor(
-					(_, _) => OnBeforeConnectionOpen(),
-					(_, _) => OnConnectionOpened(),
-					null,
-					null));
-
-				Assert.AreEqual(0, open);
-				Assert.AreEqual(0, opened);
-				_ = db.Connection;
-				Assert.AreEqual(1, open);
-				Assert.AreEqual(1, opened);
-
-				using (var cdb = (DataConnection)((IDataContext)db).Clone(true))
-				{
-					open   = 0;
-					opened = 0;
-					Assert.AreEqual(0, open);
-					Assert.AreEqual(0, opened);
-					cdb.Connection.Close();
-					open   = 0;
-					opened = 0;
-					_ = cdb.Connection;
-					Assert.AreEqual(1, open);
-					Assert.AreEqual(1, opened);
-
-					open   = 0;
-					opened = 0;
-					cdb.Close();
-					_ = cdb.Connection;
-					Assert.AreEqual(1, open);
-					Assert.AreEqual(1, opened);
-				}
-
-				open   = 0;
-				opened = 0;
-				db.Close();
-				Assert.AreEqual(0, open);
-				Assert.AreEqual(0, opened);
-				_ = db.Connection;
-				Assert.AreEqual(1, open);
-				Assert.AreEqual(1, opened);
-				open   = 0;
-				opened = 0;
-
-				using (var cdb = (DataConnection)((IDataContext)db).Clone(true))
-				{
-					Assert.AreEqual(0, open);
-					Assert.AreEqual(0, opened);
-					cdb.Close();
-					_ = cdb.Connection;
-					// with MARS cloned data connection inherit connection from parent and close do nothing
-					var expected = db.IsMarsEnabled ? 0 : 1;
-					Assert.AreEqual(expected, open);
-					Assert.AreEqual(expected, opened);
-				}
-			}
-
-			void OnBeforeConnectionOpen() => open++;
-			void OnConnectionOpened    () => opened++;
-		}
-
-		[Test]
-		public async Task TestCloneOnBeforeConnectionOpenAsyncOnConnectionOpenedAsync([DataSources(false)] string context)
-		{
-			var open   = 0;
-			var opened = 0;
-
-			using (var db = GetDataConnection(context))
-			{
-				Assert.AreEqual(0, open);
-				Assert.AreEqual(0, opened);
-				await db.EnsureConnectionAsync();
-				Assert.AreEqual(0, open);
-				Assert.AreEqual(0, opened);
-
-				using (var cdb = (DataConnection)((IDataContext)db).Clone(true))
-				{
-					Assert.AreEqual(0, open);
-					Assert.AreEqual(0, opened);
-					await db.EnsureConnectionAsync();
-					Assert.AreEqual(0, open);
-					Assert.AreEqual(0, opened);
-				}
-
-				db.Close();
-				db.AddInterceptor(new TestConnectionInterceptor(
-					null,
-					null,
-					(_, _, _) => OnBeforeConnectionOpenAsync(),
-					(_,_,_) => OnConnectionOpenedAsync()));
-				Assert.AreEqual(0, open);
-				Assert.AreEqual(0, opened);
-				await db.EnsureConnectionAsync();
-				Assert.AreEqual(1, open);
-				Assert.AreEqual(1, opened);
-
-				using (var cdb = (DataConnection)((IDataContext)db).Clone(true))
-				{
-					open   = 0;
-					opened = 0;
-					Assert.AreEqual(0, open);
-					Assert.AreEqual(0, opened);
-					cdb.Connection.Close();
-					open   = 0;
-					opened = 0;
-					await cdb.EnsureConnectionAsync();
-					Assert.AreEqual(1, open);
-					Assert.AreEqual(1, opened);
-
-					open   = 0;
-					opened = 0;
-					cdb.Close();
-					await cdb.EnsureConnectionAsync();
-					Assert.AreEqual(1, open);
-					Assert.AreEqual(1, opened);
-				}
-
-				open   = 0;
-				opened = 0;
-				db.Close();
-				Assert.AreEqual(0, open);
-				Assert.AreEqual(0, opened);
-				await db.EnsureConnectionAsync();
-				Assert.AreEqual(1, open);
-				Assert.AreEqual(1, opened);
-				open   = 0;
-				opened = 0;
-
-				using (var cdb = (DataConnection)((IDataContext)db).Clone(true))
-				{
-					Assert.AreEqual(0, open);
-					Assert.AreEqual(0, opened);
-					cdb.Close();
-					await cdb.EnsureConnectionAsync();
-					// with MARS cloned data connection inherit connection from parent and close do nothing
-					var expected = db.IsMarsEnabled ? 0 : 1;
-					Assert.AreEqual(expected, open);
-					Assert.AreEqual(expected, opened);
-				}
-			}
-
-			Task OnBeforeConnectionOpenAsync()
-			{
-				open++;
-				return Task.CompletedTask;
-			}
-
-			Task OnConnectionOpenedAsync()
-			{
-				opened++;
-				return Task.CompletedTask;
-		}
-		}
-
-		// strange provider errors, review in v3 with more recent providers
-		// also some providers remove credentials from connection string in non-design mode
-		[ActiveIssue(Configurations = new[]
-		{
-			//ProviderName.MySqlConnector,
-			ProviderName.SapHanaNative, // HanaException: error while parsing protocol
-			// Providers remove credentials in non-design mode:
-			TestProvName.AllPostgreSQL,
-			TestProvName.AllSqlServer,
-			TestProvName.AllMySqlData
-		})]
-		[Test]
-		public void TestDisposeFlagCloning([DataSources(false)] string context, [Values] bool dispose)
-		{
-			using (var db = GetDataConnection(context))
-			{
-				var cn = db.Connection;
-				using (var testDb = new DataConnection(db.DataProvider, cn, dispose))
-				{
-					Assert.AreEqual(ConnectionState.Open, cn.State);
-
-					DbConnection? clonedConnection = null;
-					using (var clonedDb = (DataConnection)((IDataContext)testDb).Clone(true))
-					{
-						clonedConnection = clonedDb.Connection;
-
-						// fails in v2 for MARS-enabled connections, already fixed in v3
-						Assert.AreEqual(db.IsMarsEnabled, testDb.IsMarsEnabled);
-
-						if (testDb.IsMarsEnabled)
-						{
-							// connection reused
-							Assert.AreEqual(cn, clonedConnection);
-							Assert.AreEqual(ConnectionState.Open, cn.State);
-						}
-						else
-						{
-							Assert.AreNotEqual(cn, clonedConnection);
-							Assert.AreEqual(ConnectionState.Open, cn.State);
-							Assert.AreEqual(ConnectionState.Open, clonedConnection.State);
-						}
-					}
-
-					if (testDb.IsMarsEnabled)
-					{
-						// cloned DC doesn't dispose parent connection
-						Assert.AreEqual(ConnectionState.Open, cn.State);
-					}
-					else
-					{
-						// cloned DC dispose own connection
-						Assert.AreEqual(ConnectionState.Open, cn.State);
-						try
-						{
-							var c = ((IDataContext)db).UnwrapDataObjectInterceptor?.UnwrapConnection(db, clonedConnection);
-
-							// bug in Miniprofiler.
-							//
-							if (c != null)
-							Assert.AreEqual(ConnectionState.Closed, clonedConnection.State);
-						}
-						catch (ObjectDisposedException)
-						{
-							// API consistency FTW!
-						}
-					}
-				}
+				Assert.That(time2, Is.GreaterThanOrEqualTo(TimeSpan.FromSeconds(60)));
+				Assert.That(time2, Is.LessThan(TimeSpan.FromSeconds(62)));
 			}
 		}
 
@@ -1191,6 +695,11 @@ namespace Tests.Data
 		public void TestDisposeFlagCloning962Test1(
 			[DataSources(false)] string context, [Values] bool withScope)
 		{
+			if (context.IsAnyOf(ProviderName.ClickHouseOctonica))
+			{
+				Assert.Inconclusive("Provider goes crazy");
+			}
+
 			if (withScope && (
 				context == ProviderName.DB2                     ||
 				context == ProviderName.InformixDB2             ||
@@ -1220,73 +729,13 @@ namespace Tests.Data
 				Assert.Inconclusive("Provider not configured or has issues with TransactionScope or doesn't support DDL in distributed transactions");
 			}
 
-			using var scope = withScope ? new TransactionScope() : null;
-			using var db = GetDataContext(context);
-			using (db.CreateLocalTable(Category.Data))
-			using (db.CreateLocalTable(Product.Data))
-			{
-				var categoryDtos = db.GetTable<Category>().LoadWith(c => c.Products).ToList();
-			}
-		}
+			using var nolog = context.IsAnyOf(TestProvName.AllAccess) ? new DisableBaseline("Access NETFX provider has issues with TS") : null;
 
-		[Test]
-		public void TestDisposeFlagCloning962Test2([DataSources(false)] string context, [Values] bool withScope)
-		{
-			if (withScope && (
-				context == ProviderName.DB2                    ||
-				context == ProviderName.InformixDB2            ||
-				context == ProviderName.SapHanaOdbc            ||
-				context == ProviderName.SqlCe                  ||
-				context == ProviderName.Sybase                 ||
-#if !NET472
-				context.IsAnyOf(TestProvName.AllOracleManaged) ||
-				context.IsAnyOf(TestProvName.AllOracleDevart)  ||
-				context.IsAnyOf(ProviderName.SapHanaNative)    ||
-#endif
-				context.IsAnyOf(TestProvName.AllClickHouse)                 ||
-				context.IsAnyOf(TestProvName.AllMySqlData)                  ||
-				context.IsAnyOf(TestProvName.AllAccess)                     ||
-				context.IsAnyOf(TestProvName.AllSqlServer)                  ||
-				context.IsAnyOf(TestProvName.AllPostgreSQL)                 ||
-				context.IsAnyOf(TestProvName.AllSQLiteClassic)
-				))
-			{
-				// Access: The ITransactionLocal interface is not supported by the 'Microsoft.Jet.OLEDB.4.0' provider.  Local transactions are unavailable with the current provider.
-				// Access>ODBC: ERROR [HY092] [Microsoft][ODBC Microsoft Access Driver]Invalid attribute/option identifier
-				// DB2: ERROR [58005] [IBM][DB2/NT64] SQL0998N  Error occurred during transaction or heuristic processing.  Reason Code = "16". Subcode = "2-8004D026".
-				// Informix DB2: ERROR [2E000] [IBM] SQL1001N  "<DBNAME>" is not a valid database name.  SQLSTATE=2E000
-				// MySql.Data: Multiple simultaneous connections or connections with different connection strings inside the same transaction are not currently supported.
-				// PostgreSQL: 55000: prepared transactions are disabled
-				// SQLite.Classic: The operation is not valid for the state of the transaction.
-				// SAP HANA ODBC: ERROR [HYC00] [SAP AG][LIBODBCHDB32 DLL] Optional feature not implemented
-				// SQLCE: The connection object can not be enlisted in transaction scope.
-				// Sybase native: Only One Local connection allowed in the TransactionScope
-				// Oracle managed: Operation is not supported on this platform.
-				// SAP.Native: Operation is not supported on this platform.
-				// SqlServer: The operation is not valid for the state of the transaction.
-				// ClickHouse doesn't support transactions
-				Assert.Inconclusive("Provider not configured or has issues with TransactionScope");
-			}
-
-			var scope = withScope ? new TransactionScope() : null;
-
-			try
-			{
-				using var db = GetDataConnection(context);
-
-					// test cloned data connection without LoadWith, as it doesn't use cloning in v3
-					db.Select(() => "test1");
-
-				using var cdb = ((IDataContext)db).Clone(true);
-
-						cdb.Select(() => "test2");
-
-						scope?.Complete();
-					}
-			finally
-			{
-				scope?.Dispose();
-			}
+			using var scope  = withScope ? new TransactionScope() : null;
+			using var db     = GetDataContext(context);
+			using var tc     = db.CreateLocalTable(Category.Data);
+			using var tp     = db.CreateLocalTable(Product.Data);
+			var categoryDtos = db.GetTable<Category>().LoadWith(c => c.Products).ToList();
 		}
 		#endregion
 
@@ -1323,7 +772,7 @@ namespace Tests.Data
 
 					var ids = db.GetTable<TransactionScopeTable>().Select(_ => _.Id).OrderBy(_ => _).ToArray();
 
-					Assert.AreEqual(3, ids.Length);
+					Assert.That(ids, Has.Length.EqualTo(3));
 				}
 			}
 			finally
@@ -1359,8 +808,8 @@ namespace Tests.Data
 
 					var ids = db.GetTable<TransactionScopeTable>().Select(_ => _.Id).OrderBy(_ => _).ToArray();
 
-					Assert.AreEqual(1, ids.Length);
-					Assert.AreEqual(3, ids[0]);
+					Assert.That(ids, Has.Length.EqualTo(1));
+					Assert.That(ids[0], Is.EqualTo(3));
 				}
 			}
 			finally
@@ -1398,9 +847,12 @@ namespace Tests.Data
 
 					var ids = db.GetTable<TransactionScopeTable>().Select(_ => _.Id).OrderBy(_ => _).ToArray();
 
-					Assert.AreEqual(2, ids.Length);
-					Assert.AreEqual(1, ids[0]);
-					Assert.AreEqual(3, ids[1]);
+					Assert.That(ids, Has.Length.EqualTo(2));
+					Assert.Multiple(() =>
+					{
+						Assert.That(ids[0], Is.EqualTo(1));
+						Assert.That(ids[1], Is.EqualTo(3));
+					});
 				}
 			}
 			finally
@@ -1461,13 +913,16 @@ namespace Tests.Data
 								}
 							}
 
-							Assert.True(cnt3 > 0);
+							Assert.That(cnt3, Is.GreaterThan(0));
 						}
 					}
 				}
 
-				Assert.True(cnt1 > 0);
-				Assert.AreEqual(cnt1, cnt2);
+				Assert.Multiple(() =>
+				{
+					Assert.That(cnt1, Is.GreaterThan(0));
+					Assert.That(cnt2, Is.EqualTo(cnt1));
+				});
 			}
 		}
 
@@ -1590,14 +1045,17 @@ namespace Tests.Data
 									}
 								}
 
-								Assert.True(cnt3 > 0);
+								Assert.That(cnt3, Is.GreaterThan(0));
 							}
 						}
 					}
 				}
 
-				Assert.True(cnt1 > 0);
-				Assert.AreEqual(cnt1, cnt2);
+				Assert.Multiple(() =>
+				{
+					Assert.That(cnt1, Is.GreaterThan(0));
+					Assert.That(cnt2, Is.EqualTo(cnt1));
+				});
 			}
 		}
 
@@ -1728,13 +1186,16 @@ namespace Tests.Data
 								}
 							}
 
-							Assert.True(cnt3 > 0);
+							Assert.That(cnt3, Is.GreaterThan(0));
 						}
 					}
 				}
 
-				Assert.True(cnt1 > 0);
-				Assert.AreEqual(cnt1, cnt2);
+				Assert.Multiple(() =>
+				{
+					Assert.That(cnt1, Is.GreaterThan(0));
+					Assert.That(cnt2, Is.EqualTo(cnt1));
+				});
 			}
 		}
 
@@ -1818,8 +1279,11 @@ namespace Tests.Data
 					cnt2++;
 				}
 
-				Assert.True(cnt1 > 0);
-				Assert.AreEqual(cnt1, cnt2);
+				Assert.Multiple(() =>
+				{
+					Assert.That(cnt1, Is.GreaterThan(0));
+					Assert.That(cnt2, Is.EqualTo(cnt1));
+				});
 			}
 		}
 
@@ -1862,7 +1326,7 @@ namespace Tests.Data
 
 				db.Person.Where(_ => _.LastName == param).ToList();
 
-				Assert.AreEqual(1, commandInterceptor.Parameters.Length);
+				Assert.That(commandInterceptor.Parameters, Has.Length.EqualTo(1));
 			}
 		}
 
@@ -1878,11 +1342,11 @@ namespace Tests.Data
 
 				await db.Person.Where(_ => _.LastName == param).ToListAsync();
 
-				Assert.AreEqual(1, commandInterceptor.Parameters.Length);
+				Assert.That(commandInterceptor.Parameters, Has.Length.EqualTo(1));
 			}
 		}
 
-#if !NET472
+#if !NETFRAMEWORK
 		[ActiveIssue("https://github.com/Octonica/ClickHouseClient/issues/59", Configuration = ProviderName.ClickHouseOctonica)]
 		[Test]
 		public async Task MARS_SupportedAsync(
@@ -1906,8 +1370,11 @@ namespace Tests.Data
 					cnt2++;
 				}
 
-				Assert.True(cnt1 > 0);
-				Assert.AreEqual(cnt1, cnt2);
+				Assert.Multiple(() =>
+				{
+					Assert.That(cnt1, Is.GreaterThan(0));
+					Assert.That(cnt2, Is.EqualTo(cnt1));
+				});
 			}
 		}
 
@@ -1946,7 +1413,7 @@ namespace Tests.Data
 			using var cn1 = GetDataContext(context);
 			using var cn2 = GetDataContext(context);
 
-			Assert.AreEqual(cn1.MappingSchema, cn2.MappingSchema);
+			Assert.That(cn2.MappingSchema, Is.EqualTo(cn1.MappingSchema));
 		}
 
 		[Test]
@@ -1958,7 +1425,7 @@ namespace Tests.Data
 			using var cn1 = GetDataContext(context, ms);
 			using var cn2 = GetDataContext(context, ms);
 
-			Assert.AreEqual(cn1.MappingSchema, cn2.MappingSchema);
+			Assert.That(cn2.MappingSchema, Is.EqualTo(cn1.MappingSchema));
 		}
 	}
 }

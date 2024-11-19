@@ -285,7 +285,7 @@ namespace Tests.UserTests
 					.LoadWith(i => i.PriceList)
 					.Where(f => f.Id == 1);
 
-				Assert.DoesNotThrow(() => _ = query.ToString());
+				Assert.DoesNotThrow(() => TestContext.Out.WriteLine(query.ToString()));
 			}
 		}
 	}

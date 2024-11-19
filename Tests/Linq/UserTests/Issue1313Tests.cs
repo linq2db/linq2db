@@ -81,8 +81,8 @@ namespace Tests.UserTests
 			var members = type.GetPublicInstanceValueMembers();
 
 			// Test returned array
-			Assert.IsNotNull(members);
-			Assert.IsTrue(members.Length == 5, "Expected 5 returned members, found {0}.", members.Length);
+			Assert.That(members, Is.Not.Null);
+			Assert.That(members, Has.Length.EqualTo(5), $"Expected 5 returned members, found {members.Length}.");
 
 			// Check for duplicate names
 			string[] dupNames =
@@ -92,7 +92,7 @@ namespace Tests.UserTests
 					where grp.Count() > 1
 					select grp.Key
 				).ToArray();
-			Assert.IsFalse(dupNames.Any(), "Found duplicate entries for: {0}.", string.Join(", ", dupNames));
+			Assert.That(dupNames.Any(), Is.False, $"Found duplicate entries for: {string.Join(", ", dupNames)}.");
 
 			// Check that returned members are all from the derived class except the marker property
 			var baseMembers =
@@ -101,7 +101,7 @@ namespace Tests.UserTests
 					where m.Name != nameof(I1313_Base.MarkerProperty) && m.DeclaringType != typeof(I1313_Derived)
 					select m.Name
 				).ToArray();
-			Assert.IsFalse(baseMembers.Any(), "Found incorrect base class member(s): {0}.", string.Join(", ", baseMembers));
+			Assert.That(baseMembers.Any(), Is.False, $"Found incorrect base class member(s): {string.Join(", ", baseMembers)}.");
 		}
 
 		[Test]
@@ -129,17 +129,17 @@ namespace Tests.UserTests
 
 					// Ensure the expected records are returned
 					var records = query!.ToArray();
-					Assert.IsNotNull(records);
-					Assert.AreEqual(1, records.Length);
+					Assert.That(records, Is.Not.Null);
+					Assert.That(records, Has.Length.EqualTo(1));
 
 					// Check the returned values are as expected
 					var record = records.First();
-					Assert.IsTrue(record.ChangeToProp == 123 && record.ChangeFieldType == 2 && record.ChangeToField == 3 && record.ChangePropType == 4, "Unexpected values in record.");
+					Assert.That(record.ChangeToProp == 123 && record.ChangeFieldType == 2 && record.ChangeToField == 3 && record.ChangePropType == 4, Is.True, "Unexpected values in record.");
 
 					// Check the replaced base class fields have not been set
 					I1313_Base base_record = record;
-					Assert.AreSame(record, base_record);
-					Assert.IsTrue(base_record.ChangeToProp == 0 && base_record.ChangeFieldType == 0 && base_record.ChangeToField == 0 && base_record.ChangePropType == 0, "Data leakage to base class members.");
+					Assert.That(base_record, Is.SameAs(record));
+					Assert.That(base_record.ChangeToProp == 0 && base_record.ChangeFieldType == 0 && base_record.ChangeToField == 0 && base_record.ChangePropType == 0, Is.True, "Data leakage to base class members.");
 				}
 			}
 		}

@@ -137,6 +137,8 @@ namespace LinqToDB.Data
 		int?                        MaxParametersForBatch  = default,
 		int?                        MaxDegreeOfParallelism = default,
 		bool                        WithoutSession         = default
+		// If you add another parameter here, don't forget to update
+		// BulkCopyOptions copy constructor and IConfigurationID.ConfigurationID.
 	)
 		: IOptionSet
 	{
@@ -144,26 +146,28 @@ namespace LinqToDB.Data
 		{
 		}
 
-		BulkCopyOptions(BulkCopyOptions options)
+		BulkCopyOptions(BulkCopyOptions original)
 		{
-			MaxBatchSize           = options.MaxBatchSize;
-			BulkCopyTimeout        = options.BulkCopyTimeout;
-			BulkCopyType           = options.BulkCopyType;
-			CheckConstraints       = options.CheckConstraints;
-			KeepIdentity           = options.KeepIdentity;
-			TableLock              = options.TableLock;
-			KeepNulls              = options.KeepNulls;
-			FireTriggers           = options.FireTriggers;
-			UseInternalTransaction = options.UseInternalTransaction;
-			ServerName             = options.ServerName;
-			DatabaseName           = options.DatabaseName;
-			SchemaName             = options.SchemaName;
-			TableName              = options.TableName;
-			TableOptions           = options.TableOptions;
-			NotifyAfter            = options.NotifyAfter;
-			RowsCopiedCallback     = options.RowsCopiedCallback;
-			MaxDegreeOfParallelism = options.MaxDegreeOfParallelism;
-			WithoutSession         = options.WithoutSession;
+			MaxBatchSize           = original.MaxBatchSize;
+			BulkCopyTimeout        = original.BulkCopyTimeout;
+			BulkCopyType           = original.BulkCopyType;
+			CheckConstraints       = original.CheckConstraints;
+			KeepIdentity           = original.KeepIdentity;
+			TableLock              = original.TableLock;
+			KeepNulls              = original.KeepNulls;
+			FireTriggers           = original.FireTriggers;
+			UseInternalTransaction = original.UseInternalTransaction;
+			ServerName             = original.ServerName;
+			DatabaseName           = original.DatabaseName;
+			SchemaName             = original.SchemaName;
+			TableName              = original.TableName;
+			TableOptions           = original.TableOptions;
+			NotifyAfter            = original.NotifyAfter;
+			RowsCopiedCallback     = original.RowsCopiedCallback;
+			UseParameters          = original.UseParameters;
+			MaxParametersForBatch  = original.MaxParametersForBatch;
+			MaxDegreeOfParallelism = original.MaxDegreeOfParallelism;
+			WithoutSession         = original.WithoutSession;
 		}
 
 		public static readonly BulkCopyOptions Empty = new();
@@ -193,6 +197,8 @@ namespace LinqToDB.Data
 						.Add(TableOptions)
 						.Add(NotifyAfter)
 						.Add(RowsCopiedCallback)
+						.Add(UseParameters)
+						.Add(MaxParametersForBatch)
 						.Add(MaxDegreeOfParallelism)
 						.Add(WithoutSession)
 						.CreateID();

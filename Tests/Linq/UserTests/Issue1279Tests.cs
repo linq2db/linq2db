@@ -28,7 +28,7 @@ namespace Tests.UserTests
 
 				var result = db.GetTable<Issue1279Table>().First().CharFld;
 
-				Assert.AreEqual(val, result);
+				Assert.That(result, Is.EqualTo(val));
 			}
 		}
 	}

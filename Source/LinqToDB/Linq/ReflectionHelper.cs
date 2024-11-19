@@ -144,6 +144,16 @@ namespace LinqToDB.Linq
 			public static PropertyInfo Variables   = PropertyOf(e => e.Variables);
 		}
 
+		public class SqlGenericConstructor : Expressor<SqlGenericConstructorExpression>
+		{
+			public static PropertyInfo Assignments = PropertyOf(e => e.Assignments);
+		}
+
+		public class SqlGenericConstructorAssignment : Expressor<SqlGenericConstructorExpression.Assignment>
+		{
+			public static PropertyInfo Expression = PropertyOf(e => e.Expression);
+		}
+
 		public static MethodInfo ExprItem  = IndexExpressor<Expression>         .Item;
 		public static MethodInfo ParamItem = IndexExpressor<ParameterExpression>.Item;
 		public static MethodInfo ElemItem  = IndexExpressor<ElementInit>        .Item;
@@ -167,12 +177,10 @@ namespace LinqToDB.Linq
 				public static MethodInfo Like22 = MethodOf(s => Sql.Like(s, "", ' '));
 			}
 
-#if !NET45
 			public sealed class FormattableString : Expressor<System.FormattableString>
 			{
 				public static MethodInfo GetArguments = MethodOf(s => s.GetArgument(0));
 			}
-#endif
 		}
 	}
 }

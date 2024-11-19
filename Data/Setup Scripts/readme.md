@@ -14,7 +14,7 @@ Contains database setup scripts for local testing
 - `informix.cmd` : Windows script to create or update docker container with Informix instance
 - `mariadb.cmd` : Windows script to create or update docker container with MariaDB instance
 - `mysql55.cmd` : Windows script to create or update docker container with MySQL 5.5 instance
-- `mysql80.cmd` : Windows script to create or update docker container with latest MySQL 8.x instance
+- `mysql.cmd` : Windows script to create or update docker container with latest MySQL 9.x instance
 - `oracle11.cmd` : Windows script to create or update docker container with Oracle 11 instance
 - `oracle12.cmd` : Windows script to create or update docker container with Oracle 12 instance
 - `oracle18.cmd` : Windows script to create or update docker container with Oracle 18 instance
@@ -31,11 +31,12 @@ Contains database setup scripts for local testing
 - `pgsql14.cmd` : Windows script to create or update docker container with PostgreSQL 14 instance
 - `pgsql15.cmd` : Windows script to create or update docker container with PostgreSQL 15 instance
 - `pgsql16.cmd` : Windows script to create or update docker container with PostgreSQL 16 instance
+- `pgsql17.cmd` : Windows script to create or update docker container with PostgreSQL 17 instance
 - `saphana2.cmd` : Windows script to create or update docker container with SAP HANA 2 instance
 - `sqlserver2017.cmd` : Windows script to create or update docker container with SQL Server 2017 (Linux-based) instance
 - `sqlserver2019.cmd` : Windows script to create or update docker container with SQL Server 2019 (Linux-based) instance (also creates databases for FTS, Contained and SequentialAccess test providers)
 - `sqlserver2022.cmd` : Windows script to create or update docker container with SQL Server 2022 (Linux-based) instance
-- `sybase-ase.cmd` : Windows script to create or update docker container with Sybase ASE instance
+- `sybase-ase.cmd` : Windows script to create or update docker container with SAP ASE 16 instance
 
 ### Windows images
 

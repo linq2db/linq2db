@@ -43,19 +43,20 @@ namespace Cli.T4.ClickHouse.Client
 
 		partial void InitDataContext();
 
-		public ITable<AllType>           AllTypes            => this.GetTable<AllType>();
-		public ITable<Child>             Children            => this.GetTable<Child>();
-		public ITable<CollatedTable>     CollatedTables      => this.GetTable<CollatedTable>();
-		public ITable<Doctor>            Doctors             => this.GetTable<Doctor>();
-		public ITable<GrandChild>        GrandChildren       => this.GetTable<GrandChild>();
-		public ITable<InheritanceChild>  InheritanceChildren => this.GetTable<InheritanceChild>();
-		public ITable<InheritanceParent> InheritanceParents  => this.GetTable<InheritanceParent>();
-		public ITable<LinqDataType>      LinqDataTypes       => this.GetTable<LinqDataType>();
-		public ITable<Parent>            Parents             => this.GetTable<Parent>();
-		public ITable<Patient>           Patients            => this.GetTable<Patient>();
-		public ITable<Person>            People              => this.GetTable<Person>();
-		public ITable<TestMerge1>        TestMerge1          => this.GetTable<TestMerge1>();
-		public ITable<TestMerge2>        TestMerge2          => this.GetTable<TestMerge2>();
+		public ITable<AllType>                 AllTypes                 => this.GetTable<AllType>();
+		public ITable<Child>                   Children                 => this.GetTable<Child>();
+		public ITable<CollatedTable>           CollatedTables           => this.GetTable<CollatedTable>();
+		public ITable<Doctor>                  Doctors                  => this.GetTable<Doctor>();
+		public ITable<GrandChild>              GrandChildren            => this.GetTable<GrandChild>();
+		public ITable<InheritanceChild>        InheritanceChildren      => this.GetTable<InheritanceChild>();
+		public ITable<InheritanceParent>       InheritanceParents       => this.GetTable<InheritanceParent>();
+		public ITable<LinqDataType>            LinqDataTypes            => this.GetTable<LinqDataType>();
+		public ITable<Parent>                  Parents                  => this.GetTable<Parent>();
+		public ITable<Patient>                 Patients                 => this.GetTable<Patient>();
+		public ITable<Person>                  People                   => this.GetTable<Person>();
+		public ITable<ReplacingMergeTreeTable> ReplacingMergeTreeTables => this.GetTable<ReplacingMergeTreeTable>();
+		public ITable<TestMerge1>              TestMerge1               => this.GetTable<TestMerge1>();
+		public ITable<TestMerge2>              TestMerge2               => this.GetTable<TestMerge2>();
 	}
 
 	[Table("AllTypes")]
@@ -113,6 +114,11 @@ namespace Cli.T4.ClickHouse.Client
 		public static Person? Find(this ITable<Person> table, int personId)
 		{
 			return table.FirstOrDefault(e => e.PersonID == personId);
+		}
+
+		public static ReplacingMergeTreeTable? Find(this ITable<ReplacingMergeTreeTable> table, uint id)
+		{
+			return table.FirstOrDefault(e => e.ID == id);
 		}
 
 		public static TestMerge1? Find(this ITable<TestMerge1> table, int id)
@@ -212,6 +218,13 @@ namespace Cli.T4.ClickHouse.Client
 		[Column("LastName"  , CanBeNull    = false                     )] public string  LastName   { get; set; } = null!; // String
 		[Column("MiddleName"                                           )] public string? MiddleName { get; set; } // String
 		[Column("Gender"    , CanBeNull    = false                     )] public byte[]  Gender     { get; set; } = null!; // FixedString(1)
+	}
+
+	[Table("ReplacingMergeTreeTable")]
+	public partial class ReplacingMergeTreeTable
+	{
+		[Column("ID", IsPrimaryKey = true, SkipOnUpdate = true)] public uint           ID { get; set; } // UInt32
+		[Column("TS"                                          )] public DateTimeOffset TS { get; set; } // DateTime
 	}
 
 	[Table("TestMerge1")]

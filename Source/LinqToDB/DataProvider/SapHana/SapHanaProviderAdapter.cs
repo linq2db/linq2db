@@ -11,17 +11,20 @@ namespace LinqToDB.DataProvider.SapHana
 
 	public class SapHanaProviderAdapter : IDynamicProviderAdapter
 	{
-		private static readonly object _syncRoot = new ();
-		private static SapHanaProviderAdapter? _instance;
+		private static readonly object _unmanagedSyncRoot = new ();
+		private static readonly object _odbcSyncRoot      = new ();
+
+		private static SapHanaProviderAdapter? _unmanagedProvider;
+		private static SapHanaProviderAdapter? _odbcProvider;
 
 #if NETFRAMEWORK
-		public const string AssemblyName        = "Sap.Data.Hana.v4.5";
+		internal const string UnmanagedAssemblyName       = "Sap.Data.Hana.v4.5";
 #else
-		public const string AssemblyName        = "Sap.Data.Hana.Core.v2.1";
+		internal const string UnmanagedAssemblyName       = "Sap.Data.Hana.Core.v2.1";
 #endif
 
-		public const string ClientNamespace     = "Sap.Data.Hana";
-		public const string ProviderFactoryName = "Sap.Data.Hana";
+		internal const string UnmanagedClientNamespace    = "Sap.Data.Hana";
+		private const string UnmanagedProviderFactoryName = "Sap.Data.Hana";
 
 		private SapHanaProviderAdapter(
 			Type connectionType,
@@ -29,17 +32,19 @@ namespace LinqToDB.DataProvider.SapHana
 			Type parameterType,
 			Type commandType,
 			Type transactionType,
+			Func<string, DbConnection> connectionFactory,
 
 			Action<DbParameter, HanaDbType> dbTypeSetter,
 
 			Func<DbConnection, HanaBulkCopyOptions, DbTransaction?, HanaBulkCopy> bulkCopyCreator,
 			Func<int, string, HanaBulkCopyColumnMapping>                          bulkCopyColumnMappingCreator)
 		{
-			ConnectionType  = connectionType;
-			DataReaderType  = dataReaderType;
-			ParameterType   = parameterType;
-			CommandType     = commandType;
-			TransactionType = transactionType;
+			ConnectionType     = connectionType;
+			DataReaderType     = dataReaderType;
+			ParameterType      = parameterType;
+			CommandType        = commandType;
+			TransactionType    = transactionType;
+			_connectionFactory = connectionFactory;
 
 			SetDbType = dbTypeSetter;
 
@@ -47,76 +52,112 @@ namespace LinqToDB.DataProvider.SapHana
 			CreateBulkCopyColumnMapping = bulkCopyColumnMappingCreator;
 		}
 
+		private SapHanaProviderAdapter(OdbcProviderAdapter odbcProviderAdapter)
+		{
+			ConnectionType = odbcProviderAdapter.ConnectionType;
+			DataReaderType = odbcProviderAdapter.DataReaderType;
+			ParameterType = odbcProviderAdapter.ParameterType;
+			CommandType = odbcProviderAdapter.CommandType;
+			TransactionType = odbcProviderAdapter.TransactionType;
+			_connectionFactory = odbcProviderAdapter.CreateConnection;
+		}
+
+		#region IDynamicProviderAdapter
+
 		public Type ConnectionType  { get; }
 		public Type DataReaderType  { get; }
 		public Type ParameterType   { get; }
 		public Type CommandType     { get; }
 		public Type TransactionType { get; }
 
-		public Action<DbParameter, HanaDbType> SetDbType { get; }
+		readonly Func<string, DbConnection> _connectionFactory;
+		public DbConnection CreateConnection(string connectionString) => _connectionFactory(connectionString);
 
-		public Func<DbConnection, HanaBulkCopyOptions, DbTransaction?, HanaBulkCopy> CreateBulkCopy              { get; }
-		public Func<int, string, HanaBulkCopyColumnMapping>                          CreateBulkCopyColumnMapping { get; }
+#endregion
 
-		internal static SapHanaProviderAdapter GetInstance()
+		public Action<DbParameter, HanaDbType>? SetDbType { get; }
+
+		internal Func<DbConnection, HanaBulkCopyOptions, DbTransaction?, HanaBulkCopy>? CreateBulkCopy              { get; }
+		public   Func<int, string, HanaBulkCopyColumnMapping>?                          CreateBulkCopyColumnMapping { get; }
+
+		internal static SapHanaProviderAdapter GetInstance(SapHanaProvider provider)
 		{
-			if (_instance == null)
+			if (provider == SapHanaProvider.ODBC)
 			{
-				lock (_syncRoot)
+				if (_odbcProvider == null)
+				{
+					lock (_unmanagedSyncRoot)
 #pragma warning disable CA1508 // Avoid dead conditional code
-					if (_instance == null)
+						_odbcProvider ??= new SapHanaProviderAdapter(OdbcProviderAdapter.GetInstance());
 #pragma warning restore CA1508 // Avoid dead conditional code
-					{
-						var assembly = Common.Tools.TryLoadAssembly(AssemblyName, ProviderFactoryName);
-						if (assembly == null)
-							throw new InvalidOperationException($"Cannot load assembly {AssemblyName}");
+				}
 
-						var connectionType  = assembly.GetType($"{ClientNamespace}.HanaConnection" , true)!;
-						var dataReaderType  = assembly.GetType($"{ClientNamespace}.HanaDataReader" , true)!;
-						var parameterType   = assembly.GetType($"{ClientNamespace}.HanaParameter"  , true)!;
-						var commandType     = assembly.GetType($"{ClientNamespace}.HanaCommand"    , true)!;
-						var transactionType = assembly.GetType($"{ClientNamespace}.HanaTransaction", true)!;
-						var dbType          = assembly.GetType($"{ClientNamespace}.HanaDbType"     , true)!;
+				return _odbcProvider;
+			}
+			else
+			{
+				if (_unmanagedProvider == null)
+				{
+					lock (_odbcSyncRoot)
+#pragma warning disable CA1508 // Avoid dead conditional code
+						if (_unmanagedProvider == null)
+#pragma warning restore CA1508 // Avoid dead conditional code
+						{
+							var assembly = Common.Tools.TryLoadAssembly(UnmanagedAssemblyName, UnmanagedProviderFactoryName);
+							if (assembly == null)
+								throw new InvalidOperationException($"Cannot load assembly {UnmanagedAssemblyName}");
 
-						var bulkCopyType                    = assembly.GetType($"{ClientNamespace}.HanaBulkCopy"                       , true)!;
-						var bulkCopyOptionsType             = assembly.GetType($"{ClientNamespace}.HanaBulkCopyOptions"                , true)!;
-						var bulkCopyColumnMappingType       = assembly.GetType($"{ClientNamespace}.HanaBulkCopyColumnMapping"          , true)!;
-						var rowsCopiedEventHandlerType      = assembly.GetType($"{ClientNamespace}.HanaRowsCopiedEventHandler"         , true)!;
-						var rowsCopiedEventArgs             = assembly.GetType($"{ClientNamespace}.HanaRowsCopiedEventArgs"            , true)!;
-						var bulkCopyColumnMappingCollection = assembly.GetType($"{ClientNamespace}.HanaBulkCopyColumnMappingCollection", true)!;
+							var connectionType  = assembly.GetType($"{UnmanagedClientNamespace}.HanaConnection" , true)!;
+							var dataReaderType  = assembly.GetType($"{UnmanagedClientNamespace}.HanaDataReader" , true)!;
+							var parameterType   = assembly.GetType($"{UnmanagedClientNamespace}.HanaParameter"  , true)!;
+							var commandType     = assembly.GetType($"{UnmanagedClientNamespace}.HanaCommand"    , true)!;
+							var transactionType = assembly.GetType($"{UnmanagedClientNamespace}.HanaTransaction", true)!;
+							var dbType          = assembly.GetType($"{UnmanagedClientNamespace}.HanaDbType"     , true)!;
 
-						var typeMapper = new TypeMapper();
+							var bulkCopyType                    = assembly.GetType($"{UnmanagedClientNamespace}.HanaBulkCopy"                       , true)!;
+							var bulkCopyOptionsType             = assembly.GetType($"{UnmanagedClientNamespace}.HanaBulkCopyOptions"                , true)!;
+							var bulkCopyColumnMappingType       = assembly.GetType($"{UnmanagedClientNamespace}.HanaBulkCopyColumnMapping"          , true)!;
+							var rowsCopiedEventHandlerType      = assembly.GetType($"{UnmanagedClientNamespace}.HanaRowsCopiedEventHandler"         , true)!;
+							var rowsCopiedEventArgs             = assembly.GetType($"{UnmanagedClientNamespace}.HanaRowsCopiedEventArgs"            , true)!;
+							var bulkCopyColumnMappingCollection = assembly.GetType($"{UnmanagedClientNamespace}.HanaBulkCopyColumnMappingCollection", true)!;
 
-						typeMapper.RegisterTypeWrapper<HanaConnection>(connectionType);
-						typeMapper.RegisterTypeWrapper<HanaTransaction>(transactionType);
-						typeMapper.RegisterTypeWrapper<HanaParameter>(parameterType);
-						typeMapper.RegisterTypeWrapper<HanaDbType>(dbType);
+							var typeMapper = new TypeMapper();
 
-						// bulk copy types
-						typeMapper.RegisterTypeWrapper<HanaBulkCopy>(bulkCopyType);
-						typeMapper.RegisterTypeWrapper<HanaRowsCopiedEventArgs>(rowsCopiedEventArgs);
-						typeMapper.RegisterTypeWrapper<HanaRowsCopiedEventHandler>(rowsCopiedEventHandlerType);
-						typeMapper.RegisterTypeWrapper<HanaBulkCopyColumnMappingCollection>(bulkCopyColumnMappingCollection);
-						typeMapper.RegisterTypeWrapper<HanaBulkCopyOptions>(bulkCopyOptionsType);
-						typeMapper.RegisterTypeWrapper<HanaBulkCopyColumnMapping>(bulkCopyColumnMappingType);
+							typeMapper.RegisterTypeWrapper<HanaConnection>(connectionType);
+							typeMapper.RegisterTypeWrapper<HanaTransaction>(transactionType);
+							typeMapper.RegisterTypeWrapper<HanaParameter>(parameterType);
+							typeMapper.RegisterTypeWrapper<HanaDbType>(dbType);
 
-						typeMapper.FinalizeMappings();
+							// bulk copy types
+							typeMapper.RegisterTypeWrapper<HanaBulkCopy>(bulkCopyType);
+							typeMapper.RegisterTypeWrapper<HanaRowsCopiedEventArgs>(rowsCopiedEventArgs);
+							typeMapper.RegisterTypeWrapper<HanaRowsCopiedEventHandler>(rowsCopiedEventHandlerType);
+							typeMapper.RegisterTypeWrapper<HanaBulkCopyColumnMappingCollection>(bulkCopyColumnMappingCollection);
+							typeMapper.RegisterTypeWrapper<HanaBulkCopyOptions>(bulkCopyOptionsType);
+							typeMapper.RegisterTypeWrapper<HanaBulkCopyColumnMapping>(bulkCopyColumnMappingType);
 
-						var typeSetter = typeMapper.Type<HanaParameter>().Member(p => p.HanaDbType).BuildSetter<DbParameter>();
+							typeMapper.FinalizeMappings();
 
-						_instance = new SapHanaProviderAdapter(
-							connectionType,
-							dataReaderType,
-							parameterType,
-							commandType,
-							transactionType,
-							typeSetter,
-							typeMapper.BuildWrappedFactory((DbConnection connection, HanaBulkCopyOptions options, DbTransaction? transaction) => new HanaBulkCopy((HanaConnection)(object)connection, options, (HanaTransaction?)(object?)transaction)),
-							typeMapper.BuildWrappedFactory((int source, string destination) => new HanaBulkCopyColumnMapping(source, destination)));
-					}
+							var connectionFactory = typeMapper.BuildTypedFactory<string, HanaConnection, DbConnection>((string connectionString) => new HanaConnection(connectionString));
+
+							var typeSetter = typeMapper.Type<HanaParameter>().Member(p => p.HanaDbType).BuildSetter<DbParameter>();
+
+							_unmanagedProvider = new SapHanaProviderAdapter(
+								connectionType,
+								dataReaderType,
+								parameterType,
+								commandType,
+								transactionType,
+								connectionFactory,
+								typeSetter,
+								typeMapper.BuildWrappedFactory((DbConnection connection, HanaBulkCopyOptions options, DbTransaction? transaction) => new HanaBulkCopy((HanaConnection)(object)connection, options, (HanaTransaction?)(object?)transaction)),
+								typeMapper.BuildWrappedFactory((int source, string destination) => new HanaBulkCopyColumnMapping(source, destination)));
+						}
+				}
+
+				return _unmanagedProvider;
 			}
 
-			return _instance;
 		}
 
 		[Wrapper]
@@ -125,8 +166,9 @@ namespace LinqToDB.DataProvider.SapHana
 		}
 
 		[Wrapper]
-		public class HanaConnection
+		internal sealed class HanaConnection
 		{
+			public HanaConnection(string connectionString) => throw new NotImplementedException();
 		}
 
 		[Wrapper]
@@ -165,7 +207,7 @@ namespace LinqToDB.DataProvider.SapHana
 
 		#region BulkCopy
 		[Wrapper]
-		public class HanaBulkCopy : TypeWrapper, IDisposable
+		internal class HanaBulkCopy : TypeWrapper, IDisposable
 		{
 			private static object[] Wrappers { get; }
 				= new object[]

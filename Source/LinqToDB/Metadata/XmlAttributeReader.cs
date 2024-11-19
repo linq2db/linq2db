@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -30,26 +31,26 @@ namespace LinqToDB.Metadata
 	///     </Type>
 	/// </[Root]>
 	/// ]]>
-	/// 
+	///
 	/// <list type="number">
 	/// <item>Root node name could be any</item>
 	/// <item>Type nodes define entity classes with entity type name specified in Name attribute (must be <c>typeof(Entity).FullName</c> or <c>typeof(Entity).Name</c> value)</item>
 	/// <item>Member nodes define entity class members with mapping attributes with member name specified in Name attribute</item>
 	/// <item>Attr nodes define attributes of entity (if nested into Type node) or entity member (when nested into Member node)</item>
 	/// </list>
-	/// 
+	///
 	/// Attribute node format:
 	/// <![CDATA[
 	/// <[AttributeTypeName]>
 	///   <[PropertyName] Value="<serialized_value>" Type="<Type.FullName|Type.Name>" />
 	/// </[AttributeTypeName]>
 	/// ]]>
-	/// 
+	///
 	/// <list type="number">
 	/// <item>Node name is a mapping attribute type name as <c>Type.FullName</c>, <c>Type.Name</c> or <c>Type.Name</c> without <c>"Attribute"</c> suffix</item>
 	/// <item>PropertyName node name is a name of attribute property you want to set</item>
 	/// <item>Type attribute specify value type as <c>Type.FullName</c> or <c>Type.Name</c> string and specified only for non-string properties</item>
-	/// <item>Value contains attribute property value, serialized as string, understandable by <see cref="Converter.ChangeType(object?, Type, Mapping.MappingSchema?)"/> method</item>
+	/// <item>Value contains attribute property value, serialized as string, understandable by <see cref="Converter.ChangeType(object?, Type, Mapping.MappingSchema?, ConversionType)"/> method</item>
 	/// </list>
 	/// </example>
 	public class XmlAttributeReader : IMetadataReader
@@ -58,7 +59,7 @@ namespace LinqToDB.Metadata
 
 		readonly Dictionary<string,MetaTypeInfo> _types;
 
-		readonly static IReadOnlyDictionary<string,Type> _mappingAttributes;
+		static readonly IReadOnlyDictionary<string,Type> _mappingAttributes;
 
 		static XmlAttributeReader()
 		{
@@ -184,7 +185,7 @@ namespace LinqToDB.Metadata
 			if (xmlDocStream == null) throw new ArgumentNullException(nameof(xmlDocStream));
 
 			_types    = LoadStream(xmlDocStream, null);
-			_objectId = xmlDocStream.GetHashCode().ToString();
+			_objectId = xmlDocStream.GetHashCode().ToString(NumberFormatInfo.InvariantInfo);
 		}
 
 		static AttributeInfo[] GetAttrs(string? fileName, XElement el, string? exclude, string typeName, string? memberName)
@@ -260,7 +261,7 @@ namespace LinqToDB.Metadata
 			if ((_types.TryGetValue(type.FullName!, out var t) || _types.TryGetValue(type.Name, out t)) && t.Attributes.Length > 0)
 				return t.Attributes.Select(a => a.MakeAttribute()).ToArray();
 
-			return Array<MappingAttribute>.Empty;
+			return [];
 		}
 
 		public MappingAttribute[] GetAttributes(Type type, MemberInfo memberInfo)
@@ -271,11 +272,11 @@ namespace LinqToDB.Metadata
 					return m.Attributes.Select(a => a.MakeAttribute()).ToArray();
 			}
 
-			return Array<MappingAttribute>.Empty;
+			return [];
 		}
 
 		/// <inheritdoc cref="IMetadataReader.GetDynamicColumns"/>
-		public MemberInfo[] GetDynamicColumns(Type type) => Array<MemberInfo>.Empty;
+		public MemberInfo[] GetDynamicColumns(Type type) => [];
 
 		public string GetObjectID() => _objectId;
 	}

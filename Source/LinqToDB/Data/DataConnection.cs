@@ -3,20 +3,24 @@ using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
 using System.Diagnostics;
+using System.Globalization;
 using System.Linq;
+using System.Text;
 using System.Threading;
-
 using JetBrains.Annotations;
 
 namespace LinqToDB.Data
 {
 	using Async;
-	using Common;
 	using Common.Internal;
+	using Common;
 	using DataProvider;
 	using Expressions;
+	using Infrastructure;
+	using Interceptors;
 	using Mapping;
 	using RetryPolicy;
+	using Tools;
 
 	/// <summary>
 	/// Implements persistent database connection abstraction over different database engines.
@@ -24,7 +28,7 @@ namespace LinqToDB.Data
 	/// or attached to existing connection or transaction.
 	/// </summary>
 	[PublicAPI]
-	public partial class DataConnection : IDataContext, ICloneable
+	public partial class DataConnection : IDataContext, IInfrastructure<IServiceProvider>
 	{
 		#region .ctor
 
@@ -423,6 +427,7 @@ namespace LinqToDB.Data
 
 			DataProvider!.InitContext(this);
 		}
+
 #pragma warning restore CS8618
 
 		#endregion
@@ -438,6 +443,7 @@ namespace LinqToDB.Data
 		/// Database configuration name (connection string name).
 		/// </summary>
 		public string?       ConfigurationString { get; private set; }
+
 		/// <summary>
 		/// Database provider implementation for specific database engine.
 		/// </summary>
@@ -484,6 +490,8 @@ namespace LinqToDB.Data
 		/// </summary>
 		static void OnTraceInternal(TraceInfo info)
 		{
+			using var m = ActivityService.Start(ActivityID.OnTraceInternal);
+
 			var dc = info.DataConnection;
 
 			switch (info.TraceInfoStep)
@@ -498,8 +506,8 @@ namespace LinqToDB.Data
 				case TraceInfoStep.AfterExecute:
 					dc.WriteTraceLineConnection(
 						info.RecordsAffected != null
-							? $"Query Execution Time ({info.TraceInfoStep}){(info.IsAsync ? " (async)" : "")}: {info.ExecutionTime}. Records Affected: {info.RecordsAffected}.\r\n"
-							: $"Query Execution Time ({info.TraceInfoStep}){(info.IsAsync ? " (async)" : "")}: {info.ExecutionTime}\r\n",
+							? FormattableString.Invariant($"Query Execution Time ({info.TraceInfoStep}){(info.IsAsync ? " (async)" : "")}: {info.ExecutionTime}. Records Affected: {info.RecordsAffected}.\r\n")
+							: FormattableString.Invariant($"Query Execution Time ({info.TraceInfoStep}){(info.IsAsync ? " (async)" : "")}: {info.ExecutionTime}\r\n"),
 						dc.TraceSwitchConnection.DisplayName,
 						info.TraceLevel);
 					break;
@@ -508,7 +516,7 @@ namespace LinqToDB.Data
 				{
 					using var sb = Pools.StringBuilder.Allocate();
 
-					sb.Value.Append(info.TraceInfoStep);
+					sb.Value.Append(CultureInfo.InvariantCulture, $"{info.TraceInfoStep}");
 
 					for (var ex = info.Exception; ex != null; ex = ex.InnerException)
 					{
@@ -516,8 +524,8 @@ namespace LinqToDB.Data
 						{
 							sb.Value
 								.AppendLine()
-								.AppendLine($"Exception: {ex.GetType()}")
-								.AppendLine($"Message  : {ex.Message}")
+								.AppendLine(CultureInfo.InvariantCulture, $"Exception: {ex.GetType()}")
+								.AppendLine(CultureInfo.InvariantCulture, $"Message  : {ex.Message}")
 								.AppendLine(ex.StackTrace)
 								;
 						}
@@ -529,7 +537,7 @@ namespace LinqToDB.Data
 							// list contains any elements or not
 							sb.Value
 								.AppendLine()
-								.AppendFormat("Failed while tried to log failure of type {0}", ex.GetType())
+								.Append(CultureInfo.InvariantCulture, $"Failed while tried to log failure of type {ex.GetType()}")
 								;
 						}
 					}
@@ -557,10 +565,10 @@ namespace LinqToDB.Data
 				{
 					using var sb = Pools.StringBuilder.Allocate();
 
-					sb.Value.Append($"Total Execution Time ({info.TraceInfoStep}){(info.IsAsync ? " (async)" : "")}: {info.ExecutionTime}.");
+					sb.Value.Append(CultureInfo.InvariantCulture, $"Total Execution Time ({info.TraceInfoStep}){(info.IsAsync ? " (async)" : "")}: {info.ExecutionTime}.");
 
 					if (info.RecordsAffected != null)
-						sb.Value.Append($" Rows Count: {info.RecordsAffected}.");
+						sb.Value.Append(CultureInfo.InvariantCulture, $" Rows Count: {info.RecordsAffected}.");
 
 					sb.Value.AppendLine();
 
@@ -645,10 +653,13 @@ namespace LinqToDB.Data
 		IAsyncDbConnection?              _connection;
 		Func<DataOptions, DbConnection>? _connectionFactory;
 
+		// TODO: V6 remove it or replace with non-creating access + creation method if such public APIs needed
 		/// <summary>
 		/// Gets underlying database connection, used by current connection object.
 		/// </summary>
 		public DbConnection Connection => EnsureConnection().Connection;
+
+		internal DbConnection? CurrentConnection => _connection?.Connection;
 
 		internal IAsyncDbConnection EnsureConnection(bool connect = true)
 		{
@@ -659,12 +670,13 @@ namespace LinqToDB.Data
 				if (_connection == null)
 				{
 					DbConnection connection;
+
 					if (_connectionFactory != null)
 						connection = _connectionFactory(Options);
 					else
 						connection = DataProvider.CreateConnection(ConnectionString!);
 
-					_connection = AsyncFactory.Create(connection);
+					_connection = AsyncFactory.CreateAndSetDataContext(this, connection);
 
 					if (RetryPolicy != null)
 						_connection = new RetryingDbConnection(this, _connection, RetryPolicy);
@@ -674,12 +686,21 @@ namespace LinqToDB.Data
 
 				if (connect && _connection.State == ConnectionState.Closed)
 				{
-					_connectionInterceptor?.ConnectionOpening(new(this), _connection.Connection);
+					var interceptor = ((IInterceptable<IConnectionInterceptor>)this).Interceptor;
+					if (interceptor != null)
+					{
+						using (ActivityService.Start(ActivityID.ConnectionInterceptorConnectionOpening))
+							interceptor.ConnectionOpening(new(this), _connection.Connection);
+					}
 
 					_connection.Open();
 					_closeConnection = true;
 
-					_connectionInterceptor?.ConnectionOpened(new(this), _connection.Connection);
+					if (interceptor != null)
+					{
+						using (ActivityService.Start(ActivityID.ConnectionInterceptorConnectionOpened))
+							interceptor.ConnectionOpened(new(this), _connection.Connection);
+					}
 				}
 			}
 			catch (Exception ex)
@@ -697,7 +718,6 @@ namespace LinqToDB.Data
 				throw;
 			}
 
-
 			return _connection;
 		}
 
@@ -706,7 +726,12 @@ namespace LinqToDB.Data
 		/// </summary>
 		public virtual void Close()
 		{
-			_dataContextInterceptor?.OnClosing(new (this));
+			var interceptor = ((IInterceptable<IDataContextInterceptor>)this).Interceptor;
+			if (interceptor != null)
+			{
+				using (ActivityService.Start(ActivityID.DataContextInterceptorOnClosing))
+					interceptor.OnClosing(new(this));
+			}
 
 			DisposeCommand();
 
@@ -727,7 +752,11 @@ namespace LinqToDB.Data
 					_connection.Close();
 			}
 
-			_dataContextInterceptor?.OnClosed(new (this));
+			if (interceptor != null)
+			{
+				using (ActivityService.Start(ActivityID.DataContextInterceptorOnClosed))
+					interceptor.OnClosed(new (this));
+			}
 		}
 
 		#endregion
@@ -766,8 +795,12 @@ namespace LinqToDB.Data
 
 		internal void CommitCommandInit()
 		{
-			if (_commandInterceptor != null)
-				_command = _commandInterceptor.CommandInitialized(new (this), _command!);
+			var interceptor = ((IInterceptable<ICommandInterceptor>)this).Interceptor;
+			if (interceptor != null)
+			{
+				using (ActivityService.Start(ActivityID.CommandInterceptorCommandInitialized))
+					_command = interceptor.CommandInitialized(new (this), _command!);
+			}
 
 			LastQuery = _command!.CommandText;
 		}
@@ -833,14 +866,28 @@ namespace LinqToDB.Data
 
 		protected virtual int ExecuteNonQuery(DbCommand command)
 		{
-			if (_commandInterceptor == null)
-				return command.ExecuteNonQuery();
+			try
+			{
+				if (((IInterceptable<ICommandInterceptor>)this).Interceptor is { } cInterceptor)
+				{
+					Option<int> result;
 
-			var result = _commandInterceptor.ExecuteNonQuery(new (this), command, Option<int>.None);
+					using (ActivityService.Start(ActivityID.CommandInterceptorExecuteNonQuery))
+						result = cInterceptor.ExecuteNonQuery(new(this), command, Option<int>.None);
 
-			return result.HasValue
-				? result.Value
-				: command.ExecuteNonQuery();
+					if (result.HasValue)
+						return result.Value;
+				}
+
+				using (ActivityService.Start(ActivityID.CommandExecuteNonQuery)?.AddQueryInfo(this, _command!.Connection, _command))
+					return command.ExecuteNonQuery();
+			}
+			catch (Exception ex) when (((IInterceptable<IExceptionInterceptor>)this).Interceptor is { } eInterceptor)
+			{
+				using (ActivityService.Start(ActivityID.ExceptionInterceptorProcessException))
+					eInterceptor.ProcessException(new(this), ex);
+				throw;
+			}
 		}
 
 		internal int ExecuteNonQuery()
@@ -902,15 +949,28 @@ namespace LinqToDB.Data
 
 		internal int ExecuteNonQueryCustom(DbCommand command, Func<DbCommand, int> customExecute)
 		{
-			if (_commandInterceptor == null)
-				return customExecute(command);
+			try
+			{
+				if (((IInterceptable<ICommandInterceptor>)this).Interceptor is { } cInterceptor)
+				{
+					Option<int> result;
 
-			// remove?
-			var result = _commandInterceptor.ExecuteNonQuery(new (this), command, Option<int>.None);
+					using (ActivityService.Start(ActivityID.CommandInterceptorExecuteNonQuery))
+						result = cInterceptor.ExecuteNonQuery(new(this), command, Option<int>.None);
 
-			return result.HasValue
-				? result.Value
-				: customExecute(command);
+					if (result.HasValue)
+						return result.Value;
+				}
+
+				using (ActivityService.Start(ActivityID.CommandExecuteNonQuery)?.AddQueryInfo(this, _command!.Connection, _command))
+					return customExecute(command);
+			}
+			catch (Exception ex) when (((IInterceptable<IExceptionInterceptor>)this).Interceptor is { } eInterceptor)
+			{
+				using (ActivityService.Start(ActivityID.ExceptionInterceptorProcessException))
+					eInterceptor.ProcessException(new(this), ex);
+				throw;
+			}
 		}
 
 		internal int ExecuteNonQueryCustom(Func<DbCommand, int> customExecute)
@@ -976,14 +1036,28 @@ namespace LinqToDB.Data
 
 		protected virtual object? ExecuteScalar(DbCommand command)
 		{
-			var result = Option<object?>.None;
+			try
+			{
+				if (((IInterceptable<ICommandInterceptor>)this).Interceptor is { } cInterceptor)
+				{
+					Option<object?> result;
 
-			if (_commandInterceptor != null)
-				result = _commandInterceptor.ExecuteScalar(new (this), command, result);
+					using (ActivityService.Start(ActivityID.CommandInterceptorExecuteScalar))
+						result = cInterceptor.ExecuteScalar(new(this), command, Option<object?>.None);
 
-			return result.HasValue
-				? result.Value
-				: command.ExecuteScalar();
+					if (result.HasValue)
+						return result.Value;
+				}
+
+				using (ActivityService.Start(ActivityID.CommandExecuteScalar)?.AddQueryInfo(this, Connection, _command))
+					return command.ExecuteScalar();
+			}
+			catch (Exception ex) when (((IInterceptable<IExceptionInterceptor>)this).Interceptor is { } eInterceptor)
+			{
+				using (ActivityService.Start(ActivityID.ExceptionInterceptorProcessException))
+					eInterceptor.ProcessException(new(this), ex);
+				throw;
+			}
 		}
 
 		object? ExecuteScalar()
@@ -1048,23 +1122,48 @@ namespace LinqToDB.Data
 
 		protected virtual DataReaderWrapper ExecuteReader(CommandBehavior commandBehavior)
 		{
-			var result = Option<DbDataReader>.None;
+			try
+			{
+				DbDataReader reader;
 
-			if (_commandInterceptor != null)
-				result = _commandInterceptor.ExecuteReader(new (this), _command!, commandBehavior, result);
+				if (((IInterceptable<ICommandInterceptor>)this).Interceptor is { } cInterceptor)
+				{
+					Option<DbDataReader> result;
 
-			var rd = result.HasValue
-				? result.Value
-				: _command!.ExecuteReader(commandBehavior);
+					using (ActivityService.Start(ActivityID.CommandInterceptorExecuteScalar))
+						result = cInterceptor.ExecuteReader(new(this), _command!, commandBehavior, Option<DbDataReader>.None);
 
-			if (_commandInterceptor != null)
-				_commandInterceptor.AfterExecuteReader(new (this), _command!, commandBehavior, rd);
+					if (!result.HasValue)
+					{
+						using (ActivityService.Start(ActivityID.CommandExecuteReader)?.AddQueryInfo(this, _command!.Connection, _command))
+							reader = _command!.ExecuteReader(commandBehavior);
+					}
+					else
+					{
+						reader = result.Value;	
+					}
 
-			var wrapper = new DataReaderWrapper(this, rd, _command!);
+					using (ActivityService.Start(ActivityID.CommandInterceptorAfterExecuteReader))
+						cInterceptor.AfterExecuteReader(new(this), _command!, commandBehavior, reader);
+				}
+				else
+				{
+					using (ActivityService.Start(ActivityID.CommandExecuteReader)?.AddQueryInfo(this, _command!.Connection, _command))
+						reader = _command!.ExecuteReader(commandBehavior);
+				}
 
-			_command = null;
 
-			return wrapper;
+				var wrapper = new DataReaderWrapper(this, reader, _command!);
+				_command = null;
+
+				return wrapper;
+			}
+			catch (Exception ex) when (((IInterceptable<IExceptionInterceptor>)this).Interceptor is { } eInterceptor)
+			{
+				using (ActivityService.Start(ActivityID.ExceptionInterceptorProcessException))
+					eInterceptor.ProcessException(new(this), ex);
+				throw;
+			}
 		}
 
 		DataReaderWrapper ExecuteReader()
@@ -1346,7 +1445,7 @@ namespace LinqToDB.Data
 						TraceLevel    = TraceLevel.Info,
 						CommandText   = sql,
 						StartTime     = now,
-						ExecutionTime = sw!.Elapsed
+						ExecutionTime = sw?.Elapsed
 					});
 				}
 
@@ -1411,52 +1510,6 @@ namespace LinqToDB.Data
 
 		#endregion
 
-		#region ICloneable Members
-
-		DataConnection(string? configurationString, IDataProvider dataProvider, string? connectionString, DbConnection? connection, MappingSchema mappingSchema, DataOptions options)
-		{
-			ConfigurationString = configurationString;
-			DataProvider        = dataProvider;
-			ConnectionString    = connectionString;
-			_connection         = connection != null ? AsyncFactory.Create(connection) : null;
-			MappingSchema       = mappingSchema;
-			Options             = options;
-		}
-
-		// TODO: v6: get rid of Clone as we shouldn't need to clone connection with new parser anymore
-		/// <summary>
-		/// Clones current connection.
-		/// </summary>
-		/// <returns>Cloned connection.</returns>
-		public object Clone()
-		{
-			CheckAndThrowOnDisposed();
-
-			var connection = _connection?.TryClone() ?? _connectionFactory?.Invoke(Options);
-
-			// https://github.com/linq2db/linq2db/issues/1486
-			// when there is no ConnectionString and provider doesn't support connection cloning
-			// try to get ConnectionString from _connection
-			// will not work for providers that remove security information from connection string
-			var connectionString = ConnectionString ?? (connection == null ? _connection?.ConnectionString : null);
-
-			return new DataConnection(ConfigurationString, DataProvider, connectionString, connection, MappingSchema, Options)
-				{
-					RetryPolicy               = RetryPolicy,
-					CommandTimeout            = CommandTimeout,
-					InlineParameters          = InlineParameters,
-					ThrowOnDisposed           = ThrowOnDisposed,
-					OnTraceConnection         = OnTraceConnection,
-					_queryHints               = _queryHints?.Count > 0 ? _queryHints.ToList() : null,
-					_commandInterceptor       = _commandInterceptor.CloneAggregated(),
-					_connectionInterceptor    = _connectionInterceptor.CloneAggregated(),
-					_dataContextInterceptor   = _dataContextInterceptor.CloneAggregated(),
-					_entityServiceInterceptor = _entityServiceInterceptor.CloneAggregated(),
-				};
-		}
-
-		#endregion
-
 		#region System.IDisposable Members
 
 		protected bool  Disposed        { get; private set; }
@@ -1484,5 +1537,7 @@ namespace LinqToDB.Data
 		{
 			return DataProvider.GetCommandBehavior(commandBehavior);
 		}
+
+		IServiceProvider IInfrastructure<IServiceProvider>.Instance => ((IInfrastructure<IServiceProvider>)DataProvider).Instance;
 	}
 }

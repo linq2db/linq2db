@@ -1,13 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
-using System.Text;
 
 namespace LinqToDB.SqlQuery
 {
 	using Common;
 
-	public class SqlParameter : ISqlExpression
+	public class SqlParameter : SqlExpressionBase
 	{
 		public SqlParameter(DbDataType type, string? name, object? value)
 		{
@@ -27,14 +26,13 @@ namespace LinqToDB.SqlQuery
 #endif
 
 		// meh, nullable...
-		public string?    Name             { get; set; }
-		public DbDataType Type             { get; set; }
-		public bool       IsQueryParameter { get; set; }
-		internal int?     AccessorId       { get; set; }
+		public   string?    Name             { get; set; }
+		public   DbDataType Type             { get; set; }
+		public   bool       IsQueryParameter { get; set; }
+		internal int?       AccessorId       { get; set; }
 
-		Type ISqlExpression.SystemType => Type.SystemType;
-
-		public object?    Value            { get; }
+		public object? Value     { get; }
+		public bool    NeedsCast { get; set; }
 
 		public object? CorrectParameterValue(object? rawValue)
 		{
@@ -84,80 +82,56 @@ namespace LinqToDB.SqlQuery
 
 		#endregion
 
-		#region Overrides
+		#region SqlExpressionBase overrides
 
-#if OVERRIDETOSTRING
+		public override int  Precedence => SqlQuery.Precedence.Primary;
+		public override Type SystemType => Type.SystemType;
 
-		public override string ToString()
+		public override bool CanBeNullable(NullabilityContext nullability) 
+			=> SqlDataType.TypeCanBeNull(Type.SystemType);
+
+		public override bool Equals(ISqlExpression other, Func<ISqlExpression, ISqlExpression, bool> comparer)
 		{
-			return ((IQueryElement)this).ToString(new StringBuilder(), new Dictionary<IQueryElement,IQueryElement>()).ToString();
-		}
-
-#endif
-
-		#endregion
-
-		#region ISqlExpression Members
-
-		public int Precedence => SqlQuery.Precedence.Primary;
-
-		#endregion
-
-		#region ISqlExpressionWalkable Members
-
-		ISqlExpression ISqlExpressionWalkable.Walk<TContext>(WalkOptions options, TContext context, Func<TContext, ISqlExpression, ISqlExpression> func)
-		{
-			return func(context, this);
+			return ReferenceEquals(this, other) && comparer(this, other);
 		}
 
 		#endregion
-
-		#region IEquatable<ISqlExpression> Members
-
-		bool IEquatable<ISqlExpression>.Equals(ISqlExpression? other)
-		{
-			return ReferenceEquals(this, other);
-		}
 
 		public override int GetHashCode()
 		{
 			return RuntimeHelpers.GetHashCode(this);
 		}
 
-		#endregion
-
-		#region ISqlExpression Members
-
-		public bool CanBeNull => SqlDataType.TypeCanBeNull(Type.SystemType);
-
-		public bool Equals(ISqlExpression other, Func<ISqlExpression,ISqlExpression,bool> comparer)
-		{
-			return ((ISqlExpression)this).Equals(other) && comparer(this, other);
-		}
-
-		#endregion
-
 		#region IQueryElement Members
 
-		public QueryElementType ElementType => QueryElementType.SqlParameter;
+		public override QueryElementType ElementType => QueryElementType.SqlParameter;
 
-		StringBuilder IQueryElement.ToString(StringBuilder sb, Dictionary<IQueryElement,IQueryElement> dic)
+		public override QueryElementTextWriter ToString(QueryElementTextWriter writer)
 		{
-			if (Name?.StartsWith("@") == false)
-				sb.Append('@');
+			writer.DebugAppendUniqueId(this);
 
-			sb
+			if (NeedsCast)
+				writer.Append("$Cast$(");
+
+			if (Name?.StartsWith("@") == false)
+				writer.Append('@');
+
+			writer
 				.Append(Name ?? "parameter");
 
 #if DEBUG
-			sb.Append('(').Append(_paramNumber).Append(')');
+			writer.Append('(').Append(_paramNumber).Append(')');
 #endif
 			if (Value != null)
-				sb
+				writer
 					.Append('[')
 					.Append(Value)
 					.Append(']');
-			return sb;
+
+			if (NeedsCast)
+				writer.Append(")");
+
+			return writer;
 		}
 
 		#endregion

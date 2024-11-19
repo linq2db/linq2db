@@ -230,8 +230,10 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSybase, "The Sybase ASE does not support the UPDATE statement with the TOP + ORDER BY clause.")]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllMySql, "MySql does not support Skip in update query")]
 		public void UpdateTestJoinSkipTake(
-			[DataSources(TestProvName.AllAccess, TestProvName.AllSqlServer2005, TestProvName.AllMySql, ProviderName.SqlCe, TestProvName.AllClickHouse, TestProvName.AllSybase)]
+			[DataSources(TestProvName.AllAccess, TestProvName.AllClickHouse, ProviderName.SqlCe)]
 			string context)
 		{
 			var data = GenerateData();
@@ -345,11 +347,11 @@ namespace Tests.xUpdate
 					.Set(v => v.Value1, v => v.Relation!.RelatedValue3)
 					.Update();
 
-				Assert.AreEqual(1, affected);
+				Assert.That(affected, Is.EqualTo(1));
 
 				var updatedValue = forUpdates.Where(v => v.Relation!.RelatedValue1 == 11).Select(v => v.Value1).First();
 
-				Assert.AreEqual(13, updatedValue);
+				Assert.That(updatedValue, Is.EqualTo(13));
 			}
 		}
 
@@ -372,11 +374,11 @@ namespace Tests.xUpdate
 
 				var affected = updatable.Update();
 
-				Assert.AreEqual(1, affected);
+				Assert.That(affected, Is.EqualTo(1));
 
 				var updatedValue = forUpdates.Where(v => v.Relation!.RelatedValue1 == 11).Select(v => v.Value1).First();
 
-				Assert.AreEqual(13, updatedValue);
+				Assert.That(updatedValue, Is.EqualTo(13));
 			}
 		}
 
@@ -398,15 +400,18 @@ namespace Tests.xUpdate
 					.Set(v => v.Value3, v => 1)
 					.Update();
 
-				Assert.AreEqual(1, affected);
+				Assert.That(affected, Is.EqualTo(1));
 
 				var updatedValue = forUpdates.Where(v => v.Relation!.RelatedValue1 == 11)
 					.Select(v => new {v.Value1, v.Value2, v.Value3})
 					.First();
 
-				Assert.AreEqual(36, updatedValue.Value1);
-				Assert.AreEqual(36, updatedValue.Value2);
-				Assert.AreEqual(1,  updatedValue.Value3);
+				Assert.Multiple(() =>
+				{
+					Assert.That(updatedValue.Value1, Is.EqualTo(36));
+					Assert.That(updatedValue.Value2, Is.EqualTo(36));
+					Assert.That(updatedValue.Value3, Is.EqualTo(1));
+				});
 			}
 		}
 
@@ -431,16 +436,37 @@ namespace Tests.xUpdate
 
 				var affected = updatable.Update();
 
-				Assert.AreEqual(1, affected);
+				Assert.That(affected, Is.EqualTo(1));
 
 				var updatedValue = forUpdates.Where(v => v.Relation!.RelatedValue1 == 11)
 					.Select(v => new {v.Value1, v.Value2, v.Value3})
 					.First();
 
-				Assert.AreEqual(36, updatedValue.Value1);
-				Assert.AreEqual(36, updatedValue.Value2);
-				Assert.AreEqual(1,  updatedValue.Value3);
+				Assert.Multiple(() =>
+				{
+					Assert.That(updatedValue.Value1, Is.EqualTo(36));
+					Assert.That(updatedValue.Value2, Is.EqualTo(36));
+					Assert.That(updatedValue.Value3, Is.EqualTo(1));
+				});
 			}
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/2330")]
+		public void Issue2330Test([DataSources(TestProvName.AllClickHouse, ProviderName.SqlCe)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q = from w in db.Parent
+					join b in db.Child on w.ParentID equals b.ParentID
+					where b.ChildID == (from b2 in db.Child select b2.ParentID).Max()
+						// to avoid actual update
+						&& b.ChildID == -1
+					select new { w, b };
+
+			q.Update(db.Parent, obj => new Model.Parent()
+			{
+				Value1 = obj.b.ChildID
+			});
 		}
 	}
 }

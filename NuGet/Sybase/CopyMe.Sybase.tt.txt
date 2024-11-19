@@ -7,7 +7,7 @@
 /*
 	1. Download and install Sybase data provider for .NET.
 
-	2. Add a reference to Sybase.AdoNet2(4).AseClient.dll.
+	2. Add a reference to Sybase.AdoNet45.AseClient.dll.
 
 	3. Create new *.tt file (e.g. MyDatabase.tt) in a folder where you would like to generate your data model
 		and copy content from this file to it. For example:

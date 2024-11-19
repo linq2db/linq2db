@@ -1,20 +1,17 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Runtime.CompilerServices;
-using System.Diagnostics.CodeAnalysis;
 
 namespace LinqToDB.Expressions
 {
-	using Common;
 	using Common.Internal;
 	using Extensions;
 	using Linq;
-	using Linq.Builder;
 	using Mapping;
-	using Reflection;
 
 	/// <summary>
 	/// Internal API.
@@ -70,7 +67,7 @@ namespace LinqToDB.Expressions
 		#region Helpers
 
 		public static LambdaExpression UnwrapLambda(this Expression ex)
-			=> (LambdaExpression)((UnaryExpression)ex).Operand.Unwrap();
+			=> (LambdaExpression)ex.Unwrap();
 
 		[return: NotNullIfNotNull(nameof(ex))]
 		public static Expression? Unwrap(this Expression? ex)
@@ -84,6 +81,11 @@ namespace LinqToDB.Expressions
 				case ExpressionType.ConvertChecked :
 				case ExpressionType.Convert        :
 					return ((UnaryExpression)ex).Operand.Unwrap();
+				case ExpressionType.Extension
+					when ex is SqlAdjustTypeExpression adjustType:
+				{
+					return adjustType.Expression.Unwrap();
+				}
 			}
 
 			return ex;
@@ -100,9 +102,15 @@ namespace LinqToDB.Expressions
 				case ExpressionType.ConvertChecked :
 				case ExpressionType.Convert        :
 				{
-					if (((UnaryExpression)ex).Method == null)
-						return ((UnaryExpression)ex).Operand.UnwrapConvert();
+					var unaryExpression = (UnaryExpression)ex;
+					if (unaryExpression.Method == null)
+						return unaryExpression.Operand.UnwrapConvert();
 					break;
+				}
+				case ExpressionType.Extension
+					when ex is SqlAdjustTypeExpression adjustType:
+				{
+					return adjustType.Expression.Unwrap();
 				}
 			}
 
@@ -130,48 +138,9 @@ namespace LinqToDB.Expressions
 			return ex;
 		}
 
-		[return: NotNullIfNotNull(nameof(ex))]
-		public static Expression? UnwrapWithAs(this Expression? ex)
+		public static Expression SkipMethodChain(this Expression expr, MappingSchema mappingSchema, out bool isQueryable)
 		{
-			return ex?.NodeType switch
-			{
-				null                  => null,
-				ExpressionType.TypeAs => ((UnaryExpression)ex).Operand.Unwrap(),
-				_                     => ex.Unwrap(),
-			};
-		}
-
-		private static readonly MethodInfo[] SkipPathThroughMethods =
-		{
-			Methods.Enumerable.AsQueryable, Methods.LinqToDB.SqlExt.ToNotNull, Methods.LinqToDB.SqlExt.Alias
-		};
-
-		public static Expression SkipPathThrough(this Expression expr)
-		{
-			switch (expr.NodeType)
-			{
-				case ExpressionType.MemberAccess:
-				{
-					var ma = (MemberExpression)expr;
-					if (ma.Expression != null)
-						return ma.Update(ma.Expression.SkipPathThrough());
-					break;
-				}
-				case ExpressionType.Call:
-				{
-					var mc = (MethodCallExpression)expr;
-					if (mc.IsSameGenericMethod(SkipPathThroughMethods))
-						return mc.Arguments[0].SkipPathThrough();
-					break;
-				}
-			}
-
-			return expr;
-		}
-
-		public static Expression SkipMethodChain(this Expression expr, MappingSchema mappingSchema)
-		{
-			return Sql.ExtensionAttribute.ExcludeExtensionChain(mappingSchema, expr);
+			return Sql.ExtensionAttribute.ExcludeExtensionChain(mappingSchema, expr, out isQueryable);
 		}
 
 		public static Dictionary<Expression,Expression> GetExpressionAccessors(this Expression expression, Expression path)
@@ -219,91 +188,6 @@ namespace LinqToDB.Expressions
 			return accessors;
 		}
 
-		[return: NotNullIfNotNull(nameof(expr))]
-		public static Expression? GetRootObject(Expression? expr, MappingSchema mapping)
-		{
-			if (expr == null)
-				return null;
-
-			expr = expr.SkipMethodChain(mapping);
-			expr = expr.SkipPathThrough();
-
-			switch (expr.NodeType)
-			{
-				case ExpressionType.Call         :
-					{
-						var e = (MethodCallExpression)expr;
-
-						if (e.Object != null)
-							return GetRootObject(e.Object, mapping);
-
-						if (e.Arguments?.Count > 0 &&
-						    (e.IsQueryable()
-						     || e.IsAggregate(mapping)
-						     || e.IsAssociation(mapping)
-						     || e.Method.IsSqlPropertyMethodEx()
-						     || e.IsSameGenericMethod(TunnelMethods)))
-							return GetRootObject(e.Arguments[0], mapping);
-
-						break;
-					}
-
-				case ExpressionType.MemberAccess :
-					{
-						var e = (MemberExpression)expr;
-
-						if (e.Expression != null)
-							return GetRootObject(e.Expression.UnwrapWithAs(), mapping);
-
-						break;
-					}
-			}
-
-			return expr;
-		}
-
-		public static List<Expression> GetMembers(this Expression? expr)
-		{
-			if (expr == null)
-				return new List<Expression>();
-
-			List<Expression> list;
-
-			switch (expr.NodeType)
-			{
-				case ExpressionType.Call         :
-					{
-						var e = (MethodCallExpression)expr;
-
-						if (e.Object != null)
-							list = GetMembers(e.Object);
-						else if (e.Arguments?.Count > 0 && e.IsQueryable())
-							list = GetMembers(e.Arguments[0]);
-						else
-							list = new List<Expression>();
-
-						break;
-					}
-
-				case ExpressionType.MemberAccess :
-					{
-						var e = (MemberExpression)expr;
-
-						list = e.Expression != null ? GetMembers(e.Expression.Unwrap()) : new List<Expression>();
-
-						break;
-					}
-
-				default                          :
-					list = new List<Expression>();
-					break;
-			}
-
-			list.Add(expr);
-
-			return list;
-		}
-
 		public static bool IsQueryable(this MethodCallExpression method, bool enumerable = true)
 		{
 			var type = method.Method.DeclaringType;
@@ -317,25 +201,11 @@ namespace LinqToDB.Expressions
 				MemberCache.GetMemberInfo(method.Method).IsQueryable;
 		}
 
-		public static bool IsAsyncExtension(this MethodCallExpression method, bool enumerable = true)
+		public static bool IsAsyncExtension(this MethodCallExpression method)
 		{
 			var type = method.Method.DeclaringType;
 
 			return type == typeof(AsyncExtensions);
-		}
-
-		public static bool IsAggregate(this MethodCallExpression methodCall, MappingSchema mapping)
-		{
-			if (methodCall.IsQueryable(AggregationBuilder.MethodNames) || methodCall.IsQueryable(CountBuilder.MethodNames))
-				return true;
-
-			if (methodCall.Arguments.Count > 0)
-			{
-				var function = AggregationBuilder.GetAggregateDefinition(methodCall, mapping);
-				return function != null;
-			}
-
-			return false;
 		}
 
 		public static bool IsExtensionMethod(this MethodCallExpression methodCall, MappingSchema mapping)
@@ -400,9 +270,19 @@ namespace LinqToDB.Expressions
 			return false;
 		}
 
+		public static bool IsAssociation(MemberInfo member, MappingSchema mappingSchema)
+		{
+			return mappingSchema.GetAttribute<AssociationAttribute>(member.DeclaringType!, member) != null;
+		}
+
+		public static bool IsAssociation(this MemberExpression memberExpression, MappingSchema mappingSchema)
+		{
+			return IsAssociation(memberExpression.Member, mappingSchema);
+		}
+
 		public static bool IsAssociation(this MethodCallExpression method, MappingSchema mappingSchema)
 		{
-			return mappingSchema.HasAttribute<AssociationAttribute>(method.Method.DeclaringType!, method.Method);
+			return IsAssociation(method.Method, mappingSchema);
 		}
 
 		private static readonly string[] CteMethodNames = { "AsCte", "GetCte" };
@@ -412,131 +292,11 @@ namespace LinqToDB.Expressions
 			return method.IsQueryable(CteMethodNames);
 		}
 
-		static Expression FindLevel(Expression expression, MappingSchema mapping, int level, ref int current)
-		{
-			switch (expression.NodeType)
-			{
-				case ExpressionType.Call :
-					{
-						var call = (MethodCallExpression)expression;
-						var expr = ExtractMethodCallTunnelExpression(call, mapping);
-
-						if (expr != null)
-						{
-							var ex = FindLevel(expr, mapping, level, ref current);
-
-							if (level == current)
-								return ex;
-
-							current++;
-						}
-
-						break;
-					}
-
-				case ExpressionType.MemberAccess:
-					{
-						var e = ((MemberExpression)expression);
-
-						if (e.Expression != null)
-						{
-							var expr = FindLevel(e.Expression.UnwrapWithAs(), mapping, level, ref current);
-
-							if (level == current)
-								return expr;
-
-							current++;
-						}
-
-						break;
-					}
-			}
-
-			return expression;
-		}
-
-		/// <summary>
-		/// Returns part of expression based on its level.
-		/// </summary>
-		/// <param name="expression">Base expression that needs decomposition.</param>
-		/// <param name="mapping">Maping schema.</param>
-		/// <param name="level">Level that should be to be extracted.</param>
-		/// <returns>Exstracted expression.</returns>
-		/// <example>
-		/// This sample shows what method returns for expression [c.ParentId].
-		/// <code>
-		/// expression.GetLevelExpression(mapping, 0) == [c]
-		/// expression.GetLevelExpression(mapping, 1) == [c.ParentId]
-		/// </code>
-		/// </example>
-		public static Expression GetLevelExpression(this Expression expression, MappingSchema mapping, int level)
-		{
-			var current = 0;
-			var expr    = FindLevel(expression, mapping, level, ref current);
-
-			if (expr == null || current != level)
-				throw new InvalidOperationException();
-
-			return expr;
-		}
-
-		private static readonly MethodInfo[] TunnelMethods = new [] { Methods.LinqToDB.SqlExt.ToNotNull, Methods.LinqToDB.SqlExt.Alias };
-
-		static Expression? ExtractMethodCallTunnelExpression(MethodCallExpression call, MappingSchema mapping)
-		{
-			var expr = call.Object;
-
-			if (expr == null && call.Arguments.Count > 0 &&
-			    (call.IsQueryable()
-			     || call.IsAggregate(mapping)
-			     || call.IsExtensionMethod(mapping)
-			     || call.IsAssociation(mapping)
-				 || call.Method.IsSqlPropertyMethodEx()
-				 || call.IsSameGenericMethod(TunnelMethods)
-			     )
-			    )
-			{
-				expr = call.Arguments[0];
-			}
-
-			return expr;
-		}
-
-		public static int GetLevel(this Expression expression, MappingSchema mapping)
-		{
-			switch (expression.NodeType)
-			{
-				case ExpressionType.Call :
-					{
-						var call = (MethodCallExpression)expression;
-						var expr = ExtractMethodCallTunnelExpression(call, mapping);
-						if (expr != null)
-						{
-							return GetLevel(expr.UnwrapWithAs(), mapping) + 1;
-						}
-
-						break;
-					}
-
-				case ExpressionType.MemberAccess:
-					{
-						var e = ((MemberExpression)expression);
-
-						if (e.Expression != null)
-							return GetLevel(e.Expression.UnwrapWithAs(), mapping) + 1;
-
-						break;
-					}
-			}
-
-			return 0;
-		}
-
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool IsNullValue(this Expression expr)
 		{
-			return (expr is ConstantExpression c && c.Value == null)
-				|| (expr is DefaultExpression && expr.Type.IsNullableType());
+			return (expr is ConstantExpression { Value: null })
+				|| (expr is DefaultExpression or DefaultValueExpression && expr.Type.IsNullableType());
 		}
 
 		public static Expression? GetArgumentByName(this MethodCallExpression methodCall, string parameterName)
@@ -558,7 +318,7 @@ namespace LinqToDB.Expressions
 			return expression?.NodeType switch
 			{
 				null                        => true,
-				ExpressionType.Convert      => IsEvaluable(((UnaryExpression)expression).Operand, mappingSchema),
+				ExpressionType.Convert or ExpressionType.ConvertChecked => IsEvaluable(((UnaryExpression)expression).Operand, mappingSchema),
 				ExpressionType.Default      => true,
 				// don't return true for closure classes
 				ExpressionType.Constant     => expression is ConstantExpression c && (c.Value == null || c.Value is string || c.Value.GetType().IsValueType),
@@ -597,7 +357,7 @@ namespace LinqToDB.Expressions
 			else if (e is UnaryExpression unaryExpression)
 			{
 				newExpr = unaryExpression.Update(OptimizeExpression(unaryExpression.Operand, mappingSchema));
-				if (newExpr.NodeType == ExpressionType.Convert && ((UnaryExpression)newExpr).Operand.NodeType == ExpressionType.Convert)
+				if (newExpr.NodeType is ExpressionType.Convert or ExpressionType.ConvertChecked && ((UnaryExpression)newExpr).Operand.NodeType is ExpressionType.Convert or ExpressionType.ConvertChecked)
 				{
 					// remove double convert
 					newExpr = Expression.Convert(
@@ -703,6 +463,5 @@ namespace LinqToDB.Expressions
 
 			return expression;
 		}
-
 	}
 }

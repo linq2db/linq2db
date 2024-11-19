@@ -1,35 +1,38 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace LinqToDB.SqlQuery
 {
 	using Common;
-	using Common.Internal;
+
 	using Mapping;
 
-	public class SqlField : ISqlExpression
+	public class SqlField : SqlExpressionBase
 	{
 		internal static SqlField All(ISqlTableSource table)
 		{
 			return new SqlField(table, "*", "*");
 		}
 
-		public SqlField(ISqlTableSource table, string name)
+		protected SqlField()
+		{
+
+		}
+
+		public SqlField(ISqlTableSource table, string name) : this()
 		{
 			Table     = table;
 			Name      = name;
 			CanBeNull = true;
 		}
 
-		public SqlField(Type systemType, string? name, bool canBeNull)
+		public SqlField(DbDataType dbDataType, string? name, bool canBeNull) : this()
 		{
-			Type      = new DbDataType(systemType);
+			Type      = dbDataType;
 			Name      = name!;
 			CanBeNull = canBeNull;
 		}
 
-		private SqlField(ISqlTableSource table, string name, string physicalName)
+		SqlField(ISqlTableSource table, string name, string physicalName) : this()
 		{
 			Table        = table;
 			Name         = name;
@@ -37,14 +40,14 @@ namespace LinqToDB.SqlQuery
 			CanBeNull    = true;
 		}
 
-		public SqlField(string name, string physicalName)
+		public SqlField(string name, string physicalName) : this()
 		{
 			Name         = name;
 			PhysicalName = physicalName;
 			CanBeNull    = true;
 		}
 
-		public SqlField(SqlField field)
+		public SqlField(SqlField field) : this()
 		{
 			Type             = field.Type;
 			Alias            = field.Alias;
@@ -62,7 +65,7 @@ namespace LinqToDB.SqlQuery
 			IsDynamic        = field.IsDynamic;
 		}
 
-		public SqlField(ColumnDescriptor column)
+		public SqlField(ColumnDescriptor column) : this()
 		{
 			Type              = column.GetDbDataType(true);
 			Name              = column.MemberName;
@@ -95,73 +98,48 @@ namespace LinqToDB.SqlQuery
 		public ISqlTableSource?  Table             { get; set; }
 		public ColumnDescriptor  ColumnDescriptor  { get; set; } = null!; // TODO: not true, we probably should introduce something else for non-column fields
 
-		Type ISqlExpression.SystemType => Type.SystemType;
+		public override Type SystemType => Type.SystemType;
 
-		private string? _physicalName;
+		string? _physicalName;
 		public  string   PhysicalName
 		{
 			get => _physicalName ?? Name;
 			set => _physicalName = value;
 		}
 
-		#region Overrides
-
-//#if OVERRIDETOSTRING
-
-		public override string ToString()
-		{
-			using var sb = Pools.StringBuilder.Allocate();
-			return ((IQueryElement)this).ToString(sb.Value, new Dictionary<IQueryElement, IQueryElement>()).ToString();
-		}
-
-//#endif
-
-		#endregion
-
 		#region ISqlExpression Members
+
+		public override bool CanBeNullable(NullabilityContext nullability) => nullability.CanBeNull(this);
 
 		public bool CanBeNull { get; set; }
 
-		public bool Equals(ISqlExpression other, Func<ISqlExpression, ISqlExpression, bool> comparer)
+		public override bool Equals(ISqlExpression other, Func<ISqlExpression, ISqlExpression, bool> comparer)
 		{
 			return this == other;
 		}
 
-		public int Precedence => SqlQuery.Precedence.Primary;
-
-		#endregion
-
-		#region ISqlExpressionWalkable Members
-
-		ISqlExpression ISqlExpressionWalkable.Walk<TContext>(WalkOptions options, TContext context, Func<TContext, ISqlExpression, ISqlExpression> func)
-		{
-			return func(context, this);
-		}
-
-		#endregion
-
-		#region IEquatable<ISqlExpression> Members
-
-		bool IEquatable<ISqlExpression>.Equals(ISqlExpression? other)
-		{
-			return this == other;
-		}
+		public override int Precedence => SqlQuery.Precedence.Primary;
 
 		#endregion
 
 		#region IQueryElement Members
 
-		public QueryElementType ElementType => QueryElementType.SqlField;
+		public override QueryElementType ElementType => QueryElementType.SqlField;
 
-		StringBuilder IQueryElement.ToString(StringBuilder sb, Dictionary<IQueryElement, IQueryElement> dic)
+		public override QueryElementTextWriter ToString(QueryElementTextWriter writer)
 		{
+			// writer.DebugAppendUniqueId(this);
+
 			if (Table != null)
-				sb
+				writer
 					.Append('t')
 					.Append(Table.SourceID)
 					.Append('.');
 
-			return sb.Append(Name);
+			writer.Append(Name);
+			if (CanBeNull)
+				writer.Append("?");
+			return writer;
 		}
 
 		#endregion

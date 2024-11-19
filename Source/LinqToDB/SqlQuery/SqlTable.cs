@@ -1,18 +1,16 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
-using System.Text;
 using System.Threading;
 
 namespace LinqToDB.SqlQuery
 {
 	using Common;
-	using Common.Internal;
 	using Data;
 	using Mapping;
-	using Remote;
 
-	public class SqlTable : ISqlTableSource, IQueryExtendible
+	public class SqlTable : SqlExpressionBase, ISqlTableSource
 	{
 		#region Init
 
@@ -21,6 +19,7 @@ namespace LinqToDB.SqlQuery
 			SourceID   = sourceId ?? Interlocked.Increment(ref SelectQuery.SourceIDCounter);
 			ObjectType = objectType;
 			TableName  = tableName;
+			_all       = SqlField.All(this);
 		}
 
 		internal SqlTable(
@@ -47,6 +46,8 @@ namespace LinqToDB.SqlQuery
 			SqlTableType   = sqlTableType;
 			TableArguments = tableArguments;
 			TableOptions   = tableOptions;
+
+			_all ??= SqlField.All(this);
 		}
 
 		#endregion
@@ -86,9 +87,11 @@ namespace LinqToDB.SqlQuery
 						{
 							var converter = entityDescriptor.MappingSchema.GetConverter(
 								field.Type,
-								new DbDataType(typeof(DataParameter)), true);
+								new DbDataType(typeof(DataParameter)),
+								true,
+								ConversionType.ToDatabase);
 
-							var parameter = converter?.ConvertValueToParameter?.Invoke(DefaultValue.GetValue(field.Type.SystemType, entityDescriptor.MappingSchema));
+							var parameter = converter?.ConvertValueToParameter(DefaultValue.GetValue(field.Type.SystemType, entityDescriptor.MappingSchema));
 							if (parameter != null)
 								field.Type = field.Type.WithDataType(parameter.DataType);
 						}
@@ -111,6 +114,8 @@ namespace LinqToDB.SqlQuery
 				var cd = entityDescriptor[identityField.Name]!;
 				SequenceAttributes = cd.SequenceName == null ? null : new[] { cd.SequenceName };
 			}
+
+			_all ??= SqlField.All(this);
 		}
 
 		#endregion
@@ -131,6 +136,8 @@ namespace LinqToDB.SqlQuery
 
 			Expression         = table.Expression;
 			TableArguments     = table.TableArguments;
+
+			_all ??= SqlField.All(this);
 		}
 
 		public SqlTable(SqlTable table, IEnumerable<SqlField> fields, ISqlExpression[] tableArguments)
@@ -146,18 +153,42 @@ namespace LinqToDB.SqlQuery
 			SqlTableType       = table.SqlTableType;
 			TableArguments     = tableArguments;
 			SqlQueryExtensions = table.SqlQueryExtensions;
+
+			_all ??= SqlField.All(this);
 		}
 
 		#endregion
 
 		#region Overrides
 
-		public override string ToString()
+		public override QueryElementType ElementType => QueryElementType.SqlTable;
+
+		public override QueryElementTextWriter ToString(QueryElementTextWriter writer)
 		{
-			using var sb = Pools.StringBuilder.Allocate();
-			return ((IQueryElement)this).ToString(sb.Value, new Dictionary<IQueryElement,IQueryElement>()).ToString();
+			if (TableName.Server   != null) writer.Append('[').Append(TableName.Server).Append("].");
+			if (TableName.Database != null) writer.Append('[').Append(TableName.Database).Append("].");
+			if (TableName.Schema   != null) writer.Append('[').Append(TableName.Schema).Append("].");
+			return writer.Append('[').Append(Expression ?? TableName.Name).Append('(').Append(SourceID).Append(")]");
 		}
 
+		public override bool Equals(ISqlExpression? other, Func<ISqlExpression, ISqlExpression, bool> comparer)
+		{
+			if (ReferenceEquals(this, other))
+				return true;
+
+			if (other is not SqlTable otherTable)
+				return false;
+
+			return ObjectType == otherTable.ObjectType &&
+			       TableName  == otherTable.TableName  &&
+			       Alias      == otherTable.Alias;
+		}
+
+		public override bool CanBeNullable(NullabilityContext nullability) => CanBeNull;
+
+		public override int Precedence => SqlQuery.Precedence.Primary;
+		public override Type SystemType => ObjectType;
+		
 		#endregion
 
 		#region Public Members
@@ -179,6 +210,8 @@ namespace LinqToDB.SqlQuery
 		public         TableOptions      TableOptions   { get; set; }
 		public virtual string?           ID             { get; set; }
 
+		public bool CanBeNull { get; set; } = true;
+
 		/// <summary>
 		/// Custom SQL expression format string (used together with <see cref="TableArguments"/>) to
 		/// transform <see cref="SqlTable"/> to custom table expression.
@@ -195,10 +228,10 @@ namespace LinqToDB.SqlQuery
 		internal string NameForLogging => Expression ?? TableName.Name;
 
 		// list user to preserve order of fields in queries
-		readonly List<SqlField>              _orderedFields = new();
-		readonly Dictionary<string,SqlField> _fieldsLookup  = new();
+		internal readonly List<SqlField>              _orderedFields = new();
+		readonly          Dictionary<string,SqlField> _fieldsLookup  = new();
 
-		public           IReadOnlyList<SqlField>         Fields => _orderedFields;
+		public           List<SqlField> Fields => _orderedFields;
 		public List<SqlQueryExtension>? SqlQueryExtensions { get; set; }
 
 		// identity fields cached, as it is most used fields filter
@@ -214,8 +247,8 @@ namespace LinqToDB.SqlQuery
 
 		public SequenceNameAttribute[]? SequenceAttributes { get; protected internal set; }
 
-		private SqlField? _all;
-		public  SqlField   All => _all ??= SqlField.All(this);
+		SqlField?       _all;
+		public SqlField All => _all!;
 
 		public SqlField? GetIdentityField()
 		{
@@ -225,7 +258,7 @@ namespace LinqToDB.SqlQuery
 
 			var keys = GetKeys(true);
 
-			if (keys.Count == 1)
+			if (keys?.Count == 1)
 				return (SqlField)keys[0];
 
 			return null;
@@ -263,7 +296,7 @@ namespace LinqToDB.SqlQuery
 
 		List<ISqlExpression>? _keyFields;
 
-		public IList<ISqlExpression> GetKeys(bool allIfEmpty)
+		public virtual IList<ISqlExpression>? GetKeys(bool allIfEmpty)
 		{
 			_keyFields ??=
 			(
@@ -278,60 +311,6 @@ namespace LinqToDB.SqlQuery
 				return Fields.Select(f => f as ISqlExpression).ToList();
 
 			return _keyFields;
-		}
-
-		#endregion
-
-		#region IQueryElement Members
-
-		public virtual QueryElementType ElementType => QueryElementType.SqlTable;
-
-		public virtual StringBuilder ToString(StringBuilder sb, Dictionary<IQueryElement,IQueryElement> dic)
-		{
-			if (TableName.Server   != null) sb.Append($"[{TableName.Server}].");
-			if (TableName.Database != null) sb.Append($"[{TableName.Database}].");
-			if (TableName.Schema   != null) sb.Append($"[{TableName.Schema}].");
-			return sb.Append($"[{Expression ?? TableName.Name}({SourceID})]");
-		}
-
-		#endregion
-
-		#region ISqlExpression Members
-
-		public bool CanBeNull { get; set; } = true;
-
-		int  ISqlExpression.Precedence => Precedence.Primary;
-		Type ISqlExpression.SystemType => ObjectType;
-
-		public bool Equals(ISqlExpression other, Func<ISqlExpression,ISqlExpression,bool> comparer)
-		{
-			return this == other;
-		}
-
-		#endregion
-
-		#region IEquatable<ISqlExpression> Members
-
-		bool IEquatable<ISqlExpression>.Equals(ISqlExpression? other)
-		{
-			return this == other;
-		}
-
-		#endregion
-
-		#region ISqlExpressionWalkable Members
-
-		public virtual ISqlExpression Walk<TContext>(WalkOptions options, TContext context, Func<TContext, ISqlExpression, ISqlExpression> func)
-		{
-			if (TableArguments != null)
-				for (var i = 0; i < TableArguments.Length; i++)
-					TableArguments[i] = TableArguments[i].Walk(options, context, func)!;
-
-			if (SqlQueryExtensions != null)
-				foreach (var e in SqlQueryExtensions)
-					e.Walk(options, context, func);
-
-			return func(context, this);
 		}
 
 		#endregion

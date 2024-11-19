@@ -12,23 +12,20 @@ namespace LinqToDB.SqlProvider
 		/// Finalizes query.
 		/// </summary>
 		/// <returns>Query which is ready for optimization.</returns>
-		SqlStatement Finalize          (MappingSchema mappingSchema, SqlStatement statement, DataOptions dataOptions);
+		SqlStatement Finalize(MappingSchema mappingSchema, SqlStatement statement, DataOptions dataOptions);
 
 		/// <summary>
 		/// Examine query for parameter dependency.
 		/// </summary>
 		/// <returns></returns>
-		bool IsParameterDependent(SqlStatement statement);
+		bool IsParameterDependent(NullabilityContext nullability, SqlStatement statement, DataOptions dataOptions);
 
 		/// <summary>
 		/// Corrects skip/take for specific DataProvider
 		/// </summary>
-		void ConvertSkipTake(MappingSchema mappingSchema, DataOptions dataOptions, SelectQuery selectQuery, OptimizationContext optimizationContext, out ISqlExpression? takeExpr, out ISqlExpression? skipExpr);
+		void ConvertSkipTake(NullabilityContext nullability, MappingSchema mappingSchema, DataOptions dataOptions, SelectQuery selectQuery, OptimizationContext optimizationContext, out ISqlExpression? takeExpr, out ISqlExpression? skipExpr);
 
-		/// <summary>
-		/// Converts query element to specific provider dialect.
-		/// </summary>
-		[return: NotNullIfNotNull(nameof(element))]
-		IQueryElement? ConvertElement(MappingSchema mappingSchema, DataOptions dataOptions, IQueryElement? element, OptimizationContext context);
+		SqlExpressionOptimizerVisitor CreateOptimizerVisitor(bool allowModify);
+		SqlExpressionConvertVisitor   CreateConvertVisitor(bool   allowModify);
 	}
 }

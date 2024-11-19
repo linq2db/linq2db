@@ -1,8 +1,14 @@
-﻿namespace LinqToDB.DataProvider.DB2
+﻿using System.Globalization;
+
+#if NETFRAMEWORK || NETSTANDARD2_0
+using System.Text;
+#endif
+
+namespace LinqToDB.DataProvider.DB2
 {
+	using Common;
 	using Mapping;
 	using SqlProvider;
-	using SqlQuery;
 
 	sealed class DB2zOSSqlBuilder : DB2SqlBuilderBase
 	{
@@ -22,16 +28,14 @@
 
 		protected override DB2Version Version => DB2Version.zOS;
 
-		protected override void BuildDataTypeFromDataType(SqlDataType type, bool forCreateTable, bool canBeNull)
+		protected override void BuildDataTypeFromDataType(DbDataType type, bool forCreateTable, bool canBeNull)
 		{
-			switch (type.Type.DataType)
+			switch (type.DataType)
 			{
 				case DataType.VarBinary:
 					// https://www.ibm.com/docs/en/db2-for-zos/12?topic=strings-varying-length-binary
-					StringBuilder
-						.Append("VARBINARY(")
-						.Append(type.Type.Length == null || type.Type.Length > 32704 || type.Type.Length < 1 ? 32704 : type.Type.Length)
-						.Append(')');
+					var length = type.Length == null || type.Length > 32704 || type.Length < 1 ? 32704 : type.Length;
+					StringBuilder.Append(CultureInfo.InvariantCulture, $"VARBINARY({length})");
 					return;
 			}
 

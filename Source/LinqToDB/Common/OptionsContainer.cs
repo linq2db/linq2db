@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-
 using JetBrains.Annotations;
 
 namespace LinqToDB.Common
@@ -58,13 +57,14 @@ namespace LinqToDB.Common
 			return ReferenceEquals(original, options) ? (T)this : WithOptions(options);
 		}
 
-		Dictionary<Type,IOptionSet>? _sets;
+		volatile Dictionary<Type,IOptionSet>? _sets;
 
 		/// <summary>
 		/// Provides access to option sets, stored in current options object.
 		/// </summary>
 		public virtual IEnumerable<IOptionSet> OptionSets
 		{
+			[Pure]
 			get
 			{
 				if (_sets != null)
@@ -78,6 +78,7 @@ namespace LinqToDB.Common
 		/// </summary>
 		/// <typeparam name="TSet">Options set type.</typeparam>
 		/// <returns>Options set or <c>null</c> if set with type <typeparamref name="TSet"/> not found in options.</returns>
+		[Pure]
 		public virtual TSet? Find<TSet>()
 			where TSet : class, IOptionSet
 		{
@@ -87,11 +88,14 @@ namespace LinqToDB.Common
 			return null;
 		}
 
+		[Pure]
 		public TSet FindOrDefault<TSet>(TSet defaultOptions)
 			where TSet : class, IOptionSet
 		{
 			return Find<TSet>() ?? defaultOptions;
 		}
+
+		readonly object _sync = new ();
 
 		/// <summary>
 		/// Returns options set by set type <typeparamref name="TSet"/>. If options doesn't contain specific options set, it is created and added to options.
@@ -100,13 +104,15 @@ namespace LinqToDB.Common
 		/// <returns>
 		/// Returns options set by set type <typeparamref name="TSet"/>. If options doesn't contain specific options set, it is created and added to options.
 		/// </returns>
+		[Pure]
 		public virtual TSet Get<TSet>()
 			where TSet : class, IOptionSet, new()
 		{
 			if (Find<TSet>() is { } set)
 				return set;
 
-			(_sets ??= new())[typeof(TSet)] = set = new();
+			lock (_sync)
+				_sets = new (_sets ?? []) { [typeof(TSet)] = set = new() };
 
 			return set;
 		}

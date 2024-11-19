@@ -91,7 +91,7 @@ namespace LinqToDB.Mapping
 
 		public override string GetObjectID()
 		{
-			return $".{Configuration}.{Name}.{Schema}.{Database}.{Server}.{(IsTemporary?'1':'0')}.{(int)TableOptions}.{(IsColumnAttributeRequired?'1':'0')}.{(IsView?'1':'0')}.";
+			return FormattableString.Invariant($".{Configuration}.{Name}.{Schema}.{Database}.{Server}.{(IsTemporary?'1':'0')}.{(int)TableOptions}.{(IsColumnAttributeRequired?'1':'0')}.{(IsView?'1':'0')}.");
 		}
 	}
 }

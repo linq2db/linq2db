@@ -30,13 +30,13 @@ namespace LinqToDB.DataProvider.SqlServer
 		//
 		[SqlExpression("bigint")]              public static SqlType<long?>           BigInt                            => new SqlType<long?>   ("bigint");
 		[SqlExpression("numeric")]             public static SqlType<decimal?>        Numeric()                         => new SqlType<decimal?>("numeric");
-		[SqlExpression("numeric({0})")]        public static SqlType<decimal?>        Numeric(int precision)            => new SqlType<decimal?>($"numeric({precision})");
-		[SqlExpression("numeric({0}, {1})")]   public static SqlType<decimal?>        Numeric(int precision, int scale) => new SqlType<decimal?>($"numeric({precision}, {scale})");
+		[SqlExpression("numeric({0})")]        public static SqlType<decimal?>        Numeric(int precision)            => new SqlType<decimal?>(FormattableString.Invariant($"numeric({precision})"));
+		[SqlExpression("numeric({0}, {1})")]   public static SqlType<decimal?>        Numeric(int precision, int scale) => new SqlType<decimal?>(FormattableString.Invariant($"numeric({precision}, {scale})"));
 		[SqlExpression("bit")]                 public static SqlType<bool?>           Bit                               => new SqlType<bool?>   ("bit");
 		[SqlExpression("smallint")]            public static SqlType<short?>          SmallInt                          => new SqlType<short?>  ("smallint");
 		[SqlExpression("decimal")]             public static SqlType<decimal?>        Decimal()                         => new SqlType<decimal?>("decimal");
-		[SqlExpression("decimal({0})")]        public static SqlType<decimal?>        Decimal(int precision)            => new SqlType<decimal?>($"decimal({precision})");
-		[SqlExpression("decimal({0}, {1})")]   public static SqlType<decimal?>        Decimal(int precision, int scale) => new SqlType<decimal?>($"decimal({precision}, {scale})");
+		[SqlExpression("decimal({0})")]        public static SqlType<decimal?>        Decimal(int precision)            => new SqlType<decimal?>(FormattableString.Invariant($"decimal({precision})"));
+		[SqlExpression("decimal({0}, {1})")]   public static SqlType<decimal?>        Decimal(int precision, int scale) => new SqlType<decimal?>(FormattableString.Invariant($"decimal({precision}, {scale})"));
 		[SqlExpression("smallmoney")]          public static SqlType<decimal?>        SmallMoney                        => new SqlType<decimal?>("smallmoney");
 		[SqlExpression("int")]                 public static SqlType<int?>            Int                               => new SqlType<int?>    ("int");
 		[SqlExpression("tinyint")]             public static SqlType<byte?>           TinyInt                           => new SqlType<byte?>   ("tinyint");
@@ -45,47 +45,47 @@ namespace LinqToDB.DataProvider.SqlServer
 		// Approximate numerics
 		//
 		[SqlExpression("float")]               public static SqlType<double?>         Float()                           => new SqlType<double?>  ("float");
-		[SqlExpression("float({0})")]          public static SqlType<double?>         Float(int n)                      => new SqlType<double?>  ($"float({n})");
+		[SqlExpression("float({0})")]          public static SqlType<double?>         Float(int n)                      => new SqlType<double?>  (FormattableString.Invariant($"float({n})"));
 		[SqlExpression("real")]                public static SqlType<float?>          Real                              => new SqlType<float?>   ("real");
 
 		// Date and Time
 		//
 		[SqlExpression("date")]                public static SqlType<DateTime?>       Date                              => new SqlType<DateTime?>      ("date");
 		[SqlExpression("datetimeoffset")]      public static SqlType<DateTimeOffset?> DatetimeOffset()                  => new SqlType<DateTimeOffset?>("datetimeoffset");
-		[SqlExpression("datetimeoffset({0})")] public static SqlType<DateTimeOffset?> DatetimeOffset(int size)          => new SqlType<DateTimeOffset?>($"datetimeoffset({size})");
+		[SqlExpression("datetimeoffset({0})")] public static SqlType<DateTimeOffset?> DatetimeOffset(int size)          => new SqlType<DateTimeOffset?>(FormattableString.Invariant($"datetimeoffset({size})"));
 		[SqlExpression("datetime2")]           public static SqlType<DateTime?>       Datetime2()                       => new SqlType<DateTime?>      ("datetime2");
-		[SqlExpression("datetime2({0})")]      public static SqlType<DateTime?>       Datetime2(int size)               => new SqlType<DateTime?>      ($"datetime2({size})");
+		[SqlExpression("datetime2({0})")]      public static SqlType<DateTime?>       Datetime2(int size)               => new SqlType<DateTime?>      (FormattableString.Invariant($"datetime2({size})"));
 		[SqlExpression("smalldatetime")]       public static SqlType<DateTime?>       SmallDatetime                     => new SqlType<DateTime?>      ("smalldatetime");
 		[SqlExpression("datetime")]            public static SqlType<DateTime?>       Datetime                          => new SqlType<DateTime?>      ("datetime");
 		[SqlExpression("time")]                public static SqlType<TimeSpan?>       Time()                            => new SqlType<TimeSpan?>      ("time");
-		[SqlExpression("time({0})")]           public static SqlType<TimeSpan?>       Time(int size)                    => new SqlType<TimeSpan?>      ($"time({size})");
+		[SqlExpression("time({0})")]           public static SqlType<TimeSpan?>       Time(int size)                    => new SqlType<TimeSpan?>      (FormattableString.Invariant($"time({size})"));
 
 		// Character strings
 		//
 		[SqlExpression("char")]                public static SqlType<string?>         Char()                            => new SqlType<string?>("char");
-		[SqlExpression("char({0})")]           public static SqlType<string?>         Char(int size)                    => new SqlType<string?>($"char({size})");
+		[SqlExpression("char({0})")]           public static SqlType<string?>         Char(int size)                    => new SqlType<string?>(FormattableString.Invariant($"char({size})"));
 		[SqlExpression("char(max)")]           public static SqlType<string?>         CharMax                           => new SqlType<string?>("char(max)");
 		[SqlExpression("varchar")]             public static SqlType<string?>         VarChar()                         => new SqlType<string?>("varchar");
-		[SqlExpression("varchar({0})")]        public static SqlType<string?>         VarChar(int size)                 => new SqlType<string?>($"varchar({size})");
+		[SqlExpression("varchar({0})")]        public static SqlType<string?>         VarChar(int size)                 => new SqlType<string?>(FormattableString.Invariant($"varchar({size})"));
 		[SqlExpression("varchar(max)")]        public static SqlType<string?>         VarCharMax                        => new SqlType<string?>("varchar(max)");
 		[SqlExpression("text")]                public static SqlType<string?>         Text                              => new SqlType<string?>("text");
 
 		// Unicode character strings
 		//
 		[SqlExpression("nchar")]               public static SqlType<string?>         NChar()                           => new SqlType<string?>("nchar");
-		[SqlExpression("nchar({0})")]          public static SqlType<string?>         NChar(int size)                   => new SqlType<string?>($"nchar({size})");
+		[SqlExpression("nchar({0})")]          public static SqlType<string?>         NChar(int size)                   => new SqlType<string?>(FormattableString.Invariant($"nchar({size})"));
 		[SqlExpression("nchar(max)")]          public static SqlType<string?>         NCharMax                          => new SqlType<string?>("nchar(max)");
 		[SqlExpression("nvarchar")]            public static SqlType<string?>         NVarChar()                        => new SqlType<string?>("nvarchar");
-		[SqlExpression("nvarchar({0})")]       public static SqlType<string?>         NVarChar(int size)                => new SqlType<string?>($"nvarchar({size})");
+		[SqlExpression("nvarchar({0})")]       public static SqlType<string?>         NVarChar(int size)                => new SqlType<string?>(FormattableString.Invariant($"nvarchar({size})"));
 		[SqlExpression("nvarchar(max)")]       public static SqlType<string?>         NVarCharMax                       => new SqlType<string?>("nvarchar(max)");
 		[SqlExpression("ntext")]               public static SqlType<string?>         NText                             => new SqlType<string?>("ntext");
 
 		// Binary strings
 		[SqlExpression("binary")]              public static SqlType<byte[]?>         Binary()                          => new SqlType<byte[]?>("binary");
-		[SqlExpression("binary({0})")]         public static SqlType<byte[]?>         Binary(int size)                  => new SqlType<byte[]?>($"binary({size})");
+		[SqlExpression("binary({0})")]         public static SqlType<byte[]?>         Binary(int size)                  => new SqlType<byte[]?>(FormattableString.Invariant($"binary({size})"));
 		[SqlExpression("binary(max)")]         public static SqlType<byte[]?>         BinaryMax                         => new SqlType<byte[]?>("binary(max)");
 		[SqlExpression("varbinary")]           public static SqlType<byte[]?>         VarBinary()                       => new SqlType<byte[]?>("varbinary");
-		[SqlExpression("varbinary({0})")]      public static SqlType<byte[]?>         VarBinary(int size)               => new SqlType<byte[]?>($"varbinary({size})");
+		[SqlExpression("varbinary({0})")]      public static SqlType<byte[]?>         VarBinary(int size)               => new SqlType<byte[]?>(FormattableString.Invariant($"varbinary({size})"));
 		[SqlExpression("varbinary(max)")]      public static SqlType<byte[]?>         VarBinaryMax                      => new SqlType<byte[]?>("varbinary(max)");
 		[SqlExpression("image")]               public static SqlType<byte[]?>         Image                             => new SqlType<byte[]?>("image");
 

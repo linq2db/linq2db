@@ -7,7 +7,6 @@
 
 using LinqToDB;
 using LinqToDB.Data;
-using LinqToDB.Expressions;
 using LinqToDB.Mapping;
 using NpgsqlTypes;
 using System;
@@ -17,7 +16,6 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Net;
 using System.Net.NetworkInformation;
-using System.Reflection;
 
 #pragma warning disable 1573, 1591
 #nullable enable
@@ -99,11 +97,9 @@ namespace Cli.NoMetadata.PostgreSQL
 
 		#region Table Functions
 		#region GetParentById
-		private static readonly MethodInfo _getParentById = MemberHelper.MethodOf<TestDataDB>(ctx => ctx.GetParentById(default));
-
 		public IQueryable<GetParentByIdResult> GetParentById(int? id)
 		{
-			return this.GetTable<GetParentByIdResult>(this, _getParentById, id);
+			return this.QueryFromExpression<GetParentByIdResult>(() => GetParentById(id));
 		}
 
 		public partial class GetParentByIdResult
@@ -114,11 +110,9 @@ namespace Cli.NoMetadata.PostgreSQL
 		#endregion
 
 		#region TestTableFunction
-		private static readonly MethodInfo _testTableFunction = MemberHelper.MethodOf<TestDataDB>(ctx => ctx.TestTableFunction(default));
-
 		public IQueryable<TestTableFunctionResult> TestTableFunction(int? param1)
 		{
-			return this.GetTable<TestTableFunctionResult>(this, _testTableFunction, param1);
+			return this.QueryFromExpression<TestTableFunctionResult>(() => TestTableFunction(param1));
 		}
 
 		public partial class TestTableFunctionResult
@@ -128,11 +122,9 @@ namespace Cli.NoMetadata.PostgreSQL
 		#endregion
 
 		#region TestTableFunction1
-		private static readonly MethodInfo _testTableFunction1 = MemberHelper.MethodOf<TestDataDB>(ctx => ctx.TestTableFunction1(default, default));
-
 		public IQueryable<TestTableFunction1Result> TestTableFunction1(int? param1, int? param2)
 		{
-			return this.GetTable<TestTableFunction1Result>(this, _testTableFunction1, param1, param2);
+			return this.QueryFromExpression<TestTableFunction1Result>(() => TestTableFunction1(param1, param2));
 		}
 
 		public partial class TestTableFunction1Result
@@ -143,62 +135,60 @@ namespace Cli.NoMetadata.PostgreSQL
 		#endregion
 
 		#region TestTableFunctionSchema
-		private static readonly MethodInfo _testTableFunctionSchema = MemberHelper.MethodOf<TestDataDB>(ctx => ctx.TestTableFunctionSchema());
-
 		public IQueryable<TestTableFunctionSchemaResult> TestTableFunctionSchema()
 		{
-			return this.GetTable<TestTableFunctionSchemaResult>(this, _testTableFunctionSchema);
+			return this.QueryFromExpression<TestTableFunctionSchemaResult>(() => TestTableFunctionSchema());
 		}
 
 		public partial class TestTableFunctionSchemaResult
 		{
-			public int?                        Id                  { get; set; }
-			public long?                       BigintDataType      { get; set; }
-			public decimal?                    NumericDataType     { get; set; }
-			public short?                      SmallintDataType    { get; set; }
-			public int?                        IntDataType         { get; set; }
-			public decimal?                    MoneyDataType       { get; set; }
-			public double?                     DoubleDataType      { get; set; }
-			public float?                      RealDataType        { get; set; }
-			public DateTime?                   TimestampDataType   { get; set; }
-			public DateTimeOffset?             TimestampTzDataType { get; set; }
-			public DateTime?                   DateDataType        { get; set; }
-			public TimeSpan?                   TimeDataType        { get; set; }
-			public DateTimeOffset?             TimeTzDataType      { get; set; }
-			public TimeSpan?                   IntervalDataType    { get; set; }
-			public TimeSpan?                   IntervalDataType2   { get; set; }
-			public char?                       CharDataType        { get; set; }
-			public string?                     Char20DataType      { get; set; }
-			public string?                     VarcharDataType     { get; set; }
-			public string?                     TextDataType        { get; set; }
-			public byte[]?                     BinaryDataType      { get; set; }
-			public Guid?                       UuidDataType        { get; set; }
-			public BitArray?                   BitDataType         { get; set; }
-			public bool?                       BooleanDataType     { get; set; }
-			public string?                     ColorDataType       { get; set; }
-			public NpgsqlPoint?                PointDataType       { get; set; }
-			public NpgsqlLSeg?                 LsegDataType        { get; set; }
-			public NpgsqlBox?                  BoxDataType         { get; set; }
-			public NpgsqlPath?                 PathDataType        { get; set; }
-			public NpgsqlPolygon?              PolygonDataType     { get; set; }
-			public NpgsqlCircle?               CircleDataType      { get; set; }
-			public NpgsqlLine?                 LineDataType        { get; set; }
-			public IPAddress?                  InetDataType        { get; set; }
-			public ValueTuple<IPAddress, int>? CidrDataType        { get; set; }
-			public PhysicalAddress?            MacaddrDataType     { get; set; }
-			public PhysicalAddress?            Macaddr8DataType    { get; set; }
-			public string?                     JsonDataType        { get; set; }
-			public string?                     JsonbDataType       { get; set; }
-			public string?                     XmlDataType         { get; set; }
-			public BitArray?                   VarBitDataType      { get; set; }
-			public string[]?                   Strarray            { get; set; }
-			public int[]?                      Intarray            { get; set; }
-			public int[]?                      Int2Darray          { get; set; }
-			public long[]?                     Longarray           { get; set; }
-			public TimeSpan[]?                 Intervalarray       { get; set; }
-			public double[]?                   Doublearray         { get; set; }
-			public decimal[]?                  Numericarray        { get; set; }
-			public decimal[]?                  Decimalarray        { get; set; }
+			public int?                         Id                  { get; set; }
+			public long?                        BigintDataType      { get; set; }
+			public decimal?                     NumericDataType     { get; set; }
+			public short?                       SmallintDataType    { get; set; }
+			public int?                         IntDataType         { get; set; }
+			public decimal?                     MoneyDataType       { get; set; }
+			public double?                      DoubleDataType      { get; set; }
+			public float?                       RealDataType        { get; set; }
+			public DateTime?                    TimestampDataType   { get; set; }
+			public DateTimeOffset?              TimestampTzDataType { get; set; }
+			public DateTime?                    DateDataType        { get; set; }
+			public TimeSpan?                    TimeDataType        { get; set; }
+			public DateTimeOffset?              TimeTzDataType      { get; set; }
+			public TimeSpan?                    IntervalDataType    { get; set; }
+			public TimeSpan?                    IntervalDataType2   { get; set; }
+			public char?                        CharDataType        { get; set; }
+			public string?                      Char20DataType      { get; set; }
+			public string?                      VarcharDataType     { get; set; }
+			public string?                      TextDataType        { get; set; }
+			public byte[]?                      BinaryDataType      { get; set; }
+			public Guid?                        UuidDataType        { get; set; }
+			public BitArray?                    BitDataType         { get; set; }
+			public bool?                        BooleanDataType     { get; set; }
+			public string?                      ColorDataType       { get; set; }
+			public NpgsqlPoint?                 PointDataType       { get; set; }
+			public NpgsqlLSeg?                  LsegDataType        { get; set; }
+			public NpgsqlBox?                   BoxDataType         { get; set; }
+			public NpgsqlPath?                  PathDataType        { get; set; }
+			public NpgsqlPolygon?               PolygonDataType     { get; set; }
+			public NpgsqlCircle?                CircleDataType      { get; set; }
+			public NpgsqlLine?                  LineDataType        { get; set; }
+			public IPAddress?                   InetDataType        { get; set; }
+			public ValueTuple<IPAddress, byte>? CidrDataType        { get; set; }
+			public PhysicalAddress?             MacaddrDataType     { get; set; }
+			public PhysicalAddress?             Macaddr8DataType    { get; set; }
+			public string?                      JsonDataType        { get; set; }
+			public string?                      JsonbDataType       { get; set; }
+			public string?                      XmlDataType         { get; set; }
+			public BitArray?                    VarBitDataType      { get; set; }
+			public string[]?                    Strarray            { get; set; }
+			public int[]?                       Intarray            { get; set; }
+			public int[]?                       Int2Darray          { get; set; }
+			public long[]?                      Longarray           { get; set; }
+			public TimeSpan[]?                  Intervalarray       { get; set; }
+			public double[]?                    Doublearray         { get; set; }
+			public decimal[]?                   Numericarray        { get; set; }
+			public decimal[]?                   Decimalarray        { get; set; }
 		}
 		#endregion
 		#endregion

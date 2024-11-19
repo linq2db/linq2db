@@ -18,7 +18,7 @@ namespace LinqToDB.DataProvider.Firebird
 		}
 
 		/// <summary>
-		/// Specifies that Firebird supports literal encoding. Availiable from version 2.5.
+		/// Specifies that Firebird supports literal encoding. Available from version 2.5 and could be used for Dialect 1 databases.
 		/// </summary>
 		[Obsolete("Use FirebirdOptions.Default.IsLiteralEncodingSupported instead.")]
 		public static bool IsLiteralEncodingSupported

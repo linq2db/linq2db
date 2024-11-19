@@ -9,12 +9,10 @@ using FirebirdSql.Data.Types;
 using LinqToDB;
 using LinqToDB.Common;
 using LinqToDB.Data;
-using LinqToDB.Expressions;
 using System;
 using System.Data;
 using System.Linq;
 using System.Numerics;
-using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -61,11 +59,9 @@ namespace Cli.NoMetadata.Firebird
 
 		#region Table Functions
 		#region OutRefEnumTest
-		private static readonly MethodInfo _outRefEnumTest = MemberHelper.MethodOf<TestDataDB>(ctx => ctx.OutRefEnumTest(default, default));
-
 		public IQueryable<OutRefEnumTestResult> OutRefEnumTest(string? str, string? inInputoutputstr)
 		{
-			return this.GetTable<OutRefEnumTestResult>(this, _outRefEnumTest, str, inInputoutputstr);
+			return this.QueryFromExpression<OutRefEnumTestResult>(() => OutRefEnumTest(str, inInputoutputstr));
 		}
 
 		public partial class OutRefEnumTestResult
@@ -76,11 +72,9 @@ namespace Cli.NoMetadata.Firebird
 		#endregion
 
 		#region OutRefTest
-		private static readonly MethodInfo _outRefTest = MemberHelper.MethodOf<TestDataDB>(ctx => ctx.OutRefTest(default, default, default, default));
-
 		public IQueryable<OutRefTestResult> OutRefTest(int? id, int? inInputoutputid, string? str, string? inInputoutputstr)
 		{
-			return this.GetTable<OutRefTestResult>(this, _outRefTest, id, inInputoutputid, str, inInputoutputstr);
+			return this.QueryFromExpression<OutRefTestResult>(() => OutRefTest(id, inInputoutputid, str, inInputoutputstr));
 		}
 
 		public partial class OutRefTestResult
@@ -93,11 +87,9 @@ namespace Cli.NoMetadata.Firebird
 		#endregion
 
 		#region PatientSelectAll
-		private static readonly MethodInfo _patientSelectAll = MemberHelper.MethodOf<TestDataDB>(ctx => ctx.PatientSelectAll());
-
 		public IQueryable<PatientSelectAllResult> PatientSelectAll()
 		{
-			return this.GetTable<PatientSelectAllResult>(this, _patientSelectAll);
+			return this.QueryFromExpression<PatientSelectAllResult>(() => PatientSelectAll());
 		}
 
 		public partial class PatientSelectAllResult
@@ -112,11 +104,9 @@ namespace Cli.NoMetadata.Firebird
 		#endregion
 
 		#region PatientSelectByName
-		private static readonly MethodInfo _patientSelectByName = MemberHelper.MethodOf<TestDataDB>(ctx => ctx.PatientSelectByName(default, default));
-
 		public IQueryable<PatientSelectByNameResult> PatientSelectByName(string? firstname, string? lastname)
 		{
-			return this.GetTable<PatientSelectByNameResult>(this, _patientSelectByName, firstname, lastname);
+			return this.QueryFromExpression<PatientSelectByNameResult>(() => PatientSelectByName(firstname, lastname));
 		}
 
 		public partial class PatientSelectByNameResult
@@ -129,11 +119,9 @@ namespace Cli.NoMetadata.Firebird
 		#endregion
 
 		#region PersonInsert
-		private static readonly MethodInfo _personInsert = MemberHelper.MethodOf<TestDataDB>(ctx => ctx.PersonInsert(default, default, default, default));
-
 		public IQueryable<PersonInsertResult> PersonInsert(string? firstname, string? lastname, string? middlename, char? gender)
 		{
-			return this.GetTable<PersonInsertResult>(this, _personInsert, firstname, lastname, middlename, gender);
+			return this.QueryFromExpression<PersonInsertResult>(() => PersonInsert(firstname, lastname, middlename, gender));
 		}
 
 		public partial class PersonInsertResult
@@ -143,11 +131,9 @@ namespace Cli.NoMetadata.Firebird
 		#endregion
 
 		#region PersonInsertOutputParameter
-		private static readonly MethodInfo _personInsertOutputParameter = MemberHelper.MethodOf<TestDataDB>(ctx => ctx.PersonInsertOutputParameter(default, default, default, default));
-
 		public IQueryable<PersonInsertOutputParameterResult> PersonInsertOutputParameter(string? firstname, string? lastname, string? middlename, char? gender)
 		{
-			return this.GetTable<PersonInsertOutputParameterResult>(this, _personInsertOutputParameter, firstname, lastname, middlename, gender);
+			return this.QueryFromExpression<PersonInsertOutputParameterResult>(() => PersonInsertOutputParameter(firstname, lastname, middlename, gender));
 		}
 
 		public partial class PersonInsertOutputParameterResult
@@ -157,11 +143,9 @@ namespace Cli.NoMetadata.Firebird
 		#endregion
 
 		#region PersonSelectAll
-		private static readonly MethodInfo _personSelectAll = MemberHelper.MethodOf<TestDataDB>(ctx => ctx.PersonSelectAll());
-
 		public IQueryable<PersonSelectAllResult> PersonSelectAll()
 		{
-			return this.GetTable<PersonSelectAllResult>(this, _personSelectAll);
+			return this.QueryFromExpression<PersonSelectAllResult>(() => PersonSelectAll());
 		}
 
 		public partial class PersonSelectAllResult
@@ -175,11 +159,9 @@ namespace Cli.NoMetadata.Firebird
 		#endregion
 
 		#region PersonSelectByKey
-		private static readonly MethodInfo _personSelectByKey = MemberHelper.MethodOf<TestDataDB>(ctx => ctx.PersonSelectByKey(default));
-
 		public IQueryable<PersonSelectByKeyResult> PersonSelectByKey(int? id)
 		{
-			return this.GetTable<PersonSelectByKeyResult>(this, _personSelectByKey, id);
+			return this.QueryFromExpression<PersonSelectByKeyResult>(() => PersonSelectByKey(id));
 		}
 
 		public partial class PersonSelectByKeyResult
@@ -193,11 +175,9 @@ namespace Cli.NoMetadata.Firebird
 		#endregion
 
 		#region PersonSelectByName
-		private static readonly MethodInfo _personSelectByName = MemberHelper.MethodOf<TestDataDB>(ctx => ctx.PersonSelectByName(default, default));
-
 		public IQueryable<PersonSelectByNameResult> PersonSelectByName(string? inFirstname, string? inLastname)
 		{
-			return this.GetTable<PersonSelectByNameResult>(this, _personSelectByName, inFirstname, inLastname);
+			return this.QueryFromExpression<PersonSelectByNameResult>(() => PersonSelectByName(inFirstname, inLastname));
 		}
 
 		public partial class PersonSelectByNameResult
@@ -211,11 +191,9 @@ namespace Cli.NoMetadata.Firebird
 		#endregion
 
 		#region ScalarDataReader
-		private static readonly MethodInfo _scalarDataReader = MemberHelper.MethodOf<TestDataDB>(ctx => ctx.ScalarDataReader());
-
 		public IQueryable<ScalarDataReaderResult> ScalarDataReader()
 		{
-			return this.GetTable<ScalarDataReaderResult>(this, _scalarDataReader);
+			return this.QueryFromExpression<ScalarDataReaderResult>(() => ScalarDataReader());
 		}
 
 		public partial class ScalarDataReaderResult
@@ -226,11 +204,9 @@ namespace Cli.NoMetadata.Firebird
 		#endregion
 
 		#region ScalarOutputParameter
-		private static readonly MethodInfo _scalarOutputParameter = MemberHelper.MethodOf<TestDataDB>(ctx => ctx.ScalarOutputParameter());
-
 		public IQueryable<ScalarOutputParameterResult> ScalarOutputParameter()
 		{
-			return this.GetTable<ScalarOutputParameterResult>(this, _scalarOutputParameter);
+			return this.QueryFromExpression<ScalarOutputParameterResult>(() => ScalarOutputParameter());
 		}
 
 		public partial class ScalarOutputParameterResult
@@ -241,11 +217,9 @@ namespace Cli.NoMetadata.Firebird
 		#endregion
 
 		#region ScalarReturnParameter
-		private static readonly MethodInfo _scalarReturnParameter = MemberHelper.MethodOf<TestDataDB>(ctx => ctx.ScalarReturnParameter());
-
 		public IQueryable<ScalarReturnParameterResult> ScalarReturnParameter()
 		{
-			return this.GetTable<ScalarReturnParameterResult>(this, _scalarReturnParameter);
+			return this.QueryFromExpression<ScalarReturnParameterResult>(() => ScalarReturnParameter());
 		}
 
 		public partial class ScalarReturnParameterResult
@@ -255,11 +229,9 @@ namespace Cli.NoMetadata.Firebird
 		#endregion
 
 		#region TestTableFunction
-		private static readonly MethodInfo _testTableFunction = MemberHelper.MethodOf<TestDataDB>(ctx => ctx.TestTableFunction(default));
-
 		public IQueryable<TestTableFunctionResult> TestTableFunction(int? i)
 		{
-			return this.GetTable<TestTableFunctionResult>(this, _testTableFunction, i);
+			return this.QueryFromExpression<TestTableFunctionResult>(() => TestTableFunction(i));
 		}
 
 		public partial class TestTableFunctionResult
@@ -269,11 +241,9 @@ namespace Cli.NoMetadata.Firebird
 		#endregion
 
 		#region TestV4Types
-		private static readonly MethodInfo _testV4Types = MemberHelper.MethodOf<TestDataDB>(ctx => ctx.TestV4Types(default, default, default, default, default));
-
 		public IQueryable<TestV4TypesResult> TestV4Types(FbZonedDateTime? tstz, FbZonedTime? ttz, FbDecFloat? decfloat16, FbDecFloat? decfloat34, BigInteger? int128)
 		{
-			return this.GetTable<TestV4TypesResult>(this, _testV4Types, tstz, ttz, decfloat16, decfloat34, int128);
+			return this.QueryFromExpression<TestV4TypesResult>(() => TestV4Types(tstz, ttz, decfloat16, decfloat34, int128));
 		}
 
 		public partial class TestV4TypesResult
@@ -287,11 +257,9 @@ namespace Cli.NoMetadata.Firebird
 		#endregion
 
 		#region TestPackage1TestTableFunction
-		private static readonly MethodInfo _testTableFunction1 = MemberHelper.MethodOf<TestDataDB>(ctx => ctx.TestPackage1TestTableFunction(default));
-
 		public IQueryable<TestPackage1TestTableFunctionResult> TestPackage1TestTableFunction(int? i)
 		{
-			return this.GetTable<TestPackage1TestTableFunctionResult>(this, _testTableFunction1, i);
+			return this.QueryFromExpression<TestPackage1TestTableFunctionResult>(() => TestPackage1TestTableFunction(i));
 		}
 
 		public partial class TestPackage1TestTableFunctionResult
@@ -301,11 +269,9 @@ namespace Cli.NoMetadata.Firebird
 		#endregion
 
 		#region TestPackage2TestTableFunction
-		private static readonly MethodInfo _testTableFunction2 = MemberHelper.MethodOf<TestDataDB>(ctx => ctx.TestPackage2TestTableFunction(default));
-
 		public IQueryable<TestPackage2TestTableFunctionResult> TestPackage2TestTableFunction(int? i)
 		{
-			return this.GetTable<TestPackage2TestTableFunctionResult>(this, _testTableFunction2, i);
+			return this.QueryFromExpression<TestPackage2TestTableFunctionResult>(() => TestPackage2TestTableFunction(i));
 		}
 
 		public partial class TestPackage2TestTableFunctionResult
@@ -339,7 +305,7 @@ namespace Cli.NoMetadata.Firebird
 		}
 
 		/// <summary>
-		/// INTEG_52 backreference
+		/// INTEG_18 backreference
 		/// </summary>
 		public static Patient? Patient(this Person obj, IDataContext db)
 		{
@@ -349,7 +315,7 @@ namespace Cli.NoMetadata.Firebird
 
 		#region Patient Associations
 		/// <summary>
-		/// INTEG_52
+		/// INTEG_18
 		/// </summary>
 		public static Person Integ(this Patient obj, IDataContext db)
 		{

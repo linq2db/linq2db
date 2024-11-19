@@ -191,7 +191,7 @@ namespace Tests.UserTests
 			}, TestProvName.AllSqlServer, ddl: true);
 		}
 
-		public async Task TestTableFQN<TTable>(
+		private async Task TestTableFQN<TTable>(
 			string context,
 			bool withServer, bool withDatabase, bool withSchema,
 			Func<IDataContext, ITable<TTable>, string?, string?, string?, Task> operation,
@@ -274,7 +274,7 @@ namespace Tests.UserTests
 			if (withDatabase) table = table.DatabaseName(dbName);
 			if (withSchema  ) table = table.SchemaName  (schemaName);
 
-			if (throws && context.Contains(".LinqService"))
+			if (throws && context.IsRemote())
 			{
 #if NETFRAMEWORK
 				Assert.ThrowsAsync<FaultException>(() => operation(db, table, schemaName, dbName, serverName));

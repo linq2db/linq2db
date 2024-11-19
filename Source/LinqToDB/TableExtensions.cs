@@ -1,7 +1,5 @@
 ﻿using System;
 using System.Diagnostics.CodeAnalysis;
-using System.Text;
-
 using JetBrains.Annotations;
 
 namespace LinqToDB

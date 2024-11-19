@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -49,10 +50,8 @@ namespace LinqToDB.Common.Internal
 
 		public IdentifierBuilder Add(IConfigurationID? data)
 		{
-			_sb.Value
-				.Append('.')
-				.Append(data?.ConfigurationID)
-				;
+			_sb.Value.Append(CultureInfo.InvariantCulture, $".{data?.ConfigurationID}");
+
 			return this;
 		}
 
@@ -85,10 +84,8 @@ namespace LinqToDB.Common.Internal
 
 		public IdentifierBuilder Add(Delegate? data)
 		{
-			_sb.Value
-				.Append('.')
-				.Append(data?.Method)
-				;
+			_sb.Value.Append(CultureInfo.InvariantCulture, $".{data?.Method}");
+
 			return this;
 		}
 
@@ -105,15 +102,20 @@ namespace LinqToDB.Common.Internal
 		{
 			_sb.Value
 				.Append('.')
-				.AppendFormat(format, data)
+				.AppendFormat(CultureInfo.InvariantCulture, format, data)
 				;
 			return this;
 		}
 
-		public IdentifierBuilder AddRange(IEnumerable items)
+		public IdentifierBuilder AddRange(IEnumerable? items)
 		{
-			foreach (var item in items)
-				Add(GetObjectID(item));
+			if (items == null)
+				Add(string.Empty);
+			else
+			{
+				foreach (var item in items)
+					Add(GetObjectID(item));
+			}
 			return this;
 		}
 
@@ -150,7 +152,7 @@ namespace LinqToDB.Common.Internal
 
 		public static string GetObjectID(Type? obj)
 		{
-			return obj == null ? string.Empty : _types.GetOrAdd(obj, static _ => Interlocked.Increment(ref _typeCounter).ToString());
+			return obj == null ? string.Empty : _types.GetOrAdd(obj, static _ => Interlocked.Increment(ref _typeCounter).ToString(NumberFormatInfo.InvariantInfo));
 		}
 
 		static          int                              _expressionCounter;
@@ -181,15 +183,15 @@ namespace LinqToDB.Common.Internal
 		{
 			return obj switch
 			{
-				IConfigurationID c => c.ConfigurationID.ToString(),
+				IConfigurationID c => c.ConfigurationID.ToString(NumberFormatInfo.InvariantInfo),
 				Type t             => GetObjectID(t),
 				Delegate d         => GetObjectID(d.Method),
 				int  i             => GetIntID(i),
 				null               => string.Empty,
 				string str         => str,
 				IEnumerable col    => $"[{string.Join(",", col.Cast<object?>().Select(GetObjectID))}]",
-				Expression ex      => GetObjectID(ex).ToString(),
-				TimeSpan ts        => ts.Ticks.ToString(),
+				Expression ex      => GetObjectID(ex).ToString(NumberFormatInfo.InvariantInfo),
+				TimeSpan ts        => ts.Ticks.ToString(NumberFormatInfo.InvariantInfo),
 				_                  => GetOrAddObject(obj)
 			};
 
@@ -197,7 +199,7 @@ namespace LinqToDB.Common.Internal
 			{
 				try
 				{
-					return _objects.GetOrAdd(o, static _ => Interlocked.Increment(ref _objectCounter).ToString());
+					return _objects.GetOrAdd(o, static _ => Interlocked.Increment(ref _objectCounter).ToString(NumberFormatInfo.InvariantInfo));
 				}
 				catch (InvalidOperationException)
 				{
@@ -229,11 +231,11 @@ namespace LinqToDB.Common.Internal
 			{
 				var value = _intToString[id];
 				if (value == null)
-					_intToString[id] = value = id.ToString();
+					_intToString[id] = value = id.ToString(NumberFormatInfo.InvariantInfo);
 				return value;
 			}
 
-			return id.ToString();
+			return id.ToString(NumberFormatInfo.InvariantInfo);
 		}
 
 		public void Dispose()

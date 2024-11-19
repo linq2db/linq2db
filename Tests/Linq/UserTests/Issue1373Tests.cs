@@ -64,7 +64,8 @@ namespace Tests.UserTests
 
 			var ms = new MappingSchema();
 			ms.SetConvertExpression<string?, CustomFieldType?>(s => CustomFieldType.FromString(s));
-			ms.SetConvertExpression<CustomFieldType, DataParameter>(_ => new DataParameter(null, _ != null ? _.ToString() : null), false);
+			ms.SetConvertExpression<CustomFieldType, DataParameter>(
+				_ => new DataParameter(null, _ != null ? _.ToString() : null), false);
 
 			using (var db = GetDataContext(context, ms))
 			using (var tbl = db.CreateLocalTable<Issue1363Record>())
@@ -86,7 +87,7 @@ namespace Tests.UserTests
 					Field1 = new CustomFieldType() { Field1 = "test" }
 				});
 
-				Assert(db);
+				AssertDb(db);
 			}
 		}
 
@@ -98,7 +99,10 @@ namespace Tests.UserTests
 			var ms = new MappingSchema();
 
 			ms.SetConvertExpression<string?, CustomFieldType?>(s => CustomFieldType.FromString(s));
-			ms.SetConvertExpression<CustomFieldType, DataParameter>(_ => _ == null ? new DataParameter(null, null, DataType.NVarChar) : new DataParameter(null, _.ToString()), false);
+			ms.SetConvertExpression<CustomFieldType, DataParameter>(
+				_ => _ == null
+					? new DataParameter(null, null, DataType.NVarChar)
+					: new DataParameter(null, _.ToString()), false);
 
 			using (var db = GetDataContext(context, ms))
 			using (var tbl = db.CreateLocalTable<Issue1363Record>())
@@ -120,7 +124,7 @@ namespace Tests.UserTests
 					Field1 = new CustomFieldType() { Field1 = "test" }
 				});
 
-				Assert(db);
+				AssertDb(db);
 			}
 		}
 
@@ -132,7 +136,8 @@ namespace Tests.UserTests
 			var ms = new MappingSchema();
 
 			ms.SetConvertExpression<string?, CustomFieldType?>(s => CustomFieldType.FromString(s));
-			ms.SetConvertExpression<CustomFieldType, DataParameter>(_ => new DataParameter(null, _ == null ? null : _.ToString(), DataType.NVarChar), false);
+			ms.SetConvertExpression<CustomFieldType, DataParameter>(
+				_ => new DataParameter(null, _ == null ? null : _.ToString(), DataType.NVarChar), false);
 
 			using (var db = GetDataContext(context,  ms))
 			using (var tbl = db.CreateLocalTable<Issue1363Record>())
@@ -154,7 +159,7 @@ namespace Tests.UserTests
 					Field1 = new CustomFieldType() { Field1 = "test" }
 				});
 
-				Assert(db);
+				AssertDb(db);
 			}
 		}
 
@@ -165,7 +170,8 @@ namespace Tests.UserTests
 
 			var ms = new MappingSchema();
 			ms.SetConvertExpression<string?, CustomFieldType?>(s => CustomFieldType.FromString(s));
-			ms.SetConvertExpression<CustomFieldType, DataParameter>(_ => new DataParameter(null, _ != null ? _.ToString() : null), false);
+			ms.SetConvertExpression<CustomFieldType, DataParameter>(
+				_ => new DataParameter(null, _ != null ? _.ToString() : null), false);
 
 			using (var db = GetDataContext(context, ms))
 			using (var tbl = db.CreateLocalTable<Issue1363Record>())
@@ -188,7 +194,7 @@ namespace Tests.UserTests
 					Field1 = new CustomFieldType() { Field1 = "test" }
 				});
 
-				Assert(db);
+				AssertDb(db);
 			}
 		}
 
@@ -200,7 +206,10 @@ namespace Tests.UserTests
 			var ms = new MappingSchema();
 
 			ms.SetConvertExpression<string?, CustomFieldType?>(s => CustomFieldType.FromString(s));
-			ms.SetConvertExpression<CustomFieldType, DataParameter>(_ => _ == null ? new DataParameter(null, null, DataType.NVarChar) : new DataParameter(null, _.ToString()), false);
+			ms.SetConvertExpression<CustomFieldType?, DataParameter>(
+				_ => _ == null
+					? new DataParameter(null, null, DataType.NVarChar)
+					: new DataParameter(null, _.ToString()), false);
 
 			using (var db = GetDataContext(context, ms))
 			using (var tbl = db.CreateLocalTable<Issue1363Record>())
@@ -223,7 +232,7 @@ namespace Tests.UserTests
 					Field1 = new CustomFieldType() { Field1 = "test" }
 				});
 
-				Assert(db);
+				AssertDb(db);
 			}
 		}
 
@@ -235,7 +244,8 @@ namespace Tests.UserTests
 			var ms = new MappingSchema();
 
 			ms.SetConvertExpression<string?, CustomFieldType?>(s => CustomFieldType.FromString(s));
-			ms.SetConvertExpression<CustomFieldType, DataParameter>(_ => new DataParameter(null, _ == null ? null : _.ToString(), DataType.NVarChar), false);
+			ms.SetConvertExpression<CustomFieldType, DataParameter>(
+				_ => new DataParameter(null, _ == null ? null : _.ToString(), DataType.NVarChar), false);
 
 			using (var db = GetDataContext(context, ms))
 			using (var tbl = db.CreateLocalTable<Issue1363Record>())
@@ -258,21 +268,24 @@ namespace Tests.UserTests
 					Field1 = new CustomFieldType() { Field1 = "test" }
 				});
 
-				Assert(db);
+				AssertDb(db);
 			}
 		}
 
-		private static void Assert(Model.ITestDataContext db)
+		private static void AssertDb(Model.ITestDataContext db)
 		{
 			var result = db.GetTable<Issue1363CustomRecord>().OrderBy(_ => _.Id).ToArray();
-			NUnit.Framework.Assert.AreEqual(3, result.Length);
-			NUnit.Framework.Assert.AreEqual(1, result[0].Id);
-			NUnit.Framework.Assert.IsNull(result[0].Field1);
-			NUnit.Framework.Assert.AreEqual(2, result[1].Id);
-			NUnit.Framework.Assert.IsNull(result[1].Field1);
-			NUnit.Framework.Assert.AreEqual(3, result[2].Id);
-			NUnit.Framework.Assert.IsNotNull(result[2].Field1);
-			NUnit.Framework.Assert.AreEqual("test", result[2].Field1!.Field1);
+			Assert.That(result, Has.Length.EqualTo(3));
+			Assert.Multiple(() =>
+			{
+				Assert.That(result[0].Id, Is.EqualTo(1));
+				Assert.That(result[0].Field1, Is.Null);
+				Assert.That(result[1].Id, Is.EqualTo(2));
+				Assert.That(result[1].Field1, Is.Null);
+				Assert.That(result[2].Id, Is.EqualTo(3));
+				Assert.That(result[2].Field1, Is.Not.Null);
+			});
+			Assert.That(result[2].Field1!.Field1, Is.EqualTo("test"));
 		}
 	}
 }

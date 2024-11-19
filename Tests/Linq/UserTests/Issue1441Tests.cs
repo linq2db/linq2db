@@ -32,7 +32,7 @@ namespace Tests.UserTests
 			public string Title { get; set; } = null!;
 		}
 
-		public void SampleSelectTest1([DataSources] string context)
+		private void SampleSelectTest1([DataSources] string context)
 		{
 			using (var db           = GetDataContext(context))
 			using (var authorsTable = db.CreateLocalTable<Author>())

@@ -1,10 +1,12 @@
 ﻿using System;
 using System.Data;
 using System.Data.Common;
-using LinqToDB.Expressions;
+using System.Linq.Expressions;
 
 namespace LinqToDB.DataProvider
 {
+	using Expressions;
+
 	public class OleDbProviderAdapter : IDynamicProviderAdapter
 	{
 		private static readonly object _syncRoot = new object();
@@ -19,15 +21,18 @@ namespace LinqToDB.DataProvider
 			Type parameterType,
 			Type commandType,
 			Type transactionType,
+			Func<string, DbConnection> connectionFactory,
+
 			Action<DbParameter, OleDbType> dbTypeSetter,
 			Func  <DbParameter, OleDbType> dbTypeGetter,
 			Func  <DbConnection, Guid, object[]?, DataTable> schemaTableGetter)
 		{
-			ConnectionType  = connectionType;
-			DataReaderType  = dataReaderType;
-			ParameterType   = parameterType;
-			CommandType     = commandType;
-			TransactionType = transactionType;
+			ConnectionType     = connectionType;
+			DataReaderType     = dataReaderType;
+			ParameterType      = parameterType;
+			CommandType        = commandType;
+			TransactionType    = transactionType;
+			_connectionFactory = connectionFactory;
 
 			SetDbType = dbTypeSetter;
 			GetDbType = dbTypeGetter;
@@ -35,11 +40,18 @@ namespace LinqToDB.DataProvider
 			GetOleDbSchemaTable = schemaTableGetter;
 		}
 
+#region IDynamicProviderAdapter
+
 		public Type ConnectionType  { get; }
 		public Type DataReaderType  { get; }
 		public Type ParameterType   { get; }
 		public Type CommandType     { get; }
 		public Type TransactionType { get; }
+
+		readonly Func<string, DbConnection> _connectionFactory;
+		public DbConnection CreateConnection(string connectionString) => _connectionFactory(connectionString);
+
+#endregion
 
 		public Action<DbParameter, OleDbType> SetDbType { get; }
 		public Func  <DbParameter, OleDbType> GetDbType { get; }
@@ -88,6 +100,7 @@ namespace LinqToDB.DataProvider
 							parameterType,
 							commandType,
 							transactionType,
+							typeMapper.BuildTypedFactory<string, OleDbConnection, DbConnection>((string connectionString) => new OleDbConnection(connectionString)),
 							typeSetter,
 							typeGetter,
 							oleDbSchemaTableGetter);
@@ -114,6 +127,8 @@ namespace LinqToDB.DataProvider
 		[Wrapper]
 		private sealed class OleDbConnection
 		{
+			public OleDbConnection(string connectionString) => throw new NotImplementedException();
+
 			public DataTable GetOleDbSchemaTable(Guid schema, object[]? restrictions) => throw new NotImplementedException();
 		}
 

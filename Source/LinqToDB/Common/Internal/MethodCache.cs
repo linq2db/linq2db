@@ -1,13 +1,11 @@
-﻿using System;
-using System.Collections.Concurrent;
+﻿using System.Collections.Concurrent;
 using System.Reflection;
-
-using LinqToDB.Linq;
 
 namespace LinqToDB.Common.Internal
 {
 	using Expressions;
 	using Extensions;
+	using Linq;
 
 	static class MemberCache
 	{

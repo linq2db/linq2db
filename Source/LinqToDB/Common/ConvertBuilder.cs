@@ -50,7 +50,7 @@ namespace LinqToDB.Common
 			if (!from.IsNullable() || to != from.UnwrapNullableType())
 				return null;
 
-			var mi = from.GetMethod("GetValueOrDefault", BindingFlags.Instance | BindingFlags.Public, null, Array<Type>.Empty, null);
+			var mi = from.GetMethod("GetValueOrDefault", BindingFlags.Instance | BindingFlags.Public, null, [], null);
 
 			if (mi == null)
 				return null;
@@ -192,7 +192,7 @@ namespace LinqToDB.Common
 		{
 			if (to == typeof(string) && !from.IsNullable())
 			{
-				var mi = from.GetMethodEx("ToString", Array<Type>.Empty);
+				var mi = from.GetMethodEx("ToString", []);
 				return mi != null ? Expression.Call(p, mi) : null;
 			}
 
@@ -212,11 +212,12 @@ namespace LinqToDB.Common
 				{
 					var val = values.GetValue(i)!;
 					var lv  = (long)Convert.ChangeType(val, typeof(long), Thread.CurrentThread.CurrentCulture)!;
+					var lvs = lv.ToString(NumberFormatInfo.InvariantInfo);
 
-					dic[lv.ToString()] = val;
+					dic[lvs] = val;
 
 					if (lv > 0)
-						dic["+" + lv.ToString()] = val;
+						dic["+" + lvs] = val;
 				}
 
 				for (var i = 0; i < values.Length; i++)
@@ -360,7 +361,6 @@ namespace LinqToDB.Common
 					if (valueType.IsNullable())
 						valueType = valueType.ToNullableUnderlying();
 
-
 					var toTypeFields = fromFields
 						.Select(f => new { f.Field, Attrs = f.Attrs
 							.OrderBy(a =>
@@ -459,7 +459,9 @@ namespace LinqToDB.Common
 								Expression.Call(
 									_throwLinqToDBConvertException,
 									Expression.Constant(
-										string.Format("Mapping ambiguity. '{0}.{1}' can be mapped to either '{2}.{3}' or '{2}.{4}'.",
+										string.Format(
+											CultureInfo.InvariantCulture,
+											"Mapping ambiguity. '{0}.{1}' can be mapped to either '{2}.{3}' or '{2}.{4}'.",
 											from.FullName, fromAttrs[0].Field.Name,
 											to.FullName,
 											prev.To.Field.Name,

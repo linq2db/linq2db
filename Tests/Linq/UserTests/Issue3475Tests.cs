@@ -13,7 +13,7 @@ namespace Tests.UserTests
 	[TestFixture]
 	public class Issue3475Tests : TestBase
 	{
-		internal sealed class LinqToDBDynamicLinqCustomTypeProvider : DefaultDynamicLinqCustomTypeProvider
+		internal sealed class LinqToDBDynamicLinqCustomTypeProvider() : DefaultDynamicLinqCustomTypeProvider(ParsingConfig.Default)
 		{
 			public override HashSet<Type> GetCustomTypes()
 			{

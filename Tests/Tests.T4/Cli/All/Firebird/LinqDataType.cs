@@ -21,7 +21,7 @@ namespace Cli.All.Firebird
 		[Column("MoneyValue"    , DataType = DataType.Decimal , DbType = "decimal(10,4)", Precision = 10, Scale = 4)] public decimal?  MoneyValue     { get; set; } // decimal(10,4)
 		[Column("DateTimeValue" , DataType = DataType.DateTime, DbType = "timestamp"                               )] public DateTime? DateTimeValue  { get; set; } // timestamp
 		[Column("DateTimeValue2", DataType = DataType.DateTime, DbType = "timestamp"                               )] public DateTime? DateTimeValue2 { get; set; } // timestamp
-		[Column("BoolValue"     , DataType = DataType.NChar   , DbType = "char(1)"      , Length    = 1            )] public char?     BoolValue      { get; set; } // char(1)
+		[Column("BoolValue"     , DataType = DataType.Boolean , DbType = "boolean"                                 )] public bool?     BoolValue      { get; set; } // boolean
 		[Column("GuidValue"     , DataType = DataType.NChar   , DbType = "char(16)"     , Length    = 16           )] public string?   GuidValue      { get; set; } // char(16)
 		[Column("BinaryValue"   , DataType = DataType.Blob    , DbType = "blob"                                    )] public byte[]?   BinaryValue    { get; set; } // blob
 		[Column("SmallIntValue" , DataType = DataType.Int16   , DbType = "smallint"                                )] public short?    SmallIntValue  { get; set; } // smallint

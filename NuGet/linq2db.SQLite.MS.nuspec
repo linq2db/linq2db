@@ -13,13 +13,17 @@
 		<tags>linq linq2db SQLite LinqToDB ORM database DB SQL</tags>
 		<readme>README.md</readme>
 		<dependencies>
-			<group targetFramework="net451">
-				<dependency id="linq2db"                version="5.0.0" />
-				<dependency id="Microsoft.Data.Sqlite"  version="1.1.1" />
-			</group>
 			<group targetFramework="netstandard2.0">
-				<dependency id="linq2db"                version="5.0.0"  />
-				<dependency id="Microsoft.Data.Sqlite"  version="7.0.11" />
+				<dependency id="linq2db"                version="6.0.0"  />
+				<dependency id="Microsoft.Data.Sqlite"  version="6.0.36" />
+			</group>
+			<group targetFramework="net8.0">
+				<dependency id="linq2db"                version="6.0.0"  />
+				<dependency id="Microsoft.Data.Sqlite"  version="8.0.11" />
+			</group>
+			<group targetFramework="net9.0">
+				<dependency id="linq2db"                version="6.0.0" />
+				<dependency id="Microsoft.Data.Sqlite"  version="9.0.0" />
 			</group>
 		</dependencies>
 		<contentFiles>
@@ -27,27 +31,27 @@
 		</contentFiles>
 	</metadata>
 	<files>
-		<file src="..\Nuget\README.T4.md"                                            target="README.md"                                                                                          />
+		<file src="..\..\NuGet\README.T4.md"                                      target="README.md"                                                                                          />
 
-		<file src="..\Source\LinqToDB\bin\Release\net46\linq2db.dll"                 target="tools"                                                                                              />
-		<file src="..\Tests\Linq\bin\Azure\net472\Humanizer.dll"                     target="tools"                                                                                              />
-		<file src="..\Tests\Linq\bin\Azure\net472\System.Data.SQLite.dll"            target="tools"                                                                                              />
-		<file src="..\Tests\Linq\bin\Azure\net472\x86\SQLite.Interop.dll"            target="tools\x86"                                                                                          />
-		<file src="..\Tests\Linq\bin\Azure\net472\x64\SQLite.Interop.dll"            target="tools\x64"                                                                                          />
-		<file src="..\Tests\Linq\bin\Azure\net472\Microsoft.Bcl.AsyncInterfaces.dll" target="tools"                                                                                              />
+		<file src="..\bin\LinqToDB\Release\net462\linq2db.dll"                    target="tools"                                                                                              />
+		<file src="..\bin\Tests\Release\net462\Humanizer.dll"                     target="tools"                                                                                              />
+		<file src="..\bin\Tests\Release\net462\System.Data.SQLite.dll"            target="tools"                                                                                              />
+		<file src="..\bin\Tests\Release\net462\x86\SQLite.Interop.dll"            target="tools\x86"                                                                                          />
+		<file src="..\bin\Tests\Release\net462\x64\SQLite.Interop.dll"            target="tools\x64"                                                                                          />
+		<file src="..\bin\Tests\Release\net462\Microsoft.Bcl.AsyncInterfaces.dll" target="tools"                                                                                              />
 
-		<file src="..\NuGet\SQLite\linq2db.SQLite.props"                             target="build\linq2db.SQLite.MS.props"                                                                      />
+		<file src="..\..\NuGet\SQLite\linq2db.SQLite.props"                       target="build\linq2db.SQLite.MS.props"                                                                      />
 
-		<file src="..\NuGet\SQLite\*.*"                                              target="contentFiles\any\any\LinqToDB.Templates"                          exclude="**\*.props"              />
-		<file src="..\NuGet\t4models\*.ttinclude"                                    target="contentFiles\any\any\LinqToDB.Templates"                                                            />
-		<file src="..\Source\LinqToDB.Templates\*.ttinclude"                         target="contentFiles\any\any\LinqToDB.Templates"                          exclude="**\LinqToDB.*.ttinclude" />
-		<file src="..\Source\LinqToDB.Templates\LinqToDB.Tools.ttinclude"            target="contentFiles\any\any\LinqToDB.Templates\LinqToDB.Tools.ttinclude"                                   />
-		<file src="..\Source\LinqToDB.Templates\*.SQLite.ttinclude"                  target="contentFiles\any\any\LinqToDB.Templates"                                                            />
+		<file src="..\..\NuGet\SQLite\*.*"                                        target="contentFiles\any\any\LinqToDB.Templates"                          exclude="**\*.props"              />
+		<file src="..\..\NuGet\t4models\*.ttinclude"                              target="contentFiles\any\any\LinqToDB.Templates"                                                            />
+		<file src="..\..\Source\LinqToDB.Templates\*.ttinclude"                   target="contentFiles\any\any\LinqToDB.Templates"                          exclude="**\LinqToDB.*.ttinclude" />
+		<file src="..\..\Source\LinqToDB.Templates\LinqToDB.Tools.ttinclude"      target="contentFiles\any\any\LinqToDB.Templates\LinqToDB.Tools.ttinclude"                                   />
+		<file src="..\..\Source\LinqToDB.Templates\*.SQLite.ttinclude"            target="contentFiles\any\any\LinqToDB.Templates"                                                            />
 
-		<file src="..\NuGet\SQLite\*.*"                                              target="content\LinqToDB.Templates"                                       exclude="**\*.props"              />
-		<file src="..\NuGet\t4models\*.ttinclude"                                    target="content\LinqToDB.Templates"                                                                         />
-		<file src="..\Source\LinqToDB.Templates\*.ttinclude"                         target="content\LinqToDB.Templates"                                       exclude="**\LinqToDB.*.ttinclude" />
-		<file src="..\Source\LinqToDB.Templates\LinqToDB.Tools.ttinclude"            target="content\LinqToDB.Templates\LinqToDB.Tools.ttinclude"                                                />
-		<file src="..\Source\LinqToDB.Templates\*.SQLite.ttinclude"                  target="content\LinqToDB.Templates"                                                                         />
+		<file src="..\..\NuGet\SQLite\*.*"                                        target="content\LinqToDB.Templates"                                       exclude="**\*.props"              />
+		<file src="..\..\NuGet\t4models\*.ttinclude"                              target="content\LinqToDB.Templates"                                                                         />
+		<file src="..\..\Source\LinqToDB.Templates\*.ttinclude"                   target="content\LinqToDB.Templates"                                       exclude="**\LinqToDB.*.ttinclude" />
+		<file src="..\..\Source\LinqToDB.Templates\LinqToDB.Tools.ttinclude"      target="content\LinqToDB.Templates\LinqToDB.Tools.ttinclude"                                                />
+		<file src="..\..\Source\LinqToDB.Templates\*.SQLite.ttinclude"            target="content\LinqToDB.Templates"                                                                         />
 	</files>
 </package>

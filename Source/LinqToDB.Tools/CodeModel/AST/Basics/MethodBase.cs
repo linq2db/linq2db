@@ -21,7 +21,7 @@ namespace LinqToDB.CodeModel
 			Attributes  = attributes;
 			Body        = body;
 			XmlDoc      = xmlDoc;
-			_parameters = new (parameters ?? Array<CodeParameter>.Empty);
+			_parameters = new (parameters ?? []);
 		}
 
 		/// <summary>

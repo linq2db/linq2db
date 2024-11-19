@@ -10,9 +10,7 @@ namespace LinqToDB.Metadata
 	/// This class is the base class for exceptions that may occur during
 	/// execution of the namespace members.
 	/// </remarks>
-#if !NET8_0_OR_GREATER
 	[Serializable]
-#endif
 	public class MetadataException : Exception
 	{
 		/// <summary>
@@ -28,7 +26,7 @@ namespace LinqToDB.Metadata
 		}
 
 		/// <summary>
-		/// Initializes a new instance of the <see cref="MetadataException"/> class 
+		/// Initializes a new instance of the <see cref="MetadataException"/> class
 		/// with the specified error message.
 		/// </summary>
 		/// <param name="message">The message to display to the client when the
@@ -40,7 +38,7 @@ namespace LinqToDB.Metadata
 		}
 
 		/// <summary>
-		/// Initializes a new instance of the <see cref="MetadataException"/> class 
+		/// Initializes a new instance of the <see cref="MetadataException"/> class
 		/// with the specified error message and InnerException property.
 		/// </summary>
 		/// <param name="message">The message to display to the client when the
@@ -55,7 +53,7 @@ namespace LinqToDB.Metadata
 		}
 
 		/// <summary>
-		/// Initializes a new instance of the <see cref="MetadataException"/> class 
+		/// Initializes a new instance of the <see cref="MetadataException"/> class
 		/// with the specified InnerException property.
 		/// </summary>
 		/// <param name="innerException">The InnerException, if any, that threw
@@ -65,20 +63,5 @@ namespace LinqToDB.Metadata
 			: base(innerException.Message, innerException)
 		{
 		}
-#if !NET8_0_OR_GREATER
-		/// <summary>
-		/// Initializes a new instance of the <see cref="MetadataException"/> class
-		/// with serialized data.
-		/// </summary>
-		/// <param name="info">The object that holds the serialized object data.</param>
-		/// <param name="context">The contextual information about the source or
-		/// destination.</param>
-		/// <remarks>This constructor is called during deserialization to
-		/// reconstitute the exception object transmitted over a stream.</remarks>
-		protected MetadataException(SerializationInfo info, StreamingContext context)
-			: base(info, context)
-		{
-		}
-#endif
 	}
 }

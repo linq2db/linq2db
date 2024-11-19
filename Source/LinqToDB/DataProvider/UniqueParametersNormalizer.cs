@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 
-using LinqToDB.Common.Internal;
-
 namespace LinqToDB.DataProvider
 {
 	/// <summary>
@@ -44,7 +42,7 @@ namespace LinqToDB.DataProvider
 
 			if (badIdx != -1)
 			{
-#if NETSTANDARD2_1_OR_GREATER || NETCOREAPP3_1_OR_GREATER
+#if NET6_0_OR_GREATER
 				// allocate memory on the stack if possible, and prepopulate it with the original string
 				Span<char> newName = name.Length < 500 ? stackalloc char[name.Length] : name.ToCharArray();
 				if (name.Length < 500)
@@ -68,7 +66,7 @@ namespace LinqToDB.DataProvider
 
 				if (newNameLength > 0)
 				{
-#if NETSTANDARD2_1_OR_GREATER || NETCOREAPP3_1_OR_GREATER
+#if NET6_0_OR_GREATER
 					name = new string(newName.Slice(0, newNameLength));
 #else
 					name = new string(newName, 0, newNameLength);
@@ -83,7 +81,7 @@ namespace LinqToDB.DataProvider
 
 		protected virtual bool IsValidFirstCharacter(char chr)
 		{
-#if NET7_0_OR_GREATER
+#if NET8_0_OR_GREATER
 			return char.IsAsciiLetter(chr);
 #else
 			return chr is >= 'a' and <= 'z'
@@ -93,7 +91,7 @@ namespace LinqToDB.DataProvider
 
 		protected virtual bool IsValidCharacter(char chr)
 		{
-#if NET7_0_OR_GREATER
+#if NET8_0_OR_GREATER
 			return chr == '_' || char.IsAsciiLetterOrDigit(chr);
 #else
 			return chr == '_'
@@ -124,7 +122,7 @@ namespace LinqToDB.DataProvider
 				// if the name is reserved or already in use, generate a unique name for the parameter
 				var cnt = 0;
 				while (IsReserved(name) || _usedParameterNames?.Contains(name) == true)
-					name = $"{originalName}{CounterSeparator}{++cnt}";
+					name = FormattableString.Invariant($"{originalName}{CounterSeparator}{++cnt}");
 
 				// if name is not too long, return it
 				if (name.Length <= MaxLength)

@@ -71,20 +71,23 @@ namespace Tests.UserTests
 				var sp = db.DataProvider.GetSchemaProvider();
 				var s = sp.GetSchema(db);
 				var table = s.Tables.FirstOrDefault(_ => _.TableName!.Equals("ColumnOrderTest", StringComparison.OrdinalIgnoreCase))!;
-				Assert.IsNotNull(table);
+				Assert.That(table, Is.Not.Null);
 
-				// Confirm order of specified fields only
-				Assert.AreEqual("recordid", table.Columns[0].ColumnName.ToLowerInvariant());
-				Assert.AreEqual("effectivestart", table.Columns[1].ColumnName.ToLowerInvariant());
-				Assert.AreEqual("effectiveend", table.Columns[2].ColumnName.ToLowerInvariant());
-				Assert.AreEqual("key", table.Columns[3].ColumnName.ToLowerInvariant());
-				Assert.AreEqual("audit1id", table.Columns[6].ColumnName.ToLowerInvariant());
-				Assert.AreEqual("audit2id", table.Columns[7].ColumnName.ToLowerInvariant());
+				Assert.Multiple(() =>
+				{
+					// Confirm order of specified fields only
+					Assert.That(table.Columns[0].ColumnName.ToLowerInvariant(), Is.EqualTo("recordid"));
+					Assert.That(table.Columns[1].ColumnName.ToLowerInvariant(), Is.EqualTo("effectivestart"));
+					Assert.That(table.Columns[2].ColumnName.ToLowerInvariant(), Is.EqualTo("effectiveend"));
+					Assert.That(table.Columns[3].ColumnName.ToLowerInvariant(), Is.EqualTo("key"));
+					Assert.That(table.Columns[6].ColumnName.ToLowerInvariant(), Is.EqualTo("audit1id"));
+					Assert.That(table.Columns[7].ColumnName.ToLowerInvariant(), Is.EqualTo("audit2id"));
+				});
 
 				// Confirm that unordered fields are in the right range of positions
 				string[] unordered = new[] { "name", "code" };
-				Assert.Contains(table.Columns[4].ColumnName.ToLowerInvariant(), unordered);
-				Assert.Contains(table.Columns[5].ColumnName.ToLowerInvariant(), unordered);
+				Assert.That(unordered, Does.Contain(table.Columns[4].ColumnName.ToLowerInvariant()));
+				Assert.That(unordered, Does.Contain(table.Columns[5].ColumnName.ToLowerInvariant()));
 			}
 		}
 
@@ -117,20 +120,23 @@ namespace Tests.UserTests
 					var sp = db.DataProvider.GetSchemaProvider();
 					var s = sp.GetSchema(db);
 					var table = s.Tables.FirstOrDefault(_ => _.TableName!.Equals(nameof(FluentMapping), StringComparison.OrdinalIgnoreCase))!;
-					Assert.IsNotNull(table);
+					Assert.That(table, Is.Not.Null);
 
-					// Confirm order of specified fields only
-					Assert.AreEqual("recordid", table.Columns[0].ColumnName.ToLowerInvariant());
-					Assert.AreEqual("effectivestart", table.Columns[1].ColumnName.ToLowerInvariant());
-					Assert.AreEqual("effectiveend", table.Columns[2].ColumnName.ToLowerInvariant());
-					Assert.AreEqual("key", table.Columns[3].ColumnName.ToLowerInvariant());
-					Assert.AreEqual("audit1id", table.Columns[6].ColumnName.ToLowerInvariant());
-					Assert.AreEqual("audit2id", table.Columns[7].ColumnName.ToLowerInvariant());
+					Assert.Multiple(() =>
+					{
+						// Confirm order of specified fields only
+						Assert.That(table.Columns[0].ColumnName.ToLowerInvariant(), Is.EqualTo("recordid"));
+						Assert.That(table.Columns[1].ColumnName.ToLowerInvariant(), Is.EqualTo("effectivestart"));
+						Assert.That(table.Columns[2].ColumnName.ToLowerInvariant(), Is.EqualTo("effectiveend"));
+						Assert.That(table.Columns[3].ColumnName.ToLowerInvariant(), Is.EqualTo("key"));
+						Assert.That(table.Columns[6].ColumnName.ToLowerInvariant(), Is.EqualTo("audit1id"));
+						Assert.That(table.Columns[7].ColumnName.ToLowerInvariant(), Is.EqualTo("audit2id"));
+					});
 
 					// Confirm that unordered fields are in the right range of positions
 					string[] unordered = new[] { "unordered1", "unordered2" };
-					Assert.Contains(table.Columns[4].ColumnName.ToLowerInvariant(), unordered);
-					Assert.Contains(table.Columns[5].ColumnName.ToLowerInvariant(), unordered);
+					Assert.That(unordered, Does.Contain(table.Columns[4].ColumnName.ToLowerInvariant()));
+					Assert.That(unordered, Does.Contain(table.Columns[5].ColumnName.ToLowerInvariant()));
 				}
 			}
 		}

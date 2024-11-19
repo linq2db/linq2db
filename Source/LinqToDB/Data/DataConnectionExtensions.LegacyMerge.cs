@@ -5,10 +5,10 @@ using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
 
-using LinqToDB.Common.Internal;
-
 namespace LinqToDB.Data
 {
+	using Common.Internal;
+
 	/// <summary>
 	/// Contains extension methods for <see cref="DataConnection"/> class.
 	/// </summary>
@@ -17,14 +17,11 @@ namespace LinqToDB.Data
 		private static bool MergeWithUpdate<T>(ITable<T> table)
 			where T : class
 		{
-			if (!(table.DataContext is DataConnection dataConnection))
-				throw new ArgumentException("DataContext must be of DataConnection type.");
-
-			return dataConnection
+			return table.DataContext
 				.MappingSchema
-				.GetEntityDescriptor(typeof(T), dataConnection.Options.ConnectionOptions.OnEntityDescriptorCreated)
+				.GetEntityDescriptor(typeof(T), table.DataContext.Options.ConnectionOptions.OnEntityDescriptorCreated)
 				.Columns
-				.Any(c => !c.IsPrimaryKey && !c.IsIdentity && !c.SkipOnUpdate);
+				.Any(c => c is { IsPrimaryKey: false, IsIdentity: false, SkipOnUpdate: false });
 		}
 
 		/// <summary>

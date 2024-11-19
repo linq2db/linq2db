@@ -6,16 +6,15 @@ namespace LinqToDB.Linq.Builder
 	using LinqToDB.Expressions;
 	using SqlQuery;
 
+	[BuildsMethodCall("Truncate")]
 	sealed class TruncateBuilder : MethodCallBuilder
 	{
 		#region TruncateBuilder
 
-		protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
-		{
-			return methodCall.IsQueryable("Truncate");
-		}
+		public static bool CanBuildMethod(MethodCallExpression call, BuildInfo info, ExpressionBuilder builder)
+			=> call.IsQueryable();
 
-		protected override IBuildContext BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
+		protected override BuildSequenceResult BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
 			var sequence = (TableBuilder.TableContext)builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
 
@@ -23,57 +22,38 @@ namespace LinqToDB.Linq.Builder
 			var arg   = methodCall.Arguments[1].Unwrap();
 
 			if (arg.Type == typeof(bool))
-				reset = (bool)arg.EvaluateExpression(builder.DataContext)!;
+				reset = (bool)builder.EvaluateExpression(arg)!;
 
-			sequence.Statement = new SqlTruncateTableStatement { Table = sequence.SqlTable, ResetIdentity = reset };
-
-			return new TruncateContext(buildInfo.Parent, sequence);
+			return BuildSequenceResult.FromContext(new TruncateContext(sequence, new SqlTruncateTableStatement { Table = sequence.SqlTable, ResetIdentity = reset }));
 		}
 
 		#endregion
 
 		#region TruncateContext
 
-		sealed class TruncateContext : SequenceContextBase
+		sealed class TruncateContext : PassThroughContext
 		{
-			public TruncateContext(IBuildContext? parent, IBuildContext sequence)
-				: base(parent, sequence, null)
+			readonly SqlTruncateTableStatement _truncateTableStatement;
+
+			public TruncateContext(IBuildContext sequence, SqlTruncateTableStatement truncateTableStatement)
+				: base(sequence, sequence.SelectQuery)
 			{
+				_truncateTableStatement = truncateTableStatement;
 			}
 
-			public override void BuildQuery<T>(Query<T> query, ParameterExpression queryParameter)
+			public override void SetRunQuery<T>(Query<T> query, Expression expr)
 			{
 				QueryRunner.SetNonQueryQuery(query);
 			}
 
-			public override Expression BuildExpression(Expression? expression, int level, bool enforceServerSide)
+			public override IBuildContext Clone(CloningContext context)
 			{
-				throw new NotImplementedException();
-			}
-
-			public override SqlInfo[] ConvertToSql(Expression? expression, int level, ConvertFlags flags)
-			{
-				throw new NotImplementedException();
-			}
-
-			public override SqlInfo[] ConvertToIndex(Expression? expression, int level, ConvertFlags flags)
-			{
-				throw new NotImplementedException();
-			}
-
-			public override IsExpressionResult IsExpression(Expression? expression, int level, RequestFor requestFlag)
-			{
-				throw new NotImplementedException();
-			}
-
-			public override IBuildContext GetContext(Expression? expression, int level, BuildInfo buildInfo)
-			{
-				throw new NotImplementedException();
+				return new TruncateContext(context.CloneContext(Context), context.CloneElement(_truncateTableStatement));
 			}
 
 			public override SqlStatement GetResultStatement()
 			{
-				return Sequence.GetResultStatement();
+				return _truncateTableStatement;
 			}
 		}
 

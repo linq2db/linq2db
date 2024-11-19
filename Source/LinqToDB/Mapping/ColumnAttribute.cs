@@ -305,10 +305,12 @@ namespace LinqToDB.Mapping
 		/// Custom template for column definition in create table SQL expression, generated using
 		/// <see cref="DataExtensions.CreateTable{T}(IDataContext, string?, string?, string?, string?, string?, DefaultNullable, string?, TableOptions)"/> methods.
 		/// Template accepts following string parameters:
-		/// - {0} - column name;
-		/// - {1} - column type;
-		/// - {2} - NULL specifier;
-		/// - {3} - identity specification.
+		/// <list type="bullet">
+		/// <item>{0} - column name;</item>
+		/// <item>{1} - column type;</item>
+		/// <item>{2} - NULL specifier;</item>
+		/// <item>{3} - identity specification.</item>
+		/// </list>
 		/// </summary>
 		public string? CreateFormat { get; set; }
 
@@ -334,7 +336,7 @@ namespace LinqToDB.Mapping
 
 		public override string GetObjectID()
 		{
-			return $".{Configuration}.{Name}.{MemberName}.{(int)DataType}.{DbType}.{(IsColumn?'1':'0')}.{Storage}.{(IsDiscriminator?'1':'0')}.{(SkipOnEntityFetch?'1':'0')}.{_skipOnInsert}.{_skipOnUpdate}.{_isIdentity}.{_isPrimaryKey}.{PrimaryKeyOrder}.{_canBeNull}.{_length}.{_precision}.{_scale}.{CreateFormat}.{_order}.";
+			return FormattableString.Invariant($".{Configuration}.{Name}.{MemberName}.{(int)DataType}.{DbType}.{(IsColumn?'1':'0')}.{Storage}.{(IsDiscriminator?'1':'0')}.{(SkipOnEntityFetch?'1':'0')}.{_skipOnInsert}.{_skipOnUpdate}.{_isIdentity}.{_isPrimaryKey}.{PrimaryKeyOrder}.{_canBeNull}.{_length}.{_precision}.{_scale}.{CreateFormat}.{_order}.");
 		}
 	}
 }

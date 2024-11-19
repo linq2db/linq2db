@@ -58,47 +58,50 @@ namespace Tests.Linq
 			};
 
 			var cnt = db.Insert(record);
-			if (!skipCnt) Assert.AreEqual(1, cnt);
+			if (!skipCnt) Assert.That(cnt, Is.EqualTo(1));
 			AssertData(record);
 
 			record.Value = "value 1";
 			cnt = db.UpdateOptimistic(record);
-			if (!skipCnt) Assert.AreEqual(1, cnt);
+			if (!skipCnt) Assert.That(cnt, Is.EqualTo(1));
 			record.Stamp++;
 			AssertData(record);
 
 			record.Value = "value 2";
 			cnt = db.UpdateOptimistic(record);
-			if (!skipCnt) Assert.AreEqual(1, cnt);
+			if (!skipCnt) Assert.That(cnt, Is.EqualTo(1));
 			record.Stamp++;
 			AssertData(record);
 
 			record.Stamp--;
 			record.Value = "value 3";
 			cnt = db.UpdateOptimistic(record);
-			Assert.AreEqual(0, cnt);
+			Assert.That(cnt, Is.EqualTo(0));
 			record.Stamp++;
 			record.Value = "value 2";
 			AssertData(record);
 			record.Stamp--;
 
 			cnt = db.DeleteOptimistic(record);
-			Assert.AreEqual(0, cnt);
+			Assert.That(cnt, Is.EqualTo(0));
 			record.Stamp++;
 			AssertData(record);
 
 			cnt = db.DeleteOptimistic(record);
-			if (!skipCnt) Assert.AreEqual(1, cnt);
-			Assert.AreEqual(0, t.ToArray().Length);
+			if (!skipCnt) Assert.That(cnt, Is.EqualTo(1));
+			Assert.That(t.ToArray(), Is.Empty);
 
 			void AssertData(ConcurrencyTable<int> record)
 			{
 				var data = t.ToArray();
 
-				Assert.AreEqual(1, data.Length);
-				Assert.AreEqual(record.Id, data[0].Id);
-				Assert.AreEqual(record.Value, data[0].Value);
-				Assert.AreEqual(record.Stamp, data[0].Stamp);
+				Assert.That(data, Has.Length.EqualTo(1));
+				Assert.Multiple(() =>
+				{
+					Assert.That(data[0].Id, Is.EqualTo(record.Id));
+					Assert.That(data[0].Value, Is.EqualTo(record.Value));
+					Assert.That(data[0].Stamp, Is.EqualTo(record.Stamp));
+				});
 			}
 		}
 
@@ -126,47 +129,50 @@ namespace Tests.Linq
 			};
 
 			var cnt = await db.InsertAsync(record);
-			if (!skipCnt) Assert.AreEqual(1, cnt);
+			if (!skipCnt) Assert.That(cnt, Is.EqualTo(1));
 			AssertData(record);
 
 			record.Value = "value 1";
 			cnt = await db.UpdateOptimisticAsync(record);
-			if (!skipCnt) Assert.AreEqual(1, cnt);
+			if (!skipCnt) Assert.That(cnt, Is.EqualTo(1));
 			record.Stamp++;
 			AssertData(record);
 
 			record.Value = "value 2";
 			cnt = await db.UpdateOptimisticAsync(record);
-			if (!skipCnt) Assert.AreEqual(1, cnt);
+			if (!skipCnt) Assert.That(cnt, Is.EqualTo(1));
 			record.Stamp++;
 			AssertData(record);
 
 			record.Stamp--;
 			record.Value = "value 3";
 			cnt = await db.UpdateOptimisticAsync(record);
-			Assert.AreEqual(0, cnt);
+			Assert.That(cnt, Is.EqualTo(0));
 			record.Stamp++;
 			record.Value = "value 2";
 			AssertData(record);
 			record.Stamp--;
 
 			cnt = await db.DeleteOptimisticAsync(record);
-			Assert.AreEqual(0, cnt);
+			Assert.That(cnt, Is.EqualTo(0));
 			record.Stamp++;
 			AssertData(record);
 
 			cnt = await db.DeleteOptimisticAsync(record);
-			if (!skipCnt) Assert.AreEqual(1, cnt);
-			Assert.AreEqual(0, t.ToArray().Length);
+			if (!skipCnt) Assert.That(cnt, Is.EqualTo(1));
+			Assert.That(t.ToArray(), Is.Empty);
 
 			void AssertData(ConcurrencyTable<int> record)
 			{
 				var data = t.ToArray();
 
-				Assert.AreEqual(1, data.Length);
-				Assert.AreEqual(record.Id, data[0].Id);
-				Assert.AreEqual(record.Value, data[0].Value);
-				Assert.AreEqual(record.Stamp, data[0].Stamp);
+				Assert.That(data, Has.Length.EqualTo(1));
+				Assert.Multiple(() =>
+				{
+					Assert.That(data[0].Id, Is.EqualTo(record.Id));
+					Assert.That(data[0].Value, Is.EqualTo(record.Value));
+					Assert.That(data[0].Stamp, Is.EqualTo(record.Stamp));
+				});
 			}
 		}
 
@@ -194,37 +200,40 @@ namespace Tests.Linq
 			};
 
 			var cnt = db.Insert(record);
-			if (!skipCnt) Assert.AreEqual(1, cnt);
+			if (!skipCnt) Assert.That(cnt, Is.EqualTo(1));
 			AssertData(record);
 
 			record.Value = "value 1";
 			cnt = t.Where(r => r.Id == 2).UpdateOptimistic(record);
-			if (!skipCnt) Assert.AreEqual(0, cnt);
+			if (!skipCnt) Assert.That(cnt, Is.EqualTo(0));
 			record.Value = "initial";
 			AssertData(record);
 
 			record.Value = "value 2";
 			cnt = t.Where(r => r.Id == 1).UpdateOptimistic(record);
-			if (!skipCnt) Assert.AreEqual(1, cnt);
+			if (!skipCnt) Assert.That(cnt, Is.EqualTo(1));
 			record.Stamp++;
 			AssertData(record);
 
 			cnt = t.Where(r => r.Id == 2).DeleteOptimistic(record);
-			if (!skipCnt) Assert.AreEqual(0, cnt);
+			if (!skipCnt) Assert.That(cnt, Is.EqualTo(0));
 			AssertData(record);
 
 			cnt = t.Where(r => r.Id == 1).DeleteOptimistic(record);
-			if (!skipCnt) Assert.AreEqual(1, cnt);
-			Assert.AreEqual(0, t.ToArray().Length);
+			if (!skipCnt) Assert.That(cnt, Is.EqualTo(1));
+			Assert.That(t.ToArray(), Is.Empty);
 
 			void AssertData(ConcurrencyTable<int> record)
 			{
 				var data = t.ToArray();
 
-				Assert.AreEqual(1, data.Length);
-				Assert.AreEqual(record.Id, data[0].Id);
-				Assert.AreEqual(record.Value, data[0].Value);
-				Assert.AreEqual(record.Stamp, data[0].Stamp);
+				Assert.That(data, Has.Length.EqualTo(1));
+				Assert.Multiple(() =>
+				{
+					Assert.That(data[0].Id, Is.EqualTo(record.Id));
+					Assert.That(data[0].Value, Is.EqualTo(record.Value));
+					Assert.That(data[0].Stamp, Is.EqualTo(record.Stamp));
+				});
 			}
 		}
 
@@ -252,37 +261,40 @@ namespace Tests.Linq
 			};
 
 			var cnt = await db.InsertAsync(record);
-			if (!skipCnt) Assert.AreEqual(1, cnt);
+			if (!skipCnt) Assert.That(cnt, Is.EqualTo(1));
 			AssertData(record);
 
 			record.Value = "value 1";
 			cnt = await t.Where(r => r.Id == 2).UpdateOptimisticAsync(record);
-			if (!skipCnt) Assert.AreEqual(0, cnt);
+			if (!skipCnt) Assert.That(cnt, Is.EqualTo(0));
 			record.Value = "initial";
 			AssertData(record);
 
 			record.Value = "value 2";
 			cnt = await t.Where(r => r.Id == 1).UpdateOptimisticAsync(record);
-			if (!skipCnt) Assert.AreEqual(1, cnt);
+			if (!skipCnt) Assert.That(cnt, Is.EqualTo(1));
 			record.Stamp++;
 			AssertData(record);
 
 			cnt = await t.Where(r => r.Id == 2).DeleteOptimisticAsync(record);
-			if (!skipCnt) Assert.AreEqual(0, cnt);
+			if (!skipCnt) Assert.That(cnt, Is.EqualTo(0));
 			AssertData(record);
 
 			cnt = await t.Where(r => r.Id == 1).DeleteOptimisticAsync(record);
-			if (!skipCnt) Assert.AreEqual(1, cnt);
-			Assert.AreEqual(0, t.ToArray().Length);
+			if (!skipCnt) Assert.That(cnt, Is.EqualTo(1));
+			Assert.That(t.ToArray(), Is.Empty);
 
 			void AssertData(ConcurrencyTable<int> record)
 			{
 				var data = t.ToArray();
 
-				Assert.AreEqual(1, data.Length);
-				Assert.AreEqual(record.Id, data[0].Id);
-				Assert.AreEqual(record.Value, data[0].Value);
-				Assert.AreEqual(record.Stamp, data[0].Stamp);
+				Assert.That(data, Has.Length.EqualTo(1));
+				Assert.Multiple(() =>
+				{
+					Assert.That(data[0].Id, Is.EqualTo(record.Id));
+					Assert.That(data[0].Value, Is.EqualTo(record.Value));
+					Assert.That(data[0].Stamp, Is.EqualTo(record.Stamp));
+				});
 			}
 		}
 
@@ -311,50 +323,53 @@ namespace Tests.Linq
 			};
 
 			var cnt = db.Insert(record);
-			if (!skipCnt) Assert.AreEqual(1, cnt);
+			if (!skipCnt) Assert.That(cnt, Is.EqualTo(1));
 			AssertData(record, true);
 
 			record.Value = "value 1";
 			cnt = db.UpdateOptimistic(record);
-			if (!skipCnt) Assert.AreEqual(1, cnt);
+			if (!skipCnt) Assert.That(cnt, Is.EqualTo(1));
 			AssertData(record);
 
 			record.Value = "value 2";
 			cnt = db.UpdateOptimistic(record);
-			if (!skipCnt) Assert.AreEqual(1, cnt);
+			if (!skipCnt) Assert.That(cnt, Is.EqualTo(1));
 			AssertData(record);
 
 			var dbStamp = record.Stamp;
 			record.Value = "value 3";
 			record.Stamp = Guid.NewGuid();
 			cnt = db.UpdateOptimistic(record);
-			Assert.AreEqual(0, cnt);
+			Assert.That(cnt, Is.EqualTo(0));
 			record.Stamp = dbStamp;
 			record.Value = "value 2";
 			AssertData(record, true);
 			record.Stamp = Guid.NewGuid();
 
 			cnt = db.DeleteOptimistic(record);
-			Assert.AreEqual(0, cnt);
+			Assert.That(cnt, Is.EqualTo(0));
 			record.Stamp = dbStamp;
 			AssertData(record, true);
 
 			cnt = db.DeleteOptimistic(record);
-			if (!skipCnt) Assert.AreEqual(1, cnt);
-			Assert.AreEqual(0, t.ToArray().Length);
+			if (!skipCnt) Assert.That(cnt, Is.EqualTo(1));
+			Assert.That(t.ToArray(), Is.Empty);
 
 			void AssertData(ConcurrencyTable<Guid> record, bool equals = false)
 			{
 				var data = t.ToArray();
 
-				Assert.AreEqual(1, data.Length);
-				Assert.AreEqual(record.Id, data[0].Id);
-				Assert.AreEqual(record.Value, data[0].Value);
+				Assert.That(data, Has.Length.EqualTo(1));
+				Assert.Multiple(() =>
+				{
+					Assert.That(data[0].Id, Is.EqualTo(record.Id));
+					Assert.That(data[0].Value, Is.EqualTo(record.Value));
+				});
 
 				if (equals)
-					Assert.AreEqual(record.Stamp, data[0].Stamp);
+					Assert.That(data[0].Stamp, Is.EqualTo(record.Stamp));
 				else
-					Assert.AreNotEqual(record.Stamp, data[0].Stamp);
+					Assert.That(data[0].Stamp, Is.Not.EqualTo(record.Stamp));
 
 				record.Stamp = data[0].Stamp;
 			}
@@ -386,50 +401,53 @@ namespace Tests.Linq
 			};
 
 			var cnt = db.Insert(record);
-			if (!skipCnt) Assert.AreEqual(1, cnt);
+			if (!skipCnt) Assert.That(cnt, Is.EqualTo(1));
 			AssertData(record, true);
 
 			record.Value = "value 1";
 			cnt = db.UpdateOptimistic(record);
-			if (!skipCnt) Assert.AreEqual(1, cnt);
+			if (!skipCnt) Assert.That(cnt, Is.EqualTo(1));
 			AssertData(record);
 
 			record.Value = "value 2";
 			cnt = db.UpdateOptimistic(record);
-			if (!skipCnt) Assert.AreEqual(1, cnt);
+			if (!skipCnt) Assert.That(cnt, Is.EqualTo(1));
 			AssertData(record);
 
 			var dbStamp = record.Stamp;
 			record.Value = "value 3";
 			record.Stamp = Guid.NewGuid().ToString();
 			cnt = db.UpdateOptimistic(record);
-			Assert.AreEqual(0, cnt);
+			Assert.That(cnt, Is.EqualTo(0));
 			record.Stamp = dbStamp;
 			record.Value = "value 2";
 			AssertData(record, true);
 			record.Stamp = Guid.NewGuid().ToString();
 
 			cnt = db.DeleteOptimistic(record);
-			Assert.AreEqual(0, cnt);
+			Assert.That(cnt, Is.EqualTo(0));
 			record.Stamp = dbStamp;
 			AssertData(record, true);
 
 			cnt = db.DeleteOptimistic(record);
-			if (!skipCnt) Assert.AreEqual(1, cnt);
-			Assert.AreEqual(0, t.ToArray().Length);
+			if (!skipCnt) Assert.That(cnt, Is.EqualTo(1));
+			Assert.That(t.ToArray(), Is.Empty);
 
 			void AssertData(ConcurrencyTable<string> record, bool equals = false)
 			{
 				var data = t.ToArray();
 
-				Assert.AreEqual(1, data.Length);
-				Assert.AreEqual(record.Id, data[0].Id);
-				Assert.AreEqual(record.Value, data[0].Value);
+				Assert.That(data, Has.Length.EqualTo(1));
+				Assert.Multiple(() =>
+				{
+					Assert.That(data[0].Id, Is.EqualTo(record.Id));
+					Assert.That(data[0].Value, Is.EqualTo(record.Value));
+				});
 
 				if (equals)
-					Assert.AreEqual(record.Stamp, data[0].Stamp);
+					Assert.That(data[0].Stamp, Is.EqualTo(record.Stamp));
 				else
-					Assert.AreNotEqual(record.Stamp, data[0].Stamp);
+					Assert.That(data[0].Stamp, Is.Not.EqualTo(record.Stamp));
 
 				record.Stamp = data[0].Stamp;
 			}
@@ -448,6 +466,7 @@ namespace Tests.Linq
 				.Entity<ConcurrencyTable<byte[]>>()
 					.HasTableName("ConcurrencyGuidBinary")
 					.Property(e => e.Stamp)
+						.HasDataType(DataType.Binary)
 						.HasLength(16)
 						.HasAttribute(new OptimisticLockPropertyAttribute(VersionBehavior.Guid))
 				.Build();
@@ -459,55 +478,58 @@ namespace Tests.Linq
 			var record = new ConcurrencyTable<byte[]>()
 			{
 				Id    = 1,
-				Stamp = Guid.NewGuid().ToByteArray(),
+				Stamp = TestData.Guid1.ToByteArray(),
 				Value = "initial"
 			};
 
 			var cnt = db.Insert(record);
-			if (!skipCnt) Assert.AreEqual(1, cnt);
+			if (!skipCnt) Assert.That(cnt, Is.EqualTo(1));
 			AssertData(record, true);
 
 			record.Value = "value 1";
 			cnt = db.UpdateOptimistic(record);
-			if (!skipCnt) Assert.AreEqual(1, cnt);
+			if (!skipCnt) Assert.That(cnt, Is.EqualTo(1));
 			AssertData(record);
 
 			record.Value = "value 2";
 			cnt = db.UpdateOptimistic(record);
-			if (!skipCnt) Assert.AreEqual(1, cnt);
+			if (!skipCnt) Assert.That(cnt, Is.EqualTo(1));
 			AssertData(record);
 
 			var dbStamp = record.Stamp;
 			record.Value = "value 3";
-			record.Stamp = Guid.NewGuid().ToByteArray();
+			record.Stamp = TestData.Guid2.ToByteArray();
 			cnt = db.UpdateOptimistic(record);
-			Assert.AreEqual(0, cnt);
+			Assert.That(cnt, Is.EqualTo(0));
 			record.Stamp = dbStamp;
 			record.Value = "value 2";
 			AssertData(record, true);
-			record.Stamp = Guid.NewGuid().ToByteArray();
+			record.Stamp = TestData.Guid3.ToByteArray();
 
 			cnt = db.DeleteOptimistic(record);
-			Assert.AreEqual(0, cnt);
+			Assert.That(cnt, Is.EqualTo(0));
 			record.Stamp = dbStamp;
 			AssertData(record, true);
 
 			cnt = db.DeleteOptimistic(record);
-			if (!skipCnt) Assert.AreEqual(1, cnt);
-			Assert.AreEqual(0, t.ToArray().Length);
+			if (!skipCnt) Assert.That(cnt, Is.EqualTo(1));
+			Assert.That(t.ToArray(), Is.Empty);
 
 			void AssertData(ConcurrencyTable<byte[]> record, bool equals = false)
 			{
 				var data = t.ToArray();
 
-				Assert.AreEqual(1, data.Length);
-				Assert.AreEqual(record.Id, data[0].Id);
-				Assert.AreEqual(record.Value, data[0].Value);
+				Assert.That(data, Has.Length.EqualTo(1));
+				Assert.Multiple(() =>
+				{
+					Assert.That(data[0].Id, Is.EqualTo(record.Id));
+					Assert.That(data[0].Value, Is.EqualTo(record.Value));
+				});
 
 				if (equals)
-					Assert.AreEqual(record.Stamp, data[0].Stamp);
+					Assert.That(data[0].Stamp, Is.EqualTo(record.Stamp));
 				else
-					Assert.AreNotEqual(record.Stamp, data[0].Stamp);
+					Assert.That(data[0].Stamp, Is.Not.EqualTo(record.Stamp));
 
 				record.Stamp = data[0].Stamp;
 			}
@@ -538,50 +560,53 @@ namespace Tests.Linq
 			};
 
 			var cnt = await db.InsertAsync(record);
-			if (!skipCnt) Assert.AreEqual(1, cnt);
+			if (!skipCnt) Assert.That(cnt, Is.EqualTo(1));
 			AssertData(record, true);
 
 			record.Value = "value 1";
 			cnt = await db.UpdateOptimisticAsync(record);
-			if (!skipCnt) Assert.AreEqual(1, cnt);
+			if (!skipCnt) Assert.That(cnt, Is.EqualTo(1));
 			AssertData(record);
 
 			record.Value = "value 2";
 			cnt = await db.UpdateOptimisticAsync(record);
-			if (!skipCnt) Assert.AreEqual(1, cnt);
+			if (!skipCnt) Assert.That(cnt, Is.EqualTo(1));
 			AssertData(record);
 
 			var dbStamp = record.Stamp;
 			record.Value = "value 3";
 			record.Stamp = Guid.NewGuid();
 			cnt = await db.UpdateOptimisticAsync(record);
-			Assert.AreEqual(0, cnt);
+			Assert.That(cnt, Is.EqualTo(0));
 			record.Stamp = dbStamp;
 			record.Value = "value 2";
 			AssertData(record, true);
 			record.Stamp = Guid.NewGuid();
 
 			cnt = await db.DeleteOptimisticAsync(record);
-			Assert.AreEqual(0, cnt);
+			Assert.That(cnt, Is.EqualTo(0));
 			record.Stamp = dbStamp;
 			AssertData(record, true);
 
 			cnt = await db.DeleteOptimisticAsync(record);
-			if (!skipCnt) Assert.AreEqual(1, cnt);
-			Assert.AreEqual(0, t.ToArray().Length);
+			if (!skipCnt) Assert.That(cnt, Is.EqualTo(1));
+			Assert.That(t.ToArray(), Is.Empty);
 
 			void AssertData(ConcurrencyTable<Guid> record, bool equals = false)
 			{
 				var data = t.ToArray();
 
-				Assert.AreEqual(1, data.Length);
-				Assert.AreEqual(record.Id, data[0].Id);
-				Assert.AreEqual(record.Value, data[0].Value);
+				Assert.That(data, Has.Length.EqualTo(1));
+				Assert.Multiple(() =>
+				{
+					Assert.That(data[0].Id, Is.EqualTo(record.Id));
+					Assert.That(data[0].Value, Is.EqualTo(record.Value));
+				});
 
 				if (equals)
-					Assert.AreEqual(record.Stamp, data[0].Stamp);
+					Assert.That(data[0].Stamp, Is.EqualTo(record.Stamp));
 				else
-					Assert.AreNotEqual(record.Stamp, data[0].Stamp);
+					Assert.That(data[0].Stamp, Is.Not.EqualTo(record.Stamp));
 
 				record.Stamp = data[0].Stamp;
 			}
@@ -612,50 +637,53 @@ namespace Tests.Linq
 			};
 
 			var cnt = db.Insert(record);
-			if (!skipCnt) Assert.AreEqual(1, cnt);
+			if (!skipCnt) Assert.That(cnt, Is.EqualTo(1));
 			AssertData(record, true);
 
 			record.Value = "value 1";
 			cnt = db.UpdateOptimistic(record);
-			if (!skipCnt) Assert.AreEqual(1, cnt);
+			if (!skipCnt) Assert.That(cnt, Is.EqualTo(1));
 			AssertData(record);
 
 			record.Value = "value 2";
 			cnt = db.UpdateOptimistic(record);
-			if (!skipCnt) Assert.AreEqual(1, cnt);
+			if (!skipCnt) Assert.That(cnt, Is.EqualTo(1));
 			AssertData(record);
 
 			var dbStamp = record.Stamp;
 			record.Value = "value 3";
 			record.Stamp = "unknown-value";
 			cnt = db.UpdateOptimistic(record);
-			Assert.AreEqual(0, cnt);
+			Assert.That(cnt, Is.EqualTo(0));
 			record.Stamp = dbStamp;
 			record.Value = "value 2";
 			AssertData(record, true);
 			record.Stamp = "unknown-value";
 
 			cnt = db.DeleteOptimistic(record);
-			Assert.AreEqual(0, cnt);
+			Assert.That(cnt, Is.EqualTo(0));
 			record.Stamp = dbStamp;
 			AssertData(record, true);
 
 			cnt = db.DeleteOptimistic(record);
-			if (!skipCnt) Assert.AreEqual(1, cnt);
-			Assert.AreEqual(0, t.ToArray().Length);
+			if (!skipCnt) Assert.That(cnt, Is.EqualTo(1));
+			Assert.That(t.ToArray(), Is.Empty);
 
 			void AssertData(ConcurrencyTable<string> record, bool equals = false)
 			{
 				var data = t.ToArray();
 
-				Assert.AreEqual(1, data.Length);
-				Assert.AreEqual(record.Id, data[0].Id);
-				Assert.AreEqual(record.Value, data[0].Value);
+				Assert.That(data, Has.Length.EqualTo(1));
+				Assert.Multiple(() =>
+				{
+					Assert.That(data[0].Id, Is.EqualTo(record.Id));
+					Assert.That(data[0].Value, Is.EqualTo(record.Value));
+				});
 
 				if (equals)
-					Assert.AreEqual(record.Stamp, data[0].Stamp);
+					Assert.That(data[0].Stamp, Is.EqualTo(record.Stamp));
 				else
-					Assert.AreNotEqual(record.Stamp, data[0].Stamp);
+					Assert.That(data[0].Stamp, Is.Not.EqualTo(record.Stamp));
 
 				record.Stamp = data[0].Stamp;
 			}
@@ -686,50 +714,53 @@ namespace Tests.Linq
 			};
 
 			var cnt = await db.InsertAsync(record);
-			if (!skipCnt) Assert.AreEqual(1, cnt);
+			if (!skipCnt) Assert.That(cnt, Is.EqualTo(1));
 			AssertData(record, true);
 
 			record.Value = "value 1";
 			cnt = await db.UpdateOptimisticAsync(record);
-			if (!skipCnt) Assert.AreEqual(1, cnt);
+			if (!skipCnt) Assert.That(cnt, Is.EqualTo(1));
 			AssertData(record);
 
 			record.Value = "value 2";
 			cnt = await db.UpdateOptimisticAsync(record);
-			if (!skipCnt) Assert.AreEqual(1, cnt);
+			if (!skipCnt) Assert.That(cnt, Is.EqualTo(1));
 			AssertData(record);
 
 			var dbStamp = record.Stamp;
 			record.Value = "value 3";
 			record.Stamp = "unknown-value";
 			cnt = await db.UpdateOptimisticAsync(record);
-			Assert.AreEqual(0, cnt);
+			Assert.That(cnt, Is.EqualTo(0));
 			record.Stamp = dbStamp;
 			record.Value = "value 2";
 			AssertData(record, true);
 			record.Stamp = "unknown-value";
 
 			cnt = await db.DeleteOptimisticAsync(record);
-			Assert.AreEqual(0, cnt);
+			Assert.That(cnt, Is.EqualTo(0));
 			record.Stamp = dbStamp;
 			AssertData(record, true);
 
 			cnt = await db.DeleteOptimisticAsync(record);
-			if (!skipCnt) Assert.AreEqual(1, cnt);
-			Assert.AreEqual(0, t.ToArray().Length);
+			if (!skipCnt) Assert.That(cnt, Is.EqualTo(1));
+			Assert.That(t.ToArray(), Is.Empty);
 
 			void AssertData(ConcurrencyTable<string> record, bool equals = false)
 			{
 				var data = t.ToArray();
 
-				Assert.AreEqual(1, data.Length);
-				Assert.AreEqual(record.Id, data[0].Id);
-				Assert.AreEqual(record.Value, data[0].Value);
+				Assert.That(data, Has.Length.EqualTo(1));
+				Assert.Multiple(() =>
+				{
+					Assert.That(data[0].Id, Is.EqualTo(record.Id));
+					Assert.That(data[0].Value, Is.EqualTo(record.Value));
+				});
 
 				if (equals)
-					Assert.AreEqual(record.Stamp, data[0].Stamp);
+					Assert.That(data[0].Stamp, Is.EqualTo(record.Stamp));
 				else
-					Assert.AreNotEqual(record.Stamp, data[0].Stamp);
+					Assert.That(data[0].Stamp, Is.Not.EqualTo(record.Stamp));
 
 				record.Stamp = data[0].Stamp;
 			}
@@ -761,50 +792,53 @@ namespace Tests.Linq
 			};
 
 			var cnt = db.Insert(record);
-			if (!skipCnt) Assert.AreEqual(1, cnt);
+			if (!skipCnt) Assert.That(cnt, Is.EqualTo(1));
 			AssertData(record);
 
 			record.Value = "value 1";
 			cnt = db.UpdateOptimistic(record);
-			if (!skipCnt) Assert.AreEqual(1, cnt);
+			if (!skipCnt) Assert.That(cnt, Is.EqualTo(1));
 			AssertData(record);
 
 			record.Value = "value 2";
 			cnt = db.UpdateOptimistic(record);
-			if (!skipCnt) Assert.AreEqual(1, cnt);
+			if (!skipCnt) Assert.That(cnt, Is.EqualTo(1));
 			AssertData(record);
 
 			var dbStamp = record.Stamp.ToArray();
 			record.Value = "value 3";
 			record.Stamp[0] = (byte)(record.Stamp[0] + 1);
 			cnt = db.UpdateOptimistic(record);
-			Assert.AreEqual(0, cnt);
+			Assert.That(cnt, Is.EqualTo(0));
 			record.Stamp = dbStamp;
 			record.Value = "value 2";
 			AssertData(record, true);
 			record.Stamp[0] = (byte)(record.Stamp[0] + 1);
 
 			cnt = db.DeleteOptimistic(record);
-			Assert.AreEqual(0, cnt);
+			Assert.That(cnt, Is.EqualTo(0));
 			record.Stamp = dbStamp;
 			AssertData(record, true);
 
 			cnt = db.DeleteOptimistic(record);
-			if (!skipCnt) Assert.AreEqual(1, cnt);
-			Assert.AreEqual(0, t.ToArray().Length);
+			if (!skipCnt) Assert.That(cnt, Is.EqualTo(1));
+			Assert.That(t.ToArray(), Is.Empty);
 
 			void AssertData(ConcurrencyTable<byte[]> record, bool equals = false)
 			{
 				var data = t.ToArray();
 
-				Assert.AreEqual(1, data.Length);
-				Assert.AreEqual(record.Id, data[0].Id);
-				Assert.AreEqual(record.Value, data[0].Value);
+				Assert.That(data, Has.Length.EqualTo(1));
+				Assert.Multiple(() =>
+				{
+					Assert.That(data[0].Id, Is.EqualTo(record.Id));
+					Assert.That(data[0].Value, Is.EqualTo(record.Value));
+				});
 
 				if (equals)
-					Assert.AreEqual(record.Stamp, data[0].Stamp);
+					Assert.That(data[0].Stamp, Is.EqualTo(record.Stamp));
 				else
-					Assert.AreNotEqual(record.Stamp, data[0].Stamp);
+					Assert.That(data[0].Stamp, Is.Not.EqualTo(record.Stamp));
 
 				record.Stamp = data[0].Stamp;
 			}
@@ -836,50 +870,53 @@ namespace Tests.Linq
 			};
 
 			var cnt = await db.InsertAsync(record);
-			if (!skipCnt) Assert.AreEqual(1, cnt);
+			if (!skipCnt) Assert.That(cnt, Is.EqualTo(1));
 			AssertData(record);
 
 			record.Value = "value 1";
 			cnt = await db.UpdateOptimisticAsync(record);
-			if (!skipCnt) Assert.AreEqual(1, cnt);
+			if (!skipCnt) Assert.That(cnt, Is.EqualTo(1));
 			AssertData(record);
 
 			record.Value = "value 2";
 			cnt = await db.UpdateOptimisticAsync(record);
-			if (!skipCnt) Assert.AreEqual(1, cnt);
+			if (!skipCnt) Assert.That(cnt, Is.EqualTo(1));
 			AssertData(record);
 
 			var dbStamp = record.Stamp.ToArray();
 			record.Value = "value 3";
 			record.Stamp[0] = (byte)(record.Stamp[0] + 1);
 			cnt = await db.UpdateOptimisticAsync(record);
-			Assert.AreEqual(0, cnt);
+			Assert.That(cnt, Is.EqualTo(0));
 			record.Stamp = dbStamp;
 			record.Value = "value 2";
 			AssertData(record, true);
 			record.Stamp[0] = (byte)(record.Stamp[0] + 1);
 
 			cnt = await db.DeleteOptimisticAsync(record);
-			Assert.AreEqual(0, cnt);
+			Assert.That(cnt, Is.EqualTo(0));
 			record.Stamp = dbStamp;
 			AssertData(record, true);
 
 			cnt = await db.DeleteOptimisticAsync(record);
-			if (!skipCnt) Assert.AreEqual(1, cnt);
-			Assert.AreEqual(0, t.ToArray().Length);
+			if (!skipCnt) Assert.That(cnt, Is.EqualTo(1));
+			Assert.That(t.ToArray(), Is.Empty);
 
 			void AssertData(ConcurrencyTable<byte[]> record, bool equals = false)
 			{
 				var data = t.ToArray();
 
-				Assert.AreEqual(1, data.Length);
-				Assert.AreEqual(record.Id, data[0].Id);
-				Assert.AreEqual(record.Value, data[0].Value);
+				Assert.That(data, Has.Length.EqualTo(1));
+				Assert.Multiple(() =>
+				{
+					Assert.That(data[0].Id, Is.EqualTo(record.Id));
+					Assert.That(data[0].Value, Is.EqualTo(record.Value));
+				});
 
 				if (equals)
-					Assert.AreEqual(record.Stamp, data[0].Stamp);
+					Assert.That(data[0].Stamp, Is.EqualTo(record.Stamp));
 				else
-					Assert.AreNotEqual(record.Stamp, data[0].Stamp);
+					Assert.That(data[0].Stamp, Is.Not.EqualTo(record.Stamp));
 
 				record.Stamp = data[0].Stamp;
 			}
@@ -911,50 +948,53 @@ namespace Tests.Linq
 			};
 
 			var cnt = db.Insert(record);
-			if (!skipCnt) Assert.AreEqual(1, cnt);
+			if (!skipCnt) Assert.That(cnt, Is.EqualTo(1));
 			AssertData(record);
 
 			record.Value = "value 1";
 			cnt = t.WhereKeyOptimistic(record).Update(r => new ConcurrencyTable<byte[]>() { Value = record.Value });
-			if (!skipCnt) Assert.AreEqual(1, cnt);
+			if (!skipCnt) Assert.That(cnt, Is.EqualTo(1));
 			AssertData(record);
 
 			record.Value = "value 2";
 			cnt = t.WhereKeyOptimistic(record).Update(r => new ConcurrencyTable<byte[]>() { Value = record.Value });
-			if (!skipCnt) Assert.AreEqual(1, cnt);
+			if (!skipCnt) Assert.That(cnt, Is.EqualTo(1));
 			AssertData(record);
 
 			var dbStamp = record.Stamp.ToArray();
 			record.Value = "value 3";
 			record.Stamp[0] = (byte)(record.Stamp[0] + 1);
 			cnt = t.WhereKeyOptimistic(record).Update(r => new ConcurrencyTable<byte[]>() { Value = record.Value });
-			Assert.AreEqual(0, cnt);
+			Assert.That(cnt, Is.EqualTo(0));
 			record.Stamp = dbStamp;
 			record.Value = "value 2";
 			AssertData(record, true);
 			record.Stamp[0] = (byte)(record.Stamp[0] + 1);
 
 			cnt = t.WhereKeyOptimistic(record).Delete();
-			Assert.AreEqual(0, cnt);
+			Assert.That(cnt, Is.EqualTo(0));
 			record.Stamp = dbStamp;
 			AssertData(record, true);
 
 			cnt = t.WhereKeyOptimistic(record).Delete();
-			if (!skipCnt) Assert.AreEqual(1, cnt);
-			Assert.AreEqual(0, t.ToArray().Length);
+			if (!skipCnt) Assert.That(cnt, Is.EqualTo(1));
+			Assert.That(t.ToArray(), Is.Empty);
 
 			void AssertData(ConcurrencyTable<byte[]> record, bool equals = false)
 			{
 				var data = t.ToArray();
 
-				Assert.AreEqual(1, data.Length);
-				Assert.AreEqual(record.Id, data[0].Id);
-				Assert.AreEqual(record.Value, data[0].Value);
+				Assert.That(data, Has.Length.EqualTo(1));
+				Assert.Multiple(() =>
+				{
+					Assert.That(data[0].Id, Is.EqualTo(record.Id));
+					Assert.That(data[0].Value, Is.EqualTo(record.Value));
+				});
 
 				if (equals)
-					Assert.AreEqual(record.Stamp, data[0].Stamp);
+					Assert.That(data[0].Stamp, Is.EqualTo(record.Stamp));
 				else
-					Assert.AreNotEqual(record.Stamp, data[0].Stamp);
+					Assert.That(data[0].Stamp, Is.Not.EqualTo(record.Stamp));
 
 				record.Stamp = data[0].Stamp;
 			}

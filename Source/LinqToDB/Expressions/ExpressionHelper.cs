@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq.Expressions;
 using System.Reflection;
 
@@ -15,7 +16,7 @@ namespace LinqToDB.Expressions
 
 			if (fi == null)
 				fi = obj.Type.GetField(name, BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.FlattenHierarchy);
-			
+
 			if (fi == null)
 				throw new InvalidOperationException($"Instance field with name {name} not found on type {obj.Type}");
 

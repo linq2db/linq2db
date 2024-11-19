@@ -8,13 +8,11 @@
 using LinqToDB;
 using LinqToDB.Common;
 using LinqToDB.Data;
-using LinqToDB.Expressions;
 using LinqToDB.Mapping;
 using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
-using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -1252,8 +1250,6 @@ namespace Cli.Fluent.SqlServer
 
 		#region Table Functions
 		#region GetParentById
-		private static readonly MethodInfo _getParentById = MemberHelper.MethodOf<TestDataDB>(ctx => ctx.GetParentById(default));
-
 		/// <summary>
 		/// This is &lt;test&gt; table function!
 		/// </summary>
@@ -1262,16 +1258,14 @@ namespace Cli.Fluent.SqlServer
 		/// </param>
 		public IQueryable<Parent> GetParentById(int? id)
 		{
-			return this.GetTable<Parent>(this, _getParentById, id);
+			return this.QueryFromExpression<Parent>(() => GetParentById(id));
 		}
 		#endregion
 
 		#region Issue1921
-		private static readonly MethodInfo _issue1921 = MemberHelper.MethodOf<TestDataDB>(ctx => ctx.Issue1921());
-
 		public IQueryable<Issue1921Result> Issue1921()
 		{
-			return this.GetTable<Issue1921Result>(this, _issue1921);
+			return this.QueryFromExpression<Issue1921Result>(() => Issue1921());
 		}
 
 		public partial class Issue1921Result

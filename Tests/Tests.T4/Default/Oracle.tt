@@ -1,6 +1,6 @@
 ﻿<#@ template language="C#" debug="True" hostSpecific="True" compilerOptions="/langversion:6" #>
 <#@ output extension=".generated.cs"                                                         #>
-<#@ assembly name="$(SolutionDir)Tests\Linq\bin\Debug\net472\Oracle.ManagedDataAccess.dll"   #>
+<#@ assembly name="$(ArtifactsPath)\bin\Tests\Debug\net462\Oracle.ManagedDataAccess.dll"     #>
 <#@ include file="..\..\..\Source\LinqToDB.Templates\LinqToDB.Oracle.ttinclude" once="true"  #>
 <#@ include file="..\Shared.ttinclude"                                          once="true"  #>
 <#

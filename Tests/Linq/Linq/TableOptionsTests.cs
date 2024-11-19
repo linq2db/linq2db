@@ -9,8 +9,6 @@ using LinqToDB.Mapping;
 
 using NUnit.Framework;
 
-using Org.BouncyCastle.Asn1.X509;
-
 namespace Tests.Linq
 {
 	[TestFixture]
@@ -112,7 +110,7 @@ namespace Tests.Linq
 		[Test]
 		public void IsGlobalTemporaryTest([IncludeDataSources(
 			ProviderName.DB2,
-			ProviderName.Firebird,
+			ProviderName.Firebird25,
 			TestProvName.AllOracle,
 			TestProvName.AllSqlServer,
 			TestProvName.AllSybase)] string context,
@@ -148,7 +146,7 @@ namespace Tests.Linq
 			TestProvName.AllSqlServer,
 			TestProvName.AllSybase)] string context)
 		{
-			if (context.IsAnyOf(TestProvName.AllSqlServer) && context.EndsWith(".LinqService"))
+			if (context.IsAnyOf(TestProvName.AllSqlServer) && context.IsRemote())
 				return;
 
 			using var db = GetDataContext(context);
@@ -179,7 +177,7 @@ namespace Tests.Linq
 			TestProvName.AllSqlServer,
 			TestProvName.AllSybase)] string context)
 		{
-			if (context.IsAnyOf(TestProvName.AllSqlServer) && context.EndsWith(".LinqService"))
+			if (context.IsAnyOf(TestProvName.AllSqlServer) && context.IsRemote())
 				return;
 
 			using var db = GetDataContext(context);

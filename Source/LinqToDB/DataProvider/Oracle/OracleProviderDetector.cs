@@ -1,29 +1,38 @@
 ﻿using System;
 using System.Data.Common;
+using System.Globalization;
 
 namespace LinqToDB.DataProvider.Oracle
 {
+	using System.IO;
 	using Configuration;
 	using Data;
+	using LinqToDB.Common;
 
-	sealed class OracleProviderDetector : ProviderDetectorBase<OracleProvider,OracleVersion,DbConnection>
+	sealed class OracleProviderDetector : ProviderDetectorBase<OracleProvider,OracleVersion>
 	{
 		public OracleProviderDetector() : base(OracleVersion.AutoDetect, OracleVersion.v12)
 		{
 		}
 
-		static readonly Lazy<IDataProvider> _oracleNativeDataProvider11  = DataConnection.CreateDataProvider<OracleDataProviderNative11>();
-		static readonly Lazy<IDataProvider> _oracleNativeDataProvider12  = DataConnection.CreateDataProvider<OracleDataProviderNative12>();
+		static readonly Lazy<IDataProvider> _oracleNativeDataProvider11  = CreateDataProvider<OracleDataProviderNative11>();
+		static readonly Lazy<IDataProvider> _oracleNativeDataProvider12  = CreateDataProvider<OracleDataProviderNative12>();
 
-		static readonly Lazy<IDataProvider> _oracleManagedDataProvider11 = DataConnection.CreateDataProvider<OracleDataProviderManaged11>();
-		static readonly Lazy<IDataProvider> _oracleManagedDataProvider12 = DataConnection.CreateDataProvider<OracleDataProviderManaged12>();
+		static readonly Lazy<IDataProvider> _oracleManagedDataProvider11 = CreateDataProvider<OracleDataProviderManaged11>();
+		static readonly Lazy<IDataProvider> _oracleManagedDataProvider12 = CreateDataProvider<OracleDataProviderManaged12>();
 
-		static readonly Lazy<IDataProvider> _oracleDevartDataProvider11  = DataConnection.CreateDataProvider<OracleDataProviderDevart11>();
-		static readonly Lazy<IDataProvider> _oracleDevartDataProvider12  = DataConnection.CreateDataProvider<OracleDataProviderDevart12>();
+		static readonly Lazy<IDataProvider> _oracleDevartDataProvider11  = CreateDataProvider<OracleDataProviderDevart11>();
+		static readonly Lazy<IDataProvider> _oracleDevartDataProvider12  = CreateDataProvider<OracleDataProviderDevart12>();
 
 		public override IDataProvider? DetectProvider(ConnectionOptions options)
 		{
-			OracleProvider? provider = null;
+			var provider = options.ProviderName switch
+			{
+				OracleProviderAdapter.ManagedClientNamespace => OracleProvider.Managed,
+				OracleProviderAdapter.DevartClientNamespace  => OracleProvider.Devart,
+				OracleProviderAdapter.NativeClientNamespace  => OracleProvider.Native,
+				_                                            => DetectProvider(options.ConnectionString)
+			};
 
 			switch (options.ProviderName)
 			{
@@ -52,7 +61,7 @@ namespace LinqToDB.DataProvider.Oracle
 						goto case ProviderName.Oracle;
 					break;
 				case ProviderName.Oracle                         :
-					if (provider == null)
+					if (provider == OracleProvider.AutoDetect)
 					{
 						if (options.ConfigurationString?.Contains("Native") == true || options.ProviderName?.Contains("Native") == true)
 							provider = OracleProvider.Native;
@@ -62,19 +71,19 @@ namespace LinqToDB.DataProvider.Oracle
 							provider = OracleProvider.Managed;
 					}
 
-					if (options.ConfigurationString?.Contains("11") == true || options.ProviderName?.Contains("11") == true) return GetDataProvider(options, provider.Value, OracleVersion.v11);
-					if (options.ConfigurationString?.Contains("12") == true || options.ProviderName?.Contains("12") == true) return GetDataProvider(options, provider.Value, OracleVersion.v12);
-					if (options.ConfigurationString?.Contains("18") == true || options.ProviderName?.Contains("18") == true) return GetDataProvider(options, provider.Value, OracleVersion.v12);
-					if (options.ConfigurationString?.Contains("19") == true || options.ProviderName?.Contains("19") == true) return GetDataProvider(options, provider.Value, OracleVersion.v12);
-					if (options.ConfigurationString?.Contains("21") == true || options.ProviderName?.Contains("21") == true) return GetDataProvider(options, provider.Value, OracleVersion.v12);
+					if (options.ConfigurationString?.Contains("11") == true || options.ProviderName?.Contains("11") == true) return GetDataProvider(options, provider, OracleVersion.v11);
+					if (options.ConfigurationString?.Contains("12") == true || options.ProviderName?.Contains("12") == true) return GetDataProvider(options, provider, OracleVersion.v12);
+					if (options.ConfigurationString?.Contains("18") == true || options.ProviderName?.Contains("18") == true) return GetDataProvider(options, provider, OracleVersion.v12);
+					if (options.ConfigurationString?.Contains("19") == true || options.ProviderName?.Contains("19") == true) return GetDataProvider(options, provider, OracleVersion.v12);
+					if (options.ConfigurationString?.Contains("21") == true || options.ProviderName?.Contains("21") == true) return GetDataProvider(options, provider, OracleVersion.v12);
 
 					if (AutoDetectProvider)
 					{
 						try
 						{
-							var dv = DetectServerVersion(options, provider.Value);
+							var dv = DetectServerVersion(options, provider);
 
-							return dv != null ? GetDataProvider(options, provider.Value, dv.Value) : null;
+							return dv != null ? GetDataProvider(options, provider, dv.Value) : null;
 						}
 						catch
 						{
@@ -82,7 +91,7 @@ namespace LinqToDB.DataProvider.Oracle
 						}
 					}
 
-					return GetDataProvider(options, provider.Value, DefaultVersion);
+					return GetDataProvider(options, provider, DefaultVersion);
 			}
 
 			return null;
@@ -90,6 +99,13 @@ namespace LinqToDB.DataProvider.Oracle
 
 		public override IDataProvider GetDataProvider(ConnectionOptions options, OracleProvider provider, OracleVersion version)
 		{
+			if (provider == OracleProvider.AutoDetect)
+			{
+				var canBeDevart = options.ConnectionString?.IndexOf("SERVER", StringComparison.OrdinalIgnoreCase) != -1;
+				var canBeOracle = options.ConnectionString?.IndexOf("DATA SOURCE", StringComparison.OrdinalIgnoreCase) != -1;
+				provider = DetectProvider(options.ConnectionString);
+			}
+
 			return (provider, version) switch
 			{
 				(_,                      OracleVersion.AutoDetect) => GetDataProvider(options, provider, DetectServerVersion(options, provider) ?? DefaultVersion),
@@ -103,6 +119,28 @@ namespace LinqToDB.DataProvider.Oracle
 			};
 		}
 
+		private static OracleProvider DetectProvider(string? connectionString)
+		{
+			// as connection string for DevArt has own (and actually more sane) format
+			// we cannot try to use incompatible provider
+			var canBeDevart = connectionString?.IndexOf("SERVER", StringComparison.OrdinalIgnoreCase) != -1;
+			var canBeOracle = connectionString?.IndexOf("DATA SOURCE", StringComparison.OrdinalIgnoreCase) != -1;
+
+			var fileName = typeof(OracleProviderDetector).Assembly.GetFileName();
+			var dirName  = Path.GetDirectoryName(fileName);
+
+			if (canBeOracle && File.Exists(Path.Combine(dirName ?? ".", OracleProviderAdapter.ManagedAssemblyName + ".dll")))
+				return OracleProvider.Managed;
+
+			if (canBeDevart && File.Exists(Path.Combine(dirName ?? ".", OracleProviderAdapter.DevartAssemblyName + ".dll")))
+				return OracleProvider.Devart;
+
+			if (canBeOracle && File.Exists(Path.Combine(dirName ?? ".", OracleProviderAdapter.NativeAssemblyName + ".dll")))
+				return OracleProvider.Native;
+
+			return canBeOracle ? OracleProvider.Managed : OracleProvider.Devart;
+		}
+
 		public override OracleVersion? DetectServerVersion(DbConnection connection)
 		{
 			var command = connection.CreateCommand();
@@ -111,7 +149,7 @@ namespace LinqToDB.DataProvider.Oracle
 
 			if (command.ExecuteScalar() is string result)
 			{
-				var version = int.Parse(result.Split('.')[0]);
+				var version = int.Parse(result.Split('.')[0], NumberStyles.Integer, NumberFormatInfo.InvariantInfo);
 
 				if (version <= 11)
 					return OracleVersion.v11;
@@ -124,6 +162,9 @@ namespace LinqToDB.DataProvider.Oracle
 
 		protected override DbConnection CreateConnection(OracleProvider provider, string connectionString)
 		{
+			if (provider == OracleProvider.AutoDetect)
+				provider = DetectProvider(connectionString);
+
 			return OracleProviderAdapter.GetInstance(provider).CreateConnection(connectionString);
 		}
 	}

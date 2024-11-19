@@ -4,6 +4,7 @@ open Tests.FSharp.Models
 
 open LinqToDB
 open LinqToDB.Mapping
+open NUnit.Framework
 open Tests.Tools
 
 let Insert1 (db : IDataContext) =
@@ -14,13 +15,12 @@ let Insert1 (db : IDataContext) =
         cleanup() |> ignore
 
         let child = {Child.ParentID=1; Child.ChildID=id}
-        NUnitAssert.AreEqual(1, db.Insert(child))
-        //Assert.AreEqual(1, db.GetTable<Child>().Insert(fun () -> {Child.ParentID=1; ChildID=id}))
-        NUnitAssert.AreEqual(1,
-            query {
+        Assert.That(db.Insert(child), Is.EqualTo 1)
+        //Assert.That(db.GetTable<Child>().Insert(fun () -> {Child.ParentID=1; ChildID=id}), Is.EqualTo 1)
+        Assert.That(query {
                 for c in db.GetTable<Child>() do
                 where (c.ChildID = id)
-                count })
+                count }, Is.EqualTo 1)
 
     finally
         cleanup() |> ignore
@@ -44,9 +44,9 @@ let Insert2 (db : IDataContext, personId : int) =
         where (p.ID > id)
         exactlyOne }
 
-    NUnitAssert.AreEqual(p.Name.FirstName, inserted.Name.FirstName)
-    NUnitAssert.AreEqual(p.Name.LastName, inserted.Name.LastName)
-    NUnitAssert.AreEqual(p.Gender, inserted.Gender)
+    Assert.That(inserted.Name.FirstName, Is.EqualTo p.Name.FirstName)
+    Assert.That(inserted.Name.LastName, Is.EqualTo p.Name.LastName)
+    Assert.That(inserted.Gender, Is.EqualTo p.Gender)
 
     finally
         db.GetTable<Person>().Delete(fun t -> t.ID > id) |> ignore

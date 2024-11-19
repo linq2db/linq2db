@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Data;
 
@@ -142,10 +143,10 @@ namespace LinqToDB.DataProvider.SQLite
 			// Handle case where Foreign Key reference does not include a column name (Issue #784)
 			if (result.Any(fk => string.IsNullOrEmpty(fk.OtherColumn)))
 			{
-				var pks = GetPrimaryKeys(dataConnection, tables, options).ToDictionary(pk => string.Format("{0}:{1}", pk.TableID, pk.Ordinal), pk => pk.ColumnName);
+				var pks = GetPrimaryKeys(dataConnection, tables, options).ToDictionary(pk => string.Format(CultureInfo.InvariantCulture, "{0}:{1}", pk.TableID, pk.Ordinal), pk => pk.ColumnName);
 				foreach (var f in result.Where(fk => string.IsNullOrEmpty(fk.OtherColumn)))
 				{
-					var k = string.Format("{0}:{1}", f.OtherTableID, f.Ordinal);
+					var k = string.Format(CultureInfo.InvariantCulture, "{0}:{1}", f.OtherTableID, f.Ordinal);
 					if (pks.TryGetValue(k, out var column))
 						f.OtherColumn = column;
 				}

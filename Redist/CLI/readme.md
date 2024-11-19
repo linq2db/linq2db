@@ -10,12 +10,12 @@ We can also generate them automatically using this code in liq2db.CLI.csproj, bu
 
 	<Target Name="BuildSpecific" AfterTargets="Build" Condition=" '$(RID)' == '' ">
 		<!--we need to remove apphost.exe as Build target doesn't validate already existing file to be compatible with requested RID-->
-		<Delete Files="obj\$(Configuration)\netcoreapp3.1\apphost.exe" />
+		<Delete Files="..\..\.build\obj\LinqToDB.CLI\$(Configuration)\net6.0\apphost.exe" />
 		<MSBuild Projects="$(MSBuildProjectFullPath)" Properties="RID=win-x86;Platform=$(Platform);Configuration=$(Configuration)" Targets="Build" />
-		<Delete Files="obj\$(Configuration)\netcoreapp3.1\apphost.exe" />
+		<Delete Files="..\..\.build\obj\LinqToDB.CLI\$(Configuration)\net6.0\apphost.exe" />
 		<MSBuild Projects="$(MSBuildProjectFullPath)" Properties="RID=win-x64;Platform=$(Platform);Configuration=$(Configuration)" Targets="Build" />
 	</Target>
 	<Target Name="CopyHosts" AfterTargets="Build" Condition=" '$(RID)' != '' ">
-		<Copy SourceFiles="bin\$(Configuration)\apphosts\$(RID)\netcoreapp3.1\$(AssemblyName).exe" DestinationFiles="bin\$(Configuration)\netcoreapp3.1\$(AssemblyName).$(RID).exe" />
+		<Copy SourceFiles="..\..\.build\bin\LinqToDB.CLI\$(Configuration)\apphosts\$(RID)\net6.0\$(AssemblyName).exe" DestinationFiles="..\..\.build\bin\LinqToDB.CLI\$(Configuration)\net6.0\$(AssemblyName).$(RID).exe" />
 	</Target>
 ```

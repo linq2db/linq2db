@@ -21,7 +21,7 @@ namespace Cli.NoMetadata.ClickHouse.Octonica
 		public int?            Field4          { get; set; } // Int32
 		public int?            Field5          { get; set; } // Int32
 		public long?           FieldInt64      { get; set; } // Int64
-		public byte?           FieldBoolean    { get; set; } // UInt8
+		public bool?           FieldBoolean    { get; set; } // Bool
 		public string?         FieldString     { get; set; } // String
 		public string?         FieldNString    { get; set; } // String
 		public byte[]?         FieldChar       { get; set; } // FixedString(1)

@@ -1,9 +1,5 @@
-﻿using System.Collections.Generic;
-using System.Linq;
-
-namespace LinqToDB.DataProvider.ClickHouse
+﻿namespace LinqToDB.DataProvider.ClickHouse
 {
-	using Common;
 	using Mapping;
 	using SqlProvider;
 	using SqlQuery;
@@ -17,18 +13,35 @@ namespace LinqToDB.DataProvider.ClickHouse
 
 		readonly DataOptions _dataOptions;
 
-		ClickHouseOptions?   _providerOptions;
+		ClickHouseOptions? _providerOptions;
 		public ClickHouseOptions ProviderOptions => _providerOptions ??= _dataOptions.FindOrDefault(ClickHouseOptions.Default);
 
-		public override SqlStatement FinalizeStatement(SqlStatement statement, EvaluationContext context, DataOptions dataOptions)
+		public override SqlStatement FinalizeStatement(SqlStatement statement, EvaluationContext context, DataOptions dataOptions, MappingSchema mappingSchema)
 		{
-			statement = base.FinalizeStatement(statement, context, dataOptions);
+			statement = base.FinalizeStatement(statement, context, dataOptions, mappingSchema);
 
 			statement = DisableParameters(statement);
 
 			statement = FixCteAliases(statement);
 
 			return statement;
+		}
+
+		protected override SqlStatement FinalizeUpdate(SqlStatement statement, DataOptions dataOptions, MappingSchema mappingSchema)
+		{
+			var result = base.FinalizeUpdate(statement, dataOptions, mappingSchema);
+
+			if (result is SqlUpdateStatement updateStatement)
+			{
+				CorrectUpdateSetters(updateStatement);
+			}
+
+			return result;
+		}
+
+		public override SqlExpressionConvertVisitor CreateConvertVisitor(bool allowModify)
+		{
+			return new ClickHouseSqlExpressionConvertVisitor(allowModify, ProviderOptions);
 		}
 
 		private static SqlStatement DisableParameters(SqlStatement statement)
@@ -60,7 +73,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 			{
 				if (e is CteClause cte)
 				{
-					for (var i = 0; i < cte.Fields!.Length; i++)
+					for (var i = 0; i < cte.Fields.Count; i++)
 						cte.Body!.Select.Columns[i].RawAlias = cte.Fields[i].Alias ?? cte.Fields[i].PhysicalName;
 
 					// block rewrite of alias
@@ -73,355 +86,5 @@ namespace LinqToDB.DataProvider.ClickHouse
 			return statement;
 		}
 
-		#region Predicates
-
-		#region LIKE
-
-		// https://clickhouse.com/docs/en/sql-reference/ansi/#feature-status E061-05
-		// https://clickhouse.com/docs/en/sql-reference/operators/#like-function
-
-		public override bool     LikeIsEscapeSupported  => false;
-		public override string   LikeEscapeCharacter    => "\\";
-		public override string[] LikeCharactersToEscape => ClickHouseLikeCharactersToEscape;
-
-		private static readonly string[] ClickHouseLikeCharactersToEscape = { "%", "_" };
-
-		public override ISqlPredicate ConvertLikePredicate(MappingSchema mappingSchema, SqlPredicate.Like predicate, EvaluationContext context)
-		{
-			// remove ESCAPE clause
-			if (predicate.Escape != null)
-				return new SqlPredicate.Like(predicate.Expr1, predicate.IsNot, predicate.Expr2, null);
-
-			return base.ConvertLikePredicate(mappingSchema, predicate, context);
-		}
-
-		#endregion
-
-		public override ISqlPredicate ConvertSearchStringPredicate(SqlPredicate.SearchString predicate, ConvertVisitor<RunOptimizationContext> visitor)
-		{
-			var caseSensitive = predicate.CaseSensitive.EvaluateBoolExpression(visitor.Context.OptimizationContext.Context)
-				?? true;
-
-			var searchExpr = predicate.Expr2;
-			var dataExpr   = predicate.Expr1;
-
-			SqlPredicate.Expr? subStrPredicate = null;
-
-			switch (predicate.Kind)
-			{
-				case SqlPredicate.SearchString.SearchKind.StartsWith:
-					if (!caseSensitive)
-						subStrPredicate = new SqlPredicate.Expr(
-							new SqlFunction(typeof(bool), "startsWith", false, true, PseudoFunctions.MakeToLower(dataExpr), PseudoFunctions.MakeToLower(searchExpr))
-							{
-								CanBeNull = searchExpr.CanBeNull || dataExpr.CanBeNull
-							});
-					else
-						subStrPredicate = new SqlPredicate.Expr(
-							new SqlFunction(typeof(bool), "startsWith", false, true, dataExpr, searchExpr)
-							{
-								CanBeNull = searchExpr.CanBeNull || dataExpr.CanBeNull
-							});
-					break;
-
-				case SqlPredicate.SearchString.SearchKind.EndsWith:
-					if (!caseSensitive)
-						subStrPredicate = new SqlPredicate.Expr(
-							new SqlFunction(typeof(bool), "endsWith", false, true, PseudoFunctions.MakeToLower(dataExpr), PseudoFunctions.MakeToLower(searchExpr))
-							{
-								CanBeNull = searchExpr.CanBeNull || dataExpr.CanBeNull
-							});
-					else
-						subStrPredicate = new SqlPredicate.Expr(
-							new SqlFunction(typeof(bool), "endsWith", false, true, dataExpr, searchExpr)
-							{
-								CanBeNull = searchExpr.CanBeNull || dataExpr.CanBeNull
-							});
-					break;
-
-				case SqlPredicate.SearchString.SearchKind.Contains:
-					subStrPredicate = new SqlPredicate.ExprExpr(
-						new SqlFunction(typeof(bool), caseSensitive ? "position" : "positionCaseInsensitive", false, true, dataExpr, searchExpr)
-						{
-							CanBeNull = searchExpr.CanBeNull || dataExpr.CanBeNull
-						},
-						SqlPredicate.Operator.Greater,
-						new SqlValue(0),
-						null);
-					break;
-			}
-
-			if (subStrPredicate != null)
-				return new SqlSearchCondition(new SqlCondition(predicate.IsNot, subStrPredicate));
-
-			return base.ConvertSearchStringPredicate(predicate, visitor);
-		}
-
-		#endregion
-
-		#region Function/Expression Conversions
-
-		public override ISqlExpression ConvertExpressionImpl(ISqlExpression expression, ConvertVisitor<RunOptimizationContext> visitor)
-		{
-			expression = base.ConvertExpressionImpl(expression, visitor);
-
-			switch (expression)
-			{
-				case SqlBinaryExpression(var type, var left, "%", var right):
-				{
-					// % operation not implemented for decimal arguments and we need to cast them to supported type
-					// also see https://github.com/ClickHouse/ClickHouse/issues/39287
-
-					var leftType  = left .GetExpressionType();
-					var rightType = right.GetExpressionType();
-					var rewrite   = false;
-
-					if (leftType.DataType is DataType.Decimal32 or DataType.Decimal64 or DataType.Decimal128 or DataType.Decimal256)
-					{
-						left = ConvertFunction(PseudoFunctions.MakeConvert(
-							new SqlDataType(new DbDataType(typeof(double), DataType.Double)),
-							new SqlDataType(leftType),
-							left));
-						rewrite = true;
-					}
-
-					if (rightType.DataType is DataType.Decimal32 or DataType.Decimal64 or DataType.Decimal128 or DataType.Decimal256)
-					{
-						right = ConvertFunction(PseudoFunctions.MakeConvert(
-							new SqlDataType(new DbDataType(typeof(double), DataType.Double)),
-							new SqlDataType(rightType),
-							right));
-						rewrite = true;
-					}
-
-					return !rewrite
-						? expression
-						: ConvertFunction(PseudoFunctions.MakeConvert(
-							new SqlDataType(expression.GetExpressionType()),
-							new SqlDataType(new DbDataType(typeof(double), DataType.Double)),
-							new SqlBinaryExpression(typeof(double), left, "%", right)));
-				}
-
-				case SqlBinaryExpression(var type, var left, "|", var right)    : return new SqlFunction(type, "bitOr",  false, true, left, right) { CanBeNull = left.CanBeNull || right.CanBeNull };
-				case SqlBinaryExpression(var type, var left, "&", var right)    : return new SqlFunction(type, "bitAnd", false, true, left, right) { CanBeNull = left.CanBeNull || right.CanBeNull };
-				case SqlBinaryExpression(var type, var left, "^", var right)    : return new SqlFunction(type, "bitXor", false, true, left, right) { CanBeNull = left.CanBeNull || right.CanBeNull };
-				case SqlBinaryExpression(var type, SqlValue(-1), "*", var right): return new SqlFunction(type, "negate", false, true, right      ) { CanBeNull = right.CanBeNull };
-
-				case SqlBinaryExpression(var type, var ex1, "+", var ex2) when type == typeof(string):
-				{
-					return ConvertFunc(new(type, "concat", false, true, ex1, ex2) { CanBeNull = ex1.CanBeNull || ex2.CanBeNull });
-
-					static SqlFunction ConvertFunc(SqlFunction func)
-					{
-						for (var i = 0; i < func.Parameters.Length; i++)
-						{
-							switch (func.Parameters[i])
-							{
-								case SqlBinaryExpression(var t, var e1, "+", var e2) when t == typeof(string):
-								{
-									var ps = new List<ISqlExpression>(func.Parameters);
-
-									ps.RemoveAt(i);
-									ps.Insert(i, e1);
-									ps.Insert(i + 1, e2);
-
-									return ConvertFunc(new(t, func.Name, false, true, ps.ToArray()) { CanBeNull = ps.Any(static p => p.CanBeNull) });
-								}
-
-								case SqlFunction(var t, "concat") f when t == typeof(string):
-								{
-									var ps = new List<ISqlExpression>(func.Parameters);
-
-									ps.RemoveAt(i);
-									ps.InsertRange(i, f.Parameters);
-
-									return ConvertFunc(new(t, func.Name, false, true, ps.ToArray()) { CanBeNull = ps.Any(static p => p.CanBeNull) });
-								}
-							}
-						}
-
-						return func;
-					}
-				}
-
-				case SqlFunction(_, "CASE", [_, SqlValue(true), SqlValue(false)]) f when SqlProviderFlags.IsProjectionBoolSupported is false:
-					return new SqlFunction(f.SystemType, f.Name, f.Parameters[0], new SqlValue((byte)1), new SqlValue((byte)0));
-
-				default: return expression;
-			}
-		}
-
-		protected override ISqlExpression ConvertFunction(SqlFunction func)
-		{
-			switch (func.Name)
-			{
-				case "Max":
-				case "Min":
-				case "Avg":
-				case "Sum":
-				{
-					// use standard-compatible aggregates
-					// https://github.com/ClickHouse/ClickHouse/pull/16123
-					if (func.IsAggregate && ProviderOptions.UseStandardCompatibleAggregates)
-					{
-						return new SqlFunction(func.SystemType, func.Name.ToLowerInvariant() + "OrNull", true, func.IsPure, func.Precedence, func.Parameters)
-						{
-							DoNotOptimize = func.DoNotOptimize,
-							CanBeNull     = true
-						};
-					}
-
-					break;
-				}
-				case PseudoFunctions.TO_LOWER              : return new SqlFunction(func.SystemType, "lowerUTF8", func.IsAggregate, func.IsPure, func.Precedence, func.Parameters) { CanBeNull = func.CanBeNull };
-				case PseudoFunctions.TO_UPPER              : return new SqlFunction(func.SystemType, "upperUTF8", func.IsAggregate, func.IsPure, func.Precedence, func.Parameters) { CanBeNull = func.CanBeNull };
-
-				case PseudoFunctions.CONVERT               : // toType
-				case PseudoFunctions.TRY_CONVERT           : // toTypeOrNull
-				case PseudoFunctions.TRY_CONVERT_OR_DEFAULT: // coalesce(toTypeOrNull, defaultValue)
-				{
-					var toType       = (SqlDataType)func.Parameters[0];
-					var value        = func.Parameters[2];
-					var defaultValue = func.Name == PseudoFunctions.TRY_CONVERT_OR_DEFAULT ? func.Parameters[3] : null;
-					var suffix       = func.Name != PseudoFunctions.CONVERT ? "OrNull" : null;
-
-					if (ClickHouseConvertFunctions.TryGetValue(toType.Type.DataType, out var name))
-					{
-						switch (toType.Type.DataType)
-						{
-							// special cases: String(N)
-							case DataType.VarChar :
-							case DataType.NVarChar:
-							{
-								// skip Try[OrDefault] as toString always succeed
-
-								// if converting from FixedString - just trim trailing \0s
-								var valueType = value.GetExpressionType();
-								if (valueType.DataType is DataType.Char or DataType.NChar or DataType.Binary)
-								{
-									return new SqlFunction(func.SystemType, "trim", false, true,
-										new SqlExpression(func.SystemType, "TRAILING '\x00' FROM {0}", Precedence.Primary, value))
-									{
-										CanBeNull = value.CanBeNull
-									};
-								}
-
-								return new SqlFunction(func.SystemType, name, false, true, value)
-								{
-									CanBeNull = value.CanBeNull
-								};
-							}
-
-							case DataType.Decimal32:
-							case DataType.Decimal64:
-							case DataType.Decimal128:
-							case DataType.Decimal256:
-							{
-								// toDecimalX(S)
-								ISqlExpression newFunc = new SqlFunction(func.SystemType, name + suffix, false, true,
-										value,
-										new SqlValue((byte)(toType.Type.Scale ?? ClickHouseMappingSchema.DEFAULT_DECIMAL_SCALE)))
-								{
-									CanBeNull = value.CanBeNull
-								};
-
-								if (defaultValue != null)
-									newFunc = ConvertFunction(PseudoFunctions.MakeCoalesce(func.SystemType, newFunc, defaultValue));
-
-								return newFunc;
-							}
-
-							case DataType.DateTime64:
-							{
-								// toDateTime64(S)
-
-								ISqlExpression newFunc = new SqlFunction(func.SystemType, name + suffix, false, true,
-										value,
-										new SqlValue((byte)(toType.Type.Precision ?? ClickHouseMappingSchema.DEFAULT_DATETIME64_PRECISION)))
-								{
-									CanBeNull = value.CanBeNull
-								};
-
-								if (defaultValue != null)
-									newFunc = ConvertFunction(PseudoFunctions.MakeCoalesce(func.SystemType, newFunc, defaultValue));
-
-								return newFunc;
-							}
-
-							// default call template
-							default:
-							{
-								ISqlExpression newFunc = new SqlFunction(func.SystemType, name + suffix, false, true, value)
-								{
-									CanBeNull = value.CanBeNull
-								};
-
-								if (defaultValue != null)
-									newFunc = ConvertFunction(PseudoFunctions.MakeCoalesce(func.SystemType, newFunc, defaultValue));
-
-								return newFunc;
-							}
-						}
-					}
-
-					throw new LinqToDBException($"Missing conversion function definition to type '{toType.Type}'");
-
-				}
-			}
-
-			return base.ConvertFunction(func);
-		}
-
-		// ClickHouse provides several ways to specify type:
-		// - to<TYPE_NAME> functions
-		// - ::TYPE pgsql-like type hint
-		// - CAST function
-		//
-		// we use functions in most of places
-		// [target type, type conversion function name]
-		private static readonly IReadOnlyDictionary<DataType, string> ClickHouseConvertFunctions = new Dictionary<DataType, string>()
-		{
-			{ DataType.Byte      , "toUInt8"      },
-			{ DataType.SByte     , "toInt8"       },
-			{ DataType.UInt16    , "toUInt16"     },
-			{ DataType.Int16     , "toInt16"      },
-			{ DataType.UInt32    , "toUInt32"     },
-			{ DataType.Int32     , "toInt32"      },
-			{ DataType.UInt64    , "toUInt64"     },
-			{ DataType.Int64     , "toInt64"      },
-			{ DataType.UInt128   , "toUInt128"    },
-			{ DataType.Int128    , "toInt128"     },
-			{ DataType.UInt256   , "toUInt256"    },
-			{ DataType.Int256    , "toInt256"     },
-
-			{ DataType.Single    , "toFloat32"    },
-			{ DataType.Double    , "toFloat64"    },
-
-			{ DataType.Boolean   , "toBool"       },
-
-			{ DataType.Guid      , "toUUID"       },
-
-			{ DataType.Date      , "toDate"       },
-			{ DataType.Date32    , "toDate32"     },
-
-			{ DataType.DateTime  , "toDateTime"   },
-			{ DataType.DateTime64, "toDateTime64" },
-
-			{ DataType.Decimal32 , "toDecimal32"  },
-			{ DataType.Decimal64 , "toDecimal64"  },
-			{ DataType.Decimal128, "toDecimal128" },
-			{ DataType.Decimal256, "toDecimal256" },
-
-			{ DataType.VarChar   , "toString"     },
-			{ DataType.NVarChar  , "toString"     },
-			{ DataType.VarBinary , "toString"     },
-
-			{ DataType.Json      , "toJSONString" },
-
-			{ DataType.IPv4      , "toIPv4"       },
-			{ DataType.IPv6      , "toIPv6"       },
-		};
-
-		#endregion
 	}
 }

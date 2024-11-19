@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 
 namespace LinqToDB.DataProvider.MySql
 {
@@ -14,7 +13,9 @@ namespace LinqToDB.DataProvider.MySql
 	/// </param>
 	public sealed record MySqlOptions
 	(
-		BulkCopyType         BulkCopyType              = BulkCopyType.MultipleRows
+		BulkCopyType BulkCopyType = BulkCopyType.MultipleRows
+		// If you add another parameter here, don't forget to update
+		// MySqlOptions copy constructor and CreateID method.
 	)
 		: DataProviderOptions<MySqlOptions>(BulkCopyType)
 	{
@@ -26,8 +27,7 @@ namespace LinqToDB.DataProvider.MySql
 		{
 		}
 
-		protected override IdentifierBuilder CreateID(IdentifierBuilder builder) => builder
-			;
+		protected override IdentifierBuilder CreateID(IdentifierBuilder builder) => builder;
 
 		#region IEquatable implementation
 

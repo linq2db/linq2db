@@ -100,7 +100,7 @@ namespace Tests.Extensions
 
 			_ = q.ToList();
 
-			Assert.That(LastQuery, Contains.Substring("\nFOR UPDATE").Using(StringComparison.Ordinal));
+			Assert.That(LastQuery, Contains.Substring("\tFOR UPDATE").Using(StringComparison.Ordinal));
 			Assert.That(LastQuery, Contains.Substring("\nFOR SHARE").Using(StringComparison.Ordinal));
 			Assert.That(LastQuery, Contains.Substring("\nFOR KEY SHARE").Using(StringComparison.Ordinal));
 		}
@@ -187,14 +187,13 @@ namespace Tests.Extensions
 						.ForShareHint()
 						.Union
 						(
-							from p in db.Child
-							select p.Parent
+							from c in db.Child
+							select c.Parent
 						)
 						.Union
 						(
 							from p in db.Parent
 							from c in db.Child.TableID("pp")
-								.AsSubQuery()
 								.AsPostgreSQL()
 								.ForShareHint()
 							select p

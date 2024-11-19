@@ -1,15 +1,15 @@
 ﻿using System;
-using System.Text;
-using System.Linq;
-using System.Globalization;
 using System.Collections.Generic;
+using System.Globalization;
+using System.Linq;
+using System.Text;
 
 namespace LinqToDB.DataProvider.ClickHouse
 {
-	using SqlQuery;
-	using SqlProvider;
-	using Mapping;
 	using Common;
+	using Mapping;
+	using SqlProvider;
+	using SqlQuery;
 
 	sealed class ClickHouseSqlBuilder : BasicSqlBuilder
 	{
@@ -24,8 +24,8 @@ namespace LinqToDB.DataProvider.ClickHouse
 
 		protected override ISqlBuilder CreateSqlBuilder() => new ClickHouseSqlBuilder(this);
 
-		protected override void BuildMergeStatement(SqlMergeStatement merge) => throw new LinqToDBException($"{Name} provider doesn't support SQL MERGE statement");
-		protected override void BuildParameter     (SqlParameter parameter ) => throw new LinqToDBException($"Parameters not supported for {Name} provider");
+		protected override void BuildMergeStatement(SqlMergeStatement merge)     => throw new LinqToDBException($"{Name} provider doesn't support SQL MERGE statement");
+		protected override void BuildParameter(SqlParameter parameter) => throw new LinqToDBException($"Parameters not supported for {Name} provider");
 
 		#region Identifiers
 
@@ -105,9 +105,9 @@ namespace LinqToDB.DataProvider.ClickHouse
 
 		#region Types
 
-		protected override void BuildDataTypeFromDataType(SqlDataType type, bool forCreateTable, bool canBeNull)
+		protected override void BuildDataTypeFromDataType(DbDataType type, bool forCreateTable, bool canBeNull)
 		{
-			BuildTypeName(StringBuilder, type.Type, canBeNull);
+			BuildTypeName(StringBuilder, type, canBeNull);
 		}
 
 		protected override void BuildCreateTableNullAttribute(SqlField field, DefaultNullable defaultNullable)
@@ -382,7 +382,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 
 		protected override void BuildOffsetLimit(SelectQuery selectQuery)
 		{
-			SqlOptimizer.ConvertSkipTake(MappingSchema, DataOptions, selectQuery, OptimizationContext, out var takeExpr, out var skipExpr);
+			SqlOptimizer.ConvertSkipTake(NullabilityContext, MappingSchema, DataOptions, selectQuery, OptimizationContext, out var takeExpr, out var skipExpr);
 
 			if (takeExpr != null || skipExpr != null)
 			{
@@ -423,19 +423,21 @@ namespace LinqToDB.DataProvider.ClickHouse
 		{
 			// move CTE to SELECT clause for INSERT FROM SELECT queries
 
+			var nullability = NullabilityContext.GetContext(statement.SelectQuery);
+
 			BuildStep = Step.Tag; BuildTag(statement);
 			BuildStep = Step.InsertClause; BuildInsertClause(statement, insertClause, addAlias);
 
 			if (statement.QueryType == QueryType.Insert && statement.SelectQuery!.From.Tables.Count != 0)
 			{
-				BuildStep = Step.WithClause     ; BuildWithClause        (statement.GetWithClause());
-				BuildStep = Step.SelectClause   ; BuildSelectClause      (statement.SelectQuery);
-				BuildStep = Step.FromClause     ; BuildFromClause        (statement, statement.SelectQuery);
-				BuildStep = Step.WhereClause    ; BuildWhereClause       (statement.SelectQuery);
-				BuildStep = Step.GroupByClause  ; BuildGroupByClause     (statement.SelectQuery);
-				BuildStep = Step.HavingClause   ; BuildHavingClause      (statement.SelectQuery);
-				BuildStep = Step.OrderByClause  ; BuildOrderByClause     (statement.SelectQuery);
-				BuildStep = Step.OffsetLimit    ; BuildOffsetLimit       (statement.SelectQuery);
+				BuildStep = Step.WithClause     ; BuildWithClause     (statement.GetWithClause());
+				BuildStep = Step.SelectClause   ; BuildSelectClause   (statement.SelectQuery);
+				BuildStep = Step.FromClause     ; BuildFromClause     (statement, statement.SelectQuery);
+				BuildStep = Step.WhereClause    ; BuildWhereClause    (statement.SelectQuery);
+				BuildStep = Step.GroupByClause  ; BuildGroupByClause  (statement.SelectQuery);
+				BuildStep = Step.HavingClause   ; BuildHavingClause   (statement.SelectQuery);
+				BuildStep = Step.OrderByClause  ; BuildOrderByClause  (statement.SelectQuery);
+				BuildStep = Step.OffsetLimit    ; BuildOffsetLimit    (statement.SelectQuery);
 				BuildStep = Step.QueryExtensions; BuildSubQueryExtensions(statement);
 			}
 
@@ -443,11 +445,25 @@ namespace LinqToDB.DataProvider.ClickHouse
 				BuildGetIdentity(insertClause);
 			else
 			{
+				if (nullability == null)
+					throw new InvalidOperationException();
+
 				BuildStep = Step.Output;
 				BuildOutputSubclause(statement.GetOutputClause());
 			}
 		}
 		#endregion
+
+		protected override bool CanSkipRootAliases(SqlStatement statement)
+		{
+			if (statement.SelectQuery != null)
+			{
+				if (statement.SelectQuery.HasSetOperators)
+					return false;
+			}
+
+			return base.CanSkipRootAliases(statement);
+		}
 
 		protected override void BuildIsDistinctPredicate(SqlPredicate.IsDistinct expr) => BuildIsDistinctPredicateFallback(expr);
 
@@ -467,13 +483,14 @@ namespace LinqToDB.DataProvider.ClickHouse
 			}
 		}
 
-		protected override void BuildColumnExpression(SelectQuery? selectQuery, ISqlExpression expr, string? alias, ref bool addAlias)
+		protected override void BuildColumnExpression(SelectQuery? selectQuery, ISqlExpression expr, string? alias,
+			ref bool                                               addAlias)
 		{
 			base.BuildColumnExpression(selectQuery, expr, alias, ref addAlias);
 
 			// force alias generation on nested queries otherwise column in parent query will have composite name subqueryAlias.columnName
 			// (could have many nesting levels) which we don't support and have no plans to support
-			addAlias = addAlias || selectQuery?.ParentSelect != null;
+			addAlias = addAlias || Statement.ParentStatement != null;
 		}
 
 		protected override void BuildTableExtensions(SqlTable table, string alias)
@@ -520,12 +537,12 @@ namespace LinqToDB.DataProvider.ClickHouse
 
 				switch (join.JoinType)
 				{
-					case JoinType.Inner when SqlProviderFlags.IsCrossJoinSupported && condition.Conditions.IsNullOrEmpty() :
-					                      StringBuilder.Append($"CROSS {h} JOIN "); return false;
-					case JoinType.Inner : StringBuilder.Append($"INNER {h} JOIN "); return true;
-					case JoinType.Left  : StringBuilder.Append($"LEFT {h} JOIN ");  return true;
-					case JoinType.Right : StringBuilder.Append($"RIGHT {h} JOIN "); return true;
-					case JoinType.Full  : StringBuilder.Append($"FULL {h} JOIN ");  return true;
+					case JoinType.Inner when SqlProviderFlags.IsCrossJoinSupported && condition.Predicates.IsNullOrEmpty() :
+					                      StringBuilder.Append(CultureInfo.InvariantCulture, $"CROSS {h} JOIN "); return false;
+					case JoinType.Inner : StringBuilder.Append(CultureInfo.InvariantCulture, $"INNER {h} JOIN "); return true;
+					case JoinType.Left  : StringBuilder.Append(CultureInfo.InvariantCulture, $"LEFT {h} JOIN ");  return true;
+					case JoinType.Right : StringBuilder.Append(CultureInfo.InvariantCulture, $"RIGHT {h} JOIN "); return true;
+					case JoinType.Full  : StringBuilder.Append(CultureInfo.InvariantCulture, $"FULL {h} JOIN ");  return true;
 					default             : throw new InvalidOperationException();
 				}
 			}

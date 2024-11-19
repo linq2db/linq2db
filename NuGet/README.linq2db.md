@@ -8,7 +8,7 @@
   - [Passing Into Constructor](#passing-into-constructor)
   - [Using Config File (.NET Framework)](#using-config-file-net-framework)
   - [Using Connection String Settings Provider](#using-connection-string-settings-provider)
-  - [Use with ASP.NET Core](#use-with-aspnet-core)
+  - [Use with ASP.NET Core](#use-with-aspnet-core-and-dependency-injection)
 - [Define **POCO** class](#define-poco-class)
   - [Configuration using mapping attributes](#configuration-using-mapping-attributes)
   - [Fluent Configuration](#fluent-configuration)
@@ -61,8 +61,6 @@ Code examples and demos can be found [here](https://github.com/linq2db/examples)
 - [LinqToDB.Identity](https://github.com/linq2db/LinqToDB.Identity) - ASP.NET Core Identity provider using Linq To DB
 - [LINQPad Driver](https://github.com/linq2db/linq2db.LINQPad)
 - [DB2 iSeries Provider](https://github.com/LinqToDB4iSeries/Linq2DB4iSeries)
-- [ASP.NET CORE 2 Template](https://github.com/David-Mawer/LINQ2DB-MVC-Core-2/tree/master/LINQ2DB-MVC-Core-2)
-- [ASP.NET CORE 3 Template with Angular](https://github.com/David-Mawer/LINQ2DB-AngularWebApp-Core-3)
 - [ASP.NET CORE 5 Template](https://github.com/David-Mawer/LINQ2DB-MVC-Core-5)
 - [PostGIS extensions for linq2db](https://github.com/apdevelop/linq2db-postgis-extensions)
 
@@ -163,7 +161,7 @@ And later just set on program startup before the first query is done (Startup.cs
 DataConnection.DefaultSettings = new MySettings();
 ```
 
-### Use with ASP.NET Core
+### Use with ASP.NET Core and Dependency Injection
 
 See [article](https://linq2db.github.io/articles/get-started/asp-dotnet-core/index.html).
 

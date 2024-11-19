@@ -83,7 +83,7 @@ namespace LinqToDB.CodeModel
 							continue;
 						case ParserState.SearchForIdentifierStart              : // identifier cannot start with .
 						case ParserState.ParseTrailingSpaces                   : // only spaces allowed after type
-							throw new InvalidOperationException($"Cannot parse name \"{name}\": unexpected dot found at {position}");
+							throw new InvalidOperationException(FormattableString.Invariant($"Cannot parse name \"{name}\": unexpected dot found at {position}"));
 						default:
 							throw new InvalidOperationException($"Invalid name parser state: {parserState}");
 					}
@@ -106,7 +106,7 @@ namespace LinqToDB.CodeModel
 							currentIdentifier.Append(chr);
 							continue;
 						case ParserState.ParseTrailingSpaces                   : // spaces expected
-							throw new InvalidOperationException($"Cannot parse name \"{name}\": unexpected character at {position}");
+							throw new InvalidOperationException(FormattableString.Invariant($"Cannot parse name \"{name}\": unexpected character at {position}"));
 						default:
 							throw new InvalidOperationException($"Invalid name parser state: {parserState}");
 					}
@@ -252,7 +252,7 @@ namespace LinqToDB.CodeModel
 						case ParserState.ParseNullablity                       : // type cannot end with .
 						case ParserState.ParseTrailingSpaces                   : // only spaces allowed after type
 						case ParserState.SearchNextTypeArgument                : // type arguments list cannot have .
-							throw new InvalidOperationException($"Cannot parse type \"{typeName}\": unexpected dot found at {position}");
+							throw new InvalidOperationException(FormattableString.Invariant($"Cannot parse type \"{typeName}\": unexpected dot found at {position}"));
 						default                                                :
 							throw new InvalidOperationException($"Invalid type parser state: {parserState}");
 					}
@@ -281,7 +281,7 @@ namespace LinqToDB.CodeModel
 						case ParserState.ParseTrailingSpaces                   : // space expected
 						case ParserState.SearchForIdentifierStart              : // identifier start character expected or space
 						case ParserState.SearchNextTypeArgument                : // ,> or identifier start character expected
-							throw new InvalidOperationException($"Cannot parse type \"{typeName}\": unexpected + found at {position}");
+							throw new InvalidOperationException(FormattableString.Invariant($"Cannot parse type \"{typeName}\": unexpected + found at {position}"));
 						default                                                :
 							throw new InvalidOperationException($"Invalid type parser state: {parserState}");
 					}
@@ -317,7 +317,7 @@ namespace LinqToDB.CodeModel
 						case ParserState.ParseTrailingSpaces                   :
 						case ParserState.SearchForIdentifierStart              :
 						case ParserState.SearchNextTypeArgument                :
-							throw new InvalidOperationException($"Cannot parse type \"{typeName}\": unexpected < found at {position}");
+							throw new InvalidOperationException(FormattableString.Invariant($"Cannot parse type \"{typeName}\": unexpected < found at {position}"));
 						default                                                :
 							throw new InvalidOperationException($"Invalid type parser state: {parserState}");
 					}
@@ -373,7 +373,7 @@ namespace LinqToDB.CodeModel
 							continue;
 						case ParserState.SearchForIdentifierStart              : // unexpected comma outside of generic type arguments list
 							if (!typeArgument)
-								throw new InvalidOperationException($"Cannot parse type \"{typeName}\": unexpected identifier at {position}");
+								throw new InvalidOperationException(FormattableString.Invariant($"Cannot parse type \"{typeName}\": unexpected identifier at {position}"));
 
 							// emtpy type argument position (open generic type argument)
 							return (null, position - chr.Length);
@@ -418,9 +418,9 @@ namespace LinqToDB.CodeModel
 								isTypeArgument = true;
 								break;
 							}
-							throw new InvalidOperationException($"Cannot parse type \"{typeName}\": unexpected > at {position}");
+							throw new InvalidOperationException(FormattableString.Invariant($"Cannot parse type \"{typeName}\": unexpected > at {position}"));
 						case ParserState.ParseTrailingSpaces                   : // only spaces expected after type
-							throw new InvalidOperationException($"Cannot parse type \"{typeName}\": unexpected > at {position}");
+							throw new InvalidOperationException(FormattableString.Invariant($"Cannot parse type \"{typeName}\": unexpected > at {position}"));
 						default                                                :
 							throw new InvalidOperationException($"Invalid type parser state: {parserState}");
 					}
@@ -451,7 +451,7 @@ namespace LinqToDB.CodeModel
 						case ParserState.SearchNextTypeArgument                : // type argument or , or > expected
 						case ParserState.ParseTrailingSpaces                   : // only spaces expected
 						case ParserState.SearchForIdentifierStart              : // identifier expected
-							throw new InvalidOperationException($"Cannot parse type \"{typeName}\": unexpected ? at {position}");
+							throw new InvalidOperationException(FormattableString.Invariant($"Cannot parse type \"{typeName}\": unexpected ? at {position}"));
 						default                                                :
 							throw new InvalidOperationException($"Invalid type parser state: {parserState}");
 					}
@@ -477,7 +477,7 @@ namespace LinqToDB.CodeModel
 						case ParserState.SearchNextTypeArgument                : // < or , expected
 						case ParserState.ParseNullablity                       : // ? or space expected
 						case ParserState.ParseTrailingSpaces                   : // spaces expected
-							throw new InvalidOperationException($"Cannot parse type \"{typeName}\": unexpected character at {position}");
+							throw new InvalidOperationException(FormattableString.Invariant($"Cannot parse type \"{typeName}\": unexpected character at {position}"));
 						default                                                :
 							throw new InvalidOperationException($"Invalid type parser state: {parserState}");
 					}

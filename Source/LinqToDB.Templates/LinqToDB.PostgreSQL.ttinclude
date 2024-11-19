@@ -14,7 +14,6 @@
 			FixTableFunctions();
 			FixRecordResultFunctions();
 			FixVoidFunctions();
-			FixFunctionNames();
 		};
 	}
 #>
@@ -71,17 +70,6 @@ void FixRecordResultFunctions()
 				IsNullable    = true
 			});
 		}
-	}
-}
-
-void FixFunctionNames()
-{
-	foreach (var proc in Procedures.Values)
-	{
-		if (proc.ProcedureName.Any(char.IsUpper))
-			proc.ProcedureName = "\"" + proc.ProcedureName + "\"";
-		if (proc.Schema?.Any(char.IsUpper) == true)
-			proc.Schema = "\"" + proc.Schema + "\"";
 	}
 }
 

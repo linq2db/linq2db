@@ -12,18 +12,17 @@ namespace Tests.UserTests
 	public class Issue820Tests : TestBase
 	{
 		[Sql.Expression("{0}", ServerSideOnly = true)]
-		public static short Nope2(short? value)
+		private static short Nope2(short? value)
 		{
 			return value!.Value;
 		}
 
 		[Sql.Expression("{0}", ServerSideOnly = true)]
-		public static short Nope(short value)
+		private static short Nope(short value)
 		{
 			return value;
 		}
 
-		[ActiveIssue("https://github.com/ClickHouse/ClickHouse/issues/37999", Configuration = ProviderName.ClickHouseMySql)]
 		[Test]
 		public void TestAndWithFunction([DataSources] string context)
 		{
@@ -37,12 +36,14 @@ namespace Tests.UserTests
 				param = null;
 				var result2 = query.ToList();
 
-				Assert.AreEqual(1, result1.Count);
-				Assert.AreEqual(0, result2.Count);
+				Assert.Multiple(() =>
+				{
+					Assert.That(result1, Has.Count.EqualTo(1));
+					Assert.That(result2, Is.Empty);
+				});
 			}
 		}
 
-		[ActiveIssue("https://github.com/ClickHouse/ClickHouse/issues/37999", Configuration = ProviderName.ClickHouseMySql)]
 		[Test]
 		public void TestAndWithCastAndFunction([DataSources] string context)
 		{
@@ -56,12 +57,14 @@ namespace Tests.UserTests
 				param = null;
 				var result2 = query.ToList();
 
-				Assert.AreEqual(1, result1.Count);
-				Assert.AreEqual(0, result2.Count);
+				Assert.Multiple(() =>
+				{
+					Assert.That(result1, Has.Count.EqualTo(1));
+					Assert.That(result2, Is.Empty);
+				});
 			}
 		}
 
-		[ActiveIssue("https://github.com/ClickHouse/ClickHouse/issues/37999", Configuration = ProviderName.ClickHouseMySql)]
 		[Test]
 		public void TestAndWithCast([DataSources] string context)
 		{
@@ -75,12 +78,14 @@ namespace Tests.UserTests
 				param = null;
 				var result2 = query.ToList();
 
-				Assert.AreEqual(1, result1.Count);
-				Assert.AreEqual(0, result2.Count);
+				Assert.Multiple(() =>
+				{
+					Assert.That(result1, Has.Count.EqualTo(1));
+					Assert.That(result2, Is.Empty);
+				});
 			}
 		}
 
-		[ActiveIssue("https://github.com/ClickHouse/ClickHouse/issues/37999", Configuration = ProviderName.ClickHouseMySql)]
 		[Test]
 		public void TestAndWithValue([DataSources] string context)
 		{
@@ -94,12 +99,14 @@ namespace Tests.UserTests
 				param = null;
 				var result2 = query.ToList();
 
-				Assert.AreEqual(1, result1.Count);
-				Assert.AreEqual(0, result2.Count);
+				Assert.Multiple(() =>
+				{
+					Assert.That(result1, Has.Count.EqualTo(1));
+					Assert.That(result2, Is.Empty);
+				});
 			}
 		}
 
-		[ActiveIssue("https://github.com/ClickHouse/ClickHouse/issues/37999", Configuration = ProviderName.ClickHouseMySql)]
 		[Test]
 		public void TestWithoutValue([DataSources] string context)
 		{
@@ -113,12 +120,14 @@ namespace Tests.UserTests
 				param = null;
 				var result2 = query.ToList();
 
-				Assert.AreEqual(1, result1.Count);
-				Assert.AreEqual(0, result2.Count);
+				Assert.Multiple(() =>
+				{
+					Assert.That(result1, Has.Count.EqualTo(1));
+					Assert.That(result2, Is.Empty);
+				});
 			}
 		}
 
-		[ActiveIssue("https://github.com/ClickHouse/ClickHouse/issues/37999", Configuration = ProviderName.ClickHouseMySql)]
 		[Test]
 		public void TestOrWithValue([DataSources] string context)
 		{
@@ -134,8 +143,11 @@ namespace Tests.UserTests
 				param = null;
 				var result2 = query.ToList();
 
-				Assert.AreEqual(1, result1.Count);
-				Assert.AreEqual(cnt, result2.Count);
+				Assert.Multiple(() =>
+				{
+					Assert.That(result1, Has.Count.EqualTo(1));
+					Assert.That(result2, Has.Count.EqualTo(cnt));
+				});
 			}
 		}
 	}

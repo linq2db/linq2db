@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Linq;
 
+using FluentAssertions;
+
 using LinqToDB;
 using LinqToDB.Mapping;
 using NUnit.Framework;
@@ -155,7 +157,7 @@ namespace Tests.UserTests
 
 				var result = query3.ToArray();
 
-				Assert.AreEqual(3, query3.GetSelectQuery().Select.Columns.Count);
+				query3.GetSelectQuery().Select.Columns.Should().HaveCount(3);
 			}
 		}
 

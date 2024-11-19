@@ -17,7 +17,7 @@ namespace LinqToDB.Mapping
 	/// <summary>
 	/// Stores mapping entity descriptor.
 	/// </summary>
-	[DebuggerDisplay("{TypeAccessor.Type.Name} (\"{TableName.Name}\")")]
+	[DebuggerDisplay("{TypeAccessor.Type.Name} (\"{Name}\")")]
 	public class EntityDescriptor : IEntityChangeDescriptor
 	{
 		/// <summary>
@@ -131,7 +131,7 @@ namespace LinqToDB.Mapping
 		/// </summary>
 		public bool HasCalculatedMembers => CalculatedMembers != null && CalculatedMembers.Count > 0;
 
-		private InheritanceMapping[] _inheritanceMappings = Array<InheritanceMapping>.Empty;
+		private InheritanceMapping[] _inheritanceMappings = [];
 		/// <summary>
 		/// Gets list of inheritance mapping descriptors for current entity.
 		/// </summary>
@@ -152,7 +152,8 @@ namespace LinqToDB.Mapping
 		/// </summary>
 		internal bool HasComplexColumns { get; private set; }
 
-		public Delegate? QueryFilterFunc { get; private set; }
+		public LambdaExpression? QueryFilterLambda { get; private set; }
+		public Delegate?         QueryFilterFunc   { get; private set; }
 
 		bool HasInheritanceMapping()
 		{
@@ -193,7 +194,8 @@ namespace LinqToDB.Mapping
 
 			if (qf != null)
 			{
-				QueryFilterFunc = qf.FilterFunc;
+				QueryFilterLambda = qf.FilterLambda;
+				QueryFilterFunc   = qf.FilterFunc;
 			}
 
 			InitializeDynamicColumnsAccessors(hasInheritanceMapping);
@@ -209,13 +211,13 @@ namespace LinqToDB.Mapping
 				if (aa != null)
 				{
 					_associations.Add(new AssociationDescriptor(
-						TypeAccessor.Type, 
-						member.MemberInfo, 
-						aa.GetThisKeys(), 
+						TypeAccessor.Type,
+						member.MemberInfo,
+						aa.GetThisKeys(),
 						aa.GetOtherKeys(),
-						aa.ExpressionPredicate, 
-						aa.Predicate, 
-						aa.QueryExpressionMethod, 
+						aa.ExpressionPredicate,
+						aa.Predicate,
+						aa.QueryExpressionMethod,
 						aa.QueryExpression,
 						aa.Storage,
 						aa.AssociationSetterExpressionMethod,

@@ -55,7 +55,7 @@ namespace Tests.Linq
 					case Sql.DateParts.Week        : partStr = "week";        break;
 					case Sql.DateParts.WeekDay     :
 						builder.Expression = "WeekDay(Date_Add({date}, interval 1 day))";
-						builder.ResultExpression = builder.Inc(builder.ConvertToSqlExpression(Precedence.Primary));
+						builder.ResultExpression = builder.Inc(builder.ConvertToSqlExpression(Precedence.Primary)!);
 						break;
 					case Sql.DateParts.Hour        : partStr = "hour";        break;
 					case Sql.DateParts.Minute      : partStr = "minute";      break;
@@ -86,7 +86,7 @@ namespace Tests.Linq
 					case Sql.DateParts.Week        : partStr = "week";    break;
 					case Sql.DateParts.WeekDay     :
 						builder.Expression = "Extract(dow from {date})";
-						builder.ResultExpression = builder.Inc(builder.ConvertToSqlExpression(Precedence.Primary));
+						builder.ResultExpression = builder.Inc(builder.ConvertToSqlExpression(Precedence.Primary)!);
 						break;
 					case Sql.DateParts.Hour        : partStr = "hour";    break;
 					case Sql.DateParts.Minute      : partStr = "minute";  break;
@@ -114,7 +114,7 @@ namespace Tests.Linq
 					case Sql.DateParts.Year        : partStr = "Y"; break;
 					case Sql.DateParts.Quarter     :
 						builder.Expression = "Cast(strFTime('%m', {date}) as int)";
-						builder.ResultExpression = builder.Inc(builder.Div(builder.Dec(builder.ConvertToSqlExpression(Precedence.Primary)), 3));
+						builder.ResultExpression = builder.Inc(builder.Div(builder.Dec(builder.ConvertToSqlExpression(Precedence.Primary)!), 3));
 						break;
 					case Sql.DateParts.Month       : partStr = "m"; break;
 					case Sql.DateParts.DayOfYear   : partStr = "j"; break;
@@ -122,7 +122,7 @@ namespace Tests.Linq
 					case Sql.DateParts.Week        : partStr = "W"; break;
 					case Sql.DateParts.WeekDay     :
 						builder.Expression = "Cast(strFTime('%w', {date}) as int)";
-						builder.ResultExpression = builder.Inc(builder.ConvertToSqlExpression(Precedence.Primary));
+						builder.ResultExpression = builder.Inc(builder.ConvertToSqlExpression(Precedence.Primary)!);
 						break;
 					case Sql.DateParts.Hour        : partStr = "H"; break;
 					case Sql.DateParts.Minute      : partStr = "M"; break;
@@ -303,7 +303,7 @@ namespace Tests.Linq
 					case Sql.DateParts.Year        : partStr = "year";        break;
 					case Sql.DateParts.Quarter     :
 						builder.Expression = "Extract(Month from {date})";
-						builder.ResultExpression = builder.Inc(builder.Div(builder.Dec(builder.ConvertToSqlExpression(Precedence.Primary)), 3));
+						builder.ResultExpression = builder.Inc(builder.Div(builder.Dec(builder.ConvertToSqlExpression(Precedence.Primary)!), 3));
 						return;
 					case Sql.DateParts.Month       : partStr = "month";       break;
 					case Sql.DateParts.DayOfYear   : partStr = "yearday";     break;
@@ -324,7 +324,7 @@ namespace Tests.Linq
 				{
 					case Sql.DateParts.DayOfYear:
 					case Sql.DateParts.WeekDay:
-						builder.ResultExpression = builder.Inc(builder.ConvertToSqlExpression(Precedence.Primary));
+						builder.ResultExpression = builder.Inc(builder.ConvertToSqlExpression(Precedence.Primary)!);
 						break;
 				}
 			}

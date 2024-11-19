@@ -88,7 +88,9 @@ namespace Tests.Linq
 
 		sealed class WithNullConverter : ValueConverter<EnumValue, string?>
 		{
+#pragma warning disable CA2263 // Prefer generic overload when type is known
 			public WithNullConverter() : base(v => v == EnumValue.Null ? null : v.ToString(), p=> p == null ? EnumValue.Null : (EnumValue)Enum.Parse(typeof(EnumValue), p), true)
+#pragma warning restore CA2263 // Prefer generic overload when type is known
 			{
 
 			}
@@ -138,6 +140,7 @@ namespace Tests.Linq
 			var ms = new MappingSchema();
 			var builder = new FluentMappingBuilder(ms);
 
+#pragma warning disable CA2263 // Prefer generic overload when type is known
 			builder.Entity<MainClass>()
 				.Property(e => e.Value1)
 				.HasConversion(v => JsonConvert.SerializeObject(v), p => JsonConvert.DeserializeObject<JToken>(p))
@@ -163,6 +166,7 @@ namespace Tests.Linq
 					_ => _.HasValue ? new DateTime(_.Value.Ticks, DateTimeKind.Local) : new DateTime?()
 				)
 				.Build();
+#pragma warning restore CA2263 // Prefer generic overload when type is known
 
 			return ms;
 		}
@@ -179,35 +183,38 @@ namespace Tests.Linq
 				// Table Materialization
 				var result = table.OrderBy(_ => _.Id).ToArray();
 
-				Assert.That(result[0].Value1, Is.Not.Null);
-				Assert.That(result[0].Value2!.Count, Is.GreaterThan(0));
+				Assert.Multiple(() =>
+				{
+					Assert.That(result[0].Value1, Is.Not.Null);
+					Assert.That(result[0].Value2!, Is.Not.Empty);
 
-				Assert.That(result[0].Enum, Is.EqualTo(EnumValue.Value1));
-				Assert.That(result[1].Enum, Is.EqualTo(EnumValue.Value2));
-				Assert.That(result[2].Enum, Is.EqualTo(EnumValue.Value3));
+					Assert.That(result[0].Enum, Is.EqualTo(EnumValue.Value1));
+					Assert.That(result[1].Enum, Is.EqualTo(EnumValue.Value2));
+					Assert.That(result[2].Enum, Is.EqualTo(EnumValue.Value3));
 
-				Assert.That(result[0].EnumNullable, Is.EqualTo(EnumValue.Value1));
-				Assert.That(result[1].EnumNullable, Is.EqualTo(EnumValue.Value2));
-				Assert.That(result[2].EnumNullable, Is.EqualTo(EnumValue.Value3));
-				Assert.That(result[3].EnumNullable, Is.Null);
+					Assert.That(result[0].EnumNullable, Is.EqualTo(EnumValue.Value1));
+					Assert.That(result[1].EnumNullable, Is.EqualTo(EnumValue.Value2));
+					Assert.That(result[2].EnumNullable, Is.EqualTo(EnumValue.Value3));
+					Assert.That(result[3].EnumNullable, Is.Null);
 
-				Assert.That(result[0].EnumWithNull, Is.EqualTo(EnumValue.Value1));
-				Assert.That(result[1].EnumWithNull, Is.EqualTo(EnumValue.Value2));
-				Assert.That(result[2].EnumWithNull, Is.EqualTo(EnumValue.Value3));
-				Assert.That(result[3].EnumWithNull, Is.EqualTo(EnumValue.Null));
+					Assert.That(result[0].EnumWithNull, Is.EqualTo(EnumValue.Value1));
+					Assert.That(result[1].EnumWithNull, Is.EqualTo(EnumValue.Value2));
+					Assert.That(result[2].EnumWithNull, Is.EqualTo(EnumValue.Value3));
+					Assert.That(result[3].EnumWithNull, Is.EqualTo(EnumValue.Null));
 
-				Assert.That(result[0].EnumWithNullDeclarative, Is.EqualTo(EnumValue.Value1));
-				Assert.That(result[1].EnumWithNullDeclarative, Is.EqualTo(EnumValue.Value2));
-				Assert.That(result[2].EnumWithNullDeclarative, Is.EqualTo(EnumValue.Value3));
-				Assert.That(result[3].EnumWithNullDeclarative, Is.EqualTo(EnumValue.Null));
+					Assert.That(result[0].EnumWithNullDeclarative, Is.EqualTo(EnumValue.Value1));
+					Assert.That(result[1].EnumWithNullDeclarative, Is.EqualTo(EnumValue.Value2));
+					Assert.That(result[2].EnumWithNullDeclarative, Is.EqualTo(EnumValue.Value3));
+					Assert.That(result[3].EnumWithNullDeclarative, Is.EqualTo(EnumValue.Null));
 
-				Assert.That(result[9].Value1, Is.Null);
-				Assert.That(result[9].Value2, Is.Null);
+					Assert.That(result[9].Value1, Is.Null);
+					Assert.That(result[9].Value2, Is.Null);
 
-				Assert.That(result[0].BoolValue, Is.EqualTo(true));
-				Assert.That(result[1].BoolValue, Is.EqualTo(false));
-				Assert.That(result[2].BoolValue, Is.EqualTo(false));
-				Assert.That(result[3].BoolValue, Is.EqualTo(false));
+					Assert.That(result[0].BoolValue, Is.EqualTo(true));
+					Assert.That(result[1].BoolValue, Is.EqualTo(false));
+					Assert.That(result[2].BoolValue, Is.EqualTo(false));
+					Assert.That(result[3].BoolValue, Is.EqualTo(false));
+				});
 
 
 				var query = from t in table
@@ -220,23 +227,35 @@ namespace Tests.Linq
 
 				var selectResult = query.OrderBy(_ => _.Id).ToArray();
 
-				Assert.That(selectResult[0].Value1, Is.Not.Null);
-				Assert.That(selectResult[0].Value2!.Count, Is.GreaterThan(0));
+				Assert.Multiple(() =>
+				{
+					Assert.That(selectResult[0].Value1, Is.Not.Null);
+					Assert.That(selectResult[0].Value2!, Is.Not.Empty);
+				});
 
 				var subqueryResult = query.AsSubQuery().OrderBy(_ => _.Id).ToArray();
 
-				Assert.That(subqueryResult[0].Value1, Is.Not.Null);
-				Assert.That(subqueryResult[0].Value2!.Count, Is.GreaterThan(0));
+				Assert.Multiple(() =>
+				{
+					Assert.That(subqueryResult[0].Value1, Is.Not.Null);
+					Assert.That(subqueryResult[0].Value2!, Is.Not.Empty);
+				});
 
 				var unionResult = query.Concat(query.AsSubQuery()).OrderBy(_ => _.Id).ToArray();
 
 				var firstItem = unionResult.First();
-				Assert.That(firstItem.Value1, Is.Not.Null);
-				Assert.That(firstItem.Value2!.Count, Is.GreaterThan(0));
+				Assert.Multiple(() =>
+				{
+					Assert.That(firstItem.Value1, Is.Not.Null);
+					Assert.That(firstItem.Value2!, Is.Not.Empty);
+				});
 
 				var lastItem = unionResult.Last();
-				Assert.That(lastItem.Value1, Is.Null);
-				Assert.That(lastItem.Value2, Is.Null);
+				Assert.Multiple(() =>
+				{
+					Assert.That(lastItem.Value1, Is.Null);
+					Assert.That(lastItem.Value2, Is.Null);
+				});
 
 				var firstList = query.AsSubQuery().OrderBy(e => e.Id).Skip(1).Select(q => q.Value2).FirstOrDefault();
 				Assert.That(firstList![0].Value, Is.EqualTo("Value2"));
@@ -265,7 +284,7 @@ namespace Tests.Linq
 
 				var selectResult = query.ToArray();
 
-				Assert.That(selectResult.Length, Is.EqualTo(1));
+				Assert.That(selectResult, Has.Length.EqualTo(1));
 			}
 		}
 
@@ -340,7 +359,7 @@ namespace Tests.Linq
 
 				var selectResult = query.ToArray();
 
-				Assert.That(selectResult.Length, Is.EqualTo(1));
+				Assert.That(selectResult, Has.Length.EqualTo(1));
 			}
 		}
 
@@ -365,7 +384,7 @@ namespace Tests.Linq
 
 				var selectResult = query.ToArray();
 
-				Assert.That(selectResult.Length, Is.EqualTo(3));
+				Assert.That(selectResult, Has.Length.EqualTo(3));
 			}
 		}
 
@@ -390,7 +409,7 @@ namespace Tests.Linq
 
 				var selectResult = query.ToArray();
 
-				Assert.That(selectResult.Length, Is.EqualTo(7));
+				Assert.That(selectResult, Has.Length.EqualTo(7));
 			}
 		}
 
@@ -477,7 +496,7 @@ namespace Tests.Linq
 
 				var selectResult = query.ToArray();
 
-				Assert.That(selectResult.Length, Is.EqualTo(9));
+				Assert.That(selectResult, Has.Length.EqualTo(9));
 			}
 		}
 
@@ -501,7 +520,7 @@ namespace Tests.Linq
 
 				var selectResult = query.ToArray();
 
-				Assert.That(selectResult.Length, Is.EqualTo(1));
+				Assert.That(selectResult, Has.Length.EqualTo(1));
 			}
 		}
 
@@ -527,7 +546,7 @@ namespace Tests.Linq
 
 				var selectResult = query.ToArray();
 
-				Assert.That(selectResult.Length, Is.EqualTo(1));
+				Assert.That(selectResult, Has.Length.EqualTo(1));
 			}
 		}
 
@@ -552,10 +571,13 @@ namespace Tests.Linq
 
 				var update1Check = rawTable.First(e => e.Id == 1);
 
-				Assert.That(update1Check.Value1, Is.EqualTo(JsonConvert.SerializeObject(testData[0].Value1)));
-				Assert.That(update1Check.Value2, Is.EqualTo(JsonConvert.SerializeObject(updated)));
-				Assert.That(update1Check.EnumWithNull, Is.Null);
-				Assert.That(update1Check.EnumWithNullDeclarative, Is.Null);
+				Assert.Multiple(() =>
+				{
+					Assert.That(update1Check.Value1, Is.EqualTo(JsonConvert.SerializeObject(testData[0].Value1)));
+					Assert.That(update1Check.Value2, Is.EqualTo(JsonConvert.SerializeObject(updated)));
+					Assert.That(update1Check.EnumWithNull, Is.Null);
+					Assert.That(update1Check.EnumWithNullDeclarative, Is.Null);
+				});
 
 
 				var toUpdate2 = new MainClass
@@ -571,10 +593,13 @@ namespace Tests.Linq
 
 				var update2Check = rawTable.First(e => e.Id == 2);
 
-				Assert.That(update2Check.Value1, Is.EqualTo(/*lang=json,strict*/ "{\"some\":\"updated2}\"}"));
-				Assert.That(update2Check.Value2, Is.EqualTo(JsonConvert.SerializeObject(new List<ItemClass> { new ItemClass { Value = "updated2" } })));
-				Assert.That(update2Check.EnumWithNull, Is.EqualTo("Value2"));
-				Assert.That(update2Check.EnumWithNullDeclarative, Is.EqualTo("Value2"));
+				Assert.Multiple(() =>
+				{
+					Assert.That(update2Check.Value1, Is.EqualTo(/*lang=json,strict*/ "{\"some\":\"updated2}\"}"));
+					Assert.That(update2Check.Value2, Is.EqualTo(JsonConvert.SerializeObject(new List<ItemClass> { new ItemClass { Value = "updated2" } })));
+					Assert.That(update2Check.EnumWithNull, Is.EqualTo("Value2"));
+					Assert.That(update2Check.EnumWithNullDeclarative, Is.EqualTo("Value2"));
+				});
 
 
 				var toUpdate3 = new MainClass
@@ -589,10 +614,13 @@ namespace Tests.Linq
 
 				var update3Check = rawTable.First(e => e.Id == 3)!;
 
-				Assert.That(update3Check.Value1, Is.Null);
-				Assert.That(update3Check.Value2, Is.Null);
-				Assert.That(update3Check.EnumWithNull, Is.Null);
-				Assert.That(update3Check.EnumWithNullDeclarative, Is.Null);
+				Assert.Multiple(() =>
+				{
+					Assert.That(update3Check.Value1, Is.Null);
+					Assert.That(update3Check.Value2, Is.Null);
+					Assert.That(update3Check.EnumWithNull, Is.Null);
+					Assert.That(update3Check.EnumWithNullDeclarative, Is.Null);
+				});
 
 			}
 		}
@@ -618,13 +646,16 @@ namespace Tests.Linq
 					.Insert();
 				var insert1Check = rawTable.First(e => e.Id == 1);
 
-				Assert.That(insert1Check.Value1, Is.EqualTo(JsonConvert.SerializeObject(new JArray())));
-				Assert.That(insert1Check.Value2, Is.EqualTo(JsonConvert.SerializeObject(inserted)));
-				Assert.That(insert1Check.Enum,   Is.EqualTo("Value1"));
-				Assert.That(insert1Check.EnumWithNull, Is.Null);
-				Assert.That(insert1Check.EnumWithNullDeclarative, Is.Null);
-				Assert.That(insert1Check.BoolValue, Is.EqualTo('Y'));
-				Assert.That(insert1Check.AnotherBoolValue, Is.EqualTo('T'));
+				Assert.Multiple(() =>
+				{
+					Assert.That(insert1Check.Value1, Is.EqualTo(JsonConvert.SerializeObject(new JArray())));
+					Assert.That(insert1Check.Value2, Is.EqualTo(JsonConvert.SerializeObject(inserted)));
+					Assert.That(insert1Check.Enum, Is.EqualTo("Value1"));
+					Assert.That(insert1Check.EnumWithNull, Is.Null);
+					Assert.That(insert1Check.EnumWithNullDeclarative, Is.Null);
+					Assert.That(insert1Check.BoolValue, Is.EqualTo('Y'));
+					Assert.That(insert1Check.AnotherBoolValue, Is.EqualTo('T'));
+				});
 
 				table
 					.Value(e => e.Id, 2)
@@ -637,13 +668,16 @@ namespace Tests.Linq
 
 				var insert2Check = rawTable.First(e => e.Id == 2);
 
-				Assert.That(insert2Check.Value1, Is.Null);
-				Assert.That(insert2Check.Value2, Is.Null);
-				Assert.That(insert2Check.Enum,   Is.EqualTo("Value2"));
-				Assert.That(insert2Check.EnumWithNull, Is.Null);
-				Assert.That(insert2Check.EnumWithNullDeclarative, Is.Null);
-				Assert.That(insert2Check.BoolValue, Is.EqualTo('N'));
-				Assert.That(insert2Check.AnotherBoolValue, Is.EqualTo('F'));
+				Assert.Multiple(() =>
+				{
+					Assert.That(insert2Check.Value1, Is.Null);
+					Assert.That(insert2Check.Value2, Is.Null);
+					Assert.That(insert2Check.Enum, Is.EqualTo("Value2"));
+					Assert.That(insert2Check.EnumWithNull, Is.Null);
+					Assert.That(insert2Check.EnumWithNullDeclarative, Is.Null);
+					Assert.That(insert2Check.BoolValue, Is.EqualTo('N'));
+					Assert.That(insert2Check.AnotherBoolValue, Is.EqualTo('F'));
+				});
 
 
 				var toInsert = new MainClass
@@ -660,16 +694,19 @@ namespace Tests.Linq
 
 				var insert3Check = rawTable.First(e => e.Id == 3);
 
-				Assert.That(insert3Check.Value1, Is.EqualTo(/*lang=json,strict*/ "{\"some\":\"inserted3}\"}"));
-				Assert.That(insert3Check.Value2, Is.EqualTo(JsonConvert.SerializeObject(new List<ItemClass> { new ItemClass { Value = "inserted3" } })));
-				Assert.That(insert3Check.Enum,   Is.EqualTo("Value3"));
-				Assert.That(insert3Check.EnumNullable, Is.Null);
-				Assert.That(insert3Check.EnumWithNull, Is.EqualTo("Value1"));
-				Assert.That(insert3Check.EnumWithNullDeclarative, Is.EqualTo("Value1"));
-				Assert.That(insert3Check.BoolValue, Is.EqualTo('Y'));
-				Assert.That(insert3Check.AnotherBoolValue, Is.EqualTo('T'));
+				Assert.Multiple(() =>
+				{
+					Assert.That(insert3Check.Value1, Is.EqualTo(/*lang=json,strict*/ "{\"some\":\"inserted3}\"}"));
+					Assert.That(insert3Check.Value2, Is.EqualTo(JsonConvert.SerializeObject(new List<ItemClass> { new ItemClass { Value = "inserted3" } })));
+					Assert.That(insert3Check.Enum, Is.EqualTo("Value3"));
+					Assert.That(insert3Check.EnumNullable, Is.Null);
+					Assert.That(insert3Check.EnumWithNull, Is.EqualTo("Value1"));
+					Assert.That(insert3Check.EnumWithNullDeclarative, Is.EqualTo("Value1"));
+					Assert.That(insert3Check.BoolValue, Is.EqualTo('Y'));
+					Assert.That(insert3Check.AnotherBoolValue, Is.EqualTo('T'));
 
-				Assert.That(table.Count(), Is.EqualTo(3));
+					Assert.That(table.Count(), Is.EqualTo(3));
+				});
 			}
 		}
 
@@ -756,15 +793,18 @@ namespace Tests.Linq
 
 			var data = table.OrderBy(_ => _.Id).ToArray();
 
-			Assert.AreEqual(2, data.Length);
+			Assert.That(data, Has.Length.EqualTo(2));
 
-			Assert.AreEqual(1, data[0].Id);
-			Assert.IsNull(data[0].FirstAppointmentTime);
-			Assert.IsNull(data[0].PassportDateOfIssue);
+			Assert.Multiple(() =>
+			{
+				Assert.That(data[0].Id, Is.EqualTo(1));
+				Assert.That(data[0].FirstAppointmentTime, Is.Null);
+				Assert.That(data[0].PassportDateOfIssue, Is.Null);
 
-			Assert.AreEqual(2, data[1].Id);
-			Assert.AreEqual(TestData.DateTime0, data[1].FirstAppointmentTime);
-			Assert.AreEqual(TestData.DateTime3, data[1].PassportDateOfIssue);
+				Assert.That(data[1].Id, Is.EqualTo(2));
+				Assert.That(data[1].FirstAppointmentTime, Is.EqualTo(TestData.DateTime0));
+				Assert.That(data[1].PassportDateOfIssue, Is.EqualTo(TestData.DateTime3));
+			});
 		}
 
 		sealed class BoolConverterAttribute : ValueConverterAttribute
@@ -833,11 +873,14 @@ namespace Tests.Linq
 
 			static void AssertRecord(Issue3830TestTable record, Issue3830TestTable[] result)
 			{
-				Assert.AreEqual(1           , result.Length  );
-				Assert.AreEqual(record.Id   , result[0].Id   );
-				Assert.AreEqual(record.Bool1, result[0].Bool1);
-				Assert.AreEqual(record.Bool2, result[0].Bool2);
-				Assert.AreEqual(record.Bool3, result[0].Bool3);
+				Assert.That(result, Has.Length.EqualTo(1));
+				Assert.Multiple(() =>
+				{
+					Assert.That(result[0].Id, Is.EqualTo(record.Id));
+					Assert.That(result[0].Bool1, Is.EqualTo(record.Bool1));
+					Assert.That(result[0].Bool2, Is.EqualTo(record.Bool2));
+					Assert.That(result[0].Bool3, Is.EqualTo(record.Bool3));
+				});
 			}
 		}
 

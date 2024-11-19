@@ -742,7 +742,7 @@ namespace LinqToDB
 
 			var ret = await QueryRunner.InsertWithIdentity<T>
 				.QueryAsync(dataContext, obj, columnFilter, tableName: tableName, serverName: serverName, databaseName: databaseName, schemaName: schemaName, tableOptions: tableOptions, token)
-				.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+				.ConfigureAwait(false);
 			return dataContext.MappingSchema.ChangeTypeTo<int>(ret);
 		}
 
@@ -805,7 +805,7 @@ namespace LinqToDB
 
 			var ret = await QueryRunner.InsertWithIdentity<T>
 				.QueryAsync(dataContext, obj, columnFilter, tableName: tableName, serverName: serverName, databaseName: databaseName, schemaName: schemaName, tableOptions: tableOptions, token)
-				.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+				.ConfigureAwait(false);
 
 			return dataContext.MappingSchema.ChangeTypeTo<long>(ret);
 		}
@@ -869,7 +869,7 @@ namespace LinqToDB
 
 			var ret = await QueryRunner.InsertWithIdentity<T>
 				.QueryAsync(dataContext, obj, columnFilter, tableName: tableName, serverName: serverName, databaseName: databaseName, schemaName: schemaName, tableOptions: tableOptions, token)
-				.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+				.ConfigureAwait(false);
 
 			return dataContext.MappingSchema.ChangeTypeTo<decimal>(ret);
 		}
@@ -1349,7 +1349,7 @@ namespace LinqToDB
 			{
 				await QueryRunner.DropTable<T>
 					.QueryAsync(dataContext, tableName: tableName, serverName: serverName, databaseName: databaseName, schemaName: schemaName, !throwExceptionIfNotExists, tableOptions: tableOptions, token)
-					.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+					.ConfigureAwait(false);
 			}
 			catch when (!throwExceptionIfNotExists ?? tableOptions.HasDropIfExists() || SqlTable.Create<T>(dataContext).TableOptions.HasDropIfExists())
 			{
@@ -1399,7 +1399,7 @@ namespace LinqToDB
 						!throwExceptionIfNotExists,
 						tableOptions.IsSet() ? tableOptions : table.TableOptions,
 						token)
-					.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+					.ConfigureAwait(false);
 			}
 			catch when (!throwExceptionIfNotExists ?? tableOptions.HasDropIfExists() || SqlTable.Create<T>(table.DataContext).TableOptions.HasDropIfExists())
 			{
@@ -1429,15 +1429,49 @@ namespace LinqToDB
 			if (cteBody     == null) throw new ArgumentNullException(nameof(cteBody));
 
 			var cteTable = new CteTable<T>(dataContext);
-			var param    = MethodHelper.GetMethodInfo(cteBody, cteTable).GetParameters()[0];
 
-			var cteQuery = cteBody(cteTable);
+			if (cteTableName == null)
+			{
+				var param = MethodHelper.GetMethodInfo(cteBody, cteTable).GetParameters()[0];
+				cteTableName = param.Name;
+			}
 
-			return ((IQueryable<T>)cteTable).Provider.CreateQuery<T>(
-				Expression.Call(
-					null,
-					MethodHelper.GetMethodInfo(LinqExtensions.AsCte, cteQuery, cteQuery, cteTableName),
-					cteTable.Expression, cteQuery.Expression, Expression.Constant(cteTableName ?? param.Name)));
+			var cteQuery  = cteBody(cteTable);
+			var queryExpr = cteQuery.Expression;
+
+			var paramExpr = Expression.Parameter(typeof(IQueryable<T>), "cteParam");
+			queryExpr = queryExpr.Transform(e =>
+			{
+				if (e.NodeType == ExpressionType.Constant)
+				{
+					var constantExpr = (ConstantExpression)e;
+					if (constantExpr.Value == cteTable)
+						return paramExpr;
+				}
+				else if (e.NodeType == ExpressionType.MemberAccess && e.Type == paramExpr.Type)
+				{
+					var me = (MemberExpression)e;
+					// closure handling
+					//
+					if (me.Expression!.NodeType == ExpressionType.Constant)
+					{
+						var value = me.EvaluateExpression();
+						if (value == cteTable)
+							return paramExpr;
+					}
+				}
+				return e;
+			});
+
+			var queryLambda = Expression.Lambda<Func<IQueryable<T>, IQueryable<T>>>(queryExpr, paramExpr);
+
+			var methodInfo = MethodHelper.GetMethodInfo(GetCte, dataContext, cteBody, cteTableName);
+
+			var queryBody = Expression.Call(
+				methodInfo,
+				SqlQueryRootExpression.Create(dataContext), queryLambda, Expression.Constant(cteTableName));
+
+			return new ExpressionQueryImpl<T>(dataContext, queryBody);
 		}
 
 		/// <summary>
@@ -1461,60 +1495,17 @@ namespace LinqToDB
 
 		#region FromSql
 
-#if !NET45
-		/// <summary>
-		/// Compares two FormattableString parameters
-		/// </summary>
-		public class SqlFormattableComparerAttribute : SqlQueryDependentAttribute
+		static Expression GenerateArray(object?[] arguments)
 		{
-			public override bool ExpressionsEqual<TContext>(TContext context, Expression expr1, Expression expr2, Func<TContext, Expression, Expression, bool> comparer)
+			var argumentsExpr = Expression.NewArrayInit(typeof(object), arguments.Select(p =>
 			{
-				if (expr1.NodeType != expr2.NodeType)
-					return false;
+				Expression constant = Expression.Constant(p, p?.GetType() ?? typeof(object));
+				if (constant.Type != typeof(object))
+					constant = Expression.Convert(constant, typeof(object));
+				return constant;
+			}));
 
-				if (expr1.NodeType == ExpressionType.Call)
-				{
-					var mc1 = (MethodCallExpression)expr1;
-					var mc2 = (MethodCallExpression)expr2;
-					if (!ObjectsEqual(mc1.Arguments[0].EvaluateExpression(), mc2.Arguments[0].EvaluateExpression()))
-						return false;
-					return comparer(context, mc1.Arguments[1], mc2.Arguments[1]);
-				}
-
-				if (expr1.NodeType == ExpressionType.Constant)
-				{
-					var c1 = (ConstantExpression)expr1;
-					var c2 = (ConstantExpression)expr2;
-
-					if (c1.Value is FormattableString str1 && c2.Value is FormattableString str2)
-					{
-						if (str1.Format != str2.Format || str1.ArgumentCount != str2.ArgumentCount)
-							return false;
-
-						for (var i = 0; i < str1.ArgumentCount; i++)
-							if (!comparer(context, Expression.Constant(str1.GetArgument(i)), Expression.Constant(str2.GetArgument(i))))
-								return false;
-
-						return true;
-					}
-				}
-
-				return base.ExpressionsEqual(context, expr1, expr2, comparer);
-			}
-
-			public override Expression PrepareForCache(Expression expression)
-			{
-				if (expression.NodeType != ExpressionType.Call)
-					return base.PrepareForCache(expression);
-
-				var mc = (MethodCallExpression)expression;
-				var newArguments = new List<Expression>();
-				newArguments.Add(Expression.Constant(mc.Arguments[0].EvaluateExpression()));
-				newArguments.AddRange(mc.Arguments.Skip(1));
-
-				mc = mc.Update(mc.Object, newArguments);
-				return mc;
-			}
+			return argumentsExpr;
 		}
 
 		/// <summary>
@@ -1539,18 +1530,26 @@ namespace LinqToDB
 		/// <returns> An <see cref="IQueryable{T}" /> representing the raw SQL query. </returns>
 		[StringFormatMethod("sql")]
 		public static IQueryable<TEntity> FromSql<TEntity>(
-			this                     IDataContext      dataContext,
-			[SqlFormattableComparer] FormattableString sql)
+			this IDataContext dataContext,
+			FormattableString sql)
 		{
 			if (dataContext == null) throw new ArgumentNullException(nameof(dataContext));
 			if (sql         == null) throw new ArgumentNullException(nameof(sql));
+
+			var arguments = sql.GetArguments();
+			var methodInfo = MethodHelper.GetMethodInfo(System.Runtime.CompilerServices.FormattableStringFactory.Create,
+				sql.Format, arguments);
+			var argumentsExpr = GenerateArray(arguments);
+
+			var formattableStringExpr =
+				Expression.Call(null, methodInfo, Expression.Constant(sql.Format), argumentsExpr);
 
 			return new ExpressionQueryImpl<TEntity>(
 				dataContext,
 				Expression.Call(
 					null,
 					MethodHelper.GetMethodInfo(FromSql<TEntity>, dataContext, sql),
-					ExpressionConstants.DataContextParam, Expression.Constant(sql)));
+					SqlQueryRootExpression.Create(dataContext), formattableStringExpr));
 		}
 
 		/// <summary>
@@ -1576,7 +1575,7 @@ namespace LinqToDB
 		[StringFormatMethod("sql")]
 		public static IQueryable<TEntity> FromSqlScalar<TEntity>(
 			this                     IDataContext      dataContext,
-			[SqlFormattableComparer] FormattableString sql)
+			FormattableString sql)
 		{
 			if (dataContext == null) throw new ArgumentNullException(nameof(dataContext));
 			if (sql         == null) throw new ArgumentNullException(nameof(sql));
@@ -1586,10 +1585,8 @@ namespace LinqToDB
 				Expression.Call(
 					null,
 					MethodHelper.GetMethodInfo(FromSqlScalar<TEntity>, dataContext, sql),
-					ExpressionConstants.DataContextParam, Expression.Constant(sql)));
+					SqlQueryRootExpression.Create(dataContext), Expression.Constant(sql)));
 		}
-
-#endif
 
 		/// <summary>
 		///     <para>
@@ -1618,18 +1615,20 @@ namespace LinqToDB
 		/// <returns> An <see cref="IQueryable{T}" /> representing the raw SQL query. </returns>
 		[StringFormatMethod("sql")]
 		public static IQueryable<TEntity> FromSql<TEntity>(
-			this                             IDataContext dataContext,
-			[SqlQueryDependent]              RawSqlString sql,
-			[SqlQueryDependentParams] params object?[]    parameters)
+			this IDataContext dataContext,
+			RawSqlString      sql,
+			params object?[]  parameters)
 		{
 			if (dataContext == null) throw new ArgumentNullException(nameof(dataContext));
+
+			var paramsExpr = GenerateArray(parameters);
 
 			return new ExpressionQueryImpl<TEntity>(
 				dataContext,
 				Expression.Call(
 					null,
 					MethodHelper.GetMethodInfo(FromSql<TEntity>, dataContext, sql, parameters),
-					ExpressionConstants.DataContextParam, Expression.Constant(sql), Expression.Constant(parameters)));
+					SqlQueryRootExpression.Create(dataContext), Expression.Constant(sql), paramsExpr));
 		}
 
 		#endregion
@@ -1676,9 +1675,48 @@ namespace LinqToDB
 				Expression.Call(
 					null,
 					MethodHelper.GetMethodInfo(SelectQuery, dataContext, selector),
-					ExpressionConstants.DataContextParam, Expression.Quote(selector)));
+					SqlQueryRootExpression.Create(dataContext), Expression.Quote(selector)));
 		}
 
 		#endregion
+
+		/// <summary>Creates a <see cref="ITable{T}"/> for given query expression.</summary>
+		/// <typeparam name="TResult">The result type of the table expression.</typeparam>
+		/// <param name="expression">The query expression to create.</param>
+		/// <returns>An <see cref="ITable{T}" /> representing the query.</returns>
+		public static ITable<TResult> TableFromExpression<TResult>(
+			this IDataContext                 dataContext,
+			Expression<Func<ITable<TResult>>> expression)
+			where TResult : notnull
+		{
+			var body = expression.UnwrapLambda().Body;
+
+			if (body is not MethodCallExpression mc)
+				throw new InvalidOperationException("TableFromExpression accepts only methods in body.");
+
+			var attr = mc.Method.GetTableFunctionAttribute(dataContext.MappingSchema);
+			if (attr == null)
+				throw new InvalidOperationException($"TableFromExpression accepts only methods which have '{nameof(Sql.TableFunctionAttribute)}' attribute.");
+
+			return new Table<TResult>(dataContext,
+				Expression.Call(
+					null,
+					MethodHelper.GetMethodInfo(TableFromExpression, dataContext, expression),
+					SqlQueryRootExpression.Create(dataContext),
+					Expression.Quote(expression)
+				));
+		}
+
+		/// <summary>Creates a <see cref="IQueryable{T}"/> for given query expression.</summary>
+		/// <typeparam name="TResult">The result type of the query expression.</typeparam>
+		/// <param name="expression">The query expression to create.</param>
+		/// <returns>An <see cref="IQueryable{T}" /> representing the query.</returns>
+		public static IQueryable<TResult> QueryFromExpression<TResult>(
+			this IDataContext                     dataContext,
+			Expression<Func<IQueryable<TResult>>> expression)
+		{
+			return new ExpressionQueryImpl<TResult>(dataContext, expression.Body);
+		}
+
 	}
 }

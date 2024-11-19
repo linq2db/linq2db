@@ -9,14 +9,13 @@ namespace LinqToDB.Linq.Builder
 
 	internal partial class MergeBuilder
 	{
+		[BuildsMethodCall(nameof(LinqExtensions.DeleteWhenMatchedAnd))]
 		internal sealed class DeleteWhenMatched : MethodCallBuilder
 		{
-			protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
-			{
-				return methodCall.IsSameGenericMethod(DeleteWhenMatchedAndMethodInfo);
-			}
+			public static bool CanBuildMethod(MethodCallExpression call, BuildInfo info, ExpressionBuilder builder)
+				=> call.IsSameGenericMethod(DeleteWhenMatchedAndMethodInfo);
 
-			protected override IBuildContext BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
+			protected override BuildSequenceResult BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 			{
 				var mergeContext = (MergeContext)builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
 
@@ -27,11 +26,19 @@ namespace LinqToDB.Linq.Builder
 				var predicate = methodCall.Arguments[1];
 				if (!predicate.IsNullValue())
 				{
-					var condition   = (LambdaExpression)predicate.Unwrap();
-					operation.Where = BuildSearchCondition(builder, statement, mergeContext.TargetContext, mergeContext.SourceContext, condition);
+					var condition           = predicate.UnwrapLambda();
+					var conditionExpression = mergeContext.SourceContext.PrepareTargetSource(condition);
+
+					operation.Where = new SqlSearchCondition();
+
+					builder.BuildSearchCondition(
+						mergeContext.SourceContext, 
+						conditionExpression, 
+						buildInfo.GetFlags(ProjectFlags.ForceOuterAssociation), 
+						operation.Where);
 				}
 
-				return mergeContext;
+				return BuildSequenceResult.FromContext(mergeContext);
 			}
 		}
 	}

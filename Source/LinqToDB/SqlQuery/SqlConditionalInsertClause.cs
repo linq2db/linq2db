@@ -1,13 +1,11 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace LinqToDB.SqlQuery
 {
-	public class SqlConditionalInsertClause : IQueryElement, ISqlExpressionWalkable
+	public class SqlConditionalInsertClause : IQueryElement
 	{
-		public SqlInsertClause     Insert { get; }
-		public SqlSearchCondition? When   { get; }
+		public SqlInsertClause     Insert { get; private set; }
+		public SqlSearchCondition? When   { get; private set; }
 
 		public SqlConditionalInsertClause(SqlInsertClause insert, SqlSearchCondition? when)
 		{
@@ -15,35 +13,32 @@ namespace LinqToDB.SqlQuery
 			When   = when;
 		}
 
-		#region ISqlExpressionWalkable
-
-		ISqlExpression? ISqlExpressionWalkable.Walk<TContext>(WalkOptions options, TContext context, Func<TContext, ISqlExpression, ISqlExpression> func)
+		public void Modify(SqlInsertClause insert, SqlSearchCondition? when)
 		{
-			((ISqlExpressionWalkable?)When)?.Walk(options, context, func);
-
-			((ISqlExpressionWalkable)Insert).Walk(options, context, func);
-
-			return null;
+			Insert = insert;
+			When   = when;
 		}
-
-		#endregion
 
 		#region IQueryElement
 
+#if DEBUG
+		public string DebugText => this.ToDebugString();
+#endif
 		QueryElementType IQueryElement.ElementType => QueryElementType.ConditionalInsertClause;
 
-		StringBuilder IQueryElement.ToString(StringBuilder sb, Dictionary<IQueryElement, IQueryElement> dic)
+		QueryElementTextWriter IQueryElement.ToString(QueryElementTextWriter writer)
 		{
 			if (When != null)
 			{
-				sb.Append("WHEN ");
-				((IQueryElement)When).ToString(sb, dic);
-				sb.AppendLine(" THEN");
+				writer
+					.Append("WHEN ")
+					.AppendElement(When)
+					.AppendLine(" THEN");
 			}
 
-			((IQueryElement)Insert).ToString(sb, dic);
+			writer.AppendElement(Insert);
 
-			return sb;
+			return writer;
 		}
 
 		#endregion

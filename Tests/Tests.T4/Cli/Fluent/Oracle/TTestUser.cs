@@ -19,7 +19,7 @@ namespace Cli.Fluent.Oracle
 
 		#region Associations
 		/// <summary>
-		/// SYS_C007192 backreference
+		/// SYS_C007123 backreference
 		/// </summary>
 		public IEnumerable<TTestUserContract> TTestUserContracts { get; set; } = null!;
 		#endregion

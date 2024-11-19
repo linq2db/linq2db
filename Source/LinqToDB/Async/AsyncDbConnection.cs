@@ -7,8 +7,13 @@ using System.Threading.Tasks;
 
 using JetBrains.Annotations;
 
+using AsyncDisposableWrapper = LinqToDB.Tools.ActivityService.AsyncDisposableWrapper;
+
 namespace LinqToDB.Async
 {
+	using Data;
+	using Tools;
+
 	/// <summary>
 	/// Implements <see cref="IAsyncDbConnection"/> wrapper over <see cref="DbConnection"/> instance with
 	/// synchronous implementation of asynchronous methods.
@@ -22,25 +27,9 @@ namespace LinqToDB.Async
 			Connection = connection ?? throw new ArgumentNullException(nameof(connection));
 		}
 
-		public virtual DbConnection Connection { get; }
+		internal DataConnection? DataConnection { get; set; }
 
-		public virtual DbConnection? TryClone()
-		{
-			try
-			{
-				return Connection is ICloneable cloneable
-					? (DbConnection)cloneable.Clone()
-					: null;
-			}
-			catch
-			{
-				// this try-catch added to handle errors like this one from MiniProfiler's ProfiledDbConnection
-				// "NotSupportedException : Underlying SqliteConnection is not cloneable"
-				// because wrapper implements ICloneable but wrapped connection doesn't
-				// exception-less solution will be always return null for wrapped connections which is also meh
-				return null;
-			}
-		}
+		public virtual DbConnection Connection { get; }
 
 		[AllowNull]
 		public virtual string ConnectionString
@@ -53,74 +42,144 @@ namespace LinqToDB.Async
 
 		public virtual DbCommand CreateCommand() => Connection.CreateCommand();
 
-		public virtual void Open     ()                                    => Connection.Open();
-		public virtual Task OpenAsync(CancellationToken cancellationToken) => Connection.OpenAsync(cancellationToken);
+		public virtual void Open()
+		{
+			using var a = ActivityService.Start(ActivityID.ConnectionOpen);
+			Connection.Open();
+			a?.AddQueryInfo(DataConnection, Connection, null);
+		}
 
-		public virtual void Close     () => Connection.Close();
+		public virtual Task OpenAsync(CancellationToken cancellationToken)
+		{
+			var a = ActivityService.StartAndConfigureAwait(ActivityID.ConnectionOpenAsync);
+
+			if (a is null)
+				return Connection.OpenAsync(cancellationToken);
+
+			return CallAwaitUsing(a, DataConnection, Connection, cancellationToken);
+
+			static async Task CallAwaitUsing(AsyncDisposableWrapper activity, DataConnection? dataConnection, DbConnection connection, CancellationToken token)
+			{
+				await using (activity)
+				{
+					await connection.OpenAsync(token).ConfigureAwait(false);
+					activity.AddQueryInfo(dataConnection, connection, null);
+				}
+			}
+		}
+
+		public virtual void Close()
+		{
+			using var _ = ActivityService.Start(ActivityID.ConnectionClose)?.AddQueryInfo(DataConnection, Connection, null);
+			Connection.Close();
+		}
+
 		public virtual Task CloseAsync()
 		{
-#if NETSTANDARD2_1PLUS
-			return Connection.CloseAsync();
+#if NET6_0_OR_GREATER
+			var a = ActivityService.StartAndConfigureAwait(ActivityID.ConnectionCloseAsync)?.AddQueryInfo(DataConnection, Connection, null);
+
+			if (a is null)
+				return Connection.CloseAsync();
+
+			return CallAwaitUsing(a, Connection);
+
+			static async Task CallAwaitUsing(AsyncDisposableWrapper activity, DbConnection connection)
+			{
+				await using (activity)
+					await connection.CloseAsync().ConfigureAwait(false);
+			}
 #else
+			using var _ = ActivityService.Start(ActivityID.ConnectionCloseAsync)?.AddQueryInfo(DataConnection, Connection, null);
+
 			Close();
-			return TaskEx.CompletedTask;
+			return Task.CompletedTask;
 #endif
 		}
 
-		public virtual IAsyncDbTransaction BeginTransaction() => AsyncFactory.Create(Connection.BeginTransaction());
-		public virtual IAsyncDbTransaction BeginTransaction(IsolationLevel isolationLevel) => AsyncFactory.Create(Connection.BeginTransaction(isolationLevel));
+		public virtual IAsyncDbTransaction BeginTransaction()
+		{
+			using var a = ActivityService.Start(ActivityID.ConnectionBeginTransaction)?.AddQueryInfo(DataConnection, Connection, null);
+			return AsyncFactory.CreateAndSetDataContext(DataConnection, Connection.BeginTransaction());
+		}
 
-#if !NATIVE_ASYNC
-			public virtual Task<IAsyncDbTransaction> BeginTransactionAsync(CancellationToken cancellationToken)
-				=> Task.FromResult(BeginTransaction());
-#elif !NETSTANDARD2_1PLUS
+		public virtual IAsyncDbTransaction BeginTransaction(IsolationLevel isolationLevel)
+		{
+			using var a = ActivityService.Start(ActivityID.ConnectionBeginTransaction)?.AddQueryInfo(DataConnection, Connection, null);
+			return AsyncFactory.CreateAndSetDataContext(DataConnection, Connection.BeginTransaction(isolationLevel));
+		}
+
+#if !NET6_0_OR_GREATER
+
 		public virtual ValueTask<IAsyncDbTransaction> BeginTransactionAsync(CancellationToken cancellationToken)
-			=> new(BeginTransaction());
+		{
+			return new(BeginTransaction());
+		}
+
+		public virtual ValueTask<IAsyncDbTransaction> BeginTransactionAsync(IsolationLevel isolationLevel, CancellationToken cancellationToken)
+		{
+			return new(BeginTransaction(isolationLevel));
+		}
+
 #else
 		public virtual async ValueTask<IAsyncDbTransaction> BeginTransactionAsync(CancellationToken cancellationToken)
 		{
-			var transaction = await Connection.BeginTransactionAsync(cancellationToken)
-				.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
-			return AsyncFactory.Create(transaction);
-		}
-#endif
+			await using (ActivityService.StartAndConfigureAwait(ActivityID.ConnectionBeginTransactionAsync)?.AddQueryInfo(DataConnection, Connection, null))
+			{
+				var transaction = await Connection.BeginTransactionAsync(cancellationToken)
+					.ConfigureAwait(false);
 
-#if !NATIVE_ASYNC
-			public virtual Task<IAsyncDbTransaction> BeginTransactionAsync(IsolationLevel isolationLevel, CancellationToken cancellationToken)
-				=> Task.FromResult(BeginTransaction(isolationLevel));
-#elif !NETSTANDARD2_1PLUS
-		public virtual ValueTask<IAsyncDbTransaction> BeginTransactionAsync(IsolationLevel isolationLevel, CancellationToken cancellationToken)
-			=> new(BeginTransaction(isolationLevel));
-#else
+				return AsyncFactory.CreateAndSetDataContext(DataConnection, transaction);
+			}
+		}
+
 		public virtual async ValueTask<IAsyncDbTransaction> BeginTransactionAsync(IsolationLevel isolationLevel, CancellationToken cancellationToken)
 		{
-			var transaction = await Connection.BeginTransactionAsync(isolationLevel, cancellationToken)
-				.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
-			return AsyncFactory.Create(transaction);
+			await using (ActivityService.StartAndConfigureAwait(ActivityID.ConnectionBeginTransactionAsync)?.AddQueryInfo(DataConnection, Connection, null))
+			{
+				var transaction = await Connection.BeginTransactionAsync(isolationLevel, cancellationToken)
+					.ConfigureAwait(false);
+
+				return AsyncFactory.CreateAndSetDataContext(DataConnection, transaction);
+			}
 		}
+
 #endif
 
 		#region IDisposable
-		public virtual void Dispose() => Connection.Dispose();
+
+		public virtual void Dispose()
+		{
+			using var _ = ActivityService.Start(ActivityID.ConnectionDispose)?.AddQueryInfo(DataConnection, Connection, null);
+			Connection.Dispose();
+		}
+
 		#endregion
 
 		#region IAsyncDisposable
-#if !NATIVE_ASYNC
-		public virtual Task DisposeAsync()
-		{
-			Dispose();
-			return TaskEx.CompletedTask;
-		}
-#else
 		public virtual ValueTask DisposeAsync()
 		{
 			if (Connection is IAsyncDisposable asyncDisposable)
-				return asyncDisposable.DisposeAsync();
+			{
+				var a = ActivityService.StartAndConfigureAwait(ActivityID.ConnectionDisposeAsync)?.AddQueryInfo(DataConnection, Connection, null);
 
-			Dispose();
+				if (a is null)
+					return asyncDisposable.DisposeAsync();
+
+				return CallAwaitUsing(a, asyncDisposable);
+
+				static async ValueTask CallAwaitUsing(AsyncDisposableWrapper activity, IAsyncDisposable disposable)
+				{
+					await using (activity)
+						await disposable.DisposeAsync().ConfigureAwait(false);
+				}
+			}
+
+			using var _ = ActivityService.Start(ActivityID.ConnectionDisposeAsync);
+
+			Connection.Dispose();
 			return default;
 		}
-#endif
 		#endregion
 	}
 }

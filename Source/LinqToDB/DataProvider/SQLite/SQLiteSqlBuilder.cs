@@ -4,10 +4,11 @@ using System.Text;
 
 namespace LinqToDB.DataProvider.SQLite
 {
+	using Common;
 	using Extensions;
 	using Mapping;
-	using SqlQuery;
 	using SqlProvider;
+	using SqlQuery;
 
 	public class SQLiteSqlBuilder : BasicSqlBuilder
 	{
@@ -57,7 +58,7 @@ namespace LinqToDB.DataProvider.SQLite
 			return "OFFSET {0}";
 		}
 
-		public override bool IsNestedJoinSupported => false;
+		public override bool IsNestedJoinParenthesisRequired => true;
 
 		public override StringBuilder Convert(StringBuilder sb, string value, ConvertType convertType)
 		{
@@ -97,9 +98,9 @@ namespace LinqToDB.DataProvider.SQLite
 			return sb.Append(value);
 		}
 
-		protected override void BuildDataTypeFromDataType(SqlDataType type, bool forCreateTable, bool canBeNull)
+		protected override void BuildDataTypeFromDataType(DbDataType type, bool forCreateTable, bool canBeNull)
 		{
-			switch (type.Type.DataType)
+			switch (type.DataType)
 			{
 				case DataType.Int32 : StringBuilder.Append("INTEGER");                                 break;
 				default             : base.BuildDataTypeFromDataType(type, forCreateTable, canBeNull); break;
@@ -184,6 +185,11 @@ namespace LinqToDB.DataProvider.SQLite
 				StringBuilder.Append("IF NOT EXISTS ");
 		}
 
+		protected override void BuildInsertOrUpdateQuery(SqlInsertOrUpdateStatement insertOrUpdate)
+		{
+			BuildInsertOrUpdateQueryAsOnConflictUpdateOrNothing(insertOrUpdate);
+		}
+
 		protected override void BuildIsDistinctPredicate(SqlPredicate.IsDistinct expr)
 		{
 			BuildExpression(GetPrecedence(expr), expr.Expr1);
@@ -194,7 +200,7 @@ namespace LinqToDB.DataProvider.SQLite
 		protected override void BuildSqlValuesTable(SqlValuesTable valuesTable, string alias, out bool aliasBuilt)
 		{
 			valuesTable = ConvertElement(valuesTable);
-			var rows = valuesTable.BuildRows(OptimizationContext.Context);
+			var rows = valuesTable.BuildRows(OptimizationContext.EvaluationContext);
 
 			if (rows.Count == 0)
 			{

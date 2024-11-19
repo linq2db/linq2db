@@ -11,6 +11,7 @@ namespace LinqToDB.Linq
 	using Common.Internal.Cache;
 	using Mapping;
 	using SqlQuery;
+	using Tools;
 
 	static partial class QueryRunner
 	{
@@ -58,6 +59,7 @@ namespace LinqToDB.Linq
 
 				var sqlQuery = new SelectQuery();
 				var updateStatement = new SqlUpdateStatement(sqlQuery);
+				updateStatement.Update.Table = sqlTable;
 
 				sqlQuery.From.Table(sqlTable);
 
@@ -66,7 +68,7 @@ namespace LinqToDB.Linq
 					Queries = { new QueryInfo { Statement = updateStatement, } }
 				};
 
-				var keys   = sqlTable.GetKeys(true).Cast<SqlField>().ToList();
+				var keys = (sqlTable.GetKeys(true) ?? Enumerable.Empty<ISqlExpression>()).Cast<SqlField>().ToList();
 				var fields = sqlTable.Fields
 					.Where(f => f.IsUpdatable && !f.ColumnDescriptor.ShouldSkip(obj!, descriptor, SkipModification.Update) && (columnFilter == null || columnFilter(obj, f.ColumnDescriptor)))
 					.Except(keys);
@@ -100,7 +102,7 @@ namespace LinqToDB.Linq
 
 					ei.Queries[0].AddParameterAccessor(param);
 
-					sqlQuery.Where.Field(field).Equal.Expr(param.SqlParameter);
+					sqlQuery.Where.SearchCondition.AddEqual(field, param.SqlParameter, CompareNulls.LikeSql);
 
 					if (field.CanBeNull)
 						sqlQuery.IsParameterDependent = true;
@@ -123,6 +125,8 @@ namespace LinqToDB.Linq
 			{
 				if (Equals(default(T), obj))
 					return 0;
+
+				using var a = ActivityService.Start(ActivityID.UpdateObject);
 
 				var type             = GetType<T>(obj!, dataContext);
 				var entityDescriptor = dataContext.MappingSchema.GetEntityDescriptor(type, dataContext.Options.ConnectionOptions.OnEntityDescriptorCreated);
@@ -165,33 +169,36 @@ namespace LinqToDB.Linq
 				if (Equals(default(T), obj))
 					return 0;
 
-				var type             = GetType<T>(obj!, dataContext);
-				var entityDescriptor = dataContext.MappingSchema.GetEntityDescriptor(type, dataContext.Options.ConnectionOptions.OnEntityDescriptorCreated);
+				await using (ActivityService.StartAndConfigureAwait(ActivityID.UpdateObjectAsync))
+				{
+					var type             = GetType<T>(obj!, dataContext);
+					var entityDescriptor = dataContext.MappingSchema.GetEntityDescriptor(type, dataContext.Options.ConnectionOptions.OnEntityDescriptorCreated);
 
-				var ei = dataContext.Options.LinqOptions.DisableQueryCache || entityDescriptor.SkipModificationFlags.HasFlag(SkipModification.Update) || columnFilter != null
-					? CreateQuery(dataContext, entityDescriptor, obj, columnFilter, tableName, serverName, databaseName, schemaName, tableOptions, type)
-					: Cache.QueryCache.GetOrCreate(
-						(
-							dataContext.ConfigurationID,
-							columnFilter,
-							tableName,
-							schemaName,
-							databaseName,
-							serverName,
-							tableOptions,
-							type,
-							queryFlags: dataContext.GetQueryFlags()
-						),
-						(dataContext, entityDescriptor, obj),
-						static (entry, key, context) =>
-						{
-							entry.SlidingExpiration = context.dataContext.Options.LinqOptions.CacheSlidingExpirationOrDefault;
-							return CreateQuery(context.dataContext, context.entityDescriptor, context.obj, null, key.tableName, key.serverName, key.databaseName, key.schemaName, key.tableOptions, key.type);
-						});
+					var ei = dataContext.Options.LinqOptions.DisableQueryCache || entityDescriptor.SkipModificationFlags.HasFlag(SkipModification.Update) || columnFilter != null
+						? CreateQuery(dataContext, entityDescriptor, obj, columnFilter, tableName, serverName, databaseName, schemaName, tableOptions, type)
+						: Cache.QueryCache.GetOrCreate(
+							(
+								dataContext.ConfigurationID,
+								columnFilter,
+								tableName,
+								schemaName,
+								databaseName,
+								serverName,
+								tableOptions,
+								type,
+								queryFlags: dataContext.GetQueryFlags()
+							),
+							(dataContext, entityDescriptor, obj),
+							static (entry, key, context) =>
+							{
+								entry.SlidingExpiration = context.dataContext.Options.LinqOptions.CacheSlidingExpirationOrDefault;
+								return CreateQuery(context.dataContext, context.entityDescriptor, context.obj, null, key.tableName, key.serverName, key.databaseName, key.schemaName, key.tableOptions, key.type);
+							});
 
-				var result = ei == null ? 0 : await ei.GetElementAsync(dataContext, Expression.Constant(obj), null, null, token).ConfigureAwait(Configuration.ContinueOnCapturedContext);
+					var result = ei == null ? 0 : await ei.GetElementAsync(dataContext, Expression.Constant(obj), null, null, token).ConfigureAwait(false);
 
-				return (int)result!;
+					return (int)result!;
+				}
 			}
 		}
 	}

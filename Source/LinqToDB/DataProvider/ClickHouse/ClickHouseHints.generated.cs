@@ -1,4 +1,5 @@
-﻿// Generated.
+﻿#nullable enable
+// Generated.
 //
 using System;
 using System.Linq.Expressions;

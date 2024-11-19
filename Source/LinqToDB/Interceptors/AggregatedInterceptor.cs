@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 
 namespace LinqToDB.Interceptors
 {
-	abstract class AggregatedInterceptor<TInterceptor>: IInterceptor
+	abstract class AggregatedInterceptor<TInterceptor> : IInterceptor
 		where TInterceptor : IInterceptor
 	{
 		public List<TInterceptor> Interceptors { get; } = new ();
@@ -75,7 +75,7 @@ namespace LinqToDB.Interceptors
 
 			try
 			{
-				await func().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+				await func().ConfigureAwait(false);
 			}
 			finally
 			{
@@ -91,22 +91,13 @@ namespace LinqToDB.Interceptors
 
 			try
 			{
-				return await func().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+				return await func().ConfigureAwait(false);
 			}
 			finally
 			{
 				_enumerating = false;
 				RemoveDelayed();
 			}
-		}
-
-		protected abstract AggregatedInterceptor<TInterceptor> Create();
-
-		public AggregatedInterceptor<TInterceptor> Clone()
-		{
-			var clone = Create();
-			clone.Interceptors.AddRange(Interceptors);
-			return clone;
 		}
 	}
 }

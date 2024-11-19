@@ -1,12 +1,15 @@
 ﻿using System;
+using System.Collections;
+using System.Collections.Generic;
 using System.Linq;
-#if NET472
+#if NETFRAMEWORK
 using System.ServiceModel;
 #endif
 
 using LinqToDB;
 using LinqToDB.Common;
 using LinqToDB.Data;
+using LinqToDB.Expressions;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
@@ -14,6 +17,8 @@ using NUnit.Framework;
 namespace Tests.Linq
 {
 	using Model;
+
+	using NUnit.Framework.Constraints;
 
 	[TestFixture]
 	public class MappingTests : TestBase
@@ -72,8 +77,11 @@ namespace Tests.Linq
 		{
 			var value = ConvertTo<TypeValue>.From(1);
 
-			Assert.AreEqual(TypeValue.Value1, value);
-			Assert.AreEqual(10,               (int)value);
+			Assert.Multiple(() =>
+			{
+				Assert.That(value, Is.EqualTo(TypeValue.Value1));
+				Assert.That((int)value, Is.EqualTo(10));
+			});
 		}
 
 		[Test]
@@ -194,8 +202,11 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 			{
 				var e = db.GetTable<ParentObject>().First(p => p.ParentID == 1);
-				Assert.AreEqual(1, e.ParentID);
-				Assert.AreEqual(1, e.Value.Value1);
+				Assert.Multiple(() =>
+				{
+					Assert.That(e.ParentID, Is.EqualTo(1));
+					Assert.That(e.Value.Value1, Is.EqualTo(1));
+				});
 			}
 		}
 
@@ -205,8 +216,11 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 			{
 				var e = db.GetTable<ParentObject>().First(p => p.ParentID == 1 && p.Value.Value1 == 1);
-				Assert.AreEqual(1, e.ParentID);
-				Assert.AreEqual(1, e.Value.Value1);
+				Assert.Multiple(() =>
+				{
+					Assert.That(e.ParentID, Is.EqualTo(1));
+					Assert.That(e.Value.Value1, Is.EqualTo(1));
+				});
 			}
 		}
 
@@ -226,7 +240,7 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 			{
 				var e = db.GetTable<ChildObject>().First(c => c.Parent!.Value.Value1 == 1);
-				Assert.AreEqual(1, e.ParentID);
+				Assert.That(e.ParentID, Is.EqualTo(1));
 			}
 		}
 
@@ -378,7 +392,7 @@ namespace Tests.Linq
 				IQueryable<IDocument> query = db.GetTable<Document>();
 				var idsQuery = query.Select(s => s.Id);
 				var str = idsQuery.ToString(); // Exception
-				Assert.IsNotNull(str);
+				Assert.That(str, Is.Not.Null);
 			}
 		}
 
@@ -412,7 +426,7 @@ namespace Tests.Linq
 			{
 				var results = db.GetTable<IChild>().Where(c => c.ChildID == 32).Count();
 
-				Assert.AreEqual(1, results);
+				Assert.That(results, Is.EqualTo(1));
 			}
 		}
 
@@ -423,8 +437,8 @@ namespace Tests.Linq
 			{
 				var results = db.GetTable<IChild>().Where(c => c.ChildID == 32).Select(_ => new { _.ChildID }).ToList();
 
-				Assert.AreEqual(1, results.Count);
-				Assert.AreEqual(32, results[0].ChildID);
+				Assert.That(results, Has.Count.EqualTo(1));
+				Assert.That(results[0].ChildID, Is.EqualTo(32));
 			}
 		}
 
@@ -445,7 +459,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void ColumnMappingException1([DataSources] string context)
+		public void ColumnMappingException1([DataSources(ProviderName.SqlCe)] string context)
 		{
 			GetProviderName(context, out var isLinqService);
 
@@ -455,30 +469,29 @@ namespace Tests.Linq
 				{
 #if NETFRAMEWORK
 					var fe = Assert.Throws<FaultException>(() => db.GetTable<BadMapping>().Select(_ => new { _.NotInt }).ToList())!;
-					Assert.True(fe.Message.ToLowerInvariant().Contains("firstname"));
 #else
 					var fe = Assert.Throws<Grpc.Core.RpcException>(() => db.GetTable<BadMapping>().Select(_ => new { _.NotInt }).ToList())!;
-					Assert.True(fe.Message.ToLowerInvariant().Contains("firstname"));
 #endif
+					Assert.That(fe.Message.ToLowerInvariant(), Does.Contain("firstname"));
 				}
 				else
 				{
 					var ex = Assert.Throws<LinqToDBConvertException>(() => db.GetTable<BadMapping>().Select(_ => new { _.NotInt }).ToList())!;
 					// field name casing depends on database
-					Assert.AreEqual("firstname", ex.ColumnName!.ToLowerInvariant());
+					Assert.That(ex.ColumnName!.ToLowerInvariant(), Is.EqualTo("firstname"));
 				}
 			}
 		}
 
 		[Test]
-		public void ColumnMappingException2([DataSources] string context)
+		public void ColumnMappingException2([DataSources(ProviderName.SqlCe)] string context)
 		{
 			GetProviderName(context, out var isLinqService);
 
 			using (var db = GetDataContext(context, suppressSequentialAccess: true))
 			{
 				var ex = Assert.Throws<LinqToDBConvertException>(() => db.GetTable<BadMapping>().Select(_ => new { _.BadEnum }).ToList())!;
-				Assert.AreEqual("lastname", ex.ColumnName!.ToLowerInvariant());
+				Assert.That(ex.ColumnName!.ToLowerInvariant(), Is.EqualTo("lastname"));
 			}
 		}
 
@@ -540,23 +553,29 @@ namespace Tests.Linq
 
 				var data = table.OrderBy(r => r.Id).ToArray();
 
-				Assert.AreEqual(2        , data.Length);
-				Assert.AreEqual(1        , data[0].Id);
-				Assert.AreEqual("One"    , data[0].Value);
-				Assert.AreEqual("OneBase", data[0].BaseValue );
-				Assert.AreEqual(2        , data[1].Id);
-				Assert.AreEqual("Two"    , data[1].Value);
-				Assert.AreEqual("TwoBase", data[1].BaseValue);
+				Assert.That(data, Has.Length.EqualTo(2));
+				Assert.Multiple(() =>
+				{
+					Assert.That(data[0].Id, Is.EqualTo(1));
+					Assert.That(data[0].Value, Is.EqualTo("One"));
+					Assert.That(data[0].BaseValue, Is.EqualTo("OneBase"));
+					Assert.That(data[1].Id, Is.EqualTo(2));
+					Assert.That(data[1].Value, Is.EqualTo("Two"));
+					Assert.That(data[1].BaseValue, Is.EqualTo("TwoBase"));
+				});
 
 				var proj = table.OrderBy(r => r.Id).Select(r => new { r.Id, r.Value, r.BaseValue }).ToArray();
 
-				Assert.AreEqual(2        , proj.Length);
-				Assert.AreEqual(1        , proj[0].Id);
-				Assert.AreEqual("One"    , proj[0].Value);
-				Assert.AreEqual("OneBase", proj[0].BaseValue );
-				Assert.AreEqual(2        , proj[1].Id);
-				Assert.AreEqual("Two"    , proj[1].Value);
-				Assert.AreEqual("TwoBase", proj[1].BaseValue);
+				Assert.That(proj, Has.Length.EqualTo(2));
+				Assert.Multiple(() =>
+				{
+					Assert.That(proj[0].Id, Is.EqualTo(1));
+					Assert.That(proj[0].Value, Is.EqualTo("One"));
+					Assert.That(proj[0].BaseValue, Is.EqualTo("OneBase"));
+					Assert.That(proj[1].Id, Is.EqualTo(2));
+					Assert.That(proj[1].Value, Is.EqualTo("Two"));
+					Assert.That(proj[1].BaseValue, Is.EqualTo("TwoBase"));
+				});
 			}
 		}
 
@@ -579,23 +598,29 @@ namespace Tests.Linq
 
 				var data = table.OrderBy(r => r.Id).ToArray();
 
-				Assert.AreEqual(2        , data.Length);
-				Assert.AreEqual(1        , data[0].Id);
-				Assert.AreEqual("One"    , data[0].Value);
-				Assert.AreEqual("OneBase", data[0].BaseValue );
-				Assert.AreEqual(2        , data[1].Id);
-				Assert.AreEqual("Two"    , data[1].Value);
-				Assert.AreEqual("TwoBase", data[1].BaseValue);
+				Assert.That(data, Has.Length.EqualTo(2));
+				Assert.Multiple(() =>
+				{
+					Assert.That(data[0].Id, Is.EqualTo(1));
+					Assert.That(data[0].Value, Is.EqualTo("One"));
+					Assert.That(data[0].BaseValue, Is.EqualTo("OneBase"));
+					Assert.That(data[1].Id, Is.EqualTo(2));
+					Assert.That(data[1].Value, Is.EqualTo("Two"));
+					Assert.That(data[1].BaseValue, Is.EqualTo("TwoBase"));
+				});
 
 				var proj = table.OrderBy(r => r.Id).Select(r => new { r.Id, r.Value, r.BaseValue }).ToArray();
 
-				Assert.AreEqual(2        , proj.Length);
-				Assert.AreEqual(1        , proj[0].Id);
-				Assert.AreEqual("One"    , proj[0].Value);
-				Assert.AreEqual("OneBase", proj[0].BaseValue );
-				Assert.AreEqual(2        , proj[1].Id);
-				Assert.AreEqual("Two"    , proj[1].Value);
-				Assert.AreEqual("TwoBase", proj[1].BaseValue);
+				Assert.That(proj, Has.Length.EqualTo(2));
+				Assert.Multiple(() =>
+				{
+					Assert.That(proj[0].Id, Is.EqualTo(1));
+					Assert.That(proj[0].Value, Is.EqualTo("One"));
+					Assert.That(proj[0].BaseValue, Is.EqualTo("OneBase"));
+					Assert.That(proj[1].Id, Is.EqualTo(2));
+					Assert.That(proj[1].Value, Is.EqualTo("Two"));
+					Assert.That(proj[1].BaseValue, Is.EqualTo("TwoBase"));
+				});
 			}
 		}
 
@@ -617,23 +642,29 @@ namespace Tests.Linq
 
 				var data = table.OrderBy(r => r.Id).ToArray();
 
-				Assert.AreEqual(2        , data.Length);
-				Assert.AreEqual(1        , data[0].Id);
-				Assert.AreEqual("One"    , data[0].Value);
-				Assert.AreEqual("OneBase", data[0].BaseValue );
-				Assert.AreEqual(2        , data[1].Id);
-				Assert.AreEqual("Two"    , data[1].Value);
-				Assert.AreEqual("TwoBase", data[1].BaseValue);
+				Assert.That(data, Has.Length.EqualTo(2));
+				Assert.Multiple(() =>
+				{
+					Assert.That(data[0].Id, Is.EqualTo(1));
+					Assert.That(data[0].Value, Is.EqualTo("One"));
+					Assert.That(data[0].BaseValue, Is.EqualTo("OneBase"));
+					Assert.That(data[1].Id, Is.EqualTo(2));
+					Assert.That(data[1].Value, Is.EqualTo("Two"));
+					Assert.That(data[1].BaseValue, Is.EqualTo("TwoBase"));
+				});
 
 				var proj = table.OrderBy(r => r.Id).Select(r => new { r.Id, r.Value, r.BaseValue }).ToArray();
 
-				Assert.AreEqual(2        , proj.Length);
-				Assert.AreEqual(1        , proj[0].Id);
-				Assert.AreEqual("One"    , proj[0].Value);
-				Assert.AreEqual("OneBase", proj[0].BaseValue );
-				Assert.AreEqual(2        , proj[1].Id);
-				Assert.AreEqual("Two"    , proj[1].Value);
-				Assert.AreEqual("TwoBase", proj[1].BaseValue);
+				Assert.That(proj, Has.Length.EqualTo(2));
+				Assert.Multiple(() =>
+				{
+					Assert.That(proj[0].Id, Is.EqualTo(1));
+					Assert.That(proj[0].Value, Is.EqualTo("One"));
+					Assert.That(proj[0].BaseValue, Is.EqualTo("OneBase"));
+					Assert.That(proj[1].Id, Is.EqualTo(2));
+					Assert.That(proj[1].Value, Is.EqualTo("Two"));
+					Assert.That(proj[1].BaseValue, Is.EqualTo("TwoBase"));
+				});
 			}
 		}
 
@@ -698,8 +729,8 @@ namespace Tests.Linq
 			db.GetTable<NewModel1>().Where(c => c.Id == -1).ToList();
 
 			var ed = db.MappingSchema.GetEntityDescriptor(typeof(NewModel1));
-			Assert.AreEqual(1, ed.Columns.Count);
-			Assert.AreEqual("PersonID", ed.Columns[0].ColumnName);
+			Assert.That(ed.Columns, Has.Count.EqualTo(1));
+			Assert.That(ed.Columns[0].ColumnName, Is.EqualTo("PersonID"));
 		}
 
 		[Test]
@@ -709,8 +740,8 @@ namespace Tests.Linq
 			db.GetTable<NewModel2>().Where(c => c.Id == -1).ToList();
 
 			var ed = db.MappingSchema.GetEntityDescriptor(typeof(NewModel2));
-			Assert.AreEqual(1, ed.Columns.Count);
-			Assert.AreEqual("PersonID", ed.Columns[0].ColumnName);
+			Assert.That(ed.Columns, Has.Count.EqualTo(1));
+			Assert.That(ed.Columns[0].ColumnName, Is.EqualTo("PersonID"));
 		}
 
 		[Test]
@@ -720,8 +751,8 @@ namespace Tests.Linq
 			db.GetTable<NewModel3>().Where(c => c.Id == -1).ToList();
 
 			var ed = db.MappingSchema.GetEntityDescriptor(typeof(NewModel3));
-			Assert.AreEqual(1, ed.Columns.Count);
-			Assert.AreEqual("PersonID", ed.Columns[0].ColumnName);
+			Assert.That(ed.Columns, Has.Count.EqualTo(1));
+			Assert.That(ed.Columns[0].ColumnName, Is.EqualTo("PersonID"));
 		}
 
 		[Test]
@@ -731,8 +762,8 @@ namespace Tests.Linq
 			db.GetTable<NewModel4>().Where(c => c.Id == -1).ToList();
 
 			var ed = db.MappingSchema.GetEntityDescriptor(typeof(NewModel4));
-			Assert.AreEqual(1, ed.Columns.Count);
-			Assert.AreEqual("PersonID", ed.Columns[0].ColumnName);
+			Assert.That(ed.Columns, Has.Count.EqualTo(1));
+			Assert.That(ed.Columns[0].ColumnName, Is.EqualTo("PersonID"));
 		}
 
 		[Test]
@@ -742,9 +773,402 @@ namespace Tests.Linq
 			db.GetTable<NewModel5>().Where(c => c.Id == -1).ToList();
 
 			var ed = db.MappingSchema.GetEntityDescriptor(typeof(NewModel5));
-			Assert.AreEqual(1, ed.Columns.Count);
-			Assert.AreEqual("PersonID", ed.Columns[0].ColumnName);
+			Assert.That(ed.Columns, Has.Count.EqualTo(1));
+			Assert.That(ed.Columns[0].ColumnName, Is.EqualTo("PersonID"));
 		}
 		#endregion
+
+		sealed class StorageTable
+		{
+			public StorageTable()
+			{
+			}
+
+			private int _field;
+
+			[Column] public int Field => _field;
+
+			[NotColumn]
+			public int TestAccess
+			{
+				get => _field;
+				set => _field = value;
+			}
+		}
+
+		[ActiveIssue]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/279")]
+		public void StorageFieldTest([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable<StorageTable>();
+
+			// Insert + Select
+			db.Insert(new StorageTable() { TestAccess = 5 });
+
+			var record = tb.Single();
+			Assert.That(record.TestAccess, Is.EqualTo(5));
+
+			// update
+			tb.Where(r => r.Field == 5).Set(r => r.Field, 6).Update();
+
+			record = tb.Single();
+			Assert.That(record.TestAccess, Is.EqualTo(6));
+
+			// filter
+			record = tb.Where(r => r.Field == 6).SingleOrDefault();
+			Assert.That(record, Is.Not.Null);
+			Assert.That(record!.TestAccess, Is.EqualTo(6));
+		}
+
+		#region Issue 3060
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/3060")]
+		public void Issue3060Test([DataSources(TestProvName.AllAccess)] string context)
+		{
+			var ms = new MappingSchema();
+			ms.SetConvertExpression<byte[], Blob16AsGuidType>(x => new Blob16AsGuidType(x));
+			ms.SetConvertExpression<Blob16AsGuidType, byte[]?>(x => x.Bytes);
+			ms.SetConvertExpression<Blob16AsGuidType, DataParameter>(x => DataParameter.Blob(null, x.Bytes));
+
+			using var db = GetDataContext(context, ms);
+			using var tb = db.CreateLocalTable<Issue3060Table>();
+
+			var row = new Issue3060Table()
+			{
+				Uid = new Blob16AsGuidType(TestData.Guid1)
+			};
+
+			db.Update(row);
+		}
+
+		[Table]
+		sealed class Issue3060Table
+		{
+			[Column(DataType = DataType.Int64, Length = 8, Precision = 19, Scale = 0), PrimaryKey, NotNull] public long Id { get; set; }
+			[Column(DataType = DataType.VarBinary, Length = 16, Precision = 0, Scale = 0), Nullable] public Blob16AsGuidType? Uid { get; set; }
+		}
+
+		sealed class Blob16AsGuidType
+		{
+			public Blob16AsGuidType(byte[] value)
+			{
+				Bytes = value;
+			}
+
+			public Blob16AsGuidType(Guid value)
+			{
+				Guid = value;
+			}
+
+			private byte[]? _bytes;
+
+			public byte[]? Bytes
+			{
+				get { return _bytes; }
+				set
+				{
+					_bytes = value;
+					_guid = value == null ? Guid.Empty : new Guid(value);
+				}
+			}
+
+			private Guid _guid;
+
+			public Guid Guid
+			{
+				get { return _guid; }
+				set
+				{
+					_guid = value;
+					_bytes = value == Guid.Empty ? null : value.ToByteArray();
+				}
+			}
+		}
+		#endregion
+
+		#region Issue 3117
+
+		[ActiveIssue]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/3117")]
+		public void Issue3117Test1([DataSources(TestProvName.AllAccess)] string context)
+		{
+			var ms = new MappingSchema();
+			ms.SetGenericConvertProvider(typeof(IdConverter<>));
+
+			using var db = GetDataContext(context, ms);
+			using var tb = db.CreateLocalTable<User>();
+
+			var userId = new Id<User>(5);
+			db.InsertWithIdentity(new User(userId));
+
+			var users = db.GetTable<User>().ToList();
+			var user = db.GetTable<User>().FirstOrDefault(u => u.Id == userId);
+
+			var userIds = new[]{userId};
+			user = db.GetTable<User>().FirstOrDefault(u => userIds.Contains(u.Id));
+		}
+
+		[ActiveIssue]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/3117")]
+		public void Issue3117Test2([DataSources(TestProvName.AllAccess)] string context)
+		{
+			var ms = new MappingSchema();
+			ms.SetDataType(typeof(Id<User>), DataType.Int32);
+			ms.SetValueToSqlConverter(typeof(Id<User>), (sb, dt, v) => sb.Append(((Id<User>)v).Value));
+
+			using var db = GetDataContext(context, ms);
+			using var tb = db.CreateLocalTable<User>();
+
+			var userId = new Id<User>(5);
+			db.InsertWithIdentity(new User(userId));
+
+			var users = db.GetTable<User>().ToList();
+			var user = db.GetTable<User>().FirstOrDefault(u => u.Id == userId);
+
+			var userIds = new[]{userId};
+			user = db.GetTable<User>().FirstOrDefault(u => userIds.Contains(u.Id));
+		}
+
+		class Id<T> : IConvertible
+		{
+			public int Value { get; set; }
+
+			public Id(int id)
+			{
+				Value = id;
+			}
+
+			public Id(long id)
+			{
+				Value = (int)id;
+			}
+
+			public TypeCode GetTypeCode() => TypeCode.Int32;
+
+			public int ToInt32(IFormatProvider? provider) => Value;
+			public long ToInt64(IFormatProvider? provider) => Value;
+
+			public bool ToBoolean(IFormatProvider? provider) => throw new NotImplementedException();
+			public char ToChar(IFormatProvider? provider) => throw new NotImplementedException();
+			public sbyte ToSByte(IFormatProvider? provider) => throw new NotImplementedException();
+			public byte ToByte(IFormatProvider? provider) => throw new NotImplementedException();
+			public short ToInt16(IFormatProvider? provider) => throw new NotImplementedException();
+			public ushort ToUInt16(IFormatProvider? provider) => throw new NotImplementedException();
+			public uint ToUInt32(IFormatProvider? provider) => throw new NotImplementedException();
+			public ulong ToUInt64(IFormatProvider? provider) => throw new NotImplementedException();
+			public float ToSingle(IFormatProvider? provider) => throw new NotImplementedException();
+			public double ToDouble(IFormatProvider? provider) => throw new NotImplementedException();
+			public decimal ToDecimal(IFormatProvider? provider) => throw new NotImplementedException();
+			public DateTime ToDateTime(IFormatProvider? provider) => throw new NotImplementedException();
+			public string ToString(IFormatProvider? provider) => throw new NotImplementedException();
+
+			public object ToType(Type conversionType, IFormatProvider? provider) => Convert.ChangeType(Value, conversionType);
+			public static implicit operator int(Id<T> id) => (int)id.Value;
+			public static implicit operator long(Id<T> id) => id.Value;
+		}
+
+		[Table]
+		sealed class User
+		{
+			public User() { Id = new Id<User>(0); }
+			public User(Id<User> id) { Id = id; }
+
+			[Column(IsPrimaryKey = true, DataType = DataType.Int32, CanBeNull = false)]
+			public Id<User> Id { get; set; }
+		}
+
+		sealed class IdConverter<T> : IGenericInfoProvider
+		{
+			public void SetInfo(MappingSchema mappingSchema)
+			{
+				// just check call site and you will see it cannot work
+				mappingSchema.SetDataType(typeof(Id<T>), DataType.Int32);
+				mappingSchema.SetValueToSqlConverter(typeof(Id<T>), (sb, dt, o) => sb.Append(((Id<T>)o).Value));
+			}
+		}
+		#endregion
+
+		struct RecordId
+		{
+			public RecordId(int value)
+			{
+				Value = value;
+			}
+
+			public int Value { get; set; }
+
+			public static RecordId  From(int value)  => new RecordId(value);
+			public static RecordId? From(int? value) => value == null ? null : new RecordId(value.Value);
+
+			public static implicit operator int?(RecordId? id) => id?.Value;
+		}
+
+		[Table("Parent")]
+		sealed class RecordTable
+		{
+			[Column] public int       ParentID { get; set; }
+			[Column] public RecordId? Value1   { get; set; }
+		}
+
+		private static MappingSchema SetupStructMapping(bool useExpressions, bool addNullCheck, bool mapNull)
+		{
+			// use unique name to avoid mapping conflicts due to use of non-detectable mapping changes (e.g. defaultValue having different values)
+			var ms = new MappingSchema($"{useExpressions}{addNullCheck}{mapNull}");
+
+			// note that it affects only convert expressions and doesn't replace default type value
+			// which results in different behavior for expression-based and delegate-based mappings
+			// as delegate-based conversions doesn't have addNullCheck feature
+			var defaultValue = mapNull ? 6 : (int?)null;
+
+			if (useExpressions)
+			{
+				ms.SetConvertExpression<RecordId, int>(id => id.Value, addNullCheck: addNullCheck);
+				ms.SetConvertExpression<RecordId, int?>(id => id.Value, addNullCheck: addNullCheck);
+				ms.SetConvertExpression<int, RecordId>(value => RecordId.From(value), addNullCheck: addNullCheck);
+				ms.SetConvertExpression<int, RecordId?>(g => RecordId.From(g), addNullCheck: addNullCheck);
+				ms.SetConvertExpression<int?, RecordId>(g => g == null ? default : RecordId.From((int)g), addNullCheck: addNullCheck);
+				ms.SetConvertExpression<int?, RecordId?>(value => RecordId.From(value), addNullCheck: addNullCheck);
+				ms.SetConvertExpression<RecordId, DataParameter>(id => new DataParameter { DataType = DataType.Int32, Value = id.Value }, addNullCheck: addNullCheck);
+
+				ms.SetConvertExpression<RecordId?, int>(id => id == (int?)null ? (defaultValue ?? default) : id.Value.Value, addNullCheck: addNullCheck);
+				ms.SetConvertExpression<RecordId?, int?>(id => id != null ? id.Value : defaultValue, addNullCheck: addNullCheck);
+				ms.SetConvertExpression<RecordId?, DataParameter>(id => new DataParameter { DataType = DataType.Int32, Value = id != null ? id.Value : defaultValue }, addNullCheck: addNullCheck);
+			}
+			else
+			{
+				ms.SetConverter<RecordId, int>(id => id.Value);
+				ms.SetConverter<RecordId, int?>(id => id.Value);
+				ms.SetConverter<int, RecordId>(RecordId.From);
+				ms.SetConverter<int, RecordId?>(g => RecordId.From(g));
+				ms.SetConverter<int?, RecordId>(g => g == null ? default : RecordId.From((int)g));
+				ms.SetConverter<int?, RecordId?>(RecordId.From);
+				ms.SetConverter<RecordId, DataParameter>(id => new DataParameter { DataType = DataType.Int32, Value = id.Value });
+
+				ms.SetConverter<RecordId?, int>(id => id == (int?)null ? (defaultValue ?? default) : id.Value.Value);
+				ms.SetConverter<RecordId?, int?>(id => id?.Value ?? defaultValue);
+				ms.SetConverter<RecordId?, DataParameter>(id => new DataParameter { DataType = DataType.Int32, Value = id?.Value ?? defaultValue });
+			}
+
+			return ms;
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4539")]
+		public void StructMapping_Value([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values] bool useExpressions, [Values] bool addNullCheck, [Values] bool mapNull)
+		{
+			using var db = GetDataContext(context, SetupStructMapping(useExpressions, addNullCheck, mapNull));
+
+			var tenderIds = new List<RecordId?>() { new RecordId(5), new RecordId(3), new RecordId(4), null };
+
+			var cnt = db.GetTable<RecordTable>().Where(i => i.Value1!.Value == tenderIds[0] || i.Value1!.Value == tenderIds[1] || i.Value1!.Value == tenderIds[2] || i.Value1!.Value == tenderIds[3]).Count();
+
+			Assert.That(cnt, Is.EqualTo(mapNull ? 3 : 4));
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4539")]
+		public void StructMapping_Value_IntList([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values] bool useExpressions, [Values] bool addNullCheck, [Values] bool mapNull)
+		{
+			using var db = GetDataContext(context, SetupStructMapping(useExpressions, addNullCheck, mapNull));
+
+			var tenderIds = new List<int?>() { 5, 3, 4, null };
+
+			var cnt = db.GetTable<RecordTable>().Where(i => i.Value1!.Value == tenderIds[0] || i.Value1!.Value == tenderIds[1] || i.Value1!.Value == tenderIds[2] || i.Value1!.Value == tenderIds[3]).Count();
+
+			Assert.That(cnt, Is.EqualTo(mapNull ? 3 : 4));
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4539")]
+		public void StructMapping_Collection([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values] bool useExpressions, [Values] bool addNullCheck, [Values] bool mapNull)
+		{
+			using var db = GetDataContext(context, SetupStructMapping(useExpressions, addNullCheck, mapNull));
+
+			var tenderIds = new List<RecordId?>() { new RecordId(5), new RecordId(3), new RecordId(4), null };
+
+			var cnt = db.GetTable<RecordTable>().Where(i => tenderIds.Contains(i.Value1!.Value)).Count();
+
+			Assert.That(cnt, Is.EqualTo(mapNull ? 3 : 4));
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4539")]
+		public void StructMapping_Collection_IntList([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values] bool useExpressions, [Values] bool addNullCheck, [Values] bool mapNull)
+		{
+			using var db = GetDataContext(context, SetupStructMapping(useExpressions, addNullCheck, mapNull));
+
+			var tenderIds = new List<int?>() { 5, 3, 4, null };
+
+			var cnt = db.GetTable<RecordTable>().Where(i => tenderIds.Contains(i.Value1!.Value)).Count();
+
+			Assert.That(cnt, Is.EqualTo(4));
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4539")]
+		public void StructMapping_EmptyCollection([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values] bool useExpressions, [Values] bool addNullCheck, [Values] bool mapNull)
+		{
+			using var db = GetDataContext(context, SetupStructMapping(useExpressions, addNullCheck, mapNull));
+
+			var tenderIds = new List<RecordId?>();
+
+			var cnt = db.GetTable<RecordTable>().Where(i => tenderIds.Contains(i.Value1!.Value)).Count();
+
+			Assert.That(cnt, Is.EqualTo(0));
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4539")]
+		public void StructMapping_EmptyCollection_IntList([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values] bool useExpressions, [Values] bool addNullCheck, [Values] bool mapNull)
+		{
+			using var db = GetDataContext(context, SetupStructMapping(useExpressions, addNullCheck, mapNull));
+
+			var tenderIds = new List<int?>();
+
+			var cnt = db.GetTable<RecordTable>().Where(i => tenderIds.Contains(i.Value1!.Value)).Count();
+
+			Assert.That(cnt, Is.EqualTo(0));
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4539")]
+		public void StructMapping_Enumerable([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values] bool useExpressions, [Values] bool addNullCheck, [Values] bool mapNull)
+		{
+			using var db = GetDataContext(context, SetupStructMapping(useExpressions, addNullCheck, mapNull));
+
+			var tenderIds = new ArrayList() { new RecordId(5), new RecordId(3), new RecordId(4), null };
+
+			var cnt = db.GetTable<RecordTable>().Where(i => tenderIds.Contains(i.Value1!.Value)).Count();
+
+			Assert.That(cnt, Is.EqualTo(mapNull ? 3 : 4));
+		}
+
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4539")]
+		public void StructMapping_Enumerable_IntList([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values] bool useExpressions, [Values] bool addNullCheck, [Values] bool mapNull)
+		{
+			using var db = GetDataContext(context, SetupStructMapping(useExpressions, addNullCheck, mapNull));
+
+			var tenderIds = new ArrayList() { 5, 3, 4, null };
+
+			// not supported case
+			Assert.That(() => db.GetTable<RecordTable>().Where(i => tenderIds.Contains(i.Value1!.Value)).Count(), Throws.TypeOf<InvalidCastException>());
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4539")]
+		public void StructMapping_EmptyEnumerable([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values] bool useExpressions, [Values] bool addNullCheck, [Values] bool mapNull)
+		{
+			using var db = GetDataContext(context, SetupStructMapping(useExpressions, addNullCheck, mapNull));
+
+			var tenderIds = new ArrayList();
+
+			var cnt = db.GetTable<RecordTable>().Where(i => tenderIds.Contains(i.Value1!.Value)).Count();
+
+			Assert.That(cnt, Is.EqualTo(0));
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4539")]
+		public void StructMapping_MixedEnumerable([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values] bool useExpressions, [Values] bool addNullCheck, [Values] bool mapNull)
+		{
+			using var db = GetDataContext(context, SetupStructMapping(useExpressions, addNullCheck, mapNull));
+
+			var tenderIds = new ArrayList() { new RecordId(5), 3, new RecordId(4), null };
+
+			// not supported case
+			Assert.That(() => db.GetTable<RecordTable>().Where(i => tenderIds.Contains(i.Value1!.Value)).Count(), Throws.TypeOf<InvalidCastException>());
+		}
 	}
 }

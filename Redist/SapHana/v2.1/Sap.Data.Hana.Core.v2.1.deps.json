@@ -6,7 +6,7 @@
   "compilationOptions": {},
   "targets": {
     ".NETCoreApp,Version=v2.1": {
-      "Sap.Data.Hana.Core.v2.1/2.16.21.0": {
+      "Sap.Data.Hana.Core.v2.1/2.19.18.0": {
         "runtime": {
           "Sap.Data.Hana.Core.v2.1.dll": {}
         }
@@ -14,7 +14,7 @@
     }
   },
   "libraries": {
-    "Sap.Data.Hana.Core.v2.1/2.16.21.0": {
+    "Sap.Data.Hana.Core.v2.1/2.19.18.0": {
       "type": "project",
       "serviceable": false,
       "sha512": ""

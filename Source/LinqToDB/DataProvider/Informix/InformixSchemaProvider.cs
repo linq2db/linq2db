@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 
 namespace LinqToDB.DataProvider.Informix
@@ -81,7 +82,6 @@ namespace LinqToDB.DataProvider.Informix
 			};
 		}
 
-
 		protected override string GetProviderSpecificTypeNamespace()
 		{
 			return _provider.Adapter.ProviderTypesNamespace;
@@ -123,14 +123,14 @@ namespace LinqToDB.DataProvider.Informix
 					rd =>
 					{
 						// IMPORTANT: reader calls must be ordered to support SequentialAccess
-						var tableId = rd[0].ToString();
+						var tableId = string.Format(CultureInfo.InvariantCulture, "{0}", rd[0]);
 						var pkName  = (string)rd[1];
 
 						var arr = new string?[16];
 
 						for (var i = 0; i < arr.Length; i++)
 						{
-							var value = rd["col" + (i + 1)];
+							var value = rd[FormattableString.Invariant($"col{i + 1}")];
 							arr[i] = value is DBNull ? null : (string)value;
 						}
 
@@ -241,7 +241,7 @@ namespace LinqToDB.DataProvider.Informix
 
 			if (len == 0 || j > 11) // is the default 12 on have the precision already coded
 			{
-				c.ColumnType = c.DataType + " " + arr[j].datetype + " TO " + arr[i].datetype;
+				c.ColumnType = FormattableString.Invariant($"{c.DataType} {arr[j].datetype} TO {arr[i].datetype}");
 			}
 			else // # isn't the default
 			{
@@ -251,7 +251,7 @@ namespace LinqToDB.DataProvider.Informix
 				// add in the extra
 				k += len;
 
-				c.ColumnType = c.DataType + " " + arr[j].datetype + " (" + k + ") TO " + arr[i].datetype;
+				c.ColumnType = FormattableString.Invariant($"{c.DataType} {arr[j].datetype} ({k}) TO {arr[i].datetype}");
 				c.Precision = 5;
 			}
 		}
@@ -369,17 +369,17 @@ namespace LinqToDB.DataProvider.Informix
 					rd =>
 					{
 						// IMPORTANT: reader calls must be ordered to support SequentialAccess
-						var id           = rd["ID"].ToString();
-						var name         = rd["Name"].ToString()!;
-						var thisTableID  = rd["ThisTableID"]. ToString();
-						var otherTableID = rd["OtherTableID"].ToString();
+						var id           = string.Format(CultureInfo.InvariantCulture, "{0}", rd["ID"]);
+						var name         = string.Format(CultureInfo.InvariantCulture, "{0}", rd["Name"]);
+						var thisTableID  = string.Format(CultureInfo.InvariantCulture, "{0}", rd["ThisTableID"]);
+						var otherTableID = string.Format(CultureInfo.InvariantCulture, "{0}", rd["OtherTableID"]);
 
 						var arr = new string?[16][];
 
 						for (var i = 0; i < arr.Length; i++)
 						{
-							var value1 = rd["ThisCol"  + (i + 1)];
-							var value2 = rd["OtherCol" + (i + 1)];
+							var value1 = rd[FormattableString.Invariant($"ThisCol{i + 1}")];
+							var value2 = rd[FormattableString.Invariant($"OtherCol{i + 1}")];
 
 							arr[i] = new[]
 							{
@@ -387,7 +387,6 @@ namespace LinqToDB.DataProvider.Informix
 								value2 is DBNull ? null : (string)value2
 							};
 						}
-
 
 						if (name.StartsWith("r"))
 						{
@@ -401,7 +400,7 @@ namespace LinqToDB.DataProvider.Informix
 								var n        = 0;
 
 								while (names.Contains(name))
-									name = origName + "_" + ++n;
+									name = FormattableString.Invariant($"{origName}_{++n}");
 
 								names.Add(name);
 							}

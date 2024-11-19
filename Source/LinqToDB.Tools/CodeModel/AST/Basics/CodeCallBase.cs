@@ -26,8 +26,8 @@ namespace LinqToDB.CodeModel
 			Callee               = callee;
 			MethodName           = method;
 			CanSkipTypeArguments = skipTypeArguments;
-			_genericArguments    = new (genericArguments ?? Array<CodeTypeToken>  .Empty);
-			_parameters          = new (parameters       ?? Array<ICodeExpression>.Empty);
+			_genericArguments    = new (genericArguments ?? []);
+			_parameters          = new (parameters       ?? []);
 			_wrapTrivia          = wrapTrivia == null ? null : new(wrapTrivia);
 		}
 

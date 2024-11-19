@@ -12,7 +12,7 @@ namespace LinqToDB.CodeModel
 
 		protected AttributeOwner(IEnumerable<CodeAttribute>? customAttributes)
 		{
-			_customAttributes = new (customAttributes ?? Array<CodeAttribute>.Empty);
+			_customAttributes = new (customAttributes ?? []);
 		}
 
 		/// <summary>

@@ -1,7 +1,8 @@
 ﻿using System;
-using System.Data;
 using System.Data.Common;
 using System.Threading.Tasks;
+
+using LinqToDB.Tools;
 
 namespace LinqToDB.Data
 {
@@ -10,10 +11,7 @@ namespace LinqToDB.Data
 	/// <summary>
 	/// Disposable wrapper over <see cref="DbDataReader"/> instance, which properly disposes associated objects.
 	/// </summary>
-	public class DataReaderWrapper : IDisposable
-#if !NETFRAMEWORK
-		, IAsyncDisposable
-#endif
+	public class DataReaderWrapper : IDisposable, IAsyncDisposable
 	{
 		private          bool            _disposed;
 		private readonly DataConnection? _dataConnection;
@@ -48,8 +46,9 @@ namespace LinqToDB.Data
 
 			if (DataReader != null)
 			{
-				if (_dataConnection is IInterceptable<ICommandInterceptor> interceptable)
-					interceptable.Interceptor?.BeforeReaderDispose(new (_dataConnection), Command, DataReader);
+				if (_dataConnection is IInterceptable<ICommandInterceptor> { Interceptor: {} interceptor })
+					using (ActivityService.Start(ActivityID.CommandInterceptorBeforeReaderDispose))
+						interceptor.BeforeReaderDispose(new (_dataConnection), Command, DataReader);
 
 				DataReader.Dispose();
 				DataReader = null;
@@ -67,7 +66,7 @@ namespace LinqToDB.Data
 			}
 		}
 
-#if NETSTANDARD2_1PLUS
+#if NET6_0_OR_GREATER
 		public async ValueTask DisposeAsync()
 		{
 			if (_disposed)
@@ -77,10 +76,12 @@ namespace LinqToDB.Data
 
 			if (DataReader != null)
 			{
-				if (_dataConnection is IInterceptable<ICommandInterceptor> interceptable && interceptable.Interceptor != null)
-					await interceptable.Interceptor.BeforeReaderDisposeAsync(new(_dataConnection), Command, DataReader).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+				if (_dataConnection is IInterceptable<ICommandInterceptor> { Interceptor: {} interceptor })
+					await using (ActivityService.StartAndConfigureAwait(ActivityID.CommandInterceptorBeforeReaderDisposeAsync))
+						await interceptor.BeforeReaderDisposeAsync(new(_dataConnection), Command, DataReader)
+							.ConfigureAwait(false);
 
-				await DataReader.DisposeAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+				await DataReader.DisposeAsync().ConfigureAwait(false);
 				DataReader = null;
 			}
 
@@ -89,12 +90,12 @@ namespace LinqToDB.Data
 				OnBeforeCommandDispose?.Invoke(Command);
 
 				if (_dataConnection != null)
-					await _dataConnection.DataProvider.DisposeCommandAsync(Command).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+					await _dataConnection.DataProvider.DisposeCommandAsync(Command).ConfigureAwait(false);
 				else
-					await Command.DisposeAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+					await Command.DisposeAsync().ConfigureAwait(false);
 			}
 		}
-#elif !NETFRAMEWORK
+#else
 		public ValueTask DisposeAsync()
 		{
 			Dispose();

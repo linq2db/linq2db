@@ -2,11 +2,8 @@
 	<Import Project="$(MSBuildThisFileDirectory)\..\Directory.Build.props" />
 
 	<PropertyGroup>
-		<!--net472 must be last. I know it doesn't make any sense, but it helps VS to discover .net core tests-->
-		<TargetFrameworks>netcoreapp3.1;net6.0;net7.0;net472</TargetFrameworks>
-		<Configurations>Debug;Release;Azure</Configurations>
-		<DefineConstants>$(DefineConstants)</DefineConstants>
-		<DefineConstants Condition="$(X86) != ''">$(DefineConstants);X86</DefineConstants>
+		<TargetFrameworks>net462;net6.0;net8.0;net9.0</TargetFrameworks>
+		<DefineConstants Condition=" $(DB2STUB) == 'True' ">$(DefineConstants);DB2STUBS</DefineConstants>
 	</PropertyGroup>
 
 	<PropertyGroup Condition=" '$(Configuration)' == 'Azure' ">
@@ -17,13 +14,20 @@
 
 	<ItemGroup>
 		<ProjectReference Include="..\..\Source\LinqToDB.Tools\LinqToDB.Tools.csproj" />
+		<ProjectReference Include="..\..\Source\LinqToDB.FSharp\LinqToDB.FSharp.fsproj" />
+
+		<AdditionalFiles Include="$(MSBuildThisFileDirectory)\BannedSymbols.txt" />
 	</ItemGroup>
 
-	<ItemGroup Condition="'$(TargetFramework)' == 'net472' ">
+	<ItemGroup Condition="'$(TargetFramework)' == 'net462' ">
 		<Reference Include="System.Data.Linq" />
 	</ItemGroup>
 
-	<PropertyGroup  Condition="'$(TargetFramework)' == 'netcoreapp3.1' ">
-		<SuppressTfmSupportBuildWarnings>true</SuppressTfmSupportBuildWarnings>
-	</PropertyGroup>
+	<ItemGroup Label="Ignore Useless NugetAudit Errors">
+		<!--System.Private.Uri 4.3.0 (3 errors)-->
+		<NuGetAuditSuppress Include="https://github.com/advisories/GHSA-5f2m-466j-3848" />
+		<NuGetAuditSuppress Include="https://github.com/advisories/GHSA-x5qj-9vmx-7g6g" />
+		<NuGetAuditSuppress Include="https://github.com/advisories/GHSA-xhfc-gr8f-ffwc" />
+	</ItemGroup>
+
 </Project>

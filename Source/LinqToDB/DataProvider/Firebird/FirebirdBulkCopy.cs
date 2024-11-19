@@ -10,15 +10,22 @@ namespace LinqToDB.DataProvider.Firebird
 
 	sealed class FirebirdBulkCopy : BasicBulkCopy
 	{
+		readonly FirebirdDataProvider _provider;
+
+		public FirebirdBulkCopy(FirebirdDataProvider dataProvider)
+		{
+			_provider = dataProvider;
+		}
+
 		/// <remarks>
 		/// Number based on http://www.firebirdfaq.org/faq197/
-		/// TODO: Add Compat Switch. Firebird 2.5 has 64k limit, Firebird 3.0+ 10MB.
+		/// Firebird 2.5 has 64k limit, Firebird 3.0+ 10MB.
 		/// </remarks>
-		protected override int MaxSqlLength => 65535;
+		protected override int MaxSqlLength => _provider.Version == FirebirdVersion.v25 ? 65535 : 10 * 1024 * 1024;
 
 		/// <remarks>
 		/// Based on https://github.com/FirebirdSQL/firebird/blob/799bca3ca5f9eb604433addc0f2b7cb3b6c07275/src/dsql/DsqlCompilerScratch.cpp#L528
-		/// Max is 65536/2. We subtract one from that in case ADO provider uses parameter for statemnt.
+		/// Max is 65536/2. We subtract one from that in case ADO provider uses parameter for statement.
 		/// </remarks>
 		protected override int MaxParameters => 32767;
 
@@ -56,7 +63,6 @@ namespace LinqToDB.DataProvider.Firebird
 			return MultipleRowsCopy2Async(table, options, source, " FROM rdb$database", cancellationToken);
 		}
 
-#if NATIVE_ASYNC
 		protected override Task<BulkCopyRowsCopied> MultipleRowsCopyAsync<T>(
 			ITable<T> table, DataOptions options, IAsyncEnumerable<T> source, CancellationToken cancellationToken)
 		{
@@ -66,6 +72,5 @@ namespace LinqToDB.DataProvider.Firebird
 
 			return MultipleRowsCopy2Async(table, options, source, " FROM rdb$database", cancellationToken);
 		}
-#endif
 	}
 }

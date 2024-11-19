@@ -1,33 +1,39 @@
 ﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 
 	<PropertyGroup>
-		<MSBuildWarningsAsMessages>$(MSBuildWarningsAsMessages);MSB3270;MSB3277;MSB3246</MSBuildWarningsAsMessages>
+		<MSBuildWarningsAsMessages>$(MSBuildWarningsAsMessages);MSB3270</MSBuildWarningsAsMessages>
+		<!--8002: referenced assembly miss strong name-->
 		<NoWarn>$(NoWarn);CS8002</NoWarn>
 	</PropertyGroup>
 
 	<ItemGroup>
+		<PackageReference Include="FirebirdSql.Data.FirebirdClient" />
 		<PackageReference Include="Npgsql" />
-		<PackageReference Include="System.Data.SQLite.Core" />
+		<PackageReference Include="Devart.Data.Oracle" />
 		<PackageReference Include="MySql.Data" Aliases="MySqlData" />
 		<PackageReference Include="MySqlConnector" Aliases="MySqlConnector" />
-		<PackageReference Include="FirebirdSql.Data.FirebirdClient" />
-		<PackageReference Include="AdoNetCore.AseClient" />
-		<PackageReference Include="System.Data.SqlClient" />
+		<PackageReference Include="System.Data.SQLite.Core" />
 		<PackageReference Include="Microsoft.Data.SqlClient" />
+		<PackageReference Include="System.Data.SqlClient" />
+		<PackageReference Include="AdoNetCore.AseClient" />
 		<PackageReference Include="Microsoft.Data.SQLite" />
-		<PackageReference Include="Devart.Data.Oracle" />
+		<PackageReference Include="ClickHouse.Client" />
 	</ItemGroup>
 
-	<ItemGroup Condition=" '$(TargetFramework)' == 'net472' ">
+	<ItemGroup Condition=" '$(TargetFramework)' == 'net462' ">
 		<PackageReference Include="Oracle.ManagedDataAccess" />
 		<PackageReference Include="Microsoft.SqlServer.Types" />
 
-		<Reference Include="IBM.Data.Informix">
-			<HintPath>$(MSBuildThisFileDirectory)\..\Redist\IBM\IBM.Data.Informix.dll</HintPath>
+		<Reference Include="IBM.Data.Informix" Condition=" $(PlatformTarget) != 'x86' ">
+			<HintPath>$(MSBuildThisFileDirectory)\..\Redist\IBM\SQLI x64\IBM.Data.Informix.dll</HintPath>
+		</Reference>
+		<Reference Include="IBM.Data.Informix" Condition=" $(PlatformTarget) == 'x86' ">
+			<HintPath>$(MSBuildThisFileDirectory)\..\Redist\IBM\SQLI x86\IBM.Data.Informix.dll</HintPath>
 		</Reference>
 		<Reference Include="Oracle.DataAccess">
 			<HintPath>$(MSBuildThisFileDirectory)\..\Redist\Oracle\Oracle.DataAccess.dll</HintPath>
 		</Reference>
+
 		<!--<Reference Include="Devart.Data.Oracle">
 			<HintPath>$(MSBuildThisFileDirectory)\..\Redist\Devart\Devart.Data.Oracle.dll</HintPath>
 		</Reference>
@@ -36,12 +42,12 @@
 		</Reference>-->
 	</ItemGroup>
 
-	<ItemGroup Condition=" '$(TargetFramework)' != 'net472' ">
+	<ItemGroup Condition=" '$(TargetFramework)' != 'net462' ">
+		<PackageReference Include="Oracle.ManagedDataAccess.Core" />
+		<PackageReference Include="Octonica.ClickHouseClient" />
 		<PackageReference Include="System.Data.Odbc" />
 		<PackageReference Include="System.Data.OleDb" />
-		<PackageReference Include="Oracle.ManagedDataAccess.Core" />
-		<PackageReference Include="ClickHouse.Client" />
-		<PackageReference Include="Octonica.ClickHouseClient" />
+
 		<!--<PackageReference Include="Devart.Data.Oracle" />-->
 
 		<!--nuget doesn't have strong name, so we use local self-signed copy-->
@@ -53,20 +59,18 @@
 
 	<!--some magic to not include x64 reference to IBM.Data.DB2.Core in x86 builds, as it fails x86 tests-->
 	<Choose>
-		<When Condition="$(X86) == ''">
-			<ItemGroup Condition=" '$(TargetFramework)' == 'net472' ">
+		<When Condition=" $(DB2STUB) != 'True' ">
+			<ItemGroup Condition=" '$(TargetFramework)' == 'net462' ">
 				<!--PackageReference + Reference beelongs to same nuget-->
 				<PackageReference Include="IBM.Data.DB.Provider" GeneratePathProperty="true" />
-				<Reference Include="IBM.Data.DB2">
+				<Reference Include="IBM.Data.DB2" Condition=" $(PlatformTarget) != 'x86' ">
+					<HintPath>$(PkgIBM_Data_DB_Provider)\build\net451\x64\IBM.Data.DB2.dll</HintPath>
+				</Reference>
+				<Reference Include="IBM.Data.DB2" Condition=" $(PlatformTarget) == 'x86' ">
 					<HintPath>$(PkgIBM_Data_DB_Provider)\build\net451\x86\IBM.Data.DB2.dll</HintPath>
 				</Reference>
 			</ItemGroup>
-			<ItemGroup Condition=" '$(TargetFramework)' == 'netcoreapp3.1' ">
-				<PackageReference Include="IBM.Data.DB2.Core" Condition=" '$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Windows)))' " />
-				<PackageReference Include="IBM.Data.DB2.Core-lnx" Condition=" '$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Linux)))' " />
-				<PackageReference Include="IBM.Data.DB2.Core-osx" Condition=" '$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::OSX)))' "/>
-			</ItemGroup>
-			<ItemGroup Condition=" '$(TargetFramework)' == 'net6.0' OR '$(TargetFramework)' == 'net7.0' ">
+			<ItemGroup Condition=" '$(TargetFramework)' != 'net462' ">
 				<PackageReference Include="Net.IBM.Data.Db2" Condition=" '$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Windows)))' " />
 				<PackageReference Include="Net.IBM.Data.Db2-lnx" Condition=" '$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Linux)))' " />
 				<PackageReference Include="Net.IBM.Data.Db2-osx" Condition=" '$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::OSX)))' "/>

@@ -4,27 +4,51 @@ using System.Diagnostics.CodeAnalysis;
 
 namespace LinqToDB.SqlQuery
 {
+	using Common.Internal;
+	using Visitors;
+
 	public static class QueryVisitorExtensions
 	{
+		internal static readonly ObjectPool<SqlQueryFindVisitor>          FindVisitorPool      = new(() => new SqlQueryFindVisitor(),          v => v.Cleanup(), 100);
+		internal static readonly ObjectPool<SqlQueryActionVisitor>        ActionVisitorPool    = new(() => new SqlQueryActionVisitor(),        v => v.Cleanup(), 100);
+		internal static readonly ObjectPool<SqlQueryParentFirstVisitor>   ParentVisitorPool    = new(() => new SqlQueryParentFirstVisitor(),   v => v.Cleanup(), 100);
+		internal static readonly ObjectPool<SqlQueryCloneVisitor>         CloneVisitorPool     = new(() => new SqlQueryCloneVisitor(),         v => v.Cleanup(), 100);
+		internal static readonly ObjectPool<QueryElementReplacingVisitor> ReplacingVisitorPool = new(() => new QueryElementReplacingVisitor(), v => v.Cleanup(), 100);
+
+		static class PoolHolder<TContext>
+		{
+			public static readonly ObjectPool<SqlQueryFindVisitor<TContext>>        FindPool        = new(() => new SqlQueryFindVisitor<TContext>(),         v => v.Cleanup(), 100);
+			public static readonly ObjectPool<SqlQueryFindExceptVisitor<TContext>>  FindExceptPool  = new(() => new SqlQueryFindExceptVisitor<TContext>(),   v => v.Cleanup(), 100);
+			public static readonly ObjectPool<SqlQueryActionVisitor<TContext>>      ActionPool      = new(() => new SqlQueryActionVisitor<TContext>(),       v => v.Cleanup(), 100);
+			public static readonly ObjectPool<SqlQueryParentFirstVisitor<TContext>> ParentFirstPool = new(() => new SqlQueryParentFirstVisitor<TContext>(),  v => v.Cleanup(), 100);
+			public static readonly ObjectPool<SqlQueryCloneVisitor<TContext>>       ClonePool       = new(() => new SqlQueryCloneVisitor<TContext>(),        v => v.Cleanup(), 100);
+			public static readonly ObjectPool<SqlQueryConvertVisitor<TContext>>     ConvertPool     = new(() => new SqlQueryConvertVisitor<TContext>(false), v => v.Cleanup(), 100);
+			public static readonly ObjectPool<SqlQueryConvertVisitor<TContext>>     ConvertMutationPool = new(() => new SqlQueryConvertVisitor<TContext>(true), v => v.Cleanup(), 100);
+		}
+
 		#region Visit
 		public static void Visit<TContext>(this IQueryElement element, TContext context, Action<TContext, IQueryElement> action)
 		{
-			new QueryVisitor<TContext>(context, false, action).Visit(element);
+			using var actionVisitor = PoolHolder<TContext>.ActionPool.Allocate();
+			actionVisitor.Value.Visit(context, element, false, action);
 		}
 
 		public static void Visit(this IQueryElement element, Action<IQueryElement> action)
 		{
-			new QueryVisitor<object?>(false, action).Visit(element);
+			using var actionVisitor = ActionVisitorPool.Allocate();
+			actionVisitor.Value.Visit(element, false, action);
 		}
 
 		public static void VisitAll<TContext>(this IQueryElement element, TContext context, Action<TContext, IQueryElement> action)
 		{
-			new QueryVisitor<TContext>(context, true, action).Visit(element);
+			using var actionVisitor = PoolHolder<TContext>.ActionPool.Allocate();
+			actionVisitor.Value.Visit(context, element, true, action);
 		}
 
 		public static void VisitAll(this IQueryElement element, Action<IQueryElement> action)
 		{
-			new QueryVisitor<object?>(true, action).Visit(element);
+			using var actionVisitor = ActionVisitorPool.Allocate();
+			actionVisitor.Value.Visit(element, true, action);
 		}
 
 		#endregion
@@ -32,23 +56,28 @@ namespace LinqToDB.SqlQuery
 		#region VisitParent
 		public static void VisitParentFirst<TContext>(this IQueryElement element, TContext context, Func<TContext, IQueryElement, bool> action)
 		{
-			new QueryParentVisitor<TContext>(context, false, action).Visit(element);
+			using var actionVisitor = PoolHolder<TContext>.ParentFirstPool.Allocate();
+			actionVisitor.Value.Visit(context, element, false, action);
 		}
 
 		public static void VisitParentFirst(this IQueryElement element, Func<IQueryElement, bool> action)
 		{
-			new QueryParentVisitor<object?>(false, action).Visit(element);
+			using var actionVisitor = ParentVisitorPool.Allocate();
+			actionVisitor.Value.Visit(element, false, action);
 		}
 
 		public static void VisitParentFirstAll<TContext>(this IQueryElement element, TContext context, Func<TContext, IQueryElement, bool> action)
 		{
-			new QueryParentVisitor<TContext>(context, true, action).Visit(element);
+			using var actionVisitor = PoolHolder<TContext>.ParentFirstPool.Allocate();
+			actionVisitor.Value.Visit(context, element, true, action);
 		}
 
 		public static void VisitParentFirstAll(this IQueryElement element, Func<IQueryElement, bool> action)
 		{
-			new QueryParentVisitor<object?>(true, action).Visit(element);
+			using var actionVisitor = ParentVisitorPool.Allocate();
+			actionVisitor.Value.Visit(element, true, action);
 		}
+
 		#endregion
 
 		#region Find
@@ -57,7 +86,8 @@ namespace LinqToDB.SqlQuery
 			if (element == null)
 				return null;
 
-			return new QueryFindVisitor<TContext>(context, find).Find(element);
+			using var findVisitor = PoolHolder<TContext>.FindPool.Allocate();
+			return findVisitor.Value.Find(context, element, find);
 		}
 
 		public static IQueryElement? Find(this IQueryElement? element, Func<IQueryElement, bool> find)
@@ -65,7 +95,8 @@ namespace LinqToDB.SqlQuery
 			if (element == null)
 				return null;
 
-			return new QueryFindVisitor<object?>(find).Find(element);
+			using var findVisitor = FindVisitorPool.Allocate();
+			return findVisitor.Value.Find(element, find);
 		}
 
 		public static IQueryElement? Find(this IQueryElement? element, QueryElementType type)
@@ -73,7 +104,19 @@ namespace LinqToDB.SqlQuery
 			if (element == null)
 				return null;
 
-			return new QueryFindVisitor<QueryElementType>(type, static (type, e) => e.ElementType == type).Find(element);
+			using var findVisitor = PoolHolder<QueryElementType>.FindPool.Allocate();
+			return findVisitor.Value.Find(type, element, static (type, e) => e.ElementType == type);
+		}
+		#endregion
+
+		#region FindExcept
+		public static IQueryElement? FindExcept<TContext>(this IQueryElement? element, TContext context, IQueryElement skip, Func<TContext, IQueryElement, bool> find)
+		{
+			if (element == null)
+				return null;
+
+			using var findVisitor = PoolHolder<TContext>.FindExceptPool.Allocate();
+			return findVisitor.Value.Find(context, element, skip, find);
 		}
 		#endregion
 
@@ -85,17 +128,14 @@ namespace LinqToDB.SqlQuery
 			if (element == null)
 				return null;
 
-			return new CloneVisitor<object?>(objectTree, null).Clone(element);
-		}
+			using var cloneVisitor = CloneVisitorPool.Allocate();
+			cloneVisitor.Value.RegisterReplacements(objectTree);
 
-		[return: NotNullIfNotNull(nameof(elements))]
-		public static T[]? Clone<T>(this T[]? elements, Dictionary<IQueryElement, IQueryElement> objectTree)
-			where T : class, IQueryElement
-		{
-			if (elements == null)
-				return null;
+			var clone = (T)cloneVisitor.Value.PerformClone(element);
 
-			return new CloneVisitor<object?>(objectTree, null).Clone(elements);
+			cloneVisitor.Value.GetReplacements(objectTree);
+
+			return clone;
 		}
 
 		[return: NotNullIfNotNull(nameof(element))]
@@ -105,7 +145,14 @@ namespace LinqToDB.SqlQuery
 			if (element == null)
 				return null;
 
-			return new CloneVisitor<TContext>(objectTree, context, doClone).Clone(element);
+			using var cloneVisitor = PoolHolder<TContext>.ClonePool.Allocate();
+			cloneVisitor.Value.RegisterReplacements(objectTree);
+
+			var clone = (T)cloneVisitor.Value.Clone(element, context, doClone);
+
+			cloneVisitor.Value.GetReplacements(objectTree);
+
+			return clone;
 		}
 
 		[return: NotNullIfNotNull(nameof(element))]
@@ -115,7 +162,9 @@ namespace LinqToDB.SqlQuery
 			if (element == null)
 				return null;
 
-			return new CloneVisitor<TContext>(null, context, doClone).Clone(element);
+			using var cloneVisitor = PoolHolder<TContext>.ClonePool.Allocate();
+
+			return (T)cloneVisitor.Value.Clone(element, context, doClone);
 		}
 
 		[return: NotNullIfNotNull(nameof(element))]
@@ -125,7 +174,9 @@ namespace LinqToDB.SqlQuery
 			if (element == null)
 				return null;
 
-			return new CloneVisitor<object?>(null, doClone).Clone(element);
+			using var cloneVisitor = CloneVisitorPool.Allocate();
+
+			return (T)cloneVisitor.Value.Clone(element, doClone);
 		}
 
 		[return: NotNullIfNotNull(nameof(element))]
@@ -135,69 +186,106 @@ namespace LinqToDB.SqlQuery
 			if (element == null)
 				return null;
 
-			return new CloneVisitor<object?>(null, null).Clone(element);
+			using var cloneVisitor = CloneVisitorPool.Allocate();
+
+			return (T)cloneVisitor.Value.Clone(element, null);
 		}
 		#endregion
 
+		#region Replace
+
+		public static T Replace<T>(this T element, IDictionary<IQueryElement, IQueryElement> replacements,
+			params IQueryElement[]   toIgnore)
+			where T : class, IQueryElement
+		{
+			using var replacingElementVisitor = ReplacingVisitorPool.Allocate();
+
+			return (T)replacingElementVisitor.Value.Replace(element, replacements, toIgnore);
+		}
+
+		#endregion
+
 		#region Convert
-		public static T Convert<TContext, T>(this T element, TContext context, Func<ConvertVisitor<TContext>, IQueryElement, IQueryElement> convertAction, bool withStack)
+
+		public static T Convert<TContext, T>(this T element, TContext context, Func<SqlQueryConvertVisitor<TContext>, IQueryElement, IQueryElement> convertAction, bool withStack)
 			where T : class, IQueryElement
 		{
-			return (T?)new ConvertVisitor<TContext>(context, convertAction, false, false, withStack).ConvertInternal(element) ?? element;
+			using var convertVisitor = PoolHolder<TContext>.ConvertPool.Allocate();
+
+			return (T?)convertVisitor.Value.Convert(element, context, convertAction, withStack) ?? element;
 		}
 
-		public static T Convert<TContext, T>(this T element, TContext context, Func<ConvertVisitor<TContext>, IQueryElement, IQueryElement> convertAction)
+		public static T Convert<TContext, T>(this T element, TContext context, Func<SqlQueryConvertVisitor<TContext>, IQueryElement, IQueryElement> convertAction)
 			where T : class, IQueryElement
 		{
-			return (T?)new ConvertVisitor<TContext>(context, convertAction, false, false, false).ConvertInternal(element) ?? element;
+			using var convertVisitor = PoolHolder<TContext>.ConvertPool.Allocate();
+
+			return (T?)convertVisitor.Value.Convert(element, context, convertAction, false) ?? element;
 		}
 
-		public static T Convert<T>(this T element, Func<ConvertVisitor<object?>, IQueryElement, IQueryElement> convertAction, bool withStack)
+		public static T Convert<T>(this T element, Func<SqlQueryConvertVisitor<object?>, IQueryElement, IQueryElement> convertAction, bool withStack)
 			where T : class, IQueryElement
 		{
-			return (T?)new ConvertVisitor<object?>(null, convertAction, false, false, withStack).ConvertInternal(element) ?? element;
+			if (withStack)
+				throw new NotImplementedException();
+
+			using var convertVisitor = PoolHolder<object?>.ConvertPool.Allocate();
+
+			return (T?)convertVisitor.Value.Convert(element, null, convertAction, false) ?? element;
 		}
 
-		public static T Convert<T>(this T element, Func<ConvertVisitor<object?>, IQueryElement, IQueryElement> convertAction)
+		public static T Convert<T>(this T element, Func<SqlQueryConvertVisitor<object?>, IQueryElement, IQueryElement> convertAction)
 			where T : class, IQueryElement
 		{
-			return (T?)new ConvertVisitor<object?>(null, convertAction, false, false, false).ConvertInternal(element) ?? element;
+			using var convertVisitor = PoolHolder<object?>.ConvertPool.Allocate();
+
+			return (T?)convertVisitor.Value.Convert(element, null, convertAction, false) ?? element;
 		}
 
-		public static T Convert<TContext, T>(this T element, TContext context, bool allowMutation, Func<ConvertVisitor<TContext>, IQueryElement, IQueryElement> convertAction, bool withStack)
+		public static T Convert<TContext, T>(this T element, TContext context, bool allowMutation, Func<SqlQueryConvertVisitor<TContext>, IQueryElement, IQueryElement> convertAction, bool withStack)
 			where T : class, IQueryElement
 		{
-			return (T?)new ConvertVisitor<TContext>(context, convertAction, false, allowMutation, withStack).ConvertInternal(element) ?? element;
+			using var convertVisitor = PoolHolder<TContext>.ConvertPool.Allocate();
+
+			return (T?)convertVisitor.Value.Convert(element, context, convertAction, withStack) ?? element;
 		}
 
-		public static T Convert<TContext, T>(this T element, TContext context, bool allowMutation, Func<ConvertVisitor<TContext>, IQueryElement, IQueryElement> convertAction)
+		public static T Convert<TContext, T>(this T element, TContext context, bool allowMutation, Func<SqlQueryConvertVisitor<TContext>, IQueryElement, IQueryElement> convertAction)
 			where T : class, IQueryElement
 		{
-			return (T?)new ConvertVisitor<TContext>(context, convertAction, false, allowMutation, false).ConvertInternal(element) ?? element;
+			using var convertVisitor = allowMutation
+				? PoolHolder<TContext>.ConvertMutationPool.Allocate()
+				: PoolHolder<TContext>.ConvertPool.Allocate();
+
+			return (T?)convertVisitor.Value.Convert(element, context, convertAction, false) ?? element;
 		}
 
-		public static T ConvertAll<TContext, T>(this T element, TContext context, Func<ConvertVisitor<TContext>, IQueryElement, IQueryElement> convertAction)
+		public static T ConvertAll<TContext, T>(this T element, TContext context, Func<SqlQueryConvertVisitor<TContext>, IQueryElement, IQueryElement> convertAction)
 			where T : class, IQueryElement
 		{
-			return (T?)new ConvertVisitor<TContext>(context, convertAction, true, false, false).ConvertInternal(element) ?? element;
+			using var convertVisitor = PoolHolder<TContext>.ConvertPool.Allocate();
+
+			return (T?)convertVisitor.Value.Convert(element, context, convertAction, false) ?? element;
 		}
 
-		public static T ConvertAll<TContext, T>(this T element, TContext context, Func<ConvertVisitor<TContext>, IQueryElement, IQueryElement> convertAction, Func<ConvertVisitor<TContext>, bool> parentAction)
+		public static T ConvertAll<TContext, T>(this T element, TContext context, bool allowMutation, Func<SqlQueryConvertVisitor<TContext>, IQueryElement, IQueryElement> convertAction)
 			where T : class, IQueryElement
 		{
-			return (T?)new ConvertVisitor<TContext>(context, convertAction, true, false, false, parentAction).ConvertInternal(element) ?? element;
+			using var convertVisitor = allowMutation
+				? PoolHolder<TContext>.ConvertMutationPool.Allocate()
+				: PoolHolder<TContext>.ConvertPool.Allocate();
+
+			return (T?)convertVisitor.Value.Convert(element, context, convertAction, false) ?? element;
 		}
 
-		public static T ConvertAll<TContext, T>(this T element, TContext context, bool allowMutation, Func<ConvertVisitor<TContext>, IQueryElement, IQueryElement> convertAction)
+		public static T ConvertAll<T>(this T element, bool allowMutation, Func<SqlQueryConvertVisitor<object?>, IQueryElement, IQueryElement> convertAction)
 			where T : class, IQueryElement
 		{
-			return (T?)new ConvertVisitor<TContext>(context, convertAction, true, allowMutation, false).ConvertInternal(element) ?? element;
-		}
+			using var convertVisitor = allowMutation
+				? PoolHolder<object?>.ConvertMutationPool.Allocate()
+				: PoolHolder<object?>.ConvertPool.Allocate();
 
-		public static T ConvertAll<T>(this T element, bool allowMutation, Func<ConvertVisitor<object?>, IQueryElement, IQueryElement> convertAction)
-			where T : class, IQueryElement
-		{
-			return (T?)new ConvertVisitor<object?>(null, convertAction, true, allowMutation, false).ConvertInternal(element) ?? element;
+			return (T?)convertVisitor.Value.Convert(element, null, convertAction, false) ?? element;
 		}
 		#endregion
 	}

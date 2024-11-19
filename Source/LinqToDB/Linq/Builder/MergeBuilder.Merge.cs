@@ -12,44 +12,39 @@ namespace LinqToDB.Linq.Builder
 
 	internal partial class MergeBuilder
 	{
+		[BuildsMethodCall(nameof(LinqExtensions.Merge))]
 		internal sealed class Merge : MethodCallBuilder
 		{
-			static readonly MethodInfo[] _supportedMethods = {MergeMethodInfo1, MergeMethodInfo2};
+			static readonly MethodInfo[] _supportedMethods = { MergeMethodInfo1, MergeMethodInfo2 };
 
-			protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
-			{
-				return methodCall.IsSameGenericMethod(_supportedMethods);
-			}
+			public static bool CanBuildMethod(MethodCallExpression call, BuildInfo info, ExpressionBuilder builder)
+				=> call.IsSameGenericMethod(_supportedMethods);
 
-			protected override IBuildContext BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
+			protected override BuildSequenceResult BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 			{
 				// Merge(ITable<TTarget> target, string hint)
 
 				var disableFilters = methodCall.Arguments[0] is not MethodCallExpression mc || mc.Method.Name != nameof(LinqExtensions.AsCte);
 				if (disableFilters)
-					builder.PushDisabledQueryFilters(Array<Type>.Empty);
+					builder.PushDisabledQueryFilters([]);
 
 				var target = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0], new SelectQuery()) { AssociationsAsSubQueries = true });
 
 				if (disableFilters)
 					builder.PopDisabledFilter();
 
-				if (target is not TableBuilder.TableContext tableContext
-					|| !tableContext.SelectQuery.IsSimple)
-				{
-					throw new NotImplementedException("Currently, only Tables and CTEs are supported as the target of a merge. You can fix by calling .AsCte() before calling .Merge()");
-				}
+				var targetTable = GetTargetTable(target);
 
-				var targetTable = tableContext.SqlTable;
+				if (targetTable == null)
+					throw new NotImplementedException("Currently, only CTEs are supported as the target of a merge. You can fix by calling .AsCte() before calling .Merge()");
 
 				var merge = new SqlMergeStatement(targetTable);
 				if (methodCall.Arguments.Count == 2)
-					merge.Hint = methodCall.Arguments[1].EvaluateExpression<string>(builder.DataContext);
+					merge.Hint = builder.EvaluateExpression<string>(methodCall.Arguments[1]);
 
 				target.SetAlias(merge.Target.Alias!);
-				target.Statement = merge;
 
-				return new MergeContext(merge, target);
+				return BuildSequenceResult.FromContext(new MergeContext(merge, target));
 			}
 		}
 	}

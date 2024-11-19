@@ -22,7 +22,7 @@ namespace Tests.DataProvider
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.DbTS);
 			Console.WriteLine(result.ToDiagnosticString());
-			Assert.That(result.Length, Is.EqualTo(8));
+			Assert.That(result, Has.Length.EqualTo(8));
 		}
 
 		[Test]
@@ -1124,7 +1124,7 @@ namespace Tests.DataProvider
 		public void IsJson([IncludeDataSources(TestProvName.AllSqlServer2016Plus)] string context)
 		{
 			using var db = new SystemDB(context);
-			var result = db.Select(() => SqlFn.IsJson("{ \"test\" : 1 }"));
+			var result = db.Select(() => SqlFn.IsJson(/*lang=json,strict*/ "{ \"test\" : 1 }"));
 			Console.WriteLine(result);
 			Assert.That(result, Is.True);
 		}
@@ -1133,7 +1133,7 @@ namespace Tests.DataProvider
 		public void JsonValue([IncludeDataSources(TestProvName.AllSqlServer2016Plus)] string context)
 		{
 			using var db = new SystemDB(context);
-			var result = db.Select(() => SqlFn.JsonValue("{ \"test\" : 1 }", "$.test"));
+			var result = db.Select(() => SqlFn.JsonValue(/*lang=json,strict*/ "{ \"test\" : 1 }", "$.test"));
 			Console.WriteLine(result);
 			Assert.That(result, Is.EqualTo("1"));
 		}
@@ -1142,25 +1142,25 @@ namespace Tests.DataProvider
 		public void JsonQuery([IncludeDataSources(TestProvName.AllSqlServer2016Plus)] string context)
 		{
 			using var db = new SystemDB(context);
-			var result = db.Select(() => SqlFn.JsonQuery("{ \"test\" : 1 }", "$"));
+			var result = db.Select(() => SqlFn.JsonQuery(/*lang=json,strict*/ "{ \"test\" : 1 }", "$"));
 			Console.WriteLine(result);
-			Assert.That(result, Is.EqualTo("{ \"test\" : 1 }"));
+			Assert.That(result, Is.EqualTo(/*lang=json,strict*/ "{ \"test\" : 1 }"));
 		}
 
 		[Test]
 		public void JsonModify([IncludeDataSources(TestProvName.AllSqlServer2016Plus)] string context)
 		{
 			using var db = new SystemDB(context);
-			var result = db.Select(() => SqlFn.JsonModify("{ \"test\" : 1 }", "$.test", "2"));
+			var result = db.Select(() => SqlFn.JsonModify(/*lang=json,strict*/ "{ \"test\" : 1 }", "$.test", "2"));
 			Console.WriteLine(result);
-			Assert.That(result, Is.EqualTo("{ \"test\" : \"2\" }"));
+			Assert.That(result, Is.EqualTo(/*lang=json,strict*/ "{ \"test\" : \"2\" }"));
 		}
 
 		[Test]
 		public void OpenJson1([IncludeDataSources(TestProvName.AllSqlServer2016Plus)] string context)
 		{
 			using var db = new SystemDB(context);
-			var result = db.GetTable<SqlFn.JsonData>(null, LinqToDB.Linq.MethodHelper.GetMethodInfo(SqlFn.OpenJson, string.Empty), "{ \"test\" : 1 }").ToArray();
+			var result = db.GetTable<SqlFn.JsonData>(null, LinqToDB.Linq.MethodHelper.GetMethodInfo(SqlFn.OpenJson, string.Empty), /*lang=json,strict*/ "{ \"test\" : 1 }").ToArray();
 			Console.WriteLine(result);
 
 			var expected = new[]
@@ -1175,7 +1175,7 @@ namespace Tests.DataProvider
 		public void OpenJson2([IncludeDataSources(TestProvName.AllSqlServer2016Plus)] string context)
 		{
 			using var db = new SystemDB(context);
-			var result = db.GetTable<SqlFn.JsonData>(null, LinqToDB.Linq.MethodHelper.GetMethodInfo(SqlFn.OpenJson, string.Empty, string.Empty), "{ \"test\" : [ 10, 20 ] }", "$.test").ToArray();
+			var result = db.GetTable<SqlFn.JsonData>(null, LinqToDB.Linq.MethodHelper.GetMethodInfo(SqlFn.OpenJson, string.Empty, string.Empty), /*lang=json,strict*/ "{ \"test\" : [ 10, 20 ] }", "$.test").ToArray();
 			Console.WriteLine(result);
 
 			var expected = new[]
@@ -1203,12 +1203,11 @@ namespace Tests.DataProvider
 			AreEqual(expected, result);
 		}
 
-#if !NET45
 		[Test]
 		public void OpenJson4([IncludeDataSources(TestProvName.AllSqlServer2016Plus)] string context)
 		{
 			using var db = new SystemDB(context);
-			var result = db.OpenJson("{ \"test\" : 1 }").ToArray();
+			var result = db.OpenJson(/*lang=json,strict*/ "{ \"test\" : 1 }").ToArray();
 			Console.WriteLine(result);
 
 			var expected = new[]
@@ -1224,7 +1223,7 @@ namespace Tests.DataProvider
 		public void OpenJson5([IncludeDataSources(TestProvName.AllSqlServer2017Plus)] string context)
 		{
 			using var db = new SystemDB(context);
-			var result = db.OpenJson("{ \"test\" : [ 10, 20 ] }", "$.test").ToArray();
+			var result = db.OpenJson(/*lang=json,strict*/ "{ \"test\" : [ 10, 20 ] }", "$.test").ToArray();
 			Console.WriteLine(result);
 
 			var expected = new[]
@@ -1251,7 +1250,6 @@ namespace Tests.DataProvider
 
 			AreEqual(expected, result);
 		}
-#endif
 		#endregion
 
 		#region Mathematical
@@ -1584,7 +1582,12 @@ namespace Tests.DataProvider
 			using var db = new SystemDB(context);
 			var result = db.Select(() => SqlFn.DatabasePropertyEx(SqlFn.DbName(), SqlFn.DatabasePropertyName.Version));
 			Console.WriteLine(result);
-			Assert.That(result, Is.GreaterThan(600));
+			Assert.That(result, Is.Not.Null);
+			Assert.Multiple(() =>
+			{
+				Assert.That(result, Is.TypeOf<int>());
+				Assert.That((int)result, Is.GreaterThan(600));
+			});
 		}
 
 		[Test]
@@ -1757,7 +1760,13 @@ namespace Tests.DataProvider
 			using var db = GetDataContext(context);
 			var result = db.Select(() => SqlFn.NextValueFor("dbo.TestSequence"));
 			Console.WriteLine(result);
-			Assert.That(result, Is.GreaterThan(0));
+
+			Assert.That(result, Is.Not.Null);
+			Assert.Multiple(() =>
+			{
+				Assert.That(result, Is.TypeOf<long>());
+				Assert.That((long)result, Is.GreaterThan(0L));
+			});
 		}
 
 		[Test]
@@ -1775,7 +1784,7 @@ namespace Tests.DataProvider
 
 			var l = q.ToList();
 
-			Assert.That(l.Count, Is.GreaterThan(0));
+			Assert.That(l, Is.Not.Empty);
 		}
 
 		[Test]
@@ -2451,7 +2460,6 @@ namespace Tests.DataProvider
 			using var db = GetDataContext(context);
 			var result = db.Select(() => SqlFn.CurrentRequestID());
 			Console.WriteLine(result);
-			Assert.That(result, Is.Not.Null);
 		}
 
 		[Test]
@@ -2556,7 +2564,7 @@ namespace Tests.DataProvider
 			using var db = GetDataContext(context);
 			var result = db.Select(() => SqlFn.MinActiveRowVersion());
 			Console.WriteLine(result);
-			Assert.That(result.Length, Is.EqualTo(8));
+			Assert.That(result, Has.Length.EqualTo(8));
 		}
 
 		[Test]
@@ -2565,7 +2573,7 @@ namespace Tests.DataProvider
 			using var db = GetDataContext(context);
 			var result = db.Select(() => SqlFn.NewID());
 			Console.WriteLine(result);
-			Assert.That(result, Is.Not.Null);
+			Assert.That(result, Is.Not.EqualTo(Guid.Empty));
 		}
 
 		[Test]

@@ -1,5 +1,5 @@
 ﻿using System;
-#if NET472
+#if NETFRAMEWORK
 using System.Data.Linq.SqlClient;
 #else
 using System.Data;
@@ -24,25 +24,31 @@ namespace Tests.Linq
 		[Test]
 		public void Length()
 		{
-			Assert.AreEqual(null, Sql.Length((string)null!));
-			Assert.AreEqual(0,    Sql.Length(string.Empty));
-			Assert.AreEqual(4,    Sql.Length("test"));
+			Assert.Multiple(() =>
+			{
+				Assert.That(Sql.Length((string)null!), Is.EqualTo(null));
+				Assert.That(Sql.Length(string.Empty), Is.EqualTo(0));
+				Assert.That(Sql.Length("test"), Is.EqualTo(4));
+			});
 		}
 
 		[Test]
 		public void Substring()
 		{
-			Assert.AreEqual(null, Sql.Substring(null,   0,    0));
-			Assert.AreEqual(null, Sql.Substring("test", null, 0));
-			Assert.AreEqual(null, Sql.Substring("test", -1,   0));
-			Assert.AreEqual(null, Sql.Substring("test", 5,    0));
-			Assert.AreEqual(null, Sql.Substring("test", 0,    null));
-			Assert.AreEqual(null, Sql.Substring("test", 0,    -1));
+			Assert.Multiple(() =>
+			{
+				Assert.That(Sql.Substring(null, 0, 0), Is.EqualTo(null));
+				Assert.That(Sql.Substring("test", null, 0), Is.EqualTo(null));
+				Assert.That(Sql.Substring("test", -1, 0), Is.EqualTo(null));
+				Assert.That(Sql.Substring("test", 5, 0), Is.EqualTo(null));
+				Assert.That(Sql.Substring("test", 0, null), Is.EqualTo(null));
+				Assert.That(Sql.Substring("test", 0, -1), Is.EqualTo(null));
 
-			Assert.AreEqual("",   Sql.Substring("test", 3,    0));
-			Assert.AreEqual("s",  Sql.Substring("test", 3,    1));
-			Assert.AreEqual("st", Sql.Substring("test", 3,    2));
-			Assert.AreEqual("st", Sql.Substring("test", 3,    3));
+				Assert.That(Sql.Substring("test", 3, 0), Is.EqualTo(""));
+				Assert.That(Sql.Substring("test", 3, 1), Is.EqualTo("s"));
+				Assert.That(Sql.Substring("test", 3, 2), Is.EqualTo("st"));
+				Assert.That(Sql.Substring("test", 3, 3), Is.EqualTo("st"));
+			});
 		}
 
 		[Test]
@@ -59,113 +65,137 @@ namespace Tests.Linq
 		[Test]
 		public void CharIndex1()
 		{
-			Assert.AreEqual(null, Sql.CharIndex("",            null));
-			Assert.AreEqual(null, Sql.CharIndex((string)null!, "test"));
+			Assert.Multiple(() =>
+			{
+				Assert.That(Sql.CharIndex("", null), Is.EqualTo(null));
+				Assert.That(Sql.CharIndex((string)null!, "test"), Is.EqualTo(null));
 
-			Assert.AreEqual(0,    Sql.CharIndex("",            "test"));
-			Assert.AreEqual(0,    Sql.CharIndex("g",           "test"));
-			Assert.AreEqual(3,    Sql.CharIndex("st",          "test"));
+				Assert.That(Sql.CharIndex("", "test"), Is.EqualTo(0));
+				Assert.That(Sql.CharIndex("g", "test"), Is.EqualTo(0));
+				Assert.That(Sql.CharIndex("st", "test"), Is.EqualTo(3));
+			});
 		}
 
 		[Test]
 		public void CharIndex2()
 		{
-			Assert.AreEqual(null, Sql.CharIndex("",            null,   0));
-			Assert.AreEqual(null, Sql.CharIndex((string)null!, "test", 0));
-			Assert.AreEqual(null, Sql.CharIndex("st",          "test", null));
+			Assert.Multiple(() =>
+			{
+				Assert.That(Sql.CharIndex("", null, 0), Is.EqualTo(null));
+				Assert.That(Sql.CharIndex((string)null!, "test", 0), Is.EqualTo(null));
+				Assert.That(Sql.CharIndex("st", "test", null), Is.EqualTo(null));
 
-			Assert.AreEqual(0,    Sql.CharIndex("",            "test", 0));
-			Assert.AreEqual(0,    Sql.CharIndex("g",           "test", 0));
-			Assert.AreEqual(3,    Sql.CharIndex("st",          "test", -1));
-			Assert.AreEqual(3,    Sql.CharIndex("st",          "test", 2));
-			Assert.AreEqual(0,    Sql.CharIndex("st",          "test", 4));
-			Assert.AreEqual(0,    Sql.CharIndex("st",          "test", 5));
+				Assert.That(Sql.CharIndex("", "test", 0), Is.EqualTo(0));
+				Assert.That(Sql.CharIndex("g", "test", 0), Is.EqualTo(0));
+				Assert.That(Sql.CharIndex("st", "test", -1), Is.EqualTo(3));
+				Assert.That(Sql.CharIndex("st", "test", 2), Is.EqualTo(3));
+				Assert.That(Sql.CharIndex("st", "test", 4), Is.EqualTo(0));
+				Assert.That(Sql.CharIndex("st", "test", 5), Is.EqualTo(0));
+			});
 		}
 
 		[Test]
 		public void CharIndex3()
 		{
-			Assert.AreEqual(null, Sql.CharIndex('t',           null));
-			Assert.AreEqual(null, Sql.CharIndex((char?)null!,  "test"));
+			Assert.Multiple(() =>
+			{
+				Assert.That(Sql.CharIndex('t', null), Is.EqualTo(null));
+				Assert.That(Sql.CharIndex((char?)null!, "test"), Is.EqualTo(null));
 
-			Assert.AreEqual(0,    Sql.CharIndex(Char.MinValue, "test"));
-			Assert.AreEqual(0,    Sql.CharIndex('g',           "test"));
-			Assert.AreEqual(3,    Sql.CharIndex('s',           "test"));
+				Assert.That(Sql.CharIndex(Char.MinValue, "test"), Is.EqualTo(0));
+				Assert.That(Sql.CharIndex('g', "test"), Is.EqualTo(0));
+				Assert.That(Sql.CharIndex('s', "test"), Is.EqualTo(3));
+			});
 		}
 
 		[Test]
 		public void CharIndex4()
 		{
-			Assert.AreEqual(null, Sql.CharIndex('t',           null,   0));
-			Assert.AreEqual(null, Sql.CharIndex((char?)null!,  "test", 0));
-			Assert.AreEqual(null, Sql.CharIndex('t',           "test", null));
+			Assert.Multiple(() =>
+			{
+				Assert.That(Sql.CharIndex('t', null, 0), Is.EqualTo(null));
+				Assert.That(Sql.CharIndex((char?)null!, "test", 0), Is.EqualTo(null));
+				Assert.That(Sql.CharIndex('t', "test", null), Is.EqualTo(null));
 
-			Assert.AreEqual(0,    Sql.CharIndex(Char.MinValue, "test", 0));
-			Assert.AreEqual(0,    Sql.CharIndex('g',           "test", 0));
-			Assert.AreEqual(3,    Sql.CharIndex('s',           "test", -1));
-			Assert.AreEqual(3,    Sql.CharIndex('s',           "test", 2));
-			Assert.AreEqual(0,    Sql.CharIndex('s',           "test", 4));
-			Assert.AreEqual(0,    Sql.CharIndex('s',           "test", 5));
+				Assert.That(Sql.CharIndex(Char.MinValue, "test", 0), Is.EqualTo(0));
+				Assert.That(Sql.CharIndex('g', "test", 0), Is.EqualTo(0));
+				Assert.That(Sql.CharIndex('s', "test", -1), Is.EqualTo(3));
+				Assert.That(Sql.CharIndex('s', "test", 2), Is.EqualTo(3));
+				Assert.That(Sql.CharIndex('s', "test", 4), Is.EqualTo(0));
+				Assert.That(Sql.CharIndex('s', "test", 5), Is.EqualTo(0));
+			});
 		}
 
 		[Test]
 		public void Reverse()
 		{
-			Assert.AreEqual(null,         Sql.Reverse(null));
-			Assert.AreEqual(string.Empty, Sql.Reverse(string.Empty));
-			Assert.AreEqual("dcba",       Sql.Reverse("abcd"));
+			Assert.Multiple(() =>
+			{
+				Assert.That(Sql.Reverse(null), Is.EqualTo(null));
+				Assert.That(Sql.Reverse(string.Empty), Is.EqualTo(string.Empty));
+				Assert.That(Sql.Reverse("abcd"), Is.EqualTo("dcba"));
+			});
 		}
 
 		[Test]
 		public void Left()
 		{
-			Assert.AreEqual(null,   Sql.Left(null,   0));
-			Assert.AreEqual(null,   Sql.Left("test", null));
-			Assert.AreEqual(null,   Sql.Left("test", -1));
-			Assert.AreEqual("",     Sql.Left("test", 0));
-			Assert.AreEqual("te",   Sql.Left("test", 2));
-			Assert.AreEqual("test", Sql.Left("test", 5));
+			Assert.Multiple(() =>
+			{
+				Assert.That(Sql.Left(null, 0), Is.EqualTo(null));
+				Assert.That(Sql.Left("test", null), Is.EqualTo(null));
+				Assert.That(Sql.Left("test", -1), Is.EqualTo(null));
+				Assert.That(Sql.Left("test", 0), Is.EqualTo(""));
+				Assert.That(Sql.Left("test", 2), Is.EqualTo("te"));
+				Assert.That(Sql.Left("test", 5), Is.EqualTo("test"));
+			});
 		}
 
 		[Test]
 		public void Right()
 		{
-			Assert.AreEqual(null,   Sql.Right(null,   0));
-			Assert.AreEqual(null,   Sql.Right("test", null));
-			Assert.AreEqual(null,   Sql.Right("test", -1));
-			Assert.AreEqual("",     Sql.Right("test", 0));
-			Assert.AreEqual("st",   Sql.Right("test", 2));
-			Assert.AreEqual("test", Sql.Right("test", 5));
+			Assert.Multiple(() =>
+			{
+				Assert.That(Sql.Right(null, 0), Is.EqualTo(null));
+				Assert.That(Sql.Right("test", null), Is.EqualTo(null));
+				Assert.That(Sql.Right("test", -1), Is.EqualTo(null));
+				Assert.That(Sql.Right("test", 0), Is.EqualTo(""));
+				Assert.That(Sql.Right("test", 2), Is.EqualTo("st"));
+				Assert.That(Sql.Right("test", 5), Is.EqualTo("test"));
+			});
 		}
 
 		[Test]
 		public void Stuff1()
 		{
-			// Disallowed null parameters
-			Assert.AreEqual(null,       Sql.Stuff((string)null!, 1,    1,    "test"));
-			Assert.AreEqual(null,       Sql.Stuff("test",        null, 1,    "test"));
-			Assert.AreEqual(null,       Sql.Stuff("test",        1,    null, "test"));
-			Assert.AreEqual(null,       Sql.Stuff("test",        1,    1,    null));
+			Assert.Multiple(() =>
+			{
+				// Disallowed null parameters
+				Assert.That(Sql.Stuff((string)null!, 1, 1, "test"), Is.EqualTo(null));
+				Assert.That(Sql.Stuff("test", null, 1, "test"), Is.EqualTo(null));
+				Assert.That(Sql.Stuff("test", 1, null, "test"), Is.EqualTo(null));
+				Assert.That(Sql.Stuff("test", 1, 1, null), Is.EqualTo(null));
 
-			// Disallowed start
-			Assert.AreEqual(null,       Sql.Stuff("test",        0,    1,    "test"));
-			Assert.AreEqual(null,       Sql.Stuff("test",        5,    1,    "test"));
+				// Disallowed start
+				Assert.That(Sql.Stuff("test", 0, 1, "test"), Is.EqualTo(null));
+				Assert.That(Sql.Stuff("test", 5, 1, "test"), Is.EqualTo(null));
 
-			// Disallowed length
-			Assert.AreEqual(null,       Sql.Stuff("test",        1,    -1,   "test"));
+				// Disallowed length
+				Assert.That(Sql.Stuff("test", 1, -1, "test"), Is.EqualTo(null));
 
-			// Correct start and length
-			Assert.AreEqual("5678",     Sql.Stuff("1234",        1,    4,    "5678"));
+				// Correct start and length
+				Assert.That(Sql.Stuff("1234", 1, 4, "5678"), Is.EqualTo("5678"));
 
-			// Correct start
-			Assert.AreEqual("12356784", Sql.Stuff("1234",        4,    0,    "5678"));
+				// Correct start
+				Assert.That(Sql.Stuff("1234", 4, 0, "5678"), Is.EqualTo("12356784"));
 
-			// Correct length
-			Assert.AreEqual("125678",   Sql.Stuff("1234",        3,    5,    "5678"));
+				// Correct length
+				Assert.That(Sql.Stuff("1234", 3, 5, "5678"), Is.EqualTo("125678"));
+			});
 		}
 
 		[Test]
-		public void Stuff2()
+		public void Stuff2Fail()
 		{
 			var expression = Enumerable.Empty<string>();
 			Assert.Throws<NotImplementedException>(() => Sql.Stuff(expression, 1, 1, "")); // ServerSideOnly
@@ -174,63 +204,78 @@ namespace Tests.Linq
 		[Test]
 		public void Space()
 		{
-			Assert.AreEqual(null, Sql.Space(null));
-			Assert.AreEqual(null, Sql.Space(-1));
-			Assert.AreEqual("",   Sql.Space(0));
-			Assert.AreEqual(" ",  Sql.Space(1));
+			Assert.Multiple(() =>
+			{
+				Assert.That(Sql.Space(null), Is.EqualTo(null));
+				Assert.That(Sql.Space(-1), Is.EqualTo(null));
+				Assert.That(Sql.Space(0), Is.EqualTo(""));
+				Assert.That(Sql.Space(1), Is.EqualTo(" "));
+			});
 		}
 
 		[Test]
 		public void PadLeft()
 		{
-			Assert.AreEqual(null,     Sql.PadLeft(null,   1,    '.'));
-			Assert.AreEqual(null,     Sql.PadLeft("test", null, '.'));
-			Assert.AreEqual(null,     Sql.PadLeft("test", 1,    null));
+			Assert.Multiple(() =>
+			{
+				Assert.That(Sql.PadLeft(null, 1, '.'), Is.EqualTo(null));
+				Assert.That(Sql.PadLeft("test", null, '.'), Is.EqualTo(null));
+				Assert.That(Sql.PadLeft("test", 1, null), Is.EqualTo(null));
 
-			Assert.AreEqual(null,     Sql.PadLeft("test", -1,   '.'));
-			Assert.AreEqual("",       Sql.PadLeft("test", 0,    '.'));
-			Assert.AreEqual("tes",    Sql.PadLeft("test", 3,    '.'));
-			Assert.AreEqual("test",   Sql.PadLeft("test", 4,    '.'));
-			Assert.AreEqual(".test",  Sql.PadLeft("test", 5,    '.'));
+				Assert.That(Sql.PadLeft("test", -1, '.'), Is.EqualTo(null));
+				Assert.That(Sql.PadLeft("test", 0, '.'), Is.EqualTo(""));
+				Assert.That(Sql.PadLeft("test", 3, '.'), Is.EqualTo("tes"));
+				Assert.That(Sql.PadLeft("test", 4, '.'), Is.EqualTo("test"));
+				Assert.That(Sql.PadLeft("test", 5, '.'), Is.EqualTo(".test"));
+			});
 		}
 
 		[Test]
 		public void PadRight()
 		{
-			Assert.AreEqual(null,     Sql.PadRight(null,   1,    '.'));
-			Assert.AreEqual(null,     Sql.PadRight("test", null, '.'));
-			Assert.AreEqual(null,     Sql.PadRight("test", 1,    null));
+			Assert.Multiple(() =>
+			{
+				Assert.That(Sql.PadRight(null, 1, '.'), Is.EqualTo(null));
+				Assert.That(Sql.PadRight("test", null, '.'), Is.EqualTo(null));
+				Assert.That(Sql.PadRight("test", 1, null), Is.EqualTo(null));
 
-			Assert.AreEqual(null,     Sql.PadRight("test", -1,   '.'));
-			Assert.AreEqual("",       Sql.PadRight("test", 0,    '.'));
-			Assert.AreEqual("tes",    Sql.PadRight("test", 3,    '.'));
-			Assert.AreEqual("test",   Sql.PadRight("test", 4,    '.'));
-			Assert.AreEqual("test.",  Sql.PadRight("test", 5,    '.'));
+				Assert.That(Sql.PadRight("test", -1, '.'), Is.EqualTo(null));
+				Assert.That(Sql.PadRight("test", 0, '.'), Is.EqualTo(""));
+				Assert.That(Sql.PadRight("test", 3, '.'), Is.EqualTo("tes"));
+				Assert.That(Sql.PadRight("test", 4, '.'), Is.EqualTo("test"));
+				Assert.That(Sql.PadRight("test", 5, '.'), Is.EqualTo("test."));
+			});
 		}
 
 		[Test]
 		public void Replace1()
 		{
-			Assert.AreEqual(null,    Sql.Replace(null,   "e",  "oa"));
-			Assert.AreEqual(null,    Sql.Replace("test", null, "oa"));
-			Assert.AreEqual(null,    Sql.Replace("test", "e",  null));
+			Assert.Multiple(() =>
+			{
+				Assert.That(Sql.Replace(null, "e", "oa"), Is.EqualTo(null));
+				Assert.That(Sql.Replace("test", null, "oa"), Is.EqualTo(null));
+				Assert.That(Sql.Replace("test", "e", null), Is.EqualTo(null));
 
-			Assert.AreEqual("",      Sql.Replace("",     "e",  "oa"));
-			Assert.AreEqual("test",  Sql.Replace("test", "",   "oa"));
-			Assert.AreEqual("test",  Sql.Replace("test", "g",  "oa"));
-			Assert.AreEqual("toast", Sql.Replace("test", "e",  "oa"));
+				Assert.That(Sql.Replace("", "e", "oa"), Is.EqualTo(""));
+				Assert.That(Sql.Replace("test", "", "oa"), Is.EqualTo("test"));
+				Assert.That(Sql.Replace("test", "g", "oa"), Is.EqualTo("test"));
+				Assert.That(Sql.Replace("test", "e", "oa"), Is.EqualTo("toast"));
+			});
 		}
 
 		[Test]
 		public void Replace2()
 		{
-			Assert.AreEqual(null,    Sql.Replace(null,   'e',  'o'));
-			Assert.AreEqual(null,    Sql.Replace("test", null, 'o'));
-			Assert.AreEqual(null,    Sql.Replace("test", 'e',  null));
+			Assert.Multiple(() =>
+			{
+				Assert.That(Sql.Replace(null, 'e', 'o'), Is.EqualTo(null));
+				Assert.That(Sql.Replace("test", null, 'o'), Is.EqualTo(null));
+				Assert.That(Sql.Replace("test", 'e', null), Is.EqualTo(null));
 
-			Assert.AreEqual("",      Sql.Replace("",     'e',  'o'));
-			Assert.AreEqual("test",  Sql.Replace("test", 'g',  'o'));
-			Assert.AreEqual("tost",  Sql.Replace("test", 'e',  'o'));
+				Assert.That(Sql.Replace("", 'e', 'o'), Is.EqualTo(""));
+				Assert.That(Sql.Replace("test", 'g', 'o'), Is.EqualTo("test"));
+				Assert.That(Sql.Replace("test", 'e', 'o'), Is.EqualTo("tost"));
+			});
 		}
 
 		#endregion
@@ -241,7 +286,7 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 			{
 				var q = from p in db.Person where p.FirstName.Length == "John".Length && p.ID == 1 select p;
-				Assert.AreEqual(1, q.ToList().First().ID);
+				Assert.That(q.ToList().First().ID, Is.EqualTo(1));
 			}
 		}
 
@@ -255,7 +300,7 @@ namespace Tests.Linq
 			}
 		}
 
-#if NETCOREAPP3_1_OR_GREATER
+#if NET6_0_OR_GREATER
 		[Test]
 		public void ContainsConstantWithCase1([DataSources(ProviderName.SqlCe)] string context)
 		{
@@ -298,7 +343,7 @@ namespace Tests.Linq
 				var arr = new[] { "oh", "oh'", "oh\\" };
 
 				var q = from p in db.Person where  arr.Contains(p.FirstName) select p;
-				Assert.AreEqual(0, q.Count());
+				Assert.That(q.Count(), Is.EqualTo(0));
 			}
 		}
 
@@ -381,8 +426,11 @@ namespace Tests.Linq
 			{
 				var q = from p in db.Person where p.FirstName.Contains(str) && p.ID == 1 select new { p, str };
 				var r = q.ToList().First();
-				Assert.AreEqual(1,   r.p.ID);
-				Assert.AreEqual(str, r.str);
+				Assert.Multiple(() =>
+				{
+					Assert.That(r.p.ID, Is.EqualTo(1));
+					Assert.That(r.str, Is.EqualTo(str));
+				});
 			}
 		}
 
@@ -394,7 +442,7 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 			{
 				var q = from p in db.Person where !p.FirstName.Contains(str) && p.ID == 1 select p;
-				Assert.AreEqual(1, q.ToList().First().ID);
+				Assert.That(q.ToList().First().ID, Is.EqualTo(1));
 			}
 		}
 
@@ -411,7 +459,7 @@ namespace Tests.Linq
 					on d.PersonID equals p.ID
 					select p;
 
-				Assert.AreEqual(1, q.ToList().First().ID);
+				Assert.That(q.ToList().First().ID, Is.EqualTo(1));
 			}
 		}
 
@@ -505,7 +553,7 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 			{
 				var q = from p in db.Person where p.FirstName.StartsWith("Jo") && p.ID == 1 select p;
-				Assert.AreEqual(1, q.ToList().First().ID);
+				Assert.That(q.ToList().First().ID, Is.EqualTo(1));
 			}
 		}
 
@@ -755,14 +803,14 @@ namespace Tests.Linq
 			}
 		}
 
-#if NET472
+#if NETFRAMEWORK
 		[Test]
 		public void Like11([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
 				var q = from p in db.Person where SqlMethods.Like(p.FirstName, "%hn%") && p.ID == 1 select p;
-				Assert.AreEqual(1, q.ToList().First().ID);
+				Assert.That(q.ToList().First().ID, Is.EqualTo(1));
 			}
 		}
 
@@ -772,7 +820,7 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 			{
 				var q = from p in db.Person where !SqlMethods.Like(p.FirstName, @"%h~%n%", '~') && p.ID == 1 select p;
-				Assert.AreEqual(1, q.ToList().First().ID);
+				Assert.That(q.ToList().First().ID, Is.EqualTo(1));
 			}
 		}
 #endif
@@ -783,7 +831,7 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 			{
 				var q = from p in db.Person where Sql.Like(p.FirstName, "%hn%") && p.ID == 1 select p;
-				Assert.AreEqual(1, q.ToList().First().ID);
+				Assert.That(q.ToList().First().ID, Is.EqualTo(1));
 			}
 		}
 
@@ -793,7 +841,7 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 			{
 				var q = from p in db.Person where !Sql.Like(p.FirstName, @"%h~%n%", '~') && p.ID == 1 select p;
-				Assert.AreEqual(1, q.ToList().First().ID);
+				Assert.That(q.ToList().First().ID, Is.EqualTo(1));
 			}
 		}
 
@@ -804,7 +852,7 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 			{
 				var q = from p in db.Person where !Sql.Like(p.FirstName, pattern, '~') && p.ID == 1 select p;
-				Assert.AreEqual(1, q.ToList().First().ID);
+				Assert.That(q.ToList().First().ID, Is.EqualTo(1));
 			}
 		}
 
@@ -814,7 +862,7 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 			{
 				var q = from p in db.Person where p.FirstName.IndexOf("oh") == 1 && p.ID == 1 select p;
-				Assert.AreEqual(1, q.ToList().First().ID);
+				Assert.That(q.ToList().First().ID, Is.EqualTo(1));
 			}
 		}
 
@@ -824,7 +872,7 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 			{
 				var q = from p in db.Person where p.FirstName.IndexOf("") == 0 && p.ID == 1 select p;
-				Assert.AreEqual(1, q.ToList().First().ID);
+				Assert.That(q.ToList().First().ID, Is.EqualTo(1));
 			}
 		}
 
@@ -834,11 +882,22 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 			{
 				var q = from p in db.Person where p.LastName.IndexOf("e", 2) == 4 && p.ID == 2 select p;
-				Assert.AreEqual(2, q.ToList().First().ID);
+				Assert.That(q.ToList().First().ID, Is.EqualTo(2));
 			}
 		}
 
-		[ActiveIssue(Details = "Sql.CharIndex(string, string, int) have incorrect SQL logic for all providers (except HANA)")]
+		[ActiveIssue(Details = "Sql.CharIndex(string, string, int) have incorrect SQL logic for all providers (except HANA)",
+			Configurations =
+			[
+				TestProvName.AllClickHouse,
+				TestProvName.AllInformix,
+				TestProvName.AllMySql,
+				TestProvName.AllOracle,
+				TestProvName.AllPostgreSQL,
+				TestProvName.AllSqlServer,
+				TestProvName.AllSybase,
+				TestProvName.AllSQLiteClassic,
+			])]
 		[Test]
 		public void IndexOf3([DataSources(
 			ProviderName.DB2, TestProvName.AllFirebird,
@@ -852,7 +911,7 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 			{
 				var q = from p in db.Person where p.LastName.IndexOf(s, n1, n2) == 4 && p.ID == 2 select p;
-				Assert.AreEqual(2, q.ToList().First().ID);
+				Assert.That(q.ToList().First().ID, Is.EqualTo(2));
 			}
 		}
 
@@ -865,10 +924,11 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 			{
 				var q = from p in db.Person where p.LastName.LastIndexOf("p") == 2 && p.ID == 1 select p;
-				Assert.AreEqual(1, q.ToList().First().ID);
+				Assert.That(q.ToList().First().ID, Is.EqualTo(1));
 			}
 		}
 
+		[ActiveIssue("Nothing to see here, it just broke after new ClickHouse release (broken in: 24.2.2)", Configuration = ProviderName.ClickHouseMySql)]
 		[Test]
 		public void LastIndexOf2([DataSources(
 			ProviderName.DB2, ProviderName.SqlCe,
@@ -879,10 +939,11 @@ namespace Tests.Linq
 			{
 				var q = from p in db.Person where p.ID == 1 select new { p.ID, FirstName = "123" + p.FirstName + "012345" };
 				q = q.Where(p => p.FirstName.LastIndexOf("123", 5) == 8);
-				Assert.AreEqual(1, q.ToList().First().ID);
+				Assert.That(q.ToList().First().ID, Is.EqualTo(1));
 			}
 		}
 
+		[ActiveIssue("Nothing to see here, it just broke after new ClickHouse release (broken in: 24.2.2)", Configuration = ProviderName.ClickHouseMySql)]
 		[Test]
 		public void LastIndexOf3([DataSources(
 			ProviderName.DB2, ProviderName.SqlCe,
@@ -893,7 +954,7 @@ namespace Tests.Linq
 			{
 				var q = from p in db.Person where p.ID == 1 select new { p.ID, FirstName = "123" + p.FirstName + "0123451234" };
 				q = q.Where(p => p.FirstName.LastIndexOf("123", 5, 6) == 8);
-				Assert.AreEqual(1, q.ToList().First().ID);
+				Assert.That(q.ToList().First().ID, Is.EqualTo(1));
 			}
 		}
 
@@ -903,7 +964,7 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 			{
 				var q = from p in db.Person where Sql.CharIndex("oh", p.FirstName) == 2 && p.ID == 1 select p;
-				Assert.AreEqual(1, q.ToList().First().ID);
+				Assert.That(q.ToList().First().ID, Is.EqualTo(1));
 			}
 		}
 
@@ -913,7 +974,7 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 			{
 				var q = from p in db.Person where Sql.CharIndex("p", p.LastName, 2) == 3 && p.ID == 1 select p;
-				Assert.AreEqual(1, q.ToList().First().ID);
+				Assert.That(q.ToList().First().ID, Is.EqualTo(1));
 			}
 		}
 
@@ -923,7 +984,7 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 			{
 				var q = from p in db.Person where Sql.Left(p.FirstName, 2) == "Jo" && p.ID == 1 select p;
-				Assert.AreEqual(1, q.ToList().First().ID);
+				Assert.That(q.ToList().First().ID, Is.EqualTo(1));
 			}
 		}
 
@@ -933,7 +994,7 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 			{
 				var q = from p in db.Person where Sql.Right(p.FirstName, 3) == "ohn" && p.ID == 1 select p;
-				Assert.AreEqual(1, q.ToList().First().ID);
+				Assert.That(q.ToList().First().ID, Is.EqualTo(1));
 			}
 		}
 
@@ -943,7 +1004,7 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 			{
 				var q = from p in db.Person where p.ID == 1 select Sql.Right(p.FirstName, 3);
-				Assert.AreEqual("ohn", q.ToList().First());
+				Assert.That(q.ToList().First(), Is.EqualTo("ohn"));
 			}
 		}
 
@@ -953,7 +1014,7 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 			{
 				var q = from p in db.Person where p.FirstName.Substring(1) == "ohn" && p.ID == 1 select p;
-				Assert.AreEqual(1, q.ToList().First().ID);
+				Assert.That(q.ToList().First().ID, Is.EqualTo(1));
 			}
 		}
 
@@ -963,7 +1024,7 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 			{
 				var q = from p in db.Person where p.FirstName.Substring(1, 2) == "oh" && p.ID == 1 select p;
-				Assert.AreEqual(1, q.ToList().First().ID);
+				Assert.That(q.ToList().First().ID, Is.EqualTo(1));
 			}
 		}
 
@@ -976,7 +1037,7 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 			{
 				var q = from p in db.Person where Sql.Reverse(p.FirstName) == "nhoJ" && p.ID == 1 select p;
-				Assert.AreEqual(1, q.ToList().First().ID);
+				Assert.That(q.ToList().First().ID, Is.EqualTo(1));
 			}
 		}
 
@@ -986,7 +1047,7 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 			{
 				var q = from p in db.Person where Sql.Stuff(p.FirstName, 3, 1, "123") == "Jo123n" && p.ID == 1 select p;
-				Assert.AreEqual(1, q.ToList().First().ID);
+				Assert.That(q.ToList().First().ID, Is.EqualTo(1));
 			}
 		}
 
@@ -1028,7 +1089,7 @@ namespace Tests.Linq
 							select "," + c.Name, 1, 1, "")
 					};
 
-				TestContext.WriteLine(q.ToString());
+				TestContext.Out.WriteLine(q.ToString());
 			}
 		}
 
@@ -1038,7 +1099,7 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 			{
 				var q = from p in db.Person where p.FirstName.Insert(2, "123") == "Jo123hn" && p.ID == 1 select p;
-				Assert.AreEqual(1, q.ToList().First().ID);
+				Assert.That(q.ToList().First().ID, Is.EqualTo(1));
 			}
 		}
 
@@ -1048,7 +1109,7 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 			{
 				var q = from p in db.Person where p.FirstName.Remove(2) == "Jo" && p.ID == 1 select p;
-				Assert.AreEqual(1, q.ToList().First().ID);
+				Assert.That(q.ToList().First().ID, Is.EqualTo(1));
 			}
 		}
 
@@ -1058,7 +1119,7 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 			{
 				var q = from p in db.Person where p.FirstName.Remove(1, 2) == "Jn" && p.ID == 1 select p;
-				Assert.AreEqual(1, q.ToList().First().ID);
+				Assert.That(q.ToList().First().ID, Is.EqualTo(1));
 			}
 		}
 
@@ -1068,7 +1129,7 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 			{
 				var q = from p in db.Person where p.FirstName + Sql.Space(p.ID + 1) + "123" == "John  123" && p.ID == 1 select p;
-				Assert.AreEqual(1, q.ToList().First().ID);
+				Assert.That(q.ToList().First().ID, Is.EqualTo(1));
 			}
 		}
 
@@ -1078,7 +1139,7 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 			{
 				var q = from p in db.Person where Sql.PadRight(p.FirstName, 6, ' ') + "123" == "John  123" && p.ID == 1 select p;
-				Assert.AreEqual(1, q.ToList().First().ID);
+				Assert.That(q.ToList().First().ID, Is.EqualTo(1));
 			}
 		}
 
@@ -1088,7 +1149,7 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 			{
 				var q = from p in db.Person where p.FirstName.PadRight(6) + "123" == "John  123" && p.ID == 1 select p;
-				Assert.AreEqual(1, q.ToList().First().ID);
+				Assert.That(q.ToList().First().ID, Is.EqualTo(1));
 			}
 		}
 
@@ -1098,7 +1159,7 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 			{
 				var q = from p in db.Person where p.FirstName.PadRight(6, '*') + "123" == "John**123" && p.ID == 1 select p;
-				Assert.AreEqual(1, q.ToList().First().ID);
+				Assert.That(q.ToList().First().ID, Is.EqualTo(1));
 			}
 		}
 
@@ -1108,7 +1169,7 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 			{
 				var q = from p in db.Person where "123" + Sql.PadLeft(p.FirstName, 6, ' ') == "123  John" && p.ID == 1 select p;
-				Assert.AreEqual(1, q.ToList().First().ID);
+				Assert.That(q.ToList().First().ID, Is.EqualTo(1));
 			}
 		}
 
@@ -1118,7 +1179,7 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 			{
 				var q = from p in db.Person where "123" + p.FirstName.PadLeft(6) == "123  John" && p.ID == 1 select p;
-				Assert.AreEqual(1, q.ToList().First().ID);
+				Assert.That(q.ToList().First().ID, Is.EqualTo(1));
 			}
 		}
 
@@ -1128,7 +1189,7 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 			{
 				var q = from p in db.Person where "123" + p.FirstName.PadLeft(6, '*') == "123**John" && p.ID == 1 select p;
-				Assert.AreEqual(1, q.ToList().First().ID);
+				Assert.That(q.ToList().First().ID, Is.EqualTo(1));
 			}
 		}
 
@@ -1138,7 +1199,7 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 			{
 				var q = from p in db.Person where p.FirstName.Replace("hn", "lie") == "Jolie" && p.ID == 1 select p;
-				Assert.AreEqual(1, q.ToList().First().ID);
+				Assert.That(q.ToList().First().ID, Is.EqualTo(1));
 			}
 		}
 
@@ -1150,7 +1211,7 @@ namespace Tests.Linq
 				var q =
 					from p in db.Person where p.ID == 1 select new { p.ID, Name = "  " + p.FirstName + " " } into pp
 					where pp.Name.Trim() == "John" select pp;
-				Assert.AreEqual(1, q.ToList().First().ID);
+				Assert.That(q.ToList().First().ID, Is.EqualTo(1));
 			}
 		}
 
@@ -1162,7 +1223,7 @@ namespace Tests.Linq
 				var q =
 					from p in db.Person where p.ID == 1 select new { p.ID, Name = "  " + p.FirstName + " " } into pp
 					where pp.Name.TrimStart() == "John " select pp;
-				Assert.AreEqual(1, q.ToList().First().ID);
+				Assert.That(q.ToList().First().ID, Is.EqualTo(1));
 			}
 		}
 
@@ -1174,12 +1235,12 @@ namespace Tests.Linq
 				var q =
 					from p in db.Person where p.ID == 1 select new { p.ID, Name = "  " + p.FirstName + " " } into pp
 					where pp.Name.TrimEnd() == "  John" select pp;
-				Assert.AreEqual(1, q.ToList().First().ID);
+				Assert.That(q.ToList().First().ID, Is.EqualTo(1));
 			}
 		}
 
 		// for disabled providers see notes on implementation at
-		// EXpressions.TrimLeft/TrimRight
+		// Expressions.TrimLeft/TrimRight
 		[Test]
 		public void TrimLeftCharacters([DataSources(
 			TestProvName.AllFirebird,
@@ -1194,9 +1255,9 @@ namespace Tests.Linq
 				from p in db.Person
 				where p.ID == 1
 				select new { p.ID, Name = "  " + p.FirstName + " " } into pp
-				where pp.Name.TrimStart(' ', 'J') == "ohn "
+				where pp.Name.TrimStart(new char[]{ ' ', 'J' }) == "ohn "
 				select pp;
-			Assert.AreEqual(1, q.ToList().First().ID);
+			Assert.That(q.ToList().First().ID, Is.EqualTo(1));
 		}
 
 		[Test]
@@ -1213,9 +1274,49 @@ namespace Tests.Linq
 				from p in db.Person
 				where p.ID == 1
 				select new { p.ID, Name = "  " + p.FirstName + " " } into pp
-				where pp.Name.TrimEnd(' ', 'n') == "  Joh"
+				where pp.Name.TrimEnd(new char[]{ ' ', 'n' }) == "  Joh"
 				select pp;
-			Assert.AreEqual(1, q.ToList().First().ID);
+			Assert.That(q.ToList().First().ID, Is.EqualTo(1));
+		}
+
+		// for disabled providers see notes on implementation at
+		// Expressions.TrimLeft/TrimRight
+		[Test]
+		public void TrimLeftCharacter([DataSources(
+			TestProvName.AllFirebird,
+			TestProvName.AllMySql,
+			TestProvName.AllAccess,
+			ProviderName.SqlCe,
+			TestProvName.AllSqlServer2019Minus,
+			TestProvName.AllSybase)] string context)
+		{
+			using var db = GetDataContext(context);
+			var q =
+				from p in db.Person
+				where p.ID == 1
+				select new { p.ID, Name = "  " + p.FirstName + " " } into pp
+				where pp.Name.TrimStart(' ') == "John "
+				select pp;
+			Assert.That(q.ToList().First().ID, Is.EqualTo(1));
+		}
+
+		[Test]
+		public void TrimRightCharacter([DataSources(
+			TestProvName.AllFirebird,
+			TestProvName.AllMySql,
+			TestProvName.AllAccess,
+			ProviderName.SqlCe,
+			TestProvName.AllSqlServer2019Minus,
+			TestProvName.AllSybase)] string context)
+		{
+			using var db = GetDataContext(context);
+			var q =
+				from p in db.Person
+				where p.ID == 1
+				select new { p.ID, Name = "  " + p.FirstName + " " } into pp
+				where pp.Name.TrimEnd(' ') == "  John"
+				select pp;
+			Assert.That(q.ToList().First().ID, Is.EqualTo(1));
 		}
 
 		[Test]
@@ -1224,7 +1325,7 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 			{
 				var q = from p in db.Person where p.FirstName.ToLower() == "john" && p.ID == 1 select p;
-				Assert.AreEqual(1, q.ToList().First().ID);
+				Assert.That(q.ToList().First().ID, Is.EqualTo(1));
 			}
 		}
 
@@ -1235,7 +1336,7 @@ namespace Tests.Linq
 			{
 				var param = "JOHN";
 				var q = from p in db.Person where p.FirstName.ToLower() == param.ToLower() && p.ID == 1 select p;
-				Assert.AreEqual(1, q.ToList().First().ID);
+				Assert.That(q.ToList().First().ID, Is.EqualTo(1));
 			}
 		}
 
@@ -1245,7 +1346,7 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 			{
 				var q = from p in db.Person where p.FirstName.ToUpper() == "JOHN" && p.ID == 1 select p;
-				Assert.AreEqual(1, q.ToList().First().ID);
+				Assert.That(q.ToList().First().ID, Is.EqualTo(1));
 			}
 		}
 
@@ -1256,7 +1357,7 @@ namespace Tests.Linq
 			{
 				var param = "john";
 				var q = from p in db.Person where p.FirstName.ToUpper() == param.ToUpper() && p.ID == 1 select p;
-				Assert.AreEqual(1, q.ToList().First().ID);
+				Assert.That(q.ToList().First().ID, Is.EqualTo(1));
 			}
 		}
 
@@ -1266,7 +1367,7 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 			{
 				var q = from p in db.Person where p.FirstName.CompareTo("John") == 0 && p.ID == 1 select p;
-				Assert.AreEqual(1, q.ToList().First().ID);
+				Assert.That(q.ToList().First().ID, Is.EqualTo(1));
 			}
 		}
 
@@ -1276,7 +1377,7 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 			{
 				var q = from p in db.Person where p.FirstName.CompareTo("Jo") != 0 && p.ID == 1 select p;
-				Assert.AreEqual(1, q.ToList().First().ID);
+				Assert.That(q.ToList().First().ID, Is.EqualTo(1));
 			}
 		}
 
@@ -1286,7 +1387,7 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 			{
 				var q = from p in db.Person where 0 != p.FirstName.CompareTo("Jo") && p.ID == 1 select p;
-				Assert.AreEqual(1, q.ToList().First().ID);
+				Assert.That(q.ToList().First().ID, Is.EqualTo(1));
 			}
 		}
 
@@ -1296,7 +1397,7 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 			{
 				var q = from p in db.Person where p.FirstName.CompareTo("Joh") > 0 && p.ID == 1 select p;
-				Assert.AreEqual(1, q.ToList().First().ID);
+				Assert.That(q.ToList().First().ID, Is.EqualTo(1));
 			}
 		}
 
@@ -1306,7 +1407,7 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 			{
 				var q = from p in db.Person where p.FirstName.CompareTo("Johnn") < 0 && p.ID == 1 select p;
-				Assert.AreEqual(1, q.ToList().First().ID);
+				Assert.That(q.ToList().First().ID, Is.EqualTo(1));
 			}
 		}
 
@@ -1316,7 +1417,7 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 			{
 				var q = from p in db.Person where p.FirstName.CompareTo("Johnn") <= 0 && p.ID == 1 select p;
-				Assert.AreEqual(1, q.ToList().First().ID);
+				Assert.That(q.ToList().First().ID, Is.EqualTo(1));
 			}
 		}
 
@@ -1326,7 +1427,7 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 			{
 				var q = from p in db.Person where 0 >= p.FirstName.CompareTo("Johnn") && p.ID == 1 select p;
-				Assert.AreEqual(1, q.ToList().First().ID);
+				Assert.That(q.ToList().First().ID, Is.EqualTo(1));
 			}
 		}
 
@@ -1336,7 +1437,7 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 			{
 				var q = from p in db.Person where p.FirstName.CompareTo(55) > 0 && p.ID == 1 select p;
-				Assert.AreEqual(1, q.ToList().First().ID);
+				Assert.That(q.ToList().First().ID, Is.EqualTo(1));
 			}
 		}
 
@@ -1346,7 +1447,7 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 			{
 				var q = from p in db.Person where p.FirstName.CompareTo(55) >= 0 && p.ID == 1 select p;
-				Assert.AreEqual(1, q.ToList().First().ID);
+				Assert.That(q.ToList().First().ID, Is.EqualTo(1));
 			}
 		}
 
@@ -1356,7 +1457,7 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 			{
 				var q = from p in db.Person where 0 <= p.FirstName.CompareTo(55) && p.ID == 1 select p;
-				Assert.AreEqual(1, q.ToList().First().ID);
+				Assert.That(q.ToList().First().ID, Is.EqualTo(1));
 			}
 		}
 
@@ -1366,7 +1467,7 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 			{
 				var q = from p in db.Person where string.CompareOrdinal(p.FirstName, "Joh") > 0 && p.ID == 1 select p;
-				Assert.AreEqual(1, q.ToList().First().ID);
+				Assert.That(q.ToList().First().ID, Is.EqualTo(1));
 			}
 		}
 
@@ -1376,7 +1477,7 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 			{
 				var q = from p in db.Person where string.CompareOrdinal(p.FirstName, 1, "Joh", 1, 2) == 0 && p.ID == 1 select p;
-				Assert.AreEqual(1, q.ToList().First().ID);
+				Assert.That(q.ToList().First().ID, Is.EqualTo(1));
 			}
 		}
 
@@ -1386,7 +1487,7 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 			{
 				var q = from p in db.Person where string.Compare(p.FirstName, "Joh") > 0 && p.ID == 1 select p;
-				Assert.AreEqual(1, q.ToList().First().ID);
+				Assert.That(q.ToList().First().ID, Is.EqualTo(1));
 			}
 		}
 
@@ -1396,7 +1497,7 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 			{
 				var q = from p in db.Person where string.Compare(p.FirstName, "joh", true) > 0 && p.ID == 1 select p;
-				Assert.AreEqual(1, q.ToList().First().ID);
+				Assert.That(q.ToList().First().ID, Is.EqualTo(1));
 			}
 		}
 
@@ -1406,7 +1507,7 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 			{
 				var q = from p in db.Person where string.Compare(p.FirstName, 1, "Joh", 1, 2) == 0 && p.ID == 1 select p;
-				Assert.AreEqual(1, q.ToList().First().ID);
+				Assert.That(q.ToList().First().ID, Is.EqualTo(1));
 			}
 		}
 
@@ -1416,7 +1517,7 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 			{
 				var q = from p in db.Person where string.Compare(p.FirstName, 1, "Joh", 1, 2, true) == 0 && p.ID == 1 select p;
-				Assert.AreEqual(1, q.ToList().First().ID);
+				Assert.That(q.ToList().First().ID, Is.EqualTo(1));
 			}
 		}
 
@@ -1426,18 +1527,17 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 			{
 				var q = from p in db.Person where !string.IsNullOrEmpty(p.FirstName) && p.ID == 1 select p;
-				Assert.AreEqual(1, q.ToList().First().ID);
+				Assert.That(q.ToList().First().ID, Is.EqualTo(1));
 			}
 		}
 
-		[ActiveIssue("https://github.com/Octonica/ClickHouseClient/issues/56 + https://github.com/ClickHouse/ClickHouse/issues/37999", Configurations = new[] { ProviderName.ClickHouseMySql, ProviderName.ClickHouseOctonica })]
 		[Test]
 		public void IsNullOrEmpty2([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
 				var q = from p in db.Person where p.ID == 1 select string.IsNullOrEmpty(p.FirstName);
-				Assert.AreEqual(false, q.ToList().First());
+				Assert.That(q.ToList().First(), Is.EqualTo(false));
 			}
 		}
 
@@ -1451,7 +1551,7 @@ namespace Tests.Linq
 			public static readonly CollatedTable TestData = new () { Id = 1, CaseSensitive = "TestString", CaseInsensitive = "TestString" };
 		}
 
-#if NETCOREAPP3_1_OR_GREATER
+#if NET6_0_OR_GREATER
 		[Test]
 		public void ExplicitOrdinalIgnoreCase_Contains([DataSources] string context)
 		{
@@ -1805,16 +1905,25 @@ namespace Tests.Linq
 
 				var test = "Test";
 
-				Assert.True(table.Any(sampleClass => sampleClass.Value == test || sampleClass.Value2!.Contains(test)));
-				Assert.AreEqual(2, table.Count(sampleClass => sampleClass.Value == test || sampleClass.Value2!.Contains(test)));
+				Assert.Multiple(() =>
+				{
+					Assert.That(table.Any(sampleClass => sampleClass.Value == test || sampleClass.Value2!.Contains(test)), Is.True);
+					Assert.That(table.Count(sampleClass => sampleClass.Value == test || sampleClass.Value2!.Contains(test)), Is.EqualTo(2));
+				});
 
 				test = "Value";
-				Assert.True(table.Any(sampleClass => sampleClass.Value == test || sampleClass.Value2!.Contains(test)));
-				Assert.AreEqual(1, table.Count(sampleClass => sampleClass.Value == test || sampleClass.Value2!.Contains(test)));
+				Assert.Multiple(() =>
+				{
+					Assert.That(table.Any(sampleClass => sampleClass.Value == test || sampleClass.Value2!.Contains(test)), Is.True);
+					Assert.That(table.Count(sampleClass => sampleClass.Value == test || sampleClass.Value2!.Contains(test)), Is.EqualTo(1));
+				});
 
 				test = "Class";
-				Assert.True(table.Any(sampleClass => sampleClass.Value == test || sampleClass.Value2!.Contains(test)));
-				Assert.AreEqual(1, table.Count(sampleClass => sampleClass.Value == test || sampleClass.Value2!.Contains(test)));
+				Assert.Multiple(() =>
+				{
+					Assert.That(table.Any(sampleClass => sampleClass.Value == test || sampleClass.Value2!.Contains(test)), Is.True);
+					Assert.That(table.Count(sampleClass => sampleClass.Value == test || sampleClass.Value2!.Contains(test)), Is.EqualTo(1));
+				});
 			}
 		}
 		#endregion

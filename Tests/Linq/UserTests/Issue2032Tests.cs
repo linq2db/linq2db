@@ -44,19 +44,22 @@ namespace Tests.UserTests
 					})
 					.ToArray();
 
-				Assert.AreEqual(2         , data.Length);
-				Assert.AreEqual(1         , data[0].Id);
-				Assert.AreEqual(123.456m  , data[0].Decimal1);
-				Assert.AreEqual(0m        , data[0].Decimal2);
-				Assert.AreEqual(0.1m      , data[0].Decimal3);
-				Assert.AreEqual(0         , data[0].Int1);
-				Assert.AreEqual(22        , data[0].Int2);
-				Assert.AreEqual(2         , data[1].Id);
-				Assert.AreEqual(-123.456m , data[1].Decimal1);
-				Assert.AreEqual(678.903m  , data[1].Decimal2);
-				Assert.AreEqual(3523.2352m, data[1].Decimal3);
-				Assert.AreEqual(-123      , data[1].Int1);
-				Assert.AreEqual(345       , data[1].Int2);
+				Assert.That(data, Has.Length.EqualTo(2));
+				Assert.Multiple(() =>
+				{
+					Assert.That(data[0].Id, Is.EqualTo(1));
+					Assert.That(data[0].Decimal1, Is.EqualTo(123.456m));
+					Assert.That(data[0].Decimal2, Is.EqualTo(0m));
+					Assert.That(data[0].Decimal3, Is.EqualTo(0.1m));
+					Assert.That(data[0].Int1, Is.EqualTo(0));
+					Assert.That(data[0].Int2, Is.EqualTo(22));
+					Assert.That(data[1].Id, Is.EqualTo(2));
+					Assert.That(data[1].Decimal1, Is.EqualTo(-123.456m));
+					Assert.That(data[1].Decimal2, Is.EqualTo(678.903m));
+					Assert.That(data[1].Decimal3, Is.EqualTo(3523.2352m));
+					Assert.That(data[1].Int1, Is.EqualTo(-123));
+					Assert.That(data[1].Int2, Is.EqualTo(345));
+				});
 			}
 		}
 	}

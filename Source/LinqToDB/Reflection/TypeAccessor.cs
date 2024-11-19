@@ -57,6 +57,11 @@ namespace LinqToDB.Reflection
 				return ma;
 			});
 
+		public MemberAccessor? GetMemberByName(string memberName)
+		{
+			return _membersByName.TryGetValue(memberName, out var accessor) ? accessor : null;
+		}
+
 		public MemberAccessor this[int index] => Members[index];
 
 		#endregion

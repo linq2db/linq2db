@@ -1,8 +1,8 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
-using System.Collections.Generic;
 
 namespace LinqToDB.Mapping
 {
@@ -444,7 +444,7 @@ namespace LinqToDB.Mapping
 			var memberInfo = MemberHelper.GetMemberInfo(aliasMember);
 
 			if (memberInfo == null)
-				throw new ArgumentException($"Can not deduce MemberInfo from Lambda: '{aliasMember}'");
+				throw new ArgumentException($"Cannot deduce MemberInfo from Lambda: '{aliasMember}'");
 
 			return HasAttribute(new ColumnAliasAttribute(memberInfo.Name));
 		}

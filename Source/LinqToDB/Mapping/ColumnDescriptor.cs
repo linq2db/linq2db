@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -15,6 +16,7 @@ namespace LinqToDB.Mapping
 	/// <summary>
 	/// Stores mapping entity column descriptor.
 	/// </summary>
+	[DebuggerDisplay("Member:{MemberName}, Column:'{ColumnName}'")]
 	public class ColumnDescriptor : IColumnChangeDescriptor
 	{
 		/// <summary>
@@ -424,7 +426,6 @@ namespace LinqToDB.Mapping
 			return new DbDataType(systemType, dbDataType?.DataType ?? dataType, DbType ?? dbDataType?.DbType, Length ?? dbDataType?.Length, Precision ?? dbDataType?.Precision, Scale ?? dbDataType?.Scale);
 		}
 
-
 		/// <summary>
 		/// Returns DbDataType for current column after conversions.
 		/// </summary>
@@ -659,7 +660,7 @@ namespace LinqToDB.Mapping
 		public static Expression ApplyConversions(MappingSchema mappingSchema, Expression getterExpr, DbDataType dbDataType, IValueConverter? valueConverter, bool includingEnum)
 		{
 			// search for type preparation converter
-			var prepareConverter = mappingSchema.GetConvertExpression(getterExpr.Type, getterExpr.Type, false, false);
+			var prepareConverter = mappingSchema.GetConvertExpression(getterExpr.Type, getterExpr.Type, false, false, ConversionType.ToDatabase);
 
 			if (prepareConverter != null)
 				getterExpr = InternalExtensions.ApplyLambdaToExpression(prepareConverter, getterExpr);
@@ -676,7 +677,9 @@ namespace LinqToDB.Mapping
 			{
 				var convertLambda = mappingSchema.GetConvertExpression(
 					dbDataType.WithSystemType(getterExpr.Type),
-					dbDataType.WithSystemType(typeof(DataParameter)), createDefault: false);
+					dbDataType.WithSystemType(typeof(DataParameter)),
+					createDefault  : false,
+					conversionType : ConversionType.ToDatabase);
 
 				if (convertLambda != null)
 				{
@@ -690,12 +693,14 @@ namespace LinqToDB.Mapping
 						var type = Converter.GetDefaultMappingFromEnumType(mappingSchema, getterExpr.Type);
 						if (type != null)
 						{
-							var enumConverter = mappingSchema.GetConvertExpression(getterExpr.Type, type)!;
+							var enumConverter = mappingSchema.GetConvertExpression(getterExpr.Type, type, conversionType: ConversionType.ToDatabase)!;
 							getterExpr = InternalExtensions.ApplyLambdaToExpression(enumConverter, getterExpr);
 
 							convertLambda = mappingSchema.GetConvertExpression(
 								dbDataType.WithSystemType(getterExpr.Type),
-								dbDataType.WithSystemType(typeof(DataParameter)), createDefault: false);
+								dbDataType.WithSystemType(typeof(DataParameter)),
+								createDefault  : false,
+								conversionType : ConversionType.ToDatabase);
 
 							if (convertLambda != null)
 							{

@@ -23,7 +23,7 @@ namespace LinqToDB.Benchmarks.QueryGeneration
 				return;
 
 			_dataProviders.Add(ProviderName.Access,   new AccessOleDbDataProvider());
-			_dataProviders.Add(ProviderName.Firebird, new FirebirdDataProvider());
+			_dataProviders.Add(ProviderName.Firebird, FirebirdTools.GetDataProvider(FirebirdVersion.v5));
 
 			/*
 			_dataProviders.Add(ProviderName.SQLiteMS,              new SQLiteDataProvider(ProviderName.SQLiteMS));

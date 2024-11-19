@@ -1,15 +1,14 @@
 ﻿using System;
 using System.Data.Common;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace LinqToDB.Data
 {
-	using Common;
 	using Common.Internal;
+	using Common;
 	using DataProvider;
 	using Interceptors;
 	using Mapping;
+	using Remote;
 
 	/// <param name="ConfigurationString">
 	/// Gets configuration string name to use with <see cref="DataConnection"/> instance.
@@ -64,8 +63,10 @@ namespace LinqToDB.Data
 		Func<ConnectionOptions, IDataProvider>?         DataProviderFactory       = default,
 		ConnectionOptionsConnectionInterceptor?         ConnectionInterceptor     = default,
 		Action<MappingSchema, IEntityChangeDescriptor>? OnEntityDescriptorCreated = default
+		// If you add another parameter here, don't forget to update
+		// ConnectionOptions copy constructor and IConfigurationID.ConfigurationID.
 	)
-		: IOptionSet, IApplicable<DataConnection>, IApplicable<DataContext>
+		: IOptionSet, IApplicable<DataConnection>, IApplicable<DataContext>, IApplicable<RemoteDataContextBase>
 	{
 		public ConnectionOptions() : this((string?)null)
 		{
@@ -129,6 +130,11 @@ namespace LinqToDB.Data
 		void IApplicable<DataContext>.Apply(DataContext obj)
 		{
 			DataContext.ConfigurationApplier.Apply(obj, this);
+		}
+
+		void IApplicable<RemoteDataContextBase>.Apply(RemoteDataContextBase obj)
+		{
+			RemoteDataContextBase.ConfigurationApplier.Apply(obj, this);
 		}
 
 		#region IEquatable implementation

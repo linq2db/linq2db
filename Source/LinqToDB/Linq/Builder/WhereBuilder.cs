@@ -4,64 +4,41 @@ namespace LinqToDB.Linq.Builder
 {
 	using LinqToDB.Expressions;
 
+	[BuildsMethodCall("Where", "Having")]
 	sealed class WhereBuilder : MethodCallBuilder
 	{
-		private static readonly string[] MethodNames = { "Where", "Having" };
+		public static bool CanBuildMethod(MethodCallExpression call, BuildInfo info, ExpressionBuilder builder)
+			=> call.IsQueryable();
 
-		protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
-		{
-			return methodCall.IsQueryable(MethodNames);
-		}
-
-		protected override IBuildContext BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
+		protected override BuildSequenceResult BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
 			var isHaving  = methodCall.Method.Name == "Having";
-			var sequence  = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
-			var condition = (LambdaExpression)methodCall.Arguments[1].Unwrap();
+			var sequenceResult  = builder.TryBuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
+
+			if (sequenceResult.BuildContext == null)
+				return sequenceResult;
+
+			var sequence = sequenceResult.BuildContext;
+
+			var condition = methodCall.Arguments[1].UnwrapLambda();
 
 			if (sequence.SelectQuery.Select.IsDistinct        ||
 			    sequence.SelectQuery.Select.TakeValue != null ||
 			    sequence.SelectQuery.Select.SkipValue != null)
+			{
 				sequence = new SubQueryContext(sequence);
+			}
 
-			var result    = builder.BuildWhere(buildInfo.Parent, sequence, condition, !isHaving, isHaving);
+			var result = builder.BuildWhere(
+				buildInfo.Parent, sequence, condition: condition,
+				checkForSubQuery: !isHaving, enforceHaving: isHaving, isTest: buildInfo.IsTest);
+
+			if (result == null)
+				return BuildSequenceResult.Error(methodCall);
 
 			result.SetAlias(condition.Parameters[0].Name);
 
-			return result;
-		}
-
-		protected override SequenceConvertInfo? Convert(
-			ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo, ParameterExpression? param)
-		{
-			var predicate = (LambdaExpression)methodCall.Arguments[1].Unwrap();
-			var info      = builder.ConvertSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]), predicate.Parameters[0], true);
-
-			if (info != null)
-			{
-				info.Expression = methodCall.Transform((methodCall, info, predicate), static (context, ex) => ConvertMethod(context.methodCall, 0, context.info, context.predicate.Parameters[0], ex));
-
-				if (param != null)
-				{
-					if (param.Type != info.Parameter!.Type)
-						param = Expression.Parameter(info.Parameter.Type, param.Name);
-
-					if (info.ExpressionsToReplace != null && info.ExpressionsToReplace.Count > 0)
-					{
-						foreach (var path in info.ExpressionsToReplace)
-						{
-							path.Path = path.Path.Transform((p: info.Parameter, param), static (context, e) => e == context.p ? context.param : e);
-							path.Expr = path.Expr.Transform((p: info.Parameter, param), static (context, e) => e == context.p ? context.param : e);
-						}
-					}
-				}
-
-				info.Parameter = param;
-
-				return info;
-			}
-
-			return null;
+			return BuildSequenceResult.FromContext(result);
 		}
 	}
 }

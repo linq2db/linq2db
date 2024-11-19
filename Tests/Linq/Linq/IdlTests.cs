@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using LinqToDB;
+using LinqToDB.Common;
 using LinqToDB.Mapping;
 using LinqToDB.Extensions;
 
@@ -277,8 +278,10 @@ namespace Tests.Linq
 		[Test]
 		public void TestForGroupBy([IdlProviders] string context)
 		{
-			using (var db = GetDataContext(context))
+			using var guard = new GuardGrouping(false);
+			using (var db = GetDataContext(context, o => o.OmitUnsupportedCompareNulls(context)))
 			{
+
 				/* no error in first call */
 				getData(db, new List<int?> { 2 }, new List<int?> { 211, 212, 221, 222 });
 
@@ -302,8 +305,11 @@ namespace Tests.Linq
 		{
 			using (var db = GetDataContext(context))
 			{
-				Assert.That(db.Patient.Where(x => x.PersonID < 0).Select(x => (int?)x.PersonID).Max(), Is.Null);
-				Assert.That(db.Patient.Where(x => x.PersonID < 0).Max(x => (int?)x.PersonID), Is.Null);
+				Assert.Multiple(() =>
+				{
+					Assert.That(db.Patient.Where(x => x.PersonID < 0).Select(x => (int?)x.PersonID).Max(), Is.Null);
+					Assert.That(db.Patient.Where(x => x.PersonID < 0).Max(x => (int?)x.PersonID), Is.Null);
+				});
 				Assert.Catch<InvalidOperationException>(
 					() => db.Patient.Where(x => x.PersonID < 0).Select(x => x.PersonID).Max());
 				Assert.Catch<InvalidOperationException>(
@@ -320,8 +326,11 @@ namespace Tests.Linq
 				var r1 = ds.Patients().ToList();
 				var r2 = ds.Persons().ToList();
 
-				Assert.That(r1, Is.Not.Empty);
-				Assert.That(r2, Is.Not.Empty);
+				Assert.Multiple(() =>
+				{
+					Assert.That(r1, Is.Not.Empty);
+					Assert.That(r2, Is.Not.Empty);
+				});
 
 				var r3 = ds.Patients().ToIdlPatientEx(ds);
 				var r4 = r3.ToList();
@@ -619,26 +628,25 @@ namespace Tests.Linq
 		{
 			using (var db = GetDataConnection(context))
 			{
-				var q = from p in db.Person
+				var query1 = from p in db.Person
 							where p.ID < 0
 							select new { Rank = 0, FirstName = (string?)null, LastName = (string?)null };
-				var q2 =
-					q.Concat(
+				var query2 =
+					query1.Concat(
 						from p in db.Person
 						select new { Rank = p.ID, p.FirstName, p.LastName });
 
-				var resultquery = (from x in q2 orderby x.Rank, x.FirstName, x.LastName select x).ToString()!;
-				
-				TestContext.WriteLine(resultquery);
+				var resultquery = (from x in query2 orderby x.Rank, x.FirstName, x.LastName select x).ToString()!;
 
-				var rqr = resultquery.LastIndexOf("ORDER BY", System.StringComparison.OrdinalIgnoreCase);
+				TestContext.Out.WriteLine(resultquery);
+
+				var rqr = resultquery.LastIndexOf("ORDER BY", StringComparison.OrdinalIgnoreCase);
 				var rqp = (resultquery.Substring(rqr + "ORDER BY".Length).Split(',')).Select(p => p.Trim()).ToArray();
 
-				Assert.That(rqp.Length, Is.EqualTo(3));
+				Assert.That(rqp, Has.Length.EqualTo(3));
 			}
 		}
 
-		[ActiveIssue("https://github.com/ClickHouse/ClickHouse/issues/37999", Configuration = ProviderName.ClickHouseMySql)]
 		[Test]
 		public void TestContainsForNullableDateTimeWithOnlyNullValue1([IdlProviders] string context)
 		{
@@ -657,7 +665,6 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue("https://github.com/ClickHouse/ClickHouse/issues/37999", Configuration = ProviderName.ClickHouseMySql)]
 		[Test]
 		public void TestContainsForNullableDateTimeWithOnlyNullValue2([IdlProviders] string context)
 		{
@@ -674,7 +681,6 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue("https://github.com/ClickHouse/ClickHouse/issues/37999", Configuration = ProviderName.ClickHouseMySql)]
 		[Test]
 		public void TestContainsForNullableDateTimeWithNullAndNotNullValues1([IdlProviders] string context)
 		{
@@ -694,7 +700,6 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue("https://github.com/ClickHouse/ClickHouse/issues/37999", Configuration = ProviderName.ClickHouseMySql)]
 		[Test]
 		public void TestContainsForNullableDateTimeWithNullAndNotNullValues2([IdlProviders] string context)
 		{
@@ -785,7 +790,7 @@ namespace Tests.Linq
 				Assert.That(new GenericConcatQuery(db, new object[] { "A", 1 }).Query().ToList(), Is.Not.Null);
 		}
 
-		public static IQueryable<TSource> Concat2<TSource>(IQueryable<TSource> source1, IEnumerable<TSource> source2)
+		private static IQueryable<TSource> Concat2<TSource>(IQueryable<TSource> source1, IEnumerable<TSource> source2)
 		{
 			return source1.Provider.CreateQuery<TSource>(
 				Expression.Call(

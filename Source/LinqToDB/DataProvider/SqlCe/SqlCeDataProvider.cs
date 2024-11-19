@@ -12,9 +12,11 @@ namespace LinqToDB.DataProvider.SqlCe
 {
 	using Common;
 	using Data;
+	using Linq.Translation;
 	using Mapping;
 	using SchemaProvider;
 	using SqlProvider;
+	using Translation;
 
 	public class SqlCeDataProvider : DynamicDataProviderBase<SqlCeProviderAdapter>
 	{
@@ -30,10 +32,11 @@ namespace LinqToDB.DataProvider.SqlCe
 			SqlProviderFlags.IsCountSubQuerySupported             = false;
 			SqlProviderFlags.IsApplyJoinSupported                 = true;
 			SqlProviderFlags.IsInsertOrUpdateSupported            = false;
-			SqlProviderFlags.IsDistinctOrderBySupported           = false;
 			SqlProviderFlags.IsOrderByAggregateFunctionsSupported = false;
 			SqlProviderFlags.IsDistinctSetOperationsSupported     = false;
 			SqlProviderFlags.IsUpdateFromSupported                = false;
+			SqlProviderFlags.IsCountDistinctSupported             = false;
+			SqlProviderFlags.IsAggregationDistinctSupported       = false;
 
 			SetCharFieldToType<char>("NChar", DataTools.GetCharExpression);
 
@@ -46,6 +49,11 @@ namespace LinqToDB.DataProvider.SqlCe
 		#region Overrides
 
 		public override TableOptions SupportedTableOptions => TableOptions.None;
+
+		protected override IMemberTranslator CreateMemberTranslator()
+		{
+			return new SqlCeMemberTranslator();
+		}
 
 		public override ISqlBuilder CreateSqlBuilder(MappingSchema mappingSchema, DataOptions dataOptions)
 		{
@@ -168,7 +176,6 @@ namespace LinqToDB.DataProvider.SqlCe
 				cancellationToken);
 		}
 
-#if NATIVE_ASYNC
 		public override Task<BulkCopyRowsCopied> BulkCopyAsync<T>(DataOptions options, ITable<T> table,
 			IAsyncEnumerable<T> source, CancellationToken cancellationToken)
 		{
@@ -181,7 +188,6 @@ namespace LinqToDB.DataProvider.SqlCe
 				source,
 				cancellationToken);
 		}
-#endif
 
 		#endregion
 	}

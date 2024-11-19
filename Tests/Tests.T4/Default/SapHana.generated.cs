@@ -68,6 +68,13 @@ namespace Default.SapHana
 			InitMappingSchema();
 		}
 
+		public TestDataDB(DataOptions<TestDataDB> options)
+			: base(options.Options)
+		{
+			InitDataContext();
+			InitMappingSchema();
+		}
+
 		partial void InitDataContext  ();
 		partial void InitMappingSchema();
 
@@ -76,10 +83,9 @@ namespace Default.SapHana
 		#region GetParentByID
 
 		[Sql.TableFunction(Schema="TESTDB", Name="GetParentByID")]
-		public ITable<Parent> GetParentByID(int? ID)
+		public ITable<Parent> GetParentByID(int? iD)
 		{
-			return this.GetTable<Parent>(this, (MethodInfo)MethodBase.GetCurrentMethod()!,
-				ID);
+			return this.TableFromExpression(() => GetParentByID(iD));
 		}
 
 		#endregion
@@ -87,10 +93,9 @@ namespace Default.SapHana
 		#region TestTableFunction
 
 		[Sql.TableFunction(Schema="TESTDB", Name="TEST_TABLE_FUNCTION")]
-		public ITable<TestTableFUNCTIONResult> TestTableFunction(int? I)
+		public ITable<TestTableFUNCTIONResult> TestTableFunction(int? i)
 		{
-			return this.GetTable<TestTableFUNCTIONResult>(this, (MethodInfo)MethodBase.GetCurrentMethod()!,
-				I);
+			return this.TableFromExpression(() => TestTableFunction(i));
 		}
 
 		public partial class TestTableFUNCTIONResult
@@ -424,19 +429,19 @@ namespace Default.SapHana
 
 		#region DROPCONSTRAINTFROMTABLE
 
-		public static int DROPCONSTRAINTFROMTABLE(this TestDataDB dataConnection, string? TABLENAME, string? CONSTRAINTNAME, string? SCHEMANAME)
+		public static int DROPCONSTRAINTFROMTABLE(this TestDataDB dataConnection, string? tABLENAME, string? cONSTRAINTNAME, string? sCHEMANAME)
 		{
 			var parameters = new []
 			{
-				new DataParameter("TABLENAME",      TABLENAME,      LinqToDB.DataType.VarChar)
+				new DataParameter("TABLENAME",      tABLENAME,      LinqToDB.DataType.VarChar)
 				{
 					Size = 50
 				},
-				new DataParameter("CONSTRAINTNAME", CONSTRAINTNAME, LinqToDB.DataType.VarChar)
+				new DataParameter("CONSTRAINTNAME", cONSTRAINTNAME, LinqToDB.DataType.VarChar)
 				{
 					Size = 100
 				},
-				new DataParameter("SCHEMANAME",     SCHEMANAME,     LinqToDB.DataType.VarChar)
+				new DataParameter("SCHEMANAME",     sCHEMANAME,     LinqToDB.DataType.VarChar)
 				{
 					Size = 50
 				}
@@ -449,15 +454,15 @@ namespace Default.SapHana
 
 		#region DROPEXISTINGFUNCTION
 
-		public static int DROPEXISTINGFUNCTION(this TestDataDB dataConnection, string? FUNCTIONNAME, string? SCHEMANAME)
+		public static int DROPEXISTINGFUNCTION(this TestDataDB dataConnection, string? fUNCTIONNAME, string? sCHEMANAME)
 		{
 			var parameters = new []
 			{
-				new DataParameter("FUNCTIONNAME", FUNCTIONNAME, LinqToDB.DataType.VarChar)
+				new DataParameter("FUNCTIONNAME", fUNCTIONNAME, LinqToDB.DataType.VarChar)
 				{
 					Size = 50
 				},
-				new DataParameter("SCHEMANAME",   SCHEMANAME,   LinqToDB.DataType.VarChar)
+				new DataParameter("SCHEMANAME",   sCHEMANAME,   LinqToDB.DataType.VarChar)
 				{
 					Size = 50
 				}
@@ -470,15 +475,15 @@ namespace Default.SapHana
 
 		#region DROPEXISTINGPROCEDURE
 
-		public static int DROPEXISTINGPROCEDURE(this TestDataDB dataConnection, string? PROCEDURENAME, string? SCHEMANAME)
+		public static int DROPEXISTINGPROCEDURE(this TestDataDB dataConnection, string? pROCEDURENAME, string? sCHEMANAME)
 		{
 			var parameters = new []
 			{
-				new DataParameter("PROCEDURENAME", PROCEDURENAME, LinqToDB.DataType.VarChar)
+				new DataParameter("PROCEDURENAME", pROCEDURENAME, LinqToDB.DataType.VarChar)
 				{
 					Size = 50
 				},
-				new DataParameter("SCHEMANAME",    SCHEMANAME,    LinqToDB.DataType.VarChar)
+				new DataParameter("SCHEMANAME",    sCHEMANAME,    LinqToDB.DataType.VarChar)
 				{
 					Size = 50
 				}
@@ -491,15 +496,15 @@ namespace Default.SapHana
 
 		#region DROPEXISTINGTABLE
 
-		public static int DROPEXISTINGTABLE(this TestDataDB dataConnection, string? TABLENAME, string? SCHEMANAME)
+		public static int DROPEXISTINGTABLE(this TestDataDB dataConnection, string? tABLENAME, string? sCHEMANAME)
 		{
 			var parameters = new []
 			{
-				new DataParameter("TABLENAME",  TABLENAME,  LinqToDB.DataType.VarChar)
+				new DataParameter("TABLENAME",  tABLENAME,  LinqToDB.DataType.VarChar)
 				{
 					Size = 50
 				},
-				new DataParameter("SCHEMANAME", SCHEMANAME, LinqToDB.DataType.VarChar)
+				new DataParameter("SCHEMANAME", sCHEMANAME, LinqToDB.DataType.VarChar)
 				{
 					Size = 50
 				}
@@ -512,15 +517,15 @@ namespace Default.SapHana
 
 		#region DROPEXISTINGVIEW
 
-		public static int DROPEXISTINGVIEW(this TestDataDB dataConnection, string? VIEWNAME, string? SCHEMANAME)
+		public static int DROPEXISTINGVIEW(this TestDataDB dataConnection, string? vIEWNAME, string? sCHEMANAME)
 		{
 			var parameters = new []
 			{
-				new DataParameter("VIEWNAME",   VIEWNAME,   LinqToDB.DataType.VarChar)
+				new DataParameter("VIEWNAME",   vIEWNAME,   LinqToDB.DataType.VarChar)
 				{
 					Size = 50
 				},
-				new DataParameter("SCHEMANAME", SCHEMANAME, LinqToDB.DataType.VarChar)
+				new DataParameter("SCHEMANAME", sCHEMANAME, LinqToDB.DataType.VarChar)
 				{
 					Size = 50
 				}
@@ -540,7 +545,7 @@ namespace Default.SapHana
 			return dataConnection.QueryProc(dataReader =>
 				new DuplicateColumnNamesResult
 				{
-					id      = Converter.ChangeTypeTo<int?>   (dataReader.GetValue(0), ms),
+					Id      = Converter.ChangeTypeTo<int?>   (dataReader.GetValue(0), ms),
 					Column2 = Converter.ChangeTypeTo<string?>(dataReader.GetValue(1), ms),
 				},
 				"\"TESTDB\".\"DuplicateColumnNames\"");
@@ -548,7 +553,7 @@ namespace Default.SapHana
 
 		public partial class DuplicateColumnNamesResult
 		{
-			               public int?    id      { get; set; }
+			[Column("id")] public int?    Id      { get; set; }
 			[Column("id")] public string? Column2 { get; set; }
 		}
 
@@ -556,11 +561,11 @@ namespace Default.SapHana
 
 		#region OutRefEnumTest
 
-		public static int OutRefEnumTest(this TestDataDB dataConnection, string? STR, out string? OUTPUTSTR, ref string? INPUTOUTPUTSTR)
+		public static int OutRefEnumTest(this TestDataDB dataConnection, string? sTR, out string? oUTPUTSTR, ref string? iNPUTOUTPUTSTR)
 		{
 			var parameters = new []
 			{
-				new DataParameter("STR",            STR,            LinqToDB.DataType.VarChar)
+				new DataParameter("STR",            sTR,            LinqToDB.DataType.VarChar)
 				{
 					Size = 50
 				},
@@ -569,7 +574,7 @@ namespace Default.SapHana
 					Direction = ParameterDirection.Output,
 					Size      = 50
 				},
-				new DataParameter("INPUTOUTPUTSTR", INPUTOUTPUTSTR, LinqToDB.DataType.VarChar)
+				new DataParameter("INPUTOUTPUTSTR", iNPUTOUTPUTSTR, LinqToDB.DataType.VarChar)
 				{
 					Direction = ParameterDirection.InputOutput,
 					Size      = 50
@@ -578,8 +583,8 @@ namespace Default.SapHana
 
 			var ret = dataConnection.ExecuteProc("\"TESTDB\".\"OutRefEnumTest\"", parameters);
 
-			OUTPUTSTR      = Converter.ChangeTypeTo<string?>(parameters[1].Value);
-			INPUTOUTPUTSTR = Converter.ChangeTypeTo<string?>(parameters[2].Value);
+			oUTPUTSTR      = Converter.ChangeTypeTo<string?>(parameters[1].Value);
+			iNPUTOUTPUTSTR = Converter.ChangeTypeTo<string?>(parameters[2].Value);
 
 			return ret;
 		}
@@ -588,11 +593,11 @@ namespace Default.SapHana
 
 		#region OutRefTest
 
-		public static int OutRefTest(this TestDataDB dataConnection, int? ID, out int? OUTPUTID, ref int? INPUTOUTPUTID, string? STR, out string? OUTPUTSTR, ref string? INPUTOUTPUTSTR)
+		public static int OutRefTest(this TestDataDB dataConnection, int? iD, out int? oUTPUTID, ref int? iNPUTOUTPUTID, string? sTR, out string? oUTPUTSTR, ref string? iNPUTOUTPUTSTR)
 		{
 			var parameters = new []
 			{
-				new DataParameter("ID",             ID,             LinqToDB.DataType.Int32)
+				new DataParameter("ID",             iD,             LinqToDB.DataType.Int32)
 				{
 					Size = 10
 				},
@@ -601,12 +606,12 @@ namespace Default.SapHana
 					Direction = ParameterDirection.Output,
 					Size      = 10
 				},
-				new DataParameter("INPUTOUTPUTID",  INPUTOUTPUTID,  LinqToDB.DataType.Int32)
+				new DataParameter("INPUTOUTPUTID",  iNPUTOUTPUTID,  LinqToDB.DataType.Int32)
 				{
 					Direction = ParameterDirection.InputOutput,
 					Size      = 10
 				},
-				new DataParameter("STR",            STR,            LinqToDB.DataType.VarChar)
+				new DataParameter("STR",            sTR,            LinqToDB.DataType.VarChar)
 				{
 					Size = 50
 				},
@@ -615,7 +620,7 @@ namespace Default.SapHana
 					Direction = ParameterDirection.Output,
 					Size      = 50
 				},
-				new DataParameter("INPUTOUTPUTSTR", INPUTOUTPUTSTR, LinqToDB.DataType.VarChar)
+				new DataParameter("INPUTOUTPUTSTR", iNPUTOUTPUTSTR, LinqToDB.DataType.VarChar)
 				{
 					Direction = ParameterDirection.InputOutput,
 					Size      = 50
@@ -624,10 +629,10 @@ namespace Default.SapHana
 
 			var ret = dataConnection.ExecuteProc("\"TESTDB\".\"OutRefTest\"", parameters);
 
-			OUTPUTID       = Converter.ChangeTypeTo<int?>   (parameters[1].Value);
-			INPUTOUTPUTID  = Converter.ChangeTypeTo<int?>   (parameters[2].Value);
-			OUTPUTSTR      = Converter.ChangeTypeTo<string?>(parameters[4].Value);
-			INPUTOUTPUTSTR = Converter.ChangeTypeTo<string?>(parameters[5].Value);
+			oUTPUTID       = Converter.ChangeTypeTo<int?>   (parameters[1].Value);
+			iNPUTOUTPUTID  = Converter.ChangeTypeTo<int?>   (parameters[2].Value);
+			oUTPUTSTR      = Converter.ChangeTypeTo<string?>(parameters[4].Value);
+			iNPUTOUTPUTSTR = Converter.ChangeTypeTo<string?>(parameters[5].Value);
 
 			return ret;
 		}
@@ -655,15 +660,15 @@ namespace Default.SapHana
 
 		#region PatientSelectByName
 
-		public static IEnumerable<PatientSelectByNameResult> PatientSelectByName(this TestDataDB dataConnection, string? FIRSTNAME, string? LASTNAME)
+		public static IEnumerable<PatientSelectByNameResult> PatientSelectByName(this TestDataDB dataConnection, string? fIRSTNAME, string? lASTNAME)
 		{
 			var parameters = new []
 			{
-				new DataParameter("FIRSTNAME", FIRSTNAME, LinqToDB.DataType.NVarChar)
+				new DataParameter("FIRSTNAME", fIRSTNAME, LinqToDB.DataType.NVarChar)
 				{
 					Size = 50
 				},
-				new DataParameter("LASTNAME",  LASTNAME,  LinqToDB.DataType.NVarChar)
+				new DataParameter("LASTNAME",  lASTNAME,  LinqToDB.DataType.NVarChar)
 				{
 					Size = 50
 				}
@@ -686,11 +691,11 @@ namespace Default.SapHana
 
 		#region PersonDelete
 
-		public static int PersonDelete(this TestDataDB dataConnection, int? PERSONID)
+		public static int PersonDelete(this TestDataDB dataConnection, int? pERSONID)
 		{
 			var parameters = new []
 			{
-				new DataParameter("PERSONID", PERSONID, LinqToDB.DataType.Int32)
+				new DataParameter("PERSONID", pERSONID, LinqToDB.DataType.Int32)
 				{
 					Size = 10
 				}
@@ -703,23 +708,23 @@ namespace Default.SapHana
 
 		#region PersonInsert
 
-		public static int PersonInsert(this TestDataDB dataConnection, string? FIRSTNAME, string? LASTNAME, string? MIDDLENAME, char? GENDER)
+		public static int PersonInsert(this TestDataDB dataConnection, string? fIRSTNAME, string? lASTNAME, string? mIDDLENAME, char? gENDER)
 		{
 			var parameters = new []
 			{
-				new DataParameter("FIRSTNAME",  FIRSTNAME,  LinqToDB.DataType.NVarChar)
+				new DataParameter("FIRSTNAME",  fIRSTNAME,  LinqToDB.DataType.NVarChar)
 				{
 					Size = 50
 				},
-				new DataParameter("LASTNAME",   LASTNAME,   LinqToDB.DataType.NVarChar)
+				new DataParameter("LASTNAME",   lASTNAME,   LinqToDB.DataType.NVarChar)
 				{
 					Size = 50
 				},
-				new DataParameter("MIDDLENAME", MIDDLENAME, LinqToDB.DataType.NVarChar)
+				new DataParameter("MIDDLENAME", mIDDLENAME, LinqToDB.DataType.NVarChar)
 				{
 					Size = 50
 				},
-				new DataParameter("GENDER",     GENDER,     LinqToDB.DataType.Char)
+				new DataParameter("GENDER",     gENDER,     LinqToDB.DataType.Char)
 				{
 					Size = 1
 				}
@@ -732,23 +737,23 @@ namespace Default.SapHana
 
 		#region PersonInsertOutputParameter
 
-		public static int PersonInsertOutputParameter(this TestDataDB dataConnection, string? FIRSTNAME, string? LASTNAME, string? MIDDLENAME, char? GENDER, out int? PERSONID)
+		public static int PersonInsertOutputParameter(this TestDataDB dataConnection, string? fIRSTNAME, string? lASTNAME, string? mIDDLENAME, char? gENDER, out int? pERSONID)
 		{
 			var parameters = new []
 			{
-				new DataParameter("FIRSTNAME", FIRSTNAME, LinqToDB.DataType.NVarChar)
+				new DataParameter("FIRSTNAME", fIRSTNAME, LinqToDB.DataType.NVarChar)
 				{
 					Size = 50
 				},
-				new DataParameter("LASTNAME", LASTNAME, LinqToDB.DataType.NVarChar)
+				new DataParameter("LASTNAME", lASTNAME, LinqToDB.DataType.NVarChar)
 				{
 					Size = 50
 				},
-				new DataParameter("MIDDLENAME", MIDDLENAME, LinqToDB.DataType.NVarChar)
+				new DataParameter("MIDDLENAME", mIDDLENAME, LinqToDB.DataType.NVarChar)
 				{
 					Size = 50
 				},
-				new DataParameter("GENDER",   GENDER,   LinqToDB.DataType.Char)
+				new DataParameter("GENDER",   gENDER,   LinqToDB.DataType.Char)
 				{
 					Size = 1
 				},
@@ -761,7 +766,7 @@ namespace Default.SapHana
 
 			var ret = dataConnection.ExecuteProc("\"TESTDB\".\"Person_Insert_OutputParameter\"", parameters);
 
-			PERSONID = Converter.ChangeTypeTo<int?>(parameters[4].Value);
+			pERSONID = Converter.ChangeTypeTo<int?>(parameters[4].Value);
 
 			return ret;
 		}
@@ -788,11 +793,11 @@ namespace Default.SapHana
 
 		#region PersonSelectByKey
 
-		public static IEnumerable<PersonSelectByKeyResult> PersonSelectByKey(this TestDataDB dataConnection, int? ID)
+		public static IEnumerable<PersonSelectByKeyResult> PersonSelectByKey(this TestDataDB dataConnection, int? iD)
 		{
 			var parameters = new []
 			{
-				new DataParameter("ID", ID, LinqToDB.DataType.Int32)
+				new DataParameter("ID", iD, LinqToDB.DataType.Int32)
 				{
 					Size = 10
 				}
@@ -814,15 +819,15 @@ namespace Default.SapHana
 
 		#region PersonSelectByName
 
-		public static IEnumerable<PersonSelectByNameResult> PersonSelectByName(this TestDataDB dataConnection, string? FIRSTNAME, string? LASTNAME)
+		public static IEnumerable<PersonSelectByNameResult> PersonSelectByName(this TestDataDB dataConnection, string? fIRSTNAME, string? lASTNAME)
 		{
 			var parameters = new []
 			{
-				new DataParameter("FIRSTNAME", FIRSTNAME, LinqToDB.DataType.NVarChar)
+				new DataParameter("FIRSTNAME", fIRSTNAME, LinqToDB.DataType.NVarChar)
 				{
 					Size = 50
 				},
-				new DataParameter("LASTNAME",  LASTNAME,  LinqToDB.DataType.NVarChar)
+				new DataParameter("LASTNAME",  lASTNAME,  LinqToDB.DataType.NVarChar)
 				{
 					Size = 50
 				}
@@ -844,15 +849,15 @@ namespace Default.SapHana
 
 		#region PersonSelectListByName
 
-		public static IEnumerable<PersonSelectListByNameResult> PersonSelectListByName(this TestDataDB dataConnection, string? FIRSTNAME, string? LASTNAME)
+		public static IEnumerable<PersonSelectListByNameResult> PersonSelectListByName(this TestDataDB dataConnection, string? fIRSTNAME, string? lASTNAME)
 		{
 			var parameters = new []
 			{
-				new DataParameter("FIRSTNAME", FIRSTNAME, LinqToDB.DataType.NVarChar)
+				new DataParameter("FIRSTNAME", fIRSTNAME, LinqToDB.DataType.NVarChar)
 				{
 					Size = 50
 				},
-				new DataParameter("LASTNAME",  LASTNAME,  LinqToDB.DataType.NVarChar)
+				new DataParameter("LASTNAME",  lASTNAME,  LinqToDB.DataType.NVarChar)
 				{
 					Size = 50
 				}
@@ -874,33 +879,56 @@ namespace Default.SapHana
 
 		#region PersonUpdate
 
-		public static int PersonUpdate(this TestDataDB dataConnection, int? PERSONID, string? FIRSTNAME, string? LASTNAME, string? MIDDLENAME, char? GENDER)
+		public static int PersonUpdate(this TestDataDB dataConnection, int? pERSONID, string? fIRSTNAME, string? lASTNAME, string? mIDDLENAME, char? gENDER)
 		{
 			var parameters = new []
 			{
-				new DataParameter("PERSONID",   PERSONID,   LinqToDB.DataType.Int32)
+				new DataParameter("PERSONID",   pERSONID,   LinqToDB.DataType.Int32)
 				{
 					Size = 10
 				},
-				new DataParameter("FIRSTNAME",  FIRSTNAME,  LinqToDB.DataType.NVarChar)
+				new DataParameter("FIRSTNAME",  fIRSTNAME,  LinqToDB.DataType.NVarChar)
 				{
 					Size = 50
 				},
-				new DataParameter("LASTNAME",   LASTNAME,   LinqToDB.DataType.NVarChar)
+				new DataParameter("LASTNAME",   lASTNAME,   LinqToDB.DataType.NVarChar)
 				{
 					Size = 50
 				},
-				new DataParameter("MIDDLENAME", MIDDLENAME, LinqToDB.DataType.NVarChar)
+				new DataParameter("MIDDLENAME", mIDDLENAME, LinqToDB.DataType.NVarChar)
 				{
 					Size = 50
 				},
-				new DataParameter("GENDER",     GENDER,     LinqToDB.DataType.Char)
+				new DataParameter("GENDER",     gENDER,     LinqToDB.DataType.Char)
 				{
 					Size = 1
 				}
 			};
 
 			return dataConnection.ExecuteProc("\"TESTDB\".\"Person_Update\"", parameters);
+		}
+
+		#endregion
+
+		#region PrdGlobalEccCvMARAproc
+
+		public static IEnumerable<PrdGlobalEccCvMARAprocResult> PrdGlobalEccCvMARAproc(this TestDataDB dataConnection)
+		{
+			var ms = dataConnection.MappingSchema;
+
+			return dataConnection.QueryProc(dataReader =>
+				new PrdGlobalEccCvMARAprocResult
+				{
+					Id      = Converter.ChangeTypeTo<int?>   (dataReader.GetValue(0), ms),
+					Column2 = Converter.ChangeTypeTo<string?>(dataReader.GetValue(1), ms),
+				},
+				"\"TESTDB\".\"prd.global.ecc/CV_MARAproc\"");
+		}
+
+		public partial class PrdGlobalEccCvMARAprocResult
+		{
+			[Column("id")] public int?    Id      { get; set; }
+			[Column("id")] public string? Column2 { get; set; }
 		}
 
 		#endregion
@@ -921,11 +949,11 @@ namespace Default.SapHana
 
 		#region TestProcedure
 
-		public static IEnumerable<TestPROCEDUREResult> TestProcedure(this TestDataDB dataConnection, int? I)
+		public static IEnumerable<TestPROCEDUREResult> TestProcedure(this TestDataDB dataConnection, int? i)
 		{
 			var parameters = new []
 			{
-				new DataParameter("I", I, LinqToDB.DataType.Int32)
+				new DataParameter("I", i, LinqToDB.DataType.Int32)
 				{
 					Size = 10
 				}
@@ -947,29 +975,6 @@ namespace Default.SapHana
 		}
 
 		#endregion
-
-		#region PrdGlobalEccCvMARAproc
-
-		public static IEnumerable<PrdGlobalEccCvMARAprocResult> PrdGlobalEccCvMARAproc(this TestDataDB dataConnection)
-		{
-			var ms = dataConnection.MappingSchema;
-
-			return dataConnection.QueryProc(dataReader =>
-				new PrdGlobalEccCvMARAprocResult
-				{
-					id      = Converter.ChangeTypeTo<int?>   (dataReader.GetValue(0), ms),
-					Column2 = Converter.ChangeTypeTo<string?>(dataReader.GetValue(1), ms),
-				},
-				"\"TESTDB\".\"prd.global.ecc/CV_MARAproc\"");
-		}
-
-		public partial class PrdGlobalEccCvMARAprocResult
-		{
-			               public int?    id      { get; set; }
-			[Column("id")] public string? Column2 { get; set; }
-		}
-
-		#endregion
 	}
 
 	public static partial class SqlFunctions
@@ -977,7 +982,7 @@ namespace Default.SapHana
 		#region TestFunction
 
 		[Sql.Function(Name="\"TESTDB\".\"TEST_FUNCTION\"", ServerSideOnly=true)]
-		public static int? TestFunction(int? I)
+		public static int? TestFunction(int? i)
 		{
 			throw new InvalidOperationException();
 		}

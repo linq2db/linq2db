@@ -1427,56 +1427,56 @@ namespace Cli.All.MariaDB
 
 		public partial class Issue2313ParametersResult
 		{
-			[Column("`VarCharDefault`"                                               , DataType = DataType.VarChar  , DbType = "VARCHAR(255)"      )] public string?   VarCharDefault                                { get; set; }
-			[Column("`VarChar1`"                                                     , DataType = DataType.VarChar  , DbType = "VARCHAR(1)"        )] public char?     VarChar1                                      { get; set; }
-			[Column("`Char255`"                                                      , DataType = DataType.Char     , DbType = "CHAR(255)"         )] public string?   Char255                                       { get; set; }
-			[Column("`Char1`"                                                        , DataType = DataType.Char     , DbType = "CHAR(1)"           )] public char?     Char1                                         { get; set; }
-			[Column("`VarBinary255`"                                                 , DataType = DataType.VarBinary, DbType = "VARBINARY(255)"    )] public byte[]?   VarBinary255                                  { get; set; }
-			[Column("`Binary255`"                                                    , DataType = DataType.Binary   , DbType = "BINARY(255)"       )] public byte[]?   Binary255                                     { get; set; }
-			[Column("`TinyBlob`"                                                     , DataType = DataType.Blob     , DbType = "BLOB"              )] public byte[]?   TinyBlob                                      { get; set; }
-			[Column("`Blob`"                                                         , DataType = DataType.Blob     , DbType = "BLOB"              )] public byte[]?   Blob                                          { get; set; }
-			[Column("`MediumBlob`"                                                   , DataType = DataType.Blob     , DbType = "BLOB"              )] public byte[]?   MediumBlob                                    { get; set; }
-			[Column("`LongBlob`"                                                     , DataType = DataType.Blob     , DbType = "BLOB"              )] public byte[]?   LongBlob                                      { get; set; }
-			[Column("`TinyText`"                                                     , DataType = DataType.Text     , DbType = "TEXT"              )] public string?   TinyText                                      { get; set; }
-			[Column("`Text`"                                                         , DataType = DataType.Text     , DbType = "TEXT"              )] public string?   Text                                          { get; set; }
-			[Column("`MediumText`"                                                   , DataType = DataType.Text     , DbType = "TEXT"              )] public string?   MediumText                                    { get; set; }
-			[Column("`LongText`"                                                     , DataType = DataType.Text     , DbType = "TEXT"              )] public string?   LongText                                      { get; set; }
-			[Column("`Date`"                                                         , DataType = DataType.Date     , DbType = "DATE"              )] public DateTime? Date                                          { get; set; }
-			[Column("`DateTime`"                                                     , DataType = DataType.DateTime , DbType = "DATETIME"          )] public DateTime? DateTime                                      { get; set; }
-			[Column("`TimeStamp`"                                                    , DataType = DataType.DateTime , DbType = "TIMESTAMP"         )] public DateTime? TimeStamp                                     { get; set; }
-			[Column("`Time`"                                                         , DataType = DataType.Time     , DbType = "TIME"              )] public TimeSpan? Time                                          { get; set; }
-			[Column("-- SKIP MySql55 BEGIN\n-- SKIP MySql55Connector BEGIN\n\t`Json`", DataType = DataType.Text     , DbType = "TEXT"              )] public string?   SkipMySql55BeginSkipMySql55ConnectorBeginJson { get; set; }
-			[Column("-- SKIP MySql55Connector END\n-- SKIP MySql55 END\n\t`TinyInt`" , DataType = DataType.SByte    , DbType = "TINYINT"           )] public sbyte?    SkipMySql55ConnectorEndSkipMySql55EndTinyInt  { get; set; }
-			[Column("`TinyIntUnsigned`"                                              , DataType = DataType.Byte     , DbType = "TINYINT UNSIGNED"  )] public byte?     TinyIntUnsigned                               { get; set; }
-			[Column("`SmallInt`"                                                     , DataType = DataType.Int16    , DbType = "SMALLINT"          )] public short?    SmallInt                                      { get; set; }
-			[Column("`SmallIntUnsigned`"                                             , DataType = DataType.UInt16   , DbType = "SMALLINT UNSIGNED" )] public ushort?   SmallIntUnsigned                              { get; set; }
-			[Column("`MediumInt`"                                                    , DataType = DataType.Int32    , DbType = "MEDIUMINT"         )] public int?      MediumInt                                     { get; set; }
-			[Column("`MediumIntUnsigned`"                                            , DataType = DataType.UInt32   , DbType = "MEDIUMINT UNSIGNED")] public uint?     MediumIntUnsigned                             { get; set; }
-			[Column("`Int`"                                                          , DataType = DataType.Int32    , DbType = "INT"               )] public int?      Int                                           { get; set; }
-			[Column("`IntUnsigned`"                                                  , DataType = DataType.UInt32   , DbType = "INT UNSIGNED"      )] public uint?     IntUnsigned                                   { get; set; }
-			[Column("`BigInt`"                                                       , DataType = DataType.Int64    , DbType = "BIGINT"            )] public long?     BigInt                                        { get; set; }
-			[Column("`BigIntUnsigned`"                                               , DataType = DataType.UInt64   , DbType = "BIGINT UNSIGNED"   )] public ulong?    BigIntUnsigned                                { get; set; }
-			[Column("`Decimal`"                                                      , DataType = DataType.Decimal  , DbType = "DECIMAL(10,0)"     )] public decimal?  Decimal                                       { get; set; }
-			[Column("`Float`"                                                        , DataType = DataType.Single   , DbType = "FLOAT"             )] public float?    Float                                         { get; set; }
-			[Column("`Double`"                                                       , DataType = DataType.Double   , DbType = "DOUBLE"            )] public double?   Double                                        { get; set; }
-			[Column("`Boolean`"                                                      , DataType = DataType.SByte    , DbType = "BOOL"              )] public bool?     Boolean                                       { get; set; }
-			[Column("`Bit1`"                                                         , DataType = DataType.BitArray , DbType = "BIT"               )] public bool?     Bit1                                          { get; set; }
-			[Column("`Bit8`"                                                         , DataType = DataType.BitArray , DbType = "BIT"               )] public bool?     Bit8                                          { get; set; }
-			[Column("`Bit10`"                                                        , DataType = DataType.BitArray , DbType = "BIT"               )] public bool?     Bit10                                         { get; set; }
-			[Column("`Bit16`"                                                        , DataType = DataType.BitArray , DbType = "BIT"               )] public bool?     Bit16                                         { get; set; }
-			[Column("`Bit32`"                                                        , DataType = DataType.BitArray , DbType = "BIT"               )] public bool?     Bit32                                         { get; set; }
-			[Column("`Bit64`"                                                        , DataType = DataType.BitArray , DbType = "BIT"               )] public bool?     Bit64                                         { get; set; }
-			[Column("`Enum`"                                                         , DataType = DataType.VarChar  , DbType = "ENUM"              )] public string?   Enum                                          { get; set; }
-			[Column("`Set`"                                                          , DataType = DataType.VarChar  , DbType = "ENUM"              )] public string?   Set                                           { get; set; }
-			[Column("`Year`"                                                         , DataType = DataType.Int32    , DbType = "YEAR"              )] public int?      Year                                          { get; set; }
-			[Column("`Geometry`"                                                     , DbType   = "GEOMETRY"                                       )] public byte[]?   Geometry                                      { get; set; }
-			[Column("`Point`"                                                        , DbType   = "GEOMETRY"                                       )] public byte[]?   Point                                         { get; set; }
-			[Column("`LineString`"                                                   , DbType   = "GEOMETRY"                                       )] public byte[]?   LineString                                    { get; set; }
-			[Column("`Polygon`"                                                      , DbType   = "GEOMETRY"                                       )] public byte[]?   Polygon                                       { get; set; }
-			[Column("`MultiPoint`"                                                   , DbType   = "GEOMETRY"                                       )] public byte[]?   MultiPoint                                    { get; set; }
-			[Column("`MultiLineString`"                                              , DbType   = "GEOMETRY"                                       )] public byte[]?   MultiLineString                               { get; set; }
-			[Column("`MultiPolygon`"                                                 , DbType   = "GEOMETRY"                                       )] public byte[]?   MultiPolygon                                  { get; set; }
-			[Column("`GeometryCollection`"                                           , DbType   = "GEOMETRY"                                       )] public byte[]?   GeometryCollection                            { get; set; }
+			[Column("`VarCharDefault`"    , DataType = DataType.VarChar  , DbType = "VARCHAR(255)"      )] public string?   VarCharDefault     { get; set; }
+			[Column("`VarChar1`"          , DataType = DataType.VarChar  , DbType = "VARCHAR(1)"        )] public char?     VarChar1           { get; set; }
+			[Column("`Char255`"           , DataType = DataType.Char     , DbType = "CHAR(255)"         )] public string?   Char255            { get; set; }
+			[Column("`Char1`"             , DataType = DataType.Char     , DbType = "CHAR(1)"           )] public char?     Char1              { get; set; }
+			[Column("`VarBinary255`"      , DataType = DataType.VarBinary, DbType = "VARBINARY(255)"    )] public byte[]?   VarBinary255       { get; set; }
+			[Column("`Binary255`"         , DataType = DataType.Binary   , DbType = "BINARY(255)"       )] public byte[]?   Binary255          { get; set; }
+			[Column("`TinyBlob`"          , DataType = DataType.Blob     , DbType = "BLOB"              )] public byte[]?   TinyBlob           { get; set; }
+			[Column("`Blob`"              , DataType = DataType.Blob     , DbType = "BLOB"              )] public byte[]?   Blob               { get; set; }
+			[Column("`MediumBlob`"        , DataType = DataType.Blob     , DbType = "BLOB"              )] public byte[]?   MediumBlob         { get; set; }
+			[Column("`LongBlob`"          , DataType = DataType.Blob     , DbType = "BLOB"              )] public byte[]?   LongBlob           { get; set; }
+			[Column("`TinyText`"          , DataType = DataType.Text     , DbType = "TEXT"              )] public string?   TinyText           { get; set; }
+			[Column("`Text`"              , DataType = DataType.Text     , DbType = "TEXT"              )] public string?   Text               { get; set; }
+			[Column("`MediumText`"        , DataType = DataType.Text     , DbType = "TEXT"              )] public string?   MediumText         { get; set; }
+			[Column("`LongText`"          , DataType = DataType.Text     , DbType = "TEXT"              )] public string?   LongText           { get; set; }
+			[Column("`Date`"              , DataType = DataType.Date     , DbType = "DATE"              )] public DateTime? Date               { get; set; }
+			[Column("`DateTime`"          , DataType = DataType.DateTime , DbType = "DATETIME"          )] public DateTime? DateTime           { get; set; }
+			[Column("`TimeStamp`"         , DataType = DataType.DateTime , DbType = "TIMESTAMP"         )] public DateTime? TimeStamp          { get; set; }
+			[Column("`Time`"              , DataType = DataType.Time     , DbType = "TIME"              )] public TimeSpan? Time               { get; set; }
+			[Column("`Json`"              , DataType = DataType.Text     , DbType = "TEXT"              )] public string?   Json               { get; set; }
+			[Column("`TinyInt`"           , DataType = DataType.SByte    , DbType = "TINYINT"           )] public sbyte?    TinyInt            { get; set; }
+			[Column("`TinyIntUnsigned`"   , DataType = DataType.Byte     , DbType = "TINYINT UNSIGNED"  )] public byte?     TinyIntUnsigned    { get; set; }
+			[Column("`SmallInt`"          , DataType = DataType.Int16    , DbType = "SMALLINT"          )] public short?    SmallInt           { get; set; }
+			[Column("`SmallIntUnsigned`"  , DataType = DataType.UInt16   , DbType = "SMALLINT UNSIGNED" )] public ushort?   SmallIntUnsigned   { get; set; }
+			[Column("`MediumInt`"         , DataType = DataType.Int32    , DbType = "MEDIUMINT"         )] public int?      MediumInt          { get; set; }
+			[Column("`MediumIntUnsigned`" , DataType = DataType.UInt32   , DbType = "MEDIUMINT UNSIGNED")] public uint?     MediumIntUnsigned  { get; set; }
+			[Column("`Int`"               , DataType = DataType.Int32    , DbType = "INT"               )] public int?      Int                { get; set; }
+			[Column("`IntUnsigned`"       , DataType = DataType.UInt32   , DbType = "INT UNSIGNED"      )] public uint?     IntUnsigned        { get; set; }
+			[Column("`BigInt`"            , DataType = DataType.Int64    , DbType = "BIGINT"            )] public long?     BigInt             { get; set; }
+			[Column("`BigIntUnsigned`"    , DataType = DataType.UInt64   , DbType = "BIGINT UNSIGNED"   )] public ulong?    BigIntUnsigned     { get; set; }
+			[Column("`Decimal`"           , DataType = DataType.Decimal  , DbType = "DECIMAL(10,0)"     )] public decimal?  Decimal            { get; set; }
+			[Column("`Float`"             , DataType = DataType.Single   , DbType = "FLOAT"             )] public float?    Float              { get; set; }
+			[Column("`Double`"            , DataType = DataType.Double   , DbType = "DOUBLE"            )] public double?   Double             { get; set; }
+			[Column("`Boolean`"           , DataType = DataType.SByte    , DbType = "BOOL"              )] public bool?     Boolean            { get; set; }
+			[Column("`Bit1`"              , DataType = DataType.BitArray , DbType = "BIT"               )] public bool?     Bit1               { get; set; }
+			[Column("`Bit8`"              , DataType = DataType.BitArray , DbType = "BIT"               )] public bool?     Bit8               { get; set; }
+			[Column("`Bit10`"             , DataType = DataType.BitArray , DbType = "BIT"               )] public bool?     Bit10              { get; set; }
+			[Column("`Bit16`"             , DataType = DataType.BitArray , DbType = "BIT"               )] public bool?     Bit16              { get; set; }
+			[Column("`Bit32`"             , DataType = DataType.BitArray , DbType = "BIT"               )] public bool?     Bit32              { get; set; }
+			[Column("`Bit64`"             , DataType = DataType.BitArray , DbType = "BIT"               )] public bool?     Bit64              { get; set; }
+			[Column("`Enum`"              , DataType = DataType.VarChar  , DbType = "ENUM"              )] public string?   Enum               { get; set; }
+			[Column("`Set`"               , DataType = DataType.VarChar  , DbType = "ENUM"              )] public string?   Set                { get; set; }
+			[Column("`Year`"              , DataType = DataType.Int32    , DbType = "YEAR"              )] public int?      Year               { get; set; }
+			[Column("`Geometry`"          , DbType   = "GEOMETRY"                                       )] public byte[]?   Geometry           { get; set; }
+			[Column("`Point`"             , DbType   = "GEOMETRY"                                       )] public byte[]?   Point              { get; set; }
+			[Column("`LineString`"        , DbType   = "GEOMETRY"                                       )] public byte[]?   LineString         { get; set; }
+			[Column("`Polygon`"           , DbType   = "GEOMETRY"                                       )] public byte[]?   Polygon            { get; set; }
+			[Column("`MultiPoint`"        , DbType   = "GEOMETRY"                                       )] public byte[]?   MultiPoint         { get; set; }
+			[Column("`MultiLineString`"   , DbType   = "GEOMETRY"                                       )] public byte[]?   MultiLineString    { get; set; }
+			[Column("`MultiPolygon`"      , DbType   = "GEOMETRY"                                       )] public byte[]?   MultiPolygon       { get; set; }
+			[Column("`GeometryCollection`", DbType   = "GEOMETRY"                                       )] public byte[]?   GeometryCollection { get; set; }
 		}
 		#endregion
 

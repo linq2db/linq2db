@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 
 using LinqToDB;
 using LinqToDB.Common;
@@ -14,7 +15,6 @@ namespace Tests.xUpdate
 	// Regression tests converted from tests for previous version of Merge API to new API.
 	public partial class MergeTests
 	{
-		// ASE: just fails
 		[Test]
 		public void Merge([MergeDataContextSource(TestProvName.AllSybase)] string context)
 		{
@@ -30,7 +30,6 @@ namespace Tests.xUpdate
 			}
 		}
 
-		// ASE: just fails
 		[Test]
 		public void MergeWithEmptySource([MergeDataContextSource(TestProvName.AllOracle, TestProvName.AllSybase)] string context)
 		{
@@ -38,7 +37,7 @@ namespace Tests.xUpdate
 			{
 				db.GetTable<Person>()
 					.Merge()
-					.Using(Array<Person>.Empty)
+					.Using(Array.Empty<Person>())
 					.OnTargetKey()
 					.UpdateWhenMatched()
 					.InsertWhenNotMatched()
@@ -47,7 +46,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void MergeWithDelete([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
+		public void MergeWithDelete([MergeNotMatchedBySourceDataContextSource(true)] string context)
 		{
 			using (var db = GetDataConnection(context))
 			using (db.BeginTransaction())
@@ -64,7 +63,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void MergeWithDeletePredicate1([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
+		public void MergeWithDeletePredicate1([MergeNotMatchedBySourceDataContextSource(true)] string context)
 		{
 			using (var db = GetDataConnection(context))
 			using (db.BeginTransaction())
@@ -81,7 +80,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void MergeWithDeletePredicate3([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
+		public void MergeWithDeletePredicate3([MergeNotMatchedBySourceDataContextSource(true)] string context)
 		{
 			using (var db = GetDataConnection(context))
 			using (db.BeginTransaction())
@@ -115,7 +114,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void MergeWithDeletePredicate4([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
+		public void MergeWithDeletePredicate4([MergeNotMatchedBySourceDataContextSource(true)] string context)
 		{
 			using (var db = GetDataConnection(context))
 			using (db.BeginTransaction())
@@ -151,7 +150,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void MergeWithDeletePredicate5([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
+		public void MergeWithDeletePredicate5([MergeNotMatchedBySourceDataContextSource(true)] string context)
 		{
 			using (var db = GetDataConnection(context))
 			using (db.BeginTransaction())
@@ -290,9 +289,12 @@ namespace Tests.xUpdate
 
 				var row = db.GetTable<AllType>().OrderByDescending(_ => _.ID).Take(1).Single();
 
-				Assert.AreEqual('\0', row.charDataType);
-				Assert.AreEqual("\0", row.ncharDataType);
-				Assert.AreEqual("test\0it", row.nvarcharDataType);
+				Assert.Multiple(() =>
+				{
+					Assert.That(row.charDataType, Is.EqualTo('\0'));
+					Assert.That(row.ncharDataType, Is.EqualTo("\0"));
+					Assert.That(row.nvarcharDataType, Is.EqualTo("test\0it"));
+				});
 			}
 		}
 	}

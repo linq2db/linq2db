@@ -103,7 +103,6 @@ namespace LinqToDB.CommandLine
 			AddOption(_dataModelOptions, DataModel.AsyncProcResultClassNaming);
 			AddOption(_dataModelOptions, DataModel.AsyncProcResultClassPropertyNaming);
 			AddOption(_dataModelOptions, DataModel.ProcOrFuncResultColumnPropertyNaming);
-			AddOption(_dataModelOptions, DataModel.TableFunctionMethodInfoNaming);
 			AddOption(_dataModelOptions, DataModel.FunctionTupleClassNaming);
 			AddOption(_dataModelOptions, DataModel.FunctionTupleFieldPropertyNaming);
 			AddOption(_dataModelOptions, DataModel.SchemaWrapperClassNaming);

@@ -84,9 +84,7 @@ namespace Tests.Linq
 			new StringTestTable()
 		};
 
-		// Sybase: need to configure sybase docker image to use utf8 character set
 		// CH: We don't perform trimming of FixedString type
-		[ActiveIssue(Configurations = new[] { TestProvName.AllSybase } )]
 		[Test]
 		public void StringTrimming([DataSources(TestProvName.AllInformix, TestProvName.AllClickHouse)] string context)
 		{
@@ -117,28 +115,28 @@ namespace Tests.Linq
 
 					var records = db.GetTable<StringTestTable>().Where(_ => _.Id > lastId).OrderBy(_ => _.Id).ToArray();
 
-					Assert.AreEqual(testData.Length, records.Length);
+					Assert.That(records, Has.Length.EqualTo(testData.Length));
 
 					for (var i = 0; i < records.Length; i++)
 					{
 						if (!SkipChar(context))
 						{
 							if (context.IsAnyOf(TestProvName.AllSybase, TestProvName.AllOracleDevartOCI))
-								Assert.AreEqual(testData[i].String?.TrimEnd(' ')?.TrimEnd('\0'), records[i].String);
+								Assert.That(records[i].String, Is.EqualTo(testData[i].String?.TrimEnd(' ')?.TrimEnd('\0')));
 							else if (context.IsAnyOf(TestProvName.AllClickHouse))
-								Assert.AreEqual(testData[i].String?.TrimEnd('\0'), records[i].String);
+								Assert.That(records[i].String, Is.EqualTo(testData[i].String?.TrimEnd('\0')));
 							else
-								Assert.AreEqual(testData[i].String?.TrimEnd(' '), records[i].String);
+								Assert.That(records[i].String, Is.EqualTo(testData[i].String?.TrimEnd(' ')));
 						}
 
 						if (!context.IsAnyOf(TestProvName.AllFirebird))
 						{
 							if (context.IsAnyOf(TestProvName.AllSybase, TestProvName.AllOracleDevartOCI))
-								Assert.AreEqual(testData[i].NString?.TrimEnd(' ')?.TrimEnd('\0'), records[i].NString);
+								Assert.That(records[i].NString, Is.EqualTo(testData[i].NString?.TrimEnd(' ')?.TrimEnd('\0')));
 							else if (context.IsAnyOf(TestProvName.AllClickHouse))
-								Assert.AreEqual(testData[i].NString?.TrimEnd('\0'), records[i].NString);
+								Assert.That(records[i].NString, Is.EqualTo(testData[i].NString?.TrimEnd('\0')));
 							else
-								Assert.AreEqual(testData[i].NString?.TrimEnd(' '), records[i].NString);
+								Assert.That(records[i].NString, Is.EqualTo(testData[i].NString?.TrimEnd(' ')));
 						}
 					}
 
@@ -246,7 +244,7 @@ namespace Tests.Linq
 
 					var records = db.GetTable<CharTestTable>().Where(_ => _.Id > lastId).OrderBy(_ => _.Id).ToArray();
 
-					Assert.AreEqual(testData.Length, records.Length);
+					Assert.That(records, Has.Length.EqualTo(testData.Length));
 
 					for (var i = 0; i < records.Length; i++)
 					{
@@ -255,14 +253,14 @@ namespace Tests.Linq
 							// SAP or provider trims space and we return default value, which is \0 for char
 							// or we insert it incorrectly?
 							if (testData[i].Char == ' ')
-								Assert.AreEqual('\0', records[i].Char);
+								Assert.That(records[i].Char, Is.EqualTo('\0'));
 							else
-								Assert.AreEqual(testData[i].Char, records[i].Char);
+								Assert.That(records[i].Char, Is.EqualTo(testData[i].Char));
 
 							if (testData[i].NChar == ' ')
-								Assert.AreEqual('\0', records[i].NChar);
+								Assert.That(records[i].NChar, Is.EqualTo('\0'));
 							else
-								Assert.AreEqual(testData[i].NChar, records[i].NChar);
+								Assert.That(records[i].NChar, Is.EqualTo(testData[i].NChar));
 
 							continue;
 						}
@@ -270,20 +268,20 @@ namespace Tests.Linq
 						if (!SkipChar(context))
 						{
 							if (context.IsAnyOf(TestProvName.AllSybase))
-								Assert.AreEqual(testData[i].Char == '\0' ? ' ' : testData[i].Char, records[i].Char);
+								Assert.That(records[i].Char, Is.EqualTo(testData[i].Char == '\0' ? ' ' : testData[i].Char));
 							else
-								Assert.AreEqual(testData[i].Char, records[i].Char);
+								Assert.That(records[i].Char, Is.EqualTo(testData[i].Char));
 						}
 
 						if (context.IsAnyOf(TestProvName.AllMySql))
 							// for some reason mysql doesn't insert space
-							Assert.AreEqual(testData[i].NChar == ' ' ? '\0' : testData[i].NChar, records[i].NChar);
+							Assert.That(records[i].NChar, Is.EqualTo(testData[i].NChar == ' ' ? '\0' : testData[i].NChar));
 						else if (!context.IsAnyOf(TestProvName.AllFirebird))
 						{
 							if (context.IsAnyOf(TestProvName.AllSybase))
-								Assert.AreEqual(testData[i].NChar == '\0' ? ' ' : testData[i].NChar, records[i].NChar);
+								Assert.That(records[i].NChar, Is.EqualTo(testData[i].NChar == '\0' ? ' ' : testData[i].NChar));
 							else
-								Assert.AreEqual(testData[i].NChar, records[i].NChar);
+								Assert.That(records[i].NChar, Is.EqualTo(testData[i].NChar));
 						}
 					}
 				}

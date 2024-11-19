@@ -2,10 +2,10 @@
 
 This directory contains test configs and setup scripts for test jobs on Azure Pipelines.
 
-- `net472` folder stores test job configs for .NET 4.7.2 Windows tests
-- `netcoreapp31` folder stores test job configs for `netcoreapp3.1` test runs for Windows, Linux and MacOS
+- `netfx` folder stores test job configs for .NET 4.6.2 Windows tests
 - `net60` folder stores test job configs for `net6.0` test runs for Windows, Linux and MacOS
-- `net70` folder stores test job configs for `net7.0` test runs for Windows, Linux and MacOS
+- `net80` folder stores test job configs for `net8.0` test runs for Windows, Linux and MacOS
+- `net90` folder stores test job configs for `net9.0` test runs for Windows, Linux and MacOS
 - `scripts` folder stores test job setup scripts (`*.cmd` for Windows jobs, `*.sh` for Linux and MacOS, `*.ps1` for PowerShell scripts)
 
 ## Azure Pipelines
@@ -43,7 +43,9 @@ Those pipelines used to run tests only for specific databases manually by team m
 - `/azp run test-sqlite` - SQLite tests
 - `/azp run test-sqlserver` - SQL Server tests (all versions)
 - `/azp run test-sqlserver-2019` - SQL Server 2019 tests
+- `/azp run test-sqlserver-2022` - SQL Server 2022 tests
 - `/azp run test-sybase` - SAP/SYBASE ASE tests
+- `/azp run test-metrics` - SQL Server 2022 tests with metrics
 
 ## Test Matrix
 
@@ -60,24 +62,24 @@ Legend:
 - :heavy_minus_sign: - test configuration not supported (e.g. db/provider not available for target OS/Framework)
 - :heavy_check_mark: - test job implemented
 - :x: - test job not implemented yet
-- `netfx`: .NET Framework (4.7.2)
-- `netcore`: .NET Core 3.1, .NET 6.0 OR .NET 7.0
+- `netfx`: .NET Framework (4.6.2)
+- `netcore`: .NET 6 OR .NET 8
 - :door: - Windows 2022
-- :penguin: - Linux (Ununtu 22.04)
-- :green_apple: - MacOS 10.15 (MacOS testing currently disabled)
+- :penguin: - Linux (Ununtu 24.04)
+- :green_apple: - MacOS 13 (MacOS testing currently disabled)
 
 | Database (version): provider \ Target framework (OS) | netfx :door: | netcore :door: | netcore :penguin: | netcore :green_apple: |
 |:---|:---:|:---:|:---:|:---:|
 |TestNoopProvider<sup>[1](#notes)</sup>|:heavy_check_mark:|:heavy_check_mark:|:heavy_check_mark:|:heavy_check_mark:|
-|SQLite [3.40.1](https://www.sqlite.org/releaselog/3_40_1.html)<br>[Microsoft.Data.SQLite](https://www.nuget.org/packages/Microsoft.Data.SQLite/)<br>with NorthwindDB Tests|:heavy_check_mark:|:heavy_check_mark:|:heavy_check_mark:|:heavy_check_mark:|
-|SQLite [3.42.0](https://www.sqlite.org/releaselog/3_42_0.html)<br>[System.Data.SQLite](https://www.nuget.org/packages/System.Data.SQLite.Core/)<br>with NorthwindDB Tests|:heavy_check_mark:|:heavy_check_mark:|:heavy_check_mark:|:heavy_check_mark:|
-|SQLite [3.42.0](https://www.sqlite.org/releaselog/3_42_0.html)<br>[System.Data.SQLite](https://www.nuget.org/packages/System.Data.SQLite.Core/)<br>with [MiniProfiler](https://www.nuget.org/packages/MiniProfiler.Shared/)<br>without mappings to underlying provider|:heavy_check_mark:|:heavy_check_mark:|:heavy_check_mark:|:heavy_check_mark:|
-|SQLite [3.42.0](https://www.sqlite.org/releaselog/3_42_0.html)<br>[System.Data.SQLite](https://www.nuget.org/packages/System.Data.SQLite.Core/)<br>with [MiniProfiler](https://www.nuget.org/packages/MiniProfiler.Shared/)<br>with mappings to underlying provider|:heavy_check_mark:|:heavy_check_mark:|:heavy_check_mark:|:heavy_check_mark:|
-|MySQL 5.6<br>[MySql.Data](https://www.nuget.org/packages/MySql.Data/)|:x:|:x:|:heavy_check_mark:|:heavy_check_mark:|
-|MySQL 5.6<br>[MySqlConnector](https://www.nuget.org/packages/MySqlConnector/)|:x:|:x:|:heavy_check_mark:|:heavy_check_mark:|
-|MySQL (latest)<br>[MySql.Data](https://www.nuget.org/packages/MySql.Data/)|:x:|:x:|:heavy_check_mark:|:heavy_check_mark:|
-|MySQL (latest)<br>[MySqlConnector](https://www.nuget.org/packages/MySqlConnector/)|:x:|:x:|:heavy_check_mark:|:heavy_check_mark:|
-|MariaDB (latest)<br>[MySqlConnector](https://www.nuget.org/packages/MySqlConnector/)|:x:|:x:|:heavy_check_mark:|:heavy_check_mark:|
+|SQLite [3.46.1](https://www.sqlite.org/releaselog/3_46_1.html)<br>[Microsoft.Data.SQLite](https://www.nuget.org/packages/Microsoft.Data.SQLite/)<br>with NorthwindDB Tests|:heavy_check_mark:|:heavy_check_mark:|:heavy_check_mark:|:heavy_check_mark:|
+|SQLite [3.46.1](https://www.sqlite.org/releaselog/3_46_1.html)<br>[System.Data.SQLite](https://www.nuget.org/packages/System.Data.SQLite.Core/)<br>with NorthwindDB Tests|:heavy_check_mark:|:heavy_check_mark:|:heavy_check_mark:|:heavy_check_mark:|
+|SQLite [3.46.1](https://www.sqlite.org/releaselog/3_46_1.html)<br>[System.Data.SQLite](https://www.nuget.org/packages/System.Data.SQLite.Core/)<br>with [MiniProfiler](https://www.nuget.org/packages/MiniProfiler.Shared/)<br>without mappings to underlying provider|:heavy_check_mark:|:heavy_check_mark:|:heavy_check_mark:|:heavy_check_mark:|
+|SQLite [3.46.1](https://www.sqlite.org/releaselog/3_46_1.html)<br>[System.Data.SQLite](https://www.nuget.org/packages/System.Data.SQLite.Core/)<br>with [MiniProfiler](https://www.nuget.org/packages/MiniProfiler.Shared/)<br>with mappings to underlying provider|:heavy_check_mark:|:heavy_check_mark:|:heavy_check_mark:|:heavy_check_mark:|
+|MySQL 5.7<br>[MySql.Data](https://www.nuget.org/packages/MySql.Data/)|:x:|:x:|:heavy_check_mark:|:heavy_check_mark:|
+|MySQL 5.7<br>[MySqlConnector](https://www.nuget.org/packages/MySqlConnector/)|:x:|:x:|:heavy_check_mark:|:heavy_check_mark:|
+|MySQL 8.0<br>[MySql.Data](https://www.nuget.org/packages/MySql.Data/)|:x:|:x:|:heavy_check_mark:|:heavy_check_mark:|
+|MySQL 8.0<br>[MySqlConnector](https://www.nuget.org/packages/MySqlConnector/)|:x:|:x:|:heavy_check_mark:|:heavy_check_mark:|
+|MariaDB 11<br>[MySqlConnector](https://www.nuget.org/packages/MySqlConnector/)|:x:|:x:|:heavy_check_mark:|:heavy_check_mark:|
 |PostgreSQL 11<br>[Npgsql](https://www.nuget.org/packages/Npgsql/)|:x:|:x:|:heavy_check_mark:|:heavy_check_mark:|
 |PostgreSQL 12<br>[Npgsql](https://www.nuget.org/packages/Npgsql/)|:x:|:x:|:heavy_check_mark:|:heavy_check_mark:|
 |PostgreSQL 13<br>[Npgsql](https://www.nuget.org/packages/Npgsql/)|:x:|:x:|:heavy_check_mark:|:heavy_check_mark:|
@@ -87,6 +89,7 @@ Legend:
 |Firebird 2.5<br>[FirebirdSql.Data.FirebirdClient](https://www.nuget.org/packages/FirebirdSql.Data.FirebirdClient/)|:x:|:x:|:heavy_check_mark:|:heavy_check_mark:|
 |Firebird 3.0<br>[FirebirdSql.Data.FirebirdClient](https://www.nuget.org/packages/FirebirdSql.Data.FirebirdClient/)|:x:|:x:|:heavy_check_mark:|:heavy_check_mark:|
 |Firebird 4.0<br>[FirebirdSql.Data.FirebirdClient](https://www.nuget.org/packages/FirebirdSql.Data.FirebirdClient/)|:x:|:x:|:heavy_check_mark:|:heavy_check_mark:|
+|Firebird 5.0<br>[FirebirdSql.Data.FirebirdClient](https://www.nuget.org/packages/FirebirdSql.Data.FirebirdClient/)|:x:|:x:|:heavy_check_mark:|:heavy_check_mark:|
 |SAP/Sybase ASE 16.2<br>[AdoNetCore.AseClient](https://www.nuget.org/packages/AdoNetCore.AseClient/)|:x:|:x:|:heavy_check_mark:|:heavy_check_mark:|
 |SAP/Sybase ASE 16.2<br>Native Client|:x:|:x:|:x:|:x:|
 |MS SQL CE|:heavy_check_mark:|:heavy_check_mark:|:heavy_minus_sign:|:heavy_minus_sign:|
@@ -95,16 +98,16 @@ Legend:
 |MS SQL Server 2012<br>[System.Data.SqlClient](https://www.nuget.org/packages/System.Data.SqlClient/)<br>[Microsoft.Data.SqlClient](https://www.nuget.org/packages/Microsoft.Data.SqlClient/)|:heavy_check_mark:|:heavy_check_mark:|:heavy_minus_sign:|:heavy_minus_sign:|
 |MS SQL Server 2014<br>[System.Data.SqlClient](https://www.nuget.org/packages/System.Data.SqlClient/)<br>[Microsoft.Data.SqlClient](https://www.nuget.org/packages/Microsoft.Data.SqlClient/)|:heavy_check_mark:|:heavy_check_mark:|:heavy_minus_sign:|:heavy_minus_sign:|
 |MS SQL Server 2016<br>[System.Data.SqlClient](https://www.nuget.org/packages/System.Data.SqlClient/)<br>[Microsoft.Data.SqlClient](https://www.nuget.org/packages/Microsoft.Data.SqlClient/)|:heavy_check_mark:|:heavy_check_mark:|:heavy_minus_sign:|:heavy_minus_sign:|
-|MS SQL Server 2017<br>[System.Data.SqlClient](https://www.nuget.org/packages/System.Data.SqlClient/)<br>[Microsoft.Data.SqlClient](https://www.nuget.org/packages/Microsoft.Data.SqlClient/)<br>with FTS Tests|:heavy_check_mark:<sup>[2](#notes)</sup>|:heavy_check_mark:<sup>[2](#notes)</sup>|:heavy_check_mark:|:heavy_check_mark:|
-|MS SQL Server 2019<br>[System.Data.SqlClient](https://www.nuget.org/packages/System.Data.SqlClient/)<br>[Microsoft.Data.SqlClient](https://www.nuget.org/packages/Microsoft.Data.SqlClient/)<br>with FTS Tests|:heavy_check_mark:<sup>[2](#notes)</sup>|:heavy_check_mark:<sup>[2](#notes)</sup>|:heavy_check_mark:|:heavy_check_mark:|
-|MS SQL Server 2022<br>[System.Data.SqlClient](https://www.nuget.org/packages/System.Data.SqlClient/)<br>[Microsoft.Data.SqlClient](https://www.nuget.org/packages/Microsoft.Data.SqlClient/)<br>with FTS Tests|:heavy_check_mark:<sup>[2](#notes)</sup>|:heavy_check_mark:<sup>[2](#notes)</sup>|:heavy_check_mark:|:heavy_check_mark:|
+|MS SQL Server 2017<br>[System.Data.SqlClient](https://www.nuget.org/packages/System.Data.SqlClient/)<br>[Microsoft.Data.SqlClient](https://www.nuget.org/packages/Microsoft.Data.SqlClient/)<br>with FTS Tests|:heavy_check_mark:|:heavy_check_mark:|:heavy_check_mark:|:heavy_check_mark:|
+|MS SQL Server 2019<br>[System.Data.SqlClient](https://www.nuget.org/packages/System.Data.SqlClient/)<br>[Microsoft.Data.SqlClient](https://www.nuget.org/packages/Microsoft.Data.SqlClient/)<br>with FTS Tests|:heavy_check_mark:|:heavy_check_mark:|:heavy_check_mark:|:heavy_check_mark:|
+|MS SQL Server 2022<br>[System.Data.SqlClient](https://www.nuget.org/packages/System.Data.SqlClient/)<br>[Microsoft.Data.SqlClient](https://www.nuget.org/packages/Microsoft.Data.SqlClient/)<br>with FTS Tests|:heavy_check_mark:|:heavy_check_mark:|:heavy_check_mark:|:heavy_check_mark:|
 |Azure SQL<br>[System.Data.SqlClient](https://www.nuget.org/packages/System.Data.SqlClient/)<br>[Microsoft.Data.SqlClient](https://www.nuget.org/packages/Microsoft.Data.SqlClient/)|:x:|:x:|:x:|:x:|
 |Access<br>Jet 4.0 OLE DB|:heavy_check_mark:|:x:|:heavy_minus_sign:|:heavy_minus_sign:|
 |Access><br>ACE 12 OLE DB|:heavy_check_mark:|:heavy_check_mark:|:heavy_minus_sign:|:heavy_minus_sign:|
 |Access<br>MDB ODBC|:heavy_check_mark:|:x:|:heavy_minus_sign:|:heavy_minus_sign:|
 |Access<br>MDB+ACCDB ODBC|:heavy_check_mark:|:heavy_check_mark:|:heavy_minus_sign:|:heavy_minus_sign:|
 |DB2 LUW 11.5<br>[IBM.Data.DB2](https://www.nuget.org/packages/IBM.Data.DB.Provider/) (netfx)<br>[IBM.Data.DB2.Core](https://www.nuget.org/packages/IBM.Data.DB2.Core/) ([osx](https://www.nuget.org/packages/IBM.Data.DB2.Core-osx/), [lin](https://www.nuget.org/packages/IBM.Data.DB2.Core-lnx/)) (core)|:x:|:x:|:heavy_check_mark:|:heavy_check_mark:|
-|Informix 14.10<br>[IBM.Data.DB2](https://www.nuget.org/packages/IBM.Data.DB.Provider/) IDS (netfx)<br>[IBM.Data.DB2.Core](https://www.nuget.org/packages/IBM.Data.DB2.Core/) ([osx](https://www.nuget.org/packages/IBM.Data.DB2.Core-osx/), [lin](https://www.nuget.org/packages/IBM.Data.DB2.Core-lnx/)) (core)|:x:|:x:|:x:|:x:|
+|Informix 14.10<br>[IBM.Data.DB2](https://www.nuget.org/packages/IBM.Data.DB.Provider/) IDS (netfx)<br>[IBM.Data.DB2.Core](https://www.nuget.org/packages/IBM.Data.DB2.Core/) ([osx](https://www.nuget.org/packages/IBM.Data.DB2.Core-osx/), [lin](https://www.nuget.org/packages/IBM.Data.DB2.Core-lnx/)) (core)|:x:|:x:|:heavy_check_mark:|:heavy_check_mark:|
 |Oracle 11.2g XE<br>[Oracle.ManagedDataAccess](https://www.nuget.org/packages/Oracle.ManagedDataAccess/) (netfx)<br>[Oracle.ManagedDataAccess.Core](https://www.nuget.org/packages/Oracle.ManagedDataAccess.Core/) (core)|:x:|:x:|:heavy_check_mark:|:heavy_check_mark:|
 |Oracle 12.2c<br>[Oracle.ManagedDataAccess](https://www.nuget.org/packages/Oracle.ManagedDataAccess/) (netfx)<br>[Oracle.ManagedDataAccess.Core](https://www.nuget.org/packages/Oracle.ManagedDataAccess.Core/) (core)|:x:|:x:|:heavy_check_mark:|:heavy_check_mark:|
 |Oracle 18c<br>[Oracle.ManagedDataAccess](https://www.nuget.org/packages/Oracle.ManagedDataAccess/) (netfx)<br>[Oracle.ManagedDataAccess.Core](https://www.nuget.org/packages/Oracle.ManagedDataAccess.Core/) (core)|:x:|:x:|:heavy_check_mark:|:heavy_check_mark:|
@@ -131,24 +134,26 @@ Legend:
 |`TestProvName.SQLiteClassicMiniProfilerMapped`|System.Data.Sqlite + MiniProfiler|Tests compatibility with connection wrappers (with mappings to provider types)|
 |`TestProvName.NorthwindSQLite`|System.Data.Sqlite FTS||
 |`TestProvName.NorthwindSQLiteMS`|Microsoft.Data.Sqlite FTS||
-|`ProviderName.MySql`|Latest MySQL using MySQL.Data||
-|`ProviderName.MySqlConnector`|Latest MySQL using MySqlConnector||
-|`TestProvName.MySql55`|MySQL 5.5 using MySQL.Data||
-|`TestProvName.MySql55Connector`|MySQL 5.5 using MySqlConnector||
-|`TestProvName.MariaDB`|Latest MariaDB using MySqlConnector||
-|`ProviderName.PostgreSQL92`|PostgreSQL 9.2-|PGSQL 9 not tested by CI|
-|`ProviderName.PostgreSQL93`|PostgreSQL [9.3-9.5)|PGSQL 9 not tested by CI|
-|`ProviderName.PostgreSQL95`|PostgreSQL 9.5+|PGSQL 9 not tested by CI|
-|`TestProvName.PostgreSQL10`|PostgreSQL 10|Not tested by CI|
-|`TestProvName.PostgreSQL11`|PostgreSQL 11||
-|`TestProvName.PostgreSQL12`|PostgreSQL 12||
+|`ProviderName.MySql57`|MySQL 5.7 using MySQL.Data||
+|`TestProvName.MySql57Connector`|MySQL 5.7 using MySqlConnector||
+|`ProviderName.MySql80`|Latest MySQL using MySQL.Data||
+|`TestProvName.MySql80Connector`|Latest MySQL using MySqlConnector||
+|`TestProvName.MariaDB11Connector`|Latest MariaDB using MySqlConnector||
+|`ProviderName.PostgreSQL92`|PostgreSQL 9.2-|PGSQL 9 not tested by CI (EOL)|
+|`ProviderName.PostgreSQL93`|PostgreSQL [9.3-9.5)|PGSQL 9 not tested by CI (EOL)|
+|`ProviderName.PostgreSQL95`|PostgreSQL 9.5+|PGSQL 9 not tested by CI (EOL)|
+|`TestProvName.PostgreSQL10`|PostgreSQL 10|Not tested by CI (EOL)|
+|`TestProvName.PostgreSQL11`|PostgreSQL 11|Not tested by CI (EOL)|
+|`TestProvName.PostgreSQL12`|PostgreSQL 12|Not tested by CI (EOL)|
 |`TestProvName.PostgreSQL13`|PostgreSQL 13||
 |`TestProvName.PostgreSQL14`|PostgreSQL 14||
 |`ProviderName.PostgreSQL15`|PostgreSQL 15||
 |`TestProvName.PostgreSQL16`|PostgreSQL 16||
-|`ProviderName.Firebird`|Firebird 2.5||
+|`TestProvName.PostgreSQL17`|PostgreSQL 17||
+|`ProviderName.Firebird25`|Firebird 2.5||
 |`TestProvName.Firebird3`|Firebird 3.0||
 |`TestProvName.Firebird4`|Firebird 4.0||
+|`TestProvName.Firebird5`|Firebird 5.0||
 |`ProviderName.Sybase`|Sybase ASE using official unmanaged provider||
 |`ProviderName.SybaseManaged`|Sybase ASE using DataAction managed provider||
 |`ProviderName.SqlCe`|SQL CE| SQL CE 4.0 used for testing|

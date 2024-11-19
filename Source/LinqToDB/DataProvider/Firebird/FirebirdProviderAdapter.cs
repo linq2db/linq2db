@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Data;
 using System.Data.Common;
+using System.Linq.Expressions;
 
 namespace LinqToDB.DataProvider.Firebird
 {
@@ -76,6 +77,8 @@ namespace LinqToDB.DataProvider.Firebird
 			ClearAllPools = typeMapper.BuildAction(typeMapper.MapActionLambda(() => FbConnection.ClearAllPools()));
 
 			IsDateOnlySupported = assembly.GetName().Version >= MinDateOnlyVersion;
+
+			_connectionFactory = typeMapper.BuildTypedFactory<string, FbConnection, DbConnection>((string connectionString) => new FbConnection(connectionString));
 		}
 
 		static readonly Lazy<FirebirdProviderAdapter> _lazy    = new (() => new ());
@@ -88,11 +91,18 @@ namespace LinqToDB.DataProvider.Firebird
 			}
 		}
 
+#region IDynamicProviderAdapter
+
 		public Type ConnectionType  { get; }
 		public Type DataReaderType  { get; }
 		public Type ParameterType   { get; }
 		public Type CommandType     { get; }
 		public Type TransactionType { get; }
+
+		readonly Func<string, DbConnection> _connectionFactory;
+		public DbConnection CreateConnection(string connectionString) => _connectionFactory(connectionString);
+
+#endregion
 
 		/// <summary>
 		/// FB client 7.10.0+.
@@ -134,6 +144,8 @@ namespace LinqToDB.DataProvider.Firebird
 		[Wrapper]
 		private sealed class FbConnection
 		{
+			public FbConnection(string connectionString) => throw new NotImplementedException();
+
 			public static void ClearAllPools() => throw new NotImplementedException();
 		}
 
@@ -162,7 +174,7 @@ namespace LinqToDB.DataProvider.Firebird
 			Text      = 13,
 			Time      = 14,
 			TimeStamp = 15,
-			VarChar       = 16,
+			VarChar   = 16,
 
 			// new in 7.10.0
 			TimeStampTZ   = 17,

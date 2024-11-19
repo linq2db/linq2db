@@ -5,7 +5,6 @@ using LinqToDB;
 
 using NUnit.Framework;
 
-
 namespace Tests.Linq
 {
 	using Model;
@@ -30,7 +29,7 @@ namespace Tests.Linq
 			{
 				var query = (IQueryable<Person>)CompilerServices.CompareString(db);
 				var str   = query.ToString();
-				TestContext.WriteLine(str);
+				TestContext.Out.WriteLine(str);
 				Assert.That(str, Does.Not.Contain("CASE"));
 			}
 		}
@@ -44,7 +43,6 @@ namespace Tests.Linq
 					VisualBasicCommon.ParamenterName(db));
 		}
 
-		[ActiveIssue("https://github.com/ClickHouse/ClickHouse/issues/37999", Configuration = ProviderName.ClickHouseMySql)]
 		[Test]
 		public void SearchCondition1([DataSources(TestProvName.AllAccess)] string context)
 		{
@@ -110,8 +108,6 @@ namespace Tests.Linq
 			}
 		}
 
-		//Instance property or field with name Key not found on type System.Collections.Generic.IEnumerable`1[Tests.VisualBasic.VBTests+Activity649]
-		[ActiveIssue(649)]
 		[Test]
 		public void Issue649Test1([DataSources] string context)
 		{
@@ -145,8 +141,6 @@ namespace Tests.Linq
 			}
 		}
 
-		// Instance property or field with name Key not found on type System.Collections.Generic.IEnumerable`1[Tests.Model.Child]
-		[ActiveIssue(649)]
 		[Test]
 		public void Issue649Test4([DataSources] string context)
 		{

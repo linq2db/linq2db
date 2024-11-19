@@ -75,14 +75,27 @@ namespace Tests.Linq
 			{
 				var collection = db.Parent.Select(_ => new { _.ParentID }).ToList();
 
-				db.Parent
+				var query = db.Parent
 					.Select(_ => new
 					{
 						Children = collection.Where(c1 => c1.ParentID == _.ParentID).ToArray()
-					})
-					.ToArray();
+					});
+
+				AssertQuery(query);
 			}
 		}
 
+		[Test]
+		public void EnumerableAsQueryable([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var resultQuery = Array.Empty<Model.Person>().AsQueryable();
+
+			var query = db.GetTable<Model.Person>()
+				.Where(_ => !resultQuery.Select(m => m.ID).Contains(_.ID));
+
+			AssertQuery(query);
+		}
 	}
 }

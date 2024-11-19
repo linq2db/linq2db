@@ -100,11 +100,14 @@ namespace Tests.UserTests
 							 };
 
 				var res = result.ToList();
-				Assert.AreEqual(2, res.Count);
-				Assert.False(res[0].Default);
-				Assert.False(res[1].Default);
-				Assert.True(res[0].Copy);
-				Assert.True(res[1].Copy);
+				Assert.That(res, Has.Count.EqualTo(2));
+				Assert.Multiple(() =>
+				{
+					Assert.That(res[0].Default, Is.False);
+					Assert.That(res[1].Default, Is.False);
+					Assert.That(res[0].Copy, Is.True);
+					Assert.That(res[1].Copy, Is.True);
+				});
 			}
 		}
 

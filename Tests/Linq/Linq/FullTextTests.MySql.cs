@@ -25,7 +25,7 @@ namespace Tests.Linq
 
 		#region MATCH
 		[Test]
-		public void MatchPredicate([IncludeDataSources(true, TestProvName.AllMySqlFullText)] string context)
+		public void MatchPredicate([IncludeDataSources(true, TestProvName.AllMySql)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -34,16 +34,19 @@ namespace Tests.Linq
 					.OrderBy(r => r.Id);
 
 				var results = query.ToList();
-				Assert.AreEqual(2, results.Count);
-				Assert.AreEqual("looking for something?", results[0].TestField1);
-				Assert.AreEqual("found it!", results[0].TestField2);
-				Assert.AreEqual("record not found", results[1].TestField1);
-				Assert.AreEqual("empty", results[1].TestField2);
+				Assert.That(results, Has.Count.EqualTo(2));
+				Assert.Multiple(() =>
+				{
+					Assert.That(results[0].TestField1, Is.EqualTo("looking for something?"));
+					Assert.That(results[0].TestField2, Is.EqualTo("found it!"));
+					Assert.That(results[1].TestField1, Is.EqualTo("record not found"));
+					Assert.That(results[1].TestField2, Is.EqualTo("empty"));
+				});
 			}
 		}
 
 		[Test]
-		public void MatchPredicateOneColumn([IncludeDataSources(true, TestProvName.AllMySqlFullText)] string context)
+		public void MatchPredicateOneColumn([IncludeDataSources(true, TestProvName.AllMySql)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -52,14 +55,17 @@ namespace Tests.Linq
 					.OrderBy(r => r.Id);
 
 				var results = query.ToList();
-				Assert.AreEqual(1, results.Count);
-				Assert.AreEqual("record not found", results[0].TestField1);
-				Assert.AreEqual("empty", results[0].TestField2);
+				Assert.That(results, Has.Count.EqualTo(1));
+				Assert.Multiple(() =>
+				{
+					Assert.That(results[0].TestField1, Is.EqualTo("record not found"));
+					Assert.That(results[0].TestField2, Is.EqualTo("empty"));
+				});
 			}
 		}
 
 		[Test]
-		public void MatchPredicateWithModifier([IncludeDataSources(true, TestProvName.AllMySqlFullText)] string context, [Values] MySqlExtensions.MatchModifier modifier)
+		public void MatchPredicateWithModifier([IncludeDataSources(true, TestProvName.AllMySql)] string context, [Values] MySqlExtensions.MatchModifier modifier)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -68,18 +74,21 @@ namespace Tests.Linq
 					.OrderBy(r => r.Id);
 
 				var results = query.ToList();
-				Assert.AreEqual(2, results.Count);
-				Assert.AreEqual("looking for something?", results[0].TestField1);
-				Assert.AreEqual("found it!", results[0].TestField2);
-				Assert.AreEqual("record not found", results[1].TestField1);
-				Assert.AreEqual("empty", results[1].TestField2);
+				Assert.That(results, Has.Count.EqualTo(2));
+				Assert.Multiple(() =>
+				{
+					Assert.That(results[0].TestField1, Is.EqualTo("looking for something?"));
+					Assert.That(results[0].TestField2, Is.EqualTo("found it!"));
+					Assert.That(results[1].TestField1, Is.EqualTo("record not found"));
+					Assert.That(results[1].TestField2, Is.EqualTo("empty"));
+				});
 			}
 		}
 		#endregion
 
 		#region MATCH
 		[Test]
-		public void MatchRelevancePredicate([IncludeDataSources(true, TestProvName.AllMySqlFullText)] string context)
+		public void MatchRelevancePredicate([IncludeDataSources(true, TestProvName.AllMySql)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -88,15 +97,18 @@ namespace Tests.Linq
 					.Select(r => Sql.Ext.MySql().MatchRelevance("found", r.TestField1, r.TestField2));
 
 				var results = query.ToList();
-				Assert.AreEqual(3, results.Count);
-				Assert.AreEqual(results[0], results[1]);
-				Assert.Greater(results[1], results[2]);
-				Assert.AreEqual(0, results[2]);
+				Assert.That(results, Has.Count.EqualTo(3));
+				Assert.That(results[1], Is.EqualTo(results[0]));
+				Assert.Multiple(() =>
+				{
+					Assert.That(results[1], Is.GreaterThan(results[2]));
+					Assert.That(results[2], Is.EqualTo(0));
+				});
 			}
 		}
 
 		[Test]
-		public void MatchRelevancePredicateOneColumn([IncludeDataSources(true, TestProvName.AllMySqlFullText)] string context)
+		public void MatchRelevancePredicateOneColumn([IncludeDataSources(true, TestProvName.AllMySql)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -105,15 +117,18 @@ namespace Tests.Linq
 					.Select(r => Sql.Ext.MySql().MatchRelevance("found", r.TestField2));
 
 				var results = query.ToList();
-				Assert.AreEqual(3, results.Count);
-				Assert.Greater(results[0], results[1]);
-				Assert.AreEqual(results[1], results[2]);
-				Assert.AreEqual(0, results[2]);
+				Assert.That(results, Has.Count.EqualTo(3));
+				Assert.Multiple(() =>
+				{
+					Assert.That(results[0], Is.GreaterThan(results[1]));
+					Assert.That(results[2], Is.EqualTo(results[1]));
+				});
+				Assert.That(results[2], Is.EqualTo(0));
 			}
 		}
 
 		[Test]
-		public void MatchRelevancePredicateWithModifier([IncludeDataSources(true, TestProvName.AllMySqlFullText)] string context, [Values] MySqlExtensions.MatchModifier modifier)
+		public void MatchRelevancePredicateWithModifier([IncludeDataSources(true, TestProvName.AllMySql)] string context, [Values] MySqlExtensions.MatchModifier modifier)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -122,13 +137,16 @@ namespace Tests.Linq
 					.Select(r => Sql.Ext.MySql().MatchRelevance(modifier, "found", r.TestField1, r.TestField2));
 
 				var results = query.ToList();
-				Assert.AreEqual(3, results.Count);
+				Assert.That(results, Has.Count.EqualTo(3));
 				if (modifier == MySqlExtensions.MatchModifier.WithQueryExpansion)
-					Assert.Greater(results[0], results[1]);
+					Assert.That(results[0], Is.GreaterThan(results[1]));
 				else
-					Assert.AreEqual(results[0], results[1]);
-				Assert.Greater(results[1], results[2]);
-				Assert.AreEqual(0, results[2]);
+					Assert.That(results[1], Is.EqualTo(results[0]));
+				Assert.Multiple(() =>
+				{
+					Assert.That(results[1], Is.GreaterThan(results[2]));
+					Assert.That(results[2], Is.EqualTo(0));
+				});
 			}
 		}
 		#endregion

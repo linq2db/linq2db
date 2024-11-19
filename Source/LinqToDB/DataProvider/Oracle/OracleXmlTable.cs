@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Text;
@@ -34,8 +35,8 @@ namespace LinqToDB.DataProvider.Oracle
 					case DataType.Byte       : return "Number(3)";
 					case DataType.Money      : return "Number(19,4)";
 					case DataType.SmallMoney : return "Number(10,4)";
-					case DataType.NVarChar   : return "VarChar2(" + (type.Type.Length ?? 100) + ")";
-					case DataType.NChar      : return "Char2(" + (type.Type.Length ?? 100) + ")";
+					case DataType.NVarChar   : return FormattableString.Invariant($"VarChar2(${type.Type.Length ?? 100})");
+					case DataType.NChar      : return FormattableString.Invariant($"Char2({type.Type.Length ?? 100})");
 					case DataType.Double     : return "Float";
 					case DataType.Single     : return "Real";
 					case DataType.UInt16     : return "Int";
@@ -48,9 +49,9 @@ namespace LinqToDB.DataProvider.Oracle
 				var text = !string.IsNullOrEmpty(type.Type.DbType) ? type.Type.DbType! : type.Type.DataType.ToString();
 
 				if (type.Type.Length > 0)
-					text += "(" + type.Type.Length + ")";
+					text += FormattableString.Invariant($"({type.Type.Length})");
 				else if (type.Type.Precision > 0)
-					text += "(" + type.Type.Precision + "," + type.Type.Scale + ")";
+					text += FormattableString.Invariant($"({type.Type.Precision},{type.Type.Scale})");
 
 				return text;
 			}
@@ -66,9 +67,9 @@ namespace LinqToDB.DataProvider.Oracle
 
 					for (var i = 0; i < converters.Count; i++)
 					{
-						sb.Value.Append("<c" + i + ">");
+						sb.Value.Append(CultureInfo.InvariantCulture, $"<c{i}>");
 						converters[i](sb.Value, item!);
-						sb.Value.Append("</c" + i + ">");
+						sb.Value.Append(CultureInfo.InvariantCulture, $"</c{i}>");
 					}
 
 					sb.Value.AppendLine("</r>");
@@ -111,10 +112,20 @@ namespace LinqToDB.DataProvider.Oracle
 				return o => ValueConverter(converters, o);
 			}
 
-			public override void SetTable<TContext>(DataOptions options, TContext context, ISqlBuilder sqlBuilder, MappingSchema mappingSchema, SqlTable table, MethodCallExpression methodCall, Func<TContext, Expression, ColumnDescriptor?, ISqlExpression> converter)
+			public override void SetTable<TContext>(DataOptions options, TContext context, ISqlBuilder sqlBuilder, MappingSchema mappingSchema, SqlTable table, MethodCallExpression methodCall, Sql.ExpressionAttribute.ConvertFunc<TContext> converter)
 			{
 				var exp = methodCall.Arguments[1];
-				var arg = converter(context, exp, null);
+
+				if (exp is LambdaExpression { Parameters: [] } lambda)
+					exp = lambda.Body;
+
+				var converted = converter(context, exp, null, null);
+
+				if (converted is not SqlPlaceholderExpression placeholder)
+					throw SqlErrorExpression.EnsureError(null, converted).CreateException();
+
+				var arg = placeholder.Sql;
+
 				var ed  = mappingSchema.GetEntityDescriptor(table.ObjectType, options.ConnectionOptions.OnEntityDescriptorCreated);
 
 				if (arg is SqlParameter p)
@@ -124,10 +135,13 @@ namespace LinqToDB.DataProvider.Oracle
 					// TODO: ValueConverter contract nullability violations
 					if (exp is ConstantExpression constExpr)
 					{
-						if (constExpr.Value is Func<string>)
-							p.ValueConverter = static l => ((Func<string>)l!)();
-						else
-							p.ValueConverter = GetXmlConverter(options, mappingSchema, table)!;
+						if (constExpr.Value is not string)
+						{
+							if (constExpr.Value is Func<string>)
+								p.ValueConverter = static l => ((Func<string>)l!)();
+							else
+								p.ValueConverter = GetXmlConverter(options, mappingSchema, table)!;
+						}
 					}
 					else if (exp is LambdaExpression)
 					{
@@ -141,9 +155,10 @@ namespace LinqToDB.DataProvider.Oracle
 					if (i > 0)
 						columns.Value.Append(", ");
 
-					var  c= ed.Columns[i];
+					var c = ed.Columns[i];
 
 					columns.Value.AppendFormat(
+						CultureInfo.InvariantCulture,
 						"{0} {1} path 'c{2}'",
 						sqlBuilder.ConvertInline(c.ColumnName, ConvertType.NameToQueryField),
 						string.IsNullOrEmpty(c.DbType)
@@ -177,9 +192,13 @@ namespace LinqToDB.DataProvider.Oracle
 			return converter(data);
 		}
 
-		private static readonly MethodInfo OracleXmlTableIEnumerableT = MemberHelper.MethodOf(() => OracleXmlTable<object>(null!, (IEnumerable<object>)null!)).GetGenericMethodDefinition();
-		private static readonly MethodInfo OracleXmlTableString       = MemberHelper.MethodOf(() => OracleXmlTable<object>(null!, (string)null!))             .GetGenericMethodDefinition();
-		private static readonly MethodInfo OracleXmlTableFuncString   = MemberHelper.MethodOf(() => OracleXmlTable<object>(null!, (Func<string>)null!))       .GetGenericMethodDefinition();
+		private static MethodInfo? _oracleXmlTableIEnumerableT;
+		private static MethodInfo? _oracleXmlTableString;
+		private static MethodInfo? _oracleXmlTableFuncString;
+
+		private static MethodInfo OracleXmlTableIEnumerableT => _oracleXmlTableIEnumerableT ??= MemberHelper.MethodOf(() => OracleXmlTable<object>(null!, (IEnumerable<object>)null!)).GetGenericMethodDefinition();
+		private static MethodInfo OracleXmlTableString       => _oracleXmlTableString       ??= MemberHelper.MethodOf(() => OracleXmlTable<object>(null!, (string)null!))             .GetGenericMethodDefinition();
+		private static MethodInfo OracleXmlTableFuncString   => _oracleXmlTableFuncString   ??= MemberHelper.MethodOf(() => OracleXmlTable<object>(null!, (Func<string>)null!))       .GetGenericMethodDefinition();
 
 		[OracleXmlTable]
 		public static ITable<T> OracleXmlTable<T>(this IDataContext dataContext, IEnumerable<T> data)

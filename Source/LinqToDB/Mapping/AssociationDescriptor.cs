@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -132,7 +133,7 @@ namespace LinqToDB.Mapping
 		/// <returns>Returns array with names of association key column members.</returns>
 		public static string[] ParseKeys(string? keys)
 		{
-			return keys?.Replace(" ", "").Split(',') ?? Array<string>.Empty;
+			return keys?.Replace(" ", "").Split(',') ?? [];
 		}
 
 		/// <summary>
@@ -144,8 +145,8 @@ namespace LinqToDB.Mapping
 			if (!string.IsNullOrEmpty(AliasName))
 				return AliasName!;
 
-			if (!string.IsNullOrEmpty(Configuration.Sql.AssociationAlias))
-				return string.Format(Configuration.Sql.AssociationAlias, MemberInfo.Name);
+			if (Configuration.Sql.AssociationAliasFormat != null)
+				return string.Format(CultureInfo.InvariantCulture, Configuration.Sql.AssociationAliasFormat, MemberInfo.Name);
 
 			return string.Empty;
 		}
@@ -183,12 +184,11 @@ namespace LinqToDB.Mapping
 					return methodInfo.DeclaringType!;
 				}
 
-				throw new LinqToDBException($"Can not retrieve declaring type form member {methodInfo}");
+				throw new LinqToDBException($"Cannot retrieve declaring type form member {methodInfo}");
 			}
 
 			return MemberInfo.DeclaringType!;
 		}
-
 
 		/// <summary>
 		/// Loads predicate expression from <see cref="ExpressionPredicate"/> member.
@@ -238,7 +238,7 @@ namespace LinqToDB.Mapping
 					{
 						if (method.GetParameters().Length > 0)
 							throw new LinqToDBException($"Method '{ExpressionPredicate}' for type '{type.Name}' should have no parameters");
-						var value = method.Invoke(null, Array<object>.Empty);
+						var value = method.Invoke(null, []);
 						if (value == null)
 							return null;
 
@@ -321,7 +321,7 @@ namespace LinqToDB.Mapping
 
 			if (!(typeof(IQueryable<>).IsSameOrParentOf(lambda.ReturnType) &&
 			      lambda.ReturnType.GetGenericArguments()[0].IsSameOrParentOf(objectType)))
-				throw new LinqToDBException("Result type of expression predicate should be 'IQueryable<{objectType.Name}>'");
+				throw new LinqToDBException($"Result type of expression predicate should be 'IQueryable<{objectType.Name}>'");
 
 			return lambda;
 		}
@@ -389,30 +389,37 @@ namespace LinqToDB.Mapping
 		/// <summary>
 		/// Get the association assignment expression, accounting for <see cref="Storage"/> and <see cref="AssociationSetterExpression" />
 		/// </summary>
-		/// <param name="parentObject">Parent object expression</param>
 		/// <param name="value">Association value expression</param>
 		/// <param name="memberInfo">Member info</param>
 		/// <returns></returns>
-		internal Expression GetAssociationAssignmentExpression(Expression parentObject, Expression value, MemberInfo memberInfo)
+		internal LambdaExpression? GetAssociationAssignmentLambda(Expression value, MemberInfo memberInfo)
 		{
-			var storageMember = Storage != null
-				? ExpressionHelper.PropertyOrField(parentObject, Storage)
-				: Expression.MakeMemberAccess(parentObject, memberInfo);
+			if (Storage == null && !HasAssociationSetterMethod())
+				return null;
 
+			var entityParam = Expression.Parameter(memberInfo.DeclaringType!, "e");
+
+			var storageMember = Storage != null
+				? ExpressionHelper.PropertyOrField(entityParam, Storage)
+				: Expression.MakeMemberAccess(entityParam, memberInfo);
+
+			Expression body;
 			if (HasAssociationSetterMethod())
 			{
 				var setMethod = GetAssociationSetterMethod(storageMember.Type, value.Type)!;
-				return setMethod.GetBody(storageMember, value);
+				body = setMethod.GetBody(storageMember, value);
 			}
 			else
 			{
-				return Expression.Assign(storageMember, value);
+				body = Expression.Assign(storageMember, value);
 			}
+
+			return Expression.Lambda(body, entityParam);
 		}
 
 		/// <summary>
 		/// Gets the desired type for the association value to be used by the assignment expression
-		/// returned by <see cref="GetAssociationAssignmentExpression" />
+		/// returned by <see cref="GetAssociationAssignmentLambda" />
 		/// </summary>
 		/// <param name="memberInfo"></param>
 		/// <param name="parentType"></param>
@@ -440,6 +447,12 @@ namespace LinqToDB.Mapping
 			return storageMember.GetMemberType();
 		}
 
+		public override string ToString()
+		{
+			return MemberInfo.Name;
+		}
+
 		#endregion
+
 	}
 }

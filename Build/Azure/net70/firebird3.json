@@ -1,7 +1,0 @@
-﻿{
-	"NET70.Azure": {
-		"Providers": [
-			"Firebird3"
-		]
-	}
-}

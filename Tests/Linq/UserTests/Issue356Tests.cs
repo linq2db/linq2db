@@ -32,6 +32,7 @@ namespace Tests.UserTests
 
 		// Test without sorting order dependency
 		// Generated SQL not supported by Access
+		[ActiveIssue("HanaException : feature not supported: SET operator in LATERAL", Configuration = TestProvName.AllSapHana)]
 		[Test]
 		public void Test1([DataSources(TestProvName.AllPostgreSQL, TestProvName.AllAccess)] string context)
 		{

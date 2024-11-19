@@ -251,8 +251,8 @@ namespace Tests.Linq
 			db.GetTable<T>().Where(c => c.Id == -1).ToList();
 
 			var ed = db.MappingSchema.GetEntityDescriptor(typeof(T));
-			Assert.AreEqual(1, ed.Columns.Count);
-			Assert.AreEqual("PersonID", ed.Columns[0].ColumnName);
+			Assert.That(ed.Columns, Has.Count.EqualTo(1));
+			Assert.That(ed.Columns[0].ColumnName, Is.EqualTo("PersonID"));
 		}
 
 		void Issue4031_Execute<T>(string context) where T : class, IIssue4031
@@ -261,8 +261,8 @@ namespace Tests.Linq
 			db.GetTable<T>().Where(c => c.Id == -1).ToList();
 
 			var ed = db.MappingSchema.GetEntityDescriptor(typeof(T));
-			Assert.AreEqual(1, ed.Columns.Count);
-			Assert.AreEqual("PersonID", ed.Columns[0].ColumnName);
+			Assert.That(ed.Columns, Has.Count.EqualTo(1));
+			Assert.That(ed.Columns[0].ColumnName, Is.EqualTo("PersonID"));
 		}
 
 		void Issue4031_Execute_TwoFields<T>(string context) where T : class, IIssue4031
@@ -271,10 +271,10 @@ namespace Tests.Linq
 			db.GetTable<T>().Where(c => c.Id == -1).Select(c => new { c.Id }).ToList();
 
 			var ed = db.MappingSchema.GetEntityDescriptor(typeof(T));
-			Assert.AreEqual(2, ed.Columns.Count);
+			Assert.That(ed.Columns, Has.Count.EqualTo(2));
 			var columnNames = ed.Columns.Select(c => c.ColumnName).ToArray();
-			Assert.Contains("PersonID", columnNames);
-			Assert.Contains("UNKNOWN", columnNames);
+			Assert.That(columnNames, Does.Contain("PersonID"));
+			Assert.That(columnNames, Does.Contain("UNKNOWN"));
 		}
 		#endregion
 
@@ -308,11 +308,14 @@ namespace Tests.Linq
 
 			var results = t.OrderBy(r => r.Id).ToArray();
 
-			Assert.AreEqual(2, results.Length);
-			Assert.AreEqual(1, results[0].Id);
-			Assert.AreEqual("new_name", results[0].Name);
-			Assert.AreEqual(2, results[1].Id);
-			Assert.AreEqual("old_name", results[1].Name);
+			Assert.That(results, Has.Length.EqualTo(2));
+			Assert.Multiple(() =>
+			{
+				Assert.That(results[0].Id, Is.EqualTo(1));
+				Assert.That(results[0].Name, Is.EqualTo("new_name"));
+				Assert.That(results[1].Id, Is.EqualTo(2));
+				Assert.That(results[1].Name, Is.EqualTo("old_name"));
+			});
 		}
 		#endregion
 
@@ -339,8 +342,8 @@ namespace Tests.Linq
 				.Where(x => x.Id == 1)
 				.ToArray();
 
-			Assert.AreEqual(1, results.Length);
-			Assert.AreEqual(1, results[0].Id);
+			Assert.That(results, Has.Length.EqualTo(1));
+			Assert.That(results[0].Id, Is.EqualTo(1));
 		}
 		#endregion
 	}

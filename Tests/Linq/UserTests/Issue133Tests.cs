@@ -30,7 +30,7 @@ namespace Tests.UserTests
 			throw new InvalidOperationException("This function should be used only in database code");
 		}
 
-		[Test, ActiveIssue("Wrong Having detection")]
+		[Test]
 		public void NegativeWhereTest([SupportsAnalyticFunctionsContext] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -41,9 +41,9 @@ namespace Tests.UserTests
 					.Where(_ => _.Sum != 36)
 					.ToList();
 
-				Assert.AreEqual(5, result.Count);
+				Assert.That(result, Has.Count.EqualTo(5));
 
-				Assert.AreEqual(100d, result.Sum(_ => _.CountPercents), 0.001);
+				Assert.That(result.Sum(_ => _.CountPercents), Is.EqualTo(100d).Within(0.001));
 			}
 		}
 
@@ -58,8 +58,8 @@ namespace Tests.UserTests
 					.Having(_ => _.Sum != 36)
 					.ToList();
 
-				Assert.AreEqual(5, result.Count);
-				Assert.AreEqual(100d, result.Sum(_ => _.CountPercents), 0.001);
+				Assert.That(result, Has.Count.EqualTo(5));
+				Assert.That(result.Sum(_ => _.CountPercents), Is.EqualTo(100d).Within(0.001));
 			}
 		}
 
@@ -78,8 +78,8 @@ namespace Tests.UserTests
 					.Where(_ => _.Sum != 36)
 					.ToList();
 
-				Assert.AreEqual(5, result.Count);
-				Assert.AreEqual(100d, result.Sum(_ => _.CountPercents), 0.001);
+				Assert.That(result, Has.Count.EqualTo(5));
+				Assert.That(result.Sum(_ => _.CountPercents), Is.EqualTo(100d).Within(0.001));
 			}
 		}
 
@@ -98,8 +98,8 @@ namespace Tests.UserTests
 					.Having(_ => _.Sum != 36)
 					.ToList();
 
-				Assert.AreEqual(5, result.Count);
-				Assert.AreEqual(100d, result.Sum(_ => _.CountPercents), 0.001);
+				Assert.That(result, Has.Count.EqualTo(5));
+				Assert.That(result.Sum(_ => _.CountPercents), Is.EqualTo(100d).Within(0.001));
 			}
 		}
 	}

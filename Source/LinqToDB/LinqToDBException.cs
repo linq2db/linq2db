@@ -10,9 +10,7 @@ namespace LinqToDB
 	/// This class is the base class for exceptions that may occur during
 	/// execution of the namespace members.
 	/// </remarks>
-#if !NET8_0_OR_GREATER
 	[Serializable]
-#endif
 	public class LinqToDBException : Exception
 	{
 		/// <summary>
@@ -65,20 +63,5 @@ namespace LinqToDB
 			: base(innerException.Message, innerException)
 		{
 		}
-#if !NET8_0_OR_GREATER
-		/// <summary>
-		/// Initializes a new instance of the <see cref="LinqToDBException"/> class
-		/// with serialized data.
-		/// </summary>
-		/// <param name="info">The object that holds the serialized object data.</param>
-		/// <param name="context">The contextual information about the source or
-		/// destination.</param>
-		/// <remarks>This constructor is called during deserialization to
-		/// reconstitute the exception object transmitted over a stream.</remarks>
-		protected LinqToDBException(SerializationInfo info, StreamingContext context)
-			: base(info, context)
-		{
-		}
-#endif
 	}
 }

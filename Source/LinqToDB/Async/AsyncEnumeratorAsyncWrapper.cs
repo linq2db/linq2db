@@ -1,13 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-#if !NATIVE_ASYNC
-using TASK  = System.Threading.Tasks.Task;
-using TASKB = System.Threading.Tasks.Task<bool>;
-#else
-using TASK  = System.Threading.Tasks.ValueTask;
-using TASKB = System.Threading.Tasks.ValueTask<bool>;
-#endif
 
 namespace LinqToDB.Async
 {
@@ -24,23 +17,23 @@ namespace LinqToDB.Async
 
 		T IAsyncEnumerator<T>.Current => _enumerator!.Current;
 
-		async TASK IAsyncDisposable.DisposeAsync()
+		async ValueTask IAsyncDisposable.DisposeAsync()
 		{
-			await _enumerator!.DisposeAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+			await _enumerator!.DisposeAsync().ConfigureAwait(false);
 			if (_disposable != null)
-				await _disposable.DisposeAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+				await _disposable.DisposeAsync().ConfigureAwait(false);
 		}
 
-		async TASKB IAsyncEnumerator<T>.MoveNextAsync()
+		async ValueTask<bool> IAsyncEnumerator<T>.MoveNextAsync()
 		{
 			if (_enumerator == null)
 			{
-				var tuple   = await _init().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+				var tuple   = await _init().ConfigureAwait(false);
 				_enumerator = tuple.Item1;
 				_disposable = tuple.Item2;
 			}
 
-			return await _enumerator.MoveNextAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+			return await _enumerator.MoveNextAsync().ConfigureAwait(false);
 		}
 	}
 }

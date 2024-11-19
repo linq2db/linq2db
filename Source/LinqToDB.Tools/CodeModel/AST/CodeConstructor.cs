@@ -23,7 +23,7 @@ namespace LinqToDB.CodeModel
 		{
 			Class           = @class;
 			ThisCall        = thisCall;
-			_baseParameters = new (baseArguments ?? Array<ICodeExpression>.Empty);
+			_baseParameters = new (baseArguments ?? []);
 		}
 
 		public CodeConstructor(CodeClass @class)

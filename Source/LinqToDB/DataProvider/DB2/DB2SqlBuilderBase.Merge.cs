@@ -7,7 +7,8 @@ namespace LinqToDB.DataProvider.DB2
 
 	abstract partial class DB2SqlBuilderBase
 	{
-		protected override bool IsSqlValuesTableValueTypeRequired(SqlValuesTable source, IReadOnlyList<ISqlExpression[]> rows, int row, int column)
+		protected override bool IsSqlValuesTableValueTypeRequired(SqlValuesTable source,
+			IReadOnlyList<ISqlExpression[]>                                      rows, int row, int column)
 		{
 			/* DB2 doesn't like NULLs without type information
 			 : ERROR [42610] [IBM][DB2/NT64] SQL0418N  The statement was not processed because the statement

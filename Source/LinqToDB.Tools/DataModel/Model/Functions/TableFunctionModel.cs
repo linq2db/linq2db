@@ -13,18 +13,12 @@ namespace LinqToDB.DataModel
 		public TableFunctionModel(
 			SqlObjectName         name,
 			MethodModel           method,
-			TableFunctionMetadata metadata,
-			string                methodInfoFieldName)
+			TableFunctionMetadata metadata)
 			: base(name, method)
 		{
-			Metadata            = metadata;
-			MethodInfoFieldName = methodInfoFieldName;
+			Metadata = metadata;
 		}
 
-		/// <summary>
-		/// Gets or sets name of private field to store <see cref="MethodInfo"/> instance of generated function mapping method.
-		/// </summary>
-		public string                MethodInfoFieldName { get; set; }
 		/// <summary>
 		/// Gets or sets table function metadata descriptor.
 		/// </summary>

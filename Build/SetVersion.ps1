@@ -1,28 +1,30 @@
 Param(
 	[Parameter(Mandatory=$true)][string]$path,
-	[Parameter(Mandatory=$true)][string]$version
+	[Parameter(Mandatory=$true)][string]$version,
+	[Parameter(Mandatory=$true)][string]$prop
 )
 
 $ErrorActionPreference = "Stop"
 Set-StrictMode -Version Latest
 
-if ($version) {
+$xmlPath = Resolve-Path "$path"
 
-	$xmlPath = Resolve-Path "$path"
+$xml = New-Object System.Xml.XmlDocument
+$xml.PreserveWhitespace = $true
+$xml.Load("$xmlPath")
 
-	$xml = [XML](Get-Content "$xmlPath")
-	$xml.PreserveWhitespace = $true
-	$save = $false
+$nsm = New-Object System.Xml.XmlNamespaceManager($xml.NameTable)
+$nsm.AddNamespace("ns", 'http://schemas.microsoft.com/developer/msbuild/2003')
 
-	$xPath = "//PropertyGroup/Version"
-	$nodes = $xml.SelectNodes($xPath)
-	foreach($node in $nodes) {
-		$node.InnerXml = $version
-		$save = $true
-	}
+$xPath = "/ns:Project/ns:PropertyGroup/ns:$prop"
+$node = $xml.SelectSingleNode($xPath, $nsm)
 
-	if ($save) {
-		Write-Host "Patched $xmlPath"
-		$xml.Save($xmlPath)
-	}
+if($node) {
+	$node.InnerXml = $version
+	Write-Host "Patched $xmlPath"
+	$xml.Save($xmlPath)
+} else {
+	Write-Host "Patching failed. Node $xPath not found"
+	exit -1
 }
+

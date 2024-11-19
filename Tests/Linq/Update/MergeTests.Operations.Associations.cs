@@ -8,7 +8,7 @@ namespace Tests.xUpdate
 	public partial class MergeTests
 	{
 		[Test]
-		public void TargetAssociation([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
+		public void TargetAssociation([MergeNotMatchedBySourceDataContextSource(true, TestProvName.AllPostgreSQL17Plus)] string context)
 		{
 			ResetPersonIdentity(context);
 
@@ -26,9 +26,12 @@ namespace Tests.xUpdate
 
 				var result = db.GetTable<MPerson>().OrderBy(_ => _.ID).ToList();
 
-				Assert.AreEqual(1, rows);
+				Assert.Multiple(() =>
+				{
+					Assert.That(rows, Is.EqualTo(1));
 
-				Assert.AreEqual(5, result.Count);
+					Assert.That(result, Has.Count.EqualTo(5));
+				});
 
 				AssertPerson(IdentityPersons[0], result[0]);
 				AssertPerson(IdentityPersons[1], result[1]);
@@ -39,7 +42,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void TargetQueryAssociation([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
+		public void TargetQueryAssociation([MergeNotMatchedBySourceDataContextSource(true, TestProvName.AllPostgreSQL17Plus)] string context)
 		{
 			ResetPersonIdentity(context);
 
@@ -57,9 +60,12 @@ namespace Tests.xUpdate
 
 				var result = db.GetTable<MPerson>().OrderBy(_ => _.ID).ToList();
 
-				Assert.AreEqual(1, rows);
+				Assert.Multiple(() =>
+				{
+					Assert.That(rows, Is.EqualTo(1));
 
-				Assert.AreEqual(5, result.Count);
+					Assert.That(result, Has.Count.EqualTo(5));
+				});
 
 				AssertPerson(IdentityPersons[0], result[0]);
 				AssertPerson(IdentityPersons[1], result[1]);
@@ -90,7 +96,7 @@ namespace Tests.xUpdate
 					.DeleteWhenMatchedAnd((t, s) => s.Diagnosis != "sick")
 					.Merge();
 
-				Assert.AreEqual(1, cnt);
+				Assert.That(cnt, Is.EqualTo(1));
 			}
 		}
 
@@ -115,7 +121,7 @@ namespace Tests.xUpdate
 					.DeleteWhenMatchedAnd((t, s) => s.Patient!.Diagnosis != "sick")
 					.Merge();
 
-				Assert.AreEqual(1, cnt);
+				Assert.That(cnt, Is.EqualTo(1));
 			}
 		}
 
@@ -140,12 +146,12 @@ namespace Tests.xUpdate
 					.DeleteWhenMatchedAnd((t, s) => s.Patient!.Diagnosis != "sick")
 					.Merge();
 
-				Assert.AreEqual(5, cnt);
+				Assert.That(cnt, Is.EqualTo(5));
 			}
 		}
 
 		[Test]
-		public void OtherSourceAssociationInDeleteBySourcePredicate([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
+		public void OtherSourceAssociationInDeleteBySourcePredicate([MergeNotMatchedBySourceDataContextSource(true, TestProvName.AllPostgreSQL17Plus)] string context)
 		{
 			ResetPersonIdentity(context);
 
@@ -163,9 +169,12 @@ namespace Tests.xUpdate
 
 				var result = db.GetTable<MPerson>().OrderBy(_ => _.ID).ToList();
 
-				Assert.AreEqual(1, rows);
+				Assert.Multiple(() =>
+				{
+					Assert.That(rows, Is.EqualTo(1));
 
-				Assert.AreEqual(5, result.Count);
+					Assert.That(result, Has.Count.EqualTo(5));
+				});
 
 				AssertPerson(IdentityPersons[0], result[0]);
 				AssertPerson(IdentityPersons[1], result[1]);
@@ -199,23 +208,28 @@ namespace Tests.xUpdate
 
 				var result = db.GetTable<MPatient>().OrderBy(_ => _.PersonID).ToList();
 
-				Assert.AreEqual(1, rows);
+				Assert.Multiple(() =>
+				{
+					Assert.That(rows, Is.EqualTo(1));
 
-				Assert.AreEqual(1, result.Count);
+					Assert.That(result, Has.Count.EqualTo(1));
+				});
 
-				Assert.AreEqual(IdentityPatients[0].PersonID, result[0].PersonID);
-				Assert.AreEqual(IdentityPatients[0].Diagnosis, result[0].Diagnosis);
+				Assert.Multiple(() =>
+				{
+					Assert.That(result[0].PersonID, Is.EqualTo(IdentityPatients[0].PersonID));
+					Assert.That(result[0].Diagnosis, Is.EqualTo(IdentityPatients[0].Diagnosis));
+				});
 			}
 		}
 
-		// ASE: server dies
 		// Oracle: associations in insert setter
 		[Test]
 		public void OtherSourceAssociationInInsertCreate([MergeDataContextSource(
 			false,
 			TestProvName.AllOracle,
-			TestProvName.AllSybase, TestProvName.AllInformix,
-			TestProvName.AllSapHana, ProviderName.Firebird)]
+			TestProvName.AllInformix,
+			TestProvName.AllSapHana, ProviderName.Firebird25)]
 			string context)
 		{
 			ResetPersonIdentity(context);
@@ -239,9 +253,12 @@ namespace Tests.xUpdate
 
 				var result = db.GetTable<MPerson>().OrderBy(_ => _.ID).ToList();
 
-				Assert.AreEqual(1, rows);
+				Assert.Multiple(() =>
+				{
+					Assert.That(rows, Is.EqualTo(1));
 
-				Assert.AreEqual(7, result.Count);
+					Assert.That(result, Has.Count.EqualTo(7));
+				});
 
 				AssertPerson(IdentityPersons[0], result[0]);
 				AssertPerson(IdentityPersons[1], result[1]);
@@ -250,15 +267,17 @@ namespace Tests.xUpdate
 				AssertPerson(IdentityPersons[4], result[4]);
 				AssertPerson(IdentityPersons[5], result[5]);
 
-				Assert.AreEqual(IdentityPersons[5].ID + 1, result[6].ID);
-				Assert.AreEqual(Gender.Unknown, result[6].Gender);
-				Assert.AreEqual("sick", result[6].FirstName);
-				Assert.AreEqual("Inserted 2", result[6].LastName);
-				Assert.IsNull(result[6].MiddleName);
+				Assert.Multiple(() =>
+				{
+					Assert.That(result[6].ID, Is.EqualTo(IdentityPersons[5].ID + 1));
+					Assert.That(result[6].Gender, Is.EqualTo(Gender.Unknown));
+					Assert.That(result[6].FirstName, Is.EqualTo("sick"));
+					Assert.That(result[6].LastName, Is.EqualTo("Inserted 2"));
+					Assert.That(result[6].MiddleName, Is.Null);
+				});
 			}
 		}
 
-		// ASE: server dies
 		// Oracle: associations in insert setters
 		// Informix: associations doesn't work right now
 		// SAP: associations doesn't work right now
@@ -266,7 +285,7 @@ namespace Tests.xUpdate
 		public void OtherSourceAssociationInInsertCreate2([MergeDataContextSource(
 			false,
 			TestProvName.AllOracle,
-			TestProvName.AllSybase, TestProvName.AllInformix, TestProvName.AllSapHana)]
+			TestProvName.AllInformix, TestProvName.AllSapHana)]
 			string context)
 		{
 			ResetPersonIdentity(context);
@@ -290,9 +309,12 @@ namespace Tests.xUpdate
 
 				var result = db.GetTable<MPerson>().OrderBy(_ => _.ID).ToList();
 
-				Assert.AreEqual(1, rows);
+				Assert.Multiple(() =>
+				{
+					Assert.That(rows, Is.EqualTo(1));
 
-				Assert.AreEqual(7, result.Count);
+					Assert.That(result, Has.Count.EqualTo(7));
+				});
 
 				AssertPerson(IdentityPersons[0], result[0]);
 				AssertPerson(IdentityPersons[1], result[1]);
@@ -301,20 +323,22 @@ namespace Tests.xUpdate
 				AssertPerson(IdentityPersons[4], result[4]);
 				AssertPerson(IdentityPersons[5], result[5]);
 
-				Assert.AreEqual(IdentityPersons[5].ID + 1, result[6].ID);
-				Assert.AreEqual(Gender.Unknown, result[6].Gender);
-				Assert.AreEqual("sick", result[6].FirstName);
-				Assert.AreEqual("Inserted 2", result[6].LastName);
-				Assert.IsNull(result[6].MiddleName);
+				Assert.Multiple(() =>
+				{
+					Assert.That(result[6].ID, Is.EqualTo(IdentityPersons[5].ID + 1));
+					Assert.That(result[6].Gender, Is.EqualTo(Gender.Unknown));
+					Assert.That(result[6].FirstName, Is.EqualTo("sick"));
+					Assert.That(result[6].LastName, Is.EqualTo("Inserted 2"));
+					Assert.That(result[6].MiddleName, Is.Null);
+				});
 			}
 		}
 
-		// ASE: server dies
 		[Test]
 		public void OtherSourceAssociationInInsertPredicate([MergeDataContextSource(
 			false,
 			TestProvName.AllSybase, TestProvName.AllInformix,
-			TestProvName.AllSapHana, ProviderName.Firebird)]
+			TestProvName.AllSapHana, ProviderName.Firebird25)]
 			string context)
 		{
 			ResetPersonIdentity(context);
@@ -340,7 +364,7 @@ namespace Tests.xUpdate
 
 				AssertRowCount(1, rows, context);
 
-				Assert.AreEqual(7, result.Count);
+				Assert.That(result, Has.Count.EqualTo(7));
 
 				AssertPerson(IdentityPersons[0], result[0]);
 				AssertPerson(IdentityPersons[1], result[1]);
@@ -349,11 +373,14 @@ namespace Tests.xUpdate
 				AssertPerson(IdentityPersons[4], result[4]);
 				AssertPerson(IdentityPersons[5], result[5]);
 
-				Assert.AreEqual(IdentityPersons[5].ID + 1, result[6].ID);
-				Assert.AreEqual(Gender.Male, result[6].Gender);
-				Assert.AreEqual("Inserted 1", result[6].FirstName);
-				Assert.AreEqual("Inserted 2", result[6].LastName);
-				Assert.IsNull(result[6].MiddleName);
+				Assert.Multiple(() =>
+				{
+					Assert.That(result[6].ID, Is.EqualTo(IdentityPersons[5].ID + 1));
+					Assert.That(result[6].Gender, Is.EqualTo(Gender.Male));
+					Assert.That(result[6].FirstName, Is.EqualTo("Inserted 1"));
+					Assert.That(result[6].LastName, Is.EqualTo("Inserted 2"));
+					Assert.That(result[6].MiddleName, Is.Null);
+				});
 			}
 		}
 
@@ -388,29 +415,29 @@ namespace Tests.xUpdate
 
 				AssertRowCount(1, rows, context);
 
-				Assert.AreEqual(6, result.Count);
+				Assert.That(result, Has.Count.EqualTo(6));
 
 				AssertPerson(IdentityPersons[0], result[0]);
 				AssertPerson(IdentityPersons[1], result[1]);
 				AssertPerson(IdentityPersons[2], result[2]);
 
-				Assert.AreEqual(IdentityPersons[3].ID, result[3].ID);
-				Assert.AreEqual(IdentityPersons[3].Gender, result[3].Gender);
-				Assert.AreEqual(IdentityPersons[3].FirstName, result[3].FirstName);
-				Assert.AreEqual(IdentityPersons[3].LastName, result[3].LastName);
-				Assert.AreEqual("R.I.P.", result[3].MiddleName);
+				Assert.Multiple(() =>
+				{
+					Assert.That(result[3].ID, Is.EqualTo(IdentityPersons[3].ID));
+					Assert.That(result[3].Gender, Is.EqualTo(IdentityPersons[3].Gender));
+					Assert.That(result[3].FirstName, Is.EqualTo(IdentityPersons[3].FirstName));
+					Assert.That(result[3].LastName, Is.EqualTo(IdentityPersons[3].LastName));
+					Assert.That(result[3].MiddleName, Is.EqualTo("R.I.P."));
+				});
 
 				AssertPerson(IdentityPersons[4], result[4]);
 				AssertPerson(IdentityPersons[5], result[5]);
 			}
 		}
 
-		// ASE: server dies
 		// Informix: associations doesn't work right now
 		[Test]
-		public void OtherSourceAssociationInUpdate([MergeDataContextSource(
-			false,
-			TestProvName.AllSybase, TestProvName.AllInformix)]
+		public void OtherSourceAssociationInUpdate([MergeDataContextSource(false, TestProvName.AllInformix)]
 			string context)
 		{
 			ResetPersonIdentity(context);
@@ -435,17 +462,20 @@ namespace Tests.xUpdate
 
 				AssertRowCount(1, rows, context);
 
-				Assert.AreEqual(6, result.Count);
+				Assert.That(result, Has.Count.EqualTo(6));
 
 				AssertPerson(IdentityPersons[0], result[0]);
 				AssertPerson(IdentityPersons[1], result[1]);
 				AssertPerson(IdentityPersons[2], result[2]);
 
-				Assert.AreEqual(IdentityPersons[3].ID, result[3].ID);
-				Assert.AreEqual(IdentityPersons[3].Gender, result[3].Gender);
-				Assert.AreEqual("first 4", result[3].FirstName);
-				Assert.AreEqual("last very sick", result[3].LastName);
-				Assert.AreEqual("first very sick", result[3].MiddleName);
+				Assert.Multiple(() =>
+				{
+					Assert.That(result[3].ID, Is.EqualTo(IdentityPersons[3].ID));
+					Assert.That(result[3].Gender, Is.EqualTo(IdentityPersons[3].Gender));
+					Assert.That(result[3].FirstName, Is.EqualTo("first 4"));
+					Assert.That(result[3].LastName, Is.EqualTo("last very sick"));
+					Assert.That(result[3].MiddleName, Is.EqualTo("first very sick"));
+				});
 
 				AssertPerson(IdentityPersons[4], result[4]);
 				AssertPerson(IdentityPersons[5], result[5]);
@@ -453,7 +483,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void OtherSourceAssociationInUpdateBySource([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
+		public void OtherSourceAssociationInUpdateBySource([MergeNotMatchedBySourceDataContextSource(true)] string context)
 		{
 			ResetPersonIdentity(context);
 
@@ -476,18 +506,24 @@ namespace Tests.xUpdate
 
 				var result = db.GetTable<MPerson>().OrderBy(_ => _.ID).ToList();
 
-				Assert.AreEqual(1, rows);
+				Assert.Multiple(() =>
+				{
+					Assert.That(rows, Is.EqualTo(1));
 
-				Assert.AreEqual(6, result.Count);
+					Assert.That(result, Has.Count.EqualTo(6));
+				});
 
 				AssertPerson(IdentityPersons[0], result[0]);
 				AssertPerson(IdentityPersons[1], result[1]);
 
-				Assert.AreEqual(IdentityPersons[2].ID, result[2].ID);
-				Assert.AreEqual(IdentityPersons[2].Gender, result[2].Gender);
-				Assert.AreEqual("Updated", result[2].FirstName);
-				Assert.AreEqual("sick", result[2].LastName);
-				Assert.AreEqual(IdentityPersons[2].MiddleName, result[2].MiddleName);
+				Assert.Multiple(() =>
+				{
+					Assert.That(result[2].ID, Is.EqualTo(IdentityPersons[2].ID));
+					Assert.That(result[2].Gender, Is.EqualTo(IdentityPersons[2].Gender));
+					Assert.That(result[2].FirstName, Is.EqualTo("Updated"));
+					Assert.That(result[2].LastName, Is.EqualTo("sick"));
+					Assert.That(result[2].MiddleName, Is.EqualTo(IdentityPersons[2].MiddleName));
+				});
 
 				AssertPerson(IdentityPersons[3], result[3]);
 				AssertPerson(IdentityPersons[4], result[4]);
@@ -496,8 +532,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void OtherSourceAssociationInUpdateBySourcePredicate(
-			[IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
+		public void OtherSourceAssociationInUpdateBySourcePredicate([MergeNotMatchedBySourceDataContextSource(true)] string context)
 		{
 			ResetPersonIdentity(context);
 
@@ -519,31 +554,36 @@ namespace Tests.xUpdate
 
 				var result = db.GetTable<MPerson>().OrderBy(_ => _.ID).ToList();
 
-				Assert.AreEqual(1, rows);
+				Assert.Multiple(() =>
+				{
+					Assert.That(rows, Is.EqualTo(1));
 
-				Assert.AreEqual(6, result.Count);
+					Assert.That(result, Has.Count.EqualTo(6));
+				});
 
 				AssertPerson(IdentityPersons[0], result[0]);
 				AssertPerson(IdentityPersons[1], result[1]);
 				AssertPerson(IdentityPersons[2], result[2]);
 
-				Assert.AreEqual(IdentityPersons[3].ID, result[3].ID);
-				Assert.AreEqual(IdentityPersons[3].Gender, result[3].Gender);
-				Assert.AreEqual("Updated", result[3].FirstName);
-				Assert.AreEqual(IdentityPersons[3].LastName, result[3].LastName);
-				Assert.AreEqual(IdentityPersons[3].MiddleName, result[3].MiddleName);
+				Assert.Multiple(() =>
+				{
+					Assert.That(result[3].ID, Is.EqualTo(IdentityPersons[3].ID));
+					Assert.That(result[3].Gender, Is.EqualTo(IdentityPersons[3].Gender));
+					Assert.That(result[3].FirstName, Is.EqualTo("Updated"));
+					Assert.That(result[3].LastName, Is.EqualTo(IdentityPersons[3].LastName));
+					Assert.That(result[3].MiddleName, Is.EqualTo(IdentityPersons[3].MiddleName));
+				});
 
 				AssertPerson(IdentityPersons[4], result[4]);
 				AssertPerson(IdentityPersons[5], result[5]);
 			}
 		}
 
-		// ASE: server dies
 		[Test]
 		public void OtherSourceAssociationInUpdatePredicate([MergeDataContextSource(
 			false,
 			TestProvName.AllSybase, TestProvName.AllInformix,
-			TestProvName.AllSapHana, ProviderName.Firebird)]
+			TestProvName.AllSapHana, ProviderName.Firebird25)]
 			string context)
 		{
 			ResetPersonIdentity(context);
@@ -569,17 +609,20 @@ namespace Tests.xUpdate
 
 				AssertRowCount(1, rows, context);
 
-				Assert.AreEqual(6, result.Count);
+				Assert.That(result, Has.Count.EqualTo(6));
 
 				AssertPerson(IdentityPersons[0], result[0]);
 				AssertPerson(IdentityPersons[1], result[1]);
 				AssertPerson(IdentityPersons[2], result[2]);
 
-				Assert.AreEqual(IdentityPersons[3].ID, result[3].ID);
-				Assert.AreEqual(IdentityPersons[3].Gender, result[3].Gender);
-				Assert.AreEqual("first 4", result[3].FirstName);
-				Assert.AreEqual("Updated", result[3].LastName);
-				Assert.AreEqual(IdentityPersons[3].MiddleName, result[3].MiddleName);
+				Assert.Multiple(() =>
+				{
+					Assert.That(result[3].ID, Is.EqualTo(IdentityPersons[3].ID));
+					Assert.That(result[3].Gender, Is.EqualTo(IdentityPersons[3].Gender));
+					Assert.That(result[3].FirstName, Is.EqualTo("first 4"));
+					Assert.That(result[3].LastName, Is.EqualTo("Updated"));
+					Assert.That(result[3].MiddleName, Is.EqualTo(IdentityPersons[3].MiddleName));
+				});
 
 				AssertPerson(IdentityPersons[4], result[4]);
 				AssertPerson(IdentityPersons[5], result[5]);
@@ -587,8 +630,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void SameSourceAssociationInDeleteBySourcePredicate(
-			[IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
+		public void SameSourceAssociationInDeleteBySourcePredicate([MergeNotMatchedBySourceDataContextSource(true, TestProvName.AllPostgreSQL17Plus)] string context)
 		{
 			ResetPersonIdentity(context);
 
@@ -606,9 +648,12 @@ namespace Tests.xUpdate
 
 				var result = db.GetTable<MPerson>().OrderBy(_ => _.ID).ToList();
 
-				Assert.AreEqual(1, rows);
+				Assert.Multiple(() =>
+				{
+					Assert.That(rows, Is.EqualTo(1));
 
-				Assert.AreEqual(5, result.Count);
+					Assert.That(result, Has.Count.EqualTo(5));
+				});
 
 				AssertPerson(IdentityPersons[0], result[0]);
 				AssertPerson(IdentityPersons[1], result[1]);
@@ -623,7 +668,7 @@ namespace Tests.xUpdate
 			false,
 			TestProvName.AllOracle,
 			TestProvName.AllSybase, TestProvName.AllInformix,
-			TestProvName.AllSapHana, ProviderName.Firebird)]
+			TestProvName.AllSapHana, ProviderName.Firebird25)]
 			string context)
 		{
 			ResetPersonIdentity(context);
@@ -642,23 +687,28 @@ namespace Tests.xUpdate
 
 				var result = db.GetTable<MPatient>().OrderBy(_ => _.PersonID).ToList();
 
-				Assert.AreEqual(1, rows);
+				Assert.Multiple(() =>
+				{
+					Assert.That(rows, Is.EqualTo(1));
 
-				Assert.AreEqual(1, result.Count);
+					Assert.That(result, Has.Count.EqualTo(1));
+				});
 
-				Assert.AreEqual(IdentityPatients[0].PersonID, result[0].PersonID);
-				Assert.AreEqual(IdentityPatients[0].Diagnosis, result[0].Diagnosis);
+				Assert.Multiple(() =>
+				{
+					Assert.That(result[0].PersonID, Is.EqualTo(IdentityPatients[0].PersonID));
+					Assert.That(result[0].Diagnosis, Is.EqualTo(IdentityPatients[0].Diagnosis));
+				});
 			}
 		}
 
-		// ASE: server dies
 		// Oracle: associations in instert setters
 		[Test]
 		public void SameSourceAssociationInInsertCreate([MergeDataContextSource(
 			false,
 			TestProvName.AllOracle,
-			TestProvName.AllSybase, TestProvName.AllInformix,
-			TestProvName.AllSapHana, ProviderName.Firebird)]
+			TestProvName.AllInformix,
+			TestProvName.AllSapHana, ProviderName.Firebird25)]
 			string context)
 		{
 			ResetPersonIdentity(context);
@@ -684,9 +734,12 @@ namespace Tests.xUpdate
 
 				var result = db.GetTable<MPerson>().OrderBy(_ => _.ID).ToList();
 
-				Assert.AreEqual(1, rows);
+				Assert.Multiple(() =>
+				{
+					Assert.That(rows, Is.EqualTo(1));
 
-				Assert.AreEqual(7, result.Count);
+					Assert.That(result, Has.Count.EqualTo(7));
+				});
 
 				AssertPerson(IdentityPersons[0], result[0]);
 				AssertPerson(IdentityPersons[1], result[1]);
@@ -695,15 +748,17 @@ namespace Tests.xUpdate
 				AssertPerson(IdentityPersons[4], result[4]);
 				AssertPerson(IdentityPersons[5], result[5]);
 
-				Assert.AreEqual(IdentityPersons[5].ID + 1, result[6].ID);
-				Assert.AreEqual(Gender.Unknown, result[6].Gender);
-				Assert.AreEqual("sick", result[6].FirstName);
-				Assert.AreEqual("Inserted 2", result[6].LastName);
-				Assert.IsNull(result[6].MiddleName);
+				Assert.Multiple(() =>
+				{
+					Assert.That(result[6].ID, Is.EqualTo(IdentityPersons[5].ID + 1));
+					Assert.That(result[6].Gender, Is.EqualTo(Gender.Unknown));
+					Assert.That(result[6].FirstName, Is.EqualTo("sick"));
+					Assert.That(result[6].LastName, Is.EqualTo("Inserted 2"));
+					Assert.That(result[6].MiddleName, Is.Null);
+				});
 			}
 		}
 
-		// ASE: server dies
 		// Oracle: associations in instert setters
 		// Informix: associations doesn't work right now
 		// SAP: associations doesn't work right now
@@ -711,7 +766,7 @@ namespace Tests.xUpdate
 		public void SameSourceAssociationInInsertCreate2([MergeDataContextSource(
 			false,
 			TestProvName.AllOracle,
-			TestProvName.AllSybase, TestProvName.AllInformix, TestProvName.AllSapHana)]
+			TestProvName.AllInformix, TestProvName.AllSapHana)]
 			string context)
 		{
 			ResetPersonIdentity(context);
@@ -735,9 +790,12 @@ namespace Tests.xUpdate
 
 				var result = db.GetTable<MPerson>().OrderBy(_ => _.ID).ToList();
 
-				Assert.AreEqual(1, rows);
+				Assert.Multiple(() =>
+				{
+					Assert.That(rows, Is.EqualTo(1));
 
-				Assert.AreEqual(7, result.Count);
+					Assert.That(result, Has.Count.EqualTo(7));
+				});
 
 				AssertPerson(IdentityPersons[0], result[0]);
 				AssertPerson(IdentityPersons[1], result[1]);
@@ -746,20 +804,22 @@ namespace Tests.xUpdate
 				AssertPerson(IdentityPersons[4], result[4]);
 				AssertPerson(IdentityPersons[5], result[5]);
 
-				Assert.AreEqual(IdentityPersons[5].ID + 1, result[6].ID);
-				Assert.AreEqual(Gender.Unknown, result[6].Gender);
-				Assert.AreEqual("sick", result[6].FirstName);
-				Assert.AreEqual("Inserted 2", result[6].LastName);
-				Assert.IsNull(result[6].MiddleName);
+				Assert.Multiple(() =>
+				{
+					Assert.That(result[6].ID, Is.EqualTo(IdentityPersons[5].ID + 1));
+					Assert.That(result[6].Gender, Is.EqualTo(Gender.Unknown));
+					Assert.That(result[6].FirstName, Is.EqualTo("sick"));
+					Assert.That(result[6].LastName, Is.EqualTo("Inserted 2"));
+					Assert.That(result[6].MiddleName, Is.Null);
+				});
 			}
 		}
 
-		// ASE: server dies
 		[Test]
 		public void SameSourceAssociationInInsertPredicate([MergeDataContextSource(
 			false,
 			TestProvName.AllSybase, TestProvName.AllInformix,
-			TestProvName.AllSapHana, ProviderName.Firebird)]
+			TestProvName.AllSapHana, ProviderName.Firebird25)]
 			string context)
 		{
 			ResetPersonIdentity(context);
@@ -787,7 +847,7 @@ namespace Tests.xUpdate
 
 				AssertRowCount(1, rows, context);
 
-				Assert.AreEqual(7, result.Count);
+				Assert.That(result, Has.Count.EqualTo(7));
 
 				AssertPerson(IdentityPersons[0], result[0]);
 				AssertPerson(IdentityPersons[1], result[1]);
@@ -796,11 +856,14 @@ namespace Tests.xUpdate
 				AssertPerson(IdentityPersons[4], result[4]);
 				AssertPerson(IdentityPersons[5], result[5]);
 
-				Assert.AreEqual(IdentityPersons[5].ID + 1, result[6].ID);
-				Assert.AreEqual(Gender.Male, result[6].Gender);
-				Assert.AreEqual("Inserted 1", result[6].FirstName);
-				Assert.AreEqual("Inserted 2", result[6].LastName);
-				Assert.IsNull(result[6].MiddleName);
+				Assert.Multiple(() =>
+				{
+					Assert.That(result[6].ID, Is.EqualTo(IdentityPersons[5].ID + 1));
+					Assert.That(result[6].Gender, Is.EqualTo(Gender.Male));
+					Assert.That(result[6].FirstName, Is.EqualTo("Inserted 1"));
+					Assert.That(result[6].LastName, Is.EqualTo("Inserted 2"));
+					Assert.That(result[6].MiddleName, Is.Null);
+				});
 			}
 		}
 
@@ -835,30 +898,29 @@ namespace Tests.xUpdate
 
 				AssertRowCount(1, rows, context);
 
-				Assert.AreEqual(6, result.Count);
+				Assert.That(result, Has.Count.EqualTo(6));
 
 				AssertPerson(IdentityPersons[0], result[0]);
 				AssertPerson(IdentityPersons[1], result[1]);
 				AssertPerson(IdentityPersons[2], result[2]);
 
-				Assert.AreEqual(IdentityPersons[3].ID, result[3].ID);
-				Assert.AreEqual(IdentityPersons[3].Gender, result[3].Gender);
-				Assert.AreEqual(IdentityPersons[3].FirstName, result[3].FirstName);
-				Assert.AreEqual(IdentityPersons[3].LastName, result[3].LastName);
-				Assert.AreEqual("R.I.P.", result[3].MiddleName);
+				Assert.Multiple(() =>
+				{
+					Assert.That(result[3].ID, Is.EqualTo(IdentityPersons[3].ID));
+					Assert.That(result[3].Gender, Is.EqualTo(IdentityPersons[3].Gender));
+					Assert.That(result[3].FirstName, Is.EqualTo(IdentityPersons[3].FirstName));
+					Assert.That(result[3].LastName, Is.EqualTo(IdentityPersons[3].LastName));
+					Assert.That(result[3].MiddleName, Is.EqualTo("R.I.P."));
+				});
 
 				AssertPerson(IdentityPersons[4], result[4]);
 				AssertPerson(IdentityPersons[5], result[5]);
 			}
 		}
 
-		// ASE: server dies
 		// Informix: associations doesn't work right now
 		[Test]
-		public void SameSourceAssociationInUpdate([MergeDataContextSource(
-			false,
-			TestProvName.AllSybase, TestProvName.AllInformix)]
-			string context)
+		public void SameSourceAssociationInUpdate([MergeDataContextSource(false, TestProvName.AllInformix)] string context)
 		{
 			ResetPersonIdentity(context);
 
@@ -882,17 +944,20 @@ namespace Tests.xUpdate
 
 				AssertRowCount(1, rows, context);
 
-				Assert.AreEqual(6, result.Count);
+				Assert.That(result, Has.Count.EqualTo(6));
 
 				AssertPerson(IdentityPersons[0], result[0]);
 				AssertPerson(IdentityPersons[1], result[1]);
 				AssertPerson(IdentityPersons[2], result[2]);
 
-				Assert.AreEqual(IdentityPersons[3].ID, result[3].ID);
-				Assert.AreEqual(IdentityPersons[3].Gender, result[3].Gender);
-				Assert.AreEqual("first 4", result[3].FirstName);
-				Assert.AreEqual("last very sick", result[3].LastName);
-				Assert.AreEqual("first very sick", result[3].MiddleName);
+				Assert.Multiple(() =>
+				{
+					Assert.That(result[3].ID, Is.EqualTo(IdentityPersons[3].ID));
+					Assert.That(result[3].Gender, Is.EqualTo(IdentityPersons[3].Gender));
+					Assert.That(result[3].FirstName, Is.EqualTo("first 4"));
+					Assert.That(result[3].LastName, Is.EqualTo("last very sick"));
+					Assert.That(result[3].MiddleName, Is.EqualTo("first very sick"));
+				});
 
 				AssertPerson(IdentityPersons[4], result[4]);
 				AssertPerson(IdentityPersons[5], result[5]);
@@ -900,7 +965,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void SameSourceAssociationInUpdateBySource([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
+		public void SameSourceAssociationInUpdateBySource([MergeNotMatchedBySourceDataContextSource(true)] string context)
 		{
 			ResetPersonIdentity(context);
 
@@ -924,18 +989,24 @@ namespace Tests.xUpdate
 
 				var result = db.GetTable<MPerson>().OrderBy(_ => _.ID).ToList();
 
-				Assert.AreEqual(1, rows);
+				Assert.Multiple(() =>
+				{
+					Assert.That(rows, Is.EqualTo(1));
 
-				Assert.AreEqual(6, result.Count);
+					Assert.That(result, Has.Count.EqualTo(6));
+				});
 
 				AssertPerson(IdentityPersons[0], result[0]);
 				AssertPerson(IdentityPersons[1], result[1]);
 
-				Assert.AreEqual(IdentityPersons[2].ID, result[2].ID);
-				Assert.AreEqual(IdentityPersons[2].Gender, result[2].Gender);
-				Assert.AreEqual("Updated", result[2].FirstName);
-				Assert.AreEqual("sick", result[2].LastName);
-				Assert.AreEqual(IdentityPersons[2].MiddleName, result[2].MiddleName);
+				Assert.Multiple(() =>
+				{
+					Assert.That(result[2].ID, Is.EqualTo(IdentityPersons[2].ID));
+					Assert.That(result[2].Gender, Is.EqualTo(IdentityPersons[2].Gender));
+					Assert.That(result[2].FirstName, Is.EqualTo("Updated"));
+					Assert.That(result[2].LastName, Is.EqualTo("sick"));
+					Assert.That(result[2].MiddleName, Is.EqualTo(IdentityPersons[2].MiddleName));
+				});
 
 				AssertPerson(IdentityPersons[3], result[3]);
 				AssertPerson(IdentityPersons[4], result[4]);
@@ -944,8 +1015,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void SameSourceAssociationInUpdateBySourcePredicate(
-			[IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
+		public void SameSourceAssociationInUpdateBySourcePredicate([MergeNotMatchedBySourceDataContextSource(true)] string context)
 		{
 			ResetPersonIdentity(context);
 
@@ -968,31 +1038,36 @@ namespace Tests.xUpdate
 
 				var result = db.GetTable<MPerson>().OrderBy(_ => _.ID).ToList();
 
-				Assert.AreEqual(1, rows);
+				Assert.Multiple(() =>
+				{
+					Assert.That(rows, Is.EqualTo(1));
 
-				Assert.AreEqual(6, result.Count);
+					Assert.That(result, Has.Count.EqualTo(6));
+				});
 
 				AssertPerson(IdentityPersons[0], result[0]);
 				AssertPerson(IdentityPersons[1], result[1]);
 				AssertPerson(IdentityPersons[2], result[2]);
 
-				Assert.AreEqual(IdentityPersons[3].ID, result[3].ID);
-				Assert.AreEqual(IdentityPersons[3].Gender, result[3].Gender);
-				Assert.AreEqual("Updated", result[3].FirstName);
-				Assert.AreEqual(IdentityPersons[3].LastName, result[3].LastName);
-				Assert.AreEqual(IdentityPersons[3].MiddleName, result[3].MiddleName);
+				Assert.Multiple(() =>
+				{
+					Assert.That(result[3].ID, Is.EqualTo(IdentityPersons[3].ID));
+					Assert.That(result[3].Gender, Is.EqualTo(IdentityPersons[3].Gender));
+					Assert.That(result[3].FirstName, Is.EqualTo("Updated"));
+					Assert.That(result[3].LastName, Is.EqualTo(IdentityPersons[3].LastName));
+					Assert.That(result[3].MiddleName, Is.EqualTo(IdentityPersons[3].MiddleName));
+				});
 
 				AssertPerson(IdentityPersons[4], result[4]);
 				AssertPerson(IdentityPersons[5], result[5]);
 			}
 		}
 
-		// ASE: server dies
 		[Test]
 		public void SameSourceAssociationInUpdatePredicate([MergeDataContextSource(
 			false,
 			TestProvName.AllSybase, TestProvName.AllInformix,
-			TestProvName.AllSapHana, ProviderName.Firebird)]
+			TestProvName.AllSapHana, ProviderName.Firebird25)]
 			string context)
 		{
 			ResetPersonIdentity(context);
@@ -1018,17 +1093,20 @@ namespace Tests.xUpdate
 
 				AssertRowCount(1, rows, context);
 
-				Assert.AreEqual(6, result.Count);
+				Assert.That(result, Has.Count.EqualTo(6));
 
 				AssertPerson(IdentityPersons[0], result[0]);
 				AssertPerson(IdentityPersons[1], result[1]);
 				AssertPerson(IdentityPersons[2], result[2]);
 
-				Assert.AreEqual(IdentityPersons[3].ID, result[3].ID);
-				Assert.AreEqual(IdentityPersons[3].Gender, result[3].Gender);
-				Assert.AreEqual(IdentityPersons[3].FirstName, result[3].FirstName);
-				Assert.AreEqual(IdentityPersons[3].LastName, result[3].LastName);
-				Assert.AreEqual("Updated", result[3].MiddleName);
+				Assert.Multiple(() =>
+				{
+					Assert.That(result[3].ID, Is.EqualTo(IdentityPersons[3].ID));
+					Assert.That(result[3].Gender, Is.EqualTo(IdentityPersons[3].Gender));
+					Assert.That(result[3].FirstName, Is.EqualTo(IdentityPersons[3].FirstName));
+					Assert.That(result[3].LastName, Is.EqualTo(IdentityPersons[3].LastName));
+					Assert.That(result[3].MiddleName, Is.EqualTo("Updated"));
+				});
 
 				AssertPerson(IdentityPersons[4], result[4]);
 				AssertPerson(IdentityPersons[5], result[5]);
@@ -1049,9 +1127,12 @@ namespace Tests.xUpdate
 				var doctors = db.GetTable<MDoctor>().OrderBy(_ => _.PersonID).ToList();
 				var persons = db.GetTable<MPerson>().OrderBy(_ => _.ID).ToList();
 
-				Assert.AreEqual(IdentityPersons.Length, persons.Count);
-				Assert.AreEqual(IdentityPatients.Length, patients.Count);
-				Assert.AreEqual(IdentityDoctors.Length, doctors.Count);
+				Assert.Multiple(() =>
+				{
+					Assert.That(persons, Has.Count.EqualTo(IdentityPersons.Length));
+					Assert.That(patients, Has.Count.EqualTo(IdentityPatients.Length));
+					Assert.That(doctors, Has.Count.EqualTo(IdentityDoctors.Length));
+				});
 
 				for (var i = 0; i < persons.Count; i++)
 				{
@@ -1060,14 +1141,20 @@ namespace Tests.xUpdate
 
 				for (var i = 0; i < patients.Count; i++)
 				{
-					Assert.AreEqual(IdentityPatients[i].PersonID, patients[i].PersonID);
-					Assert.AreEqual(IdentityPatients[i].Diagnosis, patients[i].Diagnosis);
+					Assert.Multiple(() =>
+					{
+						Assert.That(patients[i].PersonID, Is.EqualTo(IdentityPatients[i].PersonID));
+						Assert.That(patients[i].Diagnosis, Is.EqualTo(IdentityPatients[i].Diagnosis));
+					});
 				}
 
 				for (var i = 0; i < doctors.Count; i++)
 				{
-					Assert.AreEqual(IdentityDoctors[i].PersonID, doctors[i].PersonID);
-					Assert.AreEqual(IdentityDoctors[i].Taxonomy, doctors[i].Taxonomy);
+					Assert.Multiple(() =>
+					{
+						Assert.That(doctors[i].PersonID, Is.EqualTo(IdentityDoctors[i].PersonID));
+						Assert.That(doctors[i].Taxonomy, Is.EqualTo(IdentityDoctors[i].Taxonomy));
+					});
 				}
 			}
 		}
@@ -1099,7 +1186,7 @@ namespace Tests.xUpdate
 
 				AssertRowCount(1, rows, context);
 
-				Assert.AreEqual(5, result.Count);
+				Assert.That(result, Has.Count.EqualTo(5));
 
 				AssertPerson(IdentityPersons[0], result[0]);
 				AssertPerson(IdentityPersons[1], result[1]);
@@ -1136,7 +1223,7 @@ namespace Tests.xUpdate
 
 				AssertRowCount(1, rows, context);
 
-				Assert.AreEqual(5, result.Count);
+				Assert.That(result, Has.Count.EqualTo(5));
 
 				AssertPerson(IdentityPersons[0], result[0]);
 				AssertPerson(IdentityPersons[1], result[1]);

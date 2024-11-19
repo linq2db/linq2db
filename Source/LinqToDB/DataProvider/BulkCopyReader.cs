@@ -7,9 +7,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
-#if NATIVE_ASYNC
 using System.Threading;
-#endif
 
 namespace LinqToDB.DataProvider
 {
@@ -20,14 +18,8 @@ namespace LinqToDB.DataProvider
 
 	public class BulkCopyReader<T> : BulkCopyReader, IAsyncDisposable
 	{
-#if !NATIVE_ASYNC
-#pragma warning disable CA2213 // Disposable fields should be disposed
-		readonly IEnumerator<T>?      _enumerator;
-#pragma warning restore CA2213 // Disposable fields should be disposed
-#else
 		readonly IEnumerator<T>?      _enumerator;
 		readonly IAsyncEnumerator<T>? _asyncEnumerator;
-#endif
 
 		public BulkCopyReader(DataConnection dataConnection, List<ColumnDescriptor> columns, IEnumerable<T> collection)
 			: base(dataConnection, columns)
@@ -35,7 +27,6 @@ namespace LinqToDB.DataProvider
 			_enumerator = collection.GetEnumerator();
 		}
 
-#if NATIVE_ASYNC
 		public BulkCopyReader(DataConnection dataConnection, List<ColumnDescriptor> columns, IAsyncEnumerable<T> collection, CancellationToken cancellationToken)
 			: base(dataConnection, columns)
 		{
@@ -52,22 +43,12 @@ namespace LinqToDB.DataProvider
 
 		protected override object Current
 			=> (_enumerator != null ? _enumerator.Current : _asyncEnumerator!.Current)!;
-#else
-		protected override bool MoveNext()
-			=> _enumerator!.MoveNext();
 
-		protected override object Current
-			=> _enumerator!.Current!;
-#endif
-
-#if NATIVE_ASYNC
 		protected override ValueTask<bool> MoveNextAsync()
 			=> _enumerator != null ? new ValueTask<bool>(_enumerator.MoveNext()) : _asyncEnumerator!.MoveNextAsync();
-#endif
 
-#region Implementation of IDisposable
+		#region Implementation of IDisposable
 
-#if NATIVE_ASYNC
 #pragma warning disable CA2215 // CA2215: Dispose methods should call base class dispose
 		protected override void Dispose(bool disposing)
 #pragma warning restore CA2215 // CA2215: Dispose methods should call base class dispose
@@ -81,10 +62,8 @@ namespace LinqToDB.DataProvider
 				}
 			}
 		}
-#endif
 
-#if NATIVE_ASYNC
-#if NETSTANDARD2_1PLUS
+#if NET6_0_OR_GREATER
 #pragma warning disable CA2215 // CA2215: Dispose methods should call base class dispose
 		public override ValueTask DisposeAsync()
 #pragma warning restore CA2215 // CA2215: Dispose methods should call base class dispose
@@ -95,13 +74,6 @@ namespace LinqToDB.DataProvider
 			_enumerator?.Dispose();
 			return _asyncEnumerator?.DisposeAsync() ?? default;
 		}
-#else
-		public Task DisposeAsync()
-		{
-			Dispose(true);
-			return TaskEx.CompletedTask;
-		}
-#endif
 
 #endregion
 
@@ -118,9 +90,8 @@ namespace LinqToDB.DataProvider
 		readonly IReadOnlyDictionary<string, int> _ordinals;
 
 		protected abstract bool MoveNext();
-#if NATIVE_ASYNC
 		protected abstract ValueTask<bool> MoveNextAsync();
-#endif
+
 		protected abstract object Current { get; }
 
 		protected BulkCopyReader(DataConnection dataConnection, List<ColumnDescriptor> columns)
@@ -298,17 +269,15 @@ namespace LinqToDB.DataProvider
 			return b;
 		}
 
-#if NATIVE_ASYNC
 		public override async Task<bool> ReadAsync(CancellationToken cancellationToken)
 		{
-			var b = await MoveNextAsync().ConfigureAwait(Configuration.ContinueOnCapturedContext);
+			var b = await MoveNextAsync().ConfigureAwait(false);
 
 			if (b)
 				Count++;
 
 			return b;
 		}
-#endif
 
 		public override int Depth           => throw new NotImplementedException();
 

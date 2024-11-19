@@ -1,13 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
-using System.Text;
 
 namespace LinqToDB.SqlQuery
 {
-	using Common.Internal;
-
-	public class SqlSelectClause : ClauseBase, IQueryElement, ISqlExpressionWalkable
+	public class SqlSelectClause : ClauseBase, IQueryElement
 	{
 		#region Init
 
@@ -43,22 +41,12 @@ namespace LinqToDB.SqlQuery
 
 		public SqlSelectClause SubQuery(SelectQuery subQuery)
 		{
-			if (subQuery.ParentSelect != null && subQuery.ParentSelect != SelectQuery)
-				throw new ArgumentException("SqlQuery already used as subquery");
-
-			subQuery.ParentSelect = SelectQuery;
-
 			AddOrFindColumn(new SqlColumn(SelectQuery, subQuery));
 			return this;
 		}
 
 		public SqlSelectClause SubQuery(SelectQuery selectQuery, string alias)
 		{
-			if (selectQuery.ParentSelect != null && selectQuery.ParentSelect != SelectQuery)
-				throw new ArgumentException("SqlQuery already used as subquery");
-
-			selectQuery.ParentSelect = SelectQuery;
-
 			AddOrFindColumn(new SqlColumn(SelectQuery, selectQuery, alias));
 			return this;
 		}
@@ -195,7 +183,7 @@ namespace LinqToDB.SqlQuery
 				}
 			}
 
-#if DEBUG
+#if BUGCHECK
 
 			switch (col.Expression.ElementType)
 			{
@@ -303,128 +291,120 @@ namespace LinqToDB.SqlQuery
 
 		public override string ToString()
 		{
-			return ((IQueryElement)this).ToString(new StringBuilder(), new Dictionary<IQueryElement,IQueryElement>()).ToString();
+			return this.ToDebugString();
 		}
 
 #endif
 
 		#endregion
 
-		#region ISqlExpressionWalkable Members
+		#region QueryElement overrides
 
-		ISqlExpression? ISqlExpressionWalkable.Walk<TContext>(WalkOptions options, TContext context, Func<TContext, ISqlExpression, ISqlExpression> func)
+		public override QueryElementType ElementType => QueryElementType.SelectClause;
+
+		public override QueryElementTextWriter ToString(QueryElementTextWriter writer)
 		{
-			if (!options.SkipColumnDeclaration)
-			{
-				for (var i = 0; i < Columns.Count; i++)
-				{
-					var col = Columns[i];
-					var expr = col.Walk(options, context, func);
+			if (!writer.AddVisited(this))
+				return writer.Append("...");
 
-					if (expr is SqlColumn column)
-						Columns[i] = column;
-					else
-						Columns[i] = new SqlColumn(col.Parent, expr, col.Alias);
-				}
-			}
+			writer.Append("SELECT ");
 
-			TakeValue = TakeValue?.Walk(options, context, func);
-			SkipValue = SkipValue?.Walk(options, context, func);
-
-			return null;
-		}
-
-		#endregion
-
-		#region IQueryElement Members
-
-		public QueryElementType ElementType => QueryElementType.SelectClause;
-
-		StringBuilder IQueryElement.ToString(StringBuilder sb, Dictionary<IQueryElement,IQueryElement> dic)
-		{
-			if (dic.ContainsKey(this))
-				return sb.Append("...");
-
-			dic.Add(this, this);
-
-			sb.Append("SELECT ");
-
-			if (IsDistinct) sb.Append("DISTINCT ");
+			if (IsDistinct) writer.Append("DISTINCT ");
 
 			if (SkipValue != null)
 			{
-				sb.Append("SKIP ");
-				SkipValue.ToString(sb, dic);
-				sb.Append(' ');
+				writer
+					.Append("SKIP ")
+					.AppendElement(SkipValue);
+				writer.Append(' ');
 			}
 
 			if (TakeValue != null)
 			{
-				sb.Append("TAKE ");
-				TakeValue.ToString(sb, dic);
-				sb.Append(' ');
+				writer
+					.Append("TAKE ")
+					.AppendElement(TakeValue)
+					.Append(' ');
+
+				if (TakeHints != null)
+				{
+					if (TakeHints.Value.HasFlag(LinqToDB.TakeHints.Percent))
+						writer.Append("PERCENT ");
+
+					if (TakeHints.Value.HasFlag(LinqToDB.TakeHints.WithTies))
+						writer.Append("WITH TIES ");
+				}
 			}
 
-			sb.AppendLine();
+			writer.AppendLine();
 
 			if (Columns.Count == 0)
-				sb.Append("\t*, \n");
+			{
+				using(writer.IndentScope())
+					writer.AppendLine("*");
+			}
 			else
 			{
 				var columnNames = new List<string>();
-				using var csb = Pools.StringBuilder.Allocate();
+				var csb         = new QueryElementTextWriter(writer.Nullability);
 				var maxLength   = 0;
 				for (var i = 0; i < Columns.Count; i++)
 				{
-					csb.Value.Length = 0;
+					csb.Length = 0;
 					var c = Columns[i];
-					csb.Value.Append('\t');
 
-					csb.Value
+					csb
 						.Append('t')
-						.Append(c.Parent?.SourceID ?? -1)
+						.Append((c.Parent?.SourceID ?? -1).ToString(NumberFormatInfo.InvariantInfo))
 #if DEBUG
-						.Append('[').Append(c.ColumnNumber).Append(']')
+						.Append('[').Append(c.Number).Append(']')
 #endif
 						.Append('.')
-						.Append(c.Alias ?? "c" + (i + 1));
+						.Append(c.Alias ?? FormattableString.Invariant($"c{i + 1}"));
 
-					var columnName = csb.Value.ToString();
+					var columnName = csb.ToString();
 					columnNames.Add(columnName);
 					maxLength = Math.Max(maxLength, columnName.Length);
 				}
 
-				for (var i = 0; i < Columns.Count; i++)
+				using (writer.IndentScope())
 				{
-					var c          = Columns[i];
-					var columnName = columnNames[i];
-					sb.Append(columnName)
-						.Append(' ', maxLength - columnName.Length)
-						.Append(" = ");
-
-					csb.Value.Length = 0;
-					c.Expression.ToString(csb.Value, dic);
-
-					var expressionText = csb.Value.ToString();
-					if (expressionText.Contains("\n"))
+					for (var index = 0; index < Columns.Count; index++)
 					{
-						var ident = "\t" + new string(' ', maxLength + 2);
-						expressionText = expressionText.Replace("\n", "\n" + ident);
-					}
+						var c          = Columns[index];
+						var columnName = columnNames[index];
+						writer.Append(columnName)
+							.Append(' ', maxLength - columnName.Length)
+							.Append(" = ");
 
-					sb
-						.Append(expressionText)
-						.Append(", \n");
+						using (writer.IndentScope())
+							writer.AppendElement(c.Expression);
+
+						if (writer.ToString(writer.Length - 1, 1) != "?" && c.Expression.CanBeNullable(writer.Nullability))
+							writer.Append('?');
+
+						if (index < Columns.Count - 1)
+							writer.AppendLine(",");
+						else
+							writer.AppendLine();
+					}
 				}
 			}
 
-			sb.Length -= 3;
+			writer.RemoveVisited(this);
 
-			dic.Remove(this);
-
-			return sb;
+			return writer;
 		}
 
 		#endregion
+
+		public void Cleanup()
+		{
+			IsDistinct = false;
+			TakeValue  = null;
+			TakeHints  = null;
+			SkipValue  = null;
+			Columns.Clear();
+		}
 	}
 }

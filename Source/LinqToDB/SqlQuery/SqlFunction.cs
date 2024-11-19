@@ -1,105 +1,126 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
+using System.Linq;
+
+using LinqToDB.Common;
 
 namespace LinqToDB.SqlQuery
 {
-	public class SqlFunction : ISqlExpression//ISqlTableSource
+	public class SqlFunction : SqlExpressionBase
 	{
-		public SqlFunction(Type systemType, string name, params ISqlExpression[] parameters)
-			: this(systemType, name, false, true, SqlQuery.Precedence.Primary, parameters)
+		public SqlFunction(DbDataType dbDataType, string name, params ISqlExpression[] parameters)
+			: this(dbDataType, name, false, true, SqlQuery.Precedence.Primary, ParametersNullabilityType.IfAnyParameterNullable, null, parameters)
 		{
 		}
 
-		public SqlFunction(Type systemType, string name, bool isAggregate, bool isPure, params ISqlExpression[] parameters)
-			: this(systemType, name, isAggregate, isPure, SqlQuery.Precedence.Primary, parameters)
+		public SqlFunction(DbDataType dbDataType, string name, bool isAggregate, bool isPure, params ISqlExpression[] parameters)
+			: this(dbDataType, name, isAggregate, isPure, SqlQuery.Precedence.Primary, ParametersNullabilityType.IfAnyParameterNullable, null, parameters)
 		{
 		}
 
-		public SqlFunction(Type systemType, string name, bool isAggregate, params ISqlExpression[] parameters)
-			: this(systemType, name, isAggregate, true, SqlQuery.Precedence.Primary, parameters)
+		public SqlFunction(DbDataType dbDataType, string name, bool isAggregate, params ISqlExpression[] parameters)
+			: this(dbDataType, name, isAggregate, true, SqlQuery.Precedence.Primary, ParametersNullabilityType.IfAnyParameterNullable, null, parameters)
 		{
 		}
 
-		public SqlFunction(Type systemType, string name, bool isAggregate, int precedence, params ISqlExpression[] parameters)
-			: this(systemType, name, isAggregate, true, precedence, parameters)
+		public SqlFunction(DbDataType dbDataType, string name, bool isAggregate, int precedence, params ISqlExpression[] parameters)
+			: this(dbDataType, name, isAggregate, true, precedence, ParametersNullabilityType.IfAnyParameterNullable, null, parameters)
 		{
 		}
 
-		public SqlFunction(Type systemType, string name, bool isAggregate, bool isPure, int precedence, params ISqlExpression[] parameters)
+		public SqlFunction(DbDataType dbDataType, string name, bool isAggregate, bool isPure, int precedence, ParametersNullabilityType nullabilityType, bool? canBeNull, params ISqlExpression[] parameters) 
 		{
-			//_sourceID = Interlocked.Increment(ref SqlQuery.SourceIDCounter);
-
-			if (systemType == null) throw new ArgumentNullException(nameof(systemType));
 			if (parameters == null) throw new ArgumentNullException(nameof(parameters));
 
 			foreach (var p in parameters)
 				if (p == null) throw new ArgumentNullException(nameof(parameters));
 
-			SystemType  = systemType;
-			Name        = name;
-			Precedence  = precedence;
-			IsAggregate = isAggregate;
-			IsPure      = isPure;
-			Parameters  = parameters;
+			Type            = dbDataType;
+			Name            = name;
+			Precedence      = precedence;
+			NullabilityType = nullabilityType;
+			_canBeNull      = canBeNull;
+			FunctionFlags = (isAggregate ? SqlFlags.IsAggregate : SqlFlags.None) |
+			                (isPure ? SqlFlags.IsPure : SqlFlags.None);
+			Parameters      = parameters;
 		}
 
-		public Type             SystemType   { get; }
-		public string           Name         { get; }
-		public int              Precedence   { get; }
-		public bool             IsAggregate  { get; }
-		public bool             IsPure       { get; }
-		public ISqlExpression[] Parameters   { get; }
+		public SqlFunction(Type systemType, string name, params ISqlExpression[] parameters)
+			: this(systemType, name, false, true, SqlQuery.Precedence.Primary, ParametersNullabilityType.IfAnyParameterNullable, null, parameters)
+		{
+		}
+
+		public SqlFunction(Type systemType, string name, bool isAggregate, bool isPure, params ISqlExpression[] parameters)
+			: this(systemType, name, isAggregate, isPure, SqlQuery.Precedence.Primary, ParametersNullabilityType.IfAnyParameterNullable, null, parameters)
+		{
+		}
+
+		public SqlFunction(Type systemType, string name, bool isAggregate, params ISqlExpression[] parameters)
+			: this(systemType, name, isAggregate, true, SqlQuery.Precedence.Primary, ParametersNullabilityType.IfAnyParameterNullable, null, parameters)
+		{
+		}
+
+		public SqlFunction(Type systemType, string name, bool isAggregate, int precedence, params ISqlExpression[] parameters)
+			: this(systemType, name, isAggregate, true, precedence, ParametersNullabilityType.IfAnyParameterNullable, null, parameters)
+		{
+		}
+
+		public SqlFunction(Type systemType, string name, bool isAggregate, bool isPure, int precedence, ParametersNullabilityType nullabilityType, bool? canBeNull, params ISqlExpression[] parameters)
+		: this(new DbDataType(systemType), name, isAggregate, isPure, precedence, nullabilityType, canBeNull, parameters)
+		{
+		}
+
+		public          DbDataType                Type              { get; }
+		public override Type                      SystemType        => Type.SystemType;
+		public          string                    Name              { get; }
+		public override int                       Precedence        { get; }
+		public          SqlFlags                  FunctionFlags     { get; }
+		public          bool                      IsAggregate       => (FunctionFlags & SqlFlags.IsAggregate) != 0;
+		public          bool                      IsPure            => (FunctionFlags & SqlFlags.IsPure)      != 0;
+		public          ISqlExpression[]          Parameters        { get; }
+		public          bool?                     CanBeNullNullable => _canBeNull;
+		public          ParametersNullabilityType NullabilityType   { get; }
 
 		public bool DoNotOptimize { get; set; }
 
-		public static SqlFunction CreateCount (Type type, ISqlTableSource table) { return new SqlFunction(type, "Count", true, new SqlExpression("*", new SqlValue(table.SourceID))); }
+		public static SqlFunction CreateCount(Type type, ISqlTableSource table)
+		{
+			return new SqlFunction(type, "COUNT", true, true, SqlQuery.Precedence.Primary,
+				ParametersNullabilityType.NotNullable, null, new SqlExpression("*", new SqlValue(table.SourceID)));
+		}
 
 		public static SqlFunction CreateAll   (SelectQuery subQuery) { return new SqlFunction(typeof(bool), "ALL",    false, SqlQuery.Precedence.Comparison, subQuery); }
 		public static SqlFunction CreateSome  (SelectQuery subQuery) { return new SqlFunction(typeof(bool), "SOME",   false, SqlQuery.Precedence.Comparison, subQuery); }
 		public static SqlFunction CreateAny   (SelectQuery subQuery) { return new SqlFunction(typeof(bool), "ANY",    false, SqlQuery.Precedence.Comparison, subQuery); }
 		public static SqlFunction CreateExists(SelectQuery subQuery) { return new SqlFunction(typeof(bool), "EXISTS", false, SqlQuery.Precedence.Comparison, subQuery); }
 
+		public SqlFunction WithName(string name)
+		{
+			if (name == Name)
+				return this;
+			return new SqlFunction(SystemType, name, IsAggregate, IsPure, Precedence, NullabilityType, _canBeNull, Parameters);
+		}
+
+		public SqlFunction WithParameters(ISqlExpression[] parameters)
+		{
+			return new SqlFunction(SystemType, Name, IsAggregate, IsPure, Precedence, NullabilityType, _canBeNull, parameters);
+		}
+
 		#region Overrides
-
-#if OVERRIDETOSTRING
-
-		public override string ToString()
-		{
-			return ((IQueryElement)this).ToString(new StringBuilder(), new Dictionary<IQueryElement,IQueryElement>()).ToString();
-		}
-
-#endif
-
-		#endregion
-
-		#region ISqlExpressionWalkable Members
-
-		ISqlExpression ISqlExpressionWalkable.Walk<TContext>(WalkOptions options, TContext context, Func<TContext, ISqlExpression, ISqlExpression> func)
-		{
-			for (var i = 0; i < Parameters.Length; i++)
-				Parameters[i] = Parameters[i].Walk(options, context, func)!;
-
-			return func(context, this);
-		}
-
-		#endregion
-
-		#region IEquatable<ISqlExpression> Members
-
-		bool IEquatable<ISqlExpression>.Equals(ISqlExpression? other)
-		{
-			return Equals(other, SqlExpression.DefaultComparer);
-		}
 
 		#endregion
 
 		#region ISqlExpression Members
 
-		private bool? _canBeNull;
+		public override bool CanBeNullable(NullabilityContext nullability)
+		{
+			return QueryHelper.CalcCanBeNull(_canBeNull, NullabilityType,
+				Parameters.Select(p => p.CanBeNullable(nullability)));
+		}
+
+		bool?       _canBeNull;
 		public  bool   CanBeNull
 		{
-			get => _canBeNull ?? true;
+			get => _canBeNull ?? NullabilityType != ParametersNullabilityType.NotNullable;
 			set => _canBeNull = value;
 		}
 
@@ -128,11 +149,10 @@ namespace LinqToDB.SqlQuery
 			// ReSharper restore NonReadonlyMemberInGetHashCode
 		}
 
-		public bool Equals(ISqlExpression? other, Func<ISqlExpression,ISqlExpression,bool> comparer)
+		public override bool Equals(ISqlExpression? other, Func<ISqlExpression,ISqlExpression,bool> comparer)
 		{
-			if (this == other)
+			if (ReferenceEquals(this, other))
 				return true;
-
 
 			if (!(other is SqlFunction func) || Name != func.Name || Parameters.Length != func.Parameters.Length || SystemType != func.SystemType)
 				return false;
@@ -148,24 +168,45 @@ namespace LinqToDB.SqlQuery
 
 		#region IQueryElement Members
 
-		public QueryElementType ElementType => QueryElementType.SqlFunction;
+		public override QueryElementType ElementType => QueryElementType.SqlFunction;
 
-		StringBuilder IQueryElement.ToString(StringBuilder sb, Dictionary<IQueryElement,IQueryElement> dic)
+		public override QueryElementTextWriter ToString(QueryElementTextWriter writer)
 		{
-			sb
+			writer.DebugAppendUniqueId(this);
+
+			writer
 				.Append(Name)
 				.Append('(');
 
-			foreach (var p in Parameters)
+			var indent = false;
+			// Handling Exists
+			if (Parameters.Length == 1 && Parameters[0] is SelectQuery)
 			{
-				p.ToString(sb, dic);
-				sb.Append(", ");
+				writer.AppendLine();
+				writer.Indent();
+				indent = true;
 			}
 
-			if (Parameters.Length > 0)
-				sb.Length -= 2;
+			for (var index = 0; index < Parameters.Length; index++)
+			{
+				var p = Parameters[index];
+				p.ToString(writer);
+				if (index < Parameters.Length - 1)
+					writer.Append(", ");
+			}
 
-			return sb.Append(')');
+			if (indent)
+			{
+				writer.AppendLine();
+				writer.UnIndent();
+			}
+
+			writer.Append(')');
+
+			if (CanBeNullable(writer.Nullability))
+				writer.Append("?");
+
+			return writer;
 		}
 
 		#endregion

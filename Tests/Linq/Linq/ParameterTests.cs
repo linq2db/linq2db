@@ -40,10 +40,10 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 			{
 				int? id = null;
-				Assert.AreEqual(0, db.Person.Where(_ => _.ID == id).Count());
+				Assert.That(db.Person.Where(_ => _.ID == id).Count(), Is.EqualTo(0));
 
 				id = 1;
-				Assert.AreEqual(1, db.Person.Where(_ => _.ID == id).Count());
+				Assert.That(db.Person.Where(_ => _.ID == id).Count(), Is.EqualTo(1));
 			}
 		}
 
@@ -53,7 +53,7 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 			{
 				var id = 1;
-				Assert.AreEqual(1, db.Person.Where(_ => _.ID == id || _.ID <= id || _.ID == id).Count());
+				Assert.That(db.Person.Where(_ => _.ID == id || _.ID <= id || _.ID == id).Count(), Is.EqualTo(1));
 			}
 		}
 
@@ -69,21 +69,29 @@ namespace Tests.Linq
 
 				var queryInlined = query.InlineParameters();
 
+				Assert.Multiple(() =>
+				{
 #pragma warning disable CS0618 // Type or member is obsolete
-				Assert.That(query.GetStatement().CollectParameters().Length,        Is.EqualTo(1));
-				Assert.That(queryInlined.GetStatement().CollectParameters().Length, Is.EqualTo(0));
+					Assert.That(query.GetStatement().CollectParameters(), Has.Length.EqualTo(1));
+					Assert.That(queryInlined.GetStatement().CollectParameters(), Is.Empty);
+				});
 #pragma warning restore CS0618 // Type or member is obsolete
 			}
 		}
 
+		[ActiveIssue(
+			@"Sybase providers explicitly cut string value if it contains 0x00 character and the only way to send it to database is to use literals.
+			But here we test parameters.
+			For reference: https://github.com/DataAction/AdoNetCore.AseClient/issues/51#issuecomment-417981677",
+			Configuration = TestProvName.AllSybase)]
 		[Test]
 		public void CharAsSqlParameter1(
 			[DataSources(
 				ProviderName.SqlCe,
 				TestProvName.AllSQLite,
 				TestProvName.AllPostgreSQL,
+				TestProvName.AllOracleDevartOCI,
 				TestProvName.AllInformix,
-				ProviderName.DB2,
 				TestProvName.AllSapHana)]
 			string context)
 		{
@@ -96,14 +104,19 @@ namespace Tests.Linq
 			}
 		}
 
+		[ActiveIssue(
+			@"Sybase providers explicitly cut string value if it contains 0x00 character and the only way to send it to database is to use literals.
+			But here we test parameters.
+			For reference: https://github.com/DataAction/AdoNetCore.AseClient/issues/51#issuecomment-417981677",
+			Configuration = TestProvName.AllSybase)]
 		[Test]
 		public void CharAsSqlParameter2(
 			[DataSources(
 				ProviderName.SqlCe,
 				TestProvName.AllSQLite,
 				TestProvName.AllPostgreSQL,
+				TestProvName.AllOracleDevartOCI,
 				TestProvName.AllInformix,
-				ProviderName.DB2,
 				TestProvName.AllSapHana)]
 			string context)
 		{
@@ -116,13 +129,18 @@ namespace Tests.Linq
 			}
 		}
 
+		[ActiveIssue(
+			@"Sybase providers explicitly cut string value if it contains 0x00 character and the only way to send it to database is to use literals.
+			But here we test parameters.
+			For reference: https://github.com/DataAction/AdoNetCore.AseClient/issues/51#issuecomment-417981677",
+			Configuration = TestProvName.AllSybase)]
 		[Test]
 		public void CharAsSqlParameter3(
 			[DataSources(
 				ProviderName.SqlCe,
 				TestProvName.AllPostgreSQL,
+				TestProvName.AllOracleDevartOCI,
 				TestProvName.AllInformix,
-				ProviderName.DB2,
 				TestProvName.AllSapHana)]
 			string context)
 		{
@@ -147,12 +165,16 @@ namespace Tests.Linq
 			}
 		}
 
+		[ActiveIssue(
+			@"Sybase providers explicitly cut string value if it contains 0x00 character and the only way to send it to database is to use literals.
+			But here we test parameters.
+			For reference: https://github.com/DataAction/AdoNetCore.AseClient/issues/51#issuecomment-417981677",
+			Configuration = TestProvName.AllSybase)]
 		[Test]
 		public void CharAsSqlParameter5(
 			[DataSources(
 				TestProvName.AllPostgreSQL,
-				TestProvName.AllInformix,
-				ProviderName.DB2)]
+				TestProvName.AllInformix)]
 			string context)
 		{
 			using (var  db = GetDataContext(context))
@@ -175,14 +197,14 @@ namespace Tests.Linq
 
 		// Excluded providers inline such parameter
 		[Test]
-		public void ExposeSqlDecimalParameter([DataSources(false, ProviderName.DB2, TestProvName.AllInformix, TestProvName.AllClickHouse)] string context)
+		public void ExposeSqlDecimalParameter([DataSources(false, TestProvName.AllInformix, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataConnection(context))
 			{
 				var p   = 123.456m;
 				var sql = db.GetTable<AllTypes>().Where(t => t.DecimalDataType == p).ToString();
 
-				TestContext.WriteLine(sql);
+				TestContext.Out.WriteLine(sql);
 
 				Assert.That(sql, Contains.Substring("(6, 3)"));
 			}
@@ -190,14 +212,14 @@ namespace Tests.Linq
 
 		// DB2: see DB2SqlOptimizer.SetQueryParameter - binary parameters inlined for DB2
 		[Test]
-		public void ExposeSqlBinaryParameter([DataSources(false, ProviderName.DB2, TestProvName.AllClickHouse)] string context)
+		public void ExposeSqlBinaryParameter([DataSources(false, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataConnection(context))
 			{
 				var p   = new byte[] { 0, 1, 2 };
 				var sql = db.GetTable<AllTypes>().Where(t => t.BinaryDataType == p).ToString();
 
-				TestContext.WriteLine(sql);
+				TestContext.Out.WriteLine(sql);
 
 				Assert.That(sql, Contains.Substring("(3)").Or.Contains("Blob").Or.Contains("(8000)"));
 			}
@@ -300,7 +322,6 @@ namespace Tests.Linq
 			db.Parent.Where(p => GetChildrenFiltered(db, ChildFilter).Select(c => c.ParentID).Contains(p.ParentID)).ToList();
 		}
 
-		[ActiveIssue(Configuration = TestProvName.AllSybase, Details = "CI: sybase image needs utf-8 enabled")]
 		[Test]
 		public void TestInternationalParamName([DataSources] string context)
 		{
@@ -317,8 +338,6 @@ namespace Tests.Linq
 			}
 		}
 
-		// sequence evaluation fails in GetChildrenFiltered2
-		[ActiveIssue("Unable to cast object of type 'System.Linq.Expressions.FieldExpression' to type 'System.Linq.Expressions.LambdaExpression'.")]
 		[Test]
 		public void TestQueryableCallWithParametersWorkaround2([DataSources] string context)
 		{
@@ -420,25 +439,34 @@ namespace Tests.Linq
 					Issue404? usage = null;
 					var allUsages = !usage.HasValue;
 					var res1 = Test()!;
-					Assert.AreEqual(1, res1.Id);
-					Assert.AreEqual(3, res1.Values!.Count);
-					Assert.AreEqual(3, res1.Values.Where(v => v.FirstTableId == 1).Count());
+					Assert.Multiple(() =>
+					{
+						Assert.That(res1.Id, Is.EqualTo(1));
+						Assert.That(res1.Values!, Has.Count.EqualTo(3));
+						Assert.That(res1.Values!.Where(v => v.FirstTableId == 1).Count(), Is.EqualTo(3));
+					});
 
 					usage = Issue404.Value1;
 					allUsages = false;
 					var res2 = Test()!;
-					Assert.AreEqual(1, res2.Id);
-					Assert.AreEqual(2, res2.Values!.Count);
-					Assert.AreEqual(2, res2.Values.Where(v => v.Usage == usage).Count());
-					Assert.AreEqual(2, res2.Values.Where(v => v.FirstTableId == 1).Count());
+					Assert.Multiple(() =>
+					{
+						Assert.That(res2.Id, Is.EqualTo(1));
+						Assert.That(res2.Values!, Has.Count.EqualTo(2));
+						Assert.That(res2.Values!.Where(v => v.Usage == usage).Count(), Is.EqualTo(2));
+						Assert.That(res2.Values!.Where(v => v.FirstTableId == 1).Count(), Is.EqualTo(2));
+					});
 
 					usage = Issue404.Value2;
 					allUsages = false;
 					var res3 = Test()!;
-					Assert.AreEqual(1, res2.Id);
-					Assert.AreEqual(1, res3.Values!.Count);
-					Assert.AreEqual(1, res3.Values.Where(v => v.Usage == usage).Count());
-					Assert.AreEqual(1, res3.Values.Where(v => v.FirstTableId == 1).Count());
+					Assert.Multiple(() =>
+					{
+						Assert.That(res2.Id, Is.EqualTo(1));
+						Assert.That(res3.Values!, Has.Count.EqualTo(1));
+						Assert.That(res3.Values!.Where(v => v.Usage == usage).Count(), Is.EqualTo(1));
+						Assert.That(res3.Values!.Where(v => v.FirstTableId == 1).Count(), Is.EqualTo(1));
+					});
 
 					FirstTable? Test()
 					{
@@ -468,7 +496,6 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue("SQL0418N", Configuration = ProviderName.DB2)]
 		[Test]
 		public void Issue1189Test([DataSources] string context)
 		{
@@ -1242,11 +1269,14 @@ namespace Tests.Linq
 				_param      = 1;
 				var persons = Query(db);
 
-				Assert.AreEqual(1, persons.Count);
-				Assert.AreEqual(1, persons[0].ID);
-				Assert.AreEqual(1, _cnt1);
-				Assert.AreEqual(1, _cnt2);
-				Assert.AreEqual(1, _cnt3);
+				Assert.That(persons, Has.Count.EqualTo(1));
+				Assert.Multiple(() =>
+				{
+					Assert.That(persons[0].ID, Is.EqualTo(1));
+					Assert.That(_cnt1, Is.EqualTo(1));
+					Assert.That(_cnt2, Is.EqualTo(1));
+					Assert.That(_cnt3, Is.EqualTo(1));
+				});
 
 				_cnt1   = 0;
 				_cnt2   = 0;
@@ -1254,13 +1284,16 @@ namespace Tests.Linq
 				_param  = 2;
 				persons = Query(db);
 
-				Assert.AreEqual(3, persons.Count);
-				Assert.AreEqual(1, persons.Count(_ => _.ID == 1));
-				Assert.AreEqual(1, persons.Count(_ => _.ID == 2));
-				Assert.AreEqual(1, persons.Count(_ => _.ID == 4));
-				Assert.AreEqual(3, _cnt1);
-				Assert.AreEqual(1, _cnt2);
-				Assert.AreEqual(1, _cnt3);
+				Assert.That(persons, Has.Count.EqualTo(3));
+				Assert.Multiple(() =>
+				{
+					Assert.That(persons.Count(_ => _.ID == 1), Is.EqualTo(1));
+					Assert.That(persons.Count(_ => _.ID == 2), Is.EqualTo(1));
+					Assert.That(persons.Count(_ => _.ID == 4), Is.EqualTo(1));
+					Assert.That(_cnt1, Is.EqualTo(1));
+					Assert.That(_cnt2, Is.EqualTo(1));
+					Assert.That(_cnt3, Is.EqualTo(1));
+				});
 
 				_cnt1   = 0;
 				_cnt2   = 0;
@@ -1268,12 +1301,15 @@ namespace Tests.Linq
 				_param  = 3;
 				persons = Query(db);
 
-				Assert.AreEqual(2, persons.Count);
-				Assert.AreEqual(1, persons.Count(_ => _.ID == 2));
-				Assert.AreEqual(1, persons.Count(_ => _.ID == 3));
-				Assert.AreEqual(5, _cnt1);
-				Assert.AreEqual(3, _cnt2);
-				Assert.AreEqual(1, _cnt3);
+				Assert.That(persons, Has.Count.EqualTo(2));
+				Assert.Multiple(() =>
+				{
+					Assert.That(persons.Count(_ => _.ID == 2), Is.EqualTo(1));
+					Assert.That(persons.Count(_ => _.ID == 3), Is.EqualTo(1));
+					Assert.That(_cnt1, Is.EqualTo(1));
+					Assert.That(_cnt2, Is.EqualTo(1));
+					Assert.That(_cnt3, Is.EqualTo(1));
+				});
 
 				_cnt1   = 0;
 				_cnt2   = 0;
@@ -1281,11 +1317,14 @@ namespace Tests.Linq
 				_param  = 1;
 				persons = Query(db);
 
-				Assert.AreEqual(1, persons.Count);
-				Assert.AreEqual(1, persons[0].ID);
-				Assert.AreEqual(4, _cnt1);
-				Assert.AreEqual(2, _cnt2);
-				Assert.AreEqual(2, _cnt3);
+				Assert.That(persons, Has.Count.EqualTo(1));
+				Assert.Multiple(() =>
+				{
+					Assert.That(persons[0].ID, Is.EqualTo(1));
+					Assert.That(_cnt1, Is.EqualTo(1));
+					Assert.That(_cnt2, Is.EqualTo(1));
+					Assert.That(_cnt3, Is.EqualTo(1));
+				});
 
 				_cnt1   = 0;
 				_cnt2   = 0;
@@ -1293,12 +1332,15 @@ namespace Tests.Linq
 				_param  = 3;
 				persons = Query(db);
 
-				Assert.AreEqual(2, persons.Count);
-				Assert.AreEqual(1, persons.Count(_ => _.ID == 2));
-				Assert.AreEqual(1, persons.Count(_ => _.ID == 3));
-				Assert.AreEqual(2, _cnt1);
-				Assert.AreEqual(2, _cnt2);
-				Assert.AreEqual(2, _cnt3);
+				Assert.That(persons, Has.Count.EqualTo(2));
+				Assert.Multiple(() =>
+				{
+					Assert.That(persons.Count(_ => _.ID == 2), Is.EqualTo(1));
+					Assert.That(persons.Count(_ => _.ID == 3), Is.EqualTo(1));
+					Assert.That(_cnt1, Is.EqualTo(1));
+					Assert.That(_cnt2, Is.EqualTo(1));
+					Assert.That(_cnt3, Is.EqualTo(1));
+				});
 
 				_cnt1   = 0;
 				_cnt2   = 0;
@@ -1306,13 +1348,16 @@ namespace Tests.Linq
 				_param  = 2;
 				persons = Query(db);
 
-				Assert.AreEqual(3, persons.Count);
-				Assert.AreEqual(1, persons.Count(_ => _.ID == 1));
-				Assert.AreEqual(1, persons.Count(_ => _.ID == 2));
-				Assert.AreEqual(1, persons.Count(_ => _.ID == 4));
-				Assert.AreEqual(4, _cnt1);
-				Assert.AreEqual(3, _cnt2);
-				Assert.AreEqual(2, _cnt3);
+				Assert.That(persons, Has.Count.EqualTo(3));
+				Assert.Multiple(() =>
+				{
+					Assert.That(persons.Count(_ => _.ID == 1), Is.EqualTo(1));
+					Assert.That(persons.Count(_ => _.ID == 2), Is.EqualTo(1));
+					Assert.That(persons.Count(_ => _.ID == 4), Is.EqualTo(1));
+					Assert.That(_cnt1, Is.EqualTo(1));
+					Assert.That(_cnt2, Is.EqualTo(1));
+					Assert.That(_cnt3, Is.EqualTo(1));
+				});
 			}
 
 			List<Person> Query(ITestDataContext db)
@@ -1365,40 +1410,40 @@ namespace Tests.Linq
 				_param      = 1;
 				var persons = Query(db);
 
-				Assert.AreEqual(1, persons.Count);
-				Assert.AreEqual(1, persons[0].ID);
+				Assert.That(persons, Has.Count.EqualTo(1));
+				Assert.That(persons[0].ID, Is.EqualTo(1));
 				//Assert.AreEqual(1, _cnt1);
 
 				_cnt1   = 0;
 				_param  = 2;
 				persons = Query(db);
 
-				Assert.AreEqual(1, persons.Count);
-				Assert.AreEqual(2, persons[0].ID);
+				Assert.That(persons, Has.Count.EqualTo(1));
+				Assert.That(persons[0].ID, Is.EqualTo(2));
 				//Assert.AreEqual(1, _cnt1);
 
 				_cnt1   = 0;
 				_param  = 3;
 				persons = Query(db);
 
-				Assert.AreEqual(1, persons.Count);
-				Assert.AreEqual(3, persons[0].ID);
+				Assert.That(persons, Has.Count.EqualTo(1));
+				Assert.That(persons[0].ID, Is.EqualTo(3));
 				//Assert.AreEqual(1, _cnt1);
 
 				_cnt1   = 0;
 				_param  = 4;
 				persons = Query(db);
 
-				Assert.AreEqual(1, persons.Count);
-				Assert.AreEqual(4, persons[0].ID);
+				Assert.That(persons, Has.Count.EqualTo(1));
+				Assert.That(persons[0].ID, Is.EqualTo(4));
 				//Assert.AreEqual(1, _cnt1);
 
 				_cnt1   = 0;
 				_param  = 1;
 				persons = Query(db);
 
-				Assert.AreEqual(1, persons.Count);
-				Assert.AreEqual(1, persons[0].ID);
+				Assert.That(persons, Has.Count.EqualTo(1));
+				Assert.That(persons[0].ID, Is.EqualTo(1));
 				//Assert.AreEqual(1, _cnt1);
 			}
 
@@ -1435,62 +1480,63 @@ namespace Tests.Linq
 			Task.WaitAll(tasks);
 		}
 
-		public void TestRunner(string context, int thread)
+		private void TestRunner(string context, int thread)
 		{
-			using (var db = GetDataContext(context))
-			{
-				_params[thread] = 1;
-				var persons = Query(db, thread);
+			// don't use Assert.Multiple in multi-threading tests
+#pragma warning disable NUnit2045 // Use Assert.Multiple
+			using var db = GetDataContext(context);
+			_params[thread] = 1;
+			var persons = Query(db, thread);
 
-				Assert.AreEqual(1, persons.Count);
-				Assert.AreEqual(1, persons[0].ID);
+			Assert.That(persons, Has.Count.EqualTo(1));
+			Assert.That(persons[0].ID, Is.EqualTo(1));
 
-				_params[thread] = 2;
-				persons = Query(db, thread);
+			_params[thread] = 2;
+			persons = Query(db, thread);
 
-				Assert.AreEqual(3, persons.Count);
-				Assert.AreEqual(1, persons.Count(_ => _.ID == 1));
-				Assert.AreEqual(1, persons.Count(_ => _.ID == 2));
-				Assert.AreEqual(1, persons.Count(_ => _.ID == 4));
+			Assert.That(persons, Has.Count.EqualTo(3));
+			Assert.That(persons.Count(_ => _.ID == 1), Is.EqualTo(1));
+			Assert.That(persons.Count(_ => _.ID == 2), Is.EqualTo(1));
+			Assert.That(persons.Count(_ => _.ID == 4), Is.EqualTo(1));
 
-				_params[thread] = 3;
-				persons = Query(db, thread);
+			_params[thread] = 3;
+			persons = Query(db, thread);
 
-				Assert.AreEqual(2, persons.Count);
-				Assert.AreEqual(1, persons.Count(_ => _.ID == 2));
-				Assert.AreEqual(1, persons.Count(_ => _.ID == 3));
+			Assert.That(persons, Has.Count.EqualTo(2));
+			Assert.That(persons.Count(_ => _.ID == 2), Is.EqualTo(1));
+			Assert.That(persons.Count(_ => _.ID == 3), Is.EqualTo(1));
 
-				_params[thread] = 1;
-				persons = Query(db, thread);
+			_params[thread] = 1;
+			persons = Query(db, thread);
 
-				Assert.AreEqual(1, persons.Count);
-				Assert.AreEqual(1, persons[0].ID);
+			Assert.That(persons, Has.Count.EqualTo(1));
+			Assert.That(persons[0].ID, Is.EqualTo(1));
 
-				_params[thread] = 3;
-				persons = Query(db, thread);
+			_params[thread] = 3;
+			persons = Query(db, thread);
 
-				Assert.AreEqual(2, persons.Count);
-				Assert.AreEqual(1, persons.Count(_ => _.ID == 2));
-				Assert.AreEqual(1, persons.Count(_ => _.ID == 3));
+			Assert.That(persons, Has.Count.EqualTo(2));
+			Assert.That(persons.Count(_ => _.ID == 2), Is.EqualTo(1));
+			Assert.That(persons.Count(_ => _.ID == 3), Is.EqualTo(1));
 
-				_params[thread] = 2;
-				persons = Query(db, thread);
+			_params[thread] = 2;
+			persons = Query(db, thread);
 
-				Assert.AreEqual(3, persons.Count);
-				Assert.AreEqual(1, persons.Count(_ => _.ID == 1));
-				Assert.AreEqual(1, persons.Count(_ => _.ID == 2));
-				Assert.AreEqual(1, persons.Count(_ => _.ID == 4));
-			}
+			Assert.That(persons, Has.Count.EqualTo(3));
+			Assert.That(persons.Count(_ => _.ID == 1), Is.EqualTo(1));
+			Assert.That(persons.Count(_ => _.ID == 2), Is.EqualTo(1));
+			Assert.That(persons.Count(_ => _.ID == 4), Is.EqualTo(1));
 
 			List<Person> Query(ITestDataContext db, int thread)
 			{
 				return db.Person
-					.Where(_ => 
+					.Where(_ =>
 					 GetQueryT1(db, thread).Select(p => p.ID).Contains(_.ID) &&
 					(GetQueryT2(db, thread).Select(p => p.ID).Contains(_.ID) ||
 					 GetQueryT3(db, thread).Select(p => p.ID).Contains(_.ID)))
 					.ToList();
 			}
+#pragma warning restore NUnit2045 // Use Assert.Multiple
 		}
 
 		private IQueryable<Person> GetQueryT1(ITestDataContext db, int thread)
@@ -1532,17 +1578,23 @@ namespace Tests.Linq
 				_param      = 1;
 				var persons = Query(db);
 
-				Assert.AreEqual(3, persons.Count);
-				Assert.True(persons.All(p => p.ID != _param));
-				Assert.AreEqual(1, _cnt);
+				Assert.That(persons, Has.Count.EqualTo(3));
+				Assert.Multiple(() =>
+				{
+					Assert.That(persons.All(p => p.ID != _param), Is.True);
+					Assert.That(_cnt, Is.EqualTo(1));
+				});
 
 				_cnt    = 0;
 				_param  = 2;
 				persons = Query(db);
 
-				Assert.AreEqual(3, persons.Count);
-				Assert.True(persons.All(p => p.ID != _param));
-				Assert.AreEqual(1, _cnt);
+				Assert.That(persons, Has.Count.EqualTo(3));
+				Assert.Multiple(() =>
+				{
+					Assert.That(persons.All(p => p.ID != _param), Is.True);
+					Assert.That(_cnt, Is.EqualTo(1));
+				});
 			}
 
 			List<Person> Query(ITestDataContext db)
@@ -1571,6 +1623,149 @@ namespace Tests.Linq
 						  where c.ID == data.ID
 						  && (c.MiddleName != null ? c.MiddleName.Trim().ToLower() : string.Empty) == (data.MiddleName != null ? data.MiddleName.Trim().ToLower() : string.Empty)
 						  select c).ToList();
+		}
+
+
+		int GetId(int id, int increment)
+		{
+			return id + increment;
+		}
+
+		/// <summary>
+		/// Tests that we do not have cache hit for similar parameters
+		/// </summary>
+		/// <param name="context"></param>
+		[Test]
+		public void Caching([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var id = 1;
+
+				var query1  = db.Parent.Where(x => x.ParentID == GetId(id, 0) || x.ParentID == GetId(id, 0));
+				AssertQuery(query1);
+
+				id = 2;
+
+				var query2  = db.Parent.Where(x => x.ParentID == GetId(id, 1) || x.ParentID == GetId(id, 0));
+				AssertQuery(query2);
+			}
+		}
+
+
+#if NET6_0_OR_GREATER
+		[Table]
+		public sealed class Issue4371Table2
+		{
+			[Column(DataType = DataType.VarChar)] public DateOnly?       ColumnDO  { get; set; }
+		}
+
+		[Test]
+		public void Issue4371TestDateOnly([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable<Issue4371Table2>();
+
+			var dt = TestData.DateOnly;
+			db.Insert(new Issue4371Table2() { ColumnDO = dt });
+
+			using var _ = new CultureRegion("fa-IR");
+			Assert.That(tb.Where(r => r.ColumnDO == dt).Count(), Is.EqualTo(1));
+		}
+
+		[Test]
+		public void Issue4371TestDateOnlyCrash([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable<Issue4371Table2>();
+
+			var dt = DateOnly.FromDateTime(new DateTime(50284592391540000));
+			db.Insert(new Issue4371Table2() { ColumnDO = dt });
+
+			using var _ = new CultureRegion("fa-IR");
+			Assert.That(tb.Where(r => r.ColumnDO == dt).Count(), Is.EqualTo(1));
+		}
+#endif
+
+		[Table]
+		public sealed class Issue4371Table
+		{
+			[Column(DataType = DataType.VarChar)] public DateTime?       ColumnDT  { get; set; }
+			[Column(DataType = DataType.VarChar)] public DateTimeOffset? ColumnDTO { get; set; }
+			[Column(DataType = DataType.VarChar)] public TimeSpan?       ColumnTS  { get; set; }
+		}
+
+		[Test]
+		public void Issue4371TestDateTimeOffset([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable<Issue4371Table>();
+
+			var dto = TestData.DateTimeOffset;
+			db.Insert(new Issue4371Table() { ColumnDTO = dto });
+
+			using var _ = new CultureRegion("fa-IR");
+			Assert.That(tb.Where(r => r.ColumnDTO == dto).Count(), Is.EqualTo(1));
+		}
+
+		[Test]
+		public void Issue4371TestDateTimeCrash([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable<Issue4371Table>();
+
+			var dt = new DateTime(50284592391540000);
+			db.Insert(new Issue4371Table() { ColumnDT = dt });
+
+			using var _ = new CultureRegion("fa-IR");
+			Assert.That(tb.Where(r => r.ColumnDT == dt).Count(), Is.EqualTo(1));
+		}
+
+		[Test]
+		public void Issue4371TestDateTimeOffsetCrash([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable<Issue4371Table>();
+
+			var dto = new DateTimeOffset(50284592391540000, default);
+			db.Insert(new Issue4371Table() { ColumnDTO = dto });
+
+			using var _ = new CultureRegion("fa-IR");
+			Assert.That(tb.Where(r => r.ColumnDTO == dto).Count(), Is.EqualTo(1));
+		}
+
+		[Test]
+		public void Issue4371TestTimeSpan([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable<Issue4371Table>();
+
+			var ts = TestData.TimeOfDay;
+			db.Insert(new Issue4371Table() { ColumnTS = ts });
+
+			using var _ = new CultureRegion("fa-IR");
+			Assert.That(tb.Where(r => r.ColumnTS == ts).Count(), Is.EqualTo(1));
+		}
+
+		[Test]
+		public void Issue4359_PrimaryParameterName([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			// primary constructor parameter use reference to backing field with ugly name
+			// we use field name to derive parameter name
+			var result = new TestParameterNames("John").Test(db);
+
+			Assert.That(result, Is.Not.Null);
+			Assert.That(result!.ID, Is.EqualTo(1));
+		}
+
+		private class TestParameterNames(string Parameter)
+		{
+			public Person? Test(ITestDataContext db)
+			{
+				return db.Person.Where(p => p.FirstName == Parameter).SingleOrDefault();
+			}
 		}
 	}
 }

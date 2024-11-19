@@ -23,7 +23,7 @@ namespace Cli.Default.ClickHouse.Octonica
 		[Column("Field4"                                                   )] public int?            Field4          { get; set; } // Int32
 		[Column("Field5"                                                   )] public int?            Field5          { get; set; } // Int32
 		[Column("FieldInt64"                                               )] public long?           FieldInt64      { get; set; } // Int64
-		[Column("FieldBoolean"                                             )] public byte?           FieldBoolean    { get; set; } // UInt8
+		[Column("FieldBoolean"                                             )] public bool?           FieldBoolean    { get; set; } // Bool
 		[Column("FieldString"                                              )] public string?         FieldString     { get; set; } // String
 		[Column("FieldNString"                                             )] public string?         FieldNString    { get; set; } // String
 		[Column("FieldChar"                                                )] public byte[]?         FieldChar       { get; set; } // FixedString(1)

@@ -1,4 +1,4 @@
-using System.Linq.Expressions;
+﻿using System.Linq.Expressions;
 
 namespace LinqToDB.Common
 {
@@ -17,7 +17,7 @@ namespace LinqToDB.Common
 		///     Gets the expression to convert objects when reading data from the database.
 		/// </summary>
 		LambdaExpression FromProviderExpression { get; }
-		
+
 		/// <summary>
 		///     Gets the expression to convert objects when writing data to the database.
 		/// </summary>

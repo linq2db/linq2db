@@ -124,7 +124,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			}
 		}
 
-		public static class TemporalTable
+		internal static class TemporalTable
 		{
 			public const string All         = "ALL";
 			public const string AsOf        = "AS OF";
@@ -163,30 +163,22 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		sealed class WithForceSeekExtensionBuilder : ISqlQueryExtensionBuilder
 		{
-			public void Build(ISqlBuilder sqlBuilder, StringBuilder stringBuilder, SqlQueryExtension sqlQueryExtension)
+			public void Build(NullabilityContext nullability, ISqlBuilder sqlBuilder, StringBuilder stringBuilder, SqlQueryExtension sqlQueryExtension)
 			{
-				var value = (SqlValue)      sqlQueryExtension.Arguments["indexName"];
+				var value = (SqlValue)sqlQueryExtension.Arguments["indexName"];
 				var count = (int)((SqlValue)sqlQueryExtension.Arguments["columns.Count"]).Value!;
 
 				if (count == 0)
 				{
-					stringBuilder
-						.Append("ForceSeek, Index(")
-						.Append(value.Value)
-						.Append(')')
-						;
+					stringBuilder.Append(CultureInfo.InvariantCulture, $"ForceSeek, Index({value.Value})");
 				}
 				else
 				{
-					stringBuilder
-						.Append("ForceSeek(")
-						.Append(value.Value)
-						.Append('(')
-						;
+					stringBuilder.Append(CultureInfo.InvariantCulture, $"ForceSeek({value.Value}(");
 
 					for (var i = 0; i < count; i++)
 					{
-						sqlBuilder.BuildExpression(sqlBuilder.StringBuilder, sqlQueryExtension.Arguments[$"columns.{i}"], false);
+						sqlBuilder.BuildExpression(sqlBuilder.StringBuilder, sqlQueryExtension.Arguments[FormattableString.Invariant($"columns.{i}")], false);
 						stringBuilder.Append(", ");
 					}
 
@@ -232,21 +224,20 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		sealed class ParamsExtensionBuilder : ISqlQueryExtensionBuilder
 		{
-			public void Build(ISqlBuilder sqlBuilder, StringBuilder stringBuilder, SqlQueryExtension sqlQueryExtension)
+			public void Build(NullabilityContext nullability, ISqlBuilder sqlBuilder, StringBuilder stringBuilder, SqlQueryExtension sqlQueryExtension)
 			{
 				var count = (int)((SqlValue)sqlQueryExtension.Arguments["values.Count"]).Value!;
 
-				stringBuilder
-					.Append(((SqlValue)sqlQueryExtension.Arguments[".ExtensionArguments.0"]).Value)
-					.Append('(');
-					;
+				stringBuilder.Append(
+					CultureInfo.InvariantCulture,
+					$"{((SqlValue)sqlQueryExtension.Arguments[".ExtensionArguments.0"]).Value}(");
 
 				for (var i = 0; i < count; i++)
 				{
 					if (i > 0)
 						stringBuilder.Append(", ");
-					var value = (SqlValue)sqlQueryExtension.Arguments[$"values.{i}"];
-					stringBuilder.Append(value.Value);
+					var value = (SqlValue)sqlQueryExtension.Arguments[FormattableString.Invariant($"values.{i}")];
+					stringBuilder.Append(CultureInfo.InvariantCulture, $"{value.Value}");
 				}
 
 				stringBuilder.Append(')');
@@ -261,7 +252,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			[SqlQueryDependent] params string[]       values)
 			where TSource : notnull
 		{
-			var currentSource = LinqExtensions.ProcessSourceQueryable?.Invoke(source) ?? source;
+			var currentSource = source.ProcessIQueryable();
 
 			return new SqlServerSpecificQueryable<TSource>(currentSource.Provider.CreateQuery<TSource>(
 				Expression.Call(
@@ -282,7 +273,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			[SqlQueryDependent] params string[]       values)
 			where TSource : notnull
 		{
-			var currentSource = LinqExtensions.ProcessSourceQueryable?.Invoke(source) ?? source;
+			var currentSource = source.ProcessIQueryable();
 
 			return new SqlServerSpecificQueryable<TSource>(currentSource.Provider.CreateQuery<TSource>(
 				Expression.Call(
@@ -294,7 +285,7 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		sealed class TableParamsExtensionBuilder : ISqlQueryExtensionBuilder
 		{
-			public void Build(ISqlBuilder sqlBuilder, StringBuilder stringBuilder, SqlQueryExtension sqlQueryExtension)
+			public void Build(NullabilityContext nullability, ISqlBuilder sqlBuilder, StringBuilder stringBuilder, SqlQueryExtension sqlQueryExtension)
 			{
 				var count = (int)((SqlValue)sqlQueryExtension.Arguments["values.Count"]).Value!;
 
@@ -309,8 +300,8 @@ namespace LinqToDB.DataProvider.SqlServer
 				for (var i = 0; i < count; i++)
 				{
 					stringBuilder.Append(", ");
-					var value = (SqlValue)sqlQueryExtension.Arguments[$"values.{i}"];
-					stringBuilder.Append(value.Value);
+					var value = (SqlValue)sqlQueryExtension.Arguments[FormattableString.Invariant($"values.{i}")];
+					stringBuilder.Append(CultureInfo.InvariantCulture, $"{value.Value}");
 				}
 
 				stringBuilder.Append(')');
@@ -332,7 +323,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			[SqlQueryDependent] params string[]       values)
 			where TSource : notnull
 		{
-			var currentSource = LinqExtensions.ProcessSourceQueryable?.Invoke(source) ?? source;
+			var currentSource = source.ProcessIQueryable();
 
 			return new SqlServerSpecificQueryable<TSource>(currentSource.Provider.CreateQuery<TSource>(
 				Expression.Call(
@@ -488,7 +479,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			[SqlQueryDependent] string                hint)
 			where TSource : notnull
 		{
-			var currentSource = LinqExtensions.ProcessSourceQueryable?.Invoke(source) ?? source;
+			var currentSource = source.ProcessIQueryable();
 
 			return new SqlServerSpecificQueryable<TSource>(currentSource.Provider.CreateQuery<TSource>(
 				Expression.Call(
@@ -515,7 +506,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			[SqlQueryDependent] TParam                hintParameter)
 			where TSource : notnull
 		{
-			var currentSource = LinqExtensions.ProcessSourceQueryable?.Invoke(source) ?? source;
+			var currentSource = source.ProcessIQueryable();
 
 			return new SqlServerSpecificQueryable<TSource>(currentSource.Provider.CreateQuery<TSource>(
 				Expression.Call(
@@ -541,7 +532,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			[SqlQueryDependent] params object[]       hintParameters)
 			where TSource : notnull
 		{
-			var currentSource = LinqExtensions.ProcessSourceQueryable?.Invoke(source) ?? source;
+			var currentSource = source.ProcessIQueryable();
 
 			return new SqlServerSpecificQueryable<TSource>(currentSource.Provider.CreateQuery<TSource>(
 				Expression.Call(
@@ -572,7 +563,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			[SqlQueryDependent] string                hint)
 			where TSource : notnull
 		{
-			var currentSource = LinqExtensions.ProcessSourceQueryable?.Invoke(source) ?? source;
+			var currentSource = source.ProcessIQueryable();
 
 			return new SqlServerSpecificQueryable<TSource>(currentSource.Provider.CreateQuery<TSource>(
 				Expression.Call(
@@ -600,7 +591,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			[SqlQueryDependent] string                hint)
 			where TSource : notnull
 		{
-			var currentSource = LinqExtensions.ProcessSourceQueryable?.Invoke(source) ?? source;
+			var currentSource = source.ProcessIQueryable();
 
 			return new SqlServerSpecificQueryable<TSource>(currentSource.Provider.CreateQuery<TSource>(
 				Expression.Call(
@@ -649,7 +640,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		public static ISqlServerSpecificQueryable<TSource> JoinHint<TSource>(this ISqlServerSpecificQueryable<TSource> source, [SqlQueryDependent] string hint)
 			where TSource : notnull
 		{
-			var currentSource = LinqExtensions.ProcessSourceQueryable?.Invoke(source) ?? source;
+			var currentSource = source.ProcessIQueryable();
 
 			return new SqlServerSpecificQueryable<TSource>(currentSource.Provider.CreateQuery<TSource>(
 				Expression.Call(
@@ -675,7 +666,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		public static ISqlServerSpecificQueryable<TSource> QueryHint<TSource>(this ISqlServerSpecificQueryable<TSource> source, [SqlQueryDependent] string hint)
 			where TSource : notnull
 		{
-			var currentSource = LinqExtensions.ProcessSourceQueryable?.Invoke(source) ?? source;
+			var currentSource = source.ProcessIQueryable();
 
 			return new SqlServerSpecificQueryable<TSource>(currentSource.Provider.CreateQuery<TSource>(
 				Expression.Call(
@@ -702,7 +693,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			[SqlQueryDependent] TParam hintParameter)
 			where TSource : notnull
 		{
-			var currentSource = LinqExtensions.ProcessSourceQueryable?.Invoke(source) ?? source;
+			var currentSource = source.ProcessIQueryable();
 
 			return new SqlServerSpecificQueryable<TSource>(currentSource.Provider.CreateQuery<TSource>(
 				Expression.Call(
@@ -731,7 +722,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			[SqlQueryDependent] params TParam[] hintParameters)
 			where TSource : notnull
 		{
-			var currentSource = LinqExtensions.ProcessSourceQueryable?.Invoke(source) ?? source;
+			var currentSource = source.ProcessIQueryable();
 
 			return new SqlServerSpecificQueryable<TSource>(currentSource.Provider.CreateQuery<TSource>(
 				Expression.Call(
@@ -756,7 +747,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		public static ISqlServerSpecificQueryable<TSource> QueryHint2019Plus<TSource>(this ISqlServerSpecificQueryable<TSource> source, [SqlQueryDependent] string hint)
 			where TSource : notnull
 		{
-			var currentSource = LinqExtensions.ProcessSourceQueryable?.Invoke(source) ?? source;
+			var currentSource = source.ProcessIQueryable();
 
 			return new SqlServerSpecificQueryable<TSource>(currentSource.Provider.CreateQuery<TSource>(
 				Expression.Call(
@@ -784,7 +775,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		public static ISqlServerSpecificQueryable<TSource> QueryHint2008Plus<TSource>(this ISqlServerSpecificQueryable<TSource> source, [SqlQueryDependent] string hint)
 			where TSource : notnull
 		{
-			var currentSource = LinqExtensions.ProcessSourceQueryable?.Invoke(source) ?? source;
+			var currentSource = source.ProcessIQueryable();
 
 			return new SqlServerSpecificQueryable<TSource>(currentSource.Provider.CreateQuery<TSource>(
 				Expression.Call(
@@ -811,7 +802,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		public static ISqlServerSpecificQueryable<TSource> QueryHint2012Plus<TSource>(this ISqlServerSpecificQueryable<TSource> source, [SqlQueryDependent] string hint)
 			where TSource : notnull
 		{
-			var currentSource = LinqExtensions.ProcessSourceQueryable?.Invoke(source) ?? source;
+			var currentSource = source.ProcessIQueryable();
 
 			return new SqlServerSpecificQueryable<TSource>(currentSource.Provider.CreateQuery<TSource>(
 				Expression.Call(
@@ -836,7 +827,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		public static ISqlServerSpecificQueryable<TSource> QueryHint2016Plus<TSource>(this ISqlServerSpecificQueryable<TSource> source, [SqlQueryDependent] string hint)
 			where TSource : notnull
 		{
-			var currentSource = LinqExtensions.ProcessSourceQueryable?.Invoke(source) ?? source;
+			var currentSource = source.ProcessIQueryable();
 
 			return new SqlServerSpecificQueryable<TSource>(currentSource.Provider.CreateQuery<TSource>(
 				Expression.Call(
@@ -851,7 +842,7 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		sealed class TemporalTableExtensionBuilder : ISqlQueryExtensionBuilder
 		{
-			public void Build(ISqlBuilder sqlBuilder, StringBuilder stringBuilder, SqlQueryExtension sqlQueryExtension)
+			public void Build(NullabilityContext nullability, ISqlBuilder sqlBuilder, StringBuilder stringBuilder, SqlQueryExtension sqlQueryExtension)
 			{
 				var expression = (string)((SqlValue)sqlQueryExtension.Arguments["expression"]).Value!;
 
@@ -980,6 +971,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		{
 			return table.TemporalTableHint(TemporalTable.All);
 		}
+
 		static Expression<Func<ISqlServerSpecificTable<TSource>,ISqlServerSpecificTable<TSource>>> TemporalTableAllImpl<TSource>()
 			where TSource : notnull
 		{

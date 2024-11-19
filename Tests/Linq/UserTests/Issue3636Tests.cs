@@ -5,6 +5,7 @@ using FluentAssertions;
 using LinqToDB;
 using LinqToDB.Interceptors;
 using LinqToDB.Linq;
+using LinqToDB.Linq.Builder;
 using LinqToDB.Mapping;
 using NUnit.Framework;
 using Tests.Model;
@@ -36,6 +37,7 @@ namespace Tests.UserTests
 			var data1 = new[] { new T1 { ID = 1, ID2 = 2 }, new T1 { ID = 2, ID2 = 2 }, new T1 { ID = 2, ID2 = 85 } };
 			var data2 = new[] { new T2 { ID = 1, ID2 = 2 }, new T2 { ID = 2, ID2 = 2 }, new T2 { ID = 2, ID2 = 85 } };
 
+			using var guard  = new GuardGrouping(false);
 			using var db     = GetDataContext(context);
 			using var table1 = db.CreateLocalTable(data1);
 			using var table2 = db.CreateLocalTable(data2);
@@ -55,27 +57,39 @@ namespace Tests.UserTests
 
 			if (myId == 2)
 			{
-				Assert.AreEqual(1, result.Key);
+				Assert.Multiple(() =>
+				{
+					Assert.That(result.Key, Is.EqualTo(1));
 
-				Assert.AreEqual(1, groupResult.Length);
+					Assert.That(groupResult, Has.Length.EqualTo(1));
+				});
 
-				Assert.AreEqual(1, groupResult[0].s.ID);
-				Assert.AreEqual(2, groupResult[0].s.ID2);
-				Assert.AreEqual(0, groupResult[0].s.ID3);
-				Assert.AreEqual(1, groupResult[0].order.ID);
-				Assert.AreEqual(2, groupResult[0].order.ID2);
+				Assert.Multiple(() =>
+				{
+					Assert.That(groupResult[0].s.ID, Is.EqualTo(1));
+					Assert.That(groupResult[0].s.ID2, Is.EqualTo(2));
+					Assert.That(groupResult[0].s.ID3, Is.EqualTo(0));
+					Assert.That(groupResult[0].order.ID, Is.EqualTo(1));
+					Assert.That(groupResult[0].order.ID2, Is.EqualTo(2));
+				});
 			}
 			else
 			{
-				Assert.AreEqual(2, result.Key);
+				Assert.Multiple(() =>
+				{
+					Assert.That(result.Key, Is.EqualTo(2));
 
-				Assert.AreEqual(1, groupResult.Length);
+					Assert.That(groupResult, Has.Length.EqualTo(1));
+				});
 
-				Assert.AreEqual(2, groupResult[0].s.ID);
-				Assert.AreEqual(85, groupResult[0].s.ID2);
-				Assert.AreEqual(0, groupResult[0].s.ID3);
-				Assert.AreEqual(2, groupResult[0].order.ID);
-				Assert.AreEqual(85, groupResult[0].order.ID2);
+				Assert.Multiple(() =>
+				{
+					Assert.That(groupResult[0].s.ID, Is.EqualTo(2));
+					Assert.That(groupResult[0].s.ID2, Is.EqualTo(85));
+					Assert.That(groupResult[0].s.ID3, Is.EqualTo(0));
+					Assert.That(groupResult[0].order.ID, Is.EqualTo(2));
+					Assert.That(groupResult[0].order.ID2, Is.EqualTo(85));
+				});
 			}
 		}
 	}

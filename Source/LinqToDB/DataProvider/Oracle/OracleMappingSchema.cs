@@ -13,6 +13,28 @@ namespace LinqToDB.DataProvider.Oracle
 
 	public sealed class OracleMappingSchema : LockedMappingSchema
 	{
+#if SUPPORTS_COMPOSITE_FORMAT
+		private static readonly CompositeFormat DATE_FORMAT     = CompositeFormat.Parse("DATE '{0:yyyy-MM-dd}'");
+		private static readonly CompositeFormat DATETIME_FORMAT = CompositeFormat.Parse("TO_DATE('{0:yyyy-MM-dd HH:mm:ss}', 'YYYY-MM-DD HH24:MI:SS')");
+
+		private static readonly CompositeFormat TIMESTAMP0_FORMAT = CompositeFormat.Parse("TIMESTAMP '{0:yyyy-MM-dd HH:mm:ss}'");
+		private static readonly CompositeFormat TIMESTAMP1_FORMAT = CompositeFormat.Parse("TIMESTAMP '{0:yyyy-MM-dd HH:mm:ss.f}'");
+		private static readonly CompositeFormat TIMESTAMP2_FORMAT = CompositeFormat.Parse("TIMESTAMP '{0:yyyy-MM-dd HH:mm:ss.ff}'");
+		private static readonly CompositeFormat TIMESTAMP3_FORMAT = CompositeFormat.Parse("TIMESTAMP '{0:yyyy-MM-dd HH:mm:ss.fff}'");
+		private static readonly CompositeFormat TIMESTAMP4_FORMAT = CompositeFormat.Parse("TIMESTAMP '{0:yyyy-MM-dd HH:mm:ss.ffff}'");
+		private static readonly CompositeFormat TIMESTAMP5_FORMAT = CompositeFormat.Parse("TIMESTAMP '{0:yyyy-MM-dd HH:mm:ss.fffff}'");
+		private static readonly CompositeFormat TIMESTAMP6_FORMAT = CompositeFormat.Parse("TIMESTAMP '{0:yyyy-MM-dd HH:mm:ss.ffffff}'");
+		private static readonly CompositeFormat TIMESTAMP7_FORMAT = CompositeFormat.Parse("TIMESTAMP '{0:yyyy-MM-dd HH:mm:ss.fffffff}'");
+
+		private static readonly CompositeFormat TIMESTAMPTZ0_FORMAT = CompositeFormat.Parse("TIMESTAMP '{0:yyyy-MM-dd HH:mm:ss} +00:00'");
+		private static readonly CompositeFormat TIMESTAMPTZ1_FORMAT = CompositeFormat.Parse("TIMESTAMP '{0:yyyy-MM-dd HH:mm:ss.f} +00:00'");
+		private static readonly CompositeFormat TIMESTAMPTZ2_FORMAT = CompositeFormat.Parse("TIMESTAMP '{0:yyyy-MM-dd HH:mm:ss.ff} +00:00'");
+		private static readonly CompositeFormat TIMESTAMPTZ3_FORMAT = CompositeFormat.Parse("TIMESTAMP '{0:yyyy-MM-dd HH:mm:ss.fff} +00:00'");
+		private static readonly CompositeFormat TIMESTAMPTZ4_FORMAT = CompositeFormat.Parse("TIMESTAMP '{0:yyyy-MM-dd HH:mm:ss.ffff} +00:00'");
+		private static readonly CompositeFormat TIMESTAMPTZ5_FORMAT = CompositeFormat.Parse("TIMESTAMP '{0:yyyy-MM-dd HH:mm:ss.fffff} +00:00'");
+		private static readonly CompositeFormat TIMESTAMPTZ6_FORMAT = CompositeFormat.Parse("TIMESTAMP '{0:yyyy-MM-dd HH:mm:ss.ffffff} +00:00'");
+		private static readonly CompositeFormat TIMESTAMPTZ7_FORMAT = CompositeFormat.Parse("TIMESTAMP '{0:yyyy-MM-dd HH:mm:ss.fffffff} +00:00'");
+#else
 		private const string DATE_FORMAT = "DATE '{0:yyyy-MM-dd}'";
 
 		private const string DATETIME_FORMAT = "TO_DATE('{0:yyyy-MM-dd HH:mm:ss}', 'YYYY-MM-DD HH24:MI:SS')";
@@ -34,13 +56,13 @@ namespace LinqToDB.DataProvider.Oracle
 		private const string TIMESTAMPTZ5_FORMAT = "TIMESTAMP '{0:yyyy-MM-dd HH:mm:ss.fffff} +00:00'";
 		private const string TIMESTAMPTZ6_FORMAT = "TIMESTAMP '{0:yyyy-MM-dd HH:mm:ss.ffffff} +00:00'";
 		private const string TIMESTAMPTZ7_FORMAT = "TIMESTAMP '{0:yyyy-MM-dd HH:mm:ss.fffffff} +00:00'";
+#endif
 
 		OracleMappingSchema() : base(ProviderName.Oracle)
 		{
 			ColumnNameComparer = StringComparer.OrdinalIgnoreCase;
 
 			SetDataType(typeof(Guid),   DataType.Guid);
-			SetDataType(typeof(Guid?),  DataType.Guid);
 			SetDataType(typeof(string), new SqlDataType(DataType.VarChar, typeof(string), 255));
 
 			SetConvertExpression<decimal,TimeSpan>(v => new TimeSpan((long)v));
@@ -48,7 +70,7 @@ namespace LinqToDB.DataProvider.Oracle
 			SetValueToSqlConverter(typeof(Guid),           (sb, _,_,v) => ConvertBinaryToSql  (sb,     ((Guid)   v).ToByteArray()));
 			SetValueToSqlConverter(typeof(DateTime),       (sb,dt,_,v) => ConvertDateTimeToSql(sb, dt, (DateTime)v));
 			SetValueToSqlConverter(typeof(DateTimeOffset), (sb,dt,_,v) => ConvertDateTimeToSql(sb, dt, ((DateTimeOffset)v).UtcDateTime));
-			SetValueToSqlConverter(typeof(string)        , (sb, _,_,v) => ConvertStringToSql  (sb,     v.ToString()!));
+			SetValueToSqlConverter(typeof(string)        , (sb, _,_,v) => ConvertStringToSql  (sb,     (string)v));
 			SetValueToSqlConverter(typeof(char)          , (sb, _,_,v) => ConvertCharToSql    (sb,     (char)v));
 			SetValueToSqlConverter(typeof(byte[]),         (sb, _,_,v) => ConvertBinaryToSql  (sb,     (byte[])v));
 			SetValueToSqlConverter(typeof(Binary),         (sb, _,_,v) => ConvertBinaryToSql  (sb,     ((Binary)v).ToArray()));
@@ -97,11 +119,7 @@ namespace LinqToDB.DataProvider.Oracle
 
 		static void AppendConversion(StringBuilder stringBuilder, int value)
 		{
-			stringBuilder
-				.Append("chr(")
-				.Append(value)
-				.Append(')')
-				;
+			stringBuilder.Append(CultureInfo.InvariantCulture, $"chr({value})");
 		}
 
 		internal static void ConvertStringToSql(StringBuilder stringBuilder, string value)
@@ -136,7 +154,11 @@ namespace LinqToDB.DataProvider.Oracle
 
 		static void ConvertDateTimeToSql(StringBuilder stringBuilder, SqlDataType dataType, DateTime value)
 		{
+#if SUPPORTS_COMPOSITE_FORMAT
+			CompositeFormat format;
+#else
 			string format;
+#endif
 			switch (dataType.Type.DataType)
 			{
 				case DataType.Date:

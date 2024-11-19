@@ -14,7 +14,6 @@ using LinqToDB.Data;
 using LinqToDB.DataProvider.DB2;
 using LinqToDB.DataProvider.Oracle;
 using LinqToDB.DataProvider.PostgreSQL;
-using LinqToDB.DataProvider.SqlServer;
 using LinqToDB.Extensions;
 using LinqToDB.Metadata;
 using LinqToDB.Naming;
@@ -186,14 +185,12 @@ namespace LinqToDB.CommandLine
 				case ProviderName.SQLite:
 					provider = ProviderName.SQLiteClassic;
 					break;
-				case ProviderName.Firebird:
-					// TODO                         : don't forget to add versioning here after Firebird versioning feature merged
+				case ProviderName.Firebird          :
 					break;
-				case ProviderName.MySql:
-					// TODO                         : remove provider hint after MySQL.Data support removed
-					provider = ProviderName.MySqlConnector;
+				case ProviderName.MySql             :
+					provider = "MySqlConnector";
 					break;
-				case ProviderName.Oracle:
+				case ProviderName.Oracle            :
 					OracleTools.AutoDetectProvider = true;
 					provider = ProviderName.OracleManaged;
 					break;
@@ -203,9 +200,9 @@ namespace LinqToDB.CommandLine
 				case ProviderName.Sybase:
 					provider = ProviderName.SybaseManaged;
 					break;
-				case ProviderName.SqlCe:
+				case ProviderName.SqlCe             :
 				{
-					if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+					if (!OperatingSystem.IsWindows())
 					{
 						Console.Error.WriteLine($"SQL Server Compact Edition not supported on non-Windows platforms");
 						return null;
@@ -230,7 +227,7 @@ Possible reasons:
 				case ProviderName.SapHana:
 				{
 					var isOdbc = connectionString.Contains("HDBODBC", StringComparison.OrdinalIgnoreCase);
-					if (!isOdbc && !RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+					if (!isOdbc && !OperatingSystem.IsWindows())
 					{
 						Console.Error.WriteLine($"Only ODBC provider for SAP HANA supported on non-Windows platforms. Provided connection string doesn't look like HANA ODBC connection string.");
 						return null;
@@ -268,15 +265,13 @@ Possible reasons:
 					if (providerLocation == null || !File.Exists(providerLocation))
 					{
 						// we cannot add 90 Megabytes (compressed size) of native provider for single db just because we can
-						// note: we use IBM.Data.DB2.Core because Net.IBM.Data.Db2 and Net5.IBM.Data.Db2 require
-						// net6/net5 runtime and fail to load if .net core 3.1 runtime used to run tool (default runtime for tool)
-						Console.Error.WriteLine(@$"Cannot locate IBM.Data.DB2.Core.dll provider assembly.
-Due to huge size of it, we don't include IBM.Data.DB2 provider into installation.
+						Console.Error.WriteLine(@$"Cannot locate IBM.Data.Db2.dll provider assembly.
+Due to huge size of it, we don't include Net.IBM.Data.Db2 provider into installation.
 You need to install it manually and specify provider path using '--provider-location <path_to_assembly>' option.
 Provider could be downloaded from:
-- for Windows: https://www.nuget.org/packages/Net.IBM.Data.DB2.Core
-- for Linux: https://www.nuget.org/packages/Net.IBM.Data.DB2.Core-lnx
-- for macOS: https://www.nuget.org/packages/Net.IBM.Data.DB2.Core-osx");
+- for Windows: https://www.nuget.org/packages/Net.IBM.Data.Db2
+- for Linux: https://www.nuget.org/packages/Net.IBM.Data.Db2-lnx
+- for macOS: https://www.nuget.org/packages/Net.IBM.Data.Db2-osx");
 						return null;
 					}
 
@@ -286,7 +281,7 @@ Provider could be downloaded from:
 				}
 				case ProviderName.Access:
 				{
-					if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+					if (!OperatingSystem.IsWindows())
 					{
 						Console.Error.WriteLine($"MS Access not supported on non-Windows platforms");
 						return null;
@@ -432,7 +427,7 @@ Provider could be downloaded from:
 			status = null;
 
 			// currently we support multiarch only for Windows
-			if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+			if (!OperatingSystem.IsWindows())
 			{
 				Console.Out.WriteLine($"'{General.Architecture.Name}' parameter ignored for non-Windows system");
 				return false;

@@ -1,31 +1,34 @@
 ﻿using System.Linq;
 using System.Linq.Expressions;
-using LinqToDB.Expressions;
 
 namespace LinqToDB.Linq.Builder
 {
+	using LinqToDB.Expressions;
+
+	[BuildsMethodCall("HasUniqueKey")]
 	sealed class HasUniqueKeyBuilder : MethodCallBuilder
 	{
-		protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
+		public static bool CanBuildMethod(MethodCallExpression call, BuildInfo buildInfo, ExpressionBuilder builder)
+			=> call.IsQueryable();
+
+		protected override BuildSequenceResult BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
-			return methodCall.IsQueryable("HasUniqueKey");
-		}
+			var buildResult = builder.TryBuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
+			if (buildResult.BuildContext == null)
+				return buildResult;
+				
+			var sequence = buildResult.BuildContext;
 
-		protected override IBuildContext BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
-		{
-			var sequence = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
+			var keySelector = methodCall.Arguments[1].UnwrapLambda();
 
-			var keySelector = (LambdaExpression) methodCall.Arguments[1].Unwrap();
-			var keyContext  = new SelectContext(buildInfo.Parent, keySelector, sequence);
-			var keySql      = builder.ConvertExpressions(keyContext, keySelector.Body.Unwrap(), ConvertFlags.All, null);
+			var keyExpr = SequenceHelper.PrepareBody(keySelector, sequence);
+			var keySql  = builder.BuildSqlExpression(sequence, keyExpr, ProjectFlags.SQL);
 
-			var uniqueKeys  = keySql
-				.Select(info => sequence.SelectQuery.Select.Columns[sequence.SelectQuery.Select.Add(info.Sql)])
-				.ToArray();
+			var placeholders = ExpressionBuilder.CollectDistinctPlaceholders(keySql);
 
-			sequence.SelectQuery.UniqueKeys.Add(uniqueKeys);
+			sequence.SelectQuery.UniqueKeys.Add(placeholders.Select(p => p.Sql).ToArray());
 
-			return new SubQueryContext(sequence);
+			return BuildSequenceResult.FromContext(new SubQueryContext(sequence));
 		}
 	}
 }

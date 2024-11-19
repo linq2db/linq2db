@@ -1,0 +1,11 @@
+﻿#nullable enable
+LinqToDB.Extensions.DependencyInjection.ServiceConfigurationExtensions
+LinqToDB.Extensions.Logging.LinqToDBLoggerFactoryAdapter
+LinqToDB.Extensions.Logging.LinqToDBLoggerFactoryAdapter.LinqToDBLoggerFactoryAdapter(Microsoft.Extensions.Logging.ILoggerFactory! loggerFactory) -> void
+LinqToDB.Extensions.Logging.LinqToDBLoggerFactoryAdapter.OnTrace(string? message, string? category, System.Diagnostics.TraceLevel level) -> void
+LinqToDB.Extensions.Logging.OptionsBuilderExtensions
+static LinqToDB.Extensions.DependencyInjection.ServiceConfigurationExtensions.AddLinqToDB(this Microsoft.Extensions.DependencyInjection.IServiceCollection! serviceCollection, System.Func<System.IServiceProvider!, LinqToDB.DataOptions!, LinqToDB.DataOptions!>! configure, Microsoft.Extensions.DependencyInjection.ServiceLifetime lifetime = Microsoft.Extensions.DependencyInjection.ServiceLifetime.Scoped) -> Microsoft.Extensions.DependencyInjection.IServiceCollection!
+static LinqToDB.Extensions.DependencyInjection.ServiceConfigurationExtensions.AddLinqToDBContext<TContext, TContextImplementation>(this Microsoft.Extensions.DependencyInjection.IServiceCollection! serviceCollection, System.Func<System.IServiceProvider!, LinqToDB.DataOptions!, LinqToDB.DataOptions!>! configure, Microsoft.Extensions.DependencyInjection.ServiceLifetime lifetime = Microsoft.Extensions.DependencyInjection.ServiceLifetime.Scoped) -> Microsoft.Extensions.DependencyInjection.IServiceCollection!
+static LinqToDB.Extensions.DependencyInjection.ServiceConfigurationExtensions.AddLinqToDBContext<TContext>(this Microsoft.Extensions.DependencyInjection.IServiceCollection! serviceCollection, System.Func<System.IServiceProvider!, LinqToDB.DataOptions!, LinqToDB.DataOptions!>! configure, Microsoft.Extensions.DependencyInjection.ServiceLifetime lifetime = Microsoft.Extensions.DependencyInjection.ServiceLifetime.Scoped) -> Microsoft.Extensions.DependencyInjection.IServiceCollection!
+static LinqToDB.Extensions.Logging.OptionsBuilderExtensions.UseDefaultLogging(this LinqToDB.DataOptions! options, System.IServiceProvider! provider) -> LinqToDB.DataOptions!
+static LinqToDB.Extensions.Logging.OptionsBuilderExtensions.UseLoggerFactory(this LinqToDB.DataOptions! options, Microsoft.Extensions.Logging.ILoggerFactory! factory) -> LinqToDB.DataOptions!

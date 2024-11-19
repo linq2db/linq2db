@@ -2,6 +2,8 @@
 
 using LinqToDB;
 using LinqToDB.Data;
+using LinqToDB.FSharp;
+
 using NUnit.Framework;
 
 using Tests.FSharp.Models;
@@ -22,14 +24,17 @@ namespace Tests.Linq
 				p = "Tester";
 				var person2 = db.GetTable<Person>().Where(t => t.FirstName == p).Single();
 
-				Assert.That(person1.FirstName, Is.EqualTo("John"));
-				Assert.That(person2.FirstName, Is.EqualTo("Tester"));
+				Assert.Multiple(() =>
+				{
+					Assert.That(person1.FirstName, Is.EqualTo("John"));
+					Assert.That(person2.FirstName, Is.EqualTo("Tester"));
+				});
 			}
 		}
 
 		// Excluded providers inline such parameter
 		[Test]
-		public void ExposeSqlStringParameter([DataSources(false, ProviderName.DB2, TestProvName.AllInformix, TestProvName.AllClickHouse)]
+		public void ExposeSqlStringParameter([DataSources(false, TestProvName.AllInformix, TestProvName.AllClickHouse)]
 			string context)
 		{
 			using (var db = GetDataConnection(context))
@@ -37,7 +42,7 @@ namespace Tests.Linq
 				var p   = "abc";
 				var sql = db.GetTable<Person>().Where(t => t.FirstName == p).ToString();
 
-				TestContext.WriteLine(sql);
+				TestContext.Out.WriteLine(sql);
 
 				Assert.That(sql, Contains.Substring("(3)").Or.Contains("(4000)"));
 			}

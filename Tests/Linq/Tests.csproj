@@ -3,13 +3,31 @@
 
 	<PropertyGroup>
 		<AssemblyName>linq2db.Tests</AssemblyName>
+
+		<MSBuildWarningsAsMessages>$(MSBuildWarningsAsMessages);MSB3277</MSBuildWarningsAsMessages>
 	</PropertyGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\VisualBasic\Tests.VisualBasic.vbproj" />
+	</ItemGroup>
+
+	<ItemGroup Condition=" '$(TargetFramework)' == 'net462' ">
+		<Reference Include="Sap.Data.Hana.v4.5">
+			<HintPath>..\..\Redist\SapHana\v4.5\Sap.Data.Hana.v4.5.dll</HintPath>
+		</Reference>
+	</ItemGroup>
+	
+	<ItemGroup Condition=" '$(TargetFramework)' != 'net462' ">
+		<FrameworkReference Include="Microsoft.AspNetCore.App" />
+
+		<Reference Include="Sap.Data.Hana.Core.v2.1">
+			<HintPath>..\..\Redist\SapHana\v2.1\Sap.Data.Hana.Core.v2.1.dll</HintPath>
+		</Reference>
+	</ItemGroup>
 
 	<ItemGroup>
 		<!-- T4 support -->
 		<Service Include="{508349b6-6b84-4df5-91f0-309beebad82d}" />
-
-		<ProjectReference Include="..\VisualBasic\Tests.VisualBasic.vbproj" />
 
 		<None Update="Extensions\MySqlTests.tt">
 			<LastGenOutput>MySqlTests.generated.cs</LastGenOutput>
@@ -67,21 +85,6 @@
 		<None Include="..\..\Redist\SapHana\libadonetHDB32.dll" Link="libadonetHDB32.dll">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</None>
-	</ItemGroup>
-
-	<ItemGroup Condition=" '$(TargetFramework)' == 'net472' ">
-		<Reference Include="Sap.Data.Hana.v4.5">
-			<HintPath>..\..\Redist\SapHana\v4.5\Sap.Data.Hana.v4.5.dll</HintPath>
-		</Reference>
-	</ItemGroup>
-	<ItemGroup Condition=" '$(TargetFramework)' == 'netcoreapp3.1' OR '$(TargetFramework)' == 'net6.0' OR '$(TargetFramework)' == 'net7.0' ">
-		<Reference Include="Sap.Data.Hana.Core.v2.1">
-			<HintPath>..\..\Redist\SapHana\v2.1\Sap.Data.Hana.Core.v2.1.dll</HintPath>
-		</Reference>
-	</ItemGroup>
-
-	<ItemGroup Condition=" '$(TargetFramework)' != 'net472' ">
-		<FrameworkReference Include="Microsoft.AspNetCore.App" />
 	</ItemGroup>
 
 	<ItemGroup Condition="'$(Language)'=='C#'">

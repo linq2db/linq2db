@@ -1,19 +1,16 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-using LinqToDB.Mapping;
+using System.Linq;
 
 namespace LinqToDB.SqlQuery
 {
-	using Common.Internal;
+	using Mapping;
 
 	//TODO: Investigate how to implement only ISqlTableSource interface
-	public class SqlRawSqlTable : SqlTable, IQueryElement
+	public class SqlRawSqlTable : SqlTable
 	{
 		public string SQL { get; }
 
-		public ISqlExpression[] Parameters { get; }
+		public ISqlExpression[] Parameters { get; private set; }
 
 		public SqlRawSqlTable(
 			EntityDescriptor endtityDescriptor,
@@ -46,52 +43,30 @@ namespace LinqToDB.SqlQuery
 
 			SequenceAttributes = table.SequenceAttributes;
 
+			AddRange(table.Fields.Select(f => new SqlField(f)));
+
 			SQL                = table.SQL;
 			Parameters         = parameters;
 		}
 
 		public override QueryElementType ElementType  => QueryElementType.SqlRawSqlTable;
 
-		StringBuilder IQueryElement.ToString(StringBuilder sb, Dictionary<IQueryElement, IQueryElement> dic)
+		public override QueryElementTextWriter ToString(QueryElementTextWriter writer)
 		{
-			return sb
+			writer
+				.DebugAppendUniqueId(this)
 				.AppendLine("(")
 				.Append(SQL)
 				.Append(')')
 				.AppendLine();
-		}
 
-		public override string ToString()
-		{
-			using var sb = Pools.StringBuilder.Allocate();
-			return ((IQueryElement)this).ToString(sb.Value, new Dictionary<IQueryElement,IQueryElement>()).ToString();
+			return writer;
 		}
 
 		#region IQueryElement Members
 
-		public string SqlText
-		{
-			get
-			{
-				using var sb = Pools.StringBuilder.Allocate();
-				return ((IQueryElement)this).ToString(sb.Value, new Dictionary<IQueryElement, IQueryElement>()).ToString();
-			}
-		}
+		public string SqlText => this.ToDebugString();
 
 		#endregion
-
-		#region ISqlExpressionWalkable Members
-
-		public override ISqlExpression Walk<TContext>(WalkOptions options, TContext context, Func<TContext, ISqlExpression, ISqlExpression> func)
-		{
-			if (Parameters != null)
-				for (var i = 0; i < Parameters.Length; i++)
-					Parameters[i] = Parameters[i].Walk(options, context, func)!;
-
-			return func(context, this);
-		}
-
-		#endregion
-
 	}
 }

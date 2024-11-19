@@ -13,21 +13,26 @@ uid: contributing
 |.\Data|Databases and database creation scripts for tests|
 |.\NuGet|LINQ to DB NuGet packages build files|
 |.\Redist| Binaries, unavailable officially at NuGet, used by tests and nugets|
+|.\Source\CodeGenerators| LINQ to DB internal source generators source code|
 |.\Source\LinqToDB| LINQ to DB source code|
-|.\Source\LinqToDB.AspNet| LINQ to DB ASP.NET Core integration library source code|
 |.\Source\LinqToDB.CLI| LINQ to DB CLI scaffold tool source code|
+|.\Source\LinqToDB.EntityFrameworkCore| LINQ to DB integration with Entity Framework Core source code|
+|.\Source\LinqToDB.Extensions| LINQ to DB Dependency Injection and Logging extensions library source code|
+|.\Source\LinqToDB.FSharp | F# support extension for Linq To DB|
 |.\Source\LinqToDB.Remote.Grpc| LINQ to DB Remote Context GRPC client/server source code|
 |.\Source\LinqToDB.Remote.Wcf| LINQ to DB Remote Context WCF client/server source code|
 |.\Source\LinqToDB.Templates| LINQ to DB t4models source code|
 |.\Source\LinqToDB.Tools| LINQ to DB Tools source code|
 |.\Tests| Unit test projects folder|
 |.\Tests\Base|LINQ to DB testing framework|
+|.\Tests\EntityFrameworkCore|LINQ to DB EF.Core integration tests|
+|.\Tests\EntityFrameworkCore.FSharp|LINQ to DB EF.Core F# integration tests|
 |.\Tests\FSharp|F# models and tests|
 |.\Tests\Linq|Main project for LINQ to DB unit tests|
 |.\Tests\Model|Model classes for tests|
-|.\Tests\Tests.T4|T4 templates test project|
 |.\Tests\Tests.Benchmarks| Benchmarks|
-|.\Tests\Tests.PLayground| Test project for use with linq2db.playground.sln lite test solution<br>Used for work on specific test without full solution load|
+|.\Tests\Tests.PLayground| Test project for use with linq2db.playground.sln lite test solution. Used for work on specific test without full solution load|
+|.\Tests\Tests.T4|T4 templates test project|
 |.\Tests\VisualBasic|Visual Basic models and tests support|
 
 #### Solutions
@@ -38,40 +43,22 @@ uid: contributing
 
 #### Source projects
 
-Preferred target defines:
+Custom feature symbols:
 
-- `NETFRAMEWORK` - `net45`, `net46` and `net472` target ifdef
-- `NETSTANDARD2_1PLUS` - targets with `netstandard2.1` support (`netstandard2.1`, `netcoreapp3.1`, `net6.0`, `net7.0`). Don't use this define in test projects!
-- `NATIVE_ASYNC` - ifdef with native support for `ValueTask`, `IAsyncEnumerable<T>` and `IAsyncDisposable` types
+* `SUPPORTS_COMPOSITE_FORMAT`: for code that use `System.Text.CompositeFormat` class
 
-Other allowed target defines:
+Custom debugging symbols:
 
-- `NETSTANDARD2_1` - `netstandard2.1` target ifdef
-- `NETCOREAPP3_1` - `netcoreapp3.1` target ifdef
-- `NETSTANDARD2_0` - `netstandard2.0` target ifdef
-- `NET6_0` - `net6.0` target ifdef
-- `NET7_0` - `net7.0` target ifdef
-- `NET45` - `net45` target ifdef
-- `NET46` - `net46` target ifdef
-- `NET472` - `net472` target ifdef
-
-Allowed debugging defines:
-
-- `TRACK_BUILD` - ???
-- `DEBUG` - for debug code in debug build. To disable debug code use `DEBUG1` rename
-- `OVERRIDETOSTRING` - enables `ToString()` overrides for AST model (must be enabled in LinqToDB.csproj by renaming existing `OVERRIDETOSTRING1` define)
+* `OVERRIDETOSTRING` - enables `ToString()` overrides for AST model (must be enabled in LinqToDB.csproj by renaming existing `OVERRIDETOSTRING1` define)
+* `BUGCHECK` - enables extra bugchecks in debug and ci test builds
 
 #### Test projects
 
-Tests targets: `net472`, `netcoreapp31`, `net6.0`, `net7.0`
+Tests targets: `net462`, `net6.0`, `net8.0`, `net9.0`. In general we test 3 configurations: lowest supported .NET Framework, lowest supported .NET version, highest supported .NET version.
 
-Allowed target defines:
+Custom symbols:
 
-- `NETCOREAPP3_1` - `netcoreapp3.1` target ifdef
-- `NET6_0` - `net6.0` target ifdef
-- `NET7_0` - `net7.0` target ifdef
-- `NET472` - `net472` target ifdef
-- `AZURE` - for Azure Pipelines CI builds
+* `AZURE` - for Azure Pipelines CI builds
 
 ## Build
 
@@ -80,12 +67,12 @@ You can use solution to build and run tests. Also you can build whole solution o
 * `.\Build.cmd` - builds all the projects in the solution for Debug, Release and Azure configurations
 * `.\Compile.cmd` - builds LinqToDB project for Debug and Release configurations
 * `.\Clean.cmd` - cleanups solution projects for Debug, Release and Azure configurations
-* `.\Test.cmd` - build `Debug` configuration and run tests for `net472`, `netcoreapp3.1`, `net6.0` and `net7.0` targets. You can set other configuration by passing it as first parameter, disable test targets by passing 0 to second (for `net472`),  third (for `netcoreapp3.1`), fourth (for `net6.0`) or fifth (for `net7.0`) parameter and format (default:html) as 7th parameter.
+* `.\Test.cmd` - build `Debug` configuration and run tests for `net462`, `net6.0`, `net8.0` and `net9.0` targets. You can set other configuration by passing it as first parameter, disable test targets by passing 0 to second (for `net462`), third (for `net6.0`), fourth (for `net8.0`) or fifth (for `net9.0`) parameter and format (default:html) as 6th parameter.
 
-Example of running `Release` build tests for `netcoreapp3.1` only with trx as output:
+Example of running `Release` build tests for `net6.0` only with `trx` as output:
 
-```
-test.cmd Release 0 1 0 0 0 trx
+```cmd
+test.cmd Release 0 1 0 0 trx
 ```
 
 ### Different platforms support
@@ -133,7 +120,7 @@ public class Test: TestBase
 ### Configure data providers for tests
 
 `DataSourcesAttribute` generates tests for each enabled data provider. Configuration is taken
-from `.\Tests\DataProviders.json` and `.\Tests\UserDataProviders.json` (used first, if exists).
+from `.\DataProviders.json` and `.\UserDataProviders.json` (used first, if exists).
 
 Repository already contains pre-configured `UserDataProviders.json.template` configuration with basic setup for SQLite-based testing and all you need is to rename it to `UserDataProviders.json`, add connection string for other databases you want to test.
 `UserDataProviders.json` will be ignored by git, so you can edit it freely.
@@ -147,8 +134,8 @@ The `[User]DataProviders.json` is a regular JSON file:
 
 ```js
 {
-    // .net framework 4.7.2 test configuration
-    "NET472" :
+    // .net framework 4.6.2 test configuration
+    "NETFX" :
     {
         // base configuration to inherit settings from
         // Inheritance rules:
@@ -158,7 +145,7 @@ The `[User]DataProviders.json` is a regular JSON file:
 
         // default provider, used as a source of reference data
         // LINQ to DB uses SQLite for it and you hardly need to change it
-        "DefaultConfiguration" : "SQLite.Classic",
+        "DefaultConfiguration" : "SQLite.MS",
 
         // (optional) contains full or relative (from test assembly location) path to test baselines directory.
         // When path is set and specified directory exists - enables baselines generation for tests.
@@ -184,10 +171,10 @@ The `[User]DataProviders.json` is a regular JSON file:
             "SqlServer.2005",
             "SqlServer.Azure",
             "DB2",
-            "Firebird",
+            "Firebird.5",
             "Informix",
-            "MySql",
-            "MariaDB",
+            "MySql.8.0",
+            "MariaDB.11",
             "Oracle.Native",
             "Oracle.Managed",
             "PostgreSQL",
@@ -218,17 +205,17 @@ The `[User]DataProviders.json` is a regular JSON file:
             "SqlServer.2008",
             "SqlServer.2005",
             "SqlServer.Azure",
-            "Firebird",
-            "MySql",
-            "MariaDB",
+            "Firebird.5",
+            "MySql.8.0",
+            "MariaDB.11",
             "PostgreSQL",
             "SqlServer.Northwind",
             "TestNoopProvider"
         ]
     },
 
-    // .net 7.0 test configuration
-    "NET70" :
+    // .net 8.0 test configuration
+    "NET80" :
     {
         "BasedOn"              : "LocalConnectionStrings",
         "Providers"            :
@@ -240,9 +227,31 @@ The `[User]DataProviders.json` is a regular JSON file:
             "SqlServer.2008",
             "SqlServer.2005",
             "SqlServer.Azure",
-            "Firebird",
-            "MySql",
-            "MariaDB",
+            "Firebird.5",
+            "MySql.8.0",
+            "MariaDB.11",
+            "PostgreSQL",
+            "SqlServer.Northwind",
+            "TestNoopProvider"
+        ]
+    },
+
+    // .net 9.0 test configuration
+    "NET90" :
+    {
+        "BasedOn"              : "LocalConnectionStrings",
+        "Providers"            :
+        [
+            "SQLite.MS",
+            "Northwind.SQLite.MS",
+            "SqlServer.2014",
+            "SqlServer.2012",
+            "SqlServer.2008",
+            "SqlServer.2005",
+            "SqlServer.Azure",
+            "Firebird.5",
+            "MySql.8.0",
+            "MariaDB.11",
             "PostgreSQL",
             "SqlServer.Northwind",
             "TestNoopProvider"
@@ -267,7 +276,7 @@ The `[User]DataProviders.json` is a regular JSON file:
 }
 ```
 
-To define your own configurations **DO NOT EDIT** `DataProviders.json` - create `.\Tests\Linq\UserDataProviders.json` and define needed configurations.
+To define your own configurations **DO NOT EDIT** `DataProviders.json` - create `.\UserDataProviders.json` and define needed configurations.
 
 Tests execution depends on `_CreateData.*` tests executed first. Those tests recreate test databases and populate them with test data, so if you are going to run one test be sure to run `_CreateData` before it manually.
 
@@ -279,10 +288,10 @@ We do run builds and tests with:
 
 * [Azure Pipelines](https://dev.azure.com/linq2db/linq2db/_build?definitionId=3) [pipelines/default.yml](https://github.com/linq2db/linq2db/blob/master/Build/Azure/pipelines/default.yml).
 It builds solution, generate and publish nugets and runs tests for:
-  * .Net 4.7.2
-  * .Net Core 3.1 (Windows, Linux and MacOS)
+  * .Net 4.6.2
   * .Net 6.0 (Windows, Linux and MacOS)
-  * .Net 7.0 (Windows, Linux and MacOS)
+  * .Net 8.0 (Windows, Linux and MacOS)
+  * .Net 9.0 (Windows, Linux and MacOS)
 For more details check [readme](https://github.com/linq2db/linq2db/blob/master/Build/Azure/README.md)
 
 CI builds are done for all branches and PRs.

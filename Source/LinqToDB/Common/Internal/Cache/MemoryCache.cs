@@ -341,7 +341,6 @@ namespace LinqToDB.Common.Internal.Cache
 		{
 			var currentSize = Interlocked.Read(ref cache._cacheSize);
 
-
 			var lowWatermark = cache._options.SizeLimit * (1 - cache._options.CompactionPercentage);
 
 			if (currentSize > lowWatermark)

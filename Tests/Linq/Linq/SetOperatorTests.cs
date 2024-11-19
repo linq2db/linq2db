@@ -1,4 +1,5 @@
 ﻿using System.Linq;
+using System.Threading.Tasks;
 using LinqToDB;
 using LinqToDB.Mapping;
 using LinqToDB.Tools.Comparers;
@@ -65,7 +66,8 @@ namespace Tests.Linq
 				var expected = e1.Where(e => !e2.Contains(e, ComparerBuilder.GetEqualityComparer<SampleData>())).ToArray();
 				var actual = query.ToArray();
 
-				if (!context.IsAnyOf(TestProvName.AllPostgreSQL)) // postgres has a bug?
+				// TODO: emulation is not correct, but pgsql and mysql native implementation working properly
+				if (!context.IsAnyOf(TestProvName.AllPostgreSQL, TestProvName.AllMySql8Plus))
 					AreEqual(expected, actual, ComparerBuilder.GetEqualityComparer<SampleData>());
 			}
 		}
@@ -88,7 +90,8 @@ namespace Tests.Linq
 				var expected = e1.Where(e => e2.Contains(e, ComparerBuilder.GetEqualityComparer<SampleData>())).ToArray();
 				var actual = query.ToArray();
 
-				if (!context.IsAnyOf(TestProvName.AllPostgreSQL)) // postgres has a bug?
+				// TODO: emulation is not correct, but pgsql and mysql native implementation working properly
+				if (!context.IsAnyOf(TestProvName.AllPostgreSQL, TestProvName.AllMySql8Plus))
 					AreEqual(expected, actual, ComparerBuilder.GetEqualityComparer<SampleData>());
 			}
 		}
@@ -186,8 +189,6 @@ namespace Tests.Linq
 			}
 		}
 
-
-
 		private SampleData[] GenerateTestData()
 		{
 			return Enumerable.Range(1, 10)
@@ -199,6 +200,29 @@ namespace Tests.Linq
 					Value3 = i * 1000
 				})
 				.ToArray();
+		}
+
+		[Test]
+		public async Task Issue3132Test([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var query1 = db.Person
+					.Where(x => x.MiddleName != null)
+					.GroupBy(x => x.MiddleName)
+					.Select(grp => new
+					{
+						grp.Key,
+						Count = grp.Count()
+					});
+
+				var unionResult = await query1
+					.UnionAll(query1).UnionAll(query1).UnionAll(query1).UnionAll(query1).UnionAll(query1)
+					.UnionAll(query1).UnionAll(query1).UnionAll(query1).UnionAll(query1).UnionAll(query1)
+					.UnionAll(query1).UnionAll(query1).UnionAll(query1).UnionAll(query1).UnionAll(query1)
+					.UnionAll(query1).UnionAll(query1).UnionAll(query1).UnionAll(query1).UnionAll(query1)
+					.ToArrayAsync();
+			}
 		}
 	}
 }

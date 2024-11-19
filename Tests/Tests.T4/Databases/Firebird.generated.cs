@@ -22,7 +22,7 @@ using LinqToDB.Mapping;
 
 namespace FirebirdDataContext
 {
-	public partial class TESTDB25DB : LinqToDB.Data.DataConnection
+	public partial class Testdb25DB : LinqToDB.Data.DataConnection
 	{
 		public ITable<AllType>           AllTypes            { get { return this.GetTable<AllType>(); } }
 		public ITable<CamelCaseName>     CamelCaseNames      { get { return this.GetTable<CamelCaseName>(); } }
@@ -44,27 +44,27 @@ namespace FirebirdDataContext
 		public ITable<TestMerge1>        TestMerge1          { get { return this.GetTable<TestMerge1>(); } }
 		public ITable<TestMerge2>        TestMerge2          { get { return this.GetTable<TestMerge2>(); } }
 
-		public TESTDB25DB()
+		public Testdb25DB()
 		{
 			InitDataContext();
 			InitMappingSchema();
 		}
 
-		public TESTDB25DB(string configuration)
+		public Testdb25DB(string configuration)
 			: base(configuration)
 		{
 			InitDataContext();
 			InitMappingSchema();
 		}
 
-		public TESTDB25DB(DataOptions options)
+		public Testdb25DB(DataOptions options)
 			: base(options)
 		{
 			InitDataContext();
 			InitMappingSchema();
 		}
 
-		public TESTDB25DB(DataOptions<TESTDB25DB> options)
+		public Testdb25DB(DataOptions<Testdb25DB> options)
 			: base(options.Options)
 		{
 			InitDataContext();
@@ -81,9 +81,7 @@ namespace FirebirdDataContext
 		[Sql.TableFunction(Name="OutRefEnumTest")]
 		public ITable<OutRefEnumTestResult> OutRefEnumTest(string? sTR, string? inInputoutputstr)
 		{
-			return this.GetTable<OutRefEnumTestResult>(this, (MethodInfo)MethodBase.GetCurrentMethod()!,
-				sTR,
-				inInputoutputstr);
+			return this.TableFromExpression(() => OutRefEnumTest(sTR, inInputoutputstr));
 		}
 
 		public partial class OutRefEnumTestResult
@@ -99,11 +97,7 @@ namespace FirebirdDataContext
 		[Sql.TableFunction(Name="OutRefTest")]
 		public ITable<OutRefTestResult> OutRefTest(int? iD, int? inInputoutputid, string? sTR, string? inInputoutputstr)
 		{
-			return this.GetTable<OutRefTestResult>(this, (MethodInfo)MethodBase.GetCurrentMethod()!,
-				iD,
-				inInputoutputid,
-				sTR,
-				inInputoutputstr);
+			return this.TableFromExpression(() => OutRefTest(iD, inInputoutputid, sTR, inInputoutputstr));
 		}
 
 		public partial class OutRefTestResult
@@ -121,7 +115,7 @@ namespace FirebirdDataContext
 		[Sql.TableFunction(Name="Patient_SelectAll")]
 		public ITable<PatientSelectAllResult> PatientSelectAll()
 		{
-			return this.GetTable<PatientSelectAllResult>(this, (MethodInfo)MethodBase.GetCurrentMethod()!);
+			return this.TableFromExpression(() => PatientSelectAll());
 		}
 
 		public partial class PatientSelectAllResult
@@ -141,9 +135,7 @@ namespace FirebirdDataContext
 		[Sql.TableFunction(Name="Patient_SelectByName")]
 		public ITable<PatientSelectByNameResult> PatientSelectByName(string? fIRSTNAME, string? lASTNAME)
 		{
-			return this.GetTable<PatientSelectByNameResult>(this, (MethodInfo)MethodBase.GetCurrentMethod()!,
-				fIRSTNAME,
-				lASTNAME);
+			return this.TableFromExpression(() => PatientSelectByName(fIRSTNAME, lASTNAME));
 		}
 
 		public partial class PatientSelectByNameResult
@@ -161,11 +153,7 @@ namespace FirebirdDataContext
 		[Sql.TableFunction(Name="Person_Insert")]
 		public ITable<PersonInsertResult> PersonInsert(string? fIRSTNAME, string? lASTNAME, string? mIDDLENAME, char? gENDER)
 		{
-			return this.GetTable<PersonInsertResult>(this, (MethodInfo)MethodBase.GetCurrentMethod()!,
-				fIRSTNAME,
-				lASTNAME,
-				mIDDLENAME,
-				gENDER);
+			return this.TableFromExpression(() => PersonInsert(fIRSTNAME, lASTNAME, mIDDLENAME, gENDER));
 		}
 
 		public partial class PersonInsertResult
@@ -180,11 +168,7 @@ namespace FirebirdDataContext
 		[Sql.TableFunction(Name="Person_Insert_OutputParameter")]
 		public ITable<PersonInsertOutputParameterResult> PersonInsertOutputParameter(string? fIRSTNAME, string? lASTNAME, string? mIDDLENAME, char? gENDER)
 		{
-			return this.GetTable<PersonInsertOutputParameterResult>(this, (MethodInfo)MethodBase.GetCurrentMethod()!,
-				fIRSTNAME,
-				lASTNAME,
-				mIDDLENAME,
-				gENDER);
+			return this.TableFromExpression(() => PersonInsertOutputParameter(fIRSTNAME, lASTNAME, mIDDLENAME, gENDER));
 		}
 
 		public partial class PersonInsertOutputParameterResult
@@ -199,7 +183,7 @@ namespace FirebirdDataContext
 		[Sql.TableFunction(Name="Person_SelectAll")]
 		public ITable<PersonSelectAllResult> PersonSelectAll()
 		{
-			return this.GetTable<PersonSelectAllResult>(this, (MethodInfo)MethodBase.GetCurrentMethod()!);
+			return this.TableFromExpression(() => PersonSelectAll());
 		}
 
 		public partial class PersonSelectAllResult
@@ -218,8 +202,7 @@ namespace FirebirdDataContext
 		[Sql.TableFunction(Name="Person_SelectByKey")]
 		public ITable<PersonSelectByKeyResult> PersonSelectByKey(int? iD)
 		{
-			return this.GetTable<PersonSelectByKeyResult>(this, (MethodInfo)MethodBase.GetCurrentMethod()!,
-				iD);
+			return this.TableFromExpression(() => PersonSelectByKey(iD));
 		}
 
 		public partial class PersonSelectByKeyResult
@@ -238,9 +221,7 @@ namespace FirebirdDataContext
 		[Sql.TableFunction(Name="Person_SelectByName")]
 		public ITable<PersonSelectByNameResult> PersonSelectByName(string? inFirstname, string? inLastname)
 		{
-			return this.GetTable<PersonSelectByNameResult>(this, (MethodInfo)MethodBase.GetCurrentMethod()!,
-				inFirstname,
-				inLastname);
+			return this.TableFromExpression(() => PersonSelectByName(inFirstname, inLastname));
 		}
 
 		public partial class PersonSelectByNameResult
@@ -259,7 +240,7 @@ namespace FirebirdDataContext
 		[Sql.TableFunction(Name="Scalar_DataReader")]
 		public ITable<ScalarDataReaderResult> ScalarDataReader()
 		{
-			return this.GetTable<ScalarDataReaderResult>(this, (MethodInfo)MethodBase.GetCurrentMethod()!);
+			return this.TableFromExpression(() => ScalarDataReader());
 		}
 
 		public partial class ScalarDataReaderResult
@@ -275,7 +256,7 @@ namespace FirebirdDataContext
 		[Sql.TableFunction(Name="Scalar_OutputParameter")]
 		public ITable<ScalarOutputParameterResult> ScalarOutputParameter()
 		{
-			return this.GetTable<ScalarOutputParameterResult>(this, (MethodInfo)MethodBase.GetCurrentMethod()!);
+			return this.TableFromExpression(() => ScalarOutputParameter());
 		}
 
 		public partial class ScalarOutputParameterResult
@@ -291,7 +272,7 @@ namespace FirebirdDataContext
 		[Sql.TableFunction(Name="Scalar_ReturnParameter")]
 		public ITable<ScalarReturnParameterResult> ScalarReturnParameter()
 		{
-			return this.GetTable<ScalarReturnParameterResult>(this, (MethodInfo)MethodBase.GetCurrentMethod()!);
+			return this.TableFromExpression(() => ScalarReturnParameter());
 		}
 
 		public partial class ScalarReturnParameterResult
@@ -569,11 +550,11 @@ namespace FirebirdDataContext
 		[Column(DbType="integer",          DataType=LinqToDB.DataType.Int32),                               Nullable         ] public int?      FieldEnumNumber { get; set; } // integer
 	}
 
-	public static partial class TESTDB25DBStoredProcedures
+	public static partial class Testdb25DBStoredProcedures
 	{
 		#region AddIssue792Record
 
-		public static int AddIssue792Record(this TESTDB25DB dataConnection)
+		public static int AddIssue792Record(this Testdb25DB dataConnection)
 		{
 			return dataConnection.ExecuteProc("\"AddIssue792Record\"");
 		}
@@ -582,7 +563,7 @@ namespace FirebirdDataContext
 
 		#region PersonDelete
 
-		public static int PersonDelete(this TESTDB25DB dataConnection, int? pERSONID)
+		public static int PersonDelete(this Testdb25DB dataConnection, int? pERSONID)
 		{
 			var parameters = new []
 			{
@@ -599,7 +580,7 @@ namespace FirebirdDataContext
 
 		#region PersonUpdate
 
-		public static int PersonUpdate(this TESTDB25DB dataConnection, int? pERSONID, string? fIRSTNAME, string? lASTNAME, string? mIDDLENAME, char? gENDER)
+		public static int PersonUpdate(this Testdb25DB dataConnection, int? pERSONID, string? fIRSTNAME, string? lASTNAME, string? mIDDLENAME, char? gENDER)
 		{
 			var parameters = new []
 			{

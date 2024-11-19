@@ -14,7 +14,7 @@ namespace Tests
 		/// <param name="providers">List of test providers to check against. Each entry could be provider name or comma-separated list of providers.</param>
 		public static bool IsAnyOf(this string context, params string[] providers)
 		{
-			var providerName = context.Replace(".LinqService", string.Empty);
+			var providerName = context.Replace(TestBase.LinqServiceSuffix, string.Empty);
 			foreach (var provider in providers)
 			{
 				if (provider.Split(',').Any(p => p == providerName))
@@ -22,6 +22,22 @@ namespace Tests
 			}
 
 			return false;
+		}
+
+		/// <summary>
+		/// Returns <c>true</c> for remote context.
+		/// </summary>
+		public static bool IsRemote(this string context)
+		{
+			return context.EndsWith(TestBase.LinqServiceSuffix);
+		}
+
+		/// <summary>
+		/// Removes remote context suffix.
+		/// </summary>
+		public static string StripRemote(this string context)
+		{
+			return context.Replace(TestBase.LinqServiceSuffix, string.Empty);
 		}
 
 		/// <summary>

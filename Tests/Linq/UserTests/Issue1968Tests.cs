@@ -103,9 +103,12 @@ namespace Tests.UserTests
 					.LoadWith(x => x.Faculties)
 					.LoadWith(m => m.Subjects).ToList();
 
-				Assert.That(result.Count,              Is.EqualTo(1));
-				Assert.That(result[0].Faculties.Count, Is.EqualTo(1));
-				Assert.That(result[0].Subjects.Count,  Is.EqualTo(1));
+				Assert.That(result, Has.Count.EqualTo(1));
+				Assert.Multiple(() =>
+				{
+					Assert.That(result[0].Faculties, Has.Count.EqualTo(1));
+					Assert.That(result[0].Subjects, Has.Count.EqualTo(1));
+				});
 			}
 		}
 	}

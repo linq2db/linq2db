@@ -1,12 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Text;
 
 namespace LinqToDB.SqlQuery
 {
-	using Remote;
-
-	public class SqlJoinedTable : IQueryElement, ISqlExpressionWalkable, IQueryExtendible
+	public class SqlJoinedTable : QueryElement
 	{
 		public SqlJoinedTable(JoinType joinType, SqlTableSource table, bool isWeak, SqlSearchCondition searchCondition)
 		{
@@ -29,69 +26,71 @@ namespace LinqToDB.SqlQuery
 
 		public JoinType                 JoinType           { get; set; }
 		public SqlTableSource           Table              { get; set; }
-		public SqlSearchCondition       Condition          { get; private set; }
+		public SqlSearchCondition       Condition          { get; internal set; }
 		public bool                     IsWeak             { get; set; }
 		public bool                     CanConvertApply    { get; set; }
 		public List<SqlQueryExtension>? SqlQueryExtensions { get; set; }
+		public SourceCardinality        Cardinality        { get; set; }
 
-#if OVERRIDETOSTRING
+		public override QueryElementType ElementType => QueryElementType.JoinedTable;
 
-		public override string ToString()
+		public override QueryElementTextWriter ToString(QueryElementTextWriter writer)
 		{
-			return ((IQueryElement)this).ToString(new StringBuilder(), new Dictionary<IQueryElement,IQueryElement>()).ToString();
-		}
-
-#endif
-
-		#region ISqlExpressionWalkable Members
-
-		public ISqlExpression? Walk<TContext>(WalkOptions options, TContext context, Func<TContext, ISqlExpression, ISqlExpression> func)
-		{
-			Condition = (SqlSearchCondition)((ISqlExpressionWalkable)Condition).Walk(options, context, func)!;
-
-			Table.Walk(options, context, func);
-
-			if (SqlQueryExtensions != null)
-				foreach (var e in SqlQueryExtensions)
-					e.Walk(options, context, func);
-
-			return null;
-		}
-
-		#endregion
-
-		#region IQueryElement Members
-
-		public QueryElementType ElementType => QueryElementType.JoinedTable;
-
-		StringBuilder IQueryElement.ToString(StringBuilder sb, Dictionary<IQueryElement,IQueryElement> dic)
-		{
-			if (dic.ContainsKey(this))
-				return sb.Append("...");
-
-			dic.Add(this, this);
+			if (!writer.AddVisited(this))
+				return writer.Append("...");
 
 			if (IsWeak)
-				sb.Append("WEAK ");
+				writer.Append("WEAK ");
 
 			switch (JoinType)
 			{
-				case JoinType.Inner      : sb.Append("INNER JOIN ");  break;
-				case JoinType.Left       : sb.Append("LEFT JOIN ");   break;
-				case JoinType.CrossApply : sb.Append("CROSS APPLY "); break;
-				case JoinType.OuterApply : sb.Append("OUTER APPLY "); break;
-				default                  : sb.Append("SOME JOIN "); break;
+				case JoinType.Inner      : writer.Append("INNER JOIN ");  break;
+				case JoinType.Cross      : writer.Append("CROSS JOIN ");  break;
+				case JoinType.Left       : writer.Append("LEFT JOIN ");   break;
+				case JoinType.CrossApply : writer.Append("CROSS APPLY "); break;
+				case JoinType.OuterApply : writer.Append("OUTER APPLY "); break;
+				case JoinType.Right      : writer.Append("RIGHT JOIN ");  break;
+				case JoinType.Full       : writer.Append("FULL JOIN ");   break;
+				case JoinType.FullApply  : writer.Append("FULL APPLY ");  break;
+				case JoinType.RightApply : writer.Append("RIGHT APPLY "); break;
+				default                  : writer.Append("SOME JOIN ");   break;
 			}
 
-			((IQueryElement)Table).ToString(sb, dic);
-			sb.Append(" ON ");
-			((IQueryElement)Condition).ToString(sb, dic);
+			if (Cardinality != SourceCardinality.Unknown)
+				writer.Append(" (" + Cardinality + ") ");
 
-			dic.Remove(this);
+			if (Table.Joins.Count > 0)
+			{
+				writer
+					.Append("(")
+					.AppendLine();
 
-			return sb;
+				using (writer.IndentScope())
+				{
+					writer
+						.AppendElement(Table);
+				}
+
+				writer
+					.AppendLine()
+					.Append(") ");
+			}
+			else
+			{
+				writer
+					.AppendElement(Table);
+			}
+
+			if (JoinType != JoinType.Cross)
+			{
+				writer
+					.Append(" ON ")
+					.AppendElement(Condition);
+			}
+
+			writer.RemoveVisited(this);
+
+			return writer;
 		}
-
-		#endregion
 	}
 }

@@ -22,11 +22,11 @@ namespace Tests.UserTests
 			[Column("TypeDiscriminator")]                         public int?    Data;
 		}
 
-		// PostgreSQL disabled because it needs real primary key on database side
+		// PostgreSQL and SQLite disabled because they need real unique constrain on database side
 		// DB2 needs merge api + arraycontext features from 3.0
 		[ActiveIssue(1239, Configuration = ProviderName.DB2)]
 		[Test]
-		public void TestInsertOrUpdate([InsertOrUpdateDataSources(false, TestProvName.AllPostgreSQL)] string context)
+		public void TestInsertOrUpdate([InsertOrUpdateDataSources(false, TestProvName.AllPostgreSQL, TestProvName.AllSQLite)] string context)
 		{
 			using (var db = GetDataConnection(context))
 			using (db.BeginTransaction())
@@ -46,7 +46,7 @@ namespace Tests.UserTests
 							Data = 1
 						});
 
-				Assert.AreEqual(1, db.GetTable<TestTable>().Count());
+				Assert.That(db.GetTable<TestTable>().Count(), Is.EqualTo(1));
 
 				db.GetTable<TestTable>()
 					.InsertOrUpdate(
@@ -61,16 +61,13 @@ namespace Tests.UserTests
 							Data = 1
 						});
 
-				Assert.AreEqual(1, db.GetTable<TestTable>().Count());
+				Assert.That(db.GetTable<TestTable>().Count(), Is.EqualTo(1));
 			}
 		}
 
-		// PostgreSQL disabled because it needs real primary key on database side
-		[ActiveIssue(
-			Configuration = ProviderName.DB2,
-			Details       = "ERROR [42610] [IBM][DB2/NT64] SQL0418N  The statement was not processed because the statement contains an invalid use of one of the following: an untyped parameter marker, the DEFAULT keyword, or a null value.")]
+		// PostgreSQL and SQLite disabled because they need real unique constrain on database side
 		[Test]
-		public void InsertOrReplaceTest([InsertOrUpdateDataSources(false, TestProvName.AllPostgreSQL)] string context)
+		public void InsertOrReplaceTest([InsertOrUpdateDataSources(false, TestProvName.AllPostgreSQL, TestProvName.AllSQLite)] string context)
 		{
 			using (var db = GetDataConnection(context))
 			using (db.BeginTransaction())
@@ -86,11 +83,11 @@ namespace Tests.UserTests
 
 				db.InsertOrReplace(record);
 
-				Assert.AreEqual(1, db.GetTable<TestTable>().Count());
+				Assert.That(db.GetTable<TestTable>().Count(), Is.EqualTo(1));
 
 				db.InsertOrReplace(record);
 
-				Assert.AreEqual(1, db.GetTable<TestTable>().Count());
+				Assert.That(db.GetTable<TestTable>().Count(), Is.EqualTo(1));
 			}
 		}
 
@@ -117,7 +114,7 @@ namespace Tests.UserTests
 					.InsertWhenNotMatched()
 					.Merge();
 
-				Assert.AreEqual(1, db.GetTable<TestTable>().Count());
+				Assert.That(db.GetTable<TestTable>().Count(), Is.EqualTo(1));
 
 				db.GetTable<TestTable>()
 					.Merge()
@@ -127,7 +124,7 @@ namespace Tests.UserTests
 					.InsertWhenNotMatched()
 					.Merge();
 
-				Assert.AreEqual(1, db.GetTable<TestTable>().Count());
+				Assert.That(db.GetTable<TestTable>().Count(), Is.EqualTo(1));
 			}
 		}
 
@@ -154,7 +151,7 @@ namespace Tests.UserTests
 					.InsertWhenNotMatched()
 					.Merge();
 
-				Assert.AreEqual(1, db.GetTable<TestTable>().Count());
+				Assert.That(db.GetTable<TestTable>().Count(), Is.EqualTo(1));
 
 				db.GetTable<TestTable>()
 					.Merge()
@@ -164,7 +161,7 @@ namespace Tests.UserTests
 					.InsertWhenNotMatched()
 					.Merge();
 
-				Assert.AreEqual(1, db.GetTable<TestTable>().Count());
+				Assert.That(db.GetTable<TestTable>().Count(), Is.EqualTo(1));
 			}
 		}
 	}

@@ -366,11 +366,17 @@ namespace Tests.Mapping
 
 
 				var data = db.GetTable<FluentMetadataBasedStore>().ToList();
-				Assert.AreEqual(1, data.Count);
-				Assert.AreEqual(5, data[0].Id);
-				Assert.AreEqual(1, data[0].Values.Count);
-				Assert.AreEqual("Name", data[0].Values.Keys.Single());
-				Assert.AreEqual("test_name", data[0].Values["Name"]);
+				Assert.That(data, Has.Count.EqualTo(1));
+				Assert.Multiple(() =>
+				{
+					Assert.That(data[0].Id, Is.EqualTo(5));
+					Assert.That(data[0].Values, Has.Count.EqualTo(1));
+				});
+				Assert.Multiple(() =>
+				{
+					Assert.That(data[0].Values.Keys.Single(), Is.EqualTo("Name"));
+					Assert.That(data[0].Values["Name"], Is.EqualTo("test_name"));
+				});
 			}
 		}
 
@@ -395,11 +401,17 @@ namespace Tests.Mapping
 
 
 				var data = db.GetTable<FluentMetadataBasedStore>().ToList();
-				Assert.AreEqual(1, data.Count);
-				Assert.AreEqual(5, data[0].Id);
-				Assert.AreEqual(1, data[0].Values.Count);
-				Assert.AreEqual("Name", data[0].Values.Keys.Single());
-				Assert.AreEqual("test_name", data[0].Values["Name"]);
+				Assert.That(data, Has.Count.EqualTo(1));
+				Assert.Multiple(() =>
+				{
+					Assert.That(data[0].Id, Is.EqualTo(5));
+					Assert.That(data[0].Values, Has.Count.EqualTo(1));
+				});
+				Assert.Multiple(() =>
+				{
+					Assert.That(data[0].Values.Keys.Single(), Is.EqualTo("Name"));
+					Assert.That(data[0].Values["Name"], Is.EqualTo("test_name"));
+				});
 			}
 		}
 
@@ -426,12 +438,18 @@ namespace Tests.Mapping
 
 
 				var data = db.GetTable<FluentMetadataBasedStore>().ToList();
-				Assert.AreEqual(1, data.Count);
-				Assert.AreEqual(5, data[0].Id);
-				Assert.AreEqual(0, data[0].Values.Count);
-				Assert.AreEqual(1, data[0].SQLiteValues.Count);
-				Assert.AreEqual("Name", data[0].SQLiteValues.Keys.Single());
-				Assert.AreEqual("test_name", data[0].SQLiteValues["Name"]);
+				Assert.That(data, Has.Count.EqualTo(1));
+				Assert.Multiple(() =>
+				{
+					Assert.That(data[0].Id, Is.EqualTo(5));
+					Assert.That(data[0].Values, Is.Empty);
+					Assert.That(data[0].SQLiteValues, Has.Count.EqualTo(1));
+				});
+				Assert.Multiple(() =>
+				{
+					Assert.That(data[0].SQLiteValues.Keys.Single(), Is.EqualTo("Name"));
+					Assert.That(data[0].SQLiteValues["Name"], Is.EqualTo("test_name"));
+				});
 			}
 		}
 
@@ -453,12 +471,18 @@ namespace Tests.Mapping
 				db.Insert(obj);
 
 				var data = db.GetTable<AttributeMetadataBasedStore>().ToList();
-				Assert.AreEqual(1, data.Count);
-				Assert.AreEqual(5, data[0].Id);
-				Assert.AreEqual(0, data[0].Values.Count);
-				Assert.AreEqual(1, data[0].SQLiteValues.Count);
-				Assert.AreEqual("Name", data[0].SQLiteValues.Keys.Single());
-				Assert.AreEqual("test_name", data[0].SQLiteValues["Name"]);
+				Assert.That(data, Has.Count.EqualTo(1));
+				Assert.Multiple(() =>
+				{
+					Assert.That(data[0].Id, Is.EqualTo(5));
+					Assert.That(data[0].Values, Is.Empty);
+					Assert.That(data[0].SQLiteValues, Has.Count.EqualTo(1));
+				});
+				Assert.Multiple(() =>
+				{
+					Assert.That(data[0].SQLiteValues.Keys.Single(), Is.EqualTo("Name"));
+					Assert.That(data[0].SQLiteValues["Name"], Is.EqualTo("test_name"));
+				});
 			}
 		}
 
@@ -482,11 +506,17 @@ namespace Tests.Mapping
 				db.Insert(obj);
 
 				var data = db.GetTable<FluentMetadataBasedStore>().ToList();
-				Assert.AreEqual(1, data.Count);
-				Assert.AreEqual(5, data[0].Id);
-				Assert.AreEqual(1, data[0].Values.Count);
-				Assert.AreEqual("Name", data[0].Values.Keys.Single());
-				Assert.AreEqual("test_name", data[0].Values["Name"]);
+				Assert.That(data, Has.Count.EqualTo(1));
+				Assert.Multiple(() =>
+				{
+					Assert.That(data[0].Id, Is.EqualTo(5));
+					Assert.That(data[0].Values, Has.Count.EqualTo(1));
+				});
+				Assert.Multiple(() =>
+				{
+					Assert.That(data[0].Values.Keys.Single(), Is.EqualTo("Name"));
+					Assert.That(data[0].Values["Name"], Is.EqualTo("test_name"));
+				});
 			}
 		}
 
@@ -508,12 +538,18 @@ namespace Tests.Mapping
 				db.Insert(obj);
 
 				var data = db.GetTable<InstanceGetterSetterMethods>().ToList();
-				Assert.AreEqual(1, data.Count);
-				Assert.AreEqual(5, data[0].Id);
-				Assert.AreEqual(0, data[0].SQLiteValues.Count);
-				Assert.AreEqual(1, data[0].Values.Count);
-				Assert.AreEqual("Name", data[0].Values.Keys.Single());
-				Assert.AreEqual("test_name", data[0].Values["Name"]);
+				Assert.That(data, Has.Count.EqualTo(1));
+				Assert.Multiple(() =>
+				{
+					Assert.That(data[0].Id, Is.EqualTo(5));
+					Assert.That(data[0].SQLiteValues, Is.Empty);
+					Assert.That(data[0].Values, Has.Count.EqualTo(1));
+				});
+				Assert.Multiple(() =>
+				{
+					Assert.That(data[0].Values.Keys.Single(), Is.EqualTo("Name"));
+					Assert.That(data[0].Values["Name"], Is.EqualTo("test_name"));
+				});
 			}
 		}
 
@@ -539,15 +575,24 @@ namespace Tests.Mapping
 				StaticGetterSetterMethods.InstanceValues.Clear();
 
 				var data = db.GetTable<StaticGetterSetterMethods>().ToList();
-				Assert.AreEqual(1, data.Count);
-				Assert.AreEqual(5, data[0].Id);
-				Assert.AreEqual(0, data[0].SQLiteValues.Count);
-				Assert.AreEqual(0, data[0].Values.Count);
-				Assert.AreEqual(1, StaticGetterSetterMethods.InstanceValues.Count);
-				Assert.AreEqual(5, StaticGetterSetterMethods.InstanceValues.Keys.Single());
-				Assert.AreEqual(1, StaticGetterSetterMethods.InstanceValues[5].Count);
-				Assert.AreEqual("Name", StaticGetterSetterMethods.InstanceValues[5].Keys.Single());
-				Assert.AreEqual("test_name", StaticGetterSetterMethods.InstanceValues[5]["Name"]);
+				Assert.That(data, Has.Count.EqualTo(1));
+				Assert.Multiple(() =>
+				{
+					Assert.That(data[0].Id, Is.EqualTo(5));
+					Assert.That(data[0].SQLiteValues, Is.Empty);
+					Assert.That(data[0].Values, Is.Empty);
+					Assert.That(StaticGetterSetterMethods.InstanceValues, Has.Count.EqualTo(1));
+				});
+				Assert.Multiple(() =>
+				{
+					Assert.That(StaticGetterSetterMethods.InstanceValues.Keys.Single(), Is.EqualTo(5));
+					Assert.That(StaticGetterSetterMethods.InstanceValues[5], Has.Count.EqualTo(1));
+				});
+				Assert.Multiple(() =>
+				{
+					Assert.That(StaticGetterSetterMethods.InstanceValues[5].Keys.Single(), Is.EqualTo("Name"));
+					Assert.That(StaticGetterSetterMethods.InstanceValues[5]["Name"], Is.EqualTo("test_name"));
+				});
 			}
 		}
 
@@ -569,12 +614,18 @@ namespace Tests.Mapping
 				db.Insert(obj);
 
 				var data = db.GetTable<InstanceGetterSetterExpressionMethods>().ToList();
-				Assert.AreEqual(1, data.Count);
-				Assert.AreEqual(5, data[0].Id);
-				Assert.AreEqual(0, data[0].SQLiteValues.Count);
-				Assert.AreEqual(1, data[0].Values.Count);
-				Assert.AreEqual("Name", data[0].Values.Keys.Single());
-				Assert.AreEqual("test_name", data[0].Values["Name"]);
+				Assert.That(data, Has.Count.EqualTo(1));
+				Assert.Multiple(() =>
+				{
+					Assert.That(data[0].Id, Is.EqualTo(5));
+					Assert.That(data[0].SQLiteValues, Is.Empty);
+					Assert.That(data[0].Values, Has.Count.EqualTo(1));
+				});
+				Assert.Multiple(() =>
+				{
+					Assert.That(data[0].Values.Keys.Single(), Is.EqualTo("Name"));
+					Assert.That(data[0].Values["Name"], Is.EqualTo("test_name"));
+				});
 			}
 		}
 
@@ -601,15 +652,24 @@ namespace Tests.Mapping
 				StaticGetterSetterExpressionMethods.InstanceValues.Clear();
 
 				var data = db.GetTable<StaticGetterSetterExpressionMethods>().ToList();
-				Assert.AreEqual(1, data.Count);
-				Assert.AreEqual(5, data[0].Id);
-				Assert.AreEqual(0, data[0].SQLiteValues.Count);
-				Assert.AreEqual(0, data[0].Values.Count);
-				Assert.AreEqual(1, StaticGetterSetterExpressionMethods.InstanceValues.Count);
-				Assert.AreEqual(5, StaticGetterSetterExpressionMethods.InstanceValues.Keys.Single());
-				Assert.AreEqual(1, StaticGetterSetterExpressionMethods.InstanceValues[5].Count);
-				Assert.AreEqual("Name", StaticGetterSetterExpressionMethods.InstanceValues[5].Keys.Single());
-				Assert.AreEqual("test_name", StaticGetterSetterExpressionMethods.InstanceValues[5]["Name"]);
+				Assert.That(data, Has.Count.EqualTo(1));
+				Assert.Multiple(() =>
+				{
+					Assert.That(data[0].Id, Is.EqualTo(5));
+					Assert.That(data[0].SQLiteValues, Is.Empty);
+					Assert.That(data[0].Values, Is.Empty);
+					Assert.That(StaticGetterSetterExpressionMethods.InstanceValues, Has.Count.EqualTo(1));
+				});
+				Assert.Multiple(() =>
+				{
+					Assert.That(StaticGetterSetterExpressionMethods.InstanceValues.Keys.Single(), Is.EqualTo(5));
+					Assert.That(StaticGetterSetterExpressionMethods.InstanceValues[5], Has.Count.EqualTo(1));
+				});
+				Assert.Multiple(() =>
+				{
+					Assert.That(StaticGetterSetterExpressionMethods.InstanceValues[5].Keys.Single(), Is.EqualTo("Name"));
+					Assert.That(StaticGetterSetterExpressionMethods.InstanceValues[5]["Name"], Is.EqualTo("test_name"));
+				});
 			}
 		}
 
@@ -631,12 +691,18 @@ namespace Tests.Mapping
 				db.Insert(obj);
 
 				var data = db.GetTable<SQLiteInstanceGetterSetterMethods>().ToList();
-				Assert.AreEqual(1, data.Count);
-				Assert.AreEqual(5, data[0].Id);
-				Assert.AreEqual(0, data[0].Values.Count);
-				Assert.AreEqual(1, data[0].SQLiteValues.Count);
-				Assert.AreEqual("Name", data[0].SQLiteValues.Keys.Single());
-				Assert.AreEqual("test_name", data[0].SQLiteValues["Name"]);
+				Assert.That(data, Has.Count.EqualTo(1));
+				Assert.Multiple(() =>
+				{
+					Assert.That(data[0].Id, Is.EqualTo(5));
+					Assert.That(data[0].Values, Is.Empty);
+					Assert.That(data[0].SQLiteValues, Has.Count.EqualTo(1));
+				});
+				Assert.Multiple(() =>
+				{
+					Assert.That(data[0].SQLiteValues.Keys.Single(), Is.EqualTo("Name"));
+					Assert.That(data[0].SQLiteValues["Name"], Is.EqualTo("test_name"));
+				});
 			}
 		}
 
@@ -658,12 +724,18 @@ namespace Tests.Mapping
 				db.Insert(obj);
 
 				var data = db.GetTable<GetterSetterVsStorageMethods1>().ToList();
-				Assert.AreEqual(1, data.Count);
-				Assert.AreEqual(5, data[0].Id);
-				Assert.AreEqual(0, data[0].Values.Count);
-				Assert.AreEqual(1, data[0].SQLiteValues.Count);
-				Assert.AreEqual("Name", data[0].SQLiteValues.Keys.Single());
-				Assert.AreEqual("test_name", data[0].SQLiteValues["Name"]);
+				Assert.That(data, Has.Count.EqualTo(1));
+				Assert.Multiple(() =>
+				{
+					Assert.That(data[0].Id, Is.EqualTo(5));
+					Assert.That(data[0].Values, Is.Empty);
+					Assert.That(data[0].SQLiteValues, Has.Count.EqualTo(1));
+				});
+				Assert.Multiple(() =>
+				{
+					Assert.That(data[0].SQLiteValues.Keys.Single(), Is.EqualTo("Name"));
+					Assert.That(data[0].SQLiteValues["Name"], Is.EqualTo("test_name"));
+				});
 			}
 		}
 
@@ -685,12 +757,18 @@ namespace Tests.Mapping
 				db.Insert(obj);
 
 				var data = db.GetTable<GetterSetterVsStorageMethods2>().ToList();
-				Assert.AreEqual(1, data.Count);
-				Assert.AreEqual(5, data[0].Id);
-				Assert.AreEqual(0, data[0].Values.Count);
-				Assert.AreEqual(1, data[0].SQLiteValues.Count);
-				Assert.AreEqual("Name", data[0].SQLiteValues.Keys.Single());
-				Assert.AreEqual("test_name", data[0].SQLiteValues["Name"]);
+				Assert.That(data, Has.Count.EqualTo(1));
+				Assert.Multiple(() =>
+				{
+					Assert.That(data[0].Id, Is.EqualTo(5));
+					Assert.That(data[0].Values, Is.Empty);
+					Assert.That(data[0].SQLiteValues, Has.Count.EqualTo(1));
+				});
+				Assert.Multiple(() =>
+				{
+					Assert.That(data[0].SQLiteValues.Keys.Single(), Is.EqualTo("Name"));
+					Assert.That(data[0].SQLiteValues["Name"], Is.EqualTo("test_name"));
+				});
 			}
 		}
 
@@ -739,15 +817,24 @@ namespace Tests.Mapping
 				db.Insert(obj);
 
 				var data = db.GetTable<CustomSetterGetterBase>().ToList();
-				Assert.AreEqual(1, data.Count);
-				Assert.AreEqual(5, data[0].Id);
-				Assert.AreEqual(0, data[0].SQLiteValues.Count);
-				Assert.AreEqual(0, data[0].Values.Count);
-				Assert.AreEqual(1, storage.Count);
-				Assert.AreEqual(5, storage.Keys.Single());
-				Assert.AreEqual(1, storage[5].Count);
-				Assert.AreEqual("Name", storage[5].Keys.Single());
-				Assert.AreEqual("test_name", storage[5]["Name"]);
+				Assert.That(data, Has.Count.EqualTo(1));
+				Assert.Multiple(() =>
+				{
+					Assert.That(data[0].Id, Is.EqualTo(5));
+					Assert.That(data[0].SQLiteValues, Is.Empty);
+					Assert.That(data[0].Values, Is.Empty);
+					Assert.That(storage, Has.Count.EqualTo(1));
+				});
+				Assert.Multiple(() =>
+				{
+					Assert.That(storage.Keys.Single(), Is.EqualTo(5));
+					Assert.That(storage[5], Has.Count.EqualTo(1));
+				});
+				Assert.Multiple(() =>
+				{
+					Assert.That(storage[5].Keys.Single(), Is.EqualTo("Name"));
+					Assert.That(storage[5]["Name"], Is.EqualTo("test_name"));
+				});
 			}
 		}
 
@@ -788,12 +875,18 @@ namespace Tests.Mapping
 				db.Insert(obj);
 
 				var data = db.GetTable<AttributeMetadataBasedStore>().ToList();
-				Assert.AreEqual(1, data.Count);
-				Assert.AreEqual(5, data[0].Id);
-				Assert.AreEqual(0, data[0].Values.Count);
-				Assert.AreEqual(1, data[0].SQLiteValues.Count);
-				Assert.AreEqual("Name", data[0].SQLiteValues.Keys.Single());
-				Assert.AreEqual("me_default", data[0].SQLiteValues["Name"]);
+				Assert.That(data, Has.Count.EqualTo(1));
+				Assert.Multiple(() =>
+				{
+					Assert.That(data[0].Id, Is.EqualTo(5));
+					Assert.That(data[0].Values, Is.Empty);
+					Assert.That(data[0].SQLiteValues, Has.Count.EqualTo(1));
+				});
+				Assert.Multiple(() =>
+				{
+					Assert.That(data[0].SQLiteValues.Keys.Single(), Is.EqualTo("Name"));
+					Assert.That(data[0].SQLiteValues["Name"], Is.EqualTo("me_default"));
+				});
 			}
 		}
 
@@ -815,12 +908,18 @@ namespace Tests.Mapping
 				db.Insert(obj);
 
 				var data = db.GetTable<InstanceGetterSetterMethods>().ToList();
-				Assert.AreEqual(1, data.Count);
-				Assert.AreEqual(5, data[0].Id);
-				Assert.AreEqual(0, data[0].SQLiteValues.Count);
-				Assert.AreEqual(1, data[0].Values.Count);
-				Assert.AreEqual("Name", data[0].Values.Keys.Single());
-				Assert.AreEqual("accessor_def", data[0].Values["Name"]);
+				Assert.That(data, Has.Count.EqualTo(1));
+				Assert.Multiple(() =>
+				{
+					Assert.That(data[0].Id, Is.EqualTo(5));
+					Assert.That(data[0].SQLiteValues, Is.Empty);
+					Assert.That(data[0].Values, Has.Count.EqualTo(1));
+				});
+				Assert.Multiple(() =>
+				{
+					Assert.That(data[0].Values.Keys.Single(), Is.EqualTo("Name"));
+					Assert.That(data[0].Values["Name"], Is.EqualTo("accessor_def"));
+				});
 			}
 		}
 

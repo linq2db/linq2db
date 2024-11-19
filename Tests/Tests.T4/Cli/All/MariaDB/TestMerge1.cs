@@ -33,12 +33,12 @@ namespace Cli.All.MariaDB
 		[Column("FieldNChar"     , DataType = DataType.Char     , DbType = "char(1)"       , Length    = 1                                  )] public char?     FieldNChar      { get; set; } // char(1)
 		[Column("FieldFloat"     , DataType = DataType.Single   , DbType = "float"         , Precision = 12                                 )] public float?    FieldFloat      { get; set; } // float
 		[Column("FieldDouble"    , DataType = DataType.Double   , DbType = "double"        , Precision = 22                                 )] public double?   FieldDouble     { get; set; } // double
-		[Column("FieldDateTime"  , DataType = DataType.DateTime , DbType = "datetime"                                                       )] public DateTime? FieldDateTime   { get; set; } // datetime
+		[Column("FieldDateTime"  , DataType = DataType.DateTime , DbType = "datetime(6)"                                                    )] public DateTime? FieldDateTime   { get; set; } // datetime(6)
 		[Column("FieldBinary"    , DataType = DataType.VarBinary, DbType = "varbinary(20)" , Length    = 20                                 )] public byte[]?   FieldBinary     { get; set; } // varbinary(20)
 		[Column("FieldGuid"      , DataType = DataType.Char     , DbType = "char(36)"      , Length    = 36                                 )] public string?   FieldGuid       { get; set; } // char(36)
 		[Column("FieldDecimal"   , DataType = DataType.Decimal  , DbType = "decimal(24,10)", Precision = 24, Scale = 10                     )] public decimal?  FieldDecimal    { get; set; } // decimal(24,10)
 		[Column("FieldDate"      , DataType = DataType.Date     , DbType = "date"                                                           )] public DateTime? FieldDate       { get; set; } // date
-		[Column("FieldTime"      , DataType = DataType.Time     , DbType = "time"                                                           )] public TimeSpan? FieldTime       { get; set; } // time
+		[Column("FieldTime"      , DataType = DataType.Time     , DbType = "time(6)"                                                        )] public TimeSpan? FieldTime       { get; set; } // time(6)
 		[Column("FieldEnumString", DataType = DataType.VarChar  , DbType = "varchar(20)"   , Length    = 20                                 )] public string?   FieldEnumString { get; set; } // varchar(20)
 		[Column("FieldEnumNumber", DataType = DataType.Int32    , DbType = "int(11)"       , Precision = 10, Scale = 0                      )] public int?      FieldEnumNumber { get; set; } // int(11)
 

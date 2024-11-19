@@ -1,5 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
+
+using JetBrains.Annotations;
 
 namespace LinqToDB
 {
@@ -7,6 +10,8 @@ namespace LinqToDB
 	using Common.Internal;
 	using Data;
 	using Data.RetryPolicy;
+	using Remote;
+	using Interceptors;
 
 	/// <summary>
 	/// Immutable context configuration object.
@@ -29,6 +34,7 @@ namespace LinqToDB
 			_connectionOptions  = options._connectionOptions;
 			_dataContextOptions = options._dataContextOptions;
 			_bulkCopyOptions    = options._bulkCopyOptions;
+			_sqlOptions         = options._sqlOptions;
 		}
 
 		protected override DataOptions Clone()
@@ -41,15 +47,17 @@ namespace LinqToDB
 			return Clone();
 		}
 
+		[Pure]
 		public override DataOptions WithOptions(IOptionSet options)
 		{
 			switch (options)
 			{
 				case LinqOptions        lo  : return ReferenceEquals(_linqOptions,        lo)  ? this : new(this) { _linqOptions        = lo  };
-				case RetryPolicyOptions rp  : return ReferenceEquals(_retryPolicyOptions, rp)  ? this : new(this) { _retryPolicyOptions = rp  };
 				case ConnectionOptions  co  : return ReferenceEquals(_connectionOptions,  co)  ? this : new(this) { _connectionOptions  = co  };
 				case DataContextOptions dco : return ReferenceEquals(_dataContextOptions, dco) ? this : new(this) { _dataContextOptions = dco };
+				case SqlOptions         so  : return ReferenceEquals(_sqlOptions,         so)  ? this : new(this) { _sqlOptions         = so  };
 				case BulkCopyOptions    bco : return ReferenceEquals(_bulkCopyOptions,    bco) ? this : new(this) { _bulkCopyOptions    = bco };
+				case RetryPolicyOptions rp  : return ReferenceEquals(_retryPolicyOptions, rp)  ? this : new(this) { _retryPolicyOptions = rp  };
 				default                     : return base.WithOptions(options);
 			}
 		}
@@ -59,12 +67,14 @@ namespace LinqToDB
 		ConnectionOptions?  _connectionOptions;
 		DataContextOptions? _dataContextOptions;
 		BulkCopyOptions?    _bulkCopyOptions;
+		SqlOptions?         _sqlOptions;
 
 		public LinqOptions        LinqOptions        => _linqOptions        ??= Common.Configuration.Linq.Options;
 		public RetryPolicyOptions RetryPolicyOptions => _retryPolicyOptions ??= Common.Configuration.RetryPolicy.Options;
 		public ConnectionOptions  ConnectionOptions  => _connectionOptions  ??= DataConnection.DefaultDataOptions.ConnectionOptions;
 		public DataContextOptions DataContextOptions => _dataContextOptions ??= DataContextOptions.Empty;
 		public BulkCopyOptions    BulkCopyOptions    => _bulkCopyOptions    ??= BulkCopyOptions.Empty;
+		public SqlOptions         SqlOptions         => _sqlOptions         ??= Common.Configuration.Sql.Options;
 
 		public override IEnumerable<IOptionSet> OptionSets
 		{
@@ -73,6 +83,7 @@ namespace LinqToDB
 				yield return LinqOptions;
 				yield return RetryPolicyOptions;
 				yield return ConnectionOptions;
+				yield return SqlOptions;
 
 				if (_dataContextOptions != null)
 					yield return _dataContextOptions;
@@ -85,6 +96,7 @@ namespace LinqToDB
 			}
 		}
 
+		[Pure]
 		public override TSet? Find<TSet>()
 			where TSet : class
 		{
@@ -93,15 +105,16 @@ namespace LinqToDB
 			if (type == typeof(LinqOptions))        return (TSet?)(IOptionSet?)LinqOptions;
 			if (type == typeof(RetryPolicyOptions)) return (TSet?)(IOptionSet?)RetryPolicyOptions;
 			if (type == typeof(ConnectionOptions))  return (TSet?)(IOptionSet?)ConnectionOptions;
-			if (type == typeof(DataContextOptions)) return (TSet?)(IOptionSet?)_dataContextOptions;
-			if (type == typeof(BulkCopyOptions))    return (TSet?)(IOptionSet?)_bulkCopyOptions;
+			if (type == typeof(DataContextOptions)) return (TSet?)(IOptionSet?)DataContextOptions;
+			if (type == typeof(BulkCopyOptions))    return (TSet?)(IOptionSet?)BulkCopyOptions;
+			if (type == typeof(SqlOptions))         return (TSet?)(IOptionSet?)SqlOptions;
 
 			return base.Find<TSet>();
 		}
 
 		public void Apply(DataConnection dataConnection)
 		{
-			((IApplicable<DataConnection>)ConnectionOptions). Apply(dataConnection);
+			((IApplicable<DataConnection>)ConnectionOptions).Apply(dataConnection);
 			((IApplicable<DataConnection>)RetryPolicyOptions).Apply(dataConnection);
 
 			if (_dataContextOptions is IApplicable<DataConnection> a)
@@ -115,6 +128,16 @@ namespace LinqToDB
 			((IApplicable<DataContext>)ConnectionOptions).Apply(dataContext);
 
 			if (_dataContextOptions is IApplicable<DataContext> a)
+				a.Apply(dataContext);
+
+			base.Apply(dataContext);
+		}
+
+		public void Apply(RemoteDataContextBase dataContext)
+		{
+			((IApplicable<RemoteDataContextBase>)ConnectionOptions).Apply(dataContext);
+
+			if (_dataContextOptions is IApplicable<RemoteDataContextBase> a)
 				a.Apply(dataContext);
 
 			base.Apply(dataContext);
@@ -134,6 +157,7 @@ namespace LinqToDB
 						.Add(ConnectionOptions)
 						.Add(DataContextOptions)
 						.Add(BulkCopyOptions)
+						.Add(SqlOptions)
 						.AddRange(base.OptionSets)
 						.CreateID();
 				}

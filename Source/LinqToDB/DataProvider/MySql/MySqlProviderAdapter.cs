@@ -1,6 +1,6 @@
 ﻿using System;
-using System.Data;
 using System.Collections.Generic;
+using System.Data;
 using System.Data.Common;
 using System.Linq.Expressions;
 using System.Text;
@@ -35,22 +35,24 @@ namespace LinqToDB.DataProvider.MySql
 		public const string OldMySqlConnectorNamespace       = "MySql.Data.MySqlClient";
 		public const string OldMySqlConnectorTypesNamespace  = "MySql.Data.Types";
 
-		public enum MySqlProvider
-		{
-			MySqlData,
-			MySqlConnector
-		}
-
 		MySqlProviderAdapter()
 		{
 		}
 
-		public MySqlProvider ProviderType    { get; protected set; }
+#region IDynamicProviderAdapter
+
 		public Type          ConnectionType  { get; protected set; } = null!;
 		public Type          DataReaderType  { get; protected set; } = null!;
 		public Type          ParameterType   { get; protected set; } = null!;
 		public Type          CommandType     { get; protected set; } = null!;
 		public Type          TransactionType { get; protected set; } = null!;
+
+		Func<string, DbConnection> _connectionFactory = null!;
+		public DbConnection CreateConnection(string connectionString) => _connectionFactory(connectionString);
+
+#endregion
+
+		public MySqlProvider ProviderType    { get; protected set; }
 		public MappingSchema MappingSchema   { get; protected set; } = null!;
 
 		/// <summary>
@@ -107,9 +109,9 @@ namespace LinqToDB.DataProvider.MySql
 			internal Func<int, string, MySqlBulkCopyColumnMapping>                    CreateColumnMapping { get; }
 		}
 
-		public static MySqlProviderAdapter GetInstance(string name)
+		public static MySqlProviderAdapter GetInstance(MySqlProvider provider)
 		{
-			if (name == ProviderName.MySqlConnector)
+			if (provider == MySqlProvider.MySqlConnector)
 			{
 				if (_mysqlConnectorInstance == null)
 				{
@@ -160,16 +162,20 @@ namespace LinqToDB.DataProvider.MySql
 					var mySqlGeometryType = assembly.GetType($"{MySqlDataTypesNamespace}.MySqlGeometry"    , true)!;
 
 					var typeMapper = new TypeMapper();
+					typeMapper.RegisterTypeWrapper<MySqlConnection>(connectionType);
 					typeMapper.RegisterTypeWrapper<MySqlParameter>(parameterType);
 					typeMapper.RegisterTypeWrapper<MySqlDbType>(dbType);
 					typeMapper.RegisterTypeWrapper<MySqlDateTime>(mySqlDateTimeType);
 					typeMapper.RegisterTypeWrapper<MySqlDecimal>(mySqlDecimalType);
+					typeMapper.FinalizeMappings();
 
-					var dbTypeGetter      = typeMapper.Type<MySqlParameter>().Member(p => p.MySqlDbType).BuildGetter<DbParameter>();
+					var dbTypeGetter       = typeMapper.Type<MySqlParameter>().Member(p => p.MySqlDbType).BuildGetter<DbParameter>();
 					var decimalGetter      = typeMapper.BuildFunc<object, string>(typeMapper.MapLambda((object value) => ((MySqlDecimal)value).ToString()));
 					var toDecimalConverter = typeMapper.MapLambda((MySqlDecimal d) => d.Value);
 					var toDoubleConverter  = typeMapper.MapLambda((MySqlDecimal d) => d.ToDouble());
-					var dateTimeConverter = typeMapper.MapLambda((MySqlDateTime dt) => dt.GetDateTime());
+					var dateTimeConverter  = typeMapper.MapLambda((MySqlDateTime dt) => dt.GetDateTime());
+
+					_connectionFactory = typeMapper.BuildTypedFactory<string, MySqlConnection, DbConnection>((string connectionString) => new MySqlConnection(connectionString));
 
 					var mappingSchema = new MySqlDataAdapterMappingSchema();
 
@@ -210,7 +216,7 @@ namespace LinqToDB.DataProvider.MySql
 
 			sealed class MySqlDataAdapterMappingSchema : LockedMappingSchema
 			{
-				public MySqlDataAdapterMappingSchema() : base("MySqlDataAdapter")
+				public MySqlDataAdapterMappingSchema() : base("MySql.Data")
 				{
 				}
 			}
@@ -351,6 +357,8 @@ namespace LinqToDB.DataProvider.MySql
 					else
 						typeMapper.FinalizeMappings();
 
+					_connectionFactory = typeMapper.BuildTypedFactory<string, MySqlConnection, DbConnection>((string connectionString) => new MySqlConnection(connectionString));
+
 					var typeGetter        = typeMapper.Type<MySqlParameter>().Member(p => p.MySqlDbType).BuildGetter<DbParameter>();
 					var dateTimeConverter = typeMapper.MapLambda((MySqlDateTime dt) => dt.GetDateTime());
 
@@ -403,7 +411,7 @@ namespace LinqToDB.DataProvider.MySql
 
 			sealed class MySqlConnectorAdapterMappingSchema : LockedMappingSchema
 			{
-				public MySqlConnectorAdapterMappingSchema() : base("MySqlConnectorAdapter")
+				public MySqlConnectorAdapterMappingSchema() : base("MySqlConnector")
 				{
 				}
 			}
@@ -474,11 +482,6 @@ namespace LinqToDB.DataProvider.MySql
 				VarChar    = 253,
 				VarString  = 15,
 				Year       = 13
-			}
-
-			[Wrapper]
-			internal sealed class MySqlConnection
-			{
 			}
 
 			[Wrapper]
@@ -594,20 +597,20 @@ namespace LinqToDB.DataProvider.MySql
 					{
 						var action = (Func<MySqlBulkCopy, IDataReader, CancellationToken, Task>)CompiledWrappers[12];
 #pragma warning disable RS0030 // API mapping must preserve type (IDataReader)
-						await action(this, dataReader, cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+						await action(this, dataReader, cancellationToken).ConfigureAwait(false);
 #pragma warning restore RS0030 //  API mapping must preserve type (IDataReader)
 					}
 					else if (CanWriteToServerAsync3)
-						await WriteToServerAsync3(dataReader, cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+						await WriteToServerAsync3(dataReader, cancellationToken).ConfigureAwait(false);
 					else if (CanWriteToServerAsync2)
 					{
 						var action = (Func<MySqlBulkCopy, IDataReader, CancellationToken, Task>)CompiledWrappers[10];
 #pragma warning disable RS0030 // API mapping must preserve type (IDataReader)
-						await action(this, dataReader, cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+						await action(this, dataReader, cancellationToken).ConfigureAwait(false);
 #pragma warning restore RS0030 //  API mapping must preserve type (IDataReader)
 					}
 					else if (CanWriteToServerAsync1)
-						await WriteToServerAsync1(dataReader, cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+						await WriteToServerAsync1(dataReader, cancellationToken).ConfigureAwait(false);
 					else
 						throw new InvalidOperationException("BulkCopy.WriteToServerAsync implementation not configured");
 				}
@@ -697,6 +700,12 @@ namespace LinqToDB.DataProvider.MySql
 			public MySqlBulkCopyResult(object instance) : base(instance, null)
 			{
 			}
+		}
+
+		[Wrapper]
+		internal sealed class MySqlConnection
+		{
+			public MySqlConnection(string connectionString) => throw new NotImplementedException();
 		}
 	}
 }

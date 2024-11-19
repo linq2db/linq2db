@@ -3,7 +3,9 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Reflection;
 using System.Threading;
+using System.Threading.Tasks;
 
 using JetBrains.Annotations;
 
@@ -11,6 +13,7 @@ namespace LinqToDB
 {
 	using Async;
 	using Linq;
+	using Linq.Builder;
 
 	public partial class LinqExtensions
 	{
@@ -61,7 +64,7 @@ namespace LinqToDB
 			return newTable;
 		}
 
-		sealed class LoadWithQueryable<TEntity, TProperty> : ILoadWithQueryable<TEntity, TProperty>
+		sealed class LoadWithQueryable<TEntity, TProperty> : ILoadWithQueryable<TEntity, TProperty>, IExpressionQuery
 		{
 			private readonly IQueryable<TEntity> _query;
 
@@ -76,9 +79,11 @@ namespace LinqToDB
 			IAsyncEnumerator<TEntity> IAsyncEnumerable<TEntity>.GetAsyncEnumerator(CancellationToken cancellationToken) =>
 				((IAsyncEnumerable<TEntity>)_query).GetAsyncEnumerator(cancellationToken);
 
-			public Expression Expression   => _query.Expression;
-			public Type ElementType        => _query.ElementType;
-			public IQueryProvider Provider => _query.Provider;
+			public Expression     Expression  => _query.Expression;
+			public string         SqlText     => (_query as IExpressionQuery)?.SqlText ?? string.Empty;
+			public IDataContext   DataContext => (_query as IExpressionQuery)?.DataContext!;
+			public Type           ElementType => _query.ElementType;
+			public IQueryProvider Provider    => _query.Provider;
 
 			public override string ToString() => _query.ToString()!;
 		}
@@ -151,13 +156,15 @@ namespace LinqToDB
 			if (source   == null) throw new ArgumentNullException(nameof(source));
 			if (selector == null) throw new ArgumentNullException(nameof(selector));
 
-			var currentSource = ProcessSourceQueryable?.Invoke(source) ?? source;
+			var currentSource = source.ProcessIQueryable();
 
-			var result = currentSource.Provider.CreateQuery<TEntity>(
-				Expression.Call(null,
-					MethodHelper.GetMethodInfo(LoadWith, source, selector),
-					currentSource.Expression, Expression.Quote(selector)));
+			var expr = Expression.Call(
+				null,
+				MethodHelper.GetMethodInfo(LoadWith, source, selector),
+				currentSource.Expression,
+				Expression.Quote(selector));
 
+			var result = currentSource.Provider.CreateQuery<TEntity>(expr);
 			return new LoadWithQueryable<TEntity,TProperty>(result);
 		}
 
@@ -240,13 +247,14 @@ namespace LinqToDB
 			if (source   == null) throw new ArgumentNullException(nameof(source));
 			if (selector == null) throw new ArgumentNullException(nameof(selector));
 
-			var currentSource = ProcessSourceQueryable?.Invoke(source) ?? source;
+			var currentSource = source.ProcessIQueryable();
 
-			var result = currentSource.Provider.CreateQuery<TEntity>(
-				Expression.Call(null,
-					MethodHelper.GetMethodInfo(LoadWith, source, selector, loadFunc),
-					new[] { currentSource.Expression, Expression.Quote(selector), Expression.Quote(loadFunc) }));
+			var expr = Expression.Call(
+				null,
+				MethodHelper.GetMethodInfo(LoadWith, source, selector, loadFunc),
+				new[] { currentSource.Expression, Expression.Quote(selector), Expression.Quote(loadFunc) });
 
+			var result = currentSource.Provider.CreateQuery<TEntity>(expr);
 			return new LoadWithQueryable<TEntity, TProperty>(result);
 		}
 
@@ -329,13 +337,16 @@ namespace LinqToDB
 			if (source   == null) throw new ArgumentNullException(nameof(source));
 			if (selector == null) throw new ArgumentNullException(nameof(selector));
 
-			var currentSource = ProcessSourceQueryable?.Invoke(source) ?? source;
+			var currentSource = source.ProcessIQueryable();
 
-			var result = currentSource.Provider.CreateQuery<TEntity>(
-				Expression.Call(null,
-					MethodHelper.GetMethodInfo(LoadWith, source, selector, loadFunc),
-					currentSource.Expression, Expression.Quote(selector), Expression.Quote(loadFunc)));
+			var expr = Expression.Call(
+				null,
+				MethodHelper.GetMethodInfo(LoadWith, source, selector, loadFunc),
+				currentSource.Expression,
+				Expression.Quote(selector),
+				Expression.Quote(loadFunc));
 
+			var result = currentSource.Provider.CreateQuery<TEntity>(expr);
 			return new LoadWithQueryable<TEntity,TProperty>(result);
 		}
 
@@ -386,13 +397,15 @@ namespace LinqToDB
 			if (source   == null) throw new ArgumentNullException(nameof(source));
 			if (selector == null) throw new ArgumentNullException(nameof(selector));
 
-			var currentSource = ProcessSourceQueryable?.Invoke(source) ?? source;
+			var currentSource = source.ProcessIQueryable();
 
-			var result = currentSource.Provider.CreateQuery<TEntity>(
-				Expression.Call(null,
-					MethodHelper.GetMethodInfo(ThenLoad, source, selector),
-					currentSource.Expression, Expression.Quote(selector)));
+			var expr = Expression.Call(
+				null,
+				MethodHelper.GetMethodInfo(ThenLoad, source, selector),
+				currentSource.Expression,
+				Expression.Quote(selector));
 
+			var result = currentSource.Provider.CreateQuery<TEntity>(expr);
 			return new LoadWithQueryable<TEntity,TProperty>(result);
 		}
 
@@ -443,13 +456,14 @@ namespace LinqToDB
 			if (source   == null) throw new ArgumentNullException(nameof(source));
 			if (selector == null) throw new ArgumentNullException(nameof(selector));
 
-			var currentSource = ProcessSourceQueryable?.Invoke(source) ?? source;
+			var currentSource = source.ProcessIQueryable();
 
-			var result = currentSource.Provider.CreateQuery<TEntity>(
-				Expression.Call(null,
-					MethodHelper.GetMethodInfo(ThenLoad, source, selector),
-					new[] { currentSource.Expression, Expression.Quote(selector) }));
+			var expr = Expression.Call(
+				null,
+				MethodHelper.GetMethodInfo(ThenLoad, source, selector),
+				new[] { currentSource.Expression, Expression.Quote(selector) });
 
+			var result = currentSource.Provider.CreateQuery<TEntity>(expr);
 			return new LoadWithQueryable<TEntity,TProperty>(result);
 		}
 
@@ -511,11 +525,14 @@ namespace LinqToDB
 			if (source   == null) throw new ArgumentNullException(nameof(source));
 			if (selector == null) throw new ArgumentNullException(nameof(selector));
 
-			var result = source.Provider.CreateQuery<TEntity>(
-				Expression.Call(null,
-					MethodHelper.GetMethodInfo(ThenLoad, source, selector, loadFunc),
-					new[] { source.Expression, Expression.Quote(selector), Expression.Quote(loadFunc) }));
+			var currentSource = source.ProcessIQueryable();
 
+			var expr = Expression.Call(
+				null,
+				MethodHelper.GetMethodInfo(ThenLoad, source, selector, loadFunc),
+				new[] { currentSource.Expression, Expression.Quote(selector), Expression.Quote(loadFunc) });
+
+			var result = currentSource.Provider.CreateQuery<TEntity>(expr);
 			return new LoadWithQueryable<TEntity,TProperty>(result);
 		}
 
@@ -577,13 +594,16 @@ namespace LinqToDB
 			if (source   == null) throw new ArgumentNullException(nameof(source));
 			if (selector == null) throw new ArgumentNullException(nameof(selector));
 
-			var currentSource = ProcessSourceQueryable?.Invoke(source) ?? source;
+			var currentSource = source.ProcessIQueryable();
 
-			var result = currentSource.Provider.CreateQuery<TEntity>(
-				Expression.Call(null,
-					MethodHelper.GetMethodInfo(ThenLoad, source, selector, loadFunc),
-					currentSource.Expression, Expression.Quote(selector), Expression.Quote(loadFunc)));
+			var expr = Expression.Call(
+				null,
+				MethodHelper.GetMethodInfo(ThenLoad, source, selector, loadFunc),
+				currentSource.Expression,
+				Expression.Quote(selector),
+				Expression.Quote(loadFunc));
 
+			var result = currentSource.Provider.CreateQuery<TEntity>(expr);
 			return new LoadWithQueryable<TEntity,TProperty>(result);
 		}
 
@@ -645,16 +665,18 @@ namespace LinqToDB
 			if (source   == null) throw new ArgumentNullException(nameof(source));
 			if (selector == null) throw new ArgumentNullException(nameof(selector));
 
-			var currentSource = ProcessSourceQueryable?.Invoke(source) ?? source;
+			var currentSource = source.ProcessIQueryable();
 
-			var result = currentSource.Provider.CreateQuery<TEntity>(
-				Expression.Call(null,
-					MethodHelper.GetMethodInfo(ThenLoad, source, selector, loadFunc),
-					currentSource.Expression, Expression.Quote(selector), Expression.Quote(loadFunc)));
+			var expr = Expression.Call(
+				null,
+				MethodHelper.GetMethodInfo(ThenLoad, source, selector, loadFunc),
+				currentSource.Expression,
+				Expression.Quote(selector),
+				Expression.Quote(loadFunc));
 
+			var result = currentSource.Provider.CreateQuery<TEntity>(expr);
 			return new LoadWithQueryable<TEntity,TProperty>(result);
 		}
-
 
 		/// <summary>
 		/// Specifies associations that should be loaded for parent association, loaded by previous LoadWith/ThenLoad call in chain.
@@ -714,15 +736,28 @@ namespace LinqToDB
 			if (source   == null) throw new ArgumentNullException(nameof(source));
 			if (selector == null) throw new ArgumentNullException(nameof(selector));
 
-			var currentSource = ProcessSourceQueryable?.Invoke(source) ?? source;
+			var currentSource = source.ProcessIQueryable();
 
-			var result = currentSource.Provider.CreateQuery<TEntity>(
-				Expression.Call(null,
-					MethodHelper.GetMethodInfo(ThenLoad, source, selector, loadFunc),
-					currentSource.Expression, Expression.Quote(selector), Expression.Quote(loadFunc)));
+			var expr = Expression.Call(
+				null,
+				MethodHelper.GetMethodInfo(ThenLoad, source, selector, loadFunc),
+				currentSource.Expression,
+				Expression.Quote(selector),
+				Expression.Quote(loadFunc));
 
+			var result = currentSource.Provider.CreateQuery<TEntity>(expr);
 			return new LoadWithQueryable<TEntity, TProperty>(result);
 		}
 
+		[LinqTunnel]
+		[Pure]
+		internal static TSource LoadWithInternal<TSource>(
+			this TSource             source,
+			LoadWithInfo             loadWith,
+			MemberInfo[]?            loadWithPath)
+			where TSource : class
+		{
+			throw new InvalidOperationException();
+		}
 	}
 }

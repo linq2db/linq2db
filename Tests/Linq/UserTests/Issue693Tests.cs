@@ -104,8 +104,11 @@ namespace Tests.UserTests
 				var obj3 = db.GetTable<Entity533>().First(_ => _.ID == id1);
 				var obj4 = db.GetTable<Entity533>().First(_ => _.ID == id2);
 
-				Assert.IsNull (obj4.MiddleName);
-				Assert.NotNull(obj3.MiddleName);
+				Assert.Multiple(() =>
+				{
+					Assert.That(obj4.MiddleName, Is.Null);
+					Assert.That(obj3.MiddleName, Is.Not.Null);
+				});
 			}
 		}
 	}

@@ -16,6 +16,8 @@ namespace Tests.xUpdate
 
 	using Model;
 
+	using Tests.DataProvider;
+
 	[TestFixture]
 	[Order(10000)]
 	public class BulkCopyTests : TestBase
@@ -55,7 +57,7 @@ namespace Tests.xUpdate
 		[Test]
 		public async Task KeepIdentity_SkipOnInsertTrue(
 			[DataSources(false, TestProvName.AllClickHouse)] string context,
-			[Values(null, true, false)                     ] bool? keepIdentity,
+			[Values                                        ] bool? keepIdentity,
 			[Values                                        ] BulkCopyType copyType,
 			[Values(0, 1, 2)                               ] int asyncMode) // 0 == sync, 1 == async, 2 == async with IAsyncEnumerable
 		{
@@ -84,16 +86,19 @@ namespace Tests.xUpdate
 
 					var data = db.GetTable<TestTable2>().Where(_ => _.ID > lastId).OrderBy(_ => _.ID).ToArray();
 
-					Assert.AreEqual(2, data.Length);
+					Assert.That(data, Has.Length.EqualTo(2));
 
 					// oracle supports identity insert only starting from version 12c, which is not used yet for tests
 					var useGenerated = keepIdentity != true
 						|| context.IsAnyOf(TestProvName.AllOracle);
 
-					Assert.AreEqual(lastId + (!useGenerated ? 10 : 1), data[0].ID);
-					Assert.AreEqual(200, data[0].Value);
-					Assert.AreEqual(lastId + (!useGenerated ? 20 : 2), data[1].ID);
-					Assert.AreEqual(300, data[1].Value);
+					Assert.Multiple(() =>
+					{
+						Assert.That(data[0].ID, Is.EqualTo(lastId + (!useGenerated ? 10 : 1)));
+						Assert.That(data[0].Value, Is.EqualTo(200));
+						Assert.That(data[1].ID, Is.EqualTo(lastId + (!useGenerated ? 20 : 2)));
+						Assert.That(data[1].Value, Is.EqualTo(300));
+					});
 
 					async Task perform()
 					{
@@ -141,10 +146,10 @@ namespace Tests.xUpdate
 		[Test]
 		public async Task KeepIdentity_SkipOnInsertFalse(
 			[DataSources(false, TestProvName.AllClickHouse)]
-		                                string       context,
-			[Values(null, true, false)] bool?        keepIdentity,
-			[Values]                    BulkCopyType copyType,
-			[Values(0, 1, 2)]           int          asyncMode) // 0 == sync, 1 == async, 2 == async with IAsyncEnumerable
+		                      string       context,
+			[Values] bool?    keepIdentity,
+			[Values]          BulkCopyType copyType,
+			[Values(0, 1, 2)] int          asyncMode) // 0 == sync, 1 == async, 2 == async with IAsyncEnumerable
 		{
 			if ((context == ProviderName.Sybase) && copyType == BulkCopyType.ProviderSpecific && keepIdentity != true)
 				Assert.Inconclusive("Sybase native bulk copy doesn't support identity insert (despite documentation)");
@@ -168,16 +173,19 @@ namespace Tests.xUpdate
 
 					var data = db.GetTable<TestTable1>().Where(_ => _.ID > lastId).OrderBy(_ => _.ID).ToArray();
 
-					Assert.AreEqual(2, data.Length);
+					Assert.That(data, Has.Length.EqualTo(2));
 
 					// oracle supports identity insert only starting from version 12c, which is not used yet for tests
 					var useGenerated = keepIdentity != true
 						|| context.IsAnyOf(TestProvName.AllOracle);
 
-					Assert.AreEqual(lastId + (!useGenerated ? 10 : 1), data[0].ID);
-					Assert.AreEqual(200, data[0].Value);
-					Assert.AreEqual(lastId + (!useGenerated ? 20 : 2), data[1].ID);
-					Assert.AreEqual(300, data[1].Value);
+					Assert.Multiple(() =>
+					{
+						Assert.That(data[0].ID, Is.EqualTo(lastId + (!useGenerated ? 10 : 1)));
+						Assert.That(data[0].Value, Is.EqualTo(200));
+						Assert.That(data[1].ID, Is.EqualTo(lastId + (!useGenerated ? 20 : 2)));
+						Assert.That(data[1].Value, Is.EqualTo(300));
+					});
 
 					async Task perform()
 					{
@@ -242,8 +250,8 @@ namespace Tests.xUpdate
 					|| copyType == BulkCopyType.ProviderSpecific))
 			{
 				var ex = Assert.CatchAsync(async () => await perform())!;
-				Assert.IsInstanceOf<LinqToDBException>(ex);
-				Assert.AreEqual("BulkCopyOptions.KeepIdentity = true is not supported by Firebird provider. If you use generators with triggers, you should disable triggers during BulkCopy execution manually.", ex.Message);
+				Assert.That(ex, Is.InstanceOf<LinqToDBException>());
+				Assert.That(ex.Message, Is.EqualTo("BulkCopyOptions.KeepIdentity = true is not supported by Firebird provider. If you use generators with triggers, you should disable triggers during BulkCopy execution manually."));
 				return false;
 			}
 
@@ -264,8 +272,8 @@ namespace Tests.xUpdate
 				&& keepIdentity == true)
 			{
 				var ex = Assert.CatchAsync(async () => await perform())!;
-				Assert.IsInstanceOf<LinqToDBException>(ex);
-				Assert.AreEqual("BulkCopyOptions.KeepIdentity = true is not supported by BulkCopyType.RowByRow mode", ex.Message);
+				Assert.That(ex, Is.InstanceOf<LinqToDBException>());
+				Assert.That(ex.Message, Is.EqualTo("BulkCopyOptions.KeepIdentity = true is not supported by BulkCopyType.RowByRow mode"));
 				return false;
 			}
 
@@ -303,9 +311,8 @@ namespace Tests.xUpdate
 
 			db.Parent.BulkCopy(options, rowsToInsert);
 
-			Assert.AreEqual(rowsToInsert.Count,
-				db.Parent.Where(r =>
-					r.ParentID >= rowsToInsert[0].ParentID && r.ParentID <= rowsToInsert.Last().ParentID).Count());
+			Assert.That(db.Parent.Where(r =>
+					r.ParentID >= rowsToInsert[0].ParentID && r.ParentID <= rowsToInsert.Last().ParentID).Count(), Is.EqualTo(rowsToInsert.Count));
 		}
 
 		[Table]
@@ -313,6 +320,14 @@ namespace Tests.xUpdate
 		{
 			[Column] public int Id { get; set; }
 		}
+
+#if NET6_0_OR_GREATER
+		[Table]
+		public class DateOnlyTable
+		{
+			[Column] public DateOnly Date { get; set; }
+		}
+#endif		
 
 		[Table]
 		public class IdentitySimpleBulkCopyTable
@@ -396,6 +411,44 @@ namespace Tests.xUpdate
 			}
 		}
 
+#if NET6_0_OR_GREATER
+		[Test]
+		public void BulkCopyDateOnly(
+			[DataSources(false)] string context,
+			[Values(BulkCopyType.RowByRow, BulkCopyType.MultipleRows, BulkCopyType.ProviderSpecific)] BulkCopyType copyType)
+		{
+			using var db    = new DataConnection(context);
+			var options     = GetDefaultBulkCopyOptions(context) with { BulkCopyType = copyType };
+			using var table = db.CreateLocalTable<DateOnlyTable>();
+			
+			db.DataProvider.BulkCopy(
+				db.Options.WithOptions(options), 
+				table, 
+				new[] { new DateOnlyTable() { Date = new DateOnly(2021, 1, 1) } });
+			
+			Assert.That(table.Single().Date, Is.EqualTo(new DateOnly(2021, 1, 1)));
+		}
+
+		[Test]
+		public void BulkCopyDateOnlyArrayBound(
+			[IncludeDataSources(TestProvName.AllOracle)] string context
+		)
+		{
+			// This makes use of array-bound parameters, which is a unique code-path in OracleBulkCopy (issue #4385)
+			using var mode  = new OracleAlternativeBulkCopyMode(AlternativeBulkCopy.InsertInto);
+			using var db    = new DataConnection(context);
+			var options     = GetDefaultBulkCopyOptions(context) with { BulkCopyType = BulkCopyType.MultipleRows };
+			using var table = db.CreateLocalTable<DateOnlyTable>();
+			
+			db.DataProvider.BulkCopy(
+				db.Options.WithOptions(options), 
+				table, 
+				new[] { new DateOnlyTable() { Date = new DateOnly(2021, 1, 1) } });
+			
+			Assert.That(table.Single().Date, Is.EqualTo(new DateOnly(2021, 1, 1)));
+		}
+#endif
+
 #pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
 		private async IAsyncEnumerable<SimpleBulkCopyTable> AsyncEnumerableData(int start, int count)
 #pragma warning restore CS1998 // Async method lacks 'await' operators and will run synchronously
@@ -450,25 +503,31 @@ namespace Tests.xUpdate
 			var options     = GetDefaultBulkCopyOptions(context) with { BulkCopyType = copyType };
 
 			((IDataContext)db).Close();
-			DataProvider.MySqlTests.EnableNativeBulk(db.GetDataConnection(), context);
+			MySqlTestUtils.EnableNativeBulk(db.GetDataConnection(), context);
 			db.CloseAfterUse = true;
 			db.AddInterceptor(interceptor);
 			db.DataProvider.BulkCopy(db.Options.WithOptions(options), table, new[] { new SimpleBulkCopyTable() { Id = 1 } });
 
 			if (context.IsAnyOf(ProviderName.ClickHouseClient) && copyType is BulkCopyType.ProviderSpecific)
 			{
-				// provider-specific bulk copy doesn't support sync API
-				Assert.That(interceptor.Closed        , Is.EqualTo(0));
-				Assert.That(interceptor.ClosedAsync   , Is.EqualTo(1));
-				Assert.That(interceptor.ClosedCtx     , Is.EqualTo(0));
-				Assert.That(interceptor.ClosedAsyncCtx, Is.EqualTo(1).Or.EqualTo(0));
+				Assert.Multiple(() =>
+				{
+					// provider-specific bulk copy doesn't support sync API
+					Assert.That(interceptor.Closed, Is.EqualTo(0));
+					Assert.That(interceptor.ClosedAsync, Is.EqualTo(1));
+					Assert.That(interceptor.ClosedCtx, Is.EqualTo(0));
+					Assert.That(interceptor.ClosedAsyncCtx, Is.EqualTo(1).Or.EqualTo(0));
+				});
 			}
 			else
 			{
-				Assert.That(interceptor.Closed        , Is.EqualTo(1));
-				Assert.That(interceptor.ClosedAsync   , Is.EqualTo(0));
-				Assert.That(interceptor.ClosedCtx     , Is.EqualTo(1).Or.EqualTo(0));
-				Assert.That(interceptor.ClosedAsyncCtx, Is.EqualTo(0));
+				Assert.Multiple(() =>
+				{
+					Assert.That(interceptor.Closed, Is.EqualTo(1));
+					Assert.That(interceptor.ClosedAsync, Is.EqualTo(0));
+					Assert.That(interceptor.ClosedCtx, Is.EqualTo(1).Or.EqualTo(0));
+					Assert.That(interceptor.ClosedAsyncCtx, Is.EqualTo(0));
+				});
 			}
 		}
 
@@ -483,7 +542,7 @@ namespace Tests.xUpdate
 			var options     = GetDefaultBulkCopyOptions(context) with { BulkCopyType = copyType };
 
 			((IDataContext)db).Close();
-			DataProvider.MySqlTests.EnableNativeBulk(db.GetDataConnection(), context);
+			MySqlTestUtils.EnableNativeBulk(db.GetDataConnection(), context);
 			db.CloseAfterUse = true;
 			db.AddInterceptor(interceptor);
 			await db.DataProvider.BulkCopyAsync(db.Options.WithOptions(options), table, new[] { new SimpleBulkCopyTable() { Id = 1 } }, default);
@@ -491,18 +550,24 @@ namespace Tests.xUpdate
 			if (context.IsAnyOf(TestProvName.AllInformix, ProviderName.DB2, ProviderName.Sybase, TestProvName.AllOracle)
 				&& copyType is BulkCopyType.ProviderSpecific)
 			{
-				// provider-specific bulk copy doesn't support async API
-				Assert.That(interceptor.Closed        , Is.EqualTo(1));
-				Assert.That(interceptor.ClosedAsync   , Is.EqualTo(0));
-				Assert.That(interceptor.ClosedCtx     , Is.EqualTo(1).Or.EqualTo(0));
-				Assert.That(interceptor.ClosedAsyncCtx, Is.EqualTo(0));
+				Assert.Multiple(() =>
+				{
+					// provider-specific bulk copy doesn't support async API
+					Assert.That(interceptor.Closed, Is.EqualTo(1));
+					Assert.That(interceptor.ClosedAsync, Is.EqualTo(0));
+					Assert.That(interceptor.ClosedCtx, Is.EqualTo(1).Or.EqualTo(0));
+					Assert.That(interceptor.ClosedAsyncCtx, Is.EqualTo(0));
+				});
 			}
 			else
 			{
-				Assert.That(interceptor.Closed        , Is.EqualTo(0));
-				Assert.That(interceptor.ClosedAsync   , Is.EqualTo(1));
-				Assert.That(interceptor.ClosedCtx     , Is.EqualTo(0));
-				Assert.That(interceptor.ClosedAsyncCtx, Is.EqualTo(1).Or.EqualTo(0));
+				Assert.Multiple(() =>
+				{
+					Assert.That(interceptor.Closed, Is.EqualTo(0));
+					Assert.That(interceptor.ClosedAsync, Is.EqualTo(1));
+					Assert.That(interceptor.ClosedCtx, Is.EqualTo(0));
+					Assert.That(interceptor.ClosedAsyncCtx, Is.EqualTo(1).Or.EqualTo(0));
+				});
 			}
 		}
 
@@ -517,7 +582,7 @@ namespace Tests.xUpdate
 			var options     = GetDefaultBulkCopyOptions(context) with { BulkCopyType = copyType };
 
 			((IDataContext)db).Close();
-			DataProvider.MySqlTests.EnableNativeBulk(db.GetDataConnection(), context);
+			MySqlTestUtils.EnableNativeBulk(db.GetDataConnection(), context);
 			db.CloseAfterUse = true;
 			db.AddInterceptor(interceptor);
 			await db.DataProvider.BulkCopyAsync(db.Options.WithOptions(options), table, AsyncEnumerableData(2, 1), default);
@@ -525,18 +590,24 @@ namespace Tests.xUpdate
 			if (context.IsAnyOf(TestProvName.AllInformix, ProviderName.DB2, ProviderName.Sybase, TestProvName.AllOracle)
 				&& copyType is BulkCopyType.ProviderSpecific)
 			{
-				// provider-specific bulk copy doesn't support async API
-				Assert.That(interceptor.Closed        , Is.EqualTo(1));
-				Assert.That(interceptor.ClosedAsync   , Is.EqualTo(0));
-				Assert.That(interceptor.ClosedCtx     , Is.EqualTo(1).Or.EqualTo(0));
-				Assert.That(interceptor.ClosedAsyncCtx, Is.EqualTo(0));
+				Assert.Multiple(() =>
+				{
+					// provider-specific bulk copy doesn't support async API
+					Assert.That(interceptor.Closed, Is.EqualTo(1));
+					Assert.That(interceptor.ClosedAsync, Is.EqualTo(0));
+					Assert.That(interceptor.ClosedCtx, Is.EqualTo(1).Or.EqualTo(0));
+					Assert.That(interceptor.ClosedAsyncCtx, Is.EqualTo(0));
+				});
 			}
 			else
 			{
-				Assert.That(interceptor.Closed        , Is.EqualTo(0));
-				Assert.That(interceptor.ClosedAsync   , Is.EqualTo(1));
-				Assert.That(interceptor.ClosedCtx     , Is.EqualTo(0));
-				Assert.That(interceptor.ClosedAsyncCtx, Is.EqualTo(1).Or.EqualTo(0));
+				Assert.Multiple(() =>
+				{
+					Assert.That(interceptor.Closed, Is.EqualTo(0));
+					Assert.That(interceptor.ClosedAsync, Is.EqualTo(1));
+					Assert.That(interceptor.ClosedCtx, Is.EqualTo(0));
+					Assert.That(interceptor.ClosedAsyncCtx, Is.EqualTo(1).Or.EqualTo(0));
+				});
 			}
 		}
 
@@ -551,7 +622,7 @@ namespace Tests.xUpdate
 			var options     = GetDefaultBulkCopyOptions(context) with { BulkCopyType = copyType };
 
 			((IDataContext)db).Close();
-			DataProvider.MySqlTests.EnableNativeBulk(db, context);
+			MySqlTestUtils.EnableNativeBulk(db, context);
 			((IDataContext)db).CloseAfterUse = true;
 			db.AddInterceptor(interceptor);
 
@@ -559,14 +630,20 @@ namespace Tests.xUpdate
 
 			if (context.IsAnyOf(ProviderName.ClickHouseClient) && copyType is BulkCopyType.ProviderSpecific)
 			{
-				// provider-specific bulk copy doesn't support sync API
-				Assert.That(interceptor.Closed     , Is.EqualTo(0));
-				Assert.That(interceptor.ClosedAsync, Is.EqualTo(1));
+				Assert.Multiple(() =>
+				{
+					// provider-specific bulk copy doesn't support sync API
+					Assert.That(interceptor.Closed, Is.EqualTo(0));
+					Assert.That(interceptor.ClosedAsync, Is.EqualTo(1));
+				});
 			}
 			else
 			{
-				Assert.That(interceptor.Closed     , Is.EqualTo(1));
-				Assert.That(interceptor.ClosedAsync, Is.EqualTo(0));
+				Assert.Multiple(() =>
+				{
+					Assert.That(interceptor.Closed, Is.EqualTo(1));
+					Assert.That(interceptor.ClosedAsync, Is.EqualTo(0));
+				});
 			}
 		}
 
@@ -581,7 +658,7 @@ namespace Tests.xUpdate
 			var options     = GetDefaultBulkCopyOptions(context) with { BulkCopyType = copyType };
 
 			((IDataContext)db).Close();
-			DataProvider.MySqlTests.EnableNativeBulk(db, context);
+			MySqlTestUtils.EnableNativeBulk(db, context);
 			((IDataContext)db).CloseAfterUse = true;
 			db.AddInterceptor(interceptor);
 
@@ -590,14 +667,20 @@ namespace Tests.xUpdate
 			if (context.IsAnyOf(TestProvName.AllInformix, ProviderName.DB2, ProviderName.Sybase, TestProvName.AllOracle)
 				&& copyType is BulkCopyType.ProviderSpecific)
 			{
-				// provider-specific bulk copy doesn't support async API
-				Assert.That(interceptor.Closed     , Is.EqualTo(1));
-				Assert.That(interceptor.ClosedAsync, Is.EqualTo(0));
+				Assert.Multiple(() =>
+				{
+					// provider-specific bulk copy doesn't support async API
+					Assert.That(interceptor.Closed, Is.EqualTo(1));
+					Assert.That(interceptor.ClosedAsync, Is.EqualTo(0));
+				});
 			}
 			else
 			{
-				Assert.That(interceptor.Closed     , Is.EqualTo(0));
-				Assert.That(interceptor.ClosedAsync, Is.EqualTo(1));
+				Assert.Multiple(() =>
+				{
+					Assert.That(interceptor.Closed, Is.EqualTo(0));
+					Assert.That(interceptor.ClosedAsync, Is.EqualTo(1));
+				});
 			}
 		}
 
@@ -612,7 +695,7 @@ namespace Tests.xUpdate
 			var options     = GetDefaultBulkCopyOptions(context) with { BulkCopyType = copyType };
 
 			((IDataContext)db).Close();
-			DataProvider.MySqlTests.EnableNativeBulk(db, context);
+			MySqlTestUtils.EnableNativeBulk(db, context);
 			((IDataContext)db).CloseAfterUse = true;
 			db.AddInterceptor(interceptor);
 
@@ -621,14 +704,20 @@ namespace Tests.xUpdate
 			if (context.IsAnyOf(TestProvName.AllInformix, ProviderName.DB2, ProviderName.Sybase, TestProvName.AllOracle)
 				&& copyType is BulkCopyType.ProviderSpecific)
 			{
-				// provider-specific bulk copy doesn't support async API
-				Assert.That(interceptor.Closed     , Is.EqualTo(1));
-				Assert.That(interceptor.ClosedAsync, Is.EqualTo(0));
+				Assert.Multiple(() =>
+				{
+					// provider-specific bulk copy doesn't support async API
+					Assert.That(interceptor.Closed, Is.EqualTo(1));
+					Assert.That(interceptor.ClosedAsync, Is.EqualTo(0));
+				});
 			}
 			else
 			{
-				Assert.That(interceptor.Closed     , Is.EqualTo(0));
-				Assert.That(interceptor.ClosedAsync, Is.EqualTo(1));
+				Assert.Multiple(() =>
+				{
+					Assert.That(interceptor.Closed, Is.EqualTo(0));
+					Assert.That(interceptor.ClosedAsync, Is.EqualTo(1));
+				});
 			}
 		}
 
@@ -647,10 +736,13 @@ namespace Tests.xUpdate
 			db.AddInterceptor(interceptor);
 			db.DataProvider.BulkCopy(db.Options.WithOptions(options), table, new[] { new IdentitySimpleBulkCopyTable() { Id = 1 } });
 
-			Assert.That(interceptor.Closed        , Is.EqualTo(1));
-			Assert.That(interceptor.ClosedAsync   , Is.EqualTo(0));
-			Assert.That(interceptor.ClosedCtx     , Is.EqualTo(1).Or.EqualTo(0));
-			Assert.That(interceptor.ClosedAsyncCtx, Is.EqualTo(0));
+			Assert.Multiple(() =>
+			{
+				Assert.That(interceptor.Closed, Is.EqualTo(1));
+				Assert.That(interceptor.ClosedAsync, Is.EqualTo(0));
+				Assert.That(interceptor.ClosedCtx, Is.EqualTo(1).Or.EqualTo(0));
+				Assert.That(interceptor.ClosedAsyncCtx, Is.EqualTo(0));
+			});
 		}
 
 		[Test]
@@ -668,10 +760,13 @@ namespace Tests.xUpdate
 			db.AddInterceptor(interceptor);
 			await db.DataProvider.BulkCopyAsync(db.Options.WithOptions(options), table, new[] { new IdentitySimpleBulkCopyTable() { Id = 1 } }, default);
 
-			Assert.That(interceptor.Closed        , Is.EqualTo(0));
-			Assert.That(interceptor.ClosedAsync   , Is.EqualTo(1));
-			Assert.That(interceptor.ClosedCtx     , Is.EqualTo(0));
-			Assert.That(interceptor.ClosedAsyncCtx, Is.EqualTo(1).Or.EqualTo(0));
+			Assert.Multiple(() =>
+			{
+				Assert.That(interceptor.Closed, Is.EqualTo(0));
+				Assert.That(interceptor.ClosedAsync, Is.EqualTo(1));
+				Assert.That(interceptor.ClosedCtx, Is.EqualTo(0));
+				Assert.That(interceptor.ClosedAsyncCtx, Is.EqualTo(1).Or.EqualTo(0));
+			});
 		}
 
 		[Test]
@@ -689,10 +784,13 @@ namespace Tests.xUpdate
 			db.AddInterceptor(interceptor);
 			await db.DataProvider.BulkCopyAsync(db.Options.WithOptions(options), table, IdentityAsyncEnumerableData(2, 1), default);
 
-			Assert.That(interceptor.Closed        , Is.EqualTo(0));
-			Assert.That(interceptor.ClosedAsync   , Is.EqualTo(1));
-			Assert.That(interceptor.ClosedCtx     , Is.EqualTo(0));
-			Assert.That(interceptor.ClosedAsyncCtx, Is.EqualTo(1).Or.EqualTo(0));
+			Assert.Multiple(() =>
+			{
+				Assert.That(interceptor.Closed, Is.EqualTo(0));
+				Assert.That(interceptor.ClosedAsync, Is.EqualTo(1));
+				Assert.That(interceptor.ClosedCtx, Is.EqualTo(0));
+				Assert.That(interceptor.ClosedAsyncCtx, Is.EqualTo(1).Or.EqualTo(0));
+			});
 		}
 
 		[Test]
@@ -711,8 +809,11 @@ namespace Tests.xUpdate
 
 			db.DataProvider.BulkCopy(db.Options.WithOptions(options), table, new[] { new IdentitySimpleBulkCopyTable() { Id = 1 } });
 
-			Assert.That(interceptor.Closed     , Is.EqualTo(1));
-			Assert.That(interceptor.ClosedAsync, Is.EqualTo(0));
+			Assert.Multiple(() =>
+			{
+				Assert.That(interceptor.Closed, Is.EqualTo(1));
+				Assert.That(interceptor.ClosedAsync, Is.EqualTo(0));
+			});
 		}
 
 		[Test]
@@ -731,8 +832,11 @@ namespace Tests.xUpdate
 
 			await db.DataProvider.BulkCopyAsync(db.Options.WithOptions(options), table, new[] { new IdentitySimpleBulkCopyTable() { Id = 1 } }, default);
 
-			Assert.That(interceptor.Closed     , Is.EqualTo(0));
-			Assert.That(interceptor.ClosedAsync, Is.EqualTo(1));
+			Assert.Multiple(() =>
+			{
+				Assert.That(interceptor.Closed, Is.EqualTo(0));
+				Assert.That(interceptor.ClosedAsync, Is.EqualTo(1));
+			});
 		}
 
 		[Test]
@@ -751,8 +855,11 @@ namespace Tests.xUpdate
 
 			await db.DataProvider.BulkCopyAsync(db.Options.WithOptions(options), table, IdentityAsyncEnumerableData(2, 1), default);
 
-			Assert.That(interceptor.Closed     , Is.EqualTo(0));
-			Assert.That(interceptor.ClosedAsync, Is.EqualTo(1));
+			Assert.Multiple(() =>
+			{
+				Assert.That(interceptor.Closed, Is.EqualTo(0));
+				Assert.That(interceptor.ClosedAsync, Is.EqualTo(1));
+			});
 		}
 
 		[Test]
@@ -771,10 +878,13 @@ namespace Tests.xUpdate
 			db.AddInterceptor(interceptor);
 			db.DataProvider.BulkCopy(db.Options.WithOptions(options), table, new[] { new SimpleBulkCopyTable() { Id = 1 } });
 
-			Assert.That(interceptor.Closed, Is.EqualTo(1));
-			Assert.That(interceptor.ClosedAsync, Is.EqualTo(0));
-			Assert.That(interceptor.ClosedCtx, Is.EqualTo(1).Or.EqualTo(0));
-			Assert.That(interceptor.ClosedAsyncCtx, Is.EqualTo(0));
+			Assert.Multiple(() =>
+			{
+				Assert.That(interceptor.Closed, Is.EqualTo(1));
+				Assert.That(interceptor.ClosedAsync, Is.EqualTo(0));
+				Assert.That(interceptor.ClosedCtx, Is.EqualTo(1).Or.EqualTo(0));
+				Assert.That(interceptor.ClosedAsyncCtx, Is.EqualTo(0));
+			});
 		}
 
 		[Test]
@@ -793,10 +903,13 @@ namespace Tests.xUpdate
 			db.AddInterceptor(interceptor);
 			await db.DataProvider.BulkCopyAsync(db.Options.WithOptions(options), table, new[] { new SimpleBulkCopyTable() { Id = 1 } }, default);
 
-			Assert.That(interceptor.Closed, Is.EqualTo(0));
-			Assert.That(interceptor.ClosedAsync, Is.EqualTo(1));
-			Assert.That(interceptor.ClosedCtx, Is.EqualTo(0));
-			Assert.That(interceptor.ClosedAsyncCtx, Is.EqualTo(1).Or.EqualTo(0));
+			Assert.Multiple(() =>
+			{
+				Assert.That(interceptor.Closed, Is.EqualTo(0));
+				Assert.That(interceptor.ClosedAsync, Is.EqualTo(1));
+				Assert.That(interceptor.ClosedCtx, Is.EqualTo(0));
+				Assert.That(interceptor.ClosedAsyncCtx, Is.EqualTo(1).Or.EqualTo(0));
+			});
 		}
 
 		[Test]
@@ -815,10 +928,13 @@ namespace Tests.xUpdate
 			db.AddInterceptor(interceptor);
 			await db.DataProvider.BulkCopyAsync(db.Options.WithOptions(options), table, AsyncEnumerableData(2, 1), default);
 
-			Assert.That(interceptor.Closed, Is.EqualTo(0));
-			Assert.That(interceptor.ClosedAsync, Is.EqualTo(1));
-			Assert.That(interceptor.ClosedCtx, Is.EqualTo(0));
-			Assert.That(interceptor.ClosedAsyncCtx, Is.EqualTo(1).Or.EqualTo(0));
+			Assert.Multiple(() =>
+			{
+				Assert.That(interceptor.Closed, Is.EqualTo(0));
+				Assert.That(interceptor.ClosedAsync, Is.EqualTo(1));
+				Assert.That(interceptor.ClosedCtx, Is.EqualTo(0));
+				Assert.That(interceptor.ClosedAsyncCtx, Is.EqualTo(1).Or.EqualTo(0));
+			});
 		}
 
 		[Test]
@@ -838,8 +954,11 @@ namespace Tests.xUpdate
 
 			db.DataProvider.BulkCopy(db.Options.WithOptions(options), table, new[] { new SimpleBulkCopyTable() { Id = 1 } });
 
-			Assert.That(interceptor.Closed, Is.EqualTo(1));
-			Assert.That(interceptor.ClosedAsync, Is.EqualTo(0));
+			Assert.Multiple(() =>
+			{
+				Assert.That(interceptor.Closed, Is.EqualTo(1));
+				Assert.That(interceptor.ClosedAsync, Is.EqualTo(0));
+			});
 		}
 
 		[Test]
@@ -859,8 +978,11 @@ namespace Tests.xUpdate
 
 			await db.DataProvider.BulkCopyAsync(db.Options.WithOptions(options), table, new[] { new SimpleBulkCopyTable() { Id = 1 } }, default);
 
-			Assert.That(interceptor.Closed, Is.EqualTo(0));
-			Assert.That(interceptor.ClosedAsync, Is.EqualTo(1));
+			Assert.Multiple(() =>
+			{
+				Assert.That(interceptor.Closed, Is.EqualTo(0));
+				Assert.That(interceptor.ClosedAsync, Is.EqualTo(1));
+			});
 		}
 
 		[Test]
@@ -880,8 +1002,11 @@ namespace Tests.xUpdate
 
 			await db.DataProvider.BulkCopyAsync(db.Options.WithOptions(options), table, AsyncEnumerableData(2, 1), default);
 
-			Assert.That(interceptor.Closed, Is.EqualTo(0));
-			Assert.That(interceptor.ClosedAsync, Is.EqualTo(1));
+			Assert.Multiple(() =>
+			{
+				Assert.That(interceptor.Closed, Is.EqualTo(0));
+				Assert.That(interceptor.ClosedAsync, Is.EqualTo(1));
+			});
 		}
 		#endregion
 
@@ -966,13 +1091,13 @@ namespace Tests.xUpdate
 				items[2].Discriminator.Should().Be(3);
 				((Inherited3)items[2]).Value3.Should().Be("Str3");
 
-				table.Single(x => x is Inherited1).Should().BeOfType(typeof(Inherited1));
-				table.Single(x => x is Inherited2).Should().BeOfType(typeof(Inherited2));
-				table.Single(x => x is Inherited3).Should().BeOfType(typeof(Inherited3));
+				table.Single(x => x is Inherited1).Should().BeOfType<Inherited1>();
+				table.Single(x => x is Inherited2).Should().BeOfType<Inherited2>();
+				table.Single(x => x is Inherited3).Should().BeOfType<Inherited3>();
 
-				table.Single(x => ((Inherited1)x).Value1 == "Str1").Should().BeOfType(typeof(Inherited1));
-				table.Single(x => ((Inherited2)x).Value2 == "Str2").Should().BeOfType(typeof(Inherited2));
-				table.Single(x => ((Inherited3)x).Value3 == "Str3").Should().BeOfType(typeof(Inherited3));
+				table.Single(x => ((Inherited1)x).Value1 == "Str1").Should().BeOfType<Inherited1>();
+				table.Single(x => ((Inherited2)x).Value2 == "Str2").Should().BeOfType<Inherited2>();
+				table.Single(x => ((Inherited3)x).Value3 == "Str3").Should().BeOfType<Inherited3>();
 			}
 		}
 
@@ -1039,13 +1164,13 @@ namespace Tests.xUpdate
 				items[2].Discriminator.Should().Be(3);
 				((InheritedDefault3)items[2]).Value3.Should().Be("Str3");
 
-				table.Single(x => x is InheritedDefault1).Should().BeOfType(typeof(InheritedDefault1));
-				table.Single(x => x is InheritedDefault2).Should().BeOfType(typeof(InheritedDefault2));
-				table.Single(x => x is InheritedDefault3).Should().BeOfType(typeof(InheritedDefault3));
+				table.Single(x => x is InheritedDefault1).Should().BeOfType<InheritedDefault1>();
+				table.Single(x => x is InheritedDefault2).Should().BeOfType<InheritedDefault2>();
+				table.Single(x => x is InheritedDefault3).Should().BeOfType<InheritedDefault3>();
 
-				table.Single(x => ((InheritedDefault1)x).Value1 == "Str1").Should().BeOfType(typeof(InheritedDefault1));
-				table.Single(x => ((InheritedDefault2)x).Value2 == "Str2").Should().BeOfType(typeof(InheritedDefault2));
-				table.Single(x => ((InheritedDefault3)x).Value3 == "Str3").Should().BeOfType(typeof(InheritedDefault3));
+				table.Single(x => ((InheritedDefault1)x).Value1 == "Str1").Should().BeOfType<InheritedDefault1>();
+				table.Single(x => ((InheritedDefault2)x).Value2 == "Str2").Should().BeOfType<InheritedDefault2>();
+				table.Single(x => ((InheritedDefault3)x).Value3 == "Str3").Should().BeOfType<InheritedDefault3>();
 			}
 		}
 	}

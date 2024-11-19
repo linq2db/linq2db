@@ -4,9 +4,37 @@ variables:
   release_branch: release
   baselines_master: master
   solution: 'linq2db.sln'
-  build_configuration: 'Azure'
-  assemblyVersion: 5.3.2
+  netfx_tfm: 'net462'
+  release_configuration: 'Release'
+  test_configuration: 'Azure'
+# names for build artifacts
+  artifact_nugets: 'nugets'
+  artifact_linq2db_binaries: 'linq2db_binaries'
+  artifact_linq2db_tools_binaries: 'linq2db_tools_binaries'
+  artifact_linq2db_extensions_binaries: 'linq2db_extensions_binaries'
+  artifact_linq2db_remote_wcf_binaries: 'linq2db_remote_wcf_binaries'
+  artifact_linq2db_remote_grpc_binaries: 'linq2db_remote_grpc_binaries'
+  artifact_linq2db_cli_binaries: 'linq2db_cli_binaries'
+  artifact_linq2db_fsharp_binaries: 'linq2db_fsharp_binaries'
+  artifact_linq2db_efcore_binaries: 'linq2db_efcore_binaries'
+  artifact_linq2db_efcore_sts_binaries: 'linq2db_efcore_sts_binaries'
+  artifact_t4_binaries: 't4_binaries'
+  artifact_test_binaries: 'test_binaries'
+# nuget/assembly versions
+  assemblyVersion: 6.0.0
+  ef3AssemblyVersion: 3.28.0
+  ef6AssemblyVersion: 6.18.0
+  ef8AssemblyVersion: 8.2.0
+  ef9AssemblyVersion: 9.1.0
   ${{ if eq(variables['Build.SourceBranchName'], 'release') }}:
-    packageVersion: 5.3.2
+    packageVersion: 6.0.0-preview.2
+    ef3PackageVersion: 3.28.0-preview.2
+    ef6PackageVersion: 6.18.0-preview.2
+    ef8PackageVersion: 8.2.0-preview.2
+    ef9PackageVersion: 9.1.0-preview.2
   ${{ if ne(variables['Build.SourceBranchName'], 'release') }}:
-    packageVersion: 5.3.2
+    packageVersion: 6.0.0
+    ef3PackageVersion: 3.28.0
+    ef6PackageVersion: 6.18.0
+    ef8PackageVersion: 8.2.0
+    ef9PackageVersion: 9.1.0

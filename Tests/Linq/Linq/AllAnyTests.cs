@@ -2,8 +2,12 @@
 using System.Linq;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
+
 using FluentAssertions;
+
 using LinqToDB;
+using LinqToDB.Linq;
+
 using NUnit.Framework;
 
 namespace Tests.Linq
@@ -87,22 +91,19 @@ namespace Tests.Linq
 					db.Parent.Where(p => p.Children.Any(c => c.GrandChildren.Any(g => g.ParentID > 3))));
 		}
 
-		[ActiveIssue("https://github.com/Octonica/ClickHouseClient/issues/56 + https://github.com/ClickHouse/ClickHouse/issues/37999", Configurations = new[] { ProviderName.ClickHouseMySql, ProviderName.ClickHouseOctonica })]
 		[Test]
 		public void Any6([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
-				Assert.AreEqual(
-					   Child.Any(c => c.ParentID > 3),
-					db.Child.Any(c => c.ParentID > 3));
+				Assert.That(
+					db.Child.Any(c => c.ParentID > 3), Is.EqualTo(Child.Any(c => c.ParentID > 3)));
 		}
 
-		[ActiveIssue("https://github.com/Octonica/ClickHouseClient/issues/56 + https://github.com/ClickHouse/ClickHouse/issues/37999", Configurations = new[] { ProviderName.ClickHouseMySql, ProviderName.ClickHouseOctonica })]
 		[Test]
 		public void Any7([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
-				Assert.AreEqual(Child.Any(), db.Child.Any());
+				Assert.That(db.Child.Any(), Is.EqualTo(Child.Any()));
 		}
 
 		[Test]
@@ -215,36 +216,30 @@ namespace Tests.Linq
 					db.Parent.Where(p => p.Children.All(c => c.GrandChildren.All(g => g.ParentID > 3))));
 		}
 
-		[ActiveIssue("https://github.com/Octonica/ClickHouseClient/issues/56 + https://github.com/ClickHouse/ClickHouse/issues/37999", Configurations = new[] { ProviderName.ClickHouseMySql, ProviderName.ClickHouseOctonica })]
 		[Test]
 		public void All4([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
-				Assert.AreEqual(
-					   Child.All(c => c.ParentID > 3),
-					db.Child.All(c => c.ParentID > 3));
+				Assert.That(
+					db.Child.All(c => c.ParentID > 3), Is.EqualTo(Child.All(c => c.ParentID > 3)));
 		}
 
-		[ActiveIssue("https://github.com/Octonica/ClickHouseClient/issues/56 + https://github.com/ClickHouse/ClickHouse/issues/37999", Configurations = new[] { ProviderName.ClickHouseMySql, ProviderName.ClickHouseOctonica })]
 		[Test]
 		public async Task All4Async([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
-				Assert.AreEqual(
-							 Child.All     (c => c.ParentID > 3),
-					await db.Child.AllAsync(c => c.ParentID > 3));
+				Assert.That(
+					await db.Child.AllAsync(c => c.ParentID > 3), Is.EqualTo(Child.All     (c => c.ParentID > 3)));
 		}
 
-		[ActiveIssue("https://github.com/Octonica/ClickHouseClient/issues/56 + https://github.com/ClickHouse/ClickHouse/issues/37999", Configurations = new[] { ProviderName.ClickHouseMySql, ProviderName.ClickHouseOctonica })]
 		[Test]
 		public void All5([DataSources] string context)
 		{
 			int n = 3;
 
 			using (var db = GetDataContext(context))
-				Assert.AreEqual(
-					   Child.All(c => c.ParentID > n),
-					db.Child.All(c => c.ParentID > n));
+				Assert.That(
+					db.Child.All(c => c.ParentID > n), Is.EqualTo(Child.All(c => c.ParentID > n)));
 		}
 
 		[Test]
@@ -295,7 +290,6 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue("https://github.com/Octonica/ClickHouseClient/issues/56 + https://github.com/ClickHouse/ClickHouse/issues/37999", Configurations = new[] { ProviderName.ClickHouseMySql, ProviderName.ClickHouseOctonica })]
 		[Test]
 		public void StackOverflowRegressionTest([DataSources] string context)
 		{
@@ -321,8 +315,36 @@ namespace Tests.Linq
 
 			var res = db.Person.Where(x => filter.NamesProp!.Any(y => y == x.FirstName)).ToArray();
 
-			Assert.AreEqual(1, res.Length);
-			Assert.AreEqual(1, res[0].ID);
+			Assert.That(res, Has.Length.EqualTo(1));
+			Assert.That(res[0].ID, Is.EqualTo(1));
+		}
+
+		[ThrowsForProvider(typeof(LinqException), providers: [TestProvName.AllAccess, ProviderName.Firebird25, TestProvName.AllMySql57, TestProvName.AllSybase], ErrorMessage = "Provider does not support CROSS/OUTER/LATERAL joins.")]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/2156")]
+		public void Issue2156Test([DataSources(TestProvName.AllClickHouse)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = from i in db.Person
+						join t in (db.Person.Where(x => x.FirstName != "Nameless One")) on i.ID equals t.ID into tj
+						from t in tj.DefaultIfEmpty()
+						join tg in db.Person on t.ID equals tg.ID into tgj
+						from tg in tgj.DefaultIfEmpty()
+						join u in db.Person on i.ID equals u.ID into uj
+						from u in uj.DefaultIfEmpty()
+						join p in db.Person on i.ID equals p.ID
+						join iSs in db.Person on i.ID equals iSs.ID
+						join e in db.Person on u.ID equals e.ID into ej
+						from e in ej.Take(1).DefaultIfEmpty()
+						where i.Patient!.Diagnosis != "Immortality"
+						select new { Issue = i, User = u, Project = p, Status = iSs, Email = e, IsHoliday = tgj.Any(x => x.FirstName == "John") };
+
+			var grouped = query
+				.Distinct()
+				.OrderBy(x => x.User)
+				.ToList()
+				.GroupBy(x => (x.User, x.Email))
+				.ToList();
 		}
 	}
 }

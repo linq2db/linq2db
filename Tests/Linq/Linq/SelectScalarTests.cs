@@ -3,6 +3,7 @@ using System.Linq;
 using System.Threading.Tasks;
 
 using LinqToDB;
+using LinqToDB.Linq;
 
 using NUnit.Framework;
 
@@ -13,22 +14,20 @@ namespace Tests.Linq
 	[TestFixture]
 	public class SelectScalarTests : TestBase
 	{
-		[ActiveIssue("CI: SQL0418N  The statement was not processed because the statement contains an invalid use of one of the following: an untyped parameter marker, the DEFAULT keyword, or a null", Configuration = ProviderName.DB2)]
 		[Test]
 		public void Parameter1([DataSources] string context)
 		{
 			var p = 1;
 			using (var db = GetDataContext(context))
-				Assert.AreEqual(p, db.Select(() => p));
+				Assert.That(db.Select(() => p), Is.EqualTo(p));
 		}
 
-		[ActiveIssue("CI: SQL0418N  The statement was not processed because the statement contains an invalid use of one of the following: an untyped parameter marker, the DEFAULT keyword, or a null", Configuration = ProviderName.DB2)]
 		[Test]
 		public async Task Parameter1Async([DataSources] string context)
 		{
 			var p = 1;
 			using (var db = GetDataContext(context))
-				Assert.AreEqual(p, await db.SelectAsync(() => p));
+				Assert.That(await db.SelectAsync(() => p), Is.EqualTo(p));
 		}
 
 		[Test]
@@ -37,7 +36,7 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 			{
 				var p = 1;
-				Assert.AreEqual(p, db.Select(() => new { p }).p);
+				Assert.That(db.Select(() => new { p }).p, Is.EqualTo(p));
 			}
 		}
 
@@ -45,54 +44,51 @@ namespace Tests.Linq
 		public void Constant1([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
-				Assert.AreEqual(1, db.Select(() => 1));
+				Assert.That(db.Select(() => 1), Is.EqualTo(1));
 		}
 
 		[Test]
 		public void Constant2([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
-				Assert.AreEqual(1, db.Select(() => new { p = 1 }).p);
+				Assert.That(db.Select(() => new { p = 1 }).p, Is.EqualTo(1));
 		}
 
 		[Test]
 		public void Constant3([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
-				Assert.AreEqual(1, db.Select(() => new Person { ID = 1, FirstName = "John" }).ID);
+				Assert.That(db.Select(() => new Person { ID = 1, FirstName = "John" }).ID, Is.EqualTo(1));
 		}
 
-		[ActiveIssue("CI: SQL0418N  The statement was not processed because the statement contains an invalid use of one of the following: an untyped parameter marker, the DEFAULT keyword, or a null", Configuration = ProviderName.DB2)]
 		[Test]
 		public void StrLen([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
-				Assert.AreEqual("1".Length, db.Select(() => "1".Length));
+				Assert.That(db.Select(() => "1".Length), Is.EqualTo("1".Length));
 		}
 
 		[Test]
 		public void IntMaxValue([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
-				Assert.AreEqual(int.MaxValue, db.Select(() => int.MaxValue));
+				Assert.That(db.Select(() => int.MaxValue), Is.EqualTo(int.MaxValue));
 		}
 
-		[ActiveIssue("CI: SQL0418N  The statement was not processed because the statement contains an invalid use of one of the following: an untyped parameter marker, the DEFAULT keyword, or a null", Configuration = ProviderName.DB2)]
 		[Test]
 		public void Substring([DataSources] string context)
 		{
 			const string s = "123";
 			using (var db = GetDataContext(context))
-				Assert.AreEqual(s.Substring(1), db.Select(() => s.Substring(1)));
+				Assert.That(db.Select(() => s.Substring(1)), Is.EqualTo(s.Substring(1)));
 		}
 
-		[ActiveIssue("CI: SQL0418N  The statement was not processed because the statement contains an invalid use of one of the following: an untyped parameter marker, the DEFAULT keyword, or a null", Configuration = ProviderName.DB2)]
 		[Test]
 		public void Add([DataSources] string context)
 		{
 			const string s = "123";
 			using (var db = GetDataContext(context))
-				Assert.AreEqual(s.Substring(1).Length + 3, db.Select(() => s.Substring(1).Length + 3));
+				Assert.That(db.Select(() => s.Substring(1).Length + 3), Is.EqualTo(s.Substring(1).Length + 3));
 		}
 
 		[Test]
@@ -101,7 +97,7 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 			{
 				var q = (from p in db.Person select new { p } into p1 select p1.p).ToList().Where(p => p.ID == 1).First();
-				Assert.AreEqual(1, q.ID);
+				Assert.That(q.ID, Is.EqualTo(1));
 			}
 		}
 
@@ -111,7 +107,7 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 			{
 				var n = (from p in db.Person select p.ID).ToList().Where(id => id == 1).First();
-				Assert.AreEqual(1, n);
+				Assert.That(n, Is.EqualTo(1));
 			}
 		}
 
@@ -121,7 +117,7 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 			{
 				var q = (from p in db.Person select new { p }).ToList().Where(p => p.p.ID == 1).First();
-				Assert.AreEqual(1, q.p.ID);
+				Assert.That(q.p.ID, Is.EqualTo(1));
 			}
 		}
 
@@ -131,7 +127,7 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 			{
 				var n = (from p in db.Person select p.FirstName.Length).ToList().Where(len => len == 4).First();
-				Assert.AreEqual(4, n);
+				Assert.That(n, Is.EqualTo(4));
 			}
 		}
 
@@ -154,7 +150,7 @@ namespace Tests.Linq
 						where p1.p1.ID == 1 && p1.p2.ID == 1
 						select p1;
 
-				Assert.IsTrue(result.ToList().SequenceEqual(expected));
+				Assert.That(result.ToList().SequenceEqual(expected), Is.True);
 			}
 		}
 
@@ -177,7 +173,7 @@ namespace Tests.Linq
 						where p1 == 1
 						select new { p1 };
 
-				Assert.IsTrue(result.ToList().SequenceEqual(expected));
+				Assert.That(result.ToList().SequenceEqual(expected), Is.True);
 			}
 		}
 
@@ -188,7 +184,7 @@ namespace Tests.Linq
 			{
 				var expected = from p in    Person where p.ID == 1 select 1;
 				var result   = from p in db.Person where p.ID == 1 select 1;
-				Assert.IsTrue(result.ToList().SequenceEqual(expected));
+				Assert.That(result.ToList().SequenceEqual(expected), Is.True);
 			}
 		}
 
@@ -200,7 +196,7 @@ namespace Tests.Linq
 				var n = 1;
 				var expected = from p in    Person where p.ID == 1 select n;
 				var result   = from p in db.Person where p.ID == 1 select n;
-				Assert.IsTrue(result.ToList().SequenceEqual(expected));
+				Assert.That(result.ToList().SequenceEqual(expected), Is.True);
 			}
 		}
 
@@ -221,7 +217,7 @@ namespace Tests.Linq
 					where c.ChildID > 20
 					select p;
 
-				Assert.AreEqual(expected.Where(p => p.ParentID == 3).First(), result.Where(p => p.ParentID == 3).First());
+				Assert.That(result.Where(p => p.ParentID == 3).First(), Is.EqualTo(expected.Where(p => p.ParentID == 3).First()));
 			}
 		}
 
@@ -231,15 +227,13 @@ namespace Tests.Linq
 			var text = "123";
 
 			using (var db = GetDataContext(context))
-				Assert.AreEqual(
-					   Child.Select(c => string.Format("{0},{1}", c.ChildID, text)).FirstOrDefault(),
-					db.Child.Select(c => string.Format("{0},{1}", c.ChildID, text)).FirstOrDefault());
+				Assert.That(
+					db.Child.Select(c => string.Format("{0},{1}", c.ChildID, text)).FirstOrDefault(), Is.EqualTo(Child.Select(c => string.Format("{0},{1}", c.ChildID, text)).FirstOrDefault()));
 		}
 
 		[Test]
-		public void SubQueryTest([DataSources(
-			TestProvName.AllAccess, TestProvName.AllInformix, ProviderName.SqlCe,
-			TestProvName.AllSybase, TestProvName.AllSapHana)]
+		[ThrowsForProvider(typeof(LinqException), providers: [ProviderName.SqlCe], ErrorMessage = "Provider does not support columns with subqueries.")]
+		public void SubQueryTest([DataSources(TestProvName.AllAccess)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -251,7 +245,6 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue(Configurations = new[] { TestProvName.AllInformix, TestProvName.AllSapHana, }, Details = "missing TOP in subquery")]
 		[Test]
 		public void SubQueryWithCastAndHasValue([DataSources(TestProvName.AllSybase, ProviderName.SqlCe)] string context)
 		{
@@ -269,9 +262,6 @@ namespace Tests.Linq
 			}
 		}
 
-		// Informix actually can use TOP in subqueries when wrapped into another select: https://stackoverflow.com/a/22656180
-		// Looks like SAP HANA2 support TOP in subqueries. We to introduce HANA provider versions
-		[ActiveIssue(Configurations = new[] { TestProvName.AllInformix, TestProvName.AllSapHana, }, Details = "missing TOP in subquery")]
 		[Test]
 		public void SubQueryWithCast([DataSources(TestProvName.AllSybase, ProviderName.SqlCe)] string context)
 		{
@@ -288,7 +278,6 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue(Configurations = new[] { TestProvName.AllInformix, TestProvName.AllSapHana, }, Details = "missing TOP in subquery")]
 		[Test]
 		public void SubQueryWithHasValue([DataSources(TestProvName.AllSybase, ProviderName.SqlCe)] string context)
 		{
@@ -306,7 +295,6 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue(Configurations = new[] { TestProvName.AllInformix, TestProvName.AllSapHana, }, Details = "missing TOP in subquery")]
 		[Test]
 		public void SubQueryWithoutCastAndHasValue([DataSources(TestProvName.AllSybase, ProviderName.SqlCe)] string context)
 		{
@@ -323,7 +311,6 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue(Configurations = new[] { TestProvName.AllInformix, TestProvName.AllSapHana, }, Details = "missing TOP in subquery")]
 		[Test]
 		public void SubQueryWithCastAndHasValueByGuid([DataSources(TestProvName.AllSybase, ProviderName.SqlCe)] string context)
 		{
@@ -341,7 +328,6 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue(Configurations = new[] { TestProvName.AllInformix, TestProvName.AllSapHana, }, Details = "missing TOP in subquery")]
 		[Test]
 		public void SubQueryWithCastByGuid([DataSources(TestProvName.AllSybase, ProviderName.SqlCe)] string context)
 		{
@@ -358,7 +344,6 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue(Configurations = new[] { TestProvName.AllInformix, TestProvName.AllSapHana, }, Details = "missing TOP in subquery")]
 		[Test]
 		public void SubQueryWithHasValueByGuid([DataSources(TestProvName.AllSybase, ProviderName.SqlCe)] string context)
 		{
@@ -376,7 +361,6 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue(Configurations = new[] { TestProvName.AllInformix, TestProvName.AllSapHana, }, Details = "missing TOP in subquery")]
 		[Test]
 		public void SubQueryWithoutCastAndHasValueByGuid([DataSources(TestProvName.AllSybase, ProviderName.SqlCe)] string context)
 		{

@@ -4,7 +4,7 @@ open Tests.FSharp.Models
 
 open System.Linq
 open LinqToDB
-open Tests.Tools
+open NUnit.Framework
 
 let SelectField (db : IDataContext) =
     let persons = db.GetTable<Person>()
@@ -13,9 +13,9 @@ let SelectField (db : IDataContext) =
         select p.LastName
     }
 
-    let sql = q.ToString()
-    NUnitAssert.ThatIsLessThan(sql.IndexOf("First"), 0)
-    NUnitAssert.ThatIsGreaterThan(sql.IndexOf("LastName"), 0)
+    let sql = "" + q.ToString()
+    Assert.That(sql.IndexOf("First"), Is.LessThan 0)
+    Assert.That(sql.IndexOf("LastName"), Is.GreaterThan 0)
 
 let SelectFieldDeeplyComplexPerson (db : IDataContext) =
     let persons = db.GetTable<DeeplyComplexPerson>()
@@ -24,9 +24,9 @@ let SelectFieldDeeplyComplexPerson (db : IDataContext) =
         select p.Name.LastName.Value
     }
 
-    let sql = q.ToString()
-    NUnitAssert.ThatIsLessThan(sql.IndexOf("First"), 0)
-    NUnitAssert.ThatIsGreaterThan(sql.IndexOf("LastName"), 0)
+    let sql = "" + q.ToString()
+    Assert.That(sql.IndexOf("First"), Is.LessThan 0)
+    Assert.That(sql.IndexOf("LastName"), Is.GreaterThan 0)
 
 
 let SelectLeftJoin (db : IDataContext) = 
@@ -43,7 +43,7 @@ let SelectLeftJoin (db : IDataContext) =
         headOrDefault
     }
 
-    NUnitAssert.IsNotNull(child)
+    Assert.That(child, Is.Not.Null)
 
 let Issue3699Test (db : IDataContext) =
     let children = db.GetTable<Parent>()
@@ -66,4 +66,4 @@ let Issue3699Test (db : IDataContext) =
                 (fun o pet -> {| p = o.p; c = o.c; pet = pet |})
             )
 
-    NUnitAssert.IsNotNull(q.ToList())
+    Assert.That(q.ToList(), Is.Not.Null)

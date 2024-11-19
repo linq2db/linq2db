@@ -4,23 +4,21 @@ using System.Data.Common;
 using System.Threading;
 using System.Threading.Tasks;
 
+using LinqToDB.Tools;
+
 namespace LinqToDB.Interceptors
 {
 	using Common;
 
 	sealed class AggregatedCommandInterceptor : AggregatedInterceptor<ICommandInterceptor>, ICommandInterceptor
 	{
-		protected override AggregatedInterceptor<ICommandInterceptor> Create()
-		{
-			return new AggregatedCommandInterceptor();
-		}
-
 		public DbCommand CommandInitialized(CommandEventData eventData, DbCommand command)
 		{
 			return Apply(() =>
 			{
 				foreach (var interceptor in Interceptors)
-					command = interceptor.CommandInitialized(eventData, command);
+					using (ActivityService.Start(ActivityID.CommandInterceptorCommandInitialized))
+						command = interceptor.CommandInitialized(eventData, command);
 				return command;
 			});
 		}
@@ -30,7 +28,8 @@ namespace LinqToDB.Interceptors
 			return Apply(() =>
 			{
 				foreach (var interceptor in Interceptors)
-					result = interceptor.ExecuteScalar(eventData, command, result);
+					using (ActivityService.Start(ActivityID.CommandInterceptorExecuteScalar))
+						result = interceptor.ExecuteScalar(eventData, command, result);
 				return result;
 			});
 		}
@@ -40,10 +39,11 @@ namespace LinqToDB.Interceptors
 			return await Apply(async () =>
 			{
 				foreach (var interceptor in Interceptors)
-					result = await interceptor.ExecuteScalarAsync(eventData, command, result, cancellationToken)
-					.ConfigureAwait(Configuration.ContinueOnCapturedContext);
+					await using (ActivityService.StartAndConfigureAwait(ActivityID.CommandInterceptorExecuteScalarAsync))
+						result = await interceptor.ExecuteScalarAsync(eventData, command, result, cancellationToken)
+							.ConfigureAwait(false);
 				return result;
-			}).ConfigureAwait(Configuration.ContinueOnCapturedContext);
+			}).ConfigureAwait(false);
 		}
 
 		public Option<int> ExecuteNonQuery(CommandEventData eventData, DbCommand command, Option<int> result)
@@ -51,7 +51,8 @@ namespace LinqToDB.Interceptors
 			return Apply(() =>
 			{
 				foreach (var interceptor in Interceptors)
-					result = interceptor.ExecuteNonQuery(eventData, command, result);
+					using (ActivityService.Start(ActivityID.CommandInterceptorExecuteNonQuery))
+						result = interceptor.ExecuteNonQuery(eventData, command, result);
 				return result;
 			});
 		}
@@ -61,10 +62,11 @@ namespace LinqToDB.Interceptors
 			return await Apply(async () =>
 			{
 				foreach (var interceptor in Interceptors)
-					result = await interceptor.ExecuteNonQueryAsync(eventData, command, result, cancellationToken)
-					.ConfigureAwait(Configuration.ContinueOnCapturedContext);
+					await using (ActivityService.StartAndConfigureAwait(ActivityID.CommandInterceptorExecuteNonQueryAsync))
+						result = await interceptor.ExecuteNonQueryAsync(eventData, command, result, cancellationToken)
+							.ConfigureAwait(false);
 				return result;
-			}).ConfigureAwait(Configuration.ContinueOnCapturedContext);
+			}).ConfigureAwait(false);
 		}
 
 		public Option<DbDataReader> ExecuteReader(CommandEventData eventData, DbCommand command, CommandBehavior commandBehavior, Option<DbDataReader> result)
@@ -72,7 +74,8 @@ namespace LinqToDB.Interceptors
 			return Apply(() =>
 			{
 				foreach (var interceptor in Interceptors)
-					result = interceptor.ExecuteReader(eventData, command, commandBehavior, result);
+					using (ActivityService.Start(ActivityID.CommandInterceptorExecuteReader))
+						result = interceptor.ExecuteReader(eventData, command, commandBehavior, result);
 				return result;
 			});
 		}
@@ -82,10 +85,11 @@ namespace LinqToDB.Interceptors
 			return await Apply(async () =>
 			{
 				foreach (var interceptor in Interceptors)
-					result = await interceptor.ExecuteReaderAsync(eventData, command, commandBehavior, result, cancellationToken)
-					.ConfigureAwait(Configuration.ContinueOnCapturedContext);
+					await using (ActivityService.StartAndConfigureAwait(ActivityID.CommandInterceptorExecuteReaderAsync))
+						result = await interceptor.ExecuteReaderAsync(eventData, command, commandBehavior, result, cancellationToken)
+							.ConfigureAwait(false);
 				return result;
-			}).ConfigureAwait(Configuration.ContinueOnCapturedContext);
+			}).ConfigureAwait(false);
 		}
 
 		public void AfterExecuteReader(CommandEventData eventData, DbCommand command, CommandBehavior commandBehavior, DbDataReader dataReader)
@@ -93,7 +97,8 @@ namespace LinqToDB.Interceptors
 			Apply(() =>
 			{
 				foreach (var interceptor in Interceptors)
-					interceptor.AfterExecuteReader(eventData, command, commandBehavior, dataReader);
+					using (ActivityService.Start(ActivityID.CommandInterceptorAfterExecuteReader))
+						interceptor.AfterExecuteReader(eventData, command, commandBehavior, dataReader);
 			});
 		}
 
@@ -102,7 +107,8 @@ namespace LinqToDB.Interceptors
 			Apply(() =>
 			{
 				foreach (var interceptor in Interceptors)
-					interceptor.BeforeReaderDispose(eventData, command, dataReader);
+					using (ActivityService.Start(ActivityID.CommandInterceptorBeforeReaderDispose))
+						interceptor.BeforeReaderDispose(eventData, command, dataReader);
 			});
 		}
 
@@ -111,9 +117,10 @@ namespace LinqToDB.Interceptors
 			await Apply(async () =>
 			{
 				foreach (var interceptor in Interceptors)
-					await interceptor.BeforeReaderDisposeAsync(eventData, command, dataReader)
-					.ConfigureAwait(Configuration.ContinueOnCapturedContext);
-			}).ConfigureAwait(Configuration.ContinueOnCapturedContext);
+					await using (ActivityService.StartAndConfigureAwait(ActivityID.CommandInterceptorBeforeReaderDisposeAsync))
+						await interceptor.BeforeReaderDisposeAsync(eventData, command, dataReader)
+							.ConfigureAwait(false);
+			}).ConfigureAwait(false);
 		}
 	}
 }
