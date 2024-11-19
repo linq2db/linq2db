@@ -178,7 +178,10 @@ namespace LinqToDB.DataProvider.DB2
 
 		static void AppendConversion(StringBuilder stringBuilder, int value)
 		{
-			stringBuilder.Append(CultureInfo.InvariantCulture, $"chr({value})");
+			stringBuilder
+				.Append("x'")
+				.AppendByteAsHexViaLookup32((byte)value)
+				.Append('\'');
 		}
 
 		static void ConvertStringToSql(StringBuilder stringBuilder, string value)
