@@ -81,8 +81,8 @@
 		<PackageVersion Include="Net.IBM.Data.Db2"                                      Version="7.0.0.400"             />
 		<PackageVersion Include="Net.IBM.Data.Db2-lnx"                                  Version="7.0.0.400"             />
 		<PackageVersion Include="Net.IBM.Data.Db2-osx"                                  Version="7.0.0.400"             />
-		<PackageVersion Include="Npgsql" Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net8.0'))"  Version="9.0.0" />
-		<PackageVersion Include="Npgsql" Condition="!$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net8.0'))" Version="8.0.6" />
+		<PackageVersion Include="Npgsql" Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net6.0'))"  Version="9.0.1" />
+		<PackageVersion Include="Npgsql" Condition="!$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net6.0'))" Version="8.0.6" />
 		<!--as of 3.1.1 multiple introduced issues blocks update-->
 		<PackageVersion Include="Octonica.ClickHouseClient"                             Version="3.1.3"                 />
 		<PackageVersion Include="Oracle.ManagedDataAccess"                              Version="21.16.0"               />
@@ -125,7 +125,7 @@
 		<PackageVersion Condition="'$(TargetFramework)'=='net462'" Include="Npgsql.EntityFrameworkCore.PostgreSQL.NodaTime" Version="3.1.18" />
 		<PackageVersion Condition="'$(TargetFramework)'=='net6.0'" Include="Npgsql.EntityFrameworkCore.PostgreSQL.NodaTime" Version="6.0.29" />
 		<PackageVersion Condition="'$(TargetFramework)'=='net8.0'" Include="Npgsql.EntityFrameworkCore.PostgreSQL.NodaTime" Version="8.0.11" />
-		<PackageVersion Condition="'$(TargetFramework)'=='net9.0'" Include="Npgsql.EntityFrameworkCore.PostgreSQL.NodaTime" Version="9.0.0"  />
+		<PackageVersion Condition="'$(TargetFramework)'=='net9.0'" Include="Npgsql.EntityFrameworkCore.PostgreSQL.NodaTime" Version="9.0.1"  />
 		<PackageVersion Condition="'$(TargetFramework)'=='net462'" Include="Microsoft.EntityFrameworkCore.Sqlite"           Version="3.1.32" />
 		<PackageVersion Condition="'$(TargetFramework)'=='net6.0'" Include="Microsoft.EntityFrameworkCore.Sqlite"           Version="6.0.36" />
 		<PackageVersion Condition="'$(TargetFramework)'=='net8.0'" Include="Microsoft.EntityFrameworkCore.Sqlite"           Version="8.0.11" />

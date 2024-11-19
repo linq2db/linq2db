@@ -18,9 +18,9 @@
 				<dependency id="linq2db" version="6.0.0"  />
 				<dependency id="Npgsql"  version="8.0.6"  />
 			</group>
-			<group targetFramework="net8.0">
+			<group targetFramework="net6.0">
 				<dependency id="linq2db" version="6.0.0"  />
-				<dependency id="Npgsql"  version="9.0.0"  />
+				<dependency id="Npgsql"  version="9.0.1"  />
 			</group>
 		</dependencies>
 		<contentFiles>
