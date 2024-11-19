@@ -264,7 +264,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests.Models.IssueModel
 		[Key, DatabaseGenerated(DatabaseGeneratedOption.Identity)]
 		public int Id { get; set; }
 
-		public DateTime CreateDate { get; set; } = DateTimeOffset.Now.ToOffset(TimeSpan.FromHours(3)).DateTime;
+		public DateTime CreateDate { get; set; } = global::Tests.TestData.DateTimeOffset.ToOffset(TimeSpan.FromHours(3)).DateTime;
 	}
 	public class Issue4644Main : Issue4644EntityBase
 	{
