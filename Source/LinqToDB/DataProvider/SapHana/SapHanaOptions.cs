@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 
 namespace LinqToDB.DataProvider.SapHana
 {
@@ -15,6 +14,8 @@ namespace LinqToDB.DataProvider.SapHana
 	public sealed record SapHanaOptions
 	(
 		BulkCopyType BulkCopyType = BulkCopyType.MultipleRows
+		// If you add another parameter here, don't forget to update
+		// SapHanaOptions copy constructor and CreateID method.
 	)
 		: DataProviderOptions<SapHanaOptions>(BulkCopyType)
 	{
@@ -26,8 +27,7 @@ namespace LinqToDB.DataProvider.SapHana
 		{
 		}
 
-		protected override IdentifierBuilder CreateID(IdentifierBuilder builder) => builder
-			;
+		protected override IdentifierBuilder CreateID(IdentifierBuilder builder) => builder;
 
 		#region IEquatable implementation
 

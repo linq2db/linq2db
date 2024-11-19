@@ -9,7 +9,6 @@ namespace Tests.UserTests
 	[TestFixture]
 	public class Issue475Tests : TestBase
 	{
-
 		[Test]
 		public void Test([NorthwindDataContext] string context)
 		{
@@ -23,8 +22,7 @@ namespace Tests.UserTests
 				var item1 = lst.Take(1).Single();
 				var item2 = zz.Take(1).Single();
 
-
-				Assert.AreEqual(item1.EmployeeID, item2.EmployeeID);
+				Assert.That(item2.EmployeeID, Is.EqualTo(item1.EmployeeID));
 			}
 		}
 	}

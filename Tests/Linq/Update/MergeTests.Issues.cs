@@ -60,14 +60,20 @@ namespace Tests.xUpdate
 
 				var result = db.GetTable<AllTypes2>().OrderBy(_ => _.ID).ToArray();
 
-				Assert.AreEqual(2, cnt);
-				Assert.AreEqual(2, result.Length);
+				Assert.Multiple(() =>
+				{
+					Assert.That(cnt, Is.EqualTo(2));
+					Assert.That(result, Has.Length.EqualTo(2));
+				});
 
-				Assert.AreEqual(testData[0].datetime2DataType, result[0].datetime2DataType);
-				Assert.AreEqual(testData[0].datetimeoffsetDataType, result[0].datetimeoffsetDataType);
+				Assert.Multiple(() =>
+				{
+					Assert.That(result[0].datetime2DataType, Is.EqualTo(testData[0].datetime2DataType));
+					Assert.That(result[0].datetimeoffsetDataType, Is.EqualTo(testData[0].datetimeoffsetDataType));
 
-				Assert.AreEqual(testData[1].datetime2DataType, result[1].datetime2DataType);
-				Assert.AreEqual(testData[1].datetimeoffsetDataType, result[1].datetimeoffsetDataType);
+					Assert.That(result[1].datetime2DataType, Is.EqualTo(testData[1].datetime2DataType));
+					Assert.That(result[1].datetimeoffsetDataType, Is.EqualTo(testData[1].datetimeoffsetDataType));
+				});
 			}
 		}
 
@@ -102,14 +108,20 @@ namespace Tests.xUpdate
 
 				var result = db.GetTable<AllTypes2>().OrderBy(_ => _.ID).ToArray();
 
-				Assert.AreEqual(2, cnt);
-				Assert.AreEqual(2, result.Length);
+				Assert.Multiple(() =>
+				{
+					Assert.That(cnt, Is.EqualTo(2));
+					Assert.That(result, Has.Length.EqualTo(2));
+				});
 
-				Assert.AreEqual(testData[0].datetime2DataType, result[0].datetime2DataType);
-				Assert.AreEqual(testData[0].datetimeoffsetDataType, result[0].datetimeoffsetDataType);
+				Assert.Multiple(() =>
+				{
+					Assert.That(result[0].datetime2DataType, Is.EqualTo(testData[0].datetime2DataType));
+					Assert.That(result[0].datetimeoffsetDataType, Is.EqualTo(testData[0].datetimeoffsetDataType));
 
-				Assert.AreEqual(testData[1].datetime2DataType, result[1].datetime2DataType);
-				Assert.AreEqual(testData[1].datetimeoffsetDataType, result[1].datetimeoffsetDataType);
+					Assert.That(result[1].datetime2DataType, Is.EqualTo(testData[1].datetime2DataType));
+					Assert.That(result[1].datetimeoffsetDataType, Is.EqualTo(testData[1].datetimeoffsetDataType));
+				});
 			}
 		}
 
@@ -149,14 +161,20 @@ namespace Tests.xUpdate
 
 				var result = db.GetTable<AllTypes2>().OrderBy(_ => _.ID).ToArray();
 
-				Assert.AreEqual(2, cnt);
-				Assert.AreEqual(2, result.Length);
+				Assert.Multiple(() =>
+				{
+					Assert.That(cnt, Is.EqualTo(2));
+					Assert.That(result, Has.Length.EqualTo(2));
+				});
 
-				Assert.AreEqual(testData[0].datetime2DataType, result[0].datetime2DataType);
-				Assert.AreEqual(testData[0].datetimeoffsetDataType, result[0].datetimeoffsetDataType);
+				Assert.Multiple(() =>
+				{
+					Assert.That(result[0].datetime2DataType, Is.EqualTo(testData[0].datetime2DataType));
+					Assert.That(result[0].datetimeoffsetDataType, Is.EqualTo(testData[0].datetimeoffsetDataType));
 
-				Assert.AreEqual(testData[1].datetime2DataType, result[1].datetime2DataType);
-				Assert.AreEqual(testData[1].datetimeoffsetDataType, result[1].datetimeoffsetDataType);
+					Assert.That(result[1].datetime2DataType, Is.EqualTo(testData[1].datetime2DataType));
+					Assert.That(result[1].datetimeoffsetDataType, Is.EqualTo(testData[1].datetimeoffsetDataType));
+				});
 			}
 		}
 
@@ -203,16 +221,22 @@ namespace Tests.xUpdate
 
 				var result = db.GetTable<AllTypes2>().OrderBy(_ => _.ID).ToArray();
 
-				Assert.AreEqual(2, cnt);
-				Assert.AreEqual(2, result.Length);
+				Assert.Multiple(() =>
+				{
+					Assert.That(cnt, Is.EqualTo(2));
+					Assert.That(result, Has.Length.EqualTo(2));
+				});
 
-				Assert.AreEqual(testData[0].ID, result[0].ID);
-				Assert.AreEqual(dt2, result[0].datetime2DataType);
-				Assert.AreEqual(dto2, result[0].datetimeoffsetDataType);
+				Assert.Multiple(() =>
+				{
+					Assert.That(result[0].ID, Is.EqualTo(testData[0].ID));
+					Assert.That(result[0].datetime2DataType, Is.EqualTo(dt2));
+					Assert.That(result[0].datetimeoffsetDataType, Is.EqualTo(dto2));
 
-				Assert.AreEqual(testData[1].ID, result[1].ID);
-				Assert.AreEqual(dt2, result[1].datetime2DataType);
-				Assert.AreEqual(dto2, result[1].datetimeoffsetDataType);
+					Assert.That(result[1].ID, Is.EqualTo(testData[1].ID));
+					Assert.That(result[1].datetime2DataType, Is.EqualTo(dt2));
+					Assert.That(result[1].datetimeoffsetDataType, Is.EqualTo(dto2));
+				});
 			}
 		}
 
@@ -265,14 +289,20 @@ namespace Tests.xUpdate
 
 				var result = db.GetTable<AllTypes2>().OrderBy(_ => _.ID).ToArray();
 
-				Assert.AreEqual(1, cnt);
-				Assert.AreEqual(2, result.Length);
+				Assert.Multiple(() =>
+				{
+					Assert.That(cnt, Is.EqualTo(1));
+					Assert.That(result, Has.Length.EqualTo(2));
+				});
 
-				Assert.AreEqual(dt2, result[0].datetime2DataType);
-				Assert.AreEqual(dto2, result[0].datetimeoffsetDataType);
+				Assert.Multiple(() =>
+				{
+					Assert.That(result[0].datetime2DataType, Is.EqualTo(dt2));
+					Assert.That(result[0].datetimeoffsetDataType, Is.EqualTo(dto2));
 
-				Assert.AreEqual(testData[1].datetime2DataType, result[1].datetime2DataType);
-				Assert.AreEqual(testData[1].datetimeoffsetDataType, result[1].datetimeoffsetDataType);
+					Assert.That(result[1].datetime2DataType, Is.EqualTo(testData[1].datetime2DataType));
+					Assert.That(result[1].datetimeoffsetDataType, Is.EqualTo(testData[1].datetimeoffsetDataType));
+				});
 			}
 		}
 		#endregion
@@ -330,12 +360,15 @@ namespace Tests.xUpdate
 
 				AssertRowCount(1, rows, context);
 
-				Assert.AreEqual(1, result.Count);
+				Assert.That(result, Has.Count.EqualTo(1));
 
 				var newRecord = new TestMapping1();
 
-				Assert.AreEqual(lastId, result[0].Id);
-				Assert.AreEqual(10, result[0].Field);
+				Assert.Multiple(() =>
+				{
+					Assert.That(result[0].Id, Is.EqualTo(lastId));
+					Assert.That(result[0].Field, Is.EqualTo(10));
+				});
 			}
 		}
 		#endregion
@@ -459,7 +492,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void TestMergeWithInterfaces6([MergeDataContextSource(TestProvName.AllInformix, ProviderName.Firebird)] string context)
+		public void TestMergeWithInterfaces6([MergeDataContextSource(TestProvName.AllInformix, ProviderName.Firebird25)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable<ReviewIndex>())
@@ -493,7 +526,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void TestMergeWithInterfaces8([MergeDataContextSource(TestProvName.AllInformix, ProviderName.Firebird)] string context)
+		public void TestMergeWithInterfaces8([MergeDataContextSource(TestProvName.AllInformix, ProviderName.Firebird25)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable<ReviewIndex>())
@@ -514,7 +547,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void TestMergeWithInterfaces9([MergeDataContextSource(TestProvName.AllInformix, ProviderName.Firebird)] string context)
+		public void TestMergeWithInterfaces9([MergeDataContextSource(TestProvName.AllInformix, ProviderName.Firebird25)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable<ReviewIndex>())
@@ -548,7 +581,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void TestMergeWithInterfaces11([MergeDataContextSource(TestProvName.AllInformix, ProviderName.Firebird, TestProvName.AllOracle)] string context)
+		public void TestMergeWithInterfaces11([MergeDataContextSource(TestProvName.AllInformix, ProviderName.Firebird25, TestProvName.AllOracle)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable<ReviewIndex>())
@@ -629,7 +662,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void TestMergeWithInterfaces16([MergeDataContextSource(ProviderName.Firebird, TestProvName.AllOracle, TestProvName.AllSybase)] string context)
+		public void TestMergeWithInterfaces16([MergeDataContextSource(ProviderName.Firebird25, TestProvName.AllOracle, TestProvName.AllSybase)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable<ReviewIndex>())
@@ -644,7 +677,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void TestMergeWithInterfaces17([MergeDataContextSource(ProviderName.Firebird, TestProvName.AllInformix, TestProvName.AllOracle, TestProvName.AllSybase)] string context)
+		public void TestMergeWithInterfaces17([MergeDataContextSource(ProviderName.Firebird25, TestProvName.AllInformix, TestProvName.AllOracle, TestProvName.AllSybase)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable<ReviewIndex>())
@@ -659,7 +692,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void TestMergeWithInterfaces18([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
+		public void TestMergeWithInterfaces18([MergeNotMatchedBySourceDataContextSource] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable<ReviewIndex>())
@@ -674,7 +707,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void TestMergeWithInterfaces19([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
+		public void TestMergeWithInterfaces19([MergeNotMatchedBySourceDataContextSource] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable<ReviewIndex>())
@@ -689,7 +722,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void TestMergeWithInterfaces20([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
+		public void TestMergeWithInterfaces20([MergeNotMatchedBySourceDataContextSource] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable<ReviewIndex>())
@@ -704,7 +737,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void TestMergeWithInterfaces21([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
+		public void TestMergeWithInterfaces21([MergeNotMatchedBySourceDataContextSource] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable<ReviewIndex>())
@@ -748,11 +781,14 @@ namespace Tests.xUpdate
 
 				var res = table.OrderBy(_ => _.Id).ToArray();
 
-				Assert.AreEqual(2, res.Length);
-				Assert.AreEqual(1, res[0].Id);
-				Assert.AreEqual(1, res[0].Value);
-				Assert.AreEqual(2, res[1].Id);
-				Assert.AreEqual(2, res[1].Value);
+				Assert.That(res, Has.Length.EqualTo(2));
+				Assert.Multiple(() =>
+				{
+					Assert.That(res[0].Id, Is.EqualTo(1));
+					Assert.That(res[0].Value, Is.EqualTo(1));
+					Assert.That(res[1].Id, Is.EqualTo(2));
+					Assert.That(res[1].Value, Is.EqualTo(2));
+				});
 
 				source[1].Value = 4;
 				source.Add(new CacheTestTable() { Id = 3, Value = 3 });
@@ -767,13 +803,16 @@ namespace Tests.xUpdate
 
 				res = table.OrderBy(_ => _.Id).ToArray();
 
-				Assert.AreEqual(3, res.Length);
-				Assert.AreEqual(1, res[0].Id);
-				Assert.AreEqual(1, res[0].Value);
-				Assert.AreEqual(2, res[1].Id);
-				Assert.AreEqual(4, res[1].Value);
-				Assert.AreEqual(3, res[2].Id);
-				Assert.AreEqual(3, res[2].Value);
+				Assert.That(res, Has.Length.EqualTo(3));
+				Assert.Multiple(() =>
+				{
+					Assert.That(res[0].Id, Is.EqualTo(1));
+					Assert.That(res[0].Value, Is.EqualTo(1));
+					Assert.That(res[1].Id, Is.EqualTo(2));
+					Assert.That(res[1].Value, Is.EqualTo(4));
+					Assert.That(res[2].Id, Is.EqualTo(3));
+					Assert.That(res[2].Value, Is.EqualTo(3));
+				});
 			}
 		}
 
@@ -830,7 +869,7 @@ namespace Tests.xUpdate
 				PrepareData(db1);
 
 			var ms = new MappingSchema();
-			new FluentMappingBuilder(ms).Entity<TestMapping1>().HasQueryFilter((t, _) => t.Where(_ => _.Id > 5)).Build();
+			new FluentMappingBuilder(ms).Entity<TestMapping1>().HasQueryFilter((t, _) => t.Id > 5).Build();
 
 			using var db = GetDataContext(context, ms);
 
@@ -847,13 +886,33 @@ namespace Tests.xUpdate
 
 			AssertRowCount(1, rows, context);
 
-			Assert.AreEqual(5, result.Count);
+			Assert.That(result, Has.Count.EqualTo(5));
 
 			AssertRow(InitialTargetData[0], result[0], null, null);
 			AssertRow(InitialTargetData[1], result[1], null, null);
 			AssertRow(InitialTargetData[2], result[2], null, 203);
 			AssertRow(InitialTargetData[3], result[3], null, null);
 			AssertRow(InitialSourceData[3], result[4], null, 216);
+		}
+
+		// HANA: Syntax error or access violation;257 sql syntax error: incorrect syntax near "WHEN MATCHED "
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/3589")]
+		public void Issue3589Test([MergeDataContextSource(TestProvName.AllSapHana)] string context)
+		{
+			// prepare data before fiters applied
+			using (var db1 = GetDataContext(context))
+				PrepareData(db1);
+
+			using var db = GetDataContext(context);
+
+			GetTarget(db)
+				.Merge()
+				// otherwise most databases will complain about multiple matches
+				.Using(GetSource1(db).Where(r => r.Id == 1))
+				.On((a, b) => true)
+				.InsertWhenNotMatched()
+				.UpdateWhenMatched()
+				.Merge();
 		}
 	}
 }

@@ -98,28 +98,30 @@ namespace Tests.UserTests
 				db.Insert(notVerified, tbl.TableName);
 				db.Insert(verified,    tbl.TableName);
 
+				Assert.Multiple(() =>
+				{
+					Assert.That(db.GetTable<TypeConvertTableRaw>().TableName(tbl.TableName).Count(_ => _.BoolValue == 'N'), Is.EqualTo(1));
+					Assert.That(db.GetTable<TypeConvertTableRaw>().TableName(tbl.TableName).Count(_ => _.BoolValue == 'Y'), Is.EqualTo(1));
+					Assert.That(db.GetTable<TypeConvertTableRaw>().TableName(tbl.TableName).Count(_ => _.GuidValue == verified.GuidValue.ToString()), Is.EqualTo(1));
 
-				Assert.AreEqual(1, db.GetTable<TypeConvertTableRaw>().TableName(tbl.TableName).Count(_ => _.BoolValue == 'N'));
-				Assert.AreEqual(1, db.GetTable<TypeConvertTableRaw>().TableName(tbl.TableName).Count(_ => _.BoolValue == 'Y'));
-				Assert.AreEqual(1, db.GetTable<TypeConvertTableRaw>().TableName(tbl.TableName).Count(_ => _.GuidValue == verified.GuidValue.ToString()));
+					Assert.That(tbl.First(_ => _.BoolValue == false), Is.EqualTo(notVerified));
+					Assert.That(tbl.First(_ => _.BoolValue == true), Is.EqualTo(verified));
 
-				Assert.AreEqual(notVerified, tbl.First(_ => _.BoolValue == false));
-				Assert.AreEqual(verified,    tbl.First(_ => _.BoolValue == true));
+					Assert.That(tbl.First(_ => _.BoolValue != true), Is.EqualTo(notVerified));
+					Assert.That(tbl.First(_ => _.BoolValue != false), Is.EqualTo(verified));
 
-				Assert.AreEqual(notVerified, tbl.First(_ => _.BoolValue != true));
-				Assert.AreEqual(verified,    tbl.First(_ => _.BoolValue != false));
+					Assert.That(tbl.First(_ => !_.BoolValue), Is.EqualTo(notVerified));
+					Assert.That(tbl.First(_ => _.BoolValue), Is.EqualTo(verified));
 
-				Assert.AreEqual(notVerified, tbl.First(_ => !_.BoolValue));
-				Assert.AreEqual(verified,    tbl.First(_ =>  _.BoolValue));
+					Assert.That(tbl.First(_ => _.BoolValue.Equals(false)), Is.EqualTo(notVerified));
+					Assert.That(tbl.First(_ => _.BoolValue.Equals(true)), Is.EqualTo(verified));
 
-				Assert.AreEqual(notVerified, tbl.First(_ => _.BoolValue.Equals(false)));
-				Assert.AreEqual(verified,    tbl.First(_ => _.BoolValue.Equals(true)));
+					Assert.That(tbl.First(_ => !_.BoolValue.Equals(true)), Is.EqualTo(notVerified));
+					Assert.That(tbl.First(_ => !_.BoolValue.Equals(false)), Is.EqualTo(verified));
 
-				Assert.AreEqual(notVerified, tbl.First(_ => !_.BoolValue.Equals(true)));
-				Assert.AreEqual(verified,    tbl.First(_ => !_.BoolValue.Equals(false)));
-
-				Assert.AreEqual(notVerified, tbl.First(_ => _.GuidValue == notVerified.GuidValue));
-				Assert.AreEqual(verified,    tbl.First(_ => _.GuidValue == verified   .GuidValue));
+					Assert.That(tbl.First(_ => _.GuidValue == notVerified.GuidValue), Is.EqualTo(notVerified));
+					Assert.That(tbl.First(_ => _.GuidValue == verified.GuidValue), Is.EqualTo(verified));
+				});
 			}
 		}
 	}

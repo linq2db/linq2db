@@ -3,20 +3,21 @@
 <#@ include file="CLI.ttinclude"                                               once="true"        #>
 <#
 	var solutionsPath = Host.ResolveAssemblyReference("$(SolutionDir)");
+	var artifactsPath = Host.ResolveAssemblyReference("$(ArtifactsPath)");
 	var targetDir     = Path.Combine(solutionsPath, "Tests", "Tests.T4", "Cli", "Fluent");
 	var mode          = "default";
 
-	var dbPath        = $@"{solutionsPath}Tests\Linq\bin\Debug\net472\Database\TestData.ODBC.mdb";
+	var dbPath        = $@"{artifactsPath}\bin\Tests\Debug\net462\Database\TestData.ODBC.mdb";
 	var accessOdbcCN  = $"Driver={{Microsoft Access Driver (*.mdb, *.accdb)}};Dbq={dbPath};ExtendedAnsiSQL=1";
 
-	dbPath            = $@"{solutionsPath}Tests\Linq\bin\Debug\net472\Database\TestData.mdb";
+	dbPath            = $@"{artifactsPath}\bin\Tests\Debug\net462\Database\TestData.mdb";
 	var accessOleDbCN = $"Provider=Microsoft.ACE.OLEDB.12.0;Data Source={dbPath};Locale Identifier=1033;Persist Security Info=True";
 
 	var sqliteCN      = "Data Source=" + Path.Combine(solutionsPath, "Data", "TestData.sqlite");
 	var sqliteNwCN    = "Data Source=" + Path.Combine(solutionsPath, "Data", "Northwind.sqlite");
 	var sqlceCN       = "Data Source=" + Path.Combine(solutionsPath, "Data", "TestData.sdf");
 
-	var db2ProviderLocation = $@"{solutionsPath}Tests\Linq\bin\Debug\netcoreapp3.1\IBM.Data.DB2.Core.dll";
+	var db2ProviderLocation = $@"{artifactsPath}\bin\Tests\Debug\net6.0\IBM.Data.Db2.dll";
 
 	var options = new string[]
 	{
@@ -35,10 +36,10 @@
 	RunCliTool("Access"         , null                 , "Cli.Fluent.Access.OleDb"       , Path.Combine(targetDir, "AccessOleDb")        , mode, connectionString: accessOleDbCN, extraOptions: extraOptions);
 	RunCliTool("Access"         , null                 , "Cli.Fluent.Access.Both"        , Path.Combine(targetDir, "AccessBoth")         , mode, connectionString: accessOleDbCN, additionalConnectionString: accessOdbcCN, extraOptions: extraOptions);
 	RunCliTool("DB2"            , "DB2"                , "Cli.Fluent.DB2"                , Path.Combine(targetDir, "DB2")                , mode, providerLocation: db2ProviderLocation, extraOptions: extraOptions);
-	RunCliTool("Firebird"       , "Firebird4"          , "Cli.Fluent.Firebird"           , Path.Combine(targetDir, "Firebird")           , mode, extraOptions: extraOptions);
+	RunCliTool("Firebird"       , "Firebird.5"         , "Cli.Fluent.Firebird"           , Path.Combine(targetDir, "Firebird")           , mode, extraOptions: extraOptions);
 	RunCliTool("Informix"       , "Informix.DB2"       , "Cli.Fluent.Informix"           , Path.Combine(targetDir, "Informix")           , mode, providerLocation: db2ProviderLocation, extraOptions: extraOptions);
-	RunCliTool("MySQL"          , "MariaDB"            , "Cli.Fluent.MariaDB"            , Path.Combine(targetDir, "MariaDB")            , mode, extraOptions: extraOptions);
-	RunCliTool("MySQL"          , "MySqlConnector"     , "Cli.Fluent.MySql"              , Path.Combine(targetDir, "MySql")              , mode, extraOptions: extraOptions);
+	RunCliTool("MySQL"          , "MariaDB.11"         , "Cli.Fluent.MariaDB"            , Path.Combine(targetDir, "MariaDB")            , mode, extraOptions: extraOptions);
+	RunCliTool("MySQL"          , "MySqlConnector.8.0" , "Cli.Fluent.MySql"              , Path.Combine(targetDir, "MySql")              , mode, extraOptions: extraOptions);
 	RunCliTool("Oracle"         , "Oracle.11.Managed"  , "Cli.Fluent.Oracle"             , Path.Combine(targetDir, "Oracle")             , mode, extraOptions: extraOptions);
 	RunCliTool("PostgreSQL"     , "PostgreSQL.10"      , "Cli.Fluent.PostgreSQL"         , Path.Combine(targetDir, "PostgreSQL")         , mode, extraOptions: extraOptions);
 	RunCliTool("SapHana"        , "SapHana.Native"     , "Cli.Fluent.SapHana"            , Path.Combine(targetDir, "SapHana")            , mode, extraOptions: extraOptions);

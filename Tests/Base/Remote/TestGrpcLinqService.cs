@@ -15,8 +15,6 @@ namespace Tests.Remote
 	{
 		private readonly LinqService    _linqService;
 
-		public bool SuppressSequentialAccess { get; set; }
-
 		public bool AllowUpdates
 		{
 			get => _linqService.AllowUpdates;
@@ -31,30 +29,12 @@ namespace Tests.Remote
 
 		public TestGrpcLinqService(
 			LinqService linqService,
-			IInterceptor? interceptor,
-			bool suppressSequentialAccess)
+			IInterceptor? interceptor)
 			: base(linqService, true)
 		{
-			_linqService             = linqService;
-			_interceptor             = interceptor;
-			SuppressSequentialAccess = suppressSequentialAccess;
+			_linqService = linqService;
+			_interceptor = interceptor;
 
-		}
-
-		public DataConnection CreateDataContext(string? configuration)
-		{
-			var dc = _linqService.CreateDataContext(configuration);
-
-			if (!SuppressSequentialAccess && configuration?.IsAnyOf(TestProvName.AllSqlServerSequentialAccess) == true)
-				dc.AddInterceptor(SequentialAccessCommandInterceptor.Instance);
-
-			if (_interceptor != null)
-				dc.AddInterceptor(_interceptor);
-
-			if (configuration?.IsAnyOf(TestProvName.AllMariaDB) == true)
-				dc.AddMappingSchema(TestBase._mariaDBSchema);
-
-			return dc;
 		}
 
 		// for now we need only one test interceptor

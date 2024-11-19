@@ -1,0 +1,31 @@
+﻿#nullable enable
+LinqToDB.DataProvider.BulkCopyReader<T>.DisposeAsync() -> System.Threading.Tasks.ValueTask
+override LinqToDB.DataProvider.Access.AccessOptions.<Clone>$() -> LinqToDB.DataProvider.DataProviderOptions<LinqToDB.DataProvider.Access.AccessOptions!>!
+override LinqToDB.DataProvider.ClickHouse.ClickHouseOptions.<Clone>$() -> LinqToDB.DataProvider.DataProviderOptions<LinqToDB.DataProvider.ClickHouse.ClickHouseOptions!>!
+override LinqToDB.DataProvider.DB2.DB2Options.<Clone>$() -> LinqToDB.DataProvider.DataProviderOptions<LinqToDB.DataProvider.DB2.DB2Options!>!
+override LinqToDB.DataProvider.Firebird.FirebirdOptions.<Clone>$() -> LinqToDB.DataProvider.DataProviderOptions<LinqToDB.DataProvider.Firebird.FirebirdOptions!>!
+override LinqToDB.DataProvider.Informix.InformixOptions.<Clone>$() -> LinqToDB.DataProvider.DataProviderOptions<LinqToDB.DataProvider.Informix.InformixOptions!>!
+override LinqToDB.DataProvider.MySql.MySqlOptions.<Clone>$() -> LinqToDB.DataProvider.DataProviderOptions<LinqToDB.DataProvider.MySql.MySqlOptions!>!
+override LinqToDB.DataProvider.Oracle.OracleOptions.<Clone>$() -> LinqToDB.DataProvider.DataProviderOptions<LinqToDB.DataProvider.Oracle.OracleOptions!>!
+override LinqToDB.DataProvider.PostgreSQL.PostgreSQLOptions.<Clone>$() -> LinqToDB.DataProvider.DataProviderOptions<LinqToDB.DataProvider.PostgreSQL.PostgreSQLOptions!>!
+override LinqToDB.DataProvider.SapHana.SapHanaOptions.<Clone>$() -> LinqToDB.DataProvider.DataProviderOptions<LinqToDB.DataProvider.SapHana.SapHanaOptions!>!
+override LinqToDB.DataProvider.SqlCe.SqlCeOptions.<Clone>$() -> LinqToDB.DataProvider.DataProviderOptions<LinqToDB.DataProvider.SqlCe.SqlCeOptions!>!
+override LinqToDB.DataProvider.SQLite.SQLiteOptions.<Clone>$() -> LinqToDB.DataProvider.DataProviderOptions<LinqToDB.DataProvider.SQLite.SQLiteOptions!>!
+override LinqToDB.DataProvider.SqlServer.SqlServerOptions.<Clone>$() -> LinqToDB.DataProvider.DataProviderOptions<LinqToDB.DataProvider.SqlServer.SqlServerOptions!>!
+override LinqToDB.DataProvider.Sybase.SybaseOptions.<Clone>$() -> LinqToDB.DataProvider.DataProviderOptions<LinqToDB.DataProvider.Sybase.SybaseOptions!>!
+const LinqToDB.DataProvider.DB2.DB2ProviderAdapter.AssemblyName = "IBM.Data.Db2" -> string!
+const LinqToDB.DataProvider.DB2.DB2ProviderAdapter.AssemblyNameOld = "IBM.Data.DB2.Core" -> string!
+const LinqToDB.DataProvider.DB2.DB2ProviderAdapter.ClientNamespace = "IBM.Data.Db2" -> string!
+const LinqToDB.DataProvider.DB2.DB2ProviderAdapter.ClientNamespaceOld = "IBM.Data.DB2.Core" -> string!
+const LinqToDB.DataProvider.SapHana.SapHanaProviderAdapter.AssemblyName = "Sap.Data.Hana.Core.v2.1" -> string!
+override System.Data.Linq.Binary.Equals(object? obj) -> bool
+override System.Data.Linq.Binary.GetHashCode() -> int
+override System.Data.Linq.Binary.ToString() -> string!
+static System.Data.Linq.Binary.implicit operator System.Data.Linq.Binary!(byte[]? value) -> System.Data.Linq.Binary!
+static System.Data.Linq.Binary.operator !=(System.Data.Linq.Binary? binary1, System.Data.Linq.Binary? binary2) -> bool
+static System.Data.Linq.Binary.operator ==(System.Data.Linq.Binary? binary1, System.Data.Linq.Binary? binary2) -> bool
+System.Data.Linq.Binary
+System.Data.Linq.Binary.Binary(byte[]? value) -> void
+System.Data.Linq.Binary.Equals(System.Data.Linq.Binary? other) -> bool
+System.Data.Linq.Binary.Length.get -> int
+System.Data.Linq.Binary.ToArray() -> byte[]!

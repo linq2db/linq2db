@@ -2,9 +2,14 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Data;
+using System.Globalization;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+
+#if NETFRAMEWORK || NETSTANDARD2_0
+using System.Text;
+#endif
 
 namespace LinqToDB.DataProvider.Oracle
 {
@@ -137,18 +142,16 @@ namespace LinqToDB.DataProvider.Oracle
 			return Task.FromResult(ProviderSpecificCopy(table, options, source));
 		}
 
-#if NATIVE_ASYNC
 		protected override async Task<BulkCopyRowsCopied> ProviderSpecificCopyAsync<T>(
 			ITable<T> table, DataOptions options, IAsyncEnumerable<T> source, CancellationToken cancellationToken)
 		{
 			var enumerator = source.GetAsyncEnumerator(cancellationToken);
-			await using (enumerator.ConfigureAwait(Configuration.ContinueOnCapturedContext))
+			await using (enumerator.ConfigureAwait(false))
 			{
 				// call the synchronous provider-specific implementation
 				return ProviderSpecificCopy(table, options, EnumerableHelper.AsyncToSyncEnumerable(enumerator));
 			}
 		}
-#endif
 
 		protected override BulkCopyRowsCopied MultipleRowsCopy<T>(
 			ITable<T> table, DataOptions options, IEnumerable<T> source)
@@ -172,7 +175,6 @@ namespace LinqToDB.DataProvider.Oracle
 			}
 		}
 
-#if NATIVE_ASYNC
 		protected override Task<BulkCopyRowsCopied> MultipleRowsCopyAsync<T>(
 			ITable<T> table, DataOptions options, IAsyncEnumerable<T> source, CancellationToken cancellationToken)
 		{
@@ -183,7 +185,6 @@ namespace LinqToDB.DataProvider.Oracle
 				default                            : return OracleMultipleRowsCopy1Async(new MultipleRowsHelper<T>(table, options), source, cancellationToken);
 			}
 		}
-#endif
 
 		static void OracleMultipleRowsCopy1Prep(MultipleRowsHelper helper)
 		{
@@ -193,7 +194,7 @@ namespace LinqToDB.DataProvider.Oracle
 
 		static void OracleMultipleRowsCopy1Add(MultipleRowsHelper helper, object item, string? from)
 		{
-			helper.StringBuilder.AppendFormat("\tINTO {0} (", helper.TableName);
+			helper.StringBuilder.Append(CultureInfo.InvariantCulture, $"\tINTO {helper.TableName} (");
 
 			foreach (var column in helper.Columns)
 			{
@@ -222,14 +223,12 @@ namespace LinqToDB.DataProvider.Oracle
 		static Task<BulkCopyRowsCopied> OracleMultipleRowsCopy1Async(MultipleRowsHelper helper, IEnumerable source, CancellationToken cancellationToken)
 			=> MultipleRowsCopyHelperAsync(helper, source, null, OracleMultipleRowsCopy1Prep, OracleMultipleRowsCopy1Add, OracleMultipleRowsCopy1Finish, cancellationToken, _maxParameters,_maxSqlLength);
 
-#if NATIVE_ASYNC
 		static Task<BulkCopyRowsCopied> OracleMultipleRowsCopy1Async<T>(MultipleRowsHelper helper, IAsyncEnumerable<T> source, CancellationToken cancellationToken)
 			=> MultipleRowsCopyHelperAsync(helper, source, null, OracleMultipleRowsCopy1Prep, OracleMultipleRowsCopy1Add, OracleMultipleRowsCopy1Finish, cancellationToken, _maxParameters,_maxSqlLength);
-#endif
 
 		static List<object> OracleMultipleRowsCopy2Prep(MultipleRowsHelper helper)
 		{
-			helper.StringBuilder.AppendFormat("INSERT INTO {0} (", helper.TableName);
+			helper.StringBuilder.Append(CultureInfo.InvariantCulture, $"INSERT INTO {helper.TableName} (");
 
 			foreach (var column in helper.Columns)
 			{
@@ -242,14 +241,14 @@ namespace LinqToDB.DataProvider.Oracle
 			helper.StringBuilder.Append(") VALUES (");
 
 			for (var i = 0; i < helper.Columns.Length; i++)
-				helper.StringBuilder.Append(":p" + (i + 1)).Append(", ");
+				helper.StringBuilder.Append(CultureInfo.InvariantCulture, $":p{i + 1}, ");
 
 			helper.StringBuilder.Length -= 2;
 
 			helper.StringBuilder.AppendLine(")");
 			helper.SetHeader();
 
-			return new List<object>(31);
+			return new List<object>(helper.BatchSize);
 		}
 
 		BulkCopyRowsCopied OracleMultipleRowsCopy2(MultipleRowsHelper helper, IEnumerable source)
@@ -299,10 +298,10 @@ namespace LinqToDB.DataProvider.Oracle
 
 				if (helper.CurrentCount >= helper.BatchSize)
 				{
-					if (!await ExecuteAsync(helper, list, cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext))
+					if (!await ExecuteAsync(helper, list, cancellationToken).ConfigureAwait(false))
 					{
 						if (!helper.SuppressCloseAfterUse && helper.OriginalContext.CloseAfterUse)
-							await helper.OriginalContext.CloseAsync().ConfigureAwait(Configuration.ContinueOnCapturedContext);
+							await helper.OriginalContext.CloseAsync().ConfigureAwait(false);
 
 						return helper.RowsCopied;
 					}
@@ -313,21 +312,20 @@ namespace LinqToDB.DataProvider.Oracle
 
 			if (helper.CurrentCount > 0)
 			{
-				await ExecuteAsync(helper, list, cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
+				await ExecuteAsync(helper, list, cancellationToken).ConfigureAwait(false);
 			}
 
 			if (!helper.SuppressCloseAfterUse && helper.OriginalContext.CloseAfterUse)
-				await helper.OriginalContext.CloseAsync().ConfigureAwait(Configuration.ContinueOnCapturedContext);
+				await helper.OriginalContext.CloseAsync().ConfigureAwait(false);
 
 			return helper.RowsCopied;
 		}
 
-#if NATIVE_ASYNC
 		async Task<BulkCopyRowsCopied> OracleMultipleRowsCopy2Async<T>(MultipleRowsHelper helper, IAsyncEnumerable<T> source, CancellationToken cancellationToken)
 		{
 			var list = OracleMultipleRowsCopy2Prep(helper);
 
-			await foreach (var item in source.WithCancellation(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext))
+			await foreach (var item in source.WithCancellation(cancellationToken).ConfigureAwait(false))
 			{
 				list.Add(item!);
 
@@ -336,10 +334,10 @@ namespace LinqToDB.DataProvider.Oracle
 
 				if (helper.CurrentCount >= helper.BatchSize)
 				{
-					if (!await ExecuteAsync(helper, list, cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext))
+					if (!await ExecuteAsync(helper, list, cancellationToken).ConfigureAwait(false))
 					{
 						if (!helper.SuppressCloseAfterUse && helper.OriginalContext.CloseAfterUse)
-							await helper.OriginalContext.CloseAsync().ConfigureAwait(Configuration.ContinueOnCapturedContext);
+							await helper.OriginalContext.CloseAsync().ConfigureAwait(false);
 
 						return helper.RowsCopied;
 					}
@@ -350,30 +348,32 @@ namespace LinqToDB.DataProvider.Oracle
 
 			if (helper.CurrentCount > 0)
 			{
-				await ExecuteAsync(helper, list, cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
+				await ExecuteAsync(helper, list, cancellationToken).ConfigureAwait(false);
 			}
 
 			if (!helper.SuppressCloseAfterUse && helper.OriginalContext.CloseAfterUse)
-				await helper.OriginalContext.CloseAsync().ConfigureAwait(Configuration.ContinueOnCapturedContext);
+				await helper.OriginalContext.CloseAsync().ConfigureAwait(false);
 
 			return helper.RowsCopied;
 		}
-#endif
 
 		bool Execute(MultipleRowsHelper helper, List<object> list)
 		{
+			var valueConverter = new BulkCopyReader.Parameter();
+
 			for (var i = 0; i < helper.Columns.Length; i++)
 			{
-				var column   = helper.Columns[i];
-				var dataType = column.DataType == DataType.Undefined
-					? helper.MappingSchema.GetDataType(column.MemberType).Type.DataType
-					: column.DataType;
+				var column     = helper.Columns[i];
+				var columnType = column.GetConvertedDbDataType();
 
 				var value = new object?[list.Count];
 				for (var j = 0; j < value.Length; j++)
-					value[j] = column.GetProviderValue(list[j]);
+				{
+					helper.DataConnection.DataProvider.SetParameter(helper.DataConnection, valueConverter, string.Empty, columnType, column.GetProviderValue(list[j]));
+					value[j] = valueConverter.Value;
+				}
 
-				helper.Parameters.Add(new DataParameter(":p" + (i + 1), value, dataType, column.DbType)
+				helper.Parameters.Add(new DataParameter(FormattableString.Invariant($":p{i + 1}"), value, columnType.DataType, columnType.DbType)
 				{
 					Direction = ParameterDirection.Input,
 					IsArray   = true,
@@ -397,18 +397,21 @@ namespace LinqToDB.DataProvider.Oracle
 
 		Task<bool> ExecuteAsync(MultipleRowsHelper helper, List<object> list, CancellationToken cancellationToken)
 		{
+			var valueConverter = new BulkCopyReader.Parameter();
+
 			for (var i = 0; i < helper.Columns.Length; i++)
 			{
-				var column   = helper.Columns[i];
-				var dataType = column.DataType == DataType.Undefined
-					? helper.MappingSchema.GetDataType(column.MemberType).Type.DataType
-					: column.DataType;
+				var column     = helper.Columns[i];
+				var columnType = column.GetConvertedDbDataType();
 
 				var value = new object?[list.Count];
 				for (var j = 0; j < value.Length; j++)
-					value[j] = column.GetProviderValue(list[j]);
+				{
+					helper.DataConnection.DataProvider.SetParameter(helper.DataConnection, valueConverter, string.Empty, columnType, column.GetProviderValue(list[j]));
+					value[j] = valueConverter.Value;
+				}
 
-				helper.Parameters.Add(new DataParameter(":p" + (i + 1), value, dataType, column.DbType)
+				helper.Parameters.Add(new DataParameter(FormattableString.Invariant($":p{i + 1}"), value, columnType.DataType, columnType.DbType)
 				{
 					Direction = ParameterDirection.Input,
 					IsArray   = true,
@@ -424,7 +427,7 @@ namespace LinqToDB.DataProvider.Oracle
 		static void OracleMultipleRowsCopy3Prep(MultipleRowsHelper helper)
 		{
 			helper.StringBuilder
-				.AppendFormat("INSERT INTO {0}", helper.TableName).AppendLine()
+				.AppendLine(CultureInfo.InvariantCulture, $"INSERT INTO {helper.TableName}")
 				.Append('(');
 
 			foreach (var column in helper.Columns)
@@ -470,9 +473,7 @@ namespace LinqToDB.DataProvider.Oracle
 		static Task<BulkCopyRowsCopied> OracleMultipleRowsCopy3Async(MultipleRowsHelper helper, IEnumerable source, CancellationToken cancellationToken)
 			=> MultipleRowsCopyHelperAsync(helper, source, null, OracleMultipleRowsCopy3Prep, OracleMultipleRowsCopy3Add, OracleMultipleRowsCopy3Finish, cancellationToken, _maxParameters, _maxSqlLength);
 
-#if NATIVE_ASYNC
 		static Task<BulkCopyRowsCopied> OracleMultipleRowsCopy3Async<T>(MultipleRowsHelper helper, IAsyncEnumerable<T> source, CancellationToken cancellationToken)
 			=> MultipleRowsCopyHelperAsync(helper, source, null, OracleMultipleRowsCopy3Prep, OracleMultipleRowsCopy3Add, OracleMultipleRowsCopy3Finish, cancellationToken, _maxParameters, _maxSqlLength);
-#endif
 	}
 }

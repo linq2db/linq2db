@@ -1,4 +1,4 @@
-﻿#if NET472
+﻿#if NETFRAMEWORK
 using System;
 using System.ServiceModel;
 using System.Threading.Tasks;

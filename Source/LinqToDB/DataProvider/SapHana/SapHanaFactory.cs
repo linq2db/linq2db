@@ -12,8 +12,16 @@ namespace LinqToDB.DataProvider.SapHana
 	{
 		IDataProvider IDataProviderFactory.GetDataProvider(IEnumerable<NamedValue> attributes)
 		{
-			var assemblyName = attributes.FirstOrDefault(_ => _.Name == "assemblyName");
-			return SapHanaTools.GetDataProvider(null, assemblyName?.Value);
+			var assemblyName = attributes.FirstOrDefault(_ => _.Name == "assemblyName")?.Value;
+
+			var provider = assemblyName switch
+			{
+				SapHanaProviderAdapter.UnmanagedAssemblyName => SapHanaProvider.Unmanaged,
+				OdbcProviderAdapter.AssemblyName             => SapHanaProvider.ODBC,
+				_                                            => SapHanaProvider.AutoDetect
+			};
+
+			return SapHanaTools.GetDataProvider(provider);
 		}
 	}
 }

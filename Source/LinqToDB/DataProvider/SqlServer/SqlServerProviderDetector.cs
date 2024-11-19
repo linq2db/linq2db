@@ -1,22 +1,21 @@
 ﻿using System;
-using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.Data.Common;
+using System.Globalization;
 using System.IO;
+using System.Linq;
 using System.Reflection;
-
-using LinqToDB.Common;
 
 namespace LinqToDB.DataProvider.SqlServer
 {
-	using Configuration;
+	using Common;
 	using Data;
 
-	sealed class SqlServerProviderDetector : ProviderDetectorBase<SqlServerProvider,SqlServerVersion,SqlServerProviderAdapter.SqlConnection>
+	sealed class SqlServerProviderDetector : ProviderDetectorBase<SqlServerProvider,SqlServerVersion>
 	{
 		public SqlServerProviderDetector() : base(SqlServerVersion.AutoDetect, SqlServerVersion.v2012)
 		{
 		}
-
-		static readonly ConcurrentQueue<SqlServerDataProvider> _providers = new();
 
 		// System.Data
 		// and/or
@@ -39,19 +38,9 @@ namespace LinqToDB.DataProvider.SqlServer
 		static readonly Lazy<IDataProvider> _sqlServerDataProvider2019Mdc = CreateDataProvider<SqlServerDataProvider2019MicrosoftDataSqlClient>();
 		static readonly Lazy<IDataProvider> _sqlServerDataProvider2022Mdc = CreateDataProvider<SqlServerDataProvider2022MicrosoftDataSqlClient>();
 
-		static Lazy<IDataProvider> CreateDataProvider<T>()
-			where T : SqlServerDataProvider, new()
+		static IEnumerable<SqlServerDataProvider> GetInstantiatedProviders()
 		{
-			return new(() =>
-			{
-				var provider = new T();
-
-				DataConnection.AddDataProvider(provider);
-
-				_providers.Enqueue(provider);
-
-				return provider;
-			}, true);
+			return DataConnection.GetRegisteredProviders().Values.OfType<SqlServerDataProvider>();
 		}
 
 		/// <summary>
@@ -66,7 +55,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			_ = new AssemblyResolver(path, SqlServerTypes.AssemblyName);
 
 			if (SqlServerTypes.UpdateTypes())
-				foreach (var provider in _providers)
+				foreach (var provider in GetInstantiatedProviders())
 					SqlServerTypes.Configure(provider);
 		}
 
@@ -78,7 +67,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		public static void ResolveSqlTypes(Assembly assembly)
 		{
 			if (SqlServerTypes.UpdateTypes(assembly))
-				foreach (var provider in _providers)
+				foreach (var provider in GetInstantiatedProviders())
 					SqlServerTypes.Configure(provider);
 		}
 
@@ -168,9 +157,9 @@ namespace LinqToDB.DataProvider.SqlServer
 				: SqlServerProvider.SystemDataSqlClient;
 		}
 
-		public override SqlServerVersion? DetectServerVersion(SqlServerProviderAdapter.SqlConnection connection)
+		public override SqlServerVersion? DetectServerVersion(DbConnection connection)
 		{
-			if (!int.TryParse(connection.ServerVersion.Split('.')[0], out var version))
+			if (!int.TryParse(connection.ServerVersion.Split('.')[0], NumberStyles.Integer, NumberFormatInfo.InvariantInfo, out var version))
 				return null;
 
 			if (version <= 8)
@@ -208,7 +197,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			};
 		}
 
-		protected override SqlServerProviderAdapter.SqlConnection CreateConnection(SqlServerProvider provider, string connectionString)
+		protected override DbConnection CreateConnection(SqlServerProvider provider, string connectionString)
 		{
 			return SqlServerProviderAdapter.GetInstance(provider).CreateConnection(connectionString);
 		}

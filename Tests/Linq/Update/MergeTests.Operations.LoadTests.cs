@@ -20,15 +20,15 @@ namespace Tests.xUpdate
 				string when context.IsAnyOf (TestProvName.AllSybase)                         => 500,
 				// hard limit around 100 records
 				// also big queries could kill connection with server
-				string when context.IsAnyOf (ProviderName.Firebird)                          => 100,
+				string when context.IsAnyOf (ProviderName.Firebird25)                        => 100,
 				// hard limit around 250 records
-				string when context.IsAnyOf (TestProvName.Firebird3, TestProvName.Firebird4) => 250,
+				string when context.IsAnyOf (TestProvName.AllFirebird3Plus)                  => 250,
 				// takes too long
 				string when context.IsAnyOf (TestProvName.AllInformix)                       => 500,
 				// original 2500 actually works, but sometimes fails with
 				// "cannot allocate enough memory: please check traces for further information"
 				// as HANA virtual machine is PITA to configure, we just use smaller data set
-				string when context.IsAnyOf (TestProvName.AllSapHana)                        => 1000,
+				string when context.IsAnyOf (TestProvName.AllSapHana)                        => 50,
 				// big batches leads to a lot of memory use by oracle, which could mess with testing environment
 				string when context.IsAnyOf (TestProvName.AllOracle)                         => 1000,
 				_                                                                            => 2500,
@@ -56,7 +56,7 @@ namespace Tests.xUpdate
 
 				AssertRowCount(size, rows, context);
 
-				Assert.AreEqual(size + 4, result.Count);
+				Assert.That(result, Has.Count.EqualTo(size + 4));
 
 				AssertRow(InitialTargetData[0], result[0], null, null);
 				AssertRow(InitialTargetData[1], result[1], null, null);
@@ -65,12 +65,15 @@ namespace Tests.xUpdate
 
 				for (var i = 4; i < size + 4; i++)
 				{
-					Assert.AreEqual(i + 1, result[i].Id);
-					Assert.AreEqual(i + 2, result[i].Field1);
-					Assert.AreEqual(i + 3, result[i].Field2);
-					Assert.IsNull(result[i].Field3);
-					Assert.AreEqual(i + 5, result[i].Field4);
-					Assert.IsNull(result[i].Field5);
+					Assert.Multiple(() =>
+					{
+						Assert.That(result[i].Id, Is.EqualTo(i + 1));
+						Assert.That(result[i].Field1, Is.EqualTo(i + 2));
+						Assert.That(result[i].Field2, Is.EqualTo(i + 3));
+						Assert.That(result[i].Field3, Is.Null);
+						Assert.That(result[i].Field4, Is.EqualTo(i + 5));
+						Assert.That(result[i].Field5, Is.Null);
+					});
 				}
 			}
 		}

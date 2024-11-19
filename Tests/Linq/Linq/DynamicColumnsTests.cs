@@ -1,10 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 
 using LinqToDB;
 using LinqToDB.DataProvider.Firebird;
 using LinqToDB.Mapping;
+using LinqToDB.Metadata;
 
 using NUnit.Framework;
 
@@ -29,8 +31,8 @@ namespace Tests.Linq
 					.Where(x => Sql.Property<int>(x, IDColumn) == 1)
 					.ToList();
 
-				Assert.AreEqual(1, result.Count);
-				Assert.AreEqual("John", result.Single().FirstName);
+				Assert.That(result, Has.Count.EqualTo(1));
+				Assert.That(result.Single().FirstName, Is.EqualTo("John"));
 			}
 		}
 
@@ -44,8 +46,8 @@ namespace Tests.Linq
 								"Hallucination with Paranoid Bugs\' Delirium of Persecution")
 					.ToList();
 
-				Assert.AreEqual(1, result.Count);
-				Assert.AreEqual("Tester", result.Single().FirstName);
+				Assert.That(result, Has.Count.EqualTo(1));
+				Assert.That(result.Single().FirstName, Is.EqualTo("Tester"));
 			}
 		}
 
@@ -59,8 +61,8 @@ namespace Tests.Linq
 								"Hallucination with Paranoid Bugs\' Delirium of Persecution")
 					.ToList();
 
-				Assert.AreEqual(1, result.Count);
-				Assert.AreEqual("Tester", result.Single().FirstName);
+				Assert.That(result, Has.Count.EqualTo(1));
+				Assert.That(result.Single().FirstName, Is.EqualTo("Tester"));
 			}
 		}
 
@@ -74,8 +76,8 @@ namespace Tests.Linq
 								"Hallucination with Paranoid Bugs\' Delirium of Persecution")
 					.ToList();
 
-				Assert.AreEqual(1, result.Count);
-				Assert.AreEqual("Tester", result.Single().FirstName);
+				Assert.That(result, Has.Count.EqualTo(1));
+				Assert.That(result.Single().FirstName, Is.EqualTo("Tester"));
 			}
 		}
 
@@ -89,7 +91,7 @@ namespace Tests.Linq
 					.Select(x => Sql.Property<object>(Sql.Property<object>(x, PatientColumn), DiagnosisColumn))
 					.ToList();
 
-				Assert.IsTrue(result.OrderBy(_ => _ as string).SequenceEqual(expected.OrderBy(_ => _)));
+				Assert.That(result.OrderBy(_ => _ as string).SequenceEqual(expected.OrderBy(_ => _)), Is.True);
 			}
 		}
 
@@ -102,8 +104,8 @@ namespace Tests.Linq
 					.Where(x => Sql.Property<string>(x, "FirstName") == "John")
 					.ToList();
 
-				Assert.AreEqual(1, result.Count);
-				Assert.AreEqual(1, result.Single().ID);
+				Assert.That(result, Has.Count.EqualTo(1));
+				Assert.That(result.Single().ID, Is.EqualTo(1));
 			}
 		}
 
@@ -117,8 +119,8 @@ namespace Tests.Linq
 								"Hallucination with Paranoid Bugs\' Delirium of Persecution")
 					.ToList();
 
-				Assert.AreEqual(1, result.Count);
-				Assert.AreEqual(2, result.Single().ID);
+				Assert.That(result, Has.Count.EqualTo(1));
+				Assert.That(result.Single().ID, Is.EqualTo(2));
 			}
 		}
 
@@ -130,7 +132,7 @@ namespace Tests.Linq
 				var expected = Person.Select(p => p.FirstName).ToList();
 				var result = db.GetTable<PersonWithDynamicStore>().ToList().Select(p => p.ExtendedProperties["FirstName"]).ToList();
 
-				Assert.IsTrue(result.SequenceEqual(expected));
+				Assert.That(result.SequenceEqual(expected), Is.True);
 			}
 		}
 
@@ -144,7 +146,7 @@ namespace Tests.Linq
 					.Select(x => Sql.Property<string>(x, "FirstName"))
 					.ToList();
 
-				Assert.IsTrue(result.SequenceEqual(expected));
+				Assert.That(result.SequenceEqual(expected), Is.True);
 			}
 		}
 
@@ -167,7 +169,7 @@ namespace Tests.Linq
 					})
 					.ToList();
 
-				Assert.IsTrue(result.SequenceEqual(expected));
+				Assert.That(result.SequenceEqual(expected), Is.True);
 			}
 		}
 
@@ -182,7 +184,7 @@ namespace Tests.Linq
 					.Select(x => Sql.Property<string>(Sql.Property<Patient>(x, PatientColumn), DiagnosisColumn))
 					.ToList();
 
-				Assert.IsTrue(result.OrderBy(_ => _).SequenceEqual(expected.OrderBy(_ => _)));
+				Assert.That(result.OrderBy(_ => _).SequenceEqual(expected.OrderBy(_ => _)), Is.True);
 			}
 		}
 
@@ -197,7 +199,7 @@ namespace Tests.Linq
 					.Select(x => x.ID)
 					.ToList();
 
-				Assert.IsTrue(result.SequenceEqual(expected));
+				Assert.That(result.SequenceEqual(expected), Is.True);
 			}
 		}
 
@@ -212,7 +214,7 @@ namespace Tests.Linq
 					.Select(x => x.ID)
 					.ToList();
 
-				Assert.IsTrue(result.SequenceEqual(expected));
+				Assert.That(result.SequenceEqual(expected), Is.True);
 			}
 		}
 
@@ -227,7 +229,7 @@ namespace Tests.Linq
 					.Select(x => x.ID)
 					.ToList();
 
-				Assert.IsTrue(result.SequenceEqual(expected));
+				Assert.That(result.SequenceEqual(expected), Is.True);
 			}
 		}
 
@@ -242,7 +244,7 @@ namespace Tests.Linq
 					.Select(x => x.ID)
 					.ToList();
 
-				Assert.IsTrue(result.OrderBy(_ => _).SequenceEqual(expected.OrderBy(_ => _)));
+				Assert.That(result.OrderBy(_ => _).SequenceEqual(expected.OrderBy(_ => _)), Is.True);
 			}
 		}
 
@@ -257,7 +259,7 @@ namespace Tests.Linq
 					.Select(p => new {p.Key, Count = p.Count()})
 					.ToList();
 
-				Assert.IsTrue(result.OrderBy(_ => _.Key).SequenceEqual(expected.OrderBy(_ => _.Key)));
+				Assert.That(result.OrderBy(_ => _.Key).SequenceEqual(expected.OrderBy(_ => _.Key)), Is.True);
 			}
 		}
 
@@ -272,7 +274,7 @@ namespace Tests.Linq
 					.Select(p => new { p.Key, Count = p.Count() })
 					.ToList();
 
-				Assert.IsTrue(result.OrderBy(_ => _.Key).SequenceEqual(expected.OrderBy(_ => _.Key)));
+				Assert.That(result.OrderBy(_ => _.Key).SequenceEqual(expected.OrderBy(_ => _.Key)), Is.True);
 			}
 		}
 
@@ -291,7 +293,7 @@ namespace Tests.Linq
 					join pa in db.Patient on Sql.Property<string>(p, "FirstName") equals Sql.Property<string>(pa, DiagnosisColumn)
 					select p;
 
-				Assert.IsTrue(result.ToList().SequenceEqual(expected.ToList()));
+				Assert.That(result.ToList().SequenceEqual(expected.ToList()), Is.True);
 			}
 		}
 
@@ -307,7 +309,7 @@ namespace Tests.Linq
 					.Select(p => ((Patient)p.ExtendedProperties[PatientColumn])?.Diagnosis)
 					.ToList();
 
-				Assert.IsTrue(result.OrderBy(_ => _).SequenceEqual(expected.OrderBy(_ => _)));
+				Assert.That(result.OrderBy(_ => _).SequenceEqual(expected.OrderBy(_ => _)), Is.True);
 			}
 		}
 
@@ -386,7 +388,7 @@ namespace Tests.Linq
 
 				var result = query.ToArray();
 
-				Assert.AreEqual(77, result[0].NI);
+				Assert.That(result[0].NI, Is.EqualTo(77));
 			}
 		}
 
@@ -414,9 +416,12 @@ namespace Tests.Linq
 
 				var result = query.ToArray();
 
-				Assert.AreEqual(77, result[0].NI);
-				Assert.AreEqual(2,  result[0].Count);
-				Assert.AreEqual(10, result[0].Sum);
+				Assert.Multiple(() =>
+				{
+					Assert.That(result[0].NI, Is.EqualTo(77));
+					Assert.That(result[0].Count, Is.EqualTo(2));
+				});
+				Assert.That(result[0].Sum, Is.EqualTo(10));
 			}
 		}
 
@@ -579,14 +584,14 @@ namespace Tests.Linq
 				db.GetTable<BananaTable>().Insert(() => new BananaTable() { Id = 1, Property = "test1" });
 
 				var res = db.GetTable<BananaTable>().ToList();
-				Assert.AreEqual(1, res.Count);
-				Assert.AreEqual("test1", res[0].Property);
+				Assert.That(res, Has.Count.EqualTo(1));
+				Assert.That(res[0].Property, Is.EqualTo("test1"));
 
 				Test(nameof(BananaTable), nameof(BananaTable.Id), nameof(BananaTable.Property), 1, "banana");
 
 				res = db.GetTable<BananaTable>().ToList();
-				Assert.AreEqual(1, res.Count);
-				Assert.AreEqual("banana", res[0].Property);
+				Assert.That(res, Has.Count.EqualTo(1));
+				Assert.That(res[0].Property, Is.EqualTo("banana"));
 
 				void Test(string entity, string filterProperty, string changedProperty, object filter, object value)
 				{
@@ -608,14 +613,14 @@ namespace Tests.Linq
 				db.GetTable<BananaTable>().Insert(() => new BananaTable() { Id = 1, Property = "test1" });
 
 				var res = db.GetTable<BananaTable>().ToList();
-				Assert.AreEqual(1, res.Count);
-				Assert.AreEqual("test1", res[0].Property);
+				Assert.That(res, Has.Count.EqualTo(1));
+				Assert.That(res[0].Property, Is.EqualTo("test1"));
 
 				Test<BananaTable>(nameof(BananaTable), nameof(BananaTable.Id), nameof(BananaTable.Property), 1, "banana");
 
 				res = db.GetTable<BananaTable>().ToList();
-				Assert.AreEqual(1, res.Count);
-				Assert.AreEqual("banana", res[0].Property);
+				Assert.That(res, Has.Count.EqualTo(1));
+				Assert.That(res[0].Property, Is.EqualTo("banana"));
 
 				void Test<TEntity>(string entity, string filterProperty, string changedProperty, object filter, object value)
 					where TEntity : class
@@ -641,6 +646,84 @@ namespace Tests.Linq
 					 select new { p.ID, pa.Diagnosis })
 					.ToList();
 				});
+			}
+		}
+
+		[Test]
+		public void Issue4602([DataSources] string context)
+		{
+			var ms = new MappingSchema();
+			ms.AddMetadataReader(new CustomMetadataReader());
+
+			using (var db = GetDataContext(context, ms))
+			using (db.CreateLocalTable<DynamicParent>())
+			using (db.CreateLocalTable<DynamicChild>())
+			{
+				Assert.DoesNotThrowAsync(async () =>
+				{
+					await db.GetTable<DynamicParent>()
+						.Where(it => it.Child!.ID == 123)
+						.ToArrayAsync();
+				});
+			}
+		}
+
+		public class DynamicParent
+		{
+			[Column, PrimaryKey, Identity]
+			public int ID { get; set; }
+
+			[Association(ThisKey = "ID", OtherKey = "ParentID")]
+			public DynamicChild? Child { get; set; }
+
+			[DynamicColumnsStore]
+			public IDictionary<string, object> ExtendedProperties { get; set; } = null!;
+		}
+
+		public class DynamicChild
+		{
+			[Column, PrimaryKey, Identity]
+			public int ID { get; set; }
+
+			[Association(ThisKey = "ParentID", OtherKey = "ID")]
+			public DynamicParent Parent { get; set; } = null!;
+
+			[DynamicColumnsStore]
+			public IDictionary<string, object> ExtendedProperties { get; set; } = null!;
+		}
+		
+		class CustomMetadataReader: IMetadataReader
+		{
+			public MappingAttribute[] GetAttributes(Type type)
+			{
+				return Array.Empty<MappingAttribute>();
+			}
+
+			public MappingAttribute[] GetAttributes(Type type, MemberInfo memberInfo)
+			{
+				if (type != typeof(DynamicChild) || memberInfo.Name != "ParentID")
+					return Array.Empty<MappingAttribute>();
+
+				return new[]
+				{
+					new ColumnAttribute("ParentID")
+				};
+			}
+
+			public MemberInfo[] GetDynamicColumns(Type type)
+			{
+				if (type != typeof(DynamicChild))
+					return Array.Empty<MemberInfo>();
+
+				return new[]
+				{
+					new DynamicColumnInfo(typeof(DynamicChild), typeof(int), "ParentID"),
+				};
+			}
+
+			public string GetObjectID()
+			{
+				return $".{nameof(CustomMetadataReader)}";
 			}
 		}
 	}

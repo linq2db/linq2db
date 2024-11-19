@@ -1,5 +1,8 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
+using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 
@@ -15,8 +18,11 @@ namespace LinqToDB.Linq.Builder
 
 	sealed class ParametersContext
 	{
-		public ParametersContext(Expression parametersExpression, ExpressionTreeOptimizationContext optimizationContext, IDataContext dataContext)
+		readonly object?[]? _parameterValues;
+
+		public ParametersContext(Expression parametersExpression, object?[]? parameterValues, ExpressionTreeOptimizationContext optimizationContext, IDataContext dataContext)
 		{
+			_parameterValues     = parameterValues;
 			ParametersExpression = parametersExpression;
 			OptimizationContext  = optimizationContext;
 			DataContext          = dataContext;
@@ -29,43 +35,59 @@ namespace LinqToDB.Linq.Builder
 		public IDataContext                      DataContext          { get; }
 		public MappingSchema                     MappingSchema        => DataContext.MappingSchema;
 
-		static ParameterExpression[] AccessorParameters =
+		static readonly ParameterExpression ItemParameter = Expression.Parameter(typeof(object));
+
+		static readonly ParameterExpression[] AccessorParameters =
 		{
 			ExpressionBuilder.ExpressionParam,
 			ExpressionConstants.DataContextParam,
 			ExpressionBuilder.ParametersParam
 		};
 
-		public readonly   List<ParameterAccessor>           CurrentSqlParameters = new ();
-		internal readonly Dictionary<Expression,Expression> _expressionAccessors;
-
-		public ParameterAccessor? RegisterParameter(Expression expression)
+		static ParameterExpression[] DbTypeAccessorParameters =
 		{
-			if (typeof(IToSqlConverter).IsSameOrParentOf(expression.Type))
-			{
-				//TODO: Check this
-				var sql = ExpressionBuilder.ConvertToSqlConvertible(expression, DataContext);
-				if (sql != null)
-					return null;
-			}
+			ExpressionBuilder.ExpressionParam,
+			ItemParameter,
+			ExpressionConstants.DataContextParam,
+			ExpressionBuilder.ParametersParam
+		};
 
-			if (!OptimizationContext.PreferServerSide(expression, false))
-			{
-				if (OptimizationContext.CanBeConstant(expression))
-					return null;
-
-				if (OptimizationContext.CanBeCompiled(expression))
-				{
-					return BuildParameter(expression, null);
-				}
-			}
-
-			return null;
-		}
+		public readonly List<ParameterAccessor>           CurrentSqlParameters = new();
+		readonly        Dictionary<Expression,Expression> _expressionAccessors;
 
 		#region Build Parameter
 
 		internal List<(Expression Expression, ColumnDescriptor? Column, ParameterAccessor Accessor)>? _parameters;
+
+		internal List<(Func<Expression, IDataContext?, object?[]?, object?> main, Func<Expression, IDataContext?, object?[]?, object?> substituted)>? _parametersDuplicateCheck;
+
+		internal Dictionary<Expression, (Expression used, MappingSchema mappingSchema, Func<IDataContext, MappingSchema, Expression> accessorFunc)>? _dynamicAccessors;
+
+		internal void RegisterDuplicateParameter(Expression expression, Func<Expression, IDataContext?, object?[]?, object?> mainAccessor, Func<Expression, IDataContext?, object?[]?, object?> substitutedAccessor)
+		{
+			_parametersDuplicateCheck ??= new();
+
+			_parametersDuplicateCheck.Add((mainAccessor, substitutedAccessor));
+		}
+
+		/// <summary>
+		/// Used for comparing query in cache to resolve whether generated expressions are equal.
+		/// </summary>
+		/// <param name="forExpression">Expression which is used as key to do not generate duplicate comparers.</param>
+		/// <param name="dataContext">DataContext which is used to execute <paramref name="accessorFunc"/>.</param>
+		/// <param name="accessorFunc">Function, which will used for retrieving current expression during cache comparison.</param>
+		/// <returns>Result of execution of accessorFunc</returns>
+		public Expression RegisterDynamicExpressionAccessor(Expression forExpression, IDataContext dataContext, MappingSchema mappingSchema, Func<IDataContext, MappingSchema, Expression> accessorFunc)
+		{
+			var result = accessorFunc(dataContext, mappingSchema);
+
+			_dynamicAccessors ??= new(ExpressionEqualityComparer.Instance);
+
+			if (!_dynamicAccessors.ContainsKey(forExpression))
+				_dynamicAccessors.Add(forExpression, (result, mappingSchema, accessorFunc));
+
+			return result;
+		}
 
 		internal void AddCurrentSqlParameter(ParameterAccessor parameterAccessor)
 		{
@@ -77,55 +99,85 @@ namespace LinqToDB.Linq.Builder
 		internal enum BuildParameterType
 		{
 			Default,
+			Bool,
 			InPredicate
 		}
 
-		public ParameterAccessor BuildParameter(Expression expr, ColumnDescriptor? columnDescriptor, bool forceConstant = false,
-			BuildParameterType buildParameterType = BuildParameterType.Default)
+		public ParameterAccessor? BuildParameter(
+			IBuildContext?     context,
+			Expression         expr,
+			ColumnDescriptor?  columnDescriptor,
+			bool               forceConstant           = false,
+			bool               doNotCheckCompatibility = false,
+			bool               forceNew                = false,
+			string?            alias                   = null,
+			BuildParameterType buildParameterType      = BuildParameterType.Default)
 		{
-			string? name = null;
+			string? name = alias;
 
-			var newExpr = ReplaceParameter(_expressionAccessors, expr, forceConstant, nm => name = nm);
+			var newExpr = ReplaceParameter(context?.MappingSchema ?? MappingSchema, expr, columnDescriptor, forceConstant, nm => name = nm);
 
-			var newAccessor = PrepareConvertersAndCreateParameter(newExpr, expr, name, columnDescriptor, buildParameterType);
+			var newAccessor = PrepareConvertersAndCreateParameter(newExpr, expr, name, columnDescriptor, doNotCheckCompatibility, buildParameterType);
+			if (newAccessor == null)
+				return null;
 
-			var found = newAccessor;
+			// do replacing again for registering parameterized constants
+			ApplyAccessors(expr, true);
 
-			// constants/default(T) must be excluded from parameter deduplication:
-			// constant value could change for next query execution which will lead to lost parameter
-			// see CharTrimming test inserts for such example
-			if (_parameters != null && expr.NodeType != ExpressionType.Constant && expr.NodeType != ExpressionType.Default)
+			if (!forceNew && !ReferenceEquals(newExpr.ValueExpression, expr))
 			{
-				foreach (var (paramExpr, column, accessor) in _parameters)
-				{
-					// build
-					if (!accessor.SqlParameter.Type.Equals(newAccessor.SqlParameter.Type))
-						continue;
+				// check that expression is not just compilable expression
+				var hasAccessors = HasAccessors(expr);
 
-					// we cannot merge parameters if they have defined ValueConverter
-					if (column != null && columnDescriptor != null)
+				// we can find duplicates in this case
+				if (hasAccessors)
+				{
+					var found = newAccessor;
+
+					if (_parameters != null)
 					{
-						if (!ReferenceEquals(column, columnDescriptor))
+						foreach (var (paramExpr, column, accessor) in _parameters)
 						{
-							if (column.ValueConverter != null || columnDescriptor.ValueConverter != null)
+							// build
+							if (!accessor.SqlParameter.Type.Equals(newAccessor.SqlParameter.Type))
 								continue;
+
+							// we cannot merge parameters if they have defined ValueConverter
+							if (column != null && columnDescriptor != null)
+							{
+								if (!ReferenceEquals(column, columnDescriptor))
+								{
+									if (column.ValueConverter != null || columnDescriptor.ValueConverter != null)
+										continue;
+								}
+							}
+							else if (!ReferenceEquals(column, columnDescriptor))
+								continue;
+
+							if (ReferenceEquals(paramExpr, expr))
+							{
+								// Its is the same already created parameter
+								return accessor;
+							}
+
+							if (paramExpr.EqualsTo(expr, OptimizationContext.GetSimpleEqualsToContext(true)))
+							{
+								found = accessor;
+								break;
+							}
 						}
 					}
-					else if (!ReferenceEquals(column, columnDescriptor))
-						continue;
 
-					if (paramExpr.EqualsTo(expr, OptimizationContext.GetSimpleEqualsToContext(true)))
+					// We already have registered parameter for the same expression
+					//
+					if (!ReferenceEquals(found, newAccessor))
 					{
-						found = accessor;
-						break;
+						// registers duplicate parameter check for expression cache
+						RegisterDuplicateParameter(expr, found.ValueAccessor, newAccessor.ValueAccessor);
+						return found;
 					}
 				}
 			}
-
-			// We already have registered parameter for the same expression
-			//
-			if (!ReferenceEquals(found, newAccessor))
-				return found;
 
 			(_parameters ??= new()).Add((expr, columnDescriptor, newAccessor));
 			AddCurrentSqlParameter(newAccessor);
@@ -133,209 +185,257 @@ namespace LinqToDB.Linq.Builder
 			return newAccessor;
 		}
 
-		public ParameterAccessor BuildParameterFromArgumentProperty(MethodCallExpression methodCall, int argumentIndex, ColumnDescriptor columnDescriptor,
-			BuildParameterType buildParameterType = BuildParameterType.Default)
+		static bool HasDbMapping(MappingSchema mappingSchema, Type testedType, out LambdaExpression? convertExpr)
 		{
-			var valueAccessor = GenerateArgumentAccessor(methodCall, argumentIndex, null);
-
-			valueAccessor = Expression.MakeMemberAccess(valueAccessor, columnDescriptor.MemberInfo);
-
-			var dataType = columnDescriptor.GetDbDataType(true);
-			var newExpr  = new ValueTypeExpression
+			if (mappingSchema.IsScalarType(testedType))
 			{
-				DataType             = dataType,
-				DbDataTypeExpression = Expression.Constant(dataType),
-				ValueExpression      = valueAccessor
-			};
-
-			var p = PrepareConvertersAndCreateParameter(newExpr, valueAccessor, null, columnDescriptor,
-				buildParameterType);
-			AddCurrentSqlParameter(p);
-
-			return p;
-		}
-
-		public ParameterAccessor BuildParameterFromArgument(MethodCallExpression methodCall, int argumentIndex, ColumnDescriptor? columnDescriptor,
-			BuildParameterType buildParameterType = BuildParameterType.Default)
-		{
-			var valueAccessor = GenerateArgumentAccessor(methodCall, argumentIndex, columnDescriptor);
-
-			var dataType = new DbDataType(valueAccessor.Type);
-			var newExpr  = new ValueTypeExpression
-			{
-				DataType             = dataType,
-				DbDataTypeExpression = Expression.Constant(dataType),
-				ValueExpression      = valueAccessor
-			};
-
-			var p = PrepareConvertersAndCreateParameter(newExpr, valueAccessor, null, columnDescriptor,
-				buildParameterType);
-			AddCurrentSqlParameter(p);
-
-			return p;
-		}
-
-		Expression? GetActualMethodAccessor(MethodCallExpression methodCall)
-		{
-			Expression? current = methodCall;
-			if (_expressionAccessors.TryGetValue(current, out var methodAccessor))
-				return methodAccessor;
-
-			// Looking in known accessors for method with only changed first parameter.
-			// Typical case when we have transformed Queryable method chain.
-			foreach (var accessorPair in _expressionAccessors)
-			{
-				if (accessorPair.Key.NodeType != ExpressionType.Call)
-					continue;
-
-				var mc = (MethodCallExpression)accessorPair.Key;
-				if (mc.Method != methodCall.Method)
-					continue;
-
-				var isEqual = true;
-				for (int i = 1; i < mc.Arguments.Count; i++)
-				{
-					isEqual = (mc.Arguments[i].Equals(methodCall.Arguments[i]));
-					if (!isEqual)
-						break;
-				}
-				if (isEqual)
-				{
-					return accessorPair.Value;
-				}
+				convertExpr = null;
+				return true;
 			}
 
-			return null;
-		}
+			convertExpr = mappingSchema.GetConvertExpression(testedType, typeof(DataParameter), false, false);
 
-		Expression GenerateArgumentAccessor(MethodCallExpression methodCall, int argumentIndex, ColumnDescriptor? columnDescriptor)
-		{
-			var arg = methodCall.Arguments[argumentIndex];
-			var methodAccessor = GetActualMethodAccessor(methodCall);
-			if (methodAccessor == null)
+			if (convertExpr != null)
+				return true;
+
+			if (testedType == typeof(object))
+				return false;
+
+			var dataType = mappingSchema.GetDataType(testedType);
+			if (dataType.Type.DataType != DataType.Undefined)
+				return true;
+
+			var notNullable = testedType.ToNullableUnderlying();
+
+			if (notNullable != testedType)
+				return HasDbMapping(mappingSchema, notNullable, out convertExpr);
+
+			// TODO: Workaround, wee need good TypeMapping approach
+			if (testedType.IsArray)
 			{
-				// compiled query case
-				//
-				if (null == arg.Find(ExpressionBuilder.ParametersParam))
-					throw new InvalidOperationException($"Method '{methodCall}' does not have accessor.");
-				return arg;
+				convertExpr = null;
+				return HasDbMapping(mappingSchema, testedType.GetElementType()!, out _);
 			}
 
-			var prop = Expression.Property(methodAccessor, ReflectionHelper.MethodCall.Arguments);
-			var valueAccessorExpr = Expression.Call(prop, ReflectionHelper.IndexExpressor<Expression>.Item,
-				ExpressionInstances.Int32Array(argumentIndex));
+			if (!testedType.IsEnum)
+				return false;
 
-			var expectedType = columnDescriptor?.MemberType ?? arg.Type;
+			var defaultMapping = Converter.GetDefaultMappingFromEnumType(mappingSchema, testedType);
+			if (defaultMapping != null && defaultMapping != testedType)
+				return HasDbMapping(mappingSchema, defaultMapping, out convertExpr);
 
-			var evaluatedExpr = Expression.Call(null,
-				Methods.LinqToDB.EvaluateExpression,
-				valueAccessorExpr,
-				Expression.Constant(null, typeof(IDataContext)));
+			var enumDefault = mappingSchema.GetDefaultFromEnumType(testedType);
+			if (enumDefault != null && enumDefault != testedType)
+				return HasDbMapping(mappingSchema, enumDefault, out convertExpr);
 
-			var valueAccessor = (Expression)evaluatedExpr;
-			valueAccessor = Expression.Convert(valueAccessor, expectedType);
-
-			return valueAccessor;
+			return false;
 		}
 
-		ParameterAccessor PrepareConvertersAndCreateParameter(ValueTypeExpression newExpr, Expression valueExpression, string? name, ColumnDescriptor? columnDescriptor, BuildParameterType buildParameterType)
+		ParameterAccessor? PrepareConvertersAndCreateParameter(ValueTypeExpression newExpr, Expression valueExpression, string? name, ColumnDescriptor? columnDescriptor, bool doNotCheckCompatibility, BuildParameterType buildParameterType)
 		{
+			if (valueExpression.Type == typeof(void))
+				return null;
+
+			Type? elementType     = null;
+			var   isParameterList = buildParameterType == BuildParameterType.InPredicate;
+
+			if (isParameterList)
+			{
+				elementType = newExpr.ValueExpression.Type.GetItemType()
+					?? newExpr.ValueExpression.UnwrapConvert().Type.GetItemType()
+					?? columnDescriptor?.MemberType
+					?? typeof(object);
+			}
+
 			var originalAccessor = newExpr.ValueExpression;
-			if (buildParameterType != BuildParameterType.InPredicate)
-			{
-				if (!typeof(DataParameter).IsSameOrParentOf(newExpr.ValueExpression.Type))
-				{
-					if (columnDescriptor != null && originalAccessor is not BinaryExpression)
-					{
-						newExpr.DataType = columnDescriptor.GetDbDataType(true)
-							.WithSystemType(newExpr.ValueExpression.Type);
+			var valueType        = elementType ?? newExpr.ValueExpression.Type;
+			var valueGetter      = isParameterList ? ItemParameter : newExpr.ValueExpression;
 
-						if (newExpr.ValueExpression.Type != columnDescriptor.MemberType)
+			if (!newExpr.IsDataParameter)
+			{
+				if (columnDescriptor != null && originalAccessor is not BinaryExpression)
+				{
+					newExpr.DataType = columnDescriptor
+						.GetDbDataType(true)
+						.WithSystemType(valueType);
+
+					if (valueType != columnDescriptor.MemberType)
+					{
+						var memberType = columnDescriptor.MemberType;
+						var noConvert  = valueGetter.UnwrapConvert();
+
+						if (noConvert.Type != typeof(object))
+							valueGetter = noConvert;
+						else if (!isParameterList && valueGetter.Type != valueExpression.Type)
+							valueGetter = Expression.Convert(noConvert, valueExpression.Type);
+						else if (valueGetter.Type == typeof(object))
+							valueGetter = Expression.Convert(noConvert, elementType != null && elementType != typeof(object) ? elementType : memberType);
+
+						if (valueGetter.Type != memberType
+							&& !(valueGetter.Type.IsNullable() && valueGetter.Type.ToNullableUnderlying() == memberType.ToNullableUnderlying()))
 						{
-							newExpr.ValueExpression = newExpr.ValueExpression.UnwrapConvert()!;
-							var memberType = columnDescriptor.MemberType;
-							if (newExpr.ValueExpression.Type != memberType)
+							if (memberType.IsValueType ||
+								!memberType.IsSameOrParentOf(valueGetter.Type))
 							{
-								if (!newExpr.ValueExpression.Type.IsNullable() || newExpr.ValueExpression.Type.ToNullableUnderlying() != memberType)
+								var convertLambda = MappingSchema.GetConvertExpression(valueGetter.Type, memberType, checkNull: true, createDefault: false);
+								if (convertLambda != null)
 								{
-									var convertLambda = MappingSchema.GenerateSafeConvert(newExpr.ValueExpression.Type,
-										memberType);
-									newExpr.ValueExpression =
-										InternalExtensions.ApplyLambdaToExpression(convertLambda,
-											newExpr.ValueExpression);
+									valueGetter = InternalExtensions.ApplyLambdaToExpression(convertLambda, valueGetter);
 								}
 							}
+
+							if (valueGetter.Type.IsNullable() && valueGetter.Type.ToNullableUnderlying() != memberType)
+							{
+								var convertLambda = MappingSchema.GenerateSafeConvert(valueGetter.Type, memberType);
+								valueGetter = InternalExtensions.ApplyLambdaToExpression(convertLambda, valueGetter);
+							}
+
+							if (valueGetter.Type != memberType)
+							{
+								valueGetter = Expression.Convert(valueGetter, memberType);
+							}
 						}
+					}
+					else if (valueType != valueGetter.Type)
+					{
+						valueGetter = Expression.Convert(valueGetter, valueType);
+					}
 
-						newExpr.ValueExpression = columnDescriptor.ApplyConversions(newExpr.ValueExpression, newExpr.DataType, true);
+					valueGetter = columnDescriptor.ApplyConversions(valueGetter, newExpr.DataType, true);
 
-						if (name == null)
-						{
-							if (columnDescriptor.MemberName.Contains("."))
-								name = columnDescriptor.ColumnName;
-							else
-								name = columnDescriptor.MemberName;
+					newExpr.DbDataTypeExpression = Expression.Constant(newExpr.DataType);
 
-						}
+					if (name == null)
+					{
+						if (columnDescriptor.MemberName.Contains("."))
+							name = columnDescriptor.ColumnName;
+						else
+							name = columnDescriptor.MemberName;
 
-						newExpr.DbDataTypeExpression = Expression.Constant(newExpr.DataType);
+					}
+				}
+				else
+				{
+					if (buildParameterType == BuildParameterType.Bool)
+					{
+						// right now, do nothing
 					}
 					else
 					{
 						// Try GetConvertExpression<.., DataParameter>() first.
 						//
-						if (newExpr.ValueExpression.Type != typeof(DataParameter))
+						if (valueGetter.Type != typeof(DataParameter))
 						{
-							var expr = MappingSchema.GetConvertExpression(newExpr.ValueExpression.Type, typeof(DataParameter), false, false);
+							LambdaExpression? convertExpr = null;
+							if (buildParameterType == BuildParameterType.Default
+								&& !HasDbMapping(MappingSchema, valueGetter.Type, out convertExpr))
+							{
+								if (!doNotCheckCompatibility)
+									return null;
+							}
 
-							newExpr.ValueExpression = expr != null ?
-								InternalExtensions.ApplyLambdaToExpression(expr, newExpr.ValueExpression) :
-								ColumnDescriptor.ApplyConversions(MappingSchema, newExpr.ValueExpression, newExpr.DataType, null, true);
+							valueGetter = convertExpr != null
+								? InternalExtensions.ApplyLambdaToExpression(convertExpr, valueGetter)
+								: ColumnDescriptor.ApplyConversions(MappingSchema, valueGetter, newExpr.DataType, null, true);
 						}
 						else
 						{
-							newExpr.ValueExpression = ColumnDescriptor.ApplyConversions(MappingSchema, newExpr.ValueExpression, newExpr.DataType, null, true);
+							valueGetter = ColumnDescriptor.ApplyConversions(MappingSchema, valueGetter, newExpr.DataType, null, true);
 						}
 					}
 				}
-
-				if (typeof(DataParameter).IsSameOrParentOf(newExpr.ValueExpression.Type))
-				{
-					newExpr.DbDataTypeExpression = Expression.Property(newExpr.ValueExpression, Methods.LinqToDB.DataParameter.DbDataType);
-
-					if (columnDescriptor != null)
-					{
-						var dbDataType = columnDescriptor.GetDbDataType(false);
-						newExpr.DbDataTypeExpression = Expression.Call(Expression.Constant(dbDataType),
-							DbDataType.WithSetValuesMethodInfo, newExpr.DbDataTypeExpression);
-					}
-
-					newExpr.ValueExpression = Expression.Property(newExpr.ValueExpression, Methods.LinqToDB.DataParameter.Value);
-				}
 			}
+
+			if (typeof(DataParameter).IsSameOrParentOf(valueGetter.Type))
+			{
+				newExpr.DbDataTypeExpression = Expression.Property(valueGetter, Methods.LinqToDB.DataParameter.DbDataType);
+
+				if (columnDescriptor != null)
+				{
+					var dbDataType = columnDescriptor.GetDbDataType(false);
+					newExpr.DbDataTypeExpression = Expression.Call(Expression.Constant(dbDataType),
+						DbDataType.WithSetValuesMethodInfo, newExpr.DbDataTypeExpression);
+				}
+
+				valueGetter = Expression.Property(valueGetter, Methods.LinqToDB.DataParameter.Value);
+			}
+
+			if (!isParameterList)
+				newExpr.ValueExpression = valueGetter;
 
 			name ??= columnDescriptor?.MemberName;
 
 			var p = CreateParameterAccessor(
-				DataContext, newExpr.ValueExpression, originalAccessor, newExpr.DbDataTypeExpression, valueExpression, ParametersExpression, name);
+				DataContext, newExpr.ValueExpression, isParameterList ? valueGetter : null, newExpr.DbDataTypeExpression, valueExpression, ParametersExpression, name);
 
 			return p;
 		}
 
-		public sealed class ValueTypeExpression
+		sealed class ValueTypeExpression
 		{
 			public Expression ValueExpression      = null!;
 			public Expression DbDataTypeExpression = null!;
 
+			public bool       IsDataParameter;
 			public DbDataType DataType;
 		}
 
-		public ValueTypeExpression ReplaceParameter(IDictionary<Expression, Expression> expressionAccessors, Expression expression, bool forceConstant, Action<string>? setName)
+		public Expression ApplyAccessors(Expression expression, bool register)
+		{
+			var result = expression.Transform(
+				(1, paramContext : this, register),
+				static (context, expr) =>
+				{
+					// TODO: !!! Code should be synched with ReplaceParameter !!!
+					if (expr.NodeType == ExpressionType.ArrayIndex && ((BinaryExpression)expr).Left == ExpressionBuilder.ParametersParam)
+					{
+						return new TransformInfo(expr, true);
+					}
+
+					if (expr.NodeType == ExpressionType.Constant && context.paramContext.GetAccessorExpression(expr, out var accessor, context.register))
+					{
+						if (accessor.Type != expr.Type)
+							accessor = Expression.Convert(accessor, expr.Type);
+
+						return new TransformInfo(accessor);
+					}
+
+					return new TransformInfo(expr);
+				});
+
+			return result;
+		}
+
+		public bool HasAccessors(Expression expression)
+		{
+			var result = false;
+			expression.Transform(
+				(1, paramContext : this),
+				(context, expr) =>
+				{
+					// TODO: !!! Code should be synched with ReplaceParameter !!!
+					if (expr.NodeType == ExpressionType.ArrayIndex && ((BinaryExpression)expr).Left == ExpressionBuilder.ParametersParam)
+					{
+						return new TransformInfo(expr, true);
+					}
+
+					if (expr.NodeType == ExpressionType.Constant && context.paramContext.GetAccessorExpression(expr, out var _, false))
+					{
+						result = true;
+					}
+
+					return new TransformInfo(expr, result);
+				});
+
+			return result;
+		}
+
+		ValueTypeExpression ReplaceParameter(MappingSchema mappingSchema, Expression expression, ColumnDescriptor? columnDescriptor, bool forceConstant, Action<string>? setName)
 		{
 			var result = new ValueTypeExpression
 			{
-				DataType             = new DbDataType(expression.Type),
-				DbDataTypeExpression = Expression.Constant(new DbDataType(expression.Type), typeof(DbDataType)),
+				DataType             = columnDescriptor?.GetDbDataType(true) ?? new DbDataType(expression.Type),
+				DbDataTypeExpression = Expression.Constant(mappingSchema.GetDbDataType(expression.UnwrapConvertToObject().Type), typeof(DbDataType)),
 			};
 
 			var unwrapped = expression.Unwrap();
@@ -346,36 +446,55 @@ namespace LinqToDB.Linq.Builder
 			}
 
 			result.ValueExpression = expression.Transform(
-				(forceConstant, (expression as MemberExpression)?.Member, expressionAccessors, result, setName, MappingSchema),
+				(forceConstant, columnDescriptor, (expression as MemberExpression)?.Member, result, setName, paramContext: this),
 				static (context, expr) =>
 				{
-					if (expr.NodeType == ExpressionType.Constant
-						&& (context.forceConstant || !expr.Type.IsConstantable(false)))
+					if (expr.NodeType == ExpressionType.ArrayIndex && ((BinaryExpression)expr).Left == ExpressionBuilder.ParametersParam)
 					{
-						if (context.expressionAccessors.TryGetValue(expr, out var val))
+						return new TransformInfo(expr, true);
+					}
+
+					if (expr.NodeType == ExpressionType.Constant)
+					{
+						var exprType = expr.Type;
+						if (context.paramContext.GetAccessorExpression(expr, out var val, false))
 						{
-							expr = Expression.Convert(val, expr.Type);
+							var constantValue = ((ConstantExpression)expr).Value;
 
-							if (context.Member != null)
+							expr = Expression.Convert(val, exprType);
+
+							if (constantValue is DataParameter dataParameter)
 							{
-								var mt = ExpressionBuilder.GetMemberDataType(context.MappingSchema, context.Member);
+								context.result.IsDataParameter = true;
+								context.result.DataType        = dataParameter.DbDataType;
+								var dataParamExpr = Expression.Convert(expr, typeof(DataParameter));
+								context.result.DbDataTypeExpression = Expression.Property(dataParamExpr, nameof(DataParameter.DbDataType));
 
-								if (mt.DataType != DataType.Undefined)
+								expr = Expression.Property(dataParamExpr, nameof(DataParameter.Value));
+							}
+							else if (context.Member != null)
+							{
+								if (context.columnDescriptor == null)
 								{
-									context.result.DataType             = context.result.DataType.WithDataType(mt.DataType);
-									context.result.DbDataTypeExpression = Expression.Constant(mt);
-								}
+									var mt = ExpressionBuilder.GetMemberDataType(context.paramContext.MappingSchema, context.Member);
 
-								if (mt.DbType != null)
-								{
-									context.result.DataType             = context.result.DataType.WithDbType(mt.DbType);
-									context.result.DbDataTypeExpression = Expression.Constant(mt);
-								}
+									if (mt.DataType != DataType.Undefined)
+									{
+										context.result.DataType             = context.result.DataType.WithDataType(mt.DataType);
+										context.result.DbDataTypeExpression = Expression.Constant(mt);
+									}
 
-								if (mt.Length != null)
-								{
-									context.result.DataType             = context.result.DataType.WithLength(mt.Length);
-									context.result.DbDataTypeExpression = Expression.Constant(mt);
+									if (mt.DbType != null)
+									{
+										context.result.DataType             = context.result.DataType.WithDbType(mt.DbType);
+										context.result.DbDataTypeExpression = Expression.Constant(mt);
+									}
+
+									if (mt.Length != null)
+									{
+										context.result.DataType             = context.result.DataType.WithLength(mt.Length);
+										context.result.DbDataTypeExpression = Expression.Constant(mt);
+									}
 								}
 
 								context.setName?.Invoke(context.Member.Name);
@@ -383,7 +502,7 @@ namespace LinqToDB.Linq.Builder
 						}
 					}
 
-					return expr;
+					return new TransformInfo(expr);
 				});
 
 			return result;
@@ -392,50 +511,55 @@ namespace LinqToDB.Linq.Builder
 		#endregion
 
 		internal static ParameterAccessor CreateParameterAccessor(
-			IDataContext        dataContext,
-			Expression          accessorExpression,
-			Expression          originalAccessorExpression,
-			Expression          dbDataTypeAccessorExpression,
-			Expression          expression,
-			Expression?         parametersExpression,
-			string?             name)
+			IDataContext         dataContext,
+			Expression           accessorExpression,
+			Expression?          itemAccessorExpression,
+			Expression           dbDataTypeAccessorExpression,
+			Expression           expression,
+			Expression?          parametersExpression,
+			string?              name)
 		{
 			// Extracting name for parameter
 			//
 			if (name == null && expression.Type == typeof(DataParameter))
 			{
-				var dp = expression.EvaluateExpression<DataParameter>(dataContext);
+				var dp = expression.EvaluateExpression<DataParameter>();
 				if (dp != null && !string.IsNullOrEmpty(dp.Name))
 					name = dp.Name;
 			}
 
+			name ??= "p";
+
 			// see #820
-			accessorExpression         = CorrectAccessorExpression(accessorExpression,         dataContext, ExpressionConstants.DataContextParam);
-			originalAccessorExpression = CorrectAccessorExpression(originalAccessorExpression, dataContext, ExpressionConstants.DataContextParam);
+			accessorExpression           = CorrectAccessorExpression(accessorExpression, dataContext);
+			dbDataTypeAccessorExpression = CorrectAccessorExpression(dbDataTypeAccessorExpression, dataContext);
 
 			var mapper = Expression.Lambda<Func<Expression,IDataContext?,object?[]?,object?>>(
 				Expression.Convert(accessorExpression, typeof(object)),
 				AccessorParameters);
 
-			var original = Expression.Lambda<Func<Expression,IDataContext?,object?[]?,object?>>(
-				Expression.Convert(originalAccessorExpression, typeof(object)),
-				AccessorParameters);
+			// TODO: it make sense to use cache for item converter
+			var itemMapper = itemAccessorExpression == null
+				? null
+				: Expression.Lambda<Func<object?,object?>>(
+					Expression.Convert(itemAccessorExpression, typeof(object)),
+					ItemParameter);
 
-			var dbDataTypeAccessor = Expression.Lambda<Func<Expression,IDataContext?,object?[]?,DbDataType>>(
+			var dbDataTypeAccessor = Expression.Lambda<Func<Expression,object?,IDataContext?,object?[]?,DbDataType>>(
 				Expression.Convert(dbDataTypeAccessorExpression, typeof(DbDataType)),
-				AccessorParameters);
+				DbTypeAccessorParameters);
 
 			var dataTypeAccessor = dbDataTypeAccessor.CompileExpression();
 
-			var parameterType = parametersExpression == null
-				? new DbDataType(accessorExpression.Type)
-				: dataTypeAccessor(parametersExpression, dataContext, null);
+			var parameterType = itemAccessorExpression != null
+				? new DbDataType(itemAccessorExpression.Type)
+				: parametersExpression == null
+					? new DbDataType(accessorExpression.Type)
+					: dataTypeAccessor(parametersExpression, null, dataContext, null);
 
-			return new ParameterAccessor
-				(
-					expression,
+			return new ParameterAccessor(
 					mapper.CompileExpression(),
-					original.CompileExpression(),
+					itemMapper?.CompileExpression(),
 					dataTypeAccessor,
 					new SqlParameter(parameterType, name, null)
 					{
@@ -444,29 +568,20 @@ namespace LinqToDB.Linq.Builder
 				)
 #if DEBUG
 				{
-					AccessorExpr = mapper
+					AccessorExpr     = mapper,
+					ItemAccessorExpr = itemMapper
 				}
 #endif
 				;
 		}
 
-
-		static Expression CorrectAccessorExpression(Expression accessorExpression, IDataContext dataContext, ParameterExpression dataContextParam)
+		static Expression CorrectAccessorExpression(Expression accessorExpression, IDataContext dataContext)
 		{
 			// see #820
-			accessorExpression = accessorExpression.Transform((dataContext, dataContextParam), static (context, e) =>
+			accessorExpression = accessorExpression.Transform(dataContext, static (context, e) =>
 			{
 				switch (e.NodeType)
 				{
-					case ExpressionType.Parameter:
-					{
-						// DataContext creates DataConnection which is not compatible with QueryRunner and parameter evaluation.
-						// It can be fixed by adding additional parameter to execution path, but it's may slowdown performance.
-						// So for now decided to throw exception.
-						if (e == context.dataContextParam && !typeof(DataConnection).IsSameOrParentOf(context.dataContext.GetType()))
-							throw new LinqException("Only DataConnection descendants can be used as source of parameters.");
-						return e;
-					}
 					case ExpressionType.MemberAccess:
 					{
 						var ma = (MemberExpression) e;
@@ -481,7 +596,8 @@ namespace LinqToDB.Linq.Builder
 
 						return e;
 					}
-					case ExpressionType.Convert:
+					case ExpressionType.Convert       :
+					case ExpressionType.ConvertChecked:
 					{
 						var ce = (UnaryExpression) e;
 						if (ce.Operand.Type.IsNullable() && !ce.Type.IsNullable())
@@ -494,6 +610,19 @@ namespace LinqToDB.Linq.Builder
 
 						return e;
 					}
+
+					case ExpressionType.Extension:
+					{
+						if (e is SqlQueryRootExpression root)
+						{
+							var newExpr = (Expression)ExpressionConstants.DataContextParam;
+							if (newExpr.Type != e.Type)
+								newExpr = Expression.Convert(newExpr, e.Type);
+							return newExpr;
+						}
+
+						return e;
+					}
 					default:
 						return e;
 				}
@@ -502,38 +631,41 @@ namespace LinqToDB.Linq.Builder
 			return accessorExpression;
 		}
 
-		internal ISqlExpression GetParameter(Expression ex, MemberInfo member, ColumnDescriptor? columnDescriptor)
+		List<Expression>? _parameterized;
+
+		public List<Expression>?                   GetParameterized()  => _parameterized;
+
+		public List<(Func<Expression, IDataContext?, object?[]?, object?> main, Func<Expression, IDataContext?, object?[]?, object?> substituted)>? GetParameterDuplicates()
+			=> _parametersDuplicateCheck;
+
+		public List<(Expression used, MappingSchema mappingSchema, Func<IDataContext, MappingSchema, Expression> accessorFunc)>? GetDynamicAccessors() => _dynamicAccessors?.Values.ToList();
+
+		public bool CanBeConstant(Expression expr)
 		{
-			if (member is MethodInfo mi)
-				member = mi.GetPropertyInfo()!; // ??
-
-			var vte  = ReplaceParameter(_expressionAccessors, ex, forceConstant: false, null);
-			var par  = vte.ValueExpression;
-			var expr = Expression.MakeMemberAccess(par.Type == typeof(object) ? Expression.Convert(par, member.DeclaringType ?? typeof(object)) : par, member);
-
-			vte.ValueExpression = expr;
-
-			if (columnDescriptor != null)
-			{
-				var dbDataType = columnDescriptor.GetDbDataType(true);
-				vte.DataType             = dbDataType;
-				vte.DbDataTypeExpression = Expression.Constant(dbDataType);
-			}
-
-			if (!expr.Type.IsSameOrParentOf(vte.DataType.SystemType))
-			{
-				var dbDataType = new DbDataType(expr.Type);
-				vte.DataType             = dbDataType;
-				vte.DbDataTypeExpression = Expression.Constant(dbDataType);
-			}
-
-			var p = PrepareConvertersAndCreateParameter(vte, expr, member?.Name, columnDescriptor, BuildParameterType.Default);
-
-			(_parameters ??= new()).Add((expr, columnDescriptor, p));
-			AddCurrentSqlParameter(p);
-
-			return p.SqlParameter;
+			if (_parameterized != null && _parameterized.Contains(expr))
+				return false;
+			return true;
 		}
 
+		public void AddAsParameterized(Expression expression)
+		{
+			_parameterized ??= new ();
+			if (!_parameterized.Contains(expression))
+				_parameterized.Add(expression);
+		}
+
+		public bool GetAccessorExpression(Expression expression, [NotNullWhen(true)] out Expression? accessor, bool register)
+		{
+			if (_expressionAccessors.TryGetValue(expression, out accessor))
+			{
+				if (register)
+					AddAsParameterized(expression);
+
+				return true;
+			}
+
+			accessor = null;
+			return false;
+		}
 	}
 }

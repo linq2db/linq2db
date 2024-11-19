@@ -7,8 +7,8 @@ using System.Linq.Expressions;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
+
 using LinqToDB.Common;
-using LinqToDB.Configuration;
 using LinqToDB.Data;
 using LinqToDB.Expressions;
 using LinqToDB.Mapping;
@@ -373,7 +373,7 @@ namespace LinqToDB.CodeModel
 			/// <summary>
 			/// <see cref="IDataContext.MappingSchema"/> property reference.
 			/// </summary>
-			public static CodeReference IDataContext_MappingSchema { get; } = PropertyOrField((IDataContext ctx) => ctx.MappingSchema, false);
+			public static CodeReference IDataContext_MappingSchema { get; } = PropertyOrField((IDataContext ctx) => ctx.MappingSchema);
 
 			/// <summary>
 			/// DataExtensions.GetTable method reference.
@@ -381,66 +381,76 @@ namespace LinqToDB.CodeModel
 			public static CodeIdentifier DataExtensions_GetTable { get; } = new CodeIdentifier(nameof(global::LinqToDB.DataExtensions.GetTable), true);
 
 			/// <summary>
+			/// DataExtensions.TableFromExpression method reference.
+			/// </summary>
+			public static CodeIdentifier DataExtensions_TableFromExpression { get; } = new CodeIdentifier(nameof(global::LinqToDB.DataExtensions.TableFromExpression), true);
+
+			/// <summary>
+			/// DataExtensions.TableFromExpression method reference.
+			/// </summary>
+			public static CodeIdentifier DataExtensions_QueryFromExpression { get; } = new CodeIdentifier(nameof(global::LinqToDB.DataExtensions.QueryFromExpression), true);
+
+			/// <summary>
 			/// <see cref="Sql.ExpressionAttribute.ServerSideOnly"/> property reference.
 			/// </summary>
-			public static CodeReference Sql_ExpressionAttribute_ServerSideOnly   { get; } = PropertyOrField((Sql.ExpressionAttribute a) => a.ServerSideOnly, false);
+			public static CodeReference Sql_ExpressionAttribute_ServerSideOnly   { get; } = PropertyOrField((Sql.ExpressionAttribute a) => a.ServerSideOnly);
 			/// <summary>
 			/// <see cref="Sql.ExpressionAttribute.PreferServerSide"/> property reference.
 			/// </summary>
-			public static CodeReference Sql_ExpressionAttribute_PreferServerSide { get; } = PropertyOrField((Sql.ExpressionAttribute a) => a.PreferServerSide, false);
+			public static CodeReference Sql_ExpressionAttribute_PreferServerSide { get; } = PropertyOrField((Sql.ExpressionAttribute a) => a.PreferServerSide);
 			/// <summary>
 			/// <see cref="Sql.ExpressionAttribute.InlineParameters"/> property reference.
 			/// </summary>
-			public static CodeReference Sql_ExpressionAttribute_InlineParameters { get; } = PropertyOrField((Sql.ExpressionAttribute a) => a.InlineParameters, false);
+			public static CodeReference Sql_ExpressionAttribute_InlineParameters { get; } = PropertyOrField((Sql.ExpressionAttribute a) => a.InlineParameters);
 			/// <summary>
 			/// <see cref="Sql.ExpressionAttribute.IsPredicate"/> property reference.
 			/// </summary>
-			public static CodeReference Sql_ExpressionAttribute_IsPredicate      { get; } = PropertyOrField((Sql.ExpressionAttribute a) => a.IsPredicate, false);
+			public static CodeReference Sql_ExpressionAttribute_IsPredicate      { get; } = PropertyOrField((Sql.ExpressionAttribute a) => a.IsPredicate);
 			/// <summary>
 			/// <see cref="Sql.ExpressionAttribute.IsAggregate"/> property reference.
 			/// </summary>
-			public static CodeReference Sql_ExpressionAttribute_IsAggregate      { get; } = PropertyOrField((Sql.ExpressionAttribute a) => a.IsAggregate, false);
+			public static CodeReference Sql_ExpressionAttribute_IsAggregate      { get; } = PropertyOrField((Sql.ExpressionAttribute a) => a.IsAggregate);
 			/// <summary>
 			/// <see cref="Sql.ExpressionAttribute.IsWindowFunction"/> property reference.
 			/// </summary>
-			public static CodeReference Sql_ExpressionAttribute_IsWindowFunction { get; } = PropertyOrField((Sql.ExpressionAttribute a) => a.IsWindowFunction, false);
+			public static CodeReference Sql_ExpressionAttribute_IsWindowFunction { get; } = PropertyOrField((Sql.ExpressionAttribute a) => a.IsWindowFunction);
 			/// <summary>
 			/// <see cref="Sql.ExpressionAttribute.IsPure"/> property reference.
 			/// </summary>
-			public static CodeReference Sql_ExpressionAttribute_IsPure           { get; } = PropertyOrField((Sql.ExpressionAttribute a) => a.IsPure, false);
+			public static CodeReference Sql_ExpressionAttribute_IsPure           { get; } = PropertyOrField((Sql.ExpressionAttribute a) => a.IsPure);
 			/// <summary>
 			/// <see cref="Sql.ExpressionAttribute.CanBeNull"/> property reference.
 			/// </summary>
-			public static CodeReference Sql_ExpressionAttribute_CanBeNull        { get; } = PropertyOrField((Sql.ExpressionAttribute a) => a.CanBeNull, false);
+			public static CodeReference Sql_ExpressionAttribute_CanBeNull        { get; } = PropertyOrField((Sql.ExpressionAttribute a) => a.CanBeNull);
 			/// <summary>
 			/// <see cref="Sql.ExpressionAttribute.IsNullable"/> property reference.
 			/// </summary>
-			public static CodeReference Sql_ExpressionAttribute_IsNullable       { get; } = PropertyOrField((Sql.ExpressionAttribute a) => a.IsNullable, false);
+			public static CodeReference Sql_ExpressionAttribute_IsNullable       { get; } = PropertyOrField((Sql.ExpressionAttribute a) => a.IsNullable);
 			/// <summary>
 			/// <see cref="Sql.ExpressionAttribute.ArgIndices"/> property reference.
 			/// </summary>
-			public static CodeReference Sql_ExpressionAttribute_ArgIndices       { get; } = PropertyOrField((Sql.ExpressionAttribute a) => a.ArgIndices, true);
+			public static CodeReference Sql_ExpressionAttribute_ArgIndices       { get; } = PropertyOrField((Sql.ExpressionAttribute a) => a.ArgIndices);
 
 			/// <summary>
 			/// <see cref="Sql.TableFunctionAttribute.Schema"/> property reference.
 			/// </summary>
-			public static CodeReference Sql_TableFunctionAttribute_Schema        { get; } = PropertyOrField((Sql.TableFunctionAttribute a) => a.Schema, true);
+			public static CodeReference Sql_TableFunctionAttribute_Schema        { get; } = PropertyOrField((Sql.TableFunctionAttribute a) => a.Schema);
 			/// <summary>
 			/// <see cref="Sql.TableFunctionAttribute.Database"/> property reference.
 			/// </summary>
-			public static CodeReference Sql_TableFunctionAttribute_Database      { get; } = PropertyOrField((Sql.TableFunctionAttribute a) => a.Database, true);
+			public static CodeReference Sql_TableFunctionAttribute_Database      { get; } = PropertyOrField((Sql.TableFunctionAttribute a) => a.Database);
 			/// <summary>
 			/// <see cref="Sql.TableFunctionAttribute.Server"/> property reference.
 			/// </summary>
-			public static CodeReference Sql_TableFunctionAttribute_Server        { get; } = PropertyOrField((Sql.TableFunctionAttribute a) => a.Server, true);
+			public static CodeReference Sql_TableFunctionAttribute_Server        { get; } = PropertyOrField((Sql.TableFunctionAttribute a) => a.Server);
 			/// <summary>
 			/// <see cref="Sql.TableFunctionAttribute.Package"/> property reference.
 			/// </summary>
-			public static CodeReference Sql_TableFunctionAttribute_Package       { get; } = PropertyOrField((Sql.TableFunctionAttribute a) => a.Package, true);
+			public static CodeReference Sql_TableFunctionAttribute_Package       { get; } = PropertyOrField((Sql.TableFunctionAttribute a) => a.Package);
 			/// <summary>
 			/// <see cref="Sql.TableFunctionAttribute.ArgIndices"/> property reference.
 			/// </summary>
-			public static CodeReference Sql_TableFunctionAttribute_ArgIndices    { get; } = PropertyOrField((Sql.TableFunctionAttribute a) => a.ArgIndices, true);
+			public static CodeReference Sql_TableFunctionAttribute_ArgIndices    { get; } = PropertyOrField((Sql.TableFunctionAttribute a) => a.ArgIndices);
 
 			/// <summary>
 			/// <see cref="AsyncExtensions.FirstOrDefaultAsync{TSource}(IQueryable{TSource}, Expression{Func{TSource, bool}}, CancellationToken)"/> method reference.
@@ -479,7 +489,7 @@ namespace LinqToDB.CodeModel
 				public static IType Converter { get; } = Parser.Parse(typeof(Converter));
 
 				/// <summary>
-				/// <see cref="Converter.ChangeTypeTo{T}(object?, MappingSchema?)"/> method reference.
+				/// <see cref="Converter.ChangeTypeTo{T}(object?, MappingSchema?,ConversionType)"/> method reference.
 				/// </summary>
 				public static CodeIdentifier Converter_ChangeTypeTo { get; } = new CodeIdentifier(nameof(global::LinqToDB.Common.Converter.ChangeTypeTo), true);
 			}
@@ -496,17 +506,17 @@ namespace LinqToDB.CodeModel
 				/// <summary>
 				/// <see cref="DataOptions{T}.Options"/> property reference.
 				/// </summary>
-				public static CodeReference DataOptions_Options { get; } = PropertyOrField((DataOptions<DataConnection> o) => o.Options, false);
+				public static CodeReference DataOptions_Options { get; } = PropertyOrField((DataOptions<DataConnection> o) => o.Options);
 
 				/// <summary>
 				/// <see cref="DataOptions.ConnectionOptions"/> property reference.
 				/// </summary>
-				public static CodeReference DataOptions_ConnectionOptions { get; } = PropertyOrField((DataOptions o) => o.ConnectionOptions, false);
+				public static CodeReference DataOptions_ConnectionOptions { get; } = PropertyOrField((DataOptions o) => o.ConnectionOptions);
 
 				/// <summary>
 				/// <see cref="ConnectionOptions.MappingSchema"/> property reference.
 				/// </summary>
-				public static CodeReference ConnectionOptions_MappingSchema { get; } = PropertyOrField((ConnectionOptions o) => o.MappingSchema, false);
+				public static CodeReference ConnectionOptions_MappingSchema { get; } = PropertyOrField((ConnectionOptions o) => o.MappingSchema);
 
 				/// <summary>
 				/// Returns <see cref="DataOptions{T}"/> type descriptor.
@@ -594,7 +604,7 @@ namespace LinqToDB.CodeModel
 				public static IType MappingSchema        { get; } = Parser.Parse<MappingSchema>();
 
 				/// <summary>
-				/// <see cref="MappingSchema.SetConvertExpression(DbDataType, DbDataType, LambdaExpression, bool)"/> method reference.
+				/// <see cref="MappingSchema.SetConvertExpression(DbDataType, DbDataType, LambdaExpression, bool, ConversionType)"/> method reference.
 				/// </summary>
 				public static CodeIdentifier MappingSchema_SetConvertExpression { get; } = new CodeIdentifier(nameof(global::LinqToDB.Mapping.MappingSchema.SetConvertExpression), true);
 
@@ -606,133 +616,133 @@ namespace LinqToDB.CodeModel
 				/// <summary>
 				/// <see cref="MappingAttribute.Configuration"/> property reference.
 				/// </summary>
-				public static CodeReference MappingAttribute_Configuration { get; } = PropertyOrField((MappingAttribute a) => a.Configuration, true);
+				public static CodeReference MappingAttribute_Configuration { get; } = PropertyOrField((MappingAttribute a) => a.Configuration);
 
 				/// <summary>
 				/// <see cref="AssociationAttribute.CanBeNull"/> property reference.
 				/// </summary>
-				public static CodeReference AssociationAttribute_CanBeNull             { get; } = PropertyOrField((AssociationAttribute a) => a.CanBeNull, false);
+				public static CodeReference AssociationAttribute_CanBeNull             { get; } = PropertyOrField((AssociationAttribute a) => a.CanBeNull);
 				/// <summary>
 				/// <see cref="AssociationAttribute.ExpressionPredicate"/> property reference.
 				/// </summary>
-				public static CodeReference AssociationAttribute_ExpressionPredicate   { get; } = PropertyOrField((AssociationAttribute a) => a.ExpressionPredicate, true);
+				public static CodeReference AssociationAttribute_ExpressionPredicate   { get; } = PropertyOrField((AssociationAttribute a) => a.ExpressionPredicate);
 				/// <summary>
 				/// <see cref="AssociationAttribute.QueryExpressionMethod"/> property reference.
 				/// </summary>
-				public static CodeReference AssociationAttribute_QueryExpressionMethod { get; } = PropertyOrField((AssociationAttribute a) => a.QueryExpressionMethod, true);
+				public static CodeReference AssociationAttribute_QueryExpressionMethod { get; } = PropertyOrField((AssociationAttribute a) => a.QueryExpressionMethod);
 				/// <summary>
 				/// <see cref="AssociationAttribute.ThisKey"/> property reference.
 				/// </summary>
-				public static CodeReference AssociationAttribute_ThisKey               { get; } = PropertyOrField((AssociationAttribute a) => a.ThisKey, true);
+				public static CodeReference AssociationAttribute_ThisKey               { get; } = PropertyOrField((AssociationAttribute a) => a.ThisKey);
 				/// <summary>
 				/// <see cref="AssociationAttribute.OtherKey"/> property reference.
 				/// </summary>
-				public static CodeReference AssociationAttribute_OtherKey              { get; } = PropertyOrField((AssociationAttribute a) => a.OtherKey, true);
+				public static CodeReference AssociationAttribute_OtherKey              { get; } = PropertyOrField((AssociationAttribute a) => a.OtherKey);
 				/// <summary>
 				/// <see cref="AssociationAttribute.AliasName"/> property reference.
 				/// </summary>
-				public static CodeReference AssociationAttribute_AliasName             { get; } = PropertyOrField((AssociationAttribute a) => a.AliasName, true);
+				public static CodeReference AssociationAttribute_AliasName             { get; } = PropertyOrField((AssociationAttribute a) => a.AliasName);
 				/// <summary>
 				/// <see cref="AssociationAttribute.Storage"/> property reference.
 				/// </summary>
-				public static CodeReference AssociationAttribute_Storage               { get; } = PropertyOrField((AssociationAttribute a) => a.Storage, true);
+				public static CodeReference AssociationAttribute_Storage               { get; } = PropertyOrField((AssociationAttribute a) => a.Storage);
 				/// <summary>
 				/// <see cref="TableAttribute.Schema"/> property reference.
 				/// </summary>
-				public static CodeReference TableAttribute_Schema                    { get; } = PropertyOrField((TableAttribute a) => a.Schema, true);
+				public static CodeReference TableAttribute_Schema                    { get; } = PropertyOrField((TableAttribute a) => a.Schema);
 				/// <summary>
 				/// <see cref="TableAttribute.Database"/> property reference.
 				/// </summary>
-				public static CodeReference TableAttribute_Database                  { get; } = PropertyOrField((TableAttribute a) => a.Database, true);
+				public static CodeReference TableAttribute_Database                  { get; } = PropertyOrField((TableAttribute a) => a.Database);
 				/// <summary>
 				/// <see cref="TableAttribute.Server"/> property reference.
 				/// </summary>
-				public static CodeReference TableAttribute_Server                    { get; } = PropertyOrField((TableAttribute a) => a.Server, true);
+				public static CodeReference TableAttribute_Server                    { get; } = PropertyOrField((TableAttribute a) => a.Server);
 				/// <summary>
 				/// <see cref="TableAttribute.IsView"/> property reference.
 				/// </summary>
-				public static CodeReference TableAttribute_IsView                    { get; } = PropertyOrField((TableAttribute a) => a.IsView, false);
+				public static CodeReference TableAttribute_IsView                    { get; } = PropertyOrField((TableAttribute a) => a.IsView);
 				/// <summary>
 				/// <see cref="TableAttribute.IsColumnAttributeRequired"/> property reference.
 				/// </summary>
-				public static CodeReference TableAttribute_IsColumnAttributeRequired { get; } = PropertyOrField((TableAttribute a) => a.IsColumnAttributeRequired, false);
+				public static CodeReference TableAttribute_IsColumnAttributeRequired { get; } = PropertyOrField((TableAttribute a) => a.IsColumnAttributeRequired);
 				/// <summary>
 				/// <see cref="TableAttribute.IsTemporary"/> property reference.
 				/// </summary>
-				public static CodeReference TableAttribute_IsTemporary               { get; } = PropertyOrField((TableAttribute a) => a.IsTemporary, false);
+				public static CodeReference TableAttribute_IsTemporary               { get; } = PropertyOrField((TableAttribute a) => a.IsTemporary);
 				/// <summary>
 				/// <see cref="TableAttribute.TableOptions"/> property reference.
 				/// </summary>
-				public static CodeReference TableAttribute_TableOptions              { get; } = PropertyOrField((TableAttribute a) => a.TableOptions, false);
+				public static CodeReference TableAttribute_TableOptions              { get; } = PropertyOrField((TableAttribute a) => a.TableOptions);
 
 				/// <summary>
 				/// <see cref="ColumnAttribute.CanBeNull"/> property reference.
 				/// </summary>
-				public static CodeReference ColumnAttribute_CanBeNull         { get; } = PropertyOrField((ColumnAttribute a) => a.CanBeNull, false);
+				public static CodeReference ColumnAttribute_CanBeNull         { get; } = PropertyOrField((ColumnAttribute a) => a.CanBeNull);
 				/// <summary>
 				/// <see cref="ColumnAttribute.DataType"/> property reference.
 				/// </summary>
-				public static CodeReference ColumnAttribute_DataType          { get; } = PropertyOrField((ColumnAttribute a) => a.DataType, false);
+				public static CodeReference ColumnAttribute_DataType          { get; } = PropertyOrField((ColumnAttribute a) => a.DataType);
 				/// <summary>
 				/// <see cref="ColumnAttribute.DbType"/> property reference.
 				/// </summary>
-				public static CodeReference ColumnAttribute_DbType            { get; } = PropertyOrField((ColumnAttribute a) => a.DbType, true);
+				public static CodeReference ColumnAttribute_DbType            { get; } = PropertyOrField((ColumnAttribute a) => a.DbType);
 				/// <summary>
 				/// <see cref="ColumnAttribute.Length"/> property reference.
 				/// </summary>
-				public static CodeReference ColumnAttribute_Length            { get; } = PropertyOrField((ColumnAttribute a) => a.Length, false);
+				public static CodeReference ColumnAttribute_Length            { get; } = PropertyOrField((ColumnAttribute a) => a.Length);
 				/// <summary>
 				/// <see cref="ColumnAttribute.Precision"/> property reference.
 				/// </summary>
-				public static CodeReference ColumnAttribute_Precision         { get; } = PropertyOrField((ColumnAttribute a) => a.Precision, false);
+				public static CodeReference ColumnAttribute_Precision         { get; } = PropertyOrField((ColumnAttribute a) => a.Precision);
 				/// <summary>
 				/// <see cref="ColumnAttribute.Scale"/> property reference.
 				/// </summary>
-				public static CodeReference ColumnAttribute_Scale             { get; } = PropertyOrField((ColumnAttribute a) => a.Scale, false);
+				public static CodeReference ColumnAttribute_Scale             { get; } = PropertyOrField((ColumnAttribute a) => a.Scale);
 				/// <summary>
 				/// <see cref="ColumnAttribute.IsPrimaryKey"/> property reference.
 				/// </summary>
-				public static CodeReference ColumnAttribute_IsPrimaryKey      { get; } = PropertyOrField((ColumnAttribute a) => a.IsPrimaryKey, false);
+				public static CodeReference ColumnAttribute_IsPrimaryKey      { get; } = PropertyOrField((ColumnAttribute a) => a.IsPrimaryKey);
 				/// <summary>
 				/// <see cref="ColumnAttribute.PrimaryKeyOrder"/> property reference.
 				/// </summary>
-				public static CodeReference ColumnAttribute_PrimaryKeyOrder   { get; } = PropertyOrField((ColumnAttribute a) => a.PrimaryKeyOrder, false);
+				public static CodeReference ColumnAttribute_PrimaryKeyOrder   { get; } = PropertyOrField((ColumnAttribute a) => a.PrimaryKeyOrder);
 				/// <summary>
 				/// <see cref="ColumnAttribute.IsIdentity"/> property reference.
 				/// </summary>
-				public static CodeReference ColumnAttribute_IsIdentity        { get; } = PropertyOrField((ColumnAttribute a) => a.IsIdentity, false);
+				public static CodeReference ColumnAttribute_IsIdentity        { get; } = PropertyOrField((ColumnAttribute a) => a.IsIdentity);
 				/// <summary>
 				/// <see cref="ColumnAttribute.SkipOnInsert"/> property reference.
 				/// </summary>
-				public static CodeReference ColumnAttribute_SkipOnInsert      { get; } = PropertyOrField((ColumnAttribute a) => a.SkipOnInsert, false);
+				public static CodeReference ColumnAttribute_SkipOnInsert      { get; } = PropertyOrField((ColumnAttribute a) => a.SkipOnInsert);
 				/// <summary>
 				/// <see cref="ColumnAttribute.SkipOnUpdate"/> property reference.
 				/// </summary>
-				public static CodeReference ColumnAttribute_SkipOnUpdate      { get; } = PropertyOrField((ColumnAttribute a) => a.SkipOnUpdate, false);
+				public static CodeReference ColumnAttribute_SkipOnUpdate      { get; } = PropertyOrField((ColumnAttribute a) => a.SkipOnUpdate);
 				/// <summary>
 				/// <see cref="ColumnAttribute.SkipOnEntityFetch"/> property reference.
 				/// </summary>
-				public static CodeReference ColumnAttribute_SkipOnEntityFetch { get; } = PropertyOrField((ColumnAttribute a) => a.SkipOnEntityFetch, false);
+				public static CodeReference ColumnAttribute_SkipOnEntityFetch { get; } = PropertyOrField((ColumnAttribute a) => a.SkipOnEntityFetch);
 				/// <summary>
 				/// <see cref="ColumnAttribute.MemberName"/> property reference.
 				/// </summary>
-				public static CodeReference ColumnAttribute_MemberName        { get; } = PropertyOrField((ColumnAttribute a) => a.MemberName, true);
+				public static CodeReference ColumnAttribute_MemberName        { get; } = PropertyOrField((ColumnAttribute a) => a.MemberName);
 				/// <summary>
 				/// <see cref="ColumnAttribute.Storage"/> property reference.
 				/// </summary>
-				public static CodeReference ColumnAttribute_Storage           { get; } = PropertyOrField((ColumnAttribute a) => a.Storage, true);
+				public static CodeReference ColumnAttribute_Storage           { get; } = PropertyOrField((ColumnAttribute a) => a.Storage);
 				/// <summary>
 				/// <see cref="ColumnAttribute.CreateFormat"/> property reference.
 				/// </summary>
-				public static CodeReference ColumnAttribute_CreateFormat      { get; } = PropertyOrField((ColumnAttribute a) => a.CreateFormat, true);
+				public static CodeReference ColumnAttribute_CreateFormat      { get; } = PropertyOrField((ColumnAttribute a) => a.CreateFormat);
 				/// <summary>
 				/// <see cref="ColumnAttribute.IsDiscriminator"/> property reference.
 				/// </summary>
-				public static CodeReference ColumnAttribute_IsDiscriminator   { get; } = PropertyOrField((ColumnAttribute a) => a.IsDiscriminator, false);
+				public static CodeReference ColumnAttribute_IsDiscriminator   { get; } = PropertyOrField((ColumnAttribute a) => a.IsDiscriminator);
 				/// <summary>
 				/// <see cref="ColumnAttribute.Order"/> property reference.
 				/// </summary>
-				public static CodeReference ColumnAttribute_Order             { get; } = PropertyOrField((ColumnAttribute a) => a.Order, false);
+				public static CodeReference ColumnAttribute_Order             { get; } = PropertyOrField((ColumnAttribute a) => a.Order);
 			}
 
 			public static class Data
@@ -774,32 +784,32 @@ namespace LinqToDB.CodeModel
 				/// <summary>
 				/// <see cref="DataConnection.CommandTimeout"/> property reference.
 				/// </summary>
-				public static CodeReference DataConnection_CommandTimeout { get; } = PropertyOrField((DataConnection dc) => dc.CommandTimeout, false);
+				public static CodeReference DataConnection_CommandTimeout { get; } = PropertyOrField((DataConnection dc) => dc.CommandTimeout);
 
 				/// <summary>
 				/// <see cref="DataParameter.Direction"/> property reference.
 				/// </summary>
-				public static CodeReference DataParameter_Direction { get; } = PropertyOrField((DataParameter dp) => dp.Direction, false);
+				public static CodeReference DataParameter_Direction { get; } = PropertyOrField((DataParameter dp) => dp.Direction);
 				/// <summary>
 				/// <see cref="DataParameter.DbType"/> property reference.
 				/// </summary>
-				public static CodeReference DataParameter_DbType    { get; } = PropertyOrField((DataParameter dp) => dp.DbType, true);
+				public static CodeReference DataParameter_DbType    { get; } = PropertyOrField((DataParameter dp) => dp.DbType);
 				/// <summary>
 				/// <see cref="DataParameter.Size"/> property reference.
 				/// </summary>
-				public static CodeReference DataParameter_Size      { get; } = PropertyOrField((DataParameter dp) => dp.Size, false);
+				public static CodeReference DataParameter_Size      { get; } = PropertyOrField((DataParameter dp) => dp.Size);
 				/// <summary>
 				/// <see cref="DataParameter.Precision"/> property reference.
 				/// </summary>
-				public static CodeReference DataParameter_Precision { get; } = PropertyOrField((DataParameter dp) => dp.Precision, false);
+				public static CodeReference DataParameter_Precision { get; } = PropertyOrField((DataParameter dp) => dp.Precision);
 				/// <summary>
 				/// <see cref="DataParameter.Scale"/> property reference.
 				/// </summary>
-				public static CodeReference DataParameter_Scale     { get; } = PropertyOrField((DataParameter dp) => dp.Scale, false);
+				public static CodeReference DataParameter_Scale     { get; } = PropertyOrField((DataParameter dp) => dp.Scale);
 				/// <summary>
 				/// <see cref="DataParameter.Value"/> property reference.
 				/// </summary>
-				public static CodeReference DataParameter_Value     { get; } = PropertyOrField((DataParameter dp) => dp.Value, true);
+				public static CodeReference DataParameter_Value     { get; } = PropertyOrField((DataParameter dp) => dp.Value);
 			}
 
 			public static class Tools
@@ -818,15 +828,26 @@ namespace LinqToDB.CodeModel
 			}
 		}
 
-		// TODO: replace forceNullable with NRT annotation lookup (first we should drop NET45 support)
-		public static CodeReference PropertyOrField<TObject, TProperty>(Expression<Func<TObject, TProperty>> accessor, bool forceNullable)
+		public static CodeReference PropertyOrField<TObject, TProperty>(Expression<Func<TObject, TProperty>> accessor)
 		{
 			var member = ((MemberExpression)accessor.Body).Member;
 
 			if (member is PropertyInfo pi)
-				return new CodeExternalPropertyOrField(new CodeIdentifier(member.Name, true), new(Parser.Parse(pi.PropertyType).WithNullability(forceNullable))).Reference;
+			{
+				var isNullable = !pi.PropertyType.IsValueType;
+				if (Nullability.TryAnalyzeMember(pi, out var nullable))
+					isNullable = nullable;
+				
+				return new CodeExternalPropertyOrField(new CodeIdentifier(member.Name, true), new(Parser.Parse(pi.PropertyType).WithNullability(isNullable))).Reference;
+			}
 			if (member is FieldInfo fi)
-				return new CodeExternalPropertyOrField(new CodeIdentifier(member.Name, true), new(Parser.Parse(fi.FieldType).WithNullability(forceNullable))).Reference;
+			{
+				var isNullable = !fi.FieldType.IsValueType;
+				if (Nullability.TryAnalyzeMember(fi, out var nullable))
+					isNullable = nullable;
+
+				return new CodeExternalPropertyOrField(new CodeIdentifier(member.Name, true), new(Parser.Parse(fi.FieldType).WithNullability(isNullable))).Reference;
+			}
 
 			throw new InvalidOperationException();
 		}

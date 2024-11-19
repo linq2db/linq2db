@@ -16,10 +16,10 @@ namespace LinqToDB.Benchmarks
 
 		private static IConfig Create()
 		{
-			var net472 = Job.Default.WithRuntime(ClrRuntime.Net472).WithDefault().AsBaseline();
-			var core31 = Job.Default.WithRuntime(CoreRuntime.Core31).WithDefault();
-			var net60  = Job.Default.WithRuntime(CoreRuntime.Core60).WithDefault();
-			var net70  = Job.Default.WithRuntime(CoreRuntime.Core70).WithDefault();
+			var netfx = Job.Default.WithRuntime(ClrRuntime.Net462).WithDefault().AsBaseline();
+			var net60 = Job.Default.WithRuntime(CoreRuntime.Core60).WithDefault();
+			var net80 = Job.Default.WithRuntime(CoreRuntime.Core80).WithDefault();
+			var net90 = Job.Default.WithRuntime(CoreRuntime.Core90).WithDefault();
 
 			return new ManualConfig()
 				.AddLogger         (DefaultConfig.Instance.GetLoggers        ().ToArray())
@@ -30,7 +30,7 @@ namespace LinqToDB.Benchmarks
 				.AddExporter       (MarkdownExporter.GitHub)
 				.AddDiagnoser      (MemoryDiagnoser.Default)
 				.WithArtifactsPath (@"..\..\..")
-				.AddJob            (net472, core31, net60, net70);
+				.AddJob            (netfx, net60, net80, net90);
 		}
 
 		private static Job WithDefault(this Job job)

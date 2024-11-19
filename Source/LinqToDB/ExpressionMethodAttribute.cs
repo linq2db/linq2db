@@ -93,7 +93,7 @@ namespace LinqToDB
 
 		public override string GetObjectID()
 		{
-			return $".{Configuration}.{MethodName}.{IdentifierBuilder.GetObjectID(Expression)}.{(IsColumn?1:0)}.{Alias}.";
+			return FormattableString.Invariant($".{Configuration}.{MethodName}.{IdentifierBuilder.GetObjectID(Expression)}.{(IsColumn?1:0)}.{Alias}.");
 		}
 	}
 }

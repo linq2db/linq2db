@@ -9,14 +9,13 @@ namespace LinqToDB.Linq.Builder
 	using LinqToDB.Expressions;
 	using SqlQuery;
 
+	[BuildsExpression(ExpressionType.Call)]
 	sealed class QueryExtensionBuilder : MethodCallBuilder
 	{
-		protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
-		{
-			return Sql.QueryExtensionAttribute.GetExtensionAttributes(methodCall, builder.MappingSchema).Length > 0;
-		}
+		public static bool CanBuild(Expression expr, BuildInfo info, ExpressionBuilder builder)
+			=> Sql.QueryExtensionAttribute.GetExtensionAttributes(expr, builder.MappingSchema).Length > 0;
 
-		protected override IBuildContext BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
+		protected override BuildSequenceResult BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
 			var methodParams = methodCall.Method.GetParameters();
 			var list         = new List<SqlQueryExtensionData>
@@ -41,8 +40,6 @@ namespace LinqToDB.Linq.Builder
 				}
 				else if (arg is NewArrayExpression ae)
 				{
-					var evaluateElements = ae.Expressions.Count > 0 && p.HasAttribute<SqlQueryDependentAttribute>();
-
 					list.Add(new($"{name}.Count", arg, p)
 					{
 						SqlExpression = new SqlValue(ae.Expressions.Count),
@@ -52,18 +49,12 @@ namespace LinqToDB.Linq.Builder
 					{
 						var ex = ae.Expressions[j];
 
-						if (evaluateElements)
-							ex = Expression.Constant(ex.EvaluateExpression(builder.DataContext));
-
-						list.Add(new($"{name}.{j}", ex, p, j));
+						list.Add(new(FormattableString.Invariant($"{name}.{j}"), ex, p, j));
 					}
 				}
 				else
 				{
 					var ex   = methodCall.Arguments[i];
-
-					if (p.HasAttribute<SqlQueryDependentAttribute>())
-						ex = Expression.Constant(ex.EvaluateExpression(builder.DataContext));
 
 					list.Add(new(name, ex, p));
 				}
@@ -86,19 +77,34 @@ namespace LinqToDB.Linq.Builder
 				{
 					if (data.ParamsIndex >= 0)
 					{
-						data.SqlExpression = data.Expression.Unwrap() switch
+						var converted = data.Expression.Unwrap() switch
 						{
-							LambdaExpression lex => builder.ConvertToExtensionSql(sequence, lex, null),
-							var ex => builder.ConvertToSql(sequence, ex)
+							LambdaExpression lex => builder.ConvertToExtensionSql(sequence, buildInfo.GetFlags(), lex, null, null),
+							var ex => builder.ConvertToSqlExpr(sequence, ex)
 						};
+
+						if (converted is SqlPlaceholderExpression placeholder)
+							data.SqlExpression = placeholder.Sql;
+						else
+							return BuildSequenceResult.Error(methodCall);
 					}
 					else if (data.Expression is LambdaExpression le)
 					{
-						data.SqlExpression = builder.ConvertToExtensionSql(sequence, le, null);
+						var converted = builder.ConvertToExtensionSql(sequence, buildInfo.GetFlags(), le, null, null);
+
+						if (converted is SqlPlaceholderExpression placeholder)
+							data.SqlExpression = placeholder.Sql;
+						else
+							return BuildSequenceResult.Error(methodCall);
 					}
 					else
 					{
-						data.SqlExpression = builder.ConvertToSql(sequence, data.Expression);
+						var converted = builder.ConvertToSqlExpr(sequence, data.Expression);
+
+						if (converted is SqlPlaceholderExpression placeholder)
+							data.SqlExpression = placeholder.Sql;
+						else
+							return BuildSequenceResult.Error(methodCall);
 					}
 				}
 			}
@@ -113,7 +119,7 @@ namespace LinqToDB.Linq.Builder
 					case Sql.QueryExtensionScope.IndexHint    :
 					case Sql.QueryExtensionScope.TableNameHint:
 					{
-						var table = SequenceHelper.GetTableContext(sequence) ?? throw new LinqToDBException($"Cannot get table context from {sequence.GetType()}");
+						var table = SequenceHelper.GetTableOrCteContext(sequence) ?? throw new LinqToDBException($"Cannot get table context from {sequence.GetType()}");
 						attr.ExtendTable(table.SqlTable, list);
 						break;
 					}
@@ -133,7 +139,21 @@ namespace LinqToDB.Linq.Builder
 						if (sequence is SetOperationBuilder.SetOperationContext { SubQuery.SelectQuery : { HasSetOperators: true } q })
 							attr.ExtendSubQuery(q.SetOperators[^1].SelectQuery.SqlQueryExtensions ??= new(), list);
 						else
-							attr.ExtendSubQuery(sequence.SelectQuery.SqlQueryExtensions ??= new(), list);
+						{
+							var queryToUpdate = sequence.SelectQuery;
+							if (sequence is AsSubqueryContext { SelectQuery.IsSimple: true } subquery)
+							{
+								queryToUpdate = subquery.SubQuery.SelectQuery;
+							}
+
+							if (!queryToUpdate.IsSimple)
+							{
+								sequence      = new SubQueryContext(sequence);
+								queryToUpdate = sequence.SelectQuery;
+							}
+
+							attr.ExtendSubQuery(queryToUpdate.SqlQueryExtensions ??= new(), list);
+						}
 						break;
 					}
 					case Sql.QueryExtensionScope.QueryHint:
@@ -141,12 +161,16 @@ namespace LinqToDB.Linq.Builder
 						attr.ExtendQuery(builder.SqlQueryExtensions ??= new(), list);
 						break;
 					}
+					case Sql.QueryExtensionScope.None:
+					{
+						break;
+					}
 				}
 			}
 
 			builder.TablesInScope = prevTablesInScope;
 
-			return joinExtensions != null ? new JoinHintContext(sequence, joinExtensions) : sequence;
+			return BuildSequenceResult.FromContext(joinExtensions != null ? new JoinHintContext(sequence, joinExtensions) : sequence);
 		}
 
 		public sealed class JoinHintContext : PassThroughContext
@@ -158,6 +182,18 @@ namespace LinqToDB.Linq.Builder
 			}
 
 			public List<SqlQueryExtension> Extensions { get; }
+
+			public override IBuildContext Clone(CloningContext context)
+			{
+				return new JoinHintContext(context.CloneContext(Context),
+					Extensions.Select(e => new SqlQueryExtension()
+					{
+						Configuration = e.Configuration,
+						Arguments     = e.Arguments.ToDictionary(a => a.Key, a => context.CloneElement(a.Value)),
+						BuilderType   = e.BuilderType,
+						Scope         = e.Scope
+					}).ToList());
+			}
 		}
 	}
 }

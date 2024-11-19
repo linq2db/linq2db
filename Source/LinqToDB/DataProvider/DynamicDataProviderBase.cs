@@ -5,10 +5,11 @@ using System.Linq.Expressions;
 
 namespace LinqToDB.DataProvider
 {
-	using Common;
 	using Data.RetryPolicy;
 	using Extensions;
+	using Interceptors;
 	using Mapping;
+	using Tools;
 
 	public abstract class DynamicDataProviderBase<TProviderMappings> : DataProviderBase
 		where TProviderMappings : IDynamicProviderAdapter
@@ -28,30 +29,7 @@ namespace LinqToDB.DataProvider
 		public override Type    DataReaderType        => Adapter.DataReaderType;
 		public override bool    TransactionsSupported => Adapter.TransactionType != null;
 
-		Func<string, DbConnection>? _createConnection;
-
-		protected override DbConnection CreateConnectionInternal(string connectionString)
-		{
-			if (_createConnection == null)
-			{
-				var l = CreateConnectionExpression(Adapter.ConnectionType);
-				_createConnection = l.CompileExpression();
-			}
-
-			return _createConnection(connectionString);
-		}
-
-		private static Expression<Func<string, DbConnection>> CreateConnectionExpression(Type connectionType)
-		{
-			var p = Expression.Parameter(typeof(string));
-			var l = Expression.Lambda<Func<string, DbConnection>>(
-				Expression.Convert(Expression.New(
-					connectionType.GetConstructor(new[] { typeof(string) })
-						?? throw new InvalidOperationException($"DbConnection type {connectionType} missing constructor with connection string parameter: {connectionType.Name}(string connectionString)"),
-					p), typeof(DbConnection)),
-				p);
-			return l;
-		}
+		protected override DbConnection CreateConnectionInternal(string connectionString) => Adapter.CreateConnection(connectionString);
 
 		#region DataReader ReaderExpressions Helpers
 
@@ -164,13 +142,19 @@ namespace LinqToDB.DataProvider
 			if (command is RetryingDbCommand rcmd)
 				command = rcmd.UnderlyingObject;
 
-			command = dataContext.UnwrapDataObjectInterceptor?.UnwrapCommand(dataContext, command) ?? command;
+			if (dataContext is IInterceptable<IUnwrapDataObjectInterceptor> { Interceptor: { } interceptor })
+				using (ActivityService.Start(ActivityID.UnwrapDataObjectInterceptorUnwrapCommand))
+					command = interceptor.UnwrapCommand(dataContext, command);
+
 			return Adapter.CommandType.IsSameOrParentOf(command.GetType()) ? command : null;
 		}
 
 		public virtual DbConnection? TryGetProviderConnection(IDataContext dataContext, DbConnection connection)
 		{
-			connection = dataContext.UnwrapDataObjectInterceptor?.UnwrapConnection(dataContext, connection) ?? connection;
+			if (dataContext is IInterceptable<IUnwrapDataObjectInterceptor> { Interceptor: { } interceptor })
+				using (ActivityService.Start(ActivityID.UnwrapDataObjectInterceptorUnwrapConnection))
+					connection = interceptor.UnwrapConnection(dataContext, connection);
+
 			return Adapter.ConnectionType.IsSameOrParentOf(connection.GetType()) ? connection : null;
 		}
 
@@ -179,7 +163,10 @@ namespace LinqToDB.DataProvider
 			if (Adapter.TransactionType == null)
 				return null;
 
-			transaction = dataContext.UnwrapDataObjectInterceptor?.UnwrapTransaction(dataContext, transaction) ?? transaction;
+			if (dataContext is IInterceptable<IUnwrapDataObjectInterceptor> { Interceptor: { } interceptor })
+				using (ActivityService.Start(ActivityID.UnwrapDataObjectInterceptorUnwrapTransaction))
+					transaction = interceptor.UnwrapTransaction(dataContext, transaction);
+
 			return Adapter.TransactionType.IsSameOrParentOf(transaction.GetType()) ? transaction : null;
 		}
 

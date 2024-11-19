@@ -1,0 +1,33 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<OutputType>Exe</OutputType>
+		<TargetFrameworks>net8.0</TargetFrameworks>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<Compile Include="..\..\Program.cs" Link="Program.cs" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\..\..\..\Source\LinqToDB.Remote.Grpc\LinqToDB.Remote.Grpc.csproj" />
+
+		<PackageReference Include="linq2db.t4models" />
+		<PackageReference Include="Grpc.Net.Client" />
+
+		<Service Include="{508349b6-6b84-4df5-91f0-309beebad82d}" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<Content Include="Northwind.tt">
+			<Generator>TextTemplatingFileGenerator</Generator>
+			<LastGenOutput>Northwind.generated.cs</LastGenOutput>
+		</Content>
+		<Compile Update="Northwind.generated.cs">
+			<DesignTime>True</DesignTime>
+			<AutoGen>True</AutoGen>
+			<DependentUpon>Northwind.tt</DependentUpon>
+		</Compile>
+	</ItemGroup>
+
+</Project>

@@ -2,10 +2,9 @@
 
 namespace LinqToDB.DataProvider.Informix
 {
-	using Extensions;
+	using Mapping;
 	using SqlProvider;
 	using SqlQuery;
-	using Mapping;
 
 	sealed class InformixSqlOptimizer : BasicSqlOptimizer
 	{
@@ -13,9 +12,14 @@ namespace LinqToDB.DataProvider.Informix
 		{
 		}
 
-		public override bool IsParameterDependedElement(IQueryElement element)
+		public override SqlExpressionConvertVisitor CreateConvertVisitor(bool allowModify)
 		{
-			if (base.IsParameterDependedElement(element))
+			return new InformixSqlExpressionConvertVisitor(allowModify);
+		}
+
+		public override bool IsParameterDependedElement(NullabilityContext nullability, IQueryElement element, DataOptions dataOptions)
+		{
+			if (base.IsParameterDependedElement(nullability, element, dataOptions))
 				return true;
 
 			switch (element.ElementType)
@@ -42,24 +46,6 @@ namespace LinqToDB.DataProvider.Informix
 			return false;
 		}
 
-		public override ISqlPredicate ConvertLikePredicate(MappingSchema mappingSchema, SqlPredicate.Like predicate,
-			EvaluationContext context)
-		{
-			//Informix cannot process parameter in Like template (only Informix provider, not InformixDB2)
-			//
-			if (context.ParameterValues != null)
-			{
-				var exp2 = TryConvertToValue(predicate.Expr2, context);
-
-				if (!ReferenceEquals(exp2, predicate.Expr2))
-				{
-					predicate = new SqlPredicate.Like(predicate.Expr1, predicate.IsNot, exp2, predicate.Escape);
-				}
-			}
-
-			return predicate;
-		}
-
 		static void SetQueryParameter(IQueryElement element)
 		{
 			if (element is SqlParameter p)
@@ -80,8 +66,6 @@ namespace LinqToDB.DataProvider.Informix
 
 		public override SqlStatement Finalize(MappingSchema mappingSchema, SqlStatement statement, DataOptions dataOptions)
 		{
-			CheckAliases(statement, int.MaxValue);
-
 			statement.VisitAll(SetQueryParameter);
 
 			// TODO: test if it works and enable support with type-cast like it is done for Firebird
@@ -97,8 +81,10 @@ namespace LinqToDB.DataProvider.Informix
 			return base.Finalize(mappingSchema, statement, dataOptions);
 		}
 
-		public override SqlStatement TransformStatement(SqlStatement statement, DataOptions dataOptions)
+		public override SqlStatement TransformStatement(SqlStatement statement, DataOptions dataOptions, MappingSchema mappingSchema)
 		{
+			statement = CorrectMultiTableQueries(statement);
+
 			switch (statement.QueryType)
 			{
 				case QueryType.Delete:
@@ -109,118 +95,11 @@ namespace LinqToDB.DataProvider.Informix
 					break;
 
 				case QueryType.Update:
-					statement = GetAlternativeUpdate((SqlUpdateStatement)statement, dataOptions);
+					statement = GetAlternativeUpdate((SqlUpdateStatement)statement, dataOptions, mappingSchema);
 					break;
 			}
 
 			return statement;
-		}
-
-		public override ISqlExpression ConvertExpressionImpl(ISqlExpression expression, ConvertVisitor<RunOptimizationContext> visitor)
-		{
-			expression = base.ConvertExpressionImpl(expression, visitor);
-
-			if (expression is SqlBinaryExpression be)
-			{
-				switch (be.Operation)
-				{
-					case "%": return new SqlFunction(be.SystemType, "Mod", be.Expr1, be.Expr2);
-					case "&": return new SqlFunction(be.SystemType, "BitAnd", be.Expr1, be.Expr2);
-					case "|": return new SqlFunction(be.SystemType, "BitOr", be.Expr1, be.Expr2);
-					case "^": return new SqlFunction(be.SystemType, "BitXor", be.Expr1, be.Expr2);
-					case "+": return be.SystemType == typeof(string) ? new SqlBinaryExpression(be.SystemType, be.Expr1, "||", be.Expr2, be.Precedence) : expression;
-				}
-			}
-			else if (expression is SqlFunction func)
-			{
-				switch (func.Name)
-				{
-					// passing parameter to NVL will result in "A syntax error has occurred." error from server
-					case "Coalesce" : return ConvertCoalesceToBinaryFunc(func, "Nvl", supportsParameters: false);
-					case "Convert"  :
-					{
-						var par0 = func.Parameters[0];
-						var par1 = func.Parameters[1];
-
-						var isNull = par1 is SqlValue sqlValue && sqlValue.Value == null;
-
-						if (!isNull)
-						{
-							switch (Type.GetTypeCode(func.SystemType.ToUnderlying()))
-							{
-								case TypeCode.String   :
-								{
-									var stype = func.Parameters[1].SystemType!.ToUnderlying();
-									if (stype == typeof(DateTime))
-									{
-										return new SqlFunction(func.SystemType, "To_Char", func.Parameters[1], new SqlValue("%Y-%m-%d %H:%M:%S.%F"));
-									}
-#if NET6_0_OR_GREATER
-									else if (stype == typeof(DateOnly))
-									{
-										return new SqlFunction(func.SystemType, "To_Char", func.Parameters[1], new SqlValue("%Y-%m-%d"));
-									}
-#endif
-									return new SqlFunction(func.SystemType, "To_Char", func.Parameters[1]);
-								}
-
-								case TypeCode.Boolean  :
-								{
-									var ex = AlternativeConvertToBoolean(func, visitor.Context.DataOptions, 1);
-									if (ex != null)
-										return ex;
-									break;
-								}
-
-								case TypeCode.UInt64   :
-									if (func.Parameters[1].SystemType!.IsFloatType())
-										par1 = new SqlFunction(func.SystemType, "Floor", func.Parameters[1]);
-									break;
-
-								case TypeCode.DateTime :
-									if (IsDateDataType(func.Parameters[0], "Date"))
-									{
-										if (func.Parameters[1].SystemType == typeof(string))
-										{
-											return new SqlFunction(
-												func.SystemType,
-												"Date",
-												new SqlFunction(func.SystemType, "To_Date", func.Parameters[1], new SqlValue("%Y-%m-%d")));
-										}
-
-										return new SqlFunction(func.SystemType, "Date", func.Parameters[1]);
-									}
-
-									if ((IsDateTime2Type(func.Parameters[0], "DateTime2")
-											|| IsDateTimeType(func.Parameters[0], "DateTime")
-											|| IsSmallDateTimeType(func.Parameters[0], "SmallDateTime"))
-										&& func.Parameters[1].SystemType == typeof(string))
-										return new SqlFunction(func.SystemType, "To_Date", func.Parameters[1], new SqlValue("%Y-%m-%d %H:%M:%S"));
-
-									if (IsTimeDataType(func.Parameters[0]))
-										return new SqlExpression(func.SystemType, "Cast(Extend({0}, hour to second) as Char(8))", Precedence.Primary, func.Parameters[1]);
-
-									return new SqlFunction(func.SystemType, "To_Date", func.Parameters[1]);
-
-								default:
-									if (func.SystemType.ToUnderlying() == typeof(DateTimeOffset))
-										goto case TypeCode.DateTime;
-									break;
-							}
-						}
-
-						return new SqlExpression(func.SystemType, "Cast({0} as {1})", Precedence.Primary, par1, par0);
-					}
-				}
-			}
-
-			return expression;
-		}
-
-		protected override ISqlExpression ConvertFunction(SqlFunction func)
-		{
-			func = ConvertFunctionParameters(func, false);
-			return base.ConvertFunction(func);
 		}
 	}
 }

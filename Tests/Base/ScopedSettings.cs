@@ -48,6 +48,22 @@ namespace Tests
 		}
 		}
 
+	public sealed class CultureRegion : IDisposable
+	{
+		private readonly CultureInfo _original;
+
+		public CultureRegion(string culture)
+		{
+			_original = Thread.CurrentThread.CurrentCulture;
+			Thread.CurrentThread.CurrentCulture = CultureInfo.GetCultureInfo(culture);
+		}
+
+		void IDisposable.Dispose()
+		{
+			Thread.CurrentThread.CurrentCulture = _original;
+		}
+	}
+
 	public class InvariantCultureRegion : IDisposable
 	{
 		private readonly CultureInfo? _original;
@@ -98,18 +114,22 @@ namespace Tests
 		}
 	}
 
-	public class CompareNullsAsValuesOption : IDisposable
+	public class CompareNullsOption : IDisposable
 	{
-		private readonly bool _original = Configuration.Linq.CompareNullsAsValues;
+		private readonly CompareNulls _original = Configuration.Linq.CompareNulls;
 
-		public CompareNullsAsValuesOption(bool enable)
+		public CompareNullsOption(bool enable)
+			: this(enable ? CompareNulls.LikeClr : CompareNulls.LikeSql)
+		{ }
+
+		public CompareNullsOption(CompareNulls value)
 		{
-			Configuration.Linq.CompareNullsAsValues = enable;
+			Configuration.Linq.CompareNulls = value;
 		}
 
 		void IDisposable.Dispose()
 		{
-			Configuration.Linq.CompareNullsAsValues = _original;
+			Configuration.Linq.CompareNulls = _original;
 		}
 	}
 

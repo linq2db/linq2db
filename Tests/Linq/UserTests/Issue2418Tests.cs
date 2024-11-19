@@ -19,19 +19,15 @@ namespace Tests.UserTests
 		{
 			builder.Expression = "JSON_MODIFY({source}, {path}, {value})";
 
-			builder.AddParameter("source", builder.GetExpression(0));
+			builder.AddParameter("source", builder.GetExpression(0)!);
 
 			var member = (MemberExpression) ((LambdaExpression) ((UnaryExpression) builder.Arguments[1]).Operand).Body;
 
 			builder.AddParameter("path", $"$.{member.Member.Name}");
 
-			var propertyExpression = (MemberExpression) builder.Arguments[2];
-			var memberExpression = (MemberExpression) propertyExpression.Expression!;
-			var fieldInfo = (FieldInfo) memberExpression.Member;
-			var valueExpression = (ConstantExpression) memberExpression.Expression!;
-			var value = ((PropertyInfo) propertyExpression.Member).GetValue(fieldInfo.GetValue(valueExpression.Value))!;
+			var value = builder.EvaluateExpression(builder.Arguments[2]);
 
-			builder.AddParameter("value", new SqlValue(value));
+			builder.AddParameter("value", new SqlValue(builder.Arguments[2].Type, value));
 		}
 	}
 

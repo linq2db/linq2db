@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Globalization;
 using System.Linq;
 using System.Net;
 using System.Numerics;
@@ -25,11 +26,11 @@ namespace LinqToDB.DataProvider.ClickHouse
 					var table       = rd.GetString(0);
 					var name        = rd.GetString(1);
 					var type        = rd.GetString(2);
-					var ordinal     = Convert.ToUInt64(rd.GetValue(3));
+					var ordinal     = Convert.ToUInt64(rd.GetValue(3), CultureInfo.InvariantCulture);
 					var description = rd.GetString(4);
-					var length      = rd.IsDBNull(5) ? null : (ulong?)Convert.ToUInt64(rd.GetValue(5));
-					var precision   = rd.IsDBNull(6) ? null : (ulong?)Convert.ToUInt64(rd.GetValue(6));
-					var scale       = rd.IsDBNull(7) ? null : (ulong?)Convert.ToUInt64(rd.GetValue(7));
+					var length      = rd.IsDBNull(5) ? null : (ulong?)Convert.ToUInt64(rd.GetValue(5), CultureInfo.InvariantCulture);
+					var precision   = rd.IsDBNull(6) ? null : (ulong?)Convert.ToUInt64(rd.GetValue(6), CultureInfo.InvariantCulture);
+					var scale       = rd.IsDBNull(7) ? null : (ulong?)Convert.ToUInt64(rd.GetValue(7), CultureInfo.InvariantCulture);
 					var readOnly    = rd.GetBoolean(8);
 
 					(type, var isNullable, _) = PreParseTypeName(type);
@@ -67,7 +68,7 @@ WHERE database = database() and default_kind <> 'ALIAS'")
 				.ToList();
 		}
 
-		protected override IReadOnlyCollection<ForeignKeyInfo> GetForeignKeys(DataConnection dataConnection, IEnumerable<TableSchema> tables, GetSchemaOptions options) => Array<ForeignKeyInfo>.Empty;
+		protected override IReadOnlyCollection<ForeignKeyInfo> GetForeignKeys(DataConnection dataConnection, IEnumerable<TableSchema> tables, GetSchemaOptions options) => [];
 
 		protected override IReadOnlyCollection<PrimaryKeyInfo> GetPrimaryKeys(DataConnection dataConnection, IEnumerable<TableSchema> tables, GetSchemaOptions options)
 		{

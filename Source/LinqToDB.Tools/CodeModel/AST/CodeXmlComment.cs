@@ -13,7 +13,7 @@ namespace LinqToDB.CodeModel
 		internal CodeXmlComment(string? summary, IEnumerable<ParameterComment>? parameters)
 		{
 			Summary     = summary;
-			_parameters = new (parameters ?? Array<ParameterComment>.Empty);
+			_parameters = new (parameters ?? []);
 		}
 
 		public CodeXmlComment()

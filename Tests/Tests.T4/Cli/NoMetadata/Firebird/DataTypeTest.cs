@@ -16,7 +16,7 @@ namespace Cli.NoMetadata.Firebird
 	{
 		public int       DataTypeId { get; set; } // integer
 		public byte[]?   Binary     { get; set; } // blob
-		public char?     Boolean    { get; set; } // char(1)
+		public bool?     Boolean    { get; set; } // boolean
 		public short?    Byte       { get; set; } // smallint
 		public byte[]?   Bytes      { get; set; } // blob
 		public char?     Char       { get; set; } // char(1)

@@ -1,11 +1,17 @@
-﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 	<PropertyGroup>
-		<Version>5.0.0.0</Version>
+		<Version>6.0.0.0</Version>
+		<EF3Version>3.0.0.0</EF3Version>
+		<EF6Version>6.0.0.0</EF6Version>
+		<EF8Version>8.0.0.0</EF8Version>
+		<EF9Version>9.0.0.0</EF9Version>
+
+		<Configurations>Debug;Release;Azure</Configurations>
 
 		<Description>LINQ to DB is a data access technology that provides a run-time infrastructure for managing relational data as objects.</Description>
 		<Authors>Igor Tkachev, Ilya Chudin, Svyatoslav Danyliv, Dmitry Lukashenko</Authors>
 		<Company>linq2db.net</Company>
-		<Copyright>2002-2023 linq2db.net</Copyright>
+		<Copyright>2002-2024 linq2db.net</Copyright>
 		<RepositoryUrl>https://github.com/linq2db/linq2db</RepositoryUrl>
 		<RepositoryType>git</RepositoryType>
 
@@ -14,9 +20,11 @@
 		<Nullable>enable</Nullable>
 		<WarningLevel>9999</WarningLevel>
 		<ErrorReport>prompt</ErrorReport>
+		<!--1573: missing xmldoc-->
+		<!--1591: missing xmldoc-->
 		<NoWarn>1573;1591</NoWarn>
 		<Features>strict</Features>
-		<TreatWarningsAsErrors>True</TreatWarningsAsErrors>
+		<TreatWarningsAsErrors>true</TreatWarningsAsErrors>
 
 		<AutoGenerateBindingRedirects>false</AutoGenerateBindingRedirects>
 		<GeneratePackageOnBuild>false</GeneratePackageOnBuild>
@@ -39,12 +47,18 @@
 
 		<AccelerateBuildsInVisualStudio>true</AccelerateBuildsInVisualStudio>
 		<ProduceReferenceAssembly>true</ProduceReferenceAssembly>
+
+		<!--feature flags-->
+		<DefineConstants Condition=" $([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net8.0')) ">SUPPORTS_COMPOSITE_FORMAT;$(DefineConstants)</DefineConstants>
+
+		<ArtifactsPath>$(MSBuildThisFileDirectory).build</ArtifactsPath>
+		<ArtifactsPivots>$(Configuration)\$(TargetFramework)</ArtifactsPivots>
 	</PropertyGroup>
 
 	<PropertyGroup Label="Code Analysis Setup">
 		<RunAnalyzersDuringBuild>false</RunAnalyzersDuringBuild>
 		<!--enable on release build only to not slowdown development/testing-->
-		<RunAnalyzersDuringBuild Condition="$(Configuration) != 'Debug'">true</RunAnalyzersDuringBuild>
+		<RunAnalyzersDuringBuild Condition="$(Configuration) == 'Release'">true</RunAnalyzersDuringBuild>
 		<RunAnalyzersDuringLiveAnalysis>true</RunAnalyzersDuringLiveAnalysis>
 
 		<AnalysisLevel>preview-All</AnalysisLevel>
@@ -55,23 +69,18 @@
 		<GenerateDocumentationFile>true</GenerateDocumentationFile>
 	</PropertyGroup>
 
-	<PropertyGroup Condition="'$(TargetFramework)' == 'netstandard2.1' OR '$(TargetFramework)' == 'netcoreapp3.1' OR '$(TargetFramework)' == 'net6.0' OR '$(TargetFramework)' == 'net7.0' OR '$(TargetFramework)' == 'net8.0'">
-		<DefineConstants>NETSTANDARD2_1PLUS;$(DefineConstants)</DefineConstants>
-	</PropertyGroup>
+	<ItemGroup Condition=" '$(TargetFramework)' == 'net462' OR '$(TargetFramework)' == 'netstandard2.0' OR '$(TargetFramework)' == 'net6.0' ">
+		<PackageReference Include="PolySharp" />
+	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="PolySharp" />
 		<PackageReference Include="Microsoft.CodeAnalysis.BannedApiAnalyzers" />
-		<AdditionalFiles Include="$(MSBuildThisFileDirectory)/Build/BannedSymbols.txt" />
+		<PackageReference Include="Meziantou.Analyzer" />
 
-		<PackageReference Include="Microsoft.CodeAnalysis.NetAnalyzers">
-			<PrivateAssets>all</PrivateAssets>
-			<IncludeAssets>build; analyzers</IncludeAssets>
-		</PackageReference>
+		<PackageReference Include="Microsoft.CodeAnalysis.NetAnalyzers" />
 	</ItemGroup>
 
 	<ItemGroup Condition="'$(Language)'=='C#'">
 		<Compile Include="$(MSBuildThisFileDirectory)/Source/Shared/*.cs" LinkBase="Compatibility" />
 	</ItemGroup>
-
 </Project>

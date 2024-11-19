@@ -1,30 +1,18 @@
 <#@ include file="LinqToDB.ttinclude" once="true" #>
 <#+
-LinqToDB.Data.DataConnection GetInformixConnection(string connectionString)
+LinqToDB.Data.DataConnection GetInformixConnection(string connectionString, LinqToDB.DataProvider.Informix.InformixProvider provider)
 {
-	return new LinqToDB.Data.DataConnection(LinqToDB.DataProvider.Informix.InformixTools.GetDataProvider(LinqToDB.ProviderName.Informix), connectionString);
+	return new LinqToDB.Data.DataConnection(LinqToDB.DataProvider.Informix.InformixTools.GetDataProvider(provider), connectionString);
 }
-
-LinqToDB.Data.DataConnection GetInformixConnection(string connectionString, string providerName)
-{
-	return new LinqToDB.Data.DataConnection(LinqToDB.DataProvider.Informix.InformixTools.GetDataProvider(providerName), connectionString);
-}
-
 
 LinqToDB.Data.DataConnection GetInformixConnection(string host, string port, string server, string database, string uid, string password)
 {
-	return GetInformixConnection(string.Format("Host={0};Service={1};Server={2};Protocol=onsoctcp;Database={3};UID={4};PWD={5}", host, port, server, database, uid, password));
+	return GetInformixConnection(string.Format("Host={0};Service={1};Server={2};Protocol=onsoctcp;Database={3};UID={4};PWD={5}", host, port, server, database, uid, password), LinqToDB.DataProvider.Informix.InformixProvider.Informix);
 }
 
-public void LoadInformixMetadata(string connectionString)
+public void LoadInformixMetadata(string connectionString, LinqToDB.DataProvider.Informix.InformixProvider provider = LinqToDB.DataProvider.Informix.InformixProvider.AutoDetect)
 {
-	using (var dataConnection = GetInformixConnection(connectionString))
-		LoadMetadata(dataConnection);
-}
-
-public void LoadInformixMetadata(string connectionString, string providerName)
-{
-	using (var dataConnection = GetInformixConnection(connectionString, providerName))
+	using (var dataConnection = GetInformixConnection(connectionString, provider))
 		LoadMetadata(dataConnection);
 }
 

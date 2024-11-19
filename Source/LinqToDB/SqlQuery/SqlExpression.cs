@@ -1,29 +1,30 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
 using System.Linq;
-using System.Text;
 
 namespace LinqToDB.SqlQuery
 {
-	public class SqlExpression : ISqlExpression
+	public class SqlExpression : SqlExpressionBase
 	{
-		public SqlExpression(Type? systemType, string expr, int precedence, SqlFlags flags, params ISqlExpression[] parameters)
+		public SqlExpression(Type? systemType, string expr, int precedence, SqlFlags flags, ParametersNullabilityType nullabilityType, bool? canBeNull, params ISqlExpression[] parameters)
 		{
 			if (parameters == null) throw new ArgumentNullException(nameof(parameters));
 
 			foreach (var value in parameters)
 				if (value == null) throw new ArgumentNullException(nameof(parameters));
 
-			SystemType  = systemType;
-			Expr        = expr;
-			Precedence  = precedence;
-			Parameters  = parameters;
-			Flags       = flags;
+			SystemType      = systemType;
+			Expr            = expr;
+			Precedence      = precedence;
+			Parameters      = parameters;
+			Flags           = flags;
+			NullabilityType = nullabilityType;
+			_canBeNull      = canBeNull;
 		}
 
 		public SqlExpression(Type? systemType, string expr, int precedence, params ISqlExpression[] parameters)
-			: this(systemType, expr, precedence, SqlFlags.IsPure, parameters)
+			: this(systemType, expr, precedence, SqlFlags.IsPure, ParametersNullabilityType.Undefined, null, parameters)
 		{
 		}
 
@@ -42,68 +43,32 @@ namespace LinqToDB.SqlQuery
 		{
 		}
 
-		public Type?            SystemType  { get; }
-		public string           Expr        { get; }
-		public int              Precedence  { get; }
-		public ISqlExpression[] Parameters  { get; }
-		public SqlFlags         Flags       { get; }
+		public override Type?                     SystemType        { get; }
+		public override int                       Precedence        { get; }
+
+		public          string                    Expr              { get; }
+		public          ISqlExpression[]          Parameters        { get; }
+		public          SqlFlags                  Flags             { get; }
+		public          bool?                     CanBeNullNullable => _canBeNull;
+		public          ParametersNullabilityType NullabilityType   { get; }
 
 		public bool             IsAggregate      => (Flags & SqlFlags.IsAggregate)      != 0;
 		public bool             IsPure           => (Flags & SqlFlags.IsPure)           != 0;
 		public bool             IsPredicate      => (Flags & SqlFlags.IsPredicate)      != 0;
 		public bool             IsWindowFunction => (Flags & SqlFlags.IsWindowFunction) != 0;
 
-		#region Overrides
-
-#if OVERRIDETOSTRING
-
-		public override string ToString()
-		{
-			return ((IQueryElement)this).ToString(new StringBuilder(), new Dictionary<IQueryElement,IQueryElement>()).ToString();
-		}
-
-#endif
-
-		#endregion
-
-		#region ISqlExpressionWalkable Members
-
-		ISqlExpression ISqlExpressionWalkable.Walk<TContext>(WalkOptions options, TContext context, Func<TContext, ISqlExpression, ISqlExpression> func)
-		{
-			for (var i = 0; i < Parameters.Length; i++)
-				Parameters[i] = Parameters[i].Walk(options, context, func)!;
-
-			return func(context, this);
-		}
-
-		#endregion
-
-		#region IEquatable<ISqlExpression> Members
-
-		bool IEquatable<ISqlExpression>.Equals(ISqlExpression? other)
-		{
-			return Equals(other, DefaultComparer);
-		}
-
-		#endregion
-
 		#region ISqlExpression Members
 
-		private bool? _canBeNull;
+		public override bool CanBeNullable(NullabilityContext nullability)
+		{
+			return QueryHelper.CalcCanBeNull(_canBeNull, NullabilityType,
+				       Parameters.Select(p => p.CanBeNullable(nullability)));
+		}
+
+		bool? _canBeNull;
 		public  bool   CanBeNull
 		{
-			get
-			{
-				if (_canBeNull.HasValue)
-					return _canBeNull.Value;
-
-				foreach (var value in Parameters)
-					if (value.CanBeNull)
-						return true;
-
-				return false;
-			}
-
+			get => _canBeNull ?? true;
 			set => _canBeNull = value;
 		}
 
@@ -130,9 +95,9 @@ namespace LinqToDB.SqlQuery
 			return hashCode;
 		}
 
-		public bool Equals(ISqlExpression? other, Func<ISqlExpression,ISqlExpression,bool> comparer)
+		public override bool Equals(ISqlExpression? other, Func<ISqlExpression,ISqlExpression,bool> comparer)
 		{
-			if (this == other)
+			if (ReferenceEquals(this, other))
 				return true;
 
 			if (!(other is SqlExpression expr) || SystemType != expr.SystemType || Expr != expr.Expr || Parameters.Length != expr.Parameters.Length)
@@ -149,34 +114,41 @@ namespace LinqToDB.SqlQuery
 
 		#region IQueryElement Members
 
-		public QueryElementType ElementType => QueryElementType.SqlExpression;
+		public override QueryElementType ElementType => QueryElementType.SqlExpression;
 
-		StringBuilder IQueryElement.ToString(StringBuilder sb, Dictionary<IQueryElement,IQueryElement> dic)
+		public override QueryElementTextWriter ToString(QueryElementTextWriter writer)
 		{
-			var len = sb.Length;
+			writer.DebugAppendUniqueId(this);
+
+			var len = writer.Length;
 			var ss  = Parameters.Select(p =>
 			{
-				p.ToString(sb, dic);
-				var s = sb.ToString(len, sb.Length - len);
-				sb.Length = len;
+				p.ToString(writer);
+				var s = writer.ToString(len, writer.Length - len);
+				writer.Length = len;
 				return (object)s;
 			});
 
 			if (Parameters.Length == 0)
-				return sb.Append(Expr);
+				return writer.Append(Expr);
 
 			if (Expr.Contains("{"))
-				sb.AppendFormat(Expr, ss.ToArray());
+				writer.AppendFormat(Expr, ss.ToArray());
 			else
-				sb.Append(Expr)
+				writer.Append(Expr)
 					.Append('{')
-					.Append(string.Join(", ", ss))
+					.Append(string.Join(", ", ss.Select(s => string.Format(CultureInfo.InvariantCulture, "{0}", s))))
 					.Append('}');
 
-			return sb;
+			return writer;
 		}
 
 		#endregion
+
+		public override bool Equals(object? obj)
+		{
+			return Equals(obj, DefaultComparer);
+		}
 
 		#region Public Static Members
 
@@ -193,10 +165,12 @@ namespace LinqToDB.SqlQuery
 					var expr = (SqlExpression)ex;
 					if (expr.IsPredicate)
 						return false;
-					if (QueryHelper.IsTransitiveExpression(expr, checkNullability: true))
-						return NeedsEqual(expr.Parameters[0]);
+					if (QueryHelper.IsTransitivePredicate(expr))
+						return false;
 					return true;
 				}
+				case QueryElementType.SearchCondition :
+					return false;
 				case QueryElementType.SqlFunction :
 
 					var f = (SqlFunction)ex;

@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 
 namespace LinqToDB.DataProvider
 {
+	using Common;
 	using Data;
 	using Extensions;
 	using Mapping;
@@ -41,9 +42,10 @@ namespace LinqToDB.DataProvider
 			Columns         = Descriptor.Columns
 				.Where(c => !c.SkipOnInsert || c.IsIdentity && options.BulkCopyOptions.KeepIdentity == true)
 				.ToArray();
-			ColumnTypes     = Columns.Select(c => new SqlDataType(c)).ToArray();
-			ParameterName   = "p";
-			BatchSize       = Math.Max(10, Options.BulkCopyOptions.MaxBatchSize ?? 1000);
+			//TODO: check how to remove SqlDataType here
+			ColumnTypes   = Columns.Select(c => new SqlDataType(c).Type).ToArray();
+			ParameterName = "p";
+			BatchSize     = Math.Max(10, Options.BulkCopyOptions.MaxBatchSize ?? 1000);
 		}
 
 		public readonly ISqlBuilder         SqlBuilder;
@@ -53,7 +55,7 @@ namespace LinqToDB.DataProvider
 		public readonly DataOptions         Options;
 		public readonly EntityDescriptor    Descriptor;
 		public readonly ColumnDescriptor[]  Columns;
-		public readonly SqlDataType[]       ColumnTypes;
+		public readonly DbDataType[]        ColumnTypes;
 		public          string?             TableName;
 		public readonly string              ParameterName;
 
@@ -96,7 +98,7 @@ namespace LinqToDB.DataProvider
 
 				if (Options.BulkCopyOptions.UseParameters || skipConvert(column) || !MappingSchema.TryConvertToSql(StringBuilder, ColumnTypes[i], Options, value))
 				{
-					var name = SqlBuilder.ConvertInline(ParameterName == "?" ? ParameterName : ParameterName + ++ParameterIndex, ConvertType.NameToQueryParameter);
+					var name = SqlBuilder.ConvertInline(ParameterName == "?" ? ParameterName : FormattableString.Invariant($"{ParameterName}{++ParameterIndex}"), ConvertType.NameToQueryParameter);
 
 					if (castParameters && (CurrentCount == 0 || castAllRows))
 					{
@@ -111,7 +113,7 @@ namespace LinqToDB.DataProvider
 						value = dataParameter.Value;
 
 					Parameters.Add(new DataParameter(
-						SqlBuilder.ConvertInline(ParameterName == "?" ? ParameterName : "p" + ParameterIndex, ConvertType.NameToQueryParameter),
+						SqlBuilder.ConvertInline(ParameterName == "?" ? ParameterName : FormattableString.Invariant($"p{ParameterIndex}"), ConvertType.NameToQueryParameter),
 						value, column.DataType, column.DbType)
 					{
 						Size      = column.Length,
@@ -132,7 +134,7 @@ namespace LinqToDB.DataProvider
 			StringBuilder.Length--;
 		}
 
-		private void AddValueCasted(string sql, SqlDataType type)
+		private void AddValueCasted(string sql, DbDataType type)
 		{
 			StringBuilder.Append("CAST(");
 			StringBuilder.Append(sql);
@@ -194,7 +196,7 @@ namespace LinqToDB.DataProvider
 		public async Task<bool> ExecuteAsync(CancellationToken cancellationToken)
 		{
 			await DataConnection.ExecuteAsync(StringBuilder.AppendLine().ToString(), cancellationToken, Parameters.ToArray())
-				.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+				.ConfigureAwait(false);
 
 			if (Options.BulkCopyOptions.RowsCopiedCallback != null)
 			{

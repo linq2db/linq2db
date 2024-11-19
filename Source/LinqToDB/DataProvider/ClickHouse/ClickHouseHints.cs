@@ -49,7 +49,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 
 		sealed class TableHintExtensionBuilder : ISqlTableExtensionBuilder
 		{
-			void ISqlTableExtensionBuilder.Build(ISqlBuilder sqlBuilder, StringBuilder stringBuilder, SqlQueryExtension sqlQueryExtension, SqlTable table, string alias)
+			void ISqlTableExtensionBuilder.Build(NullabilityContext nullability, ISqlBuilder sqlBuilder, StringBuilder stringBuilder, SqlQueryExtension sqlQueryExtension, SqlTable table, string alias)
 			{
 				if (stringBuilder.Length > 0 && stringBuilder[^1] != ' ')
 					stringBuilder.Append(' ');
@@ -101,7 +101,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 		internal static IClickHouseSpecificQueryable<TSource> TablesInScopeHint<TSource>(this IClickHouseSpecificQueryable<TSource> source, [SqlQueryDependent] string hint)
 			where TSource : notnull
 		{
-			var currentSource = LinqExtensions.ProcessSourceQueryable?.Invoke(source) ?? source;
+			var currentSource = source.ProcessIQueryable();
 
 			return new ClickHouseSpecificQueryable<TSource>(currentSource.Provider.CreateQuery<TSource>(
 				Expression.Call(
@@ -150,7 +150,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 		internal static IClickHouseSpecificQueryable<TSource> JoinHint<TSource>(this IClickHouseSpecificQueryable<TSource> source, [SqlQueryDependent] string hint)
 			where TSource : notnull
 		{
-			var currentSource = LinqExtensions.ProcessSourceQueryable?.Invoke(source) ?? source;
+			var currentSource = source.ProcessIQueryable();
 
 			return new ClickHouseSpecificQueryable<TSource>(currentSource.Provider.CreateQuery<TSource>(
 				Expression.Call(
@@ -176,7 +176,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 		internal static IClickHouseSpecificQueryable<TSource> SubQueryHint<TSource>(this IClickHouseSpecificQueryable<TSource> source, [SqlQueryDependent] string hint)
 			where TSource : notnull
 		{
-			var currentSource = LinqExtensions.ProcessSourceQueryable?.Invoke(source) ?? source;
+			var currentSource = source.ProcessIQueryable();
 
 			return new ClickHouseSpecificQueryable<TSource>(currentSource.Provider.CreateQuery<TSource>(
 				Expression.Call(
@@ -207,7 +207,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 			[SqlQueryDependent] params object?[]                             hintParameters)
 			where TSource : notnull
 		{
-			var currentSource = LinqExtensions.ProcessSourceQueryable?.Invoke(source) ?? source;
+			var currentSource = source.ProcessIQueryable();
 
 			return new ClickHouseSpecificQueryable<TSource>(currentSource.Provider.CreateQuery<TSource>(
 				Expression.Call(

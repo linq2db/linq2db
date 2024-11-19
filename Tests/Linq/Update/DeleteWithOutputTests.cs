@@ -3,6 +3,7 @@ using System.Linq;
 using System.Threading.Tasks;
 
 using LinqToDB;
+using LinqToDB.Async;
 using LinqToDB.Mapping;
 using LinqToDB.Tools.Comparers;
 
@@ -13,8 +14,8 @@ namespace Tests.xUpdate
 	[TestFixture]
 	public class DeleteWithOutputTests : TestBase
 	{
-		private const string FeatureDeleteOutputMultiple = $"{TestProvName.AllSqlServer},{TestProvName.AllMariaDB},{TestProvName.AllPostgreSQL},{TestProvName.AllSQLite}";
-		private const string FeatureDeleteOutputSingle   = $"{TestProvName.AllSqlServer},{TestProvName.AllFirebird},{TestProvName.AllMariaDB},{TestProvName.AllPostgreSQL},{TestProvName.AllSQLite}";
+		private const string FeatureDeleteOutputMultiple = $"{TestProvName.AllSqlServer},{TestProvName.AllFirebird5Plus},{TestProvName.AllMariaDB},{TestProvName.AllPostgreSQL},{TestProvName.AllSQLite}";
+		private const string FeatureDeleteOutputSingle   = $"{TestProvName.AllSqlServer},{TestProvName.AllFirebirdLess5},{TestProvName.AllMariaDB},{TestProvName.AllPostgreSQL},{TestProvName.AllSQLite}";
 		private const string FeatureDeleteOutputInto     = $"{TestProvName.AllSqlServer}";
 
 		[Table]
@@ -102,9 +103,18 @@ namespace Tests.xUpdate
 			await using var db     = GetDataContext(context);
 			await using var source = db.CreateLocalTable(sourceData);
 
+			var expected = source
+				.Where(s => s.Id > 3)
+				.ToList();
+
+			var output = await source
+				.Where(s => s.Id > 3)
+				.DeleteWithOutputAsync()
+				.ToListAsync();
+
 			AreEqual(
-				source.Where(s => s.Id > 3).ToList(),
-				await source.Where(s => s.Id > 3).DeleteWithOutputAsync(),
+				expected,
+				output,
 				ComparerBuilder.GetEqualityComparer<TableWithData>());
 		}
 
@@ -121,7 +131,8 @@ namespace Tests.xUpdate
 
 				var output = await source
 					.Where(s => s.Id == 3)
-					.DeleteWithOutputAsync();
+					.DeleteWithOutputAsync()
+					.ToListAsync();
 
 				AreEqual(
 					expected,
@@ -180,6 +191,7 @@ namespace Tests.xUpdate
 						{
 							Id       = Sql.AsSql(deleted.Id       + 1),
 							ValueStr = Sql.AsSql(deleted.ValueStr + 1),
+							Bool = deleted.ValueStr != null
 						})
 					.ToArray();
 
@@ -189,6 +201,7 @@ namespace Tests.xUpdate
 						{
 							Id       = t.Id       + 1,
 							ValueStr = t.ValueStr + 1,
+							Bool     = t.ValueStr != null
 						}),
 					output);
 			}
@@ -212,7 +225,8 @@ namespace Tests.xUpdate
 						{
 							Id       = Sql.AsSql(deleted.Id       + 1),
 							ValueStr = Sql.AsSql(deleted.ValueStr + 1),
-						});
+						})
+					.ToListAsync();
 
 				AreEqual(
 					expected
@@ -243,7 +257,8 @@ namespace Tests.xUpdate
 						{
 							Id       = Sql.AsSql(deleted.Id       + 1),
 							ValueStr = Sql.AsSql(deleted.ValueStr + 1),
-						});
+						})
+					.ToListAsync();
 
 				AreEqual(
 					expected
@@ -345,7 +360,8 @@ namespace Tests.xUpdate
 							Id       = s.Id       + param,
 							Value    = s.Value    + param,
 							ValueStr = s.ValueStr + param
-						});
+						})
+					.ToListAsync();
 
 				AreEqual(
 					expected
@@ -379,7 +395,8 @@ namespace Tests.xUpdate
 							Id       = s.Id       + param,
 							Value    = s.Value    + param,
 							ValueStr = s.ValueStr + param
-						});
+						})
+					.ToListAsync();
 
 				AreEqual(
 					expected

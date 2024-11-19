@@ -3,28 +3,33 @@
 	<PropertyGroup>
 		<RootNamespace>LinqToDB.CLI</RootNamespace>
 		<AssemblyName>dotnet-linq2db</AssemblyName>
-		<TargetFrameworks>netcoreapp3.1;net6.0;net7.0;net8.0</TargetFrameworks>
-		<DocumentationFile>bin\$(Configuration)\$(TargetFramework)\$(AssemblyName).xml</DocumentationFile>
+		<TargetFrameworks>net6.0;net8.0;net9.0</TargetFrameworks>
+		<!--don't uncomment, used to generate x86 apphosts manually
+		<PlatformTarget>x86</PlatformTarget>-->
+		<DocumentationFile>$(ArtifactsPath)\bin\$(MSBuildProjectName)\$(Configuration)\$(TargetFramework)\$(AssemblyName).xml</DocumentationFile>
 		<OutputType>Exe</OutputType>
 		<WarningsAsErrors>true</WarningsAsErrors>
 		<SignAssembly>False</SignAssembly>
 		<RollForward>Major</RollForward>
-
-		<!--https://github.com/DarkWanderer/ClickHouse.Client/issues/238-->
-		<SuppressTfmSupportBuildWarnings>true</SuppressTfmSupportBuildWarnings>
 	</PropertyGroup>
 
 	<Target Name="CopyHosts" AfterTargets="Build">
-		<Copy SourceFiles="$(MSBuildThisFileDirectory)..\..\Redist\CLI\netcoreapp3.1\dotnet-linq2db.win-x64.exe;$(MSBuildThisFileDirectory)..\..\Redist\CLI\netcoreapp3.1\dotnet-linq2db.win-x86.exe" DestinationFolder="bin\$(Configuration)\netcoreapp3.1" />
-		<Copy SourceFiles="$(MSBuildThisFileDirectory)..\..\Redist\CLI\net6.0\dotnet-linq2db.win-x64.exe;$(MSBuildThisFileDirectory)..\..\Redist\CLI\net6.0\dotnet-linq2db.win-x86.exe" DestinationFolder="bin\$(Configuration)\net6.0" />
-		<Copy SourceFiles="$(MSBuildThisFileDirectory)..\..\Redist\CLI\net7.0\dotnet-linq2db.win-x64.exe;$(MSBuildThisFileDirectory)..\..\Redist\CLI\net7.0\dotnet-linq2db.win-x86.exe" DestinationFolder="bin\$(Configuration)\net7.0" />
-		<!--<Copy SourceFiles="$(MSBuildThisFileDirectory)..\..\Redist\CLI\net8.0\dotnet-linq2db.win-x64.exe;$(MSBuildThisFileDirectory)..\..\Redist\CLI\net8.0\dotnet-linq2db.win-x86.exe" DestinationFolder="bin\$(Configuration)\net8.0" />-->
+		<Copy SourceFiles="$(SolutionDir)\Redist\CLI\net6.0\dotnet-linq2db.win-x64.exe;$(SolutionDir)\Redist\CLI\net6.0\dotnet-linq2db.win-x86.exe" DestinationFolder="$(ArtifactsPath)\bin\$(MSBuildProjectName)\$(Configuration)\net6.0" />
+		<Copy SourceFiles="$(SolutionDir)\Redist\CLI\net8.0\dotnet-linq2db.win-x64.exe;$(SolutionDir)\Redist\CLI\net8.0\dotnet-linq2db.win-x86.exe" DestinationFolder="$(ArtifactsPath)\bin\$(MSBuildProjectName)\$(Configuration)\net8.0" />
+		<Copy SourceFiles="$(SolutionDir)\Redist\CLI\net9.0\dotnet-linq2db.win-x64.exe;$(SolutionDir)\Redist\CLI\net9.0\dotnet-linq2db.win-x86.exe" DestinationFolder="$(ArtifactsPath)\bin\$(MSBuildProjectName)\$(Configuration)\net9.0" />
 
 		<!--cleanup for pack-->
 		<ItemGroup>
 			<JunkFiles
 				Condition="$(Configuration) == 'Release'"
-				Include="bin\Release\netcoreapp3.1\dotnet-linq2db.runtimeconfig.dev.json;bin\Release\netcoreapp3.1\*.pdb;bin\Release\netcoreapp3.1\*.xml;bin\Release\net6.0\dotnet-linq2db.runtimeconfig.dev.json;bin\Release\net6.0\*.pdb;bin\Release\net6.0\*.xml;bin\Release\net7.0\dotnet-linq2db.runtimeconfig.dev.json;bin\Release\net7.0\*.pdb;bin\Release\net7.0\*.xml;bin\Release\net8.0\dotnet-linq2db.runtimeconfig.dev.json;bin\Release\net8.0\*.pdb;bin\Release\net8.0\*.xml;" />
+				Include="
+			$(ArtifactsPath)\bin\$(MSBuildProjectName)\Release\net6.0\*.xml;
+			$(ArtifactsPath)\bin\$(MSBuildProjectName)\Release\net6.0\*.pdb;
+			$(ArtifactsPath)\bin\$(MSBuildProjectName)\Release\net8.0\*.xml;
+			$(ArtifactsPath)\bin\$(MSBuildProjectName)\Release\net8.0\*.pdb;
+			$(ArtifactsPath)\bin\$(MSBuildProjectName)\Release\net9.0\*.xml;
+			$(ArtifactsPath)\bin\$(MSBuildProjectName)\Release\net9.0\*.pdb;"
+		/>
 		</ItemGroup>
 
 		<Delete Condition="$(Configuration) == 'Release'" Files="@(JunkFiles)" />
@@ -36,6 +41,10 @@
 
 	<ItemGroup>
 		<ProjectReference Include="..\LinqToDB.Tools\LinqToDB.Tools.csproj" />
+
+		<PackageReference Include="Microsoft.CodeAnalysis.CSharp" />
+		<PackageReference Include="Microsoft.Extensions.DependencyModel" />
+		<PackageReference Include="Mono.TextTemplating" />
 
 		<!--providers-->
 		<PackageReference Include="System.Data.SQLite.Core" />
@@ -49,10 +58,9 @@
 		<PackageReference Include="System.Data.OleDb" />
 		<PackageReference Include="ClickHouse.Client" />
 		<PackageReference Include="Octonica.ClickHouseClient" />
-		<!--T4 support-->
-		<PackageReference Include="Mono.TextTemplating" />
-		<PackageReference Include="Microsoft.CodeAnalysis.CSharp" />
-		<!--interceptor dependencies resolve-->
-		<PackageReference Include="Microsoft.Extensions.DependencyModel" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<AdditionalFiles Include="PublicAPI.*.txt" />
 	</ItemGroup>
 </Project>

@@ -1,33 +1,36 @@
-﻿using System.Linq.Expressions;
+﻿using System;
+using System.Linq.Expressions;
 
 namespace LinqToDB.Linq.Builder
 {
 	using LinqToDB.Expressions;
 
+	[BuildsAny]
 	sealed class ContextRefBuilder : ISequenceBuilder
 	{
-		public int BuildCounter { get; set; }
+		public static bool CanBuild(BuildInfo buildInfo, ExpressionBuilder builder)
+			=> buildInfo.Expression is ContextRefExpression contextRef;
 
-		public bool CanBuild(ExpressionBuilder builder, BuildInfo buildInfo)
+		public BuildSequenceResult BuildSequence(ExpressionBuilder builder, BuildInfo buildInfo)
 		{
-			return buildInfo.Expression is ContextRefExpression;
+			var contextRef = (ContextRefExpression)buildInfo.Expression;
+
+			var context = contextRef.BuildContext;
+
+			if (!buildInfo.CreateSubQuery)
+				return BuildSequenceResult.FromContext(context);
+
+			var elementContext = context.GetContext(buildInfo.Expression, buildInfo);
+
+			if (elementContext != null)
+				return BuildSequenceResult.FromContext(elementContext);
+
+			return BuildSequenceResult.NotSupported();
 		}
-
-		public IBuildContext BuildSequence(ExpressionBuilder builder, BuildInfo buildInfo)
-		{
-			var context = ((ContextRefExpression)buildInfo.Expression).BuildContext;
-
-			return context;
-		}
-
-		public SequenceConvertInfo? Convert(ExpressionBuilder builder, BuildInfo buildInfo, ParameterExpression? param)
-		{
-			return null;
-		}
-
+		
 		public bool IsSequence(ExpressionBuilder builder, BuildInfo buildInfo)
 		{
-			return buildInfo.Expression is ContextRefExpression;
+			return true;
 		}
 	}
 }

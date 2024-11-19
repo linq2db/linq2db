@@ -1,48 +1,19 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Linq.Expressions;
 using System.Reflection;
 
 namespace LinqToDB.Reflection
 {
 	using Extensions;
-	using LinqToDB.Common;
 
 	public class TypeAccessor<T> : TypeAccessor
 	{
 		static TypeAccessor()
 		{
-			// Create Instance.
-			//
 			var type = typeof(T);
 
-			if (type.IsValueType)
-			{
-				_createInstance = () => default!;
-			}
-			else
-			{
-				var ctor = type.IsAbstract ? null : type.GetDefaultConstructorEx();
-
-				if (ctor == null)
-				{
-					Expression<Func<T>> mi;
-
-					if (type.IsAbstract) mi = () => ThrowAbstractException();
-					else                 mi = () => ThrowException();
-
-					var body = Expression.Call(null, ((MethodCallExpression)mi.Body).Method);
-
-					_createInstance = Expression.Lambda<Func<T>>(body).CompileExpression();
-				}
-				else
-				{
-					_createInstance = Expression.Lambda<Func<T>>(Expression.New(ctor)).CompileExpression();
-				}
-			}
-
-			var interfaces = !type.IsInterface && !type.IsArray ? type.GetInterfaces() : Array<Type>.Empty;
+			var interfaces = !type.IsInterface && !type.IsArray ? type.GetInterfaces() : [];
 
 			if (interfaces.Length == 0)
 			{
@@ -144,16 +115,6 @@ namespace LinqToDB.Reflection
 			}
 		}
 
-		static T ThrowException()
-		{
-			throw new LinqToDBException($"The '{typeof(T).FullName}' type must have default or init constructor.");
-		}
-
-		static T ThrowAbstractException()
-		{
-			throw new LinqToDBException($"Cant create an instance of abstract class '{typeof(T).FullName}'.");
-		}
-
 		static readonly List<MemberInfo> _members = new();
 		static readonly IObjectFactory?  _objectFactory;
 
@@ -163,19 +124,20 @@ namespace LinqToDB.Reflection
 			foreach (var member in _members)
 				if (!member.GetMemberType().IsByRef)
 					AddMember(new MemberAccessor(this, member, null));
-
-			ObjectFactory = _objectFactory;
 		}
 
-		static readonly Func<T> _createInstance;
-		public override object   CreateInstance()
+		public override object CreateInstance()
 		{
-			return _createInstance()!;
+			if (_objectFactory != null)
+				return _objectFactory.CreateInstance(this);
+			return ObjectFactory<T>.CreateInstance()!;
 		}
 
 		public T Create()
 		{
-			return _createInstance();
+			if (_objectFactory != null)
+				return (T)_objectFactory.CreateInstance(this);
+			return ObjectFactory<T>.CreateInstance()!;
 		}
 
 		public override Type Type => typeof(T);

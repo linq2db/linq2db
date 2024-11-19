@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Linq;
 using System.Linq.Expressions;
 
 using JetBrains.Annotations;
@@ -49,7 +48,7 @@ namespace LinqToDB.DataProvider.Access
 		public static IAccessSpecificQueryable<TSource> SubQueryHint<TSource>(this IAccessSpecificQueryable<TSource> source, [SqlQueryDependent] string hint)
 			where TSource : notnull
 		{
-			var currentSource = LinqExtensions.ProcessSourceQueryable?.Invoke(source) ?? source;
+			var currentSource = source.ProcessIQueryable();
 
 			return new AccessSpecificQueryable<TSource>(currentSource.Provider.CreateQuery<TSource>(
 				Expression.Call(
@@ -57,7 +56,6 @@ namespace LinqToDB.DataProvider.Access
 					MethodHelper.GetMethodInfo(SubQueryHint, source, hint),
 					currentSource.Expression, Expression.Constant(hint))));
 		}
-
 
 		#endregion
 	}

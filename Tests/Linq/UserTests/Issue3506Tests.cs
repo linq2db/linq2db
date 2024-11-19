@@ -40,7 +40,7 @@ namespace Tests.UserTests
 					(cat, owner) => cat)
 				.Count();
 
-				Assert.AreEqual(1, result);
+				Assert.That(result, Is.EqualTo(1));
 			}
 		}
 
@@ -71,7 +71,7 @@ namespace Tests.UserTests
 					(cat, owner) => cat)
 				.Count();
 
-				Assert.AreEqual(1, result);
+				Assert.That(result, Is.EqualTo(1));
 			}
 		}
 	}

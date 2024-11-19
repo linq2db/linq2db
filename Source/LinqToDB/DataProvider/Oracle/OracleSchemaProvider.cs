@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data.Common;
+using System.Globalization;
 using System.Linq;
 using System.Data;
 
@@ -165,7 +166,7 @@ namespace LinqToDB.DataProvider.Oracle
 			{
 				try
 				{
-					return int.Parse(version.Split('.')[0]);
+					return int.Parse(version.Split('.')[0], NumberStyles.Integer, NumberFormatInfo.InvariantInfo);
 				}
 				catch { }
 			}

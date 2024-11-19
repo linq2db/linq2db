@@ -72,8 +72,11 @@ namespace Tests.UserTests
 					.Update();
 
 				var record = table.Single();
-				Assert.AreEqual(KeyTypes.EC, record.ClaimedKeyType);
-				Assert.AreEqual(KeyTypes.EC, record.ClaimedKeyTypeN);
+				Assert.Multiple(() =>
+				{
+					Assert.That(record.ClaimedKeyType, Is.EqualTo(KeyTypes.EC));
+					Assert.That(record.ClaimedKeyTypeN, Is.EqualTo(KeyTypes.EC));
+				});
 			}
 		}
 
@@ -93,8 +96,11 @@ namespace Tests.UserTests
 					.Update();
 
 				var record = table.Single();
-				Assert.AreEqual(KeyTypes.EC, record.ClaimedKeyType);
-				Assert.AreEqual(KeyTypes.EC, record.ClaimedKeyTypeN);
+				Assert.Multiple(() =>
+				{
+					Assert.That(record.ClaimedKeyType, Is.EqualTo(KeyTypes.EC));
+					Assert.That(record.ClaimedKeyTypeN, Is.EqualTo(KeyTypes.EC));
+				});
 			}
 		}
 
@@ -114,8 +120,11 @@ namespace Tests.UserTests
 					.Update();
 
 				var record = table.Single();
-				Assert.AreEqual(KeyTypes.EC, record.ClaimedKeyType);
-				Assert.AreEqual(KeyTypes.EC, record.ClaimedKeyTypeN);
+				Assert.Multiple(() =>
+				{
+					Assert.That(record.ClaimedKeyType, Is.EqualTo(KeyTypes.EC));
+					Assert.That(record.ClaimedKeyTypeN, Is.EqualTo(KeyTypes.EC));
+				});
 			}
 		}
 
@@ -135,8 +144,11 @@ namespace Tests.UserTests
 					.Update();
 
 				var record = table.Single();
-				Assert.AreEqual(KeyTypes.EC, record.ClaimedKeyType);
-				Assert.AreEqual(KeyTypes.EC, record.ClaimedKeyTypeN);
+				Assert.Multiple(() =>
+				{
+					Assert.That(record.ClaimedKeyType, Is.EqualTo(KeyTypes.EC));
+					Assert.That(record.ClaimedKeyTypeN, Is.EqualTo(KeyTypes.EC));
+				});
 			}
 		}
 
@@ -154,8 +166,11 @@ namespace Tests.UserTests
 					.Update();
 
 				var record = table.Single();
-				Assert.AreEqual(KeyTypes.EC, record.ClaimedKeyType);
-				Assert.AreEqual(KeyTypes.EC, record.ClaimedKeyTypeN);
+				Assert.Multiple(() =>
+				{
+					Assert.That(record.ClaimedKeyType, Is.EqualTo(KeyTypes.EC));
+					Assert.That(record.ClaimedKeyTypeN, Is.EqualTo(KeyTypes.EC));
+				});
 			}
 		}
 
@@ -173,8 +188,11 @@ namespace Tests.UserTests
 					.Insert();
 
 				var record = table.Single();
-				Assert.AreEqual(KeyTypes.EC, record.ClaimedKeyType);
-				Assert.AreEqual(KeyTypes.EC, record.ClaimedKeyTypeN);
+				Assert.Multiple(() =>
+				{
+					Assert.That(record.ClaimedKeyType, Is.EqualTo(KeyTypes.EC));
+					Assert.That(record.ClaimedKeyTypeN, Is.EqualTo(KeyTypes.EC));
+				});
 			}
 		}
 
@@ -192,8 +210,11 @@ namespace Tests.UserTests
 					.Insert();
 
 				var record = table.Single();
-				Assert.AreEqual(KeyTypes.EC, record.ClaimedKeyType);
-				Assert.AreEqual(KeyTypes.EC, record.ClaimedKeyTypeN);
+				Assert.Multiple(() =>
+				{
+					Assert.That(record.ClaimedKeyType, Is.EqualTo(KeyTypes.EC));
+					Assert.That(record.ClaimedKeyTypeN, Is.EqualTo(KeyTypes.EC));
+				});
 			}
 		}
 
@@ -211,8 +232,11 @@ namespace Tests.UserTests
 					.Insert();
 
 				var record = table.Single();
-				Assert.AreEqual(KeyTypes.EC, record.ClaimedKeyType);
-				Assert.AreEqual(KeyTypes.EC, record.ClaimedKeyTypeN);
+				Assert.Multiple(() =>
+				{
+					Assert.That(record.ClaimedKeyType, Is.EqualTo(KeyTypes.EC));
+					Assert.That(record.ClaimedKeyTypeN, Is.EqualTo(KeyTypes.EC));
+				});
 			}
 		}
 
@@ -230,8 +254,11 @@ namespace Tests.UserTests
 					.Insert();
 
 				var record = table.Single();
-				Assert.AreEqual(KeyTypes.EC, record.ClaimedKeyType);
-				Assert.AreEqual(KeyTypes.EC, record.ClaimedKeyTypeN);
+				Assert.Multiple(() =>
+				{
+					Assert.That(record.ClaimedKeyType, Is.EqualTo(KeyTypes.EC));
+					Assert.That(record.ClaimedKeyTypeN, Is.EqualTo(KeyTypes.EC));
+				});
 			}
 		}
 
@@ -247,8 +274,11 @@ namespace Tests.UserTests
 					.Insert();
 
 				var record = table.Single();
-				Assert.AreEqual(KeyTypes.EC, record.ClaimedKeyType);
-				Assert.AreEqual(KeyTypes.EC, record.ClaimedKeyTypeN);
+				Assert.Multiple(() =>
+				{
+					Assert.That(record.ClaimedKeyType, Is.EqualTo(KeyTypes.EC));
+					Assert.That(record.ClaimedKeyTypeN, Is.EqualTo(KeyTypes.EC));
+				});
 			}
 		}
 
@@ -268,8 +298,11 @@ namespace Tests.UserTests
 					.Update();
 
 				var record = table.Single();
-				Assert.AreEqual(KeyTypes.EC, record.ClaimedKeyType);
-				Assert.AreEqual(KeyTypes.EC, record.ClaimedKeyTypeN);
+				Assert.Multiple(() =>
+				{
+					Assert.That(record.ClaimedKeyType, Is.EqualTo(KeyTypes.EC));
+					Assert.That(record.ClaimedKeyTypeN, Is.EqualTo(KeyTypes.EC));
+				});
 			}
 		}
 
@@ -289,8 +322,11 @@ namespace Tests.UserTests
 					.Update();
 
 				var record = table.Single();
-				Assert.AreEqual(KeyTypes.EC, record.ClaimedKeyType);
-				Assert.AreEqual(KeyTypes.EC, record.ClaimedKeyTypeN);
+				Assert.Multiple(() =>
+				{
+					Assert.That(record.ClaimedKeyType, Is.EqualTo(KeyTypes.EC));
+					Assert.That(record.ClaimedKeyTypeN, Is.EqualTo(KeyTypes.EC));
+				});
 			}
 		}
 
@@ -310,8 +346,11 @@ namespace Tests.UserTests
 					.Update();
 
 				var record = table.Single();
-				Assert.AreEqual(KeyTypes.EC, record.ClaimedKeyType);
-				Assert.AreEqual(KeyTypes.EC, record.ClaimedKeyTypeN);
+				Assert.Multiple(() =>
+				{
+					Assert.That(record.ClaimedKeyType, Is.EqualTo(KeyTypes.EC));
+					Assert.That(record.ClaimedKeyTypeN, Is.EqualTo(KeyTypes.EC));
+				});
 			}
 		}
 
@@ -331,8 +370,11 @@ namespace Tests.UserTests
 					.Update();
 
 				var record = table.Single();
-				Assert.AreEqual(KeyTypes.EC, record.ClaimedKeyType);
-				Assert.AreEqual(KeyTypes.EC, record.ClaimedKeyTypeN);
+				Assert.Multiple(() =>
+				{
+					Assert.That(record.ClaimedKeyType, Is.EqualTo(KeyTypes.EC));
+					Assert.That(record.ClaimedKeyTypeN, Is.EqualTo(KeyTypes.EC));
+				});
 			}
 		}
 
@@ -350,8 +392,11 @@ namespace Tests.UserTests
 					.Update();
 
 				var record = table.Single();
-				Assert.AreEqual(KeyTypes.EC, record.ClaimedKeyType);
-				Assert.AreEqual(KeyTypes.EC, record.ClaimedKeyTypeN);
+				Assert.Multiple(() =>
+				{
+					Assert.That(record.ClaimedKeyType, Is.EqualTo(KeyTypes.EC));
+					Assert.That(record.ClaimedKeyTypeN, Is.EqualTo(KeyTypes.EC));
+				});
 			}
 		}
 
@@ -369,8 +414,11 @@ namespace Tests.UserTests
 					.Insert();
 
 				var record = table.Single();
-				Assert.AreEqual(KeyTypes.EC, record.ClaimedKeyType);
-				Assert.AreEqual(KeyTypes.EC, record.ClaimedKeyTypeN);
+				Assert.Multiple(() =>
+				{
+					Assert.That(record.ClaimedKeyType, Is.EqualTo(KeyTypes.EC));
+					Assert.That(record.ClaimedKeyTypeN, Is.EqualTo(KeyTypes.EC));
+				});
 			}
 		}
 
@@ -389,8 +437,11 @@ namespace Tests.UserTests
 					.Insert();
 
 				var record = table.Single();
-				Assert.AreEqual(KeyTypes.EC, record.ClaimedKeyType);
-				Assert.IsNull(record.ClaimedKeyTypeN);
+				Assert.Multiple(() =>
+				{
+					Assert.That(record.ClaimedKeyType, Is.EqualTo(KeyTypes.EC));
+					Assert.That(record.ClaimedKeyTypeN, Is.Null);
+				});
 			}
 		}
 
@@ -408,8 +459,11 @@ namespace Tests.UserTests
 					.Insert();
 
 				var record = table.Single();
-				Assert.AreEqual(KeyTypes.EC, record.ClaimedKeyType);
-				Assert.AreEqual(KeyTypes.EC, record.ClaimedKeyTypeN);
+				Assert.Multiple(() =>
+				{
+					Assert.That(record.ClaimedKeyType, Is.EqualTo(KeyTypes.EC));
+					Assert.That(record.ClaimedKeyTypeN, Is.EqualTo(KeyTypes.EC));
+				});
 			}
 		}
 
@@ -427,8 +481,11 @@ namespace Tests.UserTests
 					.Insert();
 
 				var record = table.Single();
-				Assert.AreEqual(KeyTypes.EC, record.ClaimedKeyType);
-				Assert.AreEqual(KeyTypes.EC, record.ClaimedKeyTypeN);
+				Assert.Multiple(() =>
+				{
+					Assert.That(record.ClaimedKeyType, Is.EqualTo(KeyTypes.EC));
+					Assert.That(record.ClaimedKeyTypeN, Is.EqualTo(KeyTypes.EC));
+				});
 			}
 		}
 
@@ -444,8 +501,11 @@ namespace Tests.UserTests
 					.Insert();
 
 				var record = table.Single();
-				Assert.AreEqual(KeyTypes.EC, record.ClaimedKeyType);
-				Assert.AreEqual(KeyTypes.EC, record.ClaimedKeyTypeN);
+				Assert.Multiple(() =>
+				{
+					Assert.That(record.ClaimedKeyType, Is.EqualTo(KeyTypes.EC));
+					Assert.That(record.ClaimedKeyTypeN, Is.EqualTo(KeyTypes.EC));
+				});
 			}
 		}
 

@@ -41,7 +41,7 @@ namespace LinqToDB.CodeModel
 			header.Freeze();
 
 			if (_rowsCount == 0)
-				return _generatedRows = Array<string>.Empty;
+				return _generatedRows = [];
 
 			var result = new string[_rowsCount];
 

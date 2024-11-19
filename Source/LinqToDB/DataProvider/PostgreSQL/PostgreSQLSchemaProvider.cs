@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Data;
+using System.Globalization;
 using System.Linq;
 using System.Net;
 using System.Net.NetworkInformation;
@@ -135,7 +136,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		protected override List<TableInfo> GetTables(DataConnection dataConnection, GetSchemaOptions options)
 		{
 			var defaultSchema = ToDatabaseLiteral(dataConnection, options?.DefaultSchema ?? "public");
-			
+
 			var sql = $@"
 				SELECT
 					t.table_catalog || '.' || t.table_schema || '.' || t.table_name            as TableID,
@@ -211,7 +212,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		static string ToDatabaseLiteral(DataConnection dataConnection, string? str)
 		{
 			using var sb = Pools.StringBuilder.Allocate();
-			dataConnection.MappingSchema.ValueToSqlConverter.Convert(sb.Value, dataConnection.MappingSchema, SqlDataType.DbText, dataConnection.Options, str);
+			dataConnection.MappingSchema.ValueToSqlConverter.Convert(sb.Value, dataConnection.MappingSchema, SqlDataType.DbText.Type, dataConnection.Options, str);
 			return sb.Value.ToString();
 		}
 
@@ -221,20 +222,20 @@ namespace LinqToDB.DataProvider.PostgreSQL
 				new HashSet<string?>(
 					ExcludedSchemas.Where(s => !string.IsNullOrEmpty(s)).Union(_schemaSchemas),
 					StringComparer.OrdinalIgnoreCase);
-			
+
 			var includeSchemas = new HashSet<string?>(IncludedSchemas.Where(s => !string.IsNullOrEmpty(s)), StringComparer.OrdinalIgnoreCase);
-			
+
 			if (includeSchemas.Count > 0)
 			{
 				foreach (var toInclude in IncludedSchemas)
-		{
+				{
 					excludeSchemas.Remove(toInclude);
 				}
 			}
-			
+
 			if (excludeSchemas.Count == 0 && IncludedSchemas.Count == 0)
 				return "1 = 1";
-			
+
 			var schemaFilter = "";
 
 			if (excludeSchemas.Count > 0)
@@ -475,9 +476,9 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			(
 				from item in data
 
-				let name         = Convert.ToString(item.name)
-				let thisTableID  = Convert.ToString (item.thisTable)
-				let otherTableID = Convert.ToString (item.otherTable)
+				let name         = Convert.ToString(item.name, CultureInfo.InvariantCulture)
+				let thisTableID  = Convert.ToString (item.thisTable, CultureInfo.InvariantCulture)
+				let otherTableID = Convert.ToString (item.otherTable, CultureInfo.InvariantCulture)
 
 				from col in item.thisColumns
 					.Zip(item.otherColumns, (thisColumn,otherColumn) => new { thisColumn, otherColumn })
@@ -488,8 +489,8 @@ namespace LinqToDB.DataProvider.PostgreSQL
 					Name         = name,
 					ThisTableID  = thisTableID,
 					OtherTableID = otherTableID,
-					ThisColumn   = Convert.ToString(col.thisColumn)!,
-					OtherColumn  = Convert.ToString(col.otherColumn)!,
+					ThisColumn   = Convert.ToString(col.thisColumn, CultureInfo.InvariantCulture)!,
+					OtherColumn  = Convert.ToString(col.otherColumn, CultureInfo.InvariantCulture)!,
 					Ordinal      = col.ordinal
 				}
 			).ToList();
@@ -670,7 +671,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 			return typInfo;
 		}
-		
+
 		static string SimplifyDataType(string dataType)
 		{
 			var typeMatch = _matchType.Match(dataType);

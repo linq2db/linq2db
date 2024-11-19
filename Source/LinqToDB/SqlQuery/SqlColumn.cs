@@ -1,21 +1,31 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
+using System.Diagnostics;
 using System.Linq;
-using System.Text;
+using System.Threading;
 
 namespace LinqToDB.SqlQuery
 {
-	public class SqlColumn : IEquatable<SqlColumn>, ISqlExpression
+	public class SqlColumn : SqlExpressionBase
 	{
 		public SqlColumn(SelectQuery? parent, ISqlExpression expression, string? alias)
 		{
+			if (expression is SqlSearchCondition)
+			{
+
+			}
+
 			Parent      = parent;
 			_expression = expression ?? throw new ArgumentNullException(nameof(expression));
 			RawAlias    = alias;
 
 #if DEBUG
-			_columnNumber = ++_columnCounter;
+			Number = Interlocked.Increment(ref _columnCounter);
+
+			// useful for putting breakpoint when finding when SqlColumn was created
+			if (Number == 0)
+			{
+
+			}
 #endif
 		}
 
@@ -25,11 +35,12 @@ namespace LinqToDB.SqlQuery
 		}
 
 #if DEBUG
-		readonly int _columnNumber;
-		public   int  ColumnNumber => _columnNumber;
+		public int Number { get; }
+
 		static   int _columnCounter;
 #endif
 
+		[DebuggerBrowsable(DebuggerBrowsableState.Never)]
 		ISqlExpression _expression;
 
 		public ISqlExpression Expression
@@ -39,39 +50,26 @@ namespace LinqToDB.SqlQuery
 			{
 				if (_expression == value)
 					return;
-				if (value == this)
+				if (ReferenceEquals(value, this))
 					throw new InvalidOperationException();
 				_expression = value;
-				_hashCode   = null;
 			}
 		}
 
-		SelectQuery? _parent;
-
-		public SelectQuery? Parent
-		{
-			get => _parent;
-			set
-			{
-				if (_parent == value)
-					return;
-				_parent   = value;
-				_hashCode = null;
-			}
-		}
+		public SelectQuery? Parent { get; set; }
 
 		internal string? RawAlias   { get; set; }
 
 		public ISqlExpression UnderlyingExpression()
 		{
-			var current = QueryHelper.UnwrapExpression(Expression, false);
+			var current = QueryHelper.UnwrapExpression(Expression, true);
 			while (current.ElementType == QueryElementType.Column)
 			{
 				var column      = (SqlColumn)current;
 				var columnQuery = column.Parent;
 				if (columnQuery == null || columnQuery.HasSetOperators || QueryHelper.EnumerateLevelSources(columnQuery).Take(2).Count() > 1)
 					break;
-				current = QueryHelper.UnwrapExpression(column.Expression, false);
+				current = QueryHelper.UnwrapExpression(column.Expression, true);
 			}
 
 			return current;
@@ -89,7 +87,7 @@ namespace LinqToDB.SqlQuery
 			set => RawAlias = value;
 		}
 
-		private static string? GetAlias(ISqlExpression? expr)
+		static string? GetAlias(ISqlExpression? expr)
 		{
 			switch (expr)
 			{
@@ -108,73 +106,38 @@ namespace LinqToDB.SqlQuery
 			return null;
 		}
 
-		int? _hashCode;
-
-		[SuppressMessage("ReSharper", "NonReadonlyMemberInGetHashCode")]
-		public override int GetHashCode()
-		{
-			if (_hashCode.HasValue)
-				return _hashCode.Value;
-
-			var hashCode = Parent?.GetHashCode() ?? 0;
-
-			hashCode = unchecked(hashCode + (hashCode * 397) ^ Expression.GetHashCode());
-
-			_hashCode = hashCode;
-
-			return hashCode;
-		}
-
-		public bool Equals(SqlColumn? other)
-		{
-			if (other == null)
-				return false;
-
-			if (ReferenceEquals(this, other))
-				return true;
-
-			if (!Equals(Parent, other.Parent))
-				return false;
-
-			if (Expression.Equals(other.Expression))
-				return false;
-
-			return false;
-		}
-
 		public override string ToString()
 		{
 #if OVERRIDETOSTRING
-			var sb  = new StringBuilder();
-			var dic = new Dictionary<IQueryElement, IQueryElement>();
+			var writer = new QueryElementTextWriter(NullabilityContext.GetContext(Parent));
 
-			sb
+			writer
 				.Append('t')
 				.Append(Parent?.SourceID ?? -1)
 #if DEBUG
-				.Append('[').Append(_columnNumber).Append(']')
+				.Append("[Id:").Append(Number).Append(']')
 #endif
 				.Append('.')
 				.Append(Alias ?? "c")
-				.Append(" => ");
-
-			Expression.ToString(sb, dic);
+				.Append(" => ")
+				.AppendElement(Expression);
 
 			var underlying = UnderlyingExpression();
 			if (!ReferenceEquals(underlying, Expression))
 			{
-				sb.Append(" == ");
-				underlying.ToString(sb, dic);
+				writer
+					.Append(" := ")
+					.AppendElement(underlying);
 			}
 
-			return sb.ToString();
+			if (CanBeNullable(writer.Nullability))
+				writer.Append('?');
+
+			return writer.ToString();
 
 #else
-			if (Expression is SqlField)
-			{
-				using var sb = Common.Internal.Pools.StringBuilder.Allocate();
-				return ((IQueryElement)this).ToString(sb.Value, new Dictionary<IQueryElement, IQueryElement>()).ToString();
-			}
+			if (Expression is SqlField or SqlColumn)
+				return this.ToDebugString();
 
 			return base.ToString()!;
 #endif
@@ -182,9 +145,33 @@ namespace LinqToDB.SqlQuery
 
 		#region ISqlExpression Members
 
-		public bool CanBeNull => Expression.CanBeNull;
+		public override bool CanBeNullable(NullabilityContext nullability)
+		{
+			if (nullability.CanBeNull(this))
+				return true;
 
-		public bool Equals(ISqlExpression other, Func<ISqlExpression,ISqlExpression,bool> comparer)
+			if (Parent != null)
+			{
+				if (Parent.HasSetOperators)
+				{
+					var index = Parent.Select.Columns.IndexOf(this);
+					if (index < 0) return true;
+
+					foreach (var set in Parent.SetOperators)
+					{
+						if (index >= set.SelectQuery.Select.Columns.Count)
+							return true;
+
+						if (set.SelectQuery.Select.Columns[index].CanBeNullable(nullability))
+							return true;
+					}
+				}
+			}
+
+			return false;
+		}
+
+		public override bool Equals(ISqlExpression other, Func<ISqlExpression,ISqlExpression,bool> comparer)
 		{
 			if (this == other)
 				return true;
@@ -199,58 +186,18 @@ namespace LinqToDB.SqlQuery
 				return false;
 
 			return
-				Expression.Equals(
-					otherColumn.Expression,
-					(ex1, ex2) =>
-					{
-//							var c = ex1 as Column;
-//							if (c != null && c.Parent != Parent)
-//								return false;
-//							c = ex2 as Column;
-//							if (c != null && c.Parent != Parent)
-//								return false;
-						return comparer(ex1, ex2);
-					})
-				&&
+				Expression.Equals(otherColumn.Expression, comparer) &&
 				comparer(this, other);
 		}
 
-		public int   Precedence => SqlQuery.Precedence.Primary;
-		public Type? SystemType => Expression.SystemType;
+		public override int   Precedence => SqlQuery.Precedence.Primary;
+		public override Type? SystemType => Expression.SystemType;
 
 		#endregion
 
-		#region IEquatable<ISqlExpression> Members
+		public override QueryElementType ElementType => QueryElementType.Column;
 
-		bool IEquatable<ISqlExpression>.Equals(ISqlExpression? other)
-		{
-			if (this == other)
-				return true;
-
-			return other is SqlColumn column && Equals(column);
-		}
-
-		#endregion
-
-		#region ISqlExpressionWalkable Members
-
-		public ISqlExpression Walk<TContext>(WalkOptions options, TContext context, Func<TContext, ISqlExpression, ISqlExpression> func)
-		{
-			Expression = Expression.Walk(options, context, func)!;
-
-			if (options.ProcessParent)
-				Parent = (SelectQuery)func(context, Parent!);
-
-			return func(context, this);
-		}
-
-		#endregion
-
-		#region IQueryElement Members
-
-		public QueryElementType ElementType => QueryElementType.Column;
-
-		StringBuilder IQueryElement.ToString(StringBuilder sb, Dictionary<IQueryElement,IQueryElement> dic)
+		public override QueryElementTextWriter ToString(QueryElementTextWriter writer)
 		{
 			var parentIndex = -1;
 			if (Parent != null)
@@ -258,18 +205,19 @@ namespace LinqToDB.SqlQuery
 				parentIndex = Parent.Select.Columns.IndexOf(this);
 			}
 
-			sb
+			writer
 				.Append('t')
 				.Append(Parent?.SourceID ?? - 1)
 #if DEBUG
-				.Append('[').Append(_columnNumber).Append(']')
+				.Append('[').Append(Number).Append(']')
 #endif
 				.Append('.')
-				.Append(Alias ?? "c" + (parentIndex >= 0 ? parentIndex + 1 : parentIndex));
+				.Append(Alias ?? FormattableString.Invariant($"c{(parentIndex >= 0 ? parentIndex + 1 : parentIndex)}"));
 
-			return sb;
+				if (!Expression.CanBeNullable(writer.Nullability) && CanBeNullable(writer.Nullability))
+					writer.Append('?');
+
+			return writer;
 		}
-
-		#endregion
 	}
 }

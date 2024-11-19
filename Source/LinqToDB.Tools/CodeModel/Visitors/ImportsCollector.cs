@@ -23,11 +23,7 @@ namespace LinqToDB.CodeModel
 		/// <summary>
 		/// Gets all discovered imports.
 		/// </summary>
-#if NET45
-		public ICollection<IReadOnlyList<CodeIdentifier>>         Imports => _imports;
-#else
 		public IReadOnlyCollection<IReadOnlyList<CodeIdentifier>> Imports => _imports;
-#endif
 
 		/// <summary>
 		/// Reset visitor state.

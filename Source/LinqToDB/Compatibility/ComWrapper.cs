@@ -1,13 +1,15 @@
 ﻿using System;
 using System.Dynamic;
+using System.Globalization;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Security;
 using System.Threading;
-using LinqToDB.Common;
 
 namespace LinqToDB
 {
+	using Common;
+
 	// implementation based on code from https://github.com/dotnet/runtime/issues/12587
 	/// <summary>
 	/// This class is used as COM object wrapper instead of dynamic keyword, as dynamic for COM is not supported on .net core till v5.
@@ -56,21 +58,21 @@ namespace LinqToDB
 
 		public override bool TryGetMember(GetMemberBinder binder, out object? result)
 		{
-			result = _instance.GetType().InvokeMember(binder.Name, BindingFlags.GetProperty, Type.DefaultBinder, _instance, Array<object?>.Empty);
+			result = _instance.GetType().InvokeMember(binder.Name, BindingFlags.GetProperty, Type.DefaultBinder, _instance, [], null, CultureInfo.InvariantCulture, null);
 
 			return true;
 		}
 
 		public override bool TrySetMember(SetMemberBinder binder, object? value)
 		{
-			_instance.GetType().InvokeMember(binder.Name, BindingFlags.SetProperty, Type.DefaultBinder, _instance, new object?[] { value });
+			_instance.GetType().InvokeMember(binder.Name, BindingFlags.SetProperty, Type.DefaultBinder, _instance, new object?[] { value }, null, CultureInfo.InvariantCulture, null);
 
 			return true;
 		}
 
 		public override bool TryInvokeMember(InvokeMemberBinder binder, object?[]? args, out object? result)
 		{
-			result = _instance.GetType().InvokeMember(binder.Name, BindingFlags.InvokeMethod, Type.DefaultBinder, _instance, args);
+			result = _instance.GetType().InvokeMember(binder.Name, BindingFlags.InvokeMethod, Type.DefaultBinder, _instance, args, null, CultureInfo.InvariantCulture, null);
 
 			return true;
 		}

@@ -12,7 +12,7 @@ namespace Tests.Exceptions
 		public void NonNullableMax1([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
-				Assert.Throws(typeof(InvalidOperationException), () => db.Parent.Where(_ => _.ParentID < 0).Max(_ => _.ParentID));
+				Assert.Throws<InvalidOperationException>(() => db.Parent.Where(_ => _.ParentID < 0).Max(_ => _.ParentID));
 		}
 
 		[Test]
@@ -35,7 +35,7 @@ namespace Tests.Exceptions
 		public void NonNullableAverage([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
-				Assert.Throws(typeof(InvalidOperationException), () => db.Parent.Where(_ => _.ParentID < 0).Average(_ => _.ParentID));
+				Assert.Throws<InvalidOperationException>(() => db.Parent.Where(_ => _.ParentID < 0).Average(_ => _.ParentID));
 		}
 	}
 }

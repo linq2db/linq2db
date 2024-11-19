@@ -2,38 +2,51 @@
 using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
+using System.Globalization;
+using System.Threading;
+using System.Threading.Tasks;
 using System.Xml;
 using System.Xml.Linq;
-using System.Threading.Tasks;
-using System.Threading;
 
 namespace LinqToDB.DataProvider.Sybase
 {
 	using Common;
 	using Data;
 	using Extensions;
+	using Linq.Translation;
 	using Mapping;
 	using SchemaProvider;
 	using SqlProvider;
+	using Translation;
 
-	sealed class SybaseDataProviderNative  : SybaseDataProvider { public SybaseDataProviderNative()  : base(ProviderName.Sybase)        {} }
-	sealed class SybaseDataProviderManaged : SybaseDataProvider { public SybaseDataProviderManaged() : base(ProviderName.SybaseManaged) {} }
+	sealed class SybaseDataProviderNative  : SybaseDataProvider { public SybaseDataProviderNative()  : base(ProviderName.Sybase,        SybaseProvider.Unmanaged ) {} }
+	sealed class SybaseDataProviderManaged : SybaseDataProvider { public SybaseDataProviderManaged() : base(ProviderName.SybaseManaged, SybaseProvider.DataAction) {} }
 
 	public abstract class SybaseDataProvider : DynamicDataProviderBase<SybaseProviderAdapter>
 	{
 		#region Init
 
-		protected SybaseDataProvider(string name)
-			: base(name, MappingSchemaInstance.Get(name), SybaseProviderAdapter.GetInstance(name))
+		protected SybaseDataProvider(string name, SybaseProvider provider)
+			: this(name, SybaseProviderAdapter.GetInstance(provider == SybaseProvider.AutoDetect ? provider = SybaseProviderDetector.DetectProvider() : provider))
+		{
+		}
+
+		protected SybaseDataProvider(string name, SybaseProviderAdapter adapter)
+			: base(name, MappingSchemaInstance.Get(name), adapter)
 		{
 			SqlProviderFlags.AcceptsTakeAsParameter           = false;
 			SqlProviderFlags.IsSkipSupported                  = false;
 			SqlProviderFlags.IsSubQueryTakeSupported          = false;
 			SqlProviderFlags.CanCombineParameters             = false;
-			SqlProviderFlags.IsSybaseBuggyGroupBy             = true;
 			SqlProviderFlags.IsCrossJoinSupported             = false;
-			SqlProviderFlags.IsDistinctOrderBySupported       = false;
 			SqlProviderFlags.IsDistinctSetOperationsSupported = false;
+			SqlProviderFlags.IsWindowFunctionsSupported       = false;
+			SqlProviderFlags.IsDerivedTableOrderBySupported   = false;
+			SqlProviderFlags.IsUpdateTakeSupported            = true;
+
+			SqlProviderFlags.SupportedCorrelatedSubqueriesLevel        = 1;
+			SqlProviderFlags.IsCorrelatedSubQueryTakeSupported         = false;
+			SqlProviderFlags.IsJoinDerivedTableWithTakeInvalid         = true;
 
 			SetCharField("char",  (r,i) => r.GetString(i).TrimEnd(' '));
 			SetCharField("nchar", (r,i) => r.GetString(i).TrimEnd(' '));
@@ -85,6 +98,11 @@ namespace LinqToDB.DataProvider.Sybase
 			TableOptions.CreateIfNotExists          |
 			TableOptions.DropIfExists;
 
+		protected override IMemberTranslator CreateMemberTranslator()
+		{
+			return new SybaseMemberTranslator();
+		}
+
 		public override ISqlBuilder CreateSqlBuilder(MappingSchema mappingSchema, DataOptions dataOptions)
 		{
 			return new SybaseSqlBuilder(this, mappingSchema, dataOptions, GetSqlOptimizer(dataOptions), SqlProviderFlags);
@@ -129,13 +147,13 @@ namespace LinqToDB.DataProvider.Sybase
 
 				case DataType.Xml        :
 					dataType = dataType.WithDataType(DataType.NVarChar);
-						 if (value is XDocument      ) value = value.ToString();
+						 if (value is XDocument  xdoc) value = xdoc.ToString();
 					else if (value is XmlDocument xml) value = xml.InnerXml;
 					break;
 
 				case DataType.Guid       :
 					if (value != null)
-						value = value.ToString();
+						value = string.Format(CultureInfo.InvariantCulture, "{0}", value);
 					dataType = dataType.WithDataType(DataType.Char);
 					parameter.Size = 36;
 					break;
@@ -148,8 +166,8 @@ namespace LinqToDB.DataProvider.Sybase
 				case DataType.Char       :
 				case DataType.NChar      :
 					if (Name == ProviderName.Sybase)
-						if (value is char)
-							value = value.ToString();
+						if (value is char chr)
+							value = chr.ToString();
 					break;
 
 #if NET6_0_OR_GREATER
@@ -245,7 +263,6 @@ namespace LinqToDB.DataProvider.Sybase
 				cancellationToken);
 		}
 
-#if NATIVE_ASYNC
 		public override Task<BulkCopyRowsCopied> BulkCopyAsync<T>(DataOptions options, ITable<T> table,
 			IAsyncEnumerable<T> source, CancellationToken cancellationToken)
 		{
@@ -260,7 +277,6 @@ namespace LinqToDB.DataProvider.Sybase
 				source,
 				cancellationToken);
 		}
-#endif
 
 		#endregion
 	}

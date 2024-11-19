@@ -9,7 +9,9 @@ namespace LinqToDB.DataProvider.SqlCe
 
 	public static class SqlCeTools
 	{
-		static readonly Lazy<IDataProvider> _sqlCeDataProvider = DataConnection.CreateDataProvider<SqlCeDataProvider>();
+		enum Fake { };
+
+		static readonly Lazy<IDataProvider> _sqlCeDataProvider = ProviderDetectorBase<Fake, Fake>.CreateDataProvider<SqlCeDataProvider>();
 
 		internal static IDataProvider? ProviderDetector(ConnectionOptions options)
 		{
@@ -72,16 +74,5 @@ namespace LinqToDB.DataProvider.SqlCe
 
 			DataTools.DropFileDatabase(databaseName, ".sdf");
 		}
-
-		#region BulkCopy
-
-		[Obsolete("Use SqlCeOptions.Default.BulkCopyType instead.")]
-		public static BulkCopyType DefaultBulkCopyType
-		{
-			get => SqlCeOptions.Default.BulkCopyType;
-			set => SqlCeOptions.Default = SqlCeOptions.Default with { BulkCopyType = value };
-		}
-
-		#endregion
 	}
 }

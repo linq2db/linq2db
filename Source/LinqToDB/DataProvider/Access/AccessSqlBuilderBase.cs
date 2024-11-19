@@ -4,6 +4,7 @@ using System.Text;
 
 namespace LinqToDB.DataProvider.Access
 {
+	using Common;
 	using Extensions;
 	using Mapping;
 	using SqlProvider;
@@ -56,129 +57,48 @@ namespace LinqToDB.DataProvider.Access
 			return "TOP {0}";
 		}
 
-		protected override void BuildSql()
-		{
-			var selectQuery = Statement.SelectQuery;
-
-			if (selectQuery != null)
-			{
-				if (selectQuery.From.Tables.Count == 0 && selectQuery.Select.Columns.Count == 1)
-				{
-					if (selectQuery.Select.Columns[0].Expression is SqlFunction func)
-					{
-						if (func.Name == "Iif" && func.Parameters.Length == 3 && func.Parameters[0] is SqlSearchCondition sc)
-						{
-							if (sc.Conditions.Count == 1 && sc.Conditions[0].Predicate is SqlPredicate.FuncLike p)
-							{
-								if (p.Function.Name == "EXISTS")
-								{
-									BuildAnyAsCount(selectQuery);
-									return;
-								}
-							}
-						}
-					}
-					else if (selectQuery.Select.Columns[0].Expression is SqlSearchCondition sc)
-					{
-						if (sc.Conditions.Count == 1)
-						{
-							switch (sc.Conditions[0].Predicate)
-							{
-								case SqlPredicate.FuncLike { Function.Name: "EXISTS" } :
-									BuildAnyAsCount(selectQuery);
-									return;
-								case SqlPredicate.InSubQuery:
-									BuildInAsCount(selectQuery);
-									return;
-							}
-						}
-					}
-				}
-			}
-
-			base.BuildSql();
-		}
-
-		SqlColumn? _selectColumn;
-
-		void BuildAnyAsCount(SelectQuery selectQuery)
-		{
-			SqlSearchCondition cond;
-
-			if (selectQuery.Select.Columns[0].Expression is SqlFunction func)
-			{
-				cond  = (SqlSearchCondition)func.Parameters[0];
-			}
-			else
-			{
-				cond  = (SqlSearchCondition)selectQuery.Select.Columns[0].Expression;
-			}
-
-			var exist = ((SqlPredicate.FuncLike)cond.Conditions[0].Predicate).Function;
-			var query = (SelectQuery)exist.Parameters[0];
-
-			_selectColumn = new SqlColumn(selectQuery, new SqlExpression(cond.Conditions[0].IsNot ? "Count(*) = 0" : "Count(*) > 0"), selectQuery.Select.Columns[0].Alias);
-
-			BuildSql(0, new SqlSelectStatement(query), StringBuilder, OptimizationContext);
-
-			_selectColumn = null;
-		}
-
-		void BuildInAsCount(SelectQuery selectQuery)
-		{
-			SqlSearchCondition cond;
-
-			if (selectQuery.Select.Columns[0].Expression is SqlFunction func)
-			{
-				cond  = (SqlSearchCondition)func.Parameters[0];
-			}
-			else
-			{
-				cond  = (SqlSearchCondition)selectQuery.Select.Columns[0].Expression;
-			}
-
-			var predicate = (SqlPredicate.InSubQuery)cond.Conditions[0].Predicate;
-			var query     = predicate.SubQuery;
-
-			query.Where.SearchCondition.Conditions.Add(
-				new (false, new SqlPredicate.ExprExpr(query.Select.Columns[0].Expression, SqlPredicate.Operator.Equal, predicate.Expr1, true)));
-
-			_selectColumn = new SqlColumn(selectQuery, new SqlExpression(cond.Conditions[0].IsNot ? "Count(*) = 0" : "Count(*) > 0"), selectQuery.Select.Columns[0].Alias);
-
-			BuildSql(0, new SqlSelectStatement(query), StringBuilder, OptimizationContext);
-
-			_selectColumn = null;
-		}
-
-		protected override IEnumerable<SqlColumn> GetSelectedColumns(SelectQuery selectQuery)
-		{
-			if (_selectColumn != null)
-				return new[] { _selectColumn };
-
-			if (NeedSkip(selectQuery.Select.TakeValue, selectQuery.Select.SkipValue) && !selectQuery.OrderBy.IsEmpty)
-				return AlternativeGetSelectedColumns(selectQuery, base.GetSelectedColumns(selectQuery));
-
-			return base.GetSelectedColumns(selectQuery);
-		}
-
 		#endregion
 
-		protected override bool ParenthesizeJoin(List<SqlJoinedTable> joins)
-		{
-			return true;
-		}
+		protected override bool ParenthesizeJoin(List<SqlJoinedTable> joins) => true;
 
 		protected override void BuildBinaryExpression(SqlBinaryExpression expr)
 		{
 			switch (expr.Operation[0])
 			{
 				case '%': expr = new SqlBinaryExpression(expr.SystemType, expr.Expr1, "MOD", expr.Expr2, Precedence.Additive - 1); break;
-				case '&':
-				case '|':
+				case '&': expr = new SqlBinaryExpression(expr.SystemType, expr.Expr1, "AND", expr.Expr2, Precedence.Bitwise); break;
+				case '|': expr = new SqlBinaryExpression(expr.SystemType, expr.Expr1, "OR" , expr.Expr2, Precedence.Bitwise); break;
 				case '^': throw new SqlException("Operator '{0}' is not supported by the {1}.", expr.Operation, GetType().Name);
 			}
 
 			base.BuildBinaryExpression(expr);
+		}
+
+		protected override void BuildColumnExpression(SelectQuery? selectQuery, ISqlExpression expr, string? alias,
+			ref bool                                               addAlias)
+		{
+			if (expr is SqlValue { Value: null } sqlValue)
+			{
+				// NULL value typization. Critical for UNION, UNION ALL queries.
+				//
+				var type = sqlValue.ValueType.SystemType.ToNullableUnderlying();
+
+				object? defaultValue;
+				if (type == typeof(string))
+					defaultValue = "";
+				else
+					defaultValue = DefaultValue.GetValue(type);
+
+				if (defaultValue != null)
+				{
+					StringBuilder.Append("IIF(False, ");
+					BuildValue(sqlValue.ValueType, defaultValue);
+					StringBuilder.Append(", NULL)");
+					return;
+				}
+			}
+
+			base.BuildColumnExpression(selectQuery, expr, alias, ref addAlias);
 		}
 
 		protected override void BuildIsDistinctPredicate(SqlPredicate.IsDistinct expr)
@@ -196,110 +116,27 @@ namespace LinqToDB.DataProvider.Access
 				.Append(expr.IsNot ? '0' : '1');
 		}
 
-		protected override void BuildFunction(SqlFunction func)
-		{
-			switch (func.Name)
-			{
-				case "Coalesce"  :
-
-					if (func.Parameters.Length > 2)
-					{
-						var parms = new ISqlExpression[func.Parameters.Length - 1];
-
-						Array.Copy(func.Parameters, 1, parms, 0, parms.Length);
-						BuildFunction(new SqlFunction(func.SystemType, func.Name, func.Parameters[0],
-							new SqlFunction(func.SystemType, func.Name, parms)));
-						return;
-					}
-
-					var sc = new SqlSearchCondition();
-
-					sc.Conditions.Add(new SqlCondition(false, new SqlPredicate.IsNull(func.Parameters[0], false)));
-
-					func = new SqlFunction(func.SystemType, "Iif", sc, func.Parameters[1], func.Parameters[0]);
-
-					break;
-
-				case "CASE"      : func = ConvertCase(func.SystemType, func.Parameters, 0); break;
-				case "CharIndex" :
-					func = func.Parameters.Length == 2?
-						new SqlFunction(func.SystemType, "InStr", new SqlValue(1),    func.Parameters[1], func.Parameters[0], new SqlValue(1)):
-						new SqlFunction(func.SystemType, "InStr", func.Parameters[2], func.Parameters[1], func.Parameters[0], new SqlValue(1));
-					break;
-
-				case "Convert"   :
-					switch (func.SystemType.ToUnderlying().GetTypeCodeEx())
-					{
-						case TypeCode.String   : func = new SqlFunction(func.SystemType, "CStr" , func.Parameters[1]); break;
-						case TypeCode.Boolean  :
-						{
-							var newFunc = new SqlFunction(func.SystemType, "CBool", func.Parameters[1]);
-							if (func.Parameters[1].CanBeNull)
-							{
-								var isNull = new SqlSearchCondition();
-								isNull.Conditions.Add(new SqlCondition(false, new SqlPredicate.IsNull(func.Parameters[1], false)));
-
-								newFunc = new SqlFunction(func.SystemType, "CASE", false, true, isNull, new SqlValue(func.SystemType, null), newFunc)
-								{
-									CanBeNull = true
-								};
-							}
-
-							func = newFunc;
-							break;
-						}
-						case TypeCode.DateTime :
-							if (IsDateDataType(func.Parameters[0], "Date"))
-								func = new SqlFunction(func.SystemType, "DateValue", func.Parameters[1]);
-							else if (IsTimeDataType(func.Parameters[0]))
-								func = new SqlFunction(func.SystemType, "TimeValue", func.Parameters[1]);
-							else
-								func = new SqlFunction(func.SystemType, "CDate", func.Parameters[1]);
-							break;
-
-						default:
-							if (func.SystemType == typeof(DateTime))
-								goto case TypeCode.DateTime;
-
-							BuildExpression(func.Parameters[1]);
-
-							return;
-					}
-
-					break;
-			}
-
-			base.BuildFunction(func);
-		}
-
-		SqlFunction ConvertCase(Type systemType, ISqlExpression[] parameters, int start)
-		{
-			var len = parameters.Length - start;
-
-			if (len < 2)
-				throw new SqlException("CASE statement is not supported by the {0}.", GetType().Name);
-
-			return new SqlFunction(systemType, "Iif",
-				parameters[start],
-				parameters[start + 1],
-				len switch
-				{
-					2 => parameters[start                          + 1],
-					3 => parameters[start                          + 2],
-					_ => ConvertCase(systemType, parameters, start + 2)
-				});
-		}
-
-		protected override void BuildUpdateClause(SqlStatement statement, SelectQuery selectQuery, SqlUpdateClause updateClause)
+		protected override void BuildUpdateClause(SqlStatement statement, SelectQuery selectQuery,
+			SqlUpdateClause                                    updateClause)
 		{
 			base.BuildFromClause(statement, selectQuery);
 			StringBuilder.Remove(0, 4).Insert(0, "UPDATE");
 			base.BuildUpdateSet(selectQuery, updateClause);
 		}
 
-		protected override void BuildDataTypeFromDataType(SqlDataType type, bool forCreateTable, bool canBeNull)
+		protected override void BuildSqlCaseExpression(SqlCaseExpression caseExpression)
 		{
-			switch (type.Type.DataType)
+			BuildExpression(ConvertCaseToConditions(caseExpression, 0));
+		}
+
+		protected override void BuildSqlConditionExpression(SqlConditionExpression conditionExpression)
+		{
+			BuildSqlConditionExpressionAsFunction("IIF", conditionExpression);
+		}
+
+		protected override void BuildDataTypeFromDataType(DbDataType type, bool forCreateTable, bool canBeNull)
+		{
+			switch (type.DataType)
 			{
 				case DataType.DateTime2 : StringBuilder.Append("timestamp");                               break;
 				default                 : base.BuildDataTypeFromDataType(type, forCreateTable, canBeNull); break;
@@ -407,6 +244,30 @@ namespace LinqToDB.DataProvider.Access
 
 		protected override void StartStatementQueryExtensions(SelectQuery? selectQuery)
 		{
+		}
+
+		protected override void BuildParameter(SqlParameter parameter)
+		{
+			if (BuildStep == Step.TypedExpression || !parameter.NeedsCast)
+			{
+				base.BuildParameter(parameter);
+				return;
+			}
+
+			if (parameter.NeedsCast)
+			{
+				var saveStep = BuildStep;
+				BuildStep = Step.TypedExpression;
+
+				StringBuilder.Append("CVar(");
+				base.BuildParameter(parameter);
+				StringBuilder.Append(')');
+				BuildStep = saveStep;
+
+				return;
+			}
+
+			base.BuildParameter(parameter);
 		}
 	}
 }

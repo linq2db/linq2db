@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -157,7 +158,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			public void Build(Sql.ISqExtensionBuilder builder)
 			{
 				var dataType = builder.GetObjectValue("data_type");
-				builder.AddExpression("data_type", dataType is SqlType ? dataType.ToString()! : ((Func<SqlType>)dataType)().ToString());
+				builder.AddExpression("data_type", dataType is SqlType ? string.Format(CultureInfo.InvariantCulture, "{0}", dataType) : ((Func<SqlType>)dataType)().ToString());
 			}
 		}
 
@@ -1717,12 +1718,11 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <exception cref="InvalidOperationException" />
 		/// <remarks>Only available on SQL Server 2016 or later, and compatibility mode for the database must be set to 130 or higher</remarks>
 		[Sql.TableExpression("OPENJSON({2}, {3}) {1}")]
-		public static IQueryable<JsonData> OpenJson(string? json, string path)
+		public static IQueryable<JsonData> OpenJson(string? json, [ExprParameter(DoNotParameterize = true)] string path)
 		{
 			throw new InvalidOperationException($"'{nameof(OpenJson)}' is a server side only function.");
 		}
 
-#if !NET45
 		/// <summary>
 		/// <para><b><see href="https://docs.microsoft.com/en-us/sql/t-sql/functions/OPENJSON-transact-sql">OPENJSON (Transact-SQL)</see></b></para>
 		/// <para>A table-valued function that parses JSON text and returns objects and properties from the JSON input as rows and columns.</para>
@@ -1734,10 +1734,9 @@ namespace LinqToDB.DataProvider.SqlServer
 		[ExpressionMethod(nameof(GenerateOpenJsonStringImpl))]
 		public static IQueryable<JsonData> OpenJson(this IDataContext dc, [ExprParameter] string? json)
 		{
-			return (_generateOpenJsonStringImpl ??= GenerateOpenJsonStringImpl().CompileExpression())(dc, json);
+			return dc.QueryFromExpression(() => dc.OpenJson(json));
 		}
 
-		private static Func<IDataContext, string?, IQueryable<JsonData>>? _generateOpenJsonStringImpl;
 		private static Expression<Func<IDataContext, string?, IQueryable<JsonData>>> GenerateOpenJsonStringImpl()
 		{
 			return (dc, json) => dc.FromSql<JsonData>($"OPENJSON({json})");
@@ -1755,15 +1754,13 @@ namespace LinqToDB.DataProvider.SqlServer
 		[ExpressionMethod(nameof(GenerateOpenJsonStringStringImpl))]
 		public static IQueryable<JsonData> OpenJson(this IDataContext dc, [ExprParameter] string? json, [ExprParameter] string path)
 		{
-			return (_generateOpenJsonStringStringImpl ??= GenerateOpenJsonStringStringImpl().CompileExpression())(dc, json, path);
+			return dc.QueryFromExpression(() => dc.OpenJson(json, path));
 		}
 
-		private static Func<IDataContext, string?, string, IQueryable<JsonData>>? _generateOpenJsonStringStringImpl;
 		private static Expression<Func<IDataContext, string?, string, IQueryable<JsonData>>> GenerateOpenJsonStringStringImpl()
 		{
 			return (dc, json, path) => dc.FromSql<JsonData>($"OPENJSON({json}, {path})");
 		}
-#endif
 
 		#endregion
 
@@ -4239,7 +4236,7 @@ namespace LinqToDB.DataProvider.SqlServer
 
 					ps[i] = prop.ParameterType == typeof(T)
 						? new SqlExpression('\'' + builder.GetValue<T>(prop.Name!)?.ToString() + '\'', Precedence.Primary)
-						: builder.GetExpression(prop.Name!);
+						: builder.GetExpression(prop.Name!)!;
 				}
 
 				builder.ResultExpression = new SqlFunction(method.ReturnType, builder.Expression, ps);

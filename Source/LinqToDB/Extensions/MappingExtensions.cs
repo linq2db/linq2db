@@ -1,10 +1,12 @@
 ﻿using System;
+using System.Globalization;
 using System.Reflection;
 using System.Text;
 
 namespace LinqToDB.Extensions
 {
 	using Common;
+	using Data;
 	using Mapping;
 	using SqlQuery;
 
@@ -17,8 +19,25 @@ namespace LinqToDB.Extensions
 			return new SqlValue(columnDescriptor.GetDbDataType(true), providerValue);
 		}
 
-		public static SqlValue GetSqlValue(this MappingSchema mappingSchema, Type systemType, object? originalValue)
+		public static SqlValue GetSqlValue<T>(this MappingSchema mappingSchema, DbDataType type, T originalValue)
+			where T: notnull
 		{
+			var converter = mappingSchema.GetConverter<T, DataParameter>(ConversionType.ToDatabase);
+
+			if (converter != null)
+			{
+				var p = converter(originalValue);
+				return new SqlValue(p.DbDataType, p.Value);
+			}
+
+			return new SqlValue(type, originalValue);
+		}
+
+		public static SqlValue GetSqlValue(this MappingSchema mappingSchema, Type systemType, object? originalValue, DbDataType? columnType)
+		{
+			if (originalValue is DataParameter p)
+				return new SqlValue(p.Value == null ? p.GetOrSetDbDataType(columnType) : p.DbDataType, p.Value);
+
 			var underlyingType = systemType.ToNullableUnderlying();
 
 			if (!mappingSchema.ValueToSqlConverter.CanConvert(underlyingType))
@@ -31,7 +50,7 @@ namespace LinqToDB.Extensions
 
 						if (Configuration.UseEnumValueNameForStringColumns && type == typeof(string) &&
 						    mappingSchema.GetMapValues(underlyingType)             == null)
-							return new SqlValue(type, originalValue!.ToString());
+							return new SqlValue(type, string.Format(CultureInfo.InvariantCulture, "{0}", originalValue));
 
 						return new SqlValue(type, Converter.ChangeType(originalValue, type, mappingSchema));
 					}
@@ -41,10 +60,12 @@ namespace LinqToDB.Extensions
 			if (systemType == typeof(object) && originalValue != null)
 				systemType = originalValue.GetType();
 
-			return new SqlValue(systemType, originalValue);
+			var valueDbType = originalValue == null ? columnType ?? new DbDataType(systemType) : new DbDataType(systemType);
+
+			return new SqlValue(valueDbType, originalValue);
 		}
 
-		public static bool TryConvertToSql(this MappingSchema mappingSchema, StringBuilder stringBuilder, SqlDataType? dataType, DataOptions options, object? value)
+		public static bool TryConvertToSql(this MappingSchema mappingSchema, StringBuilder stringBuilder, DbDataType? dataType, DataOptions options, object? value)
 		{
 			var sqlConverter = mappingSchema.ValueToSqlConverter;
 
@@ -66,7 +87,7 @@ namespace LinqToDB.Extensions
 
 						if (Configuration.UseEnumValueNameForStringColumns && type == typeof(string) &&
 						    mappingSchema.GetMapValues(underlyingType)             == null)
-							value = value.ToString();
+							value = string.Format(CultureInfo.InvariantCulture, "{0}", value);
 						else
 							value = Converter.ChangeType(value, type, mappingSchema);
 					}
@@ -77,7 +98,7 @@ namespace LinqToDB.Extensions
 		}
 
 		public static void ConvertToSqlValue(this MappingSchema mappingSchema, StringBuilder stringBuilder,
-			SqlDataType?                                        dataType,      DataOptions   options, object? value)
+			DbDataType? dataType, DataOptions options, object? value)
 		{
 			if (!mappingSchema.TryConvertToSql(stringBuilder, dataType, options, value))
 				throw new LinqToDBException($"Cannot convert value of type {value?.GetType()} to SQL");

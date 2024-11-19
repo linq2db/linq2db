@@ -2,17 +2,23 @@
 using System;
 using System.Collections.Concurrent;
 using System.Diagnostics;
+using System.Security.Authentication;
+
 using LinqToDB;
 using LinqToDB.Interceptors;
 using LinqToDB.Mapping;
 using LinqToDB.Remote;
 using LinqToDB.Remote.Grpc;
+
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+
 using NUnit.Framework;
+
 using ProtoBuf.Grpc.Server;
+
 using Tests.Model;
 using Tests.Model.Remote.Grpc;
 
@@ -29,33 +35,37 @@ namespace Tests.Remote.ServerContainer
 
 		private ConcurrentDictionary<int, TestGrpcLinqService> _openHosts = new();
 
-		public GrpcServerContainer()
+		private static string GetServiceUrl(int port)
 		{
+#if NET6_0
+			// https://learn.microsoft.com/en-us/aspnet/core/grpc/troubleshoot?view=aspnetcore-7.0#unable-to-start-aspnet-core-grpc-app-on-macos
+			if (OperatingSystem.IsMacOS())
+			{
+				return $"http://localhost:{port}";
+			}
+#endif
+			return $"https://localhost:{port}";
 		}
 
 		public ITestDataContext Prepare(
 			MappingSchema? ms,
 			IInterceptor? interceptor,
-			bool suppressSequentialAccess,
 			string configuration,
 			Func<DataOptions,DataOptions>? optionBuilder)
 		{
-			var service = OpenHost(ms, interceptor, suppressSequentialAccess);
-
-			service.SuppressSequentialAccess = suppressSequentialAccess;
+			var service = OpenHost(ms, interceptor);
 
 			if (interceptor != null)
 			{
 				service.AddInterceptor(interceptor);
 			}
 
-			var url = $"https://localhost:{GetPort()}";
+			var url = GetServiceUrl(GetPort());
 
 			var dx = new TestGrpcDataContext(
 				url,
 				() =>
 				{
-					service.SuppressSequentialAccess = false;
 					if (interceptor != null)
 						service.RemoveInterceptor();
 				},
@@ -67,13 +77,10 @@ namespace Tests.Remote.ServerContainer
 			if (ms != null)
 				dx.MappingSchema = MappingSchema.CombineSchemas(ms, dx.MappingSchema);
 
-			if (configuration.IsAnyOf(TestProvName.AllMariaDB))
-				dx.MappingSchema = MappingSchema.CombineSchemas(TestBase._mariaDBSchema, dx.MappingSchema);
-
 			return dx;
 		}
 
-		private TestGrpcLinqService OpenHost(MappingSchema? ms, IInterceptor? interceptor, bool suppressSequentialAccess)
+		private TestGrpcLinqService OpenHost(MappingSchema? ms, IInterceptor? interceptor)
 		{
 			var port = GetPort();
 
@@ -92,13 +99,11 @@ namespace Tests.Remote.ServerContainer
 				}
 
 				service = new TestGrpcLinqService(
-					new TestLinqService()
+					new LinqService()
 					{
 						AllowUpdates = true
 					},
-					interceptor,
-					suppressSequentialAccess
-					);
+					interceptor);
 
 				if (ms != null)
 					service.MappingSchema = ms;
@@ -111,7 +116,18 @@ namespace Tests.Remote.ServerContainer
 				{
 					webBuilder.UseStartup<Startup>();
 
-					var url = $"https://localhost:{port}";
+#if NET6_0
+					// https://learn.microsoft.com/en-us/aspnet/core/grpc/troubleshoot?view=aspnetcore-7.0#unable-to-start-aspnet-core-grpc-app-on-macos
+					if (OperatingSystem.IsMacOS())
+					{
+						webBuilder.ConfigureKestrel(o =>
+						{
+							o.ListenLocalhost(port, o => o.Protocols = Microsoft.AspNetCore.Server.Kestrel.Core.HttpProtocols.Http2);
+						});
+					}
+#endif
+
+					var url = GetServiceUrl(port);
 					webBuilder.UseUrls(url);
 				}).Build();
 

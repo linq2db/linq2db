@@ -1,5 +1,8 @@
 ﻿using System;
 using System.Reflection;
+#if SUPPORTS_COMPOSITE_FORMAT
+using System.Text;
+#endif
 using System.Threading;
 
 namespace LinqToDB.DataModel
@@ -108,7 +111,11 @@ namespace LinqToDB.DataModel
 		/// Assocation extensions region name template for specific entity.
 		/// Parameter: entity name.
 		/// </summary>
+#if SUPPORTS_COMPOSITE_FORMAT
+		public static readonly CompositeFormat EXTENSIONS_ENTITY_ASSOCIATIONS_REGION = CompositeFormat.Parse("{0} Associations");
+#else
 		public const string EXTENSIONS_ENTITY_ASSOCIATIONS_REGION        = "{0} Associations";
+#endif
 		/// <summary>
 		/// Association extension method <c>this</c> parameter name.
 		/// </summary>
@@ -198,6 +205,10 @@ namespace LinqToDB.DataModel
 		/// Stored procedure nameless non-return parameter naming template.
 		/// Parameter: parameter index.
 		/// </summary>
+#if SUPPORTS_COMPOSITE_FORMAT
+		public static readonly CompositeFormat STORED_PROCEDURE_PARAMETER_TEMPLATE = CompositeFormat.Parse("p{0}");
+#else
 		public const string STORED_PROCEDURE_PARAMETER_TEMPLATE          = "p{0}";
+#endif
 	}
 }

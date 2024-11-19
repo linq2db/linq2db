@@ -33,9 +33,12 @@ namespace Tests.Linq
 
 				var result = query.First();
 
-				Assert.That(result.FieldIdName1,  Is.EqualTo("[id]"));
-				Assert.That(result.FieldIdName2,  Is.EqualTo("[id]"));
-				Assert.That(result.FieldIdNameNQ, Is.EqualTo("id"));
+				Assert.Multiple(() =>
+				{
+					Assert.That(result.FieldIdName1, Is.EqualTo("[id]"));
+					Assert.That(result.FieldIdName2, Is.EqualTo("[id]"));
+					Assert.That(result.FieldIdNameNQ, Is.EqualTo("id"));
+				});
 			}
 		}
 
@@ -55,13 +58,16 @@ namespace Tests.Linq
 
 				var result = query.First();
 
-				Assert.That(result.FieldIdName1,  Is.EqualTo("[id]"));
-				Assert.That(result.FieldIdName2,  Is.EqualTo("[id]"));
-				Assert.That(result.FieldIdNameNQ, Is.EqualTo("id"));
+				Assert.Multiple(() =>
+				{
+					Assert.That(result.FieldIdName1, Is.EqualTo("[id]"));
+					Assert.That(result.FieldIdName2, Is.EqualTo("[id]"));
+					Assert.That(result.FieldIdNameNQ, Is.EqualTo("id"));
 
-				Assert.That(Sql.FieldName(table, _ => _.Value),        Is.EqualTo("[value]"));
-				Assert.That(Sql.FieldName(table, _ => _.Value, true),  Is.EqualTo("[value]"));
-				Assert.That(Sql.FieldName(table, _ => _.Value, false), Is.EqualTo("value"));
+					Assert.That(Sql.FieldName(table, _ => _.Value), Is.EqualTo("[value]"));
+					Assert.That(Sql.FieldName(table, _ => _.Value, true), Is.EqualTo("[value]"));
+					Assert.That(Sql.FieldName(table, _ => _.Value, false), Is.EqualTo("value"));
+				});
 			}
 		}
 
@@ -86,12 +92,15 @@ namespace Tests.Linq
 
 				var result = query.First();
 
-				Assert.That(result.TableName1,  Is.EqualTo("[database].[schema].[table_name]"));
-				Assert.That(result.TableName2,  Is.EqualTo("[database].[schema].[table_name]"));
-				Assert.That(result.TableName3,  Is.EqualTo("[table_name]"));
-				Assert.That(result.TableName4,  Is.EqualTo("table_name"));
-				Assert.That(result.TableName_Schema,   Is.EqualTo("[schema].[table_name]"));
-				Assert.That(result.TableName_Database, Is.EqualTo("[database]..[table_name]"));
+				Assert.Multiple(() =>
+				{
+					Assert.That(result.TableName1, Is.EqualTo("[database].[schema].[table_name]"));
+					Assert.That(result.TableName2, Is.EqualTo("[database].[schema].[table_name]"));
+					Assert.That(result.TableName3, Is.EqualTo("[table_name]"));
+					Assert.That(result.TableName4, Is.EqualTo("table_name"));
+					Assert.That(result.TableName_Schema, Is.EqualTo("[schema].[table_name]"));
+					Assert.That(result.TableName_Database, Is.EqualTo("[database]..[table_name]"));
+				});
 			}
 		}
 
@@ -113,7 +122,7 @@ namespace Tests.Linq
 						TableName_Database = Sql.TableName(t, Sql.TableQualification.DatabaseName),
 					};
 
-				TestContext.WriteLine(query.ToString());
+				TestContext.Out.WriteLine(query.ToString());
 
 				var ast = query.GetSelectQuery();
 
@@ -122,11 +131,15 @@ namespace Tests.Linq
 					return (string)((SqlValue)ast.Select.Columns[index].Expression).Value!;
 				}
 
-				Assert.That(GetColumnValue(0), Is.EqualTo("[database].[schema].[table_name]"));
-				Assert.That(GetColumnValue(1), Is.EqualTo("[table_name]"));
-				Assert.That(GetColumnValue(2), Is.EqualTo("table_name"));
-				Assert.That(GetColumnValue(3), Is.EqualTo("[schema].[table_name]"));
-				Assert.That(GetColumnValue(4), Is.EqualTo("[database]..[table_name]"));
+				Assert.Multiple(() =>
+				{
+					Assert.That(GetColumnValue(0), Is.EqualTo("[database].[schema].[table_name]"));
+					Assert.That(GetColumnValue(1), Is.EqualTo("[database].[schema].[table_name]"));
+					Assert.That(GetColumnValue(2), Is.EqualTo("[table_name]"));
+					Assert.That(GetColumnValue(3), Is.EqualTo("table_name"));
+					Assert.That(GetColumnValue(4), Is.EqualTo("[schema].[table_name]"));
+					Assert.That(GetColumnValue(5), Is.EqualTo("[database]..[table_name]"));
+				});
 			}
 		}
 
@@ -151,12 +164,15 @@ namespace Tests.Linq
 
 				var result = query.First();
 
-				Assert.That(result.TableName1,  Is.EqualTo("[database].[schema].[table_name]"));
-				Assert.That(result.TableName2,  Is.EqualTo("[database].[schema].[table_name]"));
-				Assert.That(result.TableName3,  Is.EqualTo("[table_name]"));
-				Assert.That(result.TableName4,  Is.EqualTo("table_name"));
-				Assert.That(result.TableName_Schema,   Is.EqualTo("[schema].[table_name]"));
-				Assert.That(result.TableName_Database, Is.EqualTo("[database]..[table_name]"));
+				Assert.Multiple(() =>
+				{
+					Assert.That(result.TableName1, Is.EqualTo("[database].[schema].[table_name]"));
+					Assert.That(result.TableName2, Is.EqualTo("[database].[schema].[table_name]"));
+					Assert.That(result.TableName3, Is.EqualTo("[table_name]"));
+					Assert.That(result.TableName4, Is.EqualTo("table_name"));
+					Assert.That(result.TableName_Schema, Is.EqualTo("[schema].[table_name]"));
+					Assert.That(result.TableName_Database, Is.EqualTo("[database]..[table_name]"));
+				});
 			}
 		}
 
@@ -178,7 +194,7 @@ namespace Tests.Linq
 						TableName_Database = Sql.TableExpr(t, Sql.TableQualification.DatabaseName),
 					};
 
-				TestContext.WriteLine(query.ToString());
+				TestContext.Out.WriteLine(query.ToString());
 
 				var ast = query.GetSelectQuery();
 
@@ -187,11 +203,15 @@ namespace Tests.Linq
 					return ((SqlExpression)ast.Select.Columns[index].Expression).Expr;
 				}
 
-				Assert.That(GetColumnValue(0), Is.EqualTo("[database].[schema].[table_name]"));
-				Assert.That(GetColumnValue(1), Is.EqualTo("[table_name]"));
-				Assert.That(GetColumnValue(2), Is.EqualTo("table_name"));
-				Assert.That(GetColumnValue(3), Is.EqualTo("[schema].[table_name]"));
-				Assert.That(GetColumnValue(4), Is.EqualTo("[database]..[table_name]"));
+				Assert.Multiple(() =>
+				{
+					Assert.That(GetColumnValue(0), Is.EqualTo("[database].[schema].[table_name]"));
+					Assert.That(GetColumnValue(1), Is.EqualTo("[database].[schema].[table_name]"));
+					Assert.That(GetColumnValue(2), Is.EqualTo("[table_name]"));
+					Assert.That(GetColumnValue(3), Is.EqualTo("table_name"));
+					Assert.That(GetColumnValue(4), Is.EqualTo("[schema].[table_name]"));
+					Assert.That(GetColumnValue(5), Is.EqualTo("[database]..[table_name]"));
+				});
 			}
 		}
 
@@ -240,7 +260,7 @@ namespace Tests.Linq
 
 				var query1Str = query1.ToString();
 
-				TestContext.WriteLine(query1Str);
+				TestContext.Out.WriteLine(query1Str);
 
 				var query2 = from t in table
 					from ft in db.FromSql<FreeTextKey<int>>(
@@ -250,7 +270,7 @@ namespace Tests.Linq
 
 				var query2Str = query2.ToString();
 
-				TestContext.WriteLine(query2Str);
+				TestContext.Out.WriteLine(query2Str);
 
 
 				var query3 = db.FromSql<FreeTextKey<int>>(
@@ -258,11 +278,14 @@ namespace Tests.Linq
 
 				var query3Str = query3.ToString();
 
-				TestContext.WriteLine(query3Str);
+				TestContext.Out.WriteLine(query3Str);
 
-				StringAssert.Contains("FREETEXTTABLE([database].[schema].[table_name], [value],", query1Str);
-				StringAssert.Contains("FREETEXTTABLE([database].[schema].[table_name], [value],", query2Str);
-				StringAssert.Contains("FREETEXTTABLE([database].[schema].[table_name], [value],", query3Str);
+				Assert.Multiple(() =>
+				{
+					Assert.That(query1Str, Does.Contain("FREETEXTTABLE([database].[schema].[table_name], [value],"));
+					Assert.That(query2Str, Does.Contain("FREETEXTTABLE([database].[schema].[table_name], [value],"));
+					Assert.That(query3Str, Does.Contain("FREETEXTTABLE([database].[schema].[table_name], [value],"));
+				});
 			}
 		}
 

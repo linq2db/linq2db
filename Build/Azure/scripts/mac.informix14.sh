@@ -15,10 +15,10 @@ docker ps -a
 retries=0
 status="1"
 until docker logs informix | grep -q 'Informix container login Information'; do
-    sleep 5
+    sleep 10
     retries=`expr $retries + 1`
     echo waiting for informix to start
-    if [ $retries -gt 100 ]; then
+    if [ $retries -gt 1000 ]; then
         echo informix not started or takes too long to start
         exit 1
     fi;

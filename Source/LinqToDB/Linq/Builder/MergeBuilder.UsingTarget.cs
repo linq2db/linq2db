@@ -8,23 +8,29 @@ namespace LinqToDB.Linq.Builder
 
 	internal partial class MergeBuilder
 	{
+		[BuildsMethodCall(nameof(LinqExtensions.UsingTarget))]
 		internal sealed class UsingTarget : MethodCallBuilder
 		{
-			protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
-			{
-				return methodCall.IsSameGenericMethod(UsingTargetMethodInfo);
-			}
+			public static bool CanBuildMethod(MethodCallExpression call, BuildInfo info, ExpressionBuilder builder)
+				=> call.IsSameGenericMethod(UsingTargetMethodInfo);
 
-			protected override IBuildContext BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
+			protected override BuildSequenceResult BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 			{
 				var mergeContext = (MergeContext)builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
 
-				// is it ok to reuse context like that?
-				var source                = new TableLikeQueryContext(mergeContext.TargetContext);
+				var genericArguments = methodCall.Method.GetGenericArguments();
+
+				var cloningContext      = new CloningContext();
+				var clonedTargetContext = cloningContext.CloneContext(mergeContext.TargetContext);
+
+				var targetContextRef = new ContextRefExpression(genericArguments[0], mergeContext.TargetContext, "target");
+				var sourceContextRef = new ContextRefExpression(genericArguments[0], clonedTargetContext, "source");
+
+				var source                = new TableLikeQueryContext(targetContextRef, sourceContextRef);
 				mergeContext.Sequences    = new IBuildContext[] { mergeContext.Sequence, source };
 				mergeContext.Merge.Source = source.Source;
 
-				return mergeContext;
+				return BuildSequenceResult.FromContext(mergeContext);
 			}
 		}
 	}

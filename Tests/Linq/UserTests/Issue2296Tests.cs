@@ -10,7 +10,7 @@ namespace Tests.UserTests
 		[Test]
 		public void Issue2296Test(
 			[IncludeDataSources(true, TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context,
-			[Values(true, false)] bool reverseWhereQuery)
+			[Values] bool reverseWhereQuery)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -37,7 +37,7 @@ namespace Tests.UserTests
 
 				var actual = dbQuery.ToArray();
 
-				Assert.AreEqual(expected, actual);
+				Assert.That(actual, Is.EqualTo(expected));
 			}
 		}
 	}

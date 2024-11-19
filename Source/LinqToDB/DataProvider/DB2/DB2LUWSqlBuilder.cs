@@ -1,7 +1,9 @@
-﻿using System.Text;
+﻿using System.Globalization;
+using System.Text;
 
 namespace LinqToDB.DataProvider.DB2
 {
+	using Common;
 	using Mapping;
 	using SqlProvider;
 	using SqlQuery;
@@ -24,9 +26,10 @@ namespace LinqToDB.DataProvider.DB2
 
 		protected override DB2Version Version => DB2Version.LUW;
 
-		protected override string GetPhysicalTableName(ISqlTableSource table, string? alias, bool ignoreTableExpression = false, string? defaultDatabaseName = null, bool withoutSuffix = false)
+		protected override string GetPhysicalTableName(ISqlTableSource table, string? alias,
+			bool ignoreTableExpression = false, string? defaultDatabaseName = null, bool withoutSuffix = false)
 		{
-			var name = base.GetPhysicalTableName(table, alias, ignoreTableExpression, defaultDatabaseName, withoutSuffix: withoutSuffix);
+			var name = base.GetPhysicalTableName(table, alias, ignoreTableExpression: ignoreTableExpression, defaultDatabaseName: defaultDatabaseName, withoutSuffix: withoutSuffix);
 
 			if (table.SqlTableType == SqlTableType.Function)
 				return $"TABLE({name})";
@@ -70,16 +73,14 @@ namespace LinqToDB.DataProvider.DB2
 			return escape ? Convert(sb, name.Name, objectType) : sb.Append(name.Name);
 		}
 
-		protected override void BuildDataTypeFromDataType(SqlDataType type, bool forCreateTable, bool canBeNull)
+		protected override void BuildDataTypeFromDataType(DbDataType type, bool forCreateTable, bool canBeNull)
 		{
-			switch (type.Type.DataType)
+			switch (type.DataType)
 			{
 				case DataType.VarBinary:
 					// https://www.ibm.com/docs/en/db2/11.5?topic=list-binary-strings
-					StringBuilder
-						.Append("VARBINARY(")
-						.Append(type.Type.Length == null || type.Type.Length > 32672 || type.Type.Length < 1 ? 32672 : type.Type.Length)
-						.Append(')');
+					var length = type.Length == null || type.Length > 32672 || type.Length < 1 ? 32672 : type.Length;
+					StringBuilder.Append(CultureInfo.InvariantCulture, $"VARBINARY({length})");
 					return;
 			}
 

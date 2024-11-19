@@ -1,8 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 
 using LinqToDB;
+using LinqToDB.Linq;
+using LinqToDB.SqlQuery;
 
 using NUnit.Framework;
 
@@ -89,7 +92,7 @@ namespace Tests.Linq
 						Count2 = Child.Where(p => p.ParentID == id && p.ParentID == _testValue).Count(),
 					});
 
-				var rids   = db.Parent
+				var rids = db.Parent
 					.Where(p => ids.Contains(p.ParentID))
 					.Select(p => p.Value1 == null ? p.ParentID : p.ParentID + 1)
 					.Distinct();
@@ -184,12 +187,33 @@ namespace Tests.Linq
 
 				var chs2 = chilren.ToList();
 
-				Assert.AreEqual(chs2.Count, chs2.Except(chs1).Count());
+				Assert.That(chs2.Except(chs1).Count(), Is.EqualTo(chs2.Count));
 			}
 		}
 
 		[Test]
-		public void ObjectCompare([DataSources(ProviderName.Access)] string context)
+		public void DerivedTake([DataSources]
+			string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				AssertQuery(db.Parent.Take(1).AsSubQuery());
+			}
+		}
+
+		[Test]
+		[ThrowsForProvider(typeof(SqlException), providers: [TestProvName.AllAccess, TestProvName.AllSybase], ErrorMessage = "Skip for subqueries is not supported")]
+		public void DerivedSkipTake([DataSources]
+			string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				AssertQuery(db.Parent.Skip(1).Take(1).AsSubQuery());
+			}
+		}
+
+		[Test]
+		public void ObjectCompare([DataSources(TestProvName.AllAccess)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -236,7 +260,6 @@ namespace Tests.Linq
 		[Test]
 		public void Contains2([DataSources(
 			TestProvName.AllClickHouse,
-			TestProvName.AllInformix,
 			TestProvName.AllMySql,
 			TestProvName.AllSybase,
 			TestProvName.AllSapHana,
@@ -256,11 +279,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void SubSub1([DataSources(
-			TestProvName.AllClickHouse,
-			ProviderName.SqlCe, ProviderName.Access, ProviderName.DB2,
-			TestProvName.AllOracle)]
-			string context)
+		public void SubSub1([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -300,10 +319,8 @@ namespace Tests.Linq
 			TestProvName.AllClickHouse,
 			ProviderName.DB2,
 			TestProvName.AllOracle,
-			TestProvName.AllMySql,
 			TestProvName.AllSybase,
-			TestProvName.AllInformix,
-			TestProvName.AllSapHana)]
+			TestProvName.AllInformix)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -347,55 +364,50 @@ namespace Tests.Linq
 		}
 
 		//[Test]
-		public void SubSub201([DataSources] string context)
-		{
-			using (var db = GetDataContext(context))
-				AreEqual(
-					from p1 in
-						from p2 in Parent
-						select new { p2, ID = p2.ParentID + 1 } into p3
-						where p3.ID > 0
-						select new { p2 = p3, ID = p3.ID + 1 }
-					where p1.ID > 0
-					select new
-					{
-						Count =
-						(
-							from c in p1.p2.p2.Children
-							select new { c, ID = c.ParentID + 1 } into c
-							where c.ID < p1.ID
-							select new { c.c, ID = c.c.ParentID + 1 } into c
-							where c.ID < p1.ID
-							select c
-						).FirstOrDefault()
-					},
-					from p1 in
-						from p2 in db.Parent
-						select new { p2, ID = p2.ParentID + 1 } into p3
-						where p3.ID > 0
-						select new { p2 = p3, ID = p3.ID + 1 }
-					where p1.ID > 0
-					select new
-					{
-						Count =
-						(
-							from c in p1.p2.p2.Children
-							select new { c, ID = c.ParentID + 1 } into c
-							where c.ID < p1.ID
-							select new { c.c, ID = c.c.ParentID + 1 } into c
-							where c.ID < p1.ID
-							select c
-						).FirstOrDefault()
-					});
-		}
+		//public void SubSub201([DataSources] string context)
+		//{
+		//	using (var db = GetDataContext(context))
+		//		AreEqual(
+		//			from p1 in
+		//				from p2 in Parent
+		//				select new { p2, ID = p2.ParentID + 1 } into p3
+		//				where p3.ID > 0
+		//				select new { p2 = p3, ID = p3.ID + 1 }
+		//			where p1.ID > 0
+		//			select new
+		//			{
+		//				Count =
+		//				(
+		//					from c in p1.p2.p2.Children
+		//					select new { c, ID = c.ParentID + 1 } into c
+		//					where c.ID < p1.ID
+		//					select new { c.c, ID = c.c.ParentID + 1 } into c
+		//					where c.ID < p1.ID
+		//					select c
+		//				).FirstOrDefault()
+		//			},
+		//			from p1 in
+		//				from p2 in db.Parent
+		//				select new { p2, ID = p2.ParentID + 1 } into p3
+		//				where p3.ID > 0
+		//				select new { p2 = p3, ID = p3.ID + 1 }
+		//			where p1.ID > 0
+		//			select new
+		//			{
+		//				Count =
+		//				(
+		//					from c in p1.p2.p2.Children
+		//					select new { c, ID = c.ParentID + 1 } into c
+		//					where c.ID < p1.ID
+		//					select new { c.c, ID = c.c.ParentID + 1 } into c
+		//					where c.ID < p1.ID
+		//					select c
+		//				).FirstOrDefault()
+		//			});
+		//}
 
 		[Test]
-		public void SubSub21([DataSources(
-			ProviderName.SqlCe, ProviderName.DB2,
-			TestProvName.AllClickHouse,
-			TestProvName.AllOracle,
-			ProviderName.Access)]
-			string context)
+		public void SubSub21([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -438,11 +450,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void SubSub211([DataSources(
-			ProviderName.SqlCe, ProviderName.Access, ProviderName.DB2,
-			TestProvName.AllClickHouse,
-			TestProvName.AllOracle)]
-			string context)
+		public void SubSub211([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -487,11 +495,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void SubSub212([DataSources(
-			ProviderName.SqlCe, TestProvName.AllAccess, ProviderName.DB2,
-			TestProvName.AllClickHouse,
-			TestProvName.AllOracle)]
-			string context)
+		public void SubSub212([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -657,14 +661,13 @@ namespace Tests.Linq
 					select p);
 		}
 
-
-		[Test, ActiveIssue(1601)]
+		[Test]
+		[ThrowsForProvider(typeof(LinqException), TestProvName.AllAccess, "Provider does not support JOIN without condition.")]
 		public void Issue1601([DataSources(false)] string context)
 		{
 			using (var db = GetDataConnection(context))
 			{
 				var query = from q in db.Types
-							let datePlus2 = q.DateTimeValue.AddDays(2)
 							let x = db.Types.Sum(y => y.MoneyValue)
 							select new
 							{
@@ -674,7 +677,7 @@ namespace Tests.Linq
 
 				query.ToList();
 
-				Assert.AreEqual(1, System.Text.RegularExpressions.Regex.Matches(db.LastQuery!, "Types").Count);
+				Assert.That(System.Text.RegularExpressions.Regex.Matches(db.LastQuery!, "Types"), Has.Count.EqualTo(2));
 			}
 		}
 
@@ -818,8 +821,8 @@ namespace Tests.Linq
 
 				var res = query.ToList();
 
-				Assert.AreEqual(1, res.Count);
-				Assert.AreEqual("Urupinsk", res[0].City_Name.Single().City_Name);
+				Assert.That(res, Has.Count.EqualTo(1));
+				Assert.That(res[0].City_Name.Single().City_Name, Is.EqualTo("Urupinsk"));
 			}
 		}
 
@@ -866,10 +869,92 @@ namespace Tests.Linq
 
 				var res = query.ToList();
 
-				Assert.AreEqual(1, res.Count);
-				Assert.AreEqual("Urupinsk", res[0].City_Name);
+				Assert.That(res, Has.Count.EqualTo(1));
+				Assert.That(res[0].City_Name, Is.EqualTo("Urupinsk"));
 			}
 		}
 
+		[Test]
+		public void DropOrderByFromNonLimitedSubquery([DataSources(TestProvName.AllClickHouse)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = db.Parent
+				.Where(p => db.Child.Where(c => c.ParentID == p.ParentID)
+					.Any(c => db.GrandChild.Select(gc => gc.ChildID).OrderBy(id => id).Contains(c.ChildID)));
+
+			AssertQuery(query);
+		}
+		
+		[ActiveIssue(Configurations = [TestProvName.AllOracle], Details = "https://forums.oracle.com/ords/apexds/post/error-ora-12704-character-set-mismatch-in-case-statement-6917")]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/3295")]
+		public void Issue3295Test1([DataSources(TestProvName.AllSybase)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = (from x in db.Person
+						 let status = db.Patient.FirstOrDefault(y => y.PersonID == x.ID)
+						 select new
+						 {
+							 Id = status != null ? status.PersonID : x.ID,
+							 StatusName = status != null ? status.Diagnosis : "abc",
+						 }).Where(x => x.StatusName == "abc");
+
+			query.ToArray();
+		}
+
+		[ActiveIssue]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/3295")]
+		public void Issue3295Test2([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var expected = Parent
+				.Where(x => x.Children.Where(y => y.ChildID == 11).Select(y => y.ParentID).FirstOrDefault() == 0)
+				.Count();
+
+			var actual = db.Parent
+				.Where(x => x.Children.Where(y => y.ChildID == 11).Select(y => y.ParentID).FirstOrDefault() == 0)
+				.Count();
+
+			Assert.That(actual, Is.EqualTo(expected));
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/3334")]
+		public void Issue3334Test([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var subquery = db.GetTable<Person>();
+
+			var query = db.GetTable<Person>()
+					.Select(entity1 => new
+					{
+						Entity1 = entity1,
+						Entity2 = subquery.FirstOrDefault(entity2 => entity2.ID == entity1.ID)
+					})
+					.GroupJoin(db.GetTable<Person>(),
+						x => x.Entity2!.ID,
+						x => x.ID,
+						(x, y) => x);
+
+			var result = query.FirstOrDefault();
+		}
+
+		[ThrowsForProvider(typeof(LinqException), providers: [TestProvName.AllSybase], ErrorMessage = "Provider does not support CROSS/OUTER/LATERAL joins.")]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/3365")]
+		public void Issue3365Test([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = db.Child.Select(x => new
+			{
+				Assignee = x.GrandChildren.Select(a => a.ParentID).FirstOrDefault()
+			});
+
+			var orderedQuery = query.OrderBy(x => x.Assignee);
+
+			orderedQuery.ToArray();
+		}
 	}
 }

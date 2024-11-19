@@ -1,10 +1,17 @@
 ﻿using System;
 using System.Data.Common;
-using System.IO;
+using System.Diagnostics;
 using System.Reflection;
 
+using LinqToDB.Common;
 using LinqToDB.DataProvider.ClickHouse;
+using LinqToDB.Tools;
+using LinqToDB.Tools.Activity;
+
 using NUnit.Framework;
+
+using Oracle.ManagedDataAccess.Client;
+
 using Tests;
 
 /// <summary>
@@ -14,9 +21,34 @@ using Tests;
 [SetUpFixture]
 public class TestsInitialization
 {
+	static bool _doMetrics;
+
 	[OneTimeSetUp]
 	public void TestAssemblySetup()
 	{
+#if DEBUG
+		ActivityService.AddFactory(ActivityHierarchyFactory);
+
+		static IActivity? ActivityHierarchyFactory(ActivityID activityID)
+		{
+			var ctx = CustomTestContext.Get();
+
+			if (ctx.Get<bool>(CustomTestContext.TRACE_DISABLED) != true)
+				return new ActivityHierarchy(activityID, s => Debug.WriteLine(s));
+			return null;
+		}
+
+		_doMetrics = true;
+#else
+		_doMetrics = TestConfiguration.StoreMetrics == true;
+#endif
+
+		if (_doMetrics)
+		{
+			Configuration.TraceMaterializationActivity = true;
+			ActivityService.AddFactory(ActivityStatistics.Factory);
+		}
+
 		// required for tests expectations
 		ClickHouseOptions.Default = ClickHouseOptions.Default with { UseStandardCompatibleAggregates = true };
 
@@ -26,10 +58,12 @@ public class TestsInitialization
 
 		// netcoreapp2.1 adds DbProviderFactories support, but providers should be registered by application itself
 		// this code allows to load assembly using factory without adding explicit reference to project
-		CopySQLiteRuntime();
 		RegisterSqlCEFactory();
 
-#if NET472 && !AZURE
+		// enable ora11 protocol with v23 client
+		OracleConfiguration.SqlNetAllowedLogonVersionClient = OracleAllowedLogonVersionClient.Version11;
+
+#if NETFRAMEWORK && !AZURE
 		// configure assembly redirect for referenced assemblies to use version from GAC
 		// this solves exception from provider-specific tests, when it tries to load version from redist folder
 		// but loaded from GAC assembly has other version
@@ -41,9 +75,13 @@ public class TestsInitialization
 				return DbProviderFactories.GetFactory("IBM.Data.DB2").GetType().Assembly;
 
 			if (requestedAssembly.Name == "IBM.Data.Informix")
+			{
 				// chose your red or blue pill carefully
 				//return DbProviderFactories.GetFactory("IBM.Data.Informix").GetType().Assembly;
+#pragma warning disable CS0618 // Type or member is obsolete
 				return typeof(IBM.Data.Informix.IfxTimeSpan).Assembly;
+#pragma warning restore CS0618 // Type or member is obsolete
+			}
 
 			return null;
 		};
@@ -60,28 +98,9 @@ public class TestsInitialization
 		CustomizationSupport.Init();
 	}
 
-	// workaround for
-	// https://github.com/ericsink/SQLitePCL.raw/issues/389
-	// https://github.com/dotnet/efcore/issues/19396
-	private void CopySQLiteRuntime()
-	{
-#if NET472
-		const string runtimeFile = "e_sqlite3.dll";
-		var destPath             = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, runtimeFile);
-		var sourcePath           = Path.Combine(
-			AppDomain.CurrentDomain.BaseDirectory,
-			"runtimes",
-			IntPtr.Size == 4 ? "win-x86" : "win-x64",
-			"native",
-			runtimeFile);
-
-		File.Copy(sourcePath, destPath, true);
-#endif
-	}
-
 	private void RegisterSqlCEFactory()
 	{
-#if !NET472
+#if !NETFRAMEWORK
 		try
 		{
 			// default install pathes. Hardcoded for now as hardly anyone will need other location in near future
@@ -98,5 +117,15 @@ public class TestsInitialization
 	[OneTimeTearDown]
 	public void TestAssemblyTeardown()
 	{
+		if (_doMetrics)
+		{
+			var str = ActivityStatistics.GetReport();
+
+			Debug.WriteLine(str);
+			TestContext.Progress.WriteLine(str);
+
+			if (TestConfiguration.StoreMetrics == true)
+				BaselinesWriter.WriteMetrics(TestConfiguration.BaselinesPath!, str);
+		}
 	}
 }

@@ -28,12 +28,12 @@ namespace Cli.Fluent.MariaDB
 		public char?     FieldNChar      { get; set; } // char(1)
 		public float?    FieldFloat      { get; set; } // float
 		public double?   FieldDouble     { get; set; } // double
-		public DateTime? FieldDateTime   { get; set; } // datetime
+		public DateTime? FieldDateTime   { get; set; } // datetime(6)
 		public byte[]?   FieldBinary     { get; set; } // varbinary(20)
 		public string?   FieldGuid       { get; set; } // char(36)
 		public decimal?  FieldDecimal    { get; set; } // decimal(24,10)
 		public DateTime? FieldDate       { get; set; } // date
-		public TimeSpan? FieldTime       { get; set; } // time
+		public TimeSpan? FieldTime       { get; set; } // time(6)
 		public string?   FieldEnumString { get; set; } // varchar(20)
 		public int?      FieldEnumNumber { get; set; } // int(11)
 	}

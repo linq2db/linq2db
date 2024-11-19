@@ -40,14 +40,14 @@ namespace LinqToDB.Extensions
 			var baseType = type.BaseType;
 			if (baseType == null || baseType == typeof(object) || baseType == typeof(ValueType))
 				return members;
-			
+
 			// in the case of inheritance, we want to:
 			//  - list base class members first
 			//  - remove shadowed members (new modifier)
 			//	- preserve the order of GetMembers() inside the same type declared type
 
 			var results = new List<MemberInfo>(members.Length);
-			var seen = new HashSet<string>();
+			var seen    = new HashSet<string>();
 			for (var t = type; t != typeof(object) && t != typeof(ValueType); t = t.BaseType!)
 			{
 				// iterating in reverse order because we will reverse it
@@ -325,10 +325,10 @@ namespace LinqToDB.Extensions
 			{
 				return new InterfaceMapping()
 				{
-					TargetType = type,
-					InterfaceType = interfaceType,
-					TargetMethods = Array<MethodInfo>.Empty,
-					InterfaceMethods = Array<MethodInfo>.Empty
+					TargetType       = type,
+					InterfaceType    = interfaceType,
+					TargetMethods    = [],
+					InterfaceMethods = []
 				};
 			}
 		}
@@ -538,6 +538,31 @@ namespace LinqToDB.Extensions
 			return null;
 		}
 
+		public static IEnumerable<Type> GetGenericTypes(this Type genericType, Type type)
+		{
+			if (genericType == null) throw new ArgumentNullException(nameof(genericType));
+
+			while (type != typeof(object))
+			{
+				if (type.IsGenericType && type.GetGenericTypeDefinition() == genericType)
+					yield return type;
+
+				if (genericType.IsInterface)
+				{
+					foreach (var interfaceType in type.GetInterfaces())
+					{
+						foreach (var gType in GetGenericTypes(genericType, interfaceType))
+							yield return gType;
+					}
+				}
+
+				if (type.BaseType == null)
+					break;
+
+				type = type.BaseType;
+			}
+		}
+
 		///<summary>
 		/// Gets the Type of a list item.
 		///</summary>
@@ -634,17 +659,10 @@ namespace LinqToDB.Extensions
 			return typeof(object);
 		}
 
-		public static bool IsEnumerableTType(this Type type, Type elementType)
+		public static bool IsEnumerableType(this Type type, Type elementType)
 		{
-			foreach (var interfaceType in type.GetInterfaces())
-			{
-				if (interfaceType.IsGenericType
-						&& interfaceType.GetGenericTypeDefinition() == typeof(IEnumerable<>)
-						&& interfaceType.GetGenericArguments()[0] == elementType)
-					return true;
-			}
-
-			return false;
+			return typeof(IEnumerable<>).GetGenericTypes(type)
+				.Any(t => t.GetGenericArguments()[0].IsSameOrParentOf(elementType));
 		}
 
 		public static bool IsGenericEnumerableType(this Type type)
@@ -819,7 +837,7 @@ namespace LinqToDB.Extensions
 			if (type.IsNullableType())
 				return null;
 
-#if NETSTANDARD2_1PLUS
+#if NET6_0_OR_GREATER
 			return RuntimeHelpers.GetUninitializedObject(type);
 #else
 			var dtype  = typeof(GetDefaultValueHelper<>).MakeGenericType(type);
@@ -836,7 +854,7 @@ namespace LinqToDB.Extensions
 
 #endregion
 
-#region MethodInfo extensions
+		#region MethodInfo extensions
 
 		[return: NotNullIfNotNull(nameof(method))]
 		public static PropertyInfo? GetPropertyInfo(this MethodInfo? method)
@@ -858,9 +876,9 @@ namespace LinqToDB.Extensions
 			return null;
 		}
 
-#endregion
+		#endregion
 
-#region MemberInfo extensions
+		#region MemberInfo extensions
 
 		public static Type GetMemberType(this MemberInfo memberInfo)
 		{
@@ -1022,7 +1040,7 @@ namespace LinqToDB.Extensions
 			return false;
 		}
 
-#endregion
+		#endregion
 
 		public static bool IsAnonymous(this Type type)
 		{

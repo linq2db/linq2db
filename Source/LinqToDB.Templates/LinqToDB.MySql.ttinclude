@@ -3,7 +3,7 @@
 <#+
 LinqToDB.Data.DataConnection GetMySqlConnection(string connectionString)
 {
-	return LinqToDB.DataProvider.MySql.MySqlTools.CreateDataConnection(connectionString, ProviderName.MySqlConnector);
+	return LinqToDB.DataProvider.MySql.MySqlTools.CreateDataConnection(connectionString, provider: LinqToDB.DataProvider.MySql.MySqlProvider.MySqlConnector);
 }
 
 LinqToDB.Data.DataConnection GetMySqlConnection(string server, string database, string uid, string password, int port=3306)

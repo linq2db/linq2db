@@ -7,10 +7,6 @@ using System.Threading.Tasks;
 
 namespace LinqToDB
 {
-	#if !NATIVE_ASYNC
-	using Async;
-	#endif
-
 	/// <summary>
 	/// Interface to override default implementation of LINQ To DB async operations.
 	/// </summary>

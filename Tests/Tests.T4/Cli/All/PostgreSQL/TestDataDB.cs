@@ -7,7 +7,6 @@
 
 using LinqToDB;
 using LinqToDB.Data;
-using LinqToDB.Expressions;
 using LinqToDB.Mapping;
 using NpgsqlTypes;
 using System;
@@ -16,7 +15,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Net.NetworkInformation;
-using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -112,12 +110,10 @@ namespace Cli.All.PostgreSQL
 
 		#region Table Functions
 		#region GetParentById
-		private static readonly MethodInfo _getParentById = MemberHelper.MethodOf<TestDataDB>(ctx => ctx.GetParentById(default));
-
 		[Sql.TableFunction("GetParentByID")]
 		public IQueryable<GetParentByIdResult> GetParentById(int? id)
 		{
-			return this.GetTable<GetParentByIdResult>(this, _getParentById, id);
+			return this.QueryFromExpression<GetParentByIdResult>(() => GetParentById(id));
 		}
 
 		public partial class GetParentByIdResult
@@ -128,12 +124,10 @@ namespace Cli.All.PostgreSQL
 		#endregion
 
 		#region TestTableFunction
-		private static readonly MethodInfo _testTableFunction = MemberHelper.MethodOf<TestDataDB>(ctx => ctx.TestTableFunction(default));
-
 		[Sql.TableFunction("TestTableFunction")]
 		public IQueryable<TestTableFunctionResult> TestTableFunction(int? param1)
 		{
-			return this.GetTable<TestTableFunctionResult>(this, _testTableFunction, param1);
+			return this.QueryFromExpression<TestTableFunctionResult>(() => TestTableFunction(param1));
 		}
 
 		public partial class TestTableFunctionResult
@@ -143,12 +137,10 @@ namespace Cli.All.PostgreSQL
 		#endregion
 
 		#region TestTableFunction1
-		private static readonly MethodInfo _testTableFunction1 = MemberHelper.MethodOf<TestDataDB>(ctx => ctx.TestTableFunction1(default, default));
-
 		[Sql.TableFunction("TestTableFunction1")]
 		public IQueryable<TestTableFunction1Result> TestTableFunction1(int? param1, int? param2)
 		{
-			return this.GetTable<TestTableFunction1Result>(this, _testTableFunction1, param1, param2);
+			return this.QueryFromExpression<TestTableFunction1Result>(() => TestTableFunction1(param1, param2));
 		}
 
 		public partial class TestTableFunction1Result
@@ -159,12 +151,10 @@ namespace Cli.All.PostgreSQL
 		#endregion
 
 		#region TestTableFunctionSchema
-		private static readonly MethodInfo _testTableFunctionSchema = MemberHelper.MethodOf<TestDataDB>(ctx => ctx.TestTableFunctionSchema());
-
 		[Sql.TableFunction("TestTableFunctionSchema")]
 		public IQueryable<TestTableFunctionSchemaResult> TestTableFunctionSchema()
 		{
-			return this.GetTable<TestTableFunctionSchemaResult>(this, _testTableFunctionSchema);
+			return this.QueryFromExpression<TestTableFunctionSchemaResult>(() => TestTableFunctionSchema());
 		}
 
 		public partial class TestTableFunctionSchemaResult
@@ -201,7 +191,7 @@ namespace Cli.All.PostgreSQL
 			[Column("circleDataType"     , DataType = DataType.Udt           , DbType = "circle"                         )] public NpgsqlCircle?     CircleDataType      { get; set; }
 			[Column("lineDataType"       , DataType = DataType.Udt           , DbType = "line"                           )] public NpgsqlLine?       LineDataType        { get; set; }
 			[Column("inetDataType"       , DataType = DataType.Udt           , DbType = "inet"                           )] public NpgsqlInet?       InetDataType        { get; set; }
-			[Column("cidrDataType"       , DataType = DataType.Udt           , DbType = "cidr"                           )] public NpgsqlInet?       CidrDataType        { get; set; }
+			[Column("cidrDataType"       , DataType = DataType.Udt           , DbType = "cidr"                           )] public NpgsqlCidr?       CidrDataType        { get; set; }
 			[Column("macaddrDataType"    , DataType = DataType.Udt           , DbType = "macaddr"                        )] public PhysicalAddress?  MacaddrDataType     { get; set; }
 			[Column("macaddr8DataType"   , DataType = DataType.Udt           , DbType = "macaddr8"                       )] public PhysicalAddress?  Macaddr8DataType    { get; set; }
 			[Column("jsonDataType"       , DataType = DataType.Json          , DbType = "json"                           )] public string?           JsonDataType        { get; set; }

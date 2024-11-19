@@ -1,20 +1,13 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Runtime.CompilerServices;
-using System.Diagnostics.CodeAnalysis;
 
 namespace LinqToDB.Expressions
 {
-	using Extensions;
-	using Reflection;
-	using Linq;
-	using Linq.Builder;
-	using Mapping;
 	using Common;
-	using Common.Internal;
+	using Extensions;
 
 	/// <summary>
 	/// Internal API.
@@ -22,13 +15,49 @@ namespace LinqToDB.Expressions
 	public static class ExpressionEvaluator
 	{
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static T? EvaluateExpression<T>(this Expression? expr, IDataContext? dataContext = null)
+		public static T? EvaluateExpression<T>(this Expression? expr)
 			where T : class
 		{
-			return expr.EvaluateExpression(dataContext) as T;
+			return expr.EvaluateExpression() as T;
 		}
 
-		public static object? EvaluateExpression(this Expression? expr, IDataContext? dataContext = null)
+		static bool IsSimpleEvaluatable(Expression? expr)
+		{
+			if (expr == null)
+				return true;
+
+			switch (expr.NodeType)
+			{
+				case ExpressionType.Default:
+					return true;
+
+				case ExpressionType.Constant:
+					return true;
+
+				case ExpressionType.MemberAccess:
+				{
+					var member = (MemberExpression) expr;
+
+					if (member.Member.MemberType != MemberTypes.Field &&
+					    member.Member.MemberType != MemberTypes.Property)
+					{
+						return false;
+					}
+
+					return IsSimpleEvaluatable(member.Expression);
+				}
+
+				case ExpressionType.Call:
+				{
+					var mc = (MethodCallExpression)expr;
+					return IsSimpleEvaluatable(mc.Object) && mc.Arguments.All(IsSimpleEvaluatable);
+				}
+			}
+
+			return false;
+		}
+
+		static object? EvaluateExpressionInternal(this Expression? expr)
 		{
 			if (expr == null)
 				return null;
@@ -41,31 +70,16 @@ namespace LinqToDB.Expressions
 				case ExpressionType.Constant:
 					return ((ConstantExpression)expr).Value;
 
-				case ExpressionType.Parameter:
-					if (expr == ExpressionConstants.DataContextParam && dataContext != null)
-						return dataContext;
-					break;
-
-				case ExpressionType.Convert:
-				case ExpressionType.ConvertChecked:
-				{
-					var unary = (UnaryExpression)expr;
-					var operand = unary.Operand.EvaluateExpression(dataContext);
-					if (operand == null)
-						return null;
-					break;
-				}
-
 				case ExpressionType.MemberAccess:
 				{
 					var member = (MemberExpression) expr;
 
-					if (member.Member.IsFieldEx())
-						return ((FieldInfo)member.Member).GetValue(member.Expression.EvaluateExpression(dataContext));
+					if (member.Member is FieldInfo fieldInfo)
+						return fieldInfo.GetValue(member.Expression.EvaluateExpressionInternal());
 
 					if (member.Member is PropertyInfo propertyInfo)
 					{
-						var obj = member.Expression.EvaluateExpression(dataContext);
+						var obj = member.Expression.EvaluateExpressionInternal();
 						if (obj == null)
 						{
 							if (propertyInfo.IsNullableValueMember())
@@ -81,9 +95,9 @@ namespace LinqToDB.Expressions
 
 				case ExpressionType.Call:
 				{
-					var mc = (MethodCallExpression)expr;
-					var arguments = mc.Arguments.Select(a => a.EvaluateExpression(dataContext)).ToArray();
-					var instance  = mc.Object.EvaluateExpression(dataContext);
+					var mc        = (MethodCallExpression)expr;
+					var arguments = mc.Arguments.Select(a => a.EvaluateExpressionInternal()).ToArray();
+					var instance  = mc.Object.EvaluateExpressionInternal();
 
 					if (instance == null && mc.Method.IsNullableGetValueOrDefault())
 						return null;
@@ -92,7 +106,19 @@ namespace LinqToDB.Expressions
 				}
 			}
 
-			expr      = dataContext == null ? expr : expr.Replace(ExpressionConstants.DataContextParam, Expression.Constant(dataContext, typeof(IDataContext)));
+			throw new InvalidOperationException($"Expression '{expr}' cannot be evaluated");
+		}
+
+		public static object? EvaluateExpression(this Expression? expr)
+		{
+			if (expr == null)
+				return null;
+
+			if (IsSimpleEvaluatable(expr))
+			{
+				return expr.EvaluateExpressionInternal();
+			}
+
 			var value = Expression.Lambda(expr).CompileExpression().DynamicInvoke();
 			return value;
 		}

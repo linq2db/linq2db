@@ -1,0 +1,27 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<AssemblyName>linq2db.FSharp</AssemblyName>
+		<RootNamespace>LinqToDB.FSharp</RootNamespace>
+		<DocumentationFile>bin\$(Configuration)\$(TargetFramework)\linq2db.FSharp.xml</DocumentationFile>
+		<DocumentationFile>$(ArtifactsPath)\bin\$(MSBuildProjectName)\$(Configuration)\$(TargetFramework)\$(AssemblyName).xml</DocumentationFile>
+
+		<WarningLevel>5</WarningLevel>
+		<TargetFrameworks>net462;netstandard2.0;net6.0;net8.0;net9.0</TargetFrameworks>
+		<GenerateDocumentationFile>true</GenerateDocumentationFile>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<Compile Include="FSharpEntityBindingInterceptor.fs" />
+		<Compile Include="DataOptionsExtensions.fs" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\LinqToDB\LinqToDB.csproj" />
+	</ItemGroup>
+
+	<ItemGroup Condition=" '$(TargetFramework)' == 'net462' ">
+		<PackageReference Include="FSharp.Core" />
+	</ItemGroup>
+
+</Project>

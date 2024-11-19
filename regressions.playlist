@@ -1,0 +1,108 @@
+<Playlist Version="2.0">
+  <Rule Name="Includes" Match="Any">
+    <Rule Match="All">
+      <Property Name="Solution" />
+      <Rule Match="Any">
+        <Rule Match="All">
+          <Property Name="Project" Value="Tests.Playground (net8.0)" />
+          <Rule Match="Any">
+            <Rule Match="All">
+              <Property Name="Namespace" Value="" />
+              <Rule Match="Any">
+                <Rule Match="All">
+                  <Property Name="Class" Value="a_CreateData" />
+                  <Rule Match="Any">
+                    <Rule Match="All">
+                      <Property Name="TestWithNormalizedFullyQualifiedName" Value="a_CreateData.CreateDatabase" />
+                      <Rule Match="Any">
+                        <Property Name="DisplayName" Value="CreateDatabase(&quot;SQLite.MS&quot;)" />
+                        <Property Name="DisplayName" Value="CreateDatabase(&quot;MySql55&quot;)" />
+                        <Property Name="DisplayName" Value="CreateDatabase(&quot;MySql55Connector&quot;)" />
+                        <Property Name="DisplayName" Value="CreateDatabase(&quot;Oracle.11.Managed&quot;)" />
+                        <Property Name="DisplayName" Value="CreateDatabase(&quot;PostgreSQL.16&quot;)" />
+                        <Property Name="DisplayName" Value="CreateDatabase(&quot;SqlServer.2016&quot;)" />
+                      </Rule>
+                    </Rule>
+                  </Rule>
+                </Rule>
+              </Rule>
+            </Rule>
+            <Rule Match="All">
+              <Property Name="Namespace" Value="Tests" />
+              <Rule Match="Any">
+                <Rule Match="All">
+                  <Property Name="Class" Value="Issue2767Tests" />
+                  <Rule Match="Any">
+                    <Rule Match="All">
+                      <Property Name="TestWithNormalizedFullyQualifiedName" Value="Tests.Issue2767Tests.SampleSelectTest" />
+                      <Rule Match="Any">
+                        <Property Name="DisplayName" Value="SampleSelectTest(&quot;SQLite.MS&quot;)" />
+                        <Property Name="DisplayName" Value="SampleSelectTest(&quot;MySql55&quot;)" />
+                        <Property Name="DisplayName" Value="SampleSelectTest(&quot;MySql55Connector&quot;)" />
+                      </Rule>
+                    </Rule>
+                  </Rule>
+                </Rule>
+              </Rule>
+            </Rule>
+            <Rule Match="All">
+              <Property Name="Namespace" Value="Tests.UserTests" />
+              <Rule Match="Any">
+                <Rule Match="All">
+                  <Property Name="Class" Value="Issue2787Tests" />
+                  <Rule Match="Any">
+                    <Rule Match="All">
+                      <Property Name="TestWithNormalizedFullyQualifiedName" Value="Tests.UserTests.Issue2787Tests.Issue2787Test" />
+                      <Rule Match="Any">
+                        <Property Name="DisplayName" Value="Issue2787Test(&quot;SQLite.MS&quot;)" />
+                      </Rule>
+                    </Rule>
+                  </Rule>
+                </Rule>
+                <Rule Match="All">
+                  <Property Name="Class" Value="Issue2743Tests" />
+                  <Rule Match="Any">
+                    <Rule Match="All">
+                      <Property Name="TestWithNormalizedFullyQualifiedName" Value="Tests.UserTests.Issue2743Tests.IssueTestDeleteViaSelect" />
+                      <Rule Match="Any">
+                        <Property Name="DisplayName" Value="IssueTestDeleteViaSelect(&quot;SQLite.MS&quot;)" />
+                        <Property Name="DisplayName" Value="IssueTestDeleteViaSelect(&quot;MySql55&quot;)" />
+                        <Property Name="DisplayName" Value="IssueTestDeleteViaSelect(&quot;MySql55Connector&quot;)" />
+                        <Property Name="DisplayName" Value="IssueTestDeleteViaSelect(&quot;SQLite.MS.LinqService&quot;)" />
+                        <Property Name="DisplayName" Value="IssueTestDeleteViaSelect(&quot;MySql55.LinqService&quot;)" />
+                        <Property Name="DisplayName" Value="IssueTestDeleteViaSelect(&quot;MySql55Connector.LinqService&quot;)" />
+                        <Property Name="DisplayName" Value="IssueTestDeleteViaSelect(&quot;Oracle.11.Managed&quot;)" />
+                        <Property Name="DisplayName" Value="IssueTestDeleteViaSelect(&quot;Oracle.11.Managed.LinqService&quot;)" />
+                        <Property Name="DisplayName" Value="IssueTestDeleteViaSelect(&quot;PostgreSQL.16&quot;)" />
+                        <Property Name="DisplayName" Value="IssueTestDeleteViaSelect(&quot;SqlServer.2016&quot;)" />
+                        <Property Name="DisplayName" Value="IssueTestDeleteViaSelect(&quot;PostgreSQL.16.LinqService&quot;)" />
+                        <Property Name="DisplayName" Value="IssueTestDeleteViaSelect(&quot;SqlServer.2016.LinqService&quot;)" />
+                      </Rule>
+                    </Rule>
+                    <Rule Match="All">
+                      <Property Name="TestWithNormalizedFullyQualifiedName" Value="Tests.UserTests.Issue2743Tests.IssueTestInsertViaSelect" />
+                      <Rule Match="Any">
+                        <Property Name="DisplayName" Value="IssueTestInsertViaSelect(&quot;SQLite.MS&quot;)" />
+                        <Property Name="DisplayName" Value="IssueTestInsertViaSelect(&quot;MySql55&quot;)" />
+                        <Property Name="DisplayName" Value="IssueTestInsertViaSelect(&quot;MySql55Connector&quot;)" />
+                        <Property Name="DisplayName" Value="IssueTestInsertViaSelect(&quot;SQLite.MS.LinqService&quot;)" />
+                        <Property Name="DisplayName" Value="IssueTestInsertViaSelect(&quot;MySql55.LinqService&quot;)" />
+                        <Property Name="DisplayName" Value="IssueTestInsertViaSelect(&quot;MySql55Connector.LinqService&quot;)" />
+                        <Property Name="DisplayName" Value="IssueTestInsertViaSelect(&quot;Oracle.11.Managed&quot;)" />
+                        <Property Name="DisplayName" Value="IssueTestInsertViaSelect(&quot;Oracle.11.Managed.LinqService&quot;)" />
+                        <Property Name="DisplayName" Value="IssueTestInsertViaSelect(&quot;PostgreSQL.16&quot;)" />
+                        <Property Name="DisplayName" Value="IssueTestInsertViaSelect(&quot;SqlServer.2016&quot;)" />
+                        <Property Name="DisplayName" Value="IssueTestInsertViaSelect(&quot;PostgreSQL.16.LinqService&quot;)" />
+                        <Property Name="DisplayName" Value="IssueTestInsertViaSelect(&quot;SqlServer.2016.LinqService&quot;)" />
+                      </Rule>
+                    </Rule>
+                  </Rule>
+                </Rule>
+              </Rule>
+            </Rule>
+          </Rule>
+        </Rule>
+      </Rule>
+    </Rule>
+  </Rule>
+</Playlist>

@@ -52,11 +52,11 @@ namespace Tests.Infrastructure
 			new object?[]{ Expression.Constant(1), Expression.Constant(2), false },
 		};
 
-		public static void Method1()
+		private static void Method1()
 		{
 		}
 
-		public static void Method2()
+		private static void Method2()
 		{
 		}
 
@@ -69,7 +69,7 @@ namespace Tests.Infrastructure
 			ib1.Add(value1);
 			ib2.Add(value2);
 
-			Assert.AreEqual(equals, ib1.CreateID() == ib2.CreateID());
+			Assert.That(ib1.CreateID() == ib2.CreateID(), Is.EqualTo(equals));
 		}
 	}
 }

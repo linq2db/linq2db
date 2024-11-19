@@ -72,7 +72,7 @@ namespace LinqToDB.Mapping
 		internal IEnumerable<T> GetAttributes<T>(Type type)
 			where T : MappingAttribute
 		{
-			return _typeAttributes.TryGetValue(type, out var attributes) ? attributes.OfType<T>() : Array<T>.Empty;
+			return _typeAttributes.TryGetValue(type, out var attributes) ? attributes.OfType<T>() : [];
 		}
 
 		/// <summary>
@@ -86,7 +86,7 @@ namespace LinqToDB.Mapping
 		internal IEnumerable<T> GetAttributes<T>(Type type, MemberInfo memberInfo)
 			where T : MappingAttribute
 		{
-			return _memberAttributes.TryGetValue(memberInfo, out var attributes) ? attributes.OfType<T>() : Array<T>.Empty;
+			return _memberAttributes.TryGetValue(memberInfo, out var attributes) ? attributes.OfType<T>() : [];
 		}
 
 		#endregion

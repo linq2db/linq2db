@@ -7,6 +7,8 @@ using System.Runtime.InteropServices;
 using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.DataProvider.Access;
+using LinqToDB.DataProvider.Informix;
+using LinqToDB.DataProvider.SQLite;
 using LinqToDB.SchemaProvider;
 
 using NUnit.Framework;
@@ -25,13 +27,13 @@ public class a_CreateData : TestBase
 {
 	void RunScript(string configString, string divider, string name, Action<DbConnection>? action = null, string? databaseName = null)
 	{
-		TestContext.WriteLine("=== " + name + " === \n");
+		TestContext.Out.WriteLine("=== " + name + " === \n");
 
 		var scriptFolder = Path.Combine(Path.GetFullPath("."), "Database", "Create Scripts");
-		TestContext.WriteLine("Script folder exists: {1}; {0}", scriptFolder, Directory.Exists(scriptFolder));
+		TestContext.Out.WriteLine("Script folder exists: {1}; {0}", scriptFolder, Directory.Exists(scriptFolder));
 
 		var sqlFileName  = Path.GetFullPath(Path.Combine(scriptFolder, Path.ChangeExtension(name, "sql")));
-		TestContext.WriteLine("Sql file exists: {1}; {0}", sqlFileName, File.Exists(sqlFileName));
+		TestContext.Out.WriteLine("Sql file exists: {1}; {0}", sqlFileName, File.Exists(sqlFileName));
 
 		var text = File.ReadAllText(sqlFileName);
 
@@ -69,26 +71,26 @@ public class a_CreateData : TestBase
 				.ToArray();
 
 			if (DataConnection.TraceSwitch.TraceInfo)
-				TestContext.WriteLine("Commands count: {0}", cmds.Length);
+				TestContext.Out.WriteLine("Commands count: {0}", cmds.Length);
 
 			foreach (var command in cmds)
 			{
 				try
 				{
 					if (DataConnection.TraceSwitch.TraceInfo)
-						TestContext.WriteLine(command);
+						TestContext.Out.WriteLine(command);
 
 					db.Execute(command);
 
 					if (DataConnection.TraceSwitch.TraceInfo)
-						TestContext.WriteLine("\nOK\n");
+						TestContext.Out.WriteLine("\nOK\n");
 				}
 				catch (Exception ex)
 				{
 					if (DataConnection.TraceSwitch.TraceError)
 					{
 						if (!DataConnection.TraceSwitch.TraceInfo)
-							TestContext.WriteLine(command);
+							TestContext.Out.WriteLine(command);
 
 						var isDrop =
 							command.TrimStart().StartsWith("DROP")          ||
@@ -96,15 +98,15 @@ public class a_CreateData : TestBase
 							command.TrimStart().Contains("DROP PROCEDURE ") ||
 							command.TrimStart().StartsWith("CALL DROP");
 
-						TestContext.WriteLine(ex.Message);
+						TestContext.Out.WriteLine(ex.Message);
 
 						if (isDrop)
 						{
-							TestContext.WriteLine("\nnot too OK\n");
+							TestContext.Out.WriteLine("\nnot too OK\n");
 						}
 						else
 						{
-							TestContext.WriteLine("\nFAILED\n");
+							TestContext.Out.WriteLine("\nFAILED\n");
 
 #pragma warning disable CA1508 // Avoid dead conditional code
 							exception ??= ex;
@@ -115,7 +117,7 @@ public class a_CreateData : TestBase
 			}
 
 			if (DataConnection.TraceSwitch.TraceInfo)
-				TestContext.WriteLine("\nBulkCopy LinqDataTypes\n");
+				TestContext.Out.WriteLine("\nBulkCopy LinqDataTypes\n");
 
 			var options = GetDefaultBulkCopyOptions(configString);
 
@@ -138,7 +140,7 @@ public class a_CreateData : TestBase
 				});
 
 			if (DataConnection.TraceSwitch.TraceInfo)
-				TestContext.WriteLine("\nBulkCopy Parent\n");
+				TestContext.Out.WriteLine("\nBulkCopy Parent\n");
 
 			db.BulkCopy(
 				options,
@@ -154,7 +156,7 @@ public class a_CreateData : TestBase
 				});
 
 			if (DataConnection.TraceSwitch.TraceInfo)
-				TestContext.WriteLine("\nBulkCopy Child\n");
+				TestContext.Out.WriteLine("\nBulkCopy Child\n");
 
 			db.BulkCopy(
 				options,
@@ -180,7 +182,7 @@ public class a_CreateData : TestBase
 				});
 
 			if (DataConnection.TraceSwitch.TraceInfo)
-				TestContext.WriteLine("\nBulkCopy GrandChild\n");
+				TestContext.Out.WriteLine("\nBulkCopy GrandChild\n");
 
 			db.BulkCopy(
 				options,
@@ -246,7 +248,6 @@ public class a_CreateData : TestBase
 	{
 		switch (context)
 		{
-			case TestProvName.Default                                    : RunScript(context,          "\nGO\n",  "SQLite",   SQLiteAction);      break;
 			case string when context.IsAnyOf(TestProvName.AllFirebird)   : RunScript(context,          "COMMIT;", "Firebird", FirebirdAction);    break;
 			case string when context.IsAnyOf(TestProvName.AllPostgreSQL) : RunScript(context,          "\nGO\n",  "PostgreSQL");                  break;
 			case string when context.IsAnyOf(TestProvName.AllMySql)      : RunScript(context,          "\nGO\n",  "MySql");                       break;
@@ -281,7 +282,7 @@ public class a_CreateData : TestBase
 	static void AccessODBCAction(DbConnection connection)
 	{
 
-		using (var conn = AccessTools.CreateDataConnection(connection, ProviderName.AccessOdbc))
+		using (var conn = AccessTools.CreateDataConnection(connection, AccessProvider.ODBC))
 		{
 			conn.Execute(@"
 				INSERT INTO AllTypes
@@ -316,7 +317,7 @@ public class a_CreateData : TestBase
 
 	static void AccessAction(DbConnection connection)
 	{
-		using (var conn = AccessTools.CreateDataConnection(connection, ProviderName.Access))
+		using (var conn = AccessTools.CreateDataConnection(connection, AccessProvider.OleDb))
 		{
 			conn.Execute(@"
 				INSERT INTO AllTypes
@@ -383,7 +384,7 @@ public class a_CreateData : TestBase
 
 	static void SQLiteAction(DbConnection connection)
 	{
-		using (var conn = LinqToDB.DataProvider.SQLite.SQLiteTools.CreateDataConnection(connection))
+		using (var conn = SQLiteTools.CreateDataConnection(connection, SQLiteProvider.AutoDetect))
 		{
 			conn.Execute(@"
 				UPDATE AllTypes
@@ -420,7 +421,7 @@ public class a_CreateData : TestBase
 
 	static void InformixAction(DbConnection connection)
 	{
-		using (var conn = LinqToDB.DataProvider.Informix.InformixTools.CreateDataConnection(connection, ProviderName.Informix))
+		using (var conn = InformixTools.CreateDataConnection(connection, InformixProvider.Informix))
 		{
 			conn.Execute(@"
 				UPDATE AllTypes
@@ -438,7 +439,7 @@ public class a_CreateData : TestBase
 
 	static void InformixDB2Action(DbConnection connection)
 	{
-		using (var conn = LinqToDB.DataProvider.Informix.InformixTools.CreateDataConnection(connection, ProviderName.InformixDB2))
+		using (var conn = InformixTools.CreateDataConnection(connection, InformixProvider.DB2))
 		{
 			conn.Execute(@"
 				UPDATE AllTypes

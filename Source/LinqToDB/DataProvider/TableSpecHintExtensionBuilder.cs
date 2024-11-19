@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Globalization;
 using System.Text;
 
 namespace LinqToDB.DataProvider
@@ -8,7 +9,7 @@ namespace LinqToDB.DataProvider
 
 	sealed class TableSpecHintExtensionBuilder : ISqlTableExtensionBuilder
 	{
-		void ISqlTableExtensionBuilder.Build(ISqlBuilder sqlBuilder, StringBuilder stringBuilder, SqlQueryExtension sqlQueryExtension, SqlTable table, string alias)
+		void ISqlTableExtensionBuilder.Build(NullabilityContext nullability, ISqlBuilder sqlBuilder, StringBuilder stringBuilder, SqlQueryExtension sqlQueryExtension, SqlTable table, string alias)
 		{
 			if (stringBuilder.Length > 0 && stringBuilder[^1] != ' ')
 				stringBuilder.Append(' ');
@@ -38,8 +39,7 @@ namespace LinqToDB.DataProvider
 				var param     = ((SqlValue)hintParameter).Value;
 				var delimiter = args.TryGetValue(".ExtensionArguments.0", out var extArg) && extArg is SqlValue { Value : string val } ? val : " ";
 
-				stringBuilder.Append(delimiter);
-				stringBuilder.Append(param);
+				stringBuilder.Append(CultureInfo.InvariantCulture, $"{delimiter}{param}");
 			}
 			else if (args.TryGetValue("hintParameters.Count", out var hintParametersCount))
 			{
@@ -53,11 +53,11 @@ namespace LinqToDB.DataProvider
 
 					for (var i = 0; i < count; i++)
 					{
-						var value = ((SqlValue)args[$"hintParameters.{i}"]).Value;
+						var value = ((SqlValue)args[FormattableString.Invariant($"hintParameters.{i}")]).Value;
 
 						if (i > 0)
 							stringBuilder.Append(delimiter1);
-						stringBuilder.Append(value);
+						stringBuilder.Append(CultureInfo.InvariantCulture, $"{value}");
 					}
 				}
 			}

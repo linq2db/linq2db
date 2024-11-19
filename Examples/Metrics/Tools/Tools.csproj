@@ -1,0 +1,17 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+	<PropertyGroup>
+		<OutputType>Exe</OutputType>
+		<TargetFramework>net8.0</TargetFramework>
+		<Nullable>enable</Nullable>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\..\..\Source\LinqToDB.Tools\LinqToDB.Tools.csproj" />
+
+		<PackageReference Include="Microsoft.Data.Sqlite" />
+
+		<Content Include="..\..\..\Data\Northwind.MS.sqlite" Link="Northwind.MS.sqlite">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</Content>
+	</ItemGroup>
+</Project>

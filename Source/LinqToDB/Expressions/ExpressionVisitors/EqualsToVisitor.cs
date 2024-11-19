@@ -1,126 +1,101 @@
 ﻿using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Linq;
 using System.Linq.Expressions;
-using System.Reflection;
 using System.Runtime.CompilerServices;
 
 namespace LinqToDB.Expressions
 {
-	using Common;
 	using Extensions;
-	using Linq;
-	using Reflection;
+	using Mapping;
 
 	static class EqualsToVisitor
 	{
-		#region Cache
-		static readonly ConcurrentDictionary<MethodInfo,IList<SqlQueryDependentAttribute?>?> _queryDependentMethods       = new ();
-		static readonly ConcurrentDictionary<MethodInfo,bool[]>                              _skipContantArgumentsMethods = new ();
-
-		static EqualsToVisitor()
-		{
-			// prefill with supported external methods as we cannot add attributes to them
-			var arr = new [] { false, true };
-			_skipContantArgumentsMethods[Methods.Queryable.Take               ] = arr;
-			_skipContantArgumentsMethods[Methods.Queryable.Skip               ] = arr;
-			_skipContantArgumentsMethods[Methods.Queryable.ElementAt          ] = arr;
-			_skipContantArgumentsMethods[Methods.Queryable.ElementAtOrDefault ] = arr;
-			_skipContantArgumentsMethods[Methods.Enumerable.Take              ] = arr;
-			_skipContantArgumentsMethods[Methods.Enumerable.Skip              ] = arr;
-			_skipContantArgumentsMethods[Methods.Enumerable.ElementAt         ] = arr;
-			_skipContantArgumentsMethods[Methods.Enumerable.ElementAtOrDefault] = arr;
-		}
-
-		public static void ClearCaches()
-		{
-			_queryDependentMethods.Clear();
-		}
-		#endregion
-
 		internal static bool EqualsTo(
-			this Expression                                           expr1,
-			Expression                                                expr2,
-			IDataContext                                              dataContext,
-			IReadOnlyDictionary<Expression, QueryableAccessor>?       queryableAccessorDic,
-			IReadOnlyDictionary<MemberInfo, QueryableMemberAccessor>? queryableMemberAccessorDic,
-			IReadOnlyDictionary<Expression, Expression>?              queryDependedObjects,
-			bool                                                      compareConstantValues = false)
+			this Expression                                                                                                                      expr1,
+			Expression                                                                                                                           expr2,
+			IDataContext                                                                                                                         dataContext,
+			List<(Func<Expression, IDataContext?, object?[]?, object?> main, Func<Expression, IDataContext?, object?[]?, object?> substituted)>? parametersDuplicates,
+			List<(Expression used, MappingSchema mappingSchema, Func<IDataContext, MappingSchema, Expression> accessorFunc)>?                    dynamicAccessors,
+			bool                                                                                                                                 compareConstantValues = false)
 		{
-			return EqualsTo(expr1, expr2, PrepareEqualsInfo(dataContext, queryableAccessorDic, queryableMemberAccessorDic, queryDependedObjects, compareConstantValues));
+			var equalsInfo = PrepareEqualsInfo(dataContext, compareConstantValues);
+			var result     = EqualsTo(expr1, expr2, equalsInfo);
+
+			if (result && parametersDuplicates != null)
+			{
+				foreach (var (main, substituted) in parametersDuplicates)
+				{
+					var value1 = main(expr2, dataContext, null);
+					var value2 = substituted(expr2, dataContext, null);
+					result = value1 == null && value2 == null || value1 != null && value1.Equals(value2);
+
+					if (!result)
+						break;
+				}
+			}
+
+			if (result && dynamicAccessors != null)
+			{
+				foreach (var (used, mappingSchema, accessorFunc) in dynamicAccessors)
+				{
+					var current = accessorFunc(dataContext, mappingSchema);
+					result = EqualsTo(used, current, equalsInfo);
+					if (!result)
+						break;
+				}
+			}
+
+			return result;
 		}
 
 		/// <summary>
 		/// Creates reusable equality context.
 		/// </summary>
 		internal static EqualsToInfo PrepareEqualsInfo(
-			IDataContext                                              dataContext,
-			IReadOnlyDictionary<Expression, QueryableAccessor>?       queryableAccessorDic       = null,
-			IReadOnlyDictionary<MemberInfo, QueryableMemberAccessor>? queryableMemberAccessorDic = null,
-			IReadOnlyDictionary<Expression, Expression>?              queryDependedObjects       = null,
-			bool                                                      compareConstantValues      = false)
+			IDataContext      dataContext,
+			bool              compareConstantValues = false)
 		{
-			return new EqualsToInfo(dataContext, queryableAccessorDic, queryableMemberAccessorDic, queryDependedObjects, compareConstantValues);
+			return new EqualsToInfo(dataContext, compareConstantValues);
 		}
 
 		internal sealed class EqualsToInfo
 		{
 			public EqualsToInfo(
-				IDataContext                                              dataContext,
-				IReadOnlyDictionary<Expression, QueryableAccessor>?       queryableAccessorDic,
-				IReadOnlyDictionary<MemberInfo, QueryableMemberAccessor>? queryableMemberAccessorDic,
-				IReadOnlyDictionary<Expression, Expression>?              queryDependedObjects,
-				bool                                                      compareConstantValues)
+				IDataContext      dataContext,
+				bool              compareConstantValues)
 			{
 				DataContext                = dataContext;
-				QueryableAccessorDic       = queryableAccessorDic;
-				QueryableMemberAccessorDic = queryableMemberAccessorDic;
-				QueryDependedObjects       = queryDependedObjects;
 				CompareConstantValues      = compareConstantValues;
 			}
 
 			public readonly IDataContext                                              DataContext;
-			public readonly IReadOnlyDictionary<MemberInfo, QueryableMemberAccessor>? QueryableMemberAccessorDic;
-			public readonly IReadOnlyDictionary<Expression, Expression>?              QueryDependedObjects;
-			public readonly IReadOnlyDictionary<Expression, QueryableAccessor>?       QueryableAccessorDic;
 			public readonly bool                                                      CompareConstantValues;
-
-			public HashSet<Expression>?          Visited;
-			public Dictionary<MemberInfo, bool>? MemberCompareCache;
 
 			public void Reset()
 			{
-				Visited?.Clear();
 			}
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		static bool CompareMemberExpression(MemberInfo memberInfo, EqualsToInfo info)
-		{
-			if (info.QueryableMemberAccessorDic == null ||
-				!info.QueryableMemberAccessorDic.TryGetValue(memberInfo, out var accessor))
-				return true;
-
-			if (info.MemberCompareCache == null || !info.MemberCompareCache.TryGetValue(memberInfo, out var compareResult))
-			{
-				compareResult = accessor.Expression.EqualsTo(accessor.Execute(memberInfo, info.DataContext), info);
-				(info.MemberCompareCache ??= new (MemberInfoComparer.Instance)).Add(memberInfo, compareResult);
-			}
-
-			return compareResult;
 		}
 
 		internal static bool EqualsTo(this Expression? expr1, Expression? expr2, EqualsToInfo info)
 		{
 			if (expr1 == expr2)
 			{
-				if (info.QueryableMemberAccessorDic == null || expr1 == null)
-					return true;
+				return true;
 			}
 
-			if (expr1 == null || expr2 == null || expr1.NodeType != expr2.NodeType || expr1.Type != expr2.Type)
+			if (expr1 == null || expr2 == null || expr1.Type != expr2.Type)
 				return false;
+
+			if (expr1.NodeType != expr2.NodeType)
+			{
+				// special cache case
+				if (expr1.NodeType == ExpressionType.Extension && expr2.NodeType == ExpressionType.Constant && expr1 is ConstantPlaceholderExpression)
+				{
+					return true;
+				}
+
+				return false;
+			}
 
 			switch (expr1.NodeType)
 			{
@@ -200,9 +175,17 @@ namespace LinqToDB.Expressions
 						((ChangeTypeExpression)expr1).Type == ((ChangeTypeExpression)expr2).Type &&
 						((ChangeTypeExpression)expr1).Expression.EqualsTo(((ChangeTypeExpression)expr2).Expression, info);
 
+				case ExpressionType.Extension:
+					return EqualsExtensions(expr1, expr2);
+
 				default:
 					throw new NotImplementedException($"Unhandled expression type: {expr1.NodeType}");
 			}
+		}
+
+		static bool EqualsExtensions(Expression expr1, Expression expr2)
+		{
+			return expr1.Equals(expr2);
 		}
 
 		static bool EqualsToX(BlockExpression expr1, BlockExpression expr2, EqualsToInfo info)
@@ -334,17 +317,6 @@ namespace LinqToDB.Expressions
 		{
 			if (expr1.Member == expr2.Member)
 			{
-				if (expr1.Expression == expr2.Expression || expr1.Expression!.Type == expr2.Expression!.Type)
-				{
-					if (info.QueryableAccessorDic != null && info.QueryableAccessorDic.TryGetValue(expr1, out var qa))
-						return
-							expr1.Expression.EqualsTo(expr2.Expression, info) &&
-							qa.Queryable.Expression.EqualsTo(qa.Accessor(expr2).Expression, info);
-
-					if (!CompareMemberExpression(expr1.Member, info))
-						return false;
-				}
-
 				return expr1.Expression.EqualsTo(expr2.Expression, info);
 			}
 
@@ -404,22 +376,9 @@ namespace LinqToDB.Expressions
 			if (expr1.Value == null && expr2.Value == null)
 				return true;
 
-			if (expr1.Type.IsConstantable(false))
-				return Equals(expr1.Value, expr2.Value);
+			var result = Equals(expr1.Value, expr2.Value);
 
-			if (expr1.Value == null || expr2.Value == null)
-				return false;
-
-			if (expr1.Value is IQueryable queryable)
-			{
-				var eq1 = queryable.Expression;
-				var eq2 = ((IQueryable)expr2.Value).Expression;
-
-				if ((info.Visited ??= new()).Add(eq1))
-					return eq1.EqualsTo(eq2, info);
-			}
-
-			return !info.CompareConstantValues || expr1.Value == expr2.Value;
+			return result;
 		}
 
 		static bool EqualsToX(MethodCallExpression expr1, MethodCallExpression expr2, EqualsToInfo info)
@@ -430,55 +389,12 @@ namespace LinqToDB.Expressions
 			if (!expr1.Object.EqualsTo(expr2.Object, info))
 				return false;
 
-			var mi = expr1.Method.GetGenericMethodDefinitionCached();
-			var dependentParameters = _queryDependentMethods.GetOrAdd(
-				mi, static mi =>
-				{
-					var parameters = mi.GetParameters();
+			var dependedParameters = SqlQueryDependentAttributeHelper.GetQueryDependentAttributes(expr1.Method);
 
-					if (parameters.Length == 0)
-						return null;
-
-					SqlQueryDependentAttribute?[]? attributes = null;
-
-					for (var i = 0; i < parameters.Length; i++)
-					{
-						var attr = parameters[i].GetAttribute<SqlQueryDependentAttribute>();
-						if (attr != null)
-						{
-							attributes  ??= new SqlQueryDependentAttribute[parameters.Length];
-							attributes[i] = attr;
-						}
-					}
-
-					return attributes;
-				});
-
-			var skipConstantArguments = _skipContantArgumentsMethods.GetOrAdd(
-				mi, static mi =>
-				{
-					var parameters = mi.GetParameters();
-
-					if (parameters.Length == 0)
-						return Array<bool>.Empty;
-
-					var flags = new bool[parameters.Length];
-
-					for (var i = 0; i < parameters.Length; i++)
-						flags[i] = parameters[i].HasAttribute<SkipIfConstantAttribute>();
-
-					return flags;
-				});
-
-			if (dependentParameters == null)
+			if (dependedParameters == null)
 			{
 				for (var i = 0; i < expr1.Arguments.Count; i++)
 				{
-					if (skipConstantArguments[i]
-						&& expr1.Arguments[i].NodeType is ExpressionType.Constant or ExpressionType.Default
-						&& expr2.Arguments[i].NodeType is ExpressionType.Constant or ExpressionType.Default)
-						continue;
-
 					if (!DefaultCompareArguments(expr1.Arguments[i], expr2.Arguments[i], info))
 						return false;
 				}
@@ -487,52 +403,26 @@ namespace LinqToDB.Expressions
 			{
 				for (var i = 0; i < expr1.Arguments.Count; i++)
 				{
-					var dependentAttribute = dependentParameters[i];
+					var dependentAttribute = dependedParameters[i];
+					var arg1 = expr1.Arguments[i];
+					var arg2 = expr2.Arguments[i];
 
 					if (dependentAttribute != null)
 					{
-						var enum1 = dependentAttribute.SplitExpression(expr1.Arguments[i]).GetEnumerator();
-						var enum2 = dependentAttribute.SplitExpression(expr2.Arguments[i]).GetEnumerator();
-
-						using (enum1)
-						using (enum2)
+						if (arg1 is not ConstantPlaceholderExpression)
 						{
-							while (enum1.MoveNext())
-							{
-								if (!enum2.MoveNext())
-									return false;
-
-								var arg1 = enum1.Current;
-								var arg2 = enum2.Current;
-
-								if (info.QueryDependedObjects != null && info.QueryDependedObjects.TryGetValue(arg1, out var nevValue))
-									arg1 = nevValue;
-								if (!dependentAttribute.ExpressionsEqual(info, arg1, arg2, static (info, e1, e2) => e1.EqualsTo(e2, info)))
-									return false;
-							}
-
-							if (enum2.MoveNext())
+							if (!dependentAttribute.ExpressionsEqual(info, arg1, arg2, static (info, e1, e2) => e1.EqualsTo(e2, info)))
 								return false;
 						}
 					}
 					else
 					{
-						if (skipConstantArguments[i]
-							&& expr1.Arguments[i].NodeType is ExpressionType.Constant or ExpressionType.Default
-							&& expr2.Arguments[i].NodeType is ExpressionType.Constant or ExpressionType.Default)
-							continue;
-
-						if (!DefaultCompareArguments(expr1.Arguments[i], expr2.Arguments[i], info))
+						if (!DefaultCompareArguments(arg1, arg2, info))
 							return false;
 					}
 				}
+
 			}
-
-			if (info.QueryableAccessorDic != null && info.QueryableAccessorDic.TryGetValue(expr1, out var qa))
-				return qa.Queryable.Expression.EqualsTo(qa.Accessor(expr2).Expression, info);
-
-			if (!CompareMemberExpression(expr1.Method, info))
-				return false;
 
 			return true;
 		}

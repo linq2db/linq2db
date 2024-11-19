@@ -667,29 +667,6 @@ namespace Sql2017
 
 		#endregion
 
-		#region SalesByYear
-
-		public static List<SalesByYearResult> SalesByYear(this NorthwindDB dataConnection, DateTime? @BeginningDate, DateTime? @EndingDate)
-		{
-			var parameters = new []
-			{
-				new DataParameter("@Beginning_Date", @BeginningDate, LinqToDB.DataType.DateTime),
-				new DataParameter("@Ending_Date",    @EndingDate,    LinqToDB.DataType.DateTime)
-			};
-
-			return dataConnection.QueryProc<SalesByYearResult>("[Sales by Year]", parameters).ToList();
-		}
-
-		public partial class SalesByYearResult
-		{
-			public DateTime? ShippedDate { get; set; }
-			public int       OrderID     { get; set; }
-			public decimal?  Subtotal    { get; set; }
-			public string?   Year        { get; set; }
-		}
-
-		#endregion
-
 		#region SalesByCategory
 
 		public static List<SalesByCategoryResult> SalesByCategory(this NorthwindDB dataConnection, string? @CategoryName, string? @OrdYear)
@@ -713,6 +690,29 @@ namespace Sql2017
 		{
 			public string   ProductName   { get; set; } = null!;
 			public decimal? TotalPurchase { get; set; }
+		}
+
+		#endregion
+
+		#region SalesByYear
+
+		public static List<SalesByYearResult> SalesByYear(this NorthwindDB dataConnection, DateTime? @BeginningDate, DateTime? @EndingDate)
+		{
+			var parameters = new []
+			{
+				new DataParameter("@Beginning_Date", @BeginningDate, LinqToDB.DataType.DateTime),
+				new DataParameter("@Ending_Date",    @EndingDate,    LinqToDB.DataType.DateTime)
+			};
+
+			return dataConnection.QueryProc<SalesByYearResult>("[Sales by Year]", parameters).ToList();
+		}
+
+		public partial class SalesByYearResult
+		{
+			public DateTime? ShippedDate { get; set; }
+			public int       OrderID     { get; set; }
+			public decimal?  Subtotal    { get; set; }
+			public string?   Year        { get; set; }
 		}
 
 		#endregion
@@ -1206,8 +1206,7 @@ namespace Sql2017
 		[Sql.TableFunction(Name="GetParentByID")]
 		public ITable<Parent> GetParentByID(int? @id)
 		{
-			return this.GetTable<Parent>(this, (MethodInfo)MethodBase.GetCurrentMethod()!,
-				@id);
+			return this.TableFromExpression(() => GetParentByID(@id));
 		}
 
 		#endregion
@@ -1217,7 +1216,7 @@ namespace Sql2017
 		[Sql.TableFunction(Name="Issue1921")]
 		public ITable<Issue1921Result> Issue1921()
 		{
-			return this.GetTable<Issue1921Result>(this, (MethodInfo)MethodBase.GetCurrentMethod()!);
+			return this.TableFromExpression(() => Issue1921());
 		}
 
 		public partial class Issue1921Result
@@ -2741,6 +2740,20 @@ namespace Sql2017
 			{
 				_dataContext = dataContext;
 			}
+
+			#region Table Functions
+
+			#region SchemaTableFunction
+
+			[Sql.TableFunction(Schema="TestSchema", Name="SchemaTableFunction")]
+			public ITable<Parent> SchemaTableFunction(int? @id)
+			{
+				return _dataContext.TableFromExpression(() => SchemaTableFunction(@id));
+			}
+
+			#endregion
+
+			#endregion
 		}
 
 		[Table(Schema="TestSchema", Name="SameTableName")]

@@ -21,7 +21,7 @@ namespace Cli.NoMetadata.Firebird
 		public int?      Field4          { get; set; } // integer
 		public int?      Field5          { get; set; } // integer
 		public long?     FieldInt64      { get; set; } // bigint
-		public char?     FieldBoolean    { get; set; } // char(1)
+		public bool?     FieldBoolean    { get; set; } // boolean
 		public string?   FieldString     { get; set; } // varchar(20)
 		public string?   FieldNString    { get; set; } // varchar(20)
 		public char?     FieldChar       { get; set; } // char(1)

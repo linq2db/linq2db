@@ -39,7 +39,7 @@ namespace LinqToDB
 					builder.ResultExpression = columnExpressions[0];
 				else
 					builder.ResultExpression = new SqlExpression(
-						string.Join(", ", Enumerable.Range(0, columns.Length).Select(i => $"{{{i}}}")),
+						string.Join(", ", Enumerable.Range(0, columns.Length).Select(i => FormattableString.Invariant($"{{{i}}}"))),
 						Precedence.Primary,
 						columnExpressions);
 			}
@@ -77,13 +77,13 @@ namespace LinqToDB
 		{
 			public void Build(ISqExtensionBuilder builder)
 			{
-				var fieldExpr    = builder.GetExpression(0);
+				var fieldExpr    = builder.GetExpression(0)!;
 				var qualified    = builder.Arguments.Length <= 1 || builder.GetValue<bool>(1);
 				var isExpression = builder.Member.Name == "FieldExpr";
 
 				var field = QueryHelper.ExtractField(fieldExpr);
 				if (field == null)
-					throw new LinqToDBException($"Can not convert expression {builder.Arguments[0]} to field.");
+					throw new LinqToDBException($"Cannot convert expression {builder.Arguments[0]} to field.");
 
 				if (isExpression)
 				{
@@ -104,7 +104,7 @@ namespace LinqToDB
 		}
 
 		[Pure]
-		[Extension("", BuilderType = typeof(FieldNameBuilderDirect), ServerSideOnly = false)]
+		[Extension("", BuilderType = typeof(FieldNameBuilderDirect), ServerSideOnly = true)]
 		public static string FieldName<T>([NoEnumeration] ITable<T> table, Expression<Func<T, object>> fieldExpr)
 			where T : notnull
 		{
@@ -112,7 +112,7 @@ namespace LinqToDB
 		}
 
 		[Pure]
-		[Extension("", BuilderType = typeof(FieldNameBuilderDirect), ServerSideOnly = false)]
+		[Extension("", BuilderType = typeof(FieldNameBuilderDirect), ServerSideOnly = true)]
 		public static string FieldName<T>([NoEnumeration] ITable<T> table, Expression<Func<T, object>> fieldExpr, [SqlQueryDependent] bool qualified)
 			where T : notnull
 		{
@@ -141,14 +141,14 @@ namespace LinqToDB
 			Full         = TableName | DatabaseName | SchemaName | ServerName | TableOptions
 		}
 
-		[Extension("", BuilderType = typeof(FieldNameBuilderDirect), ServerSideOnly = false)]
+		[Extension("", BuilderType = typeof(FieldNameBuilderDirect), ServerSideOnly = true)]
 		public static ISqlExpression FieldExpr<T, TV>([NoEnumeration] ITable<T> table, Expression<Func<T, TV>> fieldExpr)
 			where T : notnull
 		{
 			return FieldExpr(table, fieldExpr, true);
 		}
 
-		[Extension("", BuilderType = typeof(FieldNameBuilderDirect), ServerSideOnly = false)]
+		[Extension("", BuilderType = typeof(FieldNameBuilderDirect), ServerSideOnly = true)]
 		public static ISqlExpression FieldExpr<T, TV>([NoEnumeration] ITable<T> table, Expression<Func<T, TV>> fieldExpr, bool qualified)
 			where T : notnull
 		{
@@ -186,7 +186,7 @@ namespace LinqToDB
 				return columnExpressions[0];
 
 			return new SqlExpression(
-				string.Join(", ", Enumerable.Range(0, columns.Length).Select(i => $"{{{i}}}")),
+				string.Join(", ", Enumerable.Range(0, columns.Length).Select(i => FormattableString.Invariant($"{{{i}}}"))),
 				Precedence.Primary,
 				columnExpressions);
 		}
@@ -197,7 +197,7 @@ namespace LinqToDB
 				return new[] { GetColumnFromExpression(entityType, fieldExpr, mappingSchema, options) };
 
 			if (init.Arguments == null || init.Arguments.Count == 0)
-				throw new LinqToDBException($"Can not extract columns info from expression {fieldExpr.Body}");
+				throw new LinqToDBException($"Cannot extract columns info from expression {fieldExpr.Body}");
 
 			var ed = mappingSchema.GetEntityDescriptor(entityType, options.ConnectionOptions.OnEntityDescriptorCreated);
 			var columns = new ColumnDescriptor[init.Arguments.Count];
@@ -205,11 +205,11 @@ namespace LinqToDB
 			{
 				var memberInfo = MemberHelper.GetMemberInfo(init.Arguments[i]);
 				if (memberInfo == null)
-					throw new LinqToDBException($"Can not extract member info from expression {init.Arguments[i]}");
+					throw new LinqToDBException($"Cannot extract member info from expression {init.Arguments[i]}");
 
 				var column = ed.FindColumnDescriptor(memberInfo);
 
-				columns[i] = column ?? throw new LinqToDBException($"Can not find column for member {entityType.Name}.{memberInfo.Name}");
+				columns[i] = column ?? throw new LinqToDBException($"Cannot find column for member {entityType.Name}.{memberInfo.Name}");
 			}
 
 			return columns;
@@ -219,13 +219,13 @@ namespace LinqToDB
 		{
 			var memberInfo = MemberHelper.GetMemberInfo(fieldExpr.Body);
 			if (memberInfo == null)
-				throw new LinqToDBException($"Can not extract member info from expression {fieldExpr.Body}");
+				throw new LinqToDBException($"Cannot extract member info from expression {fieldExpr.Body}");
 
 			var ed     = mappingSchema.GetEntityDescriptor(entityType, options.ConnectionOptions.OnEntityDescriptorCreated);
 			var column = ed.FindColumnDescriptor(memberInfo);
 
 			if (column == null)
-				throw new LinqToDBException($"Can not find column for member {entityType.Name}.{memberInfo.Name}");
+				throw new LinqToDBException($"Cannot find column for member {entityType.Name}.{memberInfo.Name}");
 			return column;
 		}
 
@@ -287,7 +287,7 @@ namespace LinqToDB
 		{
 			public void Build(ISqExtensionBuilder builder)
 			{
-				var tableExpr    = builder.Arguments[0].EvaluateExpression(builder.DataContext);
+				var tableExpr    = builder.EvaluateExpression(builder.Arguments[0]);
 				var tableType    = ((MethodInfo)builder.Member).GetGenericArguments()[0];
 				var helperType   = typeof(TableHelper<>).MakeGenericType(tableType);
 				var tableHelper  = (TableHelper)Activator.CreateInstance(helperType, tableExpr)!;
@@ -344,17 +344,11 @@ namespace LinqToDB
 			public void Build(ISqExtensionBuilder builder)
 			{
 				var tableExpr = builder.GetExpression(0);
-				var sqlTable  = tableExpr switch
-				{
-					SqlTable  t      => t,
-					SqlField  field  => field.Table as SqlTable,
-					SqlColumn column => QueryHelper.ExtractField(column)?.Table as SqlTable,
-					_                => null
-				};
+				var sqlTable  = QueryHelper.ExtractSqlTable(tableExpr);
 
 				//TODO: review, maybe we need here TableSource
 				if (sqlTable == null)
-					throw new LinqToDBException("Can not find Table associated with expression");
+					throw new LinqToDBException("Cannot find Table associated with expression");
 
 				var qualified    = builder.Arguments.Length <= 1 ? TableQualification.Full : builder.GetValue<TableQualification>(1);
 				var isExpression = builder.Member.Name == "TableExpr";
@@ -389,7 +383,7 @@ namespace LinqToDB
 		{
 			public void Build(ISqExtensionBuilder builder)
 			{
-				builder.ResultExpression = new SqlAliasPlaceholder();
+				builder.ResultExpression = SqlAliasPlaceholder.Instance;
 			}
 		}
 
@@ -397,21 +391,11 @@ namespace LinqToDB
 		{
 			public void Build(ISqExtensionBuilder builder)
 			{
-				var tableOrColumnExpr = builder.GetExpression(0);
-				var sqlField = tableOrColumnExpr as SqlField;
+				var tableOrColumnExpr = builder.GetExpression(0)!;
 
-				if (sqlField == null)
-					throw new LinqToDBException("Can not find Table or Column associated with expression");
+				var anchor = new SqlAnchor(tableOrColumnExpr, SqlAnchor.AnchorKindEnum.TableAsSelfColumnOrField);
 
-				if (sqlField.Name != "*")
-				{
-					builder.ResultExpression = sqlField;
-					return;
-				}
-
-				var sqlTable = (SqlTable)sqlField.Table!;
-
-				builder.ResultExpression = new SqlField(sqlTable, sqlTable.TableName.Name);
+				builder.ResultExpression = anchor;
 			}
 		}
 
@@ -419,37 +403,23 @@ namespace LinqToDB
 		{
 			public void Build(ISqExtensionBuilder builder)
 			{
-				var tableExpr = builder.GetExpression(0);
-				var sqlField = tableExpr as SqlField;
+				var tableExpr = builder.GetExpression(0)!;
 
-				if (sqlField == null)
-					throw new LinqToDBException("Can not find Table associated with expression");
+				var anchor = new SqlAnchor(tableExpr, SqlAnchor.AnchorKindEnum.TableAsSelfColumn);
 
-				var sqlTable = (SqlTable)sqlField.Table!;
-
-				builder.ResultExpression = new SqlField(sqlTable, sqlTable.TableName.Name);
+				builder.ResultExpression = anchor;
 			}
 		}
 
-		private sealed class TableFieldBuilder : IExtensionCallBuilder
-		{
-			public void Build(ISqExtensionBuilder builder)
-			{
-				var tableExpr = builder.GetExpression(0);
-				var fieldName = builder.GetValue<string>(1);
-				var sqlField = tableExpr as SqlField;
-
-				if (sqlField == null)
-					throw new LinqToDBException("Can not find Table associated with expression");
-
-				builder.ResultExpression = new SqlField(sqlField.Table!, fieldName);
-			}
-		}
-
-		[Extension("", BuilderType = typeof(TableFieldBuilder))]
+		[ExpressionMethod(nameof(TableFieldIml))]
 		public static TColumn TableField<TEntity, TColumn>([NoEnumeration] TEntity entity, string fieldName)
 		{
 			throw new LinqToDBException("'Sql.TableField' is server side only method and used only for generating custom SQL parts");
+		}
+
+		static Expression<Func<TEntity, string, TColumn>> TableFieldIml<TEntity, TColumn>()
+		{
+			return (entity, fieldName) => Property<TColumn>(entity, fieldName);
 		}
 
 		[Extension("", BuilderType = typeof(TableOrColumnAsFieldBuilder))]
@@ -556,6 +526,14 @@ namespace LinqToDB
 			throw new LinqToDBException("'Sql.TableExpr' is server side only method and used only for generating custom SQL parts");
 		}
 
+		class AliasExprBuilder : IExtensionCallBuilder
+		{
+			public void Build(ISqExtensionBuilder builder)
+			{
+				builder.ResultExpression = SqlAliasPlaceholder.Instance;
+			}
+		}
+
 		/// <summary>
 		/// Useful for specifying place of alias when using <see cref="DataExtensions.FromSql{TEntity}(IDataContext, RawSqlString, object?[])"/> method.
 		/// </summary>
@@ -571,11 +549,8 @@ namespace LinqToDB
 		/// db.FromSql&lt;int&gt;($"select 1 as value from TableA")
 		/// </code>
 		/// </example>
-		[Extension("", BuilderType = typeof(TableSourceBuilder), ServerSideOnly = true)]
-		public static ISqlExpression AliasExpr()
-		{
-			return new SqlAliasPlaceholder();
-		}
+		[Extension(builderType: typeof(AliasExprBuilder), ServerSideOnly = true)]
+		public static ISqlExpression AliasExpr() => SqlAliasPlaceholder.Instance;
 
 		sealed class ExprBuilder : IExtensionCallBuilder
 		{
@@ -589,25 +564,29 @@ namespace LinqToDB
 
 				var sqlArguments = arguments.Select(e => builder.ConvertExpressionToSql(e)).ToArray();
 
-				builder.ResultExpression = new SqlExpression(
-					memberType,
-					format,
-					Precedence.Primary,
-					memberType == typeof(bool) ? SqlFlags.IsPredicate | SqlFlags.IsPure : SqlFlags.IsPure,
-					sqlArguments);
+				if (sqlArguments.Any(a => a == null))
+					builder.IsConvertible = false;
+				else
+				{
+					builder.ResultExpression = new SqlExpression(
+						memberType,
+						format,
+						Precedence.Primary,
+						memberType == typeof(bool) ? SqlFlags.IsPredicate | SqlFlags.IsPure : SqlFlags.IsPure,
+						ExpressionAttribute.ToParametersNullabilityType(builder.IsNullable),
+						builder.CanBeNull,
+						sqlArguments!);
+				}
 			}
 		}
 
-#if !NET45
 		[Extension("", BuilderType = typeof(ExprBuilder), ServerSideOnly = true)]
 		[StringFormatMethod("sql")]
-		public static T Expr<T>(
-			[DataExtensions.SqlFormattableComparer] FormattableString sql
-			)
+		public static T Expr<T>(FormattableString sql)
 		{
 			throw new LinqToDBException("'Sql.Expr' is server side only method and used only for generating custom SQL parts");
 		}
-#endif
+
 		[Extension("", BuilderType = typeof(ExprBuilder), ServerSideOnly = true)]
 		[StringFormatMethod("sql")]
 		public static T Expr<T>(

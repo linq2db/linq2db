@@ -22,7 +22,7 @@ namespace Tests.Samples
 
 				foreach (var category in query)
 				{
-					TestContext.WriteLine(category.CategoryID);
+					TestContext.Out.WriteLine(category.CategoryID);
 				}
 			}
 		}
@@ -45,7 +45,7 @@ namespace Tests.Samples
 					};
 
 				var data = query.ToArray();
-				Assert.IsNotEmpty(data);
+				Assert.That(data, Is.Not.Empty);
 			}
 		}
 	}

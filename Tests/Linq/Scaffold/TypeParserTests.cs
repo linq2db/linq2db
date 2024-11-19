@@ -153,7 +153,7 @@ namespace Tests.Scaffold
 
 			// nunit API just doesn't work
 			//Assert.That(parsedType, Is.EqualTo(expectedType).Using(LanguageProviders.CSharp.TypeEqualityComparerWithNRT));
-			Assert.True(LanguageProviders.CSharp.TypeEqualityComparerWithNRT.Equals(parsedType, expectedType));
+			Assert.That(LanguageProviders.CSharp.TypeEqualityComparerWithNRT.Equals(parsedType, expectedType), Is.True);
 		}
 	}
 }

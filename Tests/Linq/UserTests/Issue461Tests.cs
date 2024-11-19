@@ -84,7 +84,7 @@ namespace Tests.UserTests
 							  }).ToList();
 
 				if (db is DataConnection connection)
-					TestContext.WriteLine(connection.LastQuery);
+					TestContext.Out.WriteLine(connection.LastQuery);
 
 				var expected = from sep in Parent
 							   select new
@@ -119,7 +119,7 @@ namespace Tests.UserTests
 							  }).ToList();
 
 				if (db is DataConnection connection)
-					TestContext.WriteLine(connection.LastQuery);
+					TestContext.Out.WriteLine(connection.LastQuery);
 
 				var expected = from sep in Parent
 							   select new
@@ -154,7 +154,7 @@ namespace Tests.UserTests
 							  }).ToList();
 
 				if (db is DataConnection connection)
-					TestContext.WriteLine(connection.LastQuery);
+					TestContext.Out.WriteLine(connection.LastQuery);
 
 				var expected = from sep in Parent
 							   select new ValueValueHolder
@@ -189,7 +189,7 @@ namespace Tests.UserTests
 							  }).ToList();
 
 				if (db is DataConnection connection)
-					TestContext.WriteLine(connection.LastQuery);
+					TestContext.Out.WriteLine(connection.LastQuery);
 
 				var expected = from sep in Parent
 							   select new ValueValueHolder
@@ -209,7 +209,7 @@ namespace Tests.UserTests
 
 		// Sybase do not supports limiting subqueries
 		[Test]
-		public void SelectPlainTest1([DataSources(TestProvName.AllSybase, TestProvName.AllInformix, TestProvName.AllSapHana)] string context)
+		public void SelectPlainTest1([DataSources(TestProvName.AllSybase, TestProvName.AllInformix)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -222,7 +222,7 @@ namespace Tests.UserTests
 
 		// Sybase do not supports limiting subqueries
 		[Test]
-		public void SelectPlainTest2([DataSources(TestProvName.AllSybase, TestProvName.AllInformix, TestProvName.AllSapHana)] string context)
+		public void SelectPlainTest2([DataSources(TestProvName.AllSybase, TestProvName.AllInformix)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -256,6 +256,5 @@ namespace Tests.UserTests
 				);
 			}
 		}
-
 	}
 }

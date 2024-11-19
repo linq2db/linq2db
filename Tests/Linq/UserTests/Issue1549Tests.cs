@@ -59,8 +59,9 @@ namespace Tests.UserTests
 			#endregion
 		}
 
-		// default name hits 31-length limit for generator name (till FB 4.0)
-		[Table(Name = "billing_DevReadType", Configuration = ProviderName.Firebird)]
+		// FB: default name hits 31-length limit for generator name (till FB 4.0)
+		[Table(Name = "billing_DevReadType", Configuration = ProviderName.Firebird25)]
+		[Table(Name = "billing_DevReadType", Configuration = ProviderName.Firebird3)]
 		[Table(Name = "billing_DevReadingType")]
 		public partial class billing_DevReadingType
 		{
@@ -119,7 +120,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void UpdateTest([DataSources(TestProvName.AllAccess, ProviderName.SqlCe, TestProvName.AllInformix, TestProvName.AllOracle, TestProvName.AllClickHouse)] string context)
+		public void UpdateTest([DataSources(TestProvName.AllAccess, ProviderName.SqlCe, TestProvName.AllInformix, TestProvName.AllOracle, TestProvName.AllClickHouse, TestProvName.AllSybase, TestProvName.AllSapHana)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (db.CreateLocalTable<billing_Devtype>())

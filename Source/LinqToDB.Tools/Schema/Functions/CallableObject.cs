@@ -1,4 +1,7 @@
 ﻿using System.Collections.Generic;
+using System.Globalization;
+using System.Linq;
+
 using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Schema
@@ -16,6 +19,6 @@ namespace LinqToDB.Schema
 		string?                        Description,
 		IReadOnlyCollection<Parameter> Parameters)
 	{
-		public override string ToString() => $"{Name}({string.Join(", ", Parameters)})";
+		public override string ToString() => $"{Name}({string.Join(", ", Parameters.Select(p => string.Format(CultureInfo.InvariantCulture, "{0}", p)))})";
 	}
 }

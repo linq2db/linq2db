@@ -9,24 +9,45 @@ namespace LinqToDB.DataProvider.MySql
 {
 	using Common;
 	using Data;
+	using Linq.Translation;
 	using Mapping;
 	using SqlProvider;
+	using Translation;
 
-	sealed class MySqlDataProviderMySqlOfficial  : MySqlDataProvider { public MySqlDataProviderMySqlOfficial()  : base(ProviderName.MySqlOfficial)  {} }
-	sealed class MySqlDataProviderMySqlConnector : MySqlDataProvider { public MySqlDataProviderMySqlConnector() : base(ProviderName.MySqlConnector) {} }
+	sealed class MySql57DataProviderMySqlData()        : MySqlDataProvider(ProviderName.MySql57MySqlData,        MySqlVersion.MySql57,   MySqlProvider.MySqlData     ) { }
+	sealed class MySql57DataProviderMySqlConnector()   : MySqlDataProvider(ProviderName.MySql57MySqlConnector,   MySqlVersion.MySql57,   MySqlProvider.MySqlConnector) { }
+	sealed class MySql80DataProviderMySqlData()        : MySqlDataProvider(ProviderName.MySql80MySqlData,        MySqlVersion.MySql80,   MySqlProvider.MySqlData     ) { }
+	sealed class MySql80DataProviderMySqlConnector()   : MySqlDataProvider(ProviderName.MySql80MySqlConnector,   MySqlVersion.MySql80,   MySqlProvider.MySqlConnector) { }
+	sealed class MariaDB10DataProviderMySqlData()      : MySqlDataProvider(ProviderName.MariaDB10MySqlData,      MySqlVersion.MariaDB10, MySqlProvider.MySqlData     ) { }
+	sealed class MariaDB10DataProviderMySqlConnector() : MySqlDataProvider(ProviderName.MariaDB10MySqlConnector, MySqlVersion.MariaDB10, MySqlProvider.MySqlConnector) { }
 
 	public abstract class MySqlDataProvider : DynamicDataProviderBase<MySqlProviderAdapter>
 	{
-		protected MySqlDataProvider(string name)
-			: base(name, GetMappingSchema(name), MySqlProviderAdapter.GetInstance(name))
+		protected MySqlDataProvider(string name, MySqlVersion version, MySqlProvider provider)
+			: base(name, GetMappingSchema(provider, version), MySqlProviderAdapter.GetInstance(provider))
 		{
-			SqlProviderFlags.IsDistinctOrderBySupported        = false;
+			Provider = provider;
+			Version  = version;
+
 			SqlProviderFlags.IsSubQueryOrderBySupported        = true;
-			SqlProviderFlags.IsCommonTableExpressionsSupported = true;
-			SqlProviderFlags.IsDistinctSetOperationsSupported  = false;
+			SqlProviderFlags.IsCommonTableExpressionsSupported = version > MySqlVersion.MySql57;
 			SqlProviderFlags.IsUpdateFromSupported             = false;
 			SqlProviderFlags.IsNamingQueryBlockSupported       = true;
-			SqlProviderFlags.RowConstructorSupport             = RowFeature.Equality | RowFeature.Comparisons | RowFeature.CompareToSelect | RowFeature.In;
+			SqlProviderFlags.IsAllSetOperationsSupported       = version > MySqlVersion.MySql57;
+			SqlProviderFlags.IsDistinctSetOperationsSupported  = version > MySqlVersion.MySql57;
+			// MariaDB still lacking it
+			// https://jira.mariadb.org/browse/MDEV-6373
+			// https://jira.mariadb.org/browse/MDEV-19078
+			SqlProviderFlags.IsApplyJoinSupported              = version == MySqlVersion.MySql80;
+			SqlProviderFlags.IsCrossApplyJoinSupportsCondition = version == MySqlVersion.MySql80;
+			SqlProviderFlags.IsOuterApplyJoinSupportsCondition = version == MySqlVersion.MySql80;
+			SqlProviderFlags.IsWindowFunctionsSupported        = Version >= MySqlVersion.MySql80;
+
+			SqlProviderFlags.IsSubqueryWithParentReferenceInJoinConditionSupported = false;
+			SqlProviderFlags.SupportedCorrelatedSubqueriesLevel                    = 1;
+			SqlProviderFlags.RowConstructorSupport                                 = RowFeature.Equality | RowFeature.Comparisons | RowFeature.CompareToSelect | RowFeature.In;
+
+			SqlProviderFlags.IsUpdateTakeSupported     = true;
 
 			_sqlOptimizer = new MySqlSqlOptimizer(SqlProviderFlags);
 
@@ -39,22 +60,30 @@ namespace LinqToDB.DataProvider.MySql
 
 			if (Adapter.GetDateTimeOffsetMethodName != null)
 			{
-				SetProviderField(typeof(DateTimeOffset), Adapter.GetDateTimeOffsetMethodName, Adapter.DataReaderType);
-				SetToTypeField  (typeof(DateTimeOffset), Adapter.GetDateTimeOffsetMethodName, Adapter.DataReaderType);
+				SetProviderField<DateTimeOffset>(Adapter.GetDateTimeOffsetMethodName, Adapter.DataReaderType);
+				SetToTypeField(typeof(DateTimeOffset), Adapter.GetDateTimeOffsetMethodName, Adapter.DataReaderType);
 			}
 
 			SetProviderField(Adapter.MySqlDateTimeType, Adapter.GetMySqlDateTimeMethodName, Adapter.DataReaderType);
 			SetToTypeField  (Adapter.MySqlDateTimeType, Adapter.GetMySqlDateTimeMethodName, Adapter.DataReaderType);
 
-			if (Adapter.GetTimeSpanMethodName != null) SetProviderField(typeof(TimeSpan), Adapter.GetTimeSpanMethodName, Adapter.DataReaderType);
-			if (Adapter.GetSByteMethodName    != null) SetProviderField(typeof(sbyte)   , Adapter.GetSByteMethodName   , Adapter.DataReaderType);
-			if (Adapter.GetUInt16MethodName   != null) SetProviderField(typeof(ushort)  , Adapter.GetUInt16MethodName  , Adapter.DataReaderType);
-			if (Adapter.GetUInt32MethodName   != null) SetProviderField(typeof(uint)    , Adapter.GetUInt32MethodName  , Adapter.DataReaderType);
-			if (Adapter.GetUInt64MethodName   != null) SetProviderField(typeof(ulong)   , Adapter.GetUInt64MethodName  , Adapter.DataReaderType);
+			if (Adapter.GetTimeSpanMethodName != null) SetProviderField<TimeSpan>(Adapter.GetTimeSpanMethodName, Adapter.DataReaderType);
+			if (Adapter.GetSByteMethodName    != null) SetProviderField<sbyte   >(Adapter.GetSByteMethodName   , Adapter.DataReaderType);
+			if (Adapter.GetUInt16MethodName   != null) SetProviderField<ushort  >(Adapter.GetUInt16MethodName  , Adapter.DataReaderType);
+			if (Adapter.GetUInt32MethodName   != null) SetProviderField<uint    >(Adapter.GetUInt32MethodName  , Adapter.DataReaderType);
+			if (Adapter.GetUInt64MethodName   != null) SetProviderField<ulong   >(Adapter.GetUInt64MethodName  , Adapter.DataReaderType);
 #if NET6_0_OR_GREATER
-			if (Adapter.GetTimeOnlyMethodName != null) SetProviderField(typeof(TimeOnly), Adapter.GetTimeOnlyMethodName, Adapter.DataReaderType);
-			if (Adapter.GetDateOnlyMethodName != null) SetProviderField(typeof(DateOnly), Adapter.GetDateOnlyMethodName, Adapter.DataReaderType);
+			if (Adapter.GetTimeOnlyMethodName != null) SetProviderField<TimeOnly>(Adapter.GetTimeOnlyMethodName, Adapter.DataReaderType);
+			if (Adapter.GetDateOnlyMethodName != null) SetProviderField<DateOnly>(Adapter.GetDateOnlyMethodName, Adapter.DataReaderType);
 #endif
+		}
+
+		public MySqlVersion  Version  { get; }
+		public MySqlProvider Provider { get; }
+
+		protected override IMemberTranslator CreateMemberTranslator()
+		{
+			return new MySqlMemberTranslator();
 		}
 
 		public override SchemaProvider.ISchemaProvider GetSchemaProvider()
@@ -71,15 +100,25 @@ namespace LinqToDB.DataProvider.MySql
 
 		public override ISqlBuilder CreateSqlBuilder(MappingSchema mappingSchema, DataOptions dataOptions)
 		{
+			if (Version == MySqlVersion.MySql57)
+				return new MySql57SqlBuilder(this, mappingSchema, dataOptions, GetSqlOptimizer(dataOptions), SqlProviderFlags);
+			if (Version == MySqlVersion.MySql80)
+				return new MySql80SqlBuilder(this, mappingSchema, dataOptions, GetSqlOptimizer(dataOptions), SqlProviderFlags);
+
 			return new MySqlSqlBuilder(this, mappingSchema, dataOptions, GetSqlOptimizer(dataOptions), SqlProviderFlags);
 		}
 
-		private static MappingSchema GetMappingSchema(string name)
+		private static MappingSchema GetMappingSchema(MySqlProvider provider, MySqlVersion version)
 		{
-			return name switch
+			return (provider, version) switch
 			{
-				ProviderName.MySqlConnector => new MySqlMappingSchema.MySqlConnectorMappingSchema(),
-				_                           => new MySqlMappingSchema.MySqlOfficialMappingSchema(),
+				(MySqlProvider.MySqlData, MySqlVersion.MySql57)        => new MySqlMappingSchema.MySqlData57MappingSchema(),
+				(MySqlProvider.MySqlData, MySqlVersion.MySql80)        => new MySqlMappingSchema.MySqlData80MappingSchema(),
+				(MySqlProvider.MySqlData, MySqlVersion.MariaDB10)      => new MySqlMappingSchema.MySqlDataMariaDB10MappingSchema(),
+				(MySqlProvider.MySqlConnector, MySqlVersion.MySql57)   => new MySqlMappingSchema.MySqlConnector57MappingSchema(),
+				(MySqlProvider.MySqlConnector, MySqlVersion.MySql80)   => new MySqlMappingSchema.MySqlConnector80MappingSchema(),
+				(MySqlProvider.MySqlConnector, MySqlVersion.MariaDB10) => new MySqlMappingSchema.MySqlConnectorMariaDB10MappingSchema(),
+				_                                                      => new MySqlMappingSchema.MySqlConnector57MappingSchema(),
 			};
 		}
 
@@ -159,7 +198,6 @@ namespace LinqToDB.DataProvider.MySql
 				cancellationToken);
 		}
 
-#if NATIVE_ASYNC
 		public override Task<BulkCopyRowsCopied> BulkCopyAsync<T>(DataOptions options, ITable<T> table,
 			IAsyncEnumerable<T> source, CancellationToken cancellationToken)
 		{
@@ -175,7 +213,6 @@ namespace LinqToDB.DataProvider.MySql
 				source,
 				cancellationToken);
 		}
-#endif
 
 		#endregion
 	}

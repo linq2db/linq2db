@@ -26,7 +26,7 @@ namespace Cli.All.ClickHouse.Octonica
 		[Column("Field4"         , DataType = DataType.Int32     , DbType = "Int32"                                                    )] public int?            Field4          { get; set; } // Int32
 		[Column("Field5"         , DataType = DataType.Int32     , DbType = "Int32"                                                    )] public int?            Field5          { get; set; } // Int32
 		[Column("FieldInt64"     , DataType = DataType.Int64     , DbType = "Int64"                                                    )] public long?           FieldInt64      { get; set; } // Int64
-		[Column("FieldBoolean"   , DataType = DataType.Byte      , DbType = "UInt8"                                                    )] public byte?           FieldBoolean    { get; set; } // UInt8
+		[Column("FieldBoolean"   , DataType = DataType.Boolean   , DbType = "Bool"                                                     )] public bool?           FieldBoolean    { get; set; } // Bool
 		[Column("FieldString"    , DataType = DataType.NVarChar  , DbType = "String"                                                   )] public string?         FieldString     { get; set; } // String
 		[Column("FieldNString"   , DataType = DataType.NVarChar  , DbType = "String"                                                   )] public string?         FieldNString    { get; set; } // String
 		[Column("FieldChar"      , DataType = DataType.Binary    , DbType = "FixedString(1)" , Length       = 1                        )] public byte[]?         FieldChar       { get; set; } // FixedString(1)

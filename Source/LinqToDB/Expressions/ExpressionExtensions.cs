@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -127,6 +128,15 @@ namespace LinqToDB.Expressions
 		}
 
 		/// <summary>
+		/// Enumerates the expression tree and returns the <paramref name="exprToFind"/> if it's
+		/// contained within the <paramref name="expr"/>.
+		/// </summary>
+		public static Expression? Find(this Expression? expr, Expression exprToFind, IEqualityComparer<Expression> comparer)
+		{
+			return expr.Find((exprToFind, comparer), static (ctx, e) => ctx.comparer.Equals(e, ctx.exprToFind));
+		}
+
+		/// <summary>
 		/// Enumerates the given <paramref name="expr"/> and returns the first sub-expression
 		/// which matches the given <paramref name="func"/>. If no expression was found, null is returned.
 		/// </summary>
@@ -156,6 +166,14 @@ namespace LinqToDB.Expressions
 				expression,
 				(toReplace, replacedBy, equalityComparer),
 				static (context, e) => context.equalityComparer.Equals(e, context.toReplace) ? context.replacedBy : e);
+		}
+
+		public static Expression Replace(this Expression expression, IReadOnlyDictionary<Expression, Expression> replaceMap)
+		{
+			return Transform(
+				expression,
+				replaceMap,
+				static (map, e) => map.TryGetValue(e, out var newExpression) ? newExpression : e);
 		}
 
 		/// <summary>
@@ -198,6 +216,44 @@ namespace LinqToDB.Expressions
 					e == context.parameters[0]             ? context.exprToReplaceParameter1 :
 					e == context.parameters[1]             ? context.exprToReplaceParameter2 :
 					e == context.parameters[2]             ? context.exprToReplaceParameter3 : e);
+		}
+
+		/// <summary>
+		/// Returns the body of <paramref name="lambda"/> but replaces all parameters
+		/// with the given replace expressions.
+		/// </summary>
+		public static Expression GetBody(this LambdaExpression lambda, params Expression[] replacement)
+		{
+			return Transform(lambda.Body, e =>
+			{
+				if (e.NodeType == ExpressionType.Parameter)
+				{
+					var idx = lambda.Parameters.IndexOf((ParameterExpression)e);
+					if (idx >= 0 && idx < replacement.Length)
+						return replacement[idx];
+				}
+
+				return e;
+			});
+		}
+
+		/// <summary>
+		/// Returns the body of <paramref name="lambda"/> but replaces all parameters
+		/// with the given replace expressions.
+		/// </summary>
+		public static Expression GetBody(this LambdaExpression lambda, ReadOnlyCollection<Expression> replacement)
+		{
+			return Transform(lambda.Body, e =>
+			{
+				if (e.NodeType == ExpressionType.Parameter)
+				{
+					var idx = lambda.Parameters.IndexOf((ParameterExpression)e);
+					if (idx >= 0 && idx < replacement.Count)
+						return replacement[idx];
+				}
+
+				return e;
+			});
 		}
 
 		/// <summary>

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Globalization;
 using LinqToDB;
 using LinqToDB.Common;
 using LinqToDB.Data;
@@ -44,7 +45,7 @@ namespace Tests.UserTests
 					var d1 = new DateTime(d.Year, d.Month, d.Day, d.Hour,
 						d.Minute, d.Second, d.Millisecond);
 
-					sb.Append('\'').Append(d1.ToString()).Append('\'');
+					sb.Append($"'{d1}'");
 				}
 			);
 

@@ -4,7 +4,6 @@ using System.Data;
 using System.IO;
 using System.Linq;
 using System.Numerics;
-using System.Globalization;
 
 namespace LinqToDB.DataProvider.Firebird
 {
@@ -15,18 +14,10 @@ namespace LinqToDB.DataProvider.Firebird
 	sealed class FirebirdSchemaProvider : SchemaProviderBase
 	{
 		private readonly FirebirdDataProvider _provider;
-		private int _majorVersion;
 
 		public FirebirdSchemaProvider(FirebirdDataProvider provider)
 		{
 			_provider = provider;
-		}
-
-		public override DatabaseSchema GetSchema(DataConnection dataConnection, GetSchemaOptions? options = null)
-		{
-			_majorVersion = int.Parse(dataConnection.Execute<string>("SELECT rdb$get_context('SYSTEM', 'ENGINE_VERSION') from rdb$database").Split('.')[0], CultureInfo.InvariantCulture);
-
-			return base.GetSchema(dataConnection, options);
 		}
 
 		protected override string GetDatabaseName(DataConnection dbConnection)
@@ -45,7 +36,7 @@ namespace LinqToDB.DataProvider.Firebird
 				let catalog = t.Field<string>("TABLE_CATALOG")
 				let schema  = t.Field<string>("OWNER_NAME")
 				let name    = t.Field<string>("TABLE_NAME")
-				select new TableInfo
+				select new TableInfo()
 				{
 					TableID         = catalog + '.' + t.Field<string>("TABLE_SCHEMA") + '.' + name,
 					CatalogName     = catalog,
@@ -66,7 +57,7 @@ namespace LinqToDB.DataProvider.Firebird
 			return
 			(
 				from pk in pks.AsEnumerable()
-				select new PrimaryKeyInfo
+				select new PrimaryKeyInfo()
 				{
 					TableID        = pk.Field<string>("TABLE_CATALOG") + "." + pk.Field<string>("TABLE_SCHEMA") + "." + pk.Field<string>("TABLE_NAME"),
 					PrimaryKeyName = pk.Field<string>("PK_NAME")!,
@@ -86,7 +77,7 @@ namespace LinqToDB.DataProvider.Firebird
 				let type      = c.Field<string>("COLUMN_DATA_TYPE")
 				let dt        = GetDataType(type, null, options)
 				let precision = Converter.ChangeTypeTo<int>(c["NUMERIC_PRECISION"])
-				select new ColumnInfo
+				select new ColumnInfo()
 				{
 					TableID      = c.Field<string>("TABLE_CATALOG") + "." + c.Field<string>("TABLE_SCHEMA") + "." + c.Field<string>("TABLE_NAME"),
 					Name         = c.Field<string>("COLUMN_NAME")!,
@@ -112,7 +103,7 @@ namespace LinqToDB.DataProvider.Firebird
 			return
 			(
 				from c in cols.AsEnumerable()
-				select new ForeignKeyInfo
+				select new ForeignKeyInfo()
 				{
 					Name         = c.Field<string>("CONSTRAINT_NAME")!,
 					ThisTableID  = c.Field<string>("TABLE_CATALOG") + "." + c.Field<string>("TABLE_SCHEMA") + "." + c.Field<string>("TABLE_NAME"),
@@ -127,7 +118,7 @@ namespace LinqToDB.DataProvider.Firebird
 		protected override List<ProcedureInfo>? GetProcedures(DataConnection dataConnection, GetSchemaOptions options)
 		{
 			string sql;
-			if (_majorVersion >= 3)
+			if (_provider.Version > FirebirdVersion.v25)
 			{
 				sql = @"
 SELECT * FROM (
@@ -140,7 +131,7 @@ SELECT * FROM (
 	FROM RDB$PROCEDURES
 	WHERE RDB$SYSTEM_FLAG = 0 AND (RDB$PRIVATE_FLAG IS NULL OR RDB$PRIVATE_FLAG = 0) AND RDB$PROCEDURE_TYPE IS NOT NULL
 	UNION ALL
-	SELECT 
+	SELECT
 		RDB$PACKAGE_NAME,
 		RDB$FUNCTION_NAME,
 		RDB$DESCRIPTION,
@@ -163,7 +154,7 @@ SELECT * FROM (
 	FROM RDB$PROCEDURES
 	WHERE RDB$SYSTEM_FLAG = 0 AND RDB$PROCEDURE_TYPE IS NOT NULL
 	UNION ALL
-	SELECT 
+	SELECT
 		NULL,
 		RDB$FUNCTION_NAME,
 		RDB$DESCRIPTION,
@@ -202,7 +193,7 @@ SELECT * FROM (
 		protected override List<ProcedureParameterInfo> GetProcedureParameters(DataConnection dataConnection, IEnumerable<ProcedureInfo> procedures, GetSchemaOptions options)
 		{
 			string sql;
-			if (_majorVersion >= 3)
+			if (_provider.Version > FirebirdVersion.v25)
 			{
 				sql = @"SELECT
 	p.RDB$PACKAGE_NAME                                   AS PackageName,
@@ -296,7 +287,6 @@ FROM RDB$FUNCTION_ARGUMENTS p
 				var precision     = rd.IsDBNull(9) ? (int?)null : rd.GetInt32(9);
 				var scale         = rd.GetInt32(10);
 				var isNullable    = rd.IsDBNull(11) ? true : rd.GetInt32(11) != 1;
-
 
 				return new ProcedureParameterInfo()
 				{
@@ -408,7 +398,7 @@ FROM RDB$FUNCTION_ARGUMENTS p
 				{
 					dataType.CreateFormat =
 						dataType.TypeName + "(" +
-						string.Join(",", dataType.CreateParameters!.Split(',').Select((_,i) => "{" + i + "}")) +
+						string.Join(",", dataType.CreateParameters!.Split(',').Select((_,i) => FormattableString.Invariant($"{{{i}}}"))) +
 						")";
 				}
 			}
@@ -448,26 +438,27 @@ FROM RDB$FUNCTION_ARGUMENTS p
 		{
 			return dataType?.ToLowerInvariant() switch
 			{
-				"array"            => DataType.VarBinary,
-				"bigint"           => DataType.Int64,
-				"blob"             => DataType.Blob,
-				"char"             => DataType.NChar,
-				"date"             => DataType.Date,
-				"decimal"          => DataType.Decimal,
-				"double precision" => DataType.Double,
-				"float"            => DataType.Single,
-				"integer"          => DataType.Int32,
-				"numeric"          => DataType.Decimal,
-				"smallint"         => DataType.Int16,
-				"blob sub_type 1"  => DataType.Text,
-				"time"             => DataType.Time,
-				"timestamp"        => DataType.DateTime,
-				"varchar"          => DataType.NVarChar,
+				"array"                    => DataType.VarBinary,
+				"bigint"                   => DataType.Int64,
+				"blob"                     => DataType.Blob,
+				"boolean"                  => DataType.Boolean,
+				"char"                     => DataType.NChar,
+				"date"                     => DataType.Date,
+				"decimal"                  => DataType.Decimal,
+				"double precision"         => DataType.Double,
+				"float"                    => DataType.Single,
+				"integer"                  => DataType.Int32,
+				"numeric"                  => DataType.Decimal,
+				"smallint"                 => DataType.Int16,
+				"blob sub_type 1"          => DataType.Text,
+				"time"                     => DataType.Time,
+				"timestamp"                => DataType.DateTime,
+				"varchar"                  => DataType.NVarChar,
 				"int128"                   => DataType.Int128,
 				"decfloat"                 => DataType.DecFloat,
 				"timestamp with time zone" => DataType.DateTimeOffset,
 				"time with time zone"      => DataType.TimeTZ,
-				_                  => DataType.Undefined,
+				_                          => DataType.Undefined,
 			};
 		}
 

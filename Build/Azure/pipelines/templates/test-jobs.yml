@@ -1,9 +1,9 @@
 parameters:
   enabled: false
-  experimental: false
   with_baselines: false
   test_matrix: []
   mac_enabled: false # disable by default, as macos docker is even slower than virtual machine
+  full_run: false # disable by default
 
 jobs:
 ##############################################################################################
@@ -133,8 +133,10 @@ jobs:
 - job: test_windows_job
   pool:
     vmImage: 'windows-2022'
+
   displayName: 'Tests: Windows'
   dependsOn: create_baselines_branch
+  timeoutInMinutes: 180 # default: 60, max: 360
   condition: ${{ parameters.enabled }}
   variables:
     baselines_branch: $[ dependencies.create_baselines_branch.outputs['baselines_init.baselines_branch'] ]
@@ -142,7 +144,7 @@ jobs:
   strategy:
     matrix:
       ${{ each test_config in parameters.test_matrix }}:
-        ${{ if and(eq(test_config.enabled, 'true'), eq(test_config.enable_os_windows, 'true'), eq(test_config.is_experimental, parameters.experimental)) }}:
+        ${{ if and(eq(test_config.enabled, 'true'), eq(test_config.enable_os_windows, 'true')) }}:
           ${{ test_config.name }}:
             title: ${{ test_config.title }}
             config: ${{ test_config.config_win }}
@@ -151,23 +153,26 @@ jobs:
             script_local: ${{ test_config.script_win_local }}
             psscript_local: ${{ test_config.psscript_win_local }}
             extra: ${{ test_config.extra }}
-            netfx: ${{ test_config.enable_fw_net472 }}
-            netcore31: ${{ test_config.enable_fw_netcore31 }}
+            netfx: ${{ test_config.enable_fw_netfx }}
             net60: ${{ test_config.enable_fw_net60 }}
-            net70: ${{ test_config.enable_fw_net70 }}
+            net80: ${{ test_config.enable_fw_net80 }}
+            net90: ${{ test_config.enable_fw_net90 }}
             x86: ${{ test_config.x86 }}
+            retry: ${{ test_config.retry }}
 
   steps:
   - template: test-workflow-windows.yml
     parameters:
       with_baselines: ${{ parameters.with_baselines }}
+      full_run: ${{ parameters.full_run }}
 
 ########################
-#  Tests: Ubuntu 22.04 #
+#  Tests: Ubuntu 24.04 #
 ########################
 - job: test_ubuntu_job
   pool:
-    vmImage: 'ubuntu-22.04'
+    vmImage: 'ubuntu-24.04'
+  timeoutInMinutes: 180 # default: 60, max: 360
   displayName: 'Tests: Linux'
   dependsOn: create_baselines_branch
   condition: ${{ parameters.enabled }}
@@ -177,30 +182,32 @@ jobs:
   strategy:
     matrix:
       ${{ each test_config in parameters.test_matrix }}:
-        ${{ if and(eq(test_config.enabled, 'true'), eq(test_config.enable_os_ubuntu, 'true'), eq(test_config.is_experimental, parameters.experimental)) }}:
+        ${{ if and(eq(test_config.enabled, 'true'), eq(test_config.enable_os_ubuntu, 'true')) }}:
           ${{ test_config.name }}:
             title: ${{ test_config.title }}
             config: ${{ test_config.config_linux }}
             script_global: ${{ test_config.script_linux_global }}
             script_local: ${{ test_config.script_linux_local }}
-            docker_login: ${{ test_config.docker_login }}
             extra: ${{ test_config.extra }}
-            netcore31: ${{ test_config.enable_fw_netcore31 }}
             net60: ${{ test_config.enable_fw_net60 }}
-            net70: ${{ test_config.enable_fw_net70 }}
+            net80: ${{ test_config.enable_fw_net80 }}
+            net90: ${{ test_config.enable_fw_net90 }}
+            retry: ${{ test_config.retry }}
 
   steps:
   - template: test-workflow-linux.yml
     parameters:
       with_baselines: ${{ parameters.with_baselines }}
+      full_run: ${{ parameters.full_run }}
 
 #################
 #  Tests: MacOS #
 #################
 - job: test_macos_job
   pool:
-    vmImage: 'macOS-13'
+    vmImage: 'macOS-15'
   displayName: 'Tests: MacOS'
+  timeoutInMinutes: 240 # default: 60, max: 360
   dependsOn: create_baselines_branch
   condition: and(eq(${{ parameters.enabled }}, 'true'), eq(${{ parameters.mac_enabled }}, 'true'))
   variables:
@@ -209,23 +216,24 @@ jobs:
   strategy:
     matrix:
       ${{ each test_config in parameters.test_matrix }}:
-        ${{ if and(eq(test_config.enabled, 'true'), eq(test_config.enable_os_macos, 'true'), eq(test_config.is_experimental, parameters.experimental)) }}:
+        ${{ if and(eq(test_config.enabled, 'true'), eq(test_config.enable_os_macos, 'true')) }}:
           ${{ test_config.name }}:
             title: ${{ test_config.title }}
             config: ${{ test_config.config_macos }}
             script_global: ${{ test_config.script_macos_global }}
             script_local: ${{ test_config.script_macos_local }}
             docker: ${{ test_config.install_docker_macos }}
-            docker_login: ${{ test_config.docker_login }}
             extra: ${{ test_config.extra }}
-            netcore31: ${{ test_config.enable_fw_netcore31 }}
             net60: ${{ test_config.enable_fw_net60 }}
-            net70: ${{ test_config.enable_fw_net70 }}
+            net80: ${{ test_config.enable_fw_net80 }}
+            net90: ${{ test_config.enable_fw_net90 }}
+            retry: ${{ test_config.retry }}
 
   steps:
   - template: test-workflow-macos.yml
     parameters:
       with_baselines: ${{ parameters.with_baselines }}
+      full_run: ${{ parameters.full_run }}
 
 ################################################################
 # This job runs after all tests and:                           #

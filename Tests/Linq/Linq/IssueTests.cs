@@ -4,6 +4,8 @@ using System.Diagnostics;
 using System.Linq;
 using System.Linq.Expressions;
 
+using FluentAssertions;
+
 using LinqToDB;
 using LinqToDB.Common;
 using LinqToDB.Data;
@@ -41,13 +43,14 @@ namespace Tests.Linq
 
 		// https://github.com/linq2db/linq2db/issues/42
 		//
-		[ActiveIssue("https://github.com/ClickHouse/ClickHouse/issues/37999", Configuration = ProviderName.ClickHouseMySql)]
 		[Test]
 		public void Issue42Test([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
-				var t1 = db.Types2.Where(r => r.ID == 1).First();
+				var saved = db.Types2.First(r => r.ID == 1);
+
+				var t1 = db.Types2.First(r => r.ID == 1);
 
 				t1.BoolValue = !t1.BoolValue;
 
@@ -60,6 +63,11 @@ namespace Tests.Linq
 				t1.BoolValue = !t1.BoolValue;
 
 				db.Update(t1);
+
+				var current = db.Types2.First(r => r.ID == 1);
+
+				// If this test fails, Data for MathFunctionsTests will be corrupted.
+				current.Should().Be(saved);
 			}
 		}
 
@@ -188,37 +196,25 @@ namespace Tests.Linq
 		[Test]
 		public void Issue424Test1([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				AreEqual(
-					   Parent.Distinct().OrderBy(_ => _.ParentID).Take(1),
-					db.Parent.Distinct().OrderBy(_ => _.ParentID).Take(1)
-					);
-			}
+			using var db = GetDataContext(context);
+
+			AssertQuery(db.Parent.Distinct().OrderBy(_ => _.ParentID).Take(1));
 		}
 
 		[Test]
 		public void Issue424Test2([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				AreEqual(
-					   Parent.Distinct().OrderBy(_ => _.ParentID).Skip(1).Take(1),
-					db.Parent.Distinct().OrderBy(_ => _.ParentID).Skip(1).Take(1)
-					);
-			}
+			using var db = GetDataContext(context);
+
+			AssertQuery(db.Parent.Distinct().OrderBy(_ => _.ParentID).Skip(1).Take(1));
 		}
 
 		[Test]
 		public void Issue424Test3([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				AreEqual(
-					   Parent.Distinct().OrderByDescending(_ => _.ParentID).Skip(1).Take(1),
-					db.Parent.Distinct().OrderByDescending(_ => _.ParentID).Skip(1).Take(1)
-				);
-			}
+			using var db = GetDataContext(context);
+
+			AssertQuery(db.Parent.Distinct().OrderByDescending(_ => _.ParentID).Skip(1).Take(1));
 		}
 
 		// https://github.com/linq2db/linq2db/issues/498
@@ -251,7 +247,7 @@ namespace Tests.Linq
 				AreEqual(rr, r);
 
 				var sql = r.ToString()!;
-				Assert.Less(0, sql.IndexOf("INNER", 1), sql);
+				Assert.That(sql.IndexOf("INNER", 1), Is.GreaterThan(0), sql);
 			}
 		}
 
@@ -368,7 +364,7 @@ namespace Tests.Linq
 					where p.ID == 1 || p.SecondName == "fail"
 					select p;
 
-				Assert.IsNotNull(q.FirstOrDefault());
+				Assert.That(q.FirstOrDefault(), Is.Not.Null);
 			}
 		}
 
@@ -401,7 +397,6 @@ namespace Tests.Linq
 			Client
 		}
 
-		[ActiveIssue("https://github.com/Octonica/ClickHouseClient/issues/56", Configurations = new[] { ProviderName.ClickHouseOctonica })]
 		[Test]
 		public void Issue535Test2([DataSources(TestProvName.AllSybase)] string context)
 		{
@@ -427,7 +422,6 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue("https://github.com/Octonica/ClickHouseClient/issues/56", Configurations = new[] { ProviderName.ClickHouseOctonica })]
 		[Test]
 		public void Issue535Test3([DataSources(TestProvName.AllSybase)] string context)
 		{
@@ -478,13 +472,13 @@ namespace Tests.Linq
 		}
 
 		[ExpressionMethod("MapToDtoExpr1")]
-		public static PersonDto MapToDto(Person376 person)
+		private static PersonDto MapToDto(Person376 person)
 		{
 			return MapToDtoExpr1().CompileExpression()(person);
 		}
 
 		[ExpressionMethod("MapToDtoExpr2")]
-		public static DoctorDto MapToDto(Doctor doctor)
+		private static DoctorDto MapToDto(Doctor doctor)
 		{
 			return MapToDtoExpr2().CompileExpression()(doctor);
 		}
@@ -519,9 +513,12 @@ namespace Tests.Linq
 					.Where(_ => _.Doctor!.Taxonomy.Length >= 0 || _.Doctor.Taxonomy == null)
 					.Select(_ => MapToDto(_)).ToList();
 
-				Assert.IsNotEmpty(l);
-				Assert.IsNotEmpty(l.Where(_ => _.Doc == null));
-				Assert.IsNotEmpty(l.Where(_ => _.Doc != null));
+				Assert.That(l, Is.Not.Empty);
+				Assert.Multiple(() =>
+				{
+					Assert.That(l.Where(_ => _.Doc == null), Is.Not.Empty);
+					Assert.That(l.Where(_ => _.Doc != null), Is.Not.Empty);
+				});
 			}
 		}
 
@@ -559,10 +556,13 @@ namespace Tests.Linq
 					.GetTable<Person88>()
 					.Where(_ => _.ID == 1 && gender == _.Gender);
 
-				Assert.IsNotEmpty(llc);
-				Assert.IsNotEmpty(lrc);
-				Assert.IsNotEmpty(llp);
-				Assert.IsNotEmpty(lrp);
+				Assert.Multiple(() =>
+				{
+					Assert.That(llc, Is.Not.Empty);
+					Assert.That(lrc, Is.Not.Empty);
+					Assert.That(llp, Is.Not.Empty);
+					Assert.That(lrp, Is.Not.Empty);
+				});
 			}
 
 		}
@@ -699,12 +699,23 @@ namespace Tests.Linq
 			using(var db    = (DataConnection)GetDataContext(context))
 			using(var table = db.CreateLocalTable<TableWithGuid>())
 			{
-				Assert.True(db.LastQuery!.Contains("\"Default\"  CHAR(16) CHARACTER SET OCTETS"));
-				Assert.True(db.LastQuery!.Contains("\"Binary\"   CHAR(16) CHARACTER SET OCTETS"));
-				Assert.True(db.LastQuery!.Contains("\"String\"   CHAR(38)"));
-				Assert.True(db.LastQuery!.Contains("\"DefaultN\" CHAR(16) CHARACTER SET OCTETS"));
-				Assert.True(db.LastQuery!.Contains("\"BinaryN\"  CHAR(16) CHARACTER SET OCTETS"));
-				Assert.True(db.LastQuery!.Contains("\"StringN\"  CHAR(38)"));
+				Assert.That(db.LastQuery!, Does.Contain("\"String\"   CHAR(38)"));
+				Assert.That(db.LastQuery!, Does.Contain("\"StringN\"  CHAR(38)"));
+
+				if (context.IsAnyOf(TestProvName.AllFirebirdLess4))
+				{
+					Assert.That(db.LastQuery!, Does.Contain("\"Default\"  CHAR(16) CHARACTER SET OCTETS"));
+					Assert.That(db.LastQuery!, Does.Contain("\"Binary\"   CHAR(16) CHARACTER SET OCTETS"));
+					Assert.That(db.LastQuery!, Does.Contain("\"DefaultN\" CHAR(16) CHARACTER SET OCTETS"));
+					Assert.That(db.LastQuery!, Does.Contain("\"BinaryN\"  CHAR(16) CHARACTER SET OCTETS"));
+				}
+				else
+				{
+					Assert.That(db.LastQuery!, Does.Contain("\"Default\"  BINARY(16)"));
+					Assert.That(db.LastQuery!, Does.Contain("\"Binary\"   BINARY(16)"));
+					Assert.That(db.LastQuery!, Does.Contain("\"DefaultN\" BINARY(16)"));
+					Assert.That(db.LastQuery!, Does.Contain("\"BinaryN\"  BINARY(16)"));
+				}
 
 				db.InlineParameters = inlineParameters;
 
@@ -714,20 +725,23 @@ namespace Tests.Linq
 				});
 				
 				var data = table.ToArray();
-				Assert.AreEqual(1, data.Length);
-				Assert.AreEqual(TestData.Guid1, data[0].Default);
-				Assert.AreEqual(TestData.Guid2, data[0].Binary);
-				Assert.AreEqual(TestData.Guid3, data[0].String);
-				Assert.AreEqual(TestData.Guid4, data[0].DefaultN);
-				Assert.AreEqual(TestData.Guid5, data[0].BinaryN);
-				Assert.AreEqual(TestData.Guid6, data[0].StringN);
+				Assert.That(data, Has.Length.EqualTo(1));
+				Assert.Multiple(() =>
+				{
+					Assert.That(data[0].Default, Is.EqualTo(TestData.Guid1));
+					Assert.That(data[0].Binary, Is.EqualTo(TestData.Guid2));
+					Assert.That(data[0].String, Is.EqualTo(TestData.Guid3));
+					Assert.That(data[0].DefaultN, Is.EqualTo(TestData.Guid4));
+					Assert.That(data[0].BinaryN, Is.EqualTo(TestData.Guid5));
+					Assert.That(data[0].StringN, Is.EqualTo(TestData.Guid6));
 
-				Assert.AreEqual(1, table.Where(x => x.Default  == TestData.Guid1).Count());
-				Assert.AreEqual(1, table.Where(x => x.Binary   == TestData.Guid2).Count());
-				Assert.AreEqual(1, table.Where(x => x.String   == TestData.Guid3).Count());
-				Assert.AreEqual(1, table.Where(x => x.DefaultN == TestData.Guid4).Count());
-				Assert.AreEqual(1, table.Where(x => x.BinaryN  == TestData.Guid5).Count());
-				Assert.AreEqual(1, table.Where(x => x.StringN  == TestData.Guid6).Count());
+					Assert.That(table.Where(x => x.Default == TestData.Guid1).Count(), Is.EqualTo(1));
+					Assert.That(table.Where(x => x.Binary == TestData.Guid2).Count(), Is.EqualTo(1));
+					Assert.That(table.Where(x => x.String == TestData.Guid3).Count(), Is.EqualTo(1));
+					Assert.That(table.Where(x => x.DefaultN == TestData.Guid4).Count(), Is.EqualTo(1));
+					Assert.That(table.Where(x => x.BinaryN == TestData.Guid5).Count(), Is.EqualTo(1));
+					Assert.That(table.Where(x => x.StringN == TestData.Guid6).Count(), Is.EqualTo(1));
+				});
 			}
 		}
 

@@ -10,7 +10,7 @@ namespace Tests.Tools
 {
 	public class TestSettingsTests
 	{
-		static string _defaultData = @"
+		static string _defaultData = /*lang=json,strict*/ @"
 {
 	""Default"":
 	{
@@ -24,7 +24,7 @@ namespace Tests.Tools
 		[ ""111"", ""222"" ]
 	},
 
-	""CORE1"":
+	""NET60"":
 	{
 		""TraceLevel""  : ""Error"",
 		""BasedOn""     : ""Default"",
@@ -35,7 +35,7 @@ namespace Tests.Tools
 		}
 	},
 
-	""CORE21"":
+	""NET80"":
 	{
 		""BasedOn""     : ""Default"",
 		""Connections"" :
@@ -46,7 +46,7 @@ namespace Tests.Tools
 	}
 }";
 
-		static string _userData = @"
+		static string _userData = /*lang=json,strict*/ @"
 {
 	""Default"":
 	{
@@ -57,7 +57,7 @@ namespace Tests.Tools
 		}
 	},
 
-	""CORE21"":
+	""NET80"":
 	{
 		""BasedOn""     : ""Default"",
 		""Connections"" :
@@ -80,7 +80,7 @@ namespace Tests.Tools
 						new { Key = "Con 2", ConnectionString = "BBB", Provider = "SqlServer" },
 					});
 
-				yield return new TestCaseData("Core 1", "CORE1", _defaultData, null)
+				yield return new TestCaseData(".NET 6", "NET60", _defaultData, null)
 					.SetName("Tests.Tools.Core1")
 					.Returns(new[]
 					{
@@ -89,7 +89,7 @@ namespace Tests.Tools
 						new { Key = "Con 3", ConnectionString = "CCC", Provider = "SqlServer" },
 					});
 
-				yield return new TestCaseData("Core 2.1", "CORE21", _defaultData, null)
+				yield return new TestCaseData(".NET 8", "NET80", _defaultData, null)
 					.SetName("Tests.Tools.Core2")
 					.Returns(new[]
 					{
@@ -107,7 +107,7 @@ namespace Tests.Tools
 						new { Key = "Con 4", ConnectionString = "FFF", Provider = "SqlServer" },
 					});
 
-				yield return new TestCaseData("User Core 1", "CORE1", _defaultData, _userData)
+				yield return new TestCaseData("User .NET 6", "NET60", _defaultData, _userData)
 					.SetName("Tests.Tools.UserCore1")
 					.Returns(new[]
 					{
@@ -117,7 +117,7 @@ namespace Tests.Tools
 						new { Key = "Con 4", ConnectionString = "FFF", Provider = "SqlServer" },
 					});
 
-				yield return new TestCaseData("User Core 2.1", "CORE21", _defaultData, _userData)
+				yield return new TestCaseData("User C.NET 8.0", "NET80", _defaultData, _userData)
 					.SetName("Tests.Tools.UserCore2")
 					.Returns(new[]
 					{

@@ -44,7 +44,7 @@ namespace Cli.All.Oracle
 
 		#region Associations
 		/// <summary>
-		/// SYS_C007192 backreference
+		/// SYS_C007123 backreference
 		/// </summary>
 		[Association(ThisKey = nameof(UserId), OtherKey = nameof(TTestUserContract.UserId))]
 		public IEnumerable<TTestUserContract> TTestUserContracts { get; set; } = null!;

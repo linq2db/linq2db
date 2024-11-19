@@ -1,8 +1,7 @@
-﻿using System;
+﻿using System.Collections.Generic;
 
 namespace LinqToDB.DataProvider.Access
 {
-	using Linq;
 	using Mapping;
 	using SqlProvider;
 	using SqlQuery;
@@ -13,58 +12,66 @@ namespace LinqToDB.DataProvider.Access
 		{
 		}
 
-		public override bool CanCompareSearchConditions => true;
-
-		protected static string[] AccessLikeCharactersToEscape = {"_", "?", "*", "%", "#", "-", "!"};
-
-		public override bool   LikeIsEscapeSupported => false;
-
-		public override string[] LikeCharactersToEscape => AccessLikeCharactersToEscape;
-
-		public override ISqlPredicate ConvertLikePredicate(MappingSchema mappingSchema, SqlPredicate.Like predicate,
-			EvaluationContext context)
+		public override SqlExpressionConvertVisitor CreateConvertVisitor(bool allowModify)
 		{
-			if (predicate.Escape != null)
-			{
-				return new SqlPredicate.Like(predicate.Expr1, predicate.IsNot, predicate.Expr2, null);
-			}
-
-			return base.ConvertLikePredicate(mappingSchema, predicate, context);
+			return new AccessSqlExpressionConvertVisitor(allowModify);
 		}
 
-		protected override string EscapeLikePattern(string str)
+		public override SqlStatement TransformStatement(SqlStatement statement, DataOptions dataOptions, MappingSchema mappingSchema)
 		{
-			var newStr = DataTools.EscapeUnterminatedBracket(str);
-			if (newStr == str)
-				newStr = newStr.Replace("[", "[[]");
+			statement = CorrectMultiTableQueries(statement);
+			statement = CorrectInnerJoins(statement);
+			statement = CorrectExistsAndIn(statement, dataOptions);
 
-			foreach (var s in LikeCharactersToEscape)
-				newStr = newStr.Replace(s, "[" + s + "]");
-
-			return newStr;
-		}
-
-		public override ISqlExpression EscapeLikeCharacters(ISqlExpression expression, ref ISqlExpression? escape)
-		{
-			throw new LinqException("Access does not support `Replace` function which is required for such query.");
-		}
-
-		public override SqlStatement TransformStatement(SqlStatement statement, DataOptions dataOptions)
-		{
 			return statement.QueryType switch
 			{
 				QueryType.Delete => GetAlternativeDelete((SqlDeleteStatement)statement, dataOptions),
-				QueryType.Update => CorrectAccessUpdate ((SqlUpdateStatement)statement),
+				QueryType.Update => CorrectAccessUpdate ((SqlUpdateStatement)statement, dataOptions, mappingSchema),
 				_                => statement,
 			};
 		}
 
-		private SqlUpdateStatement CorrectAccessUpdate(SqlUpdateStatement statement)
+		public override SqlStatement Finalize(MappingSchema mappingSchema, SqlStatement statement, DataOptions dataOptions)
+		{
+			statement = base.Finalize(mappingSchema, statement, dataOptions);
+
+			statement = WrapParameters(statement);
+
+			return statement;
+		}
+
+		private static SqlStatement WrapParameters(SqlStatement statement)
+		{
+			// System.Data.Odbc cannot handle types if they are not in a list of hardcoded types.
+			// Here we try to avoid FromSqlType to fail when ODBC Access driver returns 0 for type
+			// https://github.com/dotnet/runtime/blob/main/src/libraries/System.Data.Odbc/src/System/Data/Odbc/Odbc32.cs#L935
+			//
+			// This is a bug in Access ODBC driver where it returns no type information for NULL/parameter-based top-level column.
+			// We wrap all NULL/parameter top level columns, because exact conditions for triggering error are not clear and even same query could fail and pass
+			// in applications with different modules loaded
+			//
+			// Some related tests:
+			// AccessTests.TestParametersWrapping
+			// Distinct5/Distinct6 tests
+			// some of Select_Ternary* tests
+
+			// only SELECT query could return dataset in ACCESS
+			if (statement.QueryType != QueryType.Select || statement.SelectQuery == null)
+				return statement;
+
+			var visitor = new WrapParametersVisitor(VisitMode.Modify);
+
+			statement = (SqlStatement)visitor.WrapParameters(statement, WrapParametersVisitor.WrapFlags.All);
+
+			return statement;
+		}
+
+		private SqlUpdateStatement CorrectAccessUpdate(SqlUpdateStatement statement, DataOptions dataOptions, MappingSchema mappingSchema)
 		{
 			if (statement.SelectQuery.Select.HasModifier)
 				throw new LinqToDBException("Access does not support update query limitation");
 
-			statement = CorrectUpdateTable(statement);
+			statement = CorrectUpdateTable(statement, leaveUpdateTableInQuery: true, dataOptions, mappingSchema);
 
 			if (!statement.SelectQuery.OrderBy.IsEmpty)
 				statement.SelectQuery.OrderBy.Items.Clear();
@@ -72,94 +79,139 @@ namespace LinqToDB.DataProvider.Access
 			return statement;
 		}
 
-		public override bool ConvertCountSubQuery(SelectQuery subQuery)
+		SqlStatement CorrectInnerJoins(SqlStatement statement)
 		{
-			return !subQuery.Where.IsEmpty;
-		}
-
-		public override ISqlPredicate ConvertSearchStringPredicate(SqlPredicate.SearchString predicate, ConvertVisitor<RunOptimizationContext> visitor)
-		{
-			var like = ConvertSearchStringPredicateViaLike(predicate, visitor);
-
-			if (predicate.CaseSensitive.EvaluateBoolExpression(visitor.Context.OptimizationContext.Context) == true)
+			statement.Visit(static e =>
 			{
-				SqlPredicate.ExprExpr? subStrPredicate = null;
-
-				switch (predicate.Kind)
+				if (e.ElementType == QueryElementType.SqlQuery)
 				{
-					case SqlPredicate.SearchString.SearchKind.StartsWith:
+					var sqlQuery = (SelectQuery)e;
+
+					for (var tIndex = 0; tIndex < sqlQuery.From.Tables.Count; tIndex++)
 					{
-						subStrPredicate =
-							new SqlPredicate.ExprExpr(
-								new SqlFunction(typeof(int), "InStr",
-									new SqlValue(1),
-									predicate.Expr1,
-									predicate.Expr2,
-									new SqlValue(0)),
-								SqlPredicate.Operator.Equal,
-								new SqlValue(1), null);
+						var t = sqlQuery.From.Tables[tIndex];
+						for (int i = 0; i < t.Joins.Count; i++)
+						{
+							var join = t.Joins[i];
+							if (join.JoinType == JoinType.Inner)
+							{
+								bool moveUp = false;
 
-						break;
+								if (join.Table.Joins.Count > 0 && join.Table.Joins[0].JoinType == JoinType.Inner)
+								{
+									// INNER JOIN Table1 t1
+									//		INNER JOIN Table2 t2 ON ...
+									// ON t1.Field = t2.Field
+									//
+
+									var usedSources = new HashSet<ISqlTableSource>();
+									QueryHelper.GetUsedSources(join.Condition, usedSources);
+
+									if (usedSources.Contains(join.Table.Joins[0].Table.Source))
+									{
+										moveUp = true;
+									}
+								}
+								else
+								{
+									// Check for join with unbounded condition
+									//
+									// INNER JOIN Table1 t1 ON other.Field = 1
+									//
+
+									var usedSources = new HashSet<ISqlTableSource>();
+									QueryHelper.GetUsedSources(join.Condition, usedSources);
+
+									moveUp = usedSources.Count < 2;
+								}
+
+								if (moveUp)
+								{
+									// Convert to old style JOIN
+									//
+									sqlQuery.From.Tables.Insert(tIndex + 1, join.Table);
+									sqlQuery.From.Where.ConcatSearchCondition(join.Condition);
+
+									t.Joins.RemoveAt(i);
+									--i;
+								}
+							}
+						}
 					}
-
-					case SqlPredicate.SearchString.SearchKind.EndsWith:
-					{
-						var indexExpr = new SqlBinaryExpression(typeof(int),
-							new SqlBinaryExpression(typeof(int),
-								new SqlFunction(typeof(int), "Length", predicate.Expr1), "-",
-								new SqlFunction(typeof(int), "Length", predicate.Expr2)), "+",
-							new SqlValue(1));
-
-						subStrPredicate =
-							new SqlPredicate.ExprExpr(
-								new SqlFunction(typeof(int), "InStr",
-									indexExpr,
-									predicate.Expr1,
-									predicate.Expr2,
-									new SqlValue(0)),
-								SqlPredicate.Operator.Equal,
-								indexExpr, null);
-
-						break;
-					}
-					case SqlPredicate.SearchString.SearchKind.Contains:
-					{
-						subStrPredicate =
-							new SqlPredicate.ExprExpr(
-								new SqlFunction(typeof(int), "InStr",
-									new SqlValue(1),
-									predicate.Expr1,
-									predicate.Expr2,
-									new SqlValue(0)),
-								SqlPredicate.Operator.GreaterOrEqual,
-								new SqlValue(1), null);
-						break;
-					}
-
 				}
 
-				if (subStrPredicate != null)
-				{
-					var result = new SqlSearchCondition(
-						new SqlCondition(false, like, predicate.IsNot),
-						new SqlCondition(predicate.IsNot, subStrPredicate));
+			});
 
-					return result;
-				}
-			}
-
-			return like;
+			return statement;
 		}
 
-		protected override ISqlExpression ConvertFunction(SqlFunction func)
+		SqlStatement CorrectExistsAndIn(SqlStatement statement, DataOptions dataOptions)
 		{
-			switch (func.Name)
+			statement = statement.Convert(1, (_, e) =>
 			{
-				case PseudoFunctions.TO_LOWER: return new SqlFunction(func.SystemType, "LCase", func.IsAggregate, func.IsPure, func.Precedence, func.Parameters);
-				case PseudoFunctions.TO_UPPER: return new SqlFunction(func.SystemType, "UCase", func.IsAggregate, func.IsPure, func.Precedence, func.Parameters);
-				case "Length"                : return new SqlFunction(func.SystemType, "LEN",   func.IsAggregate, func.IsPure, func.Precedence, func.Parameters);
-			}
-			return base.ConvertFunction(func);
+				if (e is SelectQuery sq)
+				{
+					if (sq.From.Tables.Count == 0 && sq.Select.Columns.Count == 1)
+					{
+						var column = sq.Select.Columns[0];
+						if (column.Expression is SqlSearchCondition sc && sc.Predicates.Count == 1)
+						{
+							QueryHelper.ExtractPredicate(sc.Predicates[0], out var underlying, out var isNot);
+
+							if (underlying is SqlPredicate.FuncLike { Function.Name: "EXISTS" } funcLike)
+							{
+								var existsQuery = (SelectQuery)funcLike.Function.Parameters[0];
+
+								// note that it still will not work as we need to rewrite union queries
+								// see ConcatInAny test
+								if (existsQuery.HasSetOperators)
+									return e;
+
+								existsQuery.Select.Columns.Clear();
+
+								var newSearch = new SqlSearchCondition();
+
+								var countExpr = SqlFunction.CreateCount(typeof(int), existsQuery.From.Tables[0]);
+								if (!isNot)
+									newSearch.AddGreater(countExpr, new SqlValue(0), dataOptions.LinqOptions.CompareNulls);
+								else
+									newSearch.AddEqual(countExpr, new SqlValue(0), dataOptions.LinqOptions.CompareNulls);
+
+								existsQuery.Select.AddColumn(newSearch);
+
+								return existsQuery;
+							}
+
+							if (underlying is SqlPredicate.InSubQuery inSubQuery)
+							{
+								var subquery = inSubQuery.SubQuery;
+								subquery.Where.EnsureConjunction()
+									.AddEqual(subquery.Select.Columns[0].Expression, inSubQuery.Expr1, dataOptions.LinqOptions.CompareNulls);
+
+								subquery.Select.Columns.Clear();
+
+								var newSearch = new SqlSearchCondition();
+								var countExpr = SqlFunction.CreateCount(typeof(int), subquery.From.Tables[0]);
+
+								isNot = isNot != inSubQuery.IsNot;
+
+								if (!isNot)
+									newSearch.AddGreater(countExpr, new SqlValue(0), dataOptions.LinqOptions.CompareNulls);
+								else
+									newSearch.AddEqual(countExpr, new SqlValue(0), dataOptions.LinqOptions.CompareNulls);
+
+								subquery.Select.AddColumn(newSearch);
+
+								return subquery;
+							}
+						}
+					}
+				}
+
+				return e;
+			});
+
+			return statement;
 		}
 	}
 }

@@ -20,7 +20,7 @@ namespace Cli.Fluent.Oracle
 
 		#region Associations
 		/// <summary>
-		/// SYS_C007192
+		/// SYS_C007123
 		/// </summary>
 		public TTestUser User { get; set; } = null!;
 		#endregion

@@ -29,7 +29,7 @@ namespace Tests.UserTests
 						join p in db.GetTable<Parent>() on c.ParentID equals p.ParentID
 						select c;
 
-				Assert.IsNotEmpty(q);
+				Assert.That(q, Is.Not.Empty);
 			}
 		}
 	}

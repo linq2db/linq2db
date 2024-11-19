@@ -18,7 +18,8 @@ namespace Tests.Linq
 			[IncludeDataSources(
 				TestProvName.AllSqlServer2008Plus,
 				TestProvName.AllPostgreSQL93Plus,
-				TestProvName.AllOracle12Plus)]
+				TestProvName.AllOracle12Plus,
+				TestProvName.AllMySqlWithApply)]
 			string context, [Values(1, 2)] int iteration)
 		{
 			var doe = "Doe";
@@ -382,6 +383,44 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		public void OuterApplyJoinClassArray(
+			[IncludeDataSources(
+				TestProvName.AllSqlServer2008Plus,
+				TestProvName.AllPostgreSQL93Plus,
+				TestProvName.AllOracle12Plus)]
+			string context, [Values(1, 2)] int iteration)
+		{
+			using var db = GetDataContext(context);
+
+			var cacheMiss = Query<Person>.CacheMissCount;
+
+			var q =
+				from p in db.Person
+				from n in new Person[]
+				{
+					new() { ID = 1, LastName = "Janet", FirstName = p.FirstName },
+					new() { ID = 2, LastName = "Doe", },
+				}.Where(n => p.LastName == n.LastName).DefaultIfEmpty()
+				select p;
+
+			var result = q.ToList();
+
+			if (iteration > 1)
+				Query<Person>.CacheMissCount.Should().Be(cacheMiss);
+
+			var expected =
+				from p in Person
+				from n in new Person[]
+				{
+					new() { ID = 1, LastName = "Janet", FirstName = p.FirstName },
+					new() { ID = 2, LastName = "Doe", },
+				}.Where(n => p.LastName == n.LastName).DefaultIfEmpty()
+				select p;
+
+			AreEqual(expected, result);
+		}
+
+		[Test]
 		public void InnerJoinClassArray(
 			[DataSources(TestProvName.AllAccess, ProviderName.DB2, TestProvName.AllInformix)] string context, [Values(1, 2)] int iteration)
 		{
@@ -634,10 +673,10 @@ namespace Tests.Linq
 
 				var cnt = table.Insert(queryToInsert);
 				if (!context.IsAnyOf(TestProvName.AllClickHouse))
-					Assert.AreEqual(2, cnt);
+					Assert.That(cnt, Is.EqualTo(2));
 				cnt = table.Insert(queryToInsert);
 				if (!context.IsAnyOf(TestProvName.AllClickHouse))
-					Assert.AreEqual(0, cnt);
+					Assert.That(cnt, Is.EqualTo(0));
 
 				if (iteration > 1)
 					Query<TableToInsert>.CacheMissCount.Should().Be(cacheMiss);
@@ -863,7 +902,7 @@ namespace Tests.Linq
 					{
 						IsActive = IdValues.Contains(r.ID)
 					});
-				Assert.IsNotEmpty(result);
+				Assert.That(result, Is.Not.Empty);
 			}
 		}
 
@@ -931,5 +970,69 @@ namespace Tests.Linq
 				personWithList.All(p => p.SomeList!.Count == 0).Should().BeTrue();
 			}
 		}
+
+#if NET6_0_OR_GREATER
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/3665")]
+		public void Issue3665Test1([DataSources(TestProvName.AllAccess)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var values = Enum.GetValues<Gender>();
+
+			var query =
+				from x in db.Person
+				from y in values
+				select x.ID + y;
+
+			AssertQuery(query);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/3665")]
+		public void Issue3665Test2([DataSources(TestProvName.AllAccess)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query =
+				from x in db.Person
+				from y in Enum.GetValues<Gender>()
+				select x.ID + y;
+
+			AssertQuery(query);
+		}
+
+		enum UnmappedEnum
+		{
+			Value1 = 1,
+			Value3 = 3
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/3665")]
+		public void Issue3665Test3([DataSources(TestProvName.AllAccess)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var values = Enum.GetValues<UnmappedEnum>();
+
+			var query =
+				from x in db.Person
+				from y in values
+				select x.ID + y;
+
+			AssertQuery(query);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/3665")]
+		public void Issue3665Test4([DataSources(TestProvName.AllAccess)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query =
+				from x in db.Person
+				from y in Enum.GetValues<UnmappedEnum>()
+				select x.ID + y;
+
+			AssertQuery(query);
+		}
+#endif
 	}
 }

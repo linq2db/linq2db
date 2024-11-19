@@ -30,6 +30,7 @@ namespace Tests.UserTests
 			[Column] public string? Role    { get; set; }
 		}
 
+		[Ignore("Not more applicable. Optimizer choose APPLY join when needed automatically.")]
 		[Test]
 		public void OuterApplyOptimization([IncludeDataSources(TestProvName.AllSqlServer)] string context, [Values]bool preferApply)
 		{

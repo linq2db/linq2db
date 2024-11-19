@@ -9,76 +9,72 @@ namespace LinqToDB.Linq.Builder
 {
 	using Common;
 	using Extensions;
-	using Interceptors;
 	using LinqToDB.Expressions;
 	using Mapping;
 	using Reflection;
 	using SqlQuery;
+	using Tools;
 
 	partial class TableBuilder
 	{
 		[DebuggerDisplay("{BuildContextDebuggingHelper.GetContextInfo(this)}")]
-		public class TableContext : IBuildContext
+		public class TableContext : BuildContextBase, ITableContext
 		{
 			#region Properties
 
-#if DEBUG
-			public string SqlQueryText => SelectQuery == null ? "" : SelectQuery.SqlText;
-			public string Path => this.GetPath();
-#endif
+			MappingSchema _mappingSchema;
 
-			public ExpressionBuilder      Builder     { get; }
-			public Expression?            Expression  { get; }
+			public override Expression?   Expression    { get; }
+			public override MappingSchema MappingSchema => _mappingSchema;
+			public override Type          ElementType   => ObjectType;
 
-			public SelectQuery            SelectQuery { get; set; }
-			public SqlStatement?          Statement   { get; set; }
+			public          Type             OriginalType;
+			public          EntityDescriptor EntityDescriptor;
 
-			public List<LoadWithInfo[]>?  LoadWith    { get; set; }
+			public Type          ObjectType    { get; set; }
+			public SqlTable      SqlTable      { get; set; }
+			public LoadWithInfo  LoadWithRoot  { get; set; } = new();
+			public MemberInfo[]? LoadWithPath  { get; set; }
 
-			public virtual IBuildContext? Parent      { get; set; }
-			public bool                   IsScalar    { get; set; }
-
-			public Type             OriginalType     = null!;
-			public Type             ObjectType       = null!;
-			public EntityDescriptor EntityDescriptor = null!;
-			public SqlTable         SqlTable         = null!;
-
-			internal bool           ForceLeftJoinAssociations { get; set; }
-
-			public bool             AssociationsToSubQueries { get; set; }
+			public bool IsSubQuery { get; }
 
 			#endregion
 
 			#region Init
 
-			public TableContext(ExpressionBuilder builder, BuildInfo buildInfo, Type originalType)
+			public TableContext(ExpressionBuilder builder, MappingSchema mappingSchema, BuildInfo buildInfo, Type originalType) : base (builder, originalType, buildInfo.SelectQuery)
 			{
-				Builder          = builder;
-				Parent           = buildInfo.Parent;
-				Expression       = buildInfo.Expression;
-				SelectQuery      = buildInfo.SelectQuery;
-				AssociationsToSubQueries = buildInfo.AssociationsAsSubQueries;
+				Parent         = buildInfo.Parent;
+				Expression     = buildInfo.Expression;
+				SelectQuery    = buildInfo.SelectQuery;
+				IsSubQuery     = buildInfo.IsSubQuery;
+				IsOptional     = SequenceHelper.GetIsOptional(buildInfo);
+				_mappingSchema = mappingSchema;
+
 				OriginalType     = originalType;
 				ObjectType       = GetObjectType();
-				EntityDescriptor = Builder.MappingSchema.GetEntityDescriptor(ObjectType, Builder.DataOptions.ConnectionOptions.OnEntityDescriptorCreated);
+				EntityDescriptor = mappingSchema.GetEntityDescriptor(ObjectType, Builder.DataOptions.ConnectionOptions.OnEntityDescriptorCreated);
 				SqlTable         = new SqlTable(EntityDescriptor);
 
-				SelectQuery.From.Table(SqlTable);
+				if (!buildInfo.IsTest || buildInfo.IsSubQuery)
+					SelectQuery.From.Table(SqlTable);
 
 				Init(true);
 			}
 
-			public TableContext(ExpressionBuilder builder, BuildInfo buildInfo, SqlTable table)
+			public TableContext(ExpressionBuilder builder, MappingSchema mappingSchema, BuildInfo buildInfo, SqlTable table) : base (builder, table.ObjectType, buildInfo.SelectQuery)
 			{
-				Builder          = builder;
-				Parent           = buildInfo.Parent;
-				Expression       = buildInfo.Expression;
-				SelectQuery      = buildInfo.SelectQuery;
-				AssociationsToSubQueries = buildInfo.AssociationsAsSubQueries;
+				Parent         = buildInfo.Parent;
+				Expression     = buildInfo.Expression;
+				SelectQuery    = buildInfo.SelectQuery;
+				IsSubQuery     = buildInfo.IsSubQuery;
+				IsOptional     = SequenceHelper.GetIsOptional(buildInfo);
+				_mappingSchema = mappingSchema;
+
 				OriginalType     = table.ObjectType;
 				ObjectType       = GetObjectType();
 				SqlTable         = table;
-				EntityDescriptor = Builder.MappingSchema.GetEntityDescriptor(ObjectType, Builder.DataOptions.ConnectionOptions.OnEntityDescriptorCreated);
+				EntityDescriptor = MappingSchema.GetEntityDescriptor(ObjectType, Builder.DataOptions.ConnectionOptions.OnEntityDescriptorCreated);
 
 				if (SqlTable.SqlTableType != SqlTableType.SystemTable)
 					SelectQuery.From.Table(SqlTable);
@@ -86,16 +82,18 @@ namespace LinqToDB.Linq.Builder
 				Init(true);
 			}
 
-			internal TableContext(ExpressionBuilder builder, SelectQuery selectQuery, SqlTable table)
+			internal TableContext(ExpressionBuilder builder, MappingSchema mappingSchema, SelectQuery selectQuery, SqlTable table, bool isOptional) : base(builder, table.ObjectType, selectQuery)
 			{
-				Builder          = builder;
-				Parent           = null;
-				Expression       = null;
-				SelectQuery      = selectQuery;
+				Parent         = null;
+				Expression     = null;
+				IsSubQuery     = false;
+				IsOptional     = isOptional;
+				_mappingSchema = mappingSchema;
+
 				OriginalType     = table.ObjectType;
 				ObjectType       = GetObjectType();
 				SqlTable         = table;
-				EntityDescriptor = Builder.MappingSchema.GetEntityDescriptor(ObjectType, Builder.DataOptions.ConnectionOptions.OnEntityDescriptorCreated);
+				EntityDescriptor = MappingSchema.GetEntityDescriptor(ObjectType, Builder.DataOptions.ConnectionOptions.OnEntityDescriptorCreated);
 
 				if (SqlTable.SqlTableType != SqlTableType.SystemTable)
 					SelectQuery.From.Table(SqlTable);
@@ -103,34 +101,48 @@ namespace LinqToDB.Linq.Builder
 				Init(true);
 			}
 
-			protected TableContext(ExpressionBuilder builder, SelectQuery selectQuery)
+			public TableContext(ExpressionBuilder builder, MappingSchema mappingSchema, BuildInfo buildInfo) : base (builder, typeof(object), buildInfo.SelectQuery)
 			{
-				Builder     = builder;
-				SelectQuery = selectQuery;
-			}
+				Parent         = buildInfo.Parent;
+				Expression     = buildInfo.Expression;
+				IsSubQuery     = buildInfo.IsSubQuery;
+				IsOptional     = SequenceHelper.GetIsOptional(buildInfo);
+				_mappingSchema = mappingSchema;
 
-			public TableContext(ExpressionBuilder builder, BuildInfo buildInfo)
-			{
-				Builder     = builder;
-				Parent      = buildInfo.Parent;
-				Expression  = buildInfo.Expression;
-				SelectQuery = buildInfo.SelectQuery;
-				AssociationsToSubQueries = buildInfo.AssociationsAsSubQueries;
+				var mc   = (MethodCallExpression)buildInfo.Expression;
+				var attr = mc.Method.GetTableFunctionAttribute(mappingSchema);
 
-				var mc   = (MethodCallExpression)Expression;
-				var attr = mc.Method.GetTableFunctionAttribute(builder.MappingSchema)!;
+				if (attr == null)
+					throw new LinqException($"Method '{mc.Method}' has no '{nameof(Sql.TableFunctionAttribute)}'.");
 
 				if (!typeof(IQueryable<>).IsSameOrParentOf(mc.Method.ReturnType))
 					throw new LinqException("Table function has to return IQueryable<T>.");
 
 				OriginalType     = mc.Method.ReturnType.GetGenericArguments()[0];
 				ObjectType       = GetObjectType();
-				EntityDescriptor = Builder.MappingSchema.GetEntityDescriptor(ObjectType, Builder.DataOptions.ConnectionOptions.OnEntityDescriptorCreated);
+				EntityDescriptor = mappingSchema.GetEntityDescriptor(ObjectType, Builder.DataOptions.ConnectionOptions.OnEntityDescriptorCreated);
 				SqlTable         = new SqlTable(EntityDescriptor);
 
 				SelectQuery.From.Table(SqlTable);
 
-				attr.SetTable(builder.DataOptions, (context: this, builder), builder.DataContext.CreateSqlProvider(), Builder.MappingSchema, SqlTable, mc, static (context, a, _) => context.builder.ConvertToSql(context.context, a));
+				attr.SetTable(builder.DataOptions, (context: this, builder), builder.DataContext.CreateSqlProvider(), mappingSchema, SqlTable, mc, static (context, a, _, inline) =>
+				{
+					if (context.builder.CanBeCompiled(a, false))
+					{
+						var param = context.builder.ParametersContext.BuildParameter(context.context, a, columnDescriptor : null, forceConstant : true, doNotCheckCompatibility : true);
+						if (param != null)
+						{
+							if (inline == true)
+							{
+								param.SqlParameter.IsQueryParameter = false;
+							}
+							return new SqlPlaceholderExpression(null, param.SqlParameter, a);
+						}
+					}
+					return context.builder.ConvertToSqlExpr(context.context, a);
+				});
+
+				builder.RegisterExtensionAccessors(mc);
 
 				Init(true);
 			}
@@ -139,7 +151,7 @@ namespace LinqToDB.Linq.Builder
 			{
 				for (var type = OriginalType.BaseType; type != null && type != typeof(object); type = type.BaseType)
 				{
-					var mapping = Builder.MappingSchema.GetEntityDescriptor(type, Builder.DataOptions.ConnectionOptions.OnEntityDescriptorCreated).InheritanceMapping;
+					var mapping = MappingSchema.GetEntityDescriptor(type, Builder.DataOptions.ConnectionOptions.OnEntityDescriptorCreated).InheritanceMapping;
 
 					if (mapping.Count > 0)
 						return type;
@@ -152,8 +164,6 @@ namespace LinqToDB.Linq.Builder
 
 			protected void Init(bool applyFilters)
 			{
-				Builder.Contexts.Add(this);
-
 				InheritanceMapping = EntityDescriptor.InheritanceMapping;
 
 				// Original table is a parent.
@@ -163,1187 +173,130 @@ namespace LinqToDB.Linq.Builder
 					var predicate = Builder.MakeIsPredicate(this, OriginalType);
 
 					if (predicate.GetType() != typeof(SqlPredicate.Expr))
-						SelectQuery.Where.SearchCondition.Conditions.Add(new SqlCondition(false, predicate));
+						SelectQuery.Where.EnsureConjunction().Add(predicate);
 				}
 			}
 
 			#endregion
 
-			#region BuildQuery
-
-			Dictionary<MemberInfo, Expression>? _loadWithCache;
-
-			void SetLoadWithBindings(Type objectType, ParameterExpression parentObject, List<Expression> exprs)
+			public override Expression MakeExpression(Expression path, ProjectFlags flags)
 			{
-				var loadWith = GetLoadWith();
+				if (flags.IsRoot() || flags.IsAssociationRoot() || flags.IsExtractProjection() || flags.IsAggregationRoot())
+					return path;
 
-				if (loadWith == null)
-					return;
-
-				var members = AssociationHelper.GetLoadWith(loadWith);
-
-				foreach (var member in members)
+				if (SequenceHelper.IsSameContext(path, this))
 				{
-					if (member.Info.MemberInfo.DeclaringType!.IsAssignableFrom(objectType))
+					if (flags.IsTable())
+						return path;
+
+					// Eager load case
+					if (path.Type.IsEnumerableType(ElementType))
 					{
-						var ma   = Expression.MakeMemberAccess(new ContextRefExpression(objectType, this), member.Info.MemberInfo);
-						var attr = Builder.MappingSchema.GetAttribute<AssociationAttribute>(member.Info.MemberInfo.ReflectedType!, member.Info.MemberInfo);
-
-						if (_loadWithCache == null || !_loadWithCache.TryGetValue(member.Info.MemberInfo, out var ex))
-						{
-							if (Builder.AssociationPath == null)
-								Builder.AssociationPath = new Stack<Tuple<AccessorMember, IBuildContext, List<LoadWithInfo[]>?>>();
-
-							Builder.AssociationPath.Push(Tuple.Create(new AccessorMember(ma), (IBuildContext)this, (List<LoadWithInfo[]>?)loadWith));
-
-							ex = BuildExpression(ma, 1, parentObject, true);
-							_loadWithCache ??= new Dictionary<MemberInfo, Expression>();
-							_loadWithCache.Add(member.Info.MemberInfo, ex);
-
-							_ = Builder.AssociationPath.Pop();
-						}
-
-						if (member.Info.MemberInfo.IsDynamicColumnPropertyEx())
-						{
-							var typeAcc = TypeAccessor.GetAccessor(member.Info.MemberInfo.ReflectedType!);
-							var setter  = new MemberAccessor(typeAcc, member.Info.MemberInfo, EntityDescriptor).GetSetterExpression(parentObject, ex);
-
-							exprs.Add(setter);
-						}
-						else
-						{
-							var descriptor = GetFieldOrPropAssociationDescriptor(member.Info.MemberInfo, EntityDescriptor);
-							if (descriptor == null)
-								throw new LinqToDBException("Could not find association descriptor for " + member.Info.MemberInfo.Name);
-
-							exprs.Add(descriptor.GetAssociationAssignmentExpression(parentObject, ex, member.Info.MemberInfo));
-						}
-					}
-				}
-			}
-
-			ParameterExpression? _variable;
-
-			Expression BuildTableExpression(bool buildBlock, Type objectType, Tuple<int, SqlField?>[] index)
-			{
-				if (buildBlock && _variable != null)
-					return _variable;
-
-				var recordType       = RecordsHelper.GetRecordType(objectType);
-				var entityDescriptor = Builder.MappingSchema.GetEntityDescriptor(objectType, Builder.DataOptions.ConnectionOptions.OnEntityDescriptorCreated);
-
-				// choosing type that can be instantiated
-				if ((objectType.IsInterface || objectType.IsAbstract) && !(ObjectType.IsInterface || ObjectType.IsAbstract))
-				{
-					objectType = ObjectType;
-				}
-
-				var expr =
-					recordType != RecordType.NotRecord ?
-						BuildRecordConstructor (entityDescriptor, objectType, index, recordType) :
-						BuildDefaultConstructor(entityDescriptor, objectType, index);
-
-				expr = BuildCalculatedColumns(entityDescriptor, expr);
-				expr = ProcessExpression(expr);
-				expr = NotifyEntityCreated(expr);
-
-				if (!buildBlock)
-					return expr;
-
-				return _variable = Builder.BuildVariable(expr);
-			}
-
-			static object OnEntityCreated(IDataContext context, object entity, TableOptions tableOptions, string? tableName, string? schemaName, string? databaseName, string? serverName)
-			{
-				return context is IInterceptable<IEntityServiceInterceptor> entityService ?
-					entityService.Interceptor?.EntityCreated(new(context, tableOptions, tableName, schemaName, databaseName, serverName), entity) ?? entity :
-					entity;
-				}
-
-			static readonly MethodInfo _onEntityCreatedMethodInfo = MemberHelper.MethodOf(() =>
-				OnEntityCreated(null!, null!, TableOptions.NotSet, null, null, null, null));
-
-			Expression NotifyEntityCreated(Expression expr)
-			{
-				if (Builder.DataContext is IInterceptable<IEntityServiceInterceptor> { Interceptor: {} })
-				{
-					expr = Expression.Convert(
-							Expression.Call(
-								_onEntityCreatedMethodInfo,
-								ExpressionConstants.DataContextParam,
-								expr,
-								Expression.Constant(SqlTable.TableOptions),
-								Expression.Constant(SqlTable.TableName.Name,     typeof(string)),
-								Expression.Constant(SqlTable.TableName.Schema,   typeof(string)),
-								Expression.Constant(SqlTable.TableName.Database, typeof(string)),
-								Expression.Constant(SqlTable.TableName.Server,   typeof(string))
-							),
-							expr.Type);
-				}
-
-				return expr;
-			}
-
-			Expression BuildCalculatedColumns(EntityDescriptor entityDescriptor, Expression expr)
-			{
-				if (!entityDescriptor.HasCalculatedMembers)
-					return expr;
-
-				var isBlockDisable = Builder.IsBlockDisable;
-
-				Builder.IsBlockDisable = true;
-
-				var variable    = Expression.Variable(expr.Type, expr.Type.ToString());
-				var expressions = new List<Expression>
-				{
-					Expression.Assign(variable, expr)
-				};
-
-				foreach (var member in entityDescriptor.CalculatedMembers!)
-				{
-					var accessExpression    = Expression.MakeMemberAccess(variable, member.MemberInfo);
-					var convertedExpression = Builder.ConvertExpressionTree(accessExpression);
-					var selectorLambda      = Expression.Lambda(convertedExpression, variable);
-
-					var context    = new SelectContext(Parent, selectorLambda, this);
-					var expression = context.BuildExpression(null, 0, false);
-
-					expressions.Add(Expression.Assign(accessExpression, expression));
-				}
-
-				expressions.Add(variable);
-
-				Builder.IsBlockDisable = isBlockDisable;
-
-				return Expression.Block(new[] { variable }, expressions);
-			}
-
-			Expression BuildDefaultConstructor(EntityDescriptor entityDescriptor, Type objectType, Tuple<int, SqlField?>[] index)
-			{
-				var members = new List<(ColumnDescriptor column, MemberInfo storage, ConvertFromDataReaderExpression expr)>();
-
-				foreach (var idx in index)
-				{
-					if (idx.Item1 >= 0 && idx.Item2 != null)
-					{
-						foreach (var cd in entityDescriptor.Columns)
-						{
-							if (cd.ColumnName != idx.Item2.PhysicalName)
-								continue;
-
-							MemberInfo? storage = null;
-
-							if (cd.Storage != null || cd.MemberAccessor.MemberInfo is not PropertyInfo pi)
-								storage = cd.StorageInfo;
-							else if (objectType.HasSetter(ref pi))
-							{
-								if (cd.MemberAccessor.MemberInfo == cd.StorageInfo && cd.MemberAccessor.MemberInfo != pi)
-									storage = pi;
-								else
-									storage = cd.StorageInfo;
-							}
-
-							if (storage != null)
-								members.Add((cd, storage, new ConvertFromDataReaderExpression(cd.StorageType, idx.Item1, cd.ValueConverter, Builder.DataReaderLocal)));
-						}
-					}
-				}
-
-				var initExpr = Expression.MemberInit(Expression.New(objectType),
-					members
-						// IMPORTANT: refactoring this condition will affect hasComplex variable calculation below
-						.Where(static m => !m.column.MemberAccessor.IsComplex)
-						.Select(static m => (MemberBinding)Expression.Bind(m.storage, m.expr))
-				);
-
-				var        hasComplex = members.Count > initExpr.Bindings.Count;
-				Expression expr       = initExpr;
-
-				var loadWith   = GetLoadWith();
-
-				if (hasComplex || loadWith != null)
-				{
-					var obj   = Expression.Variable(expr.Type);
-					var exprs = new List<Expression> { Expression.Assign(obj, expr) };
-
-					if (hasComplex)
-						foreach (var (column, _, exp) in members)
-							if (column.MemberAccessor.IsComplex)
-								exprs.Add(column.MemberAccessor.GetSetterExpression(obj, exp));
-
-					if (loadWith != null)
-						SetLoadWithBindings(objectType, obj, exprs);
-
-					exprs.Add(obj);
-
-					expr = Expression.Block(new[] { obj }, exprs);
-				}
-
-				return expr;
-			}
-
-			sealed class ColumnInfo
-			{
-				public bool       IsComplex;
-				public string     Name = null!;
-				public Expression Expression = null!;
-			}
-
-			IEnumerable<(string Name, Expression? Expr)> GetExpressions(TypeAccessor typeAccessor, RecordType recordType, List<ColumnInfo> columns)
-			{
-				IEnumerable<MemberAccessor> members = typeAccessor.Members;
-
-				if (recordType == RecordType.FSharp)
-				{
-					var membersWithOrder = new List<(int sequence, MemberAccessor ma)>();
-					foreach (var member in typeAccessor.Members)
-					{
-						var sequence = RecordsHelper.GetFSharpRecordMemberSequence(member.MemberInfo);
-						if (sequence != -1)
-						{
-							membersWithOrder.Add((sequence, member));
-						}
-
-						members = membersWithOrder.OrderBy(static _ => _!.sequence).Select(static _ => _.ma);
-					}
-				}
-
-				var loadWith      = GetLoadWith();
-				var loadWithItems = loadWith == null ? new List<AssociationHelper.LoadWithItem>() : AssociationHelper.GetLoadWith(loadWith);
-
-				foreach (var member in members)
-				{
-					ColumnInfo? column = null;
-					foreach (var c in columns)
-					{
-						if (!c.IsComplex && c.Name == member.Name)
-						{
-							column = c;
-							break;
-						}
+						return path;
 					}
 
-					if (column != null)
+					if (MappingSchema.IsScalarType(ElementType))
 					{
-						yield return (member.Name, column.Expression);
-					}
-					else
-					{
-						if (Builder.MappingSchema.HasAttribute<AssociationAttribute>(typeAccessor.Type, member.MemberInfo))
-						{
-							foreach (var item in loadWithItems)
-							{
-								if (MemberInfoEqualityComparer.Default.Equals(item.Info.MemberInfo, member.MemberInfo))
-								{
-									var ma = Expression.MakeMemberAccess(Expression.Constant(null, typeAccessor.Type), member.MemberInfo);
-									yield return (member.Name, BuildExpression(ma, 1, false));
-									break;
-								}
-							}
-						}
-						else
-						{
-							var name = member.Name + '.';
-
-							var cols = new List<ColumnInfo>(columns.Count);
-							foreach (var c in columns)
-								if (c.IsComplex && c.Name.StartsWith(name))
-									cols.Add(c);
-
-							if (cols.Count == 0)
-								yield return (member.Name, null);
-							else
-							{
-								foreach (var col in cols)
-								{
-									col.Name      = col.Name.Substring(name.Length);
-									col.IsComplex = col.Name.Contains(".");
-								}
-
-								var typeAcc  = TypeAccessor.GetAccessor(member.Type);
-								var memberRecordType = RecordsHelper.GetRecordType(member.Type);
-
-								var exprs = GetExpressions(typeAcc, memberRecordType, cols).ToList();
-
-								if ((memberRecordType & RecordType.CallConstructorOnWrite) != 0)
-								{
-									var expr = BuildFromParameterizedConstructor(member.Type, exprs);
-
-									yield return (member.Name, expr);
-								}
-								else
-								{
-									var bindings = new List<MemberBinding>();
-									for (var i = 0; i < typeAcc.Members.Count && i < exprs.Count; i++)
-									{
-										if (exprs[i].Expr != null)
-										{
-											bindings.Add(Expression.Bind(typeAcc.Members[i].MemberInfo, exprs[i].Expr!));
-										}
-									}
-
-									var expr = Expression.MemberInit(Expression.New(member.Type), bindings);
-
-									yield return (member.Name, expr);
-								}
-							}
-						}
-					}
-				}
-			}
-
-			static ConstructorInfo SelectParameterizedConstructor(Type objectType)
-			{
-				var constructors = objectType.GetConstructors();
-
-				if (constructors.Length == 0)
-				{
-					constructors = objectType.GetConstructors(BindingFlags.Instance | BindingFlags.NonPublic);
-
-					if (constructors.Length == 0)
-						throw new InvalidOperationException($"Type '{objectType.Name}' has no constructors.");
-				}
-
-				if (constructors.Length > 1)
-					throw new InvalidOperationException($"Type '{objectType.Name}' has ambiguous constructors.");
-
-				return constructors[0];
-			}
-
-			Expression BuildFromParameterizedConstructor(Type objectType,
-				IList<(string Name, Expression? Expr)> expressions)
-			{
-				var ctor = SelectParameterizedConstructor(objectType);
-
-				var parameters = ctor.GetParameters();
-				var argFound   = false;
-
-				var args = new Expression[parameters.Length];
-				for (int i = 0; i < parameters.Length; i++)
-				{
-					var param = parameters[i];
-					Expression? arg = null;
-					foreach (var (name, e) in expressions)
-					{
-						if (e != null && name == param.Name)
-						{
-							arg = e;
-							break;
-						}
+						var tablePlaceholder =
+							ExpressionBuilder.CreatePlaceholder(this, SqlTable, path, trackingPath : path);
+						return tablePlaceholder;
 					}
 
-					if (arg == null)
-					{
-						foreach (var (name, e) in expressions)
-						{
-							if (e != null && name.Equals(param.Name, StringComparison.OrdinalIgnoreCase))
-							{
-								arg = e;
-								break;
-							}
-						}
-					}
+					Expression fullEntity = Builder.BuildFullEntityExpression(MappingSchema, path, ElementType, flags);
+					// Entity can contain calculated columns which should be exposed
+					fullEntity = Builder.ConvertExpressionTree(fullEntity);
 
-					argFound = argFound || arg != null;
+					if (fullEntity.Type != path.Type)
+						fullEntity = Expression.Convert(fullEntity, path.Type);
 
-					arg ??= new DefaultValueExpression(Builder.MappingSchema, param.ParameterType);
-
-					args[i] = arg;
+					return fullEntity;
 				}
 
-				if (!argFound)
-					throw new InvalidOperationException($"Type '{objectType.Name}' has no suitable constructor.");
+				Expression member;
 
-				var expr = Expression.New(ctor, args);
-
-				return expr;
-			}
-
-			Expression BuildRecordConstructor(EntityDescriptor entityDescriptor, Type objectType, Tuple<int, SqlField?>[] index, RecordType recordType)
-			{
-				var columns = new List<ColumnInfo>();
-				foreach (var idx in index)
-				{
-					if (idx.Item1 >= 0 && idx.Item2 != null)
-					{
-						foreach (var cd in entityDescriptor.Columns)
-						{
-							if (cd.ColumnName == idx.Item2.PhysicalName)
-							{
-								columns.Add(
-									new ColumnInfo()
-									{
-										IsComplex  = cd.MemberAccessor.IsComplex,
-										Name       = cd.MemberName,
-										Expression = new ConvertFromDataReaderExpression(cd.MemberType, idx.Item1, cd.ValueConverter, Builder.DataReaderLocal)
-									});
-							}
-						}
-					}
-				}
-
-				var exprs = GetExpressions(entityDescriptor.TypeAccessor, recordType, columns).ToList();
-
-				return BuildFromParameterizedConstructor(objectType, exprs);
-			}
-
-			protected virtual Expression ProcessExpression(Expression expression)
-			{
-				return expression;
-			}
-
-			Tuple<int, SqlField?>[] BuildIndex(Tuple<int, SqlField?>[] index, Type objectType)
-			{
-				var names = new Dictionary<string,int>();
-				var n     = 0;
-				var ed    = Builder.MappingSchema.GetEntityDescriptor(objectType, Builder.DataOptions.ConnectionOptions.OnEntityDescriptorCreated);
-
-				foreach (var cd in ed.Columns)
-					if (cd.MemberAccessor.TypeAccessor.Type == ed.TypeAccessor.Type)
-						names.Add(cd.MemberName, n++);
-
-				var q = new List<(int idx, int sort)>();
-				for (var i = 0; i < SqlTable.Fields.Count; i++)
-				{
-					if (names.TryGetValue(SqlTable.Fields[i].Name, out var nameIndex))
-					{
-						q.Add((i, nameIndex));
-					}
-				}
-
-				var result = new Tuple<int, SqlField?>[q.Count];
-
-				var idx = 0;
-				foreach (var r in q.OrderBy(static r => r.sort))
-				{
-					result[idx] = index[r.idx];
-					idx++;
-				}
-
-				return result;
-			}
-
-			protected virtual Expression BuildQuery(Type tableType, TableContext tableContext, ParameterExpression? parentObject)
-			{
-				SqlInfo[] info;
-
-				if (IsScalarSet())
-				{
-					info = ConvertToIndex(null, 0, ConvertFlags.All);
-					if (info.Length != 1)
-						throw new LinqToDBException($"Invalid scalar type processing for type '{tableType.Name}'.");
-					var parentIndex = ConvertToParentIndex(info[0].Index, this);
-					return Builder.BuildSql(tableType, parentIndex, info[0].Sql);
-				}
-
-				if (ObjectType == tableType)
-				{
-					info = ConvertToIndex(null, 0, ConvertFlags.All);
-				}
+				if (path is MemberExpression me)
+					member = me;
 				else
+					return path;
+
+				var sql = GetField(member, false);
+
+				if (sql != null)
 				{
-					info = ConvertToSql(null, 0, ConvertFlags.All);
-
-					var table = new SqlTable(Builder.MappingSchema.GetEntityDescriptor(tableType, Builder.DataOptions.ConnectionOptions.OnEntityDescriptorCreated));
-
-					var matchedFields = new List<SqlInfo>();
-					foreach (var field in table.Fields)
+					if (flags.HasFlag(ProjectFlags.Table))
 					{
-						foreach (var sqlInfo in info)
-						{
-							var sqlField = (SqlField)sqlInfo.Sql;
-							var found = sqlField.Name == field.Name;
-
-							if (!found)
-							{
-								found = EntityDescriptor.Aliases != null &&
-										EntityDescriptor.Aliases.TryGetValue(field.Name, out var alias) &&
-										alias == sqlField.Name;
-							}
-
-							if (found)
-							{
-								matchedFields.Add(GetIndex(sqlInfo));
-								break;
-							}
-						}
+						var root = Builder.GetRootContext(this, path, false);
+						return root ?? path;
 					}
-
-					info = matchedFields.ToArray();
 				}
 
-				var index = new Tuple<int, SqlField?>[info.Length];
-
-				for (var i = 0; i < info.Length; i++)
-					index[i] = Tuple.Create(ConvertToParentIndex(info[i].Index, this), QueryHelper.GetUnderlyingField(info[i].Sql));
-
-				if (ObjectType != tableType || InheritanceMapping.Count == 0)
-					return BuildTableExpression(!Builder.IsBlockDisable, tableType, index);
-
-				Expression expr;
-
-				var defaultMapping = InheritanceMapping.SingleOrDefault(static m => m.IsDefault);
-
-				if (defaultMapping != null)
+				if (sql == null)
 				{
-					expr = Expression.Convert(
-						BuildTableExpression(false, defaultMapping.Type, BuildIndex(index, defaultMapping.Type)),
-						ObjectType);
-				}
-				else
-				{
-					var field  = SqlTable.FindFieldByMemberName(InheritanceMapping[0].DiscriminatorName) ?? throw new LinqException($"Field {InheritanceMapping[0].DiscriminatorName} not found in table {SqlTable}");
-					var dindex = ConvertToParentIndex(_indexes[field].Index, this);
-
-					expr = Expression.Convert(
-						Expression.Call(null, Methods.LinqToDB.Exceptions.DefaultInheritanceMappingException,
-							new ConvertFromDataReaderExpression(typeof(object), dindex, null, ExpressionBuilder.DataReaderParam),
-							Expression.Constant(ObjectType)),
-						ObjectType);
+					return path;
 				}
 
-				foreach (var mapping in InheritanceMapping.Select(static (m,i) => new { m, i }))
-				{
-					if (mapping.m == defaultMapping)
-						continue;
+				var placeholder = ExpressionBuilder.CreatePlaceholder(this, sql, path, trackingPath : path);
 
-					var field  = SqlTable.FindFieldByMemberName(InheritanceMapping[mapping.i].DiscriminatorName) ?? throw new LinqException($"Field {InheritanceMapping[mapping.i].DiscriminatorName} not found in table {SqlTable}");
-					var dindex = ConvertToParentIndex(_indexes[field].Index, this);
-
-					Expression testExpr;
-
-					var isNullExpr = Expression.Call(
-						ExpressionBuilder.DataReaderParam,
-						ReflectionHelper.DataReader.IsDBNull,
-						ExpressionInstances.Int32Array(dindex));
-
-					if (mapping.m.Code == null)
-					{
-						testExpr = isNullExpr;
-					}
-					else
-					{
-						var codeType = mapping.m.Code.GetType();
-
-						testExpr = ExpressionBuilder.Equal(
-							Builder.MappingSchema,
-							Builder.BuildSql(codeType, dindex, mapping.m.Discriminator.ValueConverter),
-							Expression.Constant(mapping.m.Code));
-
-						if (mapping.m.Discriminator.CanBeNull)
-						{
-							testExpr =
-								Expression.AndAlso(
-									Expression.Not(isNullExpr),
-									testExpr);
-						}
-					}
-
-					expr = Expression.Condition(
-						testExpr,
-						Expression.Convert(BuildTableExpression(false, mapping.m.Type, BuildIndex(index, mapping.m.Type)), ObjectType),
-						expr);
-				}
-
-				return expr;
+				return placeholder;
 			}
 
-			private bool IsScalarSet()
+			public override IBuildContext Clone(CloningContext context)
 			{
-				return IsScalar || Builder.MappingSchema.IsScalarType(OriginalType);
+				return new TableContext(Builder, MappingSchema, context.CloneElement(SelectQuery), context.CloneElement(SqlTable), IsOptional);
 			}
 
-			public virtual void BuildQuery<T>(Query<T> query, ParameterExpression queryParameter)
+			public override void SetRunQuery<T>(Query<T> query, Expression expr)
 			{
-				var expr   = BuildQuery(typeof(T), this, null);
-				var mapper = Builder.BuildMapper<T>(expr);
+				var mapper = Builder.BuildMapper<T>(SelectQuery, expr);
 
 				QueryRunner.SetRunQuery(query, mapper);
 			}
 
-			#endregion
-
-			#region BuildExpression
-
-			public virtual Expression BuildExpression(Expression? expression, int level, bool enforceServerSide)
-			{
-				return BuildExpression(expression, level, null, enforceServerSide);
-			}
-
-			Expression BuildExpression(Expression? expression, int level, ParameterExpression? parentObject, bool enforceServerSide)
-			{
-				if (expression == null)
-				{
-					return BuildQuery(OriginalType, this, parentObject);
-				}
-
-				// Build table.
-				//
-
-				var levelExpression = expression.GetLevelExpression(Builder.MappingSchema, level);
-				var descriptor      = GetAssociationDescriptor(levelExpression, out _);
-
-				if (descriptor?.IsList == true)
-				{
-					if (Builder.GetRootObject(expression) is ContextRefExpression)
-						return EagerLoading.GenerateAssociationExpression(Builder, this, expression, descriptor)!;
-
-					return Builder.BuildMultipleQuery(this, expression, false);
-				}
-
-				var contextInfo = FindContextExpression(expression, level, false, false);
-
-				if (contextInfo == null)
-				{
-					if (expression is MemberExpression memberExpression)
-					{
-						if (EntityDescriptor != null &&
-							EntityDescriptor.TypeAccessor.Type == memberExpression.Member.DeclaringType)
-						{
-							return new DefaultValueExpression(Builder.MappingSchema, memberExpression.Type);
-						}
-					}
-
-					throw new LinqException("'{0}' cannot be converted to SQL.", expression);
-				}
-
-				if (contextInfo.Field == null)
-				{
-					Expression expr;
-
-					if (contextInfo.CurrentExpression == null)
-						throw new InvalidOperationException("contextInfo.CurrentExpression is null");
-
-					var maxLevel = contextInfo.CurrentExpression.GetLevel(Builder.MappingSchema);
-
-					if (contextInfo.CurrentLevel + 1 > maxLevel)
-						expr = contextInfo.Context.BuildExpression(null, 0, false);
-					else
-						expr = contextInfo.Context.BuildExpression(contextInfo.CurrentExpression, contextInfo.CurrentLevel + 1, false);
-
-					return expr;
-				}
-
-				if (!enforceServerSide && contextInfo.LevelExpression != null && contextInfo.LevelExpression != contextInfo.CurrentExpression)
-				{
-					var expr = BuildExpression(contextInfo.LevelExpression, level, parentObject, enforceServerSide);
-
-					return expression.Transform(e => e == contextInfo.LevelExpression ? expr : e);
-				}
-
-				// Build field.
-				//
-				var info = ConvertToIndex(expression, level, ConvertFlags.Field).Single();
-				var idx  = ConvertToParentIndex(info.Index, null);
-
-				return Builder.BuildSql(expression!, idx, info.Sql);
-			}
-
-			#endregion
-
-			#region ConvertToSql
-
-			public virtual SqlInfo[] ConvertToSql(Expression? expression, int level, ConvertFlags flags)
-			{
-				switch (flags)
-				{
-					case ConvertFlags.All   :
-						{
-							var contextInfo = FindContextExpression(expression, level, false, true)!;
-
-							if (contextInfo.Field == null)
-							{
-								SqlInfo[] result;
-
-								if (!IsScalarSet())
-								{
-									// Handling case with Associations
-									//
-									if (contextInfo.Context != this)
-									{
-										result = contextInfo.Context.ConvertToIndex(contextInfo.CurrentExpression, contextInfo.CurrentLevel, flags);
-									}
-									else
-									{
-										result = SqlTable.Fields
-											.Where (static field => !field.IsDynamic && !field.SkipOnEntityFetch)
-											.Select(static f => f.ColumnDescriptor != null
-												? new SqlInfo(f.ColumnDescriptor.MemberInfo, f)
-												: new SqlInfo(f))
-											.ToArray();
-									}
-								}
-								else
-								{
-									result = new[]
-									{
-										new SqlInfo(SqlTable)
-									};
-								}
-
-								return result;
-							}
-							else
-							{
-								var mi = QueryHelper.GetColumnDescriptor(contextInfo.Field)?.MemberInfo;
-
-								SqlInfo[] result;
-								if (mi != null)
-								{
-									result = new SqlInfo[]
-									{
-										new(mi, contextInfo.Field)
-									};
-								}
-								else
-								{
-									result = new SqlInfo[]
-									{
-										new(contextInfo.Field)
-									};
-
-								}
-								return result;
-							}
-						}
-
-					case ConvertFlags.Key   :
-						{
-							var contextInfo = FindContextExpression(expression, level, false, true)!;
-
-							if (contextInfo.Field == null)
-							{
-								if (contextInfo.Context != this)
-								{
-									SqlInfo[] resultSql;
-									var maxLevel = contextInfo.CurrentExpression!.GetLevel(Builder.MappingSchema);
-									if (maxLevel == 0)
-									{
-										resultSql = contextInfo.Context.ConvertToSql(null, 0, flags);
-									}
-									else
-									{
-										resultSql = contextInfo.Context.ConvertToSql(contextInfo.CurrentExpression,
-											contextInfo.CurrentLevel >= maxLevel
-												? contextInfo.CurrentLevel
-												: contextInfo.CurrentLevel + 1, flags);
-									}
-
-									if (contextInfo.AsSubquery)
-									{
-										resultSql = new[]
-										{
-											new SqlInfo(contextInfo.Context.SelectQuery, SelectQuery)
-										};
-									}
-
-									return resultSql;
-								}
-
-								if (IsScalarSet())
-								{
-									var result = new[]
-									{
-										new SqlInfo(SqlTable)
-									};
-									return result;
-								}
-
-								List<SqlInfo>? key = null;
-								foreach (var field in SqlTable.Fields.Where(static f => f.IsPrimaryKey).OrderBy(static f => f.PrimaryKeyOrder))
-								{
-									(key ??= new()).Add(new SqlInfo(field.ColumnDescriptor.MemberInfo, field, SelectQuery));
-								}
-
-								return key?.ToArray() ?? ConvertToSql(expression, level, ConvertFlags.All);
-							}
-							else
-							{
-								return new[]
-								{
-									// ???
-									new SqlInfo(QueryHelper.GetUnderlyingField(contextInfo.Field)?.ColumnDescriptor.MemberInfo!, contextInfo.Field)
-								};
-							}
-						}
-
-					case ConvertFlags.Field :
-						{
-							var contextInfo = FindContextExpression(expression, level, false, false);
-
-							if (contextInfo == null)
-							{
-								if (expression == null)
-									throw new InvalidOperationException();
-
-								var levelExpression = expression.GetLevelExpression(Builder.MappingSchema, level);
-
-								throw new LinqException($"Expression '{levelExpression}' is not a Field.");
-							}
-
-							if (contextInfo.Field != null)
-								return new[]
-								{
-									// ???
-									new SqlInfo(QueryHelper.GetUnderlyingField(contextInfo.Field)?.ColumnDescriptor.MemberInfo!, contextInfo.Field, SelectQuery)
-								};
-
-							if (contextInfo.CurrentExpression == null)
-							{
-								return new[]
-								{
-									new SqlInfo
-									(
-										SqlTable.All
-									)
-								};
-							}
-
-							SqlInfo[] resultSql;
-							var maxLevel = contextInfo.CurrentExpression.GetLevel(Builder.MappingSchema);
-							if (contextInfo.Context == this)
-							{
-								if (maxLevel == 0)
-									resultSql = contextInfo.Context.ConvertToSql(null, 0, flags);
-								else
-									resultSql = contextInfo.Context.ConvertToSql(contextInfo.CurrentExpression,
-										contextInfo.CurrentLevel + 1, flags);
-							}
-							else
-							{
-								if (maxLevel == 0)
-									resultSql = contextInfo.Context.ConvertToIndex(null, 0, flags);
-								else
-									resultSql = contextInfo.Context.ConvertToIndex(contextInfo.CurrentExpression,
-										contextInfo.CurrentLevel + 1, flags);
-
-								if (contextInfo.AsSubquery)
-								{
-									resultSql = new[]
-									{
-										new SqlInfo(contextInfo.Context.SelectQuery, SelectQuery)
-									};
-								}
-							}
-							return resultSql;
-						}
-				}
-
-				throw new NotImplementedException();
-			}
-
-			#endregion
-
-			#region ConvertToIndex
-
-			readonly Dictionary<ISqlExpression,SqlInfo> _indexes = new ();
-
-			protected virtual SqlInfo GetIndex(SqlInfo expr)
-			{
-				if (_indexes.TryGetValue(expr.Sql, out var n))
-					return n;
-
-				int index;
-				if (expr.Sql is SqlField field)
-				{
-					index = SelectQuery.Select.Add(field, field.Alias);
-				}
-				else
-				{
-					index = SelectQuery.Select.Add(expr.Sql);
-				}
-
-				var newExpr = new SqlInfo
-				(
-					expr.MemberChain,
-					SelectQuery.Select.Columns[index],
-					SelectQuery,
-					index
-				);
-
-				_indexes.Add(expr.Sql, newExpr);
-
-				return newExpr;
-			}
-
-			public virtual SqlInfo[] ConvertToIndex(Expression? expression, int level, ConvertFlags flags)
-			{
-				switch (flags)
-				{
-					case ConvertFlags.Field :
-					case ConvertFlags.Key   :
-					case ConvertFlags.All   :
-
-						var info = ConvertToSql(expression, level, flags);
-
-						for (var i = 0; i < info.Length; i++)
-							info[i] = GetIndex(info[i]);
-
-						return info;
-				}
-
-				throw new NotImplementedException();
-			}
-
-			#endregion
-
-			#region IsExpression
-
-			public virtual IsExpressionResult IsExpression(Expression? expression, int level, RequestFor requestFlag)
-			{
-				switch (requestFlag)
-				{
-					case RequestFor.Field      :
-						{
-							if (expression == null || expression.GetLevel(Builder.MappingSchema) == 0)
-								return IsExpressionResult.False;
-
-							var contextInfo = FindContextExpression(expression, level, false, false);
-							if (contextInfo == null)
-								return IsExpressionResult.False;
-
-							if (contextInfo.Field != null)
-								return new (contextInfo.Field);
-
-							if (contextInfo.CurrentExpression == null
-								|| contextInfo.CurrentExpression.GetLevel(Builder.MappingSchema) == contextInfo.CurrentLevel)
-								return IsExpressionResult.False;
-
-							return contextInfo.Context.IsExpression(contextInfo.CurrentExpression,
-								contextInfo.CurrentLevel + 1, requestFlag);
-						}
-
-					case RequestFor.Table       :
-					case RequestFor.Object      :
-						{
-							if (expression == null)
-							{
-								if (!IsScalarSet())
-									return new IsExpressionResult(true, this);
-								return IsExpressionResult.False;
-							}
-
-							var contextInfo = FindContextExpression(expression, level, false, false);
-							if (contextInfo == null)
-								return IsExpressionResult.False;
-
-							if (contextInfo.Field != null)
-								return IsExpressionResult.False;
-
-							if (contextInfo.CurrentExpression == null
-								|| contextInfo.CurrentExpression.GetLevel(Builder.MappingSchema) == contextInfo.CurrentLevel)
-								return new IsExpressionResult(true, contextInfo.Context);
-
-							return contextInfo.Context.IsExpression(contextInfo.CurrentExpression,
-								contextInfo.CurrentLevel + 1, requestFlag);
-
-						}
-
-					case RequestFor.Expression :
-						{
-							if (expression == null)
-								return IsExpressionResult.False;
-
-							var levelExpression = expression.GetLevelExpression(Builder.MappingSchema, level);
-
-							switch (levelExpression.NodeType)
-							{
-								case ExpressionType.MemberAccess:
-								case ExpressionType.Call:
-									{
-										var descriptor = GetAssociationDescriptor(levelExpression, out _);
-										if (descriptor != null)
-											return IsExpressionResult.False;
-
-										var contextInfo = FindContextExpression(expression, level, false, false);
-										return IsExpressionResult.GetResult(contextInfo?.Context == null);
-									}
-								case ExpressionType.Extension:
-									{
-										if (levelExpression is ContextRefExpression)
-											return IsExpressionResult.False;
-										break;
-									}
-								case ExpressionType.Parameter    :
-									{
-										if (IsExpression(expression, level, RequestFor.Object).Result)
-											return IsExpressionResult.False;
-										return IsExpressionResult.True;
-									}
-							}
-
-							return IsExpressionResult.True;
-						}
-
-					case RequestFor.Association      :
-						{
-							if (expression == null)
-								return IsExpressionResult.False;
-
-							var result = IsExpression(expression, level, RequestFor.Table);
-							if (!result.Result || !(result.Context is AssociationContext))
-								return IsExpressionResult.False;
-
-							return result;
-						}
-				}
-
-				return IsExpressionResult.False;
-			}
-
-			#endregion
+			public override bool IsOptional { get; }
 
 			#region GetContext
 
-			Dictionary<AccessorMember, Tuple<IBuildContext, bool>>? _associationContexts;
-			Dictionary<AccessorMember, IBuildContext>? _collectionAssociationContexts;
-
-
-			public IBuildContext GetContext(Expression? expression, int level, BuildInfo buildInfo)
+			public override IBuildContext? GetContext(Expression expression, BuildInfo buildInfo)
 			{
-				if (expression == null)
-				{
-					if (buildInfo != null && buildInfo.IsSubQuery)
-					{
-						var table = new TableContext(
-							Builder,
-							new BuildInfo(Parent is SelectManyBuilder.SelectManyContext ? this : Parent, Expression!, buildInfo.SelectQuery),
-							SqlTable.ObjectType);
-
-						return table;
-					}
-
+				if (!buildInfo.CreateSubQuery || buildInfo.IsTest)
 					return this;
-				}
 
-				if (buildInfo != null)
-				{
-					if (buildInfo.IsSubQuery)
-					{
-						var levelExpression = expression.GetLevelExpression(Builder.MappingSchema, level);
+				var expr = Builder.GetSequenceExpression(this);
+				if (expr == null)
+					return this;
 
-						if (levelExpression == expression && expression.NodeType == ExpressionType.MemberAccess ||
-							expression.NodeType == ExpressionType.Call)
-						{
-							var tableLevel  = FindContextExpression(expression, level, true, true)!;
+				var context = Builder.BuildSequence(new BuildInfo(buildInfo, expr));
 
-							if (tableLevel.Descriptor?.IsList == true)
-							{
-								Expression ma;
-								switch (buildInfo.Expression)
-								{
-									case MemberExpression me:
-										{
-											ma = me.Expression!;
-											break;
-										}
-									case MethodCallExpression mc:
-										{
-											ma = mc.Method.IsStatic ? mc.Arguments[0] : mc.Object!;
-											break;
-										}
-
-									default:
-										ma = Builder.GetRootObject(buildInfo.Expression);
-										break;
-
-								}
-
-								var elementType     = tableLevel.Descriptor.GetElementType(Builder.MappingSchema);
-								var parentExactType = ma.Type;
-
-								var queryMethod = AssociationHelper.CreateAssociationQueryLambda(
-									Builder, new AccessorMember(expression), tableLevel.Descriptor, OriginalType, parentExactType, elementType,
-									false, false, GetLoadWith(), out _);
-
-								var expr   = queryMethod.GetBody(ma);
-
-								buildInfo.IsAssociationBuilt  = true;
-								var oldDefaultIfEmpty         = Builder.DisableDefaultIfEmpty;
-								Builder.DisableDefaultIfEmpty = true;
-
-								var result =  Builder.BuildSequence(new BuildInfo(buildInfo, expr));
-
-								Builder.DisableDefaultIfEmpty = oldDefaultIfEmpty;
-
-								return result;
-							}
-						}
-						else
-						{
-							var tableLevel  = FindContextExpression(expression, level, forceInner: false, throwExceptionForNull: true)!;
-
-							var result = tableLevel.Context.GetContext(tableLevel.CurrentExpression, tableLevel.CurrentLevel + 1, buildInfo);
-							if (result == null)
-								throw new LinqException($"Can not build association for expression '{tableLevel.CurrentExpression}'");
-							return result;
-						}
-					}
-				}
-
-				throw new InvalidOperationException();
+				return context;
 			}
 
-			public virtual SqlStatement GetResultStatement()
+			public override SqlStatement GetResultStatement()
 			{
-				return Statement ??= new SqlSelectStatement(SelectQuery);
-			}
-
-			public void CompleteColumns()
-			{
-			}
-
-			#endregion
-
-			#region ConvertToParentIndex
-
-			public virtual int ConvertToParentIndex(int index, IBuildContext? context)
-			{
-				if (context != null && context != this && context.SelectQuery != SelectQuery)
-				{
-					var sqlInfo = new SqlInfo(context.SelectQuery.Select.Columns[index], context.SelectQuery, index);
-					sqlInfo = GetIndex(sqlInfo);
-					index = sqlInfo.Index;
-				}
-
-				return Parent?.ConvertToParentIndex(index, this) ?? index;
+				return new SqlSelectStatement(SelectQuery);
 			}
 
 			#endregion
 
 			#region SetAlias
 
-			public void SetAlias(string? alias)
+			public override void SetAlias(string? alias)
 			{
-				if (alias == null || SqlTable == null)
+				if (alias == null)
+					return;
+
+				if (SqlTable.Alias != null)
 					return;
 
 				if (!alias.Contains('<'))
-					SqlTable.Alias ??= alias;
-			}
-
-			#endregion
-
-			#region GetSubQuery
-
-			public ISqlExpression? GetSubQuery(IBuildContext context)
-			{
-				return null;
+					SqlTable.Alias = alias;
 			}
 
 			#endregion
 
 			#region Helpers
 
-			protected List<LoadWithInfo[]>? GetLoadWith()
+			protected ISqlExpression? GetField(Expression expression, bool throwException)
 			{
-				return LoadWith;
-			}
-
-			protected (ISqlExpression?,Expression?) GetField(Expression expression, int level, bool throwException)
-			{
-				expression = expression.SkipPathThrough();
-
 				if (expression.NodeType == ExpressionType.MemberAccess)
 				{
 					var memberExpression = (MemberExpression)expression;
@@ -1378,7 +331,7 @@ namespace LinqToDB.Linq.Builder
 						}
 					}
 
-					var levelExpression = expression.GetLevelExpression(Builder.MappingSchema, level);
+					var levelExpression = expression;
 
 					if (levelExpression.NodeType == ExpressionType.MemberAccess)
 					{
@@ -1433,10 +386,10 @@ namespace LinqToDB.Linq.Builder
 											}
 
 											if (field.Name == pathName)
-												return (field, null);
+												return field;
 										}
 										else if (field.Name == name)
-											return (field, levelExpression);
+											return field;
 									}
 								}
 							}
@@ -1454,9 +407,9 @@ namespace LinqToDB.Linq.Builder
 										var name = memberExpression.Member.Name;
 										var me   = memberExpression;
 
-										if (me.Expression is MemberExpression)
+										if (me.Expression.UnwrapConvert() is MemberExpression)
 										{
-											while (me.Expression is MemberExpression me1)
+											while (me.Expression.UnwrapConvert() is MemberExpression me1)
 											{
 												me   = me1;
 												name = me.Member.Name + '.' + name;
@@ -1465,33 +418,71 @@ namespace LinqToDB.Linq.Builder
 											var fld = SqlTable.FindFieldByMemberName(name);
 
 											if (fld != null)
-												return (fld, null);
+												return fld;
 										}
 									}
 									else
 									{
-										return (field, null);
+										if (SequenceHelper.IsSameContext(memberExpression.Expression.UnwrapConvert(), this))
+											return field;
 									}
 								}
 
 								if (InheritanceMapping.Count > 0 && field.Name == memberExpression.Member.Name)
+								{
 									foreach (var mapping in InheritanceMapping)
-										foreach (var mm in Builder.MappingSchema.GetEntityDescriptor(mapping.Type, Builder.DataOptions.ConnectionOptions.OnEntityDescriptorCreated).Columns)
+									{
+										foreach (var mm in MappingSchema.GetEntityDescriptor(mapping.Type, Builder.DataOptions.ConnectionOptions.OnEntityDescriptorCreated).Columns)
+										{
 											if (mm.MemberAccessor.MemberInfo.EqualsTo(memberExpression.Member))
-												return (field, null);
+												return field;
+										}
+									}
+								}
 
-								var dynamicField = GetOrAddDynamicColumn(memberExpression);
-								if (dynamicField != null)
-									return (dynamicField, null);
 							}
 
-							var newDynamicField = GetOrAddDynamicColumn(memberExpression);
-							if (newDynamicField != null)
-								return (newDynamicField, null);
+							if (memberExpression.Member.IsDynamicColumnPropertyEx())
+							{
+								var fieldName = memberExpression.Member.Name;
 
-							if (throwException &&
-								EntityDescriptor != null &&
-								EntityDescriptor.TypeAccessor.Type == memberExpression.Member.DeclaringType)
+								// do not add association columns
+								var flag = true;
+
+								foreach (var assoc in EntityDescriptor.Associations)
+								{
+									if (assoc.MemberInfo == memberExpression.Member)
+									{
+										flag = false;
+										break;
+									}
+								}
+
+								if (flag)
+								{
+									var newField = SqlTable.FindFieldByMemberName(fieldName);
+									if (newField == null)
+									{
+										newField = new SqlField(
+											new ColumnDescriptor(
+												MappingSchema,
+												EntityDescriptor,
+												new ColumnAttribute(fieldName),
+												new MemberAccessor(EntityDescriptor.TypeAccessor,
+													memberExpression.Member, EntityDescriptor),
+												InheritanceMapping.Count > 0)
+										) { IsDynamic = true, };
+
+										SqlTable.Add(newField);
+									}
+
+									return newField;
+								}
+							}
+
+							if (throwException                             &&
+							    EntityDescriptor                   != null &&
+							    EntityDescriptor.TypeAccessor.Type == memberExpression.Member.DeclaringType)
 							{
 								throw new LinqException("Member '{0}.{1}' is not a table column.",
 									memberExpression.Member.DeclaringType.Name, memberExpression.Member.Name);
@@ -1500,267 +491,10 @@ namespace LinqToDB.Linq.Builder
 					}
 				}
 
-				return (null, null);
-			}
-
-			private SqlField? GetOrAddDynamicColumn(MemberExpression memberExpression)
-			{
-				if (memberExpression.Member.IsDynamicColumnPropertyEx())
+				if (throwException)
 				{
-					var fieldName = memberExpression.Member.Name;
-
-					// do not add association columns
-					var flag = true;
-
-					foreach (var assoc in EntityDescriptor.Associations)
-					{
-						if (assoc.MemberInfo == memberExpression.Member)
-						{
-							flag = false;
-							break;
-						}
-					}
-
-					if (flag)
-					{
-						var newField = SqlTable.FindFieldByMemberName(fieldName);
-						if (newField == null)
-						{
-							newField = new SqlField(
-								new ColumnDescriptor(
-									Builder.MappingSchema,
-									EntityDescriptor,
-									new ColumnAttribute(fieldName),
-									new MemberAccessor(EntityDescriptor.TypeAccessor, memberExpression.Member, EntityDescriptor),
-									InheritanceMapping.Count > 0))
-							{ IsDynamic = true, };
-
-							SqlTable.Add(newField);
-						}
-
-						return newField;
-					}
+					throw new LinqException($"Member '{expression}' is not a table column.");
 				}
-
-				return null;
-			}
-
-			sealed class ContextInfo
-			{
-				public ContextInfo(IBuildContext context, ISqlExpression? field, Expression? currentExpression, int currentLevel, Expression? levelExpression)
-				{
-					Context           = context;
-					Field             = field;
-					CurrentExpression = currentExpression;
-					CurrentLevel      = currentLevel;
-					LevelExpression   = levelExpression;
-				}
-
-				public ContextInfo(IBuildContext context, Expression? currentExpression, int currentLevel, Expression? levelExpression):
-					this(context, null, currentExpression, currentLevel, levelExpression)
-				{
-				}
-
-				public IBuildContext          Context;
-				public Expression?            CurrentExpression;
-				public Expression?            LevelExpression;
-				public ISqlExpression?        Field;
-				public int                    CurrentLevel;
-				public bool                   AsSubquery;
-				public AssociationDescriptor? Descriptor;
-			}
-
-			ContextInfo? FindContextExpression(Expression? expression, int level, bool forceInner, bool throwExceptionForNull)
-			{
-				if (expression == null)
-				{
-					return new ContextInfo(this, null, 0, null);
-				}
-
-				expression = expression.SkipPathThrough();
-
-				var levelExpression = expression.GetLevelExpression(Builder.MappingSchema, level);
-
-				switch (levelExpression.NodeType)
-				{
-					case ExpressionType.Parameter    :
-						{
-							return new ContextInfo(this, expression, level, levelExpression);
-						}
-					case ExpressionType.MemberAccess:
-						{
-							var (field,lex) = GetField(expression, level, false);
-
-							if (field != null)
-							{
-								return new ContextInfo(this, field, expression, level, lex);
-							}
-
-							goto case ExpressionType.Call;
-						}
-					case ExpressionType.Call         :
-						{
-							var descriptor = GetAssociationDescriptor(levelExpression, out var accessorMember);
-
-							if (descriptor != null && accessorMember != null)
-							{
-								var isOuter = descriptor.CanBeNull || ForceLeftJoinAssociations;
-								IBuildContext? associatedContext;
-
-								if (!descriptor.IsList && !AssociationsToSubQueries)
-								{
-									var forceNew = false;
-									if (_associationContexts != null && _associationContexts.TryGetValue(accessorMember, out var testInfo))
-									{
-										if (testInfo.Item1 is AssociationContext ac && !ac.IsCompatibleLoadWith())
-											forceNew = true;
-									}
-
-									if (forceNew || _associationContexts == null || !_associationContexts.TryGetValue(accessorMember, out var foundInfo))
-									{
-
-										if (forceInner)
-											isOuter = false;
-										else if (!isOuter)
-										{
-											if (Parent != null && SequenceHelper.UnwrapSubqueryContext(Parent) is DefaultIfEmptyBuilder.DefaultIfEmptyContext)
-												isOuter = true;
-										}
-
-										var newExpression = expression.Replace(levelExpression,
-											new ContextRefExpression(levelExpression.Type, this));
-
-										associatedContext = AssociationHelper.BuildAssociationInline(Builder,
-											new BuildInfo(Parent, newExpression, SelectQuery), this, accessorMember, descriptor,
-											!forceInner,
-											ref isOuter);
-
-										if (!forceNew)
-										{
-											_associationContexts ??= new ();
-											_associationContexts.Add(accessorMember, Tuple.Create(associatedContext, isOuter));
-										}
-									}
-									else
-									{
-										associatedContext = foundInfo.Item1;
-									}
-
-									var contextRef = new ContextRefExpression(levelExpression.Type, associatedContext);
-
-									return new ContextInfo(associatedContext, expression.Replace(levelExpression, contextRef), 0, levelExpression) { Descriptor = descriptor };
-								}
-								else
-								{
-									if (AssociationsToSubQueries || _collectionAssociationContexts == null || !_collectionAssociationContexts.TryGetValue(accessorMember, out associatedContext))
-									{
-										var newExpression = expression.Replace(levelExpression,
-											new ContextRefExpression(levelExpression.Type, this));
-
-										associatedContext = AssociationHelper.BuildAssociationSelectMany(Builder,
-											new BuildInfo(Parent, newExpression, new SelectQuery()),
-											this, accessorMember, descriptor,
-											ref isOuter);
-
-										if (!AssociationsToSubQueries)
-										{
-											_collectionAssociationContexts ??= new Dictionary<AccessorMember, IBuildContext>();
-											_collectionAssociationContexts.Add(accessorMember, associatedContext);
-										}
-										else
-										{
-											associatedContext.SelectQuery.ParentSelect = SelectQuery;
-										}
-
-									}
-									var contextRef = new ContextRefExpression(levelExpression.Type, associatedContext);
-
-									return new ContextInfo(associatedContext, expression.Replace(levelExpression, contextRef), 0, levelExpression)
-									{
-										Descriptor = descriptor,
-										AsSubquery = AssociationsToSubQueries || descriptor.IsList
-									};
-								}
-							}
-
-							break;
-						}
-					default:
-						{
-							if (levelExpression is ContextRefExpression refExpression)
-							{
-								return new ContextInfo(refExpression.BuildContext, expression, level, levelExpression);
-							}
-							break;
-						}
-				}
-
-				if (throwExceptionForNull)
-					throw new LinqException($"Expression '{expression}' ({levelExpression}) is not a table.");
-
-				return null;
-			}
-
-			AssociationDescriptor? GetAssociationDescriptor(Expression expression, out AccessorMember? memberInfo, bool onlyCurrent = true)
-			{
-				memberInfo = null;
-				if (expression.NodeType == ExpressionType.MemberAccess || expression.NodeType == ExpressionType.Call)
-					memberInfo = new AccessorMember(expression);
-
-				if (memberInfo == null)
-					return null;
-
-				var descriptor = GetAssociationDescriptor(memberInfo, EntityDescriptor);
-				if (descriptor == null && !onlyCurrent && memberInfo.MemberInfo.DeclaringType != ObjectType)
-					descriptor = GetAssociationDescriptor(memberInfo, Builder.MappingSchema.GetEntityDescriptor(memberInfo.MemberInfo.DeclaringType!, Builder.DataOptions.ConnectionOptions.OnEntityDescriptorCreated));
-
-				return descriptor;
-			}
-
-			AssociationDescriptor? GetAssociationDescriptor(AccessorMember accessorMember, EntityDescriptor entityDescriptor)
-			{
-				if (accessorMember.MemberInfo.MemberType == MemberTypes.Method)
-				{
-					var attribute = Builder.MappingSchema.GetAttribute<AssociationAttribute>(accessorMember.MemberInfo.DeclaringType!, accessorMember.MemberInfo);
-
-					if (attribute != null)
-						return new AssociationDescriptor
-						(
-							entityDescriptor.ObjectType,
-							accessorMember.MemberInfo,
-							attribute.GetThisKeys(),
-							attribute.GetOtherKeys(),
-							attribute.ExpressionPredicate,
-							attribute.Predicate,
-							attribute.QueryExpressionMethod,
-							attribute.QueryExpression,
-							attribute.Storage,
-							attribute.AssociationSetterExpressionMethod,
-							attribute.AssociationSetterExpression,
-							attribute.ConfiguredCanBeNull,
-							attribute.AliasName
-						);
-				}
-				else if (accessorMember.MemberInfo.MemberType == MemberTypes.Property || accessorMember.MemberInfo.MemberType == MemberTypes.Field)
-				{
-					return GetFieldOrPropAssociationDescriptor(accessorMember.MemberInfo, entityDescriptor);
-				}
-
-				return null;
-			}
-
-			AssociationDescriptor? GetFieldOrPropAssociationDescriptor(MemberInfo memberInfo, EntityDescriptor entityDescriptor)
-			{
-				if (entityDescriptor.FindAssociationDescriptor(memberInfo) is AssociationDescriptor associationDescriptor)
-					return associationDescriptor;
-
-				foreach (var m in entityDescriptor.InheritanceMapping)
-				{
-					var ed = Builder.MappingSchema.GetEntityDescriptor(m.Type, Builder.DataOptions.ConnectionOptions.OnEntityDescriptorCreated);
-					if (ed.FindAssociationDescriptor(memberInfo) is AssociationDescriptor inheritedAssociationDescriptor)
-						return inheritedAssociationDescriptor;
-				}
-
 				return null;
 			}
 

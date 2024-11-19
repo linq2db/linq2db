@@ -1,4 +1,6 @@
-﻿using System.Linq;
+﻿using System;
+using System.Collections.ObjectModel;
+using System.Linq;
 using System.Linq.Expressions;
 
 namespace LinqToDB.Linq.Builder
@@ -6,142 +8,263 @@ namespace LinqToDB.Linq.Builder
 	using LinqToDB.Expressions;
 	using SqlQuery;
 
+	[BuildsMethodCall("DefaultIfEmpty")]
 	sealed class DefaultIfEmptyBuilder : MethodCallBuilder
 	{
-		protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
-		{
-			return methodCall.IsQueryable("DefaultIfEmpty");
-		}
+		public static bool CanBuildMethod(MethodCallExpression call, BuildInfo info, ExpressionBuilder builder)
+			=> call.IsQueryable();
 
-		protected override IBuildContext BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
+		static ReadOnlyCollection<Expression>? PrepareNoNullConditions(ExpressionBuilder builder, IBuildContext notNullHandlerSequence, IBuildContext sequence, IBuildContext nullabilitySequence, bool allowNullField)
 		{
-			var sequence     = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
-			var defaultValue = methodCall.Arguments.Count == 1 ? null : methodCall.Arguments[1].Unwrap();
+			var sequenceRef  = new ContextRefExpression(sequence.ElementType, sequence);
+			var translated   = builder.BuildSqlExpression(sequence, sequenceRef, ProjectFlags.SQL, buildFlags: ExpressionBuilder.BuildFlags.ForceAssignments);
+			var placeholders = ExpressionBuilder.CollectDistinctPlaceholders(translated);
 
-			if (buildInfo.Parent is SelectManyBuilder.SelectManyContext context)
+			var nullability = NullabilityContext.GetContext(nullabilitySequence.SelectQuery);
+			var notNull = placeholders
+				.Where(p => !p.Sql.CanBeNullable(nullability))
+				.Cast<Expression>()
+				.ToList();
+
+			if (notNull.Count == 0)
 			{
-				if (context.Sequence[0] is JoinBuilder.GroupJoinContext groupJoin)
+				if (builder.DataContext.SqlProviderFlags.IsAccessBuggyLeftJoinConstantNullability)
 				{
-					groupJoin.SelectQuery.From.Tables[0].Joins[0].JoinType = JoinType.Left;
-					groupJoin.SelectQuery.From.Tables[0].Joins[0].IsWeak   = false;
+					if (placeholders.Count == 0)
+						return null;
+
+					notNull = placeholders.Cast<Expression>().ToList();
 				}
+				else
+				{
+					notNull.Add(
+						SequenceHelper.CreateSpecialProperty(
+							new ContextRefExpression(notNullHandlerSequence.ElementType, notNullHandlerSequence),
+							typeof(int?),
+							DefaultIfEmptyContext.NotNullPropName
+						)
+					);
+				}
+
+			}
+			else if (notNull.Count > 0)
+			{
+				notNull.RemoveRange(1, notNull.Count - 1);
 			}
 
-			return new DefaultIfEmptyContext(buildInfo.Parent, sequence, defaultValue);
+			return notNull.AsReadOnly();
+		}
+
+		protected override BuildSequenceResult BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
+		{
+			var defaultValue = methodCall.Arguments.Count == 1 ? null : methodCall.Arguments[1].Unwrap();
+
+			// Generating LEFT JOIN from one record resultset
+			if (buildInfo.SourceCardinality == SourceCardinality.Unknown)
+			{
+				var sequenceResult = builder.TryBuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0], new SelectQuery()));
+				if (sequenceResult.BuildContext == null)
+					return sequenceResult;
+
+				var sequence = sequenceResult.BuildContext;
+
+				defaultValue ??= Expression.Default(methodCall.Method.GetGenericArguments()[0]);
+
+				var defaultValueContext = new SelectContext(buildInfo.Parent,
+					builder,
+					null,
+					defaultValue,
+					new SelectQuery(), buildInfo.IsSubQuery);
+
+				var subqueryContext = new SubQueryContext(defaultValueContext);
+
+				var joinedTable = new SqlJoinedTable(JoinType.Left, sequence.SelectQuery, "d", false);
+
+				subqueryContext.SelectQuery.From.Tables[0].Joins.Add(joinedTable);
+
+				var defaultRef = new ContextRefExpression(defaultValueContext.ElementType, defaultValueContext);
+
+				// force to generate fields
+				var translated = builder.BuildSqlExpression(defaultValueContext, defaultRef, ProjectFlags.SQL, buildFlags : ExpressionBuilder.BuildFlags.ForceAssignments);
+				translated = builder.UpdateNesting(subqueryContext, translated);
+				if (defaultValueContext.SelectQuery.Select.Columns.Count == 0)
+				{
+					//TODO: consider to move to SelectQueryOptimizerVisitor
+					defaultValueContext.SelectQuery.Select.AddNew(new SqlValue(1));
+				}
+
+				var defaultIfEmptyContext = new DefaultIfEmptyContext(
+					buildInfo.Parent,
+					sequence,
+					sequence,
+					defaultValue: null,
+					allowNullField: true,
+					isNullValidationDisabled: false);
+
+				var notNullConditions = defaultIfEmptyContext.GetNotNullConditions();
+
+				var defaultIfEmptyRef = new ContextRefExpression(defaultIfEmptyContext.ElementType, defaultIfEmptyContext);
+				var defaultRefExpr = (Expression)defaultRef;
+				if (defaultRefExpr.Type != defaultIfEmptyRef.Type)
+				{
+					defaultRefExpr = Expression.Convert(defaultRefExpr, defaultIfEmptyRef.Type);
+				}
+
+				var condition = notNullConditions.Select(SequenceHelper.MakeNotNullCondition).Aggregate(Expression.AndAlso);
+				var bodyValue = Expression.Condition(condition, defaultIfEmptyRef, defaultRefExpr);
+
+				var resultSelectContext =
+					new SelectContext(buildInfo.Parent, bodyValue, subqueryContext, buildInfo.IsSubQuery);
+
+				if (!buildInfo.IsSubQuery)
+				{
+					if (!builder.IsSupportedSubquery(resultSelectContext, resultSelectContext, out var errorMessage))
+						return BuildSequenceResult.Error(methodCall, errorMessage);
+				}
+
+				return BuildSequenceResult.FromContext(new SubQueryContext(resultSelectContext));
+			}
+			else
+			{
+				var buildResult = builder.TryBuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]) {SourceCardinality = buildInfo.SourceCardinality | SourceCardinality.Zero});
+				if (buildResult.BuildContext == null)
+					return buildResult;
+				var sequence = buildResult.BuildContext;
+
+				return BuildSequenceResult.FromContext(new DefaultIfEmptyContext(buildInfo.Parent, sequence, sequence, defaultValue, true, false));
+			}
 		}
 
 		public sealed class DefaultIfEmptyContext : SequenceContextBase
 		{
-			public DefaultIfEmptyContext(IBuildContext? parent, IBuildContext sequence, Expression? defaultValue)
+			readonly IBuildContext _nullabilitySequence;
+			readonly bool          _allowNullField;
+
+			ReadOnlyCollection<Expression>? _notNullConditions;
+
+			public DefaultIfEmptyContext(IBuildContext? parent, IBuildContext sequence, IBuildContext nullabilitySequence, Expression? defaultValue, bool allowNullField, bool isNullValidationDisabled)
 				: base(parent, sequence, null)
 			{
-				DefaultValue = defaultValue;
+				_nullabilitySequence     = nullabilitySequence;
+				_allowNullField          = allowNullField;
+				DefaultValue             = defaultValue;
+				IsNullValidationDisabled = isNullValidationDisabled;
 			}
 
-			public Expression? DefaultValue { get; }
+			public bool        IsNullValidationDisabled { get; set; }
+			public Expression? DefaultValue             { get; }
 
-			public override Expression BuildExpression(Expression? expression, int level, bool enforceServerSide)
+			public const string NotNullPropName = "not_null";
+
+			public ReadOnlyCollection<Expression> GetNotNullConditions()
 			{
-				expression = SequenceHelper.CorrectExpression(expression, this, Sequence);
+				if (_notNullConditions == null)
+					_notNullConditions = PrepareNoNullConditions(Builder, this, Sequence, _nullabilitySequence, true) ?? throw new InvalidOperationException();
+				return _notNullConditions;
+			}
 
-				var expr = Sequence.BuildExpression(expression, level, enforceServerSide);
+			public override Expression MakeExpression(Expression path, ProjectFlags flags)
+			{
+				if (SequenceHelper.IsSameContext(path, this) && (flags.IsRoot() || flags.IsAssociationRoot()))
+					return path;
 
-				if (!Builder.DisableDefaultIfEmpty && expression == null)
+				var newPath = SequenceHelper.CorrectExpression(path, this, Sequence);
+
+				if (ExpressionEqualityComparer.Instance.Equals(newPath, path))
+					return path;
+
+				if (flags.IsTraverse() || flags.IsRoot() || flags.IsTable() || flags.IsExtractProjection() || flags.IsAggregationRoot())
+					return newPath;
+
+				if ((flags.IsSql() || flags.IsExpression()) && SequenceHelper.IsSpecialProperty(path, typeof(int?), NotNullPropName))
 				{
-					var q =
-						from col in SelectQuery.Select.Columns
-						where !col.CanBeNull
-						select SelectQuery.Select.Columns.IndexOf(col);
+					var placeholder = ExpressionBuilder.CreatePlaceholder(this,
+						new SqlNullabilityExpression(new SqlValue(1), true),
+						path,
+						alias : NotNullPropName);
 
-					var idx = q.DefaultIfEmpty(-1).First();
+					return placeholder;
+				}
 
-					if (idx == -1)
+				if (!IsNullValidationDisabled && DefaultValue != null)
+				{
+					var notNullConditions = GetNotNullConditions();
+
+					var sequenceRef = new ContextRefExpression(ElementType, Sequence);
+
+					var testCondition = notNullConditions.Select(SequenceHelper.MakeNotNullCondition).Aggregate(Expression.AndAlso);
+
+					var defaultValue = DefaultValue;
+					if (defaultValue.Type != sequenceRef.Type)
 					{
-						idx = SelectQuery.Select.Add(new SqlValue((int?)1));
-						SelectQuery.Select.Columns[idx].RawAlias = "is_empty";
+						defaultValue = Expression.Convert(defaultValue, sequenceRef.Type);
 					}
 
-					var n = ConvertToParentIndex(idx, this);
+					var body = Expression.Condition(testCondition, sequenceRef, defaultValue);
 
-					Expression e = Expression.Call(
-						ExpressionBuilder.DataReaderParam,
-						ReflectionHelper.DataReader.IsDBNull,
-						ExpressionInstances.Int32Array(n));
+					var projectedDefault = Builder.Project(Sequence, newPath, null, -1, flags, body, true);
+					return projectedDefault;
+				}
 
-					var defaultValue = DefaultValue ?? new DefaultValueExpression(Builder.MappingSchema, expr.Type);
+				var expr = Builder.BuildSqlExpression(this, newPath, flags/*.SqlFlag()*/);
 
-					if (expr.NodeType == ExpressionType.Parameter)
+				if (!flags.IsTest())
+				{
+					expr = Builder.UpdateNesting(this, expr);
+				}
+
+				expr = SequenceHelper.CorrectTrackingPath(Builder, expr, path);
+
+				if (!IsNullValidationDisabled && /*!flags.IsKeys() && */expr.UnwrapConvert() is not SqlEagerLoadExpression)
+				{
+					if (expr is SqlPlaceholderExpression placeholder)
 					{
-						var par  = (ParameterExpression)expr;
-						var pidx = Builder.BlockVariables.IndexOf(par);
-
-						if (pidx >= 0)
+						if (flags.IsExpression())
 						{
-							var ex = Builder.BlockExpressions[pidx];
-
-							if (ex.NodeType == ExpressionType.Assign)
+							var nullablePlaceholder = placeholder.MakeNullable();
+							if (path.Type != placeholder.Type)
 							{
-								var bex = (BinaryExpression)ex;
-
-								if (bex.Left == expr)
-								{
-									if (bex.Right.NodeType != ExpressionType.Conditional)
-									{
-										Builder.BlockExpressions[pidx] =
-											Expression.Assign(
-												bex.Left,
-												Expression.Condition(e, defaultValue, bex.Right));
-									}
-								}
+								return Expression.Condition(
+									Expression.NotEqual(nullablePlaceholder, Expression.Default(placeholder.Type)),
+									placeholder, Expression.Default(path.Type));
 							}
 						}
+
+						return placeholder;
 					}
 
-					expr = Expression.Condition(e, defaultValue, expr);
+					if (_notNullConditions == null)
+					{
+						_notNullConditions = PrepareNoNullConditions(Builder, this, Sequence, _nullabilitySequence, _allowNullField);
+					}
+
+					if (_notNullConditions != null)
+					{
+						expr = new SqlDefaultIfEmptyExpression(expr, _notNullConditions);
+						return expr;
+					}
 				}
 
 				return expr;
 			}
 
-			public override SqlInfo[] ConvertToSql(Expression? expression, int level, ConvertFlags flags)
+			public override IBuildContext Clone(CloningContext context)
+			{
+				return new DefaultIfEmptyContext(null, 
+					context.CloneContext(Sequence), 
+					context.CloneContext(_nullabilitySequence), 
+					context.CloneExpression(DefaultValue), 
+					_allowNullField, 
+					IsNullValidationDisabled);
+			}
+
+			public override IBuildContext? GetContext(Expression expression, BuildInfo buildInfo)
 			{
 				expression = SequenceHelper.CorrectExpression(expression, this, Sequence);
-				return Sequence.ConvertToSql(expression, level, flags);
+				return Sequence.GetContext(expression, buildInfo);
 			}
 
-			public override SqlInfo[] ConvertToIndex(Expression? expression, int level, ConvertFlags flags)
-			{
-				expression = SequenceHelper.CorrectExpression(expression, this, Sequence);
-				return ForceNullability(Sequence.ConvertToIndex(expression, level, flags));
-			}
-
-			private SqlInfo[] ForceNullability(SqlInfo[] sql)
-			{
-				if (Builder.DisableDefaultIfEmpty)
-					return sql;
-
-				// force nullability
-				for (var i = 0; i < sql.Length; i++)
-				{
-					var item = sql[i];
-					if (!item.Sql.CanBeNull)
-						sql[i] = item.WithSql(new SqlExpression(item.Sql.SystemType, "{0}", item.Sql.Precedence, item.Sql) { CanBeNull = true });
-				}
-
-				return sql;
-			}
-
-			public override IsExpressionResult IsExpression(Expression? expression, int level, RequestFor requestFlag)
-			{
-				expression = SequenceHelper.CorrectExpression(expression, this, Sequence);
-				return Sequence.IsExpression(expression, level, requestFlag);
-			}
-
-			public override IBuildContext? GetContext(Expression? expression, int level, BuildInfo buildInfo)
-			{
-				expression = SequenceHelper.CorrectExpression(expression, this, Sequence);
-				return Sequence.GetContext(expression, level, buildInfo);
-			}
+			public override bool IsOptional => true;
 		}
 	}
 }

@@ -20,7 +20,7 @@ namespace Cli.Default.Firebird
 		[Column("MoneyValue"    )] public decimal?  MoneyValue     { get; set; } // decimal(10,4)
 		[Column("DateTimeValue" )] public DateTime? DateTimeValue  { get; set; } // timestamp
 		[Column("DateTimeValue2")] public DateTime? DateTimeValue2 { get; set; } // timestamp
-		[Column("BoolValue"     )] public char?     BoolValue      { get; set; } // char(1)
+		[Column("BoolValue"     )] public bool?     BoolValue      { get; set; } // boolean
 		[Column("GuidValue"     )] public string?   GuidValue      { get; set; } // char(16)
 		[Column("BinaryValue"   )] public byte[]?   BinaryValue    { get; set; } // blob
 		[Column("SmallIntValue" )] public short?    SmallIntValue  { get; set; } // smallint

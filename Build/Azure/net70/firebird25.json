@@ -1,8 +1,0 @@
-﻿{
-	"NET70.Azure": {
-		"Providers": [
-			// Firebird 2.5
-			"Firebird"
-		]
-	}
-}

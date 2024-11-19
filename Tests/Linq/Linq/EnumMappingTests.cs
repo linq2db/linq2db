@@ -138,7 +138,7 @@ namespace Tests.Linq
 					TestField = TestEnum1.Value2
 				});
 
-				Assert.AreEqual(1, db.GetTable<RawTable>().Where(r => r.Id == RID && r.TestField == VAL2).Count());
+				Assert.That(db.GetTable<RawTable>().Where(r => r.Id == RID && r.TestField == VAL2).Count(), Is.EqualTo(1));
 			}
 		}
 
@@ -154,7 +154,7 @@ namespace Tests.Linq
 					TestField = TestEnum21.Value2
 				});
 
-				Assert.AreEqual(1, db.GetTable<RawTable>().Where(r => r.Id == RID && r.TestField == VAL2).Count());
+				Assert.That(db.GetTable<RawTable>().Where(r => r.Id == RID && r.TestField == VAL2).Count(), Is.EqualTo(1));
 			}
 		}
 
@@ -170,8 +170,8 @@ namespace Tests.Linq
 					TestField = TestEnum1.Value2
 				});
 
-				Assert.AreEqual(1, db.GetTable<RawTable>()
-					.Where(r => r.Id == RID && r.TestField == VAL2).Count());
+				Assert.That(db.GetTable<RawTable>()
+					.Where(r => r.Id == RID && r.TestField == VAL2).Count(), Is.EqualTo(1));
 			}
 		}
 
@@ -187,7 +187,7 @@ namespace Tests.Linq
 					TestField = TestEnum21.Value2
 				});
 
-				Assert.AreEqual(1, db.GetTable<RawTable>().Where(r => r.Id == RID && r.TestField == VAL2).Count());
+				Assert.That(db.GetTable<RawTable>().Where(r => r.Id == RID && r.TestField == VAL2).Count(), Is.EqualTo(1));
 			}
 		}
 
@@ -204,7 +204,7 @@ namespace Tests.Linq
 				});
 
 				var result = db.GetTable<TestTable1>().Where(r => r.Id == RID && r.TestField == TestEnum1.Value2).Select(r => r.TestField).FirstOrDefault();
-				Assert.AreEqual(TestEnum1.Value2, result);
+				Assert.That(result, Is.EqualTo(TestEnum1.Value2));
 			}
 		}
 
@@ -221,7 +221,7 @@ namespace Tests.Linq
 				});
 
 				var result = db.GetTable<TestTable2>().Where(r => r.Id == RID && r.TestField == TestEnum21.Value2).Select(r => r.TestField).FirstOrDefault();
-				Assert.AreEqual(TestEnum21.Value2, result);
+				Assert.That(result, Is.EqualTo(TestEnum21.Value2));
 			}
 		}
 
@@ -240,7 +240,7 @@ namespace Tests.Linq
 				var result = db.GetTable<NullableTestTable1>()
 					.Where(r => r.Id == RID && r.TestField == TestEnum1.Value2)
 					.Select(r => r.TestField).FirstOrDefault();
-				Assert.AreEqual(TestEnum1.Value2, result);
+				Assert.That(result, Is.EqualTo(TestEnum1.Value2));
 			}
 		}
 
@@ -284,7 +284,7 @@ namespace Tests.Linq
 					.Select(r => r.TestField)
 					.FirstOrDefault();
 
-				Assert.AreEqual(VAL2, result);
+				Assert.That(result, Is.EqualTo(VAL2));
 			}
 		}
 
@@ -309,7 +309,7 @@ namespace Tests.Linq
 					.Select(r => r.TestField)
 					.FirstOrDefault();
 
-				Assert.AreEqual(VAL2, result);
+				Assert.That(result, Is.EqualTo(VAL2));
 			}
 		}
 
@@ -334,7 +334,7 @@ namespace Tests.Linq
 					.Select(r => r.TestField)
 					.FirstOrDefault();
 
-				Assert.AreEqual(VAL2, result);
+				Assert.That(result, Is.EqualTo(VAL2));
 			}
 		}
 
@@ -359,7 +359,7 @@ namespace Tests.Linq
 					.Select(r => r.TestField)
 					.FirstOrDefault();
 
-				Assert.AreEqual(VAL2, result);
+				Assert.That(result, Is.EqualTo(VAL2));
 			}
 		}
 
@@ -380,7 +380,7 @@ namespace Tests.Linq
 					.Select(r => new { r.TestField })
 					.FirstOrDefault()!;
 
-				Assert.NotNull(result);
+				Assert.That(result, Is.Not.Null);
 				Assert.That(result.TestField, Is.EqualTo(TestEnum1.Value2));
 			}
 		}
@@ -402,8 +402,8 @@ namespace Tests.Linq
 					.Select(r => new { r.TestField })
 					.FirstOrDefault()!;
 
-				Assert.NotNull(result);
-				Assert.AreEqual(TestEnum21.Value2, result.TestField);
+				Assert.That(result, Is.Not.Null);
+				Assert.That(result.TestField, Is.EqualTo(TestEnum21.Value2));
 			}
 		}
 
@@ -424,8 +424,8 @@ namespace Tests.Linq
 					.Select(r => new { r.TestField })
 					.FirstOrDefault()!;
 
-				Assert.NotNull(result);
-				Assert.AreEqual(TestEnum1.Value2, result.TestField);
+				Assert.That(result, Is.Not.Null);
+				Assert.That(result.TestField, Is.EqualTo(TestEnum1.Value2));
 			}
 		}
 
@@ -446,8 +446,8 @@ namespace Tests.Linq
 					.Select(r => new { r.TestField })
 					.FirstOrDefault()!;
 
-				Assert.NotNull(result);
-				Assert.AreEqual(TestEnum21.Value2, result.TestField);
+				Assert.That(result, Is.Not.Null);
+				Assert.That(result.TestField, Is.EqualTo(TestEnum21.Value2));
 			}
 		}
 
@@ -465,7 +465,7 @@ namespace Tests.Linq
 
 				var cnt = db.GetTable<TestTable1>().Delete(r => r.Id == RID && r.TestField == TestEnum1.Value2);
 				if (!context.IsAnyOf(TestProvName.AllClickHouse))
-					Assert.AreEqual(1, cnt);
+					Assert.That(cnt, Is.EqualTo(1));
 			}
 		}
 
@@ -483,7 +483,7 @@ namespace Tests.Linq
 
 				var cnt = db.GetTable<TestTable2>().Delete(r => r.Id == RID && r.TestField == TestEnum21.Value2);
 				if (!context.IsAnyOf(TestProvName.AllClickHouse))
-					Assert.AreEqual(1, cnt);
+					Assert.That(cnt, Is.EqualTo(1));
 			}
 		}
 
@@ -501,7 +501,7 @@ namespace Tests.Linq
 
 				var cnt = db.GetTable<NullableTestTable1>().Delete(r => r.Id == RID && r.TestField == TestEnum1.Value2);
 				if (!context.IsAnyOf(TestProvName.AllClickHouse))
-					Assert.AreEqual(1, cnt);
+					Assert.That(cnt, Is.EqualTo(1));
 			}
 		}
 
@@ -519,7 +519,7 @@ namespace Tests.Linq
 
 				var cnt = db.GetTable<NullableTestTable2>().Delete(r => r.Id == RID && r.TestField == TestEnum21.Value2);
 				if (!context.IsAnyOf(TestProvName.AllClickHouse))
-					Assert.AreEqual(1, cnt);
+					Assert.That(cnt, Is.EqualTo(1));
 			}
 		}
 
@@ -539,7 +539,7 @@ namespace Tests.Linq
 					.Where(r => r.Id == RID && r.TestField == TestEnum1.Value1)
 					.Set(r => r.TestField, TestEnum1.Value2).Update();
 				var result = db.GetTable<RawTable>().Where(r => r.Id == RID && r.TestField == VAL2).Select(r => r.TestField).FirstOrDefault();
-				Assert.AreEqual(VAL2, result);
+				Assert.That(result, Is.EqualTo(VAL2));
 			}
 		}
 
@@ -559,7 +559,7 @@ namespace Tests.Linq
 					.Where(r => r.Id == RID && r.TestField == TestEnum21.Value1)
 					.Set(r => r.TestField, TestEnum21.Value2).Update();
 				var result = db.GetTable<RawTable>().Where(r => r.Id == RID && r.TestField == VAL2).Select(r => r.TestField).FirstOrDefault();
-				Assert.AreEqual(VAL2, result);
+				Assert.That(result, Is.EqualTo(VAL2));
 			}
 		}
 
@@ -579,7 +579,7 @@ namespace Tests.Linq
 					.Where(r => r.Id == RID && r.Int32Field == TestEnum3.Value1)
 					.Set(r => r.Int32Field, () => TestEnum3.Value2).Update();
 
-				Assert.AreEqual(1, db.GetTable<RawTable>().Where(r => r.Id == RID && r.Int32Field == 4).Count());
+				Assert.That(db.GetTable<RawTable>().Where(r => r.Id == RID && r.Int32Field == 4).Count(), Is.EqualTo(1));
 			}
 		}
 
@@ -599,7 +599,7 @@ namespace Tests.Linq
 					.Where(r => r.Id == RID && r.TestField == TestEnum1.Value1)
 					.Set(r => r.TestField, TestEnum1.Value2).Update();
 				var result = db.GetTable<RawTable>().Where(r => r.Id == RID && r.TestField == VAL2).Select(r => r.TestField).FirstOrDefault();
-				Assert.AreEqual(VAL2, result);
+				Assert.That(result, Is.EqualTo(VAL2));
 			}
 		}
 
@@ -619,7 +619,7 @@ namespace Tests.Linq
 					.Where(r => r.Id == RID && r.TestField == TestEnum21.Value1)
 					.Set(r => r.TestField, TestEnum21.Value2).Update();
 				var result = db.GetTable<RawTable>().Where(r => r.Id == RID && r.TestField == VAL2).Select(r => r.TestField).FirstOrDefault();
-				Assert.AreEqual(VAL2, result);
+				Assert.That(result, Is.EqualTo(VAL2));
 			}
 		}
 
@@ -638,7 +638,7 @@ namespace Tests.Linq
 				db.GetTable<NullableTestTable2>()
 					.Where(r => r.Id == RID && r.Int32Field == TestEnum3.Value1)
 					.Set(r => r.Int32Field, () => TestEnum3.Value2).Update();
-				Assert.AreEqual(1, db.GetTable<RawTable>().Where(r => r.Id == RID && r.Int32Field == 4).Count());
+				Assert.That(db.GetTable<RawTable>().Where(r => r.Id == RID && r.Int32Field == 4).Count(), Is.EqualTo(1));
 			}
 		}
 
@@ -654,8 +654,8 @@ namespace Tests.Linq
 					TestField = VAL2
 				});
 
-				Assert.AreEqual(1, db.GetTable<TestTable1>()
-					.Where(r => r.Id == RID && new[] { TestEnum1.Value2 }.Contains(r.TestField)).Count());
+				Assert.That(db.GetTable<TestTable1>()
+					.Where(r => r.Id == RID && new[] { TestEnum1.Value2 }.Contains(r.TestField)).Count(), Is.EqualTo(1));
 			}
 		}
 
@@ -671,7 +671,7 @@ namespace Tests.Linq
 					TestField = VAL2
 				});
 
-				Assert.AreEqual(1, db.GetTable<TestTable2>().Where(r => r.Id == RID && new[] { TestEnum21.Value2 }.Contains(r.TestField)).Count());
+				Assert.That(db.GetTable<TestTable2>().Where(r => r.Id == RID && new[] { TestEnum21.Value2 }.Contains(r.TestField)).Count(), Is.EqualTo(1));
 			}
 		}
 
@@ -687,8 +687,8 @@ namespace Tests.Linq
 					TestField = VAL2
 				});
 
-				Assert.AreEqual(1, db.GetTable<NullableTestTable1>()
-					.Where(r => r.Id == RID && new[] { (TestEnum1?)TestEnum1.Value2 }.Contains(r.TestField)).Count());
+				Assert.That(db.GetTable<NullableTestTable1>()
+					.Where(r => r.Id == RID && new[] { (TestEnum1?)TestEnum1.Value2 }.Contains(r.TestField)).Count(), Is.EqualTo(1));
 			}
 		}
 
@@ -704,8 +704,8 @@ namespace Tests.Linq
 					TestField = VAL2
 				});
 
-				Assert.AreEqual(1, db.GetTable<NullableTestTable2>()
-					.Where(r => r.Id == RID && new[] { (TestEnum21?)TestEnum21.Value2 }.Contains(r.TestField)).Count());
+				Assert.That(db.GetTable<NullableTestTable2>()
+					.Where(r => r.Id == RID && new[] { (TestEnum21?)TestEnum21.Value2 }.Contains(r.TestField)).Count(), Is.EqualTo(1));
 			}
 		}
 
@@ -725,8 +725,8 @@ namespace Tests.Linq
 					.Select(r => new { r.TestField })
 					.FirstOrDefault()!;
 
-				Assert.NotNull(result);
-				Assert.IsNull(result.TestField);
+				Assert.That(result, Is.Not.Null);
+				Assert.That(result.TestField, Is.Null);
 			}
 		}
 
@@ -746,8 +746,8 @@ namespace Tests.Linq
 					.Select(r => new { r.TestField })
 					.FirstOrDefault()!;
 
-				Assert.NotNull(result);
-				Assert.IsNull(result.TestField);
+				Assert.That(result, Is.Not.Null);
+				Assert.That(result.TestField, Is.Null);
 			}
 		}
 
@@ -765,8 +765,8 @@ namespace Tests.Linq
 				var result = db.GetTable<NullableTestTable1>()
 					.Where(r => r.Id == RID && r.TestField == null)
 					.Select(r => new { r.TestField }).FirstOrDefault()!;
-				Assert.NotNull(result);
-				Assert.Null(result.TestField);
+				Assert.That(result, Is.Not.Null);
+				Assert.That(result.TestField, Is.Null);
 			}
 		}
 
@@ -784,8 +784,8 @@ namespace Tests.Linq
 				var result = db.GetTable<NullableTestTable2>()
 					.Where(r => r.Id == RID && r.TestField == null)
 					.Select(r => new { r.TestField }).FirstOrDefault()!;
-				Assert.NotNull(result);
-				Assert.Null(result.TestField);
+				Assert.That(result, Is.Not.Null);
+				Assert.That(result.TestField, Is.Null);
 			}
 		}
 
@@ -801,7 +801,7 @@ namespace Tests.Linq
 					TestField = TestEnum1.Value2
 				});
 
-				Assert.AreEqual(1, db.GetTable<RawTable>().Where(r => r.Id == RID && r.TestField == VAL2).Count());
+				Assert.That(db.GetTable<RawTable>().Where(r => r.Id == RID && r.TestField == VAL2).Count(), Is.EqualTo(1));
 			}
 		}
 
@@ -817,7 +817,7 @@ namespace Tests.Linq
 					TestField = TestEnum21.Value2
 				});
 
-				Assert.AreEqual(1, db.GetTable<RawTable>().Where(r => r.Id == RID && r.TestField == VAL2).Count());
+				Assert.That(db.GetTable<RawTable>().Where(r => r.Id == RID && r.TestField == VAL2).Count(), Is.EqualTo(1));
 			}
 		}
 
@@ -833,8 +833,8 @@ namespace Tests.Linq
 					TestField = TestEnum1.Value2
 				});
 
-				Assert.AreEqual(1, db.GetTable<RawTable>()
-					.Where(r => r.Id == RID && r.TestField == VAL2).Count());
+				Assert.That(db.GetTable<RawTable>()
+					.Where(r => r.Id == RID && r.TestField == VAL2).Count(), Is.EqualTo(1));
 			}
 		}
 
@@ -850,7 +850,7 @@ namespace Tests.Linq
 					TestField = TestEnum21.Value2
 				});
 
-				Assert.AreEqual(1, db.GetTable<RawTable>().Where(r => r.Id == RID && r.TestField == VAL2).Count());
+				Assert.That(db.GetTable<RawTable>().Where(r => r.Id == RID && r.TestField == VAL2).Count(), Is.EqualTo(1));
 			}
 		}
 
@@ -878,8 +878,8 @@ namespace Tests.Linq
 					.Insert(db.GetTable<TestTable1>(), r => r);
 
 				if (!context.IsAnyOf(TestProvName.AllClickHouse))
-					Assert.AreEqual(1, result);
-				Assert.AreEqual(1, db.GetTable<RawTable>().Where(r => r.Id == RID && r.TestField == VAL1).Count());
+					Assert.That(result, Is.EqualTo(1));
+				Assert.That(db.GetTable<RawTable>().Where(r => r.Id == RID && r.TestField == VAL1).Count(), Is.EqualTo(1));
 			}
 		}
 
@@ -907,8 +907,8 @@ namespace Tests.Linq
 					.Insert(db.GetTable<TestTable2>(), r => r);
 
 				if (!context.IsAnyOf(TestProvName.AllClickHouse))
-					Assert.AreEqual(1, result);
-				Assert.AreEqual(1, db.GetTable<RawTable>().Where(r => r.Id == RID && r.TestField == VAL1).Count());
+					Assert.That(result, Is.EqualTo(1));
+				Assert.That(db.GetTable<RawTable>().Where(r => r.Id == RID && r.TestField == VAL1).Count(), Is.EqualTo(1));
 			}
 		}
 
@@ -936,8 +936,8 @@ namespace Tests.Linq
 					.Insert(db.GetTable<NullableTestTable1>(), r => r);
 
 				if (!context.IsAnyOf(TestProvName.AllClickHouse))
-					Assert.AreEqual(1, result);
-				Assert.AreEqual(1, db.GetTable<RawTable>().Where(r => r.Id == RID && r.TestField == VAL1).Count());
+					Assert.That(result, Is.EqualTo(1));
+				Assert.That(db.GetTable<RawTable>().Where(r => r.Id == RID && r.TestField == VAL1).Count(), Is.EqualTo(1));
 			}
 		}
 
@@ -965,8 +965,8 @@ namespace Tests.Linq
 					.Insert(db.GetTable<NullableTestTable2>(), r => r);
 
 				if (!context.IsAnyOf(TestProvName.AllClickHouse))
-					Assert.AreEqual(1, result);
-				Assert.AreEqual(1, db.GetTable<RawTable>().Where(r => r.Id == RID && r.TestField == VAL1).Count());
+					Assert.That(result, Is.EqualTo(1));
+				Assert.That(db.GetTable<RawTable>().Where(r => r.Id == RID && r.TestField == VAL1).Count(), Is.EqualTo(1));
 			}
 		}
 
@@ -984,7 +984,7 @@ namespace Tests.Linq
 
 				var cnt = db.GetTable<TestTable1>().Delete(r => r.Id == RID && r.TestField.Equals(TestEnum1.Value2));
 				if (!context.IsAnyOf(TestProvName.AllClickHouse))
-					Assert.AreEqual(1, cnt);
+					Assert.That(cnt, Is.EqualTo(1));
 			}
 		}
 
@@ -1002,7 +1002,7 @@ namespace Tests.Linq
 
 				var cnt = db.GetTable<TestTable2>().Delete(r => r.Id == RID && r.TestField.Equals(TestEnum21.Value2));
 				if (!context.IsAnyOf(TestProvName.AllClickHouse))
-					Assert.AreEqual(1, cnt);
+					Assert.That(cnt, Is.EqualTo(1));
 			}
 		}
 
@@ -1021,7 +1021,7 @@ namespace Tests.Linq
 				var cnt = db.GetTable<NullableTestTable1>().Delete(r => r.Id == RID && r.TestField.Equals(TestEnum1.Value2));
 
 				if (!context.IsAnyOf(TestProvName.AllClickHouse))
-					Assert.AreEqual(1, cnt);
+					Assert.That(cnt, Is.EqualTo(1));
 			}
 		}
 
@@ -1040,7 +1040,7 @@ namespace Tests.Linq
 				var cnt = db.GetTable<NullableTestTable2>().Delete(r => r.Id == RID && r.TestField.Equals(TestEnum21.Value2));
 
 				if (!context.IsAnyOf(TestProvName.AllClickHouse))
-					Assert.AreEqual(1, cnt);
+					Assert.That(cnt, Is.EqualTo(1));
 			}
 		}
 
@@ -1061,7 +1061,7 @@ namespace Tests.Linq
 				var filterPredicate = Expression.Lambda<Func<TestTable1, bool>>(filterExpression, entityParameter);
 				var result = db.GetTable<TestTable1>().Where(filterPredicate).ToList();
 
-				Assert.AreEqual(1, result.Count);
+				Assert.That(result, Has.Count.EqualTo(1));
 			}
 		}
 
@@ -1082,7 +1082,7 @@ namespace Tests.Linq
 				var filterPredicate = Expression.Lambda<Func<TestTable2, bool>>(filterExpression, entityParameter);
 				var result = db.GetTable<TestTable2>().Where(filterPredicate).ToList();
 
-				Assert.AreEqual(1, result.Count);
+				Assert.That(result, Has.Count.EqualTo(1));
 			}
 		}
 
@@ -1128,10 +1128,13 @@ namespace Tests.Linq
 				})
 				.ToArray();
 
-				Assert.AreEqual(1, result.Length);
-				Assert.NotNull(result[0].Target);
-				Assert.AreEqual(10, result[0].Target!.Value.TargetID);
-				Assert.AreEqual(TestEnum1.Value2, result[0].Target!.Value.TargetType);
+				Assert.That(result, Has.Length.EqualTo(1));
+				Assert.That(result[0].Target, Is.Not.Null);
+				Assert.Multiple(() =>
+				{
+					Assert.That(result[0].Target!.Value.TargetID, Is.EqualTo(10));
+					Assert.That(result[0].Target!.Value.TargetType, Is.EqualTo(TestEnum1.Value2));
+				});
 			}
 		}
 
@@ -1177,10 +1180,13 @@ namespace Tests.Linq
 				})
 				.ToArray();
 
-				Assert.AreEqual(1, result.Length);
-				Assert.NotNull(result[0].Target);
-				Assert.AreEqual(10, result[0].Target!.Value.TargetID);
-				Assert.AreEqual(TestEnum2.Value2, result[0].Target!.Value.TargetType);
+				Assert.That(result, Has.Length.EqualTo(1));
+				Assert.That(result[0].Target, Is.Not.Null);
+				Assert.Multiple(() =>
+				{
+					Assert.That(result[0].Target!.Value.TargetID, Is.EqualTo(10));
+					Assert.That(result[0].Target!.Value.TargetType, Is.EqualTo(TestEnum2.Value2));
+				});
 			}
 		}
 
@@ -1211,7 +1217,7 @@ namespace Tests.Linq
 					.Select(r => new NullableResult { Value = Convert(r.TestField) })
 					.FirstOrDefault()!;
 
-				Assert.NotNull(result);
+				Assert.That(result, Is.Not.Null);
 				Assert.That(result.Value, Is.EqualTo(TestEnum1.Value2));
 			}
 		}
@@ -1420,24 +1426,30 @@ namespace Tests.Linq
 				var records = db.GetTable<NullableTestTable01>().Where(r => r.Id >= RID && r.Id <= RID + 2).OrderBy(r => r.Id).ToArray();
 				var rawRecords = db.GetTable<RawTable2>().Where(r => r.Id >= RID && r.Id <= RID + 2).OrderBy(r => r.Id).ToArray();
 
-				Assert.AreEqual(3, records.Length);
-				Assert.AreEqual(3, rawRecords.Length);
+				Assert.Multiple(() =>
+				{
+					Assert.That(records, Has.Length.EqualTo(3));
+					Assert.That(rawRecords, Has.Length.EqualTo(3));
+				});
 
-				Assert.AreEqual(RID, records[0].Id);
-				Assert.AreEqual(RID, rawRecords[0].Id);
-				Assert.AreEqual(NullableEnum01.Value1, records[0].Value);
-				Assert.AreEqual(11, rawRecords[0].Int32);
+				Assert.Multiple(() =>
+				{
+					Assert.That(records[0].Id, Is.EqualTo(RID));
+					Assert.That(rawRecords[0].Id, Is.EqualTo(RID));
+					Assert.That(records[0].Value, Is.EqualTo(NullableEnum01.Value1));
+					Assert.That(rawRecords[0].Int32, Is.EqualTo(11));
 
-				Assert.AreEqual(RID + 1, records[1].Id);
-				Assert.AreEqual(RID + 1, rawRecords[1].Id);
-				Assert.AreEqual(NullableEnum01.Value2, records[1].Value);
-				Assert.AreEqual(22, rawRecords[1].Int32);
+					Assert.That(records[1].Id, Is.EqualTo(RID + 1));
+					Assert.That(rawRecords[1].Id, Is.EqualTo(RID + 1));
+					Assert.That(records[1].Value, Is.EqualTo(NullableEnum01.Value2));
+					Assert.That(rawRecords[1].Int32, Is.EqualTo(22));
 
-				Assert.AreEqual(RID + 2, records[2].Id);
-				Assert.AreEqual(RID + 2, rawRecords[2].Id);
-				// for non-nullable enum on read null value mapped
-				Assert.AreEqual(NullableEnum01.Value3, records[2].Value);
-				Assert.IsNull(rawRecords[2].Int32);
+					Assert.That(records[2].Id, Is.EqualTo(RID + 2));
+					Assert.That(rawRecords[2].Id, Is.EqualTo(RID + 2));
+					// for non-nullable enum on read null value mapped
+					Assert.That(records[2].Value, Is.EqualTo(NullableEnum01.Value3));
+					Assert.That(rawRecords[2].Int32, Is.Null);
+				});
 			}
 		}
 
@@ -1473,29 +1485,35 @@ namespace Tests.Linq
 				var records = db.GetTable<NullableTestTable02>().Where(r => r.Id >= RID && r.Id <= RID + 3).OrderBy(r => r.Id).ToArray();
 				var rawRecords = db.GetTable<RawTable2>().Where(r => r.Id >= RID && r.Id <= RID + 3).OrderBy(r => r.Id).ToArray();
 
-				Assert.AreEqual(4, records.Length);
-				Assert.AreEqual(4, rawRecords.Length);
+				Assert.Multiple(() =>
+				{
+					Assert.That(records, Has.Length.EqualTo(4));
+					Assert.That(rawRecords, Has.Length.EqualTo(4));
+				});
 
-				Assert.AreEqual(RID, records[0].Id);
-				Assert.AreEqual(RID, rawRecords[0].Id);
-				Assert.AreEqual(NullableEnum01.Value1, records[0].Value);
-				Assert.AreEqual(11, rawRecords[0].Int32);
+				Assert.Multiple(() =>
+				{
+					Assert.That(records[0].Id, Is.EqualTo(RID));
+					Assert.That(rawRecords[0].Id, Is.EqualTo(RID));
+					Assert.That(records[0].Value, Is.EqualTo(NullableEnum01.Value1));
+					Assert.That(rawRecords[0].Int32, Is.EqualTo(11));
 
-				Assert.AreEqual(RID + 1, records[1].Id);
-				Assert.AreEqual(RID + 1, rawRecords[1].Id);
-				Assert.AreEqual(NullableEnum01.Value2, records[1].Value);
-				Assert.AreEqual(22, rawRecords[1].Int32);
+					Assert.That(records[1].Id, Is.EqualTo(RID + 1));
+					Assert.That(rawRecords[1].Id, Is.EqualTo(RID + 1));
+					Assert.That(records[1].Value, Is.EqualTo(NullableEnum01.Value2));
+					Assert.That(rawRecords[1].Int32, Is.EqualTo(22));
 
-				Assert.AreEqual(RID + 2, records[2].Id);
-				Assert.AreEqual(RID + 2, rawRecords[2].Id);
-				// for nullable enum on read null is preferred before mapped value
-				Assert.IsNull(records[2].Value);
-				Assert.IsNull(rawRecords[2].Int32);
+					Assert.That(records[2].Id, Is.EqualTo(RID + 2));
+					Assert.That(rawRecords[2].Id, Is.EqualTo(RID + 2));
+					// for nullable enum on read null is preferred before mapped value
+					Assert.That(records[2].Value, Is.Null);
+					Assert.That(rawRecords[2].Int32, Is.Null);
 
-				Assert.AreEqual(RID + 3, records[3].Id);
-				Assert.AreEqual(RID + 3, rawRecords[3].Id);
-				Assert.IsNull(records[3].Value);
-				Assert.IsNull(rawRecords[3].Int32);
+					Assert.That(records[3].Id, Is.EqualTo(RID + 3));
+					Assert.That(rawRecords[3].Id, Is.EqualTo(RID + 3));
+					Assert.That(records[3].Value, Is.Null);
+					Assert.That(rawRecords[3].Int32, Is.Null);
+				});
 			}
 		}
 
@@ -1526,24 +1544,30 @@ namespace Tests.Linq
 				var records = db.GetTable<NullableTestTable03>().Where(r => r.Id >= RID && r.Id <= RID + 2).OrderBy(r => r.Id).ToArray();
 				var rawRecords = db.GetTable<RawTable2>().Where(r => r.Id >= RID && r.Id <= RID + 2).OrderBy(r => r.Id).ToArray();
 
-				Assert.AreEqual(3, records.Length);
-				Assert.AreEqual(3, rawRecords.Length);
+				Assert.Multiple(() =>
+				{
+					Assert.That(records, Has.Length.EqualTo(3));
+					Assert.That(rawRecords, Has.Length.EqualTo(3));
+				});
 
-				Assert.AreEqual(RID, records[0].Id);
-				Assert.AreEqual(RID, rawRecords[0].Id);
-				Assert.AreEqual(NullableEnum02.Value1, records[0].Value);
-				Assert.AreEqual("11", rawRecords[0].String);
+				Assert.Multiple(() =>
+				{
+					Assert.That(records[0].Id, Is.EqualTo(RID));
+					Assert.That(rawRecords[0].Id, Is.EqualTo(RID));
+					Assert.That(records[0].Value, Is.EqualTo(NullableEnum02.Value1));
+					Assert.That(rawRecords[0].String, Is.EqualTo("11"));
 
-				Assert.AreEqual(RID + 1, records[1].Id);
-				Assert.AreEqual(RID + 1, rawRecords[1].Id);
-				Assert.AreEqual(NullableEnum02.Value2, records[1].Value);
-				Assert.AreEqual("22", rawRecords[1].String);
+					Assert.That(records[1].Id, Is.EqualTo(RID + 1));
+					Assert.That(rawRecords[1].Id, Is.EqualTo(RID + 1));
+					Assert.That(records[1].Value, Is.EqualTo(NullableEnum02.Value2));
+					Assert.That(rawRecords[1].String, Is.EqualTo("22"));
 
-				Assert.AreEqual(RID + 2, records[2].Id);
-				Assert.AreEqual(RID + 2, rawRecords[2].Id);
-				// for non-nullable enum on read null value mapped
-				Assert.AreEqual(NullableEnum02.Value3, records[2].Value);
-				Assert.IsNull(rawRecords[2].String);
+					Assert.That(records[2].Id, Is.EqualTo(RID + 2));
+					Assert.That(rawRecords[2].Id, Is.EqualTo(RID + 2));
+					// for non-nullable enum on read null value mapped
+					Assert.That(records[2].Value, Is.EqualTo(NullableEnum02.Value3));
+					Assert.That(rawRecords[2].String, Is.Null);
+				});
 			}
 		}
 
@@ -1579,29 +1603,35 @@ namespace Tests.Linq
 				var records = db.GetTable<NullableTestTable04>().Where(r => r.Id >= RID && r.Id <= RID + 3).OrderBy(r => r.Id).ToArray();
 				var rawRecords = db.GetTable<RawTable2>().Where(r => r.Id >= RID && r.Id <= RID + 3).OrderBy(r => r.Id).ToArray();
 
-				Assert.AreEqual(4, records.Length);
-				Assert.AreEqual(4, rawRecords.Length);
+				Assert.Multiple(() =>
+				{
+					Assert.That(records, Has.Length.EqualTo(4));
+					Assert.That(rawRecords, Has.Length.EqualTo(4));
+				});
 
-				Assert.AreEqual(RID, records[0].Id);
-				Assert.AreEqual(RID, rawRecords[0].Id);
-				Assert.AreEqual(NullableEnum02.Value1, records[0].Value);
-				Assert.AreEqual("11", rawRecords[0].String);
+				Assert.Multiple(() =>
+				{
+					Assert.That(records[0].Id, Is.EqualTo(RID));
+					Assert.That(rawRecords[0].Id, Is.EqualTo(RID));
+					Assert.That(records[0].Value, Is.EqualTo(NullableEnum02.Value1));
+					Assert.That(rawRecords[0].String, Is.EqualTo("11"));
 
-				Assert.AreEqual(RID + 1, records[1].Id);
-				Assert.AreEqual(RID + 1, rawRecords[1].Id);
-				Assert.AreEqual(NullableEnum02.Value2, records[1].Value);
-				Assert.AreEqual("22", rawRecords[1].String);
+					Assert.That(records[1].Id, Is.EqualTo(RID + 1));
+					Assert.That(rawRecords[1].Id, Is.EqualTo(RID + 1));
+					Assert.That(records[1].Value, Is.EqualTo(NullableEnum02.Value2));
+					Assert.That(rawRecords[1].String, Is.EqualTo("22"));
 
-				Assert.AreEqual(RID + 2, records[2].Id);
-				Assert.AreEqual(RID + 2, rawRecords[2].Id);
-				// for nullable enum on read null is preferred before mapped value
-				Assert.IsNull(records[2].Value);
-				Assert.IsNull(rawRecords[2].String);
+					Assert.That(records[2].Id, Is.EqualTo(RID + 2));
+					Assert.That(rawRecords[2].Id, Is.EqualTo(RID + 2));
+					// for nullable enum on read null is preferred before mapped value
+					Assert.That(records[2].Value, Is.Null);
+					Assert.That(rawRecords[2].String, Is.Null);
 
-				Assert.AreEqual(RID + 3, records[3].Id);
-				Assert.AreEqual(RID + 3, rawRecords[3].Id);
-				Assert.IsNull(records[3].Value);
-				Assert.IsNull(rawRecords[3].Int32);
+					Assert.That(records[3].Id, Is.EqualTo(RID + 3));
+					Assert.That(rawRecords[3].Id, Is.EqualTo(RID + 3));
+					Assert.That(records[3].Value, Is.Null);
+					Assert.That(rawRecords[3].Int32, Is.Null);
+				});
 			}
 		}
 
@@ -1632,24 +1662,30 @@ namespace Tests.Linq
 				var records = db.GetTable<NullableTestTable05>().Where(r => r.Id >= RID && r.Id <= RID + 2).OrderBy(r => r.Id).ToArray();
 				var rawRecords = db.GetTable<RawTable2>().Where(r => r.Id >= RID && r.Id <= RID + 2).OrderBy(r => r.Id).ToArray();
 
-				Assert.AreEqual(3, records.Length);
-				Assert.AreEqual(3, rawRecords.Length);
+				Assert.Multiple(() =>
+				{
+					Assert.That(records, Has.Length.EqualTo(3));
+					Assert.That(rawRecords, Has.Length.EqualTo(3));
+				});
 
-				Assert.AreEqual(RID, records[0].Id);
-				Assert.AreEqual(RID, rawRecords[0].Id);
-				Assert.AreEqual(NullableEnum03.Value1, records[0].Value);
-				Assert.AreEqual(11, rawRecords[0].Int32);
+				Assert.Multiple(() =>
+				{
+					Assert.That(records[0].Id, Is.EqualTo(RID));
+					Assert.That(rawRecords[0].Id, Is.EqualTo(RID));
+					Assert.That(records[0].Value, Is.EqualTo(NullableEnum03.Value1));
+					Assert.That(rawRecords[0].Int32, Is.EqualTo(11));
 
-				Assert.AreEqual(RID + 1, records[1].Id);
-				Assert.AreEqual(RID + 1, rawRecords[1].Id);
-				Assert.AreEqual(NullableEnum03.Value2, records[1].Value);
-				Assert.AreEqual(0, rawRecords[1].Int32);
+					Assert.That(records[1].Id, Is.EqualTo(RID + 1));
+					Assert.That(rawRecords[1].Id, Is.EqualTo(RID + 1));
+					Assert.That(records[1].Value, Is.EqualTo(NullableEnum03.Value2));
+					Assert.That(rawRecords[1].Int32, Is.EqualTo(0));
 
-				Assert.AreEqual(RID + 2, records[2].Id);
-				Assert.AreEqual(RID + 2, rawRecords[2].Id);
-				// for non-nullable enum on read null value mapped
-				Assert.AreEqual(NullableEnum03.Value3, records[2].Value);
-				Assert.IsNull(rawRecords[2].Int32);
+					Assert.That(records[2].Id, Is.EqualTo(RID + 2));
+					Assert.That(rawRecords[2].Id, Is.EqualTo(RID + 2));
+					// for non-nullable enum on read null value mapped
+					Assert.That(records[2].Value, Is.EqualTo(NullableEnum03.Value3));
+					Assert.That(rawRecords[2].Int32, Is.Null);
+				});
 			}
 		}
 
@@ -1685,33 +1721,39 @@ namespace Tests.Linq
 				var records = db.GetTable<NullableTestTable06>().Where(r => r.Id >= RID && r.Id <= RID + 3).OrderBy(r => r.Id).ToArray();
 				var rawRecords = db.GetTable<RawTable2>().Where(r => r.Id >= RID && r.Id <= RID + 3).OrderBy(r => r.Id).ToArray();
 
-				Assert.AreEqual(4, records.Length);
-				Assert.AreEqual(4, rawRecords.Length);
+				Assert.Multiple(() =>
+				{
+					Assert.That(records, Has.Length.EqualTo(4));
+					Assert.That(rawRecords, Has.Length.EqualTo(4));
+				});
 
-				Assert.AreEqual(RID, records[0].Id);
-				Assert.AreEqual(RID, rawRecords[0].Id);
-				Assert.AreEqual(NullableEnum03.Value1, records[0].Value);
-				Assert.AreEqual(11, rawRecords[0].Int32);
+				Assert.Multiple(() =>
+				{
+					Assert.That(records[0].Id, Is.EqualTo(RID));
+					Assert.That(rawRecords[0].Id, Is.EqualTo(RID));
+					Assert.That(records[0].Value, Is.EqualTo(NullableEnum03.Value1));
+					Assert.That(rawRecords[0].Int32, Is.EqualTo(11));
 
-				Assert.AreEqual(RID + 1, records[1].Id);
-				Assert.AreEqual(RID + 1, rawRecords[1].Id);
-				Assert.AreEqual(NullableEnum03.Value2, records[1].Value);
-				Assert.AreEqual(0, rawRecords[1].Int32);
+					Assert.That(records[1].Id, Is.EqualTo(RID + 1));
+					Assert.That(rawRecords[1].Id, Is.EqualTo(RID + 1));
+					Assert.That(records[1].Value, Is.EqualTo(NullableEnum03.Value2));
+					Assert.That(rawRecords[1].Int32, Is.EqualTo(0));
 
-				Assert.AreEqual(RID + 2, records[2].Id);
-				Assert.AreEqual(RID + 2, rawRecords[2].Id);
-				// for nullable enum on read null is preferred before mapped value
-				Assert.IsNull(records[2].Value);
-				Assert.IsNull(rawRecords[2].Int32);
+					Assert.That(records[2].Id, Is.EqualTo(RID + 2));
+					Assert.That(rawRecords[2].Id, Is.EqualTo(RID + 2));
+					// for nullable enum on read null is preferred before mapped value
+					Assert.That(records[2].Value, Is.Null);
+					Assert.That(rawRecords[2].Int32, Is.Null);
 
-				Assert.AreEqual(RID + 3, records[3].Id);
-				Assert.AreEqual(RID + 3, rawRecords[3].Id);
-				Assert.IsNull(records[3].Value);
-				Assert.IsNull(rawRecords[3].Int32);
+					Assert.That(records[3].Id, Is.EqualTo(RID + 3));
+					Assert.That(rawRecords[3].Id, Is.EqualTo(RID + 3));
+					Assert.That(records[3].Value, Is.Null);
+					Assert.That(rawRecords[3].Int32, Is.Null);
+				});
 			}
 		}
 
-		[Test]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/363")]
 		public void EnumMappingWriteUndefinedValue([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -1729,13 +1771,13 @@ namespace Tests.Linq
 						.Where(r => r.Id == RID)
 						.ToList();
 
-					Assert.AreEqual(1, result.Count);
-					Assert.AreEqual(5, result[0].TestField);
+					Assert.That(result, Has.Count.EqualTo(1));
+					Assert.That(result[0].TestField, Is.EqualTo(5));
 				}
 			}
 		}
 
-		[Test]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/363")]
 		public void EnumMappingReadUndefinedValue([DataSources] string context)
 		{
 			GetProviderName(context, out var isLinqService);
@@ -1774,7 +1816,7 @@ namespace Tests.Linq
 		}
 
 		[Sql.Expression("{0} = {1}", InlineParameters = true, ServerSideOnly = true, IsPredicate = true)]
-		public static bool SomeComparison(string? column, Issue1622Enum value) => throw new InvalidOperationException();
+		private static bool SomeComparison(string? column, Issue1622Enum value) => throw new InvalidOperationException();
 
 		[Test]
 		public void Issue1622Test([DataSources] string context)
@@ -1796,10 +1838,16 @@ namespace Tests.Linq
 					var res = table.Where(e => SomeComparison(e.SomeText, Issue1622Enum.Value1)).Single();
 					var res2 = table.Where(e => e.Id == 1).Single();
 
-					Assert.That(item.Id, Is.EqualTo(res.Id));
-					Assert.That(item.SomeText, Is.EqualTo(res.SomeText));
-					Assert.That(item.Id, Is.EqualTo(res2.Id));
-					Assert.That(item.SomeText, Is.EqualTo(res2.SomeText));
+					Assert.Multiple(() =>
+					{
+						Assert.That(item.Id, Is.EqualTo(res.Id));
+						Assert.That(item.SomeText, Is.EqualTo(res.SomeText));
+					});
+					Assert.Multiple(() =>
+					{
+						Assert.That(item.Id, Is.EqualTo(res2.Id));
+						Assert.That(item.SomeText, Is.EqualTo(res2.SomeText));
+					});
 				}
 			}
 		}
@@ -1864,8 +1912,11 @@ namespace Tests.Linq
 			{
 				var res = table.Where(_ => _.Property1 < CharEnum.B).Single();
 
-				Assert.AreEqual(1, res.Id);
-				Assert.AreEqual(CharEnum.A, res.Property1);
+				Assert.Multiple(() =>
+				{
+					Assert.That(res.Id, Is.EqualTo(1));
+					Assert.That(res.Property1, Is.EqualTo(CharEnum.A));
+				});
 			}
 		}
 
@@ -1877,8 +1928,11 @@ namespace Tests.Linq
 			{
 				var res = table.Where(_ => _.Property1 <= CharEnum.A).Single();
 
-				Assert.AreEqual(1, res.Id);
-				Assert.AreEqual(CharEnum.A, res.Property1);
+				Assert.Multiple(() =>
+				{
+					Assert.That(res.Id, Is.EqualTo(1));
+					Assert.That(res.Property1, Is.EqualTo(CharEnum.A));
+				});
 			}
 		}
 
@@ -1890,8 +1944,11 @@ namespace Tests.Linq
 			{
 				var res = table.Where(_ => _.Property1 > CharEnum.B).Single();
 
-				Assert.AreEqual(3, res.Id);
-				Assert.AreEqual(CharEnum.C, res.Property1);
+				Assert.Multiple(() =>
+				{
+					Assert.That(res.Id, Is.EqualTo(3));
+					Assert.That(res.Property1, Is.EqualTo(CharEnum.C));
+				});
 			}
 		}
 
@@ -1903,8 +1960,11 @@ namespace Tests.Linq
 			{
 				var res = table.Where(_ => _.Property1 >= CharEnum.C).Single();
 
-				Assert.AreEqual(3, res.Id);
-				Assert.AreEqual(CharEnum.C, res.Property1);
+				Assert.Multiple(() =>
+				{
+					Assert.That(res.Id, Is.EqualTo(3));
+					Assert.That(res.Property1, Is.EqualTo(CharEnum.C));
+				});
 			}
 		}
 
@@ -1916,8 +1976,11 @@ namespace Tests.Linq
 			{
 				var res = table.Where(_ => _.Property2 < CharEnum.B).Single();
 
-				Assert.AreEqual(1, res.Id);
-				Assert.AreEqual(CharEnum.A, res.Property2);
+				Assert.Multiple(() =>
+				{
+					Assert.That(res.Id, Is.EqualTo(1));
+					Assert.That(res.Property2, Is.EqualTo(CharEnum.A));
+				});
 			}
 		}
 
@@ -1929,8 +1992,11 @@ namespace Tests.Linq
 			{
 				var res = table.Where(_ => _.Property2 <= CharEnum.A).Single();
 
-				Assert.AreEqual(1, res.Id);
-				Assert.AreEqual(CharEnum.A, res.Property2);
+				Assert.Multiple(() =>
+				{
+					Assert.That(res.Id, Is.EqualTo(1));
+					Assert.That(res.Property2, Is.EqualTo(CharEnum.A));
+				});
 			}
 		}
 
@@ -1942,8 +2008,11 @@ namespace Tests.Linq
 			{
 				var res = table.Where(_ => _.Property2 > CharEnum.B).Single();
 
-				Assert.AreEqual(3, res.Id);
-				Assert.AreEqual(CharEnum.C, res.Property2);
+				Assert.Multiple(() =>
+				{
+					Assert.That(res.Id, Is.EqualTo(3));
+					Assert.That(res.Property2, Is.EqualTo(CharEnum.C));
+				});
 			}
 		}
 
@@ -1955,8 +2024,11 @@ namespace Tests.Linq
 			{
 				var res = table.Where(_ => _.Property2 >= CharEnum.C).Single();
 
-				Assert.AreEqual(3, res.Id);
-				Assert.AreEqual(CharEnum.C, res.Property2);
+				Assert.Multiple(() =>
+				{
+					Assert.That(res.Id, Is.EqualTo(3));
+					Assert.That(res.Property2, Is.EqualTo(CharEnum.C));
+				});
 			}
 		}
 
@@ -1968,8 +2040,11 @@ namespace Tests.Linq
 			{
 				var res = table.Where(_ => _.Property3 < CharEnumS.B).Single();
 
-				Assert.AreEqual(1, res.Id);
-				Assert.AreEqual(CharEnumS.A, res.Property3);
+				Assert.Multiple(() =>
+				{
+					Assert.That(res.Id, Is.EqualTo(1));
+					Assert.That(res.Property3, Is.EqualTo(CharEnumS.A));
+				});
 			}
 		}
 
@@ -1981,8 +2056,11 @@ namespace Tests.Linq
 			{
 				var res = table.Where(_ => _.Property3 <= CharEnumS.A).Single();
 
-				Assert.AreEqual(1, res.Id);
-				Assert.AreEqual(CharEnumS.A, res.Property3);
+				Assert.Multiple(() =>
+				{
+					Assert.That(res.Id, Is.EqualTo(1));
+					Assert.That(res.Property3, Is.EqualTo(CharEnumS.A));
+				});
 			}
 		}
 
@@ -1994,8 +2072,11 @@ namespace Tests.Linq
 			{
 				var res = table.Where(_ => _.Property3 > CharEnumS.B).Single();
 
-				Assert.AreEqual(3, res.Id);
-				Assert.AreEqual(CharEnumS.C, res.Property3);
+				Assert.Multiple(() =>
+				{
+					Assert.That(res.Id, Is.EqualTo(3));
+					Assert.That(res.Property3, Is.EqualTo(CharEnumS.C));
+				});
 			}
 		}
 
@@ -2007,8 +2088,11 @@ namespace Tests.Linq
 			{
 				var res = table.Where(_ => _.Property3 >= CharEnumS.C).Single();
 
-				Assert.AreEqual(3, res.Id);
-				Assert.AreEqual(CharEnumS.C, res.Property3);
+				Assert.Multiple(() =>
+				{
+					Assert.That(res.Id, Is.EqualTo(3));
+					Assert.That(res.Property3, Is.EqualTo(CharEnumS.C));
+				});
 			}
 		}
 
@@ -2020,8 +2104,11 @@ namespace Tests.Linq
 			{
 				var res = table.Where(_ => _.Property4 < CharEnumS.B).Single();
 
-				Assert.AreEqual(1, res.Id);
-				Assert.AreEqual(CharEnumS.A, res.Property4);
+				Assert.Multiple(() =>
+				{
+					Assert.That(res.Id, Is.EqualTo(1));
+					Assert.That(res.Property4, Is.EqualTo(CharEnumS.A));
+				});
 			}
 		}
 
@@ -2033,8 +2120,11 @@ namespace Tests.Linq
 			{
 				var res = table.Where(_ => _.Property4 <= CharEnumS.A).Single();
 
-				Assert.AreEqual(1, res.Id);
-				Assert.AreEqual(CharEnumS.A, res.Property4);
+				Assert.Multiple(() =>
+				{
+					Assert.That(res.Id, Is.EqualTo(1));
+					Assert.That(res.Property4, Is.EqualTo(CharEnumS.A));
+				});
 			}
 		}
 
@@ -2046,8 +2136,11 @@ namespace Tests.Linq
 			{
 				var res = table.Where(_ => _.Property4 > CharEnumS.B).Single();
 
-				Assert.AreEqual(3, res.Id);
-				Assert.AreEqual(CharEnumS.C, res.Property4);
+				Assert.Multiple(() =>
+				{
+					Assert.That(res.Id, Is.EqualTo(3));
+					Assert.That(res.Property4, Is.EqualTo(CharEnumS.C));
+				});
 			}
 		}
 
@@ -2059,8 +2152,11 @@ namespace Tests.Linq
 			{
 				var res = table.Where(_ => _.Property4 >= CharEnumS.C).Single();
 
-				Assert.AreEqual(3, res.Id);
-				Assert.AreEqual(CharEnumS.C, res.Property4);
+				Assert.Multiple(() =>
+				{
+					Assert.That(res.Id, Is.EqualTo(3));
+					Assert.That(res.Property4, Is.EqualTo(CharEnumS.C));
+				});
 			}
 		}
 
@@ -2072,8 +2168,11 @@ namespace Tests.Linq
 			{
 				var res = table.Where(_ => _.Property5 < CharEnumL.B).Single();
 
-				Assert.AreEqual(1, res.Id);
-				Assert.AreEqual(CharEnumL.A, res.Property5);
+				Assert.Multiple(() =>
+				{
+					Assert.That(res.Id, Is.EqualTo(1));
+					Assert.That(res.Property5, Is.EqualTo(CharEnumL.A));
+				});
 			}
 		}
 
@@ -2085,8 +2184,11 @@ namespace Tests.Linq
 			{
 				var res = table.Where(_ => _.Property5 <= CharEnumL.A).Single();
 
-				Assert.AreEqual(1, res.Id);
-				Assert.AreEqual(CharEnumL.A, res.Property5);
+				Assert.Multiple(() =>
+				{
+					Assert.That(res.Id, Is.EqualTo(1));
+					Assert.That(res.Property5, Is.EqualTo(CharEnumL.A));
+				});
 			}
 		}
 
@@ -2098,8 +2200,11 @@ namespace Tests.Linq
 			{
 				var res = table.Where(_ => _.Property5 > CharEnumL.B).Single();
 
-				Assert.AreEqual(3, res.Id);
-				Assert.AreEqual(CharEnumL.C, res.Property5);
+				Assert.Multiple(() =>
+				{
+					Assert.That(res.Id, Is.EqualTo(3));
+					Assert.That(res.Property5, Is.EqualTo(CharEnumL.C));
+				});
 			}
 		}
 
@@ -2111,8 +2216,11 @@ namespace Tests.Linq
 			{
 				var res = table.Where(_ => _.Property5 >= CharEnumL.C).Single();
 
-				Assert.AreEqual(3, res.Id);
-				Assert.AreEqual(CharEnumL.C, res.Property5);
+				Assert.Multiple(() =>
+				{
+					Assert.That(res.Id, Is.EqualTo(3));
+					Assert.That(res.Property5, Is.EqualTo(CharEnumL.C));
+				});
 			}
 		}
 
@@ -2124,8 +2232,11 @@ namespace Tests.Linq
 			{
 				var res = table.Where(_ => _.Property6 < CharEnumL.B).Single();
 
-				Assert.AreEqual(1, res.Id);
-				Assert.AreEqual(CharEnumL.A, res.Property6);
+				Assert.Multiple(() =>
+				{
+					Assert.That(res.Id, Is.EqualTo(1));
+					Assert.That(res.Property6, Is.EqualTo(CharEnumL.A));
+				});
 			}
 		}
 
@@ -2137,8 +2248,11 @@ namespace Tests.Linq
 			{
 				var res = table.Where(_ => _.Property6 <= CharEnumL.A).Single();
 
-				Assert.AreEqual(1, res.Id);
-				Assert.AreEqual(CharEnumL.A, res.Property6);
+				Assert.Multiple(() =>
+				{
+					Assert.That(res.Id, Is.EqualTo(1));
+					Assert.That(res.Property6, Is.EqualTo(CharEnumL.A));
+				});
 			}
 		}
 
@@ -2150,8 +2264,11 @@ namespace Tests.Linq
 			{
 				var res = table.Where(_ => _.Property6 > CharEnumL.B).Single();
 
-				Assert.AreEqual(3, res.Id);
-				Assert.AreEqual(CharEnumL.C, res.Property6);
+				Assert.Multiple(() =>
+				{
+					Assert.That(res.Id, Is.EqualTo(3));
+					Assert.That(res.Property6, Is.EqualTo(CharEnumL.C));
+				});
 			}
 		}
 
@@ -2163,8 +2280,11 @@ namespace Tests.Linq
 			{
 				var res = table.Where(_ => _.Property6 >= CharEnumL.C).Single();
 
-				Assert.AreEqual(3, res.Id);
-				Assert.AreEqual(CharEnumL.C, res.Property6);
+				Assert.Multiple(() =>
+				{
+					Assert.That(res.Id, Is.EqualTo(3));
+					Assert.That(res.Property6, Is.EqualTo(CharEnumL.C));
+				});
 			}
 		}
 	}

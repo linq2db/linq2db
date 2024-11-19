@@ -1,94 +1,43 @@
 ﻿using System;
-using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Linq.Expressions;
 
 namespace LinqToDB.Linq.Builder
 {
+	using LinqToDB.Expressions;
+	using Mapping;
 	using SqlQuery;
 
-	class SubQueryContext : PassThroughContext
+	[DebuggerDisplay("{BuildContextDebuggingHelper.GetContextInfo(this)}")]
+	class SubQueryContext : BuildContextBase
 	{
-#if DEBUG
-		public string? SqlQueryText => SelectQuery.SqlText;
-#endif
-
 		public SubQueryContext(IBuildContext subQuery, SelectQuery selectQuery, bool addToSql)
-			: base(subQuery)
+			: base(subQuery.Builder, subQuery.ElementType, selectQuery)
 		{
 			if (selectQuery == subQuery.SelectQuery)
 				throw new ArgumentException("Wrong subQuery argument.", nameof(subQuery));
 
 			SubQuery        = subQuery;
 			SubQuery.Parent = this;
-			SelectQuery     = selectQuery;
-			Statement       = subQuery.Statement;
 
 			if (addToSql)
 				selectQuery.From.Table(SubQuery.SelectQuery);
 		}
 
 		public SubQueryContext(IBuildContext subQuery, bool addToSql = true)
-			: this(subQuery, new SelectQuery { ParentSelect = subQuery.SelectQuery.ParentSelect }, addToSql)
+			: this(subQuery, new SelectQuery(), addToSql)
 		{
-			Statement = subQuery.Statement;
 		}
 
-		public          IBuildContext  SubQuery    { get; private set; }
-		public override SelectQuery    SelectQuery { get; set; }
-		public override IBuildContext? Parent      { get; set; }
-
-		public override SqlInfo[] ConvertToSql(Expression? expression, int level, ConvertFlags flags)
-		{
-			expression = SequenceHelper.CorrectExpression(expression, this, Context);
-
-			var indexes = SubQuery.ConvertToIndex(expression, level, flags);
-
-			var result = indexes
-				.Select(idx => new SqlInfo(idx.MemberChain, idx.Index < 0 ? idx.Sql : SubQuery.SelectQuery.Select.Columns[idx.Index], idx.Index))
-				.ToArray();
-
-			return result;
-		}
-
-		// JoinContext has similar logic. Consider to review it.
-		//
-		public override SqlInfo[] ConvertToIndex(Expression? expression, int level, ConvertFlags flags)
-		{
-			return ConvertToSql(expression, level, flags)
-				.Select(idx => idx
-					.WithQuery(SelectQuery)
-					.WithIndex(GetIndex(idx.Index, idx.Sql)))
-				.ToArray();
-		}
-
-		public override IsExpressionResult IsExpression(Expression? expression, int level, RequestFor requestFlag)
-		{
-			return requestFlag switch
-			{
-				RequestFor.SubQuery => IsExpressionResult.True,
-				_                   => base.IsExpression(expression, level, requestFlag),
-			};
-		}
+		public          IBuildContext SubQuery      { get; }
+		public override MappingSchema MappingSchema => SubQuery.MappingSchema;
 
 		protected virtual bool OptimizeColumns => true;
-		protected internal readonly Dictionary<int,int> ColumnIndexes = new ();
 
 		protected virtual int GetIndex(int index, ISqlExpression column)
 		{
-			if (!ColumnIndexes.TryGetValue(index, out var idx))
-			{
-				idx = OptimizeColumns ? SelectQuery.Select.Add(column) : SelectQuery.Select.AddNew(column);
-				ColumnIndexes.Add(index, idx);
-			}
-
-			return idx;
-		}
-
-		public override int ConvertToParentIndex(int index, IBuildContext context)
-		{
-			var idx = context == this ? index : GetIndex(index, context.SelectQuery.Select.Columns[index]);
-			return Parent?.ConvertToParentIndex(idx, this) ?? idx;
+			throw new NotImplementedException();
 		}
 
 		public override void SetAlias(string? alias)
@@ -96,21 +45,81 @@ namespace LinqToDB.Linq.Builder
 			if (alias == null)
 				return;
 
+			SubQuery.SetAlias(alias);
+
 			if (alias.Contains('<'))
 				return;
 
-			if (SelectQuery.From.Tables[0].Alias == null)
-				SelectQuery.From.Tables[0].Alias = alias;
+			var table = SelectQuery.From.Tables.FirstOrDefault();
+
+			if (table is { Alias: null })
+				table.Alias = alias;
 		}
 
-		public override ISqlExpression? GetSubQuery(IBuildContext context)
+		public override IBuildContext? GetContext(Expression expression, BuildInfo buildInfo)
 		{
-			return null;
+			expression = SequenceHelper.CorrectExpression(expression, this, SubQuery);
+			return SubQuery.GetContext(expression, buildInfo);
 		}
 
 		public override SqlStatement GetResultStatement()
 		{
-			return Statement ??= new SqlSelectStatement(SelectQuery);
+			return new SqlSelectStatement(SelectQuery);
 		}
+
+		public override void SetRunQuery<T>(Query<T> query, Expression expr)
+		{
+			SubQuery.SetRunQuery(query, expr);
+		}
+
+		public override IBuildContext Clone(CloningContext context)
+		{
+			var selectQuery = context.CloneElement(SelectQuery);
+			return new SubQueryContext(context.CloneContext(SubQuery), selectQuery, false);
+		}
+
+		public override Expression MakeExpression(Expression path, ProjectFlags flags)
+		{
+			if (flags.IsRoot() && SequenceHelper.IsSameContext(path, this))
+				return path;
+
+			var corrected = SequenceHelper.CorrectExpression(path, this, SubQuery);
+
+			if (flags.IsExtractProjection() || flags.IsTraverse() || flags.IsAggregationRoot() || flags.IsSubquery() || flags.IsTable() || flags.IsAssociationRoot() || flags.IsRoot())
+			{
+				var processed = Builder.MakeExpression(SubQuery, corrected, flags);
+				return processed;
+			}
+
+			var buildFlags = ExpressionBuilder.BuildFlags.None;
+			if (flags.IsSql())
+				buildFlags = ExpressionBuilder.BuildFlags.ForceAssignments;
+
+			var result = Builder.BuildSqlExpression(SubQuery, corrected, flags, buildFlags: buildFlags);
+
+			if (ExpressionEqualityComparer.Instance.Equals(corrected, result))
+				return path;
+
+			if (!flags.HasFlag(ProjectFlags.Test))
+			{
+				result = SequenceHelper.CorrectTrackingPath(Builder, result, path);
+
+				// correct all placeholders, they should target to appropriate SubQuery.SelectQuery
+				//
+				result = Builder.UpdateNesting(this, result);
+				result = SequenceHelper.CorrectSelectQuery(result, SelectQuery);
+
+				if (!flags.HasFlag(ProjectFlags.AssociationRoot))
+				{
+					// remap back, especially for Recursive CTE
+					result = SequenceHelper.ReplaceContext(result, SubQuery, this);
+				}
+			}
+
+			return result;
+		}
+
+		public virtual  bool NeedsSubqueryForComparison => false;
+		public override bool IsOptional                 => SubQuery.IsOptional;
 	}
 }

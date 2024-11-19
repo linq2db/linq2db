@@ -9,8 +9,7 @@ docker exec clickhouse sed -i "0,/<\/default>/{s/<\/default>/<join_use_nulls>1<\
 docker restart clickhouse
 
 retries=0
-# note that clickhouse logs to stderr(sic!) so 2>&1 needed
-until docker logs clickhouse 2>&1 | grep -q 'preprocessed_configs/users\.xml'; do
+until docker logs clickhouse | grep -q 'create new user'; do
     sleep 5
     retries=`expr $retries + 1`
     echo waiting for ClickHouse to start

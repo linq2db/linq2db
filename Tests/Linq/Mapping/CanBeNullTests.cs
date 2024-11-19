@@ -77,7 +77,6 @@ namespace Tests.Mapping
 			public int Id { get; set; }
 		}
 
-#if NET461_OR_GREATER || NETSTANDARD2_0_OR_GREATER || NETCOREAPP2_0_OR_GREATER
 		[Test]
 		public void InferFromMetadata()
 		{
@@ -132,7 +131,6 @@ namespace Tests.Mapping
 				("C1", 'A', true),
 			});
 		}
-#endif
 
 		[Test]
 		public void DefaultValues()

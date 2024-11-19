@@ -16,10 +16,10 @@ namespace Tests.xUpdate
 	{
 		sealed class TestTable
 		{
-			public int       ID;
-			public string?   Field1;
-			public string?   Field2;
-			public DateTime? CreatedOn;
+			public int       ID        { get; set; }
+			public string?   Field1    { get; set; }
+			public string?   Field2    { get; set; }
+			public DateTime? CreatedOn { get; set; }
 		}
 
 		[Test]
@@ -290,8 +290,11 @@ namespace Tests.xUpdate
 
 				var qq = conn.GetTable<Aa>().ToList().First();
 
-				Assert.That(qq.bb, Is.EqualTo(99));
-				Assert.That(qq.cc, Is.EqualTo("hallo"));
+				Assert.Multiple(() =>
+				{
+					Assert.That(qq.bb, Is.EqualTo(99));
+					Assert.That(qq.cc, Is.EqualTo("hallo"));
+				});
 
 				conn.DropTable<Qq>();
 			}

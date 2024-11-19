@@ -35,7 +35,7 @@ namespace LinqToDB.Interceptors
 				return OnConnectionOpeningAsync(connection, cancellationToken);
 
 			OnConnectionOpening?.Invoke(connection);
-			return TaskEx.CompletedTask;
+			return Task.CompletedTask;
 		}
 
 		public override void ConnectionOpened(ConnectionEventData eventData, DbConnection connection)
@@ -49,7 +49,7 @@ namespace LinqToDB.Interceptors
 				return OnConnectionOpenedAsync(connection, cancellationToken);
 
 			OnConnectionOpened?.Invoke(connection);
-			return TaskEx.CompletedTask;
+			return Task.CompletedTask;
 		}
 	}
 }

@@ -107,8 +107,8 @@ namespace Tests.Infrastructure
 			switch (configuration)
 			{
 				case string when configuration.IsAnyOf(ProviderName.Access):
-				case ProviderName.SQLiteClassic + ".LinqService":
-				case TestProvName.NoopProvider + ".LinqService":
+				case ProviderName.SQLiteClassic + LinqServiceSuffix:
+				case TestProvName.NoopProvider + LinqServiceSuffix:
 					return;
 				case TestProvName.NoopProvider:
 				case ProviderName.SQLiteClassic:
@@ -134,8 +134,8 @@ namespace Tests.Infrastructure
 				case TestProvName.NoopProvider:
 				case ProviderName.SQLiteClassic:
 					return;
-				case TestProvName.NoopProvider + ".LinqService":
-				case ProviderName.SQLiteClassic + ".LinqService":
+				case TestProvName.NoopProvider + LinqServiceSuffix:
+				case ProviderName.SQLiteClassic + LinqServiceSuffix:
 					Assert.Fail("This test should be available only for explicit run");
 					break;
 			}

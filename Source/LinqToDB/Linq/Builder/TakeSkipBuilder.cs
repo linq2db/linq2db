@@ -6,24 +6,27 @@ namespace LinqToDB.Linq.Builder
 	using LinqToDB.Expressions;
 	using SqlQuery;
 
+	[BuildsMethodCall("Skip", "Take")]
 	sealed class TakeSkipBuilder : MethodCallBuilder
 	{
-		private static readonly string[] MethodNames = { "Skip", "Take" };
+		public static bool CanBuildMethod(MethodCallExpression call, BuildInfo info, ExpressionBuilder builder)
+			=> call.IsQueryable();
 
-		protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
+		protected override BuildSequenceResult BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
-			return methodCall.IsQueryable(MethodNames);
-		}
+			var buildResult = builder.TryBuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
 
-		protected override IBuildContext BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
-		{
-			var sequence = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
+			if (buildResult.BuildContext == null)
+				return buildResult;
+
+			var sequence = buildResult.BuildContext;
+
 			var arg      = methodCall.Arguments[1].Unwrap();
 
 			ISqlExpression expr;
 
-			var linqOptions  = builder.DataContext.Options.LinqOptions;
-			var parameterize = linqOptions.ParameterizeTakeSkip;
+			var linqOptions = builder.DataContext.Options.LinqOptions;
+			var parameterize = !buildInfo.IsSubQuery && linqOptions.ParameterizeTakeSkip;
 
 			if (arg.NodeType == ExpressionType.Lambda)
 			{
@@ -36,12 +39,12 @@ namespace LinqToDB.Linq.Builder
 				arg  = methodCall.Arguments[1];
 				expr = builder.ConvertToSql(sequence, arg);
 
-				if (expr.ElementType == QueryElementType.SqlValue)
+				if (expr.ElementType == QueryElementType.SqlValue && builder.CanBeCompiled(methodCall.Arguments[1], false))
 				{
-					var param   = builder.ParametersContext.BuildParameter(methodCall.Arguments[1], null, true).SqlParameter;
-					param.Name  = methodCall.Method.Name == "Take" ? "take" : "skip";
+					var param = builder.ParametersContext.BuildParameter(sequence, methodCall.Arguments[1], null, forceConstant : true, forceNew : true)!.SqlParameter;
+					param.Name             = methodCall.Method.Name == "Take" ? "take" : "skip";
 					param.IsQueryParameter = param.IsQueryParameter && parameterize;
-					expr = param;
+					expr                   = param;
 				}
 			}
 
@@ -49,85 +52,32 @@ namespace LinqToDB.Linq.Builder
 			{
 				TakeHints? hints = null;
 				if (methodCall.Arguments.Count == 3 && methodCall.Arguments[2].Type == typeof(TakeHints))
-					hints = (TakeHints)methodCall.Arguments[2].EvaluateExpression(builder.DataContext)!;
+					hints = (TakeHints)builder.EvaluateExpression(methodCall.Arguments[2])!;
 
-				BuildTake(builder, sequence, expr, hints);
+				builder.BuildTake(sequence, expr, hints);
 			}
 			else
 			{
-				BuildSkip(builder, sequence, expr);
+				builder.BuildSkip(sequence, expr);
 			}
 
-			return sequence;
+			return BuildSequenceResult.FromContext(new TakeSkipContext(sequence));
 		}
 
-		protected override SequenceConvertInfo? Convert(
-			ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo, ParameterExpression? param)
+		class TakeSkipContext : PassThroughContext
 		{
-			var info = builder.ConvertSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]), null, true);
-
-			if (info != null)
+			public TakeSkipContext(IBuildContext context) : base(context)
 			{
-				info.Expression =
-					Expression.Call(
-						methodCall.Method.DeclaringType!,
-						methodCall.Method.Name,
-						new[] { info.Expression.Type.GetGenericArguments()[0] },
-						info.Expression, methodCall.Arguments[1]);
-					//methodCall.Transform(ex => ConvertMethod(methodCall, 0, info, null, ex));
-				info.Parameter  = param;
-
-				return info;
 			}
 
-			return null;
-		}
-
-		static void BuildTake(ExpressionBuilder builder, IBuildContext sequence, ISqlExpression expr, TakeHints? hints)
-		{
-			var sql = sequence.SelectQuery;
-
-			if (hints != null && !builder.DataContext.SqlProviderFlags.GetIsTakeHintsSupported(hints.Value))
-				throw new LinqException($"TakeHints are {hints} not supported by current database");
-
-			if (hints != null && sql.Select.SkipValue != null)
-				throw new LinqException("Take with hints could not be applied with Skip");
-
-			if (sql.Select.TakeValue != null)
-				expr = new SqlFunction(
-					typeof(int),
-					"CASE",
-					new SqlBinaryExpression(typeof(bool), sql.Select.TakeValue, "<", expr, Precedence.Comparison),
-					sql.Select.TakeValue,
-					expr);
-
-			sql.Select.Take(expr, hints);
-
-			if ( sql.Select.SkipValue != null &&
-				 builder.DataContext.SqlProviderFlags.IsTakeSupported &&
-				!builder.DataContext.SqlProviderFlags.GetIsSkipSupportedFlag(sql.Select.TakeValue, sql.Select.SkipValue))
-				sql.Select.Take(
-					new SqlBinaryExpression(typeof(int), sql.Select.SkipValue, "+", sql.Select.TakeValue!, Precedence.Additive), hints);
-		}
-
-		static void BuildSkip(ExpressionBuilder builder, IBuildContext sequence, ISqlExpression expr)
-		{
-			var sql = sequence.SelectQuery;
-
-			if (sql.Select.TakeHints != null)
-				throw new LinqException("Skip could not be applied with Take with hints");
-
-			if (sql.Select.SkipValue != null)
-				sql.Select.Skip(new SqlBinaryExpression(typeof(int), sql.Select.SkipValue, "+", expr, Precedence.Additive));
-			else
-				sql.Select.Skip(expr);
-
-			if (sql.Select.TakeValue != null)
+			public override Expression MakeExpression(Expression path, ProjectFlags flags)
 			{
-				if (builder.DataContext.SqlProviderFlags.GetIsSkipSupportedFlag(sql.Select.TakeValue, sql.Select.SkipValue) ||
-					!builder.DataContext.SqlProviderFlags.IsTakeSupported)
-					sql.Select.Take(
-						new SqlBinaryExpression(typeof(int), sql.Select.TakeValue, "-", expr, Precedence.Additive), sql.Select.TakeHints);
+				return base.MakeExpression(path, flags);
+			}
+
+			public override IBuildContext Clone(CloningContext context)
+			{
+				return new TakeSkipContext(context.CloneContext(Context));
 			}
 		}
 	}

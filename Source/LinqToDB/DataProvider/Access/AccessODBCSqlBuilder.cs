@@ -48,19 +48,5 @@ namespace LinqToDB.DataProvider.Access
 
 			return base.GetProviderTypeName(dataContext, parameter);
 		}
-
-		protected override void BuildColumnExpression(SelectQuery? selectQuery, ISqlExpression expr, string? alias, ref bool addAlias)
-		{
-			// ODBC provider doesn't support NULL parameter as top-level select column value
-			if (expr is SqlParameter p
-				&& p.IsQueryParameter
-				&& selectQuery != null
-				&& Statement.QueryType == QueryType.Select
-				&& Statement.SelectQuery == selectQuery
-				&& p.GetParameterValue(OptimizationContext.Context.ParameterValues).ProviderValue == null)
-				expr = new SqlValue(p.Type, null);
-
-			base.BuildColumnExpression(selectQuery, expr, alias, ref addAlias);
-		}
 	}
 }

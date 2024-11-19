@@ -61,7 +61,7 @@ namespace Tests.UserTests
 				var query = db.GetTable<Order>().LoadWith(o => o.Details).Where(o => o.OrderId == 1);
 				var order = query.FirstOrDefault();
 
-				Assert.AreEqual(2, interceptor.Count);
+				Assert.That(interceptor.Count, Is.EqualTo(2));
 			}
 		}
 

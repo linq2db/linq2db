@@ -3,14 +3,13 @@ using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
 using System.Linq.Expressions;
-using System.Threading.Tasks;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace LinqToDB.DataProvider
 {
 	using Common;
 	using Data;
-	using LinqToDB.SqlQuery;
 	using Mapping;
 	using SchemaProvider;
 	using SqlProvider;
@@ -25,10 +24,10 @@ namespace LinqToDB.DataProvider
 		SqlProviderFlags SqlProviderFlags      { get; }
 		TableOptions     SupportedTableOptions { get; }
 		bool             TransactionsSupported { get; }
-		void             InitContext           (IDataContext  dataContext);
-		DbConnection     CreateConnection      (string        connectionString);
+		void             InitContext           (IDataContext dataContext);
+		DbConnection     CreateConnection      (string       connectionString);
 		ISqlBuilder      CreateSqlBuilder      (MappingSchema mappingSchema, DataOptions dataOptions);
-		ISqlOptimizer    GetSqlOptimizer       (DataOptions   dataOptions);
+		ISqlOptimizer    GetSqlOptimizer       (DataOptions  dataOptions);
 		/// <summary>
 		/// Initializes <see cref="DataConnection"/> command object.
 		/// </summary>
@@ -41,7 +40,7 @@ namespace LinqToDB.DataProvider
 		/// <returns>Initialized command instance.</returns>
 		DbCommand          InitCommand           (DataConnection dataConnection, DbCommand command, CommandType commandType, string commandText, DataParameter[]? parameters, bool withParameters);
 		void               DisposeCommand        (DbCommand command);
-#if NETSTANDARD2_1PLUS
+#if NET6_0_OR_GREATER
 		ValueTask          DisposeCommandAsync   (DbCommand command);
 #endif
 		object?            GetConnectionInfo     (DataConnection dataConnection, string parameterName);
@@ -76,14 +75,12 @@ namespace LinqToDB.DataProvider
 			CancellationToken cancellationToken)
 		where T : notnull;
 
-#if NATIVE_ASYNC
 		Task<BulkCopyRowsCopied> BulkCopyAsync<T>(
 			DataOptions         options,
 			ITable<T>           table,
 			IAsyncEnumerable<T> source,
 			CancellationToken   cancellationToken)
 		where T: notnull;
-#endif
 
 		/// <summary>
 		/// Returns instance of <see cref="IQueryParametersNormalizer"/>, which implements normalization logic for parameters of single query.

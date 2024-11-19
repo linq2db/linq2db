@@ -49,8 +49,7 @@ namespace Tests.Mapping
 				var testData = GenerateData();
 				using (var table = db.CreateLocalTable(testData))
 				{
-					Assert.AreEqual(testData.Length,
-						table.Where(t => Sql.AsNotNull(t.EntityValue) == t.Id.ToString() + t.Value).Count());
+					Assert.That(table.Where(t => Sql.AsNotNull(t.EntityValue) == t.Id.ToString() + t.Value).Count(), Is.EqualTo(testData.Length));
 				}
 			}
 		}

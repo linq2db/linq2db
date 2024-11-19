@@ -3,30 +3,31 @@
 <#@ include file="CLI.ttinclude"                                               once="true"        #>
 <#
 	var solutionsPath = Host.ResolveAssemblyReference("$(SolutionDir)");
+	var artifactsPath = Host.ResolveAssemblyReference("$(ArtifactsPath)");
 	var targetDir     = Path.Combine(solutionsPath, "Tests", "Tests.T4", "Cli", "T4");
 	var mode          = "t4";
 
-	var dbPath        = $@"{solutionsPath}Tests\Linq\bin\Debug\net472\Database\TestData.ODBC.mdb";
+	var dbPath        = $@"{artifactsPath}\bin\Tests\Debug\net462\Database\TestData.ODBC.mdb";
 	var accessOdbcCN  = $"Driver={{Microsoft Access Driver (*.mdb, *.accdb)}};Dbq={dbPath};ExtendedAnsiSQL=1";
 
-	dbPath            = $@"{solutionsPath}Tests\Linq\bin\Debug\net472\Database\TestData.mdb";
+	dbPath            = $@"{artifactsPath}\bin\Tests\Debug\net462\Database\TestData.mdb";
 	var accessOleDbCN = $"Provider=Microsoft.ACE.OLEDB.12.0;Data Source={dbPath};Locale Identifier=1033;Persist Security Info=True";
 
 	var sqliteCN      = "Data Source=" + Path.Combine(solutionsPath, "Data", "TestData.sqlite");
 	var sqliteNwCN    = "Data Source=" + Path.Combine(solutionsPath, "Data", "Northwind.sqlite");
 	var sqlceCN       = "Data Source=" + Path.Combine(solutionsPath, "Data", "TestData.sdf");
 
-	var db2ProviderLocation = $@"{solutionsPath}Tests\Linq\bin\Debug\netcoreapp3.1\IBM.Data.DB2.Core.dll";
+	var db2ProviderLocation = $@"{artifactsPath}\bin\Tests\Debug\net6.0\IBM.Data.Db2.dll";
 
 	// to skip scaffold, just comment line for specific database/connection
 	RunCliTool("Access"         , null                 , "Cli.T4.Access.Odbc"        , Path.Combine(targetDir, "AccessOdbc")         , mode, connectionString: accessOdbcCN);
 	RunCliTool("Access"         , null                 , "Cli.T4.Access.OleDb"       , Path.Combine(targetDir, "AccessOleDb")        , mode, connectionString: accessOleDbCN);
 	RunCliTool("Access"         , null                 , "Cli.T4.Access.Both"        , Path.Combine(targetDir, "AccessBoth")         , mode, connectionString: accessOleDbCN, additionalConnectionString: accessOdbcCN);
 	RunCliTool("DB2"            , "DB2"                , "Cli.T4.DB2"                , Path.Combine(targetDir, "DB2")                , mode, providerLocation: db2ProviderLocation);
-	RunCliTool("Firebird"       , "Firebird4"          , "Cli.T4.Firebird"           , Path.Combine(targetDir, "Firebird")           , mode);
+	RunCliTool("Firebird"       , "Firebird.5"         , "Cli.T4.Firebird"           , Path.Combine(targetDir, "Firebird")           , mode);
 	RunCliTool("Informix"       , "Informix.DB2"       , "Cli.T4.Informix"           , Path.Combine(targetDir, "Informix")           , mode, providerLocation: db2ProviderLocation);
-	RunCliTool("MySQL"          , "MariaDB"            , "Cli.T4.MariaDB"            , Path.Combine(targetDir, "MariaDB")            , mode);
-	RunCliTool("MySQL"          , "MySqlConnector"     , "Cli.T4.MySql"              , Path.Combine(targetDir, "MySql")              , mode);
+	RunCliTool("MySQL"          , "MariaDB.11"         , "Cli.T4.MariaDB"            , Path.Combine(targetDir, "MariaDB")            , mode);
+	RunCliTool("MySQL"          , "MySqlConnector.8.0" , "Cli.T4.MySql"              , Path.Combine(targetDir, "MySql")              , mode);
 	RunCliTool("Oracle"         , "Oracle.11.Managed"  , "Cli.T4.Oracle"             , Path.Combine(targetDir, "Oracle")             , mode);
 	RunCliTool("PostgreSQL"     , "PostgreSQL.10"      , "Cli.T4.PostgreSQL"         , Path.Combine(targetDir, "PostgreSQL")         , mode);
 	RunCliTool("SapHana"        , "SapHana.Native"     , "Cli.T4.SapHana"            , Path.Combine(targetDir, "SapHana")            , mode);

@@ -69,8 +69,8 @@ namespace Tests.UserTests
 						})
 						.ToArray();
 
-					Assert.AreEqual(1, items.Length);
-					Assert.AreEqual("Bda value", items[0].Instance.BdaValue);
+					Assert.That(items, Has.Length.EqualTo(1));
+					Assert.That(items[0].Instance.BdaValue, Is.EqualTo("Bda value"));
 
 					var items2 = db.GetTable<Task>()
 						.OfType<BdaTask>()
@@ -83,8 +83,8 @@ namespace Tests.UserTests
 						})
 						.ToArray();
 
-					Assert.AreEqual(1, items2.Length);
-					Assert.AreEqual("Bda value", items2[0].Instance.BdaValue);
+					Assert.That(items2, Has.Length.EqualTo(1));
+					Assert.That(items2[0].Instance.BdaValue, Is.EqualTo("Bda value"));
 				}
 			}
 		}

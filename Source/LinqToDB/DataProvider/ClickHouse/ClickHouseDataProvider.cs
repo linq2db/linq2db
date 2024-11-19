@@ -15,10 +15,12 @@ namespace LinqToDB.DataProvider.ClickHouse
 {
 	using Common;
 	using Data;
+	using Linq.Translation;
 	using Mapping;
 	using Reflection;
 	using SchemaProvider;
 	using SqlProvider;
+	using Translation;
 
 	sealed class ClickHouseOctonicaDataProvider : ClickHouseDataProvider { public ClickHouseOctonicaDataProvider() : base(ProviderName.ClickHouseOctonica, ClickHouseProvider.Octonica        ) { } }
 	sealed class ClickHouseClientDataProvider   : ClickHouseDataProvider { public ClickHouseClientDataProvider  () : base(ProviderName.ClickHouseClient  , ClickHouseProvider.ClickHouseClient) { } }
@@ -43,15 +45,13 @@ namespace LinqToDB.DataProvider.ClickHouse
 			// as emulation doesn't work properly due to missing rowcount functionality
 			SqlProviderFlags.IsInsertOrUpdateSupported         = true;
 
-			SqlProviderFlags.IsUpdateSetTableAliasSupported    = false;
-			SqlProviderFlags.IsUpdateFromSupported             = false;
-			SqlProviderFlags.IsCommonTableExpressionsSupported = true;
-			SqlProviderFlags.IsSubQueryOrderBySupported        = true;
-			SqlProviderFlags.IsCountDistinctSupported          = true;
-			SqlProviderFlags.DoesNotSupportCorrelatedSubquery  = true;
-
-			if (this is ClickHouseOctonicaDataProvider or ClickHouseMySqlDataProvider)
-				SqlProviderFlags.IsProjectionBoolSupported = false;
+			SqlProviderFlags.IsUpdateFromSupported                     = false;
+			SqlProviderFlags.IsCommonTableExpressionsSupported         = true;
+			SqlProviderFlags.IsSubQueryOrderBySupported                = true;
+			SqlProviderFlags.SupportedCorrelatedSubqueriesLevel        = 0;
+			SqlProviderFlags.IsAllSetOperationsSupported               = true;
+			SqlProviderFlags.IsNestedJoinsSupported                    = false;
+			SqlProviderFlags.IsSupportedSimpleCorrelatedSubqueries     = true;
 
 			// unconfigured flags
 			// 1. ClickHouse doesn't support correlated subqueries at all so this flag's value doesn't make difference
@@ -59,16 +59,16 @@ namespace LinqToDB.DataProvider.ClickHouse
 			// 2. not tested as we don't support parameters currently
 			//SqlProviderFlags.AcceptsTakeAsParameter = true;
 
-			if (Adapter.GetSByteReaderMethod          != null) SetProviderField(typeof(sbyte         ), Adapter.GetSByteReaderMethod,          Adapter.DataReaderType);
-			if (Adapter.GetUInt16ReaderMethod         != null) SetProviderField(typeof(ushort        ), Adapter.GetUInt16ReaderMethod,         Adapter.DataReaderType);
-			if (Adapter.GetUInt32ReaderMethod         != null) SetProviderField(typeof(uint          ), Adapter.GetUInt32ReaderMethod,         Adapter.DataReaderType);
-			if (Adapter.GetUInt64ReaderMethod         != null) SetProviderField(typeof(ulong         ), Adapter.GetUInt64ReaderMethod,         Adapter.DataReaderType);
-			if (Adapter.GetBigIntegerReaderMethod     != null) SetProviderField(typeof(BigInteger    ), Adapter.GetBigIntegerReaderMethod,     Adapter.DataReaderType);
-			if (Adapter.GetIPAddressReaderMethod      != null) SetProviderField(typeof(IPAddress     ), Adapter.GetIPAddressReaderMethod,      Adapter.DataReaderType);
-			if (Adapter.GetDateTimeOffsetReaderMethod != null) SetProviderField(typeof(DateTimeOffset), Adapter.GetDateTimeOffsetReaderMethod, Adapter.DataReaderType);
+			if (Adapter.GetSByteReaderMethod          != null) SetProviderField<sbyte         >(Adapter.GetSByteReaderMethod,          Adapter.DataReaderType);
+			if (Adapter.GetUInt16ReaderMethod         != null) SetProviderField<ushort        >(Adapter.GetUInt16ReaderMethod,         Adapter.DataReaderType);
+			if (Adapter.GetUInt32ReaderMethod         != null) SetProviderField<uint          >(Adapter.GetUInt32ReaderMethod,         Adapter.DataReaderType);
+			if (Adapter.GetUInt64ReaderMethod         != null) SetProviderField<ulong         >(Adapter.GetUInt64ReaderMethod,         Adapter.DataReaderType);
+			if (Adapter.GetBigIntegerReaderMethod     != null) SetProviderField<BigInteger    >(Adapter.GetBigIntegerReaderMethod,     Adapter.DataReaderType);
+			if (Adapter.GetIPAddressReaderMethod      != null) SetProviderField<IPAddress     >(Adapter.GetIPAddressReaderMethod,      Adapter.DataReaderType);
+			if (Adapter.GetDateTimeOffsetReaderMethod != null) SetProviderField<DateTimeOffset>(Adapter.GetDateTimeOffsetReaderMethod, Adapter.DataReaderType);
 
 #if NET6_0_OR_GREATER
-			if (Adapter.GetDateOnlyReaderMethod != null) SetProviderField(typeof(DateOnly), Adapter.GetDateOnlyReaderMethod, Adapter.DataReaderType);
+			if (Adapter.GetDateOnlyReaderMethod != null) SetProviderField<DateOnly>(Adapter.GetDateOnlyReaderMethod, Adapter.DataReaderType);
 #endif
 
 			if (Provider == ClickHouseProvider.Octonica)
@@ -92,15 +92,15 @@ namespace LinqToDB.DataProvider.ClickHouse
 					var dataReaderParameter = Expression.Parameter(DataReaderType, "r");
 					var indexParameter      = Expression.Parameter(typeof(int), "i");
 
-					// rd.GetMySqlDecimal(i).ToString(0
+					// rd.GetMySqlDecimal(i).ToString()
 					var body = Expression.Call(
 						Expression.Call(
 							dataReaderParameter,
 							Adapter.GetMySqlDecimalReaderMethod,
-							Array<Type>.Empty,
+							[],
 							indexParameter),
 						"ToString",
-						Array<Type>.Empty);
+						[]);
 
 					ReaderExpressions[new ReaderInfo
 					{
@@ -112,43 +112,24 @@ namespace LinqToDB.DataProvider.ClickHouse
 					}]                    = Expression.Lambda(body, dataReaderParameter, indexParameter);
 				}
 			}
+
+			if (Provider == ClickHouseProvider.ClickHouseClient && Adapter.ClientDecimalType != null && Adapter.HasFaultyClientDecimalType)
+			{
+				SetProviderField(Adapter.ClientDecimalType, (DbDataReader rd, int idx) => (int  )rd.GetDecimal(idx));
+				SetProviderField(Adapter.ClientDecimalType, (DbDataReader rd, int idx) => (uint )rd.GetDecimal(idx));
+				SetProviderField(Adapter.ClientDecimalType, (DbDataReader rd, int idx) => (long )rd.GetDecimal(idx));
+				SetProviderField(Adapter.ClientDecimalType, (DbDataReader rd, int idx) => (ulong)rd.GetDecimal(idx));
+			}
+		}
+
+		protected override IMemberTranslator CreateMemberTranslator()
+		{
+			return new ClickHouseMemberTranslator();
 		}
 
 		public ClickHouseProvider Provider { get; }
 
 		#region Overrides
-
-		// https://github.com/Octonica/ClickHouseClient/issues/54
-		// after fix released we will remove this workaround (there is no reason to support older provider versions due to other bugs anyway)
-		protected override DbConnection CreateConnectionInternal(string connectionString)
-		{
-			if (Name == ProviderName.ClickHouseOctonica)
-			{
-				if (_createOctonicaConnection == null)
-				{
-					var l = CreateOctonicaConnectionExpression(Adapter.ConnectionType);
-					_createOctonicaConnection = l.CompileExpression();
-				}
-
-				return _createOctonicaConnection(connectionString);
-			}
-
-			return base.CreateConnectionInternal(connectionString);
-		}
-
-		Func<string, DbConnection>? _createOctonicaConnection;
-		private static Expression<Func<string, DbConnection>> CreateOctonicaConnectionExpression(Type connectionType)
-		{
-			var p = Expression.Parameter(typeof(string));
-			var l = Expression.Lambda<Func<string, DbConnection>>(
-				Expression.Convert(
-					Expression.MemberInit(
-						Expression.New(connectionType.GetConstructor(Array<Type>.Empty) ?? throw new InvalidOperationException($"DbConnection type {connectionType} missing constructor with connection string parameter: {connectionType.Name}(string connectionString)")),
-						Expression.Bind(Methods.ADONet.ConnectionString, p)),
-					typeof(DbConnection)),
-				p);
-			return l;
-		}
 
 		public override TableOptions SupportedTableOptions =>
 			TableOptions.IsTemporary               |
@@ -197,8 +178,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 				value = (Provider, dataType.DataType, value) switch
 				{
 					// OCTONICA provider
-					// https://github.com/Octonica/ClickHouseClient/issues/69
-					(ClickHouseProvider.Octonica, _, bool val)                                                                                                            => (byte)(val ? 1 : 0),
+					(ClickHouseProvider.Octonica, DataType.Byte, bool val)                                                                                                => (byte)(val ? 1 : 0),
 					// use ticks to avoid exceptions due to Local kind
 					(ClickHouseProvider.Octonica, DataType.DateTime or DataType.DateTime64/* or DataType.DateTime2*/, DateTime val)                                       => new DateTimeOffset(val.Ticks, default),
 					(ClickHouseProvider.Octonica, DataType.VarChar or DataType.NVarChar, Guid val)                                                                        => val.ToString("D"),
@@ -264,7 +244,6 @@ namespace LinqToDB.DataProvider.ClickHouse
 				cancellationToken);
 		}
 
-#if NATIVE_ASYNC
 		public override Task<BulkCopyRowsCopied> BulkCopyAsync<T>(
 			DataOptions options, ITable<T> table, IAsyncEnumerable<T> source, CancellationToken cancellationToken)
 		{
@@ -277,7 +256,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 				source,
 				cancellationToken);
 		}
-#endif
+
 		#endregion
 
 		private static MappingSchema GetMappingSchema(ClickHouseProvider provider)

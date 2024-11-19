@@ -5,7 +5,16 @@ using System.Threading.Tasks;
 using LinqToDB;
 using LinqToDB.Common.Internal;
 using LinqToDB.Data;
+using LinqToDB.DataProvider.MySql;
+using LinqToDB.DataProvider.SQLite;
+using LinqToDB.DataProvider.Access;
+using LinqToDB.DataProvider.ClickHouse;
+using LinqToDB.DataProvider.DB2;
+using LinqToDB.DataProvider.Oracle;
 using LinqToDB.DataProvider.SqlServer;
+using LinqToDB.DataProvider.Informix;
+using LinqToDB.DataProvider.SapHana;
+using LinqToDB.DataProvider.Sybase;
 using LinqToDB.Mapping;
 
 using Microsoft.Data.SqlClient;
@@ -41,7 +50,7 @@ namespace Tests.Infrastructure
 
 				_child = db.Child.ToList();
 
-				Assert.NotNull(s1);
+				Assert.That(s1, Is.Not.Null);
 			}
 
 			{
@@ -51,7 +60,7 @@ namespace Tests.Infrastructure
 
 				_child = db.Child.ToList();
 
-				Assert.IsNull(s1);
+				Assert.That(s1, Is.Null);
 			}
 		}
 
@@ -64,7 +73,7 @@ namespace Tests.Infrastructure
 
 			_child = db.Child.ToList();
 
-			Assert.IsNull(s1);
+			Assert.That(s1, Is.Null);
 
 			using var db1 = new TestDataConnection(db.Options
 				.UseConnection   (db.DataProvider, db.Connection, false)
@@ -77,7 +86,7 @@ namespace Tests.Infrastructure
 
 			_child = db1.Child.ToList();
 
-			Assert.NotNull(s1);
+			Assert.That(s1, Is.Not.Null);
 		}
 
 		[Test]
@@ -132,10 +141,13 @@ namespace Tests.Infrastructure
 			{
 				dc.GetTable<Person>().ToList();
 
-				Assert.True(syncBeforeCalled);
-				Assert.True(syncAfterCalled);
-				Assert.False(asyncBeforeCalled);
-				Assert.False(asyncAfterCalled);
+				Assert.Multiple(() =>
+				{
+					Assert.That(syncBeforeCalled, Is.True);
+					Assert.That(syncAfterCalled, Is.True);
+					Assert.That(asyncBeforeCalled, Is.False);
+					Assert.That(asyncAfterCalled, Is.False);
+				});
 			}
 
 			syncBeforeCalled  = false;
@@ -146,10 +158,13 @@ namespace Tests.Infrastructure
 			{
 				await dc.GetTable<Person>().ToListAsync();
 
-				Assert.False(syncBeforeCalled);
-				Assert.False(syncAfterCalled);
-				Assert.True(asyncBeforeCalled);
-				Assert.True(asyncAfterCalled);
+				Assert.Multiple(() =>
+				{
+					Assert.That(syncBeforeCalled, Is.False);
+					Assert.That(syncAfterCalled, Is.False);
+					Assert.That(asyncBeforeCalled, Is.True);
+					Assert.That(asyncAfterCalled, Is.True);
+				});
 			}
 
 			syncBeforeCalled  = false;
@@ -160,10 +175,13 @@ namespace Tests.Infrastructure
 			{
 				dc.GetTable<Person>().ToList();
 
-				Assert.True(syncBeforeCalled);
-				Assert.True(syncAfterCalled);
-				Assert.False(asyncBeforeCalled);
-				Assert.False(asyncAfterCalled);
+				Assert.Multiple(() =>
+				{
+					Assert.That(syncBeforeCalled, Is.True);
+					Assert.That(syncAfterCalled, Is.True);
+					Assert.That(asyncBeforeCalled, Is.False);
+					Assert.That(asyncAfterCalled, Is.False);
+				});
 			}
 
 			syncBeforeCalled  = false;
@@ -174,10 +192,13 @@ namespace Tests.Infrastructure
 			{
 				await dc.GetTable<Person>().ToListAsync();
 
-				Assert.False(syncBeforeCalled);
-				Assert.False(syncAfterCalled);
-				Assert.True(asyncBeforeCalled);
-				Assert.True(asyncAfterCalled);
+				Assert.Multiple(() =>
+				{
+					Assert.That(syncBeforeCalled, Is.False);
+					Assert.That(syncAfterCalled, Is.False);
+					Assert.That(asyncBeforeCalled, Is.True);
+					Assert.That(asyncAfterCalled, Is.True);
+				});
 			}
 
 			// test sync only handlers
@@ -201,8 +222,11 @@ namespace Tests.Infrastructure
 			{
 				dc.GetTable<Person>().ToList();
 
-				Assert.True(beforeCalled);
-				Assert.True(afterCalled);
+				Assert.Multiple(() =>
+				{
+					Assert.That(beforeCalled, Is.True);
+					Assert.That(afterCalled, Is.True);
+				});
 			}
 
 			beforeCalled = false;
@@ -211,8 +235,11 @@ namespace Tests.Infrastructure
 			{
 				await dc.GetTable<Person>().ToListAsync();
 
-				Assert.True(beforeCalled);
-				Assert.True(afterCalled);
+				Assert.Multiple(() =>
+				{
+					Assert.That(beforeCalled, Is.True);
+					Assert.That(afterCalled, Is.True);
+				});
 			}
 
 			beforeCalled = false;
@@ -221,8 +248,11 @@ namespace Tests.Infrastructure
 			{
 				dc.GetTable<Person>().ToList();
 
-				Assert.True(beforeCalled);
-				Assert.True(afterCalled);
+				Assert.Multiple(() =>
+				{
+					Assert.That(beforeCalled, Is.True);
+					Assert.That(afterCalled, Is.True);
+				});
 			}
 
 			beforeCalled = false;
@@ -231,8 +261,11 @@ namespace Tests.Infrastructure
 			{
 				await dc.GetTable<Person>().ToListAsync();
 
-				Assert.True(beforeCalled);
-				Assert.True(afterCalled);
+				Assert.Multiple(() =>
+				{
+					Assert.That(beforeCalled, Is.True);
+					Assert.That(afterCalled, Is.True);
+				});
 			}
 
 			// test use from provider detector
@@ -254,8 +287,11 @@ namespace Tests.Infrastructure
 			{
 				dc.GetTable<Person>().ToList();
 
-				Assert.AreEqual(2, beforeCallCnt);
-				Assert.AreEqual(2, afterCallCnt);
+				Assert.Multiple(() =>
+				{
+					Assert.That(beforeCallCnt, Is.EqualTo(2));
+					Assert.That(afterCallCnt, Is.EqualTo(2));
+				});
 			}
 		}
 
@@ -285,8 +321,11 @@ namespace Tests.Infrastructure
 					db.GetTable<EntityDescriptorTable>().ToString();
 				}
 
-				Assert.True(globalTriggered);
-				Assert.False(localTriggrered);
+				Assert.Multiple(() =>
+				{
+					Assert.That(globalTriggered, Is.True);
+					Assert.That(localTriggrered, Is.False);
+				});
 				globalTriggered = false;
 
 				// local handler set
@@ -299,8 +338,11 @@ namespace Tests.Infrastructure
 					db.GetTable<EntityDescriptorTable>().ToString();
 				}
 
-				Assert.False(globalTriggered);
-				Assert.True(localTriggrered);
+				Assert.Multiple(() =>
+				{
+					Assert.That(globalTriggered, Is.False);
+					Assert.That(localTriggrered, Is.True);
+				});
 				localTriggrered = false;
 
 				// descriptor cached
@@ -309,8 +351,11 @@ namespace Tests.Infrastructure
 					db.GetTable<EntityDescriptorTable>().ToString();
 				}
 
-				Assert.False(globalTriggered);
-				Assert.False(localTriggrered);
+				Assert.Multiple(() =>
+				{
+					Assert.That(globalTriggered, Is.False);
+					Assert.That(localTriggrered, Is.False);
+				});
 
 				// cache miss
 				using (var db = GetDataContext(context, new MappingSchema("name1")))
@@ -318,8 +363,11 @@ namespace Tests.Infrastructure
 					db.GetTable<EntityDescriptorTable>().ToString();
 				}
 
-				Assert.True(globalTriggered);
-				Assert.False(localTriggrered);
+				Assert.Multiple(() =>
+				{
+					Assert.That(globalTriggered, Is.True);
+					Assert.That(localTriggrered, Is.False);
+				});
 				globalTriggered = false;
 
 				// no handlers
@@ -329,13 +377,89 @@ namespace Tests.Infrastructure
 					db.GetTable<EntityDescriptorTable>().ToString();
 				}
 
-				Assert.False(globalTriggered);
-				Assert.False(localTriggrered);
+				Assert.Multiple(() =>
+				{
+					Assert.That(globalTriggered, Is.False);
+					Assert.That(localTriggrered, Is.False);
+				});
 			}
 			finally
 			{
 				MappingSchema.EntityDescriptorCreatedCallback = null;
 			}
+		}
+
+		private static void OverloadsNotTest()
+		{
+			// this is compile-time "test" to ensure configuration overloads with default parameters
+			// doesn't conflict with each other when default parameters not specified
+
+			var connectionString = "fake";
+
+			new DataOptions()
+
+				.UseSqlCe()
+				.UseSqlCe(connectionString)
+
+				.UseFirebird()
+				.UseFirebird(connectionString)
+
+				.UsePostgreSQL()
+				.UsePostgreSQL(o => o)
+				.UsePostgreSQL(connectionString)
+				.UsePostgreSQL(connectionString, o => o)
+
+				.UseDB2()
+				.UseDB2(o => o)
+				.UseDB2(connectionString)
+				.UseDB2(connectionString, o => o)
+
+				.UseSqlServer()
+				.UseSqlServer(o => o)
+				.UseSqlServer(connectionString)
+				.UseSqlServer(connectionString, o => o)
+
+				.UseMySql()
+				.UseMySql(o => o)
+				.UseMySql(connectionString)
+				.UseMySql(connectionString, o => o)
+
+				.UseOracle()
+				.UseOracle(o => o)
+				.UseOracle(connectionString)
+				.UseOracle(connectionString, o => o)
+
+				.UseSQLite()
+				.UseSQLite(o => o)
+				.UseSQLite(connectionString)
+				.UseSQLite(connectionString, o => o)
+
+				.UseAccess()
+				.UseAccess(o => o)
+				.UseAccess(connectionString)
+				.UseAccess(connectionString, o => o)
+
+				.UseInformix()
+				.UseInformix(o => o)
+				.UseInformix(connectionString)
+				.UseInformix(connectionString, o => o)
+
+				.UseSapHana()
+				.UseSapHana(o => o)
+				.UseSapHana(connectionString)
+				.UseSapHana(connectionString, o => o)
+
+				.UseAse()
+				.UseAse(o => o)
+				.UseAse(connectionString)
+				.UseAse(connectionString, o => o)
+
+				.UseClickHouse()
+				.UseClickHouse(o => o)
+				.UseClickHouse(connectionString)
+				.UseClickHouse(connectionString, o => o)
+
+				;
 		}
 	}
 }

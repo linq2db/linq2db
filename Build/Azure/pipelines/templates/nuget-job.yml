@@ -17,72 +17,134 @@ jobs:
     condition: ne(variables['Build.SourceBranchName'], variables['release_branch'])
     displayName: Update nuget version
 
+  - powershell: echo "##vso[task.setvariable variable=ef3PackageVersion]$(ef3PackageVersion)-rc.$(Build.BuildId)"
+    condition: ne(variables['Build.SourceBranchName'], variables['release_branch'])
+    displayName: Update nuget version
+
+  - powershell: echo "##vso[task.setvariable variable=ef6PackageVersion]$(ef6PackageVersion)-rc.$(Build.BuildId)"
+    condition: ne(variables['Build.SourceBranchName'], variables['release_branch'])
+    displayName: Update nuget version
+
+  - powershell: echo "##vso[task.setvariable variable=ef8PackageVersion]$(ef8PackageVersion)-rc.$(Build.BuildId)"
+    condition: ne(variables['Build.SourceBranchName'], variables['release_branch'])
+    displayName: Update nuget version
+
+  - powershell: echo "##vso[task.setvariable variable=ef9PackageVersion]$(ef9PackageVersion)-rc.$(Build.BuildId)"
+    condition: ne(variables['Build.SourceBranchName'], variables['release_branch'])
+    displayName: Update nuget version
+
   - task: DownloadPipelineArtifact@2
     displayName: Download LinqToDB files
     inputs:
       artifactName: '$(artifact_linq2db_binaries)'
-      targetPath: '$(Build.SourcesDirectory)/Source/LinqToDB/bin/Release'
+      targetPath: '$(Build.SourcesDirectory)/.build/bin/LinqToDB/Release'
 
   - task: DownloadPipelineArtifact@2
     displayName: Download LinqToDB.Tools files
     inputs:
       artifactName: '$(artifact_linq2db_Tools_binaries)'
-      targetPath: '$(Build.SourcesDirectory)/Source/LinqToDB.Tools/bin/Release'
+      targetPath: '$(Build.SourcesDirectory)/.build/bin/LinqToDB.Tools/Release'
 
   - task: DownloadPipelineArtifact@2
-    displayName: Download LinqToDB.AspNet files
+    displayName: Download LinqToDB.Extensions files
     inputs:
-      artifactName: '$(artifact_linq2db_aspnet_binaries)'
-      targetPath: '$(Build.SourcesDirectory)/Source/LinqToDB.AspNet/bin/Release'
+      artifactName: '$(artifact_linq2db_extensions_binaries)'
+      targetPath: '$(Build.SourcesDirectory)/.build/bin/LinqToDB.Extensions/Release'
 
   - task: DownloadPipelineArtifact@2
     displayName: Download LinqToDB.Remote.Wcf files
     inputs:
       artifactName: '$(artifact_linq2db_remote_wcf_binaries)'
-      targetPath: '$(Build.SourcesDirectory)/Source/LinqToDB.Remote.Wcf/bin/Release'
+      targetPath: '$(Build.SourcesDirectory)/.build/bin/LinqToDB.Remote.Wcf/Release'
 
   - task: DownloadPipelineArtifact@2
     displayName: Download LinqToDB.Remote.Grpc files
     inputs:
       artifactName: '$(artifact_linq2db_remote_grpc_binaries)'
-      targetPath: '$(Build.SourcesDirectory)/Source/LinqToDB.Remote.Grpc/bin/Release'
+      targetPath: '$(Build.SourcesDirectory)/.build/bin/LinqToDB.Remote.Grpc/Release'
 
   - task: DownloadPipelineArtifact@2
     displayName: Download LinqToDB.CLI files
     inputs:
       artifactName: '$(artifact_linq2db_cli_binaries)'
-      targetPath: '$(Build.SourcesDirectory)/Source/LinqToDB.CLI/bin/Release'
+      targetPath: '$(Build.SourcesDirectory)/.build/bin/LinqToDB.CLI/Release'
+
+  - task: DownloadPipelineArtifact@2
+    displayName: Download LinqToDB.FSharp files
+    inputs:
+      artifactName: '$(artifact_linq2db_fsharp_binaries)'
+      targetPath: '$(Build.SourcesDirectory)/.build/bin/LinqToDB.FSharp/Release'
+
+  - task: DownloadPipelineArtifact@2
+    displayName: Download LinqToDB.EntityFrameworkCore files
+    inputs:
+      artifactName: '$(artifact_linq2db_efcore_binaries)'
+      targetPath: '$(Build.SourcesDirectory)/.build/bin/LinqToDB.EntityFrameworkCore/Release'
+
+  - task: DownloadPipelineArtifact@2
+    displayName: Download LinqToDB.EntityFrameworkCore.STS files
+    inputs:
+      artifactName: '$(artifact_linq2db_efcore_sts_binaries)'
+      targetPath: '$(Build.SourcesDirectory)/.build/bin/LinqToDB.EntityFrameworkCore.STS/Release'
 
   - task: DownloadPipelineArtifact@2
     displayName: Download test files (for t4 nugets)
     inputs:
-      artifactName: '$(netfx472_tests)'
-      targetPath: '$(Build.SourcesDirectory)/Tests/Linq/bin/$(build_configuration)/net472'
+      artifactName: '$(artifact_t4_binaries)'
+      targetPath: '$(Build.SourcesDirectory)/.build/bin/Tests/$(release_configuration)/$(netfx_tfm)'
 
   - task: PowerShell@2
     inputs:
       filePath: '$(Build.SourcesDirectory)/Build/BuildNuspecs.ps1'
       workingDirectory: '$(Build.SourcesDirectory)'
-      arguments: -path $(Build.SourcesDirectory)/NuGet/*.nuspec -buildPath $(Build.SourcesDirectory)/BuiltNuGet -version $(packageVersion) -branch $(Build.SourceBranchName)
+      arguments: -path $(Build.SourcesDirectory)/NuGet/*.nuspec -buildPath $(Build.SourcesDirectory)/.build/nuspecs -version $(packageVersion) -branch $(Build.SourceBranchName)
     displayName: Update nuspecs
+
+  - task: PowerShell@2
+    inputs:
+      filePath: '$(Build.SourcesDirectory)/Build/BuildNuspecs.ps1'
+      workingDirectory: '$(Build.SourcesDirectory)'
+      arguments: -path $(Build.SourcesDirectory)/NuGet/linq2db.EntityFrameworkCore.v3.nuspec -buildPath $(Build.SourcesDirectory)/.build/nuspecs -version $(ef3PackageVersion) -branch $(Build.SourceBranchName) -linq2DbVersion $(packageVersion)
+    displayName: Update nuspecs (EF3)
+
+  - task: PowerShell@2
+    inputs:
+      filePath: '$(Build.SourcesDirectory)/Build/BuildNuspecs.ps1'
+      workingDirectory: '$(Build.SourcesDirectory)'
+      arguments: -path $(Build.SourcesDirectory)/NuGet/linq2db.EntityFrameworkCore.v6.nuspec -buildPath $(Build.SourcesDirectory)/.build/nuspecs -version $(ef6PackageVersion) -branch $(Build.SourceBranchName) -linq2DbVersion $(packageVersion)
+    displayName: Update nuspecs (EF6)
+
+  - task: PowerShell@2
+    inputs:
+      filePath: '$(Build.SourcesDirectory)/Build/BuildNuspecs.ps1'
+      workingDirectory: '$(Build.SourcesDirectory)'
+      arguments: -path $(Build.SourcesDirectory)/NuGet/linq2db.EntityFrameworkCore.v8.nuspec -buildPath $(Build.SourcesDirectory)/.build/nuspecs -version $(ef8PackageVersion) -branch $(Build.SourceBranchName) -linq2DbVersion $(packageVersion)
+    displayName: Update nuspecs (EF8)
+
+  - task: PowerShell@2
+    inputs:
+      filePath: '$(Build.SourcesDirectory)/Build/BuildNuspecs.ps1'
+      workingDirectory: '$(Build.SourcesDirectory)'
+      arguments: -path $(Build.SourcesDirectory)/NuGet/linq2db.EntityFrameworkCore.v9.nuspec -buildPath $(Build.SourcesDirectory)/.build/nuspecs -version $(ef9PackageVersion) -branch $(Build.SourceBranchName) -linq2DbVersion $(packageVersion)
+    displayName: Update nuspecs (EF9)
 
   - task: CmdLine@2
     inputs:
-      script: $(Build.SourcesDirectory)/NuGet/Pack.bat
-      workingDirectory: $(Build.SourcesDirectory)/BuiltNuGet
+      script: $(Build.SourcesDirectory)/NuGet/Pack.cmd
+      workingDirectory: $(Build.SourcesDirectory)/.build
     displayName: Build nugets for Azure Artifacts
     condition: and(succeeded(), ne(variables['Build.SourceBranchName'], variables['release_branch']))
 
   - task: CmdLine@2
     inputs:
-      script: $(Build.SourcesDirectory)/NuGet/Pack.bat snupkg
-      workingDirectory: $(Build.SourcesDirectory)/BuiltNuGet
+      script: $(Build.SourcesDirectory)/NuGet/Pack.cmd snupkg
+      workingDirectory: $(Build.SourcesDirectory)/.build
     displayName: Build nugets for Nuget.org
     condition: and(succeeded(), eq(variables['Build.SourceBranchName'], variables['release_branch']))
 
   - task: PublishBuildArtifacts@1
     inputs:
-      pathToPublish: '$(Build.SourcesDirectory)/BuiltNuGet/built'
+      pathToPublish: '$(Build.SourcesDirectory)/.build/nugets'
       artifactName: '$(artifact_nugets)'
     displayName: Publish nugets to artifacts
     condition: succeeded()
@@ -90,7 +152,7 @@ jobs:
   - task: NuGetCommand@2
     inputs:
       command: 'push'
-      packagesToPush: '$(Build.SourcesDirectory)/BuiltNuGet/built/*.nupkg'
+      packagesToPush: '$(Build.SourcesDirectory)/.build/nugets/*.nupkg'
       nuGetFeedType: 'internal'
       publishVstsFeed: '0dcc414b-ea54-451e-a54f-d63f05367c4b/967a4107-9788-41a4-9f6d-a2318aab1410'
     displayName: Publish to Azure Artifacts feed
@@ -99,7 +161,7 @@ jobs:
   - task: NuGetCommand@2
     inputs:
       command: 'push'
-      packagesToPush: '$(Build.SourcesDirectory)/BuiltNuGet/built/*.nupkg'
+      packagesToPush: '$(Build.SourcesDirectory)/.build/nugets/*.nupkg'
       nuGetFeedType: 'external'
       publishFeedCredentials: 'linq2db nuget.org feed'
     displayName: Publish to Nuget.org

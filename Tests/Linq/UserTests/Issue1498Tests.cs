@@ -218,8 +218,8 @@ namespace Tests.UserTests
 							MessagesIds = x.MessagesF3.Select(t => t.Id).ToList()
 						}).FirstOrDefault()!;
 
-					Assert.IsNotNull(result);
-					Assert.AreEqual(60, result.MessagesIds.Single());
+					Assert.That(result, Is.Not.Null);
+					Assert.That(result.MessagesIds.Single(), Is.EqualTo(60));
 				}
 			}
 		}
@@ -261,11 +261,14 @@ namespace Tests.UserTests
 							MessagesIds = x.MessagesF3.Select(t => t.Id).ToList()
 						}).FirstOrDefault()!;
 
-					Assert.That(result,           Is.Not.Null);
-					Assert.That(topic.Id,         Is.EqualTo(result.Topic.Id));
-					Assert.That(topic.Text,       Is.EqualTo(result.Topic.Text));
-					Assert.That(topic.Title,      Is.EqualTo(result.Topic.Title));
-					Assert.That(new[] { 60 }, Is.EqualTo(result.MessagesIds));
+					Assert.Multiple(() =>
+					{
+						Assert.That(result, Is.Not.Null);
+						Assert.That(topic.Id, Is.EqualTo(result.Topic.Id));
+						Assert.That(topic.Text, Is.EqualTo(result.Topic.Text));
+						Assert.That(topic.Title, Is.EqualTo(result.Topic.Title));
+						Assert.That(new[] { 60 }, Is.EqualTo(result.MessagesIds));
+					});
 				}
 			}
 		}

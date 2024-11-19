@@ -2,12 +2,15 @@
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 
-using LinqToDB.Common;
-using LinqToDB.DataProvider;
-using LinqToDB.SqlQuery;
+using LinqToDB.SqlQuery.Visitors;
 
 namespace LinqToDB.SqlProvider
 {
+	using Common;
+	using DataProvider;
+	using Mapping;
+	using SqlQuery;
+
 	public class OptimizationContext
 	{
 		private IQueryParametersNormalizer?                      _parametersNormalizer;
@@ -15,55 +18,53 @@ namespace LinqToDB.SqlProvider
 		private List<SqlParameter>?                              _actualParameters;
 		private Dictionary<(DbDataType, object?), SqlParameter>? _dynamicParameters;
 
-		private readonly Dictionary<IQueryElement, IQueryElement> _optimized = new(Utils.ObjectReferenceEqualityComparer<IQueryElement>.Default);
-		private readonly Func<IQueryParametersNormalizer>         _parametersNormalizerFactory;
+		public DataOptions                   DataOptions      { get; }
+		public SqlProviderFlags?             SqlProviderFlags { get; }
+		public MappingSchema                 MappingSchema    { get; }
+		public SqlExpressionConvertVisitor   ConvertVisitor   { get; }
+		public SqlExpressionOptimizerVisitor OptimizerVisitor { get; }
+
+		readonly Func<IQueryParametersNormalizer>           _parametersNormalizerFactory;
+
+		public SqlQueryVisitor.IVisitorTransformationInfo TransformationInfo => 
+			_transformationInfo ??= new SqlQueryVisitor.VisitorTransformationInfo();
+
+		SqlQueryVisitor.IVisitorTransformationInfo? _transformationInfo;
+
+		public SqlQueryVisitor.IVisitorTransformationInfo TransformationInfoConvert => 
+			_transformationInfoConvert ??= new SqlQueryVisitor.VisitorTransformationInfo();
+
+		SqlQueryVisitor.IVisitorTransformationInfo? _transformationInfoConvert;
 
 		public OptimizationContext(
-			EvaluationContext                context,
-			AliasesContext                   aliases,
-			bool                             isParameterOrderDependent,
+			EvaluationContext                evaluationContext,
+			DataOptions                      dataOptions,
+			SqlProviderFlags?                sqlProviderFlags,
+			MappingSchema                    mappingSchema,
+			SqlExpressionOptimizerVisitor    optimizerVisitor,
+			SqlExpressionConvertVisitor      convertVisitor,
+			bool                             isParameterOrderDepended,
+			bool                             isAlreadyOptimizedAndConverted,
 			Func<IQueryParametersNormalizer> parametersNormalizerFactory)
 		{
-			Aliases                      = aliases ?? throw new ArgumentNullException(nameof(aliases));
-			Context                      = context;
-			IsParameterOrderDependent    = isParameterOrderDependent;
-			_parametersNormalizerFactory = parametersNormalizerFactory;
+			EvaluationContext              = evaluationContext;
+			DataOptions                    = dataOptions;
+			SqlProviderFlags               = sqlProviderFlags;
+			MappingSchema                  = mappingSchema;
+			OptimizerVisitor               = optimizerVisitor;
+			ConvertVisitor                 = convertVisitor;
+			IsParameterOrderDependent      = isParameterOrderDepended;
+			IsAlreadyOptimizedAndConverted = isAlreadyOptimizedAndConverted;
+			_parametersNormalizerFactory   = parametersNormalizerFactory;
 		}
 
-		public EvaluationContext Context                   { get; }
-		public bool              IsParameterOrderDependent { get; }
-		public AliasesContext    Aliases                   { get; }
-
-		public bool IsOptimized(IQueryElement element, [NotNullWhen(true)] out IQueryElement? newExpr)
-		{
-			if (_optimized.TryGetValue(element, out var replaced))
-			{
-				if (replaced != element)
-				{
-					while (_optimized.TryGetValue(replaced, out var another))
-					{
-						if (replaced == another)
-							break;
-						replaced = another;
-					}
-				}
-
-				newExpr = replaced;
-				return true;
-			}
-
-			newExpr = null;
-			return false;
-		}
-
-		public void RegisterOptimized(IQueryElement element, IQueryElement newExpr)
-		{
-			_optimized[element] = newExpr;
-		}
+		public EvaluationContext EvaluationContext              { get; }
+		public bool              IsParameterOrderDependent      { get; }
+		public bool              IsAlreadyOptimizedAndConverted { get; }
 
 		public bool HasParameters() => _actualParameters?.Count > 0;
 
-		public IReadOnlyList<SqlParameter> GetParameters() => _actualParameters ?? (IReadOnlyList<SqlParameter>)Array<SqlParameter>.Empty;
+		public IReadOnlyList<SqlParameter> GetParameters() => _actualParameters ?? (IReadOnlyList<SqlParameter>)[];
 
 		public SqlParameter AddParameter(SqlParameter parameter)
 		{
@@ -82,7 +83,8 @@ namespace LinqToDB.SqlProvider
 					returnValue = new SqlParameter(parameter.Type, newName, parameter.Value)
 					{
 						AccessorId     = parameter.AccessorId,
-						ValueConverter = parameter.ValueConverter
+						ValueConverter = parameter.ValueConverter,
+						NeedsCast      = parameter.NeedsCast
 					};
 				}
 
@@ -119,28 +121,42 @@ namespace LinqToDB.SqlProvider
 			_parametersNormalizer = null;
 		}
 
-		private ConvertVisitor<BasicSqlOptimizer.RunOptimizationContext>? _visitor;
-
-		private int _nestingLevel;
-		public T ConvertAll<T>(
-			BasicSqlOptimizer.RunOptimizationContext context,
-			T                                        element,
-			Func<ConvertVisitor<BasicSqlOptimizer.RunOptimizationContext>, IQueryElement, IQueryElement> convertAction,
-			Func<ConvertVisitor<BasicSqlOptimizer.RunOptimizationContext>, bool>                         parentAction)
+		[return : NotNullIfNotNull(nameof(element))]
+		public T OptimizeAndConvertAll<T>(T element, NullabilityContext nullabilityContext)
 			where T : class, IQueryElement
 		{
-			if (_visitor == null)
-				_visitor = new ConvertVisitor<BasicSqlOptimizer.RunOptimizationContext>(context, convertAction, true, false, false, parentAction);
-			else
-				_visitor.Reset(context, convertAction, true, false, false, parentAction);
+			var newElement = OptimizerVisitor.Optimize(EvaluationContext, nullabilityContext, null, DataOptions, MappingSchema, element, visitQueries : true, isInsideNot : false, reduceBinary: true);
+			var result     = (T)ConvertVisitor.Convert(this, nullabilityContext, newElement, visitQueries : true, isInsideNot : false);
 
-			// temporary(?) guard
-			if (_nestingLevel > 0)
-				throw new InvalidOperationException("Nested optimization detected");
-			_nestingLevel++;
-			var res = (T?)_visitor.ConvertInternal(element) ?? element;
-			_nestingLevel--;
-			return res;
+			return result;
+		}
+
+		[return: NotNullIfNotNull(nameof(element))]
+		public T? OptimizeAndConvert<T>(T? element, NullabilityContext nullabilityContext, bool isInsideNot)
+			where T : class, IQueryElement
+		{
+			if (IsAlreadyOptimizedAndConverted)
+				return element;
+
+			if (element == null)
+				return null;
+
+			var newElement = OptimizerVisitor.Optimize(EvaluationContext, nullabilityContext, null, DataOptions, MappingSchema, element, visitQueries : false, isInsideNot, reduceBinary : false);
+			var result     = (T)ConvertVisitor.Convert(this, nullabilityContext, newElement, false, isInsideNot);
+
+			return result;
+		}
+
+		[return: NotNullIfNotNull(nameof(element))]
+		public T? Optimize<T>(T? element, NullabilityContext nullabilityContext, bool isInsideNot, bool reduceBinary)
+			where T : class, IQueryElement
+		{
+			if (element == null)
+				return null;
+
+			var newElement = OptimizerVisitor.Optimize(EvaluationContext, nullabilityContext, null, DataOptions, MappingSchema, element, false, isInsideNot, reduceBinary);
+
+			return (T)newElement;
 		}
 	}
 }

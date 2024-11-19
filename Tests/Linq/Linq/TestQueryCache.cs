@@ -84,8 +84,11 @@ namespace Tests.Linq
 				var foundKey = null != table.GetSelectQuery().Find(columnName,
 					               static (columnName, e) => e is SqlField f && f.PhysicalName == columnName);
 
-				Assert.IsTrue(found);
-				Assert.IsTrue(foundKey);
+				Assert.Multiple(() =>
+				{
+					Assert.That(found, Is.True);
+					Assert.That(foundKey, Is.True);
+				});
 
 				var result = table.ToArray();
 			}
@@ -114,8 +117,11 @@ namespace Tests.Linq
 				var foundKey = null != table.GetSelectQuery().Find(columnName,
 								static (columnName, e) => e is SqlField f && f.PhysicalName == columnName);
 
-				Assert.IsTrue(found);
-				Assert.IsTrue(foundKey);
+				Assert.Multiple(() =>
+				{
+					Assert.That(found, Is.True);
+					Assert.That(foundKey, Is.True);
+				});
 
 				var result = await table.ToArrayAsync();
 			}
@@ -181,7 +187,7 @@ namespace Tests.Linq
 						.Where(x => Helper.GetField(x, i) == i);
 
 					var sqlStr = test.ToString();
-					TestContext.WriteLine(sqlStr);
+					TestContext.Out.WriteLine(sqlStr);
 				}
 
 				Assert.That(Query<ManyFields>.CacheMissCount - currentMiss, Is.EqualTo(5));
@@ -209,12 +215,12 @@ namespace Tests.Linq
 			GC.Collect();
 			Assert.That(ctxRef.TryGetTarget(out _), Is.False);
 
-			WeakReference<IDataContext> ExecuteQuery(string context)
+			WeakReference<IDataContext> ExecuteQuery(string ctx)
 			{
 				Query<Person>.ClearCache();
-				using var db = GetDataContext(context);
+				using var db = GetDataContext(ctx);
 
-				db.Person.FirstOrDefault();
+				_ = db.Person.FirstOrDefault();
 
 				return new WeakReference<IDataContext>(db);
 			}

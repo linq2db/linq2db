@@ -30,7 +30,7 @@ namespace Tests.Linq
 
 				var ch = q.First();
 
-				Assert.IsNotNull(ch.Parent);
+				Assert.That(ch.Parent, Is.Not.Null);
 			}
 		}
 
@@ -45,7 +45,7 @@ namespace Tests.Linq
 
 				var ch = q.First();
 
-				Assert.IsNotNull(ch.Parent);
+				Assert.That(ch.Parent, Is.Not.Null);
 			}
 		}
 
@@ -60,8 +60,8 @@ namespace Tests.Linq
 
 				var ch = q.First();
 
-				Assert.IsNotNull(ch.Child);
-				Assert.IsNotNull(ch.Child!.Parent);
+				Assert.That(ch.Child, Is.Not.Null);
+				Assert.That(ch.Child!.Parent, Is.Not.Null);
 			}
 		}
 
@@ -76,8 +76,8 @@ namespace Tests.Linq
 
 				var ch = q.First();
 
-				Assert.IsNotNull(ch.Child);
-				Assert.IsNotNull(ch.Child!.Parent);
+				Assert.That(ch.Child, Is.Not.Null);
+				Assert.That(ch.Child!.Parent, Is.Not.Null);
 			}
 		}
 
@@ -92,7 +92,7 @@ namespace Tests.Linq
 
 				var ch = q.FirstOrDefault()!;
 
-				Assert.IsNotNull(ch.Children[0].Parent);
+				Assert.That(ch.Children[0].Parent, Is.Not.Null);
 			}
 		}
 
@@ -114,7 +114,7 @@ namespace Tests.Linq
 
 				var ch = q.ToList().Select(t => t.p).SelectMany(p => p.Children3).FirstOrDefault();
 
-				Assert.IsNotNull(ch);
+				Assert.That(ch, Is.Not.Null);
 			}
 		}
 
@@ -137,7 +137,7 @@ namespace Tests.Linq
 
 				var ch = q.ToList().Select(t => t.p).SelectMany(p => p.Children3).FirstOrDefault();
 
-				Assert.IsNotNull(ch);
+				Assert.That(ch, Is.Not.Null);
 			}
 		}
 
@@ -168,7 +168,7 @@ namespace Tests.Linq
 
 				var ch = q.ToList().Select(t => t.p).SelectMany(p => p.Children3).FirstOrDefault();
 
-				Assert.IsNotNull(ch);
+				Assert.That(ch, Is.Not.Null);
 			}
 		}
 
@@ -187,9 +187,9 @@ namespace Tests.Linq
 
 				var ch = q.ToList().Select(t => t.p).SelectMany(p => p.Children).SelectMany(p => p.GrandChildren).FirstOrDefault()!;
 
-				Assert.IsNotNull(ch);
-				Assert.IsNotNull(ch.Child);
-				Assert.IsNotNull(ch.Child!.Parent);
+				Assert.That(ch, Is.Not.Null);
+				Assert.That(ch.Child, Is.Not.Null);
+				Assert.That(ch.Child!.Parent, Is.Not.Null);
 			}
 		}
 
@@ -208,9 +208,9 @@ namespace Tests.Linq
 
 				var ch = q.ToList().Select(t => t.p).SelectMany(p => p.GrandChildren2).FirstOrDefault()!;
 
-				Assert.IsNotNull(ch);
-				Assert.IsNotNull(ch.Child);
-				Assert.IsNotNull(ch.Child!.Parent);
+				Assert.That(ch, Is.Not.Null);
+				Assert.That(ch.Child, Is.Not.Null);
+				Assert.That(ch.Child!.Parent, Is.Not.Null);
 			}
 		}
 
@@ -229,9 +229,9 @@ namespace Tests.Linq
 
 				var ch = q.Select(t => t.p).SelectMany(p => p.GrandChildren2).FirstOrDefault()!;
 
-				Assert.IsNotNull(ch);
-				Assert.IsNotNull(ch.Child);
-				Assert.IsNotNull(ch.Child!.Parent);
+				Assert.That(ch, Is.Not.Null);
+				Assert.That(ch.Child, Is.Not.Null);
+				Assert.That(ch.Child!.Parent, Is.Not.Null);
 			}
 		}
 
@@ -246,9 +246,9 @@ namespace Tests.Linq
 
 				var ch = q.SelectMany(p => p.Child!.GrandChildren).FirstOrDefault()!;
 
-				Assert.IsNotNull(ch);
-				Assert.IsNotNull(ch.Child);
-				Assert.IsNotNull(ch.Child!.Parent);
+				Assert.That(ch, Is.Not.Null);
+				Assert.That(ch.Child, Is.Not.Null);
+				Assert.That(ch.Child!.Parent, Is.Not.Null);
 			}
 		}
 
@@ -263,8 +263,8 @@ namespace Tests.Linq
 
 				var ch = q.SelectMany(p => p.Child!.GrandChildren).FirstOrDefault()!;
 
-				Assert.IsNotNull(ch);
-				Assert.IsNull   (ch.Child);
+				Assert.That(ch, Is.Not.Null);
+				Assert.That(ch.Child, Is.Null);
 			}
 		}
 
@@ -298,11 +298,17 @@ namespace Tests.Linq
 
 				foreach (var parent in q)
 				{
-					Assert.IsNotNull (parent.Children);
-					Assert.IsNotNull (parent.GrandChildren);
-					Assert.IsNotEmpty(parent.Children);
-					Assert.IsNotEmpty(parent.GrandChildren);
-					Assert.IsNull    (parent.Children3);
+					Assert.Multiple(() =>
+					{
+						Assert.That(parent.Children, Is.Not.Null);
+						Assert.That(parent.GrandChildren, Is.Not.Null);
+					});
+					Assert.Multiple(() =>
+					{
+						Assert.That(parent.Children, Is.Not.Empty);
+						Assert.That(parent.GrandChildren, Is.Not.Empty);
+						Assert.That(parent.Children3, Is.Null);
+					});
 				}
 			}
 		}
@@ -497,7 +503,6 @@ namespace Tests.Linq
 			return Tuple.Create(mainItems, mainItems2, subItems1, subSubItems1, subItems2);
 		}
 
-
 		[Test]
 		public void LoadWithAndFilter([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
@@ -549,8 +554,11 @@ namespace Tests.Linq
 						subItem.SubSubItems = subItem.SubSubItems.OrderBy(_ => _.Id).ToArray();
 				}
 
-				Assert.That(result2[0].SubItems1[0].SubSubItems[0].ParentSubItem, Is.Not.Null);
-				Assert.That(result2[0].SubItems2[0].Parent, Is.Not.Null);
+				Assert.Multiple(() =>
+				{
+					Assert.That(result2[0].SubItems1[0].SubSubItems[0].ParentSubItem, Is.Not.Null);
+					Assert.That(result2[0].SubItems2[0].Parent, Is.Not.Null);
+				});
 
 				var query3 = filterQuery
 					.LoadWith(m => m.SubItems1)
@@ -568,8 +576,11 @@ namespace Tests.Linq
 						subItem.SubSubItems = subItem.SubSubItems.OrderBy(_ => _.Id).ToArray();
 				}
 
-				Assert.That(result3[0].SubItems1[0].SubSubItems[0].ParentSubItem, Is.Not.Null);
-				Assert.That(result3[0].SubItems2[0].Parent, Is.Not.Null);
+				Assert.Multiple(() =>
+				{
+					Assert.That(result3[0].SubItems1[0].SubSubItems[0].ParentSubItem, Is.Not.Null);
+					Assert.That(result3[0].SubItems2[0].Parent, Is.Not.Null);
+				});
 			}
 		}
 
@@ -595,7 +606,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void LoadWithAndFilteredProperty([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
+		public void LoadWithAndFilteredProperty([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse, TestProvName.AllSqlServer)] string context)
 		{
 			var testData = GenerateTestData();
 
@@ -615,7 +626,7 @@ namespace Tests.Linq
 
 				var result1 = query1.OrderBy(_ => _.Id).ToArray();
 
-				Assert.That(result1[0].SubItems1.Length, Is.GreaterThan(0));
+				Assert.That(result1[0].SubItems1, Is.Not.Empty);
 
 
 				var query2 = filterQuery
@@ -624,7 +635,7 @@ namespace Tests.Linq
 
 				var result2 = query2.OrderBy(_ => _.Id).ToArray();
 
-				Assert.That(result2[0].SubItems1.Length, Is.GreaterThan(0));
+				Assert.That(result2[0].SubItems1, Is.Not.Empty);
 
 				var query3 = filterQuery
 					.LoadWith(m => m.SubItems1[0].Parent!.SubItems2.Where(e => e.ParentId % 2 == 0).OrderBy(_ => _.Id).Take(2),
@@ -632,7 +643,7 @@ namespace Tests.Linq
 
 				var result3 = query3.OrderBy(_ => _.Id).ToArray();
 
-				Assert.That(result3[0].SubItems1[0].Parent!.SubItems2.Length, Is.GreaterThan(0));
+				Assert.That(result3[0].SubItems1[0].Parent!.SubItems2, Is.Not.Empty);
 
 				var query3_1 = filterQuery
 					.LoadWith(m => m.SubItems1)
@@ -641,7 +652,7 @@ namespace Tests.Linq
 
 				var result3_1 = query3_1.OrderBy(_ => _.Id).ToArray();
 
-				Assert.That(result3_1[0].SubItems1[0].Parent!.SubItems2.Length, Is.GreaterThan(0));
+				Assert.That(result3_1[0].SubItems1[0].Parent!.SubItems2, Is.Not.Empty);
 
 				var query4 = filterQuery
 					.LoadWith(m => m.SubItems1.Where(e => e.ParentId % 2 == 0),
@@ -649,7 +660,7 @@ namespace Tests.Linq
 
 				var result4 = query4.OrderBy(_ => _.Id).ToArray();
 
-				Assert.That(result4[0].SubItems1.Length, Is.GreaterThan(0));
+				Assert.That(result4[0].SubItems1, Is.Not.Empty);
 
 			}
 		}
@@ -789,7 +800,6 @@ namespace Tests.Linq
 			};
 		}
 
-		[ActiveIssue("https://github.com/Octonica/ClickHouseClient/issues/56 + https://github.com/ClickHouse/ClickHouse/issues/37999", Configurations = new[] { ProviderName.ClickHouseMySql, ProviderName.ClickHouseOctonica })]
 		[Test]
 		public void LoadWithAssociationPredicateExpression([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
@@ -803,9 +813,12 @@ namespace Tests.Linq
 					.ToArray();
 
 
-				Assert.AreEqual(1, result.Length);
-				Assert.AreEqual(3, result[0].Children.Count);
-				Assert.AreEqual(2, result[0].ActiveChildren.Count);
+				Assert.That(result, Has.Length.EqualTo(1));
+				Assert.Multiple(() =>
+				{
+					Assert.That(result[0].Children, Has.Count.EqualTo(3));
+					Assert.That(result[0].ActiveChildren, Has.Count.EqualTo(2));
+				});
 			}
 		}
 
@@ -821,7 +834,7 @@ namespace Tests.Linq
 		}
 
 		// It is a compile test, not a unit test.
-		public void NullableAssociationTest()
+		private void NullableAssociationTest()
 		{
 			using var db = GetDataContext("");
 

@@ -20,6 +20,8 @@ namespace LinqToDB.DataProvider.DB2
 	(
 		BulkCopyType           BulkCopyType        = BulkCopyType.MultipleRows,
 		DB2IdentifierQuoteMode IdentifierQuoteMode = DB2IdentifierQuoteMode.Auto
+		// If you add another parameter here, don't forget to update
+		// DB2Options copy constructor and CreateID method.
 	)
 		: DataProviderOptions<DB2Options>(BulkCopyType)
 	{

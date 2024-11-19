@@ -86,6 +86,7 @@ namespace Tests.Data
 		public class FakeClass
 		{}
 
+		[ActiveIssue("Investigation required. Timeouts on CI", Configurations = [ TestProvName.AllSqlServer2008Minus ])]
 		[Test]
 		public void TestRetryPolicy([DataSources(false)] string context)
 		{
@@ -99,7 +100,7 @@ namespace Tests.Data
 				}
 			});
 
-			Assert.AreEqual(2, ret.Count); // 1 - open connection, 1 - execute command
+			Assert.That(ret.Count, Is.EqualTo(2)); // 1 - open connection, 1 - execute command
 		}
 
 		[Test]
@@ -115,7 +116,7 @@ namespace Tests.Data
 				}
 			});
 
-			Assert.AreEqual(2, ret.Count); // 1 - open connection, 1 - execute command
+			Assert.That(ret.Count, Is.EqualTo(2)); // 1 - open connection, 1 - execute command
 		}
 
 		[Test]
@@ -131,7 +132,7 @@ namespace Tests.Data
 				}
 			});
 
-			Assert.AreEqual(2, ret.Count); // 1 - open connection, 1 - execute command
+			Assert.That(ret.Count, Is.EqualTo(2)); // 1 - open connection, 1 - execute command
 		}
 
 		[Test]
@@ -171,10 +172,10 @@ namespace Tests.Data
 			}
 			catch (AggregateException ex)
 			{
-				Assert.IsNotNull(ex.InnerExceptions.OfType<TestException>().Single());
+				Assert.That(ex.InnerExceptions.OfType<TestException>().Single(), Is.Not.Null);
 			}
 
-			Assert.AreEqual(2, ret.Count); // 1 - open connection, 1 - execute command
+			Assert.That(ret.Count, Is.EqualTo(2)); // 1 - open connection, 1 - execute command
 		}
 
 		[Test]
@@ -191,7 +192,7 @@ namespace Tests.Data
 			}
 			catch (NotImplementedException ex)
 			{
-				Assert.AreEqual("Execute", ex.Message);
+				Assert.That(ex.Message, Is.EqualTo("Execute"));
 			}
 			finally
 			{
@@ -212,7 +213,7 @@ namespace Tests.Data
 			}
 			catch (NotImplementedException ex)
 			{
-				Assert.AreEqual("Execute", ex.Message);
+				Assert.That(ex.Message, Is.EqualTo("Execute"));
 			}
 		}
 
@@ -232,7 +233,7 @@ namespace Tests.Data
 				}
 				catch (NotImplementedException ex)
 				{
-					Assert.AreEqual("ExecuteT", ex.Message);
+					Assert.That(ex.Message, Is.EqualTo("ExecuteT"));
 				}
 				finally
 				{
@@ -260,7 +261,7 @@ namespace Tests.Data
 				}
 				catch (NotImplementedException ex)
 				{
-					Assert.AreEqual("ExecuteT", ex.Message);
+					Assert.That(ex.Message, Is.EqualTo("ExecuteT"));
 				}
 			}
 		}

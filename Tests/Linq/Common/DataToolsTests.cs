@@ -77,7 +77,7 @@ namespace Tests.Common
 		[TestCaseSource(nameof(_escapeUnterminatedBracketTestData))]
 		public void EscapeUnterminatedBracket(string testString, string expectedResult)
 		{
-			Assert.AreEqual(expectedResult, DataTools.EscapeUnterminatedBracket(testString));
+			Assert.That(DataTools.EscapeUnterminatedBracket(testString), Is.EqualTo(expectedResult));
 		}
 
 		[TestCaseSource(nameof(_convertStringToSqlTestData))]
@@ -89,11 +89,11 @@ namespace Tests.Common
 				sb,
 				"&",
 				startPrefix,
-				(strb, c) => strb.AppendFormat("chr({0})", c.ToString(CultureInfo.InvariantCulture)),
+				(strb, c) => strb.Append(CultureInfo.InvariantCulture, $"chr({c})"),
 				testString,
 				extraEscapes);
 
-			Assert.AreEqual(expected, sb.ToString());
+			Assert.That(sb.ToString(), Is.EqualTo(expected));
 		}
 	}
 }

@@ -115,8 +115,11 @@ namespace Tests.Mapping
 
 				var ed = ms.GetEntityDescriptor(typeof(MyClass));
 
-				Assert.That(ed.Name.Name, Is.EqualTo("newname"));
-				Assert.That(ed.Columns[0].ColumnName, Is.EqualTo("id1"));
+				Assert.Multiple(() =>
+				{
+					Assert.That(ed.Name.Name, Is.EqualTo("newname"));
+					Assert.That(ed.Columns[0].ColumnName, Is.EqualTo("id1"));
+				});
 			}
 			finally
 			{
@@ -179,8 +182,11 @@ namespace Tests.Mapping
 
 			var ed = ms.GetEntityDescriptor(typeof(MyClass));
 
-			Assert.That(ed["ID1"]!.IsPrimaryKey);
-			Assert.That(ed["ID1"]!.PrimaryKeyOrder, Is.EqualTo(3));
+			Assert.Multiple(() =>
+			{
+				Assert.That(ed["ID1"]!.IsPrimaryKey);
+				Assert.That(ed["ID1"]!.PrimaryKeyOrder, Is.EqualTo(3));
+			});
 		}
 
 		[Test]
@@ -193,10 +199,13 @@ namespace Tests.Mapping
 
 			var ed = ms.GetEntityDescriptor(typeof(MyClass));
 
-			Assert.That(ed["ID"]!. IsPrimaryKey);
-			Assert.That(ed["ID"]!. PrimaryKeyOrder, Is.EqualTo(3));
-			Assert.That(ed["ID1"]!.IsPrimaryKey);
-			Assert.That(ed["ID1"]!.PrimaryKeyOrder, Is.EqualTo(4));
+			Assert.Multiple(() =>
+			{
+				Assert.That(ed["ID"]!.IsPrimaryKey);
+				Assert.That(ed["ID"]!.PrimaryKeyOrder, Is.EqualTo(3));
+				Assert.That(ed["ID1"]!.IsPrimaryKey);
+				Assert.That(ed["ID1"]!.PrimaryKeyOrder, Is.EqualTo(4));
+			});
 		}
 
 		[Test]
@@ -226,8 +235,11 @@ namespace Tests.Mapping
 
 			var ed = ms.GetEntityDescriptor(typeof(MyClass));
 
-			Assert.That(ed["ID"]!.IsPrimaryKey);
-			Assert.That(ed["ID"]!.IsIdentity);
+			Assert.Multiple(() =>
+			{
+				Assert.That(ed["ID"]!.IsPrimaryKey);
+				Assert.That(ed["ID"]!.IsIdentity);
+			});
 		}
 
 		[Test]
@@ -243,8 +255,11 @@ namespace Tests.Mapping
 
 			var ed = ms.GetEntityDescriptor(typeof(MyClass));
 
-			Assert.That(ed.Name.Name,   Is.EqualTo("Table"));
-			Assert.That(ed.Name.Schema, Is.EqualTo("Schema"));
+			Assert.Multiple(() =>
+			{
+				Assert.That(ed.Name.Name, Is.EqualTo("Table"));
+				Assert.That(ed.Name.Schema, Is.EqualTo("Schema"));
+			});
 		}
 
 		[Test]
@@ -260,7 +275,7 @@ namespace Tests.Mapping
 
 			var ed = ms.GetEntityDescriptor(typeof(MyClass));
 
-			Assert.That(ed.Associations, Is.Not.EqualTo(0));
+			Assert.That(ed.Associations, Is.Not.Empty);
 		}
 
 		[Test]
@@ -292,7 +307,7 @@ namespace Tests.Mapping
 
 			var ed = ms.GetEntityDescriptor(typeof(MyClass));
 
-			Assert.That( ed.Associations, Is.Not.EqualTo( 0 ) );
+			Assert.That(ed.Associations, Is.Not.Empty);
 		}
 
 		[Test]
@@ -307,7 +322,7 @@ namespace Tests.Mapping
 
 			var ed = ms.GetEntityDescriptor(typeof(MyClass));
 
-			Assert.That(ed.Associations, Is.Not.EqualTo( 0 ) );
+			Assert.That(ed.Associations, Is.Not.Empty);
 		}
 
 		[Test]
@@ -322,7 +337,7 @@ namespace Tests.Mapping
 
 			var ed = ms.GetEntityDescriptor(typeof(MyInheritedClass));
 
-			Assert.That( ed.Associations, Is.Not.EqualTo( 0 ) );
+			Assert.That(ed.Associations, Is.Not.Empty);
 		}
 
 		[Table("Person", IsColumnAttributeRequired = false)]
@@ -356,7 +371,7 @@ namespace Tests.Mapping
 
 			var ed = ms.GetEntityDescriptor(typeof(TestInheritancePerson));
 
-			Assert.That(ed.InheritanceMapping.Count, Is.Not.EqualTo(0));
+			Assert.That(ed.InheritanceMapping, Is.Not.Empty);
 
 			using (var db = GetDataContext(context, ms))
 			{
@@ -382,15 +397,15 @@ namespace Tests.Mapping
 
 			var ed = ms.GetEntityDescriptor(typeof(TestInheritancePerson));
 
-			Assert.That(ed.InheritanceMapping.Count, Is.Not.EqualTo(0));
+			Assert.That(ed.InheritanceMapping, Is.Not.Empty);
 
 			using (var db = GetDataContext(context, ms))
 			{
 				var john = db.GetTable<TestInheritanceMale>().Where(_ => _.PersonID == 1).FirstOrDefault();
-				Assert.IsNotNull(john);
+				Assert.That(john, Is.Not.Null);
 
 				var jane = db.GetTable<TestInheritanceFemale>().Where(_ => _.PersonID == 3).FirstOrDefault();
-				Assert.IsNotNull(jane);
+				Assert.That(jane, Is.Not.Null);
 
 			}
 		}
@@ -431,7 +446,7 @@ namespace Tests.Mapping
 				var items1 = table.Where(e => e.Value == 101).ToArray();
 				var items2 = table.Where(e => e.ValueMethod() == 1001).ToArray();
 
-				Assert.AreEqual(1, items1.Length);
+				Assert.That(items1, Has.Length.EqualTo(1));
 
 				AreEqualWithComparer(items1, items2);
 			}
@@ -447,13 +462,13 @@ namespace Tests.Mapping
 
 			var od1 = ms.GetEntityDescriptor(typeof(MyClass));
 
-			Assert.AreEqual("Name1", od1.Name.Name);
+			Assert.That(od1.Name.Name, Is.EqualTo("Name1"));
 
 			b.Entity<MyClass>().HasTableName("Name2").Build();
 
 			var od2 = ms.GetEntityDescriptor(typeof(MyClass));
 
-			Assert.AreEqual("Name2", od2.Name.Name);
+			Assert.That(od2.Name.Name, Is.EqualTo("Name2"));
 		}
 
 		[Test]
@@ -469,7 +484,7 @@ namespace Tests.Mapping
 				.Build();
 
 			var ed = ms.GetEntityDescriptor(typeof(MyInheritedClass));
-			Assert.AreEqual(2, ed.Associations.Count);
+			Assert.That(ed.Associations, Has.Count.EqualTo(2));
 		}
 
 		[Test]
@@ -485,8 +500,11 @@ namespace Tests.Mapping
 				.Build();
 
 			var ed = ms.GetEntityDescriptor(typeof(MyInheritedClass));
-			Assert.AreEqual(2, ed.Associations.Count);
-			Assert.AreEqual(1, ed.Columns.Count(_ => _.IsPrimaryKey));
+			Assert.Multiple(() =>
+			{
+				Assert.That(ed.Associations, Has.Count.EqualTo(2));
+				Assert.That(ed.Columns.Count(_ => _.IsPrimaryKey), Is.EqualTo(1));
+			});
 
 		}
 
@@ -503,12 +521,18 @@ namespace Tests.Mapping
 				.Build();
 
 			var ed = ms.GetEntityDescriptor(typeof(MyInheritedClass2));
-			Assert.AreEqual(2, ed.Associations.Count);
-			Assert.AreEqual(1, ed.Columns.Count(_ => _.IsPrimaryKey));
+			Assert.Multiple(() =>
+			{
+				Assert.That(ed.Associations, Has.Count.EqualTo(2));
+				Assert.That(ed.Columns.Count(_ => _.IsPrimaryKey), Is.EqualTo(1));
+			});
 
 			var ed1 = ms.GetEntityDescriptor(typeof(MyBaseClass));
-			Assert.AreEqual(0, ed1.Associations.Count);
-			Assert.AreEqual(0, ed1.Columns.Count(_ => _.IsPrimaryKey));
+			Assert.Multiple(() =>
+			{
+				Assert.That(ed1.Associations, Is.Empty);
+				Assert.That(ed1.Columns.Count(_ => _.IsPrimaryKey), Is.EqualTo(0));
+			});
 
 		}
 
@@ -532,11 +556,14 @@ namespace Tests.Mapping
 
 			var ed = ms.GetEntityDescriptor(typeof(MyInheritedClass4));
 
-			Assert.AreEqual(nameof(IInterfaceBase), ed.Name.Name);
+			Assert.Multiple(() =>
+			{
+				Assert.That(ed.Name.Name, Is.EqualTo(nameof(IInterfaceBase)));
 
-			Assert.AreEqual(true, ed[nameof(MyInheritedClass4.IntValue)]!    .SkipOnUpdate);
-			Assert.AreEqual(true, ed[nameof(MyInheritedClass4.StringValue)]! .SkipOnInsert);
-			Assert.AreEqual(true, ed[nameof(MyInheritedClass4.MarkedOnType)]!.SkipOnInsert);
+				Assert.That(ed[nameof(MyInheritedClass4.IntValue)]!.SkipOnUpdate, Is.EqualTo(true));
+				Assert.That(ed[nameof(MyInheritedClass4.StringValue)]!.SkipOnInsert, Is.EqualTo(true));
+				Assert.That(ed[nameof(MyInheritedClass4.MarkedOnType)]!.SkipOnInsert, Is.EqualTo(true));
+			});
 		}
 
 		/// issue 291 Tests
@@ -603,9 +630,12 @@ namespace Tests.Mapping
 					DerivedClass res = db.GetTable<DerivedClass>().First();
 					var count = db.GetTable<DerivedClass>().Count();
 
-					Assert.AreEqual(item.MyCol1, res.MyCol1);
-					Assert.AreNotEqual(item.NotACol, res.NotACol);
-					Assert.AreEqual(1, count);
+					Assert.Multiple(() =>
+					{
+						Assert.That(res.MyCol1, Is.EqualTo(item.MyCol1));
+						Assert.That(res.NotACol, Is.Not.EqualTo(item.NotACol));
+						Assert.That(count, Is.EqualTo(1));
+					});
 				}
 			}
 		}
@@ -639,9 +669,12 @@ namespace Tests.Mapping
 					DerivedClass res = db.GetTable<DerivedClass>().Where(o => o.MyCol1 == "MyCol1").First();
 					var count = db.GetTable<DerivedClass>().Count();
 
-					Assert.AreEqual(item.MyCol1, res.MyCol1);
-					Assert.AreNotEqual(item.NotACol, res.NotACol);
-					Assert.AreEqual(2, count);
+					Assert.Multiple(() =>
+					{
+						Assert.That(res.MyCol1, Is.EqualTo(item.MyCol1));
+						Assert.That(res.NotACol, Is.Not.EqualTo(item.NotACol));
+						Assert.That(count, Is.EqualTo(2));
+					});
 				}
 			}
 		}
@@ -674,7 +707,7 @@ namespace Tests.Mapping
 
 				var query = db.GetTable<PersonCustom>().Where(p => p.Name != "");
 				var sql1 = query.ToString();
-				TestContext.WriteLine(sql1);
+				TestContext.Out.WriteLine(sql1);
 
 				if (finalAliases)
 					Assert.That(sql1, Does.Contain("[AGE]"));
@@ -682,12 +715,12 @@ namespace Tests.Mapping
 					Assert.That(sql1, Does.Not.Contain("[AGE]"));
 
 				var sql2 = query.Select(q => new { q.Name, q.Age }).ToString();
-				TestContext.WriteLine(sql2);
+				TestContext.Out.WriteLine(sql2);
 
 				if (finalAliases)
-					Assert.That(sql2, Does.Contain("[Age]"));
+					Assert.That(sql2, Does.Contain("[AGE]"));
 				else
-					Assert.That(sql2, Does.Not.Contain("[Age]"));
+					Assert.That(sql2, Does.Not.Contain("[AGE]"));
 			}
 		}
 
@@ -708,7 +741,7 @@ namespace Tests.Mapping
 
 				var query = db.GetTable<PersonCustom>().Where(p => p.Name != "");
 				var sql1 = query.ToString();
-				TestContext.WriteLine(sql1);
+				TestContext.Out.WriteLine(sql1);
 
 				if (finalAliases)
 					Assert.That(sql1, Does.Contain("[MONEY]"));
@@ -716,12 +749,12 @@ namespace Tests.Mapping
 					Assert.That(sql1, Does.Not.Contain("[MONEY]"));
 
 				var sql2 = query.Select(q => new { q.Name, q.Money }).ToString();
-				TestContext.WriteLine(sql2);
+				TestContext.Out.WriteLine(sql2);
 
 				if (finalAliases)
-					Assert.That(sql2, Does.Contain("[Money]"));
+					Assert.That(sql2, Does.Contain("[MONEY]"));
 				else
-					Assert.That(sql2, Does.Not.Contain("[Money]"));
+					Assert.That(sql2, Does.Not.Contain("[MONEY]"));
 			}
 		}
 
@@ -747,7 +780,7 @@ namespace Tests.Mapping
 			records.RetrieveIdentity(db, true);
 
 			for (var i = 0; i < records.Length; i++)
-				Assert.AreEqual(records[0].Id + i, records[i].Id);
+				Assert.That(records[i].Id, Is.EqualTo(records[0].Id + i));
 		}
 
 		[Test]
@@ -767,7 +800,7 @@ namespace Tests.Mapping
 			records.RetrieveIdentity(db, true);
 
 			for (var i = 0; i < records.Length; i++)
-				Assert.AreEqual(records[0].Id + i, records[i].Id);
+				Assert.That(records[i].Id, Is.EqualTo(records[0].Id + i));
 		}
 
 		[Table("Person")]
@@ -802,11 +835,14 @@ namespace Tests.Mapping
 
 			var records = db.GetTable<EnumPerson>().OrderBy(r => r.PersonID).ToArray();
 
-			Assert.AreEqual(4, records.Length);
-			Assert.AreEqual(GenderEnum.Male,   records[0].Gender);
-			Assert.AreEqual(GenderEnum.Male,   records[1].Gender);
-			Assert.AreEqual(GenderEnum.Female, records[2].Gender);
-			Assert.AreEqual(GenderEnum.Male,   records[3].Gender);
+			Assert.That(records, Has.Length.EqualTo(4));
+			Assert.Multiple(() =>
+			{
+				Assert.That(records[0].Gender, Is.EqualTo(GenderEnum.Male));
+				Assert.That(records[1].Gender, Is.EqualTo(GenderEnum.Male));
+				Assert.That(records[2].Gender, Is.EqualTo(GenderEnum.Female));
+				Assert.That(records[3].Gender, Is.EqualTo(GenderEnum.Male));
+			});
 		}
 	}
 }

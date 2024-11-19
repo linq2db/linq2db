@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Data;
 using System.Data.Common;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
@@ -64,7 +63,7 @@ namespace LinqToDB.Data
 
 			ReadNumber++;
 
-			return CommandInfo!.ExecuteQuery<T>(Reader!, CommandInfo.CommandText + "$$$" + ReadNumber);
+			return CommandInfo!.ExecuteQuery<T>(Reader!, FormattableString.Invariant($"{CommandInfo.CommandText}$$${ReadNumber}"));
 		}
 
 		#endregion
@@ -89,7 +88,7 @@ namespace LinqToDB.Data
 
 			ReadNumber++;
 
-			var sql = CommandInfo!.CommandText + "$$$" + ReadNumber;
+			var sql = FormattableString.Invariant($"{CommandInfo!.CommandText}$$${ReadNumber}");
 
 			return CommandInfo.ExecuteScalar<T>(Reader!, sql);
 		}

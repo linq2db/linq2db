@@ -61,11 +61,11 @@ namespace Tests.UserTests
 			var query2 = GetSql(context);
 			var query3 = GetSql(context);
 
-			TestContext.WriteLine(query1);
-			TestContext.WriteLine(query2);
-			TestContext.WriteLine(query3);
+			TestContext.Out.WriteLine(query1);
+			TestContext.Out.WriteLine(query2);
+			TestContext.Out.WriteLine(query3);
 
-			Assert.AreEqual(query1, query2);
+			Assert.That(query2, Is.EqualTo(query1));
 		}
 	}
 }

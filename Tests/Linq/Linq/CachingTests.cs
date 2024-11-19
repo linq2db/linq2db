@@ -51,7 +51,7 @@ namespace Tests.Linq
 				nameof(ALLTYPE.TIMEDATATYPE)
 			)] string fieldName)
 		{
-			if (!UserProviders.Contains(ProviderName.SQLiteClassic))
+			if (!TestConfiguration.UserProviders.Contains(ProviderName.SQLiteClassic))
 				return;
 
 			using (var db = GetDataContext(ProviderName.SQLiteClassic))
@@ -65,7 +65,7 @@ namespace Tests.Linq
 					};
 
 				var sql = query.ToString();
-				TestContext.WriteLine(sql);
+				TestContext.Out.WriteLine(sql);
 
 				Assert.That(sql, Contains.Substring(funcName).And.Contains(fieldName));
 			}
@@ -118,11 +118,14 @@ namespace Tests.Linq
 					select cc;
 
 				var sql = query.ToString()!;
-				TestContext.WriteLine(sql);
+				TestContext.Out.WriteLine(sql);
 
-				Assert.That(CountOccurrences(sql, tableName),    Is.EqualTo(2));
-				Assert.That(CountOccurrences(sql, databaseName), Is.EqualTo(2));
-				Assert.That(CountOccurrences(sql, schemaName),   Is.EqualTo(2));
+				Assert.Multiple(() =>
+				{
+					Assert.That(CountOccurrences(sql, tableName), Is.EqualTo(2));
+					Assert.That(CountOccurrences(sql, databaseName), Is.EqualTo(2));
+					Assert.That(CountOccurrences(sql, schemaName), Is.EqualTo(2));
+				});
 			}
 		}
 
@@ -147,11 +150,14 @@ namespace Tests.Linq
 					select cc;
 
 				var sql = query.ToString()!;
-				TestContext.WriteLine(sql);
+				TestContext.Out.WriteLine(sql);
 
-				Assert.That(CountOccurrences(sql, tableName),    Is.EqualTo(2));
-				Assert.That(CountOccurrences(sql, databaseName), Is.EqualTo(2));
-				Assert.That(CountOccurrences(sql, schemaName),   Is.EqualTo(2));
+				Assert.Multiple(() =>
+				{
+					Assert.That(CountOccurrences(sql, tableName), Is.EqualTo(2));
+					Assert.That(CountOccurrences(sql, databaseName), Is.EqualTo(2));
+					Assert.That(CountOccurrences(sql, schemaName), Is.EqualTo(2));
+				});
 			}
 		}
 
@@ -171,7 +177,7 @@ namespace Tests.Linq
 					select new {c1, c2};
 
 				var sql = query.ToString();
-				TestContext.WriteLine(sql);
+				TestContext.Out.WriteLine(sql);
 
 				if (takeHint.HasFlag(TakeHints.Percent))
 					Assert.That(sql, Contains.Substring("PERCENT"));
@@ -251,7 +257,7 @@ namespace Tests.Linq
 		}
 
 		[Sql.Extension("{field} IN (select * from {values})", IsPredicate = true, BuilderType = typeof(InExtExpressionItemBuilder), ServerSideOnly = true)]
-		public static bool InExt<T>([ExprParameter] T field, [SqlQueryDependent] IEnumerable<T> values) where T : struct, IEquatable<int>
+		private static bool InExt<T>([ExprParameter] T field, [SqlQueryDependent] IEnumerable<T> values) where T : struct, IEquatable<int>
 		{
 			throw new NotImplementedException();
 		}
@@ -266,7 +272,9 @@ namespace Tests.Linq
 
 				if (values == null)
 				{
+#pragma warning disable CA2208 // Instantiate argument exceptions correctly
 					throw new ArgumentNullException("values", "Values for \"In/Any\" operation should not be empty");
+#pragma warning restore CA2208 // Instantiate argument exceptions correctly
 				}
 
 				using var dataTable = new DataTable("IntTableType");

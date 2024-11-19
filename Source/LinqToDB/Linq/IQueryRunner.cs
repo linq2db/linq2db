@@ -7,12 +7,7 @@ namespace LinqToDB.Linq
 {
 	using Data;
 
-	public interface IQueryRunner: IDisposable
-#if NATIVE_ASYNC
-		, IAsyncDisposable
-#else
-		, Async.IAsyncDisposable
-#endif
+	public interface IQueryRunner: IDisposable, IAsyncDisposable
 	{
 		/// <summary>
 		/// Executes query and returns number of affected records.

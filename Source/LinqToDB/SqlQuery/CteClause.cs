@@ -2,24 +2,16 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using System.Text;
 using System.Threading;
-using LinqToDB.Common;
 
 namespace LinqToDB.SqlQuery
 {
 	[DebuggerDisplay("CTE({CteID}, {Name})")]
-	public class CteClause : IQueryElement, ISqlExpressionWalkable
+	public class CteClause : QueryElement
 	{
-		SqlField[]? _fields = Array<SqlField>.Empty;
-
 		public static int CteIDCounter;
 
-		public SqlField[]? Fields
-		{
-			get => _fields;
-			internal set => _fields = value;
-		}
+		public List<SqlField> Fields { get; internal set; }
 
 		public int          CteID       { get; } = Interlocked.Increment(ref CteIDCounter);
 
@@ -38,6 +30,7 @@ namespace LinqToDB.SqlQuery
 			Body        = body;
 			IsRecursive = isRecursive;
 			Name        = name;
+			Fields      = new ();
 		}
 
 		internal CteClause(
@@ -52,7 +45,7 @@ namespace LinqToDB.SqlQuery
 			ObjectType  = objectType;
 			IsRecursive = isRecursive;
 
-			Fields      = fields.ToArray();
+			Fields      = fields.ToList();
 		}
 
 		internal CteClause(
@@ -63,6 +56,7 @@ namespace LinqToDB.SqlQuery
 			Name        = name;
 			ObjectType  = objectType;
 			IsRecursive = isRecursive;
+			Fields      = new ();
 		}
 
 		internal void Init(
@@ -70,42 +64,21 @@ namespace LinqToDB.SqlQuery
 			ICollection<SqlField> fields)
 		{
 			Body       = body;
-			Fields     = fields.ToArray();
+			Fields     = fields.ToList();
 		}
 
-		public QueryElementType ElementType => QueryElementType.CteClause;
+		public override QueryElementType ElementType => QueryElementType.CteClause;
 
-		public StringBuilder ToString(StringBuilder sb, Dictionary<IQueryElement, IQueryElement> dic)
+		public override QueryElementTextWriter ToString(QueryElementTextWriter writer)
 		{
-			return sb.Append($"CTE({CteID}, {Name})");
-		}
-
-		public ISqlExpression? Walk<TContext>(WalkOptions options, TContext context, Func<TContext, ISqlExpression, ISqlExpression> func)
-		{
-			Body = Body?.Walk(options, context, func) as SelectQuery;
-
-			return null;
-		}
-
-		public SqlField RegisterFieldMapping(int index, Func<SqlField> fieldFactory)
-		{
-			if (Fields!.Length > index && Fields[index] != null)
-				return Fields[index];
-
-			var newField = fieldFactory();
-
-			Utils.MakeUniqueNames(new[] { newField }, Fields.Where(f => f != null).Select(t => t.Name), f => f.Name, (f, n, a) =>
-			{
-				f.Name = n;
-				f.PhysicalName = n;
-			}, f => (string.IsNullOrEmpty(f.Name) ? "cte_field" : f.Name) + "_1");
-
-			if (Fields.Length < index + 1)
-				Array.Resize(ref _fields, index + 1);
-
-			Fields[index] = newField;
-
-			return newField;
+			return writer
+					.DebugAppendUniqueId(this)
+				.Append("CTE(")
+				.Append(CteID)
+				.Append(", \"")
+				.Append(Name)
+				.Append("\")")
+				;
 		}
 	}
 }

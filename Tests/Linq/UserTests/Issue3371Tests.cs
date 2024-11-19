@@ -1,4 +1,6 @@
 ﻿using System.Linq;
+
+using LinqToDB;
 using LinqToDB.Mapping;
 using NUnit.Framework;
 
@@ -50,7 +52,7 @@ namespace Tests.UserTests
 				new() { Id = 3, PayRateId = 3 },
 			};
 
-			using (var db = GetDataContext(context, ms))
+			using (var db = GetDataContext(context, o => o.UseMappingSchema(ms)))
 			using (var payRates = db.CreateLocalTable("PayRate", payRateData))
 			using (var employees = db.CreateLocalTable("Employees", employeeData))
 			{

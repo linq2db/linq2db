@@ -1,6 +1,6 @@
 ﻿<#@ template language="C#" debug="True" hostSpecific="True" compilerOptions="/langversion:6"   #>
 <#@ output extension=".generated.cs"                                                           #>
-<#@ assembly name="$(SolutionDir)Tests\Linq\bin\Debug\net472\Microsoft.SqlServer.Types.dll"    #>
+<#@ assembly name="$(ArtifactsPath)\bin\Tests\Debug\net462\Microsoft.SqlServer.Types.dll"      #>
 <#@ include file="..\Shared.ttinclude"                                             once="true" #>
 <#@ include file="SqlServer.ttinclude"                                             once="true" #>
 <#@ include file="..\..\..\Source\LinqToDB.Templates\LinqToDB.SqlServer.ttinclude" once="true" #>
@@ -34,8 +34,8 @@
 	GenerateProcedureResultAsList = true;
 
 	GetSchemaOptions.LoadTable = t => t.Name != "Products" && t.Name != "Person";
-	
-	LoadSqlServerMetadata(GetConnectionString("SqlServer.Northwind"), SqlServerVersion.v2012, LinqToDB.DataProvider.SqlServer.SqlServerProvider.MicrosoftDataSqlClient);
+
+	LoadSqlServerMetadata(GetConnectionString("SqlServer.Northwind"), SqlServerVersion.v2012);
 
 	Tables["Order Details"].Columns["OrderID"]. MemberName = "ID";
 
@@ -56,7 +56,7 @@
 
 	//GenerateConstructors = false;
 
-	LoadSqlServerMetadata(GetConnectionString("SqlServer.2014"), SqlServerVersion.v2012, LinqToDB.DataProvider.SqlServer.SqlServerProvider.MicrosoftDataSqlClient);
+	LoadSqlServerMetadata(GetConnectionString("SqlServer.2019"), SqlServerVersion.v2012);
 
 	AddReturnParameter("Issue1897");
 

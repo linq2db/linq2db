@@ -2,7 +2,6 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
-using System.Text;
 using System.Threading;
 
 namespace LinqToDB.SqlQuery
@@ -24,7 +23,7 @@ namespace LinqToDB.SqlQuery
 		/// <summary>
 		/// Constructor for convert visitor.
 		/// </summary>
-		internal SqlValuesTable(ISqlExpression source, List<Func<object, ISqlExpression>> valueBuilders, IEnumerable<SqlField> fields, IReadOnlyList<ISqlExpression[]>? rows)
+		internal SqlValuesTable(ISqlExpression? source, List<Func<object, ISqlExpression>>? valueBuilders, IEnumerable<SqlField> fields, List<ISqlExpression[]>? rows)
 		{
 			Source        = source;
 			ValueBuilders = valueBuilders;
@@ -43,7 +42,7 @@ namespace LinqToDB.SqlQuery
 		/// <summary>
 		/// Constructor for remote context.
 		/// </summary>
-		internal SqlValuesTable(SqlField[] fields, MemberInfo?[]? members, IReadOnlyList<ISqlExpression[]> rows)
+		internal SqlValuesTable(SqlField[] fields, MemberInfo?[]? members, List<ISqlExpression[]> rows)
 		{
 			Rows         = rows;
 			FieldsLookup = new();
@@ -79,7 +78,7 @@ namespace LinqToDB.SqlQuery
 		/// <summary>
 		/// Used only during build.
 		/// </summary>
-		internal Dictionary<MemberInfo, SqlField>? FieldsLookup { get; }
+		internal Dictionary<MemberInfo, SqlField>? FieldsLookup { get; set; }
 
 		private readonly List<SqlField> _fields = new ();
 
@@ -102,7 +101,7 @@ namespace LinqToDB.SqlQuery
 			ValueBuilders.Add(valueBuilder);
 		}
 
-		internal IReadOnlyList<ISqlExpression[]>? Rows { get; }
+		internal List<ISqlExpression[]>? Rows { get; private set; }
 
 		internal IReadOnlyList<ISqlExpression[]> BuildRows(EvaluationContext context)
 		{
@@ -155,7 +154,7 @@ namespace LinqToDB.SqlQuery
 
 		#region ISqlExpression
 
-		bool ISqlExpression.CanBeNull => throw new NotImplementedException();
+		public bool CanBeNullable(NullabilityContext nullability) => throw new NotImplementedException();
 
 		int ISqlExpression.Precedence => throw new NotImplementedException();
 
@@ -166,82 +165,73 @@ namespace LinqToDB.SqlQuery
 		#endregion
 
 		#region IQueryElement
+
+#if DEBUG
+		public string DebugText => this.ToDebugString();
+#endif
+
 		QueryElementType IQueryElement.ElementType => QueryElementType.SqlValuesTable;
 
-		StringBuilder IQueryElement.ToString(StringBuilder sb, Dictionary<IQueryElement, IQueryElement> dic)
+		QueryElementTextWriter IQueryElement.ToString(QueryElementTextWriter writer)
 		{
 			var rows = Rows;
 			if (rows?.Count > 0)
 			{
-				sb.Append("VALUES");
-				sb.AppendLine().Append('\t');
-				for (var i = 0; i < rows.Count; i++)
-				{
-					// limit number of printed records
-					if (i == 10)
+				writer.Append("VALUES");
+				writer.AppendLine();
+
+				using (writer.IndentScope())
+					for (var i = 0; i < rows.Count; i++)
 					{
-						sb.Append($"-- skipping... total rows: {rows.Count}");
-						break;
+						// limit number of printed records
+						if (i == 10)
+						{
+							writer
+								.Append("-- skipping... total rows: ")
+								.Append(rows.Count);
+							break;
+						}
+
+						if (i > 0)
+							writer.AppendLine(',');
+
+						writer.Append('(');
+
+						for (var j = 0; j < Fields.Count; j++)
+						{
+							if (j > 0)
+								writer.Append(", ");
+
+							writer.AppendElement(rows[i][j]);
+						}
+
+						writer.Append(')');
 					}
 
-					if (i > 0)
-						sb.Append(",\n\t");
-
-					sb.Append('(');
-					for (var j = 0; j < Fields.Count; j++)
-					{
-						if (j > 0)
-							sb.Append(", ");
-
-						sb = rows[i][j].ToString(sb, dic);
-					}
-
-					sb.Append(')');
-				}
-				sb.AppendLine();
+				writer.AppendLine();
 			}
 			else
 			{
-				sb.Append("VALUES (...)");
+				writer.Append("VALUES (...)");
 			}
 
-			sb.Append('[');
+			writer.Append('[');
 
 			for (var i = 0; i < Fields.Count; i++)
 			{
 				if (i > 0)
-					sb.Append(", ");
-				sb.Append(Fields[i].PhysicalName);
+					writer.Append(", ");
+				writer.Append(Fields[i].PhysicalName);
 			}
 
-			sb.Append(']');
+			writer.Append(']');
 
-			return sb;
+			return writer;
 		}
 		#endregion
 
 		#region IEquatable
 		bool IEquatable<ISqlExpression>.Equals(ISqlExpression? other) => throw new NotImplementedException();
-		#endregion
-
-		#region ISqlExpressionWalkable
-
-		ISqlExpression ISqlExpressionWalkable.Walk<TContext>(WalkOptions options, TContext context, Func<TContext, ISqlExpression, ISqlExpression> func)
-		{
-			if (Rows != null)
-			{
-				foreach (var row in Rows)
-				{
-					for (var i = 0; i < row.Length; i++)
-					{
-						row[i] = func(context, row[i]);
-					}
-				}
-			}
-
-			return func(context, this);
-		}
-
 		#endregion
 	}
 }

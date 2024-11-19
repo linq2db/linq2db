@@ -1,0 +1,8 @@
+﻿#nullable enable
+abstract LinqToDB.LinqToDBHost.TransformText() -> string!
+LinqToDB.LinqToDBHost
+LinqToDB.LinqToDBHost.GenerationEnvironment.get -> string!
+LinqToDB.LinqToDBHost.GenerationEnvironment.set -> void
+LinqToDB.LinqToDBHost.LinqToDBHost() -> void
+LinqToDB.LinqToDBHost.Write(string! code) -> void
+virtual LinqToDB.LinqToDBHost.Initialize() -> void

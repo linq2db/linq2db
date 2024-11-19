@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-
 using JetBrains.Annotations;
 
 namespace LinqToDB.DataProvider.PostgreSQL

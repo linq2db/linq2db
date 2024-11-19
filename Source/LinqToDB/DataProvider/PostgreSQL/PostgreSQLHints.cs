@@ -26,7 +26,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 		sealed class SubQueryTableHintExtensionBuilder : ISqlQueryExtensionBuilder
 		{
-			void ISqlQueryExtensionBuilder.Build(ISqlBuilder sqlBuilder, StringBuilder stringBuilder, SqlQueryExtension sqlQueryExtension)
+			void ISqlQueryExtensionBuilder.Build(NullabilityContext nullability, ISqlBuilder sqlBuilder, StringBuilder stringBuilder, SqlQueryExtension sqlQueryExtension)
 			{
 				var hint = (string)((SqlValue)sqlQueryExtension.Arguments["hint"]).Value!;
 
@@ -44,7 +44,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 					else if (i > 0)
 						stringBuilder.Append(", ");
 
-					var id    = (Sql.SqlID)((SqlValue)sqlQueryExtension.Arguments[$"tableIDs.{i}"]).Value!;
+					var id    = (Sql.SqlID)((SqlValue)sqlQueryExtension.Arguments[FormattableString.Invariant($"tableIDs.{i}")]).Value!;
 					var alias = sqlBuilder.BuildSqlID(id);
 
 					stringBuilder.Append(alias);
@@ -84,7 +84,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			[SqlQueryDependent] params Sql.SqlID[] tableIDs)
 			where TSource : notnull
 		{
-			var currentSource = LinqExtensions.ProcessSourceQueryable?.Invoke(source) ?? source;
+			var currentSource = source.ProcessIQueryable();
 
 			return new PostgreSQLSpecificQueryable<TSource>(currentSource.Provider.CreateQuery<TSource>(
 				Expression.Call(
@@ -118,7 +118,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			[SqlQueryDependent] params Sql.SqlID[] tableIDs)
 			where TSource : notnull
 		{
-			var currentSource = LinqExtensions.ProcessSourceQueryable?.Invoke(source) ?? source;
+			var currentSource = source.ProcessIQueryable();
 
 			return new PostgreSQLSpecificQueryable<TSource>(currentSource.Provider.CreateQuery<TSource>(
 				Expression.Call(

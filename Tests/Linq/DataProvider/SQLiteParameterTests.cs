@@ -54,11 +54,14 @@ namespace Tests.DataProvider
 							where t.Value > TestData.DateTime
 							select t;
 
+				Assert.Multiple(() =>
+				{
 #pragma warning disable CS0618 // Type or member is obsolete
-				Assert.That(query.GetStatement().CollectParameters().Length, Is.EqualTo(0));
+					Assert.That(query.GetStatement().CollectParameters(), Is.Empty);
 #pragma warning restore CS0618 // Type or member is obsolete
 
-				Assert.That(query.ToString(), Does.Not.Contain("DateTime("));
+					Assert.That(query.ToString(), Does.Not.Contain("DateTime("));
+				});
 			}
 		}
 

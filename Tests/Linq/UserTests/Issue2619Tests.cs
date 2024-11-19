@@ -3,7 +3,6 @@ using System.Linq;
 using FluentAssertions;
 using LinqToDB;
 using NUnit.Framework;
-using Tests.Model;
 
 namespace Tests.UserTests
 {
@@ -25,10 +24,7 @@ namespace Tests.UserTests
 
 				sql.Should().NotContain("ORDER");
 
-				Assert.DoesNotThrow (() =>
-				{
-					union.ToList();
-				});
+				FluentActions.Enumerating(() => union).Should().NotThrow();
 			}
 		}
 
@@ -47,10 +43,7 @@ namespace Tests.UserTests
 
 				sql.Should().Contain("ORDER", Exactly.Twice());
 
-				Assert.DoesNotThrow (() =>
-				{
-					union.ToList();
-				});
+				FluentActions.Enumerating(() => union).Should().NotThrow();
 			}
 		}
 
@@ -69,10 +62,7 @@ namespace Tests.UserTests
 
 				sql.Should().Contain("ORDER", Exactly.Twice());
 
-				Assert.DoesNotThrow (() =>
-				{
-					concat.ToList();
-				});
+				FluentActions.Enumerating(() => concat).Should().NotThrow();
 			}
 		}
 
@@ -91,16 +81,13 @@ namespace Tests.UserTests
 
 				sql.Should().Contain("ORDER", Exactly.Twice());
 
-				Assert.DoesNotThrow (() =>
-				{
-					concat.ToList();
-				});
+				FluentActions.Enumerating(() => concat).Should().NotThrow();
 			}
 		}
 
 
 		[Test]
-		public void OrderByExcept([DataSources(TestProvName.AllSybase, TestProvName.AllSqlServer)] string context)
+		public void OrderByExcept([DataSources(TestProvName.AllSybase, TestProvName.AllSqlServer, TestProvName.AllAccess)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -110,14 +97,12 @@ namespace Tests.UserTests
 				var concat = persons
 					.Except(persons);
 
-				var sql = concat.ToString();
+				var sql = concat.ToString()!;
 
-				sql.Should().Contain("ORDER", AtLeast.Once());
+				if (!sql.Contains("EXISTS"))
+					sql.Should().NotContain("ORDER");
 
-				Assert.DoesNotThrow (() =>
-				{
-					concat.ToList();
-				});
+				FluentActions.Enumerating(() => concat).Should().NotThrow();
 			}
 		}
 
@@ -137,10 +122,7 @@ namespace Tests.UserTests
 
 				sql.Should().Contain("ORDER", AtLeast.Once());
 
-				Assert.DoesNotThrow (() =>
-				{
-					except.ToList();
-				});
+				FluentActions.Enumerating(() => except).Should().NotThrow();
 			}
 		}
 

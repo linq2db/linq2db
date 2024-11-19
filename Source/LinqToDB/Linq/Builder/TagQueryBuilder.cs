@@ -1,23 +1,23 @@
 ﻿using System;
 using System.Linq.Expressions;
-using LinqToDB.Expressions;
 
 namespace LinqToDB.Linq.Builder
 {
+	using LinqToDB.Expressions;
+
+	[BuildsMethodCall(nameof(LinqExtensions.TagQuery))]
 	sealed class TagQueryBuilder : MethodCallBuilder
 	{
-		protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
-		{
-			return methodCall.IsQueryable(nameof(LinqExtensions.TagQuery));
-		}
+		public static bool CanBuildMethod(MethodCallExpression call, BuildInfo info, ExpressionBuilder builder)
+			=> call.IsQueryable();
 
-		private static readonly char[] NewLine = new[] { '\r', '\n' };
+		private static readonly char[] NewLine = ['\r', '\n'];
 
-		protected override IBuildContext BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
+		protected override BuildSequenceResult BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
 			var sequence = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
 
-			var tag = methodCall.Arguments[1].EvaluateExpression<string>(builder.DataContext);
+			var tag = builder.EvaluateExpression<string>(methodCall.Arguments[1]);
 
 			if (!string.IsNullOrWhiteSpace(tag))
 			{
@@ -25,7 +25,7 @@ namespace LinqToDB.Linq.Builder
 				(builder.Tag ??= new ()).Lines.AddRange(tag!.Split(NewLine, StringSplitOptions.RemoveEmptyEntries));
 			}
 
-			return sequence;
+			return BuildSequenceResult.FromContext(sequence);
 		}
 	}
 }

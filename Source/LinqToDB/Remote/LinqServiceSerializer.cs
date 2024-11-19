@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Linq;
 using System.Runtime.Serialization;
@@ -14,14 +15,18 @@ namespace LinqToDB.Remote
 	using Mapping;
 	using SqlQuery;
 
-
 	static class LinqServiceSerializer
 	{
 		#region Public Members
 
-		public static string Serialize(MappingSchema serializationSchema, SqlStatement statement, IReadOnlyParameterValues? parameterValues, IReadOnlyCollection<string>? queryHints)
+		public static string Serialize(
+			MappingSchema                serializationSchema,
+			SqlStatement                 statement,
+			IReadOnlyParameterValues?    parameterValues,
+			IReadOnlyCollection<string>? queryHints,
+			DataOptions                  dataOptions)
 		{
-			return new QuerySerializer(serializationSchema).Serialize(statement, parameterValues, queryHints);
+			return new QuerySerializer(serializationSchema).Serialize(statement, parameterValues, queryHints, dataOptions);
 		}
 
 		public static LinqServiceQuery Deserialize(MappingSchema serializationSchema, MappingSchema contextSchema, DataOptions options, string str)
@@ -61,8 +66,8 @@ namespace LinqToDB.Remote
 			readonly MappingSchema _mappingSchema;
 
 			protected readonly StringBuilder             Builder        = new ();
-			protected readonly Dictionary<object,int>    ObjectIndices  = new ();
-			protected readonly Dictionary<object,string> DelayedObjects = new ();
+			protected readonly Dictionary<object,int>    ObjectIndices  = new (Utils.ObjectReferenceEqualityComparer<object>.Default);
+			protected readonly Dictionary<object,string> DelayedObjects = new (Utils.ObjectReferenceEqualityComparer<object>.Default);
 			protected int                                Index;
 
 			protected readonly Dictionary<SqlValuesTable, IReadOnlyList<ISqlExpression[]>> EnumerableData = new ();
@@ -115,7 +120,7 @@ namespace LinqToDB.Remote
 
 			protected void Append(int value)
 			{
-				Builder.Append(' ').Append(value);
+				Builder.Append(CultureInfo.InvariantCulture, $" {value}");
 			}
 
 			protected void AppendStringList(ICollection<string> strings)
@@ -131,12 +136,14 @@ namespace LinqToDB.Remote
 				Builder.Append(' ').Append(value.HasValue ? '1' : '0');
 
 				if (value.HasValue)
-					Builder.Append(value.Value);
+					Builder.Append(CultureInfo.InvariantCulture, $"{value.Value}");
 			}
 
 			protected void Append(Type? value)
 			{
-				Builder.Append(' ').Append(GetType(value));
+				// don't move space to format, as GetType is not get-only method...
+				Builder.Append(' ');
+				Builder.Append(CultureInfo.InvariantCulture, $"{GetType(value)}");
 			}
 
 			protected void Append(bool value)
@@ -173,7 +180,7 @@ namespace LinqToDB.Remote
 
 			protected void Append(IQueryElement? element)
 			{
-				Builder.Append(' ').Append(element == null ? 0 : ObjectIndices[element]);
+				Builder.Append(CultureInfo.InvariantCulture, $" {(element == null ? 0 : ObjectIndices[element])}");
 			}
 
 			protected void AppendDelayed(IQueryElement? element)
@@ -181,11 +188,11 @@ namespace LinqToDB.Remote
 				Builder.Append(' ');
 
 				if (element == null)
-					Builder.Append(0);
+					Builder.Append('0');
 				else
 				{
 					if (ObjectIndices.TryGetValue(element, out var idx))
-						Builder.Append(idx);
+						Builder.Append(idx.ToString(NumberFormatInfo.InvariantInfo));
 					else
 					{
 						if (!DelayedObjects.TryGetValue(element, out var id))
@@ -210,10 +217,7 @@ namespace LinqToDB.Remote
 				}
 				else
 				{
-					Builder
-						.Append(str.Length)
-						.Append(':')
-						.Append(str);
+					Builder.Append(CultureInfo.InvariantCulture, $"{str.Length}:{str}");
 				}
 			}
 
@@ -230,21 +234,13 @@ namespace LinqToDB.Remote
 
 						ObjectIndices.Add(type, idx = ++Index);
 
-						Builder
-							.Append(idx)
-							.Append(' ')
-							.Append(TypeArrayIndex)
-							.Append(' ')
-							.Append(elementType);
+						Builder.Append(CultureInfo.InvariantCulture, $"{idx} {TypeArrayIndex} {elementType}");
 					}
 					else
 					{
 						ObjectIndices.Add(type, idx = ++Index);
 
-						Builder
-							.Append(idx)
-							.Append(' ')
-							.Append(TypeIndex);
+						Builder.Append(CultureInfo.InvariantCulture, $"{idx} {TypeIndex}");
 
 						Append(Configuration.LinqService.SerializeAssemblyQualifiedName ? type.AssemblyQualifiedName : type.FullName);
 					}
@@ -270,6 +266,8 @@ namespace LinqToDB.Remote
 
 			protected string Str = null!;
 			protected int    Pos;
+
+			public DataOptions Options => _options;
 
 			protected DeserializerBase(MappingSchema serializationMappingSchema, MappingSchema contextMappingSchema, DataOptions options)
 			{
@@ -476,7 +474,7 @@ namespace LinqToDB.Remote
 						TypeIndex      => ResolveType(ReadString())!,
 						TypeArrayIndex => GetArrayType(Read<Type>()!),
 						_              => throw new SerializationException(
-							$"TypeIndex or TypeArrayIndex ({TypeIndex} or {TypeArrayIndex}) expected, but was {typecode}"),
+							FormattableString.Invariant($"TypeIndex or TypeArrayIndex ({TypeIndex} or {TypeArrayIndex}) expected, but was {typecode}")),
 					};
 					ObjectIndices.Add(idx, type);
 
@@ -484,7 +482,7 @@ namespace LinqToDB.Remote
 
 					var idx2 = ReadInt();
 					if (idx2 != idx)
-						throw new SerializationException($"Wrong type reading, expected index is {idx} but was {idx2}");
+						throw new SerializationException(FormattableString.Invariant($"Wrong type reading, expected index is {idx} but was {idx2}"));
 				}
 
 				return (Type?) type;
@@ -644,21 +642,123 @@ namespace LinqToDB.Remote
 			{
 			}
 
-			public string Serialize(SqlStatement statement, IReadOnlyParameterValues? parameterValues, IReadOnlyCollection<string>? queryHints)
+			class QuerySerializationVisitor : QueryElementVisitor
 			{
+				readonly QuerySerializer   _serializer;
+				readonly EvaluationContext _evaluationContext;
+
+				public QuerySerializationVisitor(QuerySerializer serializer, EvaluationContext evaluationContext) : base(VisitMode.ReadOnly)
+				{
+					_serializer        = serializer;
+					_evaluationContext = evaluationContext;
+				}
+
+				[return: NotNullIfNotNull(nameof(element))]
+				public override IQueryElement? Visit(IQueryElement? element)
+				{
+					if (element == null)
+						return null;
+
+					base.Visit(element);
+
+					RegisterInSerializer(element);
+
+					return element;
+				}
+
+				protected override ISqlExpression VisitSqlColumnExpression(SqlColumn column, ISqlExpression expression)
+				{
+					base.VisitSqlColumnExpression(column, expression);
+
+					RegisterInSerializer(column);
+
+					return expression;
+				}
+
+				protected override IQueryElement VisitSqlTable(SqlTable element)
+				{
+					RegisterInSerializer(element.All);
+					VisitElements(element.Fields, VisitMode.ReadOnly);
+					return base.VisitSqlTable(element);
+				}
+
+				protected override IQueryElement VisitSqlCteTable(SqlCteTable element)
+				{
+					RegisterInSerializer(element.All);
+					VisitElements(element.Fields, VisitMode.ReadOnly);
+					return base.VisitSqlCteTable(element);
+				}
+
+				protected override IQueryElement VisitSqlRawSqlTable(SqlRawSqlTable element)
+				{
+					RegisterInSerializer(element.All);
+					VisitElements(element.Fields, VisitMode.ReadOnly);
+					return base.VisitSqlRawSqlTable(element);
+				}
+
+				protected override IQueryElement VisitSqlTableLikeSource(SqlTableLikeSource element)
+				{
+					VisitElements(element.SourceFields, VisitMode.ReadOnly);
+					return base.VisitSqlTableLikeSource(element);
+				}
+
+				protected override IQueryElement VisitSqlValuesTable(SqlValuesTable element)
+				{
+					VisitElements(element.Fields, VisitMode.ReadOnly);
+					return base.VisitSqlValuesTable(element);
+				}
+
+				void RegisterInSerializer(IQueryElement element)
+				{
+					if (!_serializer.ObjectIndices.ContainsKey(element))
+						_serializer.Visit(element, _evaluationContext);
+				}
+			}
+
+			void SerializeOptions(DataOptions options)
+			{
+				Append(options.LinqOptions.PreferExistsForScalar);
+				Append(options.SqlOptions.EnableConstantExpressionInOrderBy);
+				Append(options.SqlOptions.GenerateFinalAliases);
+			}
+
+			public string Serialize(
+				SqlStatement                 statement,
+				IReadOnlyParameterValues?    parameterValues,
+				IReadOnlyCollection<string>? queryHints,
+				DataOptions                  options)
+			{
+				// Add QueryHints.
+				//
 				var queryHintCount = queryHints?.Count ?? 0;
 
-				Builder.AppendLine(queryHintCount.ToString());
+				Builder.AppendLine(queryHintCount.ToString(NumberFormatInfo.InvariantInfo));
 
 				if (queryHintCount > 0)
 					foreach (var hint in queryHints!)
 						Builder.AppendLine(hint);
 
-				statement.Visit((serializer: this, evaluationContext: new EvaluationContext(parameterValues)),
-					static (context, e) => context.serializer.Visit(e, context.evaluationContext));
+				// Serialize options.
+				//
+				SerializeOptions(options);
+
+				// Serialize statement.
+				//
+				var visitor = new QuerySerializationVisitor(this, new EvaluationContext(parameterValues));
+
+				visitor.Visit(statement);
 
 				if (DelayedObjects.Count > 0)
-					throw new LinqToDBException($"QuerySerializer error. Unknown object '{DelayedObjects.First().Key.GetType()}'.");
+				{
+					var    first = DelayedObjects.First();
+					string displayName;
+					if (first.Key is IQueryElement element)
+						displayName = element.ToDebugString();
+					else
+						displayName = first.Key.GetType().Name;
+
+					throw new LinqToDBException($"QuerySerializer error. Unknown object '{displayName}'.");
+				}
 
 				Builder.AppendLine();
 
@@ -723,29 +823,28 @@ namespace LinqToDB.Remote
 							break;
 						}
 
-					case QueryElementType.SqlFunction         : GetType(((SqlFunction)        e).SystemType)          ; break;
-					case QueryElementType.SqlExpression       : GetType(((SqlExpression)      e).SystemType)          ; break;
-					case QueryElementType.SqlBinaryExpression : GetType(((SqlBinaryExpression)e).SystemType)          ; break;
-					case QueryElementType.SqlDataType         : GetType(((SqlDataType)        e).Type.SystemType)     ; break;
-					case QueryElementType.SqlValue            : GetType(((SqlValue)           e).ValueType.SystemType); break;
-					case QueryElementType.SqlTable            : GetType(((SqlTable)           e).ObjectType)          ; break;
-					case QueryElementType.SqlCteTable         : GetType(((SqlCteTable)        e).ObjectType)          ; break;
-					case QueryElementType.CteClause           : GetType(((CteClause)          e).ObjectType)          ; break;
-					case QueryElementType.SqlRawSqlTable      : GetType(((SqlRawSqlTable)     e).ObjectType)          ; break;
+					case QueryElementType.SqlFunction              : GetType(((SqlFunction)             e).SystemType)          ; break;
+					case QueryElementType.SqlExpression            : GetType(((SqlExpression)           e).SystemType)          ; break;
+					case QueryElementType.SqlNullabilityExpression : GetType(((SqlNullabilityExpression)e).SystemType)          ; break;
+					case QueryElementType.SqlAnchor                : GetType(((SqlAnchor)e).SystemType)                         ; break;
+					case QueryElementType.SqlBinaryExpression      : GetType(((SqlBinaryExpression)     e).SystemType)          ; break;
+					case QueryElementType.SqlDataType              : GetType(((SqlDataType)             e).Type.SystemType)     ; break;
+					case QueryElementType.SqlValue                 : GetType(((SqlValue)                e).ValueType.SystemType); break;
+					case QueryElementType.SqlTable                 : GetType(((SqlTable)                e).ObjectType)          ; break;
+					case QueryElementType.SqlCteTable              : GetType(((SqlCteTable)             e).ObjectType)          ; break;
+					case QueryElementType.CteClause                : GetType(((CteClause)               e).ObjectType)          ; break;
+					case QueryElementType.SqlRawSqlTable           : GetType(((SqlRawSqlTable)          e).ObjectType)          ; break;
 				}
 
 				ObjectIndices.Add(e, ++Index);
 
-				Builder
-					.Append(Index)
-					.Append(' ')
-					.Append((int)e.ElementType);
+				Builder.Append(CultureInfo.InvariantCulture, $"{Index} {(int)e.ElementType}");
 
 				if (DelayedObjects.Count > 0)
 				{
 					if (DelayedObjects.TryGetValue(e, out var id))
 					{
-						Builder.Replace(id, Index.ToString());
+						Builder.Replace(id, Index.ToString(NumberFormatInfo.InvariantInfo));
 						DelayedObjects.Remove(e);
 					}
 				}
@@ -784,7 +883,8 @@ namespace LinqToDB.Remote
 							Append(elem.IsPure);
 							Append(elem.Precedence);
 							Append(elem.Parameters);
-							Append(elem.CanBeNull);
+							Append((int)elem.NullabilityType);
+							Append(elem.CanBeNullNullable);
 							Append(elem.DoNotOptimize);
 
 							break;
@@ -797,6 +897,7 @@ namespace LinqToDB.Remote
 
 							Append(elem.Name);
 							Append(elem.IsQueryParameter);
+							Append(elem.NeedsCast);
 							Append(paramValue.DbDataType);
 
 							var value = paramValue.ProviderValue;
@@ -826,10 +927,30 @@ namespace LinqToDB.Remote
 							Append(elem.Expr);
 							Append(elem.Precedence);
 							Append((int)elem.Flags);
+							Append((int)elem.NullabilityType);
+							Append(elem.CanBeNullNullable);
 							Append(elem.Parameters);
 
 							break;
 						}
+
+					case QueryElementType.SqlNullabilityExpression :
+					{
+						var elem = (SqlNullabilityExpression)e;
+						Append(elem.SqlExpression);
+						Append(elem.CanBeNull);
+
+						break;
+					}
+
+					case QueryElementType.SqlAnchor :
+					{
+						var elem = (SqlAnchor)e;
+						Append(elem.SqlExpression);
+						Append((int)elem.AnchorKind);
+
+						break;
+					}
 
 					case QueryElementType.SqlBinaryExpression :
 						{
@@ -911,6 +1032,8 @@ namespace LinqToDB.Remote
 
 							Append((int)elem.TableOptions);
 
+							Append(elem.SqlQueryExtensions);
+
 							break;
 						}
 
@@ -928,6 +1051,8 @@ namespace LinqToDB.Remote
 
 							foreach (var field in elem.Fields)
 								Append(ObjectIndices[field]);
+
+							Append(elem.SqlQueryExtensions);
 
 							break;
 						}
@@ -958,6 +1083,8 @@ namespace LinqToDB.Remote
 									Append(ObjectIndices[expr]);
 							}
 
+							Append(elem.SqlQueryExtensions);
+
 							break;
 						}
 
@@ -971,14 +1098,22 @@ namespace LinqToDB.Remote
 							break;
 						}
 
-					case QueryElementType.NotExprPredicate :
+					case QueryElementType.NotPredicate :
 						{
-							var elem = (SqlPredicate.NotExpr)e;
+							var elem = (SqlPredicate.Not)e;
 
-							Append(elem.Expr1);
-							Append(elem.IsNot);
-							Append(elem.Precedence);
+							Append(elem.Predicate);
 
+							break;
+						}
+
+					case QueryElementType.TruePredicate :
+						{
+							break;
+						}
+
+					case QueryElementType.FalsePredicate :
+						{
 							break;
 						}
 
@@ -1071,6 +1206,7 @@ namespace LinqToDB.Remote
 							Append(elem.Expr1);
 							Append(elem.IsNot);
 							Append(elem.SubQuery);
+							Append(elem.DoNotConvert);
 
 							break;
 						}
@@ -1107,7 +1243,6 @@ namespace LinqToDB.Remote
 							Append(elem.GroupBy);
 							Append(elem.Having);
 							Append(elem.OrderBy);
-							Append(elem.ParentSelect?.SourceID ?? 0);
 							Append(elem.IsParameterDependent);
 							Append(elem.QueryName);
 							Append(elem.DoNotSetAliases);
@@ -1121,6 +1256,8 @@ namespace LinqToDB.Remote
 								Append(index);
 							else
 								Builder.Append(" -");
+
+							Append(elem.SqlQueryExtensions);
 
 							break;
 						}
@@ -1138,18 +1275,8 @@ namespace LinqToDB.Remote
 
 					case QueryElementType.SearchCondition :
 						{
-							Append(((SqlSearchCondition)e).Conditions);
-							break;
-						}
-
-					case QueryElementType.Condition :
-						{
-							var elem = (SqlCondition)e;
-
-							Append(elem.IsNot);
-							Append(elem.Predicate);
-							Append(elem.IsOr);
-
+							Append(((SqlSearchCondition)e).IsOr);
+							Append(((SqlSearchCondition)e).Predicates);
 							break;
 						}
 
@@ -1172,6 +1299,7 @@ namespace LinqToDB.Remote
 							Append(elem.Table);
 							Append(elem.IsWeak);
 							Append(elem.Condition);
+							Append(elem.SqlQueryExtensions);
 
 							break;
 						}
@@ -1208,6 +1336,8 @@ namespace LinqToDB.Remote
 							Append(elem.Items);
 							Append(elem.Keys);
 							Append(elem.Table);
+							Append(elem.TableSource);
+							Append(elem.HasComparison);
 
 							break;
 						}
@@ -1240,6 +1370,7 @@ namespace LinqToDB.Remote
 							Append(elem.Tag);
 							Append(elem.With);
 							Append(elem.SelectQuery);
+							Append(elem.SqlQueryExtensions);
 
 							break;
 						}
@@ -1252,6 +1383,7 @@ namespace LinqToDB.Remote
 							Append(elem.Insert);
 							Append(elem.SelectQuery);
 							Append(elem.Output);
+							Append(elem.SqlQueryExtensions);
 
 							break;
 						}
@@ -1264,6 +1396,7 @@ namespace LinqToDB.Remote
 							Append(elem.Insert);
 							Append(elem.Update);
 							Append(elem.SelectQuery);
+							Append(elem.SqlQueryExtensions);
 
 							break;
 						}
@@ -1273,9 +1406,10 @@ namespace LinqToDB.Remote
 							var elem = (SqlUpdateStatement)e;
 							Append(elem.Tag);
 							Append(elem.With);
-							Append(elem.Update);
 							Append(elem.SelectQuery);
+							Append(elem.Update);
 							Append(elem.Output);
+							Append(elem.SqlQueryExtensions);
 
 							break;
 						}
@@ -1290,6 +1424,7 @@ namespace LinqToDB.Remote
 							Append(elem.Output);
 							Append(elem.Top);
 							Append(elem.SelectQuery);
+							Append(elem.SqlQueryExtensions);
 
 							break;
 						}
@@ -1312,6 +1447,7 @@ namespace LinqToDB.Remote
 							Append(elem.StatementHeader);
 							Append(elem.StatementFooter);
 							Append((int)elem.DefaultNullable);
+							Append(elem.SqlQueryExtensions);
 
 							break;
 						}
@@ -1322,6 +1458,7 @@ namespace LinqToDB.Remote
 
 						Append(elem.Tag);
 						Append(elem.Table);
+						Append(elem.SqlQueryExtensions);
 
 						break;
 					}
@@ -1333,12 +1470,14 @@ namespace LinqToDB.Remote
 						Append(elem.Tag);
 						Append(elem.Table);
 						Append(elem.ResetIdentity);
+						Append(elem.SqlQueryExtensions);
 
 						break;
 					}
 
 					case QueryElementType.FromClause    : Append(((SqlFromClause)   e).Tables);          break;
 					case QueryElementType.WhereClause   : Append(((SqlWhereClause)  e).SearchCondition); break;
+					case QueryElementType.HavingClause  : Append(((SqlHavingClause) e).SearchCondition); break;
 					case QueryElementType.GroupByClause :
 						{
 							Append((int)((SqlGroupByClause)e).GroupingType);
@@ -1355,6 +1494,7 @@ namespace LinqToDB.Remote
 
 							Append(elem.Expression);
 							Append(elem.IsDescending);
+							Append(elem.IsPositioned);
 
 							break;
 						}
@@ -1405,6 +1545,7 @@ namespace LinqToDB.Remote
 							Append(elem.On);
 							Append(elem.Operations);
 							Append(elem.Output);
+							Append(elem.SqlQueryExtensions);
 
 						break;
 						}
@@ -1416,6 +1557,7 @@ namespace LinqToDB.Remote
 							Append((int)elem.InsertType);
 							Append(elem.Source);
 							Append(elem.Inserts);
+							Append(elem.SqlQueryExtensions);
 
 							break;
 						}
@@ -1443,7 +1585,6 @@ namespace LinqToDB.Remote
 							break;
 						}
 
-
 					case QueryElementType.SqlAliasPlaceholder:
 						{
 							break;
@@ -1451,7 +1592,7 @@ namespace LinqToDB.Remote
 
 					case QueryElementType.SqlRow:
 						{
-							var elem = (SqlRow)e;
+							var elem = (SqlRowExpression)e;
 
 							Append(elem.Values);
 
@@ -1481,36 +1622,82 @@ namespace LinqToDB.Remote
 						var elem = (SqlComment)e;
 						AppendStringList(elem.Lines);
 						break;
+					}
+
+					case QueryElementType.SqlQueryExtension:
+					{
+						var ext = (SqlQueryExtension)e;
+						Append(ext.Configuration);
+						Append((int)ext.Scope);
+						Append(ext.BuilderType);
+						Append(ext.Arguments.Count);
+
+						foreach (var argument in ext.Arguments)
+						{
+							Append(argument.Key);
+							Append(argument.Value);
 						}
+
+						break;
+					}
+
+					case QueryElementType.SqlCast:
+					{
+						var elem = (SqlCastExpression)e;
+						Append(elem.ToType);
+						Append(elem.Expression);
+						Append(elem.FromType);
+						Append(elem.IsMandatory);
+						break;
+					}
+
+					case QueryElementType.SqlCondition:
+					{
+						var elem = (SqlConditionExpression)e;
+						Append(elem.Condition);
+						Append(elem.TrueValue);
+						Append(elem.FalseValue);
+						break;
+					}
+
+					case QueryElementType.SqlCase:
+					{
+						var elem = (SqlCaseExpression)e;
+
+						Append(elem.Type);
+						Append(elem.Cases.Count);
+
+						foreach (var caseItem in elem.Cases)
+						{
+							Append(caseItem.Condition);
+							Append(caseItem.ResultExpression);
+						}
+
+						Append(elem.ElseExpression);
+
+						break;
+					}
+
+					case QueryElementType.CompareTo:
+					{
+						var elem = (SqlCompareToExpression)e;
+
+						Append(elem.Expression1);
+						Append(elem.Expression2);
+
+						break;
+					}
+
+					case QueryElementType.SqlCoalesce:
+					{
+						var elem = (SqlCoalesceExpression)e;
+
+						Append(elem.Expressions);
+						break;
+					}
 
 					default:
 						throw new InvalidOperationException($"Serialize not implemented for element {e.ElementType}");
-				}
-
-				if (e is IQueryExtendible qe)
-				{
-					if (qe.SqlQueryExtensions == null || qe.SqlQueryExtensions.Count == 0)
-					{
-						Append(0);
-					}
-					else
-					{
-						Append(qe.SqlQueryExtensions.Count);
-
-						foreach (var ext in qe.SqlQueryExtensions)
-						{
-							Append(ext.Configuration);
-							Append((int)ext.Scope);
-							Append(ext.BuilderType);
-							Append(ext.Arguments.Count);
-
-							foreach (var argument in ext.Arguments)
-							{
-								Append(argument.Key);
-								Append(argument.Value);
-							}
-						}
-					}
 				}
 
 				Builder.AppendLine();
@@ -1547,10 +1734,23 @@ namespace LinqToDB.Remote
 			{
 			}
 
+			DataOptions DeserializeOptions(DataOptions options)
+			{
+				options = options
+					.WithOptions<LinqOptions>(lo => lo.WithPreferExistsForScalar(ReadBool()))
+					.WithOptions<SqlOptions>(so =>
+						so.WithEnableConstantExpressionInOrderBy(ReadBool())
+							.WithGenerateFinalAliases(ReadBool()));
+
+				return options;
+			}
+
 			public LinqServiceQuery Deserialize(string str)
 			{
 				Str = str;
 
+				// Deserialize QueryHints.
+				//
 				List<string>? queryHints = null;
 
 				var queryHintCount = ReadInt();
@@ -1574,12 +1774,20 @@ namespace LinqToDB.Remote
 					}
 				}
 
+				// Deserialize options.
+				//
+				var options = DeserializeOptions(Options);
+
+				NextLine();
+
+				// Deserialize statement.
+				//
 				while (Parse()) {}
 
 				foreach (var action in _actions)
 					action();
 
-				return new LinqServiceQuery { Statement = _statement, QueryHints = queryHints };
+				return new LinqServiceQuery { Statement = _statement, QueryHints = queryHints, DataOptions = options };
 			}
 
 			bool Parse()
@@ -1649,12 +1857,12 @@ namespace LinqToDB.Remote
 							var isPure        = ReadBool();
 							var precedence    = ReadInt();
 							var parameters    = ReadArray<ISqlExpression>()!;
-							var canBeNull     = ReadBool();
+							var nullability   = (ParametersNullabilityType)ReadInt();
+							var canBeNull     = ReadNullableBool();
 							var doNotOptimize = ReadBool();
 
-							obj = new SqlFunction(systemType, name, isAggregate, isPure, precedence, parameters)
+							obj = new SqlFunction(systemType, name, isAggregate, isPure, precedence, nullability, canBeNull, parameters)
 							{
-								CanBeNull = canBeNull,
 								DoNotOptimize = doNotOptimize
 							};
 
@@ -1665,6 +1873,7 @@ namespace LinqToDB.Remote
 						{
 							var name             = ReadString();
 							var isQueryParameter = ReadBool();
+							var needCast         = ReadBool();
 							var dbDataType       = ReadDbDataType();
 
 							var value            = ReadValue(ReadType()!);
@@ -1672,6 +1881,7 @@ namespace LinqToDB.Remote
 							obj = new SqlParameter(dbDataType, name, value)
 							{
 								IsQueryParameter = isQueryParameter,
+								NeedsCast = needCast,
 							};
 
 							break;
@@ -1683,12 +1893,34 @@ namespace LinqToDB.Remote
 							var expr        = ReadString()!;
 							var precedence  = ReadInt();
 							var flags       = (SqlFlags)ReadInt();
+							var nullability = (ParametersNullabilityType)ReadInt();
+							var canBeNull   = ReadNullableBool();
 							var parameters  = ReadArray<ISqlExpression>()!;
 
-							obj = new SqlExpression(systemType, expr, precedence, flags, parameters);
+							obj = new SqlExpression(systemType, expr, precedence, flags, nullability, canBeNull, parameters);
 
 							break;
 						}
+
+					case QueryElementType.SqlNullabilityExpression :
+					{
+						var sqlExpression = Read<ISqlExpression>()!;
+						var isNullable = ReadBool();
+
+						obj = new SqlNullabilityExpression(sqlExpression, isNullable);
+
+						break;
+					}
+
+					case QueryElementType.SqlAnchor :
+					{
+						var sqlExpression = Read<ISqlExpression>()!;
+						var kind          = (SqlAnchor.AnchorKindEnum)ReadInt();
+
+						obj = new SqlAnchor(sqlExpression, kind);
+
+						break;
+					}
 
 					case QueryElementType.SqlBinaryExpression :
 						{
@@ -1742,9 +1974,9 @@ namespace LinqToDB.Remote
 									sequenceAttributes[i] = new SequenceNameAttribute(ReadString()!, ReadString()!);
 							}
 
-							var all    = Read<SqlField>()!;
-							var fields = ReadArray<SqlField>()!;
-							var flds   = new SqlField[fields.Length + 1];
+							var all        = Read<SqlField>()!;
+							var fields     = ReadArray<SqlField>()!;
+							var flds       = new SqlField[fields.Length + 1];
 
 							flds[0] = all;
 							Array.Copy(fields, 0, flds, 1, fields.Length);
@@ -1753,9 +1985,14 @@ namespace LinqToDB.Remote
 							var tableArgs    = sqlTableType == SqlTableType.Table ? null : ReadArray<ISqlExpression>();
 							var tableOptions = (TableOptions)ReadInt();
 
+							var extensions = ReadList<SqlQueryExtension>();
+
 							obj = new SqlTable(
 								sourceID, expression, alias, tableName, objectType, sequenceAttributes, flds,
-								sqlTableType, tableArgs, tableOptions, tableID);
+								sqlTableType, tableArgs, tableOptions, tableID)
+							{
+								SqlQueryExtensions = extensions
+							};
 
 							break;
 						}
@@ -1780,8 +2017,10 @@ namespace LinqToDB.Remote
 									cteTable.SetDelayedCteObject(cte);
 							});
 
-							var all    = Read<SqlField>()!;
-							var fields = ReadArray<SqlField>()!;
+							var all        = Read<SqlField>()!;
+							var fields     = ReadArray<SqlField>()!;
+							var extensions = ReadList<SqlQueryExtension>();
+
 							var flds   = new SqlField[fields.Length + 1];
 
 							flds[0] = all;
@@ -1790,6 +2029,8 @@ namespace LinqToDB.Remote
 							cteTable = isDelayed ?
 								new SqlCteTable(sourceID, alias, flds) :
 								new SqlCteTable(sourceID, alias, flds, cte!);
+
+							cteTable.SqlQueryExtensions = extensions;
 
 							obj = cteTable;
 
@@ -1811,8 +2052,12 @@ namespace LinqToDB.Remote
 
 							var sql        = ReadString()!;
 							var parameters = ReadArray<ISqlExpression>()!;
+							var extensions = ReadList<SqlQueryExtension>();
 
-							obj = new SqlRawSqlTable(sourceID, alias, objectType, flds, sql, parameters);
+							obj = new SqlRawSqlTable(sourceID, alias, objectType, flds, sql, parameters)
+							{
+								SqlQueryExtensions = extensions
+							};
 
 							break;
 						}
@@ -1827,13 +2072,25 @@ namespace LinqToDB.Remote
 							break;
 						}
 
-					case QueryElementType.NotExprPredicate :
+					case QueryElementType.NotPredicate :
 						{
-							var expr1      = Read<ISqlExpression>()!;
-							var isNot      = ReadBool();
-							var precedence = ReadInt();
+							var predicate = Read<ISqlPredicate>()!;
 
-							obj = new SqlPredicate.NotExpr(expr1, isNot, precedence);
+							obj = new SqlPredicate.Not(predicate);
+
+							break;
+						}
+
+					case QueryElementType.TruePredicate :
+						{
+							obj = SqlPredicate.True;
+
+							break;
+						}
+
+					case QueryElementType.FalsePredicate :
+						{
+							obj = SqlPredicate.False;
 
 							break;
 						}
@@ -1922,11 +2179,12 @@ namespace LinqToDB.Remote
 
 					case QueryElementType.InSubQueryPredicate :
 						{
-							var expr1    = Read<ISqlExpression>()!;
-							var isNot    = ReadBool();
-							var subQuery = Read<SelectQuery>()!;
+							var expr1        = Read<ISqlExpression>()!;
+							var isNot        = ReadBool();
+							var subQuery     = Read<SelectQuery>()!;
+							var doNotConvert = ReadBool();
 
-							obj = new SqlPredicate.InSubQuery(expr1, isNot, subQuery);
+							obj = new SqlPredicate.InSubQuery(expr1, isNot, subQuery, doNotConvert);
 
 							break;
 						}
@@ -1957,17 +2215,14 @@ namespace LinqToDB.Remote
 							var select             = Read<SqlSelectClause>()!;
 							var where              = Read<SqlWhereClause>()!;
 							var groupBy            = Read<SqlGroupByClause>()!;
-							var having             = Read<SqlWhereClause>()!;
+							var having             = Read<SqlHavingClause>()!;
 							var orderBy            = Read<SqlOrderByClause>()!;
-							var parentSql          = ReadInt();
 							var parameterDependent = ReadBool();
 							var queryName          = ReadString();
 							var doNotSetAliases    = ReadBool();
 							var unions             = ReadArray<SqlSetOperator>();
 
 							var query = new SelectQuery(sid);
-
-							_statement = new SqlSelectStatement(query);
 
 							query.Init(
 								select,
@@ -1977,7 +2232,6 @@ namespace LinqToDB.Remote
 								having,
 								orderBy,
 								unions?.ToList(),
-								null, // we do not serialize unique keys
 								null,
 								parameterDependent,
 								queryName,
@@ -1985,14 +2239,9 @@ namespace LinqToDB.Remote
 
 							_queries.Add(sid, query);
 
-							if (parentSql != 0)
-								_actions.Add(() =>
-								{
-									if (_queries.TryGetValue(parentSql, out var selectQuery))
-										query.ParentSelect = selectQuery;
-								});
-
 							query.All = Read<SqlField>()!;
+
+							query.SqlQueryExtensions = ReadList<SqlQueryExtension>();
 
 							obj = query;
 
@@ -2015,11 +2264,7 @@ namespace LinqToDB.Remote
 						}
 
 					case QueryElementType.SearchCondition :
-						obj = new SqlSearchCondition(ReadArray<SqlCondition>()!);
-						break;
-
-					case QueryElementType.Condition :
-						obj = new SqlCondition(ReadBool(), Read<ISqlPredicate>()!, ReadBool());
+						obj = new SqlSearchCondition(ReadBool(), ReadArray<ISqlPredicate>()!);
 						break;
 
 					case QueryElementType.TableSource :
@@ -2035,12 +2280,16 @@ namespace LinqToDB.Remote
 
 					case QueryElementType.JoinedTable :
 						{
-							var joinType  = (JoinType)ReadInt();
-							var table     = Read<SqlTableSource>()!;
-							var isWeak    = ReadBool();
-							var condition = Read<SqlSearchCondition>()!;
+							var joinType   = (JoinType)ReadInt();
+							var table      = Read<SqlTableSource>()!;
+							var isWeak     = ReadBool();
+							var condition  = Read<SqlSearchCondition>()!;
+							var extensions = ReadList<SqlQueryExtension>();
 
-							obj = new SqlJoinedTable(joinType, table, isWeak, condition);
+							obj = new SqlJoinedTable(joinType, table, isWeak, condition)
+							{
+								SqlQueryExtensions = extensions
+							};
 
 							break;
 						}
@@ -2075,11 +2324,13 @@ namespace LinqToDB.Remote
 
 					case QueryElementType.UpdateClause :
 						{
-							var items = ReadArray<SqlSetExpression>();
-							var keys  = ReadArray<SqlSetExpression>();
-							var table = Read<SqlTable>();
+							var items         = ReadArray<SqlSetExpression>();
+							var keys          = ReadArray<SqlSetExpression>();
+							var table         = Read<SqlTable>();
+							var tableSource   = Read<SqlTableSource>();
+							var hasComparison = ReadBool();
 
-							var c = new SqlUpdateClause { Table = table };
+							var c = new SqlUpdateClause { Table = table, TableSource = tableSource, HasComparison = hasComparison };
 
 							if (items != null)
 								c.Items.AddRange(items);
@@ -2123,11 +2374,13 @@ namespace LinqToDB.Remote
 							var tag         = Read<SqlComment>();
 							var with        = Read<SqlWithClause>();
 							var selectQuery = Read<SelectQuery>()!;
+							var extensions  = ReadList<SqlQueryExtension>();
 
 							obj = _statement = new SqlSelectStatement(selectQuery)
 							{
 								With = with,
-								Tag  = tag
+								Tag  = tag,
+								SqlQueryExtensions = extensions
 							};
 
 							break;
@@ -2140,13 +2393,15 @@ namespace LinqToDB.Remote
 							var insert      = Read<SqlInsertClause>()!;
 							var selectQuery = Read<SelectQuery>()!;
 							var output      = Read<SqlOutputClause>();
+							var extensions  = ReadList<SqlQueryExtension>();
 
 							obj = _statement = new SqlInsertStatement(selectQuery)
 							{
-								Insert = insert,
-								Output = output,
-								With   = with,
-								Tag    = tag
+								Insert             = insert,
+								Output             = output,
+								With               = with,
+								Tag                = tag,
+								SqlQueryExtensions = extensions
 							};
 
 							break;
@@ -2156,16 +2411,18 @@ namespace LinqToDB.Remote
 						{
 							var tag         = Read<SqlComment>();
 							var with        = Read<SqlWithClause>();
-							var update      = Read<SqlUpdateClause>()!;
 							var selectQuery = Read<SelectQuery>()!;
+							var update      = Read<SqlUpdateClause>()!;
 							var output      = Read<SqlOutputClause>()!;
+							var extensions  = ReadList<SqlQueryExtension>();
 
 							obj = _statement = new SqlUpdateStatement(selectQuery)
 							{
-								Update = update,
-								Output = output,
-								With   = with,
-								Tag    = tag
+								Update             = update,
+								Output             = output,
+								With               = with,
+								Tag                = tag,
+								SqlQueryExtensions = extensions
 							};
 
 							break;
@@ -2178,13 +2435,15 @@ namespace LinqToDB.Remote
 							var insert      = Read<SqlInsertClause>()!;
 							var update      = Read<SqlUpdateClause>()!;
 							var selectQuery = Read<SelectQuery>();
+							var extensions  = ReadList<SqlQueryExtension>();
 
 							obj = _statement = new SqlInsertOrUpdateStatement(selectQuery)
 							{
-								Insert = insert,
-								Update = update,
-								With   = with,
-								Tag    = tag
+								Insert             = insert,
+								Update             = update,
+								With               = with,
+								Tag                = tag,
+								SqlQueryExtensions = extensions
 							};
 
 							break;
@@ -2198,6 +2457,7 @@ namespace LinqToDB.Remote
 							var output      = Read<SqlOutputClause>();
 							var top         = Read<ISqlExpression>()!;
 							var selectQuery = Read<SelectQuery>();
+							var extensions  = ReadList<SqlQueryExtension>();
 
 							obj = _statement = new SqlDeleteStatement
 							{
@@ -2206,7 +2466,8 @@ namespace LinqToDB.Remote
 								Top         = top,
 								SelectQuery = selectQuery,
 								With        = with,
-								Tag         = tag
+								Tag         = tag,
+								SqlQueryExtensions = extensions
 							};
 
 							break;
@@ -2219,13 +2480,15 @@ namespace LinqToDB.Remote
 							var statementHeader = ReadString();
 							var statementFooter = ReadString();
 							var defaultNullable = (DefaultNullable)ReadInt();
+							var extensions      = ReadList<SqlQueryExtension>();
 
 							obj = _statement = new SqlCreateTableStatement(table)
 							{
-								StatementHeader = statementHeader,
-								StatementFooter = statementFooter,
-								DefaultNullable = defaultNullable,
-								Tag             = tag
+								StatementHeader    = statementHeader,
+								StatementFooter    = statementFooter,
+								DefaultNullable    = defaultNullable,
+								Tag                = tag,
+								SqlQueryExtensions = extensions
 							};
 
 							break;
@@ -2233,12 +2496,14 @@ namespace LinqToDB.Remote
 
 					case QueryElementType.DropTableStatement :
 					{
-						var tag   = Read<SqlComment>();
-						var table = Read<SqlTable>()!;
+						var tag        = Read<SqlComment>();
+						var table      = Read<SqlTable>()!;
+						var extensions = ReadList<SqlQueryExtension>();
 
 						obj = _statement = new SqlDropTableStatement(table)
 						{
-							Tag = tag
+							Tag                = tag,
+							SqlQueryExtensions = extensions
 						};
 
 						break;
@@ -2246,15 +2511,17 @@ namespace LinqToDB.Remote
 
 					case QueryElementType.TruncateTableStatement :
 					{
-						var tag   = Read<SqlComment>();
-						var table = Read<SqlTable>();
-						var reset = ReadBool();
+						var tag        = Read<SqlComment>();
+						var table      = Read<SqlTable>();
+						var reset      = ReadBool();
+						var extensions = ReadList<SqlQueryExtension>();
 
 						obj = _statement = new SqlTruncateTableStatement
 						{
-							Table         = table,
-							ResetIdentity = reset,
-							Tag           = tag
+							Table              = table,
+							ResetIdentity      = reset,
+							Tag                = tag,
+							SqlQueryExtensions = extensions
 						};
 
 						break;
@@ -2271,6 +2538,7 @@ namespace LinqToDB.Remote
 					}
 					case QueryElementType.FromClause    : obj = new SqlFromClause   (ReadArray<SqlTableSource>()!);                break;
 					case QueryElementType.WhereClause   : obj = new SqlWhereClause  (Read     <SqlSearchCondition>()!);            break;
+					case QueryElementType.HavingClause  : obj = new SqlHavingClause (Read     <SqlSearchCondition>()!);            break;
 					case QueryElementType.GroupByClause : obj = new SqlGroupByClause((GroupingType)ReadInt(), ReadArray<ISqlExpression>()!); break;
 					case QueryElementType.GroupingSet   : obj = new SqlGroupingSet  (ReadArray<ISqlExpression>()!);                          break;
 					case QueryElementType.OrderByClause : obj = new SqlOrderByClause(ReadArray<SqlOrderByItem>()!);                break;
@@ -2279,8 +2547,9 @@ namespace LinqToDB.Remote
 						{
 							var expression   = Read<ISqlExpression>()!;
 							var isDescending = ReadBool();
+							var isPositioned = ReadBool();
 
-							obj = new SqlOrderByItem(expression, isDescending);
+							obj = new SqlOrderByItem(expression, isDescending, isPositioned);
 
 							break;
 						}
@@ -2329,11 +2598,13 @@ namespace LinqToDB.Remote
 							var on         = Read<SqlSearchCondition>()!;
 							var operations = ReadArray<SqlMergeOperationClause>()!;
 							var output     = Read<SqlOutputClause>();
+							var extensions = ReadList<SqlQueryExtension>();
 
 							obj = _statement = new SqlMergeStatement(with, hint, target, source, on, operations)
 							{
 								Tag    = tag,
-								Output = output
+								Output = output,
+								SqlQueryExtensions = extensions
 							};
 
 							break;
@@ -2344,8 +2615,13 @@ namespace LinqToDB.Remote
 							var insertType   = (MultiInsertType)ReadInt();
 							var source       = Read<SqlTableLikeSource>()!;
 							var inserts      = ReadList<SqlConditionalInsertClause>()!;
+							var extensions   = ReadList<SqlQueryExtension>();
 
-							obj = _statement = new SqlMultiInsertStatement(insertType, source, inserts);
+							obj = _statement =
+								new SqlMultiInsertStatement(insertType, source, inserts)
+								{
+									SqlQueryExtensions = extensions
+								};
 
 							break;
 						}
@@ -2365,10 +2641,10 @@ namespace LinqToDB.Remote
 							var fields    = ReadArray<SqlField>()!;
 
 							var rowsCount = ReadInt();
-							var rows      = new ISqlExpression[rowsCount][];
+							var rows      = new List<ISqlExpression[]>(rowsCount);
 
 							for (var i = 0; i < rowsCount; i++)
-								rows[i] = ReadArray<ISqlExpression>()!;
+								rows.Add(ReadArray<ISqlExpression>()!);
 
 							obj = new SqlValuesTable(fields, null, rows);
 
@@ -2377,14 +2653,14 @@ namespace LinqToDB.Remote
 
 					case QueryElementType.SqlAliasPlaceholder :
 						{
-							obj = new SqlAliasPlaceholder();
+							obj = SqlAliasPlaceholder.Instance;
 							break;
 						}
 
 					case QueryElementType.SqlRow:
 						{
 							var values = ReadArray<ISqlExpression>()!;
-							obj        = new SqlRow(values);
+							obj        = new SqlRowExpression(values);
 							break;
 						}
 
@@ -2419,25 +2695,12 @@ namespace LinqToDB.Remote
 							break;
 						}
 
-					default:
-						throw new InvalidOperationException($"Parse not implemented for element {(QueryElementType)type}");
-				}
-
-				if (obj is IQueryExtendible qe)
-				{
-					var count = ReadInt();
-
-					if (count > 0)
-					{
-						qe.SqlQueryExtensions = new(count);
-
-						for (var i = 0; i < count; i++)
+					case QueryElementType.SqlQueryExtension:
 						{
-							var ext = new SqlQueryExtension();
-
-							ext.Configuration = ReadString();
-							ext.Scope         = (Sql.QueryExtensionScope)ReadInt();
-							ext.BuilderType   = ReadType();
+							var configuration = ReadString();
+							var scope         = (Sql.QueryExtensionScope)ReadInt();
+							var builderType   = ReadType();
+							var arguments     = new Dictionary<string,ISqlExpression>();
 
 							var cnt = ReadInt();
 
@@ -2446,12 +2709,85 @@ namespace LinqToDB.Remote
 								var key   = ReadString();
 								var value = Read<ISqlExpression>();
 
-								ext.Arguments.Add(key!, value!);
+								arguments.Add(key!, value!);
 							}
 
-							qe.SqlQueryExtensions.Add(ext);
+							obj = new SqlQueryExtension()
+							{
+								Configuration = configuration,
+								Scope         = scope,
+								BuilderType   = builderType,
+								Arguments     = arguments
+							};
+							break;
 						}
+
+					case QueryElementType.SqlCast:
+					{
+						var dataType   = ReadDbDataType();
+						var expression = Read<ISqlExpression>();
+						var fromType   = Read<SqlDataType>();
+						var mandatory  = ReadBool();
+
+						obj = new SqlCastExpression(expression!, dataType!, fromType, mandatory);
+
+						break;
 					}
+
+					case QueryElementType.SqlCondition:
+					{
+						var condition = Read<ISqlPredicate>();
+						var trueValue = Read<ISqlExpression>();
+						var falseValue = Read<ISqlExpression>();
+
+						obj = new SqlConditionExpression(condition!, trueValue!, falseValue!);
+
+						break;
+					}
+
+					case QueryElementType.SqlCase:
+					{
+						var dbDataType = ReadDbDataType();
+						var casesCount = ReadInt();
+
+						var cases = new List<SqlCaseExpression.CaseItem>(casesCount);
+
+						for (int i = 0; i < casesCount; i++)
+						{
+							var condition = Read<ISqlPredicate>();
+							var resultExpression = Read<ISqlExpression>();
+
+							cases.Add(new SqlCaseExpression.CaseItem(condition!, resultExpression!));
+						}
+
+						var elseExpression = Read<ISqlExpression>();
+
+						obj = new SqlCaseExpression(dbDataType, cases, elseExpression);
+
+						break;
+					}
+
+					case QueryElementType.CompareTo:
+					{
+						var expr1 = Read<ISqlExpression>();
+						var expr2 = Read<ISqlExpression>();
+
+						obj = new SqlCompareToExpression(expr1!, expr2!);
+
+						break;
+					}
+
+					case QueryElementType.SqlCoalesce:
+					{
+						var expressions = ReadArray<ISqlExpression>()!;
+
+						obj = new SqlCoalesceExpression(expressions);
+
+						break;
+					}
+
+					default:
+						throw new InvalidOperationException($"Parse not implemented for element {(QueryElementType)type}");
 				}
 
 				ObjectIndices.Add(idx, obj!);

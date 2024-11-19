@@ -3,11 +3,13 @@ using System.Reflection;
 
 namespace LinqToDB.Mapping
 {
-	static class Nullability
+	/// <summary>
+	/// Internal API.
+	/// </summary>
+	public static class Nullability
 	{
 		private static Lazy<bool> _isSupported = new(() => 
 		{
-#if NET461_OR_GREATER || NETSTANDARD2_0_OR_GREATER || NETCOREAPP2_0_OR_GREATER
 			try
 			{
 				var fieldInfo = typeof(Nullability).GetField(nameof(_isSupported), BindingFlags.NonPublic | BindingFlags.Static)!;
@@ -24,11 +26,10 @@ namespace LinqToDB.Mapping
 			}
 			catch (InvalidOperationException)
 			{ /* return false below */ }
-#endif
 			return false;
 		});
 
-		public static void EnsureSupport()
+		internal static void EnsureSupport()
 		{
 			if (!_isSupported.Value)
 			{
@@ -41,7 +42,6 @@ namespace LinqToDB.Mapping
 
 		public static bool TryAnalyzeMember(MemberInfo member, out bool isNullable)
 		{
-#if NET461_OR_GREATER || NETSTANDARD2_0_OR_GREATER || NETCOREAPP2_0_OR_GREATER			
 			// Extract info from C# Nullable Reference Types if available.
 			// Note that this also handles Nullable Value Types.
 			var context = new NullabilityInfoContext();
@@ -55,10 +55,6 @@ namespace LinqToDB.Mapping
 			
 			isNullable = nullability == NullabilityState.Nullable;
 			return nullability != NullabilityState.Unknown;
-#else
-			isNullable = true;
-			return false;
-#endif
 		}
 	}
 }

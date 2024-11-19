@@ -1,8 +1,0 @@
-﻿{
-	"NET70.Azure": {
-		"Providers": [
-			"SqlServer.2014",
-			"SqlServer.2014.MS"
-		]
-	}
-}

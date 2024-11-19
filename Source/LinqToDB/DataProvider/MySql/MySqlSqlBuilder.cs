@@ -1,36 +1,36 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Data.Common;
+using System.Globalization;
+using System.Text;
 
 namespace LinqToDB.DataProvider.MySql
 {
+	using Common;
 	using Extensions;
 	using Mapping;
 	using SqlProvider;
 	using SqlQuery;
 
-	sealed class MySqlSqlBuilder : BasicSqlBuilder<MySqlOptions>
+	class MySqlSqlBuilder : BasicSqlBuilder<MySqlOptions>
 	{
 		public MySqlSqlBuilder(IDataProvider? provider, MappingSchema mappingSchema, DataOptions dataOptions, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)
 			: base(provider, mappingSchema, dataOptions, sqlOptimizer, sqlProviderFlags)
 		{
 		}
 
-		MySqlSqlBuilder(BasicSqlBuilder parentBuilder) : base(parentBuilder)
+		protected MySqlSqlBuilder(BasicSqlBuilder parentBuilder) : base(parentBuilder)
 		{
 		}
 
 		protected override ISqlBuilder CreateSqlBuilder()
 		{
-			return new MySqlSqlBuilder(this) { _hintBuilder = _hintBuilder };
+			return new MySqlSqlBuilder(this) { HintBuilder = HintBuilder };
 		}
 
 		protected override bool   IsRecursiveCteKeywordRequired   => true;
 		public    override bool   IsNestedJoinParenthesisRequired => true;
 		protected override bool   IsValuesSyntaxSupported         => false;
-		protected override string FakeTable                       => "DUAL";
 
 		protected override bool CanSkipRootAliases(SqlStatement statement)
 		{
@@ -47,20 +47,6 @@ namespace LinqToDB.DataProvider.MySql
 			return statement.NeedsIdentity() ? 2 : 1;
 		}
 
-		protected override void BuildSelectClause(SelectQuery selectQuery)
-		{
-			// mysql <= 5.5 doesn't support WHERE without FROM
-			// https://docs.oracle.com/cd/E19957-01/mysql-refman-5.5/sql-syntax.html#select
-			if (selectQuery.From.Tables.Count == 0 && !selectQuery.Where.IsEmpty)
-			{
-				AppendIndent().Append("SELECT").AppendLine();
-				BuildColumns(selectQuery);
-				AppendIndent().Append("FROM DUAL").AppendLine();
-			}
-			else
-				base.BuildSelectClause(selectQuery);
-		}
-
 		protected override void BuildCommand(SqlStatement statement, int commandNumber)
 		{
 			StringBuilder.AppendLine("SELECT LAST_INSERT_ID()");
@@ -73,27 +59,30 @@ namespace LinqToDB.DataProvider.MySql
 
 		protected override void BuildOffsetLimit(SelectQuery selectQuery)
 		{
-			if (selectQuery.Select.SkipValue == null)
+			SqlOptimizer.ConvertSkipTake(NullabilityContext, MappingSchema, DataOptions, selectQuery, OptimizationContext, out var takeExpr, out var skipExpr);
+
+			if (skipExpr == null)
 				base.BuildOffsetLimit(selectQuery);
 			else
 			{
 				AppendIndent()
 					.AppendFormat(
+						CultureInfo.InvariantCulture,
 						"LIMIT {0}, {1}",
-						WithStringBuilderBuildExpression(selectQuery.Select.SkipValue),
-						selectQuery.Select.TakeValue == null ?
-							long.MaxValue.ToString() :
-							WithStringBuilderBuildExpression(selectQuery.Select.TakeValue))
+						WithStringBuilderBuildExpression(skipExpr),
+						takeExpr == null ?
+							(object)long.MaxValue :
+							WithStringBuilderBuildExpression(takeExpr))
 					.AppendLine();
 			}
 		}
 
-		protected override void BuildDataTypeFromDataType(SqlDataType type, bool forCreateTable, bool canBeNull)
+		protected override void BuildDataTypeFromDataType(DbDataType type, bool forCreateTable, bool canBeNull)
 		{
 			// mysql has limited support for types in type-CAST expressions
 			if (!forCreateTable)
 			{
-				switch ((type.Type.DataType, type.Type.Precision, type.Type.Scale, type.Type.Length) switch
+				switch ((type.DataType, type.Precision, type.Scale, type.Length) switch
 				{
 					(DataType.Boolean  or
 					 DataType.SByte    or
@@ -115,12 +104,10 @@ namespace LinqToDB.DataProvider.MySql
 					(DataType.Date,           _,                   _,                  _                   ) => "DATE",
 					(DataType.Json,           _,                   _,                  _                   ) => "JSON",
 					(DataType.Guid,           _,                   _,                  _                   ) => "CHAR(36)",
-					// TODO: FLOAT/DOUBLE support in CAST added just recently (v8.0.17)
-					// and needs version sniffing
-					(DataType.Double or
-					 DataType.Single,         _,                   _,                  _                   ) => "$decimal$",
-					(DataType.Decimal,        _,                   not null and not 0, _                   ) => $"DECIMAL({type.Type.Precision ?? 10}, {type.Type.Scale})",
-					(DataType.Decimal,        not null and not 10, _,                  _                   ) => $"DECIMAL({type.Type.Precision})",
+					(DataType.Double,         _,                   _,                  _                   ) => "DOUBLE",
+					(DataType.Single,         _,                   _,                  _                   ) => "FLOAT",
+					(DataType.Decimal,        _,                   not null and not 0, _                   ) => FormattableString.Invariant($"DECIMAL({type.Precision ?? 10}, {type.Scale})"),
+					(DataType.Decimal,        not null and not 10, _,                  _                   ) => FormattableString.Invariant($"DECIMAL({type.Precision})"),
 					(DataType.Decimal,        _,                   _,                  _                   ) => "DECIMAL",
 					(DataType.Char      or
 					 DataType.NChar     or
@@ -139,7 +126,7 @@ namespace LinqToDB.DataProvider.MySql
 					 DataType.VarChar   or
 					 DataType.NVarChar  or
 					 DataType.NText     or
-					 DataType.Text,           _,                   _,                  _                   ) => $"CHAR({type.Type.Length})",
+					 DataType.Text,           _,                   _,                  _                   ) => $"CHAR({type.Length})",
 					(DataType.VarBinary or
 					 DataType.Binary    or
 					 DataType.Blob,           _,                   _,                  null or < 0         ) => "BINARY(255)",
@@ -148,12 +135,11 @@ namespace LinqToDB.DataProvider.MySql
 					 DataType.Blob,           _,                   _,                  1                   ) => "BINARY",
 					(DataType.VarBinary or
 					 DataType.Binary    or
-					 DataType.Blob,           _,                   _,                  _                   ) => $"BINARY({type.Type.Length})",
+					 DataType.Blob,           _,                   _,                  _                   ) => $"BINARY({type.Length})",
 					_ => null
 				})
 				{
 					case null        : base.BuildDataTypeFromDataType(type,                forCreateTable, canBeNull); break;
-					case "$decimal$" : base.BuildDataTypeFromDataType(SqlDataType.Decimal, forCreateTable, canBeNull); break;
 					case var t       : StringBuilder.Append(t);                                                        break;
 				};
 
@@ -161,7 +147,7 @@ namespace LinqToDB.DataProvider.MySql
 			}
 
 			// types for CREATE TABLE statement
-			switch ((type.Type.DataType, type.Type.Precision, type.Type.Scale, type.Type.Length) switch
+			switch ((type.DataType, type.Precision, type.Scale, type.Length) switch
 			{
 				(DataType.SByte,          _,                   _,                  _                   ) => "TINYINT",
 				(DataType.Int16,          _,                   _,                  _                   ) => "SMALLINT",
@@ -173,26 +159,24 @@ namespace LinqToDB.DataProvider.MySql
 				(DataType.UInt64,         _,                   _,                  _                   ) => "BIGINT UNSIGNED",
 				(DataType.Money,          _,                   _,                  _                   ) => "DECIMAL(19, 4)",
 				(DataType.SmallMoney,     _,                   _,                  _                   ) => "DECIMAL(10, 4)",
-				(DataType.Decimal,        _,                   not null and not 0, _                   ) => $"DECIMAL({type.Type.Precision ?? 10}, {type.Type.Scale})",
-				(DataType.Decimal,        not null and not 10, _,                  _                   ) => $"DECIMAL({type.Type.Precision})",
+				(DataType.Decimal,        _,                   not null and not 0, _                   ) => FormattableString.Invariant($"DECIMAL({type.Precision ?? 10}, {type.Scale})"),
+				(DataType.Decimal,        not null and not 10, _,                  _                   ) => FormattableString.Invariant($"DECIMAL({type.Precision})"),
 				(DataType.Decimal,        _,                   _,                  _                   ) => "DECIMAL",
 				(DataType.DateTime  or
 				 DataType.DateTime2 or
-				 DataType.SmallDateTime,  > 0 and <= 6,        _,                  _                   ) => $"DATETIME({type.Type.Precision})",
+				 DataType.SmallDateTime,  > 0 and <= 6,        _,                  _                   ) => FormattableString.Invariant($"DATETIME({type.Precision})"),
 				(DataType.DateTime  or
 				 DataType.DateTime2 or
 				 DataType.SmallDateTime,  _,                   _,                  _                   ) => "DATETIME",
-				(DataType.DateTimeOffset, > 0 and <= 6,        _,                  _                   ) => $"TIMESTAMP({type.Type.Precision})",
+				(DataType.DateTimeOffset, > 0 and <= 6,        _,                  _                   ) => FormattableString.Invariant($"TIMESTAMP({type.Precision})"),
 				(DataType.DateTimeOffset, _,                   _,                  _                   ) => "TIMESTAMP",
-				(DataType.Time,           > 0 and <= 6,        _,                  _                   ) => $"TIME({type.Type.Precision})",
+				(DataType.Time,           > 0 and <= 6,        _,                  _                   ) => FormattableString.Invariant($"TIME({type.Precision})"),
 				(DataType.Time,           _,                   _,                  _                   ) => "TIME",
 				(DataType.Boolean,        _,                   _,                  _                   ) => "BOOLEAN",
-				(DataType.Double,         >= 0 and <= 53,      _,                  _                   ) => $"FLOAT({type.Type.Precision})", // this is correct, FLOAT(p)
 				(DataType.Double,         _,                   _,                  _                   ) => "DOUBLE",
-				(DataType.Single,         >= 0 and <= 53,      _,                  _                   ) => $"FLOAT({type.Type.Precision})",
 				(DataType.Single,         _,                   _,                  _                   ) => "FLOAT",
 				(DataType.BitArray,       _,                   _,                  null                ) =>
-					type.Type.SystemType.ToNullableUnderlying()
+					type.SystemType.ToNullableUnderlying()
 					switch
 					{
 						var t when t == typeof(byte)  || t == typeof(sbyte)  =>  8,
@@ -204,9 +188,9 @@ namespace LinqToDB.DataProvider.MySql
 					switch
 					{
 						0     => "BIT",
-						var l => $"BIT({l})"
+						var l => FormattableString.Invariant($"BIT({l})")
 					},
-				(DataType.BitArray,       _,                  _,                   not 1 and >= 0      ) => $"BIT({type.Type.Length})",
+				(DataType.BitArray,       _,                  _,                   not 1 and >= 0      ) => $"BIT({type.Length})",
 				(DataType.BitArray,       _,                  _,                   _                   ) => "BIT",
 				(DataType.Date,           _,                  _,                   _                   ) => "DATE",
 				(DataType.Json,           _,                  _,                   _                   ) => "JSON",
@@ -216,16 +200,16 @@ namespace LinqToDB.DataProvider.MySql
 				(DataType.Char    or
 				 DataType.NChar,          _,                  _,                   1                   ) => "CHAR",
 				(DataType.Char    or
-				 DataType.NChar,          _,                  _,                   _                   ) => $"CHAR({type.Type.Length})",
+				 DataType.NChar,          _,                  _,                   _                   ) => $"CHAR({type.Length})",
 				(DataType.VarChar or
 				 DataType.NVarChar,       _,                  _,                   null or > 65535 or < 0) => "VARCHAR(255)",
 				(DataType.VarChar or
-				 DataType.NVarChar,       _,                  _,                   _                   ) => $"VARCHAR({type.Type.Length})",
+				 DataType.NVarChar,       _,                  _,                   _                   ) => $"VARCHAR({type.Length})",
 				(DataType.Binary,         _,                  _,                   null or < 0         ) => "BINARY(255)",
 				(DataType.Binary,         _,                  _,                   1                   ) => "BINARY",
-				(DataType.Binary,         _,                  _,                   _                   ) => $"BINARY({type.Type.Length})",
+				(DataType.Binary,         _,                  _,                   _                   ) => $"BINARY({type.Length})",
 				(DataType.VarBinary,      _,                  _,                   null or < 0         ) => "VARBINARY(255)",
-				(DataType.VarBinary,      _,                  _,                   _                   ) => $"VARBINARY({type.Type.Length})",
+				(DataType.VarBinary,      _,                  _,                   _                   ) => $"VARBINARY({type.Length})",
 				(DataType.Blob,           _,                  _,                   null or < 0         ) => "BLOB",
 				(DataType.Blob,           _,                  _,                   <= 255              ) => "TINYBLOB",
 				(DataType.Blob,           _,                  _,                   <= 65535            ) => "BLOB",
@@ -243,7 +227,7 @@ namespace LinqToDB.DataProvider.MySql
 				 DataType.Text,           _,                  _,                   _                   ) => "LONGTEXT",
 				_ => null
 			})
-						{
+			{
 				case null  : base.BuildDataTypeFromDataType(type, forCreateTable, canBeNull); break;
 				case var t : StringBuilder.Append(t);                                         break;
 			};
@@ -270,7 +254,8 @@ namespace LinqToDB.DataProvider.MySql
 			StringBuilder.AppendLine();
 		}
 
-		protected override void BuildUpdateClause(SqlStatement statement, SelectQuery selectQuery, SqlUpdateClause updateClause)
+		protected override void BuildUpdateClause(SqlStatement statement, SelectQuery selectQuery,
+			SqlUpdateClause                                    updateClause)
 		{
 			var pos = StringBuilder.Length;
 
@@ -283,6 +268,8 @@ namespace LinqToDB.DataProvider.MySql
 
 		protected override void BuildInsertQuery(SqlStatement statement, SqlInsertClause insertClause, bool addAlias)
 		{
+			var nullability = NullabilityContext.GetContext(statement.SelectQuery);
+
 			BuildStep = Step.Tag;          BuildTag(statement);
 			BuildStep = Step.InsertClause; BuildInsertClause(statement, insertClause, addAlias);
 
@@ -344,7 +331,7 @@ namespace LinqToDB.DataProvider.MySql
 				case ConvertType.NameToQueryTable     :
 				case ConvertType.NameToProcedure      :
 					// https://dev.mysql.com/doc/refman/8.0/en/identifiers.html
-					if (value.Contains('`'))
+					if (value.Contains("`"))
 						value = value.Replace("`", "``");
 
 					return sb.Append('`').Append(value).Append('`');
@@ -360,8 +347,7 @@ namespace LinqToDB.DataProvider.MySql
 			ref bool addAlias,
 			bool throwExceptionIfTableNotFound = true)
 		{
-			return base.BuildExpression(
-				expr,
+			return base.BuildExpression(expr,
 				buildTableName && Statement.QueryType != QueryType.InsertOrUpdate,
 				checkParentheses,
 				alias,
@@ -380,6 +366,8 @@ namespace LinqToDB.DataProvider.MySql
 
 		protected override void BuildInsertOrUpdateQuery(SqlInsertOrUpdateStatement insertOrUpdate)
 		{
+			var nullability = new NullabilityContext(insertOrUpdate.SelectQuery);
+
 			var position = StringBuilder.Length;
 
 			BuildInsertQuery(insertOrUpdate, insertOrUpdate.Insert, false);
@@ -461,7 +449,7 @@ namespace LinqToDB.DataProvider.MySql
 			{
 				var param = provider.TryGetProviderParameter(dataContext, parameter);
 				if (param != null)
-					return provider.Adapter.GetDbType(param).ToString();
+					return string.Format(CultureInfo.InvariantCulture, "{0}", provider.Adapter.GetDbType(param));
 			}
 
 			return base.GetProviderTypeName(dataContext, parameter);
@@ -485,7 +473,8 @@ namespace LinqToDB.DataProvider.MySql
 			throw new LinqToDBException($"{Name} provider doesn't support SQL MERGE statement");
 		}
 
-		protected override void BuildGroupByBody(GroupingType groupingType, List<ISqlExpression> items)
+		protected override void BuildGroupByBody(GroupingType groupingType,
+			List<ISqlExpression>                              items)
 		{
 			if (groupingType == GroupingType.GroupBySets || groupingType == GroupingType.Default)
 			{
@@ -502,7 +491,7 @@ namespace LinqToDB.DataProvider.MySql
 			{
 				AppendIndent();
 
-				var expr = WrapBooleanExpression(items[i]);
+				var expr = items[i];
 				BuildExpression(expr);
 
 				if (i + 1 < items.Count)
@@ -558,16 +547,16 @@ namespace LinqToDB.DataProvider.MySql
 				StringBuilder.Append("IF NOT EXISTS ");
 		}
 
-		private StringBuilder? _hintBuilder;
+		protected StringBuilder? HintBuilder { get; set; }
 
 		int  _hintPosition;
 		bool _isTopLevelBuilder;
 
 		protected override void StartStatementQueryExtensions(SelectQuery? selectQuery)
 		{
-			if (_hintBuilder == null)
+			if (HintBuilder == null)
 			{
-				_hintBuilder        = new();
+				HintBuilder        = new();
 				_isTopLevelBuilder = true;
 				_hintPosition      = StringBuilder.Length;
 
@@ -575,7 +564,7 @@ namespace LinqToDB.DataProvider.MySql
 					_hintPosition -= " INTO ".Length;
 
 				if (selectQuery?.QueryName is {} queryName)
-					_hintBuilder
+					HintBuilder
 						.Append("QB_NAME(")
 						.Append(queryName)
 						.Append(')')
@@ -595,19 +584,19 @@ namespace LinqToDB.DataProvider.MySql
 		{
 			base.FinalizeBuildQuery(statement);
 
-			if (statement.SqlQueryExtensions is not null && _hintBuilder is not null)
+			if (statement.SqlQueryExtensions is not null && HintBuilder is not null)
 			{
-				if (_hintBuilder.Length > 0 && _hintBuilder[^1] != ' ')
-					_hintBuilder.Append(' ');
-				BuildQueryExtensions(_hintBuilder, statement.SqlQueryExtensions, null, " ", null, Sql.QueryExtensionScope.QueryHint);
+				if (HintBuilder.Length > 0 && HintBuilder[^1] != ' ')
+					HintBuilder.Append(' ');
+				BuildQueryExtensions(HintBuilder, statement.SqlQueryExtensions, null, " ", null, Sql.QueryExtensionScope.QueryHint);
 			}
 
-			if (_isTopLevelBuilder && _hintBuilder!.Length > 0)
+			if (_isTopLevelBuilder && HintBuilder!.Length > 0)
 			{
-				_hintBuilder.Insert(0, " /*+ ");
-				_hintBuilder.Append(" */");
+				HintBuilder.Insert(0, " /*+ ");
+				HintBuilder.Append(" */");
 
-				StringBuilder.Insert(_hintPosition, _hintBuilder);
+				StringBuilder.Insert(_hintPosition, HintBuilder.ToString());
 			}
 		}
 
@@ -615,8 +604,8 @@ namespace LinqToDB.DataProvider.MySql
 		{
 			if (table.SqlQueryExtensions is not null)
 			{
-				if (_hintBuilder is not null)
-					BuildTableExtensions(_hintBuilder, table, alias, null, " ", null, ext =>
+				if (HintBuilder is not null)
+					BuildTableExtensions(HintBuilder, table, alias, null, " ", null, ext =>
 						ext.Scope is
 							Sql.QueryExtensionScope.TableHint or
 							Sql.QueryExtensionScope.TablesInScopeHint);

@@ -32,7 +32,7 @@ namespace Tests.DataProvider
 					do
 					{
 						var value = func(rd.Reader, 0);
-						Assert.AreEqual(1, value);
+						Assert.That(value, Is.EqualTo(1));
 					} while (rd.Reader!.Read());
 				}
 				else

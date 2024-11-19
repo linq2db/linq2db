@@ -5,25 +5,22 @@
 	<PropertyGroup>
 		<AssemblyName>Tests.T4</AssemblyName>
 
-		<NoWarn>(NoWarn);618</NoWarn>
+		<MSBuildWarningsAsMessages>$(MSBuildWarningsAsMessages);MSB3277</MSBuildWarningsAsMessages>
 	</PropertyGroup>
 
 	<ItemGroup>
 		<ProjectCapability Remove="TestContainer" />
-	</ItemGroup>
 
-	<ItemGroup>
 		<Service Include="{508349b6-6b84-4df5-91f0-309beebad82d}" />
 
 		<PackageReference Update="MySql.Data" Aliases="" />
 		<PackageReference Update="MySqlConnector" Aliases="" />
 	</ItemGroup>
 
-	<ItemGroup Condition="'$(TargetFramework)' == 'net472'">
-		<Reference Include="System.ComponentModel.DataAnnotations" />
+	<ItemGroup Condition="'$(TargetFramework)' == 'net462'">
+		<Reference Include="WindowsBase" />
 		<Reference Include="PresentationCore" />
 		<Reference Include="PresentationFramework" />
-		<Reference Include="WindowsBase" />
 	</ItemGroup>
 
 	<ItemGroup>
@@ -31,7 +28,7 @@
 		<Content Include="Models\bbb.txt" />
 	</ItemGroup>
 
-	<ItemGroup Condition="'$(TargetFramework)' == 'net472'">
+	<ItemGroup Condition="'$(TargetFramework)' == 'net462'">
 		<Compile Update="WPF\ViewModel.generated.cs">
 			<DesignTime>True</DesignTime>
 			<AutoGen>True</AutoGen>
@@ -39,7 +36,7 @@
 		</Compile>
 	</ItemGroup>
 	
-	<ItemGroup Condition="'$(TargetFramework)' != 'net472'">
+	<ItemGroup Condition="'$(TargetFramework)' != 'net462'">
 		<Compile Remove="WPF\*.cs" />
 		<None Include="WPF\ViewModel.cs" />
 

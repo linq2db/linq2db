@@ -8,10 +8,8 @@ namespace LinqToDB.DataProvider.PostgreSQL
 	using Expressions;
 	using Linq;
 	using SqlQuery;
-#if !NET45
 	using Common;
 	using Mapping;
-#endif
 
 	public interface IPostgreSQLExtensions
 	{
@@ -72,7 +70,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			if (source  == null) throw new ArgumentNullException(nameof(source));
 			if (expr    == null) throw new ArgumentNullException(nameof(expr));
 
-			var currentSource = LinqExtensions.ProcessSourceQueryable?.Invoke(source) ?? source;
+			var currentSource = source.ProcessIQueryable();
 
 			var query = currentSource.Provider.CreateQuery<TV[]>(
 				Expression.Call(
@@ -89,7 +87,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			if (source  == null) throw new ArgumentNullException(nameof(source));
 			if (expr    == null) throw new ArgumentNullException(nameof(expr));
 
-			var currentSource = LinqExtensions.ProcessSourceQueryable?.Invoke(source) ?? source;
+			var currentSource = source.ProcessIQueryable();
 
 			var query = currentSource.Provider.CreateQuery<TV[]>(
 				Expression.Call(
@@ -106,7 +104,6 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 		#region unnest
 
-#if !NET45
 		[ExpressionMethod(nameof(UnnestImpl))]
 		public static IQueryable<T> Unnest<T>(this IDataContext dc, T[] array)
 		{
@@ -136,7 +133,6 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		{
 			return (dc, array) => dc.FromSql<Ordinality<T>>($"UNNEST({array}) WITH ORDINALITY {Sql.AliasExpr()}(value, idx)");
 		}
-#endif
 
 		#endregion
 
@@ -147,7 +143,6 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		{
 			throw new LinqException($"'{nameof(ConcatArrays)}' is server-side method.");
 		}
-
 
 		[Sql.Extension("{array1} || {array2}", ServerSideOnly = true, CanBeNull = true, Precedence = Precedence.Additive)]
 		public static T[] ConcatArrays<T>(this IPostgreSQLExtensions? ext, [ExprParameter] T[] array1, [ExprParameter] T[][] array2)
@@ -294,7 +289,6 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			throw new LinqException($"'{nameof(ArrayToString)}' is server-side method.");
 		}
 
-
 		[Sql.Extension("STRING_TO_ARRAY({str}, {delimiter})", ServerSideOnly = true, CanBeNull = true, Precedence = Precedence.Primary)]
 		public static string[] StringToArray(this IPostgreSQLExtensions? ext, [ExprParameter] string str, [ExprParameter] string delimiter)
 		{
@@ -353,7 +347,6 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 		#region generate_series
 
-#if !NET45
 		static Func<IDataContext, int, int, IQueryable<int>>? _generateSeriesIntFunc;
 
 		[ExpressionMethod(nameof(GenerateSeriesIntImpl))]
@@ -366,7 +359,6 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		{
 			return (dc, start, stop) => dc.FromSqlScalar<int>($"GENERATE_SERIES({start}, {stop})");
 		}
-
 
 		static Func<IDataContext, int, int, int, IQueryable<int>>? _generateSeriesIntStepFunc;
 
@@ -381,7 +373,6 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			return (dc, start, stop, step) => dc.FromSqlScalar<int>($"GENERATE_SERIES({start}, {stop}, {step})");
 		}
 
-
 		static Func<IDataContext, DateTime, DateTime, TimeSpan, IQueryable<DateTime>>? _generateSeriesDateFunc;
 
 		[ExpressionMethod(nameof(GenerateSeriesDateImpl))]
@@ -394,12 +385,10 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		{
 			return (dc, start, stop, step) => dc.FromSqlScalar<DateTime>($"GENERATE_SERIES({start}, {stop}, {step})");
 		}
-#endif
 		#endregion
 
 		#region generate_subscripts
 
-#if !NET45
 		[ExpressionMethod(nameof(GenerateSubscriptsImpl))]
 		public static IQueryable<int> GenerateSubscripts<T>(this IDataContext dc, T[] array, int dimension)
 		{
@@ -423,7 +412,6 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		{
 			return (dc, array, dimension, reverse) => dc.FromSqlScalar<int>($"GENERATE_SUBSCRIPTS({array}, {dimension}, {reverse})");
 		}
-#endif
 
 		#endregion
 

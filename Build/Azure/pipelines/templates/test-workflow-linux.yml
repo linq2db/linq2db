@@ -4,7 +4,14 @@ parameters:
 steps:
 - checkout: none
 
-# .NET 6&7 SDK already installed https://github.com/actions/runner-images/blob/main/images/linux/Ubuntu2204-Readme.md#net-tools
+# .NET 8 SDK already installed https://github.com/actions/runner-images/blob/main/images/ubuntu/Ubuntu2204-Readme.md
+
+- task: UseDotNet@2
+  displayName: 'Install .NET 6'
+  inputs:
+    packageType: sdk
+    version: 6.x
+  condition: and(variables.title, eq(variables.net60, 'true'), succeeded())
 
 - task: CmdLine@2
   inputs:
@@ -15,31 +22,31 @@ steps:
 
 - task: DownloadPipelineArtifact@2
   inputs:
-    artifactName: test_artifacts
+    artifactName: $(artifact_test_binaries)
     targetPath: '$(System.DefaultWorkingDirectory)'
   condition: and(variables.title, succeeded())
   displayName: Extract test files
 
 - task: CmdLine@2
   inputs:
-    script: 'cp $(System.DefaultWorkingDirectory)/configs/netcore31/$(config).json netcore31/UserDataProviders.json'
-    workingDirectory: '$(System.DefaultWorkingDirectory)'
-  displayName: Copy test config
-  condition: and(variables.title, eq(variables.netcore31, 'true'), succeeded())
-
-- task: CmdLine@2
-  inputs:
-    script: 'cp $(System.DefaultWorkingDirectory)/configs/net60/$(config).json net60/UserDataProviders.json'
+    script: 'cp $(System.DefaultWorkingDirectory)/configs/net60/$(config).json net6.0/UserDataProviders.json'
     workingDirectory: '$(System.DefaultWorkingDirectory)'
   displayName: Copy .NET 6 test config
   condition: and(variables.title, eq(variables.net60, 'true'), succeeded())
 
 - task: CmdLine@2
   inputs:
-    script: 'cp $(System.DefaultWorkingDirectory)/configs/net70/$(config).json net70/UserDataProviders.json'
+    script: 'cp $(System.DefaultWorkingDirectory)/configs/net80/$(config).json net8.0/UserDataProviders.json'
     workingDirectory: '$(System.DefaultWorkingDirectory)'
-  displayName: Copy .NET 7 test config
-  condition: and(variables.title, eq(variables.net70, 'true'), succeeded())
+  displayName: Copy .NET 8 test config
+  condition: and(variables.title, eq(variables.net80, 'true'), succeeded())
+
+- task: CmdLine@2
+  inputs:
+    script: 'cp $(System.DefaultWorkingDirectory)/configs/net90/$(config).json net9.0/UserDataProviders.json'
+    workingDirectory: '$(System.DefaultWorkingDirectory)'
+  displayName: Copy .NET 9 test config
+  condition: and(variables.title, eq(variables.net90, 'true'), succeeded())
 
 - task: CmdLine@2
   inputs:
@@ -65,35 +72,76 @@ steps:
 - task: CmdLine@2
   inputs:
     script: '$(System.DefaultWorkingDirectory)/scripts/$(script_local)'
-    workingDirectory: '$(System.DefaultWorkingDirectory)/netcore31'
-  condition: and(variables.title, variables.script_local, eq(variables.netcore31, 'true'), succeeded())
-  displayName: Setup tests
-
-- script: dotnet test ./netcore31/linq2db.Tests.dll --filter "TestCategory != SkipCI" -f netcoreapp31 -l trx $(extra)
-  condition: and(variables.title, eq(variables.netcore31, 'true'), succeeded())
-  displayName: 'Tests (CORE31): $(title)'
-
-- task: CmdLine@2
-  inputs:
-    script: '$(System.DefaultWorkingDirectory)/scripts/$(script_local)'
-    workingDirectory: '$(System.DefaultWorkingDirectory)/net60'
+    workingDirectory: '$(System.DefaultWorkingDirectory)/net6.0/main/x64'
   condition: and(variables.title, variables.script_local, eq(variables.net60, 'true'), succeeded())
   displayName: Setup tests
 
-- script: dotnet test ./net60/linq2db.Tests.dll --filter "TestCategory != SkipCI" -f net60 -l trx $(extra)
-  condition: and(variables.title, eq(variables.net60, 'true'), succeeded())
+- script: dotnet test ./net6.0/main/x64/linq2db.Tests.dll --filter "TestCategory != SkipCI" -f net60 -l trx $(extra) --blame-hang-timeout 5m
+  condition: and(variables.title, eq(variables.net60, 'true'), succeeded(), ne(variables.retry, 'true'), ${{ parameters.full_run }})
   displayName: 'Tests (NET60): $(title)'
+
+- script: dotnet test ./net6.0/main/x64/linq2db.Tests.dll --filter "TestCategory != SkipCI" -f net60 -l trx $(extra) --blame-hang-timeout 5m
+  condition: and(variables.title, eq(variables.net60, 'true'), succeeded(), eq(variables.retry, 'true'), ${{ parameters.full_run }})
+  displayName: 'Tests (NET60): $(title)'
+  retryCountOnTaskFailure: 2
+
+- script: dotnet test ./net6.0/efcore/x64/linq2db.EntityFrameworkCore.Tests.dll --filter "TestCategory != SkipCI" -f net60 -l trx $(extra) --blame-hang-timeout 5m
+  condition: and(variables.title, eq(variables.net60, 'true'), succeeded())
+  displayName: 'EF.Core Tests (NET60): $(title)'
+
+- task: UseDotNet@2
+  displayName: 'Use .NET 8'
+  inputs:
+    packageType: sdk
+    version: 8.x
+  condition: and(variables.title, eq(variables.net80, 'true'), succeeded())
 
 - task: CmdLine@2
   inputs:
     script: '$(System.DefaultWorkingDirectory)/scripts/$(script_local)'
-    workingDirectory: '$(System.DefaultWorkingDirectory)/net70'
-  condition: and(variables.title, variables.script_local, eq(variables.net70, 'true'), succeeded())
-  displayName: Setup .NET 7 tests
+    workingDirectory: '$(System.DefaultWorkingDirectory)/net8.0/main/x64'
+  condition: and(variables.title, variables.script_local, eq(variables.net80, 'true'), succeeded())
+  displayName: Setup .NET 8 tests
 
-- script: dotnet test ./net70/linq2db.Tests.dll --filter "TestCategory != SkipCI" -f net70 -l trx $(extra)
-  condition: and(variables.title, eq(variables.net70, 'true'), succeeded())
-  displayName: 'Tests (.NET 7): $(title)'
+- script: dotnet test ./net8.0/main/x64/linq2db.Tests.dll --filter "TestCategory != SkipCI" -f net80 -l trx $(extra) --blame-hang-timeout 5m
+  condition: and(variables.title, eq(variables.net80, 'true'), succeeded(), ne(variables.retry, 'true'), ${{ parameters.full_run }})
+  displayName: 'Tests (.NET 8): $(title)'
+
+- script: dotnet test ./net8.0/main/x64/linq2db.Tests.dll --filter "TestCategory != SkipCI" -f net80 -l trx $(extra) --blame-hang-timeout 5m
+  condition: and(variables.title, eq(variables.net80, 'true'), succeeded(), eq(variables.retry, 'true'), ${{ parameters.full_run }})
+  displayName: 'Tests (.NET 8): $(title)'
+  retryCountOnTaskFailure: 2
+
+- script: dotnet test ./net8.0/efcore/x64/linq2db.EntityFrameworkCore.Tests.dll --filter "TestCategory != SkipCI" -f net80 -l trx $(extra) --blame-hang-timeout 5m
+  condition: and(variables.title, eq(variables.net80, 'true'), succeeded())
+  displayName: 'EF.Core Tests (.NET 8): $(title)'
+
+- task: UseDotNet@2
+  displayName: 'Use .NET 9'
+  inputs:
+    packageType: sdk
+    version: 9.x
+  condition: and(variables.title, eq(variables.net90, 'true'), succeeded())
+
+- task: CmdLine@2
+  inputs:
+    script: '$(System.DefaultWorkingDirectory)/scripts/$(script_local)'
+    workingDirectory: '$(System.DefaultWorkingDirectory)/net9.0/main/x64'
+  condition: and(variables.title, variables.script_local, eq(variables.net90, 'true'), succeeded())
+  displayName: Setup .NET 9 tests
+
+- script: dotnet test ./net9.0/main/x64/linq2db.Tests.dll --filter "TestCategory != SkipCI" -f net90 -l trx $(extra) --blame-hang-timeout 5m
+  condition: and(variables.title, eq(variables.net90, 'true'), succeeded(), ne(variables.retry, 'true'))
+  displayName: 'Tests (.NET 9): $(title)'
+
+- script: dotnet test ./net9.0/main/x64/linq2db.Tests.dll --filter "TestCategory != SkipCI" -f net90 -l trx $(extra) --blame-hang-timeout 5m
+  condition: and(variables.title, eq(variables.net90, 'true'), succeeded(), eq(variables.retry, 'true'))
+  displayName: 'Tests (.NET 9): $(title)'
+  retryCountOnTaskFailure: 2
+
+- script: dotnet test ./net9.0/efcore/x64/linq2db.EntityFrameworkCore.Tests.dll --filter "TestCategory != SkipCI" -f net90 -l trx $(extra) --blame-hang-timeout 5m
+  condition: and(variables.title, eq(variables.net90, 'true'), succeeded())
+  displayName: 'EF.Core Tests (.NET 9): $(title)'
 
 - task: PublishTestResults@2
   condition: and(variables.title, succeededOrFailed())
@@ -101,6 +149,7 @@ steps:
     testRunner: VsTest
     testResultsFiles: '**/*.trx'
     testRunTitle: 'Linux / $(title)'
+    failTaskOnMissingResultsFile: true
 
 - task: PowerShell@2
   inputs:
@@ -128,6 +177,14 @@ steps:
           $output = git pull --rebase
           if ($LASTEXITCODE -ne 0) {
               Write-Host "Failed to rebase. Error code ${LASTEXITCODE}, output: ${output}"
+              Write-Host "Display conflict diff"
+              $output = git diff ORIG_HEAD FETCH_HEAD
+              if ($LASTEXITCODE -ne 0) {
+                  Write-Host "Failed to render diff. Error code ${LASTEXITCODE}, output:"
+                  Write-Output $output
+                  exit 1
+              }
+              Write-Output $output
               exit 1
           }
           Write-Host "Push baselines to server"
@@ -149,11 +206,3 @@ steps:
     EMAIL: azp@linq2db.com
     GIT_AUTHOR_NAME: Azure Pipelines Bot
     GIT_COMMITTER_NAME: Azure Pipelines Bot
-
-# dunno why, but it is not needed for now for linux images
-#    - task: Docker@2
-#      displayName: Auth on hub.docker.com
-#      inputs:
-#        command: login
-#        containerRegistry: dockerhub
-#      condition: and(variables.title, eq(variables.docker_login, 'true'))

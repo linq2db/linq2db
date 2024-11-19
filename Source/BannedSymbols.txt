@@ -1,0 +1,289 @@
+T:System.Collections.Concurrent.ConcurrentBag`1;Don't use it, it is flawed type: https://github.com/linq2db/linq2db/pull/2066
+T:System.Data.IColumnMapping;Use DataColumnMapping class instead of ADO.NET interfaces
+T:System.Data.IColumnMappingCollection;Use ColumnMappingCollection class instead of ADO.NET interfaces
+T:System.Data.IDataAdapter;Use DataAdapter class instead of ADO.NET interfaces
+T:System.Data.IDataParameter;Use DbParameter class instead of ADO.NET interfaces
+T:System.Data.IDataParameterCollection;Use DbParameterCollection class instead of ADO.NET interfaces
+T:System.Data.IDataReader;Use DbDataReader class instead of ADO.NET interfaces
+T:System.Data.IDataRecord;Use DbDataRecord class instead of ADO.NET interfaces
+T:System.Data.IDbCommand;Use DbCommand class instead of ADO.NET interfaces
+T:System.Data.IDbConnection;Use DbConnection class instead of ADO.NET interfaces
+T:System.Data.IDbDataAdapter;Use DbDataAdapter class instead of ADO.NET interfaces
+T:System.Data.IDbDataParameter;Use DbParameter class instead of ADO.NET interfaces
+T:System.Data.IDbTransaction;Use DbTransaction class instead of ADO.NET interfaces
+T:System.ThreadStaticAttribute;don't do it
+M:System.Linq.Expressions.Expression.Property(System.Linq.Expressions.Expression,System.Reflection.MethodInfo); use overload with PropertyInfo parameter
+
+// Better to throw using ThrowIfCancellationRequested
+P:System.Threading.CancellationToken.IsCancellationRequested; prefer to throw instead
+
+// ban raw Attribute query methods and redirect to AttributesExtensions cached helpers
+M:System.Reflection.CustomAttributeExtensions.GetCustomAttribute(System.Reflection.Assembly,System.Type); Use AttributesExtensions.GetAttribute<TAttribute>(bool inherit) extension
+M:System.Reflection.CustomAttributeExtensions.GetCustomAttribute(System.Reflection.MemberInfo,System.Type); Use AttributesExtensions.GetAttribute<TAttribute>(bool inherit) extension
+M:System.Reflection.CustomAttributeExtensions.GetCustomAttribute(System.Reflection.MemberInfo,System.Type,System.Boolean); Use AttributesExtensions.GetAttribute<TAttribute>(bool inherit) extension
+M:System.Reflection.CustomAttributeExtensions.GetCustomAttribute(System.Reflection.Module,System.Type); Use AttributesExtensions.GetAttribute<TAttribute>(bool inherit) extension
+M:System.Reflection.CustomAttributeExtensions.GetCustomAttribute(System.Reflection.ParameterInfo,System.Type); Use AttributesExtensions.GetAttribute<TAttribute>(bool inherit) extension
+M:System.Reflection.CustomAttributeExtensions.GetCustomAttribute(System.Reflection.ParameterInfo,System.Type,System.Boolean); Use AttributesExtensions.GetAttribute<TAttribute>(bool inherit) extension
+M:System.Reflection.CustomAttributeExtensions.GetCustomAttribute``1(System.Reflection.Assembly); Use AttributesExtensions.GetAttribute<TAttribute>(bool inherit) extension
+M:System.Reflection.CustomAttributeExtensions.GetCustomAttribute``1(System.Reflection.MemberInfo); Use AttributesExtensions.GetAttribute<TAttribute>(bool inherit) extension
+M:System.Reflection.CustomAttributeExtensions.GetCustomAttribute``1(System.Reflection.MemberInfo,System.Boolean); Use AttributesExtensions.GetAttribute<TAttribute>(bool inherit) extension
+M:System.Reflection.CustomAttributeExtensions.GetCustomAttribute``1(System.Reflection.Module); Use AttributesExtensions.GetAttribute<TAttribute>(bool inherit) extension
+M:System.Reflection.CustomAttributeExtensions.GetCustomAttribute``1(System.Reflection.ParameterInfo); Use AttributesExtensions.GetAttribute<TAttribute>(bool inherit) extension
+M:System.Reflection.CustomAttributeExtensions.GetCustomAttribute``1(System.Reflection.ParameterInfo,System.Boolean); Use AttributesExtensions.GetAttribute<TAttribute>(bool inherit) extension
+M:System.Reflection.CustomAttributeExtensions.GetCustomAttributes(System.Reflection.Assembly); Use AttributesExtensions.GetAttributes<TAttribute>(bool inherit) extension
+M:System.Reflection.CustomAttributeExtensions.GetCustomAttributes(System.Reflection.Assembly,System.Type); Use AttributesExtensions.GetAttributes<TAttribute>(bool inherit) extension
+M:System.Reflection.CustomAttributeExtensions.GetCustomAttributes(System.Reflection.MemberInfo); Use AttributesExtensions.GetAttributes<TAttribute>(bool inherit) extension
+M:System.Reflection.CustomAttributeExtensions.GetCustomAttributes(System.Reflection.MemberInfo,System.Boolean); Use AttributesExtensions.GetAttributes<TAttribute>(bool inherit) extension
+M:System.Reflection.CustomAttributeExtensions.GetCustomAttributes(System.Reflection.MemberInfo,System.Type); Use AttributesExtensions.GetAttributes<TAttribute>(bool inherit) extension
+M:System.Reflection.CustomAttributeExtensions.GetCustomAttributes(System.Reflection.MemberInfo,System.Type,System.Boolean); Use AttributesExtensions.GetAttributes<TAttribute>(bool inherit) extension
+M:System.Reflection.CustomAttributeExtensions.GetCustomAttributes(System.Reflection.Module); Use AttributesExtensions.GetAttributes<TAttribute>(bool inherit) extension
+M:System.Reflection.CustomAttributeExtensions.GetCustomAttributes(System.Reflection.Module,System.Type); Use AttributesExtensions.GetAttributes<TAttribute>(bool inherit) extension
+M:System.Reflection.CustomAttributeExtensions.GetCustomAttributes(System.Reflection.ParameterInfo); Use AttributesExtensions.GetAttributes<TAttribute>(bool inherit) extension
+M:System.Reflection.CustomAttributeExtensions.GetCustomAttributes(System.Reflection.ParameterInfo,System.Boolean); Use AttributesExtensions.GetAttributes<TAttribute>(bool inherit) extension
+M:System.Reflection.CustomAttributeExtensions.GetCustomAttributes(System.Reflection.ParameterInfo,System.Type); Use AttributesExtensions.GetAttributes<TAttribute>(bool inherit) extension
+M:System.Reflection.CustomAttributeExtensions.GetCustomAttributes(System.Reflection.ParameterInfo,System.Type,System.Boolean); Use AttributesExtensions.GetAttributes<TAttribute>(bool inherit) extension
+M:System.Reflection.CustomAttributeExtensions.GetCustomAttributes``1(System.Reflection.Assembly); Use AttributesExtensions.GetAttributes<TAttribute>(bool inherit) extension
+M:System.Reflection.CustomAttributeExtensions.GetCustomAttributes``1(System.Reflection.MemberInfo); Use AttributesExtensions.GetAttributes<TAttribute>(bool inherit) extension
+M:System.Reflection.CustomAttributeExtensions.GetCustomAttributes``1(System.Reflection.MemberInfo,System.Boolean); Use AttributesExtensions.GetAttributes<TAttribute>(bool inherit) extension
+M:System.Reflection.CustomAttributeExtensions.GetCustomAttributes``1(System.Reflection.Module); Use AttributesExtensions.GetAttributes<TAttribute>(bool inherit) extension
+M:System.Reflection.CustomAttributeExtensions.GetCustomAttributes``1(System.Reflection.ParameterInfo); Use AttributesExtensions.GetAttributes<TAttribute>(bool inherit) extension
+M:System.Reflection.CustomAttributeExtensions.GetCustomAttributes``1(System.Reflection.ParameterInfo,System.Boolean); Use AttributesExtensions.GetAttributes<TAttribute>(bool inherit) extension
+M:System.Attribute.GetCustomAttribute(System.Reflection.Assembly,System.Type); Use AttributesExtensions.GetAttribute<TAttribute>(bool inherit) extension
+M:System.Attribute.GetCustomAttribute(System.Reflection.Assembly,System.Type,System.Boolean); Use AttributesExtensions.GetAttribute<TAttribute>(bool inherit) extension
+M:System.Attribute.GetCustomAttribute(System.Reflection.MemberInfo,System.Type); Use AttributesExtensions.GetAttribute<TAttribute>(bool inherit) extension
+M:System.Attribute.GetCustomAttribute(System.Reflection.MemberInfo,System.Type,System.Boolean); Use AttributesExtensions.GetAttribute<TAttribute>(bool inherit) extension
+M:System.Attribute.GetCustomAttribute(System.Reflection.Module,System.Type); Use AttributesExtensions.GetAttribute<TAttribute>(bool inherit) extension
+M:System.Attribute.GetCustomAttribute(System.Reflection.Module,System.Type,System.Boolean); Use AttributesExtensions.GetAttribute<TAttribute>(bool inherit) extension
+M:System.Attribute.GetCustomAttribute(System.Reflection.ParameterInfo,System.Type); Use AttributesExtensions.GetAttribute<TAttribute>(bool inherit) extension
+M:System.Attribute.GetCustomAttribute(System.Reflection.ParameterInfo,System.Type,System.Boolean); Use AttributesExtensions.GetAttribute<TAttribute>(bool inherit) extension
+M:System.Attribute.GetCustomAttributes(System.Reflection.Assembly); Use AttributesExtensions.GetAttributes<TAttribute>(bool inherit) extension
+M:System.Attribute.GetCustomAttributes(System.Reflection.Assembly,System.Boolean); Use AttributesExtensions.GetAttributes<TAttribute>(bool inherit) extension
+M:System.Attribute.GetCustomAttributes(System.Reflection.Assembly,System.Type); Use AttributesExtensions.GetAttributes<TAttribute>(bool inherit) extension
+M:System.Attribute.GetCustomAttributes(System.Reflection.Assembly,System.Type,System.Boolean); Use AttributesExtensions.GetAttributes<TAttribute>(bool inherit) extension
+M:System.Attribute.GetCustomAttributes(System.Reflection.MemberInfo); Use AttributesExtensions.GetAttributes<TAttribute>(bool inherit) extension
+M:System.Attribute.GetCustomAttributes(System.Reflection.MemberInfo,System.Boolean); Use AttributesExtensions.GetAttributes<TAttribute>(bool inherit) extension
+M:System.Attribute.GetCustomAttributes(System.Reflection.MemberInfo,System.Type); Use AttributesExtensions.GetAttributes<TAttribute>(bool inherit) extension
+M:System.Attribute.GetCustomAttributes(System.Reflection.MemberInfo,System.Type,System.Boolean); Use AttributesExtensions.GetAttributes<TAttribute>(bool inherit) extension
+M:System.Attribute.GetCustomAttributes(System.Reflection.Module); Use AttributesExtensions.GetAttributes<TAttribute>(bool inherit) extension
+M:System.Attribute.GetCustomAttributes(System.Reflection.Module,System.Boolean); Use AttributesExtensions.GetAttributes<TAttribute>(bool inherit) extension
+M:System.Attribute.GetCustomAttributes(System.Reflection.Module,System.Type); Use AttributesExtensions.GetAttributes<TAttribute>(bool inherit) extension
+M:System.Attribute.GetCustomAttributes(System.Reflection.Module,System.Type,System.Boolean); Use AttributesExtensions.GetAttributes<TAttribute>(bool inherit) extension
+M:System.Attribute.GetCustomAttributes(System.Reflection.ParameterInfo); Use AttributesExtensions.GetAttributes<TAttribute>(bool inherit) extension
+M:System.Attribute.GetCustomAttributes(System.Reflection.ParameterInfo,System.Boolean); Use AttributesExtensions.GetAttributes<TAttribute>(bool inherit) extension
+M:System.Attribute.GetCustomAttributes(System.Reflection.ParameterInfo,System.Type); Use AttributesExtensions.GetAttributes<TAttribute>(bool inherit) extension
+M:System.Attribute.GetCustomAttributes(System.Reflection.ParameterInfo,System.Type,System.Boolean); Use AttributesExtensions.GetAttributes<TAttribute>(bool inherit) extension
+M:System.Reflection.Assembly.GetCustomAttributes(System.Boolean); Use AttributesExtensions.GetAttributes<TAttribute>(bool inherit) extension
+M:System.Reflection.Assembly.GetCustomAttributes(System.Type,System.Boolean); Use AttributesExtensions.GetAttributes<TAttribute>(bool inherit) extension
+M:System.Reflection.MemberInfo.GetCustomAttributes(System.Boolean); Use AttributesExtensions.GetAttributes<TAttribute>(bool inherit) extension
+M:System.Reflection.MemberInfo.GetCustomAttributes(System.Type,System.Boolean); Use AttributesExtensions.GetAttributes<TAttribute>(bool inherit) extension
+M:System.Reflection.Module.GetCustomAttributes(System.Boolean); Use AttributesExtensions.GetAttributes<TAttribute>(bool inherit) extension
+M:System.Reflection.Module.GetCustomAttributes(System.Type,System.Boolean); Use AttributesExtensions.GetAttributes<TAttribute>(bool inherit) extension
+M:System.Reflection.ParameterInfo.GetCustomAttributes(System.Boolean); Use AttributesExtensions.GetAttributes<TAttribute>(bool inherit) extension
+M:System.Reflection.ParameterInfo.GetCustomAttributes(System.Type,System.Boolean); Use AttributesExtensions.GetAttributes<TAttribute>(bool inherit) extension
+M:System.Attribute.IsDefined(System.Reflection.Assembly,System.Type); Use AttributesExtensions.HasAttribute<TAttribute>(bool inherit) extension
+M:System.Attribute.IsDefined(System.Reflection.Assembly,System.Type,System.Boolean); Use AttributesExtensions.HasAttribute<TAttribute>(bool inherit) extension
+M:System.Attribute.IsDefined(System.Reflection.MemberInfo,System.Type); Use AttributesExtensions.HasAttribute<TAttribute>(bool inherit) extension
+M:System.Attribute.IsDefined(System.Reflection.MemberInfo,System.Type,System.Boolean); Use AttributesExtensions.HasAttribute<TAttribute>(bool inherit) extension
+M:System.Attribute.IsDefined(System.Reflection.Module,System.Type); Use AttributesExtensions.HasAttribute<TAttribute>(bool inherit) extension
+M:System.Attribute.IsDefined(System.Reflection.Module,System.Type,System.Boolean); Use AttributesExtensions.HasAttribute<TAttribute>(bool inherit) extension
+M:System.Attribute.IsDefined(System.Reflection.ParameterInfo,System.Type); Use AttributesExtensions.HasAttribute<TAttribute>(bool inherit) extension
+M:System.Attribute.IsDefined(System.Reflection.ParameterInfo,System.Type,System.Boolean); Use AttributesExtensions.HasAttribute<TAttribute>(bool inherit) extension
+
+# avoid culture-dependent calls
+M:System.DateTimeOffset.Parse(System.String); use overload with IFormatProvider parameter
+M:System.DateTimeOffset.ToString; use overload with IFormatProvider parameter
+M:System.DateTimeOffset.ToString(System.String); use overload with IFormatProvider parameter
+M:System.DateTimeOffset.TryParse(System.ReadOnlySpan{System.Char},System.DateTimeOffset@); use overload with IFormatProvider parameter
+M:System.DateTimeOffset.TryParse(System.String,System.DateTimeOffset@); use overload with IFormatProvider parameter
+M:System.DateTime.Parse(System.String); use overload with IFormatProvider parameter
+M:System.DateTime.TryParse(System.ReadOnlySpan{System.Char},System.DateTime@); use overload with IFormatProvider parameter
+M:System.DateTime.TryParse(System.String,System.DateTime@); use overload with IFormatProvider parameter
+M:System.DateTime.ToString; use overload with IFormatProvider parameter
+M:System.DateTime.ToString(System.String); use overload with IFormatProvider parameter
+M:System.DateTime.GetDateTimeFormats; use overload with IFormatProvider parameter
+M:System.DateTime.GetDateTimeFormats(System.Char); use overload with IFormatProvider parameter
+M:System.DateOnly.Parse(System.String); use overload with IFormatProvider parameter
+M:System.DateOnly.ParseExact(System.ReadOnlySpan{System.Char},System.String[]); use overload with IFormatProvider parameter
+M:System.DateOnly.ParseExact(System.String,System.String); use overload with IFormatProvider parameter
+M:System.DateOnly.ParseExact(System.String,System.String[]); use overload with IFormatProvider parameter
+M:System.DateOnly.TryParse(System.ReadOnlySpan{System.Char},System.DateOnly@); use overload with IFormatProvider parameter
+M:System.DateOnly.TryParse(System.String,System.DateOnly@); use overload with IFormatProvider parameter
+M:System.DateOnly.TryParseExact(System.ReadOnlySpan{System.Char},System.ReadOnlySpan{System.Char},System.DateOnly@); use overload with IFormatProvider parameter
+M:System.DateOnly.TryParseExact(System.ReadOnlySpan{System.Char},System.String[],System.DateOnly@); use overload with IFormatProvider parameter
+M:System.DateOnly.TryParseExact(System.String,System.String,System.DateOnly@); use overload with IFormatProvider parameter
+M:System.DateOnly.TryParseExact(System.String,System.String[],System.DateOnly@); use overload with IFormatProvider parameter
+M:System.DateOnly.ToString; use overload with IFormatProvider parameter
+M:System.DateOnly.ToString(System.String); use overload with IFormatProvider parameter
+M:System.TimeSpan.ToString; use overload with IFormatProvider parameter
+M:System.TimeSpan.ToString(System.String); use overload with IFormatProvider parameter
+M:System.TimeSpan.TryParse(System.ReadOnlySpan{System.Char},System.TimeSpan@); use overload with IFormatProvider parameter
+M:System.TimeSpan.TryParse(System.String,System.TimeSpan@); use overload with IFormatProvider parameter
+M:System.TimeSpan.Parse(System.String); use overload with IFormatProvider parameter
+M:System.TimeOnly.TryParse(System.ReadOnlySpan{System.Char},System.TimeOnly@); use overload with IFormatProvider parameter
+M:System.TimeOnly.TryParse(System.String,System.TimeOnly@); use overload with IFormatProvider parameter
+M:System.TimeOnly.TryParseExact(System.ReadOnlySpan{System.Char},System.ReadOnlySpan{System.Char},System.TimeOnly@); use overload with IFormatProvider parameter
+M:System.TimeOnly.TryParseExact(System.ReadOnlySpan{System.Char},System.String[],System.TimeOnly@); use overload with IFormatProvider parameter
+M:System.TimeOnly.TryParseExact(System.String,System.String,System.TimeOnly@); use overload with IFormatProvider parameter
+M:System.TimeOnly.TryParseExact(System.String,System.String[],System.TimeOnly@); use overload with IFormatProvider parameter
+M:System.TimeOnly.Parse(System.String); use overload with IFormatProvider parameter
+M:System.TimeOnly.ParseExact(System.ReadOnlySpan{System.Char},System.String[]); use overload with IFormatProvider parameter
+M:System.TimeOnly.ParseExact(System.String,System.String); use overload with IFormatProvider parameter
+M:System.TimeOnly.ParseExact(System.String,System.String[]); use overload with IFormatProvider parameter
+M:System.Byte.Parse(System.String); use overload with IFormatProvider parameter
+M:System.Byte.Parse(System.String,System.Globalization.NumberStyles); use overload with IFormatProvider parameter
+M:System.Byte.TryParse(System.ReadOnlySpan{System.Byte},System.Byte@); use overload with IFormatProvider parameter
+M:System.Byte.TryParse(System.ReadOnlySpan{System.Char},System.Byte@); use overload with IFormatProvider parameter
+M:System.Byte.TryParse(System.String,System.Byte@); use overload with IFormatProvider parameter
+M:System.Byte.ToString; use overload with IFormatProvider parameter
+M:System.Byte.ToString(System.String); use overload with IFormatProvider parameter
+M:System.SByte.Parse(System.String); use overload with IFormatProvider parameter
+M:System.SByte.Parse(System.String,System.Globalization.NumberStyles); use overload with IFormatProvider parameter
+M:System.SByte.TryParse(System.ReadOnlySpan{System.Byte},System.SByte@); use overload with IFormatProvider parameter
+M:System.SByte.TryParse(System.ReadOnlySpan{System.Char},System.SByte@); use overload with IFormatProvider parameter
+M:System.SByte.TryParse(System.String,System.SByte@); use overload with IFormatProvider parameter
+M:System.SByte.ToString; use overload with IFormatProvider parameter
+M:System.SByte.ToString(System.String); use overload with IFormatProvider parameter
+M:System.Int16.Parse(System.String); use overload with IFormatProvider parameter
+M:System.Int16.Parse(System.String,System.Globalization.NumberStyles); use overload with IFormatProvider parameter
+M:System.Int16.TryParse(System.ReadOnlySpan{System.Byte},System.Int16@); use overload with IFormatProvider parameter
+M:System.Int16.TryParse(System.ReadOnlySpan{System.Char},System.Int16@); use overload with IFormatProvider parameter
+M:System.Int16.TryParse(System.String,System.Int16@); use overload with IFormatProvider parameter
+M:System.Int16.ToString; use overload with IFormatProvider parameter
+M:System.Int16.ToString(System.String); use overload with IFormatProvider parameter
+M:System.UInt16.Parse(System.String); use overload with IFormatProvider parameter
+M:System.UInt16.Parse(System.String,System.Globalization.NumberStyles); use overload with IFormatProvider parameter
+M:System.UInt16.TryParse(System.ReadOnlySpan{System.Byte},System.UInt16@); use overload with IFormatProvider parameter
+M:System.UInt16.TryParse(System.ReadOnlySpan{System.Char},System.UInt16@); use overload with IFormatProvider parameter
+M:System.UInt16.TryParse(System.String,System.UInt16@); use overload with IFormatProvider parameter
+M:System.UInt16.ToString; use overload with IFormatProvider parameter
+M:System.UInt16.ToString(System.String); use overload with IFormatProvider parameter
+M:System.Int32.Parse(System.String); use overload with IFormatProvider parameter
+M:System.Int32.Parse(System.String,System.Globalization.NumberStyles); use overload with IFormatProvider parameter
+M:System.Int32.TryParse(System.ReadOnlySpan{System.Byte},System.Int32@); use overload with IFormatProvider parameter
+M:System.Int32.TryParse(System.ReadOnlySpan{System.Char},System.Int32@); use overload with IFormatProvider parameter
+M:System.Int32.TryParse(System.String,System.Int32@); use overload with IFormatProvider parameter
+M:System.Int32.ToString; use overload with IFormatProvider parameter
+M:System.Int32.ToString(System.String); use overload with IFormatProvider parameter
+M:System.UInt32.Parse(System.String); use overload with IFormatProvider parameter
+M:System.UInt32.Parse(System.String,System.Globalization.NumberStyles); use overload with IFormatProvider parameter
+M:System.UInt32.TryParse(System.ReadOnlySpan{System.Byte},System.UInt32@); use overload with IFormatProvider parameter
+M:System.UInt32.TryParse(System.ReadOnlySpan{System.Char},System.UInt32@); use overload with IFormatProvider parameter
+M:System.UInt32.TryParse(System.String,System.UInt32@); use overload with IFormatProvider parameter
+M:System.UInt32.ToString; use overload with IFormatProvider parameter
+M:System.UInt32.ToString(System.String); use overload with IFormatProvider parameter
+M:System.Int64.Parse(System.String); use overload with IFormatProvider parameter
+M:System.Int64.Parse(System.String,System.Globalization.NumberStyles); use overload with IFormatProvider parameter
+M:System.Int64.TryParse(System.ReadOnlySpan{System.Byte},System.Int64@); use overload with IFormatProvider parameter
+M:System.Int64.TryParse(System.ReadOnlySpan{System.Char},System.Int64@); use overload with IFormatProvider parameter
+M:System.Int64.TryParse(System.String,System.Int64@); use overload with IFormatProvider parameter
+M:System.Int64.ToString; use overload with IFormatProvider parameter
+M:System.Int64.ToString(System.String); use overload with IFormatProvider parameter
+M:System.UInt64.Parse(System.String); use overload with IFormatProvider parameter
+M:System.UInt64.Parse(System.String,System.Globalization.NumberStyles); use overload with IFormatProvider parameter
+M:System.UInt64.TryParse(System.ReadOnlySpan{System.Byte},System.UInt64@); use overload with IFormatProvider parameter
+M:System.UInt64.TryParse(System.ReadOnlySpan{System.Char},System.UInt64@); use overload with IFormatProvider parameter
+M:System.UInt64.TryParse(System.String,System.UInt64@); use overload with IFormatProvider parameter
+M:System.UInt64.ToString; use overload with IFormatProvider parameter
+M:System.UInt64.ToString(System.String); use overload with IFormatProvider parameter
+M:System.Decimal.Parse(System.String); use overload with IFormatProvider parameter
+M:System.Decimal.Parse(System.String,System.Globalization.NumberStyles); use overload with IFormatProvider parameter
+M:System.Decimal.TryParse(System.ReadOnlySpan{System.Byte},System.Decimal@); use overload with IFormatProvider parameter
+M:System.Decimal.TryParse(System.ReadOnlySpan{System.Char},System.Decimal@); use overload with IFormatProvider parameter
+M:System.Decimal.TryParse(System.String,System.Decimal@); use overload with IFormatProvider parameter
+M:System.Decimal.ToString; use overload with IFormatProvider parameter
+M:System.Decimal.ToString(System.String); use overload with IFormatProvider parameter
+M:System.Single.Parse(System.String); use overload with IFormatProvider parameter
+M:System.Single.Parse(System.String,System.Globalization.NumberStyles); use overload with IFormatProvider parameter
+M:System.Single.TryParse(System.ReadOnlySpan{System.Byte},System.Single@); use overload with IFormatProvider parameter
+M:System.Single.TryParse(System.ReadOnlySpan{System.Char},System.Single@); use overload with IFormatProvider parameter
+M:System.Single.TryParse(System.String,System.Single@); use overload with IFormatProvider parameter
+M:System.Single.ToString; use overload with IFormatProvider parameter
+M:System.Single.ToString(System.String); use overload with IFormatProvider parameter
+M:System.Double.Parse(System.String); use overload with IFormatProvider parameter
+M:System.Double.Parse(System.String,System.Globalization.NumberStyles); use overload with IFormatProvider parameter
+M:System.Double.TryParse(System.ReadOnlySpan{System.Byte},System.Double@); use overload with IFormatProvider parameter
+M:System.Double.TryParse(System.ReadOnlySpan{System.Char},System.Double@); use overload with IFormatProvider parameter
+M:System.Double.TryParse(System.String,System.Double@); use overload with IFormatProvider parameter
+M:System.Double.ToString; use overload with IFormatProvider parameter
+M:System.Double.ToString(System.String); use overload with IFormatProvider parameter
+M:System.Text.StringBuilder.Append(System.Byte); use explicit formatting with IFormatProvider
+M:System.Text.StringBuilder.Append(System.Decimal); use explicit formatting with IFormatProvider
+M:System.Text.StringBuilder.Append(System.Double); use explicit formatting with IFormatProvider
+M:System.Text.StringBuilder.Append(System.Int16); use explicit formatting with IFormatProvider
+M:System.Text.StringBuilder.Append(System.Int32); use explicit formatting with IFormatProvider
+M:System.Text.StringBuilder.Append(System.Int64); use explicit formatting with IFormatProvider
+M:System.Text.StringBuilder.Append(System.SByte); use explicit formatting with IFormatProvider
+M:System.Text.StringBuilder.Append(System.Single); use explicit formatting with IFormatProvider
+M:System.Text.StringBuilder.Append(System.UInt16); use explicit formatting with IFormatProvider
+M:System.Text.StringBuilder.Append(System.UInt32); use explicit formatting with IFormatProvider
+M:System.Text.StringBuilder.Append(System.UInt64); use explicit formatting with IFormatProvider
+M:System.Text.StringBuilder.Append(System.Object); use explicit formatting with IFormatProvider
+M:System.Text.StringBuilder.AppendFormat(System.String,System.Object); use explicit formatting with IFormatProvider
+M:System.Text.StringBuilder.AppendFormat(System.String,System.Object,System.Object); use explicit formatting with IFormatProvider
+M:System.Text.StringBuilder.AppendFormat(System.String,System.Object,System.Object,System.Object); use explicit formatting with IFormatProvider
+M:System.Text.StringBuilder.AppendFormat(System.String,System.Object[]); use explicit formatting with IFormatProvider
+M:System.Text.StringBuilder.AppendJoin(System.Char,System.Object[]); use explicit formatting with IFormatProvider
+M:System.Text.StringBuilder.AppendJoin(System.String,System.Object[]); use explicit formatting with IFormatProvider
+M:System.Text.StringBuilder.AppendJoin``1(System.Char,System.Collections.Generic.IEnumerable{``0}); use explicit formatting with IFormatProvider
+M:System.Text.StringBuilder.AppendJoin``1(System.String,System.Collections.Generic.IEnumerable{``0}); use explicit formatting with IFormatProvider
+M:System.Text.StringBuilder.Insert(System.Int32,System.Byte); use explicit formatting with IFormatProvider
+M:System.Text.StringBuilder.Insert(System.Int32,System.Decimal); use explicit formatting with IFormatProvider
+M:System.Text.StringBuilder.Insert(System.Int32,System.Double); use explicit formatting with IFormatProvider
+M:System.Text.StringBuilder.Insert(System.Int32,System.Int16); use explicit formatting with IFormatProvider
+M:System.Text.StringBuilder.Insert(System.Int32,System.Int32); use explicit formatting with IFormatProvider
+M:System.Text.StringBuilder.Insert(System.Int32,System.Int64); use explicit formatting with IFormatProvider
+M:System.Text.StringBuilder.Insert(System.Int32,System.Object); use explicit formatting with IFormatProvider
+M:System.Text.StringBuilder.Insert(System.Int32,System.SByte); use explicit formatting with IFormatProvider
+M:System.Text.StringBuilder.Insert(System.Int32,System.Single); use explicit formatting with IFormatProvider
+M:System.Text.StringBuilder.Insert(System.Int32,System.UInt16); use explicit formatting with IFormatProvider
+M:System.Text.StringBuilder.Insert(System.Int32,System.UInt32); use explicit formatting with IFormatProvider
+M:System.Text.StringBuilder.Insert(System.Int32,System.UInt64); use explicit formatting with IFormatProvider
+M:System.Text.StringBuilder.Append(System.Text.StringBuilder.AppendInterpolatedStringHandler@); use overload with IFormatProvider parameter
+M:System.Text.StringBuilder.AppendLine(System.Text.StringBuilder.AppendInterpolatedStringHandler@); use overload with IFormatProvider parameter
+M:System.String.Format(System.String,System.Object); use overload with IFormatProvider parameter
+M:System.String.Format(System.String,System.Object,System.Object); use overload with IFormatProvider parameter
+M:System.String.Format(System.String,System.Object,System.Object,System.Object); use overload with IFormatProvider parameter
+M:System.String.Format(System.String,System.Object[]); use overload with IFormatProvider parameter
+M:System.String.Join(System.Char,System.Object[]); use explicit formatting with IFormatProvider
+M:System.String.Join(System.String,System.Object[]); use explicit formatting with IFormatProvider
+M:System.String.Join``1(System.Char,System.Collections.Generic.IEnumerable{``0}); use explicit formatting with IFormatProvider
+M:System.String.Join``1(System.String,System.Collections.Generic.IEnumerable{``0}); use explicit formatting with IFormatProvider
+M:System.Convert.ToString(System.Object); use overload with IFormatProvider parameter
+M:System.Convert.ToString(System.Byte); use overload with IFormatProvider parameter
+M:System.Convert.ToString(System.SByte); use overload with IFormatProvider parameter
+M:System.Convert.ToString(System.Int16); use overload with IFormatProvider parameter
+M:System.Convert.ToString(System.Int32); use overload with IFormatProvider parameter
+M:System.Convert.ToString(System.Int64); use overload with IFormatProvider parameter
+M:System.Convert.ToString(System.UInt16); use overload with IFormatProvider parameter
+M:System.Convert.ToString(System.UInt32); use overload with IFormatProvider parameter
+M:System.Convert.ToString(System.UInt64); use overload with IFormatProvider parameter
+M:System.Convert.ToString(System.Decimal); use overload with IFormatProvider parameter
+M:System.Convert.ToString(System.Single); use overload with IFormatProvider parameter
+M:System.Convert.ToString(System.Double); use overload with IFormatProvider parameter
+M:System.Convert.ToString(System.DateTime); use overload with IFormatProvider parameter
+M:System.Convert.ToDateTime(System.Object); use overload with IFormatProvider parameter
+M:System.Convert.ToDateTime(System.String); use overload with IFormatProvider parameter
+M:System.Convert.ToDecimal(System.Object); use overload with IFormatProvider parameter
+M:System.Convert.ToDecimal(System.String); use overload with IFormatProvider parameter
+M:System.Convert.ToDouble(System.Object); use overload with IFormatProvider parameter
+M:System.Convert.ToDouble(System.String); use overload with IFormatProvider parameter
+M:System.Convert.ToSingle(System.Object); use overload with IFormatProvider parameter
+M:System.Convert.ToSingle(System.String); use overload with IFormatProvider parameter
+M:System.Convert.ToSByte(System.Object); use overload with IFormatProvider parameter
+M:System.Convert.ToSByte(System.String); use overload with IFormatProvider parameter
+M:System.Convert.ToByte(System.Object); use overload with IFormatProvider parameter
+M:System.Convert.ToByte(System.String); use overload with IFormatProvider parameter
+M:System.Convert.ToInt16(System.Object); use overload with IFormatProvider parameter
+M:System.Convert.ToInt16(System.String); use overload with IFormatProvider parameter
+M:System.Convert.ToInt32(System.Object); use overload with IFormatProvider parameter
+M:System.Convert.ToInt32(System.String); use overload with IFormatProvider parameter
+M:System.Convert.ToInt64(System.Object); use overload with IFormatProvider parameter
+M:System.Convert.ToInt64(System.String); use overload with IFormatProvider parameter
+M:System.Convert.ToUInt16(System.Object); use overload with IFormatProvider parameter
+M:System.Convert.ToUInt16(System.String); use overload with IFormatProvider parameter
+M:System.Convert.ToUInt32(System.Object); use overload with IFormatProvider parameter
+M:System.Convert.ToUInt32(System.String); use overload with IFormatProvider parameter
+M:System.Convert.ToUInt64(System.Object); use overload with IFormatProvider parameter
+M:System.Convert.ToUInt64(System.String); use overload with IFormatProvider parameter
+M:System.Convert.ChangeType(System.Object,System.Type); use overload with IFormatProvider parameter
+M:System.Convert.ChangeType(System.Object,System.TypeCode); use overload with IFormatProvider parameter

@@ -14,7 +14,7 @@ namespace LinqToDB.DataProvider.MySql
 	{
 		MySqlMappingSchema() : base(ProviderName.MySql)
 		{
-			SetValueToSqlConverter(typeof(string), (sb,_,_,v) => ConvertStringToSql(sb, v.ToString()!));
+			SetValueToSqlConverter(typeof(string), (sb,_,_,v) => ConvertStringToSql(sb, (string)v));
 			SetValueToSqlConverter(typeof(char),   (sb,_,_,v) => ConvertCharToSql  (sb, (char)v));
 			SetValueToSqlConverter(typeof(byte[]), (sb,_,_,v) => ConvertBinaryToSql(sb, (byte[])v));
 			SetValueToSqlConverter(typeof(Binary), (sb,_,_,v) => ConvertBinaryToSql(sb, ((Binary)v).ToArray()));
@@ -65,20 +65,79 @@ namespace LinqToDB.DataProvider.MySql
 			stringBuilder.AppendByteArrayAsHexViaLookup32(value);
 		}
 
-		internal static readonly MySqlMappingSchema Instance = new ();
+		internal static readonly MySqlMappingSchema     Instance          = new ();
+		internal static readonly MySql57MappingSchema   MySql57Instance   = new ();
+		internal static readonly MySql80MappingSchema   MySql80Instance   = new ();
+		internal static readonly MariaDB10MappingSchema MariaDB10Instance = new ();
 
-		public sealed class MySqlOfficialMappingSchema : LockedMappingSchema
+		public sealed class MySql57MappingSchema : LockedMappingSchema
 		{
-			public MySqlOfficialMappingSchema()
-				: base(ProviderName.MySqlOfficial, MySqlProviderAdapter.GetInstance(ProviderName.MySqlOfficial).MappingSchema, Instance)
+			public MySql57MappingSchema()
+				: base(ProviderName.MySql57, Instance)
 			{
 			}
 		}
 
-		public sealed class MySqlConnectorMappingSchema : LockedMappingSchema
+		public sealed class MySql80MappingSchema : LockedMappingSchema
 		{
-			public MySqlConnectorMappingSchema()
-				: base(ProviderName.MySqlConnector, MySqlProviderAdapter.GetInstance(ProviderName.MySqlConnector).MappingSchema, Instance)
+			public MySql80MappingSchema()
+				: base(ProviderName.MySql80, Instance)
+			{
+			}
+		}
+
+		public sealed class MariaDB10MappingSchema : LockedMappingSchema
+		{
+			public MariaDB10MappingSchema()
+				: base(ProviderName.MariaDB10, Instance)
+			{
+			}
+		}
+
+		public sealed class MySqlData57MappingSchema : LockedMappingSchema
+		{
+			public MySqlData57MappingSchema()
+				: base(ProviderName.MySql57MySqlData, MySqlProviderAdapter.GetInstance(MySqlProvider.MySqlData).MappingSchema, MySql57Instance)
+			{
+			}
+		}
+
+		public sealed class MySqlData80MappingSchema : LockedMappingSchema
+		{
+			public MySqlData80MappingSchema()
+				: base(ProviderName.MySql80MySqlData, MySqlProviderAdapter.GetInstance(MySqlProvider.MySqlData).MappingSchema, MySql80Instance)
+			{
+			}
+		}
+
+		public sealed class MySqlDataMariaDB10MappingSchema : LockedMappingSchema
+		{
+			public MySqlDataMariaDB10MappingSchema()
+				: base(ProviderName.MariaDB10MySqlData, MySqlProviderAdapter.GetInstance(MySqlProvider.MySqlData).MappingSchema, MariaDB10Instance)
+			{
+			}
+		}
+
+		public sealed class MySqlConnector57MappingSchema : LockedMappingSchema
+		{
+			public MySqlConnector57MappingSchema()
+				: base(ProviderName.MySql57MySqlConnector, MySqlProviderAdapter.GetInstance(MySqlProvider.MySqlConnector).MappingSchema, MySql57Instance)
+			{
+			}
+		}
+
+		public sealed class MySqlConnector80MappingSchema : LockedMappingSchema
+		{
+			public MySqlConnector80MappingSchema()
+				: base(ProviderName.MySql80MySqlConnector, MySqlProviderAdapter.GetInstance(MySqlProvider.MySqlConnector).MappingSchema, MySql80Instance)
+			{
+			}
+		}
+
+		public sealed class MySqlConnectorMariaDB10MappingSchema : LockedMappingSchema
+		{
+			public MySqlConnectorMariaDB10MappingSchema()
+				: base(ProviderName.MariaDB10MySqlConnector, MySqlProviderAdapter.GetInstance(MySqlProvider.MySqlConnector).MappingSchema, MariaDB10Instance)
 			{
 			}
 		}

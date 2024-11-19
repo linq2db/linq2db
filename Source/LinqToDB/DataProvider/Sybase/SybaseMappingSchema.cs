@@ -11,17 +11,23 @@ namespace LinqToDB.DataProvider.Sybase
 
 	sealed class SybaseMappingSchema : LockedMappingSchema
 	{
+#if SUPPORTS_COMPOSITE_FORMAT
+		private static readonly CompositeFormat TIME3_FORMAT = CompositeFormat.Parse("'{0:hh\\:mm\\:ss\\.fff}'");
+#else
 		private const string TIME3_FORMAT= "'{0:hh\\:mm\\:ss\\.fff}'";
+#endif
 
 		SybaseMappingSchema() : base(ProviderName.Sybase)
 		{
-			SetValueToSqlConverter(typeof(string)  , (sb, _,_,v) => ConvertStringToSql  (sb, v.ToString()!));
+			SetValueToSqlConverter(typeof(string)  , (sb, _,_,v) => ConvertStringToSql  (sb, (string)v));
 			SetValueToSqlConverter(typeof(char)    , (sb, _,_,v) => ConvertCharToSql    (sb, (char)v));
 			SetValueToSqlConverter(typeof(TimeSpan), (sb,dt,_,v) => ConvertTimeSpanToSql(sb, dt, (TimeSpan)v));
 			SetValueToSqlConverter(typeof(byte[])  , (sb, _,_,v) => ConvertBinaryToSql  (sb, (byte[])v));
 			SetValueToSqlConverter(typeof(Binary)  , (sb, _,_,v) => ConvertBinaryToSql  (sb, ((Binary)v).ToArray()));
 
 			SetDataType(typeof(string), new SqlDataType(DataType.NVarChar, typeof(string), 255));
+
+			SetDefaultValue(typeof(DateTime), new DateTime(1753, 1, 1));
 		}
 
 		static void ConvertBinaryToSql(StringBuilder stringBuilder, byte[] value)
@@ -35,7 +41,7 @@ namespace LinqToDB.DataProvider.Sybase
 		{
 			if (sqlDataType.Type.DataType == DataType.Int64)
 			{
-				stringBuilder.Append(value.Ticks);
+				stringBuilder.Append(value.Ticks.ToString(NumberFormatInfo.InvariantInfo));
 			}
 			else
 			{
@@ -51,11 +57,7 @@ namespace LinqToDB.DataProvider.Sybase
 
 		static void AppendConversion(StringBuilder stringBuilder, int value)
 		{
-			stringBuilder
-				.Append("char(")
-				.Append(value)
-				.Append(')')
-				;
+			stringBuilder.Append(CultureInfo.InvariantCulture, $"char({value})");
 		}
 
 		static void ConvertStringToSql(StringBuilder stringBuilder, string value)

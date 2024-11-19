@@ -4,7 +4,6 @@ using System.Net;
 using System.Numerics;
 using System.Threading.Tasks;
 using LinqToDB;
-using LinqToDB.Data;
 using LinqToDB.Common;
 using LinqToDB.Mapping;
 using NUnit.Framework;
@@ -197,21 +196,8 @@ namespace Tests.DataProvider
 			// as it is requires code, similar to NULL comparison translation code, and there is no
 			// request for support of it from users
 			const bool testNaNComparison = false;
-#if !NET6_0_OR_GREATER
-			// https://github.com/mysql-net/MySqlConnector/issues/1185
-			// fixed in 2.1.11
-			var infinitySupported = !context.IsAnyOf(ProviderName.ClickHouseMySql);
-#else
-			var infinitySupported = true;
-#endif
-
-#if NETFRAMEWORK
-			// NaN parsing fails in 0.x MySqlConnector (fixed somewhere in 1.x)
-			// nullable works only because of another bug: https://github.com/ClickHouse/ClickHouse/issues/39297
-			var nonNullableNaNSupported = !context.IsAnyOf(ProviderName.ClickHouseMySql);
-#else
-			var nonNullableNaNSupported = true;
-#endif
+			var infinitySupported        = true;
+			var nonNullableNaNSupported  = true;
 
 			// Float32
 			await TestType<float, float?>(context, new(typeof(float)), default, default);
@@ -273,19 +259,13 @@ namespace Tests.DataProvider
 		{
 			// https://clickhouse.com/docs/en/sql-reference/data-types/boolean/
 
-			// Bool
-			// https://github.com/Octonica/ClickHouseClient/issues/56
-			// https://github.com/ClickHouse/ClickHouse/issues/37999
-			if (!context.IsAnyOf(ProviderName.ClickHouseOctonica, ProviderName.ClickHouseMySql))
-			{
-				await TestType<bool, bool?>(context, new(typeof(bool)), default, default);
-				await TestType<bool, bool?>(context, new(typeof(bool)), true, false);
-				await TestType<bool, bool?>(context, new(typeof(bool)), false, true);
+			await TestType<bool, bool?>(context, new(typeof(bool)), default, default);
+			await TestType<bool, bool?>(context, new(typeof(bool)), true, false);
+			await TestType<bool, bool?>(context, new(typeof(bool)), false, true);
 
-				await TestType<bool, bool?>(context, new(typeof(bool), DataType.Boolean), default, default);
-				await TestType<bool, bool?>(context, new(typeof(bool), DataType.Boolean), true, false);
-				await TestType<bool, bool?>(context, new(typeof(bool), DataType.Boolean), false, true);
-			}
+			await TestType<bool, bool?>(context, new(typeof(bool), DataType.Boolean), default, default);
+			await TestType<bool, bool?>(context, new(typeof(bool), DataType.Boolean), true, false);
+			await TestType<bool, bool?>(context, new(typeof(bool), DataType.Boolean), false, true);
 
 			// as underlying type
 			await TestType<bool, bool?>(context, new(typeof(bool), DataType.Byte), default, default);
@@ -367,14 +347,6 @@ namespace Tests.DataProvider
 			var min = new DateTime(1900, 1, 1);
 			var max = new DateTime(2299, 12, 31);
 
-			// https://github.com/Octonica/ClickHouseClient/issues/66
-			if (context.IsAnyOf(ProviderName.ClickHouseOctonica))
-			{
-				// https://github.com/Octonica/ClickHouseClient/issues/60
-				min = new DateTime(1925, 1, 2);
-				max = new DateTime(2283, 11, 11);
-			}
-
 			// Date32
 #if NET6_0_OR_GREATER
 			await TestType<DateOnly, DateOnly?>(context, new(typeof(DateOnly)), DateOnly.FromDateTime(TestData.Date), default);
@@ -449,12 +421,6 @@ namespace Tests.DataProvider
 			// max value for DateTime64(9)
 			var max9 = new DateTime(2262, 4, 11, 23, 47, 16, 854, DateTimeKind.Unspecified).AddTicks(7758);
 			var val  = TestData.DateTime;
-
-			// https://github.com/Octonica/ClickHouseClient/issues/60
-			// https://github.com/Octonica/ClickHouseClient/issues/62
-			// https://github.com/Octonica/ClickHouseClient/issues/66
-			if (context.IsAnyOf(ProviderName.ClickHouseOctonica))
-				min = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Unspecified).AddSeconds(1);
 
 			// DateTime64
 
@@ -614,14 +580,14 @@ namespace Tests.DataProvider
 			// default
 			await TestType<string, string?>(context, new(typeof(string)), string.Empty, default);
 			await TestType<string, string?>(context, new(typeof(string)), "test ", "test\0");
-			await TestType<byte[], byte[]?>(context, new(typeof(byte[])), Array<byte>.Empty, default);
+			await TestType<byte[], byte[]?>(context, new(typeof(byte[])), Array.Empty<byte>(), default);
 			await TestType<byte[], byte[]?>(context, new(typeof(byte[])), new byte[] { 1, 2, 3, 4 }, new byte[] { 1, 2, 3, 4, 0, 0 });
 
 			await TestType<string, string?>(context, new(typeof(string), DataType.NVarChar), string.Empty, default);
 			await TestType<string, string?>(context, new(typeof(string), DataType.NVarChar), "test ", "test\0");
 			await TestType<string, string?>(context, new(typeof(string), DataType.VarChar), string.Empty, default);
 			await TestType<string, string?>(context, new(typeof(string), DataType.VarChar), "test ", "test\0");
-			await TestType<byte[], byte[]?>(context, new(typeof(byte[]), DataType.VarBinary), Array<byte>.Empty, default);
+			await TestType<byte[], byte[]?>(context, new(typeof(byte[]), DataType.VarBinary), Array.Empty<byte>(), default);
 			await TestType<byte[], byte[]?>(context, new(typeof(byte[]), DataType.VarBinary), new byte[] { 1, 2, 0, 3, 4 }, new byte[] { 1, 2, 3, 0, 4, 0, 0 });
 
 			// various characters handing
@@ -651,7 +617,7 @@ namespace Tests.DataProvider
 			await TestType<string, string?>(context, new(typeof(string), DataType.NChar,  null, length: 7), "test ", "test\0", getExpectedValue: v => padValues ? "test \0\0" : v, getExpectedNullableValue: v => padValues ? "test\0\0\0" : "test");
 			await TestType<string, string?>(context, new(typeof(string), DataType.Char,   null, length: 7), string.Empty, default, getExpectedValue: v => padValues ? "\0\0\0\0\0\0\0" : v);
 			await TestType<string, string?>(context, new(typeof(string), DataType.Char,   null, length: 7), "test ", "test\0", getExpectedValue: v => padValues ? "test \0\0" : v, getExpectedNullableValue: v => padValues ? "test\0\0\0" : "test");
-			await TestType<byte[], byte[]?>(context, new(typeof(byte[]), DataType.Binary, null, length: 7), Array<byte>.Empty, default, getExpectedValue: v => new byte[7]);
+			await TestType<byte[], byte[]?>(context, new(typeof(byte[]), DataType.Binary, null, length: 7), Array.Empty<byte>(), default, getExpectedValue: v => new byte[7]);
 			await TestType<byte[], byte[]?>(context, new(typeof(byte[]), DataType.Binary, null, length: 7), new byte[] { 1, 2, 0, 3, 4 }, new byte[] { 1, 2, 3, 0, 4, 0, 0 }, getExpectedValue: v => { Array.Resize(ref v, 7);return v; }, getExpectedNullableValue: v => { Array.Resize(ref v, 7); return v; });
 
 			// default length (ClickHouseMappingSchema.DEFAULT_FIXED_STRING_LENGTH=100)
@@ -659,7 +625,7 @@ namespace Tests.DataProvider
 			var defaultString = new string('\0', 100);
 			await TestType<string, string?>(context, new(typeof(string), DataType.NChar), string.Empty, default, getExpectedValue: _ => defaultString);
 			await TestType<string, string?>(context, new(typeof(string), DataType.Char), string.Empty, default, getExpectedValue: _ => defaultString);
-			await TestType<byte[], byte[]?>(context, new(typeof(byte[]), DataType.Binary), Array<byte>.Empty, default, getExpectedValue: _ => defaultBinary);
+			await TestType<byte[], byte[]?>(context, new(typeof(byte[]), DataType.Binary), Array.Empty<byte>(), default, getExpectedValue: _ => defaultBinary);
 
 			// various characters handing
 			await TestType<string, string?>(context, new(typeof(string), DataType.NChar, null, length: 7), "\x00", "\x01", getExpectedValue: v => padValues ? "\0\0\0\0\0\0\0" : string.Empty, getExpectedNullableValue: v => padValues ? "\x1\0\0\0\0\0\0" : v);
@@ -678,6 +644,7 @@ namespace Tests.DataProvider
 			}
 		}
 
+		[ActiveIssue("Update to new JSON type implementation")]
 		[Test]
 		public async ValueTask TestJSONType([ClickHouseDataSources(false)] string context)
 		{
@@ -801,23 +768,20 @@ namespace Tests.DataProvider
 			// Unmapped enums cannot be used as server returns string values, which cannot be converted to enum
 			// because we don't have mapping information
 
-			// https://github.com/Octonica/ClickHouseClient/issues/64
-			var nullBug = context.IsAnyOf(ProviderName.ClickHouseOctonica);
-
 			// Enum8
 
-			await TestType<Enum8Mapped, Enum8Mapped?>(context, new(typeof(Enum8Mapped), DataType.Enum8, "Enum8('value1' = -111, 'value2' = 123)"), Enum8Mapped.Two, nullBug ? (Enum8Mapped?)Enum8Mapped.One : default);
+			await TestType<Enum8Mapped, Enum8Mapped?>(context, new(typeof(Enum8Mapped), DataType.Enum8, "Enum8('value1' = -111, 'value2' = 123)"), Enum8Mapped.Two, default);
 			await TestType<Enum8Mapped, Enum8Mapped?>(context, new(typeof(Enum8Mapped), DataType.Enum8, "Enum8('value1' = -111, 'value2' = 123)"), Enum8Mapped.One, Enum8Mapped.Two);
 
 			// Enum16
 
-			await TestType<Enum16Mapped, Enum16Mapped?>(context, new(typeof(Enum16Mapped), DataType.Enum16, "Enum16('value1' = -1111, 'value2' = 2212)"), Enum16Mapped.Two, nullBug ? (Enum16Mapped?)Enum16Mapped.One : default);
+			await TestType<Enum16Mapped, Enum16Mapped?>(context, new(typeof(Enum16Mapped), DataType.Enum16, "Enum16('value1' = -1111, 'value2' = 2212)"), Enum16Mapped.Two, default);
 			await TestType<Enum16Mapped, Enum16Mapped?>(context, new(typeof(Enum16Mapped), DataType.Enum16, "Enum16('value1' = -1111, 'value2' = 2212)"), Enum16Mapped.One, Enum16Mapped.Two);
 
-			await TestType<EnumMappedVar, EnumMappedVar?>(context, new(typeof(EnumMappedVar), DataType.Enum16, "Enum16('value1' = -1234, 'value 2' = 4567)"), EnumMappedVar.Two, nullBug ? (EnumMappedVar?)EnumMappedVar.One : default);
+			await TestType<EnumMappedVar, EnumMappedVar?>(context, new(typeof(EnumMappedVar), DataType.Enum16, "Enum16('value1' = -1234, 'value 2' = 4567)"), EnumMappedVar.Two, default);
 			await TestType<EnumMappedVar, EnumMappedVar?>(context, new(typeof(EnumMappedVar), DataType.Enum16, "Enum16('value1' = -1234, 'value 2' = 4567)"), EnumMappedVar.One, EnumMappedVar.Two);
 
-			await TestType<EnumMappedFixed, EnumMappedFixed?>(context, new(typeof(EnumMappedFixed), DataType.Enum16, "Enum16('value1' = -1234, 'value2' = 4567)"), EnumMappedFixed.Two, nullBug ? (EnumMappedFixed?)EnumMappedFixed.One : default);
+			await TestType<EnumMappedFixed, EnumMappedFixed?>(context, new(typeof(EnumMappedFixed), DataType.Enum16, "Enum16('value1' = -1234, 'value2' = 4567)"), EnumMappedFixed.Two, default);
 			await TestType<EnumMappedFixed, EnumMappedFixed?>(context, new(typeof(EnumMappedFixed), DataType.Enum16, "Enum16('value1' = -1234, 'value2' = 4567)"), EnumMappedFixed.One, EnumMappedFixed.Two);
 
 			// check that default mappings still work

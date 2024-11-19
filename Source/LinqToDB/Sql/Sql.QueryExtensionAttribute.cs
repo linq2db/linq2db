@@ -72,25 +72,26 @@ namespace LinqToDB
 
 			public virtual SqlQueryExtension GetExtension(List<SqlQueryExtensionData> parameters)
 			{
-				var ext = new SqlQueryExtension
+				var arguments = new Dictionary<string,ISqlExpression>();
+
+				foreach (var item in parameters)
+					arguments.Add(item.Name, item.SqlExpression!);
+
+				if (ExtensionArguments is not null)
+				{
+					arguments.Add(".ExtensionArguments.Count",  new SqlValue(ExtensionArguments.Length));
+
+					for (var i = 0; i < ExtensionArguments.Length; i++)
+						arguments.Add(FormattableString.Invariant($".ExtensionArguments.{i}"), new SqlValue(ExtensionArguments[i]));
+				}
+
+				return new SqlQueryExtension()
 				{
 					Configuration = Configuration,
 					Scope         = Scope,
 					BuilderType   = ExtensionBuilderType,
+					Arguments     = arguments
 				};
-
-				foreach (var item in parameters)
-					ext.Arguments.Add(item.Name, item.SqlExpression!);
-
-				if (ExtensionArguments is not null)
-				{
-					ext.Arguments.Add(".ExtensionArguments.Count",  new SqlValue(ExtensionArguments.Length));
-
-					for (var i = 0; i < ExtensionArguments.Length; i++)
-						ext.Arguments.Add($".ExtensionArguments.{i}", new SqlValue(ExtensionArguments[i]));
-				}
-
-				return ext;
 			}
 
 			public virtual void ExtendTable(SqlTable table, List<SqlQueryExtensionData> parameters)
@@ -121,7 +122,7 @@ namespace LinqToDB
 				{
 					case ExpressionType.MemberAccess : memberInfo = ((MemberExpression)    expression).Member; break;
 					case ExpressionType.Call         : memberInfo = ((MethodCallExpression)expression).Method; break;
-					default                          : return Array<QueryExtensionAttribute>.Empty;
+					default                          : return [];
 				}
 
 				return mapping.GetAttributes<QueryExtensionAttribute>(memberInfo.ReflectedType!, memberInfo, forFirstConfiguration: true);
@@ -129,7 +130,7 @@ namespace LinqToDB
 
 			public override string GetObjectID()
 			{
-				return $".{Configuration}.{(int)Scope}.{IdentifierBuilder.GetObjectID(ExtensionBuilderType)}.{IdentifierBuilder.GetObjectID(ExtensionArguments)}.";
+				return FormattableString.Invariant($".{Configuration}.{(int)Scope}.{IdentifierBuilder.GetObjectID(ExtensionBuilderType)}.{IdentifierBuilder.GetObjectID(ExtensionArguments)}.");
 			}
 		}
 	}

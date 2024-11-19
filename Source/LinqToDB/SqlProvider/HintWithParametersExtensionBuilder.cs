@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Globalization;
 using System.Text;
 
 namespace LinqToDB.SqlProvider
@@ -7,7 +8,7 @@ namespace LinqToDB.SqlProvider
 
 	sealed class HintWithParametersExtensionBuilder : ISqlQueryExtensionBuilder
 	{
-		void ISqlQueryExtensionBuilder.Build(ISqlBuilder sqlBuilder, StringBuilder stringBuilder, SqlQueryExtension sqlQueryExtension)
+		void ISqlQueryExtensionBuilder.Build(NullabilityContext nullability, ISqlBuilder sqlBuilder, StringBuilder stringBuilder, SqlQueryExtension sqlQueryExtension)
 		{
 			var args  = sqlQueryExtension.Arguments;
 			var hint  = ((SqlValue)     args["hint"]).                Value;
@@ -16,7 +17,7 @@ namespace LinqToDB.SqlProvider
 			var firstDelimiter = args.TryGetValue(".ExtensionArguments.0", out var extArg0) && extArg0 is SqlValue { Value : string val0 } ? val0 : ", ";
 			var nextDelimiter  = args.TryGetValue(".ExtensionArguments.1", out var extArg1) && extArg1 is SqlValue { Value : string val1 } ? val1 : null;
 
-			stringBuilder.Append(hint);
+			stringBuilder.Append(CultureInfo.InvariantCulture, $"{hint}");
 
 			if (count > 0)
 			{
@@ -34,8 +35,8 @@ namespace LinqToDB.SqlProvider
 					stringBuilder
 						.Append(delimiter);
 
-					var value = GetValue((SqlValue)args[$"hintParameters.{i}"]);
-					stringBuilder.Append(value);
+					var value = GetValue((SqlValue)args[FormattableString.Invariant($"hintParameters.{i}")]);
+					stringBuilder.Append(CultureInfo.InvariantCulture, $"{value}");
 				}
 
 				stringBuilder.Append(')');

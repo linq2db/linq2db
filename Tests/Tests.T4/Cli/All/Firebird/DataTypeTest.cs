@@ -21,7 +21,7 @@ namespace Cli.All.Firebird
 	{
 		[Column("DataTypeID", DataType = DataType.Int32   , DbType = "integer"         , IsPrimaryKey = true           )] public int       DataTypeId { get; set; } // integer
 		[Column("Binary_"   , DataType = DataType.Blob    , DbType = "blob"                                            )] public byte[]?   Binary     { get; set; } // blob
-		[Column("Boolean_"  , DataType = DataType.NChar   , DbType = "char(1)"         , Length       = 1              )] public char?     Boolean    { get; set; } // char(1)
+		[Column("Boolean_"  , DataType = DataType.Boolean , DbType = "boolean"                                         )] public bool?     Boolean    { get; set; } // boolean
 		[Column("Byte_"     , DataType = DataType.Int16   , DbType = "smallint"                                        )] public short?    Byte       { get; set; } // smallint
 		[Column("Bytes_"    , DataType = DataType.Blob    , DbType = "blob"                                            )] public byte[]?   Bytes      { get; set; } // blob
 		[Column("CHAR_"     , DataType = DataType.NChar   , DbType = "char(1)"         , Length       = 1              )] public char?     Char       { get; set; } // char(1)

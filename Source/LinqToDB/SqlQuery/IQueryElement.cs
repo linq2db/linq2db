@@ -1,11 +1,20 @@
-﻿using System.Collections.Generic;
-using System.Text;
-
-namespace LinqToDB.SqlQuery
+﻿namespace LinqToDB.SqlQuery
 {
+	/// <summary>
+	/// Sql AST node interface.
+	/// </summary>
 	public interface IQueryElement
 	{
-		QueryElementType ElementType { get; }
-		StringBuilder    ToString (StringBuilder sb, Dictionary<IQueryElement,IQueryElement> dic);
+#if DEBUG
+		public string DebugText { get; }
+#endif
+		/// <summary>
+		/// AST node type.
+		/// </summary>
+		QueryElementType       ElementType { get; }
+		/// <summary>
+		/// Generates debug text representation of AST node.
+		/// </summary>
+		QueryElementTextWriter ToString(QueryElementTextWriter writer);
 	}
 }

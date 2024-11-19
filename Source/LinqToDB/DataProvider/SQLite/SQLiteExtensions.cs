@@ -1,13 +1,14 @@
-﻿using LinqToDB.Data;
-using LinqToDB.Linq;
-using LinqToDB.SqlProvider;
-using System;
+﻿using System;
 using System.Globalization;
 using System.Linq;
 using System.Linq.Expressions;
 
 namespace LinqToDB.DataProvider.SQLite
 {
+	using Data;
+	using Linq;
+	using SqlProvider;
+
 	public interface ISQLiteExtensions
 	{
 	}
@@ -38,7 +39,7 @@ namespace LinqToDB.DataProvider.SQLite
 		}
 
 		/// <summary>
-		/// Performs full-text search query against against speficied table and returns search results.
+		/// Performs full-text search query against specified table and returns search results.
 		/// Example: "table('search query')".
 		/// </summary>
 		/// <typeparam name="TEntity">Queried table mapping class.</typeparam>
@@ -51,7 +52,7 @@ namespace LinqToDB.DataProvider.SQLite
 		public static IQueryable<TEntity> MatchTable<TEntity>(this ISQLiteExtensions? ext, ITable<TEntity> table, string match)
 			where TEntity : class
 		{
-			return table.DataContext.FromSql<TEntity>($"{Sql.TableExpr(table, Sql.TableQualification.TableName)}({match})");
+			return table.DataContext.QueryFromExpression(() => ext.MatchTable(table, match));
 		}
 
 		static Expression<Func<ISQLiteExtensions, ITable<TEntity>, string, IQueryable<TEntity>>> MatchTableImpl1<TEntity>()
@@ -365,7 +366,6 @@ namespace LinqToDB.DataProvider.SQLite
 			return (ext, entity, weights) => Sql.Expr<double>($"bm25({Sql.TableAsField<TEntity, string>(entity)}, {Sql.Spread(weights)})");
 		}
 
-
 		/// <summary>
 		/// FTS5 highlight(fts_table, columnIndex, startMatch, endMatch) function.
 		/// Example: "highlight(table, columnIndex, 'startMatch', 'endMatch')".
@@ -541,8 +541,8 @@ namespace LinqToDB.DataProvider.SQLite
 			for (var i = 0; i < ed.Columns.Count; i++)
 			{
 				columns[i]         = sqlBuilder.ConvertInline(ed.Columns[i].ColumnName, ConvertType.NameToQueryField);
-				parameterTokens[i] = $"@p{i}";
-				parameters[i]      = DataParameter.VarChar($"@p{i}", (string)ed.Columns[i].GetProviderValue(record)!);
+				parameterTokens[i] = FormattableString.Invariant($"@p{i}");
+				parameters[i]      = DataParameter.VarChar(FormattableString.Invariant($"@p{i}"), (string)ed.Columns[i].GetProviderValue(record)!);
 			}
 
 			dc.Execute($"INSERT INTO {Sql.TableName(table)}({Sql.TableName(table, Sql.TableQualification.TableName)}, rowid, {string.Join(", ", columns)}) VALUES('delete', {rowid.ToString(NumberFormatInfo.InvariantInfo)}, {string.Join(", ", parameterTokens)})", parameters);
@@ -573,7 +573,6 @@ namespace LinqToDB.DataProvider.SQLite
 		{
 			dc.Execute($"INSERT INTO {Sql.TableName(table)}({Sql.TableName(table, Sql.TableQualification.TableName)}) VALUES('integrity-check')");
 		}
-
 
 		/// <summary>
 		/// Executes FTS5 'merge' command for specific table.

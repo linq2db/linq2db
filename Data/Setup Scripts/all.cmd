@@ -20,6 +20,10 @@ echo ========== Firebird 4.x ==========
 
 call firebird40.cmd
 
+echo ========== Firebird 5.x ==========
+
+call firebird50.cmd
+
 echo ========== Informix ==========
 
 call informix.cmd
@@ -28,13 +32,13 @@ echo ========== MariaDB ==========
 
 call mariadb.cmd
 
-echo ========== MySql 5.5 ==========
+echo ========== MySql 5.7 ==========
 
-call mysql55.cmd
+call mysql57.cmd
 
 echo ========== MySql ==========
 
-call mysql80.cmd
+call mysql.cmd
 
 echo ========== Oracle 11 ==========
 
@@ -69,6 +73,10 @@ echo ========== PostgreSQL 16 ==========
 
 call pgsql16.cmd
 
+echo ========== PostgreSQL 17 ==========
+
+call pgsql17.cmd
+
 echo ========== SAP Hana ==========
 
 call saphana2.cmd
@@ -99,8 +107,8 @@ docker update --restart unless-stopped firebird30
 docker update --restart unless-stopped firebird40
 docker update --restart unless-stopped informix
 docker update --restart unless-stopped mariadb
-docker update --restart unless-stopped mysql55
-docker update --restart unless-stopped mysql80
+docker update --restart unless-stopped mysql57
+docker update --restart unless-stopped mysql
 docker update --restart unless-stopped oracle11
 docker update --restart unless-stopped oracle19
 docker update --restart unless-stopped pgsql92

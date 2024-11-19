@@ -1,5 +1,4 @@
 ﻿using System.Data.Common;
-using LinqToDB.Async;
 
 namespace LinqToDB.Data
 {
@@ -50,7 +49,6 @@ namespace LinqToDB.Data
 		/// See also <seealso cref="TraceInfo.IsAsync"/>.
 		/// </summary>
 		DisposeQuery,
-
 
 		/// <summary>
 		/// <see cref="DataConnection.BeginTransaction()"/> or <see cref="DataConnection.BeginTransaction(System.Data.IsolationLevel)"/> or

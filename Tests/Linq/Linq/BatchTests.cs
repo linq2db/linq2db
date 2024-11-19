@@ -16,7 +16,7 @@ namespace Tests.Linq
 		[Test]
 		public void Test([IncludeDataSources(ProviderName.SqlServer)] string context)
 		{
-			using (var db = (TestServiceModelDataContext)GetDataContext(context + ".LinqService"))
+			using (var db = (TestServiceModelDataContext)GetDataContext(context + LinqServiceSuffix))
 			{
 				db.BeginBatch();
 

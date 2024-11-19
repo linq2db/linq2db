@@ -58,12 +58,12 @@ namespace Tests.UserTests
 
 		// TODO: disabled providers lacks connections
 		[Test]
-		public void TestInsert([DataSources(false, TestProvName.AllFirebird, TestProvName.AllSybase, TestProvName.AllInformix, TestProvName.AllOracle12)] string context)
+		public void TestInsert([DataSources(false, TestProvName.AllFirebird, TestProvName.AllSybase, TestProvName.AllInformix, TestProvName.AllOracle12, TestProvName.AllSQLiteClassic)] string context)
 		{
 			const int recordsCount = 20;
 
 			// sqlite connection pooling is not compatible with tested template
-			SQLiteTools.ClearAllPools();
+			SQLiteTools.ClearAllPools(provider: null);
 
 			using (new DisableBaseline("Multi-threading"))
 			using (var db = GetDataConnection(context))
@@ -79,7 +79,7 @@ namespace Tests.UserTests
 
 				Task.WaitAll(tasks.ToArray());
 
-				Assert.AreEqual(db.GetTable<InsertTable>().Count(), db.GetTable<InsertTable>().GroupBy(_ => _.Value).Count());
+				Assert.That(db.GetTable<InsertTable>().GroupBy(_ => _.Value).Count(), Is.EqualTo(db.GetTable<InsertTable>().Count()));
 			}
 		}
 

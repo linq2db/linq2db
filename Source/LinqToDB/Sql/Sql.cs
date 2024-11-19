@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data.Linq;
+using System.Globalization;
 using System.Linq.Expressions;
 using System.Reflection;
 
@@ -126,17 +127,17 @@ namespace LinqToDB
 		{
 			public void Build(ISqExtensionBuilder builder)
 			{
-				var left  = builder.GetExpression(0);
-				var right = builder.GetExpression(1);
+				var left  = builder.GetExpression(0)!;
+				var right = builder.GetExpression(1)!;
 				var isNot = builder.Expression == "NOT";
 
-				SqlPredicate predicate = left.CanBeNull || right.CanBeNull
+				var nullability = new NullabilityContext(builder.Query);
+
+				SqlPredicate predicate = left.CanBeNullable(nullability) || right.CanBeNullable(nullability)
 					? new SqlPredicate.IsDistinct(left, isNot, right)
 					: new SqlPredicate.ExprExpr(left, isNot ? SqlPredicate.Operator.Equal : SqlPredicate.Operator.NotEqual, right, withNull: null);
 
-				builder.ResultExpression = new SqlSearchCondition(
-					new SqlCondition(isNot: false, predicate)
-				);
+				builder.ResultExpression = new SqlSearchCondition(false, predicate);
 			}
 		}
 
@@ -166,24 +167,24 @@ namespace LinqToDB
 		}
 
 		[Expression("NULLIF({0}, {1})", PreferServerSide = true)]
-		[Expression(PN.Access, "case when {0} = {1} then null else {0} end", PreferServerSide = false)]
-		[Expression(PN.SqlCe,  "case when {0} = {1} then null else {0} end", PreferServerSide = false)]
+		[Expression(PN.Access, "IIF({0} = {1}, null, {0})", PreferServerSide = false)]
+		[Expression(PN.SqlCe,  "CASE WHEN {0} = {1} THEN NULL ELSE {0} END", PreferServerSide = false)]
 		public static T? NullIf<T>(T? value, T? compareTo) where T : class
 		{
 			return value != null && compareTo != null && EqualityComparer<T>.Default.Equals(value, compareTo) ? null : value;
 		}
 
 		[Expression("NULLIF({0}, {1})", PreferServerSide = true)]
-		[Expression(PN.Access, "case when {0} = {1} then null else {0} end", PreferServerSide = false)]
-		[Expression(PN.SqlCe,  "case when {0} = {1} then null else {0} end", PreferServerSide = false)]
+		[Expression(PN.Access, "IIF({0} = {1}, null, {0})", PreferServerSide = false)]
+		[Expression(PN.SqlCe,  "CASE WHEN {0} = {1} THEN NULL ELSE {0} END", PreferServerSide = false)]
 		public static T? NullIf<T>(T? value, T compareTo) where T : struct
 		{
 			return value.HasValue && EqualityComparer<T>.Default.Equals(value.Value, compareTo) ? null : value;
 		}
 
 		[Expression("NULLIF({0}, {1})", PreferServerSide = true)]
-		[Expression(PN.Access, "case when {0} = {1} then null else {0} end", PreferServerSide = false)]
-		[Expression(PN.SqlCe,  "case when {0} = {1} then null else {0} end", PreferServerSide = false)]
+		[Expression(PN.Access, "IIF({0} = {1}, null, {0})", PreferServerSide = false)]
+		[Expression(PN.SqlCe,  "CASE WHEN {0} = {1} THEN NULL ELSE {0} END", PreferServerSide = false)]
 		public static T? NullIf<T>(T? value, T? compareTo) where T : struct
 		{
 			return value.HasValue && compareTo.HasValue && EqualityComparer<T>.Default.Equals(value.Value, compareTo.Value) ? null : value;
@@ -208,7 +209,7 @@ namespace LinqToDB
 
 			private static Expression Transform(Expression e)
 			{
-				if (e.NodeType == ExpressionType.Convert || e.NodeType == ExpressionType.ConvertChecked)
+				if (e.NodeType is ExpressionType.Convert or ExpressionType.ConvertChecked)
 				{
 					var unary  = (UnaryExpression)e;
 					var method = _method.MakeGenericMethod(unary.Operand.Type, unary.Type);
@@ -229,8 +230,8 @@ namespace LinqToDB
 					return;
 				}
 
-				var sqlExpr = builder.ConvertExpressionToSql(newExpr);
-				sqlExpr     = sqlExpr.Convert(static (v, e) =>
+				var sqlExpr = builder.ConvertExpressionToSql(newExpr)!;
+				sqlExpr = sqlExpr.Convert(static (v, e) =>
 				{
 					if (e is SqlFunction func && func.Name == PseudoFunctions.REMOVE_CONVERT)
 						return func.Parameters[0];
@@ -251,13 +252,6 @@ namespace LinqToDB
 
 		#region Guid Functions
 
-		[Function  (PN.ClickHouse, "generateUUIDv4", ServerSideOnly = true, CanBeNull = false, IsPure = false)]
-		[Function  (PN.Oracle,     "Sys_Guid",       ServerSideOnly = true, CanBeNull = false, IsPure = false)]
-		[Function  (PN.Firebird,   "Gen_Uuid",       ServerSideOnly = true, CanBeNull = false, IsPure = false)]
-		[Function  (PN.MySql,      "Uuid",           ServerSideOnly = true, CanBeNull = false, IsPure = false)]
-		[Expression(PN.Sybase,     "NewID(1)",       ServerSideOnly = true, CanBeNull = false, IsPure = false)]
-		[Expression(PN.SapHana,    "SYSUUID",        ServerSideOnly = true, CanBeNull = false, IsPure = false)]
-		[Function  (               "NewID",          ServerSideOnly = true, CanBeNull = false, IsPure = false)]
 		public static Guid NewGuid()
 		{
 			return Guid.NewGuid();
@@ -267,41 +261,76 @@ namespace LinqToDB
 
 		#region Convert Functions
 
+		class ConvertBuilder : IExtensionCallBuilder
+		{
+			public void Build(ISqExtensionBuilder builder)
+			{
+				var from = builder.GetExpression("from");
+				var to = builder.GetExpression("to");
+
+				if (from is null || to is null)
+				{
+					builder.IsConvertible = false;
+					return;
+				}
+
+				var toDataType = QueryHelper.GetDbDataType(to, builder.Mapping);
+
+				builder.ResultExpression = new SqlCastExpression(from, toDataType, null, true);
+			}
+		}
+
 		[CLSCompliant(false)]
-		[Function("Convert", 0, 1, ServerSideOnly = true, IsPure = true, IsNullable = IsNullableType.SameAsSecondParameter)]
-		[Function(PseudoFunctions.CONVERT, 2, 3, 1, ServerSideOnly = true, IsPure = true, IsNullable = IsNullableType.SameAsSecondParameter, Configuration = ProviderName.ClickHouse)]
+		[Extension("", BuilderType = typeof(ConvertBuilder))]
 		public static TTo Convert<TTo,TFrom>(TTo to, TFrom from)
 		{
 			return Common.ConvertTo<TTo>.From(from);
 		}
 
 		[CLSCompliant(false)]
-		[Function("Convert", 0, 1, 2, ServerSideOnly = true, IsNullable = IsNullableType.SameAsSecondParameter)]
+		[Function(PseudoFunctions.CONVERT_FORMAT, 0, 3, 1, 2, ServerSideOnly = true, IsNullable = IsNullableType.SameAsSecondParameter)]
 		public static TTo Convert<TTo, TFrom>(TTo to, TFrom from, int format)
 		{
 			return Common.ConvertTo<TTo>.From(from);
 		}
 
-		// TODO: v5 remove. bltoolkit legacy which duplicates Convert function above (without ServerSideOnly, but it shouldn't matter)
-		[CLSCompliant(false)]
-		[Function("Convert", 0, 1, IsPure = true, IsNullable = IsNullableType.SameAsSecondParameter)]
-		[Function(PseudoFunctions.CONVERT, 2, 3, 1, ServerSideOnly = true, IsPure = true, IsNullable = IsNullableType.SameAsSecondParameter, Configuration = ProviderName.ClickHouse)]
-		public static TTo Convert2<TTo,TFrom>(TTo to, TFrom from)
+		class ConvertBuilderSimple : IExtensionCallBuilder
 		{
-			return Common.ConvertTo<TTo>.From(from);
+			public void Build(ISqExtensionBuilder builder)
+			{
+				var obj = builder.GetExpression("obj")!;
+
+				var toType     = ((MethodInfo)builder.Member).GetGenericArguments()[0];
+				var toDataType = builder.Mapping.GetDbDataType(toType);
+
+				builder.ResultExpression = new SqlCastExpression(obj, toDataType, null, true);
+			}
 		}
 
 		[CLSCompliant(false)]
-		[Function(PseudoFunctions.CONVERT, 1, 2, 0, IsPure = true)]
+		[Extension("", BuilderType = typeof(ConvertBuilderSimple))]
 		public static TTo Convert<TTo,TFrom>(TFrom obj)
 		{
 			return Common.ConvertTo<TTo>.From(obj);
 		}
 
+		class ConvertBuilderInner : IExtensionCallBuilder
+		{
+			public void Build(ISqExtensionBuilder builder)
+			{
+				var obj = builder.GetExpression("obj", unwrap: true)!;
+
+				var toType     = ((MethodInfo)builder.Member).ReturnType;
+				var toDataType = builder.Mapping.GetDbDataType(toType);
+
+				builder.ResultExpression = new SqlCastExpression(obj, toDataType, null, false);
+			}
+		}
+
 		public static class ConvertTo<TTo>
 		{
 			[CLSCompliant(false)]
-			[Function(PseudoFunctions.CONVERT, 1, 2, 0, IsPure = true)]
+			[Extension("", BuilderType = typeof(ConvertBuilderInner))]
 			public static TTo From<TFrom>(TFrom obj)
 			{
 				return Common.ConvertTo<TTo>.From(obj);
@@ -530,9 +559,54 @@ namespace LinqToDB
 			return str.Substring(0, length.Value);
 		}
 
-		[Function(                            PreferServerSide = true, IsNullable = IsNullableType.IfAnyParameterNullable)]
+		class OracleRightBuilder : IExtensionCallBuilder
+		{
+			public void Build(ISqExtensionBuilder builder)
+			{
+				var stringExpr = builder.GetExpression(0);
+				var lengthExpr = builder.GetExpression(1);
+
+				if (stringExpr == null || lengthExpr == null)
+				{
+					builder.IsConvertible = false;
+					return;
+				}
+
+				lengthExpr = new SqlBinaryExpression(lengthExpr.SystemType!, new SqlValue(-1), "*", lengthExpr, Precedence.Multiplicative);
+
+				builder.ResultExpression = new SqlFunction(stringExpr.SystemType!, "substr", false, true, stringExpr, lengthExpr);
+			}
+		}
+
+		class SqlCeRightBuilder : IExtensionCallBuilder
+		{
+			public void Build(ISqExtensionBuilder builder)
+			{
+				var stringExpr = builder.GetExpression(0);
+				var lengthExpr = builder.GetExpression(1);
+
+				if (stringExpr == null || lengthExpr == null)
+				{
+					builder.IsConvertible = false;
+					return;
+				}
+
+				// SUBSTRING(someStr, LEN(someStr) - (len - 1), len)
+
+				var startExpr = new SqlBinaryExpression(lengthExpr.SystemType!,
+					new SqlFunction(lengthExpr.SystemType!, "LEN", stringExpr), "-",
+					new SqlBinaryExpression(lengthExpr.SystemType!, lengthExpr, "-", new SqlValue(1), Precedence.Subtraction), 
+					Precedence.Subtraction);
+
+				builder.ResultExpression = new SqlFunction(stringExpr.SystemType!, "SUBSTRING", false, true, stringExpr, startExpr, lengthExpr);
+			}
+		}
+
+		[Function("RIGHT",                    PreferServerSide = true, IsNullable = IsNullableType.IfAnyParameterNullable)]
 		[Function(PN.SQLite,     "RightStr",  PreferServerSide = true, IsNullable = IsNullableType.IfAnyParameterNullable)]
 		[Function(PN.ClickHouse, "rightUTF8", PreferServerSide = true, IsNullable = IsNullableType.IfAnyParameterNullable)]
+		[Extension(PN.Oracle,    "",          PreferServerSide = true, IsNullable = IsNullableType.IfAnyParameterNullable, BuilderType = typeof(OracleRightBuilder))]
+		[Extension(PN.SqlCe,     "",          PreferServerSide = true, IsNullable = IsNullableType.IfAnyParameterNullable, BuilderType = typeof(SqlCeRightBuilder))]
 		public static string? Right(string? str, int? length)
 		{
 			if (length == null || str == null) return null;
@@ -657,25 +731,23 @@ namespace LinqToDB
 		{
 			void IExtensionCallBuilder.Build(ISqExtensionBuilder builder)
 			{
-				var str = builder.GetExpression("str");
+				var str = builder.GetExpression("str")!;
 
-				var condition = new SqlCondition(
-					false,
-					new SqlPredicate.ExprExpr(
+				var predicate = new SqlPredicate.ExprExpr(
 						new SqlExpression(
 							typeof(string),
 							"REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE({0}, '\x09', ''), '\x0a', ''), '\x0b', ''), '\x0c', ''), '\x0d', ''), '\x20', ''), '\x85', ''), '\xa0', ''), '\x1680', ''), '\x2000', ''), '\x2001', ''), '\x2002', ''), '\x2003', ''), '\x2004', ''), '\x2005', ''), '\x2006', ''), '\x2007', ''), '\x2008', ''), '\x2009', ''), '\x200a', ''), '\x2028', ''), '\x2029', ''), '\x205f', ''), '\x3000', '')",
 							str),
 						SqlPredicate.Operator.Equal,
-						new SqlValue(typeof(string), string.Empty), false),
-					true);
+						new SqlValue(typeof(string), string.Empty), withNull: null);
 
-				if (str.CanBeNull)
-					builder.ResultExpression = new SqlSearchCondition(
-						new SqlCondition(false, new SqlPredicate.IsNull(str, false), true),
-						condition);
+				var nullability = new NullabilityContext(builder.Query);
+				if (str.CanBeNullable(nullability))
+					builder.ResultExpression = new SqlSearchCondition(true, 
+						new SqlPredicate.IsNull(str, false),
+						predicate);
 				else
-					builder.ResultExpression = new SqlSearchCondition(condition);
+					builder.ResultExpression = new SqlSearchCondition(false, predicate);
 			}
 		}
 
@@ -684,29 +756,27 @@ namespace LinqToDB
 		{
 			void IExtensionCallBuilder.Build(ISqExtensionBuilder builder)
 			{
-				var str = builder.GetExpression("str");
+				var str = builder.GetExpression("str")!;
 
 				const string whiteSpaces = $"%[^{WHITESPACES}]%";
-				var condition = new SqlCondition(
-					false,
-					new SqlPredicate.NotExpr(
-						new SqlExpression(
-							typeof(bool),
-							"{0} SIMILAR TO {1}",
-							Precedence.Comparison,
-							SqlFlags.IsPredicate,
-							str,
-							new SqlValue(typeof(string), whiteSpaces)),
-						true,
-						Precedence.LogicalNegation),
-					true);
+				var predicate = new SqlPredicate.Expr(
+					new SqlExpression(
+						typeof(bool),
+						"{0} SIMILAR TO {1}",
+						Precedence.Comparison,
+						SqlFlags.IsPredicate,
+						ParametersNullabilityType.NotNullable,
+						null,
+						str,
+						new SqlValue(typeof(string), whiteSpaces)))
+					.MakeNot();
 
-				if (str.CanBeNull)
-					builder.ResultExpression = new SqlSearchCondition(
-						new SqlCondition(false, new SqlPredicate.IsNull(str, false), true),
-						condition);
+				var nullability = new NullabilityContext(builder.Query);
+				if (str.CanBeNullable(nullability))
+					builder.ResultExpression = new SqlSearchCondition(true,
+						new SqlPredicate.IsNull(str, false), predicate);
 				else
-					builder.ResultExpression = new SqlSearchCondition(condition);
+					builder.ResultExpression = new SqlSearchCondition(false, predicate);
 			}
 		}
 
@@ -715,29 +785,27 @@ namespace LinqToDB
 		{
 			void IExtensionCallBuilder.Build(ISqExtensionBuilder builder)
 			{
-				var str = builder.GetExpression("str");
+				var str = builder.GetExpression("str")!;
 
 				var whiteSpaces = $"[^{WHITESPACES}]";
-				var condition = new SqlCondition(
-					false,
-					new SqlPredicate.NotExpr(
-						new SqlExpression(
-							typeof(bool),
-							"{0} RLIKE {1}",
-							Precedence.Comparison,
-							SqlFlags.IsPredicate,
-							str,
-							new SqlValue(typeof(string), whiteSpaces)),
-						true,
-						Precedence.LogicalNegation),
-					true);
+				var condition = new SqlPredicate.Expr(
+					new SqlExpression(
+						typeof(bool),
+						"{0} RLIKE {1}",
+						Precedence.Comparison,
+						SqlFlags.IsPredicate,
+						ParametersNullabilityType.NotNullable,
+						null,
+						str,
+						new SqlValue(typeof(string), whiteSpaces)))
+					.MakeNot();
 
-				if (str.CanBeNull)
-					builder.ResultExpression = new SqlSearchCondition(
-						new SqlCondition(false, new SqlPredicate.IsNull(str, false), true),
-						condition);
+				var nullability = new NullabilityContext(builder.Query);
+				if (str.CanBeNullable(nullability))
+					builder.ResultExpression = new SqlSearchCondition(true,
+						new SqlPredicate.IsNull(str, false), condition);
 				else
-					builder.ResultExpression = new SqlSearchCondition(condition);
+					builder.ResultExpression = new SqlSearchCondition(false, condition);
 			}
 		}
 
@@ -746,24 +814,21 @@ namespace LinqToDB
 		{
 			void IExtensionCallBuilder.Build(ISqExtensionBuilder builder)
 			{
-				var str = builder.GetExpression("str");
+				var str = builder.GetExpression("str")!;
 
 				var whiteSpaces = $"%[^{WHITESPACES}]%";
-				var condition = new SqlCondition(
-					false,
-					new SqlPredicate.Like(
-						str,
-						true,
-						new SqlValue(typeof(string), whiteSpaces),
-						null),
-					true);
+				var predicate = new SqlPredicate.Like(
+					str,
+					true,
+					new SqlValue(typeof(string), whiteSpaces),
+					null);
 
-				if (str.CanBeNull)
-					builder.ResultExpression = new SqlSearchCondition(
-						new SqlCondition(false, new SqlPredicate.IsNull(str, false), true),
-						condition);
+				var nullability = new NullabilityContext(builder.Query);
+				if (str.CanBeNullable(nullability))
+					builder.ResultExpression = new SqlSearchCondition(true,
+						new SqlPredicate.IsNull(str, false), predicate);
 				else
-					builder.ResultExpression = new SqlSearchCondition(condition);
+					builder.ResultExpression = new SqlSearchCondition(false, predicate);
 			}
 		}
 
@@ -772,24 +837,22 @@ namespace LinqToDB
 		{
 			void IExtensionCallBuilder.Build(ISqExtensionBuilder builder)
 			{
-				var str = builder.GetExpression("str");
+				var str = builder.GetExpression("str")!;
 
 				var whiteSpaces = $"%[^{WHITESPACES}]%";
-				var condition = new SqlCondition(
-					false,
-					new SqlPredicate.Like(
-						str,
-						true,
-						new SqlValue(new DbDataType(typeof(string), DataType.NVarChar), whiteSpaces),
-						null),
-					true);
+				var predicate = new SqlPredicate.Like(
+					str,
+					true,
+					new SqlValue(new DbDataType(typeof(string), DataType.NVarChar), whiteSpaces),
+					null);
 
-				if (str.CanBeNull)
-					builder.ResultExpression = new SqlSearchCondition(
-						new SqlCondition(false, new SqlPredicate.IsNull(str, false), true),
-						condition);
+				var nullability = new NullabilityContext(builder.Query);
+				if (str.CanBeNullable(nullability))
+					builder.ResultExpression = new SqlSearchCondition(true,
+						new SqlPredicate.IsNull(str, false),
+						predicate);
 				else
-					builder.ResultExpression = new SqlSearchCondition(condition);
+					builder.ResultExpression = new SqlSearchCondition(false, predicate);
 			}
 		}
 
@@ -798,22 +861,20 @@ namespace LinqToDB
 		{
 			void IExtensionCallBuilder.Build(ISqExtensionBuilder builder)
 			{
-				var str = builder.GetExpression("str");
+				var str = builder.GetExpression("str")!;
 
-				var condition = new SqlCondition(
-					false,
-					new SqlPredicate.ExprExpr(
+				var predicate = new SqlPredicate.ExprExpr(
 						new SqlFunction(typeof(string), "LTRIM", str),
 						SqlPredicate.Operator.Equal,
-						new SqlValue(typeof(string), string.Empty), false),
-					true);
+						new SqlValue(typeof(string), string.Empty), withNull: null);
 
-				if (str.CanBeNull)
-					builder.ResultExpression = new SqlSearchCondition(
-						new SqlCondition(false, new SqlPredicate.IsNull(str, false), true),
-						condition);
+				var nullability = new NullabilityContext(builder.Query);
+				if (str.CanBeNullable(nullability))
+					builder.ResultExpression = new SqlSearchCondition(true,
+						new SqlPredicate.IsNull(str, false),
+						predicate);
 				else
-					builder.ResultExpression = new SqlSearchCondition(condition);
+					builder.ResultExpression = new SqlSearchCondition(false, predicate);
 			}
 		}
 
@@ -822,22 +883,20 @@ namespace LinqToDB
 		{
 			void IExtensionCallBuilder.Build(ISqExtensionBuilder builder)
 			{
-				var str = builder.GetExpression("str");
+				var str = builder.GetExpression("str")!;
 
-				var condition = new SqlCondition(
-					false,
-					new SqlPredicate.ExprExpr(
+				var predicate = new SqlPredicate.ExprExpr(
 						new SqlExpression(typeof(string), "TRIM({1} FROM {0})", str, new SqlValue(new DbDataType(typeof(string), DataType.NVarChar), WHITESPACES)),
 						SqlPredicate.Operator.Equal,
-						new SqlValue(typeof(string), string.Empty), false),
-					true);
+						new SqlValue(typeof(string), string.Empty), withNull: null);
 
-				if (str.CanBeNull)
-					builder.ResultExpression = new SqlSearchCondition(
-						new SqlCondition(false, new SqlPredicate.IsNull(str, false), true),
-						condition);
+				var nullability = new NullabilityContext(builder.Query);
+				if (str.CanBeNullable(nullability))
+					builder.ResultExpression = new SqlSearchCondition(true,
+						new SqlPredicate.IsNull(str, false),
+						predicate);
 				else
-					builder.ResultExpression = new SqlSearchCondition(condition);
+					builder.ResultExpression = new SqlSearchCondition(false, predicate);
 			}
 		}
 
@@ -846,19 +905,17 @@ namespace LinqToDB
 		{
 			void IExtensionCallBuilder.Build(ISqExtensionBuilder builder)
 			{
-				var str = builder.GetExpression("str");
+				var str = builder.GetExpression("str")!;
 
-				var condition = new SqlCondition(
-					false,
-					new SqlPredicate.IsNull(new SqlFunction(typeof(string), "LTRIM", str, new SqlValue(typeof(string), WHITESPACES)), false),
-					true);
+				var predicate = new SqlPredicate.IsNull(new SqlFunction(typeof(string), "LTRIM", str, new SqlValue(typeof(string), WHITESPACES)), false);
 
-				if (str.CanBeNull)
-					builder.ResultExpression = new SqlSearchCondition(
-						new SqlCondition(false, new SqlPredicate.IsNull(str, false), true),
-						condition);
+				var nullability = new NullabilityContext(builder.Query);
+				if (str.CanBeNullable(nullability))
+					builder.ResultExpression = new SqlSearchCondition(true,
+						new SqlPredicate.IsNull(str, false),
+						predicate);
 				else
-					builder.ResultExpression = new SqlSearchCondition(condition);
+					builder.ResultExpression = new SqlSearchCondition(false, predicate);
 			}
 		}
 
@@ -867,22 +924,20 @@ namespace LinqToDB
 		{
 			void IExtensionCallBuilder.Build(ISqExtensionBuilder builder)
 			{
-				var str = builder.GetExpression("str");
+				var str = builder.GetExpression("str")!;
 
-				var condition = new SqlCondition(
-					false,
-					new SqlPredicate.ExprExpr(
+				var predicate = new SqlPredicate.ExprExpr(
 						new SqlFunction(typeof(string), "LTRIM", str, new SqlValue(typeof(string), ASCII_WHITESPACES)),
 						SqlPredicate.Operator.Equal,
-						new SqlValue(typeof(string), string.Empty), false),
-					true);
+						new SqlValue(typeof(string), string.Empty), withNull: null);
 
-				if (str.CanBeNull)
-					builder.ResultExpression = new SqlSearchCondition(
-						new SqlCondition(false, new SqlPredicate.IsNull(str, false), true),
-						condition);
+				var nullability = new NullabilityContext(builder.Query);
+				if (str.CanBeNullable(nullability))
+					builder.ResultExpression = new SqlSearchCondition(true,
+						new SqlPredicate.IsNull(str, false),
+						predicate);
 				else
-					builder.ResultExpression = new SqlSearchCondition(condition);
+					builder.ResultExpression = new SqlSearchCondition(false, predicate);
 			}
 		}
 
@@ -891,22 +946,20 @@ namespace LinqToDB
 		{
 			void IExtensionCallBuilder.Build(ISqExtensionBuilder builder)
 			{
-				var str = builder.GetExpression("str");
+				var str = builder.GetExpression("str")!;
 
-				var condition = new SqlCondition(
-					false,
-					new SqlPredicate.ExprExpr(
+				var predicate = new SqlPredicate.ExprExpr(
 						new SqlFunction(typeof(string), "LTRIM", str, new SqlValue(typeof(string), WHITESPACES)),
 						SqlPredicate.Operator.Equal,
-						new SqlValue(typeof(string), string.Empty), false),
-					true);
+						new SqlValue(typeof(string), string.Empty), withNull: null);
 
-				if (str.CanBeNull)
-					builder.ResultExpression = new SqlSearchCondition(
-						new SqlCondition(false, new SqlPredicate.IsNull(str, false), true),
-						condition);
+				var nullability = new NullabilityContext(builder.Query);
+				if (str.CanBeNullable(nullability))
+					builder.ResultExpression = new SqlSearchCondition(true,
+						new SqlPredicate.IsNull(str, false),
+						predicate);
 				else
-					builder.ResultExpression = new SqlSearchCondition(condition);
+					builder.ResultExpression = new SqlSearchCondition(false, predicate);
 			}
 		}
 		#endregion
@@ -962,26 +1015,28 @@ namespace LinqToDB
 		[Function(PseudoFunctions.TO_LOWER, ServerSideOnly = true, IsPure = true, IsNullable = IsNullableType.IfAnyParameterNullable)]
 		public static string? Lower(string? str)
 		{
-			return str?.ToLower();
+			return str?.ToLower(CultureInfo.CurrentCulture);
 		}
 
 		[Function(PseudoFunctions.TO_UPPER, ServerSideOnly = true, IsPure = true, IsNullable = IsNullableType.IfAnyParameterNullable)]
 		public static string? Upper(string? str)
 		{
-			return str?.ToUpper();
+			return str?.ToUpper(CultureInfo.CurrentCulture);
 		}
 
 		[Expression("Lpad({0},{1},'0')",                                                                            IsNullable = IsNullableType.SameAsFirstParameter)]
 		[Expression(PN.Access, "Format({0}, String('0', {1}))",                                                     IsNullable = IsNullableType.SameAsFirstParameter)]
 		[Expression(PN.Sybase, "right(replicate('0',{1}) + cast({0} as varchar(255)),{1})",                         IsNullable = IsNullableType.SameAsFirstParameter)]
 		[Expression(PN.PostgreSQL, "Lpad({0}::text,{1},'0')",                                                       IsNullable = IsNullableType.SameAsFirstParameter)]
-		[Expression(PN.SqlServer, "format({0}, 'd{1}')",                                                            IsNullable = IsNullableType.SameAsFirstParameter)]
 		[Expression(PN.SQLite, "printf('%0{1}d', {0})",                                                             IsNullable = IsNullableType.SameAsFirstParameter)]
 		[Expression(PN.ClickHouse, "leftPadUTF8(toString({0}), toUInt32({1}), '0')",                                IsNullable = IsNullableType.SameAsFirstParameter)]
 		[Expression(PN.SqlCe, "REPLICATE('0', {1} - LEN(CAST({0} as NVARCHAR({1})))) + CAST({0} as NVARCHAR({1}))", IsNullable = IsNullableType.SameAsFirstParameter)]
+		[Expression(PN.SqlServer, "format({0}, 'd{1}')",                                                            IsNullable = IsNullableType.SameAsFirstParameter)]
+		[Expression(PN.SqlServer2005, "REPLICATE('0', CASE WHEN LEN(CAST({0} as NVARCHAR)) > {1} THEN 0 ELSE ({1} - LEN(CAST({0} as NVARCHAR))) END) + CAST({0} as NVARCHAR)", IsNullable = IsNullableType.SameAsFirstParameter)]
+		[Expression(PN.SqlServer2008, "REPLICATE('0', CASE WHEN LEN(CAST({0} as NVARCHAR)) > {1} THEN 0 ELSE ({1} - LEN(CAST({0} as NVARCHAR))) END) + CAST({0} as NVARCHAR)", IsNullable = IsNullableType.SameAsFirstParameter)]
 		public static string? ZeroPad(int? val, int length)
 		{
-			return val?.ToString("d" + length);
+			return val?.ToString(FormattableString.Invariant($"d{length}"), NumberFormatInfo.InvariantInfo);
 		}
 
 		sealed class ConcatAttribute : ExpressionAttribute
@@ -990,16 +1045,34 @@ namespace LinqToDB
 			{
 			}
 
-			public override ISqlExpression? GetExpression<TContext>(TContext context, IDataContext dataContext, SelectQuery query, Expression expression, Func<TContext, Expression, ColumnDescriptor?, ISqlExpression> converter)
+			public override Expression GetExpression<TContext>(
+				TContext              context,
+				IDataContext          dataContext,
+				IExpressionEvaluator  evaluator,
+				SelectQuery           query,
+				Expression            expression,
+				ConvertFunc<TContext> converter)
 			{
 				var expressionStr = Expression;
-				PrepareParameterValues(context, dataContext.MappingSchema, expression, ref expressionStr, true, out var knownExpressions, true, out _, converter);
+				PrepareParameterValues(context, dataContext.MappingSchema, expression, ref expressionStr, true,
+					out var knownExpressions, true, out _, converter);
 
 				var arr = new ISqlExpression[knownExpressions.Count];
 
+				Expression? current = null;
+
 				for (var i = 0; i < knownExpressions.Count; i++)
 				{
-					var arg = converter(context, knownExpressions[i]!, null);
+					var pair      = knownExpressions[i];
+
+					var converted = converter(context, pair.expression!, null, pair.parameter?.DoNotParameterize);
+
+					if (converted is not SqlPlaceholderExpression placeholder)
+						return converted;
+
+					current = placeholder;
+
+					var arg = placeholder.Sql;
 
 					if (arg.SystemType == typeof(string))
 					{
@@ -1011,19 +1084,19 @@ namespace LinqToDB
 							100 :
 							SqlDataType.GetMaxDisplaySize(dataContext.MappingSchema.GetDataType(arg.SystemType).Type.DataType);
 
-						arr[i] = PseudoFunctions.MakeConvert(new SqlDataType(DataType.VarChar, typeof(string), len, null, null, null), new SqlDataType(arg.GetExpressionType()), arg);
+						arr[i] = PseudoFunctions.MakeCast(arg, new DbDataType(typeof(string), DataType.VarChar, null, len));
 					}
 				}
 
-				if (arr.Length == 1)
-					return arr[0];
+				if (arr.Length == 1 && current != null)
+					return current;
 
 				var expr = new SqlBinaryExpression(typeof(string), arr[0], "+", arr[1]);
 
 				for (var i = 2; i < arr.Length; i++)
 					expr = new SqlBinaryExpression(typeof (string), expr, "+", arr[i]);
 
-				return expr;
+				return new SqlPlaceholderExpression(query, expr, expression);
 			}
 		}
 
@@ -1146,7 +1219,6 @@ namespace LinqToDB
 		public static int DateFirst => 7;
 
 #if NET6_0_OR_GREATER
-		[Function]
 		public static DateOnly? MakeDateOnly(int? year, int? month, int? day)
 		{
 			return year == null || month == null || day == null ?
@@ -1155,7 +1227,6 @@ namespace LinqToDB
 		}
 #endif
 
-		[Function(IsNullable = IsNullableType.IfAnyParameterNullable)]
 		public static DateTime? MakeDateTime(int? year, int? month, int? day)
 		{
 			return year == null || month == null || day == null ?
@@ -1163,7 +1234,6 @@ namespace LinqToDB
 				new DateTime(year.Value, month.Value, day.Value);
 		}
 
-		[Function(IsNullable = IsNullableType.IfAnyParameterNullable)]
 		public static DateTime? MakeDateTime(int? year, int? month, int? day, int? hour, int? minute, int? second)
 		{
 			return year == null || month == null || day == null || hour == null || minute == null || second == null ?
@@ -1269,6 +1339,13 @@ namespace LinqToDB
 		public static double?  Power(double? x, double? y)
 		{
 			return x == null || y == null ? null : Math.Pow(x.Value, y.Value);
+		}
+
+		[Expression(PN.Access, "{0} ^ {1}", Precedence = Precedence.Multiplicative, IsNullable = IsNullableType.IfAnyParameterNullable)]
+		[Function(IsNullable = IsNullableType.IfAnyParameterNullable)]
+		public static decimal?  Power(decimal? x, decimal? y)
+		{
+			return x == null || y == null ? null : (decimal)Math.Pow((double)x.Value, (double)y.Value);
 		}
 
 		[Function(IsNullable = IsNullableType.SameAsFirstParameter)]

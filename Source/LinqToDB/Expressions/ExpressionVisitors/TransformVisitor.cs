@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.Linq;
 using System.Linq.Expressions;
 using System.Runtime.CompilerServices;
 
@@ -189,8 +190,77 @@ namespace LinqToDB.Expressions
 		}
 
 		// ReSharper disable once InconsistentNaming
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static Expression TransformXE(Expression expr) => expr;
+		Expression TransformXE(Expression expr)
+		{
+			if (expr is SqlGenericConstructorExpression generic)
+			{
+				var assignments = Transform(this, generic.Assignments, TransformAssignments);
+
+				if (!ReferenceEquals(assignments, generic.Assignments))
+				{
+					generic = generic.ReplaceAssignments(assignments.ToList());
+				}
+
+				var parameters = Transform(this, generic.Parameters, TransformParameters);
+
+				if (!ReferenceEquals(parameters, generic.Parameters))
+				{
+					generic = generic.ReplaceParameters(parameters.ToList());
+				}
+
+				return generic;
+			}
+
+			if (expr is SqlGenericParamAccessExpression paramAccess)
+			{
+				return paramAccess.Update(Transform(paramAccess.Constructor));
+			}
+
+			if (expr is SqlReaderIsNullExpression isNullExpression)
+			{
+				return isNullExpression.Update((SqlPlaceholderExpression)Transform(isNullExpression.Placeholder));
+			}
+
+			if (expr is SqlAdjustTypeExpression adjustType)
+			{
+				return adjustType.Update(Transform(adjustType.Expression));
+			}
+
+			if (expr is SqlPathExpression)
+			{
+				return expr;
+			}
+
+			if (expr is PlaceholderExpression {PlaceholderType: PlaceholderType.Closure})
+			{
+				return expr;
+			}
+
+			if (expr is SqlDefaultIfEmptyExpression defaultIfEmptyExpression)
+			{
+				var inner = Transform(defaultIfEmptyExpression.InnerExpression);
+				var items = Transform(defaultIfEmptyExpression.NotNullExpressions);
+
+				return defaultIfEmptyExpression.Update(inner,
+					ReferenceEquals(items, defaultIfEmptyExpression.NotNullExpressions)
+						? defaultIfEmptyExpression.NotNullExpressions
+						: items.ToList().AsReadOnly());
+			}
+
+			return expr;
+		}
+
+		private SqlGenericConstructorExpression.Assignment TransformAssignments(TransformVisitor<TContext> visitor, SqlGenericConstructorExpression.Assignment a)
+		{
+			var aExpr = Transform(a.Expression);
+			return a.WithExpression(aExpr);
+		}
+
+		private SqlGenericConstructorExpression.Parameter TransformParameters(TransformVisitor<TContext> visitor, SqlGenericConstructorExpression.Parameter p)
+		{
+			var aExpr = Transform(p.Expression);
+			return p.WithExpression(aExpr);
+		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private Expression TransformX(TryExpression e)
@@ -384,7 +454,7 @@ namespace LinqToDB.Expressions
 					var ml = (MemberListBinding) b;
 					var i  = TransformVisitor<TContext>.Transform(visitor, ml.Initializers, TransformElementInit);
 
-					if (i != ml.Initializers)
+					if (!ReferenceEquals(i, ml.Initializers))
 						ml = Expression.ListBind(ml.Member, i);
 
 					return ml;
@@ -395,8 +465,8 @@ namespace LinqToDB.Expressions
 					var mm = (MemberMemberBinding) b;
 					var bs = TransformVisitor<TContext>.Transform(visitor, mm.Bindings, Modify);
 
-					if (bs != mm.Bindings)
-						mm = Expression.MemberBind(mm.Member);
+					if (!ReferenceEquals(bs, mm.Bindings))
+						mm = Expression.MemberBind(mm.Member, bs);
 
 					return mm;
 				}

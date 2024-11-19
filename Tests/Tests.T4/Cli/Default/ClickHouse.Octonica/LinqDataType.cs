@@ -20,7 +20,7 @@ namespace Cli.Default.ClickHouse.Octonica
 		[Column("MoneyValue"                                              )] public decimal?        MoneyValue     { get; set; } // Decimal(18, 4)
 		[Column("DateTimeValue"                                           )] public DateTimeOffset? DateTimeValue  { get; set; } // DateTime64(3)
 		[Column("DateTimeValue2"                                          )] public DateTimeOffset? DateTimeValue2 { get; set; } // DateTime64(7)
-		[Column("BoolValue"                                               )] public byte?           BoolValue      { get; set; } // UInt8
+		[Column("BoolValue"                                               )] public bool?           BoolValue      { get; set; } // Bool
 		[Column("GuidValue"                                               )] public Guid?           GuidValue      { get; set; } // UUID
 		[Column("BinaryValue"                                             )] public string?         BinaryValue    { get; set; } // String
 		[Column("SmallIntValue"                                           )] public short?          SmallIntValue  { get; set; } // Int16

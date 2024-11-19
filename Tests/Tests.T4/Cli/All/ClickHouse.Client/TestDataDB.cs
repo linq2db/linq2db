@@ -43,19 +43,20 @@ namespace Cli.All.ClickHouse.Client
 
 		partial void InitDataContext();
 
-		public ITable<AllType>           AllTypes            => this.GetTable<AllType>();
-		public ITable<Child>             Children            => this.GetTable<Child>();
-		public ITable<CollatedTable>     CollatedTables      => this.GetTable<CollatedTable>();
-		public ITable<Doctor>            Doctors             => this.GetTable<Doctor>();
-		public ITable<GrandChild>        GrandChildren       => this.GetTable<GrandChild>();
-		public ITable<InheritanceChild>  InheritanceChildren => this.GetTable<InheritanceChild>();
-		public ITable<InheritanceParent> InheritanceParents  => this.GetTable<InheritanceParent>();
-		public ITable<LinqDataType>      LinqDataTypes       => this.GetTable<LinqDataType>();
-		public ITable<Parent>            Parents             => this.GetTable<Parent>();
-		public ITable<Patient>           Patients            => this.GetTable<Patient>();
-		public ITable<Person>            People              => this.GetTable<Person>();
-		public ITable<TestMerge1>        TestMerge1          => this.GetTable<TestMerge1>();
-		public ITable<TestMerge2>        TestMerge2          => this.GetTable<TestMerge2>();
+		public ITable<AllType>                 AllTypes                 => this.GetTable<AllType>();
+		public ITable<Child>                   Children                 => this.GetTable<Child>();
+		public ITable<CollatedTable>           CollatedTables           => this.GetTable<CollatedTable>();
+		public ITable<Doctor>                  Doctors                  => this.GetTable<Doctor>();
+		public ITable<GrandChild>              GrandChildren            => this.GetTable<GrandChild>();
+		public ITable<InheritanceChild>        InheritanceChildren      => this.GetTable<InheritanceChild>();
+		public ITable<InheritanceParent>       InheritanceParents       => this.GetTable<InheritanceParent>();
+		public ITable<LinqDataType>            LinqDataTypes            => this.GetTable<LinqDataType>();
+		public ITable<Parent>                  Parents                  => this.GetTable<Parent>();
+		public ITable<Patient>                 Patients                 => this.GetTable<Patient>();
+		public ITable<Person>                  People                   => this.GetTable<Person>();
+		public ITable<ReplacingMergeTreeTable> ReplacingMergeTreeTables => this.GetTable<ReplacingMergeTreeTable>();
+		public ITable<TestMerge1>              TestMerge1               => this.GetTable<TestMerge1>();
+		public ITable<TestMerge2>              TestMerge2               => this.GetTable<TestMerge2>();
 	}
 
 	public static partial class ExtensionMethods
@@ -539,6 +540,66 @@ namespace Cli.All.ClickHouse.Client
 		public static IQueryable<Person> FindQuery(this TestDataDB db, Person @record)
 		{
 			return db.GetTable<Person>().Where(e => e.PersonId == @record.PersonId);
+		}
+
+		public static ReplacingMergeTreeTable? Find(this ITable<ReplacingMergeTreeTable> table, uint id)
+		{
+			return table.FirstOrDefault(e => e.Id == id);
+		}
+
+		public static Task<ReplacingMergeTreeTable?> FindAsync(this ITable<ReplacingMergeTreeTable> table, uint id, CancellationToken cancellationToken = default)
+		{
+			return table.FirstOrDefaultAsync(e => e.Id == id, cancellationToken);
+		}
+
+		public static IQueryable<ReplacingMergeTreeTable> FindQuery(this ITable<ReplacingMergeTreeTable> table, uint id)
+		{
+			return table.Where(e => e.Id == id);
+		}
+
+		public static ReplacingMergeTreeTable? Find(this ITable<ReplacingMergeTreeTable> table, ReplacingMergeTreeTable @record)
+		{
+			return table.FirstOrDefault(e => e.Id == @record.Id);
+		}
+
+		public static Task<ReplacingMergeTreeTable?> FindAsync(this ITable<ReplacingMergeTreeTable> table, ReplacingMergeTreeTable @record, CancellationToken cancellationToken = default)
+		{
+			return table.FirstOrDefaultAsync(e => e.Id == @record.Id, cancellationToken);
+		}
+
+		public static IQueryable<ReplacingMergeTreeTable> FindQuery(this ITable<ReplacingMergeTreeTable> table, ReplacingMergeTreeTable @record)
+		{
+			return table.Where(e => e.Id == @record.Id);
+		}
+
+		public static ReplacingMergeTreeTable? FindReplacingMergeTreeTable(this TestDataDB db, uint id)
+		{
+			return db.GetTable<ReplacingMergeTreeTable>().FirstOrDefault(e => e.Id == id);
+		}
+
+		public static Task<ReplacingMergeTreeTable?> FindReplacingMergeTreeTableAsync(this TestDataDB db, uint id, CancellationToken cancellationToken = default)
+		{
+			return db.GetTable<ReplacingMergeTreeTable>().FirstOrDefaultAsync(e => e.Id == id, cancellationToken);
+		}
+
+		public static IQueryable<ReplacingMergeTreeTable> FindReplacingMergeTreeTableQuery(this TestDataDB db, uint id)
+		{
+			return db.GetTable<ReplacingMergeTreeTable>().Where(e => e.Id == id);
+		}
+
+		public static ReplacingMergeTreeTable? Find(this TestDataDB db, ReplacingMergeTreeTable @record)
+		{
+			return db.GetTable<ReplacingMergeTreeTable>().FirstOrDefault(e => e.Id == @record.Id);
+		}
+
+		public static Task<ReplacingMergeTreeTable?> FindAsync(this TestDataDB db, ReplacingMergeTreeTable @record, CancellationToken cancellationToken = default)
+		{
+			return db.GetTable<ReplacingMergeTreeTable>().FirstOrDefaultAsync(e => e.Id == @record.Id, cancellationToken);
+		}
+
+		public static IQueryable<ReplacingMergeTreeTable> FindQuery(this TestDataDB db, ReplacingMergeTreeTable @record)
+		{
+			return db.GetTable<ReplacingMergeTreeTable>().Where(e => e.Id == @record.Id);
 		}
 
 		public static TestMerge1? Find(this ITable<TestMerge1> table, int id)

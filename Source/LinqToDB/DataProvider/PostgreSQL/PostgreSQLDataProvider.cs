@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
+using System.Globalization;
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Threading;
@@ -12,8 +13,10 @@ namespace LinqToDB.DataProvider.PostgreSQL
 {
 	using Common;
 	using Data;
+	using Linq.Translation;
 	using Mapping;
 	using SqlProvider;
+	using Translation;
 
 	sealed class PostgreSQLDataProvider92 : PostgreSQLDataProvider { public PostgreSQLDataProvider92() : base(ProviderName.PostgreSQL92, PostgreSQLVersion.v92) {} }
 	sealed class PostgreSQLDataProvider93 : PostgreSQLDataProvider { public PostgreSQLDataProvider93() : base(ProviderName.PostgreSQL93, PostgreSQLVersion.v93) {} }
@@ -33,12 +36,13 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			Version = version;
 
 			SqlProviderFlags.IsApplyJoinSupported              = version != PostgreSQLVersion.v92;
+			SqlProviderFlags.IsCrossApplyJoinSupportsCondition = true;
+			SqlProviderFlags.IsOuterApplyJoinSupportsCondition = true;
 			SqlProviderFlags.IsInsertOrUpdateSupported         = version is not PostgreSQLVersion.v92 and not PostgreSQLVersion.v93;
-			SqlProviderFlags.IsUpdateSetTableAliasSupported    = false;
 			SqlProviderFlags.IsCommonTableExpressionsSupported = true;
-			SqlProviderFlags.IsDistinctOrderBySupported        = false;
 			SqlProviderFlags.IsSubQueryOrderBySupported        = true;
 			SqlProviderFlags.IsAllSetOperationsSupported       = true;
+			SqlProviderFlags.SupportsBooleanComparison         = true;
 
 			SqlProviderFlags.RowConstructorSupport = RowFeature.Equality        | RowFeature.Comparisons |
 			                                         RowFeature.CompareToSelect | RowFeature.In | RowFeature.IsNull |
@@ -57,6 +61,11 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			_sqlOptimizer = new PostgreSQLSqlOptimizer(SqlProviderFlags);
 
 			ConfigureTypes();
+		}
+
+		protected override IMemberTranslator CreateMemberTranslator()
+		{
+			return new PostgreSQLMemberTranslator();
 		}
 
 		private void ConfigureTypes()
@@ -144,7 +153,6 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			mapType("tstzmultirange"          , NpgsqlProviderAdapter.NpgsqlDbType.TimestampTzMultirange);
 			mapType("datemultirange"          , NpgsqlProviderAdapter.NpgsqlDbType.DateMultirange);
 
-
 			if (Adapter.NpgsqlTimeSpanType != null) SetProviderField(Adapter.NpgsqlTimeSpanType, Adapter.NpgsqlTimeSpanType, Adapter.GetIntervalReaderMethod!    , dataReaderType: Adapter.DataReaderType);
 			if (Adapter.NpgsqlDateTimeType != null) SetProviderField(Adapter.NpgsqlDateTimeType, Adapter.NpgsqlDateTimeType, Adapter.GetTimeStampReaderMethod!   , dataReaderType: Adapter.DataReaderType);
 			if (Adapter.NpgsqlDateType     != null) SetProviderField(Adapter.NpgsqlDateType    , Adapter.NpgsqlDateType    , Adapter.GetDateReaderMethod!        , dataReaderType: Adapter.DataReaderType);
@@ -222,7 +230,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		internal object? NormalizeTimeStamp(PostgreSQLOptions options, object? value, DbDataType dataType)
+		internal object? NormalizeTimeStamp(PostgreSQLOptions options, object? value, DbDataType dataType, NpgsqlProviderAdapter.NpgsqlDbType? npgsqlType)
 		{
 			if (options.NormalizeTimestampData)
 			{
@@ -233,13 +241,13 @@ namespace LinqToDB.DataProvider.PostgreSQL
 				else if (value is DateTime dt)
 				{
 					// timestamptz should have UTC Kind
-					if ((dataType.DataType == DataType.DateTimeOffset || GetNativeType(dataType.DbType) == NpgsqlProviderAdapter.NpgsqlDbType.TimestampTZ))
+					if (dataType.DataType == DataType.DateTimeOffset || npgsqlType == NpgsqlProviderAdapter.NpgsqlDbType.TimestampTZ)
 					{
 						if (dt.Kind != DateTimeKind.Utc)
 							value = DateTime.SpecifyKind(dt, DateTimeKind.Utc);
 					}
 					// timestamp should have non-UTC Kind (Unspecified used by default by npgsql)
-					else if (dataType.DataType == DataType.DateTime2 || GetNativeType(dataType.DbType) == NpgsqlProviderAdapter.NpgsqlDbType.Timestamp)
+					else if (dataType.DataType == DataType.DateTime2 || npgsqlType == NpgsqlProviderAdapter.NpgsqlDbType.Timestamp)
 					{
 						if (dt.Kind == DateTimeKind.Utc)
 							value = DateTime.SpecifyKind(dt, DateTimeKind.Unspecified);
@@ -258,7 +266,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			}
 			else
 			{
-				value = NormalizeTimeStamp(dataConnection.Options.FindOrDefault(PostgreSQLOptions.Default), value, dataType);
+				value = NormalizeTimeStamp(dataConnection.Options.FindOrDefault(PostgreSQLOptions.Default), value, dataType, GetNativeType(dataType.DbType));
 			}
 
 			base.SetParameter(dataConnection, parameter, name, dataType, value);
@@ -366,7 +374,6 @@ namespace LinqToDB.DataProvider.PostgreSQL
 				cancellationToken);
 		}
 
-#if NATIVE_ASYNC
 		public override Task<BulkCopyRowsCopied> BulkCopyAsync<T>(DataOptions options, ITable<T> table,
 			IAsyncEnumerable<T> source, CancellationToken cancellationToken)
 		{
@@ -379,7 +386,6 @@ namespace LinqToDB.DataProvider.PostgreSQL
 				source,
 				cancellationToken);
 		}
-#endif
 
 		#endregion
 
@@ -503,7 +509,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 			if (dbType.StartsWith("float(") && dbType.EndsWith(")"))
 			{
-				if (int.TryParse(dbType.Substring("float(".Length, dbType.Length - "float(".Length - 1), out var precision))
+				if (int.TryParse(dbType.Substring("float(".Length, dbType.Length - "float(".Length - 1), NumberStyles.Integer, NumberFormatInfo.InvariantInfo, out var precision))
 				{
 					if (precision >= 1 && precision <= 24)
 						dbType = "real";

@@ -31,8 +31,6 @@ namespace Cli.Default.MariaDB
 		[Column("timestampDataType"                                                                                    )] public DateTime? TimestampDataType   { get; set; } // timestamp
 		[Column("timeDataType"                                                                                         )] public TimeSpan? TimeDataType        { get; set; } // time
 		[Column("yearDataType"                                                                                         )] public int?      YearDataType        { get; set; } // year(4)
-		[Column("year2DataType"                                                                                        )] public int?      Year2DataType       { get; set; } // year(4)
-		[Column("year4DataType"                                                                                        )] public int?      Year4DataType       { get; set; } // year(4)
 		[Column("charDataType"                                                                                         )] public char?     CharDataType        { get; set; } // char(1)
 		[Column("char20DataType"                                                                                       )] public string?   Char20DataType      { get; set; } // char(20)
 		[Column("varcharDataType"                                                                                      )] public string?   VarcharDataType     { get; set; } // varchar(20)

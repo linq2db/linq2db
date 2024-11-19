@@ -13,8 +13,10 @@ namespace Tests.Tools
 
 	public class TestSettings
 	{
+		public bool?                               DisableRemoteContext { get; set; }
 		public string?                             BasedOn              { get; set; }
 		public string?                             BaselinesPath        { get; set; }
+		public bool?                               StoreMetrics         { get; set; }
 		public string[]?                           Providers            { get; set; }
 		public string[]?                           Skip                 { get; set; }
 		public string?                             TraceLevel           { get; set; }
@@ -47,6 +49,7 @@ namespace Tests.Tools
 				settings1.DefaultConfiguration ??= settings2.DefaultConfiguration;
 				settings1.NoLinqService        ??= settings2.NoLinqService;
 				settings1.BaselinesPath        ??= settings2.BaselinesPath;
+				settings1.StoreMetrics         ??= settings2.StoreMetrics;
 			}
 
 			var defaultSettings = JsonSerializer.Deserialize<Dictionary<string,TestSettings>>(defaultJson, _jsonOptions)!;
@@ -122,7 +125,7 @@ namespace Tests.Tools
 						switch (provider)
 						{
 							case "++" or "+++" or "all":
-								foreach (var p in TestBase.Providers)
+								foreach (var p in TestConfiguration.Providers)
 									providers.Add(p);
 								break;
 							case "--" or "---":
@@ -204,7 +207,7 @@ namespace Tests.Tools
 						}
 					},
 					{
-						"CORE21",
+						"NET80",
 						new TestSettings
 						{
 							Connections = new Dictionary<string,TestConnection>

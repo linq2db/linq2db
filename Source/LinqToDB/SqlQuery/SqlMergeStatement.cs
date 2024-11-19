@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
-using System.Text;
 
 namespace LinqToDB.SqlQuery
 {
@@ -35,64 +34,49 @@ namespace LinqToDB.SqlQuery
 		}
 
 		public string?                       Hint       { get; internal set; }
-		public SqlTableSource                Target     { get; }
+		public SqlTableSource                Target     { get; private  set; }
 		public SqlTableLikeSource            Source     { get; internal set; } = null!;
-		public SqlSearchCondition            On         { get; }               = new();
-		public List<SqlMergeOperationClause> Operations { get; }               = new();
+		public SqlSearchCondition            On         { get; private  set; } = new();
+		public List<SqlMergeOperationClause> Operations { get; private  set; } = new();
 		public SqlOutputClause?              Output     { get; set; }
 
 		public bool                          HasIdentityInsert => Operations.Any(o => o.OperationType == MergeOperationType.Insert && o.Items.Any(item => item.Column is SqlField field && field.IsIdentity));
 		public override QueryType            QueryType         => QueryType.Merge;
 		public override QueryElementType     ElementType       => QueryElementType.MergeStatement;
 
-		public override StringBuilder ToString(StringBuilder sb, Dictionary<IQueryElement, IQueryElement> dic)
+		public void Modify(SqlTableSource target, SqlTableLikeSource source, SqlSearchCondition on, SqlOutputClause? output)
 		{
-			if (With != null)
-				With.ToString(sb, dic);
+			Target = target;
+			Source = source;
+			On     = on;
+			Output = output;
+		}
 
-			sb.Append("MERGE INTO ");
-
-			((IQueryElement)Target).ToString(sb, dic);
-
-			sb
+		public override QueryElementTextWriter ToString(QueryElementTextWriter writer)
+		{
+			writer
+				.AppendElement(With)
+				.Append("MERGE INTO ")
+				.AppendElement(Target)
 				.AppendLine()
-				.Append("USING (");
-
-			Source.ToString(sb, dic);
-
-			sb
+				.Append("USING (")
+				.AppendElement(Source)
 				.AppendLine(")")
-				.Append("ON ");
-
-			((IQueryElement)On).ToString(sb, dic);
-
-			sb.AppendLine();
+				.Append("ON ")
+				.AppendElement(On)
+				.AppendLine();
 
 			foreach (var operation in Operations)
 			{
-				((IQueryElement)operation).ToString(sb, dic);
-				sb.AppendLine();
+				writer
+					.AppendElement(operation)
+					.AppendLine();
 			}
 
 			if (Output?.HasOutput == true)
-				((IQueryElement)Output).ToString(sb, dic);
-
-			return sb;
+				writer.AppendElement(Output);
+			return writer;
 		}
-
-		public override ISqlExpression? Walk<TContext>(WalkOptions options, TContext context, Func<TContext, ISqlExpression, ISqlExpression> func)
-		{
-			Target.Walk(options, context, func);
-			Source.Walk(options, context, func);
-
-			((ISqlExpressionWalkable)On).Walk(options, context, func);
-
-			for (var i = 0; i < Operations.Count; i++)
-				((ISqlExpressionWalkable)Operations[i]).Walk(options, context, func);
-
-			return base.Walk(options, context, func);
-		}
-
 
 		public override bool IsParameterDependent
 		{
@@ -107,8 +91,10 @@ namespace LinqToDB.SqlQuery
 			set => throw new InvalidOperationException();
 		}
 
-		public override ISqlTableSource? GetTableSource(ISqlTableSource table)
+		public override ISqlTableSource? GetTableSource(ISqlTableSource table, out bool noAlias)
 		{
+			noAlias = false;
+
 			if (Target.Source == table)
 				return Target;
 
@@ -116,12 +102,6 @@ namespace LinqToDB.SqlQuery
 				return Source;
 
 			return null;
-		}
-
-		public override void WalkQueries<TContext>(TContext context, Func<TContext, SelectQuery, SelectQuery> func)
-		{
-			Source.WalkQueries(context, func);
-			With?.WalkQueries(context, func);
 		}
 	}
 }

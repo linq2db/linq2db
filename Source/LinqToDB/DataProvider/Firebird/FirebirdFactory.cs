@@ -1,5 +1,6 @@
-﻿using JetBrains.Annotations;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
+
+using JetBrains.Annotations;
 
 namespace LinqToDB.DataProvider.Firebird
 {
@@ -10,7 +11,24 @@ namespace LinqToDB.DataProvider.Firebird
 	{
 		IDataProvider IDataProviderFactory.GetDataProvider(IEnumerable<NamedValue> attributes)
 		{
-			return FirebirdTools.GetDataProvider();
+			string? versionName = null;
+
+			foreach (var attr in attributes)
+			{
+				if (attr.Name == "version" && versionName == null)
+					versionName = attr.Value;
+			}
+
+			var version = versionName switch
+			{
+				"2.5" => FirebirdVersion.v25,
+				"3"   => FirebirdVersion.v3,
+				"4"   => FirebirdVersion.v4,
+				"5"   => FirebirdVersion.v5,
+				_     => FirebirdVersion.AutoDetect,
+			};
+
+			return FirebirdTools.GetDataProvider(version);
 		}
 	}
 }

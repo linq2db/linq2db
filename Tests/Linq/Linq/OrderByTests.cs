@@ -1,8 +1,13 @@
 ﻿using System;
 using System.Linq;
 
+using FluentAssertions;
+
 using LinqToDB;
+using LinqToDB.Linq;
 using LinqToDB.SqlQuery;
+using LinqToDB.Tools;
+
 using NUnit.Framework;
 
 // ReSharper disable ReturnValueOfPureMethodIsNotUsed
@@ -29,7 +34,7 @@ namespace Tests.Linq
 					orderby ch.ParentID descending, ch.ChildID ascending
 					select ch;
 
-				Assert.IsTrue(result.ToList().SequenceEqual(expected));
+				Assert.That(result.ToList().SequenceEqual(expected), Is.True);
 			}
 		}
 
@@ -48,7 +53,7 @@ namespace Tests.Linq
 					orderby ch.ParentID descending, ch.ChildID ascending
 					select ch;
 
-				Assert.IsTrue(result.ToList().SequenceEqual(expected));
+				Assert.That(result.ToList().SequenceEqual(expected), Is.True);
 			}
 		}
 
@@ -73,7 +78,7 @@ namespace Tests.Linq
 					orderby ch.ParentID descending , ch.ChildID
 					select ch;
 
-				Assert.IsTrue(result.ToList().SequenceEqual(expected));
+				Assert.That(result.ToList().SequenceEqual(expected), Is.True);
 			}
 		}
 
@@ -98,7 +103,7 @@ namespace Tests.Linq
 					orderby ch.ParentID descending, ch.ChildID, ch.ParentID + 1 descending
 					select ch;
 
-				Assert.IsTrue(result.ToList().SequenceEqual(expected));
+				Assert.That(result.ToList().SequenceEqual(expected), Is.True);
 			}
 		}
 
@@ -117,7 +122,7 @@ namespace Tests.Linq
 					orderby ch.ChildID % 2, ch.ChildID
 					select ch;
 
-				Assert.IsTrue(result.ToList().SequenceEqual(expected));
+				Assert.That(result.ToList().SequenceEqual(expected), Is.True);
 			}
 		}
 
@@ -136,7 +141,7 @@ namespace Tests.Linq
 					orderby ch.ParentID > 0 && ch.ChildID != ch.ParentID descending, ch.ChildID
 					select ch;
 
-				Assert.IsTrue(result.ToList().SequenceEqual(expected));
+				Assert.That(result.ToList().SequenceEqual(expected), Is.True);
 			}
 		}
 
@@ -154,7 +159,7 @@ namespace Tests.Linq
 
 				q.ToList();
 
-				Assert.IsFalse(db.LastQuery!.Contains("Diagnosis"), "Why do we select Patient.Diagnosis??");
+				Assert.That(db.LastQuery!, Does.Not.Contain("Diagnosis"), "Why do we select Patient.Diagnosis??");
 			}
 		}
 
@@ -177,7 +182,7 @@ namespace Tests.Linq
 
 				var result = qry.OrderBy(x => x.ch.ChildID).Select(x => x.ch);
 
-				AreEqual(expected, result);
+				AreSame(expected, result);
 			}
 		}
 
@@ -297,7 +302,7 @@ namespace Tests.Linq
 			{
 				var expected = from p in    Parent orderby p select p;
 				var result   = from p in db.Parent orderby p select p;
-				Assert.IsTrue(result.ToList().SequenceEqual(expected));
+				Assert.That(result.ToList().SequenceEqual(expected), Is.True);
 			}
 		}
 
@@ -308,7 +313,7 @@ namespace Tests.Linq
 			{
 				var expected = from p in    Parent1 orderby p select p;
 				var result   = from p in db.Parent1 orderby p select p;
-				Assert.IsTrue(result.ToList().SequenceEqual(expected));
+				Assert.That(result.ToList().SequenceEqual(expected), Is.True);
 			}
 		}
 
@@ -329,7 +334,7 @@ namespace Tests.Linq
 					where p == c.Parent
 					select new { p.ParentID, c.ChildID };
 
-				Assert.IsTrue(result.ToList().SequenceEqual(expected));
+				Assert.That(result.ToList().SequenceEqual(expected), Is.True);
 			}
 		}
 
@@ -350,7 +355,7 @@ namespace Tests.Linq
 					where p == c.Parent1
 					select new { p.ParentID, c.ChildID };
 
-				Assert.IsTrue(result.ToList().SequenceEqual(expected));
+				Assert.That(result.ToList().SequenceEqual(expected), Is.True);
 			}
 		}
 
@@ -371,11 +376,12 @@ namespace Tests.Linq
 					where c.Parent == p
 					select new { p.ParentID, c.ChildID };
 
-				Assert.IsTrue(result.ToList().SequenceEqual(expected));
+				Assert.That(result.ToList().SequenceEqual(expected), Is.True);
 			}
 		}
 
 		[Test]
+		[ThrowsForProvider(typeof(LinqException), TestProvName.AllClickHouse, ErrorMessage = ErrorHelper.Error_Correlated_Subqueries)]
 		public void OrderByContinuous([DataSources(ProviderName.Access)] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -387,12 +393,14 @@ namespace Tests.Linq
 
 				var secondOrder =
 					from p in firstOrder
-					join pp in db.Parent on p.Value1 equals pp.Value1 
+					join pp in db.Parent on p.Value1 equals pp.Value1
 					orderby pp.ParentID
 					select p;
 
+				TestContext.Out.WriteLine(secondOrder.ToString());
+
 				var selectQuery = secondOrder.GetSelectQuery();
-				Assert.That(selectQuery.OrderBy.Items.Count, Is.EqualTo(2));
+				Assert.That(selectQuery.OrderBy.Items, Has.Count.EqualTo(2));
 				var field = QueryHelper.GetUnderlyingField(selectQuery.OrderBy.Items[0].Expression);
 				Assert.That(field, Is.Not.Null);
 				Assert.That(field!.Name, Is.EqualTo("ParentID"));
@@ -412,17 +420,17 @@ namespace Tests.Linq
 				var secondOrder =
 					from p in firstOrder
 					join pp in db.Parent on p.ParentID equals pp.ParentID
-					orderby p.ParentID descending 
+					orderby p.ParentID descending
 					select p;
 
+				TestContext.Out.WriteLine(secondOrder.ToString());
+			
 				var selectQuery = secondOrder.GetSelectQuery();
-				Assert.That(selectQuery.OrderBy.Items.Count, Is.EqualTo(1));
+				Assert.That(selectQuery.OrderBy.Items, Has.Count.EqualTo(1));
 				Assert.That(selectQuery.OrderBy.Items[0].IsDescending, Is.True);
 				var field = QueryHelper.GetUnderlyingField(selectQuery.OrderBy.Items[0].Expression);
 				Assert.That(field, Is.Not.Null);
 				Assert.That(field!.Name, Is.EqualTo("ParentID"));
-
-				TestContext.WriteLine(secondOrder.ToString());
 			}
 		}
 
@@ -433,7 +441,7 @@ namespace Tests.Linq
 			{
 				var expected =    Parent.OrderBy(p => p.ParentID).OrderByDescending(p => p.ParentID);
 				var result   = db.Parent.OrderBy(p => p.ParentID).OrderByDescending(p => p.ParentID);
-				Assert.IsTrue(result.ToList().SequenceEqual(expected));
+				Assert.That(result.ToList().SequenceEqual(expected), Is.True);
 			}
 		}
 
@@ -441,45 +449,40 @@ namespace Tests.Linq
 		public void Count1([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
-				Assert.AreEqual(
-					   Parent.OrderBy(p => p.ParentID).Count(),
-					db.Parent.OrderBy(p => p.ParentID).Count());
+				Assert.That(
+					db.Parent.OrderBy(p => p.ParentID).Count(), Is.EqualTo(Parent.OrderBy(p => p.ParentID).Count()));
 		}
 
 		[Test]
 		public void Count2([DataSources(TestProvName.AllSybase)] string context)
 		{
 			using (var db = GetDataContext(context))
-				Assert.AreEqual(
-					   Parent.OrderBy(p => p.ParentID).Take(3).Count(),
-					db.Parent.OrderBy(p => p.ParentID).Take(3).Count());
+				Assert.That(
+					db.Parent.OrderBy(p => p.ParentID).Take(3).Count(), Is.EqualTo(Parent.OrderBy(p => p.ParentID).Take(3).Count()));
 		}
 
 		[Test]
 		public void Min1([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
-				Assert.AreEqual(
-					   Parent.OrderBy(p => p.ParentID).Min(p => p.ParentID),
-					db.Parent.OrderBy(p => p.ParentID).Min(p => p.ParentID));
+				Assert.That(
+					db.Parent.OrderBy(p => p.ParentID).Min(p => p.ParentID), Is.EqualTo(Parent.OrderBy(p => p.ParentID).Min(p => p.ParentID)));
 		}
 
 		[Test]
 		public void Min2([DataSources(TestProvName.AllSybase)] string context)
 		{
 			using (var db = GetDataContext(context))
-				Assert.AreEqual(
-					   Parent.OrderBy(p => p.ParentID).Take(3).Min(p => p.ParentID),
-					db.Parent.OrderBy(p => p.ParentID).Take(3).Min(p => p.ParentID));
+				Assert.That(
+					db.Parent.OrderBy(p => p.ParentID).Take(3).Min(p => p.ParentID), Is.EqualTo(Parent.OrderBy(p => p.ParentID).Take(3).Min(p => p.ParentID)));
 		}
 
 		[Test]
 		public void Min3([DataSources(TestProvName.AllSybase, TestProvName.AllInformix)] string context)
 		{
 			using (var db = GetDataContext(context))
-				Assert.AreEqual(
-					   Parent.OrderBy(p => p.Value1).Take(3).Min(p => p.ParentID),
-					db.Parent.OrderBy(p => p.Value1).Take(3).Min(p => p.ParentID));
+				Assert.That(
+					db.Parent.OrderBy(p => p.Value1).Take(3).Min(p => p.ParentID), Is.EqualTo(Parent.OrderBy(p => p.Value1).Take(3).Min(p => p.ParentID)));
 		}
 
 		[Test]
@@ -509,7 +512,7 @@ namespace Tests.Linq
 					 join g in db.GrandChild on c.ChildID equals g.ChildID
 					 select p).Take(3).OrderBy(p => p.ParentID);
 
-				Assert.AreEqual(3, q.AsEnumerable().Count());
+				Assert.That(q.AsEnumerable().Count(), Is.EqualTo(3));
 			}
 		}
 
@@ -545,6 +548,86 @@ namespace Tests.Linq
 				query.ToArray();
 
 				Assert.That(db.LastQuery, Does.Not.Contain("ORDER BY"));
+			}
+		}
+
+
+		[Test]
+		public void OrderByIndex([IncludeDataSources(false, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
+		{
+			using (var db = (TestDataConnection)GetDataContext(context))
+			{
+				var query =
+					from p in db.ComplexPerson
+					where p.ID.In(1, 3)
+					orderby Sql.Ordinal(p.Name.LastName) descending, p.Name.FirstName descending
+					select new
+					{
+						p.ID, 
+						p.Name.LastName
+					};
+
+				query.ToArray();
+
+				db.LastQuery.Should().Contain("2 DESC");
+			}
+		}
+
+		[Test]
+		public void OrderByIndexOptimization([IncludeDataSources(false, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context, [Values] bool withIndex)
+		{
+			using (var db = (TestDataConnection)GetDataContext(context))
+			{
+				var query =
+					from p in db.ComplexPerson
+					where p.ID.In(1, 3)
+					select new
+					{
+						p.ID, 
+						CuttedName = p.Name.LastName.Substring(0, 3)
+					} into s
+					orderby withIndex ? Sql.Ordinal(s.CuttedName) : s.CuttedName descending
+					select new
+					{
+						s.ID, 
+						s.CuttedName
+					};
+
+				query.ToArray();
+
+				var selectQuery = query.GetSelectQuery();
+
+				var firstSource = selectQuery.From.Tables[0].Source;
+
+				if (withIndex)
+				{
+					firstSource.Should().BeOfType<SqlTable>();
+				}
+				else
+				{
+					firstSource.Should().BeOfType<SelectQuery>();
+				}
+			}
+		}
+
+		[Test]
+		public void OrderByIndexInExpr([IncludeDataSources(false, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
+		{
+			using (var db = (TestDataConnection)GetDataContext(context))
+			{
+				var query =
+					from p in db.ComplexPerson
+					where Sql.Ordinal(p.Name.LastName) == "Some"
+					select new
+					{
+						p.ID, 
+						p.Name.LastName
+					};
+
+				FluentActions.Enumerating(() => query)
+					.Should()
+					.Throw<LinqException>()
+					.WithMessage("The LINQ expression 'Sql.Ordinal<string>(p.Name.LastName) == \"Some\"' could not be converted to SQL.");
 			}
 		}
 
@@ -629,5 +712,63 @@ namespace Tests.Linq
 			}
 		}
 
+		[Test]
+		public void EnableConstantExpressionInOrderByTest([DataSources(ProviderName.SqlCe)] string context, [Values] bool enableConstantExpressionInOrderBy)
+		{
+			using var db  = GetDataContext(context, o => o.UseEnableConstantExpressionInOrderBy(enableConstantExpressionInOrderBy));
+
+			var q =
+			(
+				from p in db.Person
+				where p.ID.In(1, 3)
+				orderby 1, p.LastName
+				select new
+				{
+					p.ID,
+					p.LastName
+				}
+			)
+			.ToList();
+
+			Assert.That(q[0].ID, Is.EqualTo(enableConstantExpressionInOrderBy ? 1 : 3));
+		}
+
+		[Test]
+		public void EnableConstantExpressionInOrderByTest2([DataSources(ProviderName.SqlCe)] string context, [Values] bool enableConstantExpressionInOrderBy)
+		{
+			using var db  = GetDataContext(context, o => o.UseEnableConstantExpressionInOrderBy(enableConstantExpressionInOrderBy));
+
+			var q =
+			(
+				from p in db.ComplexPerson
+				where p.ID.In(1, 3)
+				orderby 1 descending , p.Name.LastName descending
+				select new
+				{
+					p.ID,
+					p.Name.LastName
+				}
+			)
+			.ToList();
+
+			Assert.That(q[0].ID, Is.EqualTo(enableConstantExpressionInOrderBy ? 3 : 1));
+		}
+
+		[Test]
+		public void EnableConstantExpressionInOrderByTest3([DataSources(ProviderName.SqlCe)] string context, [Values] bool enableConstantExpressionInOrderBy)
+		{
+			using var db  = GetDataContext(context, o => o.UseEnableConstantExpressionInOrderBy(enableConstantExpressionInOrderBy));
+
+			var q =
+			(
+				from p in db.ComplexPerson
+				where p.ID.In(1, 3)
+				orderby 1, p.Name.LastName
+				select p
+			)
+			.ToList();
+
+			Assert.That(q[0].ID, Is.EqualTo(enableConstantExpressionInOrderBy ? 1 : 3));
+		}
 	}
 }

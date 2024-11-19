@@ -281,7 +281,8 @@ namespace LinqToDB.DataProvider.SqlServer
 					INFORMATION_SCHEMA.ROUTINES
 					LEFT JOIN sys.extended_properties x
 						ON OBJECT_ID('[' + SPECIFIC_SCHEMA + '].[' + SPECIFIC_NAME + ']') = x.major_id AND
-							x.name = 'MS_Description' AND x.class = 1")
+							x.name = 'MS_Description' AND x.class = 1
+				ORDER BY SPECIFIC_CATALOG, SPECIFIC_SCHEMA, SPECIFIC_NAME")
 				.ToList();
 		}
 

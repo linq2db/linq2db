@@ -1,25 +1,25 @@
-﻿using System.Linq;
+﻿using System;
 using System.Linq.Expressions;
 using System.Reflection;
 
 namespace LinqToDB.Linq.Builder
 {
+	using Extensions;
 	using LinqToDB.Expressions;
 
 	using static LinqToDB.Reflection.Methods.LinqToDB.Merge;
 
 	internal partial class MergeBuilder
 	{
+		[BuildsMethodCall(nameof(LinqExtensions.On), nameof(LinqExtensions.OnTargetKey))]
 		internal sealed class On : MethodCallBuilder
 		{
-			static readonly MethodInfo[] _supportedMethods = {OnMethodInfo1, OnMethodInfo2, OnTargetKeyMethodInfo};
+			static readonly MethodInfo[] _supportedMethods = { OnMethodInfo1, OnMethodInfo2, OnTargetKeyMethodInfo };
 
-			protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
-			{
-				return methodCall.IsSameGenericMethod(_supportedMethods);
-			}
+			public static bool CanBuildMethod(MethodCallExpression call, BuildInfo info, ExpressionBuilder builder)
+				=> call.IsSameGenericMethod(_supportedMethods);
 
-			protected override IBuildContext BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
+			protected override BuildSequenceResult BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 			{
 				var mergeContext = (MergeContext)builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
 
@@ -28,75 +28,43 @@ namespace LinqToDB.Linq.Builder
 				if (methodCall.Arguments.Count == 2)
 				{
 					// On<TTarget, TSource>(IMergeableOn<TTarget, TSource> merge, Expression<Func<TTarget, TSource, bool>> matchCondition)
-					var predicate     = methodCall.Arguments[1];
-					var condition     = (LambdaExpression)predicate.Unwrap();
-					var conditionExpr = builder.ConvertExpression(condition.Body.Unwrap());
+					var predicate = methodCall.Arguments[1];
+					var condition = predicate.UnwrapLambda();
 
-					mergeContext.AddTargetParameter(condition.Parameters[0]);
-					mergeContext.AddSourceParameter(condition.Parameters[1]);
+					mergeContext.SourceContext.ConnectionLambda       = condition;
 
-					var filterExpression = BuildSearchCondition(builder, statement, mergeContext.TargetContext, mergeContext.SourceContext,
-						condition);
+					// correct aliases for better error handling
+					//
+					mergeContext.SourceContext.TargetContextRef.Alias = condition.Parameters[0].Name;
+					mergeContext.SourceContext.SourceContextRef.Alias = condition.Parameters[1].Name;
 
-					statement.On.Conditions.AddRange(filterExpression.Conditions);
+					var preparedCondition = mergeContext.SourceContext.GenerateCondition();
+
+					BuildMatchCondition(builder, preparedCondition, mergeContext.SourceContext, statement.On);
 				}
 				else if (methodCall.Arguments.Count == 3)
 				{
-					var targetKeyLambda = ((LambdaExpression)methodCall.Arguments[1].Unwrap());
-					var sourceKeyLambda = ((LambdaExpression)methodCall.Arguments[2].Unwrap());
+					var targetKeyLambda = methodCall.Arguments[1].UnwrapLambda();
+					var sourceKeyLambda = methodCall.Arguments[2].UnwrapLambda();
 
-					var targetKeySelector = targetKeyLambda.Body.Unwrap();
-					var sourceKeySelector = sourceKeyLambda.Body.Unwrap();
+					var targetKeySelector = mergeContext.SourceContext.PrepareTargetLambda(targetKeyLambda);
+					var sourceKeySelector = mergeContext.SourceContext.PrepareSourceBody(sourceKeyLambda);
 
-					var targetKeyContext = new ExpressionContext(buildInfo.Parent, mergeContext.TargetContext, targetKeyLambda);
-					var sourceKeyContext = new ExpressionContext(buildInfo.Parent, mergeContext.SourceContext, sourceKeyLambda);
+					mergeContext.SourceContext.TargetKeySelector = targetKeySelector;
+					mergeContext.SourceContext.SourceKeySelector = sourceKeySelector;
 
-					if (targetKeySelector.NodeType == ExpressionType.New)
-					{
-						var new1 = (NewExpression)targetKeySelector;
-						var new2 = (NewExpression)sourceKeySelector;
-
-						for (var i = 0; i < new1.Arguments.Count; i++)
-						{
-							var arg1 = new1.Arguments[i];
-							var arg2 = new2.Arguments[i];
-
-							JoinBuilder.BuildJoin(builder, statement.On, targetKeyContext, arg1, sourceKeyContext, arg2);
-						}
-					}
-					else if (targetKeySelector.NodeType == ExpressionType.MemberInit)
-					{
-						// TODO: migrate unordered members support to original code
-						var mi1 = (MemberInitExpression)targetKeySelector;
-						var mi2 = (MemberInitExpression)sourceKeySelector;
-
-						if (mi1.Bindings.Count != mi2.Bindings.Count)
-							throw new LinqException($"List of member inits does not match for entity type '{targetKeySelector.Type}'.");
-
-						for (var i = 0; i < mi1.Bindings.Count; i++)
-						{
-							var binding2 = (MemberAssignment?)mi2.Bindings.FirstOrDefault(b => b.Member == mi1.Bindings[i].Member);
-							if (binding2 == null)
-								throw new LinqException($"List of member inits does not match for entity type '{targetKeySelector.Type}'.");
-
-							var arg1 = ((MemberAssignment)mi1.Bindings[i]).Expression;
-							var arg2 = binding2.Expression;
-
-							JoinBuilder.BuildJoin(builder, statement.On, targetKeyContext, arg1, sourceKeyContext, arg2);
-						}
-					}
-					else
-					{
-						JoinBuilder.BuildJoin(builder, statement.On, targetKeyContext, targetKeySelector, sourceKeyContext, sourceKeySelector);
-					}
+					BuildMatchCondition(builder, targetKeySelector, sourceKeySelector, mergeContext.SourceContext, statement.On);
 				}
 				else
 				{
 					// OnTargetKey<TTarget>(IMergeableOn<TTarget, TTarget> merge)
+					//
+
 					var targetType       = statement.Target.SystemType!;
-					var pTarget          = Expression.Parameter(targetType, "t");
-					var pSource          = Expression.Parameter(targetType, "s");
-					var targetDescriptor = builder.MappingSchema.GetEntityDescriptor(targetType, builder.DataOptions.ConnectionOptions.OnEntityDescriptorCreated);
+					var targetLambdaType = mergeContext.SourceContext.TargetContextRef.Type;
+					var pTarget          = Expression.Parameter(targetLambdaType, "t");
+					var pSource          = Expression.Parameter(targetLambdaType, "s");
+					var targetDescriptor = mergeContext.MappingSchema.GetEntityDescriptor(targetType, builder.DataOptions.ConnectionOptions.OnEntityDescriptorCreated);
 
 					Expression? ex = null;
 
@@ -106,9 +74,13 @@ namespace LinqToDB.Linq.Builder
 						if (!column.IsPrimaryKey)
 							continue;
 
+						var member = targetLambdaType.GetMemberEx(column.MemberInfo);
+						if (member == null)
+							throw new InvalidOperationException($"Member '{column.MemberInfo.Name}' is not defined in '{pTarget.Name}'");
+
 						var expr = Expression.Equal(
-							Expression.MakeMemberAccess(pTarget, column.MemberInfo),
-							Expression.MakeMemberAccess(pSource, column.MemberInfo));
+							Expression.MakeMemberAccess(pTarget, member),
+							Expression.MakeMemberAccess(pSource, member));
 						ex = ex != null ? Expression.AndAlso(ex, expr) : expr;
 					}
 
@@ -117,14 +89,14 @@ namespace LinqToDB.Linq.Builder
 
 					var condition = Expression.Lambda(ex, pTarget, pSource);
 
-					var filterExpression = BuildSearchCondition(builder, statement, mergeContext.TargetContext, mergeContext.SourceContext,
-						condition);
+					mergeContext.SourceContext.ConnectionLambda = condition;
 
-					statement.On.Conditions.AddRange(filterExpression.Conditions);
+					var generatedCondition = mergeContext.SourceContext.GenerateCondition();
+
+					BuildMatchCondition(builder, generatedCondition, mergeContext.SourceContext, statement.On);
 				}
 
-				mergeContext.SourceContext.MatchBuilt();
-				return mergeContext;
+				return BuildSequenceResult.FromContext(mergeContext);
 			}
 		}
 	}

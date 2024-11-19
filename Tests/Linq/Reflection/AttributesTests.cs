@@ -15,8 +15,11 @@ namespace Tests.Reflection
 		{
 			var prop = typeof(Derived).GetProperty(nameof(Base.Property))!;
 
-			Assert.False(prop.HasAttribute<MyAttribute>(false));
-			Assert.True(prop.HasAttribute<MyAttribute>(true));
+			Assert.Multiple(() =>
+			{
+				Assert.That(prop.HasAttribute<MyAttribute>(false), Is.False);
+				Assert.That(prop.HasAttribute<MyAttribute>(true), Is.True);
+			});
 		}
 
 		[Test]
@@ -24,8 +27,11 @@ namespace Tests.Reflection
 		{
 			var ev = typeof(Derived).GetEvent(nameof(Base.Event))!;
 
-			Assert.False(ev.HasAttribute<MyAttribute>(false));
-			Assert.True(ev.HasAttribute<MyAttribute>(true));
+			Assert.Multiple(() =>
+			{
+				Assert.That(ev.HasAttribute<MyAttribute>(false), Is.False);
+				Assert.That(ev.HasAttribute<MyAttribute>(true), Is.True);
+			});
 		}
 
 		public class Base
@@ -58,9 +64,11 @@ namespace Tests.Reflection
 			CustomAttributeExtensions.GetCustomAttribute<Attribute>(dc);
 			CustomAttributeExtensions.GetCustomAttribute<Attribute>(dc, true);
 			CustomAttributeExtensions.GetCustomAttribute<Attribute>(dc, false);
+#pragma warning disable CA2263 // Prefer generic overload when type is known
 			CustomAttributeExtensions.GetCustomAttribute(dc, typeof(Attribute));
 			CustomAttributeExtensions.GetCustomAttribute(dc, typeof(Attribute), true);
 			CustomAttributeExtensions.GetCustomAttribute(dc, typeof(Attribute), false);
+#pragma warning restore CA2263 // Prefer generic overload when type is known
 
 			CustomAttributeExtensions.GetCustomAttributes<Attribute>(dc);
 			CustomAttributeExtensions.GetCustomAttributes<Attribute>(dc, true);
@@ -68,9 +76,11 @@ namespace Tests.Reflection
 			CustomAttributeExtensions.GetCustomAttributes(dc);
 			CustomAttributeExtensions.GetCustomAttributes(dc, true);
 			CustomAttributeExtensions.GetCustomAttributes(dc, false);
+#pragma warning disable CA2263 // Prefer generic overload when type is known
 			CustomAttributeExtensions.GetCustomAttributes(dc, typeof(Attribute));
 			CustomAttributeExtensions.GetCustomAttributes(dc, typeof(Attribute), true);
 			CustomAttributeExtensions.GetCustomAttributes(dc, typeof(Attribute), false);
+#pragma warning restore CA2263 // Prefer generic overload when type is known
 
 			AttributesExtensions.GetAttribute<Attribute>(dc, true);
 			AttributesExtensions.GetAttribute<Attribute>(dc,false);

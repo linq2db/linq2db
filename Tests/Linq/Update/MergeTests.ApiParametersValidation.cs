@@ -31,16 +31,16 @@ namespace Tests.xUpdate
 					() => LinqExtensions.Merge<Child>(new FakeTable<Child>(), null!),
 
 					() => LinqExtensions.MergeInto<Child, Child>(null!, new FakeTable<Child>()),
-					() => LinqExtensions.MergeInto<Child, Child>(Array<Child>.Empty.AsQueryable(), null!),
+					() => LinqExtensions.MergeInto<Child, Child>(Array.Empty<Child>().AsQueryable(), null!),
 
 					() => LinqExtensions.MergeInto<Child, Child>(null!, new FakeTable<Child>(), "hint"),
-					() => LinqExtensions.MergeInto<Child, Child>(Array<Child>.Empty.AsQueryable(), null!, "hint"),
-					() => LinqExtensions.MergeInto<Child, Child>(Array<Child>.Empty.AsQueryable(), new FakeTable<Child>(), null!),
+					() => LinqExtensions.MergeInto<Child, Child>(Array.Empty<Child>().AsQueryable(), null!, "hint"),
+					() => LinqExtensions.MergeInto<Child, Child>(Array.Empty<Child>().AsQueryable(), new FakeTable<Child>(), null!),
 
-					() => LinqExtensions.Using<Child, Child>(null!, Array<Child>.Empty.AsQueryable()),
+					() => LinqExtensions.Using<Child, Child>(null!, Array.Empty<Child>().AsQueryable()),
 					() => LinqExtensions.Using<Child, Child>(new FakeMergeUsing<Child>(), null!),
 
-					() => LinqExtensions.Using<Child, Child>(null!, Array<Child>.Empty),
+					() => LinqExtensions.Using<Child, Child>(null!, []),
 					() => LinqExtensions.Using<Child, Child>(new FakeMergeUsing<Child>(), null!),
 
 					() => LinqExtensions.UsingTarget<Child>(null!),
@@ -190,12 +190,13 @@ namespace Tests.xUpdate
 		sealed class FakeTable<TEntity> : ITable<TEntity>
 			where TEntity : notnull
 		{
-			IDataContext   IExpressionQuery.DataContext => throw new NotImplementedException();
-			Expression     IExpressionQuery.Expression  => throw new NotImplementedException();
-			string         IExpressionQuery.SqlText     => throw new NotImplementedException();
-			Type           IQueryable.      ElementType => throw new NotImplementedException();
-			Expression     IQueryable.      Expression  => throw new NotImplementedException();
-			IQueryProvider IQueryable.      Provider    => new FakeQueryProvider();
+			IDataContext   IExpressionQuery.   DataContext => throw new NotImplementedException();
+			Expression     IExpressionQuery.   Expression  => throw new NotImplementedException();
+			string         IExpressionQuery.   SqlText     => throw new NotImplementedException();
+			Type           IQueryable.         ElementType => throw new NotImplementedException();
+			Expression     IQueryable.         Expression  => throw new NotImplementedException();
+			IQueryProvider IQueryable.         Provider    => new FakeQueryProvider();
+			Expression     IQueryProviderAsync.Expression  => throw new NotImplementedException();
 
 			Expression IExpressionQuery<TEntity>.Expression => Expression.Constant((ITable<TEntity>)this);
 

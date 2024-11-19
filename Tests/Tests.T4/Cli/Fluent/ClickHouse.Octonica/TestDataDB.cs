@@ -204,6 +204,18 @@ namespace Cli.Fluent.ClickHouse.Octonica
 						});
 
 			builder
+				.Entity<ReplacingMergeTreeTable>()
+					.HasAttribute(new TableAttribute("ReplacingMergeTreeTable"))
+					.Member(e => e.Id)
+						.HasAttribute(new ColumnAttribute("ID")
+						{
+							IsPrimaryKey = true,
+							SkipOnUpdate = true
+						})
+					.Member(e => e.Ts)
+						.HasAttribute(new ColumnAttribute("TS"));
+
+			builder
 				.Entity<TestMerge1>()
 					.HasAttribute(new TableAttribute("TestMerge1"))
 					.Member(e => e.Id)
@@ -335,18 +347,19 @@ namespace Cli.Fluent.ClickHouse.Octonica
 
 		partial void InitDataContext();
 
-		public ITable<AllType>           AllTypes            => this.GetTable<AllType>();
-		public ITable<Child>             Children            => this.GetTable<Child>();
-		public ITable<CollatedTable>     CollatedTables      => this.GetTable<CollatedTable>();
-		public ITable<Doctor>            Doctors             => this.GetTable<Doctor>();
-		public ITable<GrandChild>        GrandChildren       => this.GetTable<GrandChild>();
-		public ITable<InheritanceChild>  InheritanceChildren => this.GetTable<InheritanceChild>();
-		public ITable<InheritanceParent> InheritanceParents  => this.GetTable<InheritanceParent>();
-		public ITable<LinqDataType>      LinqDataTypes       => this.GetTable<LinqDataType>();
-		public ITable<Parent>            Parents             => this.GetTable<Parent>();
-		public ITable<Patient>           Patients            => this.GetTable<Patient>();
-		public ITable<Person>            People              => this.GetTable<Person>();
-		public ITable<TestMerge1>        TestMerge1          => this.GetTable<TestMerge1>();
-		public ITable<TestMerge2>        TestMerge2          => this.GetTable<TestMerge2>();
+		public ITable<AllType>                 AllTypes                 => this.GetTable<AllType>();
+		public ITable<Child>                   Children                 => this.GetTable<Child>();
+		public ITable<CollatedTable>           CollatedTables           => this.GetTable<CollatedTable>();
+		public ITable<Doctor>                  Doctors                  => this.GetTable<Doctor>();
+		public ITable<GrandChild>              GrandChildren            => this.GetTable<GrandChild>();
+		public ITable<InheritanceChild>        InheritanceChildren      => this.GetTable<InheritanceChild>();
+		public ITable<InheritanceParent>       InheritanceParents       => this.GetTable<InheritanceParent>();
+		public ITable<LinqDataType>            LinqDataTypes            => this.GetTable<LinqDataType>();
+		public ITable<Parent>                  Parents                  => this.GetTable<Parent>();
+		public ITable<Patient>                 Patients                 => this.GetTable<Patient>();
+		public ITable<Person>                  People                   => this.GetTable<Person>();
+		public ITable<ReplacingMergeTreeTable> ReplacingMergeTreeTables => this.GetTable<ReplacingMergeTreeTable>();
+		public ITable<TestMerge1>              TestMerge1               => this.GetTable<TestMerge1>();
+		public ITable<TestMerge2>              TestMerge2               => this.GetTable<TestMerge2>();
 	}
 }

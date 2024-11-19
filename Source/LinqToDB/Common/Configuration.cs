@@ -1,7 +1,9 @@
 ﻿using System;
+using System.ComponentModel;
 using System.Data;
 using System.Linq.Expressions;
 using System.Reflection;
+using System.Text;
 using System.Threading.Tasks;
 
 using JetBrains.Annotations;
@@ -66,9 +68,9 @@ namespace LinqToDB.Common
 		public static bool UseEnumValueNameForStringColumns = true;
 
 		/// <summary>
-		/// Defines value to pass to <see cref="Task.ConfigureAwait(bool)"/> method for all linq2db internal await operations.
-		/// Default value: <c>false</c>.
+		///	<b>Obsolete</b>: All <see cref="Task"/>s are now awaited using <c>ConfigureAwait(false)</c>. Please remove references to this property.
 		/// </summary>
+		[Obsolete("Value is ignored in v6. Will be removed in v7.")]
 		public static bool ContinueOnCapturedContext;
 
 		/// <summary>
@@ -124,16 +126,21 @@ namespace LinqToDB.Common
 		/// annotations in [Column], [Association], or [Nullable].
 		/// </summary>
 		/// <remarks>Defaults to false.</remarks>
-		public static bool UseNullableTypesMetadata 
-		{ 
+		public static bool UseNullableTypesMetadata
+		{
 			get => _useNullableTypesMetadata;
-			set 
+			set
 			{
-				// Can't change the default value of "false" on platforms where nullable metadata is unavailable.				
+				// Can't change the default value of "false" on platforms where nullable metadata is unavailable.
 				if (value) Mapping.Nullability.EnsureSupport();
 				_useNullableTypesMetadata = value;
 			}
-		}	
+		}
+
+		/// <summary>
+		/// Enables tracing of object materialization activity. It can significantly break performance if tracing consumer performs slow, so it is disabled by default.
+		/// </summary>
+		public static bool TraceMaterializationActivity { get; set; }
 
 		public static class Data
 		{
@@ -276,9 +283,14 @@ namespace LinqToDB.Common
 			}
 
 			/// <summary>
-			/// If set to true nullable fields would be checked for IS NULL in Equal/NotEqual comparisons.
+			/// If set to <see cref="CompareNulls.LikeClr" /> nullable fields would be checked for <c>IS NULL</c> in Equal/NotEqual comparisons.
+			/// If set to <see cref="CompareNulls.LikeSql" /> comparisons are compiled straight to equivalent SQL operators,
+	  		/// which consider nulls values as not equal.
+			/// <see cref="CompareNulls.LikeSqlExceptParameters" /> is a backward compatible option that works mostly as <see cref="CompareNulls.LikeSql" />,
+			/// but sniffs parameters value and changes = into <c>IS NULL</c> when parameters are null.
+			/// Comparisons to literal null are always compiled into <c>IS NULL</c>.
 			/// This affects: Equal, NotEqual, Not Contains
-			/// Default value: <c>true</c>.
+			/// Default value: <see cref="CompareNulls.LikeClr" />.
 			/// </summary>
 			/// <example>
 			/// <code>
@@ -297,7 +309,7 @@ namespace LinqToDB.Common
 			/// db.MyEntity.Where(e => ! filter.Contains(e.Value))
 			/// </code>
 			///
-			/// Would be converted to next queries:
+			/// Would be converted to next queries under <see cref="CompareNulls.LikeClr" />:
 			/// <code>
 			/// SELECT Value FROM MyEntity WHERE Value IS NULL OR Value != 10
 			///
@@ -308,14 +320,21 @@ namespace LinqToDB.Common
 			/// SELECT Value FROM MyEntity WHERE Value IS NULL OR NOT Value IN (1, 2, 3)
 			/// </code>
 			/// </example>
-			public static bool CompareNullsAsValues
+			public static CompareNulls CompareNulls
 			{
-				get => Options.CompareNullsAsValues;
+				get => Options.CompareNulls;
 				set
 				{
-					if (Options.CompareNullsAsValues != value)
-						Options = Options with { CompareNullsAsValues = value };
+					if (Options.CompareNulls != value)
+						Options = Options with { CompareNulls = value };
 				}
+			}
+
+			[Obsolete("Use CompareNulls instead: true maps to LikeClr and false to LikeSqlExceptParameters"), EditorBrowsable(EditorBrowsableState.Never)]
+			public static bool CompareNullsAsValues
+			{
+				get => CompareNulls == CompareNulls.LikeClr;
+				set => CompareNulls = value ? CompareNulls.LikeClr : CompareNulls.LikeSqlExceptParameters;
 			}
 
 			/// <summary>
@@ -582,6 +601,22 @@ namespace LinqToDB.Common
 		[PublicAPI]
 		public static class Sql
 		{
+			static volatile SqlOptions _options = new();
+
+			/// <summary>
+			/// Default <see cref="SqlOptions"/> options. Automatically synchronized with other settings in <see cref="Sql"/> class.
+			/// </summary>
+			public static SqlOptions Options
+			{
+				get => _options;
+				set
+				{
+					_options = value;
+					DataConnection.ResetDefaultOptions();
+					DataConnection.ConnectionOptionsByConfigurationString.Clear();
+				}
+			}
+
 			/// <summary>
 			/// Format for association alias.
 			/// <para>
@@ -611,7 +646,28 @@ namespace LinqToDB.Common
 			/// Set this value to <c>null</c> to disable special alias generation queries.
 			/// </remarks>
 			/// </summary>
-			public static string? AssociationAlias { get; set; } = "a_{0}";
+			public static string? AssociationAlias
+			{
+#if SUPPORTS_COMPOSITE_FORMAT
+				get => AssociationAliasFormat?.Format;
+				set
+				{
+					AssociationAliasFormat = string.IsNullOrEmpty(value) ? null : CompositeFormat.Parse(value);
+				}
+#else
+				get => AssociationAliasFormat;
+				set
+				{
+					AssociationAliasFormat = string.IsNullOrEmpty(value) ? null : value;
+				}
+#endif
+			}
+
+#if SUPPORTS_COMPOSITE_FORMAT
+			internal static CompositeFormat? AssociationAliasFormat { get; private set; } = CompositeFormat.Parse("a_{0}");
+#else
+			internal static string? AssociationAliasFormat { get; private set; } = "a_{0}";
+#endif
 
 			/// <summary>
 			/// Indicates whether SQL Builder should generate aliases for final projection.
@@ -644,7 +700,21 @@ namespace LinqToDB.Common
 			/// </code>
 			/// </example>
 			/// </summary>
-			public static bool GenerateFinalAliases { get; set; }
+			public static bool GenerateFinalAliases
+			{
+				get => Options.GenerateFinalAliases;
+				set => Options = Options with { GenerateFinalAliases = value };
+			}
+
+			/// <summary>
+			/// If <c>true</c>, linq2db will allow any constant expressions in ORDER BY clause.
+			/// Default value: <c>false</c>.
+			/// </summary>
+			public static bool EnableConstantExpressionInOrderBy
+			{
+				get => Options.EnableConstantExpressionInOrderBy;
+				set => Options = Options with { EnableConstantExpressionInOrderBy = value };
+			}
 		}
 	}
 }

@@ -47,7 +47,6 @@ namespace LinqToDB.Common
 			_lambda = rexpr.CompileExpression();
 		}
 
-
 		private static Expression<Func<TFrom,TTo>> _expression;
 		/// <summary>
 		/// Gets or sets an expression that converts a value of <i>TFrom</i> type to <i>TTo</i> type.
@@ -77,6 +76,7 @@ namespace LinqToDB.Common
 					ConvertInfo.Default.Set(
 						typeof(TFrom),
 						typeof(TTo),
+						ConversionType.Common,
 						new ConvertInfo.LambdaInfo(_expression, null, _lambda, false));
 			}
 		}
@@ -117,6 +117,7 @@ namespace LinqToDB.Common
 					ConvertInfo.Default.Set(
 						typeof(TFrom),
 						typeof(TTo),
+						ConversionType.Common,
 						new ConvertInfo.LambdaInfo(_expression, null, _lambda, false));
 			}
 		}

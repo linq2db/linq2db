@@ -14,21 +14,13 @@ namespace LinqToDB.Async
 	{
 		private readonly Func<DbTransaction, CancellationToken, Task>? _commitAsync;
 		private readonly Func<DbTransaction, CancellationToken, Task>? _rollbackAsync;
-#if NATIVE_ASYNC
 		private readonly Func<DbTransaction, ValueTask>?               _disposeAsync;
-#else
-		private readonly Func<DbTransaction, Task>?                    _disposeAsync;
-#endif
 
 		public ReflectedAsyncDbTransaction(
 			DbTransaction transaction,
 			Func<DbTransaction, CancellationToken, Task>? commitAsync,
 			Func<DbTransaction, CancellationToken, Task>? rollbackAsync,
-#if NATIVE_ASYNC
 			Func<DbTransaction, ValueTask>?               disposeAsync)
-#else
-			Func<DbTransaction, Task>?                    disposeAsync)
-#endif
 			: base(transaction)
 		{
 			_commitAsync   = commitAsync;
@@ -46,11 +38,7 @@ namespace LinqToDB.Async
 			return _rollbackAsync?.Invoke(Transaction, cancellationToken) ?? base.RollbackAsync(cancellationToken);
 		}
 
-#if !NATIVE_ASYNC
-		public override Task DisposeAsync()
-#else
 		public override ValueTask DisposeAsync()
-#endif
 		{
 			return _disposeAsync?.Invoke(Transaction) ?? base.DisposeAsync();
 		}

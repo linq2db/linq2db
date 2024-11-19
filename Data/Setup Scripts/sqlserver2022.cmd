@@ -11,6 +11,6 @@ docker run -e ACCEPT_EULA=Y -e SA_PASSWORD=Password12! -p 1422:1433 --name sql20
 call wait sql2022 "Recovery is complete"
 
 REM create test databases
-docker exec sql2022 /opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P Password12! -Q "CREATE DATABASE TestData;"
-docker exec sql2022 /opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P Password12! -Q "CREATE DATABASE TestDataMS;"
+docker exec sql2022 /opt/mssql-tools18/bin/sqlcmd -No -S localhost -U sa -P Password12! -Q "CREATE DATABASE TestData;"
+docker exec sql2022 /opt/mssql-tools18/bin/sqlcmd -No -S localhost -U sa -P Password12! -Q "CREATE DATABASE TestDataMS;"
 

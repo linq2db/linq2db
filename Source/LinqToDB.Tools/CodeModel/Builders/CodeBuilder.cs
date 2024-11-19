@@ -49,7 +49,7 @@ namespace LinqToDB.CodeModel
 		/// Create NRT enable pragma.
 		/// </summary>
 		/// <returns>Pragma instance.</returns>
-		public CodePragma EnableNullableReferenceTypes() => new (PragmaType.NullableEnable, Common.Array<string>.Empty);
+		public CodePragma EnableNullableReferenceTypes() => new (PragmaType.NullableEnable, []);
 
 		/// <summary>
 		/// Create import statement.
@@ -101,7 +101,7 @@ namespace LinqToDB.CodeModel
 		/// <param name="returnType">Method return value type.</param>
 		/// <param name="parameters">Method parameters.</param>
 		/// <returns>Call element instance.</returns>
-		public CodeCallExpression Call(ICodeExpression objOrType, CodeIdentifier method, IType returnType, params ICodeExpression[] parameters) => new(false, objOrType, method, Common.Array<IType>.Empty, false, parameters, null, returnType);
+		public CodeCallExpression Call(ICodeExpression objOrType, CodeIdentifier method, IType returnType, params ICodeExpression[] parameters) => new(false, objOrType, method, System.Array.Empty<IType>(), false, parameters, null, returnType);
 
 		/// <summary>
 		/// Create generic void method call statement.
@@ -121,7 +121,7 @@ namespace LinqToDB.CodeModel
 		/// <param name="method">Called method name.</param>
 		/// <param name="parameters">Method parameters.</param>
 		/// <returns>Call element instance.</returns>
-		public CodeCallStatement Call(ICodeExpression objOrType, CodeIdentifier method, params ICodeExpression[] parameters) => new(false, objOrType, method, Common.Array<IType>.Empty, false, parameters, null);
+		public CodeCallStatement Call(ICodeExpression objOrType, CodeIdentifier method, params ICodeExpression[] parameters) => new(false, objOrType, method, [], false, parameters, null);
 
 		/// <summary>
 		/// Create non-void generic extension method call expression.
@@ -143,7 +143,7 @@ namespace LinqToDB.CodeModel
 		/// <param name="returnType">Method return value type.</param>
 		/// <param name="parameters">Call parameters.</param>
 		/// <returns>Call element instance.</returns>
-		public CodeCallExpression ExtCall(IType type, CodeIdentifier method, IType returnType, params ICodeExpression[] parameters) => new(true, new CodeTypeReference(type), method, Common.Array<IType>.Empty, false, parameters, null, returnType);
+		public CodeCallExpression ExtCall(IType type, CodeIdentifier method, IType returnType, params ICodeExpression[] parameters) => new(true, new CodeTypeReference(type), method, System.Array.Empty<IType>(), false, parameters, null, returnType);
 
 		/// <summary>
 		/// Create void generic extension method call statement.
@@ -163,7 +163,7 @@ namespace LinqToDB.CodeModel
 		/// <param name="method">Called method name.</param>
 		/// <param name="parameters">Call parameters.</param>
 		/// <returns>Call element instance.</returns>
-		public CodeCallStatement ExtCall(IType type, CodeIdentifier method, params ICodeExpression[] parameters) => new(true, new CodeTypeReference(type), method, Common.Array<IType>.Empty, false, parameters, null);
+		public CodeCallStatement ExtCall(IType type, CodeIdentifier method, params ICodeExpression[] parameters) => new(true, new CodeTypeReference(type), method, [], false, parameters, null);
 
 		/// <summary>
 		/// Create method parameter.
@@ -253,7 +253,7 @@ namespace LinqToDB.CodeModel
 		/// <param name="type">Object type to create.</param>
 		/// <param name="parameters">Constructor parameters.</param>
 		/// <returns>New object expression instance.</returns>
-		public CodeNew New(IType type, params ICodeExpression[] parameters) => new(type, parameters, Common.Array<CodeAssignmentStatement>.Empty);
+		public CodeNew New(IType type, params ICodeExpression[] parameters) => new(type, parameters, []);
 
 		/// <summary>
 		/// Creates throw statement.

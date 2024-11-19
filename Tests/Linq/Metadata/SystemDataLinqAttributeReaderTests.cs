@@ -1,4 +1,4 @@
-﻿#if NET472
+﻿#if NETFRAMEWORK
 using LinqToDB;
 using LinqToDB.Metadata;
 using NUnit.Framework;
@@ -109,10 +109,13 @@ namespace Tests.Metadata
 			var attrs = rd.GetAttributes(typeof(Shipper))
 				.OfType<LinqToDB.Mapping.TableAttribute>().ToArray();
 
-			Assert.NotNull(attrs);
-			Assert.AreEqual(1, attrs.Length);
-			Assert.AreEqual("Shippers", attrs[0].Name);
-			Assert.AreEqual("dbo",      attrs[0].Schema);
+			Assert.That(attrs, Is.Not.Null);
+			Assert.That(attrs, Has.Length.EqualTo(1));
+			Assert.Multiple(() =>
+			{
+				Assert.That(attrs[0].Name, Is.EqualTo("Shippers"));
+				Assert.That(attrs[0].Schema, Is.EqualTo("dbo"));
+			});
 		}
 
 		[Test]

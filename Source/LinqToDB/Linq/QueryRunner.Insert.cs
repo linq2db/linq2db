@@ -9,6 +9,7 @@ namespace LinqToDB.Linq
 	using Common.Internal.Cache;
 	using Mapping;
 	using SqlQuery;
+	using Tools;
 
 	static partial class QueryRunner
 	{
@@ -83,6 +84,8 @@ namespace LinqToDB.Linq
 				if (Equals(default(T), obj))
 					return 0;
 
+				using var a = ActivityService.Start(ActivityID.InsertObject);
+
 				var type             = GetType<T>(obj!, dataContext);
 				var entityDescriptor = dataContext.MappingSchema.GetEntityDescriptor(type, dataContext.Options.ConnectionOptions.OnEntityDescriptorCreated);
 
@@ -124,33 +127,36 @@ namespace LinqToDB.Linq
 				if (Equals(default(T), obj))
 					return 0;
 
-				var type             = GetType<T>(obj!, dataContext);
-				var entityDescriptor = dataContext.MappingSchema.GetEntityDescriptor(type, dataContext.Options.ConnectionOptions.OnEntityDescriptorCreated);
+				await using (ActivityService.StartAndConfigureAwait(ActivityID.InsertObjectAsync))
+				{
+					var type             = GetType<T>(obj!, dataContext);
+					var entityDescriptor = dataContext.MappingSchema.GetEntityDescriptor(type, dataContext.Options.ConnectionOptions.OnEntityDescriptorCreated);
 
-				var ei = dataContext.Options.LinqOptions.DisableQueryCache || entityDescriptor.SkipModificationFlags.HasFlag(SkipModification.Insert) || columnFilter != null
-					? CreateQuery(dataContext, entityDescriptor, obj, columnFilter, tableName, serverName, databaseName, schemaName, tableOptions, type)
-					: Cache<T,int>.QueryCache.GetOrCreate(
-						(
-							operation: 'I',
-							dataContext.ConfigurationID,
-							tableName,
-							serverName,
-							databaseName,
-							schemaName,
-							tableOptions,
-							type,
-							queryFlags: dataContext.GetQueryFlags()
-						),
-						(dataContext, entityDescriptor, obj),
-						static (entry, key, context) =>
-						{
-							entry.SlidingExpiration = context.dataContext.Options.LinqOptions.CacheSlidingExpirationOrDefault;
-							return CreateQuery(context.dataContext, context.entityDescriptor, context.obj, null, key.tableName, key.serverName, key.databaseName, key.schemaName, key.tableOptions, key.type);
-						});
+					var ei = dataContext.Options.LinqOptions.DisableQueryCache || entityDescriptor.SkipModificationFlags.HasFlag(SkipModification.Insert) || columnFilter != null
+						? CreateQuery(dataContext, entityDescriptor, obj, columnFilter, tableName, serverName, databaseName, schemaName, tableOptions, type)
+						: Cache<T,int>.QueryCache.GetOrCreate(
+							(
+								operation: 'I',
+								dataContext.ConfigurationID,
+								tableName,
+								serverName,
+								databaseName,
+								schemaName,
+								tableOptions,
+								type,
+								queryFlags: dataContext.GetQueryFlags()
+							),
+							(dataContext, entityDescriptor, obj),
+							static (entry, key, context) =>
+							{
+								entry.SlidingExpiration = context.dataContext.Options.LinqOptions.CacheSlidingExpirationOrDefault;
+								return CreateQuery(context.dataContext, context.entityDescriptor, context.obj, null, key.tableName, key.serverName, key.databaseName, key.schemaName, key.tableOptions, key.type);
+							});
 
-				var result = await ei.GetElementAsync(dataContext, Expression.Constant(obj), null, null, token).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+					var result = await ei.GetElementAsync(dataContext, Expression.Constant(obj), null, null, token).ConfigureAwait(false);
 
-				return (int)result!;
+					return (int)result!;
+				}
 			}
 		}
 	}
