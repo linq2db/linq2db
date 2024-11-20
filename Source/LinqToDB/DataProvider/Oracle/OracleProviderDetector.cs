@@ -17,12 +17,15 @@ namespace LinqToDB.DataProvider.Oracle
 
 		static readonly Lazy<IDataProvider> _oracleNativeDataProvider11  = CreateDataProvider<OracleDataProviderNative11>();
 		static readonly Lazy<IDataProvider> _oracleNativeDataProvider12  = CreateDataProvider<OracleDataProviderNative12>();
+		static readonly Lazy<IDataProvider> _oracleNativeDataProvider23  = CreateDataProvider<OracleDataProviderNative23>();
 
 		static readonly Lazy<IDataProvider> _oracleManagedDataProvider11 = CreateDataProvider<OracleDataProviderManaged11>();
 		static readonly Lazy<IDataProvider> _oracleManagedDataProvider12 = CreateDataProvider<OracleDataProviderManaged12>();
+		static readonly Lazy<IDataProvider> _oracleManagedDataProvider23 = CreateDataProvider<OracleDataProviderManaged23>();
 
 		static readonly Lazy<IDataProvider> _oracleDevartDataProvider11  = CreateDataProvider<OracleDataProviderDevart11>();
 		static readonly Lazy<IDataProvider> _oracleDevartDataProvider12  = CreateDataProvider<OracleDataProviderDevart12>();
+		static readonly Lazy<IDataProvider> _oracleDevartDataProvider23  = CreateDataProvider<OracleDataProviderDevart23>();
 
 		public override IDataProvider? DetectProvider(ConnectionOptions options)
 		{
@@ -40,11 +43,13 @@ namespace LinqToDB.DataProvider.Oracle
 				case OracleProviderAdapter.NativeClientNamespace :
 				case ProviderName.OracleNative                   :
 				case ProviderName.Oracle11Native                 :
+				case ProviderName.Oracle23Native                 :
 					provider = OracleProvider.Native;
 					goto case ProviderName.Oracle;
 				case OracleProviderAdapter.DevartAssemblyName    :
 				case ProviderName.OracleDevart                   :
 				case ProviderName.Oracle11Devart                 :
+				case ProviderName.Oracle23Devart                 :
 					provider = OracleProvider.Devart;
 					goto case ProviderName.Oracle;
 				case OracleProviderAdapter.ManagedAssemblyName   :
@@ -52,6 +57,7 @@ namespace LinqToDB.DataProvider.Oracle
 				case "Oracle.ManagedDataAccess.Core"             :
 				case ProviderName.OracleManaged                  :
 				case ProviderName.Oracle11Managed                :
+				case ProviderName.Oracle23Managed                :
 					provider = OracleProvider.Managed;
 					goto case ProviderName.Oracle;
 				case ""                                          :
@@ -76,6 +82,7 @@ namespace LinqToDB.DataProvider.Oracle
 					if (options.ConfigurationString?.Contains("18") == true || options.ProviderName?.Contains("18") == true) return GetDataProvider(options, provider, OracleVersion.v12);
 					if (options.ConfigurationString?.Contains("19") == true || options.ProviderName?.Contains("19") == true) return GetDataProvider(options, provider, OracleVersion.v12);
 					if (options.ConfigurationString?.Contains("21") == true || options.ProviderName?.Contains("21") == true) return GetDataProvider(options, provider, OracleVersion.v12);
+					if (options.ConfigurationString?.Contains("23") == true || options.ProviderName?.Contains("23") == true) return GetDataProvider(options, provider, OracleVersion.v23);
 
 					if (AutoDetectProvider)
 					{
@@ -111,10 +118,13 @@ namespace LinqToDB.DataProvider.Oracle
 				(_,                      OracleVersion.AutoDetect) => GetDataProvider(options, provider, DetectServerVersion(options, provider) ?? DefaultVersion),
 				(OracleProvider.Native , OracleVersion.v11)        => _oracleNativeDataProvider11 .Value,
 				(OracleProvider.Native , OracleVersion.v12)        => _oracleNativeDataProvider12 .Value,
+				(OracleProvider.Native , OracleVersion.v23)        => _oracleNativeDataProvider23 .Value,
 				(OracleProvider.Managed, OracleVersion.v11)        => _oracleManagedDataProvider11.Value,
 				(OracleProvider.Managed, OracleVersion.v12)        => _oracleManagedDataProvider12.Value,
+				(OracleProvider.Managed, OracleVersion.v23)        => _oracleManagedDataProvider23.Value,
 				(OracleProvider.Devart , OracleVersion.v11)        => _oracleDevartDataProvider11 .Value,
 				(OracleProvider.Devart , OracleVersion.v12)        => _oracleDevartDataProvider12 .Value,
+				(OracleProvider.Devart , OracleVersion.v23)        => _oracleDevartDataProvider23 .Value,
 				_                                                  => _oracleManagedDataProvider12.Value,
 			};
 		}
@@ -153,8 +163,10 @@ namespace LinqToDB.DataProvider.Oracle
 
 				if (version <= 11)
 					return OracleVersion.v11;
+				if (version < 23)
+					return OracleVersion.v12;
 
-				return OracleVersion.v12;
+				return OracleVersion.v23;
 			}
 
 			return DefaultVersion;

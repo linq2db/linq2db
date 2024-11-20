@@ -314,6 +314,8 @@ namespace Tests.xUpdate
 		[Test]
 		public void InsertIntoTempTableWithPrimaryKey([DataSources(false)] string context)
 		{
+			// Note: this test is not reenterable as it uses oracle's GLOBAL TEMPORARY TABLE incorrectly:
+			// such tables not designed for DROP and DROP could fail leading to error on second run of same test
 			using var db = GetDataContext(context);
 
 			// table name set explicitly to avoid table name conflict with

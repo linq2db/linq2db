@@ -179,21 +179,6 @@ namespace LinqToDB
 		/// </summary>
 		public const string Oracle        = "Oracle";
 		/// <summary>
-		/// Oracle (11g dialect) ODP.NET native provider.
-		/// Used as configuration name for Oracle native provider mapping schema <see cref="DataProvider.Oracle.OracleMappingSchema.Native11MappingSchema"/>.
-		/// </summary>
-		public const string Oracle11Native = "Oracle.11.Native";
-		/// <summary>
-		/// Oracle (11g dialect) Devart provider.
-		/// Used as configuration name for Oracle managed provider mapping schema <see cref="DataProvider.Oracle.OracleMappingSchema.Devart11MappingSchema"/>.
-		/// </summary>
-		public const string Oracle11Devart = "Oracle.11.Devart";
-		/// <summary>
-		/// Oracle (11g dialect) ODP.NET managed provider.
-		/// Used as configuration name for Oracle managed provider mapping schema <see cref="DataProvider.Oracle.OracleMappingSchema.Managed11MappingSchema"/>.
-		/// </summary>
-		public const string Oracle11Managed = "Oracle.11.Managed";
-		/// <summary>
 		/// Oracle ODP.NET native provider.
 		/// Used as configuration name for Oracle native provider mapping schema <see cref="DataProvider.Oracle.OracleMappingSchema.NativeMappingSchema"/>.
 		/// </summary>
@@ -208,6 +193,39 @@ namespace LinqToDB
 		/// Used as configuration name for Oracle managed provider mapping schema <see cref="DataProvider.Oracle.OracleMappingSchema.DevartMappingSchema"/>.
 		/// </summary>
 		public const string OracleDevart = "Oracle.Devart";
+
+		/// <summary>
+		/// Oracle (11g dialect) ODP.NET native provider.
+		/// Used as configuration name for Oracle native provider mapping schema <see cref="DataProvider.Oracle.OracleMappingSchema.Native11MappingSchema"/>.
+		/// </summary>
+		public const string Oracle11Native = "Oracle.11.Native";
+		/// <summary>
+		/// Oracle (11g dialect) Devart provider.
+		/// Used as configuration name for Oracle managed provider mapping schema <see cref="DataProvider.Oracle.OracleMappingSchema.Devart11MappingSchema"/>.
+		/// </summary>
+		public const string Oracle11Devart = "Oracle.11.Devart";
+		/// <summary>
+		/// Oracle (11g dialect) ODP.NET managed provider.
+		/// Used as configuration name for Oracle managed provider mapping schema <see cref="DataProvider.Oracle.OracleMappingSchema.Managed11MappingSchema"/>.
+		/// </summary>
+		public const string Oracle11Managed = "Oracle.11.Managed";
+
+		/// <summary>
+		/// Oracle (23ai dialect) ODP.NET native provider.
+		/// Used as configuration name for Oracle native provider mapping schema <see cref="DataProvider.Oracle.OracleMappingSchema.Native23MappingSchema"/>.
+		/// </summary>
+		public const string Oracle23Native = "Oracle.23.Native";
+		/// <summary>
+		/// Oracle (23ai dialect) Devart provider.
+		/// Used as configuration name for Oracle managed provider mapping schema <see cref="DataProvider.Oracle.OracleMappingSchema.Devart23MappingSchema"/>.
+		/// </summary>
+		public const string Oracle23Devart = "Oracle.23.Devart";
+		/// <summary>
+		/// Oracle (23ai dialect) ODP.NET managed provider.
+		/// Used as configuration name for Oracle managed provider mapping schema <see cref="DataProvider.Oracle.OracleMappingSchema.Managed23MappingSchema"/>.
+		/// </summary>
+		public const string Oracle23Managed = "Oracle.23.Managed";
+
 		/// <summary>
 		/// PostgreSQL 9.2- data provider.
 		/// Used as configuration name for PostgreSQL mapping schema <see cref="DataProvider.PostgreSQL.PostgreSQLMappingSchema"/>.
