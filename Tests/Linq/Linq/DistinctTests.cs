@@ -392,5 +392,43 @@ namespace Tests.Linq
 				});
 			}
 		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/2943")]
+		public void Test2943Test1([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t = db.CreateLocalTable(DistinctOrderByTable.Data);
+
+			var res = t.OrderByDescending(r => r.F1).ThenBy(r => r.F3).ThenBy(r => r.F2).Select(r => new { r.F1, r.F2 }).Distinct().ToArray();
+
+			Assert.That(res, Has.Length.EqualTo(5));
+			Assert.Multiple(() =>
+			{
+				Assert.That(res[0].F2, Is.EqualTo("8"));
+				Assert.That(res[1].F2, Is.EqualTo("5"));
+				Assert.That(res[2].F2, Is.EqualTo("4"));
+				Assert.That(res[3].F2, Is.EqualTo("3"));
+				Assert.That(res[4].F2, Is.EqualTo("2"));
+			});
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/2943")]
+		public void Test2943Test2([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t = db.CreateLocalTable(DistinctOrderByTable.Data);
+
+			var res = t.OrderByDescending(r => r.F1).Select(r => new { r.F1, r.F2 }).Distinct().ToArray();
+
+			Assert.That(res, Has.Length.EqualTo(5));
+			Assert.Multiple(() =>
+			{
+				Assert.That(res[0].F2, Is.EqualTo("8"));
+				Assert.That(res[1].F2, Is.EqualTo("5"));
+				Assert.That(res[2].F2, Is.EqualTo("4"));
+				Assert.That(res[3].F2, Is.EqualTo("3"));
+				Assert.That(res[4].F2, Is.EqualTo("2"));
+			});
+		}
 	}
 }
