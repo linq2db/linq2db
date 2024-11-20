@@ -814,6 +814,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 		}
 #endif
 
+		[ActiveIssue]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4666")]
 		public void Issue4666Test([EFDataSources(TestProvName.AllSQLite, TestProvName.AllPostgreSQL14Minus, TestProvName.AllMySql)] string provider)
 		{

@@ -318,7 +318,6 @@ namespace LinqToDB.EntityFrameworkCore.Tests.Models.IssueModel
 	public class Issue4666BaseEntity
 	{
 		[Key]
-		[DatabaseGenerated(DatabaseGeneratedOption.Identity)]
 		public int Id { get; set; }
 
 		public string? Description { get; set; }

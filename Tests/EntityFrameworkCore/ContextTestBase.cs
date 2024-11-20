@@ -61,6 +61,11 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 			OnDatabaseCreated(provider, context);
 
 			// remove potential CT pollution by OnDatabaseCreated
+			ResetChangeTracker(context);
+		}
+
+		protected static void ResetChangeTracker(TContext context)
+		{
 #if !NETFRAMEWORK
 			context.ChangeTracker.Clear();
 #else
