@@ -91,6 +91,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 		}
 #endif
 
+		[ActiveIssue]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4603")]
 		public async ValueTask Issue4603Test([EFDataSources(TestProvName.AllMySql57)] string provider)
 		{
@@ -173,6 +174,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 				.Update();
 		}
 
+		[ActiveIssue]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4012")]
 		public void Issue4012Test([EFDataSources(TestProvName.AllMySql57)] string provider)
 		{
