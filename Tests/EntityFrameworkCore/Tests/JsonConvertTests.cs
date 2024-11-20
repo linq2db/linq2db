@@ -43,7 +43,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 			ctx.EventScheduleItems.Add(new EventScheduleItem()
 			{
 				NameLocalized = new LocalizedString() { English = "English", German = "German", Slovak = "Slovak" },
-				GuidColumn = Guid.NewGuid()
+				GuidColumn = TestData.Guid1
 			});
 			ctx.SaveChanges();
 

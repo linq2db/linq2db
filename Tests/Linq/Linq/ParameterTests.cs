@@ -117,7 +117,7 @@ namespace Tests.Linq
 			using (var  db = GetDataContext(context))
 			{
 				var s1 = "0 \x0 ' 0";
-				var s2 = db.Select(() => Sql.ToSql(s1));
+				var s2 = db.Select(() => Sql.AsSql(s1));
 
 				Assert.That(s2, Is.EqualTo(s1));
 			}
@@ -142,7 +142,7 @@ namespace Tests.Linq
 			using (var  db = GetDataContext(context))
 			{
 				var s1 = "\x0 \x0 ' \x0";
-				var s2 = db.Select(() => Sql.ToSql(s1));
+				var s2 = db.Select(() => Sql.AsSql(s1));
 
 				Assert.That(s2, Is.EqualTo(s1));
 			}
@@ -166,7 +166,7 @@ namespace Tests.Linq
 			using (var  db = GetDataContext(context))
 			{
 				var s1 = "\x0";
-				var s2 = db.Select(() => Sql.ToSql(s1));
+				var s2 = db.Select(() => Sql.AsSql(s1));
 
 				Assert.That(s2, Is.EqualTo(s1));
 			}
@@ -178,7 +178,7 @@ namespace Tests.Linq
 			using (var  db = GetDataContext(context))
 			{
 				var s1 = "\x1-\x2-\x3";
-				var s2 = db.Select(() => Sql.ToSql(s1));
+				var s2 = db.Select(() => Sql.AsSql(s1));
 
 				Assert.That(s2, Is.EqualTo(s1));
 			}
@@ -199,7 +199,7 @@ namespace Tests.Linq
 			using (var  db = GetDataContext(context))
 			{
 				var s1 = '\x0';
-				var s2 = db.Select(() => Sql.ToSql(s1));
+				var s2 = db.Select(() => Sql.AsSql(s1));
 
 				Assert.That(s2, Is.EqualTo(s1));
 			}
@@ -254,7 +254,7 @@ namespace Tests.Linq
 				if (context.IsAnyOf(TestProvName.AllInformix))
 					dt = new DateTime(dt.Year, dt.Month, dt.Day, dt.Hour, dt.Minute, dt.Second);
 
-				var _ = db.Types.Where(t => t.DateTimeValue == Sql.ToSql(dt)).ToList();
+				var _ = db.Types.Where(t => t.DateTimeValue == Sql.AsSql(dt)).ToList();
 			}
 		}
 

@@ -248,13 +248,7 @@ namespace LinqToDB.DataProvider.Access
 
 		protected override void BuildParameter(SqlParameter parameter)
 		{
-			if (BuildStep == Step.TypedExpression || !parameter.NeedsCast)
-			{
-				base.BuildParameter(parameter);
-				return;
-			}
-
-			if (parameter.NeedsCast)
+			if (parameter.NeedsCast && BuildStep != Step.TypedExpression)
 			{
 				var saveStep = BuildStep;
 				BuildStep = Step.TypedExpression;

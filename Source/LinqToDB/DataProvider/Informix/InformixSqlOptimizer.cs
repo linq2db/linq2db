@@ -144,5 +144,24 @@ namespace LinqToDB.DataProvider.Informix
 
 			return statement;
 		}
+
+		public override SqlStatement FinalizeStatement(SqlStatement statement, EvaluationContext context, DataOptions dataOptions, MappingSchema mappingSchema)
+		{
+			statement = base.FinalizeStatement(statement, context, dataOptions, mappingSchema);
+			statement = WrapParameters(statement, context);
+			return statement;
+		}
+
+		static SqlStatement WrapParameters(SqlStatement statement, EvaluationContext context)
+		{
+			// Known cases:
+			// - derived columns (column of CTE query)
+
+			var visitor = new WrapParametersVisitor(VisitMode.Modify);
+
+			statement = (SqlStatement)visitor.WrapParameters(statement, WrapParametersVisitor.WrapFlags.InSelect);
+
+			return statement;
+		}
 	}
 }
