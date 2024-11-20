@@ -16,7 +16,7 @@
 			<HintPath>..\..\Redist\SapHana\v4.5\Sap.Data.Hana.v4.5.dll</HintPath>
 		</Reference>
 	</ItemGroup>
-	
+
 	<ItemGroup Condition=" '$(TargetFramework)' != 'net462' ">
 		<FrameworkReference Include="Microsoft.AspNetCore.App" />
 
