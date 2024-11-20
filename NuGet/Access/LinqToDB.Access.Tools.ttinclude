@@ -1,1 +1,1 @@
-<#@ include file="$(LinqToDBT4TemplatesPath)LinqToDB.Access.ttinclude" once="true" #>
+<#@ include file="$(LinqToDBT4AccessTemplatesPath)LinqToDB.Access.ttinclude" once="true" #>

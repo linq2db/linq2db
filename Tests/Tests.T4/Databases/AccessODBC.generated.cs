@@ -24,6 +24,7 @@ namespace AccessODBCDataContext
 	{
 		public ITable<AllType>             AllTypes             { get { return this.GetTable<AllType>(); } }
 		public ITable<Child>               Children             { get { return this.GetTable<Child>(); } }
+		public ITable<CollatedTable>       CollatedTables       { get { return this.GetTable<CollatedTable>(); } }
 		public ITable<DataTypeTest>        DataTypeTests        { get { return this.GetTable<DataTypeTest>(); } }
 		public ITable<Doctor>              Doctors              { get { return this.GetTable<Doctor>(); } }
 		public ITable<Dual>                Duals                { get { return this.GetTable<Dual>(); } }
@@ -39,6 +40,7 @@ namespace AccessODBCDataContext
 		public ITable<PatientSelectAll>    PatientSelectAll     { get { return this.GetTable<PatientSelectAll>(); } }
 		public ITable<Person>              People               { get { return this.GetTable<Person>(); } }
 		public ITable<PersonSelectAll>     PersonSelectAll      { get { return this.GetTable<PersonSelectAll>(); } }
+		public ITable<RelationsTable>      RelationsTables      { get { return this.GetTable<RelationsTable>(); } }
 		public ITable<ScalarDataReader>    ScalarDataReaders    { get { return this.GetTable<ScalarDataReader>(); } }
 		public ITable<TestIdentity>        TestIdentities       { get { return this.GetTable<TestIdentity>(); } }
 		public ITable<TestMerge1>          TestMerge1           { get { return this.GetTable<TestMerge1>(); } }
@@ -107,6 +109,14 @@ namespace AccessODBCDataContext
 	{
 		[Column(DbType="INTEGER", DataType=LinqToDB.DataType.Int32), Nullable] public int? ParentID { get; set; } // INTEGER
 		[Column(DbType="INTEGER", DataType=LinqToDB.DataType.Int32), Nullable] public int? ChildID  { get; set; } // INTEGER
+	}
+
+	[Table("CollatedTable")]
+	public partial class CollatedTable
+	{
+		[Column(DbType="INTEGER",     DataType=LinqToDB.DataType.Int32),              Nullable] public int?    Id              { get; set; } // INTEGER
+		[Column(DbType="VARCHAR(20)", DataType=LinqToDB.DataType.VarChar, Length=20), Nullable] public string? CaseSensitive   { get; set; } // VARCHAR(20)
+		[Column(DbType="VARCHAR(20)", DataType=LinqToDB.DataType.VarChar, Length=20), Nullable] public string? CaseInsensitive { get; set; } // VARCHAR(20)
 	}
 
 	[Table("DataTypeTest")]
@@ -253,6 +263,19 @@ namespace AccessODBCDataContext
 		[Column(DbType="VARCHAR(1)",  DataType=LinqToDB.DataType.VarChar, Length=1),  Nullable] public char?   Gender     { get; set; } // VARCHAR(1)
 	}
 
+	[Table("RelationsTable")]
+	public partial class RelationsTable
+	{
+		[Column(DbType="INTEGER", DataType=LinqToDB.DataType.Int32), Nullable] public int? ID1   { get; set; } // INTEGER
+		[Column(DbType="INTEGER", DataType=LinqToDB.DataType.Int32), Nullable] public int? ID2   { get; set; } // INTEGER
+		[Column(DbType="INTEGER", DataType=LinqToDB.DataType.Int32), Nullable] public int? Int1  { get; set; } // INTEGER
+		[Column(DbType="INTEGER", DataType=LinqToDB.DataType.Int32), Nullable] public int? Int2  { get; set; } // INTEGER
+		[Column(DbType="INTEGER", DataType=LinqToDB.DataType.Int32), Nullable] public int? IntN1 { get; set; } // INTEGER
+		[Column(DbType="INTEGER", DataType=LinqToDB.DataType.Int32), Nullable] public int? IntN2 { get; set; } // INTEGER
+		[Column(DbType="INTEGER", DataType=LinqToDB.DataType.Int32), Nullable] public int? FK    { get; set; } // INTEGER
+		[Column(DbType="INTEGER", DataType=LinqToDB.DataType.Int32), Nullable] public int? FKN   { get; set; } // INTEGER
+	}
+
 	[Table("Scalar_DataReader", IsView=true)]
 	public partial class ScalarDataReader
 	{
@@ -320,20 +343,28 @@ namespace AccessODBCDataContext
 
 	public static partial class TestDataDBStoredProcedures
 	{
+		#region AddIssue792Record
+
+		public static int AddIssue792Record(this TestDataDB dataConnection, int? id)
+		{
+			var parameters = new []
+			{
+				new DataParameter("id", id, LinqToDB.DataType.Int32)
+			};
+
+			return dataConnection.ExecuteProc("[AddIssue792Record]", parameters);
+		}
+
+		#endregion
+
 		#region PatientSelectByName
 
 		public static IEnumerable<PatientSelectByNameResult> PatientSelectByName(this TestDataDB dataConnection, string? @firstName, string? @lastName)
 		{
 			var parameters = new []
 			{
-				new DataParameter("@firstName", @firstName, LinqToDB.DataType.VarChar)
-				{
-					Size = 255
-				},
-				new DataParameter("@lastName",  @lastName,  LinqToDB.DataType.VarChar)
-				{
-					Size = 255
-				}
+				new DataParameter("@firstName", @firstName, LinqToDB.DataType.VarChar, 255),
+				new DataParameter("@lastName",  @lastName,  LinqToDB.DataType.VarChar, 255)
 			};
 
 			return dataConnection.QueryProc<PatientSelectByNameResult>("[Patient_SelectByName]", parameters);
@@ -371,22 +402,10 @@ namespace AccessODBCDataContext
 		{
 			var parameters = new []
 			{
-				new DataParameter("@FirstName",  @FirstName,  LinqToDB.DataType.VarChar)
-				{
-					Size = 255
-				},
-				new DataParameter("@MiddleName", @MiddleName, LinqToDB.DataType.VarChar)
-				{
-					Size = 255
-				},
-				new DataParameter("@LastName",   @LastName,   LinqToDB.DataType.VarChar)
-				{
-					Size = 255
-				},
-				new DataParameter("@Gender",     @Gender,     LinqToDB.DataType.VarChar)
-				{
-					Size = 255
-				}
+				new DataParameter("@FirstName",  @FirstName,  LinqToDB.DataType.VarChar, 255),
+				new DataParameter("@MiddleName", @MiddleName, LinqToDB.DataType.VarChar, 255),
+				new DataParameter("@LastName",   @LastName,   LinqToDB.DataType.VarChar, 255),
+				new DataParameter("@Gender",     @Gender,     LinqToDB.DataType.VarChar, 255)
 			};
 
 			return dataConnection.ExecuteProc("[Person_Insert]", parameters);
@@ -423,14 +442,8 @@ namespace AccessODBCDataContext
 		{
 			var parameters = new []
 			{
-				new DataParameter("@firstName", @firstName, LinqToDB.DataType.VarChar)
-				{
-					Size = 255
-				},
-				new DataParameter("@lastName",  @lastName,  LinqToDB.DataType.VarChar)
-				{
-					Size = 255
-				}
+				new DataParameter("@firstName", @firstName, LinqToDB.DataType.VarChar, 255),
+				new DataParameter("@lastName",  @lastName,  LinqToDB.DataType.VarChar, 255)
 			};
 
 			return dataConnection.QueryProc<PersonSelectByNameResult>("[Person_SelectByName]", parameters);
@@ -453,14 +466,8 @@ namespace AccessODBCDataContext
 		{
 			var parameters = new []
 			{
-				new DataParameter("@firstName", @firstName, LinqToDB.DataType.VarChar)
-				{
-					Size = 255
-				},
-				new DataParameter("@lastName",  @lastName,  LinqToDB.DataType.VarChar)
-				{
-					Size = 255
-				}
+				new DataParameter("@firstName", @firstName, LinqToDB.DataType.VarChar, 255),
+				new DataParameter("@lastName",  @lastName,  LinqToDB.DataType.VarChar, 255)
 			};
 
 			return dataConnection.QueryProc<PersonSelectListByNameResult>("[Person_SelectListByName]", parameters);
@@ -479,28 +486,15 @@ namespace AccessODBCDataContext
 
 		#region PersonUpdate
 
-		public static int PersonUpdate(this TestDataDB dataConnection, int? @id, int? @PersonID, string? @FirstName, string? @MiddleName, string? @LastName, string? @Gender)
+		public static int PersonUpdate(this TestDataDB dataConnection, int? @id, string? @FirstName, string? @MiddleName, string? @LastName, string? @Gender)
 		{
 			var parameters = new []
 			{
 				new DataParameter("@id",         @id,         LinqToDB.DataType.Int32),
-				new DataParameter("@PersonID",   @PersonID,   LinqToDB.DataType.Int32),
-				new DataParameter("@FirstName",  @FirstName,  LinqToDB.DataType.VarChar)
-				{
-					Size = 255
-				},
-				new DataParameter("@MiddleName", @MiddleName, LinqToDB.DataType.VarChar)
-				{
-					Size = 255
-				},
-				new DataParameter("@LastName",   @LastName,   LinqToDB.DataType.VarChar)
-				{
-					Size = 255
-				},
-				new DataParameter("@Gender",     @Gender,     LinqToDB.DataType.VarChar)
-				{
-					Size = 255
-				}
+				new DataParameter("@FirstName",  @FirstName,  LinqToDB.DataType.VarChar, 255),
+				new DataParameter("@MiddleName", @MiddleName, LinqToDB.DataType.VarChar, 255),
+				new DataParameter("@LastName",   @LastName,   LinqToDB.DataType.VarChar, 255),
+				new DataParameter("@Gender",     @Gender,     LinqToDB.DataType.VarChar, 255)
 			};
 
 			return dataConnection.ExecuteProc("[Person_Update]", parameters);

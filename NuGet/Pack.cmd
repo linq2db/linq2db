@@ -41,16 +41,11 @@ if %errorlevel% neq 0 exit
 
 ..\Redist\nuget.exe Pack %NUSPECS%\linq2db.Access.nuspec -OutputDirectory %NUGETS%
 if %errorlevel% neq 0 exit
+..\Redist\nuget.exe Pack %NUSPECS%\linq2db.ClickHouse.nuspec -OutputDirectory %NUGETS%
+if %errorlevel% neq 0 exit
 ..\Redist\nuget.exe Pack %NUSPECS%\linq2db.DB2.nuspec -OutputDirectory %NUGETS%
 if %errorlevel% neq 0 exit
 ..\Redist\nuget.exe Pack %NUSPECS%\linq2db.DB2.Core.nuspec -OutputDirectory %NUGETS%
-if %errorlevel% neq 0 exit
-..\Redist\nuget.exe Pack %NUSPECS%\linq2db.ClickHouse.Client.nuspec         -OutputDirectory %NUGETS%
-if %errorlevel% neq 0 exit
-..\Redist\nuget.exe Pack %NUSPECS%\linq2db.ClickHouse.MySqlConnector.nuspec -OutputDirectory %NUGETS%
-if %errorlevel% neq 0 exit
-..\Redist\nuget.exe Pack %NUSPECS%\linq2db.ClickHouse.Octonica.nuspec       -OutputDirectory %NUGETS%
-if %errorlevel% neq 0 exit
 if %errorlevel% neq 0 exit
 ..\Redist\nuget.exe Pack %NUSPECS%\linq2db.Firebird.nuspec -OutputDirectory %NUGETS%
 if %errorlevel% neq 0 exit
@@ -85,8 +80,6 @@ if %errorlevel% neq 0 exit
 ..\Redist\nuget.exe Pack %NUSPECS%\linq2db.Sybase.DataAction.nuspec -OutputDirectory %NUGETS%
 if %errorlevel% neq 0 exit
 ..\Redist\nuget.exe Pack %NUSPECS%\linq2db.t4models.nuspec -OutputDirectory %NUGETS%
-
-
 
 
 

@@ -1,0 +1,21 @@
+<?xml version="1.0"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
+	<metadata minClientVersion="3.3.0">
+		<id>linq2db.ClickHouse</id>
+		<title>LINQ to ClickHouse</title>
+		<summary>
+			This package includes a T4 template to generate data models for ClickHouse database.
+		</summary>
+		<tags>linq linq2db ClickHouse LinqToDB ORM database DB SQL</tags>
+	</metadata>
+	<files>
+		<file src="t4bin\ClickHouse.Client.dll"                   target="tools"                                   />
+		<file src="t4bin\Microsoft.Extensions.Http.dll"           target="tools"                                   />
+		<file src="t4bin\System.Text.Json.dll"                    target="tools"                                   />
+		<file src="t4bin\NodaTime.dll"                            target="tools"                                   />
+
+		<file src="NuGet\ClickHouse\linq2db.ClickHouse.props"     target="build"                                   />
+		<file src="NuGet\ClickHouse\*.*"     exclude="**\*.props" target="contentFiles\any\any\LinqToDB.Templates" />
+		<file src="NuGet\ClickHouse\*.*"     exclude="**\*.props" target="content\LinqToDB.Templates"              />
+	</files>
+</package>

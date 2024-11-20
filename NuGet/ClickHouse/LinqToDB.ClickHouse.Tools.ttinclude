@@ -1,10 +1,1 @@
-<#@ assembly name="$(LinqToDBT4ClickHouseClientPath)MySqlConnector.dll"                #>
-<#@ include file="$(LinqToDBT4TemplatesPath)LinqToDB.Tools.ttinclude"      once="true" #>
-<#@ include file="$(LinqToDBT4TemplatesPath)LinqToDB.ClickHouse.ttinclude" once="true" #>
-<#
-var toolsPath = GetProviderToolsPath("MySqlConnector", "MySqlConnector, Version=2.0.0.0, Culture=neutral, PublicKeyToken=d33d3e53aa5f8c92");
-
-LoadAssembly("System.Memory"                    , toolsPath);
-LoadAssembly("System.Buffers"                   , toolsPath);
-LoadAssembly("System.Threading.Tasks.Extensions", toolsPath);
-#>
+<#@ include file="$(LinqToDBT4ClickHouseTemplatesPath)LinqToDB.ClickHouse.ttinclude" once="true" #>

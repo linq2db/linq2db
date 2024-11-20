@@ -1,6 +1,6 @@
-<#@ include file="LinqToDB.ttinclude"       once="true" #>
-<#@ include file="LinqToDB.Tools.ttinclude" once="true" #>
-<#@ import namespace="System.IO"                        #>
+<#@ include file="$(LinqToDBT4TemplatesPath)LinqToDB.ttinclude"       once="true" #>
+<#@ include file="$(LinqToDBT4TemplatesPath)LinqToDB.Tools.ttinclude" once="true" #>
+<#@ import namespace="System.IO"                                                  #>
 <#+
 LinqToDB.Data.DataConnection GetAccessConnection(string connectionString)
 {

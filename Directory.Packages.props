@@ -2,7 +2,7 @@
 	<!--
 	When multiple versions of same nuget references, don't put it to unconditional ItemGroup
 	as while it works fine in Visual Studio in general there are still issues with tooling (dotnet publish, testing)
-	
+
 	IMPORTANT:
 	avoid use of different package versions in tests for different frameworks just for testing purposes if package referenced by source project
 	as it will result in old package consumed by released package and affect users (especially for projects where user has no control
@@ -17,7 +17,7 @@
 		<PackageVersion Include="Microsoft.SourceLink.GitHub"                           Version="8.0.0"                 />
 		<PackageVersion Include="Lindhart.Analyser.MissingAwaitWarning"                 Version="3.1.0-beta"            />
 	</ItemGroup>
-	
+
 	<ItemGroup Label="Polyfills">
 		<PackageVersion Include="Microsoft.Bcl.AsyncInterfaces"                         Version="9.0.0"                 />
 		<PackageVersion Include="Microsoft.Bcl.HashCode"                                Version="6.0.0"                 />
@@ -53,7 +53,7 @@
 		<PackageVersion Include="Microsoft.Extensions.DependencyInjection"              Version="6.0.2"                 />
 		<PackageVersion Include="Microsoft.Extensions.Logging.Abstractions"             Version="6.0.4"                 />
 	</ItemGroup>
-	
+
 	<ItemGroup Label="Released Dependencies" Condition=" '$(TargetFramework)' == 'net8.0' ">
 		<PackageVersion Include="Microsoft.Extensions.DependencyInjection"              Version="8.0.1"                 />
 		<PackageVersion Include="Microsoft.Extensions.Logging.Abstractions"             Version="8.0.2"                 />
@@ -138,14 +138,14 @@
 		<PackageVersion Condition="'$(TargetFramework)'=='net6.0'" Include="Microsoft.EntityFrameworkCore.InMemory"         Version="6.0.36" />
 		<PackageVersion Condition="'$(TargetFramework)'=='net8.0'" Include="Microsoft.EntityFrameworkCore.InMemory"         Version="8.0.11" />
 		<PackageVersion Condition="'$(TargetFramework)'=='net9.0'" Include="Microsoft.EntityFrameworkCore.InMemory"         Version="9.0.0"  />
-		
+
 		<!--temporary workarounds-->
 		<PackageVersion Include="Microsoft.OData.Edm" Condition="'$(TargetFramework)'=='net6.0'" Version="7.21.6" />
 		<PackageVersion Include="Microsoft.OData.Core" Condition="'$(TargetFramework)'=='net6.0'" Version="7.21.6" />
 		<PackageVersion Condition="'$(TargetFramework)'=='net9.0'"         Include="Microsoft.EntityFrameworkCore.Relational" Version="9.0.0"  />
 		<PackageVersion Condition="'$(TargetFramework)'=='net9.0'"         Include="Microsoft.EntityFrameworkCore" Version="9.0.0"  />
-</ItemGroup>
-	
+	</ItemGroup>
+
 	<ItemGroup Label="Testing" Condition=" '$(TargetFramework)' == 'net462' ">
 		<PackageVersion Include="System.Text.Json"                                      Version="9.0.0"                 />
 	</ItemGroup>

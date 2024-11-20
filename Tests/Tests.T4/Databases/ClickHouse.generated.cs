@@ -76,6 +76,7 @@ namespace ClickHouseDataContext
 		[Column("char20DataType"),                         Nullable         ] public string  Char20DataType   { get; set; } // FixedString(20)
 		[Column("varcharDataType"),                        Nullable         ] public string  VarcharDataType  { get; set; } // String
 		[Column("charDataType"),                           Nullable         ] public char?   CharDataType     { get; set; } // FixedString(1)
+		[Column("bitDataType"),                            Nullable         ] public ulong?  BitDataType      { get; set; } // UInt64
 	}
 
 	[Table("Child")]

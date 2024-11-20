@@ -148,7 +148,7 @@ namespace Default.Access.OleDb
 		/// <summary>
 		/// PersonDoctor (Person)
 		/// </summary>
-		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false)]
+		[Association(ThisKey=nameof(PersonID), OtherKey=nameof(Default.Access.OleDb.Person.PersonID), CanBeNull=false)]
 		public Person Person { get; set; } = null!;
 
 		#endregion
@@ -237,7 +237,7 @@ namespace Default.Access.OleDb
 		/// <summary>
 		/// PersonPatient (Person)
 		/// </summary>
-		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false)]
+		[Association(ThisKey=nameof(PersonID), OtherKey=nameof(Default.Access.OleDb.Person.PersonID), CanBeNull=false)]
 		public Person Person { get; set; } = null!;
 
 		#endregion
@@ -268,13 +268,13 @@ namespace Default.Access.OleDb
 		/// <summary>
 		/// PersonDoctor_BackReference (Doctor)
 		/// </summary>
-		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=true)]
+		[Association(ThisKey=nameof(PersonID), OtherKey=nameof(Default.Access.OleDb.Doctor.PersonID), CanBeNull=true)]
 		public Doctor? PersonDoctor { get; set; }
 
 		/// <summary>
 		/// PersonPatient_BackReference (Patient)
 		/// </summary>
-		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=true)]
+		[Association(ThisKey=nameof(PersonID), OtherKey=nameof(Default.Access.OleDb.Patient.PersonID), CanBeNull=true)]
 		public Patient? PersonPatient { get; set; }
 
 		#endregion
@@ -372,14 +372,8 @@ namespace Default.Access.OleDb
 		{
 			var parameters = new []
 			{
-				new DataParameter("@firstName", @firstName, LinqToDB.DataType.NText)
-				{
-					Size = 50
-				},
-				new DataParameter("@lastName",  @lastName,  LinqToDB.DataType.NText)
-				{
-					Size = 50
-				}
+				new DataParameter("@firstName", @firstName, LinqToDB.DataType.NText, 50),
+				new DataParameter("@lastName",  @lastName,  LinqToDB.DataType.NText, 50)
 			};
 
 			return dataConnection.QueryProc<PatientSelectAll>("[Patient_SelectByName]", parameters);
@@ -407,22 +401,10 @@ namespace Default.Access.OleDb
 		{
 			var parameters = new []
 			{
-				new DataParameter("@FirstName",  @FirstName,  LinqToDB.DataType.NText)
-				{
-					Size = 50
-				},
-				new DataParameter("@MiddleName", @MiddleName, LinqToDB.DataType.NText)
-				{
-					Size = 50
-				},
-				new DataParameter("@LastName",   @LastName,   LinqToDB.DataType.NText)
-				{
-					Size = 50
-				},
-				new DataParameter("@Gender",     @Gender,     LinqToDB.DataType.NText)
-				{
-					Size = 1
-				}
+				new DataParameter("@FirstName",  @FirstName,  LinqToDB.DataType.NText, 50),
+				new DataParameter("@MiddleName", @MiddleName, LinqToDB.DataType.NText, 50),
+				new DataParameter("@LastName",   @LastName,   LinqToDB.DataType.NText, 50),
+				new DataParameter("@Gender",     @Gender,     LinqToDB.DataType.NText, 1)
 			};
 
 			return dataConnection.ExecuteProc("[Person_Insert]", parameters);
@@ -450,14 +432,8 @@ namespace Default.Access.OleDb
 		{
 			var parameters = new []
 			{
-				new DataParameter("@firstName", @firstName, LinqToDB.DataType.NText)
-				{
-					Size = 50
-				},
-				new DataParameter("@lastName",  @lastName,  LinqToDB.DataType.NText)
-				{
-					Size = 50
-				}
+				new DataParameter("@firstName", @firstName, LinqToDB.DataType.NText, 50),
+				new DataParameter("@lastName",  @lastName,  LinqToDB.DataType.NText, 50)
 			};
 
 			return dataConnection.QueryProc<Person>("[Person_SelectByName]", parameters);
@@ -471,14 +447,8 @@ namespace Default.Access.OleDb
 		{
 			var parameters = new []
 			{
-				new DataParameter("@firstName", @firstName, LinqToDB.DataType.NText)
-				{
-					Size = 50
-				},
-				new DataParameter("@lastName",  @lastName,  LinqToDB.DataType.NText)
-				{
-					Size = 50
-				}
+				new DataParameter("@firstName", @firstName, LinqToDB.DataType.NText, 50),
+				new DataParameter("@lastName",  @lastName,  LinqToDB.DataType.NText, 50)
 			};
 
 			return dataConnection.QueryProc<Person>("[Person_SelectListByName]", parameters);
@@ -494,22 +464,10 @@ namespace Default.Access.OleDb
 			{
 				new DataParameter("@id",         @id,         LinqToDB.DataType.Int32),
 				new DataParameter("@PersonID",   @PersonID,   LinqToDB.DataType.Int32),
-				new DataParameter("@FirstName",  @FirstName,  LinqToDB.DataType.NText)
-				{
-					Size = 50
-				},
-				new DataParameter("@MiddleName", @MiddleName, LinqToDB.DataType.NText)
-				{
-					Size = 50
-				},
-				new DataParameter("@LastName",   @LastName,   LinqToDB.DataType.NText)
-				{
-					Size = 50
-				},
-				new DataParameter("@Gender",     @Gender,     LinqToDB.DataType.NText)
-				{
-					Size = 1
-				}
+				new DataParameter("@FirstName",  @FirstName,  LinqToDB.DataType.NText, 50),
+				new DataParameter("@MiddleName", @MiddleName, LinqToDB.DataType.NText, 50),
+				new DataParameter("@LastName",   @LastName,   LinqToDB.DataType.NText, 50),
+				new DataParameter("@Gender",     @Gender,     LinqToDB.DataType.NText, 1)
 			};
 
 			return dataConnection.ExecuteProc("[Person_Update]", parameters);
