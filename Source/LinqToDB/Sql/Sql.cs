@@ -41,11 +41,8 @@ namespace LinqToDB
 		public static T Default<T>() => throw new LinqException($"Default is only server-side method.");
 
 		/// <summary>
-		/// Enforces generating SQL even if an expression can be calculated locally.
+		/// Enforces generation of SQL even if an expression can be calculated on client.
 		/// </summary>
-		/// <typeparam name="T"></typeparam>
-		/// <param name="obj">Expression to generate SQL.</param>
-		/// <returns>Returns 'obj'.</returns>
 		[CLSCompliant(false)]
 		[Expression("{0}", 0, ServerSideOnly = true, IsNullable = IsNullableType.IfAnyParameterNullable)]
 		public static T AsSql<T>(T obj)
@@ -53,6 +50,10 @@ namespace LinqToDB
 			return obj;
 		}
 
+		/// <summary>
+		/// Enforces generation of SQL even if an expression can be calculated on client.
+		/// All values will be embedded as literals instead of parameters when possible.
+		/// </summary>
 		[CLSCompliant(false)]
 		[Expression("{0}", 0, ServerSideOnly = true, InlineParameters = true, IsNullable = IsNullableType.IfAnyParameterNullable)]
 		public static T ToSql<T>(T obj)
