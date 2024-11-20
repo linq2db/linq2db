@@ -102,6 +102,13 @@ namespace LinqToDB.Linq.Builder
 					//
 
 					var into = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[1], new SelectQuery()));
+					var tableContext = SequenceHelper.GetTableOrCteContext(builder, new ContextRefExpression(into.ElementType, into));
+
+					if (tableContext == null)
+						throw new LinqToDBException("Invalid Into table");
+
+					into = tableContext;
+
 					insertContext.Into = into;
 
 					var setter     = methodCall.GetArgumentByName("setter")!.UnwrapLambda();
