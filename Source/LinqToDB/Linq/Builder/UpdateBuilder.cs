@@ -204,10 +204,10 @@ namespace LinqToDB.Linq.Builder
 							if (collectedTables.Count > 1)
 								throw new LinqToDBException("Could not find join table for update query. Ambiguous tables.");
 
-							var tuple = collectedTables.First();
+							var kvp = collectedTables.First();
 
-							updateContext.TablePath = tuple.path;
-							sequenceTableContext    = tuple.context;
+							updateContext.TablePath = kvp.Value;
+							sequenceTableContext    = kvp.Key;
 						}
 
 						if (QueryHelper.IsEqualTables(sequenceTableContext.SqlTable, intoTableContext.SqlTable, false))
@@ -298,23 +298,23 @@ namespace LinqToDB.Linq.Builder
 			}
 		}
 
-		HashSet<(ITableContext context, Expression path)> CollectTables(ExpressionBuilder builder, Expression expr, Expression rooExpr, Type objectType)
+		Dictionary<ITableContext, Expression> CollectTables(ExpressionBuilder builder, Expression expr, Expression rooExpr, Type objectType)
 		{
-			var result = new HashSet<(ITableContext context, Expression path)>();
+			var result = new Dictionary<ITableContext, Expression>();
 
 			Expression Combine(Expression current, List<MemberInfo> path)
 			{
-				return path.Aggregate(current, (e, m) => Expression.MakeMemberAccess(e, m));
+				return path.Aggregate(current, Expression.MakeMemberAccess);
 			}
 
 			void Collect(Expression current, List<MemberInfo> path)
 			{
-				if (current is ContextRefExpression)
+				if (current is ContextRefExpression or MemberExpression)
 				{
 					var tableCtx = SequenceHelper.GetTableOrCteContext(builder, current);
-					if (tableCtx != null && tableCtx.ObjectType == objectType)
+					if (tableCtx != null && tableCtx.ObjectType == objectType && !result.ContainsKey(tableCtx))
 					{
-						result.Add((tableCtx, Combine(rooExpr, path)));
+						result.Add(tableCtx, Combine(rooExpr, path));
 					}
 				}
 				else if (current is SqlGenericConstructorExpression constructor)
