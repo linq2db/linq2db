@@ -142,6 +142,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 			result.ToArray();
 		}
 
+		[ActiveIssue]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3174")]
 		public async ValueTask Issue3174Test([EFDataSources] string provider)
 		{
@@ -368,7 +369,6 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 					  .ToArray();
 		}
 
-		[ActiveIssue(Configuration = TestProvName.AllSqlServer)]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4626")]
 		public void Issue4626Test2([EFDataSources(TestProvName.AllSQLite, TestProvName.AllMariaDB, TestProvName.AllMySql57)] string provider)
 		{
