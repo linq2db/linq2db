@@ -18,7 +18,7 @@ void DataAnnotationsImpl()
 		{
 			if (p.DisplayName != null)
 			{
-				p.Attributes.Add(new Attribute("Display", "Name=" + ModelGenerator.ToStringLiteral(p.DisplayName)) { IsSeparated = true });
+				p.Attributes.Add(new Attribute("Display", "Name=" + LinqToDB.Tools.ModelGeneration.ModelGenerator.ToStringLiteral(p.DisplayName)) { IsSeparated = true });
 			}
 
 			if (p.IsRequired)
@@ -26,7 +26,7 @@ void DataAnnotationsImpl()
 				var attr = new Attribute("Required") { IsSeparated = true };
 
 				if (p.IsRequiredMessage != null)
-					attr.Parameters.Add(string.Format("ErrorMessage=" + ModelGenerator.ToStringLiteral(p.IsRequiredMessage), p.DisplayName ?? p.Name));
+					attr.Parameters.Add(string.Format("ErrorMessage=" + LinqToDB.Tools.ModelGeneration.ModelGenerator.ToStringLiteral(p.IsRequiredMessage), p.DisplayName ?? p.Name));
 
 				p.Attributes.Add(attr);
 			}
@@ -36,14 +36,14 @@ void DataAnnotationsImpl()
 				var attr = new Attribute("StringLength", p.StringLength.ToString()) { IsSeparated = true };
 
 				if (p.StringLengthMessage != null)
-					attr.Parameters.Add(string.Format("ErrorMessage=" + ModelGenerator.ToStringLiteral(p.StringLengthMessage), p.DisplayName ?? p.Name));
+					attr.Parameters.Add(string.Format("ErrorMessage=" + LinqToDB.Tools.ModelGeneration.ModelGenerator.ToStringLiteral(p.StringLengthMessage), p.DisplayName ?? p.Name));
 
 				p.Attributes.Add(attr);
 
 //				p.Attributes.Add(
 //					new Attribute("StringLength",
 //						p.StringLength.ToString(),
-//						"ErrorMessage=" + ModelGenerator.ToStringLiteral(string.Format(
+//						"ErrorMessage=" + LinqToDB.Tools.ModelGeneration.ModelGenerator.ToStringLiteral(string.Format(
 //							"The {0} must be a string with a maximum length of {1}.",
 //							p.DisplayName ?? "field",
 //							p.StringLength)))

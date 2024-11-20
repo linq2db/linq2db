@@ -23,7 +23,7 @@ namespace Tests.T4.Wpf
 	{
 		#region NotifiedProp1 : double
 
-#if NET472
+#if NET462
 
 		private double _notifiedProp1;
 		public  double  NotifiedProp1
@@ -65,7 +65,7 @@ namespace Tests.T4.Wpf
 
 		#region NotifiedProp2 : int
 
-#if NET472
+#if NET462
 
 		private int _notifiedProp2 = 500;
 		public  int  NotifiedProp2
@@ -107,7 +107,7 @@ namespace Tests.T4.Wpf
 
 		#region NotifiedBrush1 : System.Windows.Media.Brush
 
-#if NET472
+#if NET462
 
 		public System.Windows.Media.Brush NotifiedBrush1
 		{

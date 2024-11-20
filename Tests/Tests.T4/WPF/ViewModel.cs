@@ -1,6 +1,6 @@
 ﻿using System;
 
-#if NET472
+#if NET462
 using System.Windows.Media;
 #endif
 
@@ -9,7 +9,7 @@ namespace Tests.T4.Wpf
 	/// <summary />
 	partial class ViewModel
 	{
-#if NET472
+#if NET462
 		static readonly Brush _normalBrushes   = new SolidColorBrush(Colors.Black);
 		static readonly Brush _negativeBrushes = new SolidColorBrush(Colors.Red);
 
