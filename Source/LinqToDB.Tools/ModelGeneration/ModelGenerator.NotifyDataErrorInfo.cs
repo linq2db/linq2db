@@ -29,9 +29,9 @@ namespace LinqToDB.Tools.ModelGeneration
 
 					if (!cl.Interfaces.Contains("INotifyDataErrorInfo"))
 					{
-						if (!Model.Usings.Contains("System.ComponentModel")) Model.Usings.Add("System.ComponentModel");
-						if (!Model.Usings.Contains("System.Collections"))    Model.Usings.Add("System.Collections");
-						if (!Model.Usings.Contains("System.Linq"))           Model.Usings.Add("System.Linq");
+						Model.Usings.Add("System.ComponentModel");
+						Model.Usings.Add("System.Collections");
+						Model.Usings.Add("System.Linq");
 
 						cl.Interfaces.Add("INotifyDataErrorInfo");
 

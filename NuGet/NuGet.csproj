@@ -9,6 +9,7 @@
 		<ProjectReference Include="..\Source\LinqToDB.Tools\LinqToDB.Tools.csproj" />
 
 		<PackageReference Include="System.Data.OleDb"    />
+		<PackageReference Include="MySqlConnector"       />
 		<PackageReference Include="ClickHouse.Client"    />
 		<PackageReference Include="AdoNetCore.AseClient" />
 		<PackageReference Include="Humanizer.Core"       />

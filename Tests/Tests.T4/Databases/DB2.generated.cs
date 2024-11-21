@@ -397,11 +397,11 @@ namespace DB2DataContext
 
 		#region PersonSelectbykey
 
-		public static int PersonSelectbykey(this TESTDATADB dataConnection, int? iD)
+		public static int PersonSelectbykey(this TESTDATADB dataConnection, int? id)
 		{
 			var parameters = new []
 			{
-				new DataParameter("ID", iD, LinqToDB.DataType.Int32)
+				new DataParameter("ID", id, LinqToDB.DataType.Int32)
 			};
 
 			return dataConnection.ExecuteProc("DB2INST1.PERSON_SELECTBYKEY", parameters);

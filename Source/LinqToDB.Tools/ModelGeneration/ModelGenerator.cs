@@ -468,10 +468,10 @@ namespace LinqToDB.Tools.ModelGeneration
 				GenerationEnvironment.Length--;
 		}
 
-		public void RenderUsings(List<string> usings)
+		public void RenderUsings(HashSet<string> usings)
 		{
 			var q =
-				from ns in usings.Distinct()
+				from ns in usings
 				group ns by ns.Split('.')[0];
 
 			var groups = q.OrderByDescending(ns => ns.Key == "System").ThenBy(ns => ns.Key);
@@ -565,7 +565,7 @@ namespace LinqToDB.Tools.ModelGeneration
 				return name;
 
 			if (n == name.Length)
-				return name.ToLower(CultureInfo.InvariantCulture)!;
+				return name.ToLower(CultureInfo.InvariantCulture);
 
 			n = Math.Max(1, n - 1);
 

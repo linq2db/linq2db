@@ -123,6 +123,9 @@
 		<None    Update="Default\AccessOleDB.tt" Generator="TextTemplatingFileGenerator" LastGenOutput="AccessOleDB.generated.cs" />
 		<Compile Update="Default\AccessOleDB.generated.cs" DesignTime="True" AutoGen="True" DependentUpon="AccessOleDB.tt" />
 
+		<None    Update="Default\ClickHouse.tt" Generator="TextTemplatingFileGenerator" LastGenOutput="ClickHouse.generated.cs" />
+		<Compile Update="Default\ClickHouse.generated.cs" DependentUpon="ClickHouse.tt" DesignTime="True" AutoGen="True" />
+
 		<None    Update="Default\DB2.tt" Generator="TextTemplatingFileGenerator" LastGenOutput="DB2.generated.cs" />
 		<Compile Update="Default\DB2.generated.cs" DesignTime="True" AutoGen="True" DependentUpon="DB2.tt" />
 

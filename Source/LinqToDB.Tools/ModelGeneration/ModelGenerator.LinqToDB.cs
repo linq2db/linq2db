@@ -379,7 +379,7 @@ namespace LinqToDB.Tools.ModelGeneration
 					{
 						TypeBuilder     = () => $"ITable<{t.TypeName}>",
 						Name            = t.AliasPropertyName,
-						GetBodyBuilders = { () => new[] { t.DataContextPropertyName! } },
+						GetBodyBuilders = { () => [t.DataContextPropertyName!] },
 						IsAuto          = false,
 						HasGetter       = true,
 						HasSetter       = false
@@ -566,7 +566,7 @@ namespace LinqToDB.Tools.ModelGeneration
 							TypeBuilder     = c.TypeBuilder,
 							Name            = c.AliasName,
 							GetBodyBuilders = { () => [c.MemberName!] },
-							SetBodyBuilders = { () => new[] { $"{c.MemberName} = value;" } },
+							SetBodyBuilders = { () => [$"{c.MemberName} = value;"] },
 							IsAuto          = false,
 							HasGetter       = true,
 							HasSetter       = true
@@ -639,10 +639,18 @@ namespace LinqToDB.Tools.ModelGeneration
 								if (key.OtherTable.Schema is not null && !key.OtherTable.IsDefaultSchema && schemas.ContainsKey(key.OtherTable.Schema))
 									otherSchema = SchemaNameMapping.TryGetValue(key.OtherTable.Schema, out var sc) ? $"{sc}Schema." : key.OtherTable.Schema + ".";
 
-								aa.Parameters.Add("OtherKey=" + string.Join(" + \", \" + ",
+								string SetOtherKey() => "OtherKey=" + string.Join(" + \", \" + ",
 									key.OtherColumns
-										.Select(c => $"nameof({Model.Namespace.Name}.{otherSchema}{key.OtherTable?.TypeName}.{c.MemberName})")
-										.ToArray()));
+										.Select(c => $"nameof({Model.Namespace.Name}.{otherSchema}{key.OtherTable.TypeName}.{c.MemberName})")
+										.ToArray());
+
+								aa.Parameters.Add(SetOtherKey());
+
+								if (key.OtherTable is TypeBase tb)
+								{
+									var idx = aa.Parameters.Count - 1;
+									tb.OnNameChanged += (_, _) => aa.Parameters[idx] = SetOtherKey();
+								}
 							}
 							else
 							{

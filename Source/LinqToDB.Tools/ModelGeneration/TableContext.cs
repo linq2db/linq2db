@@ -5,18 +5,12 @@ namespace LinqToDB.Tools.ModelGeneration
 	/// <summary>
 	/// For internal use.
 	/// </summary>
-	public class TableContext<TTable,TProcedure>
+	public class TableContext<TTable, TProcedure>(ModelGenerator<TTable, TProcedure> transformation, string tableName)
 		where TTable     : class, ITable, new()
 		where TProcedure : IProcedure<TTable>, new()
 	{
-		public ModelGenerator<TTable,TProcedure> Transformation;
-		public string                            TableName;
-
-		public TableContext(ModelGenerator<TTable,TProcedure> transformation, string tableName)
-		{
-			Transformation = transformation;
-			TableName      = tableName;
-		}
+		public ModelGenerator<TTable,TProcedure> Transformation = transformation;
+		public string                            TableName      = tableName;
 
 		public TableContext<TTable,TProcedure> Column(
 			string  columnName,

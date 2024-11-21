@@ -8,6 +8,7 @@
 	DataContextName   = "TESTDATADB";
 	GenerateDataTypes = true;
 	GenerateDbTypes   = true;
+	GenerateNameOf    = false;
 
 	LoadDB2Metadata(GetConnectionString("DB2"));
 	GenerateModel();

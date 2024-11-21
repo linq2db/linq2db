@@ -6,6 +6,8 @@ namespace NuGet
 	{
 		public static void References()
 		{
+			_ = typeof(MySqlConnector.MySqlConnection);
+			_ = typeof(ClickHouse.Client.ADO.ClickHouseConnection);
 			_ = typeof(IBM.Data.DB2.DB2Connection);
 //			_ = typeof(IBM.Data.Informix.IfxConnection);
 			_ = typeof(AdoNetCore.AseClient.AseConnection);

@@ -10,7 +10,7 @@ namespace LinqToDB.Tools.ModelGeneration
 	{
 		string?         Name   { get; set; }
 		List<ITypeBase> Types  { get; set; }
-		List<string>    Usings { get; set; }
+		HashSet<string> Usings { get; set; }
 
 		void Render(ModelGenerator tt);
 	}
@@ -23,7 +23,7 @@ namespace LinqToDB.Tools.ModelGeneration
 	{
 		public string?         Name   { get; set; }
 		public List<ITypeBase> Types  { get; set; } = [];
-		public List<string>    Usings { get; set; } = [];
+		public HashSet<string> Usings { get; set; } = [];
 
 		public virtual void Render(ModelGenerator tt)
 		{

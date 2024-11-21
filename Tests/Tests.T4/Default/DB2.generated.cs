@@ -175,7 +175,7 @@ namespace Default.DB2
 		/// <summary>
 		/// FK_Doctor_Person (DB2INST1.Person)
 		/// </summary>
-		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false)]
+		[Association(ThisKey=nameof(PersonID), OtherKey=nameof(Default.DB2.DB2INST1_Person.PersonID), CanBeNull=false)]
 		public DB2INST1_Person Person { get; set; } = null!;
 
 		#endregion
@@ -240,7 +240,7 @@ namespace Default.DB2
 		/// <summary>
 		/// FK_SLAVETABLE_MASTERTABLE_BackReference (DB2INST1.SLAVETABLE)
 		/// </summary>
-		[Association(ThisKey="ID1, ID2", OtherKey="ID222222222222222222222222, ID1", CanBeNull=true)]
+		[Association(ThisKey=nameof(ID1) + ", " + nameof(ID2), OtherKey=nameof(Default.DB2.DB2INST1_SLAVETABLE.ID222222222222222222222222) + ", " + nameof(Default.DB2.DB2INST1_SLAVETABLE.ID1), CanBeNull=true)]
 		public IEnumerable<DB2INST1_SLAVETABLE> Slavetables { get; set; } = null!;
 
 		#endregion
@@ -264,7 +264,7 @@ namespace Default.DB2
 		/// <summary>
 		/// FK_Patient_Person (DB2INST1.Person)
 		/// </summary>
-		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false)]
+		[Association(ThisKey=nameof(PersonID), OtherKey=nameof(Default.DB2.DB2INST1_Person.PersonID), CanBeNull=false)]
 		public DB2INST1_Person Person { get; set; } = null!;
 
 		#endregion
@@ -284,13 +284,13 @@ namespace Default.DB2
 		/// <summary>
 		/// FK_Doctor_Person_BackReference (DB2INST1.Doctor)
 		/// </summary>
-		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=true)]
+		[Association(ThisKey=nameof(PersonID), OtherKey=nameof(Default.DB2.DB2INST1_Doctor.PersonID), CanBeNull=true)]
 		public DB2INST1_Doctor? Doctor { get; set; }
 
 		/// <summary>
 		/// FK_Patient_Person_BackReference (DB2INST1.Patient)
 		/// </summary>
-		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=true)]
+		[Association(ThisKey=nameof(PersonID), OtherKey=nameof(Default.DB2.DB2INST1_Patient.PersonID), CanBeNull=true)]
 		public DB2INST1_Patient? Patient { get; set; }
 
 		#endregion
@@ -318,7 +318,7 @@ namespace Default.DB2
 		/// <summary>
 		/// FK_SLAVETABLE_MASTERTABLE (DB2INST1.MASTERTABLE)
 		/// </summary>
-		[Association(ThisKey="ID222222222222222222222222, ID1", OtherKey="ID1, ID2", CanBeNull=false)]
+		[Association(ThisKey=nameof(ID222222222222222222222222) + ", " + nameof(ID1), OtherKey=nameof(Default.DB2.DB2INST1_MASTERTABLE.ID1) + ", " + nameof(Default.DB2.DB2INST1_MASTERTABLE.ID2), CanBeNull=false)]
 		public DB2INST1_MASTERTABLE MASTERTABLE { get; set; } = null!;
 
 		#endregion
@@ -397,11 +397,11 @@ namespace Default.DB2
 
 		#region PersonSelectbykey
 
-		public static int PersonSelectbykey(this TestDataDB dataConnection, int? iD)
+		public static int PersonSelectbykey(this TestDataDB dataConnection, int? id)
 		{
 			var parameters = new []
 			{
-				new DataParameter("ID", iD, LinqToDB.DataType.Int32)
+				new DataParameter("ID", id, LinqToDB.DataType.Int32)
 			};
 
 			return dataConnection.ExecuteProc("DB2INST1.PERSON_SELECTBYKEY", parameters);

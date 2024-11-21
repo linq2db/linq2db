@@ -19,20 +19,39 @@ namespace LinqToDB.Tools.ModelGeneration
 		void Render(ModelGenerator tt);
 	}
 
+	public record NameChangedArgs(string OldName, string? NewName);
+
 	/// <summary>
 	/// For internal use.
 	/// </summary>
 	public abstract class TypeBase : ITypeBase
 	{
 		public AccessModifier   AccessModifier { get; set; } = AccessModifier.Public;
-		public string?          Name           { get; set; }
 		public bool             IsPartial      { get; set; } = true;
 		public List<string>     Comment        { get; set; } = [];
 		public List<IAttribute> Attributes     { get; set; } = [];
 		public string?          Conditional    { get; set; }
 		public string           ClassKeyword   { get; set; } = "class";
 
-		public abstract void Render(ModelGenerator tt);
+		private string? _name;
+		public  string?  Name
+		{
+			get => _name;
+			set
+			{
+				var oldName = _name;
+
+				_name = value;
+
+				if (oldName != null && oldName != _name)
+					OnNameChanged?.Invoke(this, new (oldName, _name));
+			}
+		}
+
+		public delegate void               OnNameChangedHandler(object sender, NameChangedArgs e);
+		public event OnNameChangedHandler? OnNameChanged;
+
+		public abstract void Render(ModelGenerator     tt);
 
 		protected virtual void BeginConditional(ModelGenerator tt)
 		{
