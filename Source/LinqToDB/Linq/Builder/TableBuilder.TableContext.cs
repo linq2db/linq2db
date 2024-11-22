@@ -124,7 +124,7 @@ namespace LinqToDB.Linq.Builder
 
 				attr.SetTable(builder.DataOptions, (context: this, builder), builder.DataContext.CreateSqlProvider(), mappingSchema, SqlTable, mc, static (context, a, _, inline) =>
 				{
-					if (context.builder.CanBeCompiled(a, false))
+					if (context.builder.CanBeEvaluatedOnClient(a))
 					{
 						var param = context.builder.ParametersContext.BuildParameter(context.context, a, columnDescriptor : null, forceConstant : true, doNotCheckCompatibility : true);
 						if (param != null)

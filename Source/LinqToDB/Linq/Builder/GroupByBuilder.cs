@@ -157,8 +157,6 @@ namespace LinqToDB.Linq.Builder
 			var groupBy = new GroupByContext(groupingSubquery, sequenceExpr, groupingType, key, keyRef, currentPlaceholders, element,
 				!builder.DataOptions.LinqOptions.GuardGrouping || builder.IsGroupingGuardDisabled, true);
 
-			// Will be used for eager loading generation
-			element.GroupByContext = groupBy;
 			// Will be used for completing GroupBy part
 			key.GroupByContext = groupBy;
 
@@ -300,8 +298,6 @@ namespace LinqToDB.Linq.Builder
 
 			public LambdaExpression Lambda   { get; set; }
 			public IBuildContext    Sequence { get; }
-
-			public GroupByContext GroupByContext { get; set; } = null!;
 
 			public override Expression MakeExpression(Expression path, ProjectFlags flags)
 			{
@@ -671,7 +667,6 @@ namespace LinqToDB.Linq.Builder
 					return GetEnumerator();
 				}
 			}
-
 			class GroupingEnumerable<TKey, TElement> : IResultEnumerable<IGrouping<TKey, TElement>>
 			{
 				readonly IResultEnumerable<TElement> _elements;

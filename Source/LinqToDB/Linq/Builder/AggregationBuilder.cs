@@ -9,7 +9,6 @@ namespace LinqToDB.Linq.Builder
 	using Common.Internal;
 	using Extensions;
 	using LinqToDB.Expressions;
-	using Mapping;
 	using SqlQuery;
 
 	[BuildsMethodCall("Average", "Min", "Max", "Sum", "Count", "LongCount")]
@@ -131,9 +130,6 @@ namespace LinqToDB.Linq.Builder
 
 			return aggregationType;
 		}
-
-		public override bool IsAggregationContext(ExpressionBuilder builder, BuildInfo buildInfo)
-			=> true;
 
 		static string[] AllowedNames = [nameof(Queryable.Select), nameof(Queryable.Where), nameof(Queryable.Distinct)];
 

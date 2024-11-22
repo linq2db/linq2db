@@ -12,6 +12,7 @@ namespace LinqToDB.Linq.Builder
 {
 	using Common;
 	using Common.Internal;
+	using DataProvider;
 	using Extensions;
 	using Infrastructure;
 	using LinqToDB.Expressions;
@@ -20,7 +21,6 @@ namespace LinqToDB.Linq.Builder
 	using Tools;
 	using Translation;
 	using Visitors;
-	using DataProvider;
 
 	internal sealed partial class ExpressionBuilder : IExpressionEvaluator
 	{
@@ -30,13 +30,6 @@ namespace LinqToDB.Linq.Builder
 		{
 			builder = FindBuilderImpl(info, this);
 			return builder != null;
-		}
-
-		public ISequenceBuilder FindBuilder(BuildInfo info)
-		{
-			return FindBuilderImpl(info, this) is {} builder
-				? builder 
-				: throw new LinqException($"Sequence '{SqlErrorExpression.PrepareExpressionString(info.Expression)}' cannot be converted to SQL.");
 		}
 
 		// Declaring a partial FindBuilderImpl so that the source generator doesn't change semantics
@@ -79,17 +72,14 @@ namespace LinqToDB.Linq.Builder
 			ParametersContext                 parametersContext,
 			IDataContext                      dataContext,
 			Expression                        expression,
-			ParameterExpression[]?            compiledParameters,
 			object?[]?                        parameterValues)
 		{
 			_query             = query;
 			ValidateSubqueries = validateSubqueries;
 
-			CompiledParameters = compiledParameters;
 			ParameterValues    = parameterValues;
 			DataContext        = dataContext;
 			DataOptions        = dataContext.Options;
-			OriginalExpression = expression;
 
 			_memberTranslator = ((IInfrastructure<IServiceProvider>)dataContext).Instance.GetRequiredService<IMemberTranslator>();
 
@@ -111,7 +101,6 @@ namespace LinqToDB.Linq.Builder
 		#region Public Members
 
 		public readonly IDataContext           DataContext;
-		public readonly Expression             OriginalExpression;
 		public readonly Expression             Expression;
 		public readonly ParameterExpression[]? CompiledParameters;
 		public readonly object?[]?             ParameterValues;
@@ -406,36 +395,11 @@ namespace LinqToDB.Linq.Builder
 
 		#region ConvertExpression
 
-		public ParameterExpression? SequenceParameter;
-
 		public Expression ConvertExpressionTree(Expression expression)
 		{
 			var expr = ExposeExpression(expression, DataContext, _optimizationContext, ParameterValues, optimizeConditions:false, compactBinary:true);
 
 			return expr;
-		}
-
-		#endregion
-
-		#region ConvertParameters
-
-		Expression ConvertParameters(Expression expression)
-		{
-			if (CompiledParameters == null) return expression;
-
-			return expression.Transform(CompiledParameters, static(compiledParameters, expr) =>
-			{
-				if (expr.NodeType == ExpressionType.Parameter)
-				{
-					var idx = Array.IndexOf(compiledParameters, (ParameterExpression)expr);
-					if (idx >= 0)
-						return Expression.Convert(
-							Expression.ArrayIndex(ParametersParam, ExpressionInstances.Int32(idx)),
-							expr.Type);
-				}
-
-				return expr;
-			});
 		}
 
 		#endregion
@@ -458,7 +422,6 @@ namespace LinqToDB.Linq.Builder
 		#region OptimizeExpression
 
 		public static readonly MethodInfo[] EnumerableMethods      = typeof(Enumerable     ).GetMethods();
-		public static readonly MethodInfo[] QueryableMethods       = typeof(Queryable      ).GetMethods();
 
 		#endregion
 
@@ -565,7 +528,7 @@ namespace LinqToDB.Linq.Builder
 
 		public bool CanBeEvaluated(Expression expression)
 		{
-			return CanBeCompiled(expression, false);
+			return CanBeEvaluatedOnClient(expression);
 		}
 
 		public object? Evaluate(Expression expression)

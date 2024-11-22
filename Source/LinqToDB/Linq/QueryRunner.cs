@@ -19,13 +19,13 @@ namespace LinqToDB.Linq
 	using Common.Logging;
 	using Data;
 	using Extensions;
+	using Infrastructure;
 	using Interceptors;
+	using LinqToDB.Common.Internal;
 	using LinqToDB.Expressions;
 	using Reflection;
 	using SqlQuery;
 	using Tools;
-	using Infrastructure;
-	using LinqToDB.Common.Internal;
 
 	static partial class QueryRunner
 	{
@@ -404,12 +404,6 @@ namespace LinqToDB.Linq
 
 		#region SetRunQuery
 
-		public delegate int TakeSkipDelegate(
-			Query         query,
-			Expression    expression,
-			IDataContext? dataContext,
-			object?[]?    ps);
-
 		static Func<Query,IDataContext,Mapper<T>,Expression,object?[]?,object?[]?,int, IResultEnumerable<T>> GetExecuteQuery<T>(
 				Query                                                                                         query,
 				Func<Query,IDataContext,Mapper<T>,Expression,object?[]?,object?[]?,int, IResultEnumerable<T>> queryFunc)
@@ -628,124 +622,6 @@ namespace LinqToDB.Linq
 		)
 		{
 			return new BasicResultEnumerable<T>(dataContext, expression, query, ps, preambles, queryNumber, mapper);
-		}
-
-		sealed class AsyncEnumeratorImpl<T> : IAsyncEnumerator<T>
-		{
-			readonly Query             _query;
-			readonly IDataContext      _dataContext;
-			readonly Mapper<T>         _mapper;
-			readonly Expression        _expression;
-			readonly object?[]?        _ps;
-			readonly object?[]?        _preambles;
-			readonly int               _queryNumber;
-			readonly TakeSkipDelegate? _skipAction;
-			readonly TakeSkipDelegate? _takeAction;
-			readonly CancellationToken _cancellationToken;
-
-			IQueryRunner?     _queryRunner;
-			IDataReaderAsync? _dataReader;
-			int               _take;
-
-			public AsyncEnumeratorImpl(
-				Query             query,
-				IDataContext      dataContext,
-				Mapper<T>         mapper,
-				Expression        expression,
-				object?[]?        ps,
-				object?[]?        preambles,
-				int               queryNumber,
-				TakeSkipDelegate? skipAction,
-				TakeSkipDelegate? takeAction,
-				CancellationToken cancellationToken)
-			{
-				_query             = query;
-				_dataContext       = dataContext;
-				_mapper            = mapper;
-				_expression        = expression;
-				_ps                = ps;
-				_preambles         = preambles;
-				_queryNumber       = queryNumber;
-				_skipAction        = skipAction;
-				_takeAction        = takeAction;
-				_cancellationToken = cancellationToken;
-			}
-
-			public T Current { get; set; } = default!;
-
-			public async ValueTask<bool> MoveNextAsync()
-			{
-				if (_queryRunner == null)
-				{
-					_queryRunner = _dataContext.GetQueryRunner(_query, _dataContext, _queryNumber, _expression, _ps, _preambles);
-					_dataReader  = await _queryRunner.ExecuteReaderAsync(_cancellationToken).ConfigureAwait(false);
-
-					var skip = _skipAction?.Invoke(_query, _expression, _dataContext, _ps) ?? 0;
-
-					while (skip-- > 0)
-					{
-						if (!await _dataReader.ReadAsync(_cancellationToken).ConfigureAwait(false))
-							return false;
-					}
-
-					_take = _takeAction?.Invoke(_query, _expression, _dataContext, _ps) ?? int.MaxValue;
-				}
-
-				if (_take-- > 0 && await _dataReader!.ReadAsync(_cancellationToken).ConfigureAwait(false))
-				{
-					DbDataReader dataReader;
-
-					if (_dataContext is IInterceptable<IUnwrapDataObjectInterceptor> { Interceptor: { } interceptor })
-					{
-						using (ActivityService.Start(ActivityID.UnwrapDataObjectInterceptorUnwrapDataReader))
-							dataReader = interceptor.UnwrapDataReader(_dataContext, _dataReader.DataReader);
-					}
-					else
-					{
-						dataReader = _dataReader.DataReader;
-					}
-
-					var mapperInfo = _mapper.GetMapperInfo(_dataContext, _queryRunner, dataReader);
-
-					Current = _mapper.Map(_dataContext, _queryRunner, dataReader, ref mapperInfo);
-
-					_queryRunner.RowsCount++;
-
-					return true;
-				}
-
-				return false;
-			}
-
-			public void Dispose()
-			{
-				_dataReader ?.Dispose();
-				_queryRunner?.Dispose();
-
-				_queryRunner = null;
-				_dataReader  = null;
-			}
-
-			public async ValueTask DisposeAsync()
-			{
-				if (_dataReader != null)
-					await _dataReader.DisposeAsync().ConfigureAwait(false);
-
-				if (_queryRunner != null)
-					await _queryRunner.DisposeAsync().ConfigureAwait(false);
-
-				_queryRunner = null;
-				_dataReader  = null;
-			}
-		}
-
-		public static void WrapRunQuery<TSource, TResult>(
-			Query<TSource>                                               query,
-			Query<TResult>                                               destQuery,
-			Func<IResultEnumerable<TSource>, IResultEnumerable<TResult>> wrapper)
-		{
-			var executeQuery = query.GetResultEnumerable;
-			destQuery.GetResultEnumerable = (db, expr, ps, preambles) => wrapper(executeQuery(db, expr, ps, preambles));
 		}
 
 		static void SetRunQuery<T>(

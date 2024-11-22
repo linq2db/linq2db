@@ -21,9 +21,9 @@ namespace LinqToDB.Linq.Builder
 		{
 			get
 			{
-				if (_cteTable == null!)
+				if (_cteTable == null)
 				{
-					if (CteContext != null!)
+					if (CteContext != null)
 						_cteTable = new SqlCteTable(CteContext.CteClause, ObjectType);
 					else
 						throw new InvalidOperationException("CteContext not initialized");

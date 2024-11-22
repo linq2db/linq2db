@@ -10,7 +10,7 @@ namespace LinqToDB.Linq.Builder
 
 	internal partial class MergeBuilder
 	{
-        sealed class MergeContext : SequenceContextBase
+		sealed class MergeContext : SequenceContextBase
 		{
 			public MergeContext(SqlMergeStatement merge, IBuildContext target)
 				: base(null, target, null)
@@ -65,7 +65,7 @@ namespace LinqToDB.Linq.Builder
 			public override Expression MakeExpression(Expression path, ProjectFlags flags)
 			{
 				if (SequenceHelper.IsSameContext(path, this) && flags.IsExpression() &&
-				    (Kind == MergeKind.MergeWithOutput || Kind == MergeKind.MergeWithOutputSource))
+					(Kind == MergeKind.MergeWithOutput || Kind == MergeKind.MergeWithOutputSource))
 				{
 					if (OutputExpression == null || OutputContext == null)
 						throw new InvalidOperationException();

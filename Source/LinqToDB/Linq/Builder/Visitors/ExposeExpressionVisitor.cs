@@ -1,21 +1,19 @@
 ﻿using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 
 namespace LinqToDB.Linq.Builder.Visitors
 {
-	using Common;
 	using Extensions;
+	using LinqToDB.Common.Internal;
+	using LinqToDB.Expressions;
 	using Mapping;
 	using Reflection;
-	using LinqToDB.Expressions;
-	using LinqToDB.Common.Internal;
-	using System.Globalization;
 
 	class ExposeExpressionVisitor : ExpressionVisitorBase, IExpressionEvaluator
 	{
@@ -522,7 +520,7 @@ namespace LinqToDB.Linq.Builder.Visitors
 		bool IsCompilable(Expression expression)
 		{
 			using var visitor = _isCompilableVisitorPool.Allocate();
-			return visitor.Value.IsCompilable(expression, _optimizationContext);
+			return visitor.Value.CanBeEvaluatedOnClient(expression, _optimizationContext);
 		}
 
 		interface IConvertHelper
@@ -822,26 +820,9 @@ namespace LinqToDB.Linq.Builder.Visitors
 
 		#region Helper methods
 
-		class IsCompilableVisitor : ExpressionVisitorBase
+		sealed class IsCompilableVisitor : CanBeEvaluatedOnClientCheckVisitorBase
 		{
-			bool _canBeCompiled;
-			bool _inMethod;
-
-			Stack<ReadOnlyCollection<ParameterExpression>>? _allowedParameters;
-
-			ExpressionTreeOptimizationContext _optimizationContext = default!;
-
-			bool CanBeCompiledFlag
-			{
-				get => _canBeCompiled;
-				set
-				{
-					_canBeCompiled = value;
-				}
-			}
-
-			public bool IsCompilable(Expression  expression,
-				ExpressionTreeOptimizationContext optimizationContext)
+			public bool CanBeEvaluatedOnClient(Expression expression, ExpressionTreeOptimizationContext optimizationContext)
 			{
 				Cleanup();
 
@@ -849,146 +830,18 @@ namespace LinqToDB.Linq.Builder.Visitors
 
 				_ = Visit(expression);
 
-				return _canBeCompiled;
-			}
-
-			public override void Cleanup()
-			{
-				_canBeCompiled       = true;
-				_inMethod            = false;
-				_optimizationContext = default!;
-
-				_allowedParameters?.Clear();
-
-				base.Cleanup();
-			}
-
-			public override Expression? Visit(Expression? node)
-			{
-				if (!_canBeCompiled)
-					return node;
-
-				return base.Visit(node);
-			}
-
-			protected override Expression VisitLambda<T>(Expression<T> node)
-			{
-				if (!_inMethod)
-				{
-					CanBeCompiledFlag = false;
-					return node;
-				}
-
-				_allowedParameters ??= new();
-
-				_allowedParameters.Push(node.Parameters);
-
-				_ = base.VisitLambda(node);
-
-				_allowedParameters.Pop();
-
-				return node;
+				return _canBeEvaluated;
 			}
 
 			protected override Expression VisitParameter(ParameterExpression node)
 			{
 				if (node == ExpressionBuilder.ParametersParam)
 				{
-					CanBeCompiledFlag = false;
+					_canBeEvaluated = false;
 					return node;
 				}
 
-				var isAllowed = false;
-				if (_allowedParameters != null)
-				{
-					foreach (var allowedList in _allowedParameters)
-					{
-						if (allowedList.Contains(node))
-						{
-							isAllowed = true;
-							break;
-						}
-					}
-				}
-
-				if (!isAllowed)
-					CanBeCompiledFlag = false;
-
-				return node;
-			}
-
-			internal override Expression VisitContextRefExpression(ContextRefExpression node)
-			{
-				CanBeCompiledFlag = false;
-				return node;
-			}
-
-			internal override Expression VisitSqlErrorExpression(SqlErrorExpression node)
-			{
-				CanBeCompiledFlag = false;
-				return node;
-			}
-
-			public override Expression VisitSqlPlaceholderExpression(SqlPlaceholderExpression node)
-			{
-				CanBeCompiledFlag = false;
-				return node;
-			}
-
-			internal override Expression VisitSqlGenericParamAccessExpression(SqlGenericParamAccessExpression node)
-			{
-				CanBeCompiledFlag = false;
-				return node;
-			}
-
-			internal override Expression VisitSqlEagerLoadExpression(SqlEagerLoadExpression node)
-			{
-				CanBeCompiledFlag = false;
-				return node;
-			}
-
-			protected override Expression VisitMethodCall(MethodCallExpression node)
-			{
-				if (!CanBeCompiledFlag)
-				{
-					return node;
-				}
-
-				if (_optimizationContext.IsServerSideOnly(node, false))
-					CanBeCompiledFlag = false;
-
-				var save = _inMethod;
-				_inMethod = true;
-
-				base.VisitMethodCall(node);
-
-				_inMethod = save;
-
-				return node;
-			}
-
-			internal override SqlGenericConstructorExpression.Assignment VisitSqlGenericAssignment(SqlGenericConstructorExpression.Assignment assignment)
-			{
-				CanBeCompiledFlag = false;
-				return assignment;
-			}
-
-			internal override SqlGenericConstructorExpression.Parameter VisitSqlGenericParameter(SqlGenericConstructorExpression.Parameter parameter)
-			{
-				CanBeCompiledFlag = false;
-				return parameter;
-			}
-
-			public override Expression VisitSqlGenericConstructorExpression(SqlGenericConstructorExpression node)
-			{
-				CanBeCompiledFlag = false;
-				return node;
-			}
-
-			public override Expression VisitSqlQueryRootExpression(SqlQueryRootExpression node)
-			{
-				CanBeCompiledFlag = false;
-				return node;
+				return base.VisitParameter(node);
 			}
 		}
 

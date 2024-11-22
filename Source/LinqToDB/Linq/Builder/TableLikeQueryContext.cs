@@ -92,7 +92,6 @@ namespace LinqToDB.Linq.Builder
 			return lambdaExpression.GetBody(TargetPropAccess);
 		}
 
-
 		class CorrectingVisitor: ExpressionVisitorBase
 		{
 			public   ParameterExpression  TargetParam      { get; }
@@ -354,18 +353,6 @@ namespace LinqToDB.Linq.Builder
 		public override SqlStatement GetResultStatement()
 		{
 			return SubqueryContext.GetResultStatement();
-		}
-
-		public static bool HasAssociation(ExpressionBuilder builder, Expression expression)
-		{
-			var result = null != expression.Find(builder, static (builder, expr) =>
-			{
-				if (builder.IsAssociation(expr, out _))
-					return true;
-				return false;
-			});
-
-			return result;
 		}
 
 		class ProjectionHelper<TTarget, TSource>

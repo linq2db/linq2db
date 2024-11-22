@@ -217,42 +217,6 @@ namespace LinqToDB.Linq.Builder
 			return true;
 		}
 
-		int _gettingSubquery;
-
-		public IBuildContext? GetSubQuery(IBuildContext context, Expression expr, ProjectFlags flags, out bool isSequence, out string? errorMessage)
-		{
-			var info = new BuildInfo(context, expr, new SelectQuery())
-			{
-				CreateSubQuery = true,
-			};
-
-			if (flags.IsForceOuter())
-			{
-				info.SourceCardinality = SourceCardinality.ZeroOrMany;
-			}
-
-			++_gettingSubquery;
-			var buildResult = TryBuildSequence(info);
-			--_gettingSubquery;
-
-			isSequence = buildResult.IsSequence;
-
-			if (buildResult.BuildContext != null)
-			{
-				if (_gettingSubquery == 0)
-				{
-					++_gettingSubquery;
-					var isSupported = IsSupportedSubquery(context, buildResult.BuildContext, out errorMessage);
-					--_gettingSubquery;
-					if (!isSupported)
-						return null;
-				}
-			}
-
-			errorMessage = buildResult.AdditionalDetails;
-			return buildResult.BuildContext;
-		}
-
 		#endregion
 
 		#region ConvertExpression
@@ -320,11 +284,6 @@ namespace LinqToDB.Linq.Builder
 			return _buildVisitor.UsingColumnDescriptor(columnDescriptor);
 		}
 
-		public IDisposable UsingBuildFlags(BuildFlags buildFlags)
-		{
-			return _buildVisitor.UsingBuildFlags(buildFlags);
-		}
-
 		public static SqlPlaceholderExpression CreatePlaceholder(IBuildContext? context, ISqlExpression sqlExpression,
 			Expression path, Type? convertType = null, string? alias = null, int? index = null, Expression? trackingPath = null)
 		{
@@ -373,15 +332,6 @@ namespace LinqToDB.Linq.Builder
 
 		#endregion
 
-		#region IsServerSideOnly
-
-		public bool IsServerSideOnly(Expression expr, bool inProjection)
-		{
-			return _optimizationContext.IsServerSideOnly(expr, inProjection);
-		}
-
-		#endregion
-
 		#region CanBeConstant
 
 		public bool CanBeConstant(Expression expr)
@@ -395,11 +345,14 @@ namespace LinqToDB.Linq.Builder
 
 		#endregion
 
-		#region CanBeCompiled
+		#region CanBeEvaluatedOnClient
 
-		public bool CanBeCompiled(Expression expr, bool inProjection)
+		/// <summary>
+		/// Check if <paramref name="expr"/> could be evaluated on client side.
+		/// </summary>
+		public bool CanBeEvaluatedOnClient(Expression expr)
 		{
-			return _optimizationContext.CanBeCompiled(expr, inProjection);
+			return _optimizationContext.CanBeEvaluatedOnClient(expr);
 		}
 
 		#endregion
@@ -471,33 +424,6 @@ namespace LinqToDB.Linq.Builder
 		#region Predicate Converter
 
 		#region ConvertCompare
-
-		static LambdaExpression BuildMemberPathLambda(Expression path)
-		{
-			var memberPath = new List<MemberInfo>();
-
-			var current = path;
-			do
-			{
-				if (current is MemberExpression me)
-				{
-					current = me.Expression!;
-					memberPath.Add(me.Member);
-				}
-				else
-					break;
-
-			} while (true);
-
-			var        param = Expression.Parameter(current.Type, "o");
-			Expression body  = param;
-			for (int i = memberPath.Count - 1; i >= 0; i--)
-			{
-				body = Expression.MakeMemberAccess(body, memberPath[i]);
-			}
-
-			return Expression.Lambda(body, param);
-		}
 
 		public bool TryGenerateComparison(
 			IBuildContext?                               context,
@@ -621,28 +547,6 @@ namespace LinqToDB.Linq.Builder
 				typeResult = typeResult.WithLength(ca.Length);
 
 			return typeResult;
-		}
-
-		sealed class GetDataTypeContext
-		{
-			public GetDataTypeContext(DbDataType baseType, MappingSchema mappingSchema)
-			{
-				DataType      = baseType.DataType;
-				DbType        = baseType.DbType;
-				Length        = baseType.Length;
-				Precision     = baseType.Precision;
-				Scale         = baseType.Scale;
-
-				MappingSchema = mappingSchema;
-			}
-
-			public DataType      DataType;
-			public string?       DbType;
-			public int?          Length;
-			public int?          Precision;
-			public int?          Scale;
-
-			public MappingSchema MappingSchema { get; }
 		}
 
 		#endregion
@@ -877,11 +781,6 @@ namespace LinqToDB.Linq.Builder
 
 		#region Helpers
 
-		public IBuildContext? GetContext(IBuildContext? current, Expression? expression)
-		{
-			throw new NotImplementedException();
-		}
-
 		bool IsNullConstant(Expression expr)
 		{
 			// TODO: is it correct to return true for DefaultValueExpression for non-reference type or when default value
@@ -924,7 +823,7 @@ namespace LinqToDB.Linq.Builder
 
 			// Do not modify parameters
 			//
-			if (CanBeCompiled(expr, false))
+			if (CanBeEvaluatedOnClient(expr))
 				return expr;
 
 			switch (expr.NodeType)

@@ -152,7 +152,7 @@ namespace LinqToDB.Linq.Translation
 
 		Expression? TranslateMathRoundMethod(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)
 		{
-			if ((translationFlags & TranslationFlags.Expression) != 0 && translationContext.CanBeCompiled(methodCall, translationFlags))
+			if ((translationFlags & TranslationFlags.Expression) != 0 && translationContext.CanBeEvaluatedOnClient(methodCall))
 				return null;
 
 			var routing = MidpointRounding.ToEven;
@@ -160,7 +160,7 @@ namespace LinqToDB.Linq.Translation
 			if (!translationContext.TranslateToSqlExpression(methodCall.Arguments[0], out var translatedValue))
 				return null;
 
-			if (translationFlags.HasFlag(TranslationFlags.Expression) && methodCall.Arguments.Skip(1).All(a => translationContext.CanBeCompiled(a, translationFlags)))
+			if (translationFlags.HasFlag(TranslationFlags.Expression) && methodCall.Arguments.Skip(1).All(translationContext.CanBeEvaluatedOnClient))
 				return null;
 
 			ISqlExpression? precision = null;
@@ -205,13 +205,13 @@ namespace LinqToDB.Linq.Translation
 
 		Expression? TranslateRoundToEvenMethod(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)
 		{
-			if ((translationFlags & TranslationFlags.Expression) != 0 && translationContext.CanBeCompiled(methodCall, translationFlags))
+			if ((translationFlags & TranslationFlags.Expression) != 0 && translationContext.CanBeEvaluatedOnClient(methodCall))
 				return null;
 
 			if (!translationContext.TranslateToSqlExpression(methodCall.Arguments[0], out var translatedValue))
 				return null;
 
-			if (translationFlags.HasFlag(TranslationFlags.Expression) && methodCall.Arguments.Skip(1).All(a => translationContext.CanBeCompiled(a, translationFlags)))
+			if (translationFlags.HasFlag(TranslationFlags.Expression) && methodCall.Arguments.Skip(1).All(translationContext.CanBeEvaluatedOnClient))
 				return null;
 
 			ISqlExpression? precision = null;
@@ -237,13 +237,13 @@ namespace LinqToDB.Linq.Translation
 
 		Expression? TranslateRoundAwayFromZero(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)
 		{
-			if ((translationFlags & TranslationFlags.Expression) != 0 && translationContext.CanBeCompiled(methodCall, translationFlags))
+			if ((translationFlags & TranslationFlags.Expression) != 0 && translationContext.CanBeEvaluatedOnClient(methodCall))
 				return null;
 
 			if (!translationContext.TranslateToSqlExpression(methodCall.Arguments[0], out var translatedValue))
 				return null;
 
-			if (translationFlags.HasFlag(TranslationFlags.Expression) && methodCall.Arguments.Skip(1).All(a => translationContext.CanBeCompiled(a, translationFlags)))
+			if (translationFlags.HasFlag(TranslationFlags.Expression) && methodCall.Arguments.Skip(1).All(translationContext.CanBeEvaluatedOnClient))
 				return null;
 
 			ISqlExpression? precision = null;
@@ -269,7 +269,7 @@ namespace LinqToDB.Linq.Translation
 
 		Expression? TranslatePow(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)
 		{
-			if ((translationFlags & TranslationFlags.Expression) != 0 && translationContext.CanBeCompiled(methodCall, translationFlags))
+			if ((translationFlags & TranslationFlags.Expression) != 0 && translationContext.CanBeEvaluatedOnClient(methodCall))
 				return null;
 
 			if (!translationContext.TranslateToSqlExpression(methodCall.Arguments[0], out var translatedX))

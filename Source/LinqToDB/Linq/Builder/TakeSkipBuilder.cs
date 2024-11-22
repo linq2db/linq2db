@@ -1,5 +1,4 @@
-﻿using System;
-using System.Linq.Expressions;
+﻿using System.Linq.Expressions;
 
 namespace LinqToDB.Linq.Builder
 {
@@ -49,7 +48,7 @@ namespace LinqToDB.Linq.Builder
 					if (!builder.TryConvertToSql(sequence, arg, out expr!))
 						return BuildSequenceResult.Error(arg);
 
-					if (expr.ElementType == QueryElementType.SqlValue && builder.CanBeCompiled(methodCall.Arguments[1], false))
+					if (expr.ElementType == QueryElementType.SqlValue && builder.CanBeEvaluatedOnClient(methodCall.Arguments[1]))
 					{
 						var param = builder.ParametersContext.BuildParameter(sequence, methodCall.Arguments[1], null, forceConstant : true, forceNew : true)!.SqlParameter;
 						param.Name             = methodCall.Method.Name == "Take" ? "take" : "skip";

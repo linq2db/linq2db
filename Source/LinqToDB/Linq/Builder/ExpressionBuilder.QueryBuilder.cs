@@ -1,14 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using System.Data.Common;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq.Expressions;
 using System.Runtime.CompilerServices;
 
 namespace LinqToDB.Linq.Builder
 {
-	using Extensions;
 	using Common;
+	using Extensions;
 	using LinqToDB.Expressions;
 	using SqlQuery;
 
@@ -336,18 +336,12 @@ namespace LinqToDB.Linq.Builder
 			return new SqlErrorExpression(expression);
 		}
 
-		public static bool HasError(Expression expression)
-		{
-			return null != expression.Find(0, (_, e) => e is SqlErrorExpression);
-		}
-
 		public void RegisterExtensionAccessors(Expression expression)
 		{
 			void Register(Expression expr)
 			{
-				if (!expr.Type.IsScalar() && CanBeCompiled(expr, true))
+				if (!expr.Type.IsScalar() && CanBeEvaluatedOnClient(expr))
 					ParametersContext.ApplyAccessors(expr, true);
-
 			}
 
 			// Extensions may have instance reference. Try to register them as parameterized to disallow caching objects in Expression Tree
@@ -389,12 +383,6 @@ namespace LinqToDB.Linq.Builder
 			generator.AddExpression(expression);
 
 			var result = generator.Build();
-			return result;
-		}
-
-		public Expression CorrectRoot(IBuildContext? currentContext, Expression expr)
-		{
-			var result = BuildRootExpression(expr);
 			return result;
 		}
 
@@ -454,7 +442,7 @@ namespace LinqToDB.Linq.Builder
 					}
 
 					var attr = pi.Member.GetExpressionAttribute(MappingSchema);
-					return attr != null && (attr.PreferServerSide || enforceServerSide) && !CanBeCompiled(expr, false);
+					return attr != null && (attr.PreferServerSide || enforceServerSide) && !CanBeEvaluatedOnClient(expr);
 				}
 
 				case ExpressionType.Call:
@@ -466,7 +454,7 @@ namespace LinqToDB.Linq.Builder
 						return GetVisitor(enforceServerSide).Find(l.Body.Unwrap()) != null;
 
 					var attr = pi.Method.GetExpressionAttribute(MappingSchema);
-					return attr != null && (attr.PreferServerSide || enforceServerSide) && !CanBeCompiled(expr, false);
+					return attr != null && (attr.PreferServerSide || enforceServerSide) && !CanBeEvaluatedOnClient(expr);
 				}
 
 				default:
@@ -643,13 +631,5 @@ namespace LinqToDB.Linq.Builder
 		}
 
 		#endregion
-
-		#region BuildMultipleQuery
-
-		public Expression? AssociationRoot;
-		public Stack<Tuple<AccessorMember, IBuildContext, List<LoadWithInfo[]>?>>? AssociationPath;
-
-		#endregion
-
 	}
 }

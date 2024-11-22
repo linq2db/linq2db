@@ -592,19 +592,6 @@ namespace LinqToDB.Linq.Builder
 			public Expression  FieldExpression { get; }
 			public Expression? ValueExpression { get; }
 			public bool        ForceParameter  { get; }
-
-			public SetExpressionEnvelope WithValueExpression(Expression? valueExpression)
-			{
-				if (valueExpression == null || ValueExpression == null)
-				{
-					if (ReferenceEquals(ValueExpression, valueExpression))
-						return this;
-				}
-				else if (ExpressionEqualityComparer.Instance.Equals(ValueExpression, valueExpression))
-					return this;
-
-				return new SetExpressionEnvelope(FieldExpression, valueExpression, ForceParameter);
-			}
 		}
 
 		#endregion

@@ -32,7 +32,6 @@ namespace LinqToDB.Linq.Builder
 		public IBuildContext? Parent                   { get; set; }
 		public Expression     Expression               { get; set; }
 		public SelectQuery    SelectQuery              { get; set; }
-		public bool           CopyTable                { get; set; }
 		public bool           CreateSubQuery           { get; set; }
 		public bool           AssociationsAsSubQueries { get; set; }
 		public bool           IsAssociation            { get; set; }
@@ -99,7 +98,5 @@ namespace LinqToDB.Linq.Builder
 					SequenceInfo.InlineParameters = value;
 			}
 		}
-
-
 	}
 }

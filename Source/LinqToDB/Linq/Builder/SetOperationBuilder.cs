@@ -1226,9 +1226,6 @@ namespace LinqToDB.Linq.Builder
 				return true;
 			}
 
-			// For Set we have to ensure hat columns are not optimized
-			protected override bool OptimizeColumns => false;
-
 			public override IBuildContext Clone(CloningContext context)
 			{
 				var cloned = new SetOperationContext(_setOperation, context.CloneElement(SelectQuery),
