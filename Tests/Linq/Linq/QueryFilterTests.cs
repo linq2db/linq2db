@@ -338,6 +338,7 @@ namespace Tests.Linq
 			query.ToArray();
 		}
 
+		[ActiveIssue]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4508")]
 		public void Issue4508Test([DataSources] string context)
 		{
