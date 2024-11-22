@@ -15,7 +15,7 @@ namespace LinqToDB.Linq.Builder
 	{
 		public static Type GetEnumerableElementType(Type type, MappingSchema mappingSchema)
 		{
-			if (!IsEnumerableType(type, mappingSchema))
+			if (!mappingSchema.IsCollectionType(type))
 				return type;
 			if (type.IsArray)
 				return type.GetElementType()!;
@@ -24,13 +24,6 @@ namespace LinqToDB.Linq.Builder
 			return type.GetGenericArguments()[0];
 		}
 
-		public static bool IsEnumerableType(Type type, MappingSchema mappingSchema)
-		{
-			if (mappingSchema.IsScalarType(type))
-				return false;
-			if (!typeof(IEnumerable<>).IsSameOrParentOf(type))
-				return false;
-			return true;
-		}
+		
 	}
 }

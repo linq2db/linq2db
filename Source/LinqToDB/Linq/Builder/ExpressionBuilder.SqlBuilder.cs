@@ -812,7 +812,7 @@ namespace LinqToDB.Linq.Builder
 				if (!forSearch)
 					return type.IsNullableType();
 
-				if (type != typeof(string) && typeof(IEnumerable<>).IsSameOrParentOf(type))
+				if (MappingSchema.IsCollectionType(type))
 					return true;
 
 				if (!MappingSchema.IsScalarType(type))

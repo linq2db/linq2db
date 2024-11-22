@@ -123,6 +123,7 @@ namespace LinqToDB.Linq.Builder
 				if (attribute != null)
 					descriptor = new AssociationDescriptor
 					(
+						MappingSchema,
 						entityDescriptor.ObjectType,
 						accessorMember.MemberInfo,
 						attribute.GetThisKeys(),

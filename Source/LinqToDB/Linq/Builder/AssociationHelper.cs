@@ -346,7 +346,7 @@ namespace LinqToDB.Linq.Builder
 		public static Expression BuildAssociationQuery(ExpressionBuilder builder, ContextRefExpression tableContext,
 			AccessorMember onMember, AssociationDescriptor descriptor, Expression? additionalCondition, bool inline, LoadWithInfo? loadwith, MemberInfo[]? loadWithPath, ref bool? isOptional)
 		{
-			var elementType     = descriptor.GetElementType(builder.MappingSchema);
+			var elementType     = descriptor.GetElementType();
 			var parentExactType = descriptor.GetParentElementType();
 
 			var queryMethod = CreateAssociationQueryLambda(
