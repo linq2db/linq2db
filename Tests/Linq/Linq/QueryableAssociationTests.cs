@@ -1186,5 +1186,81 @@ WHERE
 			t1.LoadWith(x => x.Items).FirstOrDefault();
 		}
 		#endregion
+
+		#region Issue 4721
+		class Issue4721Table1
+		{
+			public int Id { get; set; }
+
+			[Association(QueryExpressionMethod = nameof(OtherImpl), CanBeNull = true)]
+			public string? Other { get; set; }
+
+			[ExpressionMethod(nameof(OtherImpl))]
+			public string? Another { get; set; }
+
+			private static Expression<Func<Issue4721Table1, IDataContext, string?>> OtherImpl()
+			{
+				return (e, db) => db.GetTable<Issue4721Table2>().Where(se => se.Id == e.Id)
+					.Select(o => o.Value)
+					.FirstOrDefault();
+			}
+
+			public static Issue4721Table1[] TestData =
+			[
+				new Issue4721Table1() { Id = 1 }
+			];
+		}
+
+		class Issue4721Table2
+		{
+			public int Id { get; set; }
+			public string? Value { get; set; }
+
+			public static Issue4721Table2[] TestData =
+			[
+				new Issue4721Table2() { Id = 1, Value = "Value 1" },
+				new Issue4721Table2() { Id = 1, Value = "Value 1" }, // same value to simplify assertion
+				new Issue4721Table2() { Id = 2, Value = "Value 2" },
+			];
+		}
+
+		[ActiveIssue("Should we support it?")]
+		[Test(Description = "https://github.com/linq2db/linq2db/discussions/4721")]
+		public void Issue4721Test1([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t1 = db.CreateLocalTable(Issue4721Table1.TestData);
+			using var t2 = db.CreateLocalTable(Issue4721Table2.TestData);
+
+			var record = t1.LoadWith(x => x.Other).FirstOrDefault();
+
+			Assert.That(record, Is.Not.Null);
+			Assert.Multiple(() =>
+			{
+				Assert.That(record!.Id, Is.EqualTo(1));
+				Assert.That(record.Other, Is.EqualTo("Value 1"));
+				Assert.That(record.Another, Is.EqualTo("Value 1"));
+			});
+		}
+
+		[ThrowsForProvider(typeof(LinqException), TestProvName.AllSybase, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
+		[Test(Description = "https://github.com/linq2db/linq2db/discussions/4721")]
+		public void Issue4721Test2([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t1 = db.CreateLocalTable(Issue4721Table1.TestData);
+			using var t2 = db.CreateLocalTable(Issue4721Table2.TestData);
+
+			var record = t1.FirstOrDefault();
+
+			Assert.That(record, Is.Not.Null);
+			Assert.Multiple(() =>
+			{
+				Assert.That(record!.Id, Is.EqualTo(1));
+				Assert.That(record.Other, Is.Null);
+				Assert.That(record.Another, Is.EqualTo("Value 1"));
+			});
+		}
+		#endregion
 	}
 }
