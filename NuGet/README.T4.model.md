@@ -20,6 +20,10 @@ Don't use this package if you don't need database scaffolding functionality. Ins
 - MS Access (.NET Core-only)
   - [System.Data.Odbc](https://www.nuget.org/packages/System.Data.Odbc) for ODBC Access provider
   - [System.Data.OleDb](https://www.nuget.org/packages/System.Data.OleDb) for OLE DB Access provider
+- ClickHouse
+  - [ClickHouse.Client](https://www.nuget.org/packages/ClickHouse.Ado) for ClickHouse.Client provider
+  - [Octonica.ClickHouseClient](https://www.nuget.org/packages/Octonica.ClickHouseClient)] for Octonica.ClickHouseClient provider
+  - [MySqlConnector](https://www.nuget.org/packages/MySqlConnector) for MySqlConnector provider
 - DB2 LUW and Informix
   - [IBM.Data.DB.Provider](https://www.nuget.org/packages/IBM.Data.DB.Provider): .NET Framework provider
   - [IBM.Data.DB2.Core](https://www.nuget.org/packages/IBM.Data.DB2.Core): .NET Core Windows provider

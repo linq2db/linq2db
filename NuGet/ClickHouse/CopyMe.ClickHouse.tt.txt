@@ -4,9 +4,12 @@
 <#@ include file="$(LinqToDBT4ClickHouseTemplatesPath)LinqToDB.ClickHouse.ttinclude" once="true" #>
 <#@ include file="$(LinqToDBT4TemplatesPath)PluralizationService.ttinclude"          once="true" #>
 <#
+	// IMPORTANT: By default, LinqToDB.ClickHouse.ttinclude uses the MySqlConnector provider.
+	// If your database does not support MySql protocol, replace .ttinclude above with LinqToDB.ClickHouse.Client.ttinclude.
+
 	// Install linq2db nuget package.
 	// Install one of the following packages:
-	// - https://www.nuget.org/packages/ClickHouse.Client/        for ClickHouse.Client provider
+	// - https://www.nuget.org/packages/ClickHouse.Client         for ClickHouse.Client provider
 	// - https://www.nuget.org/packages/Octonica.ClickHouseClient for Octonica.ClickHouseClient provider
 	// - https://www.nuget.org/packages/MySqlConnector            for MySqlConnector provider
 	// See LinqToDB.Templates/README.md for more details.

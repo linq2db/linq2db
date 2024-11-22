@@ -1,14 +1,18 @@
-﻿<#@ template language="C#" debug="True" hostSpecific="True" compilerOptions="/langversion:6" #>
-<#@ CleanupBehavior processor="T4VSHost" CleanupAfterProcessingtemplate="true"               #>
-<#@ output extension=".generated.cs"                                                         #>
-<#@ include file="$(LinqToDBT4DB2TemplatesPath)LinqToDB.DB2.Tools.ttinclude"     once="true" #>
-<#@ include file="..\Shared.ttinclude"                                           once="true" #>
+﻿<#@ template language="C#" debug="True" hostSpecific="True"                        #>
+<#@ CleanupBehavior processor="T4VSHost" CleanupAfterProcessingtemplate="true"     #>
+<#@ output extension=".generated.cs"                                               #>
+<#@ include file="$(LinqToDBT4DB2TemplatesPath)LinqToDB.DB2.ttinclude" once="true" #>
+<#@ include file="..\Shared.ttinclude"                                 once="true" #>
 <#
-	NamespaceName     = "DB2DataContext";
-	DataContextName   = "TESTDATADB";
-	GenerateDataTypes = true;
-	GenerateDbTypes   = true;
-	GenerateNameOf    = false;
+	NamespaceName        = "DB2DataContext";
+	DataContextName      = "TESTDATADB";
+	GenerateDataTypes    = true;
+	GenerateDbTypes      = true;
+//	GenerateNameOf       = false;
+	GenerateSchemaAsType = true;
+
+	GetSchemaOptions.DefaultSchema = "DB2INST2";
+	GetSchemaOptions.IncludedSchemas = ["DB2INST1"];
 
 	LoadDB2Metadata(GetConnectionString("DB2"));
 	GenerateModel();

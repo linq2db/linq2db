@@ -1,11 +1,12 @@
 ﻿<#@ template language="C#" debug="True" hostSpecific="True" compilerOptions="/langversion:6" #>
 <#@ CleanupBehavior processor="T4VSHost" CleanupAfterProcessingtemplate="true"               #>
 <#@ output extension=".generated.cs"                                                         #>
-<#@ include file="$(LinqToDBT4DB2TemplatesPath)LinqToDB.DB2.Tools.ttinclude"     once="true" #>
+<#@ include file="$(LinqToDBT4DB2TemplatesPath)LinqToDB.DB2.ttinclude"           once="true" #>
 <#@ include file="..\Shared.ttinclude"                                           once="true" #>
 <#
-	NamespaceName   = "Default.DB2";
-	DataContextName = "TestDataDB";
+	NamespaceName        = "Default.DB2";
+	DataContextName      = "TestDataDB";
+	GenerateSchemaAsType = true;
 
 	LoadDB2Metadata(GetConnectionString("DB2"));
 	GenerateModel();

@@ -44,6 +44,7 @@ namespace LinqToDB.Tools.ModelGeneration
 		public string SchemaNameSuffix                    { get; set; } = "Schema";
 		public string SchemaDataContextTypeName           { get; set; } = "DataContext";
 		public bool   GenerateNameOf                      { get; set; } = true;
+		public bool   GenerateTableRegion                 { get; set; } = true;
 
 		public Dictionary<string,string> SchemaNameMapping = new();
 
@@ -226,7 +227,8 @@ namespace LinqToDB.Tools.ModelGeneration
 					Functions       = new TMemberGroup(),
 					TableFunctions  = new TMemberGroup { Region = "Table Functions" },
 				}
-			).ToDictionary(t => t.Name);
+			)
+			.ToDictionary(t => t.Name);
 
 			var procSchemas =
 			(
@@ -273,7 +275,7 @@ namespace LinqToDB.Tools.ModelGeneration
 				foreach (var schema in schemas.Values)
 				{
 					schemaMembers.Members.Add(new TProperty { EnforceNotNullable = EnableNullableReferenceTypes, TypeBuilder = () => schema.TypeName + "." + SchemaDataContextTypeName, Name = schema.PropertyName });
-					body.Add(() => new [] { $"{schema.PropertyName}{LenDiff(maxLen1, schema.PropertyName)} = new {schema.TypeName}.{LenDiff(maxLen2, schema.TypeName)}{SchemaDataContextTypeName}(this);" });
+					body.Add(() => [$"{schema.PropertyName}{LenDiff(maxLen1, schema.PropertyName)} = new {schema.TypeName}.{LenDiff(maxLen2, schema.TypeName)}{SchemaDataContextTypeName}(this);"]);
 				}
 
 				schemaGroup.Members.Add(schemaMembers);
@@ -284,6 +286,8 @@ namespace LinqToDB.Tools.ModelGeneration
 
 			if (GenerateConstructors)
 			{
+				var ctorGroup = new TMemberGroup { Region = ".ctor" };
+
 				foreach (var c in GetConstructors(DefaultConfiguration!, DataContextObject!.Name!, () => new TMethod()))
 				{
 					if (c.BodyBuilders.Count > 0)
@@ -294,10 +298,10 @@ namespace LinqToDB.Tools.ModelGeneration
 
 					c.BodyBuilders.Add(() => ["InitDataContext();", "InitMappingSchema();"]);
 
-					DataContextObject?.Members.Add(c);
+					ctorGroup.Members.Add(c);
 				}
 
-				DataContextObject?.Members.Add(new TMemberGroup
+				ctorGroup.Members.Add(new TMemberGroup
 				{
 					IsCompact = true,
 					Members   =
@@ -306,10 +310,12 @@ namespace LinqToDB.Tools.ModelGeneration
 						new TMethod { TypeBuilder = () => "void", Name = "InitMappingSchema", AccessModifier = AccessModifier.Partial }
 					}
 				});
+
+				DataContextObject?.Members.Add(ctorGroup);
 			}
 
 			if (Tables.Count > 0)
-				DataContextObject?.Members.Insert(0, defProps);
+				DataContextObject?.Members.Insert(0, new TMemberGroup { Region = "Tables", Members = [defProps] });
 
 			foreach (var schema in schemas.Values)
 			{
@@ -330,9 +336,14 @@ namespace LinqToDB.Tools.ModelGeneration
 			}
 
 			var associationExtensions = new TMemberGroup { Region = "Associations" };
+//			var tableGroup            = GenerateTableRegion ?  new TMemberGroup { Region = "Tables" } : null;
+//
+//			if (tableGroup != null)
+//				Model.m.Add(tableGroup);
 
 			foreach (var t in Tables.Values.OrderBy(tbl => tbl.IsProviderSpecific).ThenBy(tbl => tbl.TypeName))
 			{
+				//Action<ITypeBase> addType         = tableGroup == null ? Model.Types.Add : tableGroup.Members.Add;
 				var addType         = Model.Types.Add;
 				var props           = defProps;
 				var aliases         = defAliases;
@@ -425,8 +436,8 @@ namespace LinqToDB.Tools.ModelGeneration
 				var nameMaxLen     = t.Columns.Values.Max  (c => (int?)(c.MemberName == c.ColumnName
 					? 0
 					: ToStringLiteral(c.ColumnName).Length)) ?? 0;
-				var dbTypeMaxLen   = t.Columns.Values.Max  (c => (int?)(c.ColumnType?.Length)) ?? 0;
-				var dataTypeMaxLen = t.Columns.Values.Where(c => c.DataType != null).Max  (c => (int?)(c.DataType?.Length)) ?? 0;
+				var dbTypeMaxLen   = t.Columns.Values.Max  (c => c.ColumnType?.Length)                              ?? 0;
+				var dataTypeMaxLen = t.Columns.Values.Where(c => c.DataType != null).Max  (c => c.DataType?.Length) ?? 0;
 				var dataTypePrefix = "LinqToDB.";
 
 				foreach (var c in t.Columns.Values)
@@ -487,7 +498,7 @@ namespace LinqToDB.Tools.ModelGeneration
 						canBeReplaced = false;
 					}
 
-					if (c.SkipOnInsert && !c.IsIdentity)
+					if (c is { SkipOnInsert: true, IsIdentity: false })
 					{
 						ca.Parameters.Add("SkipOnInsert=true");
 						canBeReplaced = false;
@@ -637,7 +648,7 @@ namespace LinqToDB.Tools.ModelGeneration
 								var otherSchema = "";
 
 								if (key.OtherTable.Schema is not null && !key.OtherTable.IsDefaultSchema && schemas.ContainsKey(key.OtherTable.Schema))
-									otherSchema = SchemaNameMapping.TryGetValue(key.OtherTable.Schema, out var sc) ? $"{sc}Schema." : key.OtherTable.Schema + ".";
+									otherSchema = SchemaNameMapping.TryGetValue(key.OtherTable.Schema, out var sc) ? $"{sc}Schema." : key.OtherTable.TypePrefix;
 
 								string SetOtherKey() => "OtherKey=" + string.Join(" + \", \" + ",
 									key.OtherColumns
@@ -705,7 +716,7 @@ namespace LinqToDB.Tools.ModelGeneration
 								return sb.ToString();
 							}
 
-							extension.BodyBuilders.Add(() => new[] { Builder() });
+							extension.BodyBuilders.Add(() => [Builder()]);
 
 							extensionAssociations.Members.Add(extension);
 
@@ -753,7 +764,7 @@ namespace LinqToDB.Tools.ModelGeneration
 									sb.Length -= 1;
 									sb.Append(key.CanBeNull ? ".FirstOrDefault();" : ".First();");
 
-									return new [] { sb.ToString() };
+									return [sb.ToString()];
 								});
 
 								extensionAssociations.Members.Add(single);
@@ -771,8 +782,8 @@ namespace LinqToDB.Tools.ModelGeneration
 				if (GenerateFindExtensions && nPKs > 0)
 				{
 					var PKs         = t.Columns.Values.Where(c => c.IsPrimaryKey).ToList()!;
-					var maxNameLen1 = PKs.Max(c => (int?)c.MemberName?.Length) ?? 0;
-					var maxNameLen2 = PKs.Take(nPKs - 1).Max(c => (int?)c.MemberName?.Length) ?? 0;
+					var maxNameLen1 = PKs.Max(c => c.MemberName?.Length)                ?? 0;
+					var maxNameLen2 = PKs.Take(nPKs - 1).Max(c => c.MemberName?.Length) ?? 0;
 
 					tableExtensions.Members.Add(new TMethod
 					{
@@ -1040,8 +1051,8 @@ namespace LinqToDB.Tools.ModelGeneration
 						while (p.ProcParameters.Where(par => !par.IsResult || !p.IsFunction).Any(par => par.ParameterName == parametersVarName))
 							parametersVarName = FormattableString.Invariant($"parameters{cnt++}");
 
-						var maxLenSchema = inputParameters.Max(pr => (int?)pr.SchemaName?.   Length) ?? 0;
-						var maxLenParam  = inputParameters.Max(pr => (int?)pr.ParameterName?.Length) ?? 0;
+						var maxLenSchema = inputParameters.Max(pr => pr.SchemaName?.   Length)                          ?? 0;
+						var maxLenParam  = inputParameters.Max(pr => pr.ParameterName?.Length)                          ?? 0;
 						var maxLenType   = inputParameters.Max(pr => (int?)("LinqToDB.DataType." + pr.DataType).Length) ?? 0;
 
 						if (inOrOutputParameters.Count > 0)
@@ -1128,29 +1139,29 @@ namespace LinqToDB.Tools.ModelGeneration
 
 						if (p.ResultTable == null)
 						{
-							p.BodyBuilders.Add(() => new [] { $"{prefix}dataConnection.ExecuteProc({spName}{terminator}" });
+							p.BodyBuilders.Add(() => [$"{prefix}dataConnection.ExecuteProc({spName}{terminator}"]);
 						}
 						else
 						{
 							if (p.ResultTable.Columns.Values.Any(c => c.IsDuplicateOrEmpty))
 							{
-								p.BodyBuilders.Add(() => new []
-								{
+								p.BodyBuilders.Add(() =>
+								[
 									"var ms = dataConnection.MappingSchema;",
 									"",
 									prefix + "dataConnection.QueryProc(dataReader =>",
 									"\tnew " + p.ResultTable.TypeName,
 									"\t{"
-								});
+								]);
 
 								var n          = 0;
-								var maxNameLen = p.ResultTable.Columns.Values.Max(c => (int?)c.MemberName? .Length) ?? 0;
-								var maxTypeLen = p.ResultTable.Columns.Values.Max(c => (int?)c.BuildType()?.Length) ?? 0;
+								var maxNameLen = p.ResultTable.Columns.Values.Max(c => c.MemberName? .Length) ?? 0;
+								var maxTypeLen = p.ResultTable.Columns.Values.Max(c => c.BuildType()?.Length) ?? 0;
 
 								foreach (var c in p.ResultTable.Columns.Values)
 								{
-									p.BodyBuilders.Add(() => new []
-									{
+									p.BodyBuilders.Add(() =>
+									[
 										string.Format(
 											CultureInfo.InvariantCulture,
 											"\t\t{0}{1} = Converter.ChangeTypeTo<{2}>{3}(dataReader.GetValue({4}), ms),",
@@ -1159,29 +1170,29 @@ namespace LinqToDB.Tools.ModelGeneration
 											c.BuildType(),
 											LenDiff(maxTypeLen, c.BuildType()!),
 											n++)
-									});
+									]);
 								}
 
-								p.BodyBuilders.Add(() => new [] {"\t},", "\t" + spName + terminator });
+								p.BodyBuilders.Add(() => ["\t},", "\t" + spName + terminator]);
 							}
 							else
 							{
-								p.BodyBuilders.Add(() => new [] { prefix + "dataConnection.QueryProc<" + p.ResultTable.TypeName + ">(" + spName + terminator });
+								p.BodyBuilders.Add(() => [prefix + "dataConnection.QueryProc<" + p.ResultTable.TypeName + ">(" + spName + terminator]);
 							}
 						}
 
 						if (hasOut)
 						{
-							maxLenSchema = outputParameters.Max(pr => (int?)pr.SchemaName?.   Length    ) ?? 0;
-							maxLenParam  = outputParameters.Max(pr => (int?)pr.ParameterName?.Length    ) ?? 0;
+							maxLenSchema = outputParameters.Max(pr => pr.SchemaName?.   Length   )       ?? 0;
+							maxLenParam  = outputParameters.Max(pr => pr.ParameterName?.Length   )       ?? 0;
 							maxLenType   = outputParameters.Max(pr => (int?)pr.Type.ToTypeName().Length) ?? 0;
 
-							p.BodyBuilders.Add(() => new [] { string.Empty });
+							p.BodyBuilders.Add(() => [string.Empty]);
 
 							foreach (var pr in p.ProcParameters.Where(_ => _.IsOut || _.IsResult))
 							{
-								p.BodyBuilders.Add(() => new []
-								{
+								p.BodyBuilders.Add(() =>
+								[
 									string.Format(
 										CultureInfo.InvariantCulture,
 										"{0} {1}= Converter.ChangeTypeTo<{2}>{3}({4}[{5}].Value);",
@@ -1191,14 +1202,14 @@ namespace LinqToDB.Tools.ModelGeneration
 										LenDiff(maxLenType, pr.Type.ToTypeName()),
 										parametersVarName,
 										inOrOutputParameters.IndexOf(pr))
-								});
+								]);
 							}
 
-							p.BodyBuilders.Add(() => new [] {"", "return " + retName + ";" });
+							p.BodyBuilders.Add(() => ["", "return " + retName + ";"]);
 						}
 					}
 
-					if (p.ResultTable != null && p.ResultTable.DataContextPropertyName == null)
+					if (p.ResultTable is { DataContextPropertyName: null })
 					{
 						var columns = new TMemberGroup { IsCompact = true };
 
@@ -1232,7 +1243,8 @@ namespace LinqToDB.Tools.ModelGeneration
 				foreach (var schema in schemas.Values)
 				{
 					if (schema.Procedures.Members.Count > 0)
-						schema.Type.Members.Add(new TClass { Name = $"{DataContextObject?.Name}StoredProcedures", Members = { schema.Procedures }, IsStatic = true });
+						//schema.Type.Members.Add(new TClass { Name = $"{DataContextObject?.Name}StoredProcedures", Members = { schema.Procedures }, IsStatic = true });
+						schema.Type.Members.Add(new TMemberGroup { Region = "Stored Procedures", Members = { schema.Procedures } });
 
 					if (schema.Functions.Members.Count > 0)
 						schema.Type.Members.Add(new TClass { Name = "SqlFunctions", Members = { schema.Functions}, IsStatic = true });

@@ -135,7 +135,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 		protected override List<TableInfo> GetTables(DataConnection dataConnection, GetSchemaOptions options)
 		{
-			var defaultSchema = ToDatabaseLiteral(dataConnection, options?.DefaultSchema ?? "public");
+			var defaultSchema = ToDatabaseLiteral(dataConnection, options.DefaultSchema ?? "public");
 
 			var sql = $@"
 				SELECT
@@ -160,6 +160,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 			// materialized views supported starting from pgsql 9.3
 			var version = dataConnection.Query<int>("SHOW  server_version_num").Single();
+
 			if (version >= 90300)
 			{
 				// materialized views are not exposed to information_schema
@@ -192,7 +193,8 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			IEnumerable<TableSchema> tables, GetSchemaOptions options)
 		{
 			return
-				dataConnection.Query<PrimaryKeyInfo>($@"
+				dataConnection.Query<PrimaryKeyInfo>(
+					$@"""
 					SELECT
 						current_database() || '.' || pg_namespace.nspname || '.' || pg_class.relname as TableID,
 						pg_constraint.conname                                                        as PrimaryKeyName,
@@ -205,7 +207,8 @@ namespace LinqToDB.DataProvider.PostgreSQL
 							JOIN pg_namespace  ON pg_class.relnamespace = pg_namespace.oid
 					WHERE
 						pg_constraint.contype = 'p'
-						AND {GenerateSchemaFilter(dataConnection, "pg_namespace.nspname")}")
+						AND {GenerateSchemaFilter(dataConnection, "pg_namespace.nspname")}
+					""")
 				.ToList();
 		}
 

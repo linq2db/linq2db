@@ -8,18 +8,24 @@
 		<ProjectReference Include="..\Source\LinqToDB\LinqToDB.csproj" />
 		<ProjectReference Include="..\Source\LinqToDB.Tools\LinqToDB.Tools.csproj" />
 
-		<PackageReference Include="System.Data.OleDb"    />
-		<PackageReference Include="MySqlConnector"       />
-		<PackageReference Include="ClickHouse.Client"    />
+		<PackageReference Include="System.Data.OleDb" />
+		<PackageReference Include="MySqlConnector" />
+		<PackageReference Include="ClickHouse.Client" />
 		<PackageReference Include="AdoNetCore.AseClient" />
-		<PackageReference Include="Humanizer.Core"       />
+		<PackageReference Include="Humanizer.Core" />
 
 		<PackageReference Include="IBM.Data.DB.Provider" GeneratePathProperty="true" />
-		<Reference Include="IBM.Data.DB2">
-			<HintPath>$(PkgIBM_Data_DB_Provider)\build\net451\x64\IBM.Data.DB2.DLL</HintPath>
+		<Reference Include="IBM.Data.DB2" Condition=" $(PlatformTarget) != 'x86' ">
+			<HintPath>$(PkgIBM_Data_DB_Provider)\build\net451\x64\IBM.Data.DB2.dll</HintPath>
 		</Reference>
-		<Reference Include="IBM.Data.Informix">
-			<HintPath>$(SolutionDir)\Redist\IBM\x64\IBM.Data.Informix.DLL</HintPath>
+		<Reference Include="IBM.Data.DB2" Condition=" $(PlatformTarget) == 'x86' ">
+			<HintPath>$(PkgIBM_Data_DB_Provider)\build\net451\x86\IBM.Data.DB2.dll</HintPath>
+		</Reference>
+		<Reference Include="IBM.Data.Informix" Condition=" $(PlatformTarget) != 'x86' ">
+			<HintPath>$(SolutionDir)\Redist\IBM\SQLI x64\IBM.Data.Informix.dll</HintPath>
+		</Reference>
+		<Reference Include="IBM.Data.Informix" Condition=" $(PlatformTarget) == 'x86' ">
+			<HintPath>$(SolutionDir)\Redist\IBM\SQLI x86\IBM.Data.Informix.dll</HintPath>
 		</Reference>
 	</ItemGroup>
 </Project>

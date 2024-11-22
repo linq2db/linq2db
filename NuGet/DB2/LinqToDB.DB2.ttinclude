@@ -1,4 +1,6 @@
-<#@ include file="LinqToDB.ttinclude" once="true" #>
+<#@ assembly name="$(LinqToDBT4DB2ClientPath)IBM.Data.DB2.DLL"                    #>
+<#@ include file="$(LinqToDBT4TemplatesPath)LinqToDB.ttinclude" once="true"       #>
+<#@ include file="$(LinqToDBT4TemplatesPath)LinqToDB.Tools.ttinclude" once="true" #>
 <#+
 LinqToDB.Data.DataConnection GetDB2Connection(string connectionString, LinqToDB.DataProvider.DB2.DB2Version version = LinqToDB.DataProvider.DB2.DB2Version.LUW)
 {

@@ -24,27 +24,21 @@ namespace DB2DataContext
 {
 	public partial class TESTDATADB : LinqToDB.Data.DataConnection
 	{
-		public ITable<DB2INST1_ALLTYPE>           ALLTYPES            { get { return this.GetTable<DB2INST1_ALLTYPE>(); } }
-		public ITable<DB2INST1_Child>             Children            { get { return this.GetTable<DB2INST1_Child>(); } }
-		public ITable<DB2INST1_CollatedTable>     CollatedTables      { get { return this.GetTable<DB2INST1_CollatedTable>(); } }
-		public ITable<DB2INST1_Doctor>            Doctors             { get { return this.GetTable<DB2INST1_Doctor>(); } }
-		public ITable<DB2INST1_GrandChild>        GrandChildren       { get { return this.GetTable<DB2INST1_GrandChild>(); } }
-		public ITable<DB2INST1_InheritanceChild>  InheritanceChildren { get { return this.GetTable<DB2INST1_InheritanceChild>(); } }
-		public ITable<DB2INST1_InheritanceParent> InheritanceParents  { get { return this.GetTable<DB2INST1_InheritanceParent>(); } }
-		public ITable<DB2INST1_KeepIdentityTest>  KeepIdentityTests   { get { return this.GetTable<DB2INST1_KeepIdentityTest>(); } }
-		public ITable<DB2INST1_LinqDataType>      LinqDataTypes       { get { return this.GetTable<DB2INST1_LinqDataType>(); } }
-		public ITable<DB2INST1_MASTERTABLE>       Mastertables        { get { return this.GetTable<DB2INST1_MASTERTABLE>(); } }
-		public ITable<DB2INST1_Parent>            Parents             { get { return this.GetTable<DB2INST1_Parent>(); } }
-		public ITable<DB2INST1_Patient>           Patients            { get { return this.GetTable<DB2INST1_Patient>(); } }
-		public ITable<DB2INST1_Person>            People              { get { return this.GetTable<DB2INST1_Person>(); } }
-		public ITable<DB2INST1_PERSONVIEW>        Personviews         { get { return this.GetTable<DB2INST1_PERSONVIEW>(); } }
-		public ITable<DB2INST1_SLAVETABLE>        Slavetables         { get { return this.GetTable<DB2INST1_SLAVETABLE>(); } }
-		public ITable<DB2INST1_TestIdentity>      TestIdentities      { get { return this.GetTable<DB2INST1_TestIdentity>(); } }
-		public ITable<DB2INST1_TestMerge1>        TestMerge1          { get { return this.GetTable<DB2INST1_TestMerge1>(); } }
-		public ITable<DB2INST1_TestMerge2>        TestMerge2          { get { return this.GetTable<DB2INST1_TestMerge2>(); } }
+
+		#region Schemas
+
+		public DB2INST1Schema.DataContext DB2INST1 { get; set; } = null!;
+
+		public void InitSchemas()
+		{
+			DB2INST1 = new DB2INST1Schema.DataContext(this);
+		}
+
+		#endregion
 
 		public TESTDATADB()
 		{
+			InitSchemas();
 			InitDataContext();
 			InitMappingSchema();
 		}
@@ -52,6 +46,7 @@ namespace DB2DataContext
 		public TESTDATADB(string configuration)
 			: base(configuration)
 		{
+			InitSchemas();
 			InitDataContext();
 			InitMappingSchema();
 		}
@@ -59,6 +54,7 @@ namespace DB2DataContext
 		public TESTDATADB(DataOptions options)
 			: base(options)
 		{
+			InitSchemas();
 			InitDataContext();
 			InitMappingSchema();
 		}
@@ -66,326 +62,358 @@ namespace DB2DataContext
 		public TESTDATADB(DataOptions<TESTDATADB> options)
 			: base(options.Options)
 		{
+			InitSchemas();
 			InitDataContext();
 			InitMappingSchema();
 		}
 
 		partial void InitDataContext  ();
 		partial void InitMappingSchema();
+	}
 
-		#region Table Functions
-
-		#region TestMODULE1TestTableFunction
-
-		[Sql.TableFunction(Schema="DB2INST1", Package="TEST_MODULE1", Name="TEST_TABLE_FUNCTION")]
-		public ITable<TestTableFUNCTIONResult> TestMODULE1TestTableFunction(int? i)
+	public static partial class DB2INST1Schema
+	{
+		public partial class DataContext
 		{
-			return this.TableFromExpression(() => TestMODULE1TestTableFunction(i));
+			public ITable<ALLTYPE>           ALLTYPES            { get { return _dataContext.GetTable<ALLTYPE>(); } }
+			public ITable<Child>             Children            { get { return _dataContext.GetTable<Child>(); } }
+			public ITable<CollatedTable>     CollatedTables      { get { return _dataContext.GetTable<CollatedTable>(); } }
+			public ITable<Doctor>            Doctors             { get { return _dataContext.GetTable<Doctor>(); } }
+			public ITable<GrandChild>        GrandChildren       { get { return _dataContext.GetTable<GrandChild>(); } }
+			public ITable<InheritanceChild>  InheritanceChildren { get { return _dataContext.GetTable<InheritanceChild>(); } }
+			public ITable<InheritanceParent> InheritanceParents  { get { return _dataContext.GetTable<InheritanceParent>(); } }
+			public ITable<KeepIdentityTest>  KeepIdentityTests   { get { return _dataContext.GetTable<KeepIdentityTest>(); } }
+			public ITable<LinqDataType>      LinqDataTypes       { get { return _dataContext.GetTable<LinqDataType>(); } }
+			public ITable<MASTERTABLE>       Mastertables        { get { return _dataContext.GetTable<MASTERTABLE>(); } }
+			public ITable<Parent>            Parents             { get { return _dataContext.GetTable<Parent>(); } }
+			public ITable<Patient>           Patients            { get { return _dataContext.GetTable<Patient>(); } }
+			public ITable<Person>            People              { get { return _dataContext.GetTable<Person>(); } }
+			public ITable<PERSONVIEW>        Personviews         { get { return _dataContext.GetTable<PERSONVIEW>(); } }
+			public ITable<SLAVETABLE>        Slavetables         { get { return _dataContext.GetTable<SLAVETABLE>(); } }
+			public ITable<TestIdentity>      TestIdentities      { get { return _dataContext.GetTable<TestIdentity>(); } }
+			public ITable<TestMerge1>        TestMerge1          { get { return _dataContext.GetTable<TestMerge1>(); } }
+			public ITable<TestMerge2>        TestMerge2          { get { return _dataContext.GetTable<TestMerge2>(); } }
+
+			private readonly IDataContext _dataContext;
+
+			public DataContext(IDataContext dataContext)
+			{
+				_dataContext = dataContext;
+			}
+
+			#region Table Functions
+
+			#region TestMODULE1TestTableFunction
+
+			[Sql.TableFunction(Schema="DB2INST1", Package="TEST_MODULE1", Name="TEST_TABLE_FUNCTION")]
+			public ITable<TestTableFUNCTIONResult> TestMODULE1TestTableFunction(int? i)
+			{
+				return _dataContext.TableFromExpression(() => TestMODULE1TestTableFunction(i));
+			}
+
+			public partial class TestTableFUNCTIONResult
+			{
+				public int? O { get; set; }
+			}
+
+			#endregion
+
+			#region TestMODULE2TestTableFunction
+
+			[Sql.TableFunction(Schema="DB2INST1", Package="TEST_MODULE2", Name="TEST_TABLE_FUNCTION")]
+			public ITable<TestTableFUNCTIONResult0> TestMODULE2TestTableFunction(int? i)
+			{
+				return _dataContext.TableFromExpression(() => TestMODULE2TestTableFunction(i));
+			}
+
+			public partial class TestTableFUNCTIONResult0
+			{
+				public int? O { get; set; }
+			}
+
+			#endregion
+
+			#region TestTableFunction
+
+			[Sql.TableFunction(Schema="DB2INST1", Name="TEST_TABLE_FUNCTION")]
+			public ITable<TestTableFUNCTIONResult1> TestTableFunction(int? i)
+			{
+				return _dataContext.TableFromExpression(() => TestTableFunction(i));
+			}
+
+			public partial class TestTableFUNCTIONResult1
+			{
+				public int? O { get; set; }
+			}
+
+			#endregion
+
+			#endregion
 		}
 
-		public partial class TestTableFUNCTIONResult
+		[Table(Schema="DB2INST1", Name="ALLTYPES")]
+		public partial class ALLTYPE
 		{
-			public int? O { get; set; }
+			[Column(DbType="INTEGER",                  DataType=LinqToDB.DataType.Int32),                     PrimaryKey, Identity] public int       ID                { get; set; } // INTEGER
+			[Column(DbType="BIGINT",                   DataType=LinqToDB.DataType.Int64),                     Nullable            ] public long?     BIGINTDATATYPE    { get; set; } // BIGINT
+			[Column(DbType="INTEGER",                  DataType=LinqToDB.DataType.Int32),                     Nullable            ] public int?      INTDATATYPE       { get; set; } // INTEGER
+			[Column(DbType="SMALLINT",                 DataType=LinqToDB.DataType.Int16),                     Nullable            ] public short?    SMALLINTDATATYPE  { get; set; } // SMALLINT
+			[Column(DbType="DECIMAL",                  DataType=LinqToDB.DataType.Decimal,   Precision=30),   Nullable            ] public decimal?  DECIMALDATATYPE   { get; set; } // DECIMAL
+			[Column(DbType="DECFLOAT(16)",             DataType=LinqToDB.DataType.Decimal,   Precision=16),   Nullable            ] public decimal?  DECFLOATDATATYPE  { get; set; } // DECFLOAT(16)
+			[Column(DbType="REAL",                     DataType=LinqToDB.DataType.Single),                    Nullable            ] public float?    REALDATATYPE      { get; set; } // REAL
+			[Column(DbType="DOUBLE",                   DataType=LinqToDB.DataType.Double),                    Nullable            ] public double?   DOUBLEDATATYPE    { get; set; } // DOUBLE
+			[Column(DbType="CHARACTER(1)",             DataType=LinqToDB.DataType.Char,      Length=1),       Nullable            ] public char?     CHARDATATYPE      { get; set; } // CHARACTER(1)
+			[Column(DbType="CHARACTER(20)",            DataType=LinqToDB.DataType.Char,      Length=20),      Nullable            ] public string?   CHAR20DATATYPE    { get; set; } // CHARACTER(20)
+			[Column(DbType="VARCHAR(20)",              DataType=LinqToDB.DataType.VarChar,   Length=20),      Nullable            ] public string?   VARCHARDATATYPE   { get; set; } // VARCHAR(20)
+			[Column(DbType="CLOB(1048576)",            DataType=LinqToDB.DataType.Text,      Length=1048576), Nullable            ] public string?   CLOBDATATYPE      { get; set; } // CLOB(1048576)
+			[Column(DbType="DBCLOB(100)",              DataType=LinqToDB.DataType.Text,      Length=100),     Nullable            ] public string?   DBCLOBDATATYPE    { get; set; } // DBCLOB(100)
+			[Column(DbType="CHAR (5) FOR BIT DATA",    DataType=LinqToDB.DataType.Binary,    Length=5),       Nullable            ] public byte[]?   BINARYDATATYPE    { get; set; } // CHAR (5) FOR BIT DATA
+			[Column(DbType="VARCHAR (5) FOR BIT DATA", DataType=LinqToDB.DataType.VarBinary, Length=5),       Nullable            ] public byte[]?   VARBINARYDATATYPE { get; set; } // VARCHAR (5) FOR BIT DATA
+			[Column(DbType="BLOB(1048576)",            DataType=LinqToDB.DataType.Blob,      Length=1048576), Nullable            ] public byte[]?   BLOBDATATYPE      { get; set; } // BLOB(1048576)
+			[Column(DbType="GRAPHIC(10)",              DataType=LinqToDB.DataType.Text,      Length=10),      Nullable            ] public string?   GRAPHICDATATYPE   { get; set; } // GRAPHIC(10)
+			[Column(DbType="DATE",                     DataType=LinqToDB.DataType.Date),                      Nullable            ] public DateTime? DATEDATATYPE      { get; set; } // DATE
+			[Column(DbType="TIME",                     DataType=LinqToDB.DataType.Time),                      Nullable            ] public TimeSpan? TIMEDATATYPE      { get; set; } // TIME
+			[Column(DbType="TIMESTAMP",                DataType=LinqToDB.DataType.Timestamp),                 Nullable            ] public DateTime? TIMESTAMPDATATYPE { get; set; } // TIMESTAMP
+			[Column(DbType="XML",                      DataType=LinqToDB.DataType.Xml),                       Nullable            ] public string?   XMLDATATYPE       { get; set; } // XML
 		}
 
-		#endregion
-
-		#region TestMODULE2TestTableFunction
-
-		[Sql.TableFunction(Schema="DB2INST1", Package="TEST_MODULE2", Name="TEST_TABLE_FUNCTION")]
-		public ITable<TestTableFUNCTIONResult0> TestMODULE2TestTableFunction(int? i)
+		[Table(Schema="DB2INST1", Name="Child")]
+		public partial class Child
 		{
-			return this.TableFromExpression(() => TestMODULE2TestTableFunction(i));
+			[Column(DbType="INTEGER", DataType=LinqToDB.DataType.Int32), Nullable] public int? ParentID { get; set; } // INTEGER
+			[Column(DbType="INTEGER", DataType=LinqToDB.DataType.Int32), Nullable] public int? ChildID  { get; set; } // INTEGER
 		}
 
-		public partial class TestTableFUNCTIONResult0
+		[Table(Schema="DB2INST1", Name="CollatedTable")]
+		public partial class CollatedTable
 		{
-			public int? O { get; set; }
+			[Column(DbType="INTEGER",     DataType=LinqToDB.DataType.Int32),              NotNull] public int    Id              { get; set; } // INTEGER
+			[Column(DbType="VARCHAR(80)", DataType=LinqToDB.DataType.VarChar, Length=80), NotNull] public string CaseSensitive   { get; set; } = null!; // VARCHAR(80)
+			[Column(DbType="VARCHAR(80)", DataType=LinqToDB.DataType.VarChar, Length=80), NotNull] public string CaseInsensitive { get; set; } = null!; // VARCHAR(80)
 		}
 
-		#endregion
-
-		#region TestTableFunction
-
-		[Sql.TableFunction(Schema="DB2INST1", Name="TEST_TABLE_FUNCTION")]
-		public ITable<TestTableFUNCTIONResult1> TestTableFunction(int? i)
+		[Table(Schema="DB2INST1", Name="Doctor")]
+		public partial class Doctor
 		{
-			return this.TableFromExpression(() => TestTableFunction(i));
+			[Column(DbType="INTEGER",     DataType=LinqToDB.DataType.Int32),              PrimaryKey, NotNull] public int    PersonID { get; set; } // INTEGER
+			[Column(DbType="VARCHAR(50)", DataType=LinqToDB.DataType.VarChar, Length=50),             NotNull] public string Taxonomy { get; set; } = null!; // VARCHAR(50)
+
+			#region Associations
+
+			/// <summary>
+			/// FK_Doctor_Person (DB2INST1.Person)
+			/// </summary>
+			[Association(ThisKey=nameof(PersonID), OtherKey=nameof(DB2DataContext.DB2INST1Schema.Person.PersonID), CanBeNull=false)]
+			public DB2INST1Schema.Person Person { get; set; } = null!;
+
+			#endregion
 		}
 
-		public partial class TestTableFUNCTIONResult1
+		[Table(Schema="DB2INST1", Name="GrandChild")]
+		public partial class GrandChild
 		{
-			public int? O { get; set; }
+			[Column(DbType="INTEGER", DataType=LinqToDB.DataType.Int32), Nullable] public int? ParentID     { get; set; } // INTEGER
+			[Column(DbType="INTEGER", DataType=LinqToDB.DataType.Int32), Nullable] public int? ChildID      { get; set; } // INTEGER
+			[Column(DbType="INTEGER", DataType=LinqToDB.DataType.Int32), Nullable] public int? GrandChildID { get; set; } // INTEGER
 		}
 
-		#endregion
+		[Table(Schema="DB2INST1", Name="InheritanceChild")]
+		public partial class InheritanceChild
+		{
+			[Column(DbType="INTEGER",     DataType=LinqToDB.DataType.Int32),              PrimaryKey,  NotNull] public int     InheritanceChildId  { get; set; } // INTEGER
+			[Column(DbType="INTEGER",     DataType=LinqToDB.DataType.Int32),                           NotNull] public int     InheritanceParentId { get; set; } // INTEGER
+			[Column(DbType="INTEGER",     DataType=LinqToDB.DataType.Int32),                 Nullable         ] public int?    TypeDiscriminator   { get; set; } // INTEGER
+			[Column(DbType="VARCHAR(50)", DataType=LinqToDB.DataType.VarChar, Length=50),    Nullable         ] public string? Name                { get; set; } // VARCHAR(50)
+		}
 
-		#endregion
-	}
+		[Table(Schema="DB2INST1", Name="InheritanceParent")]
+		public partial class InheritanceParent
+		{
+			[Column(DbType="INTEGER",     DataType=LinqToDB.DataType.Int32),              PrimaryKey,  NotNull] public int     InheritanceParentId { get; set; } // INTEGER
+			[Column(DbType="INTEGER",     DataType=LinqToDB.DataType.Int32),                 Nullable         ] public int?    TypeDiscriminator   { get; set; } // INTEGER
+			[Column(DbType="VARCHAR(50)", DataType=LinqToDB.DataType.VarChar, Length=50),    Nullable         ] public string? Name                { get; set; } // VARCHAR(50)
+		}
 
-	[Table(Schema="DB2INST1", Name="ALLTYPES")]
-	public partial class DB2INST1_ALLTYPE
-	{
-		[Column(DbType="INTEGER",                  DataType=LinqToDB.DataType.Int32),                     PrimaryKey, Identity] public int       ID                { get; set; } // INTEGER
-		[Column(DbType="BIGINT",                   DataType=LinqToDB.DataType.Int64),                     Nullable            ] public long?     BIGINTDATATYPE    { get; set; } // BIGINT
-		[Column(DbType="INTEGER",                  DataType=LinqToDB.DataType.Int32),                     Nullable            ] public int?      INTDATATYPE       { get; set; } // INTEGER
-		[Column(DbType="SMALLINT",                 DataType=LinqToDB.DataType.Int16),                     Nullable            ] public short?    SMALLINTDATATYPE  { get; set; } // SMALLINT
-		[Column(DbType="DECIMAL",                  DataType=LinqToDB.DataType.Decimal,   Precision=30),   Nullable            ] public decimal?  DECIMALDATATYPE   { get; set; } // DECIMAL
-		[Column(DbType="DECFLOAT(16)",             DataType=LinqToDB.DataType.Decimal,   Precision=16),   Nullable            ] public decimal?  DECFLOATDATATYPE  { get; set; } // DECFLOAT(16)
-		[Column(DbType="REAL",                     DataType=LinqToDB.DataType.Single),                    Nullable            ] public float?    REALDATATYPE      { get; set; } // REAL
-		[Column(DbType="DOUBLE",                   DataType=LinqToDB.DataType.Double),                    Nullable            ] public double?   DOUBLEDATATYPE    { get; set; } // DOUBLE
-		[Column(DbType="CHARACTER(1)",             DataType=LinqToDB.DataType.Char,      Length=1),       Nullable            ] public char?     CHARDATATYPE      { get; set; } // CHARACTER(1)
-		[Column(DbType="CHARACTER(20)",            DataType=LinqToDB.DataType.Char,      Length=20),      Nullable            ] public string?   CHAR20DATATYPE    { get; set; } // CHARACTER(20)
-		[Column(DbType="VARCHAR(20)",              DataType=LinqToDB.DataType.VarChar,   Length=20),      Nullable            ] public string?   VARCHARDATATYPE   { get; set; } // VARCHAR(20)
-		[Column(DbType="CLOB(1048576)",            DataType=LinqToDB.DataType.Text,      Length=1048576), Nullable            ] public string?   CLOBDATATYPE      { get; set; } // CLOB(1048576)
-		[Column(DbType="DBCLOB(100)",              DataType=LinqToDB.DataType.Text,      Length=100),     Nullable            ] public string?   DBCLOBDATATYPE    { get; set; } // DBCLOB(100)
-		[Column(DbType="CHAR (5) FOR BIT DATA",    DataType=LinqToDB.DataType.Binary,    Length=5),       Nullable            ] public byte[]?   BINARYDATATYPE    { get; set; } // CHAR (5) FOR BIT DATA
-		[Column(DbType="VARCHAR (5) FOR BIT DATA", DataType=LinqToDB.DataType.VarBinary, Length=5),       Nullable            ] public byte[]?   VARBINARYDATATYPE { get; set; } // VARCHAR (5) FOR BIT DATA
-		[Column(DbType="BLOB(1048576)",            DataType=LinqToDB.DataType.Blob,      Length=1048576), Nullable            ] public byte[]?   BLOBDATATYPE      { get; set; } // BLOB(1048576)
-		[Column(DbType="GRAPHIC(10)",              DataType=LinqToDB.DataType.Text,      Length=10),      Nullable            ] public string?   GRAPHICDATATYPE   { get; set; } // GRAPHIC(10)
-		[Column(DbType="DATE",                     DataType=LinqToDB.DataType.Date),                      Nullable            ] public DateTime? DATEDATATYPE      { get; set; } // DATE
-		[Column(DbType="TIME",                     DataType=LinqToDB.DataType.Time),                      Nullable            ] public TimeSpan? TIMEDATATYPE      { get; set; } // TIME
-		[Column(DbType="TIMESTAMP",                DataType=LinqToDB.DataType.Timestamp),                 Nullable            ] public DateTime? TIMESTAMPDATATYPE { get; set; } // TIMESTAMP
-		[Column(DbType="XML",                      DataType=LinqToDB.DataType.Xml),                       Nullable            ] public string?   XMLDATATYPE       { get; set; } // XML
-	}
+		[Table(Schema="DB2INST1", Name="KeepIdentityTest")]
+		public partial class KeepIdentityTest
+		{
+			[Column(DbType="INTEGER", DataType=LinqToDB.DataType.Int32), PrimaryKey, Identity] public int  ID    { get; set; } // INTEGER
+			[Column(DbType="INTEGER", DataType=LinqToDB.DataType.Int32), Nullable            ] public int? Value { get; set; } // INTEGER
+		}
 
-	[Table(Schema="DB2INST1", Name="Child")]
-	public partial class DB2INST1_Child
-	{
-		[Column(DbType="INTEGER", DataType=LinqToDB.DataType.Int32), Nullable] public int? ParentID { get; set; } // INTEGER
-		[Column(DbType="INTEGER", DataType=LinqToDB.DataType.Int32), Nullable] public int? ChildID  { get; set; } // INTEGER
-	}
+		[Table(Schema="DB2INST1", Name="LinqDataTypes")]
+		public partial class LinqDataType
+		{
+			[Column(DbType="INTEGER",                DataType=LinqToDB.DataType.Int32),                            Nullable] public int?      ID             { get; set; } // INTEGER
+			[Column(DbType="DECIMAL(10,4)",          DataType=LinqToDB.DataType.Decimal,   Precision=10, Scale=4), Nullable] public decimal?  MoneyValue     { get; set; } // DECIMAL(10,4)
+			[Column(DbType="TIMESTAMP",              DataType=LinqToDB.DataType.Timestamp),                        Nullable] public DateTime? DateTimeValue  { get; set; } // TIMESTAMP
+			[Column(DbType="TIMESTAMP",              DataType=LinqToDB.DataType.Timestamp),                        Nullable] public DateTime? DateTimeValue2 { get; set; } // TIMESTAMP
+			[Column(DbType="SMALLINT",               DataType=LinqToDB.DataType.Int16),                            Nullable] public short?    BoolValue      { get; set; } // SMALLINT
+			[Column(DbType="CHAR (16) FOR BIT DATA", DataType=LinqToDB.DataType.Binary,    Length=16),             Nullable] public byte[]?   GuidValue      { get; set; } // CHAR (16) FOR BIT DATA
+			[Column(DbType="BLOB(5000)",             DataType=LinqToDB.DataType.Blob,      Length=5000),           Nullable] public byte[]?   BinaryValue    { get; set; } // BLOB(5000)
+			[Column(DbType="SMALLINT",               DataType=LinqToDB.DataType.Int16),                            Nullable] public short?    SmallIntValue  { get; set; } // SMALLINT
+			[Column(DbType="INTEGER",                DataType=LinqToDB.DataType.Int32),                            Nullable] public int?      IntValue       { get; set; } // INTEGER
+			[Column(DbType="BIGINT",                 DataType=LinqToDB.DataType.Int64),                            Nullable] public long?     BigIntValue    { get; set; } // BIGINT
+			[Column(DbType="VARCHAR(50)",            DataType=LinqToDB.DataType.VarChar,   Length=50),             Nullable] public string?   StringValue    { get; set; } // VARCHAR(50)
+		}
 
-	[Table(Schema="DB2INST1", Name="CollatedTable")]
-	public partial class DB2INST1_CollatedTable
-	{
-		[Column(DbType="INTEGER",     DataType=LinqToDB.DataType.Int32),              NotNull] public int    Id              { get; set; } // INTEGER
-		[Column(DbType="VARCHAR(80)", DataType=LinqToDB.DataType.VarChar, Length=80), NotNull] public string CaseSensitive   { get; set; } = null!; // VARCHAR(80)
-		[Column(DbType="VARCHAR(80)", DataType=LinqToDB.DataType.VarChar, Length=80), NotNull] public string CaseInsensitive { get; set; } = null!; // VARCHAR(80)
-	}
+		[Table(Schema="DB2INST1", Name="MASTERTABLE")]
+		public partial class MASTERTABLE
+		{
+			[Column(DbType="INTEGER", DataType=LinqToDB.DataType.Int32), PrimaryKey(0), NotNull] public int ID1 { get; set; } // INTEGER
+			[Column(DbType="INTEGER", DataType=LinqToDB.DataType.Int32), PrimaryKey(1), NotNull] public int ID2 { get; set; } // INTEGER
 
-	[Table(Schema="DB2INST1", Name="Doctor")]
-	public partial class DB2INST1_Doctor
-	{
-		[Column(DbType="INTEGER",     DataType=LinqToDB.DataType.Int32),              PrimaryKey, NotNull] public int    PersonID { get; set; } // INTEGER
-		[Column(DbType="VARCHAR(50)", DataType=LinqToDB.DataType.VarChar, Length=50),             NotNull] public string Taxonomy { get; set; } = null!; // VARCHAR(50)
+			#region Associations
 
-		#region Associations
+			/// <summary>
+			/// FK_SLAVETABLE_MASTERTABLE_BackReference (DB2INST1.SLAVETABLE)
+			/// </summary>
+			[Association(ThisKey=nameof(ID1) + ", " + nameof(ID2), OtherKey=nameof(DB2DataContext.DB2INST1Schema.SLAVETABLE.ID222222222222222222222222) + ", " + nameof(DB2DataContext.DB2INST1Schema.SLAVETABLE.ID1), CanBeNull=true)]
+			public IEnumerable<DB2INST1Schema.SLAVETABLE> Slavetables { get; set; } = null!;
 
-		/// <summary>
-		/// FK_Doctor_Person (DB2INST1.Person)
-		/// </summary>
-		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false)]
-		public DB2INST1_Person Person { get; set; } = null!;
+			#endregion
+		}
 
-		#endregion
-	}
+		[Table(Schema="DB2INST1", Name="Parent")]
+		public partial class Parent
+		{
+			[Column(DbType="INTEGER", DataType=LinqToDB.DataType.Int32), Nullable] public int? ParentID { get; set; } // INTEGER
+			[Column(DbType="INTEGER", DataType=LinqToDB.DataType.Int32), Nullable] public int? Value1   { get; set; } // INTEGER
+		}
 
-	[Table(Schema="DB2INST1", Name="GrandChild")]
-	public partial class DB2INST1_GrandChild
-	{
-		[Column(DbType="INTEGER", DataType=LinqToDB.DataType.Int32), Nullable] public int? ParentID     { get; set; } // INTEGER
-		[Column(DbType="INTEGER", DataType=LinqToDB.DataType.Int32), Nullable] public int? ChildID      { get; set; } // INTEGER
-		[Column(DbType="INTEGER", DataType=LinqToDB.DataType.Int32), Nullable] public int? GrandChildID { get; set; } // INTEGER
-	}
+		[Table(Schema="DB2INST1", Name="Patient")]
+		public partial class Patient
+		{
+			[Column(DbType="INTEGER",      DataType=LinqToDB.DataType.Int32),               PrimaryKey, NotNull] public int    PersonID  { get; set; } // INTEGER
+			[Column(DbType="VARCHAR(256)", DataType=LinqToDB.DataType.VarChar, Length=256),             NotNull] public string Diagnosis { get; set; } = null!; // VARCHAR(256)
 
-	[Table(Schema="DB2INST1", Name="InheritanceChild")]
-	public partial class DB2INST1_InheritanceChild
-	{
-		[Column(DbType="INTEGER",     DataType=LinqToDB.DataType.Int32),              PrimaryKey,  NotNull] public int     InheritanceChildId  { get; set; } // INTEGER
-		[Column(DbType="INTEGER",     DataType=LinqToDB.DataType.Int32),                           NotNull] public int     InheritanceParentId { get; set; } // INTEGER
-		[Column(DbType="INTEGER",     DataType=LinqToDB.DataType.Int32),                 Nullable         ] public int?    TypeDiscriminator   { get; set; } // INTEGER
-		[Column(DbType="VARCHAR(50)", DataType=LinqToDB.DataType.VarChar, Length=50),    Nullable         ] public string? Name                { get; set; } // VARCHAR(50)
-	}
+			#region Associations
 
-	[Table(Schema="DB2INST1", Name="InheritanceParent")]
-	public partial class DB2INST1_InheritanceParent
-	{
-		[Column(DbType="INTEGER",     DataType=LinqToDB.DataType.Int32),              PrimaryKey,  NotNull] public int     InheritanceParentId { get; set; } // INTEGER
-		[Column(DbType="INTEGER",     DataType=LinqToDB.DataType.Int32),                 Nullable         ] public int?    TypeDiscriminator   { get; set; } // INTEGER
-		[Column(DbType="VARCHAR(50)", DataType=LinqToDB.DataType.VarChar, Length=50),    Nullable         ] public string? Name                { get; set; } // VARCHAR(50)
-	}
+			/// <summary>
+			/// FK_Patient_Person (DB2INST1.Person)
+			/// </summary>
+			[Association(ThisKey=nameof(PersonID), OtherKey=nameof(DB2DataContext.DB2INST1Schema.Person.PersonID), CanBeNull=false)]
+			public DB2INST1Schema.Person Person { get; set; } = null!;
 
-	[Table(Schema="DB2INST1", Name="KeepIdentityTest")]
-	public partial class DB2INST1_KeepIdentityTest
-	{
-		[Column(DbType="INTEGER", DataType=LinqToDB.DataType.Int32), PrimaryKey, Identity] public int  ID    { get; set; } // INTEGER
-		[Column(DbType="INTEGER", DataType=LinqToDB.DataType.Int32), Nullable            ] public int? Value { get; set; } // INTEGER
-	}
+			#endregion
+		}
 
-	[Table(Schema="DB2INST1", Name="LinqDataTypes")]
-	public partial class DB2INST1_LinqDataType
-	{
-		[Column(DbType="INTEGER",                DataType=LinqToDB.DataType.Int32),                            Nullable] public int?      ID             { get; set; } // INTEGER
-		[Column(DbType="DECIMAL(10,4)",          DataType=LinqToDB.DataType.Decimal,   Precision=10, Scale=4), Nullable] public decimal?  MoneyValue     { get; set; } // DECIMAL(10,4)
-		[Column(DbType="TIMESTAMP",              DataType=LinqToDB.DataType.Timestamp),                        Nullable] public DateTime? DateTimeValue  { get; set; } // TIMESTAMP
-		[Column(DbType="TIMESTAMP",              DataType=LinqToDB.DataType.Timestamp),                        Nullable] public DateTime? DateTimeValue2 { get; set; } // TIMESTAMP
-		[Column(DbType="SMALLINT",               DataType=LinqToDB.DataType.Int16),                            Nullable] public short?    BoolValue      { get; set; } // SMALLINT
-		[Column(DbType="CHAR (16) FOR BIT DATA", DataType=LinqToDB.DataType.Binary,    Length=16),             Nullable] public byte[]?   GuidValue      { get; set; } // CHAR (16) FOR BIT DATA
-		[Column(DbType="BLOB(5000)",             DataType=LinqToDB.DataType.Blob,      Length=5000),           Nullable] public byte[]?   BinaryValue    { get; set; } // BLOB(5000)
-		[Column(DbType="SMALLINT",               DataType=LinqToDB.DataType.Int16),                            Nullable] public short?    SmallIntValue  { get; set; } // SMALLINT
-		[Column(DbType="INTEGER",                DataType=LinqToDB.DataType.Int32),                            Nullable] public int?      IntValue       { get; set; } // INTEGER
-		[Column(DbType="BIGINT",                 DataType=LinqToDB.DataType.Int64),                            Nullable] public long?     BigIntValue    { get; set; } // BIGINT
-		[Column(DbType="VARCHAR(50)",            DataType=LinqToDB.DataType.VarChar,   Length=50),             Nullable] public string?   StringValue    { get; set; } // VARCHAR(50)
-	}
+		[Table(Schema="DB2INST1", Name="Person")]
+		public partial class Person
+		{
+			[Column(DbType="INTEGER",      DataType=LinqToDB.DataType.Int32),              PrimaryKey,  Identity] public int     PersonID   { get; set; } // INTEGER
+			[Column(DbType="VARCHAR(50)",  DataType=LinqToDB.DataType.VarChar, Length=50), NotNull              ] public string  FirstName  { get; set; } = null!; // VARCHAR(50)
+			[Column(DbType="VARCHAR(50)",  DataType=LinqToDB.DataType.VarChar, Length=50), NotNull              ] public string  LastName   { get; set; } = null!; // VARCHAR(50)
+			[Column(DbType="VARCHAR(50)",  DataType=LinqToDB.DataType.VarChar, Length=50),    Nullable          ] public string? MiddleName { get; set; } // VARCHAR(50)
+			[Column(DbType="CHARACTER(1)", DataType=LinqToDB.DataType.Char,    Length=1),  NotNull              ] public char    Gender     { get; set; } // CHARACTER(1)
 
-	[Table(Schema="DB2INST1", Name="MASTERTABLE")]
-	public partial class DB2INST1_MASTERTABLE
-	{
-		[Column(DbType="INTEGER", DataType=LinqToDB.DataType.Int32), PrimaryKey(0), NotNull] public int ID1 { get; set; } // INTEGER
-		[Column(DbType="INTEGER", DataType=LinqToDB.DataType.Int32), PrimaryKey(1), NotNull] public int ID2 { get; set; } // INTEGER
+			#region Associations
 
-		#region Associations
+			/// <summary>
+			/// FK_Doctor_Person_BackReference (DB2INST1.Doctor)
+			/// </summary>
+			[Association(ThisKey=nameof(PersonID), OtherKey=nameof(DB2DataContext.DB2INST1Schema.Doctor.PersonID), CanBeNull=true)]
+			public DB2INST1Schema.Doctor? Doctor { get; set; }
 
-		/// <summary>
-		/// FK_SLAVETABLE_MASTERTABLE_BackReference (DB2INST1.SLAVETABLE)
-		/// </summary>
-		[Association(ThisKey="ID1, ID2", OtherKey="ID222222222222222222222222, ID1", CanBeNull=true)]
-		public IEnumerable<DB2INST1_SLAVETABLE> Slavetables { get; set; } = null!;
+			/// <summary>
+			/// FK_Patient_Person_BackReference (DB2INST1.Patient)
+			/// </summary>
+			[Association(ThisKey=nameof(PersonID), OtherKey=nameof(DB2DataContext.DB2INST1Schema.Patient.PersonID), CanBeNull=true)]
+			public DB2INST1Schema.Patient? Patient { get; set; }
 
-		#endregion
-	}
+			#endregion
+		}
 
-	[Table(Schema="DB2INST1", Name="Parent")]
-	public partial class DB2INST1_Parent
-	{
-		[Column(DbType="INTEGER", DataType=LinqToDB.DataType.Int32), Nullable] public int? ParentID { get; set; } // INTEGER
-		[Column(DbType="INTEGER", DataType=LinqToDB.DataType.Int32), Nullable] public int? Value1   { get; set; } // INTEGER
-	}
+		[Table(Schema="DB2INST1", Name="PERSONVIEW", IsView=true)]
+		public partial class PERSONVIEW
+		{
+			[Column(DbType="INTEGER",      DataType=LinqToDB.DataType.Int32),              NotNull    ] public int     PersonID   { get; set; } // INTEGER
+			[Column(DbType="VARCHAR(50)",  DataType=LinqToDB.DataType.VarChar, Length=50), NotNull    ] public string  FirstName  { get; set; } = null!; // VARCHAR(50)
+			[Column(DbType="VARCHAR(50)",  DataType=LinqToDB.DataType.VarChar, Length=50), NotNull    ] public string  LastName   { get; set; } = null!; // VARCHAR(50)
+			[Column(DbType="VARCHAR(50)",  DataType=LinqToDB.DataType.VarChar, Length=50),    Nullable] public string? MiddleName { get; set; } // VARCHAR(50)
+			[Column(DbType="CHARACTER(1)", DataType=LinqToDB.DataType.Char,    Length=1),  NotNull    ] public char    Gender     { get; set; } // CHARACTER(1)
+		}
 
-	[Table(Schema="DB2INST1", Name="Patient")]
-	public partial class DB2INST1_Patient
-	{
-		[Column(DbType="INTEGER",      DataType=LinqToDB.DataType.Int32),               PrimaryKey, NotNull] public int    PersonID  { get; set; } // INTEGER
-		[Column(DbType="VARCHAR(256)", DataType=LinqToDB.DataType.VarChar, Length=256),             NotNull] public string Diagnosis { get; set; } = null!; // VARCHAR(256)
+		[Table(Schema="DB2INST1", Name="SLAVETABLE")]
+		public partial class SLAVETABLE
+		{
+			[Column(                                 DbType="INTEGER", DataType=LinqToDB.DataType.Int32), NotNull] public int ID1                        { get; set; } // INTEGER
+			[Column("ID 2222222222222222222222  22", DbType="INTEGER", DataType=LinqToDB.DataType.Int32), NotNull] public int ID222222222222222222222222 { get; set; } // INTEGER
+			[Column("ID 2222222222222222",           DbType="INTEGER", DataType=LinqToDB.DataType.Int32), NotNull] public int ID2222222222222222         { get; set; } // INTEGER
 
-		#region Associations
+			#region Associations
 
-		/// <summary>
-		/// FK_Patient_Person (DB2INST1.Person)
-		/// </summary>
-		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false)]
-		public DB2INST1_Person Person { get; set; } = null!;
+			/// <summary>
+			/// FK_SLAVETABLE_MASTERTABLE (DB2INST1.MASTERTABLE)
+			/// </summary>
+			[Association(ThisKey=nameof(ID222222222222222222222222) + ", " + nameof(ID1), OtherKey=nameof(DB2DataContext.DB2INST1Schema.MASTERTABLE.ID1) + ", " + nameof(DB2DataContext.DB2INST1Schema.MASTERTABLE.ID2), CanBeNull=false)]
+			public DB2INST1Schema.MASTERTABLE MASTERTABLE { get; set; } = null!;
 
-		#endregion
-	}
+			#endregion
+		}
 
-	[Table(Schema="DB2INST1", Name="Person")]
-	public partial class DB2INST1_Person
-	{
-		[Column(DbType="INTEGER",      DataType=LinqToDB.DataType.Int32),              PrimaryKey,  Identity] public int     PersonID   { get; set; } // INTEGER
-		[Column(DbType="VARCHAR(50)",  DataType=LinqToDB.DataType.VarChar, Length=50), NotNull              ] public string  FirstName  { get; set; } = null!; // VARCHAR(50)
-		[Column(DbType="VARCHAR(50)",  DataType=LinqToDB.DataType.VarChar, Length=50), NotNull              ] public string  LastName   { get; set; } = null!; // VARCHAR(50)
-		[Column(DbType="VARCHAR(50)",  DataType=LinqToDB.DataType.VarChar, Length=50),    Nullable          ] public string? MiddleName { get; set; } // VARCHAR(50)
-		[Column(DbType="CHARACTER(1)", DataType=LinqToDB.DataType.Char,    Length=1),  NotNull              ] public char    Gender     { get; set; } // CHARACTER(1)
+		[Table(Schema="DB2INST1", Name="TestIdentity")]
+		public partial class TestIdentity
+		{
+			[Column(DbType="INTEGER", DataType=LinqToDB.DataType.Int32), PrimaryKey, Identity] public int ID { get; set; } // INTEGER
+		}
 
-		#region Associations
+		[Table(Schema="DB2INST1", Name="TestMerge1")]
+		public partial class TestMerge1
+		{
+			[Column(DbType="INTEGER",                   DataType=LinqToDB.DataType.Int32),                             PrimaryKey,  NotNull] public int       Id              { get; set; } // INTEGER
+			[Column(DbType="INTEGER",                   DataType=LinqToDB.DataType.Int32),                                Nullable         ] public int?      Field1          { get; set; } // INTEGER
+			[Column(DbType="INTEGER",                   DataType=LinqToDB.DataType.Int32),                                Nullable         ] public int?      Field2          { get; set; } // INTEGER
+			[Column(DbType="INTEGER",                   DataType=LinqToDB.DataType.Int32),                                Nullable         ] public int?      Field3          { get; set; } // INTEGER
+			[Column(DbType="INTEGER",                   DataType=LinqToDB.DataType.Int32),                                Nullable         ] public int?      Field4          { get; set; } // INTEGER
+			[Column(DbType="INTEGER",                   DataType=LinqToDB.DataType.Int32),                                Nullable         ] public int?      Field5          { get; set; } // INTEGER
+			[Column(DbType="BIGINT",                    DataType=LinqToDB.DataType.Int64),                                Nullable         ] public long?     FieldInt64      { get; set; } // BIGINT
+			[Column(DbType="SMALLINT",                  DataType=LinqToDB.DataType.Int16),                                Nullable         ] public short?    FieldBoolean    { get; set; } // SMALLINT
+			[Column(DbType="VARCHAR(20)",               DataType=LinqToDB.DataType.VarChar,   Length=20),                 Nullable         ] public string?   FieldString     { get; set; } // VARCHAR(20)
+			[Column(DbType="VARCHAR(80)",               DataType=LinqToDB.DataType.VarChar,   Length=80),                 Nullable         ] public string?   FieldNString    { get; set; } // VARCHAR(80)
+			[Column(DbType="CHARACTER(1)",              DataType=LinqToDB.DataType.Char,      Length=1),                  Nullable         ] public char?     FieldChar       { get; set; } // CHARACTER(1)
+			[Column(DbType="CHARACTER(4)",              DataType=LinqToDB.DataType.Char,      Length=4),                  Nullable         ] public string?   FieldNChar      { get; set; } // CHARACTER(4)
+			[Column(DbType="REAL",                      DataType=LinqToDB.DataType.Single),                               Nullable         ] public float?    FieldFloat      { get; set; } // REAL
+			[Column(DbType="DOUBLE",                    DataType=LinqToDB.DataType.Double),                               Nullable         ] public double?   FieldDouble     { get; set; } // DOUBLE
+			[Column(DbType="TIMESTAMP",                 DataType=LinqToDB.DataType.Timestamp),                            Nullable         ] public DateTime? FieldDateTime   { get; set; } // TIMESTAMP
+			[Column(DbType="VARCHAR (20) FOR BIT DATA", DataType=LinqToDB.DataType.VarBinary, Length=20),                 Nullable         ] public byte[]?   FieldBinary     { get; set; } // VARCHAR (20) FOR BIT DATA
+			[Column(DbType="CHAR (16) FOR BIT DATA",    DataType=LinqToDB.DataType.Binary,    Length=16),                 Nullable         ] public byte[]?   FieldGuid       { get; set; } // CHAR (16) FOR BIT DATA
+			[Column(DbType="DECIMAL(24,10)",            DataType=LinqToDB.DataType.Decimal,   Precision=24, Scale=10),    Nullable         ] public decimal?  FieldDecimal    { get; set; } // DECIMAL(24,10)
+			[Column(DbType="DATE",                      DataType=LinqToDB.DataType.Date),                                 Nullable         ] public DateTime? FieldDate       { get; set; } // DATE
+			[Column(DbType="TIME",                      DataType=LinqToDB.DataType.Time),                                 Nullable         ] public TimeSpan? FieldTime       { get; set; } // TIME
+			[Column(DbType="VARCHAR(20)",               DataType=LinqToDB.DataType.VarChar,   Length=20),                 Nullable         ] public string?   FieldEnumString { get; set; } // VARCHAR(20)
+			[Column(DbType="INTEGER",                   DataType=LinqToDB.DataType.Int32),                                Nullable         ] public int?      FieldEnumNumber { get; set; } // INTEGER
+		}
 
-		/// <summary>
-		/// FK_Doctor_Person_BackReference (DB2INST1.Doctor)
-		/// </summary>
-		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=true)]
-		public DB2INST1_Doctor? Doctor { get; set; }
+		[Table(Schema="DB2INST1", Name="TestMerge2")]
+		public partial class TestMerge2
+		{
+			[Column(DbType="INTEGER",                   DataType=LinqToDB.DataType.Int32),                             PrimaryKey,  NotNull] public int       Id              { get; set; } // INTEGER
+			[Column(DbType="INTEGER",                   DataType=LinqToDB.DataType.Int32),                                Nullable         ] public int?      Field1          { get; set; } // INTEGER
+			[Column(DbType="INTEGER",                   DataType=LinqToDB.DataType.Int32),                                Nullable         ] public int?      Field2          { get; set; } // INTEGER
+			[Column(DbType="INTEGER",                   DataType=LinqToDB.DataType.Int32),                                Nullable         ] public int?      Field3          { get; set; } // INTEGER
+			[Column(DbType="INTEGER",                   DataType=LinqToDB.DataType.Int32),                                Nullable         ] public int?      Field4          { get; set; } // INTEGER
+			[Column(DbType="INTEGER",                   DataType=LinqToDB.DataType.Int32),                                Nullable         ] public int?      Field5          { get; set; } // INTEGER
+			[Column(DbType="BIGINT",                    DataType=LinqToDB.DataType.Int64),                                Nullable         ] public long?     FieldInt64      { get; set; } // BIGINT
+			[Column(DbType="SMALLINT",                  DataType=LinqToDB.DataType.Int16),                                Nullable         ] public short?    FieldBoolean    { get; set; } // SMALLINT
+			[Column(DbType="VARCHAR(20)",               DataType=LinqToDB.DataType.VarChar,   Length=20),                 Nullable         ] public string?   FieldString     { get; set; } // VARCHAR(20)
+			[Column(DbType="VARCHAR(80)",               DataType=LinqToDB.DataType.VarChar,   Length=80),                 Nullable         ] public string?   FieldNString    { get; set; } // VARCHAR(80)
+			[Column(DbType="CHARACTER(1)",              DataType=LinqToDB.DataType.Char,      Length=1),                  Nullable         ] public char?     FieldChar       { get; set; } // CHARACTER(1)
+			[Column(DbType="CHARACTER(4)",              DataType=LinqToDB.DataType.Char,      Length=4),                  Nullable         ] public string?   FieldNChar      { get; set; } // CHARACTER(4)
+			[Column(DbType="REAL",                      DataType=LinqToDB.DataType.Single),                               Nullable         ] public float?    FieldFloat      { get; set; } // REAL
+			[Column(DbType="DOUBLE",                    DataType=LinqToDB.DataType.Double),                               Nullable         ] public double?   FieldDouble     { get; set; } // DOUBLE
+			[Column(DbType="TIMESTAMP",                 DataType=LinqToDB.DataType.Timestamp),                            Nullable         ] public DateTime? FieldDateTime   { get; set; } // TIMESTAMP
+			[Column(DbType="VARCHAR (20) FOR BIT DATA", DataType=LinqToDB.DataType.VarBinary, Length=20),                 Nullable         ] public byte[]?   FieldBinary     { get; set; } // VARCHAR (20) FOR BIT DATA
+			[Column(DbType="CHAR (16) FOR BIT DATA",    DataType=LinqToDB.DataType.Binary,    Length=16),                 Nullable         ] public byte[]?   FieldGuid       { get; set; } // CHAR (16) FOR BIT DATA
+			[Column(DbType="DECIMAL(24,10)",            DataType=LinqToDB.DataType.Decimal,   Precision=24, Scale=10),    Nullable         ] public decimal?  FieldDecimal    { get; set; } // DECIMAL(24,10)
+			[Column(DbType="DATE",                      DataType=LinqToDB.DataType.Date),                                 Nullable         ] public DateTime? FieldDate       { get; set; } // DATE
+			[Column(DbType="TIME",                      DataType=LinqToDB.DataType.Time),                                 Nullable         ] public TimeSpan? FieldTime       { get; set; } // TIME
+			[Column(DbType="VARCHAR(20)",               DataType=LinqToDB.DataType.VarChar,   Length=20),                 Nullable         ] public string?   FieldEnumString { get; set; } // VARCHAR(20)
+			[Column(DbType="INTEGER",                   DataType=LinqToDB.DataType.Int32),                                Nullable         ] public int?      FieldEnumNumber { get; set; } // INTEGER
+		}
 
-		/// <summary>
-		/// FK_Patient_Person_BackReference (DB2INST1.Patient)
-		/// </summary>
-		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=true)]
-		public DB2INST1_Patient? Patient { get; set; }
+		#region Stored Procedures
 
-		#endregion
-	}
-
-	[Table(Schema="DB2INST1", Name="PERSONVIEW", IsView=true)]
-	public partial class DB2INST1_PERSONVIEW
-	{
-		[Column(DbType="INTEGER",      DataType=LinqToDB.DataType.Int32),              NotNull    ] public int     PersonID   { get; set; } // INTEGER
-		[Column(DbType="VARCHAR(50)",  DataType=LinqToDB.DataType.VarChar, Length=50), NotNull    ] public string  FirstName  { get; set; } = null!; // VARCHAR(50)
-		[Column(DbType="VARCHAR(50)",  DataType=LinqToDB.DataType.VarChar, Length=50), NotNull    ] public string  LastName   { get; set; } = null!; // VARCHAR(50)
-		[Column(DbType="VARCHAR(50)",  DataType=LinqToDB.DataType.VarChar, Length=50),    Nullable] public string? MiddleName { get; set; } // VARCHAR(50)
-		[Column(DbType="CHARACTER(1)", DataType=LinqToDB.DataType.Char,    Length=1),  NotNull    ] public char    Gender     { get; set; } // CHARACTER(1)
-	}
-
-	[Table(Schema="DB2INST1", Name="SLAVETABLE")]
-	public partial class DB2INST1_SLAVETABLE
-	{
-		[Column(                                 DbType="INTEGER", DataType=LinqToDB.DataType.Int32), NotNull] public int ID1                        { get; set; } // INTEGER
-		[Column("ID 2222222222222222222222  22", DbType="INTEGER", DataType=LinqToDB.DataType.Int32), NotNull] public int ID222222222222222222222222 { get; set; } // INTEGER
-		[Column("ID 2222222222222222",           DbType="INTEGER", DataType=LinqToDB.DataType.Int32), NotNull] public int ID2222222222222222         { get; set; } // INTEGER
-
-		#region Associations
-
-		/// <summary>
-		/// FK_SLAVETABLE_MASTERTABLE (DB2INST1.MASTERTABLE)
-		/// </summary>
-		[Association(ThisKey="ID222222222222222222222222, ID1", OtherKey="ID1, ID2", CanBeNull=false)]
-		public DB2INST1_MASTERTABLE MASTERTABLE { get; set; } = null!;
-
-		#endregion
-	}
-
-	[Table(Schema="DB2INST1", Name="TestIdentity")]
-	public partial class DB2INST1_TestIdentity
-	{
-		[Column(DbType="INTEGER", DataType=LinqToDB.DataType.Int32), PrimaryKey, Identity] public int ID { get; set; } // INTEGER
-	}
-
-	[Table(Schema="DB2INST1", Name="TestMerge1")]
-	public partial class DB2INST1_TestMerge1
-	{
-		[Column(DbType="INTEGER",                   DataType=LinqToDB.DataType.Int32),                             PrimaryKey,  NotNull] public int       Id              { get; set; } // INTEGER
-		[Column(DbType="INTEGER",                   DataType=LinqToDB.DataType.Int32),                                Nullable         ] public int?      Field1          { get; set; } // INTEGER
-		[Column(DbType="INTEGER",                   DataType=LinqToDB.DataType.Int32),                                Nullable         ] public int?      Field2          { get; set; } // INTEGER
-		[Column(DbType="INTEGER",                   DataType=LinqToDB.DataType.Int32),                                Nullable         ] public int?      Field3          { get; set; } // INTEGER
-		[Column(DbType="INTEGER",                   DataType=LinqToDB.DataType.Int32),                                Nullable         ] public int?      Field4          { get; set; } // INTEGER
-		[Column(DbType="INTEGER",                   DataType=LinqToDB.DataType.Int32),                                Nullable         ] public int?      Field5          { get; set; } // INTEGER
-		[Column(DbType="BIGINT",                    DataType=LinqToDB.DataType.Int64),                                Nullable         ] public long?     FieldInt64      { get; set; } // BIGINT
-		[Column(DbType="SMALLINT",                  DataType=LinqToDB.DataType.Int16),                                Nullable         ] public short?    FieldBoolean    { get; set; } // SMALLINT
-		[Column(DbType="VARCHAR(20)",               DataType=LinqToDB.DataType.VarChar,   Length=20),                 Nullable         ] public string?   FieldString     { get; set; } // VARCHAR(20)
-		[Column(DbType="VARCHAR(80)",               DataType=LinqToDB.DataType.VarChar,   Length=80),                 Nullable         ] public string?   FieldNString    { get; set; } // VARCHAR(80)
-		[Column(DbType="CHARACTER(1)",              DataType=LinqToDB.DataType.Char,      Length=1),                  Nullable         ] public char?     FieldChar       { get; set; } // CHARACTER(1)
-		[Column(DbType="CHARACTER(4)",              DataType=LinqToDB.DataType.Char,      Length=4),                  Nullable         ] public string?   FieldNChar      { get; set; } // CHARACTER(4)
-		[Column(DbType="REAL",                      DataType=LinqToDB.DataType.Single),                               Nullable         ] public float?    FieldFloat      { get; set; } // REAL
-		[Column(DbType="DOUBLE",                    DataType=LinqToDB.DataType.Double),                               Nullable         ] public double?   FieldDouble     { get; set; } // DOUBLE
-		[Column(DbType="TIMESTAMP",                 DataType=LinqToDB.DataType.Timestamp),                            Nullable         ] public DateTime? FieldDateTime   { get; set; } // TIMESTAMP
-		[Column(DbType="VARCHAR (20) FOR BIT DATA", DataType=LinqToDB.DataType.VarBinary, Length=20),                 Nullable         ] public byte[]?   FieldBinary     { get; set; } // VARCHAR (20) FOR BIT DATA
-		[Column(DbType="CHAR (16) FOR BIT DATA",    DataType=LinqToDB.DataType.Binary,    Length=16),                 Nullable         ] public byte[]?   FieldGuid       { get; set; } // CHAR (16) FOR BIT DATA
-		[Column(DbType="DECIMAL(24,10)",            DataType=LinqToDB.DataType.Decimal,   Precision=24, Scale=10),    Nullable         ] public decimal?  FieldDecimal    { get; set; } // DECIMAL(24,10)
-		[Column(DbType="DATE",                      DataType=LinqToDB.DataType.Date),                                 Nullable         ] public DateTime? FieldDate       { get; set; } // DATE
-		[Column(DbType="TIME",                      DataType=LinqToDB.DataType.Time),                                 Nullable         ] public TimeSpan? FieldTime       { get; set; } // TIME
-		[Column(DbType="VARCHAR(20)",               DataType=LinqToDB.DataType.VarChar,   Length=20),                 Nullable         ] public string?   FieldEnumString { get; set; } // VARCHAR(20)
-		[Column(DbType="INTEGER",                   DataType=LinqToDB.DataType.Int32),                                Nullable         ] public int?      FieldEnumNumber { get; set; } // INTEGER
-	}
-
-	[Table(Schema="DB2INST1", Name="TestMerge2")]
-	public partial class DB2INST1_TestMerge2
-	{
-		[Column(DbType="INTEGER",                   DataType=LinqToDB.DataType.Int32),                             PrimaryKey,  NotNull] public int       Id              { get; set; } // INTEGER
-		[Column(DbType="INTEGER",                   DataType=LinqToDB.DataType.Int32),                                Nullable         ] public int?      Field1          { get; set; } // INTEGER
-		[Column(DbType="INTEGER",                   DataType=LinqToDB.DataType.Int32),                                Nullable         ] public int?      Field2          { get; set; } // INTEGER
-		[Column(DbType="INTEGER",                   DataType=LinqToDB.DataType.Int32),                                Nullable         ] public int?      Field3          { get; set; } // INTEGER
-		[Column(DbType="INTEGER",                   DataType=LinqToDB.DataType.Int32),                                Nullable         ] public int?      Field4          { get; set; } // INTEGER
-		[Column(DbType="INTEGER",                   DataType=LinqToDB.DataType.Int32),                                Nullable         ] public int?      Field5          { get; set; } // INTEGER
-		[Column(DbType="BIGINT",                    DataType=LinqToDB.DataType.Int64),                                Nullable         ] public long?     FieldInt64      { get; set; } // BIGINT
-		[Column(DbType="SMALLINT",                  DataType=LinqToDB.DataType.Int16),                                Nullable         ] public short?    FieldBoolean    { get; set; } // SMALLINT
-		[Column(DbType="VARCHAR(20)",               DataType=LinqToDB.DataType.VarChar,   Length=20),                 Nullable         ] public string?   FieldString     { get; set; } // VARCHAR(20)
-		[Column(DbType="VARCHAR(80)",               DataType=LinqToDB.DataType.VarChar,   Length=80),                 Nullable         ] public string?   FieldNString    { get; set; } // VARCHAR(80)
-		[Column(DbType="CHARACTER(1)",              DataType=LinqToDB.DataType.Char,      Length=1),                  Nullable         ] public char?     FieldChar       { get; set; } // CHARACTER(1)
-		[Column(DbType="CHARACTER(4)",              DataType=LinqToDB.DataType.Char,      Length=4),                  Nullable         ] public string?   FieldNChar      { get; set; } // CHARACTER(4)
-		[Column(DbType="REAL",                      DataType=LinqToDB.DataType.Single),                               Nullable         ] public float?    FieldFloat      { get; set; } // REAL
-		[Column(DbType="DOUBLE",                    DataType=LinqToDB.DataType.Double),                               Nullable         ] public double?   FieldDouble     { get; set; } // DOUBLE
-		[Column(DbType="TIMESTAMP",                 DataType=LinqToDB.DataType.Timestamp),                            Nullable         ] public DateTime? FieldDateTime   { get; set; } // TIMESTAMP
-		[Column(DbType="VARCHAR (20) FOR BIT DATA", DataType=LinqToDB.DataType.VarBinary, Length=20),                 Nullable         ] public byte[]?   FieldBinary     { get; set; } // VARCHAR (20) FOR BIT DATA
-		[Column(DbType="CHAR (16) FOR BIT DATA",    DataType=LinqToDB.DataType.Binary,    Length=16),                 Nullable         ] public byte[]?   FieldGuid       { get; set; } // CHAR (16) FOR BIT DATA
-		[Column(DbType="DECIMAL(24,10)",            DataType=LinqToDB.DataType.Decimal,   Precision=24, Scale=10),    Nullable         ] public decimal?  FieldDecimal    { get; set; } // DECIMAL(24,10)
-		[Column(DbType="DATE",                      DataType=LinqToDB.DataType.Date),                                 Nullable         ] public DateTime? FieldDate       { get; set; } // DATE
-		[Column(DbType="TIME",                      DataType=LinqToDB.DataType.Time),                                 Nullable         ] public TimeSpan? FieldTime       { get; set; } // TIME
-		[Column(DbType="VARCHAR(20)",               DataType=LinqToDB.DataType.VarChar,   Length=20),                 Nullable         ] public string?   FieldEnumString { get; set; } // VARCHAR(20)
-		[Column(DbType="INTEGER",                   DataType=LinqToDB.DataType.Int32),                                Nullable         ] public int?      FieldEnumNumber { get; set; } // INTEGER
-	}
-
-	public static partial class TESTDATADBStoredProcedures
-	{
 		#region ADDISSUE792RECORD
 
 		public static int ADDISSUE792RECORD(this TESTDATADB dataConnection)
@@ -450,108 +478,111 @@ namespace DB2DataContext
 		}
 
 		#endregion
-	}
-
-	public static partial class SqlFunctions
-	{
-		#region TestFunction
-
-		[Sql.Function(Name="DB2INST1.TEST_FUNCTION", ServerSideOnly=true)]
-		public static int? TestFunction(int? i)
-		{
-			throw new InvalidOperationException();
-		}
 
 		#endregion
 
-		#region TestMODULE1TestFunction
-
-		[Sql.Function(Name="DB2INST1.TEST_MODULE1.TEST_FUNCTION", ServerSideOnly=true)]
-		public static int? TestMODULE1TestFunction(int? i)
+		public static partial class SqlFunctions
 		{
-			throw new InvalidOperationException();
+			#region TestFunction
+
+			[Sql.Function(Name="DB2INST1.TEST_FUNCTION", ServerSideOnly=true)]
+			public static int? TestFunction(int? i)
+			{
+				throw new InvalidOperationException();
+			}
+
+			#endregion
+
+			#region TestMODULE1TestFunction
+
+			[Sql.Function(Name="DB2INST1.TEST_MODULE1.TEST_FUNCTION", ServerSideOnly=true)]
+			public static int? TestMODULE1TestFunction(int? i)
+			{
+				throw new InvalidOperationException();
+			}
+
+			#endregion
+
+			#region TestMODULE2TestFunction
+
+			[Sql.Function(Name="DB2INST1.TEST_MODULE2.TEST_FUNCTION", ServerSideOnly=true)]
+			public static int? TestMODULE2TestFunction(int? i)
+			{
+				throw new InvalidOperationException();
+			}
+
+			#endregion
 		}
 
-		#endregion
+		#region Table Extensions
 
-		#region TestMODULE2TestFunction
-
-		[Sql.Function(Name="DB2INST1.TEST_MODULE2.TEST_FUNCTION", ServerSideOnly=true)]
-		public static int? TestMODULE2TestFunction(int? i)
-		{
-			throw new InvalidOperationException();
-		}
-
-		#endregion
-	}
-
-	public static partial class TableExtensions
-	{
-		public static DB2INST1_ALLTYPE? Find(this ITable<DB2INST1_ALLTYPE> table, int ID)
+		public static ALLTYPE? Find(this ITable<ALLTYPE> table, int ID)
 		{
 			return table.FirstOrDefault(t =>
 				t.ID == ID);
 		}
 
-		public static DB2INST1_Doctor? Find(this ITable<DB2INST1_Doctor> table, int PersonID)
+		public static Doctor? Find(this ITable<Doctor> table, int PersonID)
 		{
 			return table.FirstOrDefault(t =>
 				t.PersonID == PersonID);
 		}
 
-		public static DB2INST1_InheritanceChild? Find(this ITable<DB2INST1_InheritanceChild> table, int InheritanceChildId)
+		public static InheritanceChild? Find(this ITable<InheritanceChild> table, int InheritanceChildId)
 		{
 			return table.FirstOrDefault(t =>
 				t.InheritanceChildId == InheritanceChildId);
 		}
 
-		public static DB2INST1_InheritanceParent? Find(this ITable<DB2INST1_InheritanceParent> table, int InheritanceParentId)
+		public static InheritanceParent? Find(this ITable<InheritanceParent> table, int InheritanceParentId)
 		{
 			return table.FirstOrDefault(t =>
 				t.InheritanceParentId == InheritanceParentId);
 		}
 
-		public static DB2INST1_KeepIdentityTest? Find(this ITable<DB2INST1_KeepIdentityTest> table, int ID)
+		public static KeepIdentityTest? Find(this ITable<KeepIdentityTest> table, int ID)
 		{
 			return table.FirstOrDefault(t =>
 				t.ID == ID);
 		}
 
-		public static DB2INST1_MASTERTABLE? Find(this ITable<DB2INST1_MASTERTABLE> table, int ID1, int ID2)
+		public static MASTERTABLE? Find(this ITable<MASTERTABLE> table, int ID1, int ID2)
 		{
 			return table.FirstOrDefault(t =>
 				t.ID1 == ID1 &&
 				t.ID2 == ID2);
 		}
 
-		public static DB2INST1_Patient? Find(this ITable<DB2INST1_Patient> table, int PersonID)
+		public static Patient? Find(this ITable<Patient> table, int PersonID)
 		{
 			return table.FirstOrDefault(t =>
 				t.PersonID == PersonID);
 		}
 
-		public static DB2INST1_Person? Find(this ITable<DB2INST1_Person> table, int PersonID)
+		public static Person? Find(this ITable<Person> table, int PersonID)
 		{
 			return table.FirstOrDefault(t =>
 				t.PersonID == PersonID);
 		}
 
-		public static DB2INST1_TestIdentity? Find(this ITable<DB2INST1_TestIdentity> table, int ID)
+		public static TestIdentity? Find(this ITable<TestIdentity> table, int ID)
 		{
 			return table.FirstOrDefault(t =>
 				t.ID == ID);
 		}
 
-		public static DB2INST1_TestMerge1? Find(this ITable<DB2INST1_TestMerge1> table, int Id)
+		public static TestMerge1? Find(this ITable<TestMerge1> table, int Id)
 		{
 			return table.FirstOrDefault(t =>
 				t.Id == Id);
 		}
 
-		public static DB2INST1_TestMerge2? Find(this ITable<DB2INST1_TestMerge2> table, int Id)
+		public static TestMerge2? Find(this ITable<TestMerge2> table, int Id)
 		{
 			return table.FirstOrDefault(t =>
 				t.Id == Id);
 		}
+
+		#endregion
 	}
 }
