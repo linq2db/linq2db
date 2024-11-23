@@ -228,13 +228,5 @@ namespace LinqToDB.Linq.Builder
 			var tableContext = SequenceHelper.GetTableOrCteContext(target);
 			return tableContext?.SqlTable;
 		}
-
-		static Expression EnsureType(Expression expression, Type type)
-		{
-			if (expression.Type == type)
-				return expression;
-
-			return Expression.Convert(expression, type);
-		}
 	}
 }

@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 namespace LinqToDB.Linq
 {
 	using Builder;
+	using Internal;
 	using Common.Internal.Cache;
 
 	sealed class CompiledTable<T>
@@ -40,25 +41,26 @@ namespace LinqToDB.Linq
 					var exposed = ExpressionBuilder.ExposeExpression(key.expression, ctx.dataContext,
 						optimizationContext, ctx.parameterValues, optimizeConditions : false, compactBinary : true);
 
-					var query             = new Query<T>(ctx.dataContext, exposed);
-					var parametersContext = new ParametersContext(exposed, optimizationContext, ctx.dataContext);
+					var query             = new Query<T>(ctx.dataContext);
+					var expressions       = (IQueryExpressions)new RuntimeExpressionsContainer(exposed);
+					var parametersContext = new ParametersContext(expressions, optimizationContext, ctx.dataContext);
 
 					query = new ExpressionBuilder(query, false, optimizationContext, parametersContext, ctx.dataContext, exposed, ctx.lambda.Parameters.ToArray(), ctx.parameterValues)
-						.Build<T>();
+						.Build<T>(ref expressions);
 
 					if (query.ErrorExpression != null)
 					{
-						query = new Query<T>(ctx.dataContext, exposed);
+						query = new Query<T>(ctx.dataContext);
 
 						query = new ExpressionBuilder(query, true, optimizationContext, parametersContext, ctx.dataContext, exposed, ctx.lambda.Parameters.ToArray(), ctx.parameterValues)
-							.Build<T>();
+							.Build<T>(ref expressions);
 
 						if (query.ErrorExpression != null)
 							throw query.ErrorExpression.CreateException();
 					}
 
+					query.CompiledExpressions = expressions;
 
-					query.ClearDynamicQueryableInfo();
 					return query;
 				})!;
 
@@ -67,8 +69,10 @@ namespace LinqToDB.Linq
 
 		public IQueryable<T> Create(object[] parameters, object[] preambles)
 		{
-			var db = (IDataContext)parameters[0];
-			return new Table<T>(db, _expression) { Info = GetInfo(db, parameters), Parameters = parameters };
+			var db    = (IDataContext)parameters[0];
+			var query = GetInfo(db, parameters);
+
+			return new Table<T>(db, _expression) { Info = query, Parameters = parameters };
 		}
 
 		public T Execute(object[] parameters, object[] preambles)
@@ -76,7 +80,7 @@ namespace LinqToDB.Linq
 			var db    = (IDataContext)parameters[0];
 			var query = GetInfo(db, parameters);
 
-			return (T)query.GetElement(db, _expression, parameters, preambles)!;
+			return (T)query.GetElement(db, query.CompiledExpressions!, parameters, preambles)!;
 		}
 
 		public async Task<T> ExecuteAsync(object[] parameters, object[] preambles)
@@ -84,7 +88,7 @@ namespace LinqToDB.Linq
 			var db    = (IDataContext)parameters[0];
 			var query = GetInfo(db, parameters);
 
-			return (T)(await query.GetElementAsync(db, _expression, parameters, preambles, default).ConfigureAwait(false))!;
+			return (T)(await query.GetElementAsync(db, query.CompiledExpressions!, parameters, preambles, default).ConfigureAwait(false))!;
 		}
 	}
 }

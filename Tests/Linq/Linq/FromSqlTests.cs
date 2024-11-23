@@ -7,6 +7,7 @@ using FluentAssertions;
 using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.Linq.Builder;
+using LinqToDB.Linq.Internal;
 using LinqToDB.Mapping;
 using LinqToDB.SqlQuery;
 using LinqToDB.Tools.Comparers;
@@ -535,8 +536,8 @@ namespace Tests.Linq
 				var qry1 = GetQuery(1, 114);
 				var qry2 = GetQuery(1, 115);
 
-				var expr1 = qry1.Expression;
-				var expr2 = qry2.Expression;
+				var expr1 = (IQueryExpressions)new RuntimeExpressionsContainer(qry1.Expression);
+				var expr2 = (IQueryExpressions)new RuntimeExpressionsContainer(qry2.Expression);
 
 				var query1 = Query<SampleClass>.GetQuery(db, ref expr1, out _);
 				var query2 = Query<SampleClass>.GetQuery(db, ref expr2, out _);
@@ -561,8 +562,8 @@ namespace Tests.Linq
 				var qry1 = GetQuery(1, 114);
 				var qry2 = GetQuery(1, 115);
 
-				var expr1 = qry1.Expression;
-				var expr2 = qry2.Expression;
+				var expr1 = (IQueryExpressions)new RuntimeExpressionsContainer(qry1.Expression);
+				var expr2 = (IQueryExpressions)new RuntimeExpressionsContainer(qry2.Expression);
 
 				var query1 = Query<SampleClass>.GetQuery(db, ref expr1, out _);
 				var query2 = Query<SampleClass>.GetQuery(db, ref expr2, out _);
@@ -587,8 +588,8 @@ namespace Tests.Linq
 				var qry1 = GetQuery(table1, 1, 114);
 				var qry2 = GetQuery(table2, 1, 115);
 
-				var expr1 = qry1.Expression;
-				var expr2 = qry2.Expression;
+				var expr1 = (IQueryExpressions)new RuntimeExpressionsContainer(qry1.Expression);
+				var expr2 = (IQueryExpressions)new RuntimeExpressionsContainer(qry2.Expression);
 
 				var query1 = Query<SampleClass>.GetQuery(db, ref expr1, out _);
 				var query2 = Query<SampleClass>.GetQuery(db, ref expr2, out _);
@@ -613,8 +614,8 @@ namespace Tests.Linq
 				var qry1 = GetQuery(1, 114);
 				var qry2 = GetQuery(1, 115);
 
-				var expr1 = qry1.Expression;
-				var expr2 = qry2.Expression;
+				var expr1 = (IQueryExpressions)new RuntimeExpressionsContainer(qry1.Expression);
+				var expr2 = (IQueryExpressions)new RuntimeExpressionsContainer(qry2.Expression);
 
 				var query1 = Query<SampleClass>.GetQuery(db, ref expr1, out _);
 				var query2 = Query<SampleClass>.GetQuery(db, ref expr2, out _);
@@ -641,8 +642,8 @@ namespace Tests.Linq
 				var qry1 = GetQuery(1, 114);
 				var qry2 = GetQuery(1, 115);
 
-				var expr1 = qry1.Expression;
-				var expr2 = qry2.Expression;
+				var expr1 = (IQueryExpressions)new RuntimeExpressionsContainer(qry1.Expression);
+				var expr2 = (IQueryExpressions)new RuntimeExpressionsContainer(qry2.Expression);
 
 				var query1 = Query<SampleClass>.GetQuery(db, ref expr1, out _);
 				var query2 = Query<SampleClass>.GetQuery(db, ref expr2, out _);
@@ -670,8 +671,8 @@ namespace Tests.Linq
 				var qry1 = GetQuery(table1, 1, 114);
 				var qry2 = GetQuery(table2, 1, 115);
 
-				var expr1 = qry1.Expression;
-				var expr2 = qry2.Expression;
+				var expr1 = (IQueryExpressions)new RuntimeExpressionsContainer(qry1.Expression);
+				var expr2 = (IQueryExpressions)new RuntimeExpressionsContainer(qry2.Expression);
 
 				var query1 = Query<SampleClass>.GetQuery(db, ref expr1, out _);
 				var query2 = Query<SampleClass>.GetQuery(db, ref expr2, out _);

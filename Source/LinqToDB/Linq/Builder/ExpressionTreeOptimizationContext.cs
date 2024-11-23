@@ -9,9 +9,10 @@ using System.Runtime.CompilerServices;
 
 namespace LinqToDB.Linq.Builder
 {
-	using Common.Internal;
 	using Extensions;
 	using LinqToDB.Expressions;
+	using LinqToDB.Expressions.ExpressionVisitors;
+	using Common.Internal;
 	using Mapping;
 	using SqlQuery;
 
@@ -586,7 +587,7 @@ namespace LinqToDB.Linq.Builder
 				}
 				else
 				{
-					if (node != ExpressionBuilder.ExpressionParam && (_allowedParameters == null || !_allowedParameters.Any(ps => ps.Contains(node))))
+					if (node != ExpressionBuilder.QueryExpressionContainerParam && (_allowedParameters == null || !_allowedParameters.Any(ps => ps.Contains(node))))
 					{
 						CanBeCompiledFlag = false;
 					}

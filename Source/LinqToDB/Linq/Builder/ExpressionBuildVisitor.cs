@@ -409,7 +409,7 @@ namespace LinqToDB.Linq.Builder
 			if (param == null)
 				return null;
 
-			return new SqlInlinedSqlExpression(param.SqlParameter, innerSql);
+			return new SqlInlinedSqlExpression(param, innerSql);
 		}
 
 		ISqlExpression? ConvertToSqlConvertible(IBuildContext? context, Expression expression)
@@ -423,7 +423,7 @@ namespace LinqToDB.Linq.Builder
 			if (param == null)
 				return null;
 
-			return new SqlInlinedToSqlExpression(param.SqlParameter, innerExpr);
+			return new SqlInlinedToSqlExpression(param, innerExpr);
 		}
 
 		Expression MakeWithCache(IBuildContext context, Expression expression)
@@ -2236,7 +2236,7 @@ namespace LinqToDB.Linq.Builder
 
 		Expression ApplyAccessors(Expression expression)
 		{
-			var result = Builder.ParametersContext.ApplyAccessors(expression, true);
+			var result = Builder.ParametersContext.ApplyAccessors(expression);
 			return result;
 		}
 
@@ -2244,8 +2244,7 @@ namespace LinqToDB.Linq.Builder
 		{
 			if (_buildPurpose is BuildPurpose.Sql or BuildPurpose.Expression && Builder.CanBeCompiled(node, false))
 			{
-				var sqlParam = Builder.ParametersContext.BuildParameter(BuildContext, node, _columnDescriptor, forceNew: _buildFlags.HasFlag(BuildFlags.ForceParameter), alias: _alias)
-					?.SqlParameter;
+				var sqlParam = Builder.ParametersContext.BuildParameter(BuildContext, node, _columnDescriptor, forceNew: _buildFlags.HasFlag(BuildFlags.ForceParameter), alias: _alias);
 
 				if (sqlParam != null)
 				{
@@ -2359,8 +2358,7 @@ namespace LinqToDB.Linq.Builder
 
 						if (toTranslate is not SqlGenericConstructorExpression)
 						{
-							sql = Builder.ParametersContext.BuildParameter(BuildContext, toTranslate, _columnDescriptor, forceNew : _buildFlags.HasFlag(BuildFlags.ForceParameter), alias : _alias)
-								?.SqlParameter;
+							sql = Builder.ParametersContext.BuildParameter(BuildContext, toTranslate, _columnDescriptor, forceNew : _buildFlags.HasFlag(BuildFlags.ForceParameter), alias : _alias);
 						}
 					}
 
@@ -3179,10 +3177,10 @@ namespace LinqToDB.Linq.Builder
 				expr = Expression.OrElse(expr, Expression.Equal(variable, Expression.Constant(StringComparison.Ordinal)));
 				expr = Expression.Block(new[] { variable }, assignment, expr);
 
-				var parameter = Builder.ParametersContext.BuildParameter(BuildContext, expr, columnDescriptor : null, forceConstant : true)!;
-				parameter.SqlParameter.IsQueryParameter = false;
+				var parameter = Builder.ParametersContext.BuildParameter(BuildContext, expr, columnDescriptor : null)!;
+				parameter.IsQueryParameter = false;
 
-				return parameter.SqlParameter;
+				return parameter;
 			}
 
 			ISqlPredicate? predicate = null;
@@ -4702,8 +4700,7 @@ namespace LinqToDB.Linq.Builder
 
 						if (Builder.CanBeCompiled(arr, false))
 						{
-							var p = Builder.ParametersContext.BuildParameter(BuildContext, arr, _columnDescriptor, forceConstant : false,
-								buildParameterType : ParametersContext.BuildParameterType.InPredicate)!.SqlParameter;
+							var p = Builder.ParametersContext.BuildParameter(BuildContext, arr, _columnDescriptor, buildParameterType : ParametersContext.BuildParameterType.InPredicate)!;
 							p.IsQueryParameter = false;
 							return new SqlPredicate.InList(expr, DataOptions.LinqOptions.CompareNulls == CompareNulls.LikeClr ? false : null, false, p);
 						}
@@ -5205,18 +5202,7 @@ namespace LinqToDB.Linq.Builder
 
 			public void MarkAsNonParameter(Expression expression, object? currentValue)
 			{
-				if (Builder.ParametersContext.GetAccessorExpression(expression, out var accessor, false))
-				{
-					var currentValueExpr = Expression.Lambda<Func<Expression, IDataContext?, object?[]?, object?>>(Expression.Constant(currentValue, typeof(object)),
-						ExpressionBuilder.ExpressionParam, ExpressionConstants.DataContextParam, ExpressionBuilder.ParametersParam);
-					var currentValueFunc = currentValueExpr.CompileExpression();
-
-					var accessorLambda = Expression.Lambda<Func<Expression, IDataContext?, object?[]?, object?>>(accessor, 
-						ExpressionBuilder.ExpressionParam, ExpressionConstants.DataContextParam, ExpressionBuilder.ParametersParam);
-					var accessorFunc = accessorLambda.CompileExpression();
-
-					Builder.ParametersContext.RegisterDuplicateParameter(expression, currentValueFunc, accessorFunc);
-				}
+				Builder.ParametersContext.MarkAsValue(expression, currentValue);
 			}
 
 			public IDisposable UsingColumnDescriptor(ColumnDescriptor? columnDescriptor)

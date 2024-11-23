@@ -49,13 +49,13 @@ namespace LinqToDB.Linq
 		/// </summary>
 		/// <returns>Query SQL text.</returns>
 		string                 GetSqlText          ();
-
-		Expression     Expression       { get; }
-		IDataContext   DataContext      { get; }
-		object?[]?     Parameters       { get; }
-		object?[]?     Preambles        { get; }
-		Expression?    MapperExpression { get; set; }
-		int            RowsCount        { get; set; }
-		int            QueryNumber      { get; set; }
+		
+		IQueryExpressions Expressions      { get; }
+		IDataContext      DataContext      { get; }
+		object?[]?        Parameters       { get; }
+		object?[]?        Preambles        { get; }
+		Expression?       MapperExpression { get; set; }
+		int               RowsCount        { get; set; }
+		int               QueryNumber      { get; set; }
 	}
 }

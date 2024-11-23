@@ -116,11 +116,11 @@ namespace LinqToDB.Linq.Builder
 		public readonly ParameterExpression[]? CompiledParameters;
 		public readonly object?[]?             ParameterValues;
 
-		public static readonly ParameterExpression QueryRunnerParam = Expression.Parameter(typeof(IQueryRunner), "qr");
-		public static readonly ParameterExpression DataReaderParam  = Expression.Parameter(typeof(DbDataReader), "rd");
-		public static readonly ParameterExpression ParametersParam  = Expression.Parameter(typeof(object[]),     "ps");
-		public static readonly ParameterExpression ExpressionParam  = Expression.Parameter(typeof(Expression),   "expr");
-		public static readonly ParameterExpression RowCounterParam  = Expression.Parameter(typeof(int),          "counter");
+		public static readonly ParameterExpression QueryRunnerParam              = Expression.Parameter(typeof(IQueryRunner), "qr");
+		public static readonly ParameterExpression DataReaderParam               = Expression.Parameter(typeof(DbDataReader), "rd");
+		public static readonly ParameterExpression ParametersParam               = Expression.Parameter(typeof(object[]),     "ps");
+		public static readonly ParameterExpression QueryExpressionContainerParam = Expression.Parameter(typeof(IQueryExpressions), "container");
+		public static readonly ParameterExpression RowCounterParam               = Expression.Parameter(typeof(int),          "counter");
 
 		public MappingSchema MappingSchema => DataContext.MappingSchema;
 
@@ -128,7 +128,7 @@ namespace LinqToDB.Linq.Builder
 
 		#region Builder SQL
 
-		public Query<T> Build<T>()
+		public Query<T> Build<T>(ref IQueryExpressions expressions)
 		{
 			using var m = ActivityService.Start(ActivityID.Build);
 
@@ -159,9 +159,8 @@ namespace LinqToDB.Linq.Builder
 				}
 
 				_query.SetPreambles(preambles);
-				_query.SetParameterized(_parametersContext.GetParameterized());
-				_query.SetParametersDuplicates(_parametersContext.GetParameterDuplicates());
-				_query.SetDynamicAccessors(_parametersContext.GetDynamicAccessors());
+
+				expressions = FinalizeQueryCacheInformation((Query<T>)_query, preambles);
 			}
 
 			return (Query<T>)_query;
@@ -201,44 +200,49 @@ namespace LinqToDB.Linq.Builder
 					}
 				}
 
-				if (ParametersContext.CurrentSqlParameters.Count > 0)
-				{
-					query.SetParametersAccessors(ParametersContext.CurrentSqlParameters.ToList());
-					FinalizeParameterAccessors(query, preambles);
-				}
-
 				query.IsFinalized = true;
+				sequence.SetRunQuery(query, finalized);
+				FinalizeQueryCacheInformation(query, preambles);
 			}
 
-			sequence.SetRunQuery(query, finalized);
 			return true;
 		}
 
-		void FinalizeParameterAccessors<T>(Query<T> query, List<Preamble>? preambles)
+		IQueryExpressions FinalizeQueryCacheInformation<T>(Query<T> query, List<Preamble>? preambles)
 		{
-			if (query.ParameterAccessors == null)
-				return;
+			List<SqlParameter>? builtParameters = null;
 
-			var usedParameters = new HashSet<SqlParameter>();
-
-			foreach (var queryInfo in query.Queries)
+			if (ParametersContext.CacheManager.HasParameters)
 			{
-				queryInfo.Statement.VisitAll(x =>
-				{
-					if (x is SqlParameter { AccessorId: not null } p)
-						usedParameters.Add(p);
-				});
+				var usedParameters = new HashSet<SqlParameter>();
 
-				if (preambles?.Count > 0)
+				foreach (var queryInfo in query.Queries)
 				{
-					foreach (var preamble in preambles)
+					queryInfo.Statement.VisitAll(x =>
 					{
-						preamble.GetUsedParameters(usedParameters);
+						if (x is SqlParameter { AccessorId: not null } p)
+							usedParameters.Add(p);
+					});
+
+					if (preambles?.Count > 0)
+					{
+						foreach (var preamble in preambles)
+						{
+							preamble.GetUsedParameters(usedParameters);
+						}
 					}
 				}
+
+				builtParameters = usedParameters.ToList();
 			}
 
-			query.ParameterAccessors.RemoveAll(a => usedParameters.All(p => p.AccessorId != a.AccessorId));
+			var (compareInfo, parameterAccessors, expressions) = ParametersContext.CacheManager.BuildQueryCacheCompareInfo(DataContext, ParametersContext.ParametersExpression, builtParameters);
+			
+			query.ParameterAccessors = parameterAccessors;
+			query.CompareInfo        = compareInfo;
+			query.BuiltParameters    = builtParameters;
+
+			return expressions;
 		}
 
 		Stack<Expression>? _recursiveBuildItems;

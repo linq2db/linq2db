@@ -13,6 +13,7 @@ namespace LinqToDB.Linq
 	using Data;
 	using Tools;
 	using Extensions;
+	using Internal;
 
 	abstract class ExpressionQuery<T> : IExpressionQuery<T>, IAsyncEnumerable<T>
 	{
@@ -27,7 +28,7 @@ namespace LinqToDB.Linq
 		public Expression   Expression  { get; set; } = null!;
 		public IDataContext DataContext { get; set; } = null!;
 
-		internal Query<T>? Info;
+		internal Query<T>?  Info;
 		internal object?[]? Parameters;
 		internal object?[]? Preambles;
 
@@ -47,13 +48,16 @@ namespace LinqToDB.Linq
 		{
 			get
 			{
-				var expression = Expression;
-				var info       = GetQuery(ref expression, true, out var dependsOnParameters);
+				var expression  = Expression;
+				var expressions = (IQueryExpressions)new RuntimeExpressionsContainer(expression);
+				var info        = GetQuery(ref expressions, true, out var dependsOnParameters);
 
 				if (!dependsOnParameters)
-					Expression = expression;
+				{
+					Expression = expressions.MainExpression;
+				}
 
-				var sqlText    = QueryRunner.GetSqlText(info, DataContext, expression, Parameters, Preambles);
+				var sqlText    = QueryRunner.GetSqlText(info, DataContext, expressions, Parameters, Preambles);
 
 				return sqlText;
 			}
@@ -63,32 +67,37 @@ namespace LinqToDB.Linq
 
 		#region Execute
 
-		Query<T> GetQuery(ref Expression expression, bool cache, out bool dependsOnParameters)
+		Query<T> GetQuery(ref IQueryExpressions expression, bool cache, out bool dependsOnParameters)
 		{
 			dependsOnParameters = false;
 
 			if (cache && Info != null)
+			{
 				return Info;
+			}
 
 			var info = Query<T>.GetQuery(DataContext, ref expression, out dependsOnParameters);
 
-			if (cache && info.IsFastCacheable && !dependsOnParameters)
+			if (cache && info.CompareInfo?.IsFastComparable == true && !dependsOnParameters)
+			{
 				Info = info;
+			}
 
 			return info;
 		}
 
 		async Task<TResult> IQueryProviderAsync.ExecuteAsync<TResult>(Expression expression, CancellationToken cancellationToken)
 		{
-			var query = GetQuery(ref expression, false, out _);
+			var expressions = (IQueryExpressions)new RuntimeExpressionsContainer(expression);
+			var query       = GetQuery(ref expressions, false, out _);
 
 			var transaction = await StartLoadTransactionAsync(query, cancellationToken).ConfigureAwait(false);
 			await using var tr = (transaction ?? EmptyIAsyncDisposable.Instance).ConfigureAwait(false);
 
-			Preambles = await query.InitPreamblesAsync(DataContext, expression, Parameters, cancellationToken)
+			Preambles = await query.InitPreamblesAsync(DataContext, expressions, Parameters, cancellationToken)
 				.ConfigureAwait(false);
 
-			var value = await query.GetElementAsync(DataContext, expression, Parameters, Preambles, cancellationToken)
+			var value = await query.GetElementAsync(DataContext, expressions, Parameters, Preambles, cancellationToken)
 				.ConfigureAwait(false);
 
 			return (TResult)value!;
@@ -164,33 +173,35 @@ namespace LinqToDB.Linq
 
 		async Task<IAsyncEnumerable<TResult>> IQueryProviderAsync.ExecuteAsyncEnumerable<TResult>(Expression expression, CancellationToken cancellationToken)
 		{
-			var query = GetQuery(ref expression, false, out _);
+			var expressions = (IQueryExpressions)new RuntimeExpressionsContainer(expression);
+			var query       = GetQuery(ref expressions, false, out _);
 
 			var transaction = await StartLoadTransactionAsync(query, cancellationToken).ConfigureAwait(false);
 			await using var tr = (transaction ?? EmptyIAsyncDisposable.Instance).ConfigureAwait(false);
 
-			Preambles = await query.InitPreamblesAsync(DataContext, expression, Parameters, cancellationToken)
+			Preambles = await query.InitPreamblesAsync(DataContext, expressions, Parameters, cancellationToken)
 				.ConfigureAwait(false);
 
-			return Query<TResult>.GetQuery(DataContext, ref expression, out _)
-				.GetResultEnumerable(DataContext, expression, Parameters, Preambles);
+			return Query<TResult>.GetQuery(DataContext, ref expressions, out _)
+				.GetResultEnumerable(DataContext, expressions, Parameters, Preambles);
 		}
 
 		public async Task GetForEachAsync(Action<T> action, CancellationToken cancellationToken)
 		{
-			var expression = Expression;
-			var query      = GetQuery(ref expression, true, out var dependsOnParameters);
+			var expression  = Expression;
+			var expressions = (IQueryExpressions)new RuntimeExpressionsContainer(expression);
+			var query       = GetQuery(ref expressions, true, out var dependsOnParameters);
 
 			if (!dependsOnParameters)
-				Expression = expression;
+				Expression = expressions.MainExpression;
 
 			var transaction = await StartLoadTransactionAsync(query, cancellationToken).ConfigureAwait(false);
 			await using var _ = (transaction ?? EmptyIAsyncDisposable.Instance).ConfigureAwait(false);
 
-			Preambles = await query.InitPreamblesAsync(DataContext, expression, Parameters, cancellationToken)
+			Preambles = await query.InitPreamblesAsync(DataContext, expressions, Parameters, cancellationToken)
 				.ConfigureAwait(false);
 
-			var enumerable = (IAsyncEnumerable<T>)query.GetResultEnumerable(DataContext, expression, Parameters, Preambles);
+			var enumerable = (IAsyncEnumerable<T>)query.GetResultEnumerable(DataContext, expressions, Parameters, Preambles);
 
 #pragma warning disable CA2007
 			await using var enumerator = enumerable.GetAsyncEnumerator(cancellationToken);
@@ -204,13 +215,14 @@ namespace LinqToDB.Linq
 
 		public async Task GetForEachUntilAsync(Func<T,bool> func, CancellationToken cancellationToken)
 		{
-			var expression = Expression;
-			var query      = GetQuery(ref expression, true, out var dependsOnParameters);
+			var expression  = Expression;
+			var expressions = (IQueryExpressions)new RuntimeExpressionsContainer(expression);
+			var query       = GetQuery(ref expressions, true, out var dependsOnParameters);
 
 			if (!dependsOnParameters)
-				Expression = expression;
+				Expression = expressions.MainExpression;
 
-			var enumerable = (IAsyncEnumerable<T>)query.GetResultEnumerable(DataContext, expression, Parameters, Preambles);
+			var enumerable = (IAsyncEnumerable<T>)query.GetResultEnumerable(DataContext, expressions, Parameters, Preambles);
 			var enumerator = enumerable.GetAsyncEnumerator(cancellationToken);
 
 			while (await enumerator.MoveNextAsync().ConfigureAwait(false))
@@ -227,21 +239,22 @@ namespace LinqToDB.Linq
 
 		public IAsyncEnumerator<T> GetAsyncEnumerator(CancellationToken cancellationToken = default)
 		{
-			var expression = Expression;
-			var query      = GetQuery(ref expression, true, out var dependsOnParameters);
+			var expression  = Expression;
+			var expressions = (IQueryExpressions)new RuntimeExpressionsContainer(expression);
+			var query       = GetQuery(ref expressions, true, out var dependsOnParameters);
 
 			if (!dependsOnParameters)
-				Expression = expression;
+				Expression = expressions.MainExpression;
 
 			return new AsyncEnumeratorAsyncWrapper<T>(async () =>
 			{
 				var tr = await StartLoadTransactionAsync(query, cancellationToken).ConfigureAwait(false);
 				try
 				{
-					Preambles = await query.InitPreamblesAsync(DataContext, expression, Parameters, cancellationToken)
+					Preambles = await query.InitPreamblesAsync(DataContext, expressions, Parameters, cancellationToken)
 						.ConfigureAwait(false);
 					return Tuple.Create(
-						query.GetResultEnumerable(DataContext, expression, Parameters, Preambles)
+						query.GetResultEnumerable(DataContext, expressions, Parameters, Preambles)
 						.GetAsyncEnumerator(cancellationToken), tr);
 				}
 				catch
@@ -296,16 +309,17 @@ namespace LinqToDB.Linq
 		{
 			using var m = ActivityService.Start(ActivityID.QueryProviderExecuteT);
 
-			var query = GetQuery(ref expression, false, out _);
+			var expressions = (IQueryExpressions)new RuntimeExpressionsContainer(expression);
+			var query       = GetQuery(ref expressions, false, out _);
 
 			using (StartLoadTransaction(query))
 			{
-				Preambles = query.InitPreambles(DataContext, expression, Parameters);
+				Preambles = query.InitPreambles(DataContext, expressions, Parameters);
 
 				var getElement = query.GetElement;
 				if (getElement == null)
 					throw new LinqToDBException("GetElement is not assigned by the context.");
-				return (TResult)getElement(DataContext, expression, Parameters, Preambles)!;
+				return (TResult)getElement(DataContext, expressions, Parameters, Preambles)!;
 			}
 		}
 
@@ -313,16 +327,17 @@ namespace LinqToDB.Linq
 		{
 			using var m = ActivityService.Start(ActivityID.QueryProviderExecute);
 
-			var query = GetQuery(ref expression, false, out _);
+			var expressions = (IQueryExpressions)new RuntimeExpressionsContainer(expression);
+			var query       = GetQuery(ref expressions, false, out _);
 
 			using (StartLoadTransaction(query))
 			{
-				Preambles = query.InitPreambles(DataContext, expression, Parameters);
+				Preambles = query.InitPreambles(DataContext, expressions, Parameters);
 
 				var getElement = query.GetElement;
 				if (getElement == null)
 					throw new LinqToDBException("GetElement is not assigned by the context.");
-				return getElement(DataContext, expression, Parameters, Preambles);
+				return getElement(DataContext, expressions, Parameters, Preambles);
 			}
 		}
 
@@ -334,17 +349,18 @@ namespace LinqToDB.Linq
 		{
 			using var _ = ActivityService.Start(ActivityID.QueryProviderGetEnumeratorT);
 
-			var expression = Expression;
-			var query      = GetQuery(ref expression, true, out var dependsOnParameters);
+			var expression  = Expression;
+			var expressions = (IQueryExpressions)new RuntimeExpressionsContainer(expression);
+			var query       = GetQuery(ref expressions, true, out var dependsOnParameters);
 
 			if (!dependsOnParameters)
-				Expression = expression;
+				Expression = expressions.MainExpression;
 
 			using (StartLoadTransaction(query))
 			{
-				Preambles = query.InitPreambles(DataContext, expression, Parameters);
+				Preambles = query.InitPreambles(DataContext, expressions, Parameters);
 
-				return query.GetResultEnumerable(DataContext, expression, Parameters, Preambles).GetEnumerator();
+				return query.GetResultEnumerable(DataContext, expressions, Parameters, Preambles).GetEnumerator();
 			}
 		}
 
@@ -352,17 +368,18 @@ namespace LinqToDB.Linq
 		{
 			using var _ = ActivityService.Start(ActivityID.QueryProviderGetEnumerator);
 
-			var expression = Expression;
-			var query      = GetQuery(ref expression, true, out var dependsOnParameters);
+			var expression  = Expression;
+			var expressions = (IQueryExpressions)new RuntimeExpressionsContainer(expression);
+			var query       = GetQuery(ref expressions, true, out var dependsOnParameters);
 
 			if (!dependsOnParameters)
-				Expression = expression;
+				Expression = expressions.MainExpression;
 
 			using (StartLoadTransaction(query))
 			{
-				Preambles = query.InitPreambles(DataContext, expression, Parameters);
+				Preambles = query.InitPreambles(DataContext, expressions, Parameters);
 
-				return query.GetResultEnumerable(DataContext, expression, Parameters, Preambles).GetEnumerator();
+				return query.GetResultEnumerable(DataContext, expressions, Parameters, Preambles).GetEnumerator();
 			}
 		}
 

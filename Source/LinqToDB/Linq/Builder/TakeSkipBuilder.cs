@@ -51,7 +51,11 @@ namespace LinqToDB.Linq.Builder
 
 					if (expr.ElementType == QueryElementType.SqlValue && builder.CanBeCompiled(methodCall.Arguments[1], false))
 					{
-						var param = builder.ParametersContext.BuildParameter(sequence, methodCall.Arguments[1], null, forceConstant : true, forceNew : true)!.SqlParameter;
+						var param = builder.ParametersContext.BuildParameter(sequence, methodCall.Arguments[1], null, forceNew : true)!;
+
+						// This parameter can be optimized out by QueryRunner, so we ensure that after finalization, parameter accessor will be in place.
+						builder.ParametersContext.RegisterNonQueryParameter(param);
+
 						param.Name             = methodCall.Method.Name == "Take" ? "take" : "skip";
 						param.IsQueryParameter = param.IsQueryParameter && parameterize;
 						expr                   = param;

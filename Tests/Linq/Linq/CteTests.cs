@@ -2482,5 +2482,49 @@ namespace Tests.Linq
 			});
 		}
 		#endregion
+
+		[Table(Name = "Authors")]
+		public class Author
+		{
+			[PrimaryKey, Identity]
+			public int Id { get; set; }
+
+			[Column(Name = "Name"), NotNull]
+			public string Name { get; set; } = null!;
+
+			// 1:1 relationship to Book
+			[Association(ThisKey = "Id", OtherKey = "AuthorId", CanBeNull = true)]
+			public Book? Book { get; set; }
+		}
+
+		[Table(Name = "Books")]
+		public class Book
+		{
+			[PrimaryKey, Identity]
+			public int Id { get; set; }
+
+			[Column(Name = "Title"), NotNull]
+			public string Title { get; set; } = null!;
+
+			[Column(Name = "AuthorId"), NotNull]
+			public int AuthorId { get; set; }
+
+			// 1:1 relationship to Author
+			[Association(ThisKey = "AuthorId", OtherKey = "Id", CanBeNull = false)]
+			public Author Author { get; set; } = null!;
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4012")]
+		public void TestAssociations([CteContextSource(TestProvName.AllSapHana)] string context)
+		{
+			using var db      = GetDataContext(context);
+			using var books   = db.CreateLocalTable<Book>();
+			using var authors = db.CreateLocalTable<Author>();
+
+			var booksQuery = db.GetTable<Book>().AsCte("BooksCte");
+
+			booksQuery = booksQuery.Where(b => b.Author.Name == "Steven");
+			var result = booksQuery.Select(b => b.Title).ToArray();
+		}
 	}
 }

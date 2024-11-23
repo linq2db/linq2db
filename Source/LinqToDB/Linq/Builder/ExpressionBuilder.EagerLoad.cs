@@ -277,7 +277,7 @@ namespace LinqToDB.Linq.Builder
 			{
 				var detailSequence = BuildSequence(new BuildInfo((IBuildContext?)null, correctedSequence, new SelectQuery()));
 
-				var parameters = new object[] { detailSequence, correctedSequence, queryParameter, preambles };
+				var parameters = new object[] { detailSequence, queryParameter, preambles };
 
 				resultExpression = (Expression)_buildPreambleQueryDetachedMethodInfo
 					.MakeGenericMethod(detailType)
@@ -341,7 +341,7 @@ namespace LinqToDB.Linq.Builder
 				var detailSequence = BuildSequence(new BuildInfo((IBuildContext?)null, selectManyCall,
 					clonedParentContextRef.BuildContext.SelectQuery));
 
-				var parameters = new object?[] { detailSequence, mainKeyExpression, selectManyCall, queryParameter, preambles, orderByToApply, detailKeys };
+				var parameters = new object?[] { detailSequence, mainKeyExpression, queryParameter, preambles, orderByToApply, detailKeys };
 
 				resultExpression = (Expression)_buildPreambleQueryAttachedMethodInfo
 					.MakeGenericMethod(mainKeyExpression.Type, detailType)
@@ -389,16 +389,15 @@ namespace LinqToDB.Linq.Builder
 			typeof(ExpressionBuilder).GetMethod(nameof(BuildPreambleQueryAttached), BindingFlags.Instance | BindingFlags.NonPublic) ?? throw new InvalidOperationException();
 
 		Expression BuildPreambleQueryAttached<TKey, T>(
-			IBuildContext       sequence,
-			Expression          keyExpression,
-			Expression          queryExpression,
-			ParameterExpression queryParameter,
-			List<Preamble>      preambles,
+			IBuildContext                   sequence,
+			Expression                      keyExpression,
+			ParameterExpression             queryParameter,
+			List<Preamble>                  preambles,
 			List<(LambdaExpression, bool)>? additionalOrderBy,
-			Expression[]        previousKeys)
+			Expression[]                    previousKeys)
 			where TKey : notnull
 		{
-			var query = new Query<KeyDetailEnvelope<TKey, T>>(DataContext, queryExpression);
+			var query = new Query<KeyDetailEnvelope<TKey, T>>(DataContext);
 
 			query.Init(sequence);
 			query.SetParametersAccessors(_parametersContext.CurrentSqlParameters.ToList());
@@ -430,11 +429,10 @@ namespace LinqToDB.Linq.Builder
 
 		Expression BuildPreambleQueryDetached<T>(
 			IBuildContext       sequence,
-			Expression          queryExpression,
 			ParameterExpression queryParameter,
 			List<Preamble>      preambles)
 		{
-			var query = new Query<T>(DataContext, queryExpression);
+			var query = new Query<T>(DataContext);
 
 			query.Init(sequence);
 			query.SetParametersAccessors(_parametersContext.CurrentSqlParameters.ToList());
@@ -498,14 +496,14 @@ namespace LinqToDB.Linq.Builder
 				_query = query;
 			}
 
-			public override object Execute(IDataContext dataContext, Expression expression, object?[]? parameters, object?[]? preambles)
+			public override object Execute(IDataContext dataContext, IQueryExpressions expressions, object?[]? parameters, object?[]? preambles)
 			{
-				return _query.GetResultEnumerable(dataContext, expression, preambles, preambles).ToList();
+				return _query.GetResultEnumerable(dataContext, expressions, preambles, preambles).ToList();
 			}
 
-			public override async Task<object> ExecuteAsync(IDataContext dataContext, Expression expression, object?[]? parameters, object[]? preambles, CancellationToken cancellationToken)
+			public override async Task<object> ExecuteAsync(IDataContext dataContext, IQueryExpressions expressions, object?[]? parameters, object[]? preambles, CancellationToken cancellationToken)
 			{
-				return await _query.GetResultEnumerable(dataContext, expression, preambles, preambles)
+				return await _query.GetResultEnumerable(dataContext, expressions, preambles, preambles)
 					.ToListAsync(cancellationToken)
 					.ConfigureAwait(false);
 			}
@@ -529,10 +527,10 @@ namespace LinqToDB.Linq.Builder
 				_query = query;
 			}
 
-			public override object Execute(IDataContext dataContext, Expression expression, object?[]? parameters, object?[]? preambles)
+			public override object Execute(IDataContext dataContext, IQueryExpressions expressions, object?[]? parameters, object?[]? preambles)
 			{
 				var result = new PreambleResult<TKey, T>();
-				foreach (var e in _query.GetResultEnumerable(dataContext, expression, preambles, preambles))
+				foreach (var e in _query.GetResultEnumerable(dataContext, expressions, preambles, preambles))
 				{
 					result.Add(e.Key, e.Detail);
 				}
@@ -540,12 +538,12 @@ namespace LinqToDB.Linq.Builder
 				return result;
 			}
 
-			public override async Task<object> ExecuteAsync(IDataContext dataContext, Expression expression, object?[]? parameters, object[]? preambles,
-				CancellationToken                                  cancellationToken)
+			public override async Task<object> ExecuteAsync(IDataContext dataContext, IQueryExpressions expressions, object?[]? parameters, object[]? preambles,
+				CancellationToken                                        cancellationToken)
 			{
 				var result = new PreambleResult<TKey, T>();
 
-				var enumerator = _query.GetResultEnumerable(dataContext, expression, preambles, preambles)
+				var enumerator = _query.GetResultEnumerable(dataContext, expressions, preambles, preambles)
 					.GetAsyncEnumerator(cancellationToken);
 
 				while (await enumerator.MoveNextAsync().ConfigureAwait(false))

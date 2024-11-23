@@ -25,7 +25,7 @@ namespace LinqToDB.Expressions
 			if (visitor is ExpressionVisitorBase expressionVisitor)
 				return expressionVisitor.VisitConstantPlaceholder(this);
 
-			return visitor.Visit(this);
+			return this;
 		}
 
 		bool Equals(ConstantPlaceholderExpression other)

@@ -48,8 +48,8 @@ namespace LinqToDB.Linq.Builder
 				{
 					// build setters like QueryRunner.Update
 					var sqlTable   = (SqlTable)statement.Target.Source;
-					var sourceProp = EnsureType(mergeContext.SourceContext.SourcePropAccess, sqlTable.ObjectType);
-					var targetProp = EnsureType(mergeContext.SourceContext.TargetPropAccess, sqlTable.ObjectType);
+					var sourceProp = mergeContext.SourceContext.SourcePropAccess.EnsureType(sqlTable.ObjectType);
+					var targetProp = mergeContext.SourceContext.TargetPropAccess.EnsureType(sqlTable.ObjectType);
 					var keys       = (sqlTable.GetKeys(false) ?? Enumerable.Empty<ISqlExpression>()).Cast<SqlField>().ToList();
 
 					foreach (var field in sqlTable.Fields.Where(f => f.IsUpdatable).Except(keys))

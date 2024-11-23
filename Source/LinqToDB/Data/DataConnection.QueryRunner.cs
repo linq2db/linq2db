@@ -20,17 +20,22 @@ namespace LinqToDB.Data
 
 	public partial class DataConnection
 	{
-		IQueryRunner IDataContext.GetQueryRunner(Query query,      IDataContext parametersContext, int queryNumber,
-			Expression                                 expression, object?[]?   parameters,        object?[]? preambles)
+		IQueryRunner IDataContext.GetQueryRunner(
+			Query query, 
+			IDataContext parametersContext, 
+			int queryNumber,
+			IQueryExpressions expressions, 
+			object?[]? parameters,        
+			object?[]? preambles)
 		{
 			CheckAndThrowOnDisposed();
-			return new QueryRunner(query, queryNumber, this, parametersContext, expression, parameters, preambles);
+			return new QueryRunner(query, queryNumber, this, parametersContext, expressions, parameters, preambles);
 		}
 
 		internal sealed class QueryRunner : QueryRunnerBase
 		{
-			public QueryRunner(Query query, int queryNumber, DataConnection dataConnection, IDataContext parametersContext, Expression expression, object?[]? parameters, object?[]? preambles)
-				: base(query, queryNumber, dataConnection, parametersContext, expression, parameters, preambles)
+			public QueryRunner(Query query, int queryNumber, DataConnection dataConnection, IDataContext parametersContext, IQueryExpressions expressions, object?[]? parameters, object?[]? preambles)
+				: base(query, queryNumber, dataConnection, parametersContext, expressions, parameters, preambles)
 			{
 				_dataConnection = dataConnection;
 				_parametersContext = parametersContext;

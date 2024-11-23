@@ -203,21 +203,13 @@ namespace LinqToDB.Linq.Builder
 			return correctedExpression;
 		}
 
-		static Expression EnsureType(Expression expression, Type type)
-		{
-			if (expression.Type == type)
-				return expression;
-
-			return Expression.Convert(expression, type);
-		}
-
 		public Expression GenerateCondition()
 		{
 			if (ConnectionLambda is null)
 				throw new ArgumentNullException(nameof(ConnectionLambda));
 
-			return ConnectionLambda.GetBody(EnsureType(TargetPropAccess, ConnectionLambda.Parameters[0].Type),
-				EnsureType(SourcePropAccess, ConnectionLambda.Parameters[1].Type));
+			return ConnectionLambda.GetBody(TargetPropAccess.EnsureType(ConnectionLambda.Parameters[0].Type),
+				SourcePropAccess.EnsureType(ConnectionLambda.Parameters[1].Type));
 		}
 
 		Dictionary<Expression, SqlPlaceholderExpression> _knownMap = new (ExpressionEqualityComparer.Instance);

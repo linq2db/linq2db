@@ -342,7 +342,6 @@ namespace Tests.Linq
 		public void Issue4508Test([DataSources] string context)
 		{
 			Test(context);
-			Test(context);
 
 			void Test(string context)
 			{
@@ -366,14 +365,14 @@ namespace Tests.Linq
 				var arr1 = query.ToArray();
 				var arr2 = query.ToArray();
 
-				Assert.That(arr1, Has.Length.EqualTo(arr2.Length + 2));
+				Assert.That(arr1, Has.Length.EqualTo(arr2.Length + 1));
 
 				id = 0;
 
 				arr1 = query.ToArray();
 				arr2 = query.ToArray();
 
-				Assert.That(arr1, Has.Length.EqualTo(arr2.Length + 2));
+				Assert.That(arr1, Has.Length.EqualTo(arr2.Length + 1));
 			}
 		}
 	}

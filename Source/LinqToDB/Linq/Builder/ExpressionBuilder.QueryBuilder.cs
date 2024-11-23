@@ -346,7 +346,7 @@ namespace LinqToDB.Linq.Builder
 			void Register(Expression expr)
 			{
 				if (!expr.Type.IsScalar() && CanBeCompiled(expr, true))
-					ParametersContext.ApplyAccessors(expr, true);
+					ParametersContext.ApplyAccessors(expr);
 
 			}
 
@@ -614,7 +614,7 @@ namespace LinqToDB.Linq.Builder
 			return toRead;
 		}
 
-		public Expression<Func<IQueryRunner,IDataContext,DbDataReader,Expression,object?[]?,object?[]?,T>> BuildMapper<T>(SelectQuery query, Expression expr)
+		public Expression<Func<IQueryRunner,IDataContext,DbDataReader,IQueryExpressions, object?[]?,object?[]?,T>> BuildMapper<T>(SelectQuery query, Expression expr)
 		{
 			var type = typeof(T);
 
@@ -631,11 +631,11 @@ namespace LinqToDB.Linq.Builder
 
 			var mappingBody = expressionGenerator.Build();
 
-			var mapper = Expression.Lambda<Func<IQueryRunner,IDataContext,DbDataReader,Expression,object?[]?,object?[]?,T>>(mappingBody,
+			var mapper = Expression.Lambda<Func<IQueryRunner,IDataContext,DbDataReader,IQueryExpressions,object?[]?,object?[]?,T>>(mappingBody,
 				QueryRunnerParam,
 				ExpressionConstants.DataContextParam,
 				DataReaderParam,
-				ExpressionParam,
+				QueryExpressionContainerParam,
 				ParametersParam,
 				PreambleParam);
 

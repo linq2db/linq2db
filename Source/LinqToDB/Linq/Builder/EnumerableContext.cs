@@ -39,10 +39,10 @@ namespace LinqToDB.Linq.Builder
 		EnumerableContext(ExpressionBuilder builder, MappingSchema mappingSchema, Expression expression, SelectQuery query, SqlValuesTable table, Type elementType)
 			: base(builder, elementType, query)
 		{
-			Parent = null;
+			Parent            = null;
 			_entityDescriptor = mappingSchema.GetEntityDescriptor(elementType, Builder.DataOptions.ConnectionOptions.OnEntityDescriptorCreated);
-			Table      = table;
-			Expression = expression;
+			Table             = table;
+			Expression        = expression;
 		}
 
 		SqlValuesTable BuildValuesTable(Expression expr, out bool fieldsDefined)
@@ -53,7 +53,7 @@ namespace LinqToDB.Linq.Builder
 				return BuildValuesTableFromArray((NewArrayExpression)expr);
 			}
 
-			var param = Builder.ParametersContext.BuildParameter(this, expr, null, forceConstant : true,
+			var param = Builder.ParametersContext.BuildParameter(this, expr, null,
 				buildParameterType : ParametersContext.BuildParameterType.InPredicate);
 
 			if (param == null)
@@ -62,7 +62,7 @@ namespace LinqToDB.Linq.Builder
 			}
 
 			fieldsDefined = false;
-			return new SqlValuesTable(param.SqlParameter);
+			return new SqlValuesTable(param);
 		}
 
 		SqlValuesTable BuildValuesTableFromArray(NewArrayExpression arrayExpression)
@@ -223,7 +223,7 @@ namespace LinqToDB.Linq.Builder
 		{
 			if (SequenceHelper.IsSameContext(path, this))
 			{
-				if (flags.IsRoot() || flags.IsTable() || flags.IsAssociationRoot() || flags.IsTraverse() || flags.IsAggregationRoot() || flags.IsExtractProjection())
+				if (flags.IsRoot() || flags.IsTable() || flags.IsAssociationRoot() || flags.IsTraverse() || flags.IsAggregationRoot() || flags.IsExtractProjection() || flags.IsMemberRoot())
 					return path;
 
 				if (MappingSchema.IsScalarType(ElementType) || Builder.CurrentDescriptor != null)
