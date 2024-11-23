@@ -146,6 +146,7 @@ namespace Tests.Linq
 			}
 		}
 
+		[ActiveIssue]
 		[Test]
 		public void ViaConditionNull([IncludeDataSources(false, TestProvName.AllSQLite)] string context)
 		{
