@@ -94,10 +94,8 @@ namespace LinqToDB.Linq.Builder
 			if (expr.Type == typeof(void))
 				return null;
 
-			var parameterName = alias;
-			var unwrapped = expr.UnwrapConvert();
-			if (unwrapped is MemberExpression me)
-				parameterName = me.Member.Name;
+			var suggested     = ExpressionCacheManager.SuggestParameterName(expr);
+			var parameterName = suggested ?? alias;
 
 			if (parameterName == null && columnDescriptor != null)
 			{
@@ -120,7 +118,12 @@ namespace LinqToDB.Linq.Builder
 			if (forceNew)
 				CacheManager.RegisterParameterEntry(expr, entry);
 			else
-				CacheManager.RegisterParameterEntry(expr, entry, out finalParameterId);
+			{
+				if (context?.Builder != null && mappingSchema.IsScalarType(expr.Type))
+					CacheManager.RegisterParameterEntry(expr, entry, e => context.Builder.EvaluateExpression(e), out finalParameterId);
+				else
+					CacheManager.RegisterParameterEntry(expr, entry, null, out finalParameterId);
+			}
 
 			_parametersById ??= new();
 

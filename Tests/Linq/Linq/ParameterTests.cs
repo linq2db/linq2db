@@ -8,6 +8,8 @@ using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.Linq;
 using LinqToDB.Mapping;
+using LinqToDB.SqlQuery;
+
 using Tests.Model;
 
 using NUnit.Framework;
@@ -558,6 +560,70 @@ namespace Tests.Linq
 					.Select(__ => __.Id)
 					.Any(__ => __.Equals(param)))
 				.ToList();
+			}
+		}
+
+		IQueryable<Person> GetParsons(ITestDataContext db, int personId)
+		{
+			return db.Person.Where(p => p.ID == personId);
+		}
+
+		IQueryable<Person> GetParsons2(ITestDataContext db, int? personId)
+		{
+			return db.Person.Where(p => p.ID == personId!.Value);
+		}
+
+
+		[Test]
+		public void TestParametersByEquality([DataSources(TestProvName.AllSQLite)] string context, [Values(1, 2)] int iteration)
+		{
+			using var db = GetDataContext(context);
+
+			// Tho identical for translator query, but they are different by parameteter values
+			{
+				int personId = 1;
+
+				var ctn = new { personId = 1 };
+
+				var query =
+					from p in GetParsons(db, personId)
+					from p2 in GetParsons2(db, personId).Where(p2 => p2.ID == p.ID)
+					where p.ID == ctn.personId
+					select new { p, p2 };
+
+				var cacheMiss = query.GetCacheMissCount();
+
+				query.Should().HaveCount(1);
+
+				if (iteration > 1)
+					query.GetCacheMissCount().Should().Be(cacheMiss);
+
+				var parameters = new List<SqlParameter>();
+				QueryHelper.CollectParameters(query.GetSelectQuery(), parameters);
+				parameters.Distinct().Should().HaveCount(1);
+			}
+
+			{
+				int personId = 1;
+
+				var ctn = new { personId = 2 };
+
+				var query =
+					from p in GetParsons(db, personId)
+					from p2 in GetParsons2(db, personId).Where(p2 => p2.ID == p.ID)
+					where p.ID == ctn.personId
+					select new { p, p2 };
+
+				var cacheMiss = query.GetCacheMissCount();
+
+				query.Should().HaveCount(0);
+
+				if (iteration > 1)
+					query.GetCacheMissCount().Should().Be(cacheMiss);
+
+				var parameters = new List<SqlParameter>();
+				QueryHelper.CollectParameters(query.GetSelectQuery(), parameters);
+				parameters.Distinct().Should().HaveCount(2);
 			}
 		}
 

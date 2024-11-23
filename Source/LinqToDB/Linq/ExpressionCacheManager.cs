@@ -56,6 +56,15 @@ namespace LinqToDB.Linq
 		/// Body of Expression&lt;Func&lt;object?, DbDataType&gt;&gt;
 		/// </summary>
 		public readonly Expression? DbDataTypeAccessor;
+
+		public bool    IsEvaluated    { get; private set; }
+		public object? EvaluatedValue { get; private set; }
+
+		public void SetEvaluatedValue(object? value)
+		{
+			EvaluatedValue = value;
+			IsEvaluated = true;
+		}
 	}
 
 
@@ -230,8 +239,16 @@ namespace LinqToDB.Linq
 		/// </summary>
 		/// <param name="paramExpr"></param>
 		/// <param name="entry"></param>
-		public void RegisterParameterEntry(Expression paramExpr, ParameterCacheEntry entry, out int finalParameterId)
+		public void RegisterParameterEntry(Expression paramExpr, ParameterCacheEntry entry, Func<Expression, object?>? evaluator, out int finalParameterId)
 		{
+			void EnsureEvaluated(ParameterCacheEntry localEntry, Expression expr)
+			{
+				if (localEntry.IsEvaluated)
+					return;
+
+				localEntry.SetEvaluatedValue(evaluator(expr));
+			}
+
 			_parameterEntries ??= new();
 
 			foreach (var pair in _parameterEntries.Values)
@@ -257,8 +274,63 @@ namespace LinqToDB.Linq
 				}
 			}
 
+			// find duplicates by name and value
+			if (evaluator != null)
+			{
+				var testedName = SuggestParameterName(paramExpr);
+				if (testedName != null)
+				{
+					foreach (var pair in _parameterEntries.Values)
+					{
+						if (paramExpr.Type != pair.param.Type)
+							continue;
+
+						var iteratedName = SuggestParameterName(pair.param);
+
+						if (
+							iteratedName == testedName
+							&& pair.entry.DbDataType.Equals(entry.DbDataType)
+							&& ExpressionEqualityComparer.Instance.Equals(pair.entry.ClientToProviderConverter, entry.ClientToProviderConverter)
+							&& ExpressionEqualityComparer.Instance.Equals(pair.entry.ItemAccessor, entry.ItemAccessor)
+							&& ExpressionEqualityComparer.Instance.Equals(pair.entry.DbDataTypeAccessor, entry.DbDataTypeAccessor))
+						{
+							EnsureEvaluated(pair.entry, pair.param);
+							EnsureEvaluated(entry, paramExpr);
+
+							if (Equals(pair.entry.EvaluatedValue, entry.EvaluatedValue))
+							{
+								// found duplicate, we have to register value comparison
+
+								finalParameterId = pair.entry.ParameterId;
+
+								RegisterDuplicateCheck(pair.entry.ParameterId, pair.entry.ClientValueGetter, entry.ClientValueGetter);
+
+								return;
+							}
+						}
+					}
+				}
+			
+			}
+
 			_parameterEntries.Add(entry.ParameterId, (paramExpr, entry));
 			finalParameterId = entry.ParameterId;
+		}
+
+		public static string? SuggestParameterName(Expression? expression)
+		{
+			if (expression is MemberExpression member)
+			{
+				var result = member.Member.Name;
+				if (member.Member.IsNullableValueMember())
+					result = SuggestParameterName(member.Expression) ?? result;
+				return result;
+			}
+
+			if (expression is UnaryExpression unary)
+				return SuggestParameterName(unary.Operand);
+
+			return null;
 		}
 
 		public static Expression CorrectAccessorExpression(Expression accessorExpression, IDataContext dataContext)
