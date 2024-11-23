@@ -21,7 +21,7 @@ namespace LinqToDB
 		[Extension("", ServerSideOnly = true, BuilderType = typeof(NamedCollationBuilder))]
 		[return: NotNullIfNotNull(nameof(expr))]
 		public static string? Collate(this string? expr, [SqlQueryDependent] string collation)
-			=> throw new InvalidOperationException($"{nameof(Sql)}.{nameof(Collate)} is server-side only API.");
+			=> throw new LinqToDBException($"{nameof(Sql)}.{nameof(Collate)} is server-side only API.");
 
 		internal sealed class NamedCollationBuilder : IExtensionCallBuilder
 		{
