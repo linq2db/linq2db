@@ -338,22 +338,25 @@ namespace Tests.Linq
 			query.ToArray();
 		}
 
+		int Issue4508Test_Id;
+
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4508")]
 		public void Issue4508Test([DataSources] string context)
 		{
+			Test(context);
 			Test(context);
 
 			void Test(string context)
 			{
 				var builder = new FluentMappingBuilder(new MappingSchema());
 
-				var id = 0;
+				Issue4508Test_Id = 0;
 
 				builder
 					.Entity<Person>()
 					.HasQueryFilter((q, ctx) =>
 					{
-						var idCopy = id++;
+						var idCopy = Issue4508Test_Id++;
 						return q.Where(p => p.ID > idCopy);
 					});
 
@@ -367,7 +370,7 @@ namespace Tests.Linq
 
 				Assert.That(arr1, Has.Length.EqualTo(arr2.Length + 1));
 
-				id = 0;
+				Issue4508Test_Id = 0;
 
 				arr1 = query.ToArray();
 				arr2 = query.ToArray();
