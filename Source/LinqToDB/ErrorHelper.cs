@@ -26,5 +26,9 @@
 		// Sybase
 		public const string Error_JoinToDerivedTableWithTakeInvalid = "Provider has issue with JOIN to limited recordset.";
 
+		// Clickhouse
+
+		public const string Error_ClickHouse_CorrelatedDelete = "Correlated DELETE not supported by ClickHouse";
+
 	}
 }

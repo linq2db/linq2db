@@ -301,7 +301,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 			// explicit guard to avoid situations when query produce valid SQL after aliases stripped
 			if (deleteStatement.SelectQuery.From.Tables.Count != 1
 				|| deleteStatement.SelectQuery.From.Tables[0].Joins.Count != 0)
-				throw new LinqToDBException("Correlated DELETE not supported by ClickHouse");
+				throw new LinqToDBException(ErrorHelper.Error_ClickHouse_CorrelatedDelete);
 
 			AppendIndent();
 

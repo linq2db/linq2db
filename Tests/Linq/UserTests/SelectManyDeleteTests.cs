@@ -38,16 +38,9 @@ namespace Tests.UserTests
 			public List<Child> Children { get; set; } = null!;
 		}
 
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllClickHouse, ErrorHelper.Error_ClickHouse_CorrelatedDelete)]
 		[Test]
-		public void Test([DataSources(
-			TestProvName.AllClickHouse,
-			ProviderName.DB2,
-			TestProvName.AllInformix,
-			TestProvName.AllOracle,
-			ProviderName.SqlCe,
-			TestProvName.AllSQLite,
-			TestProvName.AllSapHana)]
-			string context)
+		public void Test([DataSources] string context)
 		{
 			var harnessIds = new int[2];
 
