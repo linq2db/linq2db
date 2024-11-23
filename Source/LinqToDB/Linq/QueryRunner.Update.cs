@@ -94,7 +94,7 @@ namespace LinqToDB.Linq
 					if (dataContext.Options.LinqOptions.IgnoreEmptyUpdate)
 						return null;
 
-					throw new LinqException(
+					throw new LinqToDBException(
 						keys.Count == sqlTable.Fields.Count ?
 							$"There are no fields to update in the type '{sqlTable.NameForLogging}'. No PK is defined or all fields are keys." :
 							$"There are no fields to update in the type '{sqlTable.NameForLogging}'.");

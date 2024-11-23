@@ -388,7 +388,7 @@ namespace LinqToDB.Mapping
 			}
 
 			var discriminator = Columns.FirstOrDefault(x => x.IsDiscriminator)
-				?? throw new LinqException($"Inheritance Discriminator is not defined for the '{ObjectType}' hierarchy.");
+				?? throw new LinqToDBException($"Inheritance Discriminator is not defined for the '{ObjectType}' hierarchy.");
 
 			foreach (var m in _inheritanceMappings)
 				m.Discriminator = discriminator;

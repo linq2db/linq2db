@@ -202,7 +202,7 @@ namespace LinqToDB.Common
 			/// <summary>
 			/// Controls behavior of linq2db when there is no updateable fields in Update query:
 			/// - if <c>true</c> - query not executed and Update operation returns 0 as number of affected records;
-			/// - if <c>false</c> - <see cref="LinqException"/> will be thrown.
+			/// - if <c>false</c> - <see cref="LinqToDBException"/> will be thrown.
 			/// Default value: <c>false</c>.
 			/// </summary>
 			public static bool IgnoreEmptyUpdate

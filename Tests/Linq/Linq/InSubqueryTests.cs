@@ -140,7 +140,7 @@ namespace Tests.Linq
 
 			if (db.SqlProviderFlags.SupportedCorrelatedSubqueriesLevel == 0)
 			{
-				FluentActions.Invoking(() => AssertQuery(query)).Should().Throw<LinqException>();
+				FluentActions.Invoking(() => AssertQuery(query)).Should().Throw<LinqToDBException>();
 			}
 			else
 			{
@@ -160,7 +160,7 @@ namespace Tests.Linq
 
 			if (db.SqlProviderFlags.SupportedCorrelatedSubqueriesLevel == 0)
 			{
-				FluentActions.Invoking(() => AssertQuery(query)).Should().Throw<LinqException>();
+				FluentActions.Invoking(() => AssertQuery(query)).Should().Throw<LinqToDBException>();
 			}
 			else
 			{

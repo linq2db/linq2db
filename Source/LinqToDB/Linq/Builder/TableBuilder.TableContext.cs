@@ -110,10 +110,10 @@ namespace LinqToDB.Linq.Builder
 				var attr = mc.Method.GetTableFunctionAttribute(mappingSchema);
 
 				if (attr == null)
-					throw new LinqException($"Method '{mc.Method}' has no '{nameof(Sql.TableFunctionAttribute)}'.");
+					throw new LinqToDBException($"Method '{mc.Method}' has no '{nameof(Sql.TableFunctionAttribute)}'.");
 
 				if (!typeof(IQueryable<>).IsSameOrParentOf(mc.Method.ReturnType))
-					throw new LinqException("Table function has to return IQueryable<T>.");
+					throw new LinqToDBException("Table function has to return IQueryable<T>.");
 
 				OriginalType     = mc.Method.ReturnType.GetGenericArguments()[0];
 				ObjectType       = GetObjectType();
@@ -499,8 +499,7 @@ namespace LinqToDB.Linq.Builder
 							    EntityDescriptor                   != null &&
 							    EntityDescriptor.TypeAccessor.Type == memberExpression.Member.DeclaringType)
 							{
-								throw new LinqException("Member '{0}.{1}' is not a table column.",
-									memberExpression.Member.DeclaringType.Name, memberExpression.Member.Name);
+								throw new LinqToDBException($"Member '{memberExpression.Member.DeclaringType.Name}.{memberExpression.Member.Name}' is not a table column.");
 							}
 						}
 					}
@@ -508,7 +507,7 @@ namespace LinqToDB.Linq.Builder
 
 				if (throwException)
 				{
-					throw new LinqException($"Member '{expression}' is not a table column.");
+					throw new LinqToDBException($"Member '{expression}' is not a table column.");
 				}
 				return null;
 			}

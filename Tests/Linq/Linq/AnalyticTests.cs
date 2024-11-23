@@ -2009,8 +2009,8 @@ namespace Tests.Linq
 		// - empty resulting sequence should return default(T)
 		// This will require additional asserts for results and tests to ensure expected behavior
 		[ActiveIssue(Configurations = [ProviderName.SqlCe, TestProvName.AllSqlServer2016Minus])]
-		[ThrowsForProvider(typeof(LinqException), TestProvName.AllAccess, TestProvName.AllDB2, TestProvName.AllFirebirdLess4, TestProvName.AllInformix, TestProvName.AllMySql57, TestProvName.AllMariaDB, TestProvName.AllOracle11, TestProvName.AllSQLite, TestProvName.AllSybase, ErrorHelper.Error_OUTER_Joins)]
-		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllClickHouse, ErrorHelper.Error_GroupGuard)]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllAccess, TestProvName.AllDB2, TestProvName.AllFirebirdLess4, TestProvName.AllInformix, TestProvName.AllMySql57, TestProvName.AllMariaDB, TestProvName.AllOracle11, TestProvName.AllSQLite, TestProvName.AllSybase, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllClickHouse, ErrorMessage = ErrorHelper.Error_GroupGuard)]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4626")]
 		public void EmptySequenceTest([DataSources] string context)
 		{

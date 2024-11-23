@@ -94,7 +94,7 @@ namespace LinqToDB.SqlQuery.Visitors
 			{
 				if (!_providerFlags.IsSubQueryColumnSupported)
 				{
-					errorMessage = ErrorHelper.Error_Squbquery_in_Column;
+					errorMessage = ErrorHelper.Error_Subquery_in_Column;
 					return false;
 				}
 
@@ -185,7 +185,7 @@ namespace LinqToDB.SqlQuery.Visitors
 				{
 					if (HasIsNotNullParentReference(selectQuery))
 					{
-						errorMessage = ErrorHelper.Error_ColumnSubqueryShouldNotContainParentIsNotNull;
+						errorMessage = ErrorHelper.Oracle.Error_ColumnSubqueryShouldNotContainParentIsNotNull;
 						return false;
 					}
 				}
@@ -353,7 +353,7 @@ namespace LinqToDB.SqlQuery.Visitors
 
 			if (_providerFlags.IsJoinDerivedTableWithTakeInvalid && element.Table.Source is SelectQuery { Select.TakeValue: not null })
 			{
-				SetInvalid(ErrorHelper.Error_JoinToDerivedTableWithTakeInvalid);
+				SetInvalid(ErrorHelper.Sybase.Error_JoinToDerivedTableWithTakeInvalid);
 				return element;
 			}
 

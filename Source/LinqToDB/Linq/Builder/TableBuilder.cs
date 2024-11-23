@@ -171,7 +171,7 @@ namespace LinqToDB.Linq.Builder
 			if (dc != null)
 				return dc.MappingSchema;
 
-			throw new LinqException($"Could not retrieve DataContext information from expression '{expression}'");
+			throw new LinqToDBException($"Could not retrieve DataContext information from expression '{expression}'");
 		}
 
 		BuildSequenceResult BuildTableWithAppliedFilters(ExpressionBuilder builder, BuildInfo buildInfo, MappingSchema mappingSchema, Expression tableExpression)

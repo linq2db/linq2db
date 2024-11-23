@@ -1237,7 +1237,7 @@ namespace Tests.xUpdate
 		[Test]
 		public void InsertOrReplaceWithIdentity()
 		{
-			Assert.Throws<LinqException>(() =>
+			Assert.Throws<LinqToDBException>(() =>
 			{
 				using (var db = new DataConnection())
 				{

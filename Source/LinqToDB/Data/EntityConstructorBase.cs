@@ -535,9 +535,7 @@ namespace LinqToDB.Data
 
 		static T ThrowError<T>(object? code, Type onType)
 		{
-			throw new LinqException(
-				"Inheritance mapping is not defined for discriminator value '{0}' in the '{1}' hierarchy.",
-				code, onType);
+			throw new LinqToDBException($"Inheritance mapping is not defined for discriminator value '{code}' in the '{onType}' hierarchy.");
 		}
 
 		public virtual Expression? TryConstructFullEntity(SqlGenericConstructorExpression constructorExpression, Type constructType, ProjectFlags flags, bool checkInheritance, out string? error)

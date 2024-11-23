@@ -120,15 +120,13 @@ namespace LinqToDB.Linq.Builder
 					}
 
 					if (parentMember == null)
-						throw new LinqException("Association key '{0}' not found for type '{1}.", parentName,
-							parentType);
+						throw new LinqToDBException($"Association key '{parentName}' not found for type '{parentType}.");
 
 					var childName = association.OtherKey[i];
 					var childMember = childMembers.Find(m => m.MemberInfo.Name == childName);
 
 					if (childMember == null)
-						throw new LinqException("Association key '{0}' not found for type '{1}.", childName,
-							objectType);
+						throw new LinqToDBException($"Association key '{childName}' not found for type '{objectType}.");
 
 					var current = ExpressionBuilder.Equal(builder.MappingSchema,
 						Expression.MakeMemberAccess(currentParentParam, parentMember.MemberInfo),
@@ -150,7 +148,7 @@ namespace LinqToDB.Linq.Builder
 				}
 
 				if (predicate == null)
-					throw new LinqException("Cannot generate Association predicate");
+					throw new LinqToDBException("Cannot generate Association predicate");
 
 				if (inline && !shouldAddDefaultIfEmpty)
 				{
@@ -278,7 +276,7 @@ namespace LinqToDB.Linq.Builder
 						else
 						{
 							var filterDelegate = builder.EvaluateExpression<Delegate>(loadWithFunc) ??
-												 throw new LinqException($"Cannot convert filter function '{loadWithFunc}' to Delegate.");
+												 throw new LinqToDBException($"Cannot convert filter function '{loadWithFunc}' to Delegate.");
 
 							var argumentType = filterDelegate.GetType().GetGenericArguments()[0].GetGenericArguments()[0];
 							// check for fake argument q => q

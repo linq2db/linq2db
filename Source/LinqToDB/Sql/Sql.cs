@@ -29,16 +29,13 @@ namespace LinqToDB
 		/// </summary>
 		/// <returns></returns>
 		[Expression("*", ServerSideOnly = true, CanBeNull = false, Precedence = Precedence.Primary)]
-		public static object?[] AllColumns()
-		{
-			throw new LinqException("'AllColumns' is only server-side method.");
-		}
+		public static object?[] AllColumns() => throw new LinqToDBException("'AllColumns' is only server-side method.");
 
 		/// <summary>
 		/// Generates 'DEFAULT' keyword, usable in inserts.
 		/// </summary>
 		[Expression("DEFAULT", ServerSideOnly = true)]
-		public static T Default<T>() => throw new LinqException($"Default is only server-side method.");
+		public static T Default<T>() => throw new LinqToDBException($"Default is only server-side method.");
 
 		/// <summary>
 		/// Enforces generation of SQL even if an expression can be calculated on client.
@@ -149,10 +146,10 @@ namespace LinqToDB
 		/// <param name="entity">The entity.</param>
 		/// <param name="propertyName">Name of the property.</param>
 		/// <returns></returns>
-		/// <exception cref="LinqException">'Property' is only server-side method.</exception>
+		/// <exception cref="LinqToDBException">'Property' is only server-side method.</exception>
 		public static T Property<T>(object? entity, [SqlQueryDependent] string propertyName)
 		{
-			throw new LinqException("'Property' is only server-side method.");
+			throw new LinqToDBException("'Property' is only server-side method.");
 		}
 
 		/// <summary>
@@ -359,7 +356,7 @@ namespace LinqToDB
 		/// <returns>Value, converted to target type or <c>null</c> if conversion failed.</returns>
 		[CLSCompliant(false)]
 		[Function(PseudoFunctions.TRY_CONVERT, 3, 2, 0, ServerSideOnly = true, IsPure = true, IsNullable = IsNullableType.Nullable)]
-		public static TTo? TryConvert<TFrom, TTo>(TFrom value, TTo? _) where TTo : struct => throw new LinqException($"'{nameof(TryConvert)}' is only server-side method.");
+		public static TTo? TryConvert<TFrom, TTo>(TFrom value, TTo? _) where TTo : struct => throw new LinqToDBException($"'{nameof(TryConvert)}' is only server-side method.");
 
 		/// <summary>
 		/// Performs value conversion to specified type. If conversion failed, returns <c>null</c>.
@@ -376,7 +373,7 @@ namespace LinqToDB
 		/// <returns>Value, converted to target type or <c>null</c> if conversion failed.</returns>
 		[CLSCompliant(false)]
 		[Function(PseudoFunctions.TRY_CONVERT, 3, 2, 0, ServerSideOnly = true, IsPure = true, IsNullable = IsNullableType.Nullable)]
-		public static TTo? TryConvert<TFrom, TTo>(TFrom value, TTo? _) where TTo : class => throw new LinqException($"'{nameof(TryConvert)}' is only server-side method.");
+		public static TTo? TryConvert<TFrom, TTo>(TFrom value, TTo? _) where TTo : class => throw new LinqToDBException($"'{nameof(TryConvert)}' is only server-side method.");
 
 		/// <summary>
 		/// Performs value conversion to specified type. If conversion failed, returns value, specified by <paramref name="defaultValue"/> parameter.
@@ -392,7 +389,7 @@ namespace LinqToDB
 		/// <returns>Value, converted to target type or <paramref name="defaultValue"/> if conversion failed.</returns>
 		[CLSCompliant(false)]
 		[Function(PseudoFunctions.TRY_CONVERT_OR_DEFAULT, 3, 2, 0, 1, ServerSideOnly = true, IsPure = true, IsNullable = IsNullableType.IfAnyParameterNullable)]
-		public static TTo? TryConvertOrDefault<TFrom, TTo>(TFrom value, TTo? defaultValue) where TTo : struct => throw new LinqException($"'{nameof(TryConvertOrDefault)}' is only server-side method.");
+		public static TTo? TryConvertOrDefault<TFrom, TTo>(TFrom value, TTo? defaultValue) where TTo : struct => throw new LinqToDBException($"'{nameof(TryConvertOrDefault)}' is only server-side method.");
 
 		/// <summary>
 		/// Performs value conversion to specified type. If conversion failed, returns value, specified by <paramref name="defaultValue"/> parameter.
@@ -408,7 +405,7 @@ namespace LinqToDB
 		/// <returns>Value, converted to target type or <paramref name="defaultValue"/> if conversion failed.</returns>
 		[CLSCompliant(false)]
 		[Function(PseudoFunctions.TRY_CONVERT_OR_DEFAULT, 3, 2, 0, 1, ServerSideOnly = true, IsPure = true, IsNullable = IsNullableType.IfAnyParameterNullable)]
-		public static TTo? TryConvertOrDefault<TFrom, TTo>(TFrom value, TTo? defaultValue) where TTo : class => throw new LinqException($"'{nameof(TryConvertOrDefault)}' is only server-side method.");
+		public static TTo? TryConvertOrDefault<TFrom, TTo>(TFrom value, TTo? defaultValue) where TTo : class => throw new LinqToDBException($"'{nameof(TryConvertOrDefault)}' is only server-side method.");
 		#endregion
 
 		#region String Functions
@@ -1162,7 +1159,7 @@ namespace LinqToDB
 		[Function(PN.SqlCe,      "GetDate",           ServerSideOnly = true, CanBeNull = false)]
 		[Function(PN.Sybase,     "GetDate",           ServerSideOnly = true, CanBeNull = false)]
 		[Function(PN.ClickHouse, "now",               ServerSideOnly = true, CanBeNull = false)]
-		public static DateTime CurrentTimestamp => throw new LinqException("'CurrentTimestamp' is server side only property.");
+		public static DateTime CurrentTimestamp => throw new LinqToDBException($"'{nameof(CurrentTimestamp)}' is server side only property.");
 
 		[Function  (PN.SqlServer , "SYSUTCDATETIME"                      , ServerSideOnly = true, CanBeNull = false)]
 		[Function  (PN.Sybase    , "GETUTCDATE"                          , ServerSideOnly = true, CanBeNull = false)]
@@ -1443,14 +1440,14 @@ namespace LinqToDB
 		/// </summary>
 		[Function  (PN.SqlServer    , "IDENT_CURRENT", ServerSideOnly = true, CanBeNull = true)]
 		[Expression(                  "NULL"         , ServerSideOnly = true, CanBeNull = true)]
-		internal static object? CurrentIdentity(string tableName) => throw new LinqException($"'{nameof(CurrentIdentity)}' is server side only property.");
+		internal static object? CurrentIdentity(string tableName) => throw new LinqToDBException($"'{nameof(CurrentIdentity)}' is server side only property.");
 
 		/// <summary>
 		/// Returns identity step for specific table.
 		/// </summary>
 		[Function  (PN.SqlServer    , "IDENT_INCR", ServerSideOnly = true, CanBeNull = true)]
 		[Expression(                  "NULL"      , ServerSideOnly = true, CanBeNull = true)]
-		internal static object? IdentityStep(string tableName) => throw new LinqException($"'{nameof(IdentityStep)}' is server side only property.");
+		internal static object? IdentityStep(string tableName) => throw new LinqToDBException($"'{nameof(IdentityStep)}' is server side only property.");
 		#endregion
 	}
 }

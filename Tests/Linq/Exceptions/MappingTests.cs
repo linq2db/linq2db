@@ -18,7 +18,7 @@ namespace Tests.Exceptions
 			using (var db = GetDataContext(context))
 			{
 				var q = from p in db.Person where p.Name == "123" select p;
-				Assert.Throws<LinqException>(() => q.ToList());
+				Assert.Throws<LinqToDBException>(() => q.ToList());
 			}
 		}
 
@@ -33,7 +33,7 @@ namespace Tests.Exceptions
 		public void MapIgnore2([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
-				Assert.Throws<LinqException>(() => db.GetTable<TestPerson1>().FirstOrDefault(_ => _.FirstName == null));
+				Assert.Throws<LinqToDBException>(() => db.GetTable<TestPerson1>().FirstOrDefault(_ => _.FirstName == null));
 		}
 
 		enum Enum4

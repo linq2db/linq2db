@@ -168,7 +168,7 @@ namespace LinqToDB.Linq.Builder
 
 						if (tableContext == null)
 						{
-							throw new LinqException("Cannot retrieve Table for update.");
+							throw new LinqToDBException("Cannot retrieve Table for update.");
 						}
 
 						updateContext.TablePath = body;
@@ -182,7 +182,7 @@ namespace LinqToDB.Linq.Builder
 
 						if (intoTableContext == null)
 						{
-							throw new LinqException("Cannot retrieve Table for update.");
+							throw new LinqToDBException("Cannot retrieve Table for update.");
 						}
 
 						if (intoTableContext.SqlTable.SqlQueryExtensions?.Count > 0)

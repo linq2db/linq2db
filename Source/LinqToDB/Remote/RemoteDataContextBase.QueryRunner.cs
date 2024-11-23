@@ -200,7 +200,7 @@ namespace LinqToDB.Remote
 			public override object? ExecuteScalar()
 			{
 				if (_dataContext._batchCounter > 0)
-					throw new LinqException("Incompatible batch operation.");
+					throw new LinqToDBException("Incompatible batch operation.");
 
 				SetCommand(false);
 
@@ -240,7 +240,7 @@ namespace LinqToDB.Remote
 				_dataContext.ThrowOnDisposed();
 
 				if (_dataContext._batchCounter > 0)
-					throw new LinqException("Incompatible batch operation.");
+					throw new LinqToDBException("Incompatible batch operation.");
 
 				SetCommand(false);
 
@@ -304,7 +304,7 @@ namespace LinqToDB.Remote
 			public override async Task<IDataReaderAsync> ExecuteReaderAsync(CancellationToken cancellationToken)
 			{
 				if (_dataContext._batchCounter > 0)
-					throw new LinqException("Incompatible batch operation.");
+					throw new LinqToDBException("Incompatible batch operation.");
 
 				// preload _configurationInfo asynchronously if needed
 				await _dataContext.GetConfigurationInfoAsync(cancellationToken).ConfigureAwait(false);
@@ -335,7 +335,7 @@ namespace LinqToDB.Remote
 			public override async Task<object?> ExecuteScalarAsync(CancellationToken cancellationToken)
 			{
 				if (_dataContext._batchCounter > 0)
-					throw new LinqException("Incompatible batch operation.");
+					throw new LinqToDBException("Incompatible batch operation.");
 
 				// preload _configurationInfo asynchronously if needed
 				await _dataContext.GetConfigurationInfoAsync(cancellationToken).ConfigureAwait(false);

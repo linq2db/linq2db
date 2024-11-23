@@ -14,7 +14,7 @@ namespace Tests.Linq
 		[Test]
 		public void TestExceptionThrown_IsNull_ServerSideOnly()
 		{
-			Assert.Throws<LinqException>(() => Sql.Ext.SqlServer().IsNull(10, 1000));
+			Assert.Throws<LinqToDBException>(() => Sql.Ext.SqlServer().IsNull(10, 1000));
 		}
 
 		[Test]

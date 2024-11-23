@@ -375,7 +375,7 @@ namespace Tests.Linq
 			{
 				// we use external parameter p in GetChildrenFiltered parameter expression
 				// Sequence 'GetChildrenFiltered(value(Tests.Linq.ParameterTests+<>c__DisplayClass18_0).db, c => (c.ChildID != p.ParentID))' cannot be converted to SQL.
-				Assert.Throws<LinqException>(()
+				Assert.Throws<LinqToDBException>(()
 					=> db.Parent.Where(p => GetChildrenFiltered(db, c => c.ChildID != p.ParentID).Select(c => c.ParentID).Contains(p.ParentID)).ToList());
 			}
 		}

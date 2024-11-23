@@ -283,8 +283,8 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSybase, "The Sybase ASE does not support the UPDATE statement with the TOP + ORDER BY clause.")]
-		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllMySql, "MySql does not support Skip in update query")]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSybase, ErrorMessage = ErrorHelper.Sybase.Error_UpdateWithTopOrderBy)]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllMySql, ErrorMessage = ErrorHelper.MySql.Error_SkipInUpdate)]
 		public void UpdateTestJoinSkipTake(
 			[DataSources(TestProvName.AllAccess, TestProvName.AllClickHouse, ProviderName.SqlCe)]
 			string context)
@@ -575,7 +575,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/2815")]
-		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllClickHouse, "Correlated UPDATE not supported by ClickHouse")]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllClickHouse, ErrorMessage = ErrorHelper.ClickHouse.Error_CorrelatedUpdate)]
 		public void Issue2815Test2([DataSources(false, ProviderName.SqlCe, TestProvName.AllAccess)] string context)
 		{
 			using var db = GetDataConnection(context);

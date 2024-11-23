@@ -69,7 +69,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		[ThrowsForProvider(typeof(LinqException), TestProvName.AllSybase, ErrorMessage = ErrorHelper.Error_JoinToDerivedTableWithTakeInvalid)]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSybase, ErrorMessage = ErrorHelper.Sybase.Error_JoinToDerivedTableWithTakeInvalid)]
 		public void SelectToAnonimousTest1([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -104,7 +104,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		[ThrowsForProvider(typeof(LinqException), TestProvName.AllSybase, ErrorMessage = ErrorHelper.Error_JoinToDerivedTableWithTakeInvalid)]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSybase, ErrorMessage = ErrorHelper.Sybase.Error_JoinToDerivedTableWithTakeInvalid)]
 		public void SelectToAnonymousTest2([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -141,7 +141,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		[ThrowsForProvider(typeof(LinqException), TestProvName.AllSybase, ErrorMessage = ErrorHelper.Error_JoinToDerivedTableWithTakeInvalid)]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSybase, ErrorMessage = ErrorHelper.Sybase.Error_JoinToDerivedTableWithTakeInvalid)]
 		public void SelectToTypeTest1([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -176,7 +176,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		[ThrowsForProvider(typeof(LinqException), TestProvName.AllSybase, ErrorMessage = ErrorHelper.Error_JoinToDerivedTableWithTakeInvalid)]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSybase, ErrorMessage = ErrorHelper.Sybase.Error_JoinToDerivedTableWithTakeInvalid)]
 		public void SelectToTypeTest2([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))

@@ -521,7 +521,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[ThrowsForProvider(typeof(LinqException), TestProvName.AllAccess, TestProvName.AllSybase, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllAccess, TestProvName.AllSybase, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
 		public void Union54([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
@@ -548,7 +548,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[ThrowsForProvider(typeof(LinqException), TestProvName.AllAccess, TestProvName.AllSybase, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllAccess, TestProvName.AllSybase, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
 		public void Union541([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -728,7 +728,7 @@ namespace Tests.Linq
 
 				var fullJoin = join1.Concat(join2);
 
-				var fullJoinSql = fullJoin.ToString(); // BLToolkit.Data.Linq.LinqException : Types in Concat are constructed incompatibly.
+				var fullJoinSql = fullJoin.ToString(); // exception : Types in Concat are constructed incompatibly.
 				Assert.That(fullJoinSql, Is.Not.Null);
 
 				TestContext.Out.Write(fullJoinSql);
@@ -805,7 +805,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[ThrowsForProvider(typeof(LinqException), TestProvName.AllSybase, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSybase, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
 		public void ConcatDefaultIfEmpty([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
