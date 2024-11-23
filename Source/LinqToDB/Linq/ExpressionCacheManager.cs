@@ -237,6 +237,7 @@ namespace LinqToDB.Linq
 			foreach (var pair in _parameterEntries.Values)
 			{
 				if (ExpressionEqualityComparer.Instance.Equals(pair.param, paramExpr)
+					&& pair.entry.DbDataType.Equals(entry.DbDataType)
 					&& ExpressionEqualityComparer.Instance.Equals(pair.entry.ClientValueGetter, entry.ClientValueGetter)
 				    && ExpressionEqualityComparer.Instance.Equals(pair.entry.ClientToProviderConverter, entry.ClientToProviderConverter)
 				    && ExpressionEqualityComparer.Instance.Equals(pair.entry.ItemAccessor, entry.ItemAccessor)
@@ -246,7 +247,11 @@ namespace LinqToDB.Linq
 
 					finalParameterId = pair.entry.ParameterId;
 
-					RegisterDuplicateCheck(pair.entry.ParameterId, pair.entry.ClientValueGetter, entry.ClientValueGetter);
+					// register for duplicates only non the same parameter expressions
+					if (!ReferenceEquals(pair.param, paramExpr))
+					{
+						RegisterDuplicateCheck(pair.entry.ParameterId, pair.entry.ClientValueGetter, entry.ClientValueGetter);
+					}
 
 					return;
 				}
@@ -429,7 +434,7 @@ namespace LinqToDB.Linq
 
 						if (dbDataTypeAccessorExpr != null)
 						{
-							var dbDataTypeAccessorLambda = Expression.Lambda<Func<object?, DbDataType>>(dbDataTypeAccessorExpr.EnsureType<object>(), ParametersContext.ItemParameter);
+							var dbDataTypeAccessorLambda = Expression.Lambda<Func<object?, DbDataType>>(dbDataTypeAccessorExpr.EnsureType<DbDataType>(), ParametersContext.ItemParameter);
 							dbDataTypeAccessor = dbDataTypeAccessorLambda.CompileExpression();
 						}
 

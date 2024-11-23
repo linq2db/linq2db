@@ -1292,11 +1292,15 @@ namespace LinqToDB.SqlProvider
 			{
 				if (op is SqlPredicate.Operator.Equal or SqlPredicate.Operator.NotEqual)
 				{
-					if (sqlConditionExpression.TrueValue.Equals(unwrappedValue))
+					if (sqlConditionExpression.TrueValue.Equals(unwrappedValue) && TryEvaluateNoParameters(sqlConditionExpression.FalseValue, out _))
+					{
 						return sqlConditionExpression.Condition.MakeNot(isNot);
+					}
 
-					if (sqlConditionExpression.FalseValue.Equals(unwrappedValue))
+					if (sqlConditionExpression.FalseValue.Equals(unwrappedValue) && TryEvaluateNoParameters(sqlConditionExpression.TrueValue, out _))
+					{
 						return sqlConditionExpression.Condition.MakeNot(!isNot);
+					}
 				}
 
 				if (TryEvaluateNoParameters(unwrappedValue, out _))
