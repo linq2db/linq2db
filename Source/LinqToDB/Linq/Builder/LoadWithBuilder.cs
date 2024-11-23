@@ -20,7 +20,7 @@ namespace LinqToDB.Linq.Builder
 		static void CheckFilterFunc(Type expectedType, Type filterType, MappingSchema mappingSchema)
 		{
 			var propType = expectedType;
-			if (mappingSchema.IsScalarType(expectedType))
+			if (mappingSchema.IsCollectionType(expectedType))
 				propType = EagerLoading.GetEnumerableElementType(expectedType, mappingSchema);
 			var itemType = typeof(Expression<>).IsSameOrParentOf(filterType) ?
 				filterType.GetGenericArguments()[0].GetGenericArguments()[0].GetGenericArguments()[0] :
