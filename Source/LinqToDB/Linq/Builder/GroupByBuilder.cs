@@ -478,14 +478,7 @@ namespace LinqToDB.Linq.Builder
 				{
 					if (!IsGroupingGuardDisabled)
 					{
-						var ex = new LinqToDBException(
-							"""
-							You should explicitly specify selected fields for server-side GroupBy() call or add AsEnumerable() call before GroupBy() to perform client-side grouping.
-							Set Configuration.Linq.GuardGrouping = false to disable this check.
-							Additionally this guard exception can be disabled by extension GroupBy(...).DisableGuard().
-							NOTE! By disabling this guard you accept Eager Loading for grouping query.
-							"""
-						)
+						var ex = new LinqToDBException(ErrorHelper.Error_GroupGuard)
 						{
 							HelpLink = "https://github.com/linq2db/linq2db/issues/365"
 						};

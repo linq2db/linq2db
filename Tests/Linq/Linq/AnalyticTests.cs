@@ -5,6 +5,7 @@ using System.Linq;
 using FluentAssertions;
 
 using LinqToDB;
+using LinqToDB.Linq;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
@@ -1999,6 +2000,38 @@ namespace Tests.Linq
 						};
 
 			query.ToList();
+		}
+
+		// also see Issue4626Test2 test in efcore tests
+		// as fix I would expect to have:
+		// - skipped methods should be explicitly marked as optional
+		// - all other unmapped methods should throw
+		// - empty resulting sequence should return default(T)
+		// This will require additional asserts for results and tests to ensure expected behavior
+		[ActiveIssue(Configurations = [ProviderName.SqlCe, TestProvName.AllSqlServer2016Minus])]
+		[ThrowsForProvider(typeof(LinqException), TestProvName.AllAccess, TestProvName.AllDB2, TestProvName.AllFirebirdLess4, TestProvName.AllInformix, TestProvName.AllMySql57, TestProvName.AllMariaDB, TestProvName.AllOracle11, TestProvName.AllSQLite, TestProvName.AllSybase, ErrorHelper.Error_OUTER_Joins)]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllClickHouse, ErrorHelper.Error_GroupGuard)]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4626")]
+		public void EmptySequenceTest([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			(from c in db.Parent
+				select new
+				{
+					Key = c.ParentID,
+					Subquery = (
+						from p in c.Children
+						group p by p.ParentID into g
+						select new
+						{
+							ParentID = g.Key,
+							// Tested code:
+							// StringAggregate mapped only for some providers leading to empty function sequence for others
+							Children = g.StringAggregate(", ", p => p.ChildID.ToString()).ToValue()
+						}).ToArray()
+				 })
+				 .ToArray();
 		}
 	}
 }
