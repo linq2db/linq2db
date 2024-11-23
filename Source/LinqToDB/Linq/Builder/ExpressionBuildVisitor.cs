@@ -2296,6 +2296,11 @@ namespace LinqToDB.Linq.Builder
 
 			if (BuildContext != null && Builder.CanBeEvaluatedOnClient(node))
 			{
+				if (null != node.Find(1, (_, e) => e is PlaceholderExpression))
+				{
+					return false;
+				}
+
 				if (!Builder.PreferServerSide(node, false))
 				{
 					ISqlExpression? sql = null;
