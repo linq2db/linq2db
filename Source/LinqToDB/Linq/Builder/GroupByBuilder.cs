@@ -239,7 +239,7 @@ namespace LinqToDB.Linq.Builder
 				}
 
 				if (!hasSets)
-					throw new LinqException($"Invalid grouping sets expression '{groupingExpr}'.");
+					throw new LinqToDBException($"Invalid grouping sets expression '{groupingExpr}'.");
 			}
 			else
 			{

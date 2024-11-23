@@ -120,7 +120,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[ThrowsForProvider(typeof(LinqException), TestProvName.AllClickHouse, ErrorMessage = ErrorHelper.Error_Correlated_Subqueries)]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllClickHouse, ErrorMessage = ErrorHelper.Error_Correlated_Subqueries)]
 		public void Contains701([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))

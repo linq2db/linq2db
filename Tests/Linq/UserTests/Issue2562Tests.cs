@@ -12,13 +12,13 @@ namespace Tests.UserTests
 		[Sql.Extension("LIST({expr}, {splitter})", TokenName = "function", PreferServerSide = true)]
 		public static string FbList<T>(this Sql.ISqlExtension? ext, [ExprParameter] T expr, [ExprParameter] string splitter)
 		{
-			throw new LinqException($"'{nameof(FbList)}' is server-side method.");
+			throw new LinqToDBException($"'{nameof(FbList)}' is server-side method.");
 		}
 
 		[Sql.Extension("LIST({expr})", TokenName = "function",  PreferServerSide = true)]
 		public static string FbList<T>(this Sql.ISqlExtension? ext, [ExprParameter] T expr)
 		{
-			throw new LinqException($"'{nameof(FbList)}' is server-side method.");
+			throw new LinqToDBException($"'{nameof(FbList)}' is server-side method.");
 		}
 	}
 	

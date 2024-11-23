@@ -26,7 +26,7 @@ namespace LinqToDB.Linq.Builder
 				filterType.GetGenericArguments()[0].GetGenericArguments()[0].GetGenericArguments()[0] :
 				filterType.GetGenericArguments()[0].GetGenericArguments()[0];
 			if (propType != itemType)
-				throw new LinqException("Invalid filter function usage.");
+				throw new LinqToDBException("Invalid filter function usage.");
 		}
 
 		static LoadWithInfo CorrectLastPath(LoadWithInfo lastPath, MemberInfo[]? loadWithPath)

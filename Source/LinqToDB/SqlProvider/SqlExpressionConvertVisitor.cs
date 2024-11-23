@@ -423,7 +423,7 @@ namespace LinqToDB.SqlProvider
 						var keys  = table.GetKeys(true);
 
 						if (keys == null || keys.Count == 0)
-							throw new SqlException("Cant create IN expression.");
+							throw new LinqToDBException("Cant create IN expression.");
 
 						if (keys.Count == 1)
 						{
@@ -1327,7 +1327,7 @@ namespace LinqToDB.SqlProvider
 				case SqlValue { Value: null }:
 				{
 					if (op is not (SqlPredicate.Operator.Equal or SqlPredicate.Operator.NotEqual))
-						throw new LinqException("Null SqlRow is only allowed in equality comparisons");
+						throw new LinqToDBException("Null SqlRow is only allowed in equality comparisons");
 
 					if (ConvertRowIsNullPredicate((SqlRowExpression)predicate.Expr2, op is SqlPredicate.Operator.NotEqual, out var rowIsNullFallback))
 					{
@@ -1350,12 +1350,12 @@ namespace LinqToDB.SqlProvider
 				{
 					if (!SqlProviderFlags.RowConstructorSupport.HasFlag(feature) ||
 					    !SqlProviderFlags.RowConstructorSupport.HasFlag(RowFeature.CompareToSelect))
-						throw new LinqException("SqlRow comparisons to SELECT are not supported by this DB provider");
+						throw new LinqToDBException("SqlRow comparisons to SELECT are not supported by this DB provider");
 					break;
 				}
 
 				default:
-					throw new LinqException("Inappropriate SqlRow expression, only Sql.Row() and sub-selects are valid.");
+					throw new LinqToDBException("Inappropriate SqlRow expression, only Sql.Row() and sub-selects are valid.");
 			}
 
 			// Default ExprExpr translation is ok
@@ -1511,7 +1511,7 @@ namespace LinqToDB.SqlProvider
 				}*/
 			}
 
-			throw new LinqException("Unsupported SqlRow operator: " + op);
+			throw new LinqToDBException($"Unsupported SqlRow operator: {op}");
 		}
 
 		#endregion

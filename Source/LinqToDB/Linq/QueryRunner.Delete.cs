@@ -51,7 +51,7 @@ namespace LinqToDB.Linq
 				var keys = sqlTable.GetKeys(true)!.Cast<SqlField>().ToList();
 
 				if (keys.Count == 0)
-					throw new LinqException($"Table '{sqlTable.NameForLogging}' does not have primary key.");
+					throw new LinqToDBException($"Table '{sqlTable.NameForLogging}' does not have primary key.");
 
 				var accessorIdGenerator = new UniqueIdGenerator<ParameterAccessor>();
 

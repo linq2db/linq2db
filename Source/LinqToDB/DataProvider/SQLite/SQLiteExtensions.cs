@@ -30,7 +30,7 @@ namespace LinqToDB.DataProvider.SQLite
 		[ExpressionMethod(nameof(MatchImpl1))]
 		public static bool Match(this ISQLiteExtensions? ext, object? entityOrColumn, string match)
 		{
-			throw new LinqException($"'{nameof(Match)}' is server-side method.");
+			throw new LinqToDBException($"'{nameof(Match)}' is server-side method.");
 		}
 
 		static Expression<Func<ISQLiteExtensions?, object?, string, bool>> MatchImpl1()
@@ -73,7 +73,7 @@ namespace LinqToDB.DataProvider.SQLite
 		public static int RowId<TEntity>(this ISQLiteExtensions? ext, TEntity entity)
 			where TEntity : class
 		{
-			throw new LinqException($"'{nameof(RowId)}' is server-side method.");
+			throw new LinqToDBException($"'{nameof(RowId)}' is server-side method.");
 		}
 
 		static Expression<Func<ISQLiteExtensions, TEntity, int>> RowIdImpl<TEntity>()
@@ -95,7 +95,7 @@ namespace LinqToDB.DataProvider.SQLite
 		public static double? Rank<TEntity>(this ISQLiteExtensions? ext, TEntity entity)
 			where TEntity : class
 		{
-			throw new LinqException($"'{nameof(Rank)}' is server-side method.");
+			throw new LinqToDBException($"'{nameof(Rank)}' is server-side method.");
 		}
 
 		static Expression<Func<ISQLiteExtensions, TEntity, double?>> RankImpl<TEntity>()
@@ -118,7 +118,7 @@ namespace LinqToDB.DataProvider.SQLite
 		public static string FTS3Offsets<TEntity>(this ISQLiteExtensions? ext, TEntity entity)
 			where TEntity : class
 		{
-			throw new LinqException($"'{nameof(FTS3Offsets)}' is server-side method.");
+			throw new LinqToDBException($"'{nameof(FTS3Offsets)}' is server-side method.");
 		}
 
 		static Expression<Func<ISQLiteExtensions, TEntity, string>> Fts3OffsetsImpl<TEntity>()
@@ -140,7 +140,7 @@ namespace LinqToDB.DataProvider.SQLite
 		public static byte[] FTS3MatchInfo<TEntity>(this ISQLiteExtensions? ext, TEntity entity)
 			where TEntity : class
 		{
-			throw new LinqException($"'{nameof(FTS3MatchInfo)}' is server-side method.");
+			throw new LinqToDBException($"'{nameof(FTS3MatchInfo)}' is server-side method.");
 		}
 
 		static Expression<Func<ISQLiteExtensions, TEntity, byte[]>> Fts3MatchInfoImpl1<TEntity>()
@@ -163,7 +163,7 @@ namespace LinqToDB.DataProvider.SQLite
 		public static byte[] FTS3MatchInfo<TEntity>(this ISQLiteExtensions? ext, TEntity entity, string format)
 			where TEntity : class
 		{
-			throw new LinqException($"'{nameof(FTS3MatchInfo)}' is server-side method.");
+			throw new LinqToDBException($"'{nameof(FTS3MatchInfo)}' is server-side method.");
 		}
 
 		static Expression<Func<ISQLiteExtensions, TEntity, string, byte[]>> Fts3MatchInfoImpl2<TEntity>()
@@ -185,7 +185,7 @@ namespace LinqToDB.DataProvider.SQLite
 		public static string FTS3Snippet<TEntity>(this ISQLiteExtensions? ext, TEntity entity)
 			where TEntity : class
 		{
-			throw new LinqException($"'{nameof(FTS3Snippet)}' is server-side method.");
+			throw new LinqToDBException($"'{nameof(FTS3Snippet)}' is server-side method.");
 		}
 
 		static Expression<Func<ISQLiteExtensions, TEntity, string>> Fts3SnippetImpl1<TEntity>()
@@ -208,7 +208,7 @@ namespace LinqToDB.DataProvider.SQLite
 		public static string FTS3Snippet<TEntity>(this ISQLiteExtensions? ext, TEntity entity, string startMatch)
 			where TEntity : class
 		{
-			throw new LinqException($"'{nameof(FTS3Snippet)}' is server-side method.");
+			throw new LinqToDBException($"'{nameof(FTS3Snippet)}' is server-side method.");
 		}
 
 		static Expression<Func<ISQLiteExtensions, TEntity, string, string>> Fts3SnippetImpl2<TEntity>()
@@ -232,7 +232,7 @@ namespace LinqToDB.DataProvider.SQLite
 		public static string FTS3Snippet<TEntity>(this ISQLiteExtensions? ext, TEntity entity, string startMatch, string endMatch)
 			where TEntity : class
 		{
-			throw new LinqException($"'{nameof(FTS3Snippet)}' is server-side method.");
+			throw new LinqToDBException($"'{nameof(FTS3Snippet)}' is server-side method.");
 		}
 
 		static Expression<Func<ISQLiteExtensions, TEntity, string, string, string>> Fts3SnippetImpl3<TEntity>()
@@ -257,7 +257,7 @@ namespace LinqToDB.DataProvider.SQLite
 		public static string FTS3Snippet<TEntity>(this ISQLiteExtensions? ext, TEntity entity, string startMatch, string endMatch, string ellipses)
 			where TEntity : class
 		{
-			throw new LinqException($"'{nameof(FTS3Snippet)}' is server-side method.");
+			throw new LinqToDBException($"'{nameof(FTS3Snippet)}' is server-side method.");
 		}
 
 		static Expression<Func<ISQLiteExtensions, TEntity, string, string, string, string>> Fts3SnippetImpl4<TEntity>()
@@ -283,7 +283,7 @@ namespace LinqToDB.DataProvider.SQLite
 		public static string FTS3Snippet<TEntity>(this ISQLiteExtensions? ext, TEntity entity, string startMatch, string endMatch, string ellipses, int columnIndex)
 			where TEntity : class
 		{
-			throw new LinqException($"'{nameof(FTS3Snippet)}' is server-side method.");
+			throw new LinqToDBException($"'{nameof(FTS3Snippet)}' is server-side method.");
 		}
 
 		static Expression<Func<ISQLiteExtensions, TEntity, string, string, string, int, string>> Fts3SnippetImpl5<TEntity>()
@@ -310,7 +310,7 @@ namespace LinqToDB.DataProvider.SQLite
 		public static string FTS3Snippet<TEntity>(this ISQLiteExtensions? ext, TEntity entity, string startMatch, string endMatch, string ellipses, int columnIndex, int tokensNumber)
 			where TEntity : class
 		{
-			throw new LinqException($"'{nameof(FTS3Snippet)}' is server-side method.");
+			throw new LinqToDBException($"'{nameof(FTS3Snippet)}' is server-side method.");
 		}
 
 		static Expression<Func<ISQLiteExtensions, TEntity, string, string, string, int, int, string>> Fts3SnippetImpl6<TEntity>()
@@ -334,7 +334,7 @@ namespace LinqToDB.DataProvider.SQLite
 		public static double FTS5bm25<TEntity>(this ISQLiteExtensions? ext, TEntity entity)
 			where TEntity : class
 		{
-			throw new LinqException($"'{nameof(FTS5bm25)}' is server-side method.");
+			throw new LinqToDBException($"'{nameof(FTS5bm25)}' is server-side method.");
 		}
 
 		static Expression<Func<ISQLiteExtensions, TEntity, double>> Fts5bm25Impl1<TEntity>()
@@ -357,7 +357,7 @@ namespace LinqToDB.DataProvider.SQLite
 		public static double FTS5bm25<TEntity>(this ISQLiteExtensions? ext, TEntity entity, params double[] weights)
 			where TEntity : class
 		{
-			throw new LinqException($"'{nameof(FTS5bm25)}' is server-side method.");
+			throw new LinqToDBException($"'{nameof(FTS5bm25)}' is server-side method.");
 		}
 
 		static Expression<Func<ISQLiteExtensions, TEntity, double[], double>> Fts5bm25Impl2<TEntity>()
@@ -382,7 +382,7 @@ namespace LinqToDB.DataProvider.SQLite
 		public static string FTS5Highlight<TEntity>(this ISQLiteExtensions? ext, TEntity entity, int columnIndex, string startMatch, string endMatch)
 			where TEntity : class
 		{
-			throw new LinqException($"'{nameof(FTS5Highlight)}' is server-side method.");
+			throw new LinqToDBException($"'{nameof(FTS5Highlight)}' is server-side method.");
 		}
 
 		static Expression<Func<ISQLiteExtensions, TEntity, int, string, string, string>> Fts5HighlightImpl<TEntity>()
@@ -409,7 +409,7 @@ namespace LinqToDB.DataProvider.SQLite
 		public static string FTS5Snippet<TEntity>(this ISQLiteExtensions? ext, TEntity entity, int columnIndex, string startMatch, string endMatch, string ellipses, int tokensNumber)
 			where TEntity : class
 		{
-			throw new LinqException($"'{nameof(FTS5Snippet)}' is server-side method.");
+			throw new LinqToDBException($"'{nameof(FTS5Snippet)}' is server-side method.");
 		}
 
 		static Expression<Func<ISQLiteExtensions, TEntity, int, string, string, string, int, string>> Fts5SnippetImpl<TEntity>()

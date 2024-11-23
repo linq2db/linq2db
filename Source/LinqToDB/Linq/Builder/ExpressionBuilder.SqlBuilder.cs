@@ -101,10 +101,10 @@ namespace LinqToDB.Linq.Builder
 			var sql = sequence.SelectQuery;
 
 			if (hints != null && !DataContext.SqlProviderFlags.GetIsTakeHintsSupported(hints.Value))
-				throw new LinqException($"TakeHints are {hints} not supported by current database");
+				throw new LinqToDBException($"TakeHints are {hints} not supported by current database");
 
 			if (hints != null && sql.Select.SkipValue != null)
-				throw new LinqException("Take with hints could not be applied with Skip");
+				throw new LinqToDBException("Take with hints could not be applied with Skip");
 
 			if (sql.Select.TakeValue != null)
 			{
@@ -122,7 +122,7 @@ namespace LinqToDB.Linq.Builder
 			var sql = sequence.SelectQuery;
 
 			if (sql.Select.TakeHints != null)
-				throw new LinqException("Skip could not be applied with Take with hints");
+				throw new LinqToDBException("Skip could not be applied with Take with hints");
 
 			if (sql.Select.SkipValue != null)
 				sql.Select.Skip(new SqlBinaryExpression(typeof(int), sql.Select.SkipValue, "+", expr, Precedence.Additive));
@@ -571,7 +571,7 @@ namespace LinqToDB.Linq.Builder
 					return SqlPredicate.True;
 			}
 
-			return MakeIsPredicate(table, table, table.InheritanceMapping, typeOperand, static (table, name) => table.SqlTable.FindFieldByMemberName(name) ?? throw new LinqException($"Field {name} not found in table {table.SqlTable}"));
+			return MakeIsPredicate(table, table, table.InheritanceMapping, typeOperand, static (table, name) => table.SqlTable.FindFieldByMemberName(name) ?? throw new LinqToDBException($"Field {name} not found in table {table.SqlTable}"));
 		}
 
 		public ISqlPredicate MakeIsPredicate<TContext>(
@@ -736,7 +736,7 @@ namespace LinqToDB.Linq.Builder
 
 			foreach (var m in mapping)
 			{
-				var field = table.SqlTable.FindFieldByMemberName(table.InheritanceMapping[m.i].DiscriminatorName) ?? throw new LinqException($"Field {table.InheritanceMapping[m.i].DiscriminatorName} not found in table {table.SqlTable}");
+				var field = table.SqlTable.FindFieldByMemberName(table.InheritanceMapping[m.i].DiscriminatorName) ?? throw new LinqToDBException($"Field {table.InheritanceMapping[m.i].DiscriminatorName} not found in table {table.SqlTable}");
 				var ttype = field.ColumnDescriptor.MemberAccessor.TypeAccessor.Type;
 				var obj   = expression.Expression;
 

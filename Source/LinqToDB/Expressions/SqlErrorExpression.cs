@@ -72,7 +72,7 @@ namespace LinqToDB.Expressions
 
 		public static Exception CreateException(string message)
 		{
-			return new LinqException(message);
+			return new LinqToDBException(message);
 		}
 
 		public static Exception CreateException(Expression? expression, string? message)
@@ -110,7 +110,7 @@ namespace LinqToDB.Expressions
 				messageText = "Unknown translation error.";
 			}
 
-			return new LinqException(messageText);
+			return new LinqToDBException(messageText);
 		}
 
 		public static void ThrowError(Expression expression, string? message)

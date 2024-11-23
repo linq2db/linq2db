@@ -426,7 +426,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[ThrowsForProvider(typeof(LinqException), TestProvName.AllSybase, "Provider does not support CROSS/OUTER/LATERAL joins.")]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSybase, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
 		public void Coalesce4([DataSources(ProviderName.SqlCe, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -1975,7 +1975,7 @@ namespace Tests.Linq
 		}
 		#endregion
 
-		[ThrowsForProvider(typeof(LinqException), TestProvName.AllSybase, ErrorMessage = ErrorHelper.Error_JoinToDerivedTableWithTakeInvalid)]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSybase, ErrorMessage = ErrorHelper.Sybase.Error_JoinToDerivedTableWithTakeInvalid)]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4520")]
 		public void Issue4520Test([DataSources] string context)
 		{

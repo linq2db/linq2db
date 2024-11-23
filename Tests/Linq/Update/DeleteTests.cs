@@ -142,7 +142,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllClickHouse, ErrorHelper.Error_ClickHouse_CorrelatedDelete)]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllClickHouse, ErrorMessage = ErrorHelper.ClickHouse.Error_CorrelatedDelete)]
 		public void DeleteMany1([DataSources(false)] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -210,7 +210,7 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllClickHouse, ErrorHelper.Error_ClickHouse_CorrelatedDelete)]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllClickHouse, ErrorMessage = ErrorHelper.ClickHouse.Error_CorrelatedDelete)]
 		[Test]
 		public void DeleteMany3([DataSources] string context)
 		{
@@ -284,7 +284,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/2549")]
-		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSybase, "The Sybase ASE does not support the DELETE statement with the TOP + ORDER BY clause.")]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSybase, ErrorMessage = ErrorHelper.Sybase.Error_DeleteWithTopOrderBy)]
 		public void DeleteTakeOrdered([DataSources(
 			TestProvName.AllAccess,
 			TestProvName.AllClickHouse,
@@ -329,7 +329,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSybase, "The Sybase ASE does not support the DELETE statement with the TOP + ORDER BY clause.")]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSybase, ErrorMessage = ErrorHelper.Sybase.Error_DeleteWithTopOrderBy)]
 		public void DeleteSkipTakeOrdered([DataSources(
 			TestProvName.AllAccess,
 			TestProvName.AllClickHouse,
@@ -376,7 +376,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSybase, "The Sybase ASE does not support the DELETE statement with the SKIP clause.")]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSybase, ErrorMessage = ErrorHelper.Sybase.Error_DeleteWithSkip)]
 		public void DeleteSkipTakeNotOrdered([DataSources(
 			TestProvName.AllAccess,
 			TestProvName.AllClickHouse,
@@ -609,7 +609,7 @@ namespace Tests.xUpdate
 
 		// based on TestDeleteFrom test in EFCore tests project, it should be reenabled after fix
 		[ActiveIssue(Configurations = [TestProvName.AllClickHouse, TestProvName.AllFirebird, TestProvName.AllInformix, TestProvName.AllMySql, TestProvName.AllOracle, TestProvName.AllPostgreSQL, TestProvName.AllSapHana, ProviderName.SqlCe, TestProvName.AllSQLite])]
-		[ThrowsForProvider(typeof(LinqException), TestProvName.AllSybase, ErrorHelper.Error_OrderBy_in_Derived)]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSybase, ErrorMessage = ErrorHelper.Error_OrderBy_in_Derived)]
 		[Test]
 		public void DeleteFromWithTake([DataSources] string context)
 		{

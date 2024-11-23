@@ -168,7 +168,7 @@ namespace Tests.Linq
 		[Test]
 		public void TestComplexExpression([IdlProviders] string context)
 		{
-			// failed with LinqToDB.Data.Linq.LinqException : 'new StationObjectId() {Value = ConvertNullable(child.ChildID)}'
+			// failed with exception : 'new StationObjectId() {Value = ConvertNullable(child.ChildID)}'
 			//   cannot be converted to SQL.
 			using (var db = GetDataContext(context))
 			{

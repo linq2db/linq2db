@@ -29,7 +29,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		[ThrowsForProvider(typeof(LinqException), TestProvName.AllSybase, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSybase, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
 		public void TestIssue2900([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))

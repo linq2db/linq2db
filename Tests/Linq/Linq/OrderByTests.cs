@@ -381,7 +381,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[ThrowsForProvider(typeof(LinqException), TestProvName.AllClickHouse, ErrorMessage = ErrorHelper.Error_Correlated_Subqueries)]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllClickHouse, ErrorMessage = ErrorHelper.Error_Correlated_Subqueries)]
 		public void OrderByContinuous([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -626,7 +626,7 @@ namespace Tests.Linq
 
 				FluentActions.Enumerating(() => query)
 					.Should()
-					.Throw<LinqException>()
+					.Throw<LinqToDBException>()
 					.WithMessage("The LINQ expression 'Sql.Ordinal<string>(p.Name.LastName)' could not be converted to SQL.");
 			}
 		}

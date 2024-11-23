@@ -47,7 +47,7 @@ namespace Tests.Linq
 
 		[ActiveIssue(Configuration = TestProvName.AllInformix, Details = "Informix interval cannot be created from non-literal value")]
 		[Test]
-		[ThrowsForProvider(typeof(LinqException), TestProvName.AllSybase, ErrorMessage = ErrorHelper.Error_JoinToDerivedTableWithTakeInvalid)]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSybase, ErrorMessage = ErrorHelper.Sybase.Error_JoinToDerivedTableWithTakeInvalid)]
 		public void SubQueryTest([DataSources(TestProvName.AllAccess)] string context)
 		{
 			var data = GenerateData();

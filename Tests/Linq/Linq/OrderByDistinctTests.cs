@@ -401,7 +401,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[ThrowsForProvider(typeof(LinqException), providers: [TestProvName.AllClickHouse], ErrorMessage = ErrorHelper.Error_Correlated_Subqueries)]
+		[ThrowsForProvider(typeof(LinqToDBException), providers: [TestProvName.AllClickHouse], ErrorMessage = ErrorHelper.Error_Correlated_Subqueries)]
 		[Test]
 		public void OrderBySubQuery([DataSources] string context)
 		{
@@ -435,7 +435,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[ThrowsForProvider(typeof(LinqException), providers: [TestProvName.AllSybase], ErrorMessage = ErrorHelper.Error_OrderBy_in_Derived)]
+		[ThrowsForProvider(typeof(LinqToDBException), providers: [TestProvName.AllSybase], ErrorMessage = ErrorHelper.Error_OrderBy_in_Derived)]
 		[Test]
 		public void DoubleOrderBy([DataSources] string context)
 		{

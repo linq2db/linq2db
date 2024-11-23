@@ -1011,7 +1011,7 @@ namespace Tests.Mapping
 					Value2 = e.Count()
 				});
 
-			Assert.That(() => query.ToArray(), Throws.Exception.InstanceOf<LinqException>());
+			Assert.That(() => query.ToArray(), Throws.Exception.InstanceOf<LinqToDBException>());
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3859")]

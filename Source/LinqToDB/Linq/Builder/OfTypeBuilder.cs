@@ -74,7 +74,7 @@ namespace LinqToDB.Linq.Builder
 			return builder.MakeIsPredicate((context, table), context, discriminators, toType,
 				static (context, name) =>
 				{
-					var field  = context.table.FindFieldByMemberName(name) ?? throw new LinqException($"Field {name} not found in table {context.table}");
+					var field  = context.table.FindFieldByMemberName(name) ?? throw new LinqToDBException($"Field {name} not found in table {context.table}");
 					var member = field.ColumnDescriptor.MemberInfo;
 
 					var contextRef = new ContextRefExpression(member.DeclaringType!, context.context);

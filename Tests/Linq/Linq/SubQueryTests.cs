@@ -58,7 +58,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[ThrowsForProvider(typeof(LinqException), TestProvName.AllSybase, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSybase, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
 		public void Test4([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -203,7 +203,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[ThrowsForProvider(typeof(SqlException), providers: [TestProvName.AllAccess, TestProvName.AllSybase], ErrorMessage = "Skip for subqueries is not supported")]
+		[ThrowsForProvider(typeof(LinqToDBException), providers: [TestProvName.AllAccess, TestProvName.AllSybase], ErrorMessage = ErrorHelper.Error_Skip_in_Subquery)]
 		public void DerivedSkipTake([DataSources]
 			string context)
 		{
@@ -1201,7 +1201,7 @@ namespace Tests.Linq
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3334")]
-		[ThrowsForProvider(typeof(LinqException), TestProvName.AllSybase, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSybase, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
 		public void Issue3334Test([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
@@ -1223,7 +1223,7 @@ namespace Tests.Linq
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3365")]
-		[ThrowsForProvider(typeof(LinqException), TestProvName.AllSybase, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSybase, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
 		public void Issue3365Test([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
@@ -1256,7 +1256,7 @@ namespace Tests.Linq
 				join pc in db.Patient on ps.PcId equals pc.PersonID
 				select new { pc, ps };
 
-			Assert.That(() => query.ToArray(), Throws.Exception.InstanceOf<LinqException>());
+			Assert.That(() => query.ToArray(), Throws.Exception.InstanceOf<LinqToDBException>());
 		}
 
 		private record PcScanId(int pcId, int scanId)

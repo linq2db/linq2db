@@ -127,7 +127,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[ThrowsForProvider(typeof(LinqException), providers: [TestProvName.AllSybase], ErrorMessage = ErrorHelper.Error_OrderBy_in_Derived)]
+		[ThrowsForProvider(typeof(LinqToDBException), providers: [TestProvName.AllSybase], ErrorMessage = ErrorHelper.Error_OrderBy_in_Derived)]
 		[Test]
 		public void TakeDistinct([DataSources] string context)
 		{
@@ -331,8 +331,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[ThrowsForProvider(typeof(LinqException), providers: [TestProvName.AllSybase], ErrorMessage = ErrorHelper.Error_OrderBy_in_Derived)]
-		[ThrowsForProvider(typeof(SqlException), providers: [TestProvName.AllAccess], ErrorMessage = "Skip for subqueries is not supported")]
+		[ThrowsForProvider(typeof(LinqToDBException), providers: [TestProvName.AllSybase], ErrorMessage = ErrorHelper.Error_OrderBy_in_Derived)]
+		[ThrowsForProvider(typeof(LinqToDBException), providers: [TestProvName.AllAccess], ErrorMessage = ErrorHelper.Error_Skip_in_Subquery)]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/2943")]
 		public void OrderByDistinctSkipTakeFirst([DataSources] string context)
 		{
@@ -352,7 +352,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[ThrowsForProvider(typeof(LinqException), providers: [TestProvName.AllSybase], ErrorMessage = ErrorHelper.Error_OrderBy_in_Derived)]
+		[ThrowsForProvider(typeof(LinqToDBException), providers: [TestProvName.AllSybase], ErrorMessage = ErrorHelper.Error_OrderBy_in_Derived)]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/2943")]
 		public void OrderByDistinctTakeFirst([DataSources] string context)
 		{
@@ -373,8 +373,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[ThrowsForProvider(typeof(LinqException), providers: [TestProvName.AllSybase], ErrorMessage = ErrorHelper.Error_OrderBy_in_Derived)]
-		[ThrowsForProvider(typeof(SqlException), providers: [TestProvName.AllAccess, TestProvName.AllSQLite], ErrorMessage = "Skip for subqueries is not supported")]
+		[ThrowsForProvider(typeof(LinqToDBException), providers: [TestProvName.AllSybase], ErrorMessage = ErrorHelper.Error_OrderBy_in_Derived)]
+		[ThrowsForProvider(typeof(LinqToDBException), providers: [TestProvName.AllAccess, TestProvName.AllSQLite], ErrorMessage = ErrorHelper.Error_Skip_in_Subquery)]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/2943")]
 		public void OrderByDistinctSkipFirst([DataSources] string context)
 		{

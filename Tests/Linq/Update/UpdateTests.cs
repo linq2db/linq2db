@@ -1067,7 +1067,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSybase, "The Sybase ASE does not support the UPDATE statement with the TOP + ORDER BY clause.")]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSybase, ErrorMessage = ErrorHelper.Sybase.Error_UpdateWithTopOrderBy)]
 		public void TestUpdateTakeOrdered([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))

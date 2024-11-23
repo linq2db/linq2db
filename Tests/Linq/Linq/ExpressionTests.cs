@@ -90,8 +90,8 @@ namespace Tests.Linq
 			using (var db = (DataConnection)GetDataContext(context))
 			using (db.CreateLocalTable<ExpressionTestClass>())
 			{
-				Assert.Throws<LinqException>(() => _ = db.Select(() => Functions.DateFuncFail(db, new ExpressionTestsFakeType())));
-				Assert.Throws<LinqException>(() => _ = db.Select(() => Functions.DateExprKindFail(db, "now", new ExpressionTestsFakeType())));
+				Assert.Throws<LinqToDBException>(() => _ = db.Select(() => Functions.DateFuncFail(db, new ExpressionTestsFakeType())));
+				Assert.Throws<LinqToDBException>(() => _ = db.Select(() => Functions.DateExprKindFail(db, "now", new ExpressionTestsFakeType())));
 			}
 		}
 
@@ -400,7 +400,7 @@ namespace Tests.Linq
 					   select new { a.TenantId, a.Code, a.Description, b.StockroomCode, b.Quantity };
 
 			;
-			Assert.That(() => qry.ToArray(), Throws.InstanceOf<LinqException>()
+			Assert.That(() => qry.ToArray(), Throws.InstanceOf<LinqToDBException>()
 				.With.Message.Contain("The LINQ expression could not be converted to SQL."));
 		}
 		#endregion

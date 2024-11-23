@@ -10,6 +10,7 @@ namespace LinqToDB.EntityFrameworkCore
 		/// <summary>
 		/// Creates new instance of exception.
 		/// </summary>
+		[Obsolete("Use one of constructors with message")]
 		public LinqToDBForEFToolsException()
 		{
 		}

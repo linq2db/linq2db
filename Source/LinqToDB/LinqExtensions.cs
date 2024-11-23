@@ -2880,7 +2880,7 @@ namespace LinqToDB
 
 		/// <summary>
 		/// Limits number of records, returned from query. Allows to specify TAKE clause hints.
-		/// Using this method may cause runtime <see cref="LinqException"/> if take hints are not supported by database.
+		/// Using this method may cause runtime <see cref="LinqToDBException"/> if take hints are not supported by database.
 		/// </summary>
 		/// <typeparam name="TSource">Source table record type.</typeparam>
 		/// <param name="source">Source query.</param>
@@ -2911,7 +2911,7 @@ namespace LinqToDB
 
 		/// <summary>
 		/// Limits number of records, returned from query. Allows to specify TAKE clause hints.
-		/// Using this method may cause runtime <see cref="LinqException"/> if take hints are not supported by database.
+		/// Using this method may cause runtime <see cref="LinqToDBException"/> if take hints are not supported by database.
 		/// </summary>
 		/// <typeparam name="TSource">Source table record type.</typeparam>
 		/// <param name="source">Source query.</param>
@@ -4021,7 +4021,7 @@ namespace LinqToDB
 		[DoesNotReturn]
 		private static IQueryProviderAsync ThrowInvalidSource(string? method)
 		{
-			throw new LinqException($"LinqToDB method '{method}' called on non-LinqToDB IQueryable.");
+			throw new LinqToDBException($"LinqToDB method '{method}' called on non-LinqToDB IQueryable.");
 		}
 		#endregion
 	}
