@@ -157,8 +157,6 @@ namespace LinqToDB.Linq.Builder
 			var groupBy = new GroupByContext(groupingSubquery, sequenceExpr, groupingType, key, keyRef, currentPlaceholders, element,
 				!builder.DataOptions.LinqOptions.GuardGrouping || builder.IsGroupingGuardDisabled, true);
 
-			// Will be used for eager loading generation
-			element.GroupByContext = groupBy;
 			// Will be used for completing GroupBy part
 			key.GroupByContext = groupBy;
 
@@ -300,8 +298,6 @@ namespace LinqToDB.Linq.Builder
 
 			public LambdaExpression Lambda   { get; set; }
 			public IBuildContext    Sequence { get; }
-
-			public GroupByContext GroupByContext { get; set; } = null!;
 
 			public override Expression MakeExpression(Expression path, ProjectFlags flags)
 			{
@@ -482,14 +478,7 @@ namespace LinqToDB.Linq.Builder
 				{
 					if (!IsGroupingGuardDisabled)
 					{
-						var ex = new LinqToDBException(
-							"""
-							You should explicitly specify selected fields for server-side GroupBy() call or add AsEnumerable() call before GroupBy() to perform client-side grouping.
-							Set Configuration.Linq.GuardGrouping = false to disable this check.
-							Additionally this guard exception can be disabled by extension GroupBy(...).DisableGuard().
-							NOTE! By disabling this guard you accept Eager Loading for grouping query.
-							"""
-						)
+						var ex = new LinqToDBException(ErrorHelper.Error_GroupGuard)
 						{
 							HelpLink = "https://github.com/linq2db/linq2db/issues/365"
 						};
@@ -671,7 +660,6 @@ namespace LinqToDB.Linq.Builder
 					return GetEnumerator();
 				}
 			}
-
 			class GroupingEnumerable<TKey, TElement> : IResultEnumerable<IGrouping<TKey, TElement>>
 			{
 				readonly IResultEnumerable<TElement> _elements;

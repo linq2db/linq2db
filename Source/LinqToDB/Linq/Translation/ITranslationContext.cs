@@ -33,9 +33,7 @@ namespace LinqToDB.Linq.Translation
 		SqlPlaceholderExpression CreatePlaceholder(SelectQuery    selectQuery, ISqlExpression sqlExpression,  Expression basedOn);
 		SqlErrorExpression       CreateErrorExpression(Expression basedOn,     string?        message = null, Type?      type = null);
 
-		public bool CanBeCompiled(Expression      expression, TranslationFlags translationFlags);
-		public bool IsServerSideOnly(Expression   expression, TranslationFlags translationFlags);
-		public bool IsPreferServerSide(Expression expression, TranslationFlags translationFlags);
+		public bool CanBeEvaluatedOnClient(Expression expression);
 
 		bool    CanBeEvaluated(Expression     expression);
 		object? Evaluate(Expression           expression);

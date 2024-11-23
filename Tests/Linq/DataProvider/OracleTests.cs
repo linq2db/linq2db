@@ -3414,7 +3414,7 @@ namespace Tests.DataProvider
 
 					var id2 = db.GetTable<AllTypes>().InsertWithDecimalIdentity(() => new AllTypes
 					{
-						longDataType = Sql.ToSql(str2),
+						longDataType = Sql.AsSql(str2),
 					});
 
 					var insertedItems2 = db.GetTable<AllTypes>()

@@ -45,14 +45,14 @@ namespace LinqToDB.Linq
 					var expressions       = (IQueryExpressions)new RuntimeExpressionsContainer(exposed);
 					var parametersContext = new ParametersContext(expressions, optimizationContext, ctx.dataContext);
 
-					query = new ExpressionBuilder(query, false, optimizationContext, parametersContext, ctx.dataContext, exposed, ctx.lambda.Parameters.ToArray(), ctx.parameterValues)
+					query = new ExpressionBuilder(query, false, optimizationContext, parametersContext, ctx.dataContext, exposed, ctx.parameterValues)
 						.Build<T>(ref expressions);
 
 					if (query.ErrorExpression != null)
 					{
 						query = new Query<T>(ctx.dataContext);
 
-						query = new ExpressionBuilder(query, true, optimizationContext, parametersContext, ctx.dataContext, exposed, ctx.lambda.Parameters.ToArray(), ctx.parameterValues)
+						query = new ExpressionBuilder(query, true, optimizationContext, parametersContext, ctx.dataContext, exposed, ctx.parameterValues)
 							.Build<T>(ref expressions);
 
 						if (query.ErrorExpression != null)

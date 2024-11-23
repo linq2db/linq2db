@@ -148,34 +148,6 @@ namespace LinqToDB.Linq
 
 		#endregion
 
-		#region Helpers
-
-		ConcurrentDictionary<Type,Func<object,object>>? _enumConverters;
-
-		internal object GetConvertedEnum(Type valueType, object value)
-		{
-			_enumConverters ??= new ();
-
-			if (!_enumConverters.TryGetValue(valueType, out var converter))
-			{
-				var toType    = Converter.GetDefaultMappingFromEnumType(MappingSchema, valueType)!;
-				var convExpr  = MappingSchema.GetConvertExpression(valueType, toType)!;
-				var convParam = Expression.Parameter(typeof(object));
-
-				var lex = Expression.Lambda<Func<object, object>>(
-					Expression.Convert(convExpr.GetBody(Expression.Convert(convParam, valueType)), typeof(object)),
-					convParam);
-
-				converter = lex.CompileExpression();
-
-				_enumConverters.GetOrAdd(valueType, converter);
-			}
-
-			return converter(value);
-		}
-
-		#endregion
-
 		#region Cache Support
 
 		internal static readonly ConcurrentQueue<Action> CacheCleaners = new ();
@@ -205,11 +177,6 @@ namespace LinqToDB.Linq
 		internal bool IsAnyPreambles()
 		{
 			return _preambles?.Length > 0;
-		}
-
-		internal int PreamblesCount()
-		{
-			return _preambles?.Length ?? 0;
 		}
 
 		internal object?[]? InitPreambles(IDataContext dc, IQueryExpressions expressions, object?[]? ps)
@@ -599,11 +566,11 @@ namespace LinqToDB.Linq
 
 			try
 			{
-				query = new ExpressionBuilder(query, false, optimizationContext, parametersContext, dataContext, expressions.MainExpression, null, null).Build<T>(ref expressions);
+				query = new ExpressionBuilder(query, false, optimizationContext, parametersContext, dataContext, expressions.MainExpression, null).Build<T>(ref expressions);
 				if (query.ErrorExpression != null)
 				{
 					query = new Query<T>(dataContext);
-					query = new ExpressionBuilder(query, true, optimizationContext, parametersContext, dataContext, expressions.MainExpression, null, null).Build<T>(ref expressions);
+					query = new ExpressionBuilder(query, true, optimizationContext, parametersContext, dataContext, expressions.MainExpression, null).Build<T>(ref expressions);
 					if (query.ErrorExpression != null)
 						throw query.ErrorExpression.CreateException();
 				}

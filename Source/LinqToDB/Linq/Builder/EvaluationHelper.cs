@@ -52,6 +52,5 @@ namespace LinqToDB.Linq.Builder
 
 			return expr.EvaluateExpression();
 		}
-	
 	}
 }

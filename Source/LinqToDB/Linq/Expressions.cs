@@ -498,11 +498,6 @@ namespace LinqToDB.Linq
 			}
 		}
 
-		interface ISetInfo
-		{
-			void SetInfo();
-		}
-
 		#region Mapping
 
 		private static          Dictionary<string, Dictionary<MemberHelper.MemberInfoWithType, IExpressionInfo>>? _members;
@@ -1437,11 +1432,6 @@ namespace LinqToDB.Linq
 		public static void MapMember<T1,T2,T3,T4,TR>   (                     Type objectType, Expression<Func<T1,T2,T3,T4,TR>>    memberInfo, Expression<Func<T1,T2,T3,T4,TR>>    expression) { MapMember("",           objectType, MemberHelper.GetMemberInfo(memberInfo), expression); }
 		public static void MapMember<T1,T2,T3,T4,T5,TR>(string providerName, Type objectType, Expression<Func<T1,T2,T3,T4,T5,TR>> memberInfo, Expression<Func<T1,T2,T3,T4,T5,TR>> expression) { MapMember(providerName, objectType, MemberHelper.GetMemberInfo(memberInfo), expression); }
 		public static void MapMember<T1,T2,T3,T4,T5,TR>(                     Type objectType, Expression<Func<T1,T2,T3,T4,T5,TR>> memberInfo, Expression<Func<T1,T2,T3,T4,T5,TR>> expression) { MapMember("",           objectType, MemberHelper.GetMemberInfo(memberInfo), expression); }
-
-		static MemberHelper.MemberInfoWithType MT<T>(Expression<Func<object>> func)
-		{
-			return NormalizeMemeberInfo(MemberHelper.GetMemberInfoWithType(func));
-		}
 
 		#region Sql specific
 

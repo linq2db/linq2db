@@ -306,6 +306,8 @@ namespace LinqToDB.EntityFrameworkCore.Tests.Models.IssueModel
 
 			modelBuilder.Entity<Issue4666BaseEntity>(builder =>
 			{
+				builder.Property(e => e.Id).ValueGeneratedNever();
+
 				builder.HasDiscriminator(x => x.Type)
 					.HasValue<Issue4666BaseEntity>(Issue4666EntityType.None)
 					.HasValue<Issue4666Type1Entity>(Issue4666EntityType.Type1)

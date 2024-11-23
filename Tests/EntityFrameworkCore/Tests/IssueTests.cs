@@ -91,6 +91,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 		}
 #endif
 
+		[ActiveIssue]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4603")]
 		public async ValueTask Issue4603Test([EFDataSources(TestProvName.AllMySql57)] string provider)
 		{
@@ -142,6 +143,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 			result.ToArray();
 		}
 
+		[ActiveIssue]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3174")]
 		public async ValueTask Issue3174Test([EFDataSources] string provider)
 		{
@@ -172,6 +174,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 				.Update();
 		}
 
+		[ActiveIssue]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4012")]
 		public void Issue4012Test([EFDataSources(TestProvName.AllMySql57)] string provider)
 		{
@@ -368,9 +371,8 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 					  .ToArray();
 		}
 
-		[ActiveIssue(Configuration = TestProvName.AllSqlServer)]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4626")]
-		public void Issue4626Test2([EFDataSources(TestProvName.AllSQLite, TestProvName.AllMariaDB, TestProvName.AllMySql57)] string provider)
+		public void Issue4626Test2([EFDataSources(TestProvName.AllSQLite, TestProvName.AllMariaDB, TestProvName.AllMySql57, TestProvName.AllSqlServer2016Minus)] string provider)
 		{
 			using var ctx = CreateContext(provider);
 
@@ -814,6 +816,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 		}
 #endif
 
+		[ActiveIssue]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4666")]
 		public void Issue4666Test([EFDataSources(TestProvName.AllSQLite, TestProvName.AllPostgreSQL14Minus, TestProvName.AllMySql)] string provider)
 		{

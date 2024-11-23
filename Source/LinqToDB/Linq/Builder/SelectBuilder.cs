@@ -1,6 +1,4 @@
-﻿using System;
-using System.Diagnostics;
-using System.Linq.Expressions;
+﻿using System.Linq.Expressions;
 
 namespace LinqToDB.Linq.Builder
 {
@@ -20,12 +18,6 @@ namespace LinqToDB.Linq.Builder
 			
 			var lambda = (LambdaExpression)call.Arguments[1].Unwrap();
 			return lambda.Parameters.Count is 1 or 2;
-		}
-
-		public override bool IsAggregationContext(ExpressionBuilder builder, BuildInfo buildInfo)
-		{
-			// Select is transparent and we can treat it as an aggregation.
-			return true;
 		}
 
 		protected override BuildSequenceResult BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)

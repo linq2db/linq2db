@@ -7,8 +7,8 @@ using System.Linq.Expressions;
 namespace LinqToDB.Linq.Builder
 {
 	using Extensions;
-	using Mapping;
 	using LinqToDB.Expressions;
+	using Mapping;
 	using SqlQuery;
 
 	internal static class SequenceHelper
@@ -65,19 +65,6 @@ namespace LinqToDB.Linq.Builder
 			}
 
 			return expression;
-		}
-
-		[return: NotNullIfNotNull(nameof(expression))]
-		public static Expression? CorrectTrackingPath(ExpressionBuilder builder, Expression? expression, IBuildContext toContext)
-		{
-			if (expression == null || expression.Find(1, (_, e) => e is SqlPlaceholderExpression) == null)
-				return expression;
-
-			var contextRef = new ContextRefExpression(toContext.ElementType, toContext);
-
-			var transformed = CorrectTrackingPath(builder, expression, contextRef);
-
-			return transformed;
 		}
 
 		public static Expression CorrectTrackingPath(ExpressionBuilder builder, Expression expression, Expression toPath)
@@ -721,33 +708,6 @@ namespace LinqToDB.Linq.Builder
 			return newExpression;
 		}
 
-		public static Expression ReplaceContext(Expression expression, IBuildContext current, Expression onPath)
-		{
-			var newExpression = expression.Transform((expression, current, onPath), (ctx, e) =>
-			{
-				if (e.NodeType is ExpressionType.Convert or ExpressionType.ConvertChecked)
-				{
-					if (((UnaryExpression)e).Operand is ContextRefExpression contextOperand)
-					{
-						return new TransformInfo(contextOperand.WithType(e.Type), false, true);
-					}
-				}
-
-				if (e is ContextRefExpression contextRef && contextRef.BuildContext == ctx.current)
-				{
-					var replacement = ctx.onPath;
-					if (replacement.Type != e.Type)
-						replacement = Expression.Convert(replacement, e.Type);
-
-					return new TransformInfo(replacement);
-				}
-
-				return new TransformInfo(e);
-			});
-
-			return newExpression;
-		}
-
 		public static Expression CorrectSelectQuery(Expression expression, SelectQuery selectQuery)
 		{
 			var newExpression = expression.Transform((expression, selectQuery), (ctx, e) =>
@@ -763,23 +723,6 @@ namespace LinqToDB.Linq.Builder
 			return newExpression;
 		}
 
-		public static Expression StampNullability(Expression expression, SelectQuery query)
-		{
-			var nullability = new NullabilityContext(query);
-			var translated = expression.Transform(e =>
-			{
-				if (e is SqlPlaceholderExpression placeholder)
-				{
-					placeholder = placeholder.WithSql(SqlNullabilityExpression.ApplyNullability(placeholder.Sql, nullability));
-					return placeholder;
-				}
-
-				return e;
-			});
-
-			return translated;
-		}
-
 		public static ISqlExpression UnwrapNullability(ISqlExpression expression)
 		{
 			while (expression is SqlNullabilityExpression nullability)
@@ -788,16 +731,6 @@ namespace LinqToDB.Linq.Builder
 			}
 
 			return expression;
-		}
-
-		public static ISqlTableSource? GetExpressionSource(ISqlExpression expression)
-		{
-			return expression switch
-			{
-				SqlColumn column => column.Parent,
-				SqlField field   => field.Table,
-				_                => null,
-			};
 		}
 
 		public static Expression MoveToScopedContext(Expression expression, IBuildContext upTo)
@@ -832,18 +765,6 @@ namespace LinqToDB.Linq.Builder
 			var rootContext = context.Builder.BuildTableExpression(contextRef) as ContextRefExpression;
 
 			var tableContext = rootContext?.BuildContext as TableBuilder.TableContext;
-
-			return tableContext;
-		}
-
-		public static CteTableContext? GetCteContext(IBuildContext context)
-		{
-			var contextRef = new ContextRefExpression(context.ElementType, context);
-
-			var rootContext =
-				context.Builder.BuildTableExpression(contextRef) as ContextRefExpression;
-
-			var tableContext = rootContext?.BuildContext as CteTableContext;
 
 			return tableContext;
 		}
@@ -885,11 +806,6 @@ namespace LinqToDB.Linq.Builder
 		{
 			var found = expression.Find(1, (_, e) => e is SqlErrorExpression) as SqlErrorExpression;
 			return found;
-		}
-
-		public static bool HasDependencyWithOuter(SelectQuery selectQuery)
-		{
-			return QueryHelper.IsDependsOnOuterSources(selectQuery);
 		}
 
 		static IBuildContext UnwrapSubqueryContext(IBuildContext context)
@@ -969,19 +885,6 @@ namespace LinqToDB.Linq.Builder
 				return true;
 
 			return false;
-		}
-
-		public static bool ContainsAggregateOrWindowFunction(Expression expression)
-		{
-			return null != expression.Find(1, (_, e) =>
-			{
-				if (e is SqlPlaceholderExpression placeholder)
-				{
-					return QueryHelper.ContainsAggregationOrWindowFunction(placeholder.Sql);
-				}
-
-				return false;
-			});
 		}
 
 		#region Special fields helpers

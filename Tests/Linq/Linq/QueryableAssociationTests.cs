@@ -1186,5 +1186,113 @@ WHERE
 			t1.LoadWith(x => x.Items).FirstOrDefault();
 		}
 		#endregion
+
+		#region Issue 4723
+		class Issue4723Table1
+		{
+			public int Id { get; set; }
+
+			[Association(QueryExpressionMethod = nameof(AssociationImpl), CanBeNull = true)]
+			public string? Association { get; set; }
+
+			[ExpressionMethod(nameof(ExpressionMethodImpl))]
+			public string? ExpressionMethod { get; set; }
+
+			private static Expression<Func<Issue4723Table1, IDataContext, IQueryable<string?>>> AssociationImpl()
+			{
+				return (e, db) => db.GetTable<Issue4723Table2>().Where(se => se.Id == e.Id)
+					.Select(o => o.Value)
+					.Take(1);
+			}
+
+			private static Expression<Func<Issue4723Table1, IDataContext, string?>> ExpressionMethodImpl()
+			{
+				return (e, db) => db.GetTable<Issue4723Table2>().Where(se => se.Id == e.Id)
+					.Select(o => o.Value)
+					.FirstOrDefault();
+			}
+
+			public static Issue4723Table1[] TestData =
+			[
+				new Issue4723Table1() { Id = 1 }
+			];
+		}
+
+		class Issue4723Table2
+		{
+			public int Id { get; set; }
+			public string? Value { get; set; }
+
+			public static Issue4723Table2[] TestData =
+			[
+				new Issue4723Table2() { Id = 1, Value = "Value 1" },
+				new Issue4723Table2() { Id = 1, Value = "Value 1" }, // same value to simplify assertion
+				new Issue4723Table2() { Id = 2, Value = "Value 2" },
+			];
+		}
+
+		[ThrowsForProvider(typeof(LinqException), [TestProvName.AllAccess, ProviderName.Firebird25, TestProvName.AllMySql57, TestProvName.AllSybase], ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4723")]
+		public void Issue4723Test1_Association([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t1 = db.CreateLocalTable(Issue4723Table1.TestData);
+			using var t2 = db.CreateLocalTable(Issue4723Table2.TestData);
+
+			var records = t1.LoadWith(x => x.Association).ToArray();
+
+			Assert.That(records, Has.Length.EqualTo(1));
+			Assert.Multiple(() =>
+			{
+				Assert.That(records[0].Id, Is.EqualTo(1));
+				Assert.That(records[0].Association, Is.EqualTo("Value 1"));
+				Assert.That(records[0].ExpressionMethod, Is.EqualTo("Value 1"));
+			});
+		}
+
+		[ThrowsForProvider(typeof(LinqException), [TestProvName.AllAccess, ProviderName.Firebird25, TestProvName.AllMySql57, TestProvName.AllSybase], ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4723")]
+		public void Issue4723Test1Test_NoJoinDuplicates([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t1 = db.CreateLocalTable(Issue4723Table1.TestData);
+			using var t2 = db.CreateLocalTable(Issue4723Table2.TestData);
+
+			var query = t1.Where(x => x.Association != null && x.Association != "unknown").Select(x => new { x.Id, x1 = x.Association, x2 = x.Association });
+
+
+			var select = query.GetSelectQuery();
+			Assert.That(select.Select.From.Tables[0].Joins, Has.Count.EqualTo(1));
+
+			var records = query.ToArray();
+
+			Assert.That(records, Has.Length.EqualTo(1));
+			Assert.Multiple(() =>
+			{
+				Assert.That(records[0].Id, Is.EqualTo(1));
+				Assert.That(records[0].x1, Is.EqualTo("Value 1"));
+				Assert.That(records[0].x2, Is.EqualTo("Value 1"));
+			});
+		}
+
+		[ThrowsForProvider(typeof(LinqException), TestProvName.AllSybase, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4723")]
+		public void Issue4723Test_ExpressionMethod([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t1 = db.CreateLocalTable(Issue4723Table1.TestData);
+			using var t2 = db.CreateLocalTable(Issue4723Table2.TestData);
+
+			var records = t1.ToArray();
+
+			Assert.That(records, Has.Length.EqualTo(1));
+			Assert.Multiple(() =>
+			{
+				Assert.That(records[0].Id, Is.EqualTo(1));
+				Assert.That(records[0].Association, Is.Null);
+				Assert.That(records[0].ExpressionMethod, Is.EqualTo("Value 1"));
+			});
+		}
+		#endregion
 	}
 }

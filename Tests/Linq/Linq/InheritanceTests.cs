@@ -15,6 +15,8 @@ namespace Tests.Linq
 {
 	using Model;
 
+	using static Tests.xUpdate.MergeTests;
+
 	[TestFixture]
 	public class InheritanceTests : TestBase
 	{
@@ -2022,6 +2024,57 @@ namespace Tests.Linq
 				Assert.That(cb.Name!.First, Is.EqualTo("First1"));
 				Assert.That(cb.Name.Second, Is.EqualTo("Second"));
 			});
+		}
+		#endregion
+
+		#region Issue 4666
+		public enum Issue4666EntityType { None, Type1, Type2 }
+
+		[InheritanceMapping(Code = Issue4666EntityType.None, Type = typeof(Issue4666BaseEntity))]
+		[InheritanceMapping(Code = Issue4666EntityType.Type1, Type = typeof(Issue4666Type1Entity))]
+		[InheritanceMapping(Code = Issue4666EntityType.Type2, Type = typeof(Issue4666Type2Entity))]
+		[Table]
+		public class Issue4666BaseEntity
+		{
+			[Column] public int Id { get; set; }
+			[Column] public string? Description { get; set; }
+			[Column(IsDiscriminator = true)] public Issue4666EntityType Type { get; set; }
+		}
+
+		public class Issue4666Type1Entity : Issue4666BaseEntity
+		{
+			[Column] public string? Type1EntityProp { get; set; }
+
+			public static Issue4666Type1Entity[] Data =
+			[
+				new Issue4666Type1Entity() { Id = 1, Description = "Test1", Type1EntityProp = "Prop1" },
+				new Issue4666Type1Entity() { Id = 2, Description = "Test2", Type1EntityProp = "Prop2" }
+			];
+		}
+
+		public class Issue4666Type2Entity : Issue4666BaseEntity
+		{
+			[Column] public string? Type2EntityProp { get; set; }
+		}
+
+		// also exists in efcore tests
+		[ActiveIssue]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4666")]
+		public void Issue4666Test([MergeDataContextSource] string context)
+		{
+			using var db = GetDataContext(context);
+			using var destination = db.CreateLocalTable<Issue4666Type1Entity>();
+			using var source = db.CreateLocalTable("Issue4666Temp", Issue4666Type1Entity.Data);
+
+			destination
+				.Merge()
+				.Using(source)
+				.On((target, source) => target.Id == source.Id)
+				.InsertWhenNotMatched()
+				.UpdateWhenMatched()
+				.DeleteWhenNotMatchedBySourceAnd(i => i.Type == Issue4666EntityType.Type1)
+				.Merge();
+
 		}
 		#endregion
 	}

@@ -211,6 +211,7 @@ namespace LinqToDB.Mapping
 				if (aa != null)
 				{
 					_associations.Add(new AssociationDescriptor(
+						MappingSchema,
 						TypeAccessor.Type,
 						member.MemberInfo,
 						aa.GetThisKeys(),

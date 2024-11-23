@@ -84,20 +84,6 @@ namespace LinqToDB.Linq.Builder
 
 		[DebuggerStepThrough]
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static bool IsForExtension(this ProjectFlags flags)
-		{
-			return (flags & ProjectFlags.ForExtension) != 0;
-		}
-
-		[DebuggerStepThrough]
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static bool IsForceOuter(this ProjectFlags flags)
-		{
-			return (flags & ProjectFlags.ForceOuterAssociation) != 0;
-		}
-
-		[DebuggerStepThrough]
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool IsExpand(this ProjectFlags flags)
 		{
 			return (flags & ProjectFlags.Expand) != 0;

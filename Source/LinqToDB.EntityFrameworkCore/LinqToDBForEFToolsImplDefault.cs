@@ -202,15 +202,16 @@ namespace LinqToDB.EntityFrameworkCore
 				ProviderName.Firebird4                                                    => FirebirdTools.GetDataProvider(FirebirdVersion.v4, connectionInfo.ConnectionString),
 				ProviderName.Firebird5                                                    => FirebirdTools.GetDataProvider(FirebirdVersion.v5, connectionInfo.ConnectionString),
 
-				ProviderName.DB2 or ProviderName.DB2LUW                                   => DB2Tools.GetDataProvider(DB2Version.LUW),
-				ProviderName.DB2zOS                                                       => DB2Tools.GetDataProvider(DB2Version.zOS),
+				ProviderName.DB2 or ProviderName.DB2LUW                                   => DB2Tools.GetDataProvider(DB2Version.LUW, connectionInfo.ConnectionString),
+				ProviderName.DB2zOS                                                       => DB2Tools.GetDataProvider(DB2Version.zOS, connectionInfo.ConnectionString),
 
-				ProviderName.Oracle11Native                                               => OracleTools.GetDataProvider(OracleVersion.v11, OracleProvider.Native),
-				ProviderName.OracleNative                                                 => OracleTools.GetDataProvider(OracleVersion.v12, OracleProvider.Native),
-				ProviderName.Oracle11Managed                                              => OracleTools.GetDataProvider(OracleVersion.v11, OracleProvider.Managed),
-				ProviderName.Oracle or ProviderName.OracleManaged                         => OracleTools.GetDataProvider(OracleVersion.v12, OracleProvider.Managed),
-				ProviderName.Oracle11Devart                                               => OracleTools.GetDataProvider(OracleVersion.v11, OracleProvider.Devart),
-				ProviderName.OracleDevart                                                 => OracleTools.GetDataProvider(OracleVersion.v12, OracleProvider.Devart),
+				ProviderName.Oracle                                                       => OracleTools.GetDataProvider(OracleVersion.AutoDetect, OracleProvider.AutoDetect, connectionInfo.ConnectionString),
+				ProviderName.Oracle11Native                                               => OracleTools.GetDataProvider(OracleVersion.v11       , OracleProvider.Native    , connectionInfo.ConnectionString),
+				ProviderName.OracleNative                                                 => OracleTools.GetDataProvider(OracleVersion.AutoDetect, OracleProvider.Native    , connectionInfo.ConnectionString),
+				ProviderName.Oracle11Managed                                              => OracleTools.GetDataProvider(OracleVersion.v11       , OracleProvider.Managed   , connectionInfo.ConnectionString),
+				ProviderName.OracleManaged                                                => OracleTools.GetDataProvider(OracleVersion.AutoDetect, OracleProvider.Managed   , connectionInfo.ConnectionString),
+				ProviderName.Oracle11Devart                                               => OracleTools.GetDataProvider(OracleVersion.v11       , OracleProvider.Devart    , connectionInfo.ConnectionString),
+				ProviderName.OracleDevart                                                 => OracleTools.GetDataProvider(OracleVersion.AutoDetect, OracleProvider.Devart    , connectionInfo.ConnectionString),
 
 				ProviderName.SqlCe                                                        => SqlCeTools.GetDataProvider(),
 
@@ -294,7 +295,7 @@ namespace LinqToDB.EntityFrameworkCore
 		/// <returns>Linq To DB SQL Server provider instance.</returns>
 		protected virtual IDataProvider CreateSqlServerProvider(SqlServerVersion version, string? connectionString)
 		{
-			return DataProvider.SqlServer.SqlServerTools.GetDataProvider(version, SqlServerProvider.MicrosoftDataSqlClient);
+			return DataProvider.SqlServer.SqlServerTools.GetDataProvider(version, SqlServerProvider.MicrosoftDataSqlClient, connectionString);
 		}
 
 		/// <summary>
@@ -305,7 +306,7 @@ namespace LinqToDB.EntityFrameworkCore
 		/// <returns>Linq To DB PostgreSQL provider instance.</returns>
 		protected virtual IDataProvider CreatePostgreSqlProvider(PostgreSQLVersion version, string? connectionString)
 		{
-			return PostgreSQLTools.GetDataProvider(version);
+			return PostgreSQLTools.GetDataProvider(version, connectionString);
 		}
 
 		/// <summary>
@@ -1241,14 +1242,14 @@ namespace LinqToDB.EntityFrameworkCore
 		}
 
 		/// <summary>
-		/// Gets or sets default provider version for SQL Server. Set to <see cref="SqlServerVersion.v2008"/> dialect.
+		/// Gets or sets default provider version for SQL Server. Set to <see cref="SqlServerVersion.AutoDetect"/> dialect.
 		/// </summary>
-		public static SqlServerVersion SqlServerDefaultVersion { get; set; } = SqlServerVersion.v2008;
+		public static SqlServerVersion SqlServerDefaultVersion { get; set; } = SqlServerVersion.AutoDetect;
 
 		/// <summary>
-		/// Gets or sets default provider version for PostgreSQL Server. Set to <see cref="PostgreSQLVersion.v93"/> dialect.
+		/// Gets or sets default provider version for PostgreSQL Server. Set to <see cref="PostgreSQLVersion.AutoDetect"/> dialect.
 		/// </summary>
-		public static PostgreSQLVersion PostgreSqlDefaultVersion { get; set; } = PostgreSQLVersion.v93;
+		public static PostgreSQLVersion PostgreSqlDefaultVersion { get; set; } = PostgreSQLVersion.AutoDetect;
 
 		/// <summary>
 		/// Enables attaching entities to change tracker.

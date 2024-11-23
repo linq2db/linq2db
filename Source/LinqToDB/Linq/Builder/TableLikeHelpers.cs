@@ -13,20 +13,6 @@ namespace LinqToDB.Linq.Builder
 
 	static class TableLikeHelpers
 	{
-		public static List<MemberInfo> GetMemberPath(Expression expr)
-		{
-			var result  = new List<MemberInfo>();
-			var current = expr;
-
-			while (current is MemberExpression memberExpression)
-			{
-				result.Insert(0, memberExpression.Member);
-				current = memberExpression.Expression;
-			}
-
-			return result;
-		}
-
 		public static string? GenerateColumnAlias(ISqlExpression sqlExpression)
 		{
 			return sqlExpression switch
@@ -48,21 +34,6 @@ namespace LinqToDB.Linq.Builder
 				else
 					alias = memberExpression.Member.Name;
 				current = memberExpression.Expression;
-			}
-
-			return alias;
-		}
-
-		public static string? GenerateColumnAlias(MemberInfo[] path)
-		{
-			string? alias = null;
-
-			foreach (var current in path)
-			{
-				if (alias != null)
-					alias = current.Name + "_" + alias;
-				else
-					alias = current.Name;
 			}
 
 			return alias;
@@ -196,6 +167,5 @@ namespace LinqToDB.Linq.Builder
 
 			return transformed;
 		}
-
 	}
 }

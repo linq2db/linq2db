@@ -171,7 +171,6 @@ namespace LinqToDB.Linq.Builder
 			public bool              IsSubQuery    { get; }
 			public bool              IsAssociation { get; }
 			public bool              CanBeWeak     { get; }
-			public bool              IsTest        { get; }
 			public SourceCardinality Cardinality   { get; set; }
 
 			public override bool IsOptional => (Cardinality & SourceCardinality.Zero) != 0 || Cardinality == SourceCardinality.Unknown;
@@ -236,11 +235,6 @@ namespace LinqToDB.Linq.Builder
 
 			public void CreateJoin()
 			{
-				// sequence created in test mode and there can be no tables.
-				//
-				if (IsTest)
-					return;
-
 				if (_isJoinCreated  || _asSubquery)
 					return;
 

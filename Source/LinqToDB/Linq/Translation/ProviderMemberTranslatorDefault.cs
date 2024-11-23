@@ -59,7 +59,7 @@ namespace LinqToDB.Linq.Translation
 			if (objExpression == null)
 				return null;
 
-			if (translationContext.CanBeCompiled(objExpression, translationFlags))
+			if (translationContext.CanBeEvaluatedOnClient(objExpression))
 				return null;
 
 			var obj = translationContext.Translate(objExpression);
@@ -127,7 +127,7 @@ namespace LinqToDB.Linq.Translation
 						return true;
 				}
 
-				if (translationFlags.HasFlag(TranslationFlags.Expression) && translationContext.CanBeCompiled(methodCall.Object, translationFlags))
+				if (translationFlags.HasFlag(TranslationFlags.Expression) && translationContext.CanBeEvaluatedOnClient(methodCall.Object))
 					return true;
 
 				translated = ConvertToString(translationContext, methodCall, translationFlags);

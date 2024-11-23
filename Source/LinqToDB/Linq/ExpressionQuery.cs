@@ -11,8 +11,8 @@ namespace LinqToDB.Linq
 {
 	using Async;
 	using Data;
-	using Tools;
 	using Extensions;
+	using Tools;
 	using Internal;
 
 	abstract class ExpressionQuery<T> : IExpressionQuery<T>, IAsyncEnumerable<T>
@@ -230,11 +230,6 @@ namespace LinqToDB.Linq
 				if (func(enumerator.Current))
 					break;
 			}
-		}
-
-		public IAsyncEnumerable<T> GetAsyncEnumerable()
-		{
-			return this;
 		}
 
 		public IAsyncEnumerator<T> GetAsyncEnumerator(CancellationToken cancellationToken = default)

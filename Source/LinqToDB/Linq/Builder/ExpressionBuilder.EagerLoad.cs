@@ -12,9 +12,9 @@ namespace LinqToDB.Linq.Builder
 	using Common;
 	using Common.Internal;
 	using Extensions;
+	using LinqToDB.Expressions;
 	using Reflection;
 	using SqlQuery;
-	using LinqToDB.Expressions;
 
 	partial class ExpressionBuilder
 	{
@@ -130,12 +130,12 @@ namespace LinqToDB.Linq.Builder
 
 		bool CanBeCompiledQueryableArguments(MethodCallExpression mc)
 		{
-			//TODO: revise CanBeCompiled
+			//TODO: revise CanBeEvaluatedOnClient
 
 			/*
 			for(var i = 1; i < mc.Arguments.Count; i++)
 			{
-				if (!CanBeCompiled(mc.Arguments[i], false))
+				if (!CanBeEvaluatedOnClient(mc.Arguments[i], false))
 					return false;
 			}
 

@@ -5,10 +5,10 @@ using System.Reflection;
 
 namespace LinqToDB.Linq.Builder
 {
+	using Extensions;
 	using LinqToDB.Expressions;
 	using Mapping;
 	using SqlQuery;
-	using Extensions;
 
 	// This class implements double functionality (scalar and member type selects)
 	// and could be implemented as two different classes.
@@ -33,8 +33,6 @@ namespace LinqToDB.Linq.Builder
 		public override MappingSchema  MappingSchema => _mappingSchema;
 
 		public override Expression? Expression => Body;
-
-		public readonly Dictionary<MemberInfo,Expression> Members = new (new MemberInfoComparer());
 
 		public SelectContext(IBuildContext? parent, ExpressionBuilder builder, IBuildContext? innerContext, Expression body, SelectQuery selectQuery, bool isSubQuery)
 			: base(builder, body.Type, selectQuery)

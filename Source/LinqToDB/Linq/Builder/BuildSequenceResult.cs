@@ -23,7 +23,7 @@ namespace LinqToDB.Linq.Builder
 			ErrorExpression = null;
 		}
 
-		public static BuildSequenceResult NotSupported()                                                               
+		public static BuildSequenceResult NotSupported()
 			=> new();
 
 		public static BuildSequenceResult Error(Expression errorExpression, string? additionalDetails = null) 

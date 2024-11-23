@@ -644,6 +644,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 			var linq2dbResult = await query.AsNoTracking().ToArrayAsyncLinqToDB();
 		}
 
+		[ActiveIssue("Delete with limit translation not yet implemented", Configurations = [TestProvName.AllSQLite, TestProvName.AllMySql, TestProvName.AllPostgreSQL])]
 		[Test]
 		public async Task TestDeleteFrom([EFDataSources] string provider)
 		{

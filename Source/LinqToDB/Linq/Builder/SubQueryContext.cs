@@ -33,14 +33,7 @@ namespace LinqToDB.Linq.Builder
 		public          IBuildContext SubQuery      { get; }
 		public override MappingSchema MappingSchema => SubQuery.MappingSchema;
 
-		protected virtual bool OptimizeColumns => true;
-
 		public bool IsSelectWrapper { get; set; }
-
-		protected virtual int GetIndex(int index, ISqlExpression column)
-		{
-			throw new NotImplementedException();
-		}
 
 		public override void SetAlias(string? alias)
 		{

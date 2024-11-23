@@ -18,7 +18,7 @@ namespace LinqToDB.Linq.Builder
 			return call.IsQueryable() 
 				&& call.Arguments.Count == 2
 				// Contains over constant works through ConvertPredicate
-				&& !builder.CanBeCompiled(call.Arguments[0], false);
+				&& !builder.CanBeEvaluatedOnClient(call.Arguments[0]);
 		}
 
 		public static bool CanBuildAsyncMethod(MethodCallExpression call, BuildInfo info, ExpressionBuilder builder)
@@ -26,7 +26,7 @@ namespace LinqToDB.Linq.Builder
 			return call.IsAsyncExtension() 
 				&& call.Arguments.Count == 3
 				// Contains over constant works through ConvertPredicate
-				&& !builder.CanBeCompiled(call.Arguments[0], false);
+				&& !builder.CanBeEvaluatedOnClient(call.Arguments[0]);
 		}
 
 		protected override BuildSequenceResult BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
@@ -45,14 +45,6 @@ namespace LinqToDB.Linq.Builder
 				return BuildSequenceResult.Error(methodCall, ErrorHelper.Error_Correlated_Subqueries);
 
 			return BuildSequenceResult.FromContext(containsContext);
-		}
-
-		public static bool IsConstant(MethodCallExpression methodCall)
-		{
-			if (!methodCall.IsQueryable("Contains"))
-				return false;
-
-			return methodCall.IsQueryable(false) == false;
 		}
 
 		sealed class ContainsContext : BuildContextBase

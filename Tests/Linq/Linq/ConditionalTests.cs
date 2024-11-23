@@ -26,6 +26,7 @@ namespace Tests.Linq
 			{
 				return Enumerable.Range(1, 10)
 					.Select(x => new ConditionalData { Id = x, StringProp = x % 3 == 0 ? null : "String" + x })
+					.Concat([new ConditionalData { Id = 11, StringProp = "-1" }])
 					.ToArray();
 			}
 		}

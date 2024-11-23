@@ -20,11 +20,23 @@
 
 		public const string Error_WindowFunctionsInSearchCondition = "Window functions cannot be used in search condition.";
 
+		public const string Error_GroupGuard =
+							"""
+							You should explicitly specify selected fields for server-side GroupBy() call or add AsEnumerable() call before GroupBy() to perform client-side grouping.
+							Set Configuration.Linq.GuardGrouping = false to disable this check.
+							Additionally this guard exception can be disabled by extension GroupBy(...).DisableGuard().
+							NOTE! By disabling this guard you accept Eager Loading for grouping query.
+							""";
+
 		// Oracle
 		public const string Error_ColumnSubqueryShouldNotContainParentIsNotNull = "Column expression should not contain parent's IS NOT NULL condition.";
 
 		// Sybase
 		public const string Error_JoinToDerivedTableWithTakeInvalid = "Provider has issue with JOIN to limited recordset.";
+
+		// Clickhouse
+
+		public const string Error_ClickHouse_CorrelatedDelete = "Correlated DELETE not supported by ClickHouse";
 
 	}
 }
