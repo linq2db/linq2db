@@ -121,7 +121,7 @@ namespace LinqToDB.Linq.Builder
 			else
 			{
 				if (context?.Builder != null && mappingSchema.IsScalarType(expr.Type))
-					CacheManager.RegisterParameterEntry(expr, entry, e => context.Builder.EvaluateExpression(e), out finalParameterId);
+					CacheManager.RegisterParameterEntry(expr, entry, context.Builder.EvaluateExpression, out finalParameterId);
 				else
 					CacheManager.RegisterParameterEntry(expr, entry, null, out finalParameterId);
 			}

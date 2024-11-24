@@ -109,10 +109,10 @@ namespace LinqToDB.Linq
 
 			if (CompareInfo.ComparisionFunctions != null)
 			{
-				foreach (var pair in CompareInfo.ComparisionFunctions)
+				foreach (var (main, other) in CompareInfo.ComparisionFunctions)
 				{
-					var value1 = pair.main(matchedQueryExpressions, dataContext, null);
-					var value2 = pair.other(matchedQueryExpressions, dataContext, null);
+					var value1 = main(matchedQueryExpressions, dataContext, null);
+					var value2 = other(matchedQueryExpressions, dataContext, null);
 					result = value1 == null && value2 == null || value1 != null && value1.Equals(value2);
 
 					if (!result)

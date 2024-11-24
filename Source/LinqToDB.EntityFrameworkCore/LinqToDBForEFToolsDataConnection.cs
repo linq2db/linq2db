@@ -37,7 +37,7 @@ namespace LinqToDB.EntityFrameworkCore
 		private static readonly ConstructorInfo TupleConstructor =
 			MemberHelper.ConstructorOf(() => new Tuple<InternalEntityEntry?, bool>(null, false));
 
-		class ExpressionInterceptor : IQueryExpressionInterceptor
+		sealed class ExpressionInterceptor : IQueryExpressionInterceptor
 		{
 			private readonly LinqToDBForEFToolsDataConnection _dataConnection;
 			public ExpressionInterceptor(LinqToDBForEFToolsDataConnection dataConnection)

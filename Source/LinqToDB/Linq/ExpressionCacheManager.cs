@@ -74,11 +74,11 @@ namespace LinqToDB.Linq
 
 		public Expression MainExpression { get; }
 
-		public Dictionary<Expression, QueryCacheCompareInfo.DynamicExpressionInfo>? DynamicAccessors         { get; private set; }
-		public Dictionary<int, Dictionary<Expression, Expression>>                  AccessorsMapping         { get; } = new();
-		public HashSet<Expression>                                                  NonComparableExpressions { get; } = [];
+		public Dictionary<Expression, DynamicExpressionInfo>?      DynamicAccessors         { get; private set; }
+		public Dictionary<int, Dictionary<Expression, Expression>> AccessorsMapping         { get; } = new();
+		public HashSet<Expression>                                 NonComparableExpressions { get; } = [];
 
-		List<(object? value, Expression accesor)>?                      _byValueCompare;
+		List<(object? value, Expression accessor)>?                     _byValueCompare;
 		Dictionary<int, (Expression main, Expression other)>?           _duplicateParametersCheck;
 		Dictionary<int, (Expression param, ParameterCacheEntry entry)>? _parameterEntries;
 
@@ -559,10 +559,10 @@ namespace LinqToDB.Linq
 
 				if (_duplicateParametersCheck != null)
 				{
-					foreach (var comparePair in _duplicateParametersCheck.Values)
+					foreach (var (main, other) in _duplicateParametersCheck.Values)
 					{
-						var mainValueExpr  = PrepareExpressionAccessors(dc, comparePair.main, nonComparable).EnsureType<object>();
-						var otherValueExpr = PrepareExpressionAccessors(dc, comparePair.other, nonComparable).EnsureType<object>();
+						var mainValueExpr  = PrepareExpressionAccessors(dc, main, nonComparable).EnsureType<object>();
+						var otherValueExpr = PrepareExpressionAccessors(dc, other, nonComparable).EnsureType<object>();
 
 						// IQueryExpressions queryExpressions, IDataContext  dataContext, object?[]? compiledParameters
 						var mainFunc = Expression.Lambda<ValueAccessorFunc>(mainValueExpr, ExpressionBuilder.QueryExpressionContainerParam, ExpressionConstants.DataContextParam,
@@ -579,10 +579,10 @@ namespace LinqToDB.Linq
 
 				if (_byValueCompare != null)
 				{
-					foreach (var valueTuple in _byValueCompare)
+					foreach (var (value, accessor) in _byValueCompare)
 					{
-						var mainValueExpr  = Expression.Constant(valueTuple.value).EnsureType<object>();
-						var otherValueExpr = PrepareExpressionAccessors(dc, valueTuple.accesor, nonComparable).EnsureType<object>();
+						var mainValueExpr  = Expression.Constant(value).EnsureType<object>();
+						var otherValueExpr = PrepareExpressionAccessors(dc, accessor, nonComparable).EnsureType<object>();
 
 						var mainFunc = Expression.Lambda<ValueAccessorFunc>(mainValueExpr, ExpressionBuilder.QueryExpressionContainerParam, ExpressionConstants.DataContextParam,
 								ExpressionBuilder.ParametersParam)
