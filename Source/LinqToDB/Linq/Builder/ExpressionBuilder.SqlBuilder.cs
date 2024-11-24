@@ -1198,7 +1198,7 @@ namespace LinqToDB.Linq.Builder
 
 						if (body.IsNullValue())
 						{
-							return new DefaultValueExpression(MappingSchema, member.GetMemberType());
+							return new DefaultValueExpression(MappingSchema, member.GetMemberType(), true);
 						}
 
 						if (body is SqlAdjustTypeExpression adjustType)
@@ -1275,7 +1275,7 @@ namespace LinqToDB.Linq.Builder
 							if (strict)
 								return CreateSqlError(nextPath![0]);
 
-							return new DefaultValueExpression(null, nextPath![0].Type);
+							return new DefaultValueExpression(null, nextPath![0].Type, true);
 						}
 					}
 
@@ -1372,7 +1372,7 @@ namespace LinqToDB.Linq.Builder
 					if (strict)
 						return CreateSqlError(nextPath![0]);
 
-					return new DefaultValueExpression(MappingSchema, nextPath![0].Type);
+					return new DefaultValueExpression(MappingSchema, nextPath![0].Type, true);
 				}
 
 				case ExpressionType.MemberInit:
@@ -1473,7 +1473,7 @@ namespace LinqToDB.Linq.Builder
 					if (strict)
 						return CreateSqlError(nextPath![0]);
 
-					return new DefaultValueExpression(MappingSchema, nextPath![0].Type);
+					return new DefaultValueExpression(MappingSchema, nextPath![0].Type, true);
 
 				}
 				case ExpressionType.Conditional:
@@ -1504,9 +1504,9 @@ namespace LinqToDB.Linq.Builder
 					if (trueExpr.Type != falseExpr.Type)
 					{
 						if (trueExpr.IsNullValue())
-							trueExpr = new DefaultValueExpression(MappingSchema, falseExpr.Type);
+							trueExpr = new DefaultValueExpression(MappingSchema, falseExpr.Type, true);
 						else if (falseExpr.IsNullValue())
-							falseExpr = new DefaultValueExpression(MappingSchema, trueExpr.Type);
+							falseExpr = new DefaultValueExpression(MappingSchema, trueExpr.Type, true);
 					}
 
 					var newExpr = (Expression)Expression.Condition(cond.Test, trueExpr, falseExpr);
@@ -1521,7 +1521,7 @@ namespace LinqToDB.Linq.Builder
 					{
 						var expr = (path ?? next)!;
 
-						return new DefaultValueExpression(MappingSchema, expr.Type);
+						return new DefaultValueExpression(MappingSchema, expr.Type, true);
 					}
 
 					break;
@@ -1532,7 +1532,7 @@ namespace LinqToDB.Linq.Builder
 				{
 					var expr = (path ?? next)!;
 
-					return new DefaultValueExpression(MappingSchema, expr.Type);
+					return new DefaultValueExpression(MappingSchema, expr.Type, false);
 				}
 
 				case ExpressionType.Call:
@@ -1582,7 +1582,7 @@ namespace LinqToDB.Linq.Builder
 					{
 						if (constExpr.Value is true)
 							return truePath;
-						return new DefaultValueExpression(MappingSchema, truePath.Type);
+						return new DefaultValueExpression(MappingSchema, truePath.Type, true);
 					}
 
 					var falsePath = Expression.Constant(null, truePath.Type);
@@ -1603,7 +1603,7 @@ namespace LinqToDB.Linq.Builder
 						return Project(context, path, nextPath, nextIndex, flags, contextRef, strict);
 					}
 
-					break;
+					return Project(context, path, nextPath, nextIndex, flags, unaryExpression.Operand, strict);
 				}
 			}
 

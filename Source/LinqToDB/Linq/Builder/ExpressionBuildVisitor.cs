@@ -1721,7 +1721,7 @@ namespace LinqToDB.Linq.Builder
 
 				testCondition = notNull.Select(SequenceHelper.MakeNotNullCondition).Aggregate(Expression.AndAlso);
 
-				var defaultValue  = new DefaultValueExpression(MappingSchema, innerExpression.Type);
+				var defaultValue  = new DefaultValueExpression(MappingSchema, innerExpression.Type, true);
 
 				var condition = Expression.Condition(testCondition, innerExpression, defaultValue);
 
@@ -2144,6 +2144,13 @@ namespace LinqToDB.Linq.Builder
 		{
 			if (_buildPurpose is BuildPurpose.Sql)
 			{
+				if (node.IsNull)
+				{
+					var dataType = (node.MappingSchema ?? MappingSchema).GetDbDataType(node.Type);
+					var value    = new SqlValue(dataType, null);
+					return CreatePlaceholder(value, node);
+				}
+
 				if (HandleValue(node, out var translated))
 					return Visit(translated);
 			}
