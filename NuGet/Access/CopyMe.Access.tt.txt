@@ -21,7 +21,6 @@
 	GenerateSchemaAsType = true;
 //	GetDataOptionsMethod = "GetDataOptions({0})";
 
-
 	// Loading metadata
 	//
 	LoadAccessMetadata(@"C:\Data", "MyDatabase.mdb");

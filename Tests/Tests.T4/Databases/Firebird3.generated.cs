@@ -24,6 +24,8 @@ namespace Firebird3DataContext
 {
 	public partial class Testdb30DB : LinqToDB.Data.DataConnection
 	{
+		#region Tables
+
 		public ITable<AllType>           AllTypes            { get { return this.GetTable<AllType>(); } }
 		public ITable<CamelCaseName>     CamelCaseNames      { get { return this.GetTable<CamelCaseName>(); } }
 		public ITable<Child>             Children            { get { return this.GetTable<Child>(); } }
@@ -43,6 +45,10 @@ namespace Firebird3DataContext
 		public ITable<TestIdentity>      TestIdentities      { get { return this.GetTable<TestIdentity>(); } }
 		public ITable<TestMerge1>        TestMerge1          { get { return this.GetTable<TestMerge1>(); } }
 		public ITable<TestMerge2>        TestMerge2          { get { return this.GetTable<TestMerge2>(); } }
+
+		#endregion
+
+		#region .ctor
 
 		public Testdb30DB()
 		{
@@ -73,6 +79,8 @@ namespace Firebird3DataContext
 
 		partial void InitDataContext  ();
 		partial void InitMappingSchema();
+
+		#endregion
 
 		#region Table Functions
 
@@ -415,7 +423,7 @@ namespace Firebird3DataContext
 		/// <summary>
 		/// FK_Doctor_Person (SYSDBA.Person)
 		/// </summary>
-		[Association(ThisKey=nameof(PersonID), OtherKey=nameof(Person.PersonID), CanBeNull=false)]
+		[Association(ThisKey=nameof(PersonID), OtherKey=nameof(Firebird3DataContext.Person.PersonID), CanBeNull=false)]
 		public Person Person { get; set; } = null!;
 
 		#endregion
@@ -484,9 +492,9 @@ namespace Firebird3DataContext
 		#region Associations
 
 		/// <summary>
-		/// INTEG_1489 (SYSDBA.Person)
+		/// INTEG_188 (SYSDBA.Person)
 		/// </summary>
-		[Association(ThisKey=nameof(PersonID), OtherKey=nameof(Person.PersonID), CanBeNull=false)]
+		[Association(ThisKey=nameof(PersonID), OtherKey=nameof(Firebird3DataContext.Person.PersonID), CanBeNull=false)]
 		public Person Person { get; set; } = null!;
 
 		#endregion
@@ -506,13 +514,13 @@ namespace Firebird3DataContext
 		/// <summary>
 		/// FK_Doctor_Person_BackReference (SYSDBA.Doctor)
 		/// </summary>
-		[Association(ThisKey=nameof(PersonID), OtherKey=nameof(Doctor.PersonID), CanBeNull=true)]
+		[Association(ThisKey=nameof(PersonID), OtherKey=nameof(Firebird3DataContext.Doctor.PersonID), CanBeNull=true)]
 		public Doctor? Doctor { get; set; }
 
 		/// <summary>
-		/// INTEG_1489_BackReference (SYSDBA.Patient)
+		/// INTEG_188_BackReference (SYSDBA.Patient)
 		/// </summary>
-		[Association(ThisKey=nameof(PersonID), OtherKey=nameof(Patient.PersonID), CanBeNull=true)]
+		[Association(ThisKey=nameof(PersonID), OtherKey=nameof(Firebird3DataContext.Patient.PersonID), CanBeNull=true)]
 		public Patient? INTEG { get; set; }
 
 		#endregion
@@ -608,14 +616,11 @@ namespace Firebird3DataContext
 
 		#region PersonDelete
 
-		public static int PersonDelete(this Testdb30DB dataConnection, int? PERSONID)
+		public static int PersonDelete(this Testdb30DB dataConnection, int? PersonID)
 		{
 			var parameters = new []
 			{
-				new DataParameter("PERSONID", PERSONID, LinqToDB.DataType.Int32)
-				{
-					Size = 4
-				}
+				new DataParameter("PersonID", PersonID, LinqToDB.DataType.Int32, 4)
 			};
 
 			return dataConnection.ExecuteProc("\"Person_Delete\"", parameters);
@@ -629,26 +634,11 @@ namespace Firebird3DataContext
 		{
 			var parameters = new []
 			{
-				new DataParameter("PERSONID",   PERSONID,   LinqToDB.DataType.Int32)
-				{
-					Size = 4
-				},
-				new DataParameter("FIRSTNAME",  FIRSTNAME,  LinqToDB.DataType.NVarChar)
-				{
-					Size = 50
-				},
-				new DataParameter("LASTNAME",   LASTNAME,   LinqToDB.DataType.NVarChar)
-				{
-					Size = 50
-				},
-				new DataParameter("MIDDLENAME", MIDDLENAME, LinqToDB.DataType.NVarChar)
-				{
-					Size = 50
-				},
-				new DataParameter("GENDER",     GENDER,     LinqToDB.DataType.NChar)
-				{
-					Size = 1
-				}
+				new DataParameter("PERSONID",   PERSONID,   LinqToDB.DataType.Int32, 4),
+				new DataParameter("FIRSTNAME",  FIRSTNAME,  LinqToDB.DataType.NVarChar, 50),
+				new DataParameter("LASTNAME",   LASTNAME,   LinqToDB.DataType.NVarChar, 50),
+				new DataParameter("MIDDLENAME", MIDDLENAME, LinqToDB.DataType.NVarChar, 50),
+				new DataParameter("GENDER",     GENDER,     LinqToDB.DataType.NChar, 1)
 			};
 
 			return dataConnection.ExecuteProc("\"Person_Update\"", parameters);
@@ -662,14 +652,10 @@ namespace Firebird3DataContext
 		{
 			var parameters = new []
 			{
-				new DataParameter("I", I, LinqToDB.DataType.Int32)
+				new DataParameter("I", I, LinqToDB.DataType.Int32, 4),
+				new DataParameter("O", null, LinqToDB.DataType.Int32, 4)
 				{
-					Size = 4
-				},
-				new DataParameter("O", null, LinqToDB.DataType.Int32)
-				{
-					Direction = ParameterDirection.Output,
-					Size      = 4
+					Direction = ParameterDirection.Output
 				}
 			};
 
@@ -688,14 +674,10 @@ namespace Firebird3DataContext
 		{
 			var parameters = new []
 			{
-				new DataParameter("I", I, LinqToDB.DataType.Int32)
+				new DataParameter("I", I, LinqToDB.DataType.Int32, 4),
+				new DataParameter("O", null, LinqToDB.DataType.Int32, 4)
 				{
-					Size = 4
-				},
-				new DataParameter("O", null, LinqToDB.DataType.Int32)
-				{
-					Direction = ParameterDirection.Output,
-					Size      = 4
+					Direction = ParameterDirection.Output
 				}
 			};
 
@@ -714,14 +696,10 @@ namespace Firebird3DataContext
 		{
 			var parameters = new []
 			{
-				new DataParameter("I", I, LinqToDB.DataType.Int32)
+				new DataParameter("I", I, LinqToDB.DataType.Int32, 4),
+				new DataParameter("O", null, LinqToDB.DataType.Int32, 4)
 				{
-					Size = 4
-				},
-				new DataParameter("O", null, LinqToDB.DataType.Int32)
-				{
-					Direction = ParameterDirection.Output,
-					Size      = 4
+					Direction = ParameterDirection.Output
 				}
 			};
 

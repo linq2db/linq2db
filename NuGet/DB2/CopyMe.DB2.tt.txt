@@ -21,6 +21,7 @@
 	NamespaceName        = "DataModels";
 //	DataContextName      = "MyDB";
 	GenerateSchemaAsType = true;
+//	GetDataOptionsMethod = "GetDataOptions({0})";
 
 	// Loading metadata
 	//

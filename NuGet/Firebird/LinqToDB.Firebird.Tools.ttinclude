@@ -1,3 +1,1 @@
-<#@ assembly name="$(LinqToDBT4FirebirdClientPath)FirebirdSql.Data.FirebirdClient.dll" #>
-<#@ include file="$(LinqToDBT4TemplatesPath)LinqToDB.Tools.ttinclude"    once="true"   #>
-<#@ include file="$(LinqToDBT4TemplatesPath)LinqToDB.Firebird.ttinclude" once="true"   #>
+<#@ include file="$(LinqToDBT4FirebirdTemplatesPath)LinqToDB.Firebird.ttinclude" once="true"   #>

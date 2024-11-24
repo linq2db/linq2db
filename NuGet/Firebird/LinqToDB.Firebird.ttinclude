@@ -1,4 +1,6 @@
-<#@ include file="LinqToDB.ttinclude" once="true" #>
+<#@ assembly name="$(LinqToDBT4FirebirdClientPath)FirebirdSql.Data.FirebirdClient.dll" #>
+<#@ include file="$(LinqToDBT4TemplatesPath)LinqToDB.ttinclude" once="true"            #>
+<#@ include file="$(LinqToDBT4TemplatesPath)LinqToDB.Tools.ttinclude" once="true"      #>
 <#
 	LinqToDB.DataProvider.Firebird.FirebirdTools.ResolveFirebird(
 		typeof(FirebirdSql.Data.FirebirdClient.FbConnection).Assembly);

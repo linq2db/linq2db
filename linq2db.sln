@@ -47,7 +47,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "LinqToDB.Templates", "LinqT
 		Source\LinqToDB.Templates\EditableObject.ttinclude = Source\LinqToDB.Templates\EditableObject.ttinclude
 		Source\LinqToDB.Templates\Equatable.ttinclude = Source\LinqToDB.Templates\Equatable.ttinclude
 		Source\LinqToDB.Templates\Humanizer.ttinclude = Source\LinqToDB.Templates\Humanizer.ttinclude
-		Source\LinqToDB.Templates\LinqToDB.Firebird.ttinclude = Source\LinqToDB.Templates\LinqToDB.Firebird.ttinclude
 		Source\LinqToDB.Templates\LinqToDB.Informix.ttinclude = Source\LinqToDB.Templates\LinqToDB.Informix.ttinclude
 		Source\LinqToDB.Templates\LinqToDB.MySql.ttinclude = Source\LinqToDB.Templates\LinqToDB.MySql.ttinclude
 		Source\LinqToDB.Templates\LinqToDB.Oracle.ttinclude = Source\LinqToDB.Templates\LinqToDB.Oracle.ttinclude
