@@ -138,13 +138,13 @@ namespace LinqToDB.DataProvider.ClickHouse.Translation
 
 			protected override ISqlExpression? TranslateDateTimeTruncationToDate(ITranslationContext translationContext, ISqlExpression dateExpression, TranslationFlags translationFlags)
 			{
-				var cast = new SqlCastExpression(dateExpression, new DbDataType(typeof(DateTime), DataType.Date), null, true);
+				var cast = new SqlCastExpression(dateExpression, new DbDataType(typeof(DateTime), DataType.Date32), null, true);
 				return cast;
 			}
 
 			protected override ISqlExpression? TranslateDateTimeOffsetTruncationToDate(ITranslationContext translationContext, ISqlExpression dateExpression, TranslationFlags translationFlags)
 			{
-				var cast = new SqlCastExpression(dateExpression, new DbDataType(typeof(DateTime), DataType.Date), null, true);
+				var cast = new SqlCastExpression(dateExpression, new DbDataType(typeof(DateTime), DataType.Date32), null, true);
 				return cast;
 			}
 

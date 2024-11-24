@@ -37,6 +37,18 @@ namespace LinqToDB.SqlQuery
 			if (!_usedColumns.Add(column))
 				return;
 
+			if (column.Parent?.HasSetOperators == true)
+			{
+				var idx = column.Parent.Select.Columns.IndexOf(column);
+				if (idx >= 0)
+				{
+					foreach (var set in column.Parent.SetOperators)
+					{
+						RegisterColumn(set.SelectQuery.Select.Columns[idx]);
+					}
+				}
+			}
+
 			column.Expression.VisitParentFirst(this, (v, e) =>
 			{
 				if (e is SqlSelectClause selectClause)
@@ -158,11 +170,22 @@ namespace LinqToDB.SqlQuery
 
 		protected override IQueryElement VisitSqlQuery(SelectQuery selectQuery)
 		{
-			if (_parentSelectQuery == null || selectQuery.HasSetOperators || selectQuery.Select.IsDistinct || selectQuery.From.Tables.Count == 0)
+			if (_parentSelectQuery == null || selectQuery.Select.IsDistinct || selectQuery.From.Tables.Count == 0)
 			{
 				foreach (var c in selectQuery.Select.Columns)
 				{
 					RegisterColumn(c);
+				}
+
+				if (selectQuery.HasSetOperators)
+				{
+					foreach (var so in selectQuery.SetOperators)
+					{
+						foreach (var c in so.SelectQuery.Select.Columns)
+						{
+							RegisterColumn(c);
+						}
+					}
 				}
 			}
 			else
@@ -181,17 +204,6 @@ namespace LinqToDB.SqlQuery
 							RegisterColumn(column);
 							break;
 						}
-					}
-				}
-			}
-
-			if (selectQuery.HasSetOperators)
-			{
-				foreach (var so in selectQuery.SetOperators)
-				{
-					foreach (var c in so.SelectQuery.Select.Columns)
-					{
-						RegisterColumn(c);
 					}
 				}
 			}
