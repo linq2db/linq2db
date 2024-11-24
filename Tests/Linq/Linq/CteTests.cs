@@ -2486,7 +2486,7 @@ namespace Tests.Linq
 		[Table(Name = "Authors")]
 		public class Author
 		{
-			[PrimaryKey, Identity]
+			[PrimaryKey]
 			public int Id { get; set; }
 
 			[Column(Name = "Name"), NotNull]
@@ -2507,7 +2507,7 @@ namespace Tests.Linq
 		[Table(Name = "Books")]
 		public class Book
 		{
-			[PrimaryKey, Identity]
+			[PrimaryKey]
 			public int Id { get; set; }
 
 			[Column(Name = "Title"), NotNull]
