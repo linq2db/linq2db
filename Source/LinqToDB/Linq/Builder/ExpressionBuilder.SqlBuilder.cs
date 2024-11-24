@@ -473,7 +473,7 @@ namespace LinqToDB.Linq.Builder
 				}
 			});
 
-			return result.ToList();
+			return result;
 		}
 
 		public bool CollectNullCompareExpressions(IBuildContext context, Expression expression, List<Expression> result)

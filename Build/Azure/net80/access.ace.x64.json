@@ -1,7 +1,8 @@
 ﻿{
 	"NET80.Azure": {
 		"Providers": [
-			"Access.Ace.OleDb",
+			// disabled due to https://github.com/dotnet/runtime/issues/46187
+			//"Access.Ace.OleDb", 
 			"Access.Ace.Odbc"
 		]
 	}

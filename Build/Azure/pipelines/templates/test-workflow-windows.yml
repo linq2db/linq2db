@@ -111,23 +111,20 @@ steps:
 
 - script: dotnet test $(netfx_tfm)/efcore/x86/linq2db.EntityFrameworkCore.Tests.dll --filter "TestCategory != SkipCI" -f $(netfx_tfm) -l trx $(extra) --blame-hang-timeout 5m
   displayName: 'EF.Core Tests (NETFX): $(title)'
-  #condition: and(eq(variables.netfx, 'true'), eq(variables.x86, 'true'), variables.title, succeeded())
-  condition: and(eq(variables.netfx, 'true'), eq(variables.x86, 'true'), variables.title)
+  condition: and(eq(variables.netfx, 'true'), eq(variables.x86, 'true'), variables.title, succeeded())
 
 - task: CmdLine@2
   inputs:
     script: '$(System.DefaultWorkingDirectory)/scripts/$(script_local)'
     workingDirectory: '$(System.DefaultWorkingDirectory)/$(netfx_tfm)/main/x64'
-  #condition: and(variables.title, ne(variables.x86, 'true'), eq(variables.netfx, 'true'), variables.script_local, succeeded())
-  condition: and(variables.title, ne(variables.x86, 'true'), eq(variables.netfx, 'true'), variables.script_local)
+  condition: and(variables.title, ne(variables.x86, 'true'), eq(variables.netfx, 'true'), variables.script_local, succeeded())
   displayName: Execute NETFX x64 Setup Script
 
 - task: PowerShell@2
   inputs:
     filePath: '$(System.DefaultWorkingDirectory)/scripts/$(psscript_local)'
     workingDirectory: '$(System.DefaultWorkingDirectory)/$(netfx_tfm)/main/x64'
-  #condition: and(variables.title, ne(variables.x86, 'true'), eq(variables.netfx, 'true'), variables.psscript_local, succeeded())
-  condition: and(variables.title, ne(variables.x86, 'true'), eq(variables.netfx, 'true'), variables.psscript_local)
+  condition: and(variables.title, ne(variables.x86, 'true'), eq(variables.netfx, 'true'), variables.psscript_local, succeeded())
   displayName: Execute NETFX x64 PowerShell Setup Script
 
 - script: dotnet test $(netfx_tfm)/main/x64/linq2db.Tests.dll --filter "TestCategory != SkipCI" -f $(netfx_tfm) -l trx --arch x64 --blame-hang-timeout 5m
@@ -141,39 +138,34 @@ steps:
 
 - script: dotnet test $(netfx_tfm)/efcore/x64/linq2db.EntityFrameworkCore.Tests.dll --filter "TestCategory != SkipCI" -f $(netfx_tfm) -l trx --arch x64 --blame-hang-timeout 5m
   displayName: 'EF.Core Tests (NETFX x64): $(title)'
-  #condition: and(eq(variables.netfx, 'true'), ne(variables.x86, 'true'), variables.title, succeeded())
-  condition: and(eq(variables.netfx, 'true'), ne(variables.x86, 'true'), variables.title)
+  condition: and(eq(variables.netfx, 'true'), ne(variables.x86, 'true'), variables.title, succeeded())
 
 - task: CmdLine@2
   inputs:
     script: '$(System.DefaultWorkingDirectory)/scripts/$(script_local)'
     workingDirectory: '$(System.DefaultWorkingDirectory)/net6.0/main/x64'
-  #condition: and(variables.title, ne(variables.x86, 'true'), eq(variables.net60, 'true'), variables.script_local, succeeded())
-  condition: and(variables.title, ne(variables.x86, 'true'), eq(variables.net60, 'true'), variables.script_local)
+  condition: and(variables.title, ne(variables.x86, 'true'), eq(variables.net60, 'true'), variables.script_local, succeeded())
   displayName: Execute NET 6 (x64) Setup Script
 
 - task: CmdLine@2
   inputs:
     script: '$(System.DefaultWorkingDirectory)/scripts/$(script_local)'
     workingDirectory: '$(System.DefaultWorkingDirectory)/net6.0/main/x86'
-  #condition: and(variables.title, eq(variables.x86, 'true'), eq(variables.net60, 'true'), variables.script_local, succeeded())
-  condition: and(variables.title, eq(variables.x86, 'true'), eq(variables.net60, 'true'), variables.script_local)
+  condition: and(variables.title, eq(variables.x86, 'true'), eq(variables.net60, 'true'), variables.script_local, succeeded())
   displayName: Execute NET 6 (x86) Setup Script
 
 - task: PowerShell@2
   inputs:
     filePath: '$(System.DefaultWorkingDirectory)/scripts/$(psscript_local)'
     workingDirectory: '$(System.DefaultWorkingDirectory)/net6.0/net60/main/x64'
-  #condition: and(variables.title, ne(variables.x86, 'true'), eq(variables.net60, 'true'), variables.psscript_local, succeeded())
-  condition: and(variables.title, ne(variables.x86, 'true'), eq(variables.net60, 'true'), variables.psscript_local)
+  condition: and(variables.title, ne(variables.x86, 'true'), eq(variables.net60, 'true'), variables.psscript_local, succeeded())
   displayName: Execute NET 6 (x64) PowerShell Setup Script
 
 - task: PowerShell@2
   inputs:
     filePath: '$(System.DefaultWorkingDirectory)/scripts/$(psscript_local)'
     workingDirectory: '$(System.DefaultWorkingDirectory)/net6.0/main/x86'
-  #condition: and(variables.title, eq(variables.x86, 'true'), eq(variables.net60, 'true'), variables.psscript_local, succeeded())
-  condition: and(variables.title, eq(variables.x86, 'true'), eq(variables.net60, 'true'), variables.psscript_local)
+  condition: and(variables.title, eq(variables.x86, 'true'), eq(variables.net60, 'true'), variables.psscript_local, succeeded())
   displayName: Execute NET 6 (x86) PowerShell Setup Script
 
 - script: dotnet test net6.0/main/x64/linq2db.Tests.dll --filter "TestCategory != SkipCI" -f net60 -l trx --blame-hang-timeout 5m
@@ -196,44 +188,38 @@ steps:
 
 - script: dotnet test net6.0/efcore/x64/linq2db.EntityFrameworkCore.Tests.dll --filter "TestCategory != SkipCI" -f net60 -l trx --blame-hang-timeout 5m
   displayName: 'EF.Core Tests (NET60): $(title)'
-  #condition: and(eq(variables.net60, 'true'), ne(variables.x86, 'true'), variables.title, succeeded())
-  condition: and(eq(variables.net60, 'true'), ne(variables.x86, 'true'), variables.title)
+  condition: and(eq(variables.net60, 'true'), ne(variables.x86, 'true'), variables.title, succeeded())
 
 - script: dotnet test net6.0/efcore/x86/linq2db.EntityFrameworkCore.Tests.dll --filter "TestCategory != SkipCI" -f net60 -l trx --blame-hang-timeout 5m
   displayName: 'EF.Core Tests (NET60 x86): $(title)'
-  #condition: and(eq(variables.net60, 'true'), eq(variables.x86, 'true'), variables.title, succeeded())
-  condition: and(eq(variables.net60, 'true'), eq(variables.x86, 'true'), variables.title)
+  condition: and(eq(variables.net60, 'true'), eq(variables.x86, 'true'), variables.title, succeeded())
 
 - task: CmdLine@2
   inputs:
     script: '$(System.DefaultWorkingDirectory)/scripts/$(script_local)'
     workingDirectory: '$(System.DefaultWorkingDirectory)/net8.0/main/x64'
-  #condition: and(variables.title, ne(variables.x86, 'true'), eq(variables.net80, 'true'), variables.script_local, succeeded())
-  condition: and(variables.title, ne(variables.x86, 'true'), eq(variables.net80, 'true'), variables.script_local)
+  condition: and(variables.title, ne(variables.x86, 'true'), eq(variables.net80, 'true'), variables.script_local, succeeded())
   displayName: Execute NET 8 (x64) Setup Script
 
 - task: CmdLine@2
   inputs:
     script: '$(System.DefaultWorkingDirectory)/scripts/$(script_local)'
     workingDirectory: '$(System.DefaultWorkingDirectory)/net8.0/main/x86'
-  #condition: and(variables.title, eq(variables.x86, 'true'), eq(variables.net80, 'true'), variables.script_local, succeeded())
-  condition: and(variables.title, eq(variables.x86, 'true'), eq(variables.net80, 'true'), variables.script_local)
+  condition: and(variables.title, eq(variables.x86, 'true'), eq(variables.net80, 'true'), variables.script_local, succeeded())
   displayName: Execute NET 8 (x86) Setup Script
 
 - task: PowerShell@2
   inputs:
     filePath: '$(System.DefaultWorkingDirectory)/scripts/$(psscript_local)'
     workingDirectory: '$(System.DefaultWorkingDirectory)/net8.0/main/x64'
-  #condition: and(variables.title, ne(variables.x86, 'true'), eq(variables.net80, 'true'), variables.psscript_local, succeeded())
-  condition: and(variables.title, ne(variables.x86, 'true'), eq(variables.net80, 'true'), variables.psscript_local)
+  condition: and(variables.title, ne(variables.x86, 'true'), eq(variables.net80, 'true'), variables.psscript_local, succeeded())
   displayName: Execute NET 8 (x64) PowerShell Setup Script
 
 - task: PowerShell@2
   inputs:
     filePath: '$(System.DefaultWorkingDirectory)/scripts/$(psscript_local)'
     workingDirectory: '$(System.DefaultWorkingDirectory)/net8.0/main/x86'
-  #condition: and(variables.title, eq(variables.x86, 'true'), eq(variables.net80, 'true'), variables.psscript_local, succeeded())
-  condition: and(variables.title, eq(variables.x86, 'true'), eq(variables.net80, 'true'), variables.psscript_local)
+  condition: and(variables.title, eq(variables.x86, 'true'), eq(variables.net80, 'true'), variables.psscript_local, succeeded())
   displayName: Execute NET 8 (x86) PowerShell Setup Script
 
 - script: dotnet test net8.0/main/x64/linq2db.Tests.dll --filter "TestCategory != SkipCI" -f net80 -l trx --blame-hang-timeout 5m
@@ -256,85 +242,72 @@ steps:
 
 - script: dotnet test net8.0/efcore/x64/linq2db.EntityFrameworkCore.Tests.dll --filter "TestCategory != SkipCI" -f net80 -l trx --blame-hang-timeout 5m
   displayName: 'EF.Core Tests (.NET 8 x64): $(title)'
-  #condition: and(eq(variables.net80, 'true'), ne(variables.x86, 'true'), variables.title, succeeded())
-  condition: and(eq(variables.net80, 'true'), ne(variables.x86, 'true'), variables.title)
+  condition: and(eq(variables.net80, 'true'), ne(variables.x86, 'true'), variables.title, succeeded())
 
 - script: dotnet test net8.0/efcore/x86/linq2db.EntityFrameworkCore.Tests.dll --filter "TestCategory != SkipCI" -f net80 -l trx --blame-hang-timeout 5m
   displayName: 'EF.Core Tests (.NET 8 x86): $(title)'
-  #condition: and(eq(variables.net80, 'true'), eq(variables.x86, 'true'), variables.title, succeeded())
-  condition: and(eq(variables.net80, 'true'), eq(variables.x86, 'true'), variables.title)
+  condition: and(eq(variables.net80, 'true'), eq(variables.x86, 'true'), variables.title, succeeded())
 
 - task: UseDotNet@2
   displayName: 'Use .NET 9'
   inputs:
     packageType: sdk
     version: 9.x
-  #condition: and(variables.title, eq(variables.net90, 'true'), succeeded())
-  condition: and(variables.title, eq(variables.net90, 'true'))
+  condition: and(variables.title, eq(variables.net90, 'true'), succeeded())
 
 - task: CmdLine@2
   inputs:
     script: '$(System.DefaultWorkingDirectory)/scripts/$(script_local)'
     workingDirectory: '$(System.DefaultWorkingDirectory)/net9.0/main/x64'
-  #condition: and(variables.title, ne(variables.x86, 'true'), eq(variables.net90, 'true'), variables.script_local, succeeded())
-  condition: and(variables.title, ne(variables.x86, 'true'), eq(variables.net90, 'true'), variables.script_local)
+  condition: and(variables.title, ne(variables.x86, 'true'), eq(variables.net90, 'true'), variables.script_local, succeeded())
   displayName: Execute NET 9 (x64) Setup Script
 
 - task: CmdLine@2
   inputs:
     script: '$(System.DefaultWorkingDirectory)/scripts/$(script_local)'
     workingDirectory: '$(System.DefaultWorkingDirectory)/net9.0/main/x86'
-  #condition: and(variables.title, eq(variables.x86, 'true'), eq(variables.net90, 'true'), variables.script_local, succeeded())
-  condition: and(variables.title, eq(variables.x86, 'true'), eq(variables.net90, 'true'), variables.script_local)
+  condition: and(variables.title, eq(variables.x86, 'true'), eq(variables.net90, 'true'), variables.script_local, succeeded())
   displayName: Execute NET 9 (x86) Setup Script
 
 - task: PowerShell@2
   inputs:
     filePath: '$(System.DefaultWorkingDirectory)/scripts/$(psscript_local)'
     workingDirectory: '$(System.DefaultWorkingDirectory)/net9.0/main/x64'
-  #condition: and(variables.title, ne(variables.x86, 'true'), eq(variables.net90, 'true'), variables.psscript_local, succeeded())
-  condition: and(variables.title, ne(variables.x86, 'true'), eq(variables.net90, 'true'), variables.psscript_local)
+  condition: and(variables.title, ne(variables.x86, 'true'), eq(variables.net90, 'true'), variables.psscript_local, succeeded())
   displayName: Execute NET 9 (x64) PowerShell Setup Script
 
 - task: PowerShell@2
   inputs:
     filePath: '$(System.DefaultWorkingDirectory)/scripts/$(psscript_local)'
     workingDirectory: '$(System.DefaultWorkingDirectory)/net9.0/main/x86'
-  #condition: and(variables.title, eq(variables.x86, 'true'), eq(variables.net90, 'true'), variables.psscript_local, succeeded())
-  condition: and(variables.title, eq(variables.x86, 'true'), eq(variables.net90, 'true'), variables.psscript_local)
+  condition: and(variables.title, eq(variables.x86, 'true'), eq(variables.net90, 'true'), variables.psscript_local, succeeded())
   displayName: Execute NET 9 (x86) PowerShell Setup Script
 
 - script: dotnet test net9.0/main/x64/linq2db.Tests.dll --filter "TestCategory != SkipCI" -f net90 -l trx --blame-hang-timeout 5m
   displayName: 'Tests (.NET 9 x64): $(title)'
-  #condition: and(eq(variables.net90, 'true'), ne(variables.x86, 'true'), variables.title, succeeded(), ne(variables.retry, 'true'))
-  condition: and(eq(variables.net90, 'true'), ne(variables.x86, 'true'), variables.title, ne(variables.retry, 'true'))
+  condition: and(eq(variables.net90, 'true'), ne(variables.x86, 'true'), variables.title, succeeded(), ne(variables.retry, 'true'))
 
 - script: dotnet test net9.0/main/x64/linq2db.Tests.dll --filter "TestCategory != SkipCI" -f net90 -l trx --blame-hang-timeout 5m
   displayName: 'Tests (.NET 9 x64): $(title)'
-  #condition: and(eq(variables.net90, 'true'), ne(variables.x86, 'true'), variables.title, succeeded(), eq(variables.retry, 'true'))
-  condition: and(eq(variables.net90, 'true'), ne(variables.x86, 'true'), variables.title, eq(variables.retry, 'true'))
+  condition: and(eq(variables.net90, 'true'), ne(variables.x86, 'true'), variables.title, succeeded(), eq(variables.retry, 'true'))
   retryCountOnTaskFailure: 2
 
 - script: dotnet test net9.0/main/x86/linq2db.Tests.dll --filter "TestCategory != SkipCI" -f net90 -l trx --blame-hang-timeout 5m
   displayName: 'Tests (.NET 9 x86): $(title)'
-  #condition: and(eq(variables.net90, 'true'), eq(variables.x86, 'true'), variables.title, succeeded(), ne(variables.retry, 'true'))
-  condition: and(eq(variables.net90, 'true'), eq(variables.x86, 'true'), variables.title, ne(variables.retry, 'true'))
+  condition: and(eq(variables.net90, 'true'), eq(variables.x86, 'true'), variables.title, succeeded(), ne(variables.retry, 'true'))
 
 - script: dotnet test net9.0/main/x86/linq2db.Tests.dll --filter "TestCategory != SkipCI" -f net90 -l trx --blame-hang-timeout 5m
   displayName: 'Tests (.NET 9 x86): $(title)'
-  #condition: and(eq(variables.net90, 'true'), eq(variables.x86, 'true'), variables.title, succeeded(), eq(variables.retry, 'true'))
-  condition: and(eq(variables.net90, 'true'), eq(variables.x86, 'true'), variables.title, eq(variables.retry, 'true'))
+  condition: and(eq(variables.net90, 'true'), eq(variables.x86, 'true'), variables.title, succeeded(), eq(variables.retry, 'true'))
   retryCountOnTaskFailure: 2
 
 - script: dotnet test net9.0/efcore/x64/linq2db.EntityFrameworkCore.Tests.dll --filter "TestCategory != SkipCI" -f net90 -l trx --blame-hang-timeout 5m
   displayName: 'EF.Core Tests (.NET 9 x64): $(title)'
-  #condition: and(eq(variables.net90, 'true'), ne(variables.x86, 'true'), variables.title, succeeded())
-  condition: and(eq(variables.net90, 'true'), ne(variables.x86, 'true'), variables.title)
+  condition: and(eq(variables.net90, 'true'), ne(variables.x86, 'true'), variables.title, succeeded())
 
 - script: dotnet test net9.0/efcore/x86/linq2db.EntityFrameworkCore.Tests.dll --filter "TestCategory != SkipCI" -f net90 -l trx --blame-hang-timeout 5m
   displayName: 'EF.Core Tests (.NET 9 x86): $(title)'
-  #condition: and(eq(variables.net90, 'true'), eq(variables.x86, 'true'), variables.title, succeeded())
-  condition: and(eq(variables.net90, 'true'), eq(variables.x86, 'true'), variables.title)
+  condition: and(eq(variables.net90, 'true'), eq(variables.x86, 'true'), variables.title, succeeded())
 
 - task: PublishTestResults@2
   condition: and(variables.title, succeededOrFailed())
@@ -393,8 +366,7 @@ steps:
       exit 1
     workingDirectory: '$(System.DefaultWorkingDirectory)/baselines'
   displayName: Commit test baselines
-  condition: and(variables.title, ${{ parameters.with_baselines }})
-  #condition: and(variables.title, succeeded(), ${{ parameters.with_baselines }})
+  condition: and(variables.title, succeeded(), ${{ parameters.with_baselines }})
   env:
     GITHUB_TOKEN: $(BASELINES_GH_PAT)
     EMAIL: azp@linq2db.com

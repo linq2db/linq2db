@@ -86,8 +86,7 @@ steps:
   retryCountOnTaskFailure: 2
 
 - script: dotnet test ./net6.0/efcore/x64/linq2db.EntityFrameworkCore.Tests.dll --filter "TestCategory != SkipCI" -f net60 -l trx $(extra) --blame-hang-timeout 5m
-  #condition: and(variables.title, eq(variables.net60, 'true'), succeeded())
-  condition: and(variables.title, eq(variables.net60, 'true'))
+  condition: and(variables.title, eq(variables.net60, 'true'), succeeded())
   displayName: 'EF.Core Tests (NET60): $(title)'
 
 - task: UseDotNet@2
@@ -95,8 +94,7 @@ steps:
   inputs:
     packageType: sdk
     version: 8.x
-  #condition: and(variables.title, eq(variables.net80, 'true'), succeeded())
-  condition: and(variables.title, eq(variables.net80, 'true'))
+  condition: and(variables.title, eq(variables.net80, 'true'), succeeded())
 
 - task: CmdLine@2
   inputs:
@@ -115,8 +113,7 @@ steps:
   retryCountOnTaskFailure: 2
 
 - script: dotnet test ./net8.0/efcore/x64/linq2db.EntityFrameworkCore.Tests.dll --filter "TestCategory != SkipCI" -f net80 -l trx $(extra) --blame-hang-timeout 5m
-  #condition: and(variables.title, eq(variables.net80, 'true'), succeeded())
-  condition: and(variables.title, eq(variables.net80, 'true'))
+  condition: and(variables.title, eq(variables.net80, 'true'), succeeded())
   displayName: 'EF.Core Tests (.NET 8): $(title)'
 
 - task: UseDotNet@2
@@ -124,31 +121,26 @@ steps:
   inputs:
     packageType: sdk
     version: 9.x
-  #condition: and(variables.title, eq(variables.net90, 'true'), succeeded())
-  condition: and(variables.title, eq(variables.net90, 'true'))
+  condition: and(variables.title, eq(variables.net90, 'true'), succeeded())
 
 - task: CmdLine@2
   inputs:
     script: '$(System.DefaultWorkingDirectory)/scripts/$(script_local)'
     workingDirectory: '$(System.DefaultWorkingDirectory)/net9.0/main/x64'
-  #condition: and(variables.title, variables.script_local, eq(variables.net90, 'true'), succeeded())
-  condition: and(variables.title, variables.script_local, eq(variables.net90, 'true'))
+  condition: and(variables.title, variables.script_local, eq(variables.net90, 'true'), succeeded())
   displayName: Setup .NET 9 tests
 
 - script: dotnet test ./net9.0/main/x64/linq2db.Tests.dll --filter "TestCategory != SkipCI" -f net90 -l trx $(extra) --blame-hang-timeout 5m
-  #condition: and(variables.title, eq(variables.net90, 'true'), succeeded(), ne(variables.retry, 'true'))
-  condition: and(variables.title, eq(variables.net90, 'true'), ne(variables.retry, 'true'))
+  condition: and(variables.title, eq(variables.net90, 'true'), succeeded(), ne(variables.retry, 'true'))
   displayName: 'Tests (.NET 9): $(title)'
 
 - script: dotnet test ./net9.0/main/x64/linq2db.Tests.dll --filter "TestCategory != SkipCI" -f net90 -l trx $(extra) --blame-hang-timeout 5m
-  #condition: and(variables.title, eq(variables.net90, 'true'), succeeded(), eq(variables.retry, 'true'))
-  condition: and(variables.title, eq(variables.net90, 'true'), eq(variables.retry, 'true'))
+  condition: and(variables.title, eq(variables.net90, 'true'), succeeded(), eq(variables.retry, 'true'))
   displayName: 'Tests (.NET 9): $(title)'
   retryCountOnTaskFailure: 2
 
 - script: dotnet test ./net9.0/efcore/x64/linq2db.EntityFrameworkCore.Tests.dll --filter "TestCategory != SkipCI" -f net90 -l trx $(extra) --blame-hang-timeout 5m
-  #condition: and(variables.title, eq(variables.net90, 'true'), succeeded())
-  condition: and(variables.title, eq(variables.net90, 'true'))
+  condition: and(variables.title, eq(variables.net90, 'true'), succeeded())
   displayName: 'EF.Core Tests (.NET 9): $(title)'
 
 - task: PublishTestResults@2
@@ -208,8 +200,7 @@ steps:
       exit 1
     workingDirectory: '$(System.DefaultWorkingDirectory)/baselines'
   displayName: Commit test baselines
-  #condition: and(variables.title, succeeded(), ${{ parameters.with_baselines }})
-  condition: and(variables.title, ${{ parameters.with_baselines }})
+  condition: and(variables.title, succeeded(), ${{ parameters.with_baselines }})
   env:
     GITHUB_TOKEN: $(BASELINES_GH_PAT)
     EMAIL: azp@linq2db.com
