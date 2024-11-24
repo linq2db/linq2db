@@ -1,5 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
+using System.Linq;
 
 namespace LinqToDB.SqlQuery
 {
@@ -170,7 +170,9 @@ namespace LinqToDB.SqlQuery
 
 		protected override IQueryElement VisitSqlQuery(SelectQuery selectQuery)
 		{
-			if (_parentSelectQuery == null || selectQuery.Select.IsDistinct || selectQuery.From.Tables.Count == 0)
+			if (_parentSelectQuery == null || selectQuery.Select.IsDistinct || selectQuery.From.Tables.Count == 0
+				// we cannot remove unused columns for non-UNION ALL operators as it could affect result
+				|| (selectQuery.HasSetOperators && selectQuery.SetOperators.Any(o => o.Operation != SetOperation.UnionAll)))
 			{
 				foreach (var c in selectQuery.Select.Columns)
 				{
