@@ -2495,6 +2495,13 @@ namespace Tests.Linq
 			// 1:1 relationship to Book
 			[Association(ThisKey = "Id", OtherKey = "AuthorId", CanBeNull = true)]
 			public Book? Book { get; set; }
+
+			public static Author[] Data =
+			[
+				new Author() { Id = 1, Name = "John" },
+				new Author() { Id = 2, Name = "Steven" },
+				new Author() { Id = 3, Name = "Smith" },
+			];
 		}
 
 		[Table(Name = "Books")]
@@ -2512,6 +2519,13 @@ namespace Tests.Linq
 			// 1:1 relationship to Author
 			[Association(ThisKey = "AuthorId", OtherKey = "Id", CanBeNull = false)]
 			public Author Author { get; set; } = null!;
+
+			public static Book[] Data =
+			[
+				new Book() { Id = 1, AuthorId = 1, Title = "Something" },
+				new Book() { Id = 2, AuthorId = 2, Title = "Book" },
+				new Book() { Id = 3, AuthorId = 3, Title = "Boring" },
+			];
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4012")]
@@ -2525,6 +2539,26 @@ namespace Tests.Linq
 
 			booksQuery = booksQuery.Where(b => b.Author.Name == "Steven");
 			var result = booksQuery.Select(b => b.Title).ToArray();
+		}
+
+		[Test]
+		public void UnionCteWithFilter([CteContextSource] string context)
+		{
+			using var db      = GetDataContext(context);
+			using var books   = db.CreateLocalTable(Book.Data);
+			using var authors = db.CreateLocalTable(Author.Data);
+
+			var booksQuery = db.GetTable<Book>().Select(b => new { Book = b, b.Author }).AsCte("BooksCte");
+
+			var query1 = booksQuery.Select(r => new { Book = (Book?)r.Book, Author = (Author?)null });
+			var query2 = booksQuery.Select(r => new { Book = (Book?)null, Author = (Author?)r.Author });
+
+			var query = query1.Concat(query2).Where(r => r.Author!.Name == "Steven" || r.Book!.Title == "Something");
+			var result = booksQuery.Select(b => b.Book.Id).ToArray();
+
+			Assert.That(result, Has.Length.EqualTo(2));
+			Assert.That(result, Contains.Item(1));
+			Assert.That(result, Contains.Item(2));
 		}
 	}
 }
