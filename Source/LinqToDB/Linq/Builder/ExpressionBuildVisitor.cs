@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Data.SqlTypes;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
@@ -16,6 +15,7 @@ namespace LinqToDB.Linq.Builder
 	using Data;
 	using Extensions;
 	using LinqToDB.Expressions;
+	using LinqToDB.Expressions.Internal;
 	using Mapping;
 	using Reflection;
 	using SqlQuery;
@@ -2587,7 +2587,7 @@ namespace LinqToDB.Linq.Builder
 
 		static bool IsPrimitiveConstant(Expression expression)
 		{
-			return expression.NodeType == ExpressionType.Constant && (expression.Type == typeof(int) || expression.Type == typeof(bool));
+			return expression.NodeType == ExpressionType.Constant && (expression.Type == typeof(int) || expression.Type == typeof(bool) || expression.Type == typeof(string));
 		}
 
 		protected override Expression VisitBinary(BinaryExpression node)

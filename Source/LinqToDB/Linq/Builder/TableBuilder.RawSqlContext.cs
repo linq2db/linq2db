@@ -6,6 +6,7 @@ namespace LinqToDB.Linq.Builder
 {
 	using Common;
 	using LinqToDB.Expressions;
+	using LinqToDB.Expressions.Internal;
 	using Mapping;
 	using SqlQuery;
 

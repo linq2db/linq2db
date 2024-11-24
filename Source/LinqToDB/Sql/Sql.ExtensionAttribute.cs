@@ -8,6 +8,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Threading;
+
 using JetBrains.Annotations;
 
 namespace LinqToDB
@@ -17,6 +18,7 @@ namespace LinqToDB
 	using Expressions;
 	using Extensions;
 	using Linq.Builder;
+	using Expressions.Internal;
 	using Mapping;
 	using SqlQuery;
 

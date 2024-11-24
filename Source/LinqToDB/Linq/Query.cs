@@ -437,6 +437,47 @@ namespace LinqToDB.Linq
 
 		public static long CacheMissCount => _queryCache.CacheMissCount;
 
+		static Expression ExposeAndPrepareExpression(Expression expr, IDataContext dataContext, ExpressionTreeOptimizationContext optimizationContext)
+		{
+			var        beforeExpose = expr;
+			Expression exposed;
+			var        iteration    = 0;
+			do
+			{
+				exposed = ExpressionBuilder.ExposeExpression(beforeExpose, dataContext, optimizationContext, null,
+					optimizeConditions: true, compactBinary: false /* binary already compacted by AggregateExpression*/);
+
+				if (iteration > 0 && ReferenceEquals(beforeExpose, exposed))
+				{
+					// no changes, no need to continue
+					break;
+				}
+
+				if (dataContext is IInterceptable<IQueryExpressionInterceptor> { Interceptor: { } interceptor })
+				{
+					var processed = interceptor.ProcessExpression(exposed, new QueryExpressionArgs(dataContext, exposed, QueryExpressionArgs.ExpressionKind.ExposedQuery));
+					if (!ReferenceEquals(processed, exposed))
+					{
+						// Doe exposing again after interceptor processing
+						exposed      = processed;
+						beforeExpose = exposed;
+
+						if (++iteration > 10)
+						{
+							// guard from infinite loop
+							break;
+						}
+
+						continue;
+					}
+				}
+
+				break;
+			} while (true);
+
+			return exposed;
+		}
+
 		public static Query<T> GetQuery(IDataContext dataContext, ref IQueryExpressions expressions, out bool dependsOnParameters)
 		{
 			using var mt = ActivityService.Start(ActivityID.GetQueryTotal);
@@ -463,6 +504,9 @@ namespace LinqToDB.Linq
 
 					if (dataContext is IExpressionPreprocessor preprocessor)
 						expr = preprocessor.ProcessExpression(expr);
+
+					if (dataContext is IInterceptable<IQueryExpressionInterceptor> { Interceptor: { } interceptor })
+						expr = interceptor.ProcessExpression(expr, new QueryExpressionArgs(dataContext, expr, QueryExpressionArgs.ExpressionKind.Query));
 				}
 
 				dataOptions = dataContext.Options;
@@ -490,11 +534,7 @@ namespace LinqToDB.Linq
 				// Parameters with SqlQueryDependentAttribute will be transferred to constants
 				// No LambdaExpressions which are located in constants, they will be expanded and injected into tree
 				//
-				var exposed = ExpressionBuilder.ExposeExpression(expr, dataContext, optimizationContext, null,
-					optimizeConditions : true, compactBinary : false /* binary already compacted by AggregateExpression*/);
-
-				if (dataContext is IInterceptable<IQueryExpressionInterceptor> { Interceptor: { } interceptor })
-					exposed = interceptor.ProcessExpression(exposed, new QueryExpressionArgs(dataContext, exposed, QueryExpressionArgs.ExpressionKind.Query));
+				var exposed = ExposeAndPrepareExpression(expr, dataContext, optimizationContext);
 
 				// simple trees do not mutate
 				var isExposed = !ReferenceEquals(exposed, expr);

@@ -113,6 +113,9 @@ namespace LinqToDB.Linq.Builder
 
 				filteredExpression = Expression.Call(Methods.Queryable.Where.MakeGenericMethod(entityType), filteredExpression, Expression.Quote(filterLambda));
 				filteredExpression = ExpressionBuilder.ExposeExpression(filteredExpression, builder.DataContext, builder.OptimizationContext, builder.ParameterValues, optimizeConditions: true, compactBinary: true);
+
+				if (builder.DataContext is IInterceptable<IQueryExpressionInterceptor> { Interceptor: { } interceptor })
+					filteredExpression = interceptor.ProcessExpression(filteredExpression, new QueryExpressionArgs(builder.DataContext, filteredExpression, QueryExpressionArgs.ExpressionKind.QueryFilter));
 			}
 			else
 			{
@@ -146,7 +149,7 @@ namespace LinqToDB.Linq.Builder
 					}
 
 					if (dc is IInterceptable<IQueryExpressionInterceptor> { Interceptor: { } interceptor })
-						sequenceExpr = (LambdaExpression)interceptor.ProcessExpression(sequenceExpr, new QueryExpressionArgs(dc, sequenceExpr, QueryExpressionArgs.ExpressionKind.QueryFilter));
+						sequenceExpr = interceptor.ProcessExpression(sequenceExpr, new QueryExpressionArgs(dc, sequenceExpr, QueryExpressionArgs.ExpressionKind.QueryFilter));
 					// Optimize conditions and compact binary expressions
 					var optimizationContext = new ExpressionTreeOptimizationContext(dc);
 					sequenceExpr = ExpressionBuilder.ExposeExpression(sequenceExpr, dc, optimizationContext, null, optimizeConditions : true, compactBinary : true);

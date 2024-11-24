@@ -3,6 +3,7 @@
 namespace LinqToDB.Linq.Builder
 {
 	using LinqToDB.Expressions;
+	using LinqToDB.Expressions.Internal;
 	using SqlQuery;
 
 	partial class TableBuilder

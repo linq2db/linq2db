@@ -4,7 +4,7 @@ using System.Linq.Expressions;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 
-namespace LinqToDB.Expressions
+namespace LinqToDB.Expressions.Internal
 {
 	using Common;
 	using Extensions;
@@ -39,7 +39,7 @@ namespace LinqToDB.Expressions
 					var member = (MemberExpression) expr;
 
 					if (member.Member.MemberType != MemberTypes.Field &&
-					    member.Member.MemberType != MemberTypes.Property)
+						member.Member.MemberType != MemberTypes.Property)
 					{
 						return false;
 					}

@@ -1,10 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Globalization;
 using System.Linq;
 using System.Linq.Expressions;
-using System.Reflection;
 using System.Runtime.CompilerServices;
 
 namespace LinqToDB.Linq.Builder
@@ -14,7 +11,7 @@ namespace LinqToDB.Linq.Builder
 	using LinqToDB.Expressions.ExpressionVisitors;
 	using Common.Internal;
 	using Mapping;
-	using SqlQuery;
+	using Visitors;
 
 	public class ExpressionTreeOptimizationContext
 	{
@@ -246,12 +243,12 @@ namespace LinqToDB.Linq.Builder
 			{
 				Cleanup();
 
-				_optimizationContext = optimizationContext;
+				OptimizationContext = optimizationContext;
 				_mappingSchema       = mappingSchema;
 
 				_ = Visit(expression);
 
-				return _canBeEvaluated;
+				return CanBeEvaluated;
 			}
 
 			public override void Cleanup()
@@ -268,8 +265,8 @@ namespace LinqToDB.Linq.Builder
 
 				if (node == ExpressionConstants.DataContextParam)
 				{
-					if (_inMethod)
-						_canBeEvaluated = false;
+					if (InMethod)
+						CanBeEvaluated = false;
 
 					return node;
 				}
@@ -279,25 +276,25 @@ namespace LinqToDB.Linq.Builder
 
 			protected override Expression VisitMember(MemberExpression node)
 			{
-				var save = _inMethod;
-				_inMethod = true;
+				var save = InMethod;
+				InMethod = true;
 
 				_ = base.VisitMember(node);
 
-				_inMethod = save;
+				InMethod = save;
 
-				if (!_canBeEvaluated)
+				if (!CanBeEvaluated)
 					return node;
 
-				if (_optimizationContext.IsServerSideOnly(node))
-					_canBeEvaluated = false;
+				if (OptimizationContext.IsServerSideOnly(node))
+					CanBeEvaluated = false;
 
 				return node;
 			}
 
 			protected override Expression VisitMethodCall(MethodCallExpression node)
 			{
-				if (!_canBeEvaluated)
+				if (!CanBeEvaluated)
 					return node;
 
 				if (typeof(IQueryable<>).IsSameOrParentOf(node.Type))
@@ -305,14 +302,14 @@ namespace LinqToDB.Linq.Builder
 					if (node.Arguments.Any(static a => typeof(IDataContext).IsSameOrParentOf(a.Type)) ||
 						node.Object != null && typeof(IDataContext).IsSameOrParentOf(node.Object.Type))
 					{
-						_canBeEvaluated = false;
+						CanBeEvaluated = false;
 						return node;
 					}
 				}
 
 				if (node.Method.DeclaringType == typeof(DataExtensions))
 				{
-					_canBeEvaluated = false;
+					CanBeEvaluated = false;
 					return node;
 				}
 
@@ -321,14 +318,14 @@ namespace LinqToDB.Linq.Builder
 
 			public override Expression VisitSqlQueryRootExpression(SqlQueryRootExpression node)
 			{
-				if (_inMethod
+				if (InMethod
 					&& ((IConfigurationID)node.MappingSchema).ConfigurationID ==
 					((IConfigurationID)_mappingSchema).ConfigurationID)
 				{
 					return node;
 				}
 
-				_canBeEvaluated = false;
+				CanBeEvaluated = false;
 				return node;
 			}
 		}

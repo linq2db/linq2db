@@ -4,6 +4,7 @@ using System.Linq.Expressions;
 namespace LinqToDB.Expressions.ExpressionVisitors
 {
 	using Extensions;
+	using Internal;
 
 	static class EqualsToVisitor
 	{

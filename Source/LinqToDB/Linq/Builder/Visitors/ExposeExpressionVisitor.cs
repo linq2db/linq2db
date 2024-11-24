@@ -12,6 +12,7 @@ namespace LinqToDB.Linq.Builder.Visitors
 	using Extensions;
 	using LinqToDB.Common.Internal;
 	using LinqToDB.Expressions;
+	using LinqToDB.Expressions.Internal;
 	using Mapping;
 	using Reflection;
 
@@ -168,7 +169,7 @@ namespace LinqToDB.Linq.Builder.Visitors
 			{
 				var save = _compactBinary;
 				_compactBinary = true;
-				convertedQuery= Visit(convertedQuery);
+				convertedQuery = Visit(convertedQuery);
 				_compactBinary = save;
 
 				return convertedQuery;
@@ -826,22 +827,34 @@ namespace LinqToDB.Linq.Builder.Visitors
 			{
 				Cleanup();
 
-				_optimizationContext = optimizationContext;
+				OptimizationContext = optimizationContext;
 
 				_ = Visit(expression);
 
-				return _canBeEvaluated;
+				return CanBeEvaluated;
 			}
 
 			protected override Expression VisitParameter(ParameterExpression node)
 			{
 				if (node == ExpressionBuilder.ParametersParam)
 				{
-					_canBeEvaluated = false;
+					CanBeEvaluated = false;
 					return node;
 				}
 
 				return base.VisitParameter(node);
+			}
+
+			protected override Expression VisitExtension(Expression node)
+			{
+				if (node.CanReduce)
+				{
+					Visit(node.Reduce());
+					return node;
+				}
+
+				CanBeEvaluated = false;
+				return node;
 			}
 		}
 

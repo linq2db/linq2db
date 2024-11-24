@@ -21,7 +21,6 @@ using Microsoft.Extensions.Logging;
 
 namespace LinqToDB.EntityFrameworkCore
 {
-	using Common.Internal.Cache;
 	using Data;
 	using DataProvider;
 	using DataProvider.DB2;
@@ -36,8 +35,8 @@ namespace LinqToDB.EntityFrameworkCore
 	using Extensions;
 	using Mapping;
 	using Metadata;
-	using Reflection;
 	using SqlQuery;
+	using Internal;
 
 	// ReSharper disable once ClassWithVirtualMembersNeverInherited.Global
 	/// <summary>
@@ -564,21 +563,6 @@ namespace LinqToDB.EntityFrameworkCore
 		}
 
 		/// <summary>
-		/// Tests that method is <see cref="IQueryable{T}"/> extension.
-		/// </summary>
-		/// <param name="method">Method to test.</param>
-		/// <param name="enumerable">Allow <see cref="IEnumerable{T}"/> extensions.</param>
-		/// <returns><c>true</c> if method is <see cref="IQueryable{T}"/> extension.</returns>
-		public static bool IsQueryable(MethodCallExpression method, bool enumerable = true)
-		{
-			var type = method.Method.DeclaringType;
-
-			return type == typeof(Queryable) || (enumerable && type == typeof(Enumerable)) || type == typeof(LinqExtensions) ||
-				   type == typeof(DataExtensions) || type == typeof(TableExtensions) ||
-				   type == typeof(EntityFrameworkQueryableExtensions);
-		}
-
-		/// <summary>
 		/// Evaluates value of expression.
 		/// </summary>
 		/// <param name="expr">Expression to evaluate.</param>
@@ -612,115 +596,6 @@ namespace LinqToDB.EntityFrameworkCore
 		}
 
 		/// <summary>
-		/// Compacts expression to handle big filters.
-		/// </summary>
-		/// <param name="expression"></param>
-		/// <returns>Compacted expression.</returns>
-		public static Expression CompactExpression(Expression expression)
-		{
-			switch (expression.NodeType)
-			{
-				case ExpressionType.Or:
-				case ExpressionType.And:
-				case ExpressionType.OrElse:
-				case ExpressionType.AndAlso:
-				{
-					var stack = new Stack<Expression>();
-					var items = new List<Expression>();
-					var binary = (BinaryExpression) expression;
-
-					stack.Push(binary.Right);
-					stack.Push(binary.Left);
-					while (stack.Count > 0)
-					{
-						var item = stack.Pop();
-						if (item.NodeType == expression.NodeType)
-						{
-							binary = (BinaryExpression) item;
-							stack.Push(binary.Right);
-							stack.Push(binary.Left);
-						}
-						else
-							items.Add(item);
-					}
-
-					if (items.Count > 3)
-					{
-						// having N items will lead to NxM recursive calls in expression visitors and
-						// will result in stack overflow on relatively small numbers (~1000 items).
-						// To fix it we will rebalance condition tree here which will result in
-						// LOG2(N)*M recursive calls, or 10*M calls for 1000 items.
-						//
-						// E.g. we have condition A OR B OR C OR D OR E
-						// as an expression tree it represented as tree with depth 5
-						//   OR
-						// A    OR
-						//    B    OR
-						//       C    OR
-						//          D    E
-						// for rebalanced tree it will have depth 4
-						//                  OR
-						//        OR
-						//   OR        OR        OR
-						// A    B    C    D    E    F
-						// Not much on small numbers, but huge improvement on bigger numbers
-						while (items.Count != 1)
-						{
-							items = CompactTree(items, expression.NodeType);
-						}
-
-						return items[0];
-					}
-
-					break;
-				}
-			}
-
-			return expression;
-		}
-
-		static List<Expression> CompactTree(List<Expression> items, ExpressionType nodeType)
-		{
-			var result = new List<Expression>();
-
-			// traverse list from left to right to preserve calculation order
-			for (var i = 0; i < items.Count; i += 2)
-			{
-				if (i + 1 == items.Count)
-				{
-					// last non-paired item
-					result.Add(items[i]);
-				}
-				else
-				{
-					result.Add(Expression.MakeBinary(nodeType, items[i], items[i + 1]));
-				}
-			}
-
-			return result;
-		}
-
-#if !EF31
-		/// <summary>
-		/// Gets current property value via reflection.
-		/// </summary>
-		/// <typeparam name="TValue">Property value type.</typeparam>
-		/// <param name="obj">Object instance</param>
-		/// <param name="propName">Property name</param>
-		/// <returns>Property value.</returns>
-		/// <exception cref="InvalidOperationException"></exception>
-		protected static TValue GetPropValue<TValue>(object obj, string propName)
-		{
-			var prop = obj.GetType().GetProperty(propName)
-				?? throw new InvalidOperationException($"Property {obj.GetType().Name}.{propName} not found.");
-			var propValue = prop.GetValue(obj);
-			if (propValue == default)
-				return default!;
-			return (TValue)propValue;
-		}
-#endif
-
-		/// <summary>
 		/// Transforms EF Core expression tree to LINQ To DB expression.
 		/// Method replaces EF Core <see cref="EntityQueryable{TResult}"/> instances with LINQ To DB
 		/// <see cref="DataExtensions.GetTable{T}(IDataContext)"/> calls.
@@ -729,360 +604,48 @@ namespace LinqToDB.EntityFrameworkCore
 		/// <param name="dc">LINQ To DB <see cref="IDataContext"/> instance.</param>
 		/// <param name="ctx">Optional DbContext instance.</param>
 		/// <param name="model">EF Core data model instance.</param>
+		/// <param name="isQueryExpression">Indicates that query may contain tracking information</param>
 		/// <returns>Transformed expression.</returns>
-		public virtual Expression TransformExpression(Expression expression, IDataContext? dc, DbContext? ctx, IModel? model)
+		public virtual Expression TransformExpression(Expression expression, IDataContext? dc, DbContext? ctx, IModel? model, bool isQueryExpression)
 		{
-			var tracking           = true;
-			var ignoreTracking     = false;
+			var visitor       = new TransformExpressionVisitor();
+			var newExpression = visitor.Transform(dc, model, expression);
 
-			var nonEvaluableParameters = new HashSet<ParameterExpression>();
+			if (ReferenceEquals(newExpression, expression))
+				return expression;
 
-			TransformInfo LocalTransform(Expression e)
-			{
-				e = CompactExpression(e);
-
-				switch (e.NodeType)
-				{
-					case ExpressionType.Lambda:
-					{
-						foreach (var parameter in ((LambdaExpression)e).Parameters)
-						{
-							nonEvaluableParameters.Add(parameter);
-						}
-
-						break;
-					}
-
-					case ExpressionType.Constant:
-					{
-						if (dc != null && typeof(EntityQueryable<>).IsSameOrParentOf(e.Type) || typeof(DbSet<>).IsSameOrParentOf(e.Type))
-						{
-							var entityType = e.Type.GenericTypeArguments[0];
-							var newExpr = Expression.Call(null, Methods.LinqToDB.GetTable.MakeGenericMethod(entityType), Expression.Constant(dc));
-							return new TransformInfo(newExpr);
-						}
-
-						break;
-					}
-
-					case ExpressionType.MemberAccess:
-					{
-						if (typeof(IQueryable<>).IsSameOrParentOf(e.Type))
-						{
-							var ma    = (MemberExpression)e;
-							var query = (IQueryable)EvaluateExpression(ma)!;
-
-							return new TransformInfo(query.Expression, false, true);
-						}
-
-						break;
-					}
-
-					case ExpressionType.Call:
-					{
-						var methodCall = (MethodCallExpression) e;
-
-						var generic = methodCall.Method.IsGenericMethod ? methodCall.Method.GetGenericMethodDefinition() : methodCall.Method;
-
-						if (IsQueryable(methodCall))
-						{
-							if (methodCall.Method.IsGenericMethod)
-							{
-								var isTunnel = false;
-
-								if (generic == IgnoreQueryFiltersMethodInfo)
-								{
-									var newMethod = Expression.Call(
-										Methods.LinqToDB.IgnoreFilters.MakeGenericMethod(methodCall.Method.GetGenericArguments()),
-										methodCall.Arguments[0], Expression.NewArrayInit(typeof(Type)));
-									return new TransformInfo(newMethod, false, true);
-								}
-								else if (generic == AsNoTrackingMethodInfo
-#if !EF31
-									|| generic == AsNoTrackingWithIdentityResolutionMethodInfo
-#endif
-									)
-								{
-									isTunnel = true;
-									tracking = false;
-								}
-								else if (generic == IncludeMethodInfo)
-								{
-									var method =
-										Methods.LinqToDB.LoadWith.MakeGenericMethod(methodCall.Method
-											.GetGenericArguments());
-
-									return new TransformInfo(Expression.Call(method, methodCall.Arguments), false, true);
-								}
-								else if (generic == IncludeMethodInfoString)
-								{
-									var arguments = new List<Expression>(2)
-									{
-										methodCall.Arguments[0]
-									};
-
-									var propName = (string)EvaluateExpression(methodCall.Arguments[1])!;
-									var param    = Expression.Parameter(methodCall.Method.GetGenericArguments()[0], "e");
-									var propPath = propName.Split(_nameSeparator, StringSplitOptions.RemoveEmptyEntries);
-									var prop     = (Expression)param;
-									for (var i = 0; i < propPath.Length; i++)
-									{
-										prop = Expression.PropertyOrField(prop, propPath[i]);
-									}
-									
-									arguments.Add(Expression.Lambda(prop, param));
-
-									var method =
-										Methods.LinqToDB.LoadWith.MakeGenericMethod(param.Type, prop.Type);
-
-									return new TransformInfo(Expression.Call(method, arguments.ToArray()), false, true);
-								}
-								else if (generic == ThenIncludeMethodInfo)
-								{
-									var method =
-										Methods.LinqToDB.ThenLoadFromSingle.MakeGenericMethod(methodCall.Method
-											.GetGenericArguments());
-
-									return new TransformInfo(Expression.Call(method, methodCall.Arguments.Select(a => a.Transform(l => LocalTransform(l)))
-										.ToArray()), false, true);
-								}
-								else if (generic == ThenIncludeEnumerableMethodInfo)
-								{
-									var method =
-										Methods.LinqToDB.ThenLoadFromMany.MakeGenericMethod(methodCall.Method
-											.GetGenericArguments());
-
-									return new TransformInfo(Expression.Call(method, methodCall.Arguments.Select(a => a.Transform(l => LocalTransform(l)))
-										.ToArray()), false, true);
-								}
-								else if (generic == Methods.LinqToDB.RemoveOrderBy)
-								{
-									// This is workaround. EagerLoading runs query again with RemoveOrderBy method.
-									// it is only one possible way now how to detect nested query. 
-									ignoreTracking = true;
-								}
-								else if (generic == TagWithMethodInfo)
-								{
-									var method = Methods.LinqToDB.TagQuery.MakeGenericMethod(methodCall.Method.GetGenericArguments());
-
-									return new TransformInfo(Expression.Call(method, methodCall.Arguments.Select(a => a.Transform(l => LocalTransform(l)))
-										.ToArray()), false, true);
-								}
-
-								if (isTunnel)
-									return new TransformInfo(methodCall.Arguments[0], false, true);
-							}
-
-							break;
-						}
-
-#if !EF31
-						if (generic == AsSplitQueryMethodInfo || generic == AsSingleQueryMethodInfo)
-							return new TransformInfo(methodCall.Arguments[0], false, true);
-#endif
-
-						if (typeof(ITable<>).IsSameOrParentOf(methodCall.Type))
-						{
-							if (generic.Name == "ToLinqToDBTable")
-							{
-								return new TransformInfo(methodCall.Arguments[0], false, true);
-							}
-
-							break;
-						}
-
-#if EF31
-						if (generic == FromSqlOnQueryableMethodInfo)
-						{
-							//convert the arguments from the FromSqlOnQueryable method from EF, to a L2DB FromSql call
-							return new TransformInfo(Expression.Call(null, L2DBFromSqlMethodInfo.MakeGenericMethod(methodCall.Method.GetGenericArguments()[0]),
-								Expression.Constant(dc), 
-								Expression.New(RawSqlStringConstructor, methodCall.Arguments[1]),
-								methodCall.Arguments[2]), false, true);
-						}
-#endif
-
-						if (typeof(IQueryable<>).IsSameOrParentOf(methodCall.Type) && methodCall.Type.Assembly != typeof(LinqExtensions).Assembly)
-						{
-							if (((dc != null && !dc.MappingSchema.HasAttribute<ExpressionMethodAttribute>(methodCall.Type, methodCall.Method))
-								|| (dc == null && !methodCall.Method.HasAttribute<ExpressionMethodAttribute>()))
-								&& null == methodCall.Find(nonEvaluableParameters,
-								    (c, t) => t.NodeType == ExpressionType.Parameter && c.Contains(t) || t.NodeType == ExpressionType.Extension))
-							{
-								// Invoking function to evaluate EF's Subquery located in function
-
-								var obj = EvaluateExpression(methodCall.Object);
-								var arguments = methodCall.Arguments.Select(EvaluateExpression).ToArray();
-								if (methodCall.Method.Invoke(obj, arguments) is IQueryable result)
-								{
-									if (!ExpressionEqualityComparer.Instance.Equals(methodCall, result.Expression))
-										return new TransformInfo(result.Expression, false, true);
-								}
-							}
-						}
-
-						if (generic == EFProperty)
-						{
-							var prop = Expression.Call(null, Methods.LinqToDB.SqlExt.Property.MakeGenericMethod(methodCall.Method.GetGenericArguments()[0]),
-								methodCall.Arguments[0], methodCall.Arguments[1]);
-							return new TransformInfo(prop, false, true);
-						}
-
-						List<Expression>? newArguments = null;
-						var parameters = generic.GetParameters();
-						for (var i = 0; i < parameters.Length; i++)
-						{
-							var arg = methodCall.Arguments[i];
-							var canWrap = true;
-
-							if (arg.NodeType == ExpressionType.Call)
-							{
-								var mc = (MethodCallExpression) arg;
-								if (mc.Method.DeclaringType == typeof(Sql))
-									canWrap = false;
-							}
-
-							if (canWrap)
-							{
-								if (parameters[i].HasAttribute<NotParameterizedAttribute>())
-								{
-									newArguments ??= new List<Expression>(methodCall.Arguments.Take(i));
-
-									newArguments.Add(Expression.Call(ToSql.MakeGenericMethod(arg.Type), arg));
-									continue;
-								}
-							}
-
-							newArguments?.Add(methodCall.Arguments[i]);
-						}
-
-						if (newArguments != null)
-							return new TransformInfo(methodCall.Update(methodCall.Object, newArguments), false, true);
-
-						break;
-					}
-#if !EF31
-
-					case ExpressionType.Extension:
-					{
-						if (dc != null && e is QueryRootExpression queryRoot)
-							return new TransformInfo(TransformQueryRootExpression(dc, queryRoot));
-
-						break;
-					}
-#endif
-				}
-
-				return new TransformInfo(e);
-			}
-
-			var newExpression = expression.Transform(LocalTransform);
-
-			if (!ignoreTracking && dc is LinqToDBForEFToolsDataConnection dataConnection)
+			if (isQueryExpression && dc is LinqToDBForEFToolsDataConnection dataConnection)
 			{
 				// ReSharper disable once ConditionIsAlwaysTrueOrFalse
+
+				bool tracking;
+
+				if (visitor.Tracking == null)
+				{
+					if (ctx == null)
+					{
+						tracking = true;
+					}
+					else
+					{
+						var options = ctx.GetDbContextOptions();
+						if (options == null)
+							tracking = true;
+						else
+						{
+							var coreOptions = options.FindExtension<CoreOptionsExtension>();
+							tracking = coreOptions?.QueryTrackingBehavior == QueryTrackingBehavior.TrackAll;
+						}
+					}
+				}
+				else
+					tracking = visitor.Tracking.Value;
+
 				dataConnection.Tracking = tracking;
 			}
 
 			return newExpression;
 		}
-
-#if !EF31
-		/// <summary>
-		/// Transforms <see cref="QueryRootExpression"/> descendants to linq2db analogue. Handles Temporal tables also.
-		/// </summary>
-		/// <param name="dc">Data context.</param>
-		/// <param name="queryRoot">Query root expression</param>
-		/// <returns>Transformed expression.</returns>
-		protected virtual Expression TransformQueryRootExpression(IDataContext dc, QueryRootExpression queryRoot)
-		{
-			static Expression GetAsOfSqlServer(Expression getTableExpr, Type entityType)
-			{
-				return Expression.Call(
-					AsSqlServerTable.MakeGenericMethod(entityType),
-					getTableExpr);
-			}
-
-			if (queryRoot is FromSqlQueryRootExpression fromSqlQueryRoot)
-			{
-				//convert the arguments from the FromSqlOnQueryable method from EF, to a L2DB FromSql call
-				return Expression.Call(null,
-					L2DBFromSqlMethodInfo.MakeGenericMethod(fromSqlQueryRoot.EntityType.ClrType),
-					Expression.Constant(dc),
-					Expression.New(RawSqlStringConstructor, Expression.Constant(fromSqlQueryRoot.Sql)),
-					fromSqlQueryRoot.Argument);
-			}
-
-#if EF6
-			var entityType = queryRoot.EntityType.ClrType;
-#else
-			var entityType = queryRoot.ElementType;
-#endif
-			var getTableExpr = Expression.Call(null, Methods.LinqToDB.GetTable.MakeGenericMethod(entityType),
-				Expression.Constant(dc));
-
-			var expressionTypeName = queryRoot.GetType().Name;
-			if (expressionTypeName == "TemporalAsOfQueryRootExpression")
-			{
-				var pointInTime = GetPropValue<DateTime>(queryRoot, "PointInTime");
-
-				var asOf = Expression.Call(TemporalAsOfTable.MakeGenericMethod(entityType), 
-					GetAsOfSqlServer(getTableExpr, entityType),
-					Expression.Constant(pointInTime));
-
-				return asOf;
-			}
-
-			if (expressionTypeName == "TemporalFromToQueryRootExpression")
-			{
-				var from = GetPropValue<DateTime>(queryRoot, "From");
-				var to = GetPropValue<DateTime>(queryRoot, "To");
-
-				var fromTo = Expression.Call(TemporalFromTo.MakeGenericMethod(entityType),
-					GetAsOfSqlServer(getTableExpr, entityType),
-					Expression.Constant(from),
-					Expression.Constant(to));
-
-				return fromTo;
-			}
-
-			if (expressionTypeName == "TemporalBetweenQueryRootExpression")
-			{
-				var from = GetPropValue<DateTime>(queryRoot, "From");
-				var to = GetPropValue<DateTime>(queryRoot, "To");
-
-				var fromTo = Expression.Call(TemporalBetween.MakeGenericMethod(entityType),
-					GetAsOfSqlServer(getTableExpr, entityType),
-					Expression.Constant(from),
-					Expression.Constant(to));
-
-				return fromTo;
-			}
-
-			if (expressionTypeName == "TemporalContainedInQueryRootExpression")
-			{
-				var from = GetPropValue<DateTime>(queryRoot, "From");
-				var to = GetPropValue<DateTime>(queryRoot, "To");
-
-				var fromTo = Expression.Call(TemporalContainedIn.MakeGenericMethod(entityType),
-					GetAsOfSqlServer(getTableExpr, entityType),
-					Expression.Constant(from),
-					Expression.Constant(to));
-
-				return fromTo;
-			}
-
-			if (expressionTypeName == "TemporalAllQueryRootExpression")
-			{
-				var all = Expression.Call(TemporalAll.MakeGenericMethod(entityType),
-					GetAsOfSqlServer(getTableExpr, entityType));
-
-				return all;
-			}
-
-			return getTableExpr;
-		}
-#endif
 
 		static Expression EnsureEnumerable(Expression expression, MappingSchema mappingSchema)
 		{

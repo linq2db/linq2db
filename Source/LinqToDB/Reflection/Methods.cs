@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Data;
 using System.Data.Common;
 using System.Linq;
 using System.Linq.Expressions;
@@ -12,6 +11,8 @@ namespace LinqToDB.Reflection
 	using Expressions;
 	using Extensions;
 	using Linq;
+	using Expressions.Internal;
+
 	using SqlQuery;
 
 	/// <summary>

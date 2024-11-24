@@ -9,6 +9,7 @@ namespace LinqToDB.Linq.Builder
 	using Extensions;
 	using Infrastructure;
 	using LinqToDB.Expressions;
+	using LinqToDB.Expressions.Internal;
 	using Mapping;
 	using Reflection;
 	using SqlQuery;

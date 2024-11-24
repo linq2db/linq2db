@@ -14,6 +14,7 @@ namespace LinqToDB
 	using Expressions;
 	using Extensions;
 	using Linq;
+	using Expressions.Internal;
 	using Mapping;
 	using SqlQuery;
 

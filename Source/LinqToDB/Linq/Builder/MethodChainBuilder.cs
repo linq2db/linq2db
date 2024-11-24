@@ -8,6 +8,7 @@ namespace LinqToDB.Linq.Builder
 	using Common.Internal;
 	using Extensions;
 	using LinqToDB.Expressions;
+	using LinqToDB.Expressions.Internal;
 
 	[BuildsExpression(ExpressionType.Call)]
 	sealed class MethodChainBuilder : MethodCallBuilder

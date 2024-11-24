@@ -2,23 +2,24 @@
 using System.Collections.ObjectModel;
 using System.Linq.Expressions;
 
-namespace LinqToDB.Linq.Builder
+namespace LinqToDB.Linq.Builder.Visitors
 {
 	using LinqToDB.Expressions;
 
-	abstract class CanBeEvaluatedOnClientCheckVisitorBase : ExpressionVisitorBase
+	public abstract class CanBeEvaluatedOnClientCheckVisitorBase : ExpressionVisitorBase
 	{
-		protected bool _inMethod;
-		protected bool _canBeEvaluated;
+		protected bool InMethod;
+		protected bool CanBeEvaluated;
+
+		protected ExpressionTreeOptimizationContext     OptimizationContext = default!;
 
 		Stack<ReadOnlyCollection<ParameterExpression>>? _allowedParameters;
-		protected ExpressionTreeOptimizationContext     _optimizationContext = default!;
 
 		public override void Cleanup()
 		{
-			_canBeEvaluated      = true;
-			_inMethod            = false;
-			_optimizationContext = default!;
+			CanBeEvaluated      = true;
+			InMethod            = false;
+			OptimizationContext = default!;
 
 			_allowedParameters?.Clear();
 
@@ -27,7 +28,7 @@ namespace LinqToDB.Linq.Builder
 
 		public override Expression? Visit(Expression? node)
 		{
-			if (!_canBeEvaluated)
+			if (!CanBeEvaluated)
 				return node;
 
 			return base.Visit(node);
@@ -35,9 +36,9 @@ namespace LinqToDB.Linq.Builder
 
 		protected override Expression VisitLambda<T>(Expression<T> node)
 		{
-			if (!_inMethod)
+			if (!InMethod)
 			{
-				_canBeEvaluated = false;
+				CanBeEvaluated = false;
 				return node;
 			}
 
@@ -54,72 +55,85 @@ namespace LinqToDB.Linq.Builder
 
 		internal override Expression VisitContextRefExpression(ContextRefExpression node)
 		{
-			_canBeEvaluated = false;
+			CanBeEvaluated = false;
 			return node;
 		}
 
 		internal override Expression VisitSqlErrorExpression(SqlErrorExpression node)
 		{
-			_canBeEvaluated = false;
+			CanBeEvaluated = false;
 			return node;
 		}
 
 		public override Expression VisitSqlPlaceholderExpression(SqlPlaceholderExpression node)
 		{
-			_canBeEvaluated = false;
+			CanBeEvaluated = false;
 			return node;
 		}
 
 		internal override Expression VisitSqlGenericParamAccessExpression(SqlGenericParamAccessExpression node)
 		{
-			_canBeEvaluated = false;
+			CanBeEvaluated = false;
 			return node;
 		}
 
 		internal override Expression VisitSqlEagerLoadExpression(SqlEagerLoadExpression node)
 		{
-			_canBeEvaluated = false;
+			CanBeEvaluated = false;
 			return node;
 		}
 
 		internal override SqlGenericConstructorExpression.Assignment VisitSqlGenericAssignment(SqlGenericConstructorExpression.Assignment assignment)
 		{
-			_canBeEvaluated = false;
+			CanBeEvaluated = false;
 			return assignment;
 		}
 
 		internal override SqlGenericConstructorExpression.Parameter VisitSqlGenericParameter(SqlGenericConstructorExpression.Parameter parameter)
 		{
-			_canBeEvaluated = false;
+			CanBeEvaluated = false;
 			return parameter;
 		}
 
 		public override Expression VisitSqlGenericConstructorExpression(SqlGenericConstructorExpression node)
 		{
-			_canBeEvaluated = false;
+			CanBeEvaluated = false;
 			return node;
 		}
 
 		public override Expression VisitSqlQueryRootExpression(SqlQueryRootExpression node)
 		{
-			_canBeEvaluated = false;
+			CanBeEvaluated = false;
+			return node;
+		}
+
+		protected override Expression VisitExtension(Expression node)
+		{
+			if (node.CanReduce)
+			{
+				Visit(node.Reduce());
+				return node;
+			}
+
+			CanBeEvaluated = false;
+
 			return node;
 		}
 
 		protected override Expression VisitMethodCall(MethodCallExpression node)
 		{
-			if (!_canBeEvaluated)
+			if (!CanBeEvaluated)
 				return node;
 
-			if (_optimizationContext.IsServerSideOnly(node))
-				_canBeEvaluated = false;
+			if (OptimizationContext?.IsServerSideOnly(node) == true)
+				CanBeEvaluated = false;
 
-			var save = _inMethod;
-			_inMethod = true;
+			var save = InMethod;
+			InMethod = true;
 
 			base.VisitMethodCall(node);
 
-			_inMethod = save;
+			InMethod = save;
 
 			return node;
 		}
@@ -140,7 +154,7 @@ namespace LinqToDB.Linq.Builder
 			}
 
 			if (!isAllowed)
-				_canBeEvaluated = false;
+				CanBeEvaluated = false;
 
 			return node;
 		}

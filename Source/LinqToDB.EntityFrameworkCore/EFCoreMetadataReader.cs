@@ -115,39 +115,24 @@ namespace LinqToDB.EntityFrameworkCore
 				var filter = et.GetQueryFilter();
 				if (filter != null)
 				{
-					var queryParam   = Expression.Parameter(typeof(IQueryable<>).MakeGenericType(type), "q");
-					var dcParam      = Expression.Parameter(typeof(IDataContext), "dc");
-					var contextProp  = Expression.Property(Expression.Convert(dcParam, typeof(LinqToDBForEFToolsDataConnection)), "Context");
+					var dcParam     = Expression.Parameter(typeof(IDataContext), "dc");
+					var contextProp = Expression.Property(Expression.Convert(dcParam, typeof(LinqToDBForEFToolsDataConnection)), "Context");
 					var filterBody   = filter.Body.Transform(contextProp, static (contextProp, e) =>
-						{
-							if (typeof(DbContext).IsSameOrParentOf(e.Type))
-							{
-								Expression newExpr = contextProp;
-								if (newExpr.Type != e.Type)
-									newExpr = Expression.Convert(newExpr, e.Type);
-								return newExpr;
-							}
-
-							return e;
-						});
-
-					filterBody = LinqToDBForEFTools.TransformExpression(filterBody, null, null, _model);
-
-					// we have found dependency, check for compatibility
-
-					var filterLambda = Expression.Lambda(filterBody, filter.Parameters[0]);
-					Expression body  = Expression.Call(Methods.Queryable.Where.MakeGenericMethod(type), queryParam, filterLambda);
-
-					var checkType = filter.Body != filterBody;
-					if (checkType)
 					{
-						body = Expression.Condition(
-							Expression.TypeIs(dcParam, typeof(LinqToDBForEFToolsDataConnection)), body, queryParam);
-					}
+						if (typeof(DbContext).IsSameOrParentOf(e.Type))
+						{
+							Expression newExpr = contextProp;
+							if (newExpr.Type != e.Type)
+								newExpr = Expression.Convert(newExpr, e.Type);
+							return newExpr;
+						}
 
-					var lambda       = Expression.Lambda(body, queryParam, dcParam);
+						return e;
+					});
 
-					result.Add(new QueryFilterAttribute() { FilterFunc = lambda.Compile() });
+					var newFilter = Expression.Lambda(filterBody, filter.Parameters[0], dcParam);
+
+					result.Add(new QueryFilterAttribute() { FilterLambda = newFilter });
 				}
 
 				// InheritanceMappingAttribute

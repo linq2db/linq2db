@@ -8,7 +8,8 @@ namespace LinqToDB.Linq.Builder
 {
 	using Extensions;
 	using LinqToDB.Expressions;
-	using LinqToDB.Reflection;
+	using LinqToDB.Expressions.Internal;
+	using Reflection;
 	using Mapping;
 
 	[BuildsMethodCall("LoadWith", "ThenLoad", "LoadWithAsTable", "LoadWithInternal")]

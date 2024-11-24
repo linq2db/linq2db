@@ -5,7 +5,6 @@ using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Linq.Expressions;
-using System.Reflection;
 
 using JetBrains.Annotations;
 
@@ -233,10 +232,11 @@ namespace LinqToDB.EntityFrameworkCore
 		/// <param name="dc">LINQ To DB <see cref="IDataContext"/> instance.</param>
 		/// <param name="ctx">Optional DbContext instance.</param>
 		/// <param name="model">EF Core data model instance.</param>
+		/// <param name="isQueryExpression">Indicates that query may contain tracking information</param>
 		/// <returns>Transformed expression.</returns>
-		public static Expression TransformExpression(Expression expression, IDataContext? dc, DbContext? ctx, IModel? model)
+		public static Expression TransformExpression(Expression expression, IDataContext? dc, DbContext? ctx, IModel? model, bool isQueryExpression)
 		{
-			return Implementation.TransformExpression(expression, dc, ctx, model);
+			return Implementation.TransformExpression(expression, dc, ctx, model, isQueryExpression);
 		}
 
 		/// <summary>

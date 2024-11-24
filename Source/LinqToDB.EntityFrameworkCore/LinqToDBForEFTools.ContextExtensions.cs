@@ -274,10 +274,23 @@ namespace LinqToDB.EntityFrameworkCore
 		{
 			ArgumentNullException.ThrowIfNull(context);
 
+			var contextOptions = context.GetDbContextOptions();
+
+			return contextOptions?.GetLinqToDBOptions();
+		}
+
+		/// <summary>
+		/// Returns Linq To DB context options from EF Context.
+		/// </summary>
+		/// <returns>Db context object.</returns>
+		public static IDbContextOptions? GetDbContextOptions(this DbContext context)
+		{
+			ArgumentNullException.ThrowIfNull(context);
+
 			var contextOptions = ((IInfrastructure<IServiceProvider>)context.Database)?
 				.Instance?.GetService(typeof(IDbContextOptions)) as IDbContextOptions;
 
-			return contextOptions?.GetLinqToDBOptions();
+			return contextOptions;
 		}
 
 		/// <summary>
