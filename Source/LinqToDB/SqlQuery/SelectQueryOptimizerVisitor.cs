@@ -125,9 +125,13 @@ namespace LinqToDB.SqlQuery
 			if (usedColumns.Count == 0)
 				return;
 
-			element.Visit(usedColumns, static (uc, e) =>
+			// VisitParentFirst: CteClause must be handled before nested select
+			element.VisitParentFirst(usedColumns, static (uc, e) =>
 			{
-				if (e is SqlSelectClause select)
+				CteClause? cte          = e as CteClause;
+				SqlSelectClause? select = cte?.Body!.Select.Select ?? e as SqlSelectClause;
+
+				if (select != null)
 				{
 					for (var i = select.Columns.Count - 1; i >= 0; i--)
 					{
@@ -141,17 +145,31 @@ namespace LinqToDB.SqlQuery
 								remove = false;
 							}
 
+							// :-/
+							// probably we will need a custom visitor at some point to avoid code like that
+							if (remove && cte != null && column is SqlColumn { Expression: SqlValue { Value: 1 }, Alias: "unused" })
+							{
+								remove = false;
+							}
+
 							if (remove)
+							{
 								select.Columns.RemoveAt(i);
+								cte?.Fields.RemoveAt(i);
+							}
 						}
 					}
 
 					// see Issue3311Test3
-					if ((!select.GroupBy.IsEmpty || select.From.Tables.Count == 0) && select.Columns.Count == 0)
+					// and TestNoColumns for CTE
+					if (select.Columns.Count == 0)
 					{
-						select.AddNew(new SqlValue(1));
+						select.AddNew(new SqlValue(1), cte == null ? null : "unused");
+						cte?.Fields.Add(new SqlField(new DbDataType(typeof(int)), "unused", false));
 					}
 				}
+
+				return true;
 			});
 		}
 
