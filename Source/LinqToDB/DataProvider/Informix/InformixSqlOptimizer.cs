@@ -86,38 +86,49 @@ namespace LinqToDB.DataProvider.Informix
 
 			// IBM.Data.Db2 provider has a bug, where it could type nullable column in set as non-nullable, because first
 			// part of set use non-nullable column
-			// see test: Issue4220Test
+			// see tests: Issue4220Test, UnionCteWithFilter
 			// as workaround we apply "NVL(x, NULL)" wrap to force column being nullable
 			// Required pre-conditions:
-			// 1. query is top-level SET select
-			// 2. column in SET nullable
-			// 3. column is first part of SET is not nullable
-			// 4. column is field
-			if (statement.QueryType == QueryType.Select && statement.SelectQuery?.HasSetOperators == true)
+			// 1. column in SET nullable
+			// 2. column is first part of SET is not nullable
+			// 3. column is field
+
+			// IFX doesn't support output/returning, so only SELECT could return columns
+			if (statement.QueryType == QueryType.Select)
 			{
-				var query = statement.SelectQuery;
-
-				var firstSet           = query.SetOperators[0];
-				var nullabilityContext = NullabilityContext.GetContext(statement.SelectQuery);
-
-				for (var i = 0; i < query.Select.Columns.Count; i++)
+				statement.VisitParentFirst(mappingSchema, static (mappingSchema, e) =>
 				{
-					var column = query.Select.Columns[i];
-
-					if (column.Expression.ElementType != QueryElementType.SqlField || column.Expression.CanBeNullable(nullabilityContext))
-						continue;
-
-					foreach (var setOperator in query.SetOperators)
+					if (e.ElementType == QueryElementType.SqlQuery)
 					{
-						if (!setOperator.SelectQuery.Select.Columns[i].Expression.CanBeNullable(nullabilityContext))
-							continue;
+						var query = (SelectQuery)e;
+						if (query.HasSetOperators)
+						{
+							var firstSet           = query.SetOperators[0];
+							var nullabilityContext = NullabilityContext.GetContext(query);
 
-						var expression    = column.Expression;
-						var dbType        = QueryHelper.GetDbDataType(expression, mappingSchema);
-						column.Expression = new SqlFunction(dbType, "NVL", expression, new SqlValue(dbType, null)) { CanBeNull = true };
-						break;
+							for (var i = 0; i < query.Select.Columns.Count; i++)
+							{
+								var column = query.Select.Columns[i];
+
+								if (column.Expression.ElementType != QueryElementType.SqlField || column.Expression.CanBeNullable(nullabilityContext))
+									continue;
+
+								foreach (var setOperator in query.SetOperators)
+								{
+									if (!setOperator.SelectQuery.Select.Columns[i].Expression.CanBeNullable(nullabilityContext))
+										continue;
+
+									var expression    = column.Expression;
+									var dbType        = QueryHelper.GetDbDataType(expression, mappingSchema);
+									column.Expression = new SqlFunction(dbType, "NVL", expression, new SqlValue(dbType, null)) { CanBeNull = true };
+									break;
+								}
+							}
+						}
 					}
-				}
+
+					return true;
+				});
 			}
 
 			return statement;
