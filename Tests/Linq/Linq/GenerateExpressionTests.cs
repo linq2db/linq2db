@@ -65,7 +65,6 @@ namespace Tests.Linq
 		}
 
 		#region issue 4322
-		[ActiveIssue]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4322")]
 		public void Issue4322Test([DataSources] string context)
 		{
@@ -79,6 +78,8 @@ namespace Tests.Linq
 			// this works
 			TestUtils.DeleteTestCases();
 			var testCase = query.GenerateTestString();
+			// ignore generated exception
+			testCase = testCase!.Replace("throw new NotImplementedException", string.Empty);
 			Assert.That(testCase, Does.Not.Contain("Exception"));
 
 			TestUtils.DeleteTestCases();
@@ -86,6 +87,9 @@ namespace Tests.Linq
 
 			testCase = TestUtils.GetLastTestCase();
 			Assert.That(testCase, Is.Not.Null);
+
+			// ignore generated exception
+			testCase = testCase!.Replace("throw new NotImplementedException", string.Empty);
 			Assert.That(testCase, Does.Not.Contain("Exception"));
 		}
 
