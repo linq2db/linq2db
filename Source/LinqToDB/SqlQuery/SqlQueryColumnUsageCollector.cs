@@ -203,12 +203,12 @@ namespace LinqToDB.SqlQuery
 		protected override IQueryElement VisitSqlQuery(SelectQuery selectQuery)
 		{
 			var isCteQuery = _isCteQuery;
-			_isCteQuery = false;
+			_isCteQuery    = false;
 
-			if (!isCteQuery
-				&& (_parentSelectQuery == null || selectQuery.Select.IsDistinct || selectQuery.From.Tables.Count == 0
+			if (selectQuery.Select.IsDistinct
 				// we cannot remove unused columns for non-UNION ALL operators as it could affect result
-				|| (selectQuery.HasSetOperators && selectQuery.SetOperators.Any(o => o.Operation != SetOperation.UnionAll))))
+				|| (selectQuery.HasSetOperators && selectQuery.SetOperators.Any(o => o.Operation != SetOperation.UnionAll))
+				|| (!isCteQuery && _parentSelectQuery == null))
 			{
 				foreach (var c in selectQuery.Select.Columns)
 				{

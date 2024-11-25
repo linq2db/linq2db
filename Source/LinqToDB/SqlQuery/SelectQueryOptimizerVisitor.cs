@@ -133,6 +133,7 @@ namespace LinqToDB.SqlQuery
 
 				if (select != null)
 				{
+					var removed = false;
 					for (var i = select.Columns.Count - 1; i >= 0; i--)
 					{
 						var column = select.Columns[i];
@@ -154,15 +155,17 @@ namespace LinqToDB.SqlQuery
 
 							if (remove)
 							{
+								removed = true;
 								select.Columns.RemoveAt(i);
-								cte?.Fields.RemoveAt(i);
+								if (cte?.Fields.Count > 0)
+									cte.Fields.RemoveAt(i);
 							}
 						}
 					}
 
 					// see Issue3311Test3
 					// and TestNoColumns for CTE
-					if (select.Columns.Count == 0)
+					if (removed && select.Columns.Count == 0)
 					{
 						select.AddNew(new SqlValue(1), cte == null ? null : "unused");
 						cte?.Fields.Add(new SqlField(new DbDataType(typeof(int)), "unused", false));

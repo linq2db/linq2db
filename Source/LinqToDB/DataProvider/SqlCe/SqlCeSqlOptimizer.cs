@@ -126,10 +126,10 @@ namespace LinqToDB.DataProvider.SqlCe
 
 							if (q.Select.SkipValue != null && q.OrderBy.IsEmpty)
 							{
+								var source = q.Select.From.Tables[0].Source;
 								if (q.Select.Columns.Count == 0)
 								{
-									var source = q.Select.From.Tables[0].Source;
-									var keys   = source.GetKeys(true);
+									var keys = source.GetKeys(true);
 
 									if (keys != null)
 									{
@@ -140,17 +140,10 @@ namespace LinqToDB.DataProvider.SqlCe
 									}
 								}
 
-								for (var i = 0; i < q.Select.Columns.Count; i++)
-								{
-									var sqlExpression = q.Select.Columns[i].Expression;
-									if (!QueryHelper.ContainsAggregationOrWindowFunction(sqlExpression))
-										q.OrderBy.ExprAsc(sqlExpression);
-								}
-
-								if (q.OrderBy.IsEmpty)
-								{
-									throw new LinqToDBException("Order by required for Skip operation.");
-								}
+								// https://learn.microsoft.com/en-us/previous-versions/sql/sql-server-2005/ms173288(v=sql.90)
+								// The ORDER BY clause can include items not appearing in the select list
+								// could we have anything except SqlTable for CE?
+								q.OrderBy.ExprAsc(((SqlTable)source).Fields[0]);
 							}
 
 							// looks like SqlCE do not allow '*' for grouped records
