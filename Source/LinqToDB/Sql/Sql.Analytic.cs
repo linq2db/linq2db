@@ -100,20 +100,32 @@ namespace LinqToDB
 			public void Build(Sql.ISqExtensionBuilder builder)
 			{
 				var nulls = builder.GetValue<Sql.Nulls>("nulls");
-				var nullsStr = GetNullsStr(nulls);
+				var nullsStr = GetNullsStr(nulls, false);
 				if (!string.IsNullOrEmpty(nullsStr))
 					builder.AddExpression("modifier", nullsStr);
 			}
 		}
 
-		static string GetNullsStr(Sql.Nulls nulls)
+		sealed class ForceApplyNullsModifier : Sql.IExtensionCallBuilder
+		{
+			public void Build(Sql.ISqExtensionBuilder builder)
+			{
+				var nulls = builder.GetValue<Sql.Nulls>("nulls");
+				var nullsStr = GetNullsStr(nulls, true);
+				if (!string.IsNullOrEmpty(nullsStr))
+					builder.AddExpression("modifier", nullsStr);
+			}
+		}
+
+		static string GetNullsStr(Sql.Nulls nulls, bool forceRespect)
 		{
 			switch (nulls)
 			{
 				case Sql.Nulls.None   :
-				case Sql.Nulls.Respect:
-					// no need to add RESPECT NULLS, as it is default behavior and token itself supported only by Oracle, Informix and SQL Server 2022
 					return string.Empty;
+				case Sql.Nulls.Respect:
+					// RESPECT NULLS is default behavior for all supported databases except ClickHouse
+					return forceRespect ? "RESPECT NULLS" : string.Empty;
 				case Sql.Nulls.Ignore :
 					return "IGNORE NULLS";
 				default :
@@ -145,7 +157,7 @@ namespace LinqToDB
 				var from  = builder.GetValue<Sql.From>("from");
 
 				var fromStr  = GetFromStr(from);
-				var nullsStr = GetNullsStr(nulls);
+				var nullsStr = GetNullsStr(nulls, false);
 
 				if (!string.IsNullOrEmpty(fromStr))
 					builder.AddExpression("from", fromStr);
@@ -709,6 +721,7 @@ namespace LinqToDB
 		}
 
 		[Sql.Extension("FIRST_VALUE({expr}){_}{modifier?}", TokenName = FunctionToken, BuilderType = typeof(ApplyNullsModifier), ChainPrecedence = 1, IsWindowFunction = true, Configuration = PN.SqlServer2022)]
+		[Sql.Extension("FIRST_VALUE({expr}){_}{modifier?}", TokenName = FunctionToken, BuilderType = typeof(ForceApplyNullsModifier), ChainPrecedence = 1, IsWindowFunction = true, Configuration = PN.ClickHouse)]
 		[Sql.Extension("FIRST_VALUE({expr}{_}{modifier?})", TokenName = FunctionToken, BuilderType = typeof(ApplyNullsModifier), ChainPrecedence = 1, IsWindowFunction = true)]
 		public static IAggregateFunctionSelfContained<T> FirstValue<T>(this Sql.ISqlExtension? ext, [ExprParameter] T expr, [SqlQueryDependent] Sql.Nulls nulls)
 		{
@@ -746,6 +759,7 @@ namespace LinqToDB
 		}
 
 		[Sql.Extension("LAST_VALUE({expr}){_}{modifier?}", TokenName = FunctionToken, BuilderType = typeof(ApplyNullsModifier), ChainPrecedence = 1, IsWindowFunction = true, Configuration = PN.SqlServer2022)]
+		[Sql.Extension("LAST_VALUE({expr}){_}{modifier?}", TokenName = FunctionToken, BuilderType = typeof(ForceApplyNullsModifier), ChainPrecedence = 1, IsWindowFunction = true, Configuration = PN.ClickHouse)]
 		[Sql.Extension("LAST_VALUE({expr}{_}{modifier?})", TokenName = FunctionToken, BuilderType = typeof(ApplyNullsModifier), ChainPrecedence = 1, IsWindowFunction = true)]
 		public static IAggregateFunctionSelfContained<T> LastValue<T>(this Sql.ISqlExtension? ext, [ExprParameter] T expr, [SqlQueryDependent] Sql.Nulls nulls)
 		{

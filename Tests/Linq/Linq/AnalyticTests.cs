@@ -1515,7 +1515,6 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue("https://github.com/ClickHouse/ClickHouse/issues/37950", Configuration = TestProvName.AllClickHouse)]
 		[Test]
 		public void Issue1732FirstValue([DataSources(
 			TestProvName.AllSqlServer2008Minus,
@@ -1558,7 +1557,6 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue("https://github.com/ClickHouse/ClickHouse/issues/37950", Configuration = TestProvName.AllClickHouse)]
 		[Test]
 		public void Issue1732LastValue([DataSources(
 			TestProvName.AllSqlServer2008Minus,
