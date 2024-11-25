@@ -38,6 +38,7 @@ namespace LinqToDB.EntityFrameworkCore.Internal
 
 		public static readonly MethodInfo ThenIncludeEnumerableMethodInfo = MemberHelper.MethodOfGeneric<IIncludableQueryable<object, IEnumerable<object>>>(q => q.ThenInclude<object, object, object>(null!));
 		public static readonly MethodInfo AsNoTrackingMethodInfo          = MemberHelper.MethodOfGeneric<IQueryable<object>>(q => q.AsNoTracking());
+		public static readonly MethodInfo AsTrackingMethodInfo            = MemberHelper.MethodOfGeneric<IQueryable<object>>(q => q.AsTracking());
 #if !EF31
 		public static readonly MethodInfo AsNoTrackingWithIdentityResolutionMethodInfo = MemberHelper.MethodOfGeneric<IQueryable<object>>(q => q.AsNoTrackingWithIdentityResolution());
 #endif

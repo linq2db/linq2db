@@ -193,6 +193,12 @@ namespace LinqToDB.EntityFrameworkCore.Internal
 						return Visit(node.Arguments[0]);
 					}
 
+					if (generic == ReflectionMethods.AsTrackingMethodInfo)
+					{
+						Tracking = true;
+						return Visit(node.Arguments[0]);
+					}
+
 					if (generic == Methods.LinqToDB.RemoveOrderBy)
 					{
 						// This is workaround. EagerLoading runs query again with RemoveOrderBy method.
@@ -239,10 +245,10 @@ namespace LinqToDB.EntityFrameworkCore.Internal
 					var evaluated = node.EvaluateExpression();
 					if (evaluated is IQueryable query)
 					{
-						if (ExpressionEqualityComparer.Instance.Equals(query.Expression, node))
-							return node;
-
-						return Visit(query.Expression);
+						if (!ExpressionEqualityComparer.Instance.Equals(query.Expression, node))
+						{
+							return Visit(query.Expression);
+						}
 					}
 				}
 			}
