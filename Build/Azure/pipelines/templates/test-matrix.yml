@@ -155,13 +155,13 @@ jobs:
           title: Access ACE (ODBC-only) x64 # x64 OLEDB crashes randomly https://github.com/dotnet/runtime/issues/46187
           config_win: access.ace.x64
           psscript_win_global: access.ace.x64.ps1
-          enable_os_windows: true
+          enable_os_windows: false # true # disabled due to https://github.com/dotnet/runtime/issues/46187
           enable_os_ubuntu: false
           enable_os_macos: false
-          enable_fw_netfx: false # true # disabled due to https://github.com/dotnet/runtime/issues/46187
-          enable_fw_net60: false # true # disabled due to https://github.com/dotnet/runtime/issues/46187
-          enable_fw_net80: false # true # disabled due to https://github.com/dotnet/runtime/issues/46187
-          enable_fw_net90: false # true # disabled due to https://github.com/dotnet/runtime/issues/46187
+          enable_fw_netfx: true
+          enable_fw_net60: true
+          enable_fw_net80: true
+          enable_fw_net90: true
           extra: --arch x64
           retry: true # x64 provider could crash with AV
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[access.all]')) }}:

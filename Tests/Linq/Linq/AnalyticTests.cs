@@ -1557,6 +1557,7 @@ namespace Tests.Linq
 			}
 		}
 
+		[ActiveIssue("ClickHouse works unstable", Configuration =TestProvName.AllClickHouse)]
 		[Test]
 		public void Issue1732LastValue([DataSources(
 			TestProvName.AllSqlServer2008Minus,

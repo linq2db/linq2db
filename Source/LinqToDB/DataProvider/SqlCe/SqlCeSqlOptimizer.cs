@@ -140,10 +140,25 @@ namespace LinqToDB.DataProvider.SqlCe
 									}
 								}
 
-								// https://learn.microsoft.com/en-us/previous-versions/sql/sql-server-2005/ms173288(v=sql.90)
-								// The ORDER BY clause can include items not appearing in the select list
-								// could we have anything except SqlTable for CE?
-								q.OrderBy.ExprAsc(((SqlTable)source).Fields[0]);
+								for (var i = 0; i < q.Select.Columns.Count; i++)
+								{
+									var sqlExpression = q.Select.Columns[i].Expression;
+
+									if (!QueryHelper.ContainsAggregationOrWindowFunction(sqlExpression) && sqlExpression is not SqlValue)
+									{
+										q.OrderBy.ExprAsc(sqlExpression);
+										break;
+									}
+								}
+
+								if (q.OrderBy.IsEmpty && !q.Select.IsDistinct)
+								{
+									// https://learn.microsoft.com/en-us/previous-versions/sql/sql-server-2005/ms173288(v=sql.90)
+									// 1. The ORDER BY clause can include items not appearing in the select list
+									// 2. but: for DISTINCT, ORDER BY could contain only selected columns
+									// TODO: could we have anything except SqlTable for CE?
+									q.OrderBy.ExprAsc(((SqlTable)source).Fields[0]);
+								}
 							}
 
 							// looks like SqlCE do not allow '*' for grouped records

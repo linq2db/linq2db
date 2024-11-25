@@ -3112,7 +3112,7 @@ FROM
 				.Property(x => x.NestedTypeId)
 				.Association(x => x.Nested, x => x.NestedTypeId, x => x!.Id);
 
-			using var db = GetDataConnection(context, fluentMappingBuilder.MappingSchema);
+			using var db = GetDataContext(context, fluentMappingBuilder.MappingSchema);
 
 			using var table = db.CreateLocalTable<Issue4585TableBase>();
 			using var table1 = db.CreateLocalTable<Issue4585TableNested>();
