@@ -731,7 +731,7 @@ namespace LinqToDB.Linq.Builder
 			public override Expression VisitSqlPlaceholderExpression(SqlPlaceholderExpression node)
 			{
 				if (node.TrackingPath != null)
-					node.WithTrackingPath(Visit(node.TrackingPath));
+					return node.WithTrackingPath(Visit(node.TrackingPath));
 
 				return node;
 			}

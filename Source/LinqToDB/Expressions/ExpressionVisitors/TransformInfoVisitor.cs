@@ -405,7 +405,7 @@ namespace LinqToDB.Expressions
 						var memberType = ma.Member.GetMemberType();
 						if (ex.Type != memberType)
 							ex = Expression.Convert(ex, memberType);
-						ma.Update(ex);
+						ma = ma.Update(ex);
 					}
 
 					return ma;
