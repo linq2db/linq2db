@@ -1,4 +1,6 @@
-<#@ include file="LinqToDB.ttinclude" once="true" #>
+<#@ assembly name="$(LinqToDBT4DB2ClientPath)IBM.Data.DB2.DLL"                    #>
+<#@ include file="$(LinqToDBT4TemplatesPath)LinqToDB.ttinclude" once="true"       #>
+<#@ include file="$(LinqToDBT4TemplatesPath)LinqToDB.Tools.ttinclude" once="true" #>
 <#+
 LinqToDB.Data.DataConnection GetInformixConnection(string connectionString, LinqToDB.DataProvider.Informix.InformixProvider provider)
 {

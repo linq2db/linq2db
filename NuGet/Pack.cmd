@@ -49,8 +49,6 @@ if %errorlevel% neq 0 exit
 if %errorlevel% neq 0 exit
 ..\Redist\nuget.exe Pack %NUSPECS%\linq2db.Informix.nuspec -OutputDirectory %NUGETS%
 if %errorlevel% neq 0 exit
-..\Redist\nuget.exe Pack %NUSPECS%\linq2db.Informix.Core.nuspec -OutputDirectory %NUGETS%
-if %errorlevel% neq 0 exit
 ..\Redist\nuget.exe Pack %NUSPECS%\linq2db.MySql.nuspec -OutputDirectory %NUGETS%
 if %errorlevel% neq 0 exit
 ..\Redist\nuget.exe Pack %NUSPECS%\linq2db.MySqlConnector.nuspec -OutputDirectory %NUGETS%

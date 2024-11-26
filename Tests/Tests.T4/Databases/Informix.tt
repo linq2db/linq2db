@@ -6,6 +6,6 @@
 <#
 	NamespaceName = "InformixDataContext";
 
-	LoadInformixMetadata(GetConnectionString("Informix"));
+	LoadInformixMetadata(GetConnectionString("Informix.DB2"));
 	GenerateModel();
 #>

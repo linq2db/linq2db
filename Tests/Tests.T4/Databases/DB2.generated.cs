@@ -24,6 +24,9 @@ namespace DB2DataContext
 {
 	public partial class TESTDATADB : LinqToDB.Data.DataConnection
 	{
+		#region Tables
+
+		#endregion
 
 		#region Schemas
 
@@ -35,6 +38,8 @@ namespace DB2DataContext
 		}
 
 		#endregion
+
+		#region .ctor
 
 		public TESTDATADB()
 		{
@@ -69,6 +74,8 @@ namespace DB2DataContext
 
 		partial void InitDataContext  ();
 		partial void InitMappingSchema();
+
+		#endregion
 	}
 
 	public static partial class DB2INST1Schema

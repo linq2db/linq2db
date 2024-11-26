@@ -1,2 +1,1 @@
-<#@ include file="$(LinqToDBT4TemplatesPath)LinqToDB.Tools.ttinclude"    once="true" #>
-<#@ include file="$(LinqToDBT4TemplatesPath)LinqToDB.Informix.ttinclude" once="true" #>
+<#@ include file="$(LinqToDBT4InformixTemplatesPath)LinqToDB.Informix.ttinclude" once="true" #>

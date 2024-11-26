@@ -1,10 +1,15 @@
-<#@ template language="C#" debug="True" hostSpecific="True"                    #>
-<#@ CleanupBehavior processor="T4VSHost" CleanupAfterProcessingtemplate="true" #>
-<#@ output extension=".generated.cs"                                           #>
-
-<#@ include file="$(LinqToDBT4InformixTemplatesPath)LinqToDB.Informix.Tools.ttinclude" once="true" #>
-<#@ include file="$(LinqToDBT4TemplatesPath)PluralizationService.ttinclude"            once="true" #>
+<#@ template language="C#" debug="True" hostSpecific="True"                                  #>
+<#@ CleanupBehavior processor="T4VSHost" CleanupAfterProcessingtemplate="true"               #>
+<#@ output extension=".generated.cs"                                                         #>
+<#@ include file="$(LinqToDBT4InformixTemplatesPath)LinqToDB.Informix.ttinclude" once="true" #>
+<#@ include file="$(LinqToDBT4TemplatesPath)PluralizationService.ttinclude"      once="true" #>
 <#
+	// Install linq2db nuget package.
+	// Install one of the following packages:
+	// https://www.nuget.org/packages/IBM.Data.DB.Provider for .NET Framework provider
+	// https://www.nuget.org/packages/IBM.Data.DB2.Core    for .NET Core Windows provider
+	// https://www.nuget.org/packages/Net5.IBM.Data.Db2    for .NET 5+ Windows provider
+	// https://www.nuget.org/packages/Net.IBM.Data.Db2     for .NET 6+ Windows provider
 	// See LinqToDB.Templates/README.md for more details.
 
 	// Configuring schema load process
@@ -16,6 +21,7 @@
 	NamespaceName        = "DataModels";
 //	DataContextName      = "MyDB";
 	GenerateSchemaAsType = true;
+//	GetDataOptionsMethod = "GetDataOptions({0})";
 
 	// Loading metadata
 	//
