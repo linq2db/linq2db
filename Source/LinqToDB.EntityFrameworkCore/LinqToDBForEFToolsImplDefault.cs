@@ -87,7 +87,7 @@ namespace LinqToDB.EntityFrameworkCore
 		readonly ConcurrentDictionary<ProviderKey, IDataProvider> _knownProviders = new();
 
 		private readonly MemoryCache _schemaCache = new(
-			new Microsoft.Extensions.Caching.Memory.MemoryCacheOptions()
+			new MemoryCacheOptions()
 			{
 				ExpirationScanFrequency = TimeSpan.FromHours(1.0)
 			});
@@ -425,7 +425,7 @@ namespace LinqToDB.EntityFrameworkCore
 			(
 				Expression.New
 				(
-					DataParameterConstructor,
+					ReflectionMethods.DataParameterConstructor,
 					Expression.Constant("Conv", typeof(string)),
 					valueExpression,
 					Expression.Constant(dataType.Type.DataType, typeof(DataType)),
@@ -481,57 +481,6 @@ namespace LinqToDB.EntityFrameworkCore
 		{
 			return context?.GetService<IDbContextOptions>();
 		}
-
-#if EF31
-		static readonly MethodInfo FromSqlOnQueryableMethodInfo = typeof(RelationalQueryableExtensions).GetMethods(BindingFlags.Static|BindingFlags.NonPublic).Single(x => x.Name == "FromSqlOnQueryable").GetGenericMethodDefinition();
-#endif
-
-		static readonly MethodInfo IgnoreQueryFiltersMethodInfo = MemberHelper.MethodOfGeneric<IQueryable<object>>(q => q.IgnoreQueryFilters());
-		static readonly MethodInfo IncludeMethodInfo            = MemberHelper.MethodOfGeneric<IQueryable<object>>(q => q.Include(o => o));
-		static readonly MethodInfo IncludeMethodInfoString      = MemberHelper.MethodOfGeneric<IQueryable<object>>(q => q.Include(string.Empty));
-		static readonly MethodInfo ThenIncludeMethodInfo        = MemberHelper.MethodOfGeneric<IIncludableQueryable<object, object>>(q => q.ThenInclude<object, object, object>(null!));
-		static readonly MethodInfo TagWithMethodInfo            = MemberHelper.MethodOfGeneric<IQueryable<object>>(q => q.TagWith(string.Empty));
-
-#if !EF31
-		static readonly MethodInfo AsSplitQueryMethodInfo = MemberHelper.MethodOfGeneric<IQueryable<object>>(q => q.AsSplitQuery());
-
-		static readonly MethodInfo AsSingleQueryMethodInfo = MemberHelper.MethodOfGeneric<IQueryable<object>>(q => q.AsSingleQuery());
-#endif
-
-		static readonly MethodInfo ThenIncludeEnumerableMethodInfo              = MemberHelper.MethodOfGeneric<IIncludableQueryable<object, IEnumerable<object>>>(q => q.ThenInclude<object, object, object>(null!));
-		static readonly MethodInfo AsNoTrackingMethodInfo                       = MemberHelper.MethodOfGeneric<IQueryable<object>>(q => q.AsNoTracking());
-#if !EF31
-		static readonly MethodInfo AsNoTrackingWithIdentityResolutionMethodInfo = MemberHelper.MethodOfGeneric<IQueryable<object>>(q => q.AsNoTrackingWithIdentityResolution());
-#endif
-
-		static readonly MethodInfo EFProperty = MemberHelper.MethodOfGeneric(() => EF.Property<object>(1, ""));
-
-		static readonly MethodInfo L2DBFromSqlMethodInfo = MemberHelper.MethodOfGeneric<IDataContext>(dc => dc.FromSql<object>(new Common.RawSqlString()));
-
-		static readonly ConstructorInfo RawSqlStringConstructor = MemberHelper.ConstructorOf(() => new Common.RawSqlString(""));
-
-		static readonly ConstructorInfo DataParameterConstructor = MemberHelper.ConstructorOf(() => new DataParameter("", "", DataType.Undefined, ""));
-
-		static readonly MethodInfo ToSql = MemberHelper.MethodOfGeneric(() => Sql.ToSql(1));
-
-#if !EF31
-		private static readonly MethodInfo AsSqlServerTable    = MemberHelper.MethodOfGeneric<ITable<object>>(q => DataProvider.SqlServer.SqlServerTools.AsSqlServer(q));
-		private static readonly MethodInfo TemporalAsOfTable   = MemberHelper.MethodOfGeneric<ISqlServerSpecificTable<object>>(t => SqlServerHints.TemporalTableAsOf(t, default));
-		private static readonly MethodInfo TemporalFromTo      = MemberHelper.MethodOfGeneric<ISqlServerSpecificTable<object>>(t => SqlServerHints.TemporalTableFromTo(t, default, default));
-		private static readonly MethodInfo TemporalBetween     = MemberHelper.MethodOfGeneric<ISqlServerSpecificTable<object>>(t => SqlServerHints.TemporalTableBetween(t, default, default));
-		private static readonly MethodInfo TemporalContainedIn = MemberHelper.MethodOfGeneric<ISqlServerSpecificTable<object>>(t => SqlServerHints.TemporalTableContainedIn(t, default, default));
-		private static readonly MethodInfo TemporalAll         = MemberHelper.MethodOfGeneric<ISqlServerSpecificTable<object>>(t => SqlServerHints.TemporalTableAll(t));
-#endif
-
-		private static readonly Func<object?, object?> ContextDependenciesGetValueMethod = (typeof(RelationalQueryContextFactory)
-#if !EF31
-			.GetProperty("Dependencies", BindingFlags.NonPublic | BindingFlags.Instance)
-				?? throw new LinqToDBForEFToolsException($"Can not find protected property '{nameof(RelationalQueryContextFactory)}.Dependencies' in current EFCore Version.")
-#else
-			.GetField("_dependencies", BindingFlags.NonPublic | BindingFlags.Instance)
-				?? throw new LinqToDBForEFToolsException($"Can not find private property '{nameof(RelationalQueryContextFactory)}._dependencies' in current EFCore Version.")
-#endif
-			).GetValue;
 
 		/// <summary>
 		/// Removes conversions from expression.
@@ -647,43 +596,6 @@ namespace LinqToDB.EntityFrameworkCore
 			return newExpression;
 		}
 
-		static Expression EnsureEnumerable(Expression expression, MappingSchema mappingSchema)
-		{
-			var enumerable = typeof(IEnumerable<>).MakeGenericType(GetEnumerableElementType(expression.Type, mappingSchema));
-			if (expression.Type != enumerable)
-				expression = Expression.Convert(expression, enumerable);
-			return expression;
-		}
-
-		static LambdaExpression EnsureEnumerable(LambdaExpression lambda, MappingSchema mappingSchema)
-		{
-			var newBody = EnsureEnumerable(lambda.Body, mappingSchema);
-			if (newBody != lambda.Body)
-				lambda = Expression.Lambda(newBody, lambda.Parameters);
-			return lambda;
-		}
-
-
-		static Type GetEnumerableElementType(Type type, MappingSchema mappingSchema)
-		{
-			if (!IsEnumerableType(type, mappingSchema))
-				return type;
-			if (type.IsArray)
-				return type.GetElementType()!;
-			if (typeof(IGrouping<,>).IsSameOrParentOf(type))
-				return type.GetGenericArguments()[1];
-			return type.GetGenericArguments()[0];
-		}
-
-		static bool IsEnumerableType(Type type, MappingSchema mappingSchema)
-		{
-			if (mappingSchema.IsScalarType(type))
-				return false;
-			if (!typeof(IEnumerable<>).IsSameOrParentOf(type))
-				return false;
-			return true;
-		}
-
 		/// <summary>
 		/// Extracts <see cref="DbContext"/> instance from <see cref="IQueryable"/> object.
 		/// Due to unavailability of integration API in EF Core this method use reflection and could became broken after EF Core update.
@@ -700,7 +612,7 @@ namespace LinqToDB.EntityFrameworkCore
 			if (queryContextFactoryField.GetValue(compiler) is not RelationalQueryContextFactory queryContextFactory)
 				throw new LinqToDBForEFToolsException("LinqToDB Tools for EFCore support only Relational Databases.");
 
-			var dependencies = (QueryContextDependencies)ContextDependenciesGetValueMethod(queryContextFactory)!;
+			var dependencies = (QueryContextDependencies)ReflectionMethods.ContextDependenciesGetValueMethod(queryContextFactory)!;
 
 			return dependencies.CurrentContext?.Context;
 		}

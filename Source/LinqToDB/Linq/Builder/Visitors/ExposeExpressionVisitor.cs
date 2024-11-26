@@ -844,18 +844,6 @@ namespace LinqToDB.Linq.Builder.Visitors
 
 				return base.VisitParameter(node);
 			}
-
-			protected override Expression VisitExtension(Expression node)
-			{
-				if (node.CanReduce)
-				{
-					Visit(node.Reduce());
-					return node;
-				}
-
-				CanBeEvaluated = false;
-				return node;
-			}
 		}
 
 		static Expression AliasCall(Expression expression, string? alias)

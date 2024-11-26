@@ -138,13 +138,7 @@ namespace LinqToDB.EntityFrameworkCore
 				// InheritanceMappingAttribute
 				if (_model != null)
 				{
-					foreach (var e in _model.GetEntityTypes())
-					{
-						if (GetBaseTypeRecursive(e) == et && e.GetDiscriminatorValue() != null)
-						{
-							result.AddRange(GetMappingAttributesRecursive(e));
-						}
-					}
+					result.AddRange(LoadInheritanceAttributes(et));
 				}
 			}
 			else
@@ -158,33 +152,37 @@ namespace LinqToDB.EntityFrameworkCore
 			return result == null ? [] : result.ToArray();
 		}
 
-		static IEntityType GetBaseTypeRecursive(IEntityType entityType)
+		private IEnumerable<InheritanceMappingAttribute> LoadInheritanceAttributes(IEntityType entityType)
 		{
-			if (entityType.BaseType == null)
-				return entityType;
-			return GetBaseTypeRecursive(entityType.BaseType);
-		}
-		
-		static List<InheritanceMappingAttribute> GetMappingAttributesRecursive(IEntityType entityType)
-		{
-			var mappings = new List<InheritanceMappingAttribute>();
-			return ProcessEntityType(entityType);
+			Dictionary<Type, InheritanceMappingAttribute>? inheritanceAttributes = null;
 
-			List<InheritanceMappingAttribute> ProcessEntityType(IEntityType et)
+			foreach (var e in _model!.GetEntityTypes())
 			{
-				if (!et.ClrType.IsAbstract)
+				var baseType = e;
+				while (baseType.BaseType != null)
+					baseType = baseType.BaseType;
+
+				if (baseType == entityType && e.GetDiscriminatorValue() != null)
 				{
-					mappings.Add(new()
+					var entity = e;
+
+					while (!entity.ClrType.IsAbstract && inheritanceAttributes?.ContainsKey(entity.ClrType) != true)
 					{
-						Type = et.ClrType,
-						Code = entityType.GetDiscriminatorValue()
-					});
+						(inheritanceAttributes ??= new()).Add(entity.ClrType, new()
+						{
+							Type = entity.ClrType,
+							Code = entity.GetDiscriminatorValue()
+						});
+
+						if (entity.BaseType == null)
+							break;
+
+						entity = entity.BaseType;
+					}
 				}
-				
-				if (et.BaseType == null)
-					return mappings;
-				return ProcessEntityType(et.BaseType);
 			}
+
+			return (IEnumerable<InheritanceMappingAttribute>?)inheritanceAttributes?.Values ?? [];
 		}
 
 		static bool CompareProperty(MemberInfo? property, MemberInfo memberInfo)

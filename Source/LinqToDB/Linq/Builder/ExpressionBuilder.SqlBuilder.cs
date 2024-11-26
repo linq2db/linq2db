@@ -597,7 +597,7 @@ namespace LinqToDB.Linq.Builder
 
 			var mapping = new List<InheritanceMapping>(inheritanceMapping.Count);
 			foreach (var m in inheritanceMapping)
-				if (m.Type == toType && !m.IsDefault)
+				if (toType.IsAssignableFrom(m.Type) && !m.IsDefault)
 					mapping.Add(m);
 
 			switch (mapping.Count)

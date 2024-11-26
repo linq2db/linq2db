@@ -152,7 +152,6 @@ namespace LinqToDB.EntityFrameworkCore.Internal
 			{
 				if (node.Method.IsGenericMethod)
 				{
-
 					if (generic == ReflectionMethods.IncludeMethodInfoString)
 					{
 						var arguments = new List<Expression>(2) { node.Arguments[0] };
@@ -185,7 +184,7 @@ namespace LinqToDB.EntityFrameworkCore.Internal
 
 					if (generic == ReflectionMethods.AsNoTrackingMethodInfo
 #if !EF31
-									|| generic == ReflectionMethods.AsNoTrackingWithIdentityResolutionMethodInfo
+						|| generic == ReflectionMethods.AsNoTrackingWithIdentityResolutionMethodInfo
 #endif
 						)
 					{
@@ -289,11 +288,6 @@ namespace LinqToDB.EntityFrameworkCore.Internal
 
 			if (newArguments != null)
 				node = node.Update(node.Object, newArguments);
-
-			if (node.Method.Name == "TemporalFromTo")
-			{
-
-			}
 
 			return base.VisitMethodCall(node);
 		}
