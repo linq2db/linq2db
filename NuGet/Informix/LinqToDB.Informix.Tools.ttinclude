@@ -1,1 +1,4 @@
 <#@ include file="$(LinqToDBT4InformixTemplatesPath)LinqToDB.Informix.ttinclude" once="true" #>
+<#+
+#warning 'LinqToDB.Informix.Tools.ttinclude' is obsolete. Use 'LinqToDB.Informix.ttinclude' instead.
+#>

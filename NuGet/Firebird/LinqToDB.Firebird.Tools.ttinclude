@@ -1,1 +1,4 @@
 <#@ include file="$(LinqToDBT4FirebirdTemplatesPath)LinqToDB.Firebird.ttinclude" once="true"   #>
+<#+
+#warning 'LinqToDB.Firebird.Tools.ttinclude' is obsolete. Use 'LinqToDB.Firebird.ttinclude' instead.
+#>

@@ -1,5 +1,6 @@
-<#@ include file="LinqToDB.ttinclude" once="true" #>
-<#@ import namespace="LinqToDB"                   #>
+<#@ assembly name="$(LinqToDBT4MySqlConnectorClientPath)MySqlConnector.dll"       #>
+<#@ include file="$(LinqToDBT4TemplatesPath)LinqToDB.ttinclude" once="true"       #>
+<#@ include file="$(LinqToDBT4TemplatesPath)LinqToDB.Tools.ttinclude" once="true" #>
 <#+
 LinqToDB.Data.DataConnection GetMySqlConnection(string connectionString)
 {
