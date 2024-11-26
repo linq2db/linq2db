@@ -292,21 +292,6 @@ namespace Tests
 		}
 	}
 
-	public class GenerateExpressionTest : IDisposable
-	{
-		private readonly bool _oldValue = Configuration.Linq.GenerateExpressionTest;
-
-		public GenerateExpressionTest(bool enable)
-		{
-			Configuration.Linq.GenerateExpressionTest = enable;
-		}
-
-		public void Dispose()
-		{
-			Configuration.Linq.GenerateExpressionTest = _oldValue;
-		}
-	}
-
 	public class DoNotClearOrderBys : IDisposable
 	{
 		private readonly bool _oldValue = Configuration.Linq.DoNotClearOrderBys;

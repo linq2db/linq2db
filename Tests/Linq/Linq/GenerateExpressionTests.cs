@@ -15,8 +15,7 @@ namespace Tests.Linq
 		[Test]
 		public void Test1([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
-			using(new GenerateExpressionTest(true))
-			using (var db = GetDataContext(context))
+			using (var db = GetDataContext(context, o => o.UseGenerateExpressionTest(true)))
 			{
 				var q2 =
 					from gc1 in db.GrandChild
@@ -68,8 +67,7 @@ namespace Tests.Linq
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4322")]
 		public void Issue4322Test([DataSources] string context)
 		{
-			using var _ = new GenerateExpressionTest(true);
-			using var db = GetDataContext(context);
+			using var db = GetDataContext(context, o => o.UseGenerateExpressionTest(true));
 
 			var example = new Vector2[] { new Vector2 {X = -10f, Y = 10f} };
 
