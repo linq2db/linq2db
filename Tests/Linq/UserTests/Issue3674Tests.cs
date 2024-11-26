@@ -11,7 +11,7 @@ namespace Tests.UserTests
 	[TestFixture]
 	public class Issue3674Tests : TestBase
 	{
-		// access disabled as it is in-process provider and needs to use our stack, which is very limited here
+		// access needs more stack  as it is in-process provider and needs to use our stack
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3674")]
 		public void InThread([DataSources(false, TestProvName.AllAccess)] string context)
 		{
@@ -23,7 +23,14 @@ namespace Tests.UserTests
 			// e.g. now it required 130Kb (release) / 190Kb (debug) of memory
 			// Note that stack use could depend on provider, so we test all of them
 			// UPDATE: after fixes of binary expression aggregation implementation it works with 70K limit (debug, net9.0)
-			var thread = new Thread(ThreadBody, 80 * 1024);
+
+			var size = 80 * 1024;
+
+			// octonica provider needs some extra stack space
+			if (context.IsAnyOf(ProviderName.ClickHouseOctonica))
+				size += 10 * 1024;
+
+			var thread = new Thread(ThreadBody, size);
 			thread.Start(tb);
 			thread.Join();
 		}

@@ -761,6 +761,7 @@ jobs:
           enable_fw_net60: true
           enable_fw_net80: true
           enable_fw_net90: true
+          retry: true # 26/1/2024: temporary: some issues with debian image
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[db2.all]')) }}:
             enabled: true
           ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[db2.all]'))) }}:
@@ -783,6 +784,7 @@ jobs:
           enable_fw_net60: true
           enable_fw_net80: true
           enable_fw_net90: true
+          retry: true # 26/1/2024: temporary: some issues with debian image
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[informix.all]')) }}:
             enabled: true
           ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[informix.all]'))) }}:

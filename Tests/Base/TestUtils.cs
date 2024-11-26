@@ -3,18 +3,20 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
-using System.Text.RegularExpressions;
 using System.Threading;
 
 using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.DataProvider.Firebird;
 
+using NUnit.Framework;
+
 namespace Tests
 {
 	using Model;
 #if NETFRAMEWORK
 	using Model.Remote.Wcf;
+
 #else
 	using Model.Remote.Grpc;
 #endif
@@ -358,6 +360,8 @@ namespace Tests
 		public static string? GetLastTestCase()
 		{
 			var fileName = GetTestFilePath();
+
+			TestContext.Out.WriteLine($"Test expression file: {fileName} ({File.Exists(fileName)})");
 
 			if (File.Exists(fileName))
 				return File.ReadAllText(fileName);

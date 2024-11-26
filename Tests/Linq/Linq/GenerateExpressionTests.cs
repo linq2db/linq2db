@@ -78,6 +78,7 @@ namespace Tests.Linq
 			// this works
 			TestUtils.DeleteTestCases();
 			var testCase = query.GenerateTestString();
+			Assert.That(testCase, Is.Not.Null);
 			// ignore generated exception
 			testCase = testCase!.Replace("throw new NotImplementedException", string.Empty);
 			Assert.That(testCase, Does.Not.Contain("Exception"));

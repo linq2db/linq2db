@@ -800,7 +800,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 		}
 
 #if NET8_0_OR_GREATER
-		[ActiveIssue]
+		[ActiveIssue(Configurations = [TestProvName.AllMySql, TestProvName.AllSQLite, TestProvName.AllPostgreSQL])]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4663")]
 		public void Issue4663Test([EFDataSources] string provider)
 		{
@@ -861,7 +861,9 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 				.Merge();
 		}
 
+#if NET8_0_OR_GREATER
 		[ActiveIssue]
+#endif
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4668")]
 		public void Issue4668Test([EFDataSources] string provider)
 		{
