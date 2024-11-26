@@ -349,9 +349,7 @@ namespace Tests
 
 		public static void DeleteTestCases()
 		{
-			// sync logic with ExpressionTestGenerator.GenerateSource
-			var dir = Path.Combine(Path.GetTempPath(), "linq2db\\");
-			var fileName = Path.Combine(dir, FormattableString.Invariant($"ExpressionTest.0.cs"));
+			var fileName = GetTestFilePath();
 
 			if (File.Exists(fileName))
 				File.Delete(fileName);
@@ -359,14 +357,23 @@ namespace Tests
 
 		public static string? GetLastTestCase()
 		{
-			// sync logic with ExpressionTestGenerator.GenerateSource
-			var dir = Path.Combine(Path.GetTempPath(), "linq2db\\");
-			var fileName = Path.Combine(dir, FormattableString.Invariant($"ExpressionTest.0.cs"));
+			var fileName = GetTestFilePath();
 
 			if (File.Exists(fileName))
 				return File.ReadAllText(fileName);
 
 			return null;
+		}
+
+		// sync logic with ExpressionTestGenerator.GetTestFilePath
+		static string GetTestFilePath()
+		{
+			var dir = Path.Combine(Path.GetTempPath(), "linq2db");
+
+			if (!Directory.Exists(dir))
+				Directory.CreateDirectory(dir);
+
+			return Path.Combine(dir, FormattableString.Invariant($"ExpressionTest.0.cs"));
 		}
 	}
 }

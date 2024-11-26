@@ -203,7 +203,6 @@ namespace Tests.UserTests
 			}
 		}
 
-		//[Explicit("Could fail on non-utf8 locales")]
 		[SkipCI("Used docker image needs locale configuration")]
 		[Test]
 		public void Test_InsertOrUpdate([IncludeDataSources(TestProvName.AllInformix)] string context)
@@ -220,8 +219,7 @@ namespace Tests.UserTests
 			}
 		}
 
-		//[Explicit("Could fail on non-utf8 locales")]
-		[SkipCI("Used docker image needs locale configuration")]
+		[ActiveIssue("Used docker image needs locale configuration")]
 		[Test]
 		public void Test_Inline([IncludeDataSources(TestProvName.AllInformix)] string context)
 		{

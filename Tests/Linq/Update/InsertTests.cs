@@ -2462,7 +2462,9 @@ namespace Tests.xUpdate
 			[Column] public string? Text { get; set; }
 		}
 
-		[ActiveIssue(Details = "Update test to test different RetrieveIdentity modes for all providers with sequences")]
+		[ActiveIssue(
+			Details = "Update test to test different RetrieveIdentity modes for all providers with sequences",
+			Configurations = [TestProvName.AllFirebird, TestProvName.AllAccess, TestProvName.AllDB2, TestProvName.AllPostgreSQL, ProviderName.SqlCe, TestProvName.AllSqlServer, TestProvName.AllSapHana])]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4702")]
 		public void Issue4702Test([DataSources(false)] string context, [Values] bool useSequence)
 		{

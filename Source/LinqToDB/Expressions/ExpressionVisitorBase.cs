@@ -71,17 +71,11 @@ namespace LinqToDB.Expressions
 		{
 			var assignments = Visit(node.Assignments, VisitSqlGenericAssignment);
 
-			if (!ReferenceEquals(assignments, node.Assignments))
-			{
-				node = node.ReplaceAssignments(assignments.ToList());
-			}
+			node = node.ReplaceAssignments(assignments);
 
 			var parameters = Visit(node.Parameters, VisitSqlGenericParameter);
 
-			if (!ReferenceEquals(parameters, node.Parameters))
-			{
-				node = node.ReplaceParameters(parameters.ToList());
-			}
+			node = node.ReplaceParameters(parameters);
 
 			return node;
 		}

@@ -7,6 +7,7 @@ using System.Linq.Expressions;
 namespace LinqToDB.Linq.Builder
 {
 	using Extensions;
+	using LinqToDB.Common.Internal;
 	using LinqToDB.Expressions;
 	using Mapping;
 	using SqlQuery;
@@ -165,7 +166,7 @@ namespace LinqToDB.Linq.Builder
 
 					if (assignments != null)
 					{
-						generic = generic.ReplaceAssignments(assignments);
+						generic = generic.ReplaceAssignments(assignments.AsReadOnly());
 					}
 
 					for (var i = 0; i < generic.Parameters.Count; i++)
@@ -200,7 +201,7 @@ namespace LinqToDB.Linq.Builder
 
 					if (parameters != null)
 					{
-						generic = generic.ReplaceParameters(parameters);
+						generic = generic.ReplaceParameters(parameters.AsReadOnly());
 					}
 
 					return generic;
@@ -406,12 +407,12 @@ namespace LinqToDB.Linq.Builder
 
 				if (assignments != null)
 				{
-					generic = generic.ReplaceAssignments(assignments);
+					generic = generic.ReplaceAssignments(assignments.AsReadOnly());
 				}
 
 				if (parameters != null)
 				{
-					generic = generic.ReplaceParameters(parameters);
+					generic = generic.ReplaceParameters(parameters.AsReadOnly());
 				}
 
 				generic = generic.WithConstructionRoot(toPath);
@@ -525,12 +526,12 @@ namespace LinqToDB.Linq.Builder
 
 					if (assignments != null)
 					{
-						generic = generic.ReplaceAssignments(assignments);
+						generic = generic.ReplaceAssignments(assignments.AsReadOnly());
 					}
 
 					if (parameters != null)
 					{
-						generic = generic.ReplaceParameters(parameters);
+						generic = generic.ReplaceParameters(parameters.AsReadOnly());
 					}
 
 					generic = generic.WithConstructionRoot(toPath);
@@ -674,39 +675,69 @@ namespace LinqToDB.Linq.Builder
 			return toPath;
 		}
 
+		#region ReplaceContext
+
 		public static Expression ReplaceContext(Expression expression, IBuildContext current, IBuildContext onContext)
 		{
-			var newExpression = expression.Transform((expression, current, onContext), (ctx, e) =>
+			using var visitor = _replaceContextVisitorPool.Allocate();
+
+			return visitor.Value.ReplaceContext(expression, current, onContext);
+		}
+
+		static ObjectPool<ReplaceContextVisitor> _replaceContextVisitorPool = new(() => new ReplaceContextVisitor(), v => v.Cleanup(), 100);
+
+		sealed class ReplaceContextVisitor : ExpressionVisitorBase
+		{
+			IBuildContext _current   = null!;
+			IBuildContext _onContext = null!;
+
+			public Expression ReplaceContext(Expression expression, IBuildContext current, IBuildContext onContext)
 			{
-				if (e.NodeType is ExpressionType.Convert or ExpressionType.ConvertChecked)
+				_current   = current;
+				_onContext = onContext;
+
+				return Visit(expression);
+			}
+
+			public override void Cleanup()
+			{
+				_current   = null!;
+				_onContext = null!;
+
+				base.Cleanup();
+			}
+
+			protected override Expression VisitUnary(UnaryExpression node)
+			{
+				if (node.NodeType is ExpressionType.Convert or ExpressionType.ConvertChecked)
 				{
-					if (((UnaryExpression)e).Operand is ContextRefExpression contextOperand)
+					if (node.Operand is ContextRefExpression contextOperand)
 					{
-						return new TransformInfo(contextOperand.WithType(e.Type), false, true);
+						return Visit(contextOperand.WithType(node.Type));
 					}
 				}
 
-				if (e is ContextRefExpression contextRef)
-				{
-					if (contextRef.BuildContext == ctx.current)
-						return new TransformInfo(new ContextRefExpression(contextRef.Type, ctx.onContext, contextRef.Alias));
-				}
+				return base.VisitUnary(node);
+			}
 
-				if (e is SqlPlaceholderExpression { TrackingPath: { } } placeholder)
-				{
-					return new TransformInfo(placeholder
-						.WithTrackingPath(
-							ReplaceContext(
-								placeholder.TrackingPath, 
-								ctx.current, 
-								ctx.onContext)));
-				}
+			internal override Expression VisitContextRefExpression(ContextRefExpression node)
+			{
+				if (node.BuildContext == _current)
+					return new ContextRefExpression(node.Type, _onContext, node.Alias);
 
-				return new TransformInfo(e);
-			});
+				return node;
+			}
 
-			return newExpression;
+			public override Expression VisitSqlPlaceholderExpression(SqlPlaceholderExpression node)
+			{
+				if (node.TrackingPath != null)
+					node.WithTrackingPath(Visit(node.TrackingPath));
+
+				return node;
+			}
 		}
+
+		#endregion
 
 		public static Expression CorrectSelectQuery(Expression expression, SelectQuery selectQuery)
 		{

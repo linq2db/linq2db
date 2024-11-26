@@ -674,7 +674,7 @@ namespace LinqToDB.Data
 			}
 
 			if (newAssignments != null)
-				constructorExpression = constructorExpression.ReplaceAssignments(newAssignments);
+				constructorExpression = constructorExpression.ReplaceAssignments(newAssignments.AsReadOnly());
 
 			var constructed = TryConstructObject(constructorExpression, constructType, out error);
 

@@ -758,7 +758,7 @@ namespace LinqToDB.Linq.Builder.Visitors
 
 			if (_compactBinary)
 			{
-				var compacted = ExpressionTreeOptimizationContext.AggregateExpressionTransformer(node);
+				var compacted = BinaryExpressionAggregatorVisitor.Instance.Visit(node);
 				if (!ReferenceEquals(compacted, node))
 				{
 					node = (BinaryExpression)compacted;

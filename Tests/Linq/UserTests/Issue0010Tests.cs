@@ -8,12 +8,10 @@ using NUnit.Framework;
 
 namespace Tests.UserTests
 {
-	// https://github.com/linq2db/linq2db.LINQPad/issues/10
 	[TestFixture]
-	[SkipCI]
 	public class Issue0010Tests : TestBase
 	{
-		[Test, SkipCategory("Access.12")]
+		[Test(Description = "https://github.com/linq2db/linq2db.LINQPad/issues/10"), SkipCategory("Access.12")]
 		public void TestOleDb([IncludeDataSources(TestProvName.AllAccessOleDb)] string context)
 		{
 			var cs = DataConnection.GetConnectionString(context);
@@ -33,7 +31,7 @@ namespace Tests.UserTests
 			}
 		}
 
-		[Test, SkipCategory("Access.12")]
+		[Test(Description = "https://github.com/linq2db/linq2db.LINQPad/issues/10"), SkipCategory("Access.12")]
 		public void TestOdbc([IncludeDataSources(TestProvName.AllAccessOdbc)] string context)
 		{
 			var cs = DataConnection.GetConnectionString(context);

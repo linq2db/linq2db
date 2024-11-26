@@ -482,8 +482,6 @@ namespace LinqToDB.Linq
 		{
 			using var mt = ActivityService.Start(ActivityID.GetQueryTotal);
 
-			var expr = expressions.MainExpression;
-
 			ExpressionTreeOptimizationContext optimizationContext;
 			DataOptions                       dataOptions;
 			var                               queryFlags = QueryFlags.None;
@@ -492,13 +490,15 @@ namespace LinqToDB.Linq
 
 			using (ActivityService.Start(ActivityID.GetQueryFind))
 			{
+				var expr = expressions.MainExpression;
+
 				using (ActivityService.Start(ActivityID.GetQueryFindExpose))
 				{
 					optimizationContext = new ExpressionTreeOptimizationContext(dataContext);
 
 					// I hope fast tree optimization for unbalanced Binary Expressions. See Issue447Tests.
 					//
-					expr = optimizationContext.AggregateExpression(expr);
+					expr = BinaryExpressionAggregatorVisitor.Instance.Visit(expr);
 
 					dependsOnParameters = false;
 

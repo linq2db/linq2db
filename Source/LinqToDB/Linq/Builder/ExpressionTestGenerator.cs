@@ -940,22 +940,23 @@ namespace LinqToDB.Linq.Builder
 			}
 		}
 
+		static string GetTestFilePath()
+		{
+			var dir = Path.Combine(Path.GetTempPath(), "linq2db");
+
+			if (!Directory.Exists(dir))
+				Directory.CreateDirectory(dir);
+
+			return Path.Combine(dir, FormattableString.Invariant($"ExpressionTest.0.cs"));
+		}
+
 		public string? GenerateSource(Expression expr)
 		{
-			string? fileName = null;
+			var fileName = GetTestFilePath();
 			StreamWriter? sw = null;
 
 			try
 			{
-				var dir = Path.Combine(Path.GetTempPath(), "linq2db\\");
-
-				if (!Directory.Exists(dir))
-					Directory.CreateDirectory(dir);
-
-				var number = 0;//DateTime.Now.Ticks;
-
-				fileName = Path.Combine(dir, FormattableString.Invariant($"ExpressionTest.{number}.cs"));
-
 				sw = File.CreateText(fileName);
 
 				var source = GenerateSourceString(expr);
@@ -969,6 +970,10 @@ namespace LinqToDB.Linq.Builder
 					sw.WriteLine(ex.GetType());
 					sw.WriteLine(ex.Message);
 					sw.WriteLine(ex.StackTrace);
+				}
+				else
+				{
+					throw;
 				}
 			}
 			finally

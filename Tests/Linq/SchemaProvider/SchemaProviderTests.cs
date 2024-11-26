@@ -377,7 +377,6 @@ namespace Tests.SchemaProvider
 			}
 		}
 
-		[SkipCI("Unstable, depends on metadata selection order")]
 		[Test]
 		public void ForeignKeyMemberNameTest1([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{

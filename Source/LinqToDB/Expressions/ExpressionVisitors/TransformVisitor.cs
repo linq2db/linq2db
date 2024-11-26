@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Linq.Expressions;
@@ -196,17 +197,11 @@ namespace LinqToDB.Expressions
 			{
 				var assignments = Transform(this, generic.Assignments, TransformAssignments);
 
-				if (!ReferenceEquals(assignments, generic.Assignments))
-				{
-					generic = generic.ReplaceAssignments(assignments.ToList());
-				}
+				generic = generic.ReplaceAssignments(assignments);
 
 				var parameters = Transform(this, generic.Parameters, TransformParameters);
 
-				if (!ReferenceEquals(parameters, generic.Parameters))
-				{
-					generic = generic.ReplaceParameters(parameters.ToList());
-				}
+				generic = generic.ReplaceParameters(parameters);
 
 				return generic;
 			}
@@ -241,13 +236,9 @@ namespace LinqToDB.Expressions
 
 			if (expr is SqlDefaultIfEmptyExpression defaultIfEmptyExpression)
 			{
-				var inner = Transform(defaultIfEmptyExpression.InnerExpression);
-				var items = Transform(defaultIfEmptyExpression.NotNullExpressions);
-
-				return defaultIfEmptyExpression.Update(inner,
-					ReferenceEquals(items, defaultIfEmptyExpression.NotNullExpressions)
-						? defaultIfEmptyExpression.NotNullExpressions
-						: items.ToList().AsReadOnly());
+				return defaultIfEmptyExpression.Update(
+					Transform(defaultIfEmptyExpression.InnerExpression),
+					Transform(defaultIfEmptyExpression.NotNullExpressions));
 			}
 
 			return expr;
@@ -255,25 +246,22 @@ namespace LinqToDB.Expressions
 
 		private SqlGenericConstructorExpression.Assignment TransformAssignments(TransformVisitor<TContext> visitor, SqlGenericConstructorExpression.Assignment a)
 		{
-			var aExpr = Transform(a.Expression);
-			return a.WithExpression(aExpr);
+			return a.WithExpression(Transform(a.Expression));
 		}
 
 		private SqlGenericConstructorExpression.Parameter TransformParameters(TransformVisitor<TContext> visitor, SqlGenericConstructorExpression.Parameter p)
 		{
-			var aExpr = Transform(p.Expression);
-			return p.WithExpression(aExpr);
+			return p.WithExpression(Transform(p.Expression));
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private Expression TransformX(TryExpression e)
 		{
-			var b = Transform(e.Body);
-			var c = Transform(this, e.Handlers, TransformCatchBlock);
-			var f = Transform(e.Finally);
-			var t = Transform(e.Fault);
-
-			return e.Update(b, c, f, t);
+			return e.Update(
+				Transform(e.Body),
+				Transform(this, e.Handlers, TransformCatchBlock),
+				Transform(e.Finally),
+				Transform(e.Fault));
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -288,11 +276,10 @@ namespace LinqToDB.Expressions
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private Expression TransformX(SwitchExpression e)
 		{
-			var s = Transform(e.SwitchValue);
-			var c = Transform(this, e.Cases, TransformSwitchCase);
-			var d = Transform(e.DefaultBody);
-
-			return e.Update(s, c, d);
+			return e.Update(
+				Transform(e.SwitchValue),
+				Transform(this, e.Cases, TransformSwitchCase),
+				Transform(e.DefaultBody));
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -361,8 +348,7 @@ namespace LinqToDB.Expressions
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private static ElementInit TransformElementInit(TransformVisitor<TContext> visitor, ElementInit p)
 		{
-			var args = visitor.Transform(p.Arguments);
-			return args != p.Arguments ? Expression.ElementInit(p.AddMethod, args) : p;
+			return p.Update(visitor.Transform(p.Arguments));
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -402,7 +388,7 @@ namespace LinqToDB.Expressions
 				: e;
 		}
 
-		static IEnumerable<T> Transform<T>(TransformVisitor<TContext> visitor, IList<T> source, Func<TransformVisitor<TContext>, T, T> func)
+		static ReadOnlyCollection<T> Transform<T>(TransformVisitor<TContext> visitor, ReadOnlyCollection<T> source, Func<TransformVisitor<TContext>, T, T> func)
 			where T : class
 		{
 			List<T>? list = null;
@@ -419,10 +405,10 @@ namespace LinqToDB.Expressions
 				}
 			}
 
-			return list ?? source;
+			return list?.AsReadOnly() ?? source;
 		}
 
-		IEnumerable<T> Transform<T>(IList<T> source)
+		ReadOnlyCollection<T> Transform<T>(ReadOnlyCollection<T> source)
 			where T : Expression
 		{
 			List<T>? list = null;
@@ -439,7 +425,7 @@ namespace LinqToDB.Expressions
 				}
 			}
 
-			return list ?? source;
+			return list?.AsReadOnly() ?? source;
 		}
 
 		static MemberBinding Modify(TransformVisitor<TContext> visitor, MemberBinding b)
@@ -455,23 +441,15 @@ namespace LinqToDB.Expressions
 				case MemberBindingType.ListBinding:
 				{
 					var ml = (MemberListBinding) b;
-					var i  = Transform(visitor, ml.Initializers, TransformElementInit);
 
-					if (!ReferenceEquals(i, ml.Initializers))
-						ml = Expression.ListBind(ml.Member, i);
-
-					return ml;
+					return ml.Update(Transform(visitor, ml.Initializers, TransformElementInit));
 				}
 
 				case MemberBindingType.MemberBinding:
 				{
 					var mm = (MemberMemberBinding) b;
-					var bs = Transform(visitor, mm.Bindings, Modify);
 
-					if (!ReferenceEquals(bs, mm.Bindings))
-						mm = Expression.MemberBind(mm.Member, bs);
-
-					return mm;
+					return mm.Update(Transform(visitor, mm.Bindings, Modify));
 				}
 			}
 

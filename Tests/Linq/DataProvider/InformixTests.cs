@@ -470,7 +470,7 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[SkipCI("Used docker image needs locale configuration")]
+		[ActiveIssue("Used docker image needs locale configuration")]
 		[Test]
 		public void BulkCopyAllTypesMultipleRows([IncludeDataSources(TestProvName.AllInformix)] string context)
 		{

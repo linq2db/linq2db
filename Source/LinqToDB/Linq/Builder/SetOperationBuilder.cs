@@ -500,7 +500,7 @@ namespace LinqToDB.Linq.Builder
 						return false;
 					}
 
-					var resultGeneric = generic1.ReplaceAssignments(resultAssignments);
+					var resultGeneric = generic1.ReplaceAssignments(resultAssignments.AsReadOnly());
 
 					if (generic1.Parameters.Count > 0)
 					{
@@ -515,7 +515,7 @@ namespace LinqToDB.Linq.Builder
 							resultParameters.Add(generic1.Parameters[i].WithExpression(mergedAssignment));
 						}
 
-						resultGeneric = resultGeneric.ReplaceParameters(resultParameters);
+						resultGeneric = resultGeneric.ReplaceParameters(resultParameters.AsReadOnly());
 					}
 
 					if (Builder.TryConstruct(MappingSchema, resultGeneric, flags) == null)
@@ -935,7 +935,7 @@ namespace LinqToDB.Linq.Builder
 							_stack.Pop();
 						}
 
-						node = node.ReplaceAssignments(newAssignments);
+						node = node.ReplaceAssignments(newAssignments.AsReadOnly());
 					}
 
 					if (node.Parameters.Count > 0)
@@ -964,7 +964,7 @@ namespace LinqToDB.Linq.Builder
 							}
 						}
 
-						node = node.ReplaceParameters(newParameters);
+						node = node.ReplaceParameters(newParameters.AsReadOnly());
 					}
 
 					_stack.Pop();

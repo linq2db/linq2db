@@ -107,7 +107,7 @@ namespace LinqToDB.Linq
 		/// <param name="accessorFunc">Function, which will used for retrieving current expression during cache comparison.</param>
 		/// <returns>Result of execution of accessorFunc</returns>
 		public Expression RegisterDynamicExpressionAccessor(Expression forExpression, IDataContext dataContext, MappingSchema mappingSchema,
-			QueryCacheCompareInfo.ExpressionAccessorFunc           accessorFunc)
+			ExpressionAccessorFunc           accessorFunc)
 		{
 			var result = accessorFunc(dataContext, mappingSchema);
 
@@ -115,7 +115,7 @@ namespace LinqToDB.Linq
 
 			if (!DynamicAccessors.ContainsKey(forExpression))
 			{
-				var info = new QueryCacheCompareInfo.DynamicExpressionInfo(_generator.GetNext(), result, mappingSchema, accessorFunc);
+				var info = new DynamicExpressionInfo(_generator.GetNext(), result, mappingSchema, accessorFunc);
 				DynamicAccessors.Add(forExpression, info);
 
 				var newRoot = Expression.Call(RootPath, nameof(IQueryExpressions.GetQueryExpression), Type.EmptyTypes, Expression.Constant(info.ExpressionId));
@@ -531,14 +531,14 @@ namespace LinqToDB.Linq
 				}
 			}
 
-			List<QueryCacheCompareInfo.DynamicExpressionInfo>? dynamicAccessors   = null;
+			List<DynamicExpressionInfo>? dynamicAccessors   = null;
 
 			var replacements = new Dictionary<Expression, ConstantPlaceholderExpression>();
 
 			if (DynamicAccessors != null)
 			{
 				var runtimeExpressions = new RuntimeExpressionsContainer(parameterExpressions.MainExpression);
-				dynamicAccessors = new List<QueryCacheCompareInfo.DynamicExpressionInfo>(DynamicAccessors.Count);
+				dynamicAccessors = new List<DynamicExpressionInfo>(DynamicAccessors.Count);
 
 				foreach (var da in DynamicAccessors.Values)
 				{
