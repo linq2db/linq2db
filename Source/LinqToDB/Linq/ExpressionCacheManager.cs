@@ -289,6 +289,7 @@ namespace LinqToDB.Linq
 
 						if (
 							iteratedName == testedName
+							&& !ExpressionEqualityComparer.Instance.Equals(pair.param, paramExpr)
 							&& pair.entry.DbDataType.Equals(entry.DbDataType)
 							&& ExpressionEqualityComparer.Instance.Equals(pair.entry.ClientToProviderConverter, entry.ClientToProviderConverter)
 							&& ExpressionEqualityComparer.Instance.Equals(pair.entry.ItemAccessor, entry.ItemAccessor)
