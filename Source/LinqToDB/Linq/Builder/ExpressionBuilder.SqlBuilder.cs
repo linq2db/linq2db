@@ -575,13 +575,13 @@ namespace LinqToDB.Linq.Builder
 		}
 
 		public ISqlPredicate MakeIsPredicate<TContext>(
-			TContext                              getSqlContext,
-			IBuildContext                         context,
-			IReadOnlyList<InheritanceMapping>     inheritanceMapping,
-			Type                                  toType,
-			Func<TContext,string, ISqlExpression> getSql)
+			TContext getSqlContext,
+			IBuildContext context,
+			IReadOnlyList<InheritanceMapping> inheritanceMapping,
+			Type toType,
+			Func<TContext, string, ISqlExpression> getSql)
 		{
-			var inverse = false;
+			var notEqual = false;
 			var discriminators = new List<object?>(inheritanceMapping.Count);
 
 			foreach (var im1 in inheritanceMapping)
@@ -590,14 +590,14 @@ namespace LinqToDB.Linq.Builder
 				{
 					if (im1.IsDefault)
 					{
-						inverse = true;
+						notEqual = true;
 						break;
 					}
 					discriminators.Add(im1.Code);
 				}
 			}
 
-			if (inverse)
+			if (notEqual)
 			{
 				discriminators.Clear();
 
@@ -615,7 +615,7 @@ namespace LinqToDB.Linq.Builder
 
 			if (discriminators.Count == 0 || discriminators.Count == inheritanceMapping.Count)
 			{
-				var all = (inverse && discriminators.Count == 0) || (!inverse && discriminators.Count == inheritanceMapping.Count);
+				var all = (notEqual && discriminators.Count == 0) || (!notEqual && discriminators.Count == inheritanceMapping.Count);
 				var allCond = new SqlSearchCondition();
 				allCond.Predicates.Add(SqlPredicate.MakeBool(all));
 				return allCond;
@@ -623,10 +623,11 @@ namespace LinqToDB.Linq.Builder
 
 			var cond = new SqlSearchCondition();
 
-			var m      = inheritanceMapping[0];
-			var values = new SqlValue[discriminators.Count];
-			var dbType = m.Discriminator.GetDbDataType(true);
-			var idx    = 0;
+			var m                 = inheritanceMapping[0];
+			var values            = new SqlValue[discriminators.Count];
+			var dbType            = m.Discriminator.GetDbDataType(true);
+			var discriminatorExpr = getSql(getSqlContext, m.DiscriminatorName);
+			var idx               = 0;
 
 			foreach (var value in discriminators)
 			{
@@ -634,14 +635,44 @@ namespace LinqToDB.Linq.Builder
 				idx++;
 			}
 
-			cond.Predicates.Add(
-				new SqlPredicate.InList(
-					getSql(getSqlContext, m.DiscriminatorName),
-					DataOptions.LinqOptions.CompareNulls == CompareNulls.LikeClr ? false : null,
-					inverse,
-					values));
+			if (values.Count(v => v.Value != null) > 1)
+			{
+				// for multiple values generate IN predicate
+				cond.Predicates.Add(
+					new SqlPredicate.InList(
+						discriminatorExpr,
+						DataOptions.LinqOptions.CompareNulls == CompareNulls.LikeClr ? false : null,
+						notEqual,
+						values));
+			}
+			else
+			{
+				// otherwise plain equals
+				foreach (var value in values)
+				{
+					cond.Predicates.Add(
+						CorrectNullability(
+							new SqlPredicate.ExprExpr(
+								discriminatorExpr,
+								notEqual ? SqlPredicate.Operator.NotEqual : SqlPredicate.Operator.Equal,
+								value,
+								withNull: true)
+						)
+					);
+				}
+			}
 
 			return cond;
+
+			static ISqlPredicate CorrectNullability(SqlPredicate.ExprExpr exprExpr)
+			{
+				if (exprExpr.Expr2 is SqlValue { Value: null })
+					exprExpr.Expr1 = SqlNullabilityExpression.ApplyNullability(exprExpr.Expr1, true);
+				else if (exprExpr.Expr1 is SqlValue { Value: null })
+					exprExpr.Expr2 = SqlNullabilityExpression.ApplyNullability(exprExpr.Expr2, true);
+
+				return exprExpr;
+			}
 		}
 
 		Expression MakeIsPredicateExpression(IBuildContext context, TypeBinaryExpression expression)
