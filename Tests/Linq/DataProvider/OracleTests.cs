@@ -4480,33 +4480,65 @@ END convert_bool;");
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4172")]
-		public void Issue4172Test1([IncludeDataSources(true, TestProvName.AllOracle)] string context)
+		public void Issue4172Test_Enum_Literal_Equal([IncludeDataSources(true, TestProvName.AllOracle)] string context)
 		{
 			using var db = GetDataContext(context);
 			using var users = db.CreateLocalTable(ISSUE4172TABLE.TestData);
 
-			// Should return Unknown Role users
 			var data = (
 					from u in users
 					where u.ROLE == Role.Unknown
 					select u).ToList();
 
-			Assert.That(data, Has.Count.EqualTo(2), "Incorrect count");
+			Assert.That(data, Has.Count.EqualTo(2));
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4172")]
-		public void Issue4172Test2([IncludeDataSources(true, TestProvName.AllOracle)] string context)
+		public void Issue4172Test_Enum_Literal_NotEqual([IncludeDataSources(true, TestProvName.AllOracle)] string context)
 		{
 			using var db = GetDataContext(context);
 			using var users = db.CreateLocalTable(ISSUE4172TABLE.TestData);
 
-			// Should return Known Role users
 			var data = (
 				 from u in users
 				 where u.ROLE != Role.Unknown
 				 select u).ToList();
 
-			Assert.That(data, Has.Count.EqualTo(1), "Incorrect count");
+			Assert.That(data, Has.Count.EqualTo(1));
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4172")]
+		public void Issue4172Test_Enum_Variable_Equal([IncludeDataSources(true, TestProvName.AllOracle)] string context, [Values] bool inline)
+		{
+			using var db = GetDataContext(context);
+			using var users = db.CreateLocalTable(ISSUE4172TABLE.TestData);
+
+			db.InlineParameters = inline;
+			var value = Role.Unknown;
+
+			var data = (
+					from u in users
+					where u.ROLE == value
+					select u).ToList();
+
+			Assert.That(data, Has.Count.EqualTo(2));
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4172")]
+		public void Issue4172Test_Enum_Variable_NotEqual([IncludeDataSources(true, TestProvName.AllOracle)] string context, [Values] bool inline)
+		{
+			using var db = GetDataContext(context);
+			using var users = db.CreateLocalTable(ISSUE4172TABLE.TestData);
+
+			db.InlineParameters = inline;
+			var value = Role.Unknown;
+
+			var data = (
+				 from u in users
+				 where u.ROLE != value
+				 select u).ToList();
+
+			Assert.That(data, Has.Count.EqualTo(1));
 		}
 
 		[Table(Name = "ISSUE4172TABLE")]
@@ -4523,33 +4555,65 @@ END convert_bool;");
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4172")]
-		public void Issue4172Test3([IncludeDataSources(true, TestProvName.AllOracle)] string context)
+		public void Issue4172Test_String_Literal_Equal([IncludeDataSources(true, TestProvName.AllOracle)] string context)
 		{
 			using var db = GetDataContext(context);
 			using var users = db.CreateLocalTable(ISSUE4172TABLEx.TestData);
 
-			// Should return Known Role users
 			var data = (
 				 from u in users
 				 where u.ROLE == ""
 				 select u).ToList();
 
-			Assert.That(data, Has.Count.EqualTo(2), "Incorrect count");
+			Assert.That(data, Has.Count.EqualTo(2));
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4172")]
-		public void Issue4172Test4([IncludeDataSources(true, TestProvName.AllOracle)] string context)
+		public void Issue4172Test_String_Literal_NotEqual([IncludeDataSources(true, TestProvName.AllOracle)] string context)
 		{
 			using var db = GetDataContext(context);
 			using var users = db.CreateLocalTable(ISSUE4172TABLEx.TestData);
 
-			// Should return Known Role users
 			var data = (
 				 from u in users
 				 where u.ROLE != ""
 				 select u).ToList();
 
-			Assert.That(data, Has.Count.EqualTo(1), "Incorrect count");
+			Assert.That(data, Has.Count.EqualTo(1));
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4172")]
+		public void Issue4172Test_String_Variable_Equal([IncludeDataSources(true, TestProvName.AllOracle)] string context, [Values] bool inline)
+		{
+			using var db = GetDataContext(context);
+			using var users = db.CreateLocalTable(ISSUE4172TABLEx.TestData);
+
+			db.InlineParameters = inline;
+			var value = "";
+
+			var data = (
+				 from u in users
+				 where u.ROLE == value
+				 select u).ToList();
+
+			Assert.That(data, Has.Count.EqualTo(2));
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4172")]
+		public void Issue4172Test_String_Variable_NotEqual([IncludeDataSources(true, TestProvName.AllOracle)] string context, [Values] bool inline)
+		{
+			using var db = GetDataContext(context);
+			using var users = db.CreateLocalTable(ISSUE4172TABLEx.TestData);
+
+			db.InlineParameters = inline;
+			var value = "";
+
+			var data = (
+				 from u in users
+				 where u.ROLE != value
+				 select u).ToList();
+
+			Assert.That(data, Has.Count.EqualTo(1));
 		}
 
 		#endregion
