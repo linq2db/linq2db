@@ -1,5 +1,6 @@
-<#@ include file="T4Model.ttinclude"  once="true" #>
-<#@ include file="LinqToDB.ttinclude" once="true" #>
+<#@ assembly name="$(LinqToDBT4PostgreSQLClientPath)Npgsql.dll"                   #>
+<#@ include file="$(LinqToDBT4TemplatesPath)LinqToDB.ttinclude"       once="true" #>
+<#@ include file="$(LinqToDBT4TemplatesPath)LinqToDB.Tools.ttinclude" once="true" #>
 <#
 	LinqToDB.DataProvider.PostgreSQL.PostgreSQLTools.ResolvePostgreSQL(
 		typeof(Npgsql.NpgsqlConnection).Assembly);

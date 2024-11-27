@@ -1,10 +1,12 @@
-<#@ template language="C#" debug="True" hostSpecific="True"                    #>
-<#@ CleanupBehavior processor="T4VSHost" CleanupAfterProcessingtemplate="true" #>
-<#@ output extension=".generated.cs"                                           #>
-
-<#@ include file="$(LinqToDBT4PostgreSQLTemplatesPath)LinqToDB.PostgreSQL.Tools.ttinclude" once="true" #>
-<#@ include file="$(LinqToDBT4TemplatesPath)PluralizationService.ttinclude"                once="true" #>
+<#@ template language="C#" debug="True" hostSpecific="True"                                      #>
+<#@ CleanupBehavior processor="T4VSHost" CleanupAfterProcessingtemplate="true"                   #>
+<#@ output extension=".generated.cs"                                                             #>
+<#@ include file="$(LinqToDBT4PostgreSQLTemplatesPath)LinqToDB.PostgreSQL.ttinclude" once="true" #>
+<#@ include file="$(LinqToDBT4TemplatesPath)PluralizationService.ttinclude"          once="true" #>
 <#
+	// Install linq2db nuget package.
+	// Install one of the following packages:
+	// https://www.nuget.org/packages/Npgsql for Npgsql
 	// See LinqToDB.Templates/README.md for more details.
 
 	// Configuring schema load process
@@ -16,6 +18,7 @@
 	NamespaceName        = "DataModels";
 //	DataContextName      = "MyDB";
 	GenerateSchemaAsType = true;
+//	GetDataOptionsMethod = "GetDataOptions({0})";
 
 	// Loading metadata
 	//

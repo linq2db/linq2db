@@ -13,9 +13,9 @@ All T4 properties use `LinqToDBT4` name prefix.
 - `LinqToDBT4SharedTools`: defines path to `tools` folder and must be used only for assemblies, included into all T4 nugets: `linq2db.dll`, `Humanizer.dll`. Defined by every T4 nuget, so last one will be used.
 - `LinqToDBT4<PROVIDER>Path`: defines path to `tools` folder in nuget cache for T4 template, that use this provider to read database schema. Could be defined by multiple T4 nugets and we will use last one imported (we don't care which one). List of such properties:
   - `LinqToDBT4FirebirdClientPath`: path to `tools` folder with Firebird client
-  - `LinqToDBT4MySqlConnectorClientPath`: path to `tools` folder with `MySqlConnector` MySql client
+  - `LinqToDBT4MySqlClientPath`: path to `tools` folder with `MySqlConnector` MySql client
   - `LinqToDBT4OracleManagedClientPath`: path to `tools` folder with `Oracle.ManagedDataAccess` Oracle client
-  - `LinqToDBT4NpgsqlClientPath`: path to `tools` folder with `Npgsql` PostgreSQL client
+  - `LinqToDBT4PostgreSQLClientPath`: path to `tools` folder with `Npgsql` PostgreSQL client
   - `LinqToDBT4SQLiteClientPath`: path to `tools` folder with `System.Data.SQLite` SQLite client
   - `LinqToDBT4SQLServerClientPath`: path to `tools` folder with `Microsoft.SqlServer.Types` assembly for SQL Server spatial types
   - `LinqToDBT4SybaseDataActionClientPath`: path to `tools` folder with `AdoNetCore.AseClient` Sybase ASE client

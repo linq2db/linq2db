@@ -1,0 +1,25 @@
+<?xml version="1.0"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
+	<metadata minClientVersion="3.3.0">
+		<id>linq2db.PostgreSQL</id>
+		<title>LINQ to PostgreSQL</title>
+		<summary>
+			This package includes a T4 template to generate data models for PostgreSQL database.
+		</summary>
+		<tags>linq linq2db Npgsql PostgreSQL LinqToDB ORM database DB SQL</tags>
+	</metadata>
+	<files>
+		<file src="t4bin\Npgsql.dll"                                    target="tools"                                   />
+		<file src="t4bin\Microsoft.Bcl.HashCode.dll"                    target="tools"                                   />
+		<file src="t4bin\Microsoft.Extensions.Logging.Abstractions.dll" target="tools"                                   />
+		<file src="t4bin\System.Collections.Immutable.dll"              target="tools"                                   />
+		<file src="t4bin\System.Diagnostics.DiagnosticSource.dll"       target="tools"                                   />
+		<file src="t4bin\System.Runtime.CompilerServices.Unsafe.dll"    target="tools"                                   />
+		<file src="t4bin\System.Text.Json.dll"                          target="tools"                                   />
+		<file src="t4bin\System.Threading.Channels.dll"                 target="tools"                                   />
+
+		<file src="NuGet\PostgreSQL\linq2db.PostgreSQL.props"           target="build"                                   />
+		<file src="NuGet\PostgreSQL\*.*"           exclude="**\*.props" target="contentFiles\any\any\LinqToDB.Templates" />
+		<file src="NuGet\PostgreSQL\*.*"           exclude="**\*.props" target="content\LinqToDB.Templates"              />
+	</files>
+</package>

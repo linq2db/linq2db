@@ -62,9 +62,9 @@
 		<LinqToDBT4DB2ClientPath>$(LinqToDBT4SharedTools)</LinqToDBT4DB2ClientPath>
 		<LinqToDBT4FirebirdClientPath>$(LinqToDBT4SharedTools)</LinqToDBT4FirebirdClientPath>
 		<LinqToDBT4InformixClientPath>$(LinqToDBT4SharedTools)</LinqToDBT4InformixClientPath>
-		<LinqToDBT4MySqlConnectorClientPath>$(LinqToDBT4SharedTools)</LinqToDBT4MySqlConnectorClientPath>
+		<LinqToDBT4MySqlClientPath>$(LinqToDBT4SharedTools)</LinqToDBT4MySqlClientPath>
 		<LinqToDBT4OracleManagedClientPath>$(LinqToDBT4SharedTools)</LinqToDBT4OracleManagedClientPath>
-		<LinqToDBT4NpgsqlClientPath>$(LinqToDBT4SharedTools)</LinqToDBT4NpgsqlClientPath>
+		<LinqToDBT4PostgreSQLClientPath>$(LinqToDBT4SharedTools)</LinqToDBT4PostgreSQLClientPath>
 		<LinqToDBT4SQLiteClientPath>$(LinqToDBT4SharedTools)</LinqToDBT4SQLiteClientPath>
 		<LinqToDBT4SQLServerClientPath>$(LinqToDBT4SharedTools)</LinqToDBT4SQLServerClientPath>
 		<LinqToDBT4SybaseDataActionClientPath>$(LinqToDBT4SharedTools)</LinqToDBT4SybaseDataActionClientPath>
