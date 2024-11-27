@@ -51,9 +51,7 @@ if %errorlevel% neq 0 exit
 if %errorlevel% neq 0 exit
 ..\Redist\nuget.exe Pack %NUSPECS%\linq2db.MySql.nuspec -OutputDirectory %NUGETS%
 if %errorlevel% neq 0 exit
-..\Redist\nuget.exe Pack %NUSPECS%\linq2db.Oracle.Managed.nuspec -OutputDirectory %NUGETS%
-if %errorlevel% neq 0 exit
-..\Redist\nuget.exe Pack %NUSPECS%\linq2db.Oracle.Unmanaged.nuspec -OutputDirectory %NUGETS%
+..\Redist\nuget.exe Pack %NUSPECS%\linq2db.Oracle.nuspec -OutputDirectory %NUGETS%
 if %errorlevel% neq 0 exit
 ..\Redist\nuget.exe Pack %NUSPECS%\linq2db.PostgreSQL.nuspec -OutputDirectory %NUGETS%
 if %errorlevel% neq 0 exit

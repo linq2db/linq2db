@@ -14,6 +14,7 @@
 		<PackageReference Include="AdoNetCore.AseClient" />
 		<PackageReference Include="Humanizer.Core" />
 		<PackageReference Include="FirebirdSql.Data.FirebirdClient" />
+		<PackageReference Include="Oracle.ManagedDataAccess" />
 
 		<PackageReference Include="IBM.Data.DB.Provider" GeneratePathProperty="true" />
 		<Reference Include="IBM.Data.DB2" Condition=" $(PlatformTarget) != 'x86' ">
