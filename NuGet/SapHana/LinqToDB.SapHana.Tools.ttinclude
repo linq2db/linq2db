@@ -1,2 +1,4 @@
-<#@ include file="$(LinqToDBT4TemplatesPath)LinqToDB.Tools.ttinclude"   once="true" #>
-<#@ include file="$(LinqToDBT4TemplatesPath)LinqToDB.SapHana.ttinclude" once="true" #>
+<#@ include file="$(LinqToDBT4SapHanaTemplatesPath)LinqToDB.SapHana.ttinclude" once="true" #>
+<#+
+#warning 'LinqToDB.MySql.Tools.ttinclude' is obsolete. Use 'LinqToDB.MySql.ttinclude' instead.
+#>

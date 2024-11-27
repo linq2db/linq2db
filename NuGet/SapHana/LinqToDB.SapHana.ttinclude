@@ -1,6 +1,7 @@
-<#@ include file="T4Model.ttinclude"  once="true"    #>
-<#@ include file="LinqToDB.ttinclude" once="true"    #>
-<#@ import namespace="LinqToDB.DataProvider.SapHana" #>
+<#@ assembly name="$(LinqToDBT4MySqlClientPath)System.Data.Odbc.dll"              #>
+<#@ include file="$(LinqToDBT4TemplatesPath)LinqToDB.ttinclude"       once="true" #>
+<#@ include file="$(LinqToDBT4TemplatesPath)LinqToDB.Tools.ttinclude" once="true" #>
+<#@ import namespace="LinqToDB.DataProvider.SapHana"                              #>
 <#
 	Model.Usings.Add("LinqToDB.DataProvider.SapHana");
 	Model.Usings.Add("System.Reflection");
@@ -80,14 +81,14 @@
 		public List<Parameter> Parameters;
 	}
 
-	LinqToDB.Data.DataConnection GetSapHanaConnection(string connectionString)
+	LinqToDB.Data.DataConnection GetSapHanaConnection(string connectionString, LinqToDB.DataProvider.SapHana.SapHanaProvider provider = LinqToDB.DataProvider.SapHana.SapHanaProvider.Unmanaged)
 	{
-		return LinqToDB.DataProvider.SapHana.SapHanaTools.CreateDataConnection(connectionString, LinqToDB.DataProvider.SapHana.SapHanaProvider.Unmanaged);
+		return LinqToDB.DataProvider.SapHana.SapHanaTools.CreateDataConnection(connectionString, provider);
 	}
 
-	LinqToDB.Data.DataConnection GetSapHanaConnection(string server, string schema, string uid, string password)
+	LinqToDB.Data.DataConnection GetSapHanaConnection(string server, string schema, string uid, string password, LinqToDB.DataProvider.SapHana.SapHanaProvider provider = LinqToDB.DataProvider.SapHana.SapHanaProvider.Unmanaged)
 	{
-		return GetSapHanaConnection(string.Format("Server={0};Current Schema={1};UserID={2};Password={3};", server, schema, uid, password));
+		return GetSapHanaConnection(string.Format("Server={0};Current Schema={1};UserID={2};Password={3};", server, schema, uid, password), provider);
 	}
 
 	public void LoadSapHanaMetadata(DataConnection dataConnection)
@@ -95,15 +96,15 @@
 		LoadMetadata(dataConnection);
 	}
 
-	public void LoadSapHanaMetadata(string connectionString)
+	public void LoadSapHanaMetadata(string connectionString, LinqToDB.DataProvider.SapHana.SapHanaProvider provider = LinqToDB.DataProvider.SapHana.SapHanaProvider.Unmanaged)
 	{
-		using (var dataConnection = GetSapHanaConnection(connectionString))
+		using (var dataConnection = GetSapHanaConnection(connectionString, provider))
 			LoadMetadata(dataConnection);
 	}
 
-	public void LoadSapHanaMetadata(string server, string schema, string uid, string password)
+	public void LoadSapHanaMetadata(string server, string schema, string uid, string password, LinqToDB.DataProvider.SapHana.SapHanaProvider provider = LinqToDB.DataProvider.SapHana.SapHanaProvider.Unmanaged)
 	{
-		using (var dataConnection = GetSapHanaConnection(server, schema, uid, password))
+		using (var dataConnection = GetSapHanaConnection(server, schema, uid, password, provider))
 			LoadMetadata(dataConnection);
 	}
 #>

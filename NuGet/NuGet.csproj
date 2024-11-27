@@ -9,6 +9,7 @@
 		<ProjectReference Include="..\Source\LinqToDB.Tools\LinqToDB.Tools.csproj" />
 
 		<PackageReference Include="System.Data.OleDb" />
+		<PackageReference Include="System.Data.Odbc" />
 		<PackageReference Include="MySqlConnector" />
 		<PackageReference Include="ClickHouse.Client" />
 		<PackageReference Include="AdoNetCore.AseClient" />
@@ -16,6 +17,10 @@
 		<PackageReference Include="FirebirdSql.Data.FirebirdClient" />
 		<PackageReference Include="Oracle.ManagedDataAccess" />
 		<PackageReference Include="Npgsql" />
+
+		<Reference Include="IBM.Data.Informix">
+			<HintPath>$(SolutionDir)\Redist\SapHana\v4.5\Sap.Data.Hana.v4.5.dll</HintPath>
+		</Reference>
 
 		<PackageReference Include="IBM.Data.DB.Provider" GeneratePathProperty="true" />
 		<Reference Include="IBM.Data.DB2" Condition=" $(PlatformTarget) != 'x86' ">
