@@ -581,111 +581,67 @@ namespace LinqToDB.Linq.Builder
 			Type                                  toType,
 			Func<TContext,string, ISqlExpression> getSql)
 		{
-			static ISqlPredicate CorrectNullability(SqlPredicate.ExprExpr exprExpr)
-			{
-				if (exprExpr.Expr2 is SqlValue { Value: null })
-				{
-					exprExpr.Expr1 = SqlNullabilityExpression.ApplyNullability(exprExpr.Expr1, true);
-				}
-				else if (exprExpr.Expr1 is SqlValue { Value: null })
-				{
-					exprExpr.Expr2 = SqlNullabilityExpression.ApplyNullability(exprExpr.Expr2, true);
-				}
+			var inverse = false;
+			var discriminators = new List<object?>(inheritanceMapping.Count);
 
-				return exprExpr;
+			foreach (var im1 in inheritanceMapping)
+			{
+				if (toType.IsAssignableFrom(im1.Type))
+				{
+					if (im1.IsDefault)
+					{
+						inverse = true;
+						break;
+					}
+					discriminators.Add(im1.Code);
+				}
 			}
 
-			var mapping = new List<InheritanceMapping>(inheritanceMapping.Count);
-			foreach (var m in inheritanceMapping)
-				if (toType.IsAssignableFrom(m.Type) && !m.IsDefault)
-					mapping.Add(m);
-
-			switch (mapping.Count)
+			if (inverse)
 			{
-				case 0 :
-					{
-						var cond = new SqlSearchCondition();
+				discriminators.Clear();
 
-						var found = false;
-						foreach (var m in inheritanceMapping)
-						{
-							if (m.Type == toType)
-							{
-								found = true;
-								break;
-							}
-						}
-
-						if (found)
-						{
-							foreach (var m in inheritanceMapping.Where(static m => !m.IsDefault))
-							{
-								cond.Predicates.Add(
-									CorrectNullability(
-										new SqlPredicate.ExprExpr(
-											getSql(getSqlContext, m.DiscriminatorName),
-											SqlPredicate.Operator.NotEqual,
-											MappingSchema.GetSqlValue(m.Discriminator.MemberType, m.Code, m.Discriminator.GetDbDataType(true)),
-											withNull: true)
-									)
-								);
-							}
-						}
-						else
-						{
-							var sc = new SqlSearchCondition(true);
-							foreach (var m in inheritanceMapping)
-							{
-								if (toType.IsSameOrParentOf(m.Type))
-								{
-									sc.Predicates.Add(
-										CorrectNullability(
-											new SqlPredicate.ExprExpr(
-												getSql(getSqlContext, m.DiscriminatorName),
-												SqlPredicate.Operator.Equal,
-												MappingSchema.GetSqlValue(m.Discriminator.MemberType, m.Code, m.Discriminator.GetDbDataType(true)),
-												withNull: true)
-										)
-									);
-								}
-							}
-
-							cond.Add(sc);
-						}
-
-						return cond;
-					}
-
-				case 1 :
+				foreach (var im2 in inheritanceMapping)
 				{
-					var discriminatorSql = getSql(getSqlContext, mapping[0].DiscriminatorName);
-					var sqlValue = MappingSchema.GetSqlValue(mapping[0].Discriminator.MemberType, mapping[0].Code, mapping[0].Discriminator.GetDbDataType(true));
-
-					return CorrectNullability(
-						new SqlPredicate.ExprExpr(
-							discriminatorSql,
-							SqlPredicate.Operator.Equal,
-							sqlValue,
-							withNull: true)
-					);
-				}
-				default:
+					if (!toType.IsAssignableFrom(im2.Type))
 					{
-						var cond = new SqlSearchCondition(true);
+						if (im2.IsDefault)
+							throw new InvalidOperationException($"Multiple default inheritance mappings for {toType}");
 
-						foreach (var m in mapping)
-						{
-							cond.Predicates.Add(
-								new SqlPredicate.ExprExpr(
-									getSql(getSqlContext, m.DiscriminatorName),
-									SqlPredicate.Operator.Equal,
-									MappingSchema.GetSqlValue(m.Discriminator.MemberType, m.Code, m.Discriminator.GetDbDataType(true)),
-									withNull: true));
-						}
-
-						return cond;
+						discriminators.Add(im2.Code);
 					}
+				}
 			}
+
+			if (discriminators.Count == 0 || discriminators.Count == inheritanceMapping.Count)
+			{
+				var all = (inverse && discriminators.Count == 0) || (!inverse && discriminators.Count == inheritanceMapping.Count);
+				var allCond = new SqlSearchCondition();
+				allCond.Predicates.Add(SqlPredicate.MakeBool(all));
+				return allCond;
+			}
+
+			var cond = new SqlSearchCondition();
+
+			var m      = inheritanceMapping[0];
+			var values = new SqlValue[discriminators.Count];
+			var dbType = m.Discriminator.GetDbDataType(true);
+			var idx    = 0;
+
+			foreach (var value in discriminators)
+			{
+				values[idx] = MappingSchema.GetSqlValue(m.Discriminator.MemberType, value, dbType);
+				idx++;
+			}
+
+			cond.Predicates.Add(
+				new SqlPredicate.InList(
+					getSql(getSqlContext, m.DiscriminatorName),
+					DataOptions.LinqOptions.CompareNulls == CompareNulls.LikeClr ? false : null,
+					inverse,
+					values));
+
+			return cond;
 		}
 
 		Expression MakeIsPredicateExpression(IBuildContext context, TypeBinaryExpression expression)
