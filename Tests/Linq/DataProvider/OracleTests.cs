@@ -4458,6 +4458,13 @@ END convert_bool;");
 		sealed class ISSUE4172TABLE
 		{
 			[Column("ROLE"), Nullable] public Role ROLE { get; set; }
+
+			public static ISSUE4172TABLE[] TestData =
+			[
+				new ISSUE4172TABLE() { ROLE = Role.Unknown },
+				new ISSUE4172TABLE() { ROLE = Role.Unknown },
+				new ISSUE4172TABLE() { ROLE = Role.Role1 },
+			];
 		}
 
 		enum Role
@@ -4472,13 +4479,11 @@ END convert_bool;");
 			Role2
 		}
 
-		[Test]
-		public void Issue4172Test1([IncludeDataSources(TestProvName.Oracle12Managed)] string context)
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4172")]
+		public void Issue4172Test1([IncludeDataSources(true, TestProvName.AllOracle)] string context)
 		{
-			using var db = GetDataConnection(context);
-			using var users = db.CreateLocalTable<ISSUE4172TABLE>();
-
-			users.Insert(() => new ISSUE4172TABLE { ROLE = Role.Role1, });
+			using var db = GetDataContext(context);
+			using var users = db.CreateLocalTable(ISSUE4172TABLE.TestData);
 
 			// Should return Unknown Role users
 			var data = (
@@ -4486,21 +4491,62 @@ END convert_bool;");
 					where u.ROLE == Role.Unknown
 					select u).ToList();
 
-			Assert.That(data, Is.Empty, "Incorrect count");
+			Assert.That(data, Has.Count.EqualTo(2), "Incorrect count");
 		}
 
-		[Test]
-		public void Issue4172Test2([IncludeDataSources(TestProvName.Oracle12Managed)] string context)
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4172")]
+		public void Issue4172Test2([IncludeDataSources(true, TestProvName.AllOracle)] string context)
 		{
-			using var db = GetDataConnection(context);
-			using var users = db.CreateLocalTable<ISSUE4172TABLE>();
-
-			users.Insert(() => new ISSUE4172TABLE { ROLE = Role.Role1, });
+			using var db = GetDataContext(context);
+			using var users = db.CreateLocalTable(ISSUE4172TABLE.TestData);
 
 			// Should return Known Role users
 			var data = (
 				 from u in users
 				 where u.ROLE != Role.Unknown
+				 select u).ToList();
+
+			Assert.That(data, Has.Count.EqualTo(1), "Incorrect count");
+		}
+
+		[Table(Name = "ISSUE4172TABLE")]
+		sealed class ISSUE4172TABLEx
+		{
+			[Column("ROLE"), Nullable] public string ROLE { get; set; } = null!;
+
+			public static ISSUE4172TABLEx[] TestData =
+			[
+				new ISSUE4172TABLEx() { ROLE = "" },
+				new ISSUE4172TABLEx() { ROLE = "" },
+				new ISSUE4172TABLEx() { ROLE = "1" },
+			];
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4172")]
+		public void Issue4172Test3([IncludeDataSources(true, TestProvName.AllOracle)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var users = db.CreateLocalTable(ISSUE4172TABLEx.TestData);
+
+			// Should return Known Role users
+			var data = (
+				 from u in users
+				 where u.ROLE == ""
+				 select u).ToList();
+
+			Assert.That(data, Has.Count.EqualTo(2), "Incorrect count");
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4172")]
+		public void Issue4172Test4([IncludeDataSources(true, TestProvName.AllOracle)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var users = db.CreateLocalTable(ISSUE4172TABLEx.TestData);
+
+			// Should return Known Role users
+			var data = (
+				 from u in users
+				 where u.ROLE != ""
 				 select u).ToList();
 
 			Assert.That(data, Has.Count.EqualTo(1), "Incorrect count");
