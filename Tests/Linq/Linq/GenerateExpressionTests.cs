@@ -3,6 +3,7 @@ using System.Linq;
 using System.Linq.Expressions;
 
 using LinqToDB;
+using LinqToDB.Linq;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
@@ -82,6 +83,7 @@ namespace Tests.Linq
 			Assert.That(testCase, Does.Not.Contain("Exception"));
 
 			TestUtils.DeleteTestCases();
+			Query<Entity>.ClearCache();
 			Assert.That(() => query.ToArray(), Throws.Exception);
 
 			testCase = TestUtils.GetLastTestCase();

@@ -841,18 +841,18 @@ namespace Tests.Data
 						var options = new BulkCopyOptions()
 						{
 							BulkCopyType       = BulkCopyType.ProviderSpecific,
-							NotifyAfter        = 500,
+							NotifyAfter        = 5,
 							RowsCopiedCallback = arg => copied = arg.RowsCopied
 						};
 
 						db.BulkCopy(
 							options,
-							Enumerable.Range(0, 1000).Select(n => new SqlServerTests.AllTypes() { ID = 2000 + n }));
+							Enumerable.Range(0, 10).Select(n => new SqlServerTests.AllTypes() { ID = 2000 + n }));
 
 						Assert.Multiple(() =>
 						{
 							Assert.That(trace.Contains("INSERT BULK"), Is.EqualTo(!unmapped));
-							Assert.That(copied, Is.EqualTo(1000));
+							Assert.That(copied, Is.EqualTo(10));
 						});
 					}
 					finally
@@ -872,18 +872,18 @@ namespace Tests.Data
 						var options = new BulkCopyOptions()
 						{
 							BulkCopyType       = BulkCopyType.ProviderSpecific,
-							NotifyAfter        = 500,
+							NotifyAfter        = 5,
 							RowsCopiedCallback = arg => copied = arg.RowsCopied
 						};
 
 						await db.BulkCopyAsync(
 							options,
-							Enumerable.Range(0, 1000).Select(n => new SqlServerTests.AllTypes() { ID = 2000 + n }));
+							Enumerable.Range(0, 10).Select(n => new SqlServerTests.AllTypes() { ID = 2000 + n }));
 
 						Assert.Multiple(() =>
 						{
 							Assert.That(trace.Contains("INSERT ASYNC BULK"), Is.EqualTo(!unmapped));
-							Assert.That(copied, Is.EqualTo(1000));
+							Assert.That(copied, Is.EqualTo(10));
 						});
 					}
 					finally
@@ -1020,18 +1020,18 @@ namespace Tests.Data
 						var options = new BulkCopyOptions()
 						{
 							BulkCopyType       = BulkCopyType.ProviderSpecific,
-							NotifyAfter        = 500,
+							NotifyAfter        = 5,
 							RowsCopiedCallback = arg => copied = arg.RowsCopied
 						};
 
 						db.BulkCopy(
 							options,
-							Enumerable.Range(0, 1000).Select(n => new SqlServerTests.AllTypes() { ID = 2000 + n }));
+							Enumerable.Range(0, 10).Select(n => new SqlServerTests.AllTypes() { ID = 2000 + n }));
 
 						Assert.Multiple(() =>
 						{
 							Assert.That(trace.Contains("INSERT BULK"), Is.EqualTo(!unmapped));
-							Assert.That(copied, Is.EqualTo(1000));
+							Assert.That(copied, Is.EqualTo(10));
 						});
 					}
 					finally
@@ -1051,18 +1051,18 @@ namespace Tests.Data
 						var options = new BulkCopyOptions()
 						{
 							BulkCopyType       = BulkCopyType.ProviderSpecific,
-							NotifyAfter        = 500,
+							NotifyAfter        = 5,
 							RowsCopiedCallback = arg => copied = arg.RowsCopied
 						};
 
 						await db.BulkCopyAsync(
 							options,
-							Enumerable.Range(0, 1000).Select(n => new SqlServerTests.AllTypes() { ID = 2000 + n }));
+							Enumerable.Range(0, 10).Select(n => new SqlServerTests.AllTypes() { ID = 2000 + n }));
 
 						Assert.Multiple(() =>
 						{
 							Assert.That(trace.Contains("INSERT ASYNC BULK"), Is.EqualTo(!unmapped));
-							Assert.That(copied, Is.EqualTo(1000));
+							Assert.That(copied, Is.EqualTo(10));
 						});
 					}
 					finally

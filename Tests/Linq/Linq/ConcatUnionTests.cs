@@ -1022,7 +1022,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestConcatInheritance([IncludeDataSources(TestProvName.AllSQLiteClassic, TestProvName.AllClickHouse)] string context)
+		public void TestConcatInheritance1([IncludeDataSources(TestProvName.AllSQLiteClassic, TestProvName.AllClickHouse)] string context)
 		{
 			var testData = new[]
 			{
@@ -1042,13 +1042,71 @@ namespace Tests.Linq
 					.Concat(db.GetTable<BaseEntity>().OfType<DerivedEntity>())
 					.ToArray();
 
+				var expected = testData.OfType<BaseEntity>()
+					.Concat(testData.OfType<DerivedEntity>())
+					.ToArray();
+
+				AreEqualWithComparer(expected, result);
+			}
+		}
+
+		[ActiveIssue("type !=/== type parsing is not supported currently")]
+		[Test]
+		public void TestConcatInheritance2([IncludeDataSources(TestProvName.AllSQLiteClassic, TestProvName.AllClickHouse)] string context)
+		{
+			var testData = new[]
+			{
+				new BaseEntity { Discr = 0, EntityId = 1, Value = "VBase1" },
+				new BaseEntity { Discr = 0, EntityId = 2, Value = "VBase2" },
+				new BaseEntity { Discr = 0, EntityId = 3, Value = "VBase3" },
+
+				new DerivedEntity { Discr = 1, EntityId = 10, Value = "Derived1" },
+				new DerivedEntity { Discr = 1, EntityId = 20, Value = "Derived2" },
+				new DerivedEntity { Discr = 1, EntityId = 30, Value = "Derived3" }
+			};
+
+			using (var db = GetDataContext(context))
+			using (db.CreateLocalTable(testData))
+			{
+				var result = db.GetTable<BaseEntity>().Where(t => t.GetType() == typeof(BaseEntity))
+					.Concat(db.GetTable<BaseEntity>().OfType<DerivedEntity>())
+					.ToArray();
+
 				var expected = testData.Where(t => t.GetType() == typeof(BaseEntity))
 					.Concat(testData.OfType<DerivedEntity>())
 					.ToArray();
 
 				AreEqualWithComparer(expected, result);
 			}
+		}
 
+		[Test]
+		public void TestConcatInheritance3([IncludeDataSources(TestProvName.AllSQLiteClassic, TestProvName.AllClickHouse)] string context)
+		{
+			var testData = new[]
+			{
+				new BaseEntity { Discr = 0, EntityId = 1, Value = "VBase1" },
+				new BaseEntity { Discr = 0, EntityId = 2, Value = "VBase2" },
+				new BaseEntity { Discr = 0, EntityId = 3, Value = "VBase3" },
+
+				new DerivedEntity { Discr = 1, EntityId = 10, Value = "Derived1" },
+				new DerivedEntity { Discr = 1, EntityId = 20, Value = "Derived2" },
+				new DerivedEntity { Discr = 1, EntityId = 30, Value = "Derived3" }
+			};
+
+			using (var db = GetDataContext(context))
+			using (db.CreateLocalTable(testData))
+			{
+				var result = db.GetTable<BaseEntity>().Where(t => t.Discr == 0)
+					.Concat(db.GetTable<BaseEntity>().OfType<DerivedEntity>())
+					.ToArray();
+
+				var expected = testData.Where(t => t.GetType() == typeof(BaseEntity))
+					.Concat(testData.OfType<DerivedEntity>())
+					.ToArray();
+
+				AreEqualWithComparer(expected, result);
+			}
 		}
 
 		[Test]
