@@ -366,8 +366,7 @@ steps:
       exit 1
     workingDirectory: '$(System.DefaultWorkingDirectory)/baselines'
   displayName: Commit test baselines
-  #condition: and(variables.title, succeeded(), ${{ parameters.with_baselines }})
-  condition: and(variables.title, ${{ parameters.with_baselines }})
+  condition: and(variables.title, succeeded(), ${{ parameters.with_baselines }})
   env:
     GITHUB_TOKEN: $(BASELINES_GH_PAT)
     EMAIL: azp@linq2db.com
