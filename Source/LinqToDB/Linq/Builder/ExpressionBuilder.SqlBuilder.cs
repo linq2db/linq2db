@@ -555,14 +555,13 @@ namespace LinqToDB.Linq.Builder
 
 		public ISqlPredicate? MakeIsPredicate(TableBuilder.TableContext table, Type typeOperand)
 		{
-			return MakeIsPredicate(table, table, table.InheritanceMapping, table.InheritanceIgnoreUnmappedRecords, typeOperand, static (table, name) => table.SqlTable.FindFieldByMemberName(name) ?? throw new LinqToDBException($"Field {name} not found in table {table.SqlTable}"));
+			return MakeIsPredicate(table, table, table.InheritanceMapping, typeOperand, static (table, name) => table.SqlTable.FindFieldByMemberName(name) ?? throw new LinqToDBException($"Field {name} not found in table {table.SqlTable}"));
 		}
 
 		public ISqlPredicate? MakeIsPredicate<TContext>(
 			TContext getSqlContext,
 			IBuildContext context,
 			IReadOnlyList<InheritanceMapping> inheritanceMapping,
-			bool forceFilter,
 			Type toType,
 			Func<TContext, string, ISqlExpression> getSql)
 		{
@@ -598,8 +597,7 @@ namespace LinqToDB.Linq.Builder
 				}
 			}
 
-			if (discriminators.Count == 0
-				|| (discriminators.Count == inheritanceMapping.Count && (!forceFilter || inheritanceMapping.Any(m => m.IsDefault))))
+			if (discriminators.Count == 0 || discriminators.Count == inheritanceMapping.Count)
 			{
 				var all = (notEqual && discriminators.Count == 0) || (!notEqual && discriminators.Count == inheritanceMapping.Count);
 				if (all)

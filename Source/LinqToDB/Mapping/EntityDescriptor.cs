@@ -141,14 +141,6 @@ namespace LinqToDB.Mapping
 		public IReadOnlyList<InheritanceMapping> InheritanceMapping => _inheritanceMappings;
 
 		/// <summary>
-		/// Gets list of inheritance mapping descriptors for current entity.
-		/// </summary>
-		/// <remarks>
-		/// If multiple types mapped in inheritance hierarchy, most specific type descriptor goes before more generic type descriptor in this list.
-		/// </remarks>
-		public bool InheritanceIgnoreUnmappedRecords { get; private set; }
-
-		/// <summary>
 		/// For entity descriptor with inheritance mapping gets descriptor of root (base) entity.
 		/// </summary>
 		public EntityDescriptor? InheritanceRoot { get; private set; }
@@ -362,10 +354,6 @@ namespace LinqToDB.Mapping
 
 			if (mappingAttrs.Length == 0)
 				return;
-
-			var inheritanceAttr = MappingSchema.GetAttribute<InheritanceAttribute>(ObjectType);
-
-			InheritanceIgnoreUnmappedRecords = inheritanceAttr?.IgnoreUnmappedRecords ?? false;
 
 			_inheritanceMappings = new InheritanceMapping[mappingAttrs.Length];
 			InheritanceRoot      = this;
