@@ -42,19 +42,19 @@ namespace LinqToDB.DataProvider.Oracle
 			// Note: LikeClr sometimes generates `withNull: null` expressions, in which case it works the
 			//       same way as LikeSqlExceptParameters (for backward compatibility).
 
-			if (withNull != null 
+			if (withNull != null
 				|| (DataOptions.LinqOptions.CompareNulls != CompareNulls.LikeSql
 					&& op is SqlPredicate.Operator.Equal or SqlPredicate.Operator.NotEqual))
 			{
-				if (b.SystemType == typeof(string) &&
-				    b.TryEvaluateExpression(EvaluationContext, out var bValue) && 
+				if (Oracle11SqlOptimizer.IsTextType(b, MappingSchema)                   &&
+				    b.TryEvaluateExpressionForServer(EvaluationContext, out var bValue) &&
 					bValue is string { Length: 0 })
 				{
 					return CompareToEmptyString(a, op);
 				}
 				
-				if (a.SystemType == typeof(string)                             &&
-				    a.TryEvaluateExpression(EvaluationContext, out var aValue) && 
+				if (Oracle11SqlOptimizer.IsTextType(a, MappingSchema)                   &&
+				    a.TryEvaluateExpressionForServer(EvaluationContext, out var aValue) &&
 					aValue is string { Length: 0 })
 				{
 					return CompareToEmptyString(b, InvertDirection(op));

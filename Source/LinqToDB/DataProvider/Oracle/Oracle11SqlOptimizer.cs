@@ -33,9 +33,9 @@ namespace LinqToDB.DataProvider.Oracle
 			return statement;
 		}
 
-		public override bool IsParameterDependedElement(NullabilityContext nullability, IQueryElement element, DataOptions dataOptions)
+		public override bool IsParameterDependedElement(NullabilityContext nullability, IQueryElement element, DataOptions dataOptions, MappingSchema mappingSchema)
 		{
-			if (base.IsParameterDependedElement(nullability, element, dataOptions))
+			if (base.IsParameterDependedElement(nullability, element, dataOptions, mappingSchema))
 				return true;
 
 			switch (element.ElementType)
@@ -50,14 +50,27 @@ namespace LinqToDB.DataProvider.Oracle
 						(dataOptions.LinqOptions.CompareNulls != CompareNulls.LikeSql &&
 							op is SqlPredicate.Operator.Equal or SqlPredicate.Operator.NotEqual))
 					{
-						if (a.SystemType == typeof(string) && a.CanBeEvaluated(true))
+						if (IsTextType(a, mappingSchema) && a.CanBeEvaluated(true))
 							return true;
-						if (b.SystemType == typeof(string) && b.CanBeEvaluated(true))
+						if (IsTextType(b, mappingSchema) && b.CanBeEvaluated(true))
 							return true;
 					}
 					break;
 				}
 			}
+
+			return false;
+		}
+
+		internal static bool IsTextType(ISqlExpression expr, MappingSchema mappingSchema)
+		{
+			var type = QueryHelper.GetDbDataType(expr, mappingSchema);
+
+			if (type.DataType is DataType.VarChar or DataType.NVarChar or DataType.Char or DataType.NChar)
+				return true;
+
+			if (type.SystemType == typeof(string))
+				return true;
 
 			return false;
 		}

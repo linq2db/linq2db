@@ -361,11 +361,12 @@ namespace LinqToDB.SqlQuery
 				case null: return DbDataType.Undefined;
 				case SqlValue { ValueType: var vt }: return vt;
 
+				case SqlParameter        { Type: var t }: return t;
 				case SqlField            { Type: var t }: return t;
 				case SqlDataType         { Type: var t }: return t;
 				case SqlCastExpression   { Type: var t }: return t;
 				case SqlBinaryExpression { Type: var t }: return t;
-				case SqlFunction         { Type: var t }: return t;        
+				case SqlFunction         { Type: var t }: return t;
 
 				case SqlColumn                { Expression:    var e }: return GetDbDataType(e);
 				case SqlNullabilityExpression { SqlExpression: var e }: return GetDbDataType(e);

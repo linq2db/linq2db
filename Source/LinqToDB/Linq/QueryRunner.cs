@@ -166,7 +166,7 @@ namespace LinqToDB.Linq
 						if (e is SqlQueryRootExpression root)
 						{
 							if (((IConfigurationID)root.MappingSchema).ConfigurationID ==
-							    ((IConfigurationID)context.Context.MappingSchema).ConfigurationID)
+								((IConfigurationID)context.Context.MappingSchema).ConfigurationID)
 							{
 								var lambda      = (LambdaExpression)context.Expression;
 								var contextExpr = (Expression)Expression.PropertyOrField(lambda.Parameters[0], nameof(IQueryRunner.DataContext));
@@ -646,7 +646,7 @@ namespace LinqToDB.Linq
 		}
 
 		static readonly PropertyInfo _dataContextInfo = MemberHelper.PropertyOf<IQueryRunner>(p => p.DataContext);
-        static readonly PropertyInfo _expressionsInfo = MemberHelper.PropertyOf<IQueryRunner>(p => p.Expressions);
+		static readonly PropertyInfo _expressionsInfo = MemberHelper.PropertyOf<IQueryRunner>(p => p.Expressions);
 		static readonly PropertyInfo _parametersInfo  = MemberHelper.PropertyOf<IQueryRunner>(p => p.Parameters);
 		static readonly PropertyInfo _preamblesInfo   = MemberHelper.PropertyOf<IQueryRunner>(p => p.Preambles);
 

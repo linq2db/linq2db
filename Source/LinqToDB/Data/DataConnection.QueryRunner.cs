@@ -21,11 +21,11 @@ namespace LinqToDB.Data
 	public partial class DataConnection
 	{
 		IQueryRunner IDataContext.GetQueryRunner(
-			Query query, 
-			IDataContext parametersContext, 
+			Query query,
+			IDataContext parametersContext,
 			int queryNumber,
-			IQueryExpressions expressions, 
-			object?[]? parameters,        
+			IQueryExpressions expressions,
+			object?[]? parameters,
 			object?[]? preambles)
 		{
 			CheckAndThrowOnDisposed();
@@ -229,7 +229,7 @@ namespace LinqToDB.Data
 					{
 						if (!statement.IsParameterDependent)
 						{
-							if (sqlOptimizer.IsParameterDependent(NullabilityContext.NonQuery, statement, options))
+							if (sqlOptimizer.IsParameterDependent(NullabilityContext.NonQuery, dataConnection.MappingSchema, statement, options))
 								statement.IsParameterDependent = true;
 						}
 					}
