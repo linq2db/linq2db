@@ -2136,6 +2136,7 @@ namespace Tests.Linq
 		}
 
 		[Table("InheritanceFilter")]
+		[Inheritance(IgnoreUnmappedRecords = true)]
 		[InheritanceMapping(Code = 1, Type = typeof(SubChild1))]
 		[InheritanceMapping(Code = 11, Type = typeof(SubGrandchild11))]
 		[InheritanceMapping(Code = 12, Type = typeof(SubGrandchild12))]

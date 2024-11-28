@@ -158,11 +158,13 @@ namespace LinqToDB.Linq.Builder
 				return OriginalType;
 			}
 
+			public bool InheritanceIgnoreUnmappedRecords;
 			public IReadOnlyList<InheritanceMapping> InheritanceMapping = null!;
 
 			protected void Init(bool applyFilters)
 			{
 				InheritanceMapping = EntityDescriptor.InheritanceMapping;
+				InheritanceIgnoreUnmappedRecords = EntityDescriptor.InheritanceIgnoreUnmappedRecords;
 
 				if (applyFilters && InheritanceMapping.Count > 0)
 				{

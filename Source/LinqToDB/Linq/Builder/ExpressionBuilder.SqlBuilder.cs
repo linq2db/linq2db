@@ -30,12 +30,12 @@ namespace LinqToDB.Linq.Builder
 		#region Build Where
 
 		public IBuildContext? BuildWhere(
-			IBuildContext?   parent,
-			IBuildContext    sequence,
+			IBuildContext? parent,
+			IBuildContext sequence,
 			LambdaExpression condition,
-			bool             checkForSubQuery,
-			bool             enforceHaving,
-			out Expression?  error)
+			bool checkForSubQuery,
+			bool enforceHaving,
+			out Expression? error)
 		{
 			error = null;
 
@@ -175,8 +175,8 @@ namespace LinqToDB.Linq.Builder
 				var expr = parent.Builder.BuildSqlExpression(clonedContext, new ContextRefExpression(clonedContext.ElementType, clonedContext));
 
 				// add fake join there is no still reference
-				if (clonedParentContext.SelectQuery.From.Tables.Count                                                    > 0
-				    && clonedParentContext.SelectQuery.Find(e => e is SelectQuery sc && sc == clonedContext.SelectQuery) == null)
+				if (clonedParentContext.SelectQuery.From.Tables.Count > 0
+					&& clonedParentContext.SelectQuery.Find(e => e is SelectQuery sc && sc == clonedContext.SelectQuery) == null)
 				{
 					fakeJoin = clonedContext.SelectQuery.OuterApply().JoinedTable;
 
@@ -203,12 +203,12 @@ namespace LinqToDB.Linq.Builder
 					evaluationContext: new EvaluationContext()
 				);
 
-				if (!SqlProviderHelper.IsValidQuery(optimizedQuery, 
-					    parentQuery: null, 
-					    fakeJoin: fakeJoin, 
-					    columnSubqueryLevel: null, 
-					    parent.Builder.DataContext.SqlProviderFlags, 
-					    out errorMessage))
+				if (!SqlProviderHelper.IsValidQuery(optimizedQuery,
+						parentQuery: null,
+						fakeJoin: fakeJoin,
+						columnSubqueryLevel: null,
+						parent.Builder.DataContext.SqlProviderFlags,
+						out errorMessage))
 				{
 					return false;
 				}
@@ -235,8 +235,8 @@ namespace LinqToDB.Linq.Builder
 			// We can convert only these expressions, so it is shortcut to do not allocate visitor
 
 			if (expression.NodeType is ExpressionType.Call
-				                    or ExpressionType.MemberAccess
-				                    or ExpressionType.New
+									or ExpressionType.MemberAccess
+									or ExpressionType.New
 				|| expression is BinaryExpression)
 			{
 				var result = ConvertExpression(expression);
@@ -258,7 +258,7 @@ namespace LinqToDB.Linq.Builder
 			if (translatedExpr is SqlPlaceholderExpression placeholder)
 			{
 				placeholder = UpdateNesting(context, placeholder);
-				translated  = placeholder.Sql;
+				translated = placeholder.Sql;
 				return true;
 
 			}
@@ -371,10 +371,10 @@ namespace LinqToDB.Linq.Builder
 
 			var unwrapped = expr.Unwrap();
 			if (unwrapped != expr && !mappingSchema.ValueToSqlConverter.CanConvert(dbType.SystemType) &&
-			    mappingSchema.ValueToSqlConverter.CanConvert(unwrapped.Type))
+				mappingSchema.ValueToSqlConverter.CanConvert(unwrapped.Type))
 			{
 				dbType = dbType.WithSystemType(unwrapped.Type);
-				expr   = unwrapped;
+				expr = unwrapped;
 			}
 
 			dbType = dbType.WithSystemType(expr.Type);
@@ -415,7 +415,7 @@ namespace LinqToDB.Linq.Builder
 			}
 
 			_constants.Add(key, sqlValue);
-			
+
 			return sqlValue;
 		}
 
@@ -426,21 +426,21 @@ namespace LinqToDB.Linq.Builder
 		#region ConvertCompare
 
 		public bool TryGenerateComparison(
-			IBuildContext?                               context,
-			Expression                                   left,
-			Expression                                   right,
-			[NotNullWhen(true)] out  SqlSearchCondition? searchCondition,
+			IBuildContext? context,
+			Expression left,
+			Expression right,
+			[NotNullWhen(true)] out SqlSearchCondition? searchCondition,
 			[NotNullWhen(false)] out SqlErrorExpression? error,
-			BuildPurpose?                                buildPurpose = default)
+			BuildPurpose? buildPurpose = default)
 		{
 			return _buildVisitor.TryGenerateComparison(context, left, right, out searchCondition, out error, buildPurpose);
 		}
 
 		public SqlSearchCondition GenerateComparison(
 			IBuildContext? context,
-			Expression     left,
-			Expression     right,
-			BuildPurpose?  buildPurpose = default)
+			Expression left,
+			Expression right,
+			BuildPurpose? buildPurpose = default)
 		{
 			return _buildVisitor.GenerateComparison(context, left, right, buildPurpose);
 		}
@@ -555,13 +555,14 @@ namespace LinqToDB.Linq.Builder
 
 		public ISqlPredicate? MakeIsPredicate(TableBuilder.TableContext table, Type typeOperand)
 		{
-			return MakeIsPredicate(table, table, table.InheritanceMapping, typeOperand, static (table, name) => table.SqlTable.FindFieldByMemberName(name) ?? throw new LinqToDBException($"Field {name} not found in table {table.SqlTable}"));
+			return MakeIsPredicate(table, table, table.InheritanceMapping, table.InheritanceIgnoreUnmappedRecords, typeOperand, static (table, name) => table.SqlTable.FindFieldByMemberName(name) ?? throw new LinqToDBException($"Field {name} not found in table {table.SqlTable}"));
 		}
 
 		public ISqlPredicate? MakeIsPredicate<TContext>(
 			TContext getSqlContext,
 			IBuildContext context,
 			IReadOnlyList<InheritanceMapping> inheritanceMapping,
+			bool forceFilter,
 			Type toType,
 			Func<TContext, string, ISqlExpression> getSql)
 		{
@@ -598,7 +599,7 @@ namespace LinqToDB.Linq.Builder
 			}
 
 			if (discriminators.Count == 0
-				|| (discriminators.Count == inheritanceMapping.Count && inheritanceMapping.Any(m => m.IsDefault)))
+				|| (discriminators.Count == inheritanceMapping.Count && (!forceFilter || inheritanceMapping.Any(m => m.IsDefault))))
 			{
 				var all = (notEqual && discriminators.Count == 0) || (!notEqual && discriminators.Count == inheritanceMapping.Count);
 				if (all)
