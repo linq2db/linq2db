@@ -166,7 +166,7 @@ namespace LinqToDB.Linq.Builder
 
 				// Original table is a parent.
 				//
-				if (applyFilters)
+				if (applyFilters && ObjectType != OriginalType)
 				{
 					var predicate = Builder.MakeIsPredicate(this, OriginalType);
 

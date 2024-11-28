@@ -555,6 +555,9 @@ namespace LinqToDB.Linq.Builder
 
 		public ISqlPredicate MakeIsPredicate(TableBuilder.TableContext table, Type typeOperand)
 		{
+			if (table.InheritanceMapping.Count == 0)
+				return SqlPredicate.True;
+
 			return MakeIsPredicate(table, table, table.InheritanceMapping, typeOperand, static (table, name) => table.SqlTable.FindFieldByMemberName(name) ?? throw new LinqToDBException($"Field {name} not found in table {table.SqlTable}"));
 		}
 
