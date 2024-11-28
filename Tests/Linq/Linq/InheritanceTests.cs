@@ -938,7 +938,6 @@ namespace Tests.Linq
 
 		#region issue 4460
 
-		[ActiveIssue]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4460")]
 		public void Issue4460Test_MustFindRecord([DataSources] string context)
 		{
@@ -959,7 +958,6 @@ namespace Tests.Linq
 			});
 		}
 
-		[ActiveIssue]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4460")]
 		public void Issue4460Test_MustTypeResultProperly([DataSources] string context)
 		{
@@ -980,11 +978,10 @@ namespace Tests.Linq
 			});
 		}
 
-		[ActiveIssue]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4460")]
 		public void Issue4460Test_MustInsertAllFields([DataSources] string context, [Values] BulkCopyType copyType)
 		{
-			using var db = GetDataContext(context);
+			using var db = GetDataConnection(context);
 			using var tb = db.CreateLocalTable<Issue4460Base>();
 
 			var items = new Issue4460Base[]
@@ -1730,19 +1727,19 @@ namespace Tests.Linq
 		class Issue4364_ConcreteBaseThingBeta : Issue4364_BaseThing
 		{
 			// TODO: remove when fixed, nullable added due to Issue4364Test_CreateTableWithNullableRequiredFields
-			[Nullable] public int ConcreteField { get; set; }
+			[LinqToDB.Mapping.Nullable] public int ConcreteField { get; set; }
 		}
 
 		abstract class Issue4364_IntermediateThing : Issue4364_BaseThing
 		{
 			// TODO: remove when fixed, nullable added due to Issue4364Test_CreateTableWithNullableRequiredFields
-			[Nullable] public int IntermediateField { get; set; }
+			[LinqToDB.Mapping.Nullable] public int IntermediateField { get; set; }
 		}
 
 		class Issue4364_ConcreteIntermediateThingOne : Issue4364_IntermediateThing
 		{
 			// TODO: remove when fixed, nullable added due to Issue4364Test_CreateTableWithNullableRequiredFields
-			[Nullable] public int ConcreteField { get; set; }
+			[LinqToDB.Mapping.Nullable] public int ConcreteField { get; set; }
 		}
 
 		class Issue4364_ConcreteIntermediateThingTwo : Issue4364_IntermediateThing
@@ -2075,6 +2072,216 @@ namespace Tests.Linq
 				.DeleteWhenNotMatchedBySourceAnd(i => i.Type == Issue4666EntityType.Type1)
 				.Merge();
 
+		}
+		#endregion
+
+		#region Discriminator Filtering
+		[Table("InheritanceFilter")]
+		[InheritanceMapping(Code = 1, Type = typeof(Child1))]
+		[InheritanceMapping(Code = 2, Type = typeof(Child2))]
+		[InheritanceMapping(Code = 11, Type = typeof(Grandchild11))]
+		[InheritanceMapping(Code = 12, Type = typeof(Grandchild12))]
+		[InheritanceMapping(Code = 21, Type = typeof(Grandchild21))]
+		[InheritanceMapping(Code = 22, Type = typeof(Grandchild22))]
+		abstract class BaseClass
+		{
+			[PrimaryKey] public int Id { get; set; }
+
+			[Column(IsDiscriminator = true)] public int Code { get; set; }
+
+			public static BaseClass[] Data =
+			[
+				new Child1() { Id = 1, Child1Field = 11 },
+				new Child2() { Id = 2, Child2Field = 12 },
+				new Grandchild11() { Id = 3, Grandchild11Field = 13, Child1Field = 23 },
+				new Grandchild12() { Id = 4, Grandchild12Field = 14, Child1Field = 24 },
+				new Grandchild21() { Id = 5, Grandchild21Field = 15, Child2Field = 25 },
+				new Grandchild22() { Id = 6, Grandchild22Field = 16, Child2Field = 26 },
+			];
+		}
+
+		// TODO: for now we mark optional columns nullable for create table
+		// as db.Insert doesn't take nullability of such columns into account
+		// First we need to decide how we want to address it:
+		// - use default value as ColumnDescriptor. GetProviderValue
+		// - or: force column nullability for CREATE TABLE
+		class Child1 : BaseClass
+		{
+			[Column(CanBeNull = true)] public int Child1Field { get; set; }
+		}
+
+		class Child2 : BaseClass
+		{
+			[Column(CanBeNull = true)] public int Child2Field { get; set; }
+		}
+
+		class Grandchild11 : Child1
+		{
+			[Column(CanBeNull = true)] public int Grandchild11Field { get; set; }
+		}
+
+		class Grandchild12 : Child1
+		{
+			[Column(CanBeNull = true)] public int Grandchild12Field { get; set; }
+		}
+
+		class Grandchild21 : Child2
+		{
+			[Column(CanBeNull = true)] public int Grandchild21Field { get; set; }
+		}
+
+		class Grandchild22 : Child2
+		{
+			[Column(CanBeNull = true)] public int Grandchild22Field { get; set; }
+		}
+
+		[Table("InheritanceFilter")]
+		[InheritanceMapping(Code = 1, Type = typeof(SubChild1))]
+		[InheritanceMapping(Code = 11, Type = typeof(SubGrandchild11))]
+		[InheritanceMapping(Code = 12, Type = typeof(SubGrandchild12))]
+		abstract class SubBaseClass
+		{
+			[PrimaryKey] public int Id { get; set; }
+
+			[Column(IsDiscriminator = true)] public int Code { get; set; }
+		}
+
+		class SubChild1 : SubBaseClass
+		{
+			[Column] public int Child1Field { get; set; }
+		}
+
+		class SubGrandchild11 : SubChild1
+		{
+			[Column] public int Grandchild11Field { get; set; }
+		}
+
+		class SubGrandchild12 : SubChild1
+		{
+			[Column] public int Grandchild12Field { get; set; }
+		}
+
+		[Table("InheritanceFilter")]
+		[InheritanceMapping(Code = 1, Type = typeof(SubWithDefaultChild1), IsDefault = true)]
+		[InheritanceMapping(Code = 11, Type = typeof(SubWithDefaultGrandchild11))]
+		[InheritanceMapping(Code = 12, Type = typeof(SubWithDefaultGrandchild12))]
+		abstract class SubWithDefaultBaseClass
+		{
+			[PrimaryKey] public int Id { get; set; }
+
+			[Column(IsDiscriminator = true)] public int Code { get; set; }
+		}
+
+		class SubWithDefaultChild1 : SubWithDefaultBaseClass
+		{
+			[Column] public int Child1Field { get; set; }
+		}
+
+		class SubWithDefaultGrandchild11 : SubWithDefaultChild1
+		{
+			[Column] public int Grandchild11Field { get; set; }
+		}
+
+		class SubWithDefaultGrandchild12 : SubWithDefaultChild1
+		{
+			[Column] public int Grandchild12Field { get; set; }
+		}
+
+		[Test]
+		public void TestInheritanceInsert([DataSources(false)] string context, [Values] BulkCopyType bcType)
+		{
+			using var db = GetDataConnection(context);
+			using var _ = db.CreateLocalTable<BaseClass>();
+
+			db.BulkCopy(new BulkCopyOptions() { BulkCopyType = bcType }, BaseClass.Data);
+
+			var result = db.GetTable<BaseClass>().ToArray();
+
+			Assert.That(result, Has.Length.EqualTo(6));
+			Assert.Multiple(() =>
+			{
+				Assert.That(result.OfType<Child1>().Count(), Is.EqualTo(3));
+				Assert.That(result.OfType<Grandchild11>().Count(), Is.EqualTo(1));
+				Assert.That(result.OfType<Grandchild12>().Count(), Is.EqualTo(1));
+				Assert.That(result.OfType<Child2>().Count(), Is.EqualTo(3));
+				Assert.That(result.OfType<Grandchild21>().Count(), Is.EqualTo(1));
+				Assert.That(result.OfType<Grandchild22>().Count(), Is.EqualTo(1));
+			});
+
+			var gc11 = result.OfType<Grandchild11>().Single();
+			var gc12 = result.OfType<Grandchild12>().Single();
+			var gc21 = result.OfType<Grandchild21>().Single();
+			var gc22 = result.OfType<Grandchild22>().Single();
+			var c1 = (Child1)result.Where(r => r.GetType() == typeof(Child1)).Single();
+			var c2 = (Child2)result.Where(r => r.GetType() == typeof(Child2)).Single();
+
+			Assert.Multiple(() =>
+			{
+				Assert.That(c1.Child1Field, Is.EqualTo(11));
+				Assert.That(c2.Child2Field, Is.EqualTo(12));
+				Assert.That(gc11.Grandchild11Field, Is.EqualTo(13));
+				Assert.That(gc11.Child1Field, Is.EqualTo(23));
+				Assert.That(gc12.Grandchild12Field, Is.EqualTo(14));
+				Assert.That(gc12.Child1Field, Is.EqualTo(24));
+				Assert.That(gc21.Grandchild21Field, Is.EqualTo(15));
+				Assert.That(gc21.Child2Field, Is.EqualTo(25));
+				Assert.That(gc22.Grandchild22Field, Is.EqualTo(16));
+				Assert.That(gc22.Child2Field, Is.EqualTo(26));
+			});
+		}
+
+		[Test]
+		public void TestFullTreeSelectionWithoutDefaultDiscriminator([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var _ = db.CreateLocalTable(BaseClass.Data);
+
+			var result = db.GetTable<BaseClass>().ToArray();
+
+			Assert.That(result, Has.Length.EqualTo(6));
+			Assert.Multiple(() =>
+			{
+				Assert.That(result.OfType<Child1>().Count(), Is.EqualTo(3));
+				Assert.That(result.OfType<Grandchild11>().Count(), Is.EqualTo(1));
+				Assert.That(result.OfType<Grandchild12>().Count(), Is.EqualTo(1));
+				Assert.That(result.OfType<Child2>().Count(), Is.EqualTo(3));
+				Assert.That(result.OfType<Grandchild21>().Count(), Is.EqualTo(1));
+				Assert.That(result.OfType<Grandchild22>().Count(), Is.EqualTo(1));
+			});
+		}
+
+		[Test]
+		public void TestSubTreeSelectionWithoutDefaultDiscriminator([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var _ = db.CreateLocalTable(BaseClass.Data);
+
+			var result = db.GetTable<SubBaseClass>().ToArray();
+
+			Assert.That(result, Has.Length.EqualTo(3));
+			Assert.Multiple(() =>
+			{
+				Assert.That(result.OfType<SubChild1>().Count(), Is.EqualTo(3));
+				Assert.That(result.OfType<SubGrandchild11>().Count(), Is.EqualTo(1));
+				Assert.That(result.OfType<SubGrandchild12>().Count(), Is.EqualTo(1));
+			});
+		}
+
+		[Test]
+		public void TestSubTreeSelectionWithDefaultDiscriminator([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var _ = db.CreateLocalTable(BaseClass.Data);
+
+			var result = db.GetTable<SubWithDefaultBaseClass>().ToArray();
+
+			Assert.That(result, Has.Length.EqualTo(6));
+			Assert.Multiple(() =>
+			{
+				Assert.That(result.OfType<SubWithDefaultChild1>().Count(), Is.EqualTo(6));
+				Assert.That(result.OfType<SubWithDefaultGrandchild11>().Count(), Is.EqualTo(1));
+				Assert.That(result.OfType<SubWithDefaultGrandchild12>().Count(), Is.EqualTo(1));
+			});
 		}
 		#endregion
 	}

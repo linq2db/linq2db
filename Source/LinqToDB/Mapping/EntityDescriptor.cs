@@ -135,6 +135,9 @@ namespace LinqToDB.Mapping
 		/// <summary>
 		/// Gets list of inheritance mapping descriptors for current entity.
 		/// </summary>
+		/// <remarks>
+		/// If multiple types mapped in inheritance hierarchy, most specific type descriptor goes before more generic type descriptor in this list.
+		/// </remarks>
 		public IReadOnlyList<InheritanceMapping> InheritanceMapping => _inheritanceMappings;
 
 		/// <summary>
@@ -392,6 +395,10 @@ namespace LinqToDB.Mapping
 
 			foreach (var m in _inheritanceMappings)
 				m.Discriminator = discriminator;
+
+			// order from most specific to least specific type to simplify work with hierarchies
+			// where we need to handle more specific types first
+			Array.Sort(_inheritanceMappings, (x, y) => x == y ? 0 : x.Type.IsAssignableFrom(y.Type) ? 1 : -1);
 		}
 
 		void AddColumn(ColumnDescriptor columnDescriptor)

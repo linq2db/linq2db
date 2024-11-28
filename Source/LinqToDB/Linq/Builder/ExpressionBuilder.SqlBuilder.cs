@@ -555,22 +555,6 @@ namespace LinqToDB.Linq.Builder
 
 		public ISqlPredicate MakeIsPredicate(TableBuilder.TableContext table, Type typeOperand)
 		{
-			if (typeOperand == table.ObjectType)
-			{
-				var all = true;
-				foreach (var m in table.InheritanceMapping)
-				{
-					if (m.Type == typeOperand)
-					{
-						all = false;
-						break;
-					}
-				}
-
-				if (all)
-					return SqlPredicate.True;
-			}
-
 			return MakeIsPredicate(table, table, table.InheritanceMapping, typeOperand, static (table, name) => table.SqlTable.FindFieldByMemberName(name) ?? throw new LinqToDBException($"Field {name} not found in table {table.SqlTable}"));
 		}
 
@@ -581,7 +565,7 @@ namespace LinqToDB.Linq.Builder
 			Type toType,
 			Func<TContext, string, ISqlExpression> getSql)
 		{
-			var notEqual = false;
+			var notEqual       = false;
 			var discriminators = new List<object?>(inheritanceMapping.Count);
 
 			foreach (var im1 in inheritanceMapping)
@@ -613,7 +597,8 @@ namespace LinqToDB.Linq.Builder
 				}
 			}
 
-			if (discriminators.Count == 0 || discriminators.Count == inheritanceMapping.Count)
+			if (discriminators.Count == 0
+				|| (discriminators.Count == inheritanceMapping.Count && inheritanceMapping.Any(m => m.IsDefault)))
 			{
 				var all = (notEqual && discriminators.Count == 0) || (!notEqual && discriminators.Count == inheritanceMapping.Count);
 				var allCond = new SqlSearchCondition();
