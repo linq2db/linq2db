@@ -164,9 +164,7 @@ namespace LinqToDB.Linq.Builder
 			{
 				InheritanceMapping = EntityDescriptor.InheritanceMapping;
 
-				// Original table is a parent.
-				//
-				if (applyFilters && ObjectType != OriginalType)
+				if (applyFilters && InheritanceMapping.Count > 0)
 				{
 					var predicate = Builder.MakeIsPredicate(this, OriginalType);
 

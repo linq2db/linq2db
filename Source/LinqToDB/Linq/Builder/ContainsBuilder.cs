@@ -15,7 +15,7 @@ namespace LinqToDB.Linq.Builder
 	{
 		public static bool CanBuildMethod(MethodCallExpression call, BuildInfo info, ExpressionBuilder builder)
 		{
-			return call.IsQueryable() 
+			return call.IsQueryable()
 				&& call.Arguments.Count == 2
 				// Contains over constant works through ConvertPredicate
 				&& !builder.CanBeEvaluatedOnClient(call.Arguments[0]);
@@ -23,7 +23,7 @@ namespace LinqToDB.Linq.Builder
 
 		public static bool CanBuildAsyncMethod(MethodCallExpression call, BuildInfo info, ExpressionBuilder builder)
 		{
-			return call.IsAsyncExtension() 
+			return call.IsAsyncExtension()
 				&& call.Arguments.Count == 3
 				// Contains over constant works through ConvertPredicate
 				&& !builder.CanBeEvaluatedOnClient(call.Arguments[0]);

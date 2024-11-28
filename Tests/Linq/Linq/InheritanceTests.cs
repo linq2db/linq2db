@@ -979,7 +979,7 @@ namespace Tests.Linq
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4460")]
-		public void Issue4460Test_MustInsertAllFields([DataSources] string context, [Values] BulkCopyType copyType)
+		public void Issue4460Test_MustInsertAllFields([DataSources(false)] string context, [Values] BulkCopyType copyType)
 		{
 			using var db = GetDataConnection(context);
 			using var tb = db.CreateLocalTable<Issue4460Base>();
