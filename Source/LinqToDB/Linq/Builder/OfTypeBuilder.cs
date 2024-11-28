@@ -32,7 +32,7 @@ namespace LinqToDB.Linq.Builder
 				{
 					var predicate = builder.MakeIsPredicate(table, objectType);
 
-					if (predicate.GetType() != typeof(SqlPredicate.Expr))
+					if (predicate != null)
 						sequence.SelectQuery.Where.EnsureConjunction().Add(predicate);
 
 					return BuildSequenceResult.FromContext(new OfTypeContext(sequence, objectType));
@@ -54,7 +54,8 @@ namespace LinqToDB.Linq.Builder
 						{
 							var predicate = MakeIsPredicate(builder, sequence, fromType, toType);
 
-							sequence.SelectQuery.Where.EnsureConjunction().Add(predicate);
+							if (predicate != null)
+								sequence.SelectQuery.Where.EnsureConjunction().Add(predicate);
 
 							return BuildSequenceResult.FromContext(new OfTypeContext(sequence, toType));
 						}
@@ -65,7 +66,7 @@ namespace LinqToDB.Linq.Builder
 			return BuildSequenceResult.FromContext(sequence);
 		}
 
-		static ISqlPredicate MakeIsPredicate(ExpressionBuilder builder, IBuildContext context, Type fromType, Type toType)
+		static ISqlPredicate? MakeIsPredicate(ExpressionBuilder builder, IBuildContext context, Type fromType, Type toType)
 		{
 			var mapper         = context.MappingSchema.GetEntityDescriptor(fromType, builder.DataOptions.ConnectionOptions.OnEntityDescriptorCreated);
 			var table          = new SqlTable(mapper);
