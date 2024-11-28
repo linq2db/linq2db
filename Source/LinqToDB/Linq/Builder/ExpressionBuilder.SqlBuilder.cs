@@ -553,12 +553,12 @@ namespace LinqToDB.Linq.Builder
 
 		#region MakeIsPredicate
 
-		public ISqlPredicate MakeIsPredicate(TableBuilder.TableContext table, Type typeOperand)
+		public ISqlPredicate? MakeIsPredicate(TableBuilder.TableContext table, Type typeOperand)
 		{
 			return MakeIsPredicate(table, table, table.InheritanceMapping, typeOperand, static (table, name) => table.SqlTable.FindFieldByMemberName(name) ?? throw new LinqToDBException($"Field {name} not found in table {table.SqlTable}"));
 		}
 
-		public ISqlPredicate MakeIsPredicate<TContext>(
+		public ISqlPredicate? MakeIsPredicate<TContext>(
 			TContext getSqlContext,
 			IBuildContext context,
 			IReadOnlyList<InheritanceMapping> inheritanceMapping,
@@ -601,6 +601,9 @@ namespace LinqToDB.Linq.Builder
 				|| (discriminators.Count == inheritanceMapping.Count && inheritanceMapping.Any(m => m.IsDefault)))
 			{
 				var all = (notEqual && discriminators.Count == 0) || (!notEqual && discriminators.Count == inheritanceMapping.Count);
+				if (all)
+					return null;
+
 				var allCond = new SqlSearchCondition();
 				allCond.Predicates.Add(SqlPredicate.MakeBool(all));
 				return allCond;

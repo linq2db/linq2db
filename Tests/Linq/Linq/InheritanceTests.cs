@@ -2283,6 +2283,31 @@ namespace Tests.Linq
 				Assert.That(result.OfType<SubWithDefaultGrandchild12>().Count(), Is.EqualTo(1));
 			});
 		}
+
+		// test that this specific Insert syntax doesn't generate bad SQL:
+		// INSERT INTO table SELECT FROM table
+		// causing records duplication
+		[Test]
+		public void TestInsertIssue([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var _ = db.CreateLocalTable<BaseClass>();
+
+			db.GetTable<BaseClass>().Value(_ => _.Id, 1).Insert();
+			db.GetTable<BaseClass>().Value(_ => _.Id, 2).Insert();
+			db.GetTable<BaseClass>().Value(_ => _.Id, 3).Insert();
+
+			var result = db.GetTable<BaseClass>().OrderBy(_ => _.Id).ToArray();
+
+			Assert.That(result, Has.Length.EqualTo(3));
+			Assert.Multiple(() =>
+			{
+				Assert.That(result[0].Id, Is.EqualTo(1));
+				Assert.That(result[1].Id, Is.EqualTo(2));
+				Assert.That(result[2].Id, Is.EqualTo(3));
+			});
+		}
+
 		#endregion
 	}
 }

@@ -168,7 +168,7 @@ namespace LinqToDB.Linq.Builder
 				{
 					var predicate = Builder.MakeIsPredicate(this, OriginalType);
 
-					if (predicate.GetType() != typeof(SqlPredicate.Expr))
+					if (predicate != null)
 						SelectQuery.Where.EnsureConjunction().Add(predicate);
 				}
 			}
