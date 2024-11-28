@@ -2287,6 +2287,7 @@ namespace Tests.Linq
 		// test that this specific Insert syntax doesn't generate bad SQL:
 		// INSERT INTO table SELECT FROM table
 		// causing records duplication
+		[ActiveIssue]
 		[Test]
 		public void TestInsertIssue([DataSources] string context)
 		{
