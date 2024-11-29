@@ -2974,7 +2974,7 @@ namespace LinqToDB.Linq.Builder
 				case ExpressionType.Subtract:
 				case ExpressionType.SubtractChecked: translated = CreatePlaceholder(new SqlBinaryExpression(t, l, "-", r, Precedence.Subtraction), node); break;
 				case ExpressionType.Coalesce:        translated = CreatePlaceholder(new SqlCoalesceExpression(l, r), node); break;
-				default:                      
+				default:
 					return false;
 			}
 

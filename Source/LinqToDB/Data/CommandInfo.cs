@@ -945,11 +945,11 @@ namespace LinqToDB.Data
 					}
 
 					var genericMethod = valueMethodInfo.MakeGenericMethod(elementType);
-					var task = (Task)genericMethod.Invoke(this, new object[] { rd, cancellationToken })!;
-					await task.ConfigureAwait(false);
+					var task          = genericMethod.Invoke(this, new object[] { rd, cancellationToken })!;
 
-					// Task<T>.Result
-					var value = ((dynamic)task).Result;
+					await ((Task)task).ConfigureAwait(false);
+
+					var value = task.GetType().GetProperty(nameof(Task<int>.Result))!.GetValue(task);
 
 					member.SetValue(result, value);
 				}
