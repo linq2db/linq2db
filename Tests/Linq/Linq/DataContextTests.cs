@@ -319,5 +319,21 @@ namespace Tests.Linq
 			}
 		}
 
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4729")]
+		public void Issue4729Test([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values] bool closeAfterUse)
+		{
+			var interceptor = new CountingContextInterceptor();
+			using var db = GetDataConnection(context, o => o.UseInterceptor(interceptor));
+			((IDataContext)db).CloseAfterUse = closeAfterUse;
+
+			db.Query<int>("SELECT 1").SingleOrDefault();
+
+			Assert.Multiple(() =>
+			{
+				Assert.That(interceptor.OnClosedCount, Is.EqualTo(closeAfterUse ? 1 : 0));
+				Assert.That(interceptor.OnClosedAsyncCount, Is.EqualTo(0));
+			});
+		}
+
 	}
 }
