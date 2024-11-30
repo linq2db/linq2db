@@ -17,6 +17,8 @@ namespace LinqToDB.EntityFrameworkCore
 	using Expressions;
 	using Interceptors;
 
+	using LinqToDB.Common;
+
 	/// <summary>
 	/// Linq To DB EF.Core data connection.
 	/// </summary>
@@ -252,7 +254,7 @@ namespace LinqToDB.EntityFrameworkCore
 			var lambda =
 				Expression.Lambda<Func<IStateManager, object, Tuple<InternalEntityEntry?, bool>>>(body, stateManagerParam, objParam);
 
-			return lambda.Compile();
+			return lambda.CompileExpression();
 		}
 
 		private void CopyDatabaseProperties()

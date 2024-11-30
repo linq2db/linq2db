@@ -4463,7 +4463,7 @@ namespace LinqToDB.Linq.Builder
 
 					var lambda = Expression.Lambda<Func<object, object>>(body, rootParam);
 
-					getters.Add(new SqlGetValue(placeholder.Sql, placeholder.Type, null, lambda.Compile()));
+					getters.Add(new SqlGetValue(placeholder.Sql, placeholder.Type, null, lambda.CompileExpression()));
 				}
 			}
 		}
