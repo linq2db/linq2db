@@ -67,9 +67,9 @@ namespace LinqToDB.Linq.Builder
 		string?                    _alias;
 		Stack<Expression>          _disableSubqueries = new();
 		NewExpression?             _disableNew;
+		bool                       _preferClientSide;
 
 		NullabilityContext? _nullabilityContext;
-		Expression?         _failedToTranslate;
 
 		public IBuildContext? BuildContext
 		{
@@ -1076,13 +1076,6 @@ namespace LinqToDB.Linq.Builder
 						return false;
 					}
 
-					if (_failedToTranslate == expr)
-					{
-						attribute  = null;
-						translated = null;
-						return false;
-					}
-
 					if (!attribute.ServerSideOnly && !attribute.PreferServerSide && Builder.CanBeEvaluatedOnClient(expr))
 					{
 						attribute  = null;
@@ -1094,7 +1087,14 @@ namespace LinqToDB.Linq.Builder
 
 					if (translated is not SqlPlaceholderExpression)
 					{
-						translated = new PlaceholderExpression(translated, PlaceholderType.FailedToTranslate);
+						if (attribute.ServerSideOnly)
+						{
+							translated = SqlErrorExpression.EnsureError(translated);
+							return true;
+						}
+
+						translated = null;
+						return false;
 					}
 
 					return !IsSame(translated, expr);
@@ -1952,6 +1952,12 @@ namespace LinqToDB.Linq.Builder
 
 		bool TryConvertToSql(Expression node, out Expression translated)
 		{
+			if (_preferClientSide)
+			{
+				translated = node;
+				return false;
+			}
+
 			if (node is SqlPlaceholderExpression)
 			{
 				translated = node;
@@ -2163,28 +2169,13 @@ namespace LinqToDB.Linq.Builder
 			if (node.Type == typeof(MemberInfo[]) || node.Type == typeof(LoadWithInfo))
 				return node;
 
-			if (_buildPurpose is BuildPurpose.Expression && !Builder.IsForceParameter(node, _columnDescriptor) && !_buildFlags.HasFlag(BuildFlags.ForSetProjection))
-			{
-				if (node.Value is null)
-					return node;
-
-				var valueExpr = ApplyAccessors(node);
-
-				if (valueExpr.Type != node.Type)
-				{
-					valueExpr = Expression.Convert(valueExpr.UnwrapConvert(), node.Type);
-				}
-
-				if (!ReferenceEquals(valueExpr, node))
-					valueExpr = new PlaceholderExpression(valueExpr, PlaceholderType.Closure);
-
-				return valueExpr;
-			}
-
 			if (IsSqlOrExpression())
 			{
 				if (HandleSqlRelated(node, out var translated))
 					return Visit(translated);
+
+				if (_buildPurpose is BuildPurpose.Expression && !_buildFlags.HasFlag(BuildFlags.ForSetProjection))
+					return node;
 
 				if (HandleValue(node, out translated))
 					return Visit(translated);
@@ -2193,28 +2184,22 @@ namespace LinqToDB.Linq.Builder
 			return base.VisitConstant(node);
 		}
 
-		public override Expression VisitPlaceholderExpression(PlaceholderExpression node)
+		public override Expression VisitMarkerExpression(MarkerExpression node)
 		{
-			if (node.PlaceholderType == PlaceholderType.FailedToTranslate)
+			if (node.MarkerType == MarkerType.PreferClientSide)
 			{
-				var saveFailed = _failedToTranslate;
+				var savePreferClientSide = _preferClientSide;
 
-				_failedToTranslate = node.InnerExpression;
+				_preferClientSide = true;
 
-				var newNode = base.VisitPlaceholderExpression(node);
+				var newNode = base.VisitMarkerExpression(node);
 
-				_failedToTranslate = saveFailed;
+				_preferClientSide = savePreferClientSide;
 
 				return newNode;
-			}	
-			
-			return node;
-		}
+			}
 
-		Expression ApplyAccessors(Expression expression)
-		{
-			var result = Builder.ParametersContext.ApplyAccessors(expression);
-			return result;
+			return node;
 		}
 
 		public bool HandleAsParameter(Expression node, [NotNullWhen(true)] out Expression? translated)
@@ -2303,11 +2288,6 @@ namespace LinqToDB.Linq.Builder
 
 			if (BuildContext != null && Builder.CanBeEvaluatedOnClient(node))
 			{
-				if (null != node.Find(1, (_, e) => e is PlaceholderExpression))
-				{
-					return false;
-				}
-
 				if (!Builder.PreferServerSide(node, false))
 				{
 					ISqlExpression? sql = null;
@@ -2594,7 +2574,7 @@ namespace LinqToDB.Linq.Builder
 
 		static bool IsPrimitiveConstant(Expression expression)
 		{
-			return expression.NodeType == ExpressionType.Constant && (expression.Type == typeof(int) || expression.Type == typeof(bool) || expression.Type == typeof(string));
+			return expression.NodeType == ExpressionType.Constant && (expression.Type == typeof(int) || expression.Type == typeof(bool));
 		}
 
 		protected override Expression VisitBinary(BinaryExpression node)
@@ -2602,7 +2582,7 @@ namespace LinqToDB.Linq.Builder
 			if (BuildContext == null || _buildPurpose is not (BuildPurpose.Sql or BuildPurpose.Expression or BuildPurpose.Expand))
 				return base.VisitBinary(node);
 
-			var shouldSkipConversion = false;
+			var shouldSkipSqlConversion = false;
 			if (_buildPurpose is BuildPurpose.Expression)
 			{
 				if (node.NodeType == ExpressionType.Equal || node.NodeType == ExpressionType.NotEqual)
@@ -2610,11 +2590,11 @@ namespace LinqToDB.Linq.Builder
 					// Small tuning of final Expression generation
 					//
 					if (node.Left.IsNullValue() || node.Right.IsNullValue())
-						shouldSkipConversion = true;
+						shouldSkipSqlConversion = true;
 					else if (SequenceHelper.IsSpecialProperty(node.Left, out _, out _) || SequenceHelper.IsSpecialProperty(node.Right, out _, out _))
-						shouldSkipConversion = true;
+						shouldSkipSqlConversion = true;
 					else if (IsPrimitiveConstant(node.Left) || IsPrimitiveConstant(node.Right))
-						shouldSkipConversion = true;
+						shouldSkipSqlConversion = true;
 				}
 			}
 
@@ -2633,7 +2613,7 @@ namespace LinqToDB.Linq.Builder
 				}
 			}
 
-			if (!shouldSkipConversion && TryConvertToSql(node, out var sqlResult))
+			if (!shouldSkipSqlConversion && TryConvertToSql(node, out var sqlResult))
 			{
 				return sqlResult;
 			}

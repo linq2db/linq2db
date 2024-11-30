@@ -226,11 +226,8 @@ namespace LinqToDB.Expressions
 				return expr;
 			}
 
-			if (expr is PlaceholderExpression placeholder)
+			if (expr is MarkerExpression placeholder)
 			{
-				if (placeholder.PlaceholderType is PlaceholderType.Closure or PlaceholderType.Converted)
-					return expr;
-
 				return placeholder.Update(Transform(placeholder.InnerExpression));
 			}
 

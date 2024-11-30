@@ -3,25 +3,21 @@ using System.Linq.Expressions;
 
 namespace LinqToDB.Expressions
 {
-	public enum PlaceholderType
+	public enum MarkerType
 	{
-		Closure,
-		Converted,
-		FailedToTranslate,
+		PreferClientSide,
 	}
 
-	public class PlaceholderExpression : Expression
+	public class MarkerExpression : Expression
 	{
-		public PlaceholderType PlaceholderType   { get; }
+		public MarkerType MarkerType   { get; }
 		public Expression      InnerExpression { get; }
 
-		public PlaceholderExpression(Expression innerExpression, PlaceholderType placeholderType)
+		public MarkerExpression(Expression innerExpression, MarkerType markerType)
 		{
-			PlaceholderType = placeholderType;
+			MarkerType = markerType;
 			InnerExpression = innerExpression;
 		}
-
-		public static PlaceholderExpression Closure(Expression innerExpression) => new(innerExpression, PlaceholderType.Closure);
 
 		public override ExpressionType NodeType  => ExpressionType.Extension;
 		public override Type           Type      => InnerExpression.Type;
@@ -29,17 +25,17 @@ namespace LinqToDB.Expressions
 
 		public override Expression     Reduce() => InnerExpression;
 
-		public PlaceholderExpression Update(Expression closureExpression)
+		public MarkerExpression Update(Expression closureExpression)
 		{
 			if (ReferenceEquals(InnerExpression, closureExpression))
 				return this;
-			return new PlaceholderExpression(closureExpression, PlaceholderType);
+			return new MarkerExpression(closureExpression, MarkerType);
 		}
 
 		protected override Expression Accept(ExpressionVisitor visitor)
 		{
 			if (visitor is ExpressionVisitorBase baseVisitor)
-				return baseVisitor.VisitPlaceholderExpression(this);
+				return baseVisitor.VisitMarkerExpression(this);
 			return base.Accept(visitor);
 		}
 

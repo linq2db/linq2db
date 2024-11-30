@@ -99,7 +99,7 @@ namespace LinqToDB.Expressions
 		{
 		}
 
-		public virtual Expression VisitPlaceholderExpression(PlaceholderExpression node)
+		public virtual Expression VisitMarkerExpression(MarkerExpression node)
 		{
 			return node.Update(Visit(node.InnerExpression));
 		}

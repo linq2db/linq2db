@@ -7,8 +7,6 @@ using System.Reflection;
 using FluentAssertions;
 
 using LinqToDB;
-using LinqToDB.Configuration;
-using LinqToDB.Data;
 using LinqToDB.Expressions;
 using LinqToDB.Expressions.Internal;
 using LinqToDB.Interceptors;

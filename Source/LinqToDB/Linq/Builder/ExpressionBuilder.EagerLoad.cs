@@ -508,11 +508,11 @@ namespace LinqToDB.Linq.Builder
 					.ConfigureAwait(false);
 			}
 
-			public override void GetUsedParameters(ICollection<SqlParameter> parameters)
+			public override void GetUsedParametersAndValues(ICollection<SqlParameter> parameters, ICollection<SqlValue> values)
 			{
 				foreach (var query in _query.Queries)
 				{
-					QueryHelper.CollectParameters(query.Statement, parameters);
+					QueryHelper.CollectParametersAndValues(query.Statement, parameters, values);
 				}
 			}
 		}
@@ -555,11 +555,11 @@ namespace LinqToDB.Linq.Builder
 				return result;
 			}
 
-			public override void GetUsedParameters(ICollection<SqlParameter> parameters)
+			public override void GetUsedParametersAndValues(ICollection<SqlParameter> parameters, ICollection<SqlValue> values)
 			{
 				foreach (var query in _query.Queries)
 				{
-					QueryHelper.CollectParameters(query.Statement, parameters);
+					QueryHelper.CollectParametersAndValues(query.Statement, parameters, values);
 				}
 			}
 		}

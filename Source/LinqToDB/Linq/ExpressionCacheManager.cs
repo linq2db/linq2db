@@ -79,13 +79,15 @@ namespace LinqToDB.Linq
 		public HashSet<Expression>                                 NonComparableExpressions { get; } = [];
 
 		List<(object? value, Expression accessor)>?                     _byValueCompare;
+		List<(SqlValue value, Expression accessor)>?                    _bySqlValueCompare;
 		Dictionary<int, (Expression main, Expression other)>?           _duplicateParametersCheck;
 		Dictionary<int, (Expression param, ParameterCacheEntry entry)>? _parameterEntries;
 
 		List<SqlParameter>? _nonQueryParameters;
 
 		public Expression RootPath      { get; set; } = ExpressionBuilder.QueryExpressionContainerParam;
-		public bool       HasParameters => _parameterEntries != null;
+		public bool       HasParameters => _parameterEntries  != null;
+		public bool       HasConstants  => _bySqlValueCompare != null;
 
 		public ExpressionCacheManager(Expression mainExpression, IUniqueIdGenerator<ExpressionCacheManager> generator)
 		{
@@ -170,28 +172,6 @@ namespace LinqToDB.Linq
 				});
 
 			return transformed;
-		}
-
-		public void RegisterAccessorsAsNonComparable(Expression expression)
-		{
-			_ = expression.Transform(
-				this,
-				static (context, expr) =>
-				{
-					// TODO: !!! Code should be synched with ReplaceParameter !!!
-					if (expr.NodeType == ExpressionType.ArrayIndex && ((BinaryExpression)expr).Left == ExpressionBuilder.ParametersParam)
-					{
-						return new TransformInfo(expr, true);
-					}
-
-					if (expr.NodeType == ExpressionType.Constant && context.GetAccessorExpression(expr, out _))
-					{
-						context.NonComparableExpressions.Add(expr);
-						return new TransformInfo(expr, true);
-					}
-
-					return new TransformInfo(expr);
-				});
 		}
 
 		public void RegisterDuplicateCheck(int parameterId, Expression mainParam, Expression otherParam)
@@ -448,9 +428,10 @@ namespace LinqToDB.Linq
 		/// <param name="dc"></param>
 		/// <param name="parameterExpressions"></param>
 		/// <param name="parameters"></param>
+		/// <param name="sqlValues"></param>
 		/// <returns></returns>
-		public (QueryCacheCompareInfo compareInfo, List<ParameterAccessor>? parameterAccessors, IQueryExpressions expressions) BuildQueryCacheCompareInfo(IDataContext dc,
-			IQueryExpressions parameterExpressions, List<SqlParameter>? parameters)
+		public (QueryCacheCompareInfo compareInfo, List<ParameterAccessor>? parameterAccessors, IQueryExpressions expressions) BuildQueryCacheCompareInfo(IExpressionEvaluator evaluator, IDataContext dc,
+			IQueryExpressions parameterExpressions, List<SqlParameter>? parameters, List<SqlValue>? sqlValues)
 		{
 			List<SqlParameter>? knownParameters = null;
 			if (parameters != null)
@@ -554,47 +535,68 @@ namespace LinqToDB.Linq
 
 			List<(ValueAccessorFunc main, ValueAccessorFunc other)>? comparisionFunctions = null;
 
-			if (_duplicateParametersCheck != null || _byValueCompare != null)
+			if (_duplicateParametersCheck != null)
 			{
-				comparisionFunctions = [];
-
-				if (_duplicateParametersCheck != null)
+				foreach (var (main, other) in _duplicateParametersCheck.Values)
 				{
-					foreach (var (main, other) in _duplicateParametersCheck.Values)
-					{
-						var mainValueExpr  = PrepareExpressionAccessors(dc, main, nonComparable).EnsureType<object>();
-						var otherValueExpr = PrepareExpressionAccessors(dc, other, nonComparable).EnsureType<object>();
+					var mainValueExpr  = PrepareExpressionAccessors(dc, main, nonComparable).EnsureType<object>();
+					var otherValueExpr = PrepareExpressionAccessors(dc, other, nonComparable).EnsureType<object>();
 
-						// IQueryExpressions queryExpressions, IDataContext  dataContext, object?[]? compiledParameters
-						var mainFunc = Expression.Lambda<ValueAccessorFunc>(mainValueExpr, ExpressionBuilder.QueryExpressionContainerParam, ExpressionConstants.DataContextParam,
-								ExpressionBuilder.ParametersParam)
-							.CompileExpression();
+					// IQueryExpressions queryExpressions, IDataContext  dataContext, object?[]? compiledParameters
+					var mainFunc = Expression.Lambda<ValueAccessorFunc>(mainValueExpr, ExpressionBuilder.QueryExpressionContainerParam, ExpressionConstants.DataContextParam,
+							ExpressionBuilder.ParametersParam)
+						.CompileExpression();
 
-						var otherFunc = Expression.Lambda<ValueAccessorFunc>(otherValueExpr, ExpressionBuilder.QueryExpressionContainerParam, ExpressionConstants.DataContextParam,
-								ExpressionBuilder.ParametersParam)
-							.CompileExpression();
+					var otherFunc = Expression.Lambda<ValueAccessorFunc>(otherValueExpr, ExpressionBuilder.QueryExpressionContainerParam, ExpressionConstants.DataContextParam,
+							ExpressionBuilder.ParametersParam)
+						.CompileExpression();
 
-						comparisionFunctions.Add((mainFunc, otherFunc));
-					}
+					comparisionFunctions ??= [];
+					comparisionFunctions.Add((mainFunc, otherFunc));
 				}
+			}
 
-				if (_byValueCompare != null)
+			if (_byValueCompare != null)
+			{
+				foreach (var (value, accessor) in _byValueCompare)
 				{
-					foreach (var (value, accessor) in _byValueCompare)
-					{
-						var mainValueExpr  = Expression.Constant(value).EnsureType<object>();
-						var otherValueExpr = PrepareExpressionAccessors(dc, accessor, nonComparable).EnsureType<object>();
+					var mainValueExpr  = Expression.Constant(value).EnsureType<object>();
+					var otherValueExpr = PrepareExpressionAccessors(dc, accessor, nonComparable).EnsureType<object>();
 
-						var mainFunc = Expression.Lambda<ValueAccessorFunc>(mainValueExpr, ExpressionBuilder.QueryExpressionContainerParam, ExpressionConstants.DataContextParam,
-								ExpressionBuilder.ParametersParam)
-							.CompileExpression();
+					var mainFunc = Expression.Lambda<ValueAccessorFunc>(mainValueExpr, ExpressionBuilder.QueryExpressionContainerParam, ExpressionConstants.DataContextParam,
+							ExpressionBuilder.ParametersParam)
+						.CompileExpression();
 
-						var otherFunc = Expression.Lambda<ValueAccessorFunc>(otherValueExpr, ExpressionBuilder.QueryExpressionContainerParam, ExpressionConstants.DataContextParam,
-								ExpressionBuilder.ParametersParam)
-							.CompileExpression();
+					var otherFunc = Expression.Lambda<ValueAccessorFunc>(otherValueExpr, ExpressionBuilder.QueryExpressionContainerParam, ExpressionConstants.DataContextParam,
+							ExpressionBuilder.ParametersParam)
+						.CompileExpression();
 
-						comparisionFunctions.Add((mainFunc, otherFunc));
-					}
+					comparisionFunctions ??= [];
+					comparisionFunctions.Add((mainFunc, otherFunc));
+				}
+			}
+
+			if (_bySqlValueCompare != null && sqlValues is { Count: > 0})
+			{
+				foreach (var (value, accessor) in _bySqlValueCompare)
+				{
+					if (!sqlValues.Contains(value))
+						continue;
+
+					var mainValueExpr = Expression.Constant(evaluator.Evaluate(accessor)).EnsureType<object>();
+
+					var otherValueExpr = PrepareExpressionAccessors(dc, accessor, nonComparable).EnsureType<object>();
+
+					var mainFunc = Expression.Lambda<ValueAccessorFunc>(mainValueExpr, ExpressionBuilder.QueryExpressionContainerParam, ExpressionConstants.DataContextParam,
+							ExpressionBuilder.ParametersParam)
+						.CompileExpression();
+
+					var otherFunc = Expression.Lambda<ValueAccessorFunc>(otherValueExpr, ExpressionBuilder.QueryExpressionContainerParam, ExpressionConstants.DataContextParam,
+							ExpressionBuilder.ParametersParam)
+						.CompileExpression();
+
+					comparisionFunctions ??= [];
+					comparisionFunctions.Add((mainFunc, otherFunc));
 				}
 			}
 
@@ -623,5 +625,12 @@ namespace LinqToDB.Linq
 			_byValueCompare ??= new();
 			_byValueCompare.Add((currentValue, expression));
 		}
+
+		public void RegisterSqlValue(Expression constantExpr, SqlValue value)
+		{
+			_bySqlValueCompare = _bySqlValueCompare ?? new();
+			_bySqlValueCompare.Add((value, constantExpr));
+		}
+
 	}
 }

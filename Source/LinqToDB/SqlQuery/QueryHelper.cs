@@ -1702,8 +1702,19 @@ namespace LinqToDB.SqlQuery
 		{
 			root.VisitAll(x =>
 			{
-				if (x is SqlParameter p && p.AccessorId != null)
+				if (x is SqlParameter { AccessorId: not null } p)
 					parameters.Add(p);
+			});
+		}
+
+		public static void CollectParametersAndValues(IQueryElement root, ICollection<SqlParameter> parameters, ICollection<SqlValue> values)
+		{
+			root.VisitAll(x =>
+			{
+				if (x is SqlParameter { AccessorId: not null } p)
+					parameters.Add(p);
+				else if (x is SqlValue v)
+					values.Add(v);
 			});
 		}
 	}

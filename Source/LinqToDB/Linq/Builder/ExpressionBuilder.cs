@@ -189,6 +189,9 @@ namespace LinqToDB.Linq.Builder
 					}
 				}
 
+				// Applying accessors to all found constants in mapping expression
+				finalized = ParametersContext.ApplyAccessors(finalized);
+
 				query.IsFinalized = true;
 				sequence.SetRunQuery(query, finalized);
 				FinalizeQueryCacheInformation(query, preambles);
@@ -200,32 +203,31 @@ namespace LinqToDB.Linq.Builder
 		IQueryExpressions FinalizeQueryCacheInformation<T>(Query<T> query, List<Preamble>? preambles)
 		{
 			List<SqlParameter>? builtParameters = null;
+			List<SqlValue>?     builtValues     = null;
 
-			if (ParametersContext.CacheManager.HasParameters)
+			if (ParametersContext.CacheManager.HasParameters || ParametersContext.CacheManager.HasConstants)
 			{
 				var usedParameters = new HashSet<SqlParameter>();
+				var usedValues     = new HashSet<SqlValue>();
 
 				foreach (var queryInfo in query.Queries)
 				{
-					queryInfo.Statement.VisitAll(x =>
-					{
-						if (x is SqlParameter { AccessorId: not null } p)
-							usedParameters.Add(p);
-					});
+					QueryHelper.CollectParametersAndValues(queryInfo.Statement, usedParameters, usedValues);
+				}
 
-					if (preambles?.Count > 0)
+				if (preambles?.Count > 0)
+				{
+					foreach (var preamble in preambles)
 					{
-						foreach (var preamble in preambles)
-						{
-							preamble.GetUsedParameters(usedParameters);
-						}
+						preamble.GetUsedParametersAndValues(usedParameters, usedValues);
 					}
 				}
 
 				builtParameters = usedParameters.ToList();
+				builtValues     = usedValues.ToList();
 			}
 
-			var (compareInfo, parameterAccessors, expressions) = ParametersContext.CacheManager.BuildQueryCacheCompareInfo(DataContext, ParametersContext.ParametersExpression, builtParameters);
+			var (compareInfo, parameterAccessors, expressions) = ParametersContext.CacheManager.BuildQueryCacheCompareInfo(this, DataContext, ParametersContext.ParametersExpression, builtParameters, builtValues);
 			
 			query.ParameterAccessors = parameterAccessors;
 			query.CompareInfo        = compareInfo;

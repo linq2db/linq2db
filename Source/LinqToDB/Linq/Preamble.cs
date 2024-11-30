@@ -12,6 +12,6 @@ namespace LinqToDB.Linq
 		public abstract object       Execute(IDataContext      dataContext, IQueryExpressions expressions, object?[]? parameters, object[]? preambles);
 		public abstract Task<object> ExecuteAsync(IDataContext dataContext, IQueryExpressions expressions, object?[]? parameters, object[]? preambles, CancellationToken cancellationToken);
 
-		public abstract void         GetUsedParameters(ICollection<SqlParameter> parameters);
+		public abstract void GetUsedParametersAndValues(ICollection<SqlParameter> parameters, ICollection<SqlValue> values);
 	}
 }

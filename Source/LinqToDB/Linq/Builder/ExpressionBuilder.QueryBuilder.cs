@@ -341,7 +341,10 @@ namespace LinqToDB.Linq.Builder
 			void Register(Expression expr)
 			{
 				if (!expr.Type.IsScalar() && CanBeEvaluatedOnClient(expr))
-					ParametersContext.ApplyAccessors(expr);
+				{
+					var value = EvaluateExpression(expr);
+					ParametersContext.MarkAsValue(expr, value);
+				}
 			}
 
 			// Extensions may have instance reference. Try to register them as parameterized to disallow caching objects in Expression Tree
