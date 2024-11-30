@@ -1,20 +1,19 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 
 namespace LinqToDB.SqlQuery
 {
 	using Common;
-	using Mapping;
+	using DataProvider;
+	using Extensions;
 	using Linq.Builder;
-
+	using Mapping;
 	using SqlProvider;
 	using Visitors;
-	using DataProvider;
-	using System.Globalization;
-	using Extensions;
 
 	public class SelectQueryOptimizerVisitor : SqlQueryVisitor
 	{
@@ -37,12 +36,13 @@ namespace LinqToDB.SqlQuery
 		bool            _isInsideNot;
 		SelectQuery?    _updateQuery;
 
-		SqlQueryColumnNestingCorrector _columnNestingCorrector      = new();
-		SqlQueryColumnUsageCollector   _columnUsageCollector        = new();
-		SqlQueryOrderByOptimizer       _orderByOptimizer            = new();
-		MovingComplexityVisitor        _movingComplexityVisitor     = new();
-		SqlExpressionOptimizerVisitor  _expressionOptimizerVisitor  = new(true);
-		MovingOuterPredicateVisitor    _movingOuterPredicateVisitor = new();
+		readonly SqlQueryColumnNestingCorrector _columnNestingCorrector      = new();
+		readonly SqlQueryColumnUsageCollector   _columnUsageCollector        = new();
+		readonly SqlQueryOrderByOptimizer       _orderByOptimizer            = new();
+		readonly MovingComplexityVisitor        _movingComplexityVisitor     = new();
+		readonly SqlExpressionOptimizerVisitor  _expressionOptimizerVisitor  = new(true);
+		readonly MovingOuterPredicateVisitor    _movingOuterPredicateVisitor = new();
+		readonly RemoveUnusedColumnsVisitor     _removeUnusedColumnsVisitor  = new();
 
 		public SelectQueryOptimizerVisitor() : base(VisitMode.Modify, null)
 		{
@@ -99,7 +99,7 @@ namespace LinqToDB.SqlQuery
 				{
 					// It means that we fully optimize query
 					_columnUsageCollector.CollectUsedColumns(_rootElement);
-					RemoveNotUsedColumns(_columnUsageCollector.UsedColumns, _root);
+					_removeUnusedColumnsVisitor.RemoveUnusedColumns(_columnUsageCollector.UsedColumns, _root);
 
 					// do it always, ignore dataOptions.LinqOptions.OptimizeJoins
 					JoinsOptimizer.UnnestJoins(_root);
@@ -118,60 +118,6 @@ namespace LinqToDB.SqlQuery
 			_columnNestingCorrector.CorrectColumnNesting(_root);
 
 			return _columnNestingCorrector.HasSelectQuery;
-		}
-
-		static void RemoveNotUsedColumns(IReadOnlyCollection<SqlColumn> usedColumns, IQueryElement element)
-		{
-			if (usedColumns.Count == 0)
-				return;
-
-			// VisitParentFirst: CteClause must be handled before nested select
-			element.VisitParentFirst(usedColumns, static (uc, e) =>
-			{
-				CteClause? cte          = e as CteClause;
-				SqlSelectClause? select = cte?.Body!.Select.Select ?? e as SqlSelectClause;
-
-				if (select != null)
-				{
-					for (var i = select.Columns.Count - 1; i >= 0; i--)
-					{
-						var column = select.Columns[i];
-						if (!uc.Contains(column))
-						{
-							var remove = true;
-
-							if (select.SelectQuery.From.Tables.Count == 0 && select.Columns.Count == 1)
-							{
-								remove = false;
-							}
-
-							// :-/
-							// probably we will need a custom visitor at some point to avoid code like that
-							if (remove && cte != null && column is SqlColumn { Expression: SqlValue { Value: 1 }, Alias: "unused" })
-							{
-								remove = false;
-							}
-
-							if (remove)
-							{
-								select.Columns.RemoveAt(i);
-								if (cte?.Fields.Count > 0)
-									cte.Fields.RemoveAt(i);
-							}
-						}
-					}
-
-					// see Issue3311Test3
-					// and TestNoColumns for CTE
-					if (select.Columns.Count == 0)
-					{
-						select.AddNew(new SqlValue(1), cte == null ? null : "unused");
-						cte?.Fields.Add(new SqlField(new DbDataType(typeof(int)), "unused", false));
-					}
-				}
-
-				return true;
-			});
 		}
 
 		public override void Cleanup()
@@ -2703,7 +2649,7 @@ namespace LinqToDB.SqlQuery
 
 		#region Helpers
 
-		class MovingComplexityVisitor : QueryElementVisitor
+		sealed class MovingComplexityVisitor : QueryElementVisitor
 		{
 			ISqlExpression                _expressionToCheck = default!;
 			IQueryElement?[]              _ignore            = default!;
@@ -2870,7 +2816,7 @@ namespace LinqToDB.SqlQuery
 			}
 		}
 
-		class MovingOuterPredicateVisitor : QueryElementVisitor
+		sealed class MovingOuterPredicateVisitor : QueryElementVisitor
 		{
 			SelectQuery                          _forQuery       = default!;
 			ISqlPredicate                        _predicate      = default!;
@@ -2927,6 +2873,84 @@ namespace LinqToDB.SqlQuery
 				}
 
 				return base.Visit(element);
+			}
+		}
+
+		sealed class RemoveUnusedColumnsVisitor : QueryElementVisitor
+		{
+			private readonly HashSet<SqlSelectClause> _visitedFromCte = [];
+			private IReadOnlyCollection<SqlColumn>    _usedColumns    = null!;
+
+			public RemoveUnusedColumnsVisitor() : base(VisitMode.Modify)
+			{
+			}
+
+			public void RemoveUnusedColumns(IReadOnlyCollection<SqlColumn> usedColumns, IQueryElement element)
+			{
+				if (usedColumns.Count == 0)
+					return;
+
+				_usedColumns = usedColumns;
+
+				Visit(element);
+			}
+
+			public void Cleanup()
+			{
+				_usedColumns = null!;
+				_visitedFromCte.Clear();
+			}
+
+			protected override IQueryElement VisitCteClause(CteClause element)
+			{
+				_visitedFromCte.Add(element.Body!.Select.Select);
+				ProcessSelectClause(element.Body!.Select.Select, element);
+
+				return base.VisitCteClause(element);
+			}
+
+			protected override IQueryElement VisitSqlSelectClause(SqlSelectClause element)
+			{
+				if (!_visitedFromCte.Contains(element))
+					ProcessSelectClause(element, null);
+
+				return base.VisitSqlSelectClause(element);
+			}
+
+			private void ProcessSelectClause(SqlSelectClause element, CteClause? cte)
+			{
+				for (var i = element.Columns.Count - 1; i >= 0; i--)
+				{
+					var column = element.Columns[i];
+
+					if (!_usedColumns.Contains(column))
+					{
+						element.Columns.RemoveAt(i);
+
+						// cte with unused columns could be defined with empty Field list
+						if (cte?.Fields.Count > 0)
+							cte.Fields.RemoveAt(i);
+					}
+				}
+
+				// add fake 1 column for cases when SELECT * is not valid/undesirable
+				if (element.Columns.Count == 0
+					&& (
+						// see CteTests.TestNoColumns
+						// we don't want SQL like
+						// "WITH cte (SELECT * ..."
+						// to expose all columns implicitly
+						cte != null
+						// see JoinTests.Issue3311Test3
+						// "SELECT *" table-less syntax is not valid
+						// in theory it could be lifted for providers with Fake column, but we don't have this
+						// information here currently (it's in SqlBuilder)
+						|| element.From.Tables.Count == 0
+					))
+				{
+					element.AddNew(new SqlValue(1), alias: cte != null ? "c1" : null);
+					cte?.Fields.Add(new SqlField(new DbDataType(typeof(int)), "c1", false));
+				}
 			}
 		}
 

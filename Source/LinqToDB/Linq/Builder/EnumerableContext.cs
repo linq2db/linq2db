@@ -211,7 +211,7 @@ namespace LinqToDB.Linq.Builder
 				body = body.Replace(getter.Parameters[0], Expression.Convert(param, toType));
 
 				var getterLambda = Expression.Lambda<Func<object, ISqlExpression>>(body, param);
-				var getterFunc   = getterLambda.Compile();
+				var getterFunc   = getterLambda.CompileExpression();
 
 				Table.Add(newField = new SqlField(dbDataType, memberName, column?.CanBeNull ?? true), me.Member, getterFunc);
 			}

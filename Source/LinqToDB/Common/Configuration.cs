@@ -36,7 +36,9 @@ namespace LinqToDB.Common
 		public static TDelegate CompileExpression<TDelegate>(this Expression<TDelegate> expression)
 			where TDelegate : Delegate
 		{
+#pragma warning disable RS0030 // Do not use banned APIs
 			return ((TDelegate?)_compiler?.Invoke(expression)) ?? expression.Compile();
+#pragma warning restore RS0030 // Do not use banned APIs
 		}
 
 		/// <summary>
@@ -44,7 +46,9 @@ namespace LinqToDB.Common
 		/// </summary>
 		public static Delegate CompileExpression(this LambdaExpression expression)
 		{
+#pragma warning disable RS0030 // Do not use banned APIs
 			return _compiler?.Invoke(expression) ?? expression.Compile();
+#pragma warning restore RS0030 // Do not use banned APIs
 		}
 	}
 

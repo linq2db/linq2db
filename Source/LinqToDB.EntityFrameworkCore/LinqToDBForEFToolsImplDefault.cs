@@ -37,6 +37,7 @@ namespace LinqToDB.EntityFrameworkCore
 	using Metadata;
 	using SqlQuery;
 	using Internal;
+	using LinqToDB.Common;
 
 	// ReSharper disable once ClassWithVirtualMembersNeverInherited.Global
 	/// <summary>
@@ -540,7 +541,7 @@ namespace LinqToDB.EntityFrameworkCore
 					}
 			}
 
-			var value = Expression.Lambda(expr).Compile().DynamicInvoke();
+			var value = Expression.Lambda(expr).CompileExpression().DynamicInvoke();
 			return value;
 		}
 
