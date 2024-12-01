@@ -118,10 +118,9 @@ namespace Tests.Linq
 					from p in db.Parent select (p.Value1 ?? 100) + 50);
 		}
 
-		private static int _default;
 		static int GetDefault1()
 		{
-			return _default++;
+			return 100;
 		}
 
 		[Test]
@@ -129,13 +128,11 @@ namespace Tests.Linq
 		{
 			using (var db = GetDataContext(context))
 			{
-				_default = 0;
 				var query = from p in db.Parent select p.Value1 ?? GetDefault1();
 
 				query = query.Where(x => x > 10);
 				query.ToList();
 
-				_default = 0;
 				AreEqual(
 					from p in Parent select p.Value1    ?? GetDefault1(),
 					from p in db.Parent select p.Value1 ?? GetDefault1());
