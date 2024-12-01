@@ -987,18 +987,13 @@ namespace LinqToDB.SqlProvider
 					element.CanBeNullable(_nullabilityContext));
 			}
 
-			if (element.SqlExpression is SqlSearchCondition)
-			{
-				return element.SqlExpression;
-			}
-
 			var inner = element.SqlExpression;
 			while (inner is SqlCastExpression cast)
 			{
 				inner = cast.Expression;
 			}
 
-			if (inner is SqlValue or SqlParameter)
+			if (inner is SqlValue or SqlParameter or SqlSearchCondition)
 				return element.SqlExpression;
 
 			return element;
