@@ -972,39 +972,39 @@ WHERE
 		[Test]
 		public void TestOneToOneAssociationTransformParameter([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
-			using (var db = GetDataContext(context))
-			using (db.CreateLocalTable(new[]
+			using var db = GetDataConnection(context);
+			using var t1 = db.CreateLocalTable(new[]
 			{
 				new UserGroup {Id = 1}
-			}))
-			using (db.CreateLocalTable(new[]
+			});
+			using var t2 = db.CreateLocalTable(new[]
 			{
 				new User {Id = 1, UserGroupId = 1, LanguageId = 1},
 				new User {Id = 2, UserGroupId = 1, LanguageId = 1},
 				new User {Id = 3, UserGroupId = 1, LanguageId = 2}
-			}))
-			using (db.CreateLocalTable(new[]
+			});
+			using var t3 = db.CreateLocalTable(new[]
 			{
 				new Language {Id = 1, Name = "English"},
 				new Language {Id = 2, Name = "French"}
-			}))
-			{
-				var data = db
-					.GetTable<UserGroup>()
-					.Select(x => new
-					{
-						x.Id,
-						LanguagesWithEnCount  = x.UsersWithLanguageLike(db, "_En").Count(),
-						LanguagesWithLisCount = x.UsersWithLanguageLike(db, "Lis").Count()
-					})
-					.First();
+			});
 
-				Assert.Multiple(() =>
+			var data = db
+				.GetTable<UserGroup>()
+				.Select(x => new
 				{
-					Assert.That(data.LanguagesWithEnCount, Is.EqualTo(IsCaseSensitiveDB(context) ? 2 : 3));
-					Assert.That(data.LanguagesWithLisCount, Is.EqualTo(IsCaseSensitiveDB(context) ? 0 : 2));
-				});
-			}
+					x.Id,
+					LanguagesWithEnCount  = x.UsersWithLanguageLike(db, "_En").Count(),
+					LanguagesWithLisCount = x.UsersWithLanguageLike(db, "Lis").Count()
+				})
+				.First();
+
+			Assert.Multiple(() =>
+			{
+				Assert.That(data.LanguagesWithEnCount, Is.EqualTo(IsCaseSensitiveDB(context) ? 2 : 3));
+				Assert.That(data.LanguagesWithLisCount, Is.EqualTo(IsCaseSensitiveDB(context) ? 0 : 2));
+				Assert.That(db.LastQuery!.ToUpper(), Does.Not.Contain("REPLACE"));
+			});
 		}
 
 		[Test]

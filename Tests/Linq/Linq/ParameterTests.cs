@@ -1731,7 +1731,7 @@ namespace Tests.Linq
 
 			// check only one parameter generated
 			if(!context.IsAnyOf(TestProvName.AllClickHouse))
-				Assert.That(GetCurrentBaselines().Split("DECLARE"), Has.Length.EqualTo(2));
+				GetCurrentBaselines().Should().Contain("DECLARE", Exactly.Once());
 
 			id = 2;
 
@@ -1742,9 +1742,9 @@ namespace Tests.Linq
 			query1  = db.Parent.Where(x => x.ParentID == GetId(id, 0) || x.ParentID == GetId(id, 0));
 			AssertQuery(query1);
 
-			// check only one parameter generated
+			// check only one parameter generated (1+2+1=4)
 			if (!context.IsAnyOf(TestProvName.AllClickHouse))
-				Assert.That(GetCurrentBaselines().Split("DECLARE"), Has.Length.EqualTo(5));
+				GetCurrentBaselines().Should().Contain("DECLARE", Exactly.Times(4));
 		}
 
 
