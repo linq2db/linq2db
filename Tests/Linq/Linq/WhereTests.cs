@@ -16,6 +16,8 @@ using NUnit.Framework;
 
 namespace Tests.Linq
 {
+	using System.Security.Cryptography.Xml;
+
 	using Model;
 
 	[TestFixture]
@@ -1775,13 +1777,30 @@ namespace Tests.Linq
 			}
 		}
 
+		sealed class ComplexPredicate
+		{
+			public int Id { get; set; }
+			public string? Value { get; set; }
+
+			public static ComplexPredicate[] Data =
+			[
+				new ComplexPredicate() { Id = 1 },
+				new ComplexPredicate() { Id = 2, Value = "other" },
+				new ComplexPredicate() { Id = 3, Value = "123" },
+				new ComplexPredicate() { Id = 4, Value = "test" },
+				new ComplexPredicate() { Id = 5, Value = "1" },
+			];
+		}
+
 		[Test]
 		public void ComplexIsNullPredicateTest([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				db.Person.Where(_ => (_.MiddleName == "123") == (ComplexIsNullPredicateTestFunc(_.MiddleName) == "test")).Any();
-			}
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable(ComplexPredicate.Data);
+
+			var query = tb.OrderBy(r => r.Id).Where(r => (r.Value == "123") == (ComplexIsNullPredicateTestFunc(r.Value) == "test"));
+
+			AssertQuery(query);
 		}
 
 		[ExpressionMethod(nameof(ComplexIsNullPredicateTestFuncExpr))]
