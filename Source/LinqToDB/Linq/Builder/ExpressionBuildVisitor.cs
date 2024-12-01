@@ -1720,6 +1720,7 @@ namespace LinqToDB.Linq.Builder
 				Expression testCondition;
 
 				testCondition = notNull.Select(SequenceHelper.MakeNotNullCondition).Aggregate(Expression.AndAlso);
+				testCondition = new MarkerExpression(testCondition, MarkerType.PreferClientSide);
 
 				var defaultValue  = new DefaultValueExpression(MappingSchema, innerExpression.Type, true);
 
