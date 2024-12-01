@@ -40,7 +40,9 @@ namespace Tests.UserTests
 		{
 			short? param = 1;
 			using var db = GetDataContext(context);
-			var query = db.GetTable<LinqDataTypes2>().Where(_ => param != null && Short2(param) == _.SmallIntValue);
+
+			var query = db.GetTable<LinqDataTypes2>()
+				.Where(_ => param != null && Short2(param) == _.SmallIntValue);
 
 			var result1 = query.ToList();
 			param = null;
@@ -59,7 +61,9 @@ namespace Tests.UserTests
 		{
 			long? param = 1;
 			using var db = GetDataContext(context);
-			var query = db.GetTable<LinqDataTypes2>().Where(_ => param != null && Long2(param) == _.BigIntValue);
+
+			var query = db.GetTable<LinqDataTypes2>()
+				.Where(_ => param != null && Long2(param) == _.BigIntValue);
 
 			var result1 = query.ToList();
 			param = null;
@@ -78,7 +82,9 @@ namespace Tests.UserTests
 		{
 			short? param = 1;
 			using var db = GetDataContext(context);
-			var query = db.GetTable<LinqDataTypes2>().Where(_ => param != null && Short((short)param) == _.SmallIntValue);
+
+			var query = db.GetTable<LinqDataTypes2>()
+				.Where(_ => param != null && Short((short)param) == _.SmallIntValue);
 
 			var result1 = query.ToList();
 			param = null;
@@ -97,7 +103,9 @@ namespace Tests.UserTests
 		{
 			long? param = 1;
 			using var db = GetDataContext(context);
-			var query = db.GetTable<LinqDataTypes2>().Where(_ => param != null && Long((short)param) == _.BigIntValue);
+
+			var query = db.GetTable<LinqDataTypes2>()
+				.Where(_ => param != null && Long((short)param) == _.BigIntValue);
 
 			var result1 = query.ToList();
 			param = null;
@@ -116,7 +124,9 @@ namespace Tests.UserTests
 		{
 			short? param = 1;
 			using var db = GetDataContext(context);
-			var query = db.GetTable<LinqDataTypes2>().Where(_ => param != null && (short)param == _.SmallIntValue);
+
+			var query = db.GetTable<LinqDataTypes2>()
+				.Where(_ => param != null && (short)param == _.SmallIntValue);
 
 			var result1 = query.ToList();
 			param = null;
@@ -135,7 +145,9 @@ namespace Tests.UserTests
 		{
 			long? param = 1;
 			using var db = GetDataContext(context);
-			var query = db.GetTable<LinqDataTypes2>().Where(_ => param != null && (long)param == _.BigIntValue);
+
+			var query = db.GetTable<LinqDataTypes2>()
+				.Where(_ => param != null && (long)param == _.BigIntValue);
 
 			var result1 = query.ToList();
 			param = null;
@@ -154,7 +166,9 @@ namespace Tests.UserTests
 		{
 			short? param = 1;
 			using var db = GetDataContext(context);
-			var query = db.GetTable<LinqDataTypes2>().Where(_ => param != null && param.Value == _.SmallIntValue);
+
+			var query = db.GetTable<LinqDataTypes2>()
+				.Where(_ => param != null && param.Value == _.SmallIntValue);
 
 			var result1 = query.ToList();
 			param = null;
@@ -173,7 +187,9 @@ namespace Tests.UserTests
 		{
 			long? param = 1;
 			using var db = GetDataContext(context);
-			var query = db.GetTable<LinqDataTypes2>().Where(_ => param != null && param.Value == _.BigIntValue);
+
+			var query = db.GetTable<LinqDataTypes2>()
+				.Where(_ => param != null && param.Value == _.BigIntValue);
 
 			var result1 = query.ToList();
 			param = null;
@@ -192,7 +208,9 @@ namespace Tests.UserTests
 		{
 			short? param = 1;
 			using var db = GetDataContext(context);
-			var query = db.GetTable<LinqDataTypes2>().Where(_ => param == _.SmallIntValue);
+
+			var query = db.GetTable<LinqDataTypes2>()
+				.Where(_ => param == _.SmallIntValue);
 
 			var result1 = query.ToList();
 
@@ -212,7 +230,9 @@ namespace Tests.UserTests
 		{
 			long? param = 1;
 			using var db = GetDataContext(context);
-			var query = db.GetTable<LinqDataTypes2>().Where(_ => param == _.BigIntValue);
+
+			var query = db.GetTable<LinqDataTypes2>()
+				.Where(_ => param == _.BigIntValue);
 
 			var result1 = query.ToList();
 
@@ -234,7 +254,8 @@ namespace Tests.UserTests
 			using var db = GetDataContext(context);
 			var cnt = db.GetTable<LinqDataTypes2>().Count();
 
-			var query = db.GetTable<LinqDataTypes2>().Where(_ => param == null || param.Value == _.SmallIntValue);
+			var query = db.GetTable<LinqDataTypes2>()
+				.Where(_ => param == null || param.Value == _.SmallIntValue);
 
 			var result1 = query.ToList();
 			param = null;
@@ -255,7 +276,8 @@ namespace Tests.UserTests
 			using var db = GetDataContext(context);
 			var cnt = db.GetTable<LinqDataTypes2>().Count();
 
-			var query = db.GetTable<LinqDataTypes2>().Where(_ => param == null || param.Value == _.BigIntValue);
+			var query = db.GetTable<LinqDataTypes2>()
+				.Where(_ => param == null || param.Value == _.BigIntValue);
 
 			var result1 = query.ToList();
 			param = null;

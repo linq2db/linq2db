@@ -1644,6 +1644,9 @@ namespace LinqToDB.SqlProvider
 					if (param.NeedsCast)
 						return true;
 
+					if (param.Type.SystemType.IsNullableType())
+						return true;
+
 					return false;
 				}
 				case QueryElementType.SqlQuery:

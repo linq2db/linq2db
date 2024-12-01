@@ -992,6 +992,15 @@ namespace LinqToDB.SqlProvider
 				return element.SqlExpression;
 			}
 
+			var inner = element.SqlExpression;
+			while (inner is SqlCastExpression cast)
+			{
+				inner = cast.Expression;
+			}
+
+			if (inner is SqlValue or SqlParameter)
+				return element.SqlExpression;
+
 			return element;
 		}
 

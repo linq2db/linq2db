@@ -80,6 +80,22 @@ namespace LinqToDB.Linq.Builder
 			InPredicate
 		}
 
+		public Expression SimplifyConversion(Expression expression)
+		{
+			if (expression.NodeType is ExpressionType.Convert or ExpressionType.ConvertChecked)
+			{
+				var unary = (UnaryExpression)expression;
+				if (unary.Operand.NodeType is ExpressionType.Convert or ExpressionType.ConvertChecked)
+				{
+					var unaryOperand = (UnaryExpression)unary.Operand;
+					if (unary.Type == unaryOperand.Operand.Type)
+						return unaryOperand.Operand;
+				}
+			}
+
+			return expression;
+		}
+
 		public SqlParameter? BuildParameter(
 			IBuildContext? context,
 			Expression expr,
@@ -94,6 +110,8 @@ namespace LinqToDB.Linq.Builder
 
 			if (expr.Type == typeof(void))
 				return null;
+
+			expr = SimplifyConversion(expr);
 
 			var suggested     = ExpressionCacheManager.SuggestParameterName(expr);
 			var parameterName = suggested ?? alias;
