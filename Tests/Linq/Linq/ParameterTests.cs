@@ -1723,18 +1723,28 @@ namespace Tests.Linq
 		[Test]
 		public void Caching([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				var id = 1;
+			using var db = GetDataContext(context);
+			var id = 1;
 
-				var query1  = db.Parent.Where(x => x.ParentID == GetId(id, 0) || x.ParentID == GetId(id, 0));
-				AssertQuery(query1);
+			var query1  = db.Parent.Where(x => x.ParentID == GetId(id, 0) || x.ParentID == GetId(id, 0));
+			AssertQuery(query1);
 
-				id = 2;
+			// check only one parameter generated
+			if(!context.IsAnyOf(TestProvName.AllClickHouse))
+				Assert.That(GetCurrentBaselines().Split("DECLARE"), Has.Length.EqualTo(2));
 
-				var query2  = db.Parent.Where(x => x.ParentID == GetId(id, 1) || x.ParentID == GetId(id, 0));
-				AssertQuery(query2);
-			}
+			id = 2;
+
+			var query2  = db.Parent.Where(x => x.ParentID == GetId(id, 1) || x.ParentID == GetId(id, 0));
+			AssertQuery(query2);
+
+			id = 1;
+			query1  = db.Parent.Where(x => x.ParentID == GetId(id, 0) || x.ParentID == GetId(id, 0));
+			AssertQuery(query1);
+
+			// check only one parameter generated
+			if (!context.IsAnyOf(TestProvName.AllClickHouse))
+				Assert.That(GetCurrentBaselines().Split("DECLARE"), Has.Length.EqualTo(5));
 		}
 
 
