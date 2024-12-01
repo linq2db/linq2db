@@ -2114,6 +2114,9 @@ AS
 						select p;
 
 					query.First().Should().Be(person);;
+
+					// should have only 2 parameters
+					db.LastQuery.Should().Contain("DECLARE", Exactly.Twice());
 				}
 				finally
 				{
