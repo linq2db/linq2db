@@ -397,7 +397,7 @@ namespace LinqToDB.Linq
 					return new TransformInfo(constantPlaceholder, true);
 				}
 
-				if (ctx.nonComparable.Contains(e))
+				if (ctx.nonComparable.Contains(e) && e is not ConstantExpression { Value: null })
 				{
 					var newValue = new ConstantPlaceholderExpression(e.Type);
 					ctx.newParameterized![e] = newValue;
