@@ -168,7 +168,37 @@ namespace LinqToDB.SqlQuery
 			if (TableName.Server   != null) writer.Append('[').Append(TableName.Server).Append("].");
 			if (TableName.Database != null) writer.Append('[').Append(TableName.Database).Append("].");
 			if (TableName.Schema   != null) writer.Append('[').Append(TableName.Schema).Append("].");
-			return writer.Append('[').Append(Expression ?? TableName.Name).Append('(').Append(SourceID).Append(")]");
+
+			writer.Append('[');
+			if (Expression != null)
+			{
+				writer.Append(Expression);
+
+				var len = writer.Length;
+				var arguments  = (TableArguments ?? Enumerable.Empty<ISqlExpression>()).Select(p =>
+				{
+					p.ToString(writer);
+					var s = writer.ToString(len, writer.Length - len);
+					writer.Length = len;
+					return s;
+				}).ToList();
+
+				if (arguments.Count > 0)
+				{
+					writer
+						.Append('(')
+						.Append(string.Join(", ", arguments))
+						.Append(')');
+				}
+			}
+			else
+			{
+				writer.Append(TableName.Name);
+			}
+			
+			writer.Append('(').Append(SourceID).Append(")]");
+
+			return writer;
 		}
 
 		public override bool Equals(ISqlExpression? other, Func<ISqlExpression, ISqlExpression, bool> comparer)
