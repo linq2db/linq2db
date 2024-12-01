@@ -5,6 +5,7 @@ using System.Diagnostics;
 using System.Security.Authentication;
 
 using LinqToDB;
+using LinqToDB.Data;
 using LinqToDB.Interceptors;
 using LinqToDB.Mapping;
 using LinqToDB.Remote;
@@ -19,11 +20,11 @@ using NUnit.Framework;
 
 using ProtoBuf.Grpc.Server;
 
-using Tests.Model;
-using Tests.Model.Remote.Grpc;
-
 namespace Tests.Remote.ServerContainer
 {
+	using Model;
+	using Model.Remote.Grpc;
+
 	public class GrpcServerContainer : IServerContainer
 	{
 		private const int Port = 22654;
@@ -47,29 +48,20 @@ namespace Tests.Remote.ServerContainer
 			return $"https://localhost:{port}";
 		}
 
-		public ITestDataContext Prepare(
-			MappingSchema? ms,
-			IInterceptor? interceptor,
-			string configuration,
-			Func<DataOptions,DataOptions>? optionBuilder)
-		{
-			var service = OpenHost(ms, interceptor);
+		private Func<string, MappingSchema?, DataConnection> _connectionFactory = null!;
 
-			if (interceptor != null)
-			{
-				service.AddInterceptor(interceptor);
-			}
+		ITestDataContext IServerContainer.CreateContext(
+			MappingSchema? ms,
+			string configuration,
+			Func<DataOptions,DataOptions>? optionBuilder,
+			Func<string, MappingSchema?, DataConnection> connectionFactory)
+		{
+			_connectionFactory = connectionFactory;
+			var service = OpenHost(ms);
 
 			var url = GetServiceUrl(GetPort());
 
-			var dx = new TestGrpcDataContext(
-				url,
-				() =>
-				{
-					if (interceptor != null)
-						service.RemoveInterceptor();
-				},
-				optionBuilder)
+			var dx = new TestGrpcDataContext(url, optionBuilder)
 			{ ConfigurationString = configuration };
 
 			Debug.WriteLine(((IDataContext) dx).ConfigurationID, "Provider ");
@@ -80,7 +72,7 @@ namespace Tests.Remote.ServerContainer
 			return dx;
 		}
 
-		private TestGrpcLinqService OpenHost(MappingSchema? ms, IInterceptor? interceptor)
+		private TestGrpcLinqService OpenHost(MappingSchema? ms)
 		{
 			var port = GetPort();
 
@@ -99,11 +91,10 @@ namespace Tests.Remote.ServerContainer
 				}
 
 				service = new TestGrpcLinqService(
-					new LinqService()
+					new TestLinqService((c, ms) => _connectionFactory(c, ms))
 					{
 						AllowUpdates = true
-					},
-					interceptor);
+					});
 
 				if (ms != null)
 					service.MappingSchema = ms;

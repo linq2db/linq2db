@@ -1,7 +1,7 @@
 ﻿using System;
 
 using LinqToDB;
-using LinqToDB.Interceptors;
+using LinqToDB.Data;
 using LinqToDB.Mapping;
 
 using Tests.Model;
@@ -12,6 +12,6 @@ namespace Tests.Remote.ServerContainer
 	{
 		bool KeepSamePortBetweenThreads { get; set; }
 
-		ITestDataContext Prepare(MappingSchema? ms, IInterceptor? interceptor, string configuration, Func<DataOptions,DataOptions>? optionBuilder);
+		ITestDataContext CreateContext(MappingSchema? ms, string configuration, Func<DataOptions,DataOptions>? optionBuilder, Func<string, MappingSchema?, DataConnection> connectionFactory);
 	}
 }
