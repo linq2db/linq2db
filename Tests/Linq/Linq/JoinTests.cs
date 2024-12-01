@@ -179,12 +179,15 @@ namespace Tests.Linq
 		[Test]
 		public void InnerJoin6([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-				TestJohn(
-					from p1 in db.Person
-						join p2 in from p3 in db.Person select new { ID = p3.ID + 1, p3.FirstName } on p1.ID equals p2.ID - 1
-					where p1.ID == 1
-					select new Person { ID = p1.ID, FirstName = p2.FirstName });
+			using var db = GetDataContext(context);
+
+			TestJohn(
+				from p1 in db.Person
+					join p2 in from p3 in db.Person select new { ID = p3.ID + 1, p3.FirstName } on p1.ID equals p2.ID - 1
+				where p1.ID == 1
+				select new Person { ID = p1.ID, FirstName = p2.FirstName });
+
+			Assert.That(GetCurrentBaselines(), Does.Not.Contain("JOIN"));
 		}
 
 		[Test]

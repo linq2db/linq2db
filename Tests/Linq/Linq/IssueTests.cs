@@ -684,6 +684,9 @@ namespace Tests.Linq
 								ID = 123,
 								intDataType = _
 							});
+
+					if (isNull)
+						Assert.That(GetCurrentBaselines(), Does.Contain("IS NULL"));
 				}
 			}
 		}
