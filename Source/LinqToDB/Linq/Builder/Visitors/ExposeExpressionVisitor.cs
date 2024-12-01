@@ -559,15 +559,6 @@ namespace LinqToDB.Linq.Builder.Visitors
 				return expr;
 			}
 
-			if (node.Member.IsNullableValueMember())
-			{
-				var ntype  = typeof(ConvertHelper<>).MakeGenericType(node.Type);
-				var helper = (IConvertHelper)Activator.CreateInstance(ntype)!;
-				var expr   = helper.ConvertNull(node);
-
-				return expr;
-			}
-
 			if (node.Member.DeclaringType == typeof(TimeSpan) && node.Expression != null)
 			{
 				switch (node.Expression.NodeType)

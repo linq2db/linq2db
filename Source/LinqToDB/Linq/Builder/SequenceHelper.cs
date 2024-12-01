@@ -871,6 +871,12 @@ namespace LinqToDB.Linq.Builder
 			return expression;
 		}
 
+		public static Expression RemoveMarkers(Expression expression)
+		{
+			var result = expression.Transform(e => e is MarkerExpression marker ? marker.InnerExpression : e);
+			return result;
+		}
+
 		public static LambdaExpression? GetArgumentLambda(MethodCallExpression methodCall, string argumentName)
 		{
 			var idx = Array.FindIndex(methodCall.Method.GetParameters(), a => a.Name == argumentName);

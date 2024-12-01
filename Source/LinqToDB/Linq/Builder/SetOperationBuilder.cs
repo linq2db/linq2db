@@ -1210,6 +1210,8 @@ namespace LinqToDB.Linq.Builder
 					var optimizer = new ExpressionOptimizerVisitor();
 					projected = optimizer.Visit(projected);
 
+					projected = SequenceHelper.RemoveMarkers(projected);
+
 					if (ExpressionEqualityComparer.Instance.Equals(projected, current))
 						break;
 

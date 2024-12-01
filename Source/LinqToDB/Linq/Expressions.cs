@@ -981,14 +981,6 @@ namespace LinqToDB.Linq
 
 			#region Math
 
-			{ M(() => Math.Abs    ((decimal)0)), N(() => L<decimal,decimal>((decimal p) => Sql.Abs(p)!.Value )) },
-			{ M(() => Math.Abs    ((double) 0)), N(() => L<double, double> ((double  p) => Sql.Abs(p)!.Value )) },
-			{ M(() => Math.Abs    ((short)  0)), N(() => L<short,  short>  ((short   p) => Sql.Abs(p)!.Value )) },
-			{ M(() => Math.Abs    ((int)    0)), N(() => L<int,    int>    ((int     p) => Sql.Abs(p)!.Value )) },
-			{ M(() => Math.Abs    ((long)   0)), N(() => L<long,    long>  ((long    p) => Sql.Abs(p)!.Value )) },
-			{ M(() => Math.Abs    ((sbyte)  0)), N(() => L<sbyte,  sbyte>  ((sbyte   p) => Sql.Abs(p)!.Value )) },
-			{ M(() => Math.Abs    ((float)  0)), N(() => L<float,  float>  ((float   p) => Sql.Abs(p)!.Value )) },
-
 			{ M(() => Math.Acos   (0)   ),       N(() => L<double,double>       ((double p)          => Sql.Acos   (p)!   .Value )) },
 			{ M(() => Math.Asin   (0)   ),       N(() => L<double,double>       ((double p)          => Sql.Asin   (p)!   .Value )) },
 			{ M(() => Math.Atan   (0)   ),       N(() => L<double,double>       ((double p)          => Sql.Atan   (p)!   .Value )) },

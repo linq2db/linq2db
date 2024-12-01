@@ -626,7 +626,7 @@ namespace LinqToDB.Data
 						}
 
 						// Tell Builder to prefer client side
-						test = new MarkerExpression(test, MarkerType.PreferClientSide);
+						test = MarkerExpression.PreferClientSide(test);
 
 						var fullEntity = TryConstructFullEntity(constructorExpression, inheritance.Type, flags, false, out error);
 						if (fullEntity == null)

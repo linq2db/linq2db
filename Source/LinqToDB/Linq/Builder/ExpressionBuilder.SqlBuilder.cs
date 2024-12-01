@@ -1144,6 +1144,11 @@ namespace LinqToDB.Linq.Builder
 						return placeholder;
 					}
 
+					if (body is MarkerExpression marker)
+					{
+						return Project(context, path, nextPath, nextIndex, flags, marker.InnerExpression, strict);
+					}
+
 					if (member != null)
 					{
 						if (body is ContextRefExpression contextRef)

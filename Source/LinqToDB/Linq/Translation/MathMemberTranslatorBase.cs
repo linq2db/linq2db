@@ -12,6 +12,7 @@ namespace LinqToDB.Linq.Translation
 		{
 			RegisterMax();
 			RegisterMin();
+			RegisterAbs();
 			RegisterRound();
 			RgisterPow();
 		}
@@ -44,6 +45,25 @@ namespace LinqToDB.Linq.Translation
 			Registration.RegisterMethod((ushort  x, ushort  y) => Math.Min(x, y), TranslateMinMethod);
 			Registration.RegisterMethod((uint    x, uint    y) => Math.Min(x, y), TranslateMinMethod);
 			Registration.RegisterMethod((ulong   x, ulong   y) => Math.Min(x, y), TranslateMinMethod);
+		}
+
+		void RegisterAbs()
+		{
+			Registration.RegisterMethod((short   v) => Math.Abs(v), TranslateAbsMethod);
+			Registration.RegisterMethod((int     v) => Math.Abs(v), TranslateAbsMethod);
+			Registration.RegisterMethod((long    v) => Math.Abs(v), TranslateAbsMethod);
+			Registration.RegisterMethod((sbyte   v) => Math.Abs(v), TranslateAbsMethod);
+			Registration.RegisterMethod((float   v) => Math.Abs(v), TranslateAbsMethod);
+			Registration.RegisterMethod((double  v) => Math.Abs(v), TranslateAbsMethod);
+			Registration.RegisterMethod((decimal v) => Math.Abs(v), TranslateAbsMethod);
+
+			Registration.RegisterMethod((decimal? v) => Sql.Abs(v), TranslateAbsMethod);
+			Registration.RegisterMethod((double?  v) => Sql.Abs(v), TranslateAbsMethod);
+			Registration.RegisterMethod((short?   v) => Sql.Abs(v), TranslateAbsMethod);
+			Registration.RegisterMethod((int?     v) => Sql.Abs(v), TranslateAbsMethod);
+			Registration.RegisterMethod((long?    v) => Sql.Abs(v), TranslateAbsMethod);
+			Registration.RegisterMethod((sbyte?   v) => Sql.Abs(v), TranslateAbsMethod);
+			Registration.RegisterMethod((float?   v) => Sql.Abs(v), TranslateAbsMethod);
 		}
 
 		void RegisterRound()
@@ -116,6 +136,19 @@ namespace LinqToDB.Linq.Translation
 			return translationContext.CreatePlaceholder(translationContext.CurrentSelectQuery, translated, methodCall);
 		}
 
+		Expression? TranslateAbsMethod(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)
+		{
+			if (!translationContext.TranslateToSqlExpression(methodCall.Arguments[0], out var translatedValue))
+				return null;
+
+			var translated = TranslateAbsMethod(translationContext, methodCall, translatedValue);
+
+			if (translated == null)
+				return null;
+
+			return translationContext.CreatePlaceholder(translationContext.CurrentSelectQuery, translated, methodCall);
+		}
+
 		protected virtual ISqlExpression? TranslateMaxMethod(ITranslationContext translationContext, MethodCallExpression methodCall, ISqlExpression xValue, ISqlExpression yValue)
 		{
 			var factory = translationContext.ExpressionFactory;
@@ -147,6 +180,16 @@ namespace LinqToDB.Linq.Translation
 			}
 
 			var result = factory.Condition(factory.LessOrEqual(xValue, yValue), xValue, yValueResult);
+			return result;
+		}
+
+		protected virtual ISqlExpression? TranslateAbsMethod(ITranslationContext translationContext, MethodCallExpression methodCall, ISqlExpression value)
+		{
+			var factory = translationContext.ExpressionFactory;
+
+			var valueType = factory.GetDbDataType(value);
+
+			var result = factory.Function(valueType, "Abs", value);
 			return result;
 		}
 

@@ -1365,6 +1365,30 @@ namespace LinqToDB.Linq.Builder
 				_alias = node.Member.Name;
 				var context = FoundRoot;
 
+				if (node.Expression != null)
+				{
+					if (node.Member.IsNullableValueMember())
+					{
+						var translatedExpr = Visit(node.Expression!);
+
+						if (translatedExpr is SqlPlaceholderExpression placeholder)
+						{
+							return Visit(placeholder.WithType(node.Type));
+						}
+					}
+
+					if (node.Member.IsNullableHasValueMember())
+					{
+						var translatedExpr = Visit(node.Expression!);
+
+						if (translatedExpr is SqlPlaceholderExpression)
+						{
+							var hasValue = SequenceHelper.MakeNotNullCondition(translatedExpr);
+							return Visit(hasValue);
+						}
+					}
+				}
+
 				if (context != null)
 				{
 					if (_buildPurpose is BuildPurpose.Expression or BuildPurpose.Sql)
@@ -1376,32 +1400,6 @@ namespace LinqToDB.Linq.Builder
 							DebugCacheHit(exprCacheKey, alreadyTranslated);
 #endif
 							return Visit(alreadyTranslated);
-						}
-					}
-
-					if (node.Expression != null)
-					{
-						using var savingContext = UsingBuildContext(context.BuildContext);
-
-						if (node.Member.IsNullableValueMember())
-						{
-							var translatedExpr = Visit(node.Expression!);
-
-							if (translatedExpr is SqlPlaceholderExpression placeholder)
-							{
-								return Visit(placeholder.WithType(node.Type));
-							}
-						}
-
-						if (node.Member.IsNullableHasValueMember())
-						{
-							var translatedExpr = Visit(node.Expression!);
-
-							if (translatedExpr is SqlPlaceholderExpression placeholder)
-							{
-								var hasValue = SequenceHelper.MakeNotNullCondition(translatedExpr);
-								return Visit(hasValue);
-							}
 						}
 					}
 
@@ -1720,7 +1718,7 @@ namespace LinqToDB.Linq.Builder
 				Expression testCondition;
 
 				testCondition = notNull.Select(SequenceHelper.MakeNotNullCondition).Aggregate(Expression.AndAlso);
-				testCondition = new MarkerExpression(testCondition, MarkerType.PreferClientSide);
+				testCondition = MarkerExpression.PreferClientSide(testCondition);
 
 				var defaultValue  = new DefaultValueExpression(MappingSchema, innerExpression.Type, true);
 
@@ -1953,7 +1951,7 @@ namespace LinqToDB.Linq.Builder
 
 		bool TryConvertToSql(Expression node, out Expression translated)
 		{
-			if (_preferClientSide)
+			if (_preferClientSide && !_buildFlags.HasFlag(BuildFlags.ForSetProjection))
 			{
 				translated = node;
 				return false;
@@ -2193,11 +2191,14 @@ namespace LinqToDB.Linq.Builder
 
 				_preferClientSide = true;
 
-				var newNode = base.VisitMarkerExpression(node);
+				var inner = Visit(node.InnerExpression);
 
 				_preferClientSide = savePreferClientSide;
 
-				return newNode;
+				if (inner is SqlPlaceholderExpression or SqlErrorExpression)
+					return inner;
+
+				return node.Update(inner);
 			}
 
 			return node;

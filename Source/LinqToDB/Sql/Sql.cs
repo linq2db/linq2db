@@ -1242,14 +1242,14 @@ namespace LinqToDB
 
 		#region Math Functions
 
-		[Function(IsNullable = IsNullableType.IfAnyParameterNullable)] public static decimal? Abs    (decimal? value) => value == null ? null : Math.Abs (value.Value);
-		[Function(IsNullable = IsNullableType.IfAnyParameterNullable)] public static double?  Abs    (double?  value) => value == null ? null : Math.Abs (value.Value);
-		[Function(IsNullable = IsNullableType.IfAnyParameterNullable)] public static short?   Abs    (short?   value) => value == null ? null : Math.Abs (value.Value);
-		[Function(IsNullable = IsNullableType.IfAnyParameterNullable)] public static int?     Abs    (int?     value) => value == null ? null : Math.Abs (value.Value);
-		[Function(IsNullable = IsNullableType.IfAnyParameterNullable)] public static long?    Abs    (long?    value) => value == null ? null : Math.Abs (value.Value);
+		public static decimal? Abs    (decimal? value) => value == null ? null : Math.Abs (value.Value);
+		public static double?  Abs    (double?  value) => value == null ? null : Math.Abs (value.Value);
+		public static short?   Abs    (short?   value) => value == null ? null : Math.Abs (value.Value);
+		public static int?     Abs    (int?     value) => value == null ? null : Math.Abs (value.Value);
+		public static long?    Abs    (long?    value) => value == null ? null : Math.Abs (value.Value);
 		[CLSCompliant(false)]
-		[Function(IsNullable = IsNullableType.IfAnyParameterNullable)] public static sbyte?   Abs    (sbyte?   value) => value == null ? null : Math.Abs (value.Value);
-		[Function(IsNullable = IsNullableType.IfAnyParameterNullable)] public static float?   Abs    (float?   value) => value == null ? null : Math.Abs (value.Value);
+		public static sbyte?   Abs    (sbyte?   value) => value == null ? null : Math.Abs (value.Value);
+		public static float?   Abs    (float?   value) => value == null ? null : Math.Abs (value.Value);
 
 		[Function(IsNullable = IsNullableType.IfAnyParameterNullable)] public static double?  Acos   (double?  value) => value == null ? null : Math.Acos(value.Value);
 		[Function(IsNullable = IsNullableType.IfAnyParameterNullable)] public static double?  Asin   (double?  value) => value == null ? null : Math.Asin(value.Value);
