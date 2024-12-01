@@ -1054,7 +1054,6 @@ namespace Tests.Linq
 			using var tb = db.CreateLocalTable<Issue1855Table>();
 
 			var dtoBase = new DateTimeOffset(2019,08,08,08,08,08, TimeSpan.Zero);
-			var id = 1;
 			var insert = tb
 					.Value(r => r.Id, 1)
 					.Value(r => r.SomeDateTimeOffset, dtoBase)
@@ -1062,31 +1061,42 @@ namespace Tests.Linq
 
 			insert.Insert();
 
+			insert = tb
+					.Value(r => r.Id, 2)
+					.Value(r => r.SomeDateTimeOffset, dtoBase);
+
+			insert.Insert();
+
 			var interval = 10;
 			var clientSideIn = dtoBase.AddSeconds(interval);
-			List<Issue1855Table> result;
-			var query = tb.Where(r => r.Id == id);
+			IQueryable<Issue1855Table> query = tb;
 
 			if (testCase == 2)
 			{
-				result = query.Where(r => clientSideIn != r.SomeNullableDateTimeOffset).ToList();
+				query = query.Where(r => clientSideIn != r.SomeNullableDateTimeOffset);
 			}
 			else if (testCase == 3)
 			{
-				result = query.Where(r => clientSideIn != r.SomeDateTimeOffset).ToList();
+				query = query.Where(r => clientSideIn != r.SomeDateTimeOffset);
 			}
 			else
 			{
-				result = query
+				query = query
 					.Where(
 						r => Sql.DateAdd(
 							Sql.DateParts.Second,
 							interval,
-							(testCase == 1 ? r.SomeNullableDateTimeOffset : r.SomeDateTimeOffset)) >= clientSideIn)
-					.ToList();
+							(testCase == 1 ? r.SomeNullableDateTimeOffset : r.SomeDateTimeOffset)) >= clientSideIn);
+
 			}
 
-			Assert.That(result, Is.Not.Empty);
+			var result = query.ToArray();
+
+			Assert.That(result, Has.Length.EqualTo(testCase == 1? 1 : 2));
+			if (testCase == 1)
+			{
+				Assert.That(result[0].Id, Is.EqualTo(1));
+			}
 		}
 
 		sealed class Issue1855Table

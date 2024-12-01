@@ -3629,7 +3629,8 @@ namespace Tests.Linq
 
 			query = query = query.OrderBy(x => x.DateTimeValue2);
 
-			query.ToList();
+			var result = query.ToList();
+			Assert.That(result, Has.Count.EqualTo(12));
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4349")]
