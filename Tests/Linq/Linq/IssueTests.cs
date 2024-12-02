@@ -647,48 +647,61 @@ namespace Tests.Linq
 			}
 		}
 
-		[Table("AllTypes")]
-		[Table("ALLTYPES", Configuration = ProviderName.DB2)]
+		[Table]
 		private sealed class InsertIssueTest
 		{
-			[Column("smallintDataType")]
-			[Column("SMALLINTDATATYPE", Configuration = ProviderName.DB2)]
-			public short ID;
+			[Column] public short ID;
 
-			[Column]
-			[Column("INTDATATYPE", Configuration = ProviderName.DB2)]
-			public int? intDataType;
+			[Column] public int? intDataType;
 
 			[Association(ThisKey = nameof(ID), OtherKey = nameof(intDataType), CanBeNull = true)]
 			public IQueryable<InsertIssueTest> Association => throw new InvalidOperationException();
+
+			public static InsertIssueTest[] TestData =
+			[
+				new InsertIssueTest() { ID = 0, intDataType = 0 },
+				new InsertIssueTest() { ID = 0, intDataType = 0 },
+				new InsertIssueTest() { ID = 1234, intDataType = 1234 },
+				new InsertIssueTest() { ID = 1234, intDataType = 1234 },
+			];
 		}
 
 		[Test]
 		public void InsertFromSelectWithNullableFilter([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable(InsertIssueTest.TestData);
+
+			Query(true);
+
+			Query(false);
+
+			var data = tb.ToArray();
+			Assert.That(data, Has.Length.EqualTo(5));
+			Assert.Multiple(() =>
 			{
-				Query(true);
-				Query(false);
+				Assert.That(data.Count(r => r.ID == 0 && r.intDataType == 0), Is.EqualTo(2));
+				Assert.That(data.Count(r => r.ID == 0 && r.intDataType == 123), Is.EqualTo(1));
+				Assert.That(data.Count(r => r.ID == 1234 && r.intDataType == 1234), Is.EqualTo(2));
+			});
 
-				void Query(bool isNull)
-				{
-					db.GetTable<InsertIssueTest>()
-						.Where(_ => _.ID == GetId(isNull))
-						.SelectMany(_ => _.Association)
-						.Select(_ => _.ID)
-						.Distinct()
-						.Insert(
-							db.GetTable<InsertIssueTest>(),
-							_ => new InsertIssueTest()
-							{
-								ID = 123,
-								intDataType = _
-							});
+			void Query(bool isNull)
+			{
+				var rows = db.GetTable<InsertIssueTest>()
+					.Where(_ => _.ID == GetId(isNull))
+					.SelectMany(_ => _.Association)
+					.Select(_ => _.ID)
+					.Distinct()
+					.Insert(
+						db.GetTable<InsertIssueTest>(),
+						_ => new InsertIssueTest()
+						{
+							ID = 123,
+							intDataType = _
+						});
 
-					if (isNull)
-						Assert.That(GetCurrentBaselines(), Does.Contain("IS NULL"));
-				}
+				if (!context.IsAnyOf(TestProvName.AllClickHouse))
+					Assert.That(rows, Is.EqualTo(isNull ? 0 : 1));
 			}
 		}
 
