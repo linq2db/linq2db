@@ -2606,24 +2606,29 @@ $function$
 		}
 
 		#region Issue 4556
-		[ActiveIssue]
+		// TODO: enable remote context (requires dictionary serialization support)
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4556")]
-		public void Issue4556Test([IncludeDataSources(true, TestProvName.AllPostgreSQL15Plus)] string context)
+		public void Issue4556Test([IncludeDataSources(TestProvName.AllPostgreSQL15Plus)] string context)
 		{
-			using var db = GetDataContext(context);
+			var builder = new NpgsqlDataSourceBuilder(GetConnectionString(context));
+			builder.EnableDynamicJson();
+			var dataSource = builder.Build();
+
+			DataOptions OptionsBuilder(DataOptions o) => o.UseConnectionFactory(GetDataProvider(context), _ => dataSource.CreateConnection());
+
+			using var db = GetDataContext(context, OptionsBuilder);
 			using var tb  = db.CreateLocalTable<Issue4556Table>();
 
-			var record = new Issue4556Table
-			{
-				Payload = "John",
-				Headers = new Dictionary<string, string>()
-				{
-					{ "key1", "value1" }
-				}
-			};
-
+			// test empty set typing
 			tb.Merge()
-				.Using(new Issue4556Table[] { record })
+				.Using(Array.Empty<Issue4556Table>())
+				.OnTargetKey()
+				.InsertWhenNotMatched()
+				.Merge();
+
+			// test non-empty set typing with more than 1 row
+			tb.Merge()
+				.Using(Issue4556Table.TestData)
 				.OnTargetKey()
 				.InsertWhenNotMatched()
 				.Merge();
@@ -2633,11 +2638,47 @@ $function$
 		{
 			[PrimaryKey, Identity] public int Id { get; set; }
 
-			[Column(DataType = DataType.BinaryJson, DbType = "jsonb", Name = "Payload")]
-			public string? Payload { get; set; }
+			[Column(DataType = DataType.Json, Name = "Payload_json")]
+			public string? PayloadJson { get; set; }
 
-			[Column(DataType = DataType.Json, DbType = "json", Name = "Headers")]
-			public Dictionary<string, string>? Headers { get; set; }
+			[Column(DataType = DataType.BinaryJson, Name = "Payload_jsonb")]
+			public string? PayloadJsonB { get; set; }
+
+			[Column(DataType = DataType.Json, DbType = "json", Name = "Headers_json")]
+			public Dictionary<string, string>? HeadersJson { get; set; }
+
+			[Column(DataType = DataType.Json, DbType = "json", Name = "Headers_jsonb")]
+			public Dictionary<string, string>? HeadersJsonB { get; set; }
+
+			public static Issue4556Table[] TestData =
+			[
+				new Issue4556Table()
+				{
+					PayloadJson = "true",
+					PayloadJsonB = "123",
+					HeadersJson = new Dictionary<string, string>()
+					{
+						{ "key1", "value1" }
+					},
+					HeadersJsonB = new Dictionary<string, string>()
+					{
+						{ "key2", "value3" }
+					}
+				},
+				new Issue4556Table()
+				{
+					PayloadJson = "\"some string\"",
+					PayloadJsonB = "-124",
+					HeadersJson = new Dictionary<string, string>()
+					{
+						{ "sd", "sdfgsd" }
+					},
+					HeadersJsonB = new Dictionary<string, string>()
+					{
+						{ "g4", "sdg" }
+					}
+				}
+			];
 		}
 		#endregion
 
