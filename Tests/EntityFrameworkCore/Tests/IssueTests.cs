@@ -841,7 +841,6 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 				.Merge();
 		}
 
-		[ActiveIssue]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4667")]
 		public void Issue4667Test([EFIncludeDataSources(TestProvName.AllPostgreSQL15Plus)] string provider)
 		{

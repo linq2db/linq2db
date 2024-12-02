@@ -21,7 +21,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 						// if column contains NULL in all rows, pgsql will type is as "text"
 						rows.All(r => r[column] is SqlValue value && value.Value == null)
 						// json(b) should be typed explicitly or it will be typed as text
-						|| source.Fields[column].Type.DataType is DataType.BinaryJson or DataType.Json
+						|| PostgreSQLSqlExpressionConvertVisitor.IsJson(source.Fields[column].Type, out _)
 				));
 		}
 

@@ -342,7 +342,14 @@ namespace LinqToDB.SqlQuery
 			var result = GetDbDataType(expr);
 			if (result.DataType == DataType.Undefined)
 			{
-				result = mappingSchema.GetDbDataType(expr.SystemType ?? typeof(object));
+				var fromSchema = mappingSchema.GetDbDataType(expr.SystemType ?? typeof(object));
+
+				result = fromSchema
+					.WithSystemType(result.SystemType)
+					.WithDbType(result.DbType ?? fromSchema.DbType)
+					.WithLength(result.Length ?? fromSchema.Length)
+					.WithLength(result.Precision ?? fromSchema.Precision)
+					.WithLength(result.Scale ?? fromSchema.Scale);
 			}
 
 			return result;

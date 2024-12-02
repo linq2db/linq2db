@@ -1,5 +1,7 @@
 ﻿namespace LinqToDB.DataProvider.PostgreSQL
 {
+	using System;
+
 	using Common;
 	using Extensions;
 	using SqlProvider;
@@ -89,6 +91,17 @@
 			};
 		}
 
+		// TODO: remove and use DataType check when we implement DbType parsing to DbDataType
+		internal static bool IsJson(DbDataType type, out bool isJsonB)
+		{
+			isJsonB = type.DataType == DataType.BinaryJson
+				|| type.DbType?.Equals("jsonb", StringComparison.OrdinalIgnoreCase) == true;
+
+			return isJsonB
+				|| type.DataType is DataType.Json
+				|| type.DbType?.Equals("json", StringComparison.OrdinalIgnoreCase) == true;
+		}
+
 		protected override IQueryElement VisitExprExprPredicate(SqlPredicate.ExprExpr predicate)
 		{
 			if (predicate.Operator is SqlPredicate.Operator.Equal or SqlPredicate.Operator.NotEqual)
@@ -97,13 +110,13 @@
 				var left  = QueryHelper.GetDbDataType(predicate.Expr1, MappingSchema);
 				var right = QueryHelper.GetDbDataType(predicate.Expr2, MappingSchema);
 
-				if ((left.DataType is DataType.Json or DataType.BinaryJson || right.DataType is DataType.Json or DataType.BinaryJson)
-					&& !(left.DataType is DataType.BinaryJson && right.DataType is DataType.BinaryJson))
+				// | is correct, we need to run both
+				if ((IsJson(left, out var leftJsonB) | IsJson(right, out var rightJsonB)) && !(leftJsonB && rightJsonB))
 				{
-					var expr1 = left.DataType == DataType.BinaryJson
+					var expr1 = leftJsonB
 						? predicate.Expr1
 						: new SqlCastExpression(predicate.Expr1, new DbDataType(predicate.Expr1.SystemType ?? typeof(object), DataType.BinaryJson), null, isMandatory: true);
-					var expr2 = left.DataType == DataType.BinaryJson
+					var expr2 = rightJsonB
 						? predicate.Expr2
 						: new SqlCastExpression(predicate.Expr2, new DbDataType(predicate.Expr2.SystemType ?? typeof(object), DataType.BinaryJson), null, isMandatory: true);
 

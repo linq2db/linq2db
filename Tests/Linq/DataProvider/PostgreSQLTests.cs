@@ -2608,7 +2608,7 @@ $function$
 		#region Issue 4556
 		// TODO: enable remote context (requires dictionary serialization support)
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4556")]
-		public void Issue4556Test([IncludeDataSources(TestProvName.AllPostgreSQL15Plus)] string context)
+		public void Issue4556Test_ByDataType([IncludeDataSources(TestProvName.AllPostgreSQL15Plus)] string context)
 		{
 			var builder = new NpgsqlDataSourceBuilder(GetConnectionString(context));
 			builder.EnableDynamicJson();
@@ -2617,24 +2617,51 @@ $function$
 			DataOptions OptionsBuilder(DataOptions o) => o.UseConnectionFactory(GetDataProvider(context), _ => dataSource.CreateConnection());
 
 			using var db = GetDataContext(context, OptionsBuilder);
-			using var tb  = db.CreateLocalTable<Issue4556Table>();
+			using var tb  = db.CreateLocalTable<Issue4556Table1>();
 
 			// test empty set typing
 			tb.Merge()
-				.Using(Array.Empty<Issue4556Table>())
+				.Using(Array.Empty<Issue4556Table1>())
 				.OnTargetKey()
 				.InsertWhenNotMatched()
 				.Merge();
 
 			// test non-empty set typing with more than 1 row
 			tb.Merge()
-				.Using(Issue4556Table.TestData)
+				.Using(Issue4556Table1.TestData)
 				.OnTargetKey()
 				.InsertWhenNotMatched()
 				.Merge();
 		}
 
-		sealed class Issue4556Table
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4556")]
+		public void Issue4556Test_ByDbType([IncludeDataSources(TestProvName.AllPostgreSQL15Plus)] string context)
+		{
+			var builder = new NpgsqlDataSourceBuilder(GetConnectionString(context));
+			builder.EnableDynamicJson();
+			var dataSource = builder.Build();
+
+			DataOptions OptionsBuilder(DataOptions o) => o.UseConnectionFactory(GetDataProvider(context), _ => dataSource.CreateConnection());
+
+			using var db = GetDataContext(context, OptionsBuilder);
+			using var tb  = db.CreateLocalTable<Issue4556Table2>();
+
+			// test empty set typing
+			tb.Merge()
+				.Using(Array.Empty<Issue4556Table2>())
+				.OnTargetKey()
+				.InsertWhenNotMatched()
+				.Merge();
+
+			// test non-empty set typing with more than 1 row
+			tb.Merge()
+				.Using(Issue4556Table2.TestData)
+				.OnTargetKey()
+				.InsertWhenNotMatched()
+				.Merge();
+		}
+
+		sealed class Issue4556Table1
 		{
 			[PrimaryKey, Identity] public int Id { get; set; }
 
@@ -2644,15 +2671,15 @@ $function$
 			[Column(DataType = DataType.BinaryJson, Name = "Payload_jsonb")]
 			public string? PayloadJsonB { get; set; }
 
-			[Column(DataType = DataType.Json, DbType = "json", Name = "Headers_json")]
+			[Column(DataType = DataType.Json, Name = "Headers_json")]
 			public Dictionary<string, string>? HeadersJson { get; set; }
 
-			[Column(DataType = DataType.Json, DbType = "json", Name = "Headers_jsonb")]
+			[Column(DataType = DataType.BinaryJson, Name = "Headers_jsonb")]
 			public Dictionary<string, string>? HeadersJsonB { get; set; }
 
-			public static Issue4556Table[] TestData =
+			public static Issue4556Table1[] TestData =
 			[
-				new Issue4556Table()
+				new Issue4556Table1()
 				{
 					PayloadJson = "true",
 					PayloadJsonB = "123",
@@ -2665,7 +2692,54 @@ $function$
 						{ "key2", "value3" }
 					}
 				},
-				new Issue4556Table()
+				new Issue4556Table1()
+				{
+					PayloadJson = "\"some string\"",
+					PayloadJsonB = "-124",
+					HeadersJson = new Dictionary<string, string>()
+					{
+						{ "sd", "sdfgsd" }
+					},
+					HeadersJsonB = new Dictionary<string, string>()
+					{
+						{ "g4", "sdg" }
+					}
+				}
+			];
+		}
+
+		sealed class Issue4556Table2
+		{
+			[PrimaryKey, Identity] public int Id { get; set; }
+
+			[Column(DbType = "json", Name = "Payload_json")]
+			public string? PayloadJson { get; set; }
+
+			[Column(DbType = "jsonb", Name = "Payload_jsonb")]
+			public string? PayloadJsonB { get; set; }
+
+			[Column(DbType = "json", Name = "Headers_json")]
+			public Dictionary<string, string>? HeadersJson { get; set; }
+
+			[Column(DbType = "jsonb", Name = "Headers_jsonb")]
+			public Dictionary<string, string>? HeadersJsonB { get; set; }
+
+			public static Issue4556Table2[] TestData =
+			[
+				new Issue4556Table2()
+				{
+					PayloadJson = "true",
+					PayloadJsonB = "123",
+					HeadersJson = new Dictionary<string, string>()
+					{
+						{ "key1", "value1" }
+					},
+					HeadersJsonB = new Dictionary<string, string>()
+					{
+						{ "key2", "value3" }
+					}
+				},
+				new Issue4556Table2()
 				{
 					PayloadJson = "\"some string\"",
 					PayloadJsonB = "-124",
@@ -3050,18 +3124,25 @@ $function$
 		#endregion
 
 
-		sealed class JsonComparisonTable
+		sealed class JsonComparisonTable1
 		{
 			[Column                                ] public string? Text  { get; set; }
 			[Column(DataType = DataType.Json)      ] public string? Json  { get; set; }
 			[Column(DataType = DataType.BinaryJson)] public string? Jsonb { get; set; }
 		}
 
+		sealed class JsonComparisonTable2
+		{
+			[Column                  ] public string? Text  { get; set; }
+			[Column(DbType = "json") ] public string? Json  { get; set; }
+			[Column(DbType = "jsonb")] public string? Jsonb { get; set; }
+		}
+
 		[Test]
-		public void JsonComparison([IncludeDataSources(true, TestProvName.AllPostgreSQL)] string context)
+		public void JsonComparison_ByDataType([IncludeDataSources(true, TestProvName.AllPostgreSQL)] string context)
 		{
 			using var db = GetDataContext(context);
-			using var tb = db.CreateLocalTable([new JsonComparisonTable()
+			using var tb = db.CreateLocalTable([new JsonComparisonTable1()
 			{
 				Text  = /*lang=json,strict*/ "{ \"field\": 123}",
 				Json  = /*lang=json,strict*/ "{  \"field\": 123}",
@@ -3075,6 +3156,37 @@ $function$
 				Assert.That(tb.Count(r => r.Json == r.Json), Is.EqualTo(1));
 				Assert.That(tb.Count(r => r.Json == r.Jsonb), Is.EqualTo(1));
 				Assert.That(tb.Count(r => r.Jsonb == r.Jsonb), Is.EqualTo(1));
+
+				// reverse
+				Assert.That(tb.Count(r => r.Json == r.Text), Is.EqualTo(1));
+				Assert.That(tb.Count(r => r.Jsonb == r.Text), Is.EqualTo(1));
+				Assert.That(tb.Count(r => r.Jsonb == r.Json), Is.EqualTo(1));
+			});
+		}
+
+		[Test]
+		public void JsonComparison_ByDbType([IncludeDataSources(true, TestProvName.AllPostgreSQL)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable([new JsonComparisonTable2()
+			{
+				Text  = /*lang=json,strict*/ "{ \"field\": 123}",
+				Json  = /*lang=json,strict*/ "{  \"field\": 123}",
+				Jsonb = /*lang=json,strict*/ "{   \"field\": 123}",
+			}]);
+
+			Assert.Multiple(() =>
+			{
+				Assert.That(tb.Count(r => r.Text == r.Json), Is.EqualTo(1));
+				Assert.That(tb.Count(r => r.Text == r.Jsonb), Is.EqualTo(1));
+				Assert.That(tb.Count(r => r.Json == r.Json), Is.EqualTo(1));
+				Assert.That(tb.Count(r => r.Json == r.Jsonb), Is.EqualTo(1));
+				Assert.That(tb.Count(r => r.Jsonb == r.Jsonb), Is.EqualTo(1));
+
+				// reverse
+				Assert.That(tb.Count(r => r.Json == r.Text), Is.EqualTo(1));
+				Assert.That(tb.Count(r => r.Jsonb == r.Text), Is.EqualTo(1));
+				Assert.That(tb.Count(r => r.Jsonb == r.Json), Is.EqualTo(1));
 			});
 		}
 	}
