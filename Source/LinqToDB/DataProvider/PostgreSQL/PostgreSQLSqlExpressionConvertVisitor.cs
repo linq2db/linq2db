@@ -1,5 +1,6 @@
 ﻿namespace LinqToDB.DataProvider.PostgreSQL
 {
+	using Common;
 	using Extensions;
 	using SqlProvider;
 	using SqlQuery;
@@ -86,6 +87,31 @@
 				default:
 					return base.ConvertSqlFunction(func);
 			};
+		}
+
+		protected override IQueryElement VisitExprExprPredicate(SqlPredicate.ExprExpr predicate)
+		{
+			if (predicate.Operator is SqlPredicate.Operator.Equal or SqlPredicate.Operator.NotEqual)
+			{
+				// conversions with at least one type being json or jsonb should be done using jsonb type
+				var left  = QueryHelper.GetDbDataType(predicate.Expr1, MappingSchema);
+				var right = QueryHelper.GetDbDataType(predicate.Expr2, MappingSchema);
+
+				if ((left.DataType is DataType.Json or DataType.BinaryJson || right.DataType is DataType.Json or DataType.BinaryJson)
+					&& !(left.DataType is DataType.BinaryJson && right.DataType is DataType.BinaryJson))
+				{
+					var expr1 = left.DataType == DataType.BinaryJson
+						? predicate.Expr1
+						: new SqlCastExpression(predicate.Expr1, new DbDataType(predicate.Expr1.SystemType ?? typeof(object), DataType.BinaryJson), null, isMandatory: true);
+					var expr2 = left.DataType == DataType.BinaryJson
+						? predicate.Expr2
+						: new SqlCastExpression(predicate.Expr2, new DbDataType(predicate.Expr2.SystemType ?? typeof(object), DataType.BinaryJson), null, isMandatory: true);
+
+					predicate = new SqlPredicate.ExprExpr(expr1, predicate.Operator, expr2, predicate.WithNull);
+				}
+			}
+
+			return base.VisitExprExprPredicate(predicate);
 		}
 
 		protected override ISqlExpression ConvertConversion(SqlCastExpression cast)

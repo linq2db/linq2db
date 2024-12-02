@@ -4,6 +4,7 @@ using System.Diagnostics;
 using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.Data.RetryPolicy;
+using LinqToDB.DataProvider;
 using LinqToDB.FSharp;
 using LinqToDB.Interceptors;
 using LinqToDB.Mapping;
@@ -60,6 +61,16 @@ namespace Tests
 
 					return dc;
 				});
+		}
+
+		protected static string GetConnectionString(string configuration)
+		{
+			return DataConnection.GetConnectionString(configuration.StripRemote());
+		}
+
+		protected static IDataProvider GetDataProvider(string configuration)
+		{
+			return DataConnection.GetDataProvider(configuration.StripRemote());
 		}
 
 		protected ITestDataContext GetDataContext(string configuration, Func<DataOptions, DataOptions> dbOptionsBuilder)

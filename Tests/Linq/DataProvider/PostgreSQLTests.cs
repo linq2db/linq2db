@@ -3007,6 +3007,35 @@ $function$
 			Assert.That(record.Interval!.Ticks, Is.EqualTo(item.Interval.Ticks));
 		}
 		#endregion
+
+
+		sealed class JsonComparisonTable
+		{
+			[Column                                ] public string? Text  { get; set; }
+			[Column(DataType = DataType.Json)      ] public string? Json  { get; set; }
+			[Column(DataType = DataType.BinaryJson)] public string? Jsonb { get; set; }
+		}
+
+		[Test]
+		public void JsonComparison([IncludeDataSources(true, TestProvName.AllPostgreSQL)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable([new JsonComparisonTable()
+			{
+				Text  = /*lang=json,strict*/ "{ \"field\": 123}",
+				Json  = /*lang=json,strict*/ "{  \"field\": 123}",
+				Jsonb = /*lang=json,strict*/ "{   \"field\": 123}",
+			}]);
+
+			Assert.Multiple(() =>
+			{
+				Assert.That(tb.Count(r => r.Text == r.Json), Is.EqualTo(1));
+				Assert.That(tb.Count(r => r.Text == r.Jsonb), Is.EqualTo(1));
+				Assert.That(tb.Count(r => r.Json == r.Json), Is.EqualTo(1));
+				Assert.That(tb.Count(r => r.Json == r.Jsonb), Is.EqualTo(1));
+				Assert.That(tb.Count(r => r.Jsonb == r.Jsonb), Is.EqualTo(1));
+			});
+		}
 	}
 
 	#region Extensions
