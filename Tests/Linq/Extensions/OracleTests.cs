@@ -849,7 +849,6 @@ namespace Tests.Extensions
 
 		#region Issue 4163
 
-		[ActiveIssue(SkipForNonLinqService = true, Details = "CompareNulls.LikeClr optimization broken with remote context")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4163")]
 		public void Issue4163Test1([IncludeDataSources(true, TestProvName.AllOracle)] string context, [Values] CompareNulls compareNulls)
 		{
@@ -872,7 +871,6 @@ namespace Tests.Extensions
 			Assert.That(cnt, Is.EqualTo(2));
 		}
 
-		[ActiveIssue(SkipForNonLinqService = true, Details = "CompareNulls.LikeClr optimization broken with remote context")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4163")]
 		public void Issue4163Test3([IncludeDataSources(true, TestProvName.AllOracle)] string context, [Values] CompareNulls compareNulls)
 		{

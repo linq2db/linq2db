@@ -306,19 +306,4 @@ namespace Tests
 			Configuration.Linq.DoNotClearOrderBys = _oldValue;
 		}
 	}
-
-	public class OracleAlternativeBulkCopyMode : IDisposable
-	{
-		private readonly AlternativeBulkCopy _oldValue = OracleOptions.Default.AlternativeBulkCopy;
-
-		public OracleAlternativeBulkCopyMode(AlternativeBulkCopy mode)
-		{
-			OracleOptions.Default = OracleOptions.Default with { AlternativeBulkCopy = mode };
-		}
-
-		void IDisposable.Dispose()
-		{
-			OracleOptions.Default = OracleOptions.Default with { AlternativeBulkCopy = _oldValue };
-		}
-	}
 }

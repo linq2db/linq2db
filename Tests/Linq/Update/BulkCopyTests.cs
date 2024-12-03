@@ -2,20 +2,21 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+
 using FluentAssertions;
+
 using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.DataProvider.Informix;
+using LinqToDB.DataProvider.Oracle;
+using LinqToDB.Interceptors;
 using LinqToDB.Mapping;
+
 using NUnit.Framework;
 
 namespace Tests.xUpdate
 {
-	using LinqToDB.DataProvider.Oracle;
-	using LinqToDB.Interceptors;
-
 	using Model;
-
 	using Tests.DataProvider;
 
 	[TestFixture]
@@ -435,8 +436,7 @@ namespace Tests.xUpdate
 		)
 		{
 			// This makes use of array-bound parameters, which is a unique code-path in OracleBulkCopy (issue #4385)
-			using var mode  = new OracleAlternativeBulkCopyMode(AlternativeBulkCopy.InsertInto);
-			using var db    = new DataConnection(context);
+			using var db    = new DataConnection(context, o => o.UseOracle(o => o with { AlternativeBulkCopy = AlternativeBulkCopy.InsertInto }));
 			var options     = GetDefaultBulkCopyOptions(context) with { BulkCopyType = BulkCopyType.MultipleRows };
 			using var table = db.CreateLocalTable<DateOnlyTable>();
 			
@@ -867,9 +867,8 @@ namespace Tests.xUpdate
 			[IncludeDataSources(TestProvName.AllOracle)] string context,
 			[Values(AlternativeBulkCopy.InsertDual, AlternativeBulkCopy.InsertInto)] AlternativeBulkCopy alternateCopyType)
 		{
-			using var mode  = new OracleAlternativeBulkCopyMode(alternateCopyType);
 			var interceptor = new TestDataContextInterceptor();
-			using var db    = new DataContext(context);
+			using var db    = new DataContext(new DataOptions().UseConfiguration(context).UseOracle(o => o with { AlternativeBulkCopy = alternateCopyType }));
 			using var table = db.CreateLocalTable<SimpleBulkCopyTable>();
 			var options     = GetDefaultBulkCopyOptions(context) with { BulkCopyType = BulkCopyType.MultipleRows };
 
@@ -892,9 +891,8 @@ namespace Tests.xUpdate
 			[IncludeDataSources(TestProvName.AllOracle)] string context,
 			[Values(AlternativeBulkCopy.InsertDual, AlternativeBulkCopy.InsertInto)] AlternativeBulkCopy alternateCopyType)
 		{
-			using var mode  = new OracleAlternativeBulkCopyMode(alternateCopyType);
 			var interceptor = new TestDataContextInterceptor();
-			using var db    = new DataContext(context);
+			using var db    = new DataContext(new DataOptions().UseConfiguration(context).UseOracle(o => o with { AlternativeBulkCopy = alternateCopyType }));
 			using var table = db.CreateLocalTable<SimpleBulkCopyTable>();
 			var options     = GetDefaultBulkCopyOptions(context) with { BulkCopyType = BulkCopyType.MultipleRows };
 
@@ -917,9 +915,8 @@ namespace Tests.xUpdate
 			[IncludeDataSources(TestProvName.AllOracle)] string context,
 			[Values(AlternativeBulkCopy.InsertDual, AlternativeBulkCopy.InsertInto)] AlternativeBulkCopy alternateCopyType)
 		{
-			using var mode  = new OracleAlternativeBulkCopyMode(alternateCopyType);
 			var interceptor = new TestDataContextInterceptor();
-			using var db    = new DataContext(context);
+			using var db    = new DataContext(new DataOptions().UseConfiguration(context).UseOracle(o => o with { AlternativeBulkCopy = alternateCopyType }));
 			using var table = db.CreateLocalTable<SimpleBulkCopyTable>();
 			var options     = GetDefaultBulkCopyOptions(context) with { BulkCopyType = BulkCopyType.MultipleRows };
 
@@ -942,9 +939,8 @@ namespace Tests.xUpdate
 			[IncludeDataSources(TestProvName.AllOracle)] string context,
 			[Values(AlternativeBulkCopy.InsertDual, AlternativeBulkCopy.InsertInto)] AlternativeBulkCopy alternateCopyType)
 		{
-			using var mode  = new OracleAlternativeBulkCopyMode(alternateCopyType);
 			var interceptor = new TestDataContextInterceptor();
-			using var db    = new DataConnection(context);
+			using var db    = new DataConnection(context, o => o.UseOracle(o => o with { AlternativeBulkCopy = alternateCopyType }));
 			using var table = db.CreateLocalTable<SimpleBulkCopyTable>();
 			var options     = GetDefaultBulkCopyOptions(context) with { BulkCopyType = BulkCopyType.MultipleRows };
 
@@ -966,9 +962,8 @@ namespace Tests.xUpdate
 			[IncludeDataSources(TestProvName.AllOracle)] string context,
 			[Values(AlternativeBulkCopy.InsertDual, AlternativeBulkCopy.InsertInto)] AlternativeBulkCopy alternateCopyType)
 		{
-			using var mode  = new OracleAlternativeBulkCopyMode(alternateCopyType);
 			var interceptor = new TestDataContextInterceptor();
-			using var db    = new DataConnection(context);
+			using var db    = new DataConnection(context, o => o.UseOracle(o => o with { AlternativeBulkCopy = alternateCopyType }));
 			using var table = db.CreateLocalTable<SimpleBulkCopyTable>();
 			var options     = GetDefaultBulkCopyOptions(context) with { BulkCopyType = BulkCopyType.MultipleRows };
 
@@ -990,9 +985,8 @@ namespace Tests.xUpdate
 			[IncludeDataSources(TestProvName.AllOracle)] string context,
 			[Values(AlternativeBulkCopy.InsertDual, AlternativeBulkCopy.InsertInto)] AlternativeBulkCopy alternateCopyType)
 		{
-			using var mode  = new OracleAlternativeBulkCopyMode(alternateCopyType);
 			var interceptor = new TestDataContextInterceptor();
-			using var db    = new DataConnection(context);
+			using var db    = GetDataConnection(context, o => o.UseOracle(o => o with { AlternativeBulkCopy = alternateCopyType }));
 			using var table = db.CreateLocalTable<SimpleBulkCopyTable>();
 			var options     = GetDefaultBulkCopyOptions(context) with { BulkCopyType = BulkCopyType.MultipleRows };
 
