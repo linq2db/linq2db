@@ -35,9 +35,11 @@ namespace LinqToDB
 		/// Default value: <c>false</c>.
 		/// </summary>
 		[Pure]
+		// TODO: V7 remove
+		[Obsolete("This API doesn't have effect anymore and will be removed in future")]
 		public static LinqOptions WithPreloadGroups(this LinqOptions options, bool preloadGroups)
 		{
-			return options with { PreloadGroups = preloadGroups };
+			return options;
 		}
 
 		/// <summary>
@@ -158,7 +160,7 @@ namespace LinqToDB
 		/// <summary>
 		/// Controls behavior of LINQ query, which ends with GroupBy call.
 		/// - if <c>true</c> - <seealso cref="LinqToDBException"/> will be thrown for such queries;
-		/// - if <c>false</c> - behavior is controlled by <see cref="UsePreloadGroups"/> option.
+		/// - if <c>false</c> - eager loading used.
 		/// Default value: <c>true</c>.
 		/// </summary>
 		/// <remarks>
@@ -220,9 +222,11 @@ namespace LinqToDB
 		/// Default value: <c>true</c>.
 		/// </summary>
 		[Pure]
+		// TODO: V7 remove
+		[Obsolete("This API doesn't have effect anymore and will be removed in future")]
 		public static LinqOptions WithKeepDistinctOrdered(this LinqOptions options, bool keepDistinctOrdered)
 		{
-			return options with { KeepDistinctOrdered = keepDistinctOrdered };
+			return options;
 		}
 
 		/// <summary>
@@ -270,9 +274,11 @@ namespace LinqToDB
 		/// Default value: <c>false</c>.
 		/// </summary>
 		[Pure]
+		// TODO: V7 remove
+		[Obsolete("This API doesn't have effect anymore and will be removed in future")]
 		public static DataOptions UsePreloadGroups(this DataOptions options, bool preloadGroups)
 		{
-			return options.WithOptions<LinqOptions>(o => o with { PreloadGroups = preloadGroups });
+			return options;
 		}
 
 		/// <summary>
@@ -393,7 +399,7 @@ namespace LinqToDB
 		/// <summary>
 		/// Controls behavior of LINQ query, which ends with GroupBy call.
 		/// - if <c>true</c> - <seealso cref="LinqToDBException"/> will be thrown for such queries;
-		/// - if <c>false</c> - behavior is controlled by <see cref="UsePreloadGroups"/> option.
+		/// - if <c>false</c> - eager loading used.
 		/// Default value: <c>true</c>.
 		/// </summary>
 		/// <remarks>
@@ -455,9 +461,11 @@ namespace LinqToDB
 		/// Default value: <c>true</c>.
 		/// </summary>
 		[Pure]
+		// TODO: V7 remove
+		[Obsolete("This API doesn't have effect anymore and will be removed in future")]
 		public static DataOptions UseKeepDistinctOrdered(this DataOptions options, bool keepDistinctOrdered)
 		{
-			return options.WithOptions<LinqOptions>(o => o with { KeepDistinctOrdered = keepDistinctOrdered });
+			return options;
 		}
 
 		/// <summary>
@@ -853,6 +861,30 @@ namespace LinqToDB
 		public static DataOptions UseTransaction(this DataOptions options, IDataProvider dataProvider, DbTransaction transaction)
 		{
 			return options.WithOptions<ConnectionOptions>(o => o with { DataProvider = dataProvider, DbTransaction = transaction });
+		}
+
+		#endregion
+
+		#region DataContextOptions
+
+		/// <summary>
+		/// Command timeout or <c>null</c> for default timeout.
+		/// Default value: <c>null</c>.
+		/// </summary>
+		[Pure]
+		public static DataContextOptions WithCommandTimeout(this DataContextOptions options, int? commandTimeout)
+		{
+			return options with { CommandTimeout = commandTimeout };
+		}
+
+		/// <summary>
+		/// Command timeout or <c>null</c> for default timeout.
+		/// Default value: <c>null</c>.
+		/// </summary>
+		[Pure]
+		public static DataOptions UseCommandTimeout(this DataOptions options, int? commandTimeout)
+		{
+			return options.WithOptions<DataContextOptions>(o => o with { CommandTimeout = commandTimeout });
 		}
 
 		/// <summary>

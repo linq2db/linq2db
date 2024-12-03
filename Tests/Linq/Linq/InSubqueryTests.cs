@@ -50,11 +50,7 @@ namespace Tests.Linq
 
 		ITestDataContext GetDataContext(string context, bool preferExists, bool compareNullsAsValues)
 		{
-			return GetDataContext(context, o => o.WithOptions<LinqOptions>(lo => lo with
-			{
-				PreferExistsForScalar = preferExists,
-				CompareNulls = compareNullsAsValues ? CompareNulls.LikeClr : CompareNulls.LikeSql,
-			}));
+			return GetDataContext(context, o => o.UsePreferExistsForScalar(preferExists).UseCompareNulls(compareNullsAsValues ? CompareNulls.LikeClr : CompareNulls.LikeSql));
 		}
 
 		void AssertTest<T>(IQueryable<T> query, bool preferExists)
@@ -204,7 +200,7 @@ namespace Tests.Linq
 		[Test]
 		public void ContainsNullTest([DataSources] string context, [Values] bool preferExists)
 		{
-			using var db = GetDataContext(context, o => o.WithOptions<LinqOptions>(lo => lo.WithPreferExistsForScalar(preferExists)));
+			using var db = GetDataContext(context, o => o.UsePreferExistsForScalar(preferExists));
 
 			_ = db.Parent.Select(c => c.Value1).Contains(null);
 		}
@@ -291,13 +287,9 @@ namespace Tests.Linq
 		public void Null_In_Null_Test1([DataSources] string context, [Values] bool preferExists, [Values] bool compareNullsAsValues)
 		{
 			using var db = GetDataContext(context, o => o
-				.WithOptions<LinqOptions>(lo => lo with
-				{
-					PreferExistsForScalar = preferExists,
-					CompareNulls = compareNullsAsValues ? CompareNulls.LikeClr : CompareNulls.LikeSql,
-				})
-				.WithOptions<BulkCopyOptions>(bo => bo with { BulkCopyType = BulkCopyType.MultipleRows })
-			);
+				.UsePreferExistsForScalar(preferExists)
+				.UseCompareNulls(compareNullsAsValues ? CompareNulls.LikeClr : CompareNulls.LikeSql)
+				.UseBulkCopyType(BulkCopyType.MultipleRows));
 
 			using var t1 = db.CreateLocalTable("test_in_1", new[] { (int?)1, 3, null }.Select(i => new { ID = i }));
 			using var t2 = db.CreateLocalTable("test_in_2", new[] { (int?)1, 2, null }.Select(i => new { ID = i }));

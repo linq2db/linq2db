@@ -560,8 +560,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void Issue76([IncludeDataSources(TestProvName.AllFirebird)] string context)
 		{
-			using (new FirebirdQuoteMode(FirebirdIdentifierQuoteMode.Quote))
-			using (var db = GetDataContext(context))
+			using (var db = GetDataContext(context, o => o.UseFirebird(o => o with { IdentifierQuoteMode = FirebirdIdentifierQuoteMode.Quote })))
 			using (db.CreateLocalTable<Issue76Entity>())
 			{
 				var folders = db.GetTable<Issue76Entity>().Select(f => new Issue76Entity()
@@ -604,8 +603,7 @@ namespace Tests.DataProvider
 			[Values] bool withIdentity,
 			[Values] bool throwIfNotExists)
 		{
-			using (new FirebirdQuoteMode(quoteMode))
-			using (var db = GetDataContext(context))
+			using (var db = GetDataContext(context, o => o.UseFirebird(o => o with { IdentifierQuoteMode = quoteMode })))
 			{
 				if (withIdentity)
 					test<TestIdentityDropTable>();
@@ -650,10 +648,8 @@ namespace Tests.DataProvider
 			[IncludeDataSources(TestProvName.AllFirebird)] string context,
 			[Values(FirebirdIdentifierQuoteMode.Auto, FirebirdIdentifierQuoteMode.Quote)] FirebirdIdentifierQuoteMode quoteMode)
 		{
-			// TODO: quote mode is another candidate for query caching key
 			Query.ClearCaches();
-			using (new FirebirdQuoteMode(quoteMode))
-			using (var db = GetDataContext(context))
+			using (var db = GetDataContext(context, o => o.UseFirebird(o => o with { IdentifierQuoteMode = quoteMode })))
 			{
 				try
 				{
@@ -795,8 +791,7 @@ namespace Tests.DataProvider
 			[Values] FirebirdIdentifierQuoteMode quoteMode)
 		{
 			Query.ClearCaches();
-			using (new FirebirdQuoteMode(quoteMode))
-			using (var db      = GetDataConnection(context))
+			using (var db      = GetDataConnection(context, o => o.UseFirebird(o => o with { IdentifierQuoteMode = quoteMode })))
 			using (var cards   = db.CreateLocalTable<Card>())
 			using (var clients = db.CreateLocalTable<Client>())
 			{

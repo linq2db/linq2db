@@ -3725,28 +3725,21 @@ namespace Tests.DataProvider
 			}
 		}
 
-#region Issue 2342
+		#region Issue 2342
 		[Test]
 		public void Issue2342Test([IncludeDataSources(false, TestProvName.AllOracle)] string context)
 		{
-			try
+			using var db    = GetDataConnection(context, o => o
+				.UseOracle(o => o with { AlternativeBulkCopy = AlternativeBulkCopy.InsertInto })
+				.UseFactory(connection => new DummyRetryPolicy()));
+			using var table = db.CreateLocalTable<Issue2342Entity>();
+
+			using (db.BeginTransaction())
 			{
-				Configuration.RetryPolicy.Factory  = connection => new DummyRetryPolicy();
-
-				using var db    = GetDataConnection(context, o => o.UseOracle(o => o with { AlternativeBulkCopy = AlternativeBulkCopy.InsertInto }));
-				using var table = db.CreateLocalTable<Issue2342Entity>();
-
-				using (db.BeginTransaction())
-				{
-					table.BulkCopy(Enumerable.Range(1, 10).Select(id => new Issue2342Entity { Id = id, Name = $"Name_{id}" }));
-				}
-
-				table.Truncate();
+				table.BulkCopy(Enumerable.Range(1, 10).Select(id => new Issue2342Entity { Id = id, Name = $"Name_{id}" }));
 			}
-			finally
-			{
-				Configuration.RetryPolicy.Factory  = null;
-			}
+
+			table.Truncate();
 		}
 
 		sealed class DummyRetryPolicy : IRetryPolicy

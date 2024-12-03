@@ -1,12 +1,14 @@
 ﻿using System;
 using System.Linq;
 
+using LinqToDB;
+using LinqToDB.Common;
+using LinqToDB.Data;
+
 using NUnit.Framework;
 
 namespace Tests.UserTests
 {
-	using LinqToDB;
-	using LinqToDB.Data;
 	using Model;
 
 	[TestFixture]
@@ -152,8 +154,7 @@ namespace Tests.UserTests
 		[Test]
 		public void Test4WithoutComparasionNullCheck([DataSources] string context)
 		{
-			using var _  = new CompareNullsOption(false);
-			using var db = GetDataContext(context);
+			using var db = GetDataContext(context, o => o.UseCompareNulls(CompareNulls.LikeSql));
 			var bigintFilter = new long?[] {2};
 
 			AreEqual(FixData,

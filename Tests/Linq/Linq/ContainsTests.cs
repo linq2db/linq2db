@@ -6,6 +6,7 @@ using System.Linq.Expressions;
 using FluentAssertions;
 
 using LinqToDB;
+using LinqToDB.Common;
 using LinqToDB.Mapping;
 using LinqToDB.Tools;
 
@@ -43,8 +44,7 @@ namespace Tests.Linq
 			[DataSources] string context,
 			[Values]      bool   withNullCompares)
 		{
-			using var _   = new CompareNullsOption(withNullCompares);
-			using var db  = GetDataContext(context, new MappingSchema());
+			using var db  = GetDataContext(context, o => o.UseMappingSchema(new MappingSchema()).UseCompareNulls(withNullCompares ? CompareNulls.LikeClr : CompareNulls.LikeSql));
 			using var src = SetupSrcTable(db);
 
 			int? result;
@@ -73,8 +73,7 @@ namespace Tests.Linq
 			[DataSources] string context,
 			[Values]      bool   withNullCompares)
 		{
-			using var _   = new CompareNullsOption(withNullCompares);
-			using var db  = GetDataContext(context, new MappingSchema());
+			using var db  = GetDataContext(context, o => o.UseMappingSchema(new MappingSchema()).UseCompareNulls(withNullCompares ? CompareNulls.LikeClr : CompareNulls.LikeSql));
 			using var src = SetupSrcTable(db);
 
 			int? result;
@@ -103,8 +102,7 @@ namespace Tests.Linq
 			[DataSources] string context,
 			[Values]      bool   withNullCompares)
 		{
-			using var _   = new CompareNullsOption(withNullCompares);
-			using var db  = GetDataContext(context, new MappingSchema());
+			using var db  = GetDataContext(context, o => o.UseMappingSchema(new MappingSchema()).UseCompareNulls(withNullCompares ? CompareNulls.LikeClr : CompareNulls.LikeSql));
 			using var src = SetupSrcTable(db);
 
 			int? result;
@@ -133,8 +131,7 @@ namespace Tests.Linq
 			[DataSources] string context,
 			[Values]      bool   withNullCompares)
 		{
-			using var _   = new CompareNullsOption(withNullCompares);
-			using var db  = GetDataContext(context, new MappingSchema());
+			using var db  = GetDataContext(context, o => o.UseMappingSchema(new MappingSchema()).UseCompareNulls(withNullCompares ? CompareNulls.LikeClr : CompareNulls.LikeSql));
 			using var src = SetupSrcTable(db);
 
 			int count;
@@ -154,8 +151,7 @@ namespace Tests.Linq
 			[DataSources] string context,
 			[Values]      bool   withNullCompares)
 		{
-			using var _   = new CompareNullsOption(withNullCompares);
-			using var db  = GetDataContext(context, new MappingSchema());
+			using var db  = GetDataContext(context, o => o.UseMappingSchema(new MappingSchema()).UseCompareNulls(withNullCompares ? CompareNulls.LikeClr : CompareNulls.LikeSql));
 			using var src = SetupSrcTable(db);
 
 			int count;
@@ -175,8 +171,7 @@ namespace Tests.Linq
 			[DataSources] string context,
 			[Values]      bool   withNullCompares)
 		{
-			using var _   = new CompareNullsOption(withNullCompares);
-			using var db  = GetDataContext(context, new MappingSchema());
+			using var db  = GetDataContext(context, o => o.UseMappingSchema(new MappingSchema()).UseCompareNulls(withNullCompares ? CompareNulls.LikeClr : CompareNulls.LikeSql));
 			using var src = SetupSrcTable(db);
 
 			int count;
@@ -200,8 +195,7 @@ namespace Tests.Linq
 			[DataSources(TestProvName.AllAccess)] string context,
 			[Values]                              bool   withNullCompares)
 		{
-			using var _   = new CompareNullsOption(withNullCompares);
-			using var db  = GetDataContext(context, new MappingSchema());
+			using var db  = GetDataContext(context, o => o.UseMappingSchema(new MappingSchema()).UseCompareNulls(withNullCompares ? CompareNulls.LikeClr : CompareNulls.LikeSql));
 			using var src = SetupSrcTable(db);
 
 			int count;
@@ -222,8 +216,7 @@ namespace Tests.Linq
 			[DataSources(TestProvName.AllAccess)] string context,
 			[Values]                              bool   withNullCompares)
 		{
-			using var _   = new CompareNullsOption(withNullCompares);
-			using var db  = GetDataContext(context, new MappingSchema());
+			using var db  = GetDataContext(context, o => o.UseMappingSchema(new MappingSchema()).UseCompareNulls(withNullCompares ? CompareNulls.LikeClr : CompareNulls.LikeSql));
 			using var src = SetupSrcTable(db);
 
 			int count;
@@ -244,8 +237,7 @@ namespace Tests.Linq
 			[DataSources(TestProvName.AllAccess)] string context,
 			[Values]                              bool   withNullCompares)
 		{
-			using var _   = new CompareNullsOption(withNullCompares);
-			using var db  = GetDataContext(context, new MappingSchema());
+			using var db  = GetDataContext(context, o => o.UseMappingSchema(new MappingSchema()).UseCompareNulls(withNullCompares ? CompareNulls.LikeClr : CompareNulls.LikeSql));
 			using var src = SetupSrcTable(db);
 
 			int count;

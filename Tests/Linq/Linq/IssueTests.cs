@@ -222,8 +222,7 @@ namespace Tests.Linq
 		[Test()]
 		public void Issue498Test([DataSources] string context)
 		{
-			using (new WithoutJoinOptimization())
-			using (var db = GetDataContext(context))
+			using (var db = GetDataContext(context, o => o.UseOptimizeJoins(false)))
 			{
 				var q = from x in db.Child
 					//join y in db.GrandChild on new { x.ParentID, x.ChildID } equals new { ParentID = (int)y.ParentID, ChildID = (int)y.ChildID }
@@ -256,8 +255,7 @@ namespace Tests.Linq
 		public void Issue528Test1([DataSources] string context)
 		{
 			//using (new AllowMultipleQuery())
-			using (new GuardGrouping(false))
-			using (var db = GetDataContext(context))
+			using (var db = GetDataContext(context, o => o.UseGuardGrouping(false)))
 			{
 				var expected =    Person.GroupBy(_ => _.FirstName).Select(_ => new { _.Key, Data = _.ToList() });
 				var result   = db.Person.GroupBy(_ => _.FirstName).Select(_ => new { _.Key, Data = _.ToList() });
@@ -275,8 +273,7 @@ namespace Tests.Linq
 		public void Issue528Test2([DataSources] string context)
 		{
 			//using (new AllowMultipleQuery())
-			using (new GuardGrouping(false))
-			using (var db = GetDataContext(context))
+			using (var db = GetDataContext(context, o => o.UseGuardGrouping(false)))
 			{
 				var expected =    Person.GroupBy(_ => _.FirstName).Select(_ => new { _.Key, Data = _.ToList() }).ToList();
 				var result   = db.Person.GroupBy(_ => _.FirstName).Select(_ => new { _.Key, Data = _.ToList() }).ToList();
@@ -294,8 +291,7 @@ namespace Tests.Linq
 		public void Issue528Test3([DataSources] string context)
 		{
 			//using (new AllowMultipleQuery())
-			using (new GuardGrouping(false))
-			using (var db = GetDataContext(context))
+			using (var db = GetDataContext(context, o => o.UseGuardGrouping(false)))
 			{
 				var expected =    Person.GroupBy(_ => _.FirstName).Select(_ => new { _.Key, Data = _ });
 				var result   = db.Person.GroupBy(_ => _.FirstName).Select(_ => new { _.Key, Data = _ });

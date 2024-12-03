@@ -302,8 +302,7 @@ namespace Tests.Linq
 		[Test]
 		public void ComparisionNullCheckOff([DataSources] string context)
 		{
-			using var _  = new CompareNullsOption(false);
-			using var db = GetDataContext(context);
+			using var db = GetDataContext(context, o => o.UseCompareNulls(CompareNulls.LikeSql));
 			AreEqual(
 				   Parent.Where(p => p.Value1 != 1 && p.Value1 != null),
 				db.Parent.Where(p => p.Value1 != 1 && p.Value1 != null));

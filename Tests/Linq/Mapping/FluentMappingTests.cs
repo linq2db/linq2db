@@ -700,8 +700,7 @@ namespace Tests.Mapping
 		[Test]
 		public void ExpressionAlias([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values] bool finalAliases)
 		{
-			using (new GenerateFinalAliases(finalAliases))
-			using (var db = GetDataContext(context))
+			using (var db = GetDataContext(context, o => o.UseGenerateFinalAliases(finalAliases)))
 			{
 				Query.ClearCaches();
 
@@ -734,8 +733,7 @@ namespace Tests.Mapping
 				.Property(p => p.Money).IsExpression(p => Sql.AsSql(p.Age * Sql.AsSql(1000) + p.Name.Length * 10), true, "MONEY")
 				.Build();
 
-			using (new GenerateFinalAliases(finalAliases))
-			using (var db = GetDataContext(context, ms))
+			using (var db = GetDataContext(context, o => o.UseMappingSchema(ms).UseGenerateFinalAliases(finalAliases)))
 			{
 				Query.ClearCaches();
 

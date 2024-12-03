@@ -28,25 +28,32 @@ using LinqToDB.DataProvider.SqlCe;
 using LinqToDB.DataProvider.SQLite;
 using LinqToDB.DataProvider.SqlServer;
 using LinqToDB.DataProvider.Sybase;
-using LinqToDB.Interceptors;
 using LinqToDB.Mapping;
 
 using FirebirdSql.Data.Types;
+
 using IBM.Data.DB2Types;
+
 using Microsoft.SqlServer.Types;
+
 using NUnit.Framework;
+
 using StackExchange.Profiling;
 using StackExchange.Profiling.Data;
+
 using Tests.DataProvider;
 using Tests.Model;
+
 #if NETFRAMEWORK
 using IBM.Data.Informix;
 #endif
 
-using MySqlConnectorDateTime   = MySqlConnector::MySqlConnector.MySqlDateTime;
-using MySqlDataDateTime        = MySqlData::MySql.Data.Types.MySqlDateTime;
-using MySqlDataDecimal         = MySqlData::MySql.Data.Types.MySqlDecimal;
+using MySqlConnectorDateTime = MySqlConnector::MySqlConnector.MySqlDateTime;
+using MySqlDataDateTime = MySqlData::MySql.Data.Types.MySqlDateTime;
+using MySqlDataDecimal = MySqlData::MySql.Data.Types.MySqlDecimal;
 using MySqlDataMySqlConnection = MySqlData::MySql.Data.MySqlClient.MySqlConnection;
+
+using LinqToDB.Data.RetryPolicy;
 
 namespace Tests.Data
 {
@@ -698,19 +705,16 @@ namespace Tests.Data
 		[Test]
 		public async Task TestRetryPolicy([IncludeDataSources(TestProvName.AllSqlServer)] string context, [Values] ConnectionType type)
 		{
-			Configuration.RetryPolicy.Factory = connection => new SqlServerRetryPolicy();
-			try
-			{
-				await TestSqlServer(context, type);
-			}
-			finally
-			{
-				Configuration.RetryPolicy.Factory = null;
-			}
+			await TestSqlServerImpl(context, type, connection => new SqlServerRetryPolicy());
 		}
 
 		[Test]
 		public async Task TestSqlServer([IncludeDataSources(TestProvName.AllSqlServer)] string context, [Values] ConnectionType type)
+		{
+			await TestSqlServerImpl(context, type, null);
+		}
+
+		async Task TestSqlServerImpl(string context, ConnectionType type, Func<DataConnection, IRetryPolicy?>? factory)
 		{
 			string providerName;
 			SqlServerVersion version;
@@ -2039,9 +2043,9 @@ namespace Tests.Data
 			return CreateDataConnection(provider, context, type, cs => (DbConnection)Activator.CreateInstance(Type.GetType(connectionTypeName, true)!, cs)!, csExtra);
 		}
 
-		private DataConnection CreateDataConnection(IDataProvider provider, string context, ConnectionType type, Func<string, DbConnection> connectionFactory, string? csExtra = null)
+		private DataConnection CreateDataConnection(IDataProvider provider, string context, ConnectionType type, Func<string, DbConnection> connectionFactory, string? csExtra = null, Func<DataConnection, IRetryPolicy?>? retryPolicyFactory = null)
 		{
-			var db = new DataConnection(provider, options =>
+			var db = new DataConnection(new DataOptions().UseConnectionFactory(provider, options =>
 			{
 				// don't create connection using provider, or it will initialize types
 				var cn = connectionFactory(DataConnection.GetConnectionString(context) + csExtra);
@@ -2055,7 +2059,7 @@ namespace Tests.Data
 				}
 
 				return cn;
-			});
+			}).UseFactory(retryPolicyFactory));
 
 			switch (type)
 			{

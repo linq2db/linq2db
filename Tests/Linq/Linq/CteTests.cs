@@ -1168,8 +1168,7 @@ namespace Tests.Linq
 		[Test]
 		public void Issue2029Test([CteContextSource(TestProvName.AllClickHouse)] string context)
 		{
-			using (new GenerateFinalAliases(true))
-			using (var db = GetDataContext(context))
+			using (var db = GetDataContext(context, o => o.UseGenerateFinalAliases(true)))
 			using (db.CreateLocalTable<NcCode>())
 			using (db.CreateLocalTable<NcGroupMember>())
 			{

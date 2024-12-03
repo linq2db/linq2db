@@ -21,7 +21,6 @@ namespace Tests.Linq
 			using (var db = new NorthwindDB(context))
 			{
 				var dd = GetNorthwindAsList(context);
-				//Configuration.Linq.OptimizeJoins = false;
 
 				var q = from od in db.OrderDetail
 					join o1 in db.Order on od.OrderID equals o1.OrderID
@@ -67,7 +66,6 @@ namespace Tests.Linq
 			using (var db = new NorthwindDB(context))
 			{
 				var dd = GetNorthwindAsList(context);
-				//Configuration.Linq.OptimizeJoins = false;
 
 				var q = from od in db.OrderDetail
 					join o1 in db.Order on od.OrderID equals o1.OrderID
@@ -137,7 +135,6 @@ namespace Tests.Linq
 			using (var db = new NorthwindDB(context))
 			{
 				var dd = GetNorthwindAsList(context);
-				//Configuration.Linq.OptimizeJoins = false;
 
 				var q = from od in db.OrderDetail
 					join o1 in db.Order on od.OrderID equals o1.OrderID
@@ -180,7 +177,6 @@ namespace Tests.Linq
 			using (var db = new NorthwindDB(context))
 			{
 				var dd = GetNorthwindAsList(context);
-				//Configuration.Linq.OptimizeJoins = false;
 
 				var q = from od in db.OrderDetail
 					join o1 in db.Order on new {od.OrderID, od.ProductID} equals new {o1.OrderID, ProductID = 39}

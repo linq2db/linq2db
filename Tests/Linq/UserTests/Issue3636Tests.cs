@@ -37,8 +37,7 @@ namespace Tests.UserTests
 			var data1 = new[] { new T1 { ID = 1, ID2 = 2 }, new T1 { ID = 2, ID2 = 2 }, new T1 { ID = 2, ID2 = 85 } };
 			var data2 = new[] { new T2 { ID = 1, ID2 = 2 }, new T2 { ID = 2, ID2 = 2 }, new T2 { ID = 2, ID2 = 85 } };
 
-			using var guard  = new GuardGrouping(false);
-			using var db     = GetDataContext(context);
+			using var db     = GetDataContext(context, o => o.UseGuardGrouping(false));
 			using var table1 = db.CreateLocalTable(data1);
 			using var table2 = db.CreateLocalTable(data2);
 
