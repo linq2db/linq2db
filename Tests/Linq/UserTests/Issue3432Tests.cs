@@ -30,38 +30,24 @@ namespace Tests.UserTests
 			[Column] public string? Role    { get; set; }
 		}
 
-		[Ignore("Not more applicable. Optimizer choose APPLY join when needed automatically.")]
 		[Test]
-		public void OuterApplyOptimization([IncludeDataSources(TestProvName.AllSqlServer)] string context, [Values]bool preferApply)
+		public void OuterApplyOptimization([DataSources] string context)
 		{
 			const string Admin = "Admin";
 
-			using(new PreferApply(preferApply))
-			using (var db = GetDataContext(context))
-			using (db.CreateLocalTable<Task>())
-			using (db.CreateLocalTable<Party>())
-			using (db.CreateLocalTable<PartyAccess>())
-			{
-				var query =
-					from task in db.GetTable<Task>()
-					from party in db.GetTable<Party>()
-						.Where(p => task.AdminPartyId == p.Id ||
-						            db.GetTable<PartyAccess>().Any(pa => pa.PartyId == p.Id && pa.Role == Admin))
-						.DefaultIfEmpty()
-					select new { task.Description, party.Name };
+			using var db = GetDataContext(context);
+			using var t1 = db.CreateLocalTable<Task>();
+			using var t2 = db.CreateLocalTable<Party>();
+			using var t3 = db.CreateLocalTable<PartyAccess>();
 
-				_ = query.ToArray();
-				var sql = query.ToString();
+			var query =
+				from task in db.GetTable<Task>()
+				from party in db.GetTable<Party>()
+					.Where(p => task.AdminPartyId == p.Id || db.GetTable<PartyAccess>().Any(pa => pa.PartyId == p.Id && pa.Role == Admin))
+					.DefaultIfEmpty()
+				select new { task.Description, party.Name };
 
-				if (preferApply)
-				{
-					sql.Should().Contain("OUTER APPLY");
-				}
-				else
-				{
-					sql.Should().NotContain("OUTER APPLY");
-				}
-			}
+			_ = query.ToArray();
 		}
 	}
 }

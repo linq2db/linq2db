@@ -403,15 +403,9 @@ namespace LinqToDB.Common
 			/// Used to generate CROSS APPLY or OUTER APPLY if possible.
 			/// Default value: <c>true</c>.
 			/// </summary>
-			public static bool PreferApply
-			{
-				get => Options.PreferApply;
-				set
-				{
-					if (Options.PreferApply != value)
-						Options = Options with { PreferApply = value };
-				}
-			}
+			// TODO: V7 remove
+			[Obsolete("This API doesn't have effect anymore and will be removed in future")]
+			public static bool PreferApply { get; set; }
 
 			/// <summary>
 			/// Allows SQL generation to automatically transform

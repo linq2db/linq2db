@@ -215,7 +215,6 @@ namespace LinqToDB
 						.Add(GuardGrouping)
 						.Add(DisableQueryCache)
 						.Add(CacheSlidingExpiration)
-						.Add(PreferApply)
 						.Add(KeepDistinctOrdered)
 						.Add(ParameterizeTakeSkip)
 						.Add(EnableContextSchemaEdit)

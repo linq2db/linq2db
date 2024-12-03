@@ -206,9 +206,11 @@ namespace LinqToDB
 		/// Default value: <c>true</c>.
 		/// </summary>
 		[Pure]
+		// TODO: V7 remove
+		[Obsolete("This API doesn't have effect anymore and will be removed in future")]
 		public static LinqOptions WithPreferApply(this LinqOptions options, bool preferApply)
 		{
-			return options with { PreferApply = preferApply };
+			return options;
 		}
 
 		/// <summary>
@@ -439,9 +441,11 @@ namespace LinqToDB
 		/// Default value: <c>true</c>.
 		/// </summary>
 		[Pure]
+		// TODO: V7 remove
+		[Obsolete("This API doesn't have effect anymore and will be removed in future")]
 		public static DataOptions UsePreferApply(this DataOptions options, bool preferApply)
 		{
-			return options.WithOptions<LinqOptions>(o => o with { PreferApply = preferApply });
+			return options;
 		}
 
 		/// <summary>

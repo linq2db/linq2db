@@ -321,21 +321,4 @@ namespace Tests
 			OracleOptions.Default = OracleOptions.Default with { AlternativeBulkCopy = _oldValue };
 		}
 	}
-
-	public class PreferApply : IDisposable
-	{
-		private readonly bool _oldValue = Configuration.Linq.PreferApply;
-
-		public PreferApply(bool enable)
-		{
-			Configuration.Linq.PreferApply = enable;
-		}
-
-		public void Dispose()
-		{
-			Configuration.Linq.PreferApply = _oldValue;
-		}
-	}
-
-
 }
