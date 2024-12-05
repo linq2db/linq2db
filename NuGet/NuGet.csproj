@@ -18,6 +18,20 @@
 		<PackageReference Include="Oracle.ManagedDataAccess" />
 		<PackageReference Include="Npgsql" />
 
+		<Reference Include="System.Data.SqlServerCe">
+			<HintPath>$(SolutionDir)\Redist\SqlCe\System.Data.SqlServerCe.dll</HintPath>
+		</Reference>
+		<SqlCeNativeLibs64 Include="$(SolutionDir)\Redist\SqlCe\amd64\**" Condition=" $(PlatformTarget) != 'x86' " />
+		<None Include="@(SqlCeNativeLibs64)" Condition=" $(PlatformTarget) != 'x86' " >
+			<Link>amd64\%(RecursiveDir)%(FileName)%(Extension)</Link>
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<SqlCeNativeLibs86 Include="$(SolutionDir)\Redist\SqlCe\x86\**" Condition=" $(PlatformTarget) == 'x86' " />
+		<None Include="@(SqlCeNativeLibs86)" Condition=" $(PlatformTarget) == 'x86' " >
+			<Link>x86\%(RecursiveDir)%(FileName)%(Extension)</Link>
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+
 		<Reference Include="IBM.Data.Informix">
 			<HintPath>$(SolutionDir)\Redist\SapHana\v4.5\Sap.Data.Hana.v4.5.dll</HintPath>
 		</Reference>

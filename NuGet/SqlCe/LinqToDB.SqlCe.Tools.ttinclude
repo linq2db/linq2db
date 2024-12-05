@@ -1,2 +1,4 @@
-<#@ include file="$(LinqToDBT4TemplatesPath)LinqToDB.Tools.ttinclude" once="true" #>
-<#@ include file="$(LinqToDBT4TemplatesPath)LinqToDB.SqlCe.ttinclude" once="true" #>
+<#@ include file="$(LinqToDBT4SqlCeTemplatesPath)LinqToDB.SqlCe.ttinclude" once="true" #>
+<#+
+#warning 'LinqToDB.SqlCe.Tools.ttinclude' is obsolete. Use 'LinqToDB.SqlCe.ttinclude' instead.
+#>
