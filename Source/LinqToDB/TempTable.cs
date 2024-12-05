@@ -715,8 +715,8 @@ namespace LinqToDB
 		/// </summary>
 		public IDataContext DataContext => _table.DataContext;
 
-		string       IExpressionQuery.SqlText    => _table.SqlText;
-		Expression   IExpressionQuery.Expression => ((IExpressionQuery)_table).Expression;
+		IReadOnlyList<QuerySql> IExpressionQuery.GetSqlQuery() => _table.GetSqlQuery();
+		Expression              IExpressionQuery.Expression    => ((IExpressionQuery)_table).Expression;
 
 		#endregion
 

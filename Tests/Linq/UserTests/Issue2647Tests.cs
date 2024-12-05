@@ -32,7 +32,7 @@ namespace Tests.UserTests
 				                                     db.GetTable<IssueClass>().Count(ss3 => ss3.Id == ss.Id));
 
 				query.ToList();
-				var sql = query.ToString();
+				var sql = query.ToSqlQuery().Sql;
 				TestContext.Out.WriteLine(sql);
 
 				var selectQuery = query.GetSelectQuery();

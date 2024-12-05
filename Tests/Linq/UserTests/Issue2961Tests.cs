@@ -98,7 +98,7 @@ namespace Tests.UserTests
 
 				sqlCondos.Invoking(q => q.ToList()).Should().NotThrow();
 
-				var str = sqlCondos.ToString();
+				var str = sqlCondos.ToSqlQuery().Sql;
 
 				str.Should().Contain("COUNT(*)", AtLeast.Twice());
 			}

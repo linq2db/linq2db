@@ -705,7 +705,7 @@ namespace Tests.Mapping
 				Query.ClearCaches();
 
 				var query = db.GetTable<PersonCustom>().Where(p => p.Name != "");
-				var sql1 = query.ToString();
+				var sql1 = query.ToSqlQuery().Sql;
 				TestContext.Out.WriteLine(sql1);
 
 				if (finalAliases)
@@ -713,7 +713,7 @@ namespace Tests.Mapping
 				else
 					Assert.That(sql1, Does.Not.Contain("[AGE]"));
 
-				var sql2 = query.Select(q => new { q.Name, q.Age }).ToString();
+				var sql2 = query.Select(q => new { q.Name, q.Age }).ToSqlQuery().Sql;
 				TestContext.Out.WriteLine(sql2);
 
 				if (finalAliases)
@@ -738,7 +738,7 @@ namespace Tests.Mapping
 				Query.ClearCaches();
 
 				var query = db.GetTable<PersonCustom>().Where(p => p.Name != "");
-				var sql1 = query.ToString();
+				var sql1 = query.ToSqlQuery().Sql;
 				TestContext.Out.WriteLine(sql1);
 
 				if (finalAliases)
@@ -746,7 +746,7 @@ namespace Tests.Mapping
 				else
 					Assert.That(sql1, Does.Not.Contain("[MONEY]"));
 
-				var sql2 = query.Select(q => new { q.Name, q.Money }).ToString();
+				var sql2 = query.Select(q => new { q.Name, q.Money }).ToSqlQuery().Sql;
 				TestContext.Out.WriteLine(sql2);
 
 				if (finalAliases)

@@ -749,7 +749,7 @@ namespace Tests.Linq
 
 				Assert.That(q, Is.Not.Empty);
 
-				var qry = q.ToString()!;
+				var qry = q.ToSqlQuery().Sql;
 				Assert.That(qry, Does.Contain("PERCENT"));
 				CheckTakeGlobalParams(db);
 			}
@@ -765,7 +765,7 @@ namespace Tests.Linq
 
 				Assert.That(q, Is.Not.Empty);
 
-				var qry = q.ToString()!;
+				var qry = q.ToSqlQuery().Sql;
 				Assert.That(qry, Does.Contain("PERCENT"));
 			}
 
@@ -780,7 +780,7 @@ namespace Tests.Linq
 
 				Assert.That(q, Is.Not.Empty);
 
-				var qry = q.ToString()!;
+				var qry = q.ToSqlQuery().Sql;
 				Assert.That(qry, Does.Contain("PERCENT"));
 				Assert.That(qry, Does.Contain("WITH"));
 				CheckTakeGlobalParams(db);
@@ -797,7 +797,7 @@ namespace Tests.Linq
 
 				Assert.That(q, Is.Not.Empty);
 
-				var qry = q.ToString()!;
+				var qry = q.ToSqlQuery().Sql;
 				Assert.That(qry, Does.Contain("PERCENT"));
 				Assert.That(qry, Does.Contain("WITH"));
 			}

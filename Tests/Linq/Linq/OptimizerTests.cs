@@ -107,7 +107,7 @@ namespace Tests.Linq
 						s
 					};
 
-				TestContext.Out.WriteLine(query.ToString());
+				TestContext.Out.WriteLine(query.ToSqlQuery().Sql);
 				Assert.That(query.EnumQueries().Count(), Is.EqualTo(2));
 
 				// test that optimizer removes subquery
@@ -123,7 +123,7 @@ namespace Tests.Linq
 						s
 					};
 
-				TestContext.Out.WriteLine(queryOptimized.ToString());
+				TestContext.Out.WriteLine(queryOptimized.ToSqlQuery().Sql);
 				Assert.That(queryOptimized.EnumQueries().Count(), Is.EqualTo(1));
 			}
 		}
@@ -186,11 +186,11 @@ namespace Tests.Linq
 						d
 					};
 
-				TestContext.Out.WriteLine(query.ToString());
+				TestContext.Out.WriteLine(query.ToSqlQuery().Sql);
 				Assert.That(query.EnumQueries().SelectMany(q => q.EnumJoins()).Count(), Is.EqualTo(1));
 
 				var projected = query.Select(p => p.s);
-				TestContext.Out.WriteLine(projected.ToString());
+				TestContext.Out.WriteLine(projected.ToSqlQuery().Sql);
 				Assert.That(projected.EnumQueries().SelectMany(q => q.EnumJoins()).Count(), Is.EqualTo(0));
 			}
 		}
@@ -227,11 +227,11 @@ namespace Tests.Linq
 						MNUCount = nu.Count
 					};
 
-				TestContext.Out.WriteLine(query.ToString());
+				TestContext.Out.WriteLine(query.ToSqlQuery().Sql);
 				Assert.That(query.EnumQueries().SelectMany(q => q.EnumJoins()).Count(), Is.EqualTo(2));
 
 				var projected = query.Select(p => p.s);
-				TestContext.Out.WriteLine(projected.ToString());
+				TestContext.Out.WriteLine(projected.ToSqlQuery().Sql);
 				Assert.That(projected.EnumQueries().SelectMany(q => q.EnumJoins()).Count(), Is.EqualTo(1));
 			}
 		}
@@ -255,11 +255,11 @@ namespace Tests.Linq
 						d
 					};
 
-				TestContext.Out.WriteLine(query.ToString());
+				TestContext.Out.WriteLine(query.ToSqlQuery().Sql);
 				Assert.That(query.EnumQueries().SelectMany(q => q.EnumJoins()).Count(), Is.EqualTo(1));
 
 				var projected = query.Select(p => p.s);
-				TestContext.Out.WriteLine(projected.ToString());
+				TestContext.Out.WriteLine(projected.ToSqlQuery().Sql);
 				Assert.That(projected.EnumQueries().SelectMany(q => q.EnumJoins()).Count(), Is.EqualTo(opimizerSwitch ? 0 : 1));
 			}
 		}
@@ -289,11 +289,11 @@ namespace Tests.Linq
 						First = a
 					};
 
-				TestContext.Out.WriteLine(query1.ToString());
+				TestContext.Out.WriteLine(query1.ToSqlQuery().Sql);
 				Assert.That(query1.EnumQueries().SelectMany(q => q.EnumJoins()).Count(), Is.EqualTo(1));
 
 				var projected1 = query1.Select(p => p.Second);
-				TestContext.Out.WriteLine(projected1.ToString());
+				TestContext.Out.WriteLine(projected1.ToSqlQuery().Sql);
 				Assert.That(projected1.EnumQueries().SelectMany(q => q.EnumJoins()).Count(), Is.EqualTo(opimizerSwitch ? 0 : 1));
 
 				// With two keys
@@ -307,11 +307,11 @@ namespace Tests.Linq
 						First = a
 					};
 
-				TestContext.Out.WriteLine(query2.ToString());
+				TestContext.Out.WriteLine(query2.ToSqlQuery().Sql);
 				Assert.That(query2.EnumQueries().SelectMany(q => q.EnumJoins()).Count(), Is.EqualTo(1));
 
 				var projected2 = query2.Select(p => p.Second);
-				TestContext.Out.WriteLine(projected2.ToString());
+				TestContext.Out.WriteLine(projected2.ToSqlQuery().Sql);
 				Assert.That(projected2.EnumQueries().SelectMany(q => q.EnumJoins()).Count(), Is.EqualTo(opimizerSwitch ? 0 : 1));
 
 				// With three keys
@@ -325,11 +325,11 @@ namespace Tests.Linq
 						First = a
 					};
 
-				TestContext.Out.WriteLine(query3.ToString());
+				TestContext.Out.WriteLine(query3.ToSqlQuery().Sql);
 				Assert.That(query3.EnumQueries().SelectMany(q => q.EnumJoins()).Count(), Is.EqualTo(1));
 
 				var projected3 = query3.Select(p => p.Second);
-				TestContext.Out.WriteLine(projected3.ToString());
+				TestContext.Out.WriteLine(projected3.ToSqlQuery().Sql);
 				Assert.That(projected3.EnumQueries().SelectMany(q => q.EnumJoins()).Count(), Is.EqualTo(opimizerSwitch ? 0 : 1));
 
 			}
@@ -369,7 +369,7 @@ namespace Tests.Linq
 						FF3 = ff3,
 					};
 
-				TestContext.Out.WriteLine(query.ToString());
+				TestContext.Out.WriteLine(query.ToSqlQuery().Sql);
 				Assert.That(query.EnumQueries().SelectMany(q => q.EnumJoins()).Count(), Is.EqualTo(opimizerSwitch ? 4 : 8));
 
 			}
@@ -400,7 +400,7 @@ namespace Tests.Linq
 						F = f
 					};
 
-				TestContext.Out.WriteLine(query.ToString());
+				TestContext.Out.WriteLine(query.ToSqlQuery().Sql);
 
 				var selectQuery = query.EnumQueries().Single();
 				var table = selectQuery.From.Tables[0];
@@ -442,7 +442,7 @@ namespace Tests.Linq
 						F2 = f2,
 					};
 
-				var sqlString = query.ToString();
+				var sqlString = query.ToSqlQuery().Sql;
 				TestContext.Out.WriteLine(sqlString);
 
 				var selectQuery = query.EnumQueries().First();
@@ -450,7 +450,7 @@ namespace Tests.Linq
 				Assert.That(table.Joins, Has.Count.EqualTo(2));
 
 				var smallProjection = query.Select(q => q.S);
-				TestContext.Out.WriteLine(smallProjection.ToString());
+				TestContext.Out.WriteLine(smallProjection.ToSqlQuery().Sql);
 
 				var selectQuery2 = smallProjection.EnumQueries().First();
 				var table2 = selectQuery2.From.Tables[0];

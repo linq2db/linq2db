@@ -995,7 +995,7 @@ namespace LinqToDB.Linq
 
 		#region GetSqlText
 
-		public static string GetSqlText(Query query, IDataContext dataContext, IQueryExpressions expressions, object?[]? parameters, object?[]? preambles)
+		public static IReadOnlyList<QuerySql> GetSqlText(Query query, IDataContext dataContext, IQueryExpressions expressions, object?[]? parameters, object?[]? preambles)
 		{
 			using var m      = ActivityService.Start(ActivityID.GetSqlText);
 			using var runner = dataContext.GetQueryRunner(query, dataContext, 0, expressions, parameters, preambles);

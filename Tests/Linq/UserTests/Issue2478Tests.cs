@@ -136,7 +136,7 @@ namespace Tests.UserTests
 
 				Assert.Multiple(() =>
 				{
-					Assert.That(query.ToString(), Does.Not.Contains("EXISTS"));
+					Assert.That(query.ToSqlQuery().Sql, Does.Not.Contains("EXISTS"));
 
 					Assert.That(cnt, Is.EqualTo(result.Length));
 				});

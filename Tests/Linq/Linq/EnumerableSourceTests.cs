@@ -195,7 +195,7 @@ namespace Tests.Linq
 					select p;
 
 				var result = q.ToList();
-				var sql    = q.ToString();
+				var sql    = q.ToSqlQuery().Sql;
 
 				if (iteration > 1)
 					Query<Person>.CacheMissCount.Should().Be(cacheMiss);

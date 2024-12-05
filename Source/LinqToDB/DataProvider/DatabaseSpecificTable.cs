@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 namespace LinqToDB.DataProvider
 {
 	using Async;
+	using Linq;
 
 	abstract class DatabaseSpecificTable<TSource> : ITable<TSource>
 		where TSource : notnull
@@ -32,10 +33,10 @@ namespace LinqToDB.DataProvider
 
 		public Expression Expression => _table.Expression;
 
-		public string         SqlText     => _table.SqlText;
-		public IDataContext   DataContext => _table.DataContext;
-		public Type           ElementType => _table.ElementType;
-		public IQueryProvider Provider    => _table.Provider;
+		IReadOnlyList<QuerySql> IExpressionQuery.GetSqlQuery() => _table.GetSqlQuery();
+		public IDataContext   DataContext                      => _table.DataContext;
+		public Type           ElementType                      => _table.ElementType;
+		public IQueryProvider Provider                         => _table.Provider;
 
 		public IQueryable CreateQuery(Expression expression)
 		{

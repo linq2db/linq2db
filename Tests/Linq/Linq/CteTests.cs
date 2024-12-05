@@ -102,8 +102,8 @@ namespace Tests.Linq
 					from c4 in db.Child.Where(c4 => c4.ParentID % 2 == 0).InnerJoin(c4 => c4.ParentID == c3.ParentID)
 					select c3;
 
-				var expectedStr = expected.ToString();
-				var resultdStr  = result.ToString();
+				var expectedStr = expected.ToSqlQuery().Sql;
+				var resultdStr  = result.ToSqlQuery().Sql;
 
 				// Looks like we do not populate needed field for CTE. It is aproblem that needs to be solved
 				AreEqual(expected, result);
@@ -205,8 +205,8 @@ namespace Tests.Linq
 					orderby p.CategoryName, p.UnitPrice, p.ProductName
 					select p;
 
-				var expectedStr = expected.ToString();
-				var resultdStr  = result.ToString();
+				var expectedStr = expected.ToSqlQuery().Sql;
+				var resultdStr  = result.ToSqlQuery().Sql;
 
 				AreEqual(expected, result);
 			}
@@ -247,8 +247,8 @@ namespace Tests.Linq
 						p.UnitPrice
 					};
 
-				var expectedStr = expected.ToString();
-				var resultdStr  = result.ToString();
+				var expectedStr = expected.ToSqlQuery().Sql;
+				var resultdStr  = result.ToSqlQuery().Sql;
 
 				AreEqual(expected, result);
 			}
@@ -297,8 +297,8 @@ namespace Tests.Linq
 						p.UnitPrice
 					};
 
-				var expectedStr = expected.ToString();
-				var resultdStr  = result.ToString();
+				var expectedStr = expected.ToSqlQuery().Sql;
+				var resultdStr  = result.ToSqlQuery().Sql;
 
 				AreEqual(expected, result);
 			}
@@ -408,7 +408,7 @@ namespace Tests.Linq
 					orderby eh.HierarchyLevel, eh.LastName, eh.FirstName
 					select eh;
 
-				var resultdStr  = result.ToString();
+				var resultdStr  = result.ToSqlQuery().Sql;
 
 				var data = result.ToArray();
 			}
@@ -429,8 +429,8 @@ namespace Tests.Linq
 					from c4 in db.Child.Where(c4 => c4.ParentID % 2 == 0).InnerJoin(c4 => c4.ParentID == p.ParentID)
 					select c4;
 
-				var expectedStr = expected.ToString();
-				var resultdStr  = result.ToString();
+				var expectedStr = expected.ToSqlQuery().Sql;
+				var resultdStr  = result.ToSqlQuery().Sql;
 
 				AreEqual(expected, result);
 			}
@@ -567,7 +567,7 @@ namespace Tests.Linq
 				var cte = db.GetTable<Child>().AsCte();
 
 				var query = cte.Where(t => t.ChildID == var3 || var3 == null);
-				var str = query.ToString()!;
+				var str = query.ToSqlQuery().Sql;
 
 				TestContext.Out.WriteLine(str);
 
@@ -695,7 +695,7 @@ namespace Tests.Linq
 						)
 					, "MY_CTE");
 
-				var str = cteRecursive.ToString();
+				var str = cteRecursive.ToSqlQuery().Sql;
 				var result = cteRecursive.ToArray();
 			}
 		}
@@ -886,7 +886,7 @@ namespace Tests.Linq
 						q.Level
 					};
 
-				Assert.DoesNotThrow(() => TestContext.Out.WriteLine(query.ToString()));
+				Assert.DoesNotThrow(() => TestContext.Out.WriteLine(query.ToSqlQuery().Sql));
 			}
 		}
 
@@ -1039,7 +1039,7 @@ namespace Tests.Linq
 					from ct in children.LeftJoin(ct => c.ChildID == ct.ChildID)
 					select c;
 
-				var sql = query.ToString();
+				var sql = query.ToSqlQuery().Sql;
 				TestContext.Out.WriteLine(sql);
 
 				Assert.That(sql, Is.Not.Contains("WITH"));
@@ -1177,7 +1177,7 @@ namespace Tests.Linq
 				var ncCodeBo = "NCCodeBO:8110,SETUP_OSCILLOSCO";
 
 				var result = from item in wipCte.AllowedNcCode() where item.NcCodeBo == ncCodeBo select item;
-				var sql = ((IExpressionQuery)result).SqlText;
+				var sql = result.ToSqlQuery().Sql;
 
 				Assert.That(sql.Replace("\"", "").Replace("`", "").Replace("[", "").Replace("]", "").ToLowerInvariant(), Does.Contain("WITH AllowedNcCode (NcCodeBo, NcCode, NcCodeDescription)".ToLowerInvariant()));
 			}

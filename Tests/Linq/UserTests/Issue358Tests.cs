@@ -36,7 +36,7 @@ namespace Tests.UserTests
 					where p.MyEnum != TestIssue358Enum.Value1
 					select p;
 
-				var sql = qry.ToString()!;
+				var sql = qry.ToSqlQuery().Sql;
 				TestContext.Out.WriteLine(sql);
 
 				Assert.That(sql, Does.Contain("NULL"));
@@ -55,7 +55,7 @@ namespace Tests.UserTests
 					where !!filter.Contains(p.MyEnum!.Value)
 					select p;
 
-				var sql = qry.ToString()!;
+				var sql = qry.ToSqlQuery().Sql;
 				TestContext.Out.WriteLine(sql);
 
 				Assert.That(sql, Does.Not.Contain("NULL"));
@@ -72,7 +72,7 @@ namespace Tests.UserTests
 					where p.MyEnum2 != TestIssue358Enum.Value1
 					select p;
 
-				var sql = qry.ToString()!;
+				var sql = qry.ToSqlQuery().Sql;
 				TestContext.Out.WriteLine(sql);
 
 				Assert.That(sql, Does.Not.Contain("NULL"));
@@ -91,7 +91,7 @@ namespace Tests.UserTests
 					where !filter.Contains(p.MyEnum2)
 					select p;
 
-				var sql = qry.ToString()!;
+				var sql = qry.ToSqlQuery().Sql;
 				TestContext.Out.WriteLine(sql);
 
 				Assert.That(sql, Does.Not.Contain("NULL"));

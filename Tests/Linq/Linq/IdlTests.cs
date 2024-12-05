@@ -422,8 +422,8 @@ namespace Tests.Linq
 						Name = p.FirstName
 					};
 
-				var sql1 = (from p in people where p.Id       == 1 select p).ToString();
-				var sql2 = (from p in people where p.Id.Value == 1 select p).ToString();
+				var sql1 = (from p in people where p.Id       == 1 select p).ToSqlQuery().Sql;
+				var sql2 = (from p in people where p.Id.Value == 1 select p).ToSqlQuery().Sql;
 
 				Assert.That(sql1, Is.EqualTo(sql2));
 			}
@@ -685,7 +685,7 @@ namespace Tests.Linq
 						from p in db.Person
 						select new { Rank = p.ID, p.FirstName, p.LastName });
 
-				var resultquery = (from x in query2 orderby x.Rank, x.FirstName, x.LastName select x).ToString()!;
+				var resultquery = (from x in query2 orderby x.Rank, x.FirstName, x.LastName select x).ToSqlQuery().Sql;
 
 				TestContext.Out.WriteLine(resultquery);
 

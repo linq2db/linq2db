@@ -146,12 +146,12 @@ namespace Tests.xUpdate
 			public int OtherFake;
 		}
 
-		private static ITable<TestMapping1> GetTarget(IDataContext db)
+		internal static ITable<TestMapping1> GetTarget(IDataContext db)
 		{
 			return db.GetTable<TestMapping1>().TableName("TestMerge1");
 		}
 
-		private static ITable<TestMapping1> GetSource1(IDataContext db)
+		internal static ITable<TestMapping1> GetSource1(IDataContext db)
 		{
 			return db.GetTable<TestMapping1>().TableName("TestMerge2");
 		}
@@ -174,7 +174,7 @@ namespace Tests.xUpdate
 			});
 		}
 
-		private void PrepareData(IDataContext db)
+		internal static void PrepareData(IDataContext db)
 		{
 			using (new DisableLogging())
 			{

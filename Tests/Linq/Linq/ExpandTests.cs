@@ -89,7 +89,7 @@ namespace Tests.Linq
 					select t;
 
 				//DO NOT REMOVE, it forces caching query
-				var str = query.ToString();
+				var str = query.ToSqlQuery().Sql;
 				TestContext.Out.WriteLine(str);
 
 				var expected = from t in sampleData

@@ -1246,7 +1246,7 @@ namespace Tests.Linq
 					where (t.IntValue & TestFlag.Value1) != 0
 					select t;
 
-				var sql = result.ToString();
+				var sql = result.ToSqlQuery().Sql;
 
 				Assert.That(sql, Is.Not.Contains("Convert").And.Not.Contains("Int(").And.Not.Contains("Cast"));
 			}

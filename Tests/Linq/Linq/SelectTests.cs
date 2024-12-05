@@ -682,7 +682,7 @@ namespace Tests.Linq
 					from p in db.GetTable<TestParent>()
 					select p.Value1_;
 
-				var sql = q.ToString()!;
+				var sql = q.ToSqlQuery().Sql;
 
 				Assert.That(sql.IndexOf("ParentID_"), Is.LessThan(0));
 			}
@@ -697,7 +697,7 @@ namespace Tests.Linq
 					from p in db.GetTable<ComplexPerson>()
 					select p.Name.LastName;
 
-				var sql = q.ToString()!;
+				var sql = q.ToSqlQuery().Sql;
 
 				TestContext.Out.WriteLine(sql);
 
@@ -1716,11 +1716,11 @@ namespace Tests.Linq
 					where p.ParentID == id
 					select p;
 
-				var sql1 = query.ToString();
+				var sql1 = query.ToSqlQuery().Sql;
 
 				id = 2;
 
-				var sql2 = query.ToString();
+				var sql2 = query.ToSqlQuery().Sql;
 
 				Assert.That(sql1, Is.Not.EqualTo(sql2));
 			}

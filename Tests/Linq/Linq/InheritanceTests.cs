@@ -291,7 +291,7 @@ namespace Tests.Linq
 				var q1 = db.GetTable<Parent222>();
 				var q  = q1.Where(_ => _.Value.ID == 1);
 
-				var sql = ((IExpressionQuery<Parent222>)q).SqlText;
+				var sql = q.ToSqlQuery().Sql;
 				Assert.That(sql, Is.Not.Empty);
 			}
 		}

@@ -615,7 +615,7 @@ namespace Tests.Linq
 					where SqlLite.MatchFts(c, "some*")
 					select c;
 
-				var str = q.ToString()!;
+				var str = q.ToSqlQuery().Sql;
 				Assert.That(str, Does.Contain(" matches "));
 			}
 		}

@@ -42,7 +42,7 @@ namespace Tests.UserTests
 					where t1.Field3.Any(x => ids.Contains(x.Field1))
 					select new { t1.Field2 };
 
-				var sql = q.ToString()!;
+				var sql = q.ToSqlQuery().Sql;
 
 				Assert.That(sql.IndexOf("INNER JOIN"), Is.LessThan(0));
 			}

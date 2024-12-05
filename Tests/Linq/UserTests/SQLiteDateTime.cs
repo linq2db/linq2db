@@ -50,7 +50,7 @@ namespace Tests.UserTests
 				var matchSymbolIds = new List<int>();
 
 				var queryable = GenerateQuery(db, new DateTime(2010, 3, 5)).Where(x => matchSymbolIds.Contains(x.ID));
-				return queryable.ToString()!;
+				return queryable.ToSqlQuery().Sql;
 			}
 		}
 

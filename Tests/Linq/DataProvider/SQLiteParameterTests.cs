@@ -60,7 +60,7 @@ namespace Tests.DataProvider
 					Assert.That(query.GetStatement().CollectParameters(), Is.Empty);
 #pragma warning restore CS0618 // Type or member is obsolete
 
-					Assert.That(query.ToString(), Does.Not.Contain("DateTime("));
+					Assert.That(query.ToSqlQuery().Sql, Does.Not.Contain("DateTime("));
 				});
 			}
 		}

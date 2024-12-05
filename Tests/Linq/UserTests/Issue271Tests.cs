@@ -33,7 +33,7 @@ namespace Tests.UserTests
 						e.NVarCharValue == "NVarCharValue"
 					select e;
 
-				var str = q.ToString()!;
+				var str = q.ToSqlQuery().Sql;
 
 				TestContext.Out.WriteLine(str);
 
@@ -65,7 +65,7 @@ namespace Tests.UserTests
 						@nVarChar.Contains(e.NVarCharValue)
 					select e;
 
-				var str = q.ToString()!;
+				var str = q.ToSqlQuery().Sql;
 
 				TestContext.Out.WriteLine(str);
 

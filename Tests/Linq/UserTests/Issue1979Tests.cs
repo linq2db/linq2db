@@ -80,7 +80,7 @@ namespace Tests.UserTests
 							where tagFilter.Where(t => t.TaggableId == i.Id).Any()
 							select i;
 
-				var sql = query.ToString();
+				var sql = query.ToSqlQuery().Sql;
 				query.ToList();
 
 				/*
@@ -116,7 +116,7 @@ WHERE
 							where i.Tagging.Any(x => x.Tag.Name == "Visu")
 							select i;
 
-				var sql = query.ToString();
+				var sql = query.ToSqlQuery().Sql;
 				query.ToList();
 
 				/*

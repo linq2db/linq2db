@@ -39,7 +39,7 @@ namespace Tests.UserTests
 					where current.Foeld2 == previous.Foeld2
 					select new { current.Field1, Field2 = previous.Field1 };
 
-				var sql = q.ToString();
+				var sql = q.ToSqlQuery().Sql;
 			}
 		}
 	}

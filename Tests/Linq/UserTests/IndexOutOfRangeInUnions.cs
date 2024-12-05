@@ -31,7 +31,7 @@ namespace Tests.UserTests
 					query = query?.Union(innerQuery) ?? innerQuery;
 				}
 
-				Assert.DoesNotThrow(() => TestContext.Out.WriteLine(query?.ToString()));
+				Assert.DoesNotThrow(() => TestContext.Out.WriteLine(query?.ToSqlQuery().Sql));
 
 				query!.ToList();
 			}

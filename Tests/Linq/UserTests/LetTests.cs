@@ -70,7 +70,7 @@ namespace Tests.UserTests
 						select t4
 					select t1;
 
-				var linqResult = q.ToString();
+				var linqResult = q.ToSqlQuery().Sql;
 			}
 		}
 
@@ -89,7 +89,7 @@ namespace Tests.UserTests
 						select t4
 					select t1;
 
-				var linqResult = q.ToString();
+				var linqResult = q.ToSqlQuery().Sql;
 			}
 		}
 	}

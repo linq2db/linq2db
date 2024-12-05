@@ -64,7 +64,7 @@ namespace Tests.Linq
 						Aggregate = AggregateFunc(funcName, fieldName)
 					};
 
-				var sql = query.ToString();
+				var sql = query.ToSqlQuery().Sql;
 				TestContext.Out.WriteLine(sql);
 
 				Assert.That(sql, Contains.Substring(funcName).And.Contains(fieldName));
@@ -117,7 +117,7 @@ namespace Tests.Linq
 					)
 					select cc;
 
-				var sql = query.ToString()!;
+				var sql = query.ToSqlQuery().Sql;
 				TestContext.Out.WriteLine(sql);
 
 				Assert.Multiple(() =>
@@ -149,7 +149,7 @@ namespace Tests.Linq
 					)
 					select cc;
 
-				var sql = query.ToString()!;
+				var sql = query.ToSqlQuery().Sql;
 				TestContext.Out.WriteLine(sql);
 
 				Assert.Multiple(() =>
@@ -176,7 +176,7 @@ namespace Tests.Linq
 					from c2 in db.Child.Take(10, takeHint)
 					select new {c1, c2};
 
-				var sql = query.ToString();
+				var sql = query.ToSqlQuery().Sql;
 				TestContext.Out.WriteLine(sql);
 
 				if (takeHint.HasFlag(TakeHints.Percent))

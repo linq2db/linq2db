@@ -13,7 +13,7 @@ let SelectField (db : IDataContext) =
         select p.LastName
     }
 
-    let sql = "" + q.ToString()
+    let sql = q.ToSqlQuery().Sql
     Assert.That(sql.IndexOf("First"), Is.LessThan 0)
     Assert.That(sql.IndexOf("LastName"), Is.GreaterThan 0)
 
@@ -24,7 +24,7 @@ let SelectFieldDeeplyComplexPerson (db : IDataContext) =
         select p.Name.LastName.Value
     }
 
-    let sql = "" + q.ToString()
+    let sql = q.ToSqlQuery().Sql
     Assert.That(sql.IndexOf("First"), Is.LessThan 0)
     Assert.That(sql.IndexOf("LastName"), Is.GreaterThan 0)
 

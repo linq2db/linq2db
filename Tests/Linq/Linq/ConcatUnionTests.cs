@@ -711,7 +711,7 @@ namespace Tests.Linq
 					from t2 in tmp.DefaultIfEmpty()
 					select new { t1, t2 };
 
-				var join1Sql = join1.ToString();
+				var join1Sql = join1.ToSqlQuery().Sql;
 				Assert.That(join1Sql, Is.Not.Null);
 
 				var join2 =
@@ -723,12 +723,12 @@ namespace Tests.Linq
 					where t1 == null
 					select new { t1, t2 };
 
-				var join2Sql = join2.ToString();
+				var join2Sql = join2.ToSqlQuery().Sql;
 				Assert.That(join2Sql, Is.Not.Null);
 
 				var fullJoin = join1.Concat(join2);
 
-				var fullJoinSql = fullJoin.ToString(); // exception : Types in Concat are constructed incompatibly.
+				var fullJoinSql = fullJoin.ToSqlQuery().Sql; // exception : Types in Concat are constructed incompatibly.
 				Assert.That(fullJoinSql, Is.Not.Null);
 
 				TestContext.Out.Write(fullJoinSql);
@@ -1887,7 +1887,7 @@ namespace Tests.Linq
 				.OrderBy(i => i.ID))
 				.Union((from item in db.Person select item));
 
-			var sql = query.ToString()!;
+			var sql = query.ToSqlQuery().Sql;
 
 			sql.Should().NotContain("ORDER BY");
 
@@ -1903,7 +1903,7 @@ namespace Tests.Linq
 				.Union((from item in db.Person select item)
 				.OrderBy(i => i.ID));
 
-			var sql = query.ToString()!;
+			var sql = query.ToSqlQuery().Sql;
 
 			sql.Should().NotContain("ORDER BY");
 
@@ -1920,7 +1920,7 @@ namespace Tests.Linq
 				.OrderBy(i => i.ID))
 				.UnionAll((from item in db.Person select item));
 
-			var sql = query.ToString()!;
+			var sql = query.ToSqlQuery().Sql;
 
 			sql.Should().Contain("ORDER BY", Exactly.Once());
 			sql.Substring(sql.IndexOf("ORDER BY")).Should().Contain("UNION", Exactly.Once());
@@ -1938,7 +1938,7 @@ namespace Tests.Linq
 				.UnionAll((from item in db.Person select item)
 				.OrderBy(i => i.ID));
 
-			var sql = query.ToString()!;
+			var sql = query.ToSqlQuery().Sql;
 
 			sql.Should().Contain("ORDER BY", Exactly.Once());
 			sql.Should().Contain("UNION", Exactly.Once());

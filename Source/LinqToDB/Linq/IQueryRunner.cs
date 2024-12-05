@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
@@ -45,10 +46,10 @@ namespace LinqToDB.Linq
 		Task<IDataReaderAsync> ExecuteReaderAsync  (CancellationToken cancellationToken);
 
 		/// <summary>
-		/// Returns SQL text for query.
+		/// Returns SQL text with parameters for query.
 		/// </summary>
-		/// <returns>Query SQL text.</returns>
-		string                 GetSqlText          ();
+		/// <returns>Query SQL text with parameters.</returns>
+		IReadOnlyList<QuerySql> GetSqlText();
 		
 		IQueryExpressions Expressions      { get; }
 		IDataContext      DataContext      { get; }

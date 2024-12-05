@@ -271,7 +271,7 @@ namespace Tests.UserTests
 							  select new WmsGlobalTaskCombinedDTO()
 								  { GlobalTask = g, LoadCarrier = res };
 
-					TestContext.Out.WriteLine(qry.ToString());
+					TestContext.Out.WriteLine(qry.ToSqlQuery().Sql);
 				}
 			}
 
@@ -293,7 +293,7 @@ namespace Tests.UserTests
 							GlobalTask = g,
 						};
 
-					TestContext.Out.WriteLine(qry.ToString());
+					TestContext.Out.WriteLine(qry.ToSqlQuery().Sql);
 				}
 			}
 
@@ -329,7 +329,7 @@ namespace Tests.UserTests
 							Destination = dest, DestinationShelf = destShelf, OriginDestination = origdest
 						};
 
-					TestContext.Out.WriteLine(qry.ToString());
+					TestContext.Out.WriteLine(qry.ToSqlQuery().Sql);
 				}
 			}
 
@@ -370,7 +370,7 @@ namespace Tests.UserTests
 						from outfeed in outfeed1List.DefaultIfEmpty()
 						select new WmsGlobalTaskCombinedDTO() { GlobalTask = g, LoadCarrier = res, Source = source, SourceShelf = sourceShelf, Destination = dest, DestinationShelf = destShelf, OriginDestination = origdest, OutfeedTransportOrder = outfeed };
 
-					TestContext.Out.WriteLine(qry.ToString());
+					TestContext.Out.WriteLine(qry.ToSqlQuery().Sql);
 				}
 			}
 
@@ -524,7 +524,7 @@ namespace Tests.UserTests
 								OutfeedTransportOrder = outfeed
 							});
 
-					var str = query.ToString();
+					var str = query.ToSqlQuery().Sql;
 					TestContext.Out.WriteLine(str);
 				}
 			}

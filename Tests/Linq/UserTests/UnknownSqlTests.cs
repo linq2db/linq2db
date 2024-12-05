@@ -33,7 +33,7 @@ namespace Tests.UserTests
 							DataType = Sql.AsSql(ColumnDataType.Unknown),
 						});
 
-				var sql = q.ToString();
+				var sql = q.ToSqlQuery().Sql;
 
 				Assert.That(sql, Is.Not.Contains("Unknown"));
 			}

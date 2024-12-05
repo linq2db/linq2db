@@ -40,7 +40,7 @@ namespace Tests.Linq
 			using (var db = GetDataConnection(context))
 			{
 				var p   = "abc";
-				var sql = db.GetTable<Person>().Where(t => t.FirstName == p).ToString();
+				var sql = db.GetTable<Person>().Where(t => t.FirstName == p).ToSqlQuery().Sql;
 
 				TestContext.Out.WriteLine(sql);
 

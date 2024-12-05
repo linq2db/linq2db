@@ -584,7 +584,7 @@ namespace Tests.Linq
 					.Where(user =>
 						user.Status == status &&
 						(string.IsNullOrEmpty(firstName) || user.FirstName!.Contains(firstName)))
-					.ToString();
+					.ToSqlQuery().Sql;
 
 				Debug.WriteLine(str);
 			}

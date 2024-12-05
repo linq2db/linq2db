@@ -326,7 +326,7 @@ namespace Tests.xUpdate
 					.Value(c => c.ParentID, c => c.ParentID)
 					.Value(c => c.ChildID, () => id);
 
-				var sql = insertable.ToString();
+				var sql = insertable.ToSqlQuery().Sql;
 				TestContext.Out.WriteLine(sql);
 
 				Assert.That(sql, Does.Contain("INSERT"));

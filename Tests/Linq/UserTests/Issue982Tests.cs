@@ -73,7 +73,7 @@ namespace Tests.UserTests
 									c
 								};
 
-					var str = query.ToString()!;
+					var str = query.ToSqlQuery().Sql;
 					Assert.That(str, Does.Contain("'one' != 'two'"));
 					var _ = query.ToArray();
 				}

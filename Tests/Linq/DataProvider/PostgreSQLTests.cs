@@ -2263,7 +2263,7 @@ namespace Tests.DataProvider
 						StringValue = TestPgFunctions.Unnest(t.StringArray)
 					};
 
-				var str = query.ToString();
+				var str = query.ToSqlQuery().Sql;
 				TestContext.Out.WriteLine(str);
 			}
 		}
@@ -2280,7 +2280,7 @@ namespace Tests.DataProvider
 						StringValue = TestPgFunctions.Unnest(t.StringArray)
 					};
 
-				var str = query.ToString();
+				var str = query.ToSqlQuery().Sql;
 				TestContext.Out.WriteLine(str);
 			}
 		}

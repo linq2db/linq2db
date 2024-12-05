@@ -225,7 +225,7 @@ namespace Tests.Linq
 					.DefaultIfEmpty()
 				select t;
 
-			TestContext.Out.WriteLine(q.ToString());
+			TestContext.Out.WriteLine(q.ToSqlQuery().Sql);
 
 			var selectQuery = q.GetSelectQuery();
 

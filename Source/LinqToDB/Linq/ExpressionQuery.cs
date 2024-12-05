@@ -41,26 +41,23 @@ namespace LinqToDB.Linq
 		//
 		[JetBrains.Annotations.UsedImplicitly]
 		// ReSharper disable once InconsistentNaming
-		public string _sqlText => SqlText;
+		public IReadOnlyList<QuerySql> _sqlText => ((IExpressionQuery)this).GetSqlQuery();
 #endif
 
-		public string SqlText
+		IReadOnlyList<QuerySql> IExpressionQuery.GetSqlQuery()
 		{
-			get
+			var expression  = Expression;
+			var expressions = (IQueryExpressions)new RuntimeExpressionsContainer(expression);
+			var info        = GetQuery(ref expressions, true, out var dependsOnParameters);
+
+			if (!dependsOnParameters)
 			{
-				var expression  = Expression;
-				var expressions = (IQueryExpressions)new RuntimeExpressionsContainer(expression);
-				var info        = GetQuery(ref expressions, true, out var dependsOnParameters);
-
-				if (!dependsOnParameters)
-				{
-					Expression = expressions.MainExpression;
-				}
-
-				var sqlText    = QueryRunner.GetSqlText(info, DataContext, expressions, Parameters, Preambles);
-
-				return sqlText;
+				Expression = expressions.MainExpression;
 			}
+
+			var sqlText    = QueryRunner.GetSqlText(info, DataContext, expressions, Parameters, Preambles);
+
+			return sqlText;
 		}
 
 		#endregion

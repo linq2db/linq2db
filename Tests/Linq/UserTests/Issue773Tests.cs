@@ -65,7 +65,7 @@ CREATE VIRTUAL TABLE dataFTS USING fts4(`ID` INTEGER, `FirstName` TEXT, `LastNam
 						});
 
 					var query = data.Where(arg => SqlLite.MatchFts<DtaFts>("John*"));
-					TestContext.Out.WriteLine(query.ToString());
+					TestContext.Out.WriteLine(query.ToSqlQuery().Sql);
 					var _ = query.ToList();
 				}
 				finally

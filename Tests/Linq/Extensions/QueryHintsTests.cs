@@ -23,7 +23,7 @@ namespace Tests.Extensions
 
 				var q = db.Parent.Select(p => p);
 
-				var str = q.ToString();
+				var str = q.ToSqlQuery().Sql;
 
 				TestContext.Out.WriteLine(str);
 
@@ -40,7 +40,7 @@ namespace Tests.Extensions
 					Assert.That(ctx.LastQuery, Contains.Substring("----"));
 				}
 
-				str = q.ToString();
+				str = q.ToSqlQuery().Sql;
 
 				TestContext.Out.WriteLine(str);
 
@@ -84,7 +84,7 @@ namespace Tests.Extensions
 				db.NextQueryHints.Add(oneTimeHint);
 
 				var query = db.Parent.Where(r => r.ParentID == 11);
-				var sql = db is DataConnection ? null : query.ToString();
+				var sql = db is DataConnection ? null : query.ToSqlQuery().Sql;
 				await query.ToListAsync();
 				if (db is DataConnection dc) sql = dc.LastQuery!;
 
@@ -93,7 +93,7 @@ namespace Tests.Extensions
 				Assert.That(sql, Does.Contain(oneTimeHint), $"(1) expected {oneTimeHint}. Has alien hint: {sql.Contains("once")}");
 
 				query = db.Parent.Where(r => r.ParentID == 11);
-				sql = db is DataConnection ? null : query.ToString();
+				sql = db is DataConnection ? null : query.ToSqlQuery().Sql;
 				await query.ToListAsync();
 				if (db is DataConnection dc2) sql = dc2.LastQuery!;
 

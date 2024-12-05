@@ -122,7 +122,7 @@ namespace Tests.Linq
 						TableName_Database = Sql.TableName(t, Sql.TableQualification.DatabaseName),
 					};
 
-				TestContext.Out.WriteLine(query.ToString());
+				TestContext.Out.WriteLine(query.ToSqlQuery().Sql);
 
 				var ast = query.GetSelectQuery();
 
@@ -194,7 +194,7 @@ namespace Tests.Linq
 						TableName_Database = Sql.TableExpr(t, Sql.TableQualification.DatabaseName),
 					};
 
-				TestContext.Out.WriteLine(query.ToString());
+				TestContext.Out.WriteLine(query.ToSqlQuery().Sql);
 
 				var ast = query.GetSelectQuery();
 
@@ -258,7 +258,7 @@ namespace Tests.Linq
 						.InnerJoin(ft => ft.Key == t.Id)
 					select t;
 
-				var query1Str = query1.ToString();
+				var query1Str = query1.ToSqlQuery().Sql;
 
 				TestContext.Out.WriteLine(query1Str);
 
@@ -268,7 +268,7 @@ namespace Tests.Linq
 						.InnerJoin(ft => ft.Key == t.Id)
 					select t;
 
-				var query2Str = query2.ToString();
+				var query2Str = query2.ToSqlQuery().Sql;
 
 				TestContext.Out.WriteLine(query2Str);
 
@@ -276,7 +276,7 @@ namespace Tests.Linq
 				var query3 = db.FromSql<FreeTextKey<int>>(
 					$"FREETEXTTABLE({Sql.TableExpr(table)}, {Sql.FieldExpr(table, t => t.Value)}, {queryText})");
 
-				var query3Str = query3.ToString();
+				var query3Str = query3.ToSqlQuery().Sql;
 
 				TestContext.Out.WriteLine(query3Str);
 

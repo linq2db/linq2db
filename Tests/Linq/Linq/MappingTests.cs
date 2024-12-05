@@ -391,7 +391,7 @@ namespace Tests.Linq
 			{
 				IQueryable<IDocument> query = db.GetTable<Document>();
 				var idsQuery = query.Select(s => s.Id);
-				var str = idsQuery.ToString(); // Exception
+				var str = idsQuery.ToSqlQuery().Sql; // Exception
 				Assert.That(str, Is.Not.Null);
 			}
 		}

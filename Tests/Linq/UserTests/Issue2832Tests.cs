@@ -98,7 +98,7 @@ namespace Tests.UserTests
 					).LeftJoin(x => x.SetpointtypeId == spt.Id).DefaultIfEmpty()
 					select new {spt.Id};
 
-				var sql = query.ToString();
+				var sql = query.ToSqlQuery().Sql;
 				TestContext.Out.WriteLine(sql);
 
 				var sourcesCount = QueryHelper.EnumerateAccessibleSources(query.GetSelectQuery()).Count(s => s.ElementType == QueryElementType.SqlQuery);

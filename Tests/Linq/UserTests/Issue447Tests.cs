@@ -4,6 +4,8 @@ using System.Linq.Expressions;
 
 using FluentAssertions;
 
+using LinqToDB;
+
 using NUnit.Framework;
 
 namespace Tests.UserTests
@@ -40,7 +42,7 @@ namespace Tests.UserTests
 				result = result.Where(predicate!);
 
 				// StackOverflowException cannot be handled and will terminate process
-				result.ToString();
+				_ = result.ToSqlQuery().Sql;
 			}
 		}
 
@@ -76,12 +78,12 @@ namespace Tests.UserTests
 				var result2 = result.Where(predicate2!);
 
 				// StackOverflowException cannot be handled and will terminate process
-				result1.ToString();
+				_ = result1.ToSqlQuery().Sql;
 
 				var cacheMiss = result1.GetCacheMissCount();
 
 				// from cache
-				var sql = result2.ToString();
+				var sql = result2.ToSqlQuery().Sql;
 
 				result1.GetCacheMissCount().Should().Be(cacheMiss);
 			}
@@ -131,12 +133,12 @@ namespace Tests.UserTests
 					select r1;
 
 				// StackOverflowException cannot be handled and will terminate process
-				combined1.ToString();
+				_ = combined1.ToSqlQuery().Sql;
 
 				var cacheMiss = combined1.GetCacheMissCount();
 
 				// from cache
-				var sql = combined2.ToString();
+				var sql = combined2.ToSqlQuery().Sql;
 
 				combined2.GetCacheMissCount().Should().Be(cacheMiss);
 			}

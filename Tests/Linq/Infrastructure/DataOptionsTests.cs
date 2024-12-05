@@ -312,7 +312,7 @@ namespace Tests.Infrastructure
 				// global handler set
 				using (var db = GetDataContext(context))
 				{
-					db.GetTable<EntityDescriptorTable>().ToString();
+					_ = db.GetTable<EntityDescriptorTable>().ToSqlQuery().Sql;
 				}
 
 				Assert.Multiple(() =>
@@ -329,7 +329,7 @@ namespace Tests.Infrastructure
 					localTriggrered = true;
 				})))
 				{
-					db.GetTable<EntityDescriptorTable>().ToString();
+					_ = db.GetTable<EntityDescriptorTable>().ToSqlQuery().Sql;
 				}
 
 				Assert.Multiple(() =>
@@ -342,7 +342,7 @@ namespace Tests.Infrastructure
 				// descriptor cached
 				using (var db = GetDataContext(context))
 				{
-					db.GetTable<EntityDescriptorTable>().ToString();
+					_ = db.GetTable<EntityDescriptorTable>().ToSqlQuery().Sql;
 				}
 
 				Assert.Multiple(() =>
@@ -354,7 +354,7 @@ namespace Tests.Infrastructure
 				// cache miss
 				using (var db = GetDataContext(context, new MappingSchema("name1")))
 				{
-					db.GetTable<EntityDescriptorTable>().ToString();
+					_ = db.GetTable<EntityDescriptorTable>().ToSqlQuery().Sql;
 				}
 
 				Assert.Multiple(() =>
@@ -368,7 +368,7 @@ namespace Tests.Infrastructure
 				MappingSchema.EntityDescriptorCreatedCallback = null;
 				using (var db = GetDataContext(context, new MappingSchema("name2")))
 				{
-					db.GetTable<EntityDescriptorTable>().ToString();
+					_ = db.GetTable<EntityDescriptorTable>().ToSqlQuery().Sql;
 				}
 
 				Assert.Multiple(() =>

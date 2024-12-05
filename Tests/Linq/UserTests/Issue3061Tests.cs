@@ -76,7 +76,7 @@ namespace Tests.UserTests
 						IncidentNumber = x.IncidentProperties.FirstOrDefault()!.Incident.EventNumber
 					});
 
-				TestContext.Out.WriteLine(query.ToString());
+				TestContext.Out.WriteLine(query.ToSqlQuery().Sql);
 
 				query.GetSelectQuery().Select.Columns.Should().HaveCount(2);
 			}
@@ -134,7 +134,7 @@ namespace Tests.UserTests
 							.FirstOrDefault()
 					});
 
-				TestContext.Out.WriteLine(query.ToString());
+				TestContext.Out.WriteLine(query.ToSqlQuery().Sql);
 
 				query.GetSelectQuery().Select.Columns.Should().HaveCount(6);
 			}
