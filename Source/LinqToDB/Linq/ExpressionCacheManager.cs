@@ -262,7 +262,7 @@ namespace LinqToDB.Linq
 				{
 					foreach (var pair in _parameterEntries.Values)
 					{
-						if (paramExpr.Type != pair.param.Type)
+						if (paramExpr.Type.UnwrapNullableType() != pair.param.Type.UnwrapNullableType())
 							continue;
 
 						var iteratedName = SuggestParameterName(pair.param);
@@ -270,7 +270,7 @@ namespace LinqToDB.Linq
 						if (
 							iteratedName == testedName
 							&& !ExpressionEqualityComparer.Instance.Equals(pair.param, paramExpr)
-							&& pair.entry.DbDataType.Equals(entry.DbDataType)
+							&& pair.entry.DbDataType.EqualsDbOnly(entry.DbDataType)
 							&& ExpressionEqualityComparer.Instance.Equals(pair.entry.ClientToProviderConverter, entry.ClientToProviderConverter)
 							&& ExpressionEqualityComparer.Instance.Equals(pair.entry.ItemAccessor, entry.ItemAccessor)
 							&& ExpressionEqualityComparer.Instance.Equals(pair.entry.DbDataTypeAccessor, entry.DbDataTypeAccessor))

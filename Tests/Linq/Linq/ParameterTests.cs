@@ -1744,7 +1744,7 @@ namespace Tests.Linq
 
 			// check only one parameter generated (1+2+1=4)
 			if (!context.IsAnyOf(TestProvName.AllClickHouse))
-				GetCurrentBaselines().Should().Contain("DECLARE", Exactly.Times(4));
+				GetCurrentBaselines().Should().Contain("DECLARE", Exactly.Times(5));
 		}
 
 
