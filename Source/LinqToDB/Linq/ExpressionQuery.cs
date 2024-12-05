@@ -59,11 +59,11 @@ namespace LinqToDB.Linq
 			return sqlText;
 		}
 
-		public virtual QueryDebugView DebugView 
+		public virtual QueryDebugView DebugView
 			=> new(
-				() => new ExpressionPrinter().PrintExpression(Expression), 
-				() => ((IExpressionQuery)this).GetSqlQuery().Single().Sql,
-				() => ((IExpressionQuery)this).GetSqlQuery().Single().Sql // TODO: Inline parameters
+				() => new ExpressionPrinter().PrintExpression(Expression),
+				() => ((IExpressionQuery)this).GetSqlQueries(null)[0].Sql,
+				() => ((IExpressionQuery)this).GetSqlQueries(new () { InlineParameters = false })[0].Sql
 				);
 
 		#endregion
