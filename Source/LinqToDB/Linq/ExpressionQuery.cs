@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -14,6 +15,7 @@ namespace LinqToDB.Linq
 	using Extensions;
 	using Tools;
 	using Internal;
+	using LinqToDB.Expressions;
 
 	abstract class ExpressionQuery<T> : IExpressionQuery<T>, IAsyncEnumerable<T>
 	{
@@ -28,21 +30,18 @@ namespace LinqToDB.Linq
 		public Expression   Expression  { get; set; } = null!;
 		public IDataContext DataContext { get; set; } = null!;
 
+		[DebuggerBrowsable(DebuggerBrowsableState.Never)]
 		internal Query<T>?  Info;
+
+		[DebuggerBrowsable(DebuggerBrowsableState.Never)]
 		internal object?[]? Parameters;
+
+		[DebuggerBrowsable(DebuggerBrowsableState.Never)]
 		internal object?[]? Preambles;
 
 		#endregion
 
 		#region Public Members
-
-#if DEBUG
-		// This property is helpful in Debug Mode.
-		//
-		[JetBrains.Annotations.UsedImplicitly]
-		// ReSharper disable once InconsistentNaming
-		public IReadOnlyList<QuerySql> _sqlText => ((IExpressionQuery)this).GetSqlQuery();
-#endif
 
 		IReadOnlyList<QuerySql> IExpressionQuery.GetSqlQuery()
 		{
@@ -59,6 +58,13 @@ namespace LinqToDB.Linq
 
 			return sqlText;
 		}
+
+		public virtual QueryDebugView DebugView 
+			=> new(
+				() => new ExpressionPrinter().PrintExpression(Expression), 
+				() => ((IExpressionQuery)this).GetSqlQuery().Single().Sql,
+				() => ((IExpressionQuery)this).GetSqlQuery().Single().Sql // TODO: Inline parameters
+				);
 
 		#endregion
 
@@ -262,8 +268,13 @@ namespace LinqToDB.Linq
 
 		#region IQueryable Members
 
+		[DebuggerBrowsable(DebuggerBrowsableState.Never)]
 		Type           IQueryable.ElementType => typeof(T);
-		Expression     IQueryable.Expression  => Expression;
+
+		[DebuggerBrowsable(DebuggerBrowsableState.Never)]
+		Expression IQueryable.Expression  => Expression;
+		
+		[DebuggerBrowsable(DebuggerBrowsableState.Never)]
 		IQueryProvider IQueryable.Provider    => this;
 
 		#endregion
