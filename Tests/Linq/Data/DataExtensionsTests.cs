@@ -178,44 +178,35 @@ namespace Tests.Data
 		[Test]
 		public void TestGrouping1([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
-			using (new GuardGrouping(false))
-			using (new PreloadGroups(false))
-			using (var dc = new DataContext(context))
-			{
-				var dictionary = dc.GetTable<Person>()
-					.GroupBy(p => p.FirstName)
-					.ToDictionary(p => p.Key);
+			using var dc = GetDataContext(context, options => options.UseGuardGrouping(false));
 
-				var tables = dictionary.ToDictionary(p => p.Key, p => p.Value.ToList());
-			}
+			var dictionary = dc.GetTable<Person>()
+				.GroupBy(p => p.FirstName)
+				.ToDictionary(p => p.Key);
+
+			var tables = dictionary.ToDictionary(p => p.Key, p => p.Value.ToList());
 		}
 
 		[Test]
 		public void TestGrouping2([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
-			using (new GuardGrouping(false))
-			using (new PreloadGroups(false))
-			{
-				using (var dc = new DataContext(context))
+			using var dc = GetDataContext(context, options => options.UseGuardGrouping(false));
+			var query =
+				from p in dc.GetTable<Person>()
+				group p by new { p.FirstName } into g
+				select new
 				{
-					var query =
-						from p in dc.GetTable<Person>()
-						group p by new { p.FirstName } into g
-						select new
-						{
-							g.Key.FirstName,
-							List = g.Select(k => k.ID),
-						};
+					g.Key.FirstName,
+					List = g.Select(k => k.ID),
+				};
 
-					var array = query.ToArray();
-					Assert.That(array, Is.Not.Empty);
+			var array = query.ToArray();
+			Assert.That(array, Is.Not.Empty);
 
-					foreach (var row in array)
-					{
-						var ids = row.List.ToArray();
-						Assert.That(ids, Is.Not.Empty);
-					}
-				}
+			foreach (var row in array)
+			{
+				var ids = row.List.ToArray();
+				Assert.That(ids, Is.Not.Empty);
 			}
 		}
 

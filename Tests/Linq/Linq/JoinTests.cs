@@ -2919,8 +2919,7 @@ namespace Tests.Linq
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSybase, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
 		public void Issue1455Test1([DataSources(TestProvName.AllClickHouse)] string context)
 		{
-			using (new GuardGrouping(false))
-			using (var db = GetDataContext(context))
+			using (var db = GetDataContext(context, o => o.UseGuardGrouping(false)))
 			using (var queryLastUpd = db.CreateLocalTable<Alert>())
 			using (db.CreateLocalTable<AuditAlert>())
 			using (db.CreateLocalTable<Trade>())
@@ -2979,8 +2978,8 @@ namespace Tests.Linq
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSybase, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
 		public void Issue1455Test2([DataSources(TestProvName.AllClickHouse)] string context)
 		{
-			using (new GuardGrouping(false)) // For Sybase, which do not support Window functions
-			using (var db = GetDataContext(context))
+			// UseGuardGrouping: For Sybase, which do not support Window functions
+			using (var db = GetDataContext(context, o => o.UseGuardGrouping(false)))
 			using (db.CreateLocalTable<Alert>())
 			using (db.CreateLocalTable<AuditAlert>())
 			using (db.CreateLocalTable<Trade>())

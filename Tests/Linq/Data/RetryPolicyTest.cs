@@ -182,8 +182,7 @@ namespace Tests.Data
 		{
 			try
 			{
-				Configuration.RetryPolicy.Factory = cn => new DummyRetryPolicy();
-				using (var db = GetDataConnection(context))
+				using (var db = GetDataConnection(context, o => o.UseFactory(connection => new DummyRetryPolicy())))
 				using (db.CreateLocalTable<MyEntity>())
 				{
 					Assert.Fail("Exception expected");
@@ -192,10 +191,6 @@ namespace Tests.Data
 			catch (NotImplementedException ex)
 			{
 				Assert.That(ex.Message, Is.EqualTo("Execute"));
-			}
-			finally
-			{
-				Configuration.RetryPolicy.Factory = null;
 			}
 		}
 
@@ -219,25 +214,18 @@ namespace Tests.Data
 		[Test]
 		public void ExternalConnection([DataSources(false)] string context)
 		{
-			using (var db1 = GetDataConnection(context))
+			using var db1 = GetDataConnection(context);
+			try
 			{
-				try
+				using (var db = new DataConnection(new DataOptions().UseConnection(db1.DataProvider, db1.Connection).UseFactory(connection => new DummyRetryPolicy())))
+				using (db.CreateLocalTable<MyEntity>())
 				{
-					Configuration.RetryPolicy.Factory = cn => new DummyRetryPolicy();
-					using (var db = new DataConnection(db1.DataProvider, db1.Connection))
-					using (db.CreateLocalTable<MyEntity>())
-					{
-						Assert.Fail("Exception expected");
-					}
+					Assert.Fail("Exception expected");
 				}
-				catch (NotImplementedException ex)
-				{
-					Assert.That(ex.Message, Is.EqualTo("ExecuteT"));
-				}
-				finally
-				{
-					Configuration.RetryPolicy.Factory = null;
-				}
+			}
+			catch (NotImplementedException ex)
+			{
+				Assert.That(ex.Message, Is.EqualTo("ExecuteT"));
 			}
 		}
 

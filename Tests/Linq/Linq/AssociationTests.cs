@@ -184,24 +184,20 @@ namespace Tests.Linq
 		[Test]
 		public void GroupBy2([DataSources] string context)
 		{
-			using (new GuardGrouping(false))
-			{
-				using var db = GetDataContext(context);
+			using var db = GetDataContext(context, o => o.UseGuardGrouping(false));
 
-				AreEqual(
-					(from ch in    Child group ch by ch.Parent1).ToList().Select(g => g.Key),
-					(from ch in db.Child group ch by ch.Parent1).ToList().Select(g => g.Key));
-			}
+			AreEqual(
+				(from ch in Child group ch by ch.Parent1).ToList().Select(g => g.Key),
+				(from ch in db.Child group ch by ch.Parent1).ToList().Select(g => g.Key));
 		}
 
 		[Test]
 		public async Task GroupBy2Async([DataSources] string context)
 		{
-			using (new GuardGrouping(false))
-			using (var db = GetDataContext(context))
-				AreEqual(
-					       (from ch in    Child group ch by ch.Parent1).ToList().      Select(g => g.Key),
-					(await (from ch in db.Child group ch by ch.Parent1).ToListAsync()).Select(g => g.Key));
+			using var db = GetDataContext(context, o => o.UseGuardGrouping(false));
+			AreEqual(
+				       (from ch in    Child group ch by ch.Parent1).ToList().      Select(g => g.Key),
+				(await (from ch in db.Child group ch by ch.Parent1).ToListAsync()).Select(g => g.Key));
 		}
 
 		[Test]

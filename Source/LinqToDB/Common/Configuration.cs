@@ -2,11 +2,13 @@
 using System.ComponentModel;
 using System.Data;
 using System.Linq.Expressions;
-using System.Reflection;
-using System.Text;
 using System.Threading.Tasks;
 
 using JetBrains.Annotations;
+
+#if SUPPORTS_COMPOSITE_FORMAT
+using System.Text;
+#endif
 
 namespace LinqToDB.Common
 {
@@ -74,7 +76,8 @@ namespace LinqToDB.Common
 		/// <summary>
 		///	<b>Obsolete</b>: All <see cref="Task"/>s are now awaited using <c>ConfigureAwait(false)</c>. Please remove references to this property.
 		/// </summary>
-		[Obsolete("Value is ignored in v6. Will be removed in v7.")]
+		// TODO: V7 remove
+		[Obsolete("This API doesn't have effect anymore and will be removed in future")]
 		public static bool ContinueOnCapturedContext;
 
 		/// <summary>
@@ -193,15 +196,9 @@ namespace LinqToDB.Common
 			/// - if <c>false</c> - group data will be loaded when you call enumerator for specific group <see cref="System.Linq.IGrouping{TKey, TElement}"/>.
 			/// Default value: <c>false</c>.
 			/// </summary>
-			public static bool PreloadGroups
-			{
-				get => Options.PreloadGroups;
-				set
-				{
-					if (Options.PreloadGroups != value)
-						Options = Options with { PreloadGroups = value };
-				}
-			}
+			// TODO: V7 remove
+			[Obsolete("This API doesn't have effect anymore and will be removed in future")]
+			public static bool PreloadGroups { get; set; }
 
 			/// <summary>
 			/// Controls behavior of linq2db when there is no updateable fields in Update query:
@@ -344,7 +341,7 @@ namespace LinqToDB.Common
 			/// <summary>
 			/// Controls behavior of LINQ query, which ends with GroupBy call.
 			/// - if <c>true</c> - <seealso cref="LinqToDBException"/> will be thrown for such queries;
-			/// - if <c>false</c> - behavior is controlled by <see cref="PreloadGroups"/> option.
+			/// - if <c>false</c> - eager loading used.
 			/// Default value: <c>true</c>.
 			/// </summary>
 			/// <remarks>
@@ -403,15 +400,9 @@ namespace LinqToDB.Common
 			/// Used to generate CROSS APPLY or OUTER APPLY if possible.
 			/// Default value: <c>true</c>.
 			/// </summary>
-			public static bool PreferApply
-			{
-				get => Options.PreferApply;
-				set
-				{
-					if (Options.PreferApply != value)
-						Options = Options with { PreferApply = value };
-				}
-			}
+			// TODO: V7 remove
+			[Obsolete("This API doesn't have effect anymore and will be removed in future")]
+			public static bool PreferApply { get; set; }
 
 			/// <summary>
 			/// Allows SQL generation to automatically transform
@@ -419,15 +410,9 @@ namespace LinqToDB.Common
 			/// Into GROUP BY equivalent if syntax is not supported
 			/// Default value: <c>true</c>.
 			/// </summary>
-			public static bool KeepDistinctOrdered
-			{
-				get => Options.KeepDistinctOrdered;
-				set
-				{
-					if (Options.KeepDistinctOrdered != value)
-						Options = Options with { KeepDistinctOrdered = value };
-				}
-			}
+			// TODO: V7 remove
+			[Obsolete("This API doesn't have effect anymore and will be removed in future")]
+			public static bool KeepDistinctOrdered { get; set; }
 
 			/// <summary>
 			/// Enables Take/Skip parameterization.
@@ -476,7 +461,7 @@ namespace LinqToDB.Common
 		}
 
 		/// <summary>
-		/// Linq over WCF global settings.
+		/// Remote context global settings.
 		/// </summary>
 		[PublicAPI]
 		public static class LinqService
@@ -490,7 +475,7 @@ namespace LinqToDB.Common
 			public static bool SerializeAssemblyQualifiedName;
 
 			/// <summary>
-			/// Controls behavior of linq2db, when it cannot load <see cref="Type"/> by type name on query deserialization:
+			/// Controls behavior of Linq To DB, when it cannot load <see cref="Type"/> by type name on query deserialization:
 			/// - if <c>true</c> - <see cref="LinqToDBException"/> will be thrown;
 			/// - if <c>false</c> - type load error will be ignored.
 			/// Default value: <c>false</c>.

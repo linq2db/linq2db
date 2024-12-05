@@ -375,8 +375,7 @@ namespace Tests.Linq
 		[Test]
 		public void SqlPropertyNoStoreNonIdentifier([DataSources] string context)
 		{
-			using (new FirebirdQuoteMode(FirebirdIdentifierQuoteMode.Auto))
-			using (var db = GetDataContext(context))
+			using (var db = GetDataContext(context, o => o.UseFirebird(o => o with { IdentifierQuoteMode = FirebirdIdentifierQuoteMode.Auto })))
 			using (db.CreateLocalTable(new []
 			{
 				new DynamicTablePrototype { NotIdentifier = 77 }
@@ -398,8 +397,7 @@ namespace Tests.Linq
 		[Test]
 		public void SqlPropertyNoStoreNonIdentifierGrouping([DataSources] string context)
 		{
-			using (new FirebirdQuoteMode(FirebirdIdentifierQuoteMode.Auto))
-			using (var db = GetDataContext(context))
+			using (var db = GetDataContext(context, o => o.UseFirebird(o => o with { IdentifierQuoteMode = FirebirdIdentifierQuoteMode.Auto })))
 			using (db.CreateLocalTable(new []
 			{
 				new DynamicTablePrototype { NotIdentifier = 77, Value = 5 },

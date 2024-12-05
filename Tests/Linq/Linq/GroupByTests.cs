@@ -22,42 +22,36 @@ namespace Tests.Linq
 		[Test]
 		public void Simple1([DataSources] string context)
 		{
-			using (new PreloadGroups(true))
-			using (new GuardGrouping(false))
-			using (var db = GetDataContext(context))
+			using var db = GetDataContext(context, options => options.UseGuardGrouping(false));
+			db.BeginTransaction();
+
+			var q =
+				from ch in db.Child
+				group ch by ch.ParentID;
+
+			var list = q.ToList().Where(n => n.Key < 6).OrderBy(n => n.Key).ToList();
+
+			Assert.That(list, Has.Count.EqualTo(4));
+
+			for (var i = 0; i < list.Count; i++)
 			{
-				db.BeginTransaction();
+				var values = list[i].OrderBy(c => c.ChildID).ToList();
 
-				var q =
-					from ch in db.Child
-					group ch by ch.ParentID;
-
-				var list = q.ToList().Where(n => n.Key < 6).OrderBy(n => n.Key).ToList();
-
-				Assert.That(list, Has.Count.EqualTo(4));
-
-				for (var i = 0; i < list.Count; i++)
+				Assert.Multiple(() =>
 				{
-					var values = list[i].OrderBy(c => c.ChildID).ToList();
+					Assert.That(list[i].Key, Is.EqualTo(i + 1));
+					Assert.That(values, Has.Count.EqualTo(i + 1));
+				});
 
-					Assert.Multiple(() =>
-					{
-						Assert.That(list[i].Key, Is.EqualTo(i + 1));
-						Assert.That(values, Has.Count.EqualTo(i + 1));
-					});
-
-					for (var j = 0; j < values.Count; j++)
-						Assert.That(values[j].ChildID, Is.EqualTo((i + 1) * 10 + j + 1));
-				}
+				for (var j = 0; j < values.Count; j++)
+					Assert.That(values[j].ChildID, Is.EqualTo((i + 1) * 10 + j + 1));
 			}
 		}
 
 		[Test]
 		public void Simple2([DataSources] string context)
 		{
-			using (new PreloadGroups(false))
-			using (new GuardGrouping(false))
-			using (var db = GetDataContext(context, o => o.OmitUnsupportedCompareNulls(context)))
+			using (var db = GetDataContext(context, o => o.OmitUnsupportedCompareNulls(context).UseGuardGrouping(false)))
 			{
 				var q =
 					from ch in db.GrandChild
@@ -124,8 +118,7 @@ namespace Tests.Linq
 		[Test]
 		public void Simple6([DataSources] string context)
 		{
-			using (new GuardGrouping(false))
-			using (var db = GetDataContext(context, o => o.OmitUnsupportedCompareNulls(context)))
+			using (var db = GetDataContext(context, o => o.OmitUnsupportedCompareNulls(context).UseGuardGrouping(false)))
 			{
 				var q    = db.GrandChild.GroupBy(ch => new { ch.ParentID, ch.ChildID }, ch => ch.GrandChildID);
 				var list = q.ToList();
@@ -155,8 +148,7 @@ namespace Tests.Linq
 		[Test]
 		public void Simple8([DataSources] string context)
 		{
-			using (new GuardGrouping(false))
-			using (var db = GetDataContext(context))
+			using (var db = GetDataContext(context, o => o.UseGuardGrouping(false)))
 			{
 				var q = db.GrandChild.GroupBy(ch => new { ch.ParentID, ch.ChildID }, (g,ch) => g.ChildID);
 
@@ -168,8 +160,7 @@ namespace Tests.Linq
 		[Test]
 		public void Simple9([DataSources] string context)
 		{
-			using (new GuardGrouping(false))
-			using (var db = GetDataContext(context))
+			using (var db = GetDataContext(context, o => o.UseGuardGrouping(false)))
 			{
 				var q    = db.GrandChild.GroupBy(ch => new { ch.ParentID, ch.ChildID }, ch => ch.GrandChildID,  (g,ch) => g.ChildID);
 				var list = q.ToList();
@@ -181,8 +172,7 @@ namespace Tests.Linq
 		[Test]
 		public void Simple10([DataSources] string context)
 		{
-			using (new GuardGrouping(false))
-			using (var db = GetDataContext(context))
+			using (var db = GetDataContext(context, o => o.UseGuardGrouping(false)))
 			{
 				var expected = (from ch in    Child group ch by ch.ParentID into g select g).ToList().OrderBy(p => p.Key).ToList();
 				var result   = (from ch in db.Child group ch by ch.ParentID into g select g).ToList().OrderBy(p => p.Key).ToList();
@@ -196,8 +186,7 @@ namespace Tests.Linq
 		[Test]
 		public void Simple11([DataSources] string context)
 		{
-			using (new GuardGrouping(false))
-			using (var db = GetDataContext(context, o => o.OmitUnsupportedCompareNulls(context)))
+			using (var db = GetDataContext(context, o => o.OmitUnsupportedCompareNulls(context).UseGuardGrouping(false)))
 			{
 				var q1 = GrandChild
 					.GroupBy(ch => new { ParentID = ch.ParentID + 1, ch.ChildID }, ch => ch.ChildID);
@@ -216,8 +205,7 @@ namespace Tests.Linq
 		[Test]
 		public void Simple12([DataSources] string context)
 		{
-			using (new GuardGrouping(false))
-			using (var db = GetDataContext(context))
+			using (var db = GetDataContext(context, o => o.UseGuardGrouping(false)))
 			{
 				var q = db.GrandChild
 					.GroupBy(ch => new { ParentID = ch.ParentID + 1, ch.ChildID }, (g,ch) => g.ChildID);
@@ -230,8 +218,7 @@ namespace Tests.Linq
 		[Test]
 		public void Simple13([DataSources] string context)
 		{
-			using (new GuardGrouping(false))
-			using (var db = GetDataContext(context))
+			using (var db = GetDataContext(context, o => o.UseGuardGrouping(false)))
 			{
 				var q = db.GrandChild
 					.GroupBy(ch => new { ParentID = ch.ParentID + 1, ch.ChildID }, ch => ch.ChildID, (g,ch) => g.ChildID);
@@ -525,8 +512,7 @@ namespace Tests.Linq
 		[Test]
 		public void Calculated1([DataSources(ProviderName.SQLiteMS)] string context)
 		{
-			using (new GuardGrouping(false))
-			using (var db = GetDataContext(context))
+			using (var db = GetDataContext(context, o => o.UseGuardGrouping(false)))
 			{
 				db.BeginTransaction();
 
@@ -934,8 +920,7 @@ namespace Tests.Linq
 		{
 			var data = AggregationData.Data;
 
-			using var _     = new GuardGrouping(false);
-			using var db    = GetDataContext(context);
+			using var db    = GetDataContext(context, o => o.UseGuardGrouping(false));
 			using var table = db.CreateLocalTable(data);
 
 			var query =
@@ -963,8 +948,7 @@ namespace Tests.Linq
 		{
 			var data = AggregationData.Data;
 
-			using var _     = new GuardGrouping(false);
-			using var db    = GetDataContext(context);
+			using var db    = GetDataContext(context, o => o.UseGuardGrouping(false));
 			using var table = db.CreateLocalTable(data);
 
 			var query =
@@ -1397,8 +1381,7 @@ namespace Tests.Linq
 		[Test]
 		public void GroupByAggregate2([NorthwindDataContext] string context)
 		{
-			using (new GuardGrouping(false))
-			using (var db = new NorthwindDB(context))
+			using (var db = new NorthwindDB(new DataOptions().UseConfiguration(context).UseGuardGrouping(false)))
 			{
 				var dd = GetNorthwindAsList(context);
 				AreEqual(
@@ -1476,8 +1459,7 @@ namespace Tests.Linq
 		[Test]
 		public void Scalar101([DataSources] string context)
 		{
-			using (new GuardGrouping(false))
-			using (var db = GetDataContext(context))
+			using (var db = GetDataContext(context, o => o.UseGuardGrouping(false)))
 				AreEqual(
 					from ch in Child
 					select ch.ChildID into id
@@ -2030,8 +2012,7 @@ namespace Tests.Linq
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllAccess, ProviderName.Firebird25, TestProvName.AllMySql57, TestProvName.AllSybase, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
 		public void FirstGroupBy([DataSources] string context)
 		{
-			using (new GuardGrouping(false))
-			using (var db = GetDataContext(context))
+			using (var db = GetDataContext(context, o => o.UseGuardGrouping(false)))
 			{
 				Assert.That(
 					(from t in db.Child group t by t.ParentID into gr select gr.OrderByDescending(g => g.ChildID).First()).AsEnumerable().OrderBy(t => t.ChildID), Is.EqualTo((from t in    Child group t by t.ParentID into gr select gr.OrderByDescending(g => g.ChildID).First()).AsEnumerable().OrderBy(t => t.ChildID)));
@@ -2245,8 +2226,7 @@ namespace Tests.Linq
 		[Test]
 		public void GroupByGuard([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
-			using(new GuardGrouping(true))
-			using (var db = GetDataContext(context))
+			using (var db = GetDataContext(context, o => o.UseGuardGrouping(true)))
 			{
 				// group on client
 				var dictionary1 = db.Person
@@ -2294,7 +2274,7 @@ namespace Tests.Linq
 		[Test]
 		public void GroupByGuardCheckOptions([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values] bool guard)
 		{
-			using (var db = GetDataContext(context, b => b.WithOptions<LinqOptions>(o => o with { GuardGrouping = guard })))
+			using (var db = GetDataContext(context, b => b.UseGuardGrouping(guard)))
 			{
 				// group on client
 				var query = db.Person
@@ -2342,8 +2322,7 @@ namespace Tests.Linq
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllAccess, ProviderName.Firebird25, TestProvName.AllMySql57, TestProvName.AllSybase, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
 		public void Issue672Test([DataSources(TestProvName.AllSybase)] string context)
 		{
-			using (new GuardGrouping(false))
-			using (var db = GetDataContext(context))
+			using (var db = GetDataContext(context, o => o.UseGuardGrouping(false)))
 			using (db.CreateLocalTable<Stone>())
 			{
 				db.Insert(new Stone() { Id = 1, Name = "group1", Enabled = true, ImageFullUrl = "123" });
@@ -2559,22 +2538,19 @@ namespace Tests.Linq
 		public void Issue2306Test1([DataSources] string context)
 		{
 			Query.ClearCaches();
-			using (new GuardGrouping(false))
-			using (var db = GetDataContext(context))
+			using (var db = GetDataContext(context, o => o.UseGuardGrouping(false)))
 			{
 				db.Person.GroupBy(p => p.ID).ToDictionary(g => g.Key, g => g.Select(p => p.LastName).ToList());
 			}
 
 			Query.ClearCaches();
-			using (new GuardGrouping(true))
-			using (var db = GetDataContext(context))
+			using (var db = GetDataContext(context, o => o.UseGuardGrouping(true)))
 			{
 				Assert.Throws<LinqToDBException>(() => db.Person.GroupBy(p => p.ID).ToDictionary(g => g.Key, g => g.Select(p => p.LastName).ToList()));
 			}
 
 			Query.ClearCaches();
-			using (new GuardGrouping(true))
-			using (var db = GetDataContext(context))
+			using (var db = GetDataContext(context, o => o.UseGuardGrouping(true)))
 			{
 				db.Person.GroupBy(p => p.ID).DisableGuard().ToDictionary(g => g.Key, g => g.Select(p => p.LastName).ToList());
 			}
@@ -2587,20 +2563,17 @@ namespace Tests.Linq
 		{
 			Query.ClearCaches();
 
-			using (new GuardGrouping(false))
-			using (var db = GetDataContext(context))
+			using (var db = GetDataContext(context, o => o.UseGuardGrouping(false)))
 			{
 				db.Person.GroupBy(p => p.ID).ToDictionary(g => g.Key, g => g.Select(p => p.LastName).ToList());
 			}
 
-			using (new GuardGrouping(true))
-			using (var db = GetDataContext(context))
+			using (var db = GetDataContext(context, o => o.UseGuardGrouping(true)))
 			{
 				Assert.Throws<LinqToDBException>(() => db.Person.GroupBy(p => p.ID).ToDictionary(g => g.Key, g => g.Select(p => p.LastName).ToList()));
 			}
 
-			using (new GuardGrouping(true))
-			using (var db = GetDataContext(context))
+			using (var db = GetDataContext(context, o => o.UseGuardGrouping(true)))
 			{
 				db.Person.GroupBy(p => p.ID).DisableGuard().ToDictionary(g => g.Key, g => g.Select(p => p.LastName).ToList());
 			}
@@ -2612,20 +2585,17 @@ namespace Tests.Linq
 		public void Issue2306Test3([DataSources] string context)
 		{
 			Query.ClearCaches();
-			using (new GuardGrouping(true))
-			using (var db = GetDataContext(context))
+			using (var db = GetDataContext(context, o => o.UseGuardGrouping(true)))
 			{
 				Assert.Throws<LinqToDBException>(() => db.Person.GroupBy(p => p.ID).ToDictionary(g => g.Key, g => g.Select(p => p.LastName).ToList()));
 			}
 
-			using (new GuardGrouping(false))
-			using (var db = GetDataContext(context))
+			using (var db = GetDataContext(context, o => o.UseGuardGrouping(false)))
 			{
 				db.Person.GroupBy(p => p.ID).ToDictionary(g => g.Key, g => g.Select(p => p.LastName).ToList());
 			}
 
-			using (new GuardGrouping(true))
-			using (var db = GetDataContext(context))
+			using (var db = GetDataContext(context, o => o.UseGuardGrouping(true)))
 			{
 				db.Person.GroupBy(p => p.ID).DisableGuard().ToDictionary(g => g.Key, g => g.Select(p => p.LastName).ToList());
 			}

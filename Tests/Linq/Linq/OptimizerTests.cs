@@ -241,8 +241,7 @@ namespace Tests.Linq
 		{
 			var testData = GenerateTestData();
 
-			using (new WithoutJoinOptimization(opimizerSwitch))
-			using (var db = GetDataContext(context))
+			using (var db = GetDataContext(context, o => o.UseOptimizeJoins(opimizerSwitch)))
 			using (var first = db.CreateLocalTable("FirstOptimizerData", testData))
 			using (var second = db.CreateLocalTable("SecondOptimizerData", testData))
 			{
@@ -270,8 +269,7 @@ namespace Tests.Linq
 		{
 			var testData = GenerateTestData();
 
-			using (new WithoutJoinOptimization(opimizerSwitch))
-			using (var db = GetDataContext(context))
+			using (var db = GetDataContext(context, o => o.UseOptimizeJoins(opimizerSwitch)))
 			using (var first = db.CreateLocalTable("FirstOptimizerData", testData))
 			using (var second = db.CreateLocalTable("SecondOptimizerData", testData))
 			{
@@ -342,8 +340,7 @@ namespace Tests.Linq
 		{
 			var testData = GenerateTestData();
 
-			using (new WithoutJoinOptimization(opimizerSwitch))
-			using (var db = GetDataContext(context))
+			using (var db = GetDataContext(context, o => o.UseOptimizeJoins(opimizerSwitch)))
 			using (var first = db.CreateLocalTable("FirstOptimizerData", testData))
 			using (var second = db.CreateLocalTable("SecondOptimizerData", testData))
 			{
@@ -383,8 +380,7 @@ namespace Tests.Linq
 		{
 			var testData = GenerateTestData();
 
-			using (new WithoutJoinOptimization(opimizerSwitch))
-			using (var db = GetDataContext(context))
+			using (var db = GetDataContext(context, o => o.UseOptimizeJoins(opimizerSwitch)))
 			using (var first = db.CreateLocalTable("FirstOptimizerData", testData))
 			using (var second = db.CreateLocalTable("SecondOptimizerData", testData))
 			{
@@ -424,8 +420,7 @@ namespace Tests.Linq
 		{
 			var testData = GenerateTestData();
 
-			using (new WithoutJoinOptimization(opimizerSwitch))
-			using (var db = GetDataContext(context))
+			using (var db = GetDataContext(context, o => o.UseOptimizeJoins(opimizerSwitch)))
 			using (var first = db.CreateLocalTable("FirstOptimizerData", testData))
 			using (var second = db.CreateLocalTable("SecondOptimizerData", testData))
 			{
