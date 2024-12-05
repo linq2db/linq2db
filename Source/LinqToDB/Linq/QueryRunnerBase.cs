@@ -65,6 +65,6 @@ namespace LinqToDB.Linq
 
 		protected abstract void SetQuery(IReadOnlyParameterValues parameterValues, bool forGetSqlText);
 
-		public    abstract IReadOnlyList<QuerySql> GetSqlText(SqlGenerationOptions? options);
+		public    abstract IReadOnlyList<QuerySql> GetSqlText();
 	}
 }

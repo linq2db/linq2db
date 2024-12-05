@@ -45,6 +45,11 @@ namespace LinqToDB.Linq
 
 		IReadOnlyList<QuerySql> IExpressionQuery.GetSqlQueries(SqlGenerationOptions? options)
 		{
+			var oldInline = DataContext.InlineParameters;
+
+			if (options?.InlineParameters != null)
+				DataContext.InlineParameters = options.InlineParameters.Value;
+
 			var expression  = Expression;
 			var expressions = (IQueryExpressions)new RuntimeExpressionsContainer(expression);
 			var info        = GetQuery(ref expressions, true, out var dependsOnParameters);
@@ -54,7 +59,9 @@ namespace LinqToDB.Linq
 				Expression = expressions.MainExpression;
 			}
 
-			var sqlText    = QueryRunner.GetSqlText(info, DataContext, expressions, Parameters, Preambles, options);
+			var sqlText    = QueryRunner.GetSqlText(info, DataContext, expressions, Parameters, Preambles);
+
+			DataContext.InlineParameters = oldInline;
 
 			return sqlText;
 		}
@@ -63,7 +70,7 @@ namespace LinqToDB.Linq
 			=> new(
 				() => new ExpressionPrinter().PrintExpression(Expression),
 				() => ((IExpressionQuery)this).GetSqlQueries(null)[0].Sql,
-				() => ((IExpressionQuery)this).GetSqlQueries(new () { InlineParameters = false })[0].Sql
+				() => ((IExpressionQuery)this).GetSqlQueries(new () { InlineParameters = true })[0].Sql
 				);
 
 		#endregion

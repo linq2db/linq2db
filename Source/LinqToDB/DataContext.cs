@@ -571,9 +571,9 @@ namespace LinqToDB
 				return _queryRunner!.ExecuteNonQueryAsync(cancellationToken);
 			}
 
-			public IReadOnlyList<QuerySql> GetSqlText(SqlGenerationOptions? options)
+			public IReadOnlyList<QuerySql> GetSqlText()
 			{
-				return _queryRunner!.GetSqlText(options);
+				return _queryRunner!.GetSqlText();
 			}
 
 			public IDataContext      DataContext      => _dataContext!;

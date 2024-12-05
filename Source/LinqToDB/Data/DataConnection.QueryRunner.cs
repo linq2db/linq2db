@@ -71,13 +71,8 @@ namespace LinqToDB.Data
 				}
 			}
 
-			public override IReadOnlyList<QuerySql> GetSqlText(SqlGenerationOptions? options)
+			public override IReadOnlyList<QuerySql> GetSqlText()
 			{
-				var oldInline = _dataConnection.InlineParameters;
-
-				if (options?.InlineParameters != null)
-					_dataConnection.InlineParameters = options.InlineParameters.Value;
-
 				SetCommand(true);
 
 				var queries = new QuerySql[_executionQuery!.PreparedQuery.Commands.Length];
@@ -112,8 +107,6 @@ namespace LinqToDB.Data
 
 					queries[index] = new QuerySql(sql, parameters);
 				}
-
-				_dataConnection.InlineParameters = oldInline;
 
 				return queries;
 			}

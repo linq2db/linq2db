@@ -995,12 +995,12 @@ namespace LinqToDB.Linq
 
 		#region GetSqlText
 
-		public static IReadOnlyList<QuerySql> GetSqlText(Query query, IDataContext dataContext, IQueryExpressions expressions, object?[]? parameters, object?[]? preambles, SqlGenerationOptions? options)
+		public static IReadOnlyList<QuerySql> GetSqlText(Query query, IDataContext dataContext, IQueryExpressions expressions, object?[]? parameters, object?[]? preambles)
 		{
 			using var m      = ActivityService.Start(ActivityID.GetSqlText);
 
 			using var runner = dataContext.GetQueryRunner(query, dataContext, 0, expressions, parameters, preambles);
-			return runner.GetSqlText(options);
+			return runner.GetSqlText();
 		}
 
 		#endregion
