@@ -4018,84 +4018,79 @@ namespace LinqToDB
 		/// Convert Linq To DB query to SQL command with parameters.
 		/// </summary>
 		/// <remarks>Eager load queries currently return only SQL for main query.</remarks>
-		public static QuerySql ToSqlQuery<T>(this IQueryable<T> query)
+		public static QuerySql ToSqlQuery<T>(this IQueryable<T> query, SqlGenerationOptions? options = null)
 		{
 			if (query is LoadWithQueryableBase<T> loadWith)
 				query = loadWith.Query;
 
 			var expressionQuery = (IExpressionQuery)query.GetLinqToDBSource();
 
-			// query not expected to have multiple commands currently
-			return expressionQuery.GetSqlQuery().Single();
+			// currently we have only non-linq APIs that could generate multiple commands like
+			// InsertOrReplace, CreateTable, DropTable
+			return expressionQuery.GetSqlQueries(options)[0];
 		}
 
 		/// <summary>
 		/// Convert Linq To DB query to SQL command with parameters.
 		/// </summary>
-		public static QuerySql ToSqlQuery<T>(this IUpdatable<T> query)
+		public static QuerySql ToSqlQuery<T>(this IUpdatable<T> query, SqlGenerationOptions? options = null)
 		{
 			var expressionQuery = (IExpressionQuery)((Updatable<T>)query).Query.GetLinqToDBSource();
 
-			// query not expected to have multiple commands currently
-			return expressionQuery.GetSqlQuery().Single();
+			return expressionQuery.GetSqlQueries(options)[0];
 		}
 
 		/// <summary>
 		/// Convert Linq To DB query to SQL command with parameters.
 		/// </summary>
-		public static QuerySql ToSqlQuery<T>(this IValueInsertable<T> query)
+		public static QuerySql ToSqlQuery<T>(this IValueInsertable<T> query, SqlGenerationOptions? options = null)
 		{
 			var expressionQuery = (IExpressionQuery)((ValueInsertable<T>)query).Query.GetLinqToDBSource();
 
-			// query not expected to have multiple commands currently
-			return expressionQuery.GetSqlQuery().Single();
+			return expressionQuery.GetSqlQueries(options)[0];
 		}
 
 		/// <summary>
 		/// Convert Linq To DB query to SQL command with parameters.
 		/// </summary>
-		public static QuerySql ToSqlQuery<TSource, TTarget>(this ISelectInsertable<TSource, TTarget> query)
+		public static QuerySql ToSqlQuery<TSource, TTarget>(this ISelectInsertable<TSource, TTarget> query, SqlGenerationOptions? options = null)
 		{
 			var expressionQuery = (IExpressionQuery)((SelectInsertable<TSource, TTarget>)query).Query.GetLinqToDBSource();
 
-			// query not expected to have multiple commands currently
-			return expressionQuery.GetSqlQuery().Single();
+			return expressionQuery.GetSqlQueries(options)[0];
 		}
 
 		/// <summary>
 		/// Convert Linq To DB query to SQL command with parameters.
 		/// </summary>
 		/// <remarks>Eager load queries currently return only SQL for main query.</remarks>
-		public static QuerySql ToSqlQuery<TSource>(this IMultiInsertInto<TSource> query)
+		public static QuerySql ToSqlQuery<TSource>(this IMultiInsertInto<TSource> query, SqlGenerationOptions? options = null)
 		{
 			var expressionQuery = (IExpressionQuery)((MultiInsertQuery<TSource>)query).Query.GetLinqToDBSource();
 
-			// query not expected to have multiple commands currently
-			return expressionQuery.GetSqlQuery().Single();
+			return expressionQuery.GetSqlQueries(options)[0];
 		}
 
 		/// <summary>
 		/// Convert Linq To DB query to SQL command with parameters.
 		/// </summary>
 		/// <remarks>Eager load queries currently return only SQL for main query.</remarks>
-		public static QuerySql ToSqlQuery<TSource>(this IMultiInsertElse<TSource> query)
+		public static QuerySql ToSqlQuery<TSource>(this IMultiInsertElse<TSource> query, SqlGenerationOptions? options = null)
 		{
 			var expressionQuery = (IExpressionQuery)((MultiInsertQuery<TSource>)query).Query.GetLinqToDBSource();
 
-			// query not expected to have multiple commands currently
-			return expressionQuery.GetSqlQuery().Single();
+			return expressionQuery.GetSqlQueries(options)[0];
 		}
 
 		/// <summary>
 		/// Convert Linq To DB query to SQL command with parameters.
 		/// </summary>
 		/// <remarks>Eager load queries currently return only SQL for main query.</remarks>
-		public static QuerySql ToSqlQuery<TSource, TTarget>(this IMergeable<TSource, TTarget> query)
+		public static QuerySql ToSqlQuery<TSource, TTarget>(this IMergeable<TSource, TTarget> query, SqlGenerationOptions? options = null)
 		{
 			var expressionQuery = (IExpressionQuery)((MergeQuery<TSource, TTarget>)query).Query.GetLinqToDBSource();
 
-			// query not expected to have multiple commands currently
-			return expressionQuery.GetSqlQuery().Single();
+			return expressionQuery.GetSqlQueries(options)[0];
 		}
 		#endregion
 	}

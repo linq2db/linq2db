@@ -33,10 +33,10 @@ namespace LinqToDB.DataProvider
 
 		public Expression Expression => _table.Expression;
 
-		IReadOnlyList<QuerySql> IExpressionQuery.GetSqlQuery() => _table.GetSqlQuery();
-		public IDataContext   DataContext                      => _table.DataContext;
-		public Type           ElementType                      => _table.ElementType;
-		public IQueryProvider Provider                         => _table.Provider;
+		IReadOnlyList<QuerySql> IExpressionQuery.GetSqlQueries(SqlGenerationOptions? options) => _table.GetSqlQueries(options);
+		public IDataContext   DataContext                                                     => _table.DataContext;
+		public Type           ElementType                                                     => _table.ElementType;
+		public IQueryProvider Provider                                                        => _table.Provider;
 
 		public IQueryable CreateQuery(Expression expression)
 		{

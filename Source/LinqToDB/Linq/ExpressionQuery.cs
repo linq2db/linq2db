@@ -43,7 +43,7 @@ namespace LinqToDB.Linq
 
 		#region Public Members
 
-		IReadOnlyList<QuerySql> IExpressionQuery.GetSqlQuery()
+		IReadOnlyList<QuerySql> IExpressionQuery.GetSqlQueries(SqlGenerationOptions? options)
 		{
 			var expression  = Expression;
 			var expressions = (IQueryExpressions)new RuntimeExpressionsContainer(expression);
@@ -54,7 +54,7 @@ namespace LinqToDB.Linq
 				Expression = expressions.MainExpression;
 			}
 
-			var sqlText    = QueryRunner.GetSqlText(info, DataContext, expressions, Parameters, Preambles);
+			var sqlText    = QueryRunner.GetSqlText(info, DataContext, expressions, Parameters, Preambles, options);
 
 			return sqlText;
 		}
@@ -272,7 +272,7 @@ namespace LinqToDB.Linq
 		Type           IQueryable.ElementType => typeof(T);
 
 		[DebuggerBrowsable(DebuggerBrowsableState.Never)]
-		Expression IQueryable.Expression  => Expression;
+		Expression     IQueryable.Expression  => Expression;
 		
 		[DebuggerBrowsable(DebuggerBrowsableState.Never)]
 		IQueryProvider IQueryable.Provider    => this;

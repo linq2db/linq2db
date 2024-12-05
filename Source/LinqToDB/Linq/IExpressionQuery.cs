@@ -8,6 +8,6 @@ namespace LinqToDB.Linq
 		Expression   Expression  { get; }
 		IDataContext DataContext { get; }
 
-		IReadOnlyList<QuerySql> GetSqlQuery();
+		IReadOnlyList<QuerySql> GetSqlQueries(SqlGenerationOptions? options);
 	}
 }

@@ -1893,7 +1893,6 @@ namespace Tests.Linq
 			}
 		}
 
-
 		#region issue 2424
 		sealed class Isue2424Table
 		{

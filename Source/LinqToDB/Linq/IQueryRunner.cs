@@ -49,7 +49,7 @@ namespace LinqToDB.Linq
 		/// Returns SQL text with parameters for query.
 		/// </summary>
 		/// <returns>Query SQL text with parameters.</returns>
-		IReadOnlyList<QuerySql> GetSqlText();
+		IReadOnlyList<QuerySql> GetSqlText(SqlGenerationOptions? options);
 		
 		IQueryExpressions Expressions      { get; }
 		IDataContext      DataContext      { get; }

@@ -49,8 +49,13 @@ namespace LinqToDB.Remote
 
 			#region GetSqlText
 
-			public override IReadOnlyList<QuerySql> GetSqlText()
+			public override IReadOnlyList<QuerySql> GetSqlText(SqlGenerationOptions? options)
 			{
+				var oldInline = _dataContext.InlineParameters;
+
+				if (options?.InlineParameters != null)
+					_dataContext.InlineParameters = options.InlineParameters.Value;
+
 				SetCommand(true);
 
 				var query                  = Query.Queries[QueryNumber];
@@ -113,6 +118,8 @@ namespace LinqToDB.Remote
 
 					queries[i] = new QuerySql(sql, parameters ?? Array.Empty<DataParameter>());
 				}
+
+				_dataContext.InlineParameters = oldInline;
 
 				return queries;
 			}

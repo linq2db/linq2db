@@ -31,21 +31,21 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void Test()
+		public void Test([DataSources] string context)
 		{
 			var ids = new long[] { 1, 2, 3 };
 
-			using (var db = new DataConnection())
-			{
-				var q =
-					from t1 in db.GetTable<Table2>()
-					where t1.Field3.Any(x => ids.Contains(x.Field1))
-					select new { t1.Field2 };
+			using var db = GetDataContext(context);
+			var q =
+				from t1 in db.GetTable<Table2>()
+				where t1.Field3.Any(x => ids.Contains(x.Field1))
+				select new { t1.Field2 };
 
-				var sql = q.ToSqlQuery().Sql;
+			var sql = q.ToSqlQuery().Sql;
 
-				Assert.That(sql.IndexOf("INNER JOIN"), Is.LessThan(0));
-			}
+			BaselinesManager.LogQuery(sql);
+
+			Assert.That(sql, Does.Not.Contain("INNER JOIN"));
 		}
 	}
 }

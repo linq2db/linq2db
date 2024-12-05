@@ -4,5 +4,18 @@ using LinqToDB.Data;
 
 namespace LinqToDB.Linq
 {
-	public sealed record QuerySql(string Sql, IReadOnlyList<DataParameter> Parameters);
+	/// <summary>
+	/// Command SQL, generated from linq query.
+	/// </summary>
+	public sealed class QuerySql(string sql, IReadOnlyList<DataParameter> parameters)
+	{
+		/// <summary>
+		/// Command SQL text.
+		/// </summary>
+		public string                       Sql        => sql;
+		/// <summary>
+		/// Command parameters with values.
+		/// </summary>
+		public IReadOnlyList<DataParameter> Parameters => parameters;
+	}
 }

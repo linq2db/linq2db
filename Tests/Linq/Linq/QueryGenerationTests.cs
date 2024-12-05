@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Linq;
 
+using FluentAssertions;
+
 using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.Mapping;
@@ -9,8 +11,6 @@ using NUnit.Framework;
 
 namespace Tests.Linq
 {
-	using FluentAssertions;
-
 	using Model;
 
 	using xUpdate;
@@ -103,7 +103,7 @@ namespace Tests.Linq
 
 		[ActiveIssue("Final aliases break by-name mapping for raw SQL (not an issue?)", Configuration = ProviderName.SqlCe)]
 		[Test]
-		public void ToSqlQuery_WithParameters([DataSources] string context)
+		public void ToSqlQuery_WithParameters([DataSources] string context, [Values] bool inlineParameters)
 		{
 			using var db = GetDataContext(context);
 
@@ -111,14 +111,14 @@ namespace Tests.Linq
 
 			var query = db.Person.Where(p => p.ID == id);
 
-			var command = query.ToSqlQuery();
+			var command = query.ToSqlQuery(new () { InlineParameters = inlineParameters });
 
 			using var dc = GetDataConnection(context.StripRemote());
 
 			var person = dc.Query<Person>(command.Sql, command.Parameters).ToArray();
 			var expected = query.Single();
 
-			var expectedParams = context.IsUseParameters()
+			var expectedParams = !inlineParameters && context.IsUseParameters()
 					? 1
 					: 0;
 
@@ -137,7 +137,7 @@ namespace Tests.Linq
 
 		[ActiveIssue("Final aliases break by-name mapping for raw SQL (not an issue?)", Configuration = ProviderName.SqlCe)]
 		[Test]
-		public void ToSqlQuery_WithParametersDeduplication([DataSources] string context)
+		public void ToSqlQuery_WithParametersDeduplication([DataSources] string context, [Values] bool inlineParameters)
 		{
 			using var db = GetDataContext(context);
 
@@ -145,14 +145,14 @@ namespace Tests.Linq
 
 			var query = db.Person.Where(p => p.FirstName == firstName || p.LastName == firstName);
 
-			var command = query.ToSqlQuery();
+			var command = query.ToSqlQuery(new () { InlineParameters = inlineParameters });
 
 			using var dc = GetDataConnection(context.StripRemote());
 
 			var person = dc.Query<Person>(command.Sql, command.Parameters).ToArray();
 			var expected = query.Single();
 
-			var expectedParams = context.IsUseParameters()
+			var expectedParams = !inlineParameters && context.IsUseParameters()
 					? context.IsUsePositionalParameters()
 						? 2 : 1
 					: 0;
@@ -201,7 +201,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void ToSqlQuery_EagerLoad([DataSources] string context)
+		public void ToSqlQuery_EagerLoad([DataSources] string context, [Values] bool inlineParameters)
 		{
 			// currently preambule queries not exposed by API
 			using var db = GetDataContext(context);
@@ -210,7 +210,7 @@ namespace Tests.Linq
 
 			var query = db.Parent.Where(p => p.ParentID == id).Select(p => new { Parent = p, Children = p.Children.ToArray() });
 
-			var command = query.ToSqlQuery();
+			var command = query.ToSqlQuery(new () { InlineParameters = inlineParameters });
 
 			using var dc = GetDataConnection(context.StripRemote());
 
@@ -221,13 +221,13 @@ namespace Tests.Linq
 			Assert.Multiple(() =>
 			{
 				Assert.That(command.Sql, Does.Contain("SELECT"));
-				Assert.That(command.Parameters, Has.Count.EqualTo(context.IsUseParameters() ? 1 : 0));
+				Assert.That(command.Parameters, Has.Count.EqualTo(!inlineParameters && context.IsUseParameters() ? 1 : 0));
 				Assert.That(parent[0].ParentID, Is.EqualTo(expected.ID));
 			});
 		}
 
 		[Test]
-		public void ToSqlQuery_IUpdatable([DataSources] string context)
+		public void ToSqlQuery_IUpdatable([DataSources] string context, [Values] bool inlineParameters)
 		{
 			using var db = GetDataContext(context);
 			using var tb = db.CreateLocalTable<TableWithIdentity>();
@@ -235,7 +235,7 @@ namespace Tests.Linq
 			var newValue = 123;
 			var query = tb.Set(r => r.Value, r => newValue);
 
-			var command = query.ToSqlQuery();
+			var command = query.ToSqlQuery(new () { InlineParameters = inlineParameters });
 
 			using var dc = GetDataConnection(context.StripRemote());
 			dc.Insert(new TableWithIdentity() { Value = 1 });
@@ -246,13 +246,15 @@ namespace Tests.Linq
 			Assert.Multiple(() =>
 			{
 				Assert.That(command.Sql, Does.Contain("UPDATE"));
-				Assert.That(command.Parameters, Has.Count.EqualTo(context.IsUseParameters() ? 1 : 0));
+				Assert.That(command.Parameters, Has.Count.EqualTo(!inlineParameters && context.IsUseParameters() ? 1 : 0));
 				Assert.That(record.Value, Is.EqualTo(newValue));
 			});
 		}
 
 		[Test]
-		public void ToSqlQuery_IUpdatable_ClientIdentiy([DataSources(ProviderName.SqlCe, TestProvName.AllAccess, TestProvName.AllInformix, TestProvName.AllClickHouse, TestProvName.AllSqlServer, TestProvName.AllDB2, TestProvName.AllSybase)] string context)
+		public void ToSqlQuery_IUpdatable_ClientIdentiy(
+			[DataSources(ProviderName.SqlCe, TestProvName.AllAccess, TestProvName.AllInformix, TestProvName.AllClickHouse, TestProvName.AllSqlServer, TestProvName.AllDB2, TestProvName.AllSybase)] string context,
+			[Values] bool inlineParameters)
 		{
 			using var db = GetDataContext(context);
 			using var tb = db.CreateLocalTable<TableWithIdentity>();
@@ -262,7 +264,7 @@ namespace Tests.Linq
 				.Set(r => r.Id, r => 492)
 				.Set(r => r.Value, r => newValue);
 
-			var command = query.ToSqlQuery();
+			var command = query.ToSqlQuery(new () { InlineParameters = inlineParameters });
 
 			using var dc = GetDataConnection(context.StripRemote());
 			dc.Insert(new TableWithIdentity() { Value = 1 });
@@ -273,13 +275,13 @@ namespace Tests.Linq
 			Assert.Multiple(() =>
 			{
 				Assert.That(command.Sql, Does.Contain("UPDATE"));
-				Assert.That(command.Parameters, Has.Count.EqualTo(context.IsUseParameters() ? 1 : 0));
+				Assert.That(command.Parameters, Has.Count.EqualTo(!inlineParameters && context.IsUseParameters() ? 1 : 0));
 				Assert.That(record.Value, Is.EqualTo(newValue));
 			});
 		}
 
 		[Test]
-		public void ToSqlQuery_IValueInsertable([DataSources] string context)
+		public void ToSqlQuery_IValueInsertable([DataSources] string context, [Values] bool inlineParameters)
 		{
 			using var db = GetDataContext(context);
 			using var tb = db.CreateLocalTable<TableWithIdentity>();
@@ -287,7 +289,7 @@ namespace Tests.Linq
 			var value = 123;
 			var query = tb.Value(r => r.Value, () => value);
 
-			var command = query.ToSqlQuery();
+			var command = query.ToSqlQuery(new () { InlineParameters = inlineParameters });
 
 			using var dc = GetDataConnection(context.StripRemote());
 
@@ -298,13 +300,15 @@ namespace Tests.Linq
 			Assert.Multiple(() =>
 			{
 				Assert.That(command.Sql, Does.Contain("INSERT"));
-				Assert.That(command.Parameters, Has.Count.EqualTo(context.IsUseParameters() ? 1 : 0));
+				Assert.That(command.Parameters, Has.Count.EqualTo(!inlineParameters && context.IsUseParameters() ? 1 : 0));
 				Assert.That(record.Value, Is.EqualTo(value));
 			});
 		}
 
 		[Test]
-		public void ToSqlQuery_IValueInsertable_ClientIdentity([DataSources(ProviderName.SqlCe, TestProvName.AllSqlServer, TestProvName.AllDB2, TestProvName.AllSybase)] string context)
+		public void ToSqlQuery_IValueInsertable_ClientIdentity(
+			[DataSources(ProviderName.SqlCe, TestProvName.AllSqlServer, TestProvName.AllDB2, TestProvName.AllSybase)] string context,
+			[Values] bool inlineParameters)
 		{
 			using var db = GetDataContext(context);
 			using var tb = db.CreateLocalTable<TableWithIdentity>();
@@ -314,7 +318,7 @@ namespace Tests.Linq
 				.Value(r => r.Id, () => 543)
 				.Value(r => r.Value, () => value);
 
-			var command = query.ToSqlQuery();
+			var command = query.ToSqlQuery(new () { InlineParameters = inlineParameters });
 
 			using var dc = GetDataConnection(context.StripRemote());
 
@@ -325,13 +329,13 @@ namespace Tests.Linq
 			Assert.Multiple(() =>
 			{
 				Assert.That(command.Sql, Does.Contain("INSERT"));
-				Assert.That(command.Parameters, Has.Count.EqualTo(context.IsUseParameters() ? 1 : 0));
+				Assert.That(command.Parameters, Has.Count.EqualTo(!inlineParameters && context.IsUseParameters() ? 1 : 0));
 				Assert.That(record.Value, Is.EqualTo(value));
 			});
 		}
 
 		[Test]
-		public void ToSqlQuery_ISelectInsertable([DataSources] string context)
+		public void ToSqlQuery_ISelectInsertable([DataSources] string context, [Values] bool inlineParameters)
 		{
 			using var db = GetDataContext(context);
 			using var ts = db.CreateLocalTable<TableWithIdentitySource>();
@@ -340,7 +344,7 @@ namespace Tests.Linq
 			var addition = 123;
 			var query = ts.Into(td).Value(r => r.Value, r => r.Value + addition);
 
-			var command = query.ToSqlQuery();
+			var command = query.ToSqlQuery(new () { InlineParameters = inlineParameters });
 
 			using var dc = GetDataConnection(context.StripRemote());
 			dc.Insert(new TableWithIdentitySource() { Value = 1 });
@@ -354,13 +358,15 @@ namespace Tests.Linq
 			{
 				Assert.That(command.Sql, Does.Contain("INSERT"));
 				Assert.That(command.Sql, Does.Contain("SELECT"));
-				Assert.That(command.Parameters, Has.Count.EqualTo(context.IsUseParameters() ? 1 : 0));
+				Assert.That(command.Parameters, Has.Count.EqualTo(!inlineParameters && context.IsUseParameters() ? 1 : 0));
 				Assert.That(records.Count(r => r.Value == 1 + addition), Is.EqualTo(1));
 			});
 		}
 
 		[Test]
-		public void ToSqlQuery_ISelectInsertable_ClientIdentity([DataSources(ProviderName.SqlCe, TestProvName.AllDB2, TestProvName.AllSqlServer, TestProvName.AllSybase)] string context)
+		public void ToSqlQuery_ISelectInsertable_ClientIdentity(
+			[DataSources(ProviderName.SqlCe, TestProvName.AllDB2, TestProvName.AllSqlServer, TestProvName.AllSybase)] string context,
+			[Values] bool inlineParameters)
 		{
 			using var db = GetDataContext(context);
 			using var ts = db.CreateLocalTable<TableWithIdentitySource>();
@@ -371,7 +377,7 @@ namespace Tests.Linq
 				.Value(r => r.Id, r => 345)
 				.Value(r => r.Value, r => r.Value + addition);
 
-			var command = query.ToSqlQuery();
+			var command = query.ToSqlQuery(new () { InlineParameters = inlineParameters });
 
 			using var dc = GetDataConnection(context.StripRemote());
 			dc.Insert(new TableWithIdentitySource() { Value = 1 });
@@ -385,7 +391,7 @@ namespace Tests.Linq
 			{
 				Assert.That(command.Sql, Does.Contain("INSERT"));
 				Assert.That(command.Sql, Does.Contain("SELECT"));
-				Assert.That(command.Parameters, Has.Count.EqualTo(context.IsUseParameters() ? 1 : 0));
+				Assert.That(command.Parameters, Has.Count.EqualTo(!inlineParameters && context.IsUseParameters() ? 1 : 0));
 				Assert.That(records.Count(r => r.Value == 1 + addition), Is.EqualTo(1));
 			});
 		}

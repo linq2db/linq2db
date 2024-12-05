@@ -78,9 +78,9 @@ namespace LinqToDB
 
 			public IQueryable<TEntity> Query { get; }
 
-			Expression              IExpressionQuery.Expression    => Query.Expression;
-			IDataContext            IExpressionQuery.DataContext   => ((IExpressionQuery)Query.GetLinqToDBSource()).DataContext;
-			IReadOnlyList<QuerySql> IExpressionQuery.GetSqlQuery() => ((IExpressionQuery)Query.GetLinqToDBSource()).GetSqlQuery();
+			Expression              IExpressionQuery.Expression                                   => Query.Expression;
+			IDataContext            IExpressionQuery.DataContext                                  => ((IExpressionQuery)Query.GetLinqToDBSource()).DataContext;
+			IReadOnlyList<QuerySql> IExpressionQuery.GetSqlQueries(SqlGenerationOptions? options) => ((IExpressionQuery)Query.GetLinqToDBSource()).GetSqlQueries(options);
 		}
 
 		sealed class LoadWithQueryable<TEntity, TProperty> : LoadWithQueryableBase<TEntity>, ILoadWithQueryable<TEntity, TProperty>
