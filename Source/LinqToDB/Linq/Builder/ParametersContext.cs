@@ -91,6 +91,10 @@ namespace LinqToDB.Linq.Builder
 					if (unary.Type == unaryOperand.Operand.Type)
 						return unaryOperand.Operand;
 				}
+				else if (unary.Operand is MemberExpression memberExpression && memberExpression.Member.IsNullableValueMember() && memberExpression.Expression?.Type == expression.Type)
+				{
+					return memberExpression.Expression!;
+				}
 			}
 
 			return expression;
