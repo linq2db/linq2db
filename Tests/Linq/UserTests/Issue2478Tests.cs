@@ -116,7 +116,6 @@ namespace Tests.UserTests
 			}
 		}
 
-		[ActiveIssue(Details = "Converted FuncLikePredicate expression is not a Predicate expression.")]
 		[Test]
 		public void ExistsRemoval([IncludeDataSources(TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context, [Values] bool shouldFilter, [Values] bool isPositive)
 		{
