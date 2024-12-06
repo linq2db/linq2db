@@ -373,7 +373,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void SqlPropertyNoStoreNonIdentifier([DataSources] string context)
+		public void SqlPropertyNoStoreNonIdentifier([IncludeDataSources(TestProvName.AllFirebird)] string context)
 		{
 			using (var db = GetDataContext(context, o => o.UseFirebird(o => o with { IdentifierQuoteMode = FirebirdIdentifierQuoteMode.Auto })))
 			using (db.CreateLocalTable(new []
@@ -395,7 +395,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void SqlPropertyNoStoreNonIdentifierGrouping([DataSources] string context)
+		public void SqlPropertyNoStoreNonIdentifierGrouping([IncludeDataSources(TestProvName.AllFirebird)] string context)
 		{
 			using (var db = GetDataContext(context, o => o.UseFirebird(o => o with { IdentifierQuoteMode = FirebirdIdentifierQuoteMode.Auto })))
 			using (db.CreateLocalTable(new []
