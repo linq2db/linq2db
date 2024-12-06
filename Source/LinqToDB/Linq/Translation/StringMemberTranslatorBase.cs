@@ -72,6 +72,9 @@ namespace LinqToDB.Linq.Translation
 			if (methodCall.Object == null)
 				return null;
 
+			if (translationContext.CanBeEvaluatedOnClient(methodCall))
+				return null;
+
 			using var disposable = translationContext.UsingTypeFromExpression(methodCall.Object);
 
 			if (!translationContext.TranslateToSqlExpression(methodCall.Object, out var translatedField))
