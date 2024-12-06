@@ -47,7 +47,7 @@ namespace Tests.UserTests
 					.DefaultIfEmpty()
 				select new { task.Description, party.Name };
 
-			_ = query.ToArray();
+			FluentActions.Enumerating(() => query).Should().NotThrow();
 		}
 	}
 }
