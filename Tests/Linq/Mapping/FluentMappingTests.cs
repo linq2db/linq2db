@@ -705,16 +705,16 @@ namespace Tests.Mapping
 				Query.ClearCaches();
 
 				var query = db.GetTable<PersonCustom>().Where(p => p.Name != "");
-				var sql1 = query.ToString();
-				TestContext.Out.WriteLine(sql1);
+				var sql1 = query.ToSqlQuery().Sql;
+				BaselinesManager.LogQuery(sql1);
 
 				if (finalAliases)
 					Assert.That(sql1, Does.Contain("[AGE]"));
 				else
 					Assert.That(sql1, Does.Not.Contain("[AGE]"));
 
-				var sql2 = query.Select(q => new { q.Name, q.Age }).ToString();
-				TestContext.Out.WriteLine(sql2);
+				var sql2 = query.Select(q => new { q.Name, q.Age }).ToSqlQuery().Sql;
+				BaselinesManager.LogQuery(sql2);
 
 				if (finalAliases)
 					Assert.That(sql2, Does.Contain("[AGE]"));
@@ -738,16 +738,16 @@ namespace Tests.Mapping
 				Query.ClearCaches();
 
 				var query = db.GetTable<PersonCustom>().Where(p => p.Name != "");
-				var sql1 = query.ToString();
-				TestContext.Out.WriteLine(sql1);
+				var sql1 = query.ToSqlQuery().Sql;
+				BaselinesManager.LogQuery(sql1);
 
 				if (finalAliases)
 					Assert.That(sql1, Does.Contain("[MONEY]"));
 				else
 					Assert.That(sql1, Does.Not.Contain("[MONEY]"));
 
-				var sql2 = query.Select(q => new { q.Name, q.Money }).ToString();
-				TestContext.Out.WriteLine(sql2);
+				var sql2 = query.Select(q => new { q.Name, q.Money }).ToSqlQuery().Sql;
+				BaselinesManager.LogQuery(sql2);
 
 				if (finalAliases)
 					Assert.That(sql2, Does.Contain("[MONEY]"));

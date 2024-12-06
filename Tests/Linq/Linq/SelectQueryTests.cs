@@ -170,7 +170,9 @@ namespace Tests.Linq
 		{
 			using (var db = GetDataContext(context))
 			{
-				var sql = db.Child.Where(child => child.ChildID == -1).ToString();
+				var query = db.Child.Where(child => child.ChildID == -1);
+				query.ToArray();
+				var sql = query.ToSqlQuery().Sql;
 				Assert.That(sql, Does.Contain("child_1"));
 			}
 		}

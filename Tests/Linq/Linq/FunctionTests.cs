@@ -607,7 +607,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void MatchFtsTest([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
+		public void MatchFtsTest([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -615,8 +615,11 @@ namespace Tests.Linq
 					where SqlLite.MatchFts(c, "some*")
 					select c;
 
-				var str = q.ToString()!;
-				Assert.That(str, Does.Contain(" matches "));
+				// FTS5 required
+				//q.ToArray();
+
+				var str = q.ToSqlQuery().Sql;
+				Assert.That(str, Does.Contain(" MATCH "));
 			}
 		}
 
@@ -653,13 +656,13 @@ namespace Tests.Linq
 					return;
 				}
 
-				var newField = new SqlAnchor(srcExpr, SqlAnchor.AnchorKindEnum.TableAsSelfColumn);
+				var newField = new SqlAnchor(srcExpr, SqlAnchor.AnchorKindEnum.TableName);
 
 				builder.AddParameter("table_field", newField);
 			}
 		}
 
-		[Sql.Extension("{table_field} matches {match}", BuilderType = typeof(MatchBuilder), IsPredicate = true)]
+		[Sql.Extension("{table_field} MATCH {match}", BuilderType = typeof(MatchBuilder), IsPredicate = true)]
 		public static bool MatchFts<TEntity>(TEntity src, [ExprParameter]string match)
 		{
 			throw new InvalidOperationException();

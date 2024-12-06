@@ -674,18 +674,19 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void SelectField()
+		public void SelectField([DataSources] string context)
 		{
-			using (var db = new DataConnection())
-			{
-				var q =
+			using var db = GetDataContext(context);
+
+			var q =
 					from p in db.GetTable<TestParent>()
 					select p.Value1_;
 
-				var sql = q.ToString()!;
+			q.ToArray();
 
-				Assert.That(sql.IndexOf("ParentID_"), Is.LessThan(0));
-			}
+			var sql = q.ToSqlQuery().Sql;
+
+			Assert.That(sql, Does.Not.Contain("ParentID_"));
 		}
 
 		[Test]
@@ -697,14 +698,14 @@ namespace Tests.Linq
 					from p in db.GetTable<ComplexPerson>()
 					select p.Name.LastName;
 
-				var sql = q.ToString()!;
+				q.ToArray();
 
-				TestContext.Out.WriteLine(sql);
+				var sql = q.ToSqlQuery().Sql;
 
 				Assert.Multiple(() =>
 				{
-					Assert.That(sql.IndexOf("First"), Is.LessThan(0));
-					Assert.That(sql.IndexOf("LastName"), Is.GreaterThan(0));
+					Assert.That(sql, Does.Not.Contain("First"));
+					Assert.That(sql, Does.Contain("LastName"));
 				});
 			}
 		}
@@ -1716,11 +1717,14 @@ namespace Tests.Linq
 					where p.ParentID == id
 					select p;
 
-				var sql1 = query.ToString();
+				var sql1 = query.ToSqlQuery(new SqlGenerationOptions() { InlineParameters = true }).Sql;
 
 				id = 2;
 
-				var sql2 = query.ToString();
+				var sql2 = query.ToSqlQuery(new SqlGenerationOptions() { InlineParameters = true }).Sql;
+
+				BaselinesManager.LogQuery(sql1);
+				BaselinesManager.LogQuery(sql2);
 
 				Assert.That(sql1, Is.Not.EqualTo(sql2));
 			}

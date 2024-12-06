@@ -575,19 +575,17 @@ namespace Tests.Linq
 		[Test]
 		public void Issue191Test([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				string? firstName = null;
-				int?    status    = null;
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable<User>();
 
-				var str = db.GetTable<User>()
-					.Where(user =>
-						user.Status == status &&
-						(string.IsNullOrEmpty(firstName) || user.FirstName!.Contains(firstName)))
-					.ToString();
+			string? firstName = null;
+			int?    status    = null;
 
-				Debug.WriteLine(str);
-			}
+			db.GetTable<User>()
+				.Where(user =>
+					user.Status == status &&
+					(string.IsNullOrEmpty(firstName) || user.FirstName!.Contains(firstName)))
+				.ToArray();
 		}
 	}
 

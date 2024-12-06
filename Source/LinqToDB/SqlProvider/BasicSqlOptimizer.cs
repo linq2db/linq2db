@@ -2067,5 +2067,36 @@ namespace LinqToDB.SqlProvider
 			return statement;
 		}
 
+		#region Visitors
+		protected sealed class ClearColumParametersVisitor : SqlQueryVisitor
+		{
+			bool _disableParameters;
+
+			public ClearColumParametersVisitor() : base(VisitMode.Modify, null)
+			{
+			}
+
+			protected override ISqlExpression VisitSqlColumnExpression(SqlColumn column, ISqlExpression expression)
+			{
+				var old            = _disableParameters;
+				_disableParameters = true;
+
+				var result         = base.VisitSqlColumnExpression(column, expression);
+
+				_disableParameters = old;
+
+				return result;
+			}
+
+			protected override IQueryElement VisitSqlParameter(SqlParameter sqlParameter)
+			{
+				if (_disableParameters)
+					sqlParameter.IsQueryParameter = false;
+
+				return base.VisitSqlParameter(sqlParameter);
+			}
+		}
+		#endregion
+
 	}
 }

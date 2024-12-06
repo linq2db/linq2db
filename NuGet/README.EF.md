@@ -138,7 +138,7 @@ using (var ctx = CreateAdventureWorksContext())
     var items2 = await neededRecords.ToLinqToDB().ToArrayAsync(); 
     
     // and simple bonus - how to generate SQL
-    var sql = neededRecords.ToLinqToDB().ToString();
+    var command = neededRecords.ToLinqToDB().ToSqlQuery();
 }
 ```
 

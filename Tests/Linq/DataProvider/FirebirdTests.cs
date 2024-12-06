@@ -109,8 +109,6 @@ namespace Tests.DataProvider
 					"SELECT NULL FROM \"Dual\"" :
 					string.Format(CultureInfo.InvariantCulture, "SELECT Cast({0} as {1}) FROM \"Dual\"", sqlValue, sqlType);
 
-				Debug.WriteLine(sql + " -> " + typeof(T));
-
 				Assert.That(conn.Execute<T>(sql), Is.EqualTo(expectedValue));
 			}
 
@@ -132,17 +130,14 @@ namespace Tests.DataProvider
 					dataType == DataType.SmallMoney ? "SELECT Cast(@p as decimal(18)) FROM \"Dual\"" :
 													  "SELECT @p                      FROM \"Dual\"";
 
-				Debug.WriteLine("{0} -> DataType.{1}",  typeof(T), dataType);
 				var value = conn.Execute<T>(sql, new DataParameter { Name = "p", DataType = dataType, Value = expectedValue });
 				if (!(value is double))
 					Assert.That(value, Is.EqualTo(expectedValue));
 
-				Debug.WriteLine("{0} -> auto", typeof(T));
 				value = conn.Execute<T>(sql, new DataParameter { Name = "p", Value = expectedValue });
 				if (!(value is double))
 					Assert.That(value, Is.EqualTo(expectedValue));
 
-				Debug.WriteLine("{0} -> new",  typeof(T));
 				value = conn.Execute<T>(sql, new { p = expectedValue });
 				if (!(value is double))
 					Assert.That(value, Is.EqualTo(expectedValue));

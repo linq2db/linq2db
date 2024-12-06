@@ -70,7 +70,7 @@ namespace Tests.Extensions
 
 			_ = q.ToList();
 
-			Assert.That(q.ToString(), Contains.Substring($"WITH ({hint})"));
+			Assert.That(q.ToSqlQuery().Sql, Contains.Substring($"WITH ({hint})"));
 		}
 
 		[Test]

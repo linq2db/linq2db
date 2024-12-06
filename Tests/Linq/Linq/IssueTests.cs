@@ -36,8 +36,6 @@ namespace Tests.Linq
 				var sql = ((TestDataConnection)db).LastQuery;
 
 				Assert.That(sql, Is.Not.Contains("INNER JOIN"));
-
-				Debug.WriteLine(sql);
 			}
 		}
 
@@ -245,8 +243,8 @@ namespace Tests.Linq
 
 				AreEqual(rr, r);
 
-				var sql = r.ToString()!;
-				Assert.That(sql.IndexOf("INNER", 1), Is.GreaterThan(0), sql);
+				var sql = r.ToSqlQuery().Sql;
+				Assert.That(sql, Does.Contain("INNER"));
 			}
 		}
 

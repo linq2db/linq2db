@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -14,6 +15,7 @@ namespace LinqToDB.Linq
 	using Extensions;
 	using Tools;
 	using Internal;
+	using LinqToDB.Expressions;
 
 	abstract class ExpressionQuery<T> : IExpressionQuery<T>, IAsyncEnumerable<T>
 	{
@@ -28,40 +30,48 @@ namespace LinqToDB.Linq
 		public Expression   Expression  { get; set; } = null!;
 		public IDataContext DataContext { get; set; } = null!;
 
+		[DebuggerBrowsable(DebuggerBrowsableState.Never)]
 		internal Query<T>?  Info;
+
+		[DebuggerBrowsable(DebuggerBrowsableState.Never)]
 		internal object?[]? Parameters;
+
+		[DebuggerBrowsable(DebuggerBrowsableState.Never)]
 		internal object?[]? Preambles;
 
 		#endregion
 
 		#region Public Members
 
-#if DEBUG
-		// This property is helpful in Debug Mode.
-		//
-		[JetBrains.Annotations.UsedImplicitly]
-		// ReSharper disable once InconsistentNaming
-		public string _sqlText => SqlText;
-#endif
-
-		public string SqlText
+		IReadOnlyList<QuerySql> IExpressionQuery.GetSqlQueries(SqlGenerationOptions? options)
 		{
-			get
+			var oldInline = DataContext.InlineParameters;
+
+			if (options?.InlineParameters != null)
+				DataContext.InlineParameters = options.InlineParameters.Value;
+
+			var expression  = Expression;
+			var expressions = (IQueryExpressions)new RuntimeExpressionsContainer(expression);
+			var info        = GetQuery(ref expressions, true, out var dependsOnParameters);
+
+			if (!dependsOnParameters)
 			{
-				var expression  = Expression;
-				var expressions = (IQueryExpressions)new RuntimeExpressionsContainer(expression);
-				var info        = GetQuery(ref expressions, true, out var dependsOnParameters);
-
-				if (!dependsOnParameters)
-				{
-					Expression = expressions.MainExpression;
-				}
-
-				var sqlText    = QueryRunner.GetSqlText(info, DataContext, expressions, Parameters, Preambles);
-
-				return sqlText;
+				Expression = expressions.MainExpression;
 			}
+
+			var sqlText    = QueryRunner.GetSqlText(info, DataContext, expressions, Parameters, Preambles);
+
+			DataContext.InlineParameters = oldInline;
+
+			return sqlText;
 		}
+
+		public virtual QueryDebugView DebugView
+			=> new(
+				() => new ExpressionPrinter().PrintExpression(Expression),
+				() => ((IExpressionQuery)this).GetSqlQueries(null)[0].Sql,
+				() => ((IExpressionQuery)this).GetSqlQueries(new () { InlineParameters = true })[0].Sql
+				);
 
 		#endregion
 
@@ -265,8 +275,13 @@ namespace LinqToDB.Linq
 
 		#region IQueryable Members
 
+		[DebuggerBrowsable(DebuggerBrowsableState.Never)]
 		Type           IQueryable.ElementType => typeof(T);
+
+		[DebuggerBrowsable(DebuggerBrowsableState.Never)]
 		Expression     IQueryable.Expression  => Expression;
+		
+		[DebuggerBrowsable(DebuggerBrowsableState.Never)]
 		IQueryProvider IQueryable.Provider    => this;
 
 		#endregion

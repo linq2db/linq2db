@@ -166,7 +166,7 @@ namespace Tests.Data
 
 			using (var db = GetDataConnection(context))
 			{
-				var sql = db.GetTable<Northwind.Category>().SqlText;
+				var sql = db.GetTable<Northwind.Category>().ToSqlQuery().Sql;
 				db.OnTraceConnection = e =>
 				{
 					events[e.TraceInfoStep] = e;
@@ -206,7 +206,7 @@ namespace Tests.Data
 
 			using (var db = GetDataConnection(context))
 			{
-				var sql = db.GetTable<Northwind.Category>().SqlText;
+				var sql = db.GetTable<Northwind.Category>().ToSqlQuery().Sql;
 				db.OnTraceConnection = e =>
 				{
 					events[e.TraceInfoStep] = e;
@@ -246,7 +246,7 @@ namespace Tests.Data
 
 			using (var db = new DataConnection(context))
 			{
-				var sql = db.GetTable<Northwind.Category>().SqlText;
+				var sql = db.GetTable<Northwind.Category>().ToSqlQuery().Sql;
 				db.OnTraceConnection = e =>
 				{
 					events[e.TraceInfoStep] = e;
@@ -284,7 +284,7 @@ namespace Tests.Data
 
 			using (var db = new DataConnection(context))
 			{
-				var sql = db.GetTable<Northwind.Category>().SqlText;
+				var sql = db.GetTable<Northwind.Category>().ToSqlQuery().Sql;
 				db.OnTraceConnection = e =>
 				{
 					events[e.TraceInfoStep] = e;
@@ -482,7 +482,7 @@ namespace Tests.Data
 
 			using (var db = new DataConnection(context))
 			{
-				var sql = db.GetTable<Northwind.Category>().SqlText;
+				var sql = db.GetTable<Northwind.Category>().ToSqlQuery().Sql;
 				db.OnTraceConnection = e =>
 				{
 					events[e.TraceInfoStep] = e;
