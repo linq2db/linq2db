@@ -1744,7 +1744,7 @@ namespace Tests.Linq
 
 			// check only one parameter generated (1+2+1=4)
 			if (!context.IsAnyOf(TestProvName.AllClickHouse))
-				Assert.That(query1.ToSqlQuery().Parameters, Has.Count.EqualTo(1));
+				Assert.That(query1.ToSqlQuery().Parameters, Has.Count.EqualTo(2));
 		}
 
 

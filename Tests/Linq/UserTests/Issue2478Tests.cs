@@ -116,7 +116,6 @@ namespace Tests.UserTests
 			}
 		}
 
-		[ActiveIssue("Optimization issue: subquery always return 1 record")]
 		[Test]
 		public void ExistsRemoval([IncludeDataSources(true, TestProvName.AllSqlServer)] string context)
 		{

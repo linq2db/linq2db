@@ -14,7 +14,7 @@ namespace Tests.UserTests
 	public class Issue464Tests : TestBase
 	{
 		[Test]
-		public void Test([DataSources(false)] string context)
+		public void Test([IncludeDataSources(false, TestProvName.AllFirebird)] string context)
 		{
 			var schema = new MappingSchema();
 

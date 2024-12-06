@@ -2874,6 +2874,11 @@ namespace LinqToDB.SqlQuery
 
 				return base.Visit(element);
 			}
+
+			protected override IQueryElement VisitFuncLikePredicate(SqlPredicate.FuncLike element)
+			{
+				return element;
+			}
 		}
 
 		sealed class RemoveUnusedColumnsVisitor : QueryElementVisitor

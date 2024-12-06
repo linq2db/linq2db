@@ -56,7 +56,8 @@ namespace LinqToDB.Linq.Builder
 			}
 
 			// finalizing context
-			_ = builder.BuildExtractExpression(sequence, new ContextRefExpression(methodCall.Method.GetGenericArguments()[0], sequence));
+			var sqlExpr = builder.BuildSqlExpression(sequence, new ContextRefExpression(methodCall.Method.GetGenericArguments()[0], sequence));
+			sqlExpr = builder.ToColumns(sequence, sqlExpr);
 
 			return BuildSequenceResult.FromContext(new AllAnyContext(buildInfo.Parent, buildInfo.SelectQuery, methodCall, sequence));
 		}
