@@ -135,9 +135,12 @@ namespace Tests.DataProvider
 					"SELECT Cast(@p as decimal(38))" :
 					"SELECT @p";
 
-				Assert.That(conn.Execute<T>(sql, new DataParameter { Name = "p", DataType = dataType, Value = expectedValue }), Is.EqualTo(expectedValue));
-				Assert.That(conn.Execute<T>(sql, new DataParameter { Name = "p", Value = expectedValue }), Is.EqualTo(expectedValue));
-				Assert.That(conn.Execute<T>(sql, new { p = expectedValue }), Is.EqualTo(expectedValue));
+				Assert.Multiple(() =>
+				{
+					Assert.That(conn.Execute<T>(sql, new DataParameter { Name = "p", DataType = dataType, Value = expectedValue }), Is.EqualTo(expectedValue));
+					Assert.That(conn.Execute<T>(sql, new DataParameter { Name = "p", Value = expectedValue }), Is.EqualTo(expectedValue));
+					Assert.That(conn.Execute<T>(sql, new { p = expectedValue }), Is.EqualTo(expectedValue));
+				});
 			}
 		}
 

@@ -152,8 +152,11 @@ namespace Tests.Linq
 				//query.ToArray();
 
 				var command = query.ToSqlQuery();
-				Assert.That(command.Sql, Does.Contain("[FTS5_TABLE](@"));
-				Assert.That(command.Parameters, Has.Length.EqualTo(1));
+				Assert.Multiple(() =>
+				{
+					Assert.That(command.Sql, Does.Contain("[FTS5_TABLE](@"));
+					Assert.That(command.Parameters, Has.Count.EqualTo(1));
+				});
 				Assert.That(command.Parameters[0].Value, Is.EqualTo("found"));
 			}
 		}

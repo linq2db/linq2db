@@ -122,9 +122,12 @@ namespace Tests.DataProvider
 
 			var querySql = isODBCNull ? $"SELECT CVar({param})" : $"SELECT {param}";
 
-			Assert.That(conn.Execute<T>(querySql, new DataParameter { Name = "p", DataType = dataType, Value = expectedValue }), Is.EqualTo(expectedValue));
-			Assert.That(conn.Execute<T>(querySql, new DataParameter { Name = "p", Value = expectedValue }), Is.EqualTo(expectedValue));
-			Assert.That(conn.Execute<T>(querySql, new { p = expectedValue }), Is.EqualTo(expectedValue));
+			Assert.Multiple(() =>
+			{
+				Assert.That(conn.Execute<T>(querySql, new DataParameter { Name = "p", DataType = dataType, Value = expectedValue }), Is.EqualTo(expectedValue));
+				Assert.That(conn.Execute<T>(querySql, new DataParameter { Name = "p", Value = expectedValue }), Is.EqualTo(expectedValue));
+				Assert.That(conn.Execute<T>(querySql, new { p = expectedValue }), Is.EqualTo(expectedValue));
+			});
 		}
 
 		static void TestSimple<T>(DataConnection conn, T expectedValue, DataType dataType, bool isODBCNull)
