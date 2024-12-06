@@ -13,6 +13,8 @@ let SelectField (db : IDataContext) =
         select p.LastName
     }
 
+    q.ToArray |> ignore
+
     let sql = q.ToSqlQuery().Sql
     Assert.That(sql.IndexOf("First"), Is.LessThan 0)
     Assert.That(sql.IndexOf("LastName"), Is.GreaterThan 0)
@@ -23,6 +25,8 @@ let SelectFieldDeeplyComplexPerson (db : IDataContext) =
         for p in persons do
         select p.Name.LastName.Value
     }
+
+    q.ToArray |> ignore
 
     let sql = q.ToSqlQuery().Sql
     Assert.That(sql.IndexOf("First"), Is.LessThan 0)

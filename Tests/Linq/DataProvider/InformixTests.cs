@@ -240,7 +240,6 @@ namespace Tests.DataProvider
 						new BulkCopyOptions
 						{
 							BulkCopyType       = BulkCopyType.MultipleRows,
-							RowsCopiedCallback = copied => Debug.WriteLine(copied.RowsCopied)
 						},
 						Enumerable.Range(0, 10).Select(n =>
 							new DataTypes
@@ -277,7 +276,6 @@ namespace Tests.DataProvider
 						new BulkCopyOptions
 						{
 							BulkCopyType       = BulkCopyType.MultipleRows,
-							RowsCopiedCallback = copied => Debug.WriteLine(copied.RowsCopied)
 						},
 						Enumerable.Range(0, 10).Select(n =>
 							new DataTypes
@@ -314,7 +312,6 @@ namespace Tests.DataProvider
 						new BulkCopyOptions
 						{
 							BulkCopyType       = BulkCopyType.ProviderSpecific,
-							RowsCopiedCallback = copied => Debug.WriteLine(copied.RowsCopied)
 						},
 						Enumerable.Range(0, 10).Select(n =>
 							new DataTypes
@@ -351,7 +348,6 @@ namespace Tests.DataProvider
 						new BulkCopyOptions
 						{
 							BulkCopyType       = BulkCopyType.ProviderSpecific,
-							RowsCopiedCallback = copied => Debug.WriteLine(copied.RowsCopied)
 						},
 						Enumerable.Range(0, 10).Select(n =>
 							new DataTypes
@@ -394,7 +390,6 @@ namespace Tests.DataProvider
 						new BulkCopyOptions
 						{
 							BulkCopyType       = bulkCopyType,
-							RowsCopiedCallback = copied => Debug.WriteLine(copied.RowsCopied),
 							KeepIdentity       = keepIdentity
 						},
 						_allTypeses);
@@ -432,7 +427,6 @@ namespace Tests.DataProvider
 						new BulkCopyOptions
 						{
 							BulkCopyType = bulkCopyType,
-							RowsCopiedCallback = copied => Debug.WriteLine(copied.RowsCopied),
 							KeepIdentity = keepIdentity
 						},
 						_allTypeses);

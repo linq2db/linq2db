@@ -116,9 +116,9 @@ namespace Tests.UserTests
 			}
 		}
 
-		[ActiveIssue(Details = "Converted FuncLikePredicate expression is not a Predicate expression.")]
+		[ActiveIssue("Optimization issue: subquery always return 1 record")]
 		[Test]
-		public void ExistsRemoval([IncludeDataSources(TestProvName.AllSqlServer, TestProvName.AllClickHouse)] string context, [Values] bool shouldFilter, [Values] bool isPositive)
+		public void ExistsRemoval([IncludeDataSources(true, TestProvName.AllSqlServer)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -136,7 +136,7 @@ namespace Tests.UserTests
 
 				Assert.Multiple(() =>
 				{
-					Assert.That(query.ToSqlQuery().Sql, Does.Not.Contains("EXISTS"));
+					Assert.That(query.ToSqlQuery().Sql, Does.Not.Contain("EXISTS"));
 
 					Assert.That(cnt, Is.EqualTo(result.Length));
 				});

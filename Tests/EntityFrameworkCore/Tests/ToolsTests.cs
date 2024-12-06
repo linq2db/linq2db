@@ -228,8 +228,6 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 
 			query = query.ToLinqToDB();
 
-			var str = query.ToString();
-
 			var items = query.ToArray();
 		}
 
@@ -776,7 +774,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 			var resultEF = query.ToArray();
 			var result = query.ToLinqToDB().ToArray();
 
-			var str = query.ToLinqToDB().ToString();
+			var str = query.ToLinqToDB().ToSqlQuery().Sql;
 
 			AreEqual(resultEF, result);
 

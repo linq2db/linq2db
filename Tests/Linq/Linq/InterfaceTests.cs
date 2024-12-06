@@ -164,7 +164,11 @@ namespace Tests.Linq
 			Issue4031_Execute_TwoFields<Issue4031Case04>(context);
 
 			using var db = GetDataContext(context);
-			var sql = db.GetTable<Issue4031Case15>().Where(c => c.Id == -1).Select(c => new { c.Id }).ToSqlQuery().Sql;
+
+			var query = db.GetTable<Issue4031Case15>().Where(c => c.Id == -1).Select(c => new { c.Id });
+			query.ToArray();
+
+			var sql = query.ToSqlQuery().Sql;
 			Assert.That(sql, Is.Not.Contains("PersonID"));
 			sql.Should().Contain("UNKNOWN", Exactly.Twice());
 		}
@@ -181,7 +185,13 @@ namespace Tests.Linq
 			Issue4031_Execute_TwoFields<Issue4031Case06>(context);
 
 			using var db = GetDataContext(context);
-			var sql = db.GetTable<Issue4031Case15>().Where(c => c.Id == -1).Select(c => new { c.Id }).ToSqlQuery().Sql;
+
+			var query = db.GetTable<Issue4031Case15>().Where(c => c.Id == -1).Select(c => new { c.Id });
+
+			var sql = query.ToSqlQuery().Sql;
+
+			BaselinesManager.LogQuery(sql);
+
 			Assert.That(sql, Is.Not.Contains("PersonID"));
 			sql.Should().Contain("UNKNOWN", Exactly.Twice());
 		}
@@ -240,7 +250,13 @@ namespace Tests.Linq
 			Issue4031_Execute_TwoFields<Issue4031Case15>(context);
 
 			using var db = GetDataContext(context);
-			var sql = db.GetTable<Issue4031Case15>().Where(c => c.Id == -1).Select(c => new { c.Id }).ToSqlQuery().Sql;
+
+			var query = db.GetTable<Issue4031Case15>().Where(c => c.Id == -1).Select(c => new { c.Id });
+
+			var sql = query.ToSqlQuery().Sql;
+
+			BaselinesManager.LogQuery(sql);
+
 			Assert.That(sql, Is.Not.Contains("PersonID"));
 			sql.Should().Contain("UNKNOWN", Exactly.Twice());
 		}

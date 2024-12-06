@@ -45,13 +45,13 @@ namespace Tests.UserTests
 
 		string GetSql(string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				var matchSymbolIds = new List<int>();
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable<A>();
 
-				var queryable = GenerateQuery(db, new DateTime(2010, 3, 5)).Where(x => matchSymbolIds.Contains(x.ID));
-				return queryable.ToSqlQuery().Sql;
-			}
+			var matchSymbolIds = new List<int>();
+
+			var queryable = GenerateQuery(db, new DateTime(2010, 3, 5)).Where(x => matchSymbolIds.Contains(x.ID));
+			return queryable.ToSqlQuery().Sql;
 		}
 
 		[Test]
@@ -60,10 +60,6 @@ namespace Tests.UserTests
 			var query1 = GetSql(context);
 			var query2 = GetSql(context);
 			var query3 = GetSql(context);
-
-			TestContext.Out.WriteLine(query1);
-			TestContext.Out.WriteLine(query2);
-			TestContext.Out.WriteLine(query3);
 
 			Assert.That(query2, Is.EqualTo(query1));
 		}

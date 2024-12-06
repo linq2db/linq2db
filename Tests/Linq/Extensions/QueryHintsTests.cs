@@ -25,7 +25,7 @@ namespace Tests.Extensions
 
 				var str = q.ToSqlQuery().Sql;
 
-				TestContext.Out.WriteLine(str);
+				BaselinesManager.LogQuery(str);
 
 				Assert.That(str, Contains.Substring("---"));
 				Assert.That(str, Contains.Substring("----"));
@@ -42,7 +42,7 @@ namespace Tests.Extensions
 
 				str = q.ToSqlQuery().Sql;
 
-				TestContext.Out.WriteLine(str);
+				BaselinesManager.LogQuery(str);
 
 				Assert.That(str, Contains.Substring("---"));
 				Assert.That(str, Is.Not.Contains("----"));

@@ -3060,10 +3060,9 @@ namespace Tests.Linq
 					First = cItems.OrderBy(x => x.Count).ThenBy(x => x.Id).FirstOrDefault()
 				};
 
+			query.ToArray();
+
 			var selectQuery = query.GetSelectQuery();
-
-			TestContext.Out.WriteLine(query.ToSqlQuery().Sql);
-
 
 			// We check that grouping is left in the subquery
 

@@ -483,8 +483,7 @@ WHERE
 		}
 
 		[Test]
-		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllClickHouse, ErrorMessage = ErrorHelper.Error_Correlated_Subqueries)]
-		public void AssociationFromSqlTest([IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllClickHouse)] string context)
+		public void AssociationFromSqlTest([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using (var db = (DataConnection)GetDataContext(context, GetMapping()))
 			using (db.CreateLocalTable<FewNumberEntity>())
@@ -503,7 +502,7 @@ WHERE
 					x.SomeValue.Value
 				});
 
-				TestContext.Out.WriteLine(q.ToSqlQuery().Sql);
+				q.ToArray();
 
 				var select = q.GetSelectQuery();
 

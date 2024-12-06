@@ -1622,8 +1622,6 @@ namespace Tests.Linq
 
 				var sql = results.ToSqlQuery().Sql;
 
-				TestContext.Out.WriteLine(sql);
-
 				AreEqual(
 					from c in db.Parent.AsEnumerable()
 					where c.ParentID == id
@@ -1632,9 +1630,7 @@ namespace Tests.Linq
 					results,
 					true);
 
-				// remote context doesn't have access to final SQL
-				if (!context.IsRemote())
-					Assert.That(Regex.Matches(sql, " AND "), Has.Count.EqualTo(flag == null ? 0 : 1));
+				Assert.That(Regex.Matches(sql, " AND "), Has.Count.EqualTo(flag == null ? 0 : 1));
 			}
 		}
 
@@ -1658,9 +1654,7 @@ namespace Tests.Linq
 					results,
 					true);
 
-				// remote context doesn't have access to final SQL
-				if (!context.IsRemote())
-					Assert.That(Regex.Matches(sql, " AND "), Has.Count.EqualTo(flag == null ? 0 : 1));
+				Assert.That(Regex.Matches(sql, " AND "), Has.Count.EqualTo(flag == null ? 0 : 1));
 			}
 		}
 

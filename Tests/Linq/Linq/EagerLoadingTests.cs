@@ -337,7 +337,10 @@ namespace Tests.Linq
 		{
 			using (var db = GetDataContext(context))
 			{
-				var sql = db.Parent.LoadWith(p => p.Children).ToSqlQuery().Sql;
+				var query = db.Parent.LoadWith(p => p.Children);
+				query.ToArray();
+
+				var sql = query.ToSqlQuery().Sql;
 
 				Assert.That(sql, Does.Not.Contain("LoadWithQueryable"));
 
@@ -356,8 +359,9 @@ FROM
 			using var db = GetDataContext(context);
 
 			var query = db.Person.LoadWith(p => p.Patient).AsQueryable();
-			var sql   = query.ToSqlQuery().Sql;
-			TestContext.Out.WriteLine(sql);
+			query.ToArray();
+
+			var sql = query.ToSqlQuery().Sql;
 
 			sql.Should().NotContain("LoadWithQueryable");
 

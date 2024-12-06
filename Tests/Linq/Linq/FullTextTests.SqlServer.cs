@@ -2120,6 +2120,9 @@ namespace Tests.Linq
 					orderby c.CategoryID descending
 					select c;
 
+				// TODO: FTS not configured properly
+				//q.ToArray();
+
 				q.ToSqlQuery().Sql.Should().Contain("CONTAINS(PROPERTY([c_1].[Description], N'title'), N'bread')");
 			}
 		}
@@ -2135,6 +2138,9 @@ namespace Tests.Linq
 					orderby c.CategoryID descending
 					select c;
 
+				// TODO: FTS not configured properly
+				//q.ToArray();
+
 				q.ToSqlQuery().Sql.Should().Contain("CONTAINS(PROPERTY([c_1].[Description], N'Title'), N'dry & bread', LANGUAGE N'English')");
 			}
 		}
@@ -2149,6 +2155,9 @@ namespace Tests.Linq
 					where Sql.Ext.SqlServer().ContainsPropertyWithLanguage(c.CategoryName, "Title", "candy | meat", 1033)
 					orderby c.CategoryID descending
 					select c;
+
+				// TODO: FTS not configured properly
+				//q.ToArray();
 
 				q.ToSqlQuery().Sql.Should().Contain("CONTAINS(PROPERTY([c_1].[CategoryName], N'Title'), N'candy | meat', LANGUAGE 1033)");
 			}
@@ -2167,6 +2176,9 @@ namespace Tests.Linq
 					where Sql.Ext.SqlServer().ContainsProperty(c.Description, property, search)
 					orderby c.CategoryID descending
 					select c;
+
+				// TODO: FTS not configured properly
+				//q.ToArray();
 
 				q.ToSqlQuery().Sql.Should().Contain($"CONTAINS(PROPERTY([c_1].[Description], @property), @search)");
 			}
@@ -2187,6 +2199,9 @@ namespace Tests.Linq
 					orderby c.CategoryID descending
 					select c;
 
+				// TODO: FTS not configured properly
+				//q.ToArray();
+
 				q.ToSqlQuery().Sql.Should().Contain($"CONTAINS(PROPERTY([c_1].[Description], @property), @search, LANGUAGE @lang)");
 			}
 		}
@@ -2205,6 +2220,9 @@ namespace Tests.Linq
 					where Sql.Ext.SqlServer().ContainsPropertyWithLanguage(c.CategoryName, property, search, lang)
 					orderby c.CategoryID descending
 					select c;
+
+				// TODO: FTS not configured properly
+				//q.ToArray();
 
 				q.ToSqlQuery().Sql.Should().Contain($"CONTAINS(PROPERTY([c_1].[CategoryName], @property), @search, LANGUAGE @lang)");
 			}

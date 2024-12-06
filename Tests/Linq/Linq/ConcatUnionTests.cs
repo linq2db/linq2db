@@ -688,10 +688,7 @@ namespace Tests.Linq
 
 				var q = q1.Union(q2).Take(5);
 
-				foreach (var item in q)
-				{
-					TestContext.Out.WriteLine(item);
-				}
+				q.ToArray();
 			}
 		}
 
@@ -699,40 +696,35 @@ namespace Tests.Linq
 		public class TestEntity2 { public int Id; public string? Field1; }
 
 		[Test]
-		public void Concat90()
+		public void Concat90([DataSources] string context)
 		{
-			using(var context = new DataConnection())
-			{
-				var join1 =
-					from t1 in context.GetTable<TestEntity1>()
-					join t2 in context.GetTable<TestEntity2>()
+			using var db = GetDataContext(context);
+			using var tb1 = db.CreateLocalTable<TestEntity1>();
+			using var tb2 = db.CreateLocalTable<TestEntity2>();
+			var join1 =
+					from t1 in db.GetTable<TestEntity1>()
+					join t2 in db.GetTable<TestEntity2>()
 						on t1.Id equals t2.Id
 					into tmp
 					from t2 in tmp.DefaultIfEmpty()
 					select new { t1, t2 };
 
-				var join1Sql = join1.ToSqlQuery().Sql;
-				Assert.That(join1Sql, Is.Not.Null);
+			join1.ToArray();
 
-				var join2 =
-					from t2 in context.GetTable<TestEntity2>()
-					join t1 in context.GetTable<TestEntity1>()
+			var join2 =
+					from t2 in db.GetTable<TestEntity2>()
+					join t1 in db.GetTable<TestEntity1>()
 						on t2.Id equals t1.Id
 					into tmp
 					from t1 in tmp.DefaultIfEmpty()
 					where t1 == null
 					select new { t1, t2 };
 
-				var join2Sql = join2.ToSqlQuery().Sql;
-				Assert.That(join2Sql, Is.Not.Null);
+			join2.ToArray();
 
-				var fullJoin = join1.Concat(join2);
+			var fullJoin = join1.Concat(join2);
 
-				var fullJoinSql = fullJoin.ToSqlQuery().Sql; // exception : Types in Concat are constructed incompatibly.
-				Assert.That(fullJoinSql, Is.Not.Null);
-
-				TestContext.Out.Write(fullJoinSql);
-			}
+			fullJoin.ToArray();
 		}
 
 		[Test]

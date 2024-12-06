@@ -16,7 +16,7 @@ namespace Tests.UserTests
 			[Column, PrimaryKey, Identity] public int Id { get; set; } // integer
 		}
 
-		[Table(Schema = "public", Name = "custom_invoice")]
+		[Table]
 		public class CustomInvoice : BaseEntity
 		{
 			[Column, NotNull] public int ContractId { get; set; } // integer
@@ -39,78 +39,58 @@ namespace Tests.UserTests
 			[Association(ThisKey = "AccessTariffId", OtherKey = "Id", CanBeNull = false)]
 			public AccessTariff AccessTariff { get; set; }
 
-			/// <summary>
-			/// Línies d energia
-			/// </summary>
 			[Association(ThisKey = "Id", OtherKey = "CustomInvoiceId", CanBeNull = true)]
 			public ICollection<CustomInvoiceLine> InvoiceLines { get; set; }
 
-			/// <summary>
-			/// Lecturas de energía
-			/// </summary>
 			[Association(ThisKey = "Id", OtherKey = "CustomInvoiceId", CanBeNull = true)]
 			public ICollection<TypeAMeasures> TypeAMeasures { get; set; }
 
-			/// <summary>
-			/// Lecturas de energía
-			/// </summary>
 			[Association(ThisKey = "Id", OtherKey = "CustomInvoiceId", CanBeNull = true)]
 			public ICollection<TypeBMeasures> TypeBMeasures { get; set; }
 
 
 			[Column, NotNull] public int PriceListId { get; set; } // integer
 
-			/// <summary>
-			/// Price list used for this invoice
-			/// </summary>
 			[Association(ThisKey = "PriceListId", OtherKey = "Id", CanBeNull = true)]
 			public PriceList PriceList { get; set; }
 		}
 
-		[Table(Schema = "public", Name = "custom_invoice_linia")]
+		[Table]
 		public class CustomInvoiceLine : BaseEntity
 		{
 			[Column, NotNull] public int CustomInvoiceId { get; set; }
 		}
 
-		[Table(Schema = "public", Name = "polissa")]
+		[Table]
 		public class Contract : BaseEntity
 		{
 		}
 
-
-		[Table(Schema = "public", Name = "product_uom")]
+		[Table]
 		public class ProductUnit : BaseEntity
 		{
 		}
 
-
-		[Table(Schema = "public", Name = "cups_ps")]
+		[Table]
 		public class ServicePoint : BaseEntity
 		{
 			[Column, NotNull] public int TownId { get; set; }
 
 			[Column, NotNull] public int StreetTypeId { get; set; }
 
-			/// <summary>
-			///     Municipio
-			/// </summary>
 			[Association(ThisKey = "TownId", OtherKey = "Id", CanBeNull = true)]
 			public Town Town { get; set; }
 
-			/// <summary>
-			///     Tipo vía
-			/// </summary>
 			[Association(ThisKey = "StreetTypeId", OtherKey = "Id", CanBeNull = true)]
 			public StreetType StreetType { get; set; }
 		}
 
-		[Table(Schema = "public", Name = "street_type")]
+		[Table]
 		public class StreetType : BaseEntity
 		{
 		}
 
-		[Table(Schema = "public", Name = "type_a_measures")]
+		[Table]
 		public class TypeAMeasures : BaseEntity
 		{
 			/// <summary>
@@ -129,12 +109,12 @@ namespace Tests.UserTests
 			public MeasureSource PreviousSource { get; set; }
 		}
 
-		[Table(Schema = "public", Name = "lectures_origen")]
+		[Table]
 		public class MeasureSource : BaseEntity
 		{
 		}
 
-		[Table(Schema = "public", Name = "invoice")]
+		[Table]
 		public class Invoice : BaseEntity
 		{
 			/// <summary>
@@ -165,7 +145,7 @@ namespace Tests.UserTests
 			public Invoice RefundBy { get; set; }
 		}
 
-		[Table(Schema = "public", Name = "invoice_tax")]
+		[Table]
 		public class InvoiceTaxLine : BaseEntity
 		{
 			[Column, Nullable] public int InvoiceId { get; set; } // integer
@@ -176,13 +156,12 @@ namespace Tests.UserTests
 			public AccountTax Tax { get; set; }
 		}
 
-		[Table(Schema = "public", Name = "account_tax")]
+		[Table]
 		public class AccountTax : BaseEntity
 		{
 		}
 
-
-		[Table(Schema = "public", Name = "invoice_line")]
+		[Table]
 		public class InvoiceLine : BaseEntity
 		{
 			[Column, Nullable] public int? ProductUnitId { get; set; } // integer
@@ -196,7 +175,7 @@ namespace Tests.UserTests
 			public Product Product { get; set; }
 		}
 
-		[Table(Schema = "public", Name = "town")]
+		[Table]
 		public class Town : BaseEntity
 		{
 			[Column, Nullable] public int? StateId { get; set; } // integer
@@ -205,7 +184,7 @@ namespace Tests.UserTests
 			public CountryState State { get; set; }
 		}
 
-		[Table(Schema = "public", Name = "country_state")]
+		[Table]
 		public class CountryState : BaseEntity
 		{
 			[Column, NotNull] public int CountryId { get; set; } // integer
@@ -218,49 +197,69 @@ namespace Tests.UserTests
 			public Country Country { get; set; }
 		}
 
-		[Table(Schema = "public", Name = "autonomous_community")]
+		[Table]
 		public class AutonomousCommunity : BaseEntity
 		{
 		}
 
-		[Table(Schema = "public", Name = "country")]
+		[Table]
 		public class Country : BaseEntity
 		{
 		}
 
-		[Table(Schema = "public", Name = "invoice_pending_state")]
+		[Table]
 		public class InvoicePendingState : BaseEntity
 		{
 		}
 
-		[Table(Schema = "public", Name = "type_b_measures")]
+		[Table]
 		public class TypeBMeasures : BaseEntity
 		{
 			[Column, NotNull] public int CustomInvoiceId { get; set; }
 		}
 
-		[Table(Schema = "public", Name = "access_tariff")]
+		[Table]
 		public class AccessTariff : BaseEntity
 		{
 		}
 
-		[Table(Schema = "public", Name = "product_product")]
+		[Table]
 		public class Product : BaseEntity
 		{
 		}
 
-
-		[Table(Schema = "public", Name = "product_pricelist")]
+		[Table]
 		public class PriceList : BaseEntity
 		{
 		}
 
 		[Test]
-		public void TestLoadWithInfiniteLoop([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
+		public void TestLoadWithInfiniteLoop([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				var query = db
+			using var db = GetDataContext(context);
+			using var t01 = db.CreateLocalTable<PriceList>();
+			using var t02 = db.CreateLocalTable<Product>();
+			using var t03 = db.CreateLocalTable<AccessTariff>();
+			using var t04 = db.CreateLocalTable<CountryState>();
+			using var t05 = db.CreateLocalTable<AutonomousCommunity>();
+			using var t06 = db.CreateLocalTable<Country>();
+			using var t07 = db.CreateLocalTable<InvoicePendingState>();
+			using var t08 = db.CreateLocalTable<TypeBMeasures>();
+			using var t09 = db.CreateLocalTable<Town>();
+			using var t10 = db.CreateLocalTable<InvoiceLine>();
+			using var t11 = db.CreateLocalTable<AccountTax>();
+			using var t12 = db.CreateLocalTable<InvoiceTaxLine>();
+			using var t13 = db.CreateLocalTable<Invoice>();
+			using var t14 = db.CreateLocalTable<MeasureSource>();
+			using var t15 = db.CreateLocalTable<TypeAMeasures>();
+			using var t16 = db.CreateLocalTable<StreetType>();
+			using var t17 = db.CreateLocalTable<ServicePoint>();
+			using var t18 = db.CreateLocalTable<ProductUnit>();
+			using var t19 = db.CreateLocalTable<Contract>();
+			using var t20 = db.CreateLocalTable<CustomInvoice>();
+			using var t21 = db.CreateLocalTable<CustomInvoiceLine>();
+
+			var query = db
 					.GetTable<CustomInvoice>()
 					.LoadWith(i => i.Invoice)
 					.LoadWith(i => i.Invoice.Rectifying)
@@ -285,8 +284,7 @@ namespace Tests.UserTests
 					.LoadWith(i => i.PriceList)
 					.Where(f => f.Id == 1);
 
-				Assert.DoesNotThrow(() => TestContext.Out.WriteLine(query.ToSqlQuery().Sql));
-			}
+			query.ToArray();
 		}
 	}
 }

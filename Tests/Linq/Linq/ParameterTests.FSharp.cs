@@ -40,9 +40,9 @@ namespace Tests.Linq
 			using (var db = GetDataConnection(context))
 			{
 				var p   = "abc";
-				var sql = db.GetTable<Person>().Where(t => t.FirstName == p).ToSqlQuery().Sql;
+				db.GetTable<Person>().Where(t => t.FirstName == p).ToArray();
 
-				TestContext.Out.WriteLine(sql);
+				var sql = GetCurrentBaselines();
 
 				Assert.That(sql, Contains.Substring("(3)").Or.Contains("(4000)"));
 			}

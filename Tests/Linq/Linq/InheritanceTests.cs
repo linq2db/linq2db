@@ -284,16 +284,14 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void InheritanceMappingIssueTest()
+		public void InheritanceMappingIssueTest([DataSources] string context)
 		{
-			using (var db = new DataConnection())
-			{
-				var q1 = db.GetTable<Parent222>();
-				var q  = q1.Where(_ => _.Value.ID == 1);
+			using var db = GetDataContext(context);
 
-				var sql = q.ToSqlQuery().Sql;
-				Assert.That(sql, Is.Not.Empty);
-			}
+			var q1 = db.GetTable<Parent222>();
+			var q  = q1.Where(_ => _.Value.ID == 1);
+
+			q.ToArray();
 		}
 
 		[Table(Name = "Child", IsColumnAttributeRequired = false)]

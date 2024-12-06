@@ -155,10 +155,7 @@ namespace Tests.xUpdate
 						.Where(c => c.ChildID == id && c.Parent!.Value1 == 1)
 						.Set(c => c.ChildID, c => c.ChildID + 1);
 
-				var sql = updatable.ToSqlQuery().Sql;
-				TestContext.Out.WriteLine(sql);
-
-				Assert.That(sql, Does.Contain("UPDATE"));
+				updatable.Update();
 			}
 		}
 

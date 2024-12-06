@@ -122,7 +122,7 @@ namespace Tests.Linq
 						TableName_Database = Sql.TableName(t, Sql.TableQualification.DatabaseName),
 					};
 
-				TestContext.Out.WriteLine(query.ToSqlQuery().Sql);
+				BaselinesManager.LogQuery(query.ToSqlQuery().Sql);
 
 				var ast = query.GetSelectQuery();
 
@@ -194,7 +194,7 @@ namespace Tests.Linq
 						TableName_Database = Sql.TableExpr(t, Sql.TableQualification.DatabaseName),
 					};
 
-				TestContext.Out.WriteLine(query.ToSqlQuery().Sql);
+				BaselinesManager.LogQuery(query.ToSqlQuery().Sql);
 
 				var ast = query.GetSelectQuery();
 
@@ -260,7 +260,7 @@ namespace Tests.Linq
 
 				var query1Str = query1.ToSqlQuery().Sql;
 
-				TestContext.Out.WriteLine(query1Str);
+				BaselinesManager.LogQuery(query1Str);
 
 				var query2 = from t in table
 					from ft in db.FromSql<FreeTextKey<int>>(
@@ -270,7 +270,7 @@ namespace Tests.Linq
 
 				var query2Str = query2.ToSqlQuery().Sql;
 
-				TestContext.Out.WriteLine(query2Str);
+				BaselinesManager.LogQuery(query2Str);
 
 
 				var query3 = db.FromSql<FreeTextKey<int>>(
@@ -278,7 +278,7 @@ namespace Tests.Linq
 
 				var query3Str = query3.ToSqlQuery().Sql;
 
-				TestContext.Out.WriteLine(query3Str);
+				BaselinesManager.LogQuery(query3Str);
 
 				Assert.Multiple(() =>
 				{

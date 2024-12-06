@@ -130,8 +130,6 @@ namespace Tests.Data
 			{
 				conn.InlineParameters = true;
 				var sql = conn.Person.Where(p => p.ID == 1).Select(p => p.FirstName).Take(1).ToSqlQuery().Sql;
-				sql = string.Join(Environment.NewLine, sql.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries)
-					.Where(line => !line.StartsWith("--")));
 				var res = conn.Execute<string>(sql);
 
 				Assert.That(res, Is.EqualTo("John"));

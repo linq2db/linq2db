@@ -385,15 +385,12 @@ namespace Tests.Linq
 		public class     Document : Entity, IDocument { }
 
 		[Test]
-		public void TestMethod()
+		public void TestMethod([DataSources] string context)
 		{
-			using (var db = new TestDataConnection())
-			{
-				IQueryable<IDocument> query = db.GetTable<Document>();
-				var idsQuery = query.Select(s => s.Id);
-				var str = idsQuery.ToSqlQuery().Sql; // Exception
-				Assert.That(str, Is.Not.Null);
-			}
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable<Document>();
+
+			var query = db.GetTable<Document>().Select(s => s.Id).ToArray();
 		}
 
 		[Table("Person")]

@@ -90,7 +90,7 @@ namespace Tests.Linq
 
 				//DO NOT REMOVE, it forces caching query
 				var str = query.ToSqlQuery().Sql;
-				TestContext.Out.WriteLine(str);
+				BaselinesManager.LogQuery(str);
 
 				var expected = from t in sampleData
 					from t2 in sampleData.Where(predicate.Compile())

@@ -108,9 +108,6 @@ namespace Tests.Linq
 					.Take(1)
 					.ToSqlQuery().Sql;
 
-				sql = string.Join(Environment.NewLine, sql.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries)
-					.Where(line => !line.StartsWith("--")));
-
 				var res = conn.SetCommand(sql).ExecuteAsync<string>().Result;
 
 				Assert.That(res, Is.EqualTo("John"));
@@ -135,9 +132,6 @@ namespace Tests.Linq
 					.Take(1)
 					.ToSqlQuery().Sql;
 
-				sql = string.Join(Environment.NewLine, sql.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries)
-					.Where(line => !line.StartsWith("--")));
-
 				await using (var rd = await conn.SetCommand(sql).ExecuteReaderAsync())
 				{
 					var list = await rd.QueryToArrayAsync<string>();
@@ -160,8 +154,6 @@ namespace Tests.Linq
 				conn.InlineParameters = true;
 
 				var sql = conn.Person.Where(p => p.ID == 1).Select(p => p.Name).Take(1).ToSqlQuery().Sql;
-				sql = string.Join(Environment.NewLine, sql.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries)
-					.Where(line => !line.StartsWith("--")));
 
 				var list = await conn.SetCommand(sql)
 					.QueryToAsyncEnumerable<string>()

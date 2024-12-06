@@ -83,7 +83,7 @@ namespace Tests.UserTests
 				var cacheMiss = result1.GetCacheMissCount();
 
 				// from cache
-				var sql = result2.ToSqlQuery().Sql;
+				_ = result2.ToSqlQuery().Sql;
 
 				result1.GetCacheMissCount().Should().Be(cacheMiss);
 			}
@@ -138,7 +138,7 @@ namespace Tests.UserTests
 				var cacheMiss = combined1.GetCacheMissCount();
 
 				// from cache
-				var sql = combined2.ToSqlQuery().Sql;
+				_ = combined2.ToSqlQuery().Sql;
 
 				combined2.GetCacheMissCount().Should().Be(cacheMiss);
 			}

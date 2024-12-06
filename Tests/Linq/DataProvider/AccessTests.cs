@@ -117,18 +117,13 @@ namespace Tests.DataProvider
 
 					var sql = string.Format(CultureInfo.InvariantCulture, "SELECT {0}({1})", sqlType, sqlValue);
 
-					Debug.WriteLine(sql + " -> " + typeof(T));
-
 					Assert.That(conn.Execute<T>(sql), Is.EqualTo(expectedValue));
 				}
 
 			var querySql = isODBCNull ? $"SELECT CVar({param})" : $"SELECT {param}";
 
-			Debug.WriteLine("{0} -> DataType.{1}", typeof(T), dataType);
 			Assert.That(conn.Execute<T>(querySql, new DataParameter { Name = "p", DataType = dataType, Value = expectedValue }), Is.EqualTo(expectedValue));
-			Debug.WriteLine("{0} -> auto", typeof(T));
 			Assert.That(conn.Execute<T>(querySql, new DataParameter { Name = "p", Value = expectedValue }), Is.EqualTo(expectedValue));
-			Debug.WriteLine("{0} -> new", typeof(T));
 			Assert.That(conn.Execute<T>(querySql, new { p = expectedValue }), Is.EqualTo(expectedValue));
 		}
 
