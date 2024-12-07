@@ -422,8 +422,14 @@ namespace Tests.Linq
 						Name = p.FirstName
 					};
 
-				var sql1 = (from p in people where p.Id       == 1 select p).ToString();
-				var sql2 = (from p in people where p.Id.Value == 1 select p).ToString();
+				var query1 = from p in people where p.Id       == 1 select p;
+				var query2 = from p in people where p.Id.Value == 1 select p;
+
+				query1.ToArray();
+				query2.ToArray();
+
+				var sql1 = query1.ToSqlQuery().Sql;
+				var sql2 = query2.ToSqlQuery().Sql;
 
 				Assert.That(sql1, Is.EqualTo(sql2));
 			}
@@ -685,12 +691,13 @@ namespace Tests.Linq
 						from p in db.Person
 						select new { Rank = p.ID, p.FirstName, p.LastName });
 
-				var resultquery = (from x in query2 orderby x.Rank, x.FirstName, x.LastName select x).ToString()!;
+				var resultquery = from x in query2 orderby x.Rank, x.FirstName, x.LastName select x;
+				resultquery.ToArray();
 
-				TestContext.Out.WriteLine(resultquery);
+				var sql = resultquery.ToSqlQuery().Sql;
 
-				var rqr = resultquery.LastIndexOf("ORDER BY", StringComparison.OrdinalIgnoreCase);
-				var rqp = (resultquery.Substring(rqr + "ORDER BY".Length).Split(',')).Select(p => p.Trim()).ToArray();
+				var rqr = sql.LastIndexOf("ORDER BY", StringComparison.OrdinalIgnoreCase);
+				var rqp = (sql.Substring(rqr + "ORDER BY".Length).Split(',')).Select(p => p.Trim()).ToArray();
 
 				Assert.That(rqp, Has.Length.EqualTo(3));
 			}

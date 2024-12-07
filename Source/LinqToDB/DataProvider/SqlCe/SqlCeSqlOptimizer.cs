@@ -100,17 +100,7 @@ namespace LinqToDB.DataProvider.SqlCe
 			//
 			if (statement.IsInsert())
 			{
-				var query = statement.SelectQuery;
-				if (query != null)
-				{
-					foreach (var column in query.Select.Columns)
-					{
-						if (column.Expression is SqlParameter parameter)
-						{
-							parameter.IsQueryParameter = false;
-						}
-					}
-				}
+				new ClearColumParametersVisitor().Visit(statement);
 			}
 		}
 

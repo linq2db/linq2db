@@ -58,24 +58,12 @@ namespace LinqToDB.DataProvider.Informix
 			}
 		}
 
-		static void ClearQueryParameter(IQueryElement element)
-		{
-			if (element is SqlParameter p && p.IsQueryParameter)
-				p.IsQueryParameter = false;
-		}
-
 		public override SqlStatement Finalize(MappingSchema mappingSchema, SqlStatement statement, DataOptions dataOptions)
 		{
 			statement.VisitAll(SetQueryParameter);
 
 			// Informix doesn't support parameters in select list
-			var ignore = statement.QueryType == QueryType.Insert && statement.SelectQuery!.From.Tables.Count == 0;
-			if (!ignore)
-				statement.VisitAll(static e =>
-				{
-					if (e is SqlSelectClause select)
-						select.VisitAll(ClearQueryParameter);
-				});
+			new ClearColumParametersVisitor().Visit(statement);
 
 			return base.Finalize(mappingSchema, statement, dataOptions);
 		}

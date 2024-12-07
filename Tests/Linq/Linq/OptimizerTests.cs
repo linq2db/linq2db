@@ -107,7 +107,7 @@ namespace Tests.Linq
 						s
 					};
 
-				TestContext.Out.WriteLine(query.ToString());
+				query.ToArray();
 				Assert.That(query.EnumQueries().Count(), Is.EqualTo(2));
 
 				// test that optimizer removes subquery
@@ -123,7 +123,7 @@ namespace Tests.Linq
 						s
 					};
 
-				TestContext.Out.WriteLine(queryOptimized.ToString());
+				queryOptimized.ToArray();
 				Assert.That(queryOptimized.EnumQueries().Count(), Is.EqualTo(1));
 			}
 		}
@@ -186,11 +186,11 @@ namespace Tests.Linq
 						d
 					};
 
-				TestContext.Out.WriteLine(query.ToString());
+				query.ToArray();
 				Assert.That(query.EnumQueries().SelectMany(q => q.EnumJoins()).Count(), Is.EqualTo(1));
 
 				var projected = query.Select(p => p.s);
-				TestContext.Out.WriteLine(projected.ToString());
+				projected.ToArray();
 				Assert.That(projected.EnumQueries().SelectMany(q => q.EnumJoins()).Count(), Is.EqualTo(0));
 			}
 		}
@@ -227,11 +227,11 @@ namespace Tests.Linq
 						MNUCount = nu.Count
 					};
 
-				TestContext.Out.WriteLine(query.ToString());
+				query.ToArray();
 				Assert.That(query.EnumQueries().SelectMany(q => q.EnumJoins()).Count(), Is.EqualTo(2));
 
 				var projected = query.Select(p => p.s);
-				TestContext.Out.WriteLine(projected.ToString());
+				projected.ToArray();
 				Assert.That(projected.EnumQueries().SelectMany(q => q.EnumJoins()).Count(), Is.EqualTo(1));
 			}
 		}
@@ -255,11 +255,11 @@ namespace Tests.Linq
 						d
 					};
 
-				TestContext.Out.WriteLine(query.ToString());
+				query.ToArray();
 				Assert.That(query.EnumQueries().SelectMany(q => q.EnumJoins()).Count(), Is.EqualTo(1));
 
 				var projected = query.Select(p => p.s);
-				TestContext.Out.WriteLine(projected.ToString());
+				projected.ToArray();
 				Assert.That(projected.EnumQueries().SelectMany(q => q.EnumJoins()).Count(), Is.EqualTo(opimizerSwitch ? 0 : 1));
 			}
 		}
@@ -289,11 +289,11 @@ namespace Tests.Linq
 						First = a
 					};
 
-				TestContext.Out.WriteLine(query1.ToString());
+				query1.ToArray();
 				Assert.That(query1.EnumQueries().SelectMany(q => q.EnumJoins()).Count(), Is.EqualTo(1));
 
 				var projected1 = query1.Select(p => p.Second);
-				TestContext.Out.WriteLine(projected1.ToString());
+				projected1.ToArray();
 				Assert.That(projected1.EnumQueries().SelectMany(q => q.EnumJoins()).Count(), Is.EqualTo(opimizerSwitch ? 0 : 1));
 
 				// With two keys
@@ -307,11 +307,11 @@ namespace Tests.Linq
 						First = a
 					};
 
-				TestContext.Out.WriteLine(query2.ToString());
+				query2.ToArray();
 				Assert.That(query2.EnumQueries().SelectMany(q => q.EnumJoins()).Count(), Is.EqualTo(1));
 
 				var projected2 = query2.Select(p => p.Second);
-				TestContext.Out.WriteLine(projected2.ToString());
+				projected2.ToArray();
 				Assert.That(projected2.EnumQueries().SelectMany(q => q.EnumJoins()).Count(), Is.EqualTo(opimizerSwitch ? 0 : 1));
 
 				// With three keys
@@ -325,11 +325,11 @@ namespace Tests.Linq
 						First = a
 					};
 
-				TestContext.Out.WriteLine(query3.ToString());
+				query3.ToArray();
 				Assert.That(query3.EnumQueries().SelectMany(q => q.EnumJoins()).Count(), Is.EqualTo(1));
 
 				var projected3 = query3.Select(p => p.Second);
-				TestContext.Out.WriteLine(projected3.ToString());
+				projected3.ToArray();
 				Assert.That(projected3.EnumQueries().SelectMany(q => q.EnumJoins()).Count(), Is.EqualTo(opimizerSwitch ? 0 : 1));
 
 			}
@@ -369,7 +369,7 @@ namespace Tests.Linq
 						FF3 = ff3,
 					};
 
-				TestContext.Out.WriteLine(query.ToString());
+				query.ToArray();
 				Assert.That(query.EnumQueries().SelectMany(q => q.EnumJoins()).Count(), Is.EqualTo(opimizerSwitch ? 4 : 8));
 
 			}
@@ -400,7 +400,7 @@ namespace Tests.Linq
 						F = f
 					};
 
-				TestContext.Out.WriteLine(query.ToString());
+				query.ToArray();
 
 				var selectQuery = query.EnumQueries().Single();
 				var table = selectQuery.From.Tables[0];
@@ -416,7 +416,7 @@ namespace Tests.Linq
 
 
 		[Test]
-		public void UniqueKeysAndSubqueries([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context, [Values] bool opimizerSwitch)
+		public void UniqueKeysAndSubqueries([IncludeDataSources(true, TestProvName.AllSQLite)] string context, [Values] bool opimizerSwitch)
 		{
 			var testData = GenerateTestData();
 
@@ -442,15 +442,14 @@ namespace Tests.Linq
 						F2 = f2,
 					};
 
-				var sqlString = query.ToString();
-				TestContext.Out.WriteLine(sqlString);
+				query.ToArray();
 
 				var selectQuery = query.EnumQueries().First();
 				var table = selectQuery.From.Tables[0];
 				Assert.That(table.Joins, Has.Count.EqualTo(2));
 
 				var smallProjection = query.Select(q => q.S);
-				TestContext.Out.WriteLine(smallProjection.ToString());
+				smallProjection.ToArray();
 
 				var selectQuery2 = smallProjection.EnumQueries().First();
 				var table2 = selectQuery2.From.Tables[0];

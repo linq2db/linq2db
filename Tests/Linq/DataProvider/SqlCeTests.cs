@@ -102,17 +102,15 @@ namespace Tests.DataProvider
 
 				var sql = string.Format(CultureInfo.InvariantCulture, "SELECT Cast({0} as {1})", sqlValue ?? "NULL", sqlType);
 
-				Debug.WriteLine(sql + " -> " + typeof(T));
-
 				Assert.That(conn.Execute<T>(sql), Is.EqualTo(expectedValue));
 			}
 
-			Debug.WriteLine("{0} -> DataType.{1}",  typeof(T), dataType);
-			Assert.That(conn.Execute<T>("SELECT @p + 0", new DataParameter { Name = "p", DataType = dataType, Value = expectedValue }), Is.EqualTo(expectedValue));
-			Debug.WriteLine("{0} -> auto", typeof(T));
-			Assert.That(conn.Execute<T>("SELECT @p + 0", new DataParameter { Name = "p", Value = expectedValue }), Is.EqualTo(expectedValue));
-			Debug.WriteLine("{0} -> new",  typeof(T));
-			Assert.That(conn.Execute<T>("SELECT @p + 0", new { p = expectedValue }), Is.EqualTo(expectedValue));
+			Assert.Multiple(() =>
+			{
+				Assert.That(conn.Execute<T>("SELECT @p + 0", new DataParameter { Name = "p", DataType = dataType, Value = expectedValue }), Is.EqualTo(expectedValue));
+				Assert.That(conn.Execute<T>("SELECT @p + 0", new DataParameter { Name = "p", Value = expectedValue }), Is.EqualTo(expectedValue));
+				Assert.That(conn.Execute<T>("SELECT @p + 0", new { p = expectedValue }), Is.EqualTo(expectedValue));
+			});
 		}
 
 		static void TestSimple<T>(DataConnection conn, T expectedValue, DataType dataType)

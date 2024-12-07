@@ -216,31 +216,31 @@ namespace Tests.Linq
 			public string? VarcharDataType;
 		}
 
-		// Excluded providers inline such parameter
+		// Excluded providers inline such parameter or miss mappings
 		[Test]
-		public void ExposeSqlDecimalParameter([DataSources(false, TestProvName.AllInformix, TestProvName.AllClickHouse)] string context)
+		public void ExposeSqlDecimalParameter([DataSources(false, ProviderName.SqlCe, TestProvName.AllSybase, TestProvName.AllSapHana, TestProvName.AllPostgreSQL, TestProvName.AllOracle, TestProvName.AllDB2, TestProvName.AllFirebird, TestProvName.AllInformix, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataConnection(context))
 			{
 				var p   = 123.456m;
-				var sql = db.GetTable<AllTypes>().Where(t => t.DecimalDataType == p).ToString();
+				db.GetTable<AllTypes>().Where(t => t.DecimalDataType == p).ToArray();
 
-				TestContext.Out.WriteLine(sql);
+				var sql = GetCurrentBaselines();
 
 				Assert.That(sql, Contains.Substring("(6, 3)"));
 			}
 		}
 
-		// DB2: see DB2SqlOptimizer.SetQueryParameter - binary parameters inlined for DB2
+		// Excluded providers inline such parameter or miss mappings
 		[Test]
-		public void ExposeSqlBinaryParameter([DataSources(false, TestProvName.AllClickHouse)] string context)
+		public void ExposeSqlBinaryParameter([DataSources(false, ProviderName.SqlCe, TestProvName.AllSybase, TestProvName.AllDB2, TestProvName.AllSapHana, TestProvName.AllPostgreSQL, TestProvName.AllOracle, TestProvName.AllInformix, TestProvName.AllFirebird, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataConnection(context))
 			{
 				var p   = new byte[] { 0, 1, 2 };
-				var sql = db.GetTable<AllTypes>().Where(t => t.BinaryDataType == p).ToString();
+				db.GetTable<AllTypes>().Where(t => t.BinaryDataType == p).ToArray();
 
-				TestContext.Out.WriteLine(sql);
+				var sql = GetCurrentBaselines();
 
 				Assert.That(sql, Contains.Substring("(3)").Or.Contains("Blob").Or.Contains("(8000)"));
 			}
@@ -563,12 +563,12 @@ namespace Tests.Linq
 			}
 		}
 
-		IQueryable<Person> GetParsons(ITestDataContext db, int personId)
+		IQueryable<Person> GetPersons(ITestDataContext db, int personId)
 		{
 			return db.Person.Where(p => p.ID == personId);
 		}
 
-		IQueryable<Person> GetParsons2(ITestDataContext db, int? personId)
+		IQueryable<Person> GetPersons2(ITestDataContext db, int? personId)
 		{
 			return db.Person.Where(p => p.ID == personId!.Value);
 		}
@@ -586,8 +586,8 @@ namespace Tests.Linq
 				var ctn = new { personId = 1 };
 
 				var query =
-					from p in GetParsons(db, personId)
-					from p2 in GetParsons2(db, personId).Where(p2 => p2.ID == p.ID)
+					from p in GetPersons(db, personId)
+					from p2 in GetPersons2(db, personId).Where(p2 => p2.ID == p.ID)
 					where p.ID == ctn.personId
 					select new { p, p2 };
 
@@ -609,8 +609,8 @@ namespace Tests.Linq
 				var ctn = new { personId = 2 };
 
 				var query =
-					from p in GetParsons(db, personId)
-					from p2 in GetParsons2(db, personId).Where(p2 => p2.ID == p.ID)
+					from p in GetPersons(db, personId)
+					from p2 in GetPersons2(db, personId).Where(p2 => p2.ID == p.ID)
 					where p.ID == ctn.personId
 					select new { p, p2 };
 
@@ -1731,7 +1731,7 @@ namespace Tests.Linq
 
 			// check only one parameter generated
 			if(!context.IsAnyOf(TestProvName.AllClickHouse))
-				GetCurrentBaselines().Should().Contain("DECLARE", Exactly.Once());
+				Assert.That(query1.ToSqlQuery().Parameters, Has.Count.EqualTo(1));
 
 			id = 2;
 
@@ -1744,7 +1744,7 @@ namespace Tests.Linq
 
 			// check only one parameter generated (1+2+1=4)
 			if (!context.IsAnyOf(TestProvName.AllClickHouse))
-				GetCurrentBaselines().Should().Contain("DECLARE", Exactly.Times(5));
+				Assert.That(query1.ToSqlQuery().Parameters, Has.Count.EqualTo(2));
 		}
 
 

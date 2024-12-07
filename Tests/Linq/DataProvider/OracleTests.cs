@@ -191,17 +191,15 @@ namespace Tests.DataProvider
 
 				var sql = string.Format(CultureInfo.InvariantCulture, "SELECT Cast({0} as {1}) FROM sys.dual", sqlValue ?? "NULL", sqlType);
 
-				Debug.WriteLine(sql + " -> " + typeof(T));
-
 				Assert.That(conn.Execute<T>(sql), Is.EqualTo(expectedValue));
 			}
 
-			Debug.WriteLine("{0} -> DataType.{1}",  typeof(T), dataType);
-			Assert.That(conn.Execute<T>(PathThroughSql, new DataParameter { Name = "p", DataType = dataType, Value = expectedValue }), Is.EqualTo(expectedValue));
-			Debug.WriteLine("{0} -> auto", typeof(T));
-			Assert.That(conn.Execute<T>(PathThroughSql, new DataParameter { Name = "p", Value = expectedValue }), Is.EqualTo(expectedValue));
-			Debug.WriteLine("{0} -> new",  typeof(T));
-			Assert.That(conn.Execute<T>(PathThroughSql, new { p = expectedValue }), Is.EqualTo(expectedValue));
+			Assert.Multiple(() =>
+			{
+				Assert.That(conn.Execute<T>(PathThroughSql, new DataParameter { Name = "p", DataType = dataType, Value = expectedValue }), Is.EqualTo(expectedValue));
+				Assert.That(conn.Execute<T>(PathThroughSql, new DataParameter { Name = "p", Value = expectedValue }), Is.EqualTo(expectedValue));
+				Assert.That(conn.Execute<T>(PathThroughSql, new { p = expectedValue }), Is.EqualTo(expectedValue));
+			});
 		}
 
 		void TestSimple<T>(DataConnection conn, T expectedValue, DataType dataType)
@@ -876,8 +874,7 @@ namespace Tests.DataProvider
 
 				db.AddMappingSchema(ms);
 
-				var res = db.GetTable<AllTypes>().Where(e => e.datetime2DataType == TestData.DateTime).ToList();
-				Debug.WriteLine(res.Count);
+				db.GetTable<AllTypes>().Where(e => e.datetime2DataType == TestData.DateTime).ToList();
 			}
 		}
 
@@ -1336,7 +1333,6 @@ namespace Tests.DataProvider
 					KeepIdentity       = bulkCopyType != BulkCopyType.RowByRow,
 					BulkCopyType       = bulkCopyType,
 					NotifyAfter        = 3,
-					RowsCopiedCallback = copied => Debug.WriteLine(copied.RowsCopied)
 				};
 
 				db.BulkCopy(options, data.RetrieveIdentity(db));
@@ -1371,7 +1367,6 @@ namespace Tests.DataProvider
 					KeepIdentity       = bulkCopyType != BulkCopyType.RowByRow,
 					BulkCopyType       = bulkCopyType,
 					NotifyAfter        = 3,
-					RowsCopiedCallback = copied => Debug.WriteLine(copied.RowsCopied)
 				};
 
 				await db.BulkCopyAsync(options, data.RetrieveIdentity(db));
@@ -1418,7 +1413,6 @@ namespace Tests.DataProvider
 					MaxBatchSize = 5,
 					BulkCopyType = bulkCopyType,
 					NotifyAfter  = 3,
-					RowsCopiedCallback = copied => Debug.WriteLine(copied.RowsCopied)
 				};
 
 				db.BulkCopy(options, data);
@@ -1448,7 +1442,6 @@ namespace Tests.DataProvider
 					MaxBatchSize = 5,
 					BulkCopyType = bulkCopyType,
 					NotifyAfter  = 3,
-					RowsCopiedCallback = copied => Debug.WriteLine(copied.RowsCopied)
 				};
 
 				await db.BulkCopyAsync(options, data);

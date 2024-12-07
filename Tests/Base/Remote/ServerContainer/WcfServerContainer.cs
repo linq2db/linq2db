@@ -40,7 +40,11 @@ namespace Tests.Remote.ServerContainer
 
 			var service = OpenHost(ms);
 
-			var dx = new TestWcfDataContext(GetPort(), optionBuilder)
+			var dx = new TestWcfDataContext(
+				GetPort(),
+				o => optionBuilder == null
+					? o.UseConfiguration(configuration)
+					: optionBuilder(o.UseConfiguration(configuration)))
 			{ ConfigurationString = configuration };
 
 			Debug.WriteLine(((IDataContext)dx).ConfigurationID, "Provider ");

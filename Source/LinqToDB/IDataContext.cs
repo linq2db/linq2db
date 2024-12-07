@@ -106,7 +106,7 @@ namespace LinqToDB
 		/// <param name="queryNumber">Index of query in query batch.</param>
 		/// <param name="expressions">Query results mapping expressions.</param>
 		/// <param name="parameters">Query parameters.</param>
-		/// <param name="preambles">Query preambles</param>
+		/// <param name="preambles">Query preambles.</param>
 		/// <returns>Query runner service.</returns>
 		IQueryRunner GetQueryRunner(Query query, IDataContext parametersContext, int queryNumber, IQueryExpressions expressions, object?[]? parameters, object?[]? preambles);
 

@@ -59,7 +59,7 @@ namespace Tests.Linq
 
 			AssertQuery(query);
 
-			var sqlStr = query.ToString();
+			var sqlStr = query.ToSqlQuery().Sql;
 
 			preferExists = preferExists || db.SqlProviderFlags.IsExistsPreferableForContains;
 

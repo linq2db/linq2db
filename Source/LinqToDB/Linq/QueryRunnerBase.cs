@@ -1,11 +1,10 @@
-﻿using System;
+﻿using System.Collections.Generic;
 using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace LinqToDB.Linq
 {
-	using Common.Internal;
 	using Data;
 	using SqlQuery;
 
@@ -66,6 +65,6 @@ namespace LinqToDB.Linq
 
 		protected abstract void SetQuery(IReadOnlyParameterValues parameterValues, bool forGetSqlText);
 
-		public    abstract string GetSqlText();
+		public    abstract IReadOnlyList<QuerySql> GetSqlText();
 	}
 }

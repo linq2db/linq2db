@@ -956,7 +956,6 @@ namespace Tests.DataProvider
 					KeepIdentity = true,
 					BulkCopyType = bulkCopyType,
 					NotifyAfter = 3,
-					RowsCopiedCallback = copied => Debug.WriteLine(copied.RowsCopied)
 				};
 
 				db.BulkCopy(options, data.RetrieveIdentity(db));
@@ -987,7 +986,6 @@ namespace Tests.DataProvider
 					KeepIdentity = true,
 					BulkCopyType = bulkCopyType,
 					NotifyAfter = 3,
-					RowsCopiedCallback = copied => Debug.WriteLine(copied.RowsCopied)
 				};
 
 				await db.BulkCopyAsync(options, data.RetrieveIdentity(db));

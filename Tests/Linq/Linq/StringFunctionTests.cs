@@ -1069,11 +1069,14 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Stuff2([IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllClickHouse)] string context)
+		public void Stuff2([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				var q =
+			using var db = GetDataContext(context);
+			using var t1 = db.CreateLocalTable<Task>();
+			using var t2 = db.CreateLocalTable<TaskCategory>();
+			using var t3 = db.CreateLocalTable<Category>();
+
+			var q =
 					from t in db.GetTable<Task>()
 					join tc in db.GetTable<TaskCategory>() on t.Id equals tc.TaskId into g
 					from tc in g.DefaultIfEmpty()
@@ -1087,8 +1090,7 @@ namespace Tests.Linq
 							select "," + c.Name, 1, 1, "")
 					};
 
-				TestContext.Out.WriteLine(q.ToString());
-			}
+			_ = q.ToArray();
 		}
 
 		[Test]

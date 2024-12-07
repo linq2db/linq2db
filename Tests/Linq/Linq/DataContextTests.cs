@@ -50,13 +50,13 @@ namespace Tests.Linq
 		{
 			using (var ctx = new DataContext(context))
 			{
-				NUnit.Framework.TestContext.Out.WriteLine(ctx.GetTable<Person>().ToString());
+				ctx.GetTable<Person>().ToArray();
 
 				var q =
 					from s in ctx.GetTable<Person>()
 					select s.FirstName;
 
-				NUnit.Framework.TestContext.Out.WriteLine(q.ToString());
+				q.ToArray();
 			}
 		}
 

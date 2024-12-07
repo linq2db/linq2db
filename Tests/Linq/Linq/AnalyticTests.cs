@@ -1341,9 +1341,6 @@ namespace Tests.Linq
 						MaxValue = Sql.Ext.Min(q.MaxValue).Over().PartitionBy(q.ParentID).ToValue(),
 					};
 
-				TestContext.Out.WriteLine(q1.ToString());
-				TestContext.Out.WriteLine(q2.ToString());
-
 				Assert.Multiple(() =>
 				{
 					Assert.That(q1.EnumQueries().Count(), Is.EqualTo(2));

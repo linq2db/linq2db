@@ -2120,7 +2120,10 @@ namespace Tests.Linq
 					orderby c.CategoryID descending
 					select c;
 
-				q.ToString()!.Should().Contain("CONTAINS(PROPERTY([c_1].[Description], N'title'), N'bread')");
+				// TODO: FTS not configured properly
+				//q.ToArray();
+
+				q.ToSqlQuery().Sql.Should().Contain("CONTAINS(PROPERTY([c_1].[Description], N'title'), N'bread')");
 			}
 		}
 
@@ -2135,7 +2138,10 @@ namespace Tests.Linq
 					orderby c.CategoryID descending
 					select c;
 
-				q.ToString()!.Should().Contain("CONTAINS(PROPERTY([c_1].[Description], N'Title'), N'dry & bread', LANGUAGE N'English')");
+				// TODO: FTS not configured properly
+				//q.ToArray();
+
+				q.ToSqlQuery().Sql.Should().Contain("CONTAINS(PROPERTY([c_1].[Description], N'Title'), N'dry & bread', LANGUAGE N'English')");
 			}
 		}
 
@@ -2150,7 +2156,10 @@ namespace Tests.Linq
 					orderby c.CategoryID descending
 					select c;
 
-				q.ToString()!.Should().Contain("CONTAINS(PROPERTY([c_1].[CategoryName], N'Title'), N'candy | meat', LANGUAGE 1033)");
+				// TODO: FTS not configured properly
+				//q.ToArray();
+
+				q.ToSqlQuery().Sql.Should().Contain("CONTAINS(PROPERTY([c_1].[CategoryName], N'Title'), N'candy | meat', LANGUAGE 1033)");
 			}
 		}
 
@@ -2168,7 +2177,10 @@ namespace Tests.Linq
 					orderby c.CategoryID descending
 					select c;
 
-				q.ToString()!.Should().Contain($"CONTAINS(PROPERTY([c_1].[Description], @property), @search)");
+				// TODO: FTS not configured properly
+				//q.ToArray();
+
+				q.ToSqlQuery().Sql.Should().Contain($"CONTAINS(PROPERTY([c_1].[Description], @property), @search)");
 			}
 		}
 
@@ -2187,7 +2199,10 @@ namespace Tests.Linq
 					orderby c.CategoryID descending
 					select c;
 
-				q.ToString()!.Should().Contain($"CONTAINS(PROPERTY([c_1].[Description], @property), @search, LANGUAGE @lang)");
+				// TODO: FTS not configured properly
+				//q.ToArray();
+
+				q.ToSqlQuery().Sql.Should().Contain($"CONTAINS(PROPERTY([c_1].[Description], @property), @search, LANGUAGE @lang)");
 			}
 		}
 
@@ -2206,7 +2221,10 @@ namespace Tests.Linq
 					orderby c.CategoryID descending
 					select c;
 
-				q.ToString()!.Should().Contain($"CONTAINS(PROPERTY([c_1].[CategoryName], @property), @search, LANGUAGE @lang)");
+				// TODO: FTS not configured properly
+				//q.ToArray();
+
+				q.ToSqlQuery().Sql.Should().Contain($"CONTAINS(PROPERTY([c_1].[CategoryName], @property), @search, LANGUAGE @lang)");
 			}
 		}
 		#endregion
