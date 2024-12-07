@@ -61,7 +61,11 @@ namespace Tests.Remote.ServerContainer
 
 			var url = GetServiceUrl(GetPort());
 
-			var dx = new TestGrpcDataContext(url, optionBuilder)
+			var dx = new TestGrpcDataContext(
+				url,
+				o => optionBuilder == null
+					? o.UseConfiguration(configuration)
+					: optionBuilder(o.UseConfiguration(configuration)))
 			{ ConfigurationString = configuration };
 
 			Debug.WriteLine(((IDataContext) dx).ConfigurationID, "Provider ");

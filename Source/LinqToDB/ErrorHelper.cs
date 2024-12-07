@@ -5,7 +5,7 @@
 		public const string Error_Correlated_Subqueries          = "Provider does not support correlated subqueries.";
 		public const string Error_Correlated_Subqueries_Level    = "Provider does not support correlated subqueries in more than {0} level.";
 		public const string Error_OUTER_Joins                    = "Provider does not support CROSS/OUTER/LATERAL joins.";
-		public const string Error_Subquery_in_Column            = "Provider does not support columns with subqueries.";
+		public const string Error_Subquery_in_Column             = "Provider does not support columns with subqueries.";
 		public const string Error_Take_in_Subquery               = "Provider does not support Take value in subquery.";
 		public const string Error_Take_in_Correlated_Subquery    = "Provider does not support Take value in correlated subquery.";
 		public const string Error_Join_Without_Condition         = "Provider does not support JOIN without condition.";
