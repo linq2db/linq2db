@@ -471,21 +471,21 @@ namespace Tests.DataProvider
 			BulkCopyAllTypes(context, BulkCopyType.MultipleRows);
 		}
 
-		[SkipCI("Used docker image needs locale configuration")]
+		[ActiveIssue("Used docker image needs locale configuration")]
 		[Test]
 		public void BulkCopyAllTypesProviderSpecific([IncludeDataSources(TestProvName.AllInformix)] string context)
 		{
 			BulkCopyAllTypes(context, BulkCopyType.ProviderSpecific);
 		}
 
-		[SkipCI("Used docker image needs locale configuration")]
+		[ActiveIssue("Used docker image needs locale configuration")]
 		[Test]
 		public async Task BulkCopyAllTypesMultipleRowsAsync([IncludeDataSources(TestProvName.AllInformix)] string context)
 		{
 			await BulkCopyAllTypesAsync(context, BulkCopyType.MultipleRows);
 		}
 
-		[SkipCI("Used docker image needs locale configuration")]
+		[ActiveIssue("Used docker image needs locale configuration")]
 		[Test]
 		public async Task BulkCopyAllTypesProviderSpecificAsync([IncludeDataSources(TestProvName.AllInformix)] string context)
 		{

@@ -54,7 +54,6 @@ namespace Tests.UserTests
 			}
 		}
 
-		[SkipCI]
 		[Test]
 		public void Test2()
 		{

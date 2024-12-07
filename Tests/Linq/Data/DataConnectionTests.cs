@@ -609,8 +609,7 @@ namespace Tests.Data
 		}
 
 		[Test]
-		[SkipCI]
-		public void CommandTimeoutTest([IncludeDataSources(TestProvName.AllSqlServer2014)] string context)
+		public void CommandTimeoutTest([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
 			using (var db = GetDataConnection(context))
 			{
