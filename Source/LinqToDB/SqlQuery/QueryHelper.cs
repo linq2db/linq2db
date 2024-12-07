@@ -605,6 +605,27 @@ namespace LinqToDB.SqlQuery
 		{
 			if (expr is SqlValue { Value: null })
 				return true;
+			if (expr is SqlColumn { Parent: not null } column)
+			{
+				if (!IsNullValue(column.Expression))
+					return false;
+
+				if (column.Parent.HasSetOperators)
+				{
+					var idx = column.Parent.Select.Columns.IndexOf(column);
+					if (idx < 0)
+						return false;
+
+					foreach (var setOperator in column.Parent.SetOperators)
+					{
+						var selectClause = setOperator.SelectQuery.Select;
+						if (idx >= selectClause.Columns.Count || !IsNullValue(selectClause.Columns[idx].Expression))
+							return false;
+					}
+
+					return true;
+				}
+			}
 			return false;
 		}
 

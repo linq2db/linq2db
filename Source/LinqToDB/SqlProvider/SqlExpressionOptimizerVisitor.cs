@@ -971,6 +971,25 @@ namespace LinqToDB.SqlProvider
 					return Visit(result);
 			}
 
+			if (predicate.Expr1 is SqlConditionExpression condition)
+			{
+				if (condition.TrueValue.IsNullValue())
+				{
+					var sc = new SqlSearchCondition();
+					sc.Add(condition.Condition);
+					sc.AddIsNull(condition.FalseValue);
+					return Visit(sc.MakeNot(predicate.IsNot));
+				}
+
+				if (condition.FalseValue.IsNullValue())
+				{
+					var sc = new SqlSearchCondition();
+					sc.Add(condition.Condition.MakeNot());
+					sc.AddIsNull(condition.TrueValue);
+					return Visit(sc.MakeNot(predicate.IsNot));
+				}
+			}
+
 			return predicate;
 		}
 

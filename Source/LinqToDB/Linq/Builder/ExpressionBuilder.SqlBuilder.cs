@@ -69,7 +69,8 @@ namespace LinqToDB.Linq.Builder
 
 			if (!_buildVisitor.BuildSearchCondition(buildSequence, expr, sc, out var errorExpr))
 			{
-				error = errorExpr;
+				error = null != errorExpr.Find(1, (_, e) => e is SqlPlaceholderExpression) ? SqlErrorExpression.EnsureError(expr) : errorExpr;
+
 				return null;
 			}
 
@@ -849,7 +850,7 @@ namespace LinqToDB.Linq.Builder
 			return expr;
 		}
 
-		public bool ProcessProjection(Dictionary<MemberInfo,Expression> members, Expression expression)
+		public bool ProcessProjection(MappingSchema mappingSchema, Dictionary<MemberInfo,Expression> members, Expression expression)
 		{
 			void CollectParameters(Type forType, MethodBase method, ReadOnlyCollection<Expression> arguments)
 			{
@@ -898,6 +899,53 @@ namespace LinqToDB.Linq.Builder
 
 			switch (expression.NodeType)
 			{
+				case ExpressionType.Extension:
+				{
+					if (expression is SqlGenericConstructorExpression generic)
+					{
+						foreach (var argument in generic.Assignments)
+						{
+							members.Add(argument.MemberInfo, argument.Expression);
+						}
+					}
+
+					return true;
+				}
+
+				case ExpressionType.Conditional:
+				{
+					var dicTrue = new Dictionary<MemberInfo, Expression>();
+					var dicFalse = new Dictionary<MemberInfo, Expression>();
+
+					var cond = (ConditionalExpression)expression;
+
+					ProcessProjection(mappingSchema, dicTrue, cond.IfFalse);
+					ProcessProjection(mappingSchema, dicFalse, cond.IfTrue);
+
+					foreach (var kv in dicTrue)
+					{
+						if (!members.ContainsKey(kv.Key))
+						{
+							dicFalse.TryGetValue(kv.Key, out var falseExpr);
+
+							var expr = Expression.Condition(cond.Test, kv.Value, falseExpr ?? new DefaultValueExpression(mappingSchema, kv.Key.GetMemberType(), isNull : true));
+							members.Add(kv.Key, expr);
+						}
+					}
+
+					foreach (var kv in dicFalse)
+					{
+						if (!members.ContainsKey(kv.Key))
+						{
+							dicTrue.TryGetValue(kv.Key, out var trueExpr);
+							var expr = Expression.Condition(cond.Test, trueExpr ?? new DefaultValueExpression(mappingSchema, kv.Key.GetMemberType(), isNull : true), kv.Value);
+							members.Add(kv.Key, expr);
+						}
+					}
+
+					return true;
+				}
+
 				// new { ... }
 				//
 				case ExpressionType.New        :

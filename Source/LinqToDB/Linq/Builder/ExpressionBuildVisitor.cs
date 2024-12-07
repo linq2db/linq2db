@@ -1783,7 +1783,7 @@ namespace LinqToDB.Linq.Builder
 				var saveAlias      = _alias;
 
 				_columnDescriptor = null;
-				_alias            = null;
+				_alias            = "test";
 
 				var test = Visit(node.Test);
 
@@ -2147,7 +2147,7 @@ namespace LinqToDB.Linq.Builder
 
 		public override Expression VisitDefaultValueExpression(DefaultValueExpression node)
 		{
-			if (_buildPurpose is BuildPurpose.Sql)
+			if (_buildPurpose is BuildPurpose.Sql && _buildContext is not null)
 			{
 				if (node.IsNull)
 				{
@@ -2737,9 +2737,11 @@ namespace LinqToDB.Linq.Builder
 				}
 			}
 
-			_alias = null;
+			_alias = "cond";
+			_columnDescriptor = null;
 			var compareExpr = ConvertCompareExpression(node.NodeType, node.Left, node.Right, node);
 			_alias = saveAlias;
+			_columnDescriptor = saveColumnDescriptor;
 
 			if (!IsSame(compareExpr, node))
 			{
@@ -2790,6 +2792,9 @@ namespace LinqToDB.Linq.Builder
 
 			var predicates = new List<ISqlPredicate?>(items.Count);
 			var hasError   = false;
+
+			using var saveAlias = UsingAlias("cond");
+			using var saveColumnDescriptor = UsingColumnDescriptor(null);
 
 			foreach (var predicateExpr in items)
 			{
@@ -3279,6 +3284,15 @@ namespace LinqToDB.Linq.Builder
 
 		}
 
+		static bool IsNullExpression(Expression expression)
+		{
+			if (expression.IsNullValue())
+				return true;
+			if (expression is SqlPlaceholderExpression placeholder)
+				return placeholder.Sql.IsNullValue();
+			return false;
+		}
+
 		#region ConvertCompare
 
 		public bool TryGenerateComparison(
@@ -3377,8 +3391,9 @@ namespace LinqToDB.Linq.Builder
 
 			Expression GenerateNullComparison(Expression placeholdersExpression, bool isNot)
 			{
-				List<Expression> expressions = new();
-				if (!CollectNullCompareExpressions(placeholdersExpression, expressions) || expressions.Count == 0)
+				List<Expression>  expressions     = new();
+				List<Expression>? testExpressions = null;
+				if (!CollectNullCompareExpressions(placeholdersExpression, expressions, ref testExpressions) || (expressions.Count == 0 && testExpressions == null))
 					return GetOriginalExpression();
 
 				List<SqlPlaceholderExpression> placeholders = new(expressions.Count);
@@ -3405,18 +3420,33 @@ namespace LinqToDB.Linq.Builder
 					}
 				}
 
-				if (placeholders.Count == 0)
-					return GetOriginalExpression();
+				var searchCondition = new SqlSearchCondition(isNot);
 
 				if (notNull == null)
 					notNull = placeholders;
 
-				var searchCondition = new SqlSearchCondition(isNot);
 				foreach (var placeholder in notNull)
 				{
 					var sql = placeholder.Sql;
 					searchCondition.Predicates.Add(new SqlPredicate.IsNull(sql, isNot));
 				}
+
+				if (testExpressions != null)
+				{
+					foreach (var testExpression in testExpressions)
+					{
+						var predicateExpr = Visit(testExpression);
+						if (predicateExpr is SqlPlaceholderExpression placeholder)
+						{
+							var predicate = ConvertExpressionToPredicate(placeholder.Sql);
+							predicate = predicate.MakeNot(isNot);
+							searchCondition.Predicates.Add(predicate);
+						}
+					}
+				}
+
+				if (searchCondition.Predicates.Count == 0)
+					return GetOriginalExpression();
 
 				return CreatePlaceholder(searchCondition, GetOriginalExpression());
 			}
@@ -3708,7 +3738,7 @@ namespace LinqToDB.Linq.Builder
 							return GenerateConstructorComparison(leftGenericConstructor, rightGenericConstructor);
 						}
 
-						if (l is SqlValue lv && lv.Value == null || left.IsNullValue())
+						if (IsNullExpression(left))
 						{
 							rightExpr = Visit(rightExpr);
 
@@ -3729,7 +3759,7 @@ namespace LinqToDB.Linq.Builder
 							return GenerateNullComparison(rightExpr, isNot);
 						}
 
-						if (r is SqlValue rv && rv.Value == null || right.IsNullValue())
+						if (IsNullExpression(right))
 						{
 							leftExpr = Visit(leftExpr);
 
@@ -4037,7 +4067,7 @@ namespace LinqToDB.Linq.Builder
 			}
 		}
 
-		public bool CollectNullCompareExpressions(Expression expression, List<Expression> result)
+		public bool CollectNullCompareExpressions(Expression expression, List<Expression> result, ref List<Expression>? testExpressions)
 		{
 			switch (expression.NodeType)
 			{
@@ -4057,17 +4087,8 @@ namespace LinqToDB.Linq.Builder
 
 			if (expression is SqlGenericConstructorExpression generic)
 			{
-				foreach (var assignment in generic.Assignments)
-				{
-					if (!CollectNullCompareExpressions(assignment.Expression, result))
-						return false;
-				}
-
-				foreach (var parameter in generic.Parameters)
-				{
-					if (!CollectNullCompareExpressions(parameter.Expression, result))
-						return false;
-				}
+				testExpressions ??= [];
+				testExpressions.Add(Expression.Constant(false));
 
 				return true;
 			}
@@ -4075,6 +4096,89 @@ namespace LinqToDB.Linq.Builder
 			if (expression is SqlDefaultIfEmptyExpression defaultIfEmptyExpression)
 			{
 				result.AddRange(defaultIfEmptyExpression.NotNullExpressions);
+				return true;
+			}
+
+			if (expression is ConditionalExpression conditionalExpression)
+			{
+				var trueResult = new List<Expression>();
+
+				if (conditionalExpression.IfTrue is SqlGenericConstructorExpression)
+				{
+					testExpressions ??= [];
+
+					if (conditionalExpression.IfFalse is SqlGenericConstructorExpression)
+					{
+						testExpressions.Add(ExpressionInstances.False);
+						return true;
+					}
+
+					testExpressions.Add(Expression.Not(conditionalExpression.Test));
+
+					if (IsNullExpression(conditionalExpression.IfFalse))
+					{
+						return true;
+					}
+				}
+
+				if (conditionalExpression.IfFalse is SqlGenericConstructorExpression)
+				{
+					testExpressions ??= [];
+
+					testExpressions.Add(conditionalExpression.Test);
+
+					if (IsNullExpression(conditionalExpression.IfTrue))
+					{
+						return true;
+					}
+				}
+
+				List<Expression>? ifTrueTestExpression = null;
+
+				if (conditionalExpression.IfTrue is not SqlGenericConstructorExpression)
+				{
+					if (!CollectNullCompareExpressions(conditionalExpression.IfTrue, trueResult, ref ifTrueTestExpression))
+						return false;
+				}
+
+				List<Expression>? ifFalseTestExpression = null;
+
+				var falseResult = new List<Expression>();
+
+				if (conditionalExpression.IfFalse is not SqlGenericConstructorExpression)
+				{
+					if (!CollectNullCompareExpressions(conditionalExpression.IfFalse, falseResult, ref ifFalseTestExpression))
+						return false;
+				}
+
+				foreach (var expr in trueResult)
+				{
+					result.Add(Expression.Condition(conditionalExpression.Test, expr, new DefaultValueExpression(MappingSchema, expr.Type)));
+				}
+
+				foreach (var expr in falseResult)
+				{
+					result.Add(Expression.Condition(Expression.Not(conditionalExpression.Test), expr, new DefaultValueExpression(MappingSchema, expr.Type)));
+				}
+
+				if (ifTrueTestExpression != null)
+				{
+					foreach (var te in ifTrueTestExpression)
+					{
+						testExpressions ??= [];
+						testExpressions.Add(Expression.AndAlso(conditionalExpression.Test, te));
+					}
+				}
+
+				if (ifFalseTestExpression != null)
+				{
+					foreach (var te in ifFalseTestExpression)
+					{
+						testExpressions ??= [];
+						testExpressions.Add(Expression.AndAlso(Expression.Not(conditionalExpression.Test), te));
+					}
+				}
+
 				return true;
 			}
 
@@ -4951,14 +5055,6 @@ namespace LinqToDB.Linq.Builder
 			}
 
 			var alias = sqlPlaceholder.Alias;
-
-			if (string.IsNullOrEmpty(alias))
-			{
-				if (sqlPlaceholder.TrackingPath is MemberExpression tme)
-					alias = tme.Member.Name;
-				else if (sqlPlaceholder.Path is MemberExpression me)
-					alias = me.Member.Name;
-			}
 
 			/*
 

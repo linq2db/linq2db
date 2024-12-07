@@ -81,8 +81,10 @@ namespace LinqToDB.Linq.Builder
 
 			foreach (var row in arrayExpression.Expressions)
 			{
+				var sqlExpr = Builder.BuildSqlExpression(this, row);
+
 				var members = new Dictionary<MemberInfo, Expression>();
-				Builder.ProcessProjection(members, row);
+				Builder.ProcessProjection(MappingSchema, members, sqlExpr);
 
 				knownMembers.AddRange(members.Keys);
 			}
@@ -98,7 +100,7 @@ namespace LinqToDB.Linq.Builder
 			foreach (var row in arrayExpression.Expressions)
 			{
 				var members = new Dictionary<MemberInfo, Expression>();
-				Builder.ProcessProjection(members, row);
+				Builder.ProcessProjection(MappingSchema, members, row);
 
 				var rowValues = new ISqlExpression[columnsInfo.Count];
 
