@@ -392,7 +392,7 @@ namespace LinqToDB.SqlQuery
 
 							return search;
 						}
-					}					
+					}
 				}
 			}
 

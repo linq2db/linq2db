@@ -1254,9 +1254,21 @@ namespace LinqToDB.SqlProvider
 
 		protected virtual ISqlExpression WrapColumnExpression(ISqlExpression expr)
 		{
-			if (!SupportsNullInColumn && QueryHelper.UnwrapNullablity(expr) is SqlValue sqlValue && sqlValue.Value == null)
+			if (!SupportsNullInColumn)
 			{
-				return new SqlCastExpression(sqlValue, QueryHelper.GetDbDataType(sqlValue, MappingSchema), null, true);
+				var unwrappedExpr = QueryHelper.UnwrapNullablity(expr);
+
+				if (unwrappedExpr is SqlValue sqlValue && sqlValue.Value == null)
+				{
+					return new SqlCastExpression(sqlValue, QueryHelper.GetDbDataType(sqlValue, MappingSchema), null, true);
+				}
+				else if (unwrappedExpr is SqlParameter { IsQueryParameter: false } sqlParameter)
+				{
+					var paramValue = sqlParameter.GetParameterValue(EvaluationContext.ParameterValues);
+
+					if (paramValue.ProviderValue == null)
+						return new SqlCastExpression(sqlParameter, QueryHelper.GetDbDataType(sqlParameter, MappingSchema), null, true);
+				}
 			}
 
 			return expr;
