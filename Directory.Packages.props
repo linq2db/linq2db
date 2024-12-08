@@ -2,7 +2,7 @@
 	<!--
 	When multiple versions of same nuget references, don't put it to unconditional ItemGroup
 	as while it works fine in Visual Studio in general there are still issues with tooling (dotnet publish, testing)
-	
+
 	IMPORTANT:
 	avoid use of different package versions in tests for different frameworks just for testing purposes if package referenced by source project
 	as it will result in old package consumed by released package and affect users (especially for projects where user has no control
@@ -34,15 +34,15 @@
 		<PackageVersion Include="Grpc.Net.Client"                                       Version="2.66.0"                />
 		<PackageVersion Include="Humanizer.Core"                                        Version="2.14.1"                />
 		<PackageVersion Include="Microsoft.CodeAnalysis.CSharp"                         Version="4.11.0"                />
-		<PackageVersion Condition="'$(TargetFramework)'=='net6.0'" Include="Microsoft.Extensions.DependencyModel" Version="8.0.2" />
-		<PackageVersion Condition="'$(TargetFramework)'!='net6.0'" Include="Microsoft.Extensions.DependencyModel" Version="9.0.0" />
+		<PackageVersion Include="Microsoft.Extensions.DependencyModel"                  Version="8.0.2" Condition="'$(TargetFramework)'=='net6.0'" />
+		<PackageVersion Include="Microsoft.Extensions.DependencyModel"                  Version="9.0.0" Condition="'$(TargetFramework)'!='net6.0'" />
 		<PackageVersion Include="Mono.TextTemplating"                                   Version="3.0.0"                 />
 		<PackageVersion Include="protobuf-net.Grpc"                                     Version="1.2.2"                 />
 		<PackageVersion Include="protobuf-net"                                          Version="3.2.45"                />
 
-		<PackageVersion Condition="'$(TargetFramework)'=='netstandard2.0'" Include="Microsoft.EntityFrameworkCore.Relational" Version="3.1.32" />
-		<PackageVersion Condition="'$(TargetFramework)'=='net6.0'"         Include="Microsoft.EntityFrameworkCore.Relational" Version="6.0.36" />
-		<PackageVersion Condition="'$(TargetFramework)'=='net8.0'"         Include="Microsoft.EntityFrameworkCore.Relational" Version="8.0.11"  />
+		<PackageVersion Include="Microsoft.EntityFrameworkCore.Relational"              Version="3.1.32" Condition="'$(TargetFramework)'=='netstandard2.0'" />
+		<PackageVersion Include="Microsoft.EntityFrameworkCore.Relational"              Version="6.0.36" Condition="'$(TargetFramework)'=='net6.0'"         />
+		<PackageVersion Include="Microsoft.EntityFrameworkCore.Relational"              Version="8.0.11" Condition="'$(TargetFramework)'=='net8.0'"         />
 	</ItemGroup>
 
 	<ItemGroup Label="Released Dependencies" Condition=" '$(TargetFramework)' != 'net8.0' AND '$(TargetFramework)' != 'net9.0' ">
@@ -66,7 +66,7 @@
 
 	<ItemGroup Label="Database Providers">
 		<PackageVersion Include="AdoNetCore.AseClient"                                  Version="0.19.2"                />
-		<PackageVersion Include="ClickHouse.Client"                                     Version="7.8.2"                 />
+		<PackageVersion Include="ClickHouse.Client"                                     Version="7.8.3"                 />
 		<PackageVersion Include="Devart.Data.Oracle"                                    Version="10.3.104"              />
 		<PackageVersion Include="dotMorten.Microsoft.SqlServer.Types"                   Version="1.5.0"                 />
 		<!--<PackageVersion Include="dotMorten.Microsoft.SqlServer.Types"                   Version="2.5.0"                 />-->
@@ -138,7 +138,7 @@
 		<PackageVersion Condition="'$(TargetFramework)'=='net6.0'" Include="Microsoft.EntityFrameworkCore.InMemory"         Version="6.0.36" />
 		<PackageVersion Condition="'$(TargetFramework)'=='net8.0'" Include="Microsoft.EntityFrameworkCore.InMemory"         Version="8.0.11" />
 		<PackageVersion Condition="'$(TargetFramework)'=='net9.0'" Include="Microsoft.EntityFrameworkCore.InMemory"         Version="9.0.0"  />
-		
+
 		<!--temporary workarounds-->
 		<PackageVersion Include="Microsoft.OData.Edm" Condition="'$(TargetFramework)'=='net6.0'" Version="7.21.6" />
 		<PackageVersion Include="Microsoft.OData.Core" Condition="'$(TargetFramework)'=='net6.0'" Version="7.21.6" />

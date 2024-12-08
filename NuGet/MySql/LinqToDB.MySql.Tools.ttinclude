@@ -1,10 +1,4 @@
-<#@ assembly name="$(LinqToDBT4MySqlConnectorClientPath)MySqlConnector.dll" #>
-<#@ include file="LinqToDB.Tools.ttinclude" once="true"                     #>
-<#@ include file="LinqToDB.MySql.ttinclude" once="true"                     #>
-<#
-var toolsPath = GetProviderToolsPath("MySqlConnector", "MySqlConnector, Version=2.0.0.0, Culture=neutral, PublicKeyToken=d33d3e53aa5f8c92");
-
-LoadAssembly("System.Memory"                    , toolsPath);
-LoadAssembly("System.Buffers"                   , toolsPath);
-LoadAssembly("System.Threading.Tasks.Extensions", toolsPath);
+<#@ include file="$(LinqToDBT4MySqlTemplatesPath)LinqToDB.MySql.ttinclude" once="true" #>
+<#+
+#warning 'LinqToDB.MySql.Tools.ttinclude' is obsolete. Use 'LinqToDB.MySql.ttinclude' instead.
 #>

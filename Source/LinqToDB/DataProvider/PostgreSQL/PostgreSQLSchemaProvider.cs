@@ -135,7 +135,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 		protected override List<TableInfo> GetTables(DataConnection dataConnection, GetSchemaOptions options)
 		{
-			var defaultSchema = ToDatabaseLiteral(dataConnection, options?.DefaultSchema ?? "public");
+			var defaultSchema = ToDatabaseLiteral(dataConnection, options.DefaultSchema ?? "public");
 
 			var sql = $@"
 				SELECT
@@ -160,6 +160,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 			// materialized views supported starting from pgsql 9.3
 			var version = dataConnection.Query<int>("SHOW  server_version_num").Single();
+
 			if (version >= 90300)
 			{
 				// materialized views are not exposed to information_schema
@@ -191,21 +192,22 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		protected override IReadOnlyCollection<PrimaryKeyInfo> GetPrimaryKeys(DataConnection dataConnection,
 			IEnumerable<TableSchema> tables, GetSchemaOptions options)
 		{
-			return
-				dataConnection.Query<PrimaryKeyInfo>($@"
-					SELECT
-						current_database() || '.' || pg_namespace.nspname || '.' || pg_class.relname as TableID,
-						pg_constraint.conname                                                        as PrimaryKeyName,
-						attname                                                                      as ColumnName,
-						attnum                                                                       as Ordinal
-					FROM
-						pg_attribute
-							JOIN pg_constraint ON pg_attribute.attrelid = pg_constraint.conrelid AND pg_attribute.attnum = ANY(pg_constraint.conkey)
-							JOIN pg_class      ON pg_class.oid = pg_constraint.conrelid
-							JOIN pg_namespace  ON pg_class.relnamespace = pg_namespace.oid
-					WHERE
-						pg_constraint.contype = 'p'
-						AND {GenerateSchemaFilter(dataConnection, "pg_namespace.nspname")}")
+			return dataConnection.Query<PrimaryKeyInfo>(
+				$"""
+				SELECT
+					current_database() || '.' || pg_namespace.nspname || '.' || pg_class.relname as TableID,
+					pg_constraint.conname                                                        as PrimaryKeyName,
+					attname                                                                      as ColumnName,
+					attnum                                                                       as Ordinal
+				FROM
+					pg_attribute
+						JOIN pg_constraint ON pg_attribute.attrelid = pg_constraint.conrelid AND pg_attribute.attnum = ANY(pg_constraint.conkey)
+						JOIN pg_class      ON pg_class.oid = pg_constraint.conrelid
+						JOIN pg_namespace  ON pg_class.relnamespace = pg_namespace.oid
+				WHERE
+					pg_constraint.contype = 'p'
+					AND {GenerateSchemaFilter(dataConnection, "pg_namespace.nspname")}
+				""")
 				.ToList();
 		}
 

@@ -2,6 +2,7 @@
 	<PropertyGroup>
 		<LinqToDBT4SharedTools>$(MSBuildThisFileDirectory)..\tools\</LinqToDBT4SharedTools>
 		<LinqToDBT4OracleManagedClientPath>$(MSBuildThisFileDirectory)..\tools\</LinqToDBT4OracleManagedClientPath>
+		<LinqToDBT4TemplatesPath>$(MSBuildThisFileDirectory)..\contentFiles\any\any\LinqToDB.Templates\</LinqToDBT4TemplatesPath>
 		<LinqToDBT4OracleTemplatesPath>$(MSBuildThisFileDirectory)..\contentFiles\any\any\LinqToDB.Templates\</LinqToDBT4OracleTemplatesPath>
 	</PropertyGroup>
 </Project>
