@@ -675,7 +675,7 @@ namespace Tests.Linq
 			Assert.Multiple(() =>
 			{
 				Assert.That(data.Count(r => r.ID == 0 && r.intDataType == 0), Is.EqualTo(2));
-				Assert.That(data.Count(r => r.ID == 0 && r.intDataType == 123), Is.EqualTo(1));
+				Assert.That(data.Count(r => r.ID == 123 && r.intDataType == 1234), Is.EqualTo(1));
 				Assert.That(data.Count(r => r.ID == 1234 && r.intDataType == 1234), Is.EqualTo(2));
 			});
 

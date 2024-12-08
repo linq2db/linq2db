@@ -2708,8 +2708,8 @@ namespace LinqToDB.Linq.Builder
 
 			var saveColumnDescriptor = _columnDescriptor;
 			var saveAlias            = _alias;
-			_columnDescriptor = null;
-			_alias            = null;
+			_columnDescriptor        = null;
+			_alias                   = null;
 
 			var saveFlags = _buildFlags;
 			_buildFlags |= BuildFlags.ForKeys;

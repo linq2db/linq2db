@@ -224,11 +224,15 @@ namespace LinqToDB.Linq.Builder
 
 							if (providerValueGetter.Type.IsNullable() && providerValueGetter.Type.ToNullableUnderlying() != memberType)
 							{
-								var convertLambda = MappingSchema.GenerateSafeConvert(providerValueGetter.Type, memberType);
+								var toType = providerValueGetter.Type.IsNullableValueType() && memberType.IsValueType && !memberType.IsNullableValueType()
+									? memberType.MakeNullable()
+									: memberType;
+
+								var convertLambda   = MappingSchema.GenerateSafeConvert(providerValueGetter.Type, toType);
 								providerValueGetter = InternalExtensions.ApplyLambdaToExpression(convertLambda, providerValueGetter);
 							}
 
-							if (providerValueGetter.Type != memberType)
+							if (providerValueGetter.Type.UnwrapNullableType() != memberType.UnwrapNullableType())
 							{
 								providerValueGetter = Expression.Convert(providerValueGetter, memberType);
 							}
