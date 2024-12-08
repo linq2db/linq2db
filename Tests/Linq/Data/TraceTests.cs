@@ -56,6 +56,7 @@ namespace Tests.Data
 			return steps.ToDictionary(s => s.Enum, s => s.Value);
 		}
 
+		// test could fail for some providers in VS due to designer mode
 		[Test]
 		public void TraceInfoErrorsAreReportedForInvalidConnectionString([DataSources(false)] string context)
 		{
@@ -89,6 +90,7 @@ namespace Tests.Data
 			}
 		}
 
+		// test could fail for some providers in VS due to designer mode
 		[Test]
 		public void TraceInfoErrorsAreReportedForInvalidConnectionStringAsync([DataSources(false)] string context)
 		{

@@ -1037,9 +1037,14 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, Explicit]
-		public void StackOverflow([IncludeDataSources(TestProvName.AllSqlServer2008, TestProvName.AllSqlServer2012, TestProvName.AllClickHouse)]
-			string context)
+		// MySQL: 61 joined tables limit
+		// SQLite: 64 joined tables limit
+		// ASE: The "default data cache (id: 0)" is configured with 410 buffers.  The current query plan requires 2448 buffers.  Please reconfigure the data cache and try the command again.
+		// Access: Query is too complex (lol)
+		// DB2: Processing was cancelled due to an interrupt.
+		// SQLCE: slow (~2-3 min)
+		[Test]
+		public void StackOverflow([DataSources(TestProvName.AllAccess, ProviderName.SqlCe, TestProvName.AllDB2, TestProvName.AllMySql, TestProvName.AllSQLite, TestProvName.AllSybase)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
