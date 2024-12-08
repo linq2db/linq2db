@@ -20,17 +20,22 @@ namespace LinqToDB.Data
 
 	public partial class DataConnection
 	{
-		IQueryRunner IDataContext.GetQueryRunner(Query query,      IDataContext parametersContext, int queryNumber,
-			Expression                                 expression, object?[]?   parameters,        object?[]? preambles)
+		IQueryRunner IDataContext.GetQueryRunner(
+			Query query,
+			IDataContext parametersContext,
+			int queryNumber,
+			IQueryExpressions expressions,
+			object?[]? parameters,
+			object?[]? preambles)
 		{
 			CheckAndThrowOnDisposed();
-			return new QueryRunner(query, queryNumber, this, parametersContext, expression, parameters, preambles);
+			return new QueryRunner(query, queryNumber, this, parametersContext, expressions, parameters, preambles);
 		}
 
 		internal sealed class QueryRunner : QueryRunnerBase
 		{
-			public QueryRunner(Query query, int queryNumber, DataConnection dataConnection, IDataContext parametersContext, Expression expression, object?[]? parameters, object?[]? preambles)
-				: base(query, queryNumber, dataConnection, parametersContext, expression, parameters, preambles)
+			public QueryRunner(Query query, int queryNumber, DataConnection dataConnection, IDataContext parametersContext, IQueryExpressions expressions, object?[]? parameters, object?[]? preambles)
+				: base(query, queryNumber, dataConnection, parametersContext, expressions, parameters, preambles)
 			{
 				_dataConnection = dataConnection;
 				_parametersContext = parametersContext;
@@ -66,59 +71,44 @@ namespace LinqToDB.Data
 				}
 			}
 
-			public override string GetSqlText()
+			public override IReadOnlyList<QuerySql> GetSqlText()
 			{
 				SetCommand(true);
 
-				var sqlProvider = _dataConnection.DataProvider.CreateSqlBuilder(_dataConnection.MappingSchema, _dataConnection.Options);
-
-				using var sbv = Pools.StringBuilder.Allocate();
-				var sb = sbv.Value;
-
-				sb.Append("-- ").Append(_dataConnection.ConfigurationString);
-
-				if (_dataConnection.ConfigurationString != _dataConnection.DataProvider.Name)
-					sb.Append(' ').Append(_dataConnection.DataProvider.Name);
-
-				if (_dataConnection.DataProvider.Name != sqlProvider.Name)
-					sb.Append(' ').Append(sqlProvider.Name);
-
-				sb.AppendLine();
-
-				var isFirst = true;
+				var queries = new QuerySql[_executionQuery!.PreparedQuery.Commands.Length];
 
 				for (var index = 0; index < _executionQuery!.PreparedQuery.Commands.Length; index++)
 				{
-					var queryCommand = _executionQuery.PreparedQuery.Commands[index];
-					sqlProvider.PrintParameters(_dataConnection, sb, _executionQuery.CommandsParameters[index]);
+					var queryCommand    = _executionQuery.PreparedQuery.Commands[index];
+					var queryParameters = _executionQuery.CommandsParameters[index];
 
-					sb.AppendLine(queryCommand.Command);
+					var parameters = queryParameters == null || queryParameters.Length == 0
+						? Array.Empty<DataParameter>()
+						: new DataParameter[queryParameters.Length];
 
-					if (isFirst && _executionQuery.PreparedQuery.QueryHints != null)
+					if (queryParameters != null)
 					{
-						isFirst = false;
+						for (var i = 0; i < queryParameters.Length; i++)
+						{
+							var p            = queryParameters[i];
+							var sqlParameter = queryCommand.SqlParameters[i];
 
-						while (sb[sb.Length - 1] == '\n' || sb[sb.Length - 1] == '\r')
-							sb.Length--;
+							parameters[i] = new DataParameter(p.ParameterName, p.Value, sqlParameter.Type);
+						}
+					}
 
-						sb.AppendLine();
+					var sql = queryCommand.Command;
 
-						var sql = sb.ToString();
-
+					if (index == 0 && _executionQuery.PreparedQuery.QueryHints != null)
+					{
 						var sqlBuilder = _dataConnection.DataProvider.CreateSqlBuilder(_dataConnection.MappingSchema, _dataConnection.Options);
 						sql = sqlBuilder.ApplyQueryHints(sql, _executionQuery.PreparedQuery.QueryHints);
-
-						sb.Length = 0;
-						sb.Append(sql);
 					}
+
+					queries[index] = new QuerySql(sql, parameters);
 				}
 
-				while (sb[sb.Length - 1] == '\n' || sb[sb.Length - 1] == '\r')
-					sb.Length--;
-
-				sb.AppendLine();
-
-				return sb.ToString();
+				return queries;
 			}
 
 			public override void Dispose()
@@ -224,7 +214,7 @@ namespace LinqToDB.Data
 					{
 						if (!statement.IsParameterDependent)
 						{
-							if (sqlOptimizer.IsParameterDependent(NullabilityContext.NonQuery, statement, options))
+							if (sqlOptimizer.IsParameterDependent(NullabilityContext.NonQuery, dataConnection.MappingSchema, statement, options))
 								statement.IsParameterDependent = true;
 						}
 					}

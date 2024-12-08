@@ -469,25 +469,25 @@ namespace LinqToDB.Expressions
 			bool CompareIndex(IndexExpression a, IndexExpression b)
 			{
 				return Equals(a.Indexer, b.Indexer)
-					&& Equals(a.Object, b.Object)
+					&& Compare(a.Object, b.Object)
 					&& CompareExpressionList(a.Arguments, b.Arguments);
 			}
 
 			bool CompareSwitch(SwitchExpression a, SwitchExpression b)
 			{
-				if (! (Equals(a.SwitchValue, b.SwitchValue)
-						&& Equals(a.DefaultBody, b.DefaultBody)
+				if (! (Compare(a.SwitchValue, b.SwitchValue)
+						&& Compare(a.DefaultBody, b.DefaultBody)
 						&& Equals(a.Comparison, b.Comparison)
-						&& a.Cases.Count != b.Cases.Count))
+						&& a.Cases.Count == b.Cases.Count))
 				{
 					return false;
 				}
 
 				for (var i = 0; i < a.Cases.Count; i++)
 				{
-					if (!Equals(a.Cases[i].Body, b.Cases[i].Body))
+					if (!Compare(a.Cases[i].Body, b.Cases[i].Body))
 						return false;
-					if (!Equals(a.Cases[i].Body, b.Cases[i].Body))
+					if (!Compare(a.Cases[i].Body, b.Cases[i].Body))
 						return false;
 					if (!CompareExpressionList(a.Cases[i].TestValues, b.Cases[i].TestValues))
 						return false;

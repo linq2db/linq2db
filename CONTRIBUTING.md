@@ -159,7 +159,7 @@ The `[User]DataProviders.json` is a regular JSON file:
         // list of database providers, enabled for current test configuration
         "Providers"            :
         [
-            "Access",
+            "Access.Ace.OleDb",
             "SqlCe",
             "SQLite.Classic",
             "SQLite.MS",

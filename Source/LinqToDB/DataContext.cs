@@ -508,9 +508,9 @@ namespace LinqToDB
 			return dct;
 		}
 
-		IQueryRunner IDataContext.GetQueryRunner(Query query, IDataContext parametersContext, int queryNumber, Expression expression, object?[]? parameters, object?[]? preambles)
+		IQueryRunner IDataContext.GetQueryRunner(Query query, IDataContext parametersContext, int queryNumber, IQueryExpressions expressions, object?[]? parameters, object?[]? preambles)
 		{
-			return new QueryRunner(this, ((IDataContext)GetDataConnection()).GetQueryRunner(query, parametersContext, queryNumber, expression, parameters, preambles));
+			return new QueryRunner(this, ((IDataContext)GetDataConnection()).GetQueryRunner(query, parametersContext, queryNumber, expressions, parameters, preambles));
 		}
 
 		sealed class QueryRunner : IQueryRunner
@@ -571,18 +571,18 @@ namespace LinqToDB
 				return _queryRunner!.ExecuteNonQueryAsync(cancellationToken);
 			}
 
-			public string GetSqlText()
+			public IReadOnlyList<QuerySql> GetSqlText()
 			{
 				return _queryRunner!.GetSqlText();
 			}
 
-			public IDataContext DataContext      => _dataContext!;
-			public Expression   Expression       => _queryRunner!.Expression;
-			public object?[]?   Parameters       => _queryRunner!.Parameters;
-			public object?[]?   Preambles        => _queryRunner!.Preambles;
-			public Expression?  MapperExpression { get => _queryRunner!.MapperExpression; set => _queryRunner!.MapperExpression = value; }
-			public int          RowsCount        { get => _queryRunner!.RowsCount;        set => _queryRunner!.RowsCount        = value; }
-			public int          QueryNumber      { get => _queryRunner!.QueryNumber;      set => _queryRunner!.QueryNumber      = value; }
+			public IDataContext      DataContext      => _dataContext!;
+			public IQueryExpressions Expressions      => _queryRunner!.Expressions;
+			public object?[]?        Parameters       => _queryRunner!.Parameters;
+			public object?[]?        Preambles        => _queryRunner!.Preambles;
+			public Expression?       MapperExpression { get => _queryRunner!.MapperExpression; set => _queryRunner!.MapperExpression = value; }
+			public int               RowsCount        { get => _queryRunner!.RowsCount;        set => _queryRunner!.RowsCount        = value; }
+			public int               QueryNumber      { get => _queryRunner!.QueryNumber;      set => _queryRunner!.QueryNumber      = value; }
 		}
 
 		internal static class ConfigurationApplier

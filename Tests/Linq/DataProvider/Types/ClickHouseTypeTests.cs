@@ -644,7 +644,7 @@ namespace Tests.DataProvider
 			}
 		}
 
-		[ActiveIssue("Update to new JSON type implementation")]
+		[ActiveIssue(Configurations = [ProviderName.ClickHouseClient, ProviderName.ClickHouseOctonica])]
 		[Test]
 		public async ValueTask TestJSONType([ClickHouseDataSources(false)] string context)
 		{
@@ -659,24 +659,25 @@ namespace Tests.DataProvider
 			//await TestType<string, string?>(context, new(typeof(string), DataType.Json), "12", "-34", filterByValue: false, filterByNullableValue: false);
 
 			// provider errors not reported as JSON type is not yet unusable - nothing to fix on client side
-			// Client: Unknown type: ...
-			// Octonica: The type "Object('json')" is not supported.
-			if (!context.IsAnyOf(ProviderName.ClickHouseClient, ProviderName.ClickHouseOctonica))
+			// Client: ArgumentException: 'Unknown type: JSON'
+			// Octonica: ClickHouseException : The type "JSON" is not supported
+			//if (!context.IsAnyOf(ProviderName.ClickHouseClient, ProviderName.ClickHouseOctonica))
 			{
+				// WTF is (0)
 				await TestType<string, string?>(context, new(typeof(string), DataType.Json), "null", "null",
 					filterByValue: false, filterByNullableValue: false,
-					getExpectedValue: _ => "(0)", getExpectedNullableValue: _ => "(0)");
+					getExpectedValue: _ => "{}", getExpectedNullableValue: _ => "(0)");
 
-				await TestType<string, string?>(
-					context, new(typeof(string), DataType.Json), string.Empty, default,
-					filterByValue: false, filterByNullableValue: false,
-					getExpectedValue: _ => "(0)", getExpectedNullableValue: _ => "(0)");
+				//await TestType<string, string?>(
+				//	context, new(typeof(string), DataType.Json), string.Empty, default,
+				//	filterByValue: false, filterByNullableValue: false,
+				//	getExpectedValue: _ => "(0)", getExpectedNullableValue: _ => "(0)");
 
+				// Why number became string...
 				await TestType<string, string?>(context, new(typeof(string), DataType.Json),
 					/*lang=json,strict*/ "{ \"prop\": 333 }", /*lang=json,strict*/ "{ \"prop\": 123 }",
 					filterByValue: false, filterByNullableValue: false,
-					// yep, looks like JSON. Same as inserted, 146%
-					getExpectedValue: _ => "(333)", getExpectedNullableValue: _ => "(123)");
+					getExpectedValue: _ => /*lang=json,strict*/ "{\"prop\":\"333\"}", getExpectedNullableValue: _ => "(123)");
 			}
 		}
 

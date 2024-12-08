@@ -18,8 +18,8 @@ namespace Tests.UserTests
 				{
 					new Issue1977Table()
 					{
-						firstField  = TestBase.TestData.Guid1,
-						secondField = TestBase.TestData.Guid2
+						firstField  = global::Tests.TestData.Guid1,
+						secondField = global::Tests.TestData.Guid2
 					}
 				};
 		}

@@ -392,7 +392,7 @@ namespace LinqToDB.SqlQuery
 
 							return search;
 						}
-					}					
+					}
 				}
 			}
 
@@ -648,6 +648,9 @@ namespace LinqToDB.SqlQuery
 					if (WithNull == false)
 						return predicate;
 				}
+
+				if (!Expr1.CanBeNullable(nullability))
+					return predicate;
 
 				var search = new SqlSearchCondition(WithNull.Value);
 

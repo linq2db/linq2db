@@ -51,15 +51,12 @@ namespace LinqToDB.Linq.Builder
 			return this;
 		}
 
-		public virtual bool IsOptional => false;
+		public virtual bool IsOptional            => false;
+		public virtual bool IsSingleElement       => false;
+		public virtual bool AutomaticAssociations => true;
 
-		#region Obsolete
-
-		public virtual void CompleteColumns()
+		public virtual void Detach()
 		{
 		}
-
-		#endregion Obsolete
-
 	}
 }

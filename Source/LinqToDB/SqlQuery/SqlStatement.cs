@@ -26,30 +26,6 @@ namespace LinqToDB.SqlQuery
 		/// </summary>
 		public SqlStatement? ParentStatement { get; set; }
 
-		// TODO: V6: used by tests only -> move to test helpers
-		[Obsolete("API will be removed in future versions")]
-		public SqlParameter[] CollectParameters()
-		{
-			var parametersHash = new HashSet<SqlParameter>();
-
-			this.VisitAll(parametersHash, static (parametersHash, expr) =>
-			{
-				switch (expr.ElementType)
-				{
-					case QueryElementType.SqlParameter:
-					{
-						var p = (SqlParameter)expr;
-						if (p.IsQueryParameter)
-							parametersHash.Add(p);
-
-						break;
-					}
-				}
-			});
-
-			return parametersHash.ToArray();
-		}
-
 		public abstract SelectQuery? SelectQuery { get; set; }
 
 		public SqlComment?              Tag                { get; internal set; }

@@ -10,11 +10,6 @@ namespace LinqToDB.Linq
 		{
 			Init(dataContext, expression);
 		}
-
-		public override string ToString()
-		{
-			return SqlText;
-		}
 	}
 
 	static class ExpressionQueryImpl

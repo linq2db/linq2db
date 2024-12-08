@@ -42,7 +42,6 @@ namespace LinqToDB.Linq.Builder
 
 				return BuildSequenceResult.FromContext(new MergeContext(merge, target, source));
 			}
-
 		}
 	}
 }

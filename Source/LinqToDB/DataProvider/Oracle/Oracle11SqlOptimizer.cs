@@ -20,6 +20,8 @@ namespace LinqToDB.DataProvider.Oracle
 
 		public override SqlStatement TransformStatement(SqlStatement statement, DataOptions dataOptions, MappingSchema mappingSchema)
 		{
+			statement = base.TransformStatement(statement, dataOptions, mappingSchema);
+
 			switch (statement.QueryType)
 			{
 				case QueryType.Delete : statement = GetAlternativeDelete((SqlDeleteStatement) statement, dataOptions); break;
@@ -31,9 +33,9 @@ namespace LinqToDB.DataProvider.Oracle
 			return statement;
 		}
 
-		public override bool IsParameterDependedElement(NullabilityContext nullability, IQueryElement element, DataOptions dataOptions)
+		public override bool IsParameterDependedElement(NullabilityContext nullability, IQueryElement element, DataOptions dataOptions, MappingSchema mappingSchema)
 		{
-			if (base.IsParameterDependedElement(nullability, element, dataOptions))
+			if (base.IsParameterDependedElement(nullability, element, dataOptions, mappingSchema))
 				return true;
 
 			switch (element.ElementType)
@@ -48,14 +50,27 @@ namespace LinqToDB.DataProvider.Oracle
 						(dataOptions.LinqOptions.CompareNulls != CompareNulls.LikeSql &&
 							op is SqlPredicate.Operator.Equal or SqlPredicate.Operator.NotEqual))
 					{
-						if (a.SystemType == typeof(string) && a.CanBeEvaluated(true))
+						if (IsTextType(a, mappingSchema) && a.CanBeEvaluated(true))
 							return true;
-						if (b.SystemType == typeof(string) && b.CanBeEvaluated(true))
+						if (IsTextType(b, mappingSchema) && b.CanBeEvaluated(true))
 							return true;
 					}
 					break;
 				}
 			}
+
+			return false;
+		}
+
+		internal static bool IsTextType(ISqlExpression expr, MappingSchema mappingSchema)
+		{
+			var type = QueryHelper.GetDbDataType(expr, mappingSchema);
+
+			if (type.DataType is DataType.VarChar or DataType.NVarChar or DataType.Char or DataType.NChar)
+				return true;
+
+			if (type.SystemType == typeof(string))
+				return true;
 
 			return false;
 		}
@@ -73,7 +88,7 @@ namespace LinqToDB.DataProvider.Oracle
 		protected SqlStatement ReplaceTakeSkipWithRowNum(SqlStatement statement, bool onlySubqueries)
 		{
 			return QueryHelper.WrapQuery(
-				(object?)null,
+				statement,
 				statement,
 				static (_, query, _) =>
 				{
@@ -92,8 +107,33 @@ namespace LinqToDB.DataProvider.Oracle
 
 					return 1;
 				},
-				static (_, queries) =>
+				static (statement, queries) =>
 				{
+					if (statement.SelectQuery == queries[^1])
+					{
+						// move orderby to root
+						for (var i = queries.Count - 1; i > 0; i--)
+						{
+							var innerQuery = queries[i];
+							var outerQuery = queries[i - 1];
+							foreach (var item in innerQuery.Select.OrderBy.Items)
+							{
+								foreach (var c in innerQuery.Select.Columns)
+								{
+									if (c.Expression.Equals(item.Expression))
+									{
+										outerQuery.OrderBy.Items.Add(new SqlOrderByItem(c, item.IsDescending, item.IsPositioned));
+										break;
+									}
+								}
+							}
+						}
+
+						// cleanup unnecessary intermediate copy to have ordering only on root query
+						for (var i = 1; i < queries.Count - 1; i++)
+							queries[i].OrderBy.Items.Clear();
+					}
+
 					var query = queries[queries.Count - 1];
 					var processingQuery = queries[queries.Count - 2];
 

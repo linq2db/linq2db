@@ -119,6 +119,8 @@ namespace LinqToDB.SqlQuery
 			writer
 				.Append(Name ?? "parameter");
 
+			if (AccessorId != null)
+				writer.Append("(A:").Append(AccessorId.Value).Append(')');
 #if DEBUG
 			writer.Append('(').Append(_paramNumber).Append(')');
 #endif

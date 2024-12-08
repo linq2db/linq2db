@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 
+using LinqToDB.Common;
+
 namespace LinqToDB.Linq.Builder
 {
 	using LinqToDB.Expressions;
@@ -57,8 +59,6 @@ namespace LinqToDB.Linq.Builder
 			var join = innerContext.SelectQuery.InnerJoin();
 			var sql  = outerContext.SelectQuery;
 
-			sql.From.Tables[0].Joins.Add(join.JoinedTable);
-
 			if (extensions != null)
 				join.JoinedTable.SqlQueryExtensions = extensions;
 
@@ -75,17 +75,18 @@ namespace LinqToDB.Linq.Builder
 			var outerKeySelector = SequenceHelper.PrepareBody(outerKeyLambda, outerContext).Unwrap();
 			var innerKeySelector = SequenceHelper.PrepareBody(innerKeyLambda, innerKeyContext).Unwrap();
 
-			outerKeySelector = builder.BuildSqlExpression(outerContext, outerKeySelector, buildInfo.GetFlags(ProjectFlags.Keys | ProjectFlags.SQL));
-			innerKeySelector = builder.BuildSqlExpression(outerContext, innerKeySelector, buildInfo.GetFlags(ProjectFlags.Keys | ProjectFlags.SQL));
+			if (!builder.TryGenerateComparison(outerContext, outerKeySelector, innerKeySelector, out var compareSearchCondition, out var error, BuildPurpose.Sql))
+				return BuildSequenceResult.Error(error);
 
-			var compareSearchCondition = builder.TryGenerateComparison(outerContext, outerKeySelector, innerKeySelector, buildInfo.GetFlags());
-			if (compareSearchCondition == null)
-				throw new SqlErrorExpression(FormattableString.Invariant($"Could not compare '{outerKeyLambda}' with {innerKeyLambda}"), typeof(bool)).CreateException();
+			outerKeySelector = builder.BuildSqlExpression(outerContext, outerKeySelector, BuildPurpose.Sql, BuildFlags.ForKeys);
+			innerKeySelector = builder.BuildSqlExpression(outerContext, innerKeySelector, BuildPurpose.Sql, BuildFlags.ForKeys);
+
+			sql.From.Tables[0].Joins.Add(join.JoinedTable);
 
 			bool allowNullComparison = outerKeySelector is SqlGenericConstructorExpression ||
 			                           innerKeySelector is SqlGenericConstructorExpression;
 
-			if (!allowNullComparison)
+			if (!allowNullComparison && builder.CompareNulls is CompareNulls.LikeClr or CompareNulls.LikeSqlExceptParameters)
 				compareSearchCondition = QueryHelper.CorrectComparisonForJoin(compareSearchCondition);
 
 			join.JoinedTable.Condition = compareSearchCondition;

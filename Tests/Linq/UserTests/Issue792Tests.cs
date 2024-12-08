@@ -92,7 +92,7 @@ namespace Tests.UserTests
 			TestProvName.AllInformix,
 			// those providers cannot load schema when in transaction
 			ProviderName.DB2,
-			ProviderName.Access,
+			TestProvName.AllAccessOleDb,
 			TestProvName.AllMySql,
 			TestProvName.AllOracle,
 			TestProvName.AllSqlServer)]

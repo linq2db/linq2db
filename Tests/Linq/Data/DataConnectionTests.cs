@@ -437,8 +437,7 @@ namespace Tests.Data
 		{
 			var collection = new ServiceCollection();
 
-			collection.AddLinqToDBContext<DbConnection5>((_, options) =>
-				options.UseConfigurationString(context).WithOptions<DataContextOptions>(o => o with { CommandTimeout = 91 }));
+			collection.AddLinqToDBContext<DbConnection5>((_, options) => options.UseConfigurationString(context).UseCommandTimeout(91));
 
 			var provider = collection.BuildServiceProvider();
 			var con      = provider.GetService<DbConnection5>()!;
@@ -610,8 +609,7 @@ namespace Tests.Data
 		}
 
 		[Test]
-		[SkipCI]
-		public void CommandTimeoutTest([IncludeDataSources(TestProvName.AllSqlServer2014)] string context)
+		public void CommandTimeoutTest([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
 			using (var db = GetDataConnection(context))
 			{

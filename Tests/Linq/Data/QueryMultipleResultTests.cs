@@ -391,5 +391,44 @@ namespace Tests.Data
 			}
 		}
 
+		#region Issue 4728
+		class ToDeleteId
+		{
+			public int CaseLogId { get; set; }
+			public int CaseNbr { get; set; }
+		}
+
+		class NotDeletedId
+		{
+			public int CaseLogId { get; set; }
+			public int CaseNbr { get; set; }
+			public int CrimeCodesId { get; set; }
+		}
+
+		class DeletedId
+		{
+			public int CaseLogId { get; set; }
+			public int CaseNbr { get; set; }
+		}
+
+		class MultipleResultDeletion
+		{
+			// all 3 supported types
+			[ResultSetIndex(0)] public ToDeleteId[] ToDeleteId { get; set; } = null!;
+			[ResultSetIndex(1)] public List<NotDeletedId> NotDeletedId { get; set; } = null!;
+			[ResultSetIndex(2)] public DeletedId DeletedId { get; set; } = null!;
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4728")]
+		public async Task Issue4728Test([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
+		{
+			using var db = GetDataConnection(context);
+
+			var dataset = await db.QueryMultipleAsync<MultipleResultDeletion>(@"
+select 1, 1 from INFORMATION_SCHEMA.TABLES where 1 = 0;
+select 1, 1, 1 from INFORMATION_SCHEMA.TABLES where 1 = 0;
+select 1, 1 from INFORMATION_SCHEMA.TABLES where 1 = 0;");
+		}
+		#endregion
 	}
 }

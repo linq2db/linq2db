@@ -144,6 +144,7 @@ jobs:
           enable_fw_net80: true
           enable_fw_net90: true
           x86: true
+          retry: true # x86 provider also could crash with AV as x64, but less often, so we can just restart it
           extra: --arch x86
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[access.all]')) }}:
             enabled: true
@@ -154,7 +155,7 @@ jobs:
           title: Access ACE (ODBC-only) x64 # x64 OLEDB crashes randomly https://github.com/dotnet/runtime/issues/46187
           config_win: access.ace.x64
           psscript_win_global: access.ace.x64.ps1
-          enable_os_windows: true
+          enable_os_windows: false # true # disabled due to https://github.com/dotnet/runtime/issues/46187
           enable_os_ubuntu: false
           enable_os_macos: false
           enable_fw_netfx: true
@@ -760,6 +761,7 @@ jobs:
           enable_fw_net60: true
           enable_fw_net80: true
           enable_fw_net90: true
+          retry: true # 26/1/2024: temporary: some issues with debian image
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[db2.all]')) }}:
             enabled: true
           ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[db2.all]'))) }}:
@@ -782,6 +784,7 @@ jobs:
           enable_fw_net60: true
           enable_fw_net80: true
           enable_fw_net90: true
+          retry: true # 26/1/2024: temporary: some issues with debian image
           ${{ if or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[informix.all]')) }}:
             enabled: true
           ${{ if not(or(contains(parameters.db_filter, '[all]'), contains(parameters.db_filter, '[informix.all]'))) }}:

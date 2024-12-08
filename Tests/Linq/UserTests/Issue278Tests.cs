@@ -72,29 +72,25 @@ namespace Tests.UserTests
 		[Issue278TestData(CacheMode.CacheEnabled)]
 		public void TestPerformanceWithCache(string context, int threadCount, Action<ITestDataContext>[] actions, string caseName)
 		{
-			using (new DisableQueryCache(false))
-				TestIt(context, caseName, threadCount, actions, CacheMode.CacheEnabled);
+			TestIt(context, caseName, threadCount, actions, CacheMode.CacheEnabled, false);
 		}
 
 		[Issue278TestData(CacheMode.CacheDisabled)]
 		public void TestPerformanceWithoutCache(string context, int threadCount, Action<ITestDataContext>[] actions, string caseName)
 		{
-			using (new DisableQueryCache(true))
-				TestIt(context, caseName, threadCount, actions, CacheMode.CacheDisabled);
+			TestIt(context, caseName, threadCount, actions, CacheMode.CacheDisabled, true);
 		}
 
 		[Issue278TestData(CacheMode.ClearCache)]
 		public void TestPerformanceWithCacheClear(string context, int threadCount, Action<ITestDataContext>[] actions, string caseName)
 		{
-			using (new DisableQueryCache(false))
-				TestIt(context, caseName, threadCount, actions, CacheMode.ClearCache);
+			TestIt(context, caseName, threadCount, actions, CacheMode.ClearCache, false);
 		}
 
 		[Issue278TestData(CacheMode.NoCacheScope)]
 		public void TestPerformanceWithNoCacheScope(string context, int threadCount, Action<ITestDataContext>[] actions, string caseName)
 		{
-			using (new DisableQueryCache(false))
-				TestIt(context, caseName, threadCount, actions, CacheMode.NoCacheScope);
+			TestIt(context, caseName, threadCount, actions, CacheMode.NoCacheScope, false);
 		}
 
 		[Test]
@@ -122,8 +118,7 @@ namespace Tests.UserTests
 				actions[i] = Expression.Lambda<Action<ITestDataContext>>(body, dbParam).CompileExpression();
 			}
 
-			using (new DisableQueryCache(false))
-				TestIt(context, "TestQueryCacheOverflow", 10, actions, CacheMode.CacheEnabled);
+			TestIt(context, "TestQueryCacheOverflow", 10, actions, CacheMode.CacheEnabled, false);
 		}
 
 		[Test]
@@ -151,11 +146,10 @@ namespace Tests.UserTests
 				actions[i] = Expression.Lambda<Action<ITestDataContext>>(body, dbParam).CompileExpression();
 			}
 
-			using (new DisableQueryCache(false))
-				TestIt(context, "TestQueryCacheOverflow", 10, actions, CacheMode.CacheEnabled);
+			TestIt(context, "TestQueryCacheOverflow", 10, actions, CacheMode.CacheEnabled, false);
 		}
 
-		private void TestIt(string context, string caseName, int threadCount, Action<ITestDataContext>[] actions, CacheMode mode)
+		private void TestIt(string context, string caseName, int threadCount, Action<ITestDataContext>[] actions, CacheMode mode, bool disableQueryCache)
 		{
 			ThreadPool.GetMaxThreads(out var workerThreads, out var iocpThreads);
 
@@ -170,7 +164,7 @@ namespace Tests.UserTests
 				{
 					var rnd = new Random();
 
-					using (var db = GetDataContext(context))
+					using (var db = GetDataContext(context, o => o.UseDisableQueryCache(disableQueryCache)))
 						for (var i = 0; i < TOTAL_QUERIES_PER_RUN / threadCount; i++)
 						{
 							if (mode == CacheMode.ClearCache)

@@ -31,8 +31,6 @@ namespace Tests.UserTests
 					query = query?.Union(innerQuery) ?? innerQuery;
 				}
 
-				Assert.DoesNotThrow(() => TestContext.Out.WriteLine(query?.ToString()));
-
 				query!.ToList();
 			}
 		}

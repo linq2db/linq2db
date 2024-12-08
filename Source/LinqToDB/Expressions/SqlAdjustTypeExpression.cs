@@ -11,6 +11,7 @@ namespace LinqToDB.Expressions
 		readonly Type          _type;
 		public   Expression    Expression    { get; }
 		public   MappingSchema MappingSchema { get; }
+		public   bool          IsAssociation { get; }
 
 		public SqlAdjustTypeExpression(Expression expression, Type type, MappingSchema mappingSchema)
 		{
@@ -21,11 +22,11 @@ namespace LinqToDB.Expressions
 
 		public static Expression AdjustType(Expression expression, Type type, MappingSchema mappingSchema)
 		{
-			if (expression.Type == type)
-				return expression;
-
 			if (expression is SqlAdjustTypeExpression adjust)
 			{
+				if (expression.Type == type)
+					return expression;
+
 				return AdjustType(adjust.Expression, type, mappingSchema);
 			}
 

@@ -58,6 +58,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSybase, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
 		public void Test4([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -202,7 +203,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[ThrowsForProvider(typeof(SqlException), providers: [TestProvName.AllAccess, TestProvName.AllSybase], ErrorMessage = "Skip for subqueries is not supported")]
+		[ThrowsForProvider(typeof(LinqToDBException), providers: [TestProvName.AllAccess, TestProvName.AllSybase], ErrorMessage = ErrorHelper.Error_Skip_in_Subquery)]
 		public void DerivedSkipTake([DataSources]
 			string context)
 		{
@@ -539,7 +540,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void SubSub22([DataSources(
-			ProviderName.SqlCe, ProviderName.Access, ProviderName.DB2,
+			ProviderName.SqlCe, ProviderName.DB2,
 			TestProvName.AllClickHouse,
 			TestProvName.AllOracle, TestProvName.AllSapHana)]
 			string context)
@@ -662,7 +663,6 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[ThrowsForProvider(typeof(LinqException), TestProvName.AllAccess, "Provider does not support JOIN without condition.")]
 		public void Issue1601([DataSources(false)] string context)
 		{
 			using (var db = GetDataConnection(context))
@@ -885,7 +885,287 @@ namespace Tests.Linq
 
 			AssertQuery(query);
 		}
-		
+
+
+		#region Issue 4458
+		[Table]
+		sealed class Issue4458Item
+		{
+			[Column(CanBeNull = false)] public string Id { get; set; } = null!;
+
+			public static readonly Issue4458Item[] Data =
+			[
+				new Issue4458Item() { Id = "1", },
+				new Issue4458Item() { Id = "2", },
+				new Issue4458Item() { Id = "3", }
+			];
+		}
+
+		[Table]
+		sealed class WarehouseStock
+		{
+			[Column(CanBeNull = false)] public string ItemId { get; set; } = null!;
+			[Column] public int QuantityAvailable { get; set; }
+			[Column(CanBeNull = false)] public string WarehouseId { get; set; } = null!;
+
+			public static readonly WarehouseStock[] Data =
+			[
+				new WarehouseStock()
+				{
+					ItemId = "1",
+					QuantityAvailable = 10,
+					WarehouseId = "A",
+				}
+			];
+		}
+
+		[Table]
+		sealed class Review
+		{
+			[Column(CanBeNull = false)] public string ItemId { get; set; } = null!;
+			[Column(CanBeNull = false)] public string UserId { get; set; } = null!;
+			[Column] public int Score { get; set; }
+
+			public static readonly Review[] Data =
+			[
+				new Review()
+				{
+					ItemId = "1",
+					UserId = "1",
+					Score = 100,
+				},
+				new Review()
+				{
+					ItemId = "1",
+					UserId = "2",
+					Score = 90,
+				},
+				new Review()
+				{
+					ItemId = "2",
+					UserId = "1",
+					Score = 89,
+				},
+				new Review()
+				{
+					ItemId = "2",
+					UserId = "4",
+					Score = 93,
+				},
+				new Review()
+				{
+					ItemId = "3",
+					UserId = "5",
+					Score = 91,
+				}
+			];
+		}
+
+		sealed class ItemStockSummary
+		{
+			public string ItemId { get; set; } = null!;
+			public int TotalAvailable { get; set; }
+			public IEnumerable<Review> Reviews { get; set; } = null!;
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4458")]
+		public void Issue4458Test1([DataSources(TestProvName.AllClickHouse)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t1 = db.CreateLocalTable(Issue4458Item.Data);
+			using var t2 = db.CreateLocalTable(WarehouseStock.Data);
+			using var t3 = db.CreateLocalTable(Review.Data);
+
+			var query = from item in t1
+						from stock in t2
+						.LeftJoin(s => s.ItemId == item.Id)
+						.GroupBy(s => s.ItemId)
+						select new ItemStockSummary()
+						{
+							ItemId = item.Id,
+							TotalAvailable = stock.Sum(s => s.QuantityAvailable),
+							Reviews = t3.Where(r => r.ItemId == item.Id)
+						};
+
+			var filteredByScore = query.Where(i => i.Reviews.Any(r => r.Score > 95));
+
+			var result = filteredByScore.ToArray();
+			Assert.That(result, Has.Length.EqualTo(1));
+			Assert.Multiple(() =>
+			{
+				Assert.That(result[0].ItemId, Is.EqualTo("1"));
+				Assert.That(result[0].TotalAvailable, Is.EqualTo(10));
+				Assert.That(result[0].Reviews.Count(), Is.EqualTo(2));
+			});
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4458")]
+		public void Issue4458Test2([DataSources(TestProvName.AllClickHouse)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t1 = db.CreateLocalTable(Issue4458Item.Data);
+			using var t2 = db.CreateLocalTable(WarehouseStock.Data);
+			using var t3 = db.CreateLocalTable(Review.Data);
+
+			var query = from item in t1
+						from stock in t2
+						.LeftJoin(s => s.ItemId == item.Id)
+						.GroupBy(s => s.ItemId)
+						select new ItemStockSummary()
+						{
+							ItemId = item.Id,
+							TotalAvailable = stock.Sum(s => s.QuantityAvailable),
+							Reviews = t3.Where(r => r.ItemId == item.Id)
+						};
+
+			var filteredByScore = query.Where(i => t3.Where(r => r.ItemId == i.ItemId).Any(r => r.Score > 95));
+
+			var result = filteredByScore.ToArray();
+			Assert.That(result, Has.Length.EqualTo(1));
+			Assert.Multiple(() =>
+			{
+				Assert.That(result[0].ItemId, Is.EqualTo("1"));
+				Assert.That(result[0].TotalAvailable, Is.EqualTo(10));
+				Assert.That(result[0].Reviews.Count(), Is.EqualTo(2));
+			});
+		}
+		#endregion
+
+		#region Issue 4347
+		[Table]
+		sealed record TransactionEntity
+		{
+			[PrimaryKey]
+			public Guid Id { get; set; }
+
+			[Column]
+			public DateTime ValidOn { get; set; }
+
+			[Association(ThisKey = nameof(Id), OtherKey = nameof(LineEntity.TransactionId))]
+			public List<LineEntity> Lines { get; set; } = null!;
+		}
+
+		[Table]
+		sealed record LineEntity
+		{
+			[PrimaryKey]
+			public Guid Id { get; set; }
+
+			[Column]
+			public Guid TransactionId { get; set; }
+
+			[Column]
+			public decimal Amount { get; set; }
+
+			[Column]
+			public string Currency { get; set; } = null!;
+
+			[Association(ThisKey = nameof(TransactionId), OtherKey = nameof(TransactionEntity.Id), CanBeNull = false)]
+			public TransactionEntity Transaction { get; set; } = null!;
+		}
+
+		sealed record TransactionDto
+		{
+			public Guid Id { get; set; }
+
+			public DateTime ValidOn { get; set; }
+
+			public IEnumerable<LineDto> Lines { get; set; } = Enumerable.Empty<LineDto>();
+
+			[ExpressionMethod(nameof(FromEntityExpression))]
+			public static TransactionDto FromEntity(TransactionEntity entity)
+				=> FromEntityExpression().Compile()(entity);
+
+			static Expression<Func<TransactionEntity, TransactionDto>> FromEntityExpression() =>
+				entity => new TransactionDto
+				{
+					Id = entity.Id,
+					ValidOn = entity.ValidOn,
+					Lines = entity.Lines.Select(line => LineDto.FromEntity(line))
+				};
+		}
+
+		sealed record LineDto
+		{
+			public Guid Id { get; set; }
+
+			public decimal Amount { get; set; }
+
+			public string Currency { get; set; } = null!;
+
+			[ExpressionMethod(nameof(FromEntityExpression))]
+			public static LineDto FromEntity(LineEntity entity)
+				=> FromEntityExpression().Compile()(entity);
+
+			static Expression<Func<LineEntity, LineDto>> FromEntityExpression()
+				=> entity => new LineDto
+				{
+					Id = entity.Id,
+					Amount = entity.Amount,
+					Currency = entity.Currency
+				};
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4347")]
+		public void Issue4347Test1([DataSources(TestProvName.AllAccess, TestProvName.AllClickHouse, TestProvName.AllDB2, TestProvName.AllMariaDB, TestProvName.AllOracle11)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t1 = db.CreateLocalTable<TransactionEntity>();
+			using var t2 = db.CreateLocalTable<LineEntity>();
+
+			var currencies = new[] { "A", "B" };
+
+			var q = t1
+				.Select(x => new
+				{
+					Entity = x,
+					Dto = TransactionDto.FromEntity(x)
+				})
+				.Where(x => x.Dto.Lines.Select(y => y.Currency).Intersect(currencies).Any())
+				.OrderBy(x => x.Dto.ValidOn)
+				.Select(x => x.Dto)
+				.ToList();
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4347")]
+		public void Issue4347Test2([DataSources(TestProvName.AllAccess, TestProvName.AllClickHouse, TestProvName.AllDB2, TestProvName.AllMariaDB, TestProvName.AllOracle11)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t1 = db.CreateLocalTable<TransactionEntity>();
+			using var t2 = db.CreateLocalTable<LineEntity>();
+
+			var currencies = new[] { "A", "B" };
+
+			var q = t1
+				.Select(x => new
+				{
+					Entity = x,
+					Dto = TransactionDto.FromEntity(x)
+				})
+				.Where(x => x.Dto.Lines.Select(y => y.Currency).Intersect(currencies).Any())
+				.Select(x => x.Dto)
+				.ToList();
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4347")]
+		public void Issue4347Test3([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t1 = db.CreateLocalTable<TransactionEntity>();
+			using var t2 = db.CreateLocalTable<LineEntity>();
+
+			var q = t1
+				.Select(x => new
+				{
+					Entity = x,
+					Dto = TransactionDto.FromEntity(x)
+				})
+				.OrderBy(x => x.Dto.ValidOn)
+				.Select(x => x.Dto)
+				.ToList();
+		}
+		#endregion
+
 		[ActiveIssue(Configurations = [TestProvName.AllOracle], Details = "https://forums.oracle.com/ords/apexds/post/error-ora-12704-character-set-mismatch-in-case-statement-6917")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3295")]
 		public void Issue3295Test1([DataSources(TestProvName.AllSybase)] string context)
@@ -921,6 +1201,7 @@ namespace Tests.Linq
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3334")]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSybase, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
 		public void Issue3334Test([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
@@ -941,8 +1222,8 @@ namespace Tests.Linq
 			var result = query.FirstOrDefault();
 		}
 
-		[ThrowsForProvider(typeof(LinqException), providers: [TestProvName.AllSybase], ErrorMessage = "Provider does not support CROSS/OUTER/LATERAL joins.")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3365")]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSybase, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
 		public void Issue3365Test([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
@@ -956,5 +1237,34 @@ namespace Tests.Linq
 
 			orderedQuery.ToArray();
 		}
+
+		#region Issue 4184
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4184")]
+		public void Issue4184Test([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			
+			var subquery =
+				from p in db.Person
+				group p by p.ID
+				into gpItem
+				select new PcScanId(gpItem.Key, gpItem.Max(s => s.ID));
+
+			var query =
+				from ps in subquery
+				join pc in db.Patient on ps.PcId equals pc.PersonID
+				select new { pc, ps };
+
+			Assert.That(() => query.ToArray(), Throws.Exception.InstanceOf<LinqToDBException>());
+		}
+
+		private record PcScanId(int pcId, int scanId)
+		{
+			public int PcId = pcId;
+			public int ScanId = scanId;
+		}
+
+		#endregion
 	}
 }

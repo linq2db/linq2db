@@ -16,7 +16,7 @@ namespace LinqToDB.SqlProvider
 		/// <summary>
 		/// Flags for use by external providers.
 		/// </summary>
-		[DataMember(Order = 1)]
+		[DataMember(Order =  1)]
 		public List<string> CustomFlags { get; set; } = new List<string>();
 
 		/// <summary>
@@ -104,7 +104,7 @@ namespace LinqToDB.SqlProvider
 		/// Indicates support for skip clause in column expression subquery.
 		/// Default (set by <see cref="DataProviderBase"/>): <c>true</c>.
 		/// </summary>
-		[DataMember(Order =  13)]
+		[DataMember(Order = 13)]
 		public bool        IsSubQuerySkipSupported        { get; set; }
 
 		/// <summary>
@@ -193,6 +193,13 @@ namespace LinqToDB.SqlProvider
 		/// </summary>
 		[DataMember(Order = 26)]
 		public bool        OutputUpdateUseSpecialTables   { get; set; }
+		/// <summary>
+		/// If <c>true</c>, OUTPUT clause supports both OLD and NEW data in MERGE statement using tables with special names.
+		/// Otherwise only current record fields (after all changes) available using target table.
+		/// Default (set by <see cref="DataProviderBase"/>): <c>false</c>.
+		/// </summary>
+		[DataMember(Order = 38)]
+		public bool        OutputMergeUseSpecialTables    { get; set; }
 
 		/// <summary>
 		/// Indicates support for CROSS JOIN.
@@ -495,6 +502,21 @@ namespace LinqToDB.SqlProvider
 		[DataMember(Order = 58)]
 		public int? SupportedCorrelatedSubqueriesLevel { get; set; }
 
+		/// <summary>
+		/// Provider supports correlated DISTINCT FROM
+		/// Default <c>false</c>
+		/// </summary>
+		[DataMember(Order = 59)]
+		public bool IsDistinctFromSupported { get; set; }
+
+		/// <summary>
+		/// Provider treats empty string as <c>null</c> in queries.
+		/// It is specific behaviour only for Oracle.
+		/// Default <c>false</c>
+		/// </summary>
+		[DataMember(Order = 61)]
+		public bool DoesProviderTreatsEmptyStringAsNull { get; set; }
+
 		public bool GetAcceptsTakeAsParameterFlag(SelectQuery selectQuery)
 		{
 			return AcceptsTakeAsParameter || AcceptsTakeAsParameterIfSkip && selectQuery.Select.SkipValue != null;
@@ -559,6 +581,7 @@ namespace LinqToDB.SqlProvider
 				^ OutputDeleteUseSpecialTable                          .GetHashCode()
 				^ OutputInsertUseSpecialTable                          .GetHashCode()
 				^ OutputUpdateUseSpecialTables                         .GetHashCode()
+				^ OutputMergeUseSpecialTables                          .GetHashCode()
 				^ IsExistsPreferableForContains                        .GetHashCode()
 				^ IsRowNumberWithoutOrderBySupported                   .GetHashCode()
 				^ IsSubqueryWithParentReferenceInJoinConditionSupported.GetHashCode()
@@ -574,7 +597,9 @@ namespace LinqToDB.SqlProvider
 				^ IsUpdateTakeSupported                                .GetHashCode()
 				^ IsUpdateSkipTakeSupported                            .GetHashCode()
 				^ IsSupportedSimpleCorrelatedSubqueries                .GetHashCode()
-				^ SupportedCorrelatedSubqueriesLevel                 .GetHashCode()
+				^ SupportedCorrelatedSubqueriesLevel                   .GetHashCode()
+				^ IsDistinctFromSupported                              .GetHashCode()
+				^ DoesProviderTreatsEmptyStringAsNull                  .GetHashCode()
 				^ CustomFlags.Aggregate(0, (hash, flag) => flag.GetHashCode() ^ hash);
 	}
 
@@ -621,6 +646,7 @@ namespace LinqToDB.SqlProvider
 				&& OutputDeleteUseSpecialTable                           == other.OutputDeleteUseSpecialTable
 				&& OutputInsertUseSpecialTable                           == other.OutputInsertUseSpecialTable
 				&& OutputUpdateUseSpecialTables                          == other.OutputUpdateUseSpecialTables
+				&& OutputMergeUseSpecialTables                           == other.OutputMergeUseSpecialTables
 				&& IsExistsPreferableForContains                         == other.IsExistsPreferableForContains
 				&& IsRowNumberWithoutOrderBySupported                    == other.IsRowNumberWithoutOrderBySupported
 				&& IsSubqueryWithParentReferenceInJoinConditionSupported == other.IsSubqueryWithParentReferenceInJoinConditionSupported
@@ -637,6 +663,8 @@ namespace LinqToDB.SqlProvider
 				&& IsUpdateSkipTakeSupported                             == other.IsUpdateSkipTakeSupported
 				&& IsSupportedSimpleCorrelatedSubqueries                 == other.IsSupportedSimpleCorrelatedSubqueries
 				&& SupportedCorrelatedSubqueriesLevel                    == other.SupportedCorrelatedSubqueriesLevel
+				&& IsDistinctFromSupported                               == other.IsDistinctFromSupported
+				&& DoesProviderTreatsEmptyStringAsNull                   == other.DoesProviderTreatsEmptyStringAsNull
 				// CustomFlags as List wasn't best idea
 				&& CustomFlags.Count                                     == other.CustomFlags.Count
 				&& (CustomFlags.Count                                    == 0

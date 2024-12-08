@@ -68,7 +68,6 @@ namespace LinqToDB.DataProvider.Access
 				case '%': expr = new SqlBinaryExpression(expr.SystemType, expr.Expr1, "MOD", expr.Expr2, Precedence.Additive - 1); break;
 				case '&': expr = new SqlBinaryExpression(expr.SystemType, expr.Expr1, "AND", expr.Expr2, Precedence.Bitwise); break;
 				case '|': expr = new SqlBinaryExpression(expr.SystemType, expr.Expr1, "OR" , expr.Expr2, Precedence.Bitwise); break;
-				case '^': throw new SqlException("Operator '{0}' is not supported by the {1}.", expr.Operation, GetType().Name);
 			}
 
 			base.BuildBinaryExpression(expr);
@@ -145,6 +144,7 @@ namespace LinqToDB.DataProvider.Access
 
 		public override StringBuilder Convert(StringBuilder sb, string value, ConvertType convertType)
 		{
+			// https://learn.microsoft.com/en-us/office/troubleshoot/access/error-using-special-characters
 			switch (convertType)
 			{
 				case ConvertType.NameToQueryParameter:
@@ -248,13 +248,7 @@ namespace LinqToDB.DataProvider.Access
 
 		protected override void BuildParameter(SqlParameter parameter)
 		{
-			if (BuildStep == Step.TypedExpression || !parameter.NeedsCast)
-			{
-				base.BuildParameter(parameter);
-				return;
-			}
-
-			if (parameter.NeedsCast)
+			if (parameter.NeedsCast && BuildStep != Step.TypedExpression)
 			{
 				var saveStep = BuildStep;
 				BuildStep = Step.TypedExpression;

@@ -254,12 +254,6 @@ namespace LinqToDB.SqlQuery.Visitors
 
 			_outerSources = (_outerSources ?? Enumerable.Empty<ISqlTableSource>()).ToList();
 
-			if (element.DeletedTable != null)
-				_outerSources.Add(element.DeletedTable);
-
-			if (element.InsertedTable != null)
-				_outerSources.Add(element.InsertedTable);
-
 			if (element.OutputTable != null)
 				_outerSources.Add(element.OutputTable);
 			

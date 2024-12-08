@@ -14,7 +14,7 @@ namespace Tests
 		/// <param name="providers">List of test providers to check against. Each entry could be provider name or comma-separated list of providers.</param>
 		public static bool IsAnyOf(this string context, params string[] providers)
 		{
-			var providerName = context.Replace(TestBase.LinqServiceSuffix, string.Empty);
+			var providerName = context.StripRemote();
 			foreach (var provider in providers)
 			{
 				if (provider.Split(',').Any(p => p == providerName))
@@ -22,6 +22,16 @@ namespace Tests
 			}
 
 			return false;
+		}
+
+		public static bool IsUseParameters(this string context)
+		{
+			return !context.IsAnyOf(TestProvName.AllClickHouse);
+		}
+
+		public static bool IsUsePositionalParameters(this string context)
+		{
+			return context.IsAnyOf(TestProvName.AllSapHana, TestProvName.AllAccessOdbc);
 		}
 
 		/// <summary>

@@ -39,7 +39,12 @@ namespace LinqToDB.Linq.Builder
 
 		protected override BuildSequenceResult BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
-			var sequence = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
+			var buildResult = builder.TryBuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
+
+			if (buildResult.BuildContext == null)
+				return buildResult;
+
+			var sequence = buildResult.BuildContext;
 
 			ExtractSequence(ref sequence, out var insertContext);
 
@@ -84,7 +89,7 @@ namespace LinqToDB.Linq.Builder
 						var targetRef = new ContextRefExpression(genericArguments.Skip(1).FirstOrDefault() ?? sourceRef.Type,
 								insertContext.Into);
 
-						var sqlExpr = builder.ConvertToSqlExpr(sequence, sourceRef);
+						var sqlExpr = builder.BuildSqlExpression(sequence, sourceRef);
 
 						UpdateBuilder.ParseSetter(builder, targetRef, sqlExpr, insertContext.SetExpressions);
 					}
@@ -97,6 +102,13 @@ namespace LinqToDB.Linq.Builder
 					//
 
 					var into = builder.BuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[1], new SelectQuery()));
+					var tableContext = SequenceHelper.GetTableOrCteContext(builder, new ContextRefExpression(into.ElementType, into));
+
+					if (tableContext == null)
+						throw new LinqToDBException("Invalid Into table");
+
+					into = tableContext;
+
 					insertContext.Into = into;
 
 					var setter     = methodCall.GetArgumentByName("setter")!.UnwrapLambda();
@@ -157,8 +169,7 @@ namespace LinqToDB.Linq.Builder
 					var sourceRef = new ContextRefExpression(sourceSequence.ElementType, sourceSequence);
 
 					var redirectedExpression = builder.BuildSqlExpression(
-						sourceSequence, sourceRef, ProjectFlags.SQL,
-						buildFlags: ExpressionBuilder.BuildFlags.ForceAssignments
+						sourceSequence, sourceRef
 					);
 
 					insertContext.QuerySequence = sourceSequence;
@@ -179,9 +190,7 @@ namespace LinqToDB.Linq.Builder
 					insertStatement.Output = new SqlOutputClause();
 					insertContext.OutputExpression = outputExpression;
 
-					var insertedTable = builder.DataContext.SqlProviderFlags.OutputInsertUseSpecialTable
-						? SqlTable.Inserted(sequence.MappingSchema.GetEntityDescriptor(outputExpression.Parameters[0].Type, builder.DataOptions.ConnectionOptions.OnEntityDescriptorCreated))
-						: null;
+					SqlTable? insertedTable = null;
 
 					if (insertedTable == null && insertContext.Into != null)
 					{
@@ -191,10 +200,9 @@ namespace LinqToDB.Linq.Builder
 					if (insertedTable == null)
 						throw new InvalidOperationException("Cannot find target table for INSERT statement");
 
-					insertContext.OutputContext = new TableBuilder.TableContext(builder, sequence.MappingSchema, new SelectQuery(), insertedTable, false);
-
-					if (builder.DataContext.SqlProviderFlags.OutputInsertUseSpecialTable)
-						insertStatement.Output.InsertedTable = insertedTable;
+					var outputTableContext = new TableBuilder.TableContext(builder, sequence.MappingSchema, new SelectQuery(), insertedTable, false);
+					var outputAnchor = new AnchorContext(buildInfo.Parent, outputTableContext, SqlAnchor.AnchorKindEnum.Inserted);
+					insertContext.OutputContext = outputAnchor;
 
 					if (insertType is InsertContext.InsertTypeEnum.InsertOutputInto)
 					{
@@ -202,14 +210,15 @@ namespace LinqToDB.Linq.Builder
 						var destination = builder.BuildSequence(new BuildInfo(buildInfo, outputTable, new SelectQuery()));
 
 						var destinationRef = new ContextRefExpression(outputExpression.Body.Type, destination);
-						var outputExpr     = SequenceHelper.PrepareBody(outputExpression, insertContext.OutputContext);
+
+						var outputExpr   = SequenceHelper.PrepareBody(outputExpression, outputAnchor);
 
 						insertStatement.Output.OutputTable = ((TableBuilder.TableContext)destination).SqlTable;
 
 						var outputSetters = new List<UpdateBuilder.SetExpressionEnvelope>();
 						UpdateBuilder.ParseSetter(builder, destinationRef, outputExpr, outputSetters);
 
-						UpdateBuilder.InitializeSetExpressions(builder, insertContext.OutputContext, insertContext.OutputContext,
+						UpdateBuilder.InitializeSetExpressions(builder, outputAnchor, outputAnchor,
 							outputSetters, insertStatement.Output.OutputItems, false);
 					}
 				}
@@ -255,12 +264,12 @@ namespace LinqToDB.Linq.Builder
 
 			public List<UpdateBuilder.SetExpressionEnvelope> SetExpressions { get; } = new ();
 
-			public IBuildContext              QuerySequence    { get; set; }
-			public IBuildContext?             Into             { get; set; }
-			public BuildInfo?                 LastBuildInfo    { get; set; }
-			public LambdaExpression?          OutputExpression { get; set; }
-			public TableBuilder.TableContext? OutputContext    { get; set; }
-			public bool                       RequiresSetters  { get; set; }
+			public IBuildContext     QuerySequence    { get; set; }
+			public IBuildContext?    Into             { get; set; }
+			public BuildInfo?        LastBuildInfo    { get; set; }
+			public LambdaExpression? OutputExpression { get; set; }
+			public IBuildContext?    OutputContext    { get; set; }
+			public bool              RequiresSetters  { get; set; }
 
 			public override Expression MakeExpression(Expression path, ProjectFlags flags)
 			{
@@ -273,12 +282,19 @@ namespace LinqToDB.Linq.Builder
 						if (OutputExpression == null || OutputContext == null || LastBuildInfo == null)
 							throw new InvalidOperationException();
 
-						var selectContext = new SelectContext(Parent, OutputExpression, false, OutputContext);
-						var outputRef = new ContextRefExpression(path.Type, selectContext);
+						var outputSelectQuery = OutputContext.SelectQuery;
+
+						IBuildContext selectContext = OutputContext is AnchorContext 
+							? new SelectContext(Parent, OutputExpression, false, OutputContext)
+							: new AnchorContext(Parent, new SelectContext(Parent, OutputExpression, false, OutputContext), SqlAnchor.AnchorKindEnum.Inserted);
+
+						var outputRef     = new ContextRefExpression(path.Type, selectContext);
 
 						var outputExpressions = new List<UpdateBuilder.SetExpressionEnvelope>();
 
-						var sqlExpr = Builder.ConvertToSqlExpr(selectContext, outputRef);
+						var sqlExpr = Builder.BuildSqlExpression(selectContext, outputRef);
+						sqlExpr = SequenceHelper.CorrectSelectQuery(sqlExpr, outputSelectQuery);
+
 						if (sqlExpr is SqlPlaceholderExpression)
 							outputExpressions.Add(new UpdateBuilder.SetExpressionEnvelope(sqlExpr, sqlExpr, false));
 						else

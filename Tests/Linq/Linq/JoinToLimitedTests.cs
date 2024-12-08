@@ -2,6 +2,7 @@
 
 using FluentAssertions;
 
+using LinqToDB;
 using LinqToDB.Linq;
 
 using NUnit.Framework;
@@ -27,7 +28,7 @@ namespace Tests.Linq
 					select new { o, c };
 
 				if (!db.SqlProviderFlags.IsWindowFunctionsSupported)
-					FluentActions.Enumerating(() => act).Should().Throw<LinqException>();
+					FluentActions.Enumerating(() => act).Should().Throw<LinqToDBException>();
 				else
 					AreEqual(exp, act);
 			}
@@ -47,7 +48,7 @@ namespace Tests.Linq
 					select new { o, c };
 
 				if (!db.SqlProviderFlags.IsWindowFunctionsSupported)
-					FluentActions.Enumerating(() => act).Should().Throw<LinqException>();
+					FluentActions.Enumerating(() => act).Should().Throw<LinqToDBException>();
 				else
 					AreEqual(exp, act);
 			}
@@ -107,7 +108,7 @@ namespace Tests.Linq
 					select new { o, c };
 
 				if (!db.SqlProviderFlags.IsWindowFunctionsSupported)
-					FluentActions.Enumerating(() => act).Should().Throw<LinqException>();
+					FluentActions.Enumerating(() => act).Should().Throw<LinqToDBException>();
 				else
 					AreEqual(exp, act);
 			}
@@ -220,7 +221,7 @@ namespace Tests.Linq
 					select new { o, c };
 
 				if (!db.SqlProviderFlags.IsWindowFunctionsSupported)
-					FluentActions.Enumerating(() => act).Should().Throw<LinqException>();
+					FluentActions.Enumerating(() => act).Should().Throw<LinqToDBException>();
 				else
 					AreEqual(exp, act);
 			}
@@ -240,14 +241,14 @@ namespace Tests.Linq
 					select new { o, c };
 
 				if (!db.SqlProviderFlags.IsWindowFunctionsSupported)
-					FluentActions.Enumerating(() => act).Should().Throw<LinqException>();
+					FluentActions.Enumerating(() => act).Should().Throw<LinqToDBException>();
 				else
 					AreEqual(exp, act);
 			}
 		}
 
 		[Test]
-		[ThrowsForProvider(typeof(LinqException), TestProvName.AllSybase, "Provider has issue with JOIN to limited recordset.")]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSybase, ErrorMessage = ErrorHelper.Sybase.Error_JoinToDerivedTableWithTakeInvalid)]
 		public void InnerJoinLimited([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -267,7 +268,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[ThrowsForProvider(typeof(LinqException), TestProvName.AllSybase, "Provider has issue with JOIN to limited recordset.")]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSybase, ErrorMessage = ErrorHelper.Sybase.Error_JoinToDerivedTableWithTakeInvalid)]
 		public void InnerJoinLimitedWhere([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -300,7 +301,7 @@ namespace Tests.Linq
 					select new { o, c };
 
 				if (!db.SqlProviderFlags.IsWindowFunctionsSupported)
-					FluentActions.Enumerating(() => act).Should().Throw<LinqException>();
+					FluentActions.Enumerating(() => act).Should().Throw<LinqToDBException>();
 				else
 					AreEqual(exp, act);
 			}

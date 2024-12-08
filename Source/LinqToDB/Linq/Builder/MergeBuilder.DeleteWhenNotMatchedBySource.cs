@@ -31,7 +31,12 @@ namespace LinqToDB.Linq.Builder
 
 					operation.Where = new SqlSearchCondition();
 
-					builder.BuildSearchCondition(mergeContext.TargetContext, conditionCorrected, ProjectFlags.SQL, operation.Where);
+					var saveIsSourceOuter = mergeContext.SourceContext.IsSourceOuter;
+					mergeContext.SourceContext.IsSourceOuter = true;
+
+					builder.BuildSearchCondition(mergeContext.TargetContext, conditionCorrected, operation.Where);
+
+					mergeContext.SourceContext.IsSourceOuter = saveIsSourceOuter;
 				}
 
 				return BuildSequenceResult.FromContext(mergeContext);

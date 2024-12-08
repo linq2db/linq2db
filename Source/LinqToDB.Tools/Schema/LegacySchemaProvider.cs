@@ -60,8 +60,8 @@ namespace LinqToDB.Schema
 			_isPostgreSql       = _providerName.Contains(ProviderName.PostgreSQL);
 			_isMySqlOrMariaDB   = _providerName is ProviderName.MariaDB10MySqlConnector or ProviderName.MySql80MySqlConnector or ProviderName.MySql57MySqlConnector;
 			_isSystemDataSqlite = _providerName == "SQLite.Classic";
-			_isAccessOleDb      = _providerName == "Access";
-			_isAccessOdbc       = _providerName == "Access.Odbc";
+			_isAccessOleDb      = _providerName is ProviderName.AccessJetOleDb or ProviderName.AccessAceOleDb;
+			_isAccessOdbc       = _providerName is ProviderName.AccessJetOdbc or ProviderName.AccessAceOdbc;
 			_isSqlServer        = _providerName.Contains(ProviderName.SqlServer);
 
 			// load schema from legacy API and convrt it into new model

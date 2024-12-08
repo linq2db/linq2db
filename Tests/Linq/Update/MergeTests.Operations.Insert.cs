@@ -720,7 +720,7 @@ namespace Tests.xUpdate
 						.InsertWhenNotMatched()
 						.Merge())!;
 
-				Assert.That(exception, Is.InstanceOf<LinqException>());
+				Assert.That(exception, Is.InstanceOf<LinqToDBException>());
 				Assert.That(exception.Message,  Does.EndWith("'source.Field2' could not be converted to SQL."));
 			}
 		}
@@ -746,7 +746,7 @@ namespace Tests.xUpdate
 						})
 						.Merge())!;
 
-				Assert.That(exception, Is.InstanceOf<LinqException>());
+				Assert.That(exception, Is.InstanceOf<LinqToDBException>());
 
 				Assert.That(exception.Message,  Does.EndWith("s.Field3' could not be converted to SQL."));
 			}
@@ -1163,7 +1163,7 @@ namespace Tests.xUpdate
 						})
 					.Merge())!;
 
-				Assert.That(exception, Is.InstanceOf<LinqException>());
+				Assert.That(exception, Is.InstanceOf<LinqToDBException>());
 				Assert.That(exception.Message,  Does.EndWith(".Field2' could not be converted to SQL."));
 			}
 		}

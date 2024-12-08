@@ -76,8 +76,8 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 
 			var items = new List<NoIdentity>()
 			{
-				new() {Id = Guid.NewGuid(), Name = "John Doe"},
-				new() {Id = Guid.NewGuid(), Name = "Jane Doe"}
+				new() {Id = TestData.Guid1, Name = "John Doe"},
+				new() {Id = TestData.Guid2, Name = "Jane Doe"}
 			};
 
 			t.BulkCopy(items);

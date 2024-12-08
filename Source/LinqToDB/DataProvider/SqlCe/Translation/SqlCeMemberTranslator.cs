@@ -194,6 +194,19 @@ namespace LinqToDB.DataProvider.SqlCe.Translation
 			}
 		}
 
+		public class SqlCeMathMemberTranslator : MathMemberTranslatorBase
+		{
+			protected override ISqlExpression? TranslateRoundAwayFromZero(ITranslationContext translationContext, MethodCallExpression methodCall, ISqlExpression value, ISqlExpression? precision)
+			{
+				return base.TranslateRoundAwayFromZero(translationContext, methodCall, value, precision ?? translationContext.ExpressionFactory.Value(0));
+			}
+
+			protected override ISqlExpression? TranslateRoundToEven(ITranslationContext translationContext, MethodCallExpression methodCall, ISqlExpression value, ISqlExpression? precision)
+			{
+				return base.TranslateRoundToEven(translationContext, methodCall, value, precision ?? translationContext.ExpressionFactory.Value(0));
+			}
+		}
+
 		protected override IMemberTranslator CreateSqlTypesTranslator()
 		{
 			return new SqlTypesTranslation();
@@ -202,6 +215,11 @@ namespace LinqToDB.DataProvider.SqlCe.Translation
 		protected override IMemberTranslator CreateDateMemberTranslator()
 		{
 			return new DateFunctionsTranslator();
+		}
+
+		protected override IMemberTranslator CreateMathMemberTranslator()
+		{
+			return new SqlCeMathMemberTranslator();
 		}
 
 		protected override ISqlExpression? TranslateNewGuidMethod(ITranslationContext translationContext, TranslationFlags translationFlags)
