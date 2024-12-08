@@ -385,12 +385,7 @@ namespace LinqToDB.SqlQuery
 						: DbDataType.Undefined;
 				}
 
-				case SqlExpression sqlExpression:
-				{
-					return sqlExpression is { Parameters: [var e], Expr: "{0}" }
-						? GetDbDataType(e)
-						: DbDataType.Undefined;
-				}
+				case SqlExpression { Parameters: [var e], Expr: "{0}" }: return GetDbDataType(e);
 
 				case SqlCaseExpression caseExpression          : return GetCaseExpressionType(caseExpression);
 				case SqlConditionExpression conditionExpression: return GetConditionExpressionType(conditionExpression);
