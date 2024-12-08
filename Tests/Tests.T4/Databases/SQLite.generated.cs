@@ -20,6 +20,8 @@ namespace SQLiteDataContext
 {
 	public partial class TestDataDB : LinqToDB.DataContext
 	{
+		#region Tables
+
 		public ITable<@namespace>        Classes             { get { return this.GetTable<@namespace>(); } }
 		public ITable<AllTypesView>      AllTypesViews       { get { return this.GetTable<AllTypesView>(); } }
 		public ITable<Child>             Children            { get { return this.GetTable<Child>(); } }
@@ -39,6 +41,10 @@ namespace SQLiteDataContext
 		public ITable<TestMerge1>        TestMerge1          { get { return this.GetTable<TestMerge1>(); } }
 		public ITable<TestMerge2>        TestMerge2          { get { return this.GetTable<TestMerge2>(); } }
 		public ITable<TestT4Casing>      TestT4Casings       { get { return this.GetTable<TestT4Casing>(); } }
+
+		#endregion
+
+		#region .ctor
 
 		public TestDataDB()
 		{
@@ -69,6 +75,8 @@ namespace SQLiteDataContext
 
 		partial void InitDataContext  ();
 		partial void InitMappingSchema();
+
+		#endregion
 	}
 
 	[Table("AllTypes")]

@@ -1,12 +1,16 @@
-<#@ include file="LinqToDB.ttinclude" once="true" #>
-<#@ import namespace="System.IO"                  #>
+<#@ assembly name="$(LinqToDBT4SQLiteClientPath)System.Data.SQLite.dll"           #>
+<#@ include file="$(LinqToDBT4TemplatesPath)LinqToDB.ttinclude"       once="true" #>
+<#@ include file="$(LinqToDBT4TemplatesPath)LinqToDB.Tools.ttinclude" once="true" #>
+<#@ import namespace="System.IO"                                                  #>
 <#
-	var beforeGenerateLinqToDBModel = BeforeGenerateLinqToDBModel;
-	BeforeGenerateLinqToDBModel = () =>
 	{
-		ConvertSQLiteMetadata();
-		beforeGenerateLinqToDBModel();
-	};
+		var beforeGenerateLinqToDBModel = BeforeGenerateLinqToDBModel;
+		BeforeGenerateLinqToDBModel = () =>
+		{
+			ConvertSQLiteMetadata();
+			beforeGenerateLinqToDBModel();
+		};
+	}
 #>
 <#+
 void ConvertSQLiteMetadata()

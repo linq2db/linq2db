@@ -17,6 +17,7 @@
 		<PackageReference Include="FirebirdSql.Data.FirebirdClient" />
 		<PackageReference Include="Oracle.ManagedDataAccess" />
 		<PackageReference Include="Npgsql" />
+		<PackageReference Include="System.Data.SQLite.Core" />
 
 		<Reference Include="System.Data.SqlServerCe">
 			<HintPath>$(SolutionDir)\Redist\SqlCe\System.Data.SqlServerCe.dll</HintPath>

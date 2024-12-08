@@ -1,10 +1,13 @@
-<#@ template language="C#" debug="True" hostSpecific="True"                    #>
-<#@ CleanupBehavior processor="T4VSHost" CleanupAfterProcessingtemplate="true" #>
-<#@ output extension=".generated.cs"                                           #>
-
-<#@ include file="$(LinqToDBT4SQLiteTemplatesPath)LinqToDB.SQLite.Tools.ttinclude" once="true" #>
-<#@ include file="$(LinqToDBT4TemplatesPath)PluralizationService.ttinclude"        once="true" #>
+<#@ template language="C#" debug="True" hostSpecific="True"                              #>
+<#@ CleanupBehavior processor="T4VSHost" CleanupAfterProcessingtemplate="true"           #>
+<#@ output extension=".generated.cs"                                                     #>
+<#@ include file="$(LinqToDBT4SQLiteTemplatesPath)LinqToDB.SQLite.ttinclude" once="true" #>
+<#@ include file="$(LinqToDBT4TemplatesPath)PluralizationService.ttinclude"  once="true" #>
 <#
+	// Install linq2db nuget package.
+	// Install one of the following packages:
+	// https://www.nuget.org/packages/System.Data.SQLite.Core for System.Data.SQLite.Core (recommended as it use most recent SQLite engine and provides access to SQLite functions)
+	// https://www.nuget.org/packages/Microsoft.Data.Sqlite   for Microsoft.Data.Sqlite
 	// See LinqToDB.Templates/README.md for more details.
 
 	// Configuring schema load process
@@ -16,6 +19,7 @@
 	NamespaceName        = "DataModels";
 //	DataContextName      = "MyDB";
 	GenerateSchemaAsType = true;
+//	GetDataOptionsMethod = "GetDataOptions({0})";
 
 	// Loading metadata
 	//
