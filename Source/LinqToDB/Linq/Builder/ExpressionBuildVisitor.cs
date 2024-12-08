@@ -5056,6 +5056,14 @@ namespace LinqToDB.Linq.Builder
 
 			var alias = sqlPlaceholder.Alias;
 
+			if (string.IsNullOrEmpty(alias))
+			{
+				if (sqlPlaceholder.TrackingPath is MemberExpression tme)
+					alias = tme.Member.Name;
+				else if (sqlPlaceholder.Path is MemberExpression me)
+					alias = me.Member.Name;
+			}
+
 			/*
 
 			// Left here for simplifying debugging
