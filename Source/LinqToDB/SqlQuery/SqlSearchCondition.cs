@@ -165,9 +165,12 @@ namespace LinqToDB.SqlQuery
 
 		#region ISqlExpression Members
 
-		public override bool CanBeNullable(NullabilityContext nullability) => CanBeNull;
+		public override bool CanBeNullable(NullabilityContext nullability) => false;
 
-		public bool CanBeNull => false;
+		public bool CanBeUnknown(NullabilityContext nullability)
+		{
+			return Predicates.Any(predicate => predicate.CanBeUnknown(nullability));
+		}
 
 		public override bool Equals(ISqlExpression other, Func<ISqlExpression, ISqlExpression, bool> comparer)
 		{
