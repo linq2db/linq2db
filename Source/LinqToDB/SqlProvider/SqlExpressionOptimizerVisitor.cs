@@ -632,6 +632,9 @@ namespace LinqToDB.SqlProvider
 									case "+":
 									{
 										var value = be1v2i + vi;
+
+										if (value == 0) return be1.Expr1;
+
 										var oper  = be1.Operation;
 
 										if (value < 0)
@@ -646,6 +649,9 @@ namespace LinqToDB.SqlProvider
 									case "-":
 									{
 										var value = be1v2i - vi;
+
+										if (value == 0) return be1.Expr1;
+
 										var oper  = be1.Operation;
 
 										if (value < 0)
@@ -704,6 +710,9 @@ namespace LinqToDB.SqlProvider
 									case "+":
 									{
 										var value = be1v2i - vi;
+
+										if (value == 0) return be1.Expr1;
+
 										var oper  = be1.Operation;
 
 										if (value < 0)
@@ -718,6 +727,9 @@ namespace LinqToDB.SqlProvider
 									case "-":
 									{
 										var value = be1v2i + vi;
+
+										if (value == 0) return be1.Expr1;
+
 										var oper  = be1.Operation;
 
 										if (value < 0)
