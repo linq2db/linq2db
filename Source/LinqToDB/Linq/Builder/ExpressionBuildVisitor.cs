@@ -1226,7 +1226,7 @@ namespace LinqToDB.Linq.Builder
 				{
 					contextRef = contextRef.WithType(contextRef.BuildContext.ElementType);
 
-					var result = BuildExpression(contextRef.BuildContext, contextRef);
+					var result = BuildSqlExpression(contextRef.BuildContext, contextRef);
 
 					if (result is SqlPlaceholderExpression)
 					{
@@ -1375,6 +1375,8 @@ namespace LinqToDB.Linq.Builder
 						{
 							return Visit(placeholder.WithType(node.Type));
 						}
+
+						return node.Update(translatedExpr);
 					}
 
 					if (node.Member.IsNullableHasValueMember())

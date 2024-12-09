@@ -232,7 +232,7 @@ namespace LinqToDB.Linq.Builder
 								providerValueGetter = InternalExtensions.ApplyLambdaToExpression(convertLambda, providerValueGetter);
 							}
 
-							if (providerValueGetter.Type.UnwrapNullableType() != memberType.UnwrapNullableType())
+							if (providerValueGetter.Type != memberType && providerValueGetter.Type.UnwrapNullableType() == memberType.UnwrapNullableType())
 							{
 								providerValueGetter = Expression.Convert(providerValueGetter, memberType);
 							}
