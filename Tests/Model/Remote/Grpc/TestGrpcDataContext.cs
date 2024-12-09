@@ -5,7 +5,9 @@ using System.Net.Http;
 using System.Security.Authentication;
 using System.Threading;
 using System.Threading.Tasks;
+
 using Grpc.Net.Client;
+
 using LinqToDB;
 using LinqToDB.Remote;
 using LinqToDB.Remote.Grpc;
@@ -14,9 +16,7 @@ namespace Tests.Model.Remote.Grpc
 {
 	public class TestGrpcDataContext : GrpcDataContext, ITestDataContext
 	{
-		private readonly Action? _onDispose;
-
-		public TestGrpcDataContext(string address, Action? onDispose = null, Func<DataOptions, DataOptions>? optionBuilder = null)
+		public TestGrpcDataContext(string address, Func<DataOptions, DataOptions>? optionBuilder = null)
 			: base(
 				address,
 				new GrpcChannelOptions
@@ -31,7 +31,6 @@ namespace Tests.Model.Remote.Grpc
 				},
 				optionBuilder)
 		{
-			_onDispose = onDispose;
 		}
 
 		public ITable<Person>                 Person                 => this.GetTable<Person>();
@@ -61,18 +60,6 @@ namespace Tests.Model.Remote.Grpc
 		public ITable<Parent> GetParentByID(int? id)
 		{
 			throw new NotImplementedException();
-		}
-
-		public override void Dispose()
-		{
-			_onDispose?.Invoke();
-			base.Dispose();
-		}
-
-		public override ValueTask DisposeAsync()
-		{
-			_onDispose?.Invoke();
-			return base.DisposeAsync();
 		}
 	}
 }

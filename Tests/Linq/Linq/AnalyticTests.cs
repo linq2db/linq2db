@@ -1,15 +1,18 @@
-﻿using FluentAssertions;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 
-using Tests.Model;
+using FluentAssertions;
+
+using LinqToDB;
+using LinqToDB.Linq;
+using LinqToDB.Mapping;
+
+using NUnit.Framework;
 
 namespace Tests.Linq
 {
-	using System;
-	using System.Linq;
-
-	using LinqToDB;
-	using LinqToDB.Mapping;
-	using NUnit.Framework;
+	using Model;
 
 	[TestFixture]
 	public class AnalyticTests : TestBase
@@ -102,6 +105,35 @@ namespace Tests.Linq
 
 				var res = q.ToList();
 				Assert.That(res, Is.Not.Empty);
+			}
+		}
+
+		[Test]
+		public void TestFunctionsInSubquery(
+			[IncludeDataSources(
+				true,
+				TestProvName.AllOracle,
+				TestProvName.AllSqlServer2012Plus,
+				TestProvName.AllClickHouse,
+				TestProvName.AllPostgreSQL)]
+			string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var subq =
+					from p in db.Parent
+					join c in db.Child on p.ParentID equals c.ParentID
+					let groupId = Sql.Ext.RowNumber().Over().PartitionBy(p.Value1, c.ChildID).OrderByDesc(p.Value1).ThenBy(c.ChildID).ThenByDesc(c.ParentID).ToValue()
+					select new
+					{
+						Sum = Sql.Ext.Sum(groupId).Over().PartitionBy(p.Value1, c.ChildID).OrderBy(p.Value1).ThenBy(c.ChildID).ThenBy(c.ParentID).ToValue(),
+					};
+
+				var q = from sq in subq
+					where sq.Sum > 0
+					select sq;
+
+				Assert.DoesNotThrow(() => _ = q.ToList());
 			}
 		}
 
@@ -1309,9 +1341,6 @@ namespace Tests.Linq
 						MaxValue = Sql.Ext.Min(q.MaxValue).Over().PartitionBy(q.ParentID).ToValue(),
 					};
 
-				TestContext.Out.WriteLine(q1.ToString());
-				TestContext.Out.WriteLine(q2.ToString());
-
 				Assert.Multiple(() =>
 				{
 					Assert.That(q1.EnumQueries().Count(), Is.EqualTo(2));
@@ -1483,7 +1512,6 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue("https://github.com/ClickHouse/ClickHouse/issues/37950", Configuration = TestProvName.AllClickHouse)]
 		[Test]
 		public void Issue1732FirstValue([DataSources(
 			TestProvName.AllSqlServer2008Minus,
@@ -1526,7 +1554,7 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue("https://github.com/ClickHouse/ClickHouse/issues/37950", Configuration = TestProvName.AllClickHouse)]
+		[ActiveIssue("ClickHouse works unstable", Configuration =TestProvName.AllClickHouse)]
 		[Test]
 		public void Issue1732LastValue([DataSources(
 			TestProvName.AllSqlServer2008Minus,
@@ -1947,6 +1975,59 @@ namespace Tests.Linq
 				.OrderByDescending(_ => _.key)
 				.Take(100)
 				.ToList();
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/3373")]
+		public void Issue3373Test([DataSources(TestProvName.AllMySql57, ProviderName.Firebird25, TestProvName.AllSqlServer2008Minus, TestProvName.AllSybase, TestProvName.AllAccess, ProviderName.Firebird, ProviderName.SqlCe)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var list = new List<int>() { 3 };
+
+			var query =
+						from t in db.Child
+						select new
+						{
+							Sum = Sql.Ext.Sum(list.Contains(t.ParentID) ? t.ChildID : 0)
+								.Over()
+								.PartitionBy(t.Parent!.Value1)
+								.OrderBy(t.ParentID)
+								.ToValue()
+						};
+
+			query.ToList();
+		}
+
+		// also see Issue4626Test2 test in efcore tests
+		// as fix I would expect to have:
+		// - skipped methods should be explicitly marked as optional
+		// - all other unmapped methods should throw
+		// - empty resulting sequence should return default(T)
+		// This will require additional asserts for results and tests to ensure expected behavior
+		[ActiveIssue(Configurations = [ProviderName.SqlCe, TestProvName.AllSqlServer2016Minus])]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllAccess, TestProvName.AllDB2, TestProvName.AllFirebirdLess4, TestProvName.AllInformix, TestProvName.AllMySql57, TestProvName.AllMariaDB, TestProvName.AllOracle11, TestProvName.AllSQLite, TestProvName.AllSybase, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllClickHouse, ErrorMessage = ErrorHelper.Error_GroupGuard)]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4626")]
+		public void EmptySequenceTest([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			(from c in db.Parent
+				select new
+				{
+					Key = c.ParentID,
+					Subquery = (
+						from p in c.Children
+						group p by p.ParentID into g
+						select new
+						{
+							ParentID = g.Key,
+							// Tested code:
+							// StringAggregate mapped only for some providers leading to empty function sequence for others
+							Children = g.StringAggregate(", ", p => p.ChildID.ToString()).ToValue()
+						}).ToArray()
+				 })
+				 .ToArray();
 		}
 	}
 }

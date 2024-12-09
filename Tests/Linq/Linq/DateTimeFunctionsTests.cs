@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 
 using LinqToDB;
+using LinqToDB.Data;
 using LinqToDB.Linq;
 using LinqToDB.Mapping;
 
@@ -151,7 +152,7 @@ namespace Tests.Linq
 		[ActiveIssue("Test is broken")]
 		[Test]
 		public void CurrentTimestampUtcClientSideParameter(
-			[IncludeDataSources(true, TestProvName.AllFirebird, ProviderName.SqlCe, TestProvName.AllClickHouse)]
+			[IncludeDataSources(true, TestProvName.AllFirebird, ProviderName.SqlCe)]
 			string context)
 		{
 			using (new DisableBaseline("Server-side date generation test"))
@@ -193,8 +194,43 @@ namespace Tests.Linq
 			using (new DisableBaseline("Server-side date generation test"))
 			using (var db = GetDataContext(context))
 			{
-				var q = from p in db.Person where p.ID == 1 select new { Now = Sql.AsSql(DateTime.Now) };
+				var q = 
+					from p in db.Person 
+					where p.ID == 1 
+					select new { Now = Sql.AsSql(DateTime.Now) };
+
 				Assert.That(q.ToList().First().Now.Year, Is.EqualTo(DateTime.Now.Year));
+			}
+		}
+
+		[Test]
+		public void NullabilityCheck([DataSources(false)] string context)
+		{
+			using (var db = (TestDataConnection)GetDataContext(context))
+			{
+#pragma warning disable CS8073 // The result of the expression is always the same since a value of this type is never equal to 'null'
+				var q =
+					from p in db.Person
+					where p.ID == 1 && 
+					      (
+						      DateTime.Now != null  &&
+							  DateTime.UtcNow != null &&
+							  DateTimeOffset.Now != null &&
+							  DateTimeOffset.UtcNow != null &&
+							  Sql.CurrentTimestamp != null &&
+							  Sql.CurrentTimestampUtc != null &&
+							  Sql.CurrentTzTimestamp != null
+					      )
+					select p;
+#pragma warning restore CS8073 // The result of the expression is always the same since a value of this type is never equal to 'null'
+
+				var result = q.ToList();
+
+				Assert.Multiple(() =>
+				{
+					Assert.That(result, Has.Count.EqualTo(1));
+					Assert.That(db.LastQuery, Does.Not.Contain("NULL"));
+				});
 			}
 		}
 
@@ -551,8 +587,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[ThrowsForProvider(typeof(LinqException), TestProvName.AllAccess,   ErrorMessage = "The LINQ expression 't.DateTimeValue.Millisecond' could not be converted to SQL.")]
-		[ThrowsForProvider(typeof(LinqException), TestProvName.AllInformix, ErrorMessage = "The LINQ expression 't.DateTimeValue.Millisecond' could not be converted to SQL.")]
+		[ThrowsForProvider(typeof(LinqToDBException), [TestProvName.AllInformix, TestProvName.AllAccess], ErrorMessage = "The LINQ expression 't.DateTimeValue.Millisecond' could not be converted to SQL.")]
 		public void Millisecond([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -1529,11 +1564,13 @@ namespace Tests.Linq
 			public DateTime? DateTimeNullable { get; set; }
 
 			[Column(DataType = DataType.DateTime2, CanBeNull = false)]
-			[Column(DataType = DataType.DateTime, CanBeNull = false, Configuration = ProviderName.AccessOdbc)]
+			[Column(DataType = DataType.DateTime, CanBeNull = false, Configuration = ProviderName.AccessAceOdbc)]
+			[Column(DataType = DataType.DateTime, CanBeNull = false, Configuration = ProviderName.AccessJetOdbc)]
 			public DateTime DateTime2 { get; set; }
 
 			[Column(DataType = DataType.DateTime2, CanBeNull = true)]
-			[Column(DataType = DataType.DateTime, CanBeNull = true, Configuration = ProviderName.AccessOdbc)]
+			[Column(DataType = DataType.DateTime, CanBeNull = true, Configuration = ProviderName.AccessAceOdbc)]
+			[Column(DataType = DataType.DateTime, CanBeNull = true, Configuration = ProviderName.AccessJetOdbc)]
 			public DateTime? DateTime2Nullable { get; set; }
 
 			public static DateTypes[] Seed()

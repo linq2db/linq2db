@@ -41,6 +41,7 @@ namespace LinqToDB.DataProvider.SQLite
 			SqlProviderFlags.IsSkipSupportedIfTake             = true;
 			SqlProviderFlags.IsCommonTableExpressionsSupported = true;
 			SqlProviderFlags.IsSubQueryOrderBySupported        = true;
+			SqlProviderFlags.IsDistinctFromSupported           = true; // since 3.39.0
 			SqlProviderFlags.DefaultMultiQueryIsolationLevel   = IsolationLevel.Serializable;
 
 			// this actually requires compilation flag set

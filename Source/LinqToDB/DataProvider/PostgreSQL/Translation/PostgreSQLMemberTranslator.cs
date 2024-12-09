@@ -166,11 +166,6 @@ namespace LinqToDB.DataProvider.PostgreSQL.Translation
 				return resultExpression;
 			}
 
-			protected override ISqlExpression? TranslateDateTimeOffsetDateAdd(ITranslationContext translationContext, TranslationFlags translationFlag, ISqlExpression dateTimeExpression, ISqlExpression increment, Sql.DateParts datepart)
-			{
-				return TranslateDateTimeDateAdd(translationContext, translationFlag, dateTimeExpression, increment, datepart);
-			}
-
 			protected override ISqlExpression? TranslateMakeDateTime(
 				ITranslationContext translationContext,
 				DbDataType          resulType,
@@ -208,17 +203,35 @@ namespace LinqToDB.DataProvider.PostgreSQL.Translation
 
 				return resultExpression;
 			}
+		}
 
-			protected override ISqlExpression? TranslateDateOnlyDateAdd(ITranslationContext translationContext, TranslationFlags translationFlag, ISqlExpression dateTimeExpression, ISqlExpression increment, Sql.DateParts datepart)
+		class MathMemberTranslator : MathMemberTranslatorBase
+		{
+			protected override ISqlExpression? TranslateRoundToEven(ITranslationContext translationContext, MethodCallExpression methodCall, ISqlExpression value, ISqlExpression? precision)
 			{
-				return TranslateDateTimeDateAdd(translationContext, translationFlag, dateTimeExpression, increment, datepart);
-			}
+				var factory     = translationContext.ExpressionFactory;
+				var decimalType = factory.GetDbDataType(typeof(decimal));
 
-			protected override ISqlExpression? TranslateDateOnlyDatePart(ITranslationContext translationContext, TranslationFlags translationFlag, ISqlExpression dateTimeExpression, Sql.DateParts datepart)
-			{
-				return TranslateDateTimeDatePart(translationContext, translationFlag, dateTimeExpression, datepart);
+				var valueType   = factory.GetDbDataType(value);
+				var shouldCast  = decimalType != valueType;
+
+				var valueCasted = value;
+				if (shouldCast)
+				{
+					valueCasted = factory.Cast(value, decimalType);
+				}
+
+				var result = base.TranslateRoundToEven(translationContext, methodCall, valueCasted, precision);
+
+				if (result != null && shouldCast)
+				{
+					result = factory.Cast(result, valueType);
+				}
+
+				return result;
 			}
 		}
+
 
 		protected override IMemberTranslator CreateSqlTypesTranslator()
 		{
@@ -228,6 +241,11 @@ namespace LinqToDB.DataProvider.PostgreSQL.Translation
 		protected override IMemberTranslator CreateDateMemberTranslator()
 		{
 			return new DateFunctionsTranslator();
+		}
+
+		protected override IMemberTranslator CreateMathMemberTranslator()
+		{
+			return new MathMemberTranslator();
 		}
 
 	}

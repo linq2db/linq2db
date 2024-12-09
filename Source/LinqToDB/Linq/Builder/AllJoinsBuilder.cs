@@ -59,11 +59,10 @@ namespace LinqToDB.Linq.Builder
 				var condition = (LambdaExpression)methodCall.Arguments[conditionIndex].Unwrap();
 
 				result = builder.BuildWhere(result, result,
-					condition : condition, checkForSubQuery : false, enforceHaving : false,
-					isTest : buildInfo.IsTest);
+					condition : condition, checkForSubQuery : false, enforceHaving : false, out var error);
 
 				if (result == null)
-					return BuildSequenceResult.Error(methodCall);
+					return BuildSequenceResult.Error(error ?? methodCall);
 
 				/*if (joinType == JoinType.Full)
 				{

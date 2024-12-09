@@ -256,8 +256,7 @@ namespace LinqToDB.SqlProvider
 				if (rightSource.Source.SourceID == sourceID)
 					rightField = field;
 				else if (rightSource.Source is SelectQuery select && select.Select.From.Tables.Count == 1 && select.Select.From.Tables[0].SourceID == sourceID)
-					throw new InvalidOperationException("DetectField:Debug");
-					//rightField = field;
+					rightField = field;
 				else if (leftSource?.Source.SourceID == sourceID)
 					leftField = field;
 				else if (leftSource != null)

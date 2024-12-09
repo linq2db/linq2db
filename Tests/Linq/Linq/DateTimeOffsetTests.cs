@@ -1,9 +1,12 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices;
+
 using LinqToDB;
 using LinqToDB.Mapping;
 using LinqToDB.Tools;
+
 using NUnit.Framework;
 
 namespace Tests.Linq
@@ -1030,6 +1033,79 @@ namespace Tests.Linq
 					from t in Transaction.GetTestDataForContext(context) where           t.TransactionDate > TestData.DateTimeOffset.AddMinutes(200).ToUniversalTime() select t.TransactionId,
 					from t in db.GetTable<Transaction>()                 where Sql.AsSql(t.TransactionDate > TestData.DateTimeOffset.AddMinutes(200))                  select t.TransactionId);
 		}
+		#endregion
+
+		#region Issue 1855
+		[ActiveIssue(Configurations =
+		[
+			// caused by difference in how DTO parameter stored into database by provider
+			TestProvName.AllSQLiteClassic,
+			// for FB we need to map DTO parameters to FbzonedDateTime : https://github.com/FirebirdSQL/NETProvider/issues/1189
+			TestProvName.AllFirebird
+		])]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/1855")]
+		public void Issue1855Test(
+			// DateTimeOffset not mapped
+			[DataSources(TestProvName.AllFirebirdLess4, TestProvName.AllAccess, TestProvName.AllDB2, TestProvName.AllSybase, ProviderName.SqlCe, TestProvName.AllSapHana, TestProvName.AllInformix, TestProvName.AllSqlServer2005)]
+				string context,
+			[Values(0, 1, 2, 3)] int testCase)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable<Issue1855Table>();
+
+			var dtoBase = new DateTimeOffset(2019,08,08,08,08,08, TimeSpan.Zero);
+			var insert = tb
+					.Value(r => r.Id, 1)
+					.Value(r => r.SomeDateTimeOffset, dtoBase)
+					.Value(r => r.SomeNullableDateTimeOffset, dtoBase);
+
+			insert.Insert();
+
+			insert = tb
+					.Value(r => r.Id, 2)
+					.Value(r => r.SomeDateTimeOffset, dtoBase);
+
+			insert.Insert();
+
+			var interval = 10;
+			var clientSideIn = dtoBase.AddSeconds(interval);
+			IQueryable<Issue1855Table> query = tb;
+
+			if (testCase == 2)
+			{
+				query = query.Where(r => clientSideIn != r.SomeNullableDateTimeOffset);
+			}
+			else if (testCase == 3)
+			{
+				query = query.Where(r => clientSideIn != r.SomeDateTimeOffset);
+			}
+			else
+			{
+				query = query
+					.Where(
+						r => Sql.DateAdd(
+							Sql.DateParts.Second,
+							interval,
+							(testCase == 1 ? r.SomeNullableDateTimeOffset : r.SomeDateTimeOffset)) >= clientSideIn);
+
+			}
+
+			var result = query.ToArray();
+
+			Assert.That(result, Has.Length.EqualTo(testCase == 1? 1 : 2));
+			if (testCase == 1)
+			{
+				Assert.That(result[0].Id, Is.EqualTo(1));
+			}
+		}
+
+		sealed class Issue1855Table
+		{
+			[PrimaryKey] public int Id { get; set; }
+			public DateTimeOffset SomeDateTimeOffset { get; set; }
+			public DateTimeOffset? SomeNullableDateTimeOffset { get; set; }
+		}
+
 		#endregion
 	}
 }

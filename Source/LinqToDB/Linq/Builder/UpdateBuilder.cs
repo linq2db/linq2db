@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Reflection;
 
 namespace LinqToDB.Linq.Builder
 {
@@ -110,12 +111,17 @@ namespace LinqToDB.Linq.Builder
 					var setterExpr = methodCall.Arguments[1].Unwrap();
 					if (setterExpr is LambdaExpression && methodCall.Arguments.Count == 3 && updateType == UpdateTypeEnum.Update)
 					{
-						sequence = builder.BuildWhere(buildInfo.Parent, sequence,
-							condition : methodCall.Arguments[1].UnwrapLambda(), checkForSubQuery : false,
-							enforceHaving : false, isTest : buildInfo.IsTest);
+						sequence = builder.BuildWhere(
+							buildInfo.Parent,
+							sequence,
+							condition: methodCall.Arguments[1].UnwrapLambda(),
+							checkForSubQuery: false,
+							enforceHaving: false,
+							out var error
+						);
 
 						if (sequence == null)
-							return BuildSequenceResult.Error(methodCall);
+							return BuildSequenceResult.Error(error ?? methodCall);
 
 						setterExpr = methodCall.Arguments[2].Unwrap();
 					}
@@ -162,10 +168,11 @@ namespace LinqToDB.Linq.Builder
 
 						if (tableContext == null)
 						{
-							throw new LinqException("Cannot retrieve Table for update.");
+							throw new LinqToDBException("Cannot retrieve Table for update.");
 						}
 
-						updateContext.TargetTable = tableContext;
+						updateContext.TablePath = body;
+						updateContext.TargetTable   = tableContext;
 					}
 					else
 					{
@@ -175,7 +182,7 @@ namespace LinqToDB.Linq.Builder
 
 						if (intoTableContext == null)
 						{
-							throw new LinqException("Cannot retrieve Table for update.");
+							throw new LinqToDBException("Cannot retrieve Table for update.");
 						}
 
 						if (intoTableContext.SqlTable.SqlQueryExtensions?.Count > 0)
@@ -183,37 +190,13 @@ namespace LinqToDB.Linq.Builder
 
 						if (sequenceTableContext == null)
 						{
-							// trying to detect join table
+							// trying to detect join table in projection
 							//
-							var collectedTables = new HashSet<ITableContext>();
 
-							if (collectedTables.Count == 0)
-							{
-								// try to find in projection
-								//
-								var sequenceRefExpression = new ContextRefExpression(typeof(object), sequence);
-								var projection = builder.ExtractProjection(sequence, sequenceRefExpression);
+							var sequenceRefExpression = new ContextRefExpression(sequence.ElementType, sequence);
+							var projection            = builder.BuildExtractExpression(sequence, sequenceRefExpression);
 
-								projection.Visit((builder, sequence, collectedTables, intoTableContext), (ctx, e) =>
-								{
-									if (e is MemberExpression or ContextRefExpression)
-									{
-										var tableCtx = SequenceHelper.GetTableOrCteContext(ctx.builder, e);
-										if (tableCtx != null && tableCtx.ObjectType == ctx.intoTableContext.ObjectType)
-										{
-											ctx.collectedTables.Add(tableCtx);
-										}
-									}
-									else if (e is SqlGenericConstructorExpression { ConstructionRoot: not null } constructor)
-									{
-										var tableCtx = SequenceHelper.GetTableOrCteContext(builder, constructor.ConstructionRoot);
-										if (tableCtx != null && tableCtx.ObjectType == ctx.intoTableContext.ObjectType)
-										{
-											ctx.collectedTables.Add(tableCtx);
-										}
-									}
-								});
-							}
+							var collectedTables = CollectTables(builder, projection, sequenceRefExpression, intoTableContext.ObjectType);
 
 							if (collectedTables.Count == 0)
 								throw new LinqToDBException("Could not find join table for update query.");
@@ -221,7 +204,10 @@ namespace LinqToDB.Linq.Builder
 							if (collectedTables.Count > 1)
 								throw new LinqToDBException("Could not find join table for update query. Ambiguous tables.");
 
-							sequenceTableContext = collectedTables.First();
+							var kvp = collectedTables.First();
+
+							updateContext.TablePath = kvp.Value;
+							sequenceTableContext    = kvp.Key;
 						}
 
 						if (QueryHelper.IsEqualTables(sequenceTableContext.SqlTable, intoTableContext.SqlTable, false))
@@ -236,7 +222,7 @@ namespace LinqToDB.Linq.Builder
 							var sequenceRef = new ContextRefExpression(sequenceTableContext.SqlTable.ObjectType, sequenceTableContext);
 							var intoRef     = new ContextRefExpression(sequenceTableContext.SqlTable.ObjectType, into);
 
-							var compareSearchCondition = builder.GenerateComparison(sequenceTableContext, sequenceRef, intoRef);
+							var compareSearchCondition = builder.GenerateComparison(sequenceTableContext, sequenceRef, intoRef, BuildPurpose.Sql);
 							sequenceTableContext.SelectQuery.Where.ConcatSearchCondition(compareSearchCondition);
 							updateStatement.Update.HasComparison = true;
 						}
@@ -264,18 +250,13 @@ namespace LinqToDB.Linq.Builder
 			if (updateContext.TargetTable == null)
 				throw new InvalidOperationException();
 
-			var (deletedContext, insertedContext, deletedTable, insertedTable) = CreateDeletedInsertedContexts(builder, updateContext.TargetTable, out _);
+			var (deletedContext, insertedContext) = CreateDeletedInsertedContexts(builder, updateContext.TargetTable, out _);
 
 			updateStatement.Output = new SqlOutputClause();
-
-			updateStatement.Output.DeletedTable  = deletedTable;
-			updateStatement.Output.InsertedTable = insertedTable;
 
 			if (updateType == UpdateTypeEnum.UpdateOutput)
 			{
 				updateContext.OutputExpression = outputExpression;
-				updateContext.DeletedContext   = deletedContext;
-				updateContext.InsertedContext  = insertedContext;
 
 				return BuildSequenceResult.FromContext(updateContext);
 			}
@@ -317,7 +298,50 @@ namespace LinqToDB.Linq.Builder
 			}
 		}
 
-		public static (IBuildContext deleted, IBuildContext inserted, SqlTable deletedTable, SqlTable insertedTable) CreateDeletedInsertedContexts(ExpressionBuilder builder, ITableContext targetTableContext, out IBuildContext outputContext)
+		Dictionary<ITableContext, Expression> CollectTables(ExpressionBuilder builder, Expression expr, Expression rooExpr, Type objectType)
+		{
+			var result = new Dictionary<ITableContext, Expression>();
+
+			Expression Combine(Expression current, List<MemberInfo> path)
+			{
+				return path.Aggregate(current, Expression.MakeMemberAccess);
+			}
+
+			void Collect(Expression current, List<MemberInfo> path)
+			{
+				if (current is ContextRefExpression or MemberExpression)
+				{
+					var tableCtx = SequenceHelper.GetTableOrCteContext(builder, current);
+					if (tableCtx != null && tableCtx.ObjectType == objectType && !result.ContainsKey(tableCtx))
+					{
+						result.Add(tableCtx, Combine(rooExpr, path));
+					}
+				}
+				else if (current is SqlGenericConstructorExpression constructor)
+				{
+					foreach (var assignment in constructor.Assignments)
+					{
+						path.Add(assignment.MemberInfo);
+						Collect(assignment.Expression, path);
+						path.RemoveAt(path.Count - 1);
+					}
+				}
+				else
+				{
+					var parsed = builder.ParseGenericConstructor(current, ProjectFlags.SQL, null);
+					if (!ReferenceEquals(parsed, current))
+					{
+						Collect(parsed, path);
+					}
+				}
+			}
+
+			Collect(expr, new List<MemberInfo>());
+
+			return result;
+		}
+
+		public static (IBuildContext deleted, IBuildContext inserted) CreateDeletedInsertedContexts(ExpressionBuilder builder, ITableContext targetTableContext, out IBuildContext outputContext)
 		{
 			// create separate query for output
 			var outputSelectQuery = new SelectQuery();
@@ -327,9 +351,9 @@ namespace LinqToDB.Linq.Builder
 			if (targetTableContext is CteTableContext cteTable)
 			{
 				insertedContext = new CteTableContext(builder, null,
-					targetTableContext.SqlTable.ObjectType, outputSelectQuery, cteTable.CteContext, false);
+					targetTableContext.SqlTable.ObjectType, outputSelectQuery, cteTable.CteContext);
 				deletedContext = new CteTableContext(builder, null,
-					targetTableContext.SqlTable.ObjectType, outputSelectQuery, cteTable.CteContext, false);
+					targetTableContext.SqlTable.ObjectType, outputSelectQuery, cteTable.CteContext);
 			}
 			else
 			{
@@ -341,16 +365,10 @@ namespace LinqToDB.Linq.Builder
 
 			outputSelectQuery.From.Tables.Clear();
 
-			var deletedTable = ((ITableContext)deletedContext).SqlTable;
-			var insertedTable = ((ITableContext)insertedContext).SqlTable;
+			insertedContext = new AnchorContext(null, insertedContext, SqlAnchor.AnchorKindEnum.Inserted);
+			deletedContext  = new AnchorContext(null, deletedContext, SqlAnchor.AnchorKindEnum.Deleted);
 
-			if (builder.DataContext.SqlProviderFlags.OutputUpdateUseSpecialTables)
-			{
-				insertedContext = new AnchorContext(null, insertedContext, SqlAnchor.AnchorKindEnum.Inserted);
-				deletedContext  = new AnchorContext(null, deletedContext, SqlAnchor.AnchorKindEnum.Deleted);
-			}
-
-			return (deletedContext, insertedContext, deletedTable, insertedTable);
+			return (deletedContext, insertedContext);
 		}
 
 		public enum UpdateTypeEnum
@@ -408,22 +426,9 @@ namespace LinqToDB.Linq.Builder
 				var fieldExpression = envelope.FieldExpression;
 				var valueExpression = envelope.ValueExpression;
 
-				if (fieldExpression.IsSqlRow())
-				{
-					var row = fieldExpression.GetSqlRowValues()
-						.Select(e => GetFieldExpression(e, false))
-						.ToArray();
-
-					var rowExpression = new SqlRowExpression(row);
-
-					setExpression = new SqlSetExpression(rowExpression, null);
-				}
-				else
-				{
-					var column = GetFieldExpression(fieldExpression, valueExpression == null);
-					columnDescriptor = QueryHelper.GetColumnDescriptor(column);
-					setExpression    = new SqlSetExpression(column, null);
-				}
+				var column = GetFieldExpression(fieldExpression, valueExpression == null);
+				columnDescriptor = QueryHelper.GetColumnDescriptor(column);
+				setExpression    = new SqlSetExpression(column, null);
 
 				if (valueExpression != null)
 				{
@@ -436,14 +441,15 @@ namespace LinqToDB.Linq.Builder
 						valueExpression = Expression.Convert(valueExpression, fieldExpression.Type);
 					}
 
-					var sqlExpr = builder.ConvertToSqlExpr(valuesContext, valueExpression, unwrap : false, columnDescriptor : columnDescriptor, forceParameter: envelope.ForceParameter);
+					using var savedDescriptor = builder.UsingColumnDescriptor(columnDescriptor);
+					var sqlExpr = builder.BuildSqlExpression(valuesContext, valueExpression, BuildPurpose.Sql, envelope.ForceParameter ? BuildFlags.ForceParameter : BuildFlags.None);
 
 					if (sqlExpr is not SqlPlaceholderExpression placeholder)
 					{
 						if (sqlExpr is SqlErrorExpression errorExpr)
 							throw errorExpr.CreateException();
 
-						throw SqlErrorExpression.CreateException(valueExpression, null);
+						throw SqlErrorExpression.CreateException(sqlExpr, null);
 					}
 
 					var sql = createColumns
@@ -466,11 +472,17 @@ namespace LinqToDB.Linq.Builder
 			List<SetExpressionEnvelope> envelopes,
 			bool                        forceParameters)
 		{
-			var correctedField = builder.ParseGenericConstructor(fieldExpression, ProjectFlags.SQL, null);
+			if (fieldExpression.NodeType is ExpressionType.Convert or ExpressionType.ConvertChecked)
+			{
+				fieldExpression = ((UnaryExpression)fieldExpression).Operand;
+				valueExpression = Expression.Convert(valueExpression, fieldExpression.Type);
+			}
+
+			var correctedField = builder.BuildSqlExpression(buildContext, fieldExpression);
 
 			if (correctedField is SqlGenericConstructorExpression fieldGeneric)
 			{
-				var correctedValue = builder.ParseGenericConstructor(valueExpression, ProjectFlags.SQL, null);
+				var correctedValue = builder.BuildSqlExpression(buildContext, valueExpression);
 
 				if (correctedValue is not SqlGenericConstructorExpression valueGeneric)
 					throw SqlErrorExpression.CreateException(valueExpression, null);
@@ -489,13 +501,17 @@ namespace LinqToDB.Linq.Builder
 			else
 			{
 				var hasConversion = false;
-				var targetColumn  = builder.ConvertToSqlExpr(buildContext, fieldExpression);
+				var targetColumn  = builder.BuildSqlExpression(buildContext, fieldExpression);
+
+				ColumnDescriptor? columnDescriptor = null;
 				if (targetColumn is SqlPlaceholderExpression placeholder)
 				{
-					var columnDescriptor = QueryHelper.GetColumnDescriptor(placeholder.Sql);
+					columnDescriptor = QueryHelper.GetColumnDescriptor(placeholder.Sql);
 
 					hasConversion = columnDescriptor?.ValueConverter != null;
 				}
+
+				using var saveDescriptor = builder.UsingColumnDescriptor(columnDescriptor);
 
 				if (hasConversion)
 				{
@@ -503,7 +519,7 @@ namespace LinqToDB.Linq.Builder
 				}
 				else
 				{
-					var correctedValue = builder.ParseGenericConstructor(valueExpression, ProjectFlags.SQL, null);
+					var correctedValue = builder.BuildSqlExpression(buildContext, valueExpression);
 
 					if (correctedValue is SqlGenericConstructorExpression valueGeneric)
 					{
@@ -539,7 +555,7 @@ namespace LinqToDB.Linq.Builder
 
 			if (correctedSetter is not SqlGenericConstructorExpression)
 			{
-				correctedSetter = builder.ConvertToSqlExpr(targetRef.BuildContext, correctedSetter);
+				correctedSetter = builder.BuildSqlExpression(targetRef.BuildContext, correctedSetter);
 			}
 
 			if (correctedSetter is SqlGenericConstructorExpression generic)
@@ -576,19 +592,6 @@ namespace LinqToDB.Linq.Builder
 			public Expression  FieldExpression { get; }
 			public Expression? ValueExpression { get; }
 			public bool        ForceParameter  { get; }
-
-			public SetExpressionEnvelope WithValueExpression(Expression? valueExpression)
-			{
-				if (valueExpression == null || ValueExpression == null)
-				{
-					if (ReferenceEquals(ValueExpression, valueExpression))
-						return this;
-				}
-				else if (ExpressionEqualityComparer.Instance.Equals(ValueExpression, valueExpression))
-					return this;
-
-				return new SetExpressionEnvelope(FieldExpression, valueExpression, ForceParameter);
-			}
 		}
 
 		#endregion
@@ -608,6 +611,8 @@ namespace LinqToDB.Linq.Builder
 
 			public SqlUpdateStatement         UpdateStatement { get; }
 			public UpdateTypeEnum             UpdateType      { get; set; }
+
+			public Expression? TablePath { get; set; }
 
 			public ITableContext? TargetTable
 			{
@@ -634,8 +639,8 @@ namespace LinqToDB.Linq.Builder
 			public List<SetExpressionEnvelope> SetExpressions { get; } = new ();
 
 			public LambdaExpression? OutputExpression { get; set; }
-			public IBuildContext?    DeletedContext   { get; set; }
-			public IBuildContext?    InsertedContext  { get; set; }
+
+			public SelectQuery? OutputQuery { get; set; }
 
 			public void FinalizeSetters()
 			{
@@ -704,32 +709,10 @@ namespace LinqToDB.Linq.Builder
 
 			static Expression BuildDefaultOutputExpression(ExpressionBuilder builder, Type outputType, IBuildContext querySequence, IBuildContext insertedContext, IBuildContext deletedContext)
 			{
-				// populate all accessible fields, especially for CTE
-				var queryRef  = new ContextRefExpression(querySequence.ElementType, querySequence);
-				var allFields = builder.ConvertToSqlExpr(querySequence, queryRef);
+				var returnType   = typeof(UpdateOutput<>).MakeGenericType(outputType);
 
-				if (allFields is not SqlGenericConstructorExpression constructorExpression)
-				{
-					throw new InvalidOperationException();
-				}
-
-				var querySequenceRef = new ContextRefExpression(constructorExpression.Type, querySequence);
-				var found = FindForRightProjectionPath(constructorExpression, querySequenceRef, outputType)
-					.ToList();
-
-				if (found.Count == 0)
-					throw new LinqToDBException("Could not find appropriate table in expression");
-				if (found.Count > 1)
-					throw new LinqToDBException("Ambiguous tables in expression");
-
-				var (foundPath, foundGeneric) = found.First();
-
-				var insertedRef = new ContextRefExpression(outputType, insertedContext, "inserted");
-				var deletedRef  = new ContextRefExpression(outputType, deletedContext, "deleted");
-				var returnType  = typeof(UpdateOutput<>).MakeGenericType(outputType);
-
-				var insertedExpr = builder.RemapToNewPath(foundPath, foundGeneric, insertedRef);
-				var deletedExpr  = builder.RemapToNewPath(foundPath, foundGeneric, deletedRef);
+				var insertedExpr = new ContextRefExpression(outputType, insertedContext);
+				var deletedExpr  = new ContextRefExpression(outputType, deletedContext);
 
 				return
 					// new UpdateOutput<T> { Deleted = deleted, Inserted = inserted, }
@@ -747,26 +730,32 @@ namespace LinqToDB.Linq.Builder
 
 					if (UpdateType == UpdateTypeEnum.UpdateOutput)
 					{
-						if (DeletedContext == null || InsertedContext == null || LastBuildInfo == null || TargetTable == null)
+						if (TargetTable == null)
 							throw new InvalidOperationException();
 
 						UpdateStatement.Output ??= new SqlOutputClause();
 
-						var outputSelectQuery = DeletedContext.SelectQuery;
+						OutputQuery ??= new SelectQuery();
+						var outputSelectQuery = OutputQuery;
 
-						var insertedContext = InsertedContext;
-						var deletedContext  = DeletedContext;
+						var insertedDeletedRoot = QuerySequence;
+						if (TablePath != null)
+						{
+							insertedDeletedRoot = new SelectContext(Parent, TablePath, QuerySequence, QuerySequence.SelectQuery, false);
+						}
+
+						var insertedContext = new AnchorContext(Parent, insertedDeletedRoot, SqlAnchor.AnchorKindEnum.Inserted);
+						var deletedContext  = new AnchorContext(Parent, insertedDeletedRoot, SqlAnchor.AnchorKindEnum.Deleted);
 
 						var outputBody = OutputExpression == null
 							? BuildDefaultOutputExpression(Builder, TargetTable.ObjectType, QuerySequence, insertedContext, deletedContext)
-							: SequenceHelper.PrepareBody(OutputExpression, QuerySequence,
-								deletedContext, insertedContext);
+							: SequenceHelper.PrepareBody(OutputExpression, QuerySequence, deletedContext, insertedContext);
 
-						var selectContext = new SelectContext(Parent, outputBody, insertedContext, false);
-						var outputRef     = new ContextRefExpression(path.Type, selectContext);
+						var selectContext     = new SelectContext(Parent, outputBody, insertedContext, false);
+						var outputRef         = new ContextRefExpression(path.Type, selectContext);
 						var outputExpressions = new List<SetExpressionEnvelope>();
 
-						var sqlExpr = Builder.ConvertToSqlExpr(selectContext, outputRef);
+						var sqlExpr = Builder.BuildSqlExpression(selectContext, outputRef);
 						sqlExpr = SequenceHelper.CorrectSelectQuery(sqlExpr, outputSelectQuery);
 
 						if (sqlExpr is SqlPlaceholderExpression)

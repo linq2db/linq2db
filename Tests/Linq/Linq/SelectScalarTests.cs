@@ -232,7 +232,8 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[ThrowsForProvider(typeof(LinqException), providers: [ProviderName.SqlCe], ErrorMessage = "Provider does not support columns with subqueries.")]
+		[ThrowsForProvider(typeof(LinqToDBException), providers: [ProviderName.SqlCe], ErrorMessage = ErrorHelper.Error_Subquery_in_Column)]
+		[ThrowsForProvider(typeof(LinqToDBException), providers: [TestProvName.AllSybase, TestProvName.AllInformix], ErrorMessage = ErrorHelper.Error_Take_in_Subquery)]
 		public void SubQueryTest([DataSources(TestProvName.AllAccess)]
 			string context)
 		{

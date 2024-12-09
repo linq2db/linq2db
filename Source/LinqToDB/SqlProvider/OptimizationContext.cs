@@ -121,6 +121,16 @@ namespace LinqToDB.SqlProvider
 			_parametersNormalizer = null;
 		}
 
+		[return: NotNullIfNotNull(nameof(element))]
+		public T OptimizeAndConvertAllForRemoting<T>(T element, NullabilityContext nullabilityContext)
+			where T : class, IQueryElement
+		{
+			var newElement = OptimizerVisitor.Optimize(EvaluationContext, nullabilityContext, null, DataOptions, MappingSchema, element, visitQueries : true, isInsideNot : false, reduceBinary: false);
+			var result     = (T)ConvertVisitor.Convert(this, nullabilityContext, newElement, visitQueries : true, isInsideNot : false);
+
+			return result;
+		}
+
 		[return : NotNullIfNotNull(nameof(element))]
 		public T OptimizeAndConvertAll<T>(T element, NullabilityContext nullabilityContext)
 			where T : class, IQueryElement

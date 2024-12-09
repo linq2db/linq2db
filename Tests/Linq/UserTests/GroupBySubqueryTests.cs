@@ -14,7 +14,7 @@ namespace Tests.UserTests
 	{
 		sealed class Table1
 		{
-			public long Field1 { get; set; }
+			public int Field1 { get; set; }
 			public int  Field2 { get; set; }
 
 			[Nullable]
@@ -39,7 +39,7 @@ namespace Tests.UserTests
 		sealed class Table3
 		{
 			public int  Field5 { get; set; }
-			public long Field1 { get; set; }
+			public int Field1 { get; set; }
 
 			[Association(ThisKey = "Field5", OtherKey = "Field5", CanBeNull = false)]
 			public Table4 Ref4 { get; set; } = null!;
@@ -68,41 +68,48 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void Test()
+		public void Test([DataSources] string context)
 		{
-			using (var db = new DataConnection())
-			{
-				var q1 = (
+			using var db = GetDataContext(context, o => o.OmitUnsupportedCompareNulls(context));
+			using var t8 = db.CreateLocalTable<Table1>();
+			using var t2 = db.CreateLocalTable<Table2>();
+			using var t7 = db.CreateLocalTable<Table3>();
+			using var t4 = db.CreateLocalTable<Table4>();
+			using var t5 = db.CreateLocalTable<Table5>();
+			using var t6 = db.CreateLocalTable<Table6>();
+
+			var q1 = (
 					from t1 in db.GetTable<Table1>()
 					where t1.Field3 != null
 					select new
 					{
-						t1.Ref1.Ref4.Field6, 
+						t1.Ref1.Ref4.Field6,
 						t1.Ref3!.Field4,
 						Field1 = t1.Ref2!.Ref5!.Field8 ?? string.Empty
 					}
 				).Distinct();
 
-				var sql1 = q1.GetSelectQuery();
-				TestContext.Out.WriteLine(q1.ToString());
+			_ = q1.ToArray();
 
-				Assert.That(sql1.Select.IsDistinct, "Distinct not present");
+			var sql1 = q1.GetSelectQuery();
 
-				var q2 =
+			Assert.That(sql1.Select.IsDistinct, "Distinct not present");
+
+			var q2 =
 					from t3 in q1
 					group t3 by new { t3.Field6, t3.Field4 }
 					into g
 					where g.Count() > 1
 					select new { g.Key.Field6, EngineeringCircuitNumber = g.Key.Field4, Count = g.Count() };
 
-				var sql2 = q2.GetSelectQuery();
-				TestContext.Out.WriteLine(q2.ToString());
+			_ = q2.ToArray();
 
-				var distinct = q2.EnumQueries().FirstOrDefault(q => q.Select.IsDistinct)!;
+			var sql2 = q2.GetSelectQuery();
 
-				Assert.That(distinct, Is.Not.Null);
-				Assert.That(distinct.Select.Columns, Has.Count.EqualTo(3));
-			}
+			var distinct = q2.EnumQueries().FirstOrDefault(q => q.Select.IsDistinct)!;
+
+			Assert.That(distinct, Is.Not.Null);
+			Assert.That(distinct.Select.Columns, Has.Count.EqualTo(3));
 		}
 	}
 }

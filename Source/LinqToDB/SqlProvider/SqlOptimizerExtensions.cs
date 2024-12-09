@@ -22,7 +22,7 @@
 
 			var nullability = NullabilityContext.GetContext(statement.SelectQuery);
 
-			var newStatement = optimizationContext.OptimizeAndConvertAll(statement, nullability);
+			var newStatement = optimizationContext.OptimizeAndConvertAllForRemoting(statement, nullability);
 
 			return newStatement;
 		}

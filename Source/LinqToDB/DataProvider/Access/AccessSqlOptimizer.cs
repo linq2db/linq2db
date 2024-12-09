@@ -19,6 +19,7 @@ namespace LinqToDB.DataProvider.Access
 
 		public override SqlStatement TransformStatement(SqlStatement statement, DataOptions dataOptions, MappingSchema mappingSchema)
 		{
+			statement = base.TransformStatement(statement, dataOptions, mappingSchema);
 			statement = CorrectMultiTableQueries(statement);
 			statement = CorrectInnerJoins(statement);
 			statement = CorrectExistsAndIn(statement, dataOptions);

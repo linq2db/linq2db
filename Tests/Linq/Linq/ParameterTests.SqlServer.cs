@@ -166,9 +166,10 @@ namespace Tests.Linq
 			using (var db = GetDataConnection(context))
 			{
 				var p = "abc";
-				var sql = db.GetTable<Person>().Where(t => t.FirstName == p).ToString();
 
-				TestContext.Out.WriteLine(sql);
+				var query =  db.GetTable<Person>().Where(t => t.FirstName == p);
+				query.ToArray();
+				var sql = GetCurrentBaselines();
 
 				Assert.That(sql, Contains.Substring("(4000)"));
 			}
@@ -180,9 +181,10 @@ namespace Tests.Linq
 			using (var db = GetDataConnection(context))
 			{
 				var p = "abc";
-				var sql = db.GetTable<AllTypes>().Where(t => t.VarcharDataType == p).ToString();
 
-				TestContext.Out.WriteLine(sql);
+				var query =  db.GetTable<AllTypes>().Where(t => t.VarcharDataType == p);
+				query.ToArray();
+				var sql = GetCurrentBaselines();
 
 				Assert.That(sql, Contains.Substring("(8000)"));
 			}
@@ -194,9 +196,10 @@ namespace Tests.Linq
 			using (var db = GetDataConnection(context))
 			{
 				var p = new byte[] { 1 };
-				var sql = db.GetTable<AllTypes>().Where(t => t.VarBinaryDataType == p).ToString();
 
-				TestContext.Out.WriteLine(sql);
+				var query =  db.GetTable<AllTypes>().Where(t => t.VarBinaryDataType == p);
+				query.ToArray();
+				var sql = GetCurrentBaselines();
 
 				Assert.That(sql, Contains.Substring("(8000)"));
 			}
@@ -208,9 +211,10 @@ namespace Tests.Linq
 			using (var db = GetDataConnection(context))
 			{
 				var p = "abc";
-				var sql = db.GetTable<AllTypesWithLength>().Where(t => t.NVarcharDataType == p).ToString();
 
-				TestContext.Out.WriteLine(sql);
+				var query =  db.GetTable<AllTypesWithLength>().Where(t => t.NVarcharDataType == p);
+				query.ToArray();
+				var sql = GetCurrentBaselines();
 
 				Assert.That(sql, Contains.Substring("(20)"));
 			}
@@ -222,9 +226,10 @@ namespace Tests.Linq
 			using (var db = GetDataConnection(context))
 			{
 				var p = "abc";
-				var sql = db.GetTable<AllTypesWithLength>().Where(t => t.VarcharDataType == p).ToString();
 
-				TestContext.Out.WriteLine(sql);
+				var query =  db.GetTable<AllTypesWithLength>().Where(t => t.VarcharDataType == p);
+				query.ToArray();
+				var sql = GetCurrentBaselines();
 
 				Assert.That(sql, Contains.Substring("(20)"));
 			}
@@ -236,9 +241,10 @@ namespace Tests.Linq
 			using (var db = GetDataConnection(context))
 			{
 				var p = new byte[] { 1 };
-				var sql = db.GetTable<AllTypesWithLength>().Where(t => t.VarBinaryDataType == p).ToString();
 
-				TestContext.Out.WriteLine(sql);
+				var query =  db.GetTable<AllTypesWithLength>().Where(t => t.VarBinaryDataType == p);
+				query.ToArray();
+				var sql = GetCurrentBaselines();
 
 				Assert.That(sql, Contains.Substring("(1)"));
 			}
@@ -250,9 +256,10 @@ namespace Tests.Linq
 			using (var db = GetDataConnection(context))
 			{
 				var p = "abcdeabcdeabcdeabcde1";
-				var sql = db.GetTable<AllTypesWithLength>().Where(t => t.NVarcharDataType == p).ToString();
 
-				TestContext.Out.WriteLine(sql);
+				var query =  db.GetTable<AllTypesWithLength>().Where(t => t.NVarcharDataType == p);
+				query.ToArray();
+				var sql = GetCurrentBaselines();
 
 				Assert.That(sql, Contains.Substring("(4000)"));
 			}
@@ -264,9 +271,10 @@ namespace Tests.Linq
 			using (var db = GetDataConnection(context))
 			{
 				var p = "abcdeabcdeabcdeabcde1";
-				var sql = db.GetTable<AllTypesWithLength>().Where(t => t.VarcharDataType == p).ToString();
 
-				TestContext.Out.WriteLine(sql);
+				var query =  db.GetTable<AllTypesWithLength>().Where(t => t.VarcharDataType == p);
+				query.ToArray();
+				var sql = GetCurrentBaselines();
 
 				Assert.That(sql, Contains.Substring("(8000)"));
 			}
@@ -278,9 +286,10 @@ namespace Tests.Linq
 			using (var db = GetDataConnection(context))
 			{
 				var p = new byte[] { 1, 2 };
-				var sql = db.GetTable<AllTypesWithLength>().Where(t => t.VarBinaryDataType == p).ToString();
 
-				TestContext.Out.WriteLine(sql);
+				var query =  db.GetTable<AllTypesWithLength>().Where(t => t.VarBinaryDataType == p);
+				query.ToArray();
+				var sql = GetCurrentBaselines();
 
 				Assert.That(sql, Contains.Substring("(8000)"));
 			}
@@ -293,9 +302,10 @@ namespace Tests.Linq
 			{
 				SetupCustomTypes(db.MappingSchema);
 				var p = new NVarChar() { Value = "abc" };
-				var sql = db.GetTable<AllTypesCustom>().Where(t => t.NVarcharDataType == p).ToString();
 
-				TestContext.Out.WriteLine(sql);
+				var query =  db.GetTable<AllTypesCustom>().Where(t => t.NVarcharDataType == p);
+				query.ToArray();
+				var sql = GetCurrentBaselines();
 
 				Assert.That(sql, Contains.Substring("NVarChar -- String"));
 			}
@@ -308,9 +318,10 @@ namespace Tests.Linq
 			{
 				SetupCustomTypes(db.MappingSchema);
 				var p = new VarChar() { Value = "abc" };
-				var sql = db.GetTable<AllTypesCustom>().Where(t => t.VarcharDataType == p).ToString();
 
-				TestContext.Out.WriteLine(sql);
+				var query =  db.GetTable<AllTypesCustom>().Where(t => t.VarcharDataType == p);
+				query.ToArray();
+				var sql = GetCurrentBaselines();
 
 				Assert.That(sql, Contains.Substring(" VarChar -- AnsiString"));
 			}
@@ -323,9 +334,10 @@ namespace Tests.Linq
 			{
 				SetupCustomTypes(db.MappingSchema);
 				var p = new VarBinary() { Value = new byte[] { 1 } };
-				var sql = db.GetTable<AllTypesCustom>().Where(t => t.VarBinaryDataType == p).ToString();
 
-				TestContext.Out.WriteLine(sql);
+				var query =  db.GetTable<AllTypesCustom>().Where(t => t.VarBinaryDataType == p);
+				query.ToArray();
+				var sql = GetCurrentBaselines();
 
 				Assert.That(sql, Contains.Substring("VarBinary -- Binary"));
 			}
@@ -338,9 +350,10 @@ namespace Tests.Linq
 			{
 				SetupCustomTypes(db.MappingSchema);
 				var p = new NVarChar() { Value = "abc" };
-				var sql = db.GetTable<AllTypesCustomWithLength>().Where(t => t.NVarcharDataType == p).ToString();
 
-				TestContext.Out.WriteLine(sql);
+				var query =  db.GetTable<AllTypesCustomWithLength>().Where(t => t.NVarcharDataType == p);
+				query.ToArray();
+				var sql = GetCurrentBaselines();
 
 				Assert.That(sql, Contains.Substring("NVarChar -- String"));
 			}
@@ -353,9 +366,10 @@ namespace Tests.Linq
 			{
 				SetupCustomTypes(db.MappingSchema);
 				var p = new VarChar() { Value = "abc" };
-				var sql = db.GetTable<AllTypesCustomWithLength>().Where(t => t.VarcharDataType == p).ToString();
 
-				TestContext.Out.WriteLine(sql);
+				var query =  db.GetTable<AllTypesCustomWithLength>().Where(t => t.VarcharDataType == p);
+				query.ToArray();
+				var sql = GetCurrentBaselines();
 
 				Assert.That(sql, Contains.Substring(" VarChar -- AnsiString"));
 			}
@@ -368,9 +382,10 @@ namespace Tests.Linq
 			{
 				SetupCustomTypes(db.MappingSchema);
 				var p = new VarBinary() { Value = new byte[] { 1 } };
-				var sql = db.GetTable<AllTypesCustomWithLength>().Where(t => t.VarBinaryDataType == p).ToString();
 
-				TestContext.Out.WriteLine(sql);
+				var query =  db.GetTable<AllTypesCustomWithLength>().Where(t => t.VarBinaryDataType == p);
+				query.ToArray();
+				var sql = GetCurrentBaselines();
 
 				Assert.That(sql, Contains.Substring("VarBinary -- Binary"));
 			}
@@ -383,9 +398,10 @@ namespace Tests.Linq
 			{
 				SetupCustomTypes(db.MappingSchema);
 				var p = new NVarChar() { Value = "abcdeabcdeabcdeabcde1" };
-				var sql = db.GetTable<AllTypesCustomWithLength>().Where(t => t.NVarcharDataType == p).ToString();
 
-				TestContext.Out.WriteLine(sql);
+				var query =  db.GetTable<AllTypesCustomWithLength>().Where(t => t.NVarcharDataType == p);
+				query.ToArray();
+				var sql = GetCurrentBaselines();
 
 				Assert.That(sql, Contains.Substring("NVarChar -- String"));
 			}
@@ -398,9 +414,10 @@ namespace Tests.Linq
 			{
 				SetupCustomTypes(db.MappingSchema);
 				var p = new VarChar() { Value = "abcdeabcdeabcdeabcde1" };
-				var sql = db.GetTable<AllTypesCustomWithLength>().Where(t => t.VarcharDataType == p).ToString();
 
-				TestContext.Out.WriteLine(sql);
+				var query =  db.GetTable<AllTypesCustomWithLength>().Where(t => t.VarcharDataType == p);
+				query.ToArray();
+				var sql = GetCurrentBaselines();
 
 				Assert.That(sql, Contains.Substring(" VarChar -- AnsiString"));
 			}
@@ -413,9 +430,10 @@ namespace Tests.Linq
 			{
 				SetupCustomTypes(db.MappingSchema);
 				var p = new VarBinary() { Value = new byte[] { 1, 2 } };
-				var sql = db.GetTable<AllTypesCustomWithLength>().Where(t => t.VarBinaryDataType == p).ToString();
 
-				TestContext.Out.WriteLine(sql);
+				var query =  db.GetTable<AllTypesCustomWithLength>().Where(t => t.VarBinaryDataType == p);
+				query.ToArray();
+				var sql = GetCurrentBaselines();
 
 				Assert.That(sql, Contains.Substring("VarBinary -- Binary"));
 			}
@@ -437,7 +455,10 @@ namespace Tests.Linq
 
 					var records = table.ToList();
 					var p = new NVarChar() { Value = value };
-					var sql = table.Where(t => t.NVarChar == p).ToString()!;
+
+					var query =  table.Where(t => t.NVarChar == p);
+					query.ToArray();
+					var sql = GetCurrentBaselines();
 
 					Assert.That(records, Has.Count.EqualTo(1));
 					Assert.That(records[0].NVarChar, Is.Not.Null);
@@ -466,7 +487,10 @@ namespace Tests.Linq
 
 					var records = table.ToList();
 					var p = new VarChar() { Value = value };
-					var sql = table.Where(t => t.VarChar == p).ToString();
+
+					var query =  table.Where(t => t.VarChar == p);
+					query.ToArray();
+					var sql = GetCurrentBaselines();
 
 					Assert.That(records, Has.Count.EqualTo(1));
 					Assert.That(records[0].VarChar, Is.Not.Null);
@@ -498,7 +522,10 @@ namespace Tests.Linq
 
 					var records = table.ToList();
 					var p = new VarBinary() { Value = value };
-					var sql = table.Where(t => t.VarBinary == p).ToString()!;
+
+					var query =  table.Where(t => t.VarBinary == p);
+					query.ToArray();
+					var sql = GetCurrentBaselines();
 
 					Assert.That(records, Has.Count.EqualTo(1));
 					Assert.That(records[0].VarBinary, Is.Not.Null);
@@ -518,9 +545,10 @@ namespace Tests.Linq
 			{
 				SetupCustomTypes(db.MappingSchema, true);
 				var p = new NVarChar() { Value = "abc" };
-				var sql = db.GetTable<AllTypesCustom>().Where(t => t.NVarcharDataType == p).ToString();
 
-				TestContext.Out.WriteLine(sql);
+				var query = db.GetTable<AllTypesCustom>().Where(t => t.NVarcharDataType == p);
+				query.ToArray();
+				var sql = GetCurrentBaselines();
 
 				Assert.That(sql, Contains.Substring("(4000)"));
 			}
@@ -533,9 +561,10 @@ namespace Tests.Linq
 			{
 				SetupCustomTypes(db.MappingSchema, true);
 				var p = new VarChar() { Value = "abc" };
-				var sql = db.GetTable<AllTypesCustom>().Where(t => t.VarcharDataType == p).ToString();
 
-				TestContext.Out.WriteLine(sql);
+				var query = db.GetTable<AllTypesCustom>().Where(t => t.VarcharDataType == p);
+				query.ToArray();
+				var sql = GetCurrentBaselines();
 
 				Assert.That(sql, Contains.Substring("(8000)"));
 			}
@@ -548,9 +577,10 @@ namespace Tests.Linq
 			{
 				SetupCustomTypes(db.MappingSchema, true);
 				var p = new VarBinary() { Value = new byte[] { 1 } };
-				var sql = db.GetTable<AllTypesCustom>().Where(t => t.VarBinaryDataType == p).ToString();
 
-				TestContext.Out.WriteLine(sql);
+				var query = db.GetTable<AllTypesCustom>().Where(t => t.VarBinaryDataType == p);
+				query.ToArray();
+				var sql = GetCurrentBaselines();
 
 				Assert.That(sql, Contains.Substring("(8000)"));
 			}
@@ -563,9 +593,10 @@ namespace Tests.Linq
 			{
 				SetupCustomTypes(db.MappingSchema, true);
 				var p = new NVarChar() { Value = "abc" };
-				var sql = db.GetTable<AllTypesCustomWithLength>().Where(t => t.NVarcharDataType == p).ToString();
 
-				TestContext.Out.WriteLine(sql);
+				var query = db.GetTable<AllTypesCustomWithLength>().Where(t => t.NVarcharDataType == p);
+				query.ToArray();
+				var sql = GetCurrentBaselines();
 
 				Assert.That(sql, Contains.Substring("(20)"));
 			}
@@ -578,9 +609,10 @@ namespace Tests.Linq
 			{
 				SetupCustomTypes(db.MappingSchema, true);
 				var p = new VarChar() { Value = "abc" };
-				var sql = db.GetTable<AllTypesCustomWithLength>().Where(t => t.VarcharDataType == p).ToString();
 
-				TestContext.Out.WriteLine(sql);
+				var query = db.GetTable<AllTypesCustomWithLength>().Where(t => t.VarcharDataType == p);
+				query.ToArray();
+				var sql = GetCurrentBaselines();
 
 				Assert.That(sql, Contains.Substring("(20)"));
 			}
@@ -593,9 +625,10 @@ namespace Tests.Linq
 			{
 				SetupCustomTypes(db.MappingSchema, true);
 				var p = new VarBinary() { Value = new byte[] { 1 } };
-				var sql = db.GetTable<AllTypesCustomWithLength>().Where(t => t.VarBinaryDataType == p).ToString();
 
-				TestContext.Out.WriteLine(sql);
+				var query = db.GetTable<AllTypesCustomWithLength>().Where(t => t.VarBinaryDataType == p);
+				query.ToArray();
+				var sql = GetCurrentBaselines();
 
 				Assert.That(sql, Contains.Substring("(1)"));
 			}
@@ -608,9 +641,10 @@ namespace Tests.Linq
 			{
 				SetupCustomTypes(db.MappingSchema, true);
 				var p = new NVarChar() { Value = "abcdeabcdeabcdeabcde1" };
-				var sql = db.GetTable<AllTypesCustomWithLength>().Where(t => t.NVarcharDataType == p).ToString();
 
-				TestContext.Out.WriteLine(sql);
+				var query = db.GetTable<AllTypesCustomWithLength>().Where(t => t.NVarcharDataType == p);
+				query.ToArray();
+				var sql = GetCurrentBaselines();
 
 				Assert.That(sql, Contains.Substring("(4000)"));
 			}
@@ -623,9 +657,10 @@ namespace Tests.Linq
 			{
 				SetupCustomTypes(db.MappingSchema, true);
 				var p = new VarChar() { Value = "abcdeabcdeabcdeabcde1" };
-				var sql = db.GetTable<AllTypesCustomWithLength>().Where(t => t.VarcharDataType == p).ToString();
 
-				TestContext.Out.WriteLine(sql);
+				var query = db.GetTable<AllTypesCustomWithLength>().Where(t => t.VarcharDataType == p);
+				query.ToArray();
+				var sql = GetCurrentBaselines();
 
 				Assert.That(sql, Contains.Substring("(8000)"));
 			}
@@ -638,9 +673,10 @@ namespace Tests.Linq
 			{
 				SetupCustomTypes(db.MappingSchema, true);
 				var p = new VarBinary() { Value = new byte[] { 1, 2 } };
-				var sql = db.GetTable<AllTypesCustomWithLength>().Where(t => t.VarBinaryDataType == p).ToString();
 
-				TestContext.Out.WriteLine(sql);
+				var query = db.GetTable<AllTypesCustomWithLength>().Where(t => t.VarBinaryDataType == p);
+				query.ToArray();
+				var sql = GetCurrentBaselines();
 
 				Assert.That(sql, Contains.Substring("(8000)"));
 			}
@@ -663,7 +699,10 @@ namespace Tests.Linq
 
 					var records = table.ToList();
 					var p = new NVarChar() { Value = value };
-					var sql = table.Where(t => t.NVarChar == p).ToString()!;
+
+					var query = table.Where(t => t.NVarChar == p);
+					query.ToArray();
+					var sql = GetCurrentBaselines();
 
 					Assert.That(records, Has.Count.EqualTo(1));
 					Assert.That(records[0].NVarChar, Is.Not.Null);
@@ -692,7 +731,10 @@ namespace Tests.Linq
 
 					var records = table.ToList();
 					var p = new VarChar() { Value = value };
-					var sql = table.Where(t => t.VarChar == p).ToString()!;
+
+					var query = table.Where(t => t.VarChar == p);
+					query.ToArray();
+					var sql = GetCurrentBaselines();
 
 					Assert.That(records, Has.Count.EqualTo(1));
 					Assert.That(records[0].VarChar, Is.Not.Null);
@@ -724,7 +766,10 @@ namespace Tests.Linq
 
 					var records = table.ToList();
 					var p = new VarBinary() { Value = value };
-					var sql = table.Where(t => t.VarBinary == p).ToString()!;
+
+					var query = table.Where(t => t.VarBinary == p);
+					query.ToArray();
+					var sql = GetCurrentBaselines();
 
 					Assert.That(records, Has.Count.EqualTo(1));
 					Assert.That(records[0].VarBinary, Is.Not.Null);

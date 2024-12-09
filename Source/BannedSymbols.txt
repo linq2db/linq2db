@@ -287,3 +287,14 @@ M:System.Convert.ToUInt64(System.Object); use overload with IFormatProvider para
 M:System.Convert.ToUInt64(System.String); use overload with IFormatProvider parameter
 M:System.Convert.ChangeType(System.Object,System.Type); use overload with IFormatProvider parameter
 M:System.Convert.ChangeType(System.Object,System.TypeCode); use overload with IFormatProvider parameter
+
+# GetInterfaceMap => GetInterfaceMapEx
+M:System.Type.GetInterfaceMap(System.Type); use GetInterfaceMapEx extension
+
+# Expression Compile
+M:System.Linq.Expressions.Expression`1.Compile; use CompileExpression extension
+M:System.Linq.Expressions.Expression`1.Compile(System.Boolean); are u sure you need it?
+M:System.Linq.Expressions.Expression`1.Compile(System.Runtime.CompilerServices.DebugInfoGenerator); are u sure you need it?
+M:System.Linq.Expressions.LambdaExpression.Compile; use CompileExpression extension
+M:System.Linq.Expressions.LambdaExpression.Compile(System.Boolean); are u sure you need it?
+M:System.Linq.Expressions.LambdaExpression.Compile(System.Runtime.CompilerServices.DebugInfoGenerator); are u sure you need it?

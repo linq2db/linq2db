@@ -2,6 +2,7 @@
 using System;
 using System.ServiceModel;
 using System.Threading.Tasks;
+
 using LinqToDB;
 using LinqToDB.Remote.Wcf;
 
@@ -9,9 +10,7 @@ namespace Tests.Model.Remote.Wcf
 {
 	public class TestWcfDataContext : WcfDataContext, ITestDataContext
 	{
-		private readonly Action? _onDispose;
-
-		public TestWcfDataContext(int port, Action? onDispose = null, Func<DataOptions,DataOptions>? optionBuilder = null) : base(
+		public TestWcfDataContext(int port, Func<DataOptions,DataOptions>? optionBuilder = null) : base(
 			new NetTcpBinding(SecurityMode.None)
 			{
 				MaxReceivedMessageSize = 10000000,
@@ -26,7 +25,6 @@ namespace Tests.Model.Remote.Wcf
 			optionBuilder)
 		{
 			((NetTcpBinding)Binding!).ReaderQuotas.MaxStringContentLength = 1000000;
-			_onDispose = onDispose;
 		}
 
 		public ITable<Person>                 Person                 => this.GetTable<Person>();
@@ -56,18 +54,6 @@ namespace Tests.Model.Remote.Wcf
 		public ITable<Parent> GetParentByID(int? id)
 		{
 			throw new NotImplementedException();
-		}
-
-		public override void Dispose()
-		{
-			_onDispose?.Invoke();
-			base.Dispose();
-		}
-
-		public override ValueTask DisposeAsync()
-		{
-			_onDispose?.Invoke();
-			return base.DisposeAsync();
 		}
 	}
 }

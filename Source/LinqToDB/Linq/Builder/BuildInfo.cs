@@ -32,7 +32,6 @@ namespace LinqToDB.Linq.Builder
 		public IBuildContext? Parent                   { get; set; }
 		public Expression     Expression               { get; set; }
 		public SelectQuery    SelectQuery              { get; set; }
-		public bool           CopyTable                { get; set; }
 		public bool           CreateSubQuery           { get; set; }
 		public bool           AssociationsAsSubQueries { get; set; }
 		public bool           IsAssociation            { get; set; }
@@ -82,34 +81,22 @@ namespace LinqToDB.Linq.Builder
 			set => _isAggregation = value;
 		}
 
-		bool _isTest;
-
-		public bool IsTest
+		bool? _inlineParameters;
+		public bool? InlineParameters
 		{
 			get
 			{
-				if (_isTest || SequenceInfo == null)
-					return _isTest;
-				return SequenceInfo.IsTest;
+				if (SequenceInfo == null)
+					return _inlineParameters;
+				return SequenceInfo.InlineParameters ?? _inlineParameters;
 			}
 
-			set => _isTest = value;
+			set
+			{
+				_inlineParameters = value;
+				if (SequenceInfo != null)
+					SequenceInfo.InlineParameters = value;
+			}
 		}
-
-		public ProjectFlags GetFlags()
-		{
-			return GetFlags(ProjectFlags.SQL);
-		}
-
-		public ProjectFlags GetFlags(ProjectFlags withFlag)
-		{
-			var flags = withFlag;
-
-			if (IsTest)
-				flags |= ProjectFlags.Test;
-
-			return flags;
-		}
-
 	}
 }

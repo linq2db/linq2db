@@ -735,8 +735,8 @@ namespace Tests.Linq
 					select
 						Sql.AsSql(od.UnitPrice * od.Quantity * (decimal)(1 - od.Discount));
 
-				var sqlActual   = qActual.  ToString();
-				var sqlExpected = qExpected.ToString();
+				var sqlActual   = qActual.ToSqlQuery().Sql;
+				var sqlExpected = qExpected.ToSqlQuery().Sql;
 
 				Assert.Multiple(() =>
 				{

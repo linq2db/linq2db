@@ -146,12 +146,16 @@ namespace Tests.xUpdate
 			public int OtherFake;
 		}
 
-		private static ITable<TestMapping1> GetTarget(IDataContext db)
+#pragma warning disable NUnit1028 // The non-test method is public
+		internal static ITable<TestMapping1> GetTarget(IDataContext db)
+#pragma warning restore NUnit1028 // The non-test method is public
 		{
 			return db.GetTable<TestMapping1>().TableName("TestMerge1");
 		}
 
-		private static ITable<TestMapping1> GetSource1(IDataContext db)
+#pragma warning disable NUnit1028 // The non-test method is public
+		internal static ITable<TestMapping1> GetSource1(IDataContext db)
+#pragma warning restore NUnit1028 // The non-test method is public
 		{
 			return db.GetTable<TestMapping1>().TableName("TestMerge2");
 		}
@@ -174,7 +178,9 @@ namespace Tests.xUpdate
 			});
 		}
 
-		private void PrepareData(IDataContext db)
+#pragma warning disable NUnit1028 // The non-test method is public
+		internal static void PrepareData(IDataContext db)
+#pragma warning restore NUnit1028 // The non-test method is public
 		{
 			using (new DisableLogging())
 			{

@@ -34,6 +34,7 @@ namespace Tests.Linq
 
 		[Test]
 		public void TestSqlQueryDependent(
+			[IncludeDataSources(ProviderName.SQLiteClassic)] string context,
 			[Values(
 				"MIN",
 				"MAX",
@@ -45,16 +46,11 @@ namespace Tests.Linq
 				nameof(ALLTYPE.BIGINTDATATYPE),
 				nameof(ALLTYPE.SMALLINTDATATYPE),
 				nameof(ALLTYPE.DECIMALDATATYPE),
-				nameof(ALLTYPE.DECFLOATDATATYPE),
 				nameof(ALLTYPE.INTDATATYPE),
-				nameof(ALLTYPE.REALDATATYPE),
-				nameof(ALLTYPE.TIMEDATATYPE)
+				nameof(ALLTYPE.REALDATATYPE)
 			)] string fieldName)
 		{
-			if (!TestConfiguration.UserProviders.Contains(ProviderName.SQLiteClassic))
-				return;
-
-			using (var db = GetDataContext(ProviderName.SQLiteClassic))
+			using (var db = GetDataContext(context))
 			{
 				var query =
 					from t in db.GetTable<ALLTYPE>()
@@ -64,8 +60,69 @@ namespace Tests.Linq
 						Aggregate = AggregateFunc(funcName, fieldName)
 					};
 
-				var sql = query.ToString();
-				TestContext.Out.WriteLine(sql);
+				query.ToArray();
+				var sql = query.ToSqlQuery().Sql;
+
+				Assert.That(sql, Contains.Substring(funcName).And.Contains(fieldName));
+			}
+		}
+
+		[Test]
+		public void TestSqlQueryDependent_DecFloat(
+			[IncludeDataSources(TestProvName.AllDB2)] string context,
+			[Values(
+				"MIN",
+				"MAX",
+				"AVG",
+				"COUNT"
+			)] string funcName,
+			[Values(
+				nameof(ALLTYPE.DECFLOATDATATYPE)
+			)] string fieldName)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var query =
+					from t in db.GetTable<ALLTYPE>()
+					from c in db.GetTable<Child>()
+					select new
+					{
+						Aggregate = AggregateFunc(funcName, fieldName)
+					};
+
+				query.ToArray();
+				var sql = query.ToSqlQuery().Sql;
+
+				Assert.That(sql, Contains.Substring(funcName).And.Contains(fieldName));
+			}
+		}
+
+		[Test]
+		public void TestSqlQueryDependent_Time(
+			[IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context,
+			[Values(
+				"MIN",
+				"MAX",
+				// SQL Server doesn't support AVG(time)
+				//"AVG",
+				"COUNT"
+			)] string funcName,
+			[Values(
+				nameof(ALLTYPE.TIMEDATATYPE)
+			)] string fieldName)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var query =
+					from t in db.GetTable<ALLTYPE>()
+					from c in db.GetTable<Child>()
+					select new
+					{
+						Aggregate = AggregateFunc(funcName, fieldName)
+					};
+
+				query.ToArray();
+				var sql = query.ToSqlQuery().Sql;
 
 				Assert.That(sql, Contains.Substring(funcName).And.Contains(fieldName));
 			}
@@ -117,8 +174,8 @@ namespace Tests.Linq
 					)
 					select cc;
 
-				var sql = query.ToString()!;
-				TestContext.Out.WriteLine(sql);
+				var sql = query.ToSqlQuery().Sql;
+				BaselinesManager.LogQuery(sql);
 
 				Assert.Multiple(() =>
 				{
@@ -149,8 +206,8 @@ namespace Tests.Linq
 					)
 					select cc;
 
-				var sql = query.ToString()!;
-				TestContext.Out.WriteLine(sql);
+				var sql = query.ToSqlQuery().Sql;
+				BaselinesManager.LogQuery(sql);
 
 				Assert.Multiple(() =>
 				{
@@ -173,11 +230,11 @@ namespace Tests.Linq
 			{
 				var query =
 					from c1 in db.Child
-					from c2 in db.Child.Take(10, takeHint)
+					from c2 in db.Child.OrderBy(r => r.ParentID).Take(10, takeHint)
 					select new {c1, c2};
 
-				var sql = query.ToString();
-				TestContext.Out.WriteLine(sql);
+				query.ToArray();
+				var sql = query.ToSqlQuery().Sql;
 
 				if (takeHint.HasFlag(TakeHints.Percent))
 					Assert.That(sql, Contains.Substring("PERCENT"));

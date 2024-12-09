@@ -163,24 +163,5 @@ namespace LinqToDB.Linq
 			public static MethodInfo GetValue = MethodOf(rd => rd.GetValue(0));
 			public static MethodInfo IsDBNull = MethodOf(rd => rd.IsDBNull(0));
 		}
-
-		public sealed class Functions
-		{
-			public sealed class String : Expressor<string>
-			{
-#if NETFRAMEWORK
-				public static MethodInfo Like11 = MethodOf(s => System.Data.Linq.SqlClient.SqlMethods.Like("", ""));
-				public static MethodInfo Like12 = MethodOf(s => System.Data.Linq.SqlClient.SqlMethods.Like("", "", ' '));
-#endif
-
-				public static MethodInfo Like21 = MethodOf(s => Sql.Like(s, ""));
-				public static MethodInfo Like22 = MethodOf(s => Sql.Like(s, "", ' '));
-			}
-
-			public sealed class FormattableString : Expressor<System.FormattableString>
-			{
-				public static MethodInfo GetArguments = MethodOf(s => s.GetArgument(0));
-			}
-		}
 	}
 }

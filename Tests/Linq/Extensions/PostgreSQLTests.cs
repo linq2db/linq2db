@@ -3,6 +3,7 @@ using System.Linq;
 
 using LinqToDB;
 using LinqToDB.DataProvider.PostgreSQL;
+using LinqToDB.Mapping;
 
 using NUnit.Framework;
 
@@ -216,6 +217,27 @@ namespace Tests.Extensions
 				")",
 				"FOR SHARE",
 				")"));
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4333")]
+		public void Issue4333Test([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var data = new[]
+			{
+				new Issue4333Table { Name = "Bar" },
+				new Issue4333Table { Name = "Baz" },
+			};
+
+			using var table = db.CreateTempTable<Issue4333Table>(data);
+		}
+
+		[Table]
+		sealed class Issue4333Table
+		{
+			[PrimaryKey, Identity] public int Id { get; set; }
+			[Column] public string? Name { get; set; }
 		}
 	}
 }

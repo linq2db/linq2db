@@ -130,7 +130,7 @@ namespace LinqToDB.Common
 		{
 			var genericType = typeof(IEnumerable<>).GetGenericType(type);
 			if (genericType == null)
-				throw new InvalidOperationException($"Type '{type.Name}' do not implement IEnumerable");
+				throw new InvalidOperationException($"Type '{type.Name}' does not implement IEnumerable<T>");
 
 			return genericType.GetGenericArguments()[0];
 		}

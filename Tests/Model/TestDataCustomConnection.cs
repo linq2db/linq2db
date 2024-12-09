@@ -158,9 +158,9 @@ namespace Tests.Model
 			((IDataContext)Connection).RemoveInterceptor(interceptor);
 		}
 
-		IQueryRunner IDataContext.GetQueryRunner(Query query, IDataContext parametersContext, int queryNumber, Expression expression, object?[]? parameters, object?[]? preambles)
+		IQueryRunner IDataContext.GetQueryRunner(Query query, IDataContext parametersContext, int queryNumber, IQueryExpressions expressions, object?[]? parameters, object?[]? preambles)
 		{
-			return ((IDataContext)Connection).GetQueryRunner(query, parametersContext, queryNumber, expression, parameters, preambles);
+			return ((IDataContext)Connection).GetQueryRunner(query, parametersContext, queryNumber, expressions, parameters, preambles);
 		}
 	}
 }
