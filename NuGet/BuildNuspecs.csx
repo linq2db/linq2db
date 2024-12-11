@@ -64,10 +64,10 @@ IEnumerable<string> GetFiles(string path)
 	}
 	else
 	{
-		d = ".";
+		dir = ".";
 	}
 
-	foreach (var file in Directory.GetFiles(".", Path.GetFileName(path)))
+	foreach (var file in Directory.GetFiles(dir.TrimEnd('*'), Path.GetFileName(path)))
 		yield return file;
 }
 
