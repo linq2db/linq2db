@@ -21,7 +21,7 @@ FOR %%n IN (linq2db linq2db.Extensions linq2db.Tools linq2db.Remote.Grpc linq2db
 )
 
 REM build cli/t4 nugets (no debug support required)
-FOR %%n IN (cli Access DB2 Firebird Informix MySql Oracle PostgreSQL SapHana SqlCe SQLite SqlServer Sybase t4models) DO (
+FOR %%n IN (cli Access ClickHouse DB2 Firebird Informix MySql Oracle PostgreSQL SapHana SqlCe SQLite SqlServer Sybase t4models) DO (
     ..\Redist\nuget.exe Pack %NUSPECS%\linq2db.%%n.nuspec -OutputDirectory %NUGETS%
     IF %ERRORLEVEL% NEQ 0 EXIT /b %ERRORLEVEL%
 )
