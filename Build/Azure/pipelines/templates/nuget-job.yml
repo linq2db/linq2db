@@ -97,7 +97,7 @@ jobs:
     inputs:
       filePath: '$(Build.SourcesDirectory)/Build/BuildNuspecs.ps1'
       workingDirectory: '$(Build.SourcesDirectory)'
-      arguments: -path $(Build.SourcesDirectory)/NuGet/*.nuspec -buildPath $(Build.SourcesDirectory)/.build/nuspecs -version $(packageVersion) -branch $(Build.SourceBranchName)
+      arguments: -path $(Build.SourcesDirectory)/NuGet/**\*.nuspec -buildPath $(Build.SourcesDirectory)/.build/nuspecs -version $(packageVersion) -branch $(Build.SourceBranchName)
     displayName: Update nuspecs
 
   - task: PowerShell@2
