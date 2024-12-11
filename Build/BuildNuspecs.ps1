@@ -18,5 +18,5 @@ if ($version) {
 	cd $PSScriptRoot
 
 	dotnet tool install -g dotnet-script
-	dotnet script ..\NuGet\BuildNuspecs.csx $path $buildPath $version $linq2DbVersion $branch $clean
+	dotnet script ..\NuGet\BuildNuspecs.csx /path:$path /buildPath:$buildPath /version:$version /linq2DbVersion:$linq2DbVersion /branch:$branch /clean:$clean
 }
