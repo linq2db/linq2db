@@ -1,0 +1,54 @@
+<?xml version="1.0"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
+	<metadata minClientVersion="3.3.0">
+		<id>linq2db.t4models</id>
+		<title>LINQ to DB T4 Models</title>
+		<description>T4 templates to generate data models for LINQ to DB.</description>
+		<summary />
+		<tags>
+			linq linq2db LinqToDB ORM database DB T4 datamodel SqlServer Access SqlCe SqlServerCe MySql Firebird SQLite Sybase
+			Oracle ODP PostgreSQL DB2 Informix SapHana
+		</tags>
+		<dependencies>
+			<dependency id="linq2db" version="6.0.0" />
+		</dependencies>
+		<contentFiles>
+			<files include="**\*" buildAction="None" />
+		</contentFiles>
+	</metadata>
+	<files>
+		<file src="t4bin\*.*"    exclude="**\linq2db.*;**\Humanizer.*;**\Microsoft.Bcl.AsyncInterfaces.*" target="tools" />
+		<file src="t4bin\clidriver\**"                                  target="tools\clidriver"                         />
+		<file src="t4bin\amd64\**"                                      target="tools\amd64"                             />
+		<file src="t4bin\x86\**"                                        target="tools\x86"                               />
+		<file src="t4bin\x64\**"                                        target="tools\x64"                               />
+
+		<file src="NuGet\t4models\linq2db.t4models.props"               target="build"                                   />
+		<file src="NuGet\Access\*.*"              exclude="**\*.props"  target="contentFiles\any\any\LinqToDB.Templates" />
+		<file src="NuGet\Access\*.*"              exclude="**\*.props"  target="content\LinqToDB.Templates"              />
+		<file src="NuGet\DB2\*.*"                 exclude="**\*.props"  target="contentFiles\any\any\LinqToDB.Templates" />
+		<file src="NuGet\DB2\*.*"                 exclude="**\*.props"  target="content\LinqToDB.Templates"              />
+		<file src="NuGet\Firebird\*.*"            exclude="**\*.props"  target="contentFiles\any\any\LinqToDB.Templates" />
+		<file src="NuGet\Firebird\*.*"            exclude="**\*.props"  target="content\LinqToDB.Templates"              />
+		<file src="NuGet\Informix\*.*"            exclude="**\*.props"  target="contentFiles\any\any\LinqToDB.Templates" />
+		<file src="NuGet\Informix\*.*"            exclude="**\*.props"  target="content\LinqToDB.Templates"              />
+		<file src="NuGet\MySql\*.*"               exclude="**\*.props"  target="contentFiles\any\any\LinqToDB.Templates" />
+		<file src="NuGet\MySql\*.*"               exclude="**\*.props"  target="content\LinqToDB.Templates"              />
+		<file src="NuGet\Oracle\*.*"              exclude="**\*.props"  target="contentFiles\any\any\LinqToDB.Templates" />
+		<file src="NuGet\Oracle\*.*"              exclude="**\*.props"  target="content\LinqToDB.Templates"              />
+		<file src="NuGet\PostgreSQL\*.*"          exclude="**\*.props"  target="contentFiles\any\any\LinqToDB.Templates" />
+		<file src="NuGet\PostgreSQL\*.*"          exclude="**\*.props"  target="content\LinqToDB.Templates"              />
+		<file src="NuGet\SapHana\*.*"             exclude="**\*.props"  target="contentFiles\any\any\LinqToDB.Templates" />
+		<file src="NuGet\SapHana\*.*"             exclude="**\*.props"  target="content\LinqToDB.Templates"              />
+		<file src="NuGet\SqlCe\*.*"               exclude="**\*.props"  target="contentFiles\any\any\LinqToDB.Templates" />
+		<file src="NuGet\SqlCe\*.*"               exclude="**\*.props"  target="content\LinqToDB.Templates"              />
+		<file src="NuGet\SQLite\*.*"              exclude="**\*.props"  target="contentFiles\any\any\LinqToDB.Templates" />
+		<file src="NuGet\SQLite\*.*"              exclude="**\*.props"  target="content\LinqToDB.Templates"              />
+		<file src="NuGet\SqlServer\*.*"           exclude="**\*.props"  target="contentFiles\any\any\LinqToDB.Templates" />
+		<file src="NuGet\SqlServer\*.*"           exclude="**\*.props"  target="content\LinqToDB.Templates"              />
+		<file src="NuGet\Sybase\*.*"              exclude="**\*.props"  target="contentFiles\any\any\LinqToDB.Templates" />
+		<file src="NuGet\Sybase\*.*"              exclude="**\*.props"  target="content\LinqToDB.Templates"              />
+		<file src="NuGet\t4models\*.*"            exclude="**\*.props"  target="contentFiles\any\any\LinqToDB.Templates" />
+		<file src="NuGet\t4models\*.*"            exclude="**\*.props"  target="content\LinqToDB.Templates"              />
+	</files>
+</package>

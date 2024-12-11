@@ -12,13 +12,19 @@ All T4 properties use `LinqToDBT4` name prefix.
 
 - `LinqToDBT4SharedTools`: defines path to `tools` folder and must be used only for assemblies, included into all T4 nugets: `linq2db.dll`, `Humanizer.dll`. Defined by every T4 nuget, so last one will be used.
 - `LinqToDBT4<PROVIDER>Path`: defines path to `tools` folder in nuget cache for T4 template, that use this provider to read database schema. Could be defined by multiple T4 nugets and we will use last one imported (we don't care which one). List of such properties:
+  - `LinqToDBT4AccessClientPath`: path to `tools` folder with Access client
+  - `LinqToDBT4ClickHouseClientPath`: path to `tools` folder with ClickHouse client
+  - `LinqToDBT4DB2ClientPath`: path to `tools` folder with DB2 client
   - `LinqToDBT4FirebirdClientPath`: path to `tools` folder with Firebird client
+  - `LinqToDBT4InformixClientPath`: path to `tools` folder with Informix client
   - `LinqToDBT4MySqlClientPath`: path to `tools` folder with `MySqlConnector` MySql client
-  - `LinqToDBT4OracleManagedClientPath`: path to `tools` folder with `Oracle.ManagedDataAccess` Oracle client
+  - `LinqToDBT4OracleClientPath`: path to `tools` folder with `Oracle.ManagedDataAccess` Oracle client
   - `LinqToDBT4PostgreSQLClientPath`: path to `tools` folder with `Npgsql` PostgreSQL client
+  - `LinqToDBT4SapHanaClientPath`: path to `tools` folder with SapHana client
+  - `LinqToDBT4SqlCeClientPath`: path to `tools` folder with SqlCe client
   - `LinqToDBT4SQLiteClientPath`: path to `tools` folder with `System.Data.SQLite` SQLite client
-  - `LinqToDBT4SQLServerClientPath`: path to `tools` folder with `Microsoft.SqlServer.Types` assembly for SQL Server spatial types
-  - `LinqToDBT4SybaseDataActionClientPath`: path to `tools` folder with `AdoNetCore.AseClient` Sybase ASE client
+  - `LinqToDBT4SqlServerClientPath`: path to `tools` folder with `Microsoft.SqlServer.Types` assembly for SQL Server spatial types
+  - `LinqToDBT4SybaseClientPath`: path to `tools` folder with `AdoNetCore.AseClient` Sybase ASE client
   - all other databases require native client installed or be a part of framework
 - `LinqToDBT4<DB>TemplatesPath`: defines path to folder with T4 templates for specific database. Also could be refedined if multiple T4 nugets with same database support installed, e.g. `linq2db.<DB>` nuget and `linq2db.t4models` nuget which contains support for all databases
   - `LinqToDBT4AccessTemplatesPath`: MS Access T4 templates
@@ -33,4 +39,4 @@ All T4 properties use `LinqToDBT4` name prefix.
   - `LinqToDBT4SqlCeTemplatesPath`: SQL CE T4 templates
   - `LinqToDBT4SQLiteTemplatesPath`: SQLite templates
   - `LinqToDBT4SqlServerTemplatesPath`: SQL Server templates
-  - `LinqToDBT4SybaseAseTemplatesPath`: Sybase ASE templates
+  - `LinqToDBT4SybaseTemplatesPath`: Sybase ASE templates

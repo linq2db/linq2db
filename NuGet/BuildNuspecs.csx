@@ -6,6 +6,8 @@ using System.Xml;
 using System.Diagnostics.CodeAnalysis;
 
 using LibGit2Sharp;
+using System.IO;
+
 
 #nullable enable
 
@@ -41,11 +43,9 @@ if (clean.ToLower() is "1" or "true" && Directory.Exists(buildPath))
 if (!Directory.Exists(buildPath))
 	Directory.CreateDirectory(buildPath);
 
-var releasePath = File.Exists(Path.Combine(buildPath, "..", "bin", "NuGet", "Release", "linq2db.dll"))
-	? "Release"
-	: File.Exists(Path.Combine(buildPath, "..", "bin", "NuGet", "Debug", "linq2db.dll"))
-		? "Debug"
-		: "Release";
+string? IfExists(string config) => File.Exists(Path.Combine(buildPath, "..", "bin", "NuGet", config, "linq2db.dll")) ? config : null;
+
+var releasePath = IfExists("Azure") ?? IfExists("Release") ?? IfExists("Debug") ?? "Azure";
 var binPath     = @"..\bin";
 var t4binPath   = @"..\bin\NuGet\" + releasePath;
 

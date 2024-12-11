@@ -9,7 +9,6 @@
 		<tags>linq linq2db ClickHouse LinqToDB ORM database DB SQL</tags>
 	</metadata>
 	<files>
-
 		<file src="t4bin\MySqlConnector.dll"                            target="tools"                                   />
 		<file src="t4bin\System.Memory.dll"                             target="tools"                                   />
 		<file src="t4bin\System.Buffers.dll"                            target="tools"                                   />

@@ -1,3 +1,4 @@
-<#@ assembly name="$(LinqToDBT4SybaseClientPath)AdoNetCore.AseClient.dll"          #>
-<#@ include file="$(LinqToDBT4TemplatesPath)LinqToDB.Tools.ttinclude"  once="true" #>
-<#@ include file="$(LinqToDBT4TemplatesPath)LinqToDB.Sybase.ttinclude" once="true" #>
+<#@ include file="$(LinqToDBT4SybaseTemplatesPath)LinqToDB.Sybase.ttinclude" once="true" #>
+<#+
+#warning 'LinqToDB.Sybase.Tools.ttinclude' is obsolete. Use 'LinqToDB.Sybase.ttinclude' instead.
+#>

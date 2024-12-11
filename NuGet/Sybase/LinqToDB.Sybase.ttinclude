@@ -1,5 +1,6 @@
-<#@ include file="T4Model.ttinclude"  once="true" #>
-<#@ include file="LinqToDB.ttinclude" once="true" #>
+<#@ assembly name="$(LinqToDBT4SybaseClientPath)AdoNetCore.AseClient.dll"         #>
+<#@ include file="$(LinqToDBT4TemplatesPath)LinqToDB.ttinclude"       once="true" #>
+<#@ include file="$(LinqToDBT4TemplatesPath)LinqToDB.Tools.ttinclude" once="true" #>
 <#
 	{
 		var beforeGenerateLinqToDBModel = BeforeGenerateLinqToDBModel;

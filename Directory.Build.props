@@ -58,16 +58,18 @@
 		<LinqToDBT4SharedTools>$(SolutionDir).build\bin\NuGet\Debug\</LinqToDBT4SharedTools>
 		<LinqToDBT4TemplatesPath>$(SolutionDir)Source\LinqToDB.Templates\</LinqToDBT4TemplatesPath>
 
+		<LinqToDBT4AccessClientPath>$(LinqToDBT4SharedTools)</LinqToDBT4AccessClientPath>
 		<LinqToDBT4ClickHouseClientPath>$(LinqToDBT4SharedTools)</LinqToDBT4ClickHouseClientPath>
 		<LinqToDBT4DB2ClientPath>$(LinqToDBT4SharedTools)</LinqToDBT4DB2ClientPath>
 		<LinqToDBT4FirebirdClientPath>$(LinqToDBT4SharedTools)</LinqToDBT4FirebirdClientPath>
 		<LinqToDBT4InformixClientPath>$(LinqToDBT4SharedTools)</LinqToDBT4InformixClientPath>
 		<LinqToDBT4MySqlClientPath>$(LinqToDBT4SharedTools)</LinqToDBT4MySqlClientPath>
-		<LinqToDBT4OracleManagedClientPath>$(LinqToDBT4SharedTools)</LinqToDBT4OracleManagedClientPath>
+		<LinqToDBT4OracleClientPath>$(LinqToDBT4SharedTools)</LinqToDBT4OracleClientPath>
 		<LinqToDBT4PostgreSQLClientPath>$(LinqToDBT4SharedTools)</LinqToDBT4PostgreSQLClientPath>
+		<LinqToDBT4SapHanaClientPath>$(LinqToDBT4SharedTools)</LinqToDBT4SapHanaClientPath>
+		<LinqToDBT4SqlCeClientPath>$(LinqToDBT4SharedTools)</LinqToDBT4SqlCeClientPath>
 		<LinqToDBT4SQLiteClientPath>$(LinqToDBT4SharedTools)</LinqToDBT4SQLiteClientPath>
-		<LinqToDBT4SQLServerClientPath>$(LinqToDBT4SharedTools)</LinqToDBT4SQLServerClientPath>
-		<LinqToDBT4SybaseDataActionClientPath>$(LinqToDBT4SharedTools)</LinqToDBT4SybaseDataActionClientPath>
+		<LinqToDBT4SqlServerClientPath>$(LinqToDBT4SharedTools)</LinqToDBT4SqlServerClientPath>
 		<LinqToDBT4SybaseClientPath>$(LinqToDBT4SharedTools)</LinqToDBT4SybaseClientPath>
 
 		<LinqToDBT4AccessTemplatesPath>$(SolutionDir)Nuget\Access\</LinqToDBT4AccessTemplatesPath>
@@ -82,7 +84,6 @@
 		<LinqToDBT4SqlCeTemplatesPath>$(SolutionDir)Nuget\SqlCe\</LinqToDBT4SqlCeTemplatesPath>
 		<LinqToDBT4SQLiteTemplatesPath>$(SolutionDir)Nuget\SQLite\</LinqToDBT4SQLiteTemplatesPath>
 		<LinqToDBT4SqlServerTemplatesPath>$(SolutionDir)Nuget\SqlServer\</LinqToDBT4SqlServerTemplatesPath>
-		<LinqToDBT4SybaseAseTemplatesPath>$(SolutionDir)Nuget\Sybase\</LinqToDBT4SybaseAseTemplatesPath>
 		<LinqToDBT4SybaseTemplatesPath>$(SolutionDir)Nuget\Sybase\</LinqToDBT4SybaseTemplatesPath>
 	</PropertyGroup>
 

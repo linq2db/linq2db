@@ -16,6 +16,7 @@ namespace NuGet
 			_ = typeof(System.Data.SqlServerCe.SqlCeConnection);
 			//_ = typeof(Microsoft.Data.SqlClient.SqlConnection);
 			_ = typeof(Microsoft.SqlServer.Types.HierarchyIdException);
+			_ = typeof(AdoNetCore.AseClient.AseConnection);
 		}
 	}
 }

@@ -16,10 +16,10 @@
 	</metadata>
 
 	<files>
-		<file src="..\..\NuGet\README.EF.md"                                                           target="README.md"   />
+		<file src="NuGet\README.EF.md"                                                          target="README.md"   />
 
-		<file src="..\bin\LinqToDB.EntityFrameworkCore\Release\net6.0\linq2db.EntityFrameworkCore.pdb" target="lib\net6.0\" />
-		<file src="..\bin\LinqToDB.EntityFrameworkCore\Release\net6.0\linq2db.EntityFrameworkCore.xml" target="lib\net6.0\" />
-		<file src="..\bin\LinqToDB.EntityFrameworkCore\Release\net6.0\linq2db.EntityFrameworkCore.dll" target="lib\net6.0\" />
+		<file src="bin\LinqToDB.EntityFrameworkCore\{0}\net6.0\linq2db.EntityFrameworkCore.pdb" target="lib\net6.0\" />
+		<file src="bin\LinqToDB.EntityFrameworkCore\{0}\net6.0\linq2db.EntityFrameworkCore.xml" target="lib\net6.0\" />
+		<file src="bin\LinqToDB.EntityFrameworkCore\{0}\net6.0\linq2db.EntityFrameworkCore.dll" target="lib\net6.0\" />
 	</files>
 </package>
