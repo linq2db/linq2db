@@ -15,6 +15,8 @@ if ($version) {
 		$branch = (git rev-parse --abbrev-ref HEAD)
 	}
 
+	cd $PSScriptRoot
+
 	dotnet tool install -g dotnet-script
-	dotnet script ..\NuGet\BuildNuspecs.csx /path:$path /buildPath:$buildPath /version:$version /linq2DbVersion:$linq2DbVersion /branch:$branch /clean:$clean
+	dotnet script ..\NuGet\BuildNuspecs.csx $path $buildPath $version $linq2DbVersion $branch $clean
 }

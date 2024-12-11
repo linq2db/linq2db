@@ -2,11 +2,11 @@
 #r "nuget:System.Xml.ReaderWriter, 4.3.1"
 #r "nuget:LibGit2Sharp, 0.30.0"
 
-using System.Xml;
+using System.IO;
 using System.Diagnostics.CodeAnalysis;
+using System.Xml;
 
 using LibGit2Sharp;
-using System.IO;
 
 
 #nullable enable
