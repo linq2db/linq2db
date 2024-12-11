@@ -106,5 +106,26 @@ namespace Tests.Linq
 			AssertQuery(flatItems.Where(x => x.Size == null));
 		}
 
+		[Test]
+		public void ExtractValuesAndCombiningCoalesce([DataSources] string context)
+		{
+			using var db       = GetDataContext(context);
+			using var disposal = db.CreateLocalTable(new Item().Seed());
+
+			var items = DecomposeItems(db.GetTable<Item>());
+
+			var topOrBottoms =
+				from i in items
+				let part = i.Top ?? i.Bottom
+				select part;
+
+			AssertQuery(topOrBottoms);
+			AssertQuery(topOrBottoms.Where(x => x.Color != null));
+			AssertQuery(topOrBottoms.Where(x => x.Color == null));
+			AssertQuery(topOrBottoms.Where(x => x.Size  != null));
+			AssertQuery(topOrBottoms.Where(x => x.Size  == null));
+		}
+
+
 	}
 }

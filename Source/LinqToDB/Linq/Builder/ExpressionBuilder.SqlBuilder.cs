@@ -1542,6 +1542,37 @@ namespace LinqToDB.Linq.Builder
 					return newExpr;
 				}
 
+				case ExpressionType.Coalesce:
+				{
+					var coalesce = (BinaryExpression)body;
+					var expr1    = Project(context, null, nextPath, nextIndex, flags, coalesce.Left, strict);
+					var expr2    = Project(context, null, nextPath, nextIndex, flags, coalesce.Right, strict);
+
+					if (expr1 is SqlErrorExpression || expr2 is SqlErrorExpression)
+					{
+						break;
+					}
+
+					if (expr1.IsNullValue())
+					{
+						return expr2;
+					}
+
+					if (expr2.IsNullValue())
+					{
+						return expr1;
+					}
+
+					if (expr1.Type != expr2.Type)
+					{
+						expr2 = Expression.Convert(expr2, expr1.Type);
+					}
+
+					var newExpr = Expression.Condition(Expression.NotEqual(coalesce.Left, Expression.Constant(null, coalesce.Left.Type)), expr1, expr2);
+
+					return newExpr;
+				}
+
 				case ExpressionType.Constant:
 				{
 					var cnt = (ConstantExpression)body;

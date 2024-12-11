@@ -3393,64 +3393,78 @@ namespace LinqToDB.Linq.Builder
 
 			Expression GenerateNullComparison(Expression placeholdersExpression, bool isNot)
 			{
-				List<Expression>  expressions     = new();
-				List<Expression>? testExpressions = null;
-				if (!CollectNullCompareExpressions(placeholdersExpression, expressions, ref testExpressions) || (expressions.Count == 0 && testExpressions == null))
+				var condition = CollectNullCompareExpressionExpression(placeholdersExpression);
+
+				if (condition == null)
 					return GetOriginalExpression();
 
-				List<SqlPlaceholderExpression> placeholders = new(expressions.Count);
-				List<SqlPlaceholderExpression>? notNull      = null;
+				if (isNot)
+					condition = Expression.Not(condition);
 
-				var nullability = NullabilityContext.NonQuery;
+				condition = OptimizeExpression(condition);
 
-				foreach (var expression in expressions)
+				var converted = Visit(condition);
+
+				if (converted is not SqlPlaceholderExpression)
+					return GetOriginalExpression();
+
+				return converted;
+			}
+
+			Expression? CollectNullCompareExpressionExpression(Expression current)
+			{
+				if (IsNullExpression(current))
 				{
-					var predicateExpr = Visit(expression);
-					if (predicateExpr is SqlPlaceholderExpression placeholder)
+					return ExpressionInstances.True;
+				}
+
+				switch (current.NodeType)
+				{
+					case ExpressionType.Constant:
+					case ExpressionType.Default:
 					{
-						if (!placeholder.Sql.CanBeNullable(nullability))
-						{
-							placeholders.Clear();
-							placeholders.Add(placeholder);
-							notNull = placeholders;
-							break;
-						}
-						else
-						{
-							placeholders.Add(placeholder);
-						}
+						if (current.Type.IsValueType)
+							return null;
+
+						return Expression.Equal(current, Expression.Constant(null, current.Type));
 					}
 				}
 
-				var searchCondition = new SqlSearchCondition(isNot);
-
-				if (notNull == null)
-					notNull = placeholders;
-
-				foreach (var placeholder in notNull)
+				if (current is SqlPlaceholderExpression)
 				{
-					var sql = placeholder.Sql;
-					searchCondition.Predicates.Add(new SqlPredicate.IsNull(sql, isNot));
+					if (current.Type.IsValueType)
+						return null;
+
+					return Expression.Equal(current, Expression.Constant(null, current.Type));
 				}
 
-				if (testExpressions != null)
+				if (current is SqlGenericConstructorExpression generic)
 				{
-					foreach (var testExpression in testExpressions)
-					{
-						var predicateExpr = Visit(testExpression);
-						if (predicateExpr is SqlPlaceholderExpression placeholder)
-						{
-							var predicate = ConvertExpressionToPredicate(placeholder.Sql);
-							predicate = predicate.MakeNot(isNot);
-							searchCondition.Predicates.Add(predicate);
-						}
-					}
+					return ExpressionInstances.False;
 				}
 
-				if (searchCondition.Predicates.Count == 0)
-					return GetOriginalExpression();
+				if (current is SqlDefaultIfEmptyExpression defaultIfEmptyExpression)
+				{
+					var testCondition = Expression.Not(defaultIfEmptyExpression.NotNullExpressions.Select(SequenceHelper.MakeNotNullCondition).Aggregate(Expression.OrElse));
+					return testCondition;
+				}
 
-				return CreatePlaceholder(searchCondition, GetOriginalExpression());
+				if (current is ConditionalExpression conditionalExpression)
+				{
+					var trueCondition  = CollectNullCompareExpressionExpression(conditionalExpression.IfTrue);
+					if (trueCondition == null)
+						return null;
+
+					var falseCondition = CollectNullCompareExpressionExpression(conditionalExpression.IfFalse);
+					if (falseCondition == null)
+						return null;
+
+					return Expression.OrElse(
+						Expression.AndAlso(conditionalExpression.Test, trueCondition),
+						Expression.AndAlso(Expression.Not(conditionalExpression.Test), falseCondition));
+				}
+
+				return null;
 			}
 
 			Expression GeneratePathComparison(Expression leftOriginal, Expression leftParsed, Expression rightOriginal, Expression rightParsed)

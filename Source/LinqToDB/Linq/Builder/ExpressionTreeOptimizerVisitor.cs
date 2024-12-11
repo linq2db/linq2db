@@ -34,6 +34,19 @@ namespace LinqToDB.Linq.Builder
 				}
 			}
 
+			if (ExpressionEqualityComparer.Instance.Equals(node.IfTrue, node.IfFalse))
+			{
+				return node.IfTrue;
+			}
+
+			if (trueExpr is ConstantExpression { Value: bool ifTrueBoolValue } && falseExpr is ConstantExpression { Value: bool ifFalseBoolValue })
+			{
+				if (ifTrueBoolValue)
+					return node.Test;
+
+				return Visit(Expression.Not(node.Test));
+			}
+
 			return node.Update(test, trueExpr, falseExpr);
 		}
 

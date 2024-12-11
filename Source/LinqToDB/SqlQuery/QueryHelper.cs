@@ -617,9 +617,9 @@ namespace LinqToDB.SqlQuery
 						if (idx >= selectClause.Columns.Count || !IsNullValue(selectClause.Columns[idx].Expression))
 							return false;
 					}
-
-					return true;
 				}
+
+				return true;
 			}
 			return false;
 		}
