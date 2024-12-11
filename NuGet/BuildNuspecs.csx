@@ -230,7 +230,7 @@ Dictionary<string,string?> GetArgs() =>
 	(
 		from a in  Environment.CommandLine.Split(' ')
 		where a is ['/' or '-', ..]
-		let aa = a[1..].Split(':')
+		let aa = a[1..].Split([':'], 2)
 		select
 		(
 			Key   : aa[0],
