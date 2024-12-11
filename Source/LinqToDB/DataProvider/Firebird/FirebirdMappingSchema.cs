@@ -27,7 +27,8 @@ namespace LinqToDB.DataProvider.Firebird
 		{
 			ColumnNameComparer = StringComparer.OrdinalIgnoreCase;
 
-			SetDataType(typeof(string), new SqlDataType(DataType.NVarChar, typeof(string), 255));
+			SetDataType(typeof(string),  new SqlDataType(DataType.NVarChar, typeof(string), 255));
+			SetDataType(typeof(decimal), new SqlDataType(DataType.Decimal, typeof(decimal), 18, 10));
 
 			// firebird string literals can contain only limited set of characters, so we should encode them
 			SetValueToSqlConverter(typeof(string)  , (sb, _,o,v) => ConvertStringToSql (sb, o, (string)v));

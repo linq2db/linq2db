@@ -7,6 +7,7 @@ using FluentAssertions;
 using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.Linq.Builder;
+using LinqToDB.Linq.Internal;
 using LinqToDB.Mapping;
 using LinqToDB.SqlQuery;
 using LinqToDB.Tools.Comparers;
@@ -535,8 +536,8 @@ namespace Tests.Linq
 				var qry1 = GetQuery(1, 114);
 				var qry2 = GetQuery(1, 115);
 
-				var expr1 = qry1.Expression;
-				var expr2 = qry2.Expression;
+				var expr1 = (IQueryExpressions)new RuntimeExpressionsContainer(qry1.Expression);
+				var expr2 = (IQueryExpressions)new RuntimeExpressionsContainer(qry2.Expression);
 
 				var query1 = Query<SampleClass>.GetQuery(db, ref expr1, out _);
 				var query2 = Query<SampleClass>.GetQuery(db, ref expr2, out _);
@@ -561,8 +562,8 @@ namespace Tests.Linq
 				var qry1 = GetQuery(1, 114);
 				var qry2 = GetQuery(1, 115);
 
-				var expr1 = qry1.Expression;
-				var expr2 = qry2.Expression;
+				var expr1 = (IQueryExpressions)new RuntimeExpressionsContainer(qry1.Expression);
+				var expr2 = (IQueryExpressions)new RuntimeExpressionsContainer(qry2.Expression);
 
 				var query1 = Query<SampleClass>.GetQuery(db, ref expr1, out _);
 				var query2 = Query<SampleClass>.GetQuery(db, ref expr2, out _);
@@ -587,8 +588,8 @@ namespace Tests.Linq
 				var qry1 = GetQuery(table1, 1, 114);
 				var qry2 = GetQuery(table2, 1, 115);
 
-				var expr1 = qry1.Expression;
-				var expr2 = qry2.Expression;
+				var expr1 = (IQueryExpressions)new RuntimeExpressionsContainer(qry1.Expression);
+				var expr2 = (IQueryExpressions)new RuntimeExpressionsContainer(qry2.Expression);
 
 				var query1 = Query<SampleClass>.GetQuery(db, ref expr1, out _);
 				var query2 = Query<SampleClass>.GetQuery(db, ref expr2, out _);
@@ -613,8 +614,8 @@ namespace Tests.Linq
 				var qry1 = GetQuery(1, 114);
 				var qry2 = GetQuery(1, 115);
 
-				var expr1 = qry1.Expression;
-				var expr2 = qry2.Expression;
+				var expr1 = (IQueryExpressions)new RuntimeExpressionsContainer(qry1.Expression);
+				var expr2 = (IQueryExpressions)new RuntimeExpressionsContainer(qry2.Expression);
 
 				var query1 = Query<SampleClass>.GetQuery(db, ref expr1, out _);
 				var query2 = Query<SampleClass>.GetQuery(db, ref expr2, out _);
@@ -641,8 +642,8 @@ namespace Tests.Linq
 				var qry1 = GetQuery(1, 114);
 				var qry2 = GetQuery(1, 115);
 
-				var expr1 = qry1.Expression;
-				var expr2 = qry2.Expression;
+				var expr1 = (IQueryExpressions)new RuntimeExpressionsContainer(qry1.Expression);
+				var expr2 = (IQueryExpressions)new RuntimeExpressionsContainer(qry2.Expression);
 
 				var query1 = Query<SampleClass>.GetQuery(db, ref expr1, out _);
 				var query2 = Query<SampleClass>.GetQuery(db, ref expr2, out _);
@@ -670,8 +671,8 @@ namespace Tests.Linq
 				var qry1 = GetQuery(table1, 1, 114);
 				var qry2 = GetQuery(table2, 1, 115);
 
-				var expr1 = qry1.Expression;
-				var expr2 = qry2.Expression;
+				var expr1 = (IQueryExpressions)new RuntimeExpressionsContainer(qry1.Expression);
+				var expr2 = (IQueryExpressions)new RuntimeExpressionsContainer(qry2.Expression);
 
 				var query1 = Query<SampleClass>.GetQuery(db, ref expr1, out _);
 				var query2 = Query<SampleClass>.GetQuery(db, ref expr2, out _);
@@ -1012,6 +1013,83 @@ namespace Tests.Linq
 					});
 				}
 			}
+		}
+
+		const string MyTableNameStringConstant = "Person";
+
+		[ActiveIssue]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/3782 / https://github.com/linq2db/linq2db/issues/2779")]
+		public void Issue3782Test1([IncludeDataSources(true, TestProvName.AllPostgreSQL)] string context, [Values] bool inline)
+		{
+			using var db = GetDataContext(context);
+			db.InlineParameters = inline;
+
+			FormattableString statement = $@"
+	SELECT CASE
+		WHEN EXISTS (
+			SELECT 1
+			FROM information_schema.tables
+			WHERE table_name = {MyTableNameStringConstant}
+		)
+		THEN true
+		ELSE false
+	END AS result";
+
+			var exists = db.FromSqlScalar<bool>(statement).First();
+
+			Assert.That(exists, Is.True);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/3782 / https://github.com/linq2db/linq2db/issues/2779")]
+		public void Issue3782Test2([IncludeDataSources(true, TestProvName.AllPostgreSQL)] string context, [Values] bool inline)
+		{
+			using var db = GetDataContext(context);
+			db.InlineParameters = inline;
+
+			FormattableString statement = $@"
+	SELECT CASE
+		WHEN EXISTS (
+			SELECT 1
+			FROM information_schema.tables
+			WHERE table_name = {MyTableNameStringConstant}
+		)
+		THEN true
+		ELSE false
+	END AS result";
+
+			var query = from p in db.Person
+						where db.FromSqlScalar<bool>(statement).Any()
+						select p;
+
+			query.ToArray();
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/3782 / https://github.com/linq2db/linq2db/issues/2779")]
+		public void Issue3782Test3([IncludeDataSources(true, TestProvName.AllSqlServer2012Plus)] string context, [Values] bool inline)
+		{
+			using var db = GetDataContext(context);
+			db.InlineParameters = inline;
+
+			FormattableString statement = $"SELECT IIF(EXISTS(SELECT * FROM [INFORMATION_SCHEMA].[TABLES] [x] WHERE [x].[TABLE_NAME] = {MyTableNameStringConstant}),1,0) ttt";
+
+			var tableExists = db.FromSqlScalar<bool>(statement).Any();
+
+			Assert.That(tableExists, Is.True);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/3782 / https://github.com/linq2db/linq2db/issues/2779")]
+		public void Issue3782Test4([IncludeDataSources(true, TestProvName.AllSqlServer2012Plus)] string context, [Values] bool inline)
+		{
+			using var db = GetDataContext(context);
+			db.InlineParameters = inline;
+
+			FormattableString statement = $"SELECT IIF(EXISTS(SELECT * FROM [INFORMATION_SCHEMA].[TABLES] [x] WHERE [x].[TABLE_NAME] = {MyTableNameStringConstant}),1,0) ttt";
+
+			var query = from p in db.Person
+						where db.FromSqlScalar<bool>(statement).Any()
+						select p;
+
+			query.ToArray();
 		}
 	}
 }

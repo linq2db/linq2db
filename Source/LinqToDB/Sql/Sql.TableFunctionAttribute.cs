@@ -56,7 +56,7 @@ namespace LinqToDB
 				table.SqlTableType = SqlTableType.Function;
 				var expressionStr  = table.Expression = Name ?? methodCall.Method.Name!;
 
-				ExpressionAttribute.PrepareParameterValues(context, mappingSchema, methodCall, ref expressionStr, false, out var knownExpressions, false, out var genericTypes, converter);
+				ExpressionAttribute.PrepareParameterValues(context, mappingSchema, methodCall, ref expressionStr, false, out var knownExpressions, false, false, out var genericTypes, converter);
 
 				if (string.IsNullOrEmpty(expressionStr))
 					throw new LinqToDBException($"Cannot retrieve Table Function body from expression '{methodCall}'.");
@@ -68,10 +68,10 @@ namespace LinqToDB
 					Server  : Server   ?? table.TableName.Server,
 					Package : Package  ?? table.TableName.Package);
 
-				table.TableArguments = ExpressionAttribute.PrepareArguments(context, string.Empty, ArgIndices, true, knownExpressions, genericTypes, converter, out var error)!;
+				table.TableArguments = ExpressionAttribute.PrepareArguments(context, string.Empty, ArgIndices, true, knownExpressions, genericTypes, converter, false, out var error)!;
 
 				if (error != null)
-					throw Expressions.SqlErrorExpression.EnsureError(null, error).CreateException();
+					throw Expressions.SqlErrorExpression.EnsureError(error).CreateException();
 			}
 
 			public override string GetObjectID()

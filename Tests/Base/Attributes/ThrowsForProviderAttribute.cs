@@ -23,7 +23,7 @@ namespace Tests
 		{
 			if (parameterValue is string strValue)
 			{
-				return Providers.Contains(strValue);
+				return Providers.Count == 0 || Providers.Contains(strValue);
 			}
 
 			return false;

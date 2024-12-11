@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics.CodeAnalysis;
 
 namespace LinqToDB.DataProvider
 {
@@ -14,7 +15,7 @@ namespace LinqToDB.DataProvider
 				throw new ArgumentOutOfRangeException(nameof(maxLength), maxLength, "MaxLength should be at least 4");
 		}
 
-		public override bool IsFit(IdentifierKind identifierKind, string identifier, out int? sizeDecrement)
+		public override bool IsFit(IdentifierKind identifierKind, string identifier, [NotNullWhen(false)] out int? sizeDecrement)
 		{
 			if (identifier.Length > MaxLength)
 			{

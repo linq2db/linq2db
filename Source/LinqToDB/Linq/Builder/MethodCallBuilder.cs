@@ -1,5 +1,4 @@
-﻿using System.Linq;
-using System.Linq.Expressions;
+﻿using System.Linq.Expressions;
 
 namespace LinqToDB.Linq.Builder
 {
@@ -17,9 +16,6 @@ namespace LinqToDB.Linq.Builder
 				? builder.IsSequence(new BuildInfo(buildInfo, mc.Arguments[0]))
 				: false;
 		}
-
-		public virtual bool IsAggregationContext(ExpressionBuilder builder, BuildInfo buildInfo) 
-			=> false;
 
 		protected abstract BuildSequenceResult BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo);
 	}

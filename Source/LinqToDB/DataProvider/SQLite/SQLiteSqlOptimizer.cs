@@ -12,6 +12,8 @@
 
 		}
 
+		public override bool RequiresCastingParametersForSetOperations => false;
+
 		public override SqlExpressionConvertVisitor CreateConvertVisitor(bool allowModify)
 		{
 			return new SQLiteSqlExpressionConvertVisitor(allowModify);
@@ -19,6 +21,8 @@
 
 		public override SqlStatement TransformStatement(SqlStatement statement, DataOptions dataOptions, MappingSchema mappingSchema)
 		{
+			statement = base.TransformStatement(statement, dataOptions, mappingSchema);
+
 			switch (statement.QueryType)
 			{
 				case QueryType.Delete :

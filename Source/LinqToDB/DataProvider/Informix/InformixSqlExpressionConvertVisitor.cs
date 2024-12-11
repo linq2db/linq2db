@@ -87,14 +87,6 @@ namespace LinqToDB.DataProvider.Informix
 						break;
 					}
 
-					case TypeCode.Boolean  :
-					{
-						if (ReferenceEquals(cast, IsForPredicate))
-							return ConvertToBooleanSearchCondition(cast.Expression);
-						
-						break;
-					}
-
 					case TypeCode.UInt64   :
 						if (argument.SystemType!.IsFloatType())
 							argument = new SqlFunction(cast.SystemType, "Floor", argument);
@@ -141,7 +133,7 @@ namespace LinqToDB.DataProvider.Informix
 		{
 			var columnExpression = base.WrapColumnExpression(expr);
 
-			if (SqlProviderFlags != null 
+			if (SqlProviderFlags != null
 			    && columnExpression.SystemType == typeof(bool)
 			    && QueryHelper.UnwrapNullablity(columnExpression) is not (SqlCastExpression or SqlColumn or SqlField))
 			{
@@ -149,6 +141,25 @@ namespace LinqToDB.DataProvider.Informix
 			}
 
 			return columnExpression;
+		}
+
+		protected override IQueryElement VisitSqlConditionExpression(SqlConditionExpression element)
+		{
+			var expression = base.VisitSqlConditionExpression(element);
+
+			if (expression is SqlConditionExpression condition && condition.SystemType?.UnwrapNullableType() == typeof(bool))
+			{
+				if (condition.TrueValue is SqlValue && QueryHelper.UnwrapNullablity(condition.FalseValue) is not SqlValue)
+				{
+					expression = new SqlConditionExpression(condition.Condition, new SqlCastExpression(condition.TrueValue, new DbDataType(typeof(bool), DataType.Boolean), null, isMandatory: true), condition.FalseValue);
+				}
+				else if (condition.FalseValue is SqlValue && QueryHelper.UnwrapNullablity(condition.TrueValue) is not SqlValue)
+				{
+					expression = new SqlConditionExpression(condition.Condition, condition.TrueValue, new SqlCastExpression(condition.FalseValue, new DbDataType(typeof(bool), DataType.Boolean), null, isMandatory: true));
+				}
+			}
+
+			return expression;
 		}
 	}
 }

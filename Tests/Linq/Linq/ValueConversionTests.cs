@@ -80,7 +80,7 @@ namespace Tests.Linq
 							EnumWithNull = i % 4 == 1 ? EnumValue.Value1 : i % 4 == 2 ? EnumValue.Value2 : i % 4 == 3 ? EnumValue.Value3 : EnumValue.Null,
 							EnumWithNullDeclarative = i % 4 == 1 ? EnumValue.Value1 : i % 4 == 2 ? EnumValue.Value2 : i % 4 == 3 ? EnumValue.Value3 : EnumValue.Null,
 							BoolValue = i % 4 == 1,
-							DateTimeNullable = i % 3 == 1 ? (DateTime?)null : TestBase.TestData.Date
+							DateTimeNullable = i % 3 == 1 ? (DateTime?)null : Tests.TestData.Date
 						}
 					).ToArray();
 			}

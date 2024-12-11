@@ -29,23 +29,17 @@ namespace LinqToDB
 		/// </summary>
 		/// <returns></returns>
 		[Expression("*", ServerSideOnly = true, CanBeNull = false, Precedence = Precedence.Primary)]
-		public static object?[] AllColumns()
-		{
-			throw new LinqException("'AllColumns' is only server-side method.");
-		}
+		public static object?[] AllColumns() => throw new LinqToDBException("'AllColumns' is only server-side method.");
 
 		/// <summary>
 		/// Generates 'DEFAULT' keyword, usable in inserts.
 		/// </summary>
 		[Expression("DEFAULT", ServerSideOnly = true)]
-		public static T Default<T>() => throw new LinqException($"Default is only server-side method.");
+		public static T Default<T>() => throw new LinqToDBException($"Default is only server-side method.");
 
 		/// <summary>
-		/// Enforces generating SQL even if an expression can be calculated locally.
+		/// Enforces generation of SQL even if an expression can be calculated on client.
 		/// </summary>
-		/// <typeparam name="T"></typeparam>
-		/// <param name="obj">Expression to generate SQL.</param>
-		/// <returns>Returns 'obj'.</returns>
 		[CLSCompliant(false)]
 		[Expression("{0}", 0, ServerSideOnly = true, IsNullable = IsNullableType.IfAnyParameterNullable)]
 		public static T AsSql<T>(T obj)
@@ -53,6 +47,10 @@ namespace LinqToDB
 			return obj;
 		}
 
+		/// <summary>
+		/// Enforces generation of SQL even if an expression can be calculated on client.
+		/// All values will be embedded as literals instead of parameters when possible.
+		/// </summary>
 		[CLSCompliant(false)]
 		[Expression("{0}", 0, ServerSideOnly = true, InlineParameters = true, IsNullable = IsNullableType.IfAnyParameterNullable)]
 		public static T ToSql<T>(T obj)
@@ -148,10 +146,10 @@ namespace LinqToDB
 		/// <param name="entity">The entity.</param>
 		/// <param name="propertyName">Name of the property.</param>
 		/// <returns></returns>
-		/// <exception cref="LinqException">'Property' is only server-side method.</exception>
+		/// <exception cref="LinqToDBException">'Property' is only server-side method.</exception>
 		public static T Property<T>(object? entity, [SqlQueryDependent] string propertyName)
 		{
-			throw new LinqException("'Property' is only server-side method.");
+			throw new LinqToDBException("'Property' is only server-side method.");
 		}
 
 		/// <summary>
@@ -358,7 +356,7 @@ namespace LinqToDB
 		/// <returns>Value, converted to target type or <c>null</c> if conversion failed.</returns>
 		[CLSCompliant(false)]
 		[Function(PseudoFunctions.TRY_CONVERT, 3, 2, 0, ServerSideOnly = true, IsPure = true, IsNullable = IsNullableType.Nullable)]
-		public static TTo? TryConvert<TFrom, TTo>(TFrom value, TTo? _) where TTo : struct => throw new LinqException($"'{nameof(TryConvert)}' is only server-side method.");
+		public static TTo? TryConvert<TFrom, TTo>(TFrom value, TTo? _) where TTo : struct => throw new LinqToDBException($"'{nameof(TryConvert)}' is only server-side method.");
 
 		/// <summary>
 		/// Performs value conversion to specified type. If conversion failed, returns <c>null</c>.
@@ -375,7 +373,7 @@ namespace LinqToDB
 		/// <returns>Value, converted to target type or <c>null</c> if conversion failed.</returns>
 		[CLSCompliant(false)]
 		[Function(PseudoFunctions.TRY_CONVERT, 3, 2, 0, ServerSideOnly = true, IsPure = true, IsNullable = IsNullableType.Nullable)]
-		public static TTo? TryConvert<TFrom, TTo>(TFrom value, TTo? _) where TTo : class => throw new LinqException($"'{nameof(TryConvert)}' is only server-side method.");
+		public static TTo? TryConvert<TFrom, TTo>(TFrom value, TTo? _) where TTo : class => throw new LinqToDBException($"'{nameof(TryConvert)}' is only server-side method.");
 
 		/// <summary>
 		/// Performs value conversion to specified type. If conversion failed, returns value, specified by <paramref name="defaultValue"/> parameter.
@@ -391,7 +389,7 @@ namespace LinqToDB
 		/// <returns>Value, converted to target type or <paramref name="defaultValue"/> if conversion failed.</returns>
 		[CLSCompliant(false)]
 		[Function(PseudoFunctions.TRY_CONVERT_OR_DEFAULT, 3, 2, 0, 1, ServerSideOnly = true, IsPure = true, IsNullable = IsNullableType.IfAnyParameterNullable)]
-		public static TTo? TryConvertOrDefault<TFrom, TTo>(TFrom value, TTo? defaultValue) where TTo : struct => throw new LinqException($"'{nameof(TryConvertOrDefault)}' is only server-side method.");
+		public static TTo? TryConvertOrDefault<TFrom, TTo>(TFrom value, TTo? defaultValue) where TTo : struct => throw new LinqToDBException($"'{nameof(TryConvertOrDefault)}' is only server-side method.");
 
 		/// <summary>
 		/// Performs value conversion to specified type. If conversion failed, returns value, specified by <paramref name="defaultValue"/> parameter.
@@ -407,7 +405,7 @@ namespace LinqToDB
 		/// <returns>Value, converted to target type or <paramref name="defaultValue"/> if conversion failed.</returns>
 		[CLSCompliant(false)]
 		[Function(PseudoFunctions.TRY_CONVERT_OR_DEFAULT, 3, 2, 0, 1, ServerSideOnly = true, IsPure = true, IsNullable = IsNullableType.IfAnyParameterNullable)]
-		public static TTo? TryConvertOrDefault<TFrom, TTo>(TFrom value, TTo? defaultValue) where TTo : class => throw new LinqException($"'{nameof(TryConvertOrDefault)}' is only server-side method.");
+		public static TTo? TryConvertOrDefault<TFrom, TTo>(TFrom value, TTo? defaultValue) where TTo : class => throw new LinqToDBException($"'{nameof(TryConvertOrDefault)}' is only server-side method.");
 		#endregion
 
 		#region String Functions
@@ -446,7 +444,6 @@ namespace LinqToDB
 			return str.Substring(index, maxAllowedLength);
 		}
 
-		[Function(ServerSideOnly = true, IsPredicate = true)]
 		public static bool Like(string? matchExpression, string? pattern)
 		{
 #if !NETFRAMEWORK
@@ -1055,7 +1052,7 @@ namespace LinqToDB
 			{
 				var expressionStr = Expression;
 				PrepareParameterValues(context, dataContext.MappingSchema, expression, ref expressionStr, true,
-					out var knownExpressions, true, out _, converter);
+					out var knownExpressions, true, InlineParameters, out _, converter);
 
 				var arr = new ISqlExpression[knownExpressions.Count];
 
@@ -1065,7 +1062,7 @@ namespace LinqToDB
 				{
 					var pair      = knownExpressions[i];
 
-					var converted = converter(context, pair.expression!, null, pair.parameter?.DoNotParameterize);
+					var converted = converter(context, pair.expression!, null, InlineParameters || pair.parameter?.DoNotParameterize == true);
 
 					if (converted is not SqlPlaceholderExpression placeholder)
 						return converted;
@@ -1162,7 +1159,7 @@ namespace LinqToDB
 		[Function(PN.SqlCe,      "GetDate",           ServerSideOnly = true, CanBeNull = false)]
 		[Function(PN.Sybase,     "GetDate",           ServerSideOnly = true, CanBeNull = false)]
 		[Function(PN.ClickHouse, "now",               ServerSideOnly = true, CanBeNull = false)]
-		public static DateTime CurrentTimestamp => throw new LinqException("'CurrentTimestamp' is server side only property.");
+		public static DateTime CurrentTimestamp => throw new LinqToDBException($"'{nameof(CurrentTimestamp)}' is server side only property.");
 
 		[Function  (PN.SqlServer , "SYSUTCDATETIME"                      , ServerSideOnly = true, CanBeNull = false)]
 		[Function  (PN.Sybase    , "GETUTCDATE"                          , ServerSideOnly = true, CanBeNull = false)]
@@ -1245,14 +1242,14 @@ namespace LinqToDB
 
 		#region Math Functions
 
-		[Function(IsNullable = IsNullableType.IfAnyParameterNullable)] public static decimal? Abs    (decimal? value) => value == null ? null : Math.Abs (value.Value);
-		[Function(IsNullable = IsNullableType.IfAnyParameterNullable)] public static double?  Abs    (double?  value) => value == null ? null : Math.Abs (value.Value);
-		[Function(IsNullable = IsNullableType.IfAnyParameterNullable)] public static short?   Abs    (short?   value) => value == null ? null : Math.Abs (value.Value);
-		[Function(IsNullable = IsNullableType.IfAnyParameterNullable)] public static int?     Abs    (int?     value) => value == null ? null : Math.Abs (value.Value);
-		[Function(IsNullable = IsNullableType.IfAnyParameterNullable)] public static long?    Abs    (long?    value) => value == null ? null : Math.Abs (value.Value);
+		public static decimal? Abs    (decimal? value) => value == null ? null : Math.Abs (value.Value);
+		public static double?  Abs    (double?  value) => value == null ? null : Math.Abs (value.Value);
+		public static short?   Abs    (short?   value) => value == null ? null : Math.Abs (value.Value);
+		public static int?     Abs    (int?     value) => value == null ? null : Math.Abs (value.Value);
+		public static long?    Abs    (long?    value) => value == null ? null : Math.Abs (value.Value);
 		[CLSCompliant(false)]
-		[Function(IsNullable = IsNullableType.IfAnyParameterNullable)] public static sbyte?   Abs    (sbyte?   value) => value == null ? null : Math.Abs (value.Value);
-		[Function(IsNullable = IsNullableType.IfAnyParameterNullable)] public static float?   Abs    (float?   value) => value == null ? null : Math.Abs (value.Value);
+		public static sbyte?   Abs    (sbyte?   value) => value == null ? null : Math.Abs (value.Value);
+		public static float?   Abs    (float?   value) => value == null ? null : Math.Abs (value.Value);
 
 		[Function(IsNullable = IsNullableType.IfAnyParameterNullable)] public static double?  Acos   (double?  value) => value == null ? null : Math.Acos(value.Value);
 		[Function(IsNullable = IsNullableType.IfAnyParameterNullable)] public static double?  Asin   (double?  value) => value == null ? null : Math.Asin(value.Value);
@@ -1334,58 +1331,44 @@ namespace LinqToDB
 			return value == null || newBase == null ? null : (decimal?)Math.Log((double)value.Value, (double)newBase.Value);
 		}
 
-		[Expression(PN.Access, "{0} ^ {1}", Precedence = Precedence.Multiplicative, IsNullable = IsNullableType.IfAnyParameterNullable)]
-		[Function(IsNullable = IsNullableType.IfAnyParameterNullable)]
-		public static double?  Power(double? x, double? y)
+		public static double? Power(double? x, double? y)
 		{
 			return x == null || y == null ? null : Math.Pow(x.Value, y.Value);
 		}
 
-		[Expression(PN.Access, "{0} ^ {1}", Precedence = Precedence.Multiplicative, IsNullable = IsNullableType.IfAnyParameterNullable)]
-		[Function(IsNullable = IsNullableType.IfAnyParameterNullable)]
-		public static decimal?  Power(decimal? x, decimal? y)
+		public static decimal? Power(decimal? x, decimal? y)
 		{
 			return x == null || y == null ? null : (decimal)Math.Pow((double)x.Value, (double)y.Value);
 		}
 
-		[Function(IsNullable = IsNullableType.SameAsFirstParameter)]
-		[Function(PN.ClickHouse, "roundBankers", IsNullable = IsNullableType.SameAsFirstParameter)]
 		public static decimal? RoundToEven(decimal? value)
 		{
 			return value == null ? null : Math.Round(value.Value, MidpointRounding.ToEven);
 		}
 
-		[Function(IsNullable = IsNullableType.SameAsFirstParameter)]
-		[Function(PN.ClickHouse, "roundBankers", IsNullable = IsNullableType.SameAsFirstParameter)]
 		public static double? RoundToEven(double? value)
 		{
 			return value == null ? null : Math.Round(value.Value, MidpointRounding.ToEven);
 		}
 
-		[Function(IsNullable = IsNullableType.IfAnyParameterNullable)] public static decimal? Round(decimal? value) { return Round(value, 0); }
-		[Function(IsNullable = IsNullableType.IfAnyParameterNullable)] public static double?  Round(double?  value) { return Round(value, 0); }
+		public static decimal? Round(decimal? value) { return Round(value, 0); }
+		public static double?  Round(double?  value) { return Round(value, 0); }
 
-		[Function(IsNullable = IsNullableType.IfAnyParameterNullable)]
 		public static decimal? Round(decimal? value, int? precision)
 		{
 			return value == null || precision == null ? null : Math.Round(value.Value, precision.Value, MidpointRounding.AwayFromZero);
 		}
 
-		[Function(IsNullable = IsNullableType.IfAnyParameterNullable)]
 		public static double? Round(double? value, int? precision)
 		{
 			return value == null || precision == null ? null : Math.Round(value.Value, precision.Value, MidpointRounding.AwayFromZero);
 		}
 
-		[Function(IsNullable = IsNullableType.IfAnyParameterNullable)]
-		[Function(PN.ClickHouse, "roundBankers", IsNullable = IsNullableType.IfAnyParameterNullable)]
 		public static decimal? RoundToEven(decimal? value, int? precision)
 		{
 			return value == null || precision == null ? null : Math.Round(value.Value, precision.Value, MidpointRounding.ToEven);
 		}
 
-		[Function(IsNullable = IsNullableType.IfAnyParameterNullable)]
-		[Function(PN.ClickHouse, "roundBankers", IsNullable = IsNullableType.IfAnyParameterNullable)]
 		public static double? RoundToEven(double?  value, int? precision)
 		{
 			return value == null || precision == null ? null : Math.Round(value.Value, precision.Value, MidpointRounding.ToEven);
@@ -1457,14 +1440,14 @@ namespace LinqToDB
 		/// </summary>
 		[Function  (PN.SqlServer    , "IDENT_CURRENT", ServerSideOnly = true, CanBeNull = true)]
 		[Expression(                  "NULL"         , ServerSideOnly = true, CanBeNull = true)]
-		internal static object? CurrentIdentity(string tableName) => throw new LinqException($"'{nameof(CurrentIdentity)}' is server side only property.");
+		internal static object? CurrentIdentity(string tableName) => throw new LinqToDBException($"'{nameof(CurrentIdentity)}' is server side only property.");
 
 		/// <summary>
 		/// Returns identity step for specific table.
 		/// </summary>
 		[Function  (PN.SqlServer    , "IDENT_INCR", ServerSideOnly = true, CanBeNull = true)]
 		[Expression(                  "NULL"      , ServerSideOnly = true, CanBeNull = true)]
-		internal static object? IdentityStep(string tableName) => throw new LinqException($"'{nameof(IdentityStep)}' is server side only property.");
+		internal static object? IdentityStep(string tableName) => throw new LinqToDBException($"'{nameof(IdentityStep)}' is server side only property.");
 		#endregion
 	}
 }

@@ -68,7 +68,7 @@ namespace LinqToDB.DataProvider.MySql
 		[Sql.Extension("MATCH({columns, ', '}) AGAINST ({search})", IsPredicate = true, ServerSideOnly = true)]
 		public static bool Match(this IMySqlExtensions? ext, [ExprParameter] string search, [ExprParameter] params object?[] columns)
 		{
-			throw new LinqException($"'{nameof(Match)}' is server-side method.");
+			throw new LinqToDBException($"'{nameof(Match)}' is server-side method.");
 		}
 
 		/// <summary>
@@ -82,7 +82,7 @@ namespace LinqToDB.DataProvider.MySql
 		[Sql.Extension("MATCH({columns, ', '}) AGAINST ({search})", ServerSideOnly = true)]
 		public static double MatchRelevance(this IMySqlExtensions? ext, [ExprParameter] string search, [ExprParameter] params object?[] columns)
 		{
-			throw new LinqException($"'{nameof(MatchRelevance)}' is server-side method.");
+			throw new LinqToDBException($"'{nameof(MatchRelevance)}' is server-side method.");
 		}
 
 		/// <summary>
@@ -97,7 +97,7 @@ namespace LinqToDB.DataProvider.MySql
 		[Sql.Extension("MATCH({columns, ', '}) AGAINST ({search}{modifier?})", IsPredicate = true, ServerSideOnly = true, BuilderType = typeof(ModifierBuilder))]
 		public static bool Match(this IMySqlExtensions? ext, [SqlQueryDependent] MatchModifier modifier, [ExprParameter] string search, [ExprParameter] params object?[] columns)
 		{
-			throw new LinqException($"'{nameof(Match)}' is server-side method.");
+			throw new LinqToDBException($"'{nameof(Match)}' is server-side method.");
 		}
 
 		/// <summary>
@@ -112,7 +112,7 @@ namespace LinqToDB.DataProvider.MySql
 		[Sql.Extension("MATCH({columns, ', '}) AGAINST ({search}{modifier?})", ServerSideOnly = true, BuilderType = typeof(ModifierBuilder))]
 		public static double MatchRelevance(this IMySqlExtensions? ext, [SqlQueryDependent] MatchModifier modifier, [ExprParameter] string search, [ExprParameter] params object?[] columns)
 		{
-			throw new LinqException($"'{nameof(MatchRelevance)}' is server-side method.");
+			throw new LinqToDBException($"'{nameof(MatchRelevance)}' is server-side method.");
 		}
 
 		#endregion

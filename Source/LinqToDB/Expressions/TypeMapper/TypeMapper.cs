@@ -13,6 +13,7 @@ namespace LinqToDB.Expressions
 {
 	using Common;
 	using Extensions;
+	using Internal;
 
 	/// <summary>
 	/// Implements typed mappings support for dynamically loaded types.

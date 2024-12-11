@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Linq;
 
+using FluentAssertions;
+
 using LinqToDB;
 
 using NUnit.Framework;
@@ -342,7 +344,7 @@ namespace Tests.Linq
 		// TODO: implement other MidpointRounding values (and remove NUnit4001 suppress)
 		[Test]
 #pragma warning disable NUnit4001
-		public void Round12([DataSources(TestProvName.AllSQLite)] string context, [Values(MidpointRounding.AwayFromZero, MidpointRounding.ToEven)] MidpointRounding mp)
+		public void Round12([DataSources(TestProvName.AllSQLite)] string context, [Values(MidpointRounding.AwayFromZero, MidpointRounding.ToEven)] MidpointRounding mp, [Values(1, 2)] int iteration)
 #pragma warning restore NUnit4001
 		{
 
@@ -353,9 +355,14 @@ namespace Tests.Linq
 				if (context.IsAnyOf(ProviderName.DB2))
 					q = q.AsQueryable().Select(t => Math.Round(t, 1, mp));
 
+				var cacheMissCount = q.GetCacheMissCount();
+
 				AreEqual(
 					from t in from p in    Types select Math.Round(p.MoneyValue, 1, mp) where t != 0 && t != 7 select t,
 					q);
+
+				if (iteration > 1)
+					q.GetCacheMissCount().Should().Be(cacheMissCount);
 			}
 		}
 

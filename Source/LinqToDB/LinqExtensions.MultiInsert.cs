@@ -275,7 +275,7 @@ namespace LinqToDB
 		public interface IMultiInsertElse<TSource>
 		{ }
 
-		private sealed class MultiInsertQuery<TSource> : IMultiInsertSource<TSource>
+		internal sealed class MultiInsertQuery<TSource> : IMultiInsertSource<TSource>
 		{
 			public readonly IQueryable<TSource> Query;
 
