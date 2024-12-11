@@ -39,7 +39,7 @@ namespace LinqToDB.DataProvider.Access
 			SqlProviderFlags.TakeHintsSupported                       = TakeHints.Percent;
 			SqlProviderFlags.IsCrossJoinSupported                     = false;
 			SqlProviderFlags.IsDistinctSetOperationsSupported         = false;
-			SqlProviderFlags.IsParameterOrderDependent                = provider == AccessProvider.ODBC;
+			SqlProviderFlags.IsParameterOrderDependent                = true; // provider == AccessProvider.ODBC
 			SqlProviderFlags.IsUpdateFromSupported                    = false;
 			SqlProviderFlags.IsWindowFunctionsSupported               = false;
 			SqlProviderFlags.SupportedCorrelatedSubqueriesLevel       = 1;
