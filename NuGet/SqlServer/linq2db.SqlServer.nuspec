@@ -1,0 +1,20 @@
+<?xml version="1.0"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
+	<metadata minClientVersion="3.3.0">
+		<id>linq2db.SqlServer</id>
+		<title>LINQ to SqlServer</title>
+		<summary>
+			This package includes a T4 template to generate data models for SqlServer database and references to the linq2db.
+		</summary>
+		<tags>linq linq2db SqlServer LinqToDB ORM database DB SQL</tags>
+	</metadata>
+	<files>
+		<file src="t4bin\Microsoft.SqlServer.Types.dll"      target="tools"                                   />
+		<file src="t4bin\x86\SqlServerSpatial160.dll"        target="tools\x86"                               />
+		<file src="t4bin\x64\SqlServerSpatial160.dll"        target="tools\x64"                               />
+
+		<file src="NuGet\SqlServer\linq2db.SqlServer.props"  target="build"                                   />
+		<file src="NuGet\SqlServer\*.*" exclude="**\*.props" target="contentFiles\any\any\LinqToDB.Templates" />
+		<file src="NuGet\SqlServer\*.*" exclude="**\*.props" target="content\LinqToDB.Templates"              />
+	</files>
+</package>

@@ -1,10 +1,14 @@
-<#@ template language="C#" debug="True" hostSpecific="True"                    #>
-<#@ CleanupBehavior processor="T4VSHost" CleanupAfterProcessingtemplate="true" #>
-<#@ output extension=".generated.cs"                                           #>
-
-<#@ include file="$(LinqToDBT4SqlServerTemplatesPath)LinqToDB.SqlServer.Tools.ttinclude" once="true" #>
-<#@ include file="$(LinqToDBT4TemplatesPath)PluralizationService.ttinclude"              once="true" #>
+<#@ template language="C#" debug="True" hostSpecific="True"                                    #>
+<#@ CleanupBehavior processor="T4VSHost" CleanupAfterProcessingtemplate="true"                 #>
+<#@ output extension=".generated.cs"                                                           #>
+<#@ include file="$(LinqToDBT4SqlServerTemplatesPath)LinqToDB.SqlServer.ttinclude" once="true" #>
+<#@ include file="$(LinqToDBT4TemplatesPath)PluralizationService.ttinclude"        once="true" #>
 <#
+	// Install linq2db nuget package.
+	// Install one of the following packages:
+	// https://www.nuget.org/packages/Microsoft.Data.SqlClient  for Microsoft.Data.SqlClient (recommended)
+	// https://www.nuget.org/packages/System.Data.SqlClient     for System.Data.SqlClient    (legacy)
+	// https://www.nuget.org/packages/Microsoft.SqlServer.Types for Microsoft.SqlServer.Types, if needed
 	// See LinqToDB.Templates/README.md for more details.
 
 	// Configuring schema load process
@@ -16,6 +20,7 @@
 	NamespaceName        = "DataModels";
 //	DataContextName      = "MyDB";
 	GenerateSchemaAsType = true;
+//	GetDataOptionsMethod = "GetDataOptions({0})";
 
 	// Loading metadata
 	//

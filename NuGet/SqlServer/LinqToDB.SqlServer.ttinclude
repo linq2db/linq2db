@@ -1,8 +1,11 @@
-<#@ include file="T4Model.ttinclude"  once="true"      #>
-<#@ include file="LinqToDB.ttinclude" once="true"      #>
-<#@ import namespace="LinqToDB.DataProvider.SqlServer" #>
+<#@ assembly name="System.Data.dll"                                               #>
+<#@ include file="$(LinqToDBT4TemplatesPath)LinqToDB.ttinclude"       once="true" #>
+<#@ include file="$(LinqToDBT4TemplatesPath)LinqToDB.Tools.ttinclude" once="true" #>
+<#@ import namespace="LinqToDB.DataProvider.SqlServer"                            #>
 <#
 	{
+		var _ = typeof(System.Data.SqlClient.SqlConnection).Assembly;
+
 		GenerateProcedureDbType = p => p.DataType == "Structured" && p.SchemaType != null;
 
 		var afterGenerateLinqToDBModel = AfterGenerateLinqToDBModel;

@@ -63,8 +63,6 @@ if %errorlevel% neq 0 exit
 if %errorlevel% neq 0 exit
 ..\Redist\nuget.exe Pack %NUSPECS%\linq2db.SqlServer.nuspec -OutputDirectory %NUGETS%
 if %errorlevel% neq 0 exit
-..\Redist\nuget.exe Pack %NUSPECS%\linq2db.SqlServer.MS.nuspec -OutputDirectory %NUGETS%
-if %errorlevel% neq 0 exit
 ..\Redist\nuget.exe Pack %NUSPECS%\linq2db.Sybase.nuspec -OutputDirectory %NUGETS%
 if %errorlevel% neq 0 exit
 ..\Redist\nuget.exe Pack %NUSPECS%\linq2db.Sybase.DataAction.nuspec -OutputDirectory %NUGETS%

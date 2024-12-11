@@ -14,7 +14,7 @@ namespace LinqToDB.Schema
 	// only schema but also names generation for generated code and type mapping of database types to .net types.
 	// To not work with this API directly, we introduced schema provider interface and perform conversion of data
 	// we get from linq2db API to new API format.
-	// Later we plan to introduce new more cleaner schema API, based on ISchemaProvider
+	// Later we plan to introduce new cleaner schema API, based on ISchemaProvider
 	/// <summary>
 	/// Default schema provider implementation over existing <see cref="SchemaProvider.ISchemaProvider.GetSchema(DataConnection, GetSchemaOptions?)"/> API.
 	/// </summary>
@@ -479,7 +479,7 @@ namespace LinqToDB.Schema
 			}
 
 			var type = new DatabaseType(column.ColumnType, column.Length, column.Precision, column.Scale);
-			
+
 			RegisterType(type, column.DataType, column.SystemType, column.ProviderSpecificType);
 
 			return new Column(

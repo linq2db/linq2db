@@ -26,6 +26,8 @@ namespace Sql2017ProcSchema
 {
 	public partial class NorthwindDB : LinqToDB.Data.DataConnection
 	{
+		#region Tables
+
 		public ITable<AlphabeticalListOfProduct>  AlphabeticalListOfProducts   { get { return this.GetTable<AlphabeticalListOfProduct>(); } }
 		public ITable<Category>                   Categories                   { get { return this.GetTable<Category>(); } }
 		public ITable<CategorySalesFor1997>       CategorySalesFor1997         { get { return this.GetTable<CategorySalesFor1997>(); } }
@@ -55,6 +57,10 @@ namespace Sql2017ProcSchema
 		public ITable<Supplier>                   Suppliers                    { get { return this.GetTable<Supplier>(); } }
 		public ITable<Territory>                  Territories                  { get { return this.GetTable<Territory>(); } }
 
+		#endregion
+
+		#region .ctor
+
 		public NorthwindDB(int i)
 		{
 			InitDataContext();
@@ -70,6 +76,8 @@ namespace Sql2017ProcSchema
 
 		partial void InitDataContext  ();
 		partial void InitMappingSchema();
+
+		#endregion
 
 		#region Alias members
 
@@ -577,10 +585,7 @@ namespace Sql2017ProcSchema
 		{
 			var parameters = new []
 			{
-				new DataParameter("@CustomerID", @CustomerID, LinqToDB.DataType.NChar)
-				{
-					Size = 5
-				}
+				new DataParameter("@CustomerID", @CustomerID, LinqToDB.DataType.NChar, 5)
 			};
 
 			return dataConnection.QueryProc<CustOrderHistResult>("[CustOrderHist]", parameters).ToList();
@@ -623,10 +628,7 @@ namespace Sql2017ProcSchema
 		{
 			var parameters = new []
 			{
-				new DataParameter("@CustomerID", @CustomerID, LinqToDB.DataType.NChar)
-				{
-					Size = 5
-				}
+				new DataParameter("@CustomerID", @CustomerID, LinqToDB.DataType.NChar, 5)
 			};
 
 			return dataConnection.QueryProc<CustOrdersOrdersResult>("[CustOrdersOrders]", parameters).ToList();
@@ -673,14 +675,8 @@ namespace Sql2017ProcSchema
 		{
 			var parameters = new []
 			{
-				new DataParameter("@CategoryName", @CategoryName, LinqToDB.DataType.NVarChar)
-				{
-					Size = 15
-				},
-				new DataParameter("@OrdYear",      @OrdYear,      LinqToDB.DataType.NVarChar)
-				{
-					Size = 4
-				}
+				new DataParameter("@CategoryName", @CategoryName, LinqToDB.DataType.NVarChar, 15),
+				new DataParameter("@OrdYear",      @OrdYear,      LinqToDB.DataType.NVarChar, 4)
 			};
 
 			return dataConnection.QueryProc<SalesByCategoryResult>("[SalesByCategory]", parameters).ToList();
@@ -1127,6 +1123,8 @@ namespace Sql2017ProcSchema
 
 	public partial class TestDataDB : LinqToDB.Data.DataConnection
 	{
+		#region Tables
+
 		public ITable<AllType>                 AllTypes                 { get { return this.GetTable<AllType>(); } }
 		public ITable<AllTypes2>               AllTypes2                { get { return this.GetTable<AllTypes2>(); } }
 		public ITable<Child>                   Children                 { get { return this.GetTable<Child>(); } }
@@ -1164,6 +1162,8 @@ namespace Sql2017ProcSchema
 		public ITable<TestSchemaX>             TestSchemaX              { get { return this.GetTable<TestSchemaX>(); } }
 		public ITable<TestSchemaY>             TestSchemaY              { get { return this.GetTable<TestSchemaY>(); } }
 
+		#endregion
+
 		#region Schemas
 
 		public MySchemaSchema.DataContext MySchema { get; set; } = null!;
@@ -1174,6 +1174,8 @@ namespace Sql2017ProcSchema
 		}
 
 		#endregion
+
+		#region .ctor
 
 		public TestDataDB(int i)
 		{
@@ -1192,6 +1194,8 @@ namespace Sql2017ProcSchema
 
 		partial void InitDataContext  ();
 		partial void InitMappingSchema();
+
+		#endregion
 
 		#region Table Functions
 
@@ -1784,19 +1788,14 @@ namespace Sql2017ProcSchema
 		{
 			var parameters = new []
 			{
-				new DataParameter("@str",            @str,            LinqToDB.DataType.VarChar)
+				new DataParameter("@str",            @str,            LinqToDB.DataType.VarChar, 50),
+				new DataParameter("@outputStr",      @outputStr,      LinqToDB.DataType.VarChar, 50)
 				{
-					Size = 50
+					Direction = ParameterDirection.InputOutput
 				},
-				new DataParameter("@outputStr",      @outputStr,      LinqToDB.DataType.VarChar)
+				new DataParameter("@inputOutputStr", @inputOutputStr, LinqToDB.DataType.VarChar, 50)
 				{
-					Direction = ParameterDirection.InputOutput,
-					Size      = 50
-				},
-				new DataParameter("@inputOutputStr", @inputOutputStr, LinqToDB.DataType.VarChar)
-				{
-					Direction = ParameterDirection.InputOutput,
-					Size      = 50
+					Direction = ParameterDirection.InputOutput
 				}
 			};
 
@@ -1825,19 +1824,14 @@ namespace Sql2017ProcSchema
 				{
 					Direction = ParameterDirection.InputOutput
 				},
-				new DataParameter("@str",            @str,            LinqToDB.DataType.VarChar)
+				new DataParameter("@str",            @str,            LinqToDB.DataType.VarChar, 50),
+				new DataParameter("@outputStr",      @outputStr,      LinqToDB.DataType.VarChar, 50)
 				{
-					Size = 50
+					Direction = ParameterDirection.InputOutput
 				},
-				new DataParameter("@outputStr",      @outputStr,      LinqToDB.DataType.VarChar)
+				new DataParameter("@inputOutputStr", @inputOutputStr, LinqToDB.DataType.VarChar, 50)
 				{
-					Direction = ParameterDirection.InputOutput,
-					Size      = 50
-				},
-				new DataParameter("@inputOutputStr", @inputOutputStr, LinqToDB.DataType.VarChar)
-				{
-					Direction = ParameterDirection.InputOutput,
-					Size      = 50
+					Direction = ParameterDirection.InputOutput
 				}
 			};
 
@@ -1878,14 +1872,8 @@ namespace Sql2017ProcSchema
 		{
 			var parameters = new []
 			{
-				new DataParameter("@firstName", @firstName, LinqToDB.DataType.NVarChar)
-				{
-					Size = 50
-				},
-				new DataParameter("@lastName",  @lastName,  LinqToDB.DataType.NVarChar)
-				{
-					Size = 50
-				}
+				new DataParameter("@firstName", @firstName, LinqToDB.DataType.NVarChar, 50),
+				new DataParameter("@lastName",  @lastName,  LinqToDB.DataType.NVarChar, 50)
 			};
 
 			return dataConnection.QueryProc<PatientSelectByNameResult>("[Patient_SelectByName]", parameters).ToList();
@@ -1923,22 +1911,10 @@ namespace Sql2017ProcSchema
 		{
 			var parameters = new []
 			{
-				new DataParameter("@FirstName",  @FirstName,  LinqToDB.DataType.NVarChar)
-				{
-					Size = 50
-				},
-				new DataParameter("@LastName",   @LastName,   LinqToDB.DataType.NVarChar)
-				{
-					Size = 50
-				},
-				new DataParameter("@MiddleName", @MiddleName, LinqToDB.DataType.NVarChar)
-				{
-					Size = 50
-				},
-				new DataParameter("@Gender",     @Gender,     LinqToDB.DataType.Char)
-				{
-					Size = 1
-				}
+				new DataParameter("@FirstName",  @FirstName,  LinqToDB.DataType.NVarChar, 50),
+				new DataParameter("@LastName",   @LastName,   LinqToDB.DataType.NVarChar, 50),
+				new DataParameter("@MiddleName", @MiddleName, LinqToDB.DataType.NVarChar, 50),
+				new DataParameter("@Gender",     @Gender,     LinqToDB.DataType.Char, 1)
 			};
 
 			return dataConnection.QueryProc<PersonInsertResult>("[Person_Insert]", parameters).ToList();
@@ -1957,22 +1933,10 @@ namespace Sql2017ProcSchema
 		{
 			var parameters = new []
 			{
-				new DataParameter("@FirstName", @FirstName, LinqToDB.DataType.NVarChar)
-				{
-					Size = 50
-				},
-				new DataParameter("@LastName", @LastName, LinqToDB.DataType.NVarChar)
-				{
-					Size = 50
-				},
-				new DataParameter("@MiddleName", @MiddleName, LinqToDB.DataType.NVarChar)
-				{
-					Size = 50
-				},
-				new DataParameter("@Gender",   @Gender,   LinqToDB.DataType.Char)
-				{
-					Size = 1
-				},
+				new DataParameter("@FirstName", @FirstName, LinqToDB.DataType.NVarChar, 50),
+				new DataParameter("@LastName", @LastName, LinqToDB.DataType.NVarChar, 50),
+				new DataParameter("@MiddleName", @MiddleName, LinqToDB.DataType.NVarChar, 50),
+				new DataParameter("@Gender",   @Gender,   LinqToDB.DataType.Char, 1),
 				new DataParameter("@PersonID", @PersonID, LinqToDB.DataType.Int32)
 				{
 					Direction = ParameterDirection.InputOutput
@@ -2055,14 +2019,8 @@ namespace Sql2017ProcSchema
 		{
 			var parameters = new []
 			{
-				new DataParameter("@firstName", @firstName, LinqToDB.DataType.NVarChar)
-				{
-					Size = 50
-				},
-				new DataParameter("@lastName",  @lastName,  LinqToDB.DataType.NVarChar)
-				{
-					Size = 50
-				}
+				new DataParameter("@firstName", @firstName, LinqToDB.DataType.NVarChar, 50),
+				new DataParameter("@lastName",  @lastName,  LinqToDB.DataType.NVarChar, 50)
 			};
 
 			return dataConnection.QueryProc<PersonSelectByNameResult>("[Person_SelectByName]", parameters).ToList();
@@ -2085,14 +2043,8 @@ namespace Sql2017ProcSchema
 		{
 			var parameters = new []
 			{
-				new DataParameter("@firstName", @firstName, LinqToDB.DataType.NVarChar)
-				{
-					Size = 50
-				},
-				new DataParameter("@lastName",  @lastName,  LinqToDB.DataType.NVarChar)
-				{
-					Size = 50
-				}
+				new DataParameter("@firstName", @firstName, LinqToDB.DataType.NVarChar, 50),
+				new DataParameter("@lastName",  @lastName,  LinqToDB.DataType.NVarChar, 50)
 			};
 
 			return dataConnection.QueryProc<PersonSelectListByNameResult>("[Person_SelectListByName]", parameters).ToList();
@@ -2116,22 +2068,10 @@ namespace Sql2017ProcSchema
 			var parameters = new []
 			{
 				new DataParameter("@PersonID",   @PersonID,   LinqToDB.DataType.Int32),
-				new DataParameter("@FirstName",  @FirstName,  LinqToDB.DataType.NVarChar)
-				{
-					Size = 50
-				},
-				new DataParameter("@LastName",   @LastName,   LinqToDB.DataType.NVarChar)
-				{
-					Size = 50
-				},
-				new DataParameter("@MiddleName", @MiddleName, LinqToDB.DataType.NVarChar)
-				{
-					Size = 50
-				},
-				new DataParameter("@Gender",     @Gender,     LinqToDB.DataType.Char)
-				{
-					Size = 1
-				}
+				new DataParameter("@FirstName",  @FirstName,  LinqToDB.DataType.NVarChar, 50),
+				new DataParameter("@LastName",   @LastName,   LinqToDB.DataType.NVarChar, 50),
+				new DataParameter("@MiddleName", @MiddleName, LinqToDB.DataType.NVarChar, 50),
+				new DataParameter("@Gender",     @Gender,     LinqToDB.DataType.Char, 1)
 			};
 
 			return dataConnection.ExecuteProc("[Person_Update]", parameters);
@@ -2822,29 +2762,30 @@ namespace Sql2017ProcSchema
 			#endregion
 		}
 
-		public static partial class TestDataDBStoredProcedures
+		#region Stored Procedures
+
+		#region TestProcedure
+
+		public static List<TestProcedureResult> TestProcedure(TestDataDB dataConnection)
 		{
-			#region TestProcedure
+			var ms = dataConnection.MappingSchema;
 
-			public static List<TestProcedureResult> TestProcedure(TestDataDB dataConnection)
-			{
-				var ms = dataConnection.MappingSchema;
-
-				return dataConnection.QueryProc(dataReader =>
-					new TestProcedureResult
-					{
-						Column1 = Converter.ChangeTypeTo<int>(dataReader.GetValue(0), ms),
-					},
-					"[TestSchema].[TestProcedure]").ToList();
-			}
-
-			public partial class TestProcedureResult
-			{
-				[Column("")] public int Column1 { get; set; }
-			}
-
-			#endregion
+			return dataConnection.QueryProc(dataReader =>
+				new TestProcedureResult
+				{
+					Column1 = Converter.ChangeTypeTo<int>(dataReader.GetValue(0), ms),
+				},
+				"[TestSchema].[TestProcedure]").ToList();
 		}
+
+		public partial class TestProcedureResult
+		{
+			[Column("")] public int Column1 { get; set; }
+		}
+
+		#endregion
+
+		#endregion
 
 		#region Table Extensions
 
