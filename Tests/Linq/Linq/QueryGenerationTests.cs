@@ -5,7 +5,9 @@ using FluentAssertions;
 
 using LinqToDB;
 using LinqToDB.Data;
+using LinqToDB.Linq;
 using LinqToDB.Mapping;
+using LinqToDB.SqlQuery;
 
 using NUnit.Framework;
 
@@ -457,7 +459,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void ToSqlQuery_IMultiInsertElse([IncludeDataSources(true, TestProvName.AllOracle)] string context)
+		public void ToSqlQuery_IMultiInsert_InsertAll([IncludeDataSources(true, TestProvName.AllOracle)] string context)
 		{
 			using var db = GetDataContext(context);
 			using var dest1 = db.CreateLocalTable<Dest1>();
@@ -482,7 +484,7 @@ namespace Tests.Linq
 					x => new Dest2 { ID = x.ID + 3, Int = x.ID + 1 }
 				);
 
-			var command = query.ToSqlQuery();
+			var command = query.ToSqlQuery(new SqlGenerationOptions() { MultiInsertMode = MultiInsertType.All });
 
 			using var dc = GetDataConnection(context.StripRemote());
 			var count = dc.Execute(command.Sql);
@@ -497,6 +499,47 @@ namespace Tests.Linq
 				Assert.That(dest1.Count(), Is.EqualTo(1));
 				Assert.That(dest1.Count(x => x.ID == 1001), Is.EqualTo(1));
 				Assert.That(dest2.Count(x => x.ID == 1003), Is.EqualTo(1));
+			});
+		}
+
+		[Test]
+		public void ToSqlQuery_IMultiInsert_InsertFirst([IncludeDataSources(true, TestProvName.AllOracle)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var dest = db.CreateLocalTable<Dest1>();
+
+			var query = db
+				.SelectQuery(() => new { ID = 1000, N = (short)42 })
+				.MultiInsert()
+				.When(
+					x => x.N < 40,
+					dest,
+					x => new Dest1 { ID = x.ID + 1, Value = x.N }
+				)
+				.When(
+					x => false,
+					dest,
+					x => new Dest1 { ID = x.ID + 2, Value = x.N }
+				)
+				.Else(
+					dest,
+					x => new Dest1 { ID = x.ID + 3, Value = x.N }
+				);
+
+			var command = query.ToSqlQuery(new SqlGenerationOptions() { MultiInsertMode = MultiInsertType.First });
+
+			using var dc = GetDataConnection(context.StripRemote());
+			var count = dc.Execute(command.Sql);
+
+			Assert.Multiple(() =>
+			{
+				Assert.That(command.Sql, Does.Contain("INSERT FIRST"));
+				Assert.That(command.Sql, Does.Contain("WHEN"));
+				Assert.That(command.Parameters, Has.Count.EqualTo(0));
+
+				Assert.That(count, Is.EqualTo(1));
+				Assert.That(dest.Count(), Is.EqualTo(1));
+				Assert.That(dest.Count(x => x.ID == 1003), Is.EqualTo(1));
 			});
 		}
 

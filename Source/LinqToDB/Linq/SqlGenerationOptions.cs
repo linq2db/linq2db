@@ -1,4 +1,6 @@
-﻿namespace LinqToDB.Linq
+﻿using LinqToDB.SqlQuery;
+
+namespace LinqToDB.Linq
 {
 	/// <summary>
 	/// SQL generation options for <see cref="LinqExtensions.ToSqlQuery{T}(System.Linq.IQueryable{T}, SqlGenerationOptions?)"/> group of APIs.
@@ -10,5 +12,10 @@
 		/// When not set, current context settings used.
 		/// </summary>
 		public bool? InlineParameters { get; set; }
+
+		/// <summary>
+		/// INSERT ALL mode for Oracle-specific multi-insert API.
+		/// </summary>
+		public MultiInsertType? MultiInsertMode { get; set; }
 	}
 }

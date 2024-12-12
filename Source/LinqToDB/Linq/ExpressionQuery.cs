@@ -16,6 +16,7 @@ namespace LinqToDB.Linq
 	using Tools;
 	using Internal;
 	using LinqToDB.Expressions;
+	using LinqToDB.SqlQuery;
 
 	abstract class ExpressionQuery<T> : IExpressionQuery<T>, IAsyncEnumerable<T>
 	{
@@ -53,6 +54,9 @@ namespace LinqToDB.Linq
 			var expression  = Expression;
 			var expressions = (IQueryExpressions)new RuntimeExpressionsContainer(expression);
 			var info        = GetQuery(ref expressions, true, out var dependsOnParameters);
+
+			if (options?.MultiInsertMode != null && info.Queries[0].Statement is SqlMultiInsertStatement multiInsert)
+				multiInsert.InsertType = options.MultiInsertMode.Value;
 
 			if (!dependsOnParameters)
 			{
