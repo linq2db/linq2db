@@ -1,5 +1,5 @@
-SET NUSPECS="..\.build\nuspecs"
-SET NUGETS="..\.build\nugets"
+SET NUSPECS=..\.build\nuspecs
+SET NUGETS=..\.build\nugets
 
 RMDIR %NUGETS% /S /Q
 MD %NUGETS%
