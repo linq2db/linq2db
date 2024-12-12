@@ -537,9 +537,9 @@ namespace LinqToDB.SqlProvider
 
 		protected override IQueryElement VisitNotPredicate(SqlPredicate.Not predicate)
 		{
-			if (predicate.Predicate.InvertIsSimple())
+			if (predicate.Predicate.CanInvert(_nullabilityContext))
 			{
-				return Visit(predicate.Predicate.Invert());
+				return Visit(predicate.Predicate.Invert(_nullabilityContext));
 			}
 
 			var saveInsideNot = _isInsideNot;
@@ -551,9 +551,9 @@ namespace LinqToDB.SqlProvider
 			_isInsideNot     = saveInsideNot;
 			_allowOptimize = saveAllow;
 
-			if (newInnerPredicate.InvertIsSimple())
+			if (newInnerPredicate.CanInvert(_nullabilityContext))
 			{
-				return Visit(newInnerPredicate.Invert());
+				return Visit(newInnerPredicate.Invert(_nullabilityContext));
 			}
 
 			if (!ReferenceEquals(newInnerPredicate, predicate.Predicate))
@@ -1062,7 +1062,6 @@ namespace LinqToDB.SqlProvider
 
 			if (expr.Operator is SqlPredicate.Operator.Equal or SqlPredicate.Operator.NotEqual)
 			{
-				// reduce comparison of predicate to true/false
 				if (expr.WithNull == null)
 				{
 					if (expr.Expr2 is ISqlPredicate expr2Predicate)

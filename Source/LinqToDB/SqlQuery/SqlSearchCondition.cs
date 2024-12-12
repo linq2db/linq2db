@@ -104,22 +104,37 @@ namespace LinqToDB.SqlQuery
 
 		#region IInvertibleElement Members
 
-		public bool InvertIsSimple()
+		public bool CanInvert(NullabilityContext nullability)
 		{
-			var moreComplex = Predicates.Count(static p => !p.InvertIsSimple());
+			var maxCount = Math.Max(Predicates.Count / 2, 2);
+			if (Predicates.Count > maxCount)
+				return false;
 
-			// don't invert if half or more of containing predicates will be more complex
-			return moreComplex <= Predicates.Count / 2;
+			if (Predicates.Count > 1 && IsAnd)
+				return false;
+
+			return Predicates.All(p =>
+			{
+				if (p is not SqlSearchCondition)
+					return false;
+
+				if (p is SqlPredicate.ExprExpr exprExpr && (exprExpr.WithNull != null || exprExpr.WithNull == true))
+				{
+					return false;
+				}
+
+				return p.CanInvert(nullability);
+			});
 		}
 
-		public ISqlPredicate Invert()
+		public ISqlPredicate Invert(NullabilityContext nullability)
 		{
 			if (Predicates.Count == 0)
 			{
 				return new SqlSearchCondition(!IsOr);
 			}
 
-			var newPredicates = Predicates.Select(static p => p.Invert());
+			var newPredicates = Predicates.Select(p => new SqlPredicate.Not(p));
 
 			return new SqlSearchCondition(!IsOr, newPredicates);
 		}

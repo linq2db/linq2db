@@ -2873,6 +2873,12 @@ namespace LinqToDB.SqlQuery
 
 				return base.Visit(element);
 			}
+
+			protected override IQueryElement VisitExistsPredicate(SqlPredicate.Exists predicate)
+			{
+				// OuterApplyOptimization test
+				return predicate;
+			}
 		}
 
 		sealed class RemoveUnusedColumnsVisitor : QueryElementVisitor
