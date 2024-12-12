@@ -6,7 +6,7 @@ dir ..\Redist\*.*
 RMDIR %NUGETS% /S /Q
 MD %NUGETS%
 
-DIR %NUGETS%
+DIR %NUSPECS%
 DIR %NUGETS%
 
 rem cmd /c "exit /b 0"
