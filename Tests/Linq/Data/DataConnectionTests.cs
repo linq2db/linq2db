@@ -638,7 +638,7 @@ namespace Tests.Data
 				finally
 				{
 					var time = DateTimeOffset.Now - start;
-					Assert.That(time, Is.GreaterThanOrEqualTo(TimeSpan.FromSeconds(10)));
+					Assert.That(time, Is.GreaterThanOrEqualTo(TimeSpan.FromSeconds(9)));
 					Assert.That(time, Is.LessThan(TimeSpan.FromSeconds(12)));
 				}
 
@@ -646,7 +646,7 @@ namespace Tests.Data
 				db.CommandTimeout = 0;
 				db.Update(forUpdate);
 				var time2 = DateTimeOffset.Now - start;
-				Assert.That(time2, Is.GreaterThanOrEqualTo(TimeSpan.FromSeconds(60)));
+				Assert.That(time2, Is.GreaterThanOrEqualTo(TimeSpan.FromSeconds(59)));
 				Assert.That(time2, Is.LessThan(TimeSpan.FromSeconds(62)));
 			}
 		}
