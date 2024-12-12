@@ -31,7 +31,7 @@ namespace Tests
 
 		public static bool IsUsePositionalParameters(this string context)
 		{
-			return context.IsAnyOf(TestProvName.AllSapHana, TestProvName.AllAccessOdbc);
+			return context.IsAnyOf(TestProvName.AllSapHana, TestProvName.AllAccess);
 		}
 
 		/// <summary>
