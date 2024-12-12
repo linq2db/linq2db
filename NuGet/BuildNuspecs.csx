@@ -2,6 +2,7 @@
 #r "nuget:System.Xml.ReaderWriter, 4.3.1"
 #r "nuget:LibGit2Sharp, 0.30.0"
 
+using System;
 using System.IO;
 using System.Diagnostics.CodeAnalysis;
 using System.Xml;
@@ -48,6 +49,8 @@ string? IfExists(string config) => File.Exists(Path.Combine(buildPath, "..", "bi
 var releasePath = IfExists("Azure") ?? IfExists("Release") ?? IfExists("Debug") ?? "Azure";
 var binPath     = @"..\bin";
 var t4binPath   = @"..\bin\NuGet\" + releasePath;
+
+Console.WriteLine($"releasePath: {releasePath}");
 
 IEnumerable<string> GetFiles(string path)
 {

@@ -14,7 +14,7 @@ jobs:
 
   # mitigate https://status.dev.azure.com/_event/182998791
   - task: NuGetToolInstaller@1
-  
+
   # .NET 6 and 8 SDKs already installed https://github.com/actions/runner-images/blob/main/images/windows/Windows2022-Readme.md
 
   - task: UseDotNet@2
@@ -99,7 +99,7 @@ jobs:
                 dotnet publish Tests/Linq/Tests.csproj -f %%f -c $(test_configuration) -a x86 /p:DB2STUB=True -o .build/publish/Tests/$(test_configuration)/%%f_x86
             )
             if %errorlevel% neq 0 exit
-            
+
             IF %%f EQU net9.0 (
                 dotnet publish Tests/EntityFrameworkCore/Tests.EntityFrameworkCore.STS.csproj -f %%f -c $(test_configuration) -a x86 -o .build/publish/EFTests/$(test_configuration)/%%f_x86
             ) ELSE (
@@ -224,7 +224,7 @@ jobs:
 
   - task: PublishPipelineArtifact@1
     inputs:
-      path: '$(Build.SourcesDirectory)/.build/bin/Tests/$(release_configuration)/$(netfx_tfm)'
+      path: '$(Build.SourcesDirectory)/.build/bin/NuGet/$(release_configuration)/$(netfx_tfm)'
       artifact: '$(artifact_t4_binaries)'
     displayName: Publish nuget artifacts part 1
     condition: and(succeeded(), ${{ parameters.with_nugets }})

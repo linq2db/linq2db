@@ -1,16 +1,12 @@
 SET NUSPECS="..\.build\nuspecs"
 SET NUGETS="..\.build\nugets"
 
-dir ..\Redist\*.*
-
 RMDIR %NUGETS% /S /Q
 MD %NUGETS%
 
 DIR %NUSPECS%
-DIR %NUGETS%
 
-rem cmd /c "exit /b 0"
-
+cmd /c "exit /b 0"
 
 ECHO build binary nugets (with debug support)
 FOR %%n IN (linq2db linq2db.Extensions linq2db.Tools linq2db.Remote.Grpc linq2db.Remote.Wcf linq2db.FSharp linq2db.EntityFrameworkCore.v3 linq2db.EntityFrameworkCore.v6 linq2db.EntityFrameworkCore.v8 linq2db.EntityFrameworkCore.v9) DO (
