@@ -224,7 +224,7 @@ jobs:
 
   - task: PublishPipelineArtifact@1
     inputs:
-      path: '$(Build.SourcesDirectory)/.build/bin/NuGet/$(release_configuration)/$(netfx_tfm)'
+      path: '$(Build.SourcesDirectory)/.build/bin/NuGet/$(release_configuration)'
       artifact: '$(artifact_t4_binaries)'
     displayName: Publish nuget artifacts part 1
     condition: and(succeeded(), ${{ parameters.with_nugets }})

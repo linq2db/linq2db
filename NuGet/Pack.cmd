@@ -28,3 +28,5 @@ FOR %%n IN (cli Access ClickHouse DB2 Firebird Informix MySql Oracle PostgreSQL 
     ..\Redist\nuget.exe Pack %NUSPECS%\linq2db.%%n.nuspec -OutputDirectory %NUGETS%
     IF %ERRORLEVEL% NEQ 0 EXIT /b %ERRORLEVEL%
 )
+
+DIR %NUGETS%

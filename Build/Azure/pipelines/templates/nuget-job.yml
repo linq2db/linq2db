@@ -91,7 +91,7 @@ jobs:
     displayName: Download test files (for t4 nugets)
     inputs:
       artifactName: '$(artifact_t4_binaries)'
-      targetPath: '$(Build.SourcesDirectory)/.build/bin/NuGet/$(release_configuration)/$(netfx_tfm)'
+      targetPath: '$(Build.SourcesDirectory)/.build/bin/NuGet/$(release_configuration)'
 
   - task: PowerShell@2
     inputs:
