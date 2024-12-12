@@ -2517,8 +2517,9 @@ namespace LinqToDB.SqlProvider
 					BuildPredicate(((SqlPredicate.IsTrue)predicate).Reduce(NullabilityContext, _isInsideNot));
 					break;
 
-				case QueryElementType.FuncLikePredicate:
-					BuildExpression(((SqlPredicate.FuncLike)predicate).Function.Precedence, ((SqlPredicate.FuncLike)predicate).Function);
+				case QueryElementType.ExistsPredicate:
+					StringBuilder.Append(((SqlPredicate.Exists)predicate).IsNot ? " NOT EXISTS " : " EXISTS ");
+					BuildExpression(GetPrecedence((SqlPredicate.Exists)predicate), ((SqlPredicate.Exists)predicate).SubQuery);
 					break;
 
 				case QueryElementType.SearchCondition:
@@ -3559,7 +3560,7 @@ namespace LinqToDB.SqlProvider
 				if (!first)
 					StringBuilder.Append(InlineComma);
 
-				BuildExpression(parameter, true, !first || name == "EXISTS");
+				BuildExpression(parameter, true, !first);
 
 				first = false;
 			}

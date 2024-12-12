@@ -190,6 +190,7 @@ namespace LinqToDB.DataProvider.SQLite
 			BuildInsertOrUpdateQueryAsOnConflictUpdateOrNothing(insertOrUpdate);
 		}
 
+		// 3.39.0 adds standard DISTINCT FROM, but let's keep older implementation for now
 		protected override void BuildIsDistinctPredicate(SqlPredicate.IsDistinct expr)
 		{
 			BuildExpression(GetPrecedence(expr), expr.Expr1);

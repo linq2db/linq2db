@@ -224,7 +224,7 @@ namespace LinqToDB.DataProvider.SqlCe
 								isTruePredicate.FalseValue, isTruePredicate.WithNull, isTruePredicate.IsNot));
 						query.Select.Columns.Clear();
 
-						return new SqlPredicate.FuncLike(SqlFunction.CreateExists(query));
+						return new SqlPredicate.Exists(false, query);
 					}
 				}
 

@@ -15,6 +15,8 @@ namespace LinqToDB.DataProvider.SqlServer
 			_sqlServerVersion = sqlServerVersion;
 		}
 
+		protected override bool SupportsDistinctAsExistsIntersect => _sqlServerVersion < SqlServerVersion.v2022;
+
 		public override ISqlPredicate ConvertSearchStringPredicate(SqlPredicate.SearchString predicate)
 		{
 			var like = base.ConvertSearchStringPredicate(predicate);

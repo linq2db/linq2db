@@ -172,14 +172,7 @@ namespace LinqToDB.SqlQuery
 				case QueryElementType.SearchCondition :
 					return false;
 				case QueryElementType.SqlFunction :
-
-					var f = (SqlFunction)ex;
-
-					return f.Name switch
-					{
-						"EXISTS" => false,
-						_        => true,
-					};
+					return true;
 			}
 
 			return false;

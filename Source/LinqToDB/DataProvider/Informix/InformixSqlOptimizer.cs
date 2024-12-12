@@ -151,14 +151,15 @@ namespace LinqToDB.DataProvider.Informix
 			return statement;
 		}
 
-		static SqlStatement WrapParameters(SqlStatement statement, EvaluationContext context)
+		internal static TElement WrapParameters<TElement>(TElement statement, EvaluationContext context)
+			where TElement: IQueryElement
 		{
 			// Known cases:
 			// - derived columns (column of CTE query)
 
 			var visitor = new WrapParametersVisitor(VisitMode.Modify);
 
-			statement = (SqlStatement)visitor.WrapParameters(statement, WrapParametersVisitor.WrapFlags.InSelect);
+			statement = (TElement)visitor.WrapParameters(statement, WrapParametersVisitor.WrapFlags.InSelect);
 
 			return statement;
 		}

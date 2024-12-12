@@ -83,7 +83,7 @@ namespace LinqToDB.SqlQuery
 				QueryElementType.IsTruePredicate           => VisitIsTruePredicate           ((SqlPredicate.IsTrue       )element),
 				QueryElementType.InSubQueryPredicate       => VisitInSubQueryPredicate       ((SqlPredicate.InSubQuery   )element),
 				QueryElementType.InListPredicate           => VisitInListPredicate           ((SqlPredicate.InList       )element),
-				QueryElementType.FuncLikePredicate         => VisitFuncLikePredicate         ((SqlPredicate.FuncLike     )element),
+				QueryElementType.ExistsPredicate           => VisitExistsPredicate           ((SqlPredicate.Exists       )element),
 				QueryElementType.SqlQuery                  => VisitSqlQuery                  ((SelectQuery               )element),
 				QueryElementType.Column                    => VisitSqlColumnReference        ((SqlColumn                 )element),
 				QueryElementType.SearchCondition           => VisitSqlSearchCondition        ((SqlSearchCondition        )element),
@@ -2079,28 +2079,31 @@ namespace LinqToDB.SqlQuery
 			return selectQuery;
 		}
 
-		protected virtual IQueryElement VisitFuncLikePredicate(SqlPredicate.FuncLike element)
+		protected virtual IQueryElement VisitExistsPredicate(SqlPredicate.Exists predicate)
 		{
-			switch (GetVisitMode(element))
+			switch (GetVisitMode(predicate))
 			{
 				case VisitMode.ReadOnly:
 				{
-					Visit(element.Function);
+					Visit(predicate.SubQuery);
 					break;
 				}
 				case VisitMode.Modify:
 				{
-					element.Modify((SqlFunction)Visit(element.Function));
+					var subQuery = (SelectQuery)Visit(predicate.SubQuery);
+
+					predicate.Modify(subQuery);
 
 					break;
 				}
 				case VisitMode.Transform:
 				{
-					var func = (SqlFunction)Visit(element.Function);
+					var subQuery = (SelectQuery)Visit(predicate.SubQuery);
 
-					if (ShouldReplace(element) || !ReferenceEquals(func, element.Function))
+					if (ShouldReplace(predicate) ||
+						!ReferenceEquals(predicate.SubQuery, subQuery))
 					{
-						return NotifyReplaced(new SqlPredicate.FuncLike(func), element);
+						return NotifyReplaced(new SqlPredicate.Exists(predicate.IsNot, subQuery), predicate);
 					}
 
 					break;
@@ -2109,7 +2112,7 @@ namespace LinqToDB.SqlQuery
 					throw CreateInvalidVisitModeException();
 			}
 
-			return element;
+			return predicate;
 		}
 
 		protected virtual IQueryElement VisitInListPredicate(SqlPredicate.InList predicate)

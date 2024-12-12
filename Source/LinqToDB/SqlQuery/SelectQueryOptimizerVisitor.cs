@@ -2615,36 +2615,35 @@ namespace LinqToDB.SqlQuery
 			return newElement;
 		}
 
-		protected override IQueryElement VisitFuncLikePredicate(SqlPredicate.FuncLike element)
+		protected override IQueryElement VisitExistsPredicate(SqlPredicate.Exists predicate)
 		{
-			var result = base.VisitFuncLikePredicate(element);
+			var result = base.VisitExistsPredicate(predicate);
 
-			if (!ReferenceEquals(result, element))
-				return Visit(element);
+			if (!ReferenceEquals(result, predicate))
+				return Visit(predicate);
 
-			if (element.Function is { Name: "EXISTS", Parameters: [SelectQuery sq] })
+			var sq = predicate.SubQuery;
+
+			// We can safely optimize out Distinct
+			if (sq.Select.IsDistinct)
 			{
-				// We can safely optimize out Distinct
-				if (sq.Select.IsDistinct)
-				{
-					sq.Select.IsDistinct = false;
-				}
+				sq.Select.IsDistinct = false;
+			}
 
-				if (sq.GroupBy.IsEmpty && !sq.HasSetOperators)
+			if (sq.GroupBy.IsEmpty && !sq.HasSetOperators)
+			{
+				// non aggregation columns can be removed
+				for (int i = sq.Select.Columns.Count - 1; i >= 0; i--)
 				{
-					// non aggregation columns can be removed
-					for (int i = sq.Select.Columns.Count - 1; i >= 0; i--)
+					var colum = sq.Select.Columns[i];
+					if (!QueryHelper.ContainsAggregationFunction(colum.Expression))
 					{
-						var colum = sq.Select.Columns[i];
-						if (!QueryHelper.ContainsAggregationFunction(colum.Expression))
-						{
-							sq.Select.Columns.RemoveAt(i);
-						}
+						sq.Select.Columns.RemoveAt(i);
 					}
 				}
 			}
 
-			return element;
+			return predicate;
 		}
 
 		#region Helpers
@@ -2873,11 +2872,6 @@ namespace LinqToDB.SqlQuery
 				}
 
 				return base.Visit(element);
-			}
-
-			protected override IQueryElement VisitFuncLikePredicate(SqlPredicate.FuncLike element)
-			{
-				return element;
 			}
 		}
 

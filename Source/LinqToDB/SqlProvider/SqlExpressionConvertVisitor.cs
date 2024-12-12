@@ -30,8 +30,9 @@ namespace LinqToDB.SqlProvider
 		{
 		}
 
-		protected virtual bool SupportsBooleanInColumn    => false;
-		protected virtual bool SupportsNullInColumn       => true;
+		protected virtual bool SupportsBooleanInColumn           => false;
+		protected virtual bool SupportsNullInColumn              => true;
+		protected virtual bool SupportsDistinctAsExistsIntersect => false;
 
 		public virtual IQueryElement Convert(OptimizationContext optimizationContext, NullabilityContext nullabilityContext, IQueryElement element, bool visitQueries, bool isInsideNot)
 		{
@@ -311,7 +312,10 @@ namespace LinqToDB.SqlProvider
 
 			if (SqlProviderFlags is { IsDistinctFromSupported: false })
 			{
-				var converted = ConvertIsDistinctPredicate(predicate);
+				var converted = SupportsDistinctAsExistsIntersect
+					? ConvertIsDistinctPredicateAsIntersect(predicate)
+					: ConvertIsDistinctPredicate(predicate);
+
 				if (!ReferenceEquals(converted, predicate))
 				{
 					return Visit(Optimize(converted));
@@ -345,6 +349,23 @@ namespace LinqToDB.SqlProvider
 				);
 
 			return searchCondition.MakeNot(predicate.IsNot);
+		}
+
+		protected virtual IQueryElement ConvertIsDistinctPredicateAsIntersect(SqlPredicate.IsDistinct predicate)
+		{
+			/*
+				EXISTS(value1 INTERSECT value2)
+			 */
+
+			var expr1 = new SelectQuery();
+			expr1.Select.AddColumn(predicate.Expr1);
+
+			var expr2 = new SelectQuery();
+			expr2.Select.AddColumn(predicate.Expr2);
+
+			expr1.SetOperators.Add(new SqlSetOperator(expr2, SetOperation.Intersect));
+
+			return new SqlPredicate.Exists(!predicate.IsNot, expr1);
 		}
 
 		public virtual IQueryElement ConvertExprExprPredicate(SqlPredicate.ExprExpr predicate)

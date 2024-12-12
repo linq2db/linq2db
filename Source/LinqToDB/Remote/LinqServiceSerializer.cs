@@ -1224,12 +1224,15 @@ namespace LinqToDB.Remote
 							break;
 						}
 
-					case QueryElementType.FuncLikePredicate :
-						{
-							var elem = (SqlPredicate.FuncLike)e;
-							Append(elem.Function);
-							break;
-						}
+					case QueryElementType.ExistsPredicate:
+					{
+						var elem = (SqlPredicate.Exists)e;
+
+						Append(elem.IsNot);
+						Append(elem.SubQuery);
+
+						break;
+					}
 
 					case QueryElementType.SqlQuery :
 						{
@@ -2200,12 +2203,15 @@ namespace LinqToDB.Remote
 							break;
 						}
 
-					case QueryElementType.FuncLikePredicate :
-						{
-							var func = Read<SqlFunction>()!;
-							obj = new SqlPredicate.FuncLike(func);
-							break;
-						}
+					case QueryElementType.ExistsPredicate:
+					{
+						var isNot    = ReadBool();
+						var subQuery = Read<SelectQuery>()!;
+
+						obj = new SqlPredicate.Exists(isNot, subQuery);
+
+						break;
+					}
 
 					case QueryElementType.SqlQuery :
 						{

@@ -37,14 +37,6 @@ namespace LinqToDB.Linq.Translation
 			return new SqlFunction(dataType, functionName, parameters);
 		}
 
-		public static ISqlPredicate FuncLikePredicate(this ISqlExpressionFactory factory, ISqlExpression function)
-		{
-			if (function is not SqlFunction func)
-				throw new InvalidOperationException("Function must be of type SqlFunction.");
-
-			return new SqlPredicate.FuncLike(func);
-		}
-
 		public static ISqlPredicate ExprPredicate(this ISqlExpressionFactory factory, ISqlExpression expression)
 		{
 			return new SqlPredicate.Expr(expression);

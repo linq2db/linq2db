@@ -235,7 +235,7 @@ namespace LinqToDB.Linq.Translation
 			var predicate = new SqlPredicate
 				.ExprExpr(
 					sqlExpression,
-					SqlPredicate.Operator.Equal, 
+					SqlPredicate.Operator.Equal,
 					new SqlValue(0),
 					translationContext.DataOptions.LinqOptions.CompareNulls == CompareNulls.LikeClr ? true : null)
 				.MakeNot();

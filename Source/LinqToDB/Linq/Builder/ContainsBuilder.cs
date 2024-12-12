@@ -190,7 +190,7 @@ namespace LinqToDB.Linq.Builder
 					if (sequence == null)
 						return null;
 
-					predicate = new SqlPredicate.FuncLike(SqlFunction.CreateExists(sequence.SelectQuery));
+					predicate = new SqlPredicate.Exists(false, sequence.SelectQuery);
 				}
 				else
 				{

@@ -13,7 +13,8 @@ namespace LinqToDB.DataProvider.Informix
 		{
 		}
 
-		protected override bool SupportsNullInColumn => false;
+		protected override bool SupportsNullInColumn              => false;
+		protected override bool SupportsDistinctAsExistsIntersect => true;
 
 		public override ISqlPredicate ConvertLikePredicate(SqlPredicate.Like predicate)
 		{
@@ -160,6 +161,11 @@ namespace LinqToDB.DataProvider.Informix
 			}
 
 			return expression;
+		}
+
+		protected override IQueryElement ConvertIsDistinctPredicateAsIntersect(SqlPredicate.IsDistinct predicate)
+		{
+			return InformixSqlOptimizer.WrapParameters(base.ConvertIsDistinctPredicateAsIntersect(predicate), EvaluationContext);
 		}
 	}
 }

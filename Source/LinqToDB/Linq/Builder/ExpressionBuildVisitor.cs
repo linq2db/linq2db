@@ -3283,7 +3283,6 @@ namespace LinqToDB.Linq.Builder
 				return null;
 
 			return new SqlPredicate.IsTrue(sqlExpression, trueSql.Sql, falseSql.Sql, DataOptions.LinqOptions.CompareNulls == CompareNulls.LikeClr ? false : null, false);
-
 		}
 
 		static bool IsNullExpression(Expression expression)

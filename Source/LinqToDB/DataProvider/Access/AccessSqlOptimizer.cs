@@ -159,9 +159,9 @@ namespace LinqToDB.DataProvider.Access
 						{
 							QueryHelper.ExtractPredicate(sc.Predicates[0], out var underlying, out var isNot);
 
-							if (underlying is SqlPredicate.FuncLike { Function.Name: "EXISTS" } funcLike)
+							if (underlying is SqlPredicate.Exists exists)
 							{
-								var existsQuery = (SelectQuery)funcLike.Function.Parameters[0];
+								var existsQuery = exists.SubQuery;
 
 								// note that it still will not work as we need to rewrite union queries
 								// see ConcatInAny test

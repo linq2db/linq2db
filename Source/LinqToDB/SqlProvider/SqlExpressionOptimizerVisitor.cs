@@ -537,9 +537,9 @@ namespace LinqToDB.SqlProvider
 
 		protected override IQueryElement VisitNotPredicate(SqlPredicate.Not predicate)
 		{
-			if (predicate.Predicate.CanInvert(_nullabilityContext))
+			if (predicate.Predicate.InvertIsSimple())
 			{
-				return Visit(predicate.Predicate.Invert(_nullabilityContext));
+				return Visit(predicate.Predicate.Invert());
 			}
 
 			var saveInsideNot = _isInsideNot;
@@ -551,9 +551,9 @@ namespace LinqToDB.SqlProvider
 			_isInsideNot     = saveInsideNot;
 			_allowOptimize = saveAllow;
 
-			if (newInnerPredicate.CanInvert(_nullabilityContext))
+			if (newInnerPredicate.InvertIsSimple())
 			{
-				return Visit(newInnerPredicate.Invert(_nullabilityContext));
+				return Visit(newInnerPredicate.Invert());
 			}
 
 			if (!ReferenceEquals(newInnerPredicate, predicate.Predicate))
@@ -834,20 +834,32 @@ namespace LinqToDB.SqlProvider
 			return base.VisitSqlCastExpression(element);
 		}
 
-		protected override IQueryElement VisitFuncLikePredicate(SqlPredicate.FuncLike element)
+		protected override IQueryElement VisitExistsPredicate(SqlPredicate.Exists predicate)
 		{
-			var funcElement = Visit(element.Function);
+			var optmimized = base.VisitExistsPredicate(predicate);
 
-			if (ReferenceEquals(funcElement, element.Function))
-				return element;
+			if (!ReferenceEquals(optmimized, predicate))
+				return Visit(optmimized);
 
-			if (funcElement is SqlPredicate)
-				return funcElement;
+			var query = predicate.SubQuery;
 
-			if (funcElement is SqlFunction function)
-				return element.Update(function);
+			if (query.Select.Columns.Count > 0)
+			{
+				if (query.GroupBy.IsEmpty)
+				{
+					var isAggregateQuery = query.Select.Columns.All(static c => QueryHelper.IsAggregationOrWindowFunction(c.Expression));
 
-			throw new InvalidCastException($"Converted FuncLikePredicate expression expected to be a Predicate expression but got {funcElement.GetType()}.");
+					if (isAggregateQuery)
+						return SqlPredicate.True;
+				}
+			}
+
+			if (query.Where.SearchCondition.Predicates is [SqlPredicate.FalsePredicate firstPredicate])
+			{
+				return firstPredicate.MakeNot(predicate.IsNot);
+			}
+
+			return predicate;
 		}
 
 		protected override IQueryElement VisitSqlFunction(SqlFunction element)
@@ -863,25 +875,6 @@ namespace LinqToDB.SqlProvider
 			if (TryEvaluate(element, out var value))
 			{
 				return QueryHelper.CreateSqlValue(value, QueryHelper.GetDbDataType(element, _mappingSchema), element.Parameters);
-			}
-
-			switch (element.Name)
-			{
-				case "EXISTS":
-				{
-					if (element.Parameters.Length == 1 && element.Parameters[0] is SelectQuery query && query.Select.Columns.Count > 0)
-					{
-						if (query.GroupBy.IsEmpty)
-						{
-							var isAggregateQuery = query.Select.Columns.All(static c => QueryHelper.IsAggregationOrWindowFunction(c.Expression));
-
-							if (isAggregateQuery)
-								return SqlPredicate.True;
-						}
-					}
-
-					break;
-				}
 			}
 
 			return element;
@@ -1069,6 +1062,7 @@ namespace LinqToDB.SqlProvider
 
 			if (expr.Operator is SqlPredicate.Operator.Equal or SqlPredicate.Operator.NotEqual)
 			{
+				// reduce comparison of predicate to true/false
 				if (expr.WithNull == null)
 				{
 					if (expr.Expr2 is ISqlPredicate expr2Predicate)

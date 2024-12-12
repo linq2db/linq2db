@@ -968,7 +968,7 @@ namespace LinqToDB.SqlQuery
 			{
 				case QueryInformation.HierarchyType.InnerQuery:
 				{
-					if (info.ParentElement is SqlFunction { Name: "EXISTS" } func)
+					if (info.ParentElement is SqlPredicate.Exists)
 					{
 						// ORDER BY not needed for EXISTS function, even when Take and Skip specified
 						selectQuery.Select.OrderBy.Items.Clear();
@@ -1513,6 +1513,9 @@ namespace LinqToDB.SqlQuery
 			};
 		}
 
+		/// <summary>
+		/// Disables null checks for equality operations.
+		/// </summary>
 		public static SqlSearchCondition CorrectComparisonForJoin(SqlSearchCondition sc)
 		{
 			var newSc = new SqlSearchCondition(false);
@@ -1521,9 +1524,7 @@ namespace LinqToDB.SqlQuery
 				var predicate = sc.Predicates[index];
 				if (predicate is SqlPredicate.ExprExpr exprExpr)
 				{
-					if ((exprExpr.Operator == SqlPredicate.Operator.Equal ||
-						 exprExpr.Operator == SqlPredicate.Operator.NotEqual)
-						&& exprExpr.WithNull != null)
+					if (exprExpr.Operator is SqlPredicate.Operator.Equal or SqlPredicate.Operator.NotEqual && exprExpr.WithNull != null)
 					{
 						predicate = new SqlPredicate.ExprExpr(exprExpr.Expr1, exprExpr.Operator, exprExpr.Expr2, null);
 					}

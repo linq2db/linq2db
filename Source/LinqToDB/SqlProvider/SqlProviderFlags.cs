@@ -503,7 +503,8 @@ namespace LinqToDB.SqlProvider
 		public int? SupportedCorrelatedSubqueriesLevel { get; set; }
 
 		/// <summary>
-		/// Provider supports correlated DISTINCT FROM
+		/// Provider supports correlated DISTINCT FROM directly or through db-specific operator/method (e.g. DECODE, IS, &lt;=&gt;).
+		/// This doesn't inclide emulation using INTERSECT.
 		/// Default <c>false</c>
 		/// </summary>
 		[DataMember(Order = 59)]

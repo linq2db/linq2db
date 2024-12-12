@@ -83,13 +83,13 @@ namespace LinqToDB.SqlQuery
 			return newElement;
 		}
 
-		protected override IQueryElement VisitFuncLikePredicate(SqlPredicate.FuncLike element)
+		protected override IQueryElement VisitExistsPredicate(SqlPredicate.Exists predicate)
 		{
 			var saveDisableOrderBy = _disableOrderBy;
 
 			_disableOrderBy = true;
 
-			var newElement = base.VisitFuncLikePredicate(element);
+			var newElement = base.VisitExistsPredicate(predicate);
 
 			_disableOrderBy = saveDisableOrderBy;
 
