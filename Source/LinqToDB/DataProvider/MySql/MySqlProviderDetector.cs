@@ -117,9 +117,12 @@ namespace LinqToDB.DataProvider.MySql
 			var fileName = typeof(MySqlProviderDetector).Assembly.GetFileName();
 			var dirName  = Path.GetDirectoryName(fileName);
 
-			return File.Exists(Path.Combine(dirName ?? ".", MySqlProviderAdapter.MySqlDataAssemblyName + ".dll"))
-				? MySqlProvider.MySqlData
-				: MySqlProvider.MySqlConnector;
+			return
+				File.Exists(Path.Combine(dirName ?? ".", MySqlProviderAdapter.MySqlConnectorAssemblyName + ".dll"))
+					? MySqlProvider.MySqlConnector
+					: File.Exists(Path.Combine(dirName ?? ".", MySqlProviderAdapter.MySqlDataAssemblyName + ".dll"))
+						? MySqlProvider.MySqlData
+						: MySqlProvider.MySqlConnector;
 		}
 
 		public override MySqlVersion? DetectServerVersion(DbConnection connection)

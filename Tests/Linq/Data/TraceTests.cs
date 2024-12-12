@@ -13,13 +13,12 @@ using NUnit.Framework;
 namespace Tests.Data
 {
 	using Model;
-	using Tools;
 
 	[TestFixture]
 	public class TraceTests : TestBase
 	{
-		private TraceLevel                           OriginalTraceLevel { get; set; }
-		private Action<string?, string?, TraceLevel> OriginalWrite      { get; set; } = null!;
+		private TraceLevel                       OriginalTraceLevel { get; set; }
+		private Action<string,string,TraceLevel> OriginalWrite      { get; set; } = null!;
 
 
 		[OneTimeSetUp]
@@ -835,20 +834,26 @@ namespace Tests.Data
 		[Test]
 		public void WriteTraceInstanceShouldUseDefault()
 		{
+			var wtl = DataConnection.WriteTraceLine;
+
 			var staticWriteCalled = false;
 			DataConnection.WriteTraceLine = (s, s1, arg3) => staticWriteCalled = true;
 
 			using (var db = new DataConnection())
 			{
-				db.WriteTraceLineConnection(null, null, TraceLevel.Info);
+				db.WriteTraceLineConnection("", "", TraceLevel.Info);
 			}
 
 			Assert.That(staticWriteCalled, Is.True, "because the data connection should have used the static version by default");
+
+			DataConnection.WriteTraceLine = wtl;
 		}
 
 		[Test]
 		public void WriteTraceInstanceShouldUseFromBuilder()
 		{
+			var wtl = DataConnection.WriteTraceLine;
+
 			var staticWriteCalled = false;
 			DataConnection.WriteTraceLine = (s, s1, arg3) => staticWriteCalled = true;
 
@@ -858,7 +863,7 @@ namespace Tests.Data
 
 			using (var db = new DataConnection(builder))
 			{
-				db.WriteTraceLineConnection(null, null, TraceLevel.Info);
+				db.WriteTraceLineConnection("", "", TraceLevel.Info);
 			}
 
 			Assert.Multiple(() =>
@@ -866,6 +871,8 @@ namespace Tests.Data
 				Assert.That(builderWriteCalled, Is.True, "because the data connection should have used the action from the builder");
 				Assert.That(staticWriteCalled, Is.False, "because the data connection should have used the action from the builder");
 			});
+
+			DataConnection.WriteTraceLine = wtl;
 		}
 	}
 }

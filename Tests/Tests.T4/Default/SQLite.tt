@@ -1,14 +1,14 @@
 ﻿<#@ template language="C#" debug="True" hostSpecific="True" compilerOptions="/langversion:6" #>
+<#@ CleanupBehavior processor="T4VSHost" CleanupAfterProcessingtemplate="true"               #>
 <#@ output extension=".generated.cs"                                                         #>
-<#@ assembly name="$(ArtifactsPath)\bin\Tests\Debug\net462\System.Data.SQLite.dll"           #>
-<#@ include file="..\Shared.ttinclude"                                          once="true"  #>
-<#@ include file="..\..\..\Source\LinqToDB.Templates\LinqToDB.SQLite.ttinclude" once="true"  #>
+<#@ include file="$(LinqToDBT4SQLiteTemplatesPath)LinqToDB.SQLite.ttinclude"     once="true" #>
+<#@ include file="..\Shared.ttinclude"                                           once="true" #>
 <#
 	NamespaceName   = "Default.SQLite";
 	DataContextName = "TestDataDB";
 
 	var solutionsPath = Host.ResolveAssemblyReference("$(SolutionDir)");
-	LoadSQLiteMetadata(solutionsPath + @"\Data\", "TestData.sqlite");
 
+	LoadSQLiteMetadata(solutionsPath + @"\Data\", "TestData.sqlite");
 	GenerateModel();
 #>
