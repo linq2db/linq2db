@@ -3682,7 +3682,17 @@ namespace LinqToDB.Linq.Builder
 			{
 				_buildFlags |= BuildFlags.ForKeys;
 
-				var columnDescriptor = SuggestColumnDescriptor(left, right);
+				ColumnDescriptor? columnDescriptor;
+
+				if (originalExpression is BinaryExpression binary && binary.Method != null)
+				{
+					// BinaryExpression has custom comparison method, don't suggest column descriptor, it may fail while suggesting converters.
+					columnDescriptor = null;
+				}
+				else
+				{
+					columnDescriptor = SuggestColumnDescriptor(left, right);
+				}
 
 				_columnDescriptor = columnDescriptor;
 
