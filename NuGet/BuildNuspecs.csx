@@ -100,6 +100,7 @@ foreach (var xmlPath in GetFiles(path))
 		xml.DocumentElement.AppendChild(xml.CreateSignificantWhitespace("\t"));
 		xml.DocumentElement.AppendChild(files = xml.CreateElement("files", nsUri));
 		xml.DocumentElement.AppendChild(xml.CreateSignificantWhitespace("\n"));
+		files.AppendChild(xml.CreateSignificantWhitespace("\n\t"));
 	}
 
 	SetMetadata  ("version",                  version,        true);
