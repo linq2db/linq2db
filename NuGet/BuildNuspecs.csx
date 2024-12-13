@@ -140,6 +140,7 @@ foreach (var xmlPath in GetFiles(path))
 		SetFile(SetAttribute("src", @"..\..\Source\LinqToDB.Templates\*.*"),     SetAttribute("target", @"content\LinqToDB.Templates"));
 		SetFile(SetAttribute("src", @"t4bin\linq2db.dll"),                       SetAttribute("target", "tools"));
 		SetFile(SetAttribute("src", @"t4bin\linq2db.Tools.dll"),                 SetAttribute("target", "tools"));
+		SetFile(SetAttribute("src", @"t4bin\linq2db.Tools.Internal.dll"),        SetAttribute("target", "tools"));
 		SetFile(SetAttribute("src", @"t4bin\Humanizer.dll"),                     SetAttribute("target", "tools"));
 		SetFile(SetAttribute("src", @"t4bin\Microsoft.Bcl.AsyncInterfaces.dll"), SetAttribute("target", "tools"));
 

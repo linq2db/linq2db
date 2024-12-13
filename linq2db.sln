@@ -419,6 +419,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "net90", "net90", "{B39B3628
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tests.EntityFrameworkCore.STS", "Tests\EntityFrameworkCore\Tests.EntityFrameworkCore.STS.csproj", "{094CACC0-4F0A-47C0-A74D-CEDF7D0CC755}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LinqToDB.Tools.Internal", "Source\LinqToDB.Tools.Internal\LinqToDB.Tools.Internal.csproj", "{F56E060D-9A5B-4685-B834-7BD2E33B7559}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Azure|Any CPU = Azure|Any CPU
@@ -556,6 +558,12 @@ Global
 		{094CACC0-4F0A-47C0-A74D-CEDF7D0CC755}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{094CACC0-4F0A-47C0-A74D-CEDF7D0CC755}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{094CACC0-4F0A-47C0-A74D-CEDF7D0CC755}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F56E060D-9A5B-4685-B834-7BD2E33B7559}.Azure|Any CPU.ActiveCfg = Azure|Any CPU
+		{F56E060D-9A5B-4685-B834-7BD2E33B7559}.Azure|Any CPU.Build.0 = Azure|Any CPU
+		{F56E060D-9A5B-4685-B834-7BD2E33B7559}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F56E060D-9A5B-4685-B834-7BD2E33B7559}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F56E060D-9A5B-4685-B834-7BD2E33B7559}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F56E060D-9A5B-4685-B834-7BD2E33B7559}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -593,6 +601,7 @@ Global
 		{1F06A522-FE25-4E95-8834-0293A55BD2DA} = {AF93451E-198C-4A94-8EB4-C330D886E102}
 		{B39B3628-49C1-4DCE-BB1B-2CC270FE7C52} = {51E64464-E257-4984-A4D5-BF9FF8B7DF1D}
 		{094CACC0-4F0A-47C0-A74D-CEDF7D0CC755} = {DF8DE665-05A2-4ACF-9799-8FC35E7F1525}
+		{F56E060D-9A5B-4685-B834-7BD2E33B7559} = {AF93451E-198C-4A94-8EB4-C330D886E102}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {15BBD7CE-1C8E-4407-9DCF-674982CEB3F7}

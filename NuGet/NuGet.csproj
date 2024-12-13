@@ -6,7 +6,7 @@
 
 	<ItemGroup>
 		<ProjectReference Include="..\Source\LinqToDB\LinqToDB.csproj" />
-		<ProjectReference Include="..\Source\LinqToDB.Tools\LinqToDB.Tools.csproj" />
+		<ProjectReference Include="..\Source\LinqToDB.Tools.Internal\LinqToDB.Tools.Internal.csproj" />
 
 		<PackageReference Include="System.Data.OleDb" />
 		<PackageReference Include="System.Data.Odbc" />
