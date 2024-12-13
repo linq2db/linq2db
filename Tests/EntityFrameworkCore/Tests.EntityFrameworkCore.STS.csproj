@@ -19,11 +19,7 @@
 		<PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL.NodaTime" />
 		<PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" />
 		<PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" />
-		<!--<PackageReference Include="Pomelo.EntityFrameworkCore.MySql" />-->
-
-		<!--temporary deps overrides-->
-		<PackageReference Include="Microsoft.EntityFrameworkCore.Relational" NoWarn="NU1608" />
-		<PackageReference Include="Microsoft.EntityFrameworkCore" NoWarn="NU1608" />
+		<PackageReference Include="Pomelo.EntityFrameworkCore.MySql" />
 	</ItemGroup>
 
 </Project>
