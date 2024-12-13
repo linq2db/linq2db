@@ -48,13 +48,11 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 					// UseNodaTime called due to bug in Npgsql v8, where UseNodaTime ignored, when UseNpgsql already called without it
 					_ when provider.IsAnyOf(TestProvName.AllPostgreSQL)
 						=> optionsBuilder.UseNpgsql(connectionString, o => o.UseNodaTime()).UseLinqToDB(builder => builder.AddCustomOptions(o => o.UseMappingSchema(NodaTimeSupport))),
-#if !NET9_0
 					_ when provider.IsAnyOf(TestProvName.AllMySql) => optionsBuilder
 #if !NETFRAMEWORK
 						.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString)),
 #else
 						.UseMySql(connectionString),
-#endif
 #endif
 					_ when provider.IsAnyOf(TestProvName.AllSQLite) => optionsBuilder.UseSqlite(connectionString),
 					_ when provider.IsAnyOf(TestProvName.AllSqlServer) => optionsBuilder.UseSqlServer(connectionString),

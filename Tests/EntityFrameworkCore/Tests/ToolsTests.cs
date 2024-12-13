@@ -267,7 +267,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 			});
 		}
 
-#if NET8_0
+#if NET8_0_OR_GREATER
 		[ActiveIssue("https://github.com/linq2db/linq2db/issues/4669", Configuration = TestProvName.AllMySql)]
 #endif
 		[Test]

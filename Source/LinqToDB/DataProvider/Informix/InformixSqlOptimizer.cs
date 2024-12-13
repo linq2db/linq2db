@@ -62,12 +62,14 @@ namespace LinqToDB.DataProvider.Informix
 		{
 			statement.VisitAll(SetQueryParameter);
 
+			statement = base.Finalize(mappingSchema, statement, dataOptions);
+
 			// Informix has some unclear issues probably with parameters in select list
 			// test: Distinct6
 			if (statement.QueryType == QueryType.Select)
 				new ClearColumParametersVisitor().Visit(statement.SelectQuery!.Select);
 
-			return base.Finalize(mappingSchema, statement, dataOptions);
+			return statement;
 		}
 
 		protected override SqlStatement FixSetOperationValues(MappingSchema mappingSchema, SqlStatement statement)
