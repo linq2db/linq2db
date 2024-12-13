@@ -62,8 +62,10 @@ namespace LinqToDB.DataProvider.Informix
 		{
 			statement.VisitAll(SetQueryParameter);
 
-			// Informix doesn't support parameters in select list
-			new ClearColumParametersVisitor().Visit(statement);
+			// Informix has some unclear issues probably with parameters in select list
+			// test: Distinct6
+			if (statement.QueryType == QueryType.Select)
+				new ClearColumParametersVisitor().Visit(statement.SelectQuery!.Select);
 
 			return base.Finalize(mappingSchema, statement, dataOptions);
 		}

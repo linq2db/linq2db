@@ -25,9 +25,6 @@ namespace LinqToDB.DataProvider.SqlCe
 			// This function mutates statement which is allowed only in this place
 			CorrectSkipAndColumns(statement);
 
-			// This function mutates statement which is allowed only in this place
-			CorrectInsertParameters(statement);
-
 			CorrectFunctionParameters(statement, dataOptions);
 
 			statement = CorrectBooleanComparison(statement);
@@ -92,16 +89,6 @@ namespace LinqToDB.DataProvider.SqlCe
 			}
 
 			return newStatement;
-		}
-
-		void CorrectInsertParameters(SqlStatement statement)
-		{
-			//SlqCe do not support parameters in columns for insert
-			//
-			if (statement.IsInsert())
-			{
-				new ClearColumParametersVisitor().Visit(statement);
-			}
 		}
 
 		static void CorrectSkipAndColumns(SqlStatement statement)
