@@ -267,22 +267,12 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 			});
 		}
 
+#if NET8_0
+		[ActiveIssue("https://github.com/linq2db/linq2db/issues/4669", Configuration = TestProvName.AllMySql)]
+#endif
 		[Test]
 		public void TestGlobalQueryFilters([EFDataSources] string provider, [Values] bool enableFilter)
 		{
-#if NET8_0
-			if (provider.IsAnyOf(TestProvName.AllMySql))
-			{
-				try
-				{
-					using var _ = new DisableBaseline("Pomelo bug workaround");
-					Test();
-				}
-				catch (UnreachableException)
-				{
-				}
-			}
-#endif
 			Test();
 
 			void Test()
