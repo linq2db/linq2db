@@ -14,7 +14,7 @@
 		<readme>README.md</readme>
 		<dependencies>
 			<dependency id="linq2db" version="6.0.0"                          />
-			<dependency id="FirebirdSql.Data.FirebirdClient" version="10.3.1" />
+			<dependency id="FirebirdSql.Data.FirebirdClient" version="10.3.2" />
 		</dependencies>
 		<contentFiles>
 			<files include="**\*" buildAction="None" />
