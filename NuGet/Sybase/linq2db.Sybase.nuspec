@@ -1,4 +1,5 @@
 <?xml version="1.0"?>
+<!-- %T4% -->
 <package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
 	<metadata minClientVersion="3.3.0">
 		<id>linq2db.Sybase</id>
@@ -10,10 +11,6 @@
 		<tags>linq linq2db SAP/Sybase LinqToDB ORM database DB SQL</tags>
 	</metadata>
 	<files>
-		<file src="t4bin\AdoNetCore.AseClient.dll"        target="tools"                                   />
-
-		<file src="NuGet\Sybase\linq2db.Sybase.props"     target="build"                                   />
-		<file src="NuGet\Sybase\*.*" exclude="**\*.props" target="contentFiles\any\any\LinqToDB.Templates" />
-		<file src="NuGet\Sybase\*.*" exclude="**\*.props" target="content\LinqToDB.Templates"              />
+		<file src="t4bin\AdoNetCore.AseClient.dll" target="tools" />
 	</files>
 </package>

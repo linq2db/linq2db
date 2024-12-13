@@ -2,15 +2,14 @@
 #r "nuget:System.Xml.ReaderWriter, 4.3.1"
 #r "nuget:LibGit2Sharp, 0.30.0"
 
+#nullable enable
+
 using System;
 using System.IO;
 using System.Diagnostics.CodeAnalysis;
 using System.Xml;
 
 using LibGit2Sharp;
-
-
-#nullable enable
 
 WriteLine(Environment.CommandLine);
 
@@ -60,25 +59,29 @@ IEnumerable<string> GetFiles(string path)
 	{
 		if (dir.EndsWith("**"))
 		{
-			foreach (var subDir in Directory.GetDirectories(d = (dir[..^2] is [_, ..] sd ? sd : ".")))
+			d = dir[..^2] is [_, ..] sd ? sd : ".";
+
+			foreach (var subDir in Directory.GetDirectories(d))
 			foreach (var file in Directory.GetFiles(subDir, Path.GetFileName(path)))
 				yield return file;
 		}
 	}
 	else
 	{
-		dir = ".";
+		d = ".";
 	}
 
-	foreach (var file in Directory.GetFiles(dir.TrimEnd('*'), Path.GetFileName(path)))
+	foreach (var file in Directory.GetFiles(d.TrimEnd('*'), Path.GetFileName(path)))
 		yield return file;
 }
+
+//System.Diagnostics.Debugger.Launch();
 
 foreach (var xmlPath in GetFiles(path))
 {
 	WriteLine($"Processing '{xmlPath}'...");
 
-	var isT4 = File.ReadAllText(xmlPath).IndexOf("content\\LinqToDB.Templates") > 0;
+	var isT4 = File.ReadAllText(xmlPath).IndexOf("%T4%") > 0;
 	var xml  = new XmlDocument();
 
 	xml.PreserveWhitespace = true;
@@ -90,14 +93,21 @@ foreach (var xmlPath in GetFiles(path))
 	ns.AddNamespace("ns", nsUri);
 
 	var metadata = xml.SelectSingleNode("//ns:package/ns:metadata", ns)!;
-	var files    = xml.SelectSingleNode("//ns:package/ns:files",    ns)!;
+	var files    = xml.SelectSingleNode("//ns:package/ns:files",    ns);
+
+	if (files == null)
+	{
+		xml.DocumentElement.AppendChild(xml.CreateSignificantWhitespace("\t"));
+		xml.DocumentElement.AppendChild(files = xml.CreateElement("files", nsUri));
+		xml.DocumentElement.AppendChild(xml.CreateSignificantWhitespace("\n"));
+	}
 
 	SetMetadata  ("version",                  version,        true);
 	SetDependency("linq2db",                  linq2DbVersion);
 	SetDependency("linq2db.t4models",         linq2DbVersion);
 	SetMetadata  ("description",              metadata.SelectSingleNode("//ns:title", ns)!.InnerText + description,                               false);
 	SetMetadata  ("releaseNotes",             "https://github.com/linq2db/linq2db/wiki/releases-and-roadmap#release-" + version.Replace(".", ""), true);
-	SetMetadata  ("copyright",                "Copyright © 2024 " + authors, true);
+	SetMetadata  ("copyright",                "Copyright © 2025 " + authors, true);
 	SetMetadata  ("authors",                  authors,                       true);
 	SetMetadata  ("owners",                   authors,                       true);
 	SetMetadata  ("readme",                   "README.md",                   true);
@@ -119,18 +129,38 @@ foreach (var xmlPath in GetFiles(path))
 
 	if (isT4)
 	{
-		SetFile(SetAttribute("src", @"NuGet\readme.T4.txt"),                            SetAttribute("target", "readme.txt"));
-		SetFile(SetAttribute("src", @"NuGet\README.T4.md"),                             SetAttribute("target", "README.md"));
-		SetFile(SetAttribute("src", @"..\..\Source\LinqToDB.Templates\*.*"),            SetAttribute("target", @"contentFiles\any\any\LinqToDB.Templates"));
-		SetFile(SetAttribute("src", @"..\..\Source\LinqToDB.Templates\*.*"),            SetAttribute("target", @"content\LinqToDB.Templates"));
-		SetFile(SetAttribute("src", t4binPath + @"\linq2db.dll"),                       SetAttribute("target", "tools"));
-		SetFile(SetAttribute("src", t4binPath + @"\linq2db.Tools.dll"),                 SetAttribute("target", "tools"));
-		SetFile(SetAttribute("src", t4binPath + @"\Humanizer.dll"),                     SetAttribute("target", "tools"));
-		SetFile(SetAttribute("src", t4binPath + @"\Microsoft.Bcl.AsyncInterfaces.dll"), SetAttribute("target", "tools"));
+		var name = Path.GetFileName(xmlPath).Split('.')[1];
+
+		SetMetadata("summary", $"This package includes a T4 template to generate data models for {name} database.", false);
+		SetMetadata("tags",    $"{name} linq linq2db LinqToDB ORM database DB SQL",                                 false);
+
+		SetFile(SetAttribute("src", @"NuGet\readme.T4.txt"),                     SetAttribute("target", "readme.txt"));
+		SetFile(SetAttribute("src", @"NuGet\README.T4.md"),                      SetAttribute("target", "README.md"));
+		SetFile(SetAttribute("src", @"..\..\Source\LinqToDB.Templates\*.*"),     SetAttribute("target", @"contentFiles\any\any\LinqToDB.Templates"));
+		SetFile(SetAttribute("src", @"..\..\Source\LinqToDB.Templates\*.*"),     SetAttribute("target", @"content\LinqToDB.Templates"));
+		SetFile(SetAttribute("src", @"t4bin\linq2db.dll"),                       SetAttribute("target", "tools"));
+		SetFile(SetAttribute("src", @"t4bin\linq2db.Tools.dll"),                 SetAttribute("target", "tools"));
+		SetFile(SetAttribute("src", @"t4bin\Humanizer.dll"),                     SetAttribute("target", "tools"));
+		SetFile(SetAttribute("src", @"t4bin\Microsoft.Bcl.AsyncInterfaces.dll"), SetAttribute("target", "tools"));
+
+		if (name is not "t4models")
+		{
+			SetFile(
+				SetAttribute("src",     @$"NuGet\{name}\linq2db.{name}.props"),
+				SetAttribute("target",  @$"build"));
+			SetFile(
+				SetAttribute("src",     @$"NuGet\{name}\*.*"),
+				SetAttribute("exclude", @"**\*.props"),
+				SetAttribute("target",  @"contentFiles\any\any\LinqToDB.Templates"));
+			SetFile(
+				SetAttribute("src",     @$"NuGet\{name}\*.*"),
+				SetAttribute("exclude", @"**\*.props"),
+				SetAttribute("target",  @"content\LinqToDB.Templates"));
+		}
 
 		{
 			var contentFilesNode = metadata.SelectSingleNode($"//ns:contentFiles", ns);
-			var filesNode = xml.CreateElement("files", nsUri);
+			var filesNode        = xml.CreateElement("files", nsUri);
 
 			if (contentFilesNode == null)
 			{
@@ -203,7 +233,7 @@ foreach (var xmlPath in GetFiles(path))
 		}
 
 		if (value != null)
-			node.InnerText = value.Length > 20 ? $"\n\t\t\t{value}\n\t\t" : value;
+			node.InnerText = value.Length > 100 ? $"\n\t\t\t{value}\n\t\t" : value;
 
 		foreach (var attr in attrs)
 			node.Attributes!.Append(attr);

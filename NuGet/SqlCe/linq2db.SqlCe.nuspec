@@ -1,19 +1,12 @@
 <?xml version="1.0"?>
+<!-- %T4% -->
 <package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
 	<metadata minClientVersion="3.3.0">
 		<id>linq2db.SqlCe</id>
 		<title>LINQ to SqlCe</title>
-		<summary>
-			This package includes a T4 template to generate data models for SqlCe database.
-		</summary>
-		<tags>linq linq2db SqlCe SqlServerCe SqlServer Compact LinqToDB ORM database DB SQL</tags>
 	</metadata>
 	<files>
-		<file src="t4bin\System.Data.SqlServerCe.dll"    target="tools"                                   />
-		<file src="t4bin\amd64\**"                       target="tools\amd64"                             />
-
-		<file src="NuGet\SqlCe\linq2db.SqlCe.props"      target="build"                                   />
-		<file src="NuGet\SqlCe\*.*" exclude="**\*.props" target="contentFiles\any\any\LinqToDB.Templates" />
-		<file src="NuGet\SqlCe\*.*" exclude="**\*.props" target="content\LinqToDB.Templates"              />
+		<file src="t4bin\System.Data.SqlServerCe.dll" target="tools"       />
+		<file src="t4bin\amd64\**"                    target="tools\amd64" />
 	</files>
 </package>

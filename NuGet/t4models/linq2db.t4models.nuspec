@@ -1,4 +1,5 @@
 <?xml version="1.0"?>
+<!-- %T4% -->
 <package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
 	<metadata minClientVersion="3.3.0">
 		<id>linq2db.t4models</id>
@@ -12,9 +13,6 @@
 		<dependencies>
 			<dependency id="linq2db" version="6.0.0" />
 		</dependencies>
-		<contentFiles>
-			<files include="**\*" buildAction="None" />
-		</contentFiles>
 	</metadata>
 	<files>
 		<file src="t4bin\*.*"    exclude="**\linq2db.*;**\Humanizer.*;**\Microsoft.Bcl.AsyncInterfaces.*" target="tools" />
