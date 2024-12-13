@@ -8,6 +8,7 @@ namespace LinqToDB.DataProvider.Oracle
 {
 	using Common;
 	using Expressions;
+	using Data;
 	using Mapping;
 	using SqlQuery;
 
@@ -210,48 +211,70 @@ namespace LinqToDB.DataProvider.Oracle
 		}
 #endif
 
-		internal static readonly OracleMappingSchema Instance = new ();
+		static readonly OracleMappingSchema   Instance   = new ();
+		static readonly Oracle11MappingSchema Instance11 = new ();
+		static readonly Oracle23MappingSchema Instance23 = new ();
+
+		public sealed class Oracle11MappingSchema : LockedMappingSchema
+		{
+			public Oracle11MappingSchema() : base("Oracle.11", Instance)
+			{
+				// setup bool to 1/0 conversions
+				var booleanType = new SqlDataType(DataType.Byte, typeof(bool), null, (byte)1, (byte)0, dbType: "NUMBER(1,0)");
+				SetDataType(typeof(bool), booleanType);
+				SetValueToSqlConverter(typeof(bool), (sb, dt, _, v) => sb.Append((bool)v ? '1' : '0'));
+
+				// TODO: we should add support for single converter to parameter for structs
+				SetConvertExpression<bool,  DataParameter>(value => new DataParameter(null, value ? (byte)1 : (byte)0, booleanType.Type));
+				SetConvertExpression<bool?, DataParameter>(value => new DataParameter(null, value == null ? null : value.Value ? (byte)1 : (byte)0, booleanType.Type.WithSystemType(typeof(bool?))), addNullCheck: false);
+			}
+		}
+
+		public sealed class Oracle23MappingSchema : LockedMappingSchema
+		{
+			public Oracle23MappingSchema() : base("Oracle.23",Instance)
+			{
+				SetDataType(typeof(bool), new SqlDataType(DataType.Boolean, typeof(bool), "BOOLEAN"));
+				SetValueToSqlConverter(typeof(bool), (sb, dt, _, v) => ConvertBooleanToSql(sb, dt, (bool)v));
+			}
+
+			static void ConvertBooleanToSql(StringBuilder sb, SqlDataType dataType, bool value)
+			{
+				if (dataType.Type.DataType is DataType.Boolean or DataType.Undefined)
+					sb.Append(value ? "TRUE" : "FALSE");
+				else
+					sb.Append(value ? '1' : '0');
+
+			}
+		}
 
 		public sealed class NativeMappingSchema : LockedMappingSchema
 		{
-			public NativeMappingSchema() : base(ProviderName.OracleNative, OracleProviderAdapter.GetInstance(OracleProvider.Native).MappingSchema, Instance)
+			public NativeMappingSchema() : base(ProviderName.OracleNative, OracleProviderAdapter.GetInstance(OracleProvider.Native).MappingSchema, Instance11)
 			{
 			}
 		}
 
 		public sealed class ManagedMappingSchema : LockedMappingSchema
 		{
-			public ManagedMappingSchema() : base(ProviderName.OracleManaged, OracleProviderAdapter.GetInstance(OracleProvider.Managed).MappingSchema, Instance)
+			public ManagedMappingSchema() : base(ProviderName.OracleManaged, OracleProviderAdapter.GetInstance(OracleProvider.Managed).MappingSchema, Instance11)
 			{
 			}
 		}
 
 		public sealed class DevartMappingSchema : LockedMappingSchema
 		{
-			public DevartMappingSchema() : base(ProviderName.OracleDevart, OracleProviderAdapter.GetInstance(OracleProvider.Devart).MappingSchema, Instance)
+			public DevartMappingSchema() : base(ProviderName.OracleDevart, OracleProviderAdapter.GetInstance(OracleProvider.Devart).MappingSchema, Instance11)
 			{
 			}
 		}
 
-		public sealed class Native11MappingSchema : LockedMappingSchema
-		{
-			public Native11MappingSchema() : base(ProviderName.Oracle11Native, OracleProviderAdapter.GetInstance(OracleProvider.Native).MappingSchema, Instance)
-			{
-			}
-		}
+		public sealed class Native11MappingSchema () : LockedMappingSchema(ProviderName.Oracle11Native,  OracleProviderAdapter.GetInstance(OracleProvider.Native ).MappingSchema, Instance11) { }
+		public sealed class Managed11MappingSchema() : LockedMappingSchema(ProviderName.Oracle11Managed, OracleProviderAdapter.GetInstance(OracleProvider.Managed).MappingSchema, Instance11) { }
+		public sealed class Devart11MappingSchema () : LockedMappingSchema(ProviderName.Oracle11Devart,  OracleProviderAdapter.GetInstance(OracleProvider.Devart ).MappingSchema, Instance11) { }
 
-		public sealed class Managed11MappingSchema : LockedMappingSchema
-		{
-			public Managed11MappingSchema() : base(ProviderName.Oracle11Managed, OracleProviderAdapter.GetInstance(OracleProvider.Managed).MappingSchema, Instance)
-			{
-			}
-		}
-
-		public sealed class Devart11MappingSchema : LockedMappingSchema
-		{
-			public Devart11MappingSchema() : base(ProviderName.Oracle11Devart, OracleProviderAdapter.GetInstance(OracleProvider.Devart).MappingSchema, Instance)
-			{
-			}
-		}
+		public sealed class Native23MappingSchema () : LockedMappingSchema(ProviderName.Oracle23Native,  OracleProviderAdapter.GetInstance(OracleProvider.Native ).MappingSchema, Instance23) { }
+		public sealed class Managed23MappingSchema() : LockedMappingSchema(ProviderName.Oracle23Managed, OracleProviderAdapter.GetInstance(OracleProvider.Managed).MappingSchema, Instance23) { }
+		public sealed class Devart23MappingSchema () : LockedMappingSchema(ProviderName.Oracle23Devart,  OracleProviderAdapter.GetInstance(OracleProvider.Devart ).MappingSchema, Instance23) { }
 	}
 }

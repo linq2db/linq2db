@@ -17,5 +17,9 @@
 		/// Oracle 12c+ dialect.
 		/// </summary>
 		v12 = 12,
+		/// <summary>
+		/// Oracle 23ai+ dialect.
+		/// </summary>
+		v23 = 23,
 	}
 }
