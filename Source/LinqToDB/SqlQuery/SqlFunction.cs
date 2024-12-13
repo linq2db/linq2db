@@ -12,6 +12,11 @@ namespace LinqToDB.SqlQuery
 		{
 		}
 
+		public SqlFunction(DbDataType dbDataType, string name, ParametersNullabilityType parametersNullability, params ISqlExpression[] parameters)
+			: this(dbDataType, name, false, true, SqlQuery.Precedence.Primary, parametersNullability, null, parameters)
+		{
+		}
+
 		public SqlFunction(DbDataType dbDataType, string name, bool isAggregate, bool isPure, params ISqlExpression[] parameters)
 			: this(dbDataType, name, isAggregate, isPure, SqlQuery.Precedence.Primary, ParametersNullabilityType.IfAnyParameterNullable, null, parameters)
 		{
@@ -46,6 +51,11 @@ namespace LinqToDB.SqlQuery
 
 		public SqlFunction(Type systemType, string name, params ISqlExpression[] parameters)
 			: this(systemType, name, false, true, SqlQuery.Precedence.Primary, ParametersNullabilityType.IfAnyParameterNullable, null, parameters)
+		{
+		}
+
+		public SqlFunction(Type systemType, string name, ParametersNullabilityType nullabilityType, params ISqlExpression[] parameters)
+			: this(systemType, name, false, true, SqlQuery.Precedence.Primary, nullabilityType, null, parameters)
 		{
 		}
 

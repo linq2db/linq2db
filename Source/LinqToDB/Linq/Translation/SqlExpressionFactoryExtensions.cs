@@ -37,6 +37,11 @@ namespace LinqToDB.Linq.Translation
 			return new SqlFunction(dataType, functionName, parameters);
 		}
 
+		public static ISqlExpression Function(this ISqlExpressionFactory factory, DbDataType dataType, string functionName, ParametersNullabilityType parametersNullability, params ISqlExpression[] parameters)
+		{
+			return new SqlFunction(dataType, functionName, parametersNullability, parameters);
+		}
+
 		public static ISqlPredicate ExprPredicate(this ISqlExpressionFactory factory, ISqlExpression expression)
 		{
 			return new SqlPredicate.Expr(expression);

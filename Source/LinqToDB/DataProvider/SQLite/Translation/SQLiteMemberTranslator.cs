@@ -77,7 +77,7 @@ namespace LinqToDB.DataProvider.SQLite.Translation
 
 			ISqlExpression StrFTime(ISqlExpressionFactory factory, DbDataType resultDbType, string format, ISqlExpression date)
 			{
-				return factory!.Function(resultDbType, StrFTimeFuncName, factory.Value(format), date);
+				return factory!.Function(resultDbType, StrFTimeFuncName, ParametersNullabilityType.SameAsSecondParameter, factory.Value(format), date);
 			}
 
 			ISqlExpression StrFTimeInt(ISqlExpressionFactory factory, DbDataType intDbType, DbDataType stringDbType, string format, ISqlExpression date)
@@ -117,7 +117,7 @@ namespace LinqToDB.DataProvider.SQLite.Translation
 						return null;
 				}
 
-				var resultExpression = factory.Function(dateType, StrFTimeFuncName, factory.Value(stringDbType, DateFormat), dateTimeExpression, dateExpr);
+				var resultExpression = factory.Function(dateType, StrFTimeFuncName, ParametersNullabilityType.SameAsSecondParameter, factory.Value(stringDbType, DateFormat), dateTimeExpression, dateExpr);
 
 				return resultExpression;
 			}
@@ -170,7 +170,7 @@ namespace LinqToDB.DataProvider.SQLite.Translation
 					PartExpression(millisecond, 3)
 				);
 
-				resultExpression = factory.Function(resulType, StrFTimeFuncName,  factory.Value(stringDataType, DateFormat), resultExpression);
+				resultExpression = factory.Function(resulType, StrFTimeFuncName, ParametersNullabilityType.SameAsSecondParameter, factory.Value(stringDataType, DateFormat), resultExpression);
 
 				return resultExpression;
 			}
@@ -189,7 +189,7 @@ namespace LinqToDB.DataProvider.SQLite.Translation
 			{
 				var factory = translationContext.ExpressionFactory;
 
-				var resultExpression = factory.Function(factory.GetDbDataType(typeof(TimeSpan)), StrFTimeFuncName, factory.Value(TimeFormat), dateExpression);
+				var resultExpression = factory.Function(factory.GetDbDataType(typeof(TimeSpan)), StrFTimeFuncName, ParametersNullabilityType.SameAsSecondParameter, factory.Value(TimeFormat), dateExpression);
 
 				return resultExpression;
 			}
