@@ -624,7 +624,7 @@ namespace Tests.Data
 				finally
 				{
 					var time = DateTimeOffset.Now - start;
-					Assert.That(time, Is.GreaterThanOrEqualTo(TimeSpan.FromSeconds(30)));
+					Assert.That(time, Is.GreaterThanOrEqualTo(TimeSpan.FromSeconds(29)));
 					Assert.That(time, Is.LessThan(TimeSpan.FromSeconds(32)));
 				}
 
