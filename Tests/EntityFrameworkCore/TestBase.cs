@@ -23,7 +23,7 @@ using Tests;
 
 #if NETFRAMEWORK
 using MySqlConnectionStringBuilder = MySql.Data.MySqlClient.MySqlConnectionStringBuilder;
-#elif !NET9_0
+#else
 using MySqlConnectionStringBuilder = MySqlConnector.MySqlConnectionStringBuilder;
 #endif
 
@@ -197,7 +197,6 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 						connectionString = cnb.ConnectionString;
 						break;
 					}
-#if !NET9_0
 					case var _ when provider.IsAnyOf(TestProvName.AllMySql):
 					{
 						var cnb = new MySqlConnectionStringBuilder(connectionString);
@@ -206,7 +205,6 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 						connectionString = cnb.ConnectionString;
 						break;
 					}
-#endif
 					case var _ when provider.IsAnyOf(TestProvName.AllSQLite):
 					{
 						var cnb = new Microsoft.Data.Sqlite.SqliteConnectionStringBuilder(connectionString);
