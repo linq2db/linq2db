@@ -423,12 +423,10 @@ namespace LinqToDB
 
 		#region Extensions
 
-		[Sql.Extension("{function} FILTER (WHERE {filter})", TokenName = FunctionToken, ChainPrecedence = 2, IsWindowFunction = true)]
+		[Sql.Extension("{function} FILTER (WHERE {filter})", TokenName = FunctionToken, ChainPrecedence = 2, IsWindowFunction = true, ServerSideOnly = true)]
 		public static IAnalyticFunctionWithoutWindow<T> Filter<T>(this IAnalyticFunctionWithoutWindow<T> func,
 			[ExprParameter] bool filter)
-		{
-			throw new LinqToDBException($"'{nameof(Filter)}' is server-side method.");
-		}
+			=> throw new ServerSideOnlyException(nameof(Filter));
 
 		#endregion
 
@@ -436,11 +434,9 @@ namespace LinqToDB
 
 		#region Average
 
-		[Sql.Extension("AVG({modifier?}{_}{expr})", BuilderType = typeof(ApplyAggregateModifier), IsAggregate = true, ChainPrecedence = 0)]
+		[Sql.Extension("AVG({modifier?}{_}{expr})", BuilderType = typeof(ApplyAggregateModifier), IsAggregate = true, ChainPrecedence = 0, ServerSideOnly = true)]
 		public static double Average<TEntity, TV>(this IEnumerable<TEntity> source, [ExprParameter] Func<TEntity, TV> expr, [SqlQueryDependent] Sql.AggregateModifier modifier)
-		{
-			throw new LinqToDBException($"'{nameof(Average)}' is server-side method.");
-		}
+			=> throw new ServerSideOnlyException(nameof(Average));
 
 		[Sql.Extension("AVG({modifier?}{_}{expr})", BuilderType = typeof(ApplyAggregateModifier), IsAggregate = true, ChainPrecedence = 0)]
 		public static double Average<TEntity, TV>(this IQueryable<TEntity> source, [ExprParameter] Expression<Func<TEntity, TV>> expr, [SqlQueryDependent] Sql.AggregateModifier modifier)
@@ -458,27 +454,21 @@ namespace LinqToDB
 				));
 		}
 
-		[Sql.Extension("AVG({expr})", TokenName = FunctionToken, ChainPrecedence = 1, IsAggregate = true)]
+		[Sql.Extension("AVG({expr})", TokenName = FunctionToken, ChainPrecedence = 1, IsAggregate = true, ServerSideOnly = true)]
 		public static IAggregateFunctionSelfContained<T> Average<T>(this Sql.ISqlExtension? ext, [ExprParameter] object? expr)
-		{
-			throw new LinqToDBException($"'{nameof(Average)}' is server-side method.");
-		}
+			=> throw new ServerSideOnlyException(nameof(Average));
 
-		[Sql.Extension("AVG({modifier?}{_}{expr})", BuilderType = typeof(ApplyAggregateModifier), TokenName = FunctionToken, ChainPrecedence = 1, IsAggregate = true)]
+		[Sql.Extension("AVG({modifier?}{_}{expr})", BuilderType = typeof(ApplyAggregateModifier), TokenName = FunctionToken, ChainPrecedence = 1, IsAggregate = true, ServerSideOnly = true)]
 		public static IAggregateFunctionSelfContained<T> Average<T>(this Sql.ISqlExtension? ext, [ExprParameter] object? expr, [SqlQueryDependent] Sql.AggregateModifier modifier)
-		{
-			throw new LinqToDBException($"'{nameof(Average)}' is server-side method.");
-		}
+			=> throw new ServerSideOnlyException(nameof(Average));
 
 		#endregion Average
 
 		#region Corr
 
-		[Sql.Extension("CORR({expr1}, {expr2})", IsWindowFunction = true, ChainPrecedence = 0)]
+		[Sql.Extension("CORR({expr1}, {expr2})", IsWindowFunction = true, ChainPrecedence = 0, ServerSideOnly = true)]
 		public static decimal? Corr<T>(this IEnumerable<T> source, [ExprParameter] Expression<Func<T, object?>> expr1, [ExprParameter] Expression<Func<T, object?>> expr2)
-		{
-			throw new LinqToDBException($"'{nameof(Corr)}' is server-side method.");
-		}
+			=> throw new ServerSideOnlyException(nameof(Corr));
 
 		[Sql.Extension("CORR({expr1}, {expr2})", IsWindowFunction = true, ChainPrecedence = 0)]
 		public static decimal? Corr<TEntity>(
@@ -500,27 +490,21 @@ namespace LinqToDB
 				));
 		}
 
-		[Sql.Extension("CORR({expr1}, {expr2})", TokenName = FunctionToken, ChainPrecedence = 1, IsWindowFunction = true)]
+		[Sql.Extension("CORR({expr1}, {expr2})", TokenName = FunctionToken, ChainPrecedence = 1, IsWindowFunction = true, ServerSideOnly = true)]
 		public static IAggregateFunctionSelfContained<T> Corr<T>(this Sql.ISqlExtension? ext, [ExprParameter] object? expr1, [ExprParameter] object? expr2)
-		{
-			throw new LinqToDBException($"'{nameof(Corr)}' is server-side method.");
-		}
+			=> throw new ServerSideOnlyException(nameof(Corr));
 
 		#endregion Corr
 
 		#region Count
 
-		[Sql.Extension("COUNT({expr})", IsAggregate = true, ChainPrecedence = 0, CanBeNull = false)]
+		[Sql.Extension("COUNT({expr})", IsAggregate = true, ChainPrecedence = 0, CanBeNull = false, ServerSideOnly = true)]
 		public static int CountExt<TEntity>(this IEnumerable<TEntity> source, [ExprParameter] Func<TEntity, object?> expr)
-		{
-			throw new LinqToDBException($"'{nameof(CountExt)}' is server-side method.");
-		}
+			=> throw new ServerSideOnlyException(nameof(CountExt));
 
-		[Sql.Extension("COUNT({modifier?}{_}{expr})", BuilderType = typeof(ApplyAggregateModifier), IsAggregate = true, ChainPrecedence = 0, CanBeNull = false)]
+		[Sql.Extension("COUNT({modifier?}{_}{expr})", BuilderType = typeof(ApplyAggregateModifier), IsAggregate = true, ChainPrecedence = 0, CanBeNull = false, ServerSideOnly = true)]
 		public static int CountExt<TEntity, TV>(this IEnumerable<TEntity> source, [ExprParameter] Func<TEntity, TV> expr, [SqlQueryDependent] Sql.AggregateModifier modifier)
-		{
-			throw new LinqToDBException($"'{nameof(CountExt)}' is server-side method.");
-		}
+			=> throw new ServerSideOnlyException(nameof(CountExt));
 
 		[Sql.Extension("COUNT({modifier?}{_}{expr})", IsAggregate = true, ChainPrecedence = 0, CanBeNull = false)]
 		public static int CountExt<TEntity, TV>(this IQueryable<TEntity> source, [ExprParameter] Expression<Func<TEntity, TV>> expr)
@@ -554,39 +538,29 @@ namespace LinqToDB
 				));
 		}
 
-		[Sql.Extension("COUNT(*)", TokenName = FunctionToken, IsAggregate = true, ChainPrecedence = 1, CanBeNull = false)]
+		[Sql.Extension("COUNT(*)", TokenName = FunctionToken, IsAggregate = true, ChainPrecedence = 1, CanBeNull = false, ServerSideOnly = true)]
 		public static IAggregateFunctionSelfContained<int> Count(this Sql.ISqlExtension? ext)
-		{
-			throw new LinqToDBException($"'{nameof(Count)}' is server-side method.");
-		}
+			=> throw new ServerSideOnlyException(nameof(Count));
 
-		[Sql.Extension("COUNT({expr})", TokenName = FunctionToken, ChainPrecedence = 1, IsAggregate = true, CanBeNull = false)]
+		[Sql.Extension("COUNT({expr})", TokenName = FunctionToken, ChainPrecedence = 1, IsAggregate = true, CanBeNull = false, ServerSideOnly = true)]
 		public static IAggregateFunctionSelfContained<int> Count<T>(this Sql.ISqlExtension? ext, [ExprParameter] T expr)
-		{
-			throw new LinqToDBException($"'{nameof(Count)}' is server-side method.");
-		}
+			=> throw new ServerSideOnlyException(nameof(Count));
 
-		[Sql.Extension("COUNT({modifier?}{_}{expr})", BuilderType = typeof(ApplyAggregateModifier), TokenName = FunctionToken, ChainPrecedence = 1, IsAggregate = true, CanBeNull = false)]
+		[Sql.Extension("COUNT({modifier?}{_}{expr})", BuilderType = typeof(ApplyAggregateModifier), TokenName = FunctionToken, ChainPrecedence = 1, IsAggregate = true, CanBeNull = false, ServerSideOnly = true)]
 		public static IAggregateFunctionSelfContained<int> Count(this Sql.ISqlExtension? ext, [ExprParameter] object? expr, [SqlQueryDependent] Sql.AggregateModifier modifier)
-		{
-			throw new LinqToDBException($"'{nameof(Count)}' is server-side method.");
-		}
+			=> throw new ServerSideOnlyException(nameof(Count));
 
 		#endregion
 
 		#region LongCount
 
-		[Sql.Extension("COUNT({expr})", IsAggregate = true, ChainPrecedence = 0)]
+		[Sql.Extension("COUNT({expr})", IsAggregate = true, ChainPrecedence = 0, ServerSideOnly = true)]
 		public static long LongCountExt<TEntity>(this IEnumerable<TEntity> source, [ExprParameter] Func<TEntity, object?> expr)
-		{
-			throw new LinqToDBException($"'{nameof(LongCountExt)}' is server-side method.");
-		}
+			=> throw new ServerSideOnlyException(nameof(LongCountExt));
 
-		[Sql.Extension("COUNT({modifier?}{_}{expr})", BuilderType = typeof(ApplyAggregateModifier), IsAggregate = true, ChainPrecedence = 0)]
+		[Sql.Extension("COUNT({modifier?}{_}{expr})", BuilderType = typeof(ApplyAggregateModifier), IsAggregate = true, ChainPrecedence = 0, ServerSideOnly = true)]
 		public static long LongCountExt<TEntity, TV>(this IEnumerable<TEntity> source, [ExprParameter] Func<TEntity, TV> expr, [SqlQueryDependent] Sql.AggregateModifier modifier)
-		{
-			throw new LinqToDBException($"'{nameof(LongCountExt)}' is server-side method.");
-		}
+			=> throw new ServerSideOnlyException(nameof(LongCountExt));
 
 		[Sql.Extension("COUNT({modifier?}{_}{expr})", BuilderType = typeof(ApplyAggregateModifier), IsAggregate = true, ChainPrecedence = 0)]
 		public static long LongCountExt<TEntity, TV>(this IQueryable<TEntity> source, [ExprParameter] Expression<Func<TEntity, TV>> expr, [SqlQueryDependent] Sql.AggregateModifier modifier = Sql.AggregateModifier.None)
@@ -604,33 +578,25 @@ namespace LinqToDB
 				));
 		}
 
-		[Sql.Extension("COUNT(*)", TokenName = FunctionToken, ChainPrecedence = 1, IsAggregate = true)]
+		[Sql.Extension("COUNT(*)", TokenName = FunctionToken, ChainPrecedence = 1, IsAggregate = true, ServerSideOnly = true)]
 		public static IAggregateFunctionSelfContained<long> LongCount(this Sql.ISqlExtension? ext)
-		{
-			throw new LinqToDBException($"'{nameof(LongCount)}' is server-side method.");
-		}
+			=> throw new ServerSideOnlyException(nameof(LongCount));
 
-		[Sql.Extension("COUNT({expr})", TokenName = FunctionToken, ChainPrecedence = 1, IsAggregate = true)]
+		[Sql.Extension("COUNT({expr})", TokenName = FunctionToken, ChainPrecedence = 1, IsAggregate = true, ServerSideOnly = true)]
 		public static IAggregateFunctionSelfContained<long> LongCount<T>(this Sql.ISqlExtension? ext, [ExprParameter] T expr)
-		{
-			throw new LinqToDBException($"'{nameof(LongCount)}' is server-side method.");
-		}
+			=> throw new ServerSideOnlyException(nameof(LongCount));
 
-		[Sql.Extension("COUNT({modifier?}{_}{expr})", BuilderType = typeof(ApplyAggregateModifier), TokenName = FunctionToken, ChainPrecedence = 1, IsAggregate = true)]
+		[Sql.Extension("COUNT({modifier?}{_}{expr})", BuilderType = typeof(ApplyAggregateModifier), TokenName = FunctionToken, ChainPrecedence = 1, IsAggregate = true, ServerSideOnly = true)]
 		public static IAggregateFunctionSelfContained<long> LongCount(this Sql.ISqlExtension? ext, [ExprParameter] object? expr, [SqlQueryDependent] Sql.AggregateModifier modifier)
-		{
-			throw new LinqToDBException($"'{nameof(LongCount)}' is server-side method.");
-		}
+			=> throw new ServerSideOnlyException(nameof(LongCount));
 
 		#endregion
 
 		#region CovarPop
 
-		[Sql.Extension("COVAR_POP({expr1}, {expr2})", IsWindowFunction = true, ChainPrecedence = 0)]
+		[Sql.Extension("COVAR_POP({expr1}, {expr2})", IsWindowFunction = true, ChainPrecedence = 0, ServerSideOnly = true)]
 		public static decimal CovarPop<T>(this IEnumerable<T> source, [ExprParameter] Expression<Func<T, object?>> expr1, [ExprParameter] Expression<Func<T, object?>> expr2)
-		{
-			throw new LinqToDBException($"'{nameof(CovarPop)}' is server-side method.");
-		}
+			=> throw new ServerSideOnlyException(nameof(CovarPop));
 
 		[Sql.Extension("COVAR_POP({expr1}, {expr2})", IsWindowFunction = true, ChainPrecedence = 0)]
 		public static decimal CovarPop<TEntity>(
@@ -652,21 +618,17 @@ namespace LinqToDB
 				));
 		}
 
-		[Sql.Extension("COVAR_POP({expr1}, {expr2})", TokenName = FunctionToken, ChainPrecedence = 1, IsWindowFunction = true)]
+		[Sql.Extension("COVAR_POP({expr1}, {expr2})", TokenName = FunctionToken, ChainPrecedence = 1, IsWindowFunction = true, ServerSideOnly = true)]
 		public static IAggregateFunctionSelfContained<T> CovarPop<T>(this Sql.ISqlExtension? ext, [ExprParameter] T expr1, [ExprParameter]T expr2)
-		{
-			throw new LinqToDBException($"'{nameof(CovarPop)}' is server-side method.");
-		}
+			=> throw new ServerSideOnlyException(nameof(CovarPop));
 
 		#endregion CovarPop
 
 		#region CovarSamp
 
-		[Sql.Extension("COVAR_SAMP({expr1}, {expr2})", IsWindowFunction = true, ChainPrecedence = 0)]
+		[Sql.Extension("COVAR_SAMP({expr1}, {expr2})", IsWindowFunction = true, ChainPrecedence = 0, ServerSideOnly = true)]
 		public static decimal? CovarSamp<T>(this IEnumerable<T> source, [ExprParameter] Expression<Func<T, object?>> expr1, [ExprParameter] Expression<Func<T, object?>> expr2)
-		{
-			throw new LinqToDBException($"'{nameof(CovarSamp)}' is server-side method.");
-		}
+			=> throw new ServerSideOnlyException(nameof(CovarSamp));
 
 		[Sql.Extension("COVAR_SAMP({expr1}, {expr2})", IsWindowFunction = true, ChainPrecedence = 0)]
 		public static decimal? CovarSamp<TEntity>(
@@ -688,133 +650,93 @@ namespace LinqToDB
 				));
 		}
 
-		[Sql.Extension("COVAR_SAMP({expr1}, {expr2})", TokenName = FunctionToken, ChainPrecedence = 1, IsWindowFunction = true)]
+		[Sql.Extension("COVAR_SAMP({expr1}, {expr2})", TokenName = FunctionToken, ChainPrecedence = 1, IsWindowFunction = true, ServerSideOnly = true)]
 		public static IAggregateFunctionSelfContained<T> CovarSamp<T>(this Sql.ISqlExtension? ext, [ExprParameter] T expr1, [ExprParameter]T expr2)
-		{
-			throw new LinqToDBException($"'{nameof(CovarSamp)}' is server-side method.");
-		}
+			=> throw new ServerSideOnlyException(nameof(CovarSamp));
 
 		#endregion CovarSamp
 
-		[Sql.Extension("CUME_DIST({expr, ', '}) {within_group}", TokenName = FunctionToken, ChainPrecedence = 1, IsWindowFunction = true)]
+		[Sql.Extension("CUME_DIST({expr, ', '}) {within_group}", TokenName = FunctionToken, ChainPrecedence = 1, IsWindowFunction = true, ServerSideOnly = true)]
 		public static INeedsWithinGroupWithOrderOnly<TR> CumeDist<TR>(this Sql.ISqlExtension? ext, [ExprParameter] params object?[] expr)
-		{
-			throw new LinqToDBException($"'{nameof(CumeDist)}' is server-side method.");
-		}
+			=> throw new ServerSideOnlyException(nameof(CumeDist));
 
-		[Sql.Extension("CUME_DIST()", TokenName = FunctionToken, ChainPrecedence = 1, IsWindowFunction = true)]
+		[Sql.Extension("CUME_DIST()", TokenName = FunctionToken, ChainPrecedence = 1, IsWindowFunction = true, ServerSideOnly = true)]
 		public static IAnalyticFunctionWithoutWindow<TR> CumeDist<TR>(this Sql.ISqlExtension? ext)
-		{
-			throw new LinqToDBException($"'{nameof(CumeDist)}' is server-side method.");
-		}
+			=> throw new ServerSideOnlyException(nameof(CumeDist));
 
-		[Sql.Extension("DENSE_RANK({expr1}, {expr2}) {within_group}", TokenName = FunctionToken, ChainPrecedence = 1, IsWindowFunction = true)]
+		[Sql.Extension("DENSE_RANK({expr1}, {expr2}) {within_group}", TokenName = FunctionToken, ChainPrecedence = 1, IsWindowFunction = true, ServerSideOnly = true)]
 		public static INeedsWithinGroupWithOrderOnly<long> DenseRank(this Sql.ISqlExtension? ext, [ExprParameter] object? expr1, [ExprParameter] object? expr2)
-		{
-			throw new LinqToDBException($"'{nameof(DenseRank)}' is server-side method.");
-		}
+			=> throw new ServerSideOnlyException(nameof(DenseRank));
 
-		[Sql.Extension("DENSE_RANK()", TokenName = FunctionToken, ChainPrecedence = 1, IsWindowFunction = true)]
+		[Sql.Extension("DENSE_RANK()", TokenName = FunctionToken, ChainPrecedence = 1, IsWindowFunction = true, ServerSideOnly = true)]
 		public static IAnalyticFunctionWithoutWindow<long> DenseRank(this Sql.ISqlExtension? ext)
-		{
-			throw new LinqToDBException($"'{nameof(DenseRank)}' is server-side method.");
-		}
+			=> throw new ServerSideOnlyException(nameof(DenseRank));
 
-		[Sql.Extension("FIRST_VALUE({expr}){_}{modifier?}", TokenName = FunctionToken, BuilderType = typeof(ApplyNullsModifier), ChainPrecedence = 1, IsWindowFunction = true, Configuration = PN.SqlServer2022)]
-		[Sql.Extension("FIRST_VALUE({expr}){_}{modifier?}", TokenName = FunctionToken, BuilderType = typeof(ForceApplyNullsModifier), ChainPrecedence = 1, IsWindowFunction = true, Configuration = PN.ClickHouse)]
-		[Sql.Extension("FIRST_VALUE({expr}{_}{modifier?})", TokenName = FunctionToken, BuilderType = typeof(ApplyNullsModifier), ChainPrecedence = 1, IsWindowFunction = true)]
+		[Sql.Extension("FIRST_VALUE({expr}){_}{modifier?}", TokenName = FunctionToken, BuilderType = typeof(ApplyNullsModifier), ChainPrecedence = 1, IsWindowFunction = true, Configuration = PN.SqlServer2022, ServerSideOnly = true)]
+		[Sql.Extension("FIRST_VALUE({expr}){_}{modifier?}", TokenName = FunctionToken, BuilderType = typeof(ForceApplyNullsModifier), ChainPrecedence = 1, IsWindowFunction = true, Configuration = PN.ClickHouse, ServerSideOnly = true)]
+		[Sql.Extension("FIRST_VALUE({expr}{_}{modifier?})", TokenName = FunctionToken, BuilderType = typeof(ApplyNullsModifier), ChainPrecedence = 1, IsWindowFunction = true, ServerSideOnly = true)]
 		public static IAggregateFunctionSelfContained<T> FirstValue<T>(this Sql.ISqlExtension? ext, [ExprParameter] T expr, [SqlQueryDependent] Sql.Nulls nulls)
-		{
-			throw new LinqToDBException($"'{nameof(FirstValue)}' is server-side method.");
-		}
+			=> throw new ServerSideOnlyException(nameof(FirstValue));
 
-		[Sql.Extension("LAG({expr}{_}{modifier?})", TokenName = FunctionToken, BuilderType = typeof(ApplyNullsModifier), ChainPrecedence = 1, IsWindowFunction = true)]
+		[Sql.Extension("LAG({expr}{_}{modifier?})", TokenName = FunctionToken, BuilderType = typeof(ApplyNullsModifier), ChainPrecedence = 1, IsWindowFunction = true, ServerSideOnly = true)]
 		public static IAnalyticFunctionWithoutWindow<T> Lag<T>(this Sql.ISqlExtension? ext, [ExprParameter] T expr, [SqlQueryDependent] Sql.Nulls nulls)
-		{
-			throw new LinqToDBException($"'{nameof(Lag)}' is server-side method.");
-		}
+			=> throw new ServerSideOnlyException(nameof(Lag));
 
-		[Sql.Extension("LAG({expr})", TokenName = FunctionToken, ChainPrecedence = 1, IsWindowFunction = true)]
+		[Sql.Extension("LAG({expr})", TokenName = FunctionToken, ChainPrecedence = 1, IsWindowFunction = true, ServerSideOnly = true)]
 		public static IAnalyticFunctionWithoutWindow<T> Lag<T>(this Sql.ISqlExtension? ext, [ExprParameter] T expr)
-		{
-			throw new LinqToDBException($"'{nameof(Lag)}' is server-side method.");
-		}
+			=> throw new ServerSideOnlyException(nameof(Lag));
 
-		[Sql.Extension("LAG({expr}, {offset})", TokenName = FunctionToken, ChainPrecedence = 1, IsWindowFunction = true)]
+		[Sql.Extension("LAG({expr}, {offset})", TokenName = FunctionToken, ChainPrecedence = 1, IsWindowFunction = true, ServerSideOnly = true)]
 		public static IAnalyticFunctionWithoutWindow<T> Lag<T>(this Sql.ISqlExtension? ext, [ExprParameter] T expr, [ExprParameter] int offset)
-		{
-			throw new LinqToDBException($"'{nameof(Lag)}' is server-side method.");
-		}
+			=> throw new ServerSideOnlyException(nameof(Lag));
 
-		[Sql.Extension("LAG({expr}, {offset}, {default})", TokenName = FunctionToken, ChainPrecedence = 1, IsWindowFunction = true)]
+		[Sql.Extension("LAG({expr}, {offset}, {default})", TokenName = FunctionToken, ChainPrecedence = 1, IsWindowFunction = true, ServerSideOnly = true)]
 		public static IAnalyticFunctionWithoutWindow<T> Lag<T>(this Sql.ISqlExtension? ext, [ExprParameter] T expr, [ExprParameter] int offset, [ExprParameter] T @default)
-		{
-			throw new LinqToDBException($"'{nameof(Lag)}' is server-side method.");
-		}
+			=> throw new ServerSideOnlyException(nameof(Lag));
 
-		[Sql.Extension("LAG({expr}{_}{modifier?}, {offset}, {default})", TokenName = FunctionToken, BuilderType = typeof(ApplyNullsModifier), ChainPrecedence = 1, IsWindowFunction = true)]
+		[Sql.Extension("LAG({expr}{_}{modifier?}, {offset}, {default})", TokenName = FunctionToken, BuilderType = typeof(ApplyNullsModifier), ChainPrecedence = 1, IsWindowFunction = true, ServerSideOnly = true)]
 		public static IAnalyticFunctionWithoutWindow<T> Lag<T>(this Sql.ISqlExtension? ext, [ExprParameter] T expr, [SqlQueryDependent] Sql.Nulls nulls, [ExprParameter] int offset, [ExprParameter] T @default)
-		{
-			throw new LinqToDBException($"'{nameof(Lag)}' is server-side method.");
-		}
+			=> throw new ServerSideOnlyException(nameof(Lag));
 
-		[Sql.Extension("LAST_VALUE({expr}){_}{modifier?}", TokenName = FunctionToken, BuilderType = typeof(ApplyNullsModifier), ChainPrecedence = 1, IsWindowFunction = true, Configuration = PN.SqlServer2022)]
-		[Sql.Extension("LAST_VALUE({expr}){_}{modifier?}", TokenName = FunctionToken, BuilderType = typeof(ForceApplyNullsModifier), ChainPrecedence = 1, IsWindowFunction = true, Configuration = PN.ClickHouse)]
-		[Sql.Extension("LAST_VALUE({expr}{_}{modifier?})", TokenName = FunctionToken, BuilderType = typeof(ApplyNullsModifier), ChainPrecedence = 1, IsWindowFunction = true)]
+		[Sql.Extension("LAST_VALUE({expr}){_}{modifier?}", TokenName = FunctionToken, BuilderType = typeof(ApplyNullsModifier), ChainPrecedence = 1, IsWindowFunction = true, Configuration = PN.SqlServer2022, ServerSideOnly = true)]
+		[Sql.Extension("LAST_VALUE({expr}){_}{modifier?}", TokenName = FunctionToken, BuilderType = typeof(ForceApplyNullsModifier), ChainPrecedence = 1, IsWindowFunction = true, Configuration = PN.ClickHouse, ServerSideOnly = true)]
+		[Sql.Extension("LAST_VALUE({expr}{_}{modifier?})", TokenName = FunctionToken, BuilderType = typeof(ApplyNullsModifier), ChainPrecedence = 1, IsWindowFunction = true, ServerSideOnly = true)]
 		public static IAggregateFunctionSelfContained<T> LastValue<T>(this Sql.ISqlExtension? ext, [ExprParameter] T expr, [SqlQueryDependent] Sql.Nulls nulls)
-		{
-			throw new LinqToDBException($"'{nameof(LastValue)}' is server-side method.");
-		}
+			=> throw new ServerSideOnlyException(nameof(LastValue));
 
-		[Sql.Extension("LEAD({expr}{_}{modifier?})", TokenName = FunctionToken, ChainPrecedence = 1, IsWindowFunction = true)]
+		[Sql.Extension("LEAD({expr}{_}{modifier?})", TokenName = FunctionToken, ChainPrecedence = 1, IsWindowFunction = true, ServerSideOnly = true)]
 		public static IAnalyticFunctionWithoutWindow<T> Lead<T>(this Sql.ISqlExtension? ext, [ExprParameter] T expr, [SqlQueryDependent] Sql.Nulls nulls)
-		{
-			throw new LinqToDBException($"'{nameof(Lead)}' is server-side method.");
-		}
+			=> throw new ServerSideOnlyException(nameof(Lead));
 
-		[Sql.Extension("LEAD({expr})", TokenName = FunctionToken, ChainPrecedence = 1, IsWindowFunction = true)]
+		[Sql.Extension("LEAD({expr})", TokenName = FunctionToken, ChainPrecedence = 1, IsWindowFunction = true, ServerSideOnly = true)]
 		public static IAnalyticFunctionWithoutWindow<T> Lead<T>(this Sql.ISqlExtension? ext, [ExprParameter] T expr)
-		{
-			throw new LinqToDBException($"'{nameof(Lead)}' is server-side method.");
-		}
+			=> throw new ServerSideOnlyException(nameof(Lead));
 
-		[Sql.Extension("LEAD({expr}, {offset})", TokenName = FunctionToken, ChainPrecedence = 1, IsWindowFunction = true)]
+		[Sql.Extension("LEAD({expr}, {offset})", TokenName = FunctionToken, ChainPrecedence = 1, IsWindowFunction = true, ServerSideOnly = true)]
 		public static IAnalyticFunctionWithoutWindow<T> Lead<T>(this Sql.ISqlExtension? ext, [ExprParameter] T expr, [ExprParameter] int offset)
-		{
-			throw new LinqToDBException($"'{nameof(Lead)}' is server-side method.");
-		}
+			=> throw new ServerSideOnlyException(nameof(Lead));
 
-		[Sql.Extension("LEAD({expr}, {offset}, {default})", TokenName = FunctionToken, ChainPrecedence = 1, IsWindowFunction = true)]
+		[Sql.Extension("LEAD({expr}, {offset}, {default})", TokenName = FunctionToken, ChainPrecedence = 1, IsWindowFunction = true, ServerSideOnly = true)]
 		public static IAnalyticFunctionWithoutWindow<T> Lead<T>(this Sql.ISqlExtension? ext, [ExprParameter] T expr, [ExprParameter] int offset, [ExprParameter] T @default)
-		{
-			throw new LinqToDBException($"'{nameof(Lead)}' is server-side method.");
-		}
+			=> throw new ServerSideOnlyException(nameof(Lead));
 
-		[Sql.Extension("LEAD({expr}{_}{modifier?}, {offset}, {default})", TokenName = FunctionToken, BuilderType = typeof(ApplyNullsModifier), ChainPrecedence = 1, IsWindowFunction = true)]
+		[Sql.Extension("LEAD({expr}{_}{modifier?}, {offset}, {default})", TokenName = FunctionToken, BuilderType = typeof(ApplyNullsModifier), ChainPrecedence = 1, IsWindowFunction = true, ServerSideOnly = true)]
 		public static IAnalyticFunctionWithoutWindow<T> Lead<T>(this Sql.ISqlExtension? ext, [ExprParameter] T expr, [SqlQueryDependent] Sql.Nulls nulls, [ExprParameter] int offset, [ExprParameter] T @default)
-		{
-			throw new LinqToDBException($"'{nameof(Lead)}' is server-side method.");
-		}
+			=> throw new ServerSideOnlyException(nameof(Lead));
 
-		[Sql.Extension("LISTAGG({expr}) {within_group}", TokenName = FunctionToken, ChainPrecedence = 1, IsWindowFunction = true)]
+		[Sql.Extension("LISTAGG({expr}) {within_group}", TokenName = FunctionToken, ChainPrecedence = 1, IsWindowFunction = true, ServerSideOnly = true)]
 		public static INeedsWithinGroupWithOrderAndMaybePartition<string> ListAgg<T>(this Sql.ISqlExtension? ext, [ExprParameter] T expr)
-		{
-			throw new LinqToDBException($"'{nameof(ListAgg)}' is server-side method.");
-		}
+			=> throw new ServerSideOnlyException(nameof(ListAgg));
 
-		[Sql.Extension("LISTAGG({expr}, {delimiter}) {within_group}", TokenName = FunctionToken, ChainPrecedence = 1, IsWindowFunction = true)]
+			[Sql.Extension("LISTAGG({expr}, {delimiter}) {within_group}", TokenName = FunctionToken, ChainPrecedence = 1, IsWindowFunction = true, ServerSideOnly = true)]
 		public static INeedsWithinGroupWithOrderAndMaybePartition<string> ListAgg<T>(this Sql.ISqlExtension? ext, [ExprParameter] T expr, [ExprParameter] string delimiter)
-		{
-			throw new LinqToDBException($"'{nameof(ListAgg)}' is server-side method.");
-		}
+			=> throw new ServerSideOnlyException(nameof(ListAgg));
 
 		#region Max
 
-		[Sql.Extension("MAX({modifier?}{_}{expr})", BuilderType = typeof(ApplyAggregateModifier), IsAggregate = true, ChainPrecedence = 0)]
+		[Sql.Extension("MAX({modifier?}{_}{expr})", BuilderType = typeof(ApplyAggregateModifier), IsAggregate = true, ChainPrecedence = 0, ServerSideOnly = true)]
 		public static TV Max<TEntity, TV>(this IEnumerable<TEntity> source, [ExprParameter] Func<TEntity, TV> expr, [SqlQueryDependent] Sql.AggregateModifier modifier)
-		{
-			throw new LinqToDBException($"'{nameof(Max)}' is server-side method.");
-		}
+			=> throw new ServerSideOnlyException(nameof(Max));
 
 		[Sql.Extension("MAX({modifier?}{_}{expr})", BuilderType = typeof(ApplyAggregateModifier), IsAggregate = true, ChainPrecedence = 0)]
 		public static TV Max<TEntity, TV>(this IQueryable<TEntity> source, [ExprParameter] Expression<Func<TEntity, TV>> expr, [SqlQueryDependent] Sql.AggregateModifier modifier)
@@ -832,27 +754,21 @@ namespace LinqToDB
 				));
 		}
 
-		[Sql.Extension("MAX({expr})", TokenName = FunctionToken, IsAggregate = true, ChainPrecedence = 1)]
+		[Sql.Extension("MAX({expr})", TokenName = FunctionToken, IsAggregate = true, ChainPrecedence = 1, ServerSideOnly = true)]
 		public static IAggregateFunctionSelfContained<T> Max<T>(this Sql.ISqlExtension? ext, [ExprParameter] T expr)
-		{
-			throw new LinqToDBException($"'{nameof(Max)}' is server-side method.");
-		}
+			=> throw new ServerSideOnlyException(nameof(Max));
 
-		[Sql.Extension("MAX({modifier?}{_}{expr})", BuilderType = typeof(ApplyAggregateModifier), IsAggregate = true, TokenName = FunctionToken, ChainPrecedence = 1)]
+		[Sql.Extension("MAX({modifier?}{_}{expr})", BuilderType = typeof(ApplyAggregateModifier), IsAggregate = true, TokenName = FunctionToken, ChainPrecedence = 1, ServerSideOnly = true)]
 		public static IAggregateFunctionSelfContained<T> Max<T>(this Sql.ISqlExtension? ext, [ExprParameter] T expr, [SqlQueryDependent] Sql.AggregateModifier modifier)
-		{
-			throw new LinqToDBException($"'{nameof(Max)}' is server-side method.");
-		}
+			=> throw new ServerSideOnlyException(nameof(Max));
 
 		#endregion Max
 
 		#region Median
 
-		[Sql.Extension("MEDIAN({expr})", IsWindowFunction = true, ChainPrecedence = 0)]
+		[Sql.Extension("MEDIAN({expr})", IsWindowFunction = true, ChainPrecedence = 0, ServerSideOnly = true)]
 		public static long Median<TEntity, T>(this IEnumerable<TEntity> source, [ExprParameter] Func<TEntity, T> expr)
-		{
-			throw new LinqToDBException($"'{nameof(Median)}' is server-side method.");
-		}
+			=> throw new ServerSideOnlyException(nameof(Median));
 
 		[Sql.Extension("MEDIAN({expr})", IsWindowFunction = true, ChainPrecedence = 0)]
 		public static long Median<TEntity, TV>(this IQueryable<TEntity> source, [ExprParameter] Expression<Func<TEntity, TV>> expr)
@@ -870,21 +786,17 @@ namespace LinqToDB
 				));
 		}
 
-		[Sql.Extension("MEDIAN({expr}) {over}", TokenName = FunctionToken, ChainPrecedence = 1, IsWindowFunction = true)]
+		[Sql.Extension("MEDIAN({expr}) {over}", TokenName = FunctionToken, ChainPrecedence = 1, IsWindowFunction = true, ServerSideOnly = true)]
 		public static IReadyToFunctionOrOverWithPartition<T> Median<T>(this Sql.ISqlExtension? ext, [ExprParameter] T expr)
-		{
-			throw new LinqToDBException($"'{nameof(Median)}' is server-side method.");
-		}
+			=> throw new ServerSideOnlyException(nameof(Median));
 
 		#endregion Median
 
 		#region Min
 
-		[Sql.Extension("MIN({modifier?}{_}{expr})", BuilderType = typeof(ApplyAggregateModifier), IsAggregate = true, ChainPrecedence = 0)]
+		[Sql.Extension("MIN({modifier?}{_}{expr})", BuilderType = typeof(ApplyAggregateModifier), IsAggregate = true, ChainPrecedence = 0, ServerSideOnly = true)]
 		public static TV Min<TEntity, TV>(this IEnumerable<TEntity> source, [ExprParameter] Func<TEntity, TV> expr, [SqlQueryDependent] Sql.AggregateModifier modifier)
-		{
-			throw new LinqToDBException($"'{nameof(Min)}' is server-side method.");
-		}
+			=> throw new ServerSideOnlyException(nameof(Min));
 
 		[Sql.Extension("MIN({modifier?}{_}{expr})", BuilderType = typeof(ApplyAggregateModifier), IsAggregate = true, ChainPrecedence = 0)]
 		public static TV Min<TEntity, TV>(this IQueryable<TEntity> source, [ExprParameter] Expression<Func<TEntity, TV>> expr, [SqlQueryDependent] Sql.AggregateModifier modifier)
@@ -901,163 +813,115 @@ namespace LinqToDB
 					currentSource.Expression, Expression.Quote(expr), Expression.Constant(modifier)));
 		}
 
-		[Sql.Extension("MIN({expr})", TokenName = FunctionToken, IsAggregate = true, ChainPrecedence = 1)]
+		[Sql.Extension("MIN({expr})", TokenName = FunctionToken, IsAggregate = true, ChainPrecedence = 1, ServerSideOnly = true)]
 		public static IAggregateFunctionSelfContained<T> Min<T>(this Sql.ISqlExtension? ext, [ExprParameter] T expr)
-		{
-			throw new LinqToDBException($"'{nameof(Min)}' is server-side method.");
-		}
+			=> throw new ServerSideOnlyException(nameof(Min));
 
-		[Sql.Extension("MIN({modifier?}{_}{expr})", BuilderType = typeof(ApplyAggregateModifier), IsAggregate = true, TokenName = FunctionToken, ChainPrecedence = 1)]
+		[Sql.Extension("MIN({modifier?}{_}{expr})", BuilderType = typeof(ApplyAggregateModifier), IsAggregate = true, TokenName = FunctionToken, ChainPrecedence = 1, ServerSideOnly = true)]
 		public static IAggregateFunctionSelfContained<T> Min<T>(this Sql.ISqlExtension? ext, [ExprParameter] T expr, [SqlQueryDependent] Sql.AggregateModifier modifier)
-		{
-			throw new LinqToDBException($"'{nameof(Min)}' is server-side method.");
-		}
+			=> throw new ServerSideOnlyException(nameof(Min));
 
 		#endregion Min
 
-		[Sql.Extension("NTH_VALUE({expr}, {n})", TokenName = FunctionToken, ChainPrecedence = 1, IsWindowFunction = true)]
+		[Sql.Extension("NTH_VALUE({expr}, {n})", TokenName = FunctionToken, ChainPrecedence = 1, IsWindowFunction = true, ServerSideOnly = true)]
 		public static IAggregateFunctionSelfContained<T> NthValue<T>(this Sql.ISqlExtension? ext, [ExprParameter] T expr, [ExprParameter] long n)
-		{
-			throw new LinqToDBException($"'{nameof(NthValue)}' is server-side method.");
-		}
+			=> throw new ServerSideOnlyException(nameof(NthValue));
 
-		[Sql.Extension("NTH_VALUE({expr}, {n}){_}{from?}{_}{nulls?}", TokenName = FunctionToken, BuilderType = typeof(ApplyFromAndNullsModifier), ChainPrecedence = 1, IsWindowFunction = true)]
+		[Sql.Extension("NTH_VALUE({expr}, {n}){_}{from?}{_}{nulls?}", TokenName = FunctionToken, BuilderType = typeof(ApplyFromAndNullsModifier), ChainPrecedence = 1, IsWindowFunction = true, ServerSideOnly = true)]
 		public static IAggregateFunctionSelfContained<T> NthValue<T>(this Sql.ISqlExtension? ext, [ExprParameter] T expr, [ExprParameter] long n, [SqlQueryDependent] Sql.From from, [SqlQueryDependent] Sql.Nulls nulls)
-		{
-			throw new LinqToDBException($"'{nameof(NthValue)}' is server-side method.");
-		}
+			=> throw new ServerSideOnlyException(nameof(NthValue));
 
-		[Sql.Extension("NTILE({expr})", TokenName = FunctionToken, ChainPrecedence = 1, IsWindowFunction = true)]
+		[Sql.Extension("NTILE({expr})", TokenName = FunctionToken, ChainPrecedence = 1, IsWindowFunction = true, ServerSideOnly = true)]
 		public static IAnalyticFunctionWithoutWindow<T> NTile<T>(this Sql.ISqlExtension? ext, [ExprParameter] T expr)
-		{
-			throw new LinqToDBException($"'{nameof(NTile)}' is server-side method.");
-		}
+			=> throw new ServerSideOnlyException(nameof(NTile));
 
-		[Sql.Extension("PERCENT_RANK({expr, ', '}) {within_group}", TokenName = FunctionToken, ChainPrecedence = 1, IsWindowFunction = true)]
+		[Sql.Extension("PERCENT_RANK({expr, ', '}) {within_group}", TokenName = FunctionToken, ChainPrecedence = 1, IsWindowFunction = true, ServerSideOnly = true)]
 		public static INeedsWithinGroupWithOrderOnly<T> PercentRank<T>(this Sql.ISqlExtension? ext, [ExprParameter] params object?[] expr)
-		{
-			throw new LinqToDBException($"'{nameof(PercentRank)}' is server-side method.");
-		}
+			=> throw new ServerSideOnlyException(nameof(PercentRank));
 
-		[Sql.Extension("PERCENT_RANK()", TokenName = FunctionToken, ChainPrecedence = 1, IsWindowFunction = true)]
+		[Sql.Extension("PERCENT_RANK()", TokenName = FunctionToken, ChainPrecedence = 1, IsWindowFunction = true, ServerSideOnly = true)]
 		public static IAnalyticFunctionWithoutWindow<T> PercentRank<T>(this Sql.ISqlExtension? ext)
-		{
-			throw new LinqToDBException($"'{nameof(PercentRank)}' is server-side method.");
-		}
+			=> throw new ServerSideOnlyException(nameof(PercentRank));
 
-		[Sql.Extension("PERCENTILE_CONT({expr}) {within_group}", TokenName = FunctionToken, ChainPrecedence = 1, IsWindowFunction = true)]
+		[Sql.Extension("PERCENTILE_CONT({expr}) {within_group}", TokenName = FunctionToken, ChainPrecedence = 1, IsWindowFunction = true, ServerSideOnly = true)]
 		public static INeedsWithinGroupWithSingleOrderAndMaybePartition<T> PercentileCont<T>(this Sql.ISqlExtension? ext, [ExprParameter] object? expr)
-		{
-			throw new LinqToDBException($"'{nameof(PercentileCont)}' is server-side method.");
-		}
+			=> throw new ServerSideOnlyException(nameof(PercentileCont));
 
 		//TODO: check nulls support when ordering
-		[Sql.Extension("PERCENTILE_DISC({expr}) {within_group}", TokenName = FunctionToken, ChainPrecedence = 1, IsWindowFunction = true)]
+		[Sql.Extension("PERCENTILE_DISC({expr}) {within_group}", TokenName = FunctionToken, ChainPrecedence = 1, IsWindowFunction = true, ServerSideOnly = true)]
 		public static INeedsWithinGroupWithSingleOrderAndMaybePartition<T> PercentileDisc<T>(this Sql.ISqlExtension? ext, [ExprParameter] object? expr)
-		{
-			throw new LinqToDBException($"'{nameof(PercentileDisc)}' is server-side method.");
-		}
+			=> throw new ServerSideOnlyException(nameof(PercentileDisc));
 
-		[Sql.Extension("RANK({expr, ', '}) {within_group}", TokenName = FunctionToken, ChainPrecedence = 1, IsWindowFunction = true)]
+		[Sql.Extension("RANK({expr, ', '}) {within_group}", TokenName = FunctionToken, ChainPrecedence = 1, IsWindowFunction = true, ServerSideOnly = true)]
 		public static INeedsWithinGroupWithOrderOnly<long> Rank(this Sql.ISqlExtension? ext, [ExprParameter] params object?[] expr)
-		{
-			throw new LinqToDBException($"'{nameof(Rank)}' is server-side method.");
-		}
+			=> throw new ServerSideOnlyException(nameof(Rank));
 
-		[Sql.Extension("RANK()", TokenName = FunctionToken, ChainPrecedence = 1, IsWindowFunction = true)]
+		[Sql.Extension("RANK()", TokenName = FunctionToken, ChainPrecedence = 1, IsWindowFunction = true, ServerSideOnly = true)]
 		public static IAnalyticFunctionWithoutWindow<long> Rank(this Sql.ISqlExtension? ext)
-		{
-			throw new LinqToDBException($"'{nameof(Rank)}' is server-side method.");
-		}
+			=> throw new ServerSideOnlyException(nameof(Rank));
 
-		[Sql.Extension("RATIO_TO_REPORT({expr}) {over}", TokenName = FunctionToken, ChainPrecedence = 1, IsWindowFunction = true)]
+		[Sql.Extension("RATIO_TO_REPORT({expr}) {over}", TokenName = FunctionToken, ChainPrecedence = 1, IsWindowFunction = true, ServerSideOnly = true)]
 		public static IOverWithPartitionNeeded<TR> RatioToReport<TR>(this Sql.ISqlExtension? ext, [ExprParameter] object? expr)
-		{
-			throw new LinqToDBException($"'{nameof(RatioToReport)}' is server-side method.");
-		}
+			=> throw new ServerSideOnlyException(nameof(RatioToReport));
 
 		#region REGR_ function
 
-		[Sql.Extension("REGR_SLOPE({expr1}, {expr2})", TokenName = FunctionToken, ChainPrecedence = 1, IsWindowFunction = true)]
+		[Sql.Extension("REGR_SLOPE({expr1}, {expr2})", TokenName = FunctionToken, ChainPrecedence = 1, IsWindowFunction = true, ServerSideOnly = true)]
 		public static IAggregateFunctionSelfContained<T> RegrSlope<T>(this Sql.ISqlExtension? ext, [ExprParameter] object? expr1, [ExprParameter] object? expr2)
-		{
-			throw new LinqToDBException($"'{nameof(RegrSlope)}' is server-side method.");
-		}
+			=> throw new ServerSideOnlyException(nameof(RegrSlope));
 
-		[Sql.Extension("REGR_INTERCEPT({expr1}, {expr2})", TokenName = FunctionToken, ChainPrecedence = 1, IsWindowFunction = true)]
+		[Sql.Extension("REGR_INTERCEPT({expr1}, {expr2})", TokenName = FunctionToken, ChainPrecedence = 1, IsWindowFunction = true, ServerSideOnly = true)]
 		public static IAggregateFunctionSelfContained<T> RegrIntercept<T>(this Sql.ISqlExtension? ext, [ExprParameter] object? expr1, [ExprParameter] object? expr2)
-		{
-			throw new LinqToDBException($"'{nameof(RegrIntercept)}' is server-side method.");
-		}
+			=> throw new ServerSideOnlyException(nameof(RegrIntercept));
 
-		[Sql.Extension("REGR_COUNT({expr1}, {expr2})", TokenName = FunctionToken, ChainPrecedence = 1, IsWindowFunction = true)]
+		[Sql.Extension("REGR_COUNT({expr1}, {expr2})", TokenName = FunctionToken, ChainPrecedence = 1, IsWindowFunction = true, ServerSideOnly = true)]
 		public static IAggregateFunctionSelfContained<long> RegrCount(this Sql.ISqlExtension? ext, [ExprParameter] object? expr1, [ExprParameter] object? expr2)
-		{
-			throw new LinqToDBException($"'{nameof(RegrCount)}' is server-side method.");
-		}
+			=> throw new ServerSideOnlyException(nameof(RegrCount));
 
-		[Sql.Extension("REGR_R2({expr1}, {expr2})", TokenName = FunctionToken, ChainPrecedence = 1, IsWindowFunction = true)]
+		[Sql.Extension("REGR_R2({expr1}, {expr2})", TokenName = FunctionToken, ChainPrecedence = 1, IsWindowFunction = true, ServerSideOnly = true)]
 		public static IAggregateFunctionSelfContained<T> RegrR2<T>(this Sql.ISqlExtension? ext, [ExprParameter] object? expr1, [ExprParameter] object? expr2)
-		{
-			throw new LinqToDBException($"'{nameof(RegrR2)}' is server-side method.");
-		}
+			=> throw new ServerSideOnlyException(nameof(RegrR2));
 
-		[Sql.Extension("REGR_AVGX({expr1}, {expr2})", TokenName = FunctionToken, ChainPrecedence = 1, IsWindowFunction = true)]
+		[Sql.Extension("REGR_AVGX({expr1}, {expr2})", TokenName = FunctionToken, ChainPrecedence = 1, IsWindowFunction = true, ServerSideOnly = true)]
 		public static IAggregateFunctionSelfContained<T> RegrAvgX<T>(this Sql.ISqlExtension? ext, [ExprParameter] object? expr1, [ExprParameter] object? expr2)
-		{
-			throw new LinqToDBException($"'{nameof(RegrAvgX)}' is server-side method.");
-		}
+			=> throw new ServerSideOnlyException(nameof(RegrAvgX));
 
-		[Sql.Extension("REGR_AVGY({expr1}, {expr2})", TokenName = FunctionToken, ChainPrecedence = 1, IsWindowFunction = true)]
+		[Sql.Extension("REGR_AVGY({expr1}, {expr2})", TokenName = FunctionToken, ChainPrecedence = 1, IsWindowFunction = true, ServerSideOnly = true)]
 		public static IAggregateFunctionSelfContained<T> RegrAvgY<T>(this Sql.ISqlExtension? ext, [ExprParameter] object? expr1, [ExprParameter] object? expr2)
-		{
-			throw new LinqToDBException($"'{nameof(RegrAvgY)}' is server-side method.");
-		}
+			=> throw new ServerSideOnlyException(nameof(RegrAvgY));
 
 		// ReSharper disable once InconsistentNaming
-		[Sql.Extension("REGR_SXX({expr1}, {expr2})", TokenName = FunctionToken, ChainPrecedence = 1, IsWindowFunction = true)]
+		[Sql.Extension("REGR_SXX({expr1}, {expr2})", TokenName = FunctionToken, ChainPrecedence = 1, IsWindowFunction = true, ServerSideOnly = true)]
 		public static IAggregateFunctionSelfContained<T> RegrSXX<T>(this Sql.ISqlExtension? ext, [ExprParameter] object? expr1, [ExprParameter] object? expr2)
-		{
-			throw new LinqToDBException($"'{nameof(RegrSXX)}' is server-side method.");
-		}
+			=> throw new ServerSideOnlyException(nameof(RegrSXX));
 
 		// ReSharper disable once InconsistentNaming
-		[Sql.Extension("REGR_SYY({expr1}, {expr2})", TokenName = FunctionToken, ChainPrecedence = 1, IsWindowFunction = true)]
+		[Sql.Extension("REGR_SYY({expr1}, {expr2})", TokenName = FunctionToken, ChainPrecedence = 1, IsWindowFunction = true, ServerSideOnly = true)]
 		public static IAggregateFunctionSelfContained<T> RegrSYY<T>(this Sql.ISqlExtension? ext, [ExprParameter] object? expr1, [ExprParameter] object? expr2)
-		{
-			throw new LinqToDBException($"'{nameof(RegrSYY)}' is server-side method.");
-		}
+			=> throw new ServerSideOnlyException(nameof(RegrSYY));
 
 		// ReSharper disable once InconsistentNaming
-		[Sql.Extension("REGR_SXY({expr1}, {expr2})", TokenName = FunctionToken, ChainPrecedence = 1, IsWindowFunction = true)]
+		[Sql.Extension("REGR_SXY({expr1}, {expr2})", TokenName = FunctionToken, ChainPrecedence = 1, IsWindowFunction = true, ServerSideOnly = true)]
 		public static IAggregateFunctionSelfContained<T> RegrSXY<T>(this Sql.ISqlExtension? ext, [ExprParameter] object? expr1, [ExprParameter] object? expr2)
-		{
-			throw new LinqToDBException($"'{nameof(RegrSXY)}' is server-side method.");
-		}
+			=> throw new ServerSideOnlyException(nameof(RegrSXY));
 
 		#endregion
 
-		[Sql.Extension("ROW_NUMBER()", TokenName = FunctionToken, ChainPrecedence = 1, IsWindowFunction = true, CanBeNull = false)]
+		[Sql.Extension("ROW_NUMBER()", TokenName = FunctionToken, ChainPrecedence = 1, IsWindowFunction = true, CanBeNull = false, ServerSideOnly = true)]
 		public static IAnalyticFunctionWithoutWindow<long> RowNumber(this Sql.ISqlExtension? ext)
-		{
-			throw new LinqToDBException($"'{nameof(RowNumber)}' is server-side method.");
-		}
+			=> throw new ServerSideOnlyException(nameof(RowNumber));
 
 		#region StdDev
 
-		[Sql.Extension(              "STDEV({expr})",  TokenName = FunctionToken, ChainPrecedence = 0, IsWindowFunction = true)]
-		[Sql.Extension(PN.Oracle,    "STDDEV({expr})", TokenName = FunctionToken, ChainPrecedence = 0, IsWindowFunction = true)]
+		[Sql.Extension(              "STDEV({expr})",  TokenName = FunctionToken, ChainPrecedence = 0, IsWindowFunction = true, ServerSideOnly = true)]
+		[Sql.Extension(PN.Oracle,    "STDDEV({expr})", TokenName = FunctionToken, ChainPrecedence = 0, IsWindowFunction = true, ServerSideOnly = true)]
 		public static double? StdDev<TEntity, TV>(this IEnumerable<TEntity> source, [ExprParameter] Func<TEntity, TV> expr)
-		{
-			throw new LinqToDBException($"'{nameof(StdDev)}' is server-side method.");
-		}
+			=> throw new ServerSideOnlyException(nameof(StdDev));
 
-		[Sql.Extension(              "STDEV({modifier?}{_}{expr})",  TokenName = FunctionToken, BuilderType = typeof(ApplyAggregateModifier), ChainPrecedence = 0, IsWindowFunction = true)]
-		[Sql.Extension(PN.Oracle,    "STDDEV({modifier?}{_}{expr})", TokenName = FunctionToken, BuilderType = typeof(ApplyAggregateModifier), ChainPrecedence = 0, IsWindowFunction = true)]
+		[Sql.Extension(              "STDEV({modifier?}{_}{expr})",  TokenName = FunctionToken, BuilderType = typeof(ApplyAggregateModifier), ChainPrecedence = 0, IsWindowFunction = true, ServerSideOnly = true)]
+		[Sql.Extension(PN.Oracle,    "STDDEV({modifier?}{_}{expr})", TokenName = FunctionToken, BuilderType = typeof(ApplyAggregateModifier), ChainPrecedence = 0, IsWindowFunction = true, ServerSideOnly = true)]
 		public static double? StdDev<TEntity, TV>(this IEnumerable<TEntity> source, [ExprParameter] Func<TEntity, TV> expr, [SqlQueryDependent] Sql.AggregateModifier modifier)
-		{
-			throw new LinqToDBException($"'{nameof(StdDev)}' is server-side method.");
-		}
+			=> throw new ServerSideOnlyException(nameof(StdDev));
 
 		[Sql.Extension(              "STDEV({modifier?}{_}{expr})",  TokenName = FunctionToken, BuilderType = typeof(ApplyAggregateModifier), ChainPrecedence = 0, IsWindowFunction = true)]
 		[Sql.Extension(PN.Oracle,    "STDDEV({modifier?}{_}{expr})", TokenName = FunctionToken, BuilderType = typeof(ApplyAggregateModifier), ChainPrecedence = 0, IsWindowFunction = true)]
@@ -1075,29 +939,23 @@ namespace LinqToDB
 					currentSource.Expression, Expression.Quote(expr), Expression.Constant(modifier)));
 		}
 
-		[Sql.Extension(              "STDEV({expr})",  TokenName = FunctionToken, ChainPrecedence = 1, IsWindowFunction = true)]
-		[Sql.Extension(PN.Oracle,    "STDDEV({expr})", TokenName = FunctionToken, ChainPrecedence = 1, IsWindowFunction = true)]
+		[Sql.Extension(              "STDEV({expr})",  TokenName = FunctionToken, ChainPrecedence = 1, IsWindowFunction = true, ServerSideOnly = true)]
+		[Sql.Extension(PN.Oracle,    "STDDEV({expr})", TokenName = FunctionToken, ChainPrecedence = 1, IsWindowFunction = true, ServerSideOnly = true)]
 		public static IAggregateFunctionSelfContained<T> StdDev<T>(this Sql.ISqlExtension? ext, [ExprParameter] object? expr)
-		{
-			throw new LinqToDBException($"'{nameof(StdDev)}' is server-side method.");
-		}
+			=> throw new ServerSideOnlyException(nameof(StdDev));
 
-		[Sql.Extension(              "STDEV({modifier?}{_}{expr})",  TokenName = FunctionToken, BuilderType = typeof(ApplyAggregateModifier), ChainPrecedence = 1, IsWindowFunction = true)]
-		[Sql.Extension(PN.Oracle,    "STDDEV({modifier?}{_}{expr})", TokenName = FunctionToken, BuilderType = typeof(ApplyAggregateModifier), ChainPrecedence = 1, IsWindowFunction = true)]
+		[Sql.Extension(              "STDEV({modifier?}{_}{expr})",  TokenName = FunctionToken, BuilderType = typeof(ApplyAggregateModifier), ChainPrecedence = 1, IsWindowFunction = true, ServerSideOnly = true)]
+		[Sql.Extension(PN.Oracle,    "STDDEV({modifier?}{_}{expr})", TokenName = FunctionToken, BuilderType = typeof(ApplyAggregateModifier), ChainPrecedence = 1, IsWindowFunction = true, ServerSideOnly = true)]
 		public static IAggregateFunctionSelfContained<T> StdDev<T>(this Sql.ISqlExtension? ext, [ExprParameter] object? expr, [SqlQueryDependent] Sql.AggregateModifier modifier)
-		{
-			throw new LinqToDBException($"'{nameof(StdDev)}' is server-side method.");
-		}
+			=> throw new ServerSideOnlyException(nameof(StdDev));
 
 		#endregion StdDev
 
 		#region StdDevPop
 
-		[Sql.Extension("STDDEV_POP({expr})", IsWindowFunction = true, ChainPrecedence = 0)]
+		[Sql.Extension("STDDEV_POP({expr})", IsWindowFunction = true, ChainPrecedence = 0, ServerSideOnly = true)]
 		public static decimal StdDevPop<TEntity, TV>(this IEnumerable<TEntity> source, [ExprParameter] Func<TEntity, TV> expr)
-		{
-			throw new LinqToDBException($"'{nameof(StdDevPop)}' is server-side method.");
-		}
+			=> throw new ServerSideOnlyException(nameof(StdDevPop));
 
 		[Sql.Extension("STDDEV_POP({expr})", IsWindowFunction = true, ChainPrecedence = 0)]
 		public static decimal StdDevPop<TEntity, TV>(this IQueryable<TEntity> source, [ExprParameter] Expression<Func<TEntity, TV>> expr)
@@ -1114,21 +972,17 @@ namespace LinqToDB
 					currentSource.Expression, Expression.Quote(expr)));
 		}
 
-		[Sql.Extension("STDDEV_POP({expr})", TokenName = FunctionToken, ChainPrecedence = 1, IsWindowFunction = true)]
+		[Sql.Extension("STDDEV_POP({expr})", TokenName = FunctionToken, ChainPrecedence = 1, IsWindowFunction = true, ServerSideOnly = true)]
 		public static IAggregateFunctionSelfContained<T> StdDevPop<T>(this Sql.ISqlExtension? ext, [ExprParameter] object? expr)
-		{
-			throw new LinqToDBException($"'{nameof(StdDevPop)}' is server-side method.");
-		}
+			=> throw new ServerSideOnlyException(nameof(StdDevPop));
 
 		#endregion StdDevPop
 
 		#region StdDevSamp
 
-		[Sql.Extension("STDDEV_SAMP({expr})", IsWindowFunction = true, ChainPrecedence = 0)]
+		[Sql.Extension("STDDEV_SAMP({expr})", IsWindowFunction = true, ChainPrecedence = 0, ServerSideOnly = true)]
 		public static decimal? StdDevSamp<TEntity, TV>(this IEnumerable<TEntity> source, [ExprParameter] Func<TEntity, TV> expr)
-		{
-			throw new LinqToDBException($"'{nameof(StdDevSamp)}' is server-side method.");
-		}
+			=> throw new ServerSideOnlyException(nameof(StdDevSamp));
 
 		[Sql.Extension("STDDEV_SAMP({expr})", IsWindowFunction = true, ChainPrecedence = 0)]
 		public static decimal? StdDevSamp<TEntity, TV>(this IQueryable<TEntity> source, [ExprParameter] Expression<Func<TEntity, TV>> expr)
@@ -1145,33 +999,25 @@ namespace LinqToDB
 					currentSource.Expression, Expression.Quote(expr)));
 		}
 
-		[Sql.Extension("STDDEV_SAMP({expr})", TokenName = FunctionToken, ChainPrecedence = 1, IsWindowFunction = true)]
+		[Sql.Extension("STDDEV_SAMP({expr})", TokenName = FunctionToken, ChainPrecedence = 1, IsWindowFunction = true, ServerSideOnly = true)]
 		public static IAggregateFunctionSelfContained<T> StdDevSamp<T>(this Sql.ISqlExtension? ext, [ExprParameter] object? expr)
-		{
-			throw new LinqToDBException($"'{nameof(StdDevSamp)}' is server-side method.");
-		}
+			=> throw new ServerSideOnlyException(nameof(StdDevSamp));
 
 		#endregion StdDevSamp
 
-		[Sql.Extension("SUM({expr})", TokenName = FunctionToken, ChainPrecedence = 1, IsAggregate = true)]
+		[Sql.Extension("SUM({expr})", TokenName = FunctionToken, ChainPrecedence = 1, IsAggregate = true, ServerSideOnly = true)]
 		public static IAggregateFunctionSelfContained<T> Sum<T>(this Sql.ISqlExtension? ext, [ExprParameter] T expr)
-		{
-			throw new LinqToDBException($"'{nameof(Sum)}' is server-side method.");
-		}
+			=> throw new ServerSideOnlyException(nameof(Sum));
 
-		[Sql.Extension("SUM({modifier?}{_}{expr})" , BuilderType = typeof(ApplyAggregateModifier), TokenName = FunctionToken, ChainPrecedence = 1, IsAggregate = true)]
+		[Sql.Extension("SUM({modifier?}{_}{expr})" , BuilderType = typeof(ApplyAggregateModifier), TokenName = FunctionToken, ChainPrecedence = 1, IsAggregate = true, ServerSideOnly = true)]
 		public static IAggregateFunctionSelfContained<T> Sum<T>(this Sql.ISqlExtension? ext, [ExprParameter] T expr, [SqlQueryDependent] Sql.AggregateModifier modifier)
-		{
-			throw new LinqToDBException($"'{nameof(Sum)}' is server-side method.");
-		}
+			=> throw new ServerSideOnlyException(nameof(Sum));
 
 		#region VarPop
 
-		[Sql.Extension("VAR_POP({expr})", IsWindowFunction = true, ChainPrecedence = 0)]
+		[Sql.Extension("VAR_POP({expr})", IsWindowFunction = true, ChainPrecedence = 0, ServerSideOnly = true)]
 		public static decimal VarPop<TEntity, TV>(this IEnumerable<TEntity> source, [ExprParameter] Func<TEntity, TV> expr)
-		{
-			throw new LinqToDBException($"'{nameof(VarPop)}' is server-side method.");
-		}
+			=> throw new ServerSideOnlyException(nameof(VarPop));
 
 		[Sql.Extension("VAR_POP({expr})", IsWindowFunction = true, ChainPrecedence = 0)]
 		public static decimal VarPop<TEntity, TV>(this IQueryable<TEntity> source, [ExprParameter] Expression<Func<TEntity, TV>> expr)
@@ -1188,21 +1034,17 @@ namespace LinqToDB
 					currentSource.Expression, Expression.Quote(expr)));
 		}
 
-		[Sql.Extension("VAR_POP({expr})", TokenName = FunctionToken, ChainPrecedence = 1, IsWindowFunction = true)]
+		[Sql.Extension("VAR_POP({expr})", TokenName = FunctionToken, ChainPrecedence = 1, IsWindowFunction = true, ServerSideOnly = true)]
 		public static IAggregateFunctionSelfContained<T> VarPop<T>(this Sql.ISqlExtension? ext, [ExprParameter] object? expr)
-		{
-			throw new LinqToDBException($"'{nameof(VarPop)}' is server-side method.");
-		}
+			=> throw new ServerSideOnlyException(nameof(VarPop));
 
 		#endregion VarPop
 
 		#region VarSamp
 
-		[Sql.Extension("VAR_SAMP({expr})", IsWindowFunction = true, ChainPrecedence = 0)]
+		[Sql.Extension("VAR_SAMP({expr})", IsWindowFunction = true, ChainPrecedence = 0, ServerSideOnly = true)]
 		public static decimal? VarSamp<TEntity, TV>(this IEnumerable<TEntity> source, [ExprParameter] Func<TEntity, TV> expr)
-		{
-			throw new LinqToDBException($"'{nameof(VarSamp)}' is server-side method.");
-		}
+			=> throw new ServerSideOnlyException(nameof(VarSamp));
 
 		[Sql.Extension("VAR_SAMP({expr})", IsWindowFunction = true, ChainPrecedence = 0)]
 		public static decimal? VarSamp<TEntity, TV>(this IQueryable<TEntity> source, [ExprParameter] Expression<Func<TEntity, TV>> expr)
@@ -1219,27 +1061,21 @@ namespace LinqToDB
 					currentSource.Expression, Expression.Quote(expr)));
 		}
 
-		[Sql.Extension("VAR_SAMP({expr})", TokenName = FunctionToken, ChainPrecedence = 1, IsWindowFunction = true)]
+		[Sql.Extension("VAR_SAMP({expr})", TokenName = FunctionToken, ChainPrecedence = 1, IsWindowFunction = true, ServerSideOnly = true)]
 		public static IAggregateFunctionSelfContained<T> VarSamp<T>(this Sql.ISqlExtension? ext, [ExprParameter] object? expr)
-		{
-			throw new LinqToDBException($"'{nameof(VarSamp)}' is server-side method.");
-		}
+			=> throw new ServerSideOnlyException(nameof(VarSamp));
 
 		#endregion VarSamp
 
 		#region Variance
 
-		[Sql.Extension("VARIANCE({expr})", IsWindowFunction = true, ChainPrecedence = 0)]
+		[Sql.Extension("VARIANCE({expr})", IsWindowFunction = true, ChainPrecedence = 0, ServerSideOnly = true)]
 		public static TV Variance<TEntity, TV>(this IEnumerable<TEntity> source, [ExprParameter] Func<TEntity, TV> expr)
-		{
-			throw new LinqToDBException($"'{nameof(Variance)}' is server-side method.");
-		}
+			=> throw new ServerSideOnlyException(nameof(Variance));
 
-		[Sql.Extension("VARIANCE({modifier?}{_}{expr})", BuilderType = typeof(ApplyAggregateModifier), IsWindowFunction = true, ChainPrecedence = 0)]
+		[Sql.Extension("VARIANCE({modifier?}{_}{expr})", BuilderType = typeof(ApplyAggregateModifier), IsWindowFunction = true, ChainPrecedence = 0, ServerSideOnly = true)]
 		public static TV Variance<TEntity, TV>(this IEnumerable<TEntity> source, [ExprParameter] Func<TEntity, TV> expr, [SqlQueryDependent] Sql.AggregateModifier modifier)
-		{
-			throw new LinqToDBException($"'{nameof(Variance)}' is server-side method.");
-		}
+			=> throw new ServerSideOnlyException(nameof(Variance));
 
 		[Sql.Extension("VARIANCE({modifier?}{_}{expr})", BuilderType = typeof(ApplyAggregateModifier), IsWindowFunction = true, ChainPrecedence = 0)]
 		public static TV Variance<TEntity, TV>(this IQueryable<TEntity> source, [ExprParameter] Expression<Func<TEntity, TV>> expr, [SqlQueryDependent] Sql.AggregateModifier modifier = Sql.AggregateModifier.None)
@@ -1256,31 +1092,23 @@ namespace LinqToDB
 					currentSource.Expression, Expression.Quote(expr), Expression.Constant(modifier)));
 		}
 
-		[Sql.Extension("VARIANCE({expr})", TokenName = FunctionToken, ChainPrecedence = 1, IsWindowFunction = true)]
+		[Sql.Extension("VARIANCE({expr})", TokenName = FunctionToken, ChainPrecedence = 1, IsWindowFunction = true, ServerSideOnly = true)]
 		public static IAggregateFunctionSelfContained<T> Variance<T>(this Sql.ISqlExtension? ext, [ExprParameter] object? expr)
-		{
-			throw new LinqToDBException($"'{nameof(Variance)}' is server-side method.");
-		}
+			=> throw new ServerSideOnlyException(nameof(Variance));
 
-		[Sql.Extension("VARIANCE({modifier?}{_}{expr})", BuilderType = typeof(ApplyAggregateModifier), TokenName = FunctionToken, ChainPrecedence = 1, IsWindowFunction = true)]
+		[Sql.Extension("VARIANCE({modifier?}{_}{expr})", BuilderType = typeof(ApplyAggregateModifier), TokenName = FunctionToken, ChainPrecedence = 1, IsWindowFunction = true, ServerSideOnly = true)]
 		public static IAggregateFunctionSelfContained<T> Variance<T>(this Sql.ISqlExtension? ext, [ExprParameter] object? expr, [SqlQueryDependent] Sql.AggregateModifier modifier)
-		{
-			throw new LinqToDBException($"'{nameof(Variance)}' is server-side method.");
-		}
+			=> throw new ServerSideOnlyException(nameof(Variance));
 
 		#endregion
 
-		[Sql.Extension("{function} KEEP (DENSE_RANK FIRST {order_by_clause}){_}{over?}", ChainPrecedence = 10, IsWindowFunction = true)]
+		[Sql.Extension("{function} KEEP (DENSE_RANK FIRST {order_by_clause}){_}{over?}", ChainPrecedence = 10, IsWindowFunction = true, ServerSideOnly = true)]
 		public static INeedOrderByAndMaybeOverWithPartition<TR> KeepFirst<TR>(this IAggregateFunction<TR> ext)
-		{
-			throw new LinqToDBException($"'{nameof(KeepFirst)}' is server-side method.");
-		}
+			=> throw new ServerSideOnlyException(nameof(KeepFirst));
 
-		[Sql.Extension("{function} KEEP (DENSE_RANK LAST {order_by_clause}){_}{over?}", ChainPrecedence = 10, IsWindowFunction = true)]
+		[Sql.Extension("{function} KEEP (DENSE_RANK LAST {order_by_clause}){_}{over?}", ChainPrecedence = 10, IsWindowFunction = true, ServerSideOnly = true)]
 		public static INeedOrderByAndMaybeOverWithPartition<TR> KeepLast<TR>(this IAggregateFunction<TR> ext)
-		{
-			throw new LinqToDBException($"'{nameof(KeepLast)}' is server-side method.");
-		}
+			=> throw new ServerSideOnlyException(nameof(KeepLast));
 
 		#endregion Analytic functions
 	}

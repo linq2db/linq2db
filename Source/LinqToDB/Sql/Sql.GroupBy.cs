@@ -20,25 +20,19 @@ namespace LinqToDB
 			public bool None => true;
 
 			public T Rollup<T>(T rollupKey)
-			{
-				throw new LinqToDBException($"'{nameof(Rollup)}' should not be called directly.");
-			}
+				=> throw new ServerSideOnlyException(nameof(Rollup));
 
 			public T Cube<T>(T cubeKey)
-			{
-				throw new LinqToDBException($"'{nameof(Cube)}' should not be called directly.");
-			}
+				=> throw new ServerSideOnlyException(nameof(Cube));
 
 			public T GroupingSets<T>(T setsExpression)
-			{
-				throw new LinqToDBException($"'{nameof(GroupingSets)}' should not be called directly.");
-			}
+				=> throw new ServerSideOnlyException(nameof(GroupingSets));
 		}
 
 		public static IGroupBy GroupBy = new GroupByImpl();
 
 		[Extension("GROUPING({fields, ', '})", ServerSideOnly = true, CanBeNull = false, IsAggregate = true)]
 		public static int Grouping([ExprParameter(ParameterKind = ExprParameterKind.Values)] params object[] fields)
-			=> throw new LinqToDBException($"'{nameof(Grouping)}' should not be called directly.");
+			=> throw new ServerSideOnlyException(nameof(Grouping));
 	}
 }

@@ -505,16 +505,12 @@ namespace Tests.Linq
 		[Sql.Extension(typeof(CompositeKeyEqualsExtensionBuilder), IsPredicate = true, ServerSideOnly = true)]
 		static bool KeyEquals<TKey>(IKeyProvider<TKey> entity, TKey value)
 			where TKey : notnull
-		{
-			throw new LinqToDBException($"{nameof(KeyEquals)} is not intended to be used directly");
-		}
+			=> throw new ServerSideOnlyException(nameof(KeyEquals));
 
 		[Sql.Extension(typeof(CompositeKeyEqualsExtensionBuilder), IsPredicate = true, ServerSideOnly = true)]
 		static bool KeysEquals<TKey>(IKeyProvider<TKey> entity, TKey[] values)
 			where TKey : notnull
-		{
-			throw new LinqToDBException($"{nameof(KeysEquals)} is not intended to be used directly");
-		}
+			=> throw new ServerSideOnlyException(nameof(KeyEquals));
 
 		class CompositeKeyEqualsExtensionBuilder : Sql.IExtensionCallBuilder
 		{
