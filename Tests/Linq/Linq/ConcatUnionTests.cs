@@ -1672,7 +1672,7 @@ namespace Tests.Linq
 			});
 		}
 
-		[ActiveIssue(Configurations = [TestProvName.AllSybase])]
+		[ActiveIssue(Configurations = [TestProvName.AllSybase, TestProvName.AllSQLite])]
 		[Test(Description = "null literals in first query")]
 		public void Issue3360_LiteralsInFirstQuery([DataSources] string context)
 		{

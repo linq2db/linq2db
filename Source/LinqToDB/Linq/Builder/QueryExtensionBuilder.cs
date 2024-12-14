@@ -6,6 +6,7 @@ using System.Linq.Expressions;
 namespace LinqToDB.Linq.Builder
 {
 	using LinqToDB.Expressions;
+	using Extensions;
 	using SqlQuery;
 
 	[BuildsExpression(ExpressionType.Call)]
@@ -98,7 +99,13 @@ namespace LinqToDB.Linq.Builder
 					}
 					else
 					{
-						var converted = builder.BuildSqlExpression(sequence, data.Expression);
+						//TODO: These QueryExtensions needs tp be rewritten completely. Workaround over DateTime.
+
+						var isQueryDepended = data.Parameter.GetAttributes<SqlQueryDependentAttribute>().Length > 0;
+
+						var additionalFlags = isQueryDepended ? BuildFlags.None : BuildFlags.ForceParameter;
+
+						var converted = builder.BuildSqlExpression(sequence, data.Expression, BuildPurpose.Sql, buildFlags : additionalFlags);
 
 						if (converted is SqlPlaceholderExpression placeholder)
 							data.SqlExpression = placeholder.Sql;

@@ -341,7 +341,7 @@ namespace LinqToDB.Linq.Builder
 			{
 				return false;
 			}
-			return _optimizationContext.CanBeConstant(expr);
+			return _optimizationContext.IsImmutable(expr);
 		}
 
 		#endregion

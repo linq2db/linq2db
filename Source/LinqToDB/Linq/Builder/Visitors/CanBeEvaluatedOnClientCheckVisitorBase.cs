@@ -138,6 +138,17 @@ namespace LinqToDB.Linq.Builder.Visitors
 			return node;
 		}
 
+		protected override Expression VisitDefault(DefaultExpression node)
+		{
+			if (node.Type == typeof(void))
+			{
+				CanBeEvaluated = false;
+				return node;
+			}
+
+			return base.VisitDefault(node);
+		}
+
 		protected override Expression VisitParameter(ParameterExpression node)
 		{
 			var isAllowed = false;

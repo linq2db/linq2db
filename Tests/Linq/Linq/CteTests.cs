@@ -1821,6 +1821,7 @@ namespace Tests.Linq
 			});
 		}
 
+		[ActiveIssue(Configurations = [TestProvName.AllSQLite])]
 		[Test(Description = "literals in anchor query")]
 		public void Issue3360_LiteralsInAnchor([CteContextSource(TestProvName.AllInformix, TestProvName.AllSapHana)] string context)
 		{

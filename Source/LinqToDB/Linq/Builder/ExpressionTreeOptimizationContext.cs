@@ -1,15 +1,16 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Reflection;
 using System.Runtime.CompilerServices;
 
 namespace LinqToDB.Linq.Builder
 {
+	using Common.Internal;
 	using Extensions;
 	using LinqToDB.Expressions;
-	using LinqToDB.Expressions.ExpressionVisitors;
-	using Common.Internal;
 	using Mapping;
 	using Visitors;
 
@@ -22,28 +23,6 @@ namespace LinqToDB.Linq.Builder
 		{
 			DataContext = dataContext;
 			MappingSchema = dataContext.MappingSchema;
-		}
-
-		private EqualsToVisitor.EqualsToInfo? _equalsToContextFalse;
-		private EqualsToVisitor.EqualsToInfo? _equalsToContextTrue;
-		internal EqualsToVisitor.EqualsToInfo GetSimpleEqualsToContext(bool compareConstantValues)
-		{
-			if (compareConstantValues)
-			{
-				if (_equalsToContextTrue == null)
-					_equalsToContextTrue = EqualsToVisitor.PrepareEqualsInfo(DataContext, compareConstantValues : compareConstantValues);
-				else
-					_equalsToContextTrue.Reset();
-				return _equalsToContextTrue;
-			}
-			else
-			{
-				if (_equalsToContextFalse == null)
-					_equalsToContextFalse = EqualsToVisitor.PrepareEqualsInfo(DataContext, compareConstantValues : compareConstantValues);
-				else
-					_equalsToContextFalse.Reset();
-				return _equalsToContextFalse;
-			}
 		}
 
 		#region IsServerSideOnly
@@ -259,93 +238,148 @@ namespace LinqToDB.Linq.Builder
 		Expression? _lastExpr1;
 		bool        _lastResult1;
 
-		private FindVisitor<ExpressionTreeOptimizationContext>? _canBeConstantVisitor;
-		public bool CanBeConstant(Expression expr)
+		static readonly ObjectPool<IsImmutableVisitor> _isImmutableVisitorPool = new(() => new IsImmutableVisitor(), v => v.Cleanup(), 100);
+
+		class IsImmutableVisitor : ExpressionVisitorBase
+		{
+			bool IsImmutable { get; set; }
+
+			public bool CanBeImmutable(Expression expression)
+			{
+				IsImmutable = true;
+				Visit(expression);
+				return IsImmutable;
+			}
+
+			[return : NotNullIfNotNull(nameof(node))]
+			public override Expression? Visit(Expression? node)
+			{
+				if (!IsImmutable)
+					return node;
+
+				return base.Visit(node);
+			}
+
+			static bool IsReadOnlyProperty(PropertyInfo property)
+			{
+				var setMethod = property.SetMethod;
+				if (setMethod != null)
+				{
+					// Check if the SetMethod is init-only
+					return setMethod.ReturnParameter.GetRequiredCustomModifiers().Contains(typeof(IsExternalInit));
+				}
+
+#if NET6_0_OR_GREATER
+				// Check if the property belongs to a readonly struct and is not modifying state
+				if (property.DeclaringType?.IsValueType == true &&
+				    property.DeclaringType.IsDefined(typeof(IsReadOnlyAttribute), false))
+				{
+					return true;
+				}
+#endif
+				return false;
+			}
+
+			static bool IsReadOnlyMethod(MethodInfo method)
+			{
+				// Check if the method is marked with [IsReadOnly] (for .NET 5+)
+#if NET6_0_OR_GREATER
+				if (method.GetAttributes<IsReadOnlyAttribute>().Length > 0)
+				{
+					return true;
+				}
+
+				// Check if the method belongs to a readonly struct and is not modifying state
+				if (method.DeclaringType?.IsValueType == true &&
+				    method.DeclaringType.IsDefined(typeof(IsReadOnlyAttribute), false))
+				{
+					// Instance methods in readonly structs are implicitly read-only
+					if (!method.IsStatic && method.Name != ".ctor")
+					{
+						return true;
+					}
+				}
+#endif
+				return false;
+			}
+
+			protected override Expression VisitMethodCall(MethodCallExpression node)
+			{
+				if (IsReadOnlyMethod(node.Method))
+					return base.VisitMethodCall(node);
+
+				// we cannot predict the result of method call
+				IsImmutable = false;
+				return node;
+			}
+
+			protected override Expression VisitMember(MemberExpression node)
+			{
+				if (node.Expression is null)
+				{
+					if (node.Member is FieldInfo { IsStatic: true, IsInitOnly: true })
+					{
+						return node;
+					}
+
+					if (node.Member is PropertyInfo property && IsReadOnlyProperty(property))
+					{
+						return node;
+					}
+
+					IsImmutable = false;
+				}
+				else
+				{
+					if (node.Expression is not ConstantExpression)
+						return base.VisitMember(node);
+
+					IsImmutable = false;
+				}
+
+				return node;
+			}
+
+			public override Expression VisitSqlQueryRootExpression(SqlQueryRootExpression node)
+			{
+				IsImmutable = false;
+				return node;
+			}
+
+			public override Expression VisitSqlPlaceholderExpression(SqlPlaceholderExpression node)
+			{
+				IsImmutable = false;
+				return node;
+			}
+
+			protected override Expression VisitParameter(ParameterExpression node)
+			{
+				if (node == ExpressionBuilder.ParametersParam || node == ExpressionBuilder.QueryExpressionContainerParam)
+				{
+					IsImmutable = false;
+					return node;
+				}
+
+				return node;
+			}
+
+			public override void Cleanup()
+			{
+				IsImmutable = true;
+			}
+		}
+
+		public bool IsImmutable(Expression expr)
 		{
 			if (_lastExpr1 == expr)
 				return _lastResult1;
 
-			var result = null == (_canBeConstantFindVisitor ??= FindVisitor<ExpressionTreeOptimizationContext>.Create(this, static (ctx, e) => ctx.CanBeConstantFind(e))).Find(expr);
+			using var visitor = _isImmutableVisitorPool.Allocate();
+
+			var result = visitor.Value.CanBeImmutable(expr);
 
 			_lastExpr1 = expr;
 			return _lastResult1 = result;
-		}
-
-		private FindVisitor<ExpressionTreeOptimizationContext>? _canBeConstantFindVisitor;
-		private bool CanBeConstantFind(Expression ex)
-		{
-			if (ex is BinaryExpression)
-				return false;
-
-			if (ex.Type == typeof(void))
-				return true;
-
-			switch (ex.NodeType)
-			{
-				case ExpressionType.Default : return false;
-				case ExpressionType.Constant:
-				{
-					var c = (ConstantExpression)ex;
-
-					if (c.Value == null || c.Value.GetType().IsConstantable(false))
-						return false;
-
-					return true;
-				}
-
-				case ExpressionType.ConvertChecked:
-				case ExpressionType.Convert:
-				{
-					var unary = (UnaryExpression)ex;
-					if (unary.Operand.Type.IsNullableType() && !unary.Type.IsNullableType())
-						return true;
-
-					return false;
-				}
-
-				case ExpressionType.MemberAccess:
-				{
-					var ma = (MemberExpression)ex;
-
-					var l = Expressions.ConvertMember(MappingSchema, ma.Expression?.Type, ma.Member);
-
-					if (l != null)
-						return (_canBeConstantVisitor ??= FindVisitor<ExpressionTreeOptimizationContext>.Create(this, static (ctx, e) => ctx.CanBeConstant(e))).Find(l.Body.Unwrap()) == null;
-
-					if (ma.Member.DeclaringType!.IsConstantable(false) || ma.Member.IsNullableValueMember())
-						return false;
-
-					break;
-				}
-
-				case ExpressionType.Call:
-				{
-					var mc = (MethodCallExpression)ex;
-
-					if (mc.Method.DeclaringType!.IsConstantable(false) || mc.Method.DeclaringType == typeof(object))
-						return false;
-
-					var attr = mc.Method.GetExpressionAttribute(MappingSchema);
-
-					if (attr != null && !attr.ServerSideOnly)
-						return false;
-
-					break;
-				}
-
-				case ExpressionType.Extension:
-				{
-					if (ex is DefaultValueExpression)
-					{
-						if (ex.Type.IsConstantable(false))
-							return false;
-					}
-
-					break;
-				}
-			}
-
-			return true;
 		}
 
 		#endregion
