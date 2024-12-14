@@ -324,7 +324,7 @@ namespace LinqToDB.Linq.Builder
 					if (method.DeclaringType != null)
 					{
 						var attributes = _mappingSchema.GetAttributes<Sql.ExpressionAttribute>(method.DeclaringType, method);
-						if (attributes.Length > 0 && !attributes.Any(a => a.PreferServerSide || a.ServerSideOnly))
+						if (attributes.Length > 0 && !attributes.Any(a => a.PreferServerSide || a.ServerSideOnly|| !a.IsPure))
 						{
 							return true;
 						}
