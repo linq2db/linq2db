@@ -335,13 +335,13 @@ namespace LinqToDB.Linq.Builder
 
 		#region CanBeConstant
 
-		public bool CanBeConstant(Expression expr)
+		public bool CanBeConstant(Expression expr, MappingSchema mappingSchema)
 		{
 			if (!ParametersContext.CanBeConstant(expr))
 			{
 				return false;
 			}
-			return _optimizationContext.IsImmutable(expr);
+			return _optimizationContext.IsImmutable(expr, mappingSchema);
 		}
 
 		#endregion

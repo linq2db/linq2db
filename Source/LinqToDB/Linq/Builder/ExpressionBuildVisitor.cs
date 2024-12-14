@@ -2304,7 +2304,7 @@ namespace LinqToDB.Linq.Builder
 						return false;
 					}
 
-					if (_columnDescriptor?.ValueConverter == null && Builder.CanBeConstant(node) && Builder.CanBeEvaluatedOnClient(node) && !_buildFlags.HasFlag(BuildFlags.ForceParameter))
+					if (_columnDescriptor?.ValueConverter == null && Builder.CanBeConstant(node, MappingSchema) && Builder.CanBeEvaluatedOnClient(node) && !_buildFlags.HasFlag(BuildFlags.ForceParameter))
 					{
 						sql = Builder.BuildConstant(MappingSchema, node, _columnDescriptor);
 					}

@@ -242,13 +242,22 @@ namespace LinqToDB.Linq.Builder
 
 		class IsImmutableVisitor : ExpressionVisitorBase
 		{
-			bool IsImmutable { get; set; }
+			MappingSchema _mappingSchema = default!;
 
-			public bool CanBeImmutable(Expression expression)
+			bool          IsImmutable { get; set; }
+
+			public bool CanBeImmutable(Expression expression, MappingSchema mappingSchema)
 			{
+				_mappingSchema = mappingSchema;
 				IsImmutable = true;
 				Visit(expression);
 				return IsImmutable;
+			}
+
+			public override void Cleanup()
+			{
+				_mappingSchema = default!;
+				IsImmutable    = true;
 			}
 
 			[return : NotNullIfNotNull(nameof(node))]
@@ -260,7 +269,7 @@ namespace LinqToDB.Linq.Builder
 				return base.Visit(node);
 			}
 
-			static bool IsReadOnlyProperty(PropertyInfo property)
+			bool IsReadOnlyProperty(PropertyInfo property)
 			{
 				var setMethod = property.SetMethod;
 				if (setMethod != null)
@@ -280,7 +289,7 @@ namespace LinqToDB.Linq.Builder
 				return false;
 			}
 
-			static bool IsReadOnlyMethod(MethodInfo method)
+			bool IsReadOnlyMethod(MethodInfo method)
 			{
 				// Check if the method is marked with [IsReadOnly] (for .NET 5+)
 #if NET6_0_OR_GREATER
@@ -300,6 +309,28 @@ namespace LinqToDB.Linq.Builder
 					}
 				}
 #endif
+				if (method.DeclaringType == typeof(object) && method.Name == nameof(ToString))
+				{
+					return true;
+				}
+
+				if (method.IsStatic)
+				{
+					if (method.DeclaringType == typeof(Math))
+					{
+						return true;
+					}
+
+					if (method.DeclaringType != null)
+					{
+						var attributes = _mappingSchema.GetAttributes<Sql.ExpressionAttribute>(method.DeclaringType, method);
+						if (attributes.Length > 0 && !attributes.Any(a => a.PreferServerSide || a.ServerSideOnly))
+						{
+							return true;
+						}
+					}
+				}
+
 				return false;
 			}
 
@@ -363,20 +394,16 @@ namespace LinqToDB.Linq.Builder
 				return node;
 			}
 
-			public override void Cleanup()
-			{
-				IsImmutable = true;
-			}
 		}
 
-		public bool IsImmutable(Expression expr)
+		public bool IsImmutable(Expression expr, MappingSchema mappingSchem)
 		{
 			if (_lastExpr1 == expr)
 				return _lastResult1;
 
 			using var visitor = _isImmutableVisitorPool.Allocate();
 
-			var result = visitor.Value.CanBeImmutable(expr);
+			var result = visitor.Value.CanBeImmutable(expr, MappingSchema);
 
 			_lastExpr1 = expr;
 			return _lastResult1 = result;
