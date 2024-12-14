@@ -629,9 +629,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <returns>Returns <c>true</c> if full-text search found matching records.</returns>
 		[Sql.Extension("FREETEXT(({tableOrColumns, ', '}), {term})", IsPredicate = true, ServerSideOnly = true)]
 		public static bool FreeText(this ISqlServerExtensions? ext, [ExprParameter] string term, [ExprParameter] params object?[] tableOrColumns)
-		{
-			throw new LinqToDBException($"'{nameof(FreeText)}' is server-side method.");
-		}
+			=> throw new ServerSideOnlyException(nameof(FreeText));
 
 		/// <summary>
 		/// Applies full-text search condition using FREETEXT predicate against specified full-text columns or all FTS columns in table.
@@ -644,9 +642,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <returns>Returns <c>true</c> if full-text search found matching records.</returns>
 		[Sql.Extension("FREETEXT(({tableOrColumns, ', '}), {term}, LANGUAGE {language})", IsPredicate = true, ServerSideOnly = true)]
 		public static bool FreeTextWithLanguage(this ISqlServerExtensions? ext, [ExprParameter] string term, [ExprParameter] string language, [ExprParameter] params object?[] tableOrColumns)
-		{
-			throw new LinqToDBException($"'{nameof(FreeTextWithLanguage)}' is server-side method.");
-		}
+			=> throw new ServerSideOnlyException(nameof(FreeTextWithLanguage));
 
 		/// <summary>
 		/// Applies full-text search condition using FREETEXT predicate against specified full-text columns or all FTS columns in table.
@@ -659,9 +655,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <returns>Returns <c>true</c> if full-text search found matching records.</returns>
 		[Sql.Extension("FREETEXT(({tableOrColumns, ', '}), {term}, LANGUAGE {language})", IsPredicate = true, ServerSideOnly = true)]
 		public static bool FreeTextWithLanguage(this ISqlServerExtensions? ext, [ExprParameter] string term, [ExprParameter] int language, [ExprParameter] params object?[] tableOrColumns)
-		{
-			throw new LinqToDBException($"'{nameof(FreeTextWithLanguage)}' is server-side method.");
-		}
+			=> throw new ServerSideOnlyException(nameof(FreeTextWithLanguage));
 
 		#endregion
 
@@ -676,9 +670,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <returns>Returns <c>true</c> if full-text search found matching records.</returns>
 		[Sql.Extension("CONTAINS(({tableOrColumns, ', '}), {search})", IsPredicate = true, ServerSideOnly = true)]
 		public static bool Contains(this ISqlServerExtensions? ext, [ExprParameter] string search, [ExprParameter] params object?[] tableOrColumns)
-		{
-			throw new LinqToDBException($"'{nameof(Contains)}' is server-side method.");
-		}
+			=> throw new ServerSideOnlyException(nameof(Contains));
 
 		/// <summary>
 		/// Applies full-text search condition using CONTAINS predicate against specified full-text columns or all FTS columns in table.
@@ -691,9 +683,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <returns>Returns <c>true</c> if full-text search found matching records.</returns>
 		[Sql.Extension("CONTAINS(({tableOrColumns, ', '}), {search}, LANGUAGE {language})", IsPredicate = true, ServerSideOnly = true)]
 		public static bool ContainsWithLanguage(this ISqlServerExtensions? ext, [ExprParameter] string search, [ExprParameter] string language, [ExprParameter] params object?[] tableOrColumns)
-		{
-			throw new LinqToDBException($"'{nameof(ContainsWithLanguage)}' is server-side method.");
-		}
+			=> throw new ServerSideOnlyException(nameof(ContainsWithLanguage));
 
 		/// <summary>
 		/// Applies full-text search condition using CONTAINS predicate against specified full-text columns or all FTS columns in table.
@@ -706,9 +696,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <returns>Returns <c>true</c> if full-text search found matching records.</returns>
 		[Sql.Extension("CONTAINS(({tableOrColumns, ', '}), {search}, LANGUAGE {language})", IsPredicate = true, ServerSideOnly = true)]
 		public static bool ContainsWithLanguage(this ISqlServerExtensions? ext, [ExprParameter] string search, [ExprParameter] int language, [ExprParameter] params object?[] tableOrColumns)
-		{
-			throw new LinqToDBException($"'{nameof(ContainsWithLanguage)}' is server-side method.");
-		}
+			=> throw new ServerSideOnlyException(nameof(ContainsWithLanguage));
 
 		/// <summary>
 		/// Applies full-text search condition using CONTAINS(PROPERTY(...)) predicate against specified full-text column property.
@@ -721,9 +709,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <returns>Returns <c>true</c> if full-text search found matching records.</returns>
 		[ExpressionMethod(nameof(ContainsPropertyImpl1))]
 		public static bool ContainsProperty(this ISqlServerExtensions? ext, object? column, string property, string search)
-		{
-			throw new LinqToDBException($"'{nameof(ContainsProperty)}' is server-side method.");
-		}
+			=> throw new ServerSideOnlyException(nameof(ContainsProperty));
 
 		static Expression<Func<ISqlServerExtensions, object?, string, string, bool>> ContainsPropertyImpl1()
 		{
@@ -742,9 +728,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <returns>Returns <c>true</c> if full-text search found matching records.</returns>
 		[ExpressionMethod(nameof(ContainsPropertyImpl2))]
 		public static bool ContainsPropertyWithLanguage(this ISqlServerExtensions? ext, object? column, string property, string search, string language)
-		{
-			throw new LinqToDBException($"'{nameof(ContainsProperty)}' is server-side method.");
-		}
+			=> throw new ServerSideOnlyException(nameof(ContainsPropertyWithLanguage));
 
 		static Expression<Func<ISqlServerExtensions, object?, string, string, string, bool>> ContainsPropertyImpl2()
 		{
@@ -763,9 +747,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <returns>Returns <c>true</c> if full-text search found matching records.</returns>
 		[ExpressionMethod(nameof(ContainsPropertyImpl3))]
 		public static bool ContainsPropertyWithLanguage(this ISqlServerExtensions? ext, object? column, string property, string search, int language)
-		{
-			throw new LinqToDBException($"'{nameof(ContainsProperty)}' is server-side method.");
-		}
+			=> throw new ServerSideOnlyException(nameof(ContainsPropertyWithLanguage));
 
 		static Expression<Func<ISqlServerExtensions, object?, string, string, int, bool>> ContainsPropertyImpl3()
 		{
@@ -785,6 +767,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <param name="replacementValue">Value to replace.</param>
 		/// <returns>Function returns a replacementValue if the value is NULL.</returns>
 		[Sql.Extension("ISNULL({value}, {replacementValue})", ServerSideOnly = true, IsNullable = Sql.IsNullableType.IfAllParametersNullable)]
-		public static T IsNull<T>(this ISqlServerExtensions? ext, [ExprParameter] T? value, [ExprParameter] T? replacementValue) => throw new LinqToDBException($"'{nameof(IsNull)}' is server - side method.");
+		public static T IsNull<T>(this ISqlServerExtensions? ext, [ExprParameter] T? value, [ExprParameter] T? replacementValue)
+			=> throw new ServerSideOnlyException(nameof(IsNull));
 	}
 }
