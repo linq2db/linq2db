@@ -286,10 +286,12 @@ namespace LinqToDB.Linq.Builder
 				if (columnDescriptor != null)
 				{
 					var dbDataType = columnDescriptor.GetDbDataType(false);
-					paramDataType = dbDataType;
+					paramDataType = dbDataType.WithSystemType(valueType);
 
 					dbDataTypeExpression = Expression.Call(Expression.Constant(dbDataType),
 						DbDataType.WithSetValuesMethodInfo, dbDataTypeExpression);
+
+					dbDataTypeExpression = Expression.Call(dbDataTypeExpression, DbDataType.WithSystemTypeMethodInfo, Expression.Constant(valueType));
 				}
 
 				providerValueGetter = Expression.Property(providerValueGetter, Methods.LinqToDB.DataParameter.Value);

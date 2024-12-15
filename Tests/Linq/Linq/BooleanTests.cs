@@ -1,5 +1,4 @@
 ﻿using System.Linq;
-using System.Threading.Tasks;
 
 using LinqToDB;
 using LinqToDB.Mapping;
@@ -8,10 +7,6 @@ using NUnit.Framework;
 
 namespace Tests.Linq
 {
-	using System.Collections.Generic;
-
-	using Model;
-
 	[TestFixture]
 	public class BooleanTests : TestBase
 	{
@@ -19,48 +14,28 @@ namespace Tests.Linq
 		{
 			static BooleanTable()
 			{
-				var records = new List<BooleanTable>();
-
 				var id = 1;
 
-				foreach (var boolean in new[] { true, false })
-				{
-					foreach (var booleanN in new bool?[] { true, false, null })
+				Data = (from boolean in new[] { true, false }
+					from booleanN in new bool?[] { true, false, null }
+					from int32 in new[] { -1, 0, 1 }
+					from int32N in new int?[] { -1, 0, 1, null }
+					from dec in new[] { -0.1m, 0m, 0.1m }
+					from decN in new decimal?[] { -0.1m, 0m, 0.1m, null }
+					from dbl in new[] { -0.1, 0.0, 0.1 }
+					from dblТ in new double?[] { -0.1, 0.0, 0.1, null }
+					select new BooleanTable()
 					{
-						foreach (var int32 in new[] { -1, 0, 1 })
-						{
-							foreach (var int32N in new int?[] { -1, 0, 1, null })
-							{
-								foreach (var dec in new[] { -0.1m, 0m, 0.1m })
-								{
-									foreach (var decN in new decimal?[] { -0.1m, 0m, 0.1m, null })
-									{
-										foreach (var dbl in new[] { -0.1, 0.0, 0.1 })
-										{
-											foreach (var dblТ in new double?[] { -0.1, 0.0, 0.1, null })
-											{
-												records.Add(new BooleanTable()
-												{
-													Id = id++,
-													Boolean = boolean,
-													BooleanN = booleanN,
-													Int32 = int32,
-													Int32N = int32N,
-													Decimal = dec,
-													DecimalN = decN,
-													Double = dbl,
-													DoubleN = dblТ,
-												});
-											}
-										}
-									}
-								}
-							}
-						}
-					}
-				}
-
-				Data = records.ToArray();
+						Id       = id++,
+						Boolean  = boolean,
+						BooleanN = booleanN,
+						Int32    = int32,
+						Int32N   = int32N,
+						Decimal  = dec,
+						DecimalN = decN,
+						Double   = dbl,
+						DoubleN  = dblТ,
+					}).ToArray();
 			}
 
 			[PrimaryKey] public int Id { get; set; }
