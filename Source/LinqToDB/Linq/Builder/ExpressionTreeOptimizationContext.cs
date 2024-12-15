@@ -362,7 +362,7 @@ namespace LinqToDB.Linq.Builder
 				}
 				else
 				{
-					if (node.Expression is not ConstantExpression)
+					if (node.Expression.UnwrapConvert() is not ConstantExpression)
 						return base.VisitMember(node);
 
 					IsImmutable = false;
