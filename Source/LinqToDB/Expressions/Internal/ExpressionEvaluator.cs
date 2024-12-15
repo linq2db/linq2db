@@ -119,8 +119,17 @@ namespace LinqToDB.Expressions.Internal
 				return expr.EvaluateExpressionInternal();
 			}
 
-			var value = Expression.Lambda(expr).CompileExpression().DynamicInvoke();
-			return value;
+			try
+			{
+				var value = Expression.Lambda(expr).CompileExpression().DynamicInvoke();
+				return value;
+			}
+			catch (TargetInvocationException ti )
+			{
+				if (ti.InnerException != null)
+					throw ti.InnerException;
+				throw;
+			}
 		}
 	}
 }
