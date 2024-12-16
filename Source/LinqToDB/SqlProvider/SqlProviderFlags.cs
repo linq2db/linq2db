@@ -439,7 +439,7 @@ namespace LinqToDB.SqlProvider
 		/// Indicates that boolean type could be used as predicate without additional conversions.
 		/// Default value: <c>true</c>.
 		/// </summary>
-		[DataMember(Order = 50)]
+		[DataMember(Order = 62)]
 		public bool SupportsBooleanType { get; set; } = true;
 
 		/// <summary>
