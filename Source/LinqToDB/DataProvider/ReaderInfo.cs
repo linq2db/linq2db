@@ -1,11 +1,13 @@
 ﻿using System;
 using System.Data.Common;
+using System.Diagnostics;
 
 using LinqToDB.Interceptors;
 
 namespace LinqToDB.DataProvider
 {
 	// TODO: V6: refactor to readonly struct
+	[DebuggerDisplay("DataReaderType={DataReaderType}, ToType={ToType}, ProviderFieldType={ProviderFieldType}, FieldType={FieldType}, DataTypeName={DataTypeName}")]
 	public struct ReaderInfo : IEquatable<ReaderInfo>
 	{
 		int _hashCode;

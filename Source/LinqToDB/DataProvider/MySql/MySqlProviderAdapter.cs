@@ -15,7 +15,7 @@ namespace LinqToDB.DataProvider.MySql
 
 	public abstract class MySqlProviderAdapter : IDynamicProviderAdapter
 	{
-		private static readonly Type[] _ordinalParameters = new Type[] { typeof(int) };
+		private static readonly Type[] _ordinalParameters = [typeof(int)];
 
 		private static readonly object _mysqlDataSyncRoot      = new ();
 		private static readonly object _mysqlConnectorSyncRoot = new ();
@@ -39,7 +39,7 @@ namespace LinqToDB.DataProvider.MySql
 		{
 		}
 
-#region IDynamicProviderAdapter
+		#region IDynamicProviderAdapter
 
 		public Type          ConnectionType  { get; protected set; } = null!;
 		public Type          DataReaderType  { get; protected set; } = null!;
@@ -50,7 +50,7 @@ namespace LinqToDB.DataProvider.MySql
 		Func<string, DbConnection> _connectionFactory = null!;
 		public DbConnection CreateConnection(string connectionString) => _connectionFactory(connectionString);
 
-#endregion
+		#endregion
 
 		public MySqlProvider ProviderType    { get; protected set; }
 		public MappingSchema MappingSchema   { get; protected set; } = null!;
@@ -111,29 +111,36 @@ namespace LinqToDB.DataProvider.MySql
 
 		public static MySqlProviderAdapter GetInstance(MySqlProvider provider)
 		{
-			if (provider == MySqlProvider.MySqlConnector)
+			switch (provider)
 			{
-				if (_mysqlConnectorInstance == null)
+				case MySqlProvider.AutoDetect:
 				{
-					lock (_mysqlConnectorSyncRoot)
-#pragma warning disable CA1508 // Avoid dead conditional code
-						_mysqlConnectorInstance ??= new MySqlConnector.MySqlConnectorProviderAdapter();
-#pragma warning restore CA1508 // Avoid dead conditional code
+					return _mysqlConnectorInstance ?? (_mysqlDataInstance ?? GetInstance(MySqlProviderDetector.DetectProvider()));
 				}
-
-				return _mysqlConnectorInstance;
-			}
-			else
-			{
-				if (_mysqlDataInstance == null)
+				case MySqlProvider.MySqlConnector:
 				{
-					lock (_mysqlDataSyncRoot)
+					if (_mysqlConnectorInstance == null)
+					{
+						lock (_mysqlConnectorSyncRoot)
 #pragma warning disable CA1508 // Avoid dead conditional code
-						_mysqlDataInstance ??= new MySqlData.MySqlDataProviderAdapter();
+							_mysqlConnectorInstance ??= new MySqlConnector.MySqlConnectorProviderAdapter();
 #pragma warning restore CA1508 // Avoid dead conditional code
-				}
+					}
 
-				return _mysqlDataInstance;
+					return _mysqlConnectorInstance;
+				}
+				default:
+				{
+					if (_mysqlDataInstance == null)
+					{
+						lock (_mysqlDataSyncRoot)
+#pragma warning disable CA1508 // Avoid dead conditional code
+							_mysqlDataInstance ??= new MySqlData.MySqlDataProviderAdapter();
+#pragma warning restore CA1508 // Avoid dead conditional code
+					}
+
+					return _mysqlDataInstance;
+				}
 			}
 		}
 

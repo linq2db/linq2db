@@ -37,10 +37,8 @@
 
 	<ItemGroup>
 		<EmbeddedResource Include="Template.tt" />
-	</ItemGroup>
 
-	<ItemGroup>
-		<ProjectReference Include="..\LinqToDB.Tools\LinqToDB.Tools.csproj" />
+		<ProjectReference Include="..\LinqToDB.Tools.Internal\LinqToDB.Tools.Internal.csproj" />
 
 		<PackageReference Include="Microsoft.CodeAnalysis.CSharp" />
 		<PackageReference Include="Microsoft.Extensions.DependencyModel" />
@@ -58,9 +56,7 @@
 		<PackageReference Include="System.Data.OleDb" />
 		<PackageReference Include="ClickHouse.Client" />
 		<PackageReference Include="Octonica.ClickHouseClient" />
-	</ItemGroup>
 
-	<ItemGroup>
 		<AdditionalFiles Include="PublicAPI.*.txt" />
 	</ItemGroup>
 </Project>

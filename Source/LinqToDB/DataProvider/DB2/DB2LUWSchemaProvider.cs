@@ -25,8 +25,15 @@ namespace LinqToDB.DataProvider.DB2
 		}
 
 		readonly HashSet<string?> _systemSchemas =
-			GetHashSet(new [] {"SYSCAT", "SYSFUN", "SYSIBM", "SYSIBMADM", "SYSPROC", "SYSPUBLIC", "SYSSTAT", "SYSTOOLS" },
+			GetHashSet(["SYSCAT", "SYSFUN", "SYSIBM", "SYSIBMADM", "SYSPROC", "SYSPUBLIC", "SYSSTAT", "SYSTOOLS"],
 				StringComparer.OrdinalIgnoreCase);
+
+		protected override void InitProvider(DataConnection dataConnection, GetSchemaOptions options)
+		{
+			base.InitProvider(dataConnection, options);
+
+			options.DefaultSchema ??= dataConnection.Execute<string>("select current_schema from sysibm.sysdummy1");
+		}
 
 		protected override List<DataTypeInfo> GetDataTypes(DataConnection dataConnection)
 		{
@@ -48,12 +55,10 @@ namespace LinqToDB.DataProvider.DB2
 				.ToList();
 		}
 
-		protected string? CurrentSchema { get; private set; }
+		//protected string? CurrentSchema { get; private set; }
 
 		protected override List<TableInfo> GetTables(DataConnection dataConnection, GetSchemaOptions options)
 		{
-			LoadCurrentSchema(dataConnection);
-
 			var tables = dataConnection.Connection.GetSchema("Tables");
 
 			return
@@ -64,24 +69,19 @@ namespace LinqToDB.DataProvider.DB2
 				let schema  = t.Field<string>("TABLE_SCHEMA")
 				let name    = t.Field<string>("TABLE_NAME")
 				let system  = t.Field<string>("TABLE_TYPE") == "SYSTEM TABLE"
-				where IncludedSchemas.Count != 0 || ExcludedSchemas.Count != 0 || schema == CurrentSchema
+				where IncludedSchemas.Count != 0 || ExcludedSchemas.Count != 0 || schema == options.DefaultSchema
 				select new TableInfo
 				{
 					TableID            = catalog + '.' + schema + '.' + name,
 					CatalogName        = catalog,
 					SchemaName         = schema,
 					TableName          = name,
-					IsDefaultSchema    = string.IsNullOrEmpty(schema),
+					IsDefaultSchema    = schema                        == options.DefaultSchema,
 					IsView             = t.Field<string>("TABLE_TYPE") == "VIEW",
 					Description        = t.Field<string>("REMARKS"),
 					IsProviderSpecific = system || _systemSchemas.Contains(schema)
 				}
 			).ToList();
-		}
-
-		protected void LoadCurrentSchema(DataConnection dataConnection)
-		{
-			CurrentSchema ??= dataConnection.Execute<string>("select current_schema from sysibm.sysdummy1");
 		}
 
 		protected override IReadOnlyCollection<PrimaryKeyInfo> GetPrimaryKeys(DataConnection dataConnection,
@@ -105,7 +105,7 @@ SELECT
 FROM
 	SYSCAT.INDEXES
 WHERE
-	UNIQUERULE = 'P' AND " + GetSchemaFilter("TABSCHEMA"))
+	UNIQUERULE = 'P' AND " + GetSchemaFilter("TABSCHEMA", options))
 				from col in pk.cols.Select((c,i) => new { c, i })
 				select new PrimaryKeyInfo
 				{
@@ -137,7 +137,7 @@ SELECT
 FROM
 	SYSCAT.COLUMNS
 WHERE
-	" + GetSchemaFilter("TABSCHEMA");
+	" + GetSchemaFilter("TABSCHEMA", options);
 
 			return _columns = dataConnection.Query(rd =>
 				{
@@ -228,7 +228,7 @@ SELECT
 FROM
 	SYSCAT.REFERENCES
 WHERE
-	" + GetSchemaFilter("TABSCHEMA"))
+	" + GetSchemaFilter("TABSCHEMA", options))
 				.SelectMany(fk =>
 				{
 					var thisTable    = _columns!.Where(c => c.TableID == fk.thisTable). OrderByDescending(c => c.Name.Length).ToList();
@@ -402,8 +402,6 @@ WHERE
 
 		protected override List<ProcedureInfo>? GetProcedures(DataConnection dataConnection, GetSchemaOptions options)
 		{
-			LoadCurrentSchema(dataConnection);
-
 			var sql = @"
 SELECT * FROM (
 	SELECT
@@ -419,7 +417,7 @@ SELECT * FROM (
 	FROM
 		SYSCAT.PROCEDURES p
 		LEFT JOIN SYSCAT.MODULEOBJECTS o ON p.SPECIFICNAME = o.SPECIFICNAME
-	WHERE " + GetSchemaFilter("p.PROCSCHEMA")
+	WHERE " + GetSchemaFilter("p.PROCSCHEMA", options)
 	+ (IncludedSchemas.Count == 0 ? " AND p.PROCSCHEMA NOT IN ('SYSPROC', 'SYSIBMADM', 'SQLJ', 'SYSIBM')" : null)
 	+ @"
 	UNION ALL
@@ -436,7 +434,7 @@ SELECT * FROM (
 	FROM
 		SYSCAT.FUNCTIONS f
 		LEFT JOIN SYSCAT.MODULEOBJECTS o ON f.SPECIFICNAME = o.SPECIFICNAME
-		WHERE " + GetSchemaFilter("f.FUNCSCHEMA")
+		WHERE " + GetSchemaFilter("f.FUNCSCHEMA", options)
 	+ (IncludedSchemas.Count == 0 ? " AND f.FUNCSCHEMA NOT IN ('SYSPROC', 'SYSIBMADM', 'SQLJ', 'SYSIBM')" : null);
 
 			if (IncludedSchemas.Count == 0)
@@ -473,7 +471,7 @@ ORDER BY OBJECTMODULENAME, PROCSCHEMA, PROCNAME, PARM_COUNT";
 						};
 					},
 					sql)
-				.Where(p => IncludedSchemas.Count != 0 || ExcludedSchemas.Count != 0 || p.SchemaName == CurrentSchema)
+				.Where(p => IncludedSchemas.Count != 0 || ExcludedSchemas.Count != 0 || p.SchemaName == options.DefaultSchema)
 				.ToList();
 		}
 
@@ -530,7 +528,7 @@ SELECT
 	NULLS
 FROM
 	SYSCAT.PROCPARMS
-WHERE " + GetSchemaFilter("PROCSCHEMA") + @"
+WHERE " + GetSchemaFilter("PROCSCHEMA", options) + @"
 UNION ALL
 SELECT
 	SPECIFICNAME,
@@ -545,11 +543,11 @@ SELECT
 	'Y'
 FROM
 	SYSCAT.FUNCPARMS
-	WHERE ROWTYPE <> 'R' AND " + GetSchemaFilter("FUNCSCHEMA"))
+	WHERE ROWTYPE <> 'R' AND " + GetSchemaFilter("FUNCSCHEMA", options))
 				.ToList();
 		}
 
-		protected string GetSchemaFilter(string schemaNameField)
+		protected string GetSchemaFilter(string schemaNameField, GetSchemaOptions options)
 		{
 			if (IncludedSchemas.Count != 0 || ExcludedSchemas.Count != 0)
 			{
@@ -569,7 +567,7 @@ FROM
 				return sql;
 			}
 
-			return $"{schemaNameField} = '{CurrentSchema}'";
+			return $"{schemaNameField} = '{options.DefaultSchema}'";
 		}
 
 		protected override string BuildTableFunctionLoadTableSchemaCommand(ProcedureSchema procedure, string commandText)

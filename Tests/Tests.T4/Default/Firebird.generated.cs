@@ -27,6 +27,8 @@ namespace Default.Firebird
 {
 	public partial class TestDataDB : LinqToDB.Data.DataConnection
 	{
+		#region Tables
+
 		public ITable<AllType>           AllTypes            { get { return this.GetTable<AllType>(); } }
 		public ITable<CamelCaseName>     CamelCaseNames      { get { return this.GetTable<CamelCaseName>(); } }
 		public ITable<Child>             Children            { get { return this.GetTable<Child>(); } }
@@ -46,6 +48,10 @@ namespace Default.Firebird
 		public ITable<TestIdentity>      TestIdentities      { get { return this.GetTable<TestIdentity>(); } }
 		public ITable<TestMerge1>        TestMerge1          { get { return this.GetTable<TestMerge1>(); } }
 		public ITable<TestMerge2>        TestMerge2          { get { return this.GetTable<TestMerge2>(); } }
+
+		#endregion
+
+		#region .ctor
 
 		public TestDataDB()
 		{
@@ -77,14 +83,16 @@ namespace Default.Firebird
 		partial void InitDataContext  ();
 		partial void InitMappingSchema();
 
+		#endregion
+
 		#region Table Functions
 
 		#region OutRefEnumTest
 
 		[Sql.TableFunction(Name="OutRefEnumTest")]
-		public ITable<OutRefEnumTestResult> OutRefEnumTest(string? sTR, string? inInputoutputstr)
+		public ITable<OutRefEnumTestResult> OutRefEnumTest(string? str, string? inInputoutputstr)
 		{
-			return this.TableFromExpression(() => OutRefEnumTest(sTR, inInputoutputstr));
+			return this.TableFromExpression(() => OutRefEnumTest(str, inInputoutputstr));
 		}
 
 		public partial class OutRefEnumTestResult
@@ -98,9 +106,9 @@ namespace Default.Firebird
 		#region OutRefTest
 
 		[Sql.TableFunction(Name="OutRefTest")]
-		public ITable<OutRefTestResult> OutRefTest(int? iD, int? inInputoutputid, string? sTR, string? inInputoutputstr)
+		public ITable<OutRefTestResult> OutRefTest(int? id, int? inInputoutputid, string? str, string? inInputoutputstr)
 		{
-			return this.TableFromExpression(() => OutRefTest(iD, inInputoutputid, sTR, inInputoutputstr));
+			return this.TableFromExpression(() => OutRefTest(id, inInputoutputid, str, inInputoutputstr));
 		}
 
 		public partial class OutRefTestResult
@@ -136,9 +144,9 @@ namespace Default.Firebird
 		#region PatientSelectByName
 
 		[Sql.TableFunction(Name="Patient_SelectByName")]
-		public ITable<PatientSelectByNameResult> PatientSelectByName(string? fIRSTNAME, string? lASTNAME)
+		public ITable<PatientSelectByNameResult> PatientSelectByName(string? firstname, string? lastname)
 		{
-			return this.TableFromExpression(() => PatientSelectByName(fIRSTNAME, lASTNAME));
+			return this.TableFromExpression(() => PatientSelectByName(firstname, lastname));
 		}
 
 		public partial class PatientSelectByNameResult
@@ -154,9 +162,9 @@ namespace Default.Firebird
 		#region PersonInsert
 
 		[Sql.TableFunction(Name="Person_Insert")]
-		public ITable<PersonInsertResult> PersonInsert(string? fIRSTNAME, string? lASTNAME, string? mIDDLENAME, char? gENDER)
+		public ITable<PersonInsertResult> PersonInsert(string? firstname, string? lastname, string? middlename, char? gender)
 		{
-			return this.TableFromExpression(() => PersonInsert(fIRSTNAME, lASTNAME, mIDDLENAME, gENDER));
+			return this.TableFromExpression(() => PersonInsert(firstname, lastname, middlename, gender));
 		}
 
 		public partial class PersonInsertResult
@@ -169,9 +177,9 @@ namespace Default.Firebird
 		#region PersonInsertOutputParameter
 
 		[Sql.TableFunction(Name="Person_Insert_OutputParameter")]
-		public ITable<PersonInsertOutputParameterResult> PersonInsertOutputParameter(string? fIRSTNAME, string? lASTNAME, string? mIDDLENAME, char? gENDER)
+		public ITable<PersonInsertOutputParameterResult> PersonInsertOutputParameter(string? firstname, string? lastname, string? middlename, char? gender)
 		{
-			return this.TableFromExpression(() => PersonInsertOutputParameter(fIRSTNAME, lASTNAME, mIDDLENAME, gENDER));
+			return this.TableFromExpression(() => PersonInsertOutputParameter(firstname, lastname, middlename, gender));
 		}
 
 		public partial class PersonInsertOutputParameterResult
@@ -203,9 +211,9 @@ namespace Default.Firebird
 		#region PersonSelectByKey
 
 		[Sql.TableFunction(Name="Person_SelectByKey")]
-		public ITable<PersonSelectByKeyResult> PersonSelectByKey(int? iD)
+		public ITable<PersonSelectByKeyResult> PersonSelectByKey(int? id)
 		{
-			return this.TableFromExpression(() => PersonSelectByKey(iD));
+			return this.TableFromExpression(() => PersonSelectByKey(id));
 		}
 
 		public partial class PersonSelectByKeyResult
@@ -333,9 +341,9 @@ namespace Default.Firebird
 		#region TestV4Types
 
 		[Sql.TableFunction(Name="TEST_V4_TYPES")]
-		public ITable<TestV4TYPESResult> TestV4Types(FbZonedDateTime? tSTZ, FbZonedTime? tTZ, FbDecFloat? dECFLOAT16, FbDecFloat? dECFLOAT34, BigInteger? int128)
+		public ITable<TestV4TYPESResult> TestV4Types(FbZonedDateTime? tstz, FbZonedTime? ttz, FbDecFloat? decfloat16, FbDecFloat? decfloat34, BigInteger? int128)
 		{
-			return this.TableFromExpression(() => TestV4Types(tSTZ, tTZ, dECFLOAT16, dECFLOAT34, int128));
+			return this.TableFromExpression(() => TestV4Types(tstz, ttz, decfloat16, decfloat34, int128));
 		}
 
 		public partial class TestV4TYPESResult
@@ -442,7 +450,7 @@ namespace Default.Firebird
 		/// <summary>
 		/// FK_Doctor_Person (SYSDBA.Person)
 		/// </summary>
-		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false)]
+		[Association(ThisKey=nameof(PersonID), OtherKey=nameof(Default.Firebird.Person.PersonID), CanBeNull=false)]
 		public Person Person { get; set; } = null!;
 
 		#endregion
@@ -511,9 +519,9 @@ namespace Default.Firebird
 		#region Associations
 
 		/// <summary>
-		/// INTEG_18 (SYSDBA.Person)
+		/// INTEG_188 (SYSDBA.Person)
 		/// </summary>
-		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false)]
+		[Association(ThisKey=nameof(PersonID), OtherKey=nameof(Default.Firebird.Person.PersonID), CanBeNull=false)]
 		public Person Person { get; set; } = null!;
 
 		#endregion
@@ -533,13 +541,13 @@ namespace Default.Firebird
 		/// <summary>
 		/// FK_Doctor_Person_BackReference (SYSDBA.Doctor)
 		/// </summary>
-		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=true)]
+		[Association(ThisKey=nameof(PersonID), OtherKey=nameof(Default.Firebird.Doctor.PersonID), CanBeNull=true)]
 		public Doctor? Doctor { get; set; }
 
 		/// <summary>
-		/// INTEG_18_BackReference (SYSDBA.Patient)
+		/// INTEG_188_BackReference (SYSDBA.Patient)
 		/// </summary>
-		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=true)]
+		[Association(ThisKey=nameof(PersonID), OtherKey=nameof(Default.Firebird.Patient.PersonID), CanBeNull=true)]
 		public Patient? INTEG { get; set; }
 
 		#endregion
@@ -635,14 +643,11 @@ namespace Default.Firebird
 
 		#region PersonDelete
 
-		public static int PersonDelete(this TestDataDB dataConnection, int? pERSONID)
+		public static int PersonDelete(this TestDataDB dataConnection, int? personID)
 		{
 			var parameters = new []
 			{
-				new DataParameter("PERSONID", pERSONID, LinqToDB.DataType.Int32)
-				{
-					Size = 4
-				}
+				new DataParameter("PersonID", personID, LinqToDB.DataType.Int32, 4)
 			};
 
 			return dataConnection.ExecuteProc("\"Person_Delete\"", parameters);
@@ -652,30 +657,15 @@ namespace Default.Firebird
 
 		#region PersonUpdate
 
-		public static int PersonUpdate(this TestDataDB dataConnection, int? pERSONID, string? fIRSTNAME, string? lASTNAME, string? mIDDLENAME, char? gENDER)
+		public static int PersonUpdate(this TestDataDB dataConnection, int? personid, string? firstname, string? lastname, string? middlename, char? gender)
 		{
 			var parameters = new []
 			{
-				new DataParameter("PERSONID",   pERSONID,   LinqToDB.DataType.Int32)
-				{
-					Size = 4
-				},
-				new DataParameter("FIRSTNAME",  fIRSTNAME,  LinqToDB.DataType.NVarChar)
-				{
-					Size = 50
-				},
-				new DataParameter("LASTNAME",   lASTNAME,   LinqToDB.DataType.NVarChar)
-				{
-					Size = 50
-				},
-				new DataParameter("MIDDLENAME", mIDDLENAME, LinqToDB.DataType.NVarChar)
-				{
-					Size = 50
-				},
-				new DataParameter("GENDER",     gENDER,     LinqToDB.DataType.NChar)
-				{
-					Size = 1
-				}
+				new DataParameter("PERSONID",   personid,   LinqToDB.DataType.Int32, 4),
+				new DataParameter("FIRSTNAME",  firstname,  LinqToDB.DataType.NVarChar, 50),
+				new DataParameter("LASTNAME",   lastname,   LinqToDB.DataType.NVarChar, 50),
+				new DataParameter("MIDDLENAME", middlename, LinqToDB.DataType.NVarChar, 50),
+				new DataParameter("GENDER",     gender,     LinqToDB.DataType.NChar, 1)
 			};
 
 			return dataConnection.ExecuteProc("\"Person_Update\"", parameters);
@@ -689,14 +679,10 @@ namespace Default.Firebird
 		{
 			var parameters = new []
 			{
-				new DataParameter("I", i, LinqToDB.DataType.Int32)
+				new DataParameter("I", i, LinqToDB.DataType.Int32, 4),
+				new DataParameter("O", null, LinqToDB.DataType.Int32, 4)
 				{
-					Size = 4
-				},
-				new DataParameter("O", null, LinqToDB.DataType.Int32)
-				{
-					Direction = ParameterDirection.Output,
-					Size      = 4
+					Direction = ParameterDirection.Output
 				}
 			};
 
@@ -715,14 +701,10 @@ namespace Default.Firebird
 		{
 			var parameters = new []
 			{
-				new DataParameter("I", i, LinqToDB.DataType.Int32)
+				new DataParameter("I", i, LinqToDB.DataType.Int32, 4),
+				new DataParameter("O", null, LinqToDB.DataType.Int32, 4)
 				{
-					Size = 4
-				},
-				new DataParameter("O", null, LinqToDB.DataType.Int32)
-				{
-					Direction = ParameterDirection.Output,
-					Size      = 4
+					Direction = ParameterDirection.Output
 				}
 			};
 
@@ -741,14 +723,10 @@ namespace Default.Firebird
 		{
 			var parameters = new []
 			{
-				new DataParameter("I", i, LinqToDB.DataType.Int32)
+				new DataParameter("I", i, LinqToDB.DataType.Int32, 4),
+				new DataParameter("O", null, LinqToDB.DataType.Int32, 4)
 				{
-					Size = 4
-				},
-				new DataParameter("O", null, LinqToDB.DataType.Int32)
-				{
-					Direction = ParameterDirection.Output,
-					Size      = 4
+					Direction = ParameterDirection.Output
 				}
 			};
 

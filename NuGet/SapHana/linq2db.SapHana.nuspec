@@ -1,0 +1,16 @@
+<?xml version="1.0"?>
+<!-- %T4% -->
+<package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
+	<metadata minClientVersion="3.3.0">
+		<id>linq2db.SapHana</id>
+		<title>LINQ to SAP HANA</title>
+		<summary>
+			This package includes a T4 template to generate data models for Sybase database.
+			SapHana data provider for .NET will still need to be installed on the production or development machine in order to connect to Sybase.
+		</summary>
+	</metadata>
+	<files>
+		<file src="t4bin\System.Data.Odbc.dll"   target="tools" />
+		<file src="t4bin\Sap.Data.Hana.v4.5.dll" target="tools" />
+	</files>
+</package>
