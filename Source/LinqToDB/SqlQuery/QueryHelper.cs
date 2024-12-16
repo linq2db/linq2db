@@ -1620,6 +1620,24 @@ namespace LinqToDB.SqlQuery
 			return expr;
 		}
 
+		public static bool CanBeNullableOrUnknown(this ISqlExpression expr, NullabilityContext nullabilityContext)
+		{
+			if (expr is ISqlPredicate predicate)
+				return predicate.CanBeUnknown(nullabilityContext);
+
+			return expr.CanBeNullable(nullabilityContext);
+		}
+
+		public static bool NeedsEqualityWithNull(ISqlExpression expr1, SqlPredicate.Operator op, ISqlExpression expr2, NullabilityContext nullabilityContext)
+		{
+			if (op == SqlPredicate.Operator.Equal)
+				return expr1.CanBeNullableOrUnknown(nullabilityContext) && expr2.CanBeNullableOrUnknown(nullabilityContext);
+			if (op == SqlPredicate.Operator.NotEqual)
+				return expr1.CanBeNullableOrUnknown(nullabilityContext) ^ expr2.CanBeNullableOrUnknown(nullabilityContext);
+
+			return false;
+		}
+
 		public static ISqlExpression UnwrapCastAndNullability(ISqlExpression expr)
 		{
 			do

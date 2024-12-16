@@ -167,26 +167,6 @@ namespace LinqToDB.SqlProvider
 			{
 				result = predicate.Expr1;
 			}
-			else
-			{
-				var hasValueConverter = QueryHelper.GetColumnDescriptor(predicate.Expr1)?.ValueConverter != null;
-				if (SqlProviderFlags?.SupportsBooleanComparison == false || hasValueConverter)
-				{
-					var unwrapped = QueryHelper.UnwrapNullablity(predicate.Expr1);
-					if (unwrapped is SqlCastExpression castExpression)
-					{
-						newResult = ConvertCastToPredicate(castExpression);
-					}
-					else if (unwrapped is SqlExpression { IsPredicate: true })
-					{
-						// do nothing
-					}
-					else
-					{
-						newResult = ConvertToBooleanSearchCondition(predicate.Expr1);
-					}
-				}
-			}
 
 			if (!ReferenceEquals(newResult, result))
 			{
@@ -384,7 +364,12 @@ namespace LinqToDB.SqlProvider
 				}
 			}
 
-			if (SqlProviderFlags is { SupportsBooleanComparison: false })
+			// convert bool_exp_1 == bool_expr_2 to (x ? 1 : 0) == (y ? 1 : 0)
+			// for providers that doesn't support boolean(predicate) comparision
+			// or for predicates that could return UNKNOWN
+			// Alternative could be to use IS [NOT] DISTINCT FROM predicate
+			if (SqlProviderFlags is { SupportsPredicatesComparison: false }
+				|| QueryHelper.NeedsEqualityWithNull(predicate.Expr1, predicate.Operator, predicate.Expr2, NullabilityContext))
 			{
 				if (QueryHelper.UnwrapNullablity(predicate.Expr2) is not (SqlValue or SqlParameter) && QueryHelper.UnwrapNullablity(predicate.Expr1) is not (SqlValue or SqlParameter))
 				{

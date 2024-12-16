@@ -429,11 +429,11 @@ namespace LinqToDB.SqlProvider
 		public bool IsAccessBuggyLeftJoinConstantNullability { get; set; }
 
 		/// <summary>
-		/// Indicates that provider supports boolean type.
+		/// Indicates that provider supports direct comparison of predicates.
 		/// Default value: <c>false</c>.
 		/// </summary>
-		[DataMember(Order =  50)]
-		public bool SupportsBooleanComparison { get; set; }
+		[DataMember(Order = 50)]
+		public bool SupportsPredicatesComparison { get; set; }
 
 		/// <summary>
 		/// Provider supports nested joins
@@ -504,7 +504,7 @@ namespace LinqToDB.SqlProvider
 
 		/// <summary>
 		/// Provider supports correlated DISTINCT FROM directly or through db-specific operator/method (e.g. DECODE, IS, &lt;=&gt;).
-		/// This doesn't inclide emulation using INTERSECT.
+		/// This doesn't include emulation using INTERSECT.
 		/// Default <c>false</c>
 		/// </summary>
 		[DataMember(Order = 59)]
@@ -593,7 +593,7 @@ namespace LinqToDB.SqlProvider
 				^ IsMultiTablesSupportsJoins                           .GetHashCode()
 				^ IsCTESupportsOrdering                                .GetHashCode()
 				^ IsAccessBuggyLeftJoinConstantNullability             .GetHashCode()
-				^ SupportsBooleanComparison                            .GetHashCode()
+				^ SupportsPredicatesComparison                         .GetHashCode()
 				^ IsDerivedTableOrderBySupported                       .GetHashCode()
 				^ IsUpdateTakeSupported                                .GetHashCode()
 				^ IsUpdateSkipTakeSupported                            .GetHashCode()
@@ -658,7 +658,7 @@ namespace LinqToDB.SqlProvider
 				&& IsMultiTablesSupportsJoins                            == other.IsMultiTablesSupportsJoins
 				&& IsCTESupportsOrdering                                 == other.IsCTESupportsOrdering
 				&& IsAccessBuggyLeftJoinConstantNullability              == other.IsAccessBuggyLeftJoinConstantNullability
-				&& SupportsBooleanComparison                             == other.SupportsBooleanComparison
+				&& SupportsPredicatesComparison                          == other.SupportsPredicatesComparison
 				&& IsDerivedTableOrderBySupported                        == other.IsDerivedTableOrderBySupported
 				&& IsUpdateTakeSupported                                 == other.IsUpdateTakeSupported
 				&& IsUpdateSkipTakeSupported                             == other.IsUpdateSkipTakeSupported

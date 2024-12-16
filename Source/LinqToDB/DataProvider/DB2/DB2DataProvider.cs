@@ -32,6 +32,7 @@ namespace LinqToDB.DataProvider.DB2
 			SqlProviderFlags.SupportedCorrelatedSubqueriesLevel       = 1;
 			SqlProviderFlags.IsRecursiveCTEJoinWithConditionSupported = false;
 			SqlProviderFlags.IsDistinctFromSupported                  = true;
+			SqlProviderFlags.SupportsPredicatesComparison             = true;
 
 			// Requires:
 			// DB2 LUW: 11.1+
