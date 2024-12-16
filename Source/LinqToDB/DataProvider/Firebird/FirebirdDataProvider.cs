@@ -39,6 +39,7 @@ namespace LinqToDB.DataProvider.Firebird
 			// CROSS - doesn't support, OUTER - supports conditions
 			SqlProviderFlags.IsOuterApplyJoinSupportsCondition = Version >= FirebirdVersion.v4;
 			SqlProviderFlags.SupportsPredicatesComparison      = Version >= FirebirdVersion.v3;
+			SqlProviderFlags.SupportsBooleanType               = Version >= FirebirdVersion.v3;
 
 			SqlProviderFlags.MaxInListValuesCount = Version >= FirebirdVersion.v5 ? 65535 : 1500;
 

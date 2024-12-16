@@ -44,6 +44,8 @@ namespace LinqToDB.DataProvider.Oracle
 			SqlProviderFlags.IsColumnSubqueryWithParentReferenceAndTakeSupported   = version >= OracleVersion.v12;
 			SqlProviderFlags.IsDistinctFromSupported                               = true;
 			SqlProviderFlags.DoesProviderTreatsEmptyStringAsNull                   = true;
+			// TODO: retest for ORA 23
+			SqlProviderFlags.SupportsBooleanType                                   = false;
 
 			SqlProviderFlags.RowConstructorSupport = RowFeature.Equality | RowFeature.CompareToSelect | RowFeature.In |
 			                                         RowFeature.Update   | RowFeature.Overlaps;

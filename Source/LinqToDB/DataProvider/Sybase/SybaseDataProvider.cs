@@ -44,6 +44,7 @@ namespace LinqToDB.DataProvider.Sybase
 			SqlProviderFlags.IsWindowFunctionsSupported       = false;
 			SqlProviderFlags.IsDerivedTableOrderBySupported   = false;
 			SqlProviderFlags.IsUpdateTakeSupported            = true;
+			SqlProviderFlags.SupportsBooleanType              = false;
 
 			SqlProviderFlags.SupportedCorrelatedSubqueriesLevel        = 1;
 			SqlProviderFlags.IsCorrelatedSubQueryTakeSupported         = false;

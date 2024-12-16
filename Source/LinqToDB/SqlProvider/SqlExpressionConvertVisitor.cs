@@ -167,6 +167,25 @@ namespace LinqToDB.SqlProvider
 			{
 				result = predicate.Expr1;
 			}
+			else
+			{
+				if (SqlProviderFlags?.SupportsBooleanType == false || QueryHelper.GetColumnDescriptor(predicate.Expr1)?.ValueConverter != null)
+				{
+					var unwrapped = QueryHelper.UnwrapNullablity(predicate.Expr1);
+					if (unwrapped is SqlCastExpression castExpression)
+					{
+						newResult = ConvertCastToPredicate(castExpression);
+					}
+					else if (unwrapped is SqlExpression { IsPredicate: true })
+					{
+						// do nothing
+					}
+					else
+					{
+						newResult = ConvertToBooleanSearchCondition(predicate.Expr1);
+					}
+				}
+			}
 
 			if (!ReferenceEquals(newResult, result))
 			{

@@ -436,6 +436,13 @@ namespace LinqToDB.SqlProvider
 		public bool SupportsPredicatesComparison { get; set; }
 
 		/// <summary>
+		/// Indicates that boolean type could be used as predicate without additional conversions.
+		/// Default value: <c>true</c>.
+		/// </summary>
+		[DataMember(Order = 50)]
+		public bool SupportsBooleanType { get; set; } = true;
+
+		/// <summary>
 		/// Provider supports nested joins
 		/// <code>
 		/// A JOIN (B JOIN C ON ?) ON ?
@@ -594,6 +601,7 @@ namespace LinqToDB.SqlProvider
 				^ IsCTESupportsOrdering                                .GetHashCode()
 				^ IsAccessBuggyLeftJoinConstantNullability             .GetHashCode()
 				^ SupportsPredicatesComparison                         .GetHashCode()
+				^ SupportsBooleanType                                  .GetHashCode()
 				^ IsDerivedTableOrderBySupported                       .GetHashCode()
 				^ IsUpdateTakeSupported                                .GetHashCode()
 				^ IsUpdateSkipTakeSupported                            .GetHashCode()
@@ -659,6 +667,7 @@ namespace LinqToDB.SqlProvider
 				&& IsCTESupportsOrdering                                 == other.IsCTESupportsOrdering
 				&& IsAccessBuggyLeftJoinConstantNullability              == other.IsAccessBuggyLeftJoinConstantNullability
 				&& SupportsPredicatesComparison                          == other.SupportsPredicatesComparison
+				&& SupportsBooleanType                                   == other.SupportsBooleanType
 				&& IsDerivedTableOrderBySupported                        == other.IsDerivedTableOrderBySupported
 				&& IsUpdateTakeSupported                                 == other.IsUpdateTakeSupported
 				&& IsUpdateSkipTakeSupported                             == other.IsUpdateSkipTakeSupported

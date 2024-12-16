@@ -66,6 +66,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			SqlProviderFlags.IsCTESupportsOrdering              = false;
 			SqlProviderFlags.IsUpdateTakeSupported              = true;
 			SqlProviderFlags.IsDistinctFromSupported            = Version >= SqlServerVersion.v2022;
+			SqlProviderFlags.SupportsBooleanType                = false;
 
 			SetCharField("char" , (r, i) => r.GetString(i).TrimEnd(' '));
 			SetCharField("nchar", (r, i) => r.GetString(i).TrimEnd(' '));
