@@ -595,8 +595,10 @@ namespace Tests.DataProvider
 
 				using (var db = GetDataConnection(context))
 				{
+					var minValue = SqlDateTime.MinValue.Value;
+
 					var values = db.GetTable<TestInline>()
-						.Where(_ => (_.DateTimeValue ?? SqlDateTime.MinValue.Value) <= TestData.DateTime)
+						.Where(_ => (_.DateTimeValue ?? minValue) <= TestData.DateTime)
 						.ToList();
 
 					Assert.That(db.LastQuery!.Contains(", @"), Is.Not.EqualTo(inline));

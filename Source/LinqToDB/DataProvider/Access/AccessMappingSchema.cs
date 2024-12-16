@@ -24,7 +24,6 @@ namespace LinqToDB.DataProvider.Access
 			SetDataType(typeof(DateTime),  DataType.DateTime);
 
 			SetValueToSqlConverter(typeof(bool),     (sb,_,_,v) => sb.Append((bool)v));
-			SetValueToSqlConverter(typeof(Guid),     (sb,_,_,v) => sb.Append(CultureInfo.InvariantCulture, $"'{(Guid)v:B}'"));
 			SetValueToSqlConverter(typeof(DateTime), (sb,_,_,v) => ConvertDateTimeToSql(sb, (DateTime)v));
 #if NET6_0_OR_GREATER
 			SetValueToSqlConverter(typeof(DateOnly), (sb,_,_,v) => ConvertDateOnlyToSql(sb, (DateOnly)v));
@@ -86,11 +85,23 @@ namespace LinqToDB.DataProvider.Access
 		}
 #endif
 
-		private static readonly AccessMappingSchema Instance = new ();
+		sealed class AccessOleDbMappingSchema : LockedMappingSchema
+		{
+			public AccessOleDbMappingSchema() : base("Access.OleDb")
+			{
+				// ODBC provider cannot handle this literal as:
+				// https://ftp.zx.net.nz/pub/archive/ftp.microsoft.com/MISC/KB/en-us/170/117.HTM
+				// Because ODBC defines the curly brace as an escape code for vendor specific escape clauses, you must turn off escape clause scanning when you use literal GUIDs in SQL statements with the Microsoft Access ODBC driver. Note that this functionality is not supported in the Microsoft Access ODBC driver that ships with MDAC 2.1 or later.
+				SetValueToSqlConverter(typeof(Guid), (sb, _, _, v) => sb.Append(CultureInfo.InvariantCulture, $"{{guid {(Guid)v:B}}}"));
+			}
+		}
 
-		public sealed class JetOleDbMappingSchema () : LockedMappingSchema(ProviderName.AccessJetOleDb, Instance);
+		private static readonly AccessMappingSchema      Instance      = new ();
+		private static readonly AccessOleDbMappingSchema OleDbInstance = new ();
+
+		public sealed class JetOleDbMappingSchema () : LockedMappingSchema(ProviderName.AccessJetOleDb, OleDbInstance, Instance);
 		public sealed class JetOdbcDbMappingSchema() : LockedMappingSchema(ProviderName.AccessJetOdbc , Instance);
-		public sealed class AceOleDbMappingSchema () : LockedMappingSchema(ProviderName.AccessAceOleDb, Instance);
+		public sealed class AceOleDbMappingSchema () : LockedMappingSchema(ProviderName.AccessAceOleDb, OleDbInstance, Instance);
 		public sealed class AceOdbcDbMappingSchema() : LockedMappingSchema(ProviderName.AccessAceOdbc , Instance);
 	}
 }

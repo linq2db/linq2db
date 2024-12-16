@@ -102,7 +102,7 @@ namespace Tests.Linq
 				where e.GuidValue == ConstantsContainer.GuidNonReadonly && e.GuidNullableValue == ConstantsContainer.GuidNonReadonly
 				select e;
 
-			query.GetStatement().CollectParameters().Should().HaveCount(1);
+			query.GetStatement().CollectParameters().Should().HaveCount(context.IsUseParameters() ? 1 : 0);
 
 			AssertQuery(query);
 		}
@@ -134,7 +134,7 @@ namespace Tests.Linq
 				where e.StringValue + "1" == ConstantsContainer.StringNonReadOnly + "1"
 				select e;
 
-			query.GetStatement().CollectParameters().Should().HaveCount(1);
+			query.GetStatement().CollectParameters().Should().HaveCount(context.IsUseParameters() ? 1 : 0);
 
 			AssertQuery(query);
 		}
@@ -200,7 +200,7 @@ namespace Tests.Linq
 				where e.Id == ConstantsContainer.InnerNonReadonlyStructure.Id && e.Id == ConstantsContainer.InnerNonReadonlyStructure.GetId(1)
 				select e;
 
-			query.GetStatement().CollectParameters().Should().HaveCount(2);
+			query.GetStatement().CollectParameters().Should().HaveCount(context.IsUseParameters() ? 2 : 0);
 			AssertQuery(query);
 
 			var query2 =
@@ -226,7 +226,7 @@ namespace Tests.Linq
 				where e.Id == ConstantsContainer.InnerClassNonReadonly.Id && e.Id == ConstantsContainer.InnerClassNonReadonly.InitOnlyId
 				select e;
 
-			query.GetStatement().CollectParameters().Should().HaveCount(2);
+			query.GetStatement().CollectParameters().Should().HaveCount(context.IsUseParameters() ? 2 : 0);
 			AssertQuery(query);
 
 			var query2 =
@@ -254,7 +254,7 @@ namespace Tests.Linq
 				where e.Id == innerClass.Id && e.Id == innerClass.InitOnlyId
 				select e;
 
-			query.GetStatement().CollectParameters().Should().HaveCount(2);
+			query.GetStatement().CollectParameters().Should().HaveCount(context.IsUseParameters() ? 2 : 0);
 			AssertQuery(query);
 
 			var query2 =

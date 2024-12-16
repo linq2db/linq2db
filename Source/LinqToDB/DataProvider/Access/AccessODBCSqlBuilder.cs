@@ -4,6 +4,7 @@ using System.Text;
 
 namespace LinqToDB.DataProvider.Access
 {
+	using Common;
 	using Mapping;
 	using SqlProvider;
 	using SqlQuery;
@@ -47,6 +48,18 @@ namespace LinqToDB.DataProvider.Access
 			}
 
 			return base.GetProviderTypeName(dataContext, parameter);
+		}
+
+		protected override void BuildValue(DbDataType? dataType, object? value)
+		{
+			// Access GUID literal syntax conflicts with ODBC runtime
+			if (value is Guid g)
+			{
+				BuildParameter(new SqlParameter(dataType ?? MappingSchema.GetDbDataType(typeof(Guid)), "value", value));
+				return;
+			}
+
+			base.BuildValue(dataType, value);
 		}
 	}
 }
