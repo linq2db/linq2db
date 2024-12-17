@@ -1,6 +1,7 @@
 ﻿using System.Linq;
 
 using LinqToDB;
+using LinqToDB.Data;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
@@ -43,12 +44,50 @@ namespace Tests.Linq
 			[Column] public bool? BooleanN { get; set; }
 			[Column] public int Int32 { get; set; }
 			[Column] public int? Int32N { get; set; }
+			[Column] public decimal Decimal { get; set; }
+			[Column] public decimal? DecimalN { get; set; }
+			[Column] public double Double { get; set; }
+			[Column] public double? DoubleN { get; set; }
+
+			public static readonly BooleanTable[] Data;
+		}
+
+		sealed class SybaseBooleanTable
+		{
+			static SybaseBooleanTable()
+			{
+				var id = 1;
+
+				Data = (from boolean in new[] { true, false }
+						from int32 in new[] { -1, 0, 1 }
+						from int32N in new int?[] { -1, 0, 1, null }
+						from dec in new[] { -0.1m, 0m, 0.1m }
+						from decN in new decimal?[] { -0.1m, 0m, 0.1m, null }
+						from dbl in new[] { -0.1, 0.0, 0.1 }
+						from dblТ in new double?[] { -0.1, 0.0, 0.1, null }
+						select new SybaseBooleanTable()
+						{
+							Id = id++,
+							Boolean = boolean,
+							Int32 = int32,
+							Int32N = int32N,
+							Decimal = dec,
+							DecimalN = decN,
+							Double = dbl,
+							DoubleN = dblТ,
+						}).ToArray();
+			}
+
+			[PrimaryKey] public int Id { get; set; }
+			[Column] public bool Boolean { get; set; }
+			[Column] public int Int32 { get; set; }
+			[Column] public int? Int32N { get; set; }
 			[Column(Scale = 2)] public decimal Decimal { get; set; }
 			[Column(Scale = 2)] public decimal? DecimalN { get; set; }
 			[Column] public double Double { get; set; }
 			[Column] public double? DoubleN { get; set; }
 
-			public static readonly BooleanTable[] Data;
+			public static readonly SybaseBooleanTable[] Data;
 		}
 
 		[Test]
@@ -377,7 +416,12 @@ namespace Tests.Linq
 		public void TestSybase([IncludeDataSources(false, TestProvName.AllSybase)] string context)
 		{
 			using var db = GetDataContext(context);
-			using var tb = db.CreateLocalTable(BooleanTable.Data);
+			using var tb = db.CreateLocalTable<SybaseBooleanTable>();
+
+			using (var _ = new DisableBaseline("Test setup"))
+			{
+				tb.BulkCopy(new BulkCopyOptions() { MaxBatchSize = 500 }, SybaseBooleanTable.Data);
+			}
 
 			Test();
 			db.InlineParameters = true;
@@ -397,23 +441,11 @@ namespace Tests.Linq
 				AssertQuery(tb.Where(r => r.Boolean == FalseN));
 				AssertQuery(tb.Where(r => r.Boolean == Null));
 
-				AssertQuery(tb.Where(r => r.BooleanN == True));
-				AssertQuery(tb.Where(r => r.BooleanN == False));
-				AssertQuery(tb.Where(r => r.BooleanN == TrueN));
-				AssertQuery(tb.Where(r => r.BooleanN == FalseN));
-				AssertQuery(tb.Where(r => r.BooleanN == Null));
-
 				AssertQuery(tb.Where(r => r.Boolean != True));
 				AssertQuery(tb.Where(r => r.Boolean != False));
 				AssertQuery(tb.Where(r => r.Boolean != TrueN));
 				AssertQuery(tb.Where(r => r.Boolean != FalseN));
 				AssertQuery(tb.Where(r => r.Boolean != Null));
-
-				AssertQuery(tb.Where(r => r.BooleanN != True));
-				AssertQuery(tb.Where(r => r.BooleanN != False));
-				AssertQuery(tb.Where(r => r.BooleanN != TrueN));
-				AssertQuery(tb.Where(r => r.BooleanN != FalseN));
-				AssertQuery(tb.Where(r => r.BooleanN != Null));
 
 				AssertQuery(tb.GroupBy(r => r.Id)
 					.Select(g => new
@@ -422,16 +454,12 @@ namespace Tests.Linq
 
 						Count = g.Count(r => r.Boolean),
 						Count_Explicit = g.Count(r => r.Boolean == true),
-						CountN = g.Count(r => r.BooleanN == true),
 
 						Count_False = g.Count(r => r.Boolean == false),
-						CountN_False = g.Count(r => r.BooleanN == false),
 
 						Count_NotTrue = g.Count(r => r.Boolean != true),
-						CountN_NotTrue = g.Count(r => r.BooleanN != true),
 
 						Count_NotFalse = g.Count(r => r.Boolean != false),
-						CountN_NotFalse = g.Count(r => r.BooleanN != false),
 
 						CountInt32 = g.Count(r => r.Int32 == 0),
 						Count32N = g.Count(r => r.Int32N == 0),
@@ -490,11 +518,8 @@ namespace Tests.Linq
 					Condition12 = (r.DecimalN ?? r.Decimal) == 0,
 					Condition13 = (r.DoubleN ?? r.Double) == 0,
 					Condition21 = (r.Boolean ? r.Int32N : r.Int32) == 0,
-					Condition22 = (r.BooleanN == false ? r.Int32N : r.Int32) == 0,
 					Condition23 = (r.Boolean ? r.DecimalN : r.Decimal) == 0,
-					Condition24 = (r.BooleanN == false ? r.DecimalN : r.Decimal) == 0,
 					Condition25 = (r.Boolean ? r.DoubleN : r.Double) == 0,
-					Condition26 = (r.BooleanN == false ? r.DoubleN : r.Double) == 0,
 
 					Condition101 = r.Int32 > 0,
 					Condition102 = r.Int32N > 0,
@@ -506,11 +531,8 @@ namespace Tests.Linq
 					Condition112 = (r.DecimalN ?? r.Decimal) > 0,
 					Condition113 = (r.DoubleN ?? r.Double) > 0,
 					Condition121 = (r.Boolean ? r.Int32N : r.Int32) > 0,
-					Condition122 = (r.BooleanN == false ? r.Int32N : r.Int32) > 0,
 					Condition123 = (r.Boolean ? r.DecimalN : r.Decimal) > 0,
-					Condition124 = (r.BooleanN == false ? r.DecimalN : r.Decimal) > 0,
 					Condition125 = (r.Boolean ? r.DoubleN : r.Double) > 0,
-					Condition126 = (r.BooleanN == false ? r.DoubleN : r.Double) > 0,
 
 					Condition201 = r.Int32 >= 0,
 					Condition202 = r.Int32N >= 0,
@@ -522,11 +544,8 @@ namespace Tests.Linq
 					Condition212 = (r.DecimalN ?? r.Decimal) >= 0,
 					Condition213 = (r.DoubleN ?? r.Double) >= 0,
 					Condition221 = (r.Boolean ? r.Int32N : r.Int32) >= 0,
-					Condition222 = (r.BooleanN == false ? r.Int32N : r.Int32) >= 0,
 					Condition223 = (r.Boolean ? r.DecimalN : r.Decimal) >= 0,
-					Condition224 = (r.BooleanN == false ? r.DecimalN : r.Decimal) >= 0,
 					Condition225 = (r.Boolean ? r.DoubleN : r.Double) >= 0,
-					Condition226 = (r.BooleanN == false ? r.DoubleN : r.Double) >= 0,
 
 					Condition301 = r.Int32 < 0,
 					Condition302 = r.Int32N < 0,
@@ -538,11 +557,8 @@ namespace Tests.Linq
 					Condition312 = (r.DecimalN ?? r.Decimal) < 0,
 					Condition313 = (r.DoubleN ?? r.Double) < 0,
 					Condition321 = (r.Boolean ? r.Int32N : r.Int32) < 0,
-					Condition322 = (r.BooleanN == false ? r.Int32N : r.Int32) < 0,
 					Condition323 = (r.Boolean ? r.DecimalN : r.Decimal) < 0,
-					Condition324 = (r.BooleanN == false ? r.DecimalN : r.Decimal) < 0,
 					Condition325 = (r.Boolean ? r.DoubleN : r.Double) < 0,
-					Condition326 = (r.BooleanN == false ? r.DoubleN : r.Double) < 0,
 
 					Condition401 = r.Int32 <= 0,
 					Condition402 = r.Int32N <= 0,
@@ -554,11 +570,8 @@ namespace Tests.Linq
 					Condition412 = (r.DecimalN ?? r.Decimal) <= 0,
 					Condition413 = (r.DoubleN ?? r.Double) <= 0,
 					Condition421 = (r.Boolean ? r.Int32N : r.Int32) <= 0,
-					Condition422 = (r.BooleanN == false ? r.Int32N : r.Int32) <= 0,
 					Condition423 = (r.Boolean ? r.DecimalN : r.Decimal) <= 0,
-					Condition424 = (r.BooleanN == false ? r.DecimalN : r.Decimal) <= 0,
 					Condition425 = (r.Boolean ? r.DoubleN : r.Double) <= 0,
-					Condition426 = (r.BooleanN == false ? r.DoubleN : r.Double) <= 0,
 				});
 
 				AssertQuery(query.Concat(query));
@@ -567,17 +580,12 @@ namespace Tests.Linq
 				{
 					Count = Sql.Ext.Count(g.Boolean).ToValue(),
 					Count_Explicit = Sql.Ext.Count(g.Boolean == true).ToValue(),
-					CountN_Nullable = Sql.Ext.Count(g.BooleanN).ToValue(),
-					CountN = Sql.Ext.Count(g.BooleanN == true).ToValue(),
 
 					Count_False = Sql.Ext.Count(g.Boolean == false).ToValue(),
-					CountN_False = Sql.Ext.Count(g.BooleanN == false).ToValue(),
 
 					Count_NotTrue = Sql.Ext.Count(g.Boolean != true).ToValue(),
-					CountN_NotTrue = Sql.Ext.Count(g.BooleanN != true).ToValue(),
 
 					Count_NotFalse = Sql.Ext.Count(g.Boolean != false).ToValue(),
-					CountN_NotFalse = Sql.Ext.Count(g.BooleanN != false).ToValue(),
 
 					CountInt32 = Sql.Ext.Count(g.Int32 == 0).ToValue(),
 					Count32N = Sql.Ext.Count(g.Int32N == 0).ToValue(),
@@ -626,17 +634,12 @@ namespace Tests.Linq
 				{
 					Count = g.Count(r => r.Boolean),
 					Count_Explicit = g.Count(r => r.Boolean == true),
-					CountN_Nullable = g.Count(r => r.BooleanN == true),
-					CountN = g.Count(r => r.BooleanN == true),
 
 					Count_False = g.Count(r => r.Boolean == false),
-					CountN_False = g.Count(r => r.BooleanN == false),
 
 					Count_NotTrue = g.Count(r => r.Boolean != true),
-					CountN_NotTrue = g.Count(r => r.BooleanN != true),
 
 					Count_NotFalse = g.Count(r => r.Boolean != false),
-					CountN_NotFalse = g.Count(r => r.BooleanN != false),
 
 					CountInt32 = g.Count(r => r.Int32 == 0),
 					Count32N = g.Count(r => r.Int32N == 0),
