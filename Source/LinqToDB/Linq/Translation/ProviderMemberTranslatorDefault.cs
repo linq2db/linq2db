@@ -151,11 +151,30 @@ namespace LinqToDB.Linq.Translation
 			if (methodCall.Method.Name != nameof(Sql.Convert))
 				return false;
 
-			if (methodCall.Arguments.Count != 1)
-				return false;
+			if (methodCall.Arguments.Count == 1)
+				//TODO: Implement conversion
+				return true;
 
-			//TODO: Implement conversion
-			return true;
+			if (methodCall.Arguments.Count == 2)
+			{
+				if (methodCall.Arguments[0].Type != typeof(bool))
+					return false;
+				
+				var argumentPlaceholder = TranslateNoRequiredObjectExpression(translationContext, methodCall.Arguments[1], translationFlags);
+
+				if (argumentPlaceholder == null)
+					return false;
+
+				var translatedSqlExpression = TranslateConvertToBoolean(translationContext, argumentPlaceholder.Sql, translationFlags);
+
+				if (translatedSqlExpression == null)
+					return false;
+
+				translated = translationContext.CreatePlaceholder(translationContext.CurrentSelectQuery, translatedSqlExpression, methodCall);
+				return true;
+			}
+
+			return false;
 		}
 
 		protected bool ProcessConvertToBoolean(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, out Expression? translated)
