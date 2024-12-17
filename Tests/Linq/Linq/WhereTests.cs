@@ -2383,8 +2383,11 @@ namespace Tests.Linq
 			using var db = GetDataConnection(context);
 			db.Types.Where(r => !r.BoolValue).ToList();
 
-			if (context.StartsWith(ProviderName.PostgreSQL) || context.StartsWith(ProviderName.Firebird) && !context.StartsWith(ProviderName.Firebird25))
+			if (context.IsAnyOf(TestProvName.AllFirebird, TestProvName.AllFirebird3Plus, TestProvName.AllMySql, TestProvName.AllSQLite, TestProvName.AllDB2, TestProvName.AllClickHouse, TestProvName.AllAccess, TestProvName.AllInformix))
+			{
 				Assert.That(db.LastQuery, Does.Not.Contain(" = "));
+				Assert.That(db.LastQuery, Does.Contain("NOT "));
+			}
 			else
 				Assert.That(db.LastQuery, Does.Contain(" = "));
 		}
