@@ -2518,7 +2518,7 @@ namespace LinqToDB.SqlProvider
 					break;
 
 				case QueryElementType.ExistsPredicate:
-					StringBuilder.Append(((SqlPredicate.Exists)predicate).IsNot ? " NOT EXISTS " : " EXISTS ");
+					StringBuilder.Append(((SqlPredicate.Exists)predicate).IsNot ? "NOT EXISTS" : "EXISTS");
 					BuildExpression(GetPrecedence((SqlPredicate.Exists)predicate), ((SqlPredicate.Exists)predicate).SubQuery);
 					break;
 
