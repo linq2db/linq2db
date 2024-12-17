@@ -40,7 +40,7 @@ namespace Tests.Linq
 		{
 			using var db = (TestDataConnection)GetDataContext(context);
 
-			TestType<GuidTable, Guid>(db, GuidTable.Data, context);
+			TestType<GuidTable, Guid>(db, GuidTable.Data, context, supportLiterals: !context.IsAnyOf(TestProvName.AllAccessOdbc));
 		}
 		#endregion
 
@@ -169,7 +169,7 @@ namespace Tests.Linq
 		[Sql.Expression("{0} = {1}", IsPredicate = true)]
 		private static bool Equality(object? x, object? y) => throw new NotImplementedException();
 
-		private void TestType<TTable, TType>(DataConnection db, TTable[] data, string context)
+		private void TestType<TTable, TType>(DataConnection db, TTable[] data, string context, bool supportLiterals = true)
 			where TTable: TypeTable<TType>
 			where TType: struct
 		{
@@ -200,7 +200,10 @@ namespace Tests.Linq
 			db.InlineParameters = true;
 			db.OnNextCommandInitialized((_, cmd) =>
 			{
-				Assert.That(cmd.Parameters, Is.Empty);
+				if (supportLiterals)
+					Assert.That(cmd.Parameters, Is.Empty);
+				else
+					Assert.That(cmd.Parameters, Has.Count.EqualTo(2));
 				return cmd;
 			});
 

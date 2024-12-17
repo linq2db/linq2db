@@ -264,6 +264,17 @@ namespace LinqToDB.DataProvider.Access
 			base.BuildParameter(parameter);
 		}
 
+		protected override bool TryConvertParameterToSql(SqlParameterValue paramValue)
+		{
+			// Access literals doesn't support less than second precision
+			if (paramValue.ProviderValue is DateTime dt && dt.Millisecond != 0)
+			{
+				return false;
+			}
+
+			return base.TryConvertParameterToSql(paramValue);
+		}
+
 		protected override void BuildValue(DbDataType? dataType, object? value)
 		{
 			// Access literals doesn't support less than second precision
