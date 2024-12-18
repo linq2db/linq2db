@@ -1630,10 +1630,12 @@ namespace LinqToDB.SqlQuery
 
 		public static bool NeedsEqualityWithNull(ISqlExpression expr1, SqlPredicate.Operator op, ISqlExpression expr2, NullabilityContext nullabilityContext)
 		{
-			if (op == SqlPredicate.Operator.Equal)
-				return expr1.CanBeNullableOrUnknown(nullabilityContext) && expr2.CanBeNullableOrUnknown(nullabilityContext);
-			if (op == SqlPredicate.Operator.NotEqual)
-				return expr1.CanBeNullableOrUnknown(nullabilityContext) ^ expr2.CanBeNullableOrUnknown(nullabilityContext);
+			// we cannot relax it to:
+			// ==: nullable && nullable
+			// !=: nullable XOR nullable
+			// see test GroupByAggregate
+			if (op is SqlPredicate.Operator.Equal or SqlPredicate.Operator.NotEqual)
+				return expr1.CanBeNullableOrUnknown(nullabilityContext) || expr2.CanBeNullableOrUnknown(nullabilityContext);
 
 			return false;
 		}

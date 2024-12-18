@@ -823,6 +823,7 @@ namespace Tests.OrmBattle
 			Assert.That(list, Has.Count.EqualTo(2));
 			var firstGroupList = list.First(g => !g.Key).ToList();
 			Assert.That(firstGroupList, Has.Count.EqualTo(71));
+			//AssertQuery(result);
 		}
 
 		[Test]

@@ -384,7 +384,7 @@ namespace LinqToDB.SqlProvider
 			}
 
 			// convert bool_exp_1 == bool_expr_2 to (x ? 1 : 0) == (y ? 1 : 0)
-			// for providers that doesn't support boolean(predicate) comparision
+			// for providers that doesn't support boolean(predicate) comparison
 			// or for predicates that could return UNKNOWN
 			// Alternative could be to use IS [NOT] DISTINCT FROM predicate
 			if (SqlProviderFlags is { SupportsPredicatesComparison: false }
