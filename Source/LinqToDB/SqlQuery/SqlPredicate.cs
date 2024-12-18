@@ -340,7 +340,9 @@ namespace LinqToDB.SqlQuery
 				if (WithNull == null || nullability.IsEmpty)
 					return this;
 
-				if (!Expr1.CanBeNullableOrUnknown(nullability) && !Expr2.CanBeNullableOrUnknown(nullability))
+				var canBeNull1 = Expr1.CanBeNullableOrUnknown(nullability);
+				var canBeNull2 = Expr2.CanBeNullableOrUnknown(nullability);
+				if (!canBeNull1 && !canBeNull2)
 					return MakeWithoutNulls();
 
 				switch (Operator)
@@ -361,14 +363,31 @@ namespace LinqToDB.SqlQuery
 					}
 					case Operator.Equal:
 					{
-						var search = new SqlSearchCondition(true)
+						if (canBeNull1 ^ canBeNull2)
+						{
+							var search = new SqlSearchCondition(false)
 								.Add(MakeWithoutNulls())
+								.AddAnd(sc => sc
+									.Add(new IsNull(canBeNull1 ? Expr1 : Expr2, true))
+								);
+
+							return search;
+						}
+						else
+						{
+							var search = new SqlSearchCondition(true)
+								.AddAnd(sc => sc
+									.Add(MakeWithoutNulls())
+									.Add(new IsNull(Expr1, true))
+									.Add(new IsNull(Expr2, true))
+									)
 								.AddAnd(sc => sc
 									.Add(new IsNull(Expr1, false))
 									.Add(new IsNull(Expr2, false))
 								);
 
-						return search;
+							return search;
+						}
 					}
 					default:
 					{
