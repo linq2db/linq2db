@@ -12,6 +12,8 @@ using System.Threading.Tasks;
 using System.Xml;
 using System.Xml.Linq;
 
+using FluentAssertions;
+
 using LinqToDB;
 using LinqToDB.Common;
 using LinqToDB.Data;
@@ -2599,6 +2601,34 @@ $function$
 			t.ToList();
 
 			Assert.That(db.LastQuery, Does.Contain($"\"{tableName.Replace("\"", "\"\"")}\""));
+		}
+
+		[Test]
+		public void PartitionedTables([IncludeDataSources(TestProvName.AllPostgreSQL10Plus)] string context)
+		{
+			using var db     = GetDataConnection(context);
+
+			var schema = db.DataProvider.GetSchemaProvider().GetSchema(db, new GetSchemaOptions());
+
+			var tables = schema.Tables
+				.Where(t => t.TableName != null && t.TableName.StartsWith("multitenant_table"))
+				.ToArray();
+
+			tables.Should().HaveCount(1);
+
+			var multiTenantTable = tables[0];
+
+			multiTenantTable!.Columns.Should().HaveCount(5);
+
+			var tenantidColumn = multiTenantTable.Columns.Find(c => c.ColumnName == "tenantid");
+			tenantidColumn.Should().NotBeNull();
+
+			tenantidColumn!.IsPrimaryKey.Should().BeTrue();
+
+			var idColumn = multiTenantTable.Columns.Find(c => c.ColumnName == "id");
+			idColumn.Should().NotBeNull();
+
+			idColumn!.IsPrimaryKey.Should().BeTrue();
 		}
 
 		#region Issue 4556

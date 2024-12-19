@@ -4,12 +4,12 @@
 <#@ include file="..\..\..\Source\LinqToDB.Templates\LinqToDB.PostgreSQL.ttinclude" once="true" #>
 <#@ include file="..\Shared.ttinclude"                                              once="true" #>
 <#
-	NamespaceName = "PostreSQLDataContext";
+	NamespaceName = "PostreSQL9_5DataContext";
 	GenerateConstructors = false;
 
 	GetSchemaOptions.PreferProviderSpecificTypes = true;
 
-	LoadPostgreSQLMetadata(GetConnectionString("PostgreSQL.16"));
+	LoadPostgreSQLMetadata(GetConnectionString("PostgreSQL.9.5"));
 
 	GetTable("testsamename").TypeName = "_testsamename";
 	GetTable("testsamename").DataContextPropertyName = "_testsamename";

@@ -25,7 +25,7 @@ using LinqToDB.Mapping;
 
 using NpgsqlTypes;
 
-namespace PostreSQLDataContext
+namespace PostreSQL9_5DataContext
 {
 	public partial class TestdataDB : LinqToDB.Data.DataConnection
 	{
@@ -43,7 +43,6 @@ namespace PostreSQLDataContext
 		/// </summary>
 		public ITable<Issue2023>                      Issue2023                 { get { return this.GetTable<Issue2023>(); } }
 		public ITable<LinqDataType>                   LinqDataTypes             { get { return this.GetTable<LinqDataType>(); } }
-		public ITable<MultitenantTable>               MultitenantTables         { get { return this.GetTable<MultitenantTable>(); } }
 		public ITable<Parent>                         Parents                   { get { return this.GetTable<Parent>(); } }
 		public ITable<Patient>                        Patients                  { get { return this.GetTable<Patient>(); } }
 		/// <summary>
@@ -157,7 +156,6 @@ namespace PostreSQLDataContext
 			[Column("inetDataType")       ] public NpgsqlInet?       InetDataType        { get; set; }
 			[Column("cidrDataType")       ] public NpgsqlCidr?       CidrDataType        { get; set; }
 			[Column("macaddrDataType")    ] public PhysicalAddress?  MacaddrDataType     { get; set; }
-			[Column("macaddr8DataType")   ] public PhysicalAddress?  Macaddr8DataType    { get; set; }
 			[Column("jsonDataType")       ] public string?           JsonDataType        { get; set; }
 			[Column("jsonbDataType")      ] public string?           JsonbDataType       { get; set; }
 			[Column("xmlDataType")        ] public string?           XmlDataType         { get; set; }
@@ -227,7 +225,6 @@ namespace PostreSQLDataContext
 		[Column("inetDataType",        DataType=LinqToDB.DataType.Udt),                                   Nullable            ] public NpgsqlInet?       InetDataType        { get; set; } // inet
 		[Column("cidrDataType",        DataType=LinqToDB.DataType.Udt),                                   Nullable            ] public NpgsqlCidr?       CidrDataType        { get; set; } // cidr
 		[Column("macaddrDataType",     DataType=LinqToDB.DataType.Udt),                                   Nullable            ] public PhysicalAddress?  MacaddrDataType     { get; set; } // macaddr
-		[Column("macaddr8DataType",    DataType=LinqToDB.DataType.Udt),                                   Nullable            ] public PhysicalAddress?  Macaddr8DataType    { get; set; } // macaddr8
 		[Column("jsonDataType",        DataType=LinqToDB.DataType.Json),                                  Nullable            ] public string?           JsonDataType        { get; set; } // json
 		[Column("jsonbDataType",       DataType=LinqToDB.DataType.BinaryJson),                            Nullable            ] public string?           JsonbDataType       { get; set; } // jsonb
 		[Column("xmlDataType",         DataType=LinqToDB.DataType.Xml),                                   Nullable            ] public string?           XmlDataType         { get; set; } // xml
@@ -335,16 +332,6 @@ namespace PostreSQLDataContext
 		[Column(DataType=LinqToDB.DataType.Int32,     Precision=32, Scale=0), Nullable] public int?      IntValue       { get; set; } // integer
 		[Column(DataType=LinqToDB.DataType.Int64,     Precision=64, Scale=0), Nullable] public long?     BigIntValue    { get; set; } // bigint
 		[Column(DataType=LinqToDB.DataType.NVarChar,  Length=50),             Nullable] public string?   StringValue    { get; set; } // character varying(50)
-	}
-
-	[Table(Schema="public", Name="multitenant_table")]
-	public partial class MultitenantTable
-	{
-		[Column("tenantid",    DataType=LinqToDB.DataType.Guid,      SkipOnUpdate=true),              PrimaryKey(1), NotNull] public Guid     Tenantid    { get; set; } // uuid
-		[Column("id",          DataType=LinqToDB.DataType.Guid,      SkipOnUpdate=true),              PrimaryKey(2), NotNull] public Guid     Id          { get; set; } // uuid
-		[Column("name",        DataType=LinqToDB.DataType.NVarChar,  Length=100, SkipOnUpdate=true),     Nullable           ] public string?  Name        { get; set; } // character varying(100)
-		[Column("description", DataType=LinqToDB.DataType.Text,      SkipOnUpdate=true),                 Nullable           ] public string?  Description { get; set; } // text
-		[Column("createdat",   DataType=LinqToDB.DataType.DateTime2, Precision=6, SkipOnUpdate=true),                NotNull] public DateTime Createdat   { get; set; } // timestamp (6) without time zone
 	}
 
 	[Table(Schema="public", Name="Parent")]
@@ -659,7 +646,7 @@ namespace PostreSQLDataContext
 		#region Reverse
 
 		[Sql.Function(Name="public.reverse", ServerSideOnly=true)]
-		public static string? Reverse(string? par11)
+		public static string? Reverse(string? par10)
 		{
 			throw new InvalidOperationException();
 		}
@@ -669,7 +656,7 @@ namespace PostreSQLDataContext
 		#region TestAvg
 
 		[Sql.Function(Name="public.test_avg", ServerSideOnly=true, IsAggregate = true, ArgIndices = new[] { 0 })]
-		public static double? TestAvg<TSource>(this IEnumerable<TSource> src, Expression<Func<TSource, double?>> par13)
+		public static double? TestAvg<TSource>(this IEnumerable<TSource> src, Expression<Func<TSource, double?>> par12)
 		{
 			throw new InvalidOperationException();
 		}
@@ -737,13 +724,6 @@ namespace PostreSQLDataContext
 		{
 			return table.FirstOrDefault(t =>
 				t.InheritanceParentId == InheritanceParentId);
-		}
-
-		public static MultitenantTable? Find(this ITable<MultitenantTable> table, Guid Tenantid, Guid Id)
-		{
-			return table.FirstOrDefault(t =>
-				t.Tenantid == Tenantid &&
-				t.Id       == Id);
 		}
 
 		public static Patient? Find(this ITable<Patient> table, int PersonID)
