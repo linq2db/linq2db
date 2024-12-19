@@ -36,7 +36,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 		public override DatabaseSchema GetSchema(DataConnection dataConnection, GetSchemaOptions? options = null)
 		{
-			var _version = dataConnection.Query<int>("SHOW server_version_num").Single();
+			_version = dataConnection.Query<int>("SHOW server_version_num").Single();
 
 			return base.GetSchema(dataConnection, options);
 		}
