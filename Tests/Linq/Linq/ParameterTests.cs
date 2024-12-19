@@ -523,7 +523,7 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 			using (var table = db.CreateLocalTable<Issue1189Customer>())
 			{
-				table.Where(k => k.ToDelete <= TestData.DateTime).ToList();
+				table.Where(k => k.ToDelete <= TestData.NonReadonlyDateTime).ToList();
 			}
 		}
 

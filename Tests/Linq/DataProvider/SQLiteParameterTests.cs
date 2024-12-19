@@ -51,7 +51,7 @@ namespace Tests.DataProvider
 			db.InlineParameters = true;
 
 			var query = from t in db.GetTable<ClassWithIntDate>()
-						where t.Value > TestData.DateTime
+						where t.Value > TestData.NonReadonlyDateTime
 						select t;
 
 			query.ToArray();

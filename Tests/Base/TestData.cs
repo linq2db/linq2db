@@ -16,8 +16,18 @@ namespace Tests
 		public static readonly DateTime DateTime6Utc                  = new DateTime(2020, 2, 29, 17, 54, 55, 123, DateTimeKind.Utc).AddTicks(1230);
 		public static readonly DateTime Date                          = new (2020, 2, 29);
 		public static readonly DateTime DateAmbiguous                 = new (2020, 8, 9);
+
+		public static DateTime NonReadonlyDateTime                    = new DateTime(2020, 2, 29, 17, 54, 55, 123).AddTicks(1234);
+		public static DateTime NonReadonlyDateTime0                   = new DateTime(2020, 2, 29, 17, 54, 55);
+		public static DateTime NonReadonlyDateTime3                   = new DateTime(2020, 2, 29, 17, 54, 55, 123);
+		public static DateTime NonReadonlyDateTimeUtc                 = new DateTime(2020, 2, 29, 17, 54, 55, 123, DateTimeKind.Utc).AddTicks(1234);
+		public static DateTime NonReadonlyDateTime4Utc                = new DateTime(2020, 2, 29, 17, 54, 55, 123, DateTimeKind.Utc).AddTicks(1000);
+		public static DateTime NonReadonlyDateTime6Utc                = new DateTime(2020, 2, 29, 17, 54, 55, 123, DateTimeKind.Utc).AddTicks(1230);
+		public static DateTime NonReadonlyDate                        = new (2020, 2, 29);
+		public static DateTime NonReadonlyDateAmbiguous               = new (2020, 8, 9);
+
 #if NET6_0_OR_GREATER
-			public static readonly DateOnly DateOnly                      = new (2020, 2, 29);
+		public static readonly DateOnly DateOnly                      = new (2020, 2, 29);
 			public static readonly DateOnly DateOnlyAmbiguous             = new (2020, 8, 9);
 #endif
 		public static readonly TimeSpan Interval                      = new TimeSpan(-5, 17, 54, 55, 123).Add(TimeSpan.FromTicks(1234));
