@@ -69,6 +69,11 @@ namespace LinqToDB.EntityFrameworkCore.Tests.Logging
 				{
 					commandText = kvp.Value.ToString();
 				}
+				// linq2db logger
+				else if (kvp.Key == "SqlText")
+				{
+					commandText = kvp.Value.ToString();
+				}
 			}
 			if (!string.IsNullOrEmpty(parameters))
 			{

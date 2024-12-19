@@ -10,6 +10,8 @@ namespace LinqToDB.Linq
 	using Mapping;
 	using SqlQuery;
 	using Tools;
+	using Infrastructure;
+	using Internal;
 
 	static partial class QueryRunner
 	{
@@ -42,17 +44,19 @@ namespace LinqToDB.Linq
 
 				var insertStatement = new SqlInsertStatement { Insert = { Into = sqlTable } };
 
-				var ei = new Query<int>(dataContext, null)
+				var ei = new Query<int>(dataContext)
 				{
 					Queries = { new QueryInfo { Statement = insertStatement } }
 				};
+
+				var accessorIdGenerator = new UniqueIdGenerator<ParameterAccessor>();
 
 				foreach (var field in sqlTable.Fields.Where(x => columnFilter == null || columnFilter(obj, x.ColumnDescriptor)))
 				{
 					if (field.IsInsertable && !field.ColumnDescriptor.ShouldSkip(obj!, descriptor, SkipModification.Insert))
 					{
-						var param = GetParameter(type, dataContext, field);
-						ei.Queries[0].AddParameterAccessor(param);
+						var param = GetParameter(accessorIdGenerator, type, dataContext, field);
+						ei.AddParameterAccessor(param);
 
 						insertStatement.Insert.Items.Add(new SqlSetExpression(field, param.SqlParameter));
 					}
@@ -110,7 +114,7 @@ namespace LinqToDB.Linq
 							return CreateQuery(context.dataContext, context.entityDescriptor, context.obj, null, key.tableName, key.serverName, key.databaseName, key.schemaName, key.tableOptions, key.type);
 						});
 
-				return (int)ei.GetElement(dataContext, Expression.Constant(obj), null, null)!;
+				return (int)ei.GetElement(dataContext, new RuntimeExpressionsContainer(Expression.Constant(obj)), null, null)!;
 			}
 
 			public static async Task<int> QueryAsync(
@@ -153,7 +157,7 @@ namespace LinqToDB.Linq
 								return CreateQuery(context.dataContext, context.entityDescriptor, context.obj, null, key.tableName, key.serverName, key.databaseName, key.schemaName, key.tableOptions, key.type);
 							});
 
-					var result = await ei.GetElementAsync(dataContext, Expression.Constant(obj), null, null, token).ConfigureAwait(false);
+					var result = await ei.GetElementAsync(dataContext, new RuntimeExpressionsContainer(Expression.Constant(obj)), null, null, token).ConfigureAwait(false);
 
 					return (int)result!;
 				}

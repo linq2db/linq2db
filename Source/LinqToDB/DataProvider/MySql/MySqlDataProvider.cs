@@ -33,6 +33,8 @@ namespace LinqToDB.DataProvider.MySql
 			SqlProviderFlags.IsCommonTableExpressionsSupported = version > MySqlVersion.MySql57;
 			SqlProviderFlags.IsUpdateFromSupported             = false;
 			SqlProviderFlags.IsNamingQueryBlockSupported       = true;
+			SqlProviderFlags.IsDistinctFromSupported           = true;
+			SqlProviderFlags.SupportsPredicatesComparison      = true;
 			SqlProviderFlags.IsAllSetOperationsSupported       = version > MySqlVersion.MySql57;
 			SqlProviderFlags.IsDistinctSetOperationsSupported  = version > MySqlVersion.MySql57;
 			// MariaDB still lacking it

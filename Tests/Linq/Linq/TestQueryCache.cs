@@ -186,8 +186,7 @@ namespace Tests.Linq
 						.GetTable<ManyFields>()
 						.Where(x => Helper.GetField(x, i) == i);
 
-					var sqlStr = test.ToString();
-					TestContext.Out.WriteLine(sqlStr);
+					_ = test.ToSqlQuery();
 				}
 
 				Assert.That(Query<ManyFields>.CacheMissCount - currentMiss, Is.EqualTo(5));
@@ -200,7 +199,7 @@ namespace Tests.Linq
 						.GetTable<ManyFields>()
 						.Where(x => Helper.GetField(x, i) == i);
 
-					var sqlStr = test.ToString();
+					_ = test.ToSqlQuery();
 				}
 
 				Assert.That(Query<ManyFields>.CacheMissCount, Is.EqualTo(currentMiss));

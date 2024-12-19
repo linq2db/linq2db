@@ -127,8 +127,6 @@ namespace Tests.DataProvider
 
 				var sql = string.Format(CultureInfo.InvariantCulture, "SELECT Cast({0} as {1})", sqlValue ?? "NULL", sqlType);
 
-				Debug.WriteLine(sql + " -> " + typeof(T));
-
 				Assert.That(conn.Execute<T>(sql), Is.EqualTo(expectedValue));
 			}
 
@@ -137,12 +135,12 @@ namespace Tests.DataProvider
 					"SELECT Cast(@p as decimal(38))" :
 					"SELECT @p";
 
-				Debug.WriteLine("{0} -> DataType.{1}",  typeof(T), dataType);
-				Assert.That(conn.Execute<T>(sql, new DataParameter { Name = "p", DataType = dataType, Value = expectedValue }), Is.EqualTo(expectedValue));
-				Debug.WriteLine("{0} -> auto", typeof(T));
-				Assert.That(conn.Execute<T>(sql, new DataParameter { Name = "p", Value = expectedValue }), Is.EqualTo(expectedValue));
-				Debug.WriteLine("{0} -> new",  typeof(T));
-				Assert.That(conn.Execute<T>(sql, new { p = expectedValue }), Is.EqualTo(expectedValue));
+				Assert.Multiple(() =>
+				{
+					Assert.That(conn.Execute<T>(sql, new DataParameter { Name = "p", DataType = dataType, Value = expectedValue }), Is.EqualTo(expectedValue));
+					Assert.That(conn.Execute<T>(sql, new DataParameter { Name = "p", Value = expectedValue }), Is.EqualTo(expectedValue));
+					Assert.That(conn.Execute<T>(sql, new { p = expectedValue }), Is.EqualTo(expectedValue));
+				});
 			}
 		}
 
@@ -875,7 +873,6 @@ namespace Tests.DataProvider
 						new BulkCopyOptions
 						{
 							BulkCopyType = BulkCopyType.MultipleRows,
-							RowsCopiedCallback = copied => Debug.WriteLine(copied.RowsCopied)
 						},
 						Enumerable.Range(0, 10).Select(n =>
 							new DataTypes
@@ -912,7 +909,6 @@ namespace Tests.DataProvider
 						new BulkCopyOptions
 						{
 							BulkCopyType = BulkCopyType.MultipleRows,
-							RowsCopiedCallback = copied => Debug.WriteLine(copied.RowsCopied)
 						},
 						Enumerable.Range(0, 10).Select(n =>
 							new DataTypes
@@ -949,7 +945,6 @@ namespace Tests.DataProvider
 						new BulkCopyOptions
 						{
 							BulkCopyType = BulkCopyType.ProviderSpecific,
-							RowsCopiedCallback = copied => Debug.WriteLine(copied.RowsCopied)
 						},
 						Enumerable.Range(0, 10).Select(n =>
 							new DataTypes
@@ -986,7 +981,6 @@ namespace Tests.DataProvider
 						new BulkCopyOptions
 						{
 							BulkCopyType = BulkCopyType.ProviderSpecific,
-							RowsCopiedCallback = copied => Debug.WriteLine(copied.RowsCopied)
 						},
 						Enumerable.Range(0, 10).Select(n =>
 							new DataTypes
@@ -1027,7 +1021,6 @@ namespace Tests.DataProvider
 						new BulkCopyOptions
 						{
 							BulkCopyType       = bulkCopyType,
-							RowsCopiedCallback = copied => Debug.WriteLine(copied.RowsCopied),
 							KeepIdentity       = true,
 						},
 						_allTypeses);
@@ -1063,7 +1056,6 @@ namespace Tests.DataProvider
 						new BulkCopyOptions
 						{
 							BulkCopyType = bulkCopyType,
-							RowsCopiedCallback = copied => Debug.WriteLine(copied.RowsCopied),
 							KeepIdentity = true,
 						},
 						_allTypeses);

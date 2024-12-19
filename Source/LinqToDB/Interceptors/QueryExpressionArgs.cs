@@ -7,6 +7,7 @@ namespace LinqToDB.Interceptors
 		public enum ExpressionKind
 		{
 			Query,
+			ExposedQuery,
 			AssociationExpression,
 			QueryFilter
 		}

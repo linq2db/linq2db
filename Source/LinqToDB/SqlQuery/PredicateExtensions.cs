@@ -80,12 +80,12 @@ namespace LinqToDB.SqlQuery
 	
 		public static SqlSearchCondition AddExists(this SqlSearchCondition search, SelectQuery selectQuery, bool isNot = false)
 		{
-			return search.Add(new SqlPredicate.FuncLike(SqlFunction.CreateExists(selectQuery)).MakeNot(isNot));
+			return search.Add(new SqlPredicate.Exists(isNot, selectQuery));
 		}
 	
 		public static SqlSearchCondition AddNotExists(this SqlSearchCondition search, SelectQuery selectQuery)
 		{
-			return search.Add(new SqlPredicate.FuncLike(SqlFunction.CreateExists(selectQuery)).MakeNot());
+			return search.Add(new SqlPredicate.Exists(true, selectQuery));
 		}
 
 		public static SqlSearchCondition AddNot(this SqlSearchCondition search, ISqlExpression expression)

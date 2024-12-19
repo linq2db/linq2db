@@ -9,7 +9,7 @@
 
 	GetSchemaOptions.PreferProviderSpecificTypes = true;
 
-	LoadPostgreSQLMetadata(GetConnectionString("PostgreSQL.10"));
+	LoadPostgreSQLMetadata(GetConnectionString("PostgreSQL.16"));
 
 	GetTable("testsamename").TypeName = "_testsamename";
 	GetTable("testsamename").DataContextPropertyName = "_testsamename";

@@ -32,7 +32,7 @@
 		IsTruePredicate,
 		InSubQueryPredicate,
 		InListPredicate,
-		FuncLikePredicate,
+		ExistsPredicate,
 
 		SqlQuery,
 			Column,

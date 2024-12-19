@@ -148,7 +148,7 @@ namespace Tests.UserTests
 		[Sql.Extension("COALESCE({expr},{nullValue})", ServerSideOnly = true, CanBeNull = true, Precedence = Precedence.Primary)]
 		static T Coalesce<T>([ExprParameter] T expr, [ExprParameter] T nullValue)
 		{
-			throw new LinqException($"'{nameof(Coalesce)}' is server-side method.");
+			throw new LinqToDBException($"'{nameof(Coalesce)}' is server-side method.");
 		}
 	}
 }

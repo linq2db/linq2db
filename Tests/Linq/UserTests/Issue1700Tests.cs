@@ -12,7 +12,6 @@ namespace Tests.UserTests
 {
 	public class Issue1700Tests: TestBase
 	{
-		[ThrowsForProvider(typeof(LinqException), TestProvName.AllSQLite, "Provider does not support CROSS/OUTER/LATERAL joins.")]
 		[Test]
 		public void TestOuterApplySubFunction([IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllPostgreSQL, TestProvName.AllSQLite)] string context)
 		{

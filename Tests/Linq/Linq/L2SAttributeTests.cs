@@ -71,6 +71,25 @@ namespace Tests.Linq
 				db.GetTable<L2SPersons>().Delete(p => p.PersonID == ConvertTo<int>.From(id));
 			}
 		}
+
+		[ActiveIssue]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/3691")]
+		public void Issue3691Test([DataSources] string context)
+		{
+			var ms = new LinqToDB.Mapping.MappingSchema();
+			ms.AddMetadataReader(new SystemComponentModelDataAnnotationsSchemaAttributeReader());
+#if NET472
+			ms.AddMetadataReader(new SystemDataLinqAttributeReader());
+#endif
+			using var db = GetDataContext(context, ms);
+			using var tb = db.CreateLocalTable<Issue3691Table>();
+		}
+
+		[Table(Name = "Issue3691Table")]
+		sealed class Issue3691Table
+		{
+			public int Id { get; set; }
+		}
 	}
 }
 #endif

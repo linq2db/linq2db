@@ -33,10 +33,10 @@ namespace LinqToDB.Linq.Builder
 			{
 				sequence = builder.BuildWhere(buildInfo.Parent, sequence,
 					condition : (LambdaExpression)methodCall.Arguments[1].Unwrap(), checkForSubQuery : false,
-					enforceHaving : false, isTest : buildInfo.IsTest);
+					enforceHaving : false, out var error);
 
 				if (sequence == null)
-					return BuildSequenceResult.Error(methodCall);
+					return BuildSequenceResult.Error(error ?? methodCall);
 			}
 
 			var deleteStatement = new SqlDeleteStatement(sequence.SelectQuery);
@@ -69,16 +69,9 @@ namespace LinqToDB.Linq.Builder
 				// create separate query for output
 				var outputSelectQuery = new SelectQuery();
 
-				deletedContext = new TableBuilder.TableContext(builder, sequence.MappingSchema, outputSelectQuery, deletedTable, false);
-
-				if (builder.DataContext.SqlProviderFlags.OutputDeleteUseSpecialTable)
-				{
-					deletedContext = new AnchorContext(null,
-						new TableBuilder.TableContext(builder, sequence.MappingSchema, outputSelectQuery, deletedTable, false),
-						SqlAnchor.AnchorKindEnum.Deleted);
-
-					deleteStatement.Output.DeletedTable = deletedTable;
-				}
+				deletedContext = new AnchorContext(null,
+					new TableBuilder.TableContext(builder, sequence.MappingSchema, outputSelectQuery, deletedTable, false),
+					SqlAnchor.AnchorKindEnum.Deleted);
 
 				if (deleteType == DeleteContext.DeleteTypeEnum.DeleteOutputInto)
 				{
@@ -186,7 +179,7 @@ namespace LinqToDB.Linq.Builder
 						var outputRef         = new ContextRefExpression(path.Type, selectContext);
 						var outputExpressions = new List<UpdateBuilder.SetExpressionEnvelope>();
 
-						var sqlExpr = Builder.BuildSqlExpression(selectContext, outputRef, ProjectFlags.SQL);
+						var sqlExpr = Builder.BuildSqlExpression(selectContext, outputRef);
 						sqlExpr = SequenceHelper.CorrectSelectQuery(sqlExpr, outputSelectQuery);
 
 						if (sqlExpr is SqlPlaceholderExpression)

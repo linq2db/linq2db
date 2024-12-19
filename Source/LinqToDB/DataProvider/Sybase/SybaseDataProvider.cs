@@ -39,10 +39,12 @@ namespace LinqToDB.DataProvider.Sybase
 			SqlProviderFlags.IsSubQueryTakeSupported          = false;
 			SqlProviderFlags.CanCombineParameters             = false;
 			SqlProviderFlags.IsCrossJoinSupported             = false;
+			// TODO: add versioning as it is available since 16SP3 or just ignore old versions?
 			SqlProviderFlags.IsDistinctSetOperationsSupported = false;
 			SqlProviderFlags.IsWindowFunctionsSupported       = false;
 			SqlProviderFlags.IsDerivedTableOrderBySupported   = false;
 			SqlProviderFlags.IsUpdateTakeSupported            = true;
+			SqlProviderFlags.SupportsBooleanType              = false;
 
 			SqlProviderFlags.SupportedCorrelatedSubqueriesLevel        = 1;
 			SqlProviderFlags.IsCorrelatedSubQueryTakeSupported         = false;

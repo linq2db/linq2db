@@ -190,6 +190,7 @@ namespace LinqToDB.DataProvider.SQLite
 			BuildInsertOrUpdateQueryAsOnConflictUpdateOrNothing(insertOrUpdate);
 		}
 
+		// 3.39.0 adds standard DISTINCT FROM, but let's keep older implementation for now
 		protected override void BuildIsDistinctPredicate(SqlPredicate.IsDistinct expr)
 		{
 			BuildExpression(GetPrecedence(expr), expr.Expr1);
@@ -250,5 +251,21 @@ namespace LinqToDB.DataProvider.SQLite
 			if (updateClause.Table != null)
 				BuildTableExtensions(updateClause.Table, "");
 		}
+
+		protected override void BuildUpdateQuery(SqlStatement statement, SelectQuery selectQuery, SqlUpdateClause updateClause)
+		{
+			BuildStep = Step.Tag;             BuildTag(statement);
+			BuildStep = Step.WithClause;      BuildWithClause(statement.GetWithClause());
+			BuildStep = Step.UpdateClause;    BuildUpdateClause(Statement, selectQuery, updateClause);
+			BuildStep = Step.FromClause;      BuildFromClause(Statement, selectQuery);
+			BuildStep = Step.WhereClause;     BuildUpdateWhereClause(selectQuery);
+			BuildStep = Step.GroupByClause;   BuildGroupByClause(selectQuery);
+			BuildStep = Step.HavingClause;    BuildHavingClause(selectQuery);
+			BuildStep = Step.Output;          BuildOutputSubclause(statement.GetOutputClause());
+			BuildStep = Step.OrderByClause;   BuildOrderByClause(selectQuery);
+			BuildStep = Step.OffsetLimit;     BuildOffsetLimit(selectQuery);
+			BuildStep = Step.QueryExtensions; BuildSubQueryExtensions(statement);
+		}
+
 	}
 }

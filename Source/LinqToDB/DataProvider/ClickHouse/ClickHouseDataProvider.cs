@@ -52,6 +52,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 			SqlProviderFlags.IsAllSetOperationsSupported               = true;
 			SqlProviderFlags.IsNestedJoinsSupported                    = false;
 			SqlProviderFlags.IsSupportedSimpleCorrelatedSubqueries     = true;
+			SqlProviderFlags.SupportsPredicatesComparison              = true;
 
 			// unconfigured flags
 			// 1. ClickHouse doesn't support correlated subqueries at all so this flag's value doesn't make difference

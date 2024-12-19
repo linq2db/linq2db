@@ -668,9 +668,12 @@ namespace LinqToDB.Mapping
 			if (valueConverter != null)
 			{
 				var toProvider = valueConverter.ToProviderExpression;
-				if (!valueConverter.HandlesNulls)
-					toProvider = mappingSchema.AddNullCheck(toProvider);
-				getterExpr = InternalExtensions.ApplyLambdaToExpression(toProvider, getterExpr);
+				if (toProvider.Parameters[0].Type.IsAssignableFrom(getterExpr.Type))
+				{
+					if (!valueConverter.HandlesNulls)
+						toProvider = mappingSchema.AddNullCheck(toProvider);
+					getterExpr = InternalExtensions.ApplyLambdaToExpression(toProvider, getterExpr);
+				}
 			}
 
 			if (!getterExpr.Type.IsSameOrParentOf(typeof(DataParameter)) || getterExpr.Type == typeof(object))

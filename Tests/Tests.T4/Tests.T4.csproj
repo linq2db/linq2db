@@ -118,6 +118,10 @@
 			<Generator>TextTemplatingFileGenerator</Generator>
 			<LastGenOutput>PostgreSQL.11.generated.cs</LastGenOutput>
 		</None>
+		<None Update="Databases\PostgreSQL.9.5.tt">
+		  <Generator>TextTemplatingFileGenerator</Generator>
+		  <LastGenOutput>PostgreSQL.9.5.generated.cs</LastGenOutput>
+		</None>
 		<None Update="Databases\PostgreSQL.tt">
 			<Generator>TextTemplatingFileGenerator</Generator>
 			<LastGenOutput>PostgreSQL.generated.cs</LastGenOutput>
@@ -197,6 +201,10 @@
 		<None Update="Default\PostgreSQL.tt">
 		  <LastGenOutput>PostgreSQL.generated.cs</LastGenOutput>
 		  <Generator>TextTemplatingFileGenerator</Generator>
+		</None>
+		<None Update="Default\PostgreSQL.9.5.tt">
+			<LastGenOutput>PostgreSQL.9.5.generated.cs</LastGenOutput>
+			<Generator>TextTemplatingFileGenerator</Generator>
 		</None>
 		<None Update="Default\SapHana.tt">
 		  <LastGenOutput>SapHana.generated.cs</LastGenOutput>
@@ -346,6 +354,11 @@
 			<DesignTime>True</DesignTime>
 			<AutoGen>True</AutoGen>
 			<DependentUpon>PostgreSQL.tt</DependentUpon>
+		</Compile>
+		<Compile Update="Databases\PostgreSQL.9.5.generated.cs">
+			<DesignTime>True</DesignTime>
+			<AutoGen>True</AutoGen>
+			<DependentUpon>PostgreSQL.9.5.tt</DependentUpon>
 		</Compile>
 		<Compile Update="Databases\SapHana.generated.cs">
 			<DesignTime>True</DesignTime>

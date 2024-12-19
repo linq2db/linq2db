@@ -1,11 +1,9 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 
 namespace LinqToDB.DataProvider.SQLite
 {
-	using LinqToDB.Common;
 	using Extensions;
+	using LinqToDB.Common;
 	using SqlProvider;
 	using SqlQuery;
 
@@ -145,14 +143,14 @@ namespace LinqToDB.DataProvider.SQLite
 				if (!(expr1 is SqlCastExpression || expr1 is SqlFunction { DoNotOptimize: true }))
 				{
 					var left = PseudoFunctions.MakeMandatoryCast(predicate.Expr1, dateType, null);
-					predicate = new SqlPredicate.ExprExpr(left, predicate.Operator, predicate.Expr2, null);
+					predicate = new SqlPredicate.ExprExpr(left, predicate.Operator, predicate.Expr2, predicate.WithNull);
 				}
 
 				var expr2 = QueryHelper.UnwrapNullablity(predicate.Expr2);
 				if (!(expr2 is SqlCastExpression || expr2 is SqlFunction { DoNotOptimize: true }))
 				{
 					var right = PseudoFunctions.MakeMandatoryCast(predicate.Expr2, dateType, null);
-					predicate = new SqlPredicate.ExprExpr(predicate.Expr1, predicate.Operator, right, null);
+					predicate = new SqlPredicate.ExprExpr(predicate.Expr1, predicate.Operator, right, predicate.WithNull);
 				}
 			}
 
@@ -187,7 +185,7 @@ namespace LinqToDB.DataProvider.SQLite
 					if (IsDateDataType(dbDataType, "Date"))
 						return new SqlFunction(dbDataType.SystemType, "Date", expression) { DoNotOptimize = true };
 
-					return new SqlFunction(dbDataType.SystemType, "strftime", new SqlValue("%Y-%m-%d %H:%M:%f"), expression) { DoNotOptimize = true };
+					return new SqlFunction(dbDataType.SystemType, "strftime", ParametersNullabilityType.SameAsSecondParameter, new SqlValue("%Y-%m-%d %H:%M:%f"), expression) { DoNotOptimize = true };
 				}
 			}
 

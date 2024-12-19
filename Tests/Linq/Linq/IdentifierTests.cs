@@ -104,7 +104,6 @@ namespace Tests.Linq
 				.ToArray();
 		}
 
-		[ActiveIssue(Configuration = TestProvName.AllFirebird3Plus)]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/2798")]
 		public void TestAliasLengthName_Latin([DataSources] string context)
 		{

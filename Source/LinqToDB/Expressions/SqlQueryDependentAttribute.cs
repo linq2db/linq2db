@@ -7,6 +7,7 @@ using System.Linq.Expressions;
 namespace LinqToDB.Expressions
 {
 	using Common;
+	using Internal;
 
 	/// <summary>
 	/// Used for controlling query caching of custom SQL Functions.

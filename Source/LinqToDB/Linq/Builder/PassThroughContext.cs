@@ -25,9 +25,9 @@ namespace LinqToDB.Linq.Builder
 		public override Expression MakeExpression(Expression path, ProjectFlags flags)
 		{
 			var corrected = SequenceHelper.CorrectExpression(path, this, Context);
-			var result = Builder.MakeExpression(Context, corrected, flags);
+			var result = Builder.BuildExpression(Context, corrected);
 
-			if (flags.IsSql() && !flags.IsTest())
+			if (flags.IsSql())
 			{
 				result = SequenceHelper.CorrectTrackingPath(result, Context, this);
 			}
@@ -50,11 +50,8 @@ namespace LinqToDB.Linq.Builder
 			return Context.GetResultStatement();
 		}
 
-		public override void CompleteColumns()
-		{
-			Context.CompleteColumns();
-		}
-
 		public override bool IsOptional => Context.IsOptional;
+
+		public override bool IsSingleElement => Context.IsSingleElement;
 	}
 }

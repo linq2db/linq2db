@@ -86,7 +86,6 @@ namespace Tests.Data
 		public class FakeClass
 		{}
 
-		[ActiveIssue("Investigation required. Timeouts on CI", Configurations = [ TestProvName.AllSqlServer2008Minus ])]
 		[Test]
 		public void TestRetryPolicy([DataSources(false)] string context)
 		{
@@ -183,8 +182,7 @@ namespace Tests.Data
 		{
 			try
 			{
-				Configuration.RetryPolicy.Factory = cn => new DummyRetryPolicy();
-				using (var db = GetDataConnection(context))
+				using (var db = GetDataConnection(context, o => o.UseFactory(connection => new DummyRetryPolicy())))
 				using (db.CreateLocalTable<MyEntity>())
 				{
 					Assert.Fail("Exception expected");
@@ -193,10 +191,6 @@ namespace Tests.Data
 			catch (NotImplementedException ex)
 			{
 				Assert.That(ex.Message, Is.EqualTo("Execute"));
-			}
-			finally
-			{
-				Configuration.RetryPolicy.Factory = null;
 			}
 		}
 
@@ -220,25 +214,18 @@ namespace Tests.Data
 		[Test]
 		public void ExternalConnection([DataSources(false)] string context)
 		{
-			using (var db1 = GetDataConnection(context))
+			using var db1 = GetDataConnection(context);
+			try
 			{
-				try
+				using (var db = new DataConnection(new DataOptions().UseConnection(db1.DataProvider, db1.Connection).UseFactory(connection => new DummyRetryPolicy())))
+				using (db.CreateLocalTable<MyEntity>())
 				{
-					Configuration.RetryPolicy.Factory = cn => new DummyRetryPolicy();
-					using (var db = new DataConnection(db1.DataProvider, db1.Connection))
-					using (db.CreateLocalTable<MyEntity>())
-					{
-						Assert.Fail("Exception expected");
-					}
+					Assert.Fail("Exception expected");
 				}
-				catch (NotImplementedException ex)
-				{
-					Assert.That(ex.Message, Is.EqualTo("ExecuteT"));
-				}
-				finally
-				{
-					Configuration.RetryPolicy.Factory = null;
-				}
+			}
+			catch (NotImplementedException ex)
+			{
+				Assert.That(ex.Message, Is.EqualTo("ExecuteT"));
 			}
 		}
 
@@ -280,5 +267,52 @@ namespace Tests.Data
 			public Task<TResult> ExecuteAsync<TResult>(Func<CancellationToken, Task<TResult>> operation, CancellationToken cancellationToken = new CancellationToken()) => throw new NotImplementedException("ExecuteAsyncT");
 			public Task          ExecuteAsync(Func<CancellationToken, Task> operation, CancellationToken cancellationToken = new CancellationToken())                   => throw new NotImplementedException("ExecuteAsync");
 		}
+
+		#region Issue 3431
+
+		// issue reproduced on Open for MySqlConnector
+		[ActiveIssue]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/3431")]
+		public void Issue3431Test1([IncludeDataSources(TestProvName.AllMySqlConnector)] string context)
+		{
+			var connectionString = DataConnection.GetConnectionString(context);
+			var provider = DataConnection.GetDataProvider(context);
+
+			using var db = GetDataContext(
+				context,
+				o => o
+					.UseRetryPolicy(new Issue3431RetryPolicy())
+					.UseConnectionString(provider, "BAD" + connectionString));
+
+			db.Person.ToArray();
+		}
+
+		[ActiveIssue]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/3431")]
+		public async Task Issue3431Test2([IncludeDataSources(TestProvName.AllMySqlConnector)] string context)
+		{
+			var connectionString = DataConnection.GetConnectionString(context);
+			var provider = DataConnection.GetDataProvider(context);
+
+			using var db = GetDataContext(
+				context,
+				o => o
+					.UseRetryPolicy(new Issue3431RetryPolicy())
+					.UseConnectionString(provider, "BAD" + connectionString));
+
+			await db.Person.ToArrayAsync();
+		}
+
+		sealed class Issue3431RetryPolicy : RetryPolicyBase
+		{
+			public Issue3431RetryPolicy()
+				: base(1, default, 1, 1, default)
+			{
+			}
+
+			protected override bool ShouldRetryOn(Exception exception) => true;
+		}
+
+		#endregion
 	}
 }

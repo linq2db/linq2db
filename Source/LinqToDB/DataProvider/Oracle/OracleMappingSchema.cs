@@ -63,7 +63,8 @@ namespace LinqToDB.DataProvider.Oracle
 			ColumnNameComparer = StringComparer.OrdinalIgnoreCase;
 
 			SetDataType(typeof(Guid),   DataType.Guid);
-			SetDataType(typeof(string), new SqlDataType(DataType.VarChar, typeof(string), 255));
+			SetDataType(typeof(string),  new SqlDataType(DataType.VarChar, typeof(string), 255));
+			SetDataType(typeof(decimal), new SqlDataType(DataType.Decimal, typeof(decimal), 28, 10));
 
 			SetConvertExpression<decimal,TimeSpan>(v => new TimeSpan((long)v));
 

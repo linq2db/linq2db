@@ -14,7 +14,7 @@ namespace Tests.Linq
 	public class DefaultIfEmptyTests : TestBase
 	{
 		[Test]
-		[ThrowsForProvider(typeof(LinqException), TestProvName.AllSybase, "Provider has issue with JOIN to limited recordset.")]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSybase, ErrorMessage = ErrorHelper.Sybase.Error_JoinToDerivedTableWithTakeInvalid)]
 		public void WithoutDefault([DataSources(TestProvName.AllAccess, TestProvName.AllClickHouse, TestProvName.AllInformix)] string context)
 		{
 			using var db = GetDataContext(context);
@@ -28,7 +28,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[ThrowsForProvider(typeof(LinqException), TestProvName.AllSybase, "Provider has issue with JOIN to limited recordset.")]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSybase, ErrorMessage = ErrorHelper.Sybase.Error_JoinToDerivedTableWithTakeInvalid)]
 		public void WithDefault([DataSources(TestProvName.AllAccess, TestProvName.AllClickHouse, TestProvName.AllInformix)] string context)
 		{
 			using var db = GetDataContext(context);
@@ -46,6 +46,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllMySql57, TestProvName.AllOracle11, TestProvName.AllMariaDB, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
 		public void WithDefaultInSubquery([DataSources(TestProvName.AllAccess, TestProvName.AllClickHouse)] string context)
 		{
 			using var db = GetDataContext(context);

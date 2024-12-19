@@ -573,14 +573,14 @@ namespace Tests.xUpdate
 			public short N  { get; set; }
 		}
 
-		sealed class Dest1
+		public sealed class Dest1
 		{
 			public int     ID          { get; set; }
 			public short?  Value       { get; set; }
 			public string? StringValue { get; set; }
 		}
 
-		sealed class Dest2
+		public sealed class Dest2
 		{
 			public int ID    { get; set; }
 			public int Int   { get; set; }

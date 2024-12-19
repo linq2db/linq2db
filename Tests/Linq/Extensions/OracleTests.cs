@@ -498,9 +498,9 @@ namespace Tests.Extensions
 			Assert.That(LastQuery, Contains.Substring("INSERT /*+ FULL(c_1) ALL_ROWS FIRST_ROWS(10) */ INTO "));
 		}
 
+		[Obsolete("Remove test after API removed")]
 		[Test]
-
-		public void UpdateTest([IncludeDataSources(true, TestProvName.AllOracle)] string context)
+		public void UpdateTestOld([IncludeDataSources(true, TestProvName.AllOracle)] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -512,6 +512,26 @@ namespace Tests.Extensions
 			.QueryHint(OracleHints.Hint.AllRows)
 			.QueryHint(OracleHints.Hint.FirstRows(10))
 			.Update(db.Child, c => new()
+			{
+				ChildID = c.ChildID * 2
+			});
+
+			Assert.That(LastQuery, Contains.Substring("UPDATE /*+ ALL_ROWS FIRST_ROWS(10) */"));
+		}
+
+		[Test]
+		public void UpdateTest([IncludeDataSources(true, TestProvName.AllOracle)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			(
+				from c in db.Child//.TableHint(Hints.TableHint.Full)
+				where c.ParentID < -1111
+				select c
+			)
+			.QueryHint(OracleHints.Hint.AllRows)
+			.QueryHint(OracleHints.Hint.FirstRows(10))
+			.Update(q => q, c => new()
 			{
 				ChildID = c.ChildID * 2
 			});
@@ -829,7 +849,6 @@ namespace Tests.Extensions
 
 		#region Issue 4163
 
-		[ActiveIssue(SkipForNonLinqService = true, Details = "CompareNulls.LikeClr optimization broken with remote context")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4163")]
 		public void Issue4163Test1([IncludeDataSources(true, TestProvName.AllOracle)] string context, [Values] CompareNulls compareNulls)
 		{
@@ -841,7 +860,6 @@ namespace Tests.Extensions
 			Assert.That(cnt, Is.EqualTo(2));
 		}
 
-		[ActiveIssue(Details = "MappingSchema/MappingSchema.GetCanBeNull require update to support by-value nullability information")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4163")]
 		public void Issue4163Test2([IncludeDataSources(true, TestProvName.AllOracle)] string context, [Values] CompareNulls compareNulls)
 		{
@@ -853,7 +871,6 @@ namespace Tests.Extensions
 			Assert.That(cnt, Is.EqualTo(2));
 		}
 
-		[ActiveIssue(SkipForNonLinqService = true, Details = "CompareNulls.LikeClr optimization broken with remote context")]
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4163")]
 		public void Issue4163Test3([IncludeDataSources(true, TestProvName.AllOracle)] string context, [Values] CompareNulls compareNulls)
 		{

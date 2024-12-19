@@ -121,7 +121,7 @@ namespace LinqToDB.SqlQuery
 			writer.DebugAppendUniqueId(this);
 
 			var len = writer.Length;
-			var ss  = Parameters.Select(p =>
+			var arguments  = Parameters.Select(p =>
 			{
 				p.ToString(writer);
 				var s = writer.ToString(len, writer.Length - len);
@@ -133,11 +133,11 @@ namespace LinqToDB.SqlQuery
 				return writer.Append(Expr);
 
 			if (Expr.Contains("{"))
-				writer.AppendFormat(Expr, ss.ToArray());
+				writer.AppendFormat(Expr, arguments.ToArray());
 			else
 				writer.Append(Expr)
 					.Append('{')
-					.Append(string.Join(", ", ss.Select(s => string.Format(CultureInfo.InvariantCulture, "{0}", s))))
+					.Append(string.Join(", ", arguments.Select(s => string.Format(CultureInfo.InvariantCulture, "{0}", s))))
 					.Append('}');
 
 			return writer;
@@ -172,14 +172,7 @@ namespace LinqToDB.SqlQuery
 				case QueryElementType.SearchCondition :
 					return false;
 				case QueryElementType.SqlFunction :
-
-					var f = (SqlFunction)ex;
-
-					return f.Name switch
-					{
-						"EXISTS" => false,
-						_        => true,
-					};
+					return true;
 			}
 
 			return false;

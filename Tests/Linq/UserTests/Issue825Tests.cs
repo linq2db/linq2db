@@ -56,8 +56,6 @@ namespace Tests.UserTests
 				var userId  = 32;
 				var childId = 32;
 
-				//Configuration.Linq.OptimizeJoins = false;
-
 				var query = db.GetTable<Parent825>()
 					.Where(p => p.ParentPermissions.Any(permission => permission.UserId == userId))
 					.SelectMany(parent => parent.Childs)

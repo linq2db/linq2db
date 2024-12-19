@@ -8,14 +8,17 @@ namespace LinqToDB.Expressions
 
 	public class DefaultValueExpression : Expression
 	{
-		public DefaultValueExpression(MappingSchema? mappingSchema, Type type)
+		public DefaultValueExpression(MappingSchema? mappingSchema, Type type, bool isNull = false)
 		{
-			_mappingSchema = mappingSchema;
-			_type          = type;
+			MappingSchema = mappingSchema;
+			_type         = type;
+			IsNull        = isNull;
 		}
 
-		readonly MappingSchema? _mappingSchema;
-		readonly Type           _type;
+		public          MappingSchema? MappingSchema { get; }
+		readonly        Type           _type;
+
+		public bool IsNull { get; }
 
 		public override Type           Type      => _type;
 		public override ExpressionType NodeType  => ExpressionType.Extension;
@@ -24,9 +27,9 @@ namespace LinqToDB.Expressions
 		public override Expression Reduce()
 		{
 			return Constant(
-				_mappingSchema == null ?
+				MappingSchema == null ?
 					DefaultValue.GetValue(Type) :
-					_mappingSchema.GetDefaultValue(Type),
+					MappingSchema.GetDefaultValue(Type),
 				Type);
 		}
 
@@ -37,7 +40,7 @@ namespace LinqToDB.Expressions
 
 		protected bool Equals(DefaultValueExpression other)
 		{
-			return Equals(_mappingSchema, other._mappingSchema) && _type.Equals(other._type);
+			return Equals(MappingSchema, other.MappingSchema) && _type.Equals(other._type);
 		}
 
 		public override bool Equals(object? obj)
@@ -64,7 +67,7 @@ namespace LinqToDB.Expressions
 		{
 			unchecked
 			{
-				var hashCode = _mappingSchema?.GetHashCode() ?? 0;
+				var hashCode = MappingSchema?.GetHashCode() ?? 0;
 				hashCode = (hashCode * 397) ^ _type.GetHashCode();
 				return hashCode;
 			}

@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using System.Linq;
 
 using JetBrains.Annotations;
 
@@ -8,22 +7,11 @@ namespace LinqToDB.DataProvider.MySql
 	using Configuration;
 
 	[UsedImplicitly]
-	sealed class MySqlFactory : IDataProviderFactory
+	sealed class MySqlFactory : DataProviderFactoryBase
 	{
-		IDataProvider IDataProviderFactory.GetDataProvider(IEnumerable<NamedValue> attributes)
+		public override IDataProvider GetDataProvider(IEnumerable<NamedValue> attributes)
 		{
-			string? assemblyName = null;
-			string? versionName  = null;
-
-			foreach (var attr in attributes)
-			{
-				if (attr.Name == "version" && versionName == null)
-					versionName = attr.Value;
-				if (attr.Name == "assemblyName" && assemblyName == null)
-					assemblyName = attr.Value;
-			}
-
-			var version = versionName switch
+			var version = GetVersion(attributes) switch
 			{
 				"5.5" or "5.6" or "5.7"          => MySqlVersion.MySql57,
 				"8.0" or "8.1" or "8.2" or "8.3" => MySqlVersion.MySql80,
@@ -31,7 +19,7 @@ namespace LinqToDB.DataProvider.MySql
 				_                                => MySqlVersion.AutoDetect,
 			};
 
-			var provider = assemblyName switch
+			var provider = GetAssemblyName(attributes) switch
 			{
 				MySqlProviderAdapter.MySqlConnectorAssemblyName => MySqlProvider.MySqlConnector,
 				MySqlProviderAdapter.MySqlDataAssemblyName      => MySqlProvider.MySqlData,
