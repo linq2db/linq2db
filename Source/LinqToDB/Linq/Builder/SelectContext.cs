@@ -5,6 +5,7 @@ using System.Reflection;
 
 namespace LinqToDB.Linq.Builder
 {
+	using Extensions;
 	using LinqToDB.Expressions;
 	using Mapping;
 	using SqlQuery;
@@ -32,8 +33,6 @@ namespace LinqToDB.Linq.Builder
 		public override MappingSchema  MappingSchema => _mappingSchema;
 
 		public override Expression? Expression => Body;
-
-		public readonly Dictionary<MemberInfo,Expression> Members = new (new MemberInfoComparer());
 
 		public SelectContext(IBuildContext? parent, ExpressionBuilder builder, IBuildContext? innerContext, Expression body, SelectQuery selectQuery, bool isSubQuery)
 			: base(builder, body.Type, selectQuery)
@@ -73,9 +72,7 @@ namespace LinqToDB.Linq.Builder
 			{
 				if (SequenceHelper.IsSameContext(path, this))
 				{
-					if (Builder.IsSequence(this, Body))
-						return Body;
-					result = new ContextRefExpression(InnerContext.ElementType, InnerContext);
+					result = Builder.BuildExpression(InnerContext, new ContextRefExpression(InnerContext.ElementType, InnerContext));
 				}
 				else
 				{
@@ -91,8 +88,13 @@ namespace LinqToDB.Linq.Builder
 
 			if (SequenceHelper.IsSameContext(path, this))
 			{
-				if (flags.IsRoot() || flags.IsAssociationRoot() /*|| flags.HasFlag(ProjectFlags.Expand)*/ || flags.IsTable() || flags.IsTraverse())
+				if (flags.IsRoot() || flags.IsAssociationRoot() || flags.IsTable() || flags.IsTraverse() || flags.IsSubquery() || (flags.IsExpand() && !flags.IsKeys()) || flags.IsMemberRoot())
 				{
+					var isTypeMatch = path.Type.IsSameOrParentOf(ElementType) || ElementType.IsSameOrParentOf(path.Type);
+
+					if (!isTypeMatch)
+						return path;
+
 					if (Body is ContextRefExpression bodyRef)
 					{
 						// updating type for Inheritance mapping
@@ -102,7 +104,12 @@ namespace LinqToDB.Linq.Builder
 
 					if (Body.NodeType == ExpressionType.MemberAccess)
 					{
-						return Body;
+						result = Body;
+						if (result.Type != path.Type)
+						{
+							result = Expression.Convert(result, path.Type);
+						}
+						return result;
 					}
 
 					if (Body.NodeType == ExpressionType.TypeAs)
@@ -111,23 +118,31 @@ namespace LinqToDB.Linq.Builder
 						return result;
 					}
 
-					if (flags.IsTable())
+					if (flags.IsTable() || flags.IsAssociationRoot())
 					{
 						if (InnerContext != null)
 							return new ContextRefExpression(InnerContext.ElementType, InnerContext);
 					}
 
+					var translated = Builder.BuildExpression(this, Body);
+					if (!ExpressionEqualityComparer.Instance.Equals(translated, path))
+					{
+						if ((flags.IsRoot() || flags.IsMemberRoot() || flags.IsTraverse() || flags.IsSubquery()) &&
+						    !(translated is ContextRefExpression || translated is MemberExpression))
+						{
+							if (flags.IsSubquery())
+							{
+								if (Builder.IsSequence(this, translated))
+									return translated;
+							}
+							return path;
+						}
+
+						return translated;
+					}
+
 					return path;
 				}
-
-				/*
-				if (!(path.Type.IsSameOrParentOf(Body.Type) || Body.Type.IsSameOrParentOf(path.Type)))
-				{
-					if (flags.IsExpression())
-						return new SqlEagerLoadExpression((ContextRefExpression)path, path, GetEagerLoadExpression(path));
-					return ExpressionBuilder.CreateSqlError(this, path);
-				}
-				*/
 
 				if (Body.NodeType == ExpressionType.TypeAs)
 				{
@@ -136,7 +151,6 @@ namespace LinqToDB.Linq.Builder
 				}
 
 				result = Body;
-				result = SequenceHelper.RemapToNewPathSimple(Builder, result, path, flags);
 			}
 			else
 			{
@@ -154,21 +168,28 @@ namespace LinqToDB.Linq.Builder
 
 					if (flags.IsExpression())
 						result = Builder.Project(this, path, null, 0, flags, Body, strict: false);
-				}
 
-				result = SequenceHelper.RemapToNewPathSimple(Builder, result, path, flags);
+					if (flags.IsSql())
+						return path;
+				}
 
 				if (!ReferenceEquals(result, Body))
 				{
 					if (!flags.IsTable())
 					{
 						if (flags.IsSubquery())
-							result = Builder.RemoveNullPropagation(this, result, flags.SqlFlag(), false);
-
-						if ((flags.IsRoot() || flags.IsTraverse()) &&
-						    !(result is ContextRefExpression || result is MemberExpression ||
-						      result is MethodCallExpression))
 						{
+							result = Builder.RemoveNullPropagation(this, result, false);
+						}
+
+						if ((flags.IsRoot() || flags.IsTraverse() || flags.IsSubquery() || flags.IsMemberRoot() || flags.IsAssociationRoot()) &&
+						    !(result is ContextRefExpression or MemberExpression))
+						{
+							if (flags.IsSubquery() || flags.IsMemberRoot())
+							{
+								if (Builder.IsSequence(this, result))
+									return result;
+							}
 							return path;
 						}
 					}
@@ -206,13 +227,9 @@ namespace LinqToDB.Linq.Builder
 			return new SqlSelectStatement(SelectQuery);
 		}
 
-		public override void CompleteColumns()
-		{
-		}
-
 		public override IBuildContext? GetContext(Expression expression, BuildInfo buildInfo)
 		{
-			if (!buildInfo.CreateSubQuery || buildInfo.IsTest)
+			if (!buildInfo.CreateSubQuery)
 				return this;
 
 			var expr    = Body;

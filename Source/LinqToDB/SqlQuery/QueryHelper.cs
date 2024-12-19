@@ -192,7 +192,26 @@ namespace LinqToDB.SqlQuery
 			{
 				case QueryElementType.Column:
 				{
-					return GetColumnDescriptor(((SqlColumn)expr).Expression);
+					var column = (SqlColumn)expr;
+					var result = GetColumnDescriptor(column.Expression);
+					if (result is not null)
+						return result;
+
+					if (column.Parent?.HasSetOperators == true)
+					{
+						var idx = column.Parent.Select.Columns.IndexOf(column);
+						if (idx >= 0)
+						{
+							foreach (var setOperator in column.Parent.SetOperators)
+							{
+								result = GetColumnDescriptor(setOperator.SelectQuery.Select.Columns[idx].Expression);
+								if (result is not null)
+									return result;
+							}
+						}
+					}
+
+					return null;
 				}
 				case QueryElementType.SqlField:
 				{
@@ -323,9 +342,22 @@ namespace LinqToDB.SqlQuery
 			var result = GetDbDataType(expr);
 			if (result.DataType == DataType.Undefined)
 			{
-				result = mappingSchema.GetDbDataType(expr.SystemType ?? typeof(object));
+				var fromSchema = mappingSchema.GetDbDataType(expr.SystemType ?? typeof(object));
+
+				result = fromSchema
+					.WithSystemType(result.SystemType)
+					.WithDbType(result.DbType ?? fromSchema.DbType)
+					.WithLength(result.Length ?? fromSchema.Length)
+					.WithLength(result.Precision ?? fromSchema.Precision)
+					.WithLength(result.Scale ?? fromSchema.Scale);
 			}
 
+			return result;
+		}
+
+		public static DbDataType GetDbDataTypeWithoutSchema(ISqlExpression expr)
+		{
+			var result = GetDbDataType(expr);
 			return result;
 		}
 
@@ -336,11 +368,12 @@ namespace LinqToDB.SqlQuery
 				case null: return DbDataType.Undefined;
 				case SqlValue { ValueType: var vt }: return vt;
 
+				case SqlParameter        { Type: var t }: return t;
 				case SqlField            { Type: var t }: return t;
 				case SqlDataType         { Type: var t }: return t;
 				case SqlCastExpression   { Type: var t }: return t;
 				case SqlBinaryExpression { Type: var t }: return t;
-				case SqlFunction         { Type: var t }: return t;        
+				case SqlFunction         { Type: var t }: return t;
 
 				case SqlColumn                { Expression:    var e }: return GetDbDataType(e);
 				case SqlNullabilityExpression { SqlExpression: var e }: return GetDbDataType(e);
@@ -352,12 +385,7 @@ namespace LinqToDB.SqlQuery
 						: DbDataType.Undefined;
 				}
 
-				case SqlExpression sqlExpression:
-				{
-					return sqlExpression is { Parameters: [var e], Expr: "{0}" }
-						? GetDbDataType(e)
-						: DbDataType.Undefined;
-				}
+				case SqlExpression { Parameters: [var e], Expr: "{0}" }: return GetDbDataType(e);
 
 				case SqlCaseExpression caseExpression          : return GetCaseExpressionType(caseExpression);
 				case SqlConditionExpression conditionExpression: return GetConditionExpressionType(conditionExpression);
@@ -509,6 +537,12 @@ namespace LinqToDB.SqlQuery
 			if (expr.ElementType == QueryElementType.SqlValue || expr.ElementType == QueryElementType.SqlParameter)
 				return true;
 
+			if (expr.ElementType == QueryElementType.SqlBinaryExpression)
+			{
+				var be = (SqlBinaryExpression)expr;
+				return IsConstantFast(be.Expr1) && IsConstantFast(be.Expr2);
+			}
+
 			if (expr.ElementType == QueryElementType.SqlNullabilityExpression)
 				return IsConstantFast(((SqlNullabilityExpression)expr).SqlExpression);
 
@@ -566,6 +600,27 @@ namespace LinqToDB.SqlQuery
 		{
 			if (expr is SqlValue { Value: null })
 				return true;
+			if (expr is SqlColumn { Parent: not null } column)
+			{
+				if (!IsNullValue(column.Expression))
+					return false;
+
+				if (column.Parent.HasSetOperators)
+				{
+					var idx = column.Parent.Select.Columns.IndexOf(column);
+					if (idx < 0)
+						return false;
+
+					foreach (var setOperator in column.Parent.SetOperators)
+					{
+						var selectClause = setOperator.SelectQuery.Select;
+						if (idx >= selectClause.Columns.Count || !IsNullValue(selectClause.Columns[idx].Expression))
+							return false;
+					}
+				}
+
+				return true;
+			}
 			return false;
 		}
 
@@ -913,7 +968,7 @@ namespace LinqToDB.SqlQuery
 			{
 				case QueryInformation.HierarchyType.InnerQuery:
 				{
-					if (info.ParentElement is SqlFunction { Name: "EXISTS" } func)
+					if (info.ParentElement is SqlPredicate.Exists)
 					{
 						// ORDER BY not needed for EXISTS function, even when Take and Skip specified
 						selectQuery.Select.OrderBy.Items.Clear();
@@ -1440,12 +1495,16 @@ namespace LinqToDB.SqlQuery
 		[return: NotNullIfNotNull(nameof(sqlExpression))]
 		public static ISqlExpression? SimplifyColumnExpression(ISqlExpression? sqlExpression)
 		{
-			switch (sqlExpression)
+			if (sqlExpression == null)
+				return null;
+
+			switch (UnwrapNullablity(sqlExpression))
 			{
 				case SelectQuery
 				{
 					Select.Columns: [{ Expression: var expr }],
 					From.Tables: [],
+					HasSetOperators: false
 				}:
 					return SimplifyColumnExpression(expr);
 
@@ -1454,6 +1513,9 @@ namespace LinqToDB.SqlQuery
 			};
 		}
 
+		/// <summary>
+		/// Disables null checks for equality operations.
+		/// </summary>
 		public static SqlSearchCondition CorrectComparisonForJoin(SqlSearchCondition sc)
 		{
 			var newSc = new SqlSearchCondition(false);
@@ -1462,9 +1524,7 @@ namespace LinqToDB.SqlQuery
 				var predicate = sc.Predicates[index];
 				if (predicate is SqlPredicate.ExprExpr exprExpr)
 				{
-					if ((exprExpr.Operator == SqlPredicate.Operator.Equal ||
-						 exprExpr.Operator == SqlPredicate.Operator.NotEqual)
-						&& exprExpr.WithNull != null)
+					if (exprExpr.Operator is SqlPredicate.Operator.Equal or SqlPredicate.Operator.NotEqual && exprExpr.WithNull != null)
 					{
 						predicate = new SqlPredicate.ExprExpr(exprExpr.Expr1, exprExpr.Operator, exprExpr.Expr2, null);
 					}
@@ -1560,6 +1620,26 @@ namespace LinqToDB.SqlQuery
 			return expr;
 		}
 
+		public static bool CanBeNullableOrUnknown(this ISqlExpression expr, NullabilityContext nullabilityContext)
+		{
+			if (expr is ISqlPredicate predicate)
+				return predicate.CanBeUnknown(nullabilityContext);
+
+			return expr.CanBeNullable(nullabilityContext);
+		}
+
+		public static bool NeedsEqualityWithNull(ISqlExpression expr1, SqlPredicate.Operator op, ISqlExpression expr2, NullabilityContext nullabilityContext)
+		{
+			// we cannot relax it to:
+			// ==: nullable && nullable
+			// !=: nullable XOR nullable
+			// see test GroupByAggregate
+			if (op is SqlPredicate.Operator.Equal or SqlPredicate.Operator.NotEqual)
+				return expr1.CanBeNullableOrUnknown(nullabilityContext) || expr2.CanBeNullableOrUnknown(nullabilityContext);
+
+			return false;
+		}
+
 		public static ISqlExpression UnwrapCastAndNullability(ISqlExpression expr)
 		{
 			do
@@ -1626,14 +1706,6 @@ namespace LinqToDB.SqlQuery
 			});
 		}
 
-		public static void DebugCheckNesting(SqlStatement statement, bool isSubQuery)
-		{
-			// TODO: temporary disabled
-
-			// var checkVisitor = new SqlQueryNestingValidationVisitor(isSubQuery, statement);
-			// checkVisitor.Visit(statement);
-		}
-
 		public static bool? GetBoolValue(IQueryElement element, EvaluationContext evaluationContext)
 		{
 			if (element.TryEvaluateExpression(evaluationContext, out var value))
@@ -1651,7 +1723,7 @@ namespace LinqToDB.SqlQuery
 					var ts = statement.SelectQuery?.GetTableSource(f.Table!) ?? statement.GetTableSource(f.Table!, out _);
 
 					if (ts == null && f != f.Table!.All)
-						throw new SqlException("Table '{0}' not found.", f.Table);
+						throw new LinqToDBException($"Table '{f.Table}' not found.");
 				}
 			});
 		}
@@ -1665,8 +1737,28 @@ namespace LinqToDB.SqlQuery
 					var ts = query.GetTableSource(f.Table!);
 
 					if (ts == null && f != f.Table!.All)
-						throw new SqlException("Table '{0}' not found.", f.Table);
+						throw new LinqToDBException($"Table '{f.Table}' not found.");
 				}
+			});
+		}
+
+		public static void CollectParameters(IQueryElement root, ICollection<SqlParameter> parameters)
+		{
+			root.VisitAll(x =>
+			{
+				if (x is SqlParameter { AccessorId: not null } p)
+					parameters.Add(p);
+			});
+		}
+
+		public static void CollectParametersAndValues(IQueryElement root, ICollection<SqlParameter> parameters, ICollection<SqlValue> values)
+		{
+			root.VisitAll(x =>
+			{
+				if (x is SqlParameter { AccessorId: not null } p)
+					parameters.Add(p);
+				else if (x is SqlValue v)
+					values.Add(v);
 			});
 		}
 	}

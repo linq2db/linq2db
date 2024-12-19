@@ -109,8 +109,6 @@ namespace Tests.DataProvider
 					"SELECT NULL FROM \"Dual\"" :
 					string.Format(CultureInfo.InvariantCulture, "SELECT Cast({0} as {1}) FROM \"Dual\"", sqlValue, sqlType);
 
-				Debug.WriteLine(sql + " -> " + typeof(T));
-
 				Assert.That(conn.Execute<T>(sql), Is.EqualTo(expectedValue));
 			}
 
@@ -132,17 +130,14 @@ namespace Tests.DataProvider
 					dataType == DataType.SmallMoney ? "SELECT Cast(@p as decimal(18)) FROM \"Dual\"" :
 													  "SELECT @p                      FROM \"Dual\"";
 
-				Debug.WriteLine("{0} -> DataType.{1}",  typeof(T), dataType);
 				var value = conn.Execute<T>(sql, new DataParameter { Name = "p", DataType = dataType, Value = expectedValue });
 				if (!(value is double))
 					Assert.That(value, Is.EqualTo(expectedValue));
 
-				Debug.WriteLine("{0} -> auto", typeof(T));
 				value = conn.Execute<T>(sql, new DataParameter { Name = "p", Value = expectedValue });
 				if (!(value is double))
 					Assert.That(value, Is.EqualTo(expectedValue));
 
-				Debug.WriteLine("{0} -> new",  typeof(T));
 				value = conn.Execute<T>(sql, new { p = expectedValue });
 				if (!(value is double))
 					Assert.That(value, Is.EqualTo(expectedValue));
@@ -560,8 +555,7 @@ namespace Tests.DataProvider
 		[Test]
 		public void Issue76([IncludeDataSources(TestProvName.AllFirebird)] string context)
 		{
-			using (new FirebirdQuoteMode(FirebirdIdentifierQuoteMode.Quote))
-			using (var db = GetDataContext(context))
+			using (var db = GetDataContext(context, o => o.UseFirebird(o => o with { IdentifierQuoteMode = FirebirdIdentifierQuoteMode.Quote })))
 			using (db.CreateLocalTable<Issue76Entity>())
 			{
 				var folders = db.GetTable<Issue76Entity>().Select(f => new Issue76Entity()
@@ -604,8 +598,7 @@ namespace Tests.DataProvider
 			[Values] bool withIdentity,
 			[Values] bool throwIfNotExists)
 		{
-			using (new FirebirdQuoteMode(quoteMode))
-			using (var db = GetDataContext(context))
+			using (var db = GetDataContext(context, o => o.UseFirebird(o => o with { IdentifierQuoteMode = quoteMode })))
 			{
 				if (withIdentity)
 					test<TestIdentityDropTable>();
@@ -650,10 +643,8 @@ namespace Tests.DataProvider
 			[IncludeDataSources(TestProvName.AllFirebird)] string context,
 			[Values(FirebirdIdentifierQuoteMode.Auto, FirebirdIdentifierQuoteMode.Quote)] FirebirdIdentifierQuoteMode quoteMode)
 		{
-			// TODO: quote mode is another candidate for query caching key
 			Query.ClearCaches();
-			using (new FirebirdQuoteMode(quoteMode))
-			using (var db = GetDataContext(context))
+			using (var db = GetDataContext(context, o => o.UseFirebird(o => o with { IdentifierQuoteMode = quoteMode })))
 			{
 				try
 				{
@@ -795,8 +786,7 @@ namespace Tests.DataProvider
 			[Values] FirebirdIdentifierQuoteMode quoteMode)
 		{
 			Query.ClearCaches();
-			using (new FirebirdQuoteMode(quoteMode))
-			using (var db      = GetDataConnection(context))
+			using (var db      = GetDataConnection(context, o => o.UseFirebird(o => o with { IdentifierQuoteMode = quoteMode })))
 			using (var cards   = db.CreateLocalTable<Card>())
 			using (var clients = db.CreateLocalTable<Client>())
 			{
@@ -1289,6 +1279,8 @@ namespace Tests.DataProvider
 		}
 	}
 
+	#region Extensions
+
 	static class FirebirdModuleFunctions
 	{
 		[Sql.Function("TEST_FUNCTION", ServerSideOnly = true)]
@@ -1393,4 +1385,6 @@ namespace Tests.DataProvider
 			public BigInteger?      COL_INT_128    { get; set; }
 		}
 	}
+
+	#endregion
 }

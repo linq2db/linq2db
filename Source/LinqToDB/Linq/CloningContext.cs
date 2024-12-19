@@ -17,16 +17,6 @@ namespace LinqToDB.Linq
 		Dictionary<IBuildContext, IBuildContext> _buildContexts    = new ();
 		HashSet<IBuildContext>                   _currentlyCloning = new ();
 
-		public bool IsCloned(IQueryElement queryElement)
-		{
-			return _queryElements.ContainsKey(queryElement);
-		}
-
-		public bool IsCloned(IBuildContext buildContext)
-		{
-			return _buildContexts.ContainsKey(buildContext);
-		}
-
 		[return: NotNullIfNotNull(nameof(context))]
 		public TContext? CorrectContext<TContext>(TContext? context)
 			where TContext : IBuildContext

@@ -152,32 +152,32 @@ namespace Tests.Extensions
 
 			// test literal passed with proper type
 			db.InlineParameters = true;
-			table.Insert(() => new() { BlobGuid1 = TestData.Guid1 });
+			table.Insert(() => new() { BlobGuid1 = TestData.NonReadonlyGuid1 });
 			TestWrite("BlobGuid1", "blob", true);
-			table.Insert(() => new() { BlobGuid2 = TestData.Guid1 });
+			table.Insert(() => new() { BlobGuid2 = TestData.NonReadonlyGuid1 });
 			TestWrite("BlobGuid2", "blob", true);
-			table.Insert(() => new() { BlobGuid3 = TestData.Guid1 });
+			table.Insert(() => new() { BlobGuid3 = TestData.NonReadonlyGuid1 });
 			TestWrite("BlobGuid3", "blob", true);
-			table.Insert(() => new() { BlobGuid4 = TestData.Guid1 });
+			table.Insert(() => new() { BlobGuid4 = TestData.NonReadonlyGuid1 });
 			TestWrite("BlobGuid4", "blob", true);
-			table.Insert(() => new() { TextGuid1 = TestData.Guid1 });
+			table.Insert(() => new() { TextGuid1 = TestData.NonReadonlyGuid1 });
 			TestWrite("TextGuid1", "text", true);
-			table.Insert(() => new() { TextGuid2 = TestData.Guid1 });
+			table.Insert(() => new() { TextGuid2 = TestData.NonReadonlyGuid1 });
 			TestWrite("TextGuid2", "text", true);
 
 			// test parameter passed with proper type
 			db.InlineParameters = false;
-			table.Insert(() => new() { BlobGuid1 = TestData.Guid1 });
+			table.Insert(() => new() { BlobGuid1 = TestData.NonReadonlyGuid1 });
 			TestWrite("BlobGuid1", "blob", false);
-			table.Insert(() => new() { BlobGuid2 = TestData.Guid1 });
+			table.Insert(() => new() { BlobGuid2 = TestData.NonReadonlyGuid1 });
 			TestWrite("BlobGuid2", "blob", false);
-			table.Insert(() => new() { BlobGuid3 = TestData.Guid1 });
+			table.Insert(() => new() { BlobGuid3 = TestData.NonReadonlyGuid1 });
 			TestWrite("BlobGuid3", "blob", false);
-			table.Insert(() => new() { BlobGuid4 = TestData.Guid1 });
+			table.Insert(() => new() { BlobGuid4 = TestData.NonReadonlyGuid1 });
 			TestWrite("BlobGuid4", "blob", false);
-			table.Insert(() => new() { TextGuid1 = TestData.Guid1 });
+			table.Insert(() => new() { TextGuid1 = TestData.NonReadonlyGuid1 });
 			TestWrite("TextGuid1", "text", false);
-			table.Insert(() => new() { TextGuid2 = TestData.Guid1 });
+			table.Insert(() => new() { TextGuid2 = TestData.NonReadonlyGuid1 });
 			TestWrite("TextGuid2", "text", false);
 
 			// test bulk copy roundtrip

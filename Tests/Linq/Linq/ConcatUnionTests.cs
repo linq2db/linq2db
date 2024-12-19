@@ -4,6 +4,7 @@ using System.Linq.Expressions;
 using System.Threading.Tasks;
 using FluentAssertions;
 using LinqToDB;
+using LinqToDB.Linq;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
@@ -520,6 +521,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllAccess, TestProvName.AllSybase, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
 		public void Union54([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
@@ -546,6 +548,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllAccess, TestProvName.AllSybase, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
 		public void Union541([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -685,10 +688,7 @@ namespace Tests.Linq
 
 				var q = q1.Union(q2).Take(5);
 
-				foreach (var item in q)
-				{
-					TestContext.Out.WriteLine(item);
-				}
+				q.ToArray();
 			}
 		}
 
@@ -696,40 +696,35 @@ namespace Tests.Linq
 		public class TestEntity2 { public int Id; public string? Field1; }
 
 		[Test]
-		public void Concat90()
+		public void Concat90([DataSources] string context)
 		{
-			using(var context = new DataConnection())
-			{
-				var join1 =
-					from t1 in context.GetTable<TestEntity1>()
-					join t2 in context.GetTable<TestEntity2>()
+			using var db = GetDataContext(context);
+			using var tb1 = db.CreateLocalTable<TestEntity1>();
+			using var tb2 = db.CreateLocalTable<TestEntity2>();
+			var join1 =
+					from t1 in db.GetTable<TestEntity1>()
+					join t2 in db.GetTable<TestEntity2>()
 						on t1.Id equals t2.Id
 					into tmp
 					from t2 in tmp.DefaultIfEmpty()
 					select new { t1, t2 };
 
-				var join1Sql = join1.ToString();
-				Assert.That(join1Sql, Is.Not.Null);
+			join1.ToArray();
 
-				var join2 =
-					from t2 in context.GetTable<TestEntity2>()
-					join t1 in context.GetTable<TestEntity1>()
+			var join2 =
+					from t2 in db.GetTable<TestEntity2>()
+					join t1 in db.GetTable<TestEntity1>()
 						on t2.Id equals t1.Id
 					into tmp
 					from t1 in tmp.DefaultIfEmpty()
 					where t1 == null
 					select new { t1, t2 };
 
-				var join2Sql = join2.ToString();
-				Assert.That(join2Sql, Is.Not.Null);
+			join2.ToArray();
 
-				var fullJoin = join1.Concat(join2);
+			var fullJoin = join1.Concat(join2);
 
-				var fullJoinSql = fullJoin.ToString(); // BLToolkit.Data.Linq.LinqException : Types in Concat are constructed incompatibly.
-				Assert.That(fullJoinSql, Is.Not.Null);
-
-				TestContext.Out.Write(fullJoinSql);
-			}
+			fullJoin.ToArray();
 		}
 
 		[Test]
@@ -802,6 +797,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSybase, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
 		public void ConcatDefaultIfEmpty([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
@@ -964,6 +960,41 @@ namespace Tests.Linq
 			}
 		}
 
+		[Test]
+		public void ConcatConditions([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var query1 =
+					from c in db.Child
+					from p in db.Parent.Where(p => p.ParentID == c.ParentID).DefaultIfEmpty()
+					select new
+					{
+						Parent1 = Sql.ToNullable(p.ParentID) == null
+							? null
+							: new { ParentID = p.ParentID, Value1 = p.Value1 },
+						Parent2 = Sql.ToNullable(p.ParentID) == null
+							? null
+							: new Parent { ParentID = p.ParentID, Value1 = p.Value1, Children = p.Children.ToList() }
+					};
+
+				var query2 =
+					from c in db.Child
+					from p in db.Parent.Where(p => p.ParentID == c.ParentID).DefaultIfEmpty()
+					select new
+					{
+						Parent1 = Sql.ToNullable(p.ParentID) == null
+							? null
+							: new { ParentID = p.ParentID, Value1 = p.Value1 },
+						Parent2 = (Parent?)null
+					};
+
+				var query = query1.Concat(query2);
+
+				AssertQuery(query);
+			}
+		}
+
 		[Table("ConcatTest")]
 		[InheritanceMapping(Code = 0, Type = typeof(BaseEntity), IsDefault = true)]
 		[InheritanceMapping(Code = 1, Type = typeof(DerivedEntity))]
@@ -983,7 +1014,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestConcatInheritance([IncludeDataSources(TestProvName.AllSQLiteClassic, TestProvName.AllClickHouse)] string context)
+		public void TestConcatInheritance1([IncludeDataSources(TestProvName.AllSQLiteClassic, TestProvName.AllClickHouse)] string context)
 		{
 			var testData = new[]
 			{
@@ -1003,13 +1034,71 @@ namespace Tests.Linq
 					.Concat(db.GetTable<BaseEntity>().OfType<DerivedEntity>())
 					.ToArray();
 
+				var expected = testData.OfType<BaseEntity>()
+					.Concat(testData.OfType<DerivedEntity>())
+					.ToArray();
+
+				AreEqualWithComparer(expected, result);
+			}
+		}
+
+		[ActiveIssue("type !=/== type parsing is not supported currently")]
+		[Test]
+		public void TestConcatInheritance2([IncludeDataSources(TestProvName.AllSQLiteClassic, TestProvName.AllClickHouse)] string context)
+		{
+			var testData = new[]
+			{
+				new BaseEntity { Discr = 0, EntityId = 1, Value = "VBase1" },
+				new BaseEntity { Discr = 0, EntityId = 2, Value = "VBase2" },
+				new BaseEntity { Discr = 0, EntityId = 3, Value = "VBase3" },
+
+				new DerivedEntity { Discr = 1, EntityId = 10, Value = "Derived1" },
+				new DerivedEntity { Discr = 1, EntityId = 20, Value = "Derived2" },
+				new DerivedEntity { Discr = 1, EntityId = 30, Value = "Derived3" }
+			};
+
+			using (var db = GetDataContext(context))
+			using (db.CreateLocalTable(testData))
+			{
+				var result = db.GetTable<BaseEntity>().Where(t => t.GetType() == typeof(BaseEntity))
+					.Concat(db.GetTable<BaseEntity>().OfType<DerivedEntity>())
+					.ToArray();
+
 				var expected = testData.Where(t => t.GetType() == typeof(BaseEntity))
 					.Concat(testData.OfType<DerivedEntity>())
 					.ToArray();
 
 				AreEqualWithComparer(expected, result);
 			}
+		}
 
+		[Test]
+		public void TestConcatInheritance3([IncludeDataSources(TestProvName.AllSQLiteClassic, TestProvName.AllClickHouse)] string context)
+		{
+			var testData = new[]
+			{
+				new BaseEntity { Discr = 0, EntityId = 1, Value = "VBase1" },
+				new BaseEntity { Discr = 0, EntityId = 2, Value = "VBase2" },
+				new BaseEntity { Discr = 0, EntityId = 3, Value = "VBase3" },
+
+				new DerivedEntity { Discr = 1, EntityId = 10, Value = "Derived1" },
+				new DerivedEntity { Discr = 1, EntityId = 20, Value = "Derived2" },
+				new DerivedEntity { Discr = 1, EntityId = 30, Value = "Derived3" }
+			};
+
+			using (var db = GetDataContext(context))
+			using (db.CreateLocalTable(testData))
+			{
+				var result = db.GetTable<BaseEntity>().Where(t => t.Discr == 0)
+					.Concat(db.GetTable<BaseEntity>().OfType<DerivedEntity>())
+					.ToArray();
+
+				var expected = testData.Where(t => t.GetType() == typeof(BaseEntity))
+					.Concat(testData.OfType<DerivedEntity>())
+					.ToArray();
+
+				AreEqualWithComparer(expected, result);
+			}
 		}
 
 		[Test]
@@ -1427,7 +1516,6 @@ namespace Tests.Linq
 			query2.Concat(query1).ToArray();
 		}
 
-		[ActiveIssue]
 		[Test(Description = "Test that we type literal/parameter in set query column properly")]
 		public void Issue3360_TypeByProjectionProperty([IncludeDataSources(true, TestProvName.AllSqlServer)] string context)
 		{
@@ -1584,7 +1672,7 @@ namespace Tests.Linq
 			});
 		}
 
-		[ActiveIssue(Configurations = [TestProvName.AllAccess, TestProvName.AllInformix, TestProvName.AllOracle, TestProvName.AllSybase])]
+		[ActiveIssue(Configurations = [TestProvName.AllSybase, TestProvName.AllSQLite])]
 		[Test(Description = "null literals in first query")]
 		public void Issue3360_LiteralsInFirstQuery([DataSources] string context)
 		{
@@ -1791,7 +1879,7 @@ namespace Tests.Linq
 				.OrderBy(i => i.ID))
 				.Union((from item in db.Person select item));
 
-			var sql = query.ToString()!;
+			var sql = query.ToSqlQuery().Sql;
 
 			sql.Should().NotContain("ORDER BY");
 
@@ -1807,7 +1895,7 @@ namespace Tests.Linq
 				.Union((from item in db.Person select item)
 				.OrderBy(i => i.ID));
 
-			var sql = query.ToString()!;
+			var sql = query.ToSqlQuery().Sql;
 
 			sql.Should().NotContain("ORDER BY");
 
@@ -1824,7 +1912,7 @@ namespace Tests.Linq
 				.OrderBy(i => i.ID))
 				.UnionAll((from item in db.Person select item));
 
-			var sql = query.ToString()!;
+			var sql = query.ToSqlQuery().Sql;
 
 			sql.Should().Contain("ORDER BY", Exactly.Once());
 			sql.Substring(sql.IndexOf("ORDER BY")).Should().Contain("UNION", Exactly.Once());
@@ -1842,7 +1930,7 @@ namespace Tests.Linq
 				.UnionAll((from item in db.Person select item)
 				.OrderBy(i => i.ID));
 
-			var sql = query.ToString()!;
+			var sql = query.ToSqlQuery().Sql;
 
 			sql.Should().Contain("ORDER BY", Exactly.Once());
 			sql.Should().Contain("UNION", Exactly.Once());
@@ -2129,5 +2217,239 @@ namespace Tests.Linq
 
 			resultingQuery.ToList();
 		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4225")]
+		public void Issue4225Test1([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query1 = db.Person.Select(x => new
+			{
+				person = (Person?)x,
+				patient = (Patient?)null
+			});
+			var query2 = db.Patient.Select(x => new
+			{
+				person = (Person?)null,
+				patient = (Patient?)x
+			});
+
+			var q = query1.UnionAll(query2).ToList();
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4225")]
+		public void Issue4225Test2([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query1 = db.Person.Select(x => new
+			{
+				person = x,
+				patient = (Patient?)null!
+			});
+			var query2 = db.Patient.Select(x => new
+			{
+				person = (Person?)null!,
+				patient = x
+			});
+
+			var q = query1.UnionAll(query2).ToList();
+		}
+
+		#region Issue 4220
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4220")]
+		public void Issue4220Test([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var ta = db.CreateLocalTable<ConcreteA>();
+			using var tb = db.CreateLocalTable<ConcreteB>();
+
+			db.Insert(new ConcreteA { Id = 1, AOnly = "a only" });
+			db.Insert(new ConcreteB { Id = 2, BOnly = "b only" });
+
+			var result = ta.Select(e => new { A = (ConcreteA?)e, B = (ConcreteB?)null })
+				.UnionAll(tb.Select(e => new { A = (ConcreteA?)null, B = (ConcreteB?)e }))
+				.ToArray()
+				.Select(e => (Abstr?)e.A ?? e.B)
+				.OrderBy(e => e!.Id)
+				.ToArray()!;
+
+			Assert.That(result, Has.Length.EqualTo(2));
+
+			Assert.Multiple(() =>
+			{
+				Assert.That(result[0]!.Id, Is.EqualTo(1));
+				Assert.That(result[0], Is.InstanceOf<ConcreteA>());
+				Assert.That(((ConcreteA)result[0]!).AOnly, Is.EqualTo("a only"));
+
+				Assert.That(result[1]!.Id, Is.EqualTo(2));
+				Assert.That(result[1], Is.InstanceOf<ConcreteB>());
+				Assert.That(((ConcreteB)result[1]!).BOnly, Is.EqualTo("b only"));
+			});
+		}
+
+		record Abstr
+		{
+			[PrimaryKey] public int Id { get; set; }
+		}
+
+		[Table]
+		sealed record ConcreteA : Abstr
+		{
+			[Column] public string? AOnly { get; set; }
+		}
+
+		[Table]
+		sealed record ConcreteB : Abstr
+		{
+			[Column] public string? BOnly { get; set; }
+		}
+		#endregion
+
+		#region Issue 4620
+		class Issue4620Client
+		{
+			public int Id { get; set; }
+			public string? Name { get; set; }
+
+			public static readonly Issue4620Client[] Data =
+			[
+				new Issue4620Client() { Id = 1, Name = "Client 1" },
+				new Issue4620Client() { Id = 2, Name = "Client 2" },
+			];
+		}
+
+		class Issue4620Contract
+		{
+			public int Id { get; set; }
+			public int IdClient { get; set; }
+
+			public static readonly Issue4620Contract[] Data =
+			[
+				new Issue4620Contract() { Id = 1, IdClient = 1 },
+				new Issue4620Contract() { Id = 2, IdClient = 2 },
+			];
+		}
+
+		[Table("Issue4620Table")]
+		class Issue4620Bill
+		{
+			[Column] public int Id { get; set; }
+
+			// either IdContract or IdClient will be null
+			[Column] public int? IdContract { get; set; }
+			[Column] public int? IdClient { get; set; }
+
+			[Column] public decimal Sum { get; set; }
+
+			public static readonly Issue4620Bill[] Data =
+			[
+				new Issue4620Bill() { Id = 1, IdClient = 1, IdContract = null },
+				new Issue4620Bill() { Id = 2, IdClient = null, IdContract = 2 },
+				new Issue4620Bill() { Id = 3 },
+				new Issue4620Bill() { Id = 4, IdClient = 1, IdContract = 2 },
+			];
+		}
+
+		interface Issue4620IBill
+		{
+			int Id { get; set; }
+			int? IdContract { get; set; }
+			int? IdClient { get; set; }
+			decimal Sum { get; set; }
+		}
+
+		interface Issue4620IBillWithClient : Issue4620IBill
+		{
+			public Issue4620Client Client { get; set; }
+		}
+
+		class Issue4620BillWithClient : Issue4620Bill
+		{
+			public Issue4620Client Client { get; set; } = null!;
+		}
+
+		[Table("Issue4620Table")]
+		class Issue4620LegacyBill : Issue4620Bill, Issue4620IBillWithClient
+		{
+			[Association(ThisKey = nameof(IdClient), OtherKey = nameof(Client.Id), CanBeNull = false)]
+			public Issue4620Client Client { get; set; } = null!;
+		}
+
+		[Table("Issue4620Table")]
+		class Issue4620ModernBill : Issue4620Bill, Issue4620IBillWithClient
+		{
+			[Association(ThisKey = nameof(IdContract), OtherKey = nameof(Contract.Id), CanBeNull = false)]
+			public Issue4620Contract Contract { get; set; } = null!;
+
+			[Association(ExpressionPredicate = nameof(ModernBill_Client_Expr), CanBeNull = false)]
+			public Issue4620Client Client { get; set; } = null!;
+
+			static Expression<Func<Issue4620ModernBill, Issue4620Client, bool>> ModernBill_Client_Expr
+				=> (b, cl) => b.Contract.IdClient == cl.Id;
+		}
+
+		[ActiveIssue]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4620")]
+		public void Issue4620Test1([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var _ = db.CreateLocalTable(Issue4620Bill.Data);
+			using var t1 = db.CreateLocalTable(Issue4620Client.Data);
+			using var t2 = db.CreateLocalTable(Issue4620Contract.Data);
+
+			var union = db.GetTable<Issue4620LegacyBill>().Where(b => b.IdClient != null)
+				.UnionAll<Issue4620IBillWithClient>(
+					db.GetTable<Issue4620ModernBill>().Where(b => b.IdContract != null));
+
+			var result = union.Select(b => new { Id = b.Id, b.Client.Name }).OrderBy(r => r.Id).ThenBy(r => r.Name).ToArray();
+
+			Assert.That(result, Has.Length.EqualTo(4));
+			Assert.Multiple(() =>
+			{
+				Assert.That(result[0].Id, Is.EqualTo(1));
+				Assert.That(result[0].Name, Is.EqualTo("Client 1"));
+				Assert.That(result[1].Id, Is.EqualTo(2));
+				Assert.That(result[1].Name, Is.EqualTo("Client 2"));
+				Assert.That(result[2].Id, Is.EqualTo(4));
+				Assert.That(result[2].Name, Is.EqualTo("Client 1"));
+				Assert.That(result[3].Id, Is.EqualTo(4));
+				Assert.That(result[3].Name, Is.EqualTo("Client 2"));
+			});
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4620")]
+		public void Issue4620Test2([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var _ = db.CreateLocalTable(Issue4620Bill.Data);
+			using var t1 = db.CreateLocalTable(Issue4620Client.Data);
+			using var t2 = db.CreateLocalTable(Issue4620Contract.Data);
+
+			var union = db
+					.GetTable<Issue4620LegacyBill>()
+					.Where(b => b.IdClient != null)
+					.Select(b => new Issue4620BillWithClient { Id = b.Id, IdClient = b.IdClient, IdContract = b.IdContract, Sum = b.Sum, Client = b.Client })
+				.UnionAll<Issue4620BillWithClient>(
+					db.GetTable<Issue4620ModernBill>()
+					.Where(b => b.IdContract != null)
+					.Select(b => new Issue4620BillWithClient { Id = b.Id, IdClient = b.IdClient, IdContract = b.IdContract, Sum = b.Sum, Client = b.Client }));
+
+			var result = union.Select(b => new { Id = b.Id, b.Client.Name }).OrderBy(r => r.Id).ThenBy(r => r.Name).ToArray();
+
+			Assert.That(result, Has.Length.EqualTo(4));
+			Assert.Multiple(() =>
+			{
+				Assert.That(result[0].Id, Is.EqualTo(1));
+				Assert.That(result[0].Name, Is.EqualTo("Client 1"));
+				Assert.That(result[1].Id, Is.EqualTo(2));
+				Assert.That(result[1].Name, Is.EqualTo("Client 2"));
+				Assert.That(result[2].Id, Is.EqualTo(4));
+				Assert.That(result[2].Name, Is.EqualTo("Client 1"));
+				Assert.That(result[3].Id, Is.EqualTo(4));
+				Assert.That(result[3].Name, Is.EqualTo("Client 2"));
+			});
+		}
+		#endregion
 	}
 }

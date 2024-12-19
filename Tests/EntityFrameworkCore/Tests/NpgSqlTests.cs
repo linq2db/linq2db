@@ -34,7 +34,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 		{
 			using var db = CreateContext(provider);
 
-			var date = DateTime.Now;
+			var date = TestData.DateTime;
 
 			var query = db.Events.Where(e =>
 					e.Duration.Contains(date) || e.Duration.LowerBound == date || e.Duration.UpperBound == date ||
@@ -107,10 +107,10 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 			using var db = CreateContext(provider);
 			using var dc = db.CreateLinqToDBConnection();
 
-			var dt  = new DateTime(DateTime.Now.Ticks, kind);
-			var dto = DateTimeOffset.Now;
+			var dt  = new DateTime(TestData.DateTime.Ticks, kind);
+			var dto = TestData.DateTimeOffset;
 			var ins = Instant.FromDateTimeOffset(dto);
-			var ldt = LocalDateTime.FromDateTime(DateTime.Now);
+			var ldt = LocalDateTime.FromDateTime(TestData.DateTime);
 
 			db.TimeStamps.Where(e => e.Timestamp1 == dt).ToLinqToDB().ToArray();
 			db.TimeStamps.Where(e => e.Timestamp2 == ldt).ToLinqToDB().ToArray();

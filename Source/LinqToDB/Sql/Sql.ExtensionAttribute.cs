@@ -8,6 +8,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Threading;
+
 using JetBrains.Annotations;
 
 namespace LinqToDB
@@ -17,6 +18,7 @@ namespace LinqToDB
 	using Expressions;
 	using Extensions;
 	using Linq.Builder;
+	using Expressions.Internal;
 	using Mapping;
 	using SqlQuery;
 
@@ -27,7 +29,7 @@ namespace LinqToDB
 		Values
 	}
 
-	[AttributeUsage(AttributeTargets.Parameter)]
+	[AttributeUsage(AttributeTargets.Parameter, AllowMultiple = false)]
 	[MeansImplicitUse]
 	public class ExprParameterAttribute : Attribute
 	{
@@ -719,15 +721,16 @@ namespace LinqToDB
 						var arg   = arguments[i];
 						var param = parameters[i];
 
-						bool? inlineParameters = null;
+						var inlineParameters = InlineParameters;
 
 						var names = new HashSet<string>();
-						foreach (var a in param.GetAttributes<ExprParameterAttribute>())
+						var paramAttr = param.GetAttribute<ExprParameterAttribute>();
+						if (paramAttr != null)
 						{
-							if (a.DoNotParameterize)
+							if (paramAttr.DoNotParameterize)
 								inlineParameters = true;
 
-							names.Add(a.Name ?? param.Name!);
+							names.Add(paramAttr.Name ?? param.Name!);
 						}
 
 						if (names.Count > 0)
@@ -803,6 +806,7 @@ namespace LinqToDB
 									sqlExpression = converter(context, arg, null, inlineParameters);
 
 								foreach (var name in names)
+								{
 									if (sqlExpressions != null)
 									{
 										foreach (var sqlExpr in sqlExpressions)
@@ -812,6 +816,7 @@ namespace LinqToDB
 												error = sqlExpr;
 												return null;
 											}
+
 											extension.AddParameter(name!, placeholder.Sql);
 										}
 									}
@@ -822,8 +827,10 @@ namespace LinqToDB
 											error = sqlExpression;
 											return null;
 										}
+
 										extension.AddParameter(name!, placeholder.Sql);
 									}
+								}
 							}
 						}
 					}

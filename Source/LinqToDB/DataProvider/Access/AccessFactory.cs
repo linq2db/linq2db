@@ -8,20 +8,25 @@ namespace LinqToDB.DataProvider.Access
 	using Configuration;
 
 	[UsedImplicitly]
-	sealed class AccessFactory : IDataProviderFactory
+	sealed class AccessFactory : DataProviderFactoryBase
 	{
-		IDataProvider IDataProviderFactory.GetDataProvider(IEnumerable<NamedValue> attributes)
+		public override IDataProvider GetDataProvider(IEnumerable<NamedValue> attributes)
 		{
-			var assemblyName = attributes.FirstOrDefault(_ => _.Name == "assemblyName")?.Value;
-
-			var provider = assemblyName switch
+			var provider = GetAssemblyName(attributes) switch
 			{
 				OleDbProviderAdapter.AssemblyName => AccessProvider.OleDb,
 				OdbcProviderAdapter.AssemblyName  => AccessProvider.ODBC,
 				_                                 => AccessProvider.AutoDetect
 			};
 
-			return AccessTools.GetDataProvider(provider);
+			var version = GetVersion(attributes) switch
+			{
+				"JET" => AccessVersion.Jet,
+				"ACE" => AccessVersion.Ace,
+				_     => AccessVersion.AutoDetect
+			};
+
+			return AccessTools.GetDataProvider(version, provider);
 		}
 	}
 }

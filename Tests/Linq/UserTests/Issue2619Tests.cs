@@ -20,7 +20,7 @@ namespace Tests.UserTests
 				var union = persons
 						.Union (persons);
 
-				var sql = union.ToString();
+				var sql = union.ToSqlQuery().Sql;
 
 				sql.Should().NotContain("ORDER");
 
@@ -39,7 +39,7 @@ namespace Tests.UserTests
 				var union = persons
 					.Union (persons);
 
-				var sql = union.ToString();
+				var sql = union.ToSqlQuery().Sql;
 
 				sql.Should().Contain("ORDER", Exactly.Twice());
 
@@ -58,7 +58,7 @@ namespace Tests.UserTests
 				var concat = persons
 					.Concat(persons);
 
-				var sql = concat.ToString();
+				var sql = concat.ToSqlQuery().Sql;
 
 				sql.Should().Contain("ORDER", Exactly.Twice());
 
@@ -77,7 +77,7 @@ namespace Tests.UserTests
 				var concat = persons
 					.Concat(persons);
 
-				var sql = concat.ToString();
+				var sql = concat.ToSqlQuery().Sql;
 
 				sql.Should().Contain("ORDER", Exactly.Twice());
 
@@ -97,7 +97,7 @@ namespace Tests.UserTests
 				var concat = persons
 					.Except(persons);
 
-				var sql = concat.ToString()!;
+				var sql = concat.ToSqlQuery().Sql;
 
 				if (!sql.Contains("EXISTS"))
 					sql.Should().NotContain("ORDER");
@@ -118,7 +118,7 @@ namespace Tests.UserTests
 				var except = persons
 					.Except(persons);
 
-				var sql = except.ToString();
+				var sql = except.ToSqlQuery().Sql;
 
 				sql.Should().Contain("ORDER", AtLeast.Once());
 

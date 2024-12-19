@@ -8,6 +8,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 using NUnit.Framework;
 
+using Tests;
+
 namespace LinqToDB.EntityFrameworkCore.Tests
 {
 	[TestFixture]
@@ -31,13 +33,13 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 			using var db = ctx.CreateLinqToDBConnection();
 
 			var result = db.InsertWithInt64Identity(new SubDivision()
-			{ Code = "C1", Id = new Id<SubDivision, long>(0), Name = "N1", PermanentId = Guid.NewGuid() });
+			{ Code = "C1", Id = new Id<SubDivision, long>(0), Name = "N1", PermanentId = TestData.Guid1 });
 
 			result = db.InsertWithInt64Identity(new SubDivision()
-			{ Code = "C2", Id = new Id<SubDivision, long>(1), Name = "N2", PermanentId = Guid.NewGuid() });
+			{ Code = "C2", Id = new Id<SubDivision, long>(1), Name = "N2", PermanentId = TestData.Guid2 });
 
 			result = db.InsertWithInt64Identity(new SubDivision()
-			{ Code = "C3", Id = new Id<SubDivision, long>(2), Name = "N3", PermanentId = Guid.NewGuid() });
+			{ Code = "C3", Id = new Id<SubDivision, long>(2), Name = "N3", PermanentId = TestData.Guid3 });
 
 			var ef   = ctx.Subdivisions.Where(s => s.Id == 1L).ToArray();
 			var result1 = ctx.Subdivisions.ToLinqToDB().Where(s => s.Id == 1L).ToArray();

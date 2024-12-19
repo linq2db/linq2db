@@ -58,12 +58,15 @@ namespace LinqToDB.DataProvider.SqlServer
 			SqlProviderFlags.OutputDeleteUseSpecialTable        = true;
 			SqlProviderFlags.OutputInsertUseSpecialTable        = true;
 			SqlProviderFlags.OutputUpdateUseSpecialTables       = true;
+			SqlProviderFlags.OutputMergeUseSpecialTables        = true;
 			SqlProviderFlags.IsApplyJoinSupported               = true;
 			SqlProviderFlags.TakeHintsSupported                 = TakeHints.Percent | TakeHints.WithTies;
 			SqlProviderFlags.IsCommonTableExpressionsSupported  = true;
 			SqlProviderFlags.IsRowNumberWithoutOrderBySupported = false;
 			SqlProviderFlags.IsCTESupportsOrdering              = false;
 			SqlProviderFlags.IsUpdateTakeSupported              = true;
+			SqlProviderFlags.IsDistinctFromSupported            = Version >= SqlServerVersion.v2022;
+			SqlProviderFlags.SupportsBooleanType                = false;
 
 			SetCharField("char" , (r, i) => r.GetString(i).TrimEnd(' '));
 			SetCharField("nchar", (r, i) => r.GetString(i).TrimEnd(' '));

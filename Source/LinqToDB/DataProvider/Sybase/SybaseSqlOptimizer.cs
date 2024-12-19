@@ -23,10 +23,16 @@ namespace LinqToDB.DataProvider.Sybase
 			if (statement.QueryType is QueryType.Update or QueryType.Delete)
 			{
 				if (statement.SelectQuery!.Select.TakeValue != null && !statement.SelectQuery.Select.OrderBy.IsEmpty)
-					throw new LinqToDBException($"The Sybase ASE does not support the {(statement.QueryType == QueryType.Update ? "UPDATE" : "DELETE")} statement with the TOP + ORDER BY clause.");
+					throw new LinqToDBException(
+						statement.QueryType == QueryType.Update
+							? ErrorHelper.Sybase.Error_UpdateWithTopOrderBy
+							: ErrorHelper.Sybase.Error_DeleteWithTopOrderBy);
 
 				if (statement.SelectQuery.Select.SkipValue != null)
-					throw new LinqToDBException($"The Sybase ASE does not support the {(statement.QueryType == QueryType.Update ? "UPDATE" : "DELETE")} statement with the SKIP clause.");
+					throw new LinqToDBException(
+						statement.QueryType == QueryType.Update
+							? ErrorHelper.Sybase.Error_UpdateWithSkip
+							: ErrorHelper.Sybase.Error_DeleteWithSkip);
 			}
 
 			if (statement.QueryType == QueryType.Update)

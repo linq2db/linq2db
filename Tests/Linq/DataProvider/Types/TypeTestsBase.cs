@@ -68,6 +68,7 @@ namespace Tests.DataProvider
 		/// <param name="filterByNullableValue">Enable/disable selection filter by nullable column (default: <c>true</c>).</param>
 		/// <param name="getExpectedValue">Optional expected non-nullable value provider to use when value doesn't roundtrip.</param>
 		/// <param name="getExpectedNullableValue">Optional expected nullable value provider to use when value doesn't roundtrip.</param>
+		/// <param name="optionsBuilder">Optional ooptions builder to configure connection.</param>
 		protected async ValueTask TestType<TType, TNullableType>(
 			string                                context,
 			DbDataType                            dbType,
@@ -78,7 +79,8 @@ namespace Tests.DataProvider
 			bool                                  filterByValue            = true,
 			bool                                  filterByNullableValue    = true,
 			Func<TType, TType>?                   getExpectedValue         = null,
-			Func<TNullableType?, TNullableType?>? getExpectedNullableValue = null)
+			Func<TNullableType?, TNullableType?>? getExpectedNullableValue = null,
+			Func<DataOptions, DataOptions>?       optionsBuilder           = null)
 		{
 			testParameters ??= TestParameters;
 
@@ -111,7 +113,7 @@ namespace Tests.DataProvider
 			ent.Build();
 
 			// start testing
-			using var db = GetDataConnection(context, ms);
+			using var db = GetDataConnection(context, o => optionsBuilder == null ? o.UseMappingSchema(ms) : optionsBuilder(o.UseMappingSchema(ms)));
 
 			var data = new[] { new TypeTable<TType, TNullableType> { Column = value, ColumnNullable = nullableValue } };
 			using var table = db.CreateLocalTable(data);
@@ -123,7 +125,7 @@ namespace Tests.DataProvider
 
 				db.OnNextCommandInitialized((_, cmd) =>
 				{
-					Assert.That(cmd.Parameters, Has.Count.EqualTo(2));
+					Assert.That(cmd.Parameters, Has.Count.EqualTo(nullableValue == null ? 1 : 2));
 					return cmd;
 				});
 

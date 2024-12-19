@@ -68,6 +68,5 @@ namespace LinqToDB.Linq
 		{
 			return Builder.ExpressionBuilder.ExposeExpression(expression, dataContext, new Builder.ExpressionTreeOptimizationContext(dataContext), null, false, false);
 		}
-
 	}
 }

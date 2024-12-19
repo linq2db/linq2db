@@ -8,7 +8,6 @@ namespace Tests.UserTests
 	[TestFixture]
 	public class Issue2787Tests : TestBase
 	{
-		[ActiveIssue]
 		[Test]
 		public void Issue2787Test([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{

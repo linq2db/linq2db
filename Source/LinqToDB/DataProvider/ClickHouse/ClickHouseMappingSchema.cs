@@ -597,6 +597,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 				case DataType.Undefined:
 				case DataType.Int32:
 				case DataType.Double   : BuildDoubleLiteral(sb, value); return;
+				case DataType.Decimal64: BuildDecimal64Literal(sb, (decimal)value, DEFAULT_DECIMAL_SCALE); return;
 			}
 
 			throw new LinqToDBConvertException($"Unsupported Double type mapping: {dt.Type.DataType}");
@@ -608,11 +609,12 @@ namespace LinqToDB.DataProvider.ClickHouse
 
 			switch (dt.Type.DataType)
 			{
-				case DataType.Decimal32 : BuildDecimal32Literal(sb, value, scale);  return;
+				case DataType.Decimal32 : BuildDecimal32Literal(sb, value, scale);         return;
 				case DataType.Undefined :
-				case DataType.Decimal64 : BuildDecimal64Literal(sb, value, scale);  return;
-				case DataType.Decimal128: BuildDecimal128Literal(sb, value, scale); return;
-				case DataType.Decimal256: BuildDecimal256Literal(sb, value, scale); return;
+				case DataType.Decimal64 : BuildDecimal64Literal(sb, value, scale);         return;
+				case DataType.Decimal128: BuildDecimal128Literal(sb, value, scale);        return;
+				case DataType.Decimal256: BuildDecimal256Literal(sb, value, scale);        return;
+				case DataType.Int32     : BuildInt32Literal     (sb, checked((int)value)); return;
 			}
 
 			throw new LinqToDBConvertException($"Unsupported Decimal type mapping: {dt.Type.DataType}");

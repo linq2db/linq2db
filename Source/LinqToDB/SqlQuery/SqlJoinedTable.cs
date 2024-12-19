@@ -39,6 +39,8 @@ namespace LinqToDB.SqlQuery
 			if (!writer.AddVisited(this))
 				return writer.Append("...");
 
+			writer.DebugAppendUniqueId(this);
+
 			if (IsWeak)
 				writer.Append("WEAK ");
 

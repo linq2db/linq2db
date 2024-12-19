@@ -535,9 +535,7 @@ namespace LinqToDB.Data
 
 		static T ThrowError<T>(object? code, Type onType)
 		{
-			throw new LinqException(
-				"Inheritance mapping is not defined for discriminator value '{0}' in the '{1}' hierarchy.",
-				code, onType);
+			throw new LinqToDBException($"Inheritance mapping is not defined for discriminator value '{code}' in the '{onType}' hierarchy.");
 		}
 
 		public virtual Expression? TryConstructFullEntity(SqlGenericConstructorExpression constructorExpression, Type constructType, ProjectFlags flags, bool checkInheritance, out string? error)
@@ -627,6 +625,9 @@ namespace LinqToDB.Data
 								Expression.Constant(inheritance.Code));
 						}
 
+						// Tell Builder to prefer client side
+						test = MarkerExpression.PreferClientSide(test);
+
 						var fullEntity = TryConstructFullEntity(constructorExpression, inheritance.Type, flags, false, out error);
 						if (fullEntity == null)
 							return null;
@@ -676,7 +677,7 @@ namespace LinqToDB.Data
 			}
 
 			if (newAssignments != null)
-				constructorExpression = constructorExpression.ReplaceAssignments(newAssignments);
+				constructorExpression = constructorExpression.ReplaceAssignments(newAssignments.AsReadOnly());
 
 			var constructed = TryConstructObject(constructorExpression, constructType, out error);
 

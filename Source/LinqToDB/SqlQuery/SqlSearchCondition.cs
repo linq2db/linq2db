@@ -4,7 +4,7 @@ using System.Linq;
 
 namespace LinqToDB.SqlQuery
 {
-	public class SqlSearchCondition : SqlExpressionBase, ISqlPredicate
+	public sealed class SqlSearchCondition : SqlExpressionBase, ISqlPredicate
 	{
 		public SqlSearchCondition(bool isOr = false)
 		{
@@ -53,9 +53,9 @@ namespace LinqToDB.SqlQuery
 			if (!writer.AddVisited(this))
 				return writer.Append("...");
 
-			// writer
-			// 	//.Append("sc=")
-			// 	.DebugAppendUniqueId(this);
+			/*writer
+			   .Append("sc=")
+			   .DebugAppendUniqueId(this);*/
 
 			writer.Append('(');
 
@@ -165,9 +165,12 @@ namespace LinqToDB.SqlQuery
 
 		#region ISqlExpression Members
 
-		public override bool CanBeNullable(NullabilityContext nullability) => CanBeNull;
+		public override bool CanBeNullable(NullabilityContext nullability) => false;
 
-		public bool CanBeNull => false;
+		public bool CanBeUnknown(NullabilityContext nullability)
+		{
+			return Predicates.Any(predicate => predicate.CanBeUnknown(nullability));
+		}
 
 		public override bool Equals(ISqlExpression other, Func<ISqlExpression, ISqlExpression, bool> comparer)
 		{

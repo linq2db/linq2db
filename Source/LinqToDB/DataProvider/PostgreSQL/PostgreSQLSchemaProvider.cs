@@ -156,7 +156,13 @@ namespace LinqToDB.DataProvider.PostgreSQL
 					left(t.table_schema, 3) = 'pg_' OR t.table_schema = 'information_schema'   as IsProviderSpecific
 				FROM
 					information_schema.tables t
-				WHERE {GenerateSchemaFilter(dataConnection, "table_schema")}";
+				LEFT JOIN pg_inherits i ON (
+				    SELECT c.oid
+				    FROM pg_class c
+				    JOIN pg_namespace n ON c.relnamespace = n.oid
+				    WHERE c.relname = t.table_name AND n.nspname = t.table_schema
+				) = i.inhrelid
+				WHERE i.inhrelid IS NULL AND {GenerateSchemaFilter(dataConnection, "table_schema")}";
 
 			// materialized views supported starting from pgsql 9.3
 			var version = dataConnection.Query<int>("SHOW  server_version_num").Single();
@@ -345,7 +351,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 				                  LEFT JOIN (pg_type bt
 				                 JOIN pg_namespace nbt ON bt.typnamespace = nbt.oid)
 				                            ON typ.typtype = 'd'::""char"" AND typ.typbasetype = bt.oid
-				         WHERE cls.relkind IN ('r', 'v', 'm')
+				         WHERE cls.relkind IN ('r', 'v', 'm', 'p')
 				           AND attr.attnum > 0
 				           AND NOT attr.attisdropped
 				           AND {GenerateSchemaFilter(dataConnection, "ns.nspname")}

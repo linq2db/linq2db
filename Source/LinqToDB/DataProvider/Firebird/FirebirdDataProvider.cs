@@ -32,17 +32,20 @@ namespace LinqToDB.DataProvider.Firebird
 			SqlProviderFlags.IsDistinctSetOperationsSupported  = false;
 			SqlProviderFlags.IsUpdateFromSupported             = false;
 			SqlProviderFlags.OutputUpdateUseSpecialTables      = true;
+			SqlProviderFlags.OutputMergeUseSpecialTables       = true;
 			SqlProviderFlags.IsExistsPreferableForContains     = true;
 			SqlProviderFlags.IsWindowFunctionsSupported        = Version >= FirebirdVersion.v3;
 			SqlProviderFlags.IsApplyJoinSupported              = Version >= FirebirdVersion.v4;
 			// CROSS - doesn't support, OUTER - supports conditions
 			SqlProviderFlags.IsOuterApplyJoinSupportsCondition = Version >= FirebirdVersion.v4;
-			SqlProviderFlags.SupportsBooleanComparison         = Version >= FirebirdVersion.v3;
+			SqlProviderFlags.SupportsPredicatesComparison      = Version >= FirebirdVersion.v3;
+			SqlProviderFlags.SupportsBooleanType               = Version >= FirebirdVersion.v3;
 
 			SqlProviderFlags.MaxInListValuesCount = Version >= FirebirdVersion.v5 ? 65535 : 1500;
 
 			SqlProviderFlags.IsUpdateTakeSupported     = true;
 			SqlProviderFlags.IsUpdateSkipTakeSupported = true;
+			SqlProviderFlags.IsDistinctFromSupported   = true;
 
 			SqlProviderFlags.SupportedCorrelatedSubqueriesLevel = 1;
 
@@ -81,6 +84,11 @@ namespace LinqToDB.DataProvider.Firebird
 		protected override IMemberTranslator CreateMemberTranslator()
 		{
 			return Version == FirebirdVersion.v5 ? new Firebird5MemberTranslator() : new FirebirdMemberTranslator();
+		}
+
+		protected override IIdentifierService CreateIdentifierService()
+		{
+			return new IdentifierServiceSimple(Version <= FirebirdVersion.v3 ? 31 : 63);
 		}
 
 		public override ISqlBuilder CreateSqlBuilder(MappingSchema mappingSchema, DataOptions dataOptions)

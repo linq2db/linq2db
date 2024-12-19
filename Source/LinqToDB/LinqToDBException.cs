@@ -1,15 +1,10 @@
 ﻿using System;
-using System.Runtime.Serialization;
 
 namespace LinqToDB
 {
 	/// <summary>
-	/// Defines the base class for the namespace exceptions.
+	/// Exception type for exceptions, thrown by Linq To DB.
 	/// </summary>
-	/// <remarks>
-	/// This class is the base class for exceptions that may occur during
-	/// execution of the namespace members.
-	/// </remarks>
 	[Serializable]
 	public class LinqToDBException : Exception
 	{
@@ -18,10 +13,11 @@ namespace LinqToDB
 		/// </summary>
 		/// <remarks>
 		/// This constructor initializes the <see cref="Exception.Message"/>
-		/// property of the new instance such as "A Build Type exception has occurred.".
+		/// property with generic error message "A Linq To DB exception has occurred.".
 		/// </remarks>
+		[Obsolete("Use one of constructors with message")]
 		public LinqToDBException()
-			: base("A Build Type exception has occurred.")
+			: base("A Linq To DB exception has occurred.")
 		{
 		}
 
@@ -59,6 +55,7 @@ namespace LinqToDB
 		/// <param name="innerException">The InnerException, if any, that threw
 		/// the current exception.</param>
 		/// <seealso cref="Exception.InnerException"/>
+		[Obsolete("Use one of constructors with message")]
 		public LinqToDBException(Exception innerException)
 			: base(innerException.Message, innerException)
 		{

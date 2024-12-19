@@ -1,6 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using System.Collections.Generic;
+
 using JetBrains.Annotations;
 
 namespace LinqToDB.DataProvider.SqlServer
@@ -8,29 +7,18 @@ namespace LinqToDB.DataProvider.SqlServer
 	using Configuration;
 
 	[UsedImplicitly]
-	sealed class SqlServerFactory : IDataProviderFactory
+	sealed class SqlServerFactory : DataProviderFactoryBase
 	{
-		IDataProvider IDataProviderFactory.GetDataProvider(IEnumerable<NamedValue> attributes)
+		public override IDataProvider GetDataProvider(IEnumerable<NamedValue> attributes)
 		{
-			string? versionName  = null;
-			string? assemblyName = null;
-
-			foreach (var attr in attributes)
-			{
-				if (attr.Name == "version" && versionName == null)
-					versionName = attr.Value;
-				else if (attr.Name == "assemblyName" && assemblyName == null)
-					assemblyName = attr.Value;
-			}
-
-			var provider = assemblyName switch
+			var provider = GetAssemblyName(attributes) switch
 			{
 				SqlServerProviderAdapter.MicrosoftAssemblyName => SqlServerProvider.MicrosoftDataSqlClient,
 				SqlServerProviderAdapter.SystemAssemblyName    => SqlServerProvider.SystemDataSqlClient,
 				_                                              => SqlServerProvider.AutoDetect
 			};
 
-			var version = versionName switch
+			var version = GetVersion(attributes) switch
 			{
 				"2005" => SqlServerVersion.v2005,
 				"2008" => SqlServerVersion.v2008,

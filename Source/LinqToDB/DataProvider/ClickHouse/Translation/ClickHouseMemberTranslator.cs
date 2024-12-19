@@ -95,11 +95,6 @@ namespace LinqToDB.DataProvider.ClickHouse.Translation
 				return result;
 			}
 
-			protected override ISqlExpression? TranslateDateTimeOffsetDateAdd(ITranslationContext translationContext, TranslationFlags translationFlag, ISqlExpression dateTimeExpression, ISqlExpression increment, Sql.DateParts                                                                         datepart)
-			{
-				return TranslateDateTimeDateAdd(translationContext, translationFlag, dateTimeExpression, increment, datepart);
-			}
-
 			protected override ISqlExpression? TranslateMakeDateTime(
 				ITranslationContext translationContext,
 				DbDataType          resulType,
@@ -143,11 +138,17 @@ namespace LinqToDB.DataProvider.ClickHouse.Translation
 
 			protected override ISqlExpression? TranslateDateTimeTruncationToDate(ITranslationContext translationContext, ISqlExpression dateExpression, TranslationFlags translationFlags)
 			{
-				var cast = new SqlCastExpression(dateExpression, new DbDataType(typeof(DateTime), DataType.Date), null, true);
+				var cast = new SqlCastExpression(dateExpression, new DbDataType(typeof(DateTime), DataType.Date32), null, true);
 				return cast;
 			}
 
-			protected override ISqlExpression? TranslateDateTimeTruncationToTime(ITranslationContext translationContext, ISqlExpression dateExpression, TranslationFlags translationFlags)
+			protected override ISqlExpression? TranslateDateTimeOffsetTruncationToDate(ITranslationContext translationContext, ISqlExpression dateExpression, TranslationFlags translationFlags)
+			{
+				var cast = new SqlCastExpression(dateExpression, new DbDataType(typeof(DateTime), DataType.Date32), null, true);
+				return cast;
+			}
+
+			static ISqlExpression? CommonTruncationToTime(ITranslationContext translationContext, ISqlExpression dateExpression)
 			{
 				//toInt64((toUnixTimestamp64Nano(toDateTime64(t.DateTimeValue, 7)) - toUnixTimestamp64Nano(toDateTime64(toDate32(t.DateTimeValue), 7))) / 100)
 				var factory        = translationContext.ExpressionFactory;
@@ -174,6 +175,16 @@ namespace LinqToDB.DataProvider.ClickHouse.Translation
 				return resultExpression;
 			}
 
+			protected override ISqlExpression? TranslateDateTimeTruncationToTime(ITranslationContext translationContext, ISqlExpression dateExpression, TranslationFlags translationFlags)
+			{
+				return CommonTruncationToTime(translationContext, dateExpression);
+			}
+
+			protected override ISqlExpression? TranslateDateTimeOffsetTruncationToTime(ITranslationContext translationContext, ISqlExpression dateExpression, TranslationFlags translationFlags)
+			{
+				return CommonTruncationToTime(translationContext, dateExpression);
+			}
+
 			protected override ISqlExpression? TranslateSqlGetDate(ITranslationContext translationContext, TranslationFlags translationFlags)
 			{
 				var factory     = translationContext.ExpressionFactory;
@@ -190,6 +201,30 @@ namespace LinqToDB.DataProvider.ClickHouse.Translation
 		protected override IMemberTranslator CreateDateMemberTranslator()
 		{
 			return new DateFunctionsTranslator();
+		}
+
+		protected override IMemberTranslator CreateMathMemberTranslator()
+		{
+			return new MathMemberTranslator();
+		}
+
+		class MathMemberTranslator : MathMemberTranslatorBase
+		{
+			protected override ISqlExpression? TranslateRoundToEven(ITranslationContext translationContext, MethodCallExpression methodCall, ISqlExpression value, ISqlExpression? precision)
+			{
+				var factory = translationContext.ExpressionFactory;
+
+				var valueType = factory.GetDbDataType(value);
+
+				ISqlExpression result;
+
+				if (precision != null)
+					result = factory.Function(valueType, "roundBankers", value, precision);
+				else
+					result = factory.Function(valueType, "roundBankers", value);
+				
+				return result;
+			}
 		}
 
 		protected override ISqlExpression? TranslateNewGuidMethod(ITranslationContext translationContext, TranslationFlags translationFlags)

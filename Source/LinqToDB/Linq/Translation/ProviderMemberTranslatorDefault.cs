@@ -24,6 +24,11 @@ namespace LinqToDB.Linq.Translation
 			return new MathMemberTranslatorBase();
 		}
 
+		protected virtual IMemberTranslator CreateStringMemberTranslator()
+		{
+			return new StringMemberTranslatorBase();
+		}
+
 		protected ProviderMemberTranslatorDefault()
 		{
 			InitDefaultTranslators();
@@ -46,6 +51,7 @@ namespace LinqToDB.Linq.Translation
 			CombinedMemberTranslator.Add(CreateSqlTypesTranslator());
 			CombinedMemberTranslator.Add(CreateDateMemberTranslator());
 			CombinedMemberTranslator.Add(CreateMathMemberTranslator());
+			CombinedMemberTranslator.Add(CreateStringMemberTranslator());
 		}
 
 		protected SqlPlaceholderExpression? TranslateNoRequiredObjectExpression(ITranslationContext translationContext, Expression? objExpression, TranslationFlags translationFlags)
@@ -53,7 +59,7 @@ namespace LinqToDB.Linq.Translation
 			if (objExpression == null)
 				return null;
 
-			if (translationContext.CanBeCompiled(objExpression, translationFlags))
+			if (translationContext.CanBeEvaluatedOnClient(objExpression))
 				return null;
 
 			var obj = translationContext.Translate(objExpression);
@@ -121,7 +127,7 @@ namespace LinqToDB.Linq.Translation
 						return true;
 				}
 
-				if (translationFlags.HasFlag(TranslationFlags.Expression) && translationContext.CanBeCompiled(methodCall.Object, translationFlags))
+				if (translationFlags.HasFlag(TranslationFlags.Expression) && translationContext.CanBeEvaluatedOnClient(methodCall.Object))
 					return true;
 
 				translated = ConvertToString(translationContext, methodCall, translationFlags);
@@ -145,11 +151,30 @@ namespace LinqToDB.Linq.Translation
 			if (methodCall.Method.Name != nameof(Sql.Convert))
 				return false;
 
-			if (methodCall.Arguments.Count != 1)
-				return false;
+			if (methodCall.Arguments.Count == 1)
+				//TODO: Implement conversion
+				return true;
 
-			//TODO: Implement conversion
-			return true;
+			if (methodCall.Arguments.Count == 2)
+			{
+				if (methodCall.Arguments[0].Type != typeof(bool))
+					return false;
+				
+				var argumentPlaceholder = TranslateNoRequiredObjectExpression(translationContext, methodCall.Arguments[1], translationFlags);
+
+				if (argumentPlaceholder == null)
+					return false;
+
+				var translatedSqlExpression = TranslateConvertToBoolean(translationContext, argumentPlaceholder.Sql, translationFlags);
+
+				if (translatedSqlExpression == null)
+					return false;
+
+				translated = translationContext.CreatePlaceholder(translationContext.CurrentSelectQuery, translatedSqlExpression, methodCall);
+				return true;
+			}
+
+			return false;
 		}
 
 		protected bool ProcessConvertToBoolean(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, out Expression? translated)
@@ -229,7 +254,7 @@ namespace LinqToDB.Linq.Translation
 			var predicate = new SqlPredicate
 				.ExprExpr(
 					sqlExpression,
-					SqlPredicate.Operator.Equal, 
+					SqlPredicate.Operator.Equal,
 					new SqlValue(0),
 					translationContext.DataOptions.LinqOptions.CompareNulls == CompareNulls.LikeClr ? true : null)
 				.MakeNot();

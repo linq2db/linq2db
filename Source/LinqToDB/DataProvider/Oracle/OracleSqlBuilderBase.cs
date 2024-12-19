@@ -43,7 +43,7 @@ namespace LinqToDB.DataProvider.Oracle
 			var identityField = insertClause.Into!.GetIdentityField();
 
 			if (identityField == null)
-				throw new SqlException("Identity field must be defined for '{0}'.", insertClause.Into.NameForLogging);
+				throw new LinqToDBException($"Identity field must be defined for '{insertClause.Into.NameForLogging}'.");
 
 			AppendIndent().AppendLine("RETURNING ");
 			AppendIndent().Append('\t');

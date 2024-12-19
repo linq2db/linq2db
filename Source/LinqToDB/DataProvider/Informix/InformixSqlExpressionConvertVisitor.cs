@@ -13,7 +13,8 @@ namespace LinqToDB.DataProvider.Informix
 		{
 		}
 
-		protected override bool SupportsNullInColumn => false;
+		protected override bool SupportsNullInColumn              => false;
+		protected override bool SupportsDistinctAsExistsIntersect => true;
 
 		public override ISqlPredicate ConvertLikePredicate(SqlPredicate.Like predicate)
 		{
@@ -87,14 +88,6 @@ namespace LinqToDB.DataProvider.Informix
 						break;
 					}
 
-					case TypeCode.Boolean  :
-					{
-						if (ReferenceEquals(cast, IsForPredicate))
-							return ConvertToBooleanSearchCondition(cast.Expression);
-						
-						break;
-					}
-
 					case TypeCode.UInt64   :
 						if (argument.SystemType!.IsFloatType())
 							argument = new SqlFunction(cast.SystemType, "Floor", argument);
@@ -141,14 +134,19 @@ namespace LinqToDB.DataProvider.Informix
 		{
 			var columnExpression = base.WrapColumnExpression(expr);
 
-			if (SqlProviderFlags != null 
+			if (SqlProviderFlags != null
 			    && columnExpression.SystemType == typeof(bool)
-			    && QueryHelper.UnwrapNullablity(columnExpression) is not (SqlCastExpression or SqlColumn or SqlField))
+			    && QueryHelper.UnwrapNullablity(columnExpression) is not (SqlCastExpression or SqlColumn or SqlField or SqlValue))
 			{
 				columnExpression = new SqlCastExpression(columnExpression, new DbDataType(columnExpression.SystemType!, DataType.Boolean), null, isMandatory: true);
 			}
 
 			return columnExpression;
+		}
+
+		protected override IQueryElement ConvertIsDistinctPredicateAsIntersect(SqlPredicate.IsDistinct predicate)
+		{
+			return InformixSqlOptimizer.WrapParameters(base.ConvertIsDistinctPredicateAsIntersect(predicate), EvaluationContext);
 		}
 	}
 }

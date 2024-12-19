@@ -5,8 +5,8 @@ using System.Linq.Expressions;
 
 namespace LinqToDB.Linq.Builder
 {
-	using Extensions;
 	using LinqToDB.Expressions;
+	using Extensions;
 	using SqlQuery;
 
 	[BuildsExpression(ExpressionType.Call)]
@@ -79,8 +79,8 @@ namespace LinqToDB.Linq.Builder
 					{
 						var converted = data.Expression.Unwrap() switch
 						{
-							LambdaExpression lex => builder.ConvertToExtensionSql(sequence, buildInfo.GetFlags(), lex, null, null),
-							var ex => builder.ConvertToSqlExpr(sequence, ex)
+							LambdaExpression lex => builder.BuildSqlExpression(sequence, SequenceHelper.PrepareBody(lex, sequence)),
+							var ex => builder.BuildSqlExpression(sequence, ex)
 						};
 
 						if (converted is SqlPlaceholderExpression placeholder)
@@ -90,7 +90,7 @@ namespace LinqToDB.Linq.Builder
 					}
 					else if (data.Expression is LambdaExpression le)
 					{
-						var converted = builder.ConvertToExtensionSql(sequence, buildInfo.GetFlags(), le, null, null);
+						var converted = builder.ConvertToExtensionSql(sequence, le, null, null);
 
 						if (converted is SqlPlaceholderExpression placeholder)
 							data.SqlExpression = placeholder.Sql;
@@ -99,7 +99,13 @@ namespace LinqToDB.Linq.Builder
 					}
 					else
 					{
-						var converted = builder.ConvertToSqlExpr(sequence, data.Expression);
+						//TODO: These QueryExtensions needs tp be rewritten completely. Workaround over DateTime.
+
+						var isQueryDepended = data.Parameter.GetAttributes<SqlQueryDependentAttribute>().Length > 0;
+
+						var additionalFlags = isQueryDepended ? BuildFlags.None : BuildFlags.ForceParameter;
+
+						var converted = builder.BuildSqlExpression(sequence, data.Expression, BuildPurpose.Sql, buildFlags : additionalFlags);
 
 						if (converted is SqlPlaceholderExpression placeholder)
 							data.SqlExpression = placeholder.Sql;

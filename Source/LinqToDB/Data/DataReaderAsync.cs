@@ -29,8 +29,6 @@ namespace LinqToDB.Data
 		{
 			if (ReaderWrapper != null)
 			{
-				ReaderWrapper.Dispose();
-
 				if (CommandInfo?.DataConnection.TraceSwitchConnection.TraceInfo == true)
 				{
 					CommandInfo.DataConnection.OnTraceConnection(new TraceInfo(CommandInfo.DataConnection, TraceInfoStep.Completed, TraceOperation.ExecuteReader, false)
@@ -52,8 +50,6 @@ namespace LinqToDB.Data
 		{
 			if (ReaderWrapper != null)
 			{
-				await ReaderWrapper.DisposeAsync().ConfigureAwait(false);
-
 				if (CommandInfo?.DataConnection.TraceSwitchConnection.TraceInfo == true)
 				{
 					CommandInfo.DataConnection.OnTraceConnection(new TraceInfo(CommandInfo.DataConnection, TraceInfoStep.Completed, TraceOperation.ExecuteReader, true)

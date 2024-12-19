@@ -18,7 +18,7 @@ namespace LinqToDB.SqlProvider
 		/// Examine query for parameter dependency.
 		/// </summary>
 		/// <returns></returns>
-		bool IsParameterDependent(NullabilityContext nullability, SqlStatement statement, DataOptions dataOptions);
+		bool IsParameterDependent(NullabilityContext nullability, MappingSchema mappingSchema, SqlStatement statement, DataOptions dataOptions);
 
 		/// <summary>
 		/// Corrects skip/take for specific DataProvider

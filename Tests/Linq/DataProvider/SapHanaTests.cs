@@ -715,7 +715,12 @@ namespace Tests.DataProvider
 			{
 				var query1 = ctx.CaParamTest(10, 10.01, "mandatory1", null, null, "optional1");
 				var query2 = ctx.CaParamTest(100, 100.001, "mandatory2", null, 10.1, "optional2");
-				Assert.That(query1.SqlText, Is.Not.EqualTo(query2.SqlText));
+
+				// test view missing
+				//query1.ToArray();
+				//query2.ToArray();
+
+				Assert.That(query1.ToSqlQuery().Sql, Is.Not.EqualTo(query2.ToSqlQuery().Sql));
 			}
 		}
 

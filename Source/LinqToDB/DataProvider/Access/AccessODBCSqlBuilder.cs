@@ -4,6 +4,7 @@ using System.Text;
 
 namespace LinqToDB.DataProvider.Access
 {
+	using Common;
 	using Mapping;
 	using SqlProvider;
 	using SqlQuery;
@@ -39,14 +40,42 @@ namespace LinqToDB.DataProvider.Access
 
 		protected override string? GetProviderTypeName(IDataContext dataContext, DbParameter parameter)
 		{
-			if (DataProvider is AccessODBCDataProvider provider)
+			if (DataProvider is AccessDataProvider provider && provider.Provider == AccessProvider.ODBC)
 			{
 				var param = provider.TryGetProviderParameter(dataContext, parameter);
 				if (param != null)
-					return provider.Adapter.GetDbType(param).ToString();
+					return provider.Adapter.GetOdbcDbType!(param).ToString();
 			}
 
 			return base.GetProviderTypeName(dataContext, parameter);
+		}
+
+		protected override bool TryConvertParameterToSql(SqlParameterValue paramValue)
+		{
+			// see BuildValue notes
+			if (paramValue.ProviderValue is Guid g)
+			{
+				return false;
+			}
+			
+			return base.TryConvertParameterToSql(paramValue);
+		}
+
+		protected override void BuildValue(DbDataType? dataType, object? value)
+		{
+			// We force GUID literal to parameter as it's use of {} brackets conflicts with ODBC runtime
+			// problem with this fix is that sometimes string-based syntax '{xxx}' works and sometimes - doesn't
+			// and it isn't clear why
+			// (see Typestests.Guid1/2 and DataTypesTests.TestGuid)
+			// Native literal works always, but cannot be used with ODBC
+			// Al "works everywhere" solution we decided to use parameter here
+			if (value is Guid g)
+			{
+				BuildParameter(new SqlParameter(dataType ?? MappingSchema.GetDbDataType(typeof(Guid)), "value", value));
+				return;
+			}
+
+			base.BuildValue(dataType, value);
 		}
 	}
 }

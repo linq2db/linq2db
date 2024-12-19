@@ -1,6 +1,4 @@
-﻿using System;
-using System.Diagnostics;
-using System.Linq.Expressions;
+﻿using System.Linq.Expressions;
 
 namespace LinqToDB.Linq.Builder
 {
@@ -18,14 +16,8 @@ namespace LinqToDB.Linq.Builder
 			if (!call.IsQueryable())
 				return false;
 			
-			 var lambda = (LambdaExpression)call.Arguments[1].Unwrap();
-			 return lambda.Parameters.Count is 1 or 2;
-		}
-
-		public override bool IsAggregationContext(ExpressionBuilder builder, BuildInfo buildInfo)
-		{
-			// Select is transparent and we can treat it as an aggregation.
-			return true;
+			var lambda = (LambdaExpression)call.Arguments[1].Unwrap();
+			return lambda.Parameters.Count is 1 or 2;
 		}
 
 		protected override BuildSequenceResult BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
@@ -39,20 +31,23 @@ namespace LinqToDB.Linq.Builder
 			var sequence = buildResult.BuildContext;
 
 			// finalizing context
-			_ = builder.MakeExpression(sequence, new ContextRefExpression(sequence.ElementType, sequence),
-				ProjectFlags.ExtractProjection);
+			_ = builder.BuildExtractExpression(sequence, new ContextRefExpression(sequence.ElementType, sequence));
 
+			sequence.SetAlias(selector.Parameters[0].Name);
+			sequence = new SubQueryContext(sequence) { IsSelectWrapper = true };
 			sequence.SetAlias(selector.Parameters[0].Name);
 
 			var body = selector.Parameters.Count == 1
 				? SequenceHelper.PrepareBody(selector, sequence)
 				: SequenceHelper.PrepareBody(selector, sequence, new CounterContext(sequence));
 
-			var context = new SelectContext (buildInfo.Parent, body, sequence, buildInfo.IsSubQuery);
+			var context       = new SelectContext (buildInfo.Parent, body, sequence, buildInfo.IsSubQuery);
+			var resultContext = (IBuildContext) context;
+
 #if DEBUG
 			context.Debug_MethodCall = methodCall;
 #endif
-			return BuildSequenceResult.FromContext(context);
+			return BuildSequenceResult.FromContext(resultContext);
 		}
 
 		#endregion
