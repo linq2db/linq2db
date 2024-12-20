@@ -308,7 +308,7 @@ namespace LinqToDB.SqlQuery
 			/// <summary>
 			/// Converts predicate to final form based on null comparison options.
 			/// </summary>
-			public ISqlPredicate Reduce(NullabilityContext nullability, EvaluationContext context, bool insideNot, LinqOptions options)
+			public ISqlPredicate Reduce(NullabilityContext nullability, EvaluationContext context, LinqOptions options)
 			{
 				if (options.CompareNulls == CompareNulls.LikeSql)
 					return this;
@@ -340,7 +340,9 @@ namespace LinqToDB.SqlQuery
 				if (WithNull == null || nullability.IsEmpty)
 					return this;
 
-				if (!Expr1.CanBeNullableOrUnknown(nullability) && !Expr2.CanBeNullableOrUnknown(nullability))
+				var canBeNull1 = Expr1.CanBeNullableOrUnknown(nullability);
+				var canBeNull2 = Expr2.CanBeNullableOrUnknown(nullability);
+				if (!canBeNull1 && !canBeNull2)
 					return MakeWithoutNulls();
 
 				switch (Operator)
@@ -361,26 +363,55 @@ namespace LinqToDB.SqlQuery
 					}
 					case Operator.Equal:
 					{
-						var search = new SqlSearchCondition(true)
+						if (canBeNull1 ^ canBeNull2)
+						{
+							var search = new SqlSearchCondition(false)
 								.Add(MakeWithoutNulls())
+								.AddAnd(sc => sc
+									.Add(new IsNull(canBeNull1 ? Expr1 : Expr2, true))
+								);
+
+							return search;
+						}
+						else
+						{
+							var search = new SqlSearchCondition(true)
+								.AddAnd(sc => sc
+									.Add(MakeWithoutNulls())
+									.Add(new IsNull(Expr1, true))
+									.Add(new IsNull(Expr2, true))
+									)
 								.AddAnd(sc => sc
 									.Add(new IsNull(Expr1, false))
 									.Add(new IsNull(Expr2, false))
 								);
 
-						return search;
+							return search;
+						}
 					}
 					default:
 					{
-						if (WithNull.Value || insideNot)
-							return this;
+						if (canBeNull1 ^ canBeNull2)
+						{
+							var search = new SqlSearchCondition(false)
+								.AddAnd(sc => sc
+									.Add(MakeWithoutNulls())
+									.Add(new IsNull(canBeNull1 ? Expr1 : Expr2, true))
+									);
 
-						var search = new SqlSearchCondition(true)
-							.Add(MakeWithoutNulls())
-							.Add(new IsNull(Expr1, false))
-							.Add(new IsNull(Expr2, false));
+							return search;
+						}
+						else
+						{
+							var search = new SqlSearchCondition(false)
+								.AddAnd(sc => sc
+									.Add(MakeWithoutNulls())
+									.Add(new IsNull(Expr1, true))
+									.Add(new IsNull(Expr2, true))
+									);
 
-						return search;
+							return search;
+						}
 					}
 				}
 			}
