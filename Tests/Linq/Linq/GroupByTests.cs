@@ -3697,5 +3697,33 @@ namespace Tests.Linq
 
 			db.LastQuery.Should().Contain("SELECT", Exactly.Once());
 		}
+
+		[Test]
+		public void Issue_HavingConditionTranslation([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var results = db
+				.GetTable<Person>()
+				.GroupBy(_ => _.MiddleName)
+				.Having(_ => _.Key == null || _.Key != "Unknown")
+				.Select(_ => new { _.Key, Count = Sql.Ext.Count().ToValue() })
+				.ToList();
+
+			var nullValue = results.SingleOrDefault(r => r.Key == null);
+			var koValue   = results.SingleOrDefault(r => r.Key == "Ko");
+
+			Assert.Multiple(() =>
+			{
+				Assert.That(results, Has.Count.EqualTo(2));
+				Assert.That(nullValue, Is.Not.Null);
+			});
+			Assert.Multiple(() =>
+			{
+				Assert.That(nullValue.Count, Is.EqualTo(3));
+				Assert.That(koValue, Is.Not.Null);
+			});
+			Assert.That(koValue.Count, Is.EqualTo(1));
+		}
 	}
 }
