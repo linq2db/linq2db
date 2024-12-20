@@ -506,12 +506,23 @@ namespace LinqToDB.DataProvider
 		public virtual IQueryParametersNormalizer GetQueryParameterNormalizer() => new UniqueParametersNormalizer();
 
 		protected abstract IMemberTranslator  CreateMemberTranslator();
+		protected virtual  IUnaryTranslator?  CreateUnaryTranslator()  => null;
+		protected virtual  IBinaryTranslator? CreateBinaryTranslator() => null;
+
 		protected virtual  IIdentifierService CreateIdentifierService() => new IdentifierServiceSimple(128);
 
 		protected virtual void InitServiceProvider(SimpleServiceProvider serviceProvider)
 		{
 			serviceProvider.AddService(CreateMemberTranslator());
 			serviceProvider.AddService(CreateIdentifierService());
+
+			var unary = CreateUnaryTranslator();
+			if (unary != null)
+				serviceProvider.AddService(unary);
+
+			var binary = CreateBinaryTranslator();
+			if (binary != null)
+				serviceProvider.AddService(binary);
 		}
 
 		SimpleServiceProvider? _serviceProvider;

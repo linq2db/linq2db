@@ -1076,7 +1076,7 @@ namespace LinqToDB
 		/// </summary>
 		/// <returns>The new DataOptions instance.</returns>
 		[Pure]
-		public static DataOptions RemoveTranslator(this DataOptions options, IMemberTranslator translator)
+		public static DataOptions RemoveMemberTranslator(this DataOptions options, IMemberTranslator translator)
 		{
 			return options.WithOptions<DataContextOptions>(o =>
 			{
@@ -1088,6 +1088,150 @@ namespace LinqToDB
 							list.Add(i);
 
 				return o with { MemberTranslators = list };
+			});
+		}
+
+		/// <summary>
+		/// <para>
+		/// Adds <see cref="IUnaryTranslator" /> instance to those registered on the context.
+		/// </para>
+		/// <para>
+		/// Translators can be used to translate unary expressions to SQL expressions.
+		/// </para>
+		/// </summary>
+		/// <param name="options"></param>
+		/// <param name="translator"></param>
+		/// <returns>The new DataOptions instance.</returns>
+		[Pure]
+		public static DataOptions UseUnaryTranslator(this DataOptions options, IUnaryTranslator translator)
+		{
+			return options.WithOptions<DataContextOptions>(o =>
+			{
+				var list = new List<IUnaryTranslator>(o.UnaryTranslators?.Count ?? 0 + 1);
+
+				if (o.UnaryTranslators != null)
+					list.AddRange(o.UnaryTranslators);
+				list.Add(translator);
+
+				return o with { UnaryTranslators = list };
+			});
+		}
+
+		/// <summary>
+		/// <para>
+		/// Adds collection <see cref="IUnaryTranslator" /> instance to those registered on the context.
+		/// </para>
+		/// <para>
+		/// Translators can be used to translate unary expressions to SQL expressions.
+		/// </para>
+		/// </summary>
+		/// <param name="options"></param>
+		/// <param name="translators"></param>
+		/// <returns>The new DataOptions instance.</returns>
+		[Pure]
+		public static DataOptions UseUnaryTranslator(this DataOptions options, IEnumerable<IUnaryTranslator> translators)
+		{
+			return options.WithOptions<DataContextOptions>(o =>
+			{
+				var list = new List<IUnaryTranslator>();
+
+				if (o.UnaryTranslators != null)
+					list.AddRange(o.UnaryTranslators);
+				list.AddRange(translators);
+
+				return o with { UnaryTranslators = list };
+			});
+		}
+
+		/// <summary>
+		/// Removes <see cref="IUnaryTranslator" /> instance from the context.
+		/// </summary>
+		/// <returns>The new DataOptions instance.</returns>
+		[Pure]
+		public static DataOptions RemoveUnaryTranslator(this DataOptions options, IUnaryTranslator translator)
+		{
+			return options.WithOptions<DataContextOptions>(o =>
+			{
+				var list = new List<IUnaryTranslator>();
+
+				if (o.UnaryTranslators != null)
+					foreach (var i in o.UnaryTranslators)
+						if (i != translator)
+							list.Add(i);
+
+				return o with { UnaryTranslators = list };
+			});
+		}
+
+		/// <summary>
+		/// <para>
+		/// Adds <see cref="IBinaryTranslator" /> instance to those registered on the context.
+		/// </para>
+		/// <para>
+		/// Translators can be used to translate binary expressions to SQL expressions.
+		/// </para>
+		/// </summary>
+		/// <param name="options"></param>
+		/// <param name="translator"></param>
+		/// <returns>The new DataOptions instance.</returns>
+		[Pure]
+		public static DataOptions UseBinaryTranslator(this DataOptions options, IBinaryTranslator translator)
+		{
+			return options.WithOptions<DataContextOptions>(o =>
+			{
+				var list = new List<IBinaryTranslator>(o.BinaryTranslators?.Count ?? 0 + 1);
+
+				if (o.BinaryTranslators != null)
+					list.AddRange(o.BinaryTranslators);
+				list.Add(translator);
+
+				return o with { BinaryTranslators = list };
+			});
+		}
+
+		/// <summary>
+		/// <para>
+		/// Adds collection <see cref="IBinaryTranslator" /> instance to those registered on the context.
+		/// </para>
+		/// <para>
+		/// Translators can be used to translate binary expressions to SQL expressions.
+		/// </para>
+		/// </summary>
+		/// <param name="options"></param>
+		/// <param name="translators"></param>
+		/// <returns>The new DataOptions instance.</returns>
+		[Pure]
+		public static DataOptions UseBinaryTranslator(this DataOptions options, IEnumerable<IBinaryTranslator> translators)
+		{
+			return options.WithOptions<DataContextOptions>(o =>
+			{
+				var list = new List<IBinaryTranslator>();
+
+				if (o.BinaryTranslators != null)
+					list.AddRange(o.BinaryTranslators);
+				list.AddRange(translators);
+
+				return o with { BinaryTranslators = list };
+			});
+		}
+
+		/// <summary>
+		/// Removes <see cref="IBinaryTranslator" /> instance from the context.
+		/// </summary>
+		/// <returns>The new DataOptions instance.</returns>
+		[Pure]
+		public static DataOptions RemoveBinaryTranslator(this DataOptions options, IBinaryTranslator translator)
+		{
+			return options.WithOptions<DataContextOptions>(o =>
+			{
+				var list = new List<IBinaryTranslator>();
+
+				if (o.BinaryTranslators != null)
+					foreach (var i in o.BinaryTranslators)
+						if (i != translator)
+							list.Add(i);
+
+				return o with { BinaryTranslators = list };
 			});
 		}
 
