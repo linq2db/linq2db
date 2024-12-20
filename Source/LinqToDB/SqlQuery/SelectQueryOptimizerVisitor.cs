@@ -1277,19 +1277,21 @@ namespace LinqToDB.SqlQuery
 			if (havingDetected?.Count > 0)
 			{
 				// move Where to Having
-				parentQuery.Having.SearchCondition.Predicates.InsertRange(0, parentQuery.Where.SearchCondition.Predicates);
+				parentQuery.Having.SearchCondition = QueryHelper.MergeConditions(parentQuery.Having.SearchCondition, parentQuery.Where.SearchCondition);
 				parentQuery.Where.SearchCondition.Predicates.Clear();
 			}
 
 			if (!subQuery.Where.IsEmpty)
 			{
-				parentQuery.Where.SearchCondition.Predicates.InsertRange(0, subQuery.Where.SearchCondition.Predicates);
+				parentQuery.Where.SearchCondition = QueryHelper.MergeConditions(parentQuery.Where.SearchCondition, subQuery.Where.SearchCondition);
 			}
 
 			if (!subQuery.Having.IsEmpty)
 			{
-				parentQuery.Having.SearchCondition.Predicates.AddRange(subQuery.Having.SearchCondition.Predicates);
+				parentQuery.Having.SearchCondition = QueryHelper.MergeConditions(parentQuery.Having.SearchCondition, subQuery.Having.SearchCondition);
 			}
+
+			
 
 			if (subQuery.Select.IsDistinct)
 				parentQuery.Select.IsDistinct = true;

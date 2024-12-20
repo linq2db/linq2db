@@ -456,7 +456,6 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue("https://github.com/ClickHouse/ClickHouse/issues/72532", Configuration = TestProvName.AllClickHouse)]
 		[Test]
 		public void DateTimeArray1([DataSources] string context)
 		{
@@ -466,7 +465,6 @@ namespace Tests.Linq
 											from t in db.Types2 where new DateTime?[] { new DateTime(2001, 1, 11, 1, 11, 21, 100) }.Contains(t.DateTimeValue) select t);
 		}
 
-		[ActiveIssue("https://github.com/ClickHouse/ClickHouse/issues/72532", Configuration = TestProvName.AllClickHouse)]
 		[Test]
 		public void DateTimeArray2([DataSources(TestProvName.AllAccessOleDb)] string context)
 		{
@@ -478,7 +476,6 @@ namespace Tests.Linq
 											from t in db.Types2 where arr.Contains(t.DateTimeValue) select t);
 		}
 
-		[ActiveIssue("https://github.com/ClickHouse/ClickHouse/issues/72532", Configuration = TestProvName.AllClickHouse)]
 		[Test]
 		public void DateTimeArray3([DataSources(TestProvName.AllAccessOleDb)] string context)
 		{
