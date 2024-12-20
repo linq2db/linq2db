@@ -1770,18 +1770,18 @@ namespace LinqToDB.SqlQuery
 			if (parent.IsAnd)
 			{
 				if (child.IsAnd)
-					parent.AddRange(child.Predicates);
+					parent.Predicates.InsertRange(0, child.Predicates);
 				else
-					parent.Add(new SqlSearchCondition(true, child.Predicates));
+					parent.Predicates.Insert(0, new SqlSearchCondition(true, child.Predicates));
 
 				return parent;
 			}
 			else
 			{
 				if (child.IsAnd)
-					return new SqlSearchCondition(false, [parent, .. child.Predicates]);
+					return new SqlSearchCondition(false, [..child.Predicates, parent]);
 				else
-					return new SqlSearchCondition(false, parent, child);
+					return new SqlSearchCondition(false, child, parent);
 			}
 		}
 	}
