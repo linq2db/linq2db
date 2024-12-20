@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using System.Linq;
 
 using JetBrains.Annotations;
 
@@ -8,13 +7,11 @@ namespace LinqToDB.DataProvider.SQLite
 	using Configuration;
 
 	[UsedImplicitly]
-	sealed class SQLiteFactory : IDataProviderFactory
+	sealed class SQLiteFactory : DataProviderFactoryBase
 	{
-		IDataProvider IDataProviderFactory.GetDataProvider(IEnumerable<NamedValue> attributes)
+		public override IDataProvider GetDataProvider(IEnumerable<NamedValue> attributes)
 		{
-			var assemblyName = attributes.FirstOrDefault(_ => _.Name == "assemblyName")?.Value;
-
-			var provider = assemblyName switch
+			var provider = GetAssemblyName(attributes) switch
 			{
 				SQLiteProviderAdapter.SystemDataSQLiteAssemblyName    => SQLiteProvider.System,
 				SQLiteProviderAdapter.MicrosoftDataSQLiteAssemblyName => SQLiteProvider.Microsoft,

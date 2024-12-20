@@ -1,6 +1,6 @@
 ﻿using System.Linq;
 
-using LinqToDB.Linq;
+using LinqToDB;
 
 using NUnit.Framework;
 
@@ -15,7 +15,7 @@ namespace Tests.Exceptions
 			using (var db = GetDataContext(context))
 			{
 				var q = from p in db.ParentInheritance2 select p;
-				Assert.Throws<LinqException>(() => q.ToList());
+				Assert.Throws<LinqToDBException>(() => q.ToList());
 			}
 		}
 	}

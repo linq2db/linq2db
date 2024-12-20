@@ -8,7 +8,7 @@
 
 	<ItemGroup>
 		<PackageReference Include="FirebirdSql.Data.FirebirdClient" />
-		<PackageReference Include="Npgsql" />
+		<PackageReference Include="Npgsql.NodaTime" />
 		<PackageReference Include="Devart.Data.Oracle" />
 		<PackageReference Include="MySql.Data" Aliases="MySqlData" />
 		<PackageReference Include="MySqlConnector" Aliases="MySqlConnector" />

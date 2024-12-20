@@ -264,6 +264,9 @@ namespace LinqToDB.DataProvider.Informix.Translation
 						return null;
 				}
 
+				// interval literal cannot be dynamic so we should try to disable at least parameters
+				QueryHelper.MarkAsNonQueryParameters(increment);
+
 				var intervalExpr     = factory.Fragment(intervalType, "Interval ({0}) " + fragmentStr, increment);
 				if (multiplier != null)
 				{
@@ -301,7 +304,7 @@ namespace LinqToDB.DataProvider.Informix.Translation
 			protected override ISqlExpression? TranslateSqlGetDate(ITranslationContext translationContext, TranslationFlags translationFlags)
 			{
 				var factory          = translationContext.ExpressionFactory;
-				var currentTimeStamp = factory.Fragment(factory.GetDbDataType(typeof(DateTime)), "CURRENT");
+				var currentTimeStamp = factory.NotNullFragment(factory.GetDbDataType(typeof(DateTime)), "CURRENT");
 				return currentTimeStamp;
 			}
 		}

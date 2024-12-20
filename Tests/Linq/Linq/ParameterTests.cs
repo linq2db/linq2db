@@ -8,6 +8,8 @@ using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.Linq;
 using LinqToDB.Mapping;
+using LinqToDB.SqlQuery;
+
 using Tests.Model;
 
 using NUnit.Framework;
@@ -71,11 +73,30 @@ namespace Tests.Linq
 
 				Assert.Multiple(() =>
 				{
-#pragma warning disable CS0618 // Type or member is obsolete
 					Assert.That(query.GetStatement().CollectParameters(), Has.Length.EqualTo(1));
 					Assert.That(queryInlined.GetStatement().CollectParameters(), Is.Empty);
 				});
-#pragma warning restore CS0618 // Type or member is obsolete
+			}
+		}
+
+		[Test]
+		public void InlineWithSkipTake([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var id = 1;
+				var query = from t in db.Person
+					where t.ID == id
+					select t;
+
+				var queryInlined = query.InlineParameters().Skip(1).Take(2);
+				query = query.Skip(1).Take(2);
+
+				Assert.Multiple(() =>
+				{
+					Assert.That(query.GetStatement().CollectParameters(), Has.Length.EqualTo(3));
+					Assert.That(queryInlined.GetStatement().CollectParameters(), Is.Empty);
+				});
 			}
 		}
 
@@ -98,7 +119,7 @@ namespace Tests.Linq
 			using (var  db = GetDataContext(context))
 			{
 				var s1 = "0 \x0 ' 0";
-				var s2 = db.Select(() => Sql.ToSql(s1));
+				var s2 = db.Select(() => Sql.AsSql(s1));
 
 				Assert.That(s2, Is.EqualTo(s1));
 			}
@@ -123,7 +144,7 @@ namespace Tests.Linq
 			using (var  db = GetDataContext(context))
 			{
 				var s1 = "\x0 \x0 ' \x0";
-				var s2 = db.Select(() => Sql.ToSql(s1));
+				var s2 = db.Select(() => Sql.AsSql(s1));
 
 				Assert.That(s2, Is.EqualTo(s1));
 			}
@@ -147,7 +168,7 @@ namespace Tests.Linq
 			using (var  db = GetDataContext(context))
 			{
 				var s1 = "\x0";
-				var s2 = db.Select(() => Sql.ToSql(s1));
+				var s2 = db.Select(() => Sql.AsSql(s1));
 
 				Assert.That(s2, Is.EqualTo(s1));
 			}
@@ -159,7 +180,7 @@ namespace Tests.Linq
 			using (var  db = GetDataContext(context))
 			{
 				var s1 = "\x1-\x2-\x3";
-				var s2 = db.Select(() => Sql.ToSql(s1));
+				var s2 = db.Select(() => Sql.AsSql(s1));
 
 				Assert.That(s2, Is.EqualTo(s1));
 			}
@@ -180,7 +201,7 @@ namespace Tests.Linq
 			using (var  db = GetDataContext(context))
 			{
 				var s1 = '\x0';
-				var s2 = db.Select(() => Sql.ToSql(s1));
+				var s2 = db.Select(() => Sql.AsSql(s1));
 
 				Assert.That(s2, Is.EqualTo(s1));
 			}
@@ -195,31 +216,31 @@ namespace Tests.Linq
 			public string? VarcharDataType;
 		}
 
-		// Excluded providers inline such parameter
+		// Excluded providers inline such parameter or miss mappings
 		[Test]
-		public void ExposeSqlDecimalParameter([DataSources(false, TestProvName.AllInformix, TestProvName.AllClickHouse)] string context)
+		public void ExposeSqlDecimalParameter([DataSources(false, ProviderName.SqlCe, TestProvName.AllSybase, TestProvName.AllSapHana, TestProvName.AllPostgreSQL, TestProvName.AllOracle, TestProvName.AllDB2, TestProvName.AllFirebird, TestProvName.AllInformix, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataConnection(context))
 			{
 				var p   = 123.456m;
-				var sql = db.GetTable<AllTypes>().Where(t => t.DecimalDataType == p).ToString();
+				db.GetTable<AllTypes>().Where(t => t.DecimalDataType == p).ToArray();
 
-				TestContext.Out.WriteLine(sql);
+				var sql = GetCurrentBaselines();
 
 				Assert.That(sql, Contains.Substring("(6, 3)"));
 			}
 		}
 
-		// DB2: see DB2SqlOptimizer.SetQueryParameter - binary parameters inlined for DB2
+		// Excluded providers inline such parameter or miss mappings
 		[Test]
-		public void ExposeSqlBinaryParameter([DataSources(false, TestProvName.AllClickHouse)] string context)
+		public void ExposeSqlBinaryParameter([DataSources(false, ProviderName.SqlCe, TestProvName.AllSybase, TestProvName.AllDB2, TestProvName.AllSapHana, TestProvName.AllPostgreSQL, TestProvName.AllOracle, TestProvName.AllInformix, TestProvName.AllFirebird, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataConnection(context))
 			{
 				var p   = new byte[] { 0, 1, 2 };
-				var sql = db.GetTable<AllTypes>().Where(t => t.BinaryDataType == p).ToString();
+				db.GetTable<AllTypes>().Where(t => t.BinaryDataType == p).ToArray();
 
-				TestContext.Out.WriteLine(sql);
+				var sql = GetCurrentBaselines();
 
 				Assert.That(sql, Contains.Substring("(3)").Or.Contains("Blob").Or.Contains("(8000)"));
 			}
@@ -235,7 +256,7 @@ namespace Tests.Linq
 				if (context.IsAnyOf(TestProvName.AllInformix))
 					dt = new DateTime(dt.Year, dt.Month, dt.Day, dt.Hour, dt.Minute, dt.Second);
 
-				var _ = db.Types.Where(t => t.DateTimeValue == Sql.ToSql(dt)).ToList();
+				var _ = db.Types.Where(t => t.DateTimeValue == Sql.AsSql(dt)).ToList();
 			}
 		}
 
@@ -354,7 +375,7 @@ namespace Tests.Linq
 			{
 				// we use external parameter p in GetChildrenFiltered parameter expression
 				// Sequence 'GetChildrenFiltered(value(Tests.Linq.ParameterTests+<>c__DisplayClass18_0).db, c => (c.ChildID != p.ParentID))' cannot be converted to SQL.
-				Assert.Throws<LinqException>(()
+				Assert.Throws<LinqToDBException>(()
 					=> db.Parent.Where(p => GetChildrenFiltered(db, c => c.ChildID != p.ParentID).Select(c => c.ParentID).Contains(p.ParentID)).ToList());
 			}
 		}
@@ -502,7 +523,7 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 			using (var table = db.CreateLocalTable<Issue1189Customer>())
 			{
-				table.Where(k => k.ToDelete <= TestData.DateTime).ToList();
+				table.Where(k => k.ToDelete <= TestData.NonReadonlyDateTime).ToList();
 			}
 		}
 
@@ -539,6 +560,70 @@ namespace Tests.Linq
 					.Select(__ => __.Id)
 					.Any(__ => __.Equals(param)))
 				.ToList();
+			}
+		}
+
+		IQueryable<Person> GetPersons(ITestDataContext db, int personId)
+		{
+			return db.Person.Where(p => p.ID == personId);
+		}
+
+		IQueryable<Person> GetPersons2(ITestDataContext db, int? personId)
+		{
+			return db.Person.Where(p => p.ID == personId!.Value);
+		}
+
+
+		[Test]
+		public void TestParametersByEquality([DataSources(TestProvName.AllSQLite)] string context, [Values(1, 2)] int iteration)
+		{
+			using var db = GetDataContext(context);
+
+			// Tho identical for translator query, but they are different by parameteter values
+			{
+				int personId = 1;
+
+				var ctn = new { personId = 1 };
+
+				var query =
+					from p in GetPersons(db, personId)
+					from p2 in GetPersons2(db, personId).Where(p2 => p2.ID == p.ID)
+					where p.ID == ctn.personId
+					select new { p, p2 };
+
+				var cacheMiss = query.GetCacheMissCount();
+
+				query.Should().HaveCount(1);
+
+				if (iteration > 1)
+					query.GetCacheMissCount().Should().Be(cacheMiss);
+
+				var parameters = new List<SqlParameter>();
+				QueryHelper.CollectParameters(query.GetSelectQuery(), parameters);
+				parameters.Distinct().Should().HaveCount(1);
+			}
+
+			{
+				int personId = 1;
+
+				var ctn = new { personId = 2 };
+
+				var query =
+					from p in GetPersons(db, personId)
+					from p2 in GetPersons2(db, personId).Where(p2 => p2.ID == p.ID)
+					where p.ID == ctn.personId
+					select new { p, p2 };
+
+				var cacheMiss = query.GetCacheMissCount();
+
+				query.Should().HaveCount(0);
+
+				if (iteration > 1)
+					query.GetCacheMissCount().Should().Be(cacheMiss);
+
+				var parameters = new List<SqlParameter>();
+				QueryHelper.CollectParameters(query.GetSelectQuery(), parameters);
+				parameters.Distinct().Should().HaveCount(2);
 			}
 		}
 
@@ -1638,18 +1723,28 @@ namespace Tests.Linq
 		[Test]
 		public void Caching([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				var id = 1;
+			using var db = GetDataContext(context);
+			var id = 1;
 
-				var query1  = db.Parent.Where(x => x.ParentID == GetId(id, 0) || x.ParentID == GetId(id, 0));
-				AssertQuery(query1);
+			var query1  = db.Parent.Where(x => x.ParentID == GetId(id, 0) || x.ParentID == GetId(id, 0));
+			AssertQuery(query1);
 
-				id = 2;
+			// check only one parameter generated
+			if(!context.IsAnyOf(TestProvName.AllClickHouse))
+				Assert.That(query1.ToSqlQuery().Parameters, Has.Count.EqualTo(context.IsUsePositionalParameters() ? 2 : 1));
 
-				var query2  = db.Parent.Where(x => x.ParentID == GetId(id, 1) || x.ParentID == GetId(id, 0));
-				AssertQuery(query2);
-			}
+			id = 2;
+
+			var query2  = db.Parent.Where(x => x.ParentID == GetId(id, 1) || x.ParentID == GetId(id, 0));
+			AssertQuery(query2);
+
+			id = 1;
+			query1  = db.Parent.Where(x => x.ParentID == GetId(id, 0) || x.ParentID == GetId(id, 0));
+			AssertQuery(query1);
+
+			// check only one parameter generated (1+2+1=4)
+			if (!context.IsAnyOf(TestProvName.AllClickHouse))
+				Assert.That(query1.ToSqlQuery().Parameters, Has.Count.EqualTo(2));
 		}
 
 

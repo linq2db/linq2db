@@ -7,16 +7,16 @@ using Microsoft.EntityFrameworkCore.Metadata;
 namespace LinqToDB.EntityFrameworkCore
 {
 	using DataProvider;
-	using Linq;
+	using Interceptors;
 
 	/// <summary>
 	/// Linq To DB EF.Core data context.
 	/// </summary>
-	public class LinqToDBForEFToolsDataContext : DataContext, IExpressionPreprocessor
+	public class LinqToDBForEFToolsDataContext : DataContext, IQueryExpressionInterceptor
 	{
 		readonly DbContext? _context;
 		readonly IModel _model;
-		readonly Func<Expression, IDataContext, DbContext?, IModel, Expression>? _transformFunc;
+		readonly Func<Expression, IDataContext, DbContext?, IModel, bool, Expression>? _transformFunc;
 
 		/// <summary>
 		/// Creates instance of context.
@@ -27,11 +27,11 @@ namespace LinqToDB.EntityFrameworkCore
 		/// <param name="model">EF.Core model.</param>
 		/// <param name="transformFunc">Expression converter.</param>
 		public LinqToDBForEFToolsDataContext(
-			DbContext?    context,
-			IDataProvider dataProvider,
-			string        connectionString,
-			IModel        model,
-			Func<Expression, IDataContext, DbContext?, IModel, Expression>? transformFunc) : base(dataProvider, connectionString)
+			DbContext?                                                            context,
+			IDataProvider                                                         dataProvider,
+			string                                                                connectionString,
+			IModel                                                                model,
+			Func<Expression, IDataContext, DbContext?, IModel, bool, Expression>? transformFunc) : base(dataProvider, connectionString)
 		{
 			_context       = context;
 			_model         = model;
@@ -42,12 +42,15 @@ namespace LinqToDB.EntityFrameworkCore
 		/// Converts expression using convert function, passed to context.
 		/// </summary>
 		/// <param name="expression">Expression to convert.</param>
+		/// <param name="args"></param>
 		/// <returns>Converted expression.</returns>
-		public Expression ProcessExpression(Expression expression)
+		public Expression ProcessExpression(Expression expression, QueryExpressionArgs args)
 		{
 			if (_transformFunc == null)
 				return expression;
-			return _transformFunc(expression, this, _context, _model);
+
+			var transformed = _transformFunc(expression, this, _context, _model, args.Kind == QueryExpressionArgs.ExpressionKind.Query);
+			return transformed;
 		}
 	}
 }

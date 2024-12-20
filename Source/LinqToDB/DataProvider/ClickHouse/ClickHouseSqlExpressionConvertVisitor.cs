@@ -209,7 +209,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 		//
 		// we use functions in most of places
 		// [target type, type conversion function name]
-		private static readonly IReadOnlyDictionary<DataType, string> ClickHouseConvertFunctions = new Dictionary<DataType, string>()
+		internal static readonly IReadOnlyDictionary<DataType, string> ClickHouseConvertFunctions = new Dictionary<DataType, string>()
 		{
 			{ DataType.Byte      , "toUInt8"      },
 			{ DataType.SByte     , "toInt8"       },
@@ -263,14 +263,16 @@ namespace LinqToDB.DataProvider.ClickHouse
 				case "AVG":
 				case "SUM":
 				{
+					var canBeNullable = func.CanBeNullable(NullabilityContext);
+					var suffix        = canBeNullable ? "OrNull" : null;
+
 					// use standard-compatible aggregates
 					// https://github.com/ClickHouse/ClickHouse/pull/16123
 					if (func.IsAggregate && _providerOptions.UseStandardCompatibleAggregates)
 					{
-						return new SqlFunction(func.SystemType, func.Name.ToLowerInvariant() + "OrNull", true, func.IsPure, func.Precedence, ParametersNullabilityType.Nullable, null, func.Parameters)
+						return new SqlFunction(func.SystemType, func.Name.ToLowerInvariant() + suffix, true, func.IsPure, func.Precedence, func.NullabilityType, canBeNullable, func.Parameters)
 						{
 							DoNotOptimize = func.DoNotOptimize,
-							CanBeNull     = true
 						};
 					}
 
@@ -311,11 +313,6 @@ namespace LinqToDB.DataProvider.ClickHouse
 			return base.ConvertSqlFunction(func);
 		}
 
-		protected override ISqlExpression ConvertConversion(SqlCastExpression cast)
-		{
-			return MakeConversion(cast.Expression, cast.Type, false, null);
-		}
-
 		protected ISqlExpression MakeConversion(ISqlExpression expression, DbDataType toType, bool isTry, ISqlExpression? defaultValue)
 		{
 			if (ShouldSkipCast(expression, toType))
@@ -342,7 +339,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 								new SqlExpression(toType.SystemType, "TRAILING '\x00' FROM {0}", Precedence.Primary, SqlFlags.None, ParametersNullabilityType.IfAnyParameterNullable, null, value));
 						}
 
-						return new SqlFunction(toType.SystemType, name, false, true, Precedence.Primary, ParametersNullabilityType.IfAnyParameterNullable, null, value);
+						return new SqlCastExpression(value, toType, null, true);
 					}
 
 					case DataType.Decimal32:
@@ -351,10 +348,12 @@ namespace LinqToDB.DataProvider.ClickHouse
 					case DataType.Decimal256:
 					{
 						// toDecimalX(S)
-						ISqlExpression newFunc = new SqlFunction(toType.SystemType, name + suffix, false, true,
-										Precedence.Primary, ParametersNullabilityType.IfAnyParameterNullable, null,
-										value,
-										new SqlValue((byte)(toType.Scale ?? ClickHouseMappingSchema.DEFAULT_DECIMAL_SCALE)));
+						ISqlExpression newFunc = newFunc = suffix == null
+							? new SqlCastExpression(value, toType, null, true)
+							: new SqlFunction(toType.SystemType, name + suffix, false, true,
+								Precedence.Primary, ParametersNullabilityType.IfAnyParameterNullable, null,
+								value,
+								new SqlValue((byte)(toType.Scale ?? ClickHouseMappingSchema.DEFAULT_DECIMAL_SCALE)));
 
 						if (defaultValue != null)
 							newFunc = (ISqlExpression)Visit(new SqlCoalesceExpression(newFunc, defaultValue));
@@ -366,10 +365,12 @@ namespace LinqToDB.DataProvider.ClickHouse
 					{
 						// toDateTime64(S)
 
-						ISqlExpression newFunc = new SqlFunction(toType.SystemType, name + suffix, false, true,
-										Precedence.Primary, ParametersNullabilityType.IfAnyParameterNullable, null,
-										value,
-										new SqlValue((byte)(toType.Precision ?? ClickHouseMappingSchema.DEFAULT_DATETIME64_PRECISION)));
+						ISqlExpression newFunc = newFunc = suffix == null
+							? new SqlCastExpression(value, toType, null, true)
+							: new SqlFunction(toType.SystemType, name + suffix, false, true,
+								Precedence.Primary, ParametersNullabilityType.IfAnyParameterNullable, null,
+								value,
+								new SqlValue((byte)(toType.Precision ?? ClickHouseMappingSchema.DEFAULT_DATETIME64_PRECISION)));
 
 						if (defaultValue != null)
 							newFunc = (ISqlExpression)Visit(new SqlCoalesceExpression(newFunc, defaultValue));
@@ -380,7 +381,9 @@ namespace LinqToDB.DataProvider.ClickHouse
 					// default call template
 					default:
 					{
-						ISqlExpression newFunc = new SqlFunction(toType.SystemType, name + suffix, false, true, Precedence.Primary, ParametersNullabilityType.IfAnyParameterNullable, true, value);
+						ISqlExpression newFunc = suffix == null
+							? new SqlCastExpression(value, toType, null, true)
+							: new SqlFunction(toType.SystemType, name + suffix, false, true, Precedence.Primary, ParametersNullabilityType.IfAnyParameterNullable, true, value);
 
 						if (defaultValue != null)
 							newFunc = (ISqlExpression)Visit(new SqlCoalesceExpression(newFunc, defaultValue));
@@ -410,9 +413,9 @@ namespace LinqToDB.DataProvider.ClickHouse
 		static bool ShouldSkipCast(ISqlExpression expr, DbDataType toDataType)
 		{
 			// TODO: change to single return
-			if (expr is SqlValue { Value: null } sqlValue 
-				&& toDataType.DataType is DataType.Interval 
-				    or DataType.IntervalSecond 
+			if (expr is SqlValue { Value: null } sqlValue
+				&& toDataType.DataType is DataType.Interval
+				    or DataType.IntervalSecond
 				    or DataType.IntervalMinute
 				    or DataType.IntervalHour
 				    or DataType.IntervalDay

@@ -29,6 +29,10 @@ namespace LinqToDB.DataProvider.Firebird
 		/// </remarks>
 		protected override int MaxParameters => 32767;
 
+		// Too many Contexts of Relation/Procedure/Views. Maximum allowed is 256
+		// FB 2.5 requires twice lower limit (with same error message)
+		protected override int? MaxMultipleRows => _provider.Version == FirebirdVersion.v25 ? 127 : 254;
+
 		protected override bool CastFirstRowLiteralOnUnionAll    => true;
 		protected override bool CastFirstRowParametersOnUnionAll => true;
 		protected override bool CastAllRowsParametersOnUnionAll  => true;

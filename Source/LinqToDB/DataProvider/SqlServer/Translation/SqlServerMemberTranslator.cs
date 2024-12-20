@@ -74,11 +74,6 @@ namespace LinqToDB.DataProvider.SqlServer.Translation
 				return resultExpression;
 			}
 
-			protected override ISqlExpression? TranslateDateTimeOffsetDateAdd(ITranslationContext translationContext, TranslationFlags translationFlag, ISqlExpression dateTimeExpression, ISqlExpression increment, Sql.DateParts datepart)
-			{
-				return TranslateDateTimeDateAdd(translationContext, translationFlag, dateTimeExpression, increment, datepart);
-			}
-
 			protected override ISqlExpression? TranslateMakeDateTime(
 				ITranslationContext translationContext,
 				DbDataType          resulType,
@@ -158,17 +153,20 @@ namespace LinqToDB.DataProvider.SqlServer.Translation
 			protected override ISqlExpression? TranslateSqlGetDate(ITranslationContext translationContext, TranslationFlags translationFlags)
 			{
 				var factory = translationContext.ExpressionFactory;
-				return factory.Fragment(factory.GetDbDataType(typeof(DateTime)), "CURRENT_TIMESTAMP");
+				return factory.NotNullFragment(factory.GetDbDataType(typeof(DateTime)), "CURRENT_TIMESTAMP");
+			}
+		}
+
+		public class SqlServerMathMemberTranslator : MathMemberTranslatorBase
+		{
+			protected override ISqlExpression? TranslateRoundAwayFromZero(ITranslationContext translationContext, MethodCallExpression methodCall, ISqlExpression value, ISqlExpression? precision)
+			{
+				return base.TranslateRoundAwayFromZero(translationContext, methodCall, value, precision ?? translationContext.ExpressionFactory.Value(0));
 			}
 
-			protected override ISqlExpression? TranslateDateOnlyDateAdd(ITranslationContext translationContext, TranslationFlags translationFlag, ISqlExpression dateTimeExpression, ISqlExpression increment, Sql.DateParts datepart)
+			protected override ISqlExpression? TranslateRoundToEven(ITranslationContext translationContext, MethodCallExpression methodCall, ISqlExpression value, ISqlExpression? precision)
 			{
-				return TranslateDateTimeDateAdd(translationContext, translationFlag, dateTimeExpression, increment, datepart);
-			}
-
-			protected override ISqlExpression? TranslateDateOnlyDatePart(ITranslationContext translationContext, TranslationFlags translationFlag, ISqlExpression dateTimeExpression, Sql.DateParts datepart)
-			{
-				return TranslateDateTimeDatePart(translationContext, translationFlag, dateTimeExpression, datepart);
+				return base.TranslateRoundToEven(translationContext, methodCall, value, precision ?? translationContext.ExpressionFactory.Value(0));
 			}
 		}
 
@@ -180,6 +178,11 @@ namespace LinqToDB.DataProvider.SqlServer.Translation
 		protected override IMemberTranslator CreateDateMemberTranslator()
 		{
 			return new SqlServerDateFunctionsTranslator();
+		}
+
+		protected override IMemberTranslator CreateMathMemberTranslator()
+		{
+			return new SqlServerMathMemberTranslator();
 		}
 
 		protected override ISqlExpression? TranslateNewGuidMethod(ITranslationContext translationContext, TranslationFlags translationFlags)

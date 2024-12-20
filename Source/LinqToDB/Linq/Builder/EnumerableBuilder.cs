@@ -28,7 +28,7 @@ namespace LinqToDB.Linq.Builder
 			{
 				ExpressionType.MemberAccess => CanBuildMemberChain(((MemberExpression)expr).Expression),
 				ExpressionType.Constant     => ((ConstantExpression)expr).Value is IEnumerable,
-				ExpressionType.Call         => builder.CanBeCompiled(expr, false),
+				ExpressionType.Call         => builder.CanBeEvaluatedOnClient(expr),
 				_ => false,
 			};
 

@@ -22,9 +22,10 @@ namespace Tests.UserTests
 		[Test]
 		public void Test1([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				var q =
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable<Entity>();
+
+			var q =
 					from e in db.GetTable<Entity>()
 					where
 						e.CharValue     == "CharValue"     &&
@@ -33,30 +34,29 @@ namespace Tests.UserTests
 						e.NVarCharValue == "NVarCharValue"
 					select e;
 
-				var str = q.ToString()!;
+			var sql = q.ToSqlQuery().Sql;
 
-				TestContext.Out.WriteLine(str);
+			Assert.That(sql, Does.Not.Contain("N'CharValue'"));
+			Assert.That(sql, Does.Not.Contain("N'VarCharValue'"));
 
-				Assert.That(str, Does.Not.Contain("N'CharValue'"));
-				Assert.That(str, Does.Not.Contain("N'VarCharValue'"));
+			Assert.That(sql, Does.Contain("N'NCharValue'"));
+			Assert.That(sql, Does.Contain("N'NVarCharValue'"));
 
-				Assert.That(str, Does.Contain("N'NCharValue'"));
-				Assert.That(str, Does.Contain("N'NVarCharValue'"));
-			}
-
+			q.ToArray();
 		}
 
 		[Test]
 		public void Test2([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				var @char     = new[] { "CharValue"     };
-				var @varChar  = new[] { "VarCharValue"  };
-				var @nChar    = new[] { "NCharValue"    };
-				var @nVarChar = new[] { "NVarCharValue" };
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable<Entity>();
 
-				var q =
+			var @char     = new[] { "CharValue"     };
+			var @varChar  = new[] { "VarCharValue"  };
+			var @nChar    = new[] { "NCharValue"    };
+			var @nVarChar = new[] { "NVarCharValue" };
+
+			var q =
 					from e in db.GetTable<Entity>()
 					where
 						@char    .Contains(e.CharValue    ) &&
@@ -65,16 +65,15 @@ namespace Tests.UserTests
 						@nVarChar.Contains(e.NVarCharValue)
 					select e;
 
-				var str = q.ToString()!;
+			var sql = q.ToSqlQuery().Sql;
 
-				TestContext.Out.WriteLine(str);
+			Assert.That(sql, Does.Not.Contain("N'CharValue'"));
+			Assert.That(sql, Does.Not.Contain("N'VarCharValue'"));
 
-				Assert.That(str, Does.Not.Contain("N'CharValue'"));
-				Assert.That(str, Does.Not.Contain("N'VarCharValue'"));
+			Assert.That(sql, Does.Contain("N'NCharValue'"));
+			Assert.That(sql, Does.Contain("N'NVarCharValue'"));
 
-				Assert.That(str, Does.Contain("N'NCharValue'"));
-				Assert.That(str, Does.Contain("N'NVarCharValue'"));
-			}
+			q.ToArray();
 		}
 	}
 }

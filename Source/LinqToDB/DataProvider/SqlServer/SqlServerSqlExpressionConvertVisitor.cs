@@ -15,6 +15,8 @@ namespace LinqToDB.DataProvider.SqlServer
 			_sqlServerVersion = sqlServerVersion;
 		}
 
+		protected override bool SupportsDistinctAsExistsIntersect => _sqlServerVersion < SqlServerVersion.v2022;
+
 		public override ISqlPredicate ConvertSearchStringPredicate(SqlPredicate.SearchString predicate)
 		{
 			var like = base.ConvertSearchStringPredicate(predicate);
@@ -111,6 +113,14 @@ namespace LinqToDB.DataProvider.SqlServer
 		protected override ISqlExpression ConvertConversion(SqlCastExpression cast)
 		{
 			cast = FloorBeforeConvert(cast);
+
+			if (cast.ToType.DataType == DataType.Decimal)
+			{
+				if (cast.ToType.Precision == null && cast.ToType.Scale == null)
+				{
+					cast = cast.WithToType(cast.ToType.WithPrecisionScale(38, 17));
+				}
+			}
 
 			return base.ConvertConversion(cast);
 		}

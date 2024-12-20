@@ -42,7 +42,14 @@ namespace LinqToDB.Linq.Builder
 			else
 			{
 				// create all columns
-				var sqlExpr = builder.BuildSqlExpression(outerSubqueryContext, new ContextRefExpression(methodCall.Method.GetGenericArguments()[0], subQueryContext), buildInfo.GetFlags());
+				var sqlExpr = builder.BuildSqlExpression(
+					outerSubqueryContext,
+					new ContextRefExpression(
+						methodCall.Method.GetGenericArguments()[0],
+						subQueryContext
+					)
+				);
+
 				SequenceHelper.EnsureNoErrors(sqlExpr);
 				sqlExpr = builder.UpdateNesting(outerSubqueryContext, sqlExpr);
 			}
@@ -67,14 +74,14 @@ namespace LinqToDB.Linq.Builder
 					return corrected;
 
 				Expression result;
-				if (flags.IsExtractProjection())
+				if (flags.IsSql() || flags.IsExpression())
 				{
-					result = Builder.MakeExpression(Context, corrected, flags);
+					result = Builder.BuildSqlExpression(Context, corrected);
+					result = Builder.UpdateNesting(Context, result);
 				}
 				else
 				{
-					result = Builder.BuildSqlExpression(Context, corrected, flags.SqlFlag());
-					result = Builder.UpdateNesting(Context, result);
+					result = Builder.BuildExpression(Context, corrected);
 				}
 
 				return result;

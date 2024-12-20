@@ -320,5 +320,21 @@ namespace LinqToDB.Expressions
 			else
 				return Expression.MakeMemberAccess(obj, mi);
 		}
+
+		internal static Expression EnsureType(this Expression expression, Type type)
+		{
+			if (expression.Type == type)
+				return expression;
+
+			return Expression.Convert(expression, type);
+		}
+
+		internal static Expression EnsureType<T>(this Expression expression)
+		{
+			if (expression.Type == typeof(T))
+				return expression;
+
+			return Expression.Convert(expression, typeof(T));
+		}
 	}
 }

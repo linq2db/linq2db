@@ -86,7 +86,7 @@ namespace LinqToDB.DataProvider.SapHana
 			{
 				if (_odbcProvider == null)
 				{
-					lock (_unmanagedSyncRoot)
+					lock (_odbcSyncRoot)
 #pragma warning disable CA1508 // Avoid dead conditional code
 						_odbcProvider ??= new SapHanaProviderAdapter(OdbcProviderAdapter.GetInstance());
 #pragma warning restore CA1508 // Avoid dead conditional code
@@ -98,7 +98,7 @@ namespace LinqToDB.DataProvider.SapHana
 			{
 				if (_unmanagedProvider == null)
 				{
-					lock (_odbcSyncRoot)
+					lock (_unmanagedSyncRoot)
 #pragma warning disable CA1508 // Avoid dead conditional code
 						if (_unmanagedProvider == null)
 #pragma warning restore CA1508 // Avoid dead conditional code

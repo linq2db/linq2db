@@ -164,10 +164,87 @@ namespace LinqToDB.DataProvider.Access.Translation
 			protected override ISqlExpression? TranslateSqlGetDate(ITranslationContext translationContext, TranslationFlags translationFlags)
 			{
 				var factory       = translationContext.ExpressionFactory;
-				var nowExpression = factory.Fragment(factory.GetDbDataType(typeof(DateTime)), "Now");
+				var nowExpression = factory.NotNullFragment(factory.GetDbDataType(typeof(DateTime)), "Now");
 				return nowExpression;
 			}
 		}
+
+		class MathMemberTranslator : MathMemberTranslatorBase
+		{
+			protected override ISqlExpression? TranslateRoundToEven(ITranslationContext translationContext, MethodCallExpression methodCall, ISqlExpression value, ISqlExpression? precision)
+			{
+				var factory   = translationContext.ExpressionFactory;
+				var valueType = factory.GetDbDataType(value);
+				var intType   = factory.GetDbDataType(typeof(int));
+
+				ISqlExpression? result = null;
+
+				if (precision == null || precision is SqlValue { Value: 0 })
+				{
+					/*
+					 IIf(Abs([Value] * 10 Mod 10) = 5 And Int([Value]) Mod 2 = 0, 
+						Int([Value]), 
+						Round([Value]))
+					*/
+
+					var value10 = factory.Multiply(valueType, value, factory.Value(10));
+					var mod10   = factory.Mod(value10, factory.Value(10));
+
+					var absMod10 = factory.Function(factory.GetDbDataType(typeof(int)), "ABS", mod10);
+					var intCast = factory.Cast(value, intType);
+
+					var is5    = factory.Equal(absMod10, factory.Value(5));
+					var isEven = factory.Equal(factory.Mod(intCast, factory.Value(2)), factory.Value(2));
+
+					var condition = factory.SearchCondition()
+						.Add(is5)
+						.Add(isEven);
+
+					var trueValue  = intCast;
+					var falseValue = factory.Function(valueType, "ROUND", value);
+
+					result = factory.Condition(condition, trueValue, falseValue);
+				}
+				else
+				{
+					result = base.TranslateRoundToEven(translationContext, methodCall, value, precision);
+				}
+
+				return result;
+			}
+
+			protected override ISqlExpression? TranslatePow(ITranslationContext translationContext, MethodCallExpression methodCall, ISqlExpression xValue, ISqlExpression yValue)
+			{
+				var factory = translationContext.ExpressionFactory;
+
+				var xType      = factory.GetDbDataType(xValue);
+				var resultType = xType;
+
+				if (xType.SystemType == typeof(decimal))
+				{
+					xType  = factory.GetDbDataType(typeof(double));
+					xValue = factory.Cast(xValue, xType);
+				}
+
+				var yType = factory.GetDbDataType(yValue);
+
+				if (!xType.EqualsDbOnly(yType))
+				{
+					yValue = factory.Cast(yValue, xType);
+				}
+
+				var result = factory.Binary(yType, xValue, "^", yValue);
+
+				if (!resultType.EqualsDbOnly(xType))
+				{
+					result = factory.Cast(result, resultType);
+				}
+
+				return result;
+			}
+
+		}
+
 
 		protected override IMemberTranslator CreateSqlTypesTranslator()
 		{
@@ -177,6 +254,11 @@ namespace LinqToDB.DataProvider.Access.Translation
 		protected override IMemberTranslator CreateDateMemberTranslator()
 		{
 			return new DateFunctionsTranslator();
+		}
+
+		protected override IMemberTranslator CreateMathMemberTranslator()
+		{
+			return new MathMemberTranslator();
 		}
 	}
 }

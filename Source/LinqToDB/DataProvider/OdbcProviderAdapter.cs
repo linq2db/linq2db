@@ -22,7 +22,8 @@ namespace LinqToDB.DataProvider
 			Type transactionType,
 			Func<string, DbConnection> connectionFactory,
 			Action<DbParameter, OdbcType> dbTypeSetter,
-			Func  <DbParameter, OdbcType> dbTypeGetter)
+			Func  <DbParameter, OdbcType> dbTypeGetter,
+			Func<DbConnection, OdbcConnection> connectionWrapper)
 		{
 			ConnectionType     = connectionType;
 			DataReaderType     = dataReaderType;
@@ -33,6 +34,8 @@ namespace LinqToDB.DataProvider
 
 			SetDbType = dbTypeSetter;
 			GetDbType = dbTypeGetter;
+
+			ConnectionWrapper = connectionWrapper;
 		}
 
 #region IDynamicProviderAdapter
@@ -50,6 +53,8 @@ namespace LinqToDB.DataProvider
 
 		public Action<DbParameter, OdbcType> SetDbType { get; }
 		public Func  <DbParameter, OdbcType> GetDbType { get; }
+
+		internal Func<DbConnection, OdbcConnection> ConnectionWrapper { get; }
 
 		public static OdbcProviderAdapter GetInstance()
 		{
@@ -95,7 +100,8 @@ namespace LinqToDB.DataProvider
 							transactionType,
 							connectionFactory,
 							typeSetter,
-							typeGetter);
+							typeGetter,
+							typeMapper.Wrap<OdbcConnection>);
 					}
 			}
 
@@ -105,9 +111,22 @@ namespace LinqToDB.DataProvider
 		#region Wrappers
 
 		[Wrapper]
-		private sealed class OdbcConnection
+		internal sealed class OdbcConnection : TypeWrapper
 		{
+			private static LambdaExpression[] Wrappers { get; } =
+			{
+				// [0]: get Driver
+				(Expression<Func<OdbcConnection, string>>)((OdbcConnection this_) => this_.Driver),
+			};
+
+			public OdbcConnection(object instance, Delegate[] wrappers) : base(instance, wrappers)
+			{
+			}
+
 			public OdbcConnection(string connectionString) => throw new NotImplementedException();
+
+			// implementation returns string.Empty instead of null
+			public string Driver => ((Func<OdbcConnection, string>)CompiledWrappers[0])(this);
 		}
 
 		[Wrapper]

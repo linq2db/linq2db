@@ -38,9 +38,10 @@ namespace Tests.Extensions
 		}
 
 		[Test]
-		public void SelfJoinWithDifferentHintTest2([NorthwindDataContext] string context)
+		public void SelfJoinWithDifferentHintTest2([NorthwindDataContext(true)] string context)
 		{
 			using var db = new NorthwindDB(context);
+			using var tb = db.CreateLocalTable<JoinOptimizeTests.AdressEntity>();
 
 			var query =
 				from p in db.GetTable<JoinOptimizeTests.AdressEntity>().TableHint("NOLOCK")
@@ -48,7 +49,7 @@ namespace Tests.Extensions
 					on p.Id equals a.Id //PK column
 				select p;
 
-			Debug.WriteLine(query);
+			query.ToArray();
 
 			Assert.That(query.GetTableSource().Joins, Has.Count.EqualTo(1));
 		}

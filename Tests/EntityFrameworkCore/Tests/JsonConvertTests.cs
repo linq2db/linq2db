@@ -28,7 +28,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 		}
 
 		[Test]
-		public void TestJsonConvert([EFIncludeDataSources] string provider)
+		public void TestJsonConvert([EFIncludeDataSources(TestProvName.AllSqlServer)] string provider)
 		{
 			// // converting from string, because usually JSON is stored as string, but it depends on DataProvider
 			// Mapping.MappingSchema.Default.SetConverter<string, LocalizedString>(v => JsonConvert.DeserializeObject<LocalizedString>(v));
@@ -43,7 +43,7 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 			ctx.EventScheduleItems.Add(new EventScheduleItem()
 			{
 				NameLocalized = new LocalizedString() { English = "English", German = "German", Slovak = "Slovak" },
-				GuidColumn = Guid.NewGuid()
+				GuidColumn = TestData.Guid1
 			});
 			ctx.SaveChanges();
 

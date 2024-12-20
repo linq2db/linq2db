@@ -514,7 +514,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void SubQuery7([DataSources(ProviderName.SqlCe, TestProvName.AllOracle, ProviderName.Access, TestProvName.AllClickHouse)] string context)
+		public void SubQuery7([DataSources(ProviderName.SqlCe, TestProvName.AllOracle, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(

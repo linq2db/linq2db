@@ -553,7 +553,7 @@ namespace Tests.xUpdate
 				}
 
 				if (   provider.IsAnyOf(TestProvName.AllOracle)
-					|| provider.IsAnyOf(ProviderName.AccessOdbc))
+					|| provider.IsAnyOf(TestProvName.AllAccessOdbc))
 					expected = expected.Value.AddMilliseconds(-expected.Value.Millisecond);
 			}
 

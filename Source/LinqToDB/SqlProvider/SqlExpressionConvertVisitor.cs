@@ -16,7 +16,6 @@ namespace LinqToDB.SqlProvider
 	public class SqlExpressionConvertVisitor : SqlQueryVisitor
 	{
 		protected bool            IsInsideNot;
-		protected ISqlExpression? IsForPredicate;
 		protected bool            VisitQueries;
 
 		protected OptimizationContext OptimizationContext = default!;
@@ -31,8 +30,9 @@ namespace LinqToDB.SqlProvider
 		{
 		}
 
-		protected virtual bool SupportsBooleanInColumn    => false;
-		protected virtual bool SupportsNullInColumn       => true;
+		protected virtual bool SupportsBooleanInColumn           => false;
+		protected virtual bool SupportsNullInColumn              => true;
+		protected virtual bool SupportsDistinctAsExistsIntersect => false;
 
 		public virtual IQueryElement Convert(OptimizationContext optimizationContext, NullabilityContext nullabilityContext, IQueryElement element, bool visitQueries, bool isInsideNot)
 		{
@@ -87,8 +87,6 @@ namespace LinqToDB.SqlProvider
 				{
 					return new SqlOutputClause()
 					{
-						DeletedTable = result.DeletedTable, 
-						InsertedTable = result.InsertedTable,
 						OutputTable = result.OutputTable,
 						OutputItems = result.OutputItems,
 						OutputColumns = newElements
@@ -158,13 +156,48 @@ namespace LinqToDB.SqlProvider
 
 		protected override IQueryElement VisitExprPredicate(SqlPredicate.Expr predicate)
 		{
-			var saveIsForPredicate = IsForPredicate;
-			IsForPredicate = predicate.Expr1;
-
 			var result = base.VisitExprPredicate(predicate);
 
-			IsForPredicate = saveIsForPredicate;
+			if (!ReferenceEquals(result, predicate))
+				return Visit(result);
+
+			var newResult = result;
+
+			if (predicate.Expr1 is ISqlPredicate)
+			{
+				result = predicate.Expr1;
+			}
+			else
+			{
+				if (SqlProviderFlags?.SupportsBooleanType == false || QueryHelper.GetColumnDescriptor(predicate.Expr1)?.ValueConverter != null)
+				{
+					var unwrapped = QueryHelper.UnwrapNullablity(predicate.Expr1);
+					if (unwrapped is SqlCastExpression castExpression)
+					{
+						newResult = ConvertCastToPredicate(castExpression);
+					}
+					else if (unwrapped is SqlExpression { IsPredicate: true })
+					{
+						// do nothing
+					}
+					else
+					{
+						newResult = ConvertToBooleanSearchCondition(predicate.Expr1);
+					}
+				}
+			}
+
+			if (!ReferenceEquals(newResult, result))
+			{
+				result = Visit(Optimize(newResult));
+			}
+
 			return result;
+		}
+
+		public virtual IQueryElement ConvertCastToPredicate(SqlCastExpression castExpression)
+		{
+			return ConvertToBooleanSearchCondition(castExpression.Expression);
 		}
 
 		protected override IQueryElement VisitSqlFieldReference(SqlField element)
@@ -173,12 +206,6 @@ namespace LinqToDB.SqlProvider
 
 			if (!ReferenceEquals(newElement, element))
 				return Visit(newElement);
-
-			if (element.SystemType?.ToUnderlying() == typeof(bool))
-			{
-				if (ReferenceEquals(element, IsForPredicate))
-					return ConvertToBooleanSearchCondition(element);
-			}
 
 			return element;
 		}
@@ -190,12 +217,6 @@ namespace LinqToDB.SqlProvider
 			if (!ReferenceEquals(newElement, element))
 				return Visit(newElement);
 
-			if (element.SystemType?.ToUnderlying() == typeof(bool))
-			{
-				if (ReferenceEquals(element, IsForPredicate))
-					return ConvertToBooleanSearchCondition(element);
-			}
-
 			return element;
 		}
 
@@ -204,7 +225,14 @@ namespace LinqToDB.SqlProvider
 			var saveIsInsideNot = IsInsideNot;
 			IsInsideNot = true;
 
+			var saveInner    = predicate.Predicate;
 			var newPredicate = base.VisitNotPredicate(predicate);
+
+			if (!ReferenceEquals(newPredicate, predicate) || !ReferenceEquals(saveInner, predicate.Predicate))
+			{
+				newPredicate = Optimize(newPredicate);
+				return Visit(newPredicate);
+			}
 
 			IsInsideNot = saveIsInsideNot;
 
@@ -274,6 +302,71 @@ namespace LinqToDB.SqlProvider
 			return Visit(Optimize(caseExpression));
 		}
 
+		protected override IQueryElement VisitIsDistinctPredicate(SqlPredicate.IsDistinct predicate)
+		{
+			var newPredicate = base.VisitIsDistinctPredicate(predicate);
+
+			if (!ReferenceEquals(newPredicate, predicate))
+				return Visit(newPredicate);
+
+			if (SqlProviderFlags is { IsDistinctFromSupported: false })
+			{
+				var converted = SupportsDistinctAsExistsIntersect
+					? ConvertIsDistinctPredicateAsIntersect(predicate)
+					: ConvertIsDistinctPredicate(predicate);
+
+				if (!ReferenceEquals(converted, predicate))
+				{
+					return Visit(Optimize(converted));
+				}
+			}
+
+			return predicate;
+		}
+
+		public IQueryElement ConvertIsDistinctPredicate(SqlPredicate.IsDistinct predicate)
+		{
+			/*
+				(value1 IS NULL AND value2 IS NOT NULL) OR 
+				(value1 IS NOT NULL AND value2 IS NULL) OR 
+				(value1 <> value2)
+			 */
+
+			var searchCondition = new SqlSearchCondition(true);
+
+			searchCondition
+				.AddAnd(sc => sc
+					.Add(new SqlPredicate.IsNull(predicate.Expr1, false))
+					.Add(new SqlPredicate.IsNull(predicate.Expr2, true)
+					))
+				.AddAnd(sc => sc
+					.Add(new SqlPredicate.IsNull(predicate.Expr1, true))
+					.Add(new SqlPredicate.IsNull(predicate.Expr2, false)
+					)
+				)
+				.Add(new SqlPredicate.ExprExpr(predicate.Expr1, SqlPredicate.Operator.NotEqual, predicate.Expr2, null)
+				);
+
+			return searchCondition.MakeNot(predicate.IsNot);
+		}
+
+		protected virtual IQueryElement ConvertIsDistinctPredicateAsIntersect(SqlPredicate.IsDistinct predicate)
+		{
+			/*
+				EXISTS(value1 INTERSECT value2)
+			 */
+
+			var expr1 = new SelectQuery();
+			expr1.Select.AddColumn(predicate.Expr1);
+
+			var expr2 = new SelectQuery();
+			expr2.Select.AddColumn(predicate.Expr2);
+
+			expr1.SetOperators.Add(new SqlSetOperator(expr2, SetOperation.Intersect));
+
+			return new SqlPredicate.Exists(!predicate.IsNot, expr1);
+		}
+
 		public virtual IQueryElement ConvertExprExprPredicate(SqlPredicate.ExprExpr predicate)
 		{
 			var unwrapped = QueryHelper.UnwrapNullablity(predicate.Expr1);
@@ -290,7 +383,12 @@ namespace LinqToDB.SqlProvider
 				}
 			}
 
-			if (SqlProviderFlags is { SupportsBooleanComparison: false })
+			// convert bool_exp_1 == bool_expr_2 to (x ? 1 : 0) == (y ? 1 : 0)
+			// for providers that doesn't support boolean(predicate) comparison
+			// or for predicates that could return UNKNOWN
+			// Alternative could be to use IS [NOT] DISTINCT FROM predicate
+			if (SqlProviderFlags is { SupportsPredicatesComparison: false }
+				|| QueryHelper.NeedsEqualityWithNull(predicate.Expr1, predicate.Operator, predicate.Expr2, NullabilityContext))
 			{
 				if (QueryHelper.UnwrapNullablity(predicate.Expr2) is not (SqlValue or SqlParameter) && QueryHelper.UnwrapNullablity(predicate.Expr1) is not (SqlValue or SqlParameter))
 				{
@@ -350,7 +448,7 @@ namespace LinqToDB.SqlProvider
 						var keys  = table.GetKeys(true);
 
 						if (keys == null || keys.Count == 0)
-							throw new SqlException("Cant create IN expression.");
+							throw new LinqToDBException("Cant create IN expression.");
 
 						if (keys.Count == 1)
 						{
@@ -833,10 +931,28 @@ namespace LinqToDB.SqlProvider
 		{
 			var newElement = (SqlSetExpression)base.VisitSqlSetExpression(element);
 
+			while (newElement.Column is SqlCastExpression cast)
+			{
+				var newColumn = cast.Expression;
+				var newValue  = newElement.Expression == null ? null : new SqlCastExpression(newElement.Expression, QueryHelper.GetDbDataType(newColumn, MappingSchema), null, false);
+
+				if (GetVisitMode(newElement) == VisitMode.Modify)
+				{
+					newElement.Column     = newColumn;
+					newElement.Expression = newValue;
+				}
+				else
+				{
+					newElement = new SqlSetExpression(newColumn, newValue);
+				}
+			}
+
 			var wrapped = newElement.Expression == null ? null : WrapBooleanExpression(newElement.Expression, includeFields : false);
 
 			if (!ReferenceEquals(wrapped, newElement.Expression))
 			{
+				if (wrapped != null)
+					wrapped = (ISqlExpression)Optimize(wrapped);
 				if (GetVisitMode(newElement) == VisitMode.Modify)
 				{
 					newElement.Expression = wrapped;
@@ -1163,9 +1279,21 @@ namespace LinqToDB.SqlProvider
 
 		protected virtual ISqlExpression WrapColumnExpression(ISqlExpression expr)
 		{
-			if (!SupportsNullInColumn && QueryHelper.UnwrapNullablity(expr) is SqlValue sqlValue && sqlValue.Value == null)
+			if (!SupportsNullInColumn)
 			{
-				return new SqlCastExpression(sqlValue, QueryHelper.GetDbDataType(sqlValue, MappingSchema), null, true);
+				var unwrappedExpr = QueryHelper.UnwrapNullablity(expr);
+
+				if (unwrappedExpr is SqlValue sqlValue && sqlValue.Value == null)
+				{
+					return new SqlCastExpression(sqlValue, QueryHelper.GetDbDataType(sqlValue, MappingSchema), null, true);
+				}
+				else if (unwrappedExpr is SqlParameter { IsQueryParameter: false } sqlParameter)
+				{
+					var paramValue = sqlParameter.GetParameterValue(EvaluationContext.ParameterValues);
+
+					if (paramValue.ProviderValue == null)
+						return new SqlCastExpression(sqlParameter, QueryHelper.GetDbDataType(sqlParameter, MappingSchema), null, true);
+				}
 			}
 
 			return expr;
@@ -1209,15 +1337,6 @@ namespace LinqToDB.SqlProvider
 				return cast.Expression;
 			}
 
-			if (SqlProviderFlags?.SupportsBooleanComparison == false)
-			{
-				if (cast.SystemType.ToUnderlying() == typeof(bool))
-				{
-					if (ReferenceEquals(cast, IsForPredicate))
-						return ConvertToBooleanSearchCondition(cast.Expression);
-				}
-			}
-
 			return cast;
 		}
 
@@ -1245,7 +1364,7 @@ namespace LinqToDB.SqlProvider
 				case SqlValue { Value: null }:
 				{
 					if (op is not (SqlPredicate.Operator.Equal or SqlPredicate.Operator.NotEqual))
-						throw new LinqException("Null SqlRow is only allowed in equality comparisons");
+						throw new LinqToDBException("Null SqlRow is only allowed in equality comparisons");
 
 					if (ConvertRowIsNullPredicate((SqlRowExpression)predicate.Expr2, op is SqlPredicate.Operator.NotEqual, out var rowIsNullFallback))
 					{
@@ -1268,12 +1387,12 @@ namespace LinqToDB.SqlProvider
 				{
 					if (!SqlProviderFlags.RowConstructorSupport.HasFlag(feature) ||
 					    !SqlProviderFlags.RowConstructorSupport.HasFlag(RowFeature.CompareToSelect))
-						throw new LinqException("SqlRow comparisons to SELECT are not supported by this DB provider");
+						throw new LinqToDBException("SqlRow comparisons to SELECT are not supported by this DB provider");
 					break;
 				}
 
 				default:
-					throw new LinqException("Inappropriate SqlRow expression, only Sql.Row() and sub-selects are valid.");
+					throw new LinqToDBException("Inappropriate SqlRow expression, only Sql.Row() and sub-selects are valid.");
 			}
 
 			// Default ExprExpr translation is ok
@@ -1429,7 +1548,7 @@ namespace LinqToDB.SqlProvider
 				}*/
 			}
 
-			throw new LinqException("Unsupported SqlRow operator: " + op);
+			throw new LinqToDBException($"Unsupported SqlRow operator: {op}");
 		}
 
 		#endregion
@@ -1511,7 +1630,8 @@ namespace LinqToDB.SqlProvider
 			var sc = new SqlSearchCondition();
 
 			ISqlPredicate predicate;
-			if (expression.SystemType?.ToNullableUnderlying() == typeof(bool))
+			var dbType = QueryHelper.GetDbDataType(expression, MappingSchema);
+			if (dbType.SystemType.ToNullableUnderlying() == typeof(bool) || dbType.DataType == DataType.Boolean)
 			{
 				predicate = new SqlPredicate.IsTrue(expression, new SqlValue(true), new SqlValue(false), DataOptions.LinqOptions.CompareNulls == CompareNulls.LikeClr ? false : null, false);
 			}

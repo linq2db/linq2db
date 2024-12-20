@@ -3,8 +3,8 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Data.Linq;
 using System.Diagnostics;
-using System.Linq.Expressions;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Net;
 using System.Net.NetworkInformation;
 using System.Numerics;
@@ -12,9 +12,12 @@ using System.Threading.Tasks;
 using System.Xml;
 using System.Xml.Linq;
 
+using FluentAssertions;
+
 using LinqToDB;
 using LinqToDB.Common;
 using LinqToDB.Data;
+using LinqToDB.DataProvider;
 using LinqToDB.DataProvider.PostgreSQL;
 using LinqToDB.Mapping;
 using LinqToDB.SqlQuery;
@@ -23,6 +26,7 @@ using LinqToDB.Tools.Comparers;
 
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+
 using NpgsqlTypes;
 
 using NUnit.Framework;
@@ -32,6 +36,8 @@ using NUnit.Framework.Internal.Builders;
 
 namespace Tests.DataProvider
 {
+	using LinqToDB.SchemaProvider;
+
 	using Model;
 	using Npgsql;
 
@@ -236,17 +242,15 @@ namespace Tests.DataProvider
 
 				var sql = string.Format("SELECT Cast({0} as {1})", sqlValue ?? "NULL", sqlType);
 
-				Debug.WriteLine(sql + " -> " + typeof(T));
-
 				Assert.That(conn.Execute<T>(sql), Is.EqualTo(expectedValue));
 			}
 
-			Debug.WriteLine("{0} -> DataType.{1}", typeof(T), dataType);
-			Assert.That(conn.Execute<T>("SELECT :p", new DataParameter { Name = "p", DataType = dataType, Value = expectedValue }), Is.EqualTo(expectedValue));
-			Debug.WriteLine("{0} -> auto", typeof(T));
-			Assert.That(conn.Execute<T>("SELECT :p", new DataParameter { Name = "p", Value = expectedValue }), Is.EqualTo(expectedValue));
-			Debug.WriteLine("{0} -> new", typeof(T));
-			Assert.That(conn.Execute<T>("SELECT :p", new { p = expectedValue }), Is.EqualTo(expectedValue));
+			Assert.Multiple(() =>
+			{
+				Assert.That(conn.Execute<T>("SELECT :p", new DataParameter { Name = "p", DataType = dataType, Value = expectedValue }), Is.EqualTo(expectedValue));
+				Assert.That(conn.Execute<T>("SELECT :p", new DataParameter { Name = "p", Value = expectedValue }), Is.EqualTo(expectedValue));
+				Assert.That(conn.Execute<T>("SELECT :p", new { p = expectedValue }), Is.EqualTo(expectedValue));
+			});
 		}
 
 		static void TestSimple<T>(DataConnection conn, T expectedValue, DataType dataType)
@@ -2243,7 +2247,7 @@ namespace Tests.DataProvider
 
 		sealed class TableWithArray
 		{
-			[Column]
+			[Column(DbType = "text[]")]
 			public string[] StringArray { get; set; } = null!;
 		}
 
@@ -2251,34 +2255,32 @@ namespace Tests.DataProvider
 		public void UnnestTest([IncludeDataSources(TestProvName.AllPostgreSQL)]
 			string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				var query = from t in db.GetTable<TableWithArray>()
-					select new
-					{
-						StringValue = TestPgFunctions.Unnest(t.StringArray)
-					};
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable<TableWithArray>();
 
-				var str = query.ToString();
-				TestContext.Out.WriteLine(str);
-			}
+			var query = from t in db.GetTable<TableWithArray>()
+				select new
+				{
+					StringValue = TestPgFunctions.Unnest(t.StringArray)
+				};
+
+			query.ToArray();
 		}
 
 		[Test]
 		public void UnnestTest2([IncludeDataSources(TestProvName.AllPostgreSQL)]
 			string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				var query = from t in db.GetTable<TableWithArray>()
-					select new
-					{
-						StringValue = TestPgFunctions.Unnest(t.StringArray)
-					};
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable<TableWithArray>();
 
-				var str = query.ToString();
-				TestContext.Out.WriteLine(str);
-			}
+			var query = from t in db.GetTable<TableWithArray>()
+				select new
+				{
+					StringValue = TestPgFunctions.Unnest(t.StringArray)
+				};
+
+			query.ToArray();
 		}
 
 		public class DataTypeBinaryMapping
@@ -2600,8 +2602,622 @@ $function$
 
 			Assert.That(db.LastQuery, Does.Contain($"\"{tableName.Replace("\"", "\"\"")}\""));
 		}
+
+		[Test]
+		public void PartitionedTables([IncludeDataSources(TestProvName.AllPostgreSQL10Plus)] string context)
+		{
+			using var db     = GetDataConnection(context);
+
+			var schema = db.DataProvider.GetSchemaProvider().GetSchema(db, new GetSchemaOptions());
+
+			var tables = schema.Tables
+				.Where(t => t.TableName != null && t.TableName.StartsWith("multitenant_table"))
+				.ToArray();
+
+			tables.Should().HaveCount(1);
+
+			var multiTenantTable = tables[0];
+
+			multiTenantTable!.Columns.Should().HaveCount(5);
+
+			var tenantidColumn = multiTenantTable.Columns.Find(c => c.ColumnName == "tenantid");
+			tenantidColumn.Should().NotBeNull();
+
+			tenantidColumn!.IsPrimaryKey.Should().BeTrue();
+
+			var idColumn = multiTenantTable.Columns.Find(c => c.ColumnName == "id");
+			idColumn.Should().NotBeNull();
+
+			idColumn!.IsPrimaryKey.Should().BeTrue();
+		}
+
+		#region Issue 4556
+		// TODO: enable remote context (requires dictionary serialization support)
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4556")]
+		public void Issue4556Test_ByDataType([IncludeDataSources(TestProvName.AllPostgreSQL15Plus)] string context)
+		{
+			var builder = new NpgsqlDataSourceBuilder(GetConnectionString(context));
+			builder.EnableDynamicJson();
+			var dataSource = builder.Build();
+
+			DataOptions OptionsBuilder(DataOptions o) => o.UseConnectionFactory(GetDataProvider(context), _ => dataSource.CreateConnection());
+
+			using var db = GetDataContext(context, OptionsBuilder);
+			using var tb  = db.CreateLocalTable<Issue4556Table1>();
+
+			// test empty set typing
+			tb.Merge()
+				.Using(Array.Empty<Issue4556Table1>())
+				.OnTargetKey()
+				.InsertWhenNotMatched()
+				.Merge();
+
+			// test non-empty set typing with more than 1 row
+			tb.Merge()
+				.Using(Issue4556Table1.TestData)
+				.OnTargetKey()
+				.InsertWhenNotMatched()
+				.Merge();
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4556")]
+		public void Issue4556Test_ByDbType([IncludeDataSources(TestProvName.AllPostgreSQL15Plus)] string context)
+		{
+			var builder = new NpgsqlDataSourceBuilder(GetConnectionString(context));
+			builder.EnableDynamicJson();
+			var dataSource = builder.Build();
+
+			DataOptions OptionsBuilder(DataOptions o) => o.UseConnectionFactory(GetDataProvider(context), _ => dataSource.CreateConnection());
+
+			using var db = GetDataContext(context, OptionsBuilder);
+			using var tb  = db.CreateLocalTable<Issue4556Table2>();
+
+			// test empty set typing
+			tb.Merge()
+				.Using(Array.Empty<Issue4556Table2>())
+				.OnTargetKey()
+				.InsertWhenNotMatched()
+				.Merge();
+
+			// test non-empty set typing with more than 1 row
+			tb.Merge()
+				.Using(Issue4556Table2.TestData)
+				.OnTargetKey()
+				.InsertWhenNotMatched()
+				.Merge();
+		}
+
+		sealed class Issue4556Table1
+		{
+			[PrimaryKey, Identity] public int Id { get; set; }
+
+			[Column(DataType = DataType.Json, Name = "Payload_json")]
+			public string? PayloadJson { get; set; }
+
+			[Column(DataType = DataType.BinaryJson, Name = "Payload_jsonb")]
+			public string? PayloadJsonB { get; set; }
+
+			[Column(DataType = DataType.Json, Name = "Headers_json")]
+			public Dictionary<string, string>? HeadersJson { get; set; }
+
+			[Column(DataType = DataType.BinaryJson, Name = "Headers_jsonb")]
+			public Dictionary<string, string>? HeadersJsonB { get; set; }
+
+			public static Issue4556Table1[] TestData =
+			[
+				new Issue4556Table1()
+				{
+					PayloadJson = "true",
+					PayloadJsonB = "123",
+					HeadersJson = new Dictionary<string, string>()
+					{
+						{ "key1", "value1" }
+					},
+					HeadersJsonB = new Dictionary<string, string>()
+					{
+						{ "key2", "value3" }
+					}
+				},
+				new Issue4556Table1()
+				{
+					PayloadJson = "\"some string\"",
+					PayloadJsonB = "-124",
+					HeadersJson = new Dictionary<string, string>()
+					{
+						{ "sd", "sdfgsd" }
+					},
+					HeadersJsonB = new Dictionary<string, string>()
+					{
+						{ "g4", "sdg" }
+					}
+				}
+			];
+		}
+
+		sealed class Issue4556Table2
+		{
+			[PrimaryKey, Identity] public int Id { get; set; }
+
+			[Column(DbType = "json", Name = "Payload_json")]
+			public string? PayloadJson { get; set; }
+
+			[Column(DbType = "jsonb", Name = "Payload_jsonb")]
+			public string? PayloadJsonB { get; set; }
+
+			[Column(DbType = "json", Name = "Headers_json")]
+			public Dictionary<string, string>? HeadersJson { get; set; }
+
+			[Column(DbType = "jsonb", Name = "Headers_jsonb")]
+			public Dictionary<string, string>? HeadersJsonB { get; set; }
+
+			public static Issue4556Table2[] TestData =
+			[
+				new Issue4556Table2()
+				{
+					PayloadJson = "true",
+					PayloadJsonB = "123",
+					HeadersJson = new Dictionary<string, string>()
+					{
+						{ "key1", "value1" }
+					},
+					HeadersJsonB = new Dictionary<string, string>()
+					{
+						{ "key2", "value3" }
+					}
+				},
+				new Issue4556Table2()
+				{
+					PayloadJson = "\"some string\"",
+					PayloadJsonB = "-124",
+					HeadersJson = new Dictionary<string, string>()
+					{
+						{ "sd", "sdfgsd" }
+					},
+					HeadersJsonB = new Dictionary<string, string>()
+					{
+						{ "g4", "sdg" }
+					}
+				}
+			];
+		}
+		#endregion
+
+		#region 4487
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4487")]
+		public void Issue4487Test([IncludeDataSources(TestProvName.AllPostgreSQL95Plus)] string context)
+		{
+			IDataProvider dataProvider;
+			string?       connectionString;
+			using (var db = GetDataConnection(context))
+			{
+				dataProvider = db.DataProvider;
+				connectionString = db.ConnectionString;
+			}
+
+			using (var db1 = GetDataConnection(context))
+			{
+				try
+				{
+					db1.Execute(@"DROP TYPE IF EXISTS ""item_type_enum"";");
+					db1.Execute(@"CREATE TYPE ""item_type_enum"" AS ENUM (
+  'type1',
+  'type2',
+  'type3'
+)");
+					using var _ = db1.CreateLocalTable<Issue4487Table>();
+
+					var builder = new NpgsqlDataSourceBuilder(connectionString);
+					builder.MapEnum<Issue4487Enum>("item_type_enum");
+					var dataSource = builder.Build();
+
+					using var db = GetDataConnection(context, o => o.UseConnectionFactory(dataProvider, _ => dataSource.CreateConnection()));
+
+					db.GetTable<Issue4487Table>()
+						.Value(x => x.Id, 1)
+						.Value(x => x.Value, Issue4487Enum.Type1)
+						.Insert();
+
+					db.Execute("insert into \"Issue4487Table\"(\"Id\", \"Values\") values (2, '{type3,type2}')");
+
+					db.GetTable<Issue4487Table>()
+						.Value(x => x.Id, 3)
+						.Value(x => x.Values, [Issue4487Enum.Type1, Issue4487Enum.Type2])
+						.Insert();
+
+					var result = db.GetTable<Issue4487Table>().OrderBy(r => r.Id).ToArray();
+
+					Assert.That(result, Has.Length.EqualTo(3));
+
+					Assert.Multiple(() =>
+					{
+						Assert.That(result[0].Id, Is.EqualTo(1));
+						Assert.That(result[0].Value, Is.EqualTo(Issue4487Enum.Type1));
+						Assert.That(result[0].Values, Is.Null);
+
+						Assert.That(result[1].Id, Is.EqualTo(2));
+						Assert.That(result[1].Value, Is.Null);
+						Assert.That(result[1].Values, Is.EqualTo(new Issue4487Enum[] { Issue4487Enum.Type3, Issue4487Enum.Type2 }));
+
+						Assert.That(result[2].Id, Is.EqualTo(3));
+						Assert.That(result[2].Value, Is.Null);
+						Assert.That(result[2].Values, Is.EqualTo(new Issue4487Enum[] { Issue4487Enum.Type1, Issue4487Enum.Type2 }));
+					});
+				}
+				finally
+				{
+					db1.Execute(@"DROP TYPE IF EXISTS ""item_type_enum"";");
+				}
+			}
+		}
+
+		[Table]
+		sealed class Issue4487Table
+		{
+			[PrimaryKey] public int Id { get; set; }
+
+			[Column(DbType = "item_type_enum", DataType = DataType.Enum)] public Issue4487Enum? Value { get; set; }
+			[Column(DbType = "item_type_enum[]", DataType = DataType.Enum)] public Issue4487Enum[]? Values { get; set; }
+		}
+
+		[PgName("item_type_enum")]
+		enum Issue4487Enum
+		{
+			[PgName("type1")]
+			[MapValue("type1")]
+			Type1,
+			[PgName("type2")]
+			[MapValue("type2")]
+			Type2,
+			[PgName("type3")]
+			[MapValue("type3")]
+			Type3,
+		}
+		#endregion
+
+		#region issue 4250
+
+		[Sql.Expression("{point1} <-> {point2}", ServerSideOnly = true)]
+		static double Distance([ExprParameter] NpgsqlPoint? point1, [ExprParameter] NpgsqlPoint? point2) => throw new NotImplementedException();
+
+		[ActiveIssue]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4250")]
+		public void Issue4250Test([IncludeDataSources(true, TestProvName.AllPostgreSQL)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			db.GetTable<AllTypes>().Select(r => Distance(r.pointDataType, r.pointDataType)).ToArray();
+		}
+
+		#endregion
+
+		#region issue 4348
+
+		[Sql.Expression("{0} @> '[{1}]'", ServerSideOnly = true, IsPredicate = true, InlineParameters = true)]
+		static bool JsonContains(string? json, int value) => throw new NotImplementedException();
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4348")]
+		public void Issue4348Test1([IncludeDataSources(true, TestProvName.AllPostgreSQL)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable<Issue4348Table>();
+
+			var storeId = 1;
+			tb
+				.Where(i => i.Value == null || JsonContains(i.Value, storeId))
+				.Select(i => i.Id)
+				.FirstOrDefault();
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4348")]
+		public void Issue4348Test2([IncludeDataSources(true, TestProvName.AllPostgreSQL)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable<Issue4348Table>();
+
+			var storeId = 1;
+			tb
+				.Where(i => storeId == 0 || i.Value == null || JsonContains(i.Value, storeId))
+				.Select(i => i.Id)
+				.FirstOrDefault();
+		}
+
+		[Table]
+		sealed class Issue4348Table
+		{
+			[PrimaryKey] public int Id { get; set; }
+			[Column(DbType = "jsonb")] public string? Value { get; set; }
+		}
+
+		#endregion
+
+		#region issue 4780
+
+		// for tests to work, we need pg-specific metadata provider, which provides enum mappings:
+		// - from Pg* attributes
+		// - schema tables
+		// - using npgsql-specific naming conventions
+		[ActiveIssue]
+		[Test(Description = "https://github.com/npgsql/npgsql/issues/4780")]
+		public void Issue4780Test1([IncludeDataSources(TestProvName.AllPostgreSQL)] string context, [Values] bool inline)
+		{
+			IDataProvider dataProvider;
+			string?       connectionString;
+			using (var db = GetDataConnection(context))
+			{
+				dataProvider = db.DataProvider;
+				connectionString = db.ConnectionString;
+			}
+
+			using (var db1 = GetDataConnection(context))
+			{
+				try
+				{
+					db1.Execute(@"create type bar_enum as enum ('item_one', 'item_two');");
+					using var _ = db1.CreateLocalTable<Issue4780Table>();
+
+					var builder = new NpgsqlDataSourceBuilder(connectionString);
+					builder.MapEnum<Issue4780Enum>("item_type_enum");
+					var dataSource = builder.Build();
+
+					using var db = GetDataConnection(context, o => o.UseConnectionFactory(dataProvider, _ => dataSource.CreateConnection()));
+
+					db.Insert(new Issue4780Table() {Bar = Issue4780Enum.ItemOne });
+					db.Insert(new Issue4780Table() {Bar = Issue4780Enum.ItemTwo });
+
+					var variable = Issue4780Enum.ItemOne;
+
+					db.InlineParameters = inline;
+					var record = db.GetTable<Issue4780Table>().Where(f => f.Bar == variable).Single();
+
+					Assert.That(record.Bar, Is.EqualTo(variable));
+				}
+				finally
+				{
+					db1.Execute(@"DROP TYPE IF EXISTS bar_enum;");
+				}
+			}
+		}
+
+		[ActiveIssue]
+		[Test(Description = "https://github.com/npgsql/npgsql/issues/4780")]
+		public void Issue4780Test2([IncludeDataSources(TestProvName.AllPostgreSQL)] string context, [Values] bool inline)
+		{
+			IDataProvider dataProvider;
+			string?       connectionString;
+			using (var db = GetDataConnection(context))
+			{
+				dataProvider = db.DataProvider;
+				connectionString = db.ConnectionString;
+			}
+
+			using (var db1 = GetDataConnection(context))
+			{
+				try
+				{
+					db1.Execute(@"create type bar_enum as enum ('item_one', 'item_two');");
+					using var _ = db1.CreateLocalTable<Issue4780Table>();
+
+					var builder = new NpgsqlDataSourceBuilder(connectionString);
+					builder.MapEnum<Issue4780Enum>("item_type_enum");
+					var dataSource = builder.Build();
+
+					using var db = GetDataConnection(context, o => o.UseConnectionFactory(dataProvider, _ => dataSource.CreateConnection()));
+
+					db.Insert(new Issue4780Table() { Bar = Issue4780Enum.ItemOne });
+					db.Insert(new Issue4780Table() { Bar = Issue4780Enum.ItemTwo });
+
+					var items = new[]
+					{
+						Issue4780Enum.ItemOne,
+						Issue4780Enum.ItemTwo
+					};
+
+					db.InlineParameters = inline;
+					var record = db.GetTable<Issue4780Table>().Where(f => items.Contains(f.Bar)).ToArray();
+
+					Assert.That(record, Has.Length.EqualTo(2));
+				}
+				finally
+				{
+					db1.Execute(@"DROP TYPE IF EXISTS bar_enum;");
+				}
+			}
+		}
+
+		enum Issue4780Enum
+		{
+			ItemOne,
+			ItemTwo
+		}
+
+		[Table]
+		sealed class Issue4780Table
+		{
+			[Column(IsIdentity = true)] public int Id { get; set; }
+			[Column(CanBeNull = true, DataType = DataType.Enum)] public Issue4780Enum Bar { get; set; }
+		}
+
+		#endregion
+
+		#region Issue 2796
+
+		[ActiveIssue(SkipForNonLinqService = true)]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/2796")]
+		public void Issue2796Test1([IncludeDataSources(true, TestProvName.AllPostgreSQL)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable<Issue2796Table>();
+
+			var record = new Issue2796Table()
+			{
+				RangeMappedAsDateTime = new NpgsqlRange<DateTime>(TestData.DateTime6Utc, TestData.DateTime6Utc.AddDays(1))
+			};
+
+			db.Insert(record);
+
+			var res = tb.Single();
+
+			Assert.That(res.RangeMappedAsDateTime, Is.EqualTo(record.RangeMappedAsDateTime));
+		}
+
+		[ActiveIssue]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/2796")]
+		public void Issue2796Test2([IncludeDataSources(true, TestProvName.AllPostgreSQL)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable<Issue2796Table>();
+
+			var record = new Issue2796Table()
+			{
+				RangeMappedAsDateTimeOffset = new NpgsqlRange<DateTimeOffset>(TestData.DateTimeOffset6Utc, TestData.DateTimeOffset6Utc.AddDays(1))
+			};
+
+			db.Insert(record);
+
+			var res = tb.Single();
+
+			Assert.That(res.RangeMappedAsDateTimeOffset, Is.EqualTo(record.RangeMappedAsDateTimeOffset));
+		}
+
+		[Table("test")]
+		public class Issue2796Table
+		{
+
+			[Column(DbType = "tstzrange")]
+			public NpgsqlRange<DateTimeOffset>? RangeMappedAsDateTimeOffset { get; set; }
+
+			[Column(DbType = "tstzrange")]
+			public NpgsqlRange<DateTime>? RangeMappedAsDateTime { get; set; }
+		}
+
+		#endregion
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/3352")]
+		public void Issue3352Test([IncludeDataSources(TestProvName.AllPostgreSQL)] string context)
+		{
+			// ensure we load schema correctly and issue is in scaffold code
+			using var db = GetDataConnection(context);
+
+			var schema = db.DataProvider.GetSchemaProvider().GetSchema(db, new GetSchemaOptions() { GetProcedures = true });
+
+			var functions = schema.Procedures.Where(p => p.ProcedureName == "overloads").ToArray();
+
+			Assert.That(functions, Has.Length.EqualTo(3));
+
+			var overload1 = functions.Where(f => f.Parameters.Count == 2).Single();
+			var overload2 = functions.Where(f => f.Parameters.Any(p => p.ParameterName == "input2" && p.SystemType == typeof(short))).Single();
+			var overload3 = functions.Where(f => f.Parameters.Count == 3 && !f.Parameters.Any(p => p.ParameterName == "input2" && p.SystemType == typeof(short))).Single();
+		}
+
+		#region Issue 4672
+		[Table]
+		sealed class Issue4672Table
+		{
+			[Column(IsIdentity = true)] public int Id { get; set; }
+			[Column(DbType = "interval")] public NodaTime.Period? Interval { get; set; }
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4672")]
+		public void Issue4672Test([IncludeDataSources(TestProvName.AllPostgreSQL)] string context, [Values] bool inline, [Values] BulkCopyType copyType)
+		{
+			IDataProvider dataProvider;
+			string?       connectionString;
+			using (var db2 = GetDataConnection(context))
+			{
+				dataProvider = db2.DataProvider;
+				connectionString = db2.ConnectionString;
+			}
+
+			var builder = new NpgsqlDataSourceBuilder(connectionString);
+			builder.UseNodaTime();
+			var dataSource = builder.Build();
+
+			using var db = GetDataConnection(context, o => o.UseConnectionFactory(dataProvider, _ => dataSource.CreateConnection()));
+			using var tb = db.CreateLocalTable<Issue4672Table>();
+
+			db.InlineParameters = inline;
+
+			// https://github.com/npgsql/npgsql/issues/5867
+			var item = new Issue4672Table() { Id = 1, Interval = NodaTime.Period.FromTicks(TestData.Interval.Ticks).Normalize() };
+			db.BulkCopy(new BulkCopyOptions() { BulkCopyType = copyType }, [item]);
+
+			var record = tb.Single();
+
+			// Period equality is not correct
+			Assert.That(record.Interval!.Ticks, Is.EqualTo(item.Interval.Ticks));
+		}
+		#endregion
+
+
+		sealed class JsonComparisonTable1
+		{
+			[Column                                ] public string? Text  { get; set; }
+			[Column(DataType = DataType.Json)      ] public string? Json  { get; set; }
+			[Column(DataType = DataType.BinaryJson)] public string? Jsonb { get; set; }
+		}
+
+		sealed class JsonComparisonTable2
+		{
+			[Column                  ] public string? Text  { get; set; }
+			[Column(DbType = "json") ] public string? Json  { get; set; }
+			[Column(DbType = "jsonb")] public string? Jsonb { get; set; }
+		}
+
+		[Test]
+		public void JsonComparison_ByDataType([IncludeDataSources(true, TestProvName.AllPostgreSQL)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable([new JsonComparisonTable1()
+			{
+				Text  = /*lang=json,strict*/ "{ \"field\": 123}",
+				Json  = /*lang=json,strict*/ "{  \"field\": 123}",
+				Jsonb = /*lang=json,strict*/ "{   \"field\": 123}",
+			}]);
+
+			Assert.Multiple(() =>
+			{
+				Assert.That(tb.Count(r => r.Text == r.Json), Is.EqualTo(1));
+				Assert.That(tb.Count(r => r.Text == r.Jsonb), Is.EqualTo(1));
+				Assert.That(tb.Count(r => r.Json == r.Json), Is.EqualTo(1));
+				Assert.That(tb.Count(r => r.Json == r.Jsonb), Is.EqualTo(1));
+				Assert.That(tb.Count(r => r.Jsonb == r.Jsonb), Is.EqualTo(1));
+
+				// reverse
+				Assert.That(tb.Count(r => r.Json == r.Text), Is.EqualTo(1));
+				Assert.That(tb.Count(r => r.Jsonb == r.Text), Is.EqualTo(1));
+				Assert.That(tb.Count(r => r.Jsonb == r.Json), Is.EqualTo(1));
+			});
+		}
+
+		[Test]
+		public void JsonComparison_ByDbType([IncludeDataSources(true, TestProvName.AllPostgreSQL)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable([new JsonComparisonTable2()
+			{
+				Text  = /*lang=json,strict*/ "{ \"field\": 123}",
+				Json  = /*lang=json,strict*/ "{  \"field\": 123}",
+				Jsonb = /*lang=json,strict*/ "{   \"field\": 123}",
+			}]);
+
+			Assert.Multiple(() =>
+			{
+				Assert.That(tb.Count(r => r.Text == r.Json), Is.EqualTo(1));
+				Assert.That(tb.Count(r => r.Text == r.Jsonb), Is.EqualTo(1));
+				Assert.That(tb.Count(r => r.Json == r.Json), Is.EqualTo(1));
+				Assert.That(tb.Count(r => r.Json == r.Jsonb), Is.EqualTo(1));
+				Assert.That(tb.Count(r => r.Jsonb == r.Jsonb), Is.EqualTo(1));
+
+				// reverse
+				Assert.That(tb.Count(r => r.Json == r.Text), Is.EqualTo(1));
+				Assert.That(tb.Count(r => r.Jsonb == r.Text), Is.EqualTo(1));
+				Assert.That(tb.Count(r => r.Jsonb == r.Json), Is.EqualTo(1));
+			});
+		}
 	}
 
+	#region Extensions
 	public static class TestPgAggregates
 	{
 		[Sql.Function("test_avg", ServerSideOnly = true, IsAggregate = true, ArgIndices = new[] { 1 })]
@@ -2716,4 +3332,5 @@ $function$
 			public int? param3 { get; set; }
 		}
 	}
+	#endregion
 }

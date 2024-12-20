@@ -5,7 +5,6 @@ using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Linq.Expressions;
-using System.Reflection;
 
 using JetBrains.Annotations;
 
@@ -233,10 +232,11 @@ namespace LinqToDB.EntityFrameworkCore
 		/// <param name="dc">LINQ To DB <see cref="IDataContext"/> instance.</param>
 		/// <param name="ctx">Optional DbContext instance.</param>
 		/// <param name="model">EF Core data model instance.</param>
+		/// <param name="isQueryExpression">Indicates that query may contain tracking information</param>
 		/// <returns>Transformed expression.</returns>
-		public static Expression TransformExpression(Expression expression, IDataContext? dc, DbContext? ctx, IModel? model)
+		public static Expression TransformExpression(Expression expression, IDataContext? dc, DbContext? ctx, IModel? model, bool isQueryExpression)
 		{
-			return Implementation.TransformExpression(expression, dc, ctx, model);
+			return Implementation.TransformExpression(expression, dc, ctx, model, isQueryExpression);
 		}
 
 		/// <summary>
@@ -447,29 +447,6 @@ namespace LinqToDB.EntityFrameworkCore
 		public static EFConnectionInfo GetConnectionInfo(EFProviderInfo info)
 		{
 			var connection = info.Connection;
-			string? connectionString = null;
-			if (connection != null)
-			{
-				var connectionStringFunc = _connectionStringExtractors.GetOrAdd(connection.GetType(), t =>
-				{
-					// NpgSQL workaround
-					var originalProp = t.GetProperty("OriginalConnectionString", BindingFlags.Instance | BindingFlags.NonPublic);
-					                                     
-					if (originalProp == null)
-						return c => c.ConnectionString;
-
-					var parameter = Expression.Parameter(typeof(DbConnection), "c");
-					var lambda = Expression.Lambda<Func<DbConnection, string>>(
-						Expression.MakeMemberAccess(Expression.Convert(parameter, t), originalProp), parameter);
-
-					return lambda.Compile();
-				});
-
-				connectionString = connectionStringFunc(connection);
-			}
-
-			if (connection != null && connectionString != null)
-				return new EFConnectionInfo { Connection = connection, ConnectionString = connectionString };
 
 			var extracted = Implementation.ExtractConnectionInfo(info.Options);
 

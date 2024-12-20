@@ -239,6 +239,29 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		public void UnionInheritanceFlipped([DataSources] string context)
+		{
+			using var db       = GetDataContext(context);
+			using var disposal = InitTestData(db);
+
+			var authorTable = db.GetTable<Author>();
+
+			var query1 =
+				from a in authorTable.LoadWith(a => a.Books)
+				from b in a.Books.OfType<Roman>()
+				select (Book)b;
+
+			var query2 =
+				from a in authorTable.LoadWith(a => a.Books)
+				from b in a.Books.OfType<Novel>()
+				select b;
+
+			var query = query2.Union(query1);
+
+			AssertQuery(query);
+		}
+
+		[Test]
 		public void ExceptInheritance([DataSources] string context)
 		{
 			using var db       = GetDataContext(context);
@@ -473,6 +496,27 @@ namespace Tests.Linq
 						return false;
 					}
 
+					if (x.Authors == null && y.Authors != null || x.Authors != null && y.Authors == null)
+					{
+						return false;
+					}
+
+					if (x.Authors != null && y.Authors != null)
+					{
+						if (x.Authors.Count != y.Authors.Count)
+						{
+							return false;
+						}
+
+						for (var i = 0; i < x.Authors.Count; i++)
+						{
+							if (x.Authors[i].AuthorName != y.Authors[i].AuthorName)
+							{
+								return false;
+							}
+						}
+					}
+
 					return x.BookType == y.BookType;
 				}
 
@@ -515,6 +559,37 @@ namespace Tests.Linq
 
 			AssertQuery(query, ByBookTypeResult.BookTypeComparer);
 		}
+
+		[Test]
+		public void EagerConcatWithSetsDifferentByConstantsWithSkip([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
+		{
+			using var db       = GetDataContext(context);
+			using var disposal = InitTestData(db);
+
+			var books = db.GetTable<Book>().LoadWith(b => b.Authors);
+
+			var query1 =
+				from b in books.OfType<Roman>()
+				select new ByBookTypeResult
+				{
+					BookType = "Roman",
+					Authors  = null
+				};
+
+			var query2 =
+				from b in books.OfType<Novel>()
+				select new ByBookTypeResult
+				{
+					BookType = "Novel",
+					Authors  = b.Authors.ToList()
+				};
+
+			var query = Combine(query1, query2, SetOperation.UnionAll).OrderByDescending(x => x.BookType).Skip(6);
+
+			AssertQuery(query, ByBookTypeResult.BookTypeComparer);
+		}
+
+
 
 		[Test]
 		public void EagerConcatWithSetsDifferentNullability([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)

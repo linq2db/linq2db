@@ -301,7 +301,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 			// explicit guard to avoid situations when query produce valid SQL after aliases stripped
 			if (deleteStatement.SelectQuery.From.Tables.Count != 1
 				|| deleteStatement.SelectQuery.From.Tables[0].Joins.Count != 0)
-				throw new LinqToDBException("Correlated DELETE not supported by ClickHouse");
+				throw new LinqToDBException(ErrorHelper.ClickHouse.Error_CorrelatedDelete);
 
 			AppendIndent();
 
@@ -340,7 +340,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 			// explicit guard to avoid situations when query produce valid SQL after aliases stripped
 			if (selectQuery.From.Tables.Count != 1
 				|| selectQuery.From.Tables[0].Joins.Count != 0)
-				throw new LinqToDBException("Correlated UPDATE not supported by ClickHouse");
+				throw new LinqToDBException(ErrorHelper.ClickHouse.Error_CorrelatedUpdate);
 
 			var old = _disableTableAliases;
 			_disableTableAliases = true;
@@ -412,6 +412,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 		#region CTE
 
 		protected override bool IsCteColumnListSupported => false;
+		protected override bool IsRecursiveCteKeywordRequired => true;
 
 		protected override void BuildCteBody(SelectQuery selectQuery)
 		{
@@ -602,6 +603,35 @@ namespace LinqToDB.DataProvider.ClickHouse
 		{
 			if (sqlBuilder is ClickHouseSqlBuilder { _finalHints: {} fh } )
 				(_finalHints ??= new()).AddRange(fh);
+		}
+
+		protected override void BuildTypedExpression(DbDataType dataType, ISqlExpression value)
+		{
+			if (ClickHouseSqlExpressionConvertVisitor.ClickHouseConvertFunctions.TryGetValue(dataType.DataType, out var name))
+			{
+				var saveStep = BuildStep;
+				BuildStep    = Step.TypedExpression;
+
+				StringBuilder
+					.Append(name)
+					.Append('(');
+				BuildExpression(value);
+
+				if (dataType.DataType is DataType.Decimal32 or DataType.Decimal64 or DataType.Decimal128 or DataType.Decimal256)
+				{
+					StringBuilder.Append(", ");
+					StringBuilder.Append((dataType.Scale ?? ClickHouseMappingSchema.DEFAULT_DECIMAL_SCALE).ToString(CultureInfo.InvariantCulture));
+				}
+				else if (dataType.DataType is DataType.DateTime64)
+				{
+					StringBuilder.Append(", ");
+					StringBuilder.Append((dataType.Precision ?? ClickHouseMappingSchema.DEFAULT_DATETIME64_PRECISION).ToString(CultureInfo.InvariantCulture));
+				}
+
+				StringBuilder.Append(')');
+
+				BuildStep = saveStep;
+			}
 		}
 	}
 }

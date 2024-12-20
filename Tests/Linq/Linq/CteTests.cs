@@ -4,17 +4,16 @@ using System.Linq;
 using System.Linq.Expressions;
 
 using LinqToDB;
+using LinqToDB.Data;
 using LinqToDB.Expressions;
+using LinqToDB.Linq;
 using LinqToDB.Mapping;
 using LinqToDB.Tools;
 using NUnit.Framework;
+using FluentAssertions;
 
 namespace Tests.Linq
 {
-	using FluentAssertions;
-
-	using LinqToDB.Data;
-	using LinqToDB.Linq;
 	using Model;
 
 	public class CteTests : TestBase
@@ -102,9 +101,6 @@ namespace Tests.Linq
 					join c3 in ncte3 on p.ParentID equals c3.ParentID
 					from c4 in db.Child.Where(c4 => c4.ParentID % 2 == 0).InnerJoin(c4 => c4.ParentID == c3.ParentID)
 					select c3;
-
-				var expectedStr = expected.ToString();
-				var resultdStr  = result.ToString();
 
 				// Looks like we do not populate needed field for CTE. It is aproblem that needs to be solved
 				AreEqual(expected, result);
@@ -206,9 +202,6 @@ namespace Tests.Linq
 					orderby p.CategoryName, p.UnitPrice, p.ProductName
 					select p;
 
-				var expectedStr = expected.ToString();
-				var resultdStr  = result.ToString();
-
 				AreEqual(expected, result);
 			}
 		}
@@ -247,9 +240,6 @@ namespace Tests.Linq
 						p.CategoryName,
 						p.UnitPrice
 					};
-
-				var expectedStr = expected.ToString();
-				var resultdStr  = result.ToString();
 
 				AreEqual(expected, result);
 			}
@@ -297,9 +287,6 @@ namespace Tests.Linq
 						p.ProductName,
 						p.UnitPrice
 					};
-
-				var expectedStr = expected.ToString();
-				var resultdStr  = result.ToString();
 
 				AreEqual(expected, result);
 			}
@@ -409,8 +396,6 @@ namespace Tests.Linq
 					orderby eh.HierarchyLevel, eh.LastName, eh.FirstName
 					select eh;
 
-				var resultdStr  = result.ToString();
-
 				var data = result.ToArray();
 			}
 		}
@@ -429,9 +414,6 @@ namespace Tests.Linq
 				var expected = from p in _cte1
 					from c4 in db.Child.Where(c4 => c4.ParentID % 2 == 0).InnerJoin(c4 => c4.ParentID == p.ParentID)
 					select c4;
-
-				var expectedStr = expected.ToString();
-				var resultdStr  = result.ToString();
 
 				AreEqual(expected, result);
 			}
@@ -568,9 +550,9 @@ namespace Tests.Linq
 				var cte = db.GetTable<Child>().AsCte();
 
 				var query = cte.Where(t => t.ChildID == var3 || var3 == null);
-				var str = query.ToString()!;
+				var str = query.ToSqlQuery().Sql;
 
-				TestContext.Out.WriteLine(str);
+				query.ToArray();
 
 				Assert.That(str.Contains("WITH"), Is.EqualTo(true));
 			}
@@ -667,7 +649,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void RecursiveTest([CteContextSource(true, ProviderName.DB2, TestProvName.AllClickHouse, TestProvName.AllInformix, TestProvName.AllSapHana)] string context)
+		public void RecursiveTest([CteContextSource(true, ProviderName.DB2, TestProvName.AllSapHana, TestProvName.AllInformix)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -696,7 +678,6 @@ namespace Tests.Linq
 						)
 					, "MY_CTE");
 
-				var str = cteRecursive.ToString();
 				var result = cteRecursive.ToArray();
 			}
 		}
@@ -790,7 +771,7 @@ namespace Tests.Linq
 
 		[ActiveIssue(3015, Configuration = TestProvName.AllSapHana)]
 		[Test]
-		public void RecursiveTest2([CteContextSource(true, ProviderName.DB2, TestProvName.AllClickHouse)] string context)
+		public void RecursiveTest2([CteContextSource(true, ProviderName.DB2)] string context)
 		{
 			var hierarchyData = GeHirarchyData();
 
@@ -808,7 +789,7 @@ namespace Tests.Linq
 
 		[ActiveIssue(3015, Configuration = TestProvName.AllSapHana)]
 		[Test]
-		public void TestDoubleRecursion([CteContextSource(true, ProviderName.DB2, TestProvName.AllClickHouse)] string context)
+		public void TestDoubleRecursion([CteContextSource(true, ProviderName.DB2)] string context)
 		{
 			var hierarchyData = GeHirarchyData();
 
@@ -834,7 +815,7 @@ namespace Tests.Linq
 
 		[ActiveIssue(3015, Configuration = TestProvName.AllSapHana)]
 		[Test]
-		public void RecursiveCount([CteContextSource(true, ProviderName.DB2, TestProvName.AllClickHouse)] string context)
+		public void RecursiveCount([CteContextSource(true, ProviderName.DB2)] string context)
 		{
 			var hierarchyData = GeHirarchyData();
 
@@ -850,7 +831,7 @@ namespace Tests.Linq
 
 		[ActiveIssue(3015, Configurations = [TestProvName.AllSapHana, TestProvName.AllInformix])]
 		[Test]
-		public void RecursiveInsertInto([CteContextSource(true, ProviderName.DB2, TestProvName.AllClickHouse)] string context)
+		public void RecursiveInsertInto([CteContextSource(true, ProviderName.DB2)] string context)
 		{
 			var hierarchyData = GeHirarchyData();
 
@@ -869,7 +850,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void RecursiveDeepNesting([CteContextSource(true, ProviderName.DB2)] string context)
+		public void RecursiveDeepNesting([CteContextSource(true, TestProvName.AllDB2, TestProvName.AllSapHana)] string context)
 		{
 			using (var db   = GetDataContext(context))
 			using (var tree = db.CreateLocalTable<HierarchyTree>())
@@ -887,7 +868,7 @@ namespace Tests.Linq
 						q.Level
 					};
 
-				Assert.DoesNotThrow(() => TestContext.Out.WriteLine(query.ToString()));
+				query.ToArray();
 			}
 		}
 
@@ -1015,7 +996,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestEmbedded([CteContextSource(TestProvName.AllClickHouse)] string context)
+		public void TestEmbedded([CteContextSource] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1029,7 +1010,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestCteOptimization([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
+		public void TestCteOptimization([IncludeDataSources(TestProvName.AllSQLite)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1040,8 +1021,8 @@ namespace Tests.Linq
 					from ct in children.LeftJoin(ct => c.ChildID == ct.ChildID)
 					select c;
 
-				var sql = query.ToString();
-				TestContext.Out.WriteLine(sql);
+				query.ToArray();
+				var sql = query.ToSqlQuery().Sql;
 
 				Assert.That(sql, Is.Not.Contains("WITH"));
 			}
@@ -1049,7 +1030,7 @@ namespace Tests.Linq
 
 		[ActiveIssue(3015, Configuration = TestProvName.AllSapHana)]
 		[Test]
-		public void TestRecursiveScalar([CteContextSource(TestProvName.AllClickHouse)] string context)
+		public void TestRecursiveScalar([CteContextSource] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1169,8 +1150,7 @@ namespace Tests.Linq
 		[Test]
 		public void Issue2029Test([CteContextSource(TestProvName.AllClickHouse)] string context)
 		{
-			using (new GenerateFinalAliases(true))
-			using (var db = GetDataContext(context))
+			using (var db = GetDataContext(context, o => o.UseGenerateFinalAliases(true)))
 			using (db.CreateLocalTable<NcCode>())
 			using (db.CreateLocalTable<NcGroupMember>())
 			{
@@ -1179,7 +1159,9 @@ namespace Tests.Linq
 				var ncCodeBo = "NCCodeBO:8110,SETUP_OSCILLOSCO";
 
 				var result = from item in wipCte.AllowedNcCode() where item.NcCodeBo == ncCodeBo select item;
-				var sql = ((IExpressionQuery)result).SqlText;
+				result.ToArray();
+
+				var sql = result.ToSqlQuery().Sql;
 
 				Assert.That(sql.Replace("\"", "").Replace("`", "").Replace("[", "").Replace("]", "").ToLowerInvariant(), Does.Contain("WITH AllowedNcCode (NcCodeBo, NcCode, NcCodeDescription)".ToLowerInvariant()));
 			}
@@ -1246,7 +1228,6 @@ namespace Tests.Linq
 
 		[Test(Description = "Test that we generate plain UNION without sub-queries (or query will be invalid)")]
 		public void Issue3359_MultipleSets([CteContextSource(
-			TestProvName.AllClickHouse,
 			TestProvName.AllInformix,
 			TestProvName.AllSapHana,
 			TestProvName.AllOracle, // too many unions (ORA-32041: UNION ALL operation in recursive WITH clause must have only two branches)
@@ -1306,7 +1287,7 @@ namespace Tests.Linq
 
 		[ActiveIssue(3015, Configuration = TestProvName.AllSapHana)]
 		[Test(Description = "record type support")]
-		public void Issue3357_RecordClass([CteContextSource(TestProvName.AllClickHouse)] string context)
+		public void Issue3357_RecordClass([CteContextSource] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -1327,7 +1308,7 @@ namespace Tests.Linq
 
 		[ActiveIssue(3015, Configuration = TestProvName.AllSapHana)]
 		[Test(Description = "record type support")]
-		public void Issue3357_RecordLikeClass([CteContextSource(TestProvName.AllClickHouse)] string context)
+		public void Issue3357_RecordLikeClass([CteContextSource] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -1360,8 +1341,6 @@ namespace Tests.Linq
 			public string? Str  { get; set; }
 		}
 
-		// SqlException : Types don't match between the anchor and the recursive part in column "Str" of recursive query "cte".
-		[ActiveIssue]
 		[Test(Description = "Test that we type literal/parameter in set query column properly")]
 		public void Issue3360_TypeByOtherQuery([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
 		{
@@ -1383,7 +1362,7 @@ namespace Tests.Linq
 			if (db is TestDataConnection dc)
 			{
 				dc.LastQuery!.Should().NotContain("N'");
-				dc.LastQuery!.ToUpperInvariant().Should().Contain("AS VARCHAR(MAX))", Exactly.Twice());
+				dc.LastQuery!.ToUpperInvariant().Should().Contain("AS VARCHAR(MAX))", Exactly.Once());
 			}
 		}
 
@@ -1407,9 +1386,8 @@ namespace Tests.Linq
 			query.ToArray();
 		}
 
-		[ActiveIssue(3015, Configurations = [TestProvName.AllClickHouse, TestProvName.AllSqlServer, TestProvName.AllSapHana])]
 		[Test(Description = "Test that we don't need typing for non-sqlserver providers")]
-		public void Issue3360_TypeByOtherQuery_AllProviders([CteContextSource(ProviderName.DB2)] string context)
+		public void Issue3360_TypeByOtherQuery_AllProviders([CteContextSource(ProviderName.DB2, TestProvName.AllSapHana)] string context)
 		{
 			using var db = GetDataContext(context);
 			using var tb = db.CreateLocalTable<Issue3360Table>();
@@ -1449,7 +1427,6 @@ namespace Tests.Linq
 			public StrEnum Str { get; set; }
 		}
 
-		[ActiveIssue]
 		[Test(Description = "Test that we type literal/parameter in set query column properly")]
 		public void Issue3360_TypeStringEnum([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
 		{
@@ -1472,13 +1449,12 @@ namespace Tests.Linq
 			{
 				dc.LastQuery!.Should().NotContain("N'");
 				dc.LastQuery!.Should().Contain("'THIS_IS_TWO'");
-				dc.LastQuery!.ToUpperInvariant().Should().Contain("AS VARCHAR(MAX))", Exactly.Twice());
+				dc.LastQuery!.ToUpperInvariant().Should().Contain("AS VARCHAR(50))", Exactly.Once());
 			}
 		}
 
-		[ActiveIssue(3015, Configurations = [TestProvName.AllClickHouse, TestProvName.AllPostgreSQL, TestProvName.AllSqlServer, TestProvName.AllSapHana])]
 		[Test(Description = "Test that we don't need typing for non-sqlserver providers")]
-		public void Issue3360_TypeStringEnum_AllProviders([CteContextSource(ProviderName.DB2)] string context)
+		public void Issue3360_TypeStringEnum_AllProviders([CteContextSource(ProviderName.DB2, TestProvName.AllSapHana)] string context)
 		{
 			using var db = GetDataContext(context);
 			using var tb = db.CreateLocalTable<Issue3360WithEnum>();
@@ -1516,7 +1492,6 @@ namespace Tests.Linq
 			query.ToArray();
 		}
 
-		[ActiveIssue]
 		[Test(Description = "Test that we type literal/parameter in set query column properly")]
 		public void Issue3360_TypeByProjectionProperty([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
 		{
@@ -1541,9 +1516,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue(3015, Configurations = [TestProvName.AllClickHouse, TestProvName.AllSapHana])]
 		[Test(Description = "Test that we don't need typing for non-sqlserver providers")]
-		public void Issue3360_TypeByProjectionProperty_AllProviders([CteContextSource(ProviderName.DB2)] string context)
+		public void Issue3360_TypeByProjectionProperty_AllProviders([CteContextSource(ProviderName.DB2, TestProvName.AllSapHana)] string context)
 		{
 			using var db = GetDataContext(context);
 			using var tb = db.CreateLocalTable<Issue3360Table>();
@@ -1592,9 +1566,9 @@ namespace Tests.Linq
 			[Column(DataType = DataType.VarChar, Length = 50)] public StrEnum?  Enum1 { get; set; }
 		}
 
-		[ActiveIssue(3015, Configurations = [TestProvName.AllClickHouse, TestProvName.AllSqlServer, TestProvName.AllSapHana])]
+		[ActiveIssue(Configurations = [TestProvName.AllSqlServer])]
 		[Test(Description = "Test CTE columns typing")]
-		public void Issue3360_NullGuidInAnchor([CteContextSource(TestProvName.AllFirebird, ProviderName.DB2)] string context)
+		public void Issue3360_NullGuidInAnchor([CteContextSource(TestProvName.AllFirebird, ProviderName.DB2, TestProvName.AllSapHana)] string context)
 		{
 			using var db = GetDataContext(context);
 			using var tb = db.CreateLocalTable<Issue3360NullInAnchor>();
@@ -1612,9 +1586,9 @@ namespace Tests.Linq
 			query.ToArray();
 		}
 
-		[ActiveIssue(3015, Configurations = [TestProvName.AllClickHouse, TestProvName.AllPostgreSQL, TestProvName.AllSqlServer, TestProvName.AllSapHana])]
+		[ActiveIssue(Configurations = [TestProvName.AllSqlServer])]
 		[Test(Description = "Test CTE columns typing")]
-		public void Issue3360_NullEnumInAnchor([CteContextSource(ProviderName.DB2)] string context)
+		public void Issue3360_NullEnumInAnchor([CteContextSource(ProviderName.DB2, TestProvName.AllSapHana)] string context)
 		{
 			using var db = GetDataContext(context);
 			using var tb = db.CreateLocalTable<Issue3360NullInAnchor>();
@@ -1753,7 +1727,7 @@ namespace Tests.Linq
 
 		private record Issue3360NullsRecord(int Id, byte? Byte, byte? ByteN, Guid? Guid, Guid? GuidN, InvalidColumnIndexMappingEnum1? Enum, InvalidColumnIndexMappingEnum2? EnumN, bool? Bool, bool? BoolN);
 
-		[ActiveIssue(3015, Configurations = [TestProvName.AllClickHouse, TestProvName.AllFirebird, TestProvName.AllMySql, TestProvName.AllPostgreSQL, TestProvName.AllSqlServer, TestProvName.AllSapHana])]
+		[ActiveIssue(3015, Configurations = [TestProvName.AllClickHouse, TestProvName.AllFirebird, TestProvName.AllMySql, TestProvName.AllSqlServer, TestProvName.AllSapHana])]
 		[Test(Description = "null literals in anchor query (for known problematic types)")]
 		public void Issue3360_NullsInAnchor([CteContextSource] string context)
 		{
@@ -1847,7 +1821,7 @@ namespace Tests.Linq
 			});
 		}
 
-		[ActiveIssue(Configurations = [TestProvName.AllClickHouse, TestProvName.AllOracle, TestProvName.AllSqlServer])]
+		[ActiveIssue(Configurations = [TestProvName.AllSQLite])]
 		[Test(Description = "literals in anchor query")]
 		public void Issue3360_LiteralsInAnchor([CteContextSource(TestProvName.AllInformix, TestProvName.AllSapHana)] string context)
 		{
@@ -1921,9 +1895,9 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue(3015, Configurations = [TestProvName.AllClickHouse, TestProvName.AllPostgreSQL, TestProvName.AllSqlServer, TestProvName.AllSapHana])]
+		[ActiveIssue(Configurations = [TestProvName.AllPostgreSQL, TestProvName.AllSqlServer])]
 		[Test(Description = "Test that other providers work")]
-		public void Issue2451_ComplexColumn_All([CteContextSource(ProviderName.DB2)] string context)
+		public void Issue2451_ComplexColumn_All([CteContextSource(ProviderName.DB2, TestProvName.AllSapHana)] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -1981,7 +1955,7 @@ namespace Tests.Linq
 
 		[ActiveIssue(3015, Configuration = TestProvName.AllSapHana)]
 		[Test(Description = "Recursive common table expression 'CTE' does not contain a top-level UNION ALL operator.")]
-		public void Issue2264([CteContextSource(TestProvName.AllClickHouse)] string context)
+		public void Issue2264([CteContextSource] string context)
 		{
 			using var db = GetDataContext(context);
 			using var tb = db.CreateLocalTable<TestFolder>();
@@ -2133,7 +2107,6 @@ namespace Tests.Linq
 			{
 				Assert.That(result[0].ID, Is.EqualTo(11));
 				Assert.That(result[0].FirstName, Is.EqualTo("FN2"));
-				Assert.That(result[0].LastName, Is.Null);
 				Assert.That(result[0].MiddleName, Is.Null);
 				Assert.That(result[0].Gender, Is.EqualTo(Gender.Female));
 			});
@@ -2162,6 +2135,432 @@ namespace Tests.Linq
 				Assert.That(data[0].Patient!.Diagnosis, Is.Not.Null);
 				Assert.That(count, Is.EqualTo(4));
 			});
+		}
+
+		[Test]
+		public void IssueCteDuplicateColumn([CteContextSource] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var cte1 = db.Parent
+				.Where(r => r.Value1 != null)
+				.Select(c => new DuplicateColumnRecord(c.ParentID, c.Value1!.Value))
+				.AsCte();
+
+			var cte2 = db.Parent
+				.Where(r => r.Value1 != null)
+				.Select(p => new DuplicateColumnRecord(p.ParentID, p.Value1!.Value))
+				.AsCte();
+
+			var cte3 = cte2
+				.Concat(
+				from record1 in cte2
+				join record2 in cte1 on record1.Id2 equals record2.Id1
+				select new DuplicateColumnRecord(record1.Id1, record2.Id2))
+				.AsCte();
+
+			cte3.ToArray();
+		}
+
+		private sealed record DuplicateColumnRecord(int Id1, int Id2);
+
+		#region Issue 4366
+		sealed class Dto
+		{
+			public int id { get; set; }
+			public string name { get; set; } = null!;
+			public int? parent_id { get; set; }
+			public string? FullName;
+		}
+
+		class DtoMapped
+		{
+			public Dto Dto { get; set; } = null!;
+			public string? FullName;
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4366")]
+		public void Issue4366Test1([CteContextSource(TestProvName.AllSapHana)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable<Dto>();
+
+			db.GetCte<Dto>(d =>
+			(from a in tb
+			 where a.parent_id == null
+			 select new Dto
+			 {
+				 id = a.id,
+				 parent_id = a.parent_id,
+				 name = a.name,
+				 FullName = a.name
+			 })
+			 .Concat(
+				from b in tb
+				from recur in d.InnerJoin(dd => dd.id == b.parent_id)
+				select new Dto
+				{
+					id = b.id,
+					parent_id = b.parent_id,
+					name = b.name,
+					FullName = recur.FullName + " > " + b.name
+				})).ToList();
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4366")]
+		public void Issue4366Test2([CteContextSource(TestProvName.AllSapHana)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable<Dto>();
+
+			db.GetCte<DtoMapped>(d =>
+			(from a in tb
+			 where a.parent_id == null
+			 select new DtoMapped
+			 {
+				 Dto = a,
+				 FullName = a.name
+			 })
+			 .Concat(
+				from b in tb
+				from recur in d.InnerJoin(dd => dd.Dto.id == b.parent_id)
+				select new DtoMapped
+				{
+					Dto = b,
+					FullName = recur.FullName + " > " + b.name
+				})).ToList();
+		}
+		#endregion
+
+		#region Issue 1845
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/1845")]
+		public void Issue1845Test([CteContextSource] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var someCte = db.Person.Select(o => new CustomObject()
+			{
+				Value1 = o.FirstName,
+				Value2 = o.LastName,
+			}).AsCte();
+
+			var defaultValue1 = "Somebody";
+			var defaultValue2 = "Unimportant";
+			var defaultValue = new List<CustomObject>()
+			{
+				new CustomObject()
+				{
+					Value1 = defaultValue1,
+					Value2 = defaultValue2,
+				}
+			};
+
+			var query = someCte.Union(defaultValue).AsCte();
+
+			query.ToList();
+		}
+
+		sealed class CustomObject
+		{
+			public string? Value1 { get; set; }
+			public string? Value2 { get; set; }
+		}
+		#endregion
+
+		// CH: probably this https://github.com/ClickHouse/ClickHouse/issues/64794
+		[ActiveIssue(Details = "Investigate expected SQL", Configuration = TestProvName.AllClickHouse)]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4012")]
+		public void Issue4012Test([CteContextSource(TestProvName.AllSapHana)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var cte1 = db.GetCte<Child>(cte =>
+			{
+				return db.Child
+				.Concat
+				(
+					from c in db.Child
+					from c2 in cte.InnerJoin(eh => c.ChildID == eh.ParentID)
+					select c
+				);
+			});
+			var cte2 = db.GetCte<Child>(cte =>
+			{
+				return db.Child
+				.Concat
+				(
+					from c in db.Child
+					from c2 in cte.InnerJoin(eh => c.ParentID == eh.ChildID)
+					select c
+				);
+			});
+
+			var result = cte1.Union(cte2);
+
+			var resultList = result.LoadWith(c => c.GrandChildren).ToList();
+		}
+
+		#region Issue 4717
+		[Table]
+		public record Issue4717Address
+		{
+			[PrimaryKey] public int Id { get; set; }
+			[Column] public string? Address1 { get; set; }
+			[Column] public string? City { get; set; }
+			[Column] public string? State { get; set; }
+			[Column] public string? Zip { get; set; }
+		}
+
+		[Table]
+		public class Issue4717Warehouse
+		{
+			[PrimaryKey] public int Id { get; set; }
+			[Column] public string? Name { get; set; }
+			[Column] public int AddressId { get; set; }
+		}
+
+		[Table]
+		public record Issue4717UnitOfMeasure
+		{
+			[PrimaryKey] public int Id { get; set; }
+			[Column] public string? Name { get; set; }
+			[Column] public string? Abbreviation { get; set; }
+		}
+
+		[Table]
+		public record Issue4717Product
+		{
+			[PrimaryKey] public int Id { get; set; }
+			[Column] public string? Description { get; set; }
+			[Column] public string? Sku { get; set; }
+			[Column] public int UnitOfMeasureId { get; set; }
+		}
+
+		[Table]
+		[Table("Issue4717ProductIncludedProduc", Configuration = ProviderName.Oracle11Native)]
+		[Table("Issue4717ProductIncludedProduc", Configuration = ProviderName.Oracle11Managed)]
+		[Table("Issue4717ProductIncludedProduc", Configuration = TestProvName.Oracle11DevartOCI)]
+		[Table("Issue4717ProductIncludedProduc", Configuration = TestProvName.Oracle11DevartDirect)]
+		[Table("Issue4717ProductIncludedProduct", Configuration = ProviderName.Firebird25)]
+		[Table("Issue4717ProductIncludedProduct", Configuration = ProviderName.Firebird3)]
+		public record Issue4717ProductIncludedProductMapping
+		{
+			[PrimaryKey] public int ProductId { get; set; }
+			[PrimaryKey] public int IncludedProductId { get; set; }
+			[Column] public decimal Quantity { get; set; }
+		}
+
+		[Table]
+		[Table("Issue4717WarehouseProductMappi", Configuration = ProviderName.Oracle11Native)]
+		[Table("Issue4717WarehouseProductMappi", Configuration = ProviderName.Oracle11Managed)]
+		[Table("Issue4717WarehouseProductMappi", Configuration = TestProvName.Oracle11DevartOCI)]
+		[Table("Issue4717WarehouseProductMappi", Configuration = TestProvName.Oracle11DevartDirect)]
+		[Table("Issue4717WarehouseProductMappin", Configuration = ProviderName.Firebird25)]
+		[Table("Issue4717WarehouseProductMappin", Configuration = ProviderName.Firebird3)]
+		public record Issue4717WarehouseProductMapping
+		{
+			[PrimaryKey] public int WarehouseId { get; set; }
+			[PrimaryKey] public int ProductId { get; set; }
+			[Column(Precision = 10, Scale = 0)] public decimal StockOnHand { get; set; }
+		}
+
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllClickHouse, ErrorMessage = ErrorHelper.Error_Correlated_Subqueries)]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4717")]
+		public void Issue4717Test([CteContextSource] string context)
+		{
+			using var db = GetDataContext(context);
+
+			using var addressTable = db.CreateLocalTable<Issue4717Address>();
+			using var warehouseTable = db.CreateLocalTable<Issue4717Warehouse>();
+			using var unitOfMeasureTable = db.CreateLocalTable<Issue4717UnitOfMeasure>();
+			using var productTable = db.CreateLocalTable<Issue4717Product>();
+			using var productIncludedProductMappingTable = db.CreateLocalTable<Issue4717ProductIncludedProductMapping>();
+			using var warehouseProductMappingTable = db.CreateLocalTable<Issue4717WarehouseProductMapping>();
+
+			addressTable.Insert(() => new Issue4717Address()
+			{
+				Id = 1,
+				Address1 = "123 Test St",
+				City = "Test City",
+				State = "TS",
+				Zip = "12345"
+			});
+
+			warehouseTable.Insert(() => new Issue4717Warehouse()
+			{
+				Id = 1,
+				Name = "Test Warehouse",
+				AddressId = 1
+			});
+
+			unitOfMeasureTable.Insert(() => new Issue4717UnitOfMeasure()
+			{
+				Id = 1,
+				Name = "Test Warehouse",
+				Abbreviation = "ea"
+			});
+
+			var productId = 1;
+			productTable.Insert(() => new Issue4717Product()
+			{
+				Id = productId,
+				Sku = "123-SKU",
+				Description = "Test 123 Sku",
+				UnitOfMeasureId = 1
+			});
+
+			var includedProductId = 2;
+			productTable.Insert(() => new Issue4717Product()
+			{
+				Id = includedProductId,
+				Sku = "ABC-SKU",
+				Description = "Test ABC Sku",
+				UnitOfMeasureId = 1
+			});
+
+			productIncludedProductMappingTable.Insert(() => new Issue4717ProductIncludedProductMapping()
+			{
+				ProductId = productId,
+				IncludedProductId = includedProductId,
+				Quantity = 10
+			});
+
+			warehouseProductMappingTable.Insert(() => new Issue4717WarehouseProductMapping
+			{
+				WarehouseId = 1,
+				ProductId = productId,
+				StockOnHand = 10
+			});
+
+			var sourceQuery = from w in warehouseTable
+							  select new
+							  {
+								  ProductId = productId,
+								  WarehouseId = w.Id,
+							  };
+
+			sourceQuery = sourceQuery.AsCte();
+			var query = from source in sourceQuery
+						join includedProductMapping in productIncludedProductMappingTable on source.ProductId equals includedProductMapping.ProductId
+						select new
+						{
+							source.ProductId,
+							first = (from wp in warehouseProductMappingTable
+									 where wp.WarehouseId == source.WarehouseId
+									 select (decimal?)wp.StockOnHand
+									 ).FirstOrDefault() ?? 0,
+							sum = (from wp in warehouseProductMappingTable
+								   where wp.WarehouseId == source.WarehouseId
+								   select (decimal?)wp.StockOnHand
+								   ).Sum() ?? 0,
+						};
+
+			var result = query.ToList();
+
+			Assert.That(result, Has.Count.EqualTo(1));
+			Assert.Multiple(() =>
+			{
+				Assert.That(result[0].ProductId, Is.EqualTo(1));
+				Assert.That(result[0].first, Is.EqualTo(10));
+				Assert.That(result[0].sum, Is.EqualTo(10));
+			});
+		}
+		#endregion
+
+		[Table(Name = "Authors")]
+		public class Author
+		{
+			[PrimaryKey]
+			public int Id { get; set; }
+
+			[Column(Name = "Name"), NotNull]
+			public string Name { get; set; } = null!;
+
+			// 1:1 relationship to Book
+			[Association(ThisKey = "Id", OtherKey = "AuthorId", CanBeNull = true)]
+			public Book? Book { get; set; }
+
+			public static Author[] Data =
+			[
+				new Author() { Id = 1, Name = "John" },
+				new Author() { Id = 2, Name = "Steven" },
+				new Author() { Id = 3, Name = "Smith" },
+			];
+		}
+
+		[Table(Name = "Books")]
+		public class Book
+		{
+			[PrimaryKey]
+			public int Id { get; set; }
+
+			[Column(Name = "Title"), NotNull]
+			public string Title { get; set; } = null!;
+
+			[Column(Name = "AuthorId"), NotNull]
+			public int AuthorId { get; set; }
+
+			// 1:1 relationship to Author
+			[Association(ThisKey = "AuthorId", OtherKey = "Id", CanBeNull = false)]
+			public Author Author { get; set; } = null!;
+
+			public static Book[] Data =
+			[
+				new Book() { Id = 1, AuthorId = 1, Title = "Something" },
+				new Book() { Id = 2, AuthorId = 2, Title = "Book" },
+				new Book() { Id = 3, AuthorId = 3, Title = "Boring" },
+			];
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4012")]
+		public void TestAssociations([CteContextSource(TestProvName.AllSapHana)] string context)
+		{
+			using var db      = GetDataContext(context);
+			using var books   = db.CreateLocalTable<Book>();
+			using var authors = db.CreateLocalTable<Author>();
+
+			var booksQuery = db.GetTable<Book>().AsCte("BooksCte");
+
+			booksQuery = booksQuery.Where(b => b.Author.Name == "Steven");
+			var result = booksQuery.Select(b => b.Title).ToArray();
+		}
+
+		[Test]
+		public void UnionCteWithFilter([CteContextSource] string context)
+		{
+			using var db      = GetDataContext(context);
+			using var books   = db.CreateLocalTable(Book.Data);
+			using var authors = db.CreateLocalTable(Author.Data);
+
+			var booksQuery = db.GetTable<Book>()
+				.Select(b => new
+				{
+					Book = b, 
+					b.Author
+				})
+				.AsCte("BooksCte");
+
+			var query1 = booksQuery.Select(r => new
+			{
+				Book = (Book?)r.Book, 
+				Author = (Author?)null
+			});
+
+			var query2 = booksQuery.Select(r => new
+			{
+				Book = (Book?)null, 
+				Author = (Author?)r.Author
+			});
+
+			var query = query1
+				.Concat(query2)
+				.Where(r => r.Author!.Name == "Steven" || r.Book!.Title == "Something");
+
+			var result = query.Select(b => Sql.ToNullable(b.Book!.Id)).ToArray();
+
+			Assert.That(result, Has.Length.EqualTo(2));
+			Assert.That(result, Contains.Item(1));
+			Assert.That(result, Contains.Item(null));
 		}
 	}
 }

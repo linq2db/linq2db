@@ -33,7 +33,8 @@ namespace Tests.UserTests
 			private void AddConditions(SqlStatement statement)
 			{
 				if (statement.SelectQuery?.Where.IsEmpty == false)
-					statement.SelectQuery.Where.SearchCondition.Add(new SqlPredicate.Expr(new SqlExpression("'one' != 'two'"), 0));
+					statement.SelectQuery.Where.SearchCondition.Add(new SqlPredicate.Expr(
+						new SqlExpression(typeof(bool), "'one' != 'two'", Precedence.Comparison, SqlFlags.IsPredicate, ParametersNullabilityType.IfAllParametersNullable, null), 0));
 			}
 		}
 
@@ -72,8 +73,8 @@ namespace Tests.UserTests
 									c
 								};
 
-					var str = query.ToString()!;
-					Assert.That(str, Does.Contain("'one' != 'two'"));
+					Assert.That(query.ToSqlQuery().Sql, Does.Contain("'one' != 'two'"));
+
 					var _ = query.ToArray();
 				}
 			}

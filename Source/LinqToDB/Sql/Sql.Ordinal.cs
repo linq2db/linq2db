@@ -32,7 +32,7 @@ namespace LinqToDB
 		/// <typeparam name="T"></typeparam>
 		/// <param name="expression"></param>
 		/// <returns>The same <paramref name="expression"/> when calling directly.</returns>
-		/// <exception cref="LinqException">Exception is throw when used not in OrderBy/ThenBy extension methods.</exception>
+		/// <exception cref="LinqToDBException">Exception is throw when used not in OrderBy/ThenBy extension methods.</exception>
 		public static T Ordinal<T>(T expression) => expression;
 	}
 }

@@ -7,13 +7,11 @@ using System.Reflection;
 
 namespace LinqToDB.Linq.Builder
 {
-	using Common;
 	using Extensions;
 	using LinqToDB.Expressions;
 	using Mapping;
 	using Reflection;
 	using SqlQuery;
-	using Tools;
 
 	partial class TableBuilder
 	{
@@ -56,8 +54,7 @@ namespace LinqToDB.Linq.Builder
 				EntityDescriptor = mappingSchema.GetEntityDescriptor(ObjectType, Builder.DataOptions.ConnectionOptions.OnEntityDescriptorCreated);
 				SqlTable         = new SqlTable(EntityDescriptor);
 
-				if (!buildInfo.IsTest || buildInfo.IsSubQuery)
-					SelectQuery.From.Table(SqlTable);
+				SelectQuery.From.Table(SqlTable);
 
 				Init(true);
 			}
@@ -113,10 +110,10 @@ namespace LinqToDB.Linq.Builder
 				var attr = mc.Method.GetTableFunctionAttribute(mappingSchema);
 
 				if (attr == null)
-					throw new LinqException($"Method '{mc.Method}' has no '{nameof(Sql.TableFunctionAttribute)}'.");
+					throw new LinqToDBException($"Method '{mc.Method}' has no '{nameof(Sql.TableFunctionAttribute)}'.");
 
 				if (!typeof(IQueryable<>).IsSameOrParentOf(mc.Method.ReturnType))
-					throw new LinqException("Table function has to return IQueryable<T>.");
+					throw new LinqToDBException("Table function has to return IQueryable<T>.");
 
 				OriginalType     = mc.Method.ReturnType.GetGenericArguments()[0];
 				ObjectType       = GetObjectType();
@@ -127,19 +124,20 @@ namespace LinqToDB.Linq.Builder
 
 				attr.SetTable(builder.DataOptions, (context: this, builder), builder.DataContext.CreateSqlProvider(), mappingSchema, SqlTable, mc, static (context, a, _, inline) =>
 				{
-					if (context.builder.CanBeCompiled(a, false))
+					if (context.builder.CanBeEvaluatedOnClient(a))
 					{
-						var param = context.builder.ParametersContext.BuildParameter(context.context, a, columnDescriptor : null, forceConstant : true, doNotCheckCompatibility : true);
+						var param = context.builder.ParametersContext.BuildParameter(context.context, a, columnDescriptor : null, doNotCheckCompatibility : true, forceNew: false);
 						if (param != null)
 						{
 							if (inline == true)
 							{
-								param.SqlParameter.IsQueryParameter = false;
+								param.IsQueryParameter = false;
 							}
-							return new SqlPlaceholderExpression(null, param.SqlParameter, a);
+							return new SqlPlaceholderExpression(null, param, a);
 						}
 					}
-					return context.builder.ConvertToSqlExpr(context.context, a);
+
+					return context.builder.BuildSqlExpression(context.context, a);
 				});
 
 				builder.RegisterExtensionAccessors(mc);
@@ -166,13 +164,11 @@ namespace LinqToDB.Linq.Builder
 			{
 				InheritanceMapping = EntityDescriptor.InheritanceMapping;
 
-				// Original table is a parent.
-				//
-				if (applyFilters && ObjectType != OriginalType)
+				if (applyFilters && InheritanceMapping.Count > 0)
 				{
 					var predicate = Builder.MakeIsPredicate(this, OriginalType);
 
-					if (predicate.GetType() != typeof(SqlPredicate.Expr))
+					if (predicate != null)
 						SelectQuery.Where.EnsureConjunction().Add(predicate);
 				}
 			}
@@ -181,13 +177,25 @@ namespace LinqToDB.Linq.Builder
 
 			public override Expression MakeExpression(Expression path, ProjectFlags flags)
 			{
-				if (flags.IsRoot() || flags.IsAssociationRoot() || flags.IsExtractProjection() || flags.IsAggregationRoot())
+				if (flags.IsRoot() || flags.IsAssociationRoot() || flags.IsAggregationRoot() || flags.IsTraverse() || flags.IsExtractProjection() || flags.IsSubquery())
 					return path;
 
 				if (SequenceHelper.IsSameContext(path, this))
 				{
 					if (flags.IsTable())
 						return path;
+
+					// Expand is initiated by Eager Loading but there is need to expand in case when we need comparison
+					if (flags.IsExpand() && !flags.IsKeys())
+						return path;
+
+					if (flags.IsSubquery() && !(path.Type.IsSameOrParentOf(ElementType) || ElementType.IsSameOrParentOf(path.Type)))
+					{
+						var expr = Builder.GetSequenceExpression(this);
+						if (expr == null)
+							return path;
+						return expr;
+					}
 
 					// Eager load case
 					if (path.Type.IsEnumerableType(ElementType))
@@ -202,14 +210,19 @@ namespace LinqToDB.Linq.Builder
 						return tablePlaceholder;
 					}
 
-					Expression fullEntity = Builder.BuildFullEntityExpression(MappingSchema, path, ElementType, flags);
-					// Entity can contain calculated columns which should be exposed
-					fullEntity = Builder.ConvertExpressionTree(fullEntity);
+					if (path.Type.IsAssignableFrom(ElementType) || ElementType.IsAssignableFrom(path.Type))
+					{
+						Expression fullEntity = Builder.BuildFullEntityExpression(MappingSchema, path, ElementType, flags);
+						// Entity can contain calculated columns which should be exposed
+						fullEntity = Builder.ConvertExpressionTree(fullEntity);
 
-					if (fullEntity.Type != path.Type)
-						fullEntity = Expression.Convert(fullEntity, path.Type);
+						if (fullEntity.Type != path.Type)
+							fullEntity = Expression.Convert(fullEntity, path.Type);
 
-					return fullEntity;
+						return fullEntity;
+					}
+
+					return path;
 				}
 
 				Expression member;
@@ -223,14 +236,32 @@ namespace LinqToDB.Linq.Builder
 
 				if (sql != null)
 				{
-					if (flags.HasFlag(ProjectFlags.Table))
+					if (flags.IsTable())
 					{
-						var root = Builder.GetRootContext(this, path, false);
-						return root ?? path;
+						if (path is MemberExpression memberExpression && SequenceHelper.IsSameContext(memberExpression.Expression, this))
+						{
+							return ((ContextRefExpression)memberExpression.Expression!).WithType(path.Type);
+						}
+						return path;
 					}
 				}
 
 				if (sql == null)
+				{
+					if (flags.IsSqlOrExpression() && !me.IsAssociation(MappingSchema))
+					{
+						Expression fullEntity = Builder.BuildFullEntityExpression(MappingSchema, new ContextRefExpression(ElementType, this), ElementType, flags);
+
+						var projected = Builder.Project(this, path, null, -1, flags, fullEntity, true);
+
+						if (projected is not SqlErrorExpression)
+							return projected;
+					}
+
+					return path;
+				}
+
+				if (flags.IsExtractProjection())
 				{
 					return path;
 				}
@@ -254,28 +285,10 @@ namespace LinqToDB.Linq.Builder
 
 			public override bool IsOptional { get; }
 
-			#region GetContext
-
-			public override IBuildContext? GetContext(Expression expression, BuildInfo buildInfo)
-			{
-				if (!buildInfo.CreateSubQuery || buildInfo.IsTest)
-					return this;
-
-				var expr = Builder.GetSequenceExpression(this);
-				if (expr == null)
-					return this;
-
-				var context = Builder.BuildSequence(new BuildInfo(buildInfo, expr));
-
-				return context;
-			}
-
 			public override SqlStatement GetResultStatement()
 			{
 				return new SqlSelectStatement(SelectQuery);
 			}
-
-			#endregion
 
 			#region SetAlias
 
@@ -484,8 +497,7 @@ namespace LinqToDB.Linq.Builder
 							    EntityDescriptor                   != null &&
 							    EntityDescriptor.TypeAccessor.Type == memberExpression.Member.DeclaringType)
 							{
-								throw new LinqException("Member '{0}.{1}' is not a table column.",
-									memberExpression.Member.DeclaringType.Name, memberExpression.Member.Name);
+								throw new LinqToDBException($"Member '{memberExpression.Member.DeclaringType.Name}.{memberExpression.Member.Name}' is not a table column.");
 							}
 						}
 					}
@@ -493,7 +505,7 @@ namespace LinqToDB.Linq.Builder
 
 				if (throwException)
 				{
-					throw new LinqException($"Member '{expression}' is not a table column.");
+					throw new LinqToDBException($"Member '{expression}' is not a table column.");
 				}
 				return null;
 			}

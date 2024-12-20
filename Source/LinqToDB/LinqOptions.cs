@@ -17,7 +17,7 @@ namespace LinqToDB
 	/// <param name="IgnoreEmptyUpdate">
 	/// Controls behavior of linq2db when there is no updateable fields in Update query:
 	/// - if <c>true</c> - query not executed and Update operation returns 0 as number of affected records;
-	/// - if <c>false</c> - <see cref="LinqException"/> will be thrown.
+	/// - if <c>false</c> - <see cref="LinqToDBException"/> will be thrown.
 	/// Default value: <c>false</c>.
 	/// </param>
 	/// <param name="GenerateExpressionTest">
@@ -91,7 +91,7 @@ namespace LinqToDB
 	/// <summary>
 	/// Controls behavior of LINQ query, which ends with GroupBy call.
 	/// - if <c>true</c> - <seealso cref="LinqToDBException"/> will be thrown for such queries;
-	/// - if <c>false</c> - behavior is controlled by <see cref="PreloadGroups"/> option.
+	/// - if <c>false</c> - eager loading used.
 	/// Default value: <c>true</c>.
 	/// </summary>
 	/// <remarks>
@@ -153,6 +153,8 @@ namespace LinqToDB
 	/// </param>
 	public sealed record LinqOptions
 	(
+		// TODO: V7 Remove
+		[property: Obsolete("This API doesn't have effect anymore and will be removed in future")]
 		bool         PreloadGroups           = false,
 		bool         IgnoreEmptyUpdate       = false,
 		bool         GenerateExpressionTest  = false,
@@ -163,7 +165,11 @@ namespace LinqToDB
 		bool         GuardGrouping           = true,
 		bool         DisableQueryCache       = false,
 		TimeSpan?    CacheSlidingExpiration  = default,
+		// TODO: V7 Remove
+		[property: Obsolete("This API doesn't have effect anymore and will be removed in future")]
 		bool         PreferApply             = true,
+		// TODO: V7 Remove
+		[property: Obsolete("This API doesn't have effect anymore and will be removed in future")]
 		bool         KeepDistinctOrdered     = true,
 		bool         ParameterizeTakeSkip    = true,
 		bool         EnableContextSchemaEdit = false,
@@ -179,7 +185,6 @@ namespace LinqToDB
 
 		LinqOptions(LinqOptions original)
 		{
-			PreloadGroups           = original.PreloadGroups;
 			IgnoreEmptyUpdate       = original.IgnoreEmptyUpdate;
 			GenerateExpressionTest  = original.GenerateExpressionTest;
 			TraceMapperExpression   = original.TraceMapperExpression;
@@ -189,8 +194,6 @@ namespace LinqToDB
 			GuardGrouping           = original.GuardGrouping;
 			DisableQueryCache       = original.DisableQueryCache;
 			CacheSlidingExpiration  = original.CacheSlidingExpiration;
-			PreferApply             = original.PreferApply;
-			KeepDistinctOrdered     = original.KeepDistinctOrdered;
 			ParameterizeTakeSkip    = original.ParameterizeTakeSkip;
 			EnableContextSchemaEdit = original.EnableContextSchemaEdit;
 			PreferExistsForScalar   = original.PreferExistsForScalar;
@@ -205,7 +208,6 @@ namespace LinqToDB
 				{
 					using var idBuilder = new IdentifierBuilder();
 					_configurationID = idBuilder
-						.Add(PreloadGroups)
 						.Add(IgnoreEmptyUpdate)
 						.Add(GenerateExpressionTest)
 						.Add(TraceMapperExpression)
@@ -215,8 +217,6 @@ namespace LinqToDB
 						.Add(GuardGrouping)
 						.Add(DisableQueryCache)
 						.Add(CacheSlidingExpiration)
-						.Add(PreferApply)
-						.Add(KeepDistinctOrdered)
 						.Add(ParameterizeTakeSkip)
 						.Add(EnableContextSchemaEdit)
 						.Add(PreferExistsForScalar)

@@ -5,9 +5,12 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
+
 using LinqToDB;
 using LinqToDB.Common;
 using LinqToDB.Expressions;
+using LinqToDB.Expressions.Internal;
+
 using NUnit.Framework;
 
 namespace Tests.TypeMapping

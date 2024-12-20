@@ -150,6 +150,30 @@ namespace LinqToDB.DataProvider.Sybase.Translation
 			}
 		}
 
+		public class SybaseMathMemberTranslator : MathMemberTranslatorBase
+		{
+			protected override ISqlExpression? TranslateRoundAwayFromZero(ITranslationContext translationContext, MethodCallExpression methodCall, ISqlExpression value, ISqlExpression? precision)
+			{
+				return base.TranslateRoundAwayFromZero(translationContext, methodCall, value, precision ?? translationContext.ExpressionFactory.Value(0));
+			}
+
+			protected override ISqlExpression? TranslateRoundToEven(ITranslationContext translationContext, MethodCallExpression methodCall, ISqlExpression value, ISqlExpression? precision)
+			{
+				return base.TranslateRoundToEven(translationContext, methodCall, value, precision ?? translationContext.ExpressionFactory.Value(0));
+			}
+		}
+
+		class SybaseStingMemberTranslator : StringMemberTranslatorBase
+		{
+			public override ISqlExpression? TranslateReplace(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, ISqlExpression value, ISqlExpression oldValue,
+				ISqlExpression newValue)
+			{
+				var func = base.TranslateReplace(translationContext, methodCall, translationFlags, value, oldValue, newValue) as SqlFunction;
+
+				return func?.WithName("Str_Replace");
+			}
+		}
+
 		protected override IMemberTranslator CreateSqlTypesTranslator()
 		{
 			return new SqlTypesTranslation();
@@ -158,6 +182,16 @@ namespace LinqToDB.DataProvider.Sybase.Translation
 		protected override IMemberTranslator CreateDateMemberTranslator()
 		{
 			return new DateFunctionsTranslator();
+		}
+
+		protected override IMemberTranslator CreateStringMemberTranslator()
+		{
+			return new SybaseStingMemberTranslator();
+		}
+
+		protected override IMemberTranslator CreateMathMemberTranslator()
+		{
+			return new SybaseMathMemberTranslator();
 		}
 
 		protected override ISqlExpression? TranslateNewGuidMethod(ITranslationContext translationContext, TranslationFlags translationFlags)

@@ -19,7 +19,8 @@ namespace LinqToDB.DataProvider.MySql
 			SetValueToSqlConverter(typeof(byte[]), (sb,_,_,v) => ConvertBinaryToSql(sb, (byte[])v));
 			SetValueToSqlConverter(typeof(Binary), (sb,_,_,v) => ConvertBinaryToSql(sb, ((Binary)v).ToArray()));
 
-			SetDataType(typeof(string), new SqlDataType(DataType.NVarChar, typeof(string)));
+			SetDataType(typeof(string),  new SqlDataType(DataType.NVarChar, typeof(string)));
+			SetDataType(typeof(decimal), new SqlDataType(DataType.Decimal, typeof(decimal), 29, 10));
 
 			// both providers doesn't support BitArray directly and map bit fields to ulong by default
 			SetConvertExpression<BitArray?, DataParameter>(ba => new DataParameter(null, ba == null ? null : GetBits(ba), DataType.UInt64), false);

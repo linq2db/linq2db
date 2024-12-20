@@ -95,6 +95,9 @@ namespace LinqToDB.DataProvider.Firebird
 					expr = new SqlExpression(typeof(bool),
 						predicate.IsNot ? "{0} NOT STARTING WITH {1}" : "{0} STARTING WITH {1}",
 						Precedence.Comparison,
+						SqlFlags.IsPredicate,
+						ParametersNullabilityType.IfAnyParameterNullable,
+						null,
 						TryConvertToValue(
 							caseSensitive == false
 								? PseudoFunctions.MakeToLower(predicate.Expr1)
@@ -114,9 +117,12 @@ namespace LinqToDB.DataProvider.Firebird
 					{
 						expr = new SqlExpression(typeof(bool),
 							predicate.IsNot ? "{0} NOT CONTAINING {1}" : "{0} CONTAINING {1}",
-							Precedence.Comparison,
+							precedence : Precedence.Comparison,
+							flags : SqlFlags.IsPredicate,
+							nullabilityType : ParametersNullabilityType.IfAnyParameterNullable,
+							canBeNull : null,
 							TryConvertToValue(predicate.Expr1, EvaluationContext),
-							TryConvertToValue(predicate.Expr2, EvaluationContext)) {CanBeNull = false};
+							TryConvertToValue(predicate.Expr2, EvaluationContext)) { CanBeNull = false };
 					}
 					else
 					{
@@ -145,12 +151,14 @@ namespace LinqToDB.DataProvider.Firebird
 		{
 			if (cast.SystemType.ToUnderlying() == typeof(bool))
 			{
-				if (cast.Type.DbType == nameof(Sql.Types.Bit) && cast.Expression is not ISqlPredicate)
+				if (cast.Type.DataType == DataType.Boolean && cast.Expression is not ISqlPredicate)
 				{
-					var sc = new SqlSearchCondition()
-						.AddNotEqual(cast.Expression, new SqlValue(0), DataOptions.LinqOptions.CompareNulls);
-					return sc;
+					if (cast.Expression is SqlValue)
+						return cast.Expression;
 
+					var sc = new SqlSearchCondition()
+						.AddNotEqual(cast.Expression, new SqlValue(QueryHelper.GetDbDataType(cast.Expression, MappingSchema), 0), DataOptions.LinqOptions.CompareNulls);
+					return sc;
 				}
 			}
 			else if (cast.SystemType.ToUnderlying() == typeof(string) && cast.Expression.SystemType?.ToUnderlying() == typeof(Guid))
@@ -160,6 +168,14 @@ namespace LinqToDB.DataProvider.Firebird
 			else if (cast.SystemType.ToUnderlying() == typeof(Guid) && cast.Expression.SystemType?.ToUnderlying() == typeof(string))
 			{
 				return new SqlFunction(cast.SystemType, "CHAR_TO_UUID", false, true, Precedence.Primary, ParametersNullabilityType.IfAnyParameterNullable, null, cast.Expression);
+			}
+			else if (cast.ToType.DataType == DataType.Decimal)
+			{
+				if (cast.ToType.Precision == null && cast.ToType.Scale == null)
+				{
+					//TODO: check default precision and scale
+					cast = cast.WithToType(cast.ToType.WithPrecisionScale(18, 10));
+				}
 			}
 
 			cast = FloorBeforeConvert(cast);
