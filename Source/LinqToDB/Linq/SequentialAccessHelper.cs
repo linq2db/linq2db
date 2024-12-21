@@ -11,6 +11,7 @@ namespace LinqToDB.Linq
 	using Common;
 	using Extensions;
 	using LinqToDB.Expressions;
+	using LinqToDB.Expressions.ExpressionVisitors;
 	using Internal;
 	using Reflection;
 	using LinqToDB.Common.Internal;

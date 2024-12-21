@@ -13,6 +13,7 @@ using System.Threading.Tasks;
 namespace LinqToDB.DataProvider.SqlServer
 {
 	using Expressions;
+	using Expressions.Types;
 	using LinqToDB.Common;
 	using LinqToDB.Mapping;
 	using LinqToDB.Reflection;
@@ -95,7 +96,7 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		public SqlServerProvider Provider { get; }
 
-		#region IDynamicProviderAdapter
+#region IDynamicProviderAdapter
 
 		public Type ConnectionType  { get; }
 		public Type DataReaderType  { get; }
@@ -338,7 +339,7 @@ namespace LinqToDB.DataProvider.SqlServer
 					mappingSchema.SetDefaultValue(type, getNullValue());
 					mappingSchema.SetCanBeNull(type, true);
 					mappingSchema.SetDataType(type, new SqlDataType(new DbDataType(type, dataType, dbType)));
-				}
+		}
 
 				return type;
 			}

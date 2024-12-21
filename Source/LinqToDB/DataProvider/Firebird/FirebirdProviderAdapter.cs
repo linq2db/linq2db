@@ -7,6 +7,7 @@ namespace LinqToDB.DataProvider.Firebird
 {
 	using Common;
 	using Expressions;
+	using Expressions.Types;
 	using Mapping;
 	using SqlQuery;
 

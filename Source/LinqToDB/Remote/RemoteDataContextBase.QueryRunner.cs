@@ -15,6 +15,7 @@ namespace LinqToDB.Remote
 	using Common.Internal;
 	using Data;
 	using DataProvider;
+	using Extensions;
 	using Linq;
 	using SqlProvider;
 	using SqlQuery;

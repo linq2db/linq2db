@@ -32,6 +32,7 @@ namespace LinqToDB.Data
 	using Mapping;
 	using Reflection;
 	using Tools;
+	using LinqToDB.Compatibility.System;
 
 	/// <summary>
 	/// Provides database connection command abstraction.

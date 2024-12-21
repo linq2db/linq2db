@@ -4,11 +4,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 
-namespace LinqToDB.Metadata
+namespace LinqToDB.Mapping
 {
 	using Common;
 	using Extensions;
-	using Mapping;
 
 	internal sealed class MappingAttributesCache
 	{

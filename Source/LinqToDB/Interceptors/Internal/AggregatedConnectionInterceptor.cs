@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 
 using LinqToDB.Tools;
 
-namespace LinqToDB.Interceptors
+namespace LinqToDB.Interceptors.Internal
 {
 	sealed class AggregatedConnectionInterceptor : AggregatedInterceptor<IConnectionInterceptor>, IConnectionInterceptor
 	{

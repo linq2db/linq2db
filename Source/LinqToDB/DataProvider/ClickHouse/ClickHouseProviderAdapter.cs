@@ -11,6 +11,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 {
 	using Common;
 	using Expressions;
+	using Expressions.Types;
 	using Mapping;
 	using MySql;
 	using SqlQuery;
@@ -518,12 +519,11 @@ namespace LinqToDB.DataProvider.ClickHouse
 			[Wrapper]
 			internal sealed class ClickHouseException : TypeWrapper
 			{
-				private static LambdaExpression[] Wrappers { get; }
-					= new LambdaExpression[]
-				{
-				// [0]: get ErrorCode
-				(Expression<Func<ClickHouseException, int>>)((ClickHouseException this_) => this_.ErrorCode),
-				};
+				private static LambdaExpression[] Wrappers { get; } =
+					[
+						// [0]: get ErrorCode
+						(Expression<Func<ClickHouseException, int>>)((ClickHouseException this_) => this_.ErrorCode),
+					];
 
 				public ClickHouseException(object instance, Delegate[] wrappers) : base(instance, wrappers)
 				{

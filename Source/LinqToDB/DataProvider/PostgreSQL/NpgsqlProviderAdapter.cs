@@ -15,6 +15,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 	using Common;
 	using Data;
 	using Expressions;
+	using Expressions.Types;
 	using Mapping;
 
 	public class NpgsqlProviderAdapter : IDynamicProviderAdapter

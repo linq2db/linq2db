@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Threading.Tasks;
 
-namespace LinqToDB
+namespace LinqToDB.Compatibility.System
 {
 	using Common.Internal;
 

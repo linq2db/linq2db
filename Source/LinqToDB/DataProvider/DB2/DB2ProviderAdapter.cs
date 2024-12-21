@@ -7,6 +7,7 @@ namespace LinqToDB.DataProvider.DB2
 {
 	using Common;
 	using Expressions;
+	using Expressions.Types;
 	using Extensions;
 	using Mapping;
 

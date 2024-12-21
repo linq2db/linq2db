@@ -22,6 +22,7 @@ namespace LinqToDB.Mapping
 	using Common.Internal;
 	using Common.Internal.Cache;
 	using Expressions;
+	using Expressions.ExpressionVisitors;
 	using Extensions;
 	using Metadata;
 	using SqlProvider;

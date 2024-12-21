@@ -9,7 +9,7 @@ using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace LinqToDB.Expressions
+namespace LinqToDB.Expressions.Types
 {
 	using Common;
 	using Common.Internal;

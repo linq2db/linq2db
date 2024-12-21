@@ -5,6 +5,8 @@ using System.Linq.Expressions;
 
 namespace LinqToDB.Expressions
 {
+	using Expressions.Types;
+
 	public class ExpressionGenerator
 	{
 		public static TypeMapper NoOpTypeMapper = new TypeMapper();

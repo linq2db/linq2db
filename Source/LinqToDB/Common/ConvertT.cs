@@ -7,6 +7,7 @@ using JetBrains.Annotations;
 namespace LinqToDB.Common
 {
 	using Expressions;
+	using Expressions.ExpressionVisitors;
 
 	// moved to non-generic class to avoid instance-per-generic
 	internal sealed class ConvertReducer

@@ -1,10 +1,9 @@
 ﻿using System;
 using System.Data.Common;
 
-namespace LinqToDB
+namespace LinqToDB.Interceptors
 {
 	using Data;
-	using Interceptors;
 	using Interceptors.Internal;
 
 	/// <summary>

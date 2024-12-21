@@ -12,6 +12,7 @@ namespace LinqToDB.DataProvider.Oracle
 	using Common;
 	using Data;
 	using Expressions;
+	using Expressions.Types;
 	using Mapping;
 
 	public class OracleProviderAdapter : IDynamicProviderAdapter

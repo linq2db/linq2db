@@ -10,6 +10,9 @@ namespace LinqToDB.Data
 	using Async;
 	using Common;
 	using Interceptors;
+
+	using LinqToDB.Compatibility.System;
+
 	using RetryPolicy;
 	using Tools;
 

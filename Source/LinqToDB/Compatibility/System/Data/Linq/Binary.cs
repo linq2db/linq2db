@@ -1,4 +1,6 @@
 ﻿#if !NETFRAMEWORK
+#pragma warning disable IDE0130
+
 using System.Runtime.Serialization;
 
 namespace System.Data.Linq

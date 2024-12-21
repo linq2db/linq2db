@@ -2,7 +2,7 @@
 using System.Linq.Expressions;
 using System.Reflection;
 
-namespace LinqToDB.Expressions
+namespace LinqToDB.Expressions.Types
 {
 	using Common;
 

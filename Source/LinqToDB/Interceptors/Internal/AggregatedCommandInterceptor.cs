@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 using LinqToDB.Tools;
 
-namespace LinqToDB.Interceptors
+namespace LinqToDB.Interceptors.Internal
 {
 	using Common;
 

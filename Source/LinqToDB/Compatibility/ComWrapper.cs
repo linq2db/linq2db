@@ -6,7 +6,7 @@ using System.Runtime.InteropServices;
 using System.Security;
 using System.Threading;
 
-namespace LinqToDB
+namespace LinqToDB.Compatibility
 {
 	using Common;
 	using Common.Internal;

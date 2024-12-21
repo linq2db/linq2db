@@ -3,7 +3,7 @@ using System.Data.Common;
 
 using LinqToDB.Tools;
 
-namespace LinqToDB.Interceptors
+namespace LinqToDB.Interceptors.Internal
 {
 	sealed class AggregatedUnwrapDataObjectInterceptor : AggregatedInterceptor<IUnwrapDataObjectInterceptor>, IUnwrapDataObjectInterceptor
 	{
