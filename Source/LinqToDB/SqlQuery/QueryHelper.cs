@@ -1761,5 +1761,28 @@ namespace LinqToDB.SqlQuery
 					values.Add(v);
 			});
 		}
+
+		/// <summary>
+		/// Merges predicates from <paramref name="child"/> and <paramref name="parent"/> into new or <paramref name="parent"/> condition and return result.
+		/// </summary>
+		internal static SqlSearchCondition MergeConditions(SqlSearchCondition parent, SqlSearchCondition child)
+		{
+			if (parent.IsAnd)
+			{
+				if (child.IsAnd)
+					parent.Predicates.InsertRange(0, child.Predicates);
+				else
+					parent.Predicates.Insert(0, new SqlSearchCondition(true, child.Predicates));
+
+				return parent;
+			}
+			else
+			{
+				if (child.IsAnd)
+					return new SqlSearchCondition(false, [..child.Predicates, parent]);
+				else
+					return new SqlSearchCondition(false, child, parent);
+			}
+		}
 	}
 }
