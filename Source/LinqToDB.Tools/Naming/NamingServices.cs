@@ -139,6 +139,7 @@ namespace LinqToDB.Naming
 							casedWord.Append(firstWord ? chr.ToLowerInvariant() : chr.ToUpperInvariant());
 							break;
 					}
+
 					firstLetter = false;
 				}
 				else

@@ -110,7 +110,6 @@ namespace Tests.UserTests
 						Assert.That(res[0].ActualStageId, Is.EqualTo(2));
 					});
 
-
 					var query2 = db.GetTable<Task>()
 						.Select(p => new
 						{

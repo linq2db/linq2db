@@ -77,7 +77,6 @@ namespace Tests.Infrastructure
 				.UseMappingSchema(db.MappingSchema)
 				.UseTracing(ti => s1 = ti.SqlText));
 
-
 			_child = db1.Child.ToList();
 
 			Assert.That(s1, Is.Not.Null);

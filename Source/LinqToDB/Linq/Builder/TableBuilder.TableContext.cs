@@ -133,6 +133,7 @@ namespace LinqToDB.Linq.Builder
 							{
 								param.IsQueryParameter = false;
 							}
+
 							return new SqlPlaceholderExpression(null, param, a);
 						}
 					}
@@ -242,6 +243,7 @@ namespace LinqToDB.Linq.Builder
 						{
 							return ((ContextRefExpression)memberExpression.Expression!).WithType(path.Type);
 						}
+
 						return path;
 					}
 				}
@@ -507,6 +509,7 @@ namespace LinqToDB.Linq.Builder
 				{
 					throw new LinqToDBException($"Member '{expression}' is not a table column.");
 				}
+
 				return null;
 			}
 

@@ -787,6 +787,7 @@ namespace LinqToDB.SqlProvider
 			{
 				newElement = Visit(Optimize(newElement));
 			}
+
 			return newElement;
 		}
 
@@ -802,6 +803,7 @@ namespace LinqToDB.SqlProvider
 			{
 				newElement = Visit(Optimize(newElement));
 			}
+
 			return newElement;
 		}
 
@@ -817,6 +819,7 @@ namespace LinqToDB.SqlProvider
 			{
 				newElement = Visit(Optimize(newElement));
 			}
+
 			return newElement;
 		}
 
@@ -832,6 +835,7 @@ namespace LinqToDB.SqlProvider
 			{
 				newElement = Visit(Optimize(newElement));
 			}
+
 			return newElement;
 		}
 
@@ -1673,6 +1677,7 @@ namespace LinqToDB.SqlProvider
 
 				last = new SqlFunction(coalesce.SystemType!, funcName, param, last);
 			}
+
 			return last;
 		}
 

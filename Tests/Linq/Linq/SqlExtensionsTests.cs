@@ -272,7 +272,6 @@ namespace Tests.Linq
 
 				BaselinesManager.LogQuery(query2Str);
 
-
 				var query3 = db.FromSql<FreeTextKey<int>>(
 					$"FREETEXTTABLE({Sql.TableExpr(table)}, {Sql.FieldExpr(table, t => t.Value)}, {queryText})");
 

@@ -142,7 +142,6 @@ namespace Tests.Remote.ServerContainer
 			return service;
 		}
 
-
 		//Environment.CurrentManagedThreadId need for a parallel test like DataConnectionTests.MultipleConnectionsTest
 		public int GetPort()
 		{
@@ -153,7 +152,6 @@ namespace Tests.Remote.ServerContainer
 
 			return Port + (Environment.CurrentManagedThreadId % 1000) + TestExternals.RunID;
 		}
-
 
 		public class Startup
 		{

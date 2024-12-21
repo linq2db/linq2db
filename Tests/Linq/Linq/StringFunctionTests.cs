@@ -324,7 +324,6 @@ namespace Tests.Linq
 			}
 		}
 
-
 		[Test]
 		public void ContainsConstant2([DataSources] string context)
 		{
@@ -392,7 +391,6 @@ namespace Tests.Linq
 			db.Person.Count(p => p.ID == 1 && s.Contains(Sql.ToSql(toTest))).Should().Be(1);
 			db.Person.Count(p => p.ID == 1 && !s.Contains(Sql.ToSql(toTest))).Should().Be(0);
 		}
-
 
 		[Test]
 		public void ContainsParameterAll([DataSources] string context,

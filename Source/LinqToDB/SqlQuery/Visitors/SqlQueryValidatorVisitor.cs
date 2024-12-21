@@ -335,6 +335,7 @@ namespace LinqToDB.SqlQuery.Visitors
 					{
 						SetInvalid(ErrorHelper.Error_OUTER_Joins);
 					}
+
 					return element;
 				}
 			}

@@ -886,7 +886,6 @@ namespace Tests.Linq
 			AssertQuery(query);
 		}
 
-
 		#region Issue 4458
 		[Table]
 		sealed class Issue4458Item

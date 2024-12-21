@@ -30,7 +30,6 @@ namespace Tests.Linq
 			[Column("value", Length = 50)]
 			public string? Value { get; set; }
 
-
 			public SomeOtherClass? AssociatedOne { get; set; }
 
 		}
@@ -431,7 +430,6 @@ namespace Tests.Linq
 			}
 		}
 
-
 		[Test]
 		public void TestScalarSubquery(
 			[IncludeDataSources(true, TestProvName.AllPostgreSQL93Plus)]
@@ -464,7 +462,6 @@ namespace Tests.Linq
 
 		static Expression<Func<IDataContext, TValue[], IQueryable<UnnestEnvelope<TValue>>>> UnnestWithOrdinalityImpl<TValue>()
 			=> (db, member) => db.FromSql<UnnestEnvelope<TValue>>($"unnest({member}) with ordinality {Sql.AliasExpr()} (value, index)");
-
 
 		[Sql.Expression("{0}", ServerSideOnly = true, Precedence = Precedence.Primary)]
 		static T AsTyped<T>(string str)
@@ -783,7 +780,6 @@ namespace Tests.Linq
 				Test(null, 2);
 				Test(2, null);
 				Test(3, 3);
-
 
 				Query<Values<int?>>.CacheMissCount.Should().Be(saveCount);
 

@@ -782,7 +782,6 @@ namespace Tests.Linq
 			[Column("realDataType", Configuration = ProviderName.Sybase)]
 			public float? floatDataType { get; set; }
 
-
 			[Column]
 			[Column("DOUBLEDATATYPE", Configuration = ProviderName.DB2)]
 			[Column("realDataType"  , Configuration = ProviderName.Access)]

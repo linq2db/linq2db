@@ -342,6 +342,7 @@ namespace LinqToDB.Linq.Builder
 			{
 				return false;
 			}
+
 			return _optimizationContext.IsImmutable(expr, mappingSchema);
 		}
 
@@ -580,6 +581,7 @@ namespace LinqToDB.Linq.Builder
 						notEqual = true;
 						break;
 					}
+
 					discriminators.Add(im1.Code);
 				}
 			}
@@ -845,6 +847,7 @@ namespace LinqToDB.Linq.Builder
 							}
 						}
 					}
+
 					break;
 			}
 

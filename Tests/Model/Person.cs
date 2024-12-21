@@ -65,7 +65,6 @@ namespace Tests.Model
 			set { Gender = value; }
 		}
 
-
 		[NotColumn] public string Name { get { return FirstName + " " + LastName; }}
 
 		[Association(ThisKey = "ID", OtherKey = "PersonID", CanBeNull=true)]

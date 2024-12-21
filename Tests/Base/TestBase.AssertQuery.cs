@@ -327,7 +327,6 @@ namespace Tests
 				return new TransformInfo(e);
 			})!;
 
-
 			newExpr = ApplyNullCheck(newExpr);
 
 			var empty = LinqToDB.Common.Tools.CreateEmptyQuery<T>();

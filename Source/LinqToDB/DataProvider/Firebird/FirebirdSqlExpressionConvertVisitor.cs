@@ -138,6 +138,7 @@ namespace LinqToDB.DataProvider.Firebird
 
 						return ConvertSearchStringPredicateViaLike(predicate);
 					}
+
 					break;
 				}
 				default:

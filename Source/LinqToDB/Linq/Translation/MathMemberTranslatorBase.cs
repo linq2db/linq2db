@@ -77,7 +77,6 @@ namespace LinqToDB.Linq.Translation
 			Registration.RegisterMethod((double v) => Sql.Round(v)                             , TranslateRoundAwayFromZero);
 			Registration.RegisterMethod((double v) => Sql.Round(v, 0)                          , TranslateRoundAwayFromZero);
 
-
 			Registration.RegisterMethod((float v) => Math.Round(v)                            , TranslateMathRoundMethod);
 			Registration.RegisterMethod((float v) => Math.Round(v, 0)                         , TranslateMathRoundMethod);
 			Registration.RegisterMethod((float v) => Math.Round(v, MidpointRounding.ToEven)   , TranslateMathRoundMethod);
@@ -328,7 +327,6 @@ namespace LinqToDB.Linq.Translation
 
 			return translationContext.CreatePlaceholder(translationContext.CurrentSelectQuery, translated, methodCall);
 		}
-
 
 		protected virtual ISqlExpression? TranslateRoundToEven(ITranslationContext translationContext, MethodCallExpression methodCall, ISqlExpression value, ISqlExpression? precision)
 		{

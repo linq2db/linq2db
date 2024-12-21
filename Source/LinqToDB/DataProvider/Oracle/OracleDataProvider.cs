@@ -81,6 +81,7 @@ namespace LinqToDB.DataProvider.Oracle
 				ReaderExpressions[new ReaderInfo { ToType = typeof(decimal), ProviderFieldType = Adapter.OracleDecimalType, DataReaderType = Adapter.DataReaderType }] = Adapter.ReadOracleDecimalToDecimalAdv;
 				ReaderExpressions[new ReaderInfo { ToType = typeof(decimal), FieldType = typeof(decimal), DataReaderType = Adapter.DataReaderType }] = Adapter.ReadOracleDecimalToDecimalAdv;
 			}
+
 			if (Adapter.ReadOracleDecimalToInt != null)
 				ReaderExpressions[new ReaderInfo { ToType = typeof(int),            FieldType = typeof(decimal),                        DataReaderType = Adapter.DataReaderType }] = Adapter.ReadOracleDecimalToInt;
 			if (Adapter.ReadOracleDecimalToLong != null)
@@ -205,6 +206,7 @@ namespace LinqToDB.DataProvider.Oracle
 						var zone = (dto.Offset < TimeSpan.Zero ? "-" : "+") + dto.Offset.ToString("hh\\:mm", DateTimeFormatInfo.InvariantInfo);
 						value    = Adapter.CreateOracleTimeStampTZ(dto, zone);
 					}
+
 					break;
 
 				case DataType.Boolean  :

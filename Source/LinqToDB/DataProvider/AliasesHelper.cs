@@ -100,6 +100,7 @@ namespace LinqToDB.DataProvider
 						if (!string.IsNullOrEmpty(alias))
 							_allAliases.Add(alias!);
 					}
+
 					return element;
 				}
 
@@ -155,6 +156,7 @@ namespace LinqToDB.DataProvider
 
 					_newAliases.RegisterAliased(element.SourceQuery);
 				}
+
 				_newAliases.RegisterAliased(element);
 
 				return element;

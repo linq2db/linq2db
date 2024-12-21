@@ -55,6 +55,7 @@ namespace LinqToDB.DataProvider.Oracle
 						if (IsTextType(b, mappingSchema) && b.CanBeEvaluated(true))
 							return true;
 					}
+
 					break;
 				}
 			}

@@ -201,6 +201,7 @@ namespace LinqToDB.Linq.Builder
 							newBody,
 							additionalLambda);
 					}
+
 					definedQueryMethod = Expression.Lambda(newBody, definedQueryMethod.Parameters);
 				}
 

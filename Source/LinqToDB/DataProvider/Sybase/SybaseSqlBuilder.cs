@@ -72,6 +72,7 @@ namespace LinqToDB.DataProvider.Sybase
 						StringBuilder.Append("NVarChar(5461)");
 						return;
 					}
+
 					break;
 				case DataType.Decimal:
 					// default is ASE is 18,0

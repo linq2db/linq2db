@@ -245,7 +245,6 @@ namespace LinqToDB.DataProvider.Access.Translation
 
 		}
 
-
 		protected override IMemberTranslator CreateSqlTypesTranslator()
 		{
 			return new SqlTypesTranslation();

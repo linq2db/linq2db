@@ -146,6 +146,7 @@ namespace LinqToDB
 				default :
 					throw new InvalidOperationException($"Unexpected from: {from}");
 			}
+
 			return string.Empty;
 		}
 

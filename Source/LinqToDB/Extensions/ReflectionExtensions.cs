@@ -1081,6 +1081,7 @@ namespace LinqToDB.Extensions
 						if (p.GetMethod?.GetBaseDefinition() == baseDefinition)
 							return p;
 				}
+
 				if (property.SetMethod != null)
 				{
 					var baseDefinition = property.SetMethod.GetBaseDefinition();

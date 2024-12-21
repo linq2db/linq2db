@@ -41,7 +41,6 @@ namespace LinqToDB.Linq.Builder
 			ExpressionBuilder.ParametersParam
 		};
 
-
 		public readonly List<ParameterAccessor>           CurrentSqlParameters = new();
 		//readonly        Dictionary<Expression,Expression> _expressionAccessors;
 
@@ -163,7 +162,6 @@ namespace LinqToDB.Linq.Builder
 
 			return sqlParameter;
 		}
-
 
 		ParameterCacheEntry? PrepareParameterCacheEntry(MappingSchema mappingSchema, Expression paramExpression, string parameterName, ColumnDescriptor? columnDescriptor, bool doNotCheckCompatibility, BuildParameterType buildParameterType)
 		{
@@ -318,7 +316,6 @@ namespace LinqToDB.Linq.Builder
 
 			return parameterCacheEntry;
 		}
-
 
 		static bool HasDbMapping(MappingSchema mappingSchema, Type testedType, out LambdaExpression? convertExpr)
 		{

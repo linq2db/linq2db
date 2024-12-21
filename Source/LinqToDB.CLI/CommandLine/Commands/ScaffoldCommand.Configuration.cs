@@ -228,6 +228,7 @@ namespace LinqToDB.CommandLine
 						case "aggregate-function": objects |= SchemaObjects.AggregateFunction; break;
 					}
 				}
+
 				settings.LoadedObjects = objects;
 			}
 
@@ -254,7 +255,6 @@ namespace LinqToDB.CommandLine
 				foreach (var strVal in (string[])value!)
 					settings.DefaultSchemas.Add(strVal);
 			}
-
 
 			// include/exclude catalogs
 			if (options.Remove(SchemaOptions.IncludedCatalogs, out value))
@@ -296,6 +296,7 @@ namespace LinqToDB.CommandLine
 				includeTables = false;
 				tableFilter   = (NameFilter)value!;
 			}
+
 			if (options.Remove(SchemaOptions.IncludedViews, out value))
 			{
 				includeViews = true;

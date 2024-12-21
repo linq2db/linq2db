@@ -88,7 +88,6 @@ namespace LinqToDB.Linq.Builder
 		SnapshotDictionary<ExprCacheKey, Expression>                 _translationCache = new(ExprCacheKey.SqlCacheKeyComparer);
 		SnapshotDictionary<ColumnCacheKey, SqlPlaceholderExpression> _columnCache      = new(ColumnCacheKey.ColumnCacheKeyComparer);
 
-
 		public ExpressionBuildVisitor(ExpressionBuilder builder)
 		{
 			Builder = builder;
@@ -179,6 +178,7 @@ namespace LinqToDB.Linq.Builder
 					{
 						_visitor._associations = null;
 					}
+
 					_savedTranslationCache.Rollback();
 					_savedColumnCache.Rollback();
 				}
@@ -509,6 +509,7 @@ namespace LinqToDB.Linq.Builder
 			{
 				return GetCacheRootContext(expr);
 			}
+
 			if (expression is MethodCallExpression methodCallExpression && methodCallExpression.IsQueryable())
 			{
 				return GetCacheRootContext(methodCallExpression.Arguments[0]);
@@ -523,6 +524,7 @@ namespace LinqToDB.Linq.Builder
 			{
 				return GetCacheRootContext(expr);
 			}
+
 			if (expression is MethodCallExpression methodCallExpression && methodCallExpression.IsQueryable())
 			{
 				return GetCacheRootContext(methodCallExpression.Arguments[0]);
@@ -530,7 +532,6 @@ namespace LinqToDB.Linq.Builder
 
 			return expression as ContextRefExpression;
 		}
-
 
 #if DEBUG
 		void DebugCacheHit(ExprCacheKey cacheKey, Expression translated)
@@ -1345,6 +1346,7 @@ namespace LinqToDB.Linq.Builder
 						{
 							result = placeholder.WithTrackingPath(updated);
 						}
+
 						return result;
 					}
 
@@ -1941,6 +1943,7 @@ namespace LinqToDB.Linq.Builder
 				if (sql is SqlPlaceholderExpression or SqlGenericConstructorExpression)
 					return sql;
 			}
+
 			return expr;
 		}
 
@@ -2825,7 +2828,6 @@ namespace LinqToDB.Linq.Builder
 				predicates.Add(predicateSql);
 			}
 
-
 			translated = node;
 
 			if (hasError)
@@ -2841,6 +2843,7 @@ namespace LinqToDB.Linq.Builder
 						{
 							sqlExpr = new SqlSearchCondition(false, predicateSql);
 						}
+
 						var placeholder = CreatePlaceholder(sqlExpr, itemNode);
 						translated = translated.Replace(itemNode, placeholder);
 					}
@@ -3605,6 +3608,7 @@ namespace LinqToDB.Linq.Builder
 								return SqlErrorExpression.EnsureError(leftAssignment.Expression, typeof(bool));
 							return GetOriginalExpression();
 						}
+
 						continue;
 					}
 
@@ -4226,9 +4230,11 @@ namespace LinqToDB.Linq.Builder
 						value = sqlValue.Value as bool?;
 						return true;
 					}
+
 					return false;
 				}
 			}
+
 			return false;
 		}
 
@@ -4528,6 +4534,7 @@ namespace LinqToDB.Linq.Builder
 							context.Scale = type.Scale;
 							return true;
 						}
+
 						return false;
 					}
 				}

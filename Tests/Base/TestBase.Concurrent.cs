@@ -85,6 +85,7 @@ namespace Tests
 					TestContext.Out.WriteLine($"Exception in query ({result.Item1}):\n\n{result.Item5}");
 					throw result.Item5;
 				}
+
 				try
 				{
 					checkAction(result.Item2, result.Item1);
@@ -100,13 +101,13 @@ namespace Tests
 						dc.DataProvider.CreateSqlBuilder(dc.MappingSchema, dc.Options).PrintParameters(dc, sb, result.Item4.OfType<DbParameter>());
 						TestContext.Out.WriteLine(sb);
 					}
+
 					TestContext.Out.WriteLine();
 					TestContext.Out.WriteLine(result.Item3);
 
 					DumpObject(result.Item2);
 
 					DumpObject(testResult);
-
 
 					throw;
 				}

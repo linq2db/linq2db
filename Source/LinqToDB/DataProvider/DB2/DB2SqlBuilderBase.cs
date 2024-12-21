@@ -458,6 +458,7 @@ END");
 				{
 					base.BuildParameter(parameter);
 				}
+
 				BuildStep = saveStep;
 
 				return;

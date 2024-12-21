@@ -71,7 +71,6 @@ namespace Tests.Linq
 						.Sum()
 				};
 
-
 			AreEqual(exptected, query);
 		}
 

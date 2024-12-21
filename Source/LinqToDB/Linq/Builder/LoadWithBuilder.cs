@@ -391,6 +391,7 @@ namespace LinqToDB.Linq.Builder
 					if (flags.IsAssociationRoot())
 						return new ContextRefExpression(path.Type, RegisterContext);
 				}
+
 				return base.MakeExpression(path, flags);
 			}
 

@@ -442,6 +442,7 @@ namespace LinqToDB.DataProvider
 						helper.StringBuilder.Length = helper.LastRowStringIndex;
 						helper.RowsCopied.RowsCopied--;
 					}
+
 					finishFunction(helper);
 					if (!await helper.ExecuteAsync(cancellationToken).ConfigureAwait(false))
 					{
@@ -450,6 +451,7 @@ namespace LinqToDB.DataProvider
 
 						return helper.RowsCopied;
 					}
+
 					if (needRemove && !isSingle)
 					{
 						addFunction(helper, item!, from);
@@ -503,6 +505,7 @@ namespace LinqToDB.DataProvider
 						helper.StringBuilder.Length = helper.LastRowStringIndex;
 						helper.RowsCopied.RowsCopied--;
 					}
+
 					finishFunction(helper);
 					if (!await helper.ExecuteAsync(cancellationToken).ConfigureAwait(false))
 					{
@@ -511,6 +514,7 @@ namespace LinqToDB.DataProvider
 
 						return helper.RowsCopied;
 					}
+
 					if (needRemove && !isSingle)
 					{
 						addFunction(helper, item!, from);

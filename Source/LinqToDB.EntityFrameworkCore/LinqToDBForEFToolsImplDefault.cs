@@ -93,7 +93,6 @@ namespace LinqToDB.EntityFrameworkCore
 				ExpirationScanFrequency = TimeSpan.FromHours(1.0)
 			});
 
-
 		/// <summary>
 		/// Force clear of internal caches.
 		/// </summary>
@@ -679,6 +678,7 @@ namespace LinqToDB.EntityFrameworkCore
 					{
 						logger.Log(logLevel, "Query Execution Time: {ExecutionTime}. Records Affected: {RecordsAffected}.", info.ExecutionTime, info.RecordsAffected);
 					}
+
 					break;
 
 				case TraceInfoStep.Error:
@@ -697,6 +697,7 @@ namespace LinqToDB.EntityFrameworkCore
 					{
 						logger.Log(logLevel, "Total Execution Time: {TotalExecutionTime}. Rows Count: {RecordsAffected}.", info.ExecutionTime, info.RecordsAffected);
 					}
+
 					break;
 				}
 			}

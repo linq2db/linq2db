@@ -180,7 +180,6 @@ namespace LinqToDB.Linq
 						return e;
 					});
 
-
 				if (slowMode)
 				{
 					expression = expression.Transform(

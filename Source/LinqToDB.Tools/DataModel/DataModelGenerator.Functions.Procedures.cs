@@ -582,16 +582,19 @@ namespace LinqToDB.DataModel
 					ctorInitializers[initializersIdx] = context.AST.Assign(WellKnownTypes.LinqToDB.Data.DataParameter_DbType, context.AST.Constant(dbType.Name!, true));
 					initializersIdx++;
 				}
+
 				if (dbType.Length != null)
 				{
 					ctorInitializers[initializersIdx] = context.AST.Assign(WellKnownTypes.LinqToDB.Data.DataParameter_Size, context.AST.Constant(dbType.Length.Value, true));
 					initializersIdx++;
 				}
+
 				if (dbType.Precision != null)
 				{
 					ctorInitializers[initializersIdx] = context.AST.Assign(WellKnownTypes.LinqToDB.Data.DataParameter_Precision, context.AST.Constant(dbType.Precision.Value, true));
 					initializersIdx++;
 				}
+
 				if (dbType.Scale != null)
 				{
 					ctorInitializers[initializersIdx] = context.AST.Assign(WellKnownTypes.LinqToDB.Data.DataParameter_Scale, context.AST.Constant(dbType.Scale.Value, true));

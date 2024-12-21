@@ -365,7 +365,6 @@ namespace LinqToDB.CommandLine
 				return StatusCodes.T4_ERROR;
 			}
 
-
 			// make some basic assertions
 			if (language != "C#")
 			{
@@ -403,6 +402,7 @@ namespace LinqToDB.CommandLine
 				if (!asmName.Contains(".Native.", StringComparison.Ordinal))
 					referencesList.Add(MetadataReference.CreateFromFile(Path.Combine(fwPath, asmName)));
 			}
+
 			var usings = new List<string>();
 			foreach (var directive in template.Directives)
 			{

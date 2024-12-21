@@ -1798,7 +1798,6 @@ namespace Tests.Linq
 				Assert.That(result[0].Type, Is.EqualTo(1));
 				Assert.That(((CreateTable1)result[0]).Field1, Is.EqualTo(1));
 
-
 				Assert.That(result[1], Is.InstanceOf<CreateTable2>());
 			});
 			Assert.Multiple(() =>
@@ -1900,7 +1899,6 @@ namespace Tests.Linq
 
 			public int ChildId { get; set; }
 		}
-
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/3891")]
 		public void Issue3891AttributesMapping([InsertOrUpdateDataSources] string context)

@@ -84,6 +84,7 @@ namespace LinqToDB.DataProvider.SQLite
 			{
 				typeMapper.RegisterTypeWrapper<SQLiteConnection>(connectionType);
 			}
+
 			typeMapper.FinalizeMappings();
 
 			Action? clearAllPools = null;
