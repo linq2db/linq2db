@@ -17,6 +17,7 @@ namespace LinqToDB.Linq
 	using Internal;
 	using LinqToDB.Expressions;
 	using LinqToDB.SqlQuery;
+	using LinqToDB.Compatibility.System;
 
 	abstract class ExpressionQuery<T> : IExpressionQuery<T>, IAsyncEnumerable<T>
 	{

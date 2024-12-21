@@ -11,10 +11,10 @@ using System.Threading.Tasks;
 
 namespace LinqToDB.DataProvider.PostgreSQL
 {
-
 	using Common;
 	using Data;
 	using Expressions;
+	using Expressions.Types;
 	using Extensions;
 	using Mapping;
 

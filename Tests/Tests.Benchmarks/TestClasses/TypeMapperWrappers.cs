@@ -4,6 +4,7 @@ using System.Data;
 using System.Linq.Expressions;
 using System.Runtime.CompilerServices;
 using LinqToDB.Expressions;
+using LinqToDB.Expressions.Types;
 
 namespace LinqToDB.Benchmarks.TypeMapping
 {

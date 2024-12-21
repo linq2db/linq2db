@@ -7,6 +7,8 @@ namespace LinqToDB.DataProvider.Access
 {
 	using Data;
 
+	using LinqToDB.Compatibility;
+
 	/// <summary>
 	/// Contains Access provider management tools.
 	/// </summary>

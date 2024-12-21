@@ -10,6 +10,7 @@ namespace LinqToDB.Linq.Builder
 	using Common;
 	using Extensions;
 	using LinqToDB.Expressions;
+	using LinqToDB.Expressions.ExpressionVisitors;
 	using SqlQuery;
 
 	internal partial class ExpressionBuilder

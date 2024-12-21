@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq.Expressions;
 
-namespace LinqToDB.Expressions
+namespace LinqToDB.Expressions.ExpressionVisitors
 {
 	internal readonly struct FindVisitor<TContext>
 	{

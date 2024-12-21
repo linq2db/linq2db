@@ -11,6 +11,7 @@ namespace LinqToDB
 {
 	using Common.Internal;
 	using Expressions;
+	using Expressions.ExpressionVisitors;
 	using Extensions;
 	using Linq.Builder;
 	using Mapping;

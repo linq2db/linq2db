@@ -1,16 +1,18 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-
 		<AssemblyName>linq2db.Extensions</AssemblyName>
 		<RootNamespace>LinqToDB.Extensions</RootNamespace>
 
 		<DocumentationFile>$(ArtifactsPath)\bin\$(MSBuildProjectName)\$(Configuration)\$(TargetFramework)\$(AssemblyName).xml</DocumentationFile>
 
-		<TargetFrameworks>net462;netstandard2.0;net6.0;net8.0;net9.0</TargetFrameworks>
+		<TargetFrameworks>net462;netstandard2.0;net6.0;net8.0</TargetFrameworks>
 
-		<IsAotCompatible Condition="$(TargetFramework) == 'net8.0' OR $(TargetFramework) == 'net9.0'">true</IsAotCompatible>
+		<IsAotCompatible Condition="$(TargetFramework) == 'net8.0'">true</IsAotCompatible>
 		<PolySharpIncludeRuntimeSupportedAttributes>true</PolySharpIncludeRuntimeSupportedAttributes>
+
+		<Title>Linq to DB Extensions</Title>
+		<Description>Linq to DB Extensions to integrate with Microsoft.Extensions.DependencyInjection</Description>
 	</PropertyGroup>
 
 	<ItemGroup>

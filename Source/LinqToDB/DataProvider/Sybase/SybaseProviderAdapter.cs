@@ -6,6 +6,7 @@ using System.Linq.Expressions;
 namespace LinqToDB.DataProvider.Sybase
 {
 	using Expressions;
+	using Expressions.Types;
 
 	public class SybaseProviderAdapter : IDynamicProviderAdapter
 	{
