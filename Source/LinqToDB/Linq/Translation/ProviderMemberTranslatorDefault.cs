@@ -2,7 +2,6 @@
 using System.Globalization;
 using System.Linq.Expressions;
 
-
 namespace LinqToDB.Linq.Translation
 {
 	using Common;

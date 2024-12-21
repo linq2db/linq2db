@@ -572,7 +572,6 @@ namespace Tests.DataProvider
 					where folder2.Caption == "dewde"
 					select folder;
 
-
 				Assert.DoesNotThrow(() => folders.ToList());
 			}
 		}
@@ -619,7 +618,6 @@ namespace Tests.DataProvider
 					catch when(throwIfNotExists)
 					{
 					}
-
 
 					db.CreateTable<TTable>();
 					db.DropTable<TTable>(throwExceptionIfNotExists: throwIfNotExists);
@@ -803,6 +801,7 @@ namespace Tests.DataProvider
 					sql.Should().Contain("\"Client\" \"a_Owner\"");
 				}
 			}
+
 			Query.ClearCaches();
 		}
 		#endregion

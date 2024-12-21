@@ -184,6 +184,7 @@ namespace LinqToDB.SqlProvider
 						found.RemoveAt(i);
 						continue;
 					}
+
 					i++;
 				}
 

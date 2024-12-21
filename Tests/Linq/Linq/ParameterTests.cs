@@ -275,7 +275,6 @@ namespace Tests.Linq
 			}
 		}
 
-
 		static class AdditionalSql
 		{
 			[Sql.Expression("(({2} * ({1} - {0}) / {2}) * {0})", ServerSideOnly = true)]
@@ -572,7 +571,6 @@ namespace Tests.Linq
 		{
 			return db.Person.Where(p => p.ID == personId!.Value);
 		}
-
 
 		[Test]
 		public void TestParametersByEquality([DataSources(TestProvName.AllSQLite)] string context, [Values(1, 2)] int iteration)
@@ -1710,7 +1708,6 @@ namespace Tests.Linq
 						  select c).ToList();
 		}
 
-
 		int GetId(int id, int increment)
 		{
 			return id + increment;
@@ -1746,7 +1743,6 @@ namespace Tests.Linq
 			if (!context.IsAnyOf(TestProvName.AllClickHouse))
 				Assert.That(query1.ToSqlQuery().Parameters, Has.Count.EqualTo(2));
 		}
-
 
 #if NET6_0_OR_GREATER
 		[Table]

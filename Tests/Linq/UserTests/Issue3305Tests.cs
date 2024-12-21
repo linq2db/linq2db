@@ -125,7 +125,6 @@ namespace Tests.UserTests
 			public virtual int ResourceID { get; set; }
 		}
 
-
 		public class StorageShelfDTO
 		{
 			[NotColumn]
@@ -159,7 +158,6 @@ namespace Tests.UserTests
 			var resourceQry = s.GetTable<WmsLoadCarrierDTO>().HasUniqueKey(c => c.Id);
 			var refResourceStorageShelfDtos = s.GetTable<RefResourceStorageShelfDTO>().HasUniqueKey(b => b.StorageShelfID).HasUniqueKey(b => b.ResourceID);
 			var storageShelfDtos = s.GetTable<StorageShelfDTO>().HasUniqueKey(f => new { f.ChannelID, f.DepthCoordinate });
-
 
 			var inventoryResourceQryUsed = inventoryResourceQry
 			   .Select(ir => new

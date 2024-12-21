@@ -116,6 +116,7 @@ namespace LinqToDB.Common.Internal
 				foreach (var item in items)
 					Add(GetObjectID(item));
 			}
+
 			return this;
 		}
 

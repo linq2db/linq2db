@@ -15,7 +15,6 @@ namespace Tests.Linq
 			[Column] public int IntValue { get; set; }
 			[Column] public string StringValue { get; set; } = null!;
 
-
 			public static DataClass[] Seed()
 			{
 				return Enumerable.Range(1, 10).Select(idx => new DataClass
@@ -126,6 +125,5 @@ namespace Tests.Linq
 		}
 
 	}
-
 
 }

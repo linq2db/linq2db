@@ -1152,7 +1152,6 @@ namespace LinqToDB.Data
 						reader = _command!.ExecuteReader(commandBehavior);
 				}
 
-
 				var wrapper = new DataReaderWrapper(this, reader, _command!);
 				_command = null;
 

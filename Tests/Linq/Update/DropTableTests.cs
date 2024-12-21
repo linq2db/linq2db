@@ -97,7 +97,6 @@ namespace Tests.xUpdate
 					.SchemaName(schema)
 					.DatabaseName(database);
 
-
 				table.Insert(() => new DropTableTest() { ID = 123 });
 
 				var data = table.ToList();
@@ -124,7 +123,6 @@ namespace Tests.xUpdate
 					Assert.That(sql, Does.Contain(schema));
 			}
 		}
-
 
 		[Table]
 		sealed class Table

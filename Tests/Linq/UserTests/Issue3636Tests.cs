@@ -23,7 +23,6 @@ namespace Tests.UserTests
 			[Column("id3")] public int ID3 { get; set; } // integer
 		}
 
-
 		[Table]
 		public class T2
 		{

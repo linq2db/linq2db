@@ -548,7 +548,6 @@ namespace LinqToDB.EntityFrameworkCore
 			private static readonly MethodInfo _constantExpressionFactoryMethod = typeof(Expression).GetMethod(nameof(Constant), [typeof(object), typeof(Type)])
 				?? throw new InvalidOperationException();
 
-
 			public override Expression Quote()
 			{
 				// not tested

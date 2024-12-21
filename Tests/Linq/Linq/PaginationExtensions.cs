@@ -129,7 +129,6 @@ namespace Tests.Linq
 			return method;
 		}
 
-
 		static Expression ExtractOrderByPart(Expression query, List<Tuple<Expression, bool>> orderBy)
 		{
 			var current = query;
@@ -157,6 +156,7 @@ namespace Tests.Linq
 							supported = false;
 							break;
 					}
+
 					if (!supported)
 						break;
 
@@ -315,7 +315,6 @@ namespace Tests.Linq
 			Expression<Func<IQueryable<T>, long, int, IQueryable<RownNumberHolder<T>>>> selectExpression =
 				(q, rn, tc) => q.Select(x => new RownNumberHolder<T> {Data = x, RowNumber = rn, TotalCount = tc});
 
-
 			Expression totalCountExpr = includeTotal ? _totalCountTemplate.Body : _totalCountEmpty;
 
 			var entityParam = ((LambdaExpression)((MethodCallExpression)selectExpression.Body).Arguments[1].Unwrap())
@@ -362,8 +361,6 @@ namespace Tests.Linq
 								.OrderBy(x => x.RowNumber)
 								.Select(x =>
 									new Envelope<T> {Data = x.Data, Page = page, TotalCount = -1}));
-
-
 
 			var param = Expression.Parameter(typeof(RownNumberHolder<T>), "h");
 			var newPredicate = Expression.Lambda(predicate.GetBody(Expression.PropertyOrField(param, "Data")), param);

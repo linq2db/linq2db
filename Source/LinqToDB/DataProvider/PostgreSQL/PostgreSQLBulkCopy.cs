@@ -169,6 +169,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 							// reset date
 							value = new DateTimeOffset(1, 1, 1, 0, 0, 0, dto.Offset) + dto.TimeOfDay;
 						}
+
 						if (npgsqlTypes[i] != null)
 							writer.Write(value, npgsqlTypes[i]!.Value);
 						else
@@ -295,6 +296,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 							// reset date
 							value = new DateTimeOffset(1, 1, 1, 0, 0, 0, dto.Offset) + dto.TimeOfDay;
 						}
+
 						if (npgsqlTypes[i] != null)
 							await writer.WriteAsync(value, npgsqlTypes[i]!.Value, cancellationToken).ConfigureAwait(false);
 						else
@@ -417,6 +419,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 							// reset date
 							value = new DateTimeOffset(1, 1, 1, 0, 0, 0, dto.Offset) + dto.TimeOfDay;
 						}
+
 						if (npgsqlTypes[i] != null)
 							await writer.WriteAsync(value, npgsqlTypes[i]!.Value, cancellationToken).ConfigureAwait(false);
 						else

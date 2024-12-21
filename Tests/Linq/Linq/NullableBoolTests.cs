@@ -118,7 +118,6 @@ namespace Tests.Linq
 			Assert.That(LastQuery, Is.Not.Contains(" NULL"));
 		}
 
-
 		[Test]
 		public void NullTest([DataSources(ProvidersThatDoNotSupportNullableBool)] string context)
 		{

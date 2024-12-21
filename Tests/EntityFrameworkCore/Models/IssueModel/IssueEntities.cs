@@ -101,7 +101,6 @@ namespace LinqToDB.EntityFrameworkCore.Tests.Models.IssueModel
 			Id = id;
 		}
 
-
 		public int Id { get; set; }
 		public DateTime? DateFrom { get; set; }
 		public DateTime? DateTo { get; set; }

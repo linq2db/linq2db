@@ -29,7 +29,6 @@ namespace Tests.UserTests
 			[PrimaryKey] public int Id { get; set; } // int
 		}
 
-
 		[Test]
 		public void Test([DataSources] string context)
 		{

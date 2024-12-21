@@ -17,7 +17,6 @@ namespace LinqToDB.EntityFrameworkCore
 			Linq.Expressions.MapMember((DbFunctions f, string m, string p) => f.Like(m, p), (f, m, p) => Sql.Like(m, p));
 		}
 
-
 		#region Sql Server
 
 		static Sql.DateParts? GetDatePart(string name)
@@ -80,7 +79,6 @@ namespace LinqToDB.EntityFrameworkCore
 				var endExpr = endParameter.Type != typeof(DateTime?)
 					? (Expression) Expression.Convert(endParameter, typeof(DateTime?))
 					: endParameter;
-
 
 				var body   = Expression.Call(dateDiffMethod, Expression.Constant(datePart.Value), startExpr, endExpr);
 				var lambda = Expression.Lambda(body, dbFunctionsParameter, startParameter, endParameter);

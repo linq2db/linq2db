@@ -339,7 +339,6 @@ namespace Tests.Linq
 				into g
 				select g.Min(x => x.ID);
 
-
 			var query = t1.Where(t => t.ID.In(subQuery));
 
 			AssertQuery(query);

@@ -18,7 +18,6 @@ namespace Tests.UserTests
 			public string? Str;
 		}
 
-
 		public struct DataPack
 		{
 		}

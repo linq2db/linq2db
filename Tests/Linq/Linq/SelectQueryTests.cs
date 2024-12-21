@@ -145,7 +145,6 @@ namespace Tests.Linq
 			}
 		}
 
-
 		private static SampleClass[] GenerateData()
 		{
 			return Enumerable.Range(1, 1).Select(i => new SampleClass() { Id = i, Value = i * 100 }).ToArray();

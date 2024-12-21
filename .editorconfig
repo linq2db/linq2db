@@ -57,6 +57,10 @@ dotnet_style_explicit_tuple_names = true:suggestion
 # Namespaces
 dotnet_style_namespace_match_folder = false
 
+# New-line preferences
+dotnet_style_allow_multiple_blank_lines_experimental = false:warning
+dotnet_style_allow_statement_immediately_after_block_experimental = false:warning
+
 # CSharp code style settings:
 [*.cs]
 # Newline settings

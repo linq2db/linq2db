@@ -337,7 +337,6 @@ namespace Tests.Linq
 			}
 		}
 
-
 		[Sql.Extension(               "DatePart({part}, {date})",                 ServerSideOnly = false, BuilderType = typeof(DatePartBuilder))]
 		[Sql.Extension(PN.DB2,        "",                                         ServerSideOnly = false, BuilderType = typeof(DatePartBuilderDB2))] // TODO: Not checked
 		[Sql.Extension(PN.Informix,   "",                                         ServerSideOnly = false, BuilderType = typeof(DatePartBuilderInformix))] // TODO: Not checked
@@ -473,7 +472,6 @@ namespace Tests.Linq
 					from t in db.Types select Sql.AsSql(Sql.Ext.DatePart(Sql.DateParts.Millisecond, t.DateTimeValue)));
 		}
 
-
 		#endregion
 
 		#region Issue 4222
@@ -567,6 +565,7 @@ namespace Tests.Linq
 							.ToArray());
 						values.Add(row);
 					}
+
 					builder.ResultExpression = new SqlSearchCondition(false, new SqlPredicate.InList(left, null, false, values));
 				}
 				else

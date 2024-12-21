@@ -151,6 +151,7 @@ namespace LinqToDB.DataProvider.SQLite
 						f.OtherColumn = column;
 				}
 			}
+
 			return result;
 		}
 

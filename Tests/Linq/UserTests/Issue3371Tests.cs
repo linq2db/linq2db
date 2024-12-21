@@ -27,7 +27,6 @@ namespace Tests.UserTests
 			public int?     PayRateId { get; set; }
 		}
 
-
 		[Test]
 		public void NullReferenceExceptionTest([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{

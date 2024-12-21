@@ -48,7 +48,6 @@ namespace Tests.UserTests
 			[Association(ThisKey = "Id", OtherKey = "CustomInvoiceId", CanBeNull = true)]
 			public ICollection<TypeBMeasures> TypeBMeasures { get; set; }
 
-
 			[Column, NotNull] public int PriceListId { get; set; } // integer
 
 			[Association(ThisKey = "PriceListId", OtherKey = "Id", CanBeNull = true)]

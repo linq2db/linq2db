@@ -262,6 +262,7 @@ namespace LinqToDB.DataProvider.SQLite
 							// we can allow strings later if there will be request for it
 							value = guid.ToByteArray();
 						}
+
 						break;
 				}
 			}

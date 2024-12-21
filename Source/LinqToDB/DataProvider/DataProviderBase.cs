@@ -385,6 +385,7 @@ namespace LinqToDB.DataProvider
 									: "hh\\:mm\\:ss",
 							DateTimeFormatInfo.InvariantInfo);
 					}
+
 					break;
 				case DataType.Image     :
 				case DataType.Binary    :

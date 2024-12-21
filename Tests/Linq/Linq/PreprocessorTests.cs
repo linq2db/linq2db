@@ -33,13 +33,13 @@ namespace Tests.Linq
 							return Expression.Constant((int) constant.Value + 1);
 						}
 					}
+
 					return e;
 				});
 
 				return result;
 			}
 		}
-
 
 		[Test]
 		public void Test([DataSources(false)] string context)

@@ -435,7 +435,6 @@ namespace Tests.Linq
 			AssertQuery(query);
 		}
 
-
 		[Test]
 		public void UsingDictionary([DataSources] string context, [Values] SetOperation operation)
 		{
@@ -588,8 +587,6 @@ namespace Tests.Linq
 
 			AssertQuery(query, ByBookTypeResult.BookTypeComparer);
 		}
-
-
 
 		[Test]
 		public void EagerConcatWithSetsDifferentNullability([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)

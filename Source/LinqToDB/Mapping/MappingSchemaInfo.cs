@@ -112,6 +112,7 @@ namespace LinqToDB.Mapping
 									stop = true;
 									break;
 								}
+
 							if (stop)
 								continue;
 

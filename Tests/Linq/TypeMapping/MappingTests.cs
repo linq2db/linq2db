@@ -480,7 +480,6 @@ namespace Tests.TypeMapping
 				var l3 = typeMapper.MapLambda((SampleClass s, int i) => s.GetOther(i));
 				var l4 = typeMapper.MapLambda((SampleClass s, int i) => s.GetOther(i).OtherStrProp);
 
-
 				var cl1 = (Func<Dynamic.SampleClass, int>)l1.CompileExpression();
 				var cl2 = (Func<Dynamic.SampleClass, int>)l2.CompileExpression();
 				var cl3 = (Func<Dynamic.SampleClass, int, Dynamic.OtherClass>)l3.CompileExpression();
@@ -631,7 +630,6 @@ namespace Tests.TypeMapping
 					Assert.That(((Dynamic.SampleClass)thisValue1!.instance_).Id, Is.EqualTo(5));
 				});
 
-
 				wrapper.SimpleDelegateEvent                    -= handler1;
 				wrapper.SimpleDelegateWithMappingEvent         -= handler2;
 				wrapper.ReturningDelegateEvent                 -= handler3;
@@ -689,7 +687,6 @@ namespace Tests.TypeMapping
 					Assert.That(wrapper.SetFlagsEnum(FlagsEnum.Bit3), Is.EqualTo(4));
 					Assert.That(wrapper.SetFlagsEnum(FlagsEnum.Bits24), Is.EqualTo(10));
 					Assert.That(wrapper.SetFlagsEnum(FlagsEnum.Bit1 | FlagsEnum.Bit3), Is.EqualTo(5));
-
 
 					// test in properties
 					//

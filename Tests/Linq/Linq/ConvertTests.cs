@@ -220,7 +220,6 @@ namespace Tests.Linq
 					from p in from t in db.Types select Convert.ToUInt32(t.MoneyValue) where p > 0 select p);
 		}
 
-
 		[Test]
 		public void ToUInt16([DataSources] string context)
 		{

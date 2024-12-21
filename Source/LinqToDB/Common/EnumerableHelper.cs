@@ -203,6 +203,7 @@ namespace LinqToDB.Common
 						_finished = true;
 						yield break;
 					}
+
 					yield return _source.Current;
 				}
 			}

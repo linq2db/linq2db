@@ -99,7 +99,6 @@ namespace LinqToDB.Tools.Comparers
 			internal static Comparer<T>? DefaultInstance;
 		}
 
-
 		/// <summary>
 		/// Returns implementations of the <see cref="IEqualityComparer{T}" /> generic interface
 		/// based on object public members equality.

@@ -131,7 +131,6 @@ namespace Tests.UserTests
 
 				query12.GetCacheMissCount().Should().Be(cm1);	
 
-
 				var query21  = GetParents(db, values2);
 				var result21 = query21.ToArray();
 

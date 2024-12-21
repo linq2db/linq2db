@@ -170,7 +170,6 @@ namespace Tests
 								StartPositionDescription = exerciseStartDescription != null ? exerciseStartDescription.Content : exercise.Startexpl,
 							};
 
-
 				var result = query.ToList();
 
 				Assert.Multiple(() =>

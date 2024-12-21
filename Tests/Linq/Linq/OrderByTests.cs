@@ -542,7 +542,6 @@ namespace Tests.Linq
 			}
 		}
 
-
 		[Test]
 		public void OrderByConstant([IncludeDataSources(false, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
@@ -576,7 +575,6 @@ namespace Tests.Linq
 				Assert.That(db.LastQuery, Does.Not.Contain("ORDER BY"));
 			}
 		}
-
 
 		[Test]
 		public void OrderByIndex([IncludeDataSources(false, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)

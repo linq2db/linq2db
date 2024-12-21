@@ -132,6 +132,7 @@ namespace LinqToDB.Scaffold
 							DataType = typeMapping.DataType
 						});
 					}
+
 					break;
 				}
 				case ResultKind.Void:

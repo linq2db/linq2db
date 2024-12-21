@@ -17,7 +17,6 @@ namespace Tests.DataProvider
 			var connectionString = DataConnection.GetConnectionString(context);
 			var dataProvider     = DataConnection.GetDataProvider(context);
 
-
 			using (var conn = new DataConnection(dataProvider, connectionString))
 			using (var rd = conn.ExecuteReader("SELECT 1"))
 			{

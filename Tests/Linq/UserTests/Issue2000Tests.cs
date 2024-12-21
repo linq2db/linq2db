@@ -35,7 +35,6 @@ namespace Tests.UserTests
 				new DataParameter { Value = JsonSerializer.Serialize(obj), DataType = DataType.NVarChar });
 			ms.SetConverter<string, ITest1>(favs => { return JsonSerializer.Deserialize<ITest1>(favs)!; });
 
-
 			using (var db = GetDataContext(context, ms))
 			using (var table = db.CreateLocalTable<TestTable>())
 			{

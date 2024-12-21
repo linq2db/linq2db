@@ -116,7 +116,6 @@ namespace Tests.xUpdate
 			using var dest1  = db.CreateLocalTable<Dest1>();
 			using var dest2  = db.CreateLocalTable<Dest2>();
 
-
 			var sourceQuery =
 				from s in source
 				join s2 in source on s.ID equals s2.ID

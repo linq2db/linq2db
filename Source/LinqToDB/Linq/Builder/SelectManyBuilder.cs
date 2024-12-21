@@ -50,7 +50,6 @@ namespace LinqToDB.Linq.Builder
 				SourceCardinality = SourceCardinality.Many
 			};
 
-
 			using var snapshot = builder.CreateSnapshot();
 
 			var collectionResult = builder.TryBuildSequence(collectionInfo);

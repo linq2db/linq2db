@@ -67,7 +67,6 @@ namespace LinqToDB.Linq
 		}
 	}
 
-
 	class ExpressionCacheManager
 	{
 		readonly IUniqueIdGenerator<ExpressionCacheManager> _generator;
@@ -491,7 +490,6 @@ namespace LinqToDB.Linq
 							var dbDataTypeAccessorLambda = Expression.Lambda<Func<object?, DbDataType>>(dbDataTypeAccessorExpr.EnsureType<DbDataType>(), ParametersContext.ItemParameter);
 							dbDataTypeAccessor = dbDataTypeAccessorLambda.CompileExpression();
 						}
-
 
 						var accessor = new ParameterAccessor(
 							entry.ParameterId, 

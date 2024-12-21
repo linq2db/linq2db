@@ -664,6 +664,7 @@ namespace LinqToDB.Expressions.Types
 									return newExpression;
 								}
 							}
+
 							break;
 						}
 					case ExpressionType.MemberInit:
@@ -698,6 +699,7 @@ namespace LinqToDB.Expressions.Types
 								var newMemberInit = Expression.MemberInit(newExpression, newBindings);
 								return newMemberInit;
 							}
+
 							break;
 						}
 					case ExpressionType.Call:

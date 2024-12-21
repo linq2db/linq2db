@@ -190,7 +190,6 @@ namespace LinqToDB.Linq.Builder
 			}
 		}
 
-
 		public Expression PrepareSelfTargetLambda(LambdaExpression lambdaExpression)
 		{
 			if (lambdaExpression.Parameters.Count != 1)

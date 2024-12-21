@@ -75,6 +75,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 						StringBuilder
 							.Append(')');
 					}
+
 					break;
 				case DataType.SByte         :
 				case DataType.Byte          : StringBuilder.Append("SmallInt");       break;

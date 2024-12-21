@@ -39,7 +39,6 @@ namespace Tests.Linq
 			[NotColumn] public Type? NotMapped  { get; set; }
 		}
 
-
 		static Tuple<SuperClass[], Subclass1[], Subclass2[]> GenerateTestData()
 		{
 			var items1 = Enumerable.Range(1, 10).Select(i => new SuperClass

@@ -119,8 +119,10 @@ namespace LinqToDB.DataProvider.SapHana
 
 						return;
 					}
+
 					break;
 			}
+
 			base.BuildDataTypeFromDataType(type, forCreateTable, canBeNull);
 		}
 

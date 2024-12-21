@@ -1003,7 +1003,6 @@ namespace Tests.Linq
 			internal string? InternalStr { get; set; }
 		}
 
-
 		[Test]
 		public void InternalFieldProjection([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
@@ -1201,7 +1200,6 @@ namespace Tests.Linq
 				Query<IntermediateChildResult>.CacheMissCount.Should().Be(cacheMissCount);
 			}
 		}
-
 
 		[Test]
 		public void TestConditionalInProjection([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
@@ -1707,7 +1705,6 @@ namespace Tests.Linq
 				 	.Distinct()
 				 	.OrderBy(_ => _.Parent.ParentID);
 
-
 				var expectedQuery =
 					from p in Parent
 					from c1 in Child.Where(c => c.ParentID == p.ParentID).Take(1).DefaultIfEmpty()
@@ -1852,7 +1849,6 @@ namespace Tests.Linq
 				Assert.That(res, Is.True);
 			}
 		}
-
 
 		[Table("test_mapping_column_2_prop")]
 		public partial class TestMappingColumn1PropInfo

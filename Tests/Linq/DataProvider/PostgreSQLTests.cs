@@ -3149,7 +3149,6 @@ $function$
 		}
 		#endregion
 
-
 		sealed class JsonComparisonTable1
 		{
 			[Column                                ] public string? Text  { get; set; }

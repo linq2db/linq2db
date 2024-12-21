@@ -43,7 +43,6 @@ namespace Tests.Linq
 			[Column(DataType = DataType.NVarChar, Length = 200, CanBeNull = true)]
 			public List<ItemClass>? Value2 { get; set; }
 
-
 			[Column(DataType = DataType.NVarChar, Length = 50)]
 			public EnumValue Enum { get; set; }
 
@@ -52,7 +51,6 @@ namespace Tests.Linq
 
 			[Column(DataType = DataType.VarChar, Length = 50, CanBeNull = true)]
 			public EnumValue EnumWithNull { get; set; }
-
 
 			[Column(DataType = DataType.VarChar, Length = 50, CanBeNull = true)]
 			[ValueConverter(ConverterType = typeof(WithNullConverter))]
@@ -107,7 +105,6 @@ namespace Tests.Linq
 
 			[Column(DataType = DataType.NVarChar, Length = 200, CanBeNull = true)]
 			public string? Value2 { get; set; }
-
 
 			[Column(DataType = DataType.NVarChar, Length = 50)]
 			public string Enum { get; set; } = null!;
@@ -215,7 +212,6 @@ namespace Tests.Linq
 					Assert.That(result[2].BoolValue, Is.EqualTo(false));
 					Assert.That(result[3].BoolValue, Is.EqualTo(false));
 				});
-
 
 				var query = from t in table
 					select new
@@ -330,7 +326,6 @@ namespace Tests.Linq
 					group t by t.Id
 					into g
 					select g;
-
 
 				query = query.DisableGuard();
 
@@ -579,7 +574,6 @@ namespace Tests.Linq
 					Assert.That(update1Check.EnumWithNullDeclarative, Is.Null);
 				});
 
-
 				var toUpdate2 = new MainClass
 				{
 					Id = 2,
@@ -600,7 +594,6 @@ namespace Tests.Linq
 					Assert.That(update2Check.EnumWithNull, Is.EqualTo("Value2"));
 					Assert.That(update2Check.EnumWithNullDeclarative, Is.EqualTo("Value2"));
 				});
-
 
 				var toUpdate3 = new MainClass
 				{
@@ -678,7 +671,6 @@ namespace Tests.Linq
 					Assert.That(insert2Check.BoolValue, Is.EqualTo('N'));
 					Assert.That(insert2Check.AnotherBoolValue, Is.EqualTo('F'));
 				});
-
 
 				var toInsert = new MainClass
 				{

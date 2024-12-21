@@ -99,6 +99,7 @@ namespace LinqToDB.DataProvider.SqlServer
 					};
 				}
 			}
+
 			return null;
 		}
 

@@ -100,6 +100,7 @@ namespace LinqToDB.DataProvider.MySql
 					};
 				}
 			}
+
 			return null;
 		}
 

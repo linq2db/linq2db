@@ -101,6 +101,7 @@ namespace Tests.Linq
 							supported = false;
 							break;
 					}
+
 					if (!supported)
 						break;
 
@@ -118,7 +119,6 @@ namespace Tests.Linq
 			//
 			Expression<Func<T, AnalyticFunctions.IOverMayHavePartitionAndOrder<long>>> overExpression =
 				t => Sql.Ext.RowNumber().Over();
-
 
 			var isFirst = true;
 

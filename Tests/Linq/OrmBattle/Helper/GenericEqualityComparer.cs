@@ -38,6 +38,7 @@ namespace Tests.OrmBattle.Helper
 				if (!xValue.Equals(yValue))
 					return false;
 			}
+
 			return true;
 		}
 
@@ -50,6 +51,7 @@ namespace Tests.OrmBattle.Helper
 				var xValue = propertyInfo.GetValue(obj, null);
 				values.Add(xValue);
 			}
+
 			return HashCodeBuilder.Hash(values.ToArray());
 		}
 

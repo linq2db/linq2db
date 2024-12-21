@@ -88,6 +88,7 @@ namespace LinqToDB.Expressions.Internal
 							if (propertyInfo.IsNullableHasValueMember())
 								return false;
 						}
+
 						return propertyInfo.GetValue(obj, null);
 					}
 

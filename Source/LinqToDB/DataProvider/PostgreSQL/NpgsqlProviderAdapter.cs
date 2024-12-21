@@ -332,6 +332,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 									ctor = npgsqlInetType.GetConstructor(new[] { typeof(IPAddress), netmaskType })
 										?? throw new InvalidOperationException("Cannot find NpgsqlInet constructor");
 								}
+
 								var inetTupleType = valueTypeType.MakeGenericType(typeof(IPAddress), typeof(int));
 								var p = Expression.Parameter(inetTupleType, "p");
 

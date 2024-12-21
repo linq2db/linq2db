@@ -666,6 +666,7 @@ namespace Tests.Linq
 					.IsExpression(row => Sql.Expr<float?>(colExpr), isColumn: true)
 					;
 			}
+
 			fm.Build();
 
 			var id = 0;
@@ -716,6 +717,7 @@ namespace Tests.Linq
 					.IsExpression(row => Sql.Expr<string?>(colExpr), isColumn: true)
 					;
 			}
+
 			fm.Build();
 
 			var id = 0;

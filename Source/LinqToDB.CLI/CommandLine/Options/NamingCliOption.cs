@@ -115,6 +115,7 @@ namespace LinqToDB.CommandLine
 							errorDetails = $"prefix : expected string value, but got {property.Value.ValueKind}";
 							return null;
 						}
+
 						break;
 					case "suffix"                          :
 						if (property.Value.ValueKind == JsonValueKind.Null || property.Value.ValueKind == JsonValueKind.Undefined)
@@ -126,6 +127,7 @@ namespace LinqToDB.CommandLine
 							errorDetails = $"suffix : expected string value, but got {property.Value.ValueKind}";
 							return null;
 						}
+
 						break;
 					case "transformation"                  :
 						if (property.Value.ValueKind != JsonValueKind.String)
@@ -156,6 +158,7 @@ namespace LinqToDB.CommandLine
 							errorDetails = $"pluralize_if_ends_with_word_only : expected boolean value, but got {property.Value.ValueKind}";
 							return null;
 						}
+
 						break;
 					case "ignore_all_caps"                 :
 						if (property.Value.ValueKind == JsonValueKind.True)
@@ -167,6 +170,7 @@ namespace LinqToDB.CommandLine
 							errorDetails = $"ignore_all_caps : expected boolean value, but got {property.Value.ValueKind}";
 							return null;
 						}
+
 						break;
 					case "max_uppercase_word_length":
 						if (property.Value.ValueKind == JsonValueKind.Number && property.Value.TryGetInt32(out var maxLength) && maxLength > 1)
@@ -176,6 +180,7 @@ namespace LinqToDB.CommandLine
 							errorDetails = $"max_uppercase_word_length : expected number >= 2, but got: {property.Value}";
 							return null;
 						}
+
 						break;
 					default:
 						errorDetails = $"unexpected property '{property.Name}'";

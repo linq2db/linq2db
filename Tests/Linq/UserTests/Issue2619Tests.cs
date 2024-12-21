@@ -85,7 +85,6 @@ namespace Tests.UserTests
 			}
 		}
 
-
 		[Test]
 		public void OrderByExcept([DataSources(TestProvName.AllSybase, TestProvName.AllSqlServer, TestProvName.AllAccess)] string context)
 		{

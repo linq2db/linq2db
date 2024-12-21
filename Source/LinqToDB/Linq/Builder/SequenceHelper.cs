@@ -668,6 +668,7 @@ namespace LinqToDB.Linq.Builder
 				{
 					return expression;
 				}
+
 				if (!expression.Type.IsValueType)
 				{
 					if (expression is DefaultExpression)

@@ -216,6 +216,7 @@ namespace LinqToDB
 							if (prevMatch == match.Index && prevNotEmptyMatch == match.Index - 3 || (prevNotEmptyMatch >= 0 && e[prevNotEmptyMatch] != ' '))
 								res = " " + calculated;
 						}
+
 						spaceNeeded = false;
 					}
 

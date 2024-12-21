@@ -132,6 +132,7 @@ namespace LinqToDB.Metadata
 						.ToArray();
 				}
 			}
+
 			return _registeredTypes;
 		}
 

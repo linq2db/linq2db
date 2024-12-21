@@ -277,7 +277,6 @@ namespace Tests.DataProvider
 			}
 		}
 
-
 		[Test]
 		public void TestXml([IncludeDataSources(CurrentProvider)] string context)
 		{

@@ -132,7 +132,6 @@ namespace Tests.Data
 			}
 		}
 
-
 		[Table]
 		sealed class ProcedureMultipleResultExample
 		{
@@ -319,7 +318,6 @@ namespace Tests.Data
 				});
 			}
 		}
-
 
 		[Table]
 		sealed class ProcedureMultipleResultExampleWithoutAttributes

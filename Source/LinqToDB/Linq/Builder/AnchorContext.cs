@@ -29,6 +29,7 @@ namespace LinqToDB.Linq.Builder
 				{
 					return placeholder.WithSql(new SqlAnchor(placeholder.Sql, ctx.AnchorKind));
 				}
+
 				return e;
 			});
 

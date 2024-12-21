@@ -502,7 +502,6 @@ namespace LinqToDB.SqlProvider
 		[DataMember(Order = 58)]
 		public bool IsSupportedSimpleCorrelatedSubqueries { get; set; }
 
-
 		/// <summary>
 		/// Provider supports correlated subqueris, but limited how deep in subquery outer reference
 		/// Default <c>null</c>. If this value is <c>0</c>c>, provider do not support correlated subqueries

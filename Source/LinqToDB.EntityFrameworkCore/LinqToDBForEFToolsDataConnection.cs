@@ -52,7 +52,6 @@ namespace LinqToDB.EntityFrameworkCore
 			}
 		}
 
-
 		/// <summary>
 		/// Change tracker enable flag.
 		/// </summary>

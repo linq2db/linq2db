@@ -49,6 +49,7 @@
 						var newExpr =  PseudoFunctions.MakeMandatoryCast(new SqlBinaryExpression(systemType, newExpr1, element.Operation, element.Expr2), toType);
 						return Visit(Optimize(newExpr));
 					}
+
 					break;
 				}
 			}
@@ -140,6 +141,7 @@
 					return ConvertBooleanToCase(cast.Expression, cast.ToType);
 				}
 			}
+
 			cast = FloorBeforeConvert(cast);
 			return base.ConvertConversion(cast);
 		}

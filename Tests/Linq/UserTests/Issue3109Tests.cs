@@ -17,7 +17,6 @@ namespace Tests.UserTests
 			{
 			}
 
-
 			public ITable<Left>      Lefts      => this.GetTable<Left>();
 			public ITable<LeftRight> LeftRights => this.GetTable<LeftRight>();
 			public ITable<Right>     Rights     => this.GetTable<Right>();

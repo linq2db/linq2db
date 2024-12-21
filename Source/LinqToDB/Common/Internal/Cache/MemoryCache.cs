@@ -164,6 +164,7 @@ namespace LinqToDB.Common.Internal.Cache
 						// Entry could not be added, reset cache size
 						Interlocked.Add(ref _cacheSize, -entry.Size!.Value);
 					}
+
 					entry.SetExpired(EvictionReason.Replaced);
 					entry.InvokeEvictionCallbacks();
 				}
@@ -263,6 +264,7 @@ namespace LinqToDB.Common.Internal.Cache
 				{
 					Interlocked.Add(ref _cacheSize, -entry.Size!.Value);
 				}
+
 				entry.InvokeEvictionCallbacks();
 			}
 		}

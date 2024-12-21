@@ -41,7 +41,6 @@ namespace Tests.Linq
 			}
 		}
 
-
 		[Test]
 		public void MemberTranslatorTest([IncludeDataSources(false, TestProvName.AllPostgreSQL)] string context)
 		{

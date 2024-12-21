@@ -172,7 +172,6 @@ namespace LinqToDB.Linq.Builder
 			return _buildVisitor.ConvertToExtensionSql(context, expression, columnDescriptor, inlineParameters);
 		}
 
-
 		bool _handlingAlias;
 
 		Expression CheckForAlias(IBuildContext context, MemberExpression memberExpression, EntityDescriptor entityDescriptor, string alias, ProjectFlags flags)

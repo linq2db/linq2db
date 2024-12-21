@@ -94,7 +94,6 @@ namespace Tests.DataProvider
 					select t1
 				);
 
-
 				AreEqualWithComparer(expected, actual);
 			}
 		}

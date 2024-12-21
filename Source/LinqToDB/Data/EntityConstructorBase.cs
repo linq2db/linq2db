@@ -54,6 +54,7 @@ namespace LinqToDB.Data
 						else if (purpose == FullEntityPurpose.Update)
 							valid = !c.SkipOnUpdate;
 					}
+
 					return valid;
 				}).ToList();
 			}
@@ -400,6 +401,7 @@ namespace LinqToDB.Data
 						}
 					}
 				}
+
 				newExpression = Expression.New(constructorInfo!, parameterValues);
 			}
 

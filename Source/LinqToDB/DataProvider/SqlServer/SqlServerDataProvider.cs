@@ -303,6 +303,7 @@ namespace LinqToDB.DataProvider.SqlServer
 					{
 						Adapter.SetUdtTypeName(param, typeName);
 					}
+
 					break;
 
 				case DataType.NText when value is DateTime dt:

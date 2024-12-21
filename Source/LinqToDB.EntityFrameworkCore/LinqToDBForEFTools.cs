@@ -403,7 +403,6 @@ namespace LinqToDB.EntityFrameworkCore
 			return dc;
 		}
 
-
 		static readonly ConcurrentDictionary<Type, Func<DbConnection, string>> _connectionStringExtractors = new();
 
 		/// <summary>

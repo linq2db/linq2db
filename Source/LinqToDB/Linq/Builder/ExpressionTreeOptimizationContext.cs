@@ -492,6 +492,7 @@ namespace LinqToDB.Linq.Builder
 							return PreferServerSide(newExpr, enforceServerSide);
 						}
 					}
+
 					break;
 				}
 			}
