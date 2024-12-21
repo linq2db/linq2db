@@ -7,14 +7,14 @@ using System.Linq.Expressions;
 using System.Reflection;
 using System.Xml;
 
+using LinqToDB.Common;
+using LinqToDB.Data;
+using LinqToDB.Expressions;
+using LinqToDB.Expressions.Types;
+using LinqToDB.Mapping;
+
 namespace LinqToDB.DataProvider.Oracle
 {
-	using Common;
-	using Data;
-	using Expressions;
-	using Expressions.Types;
-	using Mapping;
-
 	public class OracleProviderAdapter : IDynamicProviderAdapter
 	{
 		const int NanosecondsPerTick = 100;
@@ -455,7 +455,7 @@ namespace LinqToDB.DataProvider.Oracle
 		{
 			var isNative = assemblyName == NativeAssemblyName;
 
-			var assembly = Tools.TryLoadAssembly(assemblyName, factoryName);
+			var assembly = Common.Tools.TryLoadAssembly(assemblyName, factoryName);
 			if (assembly == null)
 				throw new InvalidOperationException($"Cannot load assembly {assemblyName}");
 
@@ -661,7 +661,7 @@ namespace LinqToDB.DataProvider.Oracle
 
 		static OracleProviderAdapter CreateDevartAdapter()
 		{
-			var assembly = Tools.TryLoadAssembly(DevartAssemblyName, DevartFactoryName);
+			var assembly = Common.Tools.TryLoadAssembly(DevartAssemblyName, DevartFactoryName);
 			if (assembly == null)
 				throw new InvalidOperationException($"Cannot load assembly {DevartAssemblyName}");
 

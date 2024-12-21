@@ -1,10 +1,9 @@
 ﻿using System.Collections.Generic;
-using System.Linq;
+
+using LinqToDB.Configuration;
 
 namespace LinqToDB.DataProvider
 {
-	using Configuration;
-
 	public interface IDataProviderFactory
 	{
 		IDataProvider GetDataProvider (IEnumerable<NamedValue> attributes);

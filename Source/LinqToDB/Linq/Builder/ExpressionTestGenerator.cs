@@ -8,13 +8,13 @@ using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Text;
 
+using LinqToDB.Expressions;
+using LinqToDB.Expressions.ExpressionVisitors;
+using LinqToDB.Extensions;
+using LinqToDB.Mapping;
+
 namespace LinqToDB.Linq.Builder
 {
-	using Extensions;
-	using LinqToDB.Expressions;
-	using LinqToDB.Expressions.ExpressionVisitors;
-	using LinqToDB.Mapping;
-
 	sealed class ExpressionTestGenerator
 	{
 		readonly bool          _mangleNames; 

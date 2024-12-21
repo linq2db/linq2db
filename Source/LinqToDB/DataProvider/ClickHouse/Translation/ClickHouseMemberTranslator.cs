@@ -1,12 +1,12 @@
 ﻿using System;
 using System.Linq.Expressions;
 
+using LinqToDB.Common;
+using LinqToDB.Linq.Translation;
+using LinqToDB.SqlQuery;
+
 namespace LinqToDB.DataProvider.ClickHouse.Translation
 {
-	using Common;
-	using Linq.Translation;
-	using SqlQuery;
-
 	public class ClickHouseMemberTranslator : ProviderMemberTranslatorDefault
 	{
 		class SqlTypesTranslation : SqlTypesTranslationDefault

@@ -3,12 +3,12 @@ using System.Collections.Generic;
 using System.Data;
 using System.Linq;
 
+using LinqToDB.Common;
+using LinqToDB.Data;
+using LinqToDB.SchemaProvider;
+
 namespace LinqToDB.DataProvider.MySql
 {
-	using Common;
-	using Data;
-	using SchemaProvider;
-
 	sealed class MySqlSchemaProvider : SchemaProviderBase
 	{
 		private readonly MySqlDataProvider _provider;

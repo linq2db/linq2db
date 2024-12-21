@@ -10,12 +10,10 @@ using LinqToDB.Tools.EntityServices;
 
 using NUnit.Framework;
 
-using Tests.Linq;
+using Tests.Model;
 
 namespace Tests.Tools.EntityServices
 {
-	using Model;
-
 	[TestFixture]
 	public class IdentityMapTests : TestBase
 	{

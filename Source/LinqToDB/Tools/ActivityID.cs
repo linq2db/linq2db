@@ -1,8 +1,4 @@
-﻿using System;
-
-using LinqToDB.Linq;
-
-namespace LinqToDB.Tools
+﻿namespace LinqToDB.Tools
 {
 	/// <summary>
 	/// Activity Service event ID.

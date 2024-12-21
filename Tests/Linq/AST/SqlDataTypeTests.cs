@@ -1,5 +1,6 @@
 ﻿using LinqToDB;
 using LinqToDB.SqlQuery;
+
 using NUnit.Framework;
 
 namespace Tests.AST

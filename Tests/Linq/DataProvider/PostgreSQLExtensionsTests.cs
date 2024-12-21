@@ -7,6 +7,7 @@ using LinqToDB.Common;
 using LinqToDB.Data;
 using LinqToDB.DataProvider.PostgreSQL;
 using LinqToDB.Mapping;
+
 using NUnit.Framework;
 
 namespace Tests.DataProvider

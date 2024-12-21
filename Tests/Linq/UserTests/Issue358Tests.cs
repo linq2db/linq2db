@@ -3,14 +3,13 @@ using System.Linq;
 
 using LinqToDB;
 using LinqToDB.Common;
-using LinqToDB.Data;
 
 using NUnit.Framework;
 
+using Tests.Model;
+
 namespace Tests.UserTests
 {
-	using Model;
-
 	[TestFixture]
 	public class Issue358Tests : TestBase
 	{

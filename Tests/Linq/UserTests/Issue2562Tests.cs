@@ -1,8 +1,9 @@
 ﻿using System;
 using System.Linq;
 using System.Linq.Expressions;
+
 using LinqToDB;
-using LinqToDB.Linq;
+
 using NUnit.Framework;
 
 namespace Tests.UserTests

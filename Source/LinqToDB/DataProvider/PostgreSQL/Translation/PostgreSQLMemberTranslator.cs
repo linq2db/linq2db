@@ -1,12 +1,12 @@
 ﻿using System;
 using System.Linq.Expressions;
 
+using LinqToDB.Common;
+using LinqToDB.Linq.Translation;
+using LinqToDB.SqlQuery;
+
 namespace LinqToDB.DataProvider.PostgreSQL.Translation
 {
-	using Common;
-	using SqlQuery;
-	using Linq.Translation;
-
 	public class PostgreSQLMemberTranslator : ProviderMemberTranslatorDefault
 	{
 		class SqlTypesTranslation : SqlTypesTranslationDefault

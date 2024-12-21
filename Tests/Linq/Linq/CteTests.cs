@@ -3,19 +3,20 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 
+using FluentAssertions;
+
 using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.Expressions;
-using LinqToDB.Linq;
 using LinqToDB.Mapping;
 using LinqToDB.Tools;
+
 using NUnit.Framework;
-using FluentAssertions;
+
+using Tests.Model;
 
 namespace Tests.Linq
 {
-	using Model;
-
 	public class CteTests : TestBase
 	{
 		public static string[] CteSupportedProviders = new[]

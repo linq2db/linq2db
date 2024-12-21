@@ -2,11 +2,11 @@
 using System.Diagnostics;
 using System.Linq.Expressions;
 
+using LinqToDB.Mapping;
+using LinqToDB.SqlQuery;
+
 namespace LinqToDB.Linq.Builder
 {
-	using LinqToDB.Mapping;
-	using SqlQuery;
-
 	[DebuggerDisplay("{BuildContextDebuggingHelper.GetContextInfo(this)}")]
 	abstract class BuildContextBase : IBuildContext
 	{

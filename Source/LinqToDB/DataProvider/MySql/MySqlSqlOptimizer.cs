@@ -1,9 +1,9 @@
-﻿namespace LinqToDB.DataProvider.MySql
-{
-	using Mapping;
-	using SqlProvider;
-	using SqlQuery;
+﻿using LinqToDB.Mapping;
+using LinqToDB.SqlProvider;
+using LinqToDB.SqlQuery;
 
+namespace LinqToDB.DataProvider.MySql
+{
 	sealed class MySqlSqlOptimizer : BasicSqlOptimizer
 	{
 		public MySqlSqlOptimizer(SqlProviderFlags sqlProviderFlags) : base(sqlProviderFlags)

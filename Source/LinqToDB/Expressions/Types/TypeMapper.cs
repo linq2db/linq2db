@@ -9,12 +9,12 @@ using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 
+using LinqToDB.Common;
+using LinqToDB.Expressions.Internal;
+using LinqToDB.Extensions;
+
 namespace LinqToDB.Expressions.Types
 {
-	using Common;
-	using Extensions;
-	using Internal;
-
 	/// <summary>
 	/// Implements typed mappings support for dynamically loaded types.
 	/// </summary>

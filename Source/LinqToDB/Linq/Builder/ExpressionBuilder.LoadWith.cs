@@ -1,10 +1,10 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 
+using LinqToDB.Reflection;
+
 namespace LinqToDB.Linq.Builder
 {
-	using LinqToDB.Reflection;
-
 	internal partial class ExpressionBuilder
 	{
 		public List<LoadWithInfo> GetTableLoadWith(ITableContext table)

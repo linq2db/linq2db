@@ -11,22 +11,22 @@ using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 
+using LinqToDB.Common;
+using LinqToDB.Common.Internal;
+using LinqToDB.Common.Internal.Cache;
+using LinqToDB.Common.Logging;
+using LinqToDB.Data;
+using LinqToDB.Expressions;
+using LinqToDB.Extensions;
+using LinqToDB.Infrastructure;
+using LinqToDB.Interceptors;
+using LinqToDB.Linq.Builder;
+using LinqToDB.Reflection;
+using LinqToDB.SqlQuery;
+using LinqToDB.Tools;
+
 namespace LinqToDB.Linq
 {
-	using Builder;
-	using Common;
-	using Common.Internal.Cache;
-	using Common.Logging;
-	using Data;
-	using Extensions;
-	using Infrastructure;
-	using Interceptors;
-	using LinqToDB.Common.Internal;
-	using LinqToDB.Expressions;
-	using Reflection;
-	using SqlQuery;
-	using Tools;
-
 	static partial class QueryRunner
 	{
 		public static class Cache<T>
@@ -80,7 +80,7 @@ namespace LinqToDB.Linq
 
 			public T Map(IDataContext context, IQueryRunner queryRunner, DbDataReader dataReader, ref ReaderMapperInfo mapperInfo)
 			{
-				var a = Configuration.TraceMaterializationActivity ? ActivityService.Start(ActivityID.Materialization) : null;
+				var a = Common.Configuration.TraceMaterializationActivity ? ActivityService.Start(ActivityID.Materialization) : null;
 
 				try
 				{
@@ -205,7 +205,7 @@ namespace LinqToDB.Linq
 						});
 				}
 
-				if (Configuration.OptimizeForSequentialAccess)
+				if (Common.Configuration.OptimizeForSequentialAccess)
 					expression = SequentialAccessHelper.OptimizeMappingExpressionForSequentialAccess(expression, dataReader.FieldCount, reduce: false);
 
 				return (Expression<Func<IQueryRunner, DbDataReader, T>>)expression;
@@ -511,7 +511,7 @@ namespace LinqToDB.Linq
 					}
 
 					var mapperInfo   = _mapper.GetMapperInfo(_dataContext, runner, origDataReader);
-					var traceMapping = Configuration.TraceMaterializationActivity;
+					var traceMapping = Common.Configuration.TraceMaterializationActivity;
 
 					do
 					{
@@ -576,7 +576,7 @@ namespace LinqToDB.Linq
 						}
 
 						var mapperInfo   = _mapper.GetMapperInfo(_dataContext, runner, origDataReader);
-						var traceMapping = Configuration.TraceMaterializationActivity;
+						var traceMapping = Common.Configuration.TraceMaterializationActivity;
 
 						do
 						{

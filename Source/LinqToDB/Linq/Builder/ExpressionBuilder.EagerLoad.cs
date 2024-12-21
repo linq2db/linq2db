@@ -6,16 +6,16 @@ using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 
+using LinqToDB.Async;
+using LinqToDB.Common;
+using LinqToDB.Common.Internal;
+using LinqToDB.Expressions;
+using LinqToDB.Extensions;
+using LinqToDB.Reflection;
+using LinqToDB.SqlQuery;
+
 namespace LinqToDB.Linq.Builder
 {
-	using Async;
-	using Common;
-	using Common.Internal;
-	using Extensions;
-	using LinqToDB.Expressions;
-	using Reflection;
-	using SqlQuery;
-
 	partial class ExpressionBuilder
 	{
 		public static readonly ParameterExpression PreambleParam =

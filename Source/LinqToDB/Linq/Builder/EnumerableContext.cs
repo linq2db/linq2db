@@ -4,16 +4,16 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 
+using LinqToDB.Common;
+using LinqToDB.Data;
+using LinqToDB.Expressions;
+using LinqToDB.Extensions;
+using LinqToDB.Mapping;
+using LinqToDB.Reflection;
+using LinqToDB.SqlQuery;
+
 namespace LinqToDB.Linq.Builder
 {
-	using Common;
-	using Data;
-	using Extensions;
-	using LinqToDB.Expressions;
-	using Mapping;
-	using Reflection;
-	using SqlQuery;
-
 	//TODO: review
 	sealed class EnumerableContext : BuildContextBase
 	{

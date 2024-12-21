@@ -4,16 +4,16 @@ using System.Data.Common;
 using System.Threading;
 using System.Threading.Tasks;
 
+using LinqToDB.Common;
+using LinqToDB.Data;
+using LinqToDB.DataProvider.DB2.Translation;
+using LinqToDB.Linq.Translation;
+using LinqToDB.Mapping;
+using LinqToDB.SchemaProvider;
+using LinqToDB.SqlProvider;
+
 namespace LinqToDB.DataProvider.DB2
 {
-	using Common;
-	using Data;
-	using Linq.Translation;
-	using Mapping;
-	using SchemaProvider;
-	using SqlProvider;
-	using Translation;
-
 	sealed class DB2LUWDataProvider : DB2DataProvider { public DB2LUWDataProvider() : base(ProviderName.DB2LUW, DB2Version.LUW) {} }
 	sealed class DB2zOSDataProvider : DB2DataProvider { public DB2zOSDataProvider() : base(ProviderName.DB2zOS, DB2Version.zOS) {} }
 

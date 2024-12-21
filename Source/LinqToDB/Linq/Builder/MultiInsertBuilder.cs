@@ -3,14 +3,14 @@ using System.Collections.Generic;
 using System.Linq.Expressions;
 using System.Reflection;
 
+using LinqToDB.Expressions;
+using LinqToDB.Mapping;
+using LinqToDB.SqlQuery;
+
+using Methods = LinqToDB.Reflection.Methods.LinqToDB.MultiInsert;
+
 namespace LinqToDB.Linq.Builder
 {
-	using LinqToDB.Expressions;
-	using Mapping;
-	using SqlQuery;
-
-	using Methods = Reflection.Methods.LinqToDB.MultiInsert;
-
 	[BuildsMethodCall(
 		nameof(MultiInsertExtensions.MultiInsert),
 		nameof(MultiInsertExtensions.Into),

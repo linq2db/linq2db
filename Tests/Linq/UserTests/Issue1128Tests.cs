@@ -1,10 +1,10 @@
-﻿using NUnit.Framework;
+﻿using LinqToDB;
+using LinqToDB.Mapping;
+
+using NUnit.Framework;
 
 namespace Tests.UserTests
 {
-	using LinqToDB;
-	using LinqToDB.Mapping;
-
 	[TestFixture]
 	public class Issue1128Tests : TestBase
 	{

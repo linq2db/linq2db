@@ -1,11 +1,9 @@
-﻿using System;
+﻿using LinqToDB.Mapping;
+using LinqToDB.SqlProvider;
+using LinqToDB.SqlQuery;
 
 namespace LinqToDB.DataProvider.PostgreSQL
 {
-	using Mapping;
-	using SqlProvider;
-	using SqlQuery;
-
 	sealed class PostgreSQLSqlOptimizer : BasicSqlOptimizer
 	{
 		public PostgreSQLSqlOptimizer(SqlProviderFlags sqlProviderFlags) : base(sqlProviderFlags)

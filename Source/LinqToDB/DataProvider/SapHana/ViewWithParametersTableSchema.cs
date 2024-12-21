@@ -1,9 +1,9 @@
 ﻿using System.Collections.Generic;
 
+using LinqToDB.SchemaProvider;
+
 namespace LinqToDB.DataProvider.SapHana
 {
-	using SchemaProvider;
-
 	public class ViewWithParametersTableSchema : TableSchema
 	{
 		public ViewWithParametersTableSchema()

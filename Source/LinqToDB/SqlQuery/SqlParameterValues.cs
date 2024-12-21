@@ -1,10 +1,10 @@
 ﻿using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 
+using LinqToDB.Common;
+
 namespace LinqToDB.SqlQuery
 {
-	using Common;
-
 	public class SqlParameterValues : IReadOnlyParameterValues
 	{
 		public static readonly IReadOnlyParameterValues Empty = new SqlParameterValues();

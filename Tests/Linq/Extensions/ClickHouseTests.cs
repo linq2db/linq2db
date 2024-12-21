@@ -5,7 +5,6 @@ using LinqToDB;
 using LinqToDB.DataProvider.ClickHouse;
 
 using NUnit.Framework;
-using NUnit.Framework.Constraints;
 
 namespace Tests.Extensions
 {

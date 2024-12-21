@@ -5,10 +5,10 @@ using LinqToDB;
 
 using NUnit.Framework;
 
+using Tests.Model;
+
 namespace Tests.Linq
 {
-	using Model;
-
 	// ReSharper disable once TestClassNameDoesNotMatchFileNameWarning
 	partial class IdlTests
 	{

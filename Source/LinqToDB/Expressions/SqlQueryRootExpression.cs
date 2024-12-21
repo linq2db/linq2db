@@ -1,11 +1,11 @@
 ﻿using System;
 using System.Linq.Expressions;
 
+using LinqToDB.Common.Internal;
+using LinqToDB.Mapping;
+
 namespace LinqToDB.Expressions
 {
-	using Common.Internal;
-	using Mapping;
-
 	public class SqlQueryRootExpression : Expression, IEquatable<SqlQueryRootExpression>
 	{
 		public MappingSchema MappingSchema { get; }

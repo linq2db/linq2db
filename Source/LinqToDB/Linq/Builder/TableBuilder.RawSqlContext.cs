@@ -2,14 +2,14 @@
 using System.Collections.Generic;
 using System.Linq.Expressions;
 
+using LinqToDB.Common;
+using LinqToDB.Expressions;
+using LinqToDB.Expressions.Internal;
+using LinqToDB.Mapping;
+using LinqToDB.SqlQuery;
+
 namespace LinqToDB.Linq.Builder
 {
-	using Common;
-	using LinqToDB.Expressions;
-	using LinqToDB.Expressions.Internal;
-	using Mapping;
-	using SqlQuery;
-
 	partial class TableBuilder
 	{
 		class SimpleSelectContext : BuildContextBase

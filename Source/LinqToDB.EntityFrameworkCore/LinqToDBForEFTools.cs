@@ -8,6 +8,15 @@ using System.Linq.Expressions;
 
 using JetBrains.Annotations;
 
+using LinqToDB.Async;
+using LinqToDB.Data;
+using LinqToDB.DataProvider;
+using LinqToDB.EntityFrameworkCore.Internal;
+using LinqToDB.Expressions;
+using LinqToDB.Linq;
+using LinqToDB.Mapping;
+using LinqToDB.Metadata;
+
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
@@ -17,15 +26,6 @@ using Microsoft.Extensions.Logging;
 
 namespace LinqToDB.EntityFrameworkCore
 {
-	using Async;
-	using Data;
-	using DataProvider;
-	using Expressions;
-	using Internal;
-	using Linq;
-	using Mapping;
-	using Metadata;
-
 	/// <summary>
 	/// EF Core <see cref="DbContext"/> extensions to call LINQ To DB functionality.
 	/// </summary>

@@ -1,11 +1,11 @@
 ﻿using System.Collections.Generic;
 
+using LinqToDB.Mapping;
+using LinqToDB.SqlProvider;
+using LinqToDB.SqlQuery;
+
 namespace LinqToDB.DataProvider.Access
 {
-	using Mapping;
-	using SqlProvider;
-	using SqlQuery;
-
 	class AccessSqlOptimizer : BasicSqlOptimizer
 	{
 		public AccessSqlOptimizer(SqlProviderFlags sqlProviderFlags) : base(sqlProviderFlags)

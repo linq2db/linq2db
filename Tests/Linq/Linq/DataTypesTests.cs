@@ -9,10 +9,10 @@ using LinqToDB.Mapping;
 
 using NUnit.Framework;
 
+using Tests.Model;
+
 namespace Tests.Linq
 {
-	using Model;
-
 	// TODO: delete this test when we implement type tests for all databases similar to CLickHouse tests
 	[TestFixture]
 	public class DataTypesTests : TestBase

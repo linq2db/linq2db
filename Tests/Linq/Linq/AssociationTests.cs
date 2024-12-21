@@ -7,18 +7,17 @@ using System.Threading.Tasks;
 
 using FluentAssertions;
 
+using JetBrains.Annotations;
+
 using LinqToDB;
-using LinqToDB.Linq;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
 
-using JetBrains.Annotations;
+using Tests.Model;
 
 namespace Tests.Linq
 {
-	using Model;
-
 	[TestFixture]
 	public class AssociationTests : TestBase
 	{

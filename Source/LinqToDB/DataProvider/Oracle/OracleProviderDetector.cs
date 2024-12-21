@@ -1,14 +1,13 @@
 ﻿using System;
 using System.Data.Common;
 using System.Globalization;
+using System.IO;
+
+using LinqToDB.Common;
+using LinqToDB.Data;
 
 namespace LinqToDB.DataProvider.Oracle
 {
-	using System.IO;
-	using Configuration;
-	using Data;
-	using LinqToDB.Common;
-
 	sealed class OracleProviderDetector : ProviderDetectorBase<OracleProvider,OracleVersion>
 	{
 		public OracleProviderDetector() : base(OracleVersion.AutoDetect, OracleVersion.v12)

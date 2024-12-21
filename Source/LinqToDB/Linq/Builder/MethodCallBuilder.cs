@@ -1,9 +1,9 @@
 ﻿using System.Linq.Expressions;
 
+using LinqToDB.Expressions;
+
 namespace LinqToDB.Linq.Builder
 {
-	using LinqToDB.Expressions;
-
 	abstract class MethodCallBuilder : ISequenceBuilder
 	{
 		public BuildSequenceResult BuildSequence(ExpressionBuilder builder, BuildInfo buildInfo)

@@ -2,11 +2,11 @@
 using System.Data.Common;
 using System.IO;
 
+using LinqToDB.Common;
+using LinqToDB.Data;
+
 namespace LinqToDB.DataProvider.SapHana
 {
-	using Common;
-	using Data;
-
 	sealed class SapHanaProviderDetector : ProviderDetectorBase<SapHanaProvider, SapHanaProviderDetector.Dialect>
 	{
 		internal enum Dialect { }

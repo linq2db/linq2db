@@ -1,5 +1,7 @@
 ﻿using FluentAssertions;
+
 using LinqToDB.Common.Internal;
+
 using NUnit.Framework;
 
 namespace Tests.Common

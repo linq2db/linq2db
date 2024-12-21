@@ -9,6 +9,13 @@ using System.Reflection;
 
 using JetBrains.Annotations;
 
+using LinqToDB.Common.Internal;
+using LinqToDB.DataProvider.Firebird;
+using LinqToDB.Expressions;
+using LinqToDB.Extensions;
+using LinqToDB.Mapping;
+using LinqToDB.SqlQuery;
+
 #region ReSharper disables
 // ReSharper disable RedundantTypeArgumentsOfMethod
 // ReSharper disable RedundantCast
@@ -20,13 +27,6 @@ using JetBrains.Annotations;
 
 namespace LinqToDB.Linq
 {
-	using Common.Internal;
-	using DataProvider.Firebird;
-	using Extensions;
-	using LinqToDB.Expressions;
-	using Mapping;
-	using SqlQuery;
-
 	[PublicAPI]
 	public static class Expressions
 	{

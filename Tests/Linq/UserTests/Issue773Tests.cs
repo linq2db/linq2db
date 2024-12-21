@@ -2,15 +2,15 @@
 using System.Linq;
 using System.Reflection;
 
+using LinqToDB;
+using LinqToDB.Data;
+using LinqToDB.Mapping;
+using LinqToDB.SqlQuery;
+
 using NUnit.Framework;
 
 namespace Tests.UserTests
 {
-	using LinqToDB;
-	using LinqToDB.Data;
-	using LinqToDB.Mapping;
-	using LinqToDB.SqlQuery;
-
 	[TestFixture]
 	public class Issue773Tests : TestBase
 	{

@@ -7,15 +7,14 @@ using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
 
+using LinqToDB.Common;
+using LinqToDB.DataProvider.MySql;
+using LinqToDB.Expressions.Types;
+using LinqToDB.Mapping;
+using LinqToDB.SqlQuery;
+
 namespace LinqToDB.DataProvider.ClickHouse
 {
-	using Common;
-	using Expressions;
-	using Expressions.Types;
-	using Mapping;
-	using MySql;
-	using SqlQuery;
-
 	public class ClickHouseProviderAdapter : IDynamicProviderAdapter
 	{
 		private static readonly object _octonicaSyncRoot = new ();
@@ -196,7 +195,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 
 		private static ClickHouseProviderAdapter CreateClientAdapter()
 		{
-			var assembly = Tools.TryLoadAssembly(ClientAssemblyName, ClientProviderFactoryName);
+			var assembly = Common.Tools.TryLoadAssembly(ClientAssemblyName, ClientProviderFactoryName);
 			if (assembly == null)
 				throw new InvalidOperationException($"Cannot load assembly {ClientAssemblyName}");
 
@@ -265,7 +264,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 
 		private static ClickHouseProviderAdapter CreateOctonicaAdapter()
 		{
-			var assembly = Tools.TryLoadAssembly(OctonicaAssemblyName, OctonicaProviderFactoryName);
+			var assembly = Common.Tools.TryLoadAssembly(OctonicaAssemblyName, OctonicaProviderFactoryName);
 			if (assembly == null)
 				throw new InvalidOperationException($"Cannot load assembly {OctonicaAssemblyName}");
 

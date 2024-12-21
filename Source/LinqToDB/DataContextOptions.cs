@@ -1,14 +1,14 @@
 ﻿using System.Collections.Generic;
 
+using LinqToDB.Common;
+using LinqToDB.Common.Internal;
+using LinqToDB.Data;
+using LinqToDB.Interceptors;
+using LinqToDB.Linq.Translation;
+using LinqToDB.Remote;
+
 namespace LinqToDB
 {
-	using Common;
-	using Common.Internal;
-	using Data;
-	using Interceptors;
-	using Linq.Translation;
-	using Remote;
-
 	/// <param name="CommandTimeout">
 	/// The command timeout, or <c>null</c> if none has been set.
 	/// </param>

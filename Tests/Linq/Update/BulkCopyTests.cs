@@ -14,11 +14,11 @@ using LinqToDB.Mapping;
 
 using NUnit.Framework;
 
+using Tests.DataProvider;
+using Tests.Model;
+
 namespace Tests.xUpdate
 {
-	using Model;
-	using Tests.DataProvider;
-
 	[TestFixture]
 	[Order(10000)]
 	public class BulkCopyTests : TestBase

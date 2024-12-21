@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Linq;
+
 using FluentAssertions;
+
 using LinqToDB.Mapping;
 
 using NUnit.Framework;

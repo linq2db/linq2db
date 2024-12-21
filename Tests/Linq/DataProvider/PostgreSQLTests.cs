@@ -2,7 +2,6 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Data.Linq;
-using System.Diagnostics;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Net;
@@ -20,12 +19,15 @@ using LinqToDB.Data;
 using LinqToDB.DataProvider;
 using LinqToDB.DataProvider.PostgreSQL;
 using LinqToDB.Mapping;
+using LinqToDB.SchemaProvider;
 using LinqToDB.SqlQuery;
 using LinqToDB.Tools;
 using LinqToDB.Tools.Comparers;
 
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+
+using Npgsql;
 
 using NpgsqlTypes;
 
@@ -34,13 +36,10 @@ using NUnit.Framework.Interfaces;
 using NUnit.Framework.Internal;
 using NUnit.Framework.Internal.Builders;
 
+using Tests.Model;
+
 namespace Tests.DataProvider
 {
-	using LinqToDB.SchemaProvider;
-
-	using Model;
-	using Npgsql;
-
 	[TestFixture]
 	public class PostgreSQLTests : DataProviderTestBase
 	{

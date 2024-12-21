@@ -1,9 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
+
 using LinqToDB.CodeModel;
 using LinqToDB.DataModel;
-using LinqToDB.Metadata;
 using LinqToDB.Schema;
 
 namespace LinqToDB.Scaffold

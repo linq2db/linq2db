@@ -3,7 +3,6 @@ using System.Linq;
 using System.Text;
 
 using LinqToDB;
-using LinqToDB.Common;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;

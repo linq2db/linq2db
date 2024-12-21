@@ -1,10 +1,9 @@
 ﻿using System.Collections.Generic;
-using System.Threading;
+
+using LinqToDB.Common;
 
 namespace LinqToDB.SqlQuery
 {
-	using Common;
-
 	/// <summary>
 	/// Base class for SQL AST nodes. Use only if you need to add debug functionality to AST node.
 	/// </summary>

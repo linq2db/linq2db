@@ -3,13 +3,14 @@ using System.Collections.Generic;
 using System.Linq.Expressions;
 using System.Reflection;
 
+using LinqToDB.Data;
+using LinqToDB.Expressions;
+using LinqToDB.Mapping;
+
+using static LinqToDB.Data.EntityConstructorBase;
+
 namespace LinqToDB.Linq.Builder
 {
-	using Data;
-	using LinqToDB.Expressions;
-	using Mapping;
-	using static Data.EntityConstructorBase;
-
 	internal partial class ExpressionBuilder
 	{
 		EntityConstructor? _entityConstructor;

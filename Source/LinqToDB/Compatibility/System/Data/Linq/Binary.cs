@@ -3,10 +3,10 @@
 
 using System.Runtime.Serialization;
 
+using LinqToDB.Common;
+
 namespace System.Data.Linq
 {
-	using LinqToDB.Common;
-
 	[DataContract]
 	[Serializable]
 	public sealed class Binary : IEquatable<Binary>

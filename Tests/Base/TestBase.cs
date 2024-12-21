@@ -9,10 +9,10 @@ using LinqToDB.Data;
 using NUnit.Framework;
 using NUnit.Framework.Internal;
 
+using Tests.Model;
+
 namespace Tests
 {
-	using Model;
-
 	public partial class TestBase
 	{
 		const int TRACES_LIMIT = 50000;

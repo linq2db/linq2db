@@ -1,14 +1,12 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Linq;
 using System.Reflection;
+
+using LinqToDB.Extensions;
 
 namespace LinqToDB.Mapping
 {
-	using Common;
-	using Extensions;
-
 	internal sealed class MappingAttributesCache
 	{
 		record struct CacheKey(Type AttributeType, Key SourceKey);

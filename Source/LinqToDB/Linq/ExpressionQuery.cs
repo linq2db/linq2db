@@ -8,17 +8,17 @@ using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 
+using LinqToDB.Async;
+using LinqToDB.Compatibility.System;
+using LinqToDB.Data;
+using LinqToDB.Expressions;
+using LinqToDB.Extensions;
+using LinqToDB.Linq.Internal;
+using LinqToDB.SqlQuery;
+using LinqToDB.Tools;
+
 namespace LinqToDB.Linq
 {
-	using Async;
-	using Data;
-	using Extensions;
-	using Tools;
-	using Internal;
-	using LinqToDB.Expressions;
-	using LinqToDB.SqlQuery;
-	using LinqToDB.Compatibility.System;
-
 	abstract class ExpressionQuery<T> : IExpressionQuery<T>, IAsyncEnumerable<T>
 	{
 		#region Init

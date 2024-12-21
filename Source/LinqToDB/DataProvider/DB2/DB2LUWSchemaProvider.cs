@@ -5,12 +5,12 @@ using System.Data.Common;
 using System.Globalization;
 using System.Linq;
 
+using LinqToDB.Common;
+using LinqToDB.Data;
+using LinqToDB.SchemaProvider;
+
 namespace LinqToDB.DataProvider.DB2
 {
-	using Common;
-	using Data;
-	using SchemaProvider;
-
 	// Known Issues:
 	// - CommandBehavior.SchemaOnly doesn't return schema for stored procedures
 	class DB2LUWSchemaProvider : SchemaProviderBase

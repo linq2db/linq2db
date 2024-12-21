@@ -1,17 +1,16 @@
 ﻿using System;
-using System.Threading;
-using System.Threading.Tasks;
 using System.Linq;
+using System.Threading.Tasks;
 
 using LinqToDB;
 using LinqToDB.Data;
 
 using NUnit.Framework;
 
+using Tests.Model;
+
 namespace Tests.Data
 {
-	using Model;
-
 	[TestFixture]
 	public class TransactionTests : TestBase
 	{

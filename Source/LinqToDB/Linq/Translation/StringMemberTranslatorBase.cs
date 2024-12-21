@@ -1,10 +1,10 @@
 ﻿using System.Collections.Generic;
 using System.Linq.Expressions;
 
+using LinqToDB.SqlQuery;
+
 namespace LinqToDB.Linq.Translation
 {
-	using SqlQuery;
-
 	public class StringMemberTranslatorBase : MemberTranslatorBase
 	{
 		public StringMemberTranslatorBase()

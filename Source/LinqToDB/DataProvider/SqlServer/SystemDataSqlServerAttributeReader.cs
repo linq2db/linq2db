@@ -8,13 +8,12 @@ using System.Reflection;
 using Microsoft.SqlServer.Server;
 #endif
 
+using LinqToDB.Extensions;
+using LinqToDB.Mapping;
+using LinqToDB.Metadata;
+
 namespace LinqToDB.DataProvider.SqlServer
 {
-	using Common;
-	using Extensions;
-	using Mapping;
-	using Metadata;
-
 	/// <summary>
 	/// Adds support for types and functions, defined in Microsoft.SqlServer.Types spatial types
 	/// (or any other types and methods, that use SqlMethodAttribute or SqlUserDefinedTypeAttribute mapping attributes).

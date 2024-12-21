@@ -1,9 +1,9 @@
-﻿namespace LinqToDB.DataProvider.SapHana
-{
-	using Mapping;
-	using SqlProvider;
-	using SqlQuery;
+﻿using LinqToDB.Mapping;
+using LinqToDB.SqlProvider;
+using LinqToDB.SqlQuery;
 
+namespace LinqToDB.DataProvider.SapHana
+{
 	sealed class SapHanaSqlOptimizer : BasicSqlOptimizer
 	{
 		public SapHanaSqlOptimizer(SqlProviderFlags sqlProviderFlags) : base(sqlProviderFlags)

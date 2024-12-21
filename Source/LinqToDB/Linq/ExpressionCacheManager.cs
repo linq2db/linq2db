@@ -4,18 +4,19 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Linq.Expressions;
 
+using LinqToDB.Common;
+using LinqToDB.Expressions;
+using LinqToDB.Extensions;
+using LinqToDB.Infrastructure;
+using LinqToDB.Linq.Builder;
+using LinqToDB.Linq.Internal;
+using LinqToDB.Mapping;
+using LinqToDB.SqlQuery;
+
+using static LinqToDB.Linq.QueryCacheCompareInfo;
+
 namespace LinqToDB.Linq
 {
-	using LinqToDB.Expressions;
-	using Infrastructure;
-	using Builder;
-	using Mapping;
-	using Internal;
-	using Extensions;
-	using Common;
-	using SqlQuery;
-	using static QueryCacheCompareInfo;
-
 	sealed class ParameterCacheEntry
 	{
 		public ParameterCacheEntry(

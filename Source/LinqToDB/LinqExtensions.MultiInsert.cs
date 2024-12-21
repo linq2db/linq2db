@@ -3,13 +3,13 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
+
 using JetBrains.Annotations;
+
+using Methods = LinqToDB.Reflection.Methods.LinqToDB.MultiInsert;
 
 namespace LinqToDB
 {
-	using Async;
-	using Methods = Reflection.Methods.LinqToDB.MultiInsert;
-
 	public static class MultiInsertExtensions
 	{
 		#region Public fluent API

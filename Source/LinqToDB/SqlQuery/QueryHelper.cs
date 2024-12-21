@@ -5,13 +5,13 @@ using System.Globalization;
 using System.Linq;
 using System.Text.RegularExpressions;
 
+using LinqToDB.Common;
+using LinqToDB.Common.Internal;
+using LinqToDB.Mapping;
+using LinqToDB.SqlProvider;
+
 namespace LinqToDB.SqlQuery
 {
-	using SqlProvider;
-	using Common;
-	using Mapping;
-	using Common.Internal;
-
 	public static partial class QueryHelper
 	{
 		internal static ObjectPool<SelectQueryOptimizerVisitor> SelectOptimizer =

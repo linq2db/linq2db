@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 
 // ReSharper disable once CheckNamespace
 namespace LinqToDB.Extensions

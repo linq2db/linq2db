@@ -4,12 +4,12 @@ using System.Data;
 using System.Globalization;
 using System.Linq;
 
+using LinqToDB.Common;
+using LinqToDB.Data;
+using LinqToDB.SchemaProvider;
+
 namespace LinqToDB.DataProvider.Sybase
 {
-	using Common;
-	using Data;
-	using SchemaProvider;
-
 	sealed class SybaseSchemaProvider : SchemaProviderBase
 	{
 		private readonly SybaseDataProvider _provider;

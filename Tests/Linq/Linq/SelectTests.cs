@@ -2,22 +2,24 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
+
 using FluentAssertions;
 
 using LinqToDB;
+using LinqToDB.Common;
 using LinqToDB.Data;
 using LinqToDB.Extensions;
 using LinqToDB.Linq;
-using LinqToDB.Reflection;
 using LinqToDB.Mapping;
+using LinqToDB.Reflection;
 using LinqToDB.Tools.Comparers;
+
 using NUnit.Framework;
+
+using Tests.Model;
 
 namespace Tests.Linq
 {
-	using LinqToDB.Common;
-	using Model;
-
 	[TestFixture]
 	public class SelectTests : TestBase
 	{

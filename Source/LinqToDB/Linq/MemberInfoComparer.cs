@@ -1,10 +1,10 @@
 ﻿using System.Collections.Generic;
 using System.Reflection;
 
+using LinqToDB.Extensions;
+
 namespace LinqToDB.Linq
 {
-	using Extensions;
-
 	sealed class MemberInfoComparer : IEqualityComparer<MemberInfo>
 	{
 		public static MemberInfoComparer Instance = new ();

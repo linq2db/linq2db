@@ -1,8 +1,8 @@
-﻿namespace LinqToDB.DataProvider.Firebird.Translation
-{
-	using Linq.Translation;
-	using SqlQuery;
+﻿using LinqToDB.Linq.Translation;
+using LinqToDB.SqlQuery;
 
+namespace LinqToDB.DataProvider.Firebird.Translation
+{
 	public class Firebird5MemberTranslator : FirebirdMemberTranslator
 	{
 		class Firebird5DateFunctionsTranslator : FirebirdDateFunctionsTranslator

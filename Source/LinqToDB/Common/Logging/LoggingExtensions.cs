@@ -1,9 +1,9 @@
 ﻿using System.Diagnostics;
 
+using LinqToDB.Data;
+
 namespace LinqToDB.Common.Logging
 {
-	using Data;
-
 	public static class LoggingExtensions
 	{
 		/// <summary>

@@ -5,15 +5,15 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 
+using LinqToDB.Common;
+using LinqToDB.Expressions;
+using LinqToDB.Extensions;
+using LinqToDB.Linq;
+using LinqToDB.Linq.Builder;
+using LinqToDB.Mapping;
+
 namespace LinqToDB.Data
 {
-	using Common;
-	using Expressions;
-	using Extensions;
-	using Linq.Builder;
-	using Linq;
-	using Mapping;
-
 	sealed class RecordReaderBuilder
 	{
 		class EntityConstructor : EntityConstructorBase
@@ -115,7 +115,7 @@ namespace LinqToDB.Data
 			
 			var lambda = Expression.Lambda<Func<DbDataReader,T>>(generator.ResultExpression, DataReaderParam);
 
-			if (Configuration.OptimizeForSequentialAccess)
+			if (Common.Configuration.OptimizeForSequentialAccess)
 				lambda = (Expression<Func<DbDataReader, T>>)SequentialAccessHelper.OptimizeMappingExpressionForSequentialAccess(lambda, Reader.FieldCount, reduce: true);
 
 			return lambda.CompileExpression();

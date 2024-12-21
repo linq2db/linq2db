@@ -4,14 +4,14 @@ using System.Linq;
 using FluentAssertions;
 
 using LinqToDB;
-using LinqToDB.Linq;
 using LinqToDB.Mapping;
+
 using NUnit.Framework;
+
+using Tests.Model;
 
 namespace Tests.Exceptions
 {
-	using Model;
-
 	[TestFixture]
 	public class JoinTests : TestBase
 	{

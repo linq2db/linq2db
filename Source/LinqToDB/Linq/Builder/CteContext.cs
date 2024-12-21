@@ -2,13 +2,13 @@
 using System.Collections.Generic;
 using System.Linq.Expressions;
 
+using LinqToDB.Common;
+using LinqToDB.Expressions;
+using LinqToDB.Mapping;
+using LinqToDB.SqlQuery;
+
 namespace LinqToDB.Linq.Builder
 {
-	using Common;
-	using LinqToDB.Expressions;
-	using LinqToDB.Mapping;
-	using SqlQuery;
-
 	internal class CteContext : BuildContextBase
 	{
 		public Expression CteExpression { get; set;  }

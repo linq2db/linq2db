@@ -2,6 +2,7 @@
 
 using LinqToDB;
 using LinqToDB.Mapping;
+
 using NUnit.Framework;
 
 namespace Tests.xUpdate

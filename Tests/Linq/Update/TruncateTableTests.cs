@@ -1,8 +1,7 @@
 ﻿using System.Linq;
 
-using FluentAssertions;
-
 using JetBrains.Annotations;
+
 using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.Mapping;

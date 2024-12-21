@@ -1,12 +1,13 @@
 ﻿using System;
 using System.Linq;
-using LinqToDB.Mapping;
-using NUnit.Framework;
+using System.Linq.Expressions;
+
 using FluentAssertions;
 
 using LinqToDB;
-using LinqToDB.Linq;
-using System.Linq.Expressions;
+using LinqToDB.Mapping;
+
+using NUnit.Framework;
 
 namespace Tests.Linq
 {

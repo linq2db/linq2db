@@ -2,18 +2,18 @@
 using System.Collections.Generic;
 using System.Linq.Expressions;
 
+using LinqToDB.Common;
+using LinqToDB.Data;
+using LinqToDB.Expressions;
+using LinqToDB.Expressions.Internal;
+using LinqToDB.Extensions;
+using LinqToDB.Infrastructure;
+using LinqToDB.Mapping;
+using LinqToDB.Reflection;
+using LinqToDB.SqlQuery;
+
 namespace LinqToDB.Linq.Builder
 {
-	using Common;
-	using Data;
-	using Extensions;
-	using Infrastructure;
-	using LinqToDB.Expressions;
-	using LinqToDB.Expressions.Internal;
-	using Mapping;
-	using Reflection;
-	using SqlQuery;
-
 	sealed class ParametersContext
 	{
 		readonly        IUniqueIdGenerator<ParameterAccessor> _accessorIdGenerator = new UniqueIdGenerator<ParameterAccessor>();

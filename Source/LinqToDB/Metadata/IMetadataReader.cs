@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Reflection;
 
+using LinqToDB.Mapping;
+
 namespace LinqToDB.Metadata
 {
-	using Mapping;
-
 	public interface IMetadataReader
 	{
 		/// <summary>

@@ -1,6 +1,4 @@
-﻿using LinqToDB.EntityFrameworkCore.Tests.Models.Shared;
-
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 
 namespace LinqToDB.EntityFrameworkCore.Tests.Models.Shared
 {

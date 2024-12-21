@@ -1,12 +1,11 @@
 ﻿using System;
 
+using LinqToDB.Extensions;
+using LinqToDB.SqlProvider;
+using LinqToDB.SqlQuery;
+
 namespace LinqToDB.DataProvider.Access
 {
-	using Extensions;
-	using Linq;
-	using SqlProvider;
-	using SqlQuery;
-
 	public class AccessSqlExpressionConvertVisitor : SqlExpressionConvertVisitor
 	{
 		public AccessSqlExpressionConvertVisitor(bool allowModify) : base(allowModify)

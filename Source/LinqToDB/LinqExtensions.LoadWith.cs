@@ -5,16 +5,14 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Threading;
-using System.Threading.Tasks;
 
 using JetBrains.Annotations;
 
+using LinqToDB.Linq;
+using LinqToDB.Linq.Builder;
+
 namespace LinqToDB
 {
-	using Async;
-	using Linq;
-	using Linq.Builder;
-
 	public partial class LinqExtensions
 	{
 		/// <summary>

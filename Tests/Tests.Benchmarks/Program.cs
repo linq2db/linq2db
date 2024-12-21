@@ -1,5 +1,7 @@
 ﻿using System.Threading.Tasks;
+
 using BenchmarkDotNet.Running;
+
 using LinqToDB.Benchmarks.Queries;
 using LinqToDB.Benchmarks.QueryGeneration;
 

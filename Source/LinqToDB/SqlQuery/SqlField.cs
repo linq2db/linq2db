@@ -1,11 +1,11 @@
 ﻿using System;
 
+using LinqToDB.Common;
+
+using LinqToDB.Mapping;
+
 namespace LinqToDB.SqlQuery
 {
-	using Common;
-
-	using Mapping;
-
 	public class SqlField : SqlExpressionBase
 	{
 		internal static SqlField All(ISqlTableSource table)

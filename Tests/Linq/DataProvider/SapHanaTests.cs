@@ -2,9 +2,9 @@
 using System.Data.Linq;
 using System.Linq;
 using System.Reflection;
+using System.Threading.Tasks;
 using System.Xml;
 using System.Xml.Linq;
-using System.Threading.Tasks;
 
 using LinqToDB;
 using LinqToDB.Common;
@@ -15,10 +15,10 @@ using LinqToDB.Mapping;
 
 using NUnit.Framework;
 
+using Tests.Model;
+
 namespace Tests.DataProvider
 {
-	using Model;
-
 	[TestFixture]
 	public class SapHanaTests : DataProviderTestBase
 	{

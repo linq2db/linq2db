@@ -5,12 +5,12 @@ using System.Globalization;
 using System.Linq;
 using System.Text;
 
+using LinqToDB.Common;
+using LinqToDB.Common.Internal;
+using LinqToDB.Data;
+
 namespace LinqToDB.SchemaProvider
 {
-	using Common;
-	using Common.Internal;
-	using Data;
-
 	public abstract class SchemaProviderBase : ISchemaProvider
 	{
 		protected abstract DataType                            GetDataType   (string? dataType, string? columnType, int? length, int? precision, int? scale);

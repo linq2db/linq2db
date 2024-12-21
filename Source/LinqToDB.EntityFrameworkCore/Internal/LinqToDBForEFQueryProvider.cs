@@ -15,12 +15,12 @@ using Microsoft.EntityFrameworkCore.Query;
 #endif
 
 using LinqToDB.Expressions;
+using LinqToDB.Async;
+
+using LinqToDB.Linq;
 
 namespace LinqToDB.EntityFrameworkCore.Internal
 {
-	using Async;
-	using Linq;
-
 	/// <summary>
 	///     Adapter for <see cref="IAsyncQueryProvider" />
 	///		This is internal API and is not intended for use by Linq To DB applications.

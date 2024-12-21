@@ -4,13 +4,13 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Linq.Expressions;
 
+using LinqToDB.Common;
+using LinqToDB.Expressions;
+using LinqToDB.Linq.Builder;
+using LinqToDB.SqlQuery;
+
 namespace LinqToDB.Linq
 {
-	using Builder;
-	using Common;
-	using LinqToDB.Expressions;
-	using SqlQuery;
-	
 	class CloningContext
 	{
 		Dictionary<IQueryElement, IQueryElement> _queryElements    = new (Utils.ObjectReferenceEqualityComparer<IQueryElement>.Default);

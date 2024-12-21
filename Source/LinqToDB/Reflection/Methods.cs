@@ -5,16 +5,15 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 
+using LinqToDB.Common;
+using LinqToDB.Expressions;
+using LinqToDB.Expressions.Internal;
+using LinqToDB.Extensions;
+using LinqToDB.Linq;
+using LinqToDB.SqlQuery;
+
 namespace LinqToDB.Reflection
 {
-	using Common;
-	using Expressions;
-	using Extensions;
-	using Linq;
-	using Expressions.Internal;
-
-	using SqlQuery;
-
 	/// <summary>
 	/// This API supports the LinqToDB infrastructure and is not intended to be used  directly from your code.
 	/// This API may change or be removed in future releases.

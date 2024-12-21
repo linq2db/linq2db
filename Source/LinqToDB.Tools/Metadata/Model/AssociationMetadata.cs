@@ -1,5 +1,4 @@
-﻿using System;
-using LinqToDB.CodeModel;
+﻿using LinqToDB.CodeModel;
 using LinqToDB.Mapping;
 
 namespace LinqToDB.Metadata

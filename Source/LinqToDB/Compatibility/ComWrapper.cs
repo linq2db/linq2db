@@ -8,8 +8,6 @@ using System.Threading;
 
 namespace LinqToDB.Compatibility
 {
-	using Common;
-
 	// implementation based on code from https://github.com/dotnet/runtime/issues/12587
 	/// <summary>
 	/// This class is used as COM object wrapper instead of dynamic keyword, as dynamic for COM is not supported on .net core till v5.

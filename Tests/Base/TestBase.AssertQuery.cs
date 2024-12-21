@@ -12,10 +12,7 @@ using LinqToDB.Expressions.Internal;
 using LinqToDB.Extensions;
 using LinqToDB.Linq;
 using LinqToDB.Reflection;
-using LinqToDB.Tools;
 using LinqToDB.Tools.Comparers;
-
-using NUnit.Framework;
 
 namespace Tests
 {

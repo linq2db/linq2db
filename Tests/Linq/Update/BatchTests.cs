@@ -3,10 +3,10 @@ using LinqToDB.Data;
 
 using NUnit.Framework;
 
+using Tests.Model;
+
 namespace Tests.xUpdate
 {
-	using Model;
-
 	[TestFixture]
 	[Order(10000)]
 	public class BatchTests : TestBase

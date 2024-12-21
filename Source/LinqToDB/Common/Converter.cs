@@ -9,12 +9,12 @@ using System.Xml;
 
 using JetBrains.Annotations;
 
+using LinqToDB.Expressions;
+using LinqToDB.Expressions.ExpressionVisitors;
+using LinqToDB.Mapping;
+
 namespace LinqToDB.Common
 {
-	using Expressions;
-	using Expressions.ExpressionVisitors;
-	using Mapping;
-
 	/// <summary>
 	/// Type conversion manager.
 	/// </summary>

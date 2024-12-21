@@ -1,7 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Data.Common;
-
-namespace LinqToDB.Schema
+﻿namespace LinqToDB.Schema
 {
 	/// <summary>
 	/// SQL Server database-specific scaffold options.

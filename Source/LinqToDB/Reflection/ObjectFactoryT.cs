@@ -1,11 +1,11 @@
 ﻿using System;
 using System.Linq.Expressions;
 
+using LinqToDB.Common;
+using LinqToDB.Extensions;
+
 namespace LinqToDB.Reflection
 {
-	using Common;
-	using Extensions;
-
 	public static class ObjectFactory<T>
 	{
 		static readonly Func<T>         _createInstance;

@@ -8,19 +8,19 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 
+using LinqToDB.Common;
+using LinqToDB.Common.Internal;
+using LinqToDB.Data;
+using LinqToDB.Expressions;
+using LinqToDB.Expressions.Internal;
+using LinqToDB.Extensions;
+using LinqToDB.Linq.Translation;
+using LinqToDB.Mapping;
+using LinqToDB.Reflection;
+using LinqToDB.SqlQuery;
+
 namespace LinqToDB.Linq.Builder
 {
-	using Common;
-	using Common.Internal;
-	using Data;
-	using Extensions;
-	using LinqToDB.Expressions;
-	using LinqToDB.Expressions.Internal;
-	using Mapping;
-	using Reflection;
-	using SqlQuery;
-	using Translation;
-
 	[Flags]
 	public enum BuildPurpose
 	{

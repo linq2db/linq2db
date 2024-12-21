@@ -7,15 +7,15 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 
+using LinqToDB.Common.Internal;
+using LinqToDB.Expressions;
+using LinqToDB.Expressions.Internal;
+using LinqToDB.Extensions;
+using LinqToDB.Mapping;
+using LinqToDB.Reflection;
+
 namespace LinqToDB.Linq.Builder.Visitors
 {
-	using Extensions;
-	using LinqToDB.Common.Internal;
-	using LinqToDB.Expressions;
-	using LinqToDB.Expressions.Internal;
-	using Mapping;
-	using Reflection;
-
 	class ExposeExpressionVisitor : ExpressionVisitorBase, IExpressionEvaluator
 	{
 		static ObjectPool<IsCompilableVisitor> _isCompilableVisitorPool = new(() => new IsCompilableVisitor(), v => v.Cleanup(), 100);

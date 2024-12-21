@@ -2,13 +2,13 @@
 using System.Collections.Generic;
 using System.Linq;
 
+using LinqToDB.Common;
+using LinqToDB.Common.Internal;
+using LinqToDB.SqlQuery;
+using LinqToDB.SqlQuery.Visitors;
+
 namespace LinqToDB.DataProvider
 {
-	using Common.Internal;
-	using Common;
-	using SqlQuery;
-	using SqlQuery.Visitors;
-
 	public static class AliasesHelper
 	{
 		static readonly ObjectPool<AliasesVisitor> _aliasesVisitorPool = new(() => new AliasesVisitor(), v => v.Cleanup(), 100);

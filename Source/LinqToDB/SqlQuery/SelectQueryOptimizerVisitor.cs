@@ -5,16 +5,16 @@ using System.Globalization;
 using System.Linq;
 using System.Text;
 
+using LinqToDB.Common;
+using LinqToDB.DataProvider;
+using LinqToDB.Extensions;
+using LinqToDB.Linq.Builder;
+using LinqToDB.Mapping;
+using LinqToDB.SqlProvider;
+using LinqToDB.SqlQuery.Visitors;
+
 namespace LinqToDB.SqlQuery
 {
-	using Common;
-	using DataProvider;
-	using Extensions;
-	using Linq.Builder;
-	using Mapping;
-	using SqlProvider;
-	using Visitors;
-
 	public class SelectQueryOptimizerVisitor : SqlQueryVisitor
 	{
 		SqlProviderFlags  _providerFlags     = default!;

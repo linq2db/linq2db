@@ -1,13 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 
+using LinqToDB.Data;
+using LinqToDB.Mapping;
+
 namespace LinqToDB.DataProvider.Firebird
 {
-	using Data;
-	using Mapping;
-
 	sealed class FirebirdBulkCopy : BasicBulkCopy
 	{
 		readonly FirebirdDataProvider _provider;

@@ -1,9 +1,11 @@
-﻿using LinqToDB;
+﻿using System.Linq;
+
+using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.Linq;
 using LinqToDB.Mapping;
+
 using NUnit.Framework;
-using System.Linq;
 
 namespace Tests.UserTests
 {

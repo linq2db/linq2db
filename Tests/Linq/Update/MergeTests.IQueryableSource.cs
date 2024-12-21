@@ -1,11 +1,11 @@
 ﻿using System.Linq;
 
+using LinqToDB;
+
 using NUnit.Framework;
 
 namespace Tests.xUpdate
 {
-	using LinqToDB;
-
 	// tests for iqueryable targets (cte, non-cte)
 	public partial class MergeTests
 	{

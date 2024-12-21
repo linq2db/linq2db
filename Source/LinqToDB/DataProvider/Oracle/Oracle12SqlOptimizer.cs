@@ -1,9 +1,9 @@
-﻿namespace LinqToDB.DataProvider.Oracle
-{
-	using Mapping;
-	using SqlProvider;
-	using SqlQuery;
+﻿using LinqToDB.Mapping;
+using LinqToDB.SqlProvider;
+using LinqToDB.SqlQuery;
 
+namespace LinqToDB.DataProvider.Oracle
+{
 	public class Oracle12SqlOptimizer : Oracle11SqlOptimizer
 	{
 		public Oracle12SqlOptimizer(SqlProviderFlags sqlProviderFlags) : base(sqlProviderFlags)

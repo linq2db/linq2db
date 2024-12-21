@@ -4,14 +4,14 @@ using System.Data.Common;
 using System.Globalization;
 using System.Text;
 
+using LinqToDB.Common;
+using LinqToDB.Extensions;
+using LinqToDB.Mapping;
+using LinqToDB.SqlProvider;
+using LinqToDB.SqlQuery;
+
 namespace LinqToDB.DataProvider.MySql
 {
-	using Common;
-	using Extensions;
-	using Mapping;
-	using SqlProvider;
-	using SqlQuery;
-
 	class MySqlSqlBuilder : BasicSqlBuilder<MySqlOptions>
 	{
 		public MySqlSqlBuilder(IDataProvider? provider, MappingSchema mappingSchema, DataOptions dataOptions, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq.Expressions;
 
 using JetBrains.Annotations;
+
 using LinqToDB.Common;
 
 namespace LinqToDB.Tools.Mapper

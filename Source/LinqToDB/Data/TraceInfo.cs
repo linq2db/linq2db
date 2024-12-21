@@ -4,10 +4,10 @@ using System.Diagnostics;
 using System.Linq;
 using System.Linq.Expressions;
 
+using LinqToDB.Common.Internal;
+
 namespace LinqToDB.Data
 {
-	using Common.Internal;
-
 	/// <summary>
 	/// Tracing information for the <see cref="DataConnection"/> events.
 	/// </summary>

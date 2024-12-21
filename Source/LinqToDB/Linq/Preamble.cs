@@ -1,12 +1,11 @@
 ﻿using System.Collections.Generic;
-using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
 
+using LinqToDB.SqlQuery;
+
 namespace LinqToDB.Linq
 {
-	using SqlQuery;
-
 	abstract class Preamble
 	{
 		public abstract object       Execute(IDataContext      dataContext, IQueryExpressions expressions, object?[]? parameters, object[]? preambles);

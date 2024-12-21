@@ -1,7 +1,5 @@
 ﻿namespace LinqToDB.Interceptors
 {
-	using Data;
-
 	/// <summary>
 	/// Event arguments for <see cref="ICommandInterceptor"/> events.
 	/// </summary>

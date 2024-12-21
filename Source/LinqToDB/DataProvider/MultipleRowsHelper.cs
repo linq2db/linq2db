@@ -5,15 +5,15 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
+using LinqToDB.Common;
+using LinqToDB.Data;
+using LinqToDB.Extensions;
+using LinqToDB.Mapping;
+using LinqToDB.SqlProvider;
+using LinqToDB.SqlQuery;
+
 namespace LinqToDB.DataProvider
 {
-	using Common;
-	using Data;
-	using Extensions;
-	using Mapping;
-	using SqlProvider;
-	using SqlQuery;
-
 	public class MultipleRowsHelper<T> : MultipleRowsHelper
 		where T : notnull
 	{

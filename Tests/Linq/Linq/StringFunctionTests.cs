@@ -6,16 +6,19 @@ using System.Data;
 #endif
 
 using System.Linq;
+
 using FluentAssertions;
+
 using LinqToDB;
 using LinqToDB.Mapping;
 using LinqToDB.SqlQuery;
+
 using NUnit.Framework;
+
+using Tests.Model;
 
 namespace Tests.Linq
 {
-	using Model;
-
 	[TestFixture]
 	public class StringFunctionTests : TestBase
 	{

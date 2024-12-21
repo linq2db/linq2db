@@ -4,11 +4,11 @@ using System.Linq.Expressions;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 
+using LinqToDB.Common;
+using LinqToDB.Extensions;
+
 namespace LinqToDB.Expressions.Internal
 {
-	using Common;
-	using Extensions;
-
 	/// <summary>
 	/// Internal API.
 	/// </summary>

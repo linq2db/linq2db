@@ -1,13 +1,14 @@
 ﻿#if NETFRAMEWORK
 using System.Data.Services.Providers;
 
+using LinqToDB.Remote;
+
 using NUnit.Framework;
+
+using Tests.Model;
 
 namespace Tests.Linq
 {
-	using Model;
-	using LinqToDB.Remote;
-
 	[TestFixture]
 	public class DataServiceTests
 	{

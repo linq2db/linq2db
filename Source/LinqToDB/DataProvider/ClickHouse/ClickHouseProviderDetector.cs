@@ -2,12 +2,12 @@
 using System.Data.Common;
 using System.IO;
 
+using LinqToDB.Common;
+using LinqToDB.Data;
+using LinqToDB.DataProvider.MySql;
+
 namespace LinqToDB.DataProvider.ClickHouse
 {
-	using Common;
-	using Data;
-	using DataProvider.MySql;
-
 	sealed class ClickHouseProviderDetector : ProviderDetectorBase<ClickHouseProvider, ClickHouseProviderDetector.Dialect>
 	{
 		internal enum Dialect { }

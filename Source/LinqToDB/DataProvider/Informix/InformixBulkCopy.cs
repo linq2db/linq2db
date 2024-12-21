@@ -5,12 +5,12 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
+using LinqToDB.Common;
+using LinqToDB.Data;
+using LinqToDB.SqlProvider;
+
 namespace LinqToDB.DataProvider.Informix
 {
-	using Common;
-	using Data;
-	using SqlProvider;
-
 	sealed class InformixBulkCopy : BasicBulkCopy
 	{
 		protected override int                  MaxSqlLength  => 32767;
@@ -164,7 +164,7 @@ namespace LinqToDB.DataProvider.Informix
 
 				if (options.BulkCopyTimeout.HasValue)
 					bc.BulkCopyTimeout = options.BulkCopyTimeout.Value;
-				else if (Configuration.Data.BulkCopyUseConnectionCommandTimeout)
+				else if (Common.Configuration.Data.BulkCopyUseConnectionCommandTimeout)
 					bc.BulkCopyTimeout = connection.ConnectionTimeout;
 
 				var tableName = GetTableName(sb, options, table);

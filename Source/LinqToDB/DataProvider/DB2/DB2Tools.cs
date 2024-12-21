@@ -1,13 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Data.Common;
+﻿using System.Data.Common;
 using System.Reflection;
+
 using JetBrains.Annotations;
+
+using LinqToDB.Data;
 
 namespace LinqToDB.DataProvider.DB2
 {
-	using Data;
-
 	[PublicAPI]
 	public static class DB2Tools
 	{

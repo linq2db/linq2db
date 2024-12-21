@@ -3,11 +3,10 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq.Expressions;
 
+using LinqToDB.Common;
+
 namespace LinqToDB.Expressions
 {
-	using Common;
-	using Linq;
-
 	public class SqlErrorExpression : Expression
 	{
 		public SqlErrorExpression(Expression? expression, string? message, Type resultType, bool isCritical)

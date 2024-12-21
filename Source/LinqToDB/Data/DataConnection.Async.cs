@@ -5,17 +5,15 @@ using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
 
+using LinqToDB.Async;
+using LinqToDB.Common;
+using LinqToDB.Compatibility.System;
+using LinqToDB.Data.RetryPolicy;
+using LinqToDB.Interceptors;
+using LinqToDB.Tools;
+
 namespace LinqToDB.Data
 {
-	using Async;
-	using Common;
-	using Interceptors;
-
-	using LinqToDB.Compatibility.System;
-
-	using RetryPolicy;
-	using Tools;
-
 	public partial class DataConnection
 	{
 #if NET6_0_OR_GREATER

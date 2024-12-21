@@ -6,10 +6,10 @@ using LinqToDB.Expressions;
 
 using NUnit.Framework;
 
+using Tests.Model;
+
 namespace Tests.Linq
 {
-	using Model;
-
 	[TestFixture]
 	public class GenerateTests : TestBase
 	{

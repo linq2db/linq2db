@@ -1,24 +1,10 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Globalization;
-using System.Linq;
-using System.Text;
 
-using LinqToDB.Data;
-using LinqToDB.EntityFrameworkCore.Tests.Logging;
 using LinqToDB.EntityFrameworkCore.Tests.Models.Northwind;
-using LinqToDB.Tools;
-using LinqToDB.Tools.Comparers;
 
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Logging.Console;
-
-using NUnit.Framework;
 
 using Tests;
-using Tests.Model;
 
 namespace LinqToDB.EntityFrameworkCore.Tests
 {

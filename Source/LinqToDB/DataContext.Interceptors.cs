@@ -1,10 +1,10 @@
 ﻿using System;
 
+using LinqToDB.Interceptors;
+using LinqToDB.Interceptors.Internal;
+
 namespace LinqToDB
 {
-	using Interceptors;
-	using Interceptors.Internal;
-
 	public partial class DataContext :
 		IInterceptable<ICommandInterceptor>,
 		IInterceptable<IConnectionInterceptor>,

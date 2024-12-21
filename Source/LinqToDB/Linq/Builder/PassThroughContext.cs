@@ -1,10 +1,10 @@
 ﻿using System.Linq.Expressions;
 
+using LinqToDB.Mapping;
+using LinqToDB.SqlQuery;
+
 namespace LinqToDB.Linq.Builder
 {
-	using Mapping;
-	using SqlQuery;
-
 	abstract class PassThroughContext : BuildContextBase
 	{
 		protected PassThroughContext(IBuildContext context, SelectQuery selectQuery) : base(context.Builder, context.ElementType, selectQuery)

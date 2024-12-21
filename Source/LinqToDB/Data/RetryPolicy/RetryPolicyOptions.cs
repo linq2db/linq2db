@@ -1,11 +1,10 @@
 ﻿using System;
 
+using LinqToDB.Common;
+using LinqToDB.Common.Internal;
+
 namespace LinqToDB.Data.RetryPolicy
 {
-	using Common;
-	using Common.Internal;
-	using Data;
-
 	/// <param name="RetryPolicy">
 	/// Retry policy for new <see cref="DataConnection"/> instance.
 	/// </param>

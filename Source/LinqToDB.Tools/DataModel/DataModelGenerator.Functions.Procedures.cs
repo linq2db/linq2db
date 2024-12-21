@@ -1,10 +1,10 @@
 ﻿using System;
-using System.Linq;
-using LinqToDB.Schema;
-using LinqToDB.CodeModel;
-using LinqToDB.Common;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Linq;
+
+using LinqToDB.CodeModel;
+using LinqToDB.Schema;
 
 namespace LinqToDB.DataModel
 {

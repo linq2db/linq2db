@@ -10,16 +10,10 @@ using LinqToDB.Data;
 
 using NUnit.Framework;
 
+using Tests.Model;
+
 namespace Tests.Data
 {
-	using System.Collections;
-
-	using Model;
-
-	using Tests.DataProvider;
-
-	using Tools;
-
 	[TestFixture]
 	public class TraceTests : TestBase
 	{

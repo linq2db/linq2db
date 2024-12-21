@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Linq.Expressions;
 
+using LinqToDB.Mapping;
+
 namespace LinqToDB.Concurrency
 {
-	using Mapping;
-
 	/// <summary>
 	/// Defines optimistic lock column value generation strategy for update.
 	/// Used with <see cref="ConcurrencyExtensions" /> extensions.

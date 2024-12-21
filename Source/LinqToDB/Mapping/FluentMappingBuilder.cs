@@ -4,12 +4,11 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 
+using LinqToDB.Expressions;
+using LinqToDB.Metadata;
+
 namespace LinqToDB.Mapping
 {
-	using Common;
-	using Expressions;
-	using Metadata;
-
 	/// <summary>
 	/// Fluent mapping builder.
 	/// </summary>

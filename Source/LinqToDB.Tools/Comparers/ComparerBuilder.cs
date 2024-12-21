@@ -7,13 +7,16 @@ using System.Reflection;
 
 using JetBrains.Annotations;
 
+using LinqToDB.Common;
+
+using LinqToDB.Expressions;
+
+using LinqToDB.Extensions;
+
+using LinqToDB.Reflection;
+
 namespace LinqToDB.Tools.Comparers
 {
-	using Common;
-	using Expressions;
-	using Extensions;
-	using Reflection;
-
 	/// <summary>
 	/// Builds comparer functions and comparers.
 	/// </summary>

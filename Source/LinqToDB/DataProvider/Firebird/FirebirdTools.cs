@@ -4,10 +4,10 @@ using System.Reflection;
 
 using JetBrains.Annotations;
 
+using LinqToDB.Data;
+
 namespace LinqToDB.DataProvider.Firebird
 {
-	using Data;
-
 	[PublicAPI]
 	public static class FirebirdTools
 	{

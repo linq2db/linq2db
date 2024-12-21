@@ -1,9 +1,9 @@
 ﻿using System.Diagnostics;
 
+using LinqToDB.Common;
+
 namespace LinqToDB.SqlQuery
 {
-	using Common;
-
 	[DebuggerDisplay("{ProviderValue}, {DbDataType}")]
 	public class SqlParameterValue
 	{

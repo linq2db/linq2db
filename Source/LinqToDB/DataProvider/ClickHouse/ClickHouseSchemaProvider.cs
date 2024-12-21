@@ -6,12 +6,11 @@ using System.Linq;
 using System.Net;
 using System.Numerics;
 
+using LinqToDB.Data;
+using LinqToDB.SchemaProvider;
+
 namespace LinqToDB.DataProvider.ClickHouse
 {
-	using Common;
-	using Data;
-	using SchemaProvider;
-
 	// 1. Foregign keys and procedures: not supported by ClickHouse
 	// 2. Functions and table functions: we can get only name from ClickHouse (no parameters information) so it is useless
 	// 3. Loading of schema for non-current database: not implemented for now

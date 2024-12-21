@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
 using System.Data.Linq;
-using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
 using System.Linq.Expressions;
@@ -34,12 +33,12 @@ using NUnit.Framework;
 using Oracle.ManagedDataAccess.Client;
 using Oracle.ManagedDataAccess.Types;
 
+using Tests.Model;
+
 using DA = Devart.Data.Oracle;
 
 namespace Tests.DataProvider
 {
-	using Model;
-
 	[TestFixture]
 	public class OracleTests : TestBase
 	{
