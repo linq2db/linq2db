@@ -3,14 +3,14 @@ using System.Data;
 using System.Data.Common;
 using System.Linq.Expressions;
 
+using LinqToDB.Common;
+using LinqToDB.Expressions;
+using LinqToDB.Expressions.Types;
+using LinqToDB.Extensions;
+using LinqToDB.Mapping;
+
 namespace LinqToDB.DataProvider.DB2
 {
-	using Common;
-	using Expressions;
-	using Expressions.Types;
-	using Extensions;
-	using Mapping;
-
 	public class DB2ProviderAdapter : IDynamicProviderAdapter
 	{
 		public const string ProviderFactoryName  = "IBM.Data.DB2";
@@ -31,12 +31,12 @@ namespace LinqToDB.DataProvider.DB2
 		DB2ProviderAdapter()
 		{
 			var clientNamespace = ClientNamespace;
-			var assembly        = Tools.TryLoadAssembly(AssemblyName, ProviderFactoryName);
+			var assembly        = Common.Tools.TryLoadAssembly(AssemblyName, ProviderFactoryName);
 
 #if !NETFRAMEWORK
 			if (assembly == null)
 			{
-				assembly = Tools.TryLoadAssembly(AssemblyNameOld, ProviderFactoryName);
+				assembly = Common.Tools.TryLoadAssembly(AssemblyNameOld, ProviderFactoryName);
 				if (assembly != null)
 					clientNamespace = ClientNamespaceOld;
 			}

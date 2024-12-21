@@ -2,11 +2,10 @@
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 
+using LinqToDB.Common;
+
 namespace LinqToDB.SqlQuery.Visitors
 {
-	using Common;
-	using SqlQuery;
-
 	/// <summary>
 	/// This base visitor implements:
 	/// <list type="bullet">

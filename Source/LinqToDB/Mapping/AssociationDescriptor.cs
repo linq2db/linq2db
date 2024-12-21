@@ -1,19 +1,17 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 
+using LinqToDB.Common.Internal;
+using LinqToDB.Expressions;
+using LinqToDB.Extensions;
+using LinqToDB.Linq.Builder;
+
 namespace LinqToDB.Mapping
 {
-	using Common;
-	using Common.Internal;
-	using Extensions;
-	using Linq.Builder;
-	using Expressions;
-
 	/// <summary>
 	/// Stores association descriptor.
 	/// </summary>
@@ -153,8 +151,8 @@ namespace LinqToDB.Mapping
 			if (!string.IsNullOrEmpty(AliasName))
 				return AliasName!;
 
-			if (Configuration.Sql.AssociationAliasFormat != null)
-				return string.Format(CultureInfo.InvariantCulture, Configuration.Sql.AssociationAliasFormat, MemberInfo.Name);
+			if (Common.Configuration.Sql.AssociationAliasFormat != null)
+				return string.Format(CultureInfo.InvariantCulture, Common.Configuration.Sql.AssociationAliasFormat, MemberInfo.Name);
 
 			return string.Empty;
 		}
@@ -332,7 +330,7 @@ namespace LinqToDB.Mapping
 			// OUTER JOIN are usually materialized in non-nullable, but empty, collections.
 			// For example, `IList<Product> Products` might well require an OUTER JOIN.
 			// Neither `IList<Product>?` nor `IList<Product?>` would be correct.
-			return Configuration.UseNullableTypesMetadata && !IsList && Nullability.TryAnalyzeMember(MemberInfo, out var isNullable)
+			return Common.Configuration.UseNullableTypesMetadata && !IsList && Nullability.TryAnalyzeMember(MemberInfo, out var isNullable)
 				? isNullable
 				: true;
 		}

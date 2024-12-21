@@ -6,7 +6,6 @@ using System.Linq;
 using System.Reflection;
 
 using LinqToDB;
-using LinqToDB.Expressions;
 using LinqToDB.Expressions.Internal;
 using LinqToDB.Extensions;
 using LinqToDB.Mapping;
@@ -14,10 +13,10 @@ using LinqToDB.SqlQuery;
 
 using NUnit.Framework;
 
+using PN = LinqToDB.ProviderName;
+
 namespace Tests.Linq
 {
-	using PN = ProviderName;
-
 	public static class TestedExtensions
 	{
 		sealed class DatePartBuilder : Sql.IExtensionCallBuilder

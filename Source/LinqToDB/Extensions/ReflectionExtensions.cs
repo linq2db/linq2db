@@ -13,12 +13,11 @@ using System.Xml;
 
 using JetBrains.Annotations;
 
+using LinqToDB.Common.Internal;
+using LinqToDB.Reflection;
+
 namespace LinqToDB.Extensions
 {
-	using Common;
-	using Common.Internal;
-	using Reflection;
-
 	[PublicAPI]
 	public static class ReflectionExtensions
 	{

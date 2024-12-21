@@ -7,13 +7,12 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
+using LinqToDB.Expressions.Types;
+using LinqToDB.Mapping;
+using LinqToDB.SqlQuery;
+
 namespace LinqToDB.DataProvider.MySql
 {
-	using Expressions;
-	using Expressions.Types;
-	using Mapping;
-	using SqlQuery;
-
 	public abstract class MySqlProviderAdapter : IDynamicProviderAdapter
 	{
 		private static readonly Type[] _ordinalParameters = [typeof(int)];

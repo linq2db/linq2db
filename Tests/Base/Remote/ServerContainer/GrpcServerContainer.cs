@@ -22,15 +22,20 @@ using ProtoBuf.Grpc.Server;
 
 #if NET9_0_OR_GREATER
 using System.Threading;
+
+using Tests.Model;
+using Tests.Model.Remote.Grpc;
+
 #else
 using Lock = System.Object;
+
+using Tests.Model;
+using Tests.Model.Remote.Grpc;
+
 #endif
 
 namespace Tests.Remote.ServerContainer
 {
-	using Model;
-	using Model.Remote.Grpc;
-
 	public class GrpcServerContainer : IServerContainer
 	{
 		private const int Port = 22654;

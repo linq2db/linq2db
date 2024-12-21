@@ -2,11 +2,10 @@
 using System.Data.Common;
 using System.Linq.Expressions;
 
+using LinqToDB.Expressions.Types;
+
 namespace LinqToDB.DataProvider
 {
-	using Expressions;
-	using Expressions.Types;
-
 	public class OdbcProviderAdapter : IDynamicProviderAdapter
 	{
 		private static readonly object _syncRoot = new object();

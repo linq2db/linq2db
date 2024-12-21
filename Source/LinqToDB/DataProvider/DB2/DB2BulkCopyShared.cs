@@ -3,12 +3,12 @@ using System.Collections.Generic;
 using System.Data.Common;
 using System.Linq;
 
+using LinqToDB.Data;
+
+using DB2BulkCopyOptions = LinqToDB.DataProvider.DB2.DB2ProviderAdapter.DB2BulkCopyOptions;
+
 namespace LinqToDB.DataProvider.DB2
 {
-	using Common;
-	using Data;
-	using DB2BulkCopyOptions = DB2ProviderAdapter.DB2BulkCopyOptions;
-
 	// must be public to allow reuse by iSeries provider
 	// https://github.com/LinqToDB4iSeries/Linq2DB4iSeries/issues/69
 	public static class DB2BulkCopyShared
@@ -55,7 +55,7 @@ namespace LinqToDB.DataProvider.DB2
 
 				if (options.BulkCopyTimeout.HasValue)
 					bc.BulkCopyTimeout = options.BulkCopyTimeout.Value;
-				else if (Configuration.Data.BulkCopyUseConnectionCommandTimeout)
+				else if (Common.Configuration.Data.BulkCopyUseConnectionCommandTimeout)
 					bc.BulkCopyTimeout = connection.ConnectionTimeout;
 
 				bc.DestinationTableName = tableName;

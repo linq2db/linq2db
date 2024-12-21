@@ -1,12 +1,12 @@
-﻿namespace LinqToDB.DataProvider.PostgreSQL
+﻿using System;
+
+using LinqToDB.Common;
+using LinqToDB.Extensions;
+using LinqToDB.SqlProvider;
+using LinqToDB.SqlQuery;
+
+namespace LinqToDB.DataProvider.PostgreSQL
 {
-	using System;
-
-	using Common;
-	using Extensions;
-	using SqlProvider;
-	using SqlQuery;
-
 	public class PostgreSQLSqlExpressionConvertVisitor : SqlExpressionConvertVisitor
 	{
 		public PostgreSQLSqlExpressionConvertVisitor(bool allowModify) : base(allowModify)

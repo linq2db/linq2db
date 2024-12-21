@@ -6,18 +6,19 @@ using FluentAssertions;
 
 using LinqToDB;
 using LinqToDB.Data;
+using LinqToDB.Linq;
 using LinqToDB.Linq.Builder;
 using LinqToDB.Linq.Internal;
 using LinqToDB.Mapping;
 using LinqToDB.SqlQuery;
 using LinqToDB.Tools.Comparers;
+
 using NUnit.Framework;
+
+using Tests.Model;
 
 namespace Tests.Linq
 {
-	using LinqToDB.Linq;
-	using Model;
-
 	[TestFixture]
 	public class FromSqlTests : TestBase
 	{

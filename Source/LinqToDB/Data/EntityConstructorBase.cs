@@ -5,19 +5,19 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 
+using LinqToDB.Expressions;
+using LinqToDB.Extensions;
+using LinqToDB.Interceptors;
+using LinqToDB.Interceptors.Internal;
+using LinqToDB.Linq;
+using LinqToDB.Linq.Builder;
+using LinqToDB.Mapping;
+using LinqToDB.Reflection;
+using LinqToDB.SqlQuery;
+using LinqToDB.Tools;
+
 namespace LinqToDB.Data
 {
-	using Expressions;
-	using Extensions;
-	using Interceptors.Internal;
-	using Interceptors;
-	using Linq.Builder;
-	using Linq;
-	using Mapping;
-	using Reflection;
-	using SqlQuery;
-	using Tools;
-
 	internal abstract class EntityConstructorBase
 	{
 		public MappingSchema MappingSchema { get; private set; } = default!;

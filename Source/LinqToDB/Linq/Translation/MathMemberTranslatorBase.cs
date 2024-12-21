@@ -2,10 +2,10 @@
 using System.Linq;
 using System.Linq.Expressions;
 
+using LinqToDB.SqlQuery;
+
 namespace LinqToDB.Linq.Translation
 {
-	using SqlQuery;
-
 	public class MathMemberTranslatorBase : MemberTranslatorBase
 	{
 		public MathMemberTranslatorBase()

@@ -4,13 +4,13 @@ using System.Globalization;
 using System.Linq.Expressions;
 using System.Text;
 
+using LinqToDB.Common;
+using LinqToDB.Expressions;
+using LinqToDB.Mapping;
+using LinqToDB.SqlQuery;
+
 namespace LinqToDB.DataProvider.Oracle
 {
-	using Common;
-	using Expressions;
-	using Mapping;
-	using SqlQuery;
-
 	public sealed class OracleMappingSchema : LockedMappingSchema
 	{
 #if SUPPORTS_COMPOSITE_FORMAT

@@ -5,18 +5,19 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Text.RegularExpressions;
+
 using JetBrains.Annotations;
+
+using LinqToDB.Common.Internal;
+using LinqToDB.Expressions;
+using LinqToDB.Expressions.ExpressionVisitors;
+using LinqToDB.Extensions;
+using LinqToDB.Linq.Builder;
+using LinqToDB.Mapping;
+using LinqToDB.SqlQuery;
 
 namespace LinqToDB
 {
-	using Common.Internal;
-	using Expressions;
-	using Expressions.ExpressionVisitors;
-	using Extensions;
-	using Linq.Builder;
-	using Mapping;
-	using SqlQuery;
-
 	partial class Sql
 	{
 		/// <summary>

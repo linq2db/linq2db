@@ -1,5 +1,6 @@
 ﻿Imports LinqToDB
 Imports LinqToDB.Mapping
+
 Imports Tests.Model
 
 Public Module VBTests

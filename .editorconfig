@@ -381,7 +381,6 @@ dotnet_diagnostic.IDE0059.severity = none # IDE0059: Remove unnecessary value as
 dotnet_diagnostic.IDE0060.severity = none # IDE0060: Remove unused parameter
 dotnet_diagnostic.IDE0061.severity = none # IDE0061: Use expression body for local functions
 dotnet_diagnostic.IDE0062.severity = none # IDE0062: Make local function static
-dotnet_diagnostic.IDE0065.severity = none # IDE0065: Misplaced using directive
 dotnet_diagnostic.IDE0066.severity = none # IDE0066: Convert switch statement to expression
 dotnet_diagnostic.IDE0070.severity = none # IDE0070: Use 'System.HashCode.Combine'
 dotnet_diagnostic.IDE0072.severity = none # IDE0072: Add missing cases

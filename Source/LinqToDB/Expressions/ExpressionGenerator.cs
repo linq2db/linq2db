@@ -3,10 +3,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 
+using LinqToDB.Expressions.Types;
+
 namespace LinqToDB.Expressions
 {
-	using Expressions.Types;
-
 	public class ExpressionGenerator
 	{
 		public static TypeMapper NoOpTypeMapper = new TypeMapper();

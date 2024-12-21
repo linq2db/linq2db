@@ -1,16 +1,14 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Data;
-using System.Data.Common;
+﻿using System.Data;
 using System.Linq;
-using System.Text;
-using System.Threading;
+
 using FluentAssertions;
+
 using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.Mapping;
-using Newtonsoft.Json;
+
 using NUnit.Framework;
+
 using Tests.xUpdate;
 
 namespace Tests.Linq

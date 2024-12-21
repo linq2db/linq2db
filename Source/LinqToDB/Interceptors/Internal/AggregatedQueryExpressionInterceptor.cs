@@ -1,7 +1,5 @@
 ﻿using System.Linq.Expressions;
 
-using LinqToDB.Mapping;
-
 namespace LinqToDB.Interceptors.Internal
 {
 	class AggregatedQueryExpressionInterceptor : AggregatedInterceptor<IQueryExpressionInterceptor>, IQueryExpressionInterceptor

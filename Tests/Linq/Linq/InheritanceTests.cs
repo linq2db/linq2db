@@ -6,17 +6,16 @@ using System.Threading.Tasks;
 
 using LinqToDB;
 using LinqToDB.Data;
-using LinqToDB.Linq;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
 
+using Tests.Model;
+
+using static Tests.xUpdate.MergeTests;
+
 namespace Tests.Linq
 {
-	using Model;
-
-	using static Tests.xUpdate.MergeTests;
-
 	[TestFixture]
 	public class InheritanceTests : TestBase
 	{

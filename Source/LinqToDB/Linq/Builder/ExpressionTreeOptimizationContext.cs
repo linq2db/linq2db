@@ -6,16 +6,16 @@ using System.Linq.Expressions;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 
+using LinqToDB.Common.Internal;
+using LinqToDB.Expressions;
+using LinqToDB.Expressions.ExpressionVisitors;
+using LinqToDB.Extensions;
+using LinqToDB.Linq.Builder.Visitors;
+using LinqToDB.Mapping;
+using LinqToDB.Reflection;
+
 namespace LinqToDB.Linq.Builder
 {
-	using Common.Internal;
-	using Extensions;
-	using LinqToDB.Expressions;
-	using LinqToDB.Expressions.ExpressionVisitors;
-	using Mapping;
-	using Visitors;
-	using Reflection;
-
 	public class ExpressionTreeOptimizationContext
 	{
 		public IDataContext  DataContext   { get; }

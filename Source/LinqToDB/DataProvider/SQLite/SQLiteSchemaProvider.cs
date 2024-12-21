@@ -1,15 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Globalization;
 using System.Linq;
-using System.Data;
+
+using LinqToDB.Common;
+using LinqToDB.Data;
+using LinqToDB.SchemaProvider;
 
 namespace LinqToDB.DataProvider.SQLite
 {
-	using Common;
-	using Data;
-	using SchemaProvider;
-
 	sealed class SQLiteSchemaProvider : SchemaProviderBase
 	{
 		public override DatabaseSchema GetSchema(DataConnection dataConnection, GetSchemaOptions? options = null)

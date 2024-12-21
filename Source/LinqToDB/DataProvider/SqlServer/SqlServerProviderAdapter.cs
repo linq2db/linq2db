@@ -10,15 +10,15 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
+using LinqToDB.Common;
+using LinqToDB.Expressions;
+using LinqToDB.Expressions.Types;
+using LinqToDB.Mapping;
+using LinqToDB.Reflection;
+using LinqToDB.SqlQuery;
+
 namespace LinqToDB.DataProvider.SqlServer
 {
-	using Expressions;
-	using Expressions.Types;
-	using LinqToDB.Common;
-	using LinqToDB.Mapping;
-	using LinqToDB.Reflection;
-	using LinqToDB.SqlQuery;
-
 	// old System.Data.SqlClient versions for .net core (< 4.5.0)
 	// miss UDT and BulkCopy support
 	// We don't take it into account, as there is no reason to use such old provider versions
@@ -183,7 +183,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			else
 #endif
 			{
-				assembly = Tools.TryLoadAssembly(assemblyName, factoryName);
+				assembly = Common.Tools.TryLoadAssembly(assemblyName, factoryName);
 			}
 
 			if (assembly == null)
@@ -339,7 +339,7 @@ namespace LinqToDB.DataProvider.SqlServer
 					mappingSchema.SetDefaultValue(type, getNullValue());
 					mappingSchema.SetCanBeNull(type, true);
 					mappingSchema.SetDataType(type, new SqlDataType(new DbDataType(type, dataType, dbType)));
-		}
+				}
 
 				return type;
 			}

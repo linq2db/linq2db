@@ -1,6 +1,4 @@
-﻿using System;
-
-using LinqToDB.Tools;
+﻿using LinqToDB.Tools;
 
 namespace LinqToDB.Interceptors.Internal
 {

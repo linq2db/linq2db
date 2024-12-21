@@ -14,12 +14,10 @@ using LinqToDB.Tools.Comparers;
 
 using NUnit.Framework;
 
+using Tests.Model;
+
 namespace Tests.Linq
 {
-	using System.Security.Cryptography.Xml;
-
-	using Model;
-
 	[TestFixture]
 	public class WhereTests : TestBase
 	{

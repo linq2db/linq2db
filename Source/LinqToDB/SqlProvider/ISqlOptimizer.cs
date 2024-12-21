@@ -1,11 +1,8 @@
-﻿using System;
-using System.Diagnostics.CodeAnalysis;
+﻿using LinqToDB.Mapping;
+using LinqToDB.SqlQuery;
 
 namespace LinqToDB.SqlProvider
 {
-	using Mapping;
-	using SqlQuery;
-
 	public interface ISqlOptimizer
 	{
 		/// <summary>

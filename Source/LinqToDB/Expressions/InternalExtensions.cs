@@ -6,15 +6,15 @@ using System.Linq.Expressions;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 
+using LinqToDB.Common.Internal;
+using LinqToDB.Expressions.ExpressionVisitors;
+using LinqToDB.Expressions.Internal;
+using LinqToDB.Extensions;
+using LinqToDB.Linq;
+using LinqToDB.Mapping;
+
 namespace LinqToDB.Expressions
 {
-	using Common.Internal;
-	using Expressions.ExpressionVisitors;
-	using Extensions;
-	using Linq;
-	using Internal;
-	using Mapping;
-
 	/// <summary>
 	/// Internal API.
 	/// </summary>

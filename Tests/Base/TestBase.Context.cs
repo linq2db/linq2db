@@ -9,11 +9,12 @@ using LinqToDB.FSharp;
 using LinqToDB.Interceptors;
 using LinqToDB.Mapping;
 
+using Tests.Model;
+
+using Tests.Remote.ServerContainer;
+
 namespace Tests
 {
-	using Model;
-	using Remote.ServerContainer;
-
 	public partial class TestBase
 	{
 		static readonly MappingSchema _sequentialAccessSchema = new ("SequentialAccess");

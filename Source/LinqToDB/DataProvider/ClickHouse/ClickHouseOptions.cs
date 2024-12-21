@@ -1,11 +1,9 @@
-﻿using System;
+﻿using LinqToDB.Common;
+using LinqToDB.Common.Internal;
+using LinqToDB.Data;
 
 namespace LinqToDB.DataProvider.ClickHouse
 {
-	using Common;
-	using Common.Internal;
-	using Data;
-
 	/// <param name="BulkCopyType">
 	/// Default bulk copy mode.
 	/// Default value: <c><see cref="BulkCopyType.ProviderSpecific"/></c>.

@@ -7,19 +7,19 @@ using System.Linq.Expressions;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 
+using LinqToDB.Common;
+using LinqToDB.Common.Internal;
+using LinqToDB.Data;
+using LinqToDB.DataProvider;
+using LinqToDB.Expressions;
+using LinqToDB.Expressions.ExpressionVisitors;
+using LinqToDB.Extensions;
+using LinqToDB.Mapping;
+using LinqToDB.Reflection;
+using LinqToDB.SqlQuery;
+
 namespace LinqToDB.Linq.Builder
 {
-	using Common;
-	using Common.Internal;
-	using Data;
-	using DataProvider;
-	using Extensions;
-	using LinqToDB.Expressions;
-	using LinqToDB.Expressions.ExpressionVisitors;
-	using Mapping;
-	using Reflection;
-	using SqlQuery;
-
 	internal partial class ExpressionBuilder
 	{
 		#region LinqOptions shortcuts

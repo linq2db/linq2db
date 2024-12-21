@@ -1,9 +1,9 @@
-﻿namespace LinqToDB.DataProvider.PostgreSQL
-{
-	using LinqToDB.SqlQuery;
-	using Mapping;
-	using SqlProvider;
+﻿using LinqToDB.Mapping;
+using LinqToDB.SqlProvider;
+using LinqToDB.SqlQuery;
 
+namespace LinqToDB.DataProvider.PostgreSQL
+{
 	public class PostgreSQLSql15Builder : PostgreSQLSqlBuilder
 	{
 		public PostgreSQLSql15Builder(IDataProvider? provider, MappingSchema mappingSchema, DataOptions dataOptions, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)

@@ -3,16 +3,18 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
+
 using FluentAssertions;
+
 using LinqToDB;
 using LinqToDB.Async;
-using LinqToDB.Interceptors;
-using LinqToDB.Linq;
 using LinqToDB.Mapping;
 using LinqToDB.SqlQuery;
 using LinqToDB.Tools;
 using LinqToDB.Tools.Comparers;
+
 using NUnit.Framework;
+
 using Tests.Model;
 
 namespace Tests.Linq

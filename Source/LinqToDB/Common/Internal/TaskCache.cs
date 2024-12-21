@@ -1,9 +1,9 @@
 ﻿using System.Threading.Tasks;
 
+using LinqToDB.Data;
+
 namespace LinqToDB.Common.Internal
 {
-	using Data;
-
 	// contains reusable task instances to avoid allocations
 	internal static class TaskCache
 	{

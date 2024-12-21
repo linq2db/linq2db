@@ -4,22 +4,21 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Linq.Expressions;
-using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 
+using LinqToDB.Async;
+using LinqToDB.Common.Internal;
+using LinqToDB.Compatibility.System;
+using LinqToDB.Data;
+using LinqToDB.Expressions;
+using LinqToDB.Extensions;
+using LinqToDB.Linq.Internal;
+using LinqToDB.SqlQuery;
+using LinqToDB.Tools;
+
 namespace LinqToDB.Linq
 {
-	using Async;
-	using Common.Internal;
-	using Data;
-	using Extensions;
-	using Tools;
-	using Internal;
-	using LinqToDB.Expressions;
-	using LinqToDB.SqlQuery;
-	using LinqToDB.Compatibility.System;
-
 	abstract class ExpressionQuery<T> : IExpressionQuery<T>, IAsyncEnumerable<T>
 	{
 		#region Init
@@ -311,7 +310,9 @@ namespace LinqToDB.Linq
 
 			return ActivatorExt.CreateInstance<IQueryable>(
 				typeof(ExpressionQueryImpl<>).MakeGenericType(elementType),
-				DataContext, expression);
+				DataContext,
+				expression
+			);
 		}
 
 		TResult IQueryProvider.Execute<TResult>(Expression expression)

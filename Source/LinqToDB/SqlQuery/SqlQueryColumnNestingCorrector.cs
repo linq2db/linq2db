@@ -3,10 +3,10 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 
+using LinqToDB.SqlQuery.Visitors;
+
 namespace LinqToDB.SqlQuery
 {
-	using Visitors;
-
 	public class SqlQueryColumnNestingCorrector : SqlQueryVisitor
 	{
 		[DebuggerDisplay("QN(S:{TableSource.SourceID})")]

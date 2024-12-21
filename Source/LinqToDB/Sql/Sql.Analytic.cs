@@ -5,13 +5,13 @@ using System.Linq.Expressions;
 
 using JetBrains.Annotations;
 
+using LinqToDB.Expressions;
+using LinqToDB.Linq;
+
+using PN = LinqToDB.ProviderName;
+
 namespace LinqToDB
 {
-	using Linq;
-	using Expressions;
-
-	using PN = ProviderName;
-
 	public static partial class Sql
 	{
 		public enum AggregateModifier

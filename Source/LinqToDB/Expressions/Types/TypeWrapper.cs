@@ -4,8 +4,6 @@ using System.Reflection;
 
 namespace LinqToDB.Expressions.Types
 {
-	using Common;
-
 	/// <summary>
 	/// Implements base class for typed wrappers over provider-specific type.
 	/// </summary>

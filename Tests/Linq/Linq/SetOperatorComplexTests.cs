@@ -2,13 +2,13 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
-using System.Net;
 
 using FluentAssertions;
 
 using LinqToDB;
 using LinqToDB.Mapping;
 using LinqToDB.SqlQuery;
+
 using NUnit.Framework;
 
 namespace Tests.Linq

@@ -5,15 +5,15 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq.Expressions;
 using System.Runtime.CompilerServices;
 
-namespace LinqToDB.Linq.Builder
-{
-	using Common;
-	using Extensions;
+using LinqToDB.Common;
 	using LinqToDB.Expressions;
 	using LinqToDB.Expressions.ExpressionVisitors;
-	using SqlQuery;
-	using Reflection;
+using LinqToDB.Extensions;
+using LinqToDB.Reflection;
+using LinqToDB.SqlQuery;
 
+namespace LinqToDB.Linq.Builder
+{
 	internal partial class ExpressionBuilder
 	{
 		#region BuildExpression
@@ -97,8 +97,9 @@ namespace LinqToDB.Linq.Builder
 				if (_constructRun)
 				{
 					// remove translation helpers
-					if (node.IsSameGenericMethod(Methods.LinqToDB.ApplyModifierInternal) || node.IsSameGenericMethod(Methods.LinqToDB.DisableFilterInternal) ||
-					    node.IsSameGenericMethod(Methods.LinqToDB.LoadWithInternal))
+					if (node.IsSameGenericMethod(Methods.LinqToDB.ApplyModifierInternal)
+						|| node.IsSameGenericMethod(Methods.LinqToDB.DisableFilterInternal)
+						|| node.IsSameGenericMethod(Methods.LinqToDB.LoadWithInternal))
 					{
 						return node.Arguments[0];
 					}

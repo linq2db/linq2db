@@ -11,13 +11,13 @@ using System.Threading.Tasks;
 using System.Text;
 #endif
 
+using LinqToDB.Data;
+using LinqToDB.Mapping;
+using LinqToDB.SqlProvider;
+using LinqToDB.SqlQuery;
+
 namespace LinqToDB.DataProvider
 {
-	using Data;
-	using Mapping;
-	using SqlProvider;
-	using SqlQuery;
-
 	public class BasicBulkCopy
 	{
 		protected virtual int? MaxMultipleRows => null;

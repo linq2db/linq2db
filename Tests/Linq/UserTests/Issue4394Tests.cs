@@ -1,19 +1,18 @@
-﻿using System.Linq;
-using FluentAssertions;
-using LinqToDB;
-using LinqToDB.Common;
-using LinqToDB.Mapping;
-using LinqToDB.Interceptors;
-using NUnit.Framework;
-using System.Linq.Dynamic.Core;
-using System.Linq.Dynamic.Core.CustomTypeProviders;
-using System.Collections.Generic;
-using System;
-using System.Diagnostics;
+﻿using System;
 using System.Data;
 using System.Data.Common;
-using System.Threading;
-using System.Threading.Tasks;
+using System.Diagnostics;
+using System.Linq;
+using System.Linq.Dynamic.Core;
+
+using FluentAssertions;
+
+using LinqToDB;
+using LinqToDB.Common;
+using LinqToDB.Interceptors;
+using LinqToDB.Mapping;
+
+using NUnit.Framework;
 
 namespace Tests.UserTests
 {

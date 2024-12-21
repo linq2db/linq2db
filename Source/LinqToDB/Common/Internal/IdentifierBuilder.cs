@@ -10,11 +10,11 @@ using System.Reflection;
 using System.Text;
 using System.Threading;
 
+using LinqToDB.Expressions;
+using LinqToDB.Linq;
+
 namespace LinqToDB.Common.Internal
 {
-	using Expressions;
-	using Linq;
-
 	/// <summary>
 	/// Internal infrastructure API.
 	/// Provides functionality for <see cref="IConfigurationID.ConfigurationID"/> generation.

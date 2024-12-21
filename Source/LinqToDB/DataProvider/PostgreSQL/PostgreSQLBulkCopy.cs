@@ -5,14 +5,13 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
+using LinqToDB.Common;
+using LinqToDB.Data;
+using LinqToDB.Mapping;
+using LinqToDB.SqlProvider;
+
 namespace LinqToDB.DataProvider.PostgreSQL
 {
-	using Common;
-	using Data;
-	using Mapping;
-	using SqlProvider;
-	using SqlQuery;
-
 	sealed class PostgreSQLBulkCopy : BasicBulkCopy
 	{
 		/// <remarks>

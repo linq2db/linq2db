@@ -3,15 +3,15 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 
-namespace LinqToDB.Linq.Builder
-{
-	using Common;
+using LinqToDB.Common;
 
 	using LinqToDB.Expressions;
 	using LinqToDB.Mapping;
 
-	using SqlQuery;
+using LinqToDB.SqlQuery;
 
+namespace LinqToDB.Linq.Builder
+{
 	internal class CteContext : BuildContextBase
 	{
 		public Expression CteExpression { get; set;  }
@@ -194,7 +194,7 @@ namespace LinqToDB.Linq.Builder
 					field.Type      = dataType;
 				}
 				else
-				{
+		{
 					field = new SqlField(dataType, alias, isNullable);
 				}
 
@@ -205,7 +205,7 @@ namespace LinqToDB.Linq.Builder
 				}, f => (string.IsNullOrEmpty(f.Name) ? "field" : f.Name) + "_1");
 
 				CteClause.Fields.Add(field);
-			}
+		}
 
 			var newPlaceholderPath = path;
 
@@ -232,8 +232,8 @@ namespace LinqToDB.Linq.Builder
 					throw new InvalidOperationException();
 			}
 
-			public override IBuildContext Clone(CloningContext context)
-			{
+		public override IBuildContext Clone(CloningContext context)
+		{
 				return new CteProxy(context.CloneContext(OwnerContext), context.CloneExpression(CurrentPath), context.CloneExpression(InnerExpression));
 			}
 

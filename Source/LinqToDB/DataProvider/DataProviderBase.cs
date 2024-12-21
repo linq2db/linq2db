@@ -12,18 +12,18 @@ using System.Threading.Tasks;
 using System.Xml;
 using System.Xml.Linq;
 
+using LinqToDB.Common;
+using LinqToDB.Common.Internal;
+using LinqToDB.Data;
+using LinqToDB.Expressions;
+using LinqToDB.Infrastructure;
+using LinqToDB.Linq.Translation;
+using LinqToDB.Mapping;
+using LinqToDB.SchemaProvider;
+using LinqToDB.SqlProvider;
+
 namespace LinqToDB.DataProvider
 {
-	using Common;
-	using Common.Internal;
-	using Data;
-	using Expressions;
-	using Infrastructure;
-	using Linq.Translation;
-	using Mapping;
-	using SchemaProvider;
-	using SqlProvider;
-
 	public abstract class DataProviderBase : IDataProvider, IInfrastructure<IServiceProvider>
 	{
 		#region .ctor

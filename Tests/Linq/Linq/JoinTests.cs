@@ -8,14 +8,14 @@ using System.Linq;
 using LinqToDB;
 using LinqToDB.Common;
 using LinqToDB.Interceptors;
-using LinqToDB.Linq;
 using LinqToDB.Mapping;
+
 using NUnit.Framework;
+
+using Tests.Model;
 
 namespace Tests.Linq
 {
-	using Model;
-
 	public static class EnumerableExtensions
 	{
 		public static IEnumerable<TResult> SqlJoinInternal<TOuter, TInner, TResult>(

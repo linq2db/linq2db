@@ -1,10 +1,10 @@
 ﻿using System.Linq.Expressions;
 
+using LinqToDB.Expressions;
+using LinqToDB.SqlQuery;
+
 namespace LinqToDB.Linq.Builder
 {
-	using LinqToDB.Expressions;
-	using SqlQuery;
-
 	sealed class AnchorContext : SequenceContextBase
 	{
 		public SqlAnchor.AnchorKindEnum AnchorKind { get; }

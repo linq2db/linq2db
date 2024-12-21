@@ -1,8 +1,7 @@
-﻿using System.Linq;
+﻿using System;
 using System.Collections.Generic;
-using System;
 using System.Diagnostics.CodeAnalysis;
-using LinqToDB.Common;
+using System.Linq;
 
 namespace LinqToDB.CodeModel
 {

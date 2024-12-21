@@ -1,10 +1,10 @@
 ﻿using System.Linq.Expressions;
 
+using LinqToDB.Expressions;
+using LinqToDB.SqlQuery;
+
 namespace LinqToDB.Linq.Builder
 {
-	using LinqToDB.Expressions;
-	using SqlQuery;
-
 	[BuildsMethodCall(nameof(LinqExtensions.AsSubQuery))]
 	sealed class AsSubQueryBuilder : MethodCallBuilder
 	{

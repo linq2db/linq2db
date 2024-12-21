@@ -3,10 +3,10 @@ using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Linq;
 
+using LinqToDB.SqlProvider;
+
 namespace LinqToDB.SqlQuery.Visitors
 {
-	using SqlProvider;
-
 	public class SqlQueryValidatorVisitor : QueryElementVisitor
 	{
 		SelectQuery?     _parentQuery;

@@ -1,9 +1,7 @@
-﻿using System;
+﻿using LinqToDB.SqlProvider;
 
 namespace LinqToDB
 {
-	using SqlProvider;
-
 	public partial class Sql
 	{
 		/// <summary>

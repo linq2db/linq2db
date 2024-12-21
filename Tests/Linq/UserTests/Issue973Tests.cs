@@ -9,7 +9,9 @@ using LinqToDB;
 using LinqToDB.Common;
 using LinqToDB.Expressions;
 using LinqToDB.SqlQuery;
+
 using NUnit.Framework;
+
 using Tests.Model;
 
 namespace Tests.UserTests

@@ -2,11 +2,11 @@
 using System.Linq.Expressions;
 using System.Reflection;
 
+using LinqToDB.Common;
+using LinqToDB.SqlQuery;
+
 namespace LinqToDB.Linq.Translation
 {
-	using Common;
-	using SqlQuery;
-
 	public class SqlTypesTranslationDefault : IMemberTranslator
 	{
 		TranslationRegistration _registration = new TranslationRegistration();

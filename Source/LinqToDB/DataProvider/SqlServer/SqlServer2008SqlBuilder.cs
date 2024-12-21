@@ -1,11 +1,9 @@
-﻿using System;
+﻿using LinqToDB.Mapping;
+using LinqToDB.SqlProvider;
+using LinqToDB.SqlQuery;
 
 namespace LinqToDB.DataProvider.SqlServer
 {
-	using Mapping;
-	using SqlProvider;
-	using SqlQuery;
-
 	sealed partial class SqlServer2008SqlBuilder : SqlServerSqlBuilder
 	{
 		public SqlServer2008SqlBuilder(IDataProvider? provider, MappingSchema mappingSchema, DataOptions dataOptions, ISqlOptimizer sqlOptimizer, SqlProviderFlags sqlProviderFlags)

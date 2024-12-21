@@ -3,13 +3,13 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 
+using LinqToDB.Expressions;
+using LinqToDB.Extensions;
+
 using Microsoft.EntityFrameworkCore;
 
 namespace LinqToDB.EntityFrameworkCore
 {
-	using Expressions;
-	using Extensions;
-
 	public partial class LinqToDBForEFTools
 	{
 		static void InitializeMapping()

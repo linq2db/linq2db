@@ -3,11 +3,11 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 
+using LinqToDB.Common;
+using LinqToDB.SqlQuery;
+
 namespace LinqToDB.SqlProvider
 {
-	using Common;
-	using SqlQuery;
-
 	sealed partial class JoinsOptimizer
 	{
 		Dictionary<IQueryElement,IQueryElement>?                                 _replaceMap;

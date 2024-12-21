@@ -3,12 +3,12 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 
+using LinqToDB.Expressions;
+using LinqToDB.Extensions;
+using LinqToDB.SqlQuery;
+
 namespace LinqToDB.Linq.Builder
 {
-	using LinqToDB.Expressions;
-	using Extensions;
-	using SqlQuery;
-
 	[BuildsExpression(ExpressionType.Call)]
 	sealed class QueryExtensionBuilder : MethodCallBuilder
 	{

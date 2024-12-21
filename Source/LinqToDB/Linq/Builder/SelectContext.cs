@@ -1,15 +1,13 @@
-﻿using System.Collections.Generic;
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using System.Linq.Expressions;
-using System.Reflection;
+
+using LinqToDB.Expressions;
+using LinqToDB.Extensions;
+using LinqToDB.Mapping;
+using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Linq.Builder
 {
-	using Extensions;
-	using LinqToDB.Expressions;
-	using Mapping;
-	using SqlQuery;
-
 	// This class implements double functionality (scalar and member type selects)
 	// and could be implemented as two different classes.
 	// But the class means to have a lot of inheritors, and functionality of the inheritors

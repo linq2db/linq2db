@@ -1,7 +1,7 @@
-﻿namespace LinqToDB.Linq
-{
-	using SqlQuery;
+﻿using LinqToDB.SqlQuery;
 
+namespace LinqToDB.Linq
+{
 	public interface IQueryContext
 	{
 		SqlStatement    Statement       { get; }

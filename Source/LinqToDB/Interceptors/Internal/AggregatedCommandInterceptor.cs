@@ -1,15 +1,13 @@
-﻿using System;
-using System.Data;
+﻿using System.Data;
 using System.Data.Common;
 using System.Threading;
 using System.Threading.Tasks;
 
+using LinqToDB.Common;
 using LinqToDB.Tools;
 
 namespace LinqToDB.Interceptors.Internal
 {
-	using Common;
-
 	sealed class AggregatedCommandInterceptor : AggregatedInterceptor<ICommandInterceptor>, ICommandInterceptor
 	{
 		public DbCommand CommandInitialized(CommandEventData eventData, DbCommand command)

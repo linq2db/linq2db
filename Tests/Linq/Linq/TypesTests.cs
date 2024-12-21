@@ -7,17 +7,16 @@ using System.Linq.Expressions;
 using System.Threading;
 
 using LinqToDB;
-using LinqToDB.Mapping;
+using LinqToDB.Data;
 using LinqToDB.Extensions;
+using LinqToDB.Mapping;
 
 using NUnit.Framework;
 
+using Tests.Model;
+
 namespace Tests.Linq
 {
-	using LinqToDB.Common;
-	using LinqToDB.Data;
-	using Model;
-
 	[TestFixture]
 	public class TypesTests : TestBase
 	{

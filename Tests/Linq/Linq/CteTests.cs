@@ -13,10 +13,10 @@ using LinqToDB.Tools;
 
 using NUnit.Framework;
 
+using Tests.Model;
+
 namespace Tests.Linq
 {
-	using Model;
-
 	public class CteTests : TestBase
 	{
 		public static string[] CteSupportedProviders = new[]
@@ -2610,7 +2610,7 @@ namespace Tests.Linq
 				};
 
 			var result = query.ToArray();
-		}
+	}
 
 		[Test]
 		public void Issue_SequenceBuildFailed_2([CteContextSource(TestProvName.AllClickHouse)] string context)
@@ -2628,6 +2628,6 @@ namespace Tests.Linq
 				};
 
 			var result = query.ToArray();
-		}
+}
 	}
 }

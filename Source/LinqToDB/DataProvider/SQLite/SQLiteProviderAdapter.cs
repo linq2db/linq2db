@@ -1,12 +1,10 @@
 ﻿using System;
 using System.Data.Common;
-using System.Linq.Expressions;
+
+using LinqToDB.Expressions.Types;
 
 namespace LinqToDB.DataProvider.SQLite
 {
-	using Expressions;
-	using Expressions.Types;
-
 	public class SQLiteProviderAdapter : IDynamicProviderAdapter
 	{
 		private static readonly object _systemSyncRoot = new ();

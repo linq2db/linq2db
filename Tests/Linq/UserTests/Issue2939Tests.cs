@@ -1,8 +1,8 @@
-﻿using System;
-using System.Linq;
-using FluentAssertions;
+﻿using System.Linq;
+
 using LinqToDB;
 using LinqToDB.Mapping;
+
 using NUnit.Framework;
 
 namespace Tests.UserTests

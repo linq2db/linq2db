@@ -5,14 +5,14 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 
+using LinqToDB.Expressions;
+using LinqToDB.Extensions;
+using LinqToDB.Mapping;
+using LinqToDB.Reflection;
+using LinqToDB.SqlQuery;
+
 namespace LinqToDB.Linq.Builder
 {
-	using Extensions;
-	using LinqToDB.Expressions;
-	using Mapping;
-	using Reflection;
-	using SqlQuery;
-
 	partial class TableBuilder
 	{
 		[DebuggerDisplay("{BuildContextDebuggingHelper.GetContextInfo(this)}")]

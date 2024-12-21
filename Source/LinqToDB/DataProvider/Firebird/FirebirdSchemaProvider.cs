@@ -5,12 +5,12 @@ using System.IO;
 using System.Linq;
 using System.Numerics;
 
+using LinqToDB.Common;
+using LinqToDB.Data;
+using LinqToDB.SchemaProvider;
+
 namespace LinqToDB.DataProvider.Firebird
 {
-	using Common;
-	using Data;
-	using SchemaProvider;
-
 	sealed class FirebirdSchemaProvider : SchemaProviderBase
 	{
 		private readonly FirebirdDataProvider _provider;

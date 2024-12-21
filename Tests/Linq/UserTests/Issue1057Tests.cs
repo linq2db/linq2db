@@ -1,13 +1,14 @@
 ﻿using System;
 using System.Linq;
 using System.Linq.Expressions;
+
+using LinqToDB;
+using LinqToDB.Mapping;
+
 using NUnit.Framework;
 
 namespace Tests.UserTests
 {
-	using LinqToDB;
-	using LinqToDB.Mapping;
-
 	public class Issue1057Tests : TestBase
 	{
 		[Table, InheritanceMapping(Code = "bda.Requests", Type = typeof(BdaTask))]

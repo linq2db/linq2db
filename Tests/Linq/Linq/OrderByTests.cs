@@ -4,18 +4,17 @@ using System.Linq;
 using FluentAssertions;
 
 using LinqToDB;
-using LinqToDB.Linq;
 using LinqToDB.SqlQuery;
 using LinqToDB.Tools;
 
 using NUnit.Framework;
 
+using Tests.Model;
+
 // ReSharper disable ReturnValueOfPureMethodIsNotUsed
 
 namespace Tests.Linq
 {
-	using Model;
-
 	[TestFixture]
 	public class OrderByTests : TestBase
 	{

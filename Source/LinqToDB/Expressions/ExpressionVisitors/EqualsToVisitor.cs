@@ -1,11 +1,11 @@
 ﻿using System;
 using System.Linq.Expressions;
 
+using LinqToDB.Expressions.Internal;
+using LinqToDB.Extensions;
+
 namespace LinqToDB.Expressions.ExpressionVisitors
 {
-	using Extensions;
-	using Internal;
-
 	static class EqualsToVisitor
 	{
 		internal static bool EqualsTo(
