@@ -609,6 +609,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 
 			switch (dt.Type.DataType)
 			{
+				case DataType.Int32     : BuildDecimal32Literal(sb, value, 0);      return;
 				case DataType.Decimal32 : BuildDecimal32Literal(sb, value, scale);  return;
 				case DataType.Undefined :
 				case DataType.Decimal64 : BuildDecimal64Literal(sb, value, scale);  return;
