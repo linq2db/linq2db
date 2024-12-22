@@ -590,7 +590,7 @@ namespace LinqToDB.SqlProvider
 				return Visit(newElement);
 
 			if (TryEvaluateNoParameters(element, out var evaluatedValue))
-				return new SqlValue(_mappingSchema.GetDbDataType(element.SystemType), evaluatedValue);
+				return new SqlValue(QueryHelper.GetDbDataType(element, _mappingSchema), evaluatedValue);
 
 			switch (element.Operation)
 			{
