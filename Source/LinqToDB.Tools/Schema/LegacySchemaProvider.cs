@@ -3,14 +3,10 @@ using System.Collections.Generic;
 using System.Linq;
 
 using LinqToDB.CodeModel;
-
 using LinqToDB.Data;
-
+using LinqToDB.Internals.SqlQuery;
 using LinqToDB.Scaffold;
-
 using LinqToDB.SchemaProvider;
-
-using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Schema
 {

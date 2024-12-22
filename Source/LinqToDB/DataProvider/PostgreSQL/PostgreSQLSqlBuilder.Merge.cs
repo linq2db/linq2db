@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 
+using LinqToDB.Internals.SqlQuery;
 using LinqToDB.SqlQuery;
 
 namespace LinqToDB.DataProvider.PostgreSQL

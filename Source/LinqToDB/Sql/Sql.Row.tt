@@ -9,7 +9,7 @@ using System.Collections.Generic;
 
 namespace LinqToDB;
 
-using LinqToDB.SqlQuery;
+using LinqToDB.Internals.SqlQuery;
 using LinqToDB.Common.Internal;
 
 partial class Sql

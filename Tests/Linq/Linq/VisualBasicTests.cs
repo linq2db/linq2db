@@ -6,7 +6,6 @@ using LinqToDB;
 using NUnit.Framework;
 
 using Tests.Model;
-
 using Tests.VisualBasic;
 
 namespace Tests.Linq

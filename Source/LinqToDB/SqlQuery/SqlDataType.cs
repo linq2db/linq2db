@@ -8,6 +8,7 @@ using System.Numerics;
 
 using LinqToDB.Common;
 using LinqToDB.Extensions;
+using LinqToDB.Internals.SqlQuery;
 using LinqToDB.Mapping;
 
 namespace LinqToDB.SqlQuery

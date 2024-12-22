@@ -48,7 +48,7 @@ namespace LinqToDB.EntityFrameworkCore
 
 			InitializeMapping();
 
-			var instantiator = MemberHelper.MethodOf(() => Internals.CreateExpressionQueryInstance<int>(null!, null!))
+			var instantiator = MemberHelper.MethodOf(() => Linq.Internals.CreateExpressionQueryInstance<int>(null!, null!))
 				.GetGenericMethodDefinition();
 
 			LinqExtensions.ProcessSourceQueryable = queryable =>

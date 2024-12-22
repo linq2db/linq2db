@@ -1,6 +1,7 @@
 ﻿using System;
 
 using LinqToDB.Common;
+using LinqToDB.Internals.SqlQuery;
 using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Linq.Translation

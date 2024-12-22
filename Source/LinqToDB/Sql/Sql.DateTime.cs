@@ -2,6 +2,7 @@
 using System.Globalization;
 
 using LinqToDB.Expressions;
+using LinqToDB.Internals.SqlQuery;
 using LinqToDB.SqlQuery;
 
 using PN = LinqToDB.ProviderName;

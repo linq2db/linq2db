@@ -1,4 +1,5 @@
-﻿using LinqToDB.SqlQuery;
+﻿using LinqToDB.Internals.SqlQuery;
+using LinqToDB.SqlQuery;
 
 namespace LinqToDB.DataProvider.Oracle
 {

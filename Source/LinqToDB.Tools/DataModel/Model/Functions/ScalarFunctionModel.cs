@@ -1,6 +1,6 @@
 ﻿using LinqToDB.CodeModel;
+using LinqToDB.Internals.SqlQuery;
 using LinqToDB.Metadata;
-using LinqToDB.SqlQuery;
 
 namespace LinqToDB.DataModel
 {

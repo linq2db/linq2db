@@ -1,7 +1,7 @@
 ﻿using System.Linq.Expressions;
 
 using LinqToDB.Expressions;
-using LinqToDB.SqlQuery;
+using LinqToDB.Internals.SqlQuery;
 
 using static LinqToDB.Reflection.Methods.LinqToDB.Merge;
 

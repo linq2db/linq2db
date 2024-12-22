@@ -15,7 +15,7 @@ using LinqToDB.DataProvider;
 using LinqToDB.Extensions;
 using LinqToDB.Linq;
 using LinqToDB.SqlProvider;
-using LinqToDB.SqlQuery;
+using LinqToDB.Internals.SqlQuery;
 
 namespace LinqToDB.Remote
 {

@@ -4,7 +4,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 
 using LinqToDB.Common;
-using LinqToDB.SqlQuery;
+using LinqToDB.Internals.SqlQuery;
 
 namespace LinqToDB.SqlProvider
 {

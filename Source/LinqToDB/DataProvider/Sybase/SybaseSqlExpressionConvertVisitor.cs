@@ -1,5 +1,5 @@
-﻿using LinqToDB.SqlProvider;
-using LinqToDB.SqlQuery;
+﻿using LinqToDB.Internals.SqlQuery;
+using LinqToDB.SqlProvider;
 
 namespace LinqToDB.DataProvider.Sybase
 {

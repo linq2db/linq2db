@@ -4,9 +4,9 @@ using System.Diagnostics.CodeAnalysis;
 
 using LinqToDB.Common;
 using LinqToDB.DataProvider;
+using LinqToDB.Internals.SqlQuery;
+using LinqToDB.Internals.SqlQuery.Visitors;
 using LinqToDB.Mapping;
-using LinqToDB.SqlQuery;
-using LinqToDB.SqlQuery.Visitors;
 
 namespace LinqToDB.SqlProvider
 {

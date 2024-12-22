@@ -8,7 +8,7 @@ using FluentAssertions;
 using LinqToDB;
 using LinqToDB.Common;
 using LinqToDB.Expressions;
-using LinqToDB.SqlQuery;
+using LinqToDB.Internals.SqlQuery;
 
 using NUnit.Framework;
 

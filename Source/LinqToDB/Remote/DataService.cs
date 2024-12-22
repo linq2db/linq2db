@@ -8,9 +8,9 @@ using System.Linq.Expressions;
 using LinqToDB.Common;
 using LinqToDB.Expressions;
 using LinqToDB.Extensions;
+using LinqToDB.Internals.SqlQuery;
 using LinqToDB.Linq;
 using LinqToDB.Mapping;
-using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Remote
 {

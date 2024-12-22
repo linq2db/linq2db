@@ -2,7 +2,7 @@
 using System.Globalization;
 using System.Text;
 
-using LinqToDB.SqlQuery;
+using LinqToDB.Internals.SqlQuery;
 
 namespace LinqToDB.SqlProvider
 {

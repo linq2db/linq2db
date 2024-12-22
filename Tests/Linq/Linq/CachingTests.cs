@@ -346,7 +346,7 @@ namespace Tests.Linq
 
 				dataTable.AcceptChanges();
 
-				var param = new LinqToDB.SqlQuery.SqlParameter(new LinqToDB.Common.DbDataType(dataTable.GetType() ?? typeof(object), "IntTableType"), parameterName, dataTable);
+				var param = new LinqToDB.Internals.SqlQuery.SqlParameter(new LinqToDB.Common.DbDataType(dataTable.GetType() ?? typeof(object), "IntTableType"), parameterName, dataTable);
 
 				builder.AddParameter("values", param);
 			}

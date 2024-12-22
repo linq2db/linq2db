@@ -9,8 +9,8 @@ using LinqToDB.Common;
 using LinqToDB.Expressions;
 using LinqToDB.Expressions.Internal;
 using LinqToDB.Extensions;
+using LinqToDB.Internals.SqlQuery;
 using LinqToDB.Linq;
-using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Reflection
 {

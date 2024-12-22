@@ -1,6 +1,6 @@
 ﻿using LinqToDB.Common;
+using LinqToDB.Internals.SqlQuery;
 using LinqToDB.Linq.Translation;
-using LinqToDB.SqlQuery;
 
 namespace LinqToDB.DataProvider.SqlServer.Translation
 {

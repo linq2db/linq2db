@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-using LinqToDB.SqlQuery;
+using LinqToDB.Internals.SqlQuery;
 
 namespace LinqToDB.Schema
 {

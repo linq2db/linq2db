@@ -5,6 +5,7 @@ using System.Globalization;
 using System.Text;
 
 using LinqToDB.Common;
+using LinqToDB.Internals.SqlQuery;
 using LinqToDB.Mapping;
 using LinqToDB.SqlProvider;
 using LinqToDB.SqlQuery;

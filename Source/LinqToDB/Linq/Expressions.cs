@@ -13,6 +13,7 @@ using LinqToDB.Common.Internal;
 using LinqToDB.DataProvider.Firebird;
 using LinqToDB.Expressions;
 using LinqToDB.Extensions;
+using LinqToDB.Internals.SqlQuery;
 using LinqToDB.Mapping;
 using LinqToDB.SqlQuery;
 
@@ -1478,19 +1479,19 @@ namespace LinqToDB.Linq
 				var chars            = builder.GetValue<char[]>("trimChars");
 				if (chars == null || chars.Length == 0)
 				{
-					builder.ResultExpression = new SqlQuery.SqlFunction(
+					builder.ResultExpression = new SqlFunction(
 						typeof(string),
 						(string)"LTRIM",
 						stringExpression);
 					return;
 				}
 
-				builder.ResultExpression = new SqlQuery.SqlExpression(
+				builder.ResultExpression = new SqlExpression(
 					typeof(string),
 					builder.Expression,
 					SqlQuery.Precedence.Primary,
 					stringExpression,
-					new SqlQuery.SqlExpression(typeof(string), "{0}", new SqlQuery.SqlValue(new string(chars))));
+					new SqlExpression(typeof(string), "{0}", new SqlValue(new string(chars))));
 			}
 		}
 
@@ -1502,7 +1503,7 @@ namespace LinqToDB.Linq
 				var chars            = builder.GetValue<char[]>("trimChars");
 				if (chars == null || chars.Length == 0)
 				{
-					builder.ResultExpression = new SqlQuery.SqlExpression(
+					builder.ResultExpression = new SqlExpression(
 						typeof(string),
 						"TRIM(TRAILING FROM {0})",
 						stringExpression);
@@ -1534,19 +1535,19 @@ namespace LinqToDB.Linq
 				var chars            = builder.GetValue<char[]>("trimChars");
 				if (chars == null || chars.Length == 0)
 				{
-					builder.ResultExpression = new SqlQuery.SqlFunction(
+					builder.ResultExpression = new SqlFunction(
 						typeof(string),
 						"RTRIM",
 						stringExpression);
 					return;
 				}
 
-				builder.ResultExpression = new SqlQuery.SqlExpression(
+				builder.ResultExpression = new SqlExpression(
 					typeof(string),
 					builder.Expression,
 					SqlQuery.Precedence.Primary,
 					stringExpression,
-					new SqlQuery.SqlExpression(typeof(string), "{0}", Precedence.Primary, new SqlQuery.SqlValue(new string(chars))));
+					new SqlExpression(typeof(string), "{0}", Precedence.Primary, new SqlValue(new string(chars))));
 			}
 		}
 
@@ -1558,7 +1559,7 @@ namespace LinqToDB.Linq
 				var chars            = builder.GetValue<char[]>("trimChars");
 				if (chars == null || chars.Length == 0)
 				{
-					builder.ResultExpression = new SqlQuery.SqlFunction(
+					builder.ResultExpression = new SqlFunction(
 						typeof(string),
 						"RTRIM",
 						stringExpression);

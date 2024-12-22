@@ -2,7 +2,7 @@
 using System.Linq.Expressions;
 using System.Reflection;
 
-using LinqToDB.SqlQuery;
+using LinqToDB.Internals.SqlQuery;
 
 namespace LinqToDB.Linq.Builder
 {

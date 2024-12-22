@@ -4,8 +4,8 @@ using System.Linq.Expressions;
 using System.Reflection;
 
 using LinqToDB.Expressions;
+using LinqToDB.Internals.SqlQuery;
 using LinqToDB.Mapping;
-using LinqToDB.SqlQuery;
 
 using Methods = LinqToDB.Reflection.Methods.LinqToDB.MultiInsert;
 

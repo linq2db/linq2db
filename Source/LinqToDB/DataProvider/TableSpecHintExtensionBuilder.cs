@@ -2,8 +2,8 @@
 using System.Globalization;
 using System.Text;
 
+using LinqToDB.Internals.SqlQuery;
 using LinqToDB.SqlProvider;
-using LinqToDB.SqlQuery;
 
 namespace LinqToDB.DataProvider
 {

@@ -5,9 +5,10 @@ using System.Linq;
 using LinqToDB.Common;
 using LinqToDB.Expressions;
 using LinqToDB.Expressions.ExpressionVisitors;
+using LinqToDB.Internals.SqlQuery;
+using LinqToDB.Internals.SqlQuery.Visitors;
 using LinqToDB.Mapping;
 using LinqToDB.SqlQuery;
-using LinqToDB.SqlQuery.Visitors;
 
 // ReSharper disable InconsistentNaming
 

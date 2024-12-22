@@ -8,6 +8,7 @@ using System.Reflection;
 using JetBrains.Annotations;
 
 using LinqToDB.Expressions;
+using LinqToDB.Internals.SqlQuery;
 using LinqToDB.Mapping;
 using LinqToDB.SqlQuery;
 

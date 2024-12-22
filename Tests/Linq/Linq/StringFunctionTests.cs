@@ -11,7 +11,7 @@ using FluentAssertions;
 
 using LinqToDB;
 using LinqToDB.Mapping;
-using LinqToDB.SqlQuery;
+using LinqToDB.Internals.SqlQuery;
 
 using NUnit.Framework;
 

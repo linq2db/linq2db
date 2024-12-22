@@ -8,8 +8,8 @@ using FluentAssertions;
 
 using LinqToDB;
 using LinqToDB.Async;
+using LinqToDB.Internals.SqlQuery;
 using LinqToDB.Mapping;
-using LinqToDB.SqlQuery;
 using LinqToDB.Tools;
 using LinqToDB.Tools.Comparers;
 

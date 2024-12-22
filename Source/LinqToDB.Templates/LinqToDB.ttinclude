@@ -4,7 +4,7 @@
 <#@ import namespace="LinqToDB"                    #>
 <#@ import namespace="LinqToDB.Data"               #>
 <#@ import namespace="LinqToDB.SqlProvider"        #>
-<#@ import namespace="LinqToDB.SqlQuery"           #>
+<#@ import namespace="LinqToDB.Internals.SqlQuery"           #>
 <#@ include file="DataModel.ttinclude" once="true" #>
 <#
 	if (BaseDataContextClass == null)
