@@ -13,7 +13,7 @@ using System.Text;
 
 using LinqToDB.Common;
 using LinqToDB.Data;
-using LinqToDB.SqlProvider;
+using LinqToDB.Internals.SqlProvider;
 
 namespace LinqToDB.DataProvider.Oracle
 {

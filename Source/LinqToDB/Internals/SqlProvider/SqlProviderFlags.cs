@@ -4,11 +4,12 @@ using System.Data;
 using System.Linq;
 using System.Runtime.Serialization;
 
+using LinqToDB;
 using LinqToDB.Common;
 using LinqToDB.DataProvider;
 using LinqToDB.Internals.SqlQuery;
 
-namespace LinqToDB.SqlProvider
+namespace LinqToDB.Internals.SqlProvider
 {
 	[DataContract]
 	public sealed class SqlProviderFlags
@@ -16,60 +17,60 @@ namespace LinqToDB.SqlProvider
 		/// <summary>
 		/// Flags for use by external providers.
 		/// </summary>
-		[DataMember(Order =  1)]
+		[DataMember(Order = 1)]
 		public List<string> CustomFlags { get; set; } = new List<string>();
 
 		/// <summary>
 		/// Indicates that provider (not database!) uses positional parameters instead of named parameters (parameter values assigned in order they appear in query, not by parameter name).
 		/// Default (set by <see cref="DataProviderBase"/>): <c>false</c>.
 		/// </summary>
-		[DataMember(Order =  2)]
-		public bool        IsParameterOrderDependent      { get; set; }
+		[DataMember(Order = 2)]
+		public bool IsParameterOrderDependent { get; set; }
 
 		/// <summary>
 		/// Indicates that TAKE/TOP/LIMIT could accept parameter.
 		/// Default (set by <see cref="DataProviderBase"/>): <c>true</c>.
 		/// </summary>
-		[DataMember(Order =  3)]
-		public bool        AcceptsTakeAsParameter         { get; set; }
+		[DataMember(Order = 3)]
+		public bool AcceptsTakeAsParameter { get; set; }
 		/// <summary>
 		/// Indicates that TAKE/LIMIT could accept parameter only if also SKIP/OFFSET specified.
 		/// Default (set by <see cref="DataProviderBase"/>): <c>false</c>.
 		/// </summary>
-		[DataMember(Order =  4)]
-		public bool        AcceptsTakeAsParameterIfSkip   { get; set; }
+		[DataMember(Order = 4)]
+		public bool AcceptsTakeAsParameterIfSkip { get; set; }
 		/// <summary>
 		/// Indicates support for TOP/TAKE/LIMIT paging clause.
 		/// Default (set by <see cref="DataProviderBase"/>): <c>true</c>.
 		/// </summary>
-		[DataMember(Order =  5)]
-		public bool        IsTakeSupported                { get; set; }
+		[DataMember(Order = 5)]
+		public bool IsTakeSupported { get; set; }
 		/// <summary>
 		/// Indicates support for SKIP/OFFSET paging clause (parameter) without TAKE clause.
 		/// Provider could set this flag even if database not support it if emulates missing functionality.
 		/// E.g. : <c>TAKE [MAX_ALLOWED_VALUE] SKIP skip_value </c>
 		/// Default (set by <see cref="DataProviderBase"/>): <c>true</c>.
 		/// </summary>
-		[DataMember(Order =  6)]
-		public bool        IsSkipSupported                { get; set; }
+		[DataMember(Order = 6)]
+		public bool IsSkipSupported { get; set; }
 		/// <summary>
 		/// Indicates support for SKIP/OFFSET paging clause (parameter) only if also TAKE/LIMIT specified.
 		/// Default (set by <see cref="DataProviderBase"/>): <c>false</c>.
 		/// </summary>
-		[DataMember(Order =  7)]
-		public bool        IsSkipSupportedIfTake          { get; set; }
+		[DataMember(Order = 7)]
+		public bool IsSkipSupportedIfTake { get; set; }
 		/// <summary>
 		/// Indicates supported TAKE/LIMIT hints.
 		/// Default (set by <see cref="DataProviderBase"/>): <c>null</c> (none).
 		/// </summary>
-		[DataMember(Order =  8)]
-		public TakeHints?  TakeHintsSupported              { get; set; }
+		[DataMember(Order = 8)]
+		public TakeHints? TakeHintsSupported { get; set; }
 		/// <summary>
 		/// Indicates support for paging clause in subquery.
 		/// Default (set by <see cref="DataProviderBase"/>): <c>true</c>.
 		/// </summary>
-		[DataMember(Order =  9)]
-		public bool        IsSubQueryTakeSupported        { get; set; }
+		[DataMember(Order = 9)]
+		public bool IsSubQueryTakeSupported { get; set; }
 
 		/// <summary>
 		/// Indicates support for paging clause in derived table.
@@ -99,13 +100,13 @@ namespace LinqToDB.SqlProvider
 		/// </summary>
 		[DataMember(Order = 12)]
 		public bool IsSupportsJoinWithoutCondition { get; set; }
-		
+
 		/// <summary>
 		/// Indicates support for skip clause in column expression subquery.
 		/// Default (set by <see cref="DataProviderBase"/>): <c>true</c>.
 		/// </summary>
 		[DataMember(Order = 13)]
-		public bool        IsSubQuerySkipSupported        { get; set; }
+		public bool IsSubQuerySkipSupported { get; set; }
 
 		/// <summary>
 		/// Indicates support for scalar subquery in select list.
@@ -113,33 +114,33 @@ namespace LinqToDB.SqlProvider
 		/// Default (set by <see cref="DataProviderBase"/>): <c>true</c>.
 		/// </summary>
 		[DataMember(Order = 14)]
-		public bool        IsSubQueryColumnSupported      { get; set; }
+		public bool IsSubQueryColumnSupported { get; set; }
 		/// <summary>
 		/// Indicates support of <c>ORDER BY</c> clause in sub-queries.
 		/// Default (set by <see cref="DataProviderBase"/>): <c>false</c>.
 		/// </summary>
 		[DataMember(Order = 15)]
-		public bool        IsSubQueryOrderBySupported     { get; set; }
+		public bool IsSubQueryOrderBySupported { get; set; }
 		/// <summary>
 		/// Indicates that database supports count subquery as scalar in column.
 		/// <code>SELECT (SELECT COUNT(*) FROM some_table) FROM ...</code>
 		/// Default (set by <see cref="DataProviderBase"/>): <c>true</c>.
 		/// </summary>
 		[DataMember(Order = 16)]
-		public bool        IsCountSubQuerySupported       { get; set; }
+		public bool IsCountSubQuerySupported { get; set; }
 
 		/// <summary>
 		/// Indicates that provider requires explicit output parameter for insert with identity queries to get identity from database.
 		/// Default (set by <see cref="DataProviderBase"/>): <c>false</c>.
 		/// </summary>
 		[DataMember(Order = 17)]
-		public bool        IsIdentityParameterRequired    { get; set; }
+		public bool IsIdentityParameterRequired { get; set; }
 		/// <summary>
 		/// Indicates support for OUTER/CROSS APPLY.
 		/// Default (set by <see cref="DataProviderBase"/>): <c>false</c>.
 		/// </summary>
 		[DataMember(Order = 18)]
-		public bool        IsApplyJoinSupported           { get; set; }
+		public bool IsApplyJoinSupported { get; set; }
 		/// <summary>
 		/// Indicates support for CROSS APPLY supports condition LATERAL JOIN for example.
 		/// Default (set by <see cref="DataProviderBase"/>): <c>false</c>.
@@ -158,19 +159,19 @@ namespace LinqToDB.SqlProvider
 		/// Default (set by <see cref="DataProviderBase"/>): <c>true</c>.
 		/// </summary>
 		[DataMember(Order = 21)]
-		public bool        IsInsertOrUpdateSupported      { get; set; }
+		public bool IsInsertOrUpdateSupported { get; set; }
 		/// <summary>
 		/// Indicates that provider could share parameter between statements in multi-statement batch.
 		/// Default (set by <see cref="DataProviderBase"/>): <c>true</c>.
 		/// </summary>
 		[DataMember(Order = 22)]
-		public bool        CanCombineParameters           { get; set; }
+		public bool CanCombineParameters { get; set; }
 		/// <summary>
 		/// Specifies limit of number of values in single <c>IN</c> predicate without splitting it into several IN's.
 		/// Default (set by <see cref="DataProviderBase"/>): <c>int.MaxValue</c> (basically means there is no limit).
 		/// </summary>
 		[DataMember(Order = 23)]
-		public int         MaxInListValuesCount           { get; set; }
+		public int MaxInListValuesCount { get; set; }
 
 		/// <summary>
 		/// If <c>true</c>, removed record fields in OUTPUT clause of DELETE statement should be referenced using
@@ -178,35 +179,35 @@ namespace LinqToDB.SqlProvider
 		/// Default (set by <see cref="DataProviderBase"/>): <c>false</c>.
 		/// </summary>
 		[DataMember(Order = 24)]
-		public bool        OutputDeleteUseSpecialTable    { get; set; }
+		public bool OutputDeleteUseSpecialTable { get; set; }
 		/// <summary>
 		/// If <c>true</c>, added record fields in OUTPUT clause of INSERT statement should be referenced using
 		/// table with special name (e.g. INSERTED or NEW). Otherwise fields should be referenced using target table.
 		/// Default (set by <see cref="DataProviderBase"/>): <c>false</c>.
 		/// </summary>
 		[DataMember(Order = 25)]
-		public bool        OutputInsertUseSpecialTable    { get; set; }
+		public bool OutputInsertUseSpecialTable { get; set; }
 		/// <summary>
 		/// If <c>true</c>, OUTPUT clause supports both OLD and NEW data in UPDATE statement using tables with special names.
 		/// Otherwise only current record fields (after update) available using target table.
 		/// Default (set by <see cref="DataProviderBase"/>): <c>false</c>.
 		/// </summary>
 		[DataMember(Order = 26)]
-		public bool        OutputUpdateUseSpecialTables   { get; set; }
+		public bool OutputUpdateUseSpecialTables { get; set; }
 		/// <summary>
 		/// If <c>true</c>, OUTPUT clause supports both OLD and NEW data in MERGE statement using tables with special names.
 		/// Otherwise only current record fields (after all changes) available using target table.
 		/// Default (set by <see cref="DataProviderBase"/>): <c>false</c>.
 		/// </summary>
 		[DataMember(Order = 38)]
-		public bool        OutputMergeUseSpecialTables    { get; set; }
+		public bool OutputMergeUseSpecialTables { get; set; }
 
 		/// <summary>
 		/// Indicates support for CROSS JOIN.
 		/// Default (set by <see cref="DataProviderBase"/>): <c>true</c>.
 		/// </summary>
 		[DataMember(Order = 27)]
-		public bool        IsCrossJoinSupported              { get; set; }
+		public bool IsCrossJoinSupported { get; set; }
 
 		/// <summary>
 		/// Indicates support of CTE expressions.
@@ -214,28 +215,28 @@ namespace LinqToDB.SqlProvider
 		/// Default (set by <see cref="DataProviderBase"/>): <c>false</c>.
 		/// </summary>
 		[DataMember(Order = 28)]
-		public bool IsCommonTableExpressionsSupported     { get; set; }
+		public bool IsCommonTableExpressionsSupported { get; set; }
 
 		/// <summary>
 		/// Indicates support for aggregate functions in ORDER BY statement.
 		/// Default (set by <see cref="DataProviderBase"/>): <c>true</c>.
 		/// </summary>
 		[DataMember(Order = 29)]
-		public bool IsOrderByAggregateFunctionsSupported  { get; set; }
+		public bool IsOrderByAggregateFunctionsSupported { get; set; }
 
 		/// <summary>
 		/// Provider supports EXCEPT ALL, INTERSECT ALL set operators. Otherwise they will be emulated.
 		/// Default (set by <see cref="DataProviderBase"/>): <c>false</c>.
 		/// </summary>
 		[DataMember(Order = 30)]
-		public bool IsAllSetOperationsSupported           { get; set; }
+		public bool IsAllSetOperationsSupported { get; set; }
 
 		/// <summary>
 		/// Provider supports EXCEPT, INTERSECT set operators. Otherwise it will be emulated.
 		/// Default (set by <see cref="DataProviderBase"/>): <c>true</c>.
 		/// </summary>
 		[DataMember(Order = 31)]
-		public bool IsDistinctSetOperationsSupported      { get; set; }
+		public bool IsDistinctSetOperationsSupported { get; set; }
 
 		/// <summary>
 		/// Provider supports aggregated expression with Outer reference
@@ -276,7 +277,7 @@ namespace LinqToDB.SqlProvider
 		/// Default (set by <see cref="DataProviderBase"/>): <c>true</c>.
 		/// </summary>
 		[DataMember(Order = 33)]
-		public bool IsUpdateFromSupported             { get; set; }
+		public bool IsUpdateFromSupported { get; set; }
 
 		/// <summary>
 		/// Provider supports Naming Query Blocks
@@ -286,7 +287,7 @@ namespace LinqToDB.SqlProvider
 		/// Default (set by <see cref="DataProviderBase"/>): <c>false</c>.
 		/// </summary>
 		[DataMember(Order = 34)]
-		public bool IsNamingQueryBlockSupported       { get; set; }
+		public bool IsNamingQueryBlockSupported { get; set; }
 
 		/// <summary>
 		/// Indicates that provider supports window functions.
@@ -313,7 +314,7 @@ namespace LinqToDB.SqlProvider
 		/// Default value: <c>false</c>.
 		/// </summary>
 		[DataMember(Order = 39)]
-		public bool IsExistsPreferableForContains   { get; set; }
+		public bool IsExistsPreferableForContains { get; set; }
 
 		/// <summary>
 		/// Provider supports ROW_NUMBER OVER () without ORDER BY
@@ -425,7 +426,7 @@ namespace LinqToDB.SqlProvider
 		/// As workaround translator is trying to check for nullability all projected fields.
 		/// Default value: <c>false</c>.
 		/// </summary>
-		[DataMember(Order =  49)]
+		[DataMember(Order = 49)]
 		public bool IsAccessBuggyLeftJoinConstantNullability { get; set; }
 
 		/// <summary>
@@ -548,135 +549,135 @@ namespace LinqToDB.SqlProvider
 		// https://github.com/linq2db/linq2db/issues/1445
 		public override int GetHashCode()
 		{
-			return IsParameterOrderDependent                           .GetHashCode()
-				^ AcceptsTakeAsParameter                               .GetHashCode()
-				^ AcceptsTakeAsParameterIfSkip                         .GetHashCode()
-				^ IsTakeSupported                                      .GetHashCode()
-				^ IsSkipSupported                                      .GetHashCode()
-				^ IsSkipSupportedIfTake                                .GetHashCode()
-				^ IsSubQueryTakeSupported                              .GetHashCode()
-				^ IsDerivedTableTakeSupported                          .GetHashCode()
-				^ IsJoinDerivedTableWithTakeInvalid                    .GetHashCode()
-				^ IsCorrelatedSubQueryTakeSupported                    .GetHashCode()
-				^ IsSupportsJoinWithoutCondition                       .GetHashCode()
-				^ IsSubQuerySkipSupported                              .GetHashCode()
-				^ IsSubQueryColumnSupported                            .GetHashCode()
-				^ IsSubQueryOrderBySupported                           .GetHashCode()
-				^ IsCountSubQuerySupported                             .GetHashCode()
-				^ IsIdentityParameterRequired                          .GetHashCode()
-				^ IsApplyJoinSupported                                 .GetHashCode()
-				^ IsCrossApplyJoinSupportsCondition                    .GetHashCode()
-				^ IsOuterApplyJoinSupportsCondition                    .GetHashCode()
-				^ IsInsertOrUpdateSupported                            .GetHashCode()
-				^ CanCombineParameters                                 .GetHashCode()
-				^ MaxInListValuesCount                                 .GetHashCode()
-				^ (TakeHintsSupported?                                 .GetHashCode() ?? 0)
-				^ IsCrossJoinSupported                                 .GetHashCode()
-				^ IsCommonTableExpressionsSupported                    .GetHashCode()
-				^ IsOrderByAggregateFunctionsSupported                 .GetHashCode()
-				^ IsAllSetOperationsSupported                          .GetHashCode()
-				^ IsDistinctSetOperationsSupported                     .GetHashCode()
-				^ IsCountDistinctSupported                             .GetHashCode()
-				^ IsNestedJoinsSupported                               .GetHashCode()
-				^ IsAggregationDistinctSupported                       .GetHashCode()
-				^ IsUpdateFromSupported                                .GetHashCode()
-				^ DefaultMultiQueryIsolationLevel                      .GetHashCode()
-				^ AcceptsOuterExpressionInAggregate                    .GetHashCode()
-				^ IsNamingQueryBlockSupported                          .GetHashCode()
-				^ IsWindowFunctionsSupported                           .GetHashCode()
-				^ RowConstructorSupport                                .GetHashCode()
-				^ OutputDeleteUseSpecialTable                          .GetHashCode()
-				^ OutputInsertUseSpecialTable                          .GetHashCode()
-				^ OutputUpdateUseSpecialTables                         .GetHashCode()
-				^ OutputMergeUseSpecialTables                          .GetHashCode()
-				^ IsExistsPreferableForContains                        .GetHashCode()
-				^ IsRowNumberWithoutOrderBySupported                   .GetHashCode()
+			return IsParameterOrderDependent.GetHashCode()
+				^ AcceptsTakeAsParameter.GetHashCode()
+				^ AcceptsTakeAsParameterIfSkip.GetHashCode()
+				^ IsTakeSupported.GetHashCode()
+				^ IsSkipSupported.GetHashCode()
+				^ IsSkipSupportedIfTake.GetHashCode()
+				^ IsSubQueryTakeSupported.GetHashCode()
+				^ IsDerivedTableTakeSupported.GetHashCode()
+				^ IsJoinDerivedTableWithTakeInvalid.GetHashCode()
+				^ IsCorrelatedSubQueryTakeSupported.GetHashCode()
+				^ IsSupportsJoinWithoutCondition.GetHashCode()
+				^ IsSubQuerySkipSupported.GetHashCode()
+				^ IsSubQueryColumnSupported.GetHashCode()
+				^ IsSubQueryOrderBySupported.GetHashCode()
+				^ IsCountSubQuerySupported.GetHashCode()
+				^ IsIdentityParameterRequired.GetHashCode()
+				^ IsApplyJoinSupported.GetHashCode()
+				^ IsCrossApplyJoinSupportsCondition.GetHashCode()
+				^ IsOuterApplyJoinSupportsCondition.GetHashCode()
+				^ IsInsertOrUpdateSupported.GetHashCode()
+				^ CanCombineParameters.GetHashCode()
+				^ MaxInListValuesCount.GetHashCode()
+				^ (TakeHintsSupported?.GetHashCode() ?? 0)
+				^ IsCrossJoinSupported.GetHashCode()
+				^ IsCommonTableExpressionsSupported.GetHashCode()
+				^ IsOrderByAggregateFunctionsSupported.GetHashCode()
+				^ IsAllSetOperationsSupported.GetHashCode()
+				^ IsDistinctSetOperationsSupported.GetHashCode()
+				^ IsCountDistinctSupported.GetHashCode()
+				^ IsNestedJoinsSupported.GetHashCode()
+				^ IsAggregationDistinctSupported.GetHashCode()
+				^ IsUpdateFromSupported.GetHashCode()
+				^ DefaultMultiQueryIsolationLevel.GetHashCode()
+				^ AcceptsOuterExpressionInAggregate.GetHashCode()
+				^ IsNamingQueryBlockSupported.GetHashCode()
+				^ IsWindowFunctionsSupported.GetHashCode()
+				^ RowConstructorSupport.GetHashCode()
+				^ OutputDeleteUseSpecialTable.GetHashCode()
+				^ OutputInsertUseSpecialTable.GetHashCode()
+				^ OutputUpdateUseSpecialTables.GetHashCode()
+				^ OutputMergeUseSpecialTables.GetHashCode()
+				^ IsExistsPreferableForContains.GetHashCode()
+				^ IsRowNumberWithoutOrderBySupported.GetHashCode()
 				^ IsSubqueryWithParentReferenceInJoinConditionSupported.GetHashCode()
-				^ IsColumnSubqueryWithParentReferenceAndTakeSupported  .GetHashCode()
-				^ IsColumnSubqueryShouldNotContainParentIsNotNull      .GetHashCode()
-				^ IsRecursiveCTEJoinWithConditionSupported             .GetHashCode()
-				^ IsOuterJoinSupportsInnerJoin                         .GetHashCode()
-				^ IsMultiTablesSupportsJoins                           .GetHashCode()
-				^ IsCTESupportsOrdering                                .GetHashCode()
-				^ IsAccessBuggyLeftJoinConstantNullability             .GetHashCode()
-				^ SupportsPredicatesComparison                         .GetHashCode()
-				^ SupportsBooleanType                                  .GetHashCode()
-				^ IsDerivedTableOrderBySupported                       .GetHashCode()
-				^ IsUpdateTakeSupported                                .GetHashCode()
-				^ IsUpdateSkipTakeSupported                            .GetHashCode()
-				^ IsSupportedSimpleCorrelatedSubqueries                .GetHashCode()
-				^ SupportedCorrelatedSubqueriesLevel                   .GetHashCode()
-				^ IsDistinctFromSupported                              .GetHashCode()
-				^ DoesProviderTreatsEmptyStringAsNull                  .GetHashCode()
+				^ IsColumnSubqueryWithParentReferenceAndTakeSupported.GetHashCode()
+				^ IsColumnSubqueryShouldNotContainParentIsNotNull.GetHashCode()
+				^ IsRecursiveCTEJoinWithConditionSupported.GetHashCode()
+				^ IsOuterJoinSupportsInnerJoin.GetHashCode()
+				^ IsMultiTablesSupportsJoins.GetHashCode()
+				^ IsCTESupportsOrdering.GetHashCode()
+				^ IsAccessBuggyLeftJoinConstantNullability.GetHashCode()
+				^ SupportsPredicatesComparison.GetHashCode()
+				^ SupportsBooleanType.GetHashCode()
+				^ IsDerivedTableOrderBySupported.GetHashCode()
+				^ IsUpdateTakeSupported.GetHashCode()
+				^ IsUpdateSkipTakeSupported.GetHashCode()
+				^ IsSupportedSimpleCorrelatedSubqueries.GetHashCode()
+				^ SupportedCorrelatedSubqueriesLevel.GetHashCode()
+				^ IsDistinctFromSupported.GetHashCode()
+				^ DoesProviderTreatsEmptyStringAsNull.GetHashCode()
 				^ CustomFlags.Aggregate(0, (hash, flag) => flag.GetHashCode() ^ hash);
-	}
+		}
 
 		public override bool Equals(object? obj)
 		{
 			return obj is SqlProviderFlags other
-				&& IsParameterOrderDependent                             == other.IsParameterOrderDependent
-				&& AcceptsTakeAsParameter                                == other.AcceptsTakeAsParameter
-				&& AcceptsTakeAsParameterIfSkip                          == other.AcceptsTakeAsParameterIfSkip
-				&& IsTakeSupported                                       == other.IsTakeSupported
-				&& IsSkipSupported                                       == other.IsSkipSupported
-				&& IsSkipSupportedIfTake                                 == other.IsSkipSupportedIfTake
-				&& IsSubQueryTakeSupported                               == other.IsSubQueryTakeSupported
-				&& IsDerivedTableTakeSupported                           == other.IsDerivedTableTakeSupported
-				&& IsJoinDerivedTableWithTakeInvalid                     == other.IsJoinDerivedTableWithTakeInvalid
-				&& IsCorrelatedSubQueryTakeSupported                     == other.IsCorrelatedSubQueryTakeSupported
-				&& IsSupportsJoinWithoutCondition                        == other.IsSupportsJoinWithoutCondition
-				&& IsSubQuerySkipSupported                               == other.IsSubQuerySkipSupported
-				&& IsSubQueryColumnSupported                             == other.IsSubQueryColumnSupported
-				&& IsSubQueryOrderBySupported                            == other.IsSubQueryOrderBySupported
-				&& IsCountSubQuerySupported                              == other.IsCountSubQuerySupported
-				&& IsIdentityParameterRequired                           == other.IsIdentityParameterRequired
-				&& IsApplyJoinSupported                                  == other.IsApplyJoinSupported
-				&& IsCrossApplyJoinSupportsCondition                     == other.IsCrossApplyJoinSupportsCondition
-				&& IsOuterApplyJoinSupportsCondition                     == other.IsOuterApplyJoinSupportsCondition
-				&& IsInsertOrUpdateSupported                             == other.IsInsertOrUpdateSupported
-				&& CanCombineParameters                                  == other.CanCombineParameters
-				&& MaxInListValuesCount                                  == other.MaxInListValuesCount
-				&& TakeHintsSupported                                    == other.TakeHintsSupported
-				&& IsCrossJoinSupported                                  == other.IsCrossJoinSupported
-				&& IsCommonTableExpressionsSupported                     == other.IsCommonTableExpressionsSupported
-				&& IsOrderByAggregateFunctionsSupported                  == other.IsOrderByAggregateFunctionsSupported
-				&& IsAllSetOperationsSupported                           == other.IsAllSetOperationsSupported
-				&& IsDistinctSetOperationsSupported                      == other.IsDistinctSetOperationsSupported
-				&& IsCountDistinctSupported                              == other.IsCountDistinctSupported
-				&& IsNestedJoinsSupported                                == other.IsNestedJoinsSupported
-				&& IsAggregationDistinctSupported                        == other.IsAggregationDistinctSupported
-				&& IsUpdateFromSupported                                 == other.IsUpdateFromSupported
-				&& DefaultMultiQueryIsolationLevel                       == other.DefaultMultiQueryIsolationLevel
-				&& AcceptsOuterExpressionInAggregate                     == other.AcceptsOuterExpressionInAggregate
-				&& IsNamingQueryBlockSupported                           == other.IsNamingQueryBlockSupported
-				&& IsWindowFunctionsSupported                            == other.IsWindowFunctionsSupported
-				&& RowConstructorSupport                                 == other.RowConstructorSupport
-				&& OutputDeleteUseSpecialTable                           == other.OutputDeleteUseSpecialTable
-				&& OutputInsertUseSpecialTable                           == other.OutputInsertUseSpecialTable
-				&& OutputUpdateUseSpecialTables                          == other.OutputUpdateUseSpecialTables
-				&& OutputMergeUseSpecialTables                           == other.OutputMergeUseSpecialTables
-				&& IsExistsPreferableForContains                         == other.IsExistsPreferableForContains
-				&& IsRowNumberWithoutOrderBySupported                    == other.IsRowNumberWithoutOrderBySupported
+				&& IsParameterOrderDependent == other.IsParameterOrderDependent
+				&& AcceptsTakeAsParameter == other.AcceptsTakeAsParameter
+				&& AcceptsTakeAsParameterIfSkip == other.AcceptsTakeAsParameterIfSkip
+				&& IsTakeSupported == other.IsTakeSupported
+				&& IsSkipSupported == other.IsSkipSupported
+				&& IsSkipSupportedIfTake == other.IsSkipSupportedIfTake
+				&& IsSubQueryTakeSupported == other.IsSubQueryTakeSupported
+				&& IsDerivedTableTakeSupported == other.IsDerivedTableTakeSupported
+				&& IsJoinDerivedTableWithTakeInvalid == other.IsJoinDerivedTableWithTakeInvalid
+				&& IsCorrelatedSubQueryTakeSupported == other.IsCorrelatedSubQueryTakeSupported
+				&& IsSupportsJoinWithoutCondition == other.IsSupportsJoinWithoutCondition
+				&& IsSubQuerySkipSupported == other.IsSubQuerySkipSupported
+				&& IsSubQueryColumnSupported == other.IsSubQueryColumnSupported
+				&& IsSubQueryOrderBySupported == other.IsSubQueryOrderBySupported
+				&& IsCountSubQuerySupported == other.IsCountSubQuerySupported
+				&& IsIdentityParameterRequired == other.IsIdentityParameterRequired
+				&& IsApplyJoinSupported == other.IsApplyJoinSupported
+				&& IsCrossApplyJoinSupportsCondition == other.IsCrossApplyJoinSupportsCondition
+				&& IsOuterApplyJoinSupportsCondition == other.IsOuterApplyJoinSupportsCondition
+				&& IsInsertOrUpdateSupported == other.IsInsertOrUpdateSupported
+				&& CanCombineParameters == other.CanCombineParameters
+				&& MaxInListValuesCount == other.MaxInListValuesCount
+				&& TakeHintsSupported == other.TakeHintsSupported
+				&& IsCrossJoinSupported == other.IsCrossJoinSupported
+				&& IsCommonTableExpressionsSupported == other.IsCommonTableExpressionsSupported
+				&& IsOrderByAggregateFunctionsSupported == other.IsOrderByAggregateFunctionsSupported
+				&& IsAllSetOperationsSupported == other.IsAllSetOperationsSupported
+				&& IsDistinctSetOperationsSupported == other.IsDistinctSetOperationsSupported
+				&& IsCountDistinctSupported == other.IsCountDistinctSupported
+				&& IsNestedJoinsSupported == other.IsNestedJoinsSupported
+				&& IsAggregationDistinctSupported == other.IsAggregationDistinctSupported
+				&& IsUpdateFromSupported == other.IsUpdateFromSupported
+				&& DefaultMultiQueryIsolationLevel == other.DefaultMultiQueryIsolationLevel
+				&& AcceptsOuterExpressionInAggregate == other.AcceptsOuterExpressionInAggregate
+				&& IsNamingQueryBlockSupported == other.IsNamingQueryBlockSupported
+				&& IsWindowFunctionsSupported == other.IsWindowFunctionsSupported
+				&& RowConstructorSupport == other.RowConstructorSupport
+				&& OutputDeleteUseSpecialTable == other.OutputDeleteUseSpecialTable
+				&& OutputInsertUseSpecialTable == other.OutputInsertUseSpecialTable
+				&& OutputUpdateUseSpecialTables == other.OutputUpdateUseSpecialTables
+				&& OutputMergeUseSpecialTables == other.OutputMergeUseSpecialTables
+				&& IsExistsPreferableForContains == other.IsExistsPreferableForContains
+				&& IsRowNumberWithoutOrderBySupported == other.IsRowNumberWithoutOrderBySupported
 				&& IsSubqueryWithParentReferenceInJoinConditionSupported == other.IsSubqueryWithParentReferenceInJoinConditionSupported
-				&& IsColumnSubqueryWithParentReferenceAndTakeSupported   == other.IsColumnSubqueryWithParentReferenceAndTakeSupported
-				&& IsColumnSubqueryShouldNotContainParentIsNotNull       == other.IsColumnSubqueryShouldNotContainParentIsNotNull
-				&& IsRecursiveCTEJoinWithConditionSupported              == other.IsRecursiveCTEJoinWithConditionSupported
-				&& IsOuterJoinSupportsInnerJoin                          == other.IsOuterJoinSupportsInnerJoin
-				&& IsMultiTablesSupportsJoins                            == other.IsMultiTablesSupportsJoins
-				&& IsCTESupportsOrdering                                 == other.IsCTESupportsOrdering
-				&& IsAccessBuggyLeftJoinConstantNullability              == other.IsAccessBuggyLeftJoinConstantNullability
-				&& SupportsPredicatesComparison                          == other.SupportsPredicatesComparison
-				&& SupportsBooleanType                                   == other.SupportsBooleanType
-				&& IsDerivedTableOrderBySupported                        == other.IsDerivedTableOrderBySupported
-				&& IsUpdateTakeSupported                                 == other.IsUpdateTakeSupported
-				&& IsUpdateSkipTakeSupported                             == other.IsUpdateSkipTakeSupported
-				&& IsSupportedSimpleCorrelatedSubqueries                 == other.IsSupportedSimpleCorrelatedSubqueries
-				&& SupportedCorrelatedSubqueriesLevel                    == other.SupportedCorrelatedSubqueriesLevel
-				&& IsDistinctFromSupported                               == other.IsDistinctFromSupported
-				&& DoesProviderTreatsEmptyStringAsNull                   == other.DoesProviderTreatsEmptyStringAsNull
+				&& IsColumnSubqueryWithParentReferenceAndTakeSupported == other.IsColumnSubqueryWithParentReferenceAndTakeSupported
+				&& IsColumnSubqueryShouldNotContainParentIsNotNull == other.IsColumnSubqueryShouldNotContainParentIsNotNull
+				&& IsRecursiveCTEJoinWithConditionSupported == other.IsRecursiveCTEJoinWithConditionSupported
+				&& IsOuterJoinSupportsInnerJoin == other.IsOuterJoinSupportsInnerJoin
+				&& IsMultiTablesSupportsJoins == other.IsMultiTablesSupportsJoins
+				&& IsCTESupportsOrdering == other.IsCTESupportsOrdering
+				&& IsAccessBuggyLeftJoinConstantNullability == other.IsAccessBuggyLeftJoinConstantNullability
+				&& SupportsPredicatesComparison == other.SupportsPredicatesComparison
+				&& SupportsBooleanType == other.SupportsBooleanType
+				&& IsDerivedTableOrderBySupported == other.IsDerivedTableOrderBySupported
+				&& IsUpdateTakeSupported == other.IsUpdateTakeSupported
+				&& IsUpdateSkipTakeSupported == other.IsUpdateSkipTakeSupported
+				&& IsSupportedSimpleCorrelatedSubqueries == other.IsSupportedSimpleCorrelatedSubqueries
+				&& SupportedCorrelatedSubqueriesLevel == other.SupportedCorrelatedSubqueriesLevel
+				&& IsDistinctFromSupported == other.IsDistinctFromSupported
+				&& DoesProviderTreatsEmptyStringAsNull == other.DoesProviderTreatsEmptyStringAsNull
 				// CustomFlags as List wasn't best idea
-				&& CustomFlags.Count                                     == other.CustomFlags.Count
-				&& (CustomFlags.Count                                    == 0
+				&& CustomFlags.Count == other.CustomFlags.Count
+				&& (CustomFlags.Count == 0
 					|| CustomFlags.OrderBy(_ => _).SequenceEqual(other.CustomFlags.OrderBy(_ => _)));
 		}
 		#endregion

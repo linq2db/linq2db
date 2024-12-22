@@ -3,6 +3,7 @@ using System.Data.Common;
 using System.Text;
 
 using LinqToDB.Common;
+using LinqToDB.Internals.SqlProvider;
 using LinqToDB.Internals.SqlQuery;
 using LinqToDB.Mapping;
 using LinqToDB.SqlProvider;

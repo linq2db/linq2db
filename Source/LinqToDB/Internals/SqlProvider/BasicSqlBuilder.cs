@@ -17,6 +17,7 @@ using LinqToDB.DataProvider;
 using LinqToDB.Extensions;
 using LinqToDB.Infrastructure;
 using LinqToDB.Internals.Common;
+using LinqToDB.Internals.SqlProvider;
 using LinqToDB.Internals.SqlQuery;
 using LinqToDB.Mapping;
 using LinqToDB.SqlQuery;

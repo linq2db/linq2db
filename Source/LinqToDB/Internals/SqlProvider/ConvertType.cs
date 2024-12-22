@@ -1,4 +1,4 @@
-﻿namespace LinqToDB.SqlProvider
+﻿namespace LinqToDB.Internals.SqlProvider
 {
 	public enum ConvertType
 	{

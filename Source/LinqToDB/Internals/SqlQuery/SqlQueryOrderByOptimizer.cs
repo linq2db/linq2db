@@ -1,8 +1,8 @@
 ﻿using System.Linq;
 
 using LinqToDB.Common;
+using LinqToDB.Internals.SqlProvider;
 using LinqToDB.Internals.SqlQuery.Visitors;
-using LinqToDB.SqlProvider;
 
 namespace LinqToDB.Internals.SqlQuery
 {

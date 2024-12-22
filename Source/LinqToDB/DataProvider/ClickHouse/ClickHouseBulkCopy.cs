@@ -9,7 +9,7 @@ using LinqToDB.Data;
 using LinqToDB.Extensions;
 using LinqToDB.Internals.Async;
 using LinqToDB.Internals.Common;
-using LinqToDB.SqlProvider;
+using LinqToDB.Internals.SqlProvider;
 using LinqToDB.Tools;
 
 namespace LinqToDB.DataProvider.ClickHouse

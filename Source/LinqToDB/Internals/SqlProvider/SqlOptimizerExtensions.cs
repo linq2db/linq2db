@@ -2,7 +2,7 @@
 using LinqToDB.Internals.SqlQuery;
 using LinqToDB.Mapping;
 
-namespace LinqToDB.SqlProvider
+namespace LinqToDB.Internals.SqlProvider
 {
 	internal static class SqlOptimizerExtensions
 	{

@@ -2,9 +2,9 @@
 using System.Collections.Generic;
 using System.Linq;
 
+using LinqToDB.Internals.SqlProvider;
 using LinqToDB.Internals.SqlQuery;
 using LinqToDB.Mapping;
-using LinqToDB.SqlProvider;
 
 namespace LinqToDB.DataProvider.SqlServer
 {

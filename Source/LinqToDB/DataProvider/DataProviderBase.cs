@@ -17,10 +17,10 @@ using LinqToDB.Data;
 using LinqToDB.Expressions;
 using LinqToDB.Infrastructure;
 using LinqToDB.Internals.Common;
+using LinqToDB.Internals.SqlProvider;
 using LinqToDB.Linq.Translation;
 using LinqToDB.Mapping;
 using LinqToDB.SchemaProvider;
-using LinqToDB.SqlProvider;
 
 namespace LinqToDB.DataProvider
 {

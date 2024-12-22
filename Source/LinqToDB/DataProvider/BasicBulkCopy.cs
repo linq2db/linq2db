@@ -13,8 +13,8 @@ using System.Text;
 
 using LinqToDB.Data;
 using LinqToDB.Mapping;
-using LinqToDB.SqlProvider;
 using LinqToDB.Internals.SqlQuery;
+using LinqToDB.Internals.SqlProvider;
 
 namespace LinqToDB.DataProvider
 {

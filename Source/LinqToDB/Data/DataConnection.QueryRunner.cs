@@ -12,9 +12,9 @@ using LinqToDB.DataProvider;
 using LinqToDB.Extensions;
 using LinqToDB.Infrastructure;
 using LinqToDB.Internals.Common;
+using LinqToDB.Internals.SqlProvider;
 using LinqToDB.Internals.SqlQuery;
 using LinqToDB.Linq;
-using LinqToDB.SqlProvider;
 using LinqToDB.Tools;
 
 namespace LinqToDB.Data

@@ -3,7 +3,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Linq;
 
-using LinqToDB.SqlProvider;
+using LinqToDB.Internals.SqlProvider;
 
 namespace LinqToDB.Internals.SqlQuery.Visitors
 {

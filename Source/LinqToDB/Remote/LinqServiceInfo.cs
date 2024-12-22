@@ -1,6 +1,6 @@
 ﻿using System.Runtime.Serialization;
 
-using LinqToDB.SqlProvider;
+using LinqToDB.Internals.SqlProvider;
 
 namespace LinqToDB.Remote
 {

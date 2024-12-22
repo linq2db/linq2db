@@ -8,7 +8,7 @@ using LinqToDB.Internals.SqlQuery;
 using LinqToDB.Internals.SqlQuery.Visitors;
 using LinqToDB.Mapping;
 
-namespace LinqToDB.SqlProvider
+namespace LinqToDB.Internals.SqlProvider
 {
 	public class OptimizationContext
 	{
@@ -17,49 +17,49 @@ namespace LinqToDB.SqlProvider
 		private List<SqlParameter>?                              _actualParameters;
 		private Dictionary<(DbDataType, object?), SqlParameter>? _dynamicParameters;
 
-		public DataOptions                   DataOptions      { get; }
-		public SqlProviderFlags?             SqlProviderFlags { get; }
-		public MappingSchema                 MappingSchema    { get; }
-		public SqlExpressionConvertVisitor   ConvertVisitor   { get; }
+		public DataOptions DataOptions { get; }
+		public SqlProviderFlags? SqlProviderFlags { get; }
+		public MappingSchema MappingSchema { get; }
+		public SqlExpressionConvertVisitor ConvertVisitor { get; }
 		public SqlExpressionOptimizerVisitor OptimizerVisitor { get; }
 
 		readonly Func<IQueryParametersNormalizer>           _parametersNormalizerFactory;
 
-		public SqlQueryVisitor.IVisitorTransformationInfo TransformationInfo => 
+		public SqlQueryVisitor.IVisitorTransformationInfo TransformationInfo =>
 			_transformationInfo ??= new SqlQueryVisitor.VisitorTransformationInfo();
 
 		SqlQueryVisitor.IVisitorTransformationInfo? _transformationInfo;
 
-		public SqlQueryVisitor.IVisitorTransformationInfo TransformationInfoConvert => 
+		public SqlQueryVisitor.IVisitorTransformationInfo TransformationInfoConvert =>
 			_transformationInfoConvert ??= new SqlQueryVisitor.VisitorTransformationInfo();
 
 		SqlQueryVisitor.IVisitorTransformationInfo? _transformationInfoConvert;
 
 		public OptimizationContext(
-			EvaluationContext                evaluationContext,
-			DataOptions                      dataOptions,
-			SqlProviderFlags?                sqlProviderFlags,
-			MappingSchema                    mappingSchema,
-			SqlExpressionOptimizerVisitor    optimizerVisitor,
-			SqlExpressionConvertVisitor      convertVisitor,
-			bool                             isParameterOrderDepended,
-			bool                             isAlreadyOptimizedAndConverted,
+			EvaluationContext evaluationContext,
+			DataOptions dataOptions,
+			SqlProviderFlags? sqlProviderFlags,
+			MappingSchema mappingSchema,
+			SqlExpressionOptimizerVisitor optimizerVisitor,
+			SqlExpressionConvertVisitor convertVisitor,
+			bool isParameterOrderDepended,
+			bool isAlreadyOptimizedAndConverted,
 			Func<IQueryParametersNormalizer> parametersNormalizerFactory)
 		{
-			EvaluationContext              = evaluationContext;
-			DataOptions                    = dataOptions;
-			SqlProviderFlags               = sqlProviderFlags;
-			MappingSchema                  = mappingSchema;
-			OptimizerVisitor               = optimizerVisitor;
-			ConvertVisitor                 = convertVisitor;
-			IsParameterOrderDependent      = isParameterOrderDepended;
+			EvaluationContext = evaluationContext;
+			DataOptions = dataOptions;
+			SqlProviderFlags = sqlProviderFlags;
+			MappingSchema = mappingSchema;
+			OptimizerVisitor = optimizerVisitor;
+			ConvertVisitor = convertVisitor;
+			IsParameterOrderDependent = isParameterOrderDepended;
 			IsAlreadyOptimizedAndConverted = isAlreadyOptimizedAndConverted;
-			_parametersNormalizerFactory   = parametersNormalizerFactory;
+			_parametersNormalizerFactory = parametersNormalizerFactory;
 		}
 
-		public EvaluationContext EvaluationContext              { get; }
-		public bool              IsParameterOrderDependent      { get; }
-		public bool              IsAlreadyOptimizedAndConverted { get; }
+		public EvaluationContext EvaluationContext { get; }
+		public bool IsParameterOrderDependent { get; }
+		public bool IsAlreadyOptimizedAndConverted { get; }
 
 		public bool HasParameters() => _actualParameters?.Count > 0;
 
@@ -81,9 +81,9 @@ namespace LinqToDB.SqlProvider
 				{
 					returnValue = new SqlParameter(parameter.Type, newName, parameter.Value)
 					{
-						AccessorId     = parameter.AccessorId,
+						AccessorId = parameter.AccessorId,
 						ValueConverter = parameter.ValueConverter,
-						NeedsCast      = parameter.NeedsCast
+						NeedsCast = parameter.NeedsCast
 					};
 				}
 
@@ -116,7 +116,7 @@ namespace LinqToDB.SqlProvider
 		public void ClearParameters()
 		{
 			// must discard instance instead of Clean as it is returned by GetParameters
-			_actualParameters     = null;
+			_actualParameters = null;
 			_parametersNormalizer = null;
 		}
 
@@ -130,7 +130,7 @@ namespace LinqToDB.SqlProvider
 			return result;
 		}
 
-		[return : NotNullIfNotNull(nameof(element))]
+		[return: NotNullIfNotNull(nameof(element))]
 		public T OptimizeAndConvertAll<T>(T element, NullabilityContext nullabilityContext)
 			where T : class, IQueryElement
 		{

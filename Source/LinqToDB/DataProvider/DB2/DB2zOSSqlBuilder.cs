@@ -5,6 +5,7 @@ using System.Text;
 #endif
 
 using LinqToDB.Common;
+using LinqToDB.Internals.SqlProvider;
 using LinqToDB.Mapping;
 using LinqToDB.SqlProvider;
 

@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+﻿﻿using System.Collections.Generic;
 using System.Data.Common;
 using System.Text;
 
@@ -6,7 +6,7 @@ using LinqToDB.Common;
 using LinqToDB.Internals.SqlQuery;
 using LinqToDB.Mapping;
 
-namespace LinqToDB.SqlProvider
+namespace LinqToDB.Internals.SqlProvider
 {
 	public interface ISqlBuilder
 	{

@@ -2,17 +2,19 @@
 using System.Collections.Generic;
 using System.Linq;
 
+using LinqToDB;
 using LinqToDB.Common;
 using LinqToDB.Expressions;
 using LinqToDB.Expressions.ExpressionVisitors;
 using LinqToDB.Internals.SqlQuery;
 using LinqToDB.Internals.SqlQuery.Visitors;
 using LinqToDB.Mapping;
+using LinqToDB.SqlProvider;
 using LinqToDB.SqlQuery;
 
 // ReSharper disable InconsistentNaming
 
-namespace LinqToDB.SqlProvider
+namespace LinqToDB.Internals.SqlProvider
 {
 	public class BasicSqlOptimizer : ISqlOptimizer
 	{
@@ -44,7 +46,7 @@ namespace LinqToDB.SqlProvider
 		public virtual SqlStatement Finalize(MappingSchema mappingSchema, SqlStatement statement, DataOptions dataOptions)
 		{
 			FixEmptySelect(statement);
-			FinalizeCte   (statement);
+			FinalizeCte(statement);
 
 			var evaluationContext = new EvaluationContext(null);
 
@@ -66,7 +68,7 @@ namespace LinqToDB.SqlProvider
 			// provider specific query correction
 			statement = FinalizeStatement(statement, evaluationContext, dataOptions, mappingSchema);
 
-//statement.EnsureFindTables();
+			//statement.EnsureFindTables();
 
 			return statement;
 		}
@@ -284,7 +286,7 @@ namespace LinqToDB.SqlProvider
 						}
 
 						var keysColumns = new List<ISqlExpression>(keys.Count);
-						foreach(var key in keys)
+						foreach (var key in keys)
 						{
 							var newColumn = PopulateNesting(queries, key, 1);
 							if (newColumn == null)
@@ -355,7 +357,7 @@ namespace LinqToDB.SqlProvider
 							statement.Update.Items[index] = item;
 						}
 
-						statement.Update.Table       = newTable;
+						statement.Update.Table = newTable;
 						statement.Update.TableSource = null;
 					}
 					else
@@ -472,7 +474,7 @@ namespace LinqToDB.SqlProvider
 				{
 					var prevQuery = sc;
 
-					for (int i = 0; i < sc.SetOperators.Count; i++)
+					for (var i = 0; i < sc.SetOperators.Count; i++)
 					{
 						var currentOperator = sc.SetOperators[i];
 						var currentQuery    = currentOperator.SelectQuery;
@@ -840,7 +842,7 @@ namespace LinqToDB.SqlProvider
 
 		protected SqlDeleteStatement GetAlternativeDelete(SqlDeleteStatement deleteStatement, DataOptions dataOptions)
 		{
-			if ((deleteStatement.SelectQuery.From.Tables.Count > 1 || deleteStatement.SelectQuery.From.Tables[0].Joins.Count > 0))
+			if (deleteStatement.SelectQuery.From.Tables.Count > 1 || deleteStatement.SelectQuery.From.Tables[0].Joins.Count > 0)
 			{
 				var table = deleteStatement.Table ?? deleteStatement.SelectQuery.From.Tables[0].Source as SqlTable;
 
@@ -903,11 +905,11 @@ namespace LinqToDB.SqlProvider
 			return false;
 		}
 
-		bool MoveConditions(SqlTable table, 
+		bool MoveConditions(SqlTable table,
 			IReadOnlyCollection<ISqlTableSource> currentSources,
-			SqlSearchCondition       source, 
-			SqlSearchCondition       destination,
-			SqlSearchCondition       common)
+			SqlSearchCondition source,
+			SqlSearchCondition destination,
+			SqlSearchCondition common)
 		{
 			if (source.IsOr)
 				return false;
@@ -915,12 +917,12 @@ namespace LinqToDB.SqlProvider
 			List<ISqlPredicate>? predicatesForDestination = null;
 			List<ISqlPredicate>? predicatesCommon         = null;
 
-			ISqlTableSource[] tableSources = { (ISqlTableSource)table };
+			ISqlTableSource[] tableSources = { table };
 
 			foreach (var p in source.Predicates)
 			{
-				if (QueryHelper.IsDependsOnOuterSources(p, currentSources : currentSources) &&
-				    QueryHelper.IsDependsOnSources(p, tableSources))
+				if (QueryHelper.IsDependsOnOuterSources(p, currentSources: currentSources) &&
+					QueryHelper.IsDependsOnSources(p, tableSources))
 				{
 					predicatesForDestination ??= new();
 					predicatesForDestination.Add(p);
@@ -947,14 +949,14 @@ namespace LinqToDB.SqlProvider
 			if (predicatesForDestination != null)
 			{
 				destination.AddRange(predicatesForDestination);
-				foreach(var p in predicatesForDestination)
+				foreach (var p in predicatesForDestination)
 					source.Predicates.Remove(p);
 			}
 
 			if (predicatesCommon != null)
 			{
 				common.AddRange(predicatesCommon);
-				foreach(var p in predicatesCommon)
+				foreach (var p in predicatesCommon)
 					source.Predicates.Remove(p);
 			}
 
@@ -965,7 +967,6 @@ namespace LinqToDB.SqlProvider
 		{
 			source = null;
 
-			
 			if (query.Select.HasSomeModifiers(SqlProviderFlags.IsUpdateSkipTakeSupported, SqlProviderFlags.IsUpdateTakeSupported) ||
 				!query.GroupBy.IsEmpty)
 				return false;
@@ -1024,8 +1025,8 @@ namespace LinqToDB.SqlProvider
 		}
 
 		static SelectQuery CloneQuery(
-			SelectQuery                                  query,
-			SqlTable?                                    exceptTable,
+			SelectQuery query,
+			SqlTable? exceptTable,
 			out Dictionary<IQueryElement, IQueryElement> replaceTree)
 		{
 			replaceTree = new Dictionary<IQueryElement, IQueryElement>();
@@ -1045,7 +1046,7 @@ namespace LinqToDB.SqlProvider
 		}
 
 		protected static SqlTable CloneTable(
-			SqlTable                                     tableToClone,
+			SqlTable tableToClone,
 			out Dictionary<IQueryElement, IQueryElement> replaceTree)
 		{
 			replaceTree = new Dictionary<IQueryElement, IQueryElement>();
@@ -1074,7 +1075,7 @@ namespace LinqToDB.SqlProvider
 		}
 
 		protected static TElement RemapCloned<TElement>(
-			TElement                                  element,
+			TElement element,
 			Dictionary<IQueryElement, IQueryElement>? mainTree,
 			Dictionary<IQueryElement, IQueryElement>? innerTree = null,
 			bool insideColumns = true)
@@ -1103,8 +1104,8 @@ namespace LinqToDB.SqlProvider
 		}
 
 		static IEnumerable<(ISqlExpression target, ISqlExpression source, SelectQuery? query)> GenerateRows(
-			ISqlExpression                            target,
-			ISqlExpression                            source)
+			ISqlExpression target,
+			ISqlExpression source)
 		{
 			if (target is SqlRowExpression targetRow)
 			{
@@ -1143,11 +1144,11 @@ namespace LinqToDB.SqlProvider
 		}
 
 		static IEnumerable<(ISqlExpression, ISqlExpression)> GenerateRows(
-			ISqlExpression                            target,
-			ISqlExpression                            source,
+			ISqlExpression target,
+			ISqlExpression source,
 			Dictionary<IQueryElement, IQueryElement>? mainTree,
 			Dictionary<IQueryElement, IQueryElement>? innerTree,
-			SelectQuery                               selectQuery)
+			SelectQuery selectQuery)
 		{
 			if (target is SqlRowExpression targetRow && source is SqlRowExpression sourceRow)
 			{
@@ -1199,9 +1200,9 @@ namespace LinqToDB.SqlProvider
 
 			if (NeedsEnvelopingForUpdate(updateStatement.SelectQuery))
 			{
-				updateStatement = QueryHelper.WrapQuery(updateStatement, updateStatement.SelectQuery, allowMutation : true);
+				updateStatement = QueryHelper.WrapQuery(updateStatement, updateStatement.SelectQuery, allowMutation: true);
 			}
-			
+
 			needsComparison = false;
 
 			if (!needsComparison)
@@ -1347,7 +1348,7 @@ namespace LinqToDB.SqlProvider
 				}
 
 				newUpdateStatement.Update.Table = updateStatement.Update.Table;
-				newUpdateStatement.With         = updateStatement.With;
+				newUpdateStatement.With = updateStatement.With;
 
 				newUpdateStatement.SelectQuery.Where.SearchCondition.AddExists(clonedQuery);
 
@@ -1441,8 +1442,8 @@ namespace LinqToDB.SqlProvider
 
 			updateStatement.SelectQuery.Replace(replacements);
 
-			newSource                          = new SqlTableSource(updateTable, alias ?? "u");
-			updateStatement.Update.Table       = updateTable;
+			newSource = new SqlTableSource(updateTable, alias ?? "u");
+			updateStatement.Update.Table = updateTable;
 			updateStatement.Update.TableSource = newSource;
 
 			if (moveToJoin)
@@ -1504,7 +1505,7 @@ namespace LinqToDB.SqlProvider
 			{
 				if (RemoveUpdateTableIfPossible(statement.SelectQuery, tableToUpdate, out _))
 				{
-					isModified            = true;
+					isModified = true;
 					hasUpdateTableInQuery = false;
 				}
 			}
@@ -1513,7 +1514,7 @@ namespace LinqToDB.SqlProvider
 
 			if (hasUpdateTableInQuery)
 			{
-				statement     = DetachUpdateTableFromUpdateQuery(statement, dataOptions, moveToJoin: false, addNewSource: false, out tableSource);
+				statement = DetachUpdateTableFromUpdateQuery(statement, dataOptions, moveToJoin: false, addNewSource: false, out tableSource);
 				tableToUpdate = statement.Update.Table!;
 				tableSource = null;
 
@@ -1523,7 +1524,7 @@ namespace LinqToDB.SqlProvider
 			if (isModified)
 				OptimizeQueries(statement, statement, dataOptions, mappingSchema, new EvaluationContext());
 
-			statement.Update.Table       = tableToUpdate;
+			statement.Update.Table = tableToUpdate;
 			statement.Update.TableSource = tableSource;
 
 			return statement;
@@ -1763,7 +1764,7 @@ namespace LinqToDB.SqlProvider
 
 		public bool IsParameterDependent(NullabilityContext nullability, MappingSchema mappingSchema, SqlStatement statement, DataOptions dataOptions)
 		{
-			return null != statement.Find((optimizer : this, nullability, dataOptions, mappingSchema),
+			return null != statement.Find((optimizer: this, nullability, dataOptions, mappingSchema),
 				static (ctx, e) => ctx.optimizer.IsParameterDependedElement(ctx.nullability, e, ctx.dataOptions, ctx.mappingSchema));
 		}
 
@@ -1960,10 +1961,10 @@ namespace LinqToDB.SqlProvider
 							processingQuery.Where.SearchCondition.AddLessOrEqual(
 								rowNumberColumn,
 								new SqlBinaryExpression(
-									query.Select.SkipValue.SystemType!, 
-									query.Select.SkipValue, 
-									"+", 
-									query.Select.TakeValue), 
+									query.Select.SkipValue.SystemType!,
+									query.Select.SkipValue,
+									"+",
+									query.Select.TakeValue),
 								CompareNulls.LikeSql);
 					}
 					else

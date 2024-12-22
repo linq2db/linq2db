@@ -1,4 +1,5 @@
-﻿using LinqToDB.Mapping;
+﻿using LinqToDB.Internals.SqlProvider;
+using LinqToDB.Mapping;
 using LinqToDB.SqlProvider;
 
 namespace LinqToDB.DataProvider.SqlServer

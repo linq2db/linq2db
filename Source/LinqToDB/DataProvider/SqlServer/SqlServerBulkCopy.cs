@@ -5,7 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 
 using LinqToDB.Data;
-using LinqToDB.SqlProvider;
+using LinqToDB.Internals.SqlProvider;
 
 namespace LinqToDB.DataProvider.SqlServer
 {

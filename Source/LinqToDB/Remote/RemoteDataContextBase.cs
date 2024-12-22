@@ -18,9 +18,9 @@ using LinqToDB.Infrastructure;
 using LinqToDB.Interceptors;
 using LinqToDB.Internals.Cache;
 using LinqToDB.Internals.Common;
+using LinqToDB.Internals.SqlProvider;
 using LinqToDB.Linq.Translation;
 using LinqToDB.Mapping;
-using LinqToDB.SqlProvider;
 using LinqToDB.Tools;
 
 namespace LinqToDB.Remote

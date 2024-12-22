@@ -1,12 +1,12 @@
-﻿namespace LinqToDB.SqlProvider
+﻿namespace LinqToDB.Internals.SqlProvider
 {
 	public class TableIDInfo
 	{
 		public TableIDInfo(string tableAlias, string tableName, string tableSpec)
 		{
 			TableAlias = tableAlias;
-			TableName  = tableName;
-			TableSpec  = tableSpec;
+			TableName = tableName;
+			TableSpec = tableSpec;
 		}
 
 		public string TableAlias;

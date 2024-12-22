@@ -13,10 +13,10 @@ using JetBrains.Annotations;
 using LinqToDB.Async;
 using LinqToDB.DataProvider;
 using LinqToDB.Expressions;
+using LinqToDB.Internals.SqlProvider;
 using LinqToDB.Linq;
 using LinqToDB.Linq.Builder;
 using LinqToDB.Reflection;
-using LinqToDB.SqlProvider;
 
 using static LinqToDB.MultiInsertExtensions;
 

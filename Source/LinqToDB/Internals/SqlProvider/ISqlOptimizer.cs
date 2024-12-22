@@ -1,7 +1,7 @@
 ﻿using LinqToDB.Internals.SqlQuery;
 using LinqToDB.Mapping;
 
-namespace LinqToDB.SqlProvider
+namespace LinqToDB.Internals.SqlProvider
 {
 	public interface ISqlOptimizer
 	{
@@ -23,6 +23,6 @@ namespace LinqToDB.SqlProvider
 		void ConvertSkipTake(NullabilityContext nullability, MappingSchema mappingSchema, DataOptions dataOptions, SelectQuery selectQuery, OptimizationContext optimizationContext, out ISqlExpression? takeExpr, out ISqlExpression? skipExpr);
 
 		SqlExpressionOptimizerVisitor CreateOptimizerVisitor(bool allowModify);
-		SqlExpressionConvertVisitor   CreateConvertVisitor(bool   allowModify);
+		SqlExpressionConvertVisitor CreateConvertVisitor(bool allowModify);
 	}
 }

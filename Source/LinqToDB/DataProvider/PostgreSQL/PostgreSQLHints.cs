@@ -6,9 +6,9 @@ using System.Text;
 using JetBrains.Annotations;
 
 using LinqToDB.Expressions;
+using LinqToDB.Internals.SqlProvider;
 using LinqToDB.Internals.SqlQuery;
 using LinqToDB.Linq;
-using LinqToDB.SqlProvider;
 
 namespace LinqToDB.DataProvider.PostgreSQL
 {
