@@ -4,9 +4,9 @@ using System.Collections.Generic;
 using JetBrains.Annotations;
 
 using LinqToDB.Common;
-using LinqToDB.Common.Internal;
 using LinqToDB.Data;
 using LinqToDB.Data.RetryPolicy;
+using LinqToDB.Internals.Common;
 using LinqToDB.Remote;
 
 namespace LinqToDB

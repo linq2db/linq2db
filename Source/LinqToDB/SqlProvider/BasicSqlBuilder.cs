@@ -13,10 +13,10 @@ using System.Text;
 using System.Text.RegularExpressions;
 
 using LinqToDB.Common;
-using LinqToDB.Common.Internal;
 using LinqToDB.DataProvider;
 using LinqToDB.Extensions;
 using LinqToDB.Infrastructure;
+using LinqToDB.Internals.Common;
 using LinqToDB.Internals.SqlQuery;
 using LinqToDB.Mapping;
 using LinqToDB.SqlQuery;

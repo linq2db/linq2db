@@ -2,9 +2,9 @@
 using System.Data.Common;
 
 using LinqToDB.Common;
-using LinqToDB.Common.Internal;
 using LinqToDB.DataProvider;
 using LinqToDB.Interceptors;
+using LinqToDB.Internals.Common;
 using LinqToDB.Mapping;
 using LinqToDB.Remote;
 

@@ -1,7 +1,7 @@
 ﻿using System;
 
 using LinqToDB.Common;
-using LinqToDB.Common.Internal;
+using LinqToDB.Internals.Common;
 using LinqToDB.Reflection;
 
 namespace LinqToDB.Mapping

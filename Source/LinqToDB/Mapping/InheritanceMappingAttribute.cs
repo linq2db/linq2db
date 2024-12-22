@@ -1,6 +1,6 @@
 ﻿using System;
 
-using LinqToDB.Common.Internal;
+using LinqToDB.Internals.Common;
 
 namespace LinqToDB.Mapping
 {

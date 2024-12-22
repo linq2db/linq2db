@@ -2,7 +2,7 @@
 using System.Diagnostics;
 
 using LinqToDB.Common;
-using LinqToDB.Common.Internal;
+using LinqToDB.Internals.Common;
 
 namespace LinqToDB.Data
 {

@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 
-using LinqToDB.Common.Internal;
+using LinqToDB.Internals.Common;
 using LinqToDB.Internals.SqlQuery.Visitors;
 
 namespace LinqToDB.Internals.SqlQuery

@@ -9,7 +9,7 @@ using System.Reflection;
 using System.Runtime.CompilerServices;
 
 #if !EF6 && !EF31
-using LinqToDB.Common.Internal;
+using LinqToDB.Internals.Common;
 
 #endif
 using Microsoft.EntityFrameworkCore;

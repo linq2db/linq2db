@@ -4,11 +4,11 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
-using LinqToDB.Async;
 using LinqToDB.Common;
-using LinqToDB.Common.Internal;
 using LinqToDB.Data;
 using LinqToDB.Extensions;
+using LinqToDB.Internals.Async;
+using LinqToDB.Internals.Common;
 using LinqToDB.SqlProvider;
 using LinqToDB.Tools;
 

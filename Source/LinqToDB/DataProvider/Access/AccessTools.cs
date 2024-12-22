@@ -3,8 +3,8 @@ using System.Data.Common;
 using System.IO;
 using System.Security;
 
-using LinqToDB.Compatibility;
 using LinqToDB.Data;
+using LinqToDB.Internals.Common;
 
 namespace LinqToDB.DataProvider.Access
 {

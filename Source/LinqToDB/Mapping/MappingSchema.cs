@@ -15,12 +15,12 @@ using System.Xml.Linq;
 using JetBrains.Annotations;
 
 using LinqToDB.Common;
-using LinqToDB.Common.Internal;
-using LinqToDB.Common.Internal.Cache;
 using LinqToDB.Data;
 using LinqToDB.Expressions;
 using LinqToDB.Expressions.ExpressionVisitors;
 using LinqToDB.Extensions;
+using LinqToDB.Internals.Cache;
+using LinqToDB.Internals.Common;
 using LinqToDB.Metadata;
 using LinqToDB.SqlProvider;
 using LinqToDB.SqlQuery;

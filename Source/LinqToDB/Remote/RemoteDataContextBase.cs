@@ -10,14 +10,14 @@ using System.Threading.Tasks;
 using JetBrains.Annotations;
 
 using LinqToDB.Common;
-using LinqToDB.Common.Internal;
-using LinqToDB.Common.Internal.Cache;
 using LinqToDB.Data;
 using LinqToDB.DataProvider;
 using LinqToDB.Expressions;
 using LinqToDB.Extensions;
 using LinqToDB.Infrastructure;
 using LinqToDB.Interceptors;
+using LinqToDB.Internals.Cache;
+using LinqToDB.Internals.Common;
 using LinqToDB.Linq.Translation;
 using LinqToDB.Mapping;
 using LinqToDB.SqlProvider;

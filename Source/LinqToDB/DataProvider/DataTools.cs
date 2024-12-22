@@ -6,7 +6,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Text;
 
-using LinqToDB.Common.Internal;
+using LinqToDB.Internals.Common;
 
 namespace LinqToDB.DataProvider
 {

@@ -7,9 +7,9 @@ using System.Threading.Tasks;
 
 using LinqToDB.Async;
 using LinqToDB.Common;
-using LinqToDB.Compatibility.System;
 using LinqToDB.Data.RetryPolicy;
 using LinqToDB.Interceptors;
+using LinqToDB.Internals.Common;
 using LinqToDB.Tools;
 
 namespace LinqToDB.Data

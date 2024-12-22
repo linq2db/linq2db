@@ -9,11 +9,11 @@ using System.Linq.Expressions;
 using System.Reflection;
 
 using LinqToDB.Common;
-using LinqToDB.Common.Internal;
 using LinqToDB.Data;
 using LinqToDB.Expressions;
 using LinqToDB.Expressions.Internal;
 using LinqToDB.Extensions;
+using LinqToDB.Internals.Common;
 using LinqToDB.Internals.SqlQuery;
 using LinqToDB.Linq.Translation;
 using LinqToDB.Mapping;

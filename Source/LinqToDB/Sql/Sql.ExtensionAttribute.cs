@@ -11,10 +11,10 @@ using System.Reflection;
 using JetBrains.Annotations;
 
 using LinqToDB.Common;
-using LinqToDB.Common.Internal;
 using LinqToDB.Expressions;
 using LinqToDB.Expressions.Internal;
 using LinqToDB.Extensions;
+using LinqToDB.Internals.Common;
 using LinqToDB.Internals.SqlQuery;
 using LinqToDB.Linq.Builder;
 using LinqToDB.Mapping;

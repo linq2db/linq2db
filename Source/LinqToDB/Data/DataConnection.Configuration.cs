@@ -6,10 +6,10 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 
 using LinqToDB.Async;
-using LinqToDB.Common.Internal;
 using LinqToDB.Configuration;
 using LinqToDB.Data.RetryPolicy;
 using LinqToDB.DataProvider;
+using LinqToDB.Internals.Common;
 
 namespace LinqToDB.Data
 {

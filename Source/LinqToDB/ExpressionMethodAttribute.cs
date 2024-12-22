@@ -3,7 +3,7 @@ using System.Linq.Expressions;
 
 using JetBrains.Annotations;
 
-using LinqToDB.Common.Internal;
+using LinqToDB.Internals.Common;
 using LinqToDB.Mapping;
 
 namespace LinqToDB

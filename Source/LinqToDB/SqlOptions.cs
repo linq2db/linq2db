@@ -1,5 +1,5 @@
 ﻿using LinqToDB.Common;
-using LinqToDB.Common.Internal;
+using LinqToDB.Internals.Common;
 
 namespace LinqToDB
 {

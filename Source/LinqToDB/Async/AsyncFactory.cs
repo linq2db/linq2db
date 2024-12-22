@@ -15,6 +15,7 @@ using LinqToDB.Common;
 using LinqToDB.Data;
 using LinqToDB.Expressions;
 using LinqToDB.Extensions;
+using LinqToDB.Internals.Async;
 
 namespace LinqToDB.Async
 {

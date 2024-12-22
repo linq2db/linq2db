@@ -13,10 +13,10 @@ using System.Xml;
 using System.Xml.Linq;
 
 using LinqToDB.Common;
-using LinqToDB.Common.Internal;
 using LinqToDB.Data;
 using LinqToDB.Expressions;
 using LinqToDB.Infrastructure;
+using LinqToDB.Internals.Common;
 using LinqToDB.Linq.Translation;
 using LinqToDB.Mapping;
 using LinqToDB.SchemaProvider;

@@ -8,12 +8,12 @@ using System.Reflection;
 using System.Runtime.CompilerServices;
 
 using LinqToDB.Common;
-using LinqToDB.Common.Internal;
 using LinqToDB.Data;
 using LinqToDB.DataProvider;
 using LinqToDB.Expressions;
 using LinqToDB.Expressions.ExpressionVisitors;
 using LinqToDB.Extensions;
+using LinqToDB.Internals.Common;
 using LinqToDB.Internals.SqlQuery;
 using LinqToDB.Mapping;
 using LinqToDB.Reflection;

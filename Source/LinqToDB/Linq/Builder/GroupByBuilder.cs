@@ -8,10 +8,10 @@ using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 
-using LinqToDB.Async;
 using LinqToDB.Common;
 using LinqToDB.Expressions;
 using LinqToDB.Extensions;
+using LinqToDB.Internals.Async;
 using LinqToDB.Internals.SqlQuery;
 using LinqToDB.Mapping;
 using LinqToDB.Reflection;

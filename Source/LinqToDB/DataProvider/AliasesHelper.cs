@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 
 using LinqToDB.Common;
-using LinqToDB.Common.Internal;
+using LinqToDB.Internals.Common;
 using LinqToDB.Internals.SqlQuery;
 using LinqToDB.Internals.SqlQuery.Visitors;
 using LinqToDB.SqlQuery;

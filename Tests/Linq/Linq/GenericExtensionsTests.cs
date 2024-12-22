@@ -4,7 +4,7 @@ using System.Linq;
 using System.Reflection;
 
 using LinqToDB;
-using LinqToDB.Common.Internal;
+using LinqToDB.Internals.Common;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;

@@ -8,10 +8,10 @@ using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 
-using LinqToDB.Common.Internal;
 using LinqToDB.DataProvider;
 using LinqToDB.Extensions;
 using LinqToDB.Infrastructure;
+using LinqToDB.Internals.Common;
 using LinqToDB.Internals.SqlQuery;
 using LinqToDB.Linq;
 using LinqToDB.SqlProvider;

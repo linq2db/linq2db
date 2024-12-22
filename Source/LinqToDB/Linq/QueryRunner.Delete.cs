@@ -5,8 +5,8 @@ using System.Threading;
 using System.Threading.Tasks;
 
 using LinqToDB.Common;
-using LinqToDB.Common.Internal.Cache;
 using LinqToDB.Infrastructure;
+using LinqToDB.Internals.Cache;
 using LinqToDB.Internals.SqlQuery;
 using LinqToDB.Linq.Internal;
 using LinqToDB.Tools;

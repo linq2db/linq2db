@@ -8,8 +8,8 @@ using System.Net.NetworkInformation;
 using System.Text;
 
 using LinqToDB.Common;
-using LinqToDB.Common.Internal;
 using LinqToDB.Extensions;
+using LinqToDB.Internals.Common;
 using LinqToDB.Internals.SqlQuery;
 using LinqToDB.Mapping;
 using LinqToDB.SqlProvider;

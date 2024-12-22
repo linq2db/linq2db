@@ -9,10 +9,11 @@ using System.Threading;
 using System.Threading.Tasks;
 
 using LinqToDB.Async;
-using LinqToDB.Compatibility.System;
 using LinqToDB.Data;
 using LinqToDB.Expressions;
 using LinqToDB.Extensions;
+using LinqToDB.Internals.Async;
+using LinqToDB.Internals.Common;
 using LinqToDB.Internals.SqlQuery;
 using LinqToDB.Linq.Internal;
 using LinqToDB.Tools;

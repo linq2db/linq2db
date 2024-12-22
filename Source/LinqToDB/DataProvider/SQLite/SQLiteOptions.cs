@@ -2,8 +2,8 @@
 using System.Collections.Generic;
 
 using LinqToDB.Common;
-using LinqToDB.Common.Internal;
 using LinqToDB.Data;
+using LinqToDB.Internals.Common;
 
 namespace LinqToDB.DataProvider.SQLite
 {

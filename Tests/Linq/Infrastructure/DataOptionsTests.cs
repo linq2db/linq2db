@@ -3,9 +3,9 @@ using System.Net;
 using System.Threading.Tasks;
 
 using LinqToDB;
-using LinqToDB.Common.Internal;
 using LinqToDB.Data;
 using LinqToDB.DataProvider.SqlServer;
+using LinqToDB.Internals.Common;
 using LinqToDB.Mapping;
 
 using Microsoft.Data.SqlClient;
