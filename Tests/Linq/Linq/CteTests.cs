@@ -1626,6 +1626,34 @@ namespace Tests.Linq
 			query.ToArray();
 		}
 
+		[Sql.Expression("CAST({0} AS VARCHAR({1}))", ServerSideOnly = true, IsNullable = Sql.IsNullableType.Nullable, IgnoreGenericParameters = true)]
+		static T VarChar<T>(T value, int size)
+		{
+			throw new ServerSideOnlyException(nameof(VarChar));
+		}
+
+		private sealed record Issue3360_TypedNullEnumInAnchorProjection(int Id, StrEnum? Value);
+
+		[Test(Description = "Test CTE columns typing")]
+		public void Issue3360_TypedNullEnumInAnchor([IncludeDataSources(true, TestProvName.AllSqlServer)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable<Issue3360NullInAnchor>();
+
+			var query = from node in db.GetCte<Issue3360_TypedNullEnumInAnchorProjection>(cte =>
+			{
+				return db.GetTable<Issue3360NullInAnchor>().Select(p => new Issue3360_TypedNullEnumInAnchorProjection(p.Id, VarChar<StrEnum?>(null, 10)))
+				.Concat(
+					from p in db.GetTable<Issue3360NullInAnchor>()
+					select new Issue3360_TypedNullEnumInAnchorProjection(p.Id, VarChar(StrEnum.One, 10))
+					);
+			})
+				select new Issue3360_TypedNullEnumInAnchorProjection(node.Id, node.Value);
+			;
+
+			query.ToArray();
+		}
+
 		#region InvalidColumnIndexMapping issue
 		public enum InvalidColumnIndexMappingEnum1
 		{
