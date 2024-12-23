@@ -202,7 +202,7 @@ namespace LinqToDB
 
 		sealed class NoConvertBuilder : IExtensionCallBuilder
 		{
-			private static readonly MethodInfo _method = MethodHelper.GetMethodInfo(ConvertRemover<int, int>, 0).GetGenericMethodDefinition();
+			private static readonly MethodInfo _method = MemberHelper.MethodOfGeneric(() => ConvertRemover<int, int>(0));
 
 			private static readonly TransformVisitor<object?> _transformer = TransformVisitor<object?>.Create(Transform);
 

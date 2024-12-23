@@ -5,6 +5,9 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
+using LinqToDB.Internals.Expressions;
+using LinqToDB.Reflection;
+
 namespace LinqToDB
 {
 	using Async;
@@ -26,7 +29,7 @@ namespace LinqToDB
 				return provider.ExecuteAsync<TSource>(
 					Expression.Call(
 						null,
-						MethodHelper.GetMethodInfo(new Func<IQueryable<TSource>,TSource>(Queryable.First), source),
+						Methods.Queryable.First,
 						source.Expression) as Expression,
 					token);
 			}
@@ -53,7 +56,7 @@ namespace LinqToDB
 				return provider.ExecuteAsync<TSource>(
 					Expression.Call(
 						null,
-						MethodHelper.GetMethodInfo(new Func<IQueryable<TSource>, Expression<Func<TSource,bool>>,TSource>(Queryable.First), source, predicate),
+						Methods.Queryable.FirstCondition,
 						source.Expression, Expression.Quote(predicate)) as Expression,
 					token);
 			}
@@ -80,7 +83,7 @@ namespace LinqToDB
 				return provider.ExecuteAsync<TSource?>(
 					Expression.Call(
 						null,
-						MethodHelper.GetMethodInfo(new Func<IQueryable<TSource>,TSource?>(Queryable.FirstOrDefault), source),
+						Methods.Queryable.FirstOrDefault,
 						source.Expression) as Expression,
 					token);
 			}
@@ -107,7 +110,7 @@ namespace LinqToDB
 				return provider.ExecuteAsync<TSource?>(
 					Expression.Call(
 						null,
-						MethodHelper.GetMethodInfo(new Func<IQueryable<TSource>, Expression<Func<TSource,bool>>,TSource?>(Queryable.FirstOrDefault), source, predicate),
+						Methods.Queryable.FirstOrDefaultCondition,
 						source.Expression, Expression.Quote(predicate)) as Expression,
 					token);
 			}
@@ -134,7 +137,7 @@ namespace LinqToDB
 				return provider.ExecuteAsync<TSource>(
 					Expression.Call(
 						null,
-						MethodHelper.GetMethodInfo(new Func<IQueryable<TSource>,TSource>(Queryable.Single), source),
+						Methods.Queryable.Single,
 						source.Expression) as Expression,
 					token);
 			}
@@ -161,7 +164,7 @@ namespace LinqToDB
 				return provider.ExecuteAsync<TSource>(
 					Expression.Call(
 						null,
-						MethodHelper.GetMethodInfo(new Func<IQueryable<TSource>, Expression<Func<TSource,bool>>,TSource>(Queryable.Single), source, predicate),
+						Methods.Queryable.SingleCondition,
 						source.Expression, Expression.Quote(predicate)) as Expression,
 					token);
 			}
@@ -188,7 +191,7 @@ namespace LinqToDB
 				return provider.ExecuteAsync<TSource?>(
 					Expression.Call(
 						null,
-						MethodHelper.GetMethodInfo(new Func<IQueryable<TSource>,TSource?>(Queryable.SingleOrDefault), source),
+						Methods.Queryable.SingleOrDefault,
 						source.Expression) as Expression,
 					token);
 			}
@@ -215,7 +218,7 @@ namespace LinqToDB
 				return provider.ExecuteAsync<TSource?>(
 					Expression.Call(
 						null,
-						MethodHelper.GetMethodInfo(new Func<IQueryable<TSource>, Expression<Func<TSource,bool>>,TSource?>(Queryable.SingleOrDefault), source, predicate),
+						Methods.Queryable.SingleOrDefaultCondition,
 						source.Expression, Expression.Quote(predicate)) as Expression,
 					token);
 			}
@@ -242,7 +245,7 @@ namespace LinqToDB
 				return provider.ExecuteAsync<bool>(
 					Expression.Call(
 						null,
-						MethodHelper.GetMethodInfo(new Func<IQueryable<TSource>, TSource,bool>(Queryable.Contains), source, item),
+						Methods.Queryable.Contains,
 						source.Expression, (Expression)Expression.Constant((object?)item, typeof (TSource))) as Expression,
 					token);
 			}
@@ -269,7 +272,7 @@ namespace LinqToDB
 				return provider.ExecuteAsync<bool>(
 					Expression.Call(
 						null,
-						MethodHelper.GetMethodInfo(new Func<IQueryable<TSource>,bool>(Queryable.Any), source),
+						Methods.Queryable.Any,
 						source.Expression) as Expression,
 					token);
 			}
@@ -296,7 +299,7 @@ namespace LinqToDB
 				return provider.ExecuteAsync<bool>(
 					Expression.Call(
 						null,
-						MethodHelper.GetMethodInfo(new Func<IQueryable<TSource>, Expression<Func<TSource,bool>>,bool>(Queryable.Any), source, predicate),
+						Methods.Queryable.AnyCondition,
 						source.Expression, Expression.Quote(predicate)) as Expression,
 					token);
 			}
@@ -323,7 +326,7 @@ namespace LinqToDB
 				return provider.ExecuteAsync<bool>(
 					Expression.Call(
 						null,
-						MethodHelper.GetMethodInfo(new Func<IQueryable<TSource>, Expression<Func<TSource,bool>>,bool>(Queryable.All), source, predicate),
+						Methods.Queryable.AllCondition,
 						source.Expression, Expression.Quote(predicate)) as Expression,
 					token);
 			}
@@ -350,7 +353,7 @@ namespace LinqToDB
 				return provider.ExecuteAsync<int>(
 					Expression.Call(
 						null,
-						MethodHelper.GetMethodInfo(new Func<IQueryable<TSource>,int>(Queryable.Count), source),
+						Methods.Queryable.Count,
 						source.Expression) as Expression,
 					token);
 			}
@@ -377,7 +380,7 @@ namespace LinqToDB
 				return provider.ExecuteAsync<int>(
 					Expression.Call(
 						null,
-						MethodHelper.GetMethodInfo(new Func<IQueryable<TSource>, Expression<Func<TSource,bool>>,int>(Queryable.Count), source, predicate),
+						Methods.Queryable.CountCondition,
 						source.Expression, Expression.Quote(predicate)) as Expression,
 					token);
 			}
@@ -404,7 +407,7 @@ namespace LinqToDB
 				return provider.ExecuteAsync<long>(
 					Expression.Call(
 						null,
-						MethodHelper.GetMethodInfo(new Func<IQueryable<TSource>,long>(Queryable.LongCount), source),
+						Methods.Queryable.LongCount,
 						source.Expression) as Expression,
 					token);
 			}
@@ -431,7 +434,7 @@ namespace LinqToDB
 				return provider.ExecuteAsync<long>(
 					Expression.Call(
 						null,
-						MethodHelper.GetMethodInfo(new Func<IQueryable<TSource>, Expression<Func<TSource,bool>>,long>(Queryable.LongCount), source, predicate),
+						Methods.Queryable.LongCountCondition,
 						source.Expression, Expression.Quote(predicate)) as Expression,
 					token);
 			}
@@ -458,7 +461,7 @@ namespace LinqToDB
 				return provider.ExecuteAsync<TSource?>(
 					Expression.Call(
 						null,
-						MethodHelper.GetMethodInfo(new Func<IQueryable<TSource>,TSource?>(Queryable.Min), source),
+						Methods.Queryable.Min,
 						source.Expression) as Expression,
 					token);
 			}
@@ -485,7 +488,7 @@ namespace LinqToDB
 				return provider.ExecuteAsync<TResult?>(
 					Expression.Call(
 						null,
-						MethodHelper.GetMethodInfo(new Func<IQueryable<TSource>, Expression<Func<TSource,TResult>>,TResult?>(Queryable.Min), source, selector),
+						Methods.Queryable.MinCondition,
 						source.Expression, Expression.Quote(selector)) as Expression,
 					token);
 			}
@@ -512,7 +515,7 @@ namespace LinqToDB
 				return provider.ExecuteAsync<TSource?>(
 					Expression.Call(
 						null,
-						MethodHelper.GetMethodInfo(new Func<IQueryable<TSource>,TSource?>(Queryable.Max), source),
+						Methods.Queryable.Max,
 						source.Expression) as Expression,
 					token);
 			}
@@ -539,7 +542,7 @@ namespace LinqToDB
 				return provider.ExecuteAsync<TResult?>(
 					Expression.Call(
 						null,
-						MethodHelper.GetMethodInfo(new Func<IQueryable<TSource>, Expression<Func<TSource,TResult>>,TResult?>(Queryable.Max), source, selector),
+						Methods.Queryable.MaxCondition,
 						source.Expression, Expression.Quote(selector)) as Expression,
 					token);
 			}
@@ -566,7 +569,7 @@ namespace LinqToDB
 				return provider.ExecuteAsync<int>(
 					Expression.Call(
 						null,
-						MethodHelper.GetMethodInfo(new Func<IQueryable<int>,int>(Queryable.Sum), source),
+						MemberHelper.MethodOf(() => source.Sum()),
 						source.Expression) as Expression,
 					token);
 			}
@@ -593,7 +596,7 @@ namespace LinqToDB
 				return provider.ExecuteAsync<int?>(
 					Expression.Call(
 						null,
-						MethodHelper.GetMethodInfo(new Func<IQueryable<int?>,int?>(Queryable.Sum), source),
+						MemberHelper.MethodOf(() => source.Sum()),
 						source.Expression) as Expression,
 					token);
 			}
@@ -620,7 +623,7 @@ namespace LinqToDB
 				return provider.ExecuteAsync<long>(
 					Expression.Call(
 						null,
-						MethodHelper.GetMethodInfo(new Func<IQueryable<long>,long>(Queryable.Sum), source),
+						MemberHelper.MethodOf(() => source.Sum()),
 						source.Expression) as Expression,
 					token);
 			}
@@ -647,7 +650,7 @@ namespace LinqToDB
 				return provider.ExecuteAsync<long?>(
 					Expression.Call(
 						null,
-						MethodHelper.GetMethodInfo(new Func<IQueryable<long?>,long?>(Queryable.Sum), source),
+						MemberHelper.MethodOf(() => source.Sum()),
 						source.Expression) as Expression,
 					token);
 			}
@@ -674,7 +677,7 @@ namespace LinqToDB
 				return provider.ExecuteAsync<float>(
 					Expression.Call(
 						null,
-						MethodHelper.GetMethodInfo(new Func<IQueryable<float>,float>(Queryable.Sum), source),
+						MemberHelper.MethodOf(() => source.Sum()),
 						source.Expression) as Expression,
 					token);
 			}
@@ -701,7 +704,7 @@ namespace LinqToDB
 				return provider.ExecuteAsync<float?>(
 					Expression.Call(
 						null,
-						MethodHelper.GetMethodInfo(new Func<IQueryable<float?>,float?>(Queryable.Sum), source),
+						MemberHelper.MethodOf(() => source.Sum()),
 						source.Expression) as Expression,
 					token);
 			}
@@ -728,7 +731,7 @@ namespace LinqToDB
 				return provider.ExecuteAsync<double>(
 					Expression.Call(
 						null,
-						MethodHelper.GetMethodInfo(new Func<IQueryable<double>,double>(Queryable.Sum), source),
+						MemberHelper.MethodOf(() => source.Sum()),
 						source.Expression) as Expression,
 					token);
 			}
@@ -755,7 +758,7 @@ namespace LinqToDB
 				return provider.ExecuteAsync<double?>(
 					Expression.Call(
 						null,
-						MethodHelper.GetMethodInfo(new Func<IQueryable<double?>,double?>(Queryable.Sum), source),
+						MemberHelper.MethodOf(() => source.Sum()),
 						source.Expression) as Expression,
 					token);
 			}
@@ -782,7 +785,7 @@ namespace LinqToDB
 				return provider.ExecuteAsync<decimal>(
 					Expression.Call(
 						null,
-						MethodHelper.GetMethodInfo(new Func<IQueryable<decimal>,decimal>(Queryable.Sum), source),
+						MemberHelper.MethodOf(() => source.Sum()),
 						source.Expression) as Expression,
 					token);
 			}
@@ -809,7 +812,7 @@ namespace LinqToDB
 				return provider.ExecuteAsync<decimal?>(
 					Expression.Call(
 						null,
-						MethodHelper.GetMethodInfo(new Func<IQueryable<decimal?>,decimal?>(Queryable.Sum), source),
+						MemberHelper.MethodOf(() => source.Sum()),
 						source.Expression) as Expression,
 					token);
 			}
@@ -836,7 +839,7 @@ namespace LinqToDB
 				return provider.ExecuteAsync<int>(
 					Expression.Call(
 						null,
-						MethodHelper.GetMethodInfo(new Func<IQueryable<TSource>, Expression<Func<TSource,int>>,int>(Queryable.Sum), source, selector),
+						MemberHelper.MethodOf(() => source.Sum(selector)),
 						source.Expression, Expression.Quote(selector)) as Expression,
 					token);
 			}
@@ -863,7 +866,7 @@ namespace LinqToDB
 				return provider.ExecuteAsync<int?>(
 					Expression.Call(
 						null,
-						MethodHelper.GetMethodInfo(new Func<IQueryable<TSource>, Expression<Func<TSource,int?>>,int?>(Queryable.Sum), source, selector),
+						MemberHelper.MethodOf(() => source.Sum(selector)),
 						source.Expression, Expression.Quote(selector)) as Expression,
 					token);
 			}
@@ -890,7 +893,7 @@ namespace LinqToDB
 				return provider.ExecuteAsync<long>(
 					Expression.Call(
 						null,
-						MethodHelper.GetMethodInfo(new Func<IQueryable<TSource>, Expression<Func<TSource,long>>,long>(Queryable.Sum), source, selector),
+						MemberHelper.MethodOf(() => source.Sum(selector)),
 						source.Expression, Expression.Quote(selector)) as Expression,
 					token);
 			}
@@ -917,7 +920,7 @@ namespace LinqToDB
 				return provider.ExecuteAsync<long?>(
 					Expression.Call(
 						null,
-						MethodHelper.GetMethodInfo(new Func<IQueryable<TSource>, Expression<Func<TSource,long?>>,long?>(Queryable.Sum), source, selector),
+						MemberHelper.MethodOf(() => source.Sum(selector)),
 						source.Expression, Expression.Quote(selector)) as Expression,
 					token);
 			}
@@ -944,7 +947,7 @@ namespace LinqToDB
 				return provider.ExecuteAsync<float>(
 					Expression.Call(
 						null,
-						MethodHelper.GetMethodInfo(new Func<IQueryable<TSource>, Expression<Func<TSource,float>>,float>(Queryable.Sum), source, selector),
+						MemberHelper.MethodOf(() => source.Sum(selector)),
 						source.Expression, Expression.Quote(selector)) as Expression,
 					token);
 			}
@@ -971,7 +974,7 @@ namespace LinqToDB
 				return provider.ExecuteAsync<float?>(
 					Expression.Call(
 						null,
-						MethodHelper.GetMethodInfo(new Func<IQueryable<TSource>, Expression<Func<TSource,float?>>,float?>(Queryable.Sum), source, selector),
+						MemberHelper.MethodOf(() => source.Sum(selector)),
 						source.Expression, Expression.Quote(selector)) as Expression,
 					token);
 			}
@@ -998,7 +1001,7 @@ namespace LinqToDB
 				return provider.ExecuteAsync<double>(
 					Expression.Call(
 						null,
-						MethodHelper.GetMethodInfo(new Func<IQueryable<TSource>, Expression<Func<TSource,double>>,double>(Queryable.Sum), source, selector),
+						MemberHelper.MethodOf(() => source.Sum(selector)),
 						source.Expression, Expression.Quote(selector)) as Expression,
 					token);
 			}
@@ -1025,7 +1028,7 @@ namespace LinqToDB
 				return provider.ExecuteAsync<double?>(
 					Expression.Call(
 						null,
-						MethodHelper.GetMethodInfo(new Func<IQueryable<TSource>, Expression<Func<TSource,double?>>,double?>(Queryable.Sum), source, selector),
+						MemberHelper.MethodOf(() => source.Sum(selector)),
 						source.Expression, Expression.Quote(selector)) as Expression,
 					token);
 			}
@@ -1052,7 +1055,7 @@ namespace LinqToDB
 				return provider.ExecuteAsync<decimal>(
 					Expression.Call(
 						null,
-						MethodHelper.GetMethodInfo(new Func<IQueryable<TSource>, Expression<Func<TSource,decimal>>,decimal>(Queryable.Sum), source, selector),
+						MemberHelper.MethodOf(() => source.Sum(selector)),
 						source.Expression, Expression.Quote(selector)) as Expression,
 					token);
 			}
@@ -1079,7 +1082,7 @@ namespace LinqToDB
 				return provider.ExecuteAsync<decimal?>(
 					Expression.Call(
 						null,
-						MethodHelper.GetMethodInfo(new Func<IQueryable<TSource>, Expression<Func<TSource,decimal?>>,decimal?>(Queryable.Sum), source, selector),
+						MemberHelper.MethodOf(() => source.Sum(selector)),
 						source.Expression, Expression.Quote(selector)) as Expression,
 					token);
 			}
@@ -1106,7 +1109,7 @@ namespace LinqToDB
 				return provider.ExecuteAsync<double>(
 					Expression.Call(
 						null,
-						MethodHelper.GetMethodInfo(new Func<IQueryable<int>,double>(Queryable.Average), source),
+						MemberHelper.MethodOf(() => source.Average()),
 						source.Expression) as Expression,
 					token);
 			}
@@ -1133,7 +1136,7 @@ namespace LinqToDB
 				return provider.ExecuteAsync<double?>(
 					Expression.Call(
 						null,
-						MethodHelper.GetMethodInfo(new Func<IQueryable<int?>,double?>(Queryable.Average), source),
+						MemberHelper.MethodOf(() => source.Average()),
 						source.Expression) as Expression,
 					token);
 			}
@@ -1160,7 +1163,7 @@ namespace LinqToDB
 				return provider.ExecuteAsync<double>(
 					Expression.Call(
 						null,
-						MethodHelper.GetMethodInfo(new Func<IQueryable<long>,double>(Queryable.Average), source),
+						MemberHelper.MethodOf(() => source.Average()),
 						source.Expression) as Expression,
 					token);
 			}
@@ -1187,7 +1190,7 @@ namespace LinqToDB
 				return provider.ExecuteAsync<double?>(
 					Expression.Call(
 						null,
-						MethodHelper.GetMethodInfo(new Func<IQueryable<long?>,double?>(Queryable.Average), source),
+						MemberHelper.MethodOf(() => source.Average()),
 						source.Expression) as Expression,
 					token);
 			}
@@ -1214,7 +1217,7 @@ namespace LinqToDB
 				return provider.ExecuteAsync<float>(
 					Expression.Call(
 						null,
-						MethodHelper.GetMethodInfo(new Func<IQueryable<float>,float>(Queryable.Average), source),
+						MemberHelper.MethodOf(() => source.Average()),
 						source.Expression) as Expression,
 					token);
 			}
@@ -1241,7 +1244,7 @@ namespace LinqToDB
 				return provider.ExecuteAsync<float?>(
 					Expression.Call(
 						null,
-						MethodHelper.GetMethodInfo(new Func<IQueryable<float?>,float?>(Queryable.Average), source),
+						MemberHelper.MethodOf(() => source.Average()),
 						source.Expression) as Expression,
 					token);
 			}
@@ -1268,7 +1271,7 @@ namespace LinqToDB
 				return provider.ExecuteAsync<double>(
 					Expression.Call(
 						null,
-						MethodHelper.GetMethodInfo(new Func<IQueryable<double>,double>(Queryable.Average), source),
+						MemberHelper.MethodOf(() => source.Average()),
 						source.Expression) as Expression,
 					token);
 			}
@@ -1295,7 +1298,7 @@ namespace LinqToDB
 				return provider.ExecuteAsync<double?>(
 					Expression.Call(
 						null,
-						MethodHelper.GetMethodInfo(new Func<IQueryable<double?>,double?>(Queryable.Average), source),
+						MemberHelper.MethodOf(() => source.Average()),
 						source.Expression) as Expression,
 					token);
 			}
@@ -1322,7 +1325,7 @@ namespace LinqToDB
 				return provider.ExecuteAsync<decimal>(
 					Expression.Call(
 						null,
-						MethodHelper.GetMethodInfo(new Func<IQueryable<decimal>,decimal>(Queryable.Average), source),
+						MemberHelper.MethodOf(() => source.Average()),
 						source.Expression) as Expression,
 					token);
 			}
@@ -1349,7 +1352,7 @@ namespace LinqToDB
 				return provider.ExecuteAsync<decimal?>(
 					Expression.Call(
 						null,
-						MethodHelper.GetMethodInfo(new Func<IQueryable<decimal?>,decimal?>(Queryable.Average), source),
+						MemberHelper.MethodOf(() => source.Average()),
 						source.Expression) as Expression,
 					token);
 			}
@@ -1376,7 +1379,7 @@ namespace LinqToDB
 				return provider.ExecuteAsync<double>(
 					Expression.Call(
 						null,
-						MethodHelper.GetMethodInfo(new Func<IQueryable<TSource>, Expression<Func<TSource,int>>,double>(Queryable.Average), source, selector),
+						MemberHelper.MethodOf(() => source.Average(selector)),
 						source.Expression, Expression.Quote(selector)) as Expression,
 					token);
 			}
@@ -1403,7 +1406,7 @@ namespace LinqToDB
 				return provider.ExecuteAsync<double?>(
 					Expression.Call(
 						null,
-						MethodHelper.GetMethodInfo(new Func<IQueryable<TSource>, Expression<Func<TSource,int?>>,double?>(Queryable.Average), source, selector),
+						MemberHelper.MethodOf(() => source.Average(selector)),
 						source.Expression, Expression.Quote(selector)) as Expression,
 					token);
 			}
@@ -1430,7 +1433,7 @@ namespace LinqToDB
 				return provider.ExecuteAsync<double>(
 					Expression.Call(
 						null,
-						MethodHelper.GetMethodInfo(new Func<IQueryable<TSource>, Expression<Func<TSource,long>>,double>(Queryable.Average), source, selector),
+						MemberHelper.MethodOf(() => source.Average(selector)),
 						source.Expression, Expression.Quote(selector)) as Expression,
 					token);
 			}
@@ -1457,7 +1460,7 @@ namespace LinqToDB
 				return provider.ExecuteAsync<double?>(
 					Expression.Call(
 						null,
-						MethodHelper.GetMethodInfo(new Func<IQueryable<TSource>, Expression<Func<TSource,long?>>,double?>(Queryable.Average), source, selector),
+						MemberHelper.MethodOf(() => source.Average(selector)),
 						source.Expression, Expression.Quote(selector)) as Expression,
 					token);
 			}
@@ -1484,7 +1487,7 @@ namespace LinqToDB
 				return provider.ExecuteAsync<float>(
 					Expression.Call(
 						null,
-						MethodHelper.GetMethodInfo(new Func<IQueryable<TSource>, Expression<Func<TSource,float>>,float>(Queryable.Average), source, selector),
+						MemberHelper.MethodOf(() => source.Average(selector)),
 						source.Expression, Expression.Quote(selector)) as Expression,
 					token);
 			}
@@ -1511,7 +1514,7 @@ namespace LinqToDB
 				return provider.ExecuteAsync<float?>(
 					Expression.Call(
 						null,
-						MethodHelper.GetMethodInfo(new Func<IQueryable<TSource>, Expression<Func<TSource,float?>>,float?>(Queryable.Average), source, selector),
+						MemberHelper.MethodOf(() => source.Average(selector)),
 						source.Expression, Expression.Quote(selector)) as Expression,
 					token);
 			}
@@ -1538,7 +1541,7 @@ namespace LinqToDB
 				return provider.ExecuteAsync<double>(
 					Expression.Call(
 						null,
-						MethodHelper.GetMethodInfo(new Func<IQueryable<TSource>, Expression<Func<TSource,double>>,double>(Queryable.Average), source, selector),
+						MemberHelper.MethodOf(() => source.Average(selector)),
 						source.Expression, Expression.Quote(selector)) as Expression,
 					token);
 			}
@@ -1565,7 +1568,7 @@ namespace LinqToDB
 				return provider.ExecuteAsync<double?>(
 					Expression.Call(
 						null,
-						MethodHelper.GetMethodInfo(new Func<IQueryable<TSource>, Expression<Func<TSource,double?>>,double?>(Queryable.Average), source, selector),
+						MemberHelper.MethodOf(() => source.Average(selector)),
 						source.Expression, Expression.Quote(selector)) as Expression,
 					token);
 			}
@@ -1592,7 +1595,7 @@ namespace LinqToDB
 				return provider.ExecuteAsync<decimal>(
 					Expression.Call(
 						null,
-						MethodHelper.GetMethodInfo(new Func<IQueryable<TSource>, Expression<Func<TSource,decimal>>,decimal>(Queryable.Average), source, selector),
+						MemberHelper.MethodOf(() => source.Average(selector)),
 						source.Expression, Expression.Quote(selector)) as Expression,
 					token);
 			}
@@ -1619,7 +1622,7 @@ namespace LinqToDB
 				return provider.ExecuteAsync<decimal?>(
 					Expression.Call(
 						null,
-						MethodHelper.GetMethodInfo(new Func<IQueryable<TSource>, Expression<Func<TSource,decimal?>>,decimal?>(Queryable.Average), source, selector),
+						MemberHelper.MethodOf(() => source.Average(selector)),
 						source.Expression, Expression.Quote(selector)) as Expression,
 					token);
 			}
