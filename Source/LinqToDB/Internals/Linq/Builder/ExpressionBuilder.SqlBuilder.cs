@@ -403,9 +403,11 @@ namespace LinqToDB.Internals.Linq.Builder
 
 			var value = EvaluateExpression(expr);
 
-			if (dbType.DataType == DataType.Undefined && value is not null && value.GetType() != dbType.SystemType)
+			if (dbType.DataType == DataType.Undefined
+				&& ((value is not null && value.GetType() != dbType.SystemType)
+					 || (value is null && expr.Type != dbType.SystemType)))
 			{
-				dbType = mappingSchema.GetDbDataType(value.GetType());
+				dbType = mappingSchema.GetDbDataType(value?.GetType() ?? expr.Type);
 			}
 
 			if (dbType.DataType == DataType.Undefined && !hasConverter)
