@@ -1,7 +1,7 @@
 ﻿using System.Linq.Expressions;
 
+using LinqToDB.Internals.Linq.Translation;
 using LinqToDB.Internals.SqlQuery;
-using LinqToDB.Linq.Translation;
 
 namespace LinqToDB.DataProvider.Access.Translation
 {

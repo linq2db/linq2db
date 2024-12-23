@@ -8,7 +8,7 @@ using System.Linq;
 using System.Reflection;
 
 using LinqToDB.Data;
-using LinqToDB.Linq;
+using LinqToDB.Internals.Linq;
 using LinqToDB.Mapping;
 
 namespace LinqToDB.Common

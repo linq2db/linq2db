@@ -11,7 +11,7 @@ using System.Threading;
 
 using LinqToDB;
 using LinqToDB.Internals.Expressions;
-using LinqToDB.Linq;
+using LinqToDB.Internals.Linq;
 
 namespace LinqToDB.Internals.Common
 {

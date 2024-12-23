@@ -12,7 +12,6 @@ using LinqToDB.Expressions;
 using LinqToDB.Internals.Expressions;
 using LinqToDB.Internals.Expressions.ExpressionVisitors;
 using LinqToDB.Internals.SqlQuery;
-using LinqToDB.Linq;
 using LinqToDB.SqlQuery;
 
 using PN = LinqToDB.ProviderName;

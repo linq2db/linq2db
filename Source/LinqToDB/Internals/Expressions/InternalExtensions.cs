@@ -9,7 +9,7 @@ using System.Runtime.CompilerServices;
 using LinqToDB.Extensions;
 using LinqToDB.Internals.Common;
 using LinqToDB.Internals.Expressions.ExpressionVisitors;
-using LinqToDB.Linq;
+using LinqToDB.Internals.Linq;
 using LinqToDB.Mapping;
 
 namespace LinqToDB.Internals.Expressions

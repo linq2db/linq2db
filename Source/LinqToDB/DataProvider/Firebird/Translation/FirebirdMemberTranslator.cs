@@ -3,8 +3,8 @@ using System.Globalization;
 using System.Linq.Expressions;
 
 using LinqToDB.Common;
+using LinqToDB.Internals.Linq.Translation;
 using LinqToDB.Internals.SqlQuery;
-using LinqToDB.Linq.Translation;
 
 namespace LinqToDB.DataProvider.Firebird.Translation
 {

@@ -14,8 +14,8 @@ using LinqToDB.Common;
 using LinqToDB.Extensions;
 using LinqToDB.Internals.Common;
 using LinqToDB.Internals.Expressions;
+using LinqToDB.Internals.Linq.Builder;
 using LinqToDB.Internals.SqlQuery;
-using LinqToDB.Linq.Builder;
 using LinqToDB.Mapping;
 using LinqToDB.SqlQuery;
 

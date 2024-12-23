@@ -26,7 +26,7 @@ using LinqToDB.Internals.Async;
 using LinqToDB.Internals.Cache;
 using LinqToDB.Internals.Common;
 using LinqToDB.Internals.Expressions;
-using LinqToDB.Linq;
+using LinqToDB.Internals.Linq;
 using LinqToDB.Mapping;
 using LinqToDB.Reflection;
 using LinqToDB.Tools;

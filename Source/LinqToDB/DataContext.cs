@@ -12,6 +12,7 @@ using LinqToDB.Data;
 using LinqToDB.DataProvider;
 using LinqToDB.Infrastructure;
 using LinqToDB.Internals.Common;
+using LinqToDB.Internals.Linq;
 using LinqToDB.Internals.SqlProvider;
 using LinqToDB.Linq;
 using LinqToDB.Mapping;

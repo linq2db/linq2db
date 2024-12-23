@@ -11,9 +11,9 @@ using LinqToDB.Extensions;
 using LinqToDB.Infrastructure;
 using LinqToDB.Interceptors;
 using LinqToDB.Internals.Expressions;
+using LinqToDB.Internals.Linq;
+using LinqToDB.Internals.Linq.Translation;
 using LinqToDB.Internals.SqlQuery;
-using LinqToDB.Linq;
-using LinqToDB.Linq.Translation;
 using LinqToDB.Mapping;
 using LinqToDB.Tools;
 

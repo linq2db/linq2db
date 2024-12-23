@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 using JetBrains.Annotations;
 
-using LinqToDB.Linq;
+using LinqToDB.Internals.Linq;
 
 namespace LinqToDB
 {

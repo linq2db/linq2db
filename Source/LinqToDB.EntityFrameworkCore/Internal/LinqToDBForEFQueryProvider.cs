@@ -18,6 +18,7 @@ using LinqToDB.Async;
 
 using LinqToDB.Linq;
 using LinqToDB.Internals.Expressions;
+using LinqToDB.Internals.Linq;
 
 namespace LinqToDB.EntityFrameworkCore.Internal
 {
@@ -39,7 +40,7 @@ namespace LinqToDB.EntityFrameworkCore.Internal
 			ArgumentNullException.ThrowIfNull(expression);
 			ArgumentNullException.ThrowIfNull(dataContext);
 
-			QueryProvider = (IQueryProviderAsync) Linq.Internals.CreateExpressionQueryInstance<T>(dataContext, expression);
+			QueryProvider = (IQueryProviderAsync) Internals.Linq.Internals.CreateExpressionQueryInstance<T>(dataContext, expression);
 			QueryProviderAsQueryable = (IQueryable<T>) QueryProvider;
 		}
 

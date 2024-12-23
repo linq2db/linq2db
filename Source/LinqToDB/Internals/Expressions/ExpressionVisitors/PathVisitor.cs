@@ -5,7 +5,7 @@ using System.Linq.Expressions;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 
-using LinqToDB.Linq;
+using LinqToDB.Internals.Linq;
 
 namespace LinqToDB.Internals.Expressions.ExpressionVisitors
 {

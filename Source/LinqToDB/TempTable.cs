@@ -14,6 +14,7 @@ using LinqToDB.Async;
 using LinqToDB.Data;
 using LinqToDB.Extensions;
 using LinqToDB.Internals.Expressions;
+using LinqToDB.Internals.Linq;
 using LinqToDB.Linq;
 using LinqToDB.Mapping;
 

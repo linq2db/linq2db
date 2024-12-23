@@ -17,7 +17,7 @@ namespace CodeGenerators
 		{
 			var buildsAnyNodes = context.SyntaxProvider
 				.ForAttributeWithMetadataName(
-					"LinqToDB.Linq.Builder.BuildsAnyAttribute",
+					"LinqToDB.Internals.Linq.Builder.BuildsAnyAttribute",
 					(_, _) => true,
 					TransformBuildsAny
 				)
@@ -25,7 +25,7 @@ namespace CodeGenerators
 
 			var buildsExpressionNodes = context.SyntaxProvider
 				.ForAttributeWithMetadataName(
-					"LinqToDB.Linq.Builder.BuildsExpressionAttribute",
+					"LinqToDB.Internals.Linq.Builder.BuildsExpressionAttribute",
 					(_, _) => true,
 					TransformBuildsExpression
 				)
@@ -34,7 +34,7 @@ namespace CodeGenerators
 
 			var buildsMethodCallNodes = context.SyntaxProvider
 				.ForAttributeWithMetadataName(
-					"LinqToDB.Linq.Builder.BuildsMethodCallAttribute",
+					"LinqToDB.Internals.Linq.Builder.BuildsMethodCallAttribute",
 					(_, _) => true,
 					TransformBuildsMethodCall
 				)
@@ -147,7 +147,7 @@ namespace CodeGenerators
 				using System.Diagnostics.CodeAnalysis;
 				using System.Linq.Expressions;
 
-				namespace LinqToDB.Linq.Builder;
+				namespace LinqToDB.Internals.Linq.Builder;
 			
 				partial class ExpressionBuilder
 				{

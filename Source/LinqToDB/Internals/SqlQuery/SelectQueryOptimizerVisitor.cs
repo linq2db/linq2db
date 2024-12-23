@@ -8,9 +8,9 @@ using System.Text;
 using LinqToDB.Common;
 using LinqToDB.DataProvider;
 using LinqToDB.Extensions;
+using LinqToDB.Internals.Linq.Builder;
 using LinqToDB.Internals.SqlProvider;
 using LinqToDB.Internals.SqlQuery.Visitors;
-using LinqToDB.Linq.Builder;
 using LinqToDB.Mapping;
 using LinqToDB.SqlQuery;
 

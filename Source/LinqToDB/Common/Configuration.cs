@@ -8,6 +8,7 @@ using JetBrains.Annotations;
 
 using LinqToDB.Data;
 using LinqToDB.Data.RetryPolicy;
+using LinqToDB.Internals.Linq;
 using LinqToDB.Linq;
 
 #if SUPPORTS_COMPOSITE_FORMAT

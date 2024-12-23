@@ -8,8 +8,8 @@ using JetBrains.Annotations;
 
 using LinqToDB.Interceptors;
 using LinqToDB.Internals.Common;
+using LinqToDB.Internals.Linq;
 using LinqToDB.Internals.SqlProvider;
-using LinqToDB.Linq;
 using LinqToDB.Mapping;
 
 namespace LinqToDB

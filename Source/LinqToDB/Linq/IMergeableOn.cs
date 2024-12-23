@@ -6,7 +6,5 @@
 	/// </summary>
 	/// <typeparam name="TTarget">Target record type.</typeparam>
 	/// <typeparam name="TSource">Source record type.</typeparam>
-	public interface IMergeableOn<TTarget,TSource>
-	{
-	}
+	public interface IMergeableOn<TTarget, TSource>;
 }

@@ -18,8 +18,8 @@ using LinqToDB.Interceptors;
 using LinqToDB.Internals.Cache;
 using LinqToDB.Internals.Common;
 using LinqToDB.Internals.Expressions;
+using LinqToDB.Internals.Linq.Translation;
 using LinqToDB.Internals.SqlProvider;
-using LinqToDB.Linq.Translation;
 using LinqToDB.Mapping;
 using LinqToDB.Tools;
 

@@ -6,10 +6,9 @@ using FluentAssertions;
 
 using LinqToDB;
 using LinqToDB.Data;
+using LinqToDB.Internals.Linq;
+using LinqToDB.Internals.Linq.Builder;
 using LinqToDB.Internals.SqlQuery;
-using LinqToDB.Linq;
-using LinqToDB.Linq.Builder;
-using LinqToDB.Linq.Internal;
 using LinqToDB.Mapping;
 using LinqToDB.SqlQuery;
 using LinqToDB.Tools.Comparers;

@@ -1,6 +1,4 @@
 ﻿namespace LinqToDB.Linq
 {
-	interface ITable
-	{
-	}
+	interface ITable;
 }
