@@ -1266,5 +1266,109 @@ namespace Tests.Linq
 		}
 
 		#endregion
+
+		#region Issue 4751
+
+		sealed class Tdm100
+		{
+			public int Id { get; set; }
+			public string? CarNo { get; set; }
+			public string? CarBrand { get; set; }
+		}
+
+		sealed class Trp004
+		{
+			public string? CarNo { get; set; }
+			public int? RuleNo { get; set; }
+			public int TelNo { get; set; }
+		}
+
+		sealed class Trp003
+		{
+			public int? RuleNo { get; set; }
+			public int RuleName { get; set; }
+			public int RuleType { get; set; }
+			public int RuleVal { get; set; }
+			public int RuleUnit { get; set; }
+		}
+
+		sealed class Trp0041
+		{
+			public string? CarNo { get; set; }
+			public int FirstVal { get; set; }
+		}
+
+		sealed class Rp002_R_GetPageList_Dto
+		{
+			public int Id { get; set; }
+			public string? CarNo { get; set; }
+			public string? CarBrand { get; set; }
+			public int FirstVal { get; set; }
+			public int TelNo { get; set; }
+			public int? RuleNo { get; set; }
+			public int RuleName { get; set; }
+			public int RuleType { get; set; }
+			public int RuleVal { get; set; }
+			public int RuleUnit { get; set; }
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4751")]
+		public void Issue4751Test([DataSources] string context, [Values] bool? hasRule)
+		{
+			using var db = GetDataContext(context, o => o.OmitUnsupportedCompareNulls(context));
+			using var tb1 = db.CreateLocalTable<Tdm100>();
+			using var tb2 = db.CreateLocalTable<Trp004>();
+			using var tb3 = db.CreateLocalTable<Trp003>();
+			using var tb4 = db.CreateLocalTable<Trp0041>();
+
+			var carNo = "1";
+			var carBrand = "test";
+
+			var query = (from t1 in db.GetTable<Tdm100>()
+						 from t2 in db.GetTable<Trp004>().LeftJoin(x => x.CarNo == t1.CarNo)
+						 from t3 in db.GetTable<Trp003>().LeftJoin(x => x.RuleNo == t2.RuleNo)
+						 from t4 in db.GetTable<Trp0041>().LeftJoin(x => x.CarNo == t1.CarNo)
+
+						 orderby t1.CarNo
+						 select new Rp002_R_GetPageList_Dto()
+						 {
+							 Id = t1.Id,
+							 CarNo = t1.CarNo,
+							 CarBrand = t1.CarBrand,
+							 FirstVal = t4.FirstVal,
+							 TelNo = t2.TelNo,
+							 RuleNo = t2.RuleNo,
+							 RuleName = t3.RuleName,
+							 RuleType = t3.RuleType,
+							 RuleVal = t3.RuleVal,
+							 RuleUnit = t3.RuleUnit
+						 });
+
+			IQueryable<Rp002_R_GetPageList_Dto> query2;
+
+
+			if (hasRule == null)
+			{
+				query2 = (from t in query.AsSubQuery() select t);
+			}
+			else
+			{
+				if (hasRule == true)
+				{
+					query2 = (from t in query.AsSubQuery() where t.RuleNo != null select t);
+				}
+				else
+				{
+					query2 = (from t in query.AsSubQuery() where t.RuleNo == null select t);
+				}
+			}
+
+			var query3 = query2.Where(x => x.CarNo!.Contains(carNo) && x.CarBrand!.Contains(carBrand)
+			);
+
+			var items = query3.Skip(20).Take(10).ToList();
+			var totalCount = query3.LongCount();
+		}
+		#endregion
 	}
 }
