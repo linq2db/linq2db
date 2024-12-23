@@ -195,7 +195,7 @@ namespace Tests.Linq
 					select p;
 
 				var result = q.ToList();
-				var sql    = q.ToString();
+				var sql    = q.ToSqlQuery().Sql;
 
 				if (iteration > 1)
 					Query<Person>.CacheMissCount.Should().Be(cacheMiss);
@@ -1030,6 +1030,19 @@ namespace Tests.Linq
 				from x in db.Person
 				from y in Enum.GetValues<UnmappedEnum>()
 				select x.ID + y;
+
+			AssertQuery(query);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/3665")]
+		public void Issue3665Test5([DataSources(TestProvName.AllAccess)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query =
+				from x in db.Person
+				from y in Enum.GetValues<Gender>()
+				select y;
 
 			AssertQuery(query);
 		}

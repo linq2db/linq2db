@@ -1,14 +1,15 @@
 ﻿#if NETFRAMEWORK
 using System;
 
+using LinqToDB.Data;
+using LinqToDB.Interceptors;
+using LinqToDB.Mapping;
+using LinqToDB.Remote;
+
+using LinqToDB.Remote.Wcf;
+
 namespace Tests.Remote
 {
-	using LinqToDB.Data;
-	using LinqToDB.Interceptors;
-	using LinqToDB.Mapping;
-	using LinqToDB.Remote;
-
-	using LinqToDB.Remote.Wcf;
 
 	internal sealed class TestWcfLinqService : WcfLinqService
 	{
@@ -26,31 +27,10 @@ namespace Tests.Remote
 			set => _linqService.MappingSchema = value;
 		}
 
-		public TestWcfLinqService(
-			LinqService linqService,
-			IInterceptor? interceptor)
+		public TestWcfLinqService(LinqService linqService)
 			: base(linqService, true)
 		{
 			_linqService = linqService;
-			_interceptor = interceptor;
-		}
-
-		// for now we need only one test interceptor
-		private IInterceptor? _interceptor;
-
-		public void AddInterceptor(IInterceptor interceptor)
-		{
-			if (_interceptor != null)
-				throw new InvalidOperationException();
-
-			_interceptor = interceptor;
-		}
-
-		public void RemoveInterceptor()
-		{
-			if (_interceptor == null)
-				throw new InvalidOperationException();
-			_interceptor = null;
 		}
 	}
 }

@@ -123,6 +123,5 @@ namespace LinqToDB.Linq.Translation
 			var replacement = replacementInfo.Pattern.GetBody(replacementInfo.Replacement);
 			return replacement;
 		}
-
 	}
 }

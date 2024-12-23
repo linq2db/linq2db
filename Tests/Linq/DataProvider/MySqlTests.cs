@@ -27,6 +27,8 @@ using MySqlDataDateTime = MySqlData::MySql.Data.Types.MySqlDateTime;
 using MySqlDataDecimal = MySqlData::MySql.Data.Types.MySqlDecimal;
 using MySqlConnectorDateTime = MySqlConnector::MySqlConnector.MySqlDateTime;
 using MySqlConnectorDecimal = MySqlConnector::MySqlConnector.MySqlDecimal;
+using MySqlConnectorGuidFormat = MySqlConnector::MySqlConnector.MySqlGuidFormat;
+
 
 namespace Tests.DataProvider
 {
@@ -954,7 +956,6 @@ namespace Tests.DataProvider
 					KeepIdentity = true,
 					BulkCopyType = bulkCopyType,
 					NotifyAfter = 3,
-					RowsCopiedCallback = copied => Debug.WriteLine(copied.RowsCopied)
 				};
 
 				db.BulkCopy(options, data.RetrieveIdentity(db));
@@ -985,7 +986,6 @@ namespace Tests.DataProvider
 					KeepIdentity = true,
 					BulkCopyType = bulkCopyType,
 					NotifyAfter = 3,
-					RowsCopiedCallback = copied => Debug.WriteLine(copied.RowsCopied)
 				};
 
 				await db.BulkCopyAsync(options, data.RetrieveIdentity(db));
@@ -1555,8 +1555,8 @@ namespace Tests.DataProvider
 			[Column                                                              ] public long BigInt;
 			[Column                                                              ] public ulong UnsignedBigInt;
 			[Column                                                              ] public decimal Decimal;
-			[Column(Precision = 15)                                              ] public decimal Decimal15_0;
-			[Column(Scale = 5)                                                   ] public decimal Decimal10_5;
+			[Column(Precision = 15, Scale = 0)                                   ] public decimal Decimal15_0;
+			[Column(Precision = 10, Scale = 5)                                   ] public decimal Decimal10_5;
 			[Column(Precision = 20, Scale = 2)                                   ] public decimal Decimal20_2;
 			[Column                                                              ] public float Float;
 			[Column(Precision = 10)                                              ] public float Float10;
@@ -1644,8 +1644,8 @@ namespace Tests.DataProvider
 					Assert.That(sql, Does.Contain("\t`UnsignedInt`      INT UNSIGNED      NOT NULL"));
 					Assert.That(sql, Does.Contain("\t`BigInt`           BIGINT            NOT NULL"));
 					Assert.That(sql, Does.Contain("\t`UnsignedBigInt`   BIGINT UNSIGNED   NOT NULL"));
-					Assert.That(sql, Does.Contain("\t`Decimal`          DECIMAL           NOT NULL"));
-					Assert.That(sql, Does.Contain("\t`Decimal15_0`      DECIMAL(15)       NOT NULL"));
+					Assert.That(sql, Does.Contain("\t`Decimal`          DECIMAL(29, 10)   NOT NULL"));
+					Assert.That(sql, Does.Contain("\t`Decimal15_0`      DECIMAL(15, 0)    NOT NULL"));
 					Assert.That(sql, Does.Contain("\t`Decimal10_5`      DECIMAL(10, 5)    NOT NULL"));
 					Assert.That(sql, Does.Contain("\t`Decimal20_2`      DECIMAL(20, 2)    NOT NULL"));
 					Assert.That(sql, Does.Contain("\t`Float`            FLOAT             NOT NULL"));
@@ -1839,8 +1839,8 @@ namespace Tests.DataProvider
 			[Column                                                  ] public long BigInt;
 			[Column                                                  ] public ulong UnsignedBigInt;
 			[Column                                                  ] public decimal Decimal;
-			[Column(Precision = 15)                                  ] public decimal Decimal15_0;
-			[Column(Scale = 5)                                       ] public decimal Decimal10_5;
+			[Column(Precision = 15, Scale = 0)                       ] public decimal Decimal15_0;
+			[Column(Precision = 10, Scale = 5)                       ] public decimal Decimal10_5;
 			[Column(Precision = 20, Scale = 2)                       ] public decimal Decimal20_2;
 			[Column                                                  ] public float Float;
 			[Column(Precision = 10)                                  ] public float Float10;
@@ -2249,8 +2249,164 @@ namespace Tests.DataProvider
 				Assert.That(sbyteColumn!.SystemType, Is.EqualTo(typeof(sbyte)));
 			});
 		}
+
+
+		#region Issue 4439
+		[ActiveIssue]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4439")]
+		public void Issue4439Test([IncludeDataSources(false, TestProvName.AllMySql)] string context)
+		{
+			using var db = GetDataConnection(context);
+			using var tb = db.CreateLocalTable<TEST_TB_AA>();
+
+			db.BeginTransaction();
+			try
+			{
+				db.Insert(new TEST_TB_AA() { CODE_AA = "AA" });
+				using (var tempTB = db.CreateTempTable<TMP_MIN_TEMPORARY>(tableOptions: TableOptions.IsTemporary | TableOptions.CheckExistence))
+				{
+					Assert.That(db.LastQuery, Does.Contain(" TEMPORARY "));
+				}
+
+				Assert.That(db.LastQuery, Does.Contain(" TEMPORARY "));
+
+				db.Insert(new TEST_TB_AA() { CODE_AA = "AA" });
+#pragma warning disable CA2201 // Do not raise reserved exception types
+				throw new InvalidOperationException();
+#pragma warning restore CA2201 // Do not raise reserved exception types
+			}
+			catch (InvalidOperationException)
+			{
+				db.RollbackTransaction();
+			}
+
+			Assert.That(tb.Count(), Is.EqualTo(0));
+		}
+
+		[Table]
+		sealed class TMP_MIN_TEMPORARY
+		{
+			[Column(IsPrimaryKey = true, IsIdentity = true)]
+			public int IDX { get; set; }
+
+			[Column(CanBeNull = false, Length = 80)]
+			public string KEY_A { get; set; } = null!;
+		}
+
+		[Table]
+		sealed class TEST_TB_AA
+		{
+			[Column(IsPrimaryKey = true, IsIdentity = true)]
+			public int AID { get; set; }
+
+			[Column(CanBeNull = false, Length = 80)]
+			public string CODE_AA { get; set; } = null!;
+		}
+		#endregion
+
+		#region issue 4354
+		[ActiveIssue]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4354")]
+		public void Issue4354Test(
+			// MySql.Data has enum, but it is not configurable
+			[IncludeDataSources(false, TestProvName.AllMySqlConnector)] string context,
+			[Values] MySqlConnectorGuidFormat format,
+			[Values] BulkCopyType copyType,
+			[Values] bool inline)
+		{
+			var connectionString = DataConnection.GetConnectionString(context);
+			var dataProvider     = DataConnection.GetDataProvider(context);
+
+			if (format == MySqlConnectorGuidFormat.None || format == MySqlConnectorGuidFormat.Default)
+			{
+				Assert.Inconclusive($"{format} not tested by this test");
+			}
+
+			int? length = format switch
+			{
+				MySqlConnectorGuidFormat.Char32 => 32,
+				MySqlConnectorGuidFormat.Char36 => 36,
+				MySqlConnectorGuidFormat.TimeSwapBinary16 => 16,
+				MySqlConnectorGuidFormat.Binary16 => 16,
+				MySqlConnectorGuidFormat.LittleEndianBinary16 => 16,
+				_ => null
+			};
+
+			var type = format switch
+			{
+				MySqlConnectorGuidFormat.Char32 => DataType.Char,
+				MySqlConnectorGuidFormat.Char36 => DataType.Char,
+				MySqlConnectorGuidFormat.TimeSwapBinary16 => DataType.Binary,
+				MySqlConnectorGuidFormat.Binary16 => DataType.Binary,
+				MySqlConnectorGuidFormat.LittleEndianBinary16 => DataType.Binary,
+				_ => DataType.Guid
+			};
+
+			var fb = new FluentMappingBuilder();
+
+			var prop = fb.Entity<Issue4354Table>()
+				.Property(x => x.Value)
+					.HasDataType(type);
+
+			if (length != null)
+				prop.HasLength(length.Value);
+
+			fb.Build();
+
+			using var db = GetDataConnection(
+				context,
+				o => o.UseMappingSchema(fb.MappingSchema).UseConnectionString(dataProvider, connectionString + $";GuidFormat={format}"));
+
+			db.InlineParameters = inline;
+
+			using var tb = db.CreateLocalTable<Issue4354Table>();
+
+			var items = new Issue4354Table[] { new Issue4354Table() { Value = TestData.Guid1 } };
+
+			db.BulkCopy(new BulkCopyOptions() { BulkCopyType = copyType }, items);
+
+			var record = tb.Single();
+
+			Assert.That(record.Value, Is.EqualTo(TestData.Guid1));
+		}
+
+		sealed class Issue4354Table
+		{
+			public Guid Value { get; set; }
+		}
+		#endregion
+
+		#region Issue 3726
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/3726")]
+		public void Issue3726Test([IncludeDataSources(TestProvName.AllMySql)] string context, [Values] bool inline)
+		{
+			using var db = GetDataConnection(context);
+			using var tb = db.CreateLocalTable<Issue3726Table>();
+
+
+			db.Insert(new Issue3726Table() { Id = 1, Value = 123 });
+
+			db.InlineParameters = inline;
+
+			var bar = 123;
+
+			tb.Where(f => f.Value == bar)
+				.Set(f => f.Value2, "Baz")
+				.Update();
+
+			Assert.That(db.LastQuery!.ToLowerInvariant(), Does.Contain("cast"));
+		}
+
+		sealed class Issue3726Table
+		{
+			[PrimaryKey] public int Id { get; set; }
+			[Column] public uint Value { get; set; }
+			[Column] public string? Value2 { get; set; }
+		}
+		#endregion
 	}
 
+	#region Extensions
 	static class MariaDBModuleFunctions
 	{
 		[Sql.Function("TEST_FUNCTION", ServerSideOnly = true)]
@@ -2341,4 +2497,5 @@ namespace Tests.DataProvider
 			return ret;
 		}
 	}
+	#endregion
 }

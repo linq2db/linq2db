@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq.Expressions;
 
 namespace LinqToDB.Linq.Builder
@@ -51,6 +50,9 @@ namespace LinqToDB.Linq.Builder
 				SourceCardinality = SourceCardinality.Many
 			};
 
+
+			using var snapshot = builder.CreateSnapshot();
+
 			var collectionResult = builder.TryBuildSequence(collectionInfo);
 
 			if (collectionResult.BuildContext == null)
@@ -94,13 +96,7 @@ namespace LinqToDB.Linq.Builder
 				_ => joinType
 			};
 
-			var projected = builder.BuildSqlExpression(
-				collection,
-				new ContextRefExpression(collection.ElementType, collection),
-				buildInfo.GetFlags(),
-				buildFlags: ExpressionBuilder.BuildFlags.ForceAssignments);
-
-			var expanded = builder.MakeExpression(sequence, new ContextRefExpression(collection.ElementType, collection), ProjectFlags.ExtractProjection);
+			var expanded = builder.BuildExtractExpression(collection, new ContextRefExpression(collection.ElementType, collection));
 
 			collection = new SubQueryContext(collection);
 
@@ -119,7 +115,7 @@ namespace LinqToDB.Linq.Builder
 
 			if (resultSelector == null)
 			{
-				resultExpression = projected;
+				resultExpression = expanded;
 			}
 			else
 			{
@@ -151,7 +147,12 @@ namespace LinqToDB.Linq.Builder
 			}
 
 			if (buildInfo.Parent == null && !builder.IsSupportedSubquery(sequence, collection, out var errorMessage))
+			{
+				collection.Detach();
 				return BuildSequenceResult.Error(methodCall, errorMessage);
+			}
+
+			snapshot.Accept();
 
 			return BuildSequenceResult.FromContext(context);
 		}

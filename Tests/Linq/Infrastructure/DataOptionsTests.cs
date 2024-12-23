@@ -43,10 +43,7 @@ namespace Tests.Infrastructure
 			string? s1 = null;
 
 			{
-				using var db = new TestDataConnection(options => options.WithOptions<QueryTraceOptions>(o => o with
-				{
-					OnTrace = ti => s1 = ti.SqlText
-				}));
+				using var db = new TestDataConnection(options => options.UseTracing(ti => s1 = ti.SqlText));
 
 				_child = db.Child.ToList();
 
@@ -78,10 +75,7 @@ namespace Tests.Infrastructure
 			using var db1 = new TestDataConnection(db.Options
 				.UseConnection   (db.DataProvider, db.Connection, false)
 				.UseMappingSchema(db.MappingSchema)
-				.WithOptions<QueryTraceOptions>(o => o with
-				{
-					OnTrace = ti => s1 = ti.SqlText
-				}));
+				.UseTracing(ti => s1 = ti.SqlText));
 
 
 			_child = db1.Child.ToList();
@@ -318,7 +312,7 @@ namespace Tests.Infrastructure
 				// global handler set
 				using (var db = GetDataContext(context))
 				{
-					db.GetTable<EntityDescriptorTable>().ToString();
+					_ = db.GetTable<EntityDescriptorTable>().ToSqlQuery();
 				}
 
 				Assert.Multiple(() =>
@@ -335,7 +329,7 @@ namespace Tests.Infrastructure
 					localTriggrered = true;
 				})))
 				{
-					db.GetTable<EntityDescriptorTable>().ToString();
+					_ = db.GetTable<EntityDescriptorTable>().ToSqlQuery();
 				}
 
 				Assert.Multiple(() =>
@@ -348,7 +342,7 @@ namespace Tests.Infrastructure
 				// descriptor cached
 				using (var db = GetDataContext(context))
 				{
-					db.GetTable<EntityDescriptorTable>().ToString();
+					_ = db.GetTable<EntityDescriptorTable>().ToSqlQuery();
 				}
 
 				Assert.Multiple(() =>
@@ -360,7 +354,7 @@ namespace Tests.Infrastructure
 				// cache miss
 				using (var db = GetDataContext(context, new MappingSchema("name1")))
 				{
-					db.GetTable<EntityDescriptorTable>().ToString();
+					_ = db.GetTable<EntityDescriptorTable>().ToSqlQuery();
 				}
 
 				Assert.Multiple(() =>
@@ -374,7 +368,7 @@ namespace Tests.Infrastructure
 				MappingSchema.EntityDescriptorCreatedCallback = null;
 				using (var db = GetDataContext(context, new MappingSchema("name2")))
 				{
-					db.GetTable<EntityDescriptorTable>().ToString();
+					_ = db.GetTable<EntityDescriptorTable>().ToSqlQuery();
 				}
 
 				Assert.Multiple(() =>

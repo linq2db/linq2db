@@ -1,16 +1,16 @@
 ﻿#if !NETFRAMEWORK
 using System;
+
 using LinqToDB;
+using LinqToDB.Data;
+using LinqToDB.Interceptors;
+using LinqToDB.Mapping;
+using LinqToDB.Remote;
+
+using LinqToDB.Remote.Grpc;
 
 namespace Tests.Remote
 {
-	using LinqToDB.Data;
-	using LinqToDB.Interceptors;
-	using LinqToDB.Mapping;
-	using LinqToDB.Remote;
-
-	using LinqToDB.Remote.Grpc;
-
 	internal sealed class TestGrpcLinqService : GrpcLinqService
 	{
 		private readonly LinqService    _linqService;
@@ -27,32 +27,11 @@ namespace Tests.Remote
 			set => _linqService.MappingSchema = value;
 		}
 
-		public TestGrpcLinqService(
-			LinqService linqService,
-			IInterceptor? interceptor)
+		public TestGrpcLinqService(LinqService linqService)
 			: base(linqService, true)
 		{
 			_linqService = linqService;
-			_interceptor = interceptor;
 
-		}
-
-		// for now we need only one test interceptor
-		private IInterceptor? _interceptor;
-
-		public void AddInterceptor(IInterceptor interceptor)
-		{
-			if (_interceptor != null)
-				throw new InvalidOperationException();
-
-			_interceptor = interceptor;
-		}
-
-		public void RemoveInterceptor()
-		{
-			if (_interceptor == null)
-				throw new InvalidOperationException();
-			_interceptor = null;
 		}
 	}
 }

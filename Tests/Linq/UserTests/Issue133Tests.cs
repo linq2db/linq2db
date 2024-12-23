@@ -89,13 +89,13 @@ namespace Tests.UserTests
 			using (var db = GetDataContext(context))
 			{
 				var result = db.Child
-					.GroupBy(_ => _.ParentID)
-					.Select(_ => new
+					.GroupBy(c => c.ParentID)
+					.Select(g => new
 					{
-						CountPercents = _.Count() * 100d / Sql.Ext.Sum(_.Count()).Over().ToValue(),
-						Sum = _.Sum(r => r.ParentID)
+						CountPercents = g.Count() * 100d / Sql.Ext.Sum(g.Count()).Over().ToValue(),
+						Sum = g.Sum(r => r.ParentID)
 					})
-					.Having(_ => _.Sum != 36)
+					.Having(x => x.Sum != 36)
 					.ToList();
 
 				Assert.That(result, Has.Count.EqualTo(5));

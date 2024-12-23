@@ -40,6 +40,13 @@ namespace LinqToDB.Linq.Builder
 				}
 			}
 
+			if (expression != null && member.ReflectedType != expression.Type)
+			{
+				var newMember = expression.Type.GetMemberEx(member);
+				if (newMember != null)
+					return IsAssociationInRealization(null, newMember, out associationMember);
+			}
+
 			associationMember = null;
 			return false;
 		}
@@ -60,7 +67,7 @@ namespace LinqToDB.Linq.Builder
 			}
 		}
 
-		AssociationDescriptor? GetAssociationDescriptor(Expression expression, out AccessorMember? memberInfo, bool onlyCurrent = true)
+		public AssociationDescriptor? GetAssociationDescriptor(Expression expression, out AccessorMember? memberInfo, bool onlyCurrent = true)
 		{
 			memberInfo = null;
 
@@ -116,6 +123,7 @@ namespace LinqToDB.Linq.Builder
 				if (attribute != null)
 					descriptor = new AssociationDescriptor
 					(
+						MappingSchema,
 						entityDescriptor.ObjectType,
 						accessorMember.MemberInfo,
 						attribute.GetThisKeys(),
@@ -144,157 +152,6 @@ namespace LinqToDB.Linq.Builder
 			}
 
 			return descriptor;
-		}
-
-		Dictionary<SqlCacheKey, Expression>? _associations;
-
-		public Expression TryCreateAssociation(Expression expression, ContextRefExpression rootContext, IBuildContext? forContext, ProjectFlags flags)
-		{
-			var associationDescriptor = GetAssociationDescriptor(expression, out var memberInfo);
-
-			if (associationDescriptor == null || memberInfo == null)
-				return expression;
-
-			var associationRoot = (ContextRefExpression)MakeExpression(rootContext.BuildContext, rootContext, flags.AssociationRootFlag());
-
-			_associations ??= new Dictionary<SqlCacheKey, Expression>(SqlCacheKey.SqlCacheKeyComparer);
-
-			var cacheFlags = flags.RootFlag() & ~(ProjectFlags.Subquery | ProjectFlags.ExtractProjection | ProjectFlags.ForceOuterAssociation);
-			var key        = new SqlCacheKey(expression, associationRoot.BuildContext, null, null, cacheFlags);
-
-			if (_associations.TryGetValue(key, out var associationExpression))
-				return associationExpression;
-
-			LoadWithInfo? loadWith     = null;
-			MemberInfo[]? loadWithPath = null;
-
-			var   prevIsOuter = flags.HasFlag(ProjectFlags.ForceOuterAssociation);
-			bool? isOptional  = prevIsOuter ? true : null;
-
-			if (rootContext.BuildContext.IsOptional)
-				isOptional = true;
-
-			var table = SequenceHelper.GetTableOrCteContext(rootContext.BuildContext);
-
-			if (table != null)
-			{
-				loadWith     = table.LoadWithRoot;
-				loadWithPath = table.LoadWithPath;
-				if (table.IsOptional)
-					isOptional = true;
-			}
-
-			if (forContext?.IsOptional == true)
-				isOptional = true;
-
-			if (associationDescriptor.IsList)
-			{
-				/*if (_isOuterAssociations?.Contains(rootContext) == true)
-					isOuter = true;*/
-			}
-			else
-			{
-				isOptional = isOptional == true || associationDescriptor.CanBeNull;
-			}
-
-			Expression? notNullCheck = null;
-			if (associationDescriptor.IsList && (prevIsOuter || flags.IsSubquery()) && !flags.IsExtractProjection())
-			{
-				var keys = MakeExpression(forContext, rootContext, flags.SqlFlag().KeyFlag());
-				if (forContext != null)
-				{
-					notNullCheck = ExtractNotNullCheck(forContext, keys, flags.SqlFlag());
-				}
-			}
-
-			var association = AssociationHelper.BuildAssociationQuery(this, rootContext, memberInfo,
-				associationDescriptor, notNullCheck, !associationDescriptor.IsList, loadWith, loadWithPath, ref isOptional);
-
-			associationExpression = association;
-
-			if (!associationDescriptor.IsList && !flags.IsSubquery() && !flags.IsExtractProjection())
-			{
-				// IsAssociation will force to create OuterApply instead of subquery. Handled in FirstSingleContext
-				//
-				var buildInfo = new BuildInfo(forContext, association, new SelectQuery())
-				{
-					IsTest = flags.IsTest(),
-					SourceCardinality = isOptional == true ? SourceCardinality.ZeroOrOne : SourceCardinality.One,
-					IsAssociation = true
-				};
-
-				var sequence = BuildSequence(buildInfo);
-
-				if (!flags.IsTest())
-				{
-					if (!IsSupportedSubquery(rootContext.BuildContext, sequence, out var errorMessage))
-						return new SqlErrorExpression(null, expression, errorMessage, expression.Type, true);
-				}
-
-				sequence.SetAlias(associationDescriptor.GenerateAlias());
-
-				if (forContext != null)
-					sequence = new ScopeContext(sequence, forContext);
-
-				associationExpression = new ContextRefExpression(association.Type, sequence);
-			}
-			else
-			{
-				associationExpression = SqlAdjustTypeExpression.AdjustType(associationExpression, expression.Type, MappingSchema);
-			}
-
-			if (!flags.IsExtractProjection())
-				_associations[key] = associationExpression;
-
-			return associationExpression;
-		}
-
-		Expression? ExtractNotNullCheck(IBuildContext context, Expression expr, ProjectFlags flags)
-		{
-			SqlPlaceholderExpression? notNull = null;
-
-			if (expr is SqlPlaceholderExpression placeholder)
-			{
-				notNull = placeholder.MakeNullable();
-			}
-
-			if (notNull == null)
-			{
-				List<Expression> expressions = new();
-				if (!CollectNullCompareExpressions(context, expr, expressions) || expressions.Count == 0)
-					return null;
-
-				List<SqlPlaceholderExpression> placeholders = new(expressions.Count);
-
-				foreach (var expression in expressions)
-				{
-					var predicateExpr = ConvertToSqlExpr(context, expression, flags.SqlFlag());
-					if (predicateExpr is SqlPlaceholderExpression current)
-					{
-						placeholders.Add(current);
-					}
-				}
-
-				notNull = placeholders
-					.FirstOrDefault(pl => !pl.Sql.CanBeNullable(NullabilityContext.NonQuery));
-			}
-
-			if (notNull == null)
-			{
-				return null;
-			}
-
-			var notNullPath = notNull.Path;
-
-			if (notNullPath.Type.IsValueType && !notNullPath.Type.IsNullable())
-			{
-				notNullPath = Expression.Convert(notNullPath, typeof(Nullable<>).MakeGenericType(notNullPath.Type));
-			}
-
-			var notNullExpression = Expression.NotEqual(notNullPath, Expression.Constant(null, notNullPath.Type));
-
-			return notNullExpression;
-
 		}
 
 		public static Expression AdjustType(Expression expression, Type desiredType, MappingSchema mappingSchema)
@@ -360,24 +217,6 @@ namespace LinqToDB.Linq.Builder
 			}
 
 			return result;
-		}
-
-		public bool GetAssociationTransformation(IBuildContext buildContext, [NotNullWhen(true)] out Expression? transformation)
-		{
-			transformation = null;
-			if (_associations == null)
-				return false;
-
-			foreach (var pair in _associations)
-			{
-				if (pair.Value is ContextRefExpression contextRef && contextRef.BuildContext == buildContext)
-				{
-					transformation = pair.Key.Expression!;
-					return true;
-				}
-			}
-
-			return false;
 		}
 	}
 }

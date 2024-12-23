@@ -168,7 +168,7 @@ namespace Tests.Linq
 		[Test]
 		public void TestComplexExpression([IdlProviders] string context)
 		{
-			// failed with LinqToDB.Data.Linq.LinqException : 'new StationObjectId() {Value = ConvertNullable(child.ChildID)}'
+			// failed with exception : 'new StationObjectId() {Value = ConvertNullable(child.ChildID)}'
 			//   cannot be converted to SQL.
 			using (var db = GetDataContext(context))
 			{
@@ -278,8 +278,7 @@ namespace Tests.Linq
 		[Test]
 		public void TestForGroupBy([IdlProviders] string context)
 		{
-			using var guard = new GuardGrouping(false);
-			using (var db = GetDataContext(context, o => o.OmitUnsupportedCompareNulls(context)))
+			using (var db = GetDataContext(context, o => o.OmitUnsupportedCompareNulls(context).UseGuardGrouping(false)))
 			{
 
 				/* no error in first call */
@@ -423,8 +422,14 @@ namespace Tests.Linq
 						Name = p.FirstName
 					};
 
-				var sql1 = (from p in people where p.Id       == 1 select p).ToString();
-				var sql2 = (from p in people where p.Id.Value == 1 select p).ToString();
+				var query1 = from p in people where p.Id       == 1 select p;
+				var query2 = from p in people where p.Id.Value == 1 select p;
+
+				query1.ToArray();
+				query2.ToArray();
+
+				var sql1 = query1.ToSqlQuery().Sql;
+				var sql2 = query2.ToSqlQuery().Sql;
 
 				Assert.That(sql1, Is.EqualTo(sql2));
 			}
@@ -546,6 +551,20 @@ namespace Tests.Linq
 			}
 		}
 
+		[Obsolete("Remove test after API removed")]
+		[Test]
+		public void TestUpdateWithTargetByAssociationPropertyOld([IdlProviders(TestProvName.AllClickHouse)] string context)
+		{
+			TestUpdateByAssociationPropertyOld(context, true);
+		}
+
+		[Obsolete("Remove test after API removed")]
+		[Test]
+		public void TestSetUpdateWithoutTargetByAssociationPropertyOld([IdlProviders(TestProvName.AllClickHouse)] string context)
+		{
+			TestUpdateByAssociationPropertyOld(context, false);
+		}
+
 		[Test]
 		public void TestUpdateWithTargetByAssociationProperty([IdlProviders(TestProvName.AllClickHouse)] string context)
 		{
@@ -556,6 +575,42 @@ namespace Tests.Linq
 		public void TestSetUpdateWithoutTargetByAssociationProperty([IdlProviders(TestProvName.AllClickHouse)] string context)
 		{
 			TestUpdateByAssociationProperty(context, false);
+		}
+
+		[Obsolete("Remove test after API removed")]
+		private void TestUpdateByAssociationPropertyOld(string context, bool useUpdateWithTarget)
+		{
+			using (var db = GetDataConnection(context))
+			{
+				const int childId = 10000;
+				const int parentId = 20000;
+
+				try
+				{
+					db.Parent.Insert(() => new Parent { ParentID = parentId });
+					db.Child.Insert(() => new Child { ChildID = childId, ParentID = parentId });
+
+					var parents = from child in db.Child
+								  where child.ChildID == childId
+								  select child.Parent;
+
+					if (useUpdateWithTarget)
+					{
+						// this failed for MySql and SQLite but works with MS SQL
+						Assert.DoesNotThrow(() => parents.Update(db.Parent, x => new Parent { Value1 = 5 }));
+					}
+					else
+					{
+						// this works with MySql but failed for SQLite and MS SQL
+						Assert.DoesNotThrow(() => parents.Set(x => x.Value1, 5).Update());
+					}
+				}
+				finally
+				{
+					db.Child.Delete(x => x.ChildID == childId);
+					db.Parent.Delete(x => x.ParentID == parentId);
+				}
+			}
 		}
 
 		private void TestUpdateByAssociationProperty(string context, bool useUpdateWithTarget)
@@ -577,7 +632,7 @@ namespace Tests.Linq
 					if (useUpdateWithTarget)
 					{
 						// this failed for MySql and SQLite but works with MS SQL
-						Assert.DoesNotThrow(() => parents.Update(db.Parent, x => new Parent { Value1 = 5 }));
+						Assert.DoesNotThrow(() => parents.Update(q => q, x => new Parent { Value1 = 5 }));
 					}
 					else
 					{
@@ -636,12 +691,13 @@ namespace Tests.Linq
 						from p in db.Person
 						select new { Rank = p.ID, p.FirstName, p.LastName });
 
-				var resultquery = (from x in query2 orderby x.Rank, x.FirstName, x.LastName select x).ToString()!;
+				var resultquery = from x in query2 orderby x.Rank, x.FirstName, x.LastName select x;
+				resultquery.ToArray();
 
-				TestContext.Out.WriteLine(resultquery);
+				var sql = resultquery.ToSqlQuery().Sql;
 
-				var rqr = resultquery.LastIndexOf("ORDER BY", StringComparison.OrdinalIgnoreCase);
-				var rqp = (resultquery.Substring(rqr + "ORDER BY".Length).Split(',')).Select(p => p.Trim()).ToArray();
+				var rqr = sql.LastIndexOf("ORDER BY", StringComparison.OrdinalIgnoreCase);
+				var rqp = (sql.Substring(rqr + "ORDER BY".Length).Split(',')).Select(p => p.Trim()).ToArray();
 
 				Assert.That(rqp, Has.Length.EqualTo(3));
 			}

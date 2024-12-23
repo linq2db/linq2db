@@ -70,7 +70,7 @@ namespace Tests.Extensions
 
 			_ = q.ToList();
 
-			Assert.That(q.ToString(), Contains.Substring($"WITH ({hint})"));
+			Assert.That(q.ToSqlQuery().Sql, Contains.Substring($"WITH ({hint})"));
 		}
 
 		[Test]
@@ -551,6 +551,28 @@ namespace Tests.Extensions
 			Assert.That(LastQuery, Contains.Substring("OPTION (RECOMPILE, FAST 10)"));
 		}
 
+		[Obsolete("Remove test after API removed")]
+		[Test]
+		public void UpdateTestOld([IncludeDataSources(true, TestProvName.AllSqlServer)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			(
+				from c in db.Child.TableHint(SqlServerHints.Table.NoLock)
+				where c.ParentID < -1111
+				select c
+			)
+			.QueryHint(SqlServerHints.Query.Recompile)
+			.QueryHint(SqlServerHints.Query.Fast(10))
+			.Update(db.Child, c => new()
+			{
+				ChildID = c.ChildID * 2
+			});
+
+			Assert.That(LastQuery, Contains.Substring("WITH (NoLock)"));
+			Assert.That(LastQuery, Contains.Substring("OPTION (RECOMPILE, FAST 10)"));
+		}
+
 		[Test]
 		public void UpdateTest([IncludeDataSources(true, TestProvName.AllSqlServer)] string context)
 		{
@@ -563,7 +585,7 @@ namespace Tests.Extensions
 			)
 			.QueryHint(SqlServerHints.Query.Recompile)
 			.QueryHint(SqlServerHints.Query.Fast(10))
-			.Update(db.Child, c => new()
+			.Update(q => q, c => new()
 			{
 				ChildID = c.ChildID * 2
 			});

@@ -12,12 +12,17 @@ using NUnit.Framework;
 
 namespace Tests.Data
 {
+	using System.Collections;
+
 	using Model;
+
+	using Tests.DataProvider;
+
 
 	[TestFixture]
 	public class TraceTests : TestBase
 	{
-		private TraceLevel                       OriginalTraceLevel { get; set; }
+		private TraceLevel                           OriginalTraceLevel { get; set; }
 		private Action<string,string,TraceLevel> OriginalWrite      { get; set; } = null!;
 
 
@@ -50,6 +55,7 @@ namespace Tests.Data
 			return steps.ToDictionary(s => s.Enum, s => s.Value);
 		}
 
+		// test could fail for some providers in VS due to designer mode
 		[Test]
 		public void TraceInfoErrorsAreReportedForInvalidConnectionString([DataSources(false)] string context)
 		{
@@ -83,6 +89,7 @@ namespace Tests.Data
 			}
 		}
 
+		// test could fail for some providers in VS due to designer mode
 		[Test]
 		public void TraceInfoErrorsAreReportedForInvalidConnectionStringAsync([DataSources(false)] string context)
 		{
@@ -160,7 +167,7 @@ namespace Tests.Data
 
 			using (var db = GetDataConnection(context))
 			{
-				var sql = db.GetTable<Northwind.Category>().SqlText;
+				var sql = db.GetTable<Northwind.Category>().ToSqlQuery().Sql;
 				db.OnTraceConnection = e =>
 				{
 					events[e.TraceInfoStep] = e;
@@ -200,7 +207,7 @@ namespace Tests.Data
 
 			using (var db = GetDataConnection(context))
 			{
-				var sql = db.GetTable<Northwind.Category>().SqlText;
+				var sql = db.GetTable<Northwind.Category>().ToSqlQuery().Sql;
 				db.OnTraceConnection = e =>
 				{
 					events[e.TraceInfoStep] = e;
@@ -240,7 +247,7 @@ namespace Tests.Data
 
 			using (var db = new DataConnection(context))
 			{
-				var sql = db.GetTable<Northwind.Category>().SqlText;
+				var sql = db.GetTable<Northwind.Category>().ToSqlQuery().Sql;
 				db.OnTraceConnection = e =>
 				{
 					events[e.TraceInfoStep] = e;
@@ -278,7 +285,7 @@ namespace Tests.Data
 
 			using (var db = new DataConnection(context))
 			{
-				var sql = db.GetTable<Northwind.Category>().SqlText;
+				var sql = db.GetTable<Northwind.Category>().ToSqlQuery().Sql;
 				db.OnTraceConnection = e =>
 				{
 					events[e.TraceInfoStep] = e;
@@ -476,7 +483,7 @@ namespace Tests.Data
 
 			using (var db = new DataConnection(context))
 			{
-				var sql = db.GetTable<Northwind.Category>().SqlText;
+				var sql = db.GetTable<Northwind.Category>().ToSqlQuery().Sql;
 				db.OnTraceConnection = e =>
 				{
 					events[e.TraceInfoStep] = e;
@@ -642,7 +649,6 @@ namespace Tests.Data
 					});
 				}
 			}
-
 		}
 
 		[Test]
@@ -873,6 +879,21 @@ namespace Tests.Data
 			});
 
 			DataConnection.WriteTraceLine = wtl;
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/3663")]
+		public void Issue3663Test([DataSources(false)] string context)
+		{
+			using var db = GetDataConnection(context, o => o.UseTracing(Trace));
+			db.Person.ToArray();
+
+			db.Query<Person>(db.LastQuery!).ToArray();
+
+			static void Trace(TraceInfo trace)
+			{
+				_ = trace.Command?.CommandText;
+				_ = trace.SqlText;
+			}
 		}
 	}
 }

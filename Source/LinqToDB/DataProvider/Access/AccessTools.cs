@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Data.Common;
 using System.IO;
 using System.Security;
@@ -24,26 +23,26 @@ namespace LinqToDB.DataProvider.Access
 		/// <summary>
 		/// Returns instance of Access database provider.
 		/// </summary>
-		public static IDataProvider GetDataProvider(AccessProvider provider = AccessProvider.AutoDetect, string? connectionString = null)
+		public static IDataProvider GetDataProvider(AccessVersion version = AccessVersion.AutoDetect, AccessProvider provider = AccessProvider.AutoDetect, string? connectionString = null)
 		{
-			return ProviderDetector.GetDataProvider(new ConnectionOptions(ConnectionString: connectionString), provider, default);
+			return ProviderDetector.GetDataProvider(new ConnectionOptions(ConnectionString: connectionString), provider, version);
 		}
 
 		#region CreateDataConnection
 
-		public static DataConnection CreateDataConnection(string connectionString, AccessProvider provider = AccessProvider.AutoDetect)
+		public static DataConnection CreateDataConnection(string connectionString, AccessVersion version = AccessVersion.AutoDetect, AccessProvider provider = AccessProvider.AutoDetect)
 		{
-			return new DataConnection(ProviderDetector.GetDataProvider(new ConnectionOptions(ConnectionString: connectionString), provider, default), connectionString);
+			return new DataConnection(ProviderDetector.GetDataProvider(new ConnectionOptions(ConnectionString: connectionString), provider, version), connectionString);
 		}
 
-		public static DataConnection CreateDataConnection(DbConnection connection, AccessProvider provider = AccessProvider.AutoDetect)
+		public static DataConnection CreateDataConnection(DbConnection connection, AccessVersion version = AccessVersion.AutoDetect, AccessProvider provider = AccessProvider.AutoDetect)
 		{
-			return new DataConnection(ProviderDetector.GetDataProvider(new ConnectionOptions(DbConnection: connection), provider, default), connection);
+			return new DataConnection(ProviderDetector.GetDataProvider(new ConnectionOptions(DbConnection: connection), provider, version), connection);
 		}
 
-		public static DataConnection CreateDataConnection(DbTransaction transaction, AccessProvider provider = AccessProvider.AutoDetect)
+		public static DataConnection CreateDataConnection(DbTransaction transaction, AccessVersion version = AccessVersion.AutoDetect, AccessProvider provider = AccessProvider.AutoDetect)
 		{
-			return new DataConnection(ProviderDetector.GetDataProvider(new ConnectionOptions(DbTransaction: transaction), provider, default), transaction);
+			return new DataConnection(ProviderDetector.GetDataProvider(new ConnectionOptions(DbTransaction: transaction), provider, version), transaction);
 		}
 
 		#endregion
@@ -55,10 +54,45 @@ namespace LinqToDB.DataProvider.Access
 		/// </summary>
 		/// <param name="databaseName">Name of database to create.</param>
 		/// <param name="deleteIfExists">If <c>true</c>, existing database will be removed before create.</param>
+		/// <param name="version">Access engine to use to create database. Default value: <see cref="AccessVersion.Ace"/>.</param>
+		public static void CreateDatabase(string databaseName, bool deleteIfExists = false, AccessVersion version = AccessVersion.Ace)
+		{
+			if (databaseName == null) throw new ArgumentNullException(nameof(databaseName));
+
+			databaseName = databaseName.Trim();
+
+			var defaultExtension = version == AccessVersion.Ace ? ".accdb" : ".mdb";
+
+			// add extension if not specified
+			if (!databaseName.ToLowerInvariant().EndsWith(".mdb") && !databaseName.ToLowerInvariant().EndsWith(defaultExtension))
+				databaseName += defaultExtension;
+
+			if (File.Exists(databaseName))
+			{
+				if (!deleteIfExists)
+					return;
+				File.Delete(databaseName);
+			}
+
+			// note that it is fine to use Microsoft.ACE.OLEDB.12.0 even if newer version installed,
+			// as newer versions register itself with older version number too for backward compatibility with such
+			// situations when provider name is hardcoded
+			var connectionString = $"Provider={(version == AccessVersion.Jet ? "Microsoft.Jet.OLEDB.4.0" : "Microsoft.ACE.OLEDB.12.0")};Data Source={databaseName};Locale Identifier=1033";
+
+			CreateAccessDB(connectionString);
+		}
+
+		/// <summary>
+		/// Creates new Access database file. Requires Access OLE DB provider (JET or ACE) and ADOX.
+		/// </summary>
+		/// <param name="databaseName">Name of database to create.</param>
+		/// <param name="deleteIfExists">If <c>true</c>, existing database will be removed before create.</param>
 		/// <param name="provider">Name of OleDb provider to use to create database. Default value: "Microsoft.Jet.OLEDB.4.0".</param>
 		/// <remarks>
 		/// Provider value examples: Microsoft.Jet.OLEDB.4.0 (for JET database), Microsoft.ACE.OLEDB.12.0, Microsoft.ACE.OLEDB.15.0 (for ACE database).
 		/// </remarks>
+		// TODO: return in v7
+		[Obsolete("Use overload with 'AccessVersion version' argument")]
 		public static void CreateDatabase(string databaseName, bool deleteIfExists = false, string provider = "Microsoft.Jet.OLEDB.4.0")
 		{
 			if (databaseName == null) throw new ArgumentNullException(nameof(databaseName));
@@ -94,11 +128,11 @@ namespace LinqToDB.DataProvider.Access
 		/// Removes database file by database name.
 		/// </summary>
 		/// <param name="databaseName">Name of database to remove.</param>
-		public static void DropDatabase(string databaseName)
+		public static void DropDatabase(string databaseName, string? extension = null)
 		{
 			if (databaseName == null) throw new ArgumentNullException(nameof(databaseName));
 
-			DataTools.DropFileDatabase(databaseName, ".mdb");
+			DataTools.DropFileDatabase(databaseName, extension ?? ".mdb");
 		}
 
 		#endregion

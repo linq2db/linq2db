@@ -317,7 +317,9 @@ namespace LinqToDB.Extensions
 		{
 			try
 			{
+#pragma warning disable RS0030 // Do not use banned APIs
 				return type.GetInterfaceMap(interfaceType);
+#pragma warning restore RS0030 // Do not use banned APIs
 			}
 			// PNSE: corert
 			// NSE: NativeAOUT

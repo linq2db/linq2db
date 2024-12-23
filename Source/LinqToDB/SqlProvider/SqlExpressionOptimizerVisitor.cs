@@ -15,14 +15,15 @@ namespace LinqToDB.SqlProvider
 
 	public class SqlExpressionOptimizerVisitor : SqlQueryVisitor
 	{
-		EvaluationContext  _evaluationContext  = default!;
-		NullabilityContext _nullabilityContext = default!;
-		DataOptions        _dataOptions        = default!;
-		MappingSchema      _mappingSchema      = default!;
-		ISqlPredicate?     _allowOptimize;
-		bool               _visitQueries;
-		bool               _isInsideNot;
-		bool               _reduceBinary;
+		EvaluationContext           _evaluationContext  = default!;
+		NullabilityContext          _nullabilityContext = default!;
+		DataOptions                 _dataOptions        = default!;
+		MappingSchema               _mappingSchema      = default!;
+		ICollection<ISqlPredicate>? _allowOptimizeList;
+		ISqlPredicate?              _allowOptimize;
+		bool                        _visitQueries;
+		bool                        _isInsideNot;
+		bool                        _reduceBinary;
 
 		public SqlExpressionOptimizerVisitor(bool allowModify) : base(allowModify ? VisitMode.Modify : VisitMode.Transform, null)
 		{
@@ -40,13 +41,14 @@ namespace LinqToDB.SqlProvider
 			bool                        reduceBinary)
 		{
 			Cleanup();
-			_evaluationContext  = evaluationContext;
-			_dataOptions        = dataOptions;
-			_mappingSchema      = mappingSchema;
-			_allowOptimize      = default;
-			_visitQueries       = visitQueries;
-			_isInsideNot        = isInsideNot;
-			_reduceBinary       = reduceBinary;
+			_evaluationContext = evaluationContext;
+			_dataOptions       = dataOptions;
+			_mappingSchema     = mappingSchema;
+			_allowOptimize     = default;
+			_allowOptimizeList = default;
+			_visitQueries      = visitQueries;
+			_isInsideNot       = isInsideNot;
+			_reduceBinary      = reduceBinary;
 			SetTransformationInfo(transformationInfo);
 
 			_nullabilityContext = nullabilityContext.WithTransformationInfo(GetTransformationInfo());
@@ -64,6 +66,7 @@ namespace LinqToDB.SqlProvider
 			_dataOptions        = default!;
 			_mappingSchema      = default!;
 			_allowOptimize      = default;
+			_allowOptimizeList  = default;
 		}
 
 		[return: NotNullIfNotNull(nameof(element))]
@@ -280,15 +283,38 @@ namespace LinqToDB.SqlProvider
 			return element;
 		}
 
+		bool IsAllowedToOptimizePredicate(ISqlPredicate testPredicate, ISqlPredicate replacement)
+		{
+			if (replacement is SqlSearchCondition)
+				return true;
+
+			if (_allowOptimize == testPredicate)
+				return true;
+			if (_allowOptimizeList?.Contains(testPredicate) == true)
+				return true;
+
+			return false;
+		}
+
 		protected override IQueryElement VisitSqlSearchCondition(SqlSearchCondition element)
 		{
+			var saveAllowToOptimize = _allowOptimizeList;
+			_allowOptimizeList = element.Predicates;
+
 			var newElement = base.VisitSqlSearchCondition(element);
+
+			_allowOptimizeList = saveAllowToOptimize;
 
 			if (!ReferenceEquals(newElement, element))
 				return Visit(newElement);
 
-			if (ReferenceEquals(_allowOptimize, element) && element.Predicates.Count == 1)
-				return element.Predicates[0];
+			if (element.Predicates.Count == 1)
+			{
+				if (IsAllowedToOptimizePredicate(element, element.Predicates[0]))
+				{
+					return element.Predicates[0];
+				}
+			}
 
 			if (GetVisitMode(element) == VisitMode.Modify)
 			{
@@ -552,10 +578,10 @@ namespace LinqToDB.SqlProvider
 
 			newElement = element switch
 			{
-				(var e, "+", SqlBinaryExpression { Operation: "*", Expr1: SqlValue { Value: -1 } } binary) => new SqlBinaryExpression(element.SystemType!, e, "-", binary.Expr2, Precedence.Subtraction),
-				(var e, "+", SqlBinaryExpression { Operation: "*", Expr2: SqlValue { Value: -1 } } binary) => new SqlBinaryExpression(e.SystemType!, e, "-", binary.Expr1, Precedence.Subtraction),
-				(var e, "-", SqlBinaryExpression { Operation: "*", Expr1: SqlValue { Value: -1 } } binary) => new SqlBinaryExpression(element.SystemType!, e, "+", binary.Expr2, Precedence.Subtraction),
-				(var e, "-", SqlBinaryExpression { Operation: "*", Expr2: SqlValue { Value: -1 } } binary) => new SqlBinaryExpression(e.SystemType!, e, "+", binary.Expr1, Precedence.Subtraction),
+				(var e, "+", SqlBinaryExpression { Operation: "*", Expr1: SqlValue { Value: -1 } } binary) => SqlBinaryExpressionHelper.CreateWithTypeInferred(element.SystemType!, e, "-", binary.Expr2, Precedence.Subtraction),
+				(var e, "+", SqlBinaryExpression { Operation: "*", Expr2: SqlValue { Value: -1 } } binary) => SqlBinaryExpressionHelper.CreateWithTypeInferred(e.SystemType!, e, "-", binary.Expr1, Precedence.Subtraction),
+				(var e, "-", SqlBinaryExpression { Operation: "*", Expr1: SqlValue { Value: -1 } } binary) => SqlBinaryExpressionHelper.CreateWithTypeInferred(element.SystemType!, e, "+", binary.Expr2, Precedence.Subtraction),
+				(var e, "-", SqlBinaryExpression { Operation: "*", Expr2: SqlValue { Value: -1 } } binary) => SqlBinaryExpressionHelper.CreateWithTypeInferred(e.SystemType!, e, "+", binary.Expr1, Precedence.Subtraction),
 
 				_ => element
 			};
@@ -564,7 +590,7 @@ namespace LinqToDB.SqlProvider
 				return Visit(newElement);
 
 			if (TryEvaluateNoParameters(element, out var evaluatedValue))
-				return new SqlValue(element.SystemType, evaluatedValue);
+				return new SqlValue(QueryHelper.GetDbDataType(element, _mappingSchema), evaluatedValue);
 
 			switch (element.Operation)
 			{
@@ -579,7 +605,14 @@ namespace LinqToDB.SqlProvider
 							case int     i when i == 0  :
 							case long    l when l == 0  :
 							case decimal d when d == 0  :
-							case string  s when s.Length == 0: return element.Expr2;
+							case string  s when s.Length == 0:
+							{
+								var elementType = QueryHelper.GetDbDataType(element, _mappingSchema);
+								var expr2Type   = QueryHelper.GetDbDataType(element.Expr2, _mappingSchema);
+								if (!elementType.Equals(expr2Type))
+									return new SqlCastExpression(element.Expr2, elementType, null);
+								return element.Expr2;
+							}
 						}
 					}
 
@@ -599,6 +632,9 @@ namespace LinqToDB.SqlProvider
 									case "+":
 									{
 										var value = be1v2i + vi;
+
+										if (value == 0) return be1.Expr1;
+
 										var oper  = be1.Operation;
 
 										if (value < 0)
@@ -613,6 +649,9 @@ namespace LinqToDB.SqlProvider
 									case "-":
 									{
 										var value = be1v2i - vi;
+
+										if (value == 0) return be1.Expr1;
+
 										var oper  = be1.Operation;
 
 										if (value < 0)
@@ -671,6 +710,9 @@ namespace LinqToDB.SqlProvider
 									case "+":
 									{
 										var value = be1v2i - vi;
+
+										if (value == 0) return be1.Expr1;
+
 										var oper  = be1.Operation;
 
 										if (value < 0)
@@ -685,6 +727,9 @@ namespace LinqToDB.SqlProvider
 									case "-":
 									{
 										var value = be1v2i + vi;
+
+										if (value == 0) return be1.Expr1;
+
 										var oper  = be1.Operation;
 
 										if (value < 0)
@@ -789,20 +834,32 @@ namespace LinqToDB.SqlProvider
 			return base.VisitSqlCastExpression(element);
 		}
 
-		protected override IQueryElement VisitFuncLikePredicate(SqlPredicate.FuncLike element)
+		protected override IQueryElement VisitExistsPredicate(SqlPredicate.Exists predicate)
 		{
-			var funcElement = Visit(element.Function);
+			var optmimized = base.VisitExistsPredicate(predicate);
 
-			if (ReferenceEquals(funcElement, element.Function))
-				return element;
+			if (!ReferenceEquals(optmimized, predicate))
+				return Visit(optmimized);
 
-			if (funcElement is SqlPredicate)
-				return funcElement;
+			var query = predicate.SubQuery;
 
-			if (funcElement is SqlFunction function)
-				return element.Update(function);
+			if (query.Select.Columns.Count > 0)
+			{
+				if (query.GroupBy.IsEmpty)
+				{
+					var isAggregateQuery = query.Select.Columns.All(static c => QueryHelper.IsAggregationOrWindowFunction(c.Expression));
 
-			throw new InvalidCastException($"Converted FuncLikePredicate expression expected to be a Predicate expression but got {funcElement.GetType()}.");
+					if (isAggregateQuery)
+						return SqlPredicate.True;
+				}
+			}
+
+			if (query.Where.SearchCondition.Predicates is [SqlPredicate.FalsePredicate firstPredicate])
+			{
+				return firstPredicate.MakeNot(predicate.IsNot);
+			}
+
+			return predicate;
 		}
 
 		protected override IQueryElement VisitSqlFunction(SqlFunction element)
@@ -818,25 +875,6 @@ namespace LinqToDB.SqlProvider
 			if (TryEvaluate(element, out var value))
 			{
 				return QueryHelper.CreateSqlValue(value, QueryHelper.GetDbDataType(element, _mappingSchema), element.Parameters);
-			}
-
-			switch (element.Name)
-			{
-				case "EXISTS":
-				{
-					if (element.Parameters.Length == 1 && element.Parameters[0] is SelectQuery query && query.Select.Columns.Count > 0)
-					{
-						if (query.GroupBy.IsEmpty)
-						{
-							var isAggregateQuery = query.Select.Columns.All(static c => QueryHelper.IsAggregationOrWindowFunction(c.Expression));
-
-							if (isAggregateQuery)
-								return SqlPredicate.True;
-						}
-					}
-
-					break;
-				}
 			}
 
 			return element;
@@ -907,7 +945,9 @@ namespace LinqToDB.SqlProvider
 
 			if (!predicate.Expr1.CanBeNullable(_nullabilityContext))
 			{
-				return SqlPredicate.MakeBool(predicate.IsNot);
+				//TODO: Exception for Row, find time to analyze why it's needed
+				if (predicate.Expr1.ElementType != QueryElementType.SqlRow)
+					return SqlPredicate.MakeBool(predicate.IsNot);
 			}
 
 			if (TryEvaluate(predicate.Expr1, out var value))
@@ -936,6 +976,25 @@ namespace LinqToDB.SqlProvider
 					return Visit(result);
 			}
 
+			if (predicate.Expr1 is SqlConditionExpression condition)
+			{
+				if (condition.TrueValue.IsNullValue())
+				{
+					var sc = new SqlSearchCondition();
+					sc.Add(condition.Condition);
+					sc.AddIsNull(condition.FalseValue);
+					return Visit(sc.MakeNot(predicate.IsNot));
+				}
+
+				if (condition.FalseValue.IsNullValue())
+				{
+					var sc = new SqlSearchCondition();
+					sc.Add(condition.Condition.MakeNot());
+					sc.AddIsNull(condition.TrueValue);
+					return Visit(sc.MakeNot(predicate.IsNot));
+				}
+			}
+
 			return predicate;
 		}
 
@@ -952,10 +1011,14 @@ namespace LinqToDB.SqlProvider
 					element.CanBeNullable(_nullabilityContext));
 			}
 
-			if (element.SqlExpression is SqlSearchCondition)
+			var inner = element.SqlExpression;
+			while (inner is SqlCastExpression cast)
 			{
-				return element.SqlExpression;
+				inner = cast.Expression;
 			}
+
+			if (inner is SqlValue or SqlParameter or SqlSearchCondition)
+				return element.SqlExpression;
 
 			return element;
 		}
@@ -1257,11 +1320,15 @@ namespace LinqToDB.SqlProvider
 			{
 				if (op is SqlPredicate.Operator.Equal or SqlPredicate.Operator.NotEqual)
 				{
-					if (sqlConditionExpression.TrueValue.Equals(unwrappedValue))
+					if (sqlConditionExpression.TrueValue.Equals(unwrappedValue) && TryEvaluateNoParameters(sqlConditionExpression.FalseValue, out _))
+					{
 						return sqlConditionExpression.Condition.MakeNot(isNot);
+					}
 
-					if (sqlConditionExpression.FalseValue.Equals(unwrappedValue))
+					if (sqlConditionExpression.FalseValue.Equals(unwrappedValue) && TryEvaluateNoParameters(sqlConditionExpression.TrueValue, out _))
+					{
 						return sqlConditionExpression.Condition.MakeNot(!isNot);
+					}
 				}
 
 				if (TryEvaluateNoParameters(unwrappedValue, out _))
@@ -1366,14 +1433,14 @@ namespace LinqToDB.SqlProvider
 		{
 			if (TryEvaluateNoParameters(isTrue.Expr1, out var result) && result is bool boolValue)
 			{
-				return SqlPredicate.MakeBool(boolValue == isTrue.IsNot);
+				return SqlPredicate.MakeBool(boolValue != isTrue.IsNot);
 			}
 
 			if (isTrue.Expr1 is SqlConditionExpression or SqlCaseExpression)
 			{
 				if (!isTrue.IsNot)
 				{
-					var predicate = ProcessComparisonWithCase(isTrue.TrueValue, isTrue.Expr1, SqlPredicate.Operator.Equal);
+					var predicate = ProcessComparisonWithCase(isTrue.Expr1, isTrue.TrueValue, SqlPredicate.Operator.Equal);
 					if (predicate != null)
 						return predicate.MakeNot(isTrue.IsNot);
 				}
@@ -1480,14 +1547,14 @@ namespace LinqToDB.SqlProvider
 						binary switch
 						{
 							// e + some < v ===> some < v - e
-							(var e, "+", var some) when CanBeEvaluateNoParameters(e) => new SqlPredicate.ExprExpr(some, op, new SqlBinaryExpression(v.SystemType!, v, "-", e), null),
+							(var e, "+", var some) when CanBeEvaluateNoParameters(e) => new SqlPredicate.ExprExpr(some, op, SqlBinaryExpressionHelper.CreateWithTypeInferred(v.SystemType!, v, "-", e), null),
 							// e - some < v ===>  e - v < some
-							(var e, "-", var some) when CanBeEvaluateNoParameters(e) => new SqlPredicate.ExprExpr(new SqlBinaryExpression(v.SystemType!, e, "-", v), op, some, null),
+							(var e, "-", var some) when CanBeEvaluateNoParameters(e) => new SqlPredicate.ExprExpr(SqlBinaryExpressionHelper.CreateWithTypeInferred(v.SystemType!, e, "-", v), op, some, null),
 
 							// some + e < v ===> some < v - e
-							(var some, "+", var e) when CanBeEvaluateNoParameters(e) => new SqlPredicate.ExprExpr(some, op, new SqlBinaryExpression(v.SystemType!, v, "-", e), null),
+							(var some, "+", var e) when CanBeEvaluateNoParameters(e) => new SqlPredicate.ExprExpr(some, op, SqlBinaryExpressionHelper.CreateWithTypeInferred(v.SystemType!, v, "-", e), null),
 							// some - e < v ===> some < v + e
-							(var some, "-", var e) when CanBeEvaluateNoParameters(e) => new SqlPredicate.ExprExpr(some, op, new SqlBinaryExpression(v.SystemType!, v, "+", e), null),
+							(var some, "-", var e) when CanBeEvaluateNoParameters(e) => new SqlPredicate.ExprExpr(some, op, SqlBinaryExpressionHelper.CreateWithTypeInferred(v.SystemType!, v, "+", e), null),
 
 							_ => null
 						},
@@ -1498,14 +1565,14 @@ namespace LinqToDB.SqlProvider
 						binary switch
 						{
 							// e + some < v ===> some < v - e
-							(var e, "+", var some) when CanBeEvaluateNoParameters(e) => new SqlPredicate.ExprExpr(some, op, new SqlBinaryExpression(v.SystemType!, v, "-", e), null),
+							(var e, "+", var some) when CanBeEvaluateNoParameters(e) => new SqlPredicate.ExprExpr(some, op, SqlBinaryExpressionHelper.CreateWithTypeInferred(v.SystemType!, v, "-", e), null),
 							// e - some < v ===>  e - v < some
-							(var e, "-", var some) when CanBeEvaluateNoParameters(e) => new SqlPredicate.ExprExpr(new SqlBinaryExpression(v.SystemType!, e, "-", v), op, some, null),
+							(var e, "-", var some) when CanBeEvaluateNoParameters(e) => new SqlPredicate.ExprExpr(SqlBinaryExpressionHelper.CreateWithTypeInferred(v.SystemType!, e, "-", v), op, some, null),
 
 							// some + e < v ===> some < v - e
-							(var some, "+", var e) when CanBeEvaluateNoParameters(e) => new SqlPredicate.ExprExpr(some, op, new SqlBinaryExpression(v.SystemType!, v, "-", e), null),
+							(var some, "+", var e) when CanBeEvaluateNoParameters(e) => new SqlPredicate.ExprExpr(some, op, SqlBinaryExpressionHelper.CreateWithTypeInferred(v.SystemType!, v, "-", e), null),
 							// some - e < v ===> some < v + e
-							(var some, "-", var e) when CanBeEvaluateNoParameters(e) => new SqlPredicate.ExprExpr(some, op, new SqlBinaryExpression(v.SystemType!, v, "+", e), null),
+							(var some, "-", var e) when CanBeEvaluateNoParameters(e) => new SqlPredicate.ExprExpr(some, op, SqlBinaryExpressionHelper.CreateWithTypeInferred(v.SystemType!, v, "+", e), null),
 
 							_ => null
 						},
@@ -1516,14 +1583,14 @@ namespace LinqToDB.SqlProvider
 						binary switch
 						{
 							// v < e + some ===> v - e < some
-							(var e, "+", var some) when CanBeEvaluateNoParameters(e) => new SqlPredicate.ExprExpr(new SqlBinaryExpression(v.SystemType!, v, "-", e), op, some, null),
+							(var e, "+", var some) when CanBeEvaluateNoParameters(e) => new SqlPredicate.ExprExpr(SqlBinaryExpressionHelper.CreateWithTypeInferred(v.SystemType!, v, "-", e), op, some, null),
 							// v < e - some ===> some < e - v
-							(var e, "-", var some) when CanBeEvaluateNoParameters(e) => new SqlPredicate.ExprExpr(some, op, new SqlBinaryExpression(v.SystemType!, e, "-", v), null),
+							(var e, "-", var some) when CanBeEvaluateNoParameters(e) => new SqlPredicate.ExprExpr(some, op, SqlBinaryExpressionHelper.CreateWithTypeInferred(v.SystemType!, e, "-", v), null),
 
 							// v < some + e ===> v - e < some
-							(var some, "+", var e) when CanBeEvaluateNoParameters(e) => new SqlPredicate.ExprExpr(new SqlBinaryExpression(v.SystemType!, v, "-", e), op, some, null),
+							(var some, "+", var e) when CanBeEvaluateNoParameters(e) => new SqlPredicate.ExprExpr(SqlBinaryExpressionHelper.CreateWithTypeInferred(v.SystemType!, v, "-", e), op, some, null),
 							// v < some - e ===> v + e < some
-							(var e, "-", var some) when CanBeEvaluateNoParameters(e) => new SqlPredicate.ExprExpr(new SqlBinaryExpression(v.SystemType!, v, "+", e), op, some, null),
+							(var e, "-", var some) when CanBeEvaluateNoParameters(e) => new SqlPredicate.ExprExpr(SqlBinaryExpressionHelper.CreateWithTypeInferred(v.SystemType!, v, "+", e), op, some, null),
 
 							_ => null
 						},

@@ -4,7 +4,7 @@
 <#@ include file="$(LinqToDBT4PostgreSQLTemplatesPath)LinqToDB.PostgreSQL.Tools.ttinclude" once="true" #>
 <#@ include file="..\Shared.ttinclude"                                                     once="true" #>
 <#
-	NamespaceName                = "PostreSQL11DataContext";
+	NamespaceName                = "PostreSQL16DataContext";
 	NormalizeProcedureColumnName = false;
 
 	LoadPostgreSQLMetadata(GetConnectionString("PostgreSQL.16"));

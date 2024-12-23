@@ -4,6 +4,7 @@ namespace LinqToDB.Linq.Builder
 {
 	using Common.Internal;
 	using LinqToDB.Expressions;
+	using LinqToDB.Expressions.Internal;
 
 	public static class EvaluationHelper
 	{
@@ -52,6 +53,5 @@ namespace LinqToDB.Linq.Builder
 
 			return expr.EvaluateExpression();
 		}
-	
 	}
 }

@@ -155,10 +155,7 @@ namespace Tests.xUpdate
 						.Where(c => c.ChildID == id && c.Parent!.Value1 == 1)
 						.Set(c => c.ChildID, c => c.ChildID + 1);
 
-				var sql = updatable.ToString();
-				TestContext.Out.WriteLine(sql);
-
-				Assert.That(sql, Does.Contain("UPDATE"));
+				updatable.Update();
 			}
 		}
 
@@ -277,14 +274,14 @@ namespace Tests.xUpdate
 			}
 		}
 
+		[Obsolete("Remove test after API removed")]
 		[Test]
-		public void Update9(
+		public void Update9Old(
 			[DataSources(
 				TestProvName.AllInformix,
 				TestProvName.AllClickHouse,
 				ProviderName.SqlCe,
 				ProviderName.DB2,
-				ProviderName.Access,
 				TestProvName.AllSapHana)]
 			string context)
 		{
@@ -298,6 +295,70 @@ namespace Tests.xUpdate
 				var q =
 						from c in db.Child
 						join p in db.Parent on c.ParentID equals p.ParentID
+						where c.ChildID == id && c.Parent!.Value1 == 1
+						select new { c, p };
+
+				Assert.Multiple(() =>
+				{
+					Assert.That(db.Child.Count(c => c.ChildID == id), Is.EqualTo(1));
+					Assert.That(q.Update(db.Child, _ => new Child { ChildID = _.c.ChildID + 1, ParentID = _.p.ParentID }), Is.EqualTo(1));
+					Assert.That(db.Child.Count(c => c.ChildID == id + 1), Is.EqualTo(1));
+				});
+			}
+		}
+
+		[Test]
+		public void Update9(
+			[DataSources(
+				TestProvName.AllInformix,
+				TestProvName.AllClickHouse,
+				ProviderName.SqlCe,
+				ProviderName.DB2,
+				TestProvName.AllSapHana)]
+			string context)
+		{
+			using (var db = GetDataContext(context))
+			using (new RestoreBaseTables(db))
+			{
+				var id = 1001;
+
+				db.Child.Insert(() => new Child { ParentID = 1, ChildID = id });
+
+				var q =
+						from c in db.Child
+						join p in db.Parent on c.ParentID equals p.ParentID
+						where c.ChildID == id && c.Parent!.Value1 == 1
+						select new { c, p };
+
+				Assert.Multiple(() =>
+				{
+					Assert.That(db.Child.Count(c => c.ChildID == id), Is.EqualTo(1));
+					Assert.That(q.Update(q => q.c, _ => new Child { ChildID = _.c.ChildID + 1, ParentID = _.p.ParentID }), Is.EqualTo(1));
+					Assert.That(db.Child.Count(c => c.ChildID == id + 1), Is.EqualTo(1));
+				});
+			}
+		}
+
+		[Obsolete("Remove test after API removed")]
+		[Test]
+		public void Update10Old(
+			[DataSources(
+				TestProvName.AllClickHouse,
+				TestProvName.AllInformix,
+				TestProvName.AllSapHana,
+				ProviderName.SqlCe)]
+			string context)
+		{
+			using (var db = GetDataContext(context))
+			using (new RestoreBaseTables(db))
+			{
+				var id = 1001;
+
+				db.Child.Insert(() => new Child { ParentID = 1, ChildID = id });
+
+				var q =
+						from p in db.Parent
+						join c in db.Child on p.ParentID equals c.ParentID
 						where c.ChildID == id && c.Parent!.Value1 == 1
 						select new { c, p };
 
@@ -335,7 +396,7 @@ namespace Tests.xUpdate
 				Assert.Multiple(() =>
 				{
 					Assert.That(db.Child.Count(c => c.ChildID == id), Is.EqualTo(1));
-					Assert.That(q.Update(db.Child, _ => new Child { ChildID = _.c.ChildID + 1, ParentID = _.p.ParentID }), Is.EqualTo(1));
+					Assert.That(q.Update(q => q.c, _ => new Child { ChildID = _.c.ChildID + 1, ParentID = _.p.ParentID }), Is.EqualTo(1));
 					Assert.That(db.Child.Count(c => c.ChildID == id + 1), Is.EqualTo(1));
 				});
 			}
@@ -689,6 +750,50 @@ namespace Tests.xUpdate
 			}
 		}
 
+		[Obsolete("Remove test after API removed")]
+		[Test]
+		public void UpdateAssociation1Old([DataSources(TestProvName.AllClickHouse, TestProvName.AllInformix)] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (new RestoreBaseTables(db))
+			{
+				const int childId  = 10000;
+				const int parentId = 20000;
+
+				db.Parent.Insert(() => new Parent { ParentID = parentId, Value1 = parentId });
+				db.Child.Insert(() => new Child { ChildID = childId, ParentID = parentId });
+
+				var parents =
+						from child in db.Child
+						where child.ChildID == childId
+						select child.Parent;
+
+				Assert.That(parents.Update(db.Parent, x => new Parent { Value1 = 5 }), Is.EqualTo(1));
+			}
+		}
+
+		[Obsolete("Remove test after API removed")]
+		[Test]
+		public async Task UpdateAssociation1AsyncOld([DataSources(TestProvName.AllClickHouse, TestProvName.AllInformix)] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (new RestoreBaseTables(db))
+			{
+				const int childId  = 10000;
+				const int parentId = 20000;
+
+				await db.Parent.InsertAsync(() => new Parent { ParentID = parentId, Value1 = parentId });
+				await db.Child.InsertAsync(() => new Child { ChildID = childId, ParentID = parentId });
+
+				var parents =
+						from child in db.Child
+						where child.ChildID == childId
+						select child.Parent;
+
+				Assert.That(await parents.UpdateAsync(db.Parent, x => new Parent { Value1 = 5 }), Is.EqualTo(1));
+			}
+		}
+
 		[Test]
 		public void UpdateAssociation1([DataSources(TestProvName.AllClickHouse, TestProvName.AllInformix)] string context)
 		{
@@ -706,7 +811,7 @@ namespace Tests.xUpdate
 						where child.ChildID == childId
 						select child.Parent;
 
-				Assert.That(parents.Update(db.Parent, x => new Parent { Value1 = 5 }), Is.EqualTo(1));
+				Assert.That(parents.Update(q => q, x => new Parent { Value1 = 5 }), Is.EqualTo(1));
 			}
 		}
 
@@ -727,7 +832,7 @@ namespace Tests.xUpdate
 						where child.ChildID == childId
 						select child.Parent;
 
-				Assert.That(await parents.UpdateAsync(db.Parent, x => new Parent { Value1 = 5 }), Is.EqualTo(1));
+				Assert.That(await parents.UpdateAsync(q => q, x => new Parent { Value1 = 5 }), Is.EqualTo(1));
 			}
 		}
 
@@ -959,7 +1064,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSybase, "The Sybase ASE does not support the UPDATE statement with the TOP + ORDER BY clause.")]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSybase, ErrorMessage = ErrorHelper.Sybase.Error_UpdateWithTopOrderBy)]
 		public void TestUpdateTakeOrdered([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -1225,7 +1330,7 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test()]
+		[Test]
 		public void UpdateMultipleColumns([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -1260,6 +1365,46 @@ namespace Tests.xUpdate
 					Assert.That(udt.SmallIntValue, Is.Not.EqualTo(ldt.SmallIntValue));
 				});
 			}
+		}
+
+		[Test]
+		public void UpdateWithTypeConversion([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var _ = new RestoreBaseTables(db);
+
+			var id = 1001;
+
+			db.Types
+				.Value(t => t.ID, id)
+				.Value(t => t.MoneyValue, () => 100)
+				.Value(t => t.SmallIntValue, () => 200)
+				.Insert()
+				;
+
+			// use column with other type as value to have conversion in SQL
+			// because constants/parameters already typed by target on query build
+			db.Types
+				.Where(t => t.ID == id)
+				.Set(t => t.SmallIntValue, t => t.MoneyValue)
+				.Set(t => t.MoneyValue, t => t.SmallIntValue)
+				.Update()
+				;
+			db.Types
+				.Where(t => t.ID == id)
+				.Set(t => t.SmallIntValue, t => t.MoneyValue)
+				.Set(t => t.MoneyValue, t => t.SmallIntValue)
+				.Update()
+				;
+
+			var udt = db.Types.Single(t => t.ID == id);
+
+			Assert.Multiple(() =>
+			{
+				// MySql doesn't know how update should work
+				Assert.That(udt.MoneyValue, Is.EqualTo(100));
+				Assert.That(udt.SmallIntValue, Is.EqualTo(context.IsAnyOf(TestProvName.AllMySql) ? 100 : 200));
+			});
 		}
 
 		[Test]
@@ -1386,6 +1531,49 @@ namespace Tests.xUpdate
 			public static AccessMode[] Data = [];
 		}
 
+		[Obsolete("Remove test after API removed")]
+		[Test]
+		public void TestUpdateFromJoinOld([DataSources(
+			TestProvName.AllAccess, // access doesn't have Replace mapping
+			TestProvName.AllClickHouse,
+			ProviderName.SqlCe,
+			TestProvName.AllInformix)] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (var gt_s_one = db.CreateLocalTable(UpdateFromJoin.Data))
+			using (var access_mode = db.CreateLocalTable(AccessMode.Data))
+			{
+				gt_s_one
+					.GroupJoin(
+						access_mode,
+						l => l.col3!.Replace("auth.", "").ToUpper(),
+						am => am.code!.ToUpper(),
+						(l, am) => new
+						{
+							l,
+							am
+						})
+					.SelectMany(
+						x => x.am.DefaultIfEmpty(),
+						(x1, y1) => new
+						{
+							gt = x1.l,
+							theAM = y1!.id
+						})
+					.Update(
+						gt_s_one,
+						s => new UpdateFromJoin()
+						{
+							col1 = s.gt.col1,
+							col2 = s.gt.col2,
+							col3 = s.gt.col3!.Replace("auth.", ""),
+							col4 = s.gt.col4,
+							col5 = s.gt.col3 == "empty" ? "1" : "0",
+							col6 = s.gt.col3 == "empty" ? "" : s.theAM.ToString()
+						});
+			}
+		}
+
 		// https://stackoverflow.com/questions/57115728/
 		[Test]
 		public void TestUpdateFromJoin([DataSources(
@@ -1416,7 +1604,7 @@ namespace Tests.xUpdate
 							theAM = y1!.id
 						})
 					.Update(
-						gt_s_one,
+						q => q.gt,
 						s => new UpdateFromJoin()
 						{
 							col1 = s.gt.col1,
@@ -1429,15 +1617,16 @@ namespace Tests.xUpdate
 			}
 		}
 
+		[Obsolete("Remove test after API removed")]
 		[Test]
-		public void TestUpdateFromJoinDifferentTable([DataSources(
+		public void TestUpdateFromJoinDifferentTableOld([DataSources(
 			TestProvName.AllAccess, // access doesn't have Replace mapping
 			TestProvName.AllClickHouse,
 			ProviderName.SqlCe,
 			TestProvName.AllInformix)] string context)
 		{
-			using (var db          = GetDataContext(context))
-			using (var gt_s_one    = db.CreateLocalTable(UpdateFromJoin.Data))
+			using (var db = GetDataContext(context))
+			using (var gt_s_one = db.CreateLocalTable(UpdateFromJoin.Data))
 			using (var gt_s_one_target = db.CreateLocalTable(tableName: "gt_s_one_target", UpdateFromJoin.Data))
 			using (var access_mode = db.CreateLocalTable(AccessMode.Data))
 			{
@@ -1456,7 +1645,7 @@ namespace Tests.xUpdate
 						x => x.am.DefaultIfEmpty(),
 						(x1, y1) => new
 						{
-							gt    = x1.l,
+							gt = x1.l,
 							theAM = y1!.id
 						})
 					.Update(
@@ -1469,6 +1658,51 @@ namespace Tests.xUpdate
 							col4 = s.gt.col4,
 							col5 = s.gt.col3 == "empty" ? "1" : "0",
 							col6 = s.gt.col3 == "empty" ? "" : s.theAM.ToString()
+						});
+#pragma warning restore CA1311 // Specify a culture or use an invariant version
+			}
+		}
+
+		[Test]
+		public void TestUpdateFromJoinDifferentTable([DataSources(
+			TestProvName.AllAccess, // access doesn't have Replace mapping
+			TestProvName.AllClickHouse,
+			ProviderName.SqlCe,
+			TestProvName.AllInformix)] string context)
+		{
+			using (var db          = GetDataContext(context))
+			using (var gt_s_one    = db.CreateLocalTable(UpdateFromJoin.Data))
+			using (var gt_s_one_target = db.CreateLocalTable(tableName: "gt_s_one_target", UpdateFromJoin.Data))
+			using (var access_mode = db.CreateLocalTable(AccessMode.Data))
+			{
+#pragma warning disable CA1311 // Specify a culture or use an invariant version
+				gt_s_one.InnerJoin(gt_s_one_target, (t1, t2) => t1.id == t2.id, (t1, t2) => new { t1, t2 })
+					.GroupJoin(
+						access_mode,
+						l => l.t1.col3!.Replace("auth.", "").ToUpper(),
+						am => am.code!.ToUpper(),
+						(l, am) => new
+						{
+							l,
+							am
+						})
+					.SelectMany(
+						x => x.am.DefaultIfEmpty(),
+						(x1, y1) => new
+						{
+							gt    = x1.l,
+							theAM = y1!.id
+						})
+					.Update(
+						q => q.gt.t2,
+						s => new UpdateFromJoin()
+						{
+							col1 = s.gt.t1.col1,
+							col2 = s.gt.t1.col2,
+							col3 = s.gt.t1.col3!.Replace("auth.", ""),
+							col4 = s.gt.t1.col4,
+							col5 = s.gt.t1.col3 == "empty" ? "1" : "0",
+							col6 = s.gt.t1.col3 == "empty" ? "" : s.theAM.ToString()
 						});
 #pragma warning restore CA1311 // Specify a culture or use an invariant version
 			}
@@ -1938,6 +2172,17 @@ namespace Tests.xUpdate
 				.Where(r => r.ID == -1)
 				.Set(r => r.MoneyValue, value)
 				.Update();
+		}
+
+		[Test]
+		public void Issue4136Test([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var someExternalDependency = 10;
+			db.Types
+				.Where(p => p.ID == -1)
+				.Update(p => new LinqDataTypes { BoolValue = p.BoolValue || someExternalDependency > 0 });
 		}
 	}
 }

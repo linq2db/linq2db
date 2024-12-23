@@ -263,16 +263,16 @@ namespace LinqToDB.Expressions
 			newAssignments.AddRange(Assignments);
 			newAssignments.Add(assignment);
 
-			return ReplaceAssignments(newAssignments);
+			return ReplaceAssignments(newAssignments.AsReadOnly());
 		}
 
-		public SqlGenericConstructorExpression ReplaceAssignments(List<Assignment> assignment)
+		public SqlGenericConstructorExpression ReplaceAssignments(ReadOnlyCollection<Assignment> assignment)
 		{
 			var createNew = assignment.Count != Assignments.Count;
 
 			if (!createNew)
 			{
-				createNew = !Assignments.SequenceEqual(assignment);
+				createNew = !ReferenceEquals(Assignments, assignment) && !Assignments.SequenceEqual(assignment);
 			}
 
 			if (!createNew)
@@ -280,19 +280,19 @@ namespace LinqToDB.Expressions
 
 			var result = new SqlGenericConstructorExpression(this)
 			{
-				Assignments = assignment.AsReadOnly()
+				Assignments = assignment
 			};
 
 			return result;
 		}
 
-		public SqlGenericConstructorExpression ReplaceParameters(List<Parameter> parameters)
+		public SqlGenericConstructorExpression ReplaceParameters(ReadOnlyCollection<Parameter> parameters)
 		{
 			var createNew = parameters.Count != Parameters.Count;
 
 			if (!createNew)
 			{
-				createNew = !Parameters.SequenceEqual(parameters);
+				createNew = !ReferenceEquals(Parameters, parameters) && !Parameters.SequenceEqual(parameters);
 			}
 
 			if (!createNew)
@@ -300,7 +300,7 @@ namespace LinqToDB.Expressions
 
 			var result = new SqlGenericConstructorExpression(this)
 			{
-				Parameters = parameters.AsReadOnly(), 
+				Parameters = parameters,
 			};
 
 			return result;

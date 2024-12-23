@@ -64,6 +64,9 @@ namespace LinqToDB.Data
 				else
 					Command.Dispose();
 			}
+
+			if (((IDataContext?)_dataConnection)?.CloseAfterUse == true)
+				_dataConnection.Close();
 		}
 
 #if NET6_0_OR_GREATER
@@ -94,6 +97,9 @@ namespace LinqToDB.Data
 				else
 					await Command.DisposeAsync().ConfigureAwait(false);
 			}
+
+			if (((IDataContext?)_dataConnection)?.CloseAfterUse == true)
+				await _dataConnection.CloseAsync().ConfigureAwait(false);
 		}
 #else
 		public ValueTask DisposeAsync()

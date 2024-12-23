@@ -22,9 +22,7 @@ namespace Tests.UserTests
 
 			await tmp.BulkCopyAsync(new[] { new { ID = 2 } });
 
-			var count = await tmp.CountAsync();
-
-			TestContext.Out.WriteLine(count);
+			await tmp.CountAsync();
 		}
 	}
 }

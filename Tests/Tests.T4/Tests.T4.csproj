@@ -12,7 +12,7 @@
 		<Reference Include="PresentationCore" />
 		<Reference Include="PresentationFramework" />
 
-		<None    Update="WPF\ViewModel.tt" Generator="TextTemplatingFileGenerator" LastGenOutput="ViewModel.generated.cs" />
+		<None Update="WPF\ViewModel.tt" Generator="TextTemplatingFileGenerator" LastGenOutput="ViewModel.generated.cs" />
 		<Compile Update="WPF\ViewModel.generated.cs" DesignTime="True" AutoGen="True" DependentUpon="ViewModel.tt" />
 	</ItemGroup>
 
@@ -26,163 +26,169 @@
 
 		<ProjectCapability Remove="TestContainer" />
 
-		<PackageReference Update="MySql.Data"     Aliases="" />
+		<PackageReference Update="MySql.Data" Aliases="" />
 		<PackageReference Update="MySqlConnector" Aliases="" />
 
-		<None    Update="Cli\Fluent.tt" Generator="TextTemplatingFileGenerator" LastGenOutput="Fluent.generated.cs" />
+		<None Update="Cli\Fluent.tt" Generator="TextTemplatingFileGenerator" LastGenOutput="Fluent.generated.cs" />
 		<Compile Update="Cli\Fluent.generated.cs" DesignTime="True" AutoGen="True" DependentUpon="Fluent.tt" />
 
-		<None    Update="Cli\NoMetadata.tt" Generator="TextTemplatingFileGenerator" LastGenOutput="NoMetadata.generated.cs" />
+		<None Update="Cli\NoMetadata.tt" Generator="TextTemplatingFileGenerator" LastGenOutput="NoMetadata.generated.cs" />
 		<Compile Update="Cli\NoMetadata.generated.cs" DesignTime="True" AutoGen="True" DependentUpon="NoMetadata.tt" />
 
-		<None    Update="Cli\All.tt" Generator="TextTemplatingFileGenerator" LastGenOutput="All.generated.cs" />
+		<None Update="Cli\All.tt" Generator="TextTemplatingFileGenerator" LastGenOutput="All.generated.cs" />
 		<Compile Update="Cli\All.generated.cs" DesignTime="True" AutoGen="True" DependentUpon="All.tt" />
 
-		<None    Update="Cli\Default.tt" Generator="TextTemplatingFileGenerator" LastGenOutput="Default.generated.cs" />
+		<None Update="Cli\Default.tt" Generator="TextTemplatingFileGenerator" LastGenOutput="Default.generated.cs" />
 		<Compile Update="Cli\Default.generated.cs" DesignTime="True" AutoGen="True" DependentUpon="Default.tt" />
 
-		<None    Update="Cli\T4.tt" Generator="TextTemplatingFileGenerator" LastGenOutput="T4.generated.cs" />
+		<None Update="Cli\T4.tt" Generator="TextTemplatingFileGenerator" LastGenOutput="T4.generated.cs" />
 		<Compile Update="Cli\T4.generated.cs" DesignTime="True" AutoGen="True" DependentUpon="T4.tt" />
 
-		<None    Update="Databases\Access.tt" Generator="TextTemplatingFileGenerator" LastGenOutput="Access.generated.cs" />
+		<None Update="Databases\Access.tt" Generator="TextTemplatingFileGenerator" LastGenOutput="Access.generated.cs" />
 		<Compile Update="Databases\Access.generated.cs" DesignTime="True" AutoGen="True" DependentUpon="Access.tt" />
 
-		<None    Update="Databases\AccessODBC.tt" Generator="TextTemplatingFileGenerator" LastGenOutput="AccessODBC.generated.cs" />
+		<None Update="Databases\AccessODBC.tt" Generator="TextTemplatingFileGenerator" LastGenOutput="AccessODBC.generated.cs" />
 		<Compile Update="Databases\AccessODBC.generated.cs" DesignTime="True" AutoGen="True" DependentUpon="AccessODBC.tt" />
 
-		<None    Update="Databases\ClickHouse.tt" Generator="TextTemplatingFileGenerator" LastGenOutput="ClickHouse.generated.cs" />
+		<None Update="Databases\ClickHouse.tt" Generator="TextTemplatingFileGenerator" LastGenOutput="ClickHouse.generated.cs" />
 		<Compile Update="Databases\ClickHouse.generated.cs" DesignTime="True" AutoGen="True" DependentUpon="ClickHouse.tt" />
 
-		<None    Update="Databases\DB2.tt" Generator="TextTemplatingFileGenerator" LastGenOutput="DB2.generated.cs" />
+		<None Update="Databases\DB2.tt" Generator="TextTemplatingFileGenerator" LastGenOutput="DB2.generated.cs" />
 		<Compile Update="Databases\DB2.generated.cs" DesignTime="True" AutoGen="True" DependentUpon="DB2.tt" />
 
-		<None    Update="Databases\Firebird.tt" Generator="TextTemplatingFileGenerator" LastGenOutput="Firebird.generated.cs" />
+		<None Update="Databases\Firebird.tt" Generator="TextTemplatingFileGenerator" LastGenOutput="Firebird.generated.cs" />
 		<Compile Update="Databases\Firebird.generated.cs" DesignTime="True" AutoGen="True" DependentUpon="Firebird.tt" />
 
-		<None    Update="Databases\Firebird3.tt" Generator="TextTemplatingFileGenerator" LastGenOutput="Firebird3.generated.cs" />
+		<None Update="Databases\Firebird3.tt" Generator="TextTemplatingFileGenerator" LastGenOutput="Firebird3.generated.cs" />
 		<Compile Update="Databases\Firebird3.generated.cs" DesignTime="True" AutoGen="True" DependentUpon="Firebird3.tt" />
 
-		<None    Update="Databases\Firebird4.tt" Generator="TextTemplatingFileGenerator" LastGenOutput="Firebird4.generated.cs" />
+		<None Update="Databases\Firebird4.tt" Generator="TextTemplatingFileGenerator" LastGenOutput="Firebird4.generated.cs" />
 		<Compile Update="Databases\Firebird4.generated.cs" DesignTime="True" AutoGen="True" DependentUpon="Firebird4.tt" />
 
-		<None    Update="Databases\Informix.tt" Generator="TextTemplatingFileGenerator" LastGenOutput="Informix.generated.cs" />
+		<None Update="Databases\Informix.tt" Generator="TextTemplatingFileGenerator" LastGenOutput="Informix.generated.cs" />
 		<Compile Update="Databases\Informix.generated.cs" DesignTime="True" AutoGen="True" DependentUpon="Informix.tt" />
 
-		<None    Update="Databases\MariaDB.tt" Generator="TextTemplatingFileGenerator" LastGenOutput="MariaDB.generated.cs" />
+		<None Update="Databases\MariaDB.tt" Generator="TextTemplatingFileGenerator" LastGenOutput="MariaDB.generated.cs" />
 		<Compile Update="Databases\MariaDB.generated.cs" DesignTime="True" AutoGen="True" DependentUpon="MariaDB.tt" />
 
-		<None    Update="Databases\MySql.tt" Generator="TextTemplatingFileGenerator" LastGenOutput="MySql.generated.cs" />
+		<None Update="Databases\MySql.tt" Generator="TextTemplatingFileGenerator" LastGenOutput="MySql.generated.cs" />
 		<Compile Update="Databases\MySql.generated.cs" DesignTime="True" AutoGen="True" DependentUpon="MySql.tt" />
 
-		<None    Update="Databases\MySqlConnector.tt" Generator="TextTemplatingFileGenerator" LastGenOutput="MySqlConnector.generated.cs" />
+		<None Update="Databases\MySqlConnector.tt" Generator="TextTemplatingFileGenerator" LastGenOutput="MySqlConnector.generated.cs" />
 		<Compile Update="Databases\MySqlConnector.generated.cs" DesignTime="True" AutoGen="True" DependentUpon="MySqlConnector.tt" />
 
-		<None    Update="Databases\Oracle.tt" Generator="TextTemplatingFileGenerator" LastGenOutput="Oracle.generated.cs" />
+		<None Update="Databases\Oracle.tt" Generator="TextTemplatingFileGenerator" LastGenOutput="Oracle.generated.cs" />
 		<Compile Update="Databases\Oracle.generated.cs" DesignTime="True" AutoGen="True" DependentUpon="Oracle.tt" />
 
-		<None    Update="Databases\PostgreSQL.16.tt" Generator="TextTemplatingFileGenerator" LastGenOutput="PostgreSQL.16.generated.cs" />
+		<None Update="Databases\PostgreSQL.16.tt" Generator="TextTemplatingFileGenerator" LastGenOutput="PostgreSQL.16.generated.cs" />
 		<Compile Update="Databases\PostgreSQL.16.generated.cs" DesignTime="True" AutoGen="True" DependentUpon="PostgreSQL.16.tt" />
 
-		<None    Update="Databases\PostgreSQL.tt" Generator="TextTemplatingFileGenerator" LastGenOutput="PostgreSQL.generated.cs" />
+		<None Update="Databases\PostgreSQL.11.tt" Generator="TextTemplatingFileGenerator" LastGenOutput="PostgreSQL.11.generated.cs" />
+		<Compile Update="Databases\PostgreSQL.11.generated.cs" DesignTime="True" AutoGen="True" DependentUpon="PostgreSQL.11.tt" />
+
+		<None Update="Databases\PostgreSQL.tt" Generator="TextTemplatingFileGenerator" LastGenOutput="PostgreSQL.generated.cs" />
 		<Compile Update="Databases\PostgreSQL.generated.cs" DesignTime="True" AutoGen="True" DependentUpon="PostgreSQL.tt" />
 
-		<None    Update="Databases\SapHana.tt" Generator="TextTemplatingFileGenerator" LastGenOutput="SapHana.generated.cs" />
+		<None Update="Databases\PostgreSQL.9.5.tt" Generator="TextTemplatingFileGenerator" LastGenOutput="PostgreSQL.9.5.generated.cs" />
+		<Compile Update="Databases\PostgreSQL.9.5.generated.cs" DesignTime="True" AutoGen="True" DependentUpon="PostgreSQL.9.5.tt" />
+
+		<None Update="Databases\SapHana.tt" Generator="TextTemplatingFileGenerator" LastGenOutput="SapHana.generated.cs" />
 		<Compile Update="Databases\SapHana.generated.cs" DesignTime="True" AutoGen="True" DependentUpon="SapHana.tt" />
 
-		<None    Update="Databases\SqlCe.tt" Generator="TextTemplatingFileGenerator" LastGenOutput="SqlCe.generated.cs" />
+		<None Update="Databases\SqlCe.tt" Generator="TextTemplatingFileGenerator" LastGenOutput="SqlCe.generated.cs" />
 		<Compile Update="Databases\SqlCe.generated.cs" DesignTime="True" AutoGen="True" DependentUpon="SqlCe.tt" />
 
-		<None    Update="Databases\SQLite.tt" Generator="TextTemplatingFileGenerator" LastGenOutput="SQLite.generated.cs" />
+		<None Update="Databases\SQLite.tt" Generator="TextTemplatingFileGenerator" LastGenOutput="SQLite.generated.cs" />
 		<Compile Update="Databases\SQLite.generated.cs" DesignTime="True" AutoGen="True" DependentUpon="SQLite.tt" />
 
-		<None    Update="Databases\SqlServer.2017.ProceduresFromSchema.tt" Generator="TextTemplatingFileGenerator" LastGenOutput="SqlServer.2017.ProceduresFromSchema.generated.cs" />
+		<None Update="Databases\SqlServer.2017.ProceduresFromSchema.tt" Generator="TextTemplatingFileGenerator" LastGenOutput="SqlServer.2017.ProceduresFromSchema.generated.cs" />
 		<Compile Update="Databases\SqlServer.2017.ProceduresFromSchema.generated.cs" DesignTime="True" AutoGen="True" DependentUpon="SqlServer.2017.ProceduresFromSchema.tt" />
 
-		<None    Update="Databases\SqlServer.2017.tt" Generator="TextTemplatingFileGenerator" LastGenOutput="SqlServer.2017.generated.cs" />
+		<None Update="Databases\SqlServer.2017.tt" Generator="TextTemplatingFileGenerator" LastGenOutput="SqlServer.2017.generated.cs" />
 		<Compile Update="Databases\SqlServer.2017.generated.cs" DesignTime="True" AutoGen="True" DependentUpon="SqlServer.2017.tt" />
 
-		<None    Update="Databases\SqlServer.MS.tt" Generator="TextTemplatingFileGenerator" LastGenOutput="SqlServer.MS.generated.cs" />
+		<None Update="Databases\SqlServer.MS.tt" Generator="TextTemplatingFileGenerator" LastGenOutput="SqlServer.MS.generated.cs" />
 		<Compile Update="Databases\SqlServer.MS.generated.cs" DesignTime="True" AutoGen="True" DependentUpon="SqlServer.MS.tt" />
 
-		<None    Update="Databases\SqlServer.tt" Generator="TextTemplatingFileGenerator" LastGenOutput="SqlServer.generated.cs" />
+		<None Update="Databases\SqlServer.tt" Generator="TextTemplatingFileGenerator" LastGenOutput="SqlServer.generated.cs" />
 		<Compile Update="Databases\SqlServer.generated.cs" DesignTime="True" AutoGen="True" DependentUpon="SqlServer.tt" />
 
-		<None    Update="Databases\SqlServerAzure.tt" Generator="TextTemplatingFileGenerator" LastGenOutput="SqlServerAzure.generated.cs" />
+		<None Update="Databases\SqlServerAzure.tt" Generator="TextTemplatingFileGenerator" LastGenOutput="SqlServerAzure.generated.cs" />
 		<Compile Update="Databases\SqlServerAzure.generated.cs" DesignTime="True" AutoGen="True" DependentUpon="SqlServerAzure.tt" />
 
-		<None    Update="Databases\Sybase.DataAction.tt" Generator="TextTemplatingFileGenerator" LastGenOutput="Sybase.DataAction.generated.cs" />
+		<None Update="Databases\Sybase.DataAction.tt" Generator="TextTemplatingFileGenerator" LastGenOutput="Sybase.DataAction.generated.cs" />
 		<Compile Update="Databases\Sybase.DataAction.generated.cs" DesignTime="True" AutoGen="True" DependentUpon="Sybase.DataAction.tt" />
 
-		<None    Update="Databases\Sybase.tt" Generator="TextTemplatingFileGenerator" LastGenOutput="Sybase.generated.cs" />
+		<None Update="Databases\Sybase.tt" Generator="TextTemplatingFileGenerator" LastGenOutput="Sybase.generated.cs" />
 		<Compile Update="Databases\Sybase.generated.cs" DesignTime="True" AutoGen="True" DependentUpon="Sybase.tt" />
 
 
-		<None    Update="Default\AccessOdbc.tt" Generator="TextTemplatingFileGenerator" LastGenOutput="AccessOdbc.generated.cs" />
+		<None Update="Default\AccessOdbc.tt" Generator="TextTemplatingFileGenerator" LastGenOutput="AccessOdbc.generated.cs" />
 		<Compile Update="Default\AccessOdbc.generated.cs" DesignTime="True" AutoGen="True" DependentUpon="AccessOdbc.tt" />
 
-		<None    Update="Default\AccessOleDB.tt" Generator="TextTemplatingFileGenerator" LastGenOutput="AccessOleDB.generated.cs" />
+		<None Update="Default\AccessOleDB.tt" Generator="TextTemplatingFileGenerator" LastGenOutput="AccessOleDB.generated.cs" />
 		<Compile Update="Default\AccessOleDB.generated.cs" DesignTime="True" AutoGen="True" DependentUpon="AccessOleDB.tt" />
 
-		<None    Update="Default\ClickHouse.tt" Generator="TextTemplatingFileGenerator" LastGenOutput="ClickHouse.generated.cs" />
+		<None Update="Default\ClickHouse.tt" Generator="TextTemplatingFileGenerator" LastGenOutput="ClickHouse.generated.cs" />
 		<Compile Update="Default\ClickHouse.generated.cs" DependentUpon="ClickHouse.tt" DesignTime="True" AutoGen="True" />
 
-		<None    Update="Default\DB2.tt" Generator="TextTemplatingFileGenerator" LastGenOutput="DB2.generated.cs" />
+		<None Update="Default\DB2.tt" Generator="TextTemplatingFileGenerator" LastGenOutput="DB2.generated.cs" />
 		<Compile Update="Default\DB2.generated.cs" DesignTime="True" AutoGen="True" DependentUpon="DB2.tt" />
 
-		<None    Update="Default\Firebird.tt" Generator="TextTemplatingFileGenerator" LastGenOutput="Firebird.generated.cs" />
+		<None Update="Default\Firebird.tt" Generator="TextTemplatingFileGenerator" LastGenOutput="Firebird.generated.cs" />
 		<Compile Update="Default\Firebird.generated.cs" DesignTime="True" AutoGen="True" DependentUpon="Firebird.tt" />
 
-		<None    Update="Default\Informix.tt" Generator="TextTemplatingFileGenerator" LastGenOutput="Informix.generated.cs" />
+		<None Update="Default\Informix.tt" Generator="TextTemplatingFileGenerator" LastGenOutput="Informix.generated.cs" />
 		<Compile Update="Default\Informix.generated.cs" DesignTime="True" AutoGen="True" DependentUpon="Informix.tt" />
 
-		<None    Update="Default\MariaDB.tt" Generator="TextTemplatingFileGenerator" LastGenOutput="MariaDB.generated.cs" />
+		<None Update="Default\MariaDB.tt" Generator="TextTemplatingFileGenerator" LastGenOutput="MariaDB.generated.cs" />
 		<Compile Update="Default\MariaDB.generated.cs" DesignTime="True" AutoGen="True" DependentUpon="MariaDB.tt" />
 
-		<None    Update="Default\MySql.tt" Generator="TextTemplatingFileGenerator" LastGenOutput="MySql.generated.cs" />
+		<None Update="Default\MySql.tt" Generator="TextTemplatingFileGenerator" LastGenOutput="MySql.generated.cs" />
 		<Compile Update="Default\MySql.generated.cs" DesignTime="True" AutoGen="True" DependentUpon="MySql.tt" />
 
-		<None    Update="Default\Oracle.tt" Generator="TextTemplatingFileGenerator" LastGenOutput="Oracle.generated.cs" />
+		<None Update="Default\Oracle.tt" Generator="TextTemplatingFileGenerator" LastGenOutput="Oracle.generated.cs" />
 		<Compile Update="Default\Oracle.generated.cs" DesignTime="True" AutoGen="True" DependentUpon="Oracle.tt" />
 
-		<None    Update="Default\PostgreSQL.tt" Generator="TextTemplatingFileGenerator" LastGenOutput="PostgreSQL.generated.cs" />
+		<None Update="Default\PostgreSQL.tt" Generator="TextTemplatingFileGenerator" LastGenOutput="PostgreSQL.generated.cs" />
 		<Compile Update="Default\PostgreSQL.generated.cs" DesignTime="True" AutoGen="True" DependentUpon="PostgreSQL.tt" />
 
-		<None    Update="Default\SapHana.tt" Generator="TextTemplatingFileGenerator" LastGenOutput="SapHana.generated.cs" />
+		<None Update="Default\SapHana.tt" Generator="TextTemplatingFileGenerator" LastGenOutput="SapHana.generated.cs" />
 		<Compile Update="Default\SapHana.generated.cs" DesignTime="True" AutoGen="True" DependentUpon="SapHana.tt" />
 
-		<None    Update="Default\SqlCe.tt" Generator="TextTemplatingFileGenerator" LastGenOutput="SqlCe.generated.cs" />
+		<None Update="Default\SqlCe.tt" Generator="TextTemplatingFileGenerator" LastGenOutput="SqlCe.generated.cs" />
 		<Compile Update="Default\SqlCe.generated.cs" DesignTime="True" AutoGen="True" DependentUpon="SqlCe.tt" />
 
-		<None    Update="Default\SQLite.tt" Generator="TextTemplatingFileGenerator" LastGenOutput="SQLite.generated.cs" />
+		<None Update="Default\SQLite.tt" Generator="TextTemplatingFileGenerator" LastGenOutput="SQLite.generated.cs" />
 		<Compile Update="Default\SQLite.generated.cs" DesignTime="True" AutoGen="True" DependentUpon="SQLite.tt" />
 
-		<None    Update="Default\SqlServer.tt" Generator="TextTemplatingFileGenerator" LastGenOutput="SqlServer.generated.cs" />
+		<None Update="Default\SqlServer.tt" Generator="TextTemplatingFileGenerator" LastGenOutput="SqlServer.generated.cs" />
 		<Compile Update="Default\SqlServer.generated.cs" DesignTime="True" AutoGen="True" DependentUpon="SqlServer.tt" />
 
-		<None    Update="Default\Sybase.tt" Generator="TextTemplatingFileGenerator" LastGenOutput="Sybase.generated.cs" />
+		<None Update="Default\Sybase.tt" Generator="TextTemplatingFileGenerator" LastGenOutput="Sybase.generated.cs" />
 		<Compile Update="Default\Sybase.generated.cs" DesignTime="True" AutoGen="True" DependentUpon="Sybase.tt" />
 
-		<None    Update="Default\SQLite.Northwind.tt" Generator="TextTemplatingFileGenerator" LastGenOutput="SQLite.Northwind.generated.cs" />
+		<None Update="Default\SQLite.Northwind.tt" Generator="TextTemplatingFileGenerator" LastGenOutput="SQLite.Northwind.generated.cs" />
 		<Compile Update="Default\SQLite.Northwind.generated.cs" DesignTime="True" AutoGen="True" DependentUpon="SQLite.Northwind.tt" />
 
-		<None    Update="Default\SqlServer.Northwind.tt" Generator="TextTemplatingFileGenerator" LastGenOutput="SqlServer.Northwind.generated.cs" />
+		<None Update="Default\SqlServer.Northwind.tt" Generator="TextTemplatingFileGenerator" LastGenOutput="SqlServer.Northwind.generated.cs" />
 		<Compile Update="Default\SqlServer.Northwind.generated.cs" DesignTime="True" AutoGen="True" DependentUpon="SqlServer.Northwind.tt" />
 
-		<None    Update="Unlock.tt" Generator="TextTemplatingFileGenerator" LastGenOutput="Unlock.generated.cs" />
+		<None Update="Unlock.tt" Generator="TextTemplatingFileGenerator" LastGenOutput="Unlock.generated.cs" />
 		<Compile Update="Unlock.generated.cs" DesignTime="True" AutoGen="True" DependentUpon="Unlock.tt" />
 
-		<None    Update="Models\EditableModelTest.tt" Generator="TextTemplatingFileGenerator" LastGenOutput="EditableModelTest.generated.cs" />
+		<None Update="Models\EditableModelTest.tt" Generator="TextTemplatingFileGenerator" LastGenOutput="EditableModelTest.generated.cs" />
 		<Compile Update="Models\EditableModelTest.generated.cs" DesignTime="True" AutoGen="True" DependentUpon="EditableModelTest.tt" />
 
-		<None    Update="Models\EquatableTest.tt" Generator="TextTemplatingFileGenerator" LastGenOutput="EquatableTest.generated.cs" />
+		<None Update="Models\EquatableTest.tt" Generator="TextTemplatingFileGenerator" LastGenOutput="EquatableTest.generated.cs" />
 		<Compile Update="Models\EquatableTest.generated.cs" DesignTime="True" AutoGen="True" DependentUpon="EquatableTest.tt" />
 
-		<None    Update="Models\ModelTest.tt" Generator="TextTemplatingFileGenerator" LastGenOutput="ModelTest.generated.cs" />
+		<None Update="Models\ModelTest.tt" Generator="TextTemplatingFileGenerator" LastGenOutput="ModelTest.generated.cs" />
 		<Compile Update="Models\ModelTest.generated.cs" DesignTime="True" AutoGen="True" DependentUpon="ModelTest.tt" />
 
-		<None    Update="Models\MultipleFiles.tt" Generator="TextTemplatingFileGenerator" LastGenOutput="MultipleFiles.generated.cs" />
+		<None Update="Models\MultipleFiles.tt" Generator="TextTemplatingFileGenerator" LastGenOutput="MultipleFiles.generated.cs" />
 		<Compile Update="Models\MultipleFiles.generated.cs" DesignTime="True" AutoGen="True" DependentUpon="MultipleFiles.tt" />
-		<Compile Update="Models\aaa.cs"  DesignTime="True" AutoGen="True" DependentUpon="MultipleFiles.tt" />
-		<None    Update="Models\bbb.txt" DesignTime="True" AutoGen="True" DependentUpon="MultipleFiles.tt" />
+		<Compile Update="Models\aaa.cs" DesignTime="True" AutoGen="True" DependentUpon="MultipleFiles.tt" />
+		<None Update="Models\bbb.txt" DesignTime="True" AutoGen="True" DependentUpon="MultipleFiles.tt" />
 	</ItemGroup>
 </Project>

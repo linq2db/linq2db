@@ -32,7 +32,7 @@ namespace Tests.Linq
 		TemporalTest[] CreateTestTable(ITestDataContext db)
 		{
 			using var dc = db is TestDataConnection dcx ?
-				new DataConnection(db.Options.WithOptions<ConnectionOptions>(o => o with { DbConnection = dcx.Connection, DataProvider = dcx.DataProvider})) :
+				new DataConnection(db.Options.UseConnection(dcx.DataProvider, dcx.Connection)) :
 				new DataConnection(db.ConfigurationString);
 
 			using var sy = new SystemDB(db.ConfigurationString!);
@@ -225,7 +225,7 @@ namespace Tests.Linq
 					.DefaultIfEmpty()
 				select t;
 
-			TestContext.Out.WriteLine(q.ToString());
+			_ = q.ToSqlQuery();
 
 			var selectQuery = q.GetSelectQuery();
 

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.Reflection;
 using System.Text;
@@ -60,7 +61,9 @@ namespace LinqToDB.Extensions
 			if (systemType == typeof(object) && originalValue != null)
 				systemType = originalValue.GetType();
 
-			var valueDbType = originalValue == null ? columnType ?? new DbDataType(systemType) : new DbDataType(systemType);
+			var valueDbType = originalValue == null
+				? columnType ?? mappingSchema.GetDbDataType(systemType)
+				: mappingSchema.GetDbDataType(systemType);
 
 			return new SqlValue(valueDbType, originalValue);
 		}
@@ -112,6 +115,15 @@ namespace LinqToDB.Extensions
 		public static Sql.TableFunctionAttribute? GetTableFunctionAttribute(this MemberInfo member, MappingSchema mappingSchema)
 		{
 			return mappingSchema.GetAttribute<Sql.TableFunctionAttribute>(member.ReflectedType!, member);
+		}
+
+		public static bool IsCollectionType(this MappingSchema mappingSchema, Type type)
+		{
+			if (mappingSchema.IsScalarType(type))
+				return false;
+			if (!typeof(IEnumerable<>).IsSameOrParentOf(type))
+				return false;
+			return true;
 		}
 	}
 }

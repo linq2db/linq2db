@@ -7,42 +7,34 @@ namespace LinqToDB.Linq.Builder
 	{
 		None            = 0x00,
 
-		SQL             = 0x01,
-		Expression      = 0x02,
-		Root            = 0x04,
+		SQL        = 1 << 0,
+		Expression = 1 << 1,
+		Root       = 1 << 2,
 		/// <summary>
 		/// Forces expanding associations and GroupJoin into query expression
 		/// </summary>
-		ExtractProjection = 0x08,
+		ExtractProjection = 1 << 3,
 
-		AggregationRoot = 0x10,
+		AggregationRoot = 1 << 4,
 		/// <summary>
 		/// Specify that from whole context we need just key fields.
 		/// </summary>
-		Keys            = 0x20,
-		/// <summary>
-		/// Validates that expression can be converted to the SQL. Returned value cannot be used.
-		/// </summary>
-		Test            = 0x40,
-		AssociationRoot = 0x80,
+		Keys            = 1 << 5,
+		AssociationRoot = 1 << 7,
 		/// <summary>
 		/// Specify that we are looking for a table
 		/// </summary>
-		Table = 0x100,
-		/// <summary>
-		/// Specify that we associations should not filter out recordset
-		/// </summary>
-		ForceOuterAssociation = 0x200,
+		Table = 1 << 8,
 		/// <summary>
 		/// Specify that we expect real expression under hidden by Selects chain
 		/// </summary>
-		Traverse = 0x800,
+		Traverse = 1 << 9,
 
-		Subquery = 0x1000,
+		Subquery = 1 << 10,
 
-		/// <summary>
-		/// Indicates that generated SQL is for extension method.
-		/// </summary>
-		ForExtension = 0x2000,
+		Expand = 1 << 11,
+
+		MemberRoot = 1 << 12,
+		ForSetProjection = 1 << 13,
 	}
 }

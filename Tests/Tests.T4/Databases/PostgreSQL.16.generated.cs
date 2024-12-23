@@ -26,7 +26,7 @@ using LinqToDB.Mapping;
 
 using NpgsqlTypes;
 
-namespace PostreSQL11DataContext
+namespace PostreSQL16DataContext
 {
 	public partial class TestdataDB : LinqToDB.Data.DataConnection
 	{
@@ -46,6 +46,7 @@ namespace PostreSQL11DataContext
 		/// </summary>
 		public ITable<Issue2023>                      Issue2023                 { get { return this.GetTable<Issue2023>(); } }
 		public ITable<LinqDataType>                   LinqDataTypes             { get { return this.GetTable<LinqDataType>(); } }
+		public ITable<MultitenantTable>               MultitenantTables         { get { return this.GetTable<MultitenantTable>(); } }
 		public ITable<Parent>                         Parents                   { get { return this.GetTable<Parent>(); } }
 		public ITable<Patient>                        Patients                  { get { return this.GetTable<Patient>(); } }
 		/// <summary>
@@ -306,7 +307,7 @@ namespace PostreSQL11DataContext
 		/// <summary>
 		/// Doctor_PersonID_fkey (public.Person)
 		/// </summary>
-		[Association(ThisKey=nameof(PersonID), OtherKey=nameof(PostreSQL11DataContext.Person.PersonID), CanBeNull=false)]
+		[Association(ThisKey=nameof(PersonID), OtherKey=nameof(PostreSQL16DataContext.Person.PersonID), CanBeNull=false)]
 		public Person Person { get; set; } = null!;
 
 		#endregion
@@ -375,6 +376,16 @@ namespace PostreSQL11DataContext
 		[Column(DataType=LinqToDB.DataType.NVarChar,  Length=50),             Nullable] public string?   StringValue    { get; set; } // character varying(50)
 	}
 
+	[Table(Schema="public", Name="multitenant_table")]
+	public partial class MultitenantTable
+	{
+		[Column("tenantid",    DataType=LinqToDB.DataType.Guid,      SkipOnUpdate=true),              PrimaryKey(1), NotNull] public Guid     Tenantid    { get; set; } // uuid
+		[Column("id",          DataType=LinqToDB.DataType.Guid,      SkipOnUpdate=true),              PrimaryKey(2), NotNull] public Guid     Id          { get; set; } // uuid
+		[Column("name",        DataType=LinqToDB.DataType.NVarChar,  Length=100, SkipOnUpdate=true),     Nullable           ] public string?  Name        { get; set; } // character varying(100)
+		[Column("description", DataType=LinqToDB.DataType.Text,      SkipOnUpdate=true),                 Nullable           ] public string?  Description { get; set; } // text
+		[Column("createdat",   DataType=LinqToDB.DataType.DateTime2, Precision=6, SkipOnUpdate=true),                NotNull] public DateTime Createdat   { get; set; } // timestamp (6) without time zone
+	}
+
 	[Table(Schema="public", Name="Parent")]
 	public partial class Parent
 	{
@@ -393,7 +404,7 @@ namespace PostreSQL11DataContext
 		/// <summary>
 		/// Patient_PersonID_fkey (public.Person)
 		/// </summary>
-		[Association(ThisKey=nameof(PersonID), OtherKey=nameof(PostreSQL11DataContext.Person.PersonID), CanBeNull=false)]
+		[Association(ThisKey=nameof(PersonID), OtherKey=nameof(PostreSQL16DataContext.Person.PersonID), CanBeNull=false)]
 		public Person Person { get; set; } = null!;
 
 		#endregion
@@ -419,13 +430,13 @@ namespace PostreSQL11DataContext
 		/// <summary>
 		/// Doctor_PersonID_fkey_BackReference (public.Doctor)
 		/// </summary>
-		[Association(ThisKey=nameof(PersonID), OtherKey=nameof(PostreSQL11DataContext.Doctor.PersonID), CanBeNull=true)]
+		[Association(ThisKey=nameof(PersonID), OtherKey=nameof(PostreSQL16DataContext.Doctor.PersonID), CanBeNull=true)]
 		public Doctor? DoctorPersonIDfkey { get; set; }
 
 		/// <summary>
 		/// Patient_PersonID_fkey_BackReference (public.Patient)
 		/// </summary>
-		[Association(ThisKey=nameof(PersonID), OtherKey=nameof(PostreSQL11DataContext.Patient.PersonID), CanBeNull=true)]
+		[Association(ThisKey=nameof(PersonID), OtherKey=nameof(PostreSQL16DataContext.Patient.PersonID), CanBeNull=true)]
 		public Patient? PatientPersonIDfkey { get; set; }
 
 		#endregion
@@ -441,13 +452,13 @@ namespace PostreSQL11DataContext
 		/// <summary>
 		/// same_name_BackReference (public.same_name2)
 		/// </summary>
-		[Association(ThisKey=nameof(Id), OtherKey=nameof(PostreSQL11DataContext.SameName2.SameName), CanBeNull=true)]
+		[Association(ThisKey=nameof(Id), OtherKey=nameof(PostreSQL16DataContext.SameName2.SameName), CanBeNull=true)]
 		public IEnumerable<SameName2> SameNameBackReferences { get; set; } = null!;
 
 		/// <summary>
 		/// same_name_BackReference (public.same_name1)
 		/// </summary>
-		[Association(ThisKey=nameof(Id), OtherKey=nameof(PostreSQL11DataContext.SameName1.SameName), CanBeNull=true)]
+		[Association(ThisKey=nameof(Id), OtherKey=nameof(PostreSQL16DataContext.SameName1.SameName), CanBeNull=true)]
 		public IEnumerable<SameName1> Samenames { get; set; } = null!;
 
 		#endregion
@@ -464,7 +475,7 @@ namespace PostreSQL11DataContext
 		/// <summary>
 		/// same_name (public.same_name)
 		/// </summary>
-		[Association(ThisKey=nameof(SameName), OtherKey=nameof(PostreSQL11DataContext.SameName.Id), CanBeNull=true)]
+		[Association(ThisKey=nameof(SameName), OtherKey=nameof(PostreSQL16DataContext.SameName.Id), CanBeNull=true)]
 		public SameName? Samename { get; set; }
 
 		#endregion
@@ -481,7 +492,7 @@ namespace PostreSQL11DataContext
 		/// <summary>
 		/// same_name (public.same_name)
 		/// </summary>
-		[Association(ThisKey=nameof(SameName), OtherKey=nameof(PostreSQL11DataContext.SameName.Id), CanBeNull=true)]
+		[Association(ThisKey=nameof(SameName), OtherKey=nameof(PostreSQL16DataContext.SameName.Id), CanBeNull=true)]
 		public SameName? Samename { get; set; }
 
 		#endregion
@@ -674,10 +685,20 @@ namespace PostreSQL11DataContext
 
 		#endregion
 
+		#region Overloads
+
+		[Sql.Function(Name="public.overloads", ServerSideOnly=true)]
+		public static short? Overloads(int? input1, int? input2)
+		{
+			throw new InvalidOperationException();
+		}
+
+		#endregion
+
 		#region Reverse
 
 		[Sql.Function(Name="public.reverse", ServerSideOnly=true)]
-		public static string? Reverse(string? par8)
+		public static string? Reverse(string? par11)
 		{
 			throw new InvalidOperationException();
 		}
@@ -687,7 +708,7 @@ namespace PostreSQL11DataContext
 		#region TestAvg
 
 		[Sql.Function(Name="public.test_avg", ServerSideOnly=true, IsAggregate = true, ArgIndices = new[] { 0 })]
-		public static double? TestAvg<TSource>(this IEnumerable<TSource> src, Expression<Func<TSource, double?>> par10)
+		public static double? TestAvg<TSource>(this IEnumerable<TSource> src, Expression<Func<TSource, double?>> par13)
 		{
 			throw new InvalidOperationException();
 		}
@@ -755,6 +776,13 @@ namespace PostreSQL11DataContext
 		{
 			return table.FirstOrDefault(t =>
 				t.InheritanceParentId == InheritanceParentId);
+		}
+
+		public static MultitenantTable? Find(this ITable<MultitenantTable> table, Guid Tenantid, Guid Id)
+		{
+			return table.FirstOrDefault(t =>
+				t.Tenantid == Tenantid &&
+				t.Id       == Id);
 		}
 
 		public static Patient? Find(this ITable<Patient> table, int PersonID)

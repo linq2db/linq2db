@@ -1,0 +1,19 @@
+﻿<#@ template language="C#" debug="True" hostSpecific="True" compilerOptions="/langversion:6"     #>
+<#@ output extension=".generated.cs"                                                             #>
+<#@ include file="$(LinqToDBT4PostgreSQLTemplatesPath)LinqToDB.PostgreSQL.ttinclude" once="true" #>
+<#@ include file="..\Shared.ttinclude"                                               once="true" #>
+<#
+	NamespaceName = "PostreSQL11DataContext";
+	NormalizeProcedureColumnName = false;
+	// for https://github.com/linq2db/linq2db/issues/3203
+	GenerateSchemaAsType = true;
+
+	LoadPostgreSQLMetadata(GetConnectionString("PostgreSQL.11"));
+
+	GetTable("testsamename").TypeName = "_testsamename";
+	GetTable("testsamename").DataContextPropertyName = "_testsamename";
+
+	GenerateDataTypes = true;
+
+	GenerateModel();
+#>

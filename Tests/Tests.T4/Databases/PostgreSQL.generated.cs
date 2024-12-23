@@ -43,6 +43,7 @@ namespace PostreSQLDataContext
 		/// </summary>
 		public ITable<Issue2023>                      Issue2023                 { get { return this.GetTable<Issue2023>(); } }
 		public ITable<LinqDataType>                   LinqDataTypes             { get { return this.GetTable<LinqDataType>(); } }
+		public ITable<MultitenantTable>               MultitenantTables         { get { return this.GetTable<MultitenantTable>(); } }
 		public ITable<Parent>                         Parents                   { get { return this.GetTable<Parent>(); } }
 		public ITable<Patient>                        Patients                  { get { return this.GetTable<Patient>(); } }
 		/// <summary>
@@ -334,6 +335,16 @@ namespace PostreSQLDataContext
 		[Column(DataType=LinqToDB.DataType.Int32,     Precision=32, Scale=0), Nullable] public int?      IntValue       { get; set; } // integer
 		[Column(DataType=LinqToDB.DataType.Int64,     Precision=64, Scale=0), Nullable] public long?     BigIntValue    { get; set; } // bigint
 		[Column(DataType=LinqToDB.DataType.NVarChar,  Length=50),             Nullable] public string?   StringValue    { get; set; } // character varying(50)
+	}
+
+	[Table(Schema="public", Name="multitenant_table")]
+	public partial class MultitenantTable
+	{
+		[Column("tenantid",    DataType=LinqToDB.DataType.Guid,      SkipOnUpdate=true),              PrimaryKey(1), NotNull] public Guid     Tenantid    { get; set; } // uuid
+		[Column("id",          DataType=LinqToDB.DataType.Guid,      SkipOnUpdate=true),              PrimaryKey(2), NotNull] public Guid     Id          { get; set; } // uuid
+		[Column("name",        DataType=LinqToDB.DataType.NVarChar,  Length=100, SkipOnUpdate=true),     Nullable           ] public string?  Name        { get; set; } // character varying(100)
+		[Column("description", DataType=LinqToDB.DataType.Text,      SkipOnUpdate=true),                 Nullable           ] public string?  Description { get; set; } // text
+		[Column("createdat",   DataType=LinqToDB.DataType.DateTime2, Precision=6, SkipOnUpdate=true),                NotNull] public DateTime Createdat   { get; set; } // timestamp (6) without time zone
 	}
 
 	[Table(Schema="public", Name="Parent")]
@@ -635,10 +646,20 @@ namespace PostreSQLDataContext
 
 		#endregion
 
+		#region Overloads
+
+		[Sql.Function(Name="public.overloads", ServerSideOnly=true)]
+		public static short? Overloads(int? input1, int? input2)
+		{
+			throw new InvalidOperationException();
+		}
+
+		#endregion
+
 		#region Reverse
 
 		[Sql.Function(Name="public.reverse", ServerSideOnly=true)]
-		public static string? Reverse(string? par7)
+		public static string? Reverse(string? par11)
 		{
 			throw new InvalidOperationException();
 		}
@@ -648,7 +669,7 @@ namespace PostreSQLDataContext
 		#region TestAvg
 
 		[Sql.Function(Name="public.test_avg", ServerSideOnly=true, IsAggregate = true, ArgIndices = new[] { 0 })]
-		public static double? TestAvg<TSource>(this IEnumerable<TSource> src, Expression<Func<TSource, double?>> par9)
+		public static double? TestAvg<TSource>(this IEnumerable<TSource> src, Expression<Func<TSource, double?>> par13)
 		{
 			throw new InvalidOperationException();
 		}
@@ -716,6 +737,13 @@ namespace PostreSQLDataContext
 		{
 			return table.FirstOrDefault(t =>
 				t.InheritanceParentId == InheritanceParentId);
+		}
+
+		public static MultitenantTable? Find(this ITable<MultitenantTable> table, Guid Tenantid, Guid Id)
+		{
+			return table.FirstOrDefault(t =>
+				t.Tenantid == Tenantid &&
+				t.Id       == Id);
 		}
 
 		public static Patient? Find(this ITable<Patient> table, int PersonID)

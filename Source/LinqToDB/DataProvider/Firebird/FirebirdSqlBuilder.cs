@@ -108,7 +108,7 @@ namespace LinqToDB.DataProvider.Firebird
 			var identityField = insertClause.Into!.GetIdentityField();
 
 			if (identityField == null)
-				throw new SqlException("Identity field must be defined for '{0}'.", insertClause.Into.NameForLogging);
+				throw new LinqToDBException($"Identity field must be defined for '{insertClause.Into.NameForLogging}'.");
 
 			AppendIndent().AppendLine("RETURNING");
 			AppendIndent().Append('\t');
@@ -260,13 +260,7 @@ namespace LinqToDB.DataProvider.Firebird
 
 		protected override void BuildParameter(SqlParameter parameter)
 		{
-			if (BuildStep == Step.TypedExpression || !parameter.NeedsCast)
-			{
-				base.BuildParameter(parameter);
-				return;
-			}
-
-			if (parameter.NeedsCast)
+			if (parameter.NeedsCast && BuildStep != Step.TypedExpression)
 			{
 				var paramValue = parameter.GetParameterValue(OptimizationContext.EvaluationContext.ParameterValues);
 

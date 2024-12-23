@@ -30,10 +30,10 @@ namespace LinqToDB.DataProvider.Oracle
 			// Comparisons to a literal constant "" are always converted to IS [NOT] NULL (same as == null or == default)
 			if (op is SqlPredicate.Operator.Equal or SqlPredicate.Operator.NotEqual)
 			{
-				if (a is SqlValue { Value: string { Length: 0 } })
-					return new SqlPredicate.IsNull(b, isNot: op == SqlPredicate.Operator.NotEqual);
-				if (b is SqlValue { Value: string { Length: 0 } })
-					return new SqlPredicate.IsNull(a, isNot: op == SqlPredicate.Operator.NotEqual);
+				if (QueryHelper.UnwrapNullablity(a) is SqlValue { Value: string { Length: 0 } })
+					return new SqlPredicate.IsNull(SqlNullabilityExpression.ApplyNullability(b, true), isNot: op == SqlPredicate.Operator.NotEqual);
+				if (QueryHelper.UnwrapNullablity(b) is SqlValue { Value: string { Length: 0 } })
+					return new SqlPredicate.IsNull(SqlNullabilityExpression.ApplyNullability(a, true), isNot: op == SqlPredicate.Operator.NotEqual);
 			}
 
 			// CompareNulls.LikeSql compiles as-is, no change
@@ -42,19 +42,19 @@ namespace LinqToDB.DataProvider.Oracle
 			// Note: LikeClr sometimes generates `withNull: null` expressions, in which case it works the
 			//       same way as LikeSqlExceptParameters (for backward compatibility).
 
-			if (withNull != null 
+			if (withNull != null
 				|| (DataOptions.LinqOptions.CompareNulls != CompareNulls.LikeSql
 					&& op is SqlPredicate.Operator.Equal or SqlPredicate.Operator.NotEqual))
 			{
-				if (b.SystemType == typeof(string) &&
-				    b.TryEvaluateExpression(EvaluationContext, out var bValue) && 
+				if (Oracle11SqlOptimizer.IsTextType(b, MappingSchema)                   &&
+				    b.TryEvaluateExpressionForServer(EvaluationContext, out var bValue) &&
 					bValue is string { Length: 0 })
 				{
 					return CompareToEmptyString(a, op);
 				}
 				
-				if (a.SystemType == typeof(string)                             &&
-				    a.TryEvaluateExpression(EvaluationContext, out var aValue) && 
+				if (Oracle11SqlOptimizer.IsTextType(a, MappingSchema)                   &&
+				    a.TryEvaluateExpressionForServer(EvaluationContext, out var aValue) &&
 					aValue is string { Length: 0 })
 				{
 					return CompareToEmptyString(b, InvertDirection(op));
@@ -69,10 +69,10 @@ namespace LinqToDB.DataProvider.Oracle
 				{
 					SqlPredicate.Operator.NotGreater     or
 					SqlPredicate.Operator.LessOrEqual    or
-					SqlPredicate.Operator.Equal          => new SqlPredicate.IsNull(x, isNot: false),
+					SqlPredicate.Operator.Equal          => new SqlPredicate.IsNull(SqlNullabilityExpression.ApplyNullability(x, true), isNot: false),
 					SqlPredicate.Operator.NotLess        or
 					SqlPredicate.Operator.Greater        or
-					SqlPredicate.Operator.NotEqual       => new SqlPredicate.IsNull(x, isNot: true),
+					SqlPredicate.Operator.NotEqual       => new SqlPredicate.IsNull(SqlNullabilityExpression.ApplyNullability(x, true), isNot: true),
 					SqlPredicate.Operator.GreaterOrEqual => new SqlPredicate.ExprExpr(
 						// Always true
 						new SqlValue(1), SqlPredicate.Operator.Equal, new SqlValue(1), withNull: null),
@@ -162,11 +162,6 @@ namespace LinqToDB.DataProvider.Oracle
 
 			var toType   = cast.ToType;
 			var argument = cast.Expression;
-
-			if (ftype == typeof(bool) && ReferenceEquals(cast, IsForPredicate))
-			{
-				return ConvertToBooleanSearchCondition(cast.Expression);
-			}
 
 			if (ftype == typeof(DateTime) || ftype == typeof(DateTimeOffset)
 #if NET6_0_OR_GREATER

@@ -19,6 +19,7 @@ namespace LinqToDB.DataProvider.Access
 
 		public override SqlStatement TransformStatement(SqlStatement statement, DataOptions dataOptions, MappingSchema mappingSchema)
 		{
+			statement = base.TransformStatement(statement, dataOptions, mappingSchema);
 			statement = CorrectMultiTableQueries(statement);
 			statement = CorrectInnerJoins(statement);
 			statement = CorrectExistsAndIn(statement, dataOptions);
@@ -158,9 +159,10 @@ namespace LinqToDB.DataProvider.Access
 						{
 							QueryHelper.ExtractPredicate(sc.Predicates[0], out var underlying, out var isNot);
 
-							if (underlying is SqlPredicate.FuncLike { Function.Name: "EXISTS" } funcLike)
+							if (underlying is SqlPredicate.Exists exists)
 							{
-								var existsQuery = (SelectQuery)funcLike.Function.Parameters[0];
+								isNot = isNot ^ exists.IsNot;
+								var existsQuery = exists.SubQuery;
 
 								// note that it still will not work as we need to rewrite union queries
 								// see ConcatInAny test

@@ -76,8 +76,26 @@ namespace LinqToDB.SqlQuery
 			if (expression is SqlColumn column)
 			{
 				// if column comes from nullable subquery - column is always nullable
-				if (column.Parent != null && CanBeNullInternal(InQuery, column.Parent) == true)
-					return true;
+				if (column.Parent != null)
+				{
+					if (CanBeNullInternal(InQuery, column.Parent) is true)
+						return true;
+
+					if (column.Parent.HasSetOperators)
+					{
+						var index = column.Parent.Select.Columns.IndexOf(column);
+						if (index < 0) return true;
+
+						foreach (var set in column.Parent.SetOperators)
+						{
+							if (index >= set.SelectQuery.Select.Columns.Count)
+								return true;
+
+							if (set.SelectQuery.Select.Columns[index].CanBeNullable(this))
+								return true;
+						}
+					}
+				}
 
 				// otherwise check column expression nullability
 				return CanBeNull(column.Expression);

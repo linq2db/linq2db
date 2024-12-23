@@ -81,7 +81,7 @@ namespace Tests.SchemaProvider
 				AssertType<Model.LinqDataTypes>(conn.MappingSchema, dbSchema);
 				AssertType<Model.Parent>       (conn.MappingSchema, dbSchema);
 
-				if (!context.IsAnyOf(ProviderName.AccessOdbc, TestProvName.AllClickHouse))
+				if (!context.IsAnyOf(TestProvName.AllAccessOdbc, TestProvName.AllClickHouse))
 					Assert.That(getTable("doctor").ForeignKeys, Has.Count.EqualTo(1));
 				else // no FK information for ACCESS ODBC, no FKs in CH
 					Assert.That(dbSchema.Tables.Single(t => t.TableName!.ToLowerInvariant() == "doctor").ForeignKeys, Is.Empty);
@@ -348,7 +348,7 @@ namespace Tests.SchemaProvider
 		// TODO: temporary disabled for oracle, as it takes 10 minutes for Oracle12 to process schema exceptions
 		// Access.Odbc: no FK information available for provider
 		[Test]
-		public void PrimaryForeignKeyTest([DataSources(false, TestProvName.AllOracle12, ProviderName.AccessOdbc, ProviderName.SQLiteMS)]
+		public void PrimaryForeignKeyTest([DataSources(false, TestProvName.AllOracle12, TestProvName.AllAccessOdbc, ProviderName.SQLiteMS)]
 			string context)
 		{
 			var skipFK = context.IsAnyOf(TestProvName.AllClickHouse);
@@ -377,7 +377,6 @@ namespace Tests.SchemaProvider
 			}
 		}
 
-		[SkipCI("Unstable, depends on metadata selection order")]
 		[Test]
 		public void ForeignKeyMemberNameTest1([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{

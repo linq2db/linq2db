@@ -93,7 +93,7 @@ namespace Tests.xUpdate
 
 				// no idea why, but Access ODBC needs database set in CREATE TABLE for INSERT to work
 				// still it doesn't distinguish CREATE TABLE with and without database name
-				var table = db.CreateTable<DropTableTest>(databaseName: context.IsAnyOf(ProviderName.AccessOdbc) ? database : null)
+				var table = db.CreateTable<DropTableTest>(databaseName: context.IsAnyOf(TestProvName.AllAccessOdbc) ? database : null)
 					.SchemaName(schema)
 					.DatabaseName(database);
 

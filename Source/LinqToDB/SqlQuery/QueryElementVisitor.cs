@@ -83,7 +83,7 @@ namespace LinqToDB.SqlQuery
 				QueryElementType.IsTruePredicate           => VisitIsTruePredicate           ((SqlPredicate.IsTrue       )element),
 				QueryElementType.InSubQueryPredicate       => VisitInSubQueryPredicate       ((SqlPredicate.InSubQuery   )element),
 				QueryElementType.InListPredicate           => VisitInListPredicate           ((SqlPredicate.InList       )element),
-				QueryElementType.FuncLikePredicate         => VisitFuncLikePredicate         ((SqlPredicate.FuncLike     )element),
+				QueryElementType.ExistsPredicate           => VisitExistsPredicate           ((SqlPredicate.Exists       )element),
 				QueryElementType.SqlQuery                  => VisitSqlQuery                  ((SelectQuery               )element),
 				QueryElementType.Column                    => VisitSqlColumnReference        ((SqlColumn                 )element),
 				QueryElementType.SearchCondition           => VisitSqlSearchCondition        ((SqlSearchCondition        )element),
@@ -1079,8 +1079,6 @@ namespace LinqToDB.SqlQuery
 			{
 				case VisitMode.ReadOnly:
 				{
-					Visit(element.InsertedTable);
-					Visit(element.DeletedTable);
 					Visit(element.OutputTable);
 
 					VisitElements(element.OutputColumns, VisitMode.ReadOnly);
@@ -1094,8 +1092,6 @@ namespace LinqToDB.SqlQuery
 				}
 				case VisitMode.Modify:
 				{
-					var insertedTable = (SqlTable?)Visit(element.InsertedTable);
-					var deletedTable  = (SqlTable?)Visit(element.DeletedTable);
 					var outputTable   = (SqlTable?)Visit(element.OutputTable);
 
 					VisitElements(element.OutputColumns, VisitMode.Modify);
@@ -1105,21 +1101,17 @@ namespace LinqToDB.SqlQuery
 						VisitElements(element.OutputItems, VisitMode.Modify);
 					}
 
-					element.Modify(insertedTable, deletedTable, outputTable);
+					element.Modify(outputTable);
 
 					break;
 				}
 				case VisitMode.Transform:
 				{
-					var insertedTable = (SqlTable?)Visit(element.InsertedTable);
-					var deletedTable  = (SqlTable?)Visit(element.DeletedTable);
 					var outputTable   = (SqlTable?)Visit(element.OutputTable);
 					var outputColumns = VisitElements(element.OutputColumns, VisitMode.Transform);
 					var outputItems   = element.HasOutputItems ? VisitElements(element.OutputItems, VisitMode.Transform) : null;
 
 					if (ShouldReplace(element)                                 ||
-					    !ReferenceEquals(element.InsertedTable, insertedTable) ||
-					    !ReferenceEquals(element.DeletedTable, deletedTable)   ||
 					    !ReferenceEquals(element.OutputTable, outputTable)     ||
 					    element.OutputColumns != outputColumns                 ||
 					    (element.HasOutputItems && element.OutputItems != outputItems)
@@ -1127,8 +1119,6 @@ namespace LinqToDB.SqlQuery
 					{
 						var newElement = NotifyReplaced(new SqlOutputClause()
 						{
-							InsertedTable = insertedTable,
-							DeletedTable  = deletedTable,
 							OutputTable   = outputTable,
 							OutputColumns = element.OutputColumns != outputColumns ? outputColumns : outputColumns?.ToList(),
 							OutputItems   = element.HasOutputItems ? (element.OutputItems != outputItems!
@@ -1156,23 +1146,27 @@ namespace LinqToDB.SqlQuery
 				{
 					VisitListOfArrays(element.Rows, VisitMode.ReadOnly);
 
+					Visit(element.Source);
+
 					break;
 				}
 				case VisitMode.Modify:
 				{
 					VisitListOfArrays(element.Rows, VisitMode.Modify);
+					element.Modify(Visit(element.Source) as ISqlExpression);
 
 					break;
 				}
 				case VisitMode.Transform:
 				{
-					var rows = VisitListOfArrays(element.Rows, VisitMode.Transform);
+					var rows   = VisitListOfArrays(element.Rows, VisitMode.Transform);
+					var source = Visit(element.Source) as ISqlExpression;
 
-					if (ShouldReplace(element) || rows != element.Rows)
+					if (ShouldReplace(element) || rows != element.Rows || !ReferenceEquals(source, element.Source))
 					{
 						var newFields = CopyFields(element.Fields);
 
-						var sqlValuesTable = new SqlValuesTable(element.Source, element.ValueBuilders, newFields, rows);
+						var sqlValuesTable = new SqlValuesTable(source, element.ValueBuilders, newFields, rows);
 						if (element.FieldsLookup != null)
 						{
 							sqlValuesTable.FieldsLookup =
@@ -2085,28 +2079,31 @@ namespace LinqToDB.SqlQuery
 			return selectQuery;
 		}
 
-		protected virtual IQueryElement VisitFuncLikePredicate(SqlPredicate.FuncLike element)
+		protected virtual IQueryElement VisitExistsPredicate(SqlPredicate.Exists predicate)
 		{
-			switch (GetVisitMode(element))
+			switch (GetVisitMode(predicate))
 			{
 				case VisitMode.ReadOnly:
 				{
-					Visit(element.Function);
+					Visit(predicate.SubQuery);
 					break;
 				}
 				case VisitMode.Modify:
 				{
-					element.Modify((SqlFunction)Visit(element.Function));
+					var subQuery = (SelectQuery)Visit(predicate.SubQuery);
+
+					predicate.Modify(subQuery);
 
 					break;
 				}
 				case VisitMode.Transform:
 				{
-					var func = (SqlFunction)Visit(element.Function);
+					var subQuery = (SelectQuery)Visit(predicate.SubQuery);
 
-					if (ShouldReplace(element) || !ReferenceEquals(func, element.Function))
+					if (ShouldReplace(predicate) ||
+						!ReferenceEquals(predicate.SubQuery, subQuery))
 					{
-						return NotifyReplaced(new SqlPredicate.FuncLike(func), element);
+						return NotifyReplaced(new SqlPredicate.Exists(predicate.IsNot, subQuery), predicate);
 					}
 
 					break;
@@ -2115,7 +2112,7 @@ namespace LinqToDB.SqlQuery
 					throw CreateInvalidVisitModeException();
 			}
 
-			return element;
+			return predicate;
 		}
 
 		protected virtual IQueryElement VisitInListPredicate(SqlPredicate.InList predicate)
