@@ -1,6 +1,6 @@
 ﻿using BenchmarkDotNet.Attributes;
 
-using LinqToDB.Expressions.Types;
+using LinqToDB.Internals.Expressions.Types;
 
 namespace LinqToDB.Benchmarks.TypeMapping
 {

@@ -5,9 +5,9 @@ using System.Linq.Expressions;
 
 using LinqToDB.Common;
 using LinqToDB.DataProvider.DB2;
-using LinqToDB.Expressions;
-using LinqToDB.Expressions.Types;
 using LinqToDB.Extensions;
+using LinqToDB.Internals.Expressions;
+using LinqToDB.Internals.Expressions.Types;
 using LinqToDB.Mapping;
 
 namespace LinqToDB.DataProvider.Informix

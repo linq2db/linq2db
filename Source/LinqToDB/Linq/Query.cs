@@ -9,9 +9,9 @@ using System.Threading.Tasks;
 
 using LinqToDB.Common;
 using LinqToDB.Common.Logging;
-using LinqToDB.Expressions;
-using LinqToDB.Expressions.ExpressionVisitors;
 using LinqToDB.Interceptors;
+using LinqToDB.Internals.Expressions;
+using LinqToDB.Internals.Expressions.ExpressionVisitors;
 using LinqToDB.Internals.SqlProvider;
 using LinqToDB.Internals.SqlQuery;
 using LinqToDB.Linq.Builder;

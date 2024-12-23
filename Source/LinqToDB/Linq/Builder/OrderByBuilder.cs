@@ -3,7 +3,7 @@ using System.Globalization;
 using System.Linq;
 using System.Linq.Expressions;
 
-using LinqToDB.Expressions;
+using LinqToDB.Internals.Expressions;
 using LinqToDB.Internals.SqlQuery;
 
 namespace LinqToDB.Linq.Builder

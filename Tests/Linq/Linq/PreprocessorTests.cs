@@ -3,7 +3,7 @@ using System.Linq.Expressions;
 
 using LinqToDB;
 using LinqToDB.Data;
-using LinqToDB.Expressions;
+using LinqToDB.Internals.Expressions;
 using LinqToDB.Linq;
 
 using NUnit.Framework;

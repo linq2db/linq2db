@@ -4,7 +4,7 @@ using System.Linq.Expressions;
 using System.Reflection;
 
 using LinqToDB.Data;
-using LinqToDB.Expressions;
+using LinqToDB.Internals.Expressions;
 using LinqToDB.Mapping;
 
 using static LinqToDB.Data.EntityConstructorBase;

@@ -2,8 +2,8 @@
 using System.Linq.Expressions;
 using System.Reflection;
 
-using LinqToDB.Expressions;
 using LinqToDB.Extensions;
+using LinqToDB.Internals.Expressions;
 
 using static LinqToDB.Reflection.Methods.LinqToDB.Merge;
 

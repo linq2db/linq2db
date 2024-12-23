@@ -7,8 +7,8 @@ using System.Threading;
 using System.Threading.Tasks;
 
 using LinqToDB.Common;
-using LinqToDB.Expressions.Internal;
-using LinqToDB.Expressions.Types;
+using LinqToDB.Internals.Expressions;
+using LinqToDB.Internals.Expressions.Types;
 
 using NUnit.Framework;
 

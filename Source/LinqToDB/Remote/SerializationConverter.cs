@@ -2,10 +2,10 @@
 using System.Linq.Expressions;
 
 using LinqToDB.Common;
-using LinqToDB.Expressions;
 using LinqToDB.Extensions;
 using LinqToDB.Internals.Cache;
 using LinqToDB.Internals.Common;
+using LinqToDB.Internals.Expressions;
 using LinqToDB.Mapping;
 
 namespace LinqToDB.Remote

@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq.Expressions;
 
-using LinqToDB.Expressions.Internal;
+using LinqToDB.Internals.Expressions;
 
 namespace LinqToDB.Expressions
 {

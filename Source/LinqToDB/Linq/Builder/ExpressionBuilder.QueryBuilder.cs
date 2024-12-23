@@ -6,9 +6,9 @@ using System.Linq.Expressions;
 using System.Runtime.CompilerServices;
 
 using LinqToDB.Common;
-using LinqToDB.Expressions;
-using LinqToDB.Expressions.ExpressionVisitors;
 using LinqToDB.Extensions;
+using LinqToDB.Internals.Expressions;
+using LinqToDB.Internals.Expressions.ExpressionVisitors;
 using LinqToDB.Internals.SqlQuery;
 
 namespace LinqToDB.Linq.Builder

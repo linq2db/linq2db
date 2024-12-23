@@ -20,12 +20,12 @@ using System.Text;
 using JetBrains.Annotations;
 
 using LinqToDB.Common;
-using LinqToDB.Expressions;
 using LinqToDB.Extensions;
 using LinqToDB.Interceptors;
 using LinqToDB.Internals.Async;
 using LinqToDB.Internals.Cache;
 using LinqToDB.Internals.Common;
+using LinqToDB.Internals.Expressions;
 using LinqToDB.Linq;
 using LinqToDB.Mapping;
 using LinqToDB.Reflection;

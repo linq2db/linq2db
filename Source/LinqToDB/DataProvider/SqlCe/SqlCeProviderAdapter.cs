@@ -3,7 +3,7 @@ using System.Data;
 using System.Data.Common;
 using System.Linq.Expressions;
 
-using LinqToDB.Expressions.Types;
+using LinqToDB.Internals.Expressions.Types;
 
 namespace LinqToDB.DataProvider.SqlCe
 {

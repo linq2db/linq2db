@@ -1,6 +1,6 @@
 ﻿using System.Linq.Expressions;
 
-using LinqToDB.Expressions;
+using LinqToDB.Internals.Expressions;
 
 using static LinqToDB.Reflection.Methods.LinqToDB.Merge;
 

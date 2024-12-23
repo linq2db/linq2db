@@ -2,7 +2,7 @@
 using System.Collections.ObjectModel;
 using System.Linq.Expressions;
 
-using LinqToDB.Expressions;
+using LinqToDB.Internals.Expressions;
 
 namespace LinqToDB.Linq.Builder.Visitors
 {

@@ -1,4 +1,4 @@
-﻿using LinqToDB.Expressions;
+﻿using LinqToDB.Internals.Expressions;
 
 namespace LinqToDB.Interceptors.Internal
 {

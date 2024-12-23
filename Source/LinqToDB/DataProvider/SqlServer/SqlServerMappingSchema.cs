@@ -9,8 +9,8 @@ using System.Text;
 using System.Xml;
 
 using LinqToDB.Common;
-using LinqToDB.Expressions;
 using LinqToDB.Extensions;
+using LinqToDB.Internals.Expressions;
 using LinqToDB.Mapping;
 using LinqToDB.SqlQuery;
 

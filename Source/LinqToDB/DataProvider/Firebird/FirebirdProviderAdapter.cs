@@ -2,7 +2,7 @@
 using System.Data;
 using System.Data.Common;
 
-using LinqToDB.Expressions.Types;
+using LinqToDB.Internals.Expressions.Types;
 using LinqToDB.Mapping;
 using LinqToDB.SqlQuery;
 

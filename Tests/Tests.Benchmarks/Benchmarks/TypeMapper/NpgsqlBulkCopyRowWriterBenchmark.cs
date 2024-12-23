@@ -5,8 +5,8 @@ using System.Runtime.CompilerServices;
 
 using BenchmarkDotNet.Attributes;
 
-using LinqToDB.Expressions;
-using LinqToDB.Expressions.Types;
+using LinqToDB.Internals.Expressions;
+using LinqToDB.Internals.Expressions.Types;
 using LinqToDB.Mapping;
 
 namespace LinqToDB.Benchmarks.TypeMapping

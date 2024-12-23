@@ -9,7 +9,7 @@ using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 
-using LinqToDB.Expressions.Types;
+using LinqToDB.Internals.Expressions.Types;
 
 namespace LinqToDB.DataProvider.SqlServer
 {

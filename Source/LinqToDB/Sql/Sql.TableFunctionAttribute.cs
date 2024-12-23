@@ -2,6 +2,7 @@
 using System.Linq.Expressions;
 
 using LinqToDB.Internals.Common;
+using LinqToDB.Internals.Expressions;
 using LinqToDB.Internals.SqlProvider;
 using LinqToDB.Internals.SqlQuery;
 using LinqToDB.Mapping;
@@ -71,7 +72,7 @@ namespace LinqToDB
 				table.TableArguments = ExpressionAttribute.PrepareArguments(context, string.Empty, ArgIndices, true, knownExpressions, genericTypes, converter, false, out var error)!;
 
 				if (error != null)
-					throw Expressions.SqlErrorExpression.EnsureError(error).CreateException();
+					throw SqlErrorExpression.EnsureError(error).CreateException();
 			}
 
 			public override string GetObjectID()

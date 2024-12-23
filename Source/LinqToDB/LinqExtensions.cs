@@ -13,6 +13,7 @@ using JetBrains.Annotations;
 using LinqToDB.Async;
 using LinqToDB.DataProvider;
 using LinqToDB.Expressions;
+using LinqToDB.Internals.Expressions;
 using LinqToDB.Internals.SqlProvider;
 using LinqToDB.Linq;
 using LinqToDB.Linq.Builder;

@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Data.Common;
 
-using LinqToDB.Expressions.Types;
+using LinqToDB.Internals.Expressions.Types;
 
 namespace LinqToDB.DataProvider.SQLite
 {
