@@ -205,7 +205,7 @@ namespace LinqToDB.Internals.SqlQuery
 
 						if (SelectQuery.HasSetOperators)
 						{
-							if (SelectQuery.SetOperators.Any(u => u.SelectQuery == query))
+							if (SelectQuery.SetOperators.Exists(u => u.SelectQuery == query))
 							{
 
 							}
