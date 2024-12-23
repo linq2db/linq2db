@@ -1384,5 +1384,27 @@ namespace Tests.Linq
 			];
 		}
 		#endregion
+
+		sealed class TimeSpanAsTicks
+		{
+			[PrimaryKey] public Guid Id { get; set; }
+			[Column] public TimeSpan Value { get; set; }
+		}
+
+		[Test]
+		public void Test_DefaultMappingOverride([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
+		{
+			var ms = new MappingSchema();
+			ms.SetDataType(typeof(TimeSpan), DataType.Int64);
+
+			using var db = GetDataContext(context, ms);
+			using var tb = db.CreateLocalTable<TimeSpanAsTicks>();
+
+			Guid? id = Guid.NewGuid();
+
+			var query = tb.Where(r => r.Value == -new TimeSpan(1200000000L));
+
+			query.ToArray();
+		}
 	}
 }
