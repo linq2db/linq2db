@@ -108,14 +108,5 @@ namespace LinqToDB.SqlQuery
 
 			return null;
 		}
-
-		public void WalkQueries<TContext>(TContext context, Func<TContext, SelectQuery, SelectQuery> func)
-		{
-			foreach (var c in Clauses)
-			{
-				if (c.Body != null)
-					c.Body = func(context, c.Body);
-			}
-		}
 	}
 }

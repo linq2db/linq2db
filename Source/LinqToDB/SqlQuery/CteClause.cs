@@ -60,8 +60,8 @@ namespace LinqToDB.SqlQuery
 		}
 
 		internal void Init(
-			SelectQuery?          body,
-			ICollection<SqlField> fields)
+			SelectQuery?            body,
+			IReadOnlyList<SqlField> fields)
 		{
 			Body       = body;
 			Fields     = fields.ToList();
