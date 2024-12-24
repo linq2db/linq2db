@@ -13,6 +13,7 @@ namespace LinqToDB.Linq.Builder
 	using LinqToDB.Expressions;
 	using Mapping;
 	using Visitors;
+	using Reflection;
 
 	public class ExpressionTreeOptimizationContext
 	{
@@ -185,6 +186,12 @@ namespace LinqToDB.Linq.Builder
 			{
 				if (!CanBeEvaluated)
 					return node;
+
+				if (node.IsSameGenericMethod(Methods.LinqToDB.Select))
+				{
+					CanBeEvaluated = false;
+					return node;
+				}
 
 				if (typeof(IQueryable<>).IsSameOrParentOf(node.Type))
 				{
