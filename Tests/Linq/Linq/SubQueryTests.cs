@@ -1267,8 +1267,14 @@ namespace Tests.Linq
 
 		#endregion
 
+		// technically it is not correct as such rownum generation is not guaranteed to follow query ordering
+		// that's why many dbs disabled and only sqlserver and oracle work
 		[Test]
-		public void LimitedSubqueryOrderPreserved1([DataSources] string context)
+		public void PreserveOrderInSubqueryWithWindowFunction_WithOrder([DataSources(
+			TestProvName.AllAccess, ProviderName.SqlCe, TestProvName.AllSybase,
+			TestProvName.AllClickHouse, TestProvName.AllFirebird, TestProvName.AllInformix, TestProvName.AllMySql,
+			TestProvName.AllPostgreSQL, TestProvName.AllSapHana, TestProvName.AllSQLite, TestProvName.AllDB2
+			)] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -1278,7 +1284,7 @@ namespace Tests.Linq
 				new
 				{
 					r.ID,
-					RowNumber = Sql.Ext.RowNumber().Over().OrderBy(db.Select(() => 1)).ToValue()
+					RowNumber = Sql.Ext.RowNumber().Over().OrderBy(db.Select(() => "unordered")).ToValue()
 				})
 				.Take(100)
 				.Join(db.Person, r => r.ID, r => r.ID, (r, n) => new { r.RowNumber, n.ID })
@@ -1289,7 +1295,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void LimitedSubqueryOrderPreserved2([DataSources] string context)
+		public void PreserveOrderInSubqueryWithWindowFunction_NoOrdering([DataSources(TestProvName.AllAccess, ProviderName.SqlCe, ProviderName.Firebird25, TestProvName.AllMySql57, TestProvName.AllSybase)] string context)
 		{
 			using var db = GetDataContext(context);
 
