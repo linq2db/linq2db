@@ -3256,7 +3256,6 @@ namespace LinqToDB.Linq.Builder
 					predicate = new SqlPredicate.IsTrue(ApplyExpressionNullability(sqlExpression, GetNullabilityContext()), trueValue.Sql, falseValue.Sql, DataOptions.LinqOptions.CompareNulls == CompareNulls.LikeClr ? false : null, false);
 					return predicate;
 				}
-
 			}
 
 			predicate = new SqlPredicate.Expr(ApplyExpressionNullability(sqlExpression, GetNullabilityContext()));
