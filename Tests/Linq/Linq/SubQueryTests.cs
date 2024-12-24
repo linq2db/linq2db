@@ -1266,5 +1266,45 @@ namespace Tests.Linq
 		}
 
 		#endregion
+
+		[Test]
+		public void LimitedSubqueryOrderPreserved1([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var result = db.Person
+				.OrderBy(p => p.FirstName)
+				.Select(r =>
+				new
+				{
+					r.ID,
+					RowNumber = Sql.Ext.RowNumber().Over().OrderBy(db.Select(() => 1)).ToValue()
+				})
+				.Take(100)
+				.Join(db.Person, r => r.ID, r => r.ID, (r, n) => new { r.RowNumber, n.ID })
+				.Where(r => r.ID == 2)
+				.Single();
+
+			Assert.That(result.RowNumber, Is.EqualTo(4));
+		}
+
+		[Test]
+		public void LimitedSubqueryOrderPreserved2([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var result = db.Person
+				.Select(r =>
+				new
+				{
+					r.ID,
+					RowNumber = Sql.Ext.RowNumber().Over().OrderBy(r.FirstName).ToValue()
+				})
+				.Join(db.Person, r => r.ID, r => r.ID, (r, n) => new { r.RowNumber, n.ID })
+				.Where(r => r.ID == 2)
+				.Single();
+
+			Assert.That(result.RowNumber, Is.EqualTo(4));
+		}
 	}
 }
