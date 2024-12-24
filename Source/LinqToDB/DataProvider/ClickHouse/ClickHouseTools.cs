@@ -1,6 +1,7 @@
 ﻿using System.Data.Common;
 
 using LinqToDB.Data;
+using LinqToDB.Internals.DataProviders.ClickHouse;
 
 namespace LinqToDB.DataProvider.ClickHouse
 {

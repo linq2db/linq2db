@@ -3,6 +3,7 @@
 using LinqToDB.Common;
 using LinqToDB.Data;
 using LinqToDB.Internals.Common;
+using LinqToDB.Internals.DataProviders.Oracle;
 
 namespace LinqToDB.DataProvider.Oracle
 {

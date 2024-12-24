@@ -2,6 +2,7 @@
 using System.Reflection;
 
 using LinqToDB.Data;
+using LinqToDB.Internals.DataProviders.Sybase;
 
 namespace LinqToDB.DataProvider.Sybase
 {

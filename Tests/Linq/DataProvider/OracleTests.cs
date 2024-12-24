@@ -22,6 +22,7 @@ using LinqToDB.Data.RetryPolicy;
 using LinqToDB.DataProvider;
 using LinqToDB.DataProvider.Oracle;
 using LinqToDB.Interceptors;
+using LinqToDB.Internals.DataProviders.Oracle;
 using LinqToDB.Internals.Linq;
 using LinqToDB.Mapping;
 using LinqToDB.SchemaProvider;

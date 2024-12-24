@@ -11,6 +11,7 @@ using LinqToDB;
 using LinqToDB.Common;
 using LinqToDB.Data;
 using LinqToDB.DataProvider.Access;
+using LinqToDB.Internals.DataProviders.Access;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;

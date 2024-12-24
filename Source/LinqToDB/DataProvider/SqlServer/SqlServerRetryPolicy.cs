@@ -7,6 +7,7 @@ using System;
 using System.Collections.Generic;
 
 using LinqToDB.Data.RetryPolicy;
+using LinqToDB.Internals.DataProviders.SqlServer;
 
 namespace LinqToDB.DataProvider.SqlServer
 {
@@ -22,7 +23,7 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// </remarks>
 		public SqlServerRetryPolicy()
 			: this(Common.Configuration.RetryPolicy.DefaultMaxRetryCount)
-		{}
+		{ }
 
 		/// <summary>
 		///     Creates a new instance of <see cref="SqlServerRetryPolicy" />.
@@ -37,7 +38,7 @@ namespace LinqToDB.DataProvider.SqlServer
 				Common.Configuration.RetryPolicy.DefaultCoefficient,
 				null
 			)
-		{}
+		{ }
 
 		/// <summary>
 		///     Creates a new instance of <see cref="SqlServerRetryPolicy" />.
@@ -49,11 +50,11 @@ namespace LinqToDB.DataProvider.SqlServer
 		/// <param name="coefficient">The coefficient for the exponential function used to compute the delay between retries. </param>
 		/// <param name="errorNumbersToAdd">Additional SQL error numbers that should be considered transient.</param>
 		public SqlServerRetryPolicy(
-			int               maxRetryCount,
-			TimeSpan          maxRetryDelay,
-			double            randomFactor,
-			double            exponentialBase,
-			TimeSpan          coefficient,
+			int maxRetryCount,
+			TimeSpan maxRetryDelay,
+			double randomFactor,
+			double exponentialBase,
+			TimeSpan coefficient,
 			ICollection<int>? errorNumbersToAdd)
 			: base(maxRetryCount, maxRetryDelay, randomFactor, exponentialBase, coefficient)
 		{

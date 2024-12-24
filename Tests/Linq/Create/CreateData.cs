@@ -9,6 +9,9 @@ using LinqToDB.Data;
 using LinqToDB.DataProvider.Access;
 using LinqToDB.DataProvider.Informix;
 using LinqToDB.DataProvider.SQLite;
+using LinqToDB.Internals.DataProviders.Access;
+using LinqToDB.Internals.DataProviders.Informix;
+using LinqToDB.Internals.DataProviders.SQLite;
 using LinqToDB.SchemaProvider;
 
 using NUnit.Framework;

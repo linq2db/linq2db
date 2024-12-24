@@ -3,6 +3,7 @@ using System.Linq.Expressions;
 using System.Reflection;
 
 using LinqToDB.Common;
+using LinqToDB.Internals.DataProviders.SqlServer;
 using LinqToDB.Internals.Expressions;
 using LinqToDB.Mapping;
 

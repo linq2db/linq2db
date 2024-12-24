@@ -9,6 +9,7 @@ using LinqToDB.Benchmarks.Mappings;
 using LinqToDB.Benchmarks.TestProvider;
 using LinqToDB.DataProvider;
 using LinqToDB.DataProvider.SqlServer;
+using LinqToDB.Internals.DataProviders.SqlServer;
 
 namespace LinqToDB.Benchmarks.Queries
 {

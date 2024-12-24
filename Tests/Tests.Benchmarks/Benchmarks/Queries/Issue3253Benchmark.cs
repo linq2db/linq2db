@@ -9,6 +9,7 @@ using BenchmarkDotNet.Attributes;
 using LinqToDB.Benchmarks.TestProvider;
 using LinqToDB.Data;
 using LinqToDB.DataProvider.SQLite;
+using LinqToDB.Internals.DataProviders.SQLite;
 using LinqToDB.Internals.Linq;
 using LinqToDB.Mapping;
 

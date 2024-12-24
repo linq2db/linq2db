@@ -7,6 +7,7 @@ using System.Text;
 using JetBrains.Annotations;
 
 using LinqToDB.Expressions;
+using LinqToDB.Internals.DataProviders.SqlServer;
 using LinqToDB.Internals.Linq;
 using LinqToDB.Internals.SqlProvider;
 using LinqToDB.Internals.SqlQuery;

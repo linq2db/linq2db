@@ -1,6 +1,7 @@
 ﻿using System.Data.Common;
 
 using LinqToDB.Data;
+using LinqToDB.Internals.DataProviders.Informix;
 
 namespace LinqToDB.DataProvider.Informix
 {

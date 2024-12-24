@@ -20,6 +20,7 @@ using LinqToDB.Common;
 using LinqToDB.Data;
 using LinqToDB.DataProvider;
 using LinqToDB.DataProvider.SqlServer;
+using LinqToDB.Internals.DataProviders.SqlServer;
 using LinqToDB.Internals.Linq;
 using LinqToDB.Mapping;
 using LinqToDB.SchemaProvider;

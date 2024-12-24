@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using LinqToDB.Common;
 using LinqToDB.Data;
 using LinqToDB.Internals.Common;
+using LinqToDB.Internals.DataProviders.PostgreSQL;
 
 namespace LinqToDB.DataProvider.PostgreSQL
 {

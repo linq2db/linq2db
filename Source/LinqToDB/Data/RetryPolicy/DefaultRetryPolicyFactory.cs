@@ -1,5 +1,7 @@
 ﻿using LinqToDB.DataProvider.ClickHouse;
 using LinqToDB.DataProvider.SqlServer;
+using LinqToDB.Internals.DataProviders.ClickHouse;
+using LinqToDB.Internals.DataProviders.SqlServer;
 
 namespace LinqToDB.Data.RetryPolicy
 {

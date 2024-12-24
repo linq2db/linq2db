@@ -2,6 +2,7 @@
 using System.Reflection;
 
 using LinqToDB.Data;
+using LinqToDB.Internals.DataProviders.MySql;
 
 namespace LinqToDB.DataProvider.MySql
 {

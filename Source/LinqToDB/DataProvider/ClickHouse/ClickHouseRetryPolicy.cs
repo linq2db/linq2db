@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 
 using LinqToDB.Data.RetryPolicy;
+using LinqToDB.Internals.DataProviders.ClickHouse;
 
 namespace LinqToDB.DataProvider.ClickHouse
 {
@@ -48,11 +49,11 @@ namespace LinqToDB.DataProvider.ClickHouse
 		/// <param name="coefficient">The coefficient for the exponential function used to compute the delay between retries. </param>
 		/// <param name="errorNumbersToAdd">Additional SQL error numbers that should be considered transient.</param>
 		public ClickHouseRetryPolicy(
-			int               maxRetryCount,
-			TimeSpan          maxRetryDelay,
-			double            randomFactor,
-			double            exponentialBase,
-			TimeSpan          coefficient,
+			int maxRetryCount,
+			TimeSpan maxRetryDelay,
+			double randomFactor,
+			double exponentialBase,
+			TimeSpan coefficient,
 			ICollection<int>? errorNumbersToAdd)
 			: base(maxRetryCount, maxRetryDelay, randomFactor, exponentialBase, coefficient)
 		{

@@ -4,6 +4,7 @@ using System.Reflection;
 using JetBrains.Annotations;
 
 using LinqToDB.Data;
+using LinqToDB.Internals.DataProviders.PostgreSQL;
 
 namespace LinqToDB.DataProvider.PostgreSQL
 {

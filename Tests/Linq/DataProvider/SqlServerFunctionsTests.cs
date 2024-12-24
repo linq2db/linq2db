@@ -4,6 +4,7 @@ using System.Linq;
 using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.DataProvider.SqlServer;
+using LinqToDB.Internals.DataProviders.SqlServer;
 using LinqToDB.Tools;
 using LinqToDB.Tools.DataProvider.SqlServer.Schemas;
 

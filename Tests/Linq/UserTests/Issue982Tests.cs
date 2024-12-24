@@ -3,6 +3,7 @@
 using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.DataProvider.Firebird;
+using LinqToDB.Internals.DataProviders.Firebird;
 using LinqToDB.Internals.SqlProvider;
 using LinqToDB.Internals.SqlQuery;
 using LinqToDB.Mapping;

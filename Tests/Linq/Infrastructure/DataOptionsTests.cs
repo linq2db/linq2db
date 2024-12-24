@@ -6,6 +6,7 @@ using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.DataProvider.SqlServer;
 using LinqToDB.Internals.Common;
+using LinqToDB.Internals.DataProviders.SqlServer;
 using LinqToDB.Mapping;
 
 using Microsoft.Data.SqlClient;

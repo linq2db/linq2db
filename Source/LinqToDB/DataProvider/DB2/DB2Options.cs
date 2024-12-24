@@ -3,6 +3,7 @@
 using LinqToDB.Common;
 using LinqToDB.Data;
 using LinqToDB.Internals.Common;
+using LinqToDB.Internals.DataProviders.DB2;
 
 namespace LinqToDB.DataProvider.DB2
 {

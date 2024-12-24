@@ -11,6 +11,7 @@ using LinqToDB;
 using LinqToDB.Common;
 using LinqToDB.Data;
 using LinqToDB.DataProvider.SQLite;
+using LinqToDB.Internals.DataProviders.SQLite;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
