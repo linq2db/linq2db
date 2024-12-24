@@ -1271,7 +1271,7 @@ namespace Tests.Linq
 		// that's why many dbs disabled and only sqlserver and oracle work
 		[Test]
 		public void PreserveOrderInSubqueryWithWindowFunction_WithOrder([DataSources(
-			TestProvName.AllAccess, ProviderName.SqlCe, TestProvName.AllSybase,
+			TestProvName.AllSqlServer2008Minus, TestProvName.AllAccess, ProviderName.SqlCe, TestProvName.AllSybase,
 			TestProvName.AllClickHouse, TestProvName.AllFirebird, TestProvName.AllInformix, TestProvName.AllMySql,
 			TestProvName.AllPostgreSQL, TestProvName.AllSapHana, TestProvName.AllSQLite, TestProvName.AllDB2
 			)] string context)
