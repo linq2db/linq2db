@@ -1,15 +1,10 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq.Expressions;
-using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 
 namespace LinqToDB.Linq.Builder
 {
-	using LinqToDB.Expressions;
 	using Extensions;
 	using Mapping;
-	using SqlQuery;
 
 	internal sealed class EagerLoading
 	{
@@ -23,7 +18,5 @@ namespace LinqToDB.Linq.Builder
 				return type.GetGenericArguments()[1];
 			return type.GetGenericArguments()[0];
 		}
-
-		
 	}
 }

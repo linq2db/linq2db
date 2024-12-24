@@ -3162,7 +3162,7 @@ namespace LinqToDB.SqlQuery
 		/// <summary>
 		/// Creates copy of <see cref="SqlField"/> without table set and call <see cref="NotifyReplaced(IQueryElement, IQueryElement)"/> for each.
 		/// </summary>
-		private IReadOnlyList<SqlField> CopyFields(IReadOnlyList<SqlField> fields)
+		protected IReadOnlyList<SqlField> CopyFields(IReadOnlyList<SqlField> fields)
 		{
 			var newFields = new SqlField[fields.Count];
 			for (var i = 0; i < fields.Count; i++)
