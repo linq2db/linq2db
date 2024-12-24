@@ -1,7 +1,7 @@
-﻿namespace LinqToDB.SchemaProvider
-{
-	using Data;
+﻿using LinqToDB.Data;
 
+namespace LinqToDB.SchemaProvider
+{
 	/// <summary>
 	/// Database schema provider.
 	/// </summary>

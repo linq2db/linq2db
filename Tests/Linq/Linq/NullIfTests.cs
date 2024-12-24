@@ -1,17 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
+﻿using System.Linq;
+
 using FluentAssertions;
+
 using LinqToDB;
-using LinqToDB.Data;
+
 using NUnit.Framework;
 
 namespace Tests.Linq
 {
-	using Model;
-
 	[TestFixture]
 	public class NullIfTests : TestBase
 	{

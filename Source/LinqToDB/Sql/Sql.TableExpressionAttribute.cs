@@ -2,14 +2,14 @@
 using System.Linq;
 using System.Linq.Expressions;
 
+using LinqToDB.Internals.SqlProvider;
+using LinqToDB.Internals.SqlQuery;
+using LinqToDB.Mapping;
+
 // ReSharper disable CheckNamespace
 
 namespace LinqToDB
 {
-	using Mapping;
-	using SqlProvider;
-	using SqlQuery;
-
 	partial class Sql
 	{
 		[Serializable]

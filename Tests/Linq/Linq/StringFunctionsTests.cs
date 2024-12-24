@@ -1,10 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+
 using LinqToDB;
-using LinqToDB.Data;
 using LinqToDB.Mapping;
+
 using NUnit.Framework;
+
 using Tests.Model;
 
 namespace Tests.Linq
@@ -155,7 +157,6 @@ namespace Tests.Linq
 						Max = g.Max(),
 						Values = g.StringAggregate(" -> ").OrderByDescending(e => e).ToValue(),
 					};
-
 
 				var expected = from t in data
 					group t.Value1 by new {t.Id, Value = t.Value1}

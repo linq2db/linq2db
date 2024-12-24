@@ -1,15 +1,15 @@
-﻿using System;
-using System.Linq;
+﻿using System.Linq;
 using System.Linq.Expressions;
 
 using JetBrains.Annotations;
 
+using LinqToDB.Expressions;
+using LinqToDB.Internals.Linq;
+using LinqToDB.Internals.SqlProvider;
+using LinqToDB.Linq;
+
 namespace LinqToDB.DataProvider.Oracle
 {
-	using Expressions;
-	using Linq;
-	using SqlProvider;
-
 	public interface IOracleSpecificTable<out TSource> : ITable<TSource>
 		where TSource : notnull
 	{

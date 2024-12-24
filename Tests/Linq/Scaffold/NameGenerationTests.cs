@@ -1,8 +1,9 @@
 ﻿using System.Collections.Generic;
+
+using LinqToDB.Internals.SqlQuery;
 using LinqToDB.Naming;
-using LinqToDB.Reflection;
 using LinqToDB.Scaffold.Internal;
-using LinqToDB.SqlQuery;
+
 using NUnit.Framework;
 
 namespace Tests.Scaffold

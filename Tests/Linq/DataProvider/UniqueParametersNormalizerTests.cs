@@ -12,9 +12,9 @@ using LinqToDB.Common;
 using LinqToDB.Data;
 using LinqToDB.DataProvider;
 using LinqToDB.Infrastructure;
+using LinqToDB.Internals.SqlProvider;
 using LinqToDB.Mapping;
 using LinqToDB.SchemaProvider;
-using LinqToDB.SqlProvider;
 
 using NUnit.Framework;
 
@@ -57,7 +57,6 @@ namespace Tests.DataProvider
 				Assert.That(normalizedStr, Is.EqualTo(expectedStrings[i]));
 			}
 		}
-
 
 		// Test sending a few unique strings that are 52 characters long
 		[Test]
@@ -280,6 +279,7 @@ namespace Tests.DataProvider
 				{
 					lastSql = info.SqlText;
 				}
+
 				defaultTrace(info);
 			};
 

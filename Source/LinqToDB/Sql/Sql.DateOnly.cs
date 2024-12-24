@@ -2,13 +2,14 @@
 using System;
 using System.Globalization;
 
+using LinqToDB.Expressions;
+using LinqToDB.Internals.Expressions;
+using LinqToDB.Internals.SqlQuery;
+
+using PN = LinqToDB.ProviderName;
+
 namespace LinqToDB
 {
-	using SqlQuery;
-	using Expressions;
-
-	using PN = ProviderName;
-
 	public partial class Sql
 	{
 		#region DatePart

@@ -3,13 +3,14 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 
+using LinqToDB.Internals.SqlQuery;
+using LinqToDB.Linq;
+using LinqToDB.SqlQuery;
+
 using PN = LinqToDB.ProviderName;
 
 namespace LinqToDB
 {
-	using Linq;
-	using SqlQuery;
-
 	public static partial class Sql
 	{
 		#region StringAggregate

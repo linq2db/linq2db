@@ -3,9 +3,9 @@ using System.Linq;
 
 using JetBrains.Annotations;
 
+using LinqToDB.Internals.Linq;
+using LinqToDB.Internals.SqlQuery;
 using LinqToDB.Linq;
-using LinqToDB.Linq.Internal;
-using LinqToDB.SqlQuery;
 
 namespace Tests
 {

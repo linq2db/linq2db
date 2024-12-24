@@ -1,8 +1,11 @@
 ﻿using System;
 using System.Linq;
+
 using FluentAssertions;
+
 using LinqToDB;
 using LinqToDB.Mapping;
+
 using NUnit.Framework;
 
 namespace Tests.UserTests
@@ -94,7 +97,6 @@ namespace Tests.UserTests
 						LocationName    = l.LocationName,
 						LocationId      = l.Id
 					};
-
 
 				sqlCondos.Invoking(q => q.ToList()).Should().NotThrow();
 

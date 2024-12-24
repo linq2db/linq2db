@@ -5,7 +5,5 @@
 	/// Only operation available for this type of builder is source configuration.
 	/// </summary>
 	/// <typeparam name="TTarget">Target record type.</typeparam>
-	public interface IMergeableUsing<TTarget>
-	{
-	}
+	public interface IMergeableUsing<TTarget>;
 }

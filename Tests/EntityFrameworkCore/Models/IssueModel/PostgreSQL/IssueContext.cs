@@ -2,8 +2,6 @@
 
 using Microsoft.EntityFrameworkCore;
 
-using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
-
 namespace LinqToDB.EntityFrameworkCore.Tests.PostgreSQL.Models.IssueModel
 {
 	public class IssueContext(DbContextOptions options) : IssueContextBase(options)

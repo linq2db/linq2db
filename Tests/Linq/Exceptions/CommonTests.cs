@@ -3,14 +3,14 @@ using System.Collections.Generic;
 
 using LinqToDB;
 using LinqToDB.Common;
-using LinqToDB.SqlQuery;
+using LinqToDB.Internals.SqlQuery;
 
 using NUnit.Framework;
 
+using Tests.Model;
+
 namespace Tests.Exceptions
 {
-	using Model;
-
 	[TestFixture]
 	public class CommonTests : TestBase
 	{

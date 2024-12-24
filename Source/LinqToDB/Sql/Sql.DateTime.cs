@@ -1,13 +1,14 @@
 ﻿using System;
 using System.Globalization;
 
+using LinqToDB.Expressions;
+using LinqToDB.Internals.SqlQuery;
+using LinqToDB.SqlQuery;
+
+using PN = LinqToDB.ProviderName;
+
 namespace LinqToDB
 {
-	using SqlQuery;
-	using Expressions;
-
-	using PN = ProviderName;
-
 	public partial class Sql
 	{
 		[Enum]

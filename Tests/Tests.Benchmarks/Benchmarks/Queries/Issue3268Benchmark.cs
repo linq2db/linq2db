@@ -8,6 +8,7 @@ using BenchmarkDotNet.Attributes;
 using LinqToDB.Benchmarks.TestProvider;
 using LinqToDB.Data;
 using LinqToDB.DataProvider.SqlServer;
+using LinqToDB.Internals.DataProviders.SqlServer;
 using LinqToDB.Mapping;
 
 namespace LinqToDB.Benchmarks.Queries

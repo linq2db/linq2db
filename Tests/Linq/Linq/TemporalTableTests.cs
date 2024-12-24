@@ -1,20 +1,23 @@
 ﻿using System;
 using System.Linq;
 using System.Threading;
+
 using FluentAssertions;
+
 using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.DataProvider.SqlServer;
+using LinqToDB.Internals.DataProviders.SqlServer;
+using LinqToDB.Internals.SqlQuery;
 using LinqToDB.Mapping;
-using LinqToDB.SqlQuery;
 using LinqToDB.Tools.DataProvider.SqlServer.Schemas;
 
 using NUnit.Framework;
 
+using Tests.Model;
+
 namespace Tests.Linq
 {
-	using Model;
-
 	[TestFixture]
 	public class TemporalTableTests : TestBase
 	{

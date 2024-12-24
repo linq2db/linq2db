@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Linq;
 
+using LinqToDB.Internals.SqlQuery;
+
 namespace LinqToDB
 {
-	using SqlQuery;
-
 	partial class Sql
 	{
 		sealed class RowBuilder : IExtensionCallBuilder

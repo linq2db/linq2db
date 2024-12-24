@@ -2,12 +2,11 @@
 using System.Linq;
 using System.Reflection;
 
+using LinqToDB.Extensions;
+using LinqToDB.Mapping;
+
 namespace LinqToDB.Metadata
 {
-	using Common;
-	using Extensions;
-	using Mapping;
-
 	public class AttributeReader : IMetadataReader
 	{
 		readonly static MappingAttributesCache _cache = new (

@@ -12,18 +12,12 @@ using System.Numerics;
 using System.Threading.Tasks;
 
 using LinqToDB;
-using LinqToDB.Common;
 using LinqToDB.Data;
 using LinqToDB.DataProvider;
 using LinqToDB.DataProvider.Access;
-using LinqToDB.DataProvider.ClickHouse;
 using LinqToDB.DataProvider.DB2;
 using LinqToDB.DataProvider.Firebird;
-using LinqToDB.DataProvider.Informix;
 using LinqToDB.DataProvider.MySql;
-using LinqToDB.DataProvider.Oracle;
-using LinqToDB.DataProvider.PostgreSQL;
-using LinqToDB.DataProvider.SapHana;
 using LinqToDB.DataProvider.SqlCe;
 using LinqToDB.DataProvider.SQLite;
 using LinqToDB.DataProvider.SqlServer;
@@ -54,6 +48,18 @@ using MySqlDataDecimal = MySqlData::MySql.Data.Types.MySqlDecimal;
 using MySqlDataMySqlConnection = MySqlData::MySql.Data.MySqlClient.MySqlConnection;
 
 using LinqToDB.Data.RetryPolicy;
+using LinqToDB.Internals.DataProviders.ClickHouse;
+using LinqToDB.Internals.DataProviders.DB2;
+using LinqToDB.Internals.DataProviders.Firebird;
+using LinqToDB.Internals.DataProviders.Informix;
+using LinqToDB.Internals.DataProviders.MySql;
+using LinqToDB.Internals.DataProviders.Oracle;
+using LinqToDB.Internals.DataProviders.PostgreSQL;
+using LinqToDB.Internals.DataProviders.SqlServer;
+using LinqToDB.DataProvider.Informix;
+using LinqToDB.DataProvider.ClickHouse;
+using LinqToDB.Internals.DataProviders.SapHana;
+using LinqToDB.Internals.DataProviders.SqlCe;
 
 namespace Tests.Data
 {
@@ -1300,6 +1306,7 @@ namespace Tests.Data
 				catch
 				{
 				}
+
 				Assert.That(trace, Does.Contain("DECLARE @p Clob("));
 
 				// provider-specific type classes

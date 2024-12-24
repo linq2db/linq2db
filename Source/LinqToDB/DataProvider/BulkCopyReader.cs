@@ -6,16 +6,16 @@ using System.Data.Common;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Linq;
-using System.Threading.Tasks;
 using System.Threading;
+using System.Threading.Tasks;
+
+using LinqToDB.Common;
+using LinqToDB.Data;
+using LinqToDB.Internals.Async;
+using LinqToDB.Mapping;
 
 namespace LinqToDB.DataProvider
 {
-	using Async;
-	using Common;
-	using Data;
-	using Mapping;
-
 	public class BulkCopyReader<T> : BulkCopyReader, IAsyncDisposable
 	{
 		readonly IEnumerator<T>?      _enumerator;

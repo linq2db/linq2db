@@ -2,14 +2,13 @@
 using System.Linq;
 
 using LinqToDB;
-using LinqToDB.Common;
 
 using NUnit.Framework;
 
+using Tests.Model;
+
 namespace Tests.xUpdate
 {
-	using Model;
-
 	// tests for empty enumerable source
 	public partial class MergeTests
 	{

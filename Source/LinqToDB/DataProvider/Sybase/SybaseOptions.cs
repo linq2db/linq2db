@@ -1,11 +1,9 @@
-﻿using System;
+﻿using LinqToDB.Common;
+using LinqToDB.Data;
+using LinqToDB.Internals.Common;
 
 namespace LinqToDB.DataProvider.Sybase
 {
-	using Common;
-	using Common.Internal;
-	using Data;
-
 	/// <param name="BulkCopyType">
 	/// Using <see cref="BulkCopyType.ProviderSpecific"/> mode with bit and identity fields could lead to following errors:
 	/// - bit: <c>false</c> inserted into bit field for first record even if <c>true</c> provided;

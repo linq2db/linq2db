@@ -10,19 +10,20 @@ using System.Threading.Tasks;
 
 using JetBrains.Annotations;
 
+using LinqToDB.Async;
+using LinqToDB.DataProvider;
+using LinqToDB.Expressions;
+using LinqToDB.Internals.Expressions;
+using LinqToDB.Internals.Linq;
+using LinqToDB.Internals.Linq.Builder;
+using LinqToDB.Internals.SqlProvider;
+using LinqToDB.Linq;
+using LinqToDB.Reflection;
+
+using static LinqToDB.MultiInsertExtensions;
+
 namespace LinqToDB
 {
-	using Async;
-	using Data;
-	using DataProvider;
-	using Expressions;
-	using Linq;
-	using Linq.Builder;
-	using Reflection;
-	using SqlProvider;
-
-	using static MultiInsertExtensions;
-
 	/// <summary>
 	/// Contains extension methods for LINQ queries.
 	/// </summary>
@@ -3888,7 +3889,7 @@ namespace LinqToDB
 		/// <returns>Test source code.</returns>
 		public static string GenerateTestString<T>(this IQueryable<T> query, bool mangleNames = false)
 		{
-			return new ExpressionTestGenerator(mangleNames, Internals.GetDataContext(query) ?? throw new ArgumentException("Query is not a Linq To DB query", nameof(query)))
+			return new ExpressionTestGenerator(mangleNames, Internals.Linq.Internals.GetDataContext(query) ?? throw new ArgumentException("Query is not a Linq To DB query", nameof(query)))
 				.GenerateSourceString(query.Expression);
 		}
 

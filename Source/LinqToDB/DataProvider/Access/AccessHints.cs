@@ -3,12 +3,12 @@ using System.Linq.Expressions;
 
 using JetBrains.Annotations;
 
+using LinqToDB.Expressions;
+using LinqToDB.Internals.SqlProvider;
+using LinqToDB.Linq;
+
 namespace LinqToDB.DataProvider.Access
 {
-	using Expressions;
-	using Linq;
-	using SqlProvider;
-
 	public static class AccessHints
 	{
 		public static class Query

@@ -8,6 +8,15 @@ using System.Linq.Expressions;
 
 using JetBrains.Annotations;
 
+using LinqToDB.Async;
+using LinqToDB.Data;
+using LinqToDB.DataProvider;
+using LinqToDB.EntityFrameworkCore.Internal;
+using LinqToDB.Internals.Expressions;
+using LinqToDB.Internals.Linq;
+using LinqToDB.Mapping;
+using LinqToDB.Metadata;
+
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
@@ -17,15 +26,6 @@ using Microsoft.Extensions.Logging;
 
 namespace LinqToDB.EntityFrameworkCore
 {
-	using Async;
-	using Data;
-	using DataProvider;
-	using Expressions;
-	using Internal;
-	using Linq;
-	using Mapping;
-	using Metadata;
-
 	/// <summary>
 	/// EF Core <see cref="DbContext"/> extensions to call LINQ To DB functionality.
 	/// </summary>
@@ -48,7 +48,7 @@ namespace LinqToDB.EntityFrameworkCore
 
 			InitializeMapping();
 
-			var instantiator = MemberHelper.MethodOf(() => Internals.CreateExpressionQueryInstance<int>(null!, null!))
+			var instantiator = MemberHelper.MethodOf(() => Internals.Linq.Internals.CreateExpressionQueryInstance<int>(null!, null!))
 				.GetGenericMethodDefinition();
 
 			LinqExtensions.ProcessSourceQueryable = queryable =>
@@ -435,7 +435,6 @@ namespace LinqToDB.EntityFrameworkCore
 
 			return dc;
 		}
-
 
 		static readonly ConcurrentDictionary<Type, Func<DbConnection, string>> _connectionStringExtractors = new();
 

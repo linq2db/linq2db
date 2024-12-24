@@ -1,13 +1,15 @@
-﻿using FluentAssertions;
-using LinqToDB;
-using LinqToDB.Common;
-using LinqToDB.Mapping;
-using NUnit.Framework;
-using System;
+﻿using System;
 using System.Linq;
 using System.Linq.Expressions;
 
-using LinqToDB.Expressions;
+using FluentAssertions;
+
+using LinqToDB;
+using LinqToDB.Common;
+using LinqToDB.Internals.Expressions;
+using LinqToDB.Mapping;
+
+using NUnit.Framework;
 
 namespace Tests.Linq
 {

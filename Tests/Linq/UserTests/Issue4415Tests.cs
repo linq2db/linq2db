@@ -1,20 +1,10 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.ComponentModel.DataAnnotations;
 using System.Linq;
-using System.Linq.Expressions;
-using System.Runtime.Serialization;
 
 using LinqToDB;
-using LinqToDB.Data;
 using LinqToDB.Mapping;
 
-using Newtonsoft.Json;
-
 using NUnit.Framework;
-
-using DataType = LinqToDB.DataType;
 
 namespace Tests.UserTests.Test4415
 {

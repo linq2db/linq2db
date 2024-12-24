@@ -1,9 +1,7 @@
-﻿using System;
+﻿using LinqToDB.Internals.Common;
 
 namespace LinqToDB.Common
 {
-	using Internal;
-
 	/// <summary>
 	/// <para>
 	/// Interface for extensions that are stored in <see cref="IOptionsContainer.OptionSets" />.

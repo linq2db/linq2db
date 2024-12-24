@@ -3,14 +3,14 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 
+using LinqToDB.Common;
+using LinqToDB.Expressions;
+using LinqToDB.Linq;
+using LinqToDB.Mapping;
+using LinqToDB.SqlQuery;
+
 namespace LinqToDB.DataProvider.PostgreSQL
 {
-	using Expressions;
-	using Linq;
-	using SqlQuery;
-	using Common;
-	using Mapping;
-
 	public interface IPostgreSQLExtensions
 	{
 	}

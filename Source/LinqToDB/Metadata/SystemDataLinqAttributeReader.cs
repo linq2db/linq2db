@@ -4,12 +4,12 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 
+using LinqToDB.Common;
+using LinqToDB.Extensions;
+using LinqToDB.Mapping;
+
 namespace LinqToDB.Metadata
 {
-	using Common;
-	using Extensions;
-	using Mapping;
-
 	/// <summary>
 	/// Metadata provider using mapping attributes from <see cref="System.Data.Linq.Mapping"/> namespace:
 	/// <list type="bullet">

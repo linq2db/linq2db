@@ -1,7 +1,9 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+
 using LinqToDB;
 using LinqToDB.Mapping;
+
 using NUnit.Framework;
 
 namespace Tests.UserTests
@@ -50,7 +52,6 @@ namespace Tests.UserTests
 
 				var loaded1 = db.GetTable<RepresentTable>().First(e => e.Name == "Some1");
 				Assert.That(loaded1.Values["IsDeleted"], Is.EqualTo(true));
-
 
 				var loaded2 = db.GetTable<RepresentTable>().First(e => e.Name == "Some2");
 				Assert.That(loaded2.Values["IsDeleted"], Is.EqualTo(false));

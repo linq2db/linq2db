@@ -1,11 +1,12 @@
-﻿using System;
-using System.Linq;
+﻿using System.Linq;
 
 using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.DataProvider.Firebird;
+using LinqToDB.Internals.DataProviders.Firebird;
+using LinqToDB.Internals.SqlProvider;
+using LinqToDB.Internals.SqlQuery;
 using LinqToDB.Mapping;
-using LinqToDB.SqlProvider;
 using LinqToDB.SqlQuery;
 
 using NUnit.Framework;

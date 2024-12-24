@@ -1,10 +1,8 @@
-﻿using System;
+﻿using LinqToDB.Common;
+using LinqToDB.Internals.Common;
 
 namespace LinqToDB
 {
-	using Common;
-	using Common.Internal;
-
 	/// <param name="EnableConstantExpressionInOrderBy">
 	/// If <c>true</c>, linq2db will allow any constant expressions in ORDER BY clause.
 	/// Default value: <c>false</c>.

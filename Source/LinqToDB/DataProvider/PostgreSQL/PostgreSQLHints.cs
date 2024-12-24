@@ -5,13 +5,13 @@ using System.Text;
 
 using JetBrains.Annotations;
 
+using LinqToDB.Expressions;
+using LinqToDB.Internals.SqlProvider;
+using LinqToDB.Internals.SqlQuery;
+using LinqToDB.Linq;
+
 namespace LinqToDB.DataProvider.PostgreSQL
 {
-	using Expressions;
-	using Linq;
-	using SqlProvider;
-	using SqlQuery;
-
 	// https://www.postgresql.org/docs/current/sql-select.html
 	//
 	public static partial class PostgreSQLHints

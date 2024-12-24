@@ -3,12 +3,12 @@ using System.Linq.Expressions;
 
 using JetBrains.Annotations;
 
+using LinqToDB.Expressions;
+using LinqToDB.Internals.SqlProvider;
+using LinqToDB.Linq;
+
 namespace LinqToDB.DataProvider.PostgreSQL
 {
-	using Expressions;
-	using Linq;
-	using SqlProvider;
-
 	public interface IPostgreSQLSpecificTable<out TSource> : ITable<TSource>
 		where TSource : notnull
 	{

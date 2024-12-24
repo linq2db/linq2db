@@ -1,13 +1,13 @@
 ﻿using System;
 using System.Linq.Expressions;
 
+using LinqToDB.Common;
+using LinqToDB.Data;
+using LinqToDB.Internals.Common;
+using LinqToDB.Internals.Linq;
+
 namespace LinqToDB
 {
-	using Common;
-	using Common.Internal;
-	using Data;
-	using Linq;
-
 	/// <param name="PreloadGroups">
 	/// Controls how group data for LINQ queries ended with GroupBy will be loaded:
 	/// - if <c>true</c> - group data will be loaded together with main query, resulting in 1 + N queries, where N - number of groups;

@@ -1,10 +1,10 @@
-﻿using System;
-using System.Data.Common;
+﻿using System.Data.Common;
+
+using LinqToDB.Data;
+using LinqToDB.Internals.DataProviders.ClickHouse;
 
 namespace LinqToDB.DataProvider.ClickHouse
 {
-	using Data;
-
 	public static partial class ClickHouseTools
 	{
 		internal static ClickHouseProviderDetector ProviderDetector = new();

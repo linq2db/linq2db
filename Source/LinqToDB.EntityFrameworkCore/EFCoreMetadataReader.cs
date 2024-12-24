@@ -9,7 +9,8 @@ using System.Reflection;
 using System.Runtime.CompilerServices;
 
 #if !EF6 && !EF31
-using LinqToDB.Common.Internal;
+using LinqToDB.Internals.Common;
+
 #endif
 using Microsoft.EntityFrameworkCore;
 #if !EF31
@@ -25,20 +26,22 @@ using Microsoft.EntityFrameworkCore.Query;
 using Microsoft.EntityFrameworkCore.Query.SqlExpressions;
 using Microsoft.EntityFrameworkCore.Storage;
 
+using LinqToDB.Common;
+
+using LinqToDB.Extensions;
+
+using LinqToDB.Mapping;
+
+using LinqToDB.Metadata;
+
+using EfExpressionPrinter = Microsoft.EntityFrameworkCore.Query.ExpressionPrinter;
+using EfSqlExpression = Microsoft.EntityFrameworkCore.Query.SqlExpressions.SqlExpression;
+
+using LinqToDB.SqlQuery;
+using LinqToDB.Internals.Expressions;
+
 namespace LinqToDB.EntityFrameworkCore
 {
-	using Common;
-	using Expressions;
-	using Extensions;
-	using Internal;
-	using Mapping;
-	using Metadata;
-	using Reflection;
-	using SqlQuery;
-
-	using EfSqlExpression = SqlExpression;
-	using EfExpressionPrinter = ExpressionPrinter;
-
 	/// <summary>
 	/// LINQ To DB metadata reader for EF.Core model.
 	/// </summary>
@@ -551,7 +554,6 @@ namespace LinqToDB.EntityFrameworkCore
 
 			private static readonly MethodInfo _constantExpressionFactoryMethod = typeof(Expression).GetMethod(nameof(Constant), [typeof(object), typeof(Type)])
 				?? throw new InvalidOperationException();
-
 
 			public override Expression Quote()
 			{

@@ -7,10 +7,10 @@ using LinqToDB;
 
 using NUnit.Framework;
 
+using Tests.UserTests.MCC.WMS.ServiceInterfaces.DTO;
+
 namespace Tests.UserTests
 {
-	using MCC.WMS.ServiceInterfaces.DTO;
-
 	namespace MCC.Common.ServiceInterfaces.DTO
 	{
 		public interface IModifiedTimeStamp

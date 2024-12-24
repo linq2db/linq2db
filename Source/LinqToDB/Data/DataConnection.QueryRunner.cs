@@ -8,16 +8,18 @@ using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 
+using LinqToDB.DataProvider;
+using LinqToDB.Extensions;
+using LinqToDB.Infrastructure;
+using LinqToDB.Internals.Common;
+using LinqToDB.Internals.Linq;
+using LinqToDB.Internals.SqlProvider;
+using LinqToDB.Internals.SqlQuery;
+using LinqToDB.Linq;
+using LinqToDB.Tools;
+
 namespace LinqToDB.Data
 {
-	using Common.Internal;
-	using DataProvider;
-	using Infrastructure;
-	using Linq;
-	using SqlProvider;
-	using SqlQuery;
-	using Tools;
-
 	public partial class DataConnection
 	{
 		IQueryRunner IDataContext.GetQueryRunner(

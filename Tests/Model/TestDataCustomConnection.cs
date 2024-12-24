@@ -5,11 +5,11 @@ using System.Linq.Expressions;
 using System.Threading.Tasks;
 
 using LinqToDB;
-using LinqToDB.Common.Internal;
 using LinqToDB.Interceptors;
-using LinqToDB.Linq;
+using LinqToDB.Internals.Common;
+using LinqToDB.Internals.Linq;
+using LinqToDB.Internals.SqlProvider;
 using LinqToDB.Mapping;
-using LinqToDB.SqlProvider;
 
 namespace Tests.Model
 {
@@ -36,7 +36,6 @@ namespace Tests.Model
 		{
 			Connection = new TestDataConnection();
 		}
-
 
 		public ITable<Person> Person => Connection.Person;
 
@@ -111,7 +110,6 @@ namespace Tests.Model
 		public string? ConfigurationString => ((IDataContext)Connection).ConfigurationString;
 
 		public int ConfigurationID => ((IConfigurationID)Connection).ConfigurationID;
-
 
 		public void AddInterceptor(IInterceptor interceptor)
 		{

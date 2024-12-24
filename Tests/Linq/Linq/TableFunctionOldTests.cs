@@ -3,14 +3,14 @@ using System.Linq;
 
 using LinqToDB;
 using LinqToDB.Data;
+using LinqToDB.DataProvider.SqlServer;
 
 using NUnit.Framework;
 
+using Tests.Model;
+
 namespace Tests.Linq
 {
-	using LinqToDB.DataProvider.SqlServer;
-	using Model;
-
 	[TestFixture]
 	public class TableFunctionOldTests : TestBase
 	{

@@ -1,8 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
+
+using LinqToDB.Internals.SqlQuery;
 using LinqToDB.Schema;
-using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Scaffold
 {

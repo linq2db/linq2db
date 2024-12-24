@@ -5,13 +5,16 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.Loader;
+
 using LinqToDB.Scaffold;
+
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Emit;
-using Mono.TextTemplating;
 using Microsoft.Extensions.DependencyModel;
 using Microsoft.Extensions.DependencyModel.Resolution;
+
+using Mono.TextTemplating;
 
 namespace LinqToDB.CommandLine
 {
@@ -365,7 +368,6 @@ namespace LinqToDB.CommandLine
 				return StatusCodes.T4_ERROR;
 			}
 
-
 			// make some basic assertions
 			if (language != "C#")
 			{
@@ -403,6 +405,7 @@ namespace LinqToDB.CommandLine
 				if (!asmName.Contains(".Native.", StringComparison.Ordinal))
 					referencesList.Add(MetadataReference.CreateFromFile(Path.Combine(fwPath, asmName)));
 			}
+
 			var usings = new List<string>();
 			foreach (var directive in template.Directives)
 			{

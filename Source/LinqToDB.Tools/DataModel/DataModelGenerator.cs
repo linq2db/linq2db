@@ -1,9 +1,10 @@
 ﻿using System;
 using System.Linq;
+
 using LinqToDB.CodeModel;
+using LinqToDB.Internals.SqlProvider;
 using LinqToDB.Metadata;
 using LinqToDB.Scaffold;
-using LinqToDB.SqlProvider;
 
 namespace LinqToDB.DataModel
 {

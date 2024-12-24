@@ -841,7 +841,6 @@ namespace Tests.Extensions
 
 			_ = q.ToList();
 
-
 			Assert.That(LastQuery, Should.Contain(
 				"SELECT /*+ CONTAINERS(DEFAULT_PDB_HINT='NO_PARALLEL')",
 				"UNION"));

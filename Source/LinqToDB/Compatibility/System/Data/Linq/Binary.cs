@@ -1,10 +1,12 @@
 ﻿#if !NETFRAMEWORK
+#pragma warning disable IDE0130
+
 using System.Runtime.Serialization;
+
+using LinqToDB.Common;
 
 namespace System.Data.Linq
 {
-	using LinqToDB.Common;
-
 	[DataContract]
 	[Serializable]
 	public sealed class Binary : IEquatable<Binary>
@@ -62,6 +64,7 @@ namespace System.Data.Linq
 				// to recompute the hash after deserialization.
 				ComputeHash();
 			}
+
 			return _hashCode!.Value;
 		}
 
@@ -82,6 +85,7 @@ namespace System.Data.Linq
 				if(_bytes[i] != binary._bytes[i])
 					return false;
 			}
+
 			return true;
 		}
 

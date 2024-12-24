@@ -2,23 +2,23 @@
 using System.Data.Linq;
 using System.Linq;
 using System.Reflection;
+using System.Threading.Tasks;
 using System.Xml;
 using System.Xml.Linq;
-using System.Threading.Tasks;
 
 using LinqToDB;
 using LinqToDB.Common;
 using LinqToDB.Data;
-using LinqToDB.DataProvider.SapHana;
 using LinqToDB.Expressions;
+using LinqToDB.Internals.DataProviders.SapHana;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
 
+using Tests.Model;
+
 namespace Tests.DataProvider
 {
-	using Model;
-
 	[TestFixture]
 	public class SapHanaTests : DataProviderTestBase
 	{
@@ -276,7 +276,6 @@ namespace Tests.DataProvider
 				});
 			}
 		}
-
 
 		[Test]
 		public void TestXml([IncludeDataSources(CurrentProvider)] string context)

@@ -2,23 +2,24 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json;
+
 using JetBrains.Annotations;
 
 using LinqToDB;
 using LinqToDB.Data;
-using LinqToDB.Linq;
+using LinqToDB.Internals.Linq;
 using LinqToDB.Mapping;
 using LinqToDB.Tools.Comparers;
 
 using NUnit.Framework;
 
+using ColumnBuilder = System.Action<LinqToDB.Mapping.EntityMappingBuilder<Tests.xUpdate.CreateTableTypesTests.CreateTableTypes>>;
+using DefaultValueBuilder = System.Action<string, Tests.xUpdate.CreateTableTypesTests.CreateTableTypes>;
+using ValueBuilder = System.Action<Tests.xUpdate.CreateTableTypesTests.CreateTableTypes>;
+
 // ReSharper disable once CheckNamespace
 namespace Tests.xUpdate
 {
-	using ColumnBuilder       = Action<EntityMappingBuilder<CreateTableTypesTests.CreateTableTypes>>;
-	using ValueBuilder        = Action<CreateTableTypesTests.CreateTableTypes>;
-	using DefaultValueBuilder = Action<string, CreateTableTypesTests.CreateTableTypes>;
-
 	[TestFixture]
 	public class CreateTableTypesTests : TestBase
 	{

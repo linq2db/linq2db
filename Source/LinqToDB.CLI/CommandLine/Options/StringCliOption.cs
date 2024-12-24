@@ -65,6 +65,7 @@ namespace LinqToDB.CommandLine
 							errorDetails = $"array should contain strings but '{value.ValueKind}' value found";
 							return null;
 						}
+
 						values.Add(value.GetString()!);
 					}
 				}

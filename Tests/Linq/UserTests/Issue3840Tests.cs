@@ -1,13 +1,9 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.ComponentModel.DataAnnotations;
 using System.Linq;
-using System.Runtime.Serialization;
+
 using LinqToDB;
-using LinqToDB.Data;
 using LinqToDB.Mapping;
-using Newtonsoft.Json;
+
 using NUnit.Framework;
 
 namespace Tests.UserTests.Test3840

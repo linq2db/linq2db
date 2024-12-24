@@ -1,14 +1,13 @@
 ﻿using System;
 using System.Data.Common;
-using System.Linq;
 using System.Linq.Expressions;
+
+using LinqToDB.DataProvider;
+using LinqToDB.Internals.SqlProvider;
+using LinqToDB.Internals.SqlQuery;
 
 namespace LinqToDB.Data
 {
-	using DataProvider;
-	using SqlProvider;
-	using SqlQuery;
-
 	public partial class DataConnection
 	{
 		protected virtual SqlStatement ProcessQuery(SqlStatement statement, EvaluationContext context)

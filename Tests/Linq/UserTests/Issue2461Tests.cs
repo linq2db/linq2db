@@ -3,6 +3,7 @@
 using FluentAssertions;
 
 using LinqToDB;
+
 using NUnit.Framework;
 
 namespace Tests.UserTests

@@ -2,10 +2,10 @@
 using System.Data.Linq;
 using System.Globalization;
 
+using LinqToDB.Mapping;
+
 namespace LinqToDB.Remote
 {
-	using Mapping;
-
 	/// <summary>
 	/// Mapping schema, that defines remote context values de-/serialization converters.
 	/// Contains mappings between basic data types and <see cref="string"/>.

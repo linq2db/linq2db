@@ -1,9 +1,10 @@
 ﻿using System;
 
+using LinqToDB.Internals.SqlQuery;
+using LinqToDB.SqlQuery;
+
 namespace LinqToDB.Mapping
 {
-	using SqlQuery;
-
 	/// <summary>
 	/// Configures mapping of mapping class member to database column.
 	/// Could be applied directly to a property or field or to mapping class/interface.

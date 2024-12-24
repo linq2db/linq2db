@@ -2,14 +2,14 @@
 using System.Linq;
 using System.Linq.Expressions;
 
-using LinqToDB.Expressions;
+using LinqToDB.Internals.Expressions;
 
 using NUnit.Framework;
 
+using Tests.Model;
+
 namespace Tests.Linq
 {
-	using Model;
-
 	[TestFixture]
 	public class GenerateTests : TestBase
 	{

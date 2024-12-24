@@ -1,13 +1,13 @@
 ﻿using System;
 using System.Globalization;
 using System.IO;
-using System.Text;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 
 using LinqToDB;
 using LinqToDB.Common;
-using LinqToDB.Expressions;
+using LinqToDB.Internals.Expressions;
 using LinqToDB.Mapping;
 using LinqToDB.Metadata;
 

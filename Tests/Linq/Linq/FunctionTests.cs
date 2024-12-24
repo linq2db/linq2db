@@ -4,20 +4,18 @@ using System.Linq;
 using System.Linq.Expressions;
 
 using LinqToDB;
-using LinqToDB.Data;
+using LinqToDB.Internals.SqlQuery;
 using LinqToDB.Linq;
-using LinqToDB.SqlQuery;
+using LinqToDB.Mapping;
 
 using NUnit.Framework;
+
+using Tests.Model;
 
 // ReSharper disable UnusedMember.Local
 
 namespace Tests.Linq
 {
-	using LinqToDB.Common;
-	using LinqToDB.Mapping;
-	using Model;
-
 	[TestFixture]
 	public class FunctionTests : TestBase
 	{

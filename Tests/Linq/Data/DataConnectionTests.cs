@@ -9,22 +9,24 @@ using System.Threading.Tasks;
 using System.Transactions;
 
 using LinqToDB;
-using LinqToDB.Extensions.DependencyInjection;
 using LinqToDB.Data;
 using LinqToDB.DataProvider;
 using LinqToDB.DataProvider.DB2;
 using LinqToDB.DataProvider.SqlServer;
+using LinqToDB.Extensions.DependencyInjection;
 using LinqToDB.Interceptors;
+using LinqToDB.Internals.DataProviders.DB2;
+using LinqToDB.Internals.DataProviders.SqlServer;
 using LinqToDB.Mapping;
 
 using Microsoft.Extensions.DependencyInjection;
 
 using NUnit.Framework;
 
+using Tests.Model;
+
 namespace Tests.Data
 {
-	using Model;
-
 	[TestFixture]
 	public class DataConnectionTests : TestBase
 	{

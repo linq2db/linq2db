@@ -1,11 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 
 using LinqToDB;
-using LinqToDB.Async;
+using LinqToDB.Internals.Async;
 using LinqToDB.Mapping;
 using LinqToDB.Tools.Comparers;
 

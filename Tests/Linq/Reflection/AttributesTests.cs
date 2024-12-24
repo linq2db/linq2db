@@ -1,8 +1,9 @@
 ﻿using System;
 using System.Reflection;
+
 using LinqToDB.Extensions;
 using LinqToDB.Mapping;
-using Microsoft.Data.SqlClient;
+
 using NUnit.Framework;
 
 namespace Tests.Reflection

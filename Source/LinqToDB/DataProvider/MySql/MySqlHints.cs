@@ -6,13 +6,14 @@ using System.Text;
 
 using JetBrains.Annotations;
 
+using LinqToDB.Expressions;
+using LinqToDB.Internals.Linq;
+using LinqToDB.Internals.SqlProvider;
+using LinqToDB.Internals.SqlQuery;
+using LinqToDB.Linq;
+
 namespace LinqToDB.DataProvider.MySql
 {
-	using Expressions;
-	using Linq;
-	using SqlProvider;
-	using SqlQuery;
-
 	public static partial class MySqlHints
 	{
 		// https://dev.mysql.com/doc/refman/8.0/en/optimizer-hints.html#optimizer-hints-index-level

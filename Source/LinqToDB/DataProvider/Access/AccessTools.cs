@@ -3,10 +3,12 @@ using System.Data.Common;
 using System.IO;
 using System.Security;
 
+using LinqToDB.Data;
+using LinqToDB.Internals.Common;
+using LinqToDB.Internals.DataProviders.Access;
+
 namespace LinqToDB.DataProvider.Access
 {
-	using Data;
-
 	/// <summary>
 	/// Contains Access provider management tools.
 	/// </summary>

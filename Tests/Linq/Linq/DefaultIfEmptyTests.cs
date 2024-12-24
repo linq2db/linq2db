@@ -3,7 +3,6 @@
 using FluentAssertions;
 
 using LinqToDB;
-using LinqToDB.Linq;
 
 using NUnit.Framework;
 
@@ -70,7 +69,6 @@ namespace Tests.Linq
 						.Select(c => c.ParentID)
 						.Sum()
 				};
-
 
 			AreEqual(exptected, query);
 		}

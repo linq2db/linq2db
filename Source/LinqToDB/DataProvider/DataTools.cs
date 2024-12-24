@@ -6,10 +6,10 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Text;
 
+using LinqToDB.Internals.Common;
+
 namespace LinqToDB.DataProvider
 {
-	using Common.Internal;
-
 	public static class DataTools
 	{
 		/// <summary>

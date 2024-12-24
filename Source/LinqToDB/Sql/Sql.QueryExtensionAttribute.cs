@@ -3,14 +3,13 @@ using System.Collections.Generic;
 using System.Linq.Expressions;
 using System.Reflection;
 
+using LinqToDB.Internals.Common;
+using LinqToDB.Internals.Linq.Builder;
+using LinqToDB.Internals.SqlQuery;
+using LinqToDB.Mapping;
+
 namespace LinqToDB
 {
-	using Common;
-	using Linq.Builder;
-	using Common.Internal;
-	using Mapping;
-	using SqlQuery;
-
 	public partial class Sql
 	{
 		/// <summary>

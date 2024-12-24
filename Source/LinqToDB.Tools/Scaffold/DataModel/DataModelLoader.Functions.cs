@@ -1,11 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
-using LinqToDB.Metadata;
-using LinqToDB.Schema;
+using System.Linq;
+
 using LinqToDB.CodeModel;
 using LinqToDB.DataModel;
-using System.Linq;
-using LinqToDB.SqlQuery;
+using LinqToDB.Internals.SqlQuery;
+using LinqToDB.Metadata;
+using LinqToDB.Schema;
 
 namespace LinqToDB.Scaffold
 {
@@ -132,6 +133,7 @@ namespace LinqToDB.Scaffold
 							DataType = typeMapping.DataType
 						});
 					}
+
 					break;
 				}
 				case ResultKind.Void:

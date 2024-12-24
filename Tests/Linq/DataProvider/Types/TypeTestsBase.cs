@@ -1,14 +1,14 @@
 ﻿using System;
-using System.Threading.Tasks;
 using System.Linq;
+using System.Threading.Tasks;
 
 using LinqToDB;
 using LinqToDB.Common;
 using LinqToDB.Data;
+using LinqToDB.Interceptors;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
-using System.Collections.Generic;
 
 namespace Tests.DataProvider
 {

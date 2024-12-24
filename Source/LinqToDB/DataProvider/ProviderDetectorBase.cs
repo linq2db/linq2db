@@ -2,12 +2,12 @@
 using System.Data;
 using System.Data.Common;
 
+using LinqToDB.Data;
+using LinqToDB.Internals.Cache;
+using LinqToDB.Tools;
+
 namespace LinqToDB.DataProvider
 {
-	using Common.Internal.Cache;
-	using Data;
-	using Tools;
-
 	abstract class ProviderDetectorBase<TProvider,TVersion>
 		where TProvider   : struct, Enum
 		where TVersion    : struct, Enum

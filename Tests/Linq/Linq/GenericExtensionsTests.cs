@@ -4,15 +4,15 @@ using System.Linq;
 using System.Reflection;
 
 using LinqToDB;
-using LinqToDB.Common.Internal;
+using LinqToDB.Internals.Common;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
 
+using Tests.Model;
+
 namespace Tests.Linq
 {
-	using Model;
-
 	[AttributeUsage(AttributeTargets.Method, AllowMultiple = true)]
 	public class ExtensionChoiceAttribute : MappingAttribute
 	{

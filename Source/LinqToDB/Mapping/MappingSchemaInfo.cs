@@ -3,14 +3,14 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 
+using LinqToDB.Common;
+using LinqToDB.Expressions;
+using LinqToDB.Internals.Common;
+using LinqToDB.Metadata;
+using LinqToDB.SqlQuery;
+
 namespace LinqToDB.Mapping
 {
-	using Common;
-	using Common.Internal;
-	using Expressions;
-	using Metadata;
-	using SqlQuery;
-
 	class MappingSchemaInfo : IConfigurationID
 	{
 		public MappingSchemaInfo(string configuration)
@@ -112,6 +112,7 @@ namespace LinqToDB.Mapping
 									stop = true;
 									break;
 								}
+
 							if (stop)
 								continue;
 

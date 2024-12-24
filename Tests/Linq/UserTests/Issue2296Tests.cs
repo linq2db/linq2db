@@ -1,5 +1,7 @@
 ﻿using System.Linq;
+
 using LinqToDB;
+
 using NUnit.Framework;
 
 namespace Tests.UserTests
@@ -23,7 +25,6 @@ namespace Tests.UserTests
 
 				localQuery = localQuery.Where(p => varInt < p.ParentID);
 				var expected = localQuery.ToArray();
-
 
 				var dbQuery =
 					from p in db.Parent

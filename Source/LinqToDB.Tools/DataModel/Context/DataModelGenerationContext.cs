@@ -5,10 +5,10 @@ using System.Globalization;
 using System.Linq;
 
 using LinqToDB.CodeModel;
+using LinqToDB.Internals.SqlProvider;
+using LinqToDB.Internals.SqlQuery;
 using LinqToDB.Metadata;
 using LinqToDB.Scaffold;
-using LinqToDB.SqlProvider;
-using LinqToDB.SqlQuery;
 
 namespace LinqToDB.DataModel
 {
@@ -174,7 +174,6 @@ namespace LinqToDB.DataModel
 
 			return group;
 		}
-
 
 		MethodGroup IDataModelGenerationContext.GetEntityAssociationExtensionsGroup(EntityModel entity)
 		{

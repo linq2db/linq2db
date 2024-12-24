@@ -1,10 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+
 using LinqToDB.CodeModel;
+using LinqToDB.Internals.SqlQuery;
 using LinqToDB.Metadata;
 using LinqToDB.Scaffold;
-using LinqToDB.SqlQuery;
 
 namespace LinqToDB.DataModel
 {

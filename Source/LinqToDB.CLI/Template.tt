@@ -14,7 +14,7 @@
 <#@ import namespace="LinqToDB.DataModel"         #>
 <#@ import namespace="LinqToDB.Schema"            #>
 <#@ import namespace="LinqToDB.Scaffold"          #>
-<#@ import namespace="LinqToDB.SqlQuery"          #>
+<#@ import namespace="LinqToDB.Internals.SqlQuery"          #>
 
 /*
 

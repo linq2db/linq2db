@@ -3,12 +3,14 @@ using System.Data;
 using System.Data.Common;
 using System.Linq;
 using System.Threading.Tasks;
+
 using BenchmarkDotNet.Attributes;
 
 using LinqToDB.Benchmarks.TestProvider;
 using LinqToDB.Data;
 using LinqToDB.DataProvider.SQLite;
-using LinqToDB.Linq;
+using LinqToDB.Internals.DataProviders.SQLite;
+using LinqToDB.Internals.Linq;
 using LinqToDB.Mapping;
 
 namespace LinqToDB.Benchmarks.Queries

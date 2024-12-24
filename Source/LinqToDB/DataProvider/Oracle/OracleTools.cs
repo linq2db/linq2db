@@ -1,10 +1,10 @@
-﻿using System;
-using System.Data.Common;
+﻿using System.Data.Common;
+
+using LinqToDB.Data;
+using LinqToDB.Internals.DataProviders.Oracle;
 
 namespace LinqToDB.DataProvider.Oracle
 {
-	using Data;
-
 	public static partial class OracleTools
 	{
 		internal static OracleProviderDetector ProviderDetector = new();

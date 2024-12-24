@@ -1,12 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
+
+using LinqToDB.Common;
+using LinqToDB.Data;
+using LinqToDB.Internals.Common;
+using LinqToDB.Internals.DataProviders.Oracle;
 
 namespace LinqToDB.DataProvider.Oracle
 {
-	using Common;
-	using Common.Internal;
-	using Data;
-
 	/// <param name="BulkCopyType">
 	/// Default bulk copy mode, used for oracle by <see cref="DataConnectionExtensions.BulkCopy{T}(DataConnection, IEnumerable{T})"/>
 	/// methods, if mode is not specified explicitly.

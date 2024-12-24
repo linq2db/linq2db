@@ -1,12 +1,11 @@
-﻿using System;
-using System.Data;
-using System.Data.Common;
+﻿using System.Data.Common;
 using System.Reflection;
+
+using LinqToDB.Data;
+using LinqToDB.Internals.DataProviders.MySql;
 
 namespace LinqToDB.DataProvider.MySql
 {
-	using Data;
-
 	public static partial class MySqlTools
 	{
 		internal static MySqlProviderDetector ProviderDetector = new();

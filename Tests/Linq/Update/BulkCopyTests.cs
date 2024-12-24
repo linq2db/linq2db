@@ -7,18 +7,18 @@ using FluentAssertions;
 
 using LinqToDB;
 using LinqToDB.Data;
-using LinqToDB.DataProvider.Informix;
-using LinqToDB.DataProvider.Oracle;
 using LinqToDB.Interceptors;
+using LinqToDB.Internals.DataProviders.Informix;
+using LinqToDB.Internals.DataProviders.Oracle;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
 
+using Tests.DataProvider;
+using Tests.Model;
+
 namespace Tests.xUpdate
 {
-	using Model;
-	using Tests.DataProvider;
-
 	[TestFixture]
 	[Order(10000)]
 	public class BulkCopyTests : TestBase

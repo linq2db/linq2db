@@ -1,21 +1,20 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Linq.Expressions;
 
 using FluentAssertions;
 
 using LinqToDB;
-using LinqToDB.Linq;
+using LinqToDB.Internals.Linq;
+using LinqToDB.Internals.SqlQuery;
 using LinqToDB.Mapping;
 using LinqToDB.SqlQuery;
 
 using NUnit.Framework;
 
+using Tests.Model;
+
 namespace Tests.Linq
 {
-	using Model;
-
 	[TestFixture]
 	public class GroupByTests : TestBase
 	{
@@ -941,7 +940,6 @@ namespace Tests.Linq
 			AssertQuery(query);
 		}
 
-
 		[Test]
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllAccess, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
 		public void MaxInGroup([DataSources] string context)
@@ -968,7 +966,6 @@ namespace Tests.Linq
 
 			AssertQuery(query);
 		}
-
 
 		[Test]
 		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllAccess, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
@@ -997,7 +994,6 @@ namespace Tests.Linq
 
 			AssertQuery(query);
 		}
-
 
 		[Test]
 		public void SelectMax([DataSources] string context)
@@ -2599,6 +2595,7 @@ namespace Tests.Linq
 			{
 				db.Person.GroupBy(p => p.ID).DisableGuard().ToDictionary(g => g.Key, g => g.Select(p => p.LastName).ToList());
 			}
+
 			Query.ClearCaches();
 		}
 
@@ -3044,7 +3041,6 @@ namespace Tests.Linq
 
 			AssertQuery(query);
 		}
-
 
 		[Test]
 		public void GroupByInOuterApply([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)

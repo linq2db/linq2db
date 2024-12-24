@@ -1,15 +1,15 @@
 ﻿using System.Linq;
 
 using LinqToDB;
+using LinqToDB.Internals.SqlQuery;
 using LinqToDB.Mapping;
-using LinqToDB.SqlQuery;
 
 using NUnit.Framework;
 
+using Tests.Model;
+
 namespace Tests.Linq
 {
-	using Model;
-
 	[TestFixture]
 	public class JoinOptimizeTests : TestBase
 	{
@@ -373,7 +373,6 @@ namespace Tests.Linq
 			}
 		}
 
-
 		[Test]
 		public void InnerJoin3([NorthwindDataContext] string context)
 		{
@@ -573,7 +572,6 @@ namespace Tests.Linq
 			}
 		}
 
-
 		[Table(Name = "Person")]
 		public class PersonEntity
 		{
@@ -585,7 +583,6 @@ namespace Tests.Linq
 			[Column]
 			public string? Name { get; set; }
 		}
-
 
 		[Table(Name = "Adress")]
 		public class AdressEntity

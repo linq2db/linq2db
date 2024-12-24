@@ -1,11 +1,11 @@
-﻿using System;
-using System.Data.Common;
+﻿using System.Data.Common;
 using System.Reflection;
+
+using LinqToDB.Data;
+using LinqToDB.Internals.DataProviders.Sybase;
 
 namespace LinqToDB.DataProvider.Sybase
 {
-	using Data;
-
 	public static class SybaseTools
 	{
 		internal static SybaseProviderDetector ProviderDetector = new();

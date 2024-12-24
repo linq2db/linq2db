@@ -1,13 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+
 using LinqToDB.CodeModel;
-using LinqToDB.Common;
 using LinqToDB.DataModel;
+using LinqToDB.Internals.SqlProvider;
 using LinqToDB.Metadata;
 using LinqToDB.Naming;
 using LinqToDB.Schema;
-using LinqToDB.SqlProvider;
 
 namespace LinqToDB.Scaffold
 {

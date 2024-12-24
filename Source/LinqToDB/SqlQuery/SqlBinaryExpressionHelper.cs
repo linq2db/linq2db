@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 
+using LinqToDB.Internals.SqlQuery;
+
 namespace LinqToDB.SqlQuery
 {
 	internal static class SqlBinaryExpressionHelper

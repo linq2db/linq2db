@@ -1,8 +1,8 @@
-﻿using System;
-using System.Linq;
-using FluentAssertions;
+﻿using System.Linq;
+
 using LinqToDB;
 using LinqToDB.Mapping;
+
 using NUnit.Framework;
 
 namespace Tests.UserTests
@@ -28,7 +28,6 @@ namespace Tests.UserTests
 		{
 			[PrimaryKey] public int Id { get; set; } // int
 		}
-
 
 		[Test]
 		public void Test([DataSources] string context)

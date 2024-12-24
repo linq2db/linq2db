@@ -1,13 +1,13 @@
 ﻿using System;
 using System.Diagnostics;
 
+using LinqToDB.Data;
+
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
 namespace LinqToDB.Extensions.Logging
 {
-	using Data;
-
 	public static class OptionsBuilderExtensions
 	{
 		/// <summary>

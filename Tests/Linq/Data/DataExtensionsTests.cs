@@ -7,10 +7,10 @@ using LinqToDB.Mapping;
 
 using NUnit.Framework;
 
+using Tests.Model;
+
 namespace Tests.Data
 {
-	using Model;
-
 	[TestFixture]
 	public class DataExtensionsTests : TestBase
 	{

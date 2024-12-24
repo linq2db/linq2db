@@ -6,16 +6,17 @@ using System.Threading;
 using System.Threading.Tasks;
 
 using LinqToDB;
-using LinqToDB.Expressions;
+using LinqToDB.Common;
+using LinqToDB.Internals.Expressions;
+using LinqToDB.Internals.Linq;
 using LinqToDB.Linq;
 
 using NUnit.Framework;
 
+using Tests.Model;
+
 namespace Tests.UserTests
 {
-	using LinqToDB.Common;
-	using Model;
-
 	[TestFixture]
 	public class Issue278Tests : TestBase
 	{

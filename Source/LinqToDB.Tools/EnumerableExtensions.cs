@@ -1,17 +1,19 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Globalization;
+using System.Linq;
 using System.Text;
 
 using JetBrains.Annotations;
 
+using LinqToDB.Extensions;
+
+using LinqToDB.Mapping;
+
+using LinqToDB.Reflection;
+
 namespace LinqToDB.Tools
 {
-	using Extensions;
-	using Mapping;
-	using Reflection;
-
 	public static class EnumerableExtensions
 	{
 		sealed class ValueHolder<T>

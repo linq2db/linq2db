@@ -1,12 +1,12 @@
 ﻿using System;
 using System.Globalization;
 
+using LinqToDB.Expressions;
+
+using PN = LinqToDB.ProviderName;
+
 namespace LinqToDB
 {
-	using Expressions;
-
-	using PN = ProviderName;
-
 	public partial class Sql
 	{
 		#region DatePart

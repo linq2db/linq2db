@@ -12,18 +12,18 @@ using System.Threading.Tasks;
 using System.Xml;
 using System.Xml.Linq;
 
+using LinqToDB.Common;
+using LinqToDB.Data;
+using LinqToDB.Infrastructure;
+using LinqToDB.Internals.Common;
+using LinqToDB.Internals.Expressions;
+using LinqToDB.Internals.Linq.Translation;
+using LinqToDB.Internals.SqlProvider;
+using LinqToDB.Mapping;
+using LinqToDB.SchemaProvider;
+
 namespace LinqToDB.DataProvider
 {
-	using Common;
-	using Common.Internal;
-	using Data;
-	using Expressions;
-	using Infrastructure;
-	using Linq.Translation;
-	using Mapping;
-	using SchemaProvider;
-	using SqlProvider;
-
 	public abstract class DataProviderBase : IDataProvider, IInfrastructure<IServiceProvider>
 	{
 		#region .ctor
@@ -386,6 +386,7 @@ namespace LinqToDB.DataProvider
 									: "hh\\:mm\\:ss",
 							DateTimeFormatInfo.InvariantInfo);
 					}
+
 					break;
 				case DataType.Image     :
 				case DataType.Binary    :

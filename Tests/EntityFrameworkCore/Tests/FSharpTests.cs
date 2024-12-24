@@ -1,12 +1,16 @@
 ﻿#if !NETFRAMEWORK && !NET9_0
-using Microsoft.EntityFrameworkCore;
-using LinqToDB.EntityFrameworkCore.FSharp;
-using EntityFrameworkCore.FSharp;
-
-using NUnit.Framework;
 using System;
 using System.Linq;
+
+using EntityFrameworkCore.FSharp;
+
+using LinqToDB.EntityFrameworkCore.FSharp;
 using LinqToDB.Mapping;
+
+using Microsoft.EntityFrameworkCore;
+
+using NUnit.Framework;
+
 using Tests;
 
 namespace LinqToDB.EntityFrameworkCore.Tests

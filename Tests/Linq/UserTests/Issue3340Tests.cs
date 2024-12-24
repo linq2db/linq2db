@@ -9,8 +9,8 @@ using System.Text;
 using LinqToDB;
 using LinqToDB.Common;
 using LinqToDB.Extensions;
+using LinqToDB.Internals.SqlQuery;
 using LinqToDB.Mapping;
-using LinqToDB.SqlQuery;
 
 using Newtonsoft.Json;
 

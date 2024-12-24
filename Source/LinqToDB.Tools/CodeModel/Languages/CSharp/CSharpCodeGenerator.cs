@@ -131,6 +131,7 @@ namespace LinqToDB.CodeModel
 						// remove any possible newlines to avoid invalid code generation
 						Write(string.Join(string.Empty, SplitByNewLine(warn)));
 					}
+
 					WriteLine();
 					break;
 				case PragmaType.Error:
@@ -390,6 +391,7 @@ namespace LinqToDB.CodeModel
 						WriteXmlText(line);
 						WriteLine();
 					}
+
 					WriteLine("/// </summary>");
 				}
 			}
@@ -1216,6 +1218,7 @@ namespace LinqToDB.CodeModel
 					WriteLine(';');
 					WriteTrivia(stmt.After);
 				}
+
 				CloseBlock(false, true);
 			}
 		}
@@ -1384,6 +1387,7 @@ namespace LinqToDB.CodeModel
 						if (size != null)
 							WriteLiteral(size.Value, WellKnownTypes.System.Int32, false);
 					}
+
 					Write(']');
 					break;
 				}
@@ -1474,6 +1478,7 @@ namespace LinqToDB.CodeModel
 										.NewGroup()
 										.ColumnValue(ATTR_TABLE_PARAMETER_VALUE, BuildFragment(b => b.Visit(parameter)));
 							}
+
 							if (attribute.NamedParameters.Count > 0)
 							{
 								var namedParameters = attributeBuilder.Group(ATTR_TABLE_NAMED_PARAMETERS_GROUP);

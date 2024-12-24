@@ -1,6 +1,9 @@
 ﻿using System.Linq;
+
 using LinqToDB;
+
 using NUnit.Framework;
+
 using Tests.Model;
 
 namespace Tests.xUpdate

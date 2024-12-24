@@ -1,11 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 
+using LinqToDB.Data.RetryPolicy;
+using LinqToDB.Internals.DataProviders.ClickHouse;
+
 namespace LinqToDB.DataProvider.ClickHouse
 {
-	using Common;
-	using Data.RetryPolicy;
-
 	/// <summary>
 	/// Retry policy handles only following exceptions:
 	/// <list type="bullet">
@@ -21,7 +21,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 		/// Creates a new instance of <see cref="ClickHouseRetryPolicy" />.
 		/// </summary>
 		public ClickHouseRetryPolicy()
-			: this(Configuration.RetryPolicy.DefaultMaxRetryCount)
+			: this(Common.Configuration.RetryPolicy.DefaultMaxRetryCount)
 		{ }
 
 		/// <summary>
@@ -29,7 +29,14 @@ namespace LinqToDB.DataProvider.ClickHouse
 		/// </summary>
 		/// <param name="maxRetryCount"> The maximum number of retry attempts. </param>
 		public ClickHouseRetryPolicy(int maxRetryCount)
-			: this(maxRetryCount, Configuration.RetryPolicy.DefaultMaxDelay, Configuration.RetryPolicy.DefaultRandomFactor, Configuration.RetryPolicy.DefaultExponentialBase, Configuration.RetryPolicy.DefaultCoefficient, null)
+			: this(
+				maxRetryCount,
+				Common.Configuration.RetryPolicy.DefaultMaxDelay,
+				Common.Configuration.RetryPolicy.DefaultRandomFactor,
+				Common.Configuration.RetryPolicy.DefaultExponentialBase,
+				Common.Configuration.RetryPolicy.DefaultCoefficient,
+				null
+			)
 		{ }
 
 		/// <summary>
@@ -42,11 +49,11 @@ namespace LinqToDB.DataProvider.ClickHouse
 		/// <param name="coefficient">The coefficient for the exponential function used to compute the delay between retries. </param>
 		/// <param name="errorNumbersToAdd">Additional SQL error numbers that should be considered transient.</param>
 		public ClickHouseRetryPolicy(
-			int               maxRetryCount,
-			TimeSpan          maxRetryDelay,
-			double            randomFactor,
-			double            exponentialBase,
-			TimeSpan          coefficient,
+			int maxRetryCount,
+			TimeSpan maxRetryDelay,
+			double randomFactor,
+			double exponentialBase,
+			TimeSpan coefficient,
 			ICollection<int>? errorNumbersToAdd)
 			: base(maxRetryCount, maxRetryDelay, randomFactor, exponentialBase, coefficient)
 		{

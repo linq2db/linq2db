@@ -4,12 +4,13 @@ using System.Linq.Expressions;
 
 using JetBrains.Annotations;
 
+using LinqToDB.Expressions;
+using LinqToDB.Internals.Linq;
+using LinqToDB.Internals.SqlProvider;
+using LinqToDB.Linq;
+
 namespace LinqToDB.DataProvider.SqlCe
 {
-	using Expressions;
-	using Linq;
-	using SqlProvider;
-
 	public static partial class SqlCeHints
 	{
 		public static class Table

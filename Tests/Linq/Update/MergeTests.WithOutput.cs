@@ -1,11 +1,9 @@
-﻿using System;
-using System.Linq;
+﻿using System.Linq;
 using System.Threading.Tasks;
 
 using FluentAssertions;
 
 using LinqToDB;
-using LinqToDB.Async;
 
 using NUnit.Framework;
 

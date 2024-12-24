@@ -3,8 +3,6 @@ using System.Linq;
 
 namespace LinqToDB
 {
-	using Async;
-
 	/// <summary>
 	/// Provides support for queryable LoadWith/ThenLoad chaining operators.
 	/// </summary>

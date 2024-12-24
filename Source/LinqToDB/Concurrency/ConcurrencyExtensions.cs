@@ -4,14 +4,13 @@ using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
 
+using LinqToDB.Extensions;
+using LinqToDB.Linq;
+using LinqToDB.Mapping;
+using LinqToDB.Reflection;
+
 namespace LinqToDB.Concurrency
 {
-	using Expressions;
-	using Extensions;
-	using Linq;
-	using Mapping;
-	using Reflection;
-
 	public static class ConcurrencyExtensions
 	{
 		private static IQueryable<T> FilterByColumns<T>(IQueryable<T> query, T obj, ColumnDescriptor[] columns)
@@ -167,7 +166,7 @@ namespace LinqToDB.Concurrency
 			if (source == null) throw new ArgumentNullException(nameof(source));
 			if (obj    == null) throw new ArgumentNullException(nameof(obj));
 
-			var dc = Internals.GetDataContext(source) ?? throw new ArgumentException("Linq To DB query expected", nameof(source));
+			var dc = Internals.Linq.Internals.GetDataContext(source) ?? throw new ArgumentException("Linq To DB query expected", nameof(source));
 
 			return MakeUpdateOptimistic(source, dc, obj).Update();
 		}
@@ -187,7 +186,7 @@ namespace LinqToDB.Concurrency
 			if (source == null) throw new ArgumentNullException(nameof(source));
 			if (obj    == null) throw new ArgumentNullException(nameof(obj));
 
-			var dc = Internals.GetDataContext(source) ?? throw new ArgumentException("Linq To DB query expected", nameof(source));
+			var dc = Internals.Linq.Internals.GetDataContext(source) ?? throw new ArgumentException("Linq To DB query expected", nameof(source));
 
 			return MakeUpdateOptimistic(source, dc, obj).UpdateAsync(cancellationToken);
 		}
@@ -268,7 +267,7 @@ namespace LinqToDB.Concurrency
 			if (source == null) throw new ArgumentNullException(nameof(source));
 			if (obj    == null) throw new ArgumentNullException(nameof(obj));
 
-			var dc      = Internals.GetDataContext(source) ?? throw new ArgumentException("Linq To DB query expected", nameof(source));
+			var dc      = Internals.Linq.Internals.GetDataContext(source) ?? throw new ArgumentException("Linq To DB query expected", nameof(source));
 			var objType = typeof(T);
 			var ed      = dc.MappingSchema.GetEntityDescriptor(objType, dc.Options.ConnectionOptions.OnEntityDescriptorCreated);
 

@@ -10,7 +10,7 @@ using Grpc.Core;
 
 using LinqToDB;
 using LinqToDB.Data;
-using LinqToDB.DataProvider.SqlServer;
+using LinqToDB.Internals.DataProviders.SqlServer;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
@@ -142,6 +142,7 @@ namespace Tests.UserTests
 				{
 					db.DropTable<TestTable>(tableName: "Issue681Table2", throwExceptionIfNotExists: false);
 				}
+
 				return Task.CompletedTask;
 				// not allowed for remote server
 			}, $"{TestProvName.AllSqlServer},{TestProvName.AllOracle}", ddl: true);
@@ -187,6 +188,7 @@ namespace Tests.UserTests
 				{
 					db.DropTable<TestTable>(tableName: "Issue681Table2", databaseName: d, serverName: s, schemaName: u);
 				}
+
 				return Task.CompletedTask;
 			}, TestProvName.AllSqlServer, ddl: true);
 		}

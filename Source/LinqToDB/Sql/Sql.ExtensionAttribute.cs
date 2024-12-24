@@ -11,17 +11,17 @@ using System.Threading;
 
 using JetBrains.Annotations;
 
+using LinqToDB.Common;
+using LinqToDB.Extensions;
+using LinqToDB.Internals.Common;
+using LinqToDB.Internals.Expressions;
+using LinqToDB.Internals.Linq.Builder;
+using LinqToDB.Internals.SqlQuery;
+using LinqToDB.Mapping;
+using LinqToDB.SqlQuery;
+
 namespace LinqToDB
 {
-	using Common;
-	using Common.Internal;
-	using Expressions;
-	using Extensions;
-	using Linq.Builder;
-	using Expressions.Internal;
-	using Mapping;
-	using SqlQuery;
-
 	public enum ExprParameterKind
 	{
 		Default,
@@ -656,6 +656,7 @@ namespace LinqToDB
 								{
 									next = current.EvaluateExpression<IQueryableContainer>()!.Query.Expression;
 								}
+
 								break;
 							}
 					}

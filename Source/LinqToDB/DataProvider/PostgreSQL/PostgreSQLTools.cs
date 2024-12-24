@@ -1,13 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Data.Common;
+﻿using System.Data.Common;
 using System.Reflection;
+
 using JetBrains.Annotations;
+
+using LinqToDB.Data;
+using LinqToDB.Internals.DataProviders.PostgreSQL;
 
 namespace LinqToDB.DataProvider.PostgreSQL
 {
-	using Data;
-
 	[PublicAPI]
 	public static partial class PostgreSQLTools
 	{

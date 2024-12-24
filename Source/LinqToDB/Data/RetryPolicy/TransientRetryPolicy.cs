@@ -4,11 +4,11 @@
 using System;
 using System.Collections.Generic;
 
+using LinqToDB.Common;
+using LinqToDB.Data.RetryPolicy;
+
 namespace LinqToDB.Data.RetryPolicy
 {
-	using Common;
-	using Data.RetryPolicy;
-
 	/// <summary>
 	/// Retry policy handles exceptions with <c>DbException.IsTransient == true</c> (requires provider support and .NET 6 or greater).
 	/// </summary>
@@ -18,7 +18,7 @@ namespace LinqToDB.Data.RetryPolicy
 		/// Creates a new instance of <see cref="TransientRetryPolicy" />.
 		/// </summary>
 		public TransientRetryPolicy()
-			: this(Configuration.RetryPolicy.DefaultMaxRetryCount)
+			: this(Common.Configuration.RetryPolicy.DefaultMaxRetryCount)
 		{ }
 
 		/// <summary>
@@ -26,7 +26,13 @@ namespace LinqToDB.Data.RetryPolicy
 		/// </summary>
 		/// <param name="maxRetryCount"> The maximum number of retry attempts. </param>
 		public TransientRetryPolicy(int maxRetryCount)
-			: this(maxRetryCount, Configuration.RetryPolicy.DefaultMaxDelay, Configuration.RetryPolicy.DefaultRandomFactor, Configuration.RetryPolicy.DefaultExponentialBase, Configuration.RetryPolicy.DefaultCoefficient)
+			: this(
+				maxRetryCount,
+				Common.Configuration.RetryPolicy.DefaultMaxDelay,
+				Common.Configuration.RetryPolicy.DefaultRandomFactor,
+				Common.Configuration.RetryPolicy.DefaultExponentialBase,
+				Common.Configuration.RetryPolicy.DefaultCoefficient
+			)
 		{ }
 
 		/// <summary>

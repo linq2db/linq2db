@@ -6,13 +6,13 @@ using System.Globalization;
 using System.Linq;
 using System.Numerics;
 
+using LinqToDB.Common;
+using LinqToDB.Extensions;
+using LinqToDB.Internals.SqlQuery;
+using LinqToDB.Mapping;
+
 namespace LinqToDB.SqlQuery
 {
-	using Common;
-	using Common.Internal;
-	using Extensions;
-	using Mapping;
-
 	public class SqlDataType : ISqlExpression, IEquatable<SqlDataType>
 	{
 		#region Init

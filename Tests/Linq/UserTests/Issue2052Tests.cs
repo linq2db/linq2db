@@ -1,5 +1,7 @@
 ﻿using System.Linq;
+
 using LinqToDB.Mapping;
+
 using NUnit.Framework;
 
 namespace Tests.UserTests
@@ -17,7 +19,6 @@ namespace Tests.UserTests
 			[Column]
 			public string? Str;
 		}
-
 
 		public struct DataPack
 		{

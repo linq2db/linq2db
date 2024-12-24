@@ -1,8 +1,4 @@
-﻿using System;
-
-namespace LinqToDB.Linq
+﻿namespace LinqToDB.Linq
 {
-	public interface ISelectInsertable<TSource,TTarget>
-	{
-	}
+	public interface ISelectInsertable<TSource, TTarget>;
 }

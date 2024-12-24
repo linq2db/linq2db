@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Data.Linq;
-using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -12,16 +11,15 @@ using LinqToDB;
 using LinqToDB.Common;
 using LinqToDB.Data;
 using LinqToDB.DataProvider.Access;
+using LinqToDB.Internals.DataProviders.Access;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
 
+using Tests.Model;
+
 namespace Tests.DataProvider
 {
-	using System.Runtime.Serialization;
-
-	using Model;
-
 	[TestFixture]
 	public class AccessTests : DataProviderTestBase
 	{

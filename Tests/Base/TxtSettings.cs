@@ -1,5 +1,5 @@
 ﻿using System.Collections.Generic;
-using LinqToDB.Common;
+
 using LinqToDB.Configuration;
 
 namespace Tests
@@ -26,7 +26,6 @@ namespace Tests
 		public string?                                DefaultConfiguration { get; set; }
 		public string?                                DefaultDataProvider  { get; set; }
 		public IEnumerable<IConnectionStringSettings> ConnectionStrings => _strings;
-
 
 		readonly List<DataProviderSettings>     _dataProviders = new List<DataProviderSettings>();
 		readonly List<ConnectionStringSettings> _strings       = new List<ConnectionStringSettings>();

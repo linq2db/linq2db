@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 
+using LinqToDB.Internals.Common;
+
 namespace LinqToDB.Mapping
 {
-	using Common.Internal;
-
 	/// <summary>
 	/// Locked mapping schema.
 	/// </summary>

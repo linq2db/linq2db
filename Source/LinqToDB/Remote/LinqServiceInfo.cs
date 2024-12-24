@@ -1,9 +1,9 @@
 ﻿using System.Runtime.Serialization;
 
+using LinqToDB.Internals.SqlProvider;
+
 namespace LinqToDB.Remote
 {
-	using SqlProvider;
-
 	[DataContract]
 	public class LinqServiceInfo
 	{

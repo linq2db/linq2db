@@ -1,18 +1,19 @@
 ﻿using System.Collections.Generic;
-using System.Linq;
 using System.Data;
+using System.Linq;
 using System.Threading.Tasks;
+
+using LinqToDB;
+using LinqToDB.Data;
+using LinqToDB.DataProvider.SqlServer;
+using LinqToDB.Mapping;
 
 using NUnit.Framework;
 
+using Tests.Model;
+
 namespace Tests.Data
 {
-	using LinqToDB;
-	using LinqToDB.Data;
-	using LinqToDB.DataProvider.SqlServer;
-	using LinqToDB.Mapping;
-	using Model;
-
 	[TestFixture]
 	public class ProcedureTests : TestBase
 	{

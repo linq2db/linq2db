@@ -6,13 +6,15 @@ using System.Text;
 
 using JetBrains.Annotations;
 
+using LinqToDB.Expressions;
+using LinqToDB.Internals.DataProviders.SqlServer;
+using LinqToDB.Internals.Linq;
+using LinqToDB.Internals.SqlProvider;
+using LinqToDB.Internals.SqlQuery;
+using LinqToDB.Linq;
+
 namespace LinqToDB.DataProvider.SqlServer
 {
-	using Expressions;
-	using Linq;
-	using SqlProvider;
-	using SqlQuery;
-
 	/// <summary>
 	/// https://docs.microsoft.com/en-us/sql/t-sql/queries/hints-transact-sql
 	/// </summary>

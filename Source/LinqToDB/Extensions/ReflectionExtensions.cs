@@ -13,12 +13,10 @@ using System.Xml;
 
 using JetBrains.Annotations;
 
+using LinqToDB.Reflection;
+
 namespace LinqToDB.Extensions
 {
-	using Common;
-	using Common.Internal;
-	using Reflection;
-
 	[PublicAPI]
 	public static class ReflectionExtensions
 	{
@@ -1081,6 +1079,7 @@ namespace LinqToDB.Extensions
 						if (p.GetMethod?.GetBaseDefinition() == baseDefinition)
 							return p;
 				}
+
 				if (property.SetMethod != null)
 				{
 					var baseDefinition = property.SetMethod.GetBaseDefinition();

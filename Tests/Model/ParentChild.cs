@@ -1,12 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
-using System.Collections.Immutable;
 
 using LinqToDB;
-using LinqToDB.Expressions;
+using LinqToDB.Internals.Expressions;
 using LinqToDB.Mapping;
 
 namespace Tests.Model

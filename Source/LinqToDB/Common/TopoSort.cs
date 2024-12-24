@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+
 using JetBrains.Annotations;
 
 namespace LinqToDB.Common
@@ -169,9 +170,11 @@ namespace LinqToDB.Common
 						list = new List<T>();
 						dependants.Add(dep, list);
 					}
+
 					list.Add(item.Item);
 					count++;
 				}
+
 				if (count == 0)
 					level.Add(item.Item);
 				else
@@ -203,6 +206,7 @@ namespace LinqToDB.Common
 								nextLevel.Value.Add(dep);
 						}
 				}
+
 				yield return level.ToArray();
 				pendingCount -= level.Count;
 				if (pendingCount == 0)

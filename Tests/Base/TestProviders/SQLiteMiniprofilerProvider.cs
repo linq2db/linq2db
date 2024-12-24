@@ -1,11 +1,10 @@
-﻿using System;
-using System.Data.Common;
+﻿using System.Data.Common;
 
 using LinqToDB;
-using LinqToDB.Configuration;
 using LinqToDB.Data;
 using LinqToDB.DataProvider;
 using LinqToDB.DataProvider.SQLite;
+using LinqToDB.Internals.DataProviders.SQLite;
 
 using StackExchange.Profiling;
 using StackExchange.Profiling.Data;

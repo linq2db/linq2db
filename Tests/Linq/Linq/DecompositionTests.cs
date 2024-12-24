@@ -126,6 +126,5 @@ namespace Tests.Linq
 			AssertQuery(topOrBottoms.Where(x => x.Size  == null));
 		}
 
-
 	}
 }

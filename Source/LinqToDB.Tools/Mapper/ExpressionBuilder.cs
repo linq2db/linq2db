@@ -7,16 +7,16 @@ using System.Reflection;
 
 using JetBrains.Annotations;
 
+using LinqToDB.Extensions;
+using LinqToDB.Internals.Expressions;
+using LinqToDB.Reflection;
+
 using static System.Linq.Expressions.Expression;
 
 // ReSharper disable TailRecursiveCall
 
 namespace LinqToDB.Tools.Mapper
 {
-	using Expressions;
-	using Extensions;
-	using Reflection;
-
 	sealed class ExpressionBuilder
 	{
 		sealed class BuilderData

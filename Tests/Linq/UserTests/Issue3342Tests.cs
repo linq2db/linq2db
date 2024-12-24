@@ -1,7 +1,9 @@
 ﻿using System;
+
 using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.Mapping;
+
 using NUnit.Framework;
 
 namespace Tests.UserTests

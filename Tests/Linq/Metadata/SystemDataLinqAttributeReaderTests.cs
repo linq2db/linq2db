@@ -1,9 +1,11 @@
 ﻿#if NETFRAMEWORK
-using LinqToDB;
-using LinqToDB.Metadata;
-using NUnit.Framework;
 using System.ComponentModel;
 using System.Linq;
+
+using LinqToDB;
+using LinqToDB.Metadata;
+
+using NUnit.Framework;
 
 namespace Tests.Metadata
 {

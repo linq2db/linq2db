@@ -3,15 +3,19 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+
 using LinqToDB;
-using LinqToDB.Expressions;
 using LinqToDB.Mapping;
+
 using NUnit.Framework;
+
+using LinqToDB.Internals.Expressions;
 
 #if NETFRAMEWORK
 using System.Net.Http;
 using System.Web.Http;
 using System.Web.Http.Hosting;
+
 using Microsoft.AspNet.OData;
 using Microsoft.AspNet.OData.Builder;
 using Microsoft.AspNet.OData.Extensions;

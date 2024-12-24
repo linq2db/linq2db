@@ -1,9 +1,9 @@
 ﻿using System.Collections.Generic;
 
+using LinqToDB.Reflection;
+
 namespace LinqToDB.Mapping
 {
-	using Reflection;
-
 	/// <summary>
 	/// Mapping entity descriptor change interface.
 	/// </summary>

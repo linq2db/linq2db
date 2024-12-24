@@ -5,15 +5,16 @@ using System.Data.Services.Providers;
 using System.Linq;
 using System.Linq.Expressions;
 
+using LinqToDB.Common;
+using LinqToDB.Expressions;
+using LinqToDB.Extensions;
+using LinqToDB.Internals.Expressions;
+using LinqToDB.Internals.SqlQuery;
+using LinqToDB.Linq;
+using LinqToDB.Mapping;
+
 namespace LinqToDB.Remote
 {
-	using Expressions;
-	using Extensions;
-	using Linq;
-	using Mapping;
-	using SqlQuery;
-	using LinqToDB.Common;
-
 	public class DataService<T> : System.Data.Services.DataService<T>, IServiceProvider
 		where T : IDataContext
 	{

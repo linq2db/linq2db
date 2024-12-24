@@ -5,14 +5,14 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 
+using LinqToDB.Common;
+using LinqToDB.Internals.Expressions;
+using LinqToDB.Mapping;
+using LinqToDB.Reflection;
+using LinqToDB.Tools.Mapper;
+
 namespace LinqToDB.Tools.EntityServices
 {
-	using Common;
-	using LinqToDB.Expressions;
-	using Mapper;
-	using Mapping;
-	using Reflection;
-
 	interface IEntityMap
 	{
 		void        MapEntity(EntityCreatedEventArgs args);

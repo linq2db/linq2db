@@ -7,15 +7,11 @@ using System.Reflection;
 
 using LinqToDB;
 using LinqToDB.Common;
-using LinqToDB.Expressions;
-using LinqToDB.Expressions.Internal;
 using LinqToDB.Extensions;
-using LinqToDB.Linq;
+using LinqToDB.Internals.Expressions;
+using LinqToDB.Internals.Linq;
 using LinqToDB.Reflection;
-using LinqToDB.Tools;
 using LinqToDB.Tools.Comparers;
-
-using NUnit.Framework;
 
 namespace Tests
 {
@@ -326,7 +322,6 @@ namespace Tests
 
 				return new TransformInfo(e);
 			})!;
-
 
 			newExpr = ApplyNullCheck(newExpr);
 

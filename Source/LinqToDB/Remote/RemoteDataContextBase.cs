@@ -1,31 +1,30 @@
 ﻿using System;
-using System.Data.Common;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Data.Common;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
+
 using JetBrains.Annotations;
+
+using LinqToDB.Common;
+using LinqToDB.Data;
+using LinqToDB.DataProvider;
+using LinqToDB.Extensions;
+using LinqToDB.Infrastructure;
+using LinqToDB.Interceptors;
+using LinqToDB.Internals.Cache;
+using LinqToDB.Internals.Common;
+using LinqToDB.Internals.Expressions;
+using LinqToDB.Internals.Linq.Translation;
+using LinqToDB.Internals.SqlProvider;
+using LinqToDB.Mapping;
+using LinqToDB.Tools;
 
 namespace LinqToDB.Remote
 {
-	using Common;
-	using Common.Internal;
-	using Common.Internal.Cache;
-	using DataProvider;
-	using Expressions;
-	using Extensions;
-	using Infrastructure;
-	using Interceptors;
-	using Linq.Translation;
-	using Tools;
-
-	using Data;
-
-	using Mapping;
-	using SqlProvider;
-
 	[PublicAPI]
 	public abstract partial class RemoteDataContextBase : IDataContext, 
 		IInfrastructure<IServiceProvider>

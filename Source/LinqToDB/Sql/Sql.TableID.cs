@@ -1,12 +1,10 @@
 ﻿using System;
-using System.Linq.Expressions;
+
+using LinqToDB.Internals.Linq.Builder;
+using LinqToDB.Internals.SqlQuery;
 
 namespace LinqToDB
 {
-	using Expressions;
-	using Linq.Builder;
-	using SqlQuery;
-
 	public partial class Sql
 	{
 		public readonly struct SqlID : IToSqlConverter, IEquatable<SqlID>

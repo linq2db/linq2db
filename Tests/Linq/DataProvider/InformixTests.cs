@@ -1,23 +1,23 @@
 ﻿using System;
 using System.Linq;
 using System.Data.Linq;
-using System.Diagnostics;
 using System.Threading.Tasks;
 
 using LinqToDB;
 using LinqToDB.Data;
-using LinqToDB.DataProvider.Informix;
+using LinqToDB.Internals.DataProviders.Informix;
 using LinqToDB.Mapping;
 
 #if NETFRAMEWORK
 using IBM.Data.Informix;
 #endif
+
 using NUnit.Framework;
+
+using Tests.Model;
 
 namespace Tests.DataProvider
 {
-	using Model;
-
 	[TestFixture]
 	public class InformixTests : DataProviderTestBase
 	{

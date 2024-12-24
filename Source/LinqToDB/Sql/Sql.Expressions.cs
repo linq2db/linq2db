@@ -2,21 +2,21 @@
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
-using System.Text;
 
 using JetBrains.Annotations;
 
+using LinqToDB.Common;
+using LinqToDB.Expressions;
+using LinqToDB.Extensions;
+using LinqToDB.Internals.Common;
+using LinqToDB.Internals.Expressions;
+using LinqToDB.Internals.SqlProvider;
+using LinqToDB.Internals.SqlQuery;
+using LinqToDB.Mapping;
+using LinqToDB.SqlQuery;
+
 namespace LinqToDB
 {
-	using Common;
-	using Common.Internal;
-	using Expressions;
-	using Extensions;
-	using Linq;
-	using Mapping;
-	using SqlProvider;
-	using SqlQuery;
-
 	public partial class Sql
 	{
 		private sealed class FieldsExprBuilderDirect : IExtensionCallBuilder
@@ -534,7 +534,7 @@ namespace LinqToDB
 		{
 			public void Build(ISqExtensionBuilder builder)
 			{
-				Linq.Builder.TableBuilder.PrepareRawSqlArguments(builder.Arguments[0],
+				Internals.Linq.Builder.TableBuilder.PrepareRawSqlArguments(builder.Arguments[0],
 					builder.Arguments.Length > 1 ? builder.Arguments[1] : null,
 					out var format, out var arguments);
 

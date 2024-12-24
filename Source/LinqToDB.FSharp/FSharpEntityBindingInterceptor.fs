@@ -1,16 +1,15 @@
 ﻿namespace LinqToDB.FSharp
 
 open System
-open System.Collections
 open System.Collections.Concurrent
 open System.Collections.Generic
 open System.Linq
 open System.Linq.Expressions
 open System.Reflection
 
-open LinqToDB.Expressions
 open LinqToDB.Extensions
 open LinqToDB.Interceptors.Internal
+open LinqToDB.Internals.Expressions
 open LinqToDB.Reflection
 
 /// Provides Linq To DB interceptor with F# support implementation.

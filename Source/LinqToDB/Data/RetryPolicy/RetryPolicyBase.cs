@@ -10,8 +10,6 @@ using System.Threading.Tasks;
 
 namespace LinqToDB.Data.RetryPolicy
 {
-	using Common;
-
 	public abstract class RetryPolicyBase : IRetryPolicy
 	{
 

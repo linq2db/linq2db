@@ -2,10 +2,9 @@
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+
+using LinqToDB.Internals.SqlQuery;
 using LinqToDB.Naming;
-using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Scaffold.Internal
 {

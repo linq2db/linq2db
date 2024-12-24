@@ -2,6 +2,7 @@
 using System.Data;
 using System.Linq;
 using System.Linq.Expressions;
+
 using LinqToDB.Benchmarks.TestProvider;
 using LinqToDB.Data;
 using LinqToDB.DataProvider;

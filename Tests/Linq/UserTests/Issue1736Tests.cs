@@ -1,9 +1,10 @@
 ﻿using System;
 using System.Linq;
 using System.Runtime.Serialization;
-using LinqToDB;
-using NUnit.Framework;
 
+using LinqToDB;
+
+using NUnit.Framework;
 
 namespace Tests.UserTests.Issue1736
 {
@@ -69,12 +70,10 @@ namespace Tests.UserTests.Issue1736
 			public int ProductStatus { get; set; }
 		}
 
-
 		public class OutfeedTransportOrderDTO : WmsBasicDTO<OutfeedTransportOrderDTO>, IHasArchiveTable
 		{
 			public Guid? MaterialID { get; set; }
 		}
-
 
 		public class RefOutfeedTransportOrderResourceDTO : BasicDTO
 		{
@@ -84,7 +83,6 @@ namespace Tests.UserTests.Issue1736
 
 			public decimal Quantity { get; set; }
 		}
-
 
 		public class RefResourceStorageShelfDTO : BasicDTOwithoutID
 		{
@@ -149,7 +147,6 @@ namespace Tests.UserTests.Issue1736
 			public bool                 MixedStock  { get; set; }
 		}
 
-
 		[Test]
 		public void Issue1736Tests([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllSqlServer)] string context)
 		{
@@ -167,7 +164,6 @@ namespace Tests.UserTests.Issue1736
 			using (db.CreateLocalTable<InventoryResourceDTO>())
 			{
 				var subqryRefOtoR = db.GetTable<RefOutfeedTransportOrderResourceDTO>();
-
 
 				var baseQry1 =
 					from ss in db.GetTable<StorageShelfDTO>()
