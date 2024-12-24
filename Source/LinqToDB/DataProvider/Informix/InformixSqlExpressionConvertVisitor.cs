@@ -136,7 +136,7 @@ namespace LinqToDB.DataProvider.Informix
 
 			if (SqlProviderFlags != null
 			    && columnExpression.SystemType == typeof(bool)
-			    && QueryHelper.UnwrapNullablity(columnExpression) is not (SqlCastExpression or SqlColumn or SqlField or SqlValue))
+			    && QueryHelper.UnwrapNullablity(columnExpression) is not (SqlCastExpression or SqlColumn or SqlField or SqlValue or ISqlPredicate))
 			{
 				columnExpression = new SqlCastExpression(columnExpression, new DbDataType(columnExpression.SystemType!, DataType.Boolean), null, isMandatory: true);
 			}
