@@ -1359,7 +1359,7 @@ namespace LinqToDB.SqlQuery
 
 			ApplySubQueryExtensions(parentQuery, subQuery);
 
-			if (subQuery.OrderBy.Items.Count > 0 && !parentQuery.Select.Columns.Any(static c => QueryHelper.IsAggregationOrWindowFunction(c.Expression)))
+			if (subQuery.OrderBy.Items.Count > 0)
 			{
 				ApplySubsequentOrder(parentQuery, subQuery);
 			}

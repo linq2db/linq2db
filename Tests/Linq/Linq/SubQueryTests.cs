@@ -1267,6 +1267,52 @@ namespace Tests.Linq
 
 		#endregion
 
+		// technically it is not correct as such rownum generation is not guaranteed to follow query ordering
+		// that's why many dbs disabled and only sqlserver and oracle work
+		[Test]
+		public void PreserveOrderInSubqueryWithWindowFunction_WithOrder([DataSources(
+			TestProvName.AllSqlServer2008Minus, TestProvName.AllAccess, ProviderName.SqlCe, TestProvName.AllSybase,
+			TestProvName.AllClickHouse, TestProvName.AllFirebird, TestProvName.AllInformix, TestProvName.AllMySql,
+			TestProvName.AllPostgreSQL, TestProvName.AllSapHana, TestProvName.AllSQLite, TestProvName.AllDB2
+			)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var result = db.Person
+				.OrderBy(p => p.FirstName)
+				.Select(r =>
+				new
+				{
+					r.ID,
+					RowNumber = Sql.Ext.RowNumber().Over().OrderBy(db.Select(() => "unordered")).ToValue()
+				})
+				.Take(100)
+				.Join(db.Person, r => r.ID, r => r.ID, (r, n) => new { r.RowNumber, n.ID })
+				.Where(r => r.ID == 2)
+				.Single();
+
+			Assert.That(result.RowNumber, Is.EqualTo(4));
+		}
+
+		[Test]
+		public void PreserveOrderInSubqueryWithWindowFunction_NoOrdering([DataSources(TestProvName.AllAccess, ProviderName.SqlCe, ProviderName.Firebird25, TestProvName.AllMySql57, TestProvName.AllSybase)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var result = db.Person
+				.Select(r =>
+				new
+				{
+					r.ID,
+					RowNumber = Sql.Ext.RowNumber().Over().OrderBy(r.FirstName).ToValue()
+				})
+				.Join(db.Person, r => r.ID, r => r.ID, (r, n) => new { r.RowNumber, n.ID })
+				.Where(r => r.ID == 2)
+				.Single();
+
+			Assert.That(result.RowNumber, Is.EqualTo(4));
+		}
+
 		#region Issue 4751
 
 		public class Trp004
