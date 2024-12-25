@@ -445,6 +445,7 @@ namespace LinqToDB.SqlQuery
 					}
 
 					var allTrue = true;
+					var allFalse = true;
 					for (var i = 0; i < cond.Predicates.Count; i++)
 					{
 						var predicate = cond.Predicates[i];
@@ -452,7 +453,8 @@ namespace LinqToDB.SqlQuery
 						{
 							if (evaluated is bool boolValue)
 							{
-								allTrue = allTrue && boolValue;
+								allTrue  = allTrue   && boolValue;
+								allFalse = allFalse && !boolValue;
 
 								if (boolValue)
 								{
@@ -474,13 +476,19 @@ namespace LinqToDB.SqlQuery
 						}
 						else
 						{
-							allTrue = false;
+							allTrue  = false;
+							allFalse = false;
 						}
 					}
 
 					if (!cond.IsOr && allTrue)
 					{
 						result = true;
+						return true;
+					}
+					else if (cond.IsOr && allFalse)
+					{
+						result = false;
 						return true;
 					}
 
