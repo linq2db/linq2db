@@ -1788,7 +1788,7 @@ namespace LinqToDB.SqlQuery
 		/// <summary>
 		/// Returns <c>true</c> if expression typed by predicate (returns SQL BOOLEAN-typed value).
 		/// </summary>
-		public static bool IsBoolean(ISqlExpression expr)
+		public static bool IsBoolean(ISqlExpression expr, bool includeFields = false)
 		{
 			expr = UnwrapNullablity(expr);
 
@@ -1812,6 +1812,9 @@ namespace LinqToDB.SqlQuery
 			{
 				return true;
 			}
+
+			if (includeFields && expr is SqlField or SqlColumn)
+				return true;
 
 			return false;
 		}

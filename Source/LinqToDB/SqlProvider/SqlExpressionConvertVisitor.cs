@@ -1253,8 +1253,19 @@ namespace LinqToDB.SqlProvider
 			if (expr.SystemType == typeof(bool))
 			{
 				var unwrapped = QueryHelper.UnwrapNullablity(expr);
-				if (unwrapped is ISqlPredicate p && (!SqlProviderFlags.SupportsBooleanType || p.CanBeUnknown(NullabilityContext) || forceConvert)
-					|| includeFields && unwrapped.ElementType is QueryElementType.Column or QueryElementType.SqlField)
+
+				var wrap = includeFields && unwrapped.ElementType is QueryElementType.Column or QueryElementType.SqlField;
+				if (!wrap && unwrapped is ISqlPredicate p)
+				{
+					if (p.TryEvaluateExpression(EvaluationContext, out var res) && res is bool booleanValue)
+					{
+						return new SqlValue(booleanValue);
+					}
+
+					wrap = !SqlProviderFlags.SupportsBooleanType || p.CanBeUnknown(NullabilityContext) || forceConvert;
+				}
+
+				if (wrap)
 				{
 					var predicate = unwrapped as ISqlPredicate ?? ConvertToBooleanSearchCondition(expr);
 
