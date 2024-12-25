@@ -453,7 +453,7 @@ namespace LinqToDB.SqlQuery
 						{
 							if (evaluated is bool boolValue)
 							{
-								allTrue  = allTrue   && boolValue;
+								allTrue  = allTrue  && boolValue;
 								allFalse = allFalse && !boolValue;
 
 								if (boolValue)
