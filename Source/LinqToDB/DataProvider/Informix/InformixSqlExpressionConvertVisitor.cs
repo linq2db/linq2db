@@ -130,13 +130,53 @@ namespace LinqToDB.DataProvider.Informix
 			return base.ConvertConversion(cast);
 		}
 
+		protected override ISqlExpression ConvertSqlCaseExpression(SqlCaseExpression element)
+		{
+			if (element.ElseExpression != null)
+			{
+				var elseExpression = WrapBooleanExpression(element.ElseExpression, includeFields : true, forceConvert: true);
+
+				if (!ReferenceEquals(elseExpression, element.ElseExpression))
+				{
+					return new SqlCaseExpression(element.Type, element.Cases, elseExpression);
+				}
+			}
+
+			return element;
+		}
+
+		protected override SqlCaseExpression.CaseItem ConvertCaseItem(SqlCaseExpression.CaseItem newElement)
+		{
+			var resultExpr = WrapBooleanExpression(newElement.ResultExpression, includeFields : true, forceConvert: true);
+
+			if (!ReferenceEquals(resultExpr, newElement.ResultExpression))
+			{
+				newElement = new SqlCaseExpression.CaseItem(newElement.Condition, resultExpr);
+			}
+
+			return newElement;
+		}
+
+		protected override ISqlExpression ConvertSqlCondition(SqlConditionExpression element)
+		{
+			var trueValue  = WrapBooleanExpression(element.TrueValue, includeFields : true, forceConvert: true);
+			var falseValue = WrapBooleanExpression(element.FalseValue, includeFields : true, forceConvert: true);
+
+			if (!ReferenceEquals(trueValue, element.TrueValue) || !ReferenceEquals(falseValue, element.FalseValue))
+			{
+				return new SqlConditionExpression(element.Condition, trueValue, falseValue);
+			}
+
+			return element;
+		}
+
 		protected override ISqlExpression WrapColumnExpression(ISqlExpression expr)
 		{
 			var columnExpression = base.WrapColumnExpression(expr);
 
 			if (SqlProviderFlags != null
 			    && columnExpression.SystemType == typeof(bool)
-			    && QueryHelper.UnwrapNullablity(columnExpression) is not (SqlCastExpression or SqlColumn or SqlField or SqlValue or ISqlPredicate))
+			    && !QueryHelper.IsBoolean(columnExpression))
 			{
 				columnExpression = new SqlCastExpression(columnExpression, new DbDataType(columnExpression.SystemType!, DataType.Boolean), null, isMandatory: true);
 			}

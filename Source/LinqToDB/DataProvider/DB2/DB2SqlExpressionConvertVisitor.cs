@@ -123,7 +123,7 @@
 
 			if (SqlProviderFlags != null
 				&& columnExpression.SystemType == typeof(bool)
-				&& QueryHelper.UnwrapNullablity(columnExpression) is ISqlPredicate)
+				&& QueryHelper.IsBoolean(columnExpression))
 			{
 				columnExpression = new SqlCastExpression(columnExpression, new DbDataType(columnExpression.SystemType!, DataType.Boolean), null, isMandatory: true);
 			}

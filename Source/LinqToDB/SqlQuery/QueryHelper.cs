@@ -1784,5 +1784,36 @@ namespace LinqToDB.SqlQuery
 					return new SqlSearchCondition(false, child, parent);
 			}
 		}
+
+		/// <summary>
+		/// Returns <c>true</c> if expression typed by predicate (returns SQL BOOLEAN-typed value).
+		/// </summary>
+		public static bool IsBoolean(ISqlExpression expr)
+		{
+			expr = UnwrapNullablity(expr);
+
+			if (expr is ISqlPredicate)
+				return true;
+
+			if (expr is SqlCaseExpression caseExpr)
+			{
+				foreach (var cs in caseExpr.Cases)
+				{
+					if (IsBoolean(cs.ResultExpression))
+						return true;
+				}
+
+				if (caseExpr.ElseExpression != null && IsBoolean(caseExpr.ElseExpression))
+					return true;
+			}
+
+			if (expr is SqlConditionExpression condExpr
+				&& (IsBoolean(condExpr.TrueValue) || IsBoolean(condExpr.FalseValue)))
+			{
+				return true;
+			}
+
+			return false;
+		}
 	}
 }

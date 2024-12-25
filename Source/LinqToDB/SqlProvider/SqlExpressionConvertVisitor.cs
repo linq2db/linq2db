@@ -1245,7 +1245,7 @@ namespace LinqToDB.SqlProvider
 			return newElement;
 		}
 
-		protected virtual ISqlExpression WrapBooleanExpression(ISqlExpression expr, bool includeFields)
+		protected virtual ISqlExpression WrapBooleanExpression(ISqlExpression expr, bool includeFields, bool forceConvert = false)
 		{
 			if (SqlProviderFlags == null)
 				return expr;
@@ -1253,7 +1253,7 @@ namespace LinqToDB.SqlProvider
 			if (expr.SystemType == typeof(bool))
 			{
 				var unwrapped = QueryHelper.UnwrapNullablity(expr);
-				if (unwrapped is ISqlPredicate p && (!SqlProviderFlags.SupportsBooleanType || p.CanBeUnknown(NullabilityContext))
+				if (unwrapped is ISqlPredicate p && (!SqlProviderFlags.SupportsBooleanType || p.CanBeUnknown(NullabilityContext) || forceConvert)
 					|| includeFields && unwrapped.ElementType is QueryElementType.Column or QueryElementType.SqlField)
 				{
 					var predicate = unwrapped as ISqlPredicate ?? ConvertToBooleanSearchCondition(expr);
