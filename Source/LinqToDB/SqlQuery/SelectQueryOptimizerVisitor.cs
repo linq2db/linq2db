@@ -93,6 +93,9 @@ namespace LinqToDB.SqlQuery
 					if (!_orderByOptimizer.IsOptimized)
 						break;
 
+					if (_orderByOptimizer.NeedsNestingUpdate) 
+						CorrectColumnsNesting();
+
 				} while (true);
 
 				if (removeWeakJoins)

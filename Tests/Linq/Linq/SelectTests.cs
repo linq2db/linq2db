@@ -1490,6 +1490,67 @@ namespace Tests.Linq
 			}
 		}
 
+		[Test]
+		public void SelectWithIndexer([IncludeDataSources(
+				true,
+				TestProvName.AllOracleManaged,
+				TestProvName.AllOracleDevart,
+				TestProvName.AllSqlServer2012Plus,
+				TestProvName.AllClickHouse,
+				TestProvName.AllPostgreSQL)]
+			string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = db.Person
+				.OrderByDescending(p => p.ID)
+				.Select((p, idx) => new { p.FirstName, p.LastName, Index = idx })
+				.Where(x => x.Index > 0);
+
+			AssertQuery(query);
+		}
+
+		[Test]
+		public void SelectWithIndexerAfterGroupBy([IncludeDataSources(
+				true,
+				TestProvName.AllOracleManaged,
+				TestProvName.AllOracleDevart,
+				TestProvName.AllSqlServer2012Plus,
+				TestProvName.AllClickHouse,
+				TestProvName.AllPostgreSQL)]
+			string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = db.Person
+				.GroupBy(p => p.ID)
+				.OrderByDescending(g => g.Key)
+				.Select((g, idx) => new { g.Key, Index = idx })
+				.Where(x => x.Index > 0);
+
+			AssertQuery(query);
+		}
+
+		[Test]
+		[ThrowsForProvider(typeof(LinqToDBException), ErrorMessage = "For retrieving index of row, specify OrderBy part")]
+		public void SelectWithIndexerNoOrder([IncludeDataSources(
+				true,
+				TestProvName.AllOracleManaged,
+				TestProvName.AllOracleDevart,
+				TestProvName.AllSqlServer2012Plus,
+				TestProvName.AllClickHouse,
+				TestProvName.AllPostgreSQL)]
+			string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = db.Person
+				.Select((p, idx) => new { p.FirstName, Index = idx })
+				.Where(x => x.Index > 1);
+
+			AssertQuery(query);
+		}
+
 		public class Table1788
 		{
 			[PrimaryKey]
