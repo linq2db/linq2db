@@ -41,7 +41,7 @@ namespace LinqToDB.Linq.Builder
 
 			var body = selector.Parameters.Count == 1
 				? SequenceHelper.PrepareBody(selector, sequence)
-				: SequenceHelper.PrepareBody(selector, sequence, new CounterContext(sequence));
+				: SequenceHelper.PrepareBody(selector, sequence, new CounterContext(buildResult.BuildContext));
 
 			var context       = new SelectContext (buildInfo.Parent, body, sequence, buildInfo.IsSubQuery);
 			var resultContext = (IBuildContext) context;
@@ -57,6 +57,8 @@ namespace LinqToDB.Linq.Builder
 		class CounterContext : BuildContextBase
 		{
 			readonly IBuildContext _sequence;
+
+			SqlPlaceholderExpression? _rowNumberPlaceholder;
 
 			public CounterContext(IBuildContext sequence) : base(sequence.Builder, typeof(int), sequence.SelectQuery)
 			{
@@ -97,6 +99,9 @@ namespace LinqToDB.Linq.Builder
 				{
 					if (flags.IsSqlOrExpression())
 					{
+						if (_rowNumberPlaceholder != null)
+							return _rowNumberPlaceholder;
+
 						if (!Builder.DataContext.SqlProviderFlags.IsWindowFunctionsSupported)
 						{
 							if (flags.IsExpression())
@@ -125,8 +130,8 @@ namespace LinqToDB.Linq.Builder
 						var intType = MappingSchema.GetDbDataType(typeof(int));
 						var sql = new SqlBinaryExpression(intType, rn, "-", new SqlValue(intType, 1));
 
-						var result = ExpressionBuilder.CreatePlaceholder(_sequence, sql, path);
-						return result;
+						_rowNumberPlaceholder = ExpressionBuilder.CreatePlaceholder(_sequence, sql, path);
+						return _rowNumberPlaceholder;
 					}
 				}
 
@@ -135,7 +140,7 @@ namespace LinqToDB.Linq.Builder
 
 			public override IBuildContext Clone(CloningContext context)
 			{
-				return new CounterContext(context.CloneContext(_sequence));
+				return new CounterContext(context.CloneContext(_sequence)) { _rowNumberPlaceholder = context.CloneExpression(_rowNumberPlaceholder) };
 			}
 
 			public override SqlStatement GetResultStatement()
