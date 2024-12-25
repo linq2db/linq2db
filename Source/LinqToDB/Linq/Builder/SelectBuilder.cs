@@ -113,7 +113,7 @@ namespace LinqToDB.Linq.Builder
 
 						if (orderQuery.OrderBy.IsEmpty)
 						{
-							return new SqlErrorExpression(path, "For retrieving index of row, specify OrderBy part", path.Type);
+							return new SqlErrorExpression(path, ErrorHelper.Error_OrderByRequiredForIndexing, path.Type);
 						}
 
 						var orderBy = string.Join(", ",

@@ -1491,14 +1491,8 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void SelectWithIndexer([IncludeDataSources(
-				true,
-				TestProvName.AllOracleManaged,
-				TestProvName.AllOracleDevart,
-				TestProvName.AllSqlServer2012Plus,
-				TestProvName.AllClickHouse,
-				TestProvName.AllPostgreSQL)]
-			string context)
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllAccess, ProviderName.Firebird25, TestProvName.AllMySql57, ProviderName.SqlCe, TestProvName.AllSybase, ErrorMessage = ErrorHelper.Error_RowNumber)]
+		public void SelectWithIndexer([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -1511,14 +1505,8 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void SelectWithIndexerAfterGroupBy([IncludeDataSources(
-				true,
-				TestProvName.AllOracleManaged,
-				TestProvName.AllOracleDevart,
-				TestProvName.AllSqlServer2012Plus,
-				TestProvName.AllClickHouse,
-				TestProvName.AllPostgreSQL)]
-			string context)
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllAccess, ProviderName.Firebird25, TestProvName.AllMySql57, ProviderName.SqlCe, TestProvName.AllSybase, ErrorMessage = ErrorHelper.Error_RowNumber)]
+		public void SelectWithIndexerAfterGroupBy([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -1532,15 +1520,8 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[ThrowsForProvider(typeof(LinqToDBException), ErrorMessage = "For retrieving index of row, specify OrderBy part")]
-		public void SelectWithIndexerNoOrder([IncludeDataSources(
-				true,
-				TestProvName.AllOracleManaged,
-				TestProvName.AllOracleDevart,
-				TestProvName.AllSqlServer2012Plus,
-				TestProvName.AllClickHouse,
-				TestProvName.AllPostgreSQL)]
-			string context)
+		[ThrowsForProvider(typeof(LinqToDBException), ErrorMessage = ErrorHelper.Error_OrderByRequiredForIndexing)]
+		public void SelectWithIndexerNoOrder([DataSources(TestProvName.AllAccess, ProviderName.Firebird25, TestProvName.AllMySql57, ProviderName.SqlCe, TestProvName.AllSybase)] string context)
 		{
 			using var db = GetDataContext(context);
 
