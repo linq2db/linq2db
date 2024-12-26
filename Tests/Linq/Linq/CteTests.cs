@@ -2591,5 +2591,49 @@ namespace Tests.Linq
 			Assert.That(result, Contains.Item(1));
 			Assert.That(result, Contains.Item(null));
 		}
+
+		sealed record SequenceBuildFailedRecord(int Id);
+
+		[Test]
+		public void Issue_SequenceBuildFailed_1([CteContextSource] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var cte = db.GetCte<SequenceBuildFailedRecord>(cte =>
+			{
+				return db.Person.Select(s => new SequenceBuildFailedRecord(s.Patient!.PersonID))
+					.Concat(
+						from r in cte
+						join p in db.Patient on r.Id equals p.PersonID
+						select new SequenceBuildFailedRecord(p.PersonID));
+			});
+
+			_ = (
+				from r in cte
+				join p in db.Patient on r.Id equals p.PersonID
+				select new
+				{
+					Values = db.Person.Where(a => a.ID == r.Id).ToArray()
+				})
+				.ToArray();
+		}
+
+		[Test]
+		public void Issue_SequenceBuildFailed_2([CteContextSource] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var cte = db.Person.Select(s => new { s.Patient!.PersonID }).AsCte();
+
+			_ = (
+				from r in cte
+				join p in db.Patient on r.PersonID equals p.PersonID
+				select new
+				{
+					Values = db.Person.Where(a => a.ID == r.PersonID).ToArray()
+				}
+				)
+				.ToArray();
+		}
 	}
 }
