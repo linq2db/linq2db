@@ -820,7 +820,7 @@ namespace LinqToDB.Linq.Builder
 
 				if (HandleExtension(BuildContext, node, out var attribute, out translatedMember))
 				{
-					if (node.Type == typeof(bool) && translatedMember is SqlPlaceholderExpression { Sql: var sql } && !attribute.IsPredicate)
+					if (node.Type == typeof(bool) && translatedMember is SqlPlaceholderExpression { Sql: var sql } && attribute.IsPredicate)
 					{
 						var predicate = ConvertExpressionToPredicate(sql);
 						var searchCondition = new SqlSearchCondition().Add(predicate);
@@ -3256,7 +3256,6 @@ namespace LinqToDB.Linq.Builder
 					predicate = new SqlPredicate.IsTrue(ApplyExpressionNullability(sqlExpression, GetNullabilityContext()), trueValue.Sql, falseValue.Sql, DataOptions.LinqOptions.CompareNulls == CompareNulls.LikeClr ? false : null, false);
 					return predicate;
 				}
-
 			}
 
 			predicate = new SqlPredicate.Expr(ApplyExpressionNullability(sqlExpression, GetNullabilityContext()));

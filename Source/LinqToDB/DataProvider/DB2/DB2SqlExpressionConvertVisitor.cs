@@ -1,8 +1,7 @@
-﻿using System;
-
-namespace LinqToDB.DataProvider.DB2
+﻿namespace LinqToDB.DataProvider.DB2
 {
 	using Extensions;
+	using LinqToDB.Common;
 	using SqlProvider;
 	using SqlQuery;
 
@@ -116,6 +115,20 @@ namespace LinqToDB.DataProvider.DB2
 			}
 
 			return base.ConvertConversion(cast);
+		}
+
+		protected override ISqlExpression WrapColumnExpression(ISqlExpression expr)
+		{
+			var columnExpression = base.WrapColumnExpression(expr);
+
+			if (SqlProviderFlags != null
+				&& columnExpression.SystemType == typeof(bool)
+				&& QueryHelper.IsBoolean(columnExpression))
+			{
+				columnExpression = new SqlCastExpression(columnExpression, new DbDataType(columnExpression.SystemType!, DataType.Boolean), null, isMandatory: true);
+			}
+
+			return columnExpression;
 		}
 	}
 }

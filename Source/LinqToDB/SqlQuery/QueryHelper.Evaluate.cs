@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Globalization;
+using System.Net.WebSockets;
 
 namespace LinqToDB.SqlQuery
 {
@@ -443,6 +444,8 @@ namespace LinqToDB.SqlQuery
 						return true;
 					}
 
+					var allTrue = true;
+					var allFalse = true;
 					for (var i = 0; i < cond.Predicates.Count; i++)
 					{
 						var predicate = cond.Predicates[i];
@@ -450,9 +453,12 @@ namespace LinqToDB.SqlQuery
 						{
 							if (evaluated is bool boolValue)
 							{
+								allTrue  = allTrue  && boolValue;
+								allFalse = allFalse && !boolValue;
+
 								if (boolValue)
 								{
-									if (cond.IsOr)
+									if (cond.IsOr || cond.Predicates.Count == 1)
 									{
 										result = true;
 										return true;
@@ -468,6 +474,22 @@ namespace LinqToDB.SqlQuery
 								}
 							}
 						}
+						else
+						{
+							allTrue  = false;
+							allFalse = false;
+						}
+					}
+
+					if (!cond.IsOr && allTrue)
+					{
+						result = true;
+						return true;
+					}
+					else if (cond.IsOr && allFalse)
+					{
+						result = false;
+						return true;
 					}
 
 					return false;

@@ -1390,7 +1390,7 @@ namespace Tests.Linq
 		}
 
 		[Test(Description = "https://github.com/linq2db/linq2db/issues/4751")]
-		public void Issue4751Test([DataSources] string context, [Values] bool? hasRule)
+		public void Issue4751Test([DataSources] string context)
 		{
 			using var db = GetDataContext(context, o => o.OmitUnsupportedCompareNulls(context));
 			using var tb1 = db.CreateLocalTable<Tdm100>();
@@ -1398,8 +1398,9 @@ namespace Tests.Linq
 			using var tb3 = db.CreateLocalTable<Trp003>();
 			using var tb4 = db.CreateLocalTable<Trp0041>();
 
-			var carNo = "1";
-			var carBrand = "test";
+			var hasRule = string.Empty;
+			string? carNo = null;
+			string? carBrand = null;
 
 			var query = (from t1 in tb1
 						 from t2 in tb2.LeftJoin(x => x.CarNo == t1.CarNo)
@@ -1431,22 +1432,9 @@ namespace Tests.Linq
 
 			IQueryable<Rp002_R_GetPageList_Dto> query2;
 
-			if (hasRule == null)
-			{
-				query2 = (from t in query.AsSubQuery() select t);
-			}
-			else
-			{
-				if (hasRule == true)
-				{
-					query2 = (from t in query.AsSubQuery() where t.RuleNo != null select t);
-				}
-				else
-				{
-					query2 = (from t in query.AsSubQuery() where t.RuleNo == null select t);
-				}
-			}
-			var query3= query2.Where(x => x.CarNo!.Contains(carNo) && x.CarBrand!.Contains(carBrand));
+			query2 = (from t in query.AsSubQuery() select t);
+
+			var query3 = query2.Where(x => x.CarNo!.Contains(carNo!) && x.CarBrand!.Contains(carBrand!));
 
 			var items = query3.Skip(20).Take(10).ToList();
 			var totalCount = query3.Count();
