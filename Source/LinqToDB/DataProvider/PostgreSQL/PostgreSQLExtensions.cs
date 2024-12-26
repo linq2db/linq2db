@@ -141,31 +141,31 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		public static T[] ConcatArrays<T>(this IPostgreSQLExtensions? ext, [ExprParameter] T[][] array1, [ExprParameter] T[] array2)
 			=> throw new ServerSideOnlyException(nameof(ConcatArrays));
 
-		[Sql.Extension("{array1} < {array2}", ServerSideOnly = true, CanBeNull = true, IsPredicate = true, Precedence = Precedence.Comparison)]
+		[Sql.Extension("{array1} < {array2}", ServerSideOnly = true, IsNullable = Sql.IsNullableType.IfAnyParameterNullable, IsPredicate = true, Precedence = Precedence.Comparison)]
 		public static bool LessThan<T>(this IPostgreSQLExtensions? ext, [ExprParameter] T[] array1, [ExprParameter] T[] array2)
 			=> throw new ServerSideOnlyException(nameof(LessThan));
 
-		[Sql.Extension("{array1} <= {array2}", ServerSideOnly = true, CanBeNull = false, IsPredicate = true, Precedence = Precedence.Comparison)]
+		[Sql.Extension("{array1} <= {array2}", ServerSideOnly = true, IsNullable = Sql.IsNullableType.IfAnyParameterNullable, IsPredicate = true, Precedence = Precedence.Comparison)]
 		public static bool LessThanOrEqual<T>(this IPostgreSQLExtensions? ext, [ExprParameter] T[] array1, [ExprParameter] T[] array2)
 			=> throw new ServerSideOnlyException(nameof(LessThanOrEqual));
 
-		[Sql.Extension("{array1} > {array2}", ServerSideOnly = true, CanBeNull = false, IsPredicate = true, Precedence = Precedence.Comparison)]
+		[Sql.Extension("{array1} > {array2}", ServerSideOnly = true, IsNullable = Sql.IsNullableType.IfAnyParameterNullable, IsPredicate = true, Precedence = Precedence.Comparison)]
 		public static bool GreaterThan<T>(this IPostgreSQLExtensions? ext, [ExprParameter] T[] array1, [ExprParameter] T[] array2)
 			=> throw new ServerSideOnlyException(nameof(GreaterThan));
 
-		[Sql.Extension("{array1} > {array2}", ServerSideOnly = true, CanBeNull = false, IsPredicate = true, Precedence = Precedence.Comparison)]
+		[Sql.Extension("{array1} >= {array2}", ServerSideOnly = true, IsNullable = Sql.IsNullableType.IfAnyParameterNullable, IsPredicate = true, Precedence = Precedence.Comparison)]
 		public static bool GreaterThanOrEqual<T>(this IPostgreSQLExtensions? ext, [ExprParameter] T[] array1, [ExprParameter] T[] array2)
 			=> throw new ServerSideOnlyException(nameof(GreaterThanOrEqual));
 
-		[Sql.Extension("{array1} @> {array2}", ServerSideOnly = true, CanBeNull = false, IsPredicate = true, Precedence = Precedence.Comparison)]
+		[Sql.Extension("{array1} @> {array2}", ServerSideOnly = true, IsNullable = Sql.IsNullableType.IfAnyParameterNullable, IsPredicate = true, Precedence = Precedence.Comparison)]
 		public static bool Contains<T>(this IPostgreSQLExtensions? ext, [ExprParameter] T[] array1, [ExprParameter] T[] array2)
 			=> throw new ServerSideOnlyException(nameof(Contains));
 
-		[Sql.Extension("{array1} <@ {array2}", ServerSideOnly = true, CanBeNull = false, IsPredicate = true, Precedence = Precedence.Comparison)]
+		[Sql.Extension("{array1} <@ {array2}", ServerSideOnly = true, IsNullable = Sql.IsNullableType.IfAnyParameterNullable, IsPredicate = true, Precedence = Precedence.Comparison)]
 		public static bool ContainedBy<T>(this IPostgreSQLExtensions? ext, [ExprParameter] T[] array1, [ExprParameter] T[] array2)
 			=> throw new ServerSideOnlyException(nameof(ContainedBy));
 
-		[Sql.Extension("{array1} && {array2}", ServerSideOnly = true, CanBeNull = false, IsPredicate = true, Precedence = Precedence.Comparison)]
+		[Sql.Extension("{array1} && {array2}", ServerSideOnly = true, IsNullable = Sql.IsNullableType.IfAnyParameterNullable, IsPredicate = true, Precedence = Precedence.Comparison)]
 		public static bool Overlaps<T>(this IPostgreSQLExtensions? ext, [ExprParameter] T[] array1, [ExprParameter] T[] array2)
 			=> throw new ServerSideOnlyException(nameof(Overlaps));
 
@@ -241,27 +241,27 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		public static string ArrayToString<T>(this IPostgreSQLExtensions? ext, [ExprParameter] T[] array, [ExprParameter] string delimiter, [ExprParameter] string nullString)
 			=> throw new ServerSideOnlyException(nameof(ArrayToString));
 
-		[Sql.Extension("{value} = ANY({array})", ServerSideOnly = true, CanBeNull = true, Precedence = Precedence.Comparison, IsPredicate = true)]
+		[Sql.Extension("{value} = ANY({array})", ServerSideOnly = true, IsNullable = Sql.IsNullableType.IfAnyParameterNullable, Precedence = Precedence.Comparison, IsPredicate = true)]
 		public static bool ValueIsEqualToAny<T>(this IPostgreSQLExtensions? ext, [ExprParameter] T value, [ExprParameter] T[] array)
 			=> throw new ServerSideOnlyException(nameof(ValueIsEqualToAny));
 
-		[Sql.Extension("{value} < ANY({array})", ServerSideOnly = true, CanBeNull = true, Precedence = Precedence.Comparison, IsPredicate = true)]
+		[Sql.Extension("{value} < ANY({array})", ServerSideOnly = true, IsNullable = Sql.IsNullableType.IfAnyParameterNullable, Precedence = Precedence.Comparison, IsPredicate = true)]
 		public static bool ValueIsLessThanAny<T>(this IPostgreSQLExtensions? ext, [ExprParameter] T value, [ExprParameter] T[] array)
 			=> throw new ServerSideOnlyException(nameof(ValueIsLessThanAny));
 
-		[Sql.Extension("{value} <= ANY({array})", ServerSideOnly = true, CanBeNull = true, Precedence = Precedence.Comparison, IsPredicate = true)]
+		[Sql.Extension("{value} <= ANY({array})", ServerSideOnly = true, IsNullable = Sql.IsNullableType.IfAnyParameterNullable, Precedence = Precedence.Comparison, IsPredicate = true)]
 		public static bool ValueIsLessThanOrEqualToAny<T>(this IPostgreSQLExtensions? ext, [ExprParameter] T value, [ExprParameter] T[] array)
 			=> throw new ServerSideOnlyException(nameof(ValueIsLessThanOrEqualToAny));
 
-		[Sql.Extension("{value} > ANY({array})", ServerSideOnly = true, CanBeNull = true, Precedence = Precedence.Comparison, IsPredicate = true)]
+		[Sql.Extension("{value} > ANY({array})", ServerSideOnly = true, IsNullable = Sql.IsNullableType.IfAnyParameterNullable, Precedence = Precedence.Comparison, IsPredicate = true)]
 		public static bool ValueIsGreaterThanAny<T>(this IPostgreSQLExtensions? ext, [ExprParameter] T value, [ExprParameter] T[] array)
 			=> throw new ServerSideOnlyException(nameof(ValueIsGreaterThanAny));
 
-		[Sql.Extension("{value} >= ANY({array})", ServerSideOnly = true, CanBeNull = true, Precedence = Precedence.Comparison, IsPredicate = true)]
+		[Sql.Extension("{value} >= ANY({array})", ServerSideOnly = true, IsNullable = Sql.IsNullableType.IfAnyParameterNullable, Precedence = Precedence.Comparison, IsPredicate = true)]
 		public static bool ValueIsGreaterThanOrEqualToAny<T>(this IPostgreSQLExtensions? ext, [ExprParameter] T value, [ExprParameter] T[] array)
 			=> throw new ServerSideOnlyException(nameof(ValueIsGreaterThanOrEqualToAny));
 
-		[Sql.Extension("{value} <> ANY({array})", ServerSideOnly = true, CanBeNull = true, Precedence = Precedence.Comparison, IsPredicate = true)]
+		[Sql.Extension("{value} <> ANY({array})", ServerSideOnly = true, IsNullable = Sql.IsNullableType.IfAnyParameterNullable, Precedence = Precedence.Comparison, IsPredicate = true)]
 		public static bool ValueIsNotEqualToAny<T>(this IPostgreSQLExtensions? ext, [ExprParameter] T value, [ExprParameter] T[] array)
 			=> throw new ServerSideOnlyException(nameof(ValueIsNotEqualToAny));
 
