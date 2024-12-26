@@ -120,6 +120,12 @@ namespace LinqToDB.DataProvider.Informix
 
 						return new SqlFunction(cast.SystemType, "To_Date", argument);
 
+					case TypeCode.Boolean:
+						// boolean literal already has explicit cast
+						if (argument is SqlValue { Value: bool, ValueType.DataType: DataType.Boolean })
+							return argument;
+						break;
+
 					default:
 						if (cast.SystemType.ToUnderlying() == typeof(DateTimeOffset))
 							goto case TypeCode.DateTime;
@@ -174,11 +180,15 @@ namespace LinqToDB.DataProvider.Informix
 		{
 			var columnExpression = base.WrapColumnExpression(expr);
 
-			if (SqlProviderFlags != null
-			    && columnExpression.SystemType == typeof(bool)
-			    && !QueryHelper.IsBoolean(columnExpression, includeFields: true))
+			if (SqlProviderFlags != null && columnExpression.SystemType == typeof(bool))
 			{
-				columnExpression = new SqlCastExpression(columnExpression, new DbDataType(columnExpression.SystemType!, DataType.Boolean), null, isMandatory: true);
+				var unwrapped = QueryHelper.UnwrapNullablity(columnExpression);
+
+				if (unwrapped is not SqlFunction and not SqlValue and not SqlCastExpression
+					&& !QueryHelper.IsBoolean(columnExpression, includeFields: true))
+				{
+					columnExpression = new SqlCastExpression(columnExpression, new DbDataType(columnExpression.SystemType!, DataType.Boolean), null, isMandatory: true);
+				}
 			}
 
 			return columnExpression;
