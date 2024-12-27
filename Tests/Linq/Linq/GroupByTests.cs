@@ -3725,5 +3725,27 @@ namespace Tests.Linq
 			});
 			Assert.That(koValue.Count, Is.EqualTo(1));
 		}
+
+		[Test]
+		public void Issue_PlaceholderDuplicate([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			db.GetTable<Person>()
+				.GroupBy(_ => new
+				{
+					key = _.ID,
+					sort = _.ID,
+				})
+				.Select(_ => new
+				{
+					Key = _.Key.key,
+					Sort = _.Key.sort,
+					label = "label"
+				})
+				.OrderBy(_ => _.Sort)
+				.Take(100)
+				.ToList();
+		}
 	}
 }
