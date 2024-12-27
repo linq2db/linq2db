@@ -1318,6 +1318,9 @@ namespace LinqToDB.SqlQuery
 			if (expr is SqlExpression expression)
 				return (expression.Flags & SqlFlags.IsWindowFunction) != 0;
 
+			if (expr is SqlWindowFunction)
+				return true;
+
 			return false;
 		}
 

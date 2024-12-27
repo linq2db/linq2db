@@ -131,11 +131,14 @@ namespace LinqToDB
 
 	public partial class Sql
 	{
-		public interface ISqlExtension
-		{
-		}
+		public interface ISqlExtension { }
+		public interface IWindowFunction { }
 
-		public static ISqlExtension? Ext => null;
+		class SqlExtensionImpl : ISqlExtension { }
+		class WindowFunctionImpl : IWindowFunction { }
+
+		public static readonly ISqlExtension?  Ext    = new SqlExtensionImpl();
+		public static readonly IWindowFunction Window = new WindowFunctionImpl();
 
 		public interface IExtensionCallBuilder
 		{

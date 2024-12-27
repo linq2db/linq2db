@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 
 using LinqToDB.Common;
 using LinqToDB.SqlQuery;
@@ -40,6 +41,18 @@ namespace LinqToDB.Linq.Translation
 		public static ISqlExpression Function(this ISqlExpressionFactory factory, DbDataType dataType, string functionName, ParametersNullabilityType parametersNullability, params ISqlExpression[] parameters)
 		{
 			return new SqlFunction(dataType, functionName, parametersNullability, parameters);
+		}
+
+		public static ISqlExpression WindowFunction(this ISqlExpressionFactory factory, DbDataType dataType, string functionName, 
+			SqlFunctionArgument[]                                              arguments,
+			bool[]                                                             argumentsNullability,
+			IEnumerable<ISqlExpression>?                                       partitionBy = null,
+			IEnumerable<SqlWindowOrderItem>?                                   orderBy     = null,
+			SqlFrameClause?                                                    frameClause = null,
+			SqlSearchCondition?                                                filter      = null
+			)
+		{
+			return new SqlWindowFunction(dataType, functionName, arguments, argumentsNullability, partitionBy, orderBy, frameClause, filter);
 		}
 
 		public static ISqlPredicate ExprPredicate(this ISqlExpressionFactory factory, ISqlExpression expression)

@@ -30,7 +30,7 @@ namespace LinqToDB
 			{
 				token.ThrowIfCancellationRequested();
 				list.Add(item);
-		}
+			}
 
 			return list;
 		}
@@ -48,7 +48,7 @@ namespace LinqToDB
 			{
 				token.ThrowIfCancellationRequested();
 				list.Add(item);
-		}
+			}
 
 			return list.ToArray();
 		}
@@ -117,7 +117,7 @@ namespace LinqToDB
 			{
 				token.ThrowIfCancellationRequested();
 				dictionary[keySelector(item)] = elementSelector(item);
-		}
+			}
 
 			return dictionary;
 		}

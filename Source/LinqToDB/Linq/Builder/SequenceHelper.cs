@@ -924,6 +924,34 @@ namespace LinqToDB.Linq.Builder
 			return false;
 		}
 
+		public static IBuildContext? GetOrderSequence(IBuildContext context)
+		{
+			var prevSequence = context;
+			while (true)
+			{
+				if (prevSequence.SelectQuery.Select.HasModifier)
+				{
+					return null;
+				}
+
+				if (!prevSequence.SelectQuery.OrderBy.IsEmpty)
+					break;
+
+				if (prevSequence is SubQueryContext { IsSelectWrapper: true } subQuery)
+				{
+					prevSequence = subQuery.SubQuery;
+				}
+				else if (prevSequence is SelectContext { InnerContext: not null } selectContext)
+				{
+					prevSequence = selectContext.InnerContext;
+				}
+				else
+					break;
+			}
+
+			return prevSequence.SelectQuery.OrderBy.IsEmpty ? null : prevSequence;
+		}
+
 		#region Special fields helpers
 
 		public static MemberExpression CreateSpecialProperty(Expression obj, Type type, string name)

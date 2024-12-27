@@ -11,6 +11,9 @@ using NUnit.Framework;
 
 namespace Tests.Linq
 {
+	using System.Collections.Generic;
+	using System.Reflection;
+
 	using Model;
 
 	[TestFixture]
@@ -185,6 +188,23 @@ namespace Tests.Linq
 				new DistinctOrderByTable() { Id = 4, F1 = 4, F2 = "4", F3 = 6 },
 			};
 		}
+
+#if NET5_0_OR_GREATER
+
+		[Test]
+		public void DistinctBy([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (var table = db.CreateLocalTable(DistinctOrderByTable.Data))
+			{
+				var query = table
+					.DistinctBy(x => new { x.F1, x.F2 });
+
+				AssertQuery(query);
+			}
+		}
+
+#endif
 
 		[Test]
 		public void DistinctOrderBy2([DataSources] string context)

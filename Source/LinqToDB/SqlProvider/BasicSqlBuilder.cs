@@ -3168,6 +3168,10 @@ namespace LinqToDB.SqlProvider
 					BuildSqlConditionExpression((SqlConditionExpression)expr);
 					break;
 
+				case QueryElementType.SqlWindowFunction:
+					BuildSqlWindowFunction((SqlWindowFunction)expr);
+					break;
+
 				default:
 					throw new InvalidOperationException($"Unexpected expression type {expr.ElementType}");
 			}
@@ -3178,6 +3182,94 @@ namespace LinqToDB.SqlProvider
 		protected virtual void BuildSqlCastExpression(SqlCastExpression castExpression)
 		{
 			BuildTypedExpression(castExpression.ToType, castExpression.Expression);
+		}
+
+
+		protected virtual void BuildSqlWindowFunction(SqlWindowFunction windowFunction)
+		{
+			StringBuilder.Append(windowFunction.FunctionName);
+			StringBuilder.Append('(');
+
+			if (windowFunction.Arguments.Count > 0)
+			{
+				for (var i = 0; i < windowFunction.Arguments.Count; i++)
+				{
+					if (i > 0)
+						StringBuilder.Append(", ");
+					var argument = windowFunction.Arguments[i];
+					if (argument.Modifier != Sql.AggregateModifier.None)
+					{
+						switch (argument.Modifier)
+						{
+							case Sql.AggregateModifier.All:
+								StringBuilder.Append("ALL");
+								break;
+							case Sql.AggregateModifier.Distinct:
+								StringBuilder.Append("DISTINCT");
+								break;
+							default:
+								throw new InvalidOperationException($"Unexpected aggregate modifier: {argument.Modifier}");
+						}
+						StringBuilder.Append(' ');
+					}
+
+					BuildExpression(argument.Expression);
+				}
+			}
+
+			StringBuilder.Append(')');
+
+			if (windowFunction.Filter != null)
+			{
+				StringBuilder.Append(" FILTER (WHERE ");
+				BuildSearchCondition(windowFunction.Filter, false);
+				StringBuilder.Append(')');
+			}
+
+			if (windowFunction.PartitionBy?.Count > 0 || windowFunction.OrderBy?.Count > 0 || windowFunction.FrameClause != null)
+			{
+				StringBuilder.Append(" OVER (");
+				if (windowFunction.PartitionBy?.Count > 0)
+				{
+					StringBuilder.Append("PARTITION BY ");
+					for (var i = 0; i < windowFunction.PartitionBy.Count; i++)
+					{
+						if (i > 0)
+							StringBuilder.Append(", ");
+						BuildExpression(windowFunction.PartitionBy[i]);
+					}
+				}
+
+				if (windowFunction.OrderBy?.Count > 0)
+				{
+					if (windowFunction.PartitionBy?.Count > 0)
+						StringBuilder.Append(' ');
+					StringBuilder.Append("ORDER BY ");
+					for (var i = 0; i < windowFunction.OrderBy.Count; i++)
+					{
+						if (i > 0)
+							StringBuilder.Append(", ");
+
+						var orderItem = windowFunction.OrderBy[i];
+						BuildExpression(orderItem.Expression);
+						if (orderItem.IsDescending)
+							StringBuilder.Append(" DESC");
+
+						if (orderItem.NullsPosition != Sql.NullsPosition.None)
+						{
+							StringBuilder.Append(" NULLS ");
+							StringBuilder.Append(orderItem.NullsPosition == Sql.NullsPosition.First ? "FIRST" : "LAST");
+						}
+					}
+				}
+
+				if (windowFunction.FrameClause != null)
+				{
+					throw new NotImplementedException("Frame clause is not supported");
+				}
+
+				StringBuilder.Append(')');
+			}
 		}
 
 		protected virtual void BuildSqlConditionExpression(SqlConditionExpression conditionExpression)

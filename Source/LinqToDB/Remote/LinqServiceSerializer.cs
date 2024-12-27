@@ -504,6 +504,21 @@ namespace LinqToDB.Remote
 				return items;
 			}
 
+			protected bool[]? ReadBoolArray()
+			{
+				var count = ReadCount();
+
+				if (count == null)
+					return null;
+
+				var items = new bool[count.Value];
+
+				for (var i = 0; i < count; i++)
+					items[i] = ReadBool();
+
+				return items;
+			}
+
 			protected List<T>? ReadList<T>()
 				where T : class
 			{
@@ -1698,6 +1713,39 @@ namespace LinqToDB.Remote
 						break;
 					}
 
+					case QueryElementType.SqlWindowFunction:
+					{
+						var elem = (SqlWindowFunction)e;
+						Append(elem.Type);
+						Append(elem.FunctionName);
+						Append(elem.Arguments);
+						Append(elem.ArgumentsNullability);
+						Append(elem.Filter);
+						Append(elem.OrderBy);
+						Append(elem.PartitionBy);
+						//Append(elem.FrameClause);
+						break;
+					}
+
+					case QueryElementType.SqlWindowOrderItem:
+					{
+						var elem = (SqlWindowOrderItem)e;
+						Append(elem.Expression);
+						Append(elem.IsDescending);
+						Append((int)elem.NullsPosition);
+						break;
+					}
+
+					case QueryElementType.SqlFrameClause:
+					{
+						var elem = (SqlFrameClause)e;
+						Append(elem.Start);
+						Append(elem.FrameType);
+						Append(elem.End);
+						break;
+					}
+
+
 					default:
 						throw new InvalidOperationException($"Serialize not implemented for element {e.ElementType}");
 				}
@@ -1716,6 +1764,19 @@ namespace LinqToDB.Remote
 
 					foreach (var e in exprs)
 						Append(ObjectIndices[e]);
+				}
+			}
+
+			void Append(bool[]? exprs)
+			{
+				if (exprs == null)
+					Builder.Append(" -");
+				else
+				{
+					Append(exprs.Length);
+
+					foreach (var e in exprs)
+						Append(e);
 				}
 			}
 		}
@@ -2785,6 +2846,44 @@ namespace LinqToDB.Remote
 
 						break;
 					}
+
+					case QueryElementType.SqlWindowFunction:
+					{
+						var functionType         = ReadDbDataType();
+						var name                 = ReadString()!;
+						var arguments            = ReadArray<SqlFunctionArgument>()!;
+						var argumentsNullability = ReadBoolArray()!;
+						var filter               = Read<SqlSearchCondition>();
+						var orderBy              = ReadArray<SqlWindowOrderItem>()!;
+						var partitionBy          = ReadArray<ISqlExpression>()!;
+
+						obj = new SqlWindowFunction(functionType, name, arguments, argumentsNullability, orderBy: orderBy, partitionBy:partitionBy, filter:filter);
+
+						break;
+					}
+
+					case QueryElementType.SqlWindowOrderItem:
+					{
+						var expression    = Read<ISqlExpression>()!;
+						var isDescending  = ReadBool();
+						var nullsPosition = (Sql.NullsPosition)ReadInt();
+
+						obj = new SqlWindowOrderItem(expression, isDescending, nullsPosition);
+
+						break;
+					}
+
+					case QueryElementType.SqlFrameClause:
+					{
+						var start = Read<SqlFrameBoundary>()!;
+						var frameType= ReadString()!;
+						var end = Read<SqlFrameBoundary>()!;
+
+						obj = new SqlFrameClause(frameType, start, end);
+
+						break;
+					}
+
 
 					default:
 						throw new InvalidOperationException($"Parse not implemented for element {(QueryElementType)type}");

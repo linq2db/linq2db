@@ -990,22 +990,6 @@ namespace LinqToDB.SqlQuery
 						partitionBy = found.ToList();
 					}
 
-					var rnBuilder = new StringBuilder();
-					rnBuilder.Append("ROW_NUMBER() OVER (");
-
-					if (partitionBy != null)
-					{
-						rnBuilder.Append("PARTITION BY ");
-						for (int i = 0; i < partitionBy.Count; i++)
-						{
-							if (i > 0)
-								rnBuilder.Append(", ");
-
-							rnBuilder.Append(CultureInfo.InvariantCulture, $"{{{parameters.Count}}}");
-							parameters.Add(partitionBy[i]);
-						}
-					}
-
 					var orderByItems = sql.OrderBy.Items.ToList();
 
 					if (sql.OrderBy.IsEmpty)
@@ -1022,30 +1006,10 @@ namespace LinqToDB.SqlQuery
 						}
 					}
 
-					if (orderByItems.Count > 0)
-					{
-						if (partitionBy != null)
-							rnBuilder.Append(' ');
+					var orderItems = orderByItems.Select(o => new SqlWindowOrderItem(o.Expression, o.IsDescending, Sql.NullsPosition.None));
 
-						rnBuilder.Append("ORDER BY ");
-						for (int i = 0; i < orderByItems.Count; i++)
-						{
-							if (i > 0)
-								rnBuilder.Append(", ");
-
-							var orderItem = orderByItems[i];
-							rnBuilder.Append(CultureInfo.InvariantCulture, $"{{{parameters.Count}}}");
-							if (orderItem.IsDescending)
-								rnBuilder.Append(" DESC");
-
-							parameters.Add(orderItem.Expression);
-						}
-					}
-
-					rnBuilder.Append(')');
-
-					rnExpression = new SqlExpression(typeof(long), rnBuilder.ToString(), Precedence.Primary,
-						SqlFlags.IsWindowFunction, ParametersNullabilityType.NotNullable, null, parameters.ToArray());
+					var longType = _mappingSchema.GetDbDataType(typeof(long));
+					rnExpression = new SqlWindowFunction(longType, "ROW_NUMBER", [], [], partitionBy : partitionBy, orderBy : orderItems);
 				}
 
 				var whereToIgnore = new List<IQueryElement> { sql.Where, sql.Select };
@@ -1513,7 +1477,7 @@ namespace LinqToDB.SqlQuery
 			{
 				if (QueryHelper.ContainsWindowFunction(column.Expression))
 				{
-					if (!parentQuery.IsSimpleOrSet)
+					if (!(!parentQuery.Select.HasModifier && parentQuery.Where.IsEmpty && parentQuery.GroupBy.IsEmpty && parentQuery.Having.IsEmpty && parentQuery.From.Tables is [{ Joins.Count: 0 }]))
 					{
 						// not allowed to break query window 
 						return false;

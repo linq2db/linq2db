@@ -130,6 +130,13 @@ namespace LinqToDB.SqlQuery
 				QueryElementType.SqlCoalesce               => VisitSqlCoalesceExpression     ((SqlCoalesceExpression     )element),
 				QueryElementType.SqlCase                   => VisitSqlCaseExpression         ((SqlCaseExpression         )element),
 				QueryElementType.CompareTo                 => VisitSqlCompareToExpression    ((SqlCompareToExpression    )element),
+				QueryElementType.SqlWindowFunction         => VisitSqlWindowFunction         ((SqlWindowFunction         )element),
+				QueryElementType.SqlWindowOrderItem        => VisitSqlWindowOrderItem        ((SqlWindowOrderItem        )element),
+				QueryElementType.SqlFrameClause            => VisitSqlFrameClause            ((SqlFrameClause            )element),
+				QueryElementType.SqlFrameBoundaryOffset             => VisitSqlFrameBoundaryOffset            ((SqlFrameBoundary.SqlOffset            )element),
+				QueryElementType.SqlFrameBoundaryCurrentRow         => VisitSqlFrameBoundaryCurrentRow        ((SqlFrameBoundary.SqlCurrentRow        )element),
+				QueryElementType.SqlFrameBoundaryUnboundedFollowing => VisitSqlFrameBoundaryUnboundedFollowing((SqlFrameBoundary.SqlUnboundedFollowing)element),
+				QueryElementType.SqlFrameBoundaryUnboundedPreceding => VisitSqlFrameBoundaryUnboundedPreceding((SqlFrameBoundary.SqlUnboundedPreceding)element),
 
 				_ => throw new InvalidOperationException()
 			};
@@ -193,10 +200,190 @@ namespace LinqToDB.SqlQuery
 		}
 
 		/// <summary>
+		/// Visitor for <see cref="SqlWindowFunction"/>.
+		/// </summary>
+		protected virtual IQueryElement VisitSqlWindowFunction(SqlWindowFunction element)
+		{
+			switch (GetVisitMode(element))
+			{
+				case VisitMode.ReadOnly:
+				{
+					VisitElements(element.Arguments, VisitMode.ReadOnly);
+					VisitElements(element.PartitionBy, VisitMode.ReadOnly);
+					VisitElements(element.OrderBy, VisitMode.ReadOnly);
+					Visit(element.FrameClause);
+					Visit(element.Filter);
+					break;
+				}
+				case VisitMode.Modify:
+				{
+					element.Modify(
+						VisitElements(element.Arguments, VisitMode.Modify),
+						VisitElements(element.PartitionBy, VisitMode.Modify),
+						VisitElements(element.OrderBy, VisitMode.Modify),
+						(SqlFrameClause?)Visit(element.FrameClause),
+						(SqlSearchCondition?)Visit(element.Filter));
+					break;
+				}
+				case VisitMode.Transform:
+				{
+					var arguments   = VisitElements(element.Arguments, VisitMode.Transform);
+					var partitionBy = VisitElements(element.PartitionBy, VisitMode.Transform);
+					var orderBy     = VisitElements(element.OrderBy, VisitMode.Transform);
+					var frameClause = (SqlFrameClause?)Visit(element.FrameClause);
+					var filter      = (SqlSearchCondition?)Visit(element.Filter);
+
+					if (ShouldReplace(element) ||
+						!ReferenceEquals(element.Arguments, arguments) ||
+						!ReferenceEquals(element.PartitionBy, partitionBy) ||
+						!ReferenceEquals(element.OrderBy, orderBy) ||
+						!ReferenceEquals(element.FrameClause, frameClause) ||
+						!ReferenceEquals(element.Filter, filter))
+					{
+						return NotifyReplaced(new SqlWindowFunction(
+							element.Type,
+							element.FunctionName,
+							arguments,
+							element.ArgumentsNullability,
+							partitionBy,
+							orderBy,
+							frameClause,
+							filter), element);
+					}
+
+					break;
+				}
+				default:
+					throw CreateInvalidVisitModeException();
+			}
+
+			return element;
+		}
+
+		protected virtual IQueryElement VisitSqlWindowOrderItem(SqlWindowOrderItem element)
+		{
+			switch (GetVisitMode(element))
+			{
+				case VisitMode.ReadOnly:
+				{
+					Visit(element.Expression);
+
+					break;
+				}
+				case VisitMode.Modify:
+				{
+					element.Modify((ISqlExpression)Visit(element.Expression));
+
+					break;
+				}
+				case VisitMode.Transform:
+				{
+					var e = (ISqlExpression)Visit(element.Expression);
+
+					if (ShouldReplace(element) || !ReferenceEquals(element.Expression, e))
+						return NotifyReplaced(new SqlWindowOrderItem(e, element.IsDescending, element.NullsPosition), element);
+
+					break;
+				}
+				default:
+					throw CreateInvalidVisitModeException();
+			}
+
+			return element;
+		}
+
+		/// <summary>
+		/// Visitor for <see cref="SqlFrameClause"/>.
+		/// </summary>
+		protected virtual IQueryElement VisitSqlFrameClause(SqlFrameClause element)
+		{
+			switch (GetVisitMode(element))
+			{
+				case VisitMode.ReadOnly:
+				{
+					Visit(element.Start);
+					Visit(element.End);
+					break;
+				}
+				case VisitMode.Modify:
+				{
+					element.Modify(
+						(SqlFrameBoundary)Visit(element.Start),
+						(SqlFrameBoundary)Visit(element.End));
+					break;
+				}
+				case VisitMode.Transform:
+				{
+					var start = (SqlFrameBoundary)Visit(element.Start);
+					var end   = (SqlFrameBoundary)Visit(element.End);
+
+					if (ShouldReplace(element) || !ReferenceEquals(element.Start, start) || !ReferenceEquals(element.End, end))
+					{
+						return NotifyReplaced(new SqlFrameClause(element.FrameType, start, end), element);
+					}
+
+					break;
+				}
+				default:
+					throw CreateInvalidVisitModeException();
+			}
+
+			return element;
+		}
+
+		/// <summary>
+		/// Visitor for <see cref="SqlFrameBoundary.SqlOffset"/>.
+		/// </summary>
+		protected virtual IQueryElement VisitSqlFrameBoundaryOffset(SqlFrameBoundary.SqlOffset element)
+		{
+			switch (GetVisitMode(element))
+			{
+				case VisitMode.ReadOnly:
+				{
+					Visit(element.Offset);
+					break;
+				}
+				case VisitMode.Modify:
+				{
+					element.Modify((ISqlExpression)Visit(element.Offset));
+					break;
+				}
+				case VisitMode.Transform:
+				{
+					var offset = (ISqlExpression)Visit(element.Offset);
+
+					if (ShouldReplace(element) || !ReferenceEquals(element.Offset, offset))
+					{
+						return NotifyReplaced(new SqlFrameBoundary.SqlOffset(offset, element.IsPreceding), element);
+					}
+
+					break;
+				}
+				default:
+					throw CreateInvalidVisitModeException();
+			}
+
+			return element;
+		}
+
+		/// <summary>
+		/// Visitor for <see cref="SqlFrameBoundary.SqlCurrentRow"/>.
+		/// </summary>
+		protected virtual IQueryElement VisitSqlFrameBoundaryCurrentRow(SqlFrameBoundary.SqlCurrentRow element) => element;
+
+		/// <summary>
+		/// Visitor for <see cref="SqlFrameBoundary.SqlUnboundedFollowing"/>.
+		/// </summary>
+		protected virtual IQueryElement VisitSqlFrameBoundaryUnboundedFollowing(SqlFrameBoundary.SqlUnboundedFollowing element) => element;
+
+		/// <summary>
+		/// Visitor for <see cref="SqlFrameBoundary.SqlUnboundedPreceding"/>.
+		/// </summary>
+		protected virtual IQueryElement VisitSqlFrameBoundaryUnboundedPreceding(SqlFrameBoundary.SqlUnboundedPreceding element) => element;
+
+		/// <summary>
 		/// Visitor for <see cref="SqlField"/> reference from query expressions.
 		/// </summary>
-		/// <param name="element"></param>
-		/// <returns></returns>
 		protected virtual IQueryElement VisitSqlFieldReference(SqlField element) => element;
 
 		/// <summary>

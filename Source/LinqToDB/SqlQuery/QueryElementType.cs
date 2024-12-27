@@ -104,5 +104,14 @@
 		SqlCase,
 		SqlSimpleCase,
 		CompareTo,
+
+		SqlFunctionArgument,
+		SqlWindowFunction,
+		SqlWindowOrderItem,
+		SqlFrameClause,
+		SqlFrameBoundaryOffset,
+		SqlFrameBoundaryCurrentRow,
+		SqlFrameBoundaryUnboundedFollowing,
+		SqlFrameBoundaryUnboundedPreceding,
 	}
 }
