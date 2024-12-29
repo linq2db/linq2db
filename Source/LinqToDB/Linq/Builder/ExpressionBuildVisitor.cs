@@ -4049,7 +4049,10 @@ namespace LinqToDB.Linq.Builder
 			{
 				if (expr is SqlPlaceholderExpression placeholder)
 				{
-					replacement.Add(placeholder, placeholder.WithPath(localPath));
+					if (!replacement.ContainsKey(placeholder))
+					{
+						replacement.Add(placeholder, placeholder.WithPath(localPath));
+					}
 				}
 				else if (expr is SqlGenericConstructorExpression generic)
 				{
