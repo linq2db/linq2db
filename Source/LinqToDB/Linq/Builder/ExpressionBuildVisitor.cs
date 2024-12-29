@@ -1334,7 +1334,7 @@ namespace LinqToDB.Linq.Builder
 
 				if (!IsSame(root, node.Expression))
 				{
-					if (root is not (SqlErrorExpression or MethodCallExpression or SqlGenericConstructorExpression))
+					if (root is not (SqlErrorExpression or MethodCallExpression or SqlGenericConstructorExpression or SqlPlaceholderExpression))
 					{
 						if (root.Type != node.Expression.Type && _buildPurpose is BuildPurpose.Table or BuildPurpose.AggregationRoot or BuildPurpose.AssociationRoot)
 							return Visit(root);
@@ -1512,17 +1512,7 @@ namespace LinqToDB.Linq.Builder
 
 				if (_buildPurpose == BuildPurpose.Expression && node.Expression != null)
 				{
-					var expression = Visit(node.Expression);
-					if (expression is SqlDefaultIfEmptyExpression defaultIfEmptyExpression)
-					{
-						var result = Expression.Condition(Expression.Equal(expression, Expression.Constant(null, expression.Type)), 
-							Expression.Default(node.Type), 
-							node.Update(defaultIfEmptyExpression.InnerExpression));
-
-						return Visit(result);
-					}
-
-					return node.Update(expression);
+					return base.VisitMember(node);
 				}
 
 				return node;

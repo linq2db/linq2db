@@ -61,7 +61,7 @@ namespace LinqToDB.Linq.Builder
 			if (flags.IsKeys())
 				buildFlags |= BuildFlags.ForKeys;
 
-			var translated = Builder.BuildSqlExpression(BuildContext, currentExpression, buildFlags: buildFlags);
+			var translated = Builder.BuildExpression(BuildContext, currentExpression, buildFlags: buildFlags);
 
 			if (ExpressionEqualityComparer.Instance.Equals(translated, currentExpression))
 				return path;

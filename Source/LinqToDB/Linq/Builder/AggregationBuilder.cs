@@ -290,7 +290,7 @@ namespace LinqToDB.Linq.Builder
 					valueExpression = new ContextRefExpression(returnType, groupByContext);
 				}
 
-				var convertedExpr = builder.BuildSqlExpression(groupByContext.SubQuery, valueExpression);
+				var convertedExpr = builder.BuildSqlExpression(groupByContext.SubQuery, valueExpression, BuildFlags.ForKeys | BuildFlags.ResetPrevious);
 
 				if (!SequenceHelper.IsSqlReady(convertedExpr))
 				{

@@ -128,11 +128,6 @@ namespace LinqToDB.Linq.Builder
 
 			public override Expression HandleTranslated(Expression? path, SqlPlaceholderExpression placeholder)
 			{
-				if (placeholder.Sql is SqlField field && field.Name == "Cursor")
-				{
-
-				}
-
 				if (path != null)
 					placeholder = placeholder.WithPath(path).WithTrackingPath(path);
 				return placeholder;
