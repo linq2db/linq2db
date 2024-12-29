@@ -1180,9 +1180,16 @@ namespace LinqToDB.Linq.Builder
 				body = RemoveNullPropagation(body, flags.HasFlag(ProjectFlags.Keys));
 			}
 
-			if (body is SqlDefaultIfEmptyExpression defaultIfEmptyExpression)
+			if (body is SqlDefaultIfEmptyExpression defaultIfEmpty && next != null)
 			{
-				body = defaultIfEmptyExpression.InnerExpression;
+				var inner = Project(context, path, nextPath, nextIndex, flags, defaultIfEmpty.InnerExpression, strict);
+				if (inner is SqlErrorExpression)
+					return inner;
+
+				var testCondition = defaultIfEmpty.NotNullExpressions.Select(SequenceHelper.MakeNotNullCondition).Aggregate(Expression.AndAlso);
+
+				var result = Expression.Condition(testCondition, inner, new DefaultValueExpression(MappingSchema, next.Type));
+				return result;
 			}
 
 			switch (body.NodeType)
@@ -1668,7 +1675,7 @@ namespace LinqToDB.Linq.Builder
 				}
 			}
 
-			return CreateSqlError(next!);
+			return CreateSqlError(next ?? path!);
 		}
 
 		public Expression ParseGenericConstructor(Expression createExpression, ProjectFlags flags, ColumnDescriptor? columnDescriptor, bool force = false)

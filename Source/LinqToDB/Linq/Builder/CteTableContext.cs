@@ -81,7 +81,7 @@ namespace LinqToDB.Linq.Builder
 			return context;
 		}
 
-		readonly Dictionary<Expression, SqlPlaceholderExpression> _fieldsMap = new (ExpressionEqualityComparer.Instance);
+		readonly Dictionary<string, SqlPlaceholderExpression> _fieldsMap = new ();
 
 		SqlCteTable? _cteTable;
 
@@ -101,12 +101,9 @@ namespace LinqToDB.Linq.Builder
 			{
 				CteContext.InitQuery();
 
-				var translated = Builder.BuildSqlExpression(CteContext, ctePath);
+				var proxy = new CteTableProxy(this, path, ctePath);
 
-				translated = SequenceHelper.ReplaceContext(translated, CteContext, this);
-
-				// replace tracking path back
-				translated = SequenceHelper.CorrectTrackingPath(translated, CteContext, this);
+				var translated = Builder.BuildSqlExpression(CteContext, SequenceHelper.CreateRef(proxy));
 
 				var placeholders = ExpressionBuilder.CollectPlaceholders(translated);
 
@@ -116,6 +113,35 @@ namespace LinqToDB.Linq.Builder
 			}
 
 			return ctePath;
+		}
+
+		class CteTableProxy : BuildProxyBase<CteTableContext>
+		{
+			public CteTableProxy(CteTableContext ownerContext, Expression currentPath, Expression innerExpression) : base(ownerContext, ownerContext.CteContext, currentPath, innerExpression)
+			{
+			}
+
+			public override IBuildContext Clone(CloningContext context)
+			{
+				return new CteTableProxy(context.CloneContext(OwnerContext), context.CloneExpression(CurrentPath), context.CloneExpression(InnerExpression));
+			}
+
+			public override Expression HandleTranslated(Expression? path, SqlPlaceholderExpression placeholder)
+			{
+				if (placeholder.Sql is SqlField field && field.Name == "Cursor")
+				{
+
+				}
+
+				if (path != null)
+					placeholder = placeholder.WithPath(path).WithTrackingPath(path);
+				return placeholder;
+			}
+
+			public override BuildProxyBase<CteTableContext> CreateProxy(CteTableContext ownerContext, IBuildContext buildContext, Expression currentPath, Expression innerExpression)
+			{
+				return new CteTableProxy(ownerContext, currentPath, innerExpression);
+			}
 		}
 
 		Expression RemapFields(Expression expression, List<SqlPlaceholderExpression> placeholders)
@@ -132,13 +158,12 @@ namespace LinqToDB.Linq.Builder
 				if (placeholder.TrackingPath == null)
 					continue;
 
-				if (!_fieldsMap.TryGetValue(placeholder.TrackingPath, out var newPlaceholder))
+				var field = QueryHelper.GetUnderlyingField(placeholder.Sql);
+				if (field == null)
+					throw new InvalidOperationException($"Could not get field from SQL: {placeholder.Sql}");
+
+				if (!_fieldsMap.TryGetValue(field.Name, out var newPlaceholder))
 				{
-					var field = QueryHelper.GetUnderlyingField(placeholder.Sql);
-
-					if (field == null)
-						throw new InvalidOperationException($"Could not get field from SQL: {placeholder.Sql}");
-
 					var newField = new SqlField(field);
 
 					CteTable.Add(newField);
@@ -149,7 +174,7 @@ namespace LinqToDB.Linq.Builder
 
 					newPlaceholder = newPlaceholder.WithType(placeholder.Type);
 
-					_fieldsMap[placeholder.TrackingPath] = newPlaceholder;
+					_fieldsMap[field.Name] = newPlaceholder;
 				}
 				else
 				{

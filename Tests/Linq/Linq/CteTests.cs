@@ -2604,18 +2604,19 @@ namespace Tests.Linq
 				return db.Person.Select(s => new SequenceBuildFailedRecord(s.Patient!.PersonID))
 					.Concat(
 						from r in cte
-						join p in db.Patient on r.Id equals p.PersonID
+						join p in db.Patient on r.Id equals p.PersonID + 1
 						select new SequenceBuildFailedRecord(p.PersonID));
 			});
 
-			_ = (
+			var query = 
 				from r in cte
 				join p in db.Patient on r.Id equals p.PersonID
 				select new
 				{
 					Values = db.Person.Where(a => a.ID == r.Id).ToArray()
-				})
-				.ToArray();
+				};
+
+			var result = query.ToArray();
 		}
 
 		[Test]
@@ -2625,15 +2626,15 @@ namespace Tests.Linq
 
 			var cte = db.Person.Select(s => new { s.Patient!.PersonID }).AsCte();
 
-			_ = (
+			var query = 
 				from r in cte
 				join p in db.Patient on r.PersonID equals p.PersonID
 				select new
 				{
 					Values = db.Person.Where(a => a.ID == r.PersonID).ToArray()
-				}
-				)
-				.ToArray();
+				};
+
+			var result = query.ToArray();
 		}
 	}
 }

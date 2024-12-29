@@ -1334,7 +1334,7 @@ namespace LinqToDB.Linq.Builder
 
 				if (!IsSame(root, node.Expression))
 				{
-					if (root is not (SqlErrorExpression or MethodCallExpression))
+					if (root is not (SqlErrorExpression or MethodCallExpression or SqlGenericConstructorExpression))
 					{
 						if (root.Type != node.Expression.Type && _buildPurpose is BuildPurpose.Table or BuildPurpose.AggregationRoot or BuildPurpose.AssociationRoot)
 							return Visit(root);
@@ -1434,7 +1434,7 @@ namespace LinqToDB.Linq.Builder
 							associationRoot = MakeWithCache(context.BuildContext, node);
 						}
 
-						if (!IsSame(associationRoot, node))
+						if (!IsSame(associationRoot, node) && associationRoot is not SqlErrorExpression)
 						{
 							return Visit(associationRoot);
 						}
@@ -1510,9 +1510,19 @@ namespace LinqToDB.Linq.Builder
 					}
 				}
 
-				if (_buildPurpose == BuildPurpose.Expression)
+				if (_buildPurpose == BuildPurpose.Expression && node.Expression != null)
 				{
-					return base.VisitMember(node);
+					var expression = Visit(node.Expression);
+					if (expression is SqlDefaultIfEmptyExpression defaultIfEmptyExpression)
+					{
+						var result = Expression.Condition(Expression.Equal(expression, Expression.Constant(null, expression.Type)), 
+							Expression.Default(node.Type), 
+							node.Update(defaultIfEmptyExpression.InnerExpression));
+
+						return Visit(result);
+					}
+
+					return node.Update(expression);
 				}
 
 				return node;
@@ -3680,6 +3690,7 @@ namespace LinqToDB.Linq.Builder
 			try
 			{
 				_buildFlags |= BuildFlags.ForKeys;
+				_buildFlags &= ~BuildFlags.ForMemberRoot;
 
 				var columnDescriptor = SuggestColumnDescriptor(left, right);
 
