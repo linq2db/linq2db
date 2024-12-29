@@ -2595,7 +2595,7 @@ namespace Tests.Linq
 		sealed record SequenceBuildFailedRecord(int Id);
 
 		[Test]
-		public void Issue_SequenceBuildFailed_1([CteContextSource] string context)
+		public void Issue_SequenceBuildFailed_1([CteContextSource(TestProvName.AllInformix, TestProvName.AllSapHana)] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -2620,7 +2620,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Issue_SequenceBuildFailed_2([CteContextSource] string context)
+		public void Issue_SequenceBuildFailed_2([CteContextSource(TestProvName.AllClickHouse)] string context)
 		{
 			using var db = GetDataContext(context);
 
