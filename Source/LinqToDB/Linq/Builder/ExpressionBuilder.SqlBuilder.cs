@@ -449,35 +449,48 @@ namespace LinqToDB.Linq.Builder
 			return _buildVisitor.GenerateComparison(context, left, right, buildPurpose);
 		}
 
+		class PlaceholderCollectVisitor : ExpressionVisitorBase
+		{
+			readonly List<SqlPlaceholderExpression> _collected = new();
+
+			public IReadOnlyList<SqlPlaceholderExpression> Collected => _collected;
+
+			public override void Cleanup()
+			{
+				_collected.Clear();
+				base.Cleanup();
+			}
+
+			public override Expression VisitSqlPlaceholderExpression(SqlPlaceholderExpression node)
+			{
+				_collected.Add(node);
+				return base.VisitSqlPlaceholderExpression(node);
+			}
+
+			public override Expression VisitSqlDefaultIfEmptyExpression(SqlDefaultIfEmptyExpression node)
+			{
+				// Do not collect placeholders from NotNullExpressions
+				Visit(node.InnerExpression);
+				return node;
+			}
+		}
+
 		public static List<SqlPlaceholderExpression> CollectPlaceholders(Expression expression)
 		{
-			var result = new List<SqlPlaceholderExpression>();
+			using var visitor = _placeholderCollectorPool.Allocate();
 
-			expression.Visit(result, static (list, e) =>
-			{
-				if (e is SqlPlaceholderExpression placeholder)
-				{
-					list.Add(placeholder);
-				}
-			});
+			visitor.Value.Visit(expression);
 
-			return result;
+			return visitor.Value.Collected.ToList();
 		}
 
 		public static List<SqlPlaceholderExpression> CollectDistinctPlaceholders(Expression expression)
 		{
-			var result = new List<SqlPlaceholderExpression>();
+			using var visitor = _placeholderCollectorPool.Allocate();
 
-			expression.Visit(result, static (list, e) =>
-			{
-				if (e is SqlPlaceholderExpression placeholder)
-				{
-					if (!list.Contains(placeholder))
-						list.Add(placeholder);
-				}
-			});
+			visitor.Value.Visit(expression);
 
-			return result;
+			return visitor.Value.Collected.Distinct().ToList();
 		}
 
 		public bool CollectNullCompareExpressions(IBuildContext context, Expression expression, List<Expression> result)
