@@ -18,7 +18,7 @@ namespace LinqToDB.Linq.Builder
 		{
 			var sequenceRef  = new ContextRefExpression(sequence.ElementType, sequence);
 			var translated   = builder.BuildSqlExpression(sequence, sequenceRef);
-			var placeholders = ExpressionBuilder.CollectDistinctPlaceholders(translated);
+			var placeholders = ExpressionBuilder.CollectDistinctPlaceholders(translated, false);
 
 			var nullability = NullabilityContext.GetContext(nullabilitySequence.SelectQuery);
 			var notNull = placeholders

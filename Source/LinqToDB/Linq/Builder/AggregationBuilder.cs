@@ -297,7 +297,7 @@ namespace LinqToDB.Linq.Builder
 					return false;
 				}
 
-				var placeholders = ExpressionBuilder.CollectDistinctPlaceholders(convertedExpr);
+				var placeholders = ExpressionBuilder.CollectDistinctPlaceholders(convertedExpr, false);
 
 				if (placeholders.Count != 1)
 				{
@@ -579,7 +579,7 @@ namespace LinqToDB.Linq.Builder
 							if (!SequenceHelper.IsSqlReady(sqlExpr))
 								return BuildSequenceResult.Error(valueExpression);
 
-							var placeholders = ExpressionBuilder.CollectDistinctPlaceholders(sqlExpr);
+							var placeholders = ExpressionBuilder.CollectDistinctPlaceholders(sqlExpr, false);
 							if (placeholders.Count != 1)
 								return BuildSequenceResult.Error(valueExpression);
 

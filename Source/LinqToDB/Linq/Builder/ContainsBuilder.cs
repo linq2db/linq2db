@@ -143,7 +143,7 @@ namespace LinqToDB.Linq.Builder
 				var contextRef   = new ContextRefExpression(args[0], InnerSequence);
 				var sequenceExpr = Builder.BuildSqlExpression(InnerSequence, contextRef, BuildPurpose.Sql, BuildFlags.ForKeys);
 
-				var sequencePlaceholders = ExpressionBuilder.CollectPlaceholders(sequenceExpr);
+				var sequencePlaceholders = ExpressionBuilder.CollectPlaceholders(sequenceExpr, false);
 				if (sequencePlaceholders.Count == 0)
 				{
 					//TODO: better error handling
@@ -151,7 +151,7 @@ namespace LinqToDB.Linq.Builder
 				}
 
 				var testExpr         = Builder.BuildSqlExpression(placeholderContext, expr, BuildPurpose.Sql, BuildFlags.ForKeys);
-				var testPlaceholders = ExpressionBuilder.CollectPlaceholders(testExpr);
+				var testPlaceholders = ExpressionBuilder.CollectPlaceholders(testExpr, false);
 
 				ISqlPredicate predicate;
 

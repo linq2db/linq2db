@@ -452,11 +452,13 @@ namespace LinqToDB.Linq.Builder
 		class PlaceholderCollectVisitor : ExpressionVisitorBase
 		{
 			readonly List<SqlPlaceholderExpression> _collected = new();
+			bool                                    _includeDefaultIfEmpty;
 
 			public IReadOnlyList<SqlPlaceholderExpression> Collected => _collected;
 
 			public override void Cleanup()
 			{
+				_includeDefaultIfEmpty = false;
 				_collected.Clear();
 				base.Cleanup();
 			}
@@ -469,28 +471,37 @@ namespace LinqToDB.Linq.Builder
 
 			public override Expression VisitSqlDefaultIfEmptyExpression(SqlDefaultIfEmptyExpression node)
 			{
-				// Do not collect placeholders from NotNullExpressions
-				Visit(node.InnerExpression);
-				return node;
+				if (!_includeDefaultIfEmpty)
+				{
+					// Do not collect placeholders from NotNullExpressions
+					Visit(node.InnerExpression);
+					return node;
+				}
+
+				return base.VisitSqlDefaultIfEmptyExpression(node);
+			}
+
+			public IReadOnlyList<SqlPlaceholderExpression> CollectPlaceholders(Expression expression, bool includeDefaultIfEmpty)
+			{
+				Cleanup();
+				_includeDefaultIfEmpty = includeDefaultIfEmpty;
+				Visit(expression);
+				return Collected;
 			}
 		}
 
-		public static List<SqlPlaceholderExpression> CollectPlaceholders(Expression expression)
+		public static List<SqlPlaceholderExpression> CollectPlaceholders(Expression expression, bool includeDefaultIfEmpty)
 		{
 			using var visitor = _placeholderCollectorPool.Allocate();
 
-			visitor.Value.Visit(expression);
-
-			return visitor.Value.Collected.ToList();
+			return visitor.Value.CollectPlaceholders(expression, includeDefaultIfEmpty).ToList();
 		}
 
-		public static List<SqlPlaceholderExpression> CollectDistinctPlaceholders(Expression expression)
+		public static List<SqlPlaceholderExpression> CollectDistinctPlaceholders(Expression expression, bool includeDefaultIfEmpty)
 		{
 			using var visitor = _placeholderCollectorPool.Allocate();
 
-			visitor.Value.Visit(expression);
-
-			return visitor.Value.Collected.Distinct().ToList();
+			return visitor.Value.CollectPlaceholders(expression, includeDefaultIfEmpty).Distinct().ToList();
 		}
 
 		public bool CollectNullCompareExpressions(IBuildContext context, Expression expression, List<Expression> result)

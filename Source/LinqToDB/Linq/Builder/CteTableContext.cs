@@ -105,7 +105,7 @@ namespace LinqToDB.Linq.Builder
 
 				var translated = Builder.BuildSqlExpression(CteContext, SequenceHelper.CreateRef(proxy));
 
-				var placeholders = ExpressionBuilder.CollectPlaceholders(translated);
+				var placeholders = ExpressionBuilder.CollectPlaceholders(translated, true);
 
 				translated = RemapFields(translated, placeholders);
 

@@ -233,7 +233,7 @@ namespace LinqToDB.Linq.Builder
 
 					setExpr = builder.UpdateNesting(sequence, setExpr);
 
-					var placeholders = ExpressionBuilder.CollectPlaceholders(setExpr);
+					var placeholders = ExpressionBuilder.CollectPlaceholders(setExpr, true);
 
 					sequence.SelectQuery.GroupBy.Items.Add(new SqlGroupingSet(placeholders.Select(p => p.Sql)));
 				}
