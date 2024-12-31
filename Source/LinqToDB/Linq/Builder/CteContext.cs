@@ -205,11 +205,6 @@ namespace LinqToDB.Linq.Builder
 				}, f => (string.IsNullOrEmpty(f.Name) ? "field" : f.Name) + "_1");
 
 				CteClause.Fields.Add(field);
-
-				if (recursiveField != null && index == -1)
-				{
-
-				}
 			}
 
 			var newPlaceholderPath = path;
@@ -275,6 +270,21 @@ namespace LinqToDB.Linq.Builder
 			newContext.CteInnerQueryContext = context.CloneContext(CteInnerQueryContext);
 			newContext.CteClause            = context.CloneElement(CteClause);
 			newContext.CteExpression        = context.CloneExpression(CteExpression);
+
+			foreach (var fm in _fieldsMap)
+			{
+				newContext._fieldsMap.Add(context.CloneExpression(fm.Key), (field: context.CloneElement(fm.Value.field), placeholder: context.CloneExpression(fm.Value.placeholder)));
+			}
+
+			foreach (var km in _knownMap)
+			{
+				newContext._knownMap.Add(context.CloneExpression(km.Key), context.CloneExpression(km.Value));
+			}
+
+			foreach (var rm in _recursiveMap)
+			{
+				newContext._recursiveMap.Add(context.CloneExpression(rm.Key), context.CloneExpression(rm.Value));
+			}
 
 			return newContext;
 		}
