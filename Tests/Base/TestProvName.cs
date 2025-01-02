@@ -241,7 +241,7 @@ namespace Tests
 
 		#region By Feature
 
-		public const string WithApplyJoin = $"{AllFirebird4Plus},{AllMySql8Plus},{AllOracle12Plus},{AllPostgreSQL93Plus},{AllSapHana},{ProviderName.SqlCe},{AllSqlServer}";
+		public const string WithApplyJoin = $"{AllFirebird4Plus},{AllMySql80},{AllOracle12Plus},{AllPostgreSQL93Plus},{AllSapHana},{ProviderName.SqlCe},{AllSqlServer}";
 
 		#endregion By Feature
 	}
