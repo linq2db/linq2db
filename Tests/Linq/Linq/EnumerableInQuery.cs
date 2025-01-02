@@ -159,9 +159,14 @@ namespace Tests.Linq
 			[Column] public string Name { get; set; } = null!;
 		}
 
-
 		[Test]
-		public void WithAssociations([IncludeDataSources(TestProvName.WithApplyJoin)] string context)
+		public void WithAssociations([IncludeDataSources(
+			TestProvName.AllFirebird4Plus,
+			TestProvName.AllMySql80,
+			TestProvName.AllOracle12Plus,
+			TestProvName.AllPostgreSQL93Plus,
+			ProviderName.SqlCe,
+			TestProvName.AllSqlServer)] string context)
 		{
 			using var db = GetDataContext(context);
 			var (items, colors, styles) = SomeItem.Seed();
@@ -182,7 +187,5 @@ namespace Tests.Linq
 
 			AssertQuery(query);
 		}
-
-
 	}
 }
