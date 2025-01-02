@@ -1703,6 +1703,12 @@ namespace LinqToDB.Linq.Builder
 
 			using var saveAlias = UsingAlias(null);
 
+			if (_buildPurpose is BuildPurpose.Sql)
+			{
+				if (innerExpression is SqlPlaceholderExpression)
+					return innerExpression;
+			}
+
 			if (innerExpression is SqlDefaultIfEmptyExpression defaultIfEmptyExpression)
 			{
 				var notNullConditions = node.NotNullExpressions
