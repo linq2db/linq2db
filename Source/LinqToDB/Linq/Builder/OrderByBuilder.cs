@@ -111,7 +111,7 @@ namespace LinqToDB.Linq.Builder
 				return BuildSequenceResult.Error(methodCall);
 			}
 
-			var placeholders = ExpressionBuilder.CollectDistinctPlaceholders(sqlExpr);
+			var placeholders = ExpressionBuilder.CollectDistinctPlaceholders(sqlExpr, false);
 
 			foreach (var placeholder in placeholders)
 			{

@@ -322,7 +322,7 @@ namespace LinqToDB.Linq.Builder
 				// replace tracking path back
 				var translated = SequenceHelper.CorrectTrackingPath(Builder, correctedPath, path);
 
-				var placeholders = ExpressionBuilder.CollectPlaceholders(translated);
+				var placeholders = ExpressionBuilder.CollectPlaceholders(translated, true);
 
 				var remapped = TableLikeHelpers.RemapToFields(SubqueryContext, Source, Source.SourceFields, _knownMap, null, translated, placeholders);
 
