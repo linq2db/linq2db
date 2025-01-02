@@ -233,7 +233,7 @@ namespace LinqToDB.Linq.Builder
 
 					setExpr = builder.UpdateNesting(sequence, setExpr);
 
-					var placeholders = ExpressionBuilder.CollectPlaceholders(setExpr);
+					var placeholders = ExpressionBuilder.CollectPlaceholders(setExpr, true);
 
 					sequence.SelectQuery.GroupBy.Items.Add(new SqlGroupingSet(placeholders.Select(p => p.Sql)));
 				}
@@ -537,7 +537,7 @@ namespace LinqToDB.Linq.Builder
 						var keyRef  = new ContextRefExpression(currentMemberExpr.Type, _key);
 						var keyPath = me.Replace(currentMemberExpr, keyRef);
 
-						var result = Builder.BuildSqlExpression(_key, keyPath, BuildFlags.ForKeys);
+						var result = Builder.BuildExpression(_key, keyPath, BuildFlags.ForKeys);
 
 						if (ExpressionEqualityComparer.Instance.Equals(result, keyPath) && flags.IsSqlOrExpression())
 							return SqlErrorExpression.EnsureError(path);

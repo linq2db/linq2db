@@ -1484,7 +1484,7 @@ namespace LinqToDB.SqlQuery
 
 				if (containsWindowFunction)
 				{
-					if (subQuery.Select.HasModifier || subQuery.HasSetOperators || !subQuery.Where.IsEmpty || !subQuery.GroupBy.IsEmpty)
+					if (subQuery.Select.HasModifier || subQuery.HasSetOperators || (!parentQuery.Where.IsEmpty && !subQuery.Where.IsEmpty) || !subQuery.GroupBy.IsEmpty)
 					{
 						// not allowed to break window
 						return false;

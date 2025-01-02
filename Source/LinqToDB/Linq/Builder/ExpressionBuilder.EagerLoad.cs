@@ -470,7 +470,7 @@ namespace LinqToDB.Linq.Builder
 					eagerLoadingCache ??= new Dictionary<Expression, Expression>(ExpressionEqualityComparer.Instance);
 					if (!eagerLoadingCache.TryGetValue(eagerLoad.SequenceExpression, out var preambleExpression))
 					{
-						preamblesLocal     ??= new List<Preamble>();
+						preamblesLocal ??= [];
 
 						preambleExpression = ProcessEagerLoadingExpression(buildContext, eagerLoad, queryParameter, preamblesLocal, previousKeys);
 						eagerLoadingCache.Add(eagerLoad.SequenceExpression, preambleExpression);

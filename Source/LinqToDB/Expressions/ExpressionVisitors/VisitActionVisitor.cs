@@ -314,6 +314,11 @@ namespace LinqToDB.Expressions
 			{
 				Visit(isNullExpression.Placeholder);
 			}
+			else if (expr is SqlDefaultIfEmptyExpression defaultIfEmpty)
+			{
+				Visit(defaultIfEmpty.InnerExpression);
+				Visit(defaultIfEmpty.NotNullExpressions);
+			}
 			else if (expr is SqlAdjustTypeExpression adjustType)
 			{
 				Visit(adjustType.Expression);
