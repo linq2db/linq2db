@@ -3241,6 +3241,9 @@ namespace LinqToDB.Linq.Builder
 			if (sqlExpression is ISqlPredicate predicate)
 				return predicate;
 
+			if (sqlExpression is SqlExpression sqlExpr && sqlExpr.Flags.HasFlag(SqlFlags.IsPredicate))
+				return new SqlPredicate.Expr(ApplyExpressionNullability(sqlExpression, GetNullabilityContext()));
+
 			var columnDescriptor = QueryHelper.GetColumnDescriptor(sqlExpression);
 			var valueConverter   = columnDescriptor?.ValueConverter;
 
