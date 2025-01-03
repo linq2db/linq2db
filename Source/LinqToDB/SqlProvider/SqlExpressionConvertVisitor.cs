@@ -1286,7 +1286,7 @@ namespace LinqToDB.SqlProvider
 						expr = new SqlCaseExpression(toType,
 							new SqlCaseExpression.CaseItem[]
 							{
-								new(new SqlPredicate.ExprExpr(expr, SqlPredicate.Operator.NotEqual, falseValue, null), trueValue),
+								new(new SqlPredicate.ExprExpr(expr, SqlPredicate.Operator.Equal, trueValue, null), trueValue),
 								new(new SqlPredicate.ExprExpr(expr, SqlPredicate.Operator.Equal, falseValue, null), falseValue)
 							}, new SqlValue(toType, null));
 					}
