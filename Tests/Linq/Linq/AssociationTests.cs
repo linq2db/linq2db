@@ -1292,16 +1292,8 @@ namespace Tests.Linq
 				.Select(e => new { e.Id, e.Department!.Name })
 				.ToList();
 
-			if (context.IsAnyOf(TestProvName.AllSqlServer))
-			{
-				Assert.That(db.LastQuery!, Does.Not.Contain(" NOT"));
-				Assert.That(db.LastQuery!, Does.Contain("AND [a_Department].[Deleted] = 0"));
-			}
-			else
-			{
-				Assert.That(db.LastQuery!, Does.Contain(" NOT"));
-				Assert.That(db.LastQuery!, Does.Not.Contain(" = 0"));
-			}
+			Assert.That(db.LastQuery!, Does.Not.Contain(" NOT"));
+			Assert.That(db.LastQuery!, Does.Contain("AND [a_Department].[Deleted] = 0"));
 		}
 
 		sealed class Entity1711

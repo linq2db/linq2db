@@ -691,7 +691,7 @@ namespace LinqToDB.SqlQuery
 
 			public override QueryElementType ElementType => QueryElementType.IsTruePredicate;
 
-			public override bool CanBeUnknown(NullabilityContext nullability) => WithNull == null && Expr1.CanBeNullableOrUnknown(nullability);
+			public override bool CanBeUnknown(NullabilityContext nullability) => Expr1.CanBeNullableOrUnknown(nullability);
 		}
 
 		// expression IS [ NOT ] NULL

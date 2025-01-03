@@ -2383,8 +2383,8 @@ namespace Tests.Linq
 			using var db = GetDataConnection(context);
 			db.Types.Where(r => !r.BoolValue).ToList();
 
-			Assert.That(db.LastQuery, Does.Not.Contain("NOT "));
 			Assert.That(db.LastQuery, Does.Contain(" = "));
+			Assert.That(db.LastQuery, Does.Not.Contain("NOT "));
 		}
 
 		[Table]

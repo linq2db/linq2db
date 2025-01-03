@@ -3248,6 +3248,7 @@ namespace LinqToDB.Linq.Builder
 			var valueConverter   = columnDescriptor?.ValueConverter;
 
 			if (!Builder.DataContext.SqlProviderFlags.SupportsBooleanType
+				|| withNull
 				|| valueConverter != null
 				|| (columnDescriptor != null && columnDescriptor.GetDbDataType(true).DataType is not DataType.Boolean))
 			{
