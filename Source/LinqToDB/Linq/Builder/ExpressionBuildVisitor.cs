@@ -2024,7 +2024,7 @@ namespace LinqToDB.Linq.Builder
 						{
 							var predicate = placeholder.Sql as ISqlPredicate;
 							if (predicate is null)
-								predicate = ConvertExpressionToPredicate(placeholder.Sql);
+								predicate = ConvertExpressionToPredicate(placeholder.Sql, !node.Operand.Type.IsNullable());
 
 							var condition = new SqlSearchCondition();
 							condition.Add(predicate.MakeNot());
@@ -2814,7 +2814,7 @@ namespace LinqToDB.Linq.Builder
 					predicateSql = ConvertExpressionToPredicate(placeholder.Sql);
 				}
 
-				if (predicateSql is null )
+				if (predicateSql is null)
 				{
 					if (_buildPurpose is BuildPurpose.Sql)
 					{
@@ -3236,15 +3236,21 @@ namespace LinqToDB.Linq.Builder
 			return corrected;
 		}
 
-		ISqlPredicate ConvertExpressionToPredicate(ISqlExpression sqlExpression)
+		ISqlPredicate ConvertExpressionToPredicate(ISqlExpression sqlExpression, bool withNull = true)
 		{
 			if (sqlExpression is ISqlPredicate predicate)
 				return predicate;
 
+			if (sqlExpression is SqlExpression sqlExpr && sqlExpr.Flags.HasFlag(SqlFlags.IsPredicate))
+				return new SqlPredicate.Expr(ApplyExpressionNullability(sqlExpression, GetNullabilityContext()));
+
 			var columnDescriptor = QueryHelper.GetColumnDescriptor(sqlExpression);
 			var valueConverter   = columnDescriptor?.ValueConverter;
 
-			if (valueConverter != null || columnDescriptor != null && columnDescriptor.DataType != DataType.Boolean)
+			if (!Builder.DataContext.SqlProviderFlags.SupportsBooleanType
+				|| withNull
+				|| valueConverter != null
+				|| (columnDescriptor != null && columnDescriptor.GetDbDataType(true).DataType is not DataType.Boolean))
 			{
 				using var descriptorSaver = UsingColumnDescriptor(columnDescriptor);
 
@@ -3259,7 +3265,7 @@ namespace LinqToDB.Linq.Builder
 
 				if (trueValue != null && falseValue != null)
 				{
-					predicate = new SqlPredicate.IsTrue(ApplyExpressionNullability(sqlExpression, GetNullabilityContext()), trueValue.Sql, falseValue.Sql, DataOptions.LinqOptions.CompareNulls == CompareNulls.LikeClr ? false : null, false);
+					predicate = new SqlPredicate.IsTrue(ApplyExpressionNullability(sqlExpression, GetNullabilityContext()), trueValue.Sql, falseValue.Sql, withNull && DataOptions.LinqOptions.CompareNulls == CompareNulls.LikeClr ? false : null, false);
 					return predicate;
 				}
 			}
@@ -3948,7 +3954,7 @@ namespace LinqToDB.Linq.Builder
 						rOriginal = ApplyExpressionNullability(rOriginal, nullability);
 
 						predicate = new SqlPredicate.ExprExpr(lOriginal, op, rOriginal,
-							compareNullsAsValues
+							compareNullsAsValues && (lOriginal.CanBeNullable(nullability) || rOriginal.CanBeNullable(nullability))
 								? true
 								: null);
 					}

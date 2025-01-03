@@ -1048,7 +1048,7 @@ namespace LinqToDB.SqlProvider
 						first = false;
 
 						AppendIndent();
-						BuildExpression(ConvertElement(expr.Expression!));
+						BuildExpression(ConvertElement(expr).Expression!);
 					}
 
 					Indent--;

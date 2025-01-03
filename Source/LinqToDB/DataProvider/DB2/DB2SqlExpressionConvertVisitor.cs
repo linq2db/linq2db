@@ -121,8 +121,7 @@
 		{
 			var columnExpression = base.WrapColumnExpression(expr);
 
-			if (SqlProviderFlags != null
-				&& columnExpression.SystemType == typeof(bool)
+			if (columnExpression.SystemType == typeof(bool)
 				&& QueryHelper.IsBoolean(columnExpression))
 			{
 				columnExpression = new SqlCastExpression(columnExpression, new DbDataType(columnExpression.SystemType!, DataType.Boolean), null, isMandatory: true);

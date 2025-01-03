@@ -49,7 +49,7 @@ namespace LinqToDB.DataProvider.Informix
 
 		public override ISqlExpression ConvertCoalesce(SqlCoalesceExpression element)
 		{
-			if (SqlProviderFlags == null || element.SystemType == null)
+			if (element.SystemType == null)
 				return element;
 
 			return ConvertCoalesceToBinaryFunc(element, "Nvl", supportsParameters : false);
@@ -180,7 +180,7 @@ namespace LinqToDB.DataProvider.Informix
 		{
 			var columnExpression = base.WrapColumnExpression(expr);
 
-			if (SqlProviderFlags != null && columnExpression.SystemType == typeof(bool))
+			if (columnExpression.SystemType == typeof(bool))
 			{
 				var unwrapped = QueryHelper.UnwrapNullablity(columnExpression);
 

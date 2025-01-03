@@ -331,10 +331,9 @@ namespace LinqToDB.SqlProvider
 						continue;
 					}
 
-					if (TryEvaluate(predicate, out var value) &&
-					    value is bool boolValue)
+					if (TryEvaluate(predicate, out var value))
 					{
-						if (boolValue)
+						if (value is true)
 						{
 							if (element.IsAnd)
 							{
@@ -357,7 +356,7 @@ namespace LinqToDB.SqlProvider
 								break;
 							}
 						}
-						else
+						else if (value is false)
 						{
 							if (element.IsOr)
 							{
@@ -366,6 +365,7 @@ namespace LinqToDB.SqlProvider
 									break;
 
 								element.Predicates.RemoveAt(i);
+
 								if (element.Predicates.Count == 0)
 									element.Predicates.Add(SqlPredicate.False);
 
@@ -379,8 +379,11 @@ namespace LinqToDB.SqlProvider
 								break;
 							}
 						}
+						else if (value is null)
+						{
+							return new SqlSearchCondition(element.IsOr, new SqlPredicate.Expr(new SqlValue(typeof(bool?), null)));
+						}
 					}
-
 				}
 			}
 			else
@@ -943,7 +946,7 @@ namespace LinqToDB.SqlProvider
 			if (_nullabilityContext.IsEmpty)
 				return predicate;
 
-			if (!predicate.Expr1.CanBeNullable(_nullabilityContext))
+			if (!predicate.Expr1.CanBeNullableOrUnknown(_nullabilityContext))
 			{
 				//TODO: Exception for Row, find time to analyze why it's needed
 				if (predicate.Expr1.ElementType != QueryElementType.SqlRow)
@@ -1336,12 +1339,12 @@ namespace LinqToDB.SqlProvider
 					if (TryEvaluateNoParameters(sqlConditionExpression.TrueValue, out _) || TryEvaluateNoParameters(sqlConditionExpression.FalseValue, out _))
 					{
 						var sc = new SqlSearchCondition(true)
-							.AddAnd( sub => 
+							.AddAnd( sub =>
 								sub
 									.Add(new SqlPredicate.ExprExpr(sqlConditionExpression.TrueValue, op, valueExpression, _dataOptions.LinqOptions.CompareNulls == CompareNulls.LikeClr ? true : null))
 									.Add(sqlConditionExpression.Condition)
 							)
-							.AddAnd( sub => 
+							.AddAnd( sub =>
 								sub
 									.Add(new SqlPredicate.ExprExpr(sqlConditionExpression.FalseValue, op, valueExpression, _dataOptions.LinqOptions.CompareNulls == CompareNulls.LikeClr ? true : null))
 									.Add(sqlConditionExpression.Condition.MakeNot())

@@ -1862,5 +1862,62 @@ namespace Tests.Linq
 				return db.Person.Where(p => p.FirstName == Parameter).SingleOrDefault();
 			}
 		}
+
+		sealed class TestBool
+		{
+			public int Id { get; set; }
+			[Column(Configuration = ProviderName.Sybase, CanBeNull = false)]
+			public bool? Value { get; set; }
+		}
+
+		[Test]
+		public void Issue_BooleanNullPreserved([DataSources] string context, [Values] bool inline, [Values] bool? value)
+		{
+			if (value == null && context.IsAnyOf(TestProvName.AllAccess, TestProvName.AllSybase))
+				Assert.Ignore("Database doesn't support NULL as boolean");
+
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable<TestBool>();
+
+			db.InlineParameters = inline;
+
+			// test parameter
+			tb.Insert(() => new TestBool()
+			{
+				Id = 1,
+				Value = !value
+			});
+
+			var record = tb.Single();
+
+			Assert.That(record.Value, Is.EqualTo(!value));
+
+			// test field
+			tb.Update(r => new TestBool()
+			{
+				Id = 1,
+				Value = !r.Value
+			});
+
+			record = tb.Single();
+
+			Assert.That(record.Value, Is.EqualTo(value));
+
+			// disabled temporary due to
+			// https://github.com/ClickHouse/ClickHouse/issues/73934
+			if (!context.IsAnyOf(TestProvName.AllClickHouse))
+			{
+				// test parameter in update
+				tb.Update(r => new TestBool()
+				{
+					Id = 1,
+					Value = !value
+				});
+
+				record = tb.Single();
+
+				Assert.That(record.Value, Is.EqualTo(!value));
+			}
+		}
 	}
 }

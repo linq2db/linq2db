@@ -229,10 +229,18 @@ namespace LinqToDB.SqlQuery
 				case QueryElementType.NotPredicate:
 				{
 					var notPredicate = (SqlPredicate.Not)expr;
-					if (notPredicate.Predicate.TryEvaluateExpression(forServer, context, out var value) && value is bool boolValue)
+					if (notPredicate.Predicate.TryEvaluateExpression(forServer, context, out var value))
 					{
-						result = !boolValue;
-						return true;
+						if (value is bool boolValue)
+						{
+							result = !boolValue;
+							return true;
+						}
+						if (value is null)
+						{
+							result = null;
+							return true;
+						}
 					}
 
 					return false;
@@ -258,10 +266,7 @@ namespace LinqToDB.SqlQuery
 
 					if (value == null)
 					{
-						if (isTruePredicate.WithNull != null)
-							result = isTruePredicate.WithNull;
-						else
-							result = false;
+						result = null;
 						return true;
 					}
 
@@ -434,7 +439,7 @@ namespace LinqToDB.SqlQuery
 					}
 				}
 
-				case QueryElementType.SearchCondition    :
+				case QueryElementType.SearchCondition:
 				{
 					var cond = (SqlSearchCondition)expr;
 
@@ -444,55 +449,60 @@ namespace LinqToDB.SqlQuery
 						return true;
 					}
 
-					var allTrue = true;
-					var allFalse = true;
+					bool? value = true;
+					var hasAny  = false;
+
 					for (var i = 0; i < cond.Predicates.Count; i++)
 					{
 						var predicate = cond.Predicates[i];
 						if (predicate.TryEvaluateExpression(forServer, context, out var evaluated))
 						{
+							hasAny = true;
 							if (evaluated is bool boolValue)
 							{
-								allTrue  = allTrue  && boolValue;
-								allFalse = allFalse && !boolValue;
-
-								if (boolValue)
+								if (cond.IsOr)
 								{
-									if (cond.IsOr || cond.Predicates.Count == 1)
+									if (boolValue)
 									{
-										result = true;
-										return true;
+										value = true;
+										break;
+									}
+									else if (i == 0)
+									{
+										value = false;
+										break;
 									}
 								}
 								else
 								{
-									if (!cond.IsOr)
+									if (!boolValue)
 									{
-										result = false;
-										return true;
+										value = false;
+										break;
 									}
 								}
 							}
+							else if (evaluated is null)
+							{
+								value = null;
+								break;
+							}
+							else if (cond.IsAnd)
+							{
+								return false;
+							}
 						}
-						else
+						else if (cond.IsAnd)
 						{
-							allTrue  = false;
-							allFalse = false;
+							return false;
 						}
 					}
 
-					if (!cond.IsOr && allTrue)
-					{
-						result = true;
-						return true;
-					}
-					else if (cond.IsOr && allFalse)
-					{
-						result = false;
-						return true;
-					}
+					if (!hasAny)
+						return false;
 
-					return false;
+					result = value;
+					return true;
 				}
 
 				case QueryElementType.SqlCase:

@@ -27,7 +27,7 @@ namespace LinqToDB.Remote
 	using SqlProvider;
 
 	[PublicAPI]
-	public abstract partial class RemoteDataContextBase : IDataContext, 
+	public abstract partial class RemoteDataContextBase : IDataContext,
 		IInfrastructure<IServiceProvider>
 	{
 		protected RemoteDataContextBase(DataOptions options)
@@ -149,10 +149,10 @@ namespace LinqToDB.Remote
 					var translatorType = Type.GetType(info.MethodCallTranslatorType)!;
 					var translator     = RemoteMemberTranslator.GetOrCreate(translatorType);
 
-					_configurationInfo = new ConfigurationInfo
+					_configurationInfo = new ConfigurationInfo()
 					{
-						LinqServiceInfo = info,
-						MappingSchema   = ms,
+						LinqServiceInfo  = info,
+						MappingSchema    = ms,
 						MemberTranslator = translator,
 					};
 				}
