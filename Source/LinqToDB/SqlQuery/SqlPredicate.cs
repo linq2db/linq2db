@@ -1,7 +1,8 @@
-﻿using LinqToDB.Common;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+
+using LinqToDB.Common;
 
 namespace LinqToDB.SqlQuery
 {
@@ -326,11 +327,22 @@ namespace LinqToDB.SqlQuery
 					{
 						if (value1 == null)
 							return new IsNull(Expr2, Operator != Operator.Equal);
-
 					} else if (Expr2.TryEvaluateExpression(context, out var value2))
 					{
 						if (value2 == null)
 							return new IsNull(Expr1, Operator != Operator.Equal);
+					}
+
+					if (!WithNull == null && Operator == Operator.NotEqual)
+					{
+						if (Expr1 is SqlValue { Value: bool } sqlValue1)
+						{
+							return new ExprExpr(Expr2, Operator.Equal, new SqlValue(sqlValue1.ValueType, !(bool)sqlValue1.Value), null);
+						}
+						else if (Expr2 is SqlValue { Value: bool } sqlValue2)
+						{
+							return new ExprExpr(Expr1, Operator.Equal, new SqlValue(sqlValue2.ValueType, !(bool)sqlValue2.Value), null);
+						}
 					}
 				}
 
