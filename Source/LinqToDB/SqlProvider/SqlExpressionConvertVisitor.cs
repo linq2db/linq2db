@@ -24,7 +24,7 @@ namespace LinqToDB.SqlProvider
 		protected EvaluationContext EvaluationContext => OptimizationContext.EvaluationContext;
 		protected DataOptions       DataOptions       => OptimizationContext.DataOptions;
 		protected MappingSchema     MappingSchema     => OptimizationContext.MappingSchema;
-		protected SqlProviderFlags? SqlProviderFlags  => OptimizationContext.SqlProviderFlags;
+		protected SqlProviderFlags  SqlProviderFlags  => OptimizationContext.SqlProviderFlags;
 
 		public SqlExpressionConvertVisitor(bool allowModify) : base(allowModify ? VisitMode.Modify : VisitMode.Transform, null)
 		{
@@ -169,7 +169,7 @@ namespace LinqToDB.SqlProvider
 			}
 			else
 			{
-				if (SqlProviderFlags?.SupportsBooleanType == false || QueryHelper.GetColumnDescriptor(predicate.Expr1)?.ValueConverter != null)
+				if (!SqlProviderFlags.SupportsBooleanType || QueryHelper.GetColumnDescriptor(predicate.Expr1)?.ValueConverter != null)
 				{
 					var unwrapped = QueryHelper.UnwrapNullablity(predicate.Expr1);
 					if (unwrapped is SqlCastExpression castExpression)
@@ -309,7 +309,7 @@ namespace LinqToDB.SqlProvider
 			if (!ReferenceEquals(newPredicate, predicate))
 				return Visit(newPredicate);
 
-			if (SqlProviderFlags is { IsDistinctFromSupported: false })
+			if (!SqlProviderFlags.IsDistinctFromSupported)
 			{
 				var converted = SupportsDistinctAsExistsIntersect
 					? ConvertIsDistinctPredicateAsIntersect(predicate)
@@ -372,10 +372,6 @@ namespace LinqToDB.SqlProvider
 			var unwrapped = QueryHelper.UnwrapNullablity(predicate.Expr1);
 			if (unwrapped.ElementType == QueryElementType.SqlRow)
 			{
-				// Do not convert for remote context
-				if (SqlProviderFlags == null)
-					return predicate;
-
 				var newPredicate = ConvertRowExprExpr(predicate, EvaluationContext);
 				if (!ReferenceEquals(newPredicate, predicate))
 				{
@@ -387,7 +383,7 @@ namespace LinqToDB.SqlProvider
 			// for providers that doesn't support boolean(predicate) comparison
 			// or for predicates that could return UNKNOWN
 			// Alternative could be to use IS [NOT] DISTINCT FROM predicate
-			if (SqlProviderFlags is { SupportsPredicatesComparison: false }
+			if (!SqlProviderFlags.SupportsPredicatesComparison
 				|| QueryHelper.NeedsEqualityWithNull(predicate.Expr1, predicate.Operator, predicate.Expr2, NullabilityContext))
 			{
 				if (QueryHelper.UnwrapNullablity(predicate.Expr2) is not (SqlValue or SqlParameter) && QueryHelper.UnwrapNullablity(predicate.Expr1) is not (SqlValue or SqlParameter))
@@ -842,12 +838,9 @@ namespace LinqToDB.SqlProvider
 			if (!ReferenceEquals(newElement, predicate))
 				return Visit(newElement);
 
-			if (SqlProviderFlags != null)
+			if (!SqlProviderFlags.RowConstructorSupport.HasFlag(RowFeature.Between) && QueryHelper.UnwrapNullablity(predicate.Expr1) is SqlRowExpression)
 			{
-				if (!SqlProviderFlags.RowConstructorSupport.HasFlag(RowFeature.Between) && QueryHelper.UnwrapNullablity(predicate.Expr1) is SqlRowExpression)
-				{
-					return Visit(Optimize(ConvertBetweenPredicate(predicate)));
-				}
+				return Visit(Optimize(ConvertBetweenPredicate(predicate)));
 			}
 
 			return newElement;
@@ -859,10 +852,6 @@ namespace LinqToDB.SqlProvider
 				return base.VisitInSubQueryPredicate(predicate);
 
 			var newPredicate = base.VisitInSubQueryPredicate(predicate);
-
-			// preparing for remoting
-			if (SqlProviderFlags == null)
-				return newPredicate;
 
 			if (!ReferenceEquals(newPredicate, predicate))
 				return Visit(newPredicate);
@@ -1007,9 +996,6 @@ namespace LinqToDB.SqlProvider
 
 		public virtual ISqlExpression ConvertCoalesce(SqlCoalesceExpression element)
 		{
-			if (SqlProviderFlags == null)
-				return element;
-
 			var type = QueryHelper.GetDbDataType(element.Expressions[0], MappingSchema);
 			return new SqlFunction(type, "Coalesce", element.Expressions);
 		}
@@ -1247,9 +1233,6 @@ namespace LinqToDB.SqlProvider
 
 		protected virtual ISqlExpression WrapBooleanExpression(ISqlExpression expr, bool includeFields, bool forceConvert = false, bool withNull = true)
 		{
-			if (SqlProviderFlags == null)
-				return expr;
-
 			if (expr.SystemType == typeof(bool))
 			{
 				var unwrapped = QueryHelper.UnwrapNullablity(expr);
@@ -1371,9 +1354,6 @@ namespace LinqToDB.SqlProvider
 
 		protected ISqlPredicate ConvertRowExprExpr(SqlPredicate.ExprExpr predicate, EvaluationContext context)
 		{
-			if (SqlProviderFlags == null)
-				return predicate;
-
 			var op = predicate.Operator;
 			var feature = op is SqlPredicate.Operator.Equal or SqlPredicate.Operator.NotEqual
 				? RowFeature.Equality
@@ -1429,7 +1409,7 @@ namespace LinqToDB.SqlProvider
 
 		bool ConvertRowIsNullPredicate(SqlRowExpression sqlRow, bool IsNot, [NotNullWhen(true)] out ISqlPredicate? rowIsNullFallback)
 		{
-			if (SqlProviderFlags != null && !SqlProviderFlags!.RowConstructorSupport.HasFlag(RowFeature.IsNull))
+			if (!SqlProviderFlags.RowConstructorSupport.HasFlag(RowFeature.IsNull))
 			{
 				rowIsNullFallback = RowIsNullFallback(sqlRow, IsNot);
 				return true;
@@ -1441,9 +1421,6 @@ namespace LinqToDB.SqlProvider
 
 		protected virtual ISqlPredicate ConvertRowInList(SqlPredicate.InList predicate)
 		{
-			if (SqlProviderFlags == null)
-				return predicate;
-
 			if (!SqlProviderFlags.RowConstructorSupport.HasFlag(RowFeature.In))
 			{
 				var left    = predicate.Expr1;

@@ -1339,12 +1339,12 @@ namespace LinqToDB.SqlProvider
 					if (TryEvaluateNoParameters(sqlConditionExpression.TrueValue, out _) || TryEvaluateNoParameters(sqlConditionExpression.FalseValue, out _))
 					{
 						var sc = new SqlSearchCondition(true)
-							.AddAnd( sub => 
+							.AddAnd( sub =>
 								sub
 									.Add(new SqlPredicate.ExprExpr(sqlConditionExpression.TrueValue, op, valueExpression, _dataOptions.LinqOptions.CompareNulls == CompareNulls.LikeClr ? true : null))
 									.Add(sqlConditionExpression.Condition)
 							)
-							.AddAnd( sub => 
+							.AddAnd( sub =>
 								sub
 									.Add(new SqlPredicate.ExprExpr(sqlConditionExpression.FalseValue, op, valueExpression, _dataOptions.LinqOptions.CompareNulls == CompareNulls.LikeClr ? true : null))
 									.Add(sqlConditionExpression.Condition.MakeNot())
