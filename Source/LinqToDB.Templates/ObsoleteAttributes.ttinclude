@@ -1,4 +1,3 @@
-<#@ include file="T4Model.ttinclude"  once="true" #>
 <#@ include file="LinqToDB.ttinclude" once="true" #>
 <#
 	{

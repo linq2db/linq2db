@@ -148,7 +148,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 		protected override List<TableInfo> GetTables(DataConnection dataConnection, GetSchemaOptions options)
 		{
-			var defaultSchema = ToDatabaseLiteral(dataConnection, options?.DefaultSchema ?? "public");
+			var defaultSchema = ToDatabaseLiteral(dataConnection, options.DefaultSchema ?? "public");
 
 			var sql = $@"
 				SELECT
@@ -209,8 +209,8 @@ namespace LinqToDB.DataProvider.PostgreSQL
 		protected override IReadOnlyCollection<PrimaryKeyInfo> GetPrimaryKeys(DataConnection dataConnection,
 			IEnumerable<TableSchema> tables, GetSchemaOptions options)
 		{
-			return
-				dataConnection.Query<PrimaryKeyInfo>($@"
+			return dataConnection.Query<PrimaryKeyInfo>(
+				$"""
 					SELECT
 						current_database() || '.' || pg_namespace.nspname || '.' || pg_class.relname as TableID,
 						pg_constraint.conname                                                        as PrimaryKeyName,
@@ -223,7 +223,8 @@ namespace LinqToDB.DataProvider.PostgreSQL
 							JOIN pg_namespace  ON pg_class.relnamespace = pg_namespace.oid
 					WHERE
 						pg_constraint.contype = 'p'
-						AND {GenerateSchemaFilter(dataConnection, "pg_namespace.nspname")}")
+					AND {GenerateSchemaFilter(dataConnection, "pg_namespace.nspname")}
+				""")
 				.ToList();
 		}
 

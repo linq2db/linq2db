@@ -4,7 +4,7 @@
 // specify additional references using @assembly directive. E.g. (remove space before #@)
 // (full path expected or user can get "The given assembly name or codebase was invalid" error)
 // < #@ assembly name="c:\path_to\Npgsql.dll" #>
-// linq2db.dll, linq2db.Tools.dll, and runtime's System*.dll assemblies already refereced
+// linq2db.dll, linq2db.Tools.Internal.dll, and runtime's System*.dll assemblies already refereced
 
 // additional namespace imports (usings)
 <#@ import namespace="System"                     #>

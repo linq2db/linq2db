@@ -21,7 +21,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			Provider = provider;
 		}
 
-		protected override void InitProvider(DataConnection dataConnection)
+		protected override void InitProvider(DataConnection dataConnection, GetSchemaOptions options)
 		{
 			var version = dataConnection.Execute<string>("select @@version");
 

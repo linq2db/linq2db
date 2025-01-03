@@ -19,6 +19,8 @@ namespace Default.SqlCe
 {
 	public partial class TestDataDB : LinqToDB.Data.DataConnection
 	{
+		#region Tables
+
 		public ITable<AllType>           AllTypes            { get { return this.GetTable<AllType>(); } }
 		public ITable<Child>             Children            { get { return this.GetTable<Child>(); } }
 		public ITable<DataType>          DataTypes           { get { return this.GetTable<DataType>(); } }
@@ -26,15 +28,19 @@ namespace Default.SqlCe
 		public ITable<GrandChild>        GrandChildren       { get { return this.GetTable<GrandChild>(); } }
 		public ITable<InheritanceChild>  InheritanceChildren { get { return this.GetTable<InheritanceChild>(); } }
 		public ITable<InheritanceParent> InheritanceParents  { get { return this.GetTable<InheritanceParent>(); } }
-		public ITable<Issue695>          Issue695s           { get { return this.GetTable<Issue695>(); } }
+		public ITable<Issue695>          Issue695            { get { return this.GetTable<Issue695>(); } }
 		public ITable<Issue695Parent>    Issue695Parents     { get { return this.GetTable<Issue695Parent>(); } }
 		public ITable<LinqDataType>      LinqDataTypes       { get { return this.GetTable<LinqDataType>(); } }
 		public ITable<Parent>            Parents             { get { return this.GetTable<Parent>(); } }
 		public ITable<Patient>           Patients            { get { return this.GetTable<Patient>(); } }
 		public ITable<Person>            People              { get { return this.GetTable<Person>(); } }
 		public ITable<TestIdentity>      TestIdentities      { get { return this.GetTable<TestIdentity>(); } }
-		public ITable<TestMerge1>        TestMerge1s         { get { return this.GetTable<TestMerge1>(); } }
-		public ITable<TestMerge2>        TestMerge2s         { get { return this.GetTable<TestMerge2>(); } }
+		public ITable<TestMerge1>        TestMerge1          { get { return this.GetTable<TestMerge1>(); } }
+		public ITable<TestMerge2>        TestMerge2          { get { return this.GetTable<TestMerge2>(); } }
+
+		#endregion
+
+		#region .ctor
 
 		public TestDataDB()
 		{
@@ -65,6 +71,8 @@ namespace Default.SqlCe
 
 		partial void InitDataContext  ();
 		partial void InitMappingSchema();
+
+		#endregion
 	}
 
 	[Table("AllTypes")]
@@ -117,7 +125,7 @@ namespace Default.SqlCe
 		/// <summary>
 		/// FK_Doctor_Person (Person)
 		/// </summary>
-		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false)]
+		[Association(ThisKey=nameof(PersonID), OtherKey=nameof(Default.SqlCe.Person.PersonID), CanBeNull=false)]
 		public Person Person { get; set; } = null!;
 
 		#endregion
@@ -159,7 +167,7 @@ namespace Default.SqlCe
 		/// <summary>
 		/// FK_Issue695_Parent (Issue695Parent)
 		/// </summary>
-		[Association(ThisKey="ID", OtherKey="ID", CanBeNull=false)]
+		[Association(ThisKey=nameof(ID), OtherKey=nameof(Default.SqlCe.Issue695Parent.ID), CanBeNull=false)]
 		public Issue695Parent Issue695Parent { get; set; } = null!;
 
 		#endregion
@@ -175,7 +183,7 @@ namespace Default.SqlCe
 		/// <summary>
 		/// FK_Issue695_Parent_BackReference (Issue695)
 		/// </summary>
-		[Association(ThisKey="ID", OtherKey="ID", CanBeNull=true)]
+		[Association(ThisKey=nameof(ID), OtherKey=nameof(Default.SqlCe.Issue695.ID), CanBeNull=true)]
 		public Issue695? FKIssue695ParentBackReference { get; set; }
 
 		#endregion
@@ -215,7 +223,7 @@ namespace Default.SqlCe
 		/// <summary>
 		/// FK_Patient_Person (Person)
 		/// </summary>
-		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false)]
+		[Association(ThisKey=nameof(PersonID), OtherKey=nameof(Default.SqlCe.Person.PersonID), CanBeNull=false)]
 		public Person Person { get; set; } = null!;
 
 		#endregion
@@ -235,13 +243,13 @@ namespace Default.SqlCe
 		/// <summary>
 		/// FK_Doctor_Person_BackReference (Doctor)
 		/// </summary>
-		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=true)]
+		[Association(ThisKey=nameof(PersonID), OtherKey=nameof(Default.SqlCe.Doctor.PersonID), CanBeNull=true)]
 		public Doctor? Doctor { get; set; }
 
 		/// <summary>
 		/// FK_Patient_Person_BackReference (Patient)
 		/// </summary>
-		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=true)]
+		[Association(ThisKey=nameof(PersonID), OtherKey=nameof(Default.SqlCe.Patient.PersonID), CanBeNull=true)]
 		public Patient? Patient { get; set; }
 
 		#endregion

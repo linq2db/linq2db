@@ -67,18 +67,21 @@ namespace Tests
 
 				Configuration.Linq.TraceMapperExpression = false;
 				// Configuration.Linq.GenerateExpressionTest  = true;
-				var assemblyPath = Path.GetDirectoryName(typeof(TestBase).Assembly.Location)!;
 
 #if NETFRAMEWORK
-				// this is needed for machine without GAC-ed sql types (e.g. machine without SQL Server installed or CI)
-				try
-				{
-					SqlServerTypes.Utilities.LoadNativeAssemblies(assemblyPath);
-				}
-				catch // this can fail during tests discovering with NUnitTestAdapter
-				{
-					// ignore
-				}
+			var assemblyPath = Path.GetDirectoryName(typeof(TestBase).Assembly.CodeBase.Replace("file:///", ""))!;
+
+			// this is needed for machine without GAC-ed sql types (e.g. machine without SQL Server installed or CI)
+			try
+			{
+				SqlServerTypes.Utilities.LoadNativeAssemblies(assemblyPath);
+			}
+			catch // this can fail during tests discovering with NUnitTestAdapter
+			{
+				// ignore
+			}
+#else
+			var assemblyPath = Path.GetDirectoryName(typeof(TestBase).Assembly.Location)!;
 #endif
 
 				Environment.CurrentDirectory = assemblyPath;
@@ -88,15 +91,15 @@ namespace Tests
 				DatabaseUtils.CopyDatabases();
 
 #if NETFRAMEWORK
-				LinqToDB.Remote.LinqService.TypeResolver = str =>
+			LinqToDB.Remote.LinqService.TypeResolver = str =>
+			{
+				return str switch
 				{
-					return str switch
-					{
-						"Tests.Model.Gender" => typeof(Gender),
-						"Tests.Model.Person" => typeof(Person),
-						_ => null,
-					};
+					"Tests.Model.Gender" => typeof(Gender),
+					"Tests.Model.Person" => typeof(Person),
+					_ => null,
 				};
+			};
 #endif
 			}
 			catch (Exception ex)

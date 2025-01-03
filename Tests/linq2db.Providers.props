@@ -1,5 +1,4 @@
 ﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-
 	<PropertyGroup>
 		<MSBuildWarningsAsMessages>$(MSBuildWarningsAsMessages);MSB3270</MSBuildWarningsAsMessages>
 		<!--8002: referenced assembly miss strong name-->
@@ -10,7 +9,7 @@
 		<PackageReference Include="FirebirdSql.Data.FirebirdClient" />
 		<PackageReference Include="Npgsql.NodaTime" />
 		<PackageReference Include="Devart.Data.Oracle" />
-		<PackageReference Include="MySql.Data" Aliases="MySqlData" />
+		<PackageReference Include="MySql.Data"     Aliases="MySqlData" />
 		<PackageReference Include="MySqlConnector" Aliases="MySqlConnector" />
 		<PackageReference Include="System.Data.SQLite.Core" />
 		<PackageReference Include="Microsoft.Data.SqlClient" />
@@ -67,7 +66,7 @@
 					<HintPath>$(PkgIBM_Data_DB_Provider)\build\net451\x64\IBM.Data.DB2.dll</HintPath>
 				</Reference>
 				<Reference Include="IBM.Data.DB2" Condition=" $(PlatformTarget) == 'x86' ">
-					<HintPath>$(PkgIBM_Data_DB_Provider)\build\net451\x86\IBM.Data.DB2.dll</HintPath>
+					<HintPath>$(PkgIBM_Data_DB_Provider)\build\net451\x86\IBM.Data.DB2.DLL</HintPath>
 				</Reference>
 			</ItemGroup>
 			<ItemGroup Condition=" '$(TargetFramework)' != 'net462' ">
@@ -77,5 +76,4 @@
 			</ItemGroup>
 		</When>
 	</Choose>
-
 </Project>

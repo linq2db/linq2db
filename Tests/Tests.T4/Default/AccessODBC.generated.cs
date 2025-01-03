@@ -326,14 +326,8 @@ namespace Default.Access.Odbc
 		{
 			var parameters = new []
 			{
-				new DataParameter("@firstName", @firstName, LinqToDB.DataType.VarChar)
-				{
-					Size = 255
-				},
-				new DataParameter("@lastName",  @lastName,  LinqToDB.DataType.VarChar)
-				{
-					Size = 255
-				}
+				new DataParameter("@firstName", @firstName, LinqToDB.DataType.VarChar, 255),
+				new DataParameter("@lastName",  @lastName,  LinqToDB.DataType.VarChar, 255)
 			};
 
 			return dataConnection.QueryProc<PatientSelectByNameResult>("[Patient_SelectByName]", parameters);
@@ -371,22 +365,10 @@ namespace Default.Access.Odbc
 		{
 			var parameters = new []
 			{
-				new DataParameter("@FirstName",  @FirstName,  LinqToDB.DataType.VarChar)
-				{
-					Size = 255
-				},
-				new DataParameter("@MiddleName", @MiddleName, LinqToDB.DataType.VarChar)
-				{
-					Size = 255
-				},
-				new DataParameter("@LastName",   @LastName,   LinqToDB.DataType.VarChar)
-				{
-					Size = 255
-				},
-				new DataParameter("@Gender",     @Gender,     LinqToDB.DataType.VarChar)
-				{
-					Size = 255
-				}
+				new DataParameter("@FirstName",  @FirstName,  LinqToDB.DataType.VarChar, 255),
+				new DataParameter("@MiddleName", @MiddleName, LinqToDB.DataType.VarChar, 255),
+				new DataParameter("@LastName",   @LastName,   LinqToDB.DataType.VarChar, 255),
+				new DataParameter("@Gender",     @Gender,     LinqToDB.DataType.VarChar, 255)
 			};
 
 			return dataConnection.ExecuteProc("[Person_Insert]", parameters);
@@ -423,14 +405,8 @@ namespace Default.Access.Odbc
 		{
 			var parameters = new []
 			{
-				new DataParameter("@firstName", @firstName, LinqToDB.DataType.VarChar)
-				{
-					Size = 255
-				},
-				new DataParameter("@lastName",  @lastName,  LinqToDB.DataType.VarChar)
-				{
-					Size = 255
-				}
+				new DataParameter("@firstName", @firstName, LinqToDB.DataType.VarChar, 255),
+				new DataParameter("@lastName",  @lastName,  LinqToDB.DataType.VarChar, 255)
 			};
 
 			return dataConnection.QueryProc<PersonSelectByNameResult>("[Person_SelectByName]", parameters);
@@ -453,14 +429,8 @@ namespace Default.Access.Odbc
 		{
 			var parameters = new []
 			{
-				new DataParameter("@firstName", @firstName, LinqToDB.DataType.VarChar)
-				{
-					Size = 255
-				},
-				new DataParameter("@lastName",  @lastName,  LinqToDB.DataType.VarChar)
-				{
-					Size = 255
-				}
+				new DataParameter("@firstName", @firstName, LinqToDB.DataType.VarChar, 255),
+				new DataParameter("@lastName",  @lastName,  LinqToDB.DataType.VarChar, 255)
 			};
 
 			return dataConnection.QueryProc<PersonSelectListByNameResult>("[Person_SelectListByName]", parameters);
@@ -485,22 +455,10 @@ namespace Default.Access.Odbc
 			{
 				new DataParameter("@id",         @id,         LinqToDB.DataType.Int32),
 				new DataParameter("@PersonID",   @PersonID,   LinqToDB.DataType.Int32),
-				new DataParameter("@FirstName",  @FirstName,  LinqToDB.DataType.VarChar)
-				{
-					Size = 255
-				},
-				new DataParameter("@MiddleName", @MiddleName, LinqToDB.DataType.VarChar)
-				{
-					Size = 255
-				},
-				new DataParameter("@LastName",   @LastName,   LinqToDB.DataType.VarChar)
-				{
-					Size = 255
-				},
-				new DataParameter("@Gender",     @Gender,     LinqToDB.DataType.VarChar)
-				{
-					Size = 255
-				}
+				new DataParameter("@FirstName",  @FirstName,  LinqToDB.DataType.VarChar, 255),
+				new DataParameter("@MiddleName", @MiddleName, LinqToDB.DataType.VarChar, 255),
+				new DataParameter("@LastName",   @LastName,   LinqToDB.DataType.VarChar, 255),
+				new DataParameter("@Gender",     @Gender,     LinqToDB.DataType.VarChar, 255)
 			};
 
 			return dataConnection.ExecuteProc("[Person_Update]", parameters);
@@ -509,3 +467,4 @@ namespace Default.Access.Odbc
 		#endregion
 	}
 }
+

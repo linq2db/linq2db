@@ -74,7 +74,7 @@ namespace LinqToDB.DataProvider.DB2
 								col.TBCREATOR = idx.TBCREATOR AND
 								col.TBNAME    = idx.TBNAME
 					WHERE
-						col.KEYSEQ > 0 AND idx.UNIQUERULE = 'P' AND " + GetSchemaFilter("col.TBCREATOR") + @"
+						col.KEYSEQ > 0 AND idx.UNIQUERULE = 'P' AND " + GetSchemaFilter("col.TBCREATOR", options) + @"
 					ORDER BY
 						col.TBCREATOR, col.TBNAME, col.KEYSEQ")
 				.ToList();
@@ -97,7 +97,7 @@ namespace LinqToDB.DataProvider.DB2
 				FROM
 					SYSIBM.SYSCOLUMNS
 				WHERE
-					" + GetSchemaFilter("TBCREATOR");
+					" + GetSchemaFilter("TBCREATOR", options);
 
 			return dataConnection.Query(rd =>
 				{
@@ -184,7 +184,7 @@ namespace LinqToDB.DataProvider.DB2
 								A.TBNAME  = B.TBNAME  AND
 								A.RELNAME = B.RELNAME
 					WHERE
-						" + GetSchemaFilter("A.CREATOR") + @"
+						" + GetSchemaFilter("A.CREATOR", options) + @"
 					ORDER BY
 						A.CREATOR,
 						A.RELNAME,
@@ -205,8 +205,6 @@ namespace LinqToDB.DataProvider.DB2
 
 		protected override List<ProcedureInfo>? GetProcedures(DataConnection dataConnection, GetSchemaOptions options)
 		{
-			LoadCurrentSchema(dataConnection);
-
 			return dataConnection
 				.Query(rd =>
 				{
@@ -231,8 +229,8 @@ namespace LinqToDB.DataProvider.DB2
 					FROM
 						SYSIBM.SYSROUTINES
 					WHERE
-						" + GetSchemaFilter("SCHEMA"))
-				.Where(p => IncludedSchemas.Count != 0 || ExcludedSchemas.Count != 0 || p.SchemaName == CurrentSchema)
+						" + GetSchemaFilter("SCHEMA", options))
+				.Where(p => IncludedSchemas.Count != 0 || ExcludedSchemas.Count != 0 || p.SchemaName == options.DefaultSchema)
 				.ToList();
 		}
 
@@ -291,7 +289,7 @@ namespace LinqToDB.DataProvider.DB2
 					FROM
 						SYSIBM.SYSPARMS
 					WHERE
-						" + GetSchemaFilter("SCHEMA"))
+						" + GetSchemaFilter("SCHEMA", options))
 				.ToList();
 		}
 	}

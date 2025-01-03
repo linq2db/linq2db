@@ -1,13 +1,12 @@
-﻿<#@ template language="C#" debug="True" hostSpecific="True" compilerOptions="/langversion:6" #>
-<#@ output extension=".generated.cs"                                                         #>
-<#@ assembly name="$(ArtifactsPath)\bin\Tests\Debug\net462\Oracle.ManagedDataAccess.dll"     #>
-<#@ include file="..\..\..\Source\LinqToDB.Templates\LinqToDB.Oracle.ttinclude" once="true"  #>
-<#@ include file="..\Shared.ttinclude"                                          once="true"  #>
+﻿<#@ template language="C#" debug="True" hostSpecific="True" compilerOptions="/langversion:6"   #>
+<#@ CleanupBehavior processor="T4VSHost" CleanupAfterProcessingtemplate="true"                 #>
+<#@ output extension=".generated.cs"                                                           #>
+<#@ include file="$(LinqToDBT4OracleTemplatesPath)LinqToDB.Oracle.ttinclude"       once="true" #>
+<#@ include file="..\Shared.ttinclude"                                             once="true" #>
 <#
 	NamespaceName   = "Default.Oracle";
 	DataContextName = "TestDataDB";
 
 	LoadOracleMetadata(GetConnectionString("Oracle.11.Managed"));
-
 	GenerateModel();
 #>
