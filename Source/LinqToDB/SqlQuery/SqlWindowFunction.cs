@@ -483,7 +483,7 @@ namespace LinqToDB.SqlQuery
 		public void Modify(SqlFrameBoundary start, SqlFrameBoundary end)
 		{
 			Start = start;
-			End = end;
+			End   = end;
 		}
 	}
 }
