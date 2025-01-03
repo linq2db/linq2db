@@ -1290,7 +1290,7 @@ namespace LinqToDB.SqlProvider
 								new(new SqlPredicate.ExprExpr(expr, SqlPredicate.Operator.Equal, falseValue, null), falseValue)
 							}, new SqlValue(toType, null));
 					}
-					else if (!withNull || !SqlProviderFlags.SupportsBooleanType)
+					else if (!withNull || !SqlProviderFlags.SupportsBooleanType || forceConvert)
 					{
 						expr = new SqlConditionExpression(predicate, trueValue, falseValue);
 					}
