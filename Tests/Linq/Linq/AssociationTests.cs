@@ -1284,16 +1284,23 @@ namespace Tests.Linq
 		[Test]
 		public void Issue845Test([IncludeDataSources(false, TestProvName.AllSqlServer, TestProvName.AllSQLite)] string context)
 		{
-			using (var db = GetDataConnection(context))
-			using (db.CreateLocalTable<Employee>())
-			using (db.CreateLocalTable<Department>())
-			{
-				var result = db.GetTable<Employee>()
-					.Select(e => new { e.Id, e.Department!.Name })
-					.ToList();
+			using var db = GetDataConnection(context);
+			using var t1 = db.CreateLocalTable<Employee>();
+			using var t2 = db.CreateLocalTable<Department>();
 
+			var result = db.GetTable<Employee>()
+				.Select(e => new { e.Id, e.Department!.Name })
+				.ToList();
+
+			if (context.IsAnyOf(TestProvName.AllSqlServer))
+			{
 				Assert.That(db.LastQuery!, Does.Not.Contain(" NOT"));
 				Assert.That(db.LastQuery!, Does.Contain("AND [a_Department].[Deleted] = 0"));
+			}
+			else
+			{
+				Assert.That(db.LastQuery!, Does.Contain(" NOT"));
+				Assert.That(db.LastQuery!, Does.Not.Contain(" = 0"));
 			}
 		}
 

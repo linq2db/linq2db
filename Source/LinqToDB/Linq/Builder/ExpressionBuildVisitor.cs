@@ -3247,7 +3247,9 @@ namespace LinqToDB.Linq.Builder
 			var columnDescriptor = QueryHelper.GetColumnDescriptor(sqlExpression);
 			var valueConverter   = columnDescriptor?.ValueConverter;
 
-			if (valueConverter != null || columnDescriptor != null && columnDescriptor.GetDbDataType(true).DataType is not DataType.Boolean)
+			if (!Builder.DataContext.SqlProviderFlags.SupportsBooleanType
+				|| valueConverter != null
+				|| (columnDescriptor != null && columnDescriptor.GetDbDataType(true).DataType is not DataType.Boolean))
 			{
 				using var descriptorSaver = UsingColumnDescriptor(columnDescriptor);
 
@@ -3267,7 +3269,7 @@ namespace LinqToDB.Linq.Builder
 				}
 			}
 
-			predicate = new SqlPredicate.IsTrue(ApplyExpressionNullability(sqlExpression, GetNullabilityContext()), new SqlValue(true), new SqlValue(false), withNull && DataOptions.LinqOptions.CompareNulls == CompareNulls.LikeClr ? false : null, false);
+			predicate = new SqlPredicate.Expr(ApplyExpressionNullability(sqlExpression, GetNullabilityContext()));
 
 			return predicate;
 		}
