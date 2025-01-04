@@ -17,16 +17,13 @@ namespace LinqToDB.Linq
 		Dictionary<IBuildContext, IBuildContext> _buildContexts    = new ();
 		HashSet<IBuildContext>                   _currentlyCloning = new ();
 
-		public CloningContext(ExpressionBuilder builder)
+		public void CloneElements<TElement>(IEnumerable<TElement>? queryElements)
+			where TElement : IQueryElement
 		{
-			// for reference use CteCloning_* testsuite
-			var ctes = builder.GetCteClauses();
-			if (ctes != null)
+			if (queryElements != null)
 			{
-				foreach (var cte in ctes)
-				{
-					CloneElement(cte);
-				}
+				foreach (var element in queryElements)
+					CloneElement(element);
 			}
 		}
 
