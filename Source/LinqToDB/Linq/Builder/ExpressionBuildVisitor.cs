@@ -2024,7 +2024,14 @@ namespace LinqToDB.Linq.Builder
 						{
 							var predicate = placeholder.Sql as ISqlPredicate;
 							if (predicate is null)
-								predicate = ConvertExpressionToPredicate(placeholder.Sql, withNull: !node.Operand.Type.IsNullable());
+							{
+								var withNull = !node.Operand.Type.IsNullable();
+
+								predicate = ConvertExpressionToPredicate(
+									placeholder.Sql,
+									withNull: withNull,
+									forceEquality: withNull && placeholder.Sql.CanBeNullableOrUnknown(GetNullabilityContext()));
+							}
 
 							var condition = new SqlSearchCondition();
 							condition.Add(predicate.MakeNot());
@@ -3236,7 +3243,7 @@ namespace LinqToDB.Linq.Builder
 			return corrected;
 		}
 
-		ISqlPredicate ConvertExpressionToPredicate(ISqlExpression sqlExpression, bool withNull = false)
+		ISqlPredicate ConvertExpressionToPredicate(ISqlExpression sqlExpression, bool withNull = false, bool forceEquality = false)
 		{
 			if (sqlExpression is ISqlPredicate predicate)
 				return predicate;
@@ -3248,7 +3255,7 @@ namespace LinqToDB.Linq.Builder
 			var valueConverter   = columnDescriptor?.ValueConverter;
 
 			if (!Builder.DataContext.SqlProviderFlags.SupportsBooleanType
-				|| withNull
+				|| forceEquality
 				|| valueConverter != null
 				|| (columnDescriptor != null && columnDescriptor.GetDbDataType(true).DataType is not DataType.Boolean))
 			{
