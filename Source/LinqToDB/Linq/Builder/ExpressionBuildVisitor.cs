@@ -2024,7 +2024,7 @@ namespace LinqToDB.Linq.Builder
 						{
 							var predicate = placeholder.Sql as ISqlPredicate;
 							if (predicate is null)
-								predicate = ConvertExpressionToPredicate(placeholder.Sql, !node.Operand.Type.IsNullable());
+								predicate = ConvertExpressionToPredicate(placeholder.Sql, withNull: !node.Operand.Type.IsNullable());
 
 							var condition = new SqlSearchCondition();
 							condition.Add(predicate.MakeNot());
@@ -3236,7 +3236,7 @@ namespace LinqToDB.Linq.Builder
 			return corrected;
 		}
 
-		ISqlPredicate ConvertExpressionToPredicate(ISqlExpression sqlExpression, bool withNull = true)
+		ISqlPredicate ConvertExpressionToPredicate(ISqlExpression sqlExpression, bool withNull = false)
 		{
 			if (sqlExpression is ISqlPredicate predicate)
 				return predicate;
