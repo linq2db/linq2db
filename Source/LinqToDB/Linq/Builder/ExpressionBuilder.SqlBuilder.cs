@@ -1073,6 +1073,14 @@ namespace LinqToDB.Linq.Builder
 			return cteContext;
 		}
 
+		public List<CteClause>? GetCteClauses()
+		{
+			if (_cteContexts == null)
+				return null;
+
+			return _cteContexts.Values.Select(ctx => ctx.CteClause).ToList();
+		}
+
 		#endregion
 
 		#region Query Filter
