@@ -20,7 +20,7 @@ namespace LinqToDB.Linq.Builder
 
 				var genericArguments = methodCall.Method.GetGenericArguments();
 
-				var cloningContext      = new CloningContext();
+				var cloningContext      = new CloningContext(builder);
 				var clonedTargetContext = cloningContext.CloneContext(mergeContext.TargetContext);
 
 				var targetContextRef = new ContextRefExpression(genericArguments[0], mergeContext.TargetContext, "target");

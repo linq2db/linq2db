@@ -162,7 +162,7 @@ namespace LinqToDB.Linq.Builder
 			{
 				// We are trying to simulate what will be with query after optimizer's work
 				//
-				var cloningContext = new CloningContext();
+				var cloningContext = new CloningContext(context.Builder);
 
 				var clonedParentContext = cloningContext.CloneContext(parent);
 				var clonedContext       = cloningContext.CloneContext(context);

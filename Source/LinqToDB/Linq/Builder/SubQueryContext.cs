@@ -69,26 +69,7 @@ namespace LinqToDB.Linq.Builder
 
 		public override IBuildContext Clone(CloningContext context)
 		{
-			SelectQuery selectQuery;
-
-			// with CTE involved, cloning should clone CTE definition first
-			var ctes = Builder.GetCteClauses();
-			if (ctes != null)
-			{
-				var select = new SqlSelectStatement(SelectQuery)
-				{
-					With = new SqlWithClause()
-					{
-						Clauses = ctes
-					}
-				};
-
-				selectQuery = context.CloneElement(select).SelectQuery;
-			}
-			else
-			{
-				selectQuery = context.CloneElement(SelectQuery);
-			}
+			var selectQuery = context.CloneElement(SelectQuery);
 
 			return new SubQueryContext(context.CloneContext(SubQuery), selectQuery, false) { IsSelectWrapper = IsSelectWrapper };
 		}
