@@ -9,14 +9,14 @@ namespace LinqToDB
 		public interface IDefinedFunction<out TR> { }
 		public interface IDefinedFunction { }
 
-		public interface IFilterPart<TFiltered>
+		public interface IFilterPart<out TFiltered>
 			where TFiltered : class
 		{
 			TFiltered Filter(bool filter);
 		}
 
 
-		public interface IOrderByPart<in TValue, TThenPart>
+		public interface IOrderByPart<in TValue, out TThenPart>
 			where TThenPart : class
 		{
 			TThenPart OrderBy(TValue     orderBy);
@@ -25,31 +25,26 @@ namespace LinqToDB
 			TThenPart OrderByDesc(TValue orderBy, Sql.NullsPosition nulls);
 		}
 
-		public interface IOrderByOThenPart<TValue, TOrdered> : IOrderByPart<TValue, IThenOrderPart<TValue, TOrdered>>
+		public interface IOrderByPart<out TOrdered> : IOrderByPart<object?, TOrdered>
 			where TOrdered : class
 		{
 		}
 
-		public interface IOrderByPart<TOrdered> : IOrderByPart<object?, TOrdered>
-			where TOrdered : class
+		public interface IThenOrderPart<out TThenPart> : IThenOrderPart<object?, TThenPart>
+			where TThenPart : class
 		{
 		}
 
-		public interface IThenOrderPart<TOrdered> : IThenOrderPart<object?, TOrdered>
-			where TOrdered : class
+		public interface IThenOrderPart<in TValue, out TThenPart>
+			where TThenPart : class
 		{
+			TThenPart ThenBy(TValue     orderBy);
+			TThenPart ThenBy(TValue     orderBy, Sql.NullsPosition nulls);
+			TThenPart ThenByDesc(TValue orderBy);
+			TThenPart ThenByDesc(TValue orderBy, Sql.NullsPosition nulls);
 		}
 
-		public interface IThenOrderPart<in TValue, TOrdered>
-			where TOrdered : class
-		{
-			IThenOrderPart<TValue, TOrdered> ThenBy(TValue     orderBy);
-			IThenOrderPart<TValue, TOrdered> ThenBy(TValue     orderBy, Sql.NullsPosition nulls);
-			IThenOrderPart<TValue, TOrdered> ThenByDesc(TValue orderBy);
-			IThenOrderPart<TValue, TOrdered> ThenByDesc(TValue orderBy, Sql.NullsPosition nulls);
-		}
-
-		public interface IPartitionPart<TPartitioned>
+		public interface IPartitionPart<out TPartitioned>
 		where TPartitioned: class
 		{
 			TPartitioned PartitionBy(params object?[] partitionBy);
@@ -57,31 +52,36 @@ namespace LinqToDB
 
 		public interface IDefinedWindow {}
 
-		public interface IFramePart<TFramed>
+		public interface IFramePart<out TFramed>
 		where TFramed : class
 		{
 			TFramed Rows();
 		}
 
 
-		public interface IOptionalFilter<TPartitioned> : IFilterPart<IPartitionPart<TPartitioned>>, IPartitionPart<TPartitioned>
+		public interface IOptionalFilter<out TPartitioned> : IFilterPart<IPartitionPart<TPartitioned>>, IPartitionPart<TPartitioned>
 			where TPartitioned : class
 		{
 		}
 
-		public interface IOptionalOrder<TFramed> : IFramePart<TFramed> 
+		public interface IOptionalOrder<out TFramed> : IFramePart<TFramed> 
 			where TFramed : class
 		{}
 
-		public interface IOptionalFilterPartition<TOrdered> : IFilterPart<IPartitionPart<IOrderByPart<TOrdered>>>, IPartitionPart<IOrderByPart<TOrdered>>, IOrderByPart<TOrdered>
+		public interface IOptionalFilterPartition<out TOrdered> : IFilterPart<IPartitionPart<IOrderByPart<TOrdered>>>, IPartitionPart<IOrderByPart<TOrdered>>, IOrderByPart<TOrdered>
 			where TOrdered : class
 		{
 		}
 
-		public interface IOPartitionROrder<TOrdered> : IPartitionPart<IOrderByPart<TOrdered>>, IOrderByPart<TOrdered>
-			where TOrdered : class
+		public interface IThenByPartFinal : IThenOrderPart<IThenByPartFinal>, IDefinedFunction
+		{
+
+		}
+
+		public interface IROrderByPartOThenByPartFinal : IOrderByPart<IThenByPartFinal>
 		{
 		}
+
 
 		/*
 		public interface IWindowDefinition
@@ -102,6 +102,12 @@ namespace LinqToDB
 			TWithArgument Argument(object?               argument);
 			TWithArgument Argument(Sql.AggregateModifier modifier, object? argument);
 		}
+
+		// ROW_NUMBER
+		public interface IOPartitionROrderFinal : IPartitionPart<IROrderByPartOThenByPartFinal>, IROrderByPartOThenByPartFinal
+		{
+		}
+
 
 		// COUNT
 		public interface IOArgumentOFilterOPartitionFinal : IArgumentPart<IOFilterOPartitionFinal>, IOFilterOPartitionFinal
@@ -125,7 +131,15 @@ namespace LinqToDB
 		{
 		}
 
-		public interface IOrderOFrameFinal : IOrderByPart<IFramePart<IDefinedFunction>>, IFramePart<IDefinedFunction>, IDefinedFunction
+		public interface IOFrameFinal : IFramePart<IDefinedFunction>, IDefinedFunction
+		{
+		}
+
+		public interface IOThenPartOFrameFinal : IThenOrderPart<IOThenPartOFrameFinal>, IOFrameFinal
+		{
+		}
+
+		public interface IOrderOFrameFinal : IOrderByPart<IOThenPartOFrameFinal>, IOFrameFinal
 		{
 		}
 
@@ -133,7 +147,7 @@ namespace LinqToDB
 		// public static object DefineWindow(this Sql.IWindowFunction window, Func<IWindowDefinition, object> func)
 		// 	=> throw new ServerSideOnlyException(nameof(RowNumber))
 
-		public static long RowNumber(this Sql.IWindowFunction window, Func<IOPartitionROrder<IDefinedFunction>, IThenOrderPart<IDefinedFunction>> func)
+		public static long RowNumber(this Sql.IWindowFunction window, Func<IOPartitionROrderFinal, IDefinedFunction> func)
 			=> throw new ServerSideOnlyException(nameof(RowNumber));
 
 		public static int Count(this Sql.IWindowFunction window, Func<IOArgumentOFilterOPartitionFinal, IDefinedFunction> func)
@@ -316,7 +330,7 @@ namespace LinqToDB
 				select new
 				{
 					g.Key,
-					PC = g.PercentileCont(0.5, f => f.OrderBy())
+					//PC = g.PercentileCont(0.5, f => f.OrderBy())
 				};
 		}
 	}
