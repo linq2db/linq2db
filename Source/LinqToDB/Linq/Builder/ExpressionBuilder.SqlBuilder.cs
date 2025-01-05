@@ -142,6 +142,11 @@ namespace LinqToDB.Linq.Builder
 
 		#region SubQueryToSql
 
+		public static bool NeedsSubqueryValidation(IDataContext dataContext)
+		{
+			return !dataContext.SqlProviderFlags.IsApplyJoinSupported;
+		}
+
 		/// <summary>
 		/// Checks that provider can handle limitation inside subquery. This function is tightly coupled with <see cref="SelectQueryOptimizerVisitor.OptimizeApply"/>
 		/// </summary>
@@ -158,7 +163,7 @@ namespace LinqToDB.Linq.Builder
 			if (parent.Builder.IsRecursiveBuild)
 				return true;
 
-			if (!context.Builder.DataContext.SqlProviderFlags.IsApplyJoinSupported)
+			if (NeedsSubqueryValidation(context.Builder.DataContext))
 			{
 				// We are trying to simulate what will be with query after optimizer's work
 				//
