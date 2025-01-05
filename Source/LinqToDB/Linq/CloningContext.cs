@@ -155,6 +155,16 @@ namespace LinqToDB.Linq
 			_buildContexts[oldContext] = newContext;
 		}
 
+		public bool IsCloned(IBuildContext context)
+		{
+			return _buildContexts.ContainsKey(context);
+		}
+
+		public bool IsCloned(IQueryElement element)
+		{
+			return _queryElements.ContainsKey(element);
+		}
+
 		[return: NotNullIfNotNull(nameof(buildContext))]
 		public IBuildContext? CloneRaw(IBuildContext? buildContext)
 		{

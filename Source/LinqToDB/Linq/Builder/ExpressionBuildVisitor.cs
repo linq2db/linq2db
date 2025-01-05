@@ -7,6 +7,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 
 namespace LinqToDB.Linq.Builder
 {
@@ -101,17 +102,28 @@ namespace LinqToDB.Linq.Builder
 
 		ContextRefExpression? FoundRoot { get; set; }
 
+
+		static bool HasClonedContext(Expression? expression, CloningContext cloningContext)
+		{
+			return expression != null &&
+			       null       != expression.Find(cloningContext, static (cc, e) => e is ContextRefExpression contextRef && cc.IsCloned(contextRef.BuildContext));
+		}
+
 		public ExpressionBuildVisitor Clone(CloningContext cloningContext)
 		{
-			var translationCache = _translationCache.ToDictionary(
-				p =>
-					new ExprCacheKey(
-						cloningContext.CorrectExpression(p.Key.Expression),
-						cloningContext.CorrectContext(p.Key.Context), p.Key.ColumnDescriptor,
-						cloningContext.CorrectElement(p.Key.SelectQuery), p.Key.Flags),
-				p => cloningContext.CorrectExpression(p.Value), ExprCacheKey.SqlCacheKeyComparer);
+			var translationCache = _translationCache
+				.Where(p => HasClonedContext(p.Key.Expression, cloningContext))
+				.ToDictionary(
+					p =>
+						new ExprCacheKey(
+							cloningContext.CorrectExpression(p.Key.Expression),
+							cloningContext.CorrectContext(p.Key.Context), p.Key.ColumnDescriptor,
+							cloningContext.CorrectElement(p.Key.SelectQuery), p.Key.Flags),
+					p => cloningContext.CorrectExpression(p.Value), ExprCacheKey.SqlCacheKeyComparer);
 
-			var columnCache = _columnCache.ToDictionary(
+			var columnCache = _columnCache
+				.Where(p => cloningContext.IsCloned(p.Key.SelectQuery) || HasClonedContext(p.Key.Expression, cloningContext))
+				.ToDictionary(
 				p =>
 					new ColumnCacheKey(
 						cloningContext.CorrectExpression(p.Key.Expression),
@@ -120,14 +132,16 @@ namespace LinqToDB.Linq.Builder
 						cloningContext.CorrectElement(p.Key.ParentQuery)),
 				p => cloningContext.CorrectExpression(p.Value), ColumnCacheKey.ColumnCacheKeyComparer);
 
-			var associations = _associations?.ToDictionary(
-				p =>
-					new ExprCacheKey(
-						cloningContext.CorrectExpression(p.Key.Expression),
-						cloningContext.CorrectContext(p.Key.Context), p.Key.ColumnDescriptor,
-						cloningContext.CorrectElement(p.Key.SelectQuery), p.Key.Flags),
+			var associations = _associations?
+				.Where(p => HasClonedContext(p.Key.Expression, cloningContext))
+				.ToDictionary(
+					p =>
+						new ExprCacheKey(
+							cloningContext.CorrectExpression(p.Key.Expression),
+							cloningContext.CorrectContext(p.Key.Context), p.Key.ColumnDescriptor,
+							cloningContext.CorrectElement(p.Key.SelectQuery), p.Key.Flags),
 
-				p => cloningContext.CorrectExpression(p.Value), ExprCacheKey.SqlCacheKeyComparer);
+					p => cloningContext.CorrectExpression(p.Value), ExprCacheKey.SqlCacheKeyComparer);
 
 			var newVisitor = new ExpressionBuildVisitor(Builder);
 			newVisitor._associations     = associations == null ? null : new SnapshotDictionary<ExprCacheKey, Expression>(associations);
@@ -417,9 +431,7 @@ namespace LinqToDB.Linq.Builder
 			
 			if (_translationCache.TryGetValue(cacheKey, out var translated))
 			{
-#if DEBUG
 				DebugCacheHit(cacheKey, translated);
-#endif
 				return translated;
 			}
 
@@ -532,27 +544,11 @@ namespace LinqToDB.Linq.Builder
 		}
 
 
-#if DEBUG
+		[Conditional("DEBUG")]
 		void DebugCacheHit(ExprCacheKey cacheKey, Expression translated)
 		{
-			if (Builder.DataContext is DataContext dataContext)
-			{
-				if (translated is SqlPlaceholderExpression placeholder)
-				{
-					if (placeholder.Sql is SqlColumn column)
-					{
-						if (column.Number == 143)
-						{
-
-						}
-					}
-				}
-
-				Debug.WriteLine(
-					$"Cache hit: {cacheKey.Expression} => {translated}");
-			}
+			Debug.WriteLine($"Cache hit: {cacheKey.Expression} => {translated}");
 		}
-#endif
 
 		ExprCacheKey GetSqlCacheKey(Expression path)
 		{
@@ -612,14 +608,22 @@ namespace LinqToDB.Linq.Builder
 		{
 			var newNode = base.Visit(node);
 
+			/*
 			if (newNode != null && node != null && !IsSame(newNode, node!))
 			{
 				Debug.WriteLine($"--> Node  {_buildPurpose}, {_buildFlags}, {node.NodeType}, \t {node} \t\t -> {newNode}");
 			}
+			*/
 
 			return newNode;
 		}
 #endif
+
+		[Conditional("DEBUG")]
+		public void LogVisit(Expression node, [CallerMemberName] string callerName = "")
+		{
+			//Debug.WriteLine($"{callerName}: {_buildPurpose}, {_buildFlags}, {node}");
+		}
 
 		protected override Expression VisitLambda<T>(Expression<T> node)
 		{
@@ -734,9 +738,8 @@ namespace LinqToDB.Linq.Builder
 
 		protected override Expression VisitMethodCall(MethodCallExpression node)
 		{
-#if DEBUG
-			Debug.WriteLine($"VisitMethodCall {_buildPurpose}, {_buildFlags}, {node}");
-#endif
+			LogVisit(node);
+
 			if (_buildPurpose == BuildPurpose.Traverse)
 			{
 				var newNode = base.VisitMethodCall(node);
@@ -875,9 +878,7 @@ namespace LinqToDB.Linq.Builder
 
 		protected override Expression VisitNew(NewExpression node)
 		{
-#if DEBUG
-			Debug.WriteLine($"VisitNew {_buildPurpose}, {_buildFlags}, {node}");
-#endif
+			LogVisit(node);
 
 			if (IsSqlOrExpression())
 			{
@@ -1309,9 +1310,8 @@ namespace LinqToDB.Linq.Builder
 
 		protected override Expression VisitMember(MemberExpression node)
 		{
-#if DEBUG
-			Debug.WriteLine($"VisitMember {_buildPurpose}, {_buildFlags}, {node}");
-#endif
+			LogVisit(node);
+
 			if (_buildFlags.HasFlag(BuildFlags.ForExpanding))
 			{
 				if (!HasContextReferenceOrSql(node))
@@ -1398,9 +1398,7 @@ namespace LinqToDB.Linq.Builder
 						var exprCacheKey = GetSqlCacheKey(node);
 						if (_translationCache.TryGetValue(exprCacheKey, out var alreadyTranslated))
 						{
-#if DEBUG
 							DebugCacheHit(exprCacheKey, alreadyTranslated);
-#endif
 							return Visit(alreadyTranslated);
 						}
 					}
@@ -2355,12 +2353,12 @@ namespace LinqToDB.Linq.Builder
 
 		public bool HandleSubquery(Expression node, [NotNullWhen(true)] out Expression? subqueryExpression)
 		{
-#if DEBUG
-			Debug.WriteLine($"HandleSubquery {_buildPurpose}, {_buildFlags}, {node}");
-#endif
 			subqueryExpression = null;
 
-			if (BuildContext == null || _buildPurpose is BuildPurpose.SubQuery)
+			if (BuildContext == null || _buildPurpose is BuildPurpose.SubQuery or BuildPurpose.Traverse)
+				return false;
+
+			if (null != subqueryExpression.Find(1, (_, e) => e is SqlEagerLoadExpression or SqlErrorExpression))
 				return false;
 
 			if (_disableSubqueries.Contains(node, ExpressionEqualityComparer.Instance))
@@ -2368,6 +2366,8 @@ namespace LinqToDB.Linq.Builder
 
 			if (Builder.CanBeEvaluatedOnClient(node))
 				return false;
+
+			LogVisit(node);
 
 			var calculatedContext = BuildContext;
 			if (node is ContextRefExpression contextRef)
@@ -2498,9 +2498,7 @@ namespace LinqToDB.Linq.Builder
 
 		internal override Expression VisitContextRefExpression(ContextRefExpression node)
 		{
-#if DEBUG
-			Debug.WriteLine($"VisitContextRefExpression  {_buildPurpose}, {_buildFlags}, {node}");
-#endif
+			LogVisit(node);
 
 			var newNode = MakeWithCache(node.BuildContext, node);
 
@@ -5189,7 +5187,7 @@ namespace LinqToDB.Linq.Builder
 			public static IEqualityComparer<ColumnCacheKey> ColumnCacheKeyComparer { get; } = new ColumnCacheKeyEqualityComparer();
 		}
 
-		[DebuggerDisplay("S: {SelectQuery?.SourceID} F: {Flags}, E: {Expression}, C: {Context}")]
+		[DebuggerDisplay("S: {SelectQuery?.SourceID} F: {Flags}, E: {Expression}, C: {Context}, CD: {ColumnDescriptor}")]
 		readonly struct ExprCacheKey
 		{
 			public ExprCacheKey(Expression expression, IBuildContext? context, ColumnDescriptor? columnDescriptor, SelectQuery? selectQuery, ProjectFlags flags)
