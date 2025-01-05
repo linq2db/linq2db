@@ -1252,7 +1252,7 @@ namespace LinqToDB.SqlProvider
 						}
 					}
 
-					wrap = !SqlProviderFlags.SupportsBooleanType || p.CanBeUnknown(NullabilityContext) || forceConvert;
+					wrap = !SqlProviderFlags.SupportsBooleanType || (!withNull && p.CanBeUnknown(NullabilityContext)) || forceConvert;
 				}
 
 				if (wrap)
@@ -1262,7 +1262,7 @@ namespace LinqToDB.SqlProvider
 					var trueValue  = new SqlValue(true);
 					var falseValue = new SqlValue(false);
 
-					if (withNull && expr.CanBeNullableOrUnknown(NullabilityContext))
+					if ((forceConvert || !SqlProviderFlags.SupportsBooleanType) && withNull && expr.CanBeNullableOrUnknown(NullabilityContext))
 					{
 						var toType = QueryHelper.GetDbDataType(expr, MappingSchema);
 
