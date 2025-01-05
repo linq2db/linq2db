@@ -997,7 +997,7 @@ namespace LinqToDB.SqlProvider
 		public virtual ISqlExpression ConvertCoalesce(SqlCoalesceExpression element)
 		{
 			var type = QueryHelper.GetDbDataType(element.Expressions[0], MappingSchema);
-			return new SqlFunction(type, "Coalesce", element.Expressions);
+			return new SqlFunction(type, "Coalesce", parametersNullability: ParametersNullabilityType.IfAllParametersNullable, element.Expressions);
 		}
 
 		public virtual ISqlExpression ConvertSqlExpression(SqlExpression element)
