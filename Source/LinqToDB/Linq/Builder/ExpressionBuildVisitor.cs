@@ -622,7 +622,7 @@ namespace LinqToDB.Linq.Builder
 		[Conditional("DEBUG")]
 		public void LogVisit(Expression node, [CallerMemberName] string callerName = "")
 		{
-			//Debug.WriteLine($"{callerName}: {_buildPurpose}, {_buildFlags}, {node}");
+			Debug.WriteLine($"{callerName}: {_buildPurpose}, {_buildFlags}, {node}");
 		}
 
 		protected override Expression VisitLambda<T>(Expression<T> node)
@@ -712,7 +712,19 @@ namespace LinqToDB.Linq.Builder
 
 			_disableNew = saveDisableNew;
 
+			FoundRoot = null;
 			return newExpression;
+		}
+
+		public override Expression VisitSqlGenericConstructorExpression(SqlGenericConstructorExpression node)
+		{
+			var newNode = base.VisitSqlGenericConstructorExpression(node);
+
+			if (!IsSame(newNode, node))
+				return Visit(newNode);
+
+			FoundRoot = null;
+			return node;
 		}
 
 		internal override SqlGenericConstructorExpression.Parameter VisitSqlGenericParameter(SqlGenericConstructorExpression.Parameter parameter)
@@ -873,7 +885,11 @@ namespace LinqToDB.Linq.Builder
 					return Visit(translated);
 			}
 
-			return base.VisitNewArray(node);
+			var newNode = base.VisitNewArray(node);
+
+			FoundRoot = null;
+
+			return newNode;
 		}
 
 		protected override Expression VisitNew(NewExpression node)
@@ -910,7 +926,11 @@ namespace LinqToDB.Linq.Builder
 
 			using var saveDescriptor = UsingColumnDescriptor(null);
 			using var saveAlias      = UsingAlias(null);
-			return base.VisitNew(node);
+			
+			var newNode = base.VisitNew(node);
+
+			FoundRoot = null;
+			return newNode;
 		}
 
 		protected override Expression VisitMemberInit(MemberInitExpression node)
