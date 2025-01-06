@@ -52,24 +52,32 @@ namespace LinqToDB
 
 		public interface IDefinedWindow {}
 
-		public interface IFramePart<out TFramed>
-		where TFramed : class
+		public interface IFramePart
 		{
-			TFramed Rows();
+			IDefinedRangeFrame RowsBetween(Func<IFrameBoundary, IFrameBoundaryDefined>   preceding, Func<IFrameBoundary, IFrameBoundaryDefined> following);
+			IDefinedRangeFrame RangeBetween(Func<IFrameBoundary, IFrameBoundaryDefined>  preceding, Func<IFrameBoundary, IFrameBoundaryDefined> following);
+			IDefinedRangeFrame GroupsBetween(Func<IFrameBoundary, IFrameBoundaryDefined> preceding, Func<IFrameBoundary, IFrameBoundaryDefined> following);
 		}
 
+		public interface IDefinedRangeFrame : IDefinedWindow
+		{
+			public IDefinedWindow ExcludeCurrentRow();
+			public IDefinedWindow ExcludeGroup();
+			public IDefinedWindow ExcludeTies();
+		}
+
+		public interface IFrameBoundaryDefined {}
+
+		public interface IFrameBoundary
+		{
+			IFrameBoundary Unbounded { get; }
+			IFrameBoundary CurrentRow  { get; }
+			IFrameBoundary Value(object? preceding);
+			IFrameBoundary Value(object? preceding, Sql.NullsPosition nulls);
+		}
 
 		public interface IOptionalFilter<out TPartitioned> : IFilterPart<IPartitionPart<TPartitioned>>, IPartitionPart<TPartitioned>
 			where TPartitioned : class
-		{
-		}
-
-		public interface IOptionalOrder<out TFramed> : IFramePart<TFramed> 
-			where TFramed : class
-		{}
-
-		public interface IOptionalFilterPartition<out TOrdered> : IFilterPart<IPartitionPart<IOrderByPart<TOrdered>>>, IPartitionPart<IOrderByPart<TOrdered>>, IOrderByPart<TOrdered>
-			where TOrdered : class
 		{
 		}
 
@@ -83,19 +91,6 @@ namespace LinqToDB
 		}
 
 
-		/*
-		public interface IWindowDefinition
-		{
-			IWindowDefinitionFramed      Filter(bool                  filter);
-			IWindowDefinitionPartitioned PartitionBy(params object?[] partitionBy);
-			IWindowDefinitionOrdered     OrderBy(object?              orderBy);
-			IWindowDefinitionOrdered     OrderBy(object?              orderBy, Sql.NullsPosition nulls);
-			IWindowDefinitionOrdered     OrderByDesc(object?          orderBy);
-			IWindowDefinitionOrdered     OrderByDesc(object?          orderBy, Sql.NullsPosition nulls);
-			IWindowDefinitionFramed      Rows();
-		}
-		*/
-
 		public interface IArgumentPart<TWithArgument>
 		where TWithArgument : class
 		{
@@ -108,9 +103,24 @@ namespace LinqToDB
 		{
 		}
 
-
 		// COUNT
-		public interface IOArgumentOFilterOPartitionFinal : IArgumentPart<IOFilterOPartitionFinal>, IOFilterOPartitionFinal
+		public interface IOArgumentOFilterOPartitionOOrderFinal : IArgumentPart<IOFilterOPartitionOOrderFinal>, IOFilterOPartitionOOrderFinal
+		{
+		}
+
+		public interface IOThenPartFinal : IThenOrderPart<IOThenPartFinal>, IDefinedFunction
+		{
+		}
+
+		public interface IOOrderFinal : IOrderByPart<IOThenPartFinal>, IOThenPartFinal
+		{
+		}
+
+		public interface IOPartitionOOrderFinal : IPartitionPart<IOOrderFinal>, IOOrderFinal
+		{
+		}
+
+		public interface IOFilterOPartitionOOrderFinal : IFilterPart<IOPartitionOOrderFinal>, IOPartitionOOrderFinal
 		{
 		}
 
@@ -131,7 +141,7 @@ namespace LinqToDB
 		{
 		}
 
-		public interface IOFrameFinal : IFramePart<IDefinedFunction>, IDefinedFunction
+		public interface IOFrameFinal : IFramePart, IDefinedFunction
 		{
 		}
 
@@ -150,7 +160,7 @@ namespace LinqToDB
 		public static long RowNumber(this Sql.IWindowFunction window, Func<IOPartitionROrderFinal, IDefinedFunction> func)
 			=> throw new ServerSideOnlyException(nameof(RowNumber));
 
-		public static int Count(this Sql.IWindowFunction window, Func<IOArgumentOFilterOPartitionFinal, IDefinedFunction> func)
+		public static int Count(this Sql.IWindowFunction window, Func<IOArgumentOFilterOPartitionOOrderFinal, IDefinedFunction> func)
 			=> throw new ServerSideOnlyException(nameof(Count));
 
 		#region Sum
