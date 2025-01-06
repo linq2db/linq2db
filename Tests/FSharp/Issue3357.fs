@@ -31,7 +31,7 @@ let Union1(db : IDataContext) =
 
     let result = query1.Concat(query2).ToArray()
     
-    Assert.That(result[0], Is.EqualTo (1, "John"));
+    Assert.That(result[0], Is.EqualTo((1, "John")));
 
 let Union2(db : IDataContext) =
     let persons = db.GetTable<Person>()
