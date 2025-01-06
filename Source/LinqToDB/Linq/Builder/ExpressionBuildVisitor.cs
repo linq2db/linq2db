@@ -705,6 +705,8 @@ namespace LinqToDB.Linq.Builder
 
 		protected override Expression VisitListInit(ListInitExpression node)
 		{
+			FoundRoot = null;
+
 			var saveDisableNew = _disableNew;
 			_disableNew = node.NewExpression;
 
@@ -712,18 +714,18 @@ namespace LinqToDB.Linq.Builder
 
 			_disableNew = saveDisableNew;
 
-			FoundRoot = null;
 			return newExpression;
 		}
 
 		public override Expression VisitSqlGenericConstructorExpression(SqlGenericConstructorExpression node)
 		{
+			FoundRoot = null;
+
 			var newNode = base.VisitSqlGenericConstructorExpression(node);
 
 			if (!IsSame(newNode, node))
 				return Visit(newNode);
 
-			FoundRoot = null;
 			return node;
 		}
 
@@ -885,11 +887,9 @@ namespace LinqToDB.Linq.Builder
 					return Visit(translated);
 			}
 
-			var newNode = base.VisitNewArray(node);
-
 			FoundRoot = null;
 
-			return newNode;
+			return base.VisitNewArray(node);
 		}
 
 		protected override Expression VisitNew(NewExpression node)
@@ -926,11 +926,9 @@ namespace LinqToDB.Linq.Builder
 
 			using var saveDescriptor = UsingColumnDescriptor(null);
 			using var saveAlias      = UsingAlias(null);
-			
-			var newNode = base.VisitNew(node);
 
 			FoundRoot = null;
-			return newNode;
+			return base.VisitNew(node);
 		}
 
 		protected override Expression VisitMemberInit(MemberInitExpression node)
