@@ -17,6 +17,16 @@ namespace LinqToDB.Linq
 		Dictionary<IBuildContext, IBuildContext> _buildContexts    = new ();
 		HashSet<IBuildContext>                   _currentlyCloning = new ();
 
+		public void CloneElements<TElement>(IEnumerable<TElement>? queryElements)
+			where TElement : IQueryElement
+		{
+			if (queryElements != null)
+			{
+				foreach (var element in queryElements)
+					CloneElement(element);
+			}
+		}
+
 		[return: NotNullIfNotNull(nameof(context))]
 		public TContext? CorrectContext<TContext>(TContext? context)
 			where TContext : IBuildContext

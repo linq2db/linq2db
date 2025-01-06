@@ -168,6 +168,7 @@ namespace LinqToDB.Linq.Builder
 				// We are trying to simulate what will be with query after optimizer's work
 				//
 				var cloningContext = new CloningContext();
+				cloningContext.CloneElements(context.Builder.GetCteClauses());
 
 				var clonedParentContext = cloningContext.CloneContext(parent);
 				var clonedContext       = cloningContext.CloneContext(context);
@@ -1076,6 +1077,14 @@ namespace LinqToDB.Linq.Builder
 			_cteContexts.TryGetValue(cteExpression, out var cteContext);
 
 			return cteContext;
+		}
+
+		public IEnumerable<CteClause>? GetCteClauses()
+		{
+			if (_cteContexts == null)
+				return null;
+
+			return _cteContexts.Values.Select(ctx => ctx.CteClause);
 		}
 
 		#endregion

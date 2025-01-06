@@ -49,7 +49,7 @@ namespace LinqToDB.DataProvider.Informix
 
 		public override ISqlExpression ConvertCoalesce(SqlCoalesceExpression element)
 		{
-			if (SqlProviderFlags == null || element.SystemType == null)
+			if (element.SystemType == null)
 				return element;
 
 			return ConvertCoalesceToBinaryFunc(element, "Nvl", supportsParameters : false);
@@ -180,7 +180,7 @@ namespace LinqToDB.DataProvider.Informix
 		{
 			var columnExpression = base.WrapColumnExpression(expr);
 
-			if (SqlProviderFlags != null && columnExpression.SystemType == typeof(bool))
+			if (columnExpression.SystemType == typeof(bool))
 			{
 				var unwrapped = QueryHelper.UnwrapNullablity(columnExpression);
 
@@ -197,6 +197,30 @@ namespace LinqToDB.DataProvider.Informix
 		protected override IQueryElement ConvertIsDistinctPredicateAsIntersect(SqlPredicate.IsDistinct predicate)
 		{
 			return InformixSqlOptimizer.WrapParameters(base.ConvertIsDistinctPredicateAsIntersect(predicate), EvaluationContext);
+		}
+
+		protected override IQueryElement VisitSqlSetExpression(SqlSetExpression element)
+		{
+			var newElement = (SqlSetExpression)base.VisitSqlSetExpression(element);
+
+			// IFX expression cannot be predicate
+			var wrapped = newElement.Expression == null ? null : WrapBooleanExpression(newElement.Expression, includeFields : false, withNull: newElement.Column.CanBeNullable(NullabilityContext), forceConvert: true);
+
+			if (!ReferenceEquals(wrapped, newElement.Expression))
+			{
+				if (wrapped != null)
+					wrapped = (ISqlExpression)Optimize(wrapped);
+				if (GetVisitMode(newElement) == VisitMode.Modify)
+				{
+					newElement.Expression = wrapped;
+				}
+				else
+				{
+					newElement = new SqlSetExpression(newElement.Column, wrapped);
+				}
+			}
+
+			return newElement;
 		}
 	}
 }

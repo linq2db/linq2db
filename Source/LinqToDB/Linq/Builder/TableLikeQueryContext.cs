@@ -287,6 +287,7 @@ namespace LinqToDB.Linq.Builder
 				if (TargetInSourceContextRef == null)
 				{
 					var cloningContext = new CloningContext();
+					cloningContext.CloneElements(Builder.GetCteClauses());
 					var targetCloned   = cloningContext.CloneContext(TargetContextRef.BuildContext);
 
 					if (ConnectionLambda == null)
@@ -401,6 +402,7 @@ namespace LinqToDB.Linq.Builder
 				// in case when there is no access to the Source we are trying to generate subquery SQL
 				//
 				var cloningContext = new CloningContext();
+				cloningContext.CloneElements(Builder.GetCteClauses());
 
 				var targetContext       = TargetContext;
 				var clonedTargetContext = NeedsCloning ? cloningContext.CloneContext(targetContext) : targetContext;

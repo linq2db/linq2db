@@ -70,6 +70,7 @@ namespace LinqToDB.Linq.Builder
 		public override IBuildContext Clone(CloningContext context)
 		{
 			var selectQuery = context.CloneElement(SelectQuery);
+
 			return new SubQueryContext(context.CloneContext(SubQuery), selectQuery, false) { IsSelectWrapper = IsSelectWrapper };
 		}
 
