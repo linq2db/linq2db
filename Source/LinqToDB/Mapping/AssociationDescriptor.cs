@@ -9,6 +9,7 @@ using System.Reflection;
 namespace LinqToDB.Mapping
 {
 	using Common;
+	using Common.Internal;
 	using Extensions;
 	using Linq.Builder;
 	using Expressions;
@@ -236,7 +237,7 @@ namespace LinqToDB.Mapping
 					{
 						if (method.GetParameters().Length > 0)
 							throw new LinqToDBException($"Method '{ExpressionPredicate}' for type '{type.Name}' should have no parameters");
-						var value = method.Invoke(null, []);
+						var value = method.InvokeExt(null, []);
 						if (value == null)
 							return null;
 

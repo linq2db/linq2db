@@ -7,6 +7,7 @@ using System.Runtime.CompilerServices;
 namespace LinqToDB.Expressions.Internal
 {
 	using Common;
+	using Common.Internal;
 	using Extensions;
 
 	/// <summary>
@@ -102,7 +103,7 @@ namespace LinqToDB.Expressions.Internal
 					if (instance == null && mc.Method.IsNullableGetValueOrDefault())
 						return null;
 
-					return mc.Method.Invoke(instance, arguments);
+					return mc.Method.InvokeExt(instance, arguments);
 				}
 			}
 
@@ -121,7 +122,7 @@ namespace LinqToDB.Expressions.Internal
 
 			try
 			{
-				var value = Expression.Lambda(expr).CompileExpression().DynamicInvoke();
+				var value = Expression.Lambda(expr).CompileExpression().DynamicInvokeExt();
 				return value;
 			}
 			catch (TargetInvocationException ti )

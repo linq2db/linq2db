@@ -282,7 +282,7 @@ namespace LinqToDB
 				var tableExpr    = builder.EvaluateExpression(builder.Arguments[0]);
 				var tableType    = ((MethodInfo)builder.Member).GetGenericArguments()[0];
 				var helperType   = typeof(TableHelper<>).MakeGenericType(tableType);
-				var tableHelper  = (TableHelper)Activator.CreateInstance(helperType, tableExpr)!;
+				var tableHelper  = ActivatorExt.CreateInstance<TableHelper>(helperType, tableExpr);
 				var qualified    = builder.Arguments.Length <= 1 ? TableQualification.Full : builder.GetValue<TableQualification>(1);
 				var isExpression = builder.Member.Name == "TableExpr";
 

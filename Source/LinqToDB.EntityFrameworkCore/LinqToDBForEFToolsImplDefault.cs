@@ -21,6 +21,7 @@ using Microsoft.Extensions.Logging;
 
 namespace LinqToDB.EntityFrameworkCore
 {
+	using Common.Internal;
 	using Data;
 	using DataProvider;
 	using DataProvider.DB2;
@@ -541,7 +542,7 @@ namespace LinqToDB.EntityFrameworkCore
 					}
 			}
 
-			var value = Expression.Lambda(expr).CompileExpression().DynamicInvoke();
+			var value = Expression.Lambda(expr).CompileExpression().DynamicInvokeExt();
 			return value;
 		}
 

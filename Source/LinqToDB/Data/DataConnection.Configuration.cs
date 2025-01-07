@@ -217,7 +217,7 @@ namespace LinqToDB.Data
 				foreach (var provider in section.DataProviders)
 				{
 					var dataProviderType = Type.GetType(provider.TypeName, true)!;
-					var providerInstance = (IDataProviderFactory)Activator.CreateInstance(dataProviderType)!;
+					var providerInstance = ActivatorExt.CreateInstance<IDataProviderFactory>(dataProviderType);
 
 					if (!string.IsNullOrEmpty(provider.Name))
 						AddDataProvider(provider.Name!, providerInstance.GetDataProvider(provider.Attributes));

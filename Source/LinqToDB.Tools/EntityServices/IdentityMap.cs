@@ -8,6 +8,7 @@ using JetBrains.Annotations;
 
 namespace LinqToDB.Tools.EntityServices
 {
+	using Common.Internal;
 	using Interceptors;
 
 	[PublicAPI]
@@ -26,7 +27,7 @@ namespace LinqToDB.Tools.EntityServices
 		{
 			return _entityMapDic.GetOrAdd(
 				entityType,
-				key => (IEntityMap)Activator.CreateInstance(typeof(EntityMap<>).MakeGenericType(key), _dataContext)!);
+				key => ActivatorExt.CreateInstance<IEntityMap>(typeof(EntityMap<>).MakeGenericType(key), _dataContext));
 		}
 
 		public IEnumerable GetEntities(Type entityType)

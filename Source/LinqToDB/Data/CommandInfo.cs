@@ -803,7 +803,7 @@ namespace LinqToDB.Data
 					}
 
 					var genericMethod = valueMethodInfo.MakeGenericMethod(elementType);
-					var value = genericMethod.Invoke(this, new object[] { rd });
+					var value = genericMethod.InvokeExt(this, new object[] { rd });
 
 					member.SetValue(result, value);
 				}
@@ -945,9 +945,9 @@ namespace LinqToDB.Data
 					}
 
 					var genericMethod = valueMethodInfo.MakeGenericMethod(elementType);
-					var task          = genericMethod.Invoke(this, new object[] { rd, cancellationToken })!;
+					var task          = genericMethod.InvokeExt<Task>(this, new object[] { rd, cancellationToken });
 
-					await ((Task)task).ConfigureAwait(false);
+					await task.ConfigureAwait(false);
 
 					var value = task.GetType().GetProperty(nameof(Task<int>.Result))!.GetValue(task);
 
@@ -1523,7 +1523,7 @@ namespace LinqToDB.Data
 				return null;
 
 			var methodInfo = _convertParameterValueMethodInfo.MakeGenericMethod(value.GetType());
-			var result     = methodInfo.Invoke(null, new[] { value, mappingSchema });
+			var result     = methodInfo.InvokeExt(null, new[] { value, mappingSchema });
 
 			return result;
 		}

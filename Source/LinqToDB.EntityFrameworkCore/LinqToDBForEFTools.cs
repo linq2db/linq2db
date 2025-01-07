@@ -18,6 +18,7 @@ using Microsoft.Extensions.Logging;
 namespace LinqToDB.EntityFrameworkCore
 {
 	using Async;
+	using Common.Internal;
 	using Data;
 	using DataProvider;
 	using Expressions;
@@ -63,8 +64,8 @@ namespace LinqToDB.EntityFrameworkCore
 				var dc = CreateLinqToDBContext(context);
 				var newExpression = queryable.Expression;
 
-				var result = (IQueryable)instantiator.MakeGenericMethod(queryable.ElementType)
-					.Invoke(null, [dc, newExpression])!;
+				var result = instantiator.MakeGenericMethod(queryable.ElementType)
+					.InvokeExt<IQueryable>(null, [dc, newExpression]);
 
 				if (prev != null)
 					result = prev(result);

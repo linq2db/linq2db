@@ -5,13 +5,17 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.Loader;
+
+using LinqToDB.Common.Internal;
 using LinqToDB.Scaffold;
+
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Emit;
-using Mono.TextTemplating;
 using Microsoft.Extensions.DependencyModel;
 using Microsoft.Extensions.DependencyModel.Resolution;
+
+using Mono.TextTemplating;
 
 namespace LinqToDB.CommandLine
 {
@@ -205,7 +209,7 @@ namespace LinqToDB.CommandLine
 
 			try
 			{
-				return (StatusCodes.SUCCESS, (ScaffoldInterceptors)Activator.CreateInstance(interceptorsType, args)!);
+				return (StatusCodes.SUCCESS, ActivatorExt.CreateInstance<ScaffoldInterceptors>(interceptorsType, args));
 			}
 			catch (Exception ex)
 			{
@@ -274,10 +278,10 @@ namespace LinqToDB.CommandLine
 				return (StatusCodes.EXPECTED_ERROR, null);
 			}
 
-			var instance = Activator.CreateInstance(type) as LinqToDBHost;
+			var instance = ActivatorExt.CreateInstance(type) as LinqToDBHost;
 			if (instance == null)
 			{
-				Console.Error.WriteLine("Cannot create template object. Make sure you didn't changed @template directive");
+				Console.Error.WriteLine();
 				return (StatusCodes.EXPECTED_ERROR, null);
 			}
 

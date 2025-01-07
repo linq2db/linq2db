@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 
 namespace LinqToDB.Concurrency
 {
+	using Common.Internal;
 	using Expressions;
 	using Extensions;
 	using Linq;
@@ -33,7 +34,7 @@ namespace LinqToDB.Concurrency
 			}
 
 			if (predicate != null)
-				query = (IQueryable<T>)methodInfo.Invoke(null, new object[] { query, Expression.Lambda(predicate, param) })!;
+				query = methodInfo.InvokeExt<IQueryable<T>>(null, new object[] { query, Expression.Lambda(predicate, param) });
 
 			return query;
 		}
@@ -102,7 +103,7 @@ namespace LinqToDB.Concurrency
 				else
 					valueExpression = Expression.Lambda(cd.MemberAccessor.GetGetterExpression(instance), param);
 
-				updatable = (IUpdatable<T>)updateMethod.Invoke(null, new object[] { updatable, propExpression, valueExpression })!;
+				updatable = updateMethod.InvokeExt<IUpdatable<T>>(null, new object[] { updatable, propExpression, valueExpression });
 			}
 
 			return updatable;
