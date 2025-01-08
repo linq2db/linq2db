@@ -210,6 +210,9 @@ GenerateConstructors            = true;
 // (string) Defines name of default configuration to use with default data context constructor
 DefaultConfiguration            = null;
 
+// Enables generation of data model only without data context class.
+GenerateModelOnly               = false;
+
 // Enables generation of data context comment with database name, data source and database version
 GenerateDatabaseInfo            = true;
 
