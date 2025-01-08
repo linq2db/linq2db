@@ -1073,7 +1073,7 @@ namespace LinqToDB.SqlProvider
 
 		static SelectQuery WrapIfNeeded(SelectQuery selectQuery)
 		{
-			if (selectQuery.Select.HasModifier || !selectQuery.GroupBy.IsEmpty || selectQuery.Select.Columns.Any(c => QueryHelper.IsAggregationOrWindowFunction(c.Expression)))
+			if (selectQuery.Select.HasModifier || !selectQuery.GroupBy.IsEmpty || QueryHelper.IsAggregationQuery(selectQuery))
 			{
 				var newQuery = new SelectQuery();
 				newQuery.From.Tables.Add(new SqlTableSource(selectQuery, null));

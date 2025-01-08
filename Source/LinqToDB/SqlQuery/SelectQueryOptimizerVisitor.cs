@@ -923,7 +923,7 @@ namespace LinqToDB.SqlQuery
 			if (joinSource.Source.ElementType == QueryElementType.SqlQuery)
 			{
 				var sql   = (SelectQuery)joinSource.Source;
-				var isAgg = sql.Select.Columns.Any(static c => QueryHelper.IsAggregationOrWindowFunction(c.Expression));
+				var isAgg = QueryHelper.IsAggregationQuery(sql);
 
 				isApplySupported = isApplySupported && (joinTable.JoinType == JoinType.CrossApply ||
 				                                        joinTable.JoinType == JoinType.OuterApply);
@@ -1894,7 +1894,7 @@ namespace LinqToDB.SqlQuery
 				}
 			}
 
-			if (subQuery.Select.Columns.Any(c => QueryHelper.IsAggregationOrWindowFunction(c.Expression)))
+			if (subQuery.Select.Columns.Any(c => QueryHelper.ContainsAggregationOrWindowFunction(c.Expression)))
 				return false;
 
 			// Actual modification starts from this point
@@ -1925,7 +1925,7 @@ namespace LinqToDB.SqlQuery
 				NotifyReplaced(column.Expression, column);
 			}
 
-			if (subQuery.OrderBy.Items.Count > 0 && !selectQuery.Select.Columns.All(static c => QueryHelper.IsAggregationOrWindowFunction(c.Expression)))
+			if (subQuery.OrderBy.Items.Count > 0 && !QueryHelper.IsAggregationQuery(selectQuery))
 			{
 				ApplySubsequentOrder(selectQuery, subQuery);
 			}
