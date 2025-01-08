@@ -30,6 +30,7 @@ namespace LinqToDB.Tools.ModelGeneration
 		public string? BaseEntityClass                     { get; set; }
 		public string  OneToManyAssociationType            { get; set; } = "IEnumerable<{0}>";
 
+		public bool    GenerateModelOnly                   { get; set; }
 		public bool    GenerateDatabaseInfo                { get; set; } = true;
 		public bool    GenerateDatabaseName                { get; set; }
 		public bool    GenerateDatabaseNameFromTable       { get; set; }
@@ -819,7 +820,10 @@ namespace LinqToDB.Tools.ModelGeneration
 		{
 			if (DataContextObject == null)
 			{
-				DataContextObject = new TClass { Name = DataContextName ?? "", BaseClass = BaseDataContextClass, };
+				DataContextObject = new TClass { Name = DataContextName ?? "" };
+
+				if (!GenerateModelOnly)
+					DataContextObject.BaseClass = BaseDataContextClass;
 
 				Model.Types.Add(DataContextObject);
 			}

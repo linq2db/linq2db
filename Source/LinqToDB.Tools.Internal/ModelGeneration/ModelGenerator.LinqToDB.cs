@@ -275,7 +275,7 @@ namespace LinqToDB.Tools.ModelGeneration
 				foreach (var schema in schemas.Values)
 				{
 					schemaMembers.Members.Add(new TProperty { EnforceNotNullable = EnableNullableReferenceTypes, TypeBuilder = () => schema.TypeName + "." + SchemaDataContextTypeName, Name = schema.PropertyName });
-					body.Add(() => [$"{schema.PropertyName}{LenDiff(maxLen1, schema.PropertyName)} = new {schema.TypeName}.{LenDiff(maxLen2, schema.TypeName)}{SchemaDataContextTypeName}(this);"]);
+					body.Add(() => [$"{schema.PropertyName}{LenDiff(maxLen1, schema.PropertyName)} = new {schema.TypeName}.{LenDiff(maxLen2, schema.TypeName)}{SchemaDataContextTypeName}({(GenerateModelOnly ? "_dataContext" : "this")});"]);
 				}
 
 				schemaGroup.Members.Add(schemaMembers);
@@ -284,7 +284,25 @@ namespace LinqToDB.Tools.ModelGeneration
 				DataContextObject?.Members.Add(schemaGroup);
 			}
 
-			if (GenerateConstructors)
+			if (GenerateModelOnly)
+			{
+				var ctorGroup = new TMemberGroup { Region = ".ctor" };
+
+				var m = new TMethod { Name = DataContextObject!.Name! };
+
+				m.ParameterBuilders.Add(() => "IDataContext dataContext");
+
+				m.BodyBuilders.Add(() =>
+					[
+						"_dataContext = dataContext;",
+					]);
+
+				ctorGroup.Members.Add(m);
+				ctorGroup.Members.Add(new TField  { TypeBuilder = () => "IDataContext", Name = "_dataContext", AccessModifier = AccessModifier.Private, IsReadonly = true });
+
+				DataContextObject?.Members.Add(ctorGroup);
+			}
+			else if (GenerateConstructors)
 			{
 				var ctorGroup = new TMemberGroup { Region = ".ctor" };
 
@@ -370,7 +388,7 @@ namespace LinqToDB.Tools.ModelGeneration
 					{
 						TypeBuilder     = () => $"ITable<{t.TypeName}>",
 						Name            = t.DataContextPropertyName,
-						GetBodyBuilders = { () => [ string.Format(CultureInfo.InvariantCulture, (schema == null ? "this" : "_dataContext") + ".GetTable<{0}>()", t.TypeName) ] },
+						GetBodyBuilders = { () => [ string.Format(CultureInfo.InvariantCulture, (schema != null || GenerateModelOnly ? "_dataContext" : "this") + ".GetTable<{0}>()", t.TypeName) ] },
 						IsAuto          = false,
 						HasGetter       = true,
 						HasSetter       = false
@@ -853,7 +871,7 @@ namespace LinqToDB.Tools.ModelGeneration
 				if (schema.Aliases.Members.Count > 0)
 					schema.Type.Members.Add(defAliases);
 
-			if (Procedures.Count > 0)
+			if (Procedures.Count > 0 && !GenerateModelOnly)
 			{
 				Model.Usings.Add("System.Collections.Generic");
 				Model.Usings.Add("System.Data");
@@ -883,7 +901,7 @@ namespace LinqToDB.Tools.ModelGeneration
 					Action<IMemberGroup> addFuncs = funcs.Members.Add;
 					Action<IMemberGroup> addTabfs = tabfs.Members.Add;
 
-					var thisDataContext = "this";
+					var thisDataContext = GenerateModelOnly ? "_dataContext" : "this";
 
 					var schema = p.Schema != null && schemas.TryGetValue(p.Schema, out var s) ? s : null;
 
