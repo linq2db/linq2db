@@ -838,15 +838,7 @@ namespace LinqToDB
 
 				if (BuilderType != null)
 				{
-					var callBuilder = _builders.GetOrAdd(BuilderType, static t =>
-						{
-							if (Activator.CreateInstance(t)! is IExtensionCallBuilder res)
-								return res;
-
-							throw new ArgumentException(
-								$"Type '{t}' does not implement {nameof(IExtensionCallBuilder)} interface.");
-						}
-					);
+					var callBuilder = _builders.GetOrAdd(BuilderType, ActivatorExt.CreateInstance<IExtensionCallBuilder>);
 
 					var builder = new ExtensionBuilder<TContext>(context, evaluator, Configuration, BuilderValue, dataContext,
 						query, extension, converter, member, arguments, IsNullable, _canBeNull);

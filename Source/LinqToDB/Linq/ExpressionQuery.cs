@@ -11,6 +11,7 @@ using System.Threading.Tasks;
 namespace LinqToDB.Linq
 {
 	using Async;
+	using Common.Internal;
 	using Data;
 	using Extensions;
 	using Tools;
@@ -307,16 +308,9 @@ namespace LinqToDB.Linq
 
 			var elementType = expression.Type.GetItemType() ?? expression.Type;
 
-			try
-			{
-				return (IQueryable)Activator.CreateInstance(
-					typeof(ExpressionQueryImpl<>).MakeGenericType(elementType),
-					DataContext, expression)!;
-			}
-			catch (TargetInvocationException ex)
-			{
-				throw ex.InnerException ?? ex;
-			}
+			return ActivatorExt.CreateInstance<IQueryable>(
+				typeof(ExpressionQueryImpl<>).MakeGenericType(elementType),
+				DataContext, expression);
 		}
 
 		TResult IQueryProvider.Execute<TResult>(Expression expression)

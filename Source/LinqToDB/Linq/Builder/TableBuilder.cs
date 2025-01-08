@@ -5,6 +5,7 @@ using System.Linq.Expressions;
 namespace LinqToDB.Linq.Builder
 {
 	using Extensions;
+	using Common.Internal;
 	using Interceptors;
 	using LinqToDB.Expressions;
 	using Mapping;
@@ -143,7 +144,7 @@ namespace LinqToDB.Linq.Builder
 					if (filterFunc != null)
 					{
 						var query    = ExpressionQueryImpl.CreateQuery(entityType, dc, sequenceExpr);
-						var filtered = (IQueryable)filterFunc.DynamicInvoke(query, dc)!;
+						var filtered = filterFunc.DynamicInvokeExt<IQueryable>(query, dc);
 
 						sequenceExpr = filtered.Expression;
 					}

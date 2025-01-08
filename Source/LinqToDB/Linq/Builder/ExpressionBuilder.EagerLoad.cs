@@ -280,9 +280,9 @@ namespace LinqToDB.Linq.Builder
 
 				var parameters = new object[] { detailSequence, queryParameter, preambles };
 
-				resultExpression = (Expression)_buildPreambleQueryDetachedMethodInfo
+				resultExpression = _buildPreambleQueryDetachedMethodInfo
 					.MakeGenericMethod(detailType)
-					.Invoke(this, parameters)!;
+					.InvokeExt<Expression>(this, parameters);
 			}
 			else
 			{
@@ -326,8 +326,9 @@ namespace LinqToDB.Linq.Builder
 
 				var detailSelectorBody = correctedSequence;
 
-				var detailSelector = (LambdaExpression)_buildSelectManyDetailSelectorInfo
-					.MakeGenericMethod(mainType, detailType).Invoke(null, new object[] { detailSelectorBody, mainParameter })!;
+				var detailSelector = _buildSelectManyDetailSelectorInfo
+					.MakeGenericMethod(mainType, detailType)
+					.InvokeExt<LambdaExpression>(null, new object[] { detailSelectorBody, mainParameter });
 
 				var selectManyCall =
 					Expression.Call(
@@ -344,9 +345,9 @@ namespace LinqToDB.Linq.Builder
 
 				var parameters = new object?[] { detailSequence, mainKeyExpression, queryParameter, preambles, orderByToApply, detailKeys };
 
-				resultExpression = (Expression)_buildPreambleQueryAttachedMethodInfo
+				resultExpression = _buildPreambleQueryAttachedMethodInfo
 					.MakeGenericMethod(mainKeyExpression.Type, detailType)
-					.Invoke(this, parameters)!;
+					.InvokeExt<Expression>(this, parameters);
 
 				_buildVisitor = saveVisitor;
 			}

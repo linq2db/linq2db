@@ -843,7 +843,7 @@ namespace LinqToDB.Extensions
 			return RuntimeHelpers.GetUninitializedObject(type);
 #else
 			var dtype  = typeof(GetDefaultValueHelper<>).MakeGenericType(type);
-			var helper = (IGetDefaultValueHelper)Activator.CreateInstance(dtype)!;
+			var helper = ActivatorExt.CreateInstance<IGetDefaultValueHelper>(dtype);
 
 			return helper.GetDefaultValue();
 #endif

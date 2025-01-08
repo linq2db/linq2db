@@ -1947,17 +1947,7 @@ namespace LinqToDB.SqlProvider
 
 		protected static ISqlExtensionBuilder GetExtensionBuilder(Type builderType)
 		{
-			return _extensionBuilders.GetOrAdd(
-				builderType,
-				type =>
-				{
-					var inst = Activator.CreateInstance(type);
-
-					if (inst is not ISqlExtensionBuilder builder)
-						throw new LinqToDBException($"Type '{builderType.FullName}' must implement the '{typeof(ISqlExtensionBuilder).FullName}' interface.");
-
-					return builder;
-				});
+			return _extensionBuilders.GetOrAdd(builderType, ActivatorExt.CreateInstance<ISqlExtensionBuilder>);
 		}
 
 		protected void BuildTableExtensions(

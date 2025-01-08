@@ -8,6 +8,7 @@ using System.Linq.Expressions;
 namespace LinqToDB.Tools.EntityServices
 {
 	using Common;
+	using Common.Internal;
 	using LinqToDB.Expressions;
 	using Mapper;
 	using Mapping;
@@ -152,7 +153,7 @@ namespace LinqToDB.Tools.EntityServices
 
 			var keyComparer = _keyComparers.GetOrAdd(
 				key.GetType(),
-				type => (IKeyComparer)Activator.CreateInstance(typeof(KeyComparer<>).MakeGenericType(typeof(T), type))!);
+				type => ActivatorExt.CreateInstance<IKeyComparer>(typeof(KeyComparer<>).MakeGenericType(typeof(T), type)));
 
 			var entity = keyComparer.MapKey(context.MappingSchema, key);
 
