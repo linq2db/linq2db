@@ -19,7 +19,7 @@ namespace LinqToDB.SqlProvider
 		private Dictionary<(DbDataType, object?), SqlParameter>? _dynamicParameters;
 
 		public DataOptions                   DataOptions      { get; }
-		public SqlProviderFlags?             SqlProviderFlags { get; }
+		public SqlProviderFlags              SqlProviderFlags { get; }
 		public MappingSchema                 MappingSchema    { get; }
 		public SqlExpressionConvertVisitor   ConvertVisitor   { get; }
 		public SqlExpressionOptimizerVisitor OptimizerVisitor { get; }
@@ -39,7 +39,7 @@ namespace LinqToDB.SqlProvider
 		public OptimizationContext(
 			EvaluationContext                evaluationContext,
 			DataOptions                      dataOptions,
-			SqlProviderFlags?                sqlProviderFlags,
+			SqlProviderFlags                 sqlProviderFlags,
 			MappingSchema                    mappingSchema,
 			SqlExpressionOptimizerVisitor    optimizerVisitor,
 			SqlExpressionConvertVisitor      convertVisitor,

@@ -40,8 +40,10 @@ namespace LinqToDB.Linq.Builder
 
 		#region Pools
 
-		public static readonly ObjectPool<SelectQuery> QueryPool = new(() => new SelectQuery(), sq => sq.Cleanup(), 100);
-		public static readonly ObjectPool<ParentInfo> ParentInfoPool = new(() => new ParentInfo(), pi => pi.Cleanup(), 100);
+		public static readonly ObjectPool<SelectQuery>               QueryPool               = new(() => new SelectQuery(), sq => sq.Cleanup(), 100);
+		public static readonly ObjectPool<ParentInfo>                ParentInfoPool           = new(() => new ParentInfo(), pi => pi.Cleanup(), 100);
+
+		static readonly ObjectPool<PlaceholderCollectVisitor> _placeholderCollectorPool = new(() => new PlaceholderCollectVisitor(), sq => sq.Cleanup(), 100);
 
 		#endregion
 

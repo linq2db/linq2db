@@ -232,7 +232,8 @@ namespace LinqToDB.Linq.Builder
 			List<Preamble>         preambles,
 			Expression[]           previousKeys)
 		{
-			var cloningContext       = new CloningContext();
+			var cloningContext = new CloningContext();
+			cloningContext.CloneElements(buildContext.Builder.GetCteClauses());
 
 			var itemType = eagerLoad.Type.GetItemType();
 
@@ -470,7 +471,7 @@ namespace LinqToDB.Linq.Builder
 					eagerLoadingCache ??= new Dictionary<Expression, Expression>(ExpressionEqualityComparer.Instance);
 					if (!eagerLoadingCache.TryGetValue(eagerLoad.SequenceExpression, out var preambleExpression))
 					{
-						preamblesLocal     ??= new List<Preamble>();
+						preamblesLocal ??= [];
 
 						preambleExpression = ProcessEagerLoadingExpression(buildContext, eagerLoad, queryParameter, preamblesLocal, previousKeys);
 						eagerLoadingCache.Add(eagerLoad.SequenceExpression, preambleExpression);

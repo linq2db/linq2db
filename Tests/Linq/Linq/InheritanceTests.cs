@@ -1158,7 +1158,7 @@ namespace Tests.Linq
 
 			var res = db.GetTable<Issue4460_4_Base>()
 				.OrderBy(r => r.Id)
-				.Where(e => e is Issue4460_4_BaseChild ? additionalFlag || e.Id != default : e.Id != default).ToArray();
+				.Where(e => e is Issue4460_4_BaseChild ? additionalFlag || e.Id != default : e.Id == default).ToArray();
 
 			Assert.That(res, Has.Length.EqualTo(2));
 

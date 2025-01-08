@@ -93,6 +93,9 @@ namespace LinqToDB.SqlQuery
 					if (!_orderByOptimizer.IsOptimized)
 						break;
 
+					if (_orderByOptimizer.NeedsNestingUpdate) 
+						CorrectColumnsNesting();
+
 				} while (true);
 
 				if (removeWeakJoins)
@@ -1359,7 +1362,7 @@ namespace LinqToDB.SqlQuery
 
 			ApplySubQueryExtensions(parentQuery, subQuery);
 
-			if (subQuery.OrderBy.Items.Count > 0 && !parentQuery.Select.Columns.Any(static c => QueryHelper.IsAggregationOrWindowFunction(c.Expression)))
+			if (subQuery.OrderBy.Items.Count > 0)
 			{
 				ApplySubsequentOrder(parentQuery, subQuery);
 			}
@@ -1481,7 +1484,7 @@ namespace LinqToDB.SqlQuery
 
 				if (containsWindowFunction)
 				{
-					if (subQuery.Select.HasModifier || subQuery.HasSetOperators || !subQuery.Where.IsEmpty || !subQuery.GroupBy.IsEmpty)
+					if (subQuery.Select.HasModifier || subQuery.HasSetOperators || (!parentQuery.Where.IsEmpty && !subQuery.Where.IsEmpty) || !subQuery.GroupBy.IsEmpty)
 					{
 						// not allowed to break window
 						return false;

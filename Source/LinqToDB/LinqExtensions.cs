@@ -661,7 +661,12 @@ namespace LinqToDB
 			if (dataContext == null) throw new ArgumentNullException(nameof(dataContext));
 			if (selector == null) throw new ArgumentNullException(nameof(selector));
 
-			var q = new ExpressionQueryImpl<T>(dataContext, selector);
+			var expr = Expression.Call(
+				null,
+				Methods.LinqToDB.Select.MakeGenericMethod(typeof(T)),
+				SqlQueryRootExpression.Create(dataContext), Expression.Quote(selector));
+
+			var q = new ExpressionQueryImpl<T>(dataContext, expr);
 
 			foreach (var item in q)
 				return item;
@@ -687,7 +692,12 @@ namespace LinqToDB
 			if (dataContext == null) throw new ArgumentNullException(nameof(dataContext));
 			if (selector == null) throw new ArgumentNullException(nameof(selector));
 
-			var q = new ExpressionQueryImpl<T>(dataContext, selector);
+			var expr = Expression.Call(
+				null,
+				Methods.LinqToDB.Select.MakeGenericMethod(typeof(T)),
+				SqlQueryRootExpression.Create(dataContext), Expression.Quote(selector));
+
+			var q = new ExpressionQueryImpl<T>(dataContext, expr);
 
 			var read = false;
 			var item = default(T)!; // this is fine, as we never return it

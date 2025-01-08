@@ -4473,5 +4473,21 @@ END convert_bool;");
 				}
 			});
 		}
+
+		[ActiveIssue(Details = "https://github.com/linq2db/linq2db/issues/1645")]
+		[Test]
+		public void TestInParameter([IncludeDataSources(TestProvName.AllOracle)] string context)
+		{
+			using var db = GetDataConnection(context);
+
+			int[] ids = [1, 2, 3];
+
+			var res = db.Person.Where(p => IsIn(p.ID, ids)).ToList();
+
+			Assert.That(res, Has.Count.EqualTo(3));
+		}
+
+		[Sql.Extension("{field} IN {values}", ServerSideOnly = true, IsPredicate = true)]
+		static bool IsIn<T>([ExprParameter] T field, [ExprParameter] T[] values) => throw new ServerSideOnlyException(nameof(IsIn));
 	}
 }

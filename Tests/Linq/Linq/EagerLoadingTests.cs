@@ -3272,5 +3272,217 @@ FROM
 			public bool IsActive { get; set; }
 		}
 		#endregion
+
+		#region Issue : CTE cloning
+
+		class CteTable
+		{
+			public int Id { get; set; }
+			public int Value1 { get; set; }
+			public int Value2 { get; set; }
+			public int Value3 { get; set; }
+			public int Value4 { get; set; }
+			public int Value5 { get; set; }
+		}
+
+		class CteChildTable
+		{
+			public int Id { get; set; }
+			public int Value { get; set; }
+
+			[Association(ThisKey = nameof(Id), OtherKey = nameof(CteTable.Value3))]
+			public CteTable[]? MainRecords { get; set; }
+		}
+
+		sealed record CteRecord(int Id, int Value1, int Value2, int Value4, int Value5);
+
+		[Test]
+		public void CteCloning_Original([CteTests.CteContextSource(TestProvName.AllSapHana)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable<CteTable>();
+			using var tc = db.CreateLocalTable<CteChildTable>();
+
+			var cte = db.GetCte<CteTable>(cte =>
+			{
+				return (
+				from r in tb
+				select new CteTable() { Id = r.Id, Value1 = r.Value1, Value2 = r.Value2, Value3 = r.Value3, Value4 = r.Value4, Value5 = r.Value5 }
+				).Concat(
+					from c in cte
+					join r in tb on c.Value2 equals r.Value3
+					select new CteTable() { Id = r.Id, Value1 = r.Value1, Value2 = r.Value2, Value3 = r.Value3, Value4 = r.Value4, Value5 = r.Value5 }
+					);
+			});
+
+			var query = (from r in cte
+						 join c in tc on r.Value4 equals c.Id into ds
+						 from d in ds.DefaultIfEmpty()
+						 select new
+						 {
+							 r.Id,
+							 r.Value1,
+							 r.Value2,
+							 r.Value3,
+							 r.Value4,
+							 r.Value5,
+							 Children = d.MainRecords!.ToArray()
+						 }
+						);
+
+			query.ToArray();
+		}
+
+		[Test]
+		public void CteCloning_Simple([CteTests.CteContextSource] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable<CteTable>();
+			using var tc = db.CreateLocalTable<CteChildTable>();
+
+			var cte = (
+				from r in tb
+				select new CteTable() { Id = r.Id, Value1 = r.Value1, Value2 = r.Value2, Value3 = r.Value3, Value4 = r.Value4, Value5 = r.Value5 }
+				).AsCte();
+
+			var query = (from r in cte
+						 join c in tc on r.Value4 equals c.Id into ds
+						 from d in ds.DefaultIfEmpty()
+						 select new
+						 {
+							 r.Id,
+							 r.Value1,
+							 r.Value2,
+							 r.Value3,
+							 r.Value4,
+							 r.Value5,
+							 Children = d.MainRecords!.ToArray()
+						 }
+						);
+
+			query.ToArray();
+		}
+
+		[Test]
+		public void CteCloning_SimpleChain([CteTests.CteContextSource] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable<CteTable>();
+			using var tc = db.CreateLocalTable<CteChildTable>();
+
+			var cte1 = (
+				from r in tb
+				select new CteTable() { Id = r.Id, Value1 = r.Value1, Value2 = r.Value2, Value3 = r.Value3, Value4 = r.Value4, Value5 = r.Value5 }
+				).AsCte();
+
+			var cte2 = (
+				from r in cte1
+				select new CteTable() { Id = r.Id, Value1 = r.Value2, Value2 = r.Value2, Value3 = r.Value5, Value4 = r.Value4, Value5 = r.Value3 }
+				).AsCte();
+
+			var cte3 = (
+				from r in cte2
+				select new CteTable() { Id = r.Value1, Value1 = r.Value3, Value2 = r.Value5, Value3 = r.Value2, Value4 = r.Id, Value5 = r.Value4 }
+				).AsCte();
+
+			var query = (from r in cte3
+						 join c in tc on r.Value4 equals c.Id into ds
+						 from d in ds.DefaultIfEmpty()
+						 select new
+						 {
+							 r.Id,
+							 r.Value1,
+							 r.Value2,
+							 r.Value3,
+							 r.Value4,
+							 r.Value5,
+							 Children = d.MainRecords!.ToArray()
+						 }
+						);
+
+			query.ToArray();
+		}
+
+		[Test]
+		public void CteCloning_RecursiveChain([CteTests.CteContextSource(TestProvName.AllSapHana, TestProvName.AllOracle)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable<CteTable>();
+			using var tc = db.CreateLocalTable<CteChildTable>();
+
+			var cte1 = db.GetCte<CteTable>(cte =>
+			{
+				return (
+				from r in tb
+				select new CteTable() { Id = r.Id, Value1 = r.Value1, Value2 = r.Value2, Value3 = r.Value3, Value4 = r.Value4, Value5 = r.Value5 }
+				).Concat(
+					from c in cte
+					join r in tb on c.Value2 equals r.Value3
+					select new CteTable() { Id = r.Id, Value1 = r.Value1, Value2 = r.Value1, Value3 = r.Value3, Value4 = r.Value1, Value5 = r.Value5 }
+					);
+			});
+
+			var cte2 = db.GetCte<CteTable>(cte =>
+			{
+				return (
+				from r in tb
+				select new CteTable() { Id = r.Id, Value1 = r.Value1, Value2 = r.Value2, Value3 = r.Value3, Value4 = r.Value4, Value5 = r.Id }
+				)
+				.Concat(
+					from c in cte1
+					join r in tb on c.Value2 equals r.Value3
+					select new CteTable() { Id = r.Id, Value1 = r.Value1, Value2 = r.Value2, Value3 = r.Value2, Value4 = r.Id, Value5 = r.Value5 }
+					)
+				.Concat(
+					from c in cte
+					join r in tb on c.Value2 equals r.Value3
+					select new CteTable() { Id = r.Id, Value1 = r.Value1, Value2 = r.Value2, Value3 = r.Id, Value4 = r.Value2, Value5 = r.Value5 }
+					)
+				;
+			});
+
+			var cte3 = db.GetCte<CteTable>(cte =>
+			{
+				return (
+				from r in tb
+				select new CteTable() { Id = r.Value4, Value1 = r.Value1, Value2 = r.Value2, Value3 = r.Value3, Value4 = r.Value4, Value5 = r.Value5 }
+				)
+				.Concat(
+					from c in cte2
+					join r in tb on c.Value2 equals r.Value3
+					select new CteTable() { Id = r.Id, Value1 = r.Value1, Value2 = r.Value2, Value3 = r.Value3, Value4 = r.Id, Value5 = r.Value4 }
+					)
+				.Concat(
+					from c in cte1
+					join r in tb on c.Value2 equals r.Value3
+					select new CteTable() { Id = r.Id, Value1 = r.Value4, Value2 = r.Id, Value3 = r.Value3, Value4 = r.Value4, Value5 = r.Value5 }
+					)
+				.Concat(
+					from c in cte
+					join r in tb on c.Value2 equals r.Value3
+					select new CteTable() { Id = r.Id, Value1 = r.Value1, Value2 = r.Value2, Value3 = r.Id, Value4 = r.Value4, Value5 = r.Value5 }
+					);
+			});
+
+			var query = (from r in cte3
+						 join c in tc on r.Value4 equals c.Id into ds
+						 from d in ds.DefaultIfEmpty()
+						 select new
+						 {
+							 r.Id,
+							 r.Value1,
+							 r.Value2,
+							 r.Value3,
+							 r.Value4,
+							 r.Value5,
+							 Children = d.MainRecords!.ToArray()
+						 }
+						);
+
+			query.ToArray();
+		}
+
+		#endregion
+
 	}
 }

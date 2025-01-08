@@ -120,7 +120,7 @@ namespace LinqToDB.DataProvider.Access
 
 		public override ISqlExpression ConvertCoalesce(SqlCoalesceExpression element)
 		{
-			if (SqlProviderFlags == null || element.SystemType == null)
+			if (element.SystemType == null)
 				return element;
 
 			if (element.Expressions.Length == 2)

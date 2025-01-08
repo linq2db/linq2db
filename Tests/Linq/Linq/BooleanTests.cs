@@ -688,5 +688,29 @@ namespace Tests.Linq
 				//AreEqual(clientQuery, serverQuery);
 			}
 		}
+
+		[Test]
+		public void TestAsSqlBoolTranslation([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var result = db.Select(() => Coalesce(Sql.AsSql(true), Sql.AsSql(false)));
+
+			Assert.That(result, Is.True);
+		}
+
+		[Test]
+		public void TestNoAsSqlBoolTranslation([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var result = db.Select(() => Coalesce(true, false));
+
+			Assert.That(result, Is.True);
+		}
+
+		[Sql.Expression("IIF({0} IS NULL, {1}, {0})", CanBeNull = false, IgnoreGenericParameters = true, ServerSideOnly = true, Configuration = ProviderName.Access)]
+		[Sql.Function("COALESCE", CanBeNull = false, IgnoreGenericParameters = true, ServerSideOnly = true)]
+		static T Coalesce<T>(T value, T defaultValue) => throw new ServerSideOnlyException(nameof(Coalesce));
 	}
 }

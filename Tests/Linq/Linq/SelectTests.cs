@@ -1490,6 +1490,48 @@ namespace Tests.Linq
 			}
 		}
 
+		[Test]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllAccess, ProviderName.Firebird25, TestProvName.AllMySql57, ProviderName.SqlCe, TestProvName.AllSybase, ErrorMessage = ErrorHelper.Error_RowNumber)]
+		public void SelectWithIndexer([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = db.Person
+				.OrderByDescending(p => p.ID)
+				.Select((p, idx) => new { p.FirstName, p.LastName, Index = idx })
+				.Where(x => x.Index > 0);
+
+			AssertQuery(query);
+		}
+
+		[Test]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllAccess, ProviderName.Firebird25, TestProvName.AllMySql57, ProviderName.SqlCe, TestProvName.AllSybase, ErrorMessage = ErrorHelper.Error_RowNumber)]
+		public void SelectWithIndexerAfterGroupBy([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = db.Person
+				.GroupBy(p => p.ID)
+				.OrderByDescending(g => g.Key)
+				.Select((g, idx) => new { g.Key, Index = idx })
+				.Where(x => x.Index > 0);
+
+			AssertQuery(query);
+		}
+
+		[Test]
+		[ThrowsForProvider(typeof(LinqToDBException), ErrorMessage = ErrorHelper.Error_OrderByRequiredForIndexing)]
+		public void SelectWithIndexerNoOrder([DataSources(TestProvName.AllAccess, ProviderName.Firebird25, TestProvName.AllMySql57, ProviderName.SqlCe, TestProvName.AllSybase)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = db.Person
+				.Select((p, idx) => new { p.FirstName, Index = idx })
+				.Where(x => x.Index > 1);
+
+			AssertQuery(query);
+		}
+
 		public class Table1788
 		{
 			[PrimaryKey]

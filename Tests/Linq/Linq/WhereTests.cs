@@ -2389,7 +2389,10 @@ namespace Tests.Linq
 				Assert.That(db.LastQuery, Does.Contain("NOT "));
 			}
 			else
+			{
+				Assert.That(db.LastQuery, Does.Not.Contain("NOT "));
 				Assert.That(db.LastQuery, Does.Contain(" = "));
+			}
 		}
 
 		[Table]

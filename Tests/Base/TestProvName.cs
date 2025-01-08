@@ -238,5 +238,11 @@ namespace Tests
 		public const string AllSapHana    = $"{ProviderName.SapHanaNative},{ProviderName.SapHanaOdbc}";
 		public const string AllInformix   = $"{ProviderName.Informix},{ProviderName.InformixDB2}";
 		public const string AllClickHouse = $"{ProviderName.ClickHouseClient},{ProviderName.ClickHouseOctonica},{ProviderName.ClickHouseMySql}";
+
+		#region By Feature
+
+		public const string WithApplyJoin = $"{AllFirebird4Plus},{AllMySql80},{AllOracle12Plus},{AllPostgreSQL93Plus},{AllSapHana},{ProviderName.SqlCe},{AllSqlServer}";
+
+		#endregion By Feature
 	}
 }
