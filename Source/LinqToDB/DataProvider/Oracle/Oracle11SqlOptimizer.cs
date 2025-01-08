@@ -92,8 +92,12 @@ namespace LinqToDB.DataProvider.Oracle
 				statement,
 				static (_, query, _) =>
 				{
+					if (QueryHelper.IsAggregationQuery(query))
+						return 1;
+
 					if (query.Select.TakeValue == null && query.Select.SkipValue == null)
 						return 0;
+
 					if (query.Select.SkipValue != null)
 						return 2;
 
