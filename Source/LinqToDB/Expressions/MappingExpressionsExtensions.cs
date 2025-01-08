@@ -5,6 +5,7 @@ using System.Reflection;
 namespace LinqToDB.Extensions
 {
 	using Common;
+	using Common.Internal;
 
 	static class MappingExpressionsExtensions
 	{
@@ -33,10 +34,7 @@ namespace LinqToDB.Extensions
 						if (method.GetParameters().Length > 0)
 							throw new LinqToDBException($"Method '{memberName}' for type '{type.Name}' should have no parameters");
 
-						if (method.Invoke(null, []) is TExpression expression)
-							return expression;
-
-						throw new LinqToDBException($"Method '{memberName}' for type '{type.Name}' should return expression");
+						return method.InvokeExt<TExpression>(null, []);
 					}
 				default:
 					throw new LinqToDBException(

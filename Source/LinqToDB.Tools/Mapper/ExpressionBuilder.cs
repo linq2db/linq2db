@@ -13,6 +13,7 @@ using static System.Linq.Expressions.Expression;
 
 namespace LinqToDB.Tools.Mapper
 {
+	using Common.Internal;
 	using Expressions;
 	using Extensions;
 	using Reflection;
@@ -702,9 +703,9 @@ namespace LinqToDB.Tools.Mapper
 			var getBuilderInfo = MemberHelper.MethodOf(() => GetBuilder<int,int>(null!)).               GetGenericMethodDefinition();
 			var selectInfo     = MemberHelper.MethodOf(() => Enumerable.Select<int,int>(null!, _ => _)).GetGenericMethodDefinition();
 			var itemBuilder    =
-				(IMapperBuilder)getBuilderInfo
+				getBuilderInfo
 					.MakeGenericMethod(fromItemType, toItemType)
-					.Invoke(null, new object[] { builder._mapperBuilder })!;
+					.InvokeExt<IMapperBuilder>(null, new object[] { builder._mapperBuilder });
 
 			var expr = getValue;
 

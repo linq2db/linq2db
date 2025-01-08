@@ -19,6 +19,7 @@ using LinqToDB.Expressions;
 namespace LinqToDB.EntityFrameworkCore.Internal
 {
 	using Async;
+	using Common.Internal;
 	using Linq;
 
 	/// <summary>
@@ -114,7 +115,7 @@ namespace LinqToDB.EntityFrameworkCore.Internal
 		{
 			var item = typeof(TResult).GetGenericArguments()[0];
 			var method = _executeAsyncMethodInfo.MakeGenericMethod(item);
-			return (TResult)method.Invoke(QueryProvider, [expression, cancellationToken])!;
+			return method.InvokeExt<TResult>(QueryProvider, [expression, cancellationToken]);
 		}
 
 		/// <summary>

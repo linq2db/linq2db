@@ -6,6 +6,7 @@ using System.Reflection;
 
 namespace LinqToDB.Linq.Builder
 {
+	using Common.Internal;
 	using Extensions;
 	using Interceptors;
 	using LinqToDB.Expressions;
@@ -283,9 +284,9 @@ namespace LinqToDB.Linq.Builder
 							if (argumentType.IsSameOrParentOf(objectType))
 							{
 
-								var query = ExpressionQueryImpl.CreateQuery(objectType, builder.DataContext, body);
-								var filtered = (IQueryable)filterDelegate.DynamicInvoke(query)!;
-								body = filtered.Expression;
+								var query    = ExpressionQueryImpl.CreateQuery(objectType, builder.DataContext, body);
+								var filtered = filterDelegate.DynamicInvokeExt<IQueryable>(query);
+								body         = filtered.Expression;
 							}
 						}
 					}

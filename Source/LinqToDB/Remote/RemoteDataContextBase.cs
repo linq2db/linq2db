@@ -95,7 +95,7 @@ namespace LinqToDB.Remote
 					static entry =>
 					{
 						entry.SlidingExpiration = Common.Configuration.Linq.CacheSlidingExpiration;
-						return new RemoteMappingSchema(entry.Key.contextIDPrefix, (MappingSchema)Activator.CreateInstance(entry.Key.mappingSchemaType)!);
+						return new RemoteMappingSchema(entry.Key.contextIDPrefix, ActivatorExt.CreateInstance<MappingSchema>(entry.Key.mappingSchemaType));
 					});
 			}
 
@@ -118,7 +118,7 @@ namespace LinqToDB.Remote
 					static entry =>
 					{
 						entry.SlidingExpiration = Common.Configuration.Linq.CacheSlidingExpiration;
-						return new RemoteMemberTranslator((IMemberTranslator)Activator.CreateInstance(entry.Key)!);
+						return new RemoteMemberTranslator(ActivatorExt.CreateInstance<IMemberTranslator>(entry.Key));
 					});
 			}
 
