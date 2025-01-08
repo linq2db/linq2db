@@ -1301,6 +1301,11 @@ namespace LinqToDB.SqlQuery
 			return result;
 		}
 
+		public static bool IsAggregationOrWindowFunction(IQueryElement expr)
+		{
+			return IsAggregationFunction(expr) || IsWindowFunction(expr);
+		}
+
 		public static bool IsAggregationFunction(IQueryElement expr)
 		{
 			return expr switch

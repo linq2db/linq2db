@@ -923,7 +923,7 @@ namespace LinqToDB.SqlQuery
 			if (joinSource.Source.ElementType == QueryElementType.SqlQuery)
 			{
 				var sql   = (SelectQuery)joinSource.Source;
-				var isAgg = QueryHelper.IsAggregationQuery(sql);
+				var isAgg = sql.Select.Columns.Any(static c => QueryHelper.IsAggregationOrWindowFunction(c.Expression));
 
 				isApplySupported = isApplySupported && (joinTable.JoinType == JoinType.CrossApply ||
 				                                        joinTable.JoinType == JoinType.OuterApply);
@@ -1406,6 +1406,7 @@ namespace LinqToDB.SqlQuery
 			{
 				if (!subQuery.GroupBy.IsEmpty)
 					return false;
+
 				if (parentQuery.Select.Columns.Count == 0)
 					return false;
 
