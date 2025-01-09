@@ -54,9 +54,22 @@ namespace LinqToDB
 
 		public interface IFramePart
 		{
-			IDefinedRangeFrame RowsBetween(Func<IFrameBoundary, IFrameBoundaryDefined>   preceding, Func<IFrameBoundary, IFrameBoundaryDefined> following);
-			IDefinedRangeFrame RangeBetween(Func<IFrameBoundary, IFrameBoundaryDefined>  preceding, Func<IFrameBoundary, IFrameBoundaryDefined> following);
-			IDefinedRangeFrame GroupsBetween(Func<IFrameBoundary, IFrameBoundaryDefined> preceding, Func<IFrameBoundary, IFrameBoundaryDefined> following);
+			IPrecedingPart RowsBetween;
+			IPrecedingPart RangeBetween;
+			IPrecedingPart GroupsBetween;
+		}
+
+		public interface IBoundaryPart<TBoundaryDefined>
+		{
+			TBoundaryDefined Unbounded  { get; }
+			TBoundaryDefined CurrentRow { get; }
+			TBoundaryDefined Value(object? preceding);
+			TBoundaryDefined Value(object? preceding, Sql.NullsPosition nulls);
+		}
+
+		public interface IPrecedingPart: IDefinedWindow
+		{
+			
 		}
 
 		public interface IDefinedRangeFrame : IDefinedWindow
