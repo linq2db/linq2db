@@ -1333,7 +1333,7 @@ namespace LinqToDB.SqlQuery
 				HasReference  = false;
 			}
 
-			[return : NotNullIfNotNull("element")]
+			[return : NotNullIfNotNull(nameof(element))]
 			public override IQueryElement? Visit(IQueryElement? element)
 			{
 				// if we already found aggregation or window function, we can stop
