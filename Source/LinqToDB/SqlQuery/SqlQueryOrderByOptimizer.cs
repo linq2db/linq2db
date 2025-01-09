@@ -48,21 +48,30 @@ namespace LinqToDB.SqlQuery
 		{
 			if (!selectQuery.OrderBy.IsEmpty)
 			{
+				// This is the case when we have 
+				// SELECT [TOP x]
+				//     COUNT(*),
+				//     AVG(Value)
+				// FROM Table
+				// ORDER BY ...
+				if (QueryHelper.IsAggregationQuery(selectQuery))
+				{
+					selectQuery.OrderBy.Items.Clear();
+					_optimized = true;
+					return;
+				}
+
 				if (!selectQuery.IsLimited)
 				{
-					if (disable || 
-					    selectQuery.Select.Columns.Count > 0 && selectQuery.Select.Columns.All(c => QueryHelper.IsAggregationOrWindowFunction(c.Expression))
-					   )
+					if (disable)
 					{
 						selectQuery.OrderBy.Items.Clear();
 						_optimized = true;
+						return;
 					}
 				}
 
-				if (!selectQuery.OrderBy.IsEmpty)
-				{
-					Utils.RemoveDuplicates(selectQuery.OrderBy.Items, item => item.Expression);
-				}
+				selectQuery.OrderBy.Items.RemoveDuplicates(item => item.Expression);
 			}
 		
 		}

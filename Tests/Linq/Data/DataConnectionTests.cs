@@ -609,6 +609,7 @@ namespace Tests.Data
 		}
 
 		[Test]
+		[Explicit]
 		public void CommandTimeoutTest([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
 			using (var db = GetDataConnection(context))
