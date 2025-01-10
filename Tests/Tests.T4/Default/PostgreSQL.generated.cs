@@ -45,6 +45,7 @@ namespace Default.PostgreSQL
 		/// </summary>
 		public ITable<Issue2023>                      Issue2023                 { get { return this.GetTable<Issue2023>(); } }
 		public ITable<LinqDataType>                   LinqDataTypes             { get { return this.GetTable<LinqDataType>(); } }
+		public ITable<MultitenantTable>               MultitenantTables         { get { return this.GetTable<MultitenantTable>(); } }
 		public ITable<Parent>                         Parents                   { get { return this.GetTable<Parent>(); } }
 		public ITable<Patient>                        Patients                  { get { return this.GetTable<Patient>(); } }
 		/// <summary>
@@ -369,6 +370,16 @@ namespace Default.PostgreSQL
 		[Column, Nullable] public string?   StringValue    { get; set; } // character varying(50)
 	}
 
+	[Table(Schema="public", Name="multitenant_table")]
+	public partial class MultitenantTable
+	{
+		[Column("tenantid",    SkipOnUpdate=true), PrimaryKey(1), NotNull] public Guid     Tenantid    { get; set; } // uuid
+		[Column("id",          SkipOnUpdate=true), PrimaryKey(2), NotNull] public Guid     Id          { get; set; } // uuid
+		[Column("name",        SkipOnUpdate=true),    Nullable           ] public string?  Name        { get; set; } // character varying(100)
+		[Column("description", SkipOnUpdate=true),    Nullable           ] public string?  Description { get; set; } // text
+		[Column("createdat",   SkipOnUpdate=true),                NotNull] public DateTime Createdat   { get; set; } // timestamp (6) without time zone
+	}
+
 	[Table(Schema="public", Name="Parent")]
 	public partial class Parent
 	{
@@ -674,10 +685,20 @@ namespace Default.PostgreSQL
 
 		#endregion
 
+		#region Overloads
+
+		[Sql.Function(Name="public.overloads", ServerSideOnly=true)]
+		public static short? Overloads(int? input1, int? input2)
+		{
+			throw new InvalidOperationException();
+		}
+
+		#endregion
+
 		#region Reverse
 
 		[Sql.Function(Name="public.reverse", ServerSideOnly=true)]
-		public static string? Reverse(string? par8)
+		public static string? Reverse(string? par11)
 		{
 			throw new InvalidOperationException();
 		}
@@ -687,7 +708,7 @@ namespace Default.PostgreSQL
 		#region TestAvg
 
 		[Sql.Function(Name="public.test_avg", ServerSideOnly=true, IsAggregate = true, ArgIndices = new[] { 0 })]
-		public static double? TestAvg<TSource>(this IEnumerable<TSource> src, Expression<Func<TSource, double?>> par10)
+		public static double? TestAvg<TSource>(this IEnumerable<TSource> src, Expression<Func<TSource, double?>> par13)
 		{
 			throw new InvalidOperationException();
 		}
@@ -749,6 +770,13 @@ namespace Default.PostgreSQL
 		{
 			return table.FirstOrDefault(t =>
 				t.InheritanceParentId == InheritanceParentId);
+		}
+
+		public static MultitenantTable? Find(this ITable<MultitenantTable> table, Guid Tenantid, Guid Id)
+		{
+			return table.FirstOrDefault(t =>
+				t.Tenantid == Tenantid &&
+				t.Id       == Id);
 		}
 
 		public static Patient? Find(this ITable<Patient> table, int PersonID)

@@ -14,9 +14,9 @@ using LinqToDB;
 using LinqToDB.Configuration;
 using LinqToDB.Mapping;
 
-namespace Default.ClickHouse
+namespace Default.ClickHouse.Client
 {
-	public partial class ClickHouseDB : LinqToDB.Data.DataConnection
+	public partial class ClickHouseClientDB : LinqToDB.Data.DataConnection
 	{
 		#region Tables
 
@@ -39,27 +39,27 @@ namespace Default.ClickHouse
 
 		#region .ctor
 
-		public ClickHouseDB()
+		public ClickHouseClientDB()
 		{
 			InitDataContext();
 			InitMappingSchema();
 		}
 
-		public ClickHouseDB(string configuration)
+		public ClickHouseClientDB(string configuration)
 			: base(configuration)
 		{
 			InitDataContext();
 			InitMappingSchema();
 		}
 
-		public ClickHouseDB(DataOptions options)
+		public ClickHouseClientDB(DataOptions options)
 			: base(options)
 		{
 			InitDataContext();
 			InitMappingSchema();
 		}
 
-		public ClickHouseDB(DataOptions<ClickHouseDB> options)
+		public ClickHouseClientDB(DataOptions<ClickHouseClientDB> options)
 			: base(options.Options)
 		{
 			InitDataContext();

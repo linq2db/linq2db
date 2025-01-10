@@ -1,7 +1,7 @@
 ﻿<#@ template language="C#" debug="True" hostSpecific="True" compilerOptions="/langversion:6"   #>
 <#@ CleanupBehavior processor="T4VSHost" CleanupAfterProcessingtemplate="true"                 #>
 <#@ output extension=".generated.cs"                                                           #>
-<#@ include file="$(LinqToDBT4AccessTemplatesPath)LinqToDB.Access.Tools.ttinclude" once="true" #>
+<#@ include file="$(LinqToDBT4AccessTemplatesPath)LinqToDB.Access.ttinclude"       once="true" #>
 <#@ include file="..\Shared.ttinclude"                                             once="true" #>
 <#
 	NamespaceName     = "Default.Access.OleDb";

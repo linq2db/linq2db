@@ -23,6 +23,8 @@ namespace Default.Sybase
 {
 	public partial class TestDataDB : LinqToDB.Data.DataConnection
 	{
+		#region Tables
+
 		public ITable<AllType>           AllTypes            { get { return this.GetTable<AllType>(); } }
 		public ITable<Child>             Children            { get { return this.GetTable<Child>(); } }
 		public ITable<CollatedTable>     CollatedTables      { get { return this.GetTable<CollatedTable>(); } }
@@ -40,6 +42,10 @@ namespace Default.Sybase
 		public ITable<TestMerge1>        TestMerge1          { get { return this.GetTable<TestMerge1>(); } }
 		public ITable<TestMerge2>        TestMerge2          { get { return this.GetTable<TestMerge2>(); } }
 		public ITable<TestMergeIdentity> TestMergeIdentities { get { return this.GetTable<TestMergeIdentity>(); } }
+
+		#endregion
+
+		#region .ctor
 
 		public TestDataDB()
 		{
@@ -70,6 +76,8 @@ namespace Default.Sybase
 
 		partial void InitDataContext  ();
 		partial void InitMappingSchema();
+
+		#endregion
 	}
 
 	[Table(Schema="dbo", Name="AllTypes")]
@@ -98,8 +106,8 @@ namespace Default.Sybase
 		[Column("char20DataType"),                                                 Nullable] public string?   Char20DataType        { get; set; } // char(20)
 		[Column("varcharDataType"),                                                Nullable] public string?   VarcharDataType       { get; set; } // varchar(20)
 		[Column("textDataType"),                                                   Nullable] public string?   TextDataType          { get; set; } // text
-		[Column("ncharDataType"),                                                  Nullable] public string?   NcharDataType         { get; set; } // nchar(20)
-		[Column("nvarcharDataType"),                                               Nullable] public string?   NvarcharDataType      { get; set; } // nvarchar(20)
+		[Column("ncharDataType"),                                                  Nullable] public string?   NcharDataType         { get; set; } // nchar(60)
+		[Column("nvarcharDataType"),                                               Nullable] public string?   NvarcharDataType      { get; set; } // nvarchar(60)
 		[Column("ntextDataType"),                                                  Nullable] public string?   NtextDataType         { get; set; } // unitext
 		[Column("binaryDataType"),                                                 Nullable] public byte[]?   BinaryDataType        { get; set; } // binary(1)
 		[Column("varbinaryDataType"),                                              Nullable] public byte[]?   VarbinaryDataType     { get; set; } // varbinary(1)
@@ -118,22 +126,22 @@ namespace Default.Sybase
 	public partial class CollatedTable
 	{
 		[Column, NotNull] public int    Id              { get; set; } // int
-		[Column, NotNull] public string CaseSensitive   { get; set; } = null!; // nvarchar(20)
-		[Column, NotNull] public string CaseInsensitive { get; set; } = null!; // nvarchar(20)
+		[Column, NotNull] public string CaseSensitive   { get; set; } = null!; // nvarchar(60)
+		[Column, NotNull] public string CaseInsensitive { get; set; } = null!; // nvarchar(60)
 	}
 
 	[Table(Schema="dbo", Name="Doctor")]
 	public partial class Doctor
 	{
 		[PrimaryKey, NotNull] public int    PersonID { get; set; } // int
-		[Column,     NotNull] public string Taxonomy { get; set; } = null!; // nvarchar(50)
+		[Column,     NotNull] public string Taxonomy { get; set; } = null!; // nvarchar(150)
 
 		#region Associations
 
 		/// <summary>
 		/// FK_Doctor_Person (dbo.Person)
 		/// </summary>
-		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false)]
+		[Association(ThisKey=nameof(PersonID), OtherKey=nameof(Default.Sybase.Person.PersonID), CanBeNull=false)]
 		public Person Person { get; set; } = null!;
 
 		#endregion
@@ -153,7 +161,7 @@ namespace Default.Sybase
 		[PrimaryKey, NotNull    ] public int     InheritanceChildId  { get; set; } // int
 		[Column,     NotNull    ] public int     InheritanceParentId { get; set; } // int
 		[Column,        Nullable] public int?    TypeDiscriminator   { get; set; } // int
-		[Column,        Nullable] public string? Name                { get; set; } // nvarchar(50)
+		[Column,        Nullable] public string? Name                { get; set; } // nvarchar(150)
 	}
 
 	[Table(Schema="dbo", Name="InheritanceParent")]
@@ -161,7 +169,7 @@ namespace Default.Sybase
 	{
 		[PrimaryKey, NotNull    ] public int     InheritanceParentId { get; set; } // int
 		[Column,        Nullable] public int?    TypeDiscriminator   { get; set; } // int
-		[Column,        Nullable] public string? Name                { get; set; } // nvarchar(50)
+		[Column,        Nullable] public string? Name                { get; set; } // nvarchar(150)
 	}
 
 	[Table(Schema="dbo", Name="KeepIdentityTest")]
@@ -184,7 +192,7 @@ namespace Default.Sybase
 		[Column,    Nullable] public short?    SmallIntValue  { get; set; } // smallint
 		[Column,    Nullable] public int?      IntValue       { get; set; } // int
 		[Column,    Nullable] public long?     BigIntValue    { get; set; } // bigint
-		[Column,    Nullable] public string?   StringValue    { get; set; } // nvarchar(50)
+		[Column,    Nullable] public string?   StringValue    { get; set; } // nvarchar(150)
 	}
 
 	[Table(Schema="dbo", Name="Parent")]
@@ -198,14 +206,14 @@ namespace Default.Sybase
 	public partial class Patient
 	{
 		[PrimaryKey, NotNull] public int    PersonID  { get; set; } // int
-		[Column,     NotNull] public string Diagnosis { get; set; } = null!; // nvarchar(256)
+		[Column,     NotNull] public string Diagnosis { get; set; } = null!; // nvarchar(768)
 
 		#region Associations
 
 		/// <summary>
 		/// FK_Patient_Person (dbo.Person)
 		/// </summary>
-		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false)]
+		[Association(ThisKey=nameof(PersonID), OtherKey=nameof(Default.Sybase.Person.PersonID), CanBeNull=false)]
 		public Person Person { get; set; } = null!;
 
 		#endregion
@@ -215,9 +223,9 @@ namespace Default.Sybase
 	public partial class Person
 	{
 		[PrimaryKey, Identity   ] public int     PersonID   { get; set; } // int
-		[Column,     NotNull    ] public string  FirstName  { get; set; } = null!; // nvarchar(50)
-		[Column,     NotNull    ] public string  LastName   { get; set; } = null!; // nvarchar(50)
-		[Column,        Nullable] public string? MiddleName { get; set; } // nvarchar(50)
+		[Column,     NotNull    ] public string  FirstName  { get; set; } = null!; // nvarchar(150)
+		[Column,     NotNull    ] public string  LastName   { get; set; } = null!; // nvarchar(150)
+		[Column,        Nullable] public string? MiddleName { get; set; } // nvarchar(150)
 		[Column,     NotNull    ] public char    Gender     { get; set; } // char(1)
 
 		#region Associations
@@ -225,13 +233,13 @@ namespace Default.Sybase
 		/// <summary>
 		/// FK_Doctor_Person_BackReference (dbo.Doctor)
 		/// </summary>
-		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=true)]
+		[Association(ThisKey=nameof(PersonID), OtherKey=nameof(Default.Sybase.Doctor.PersonID), CanBeNull=true)]
 		public Doctor? Doctor { get; set; }
 
 		/// <summary>
 		/// FK_Patient_Person_BackReference (dbo.Patient)
 		/// </summary>
-		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=true)]
+		[Association(ThisKey=nameof(PersonID), OtherKey=nameof(Default.Sybase.Patient.PersonID), CanBeNull=true)]
 		public Patient? Patient { get; set; }
 
 		#endregion
@@ -279,9 +287,9 @@ namespace Default.Sybase
 		[Column,        Nullable] public int?      Field5          { get; set; } // int
 		[Column,        Nullable] public long?     FieldInt64      { get; set; } // bigint
 		[Column,        Nullable] public string?   FieldString     { get; set; } // varchar(20)
-		[Column,        Nullable] public string?   FieldNString    { get; set; } // nvarchar(20)
+		[Column,        Nullable] public string?   FieldNString    { get; set; } // nvarchar(60)
 		[Column,        Nullable] public char?     FieldChar       { get; set; } // char(1)
-		[Column,        Nullable] public char?     FieldNChar      { get; set; } // nchar(1)
+		[Column,        Nullable] public string?   FieldNChar      { get; set; } // nchar(3)
 		[Column,        Nullable] public float?    FieldFloat      { get; set; } // real
 		[Column,        Nullable] public double?   FieldDouble     { get; set; } // float
 		[Column,        Nullable] public DateTime? FieldDateTime   { get; set; } // datetime
@@ -305,9 +313,9 @@ namespace Default.Sybase
 		[Column,        Nullable] public int?      Field5          { get; set; } // int
 		[Column,        Nullable] public long?     FieldInt64      { get; set; } // bigint
 		[Column,        Nullable] public string?   FieldString     { get; set; } // varchar(20)
-		[Column,        Nullable] public string?   FieldNString    { get; set; } // nvarchar(20)
+		[Column,        Nullable] public string?   FieldNString    { get; set; } // nvarchar(60)
 		[Column,        Nullable] public char?     FieldChar       { get; set; } // char(1)
-		[Column,        Nullable] public char?     FieldNChar      { get; set; } // nchar(1)
+		[Column,        Nullable] public string?   FieldNChar      { get; set; } // nchar(3)
 		[Column,        Nullable] public float?    FieldFloat      { get; set; } // real
 		[Column,        Nullable] public double?   FieldDouble     { get; set; } // float
 		[Column,        Nullable] public DateTime? FieldDateTime   { get; set; } // datetime
@@ -335,10 +343,9 @@ namespace Default.Sybase
 		{
 			var parameters = new []
 			{
-				new DataParameter("RETURN_VALUE", null, LinqToDB.DataType.Int32)
+				new DataParameter("RETURN_VALUE", null, LinqToDB.DataType.Int32, 10)
 				{
-					Direction = ParameterDirection.ReturnValue,
-					Size      = 10
+					Direction = ParameterDirection.ReturnValue
 				}
 			};
 
@@ -357,10 +364,9 @@ namespace Default.Sybase
 		{
 			var parameters = new []
 			{
-				new DataParameter("RETURN_VALUE", null, LinqToDB.DataType.Int32)
+				new DataParameter("RETURN_VALUE", null, LinqToDB.DataType.Int32, 10)
 				{
-					Direction = ParameterDirection.ReturnValue,
-					Size      = 10
+					Direction = ParameterDirection.ReturnValue
 				}
 			};
 
