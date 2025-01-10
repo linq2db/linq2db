@@ -2,7 +2,7 @@
 <#@ CleanupBehavior processor="T4VSHost" CleanupAfterProcessingtemplate="true"                 #>
 <#@ output extension=".generated.cs"                                                           #>
 <#@ include file="..\Shared.ttinclude"                                             once="true" #>
-<#@ include file="$(LinqToDBT4SQLiteTemplatesPath)LinqToDB.SQLite.Tools.ttinclude" once="true" #>
+<#@ include file="$(LinqToDBT4SQLiteTemplatesPath)LinqToDB.SQLite.ttinclude"       once="true" #>
 <#@ include file="$(LinqToDBT4TemplatesPath)Equatable.ttinclude"                   once="true" #>
 <#
 	EnableNullableReferenceTypes  = true;
