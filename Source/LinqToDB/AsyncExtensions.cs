@@ -17,6 +17,7 @@ namespace LinqToDB
 	public static partial class AsyncExtensions
 	{
 		#region Helpers
+
 		private static List<T> ToListToken<T>(this IEnumerable<T> source, CancellationToken token)
 		{
 			var list = new List<T>();
@@ -30,7 +31,7 @@ namespace LinqToDB
 			{
 				token.ThrowIfCancellationRequested();
 				list.Add(item);
-		}
+			}
 
 			return list;
 		}
@@ -48,20 +49,10 @@ namespace LinqToDB
 			{
 				token.ThrowIfCancellationRequested();
 				list.Add(item);
-		}
+			}
 
 			return list.ToArray();
 		}
-
-		private static Dictionary<TKey, TSource> ToDictionaryToken<TSource, TKey>(
-			this IEnumerable<TSource> source,
-			Func<TSource, TKey> keySelector,
-			CancellationToken token
-		) where TKey : notnull =>
-			source.ToDictionaryToken(
-				keySelector,
-				comparer: null,
-				token);
 
 		private static Dictionary<TKey, TSource> ToDictionaryToken<TSource, TKey>(
 			this IEnumerable<TSource> source,
@@ -90,18 +81,6 @@ namespace LinqToDB
 			this IEnumerable<TSource> source,
 			Func<TSource, TKey> keySelector,
 			Func<TSource, TElement> elementSelector,
-			CancellationToken token
-		) where TKey : notnull =>
-			source.ToDictionaryToken(
-				keySelector,
-				elementSelector,
-				comparer: null,
-				token);
-
-		private static Dictionary<TKey, TElement> ToDictionaryToken<TSource, TKey, TElement>(
-			this IEnumerable<TSource> source,
-			Func<TSource, TKey> keySelector,
-			Func<TSource, TElement> elementSelector,
 			IEqualityComparer<TKey>? comparer,
 			CancellationToken token
 		) where TKey : notnull
@@ -117,10 +96,58 @@ namespace LinqToDB
 			{
 				token.ThrowIfCancellationRequested();
 				dictionary[keySelector(item)] = elementSelector(item);
-		}
+			}
 
 			return dictionary;
 		}
+
+		static Lookup<TKey,TSource> ToLookupWithToken<TKey,TSource>(
+			this IEnumerable<TSource> source,
+			Func<TSource,TKey>        keySelector,
+			IEqualityComparer<TKey>?  comparer,
+			CancellationToken         token)
+			where TKey : notnull
+		{
+			var lookup = new Lookup<TKey,TSource>(comparer);
+
+#if NET6_0_OR_GREATER
+			if (source.TryGetNonEnumeratedCount(out var count))
+				lookup.EnsureCapacity(count);
+#endif
+
+			foreach (var item in source)
+			{
+				token.ThrowIfCancellationRequested();
+				lookup.AddItem(keySelector(item), item);
+			}
+
+			return lookup;
+		}
+
+		static Lookup<TKey,TElement> ToLookupWithToken<TKey,TSource,TElement>(
+			this IEnumerable<TSource> source,
+			Func<TSource,TKey>        keySelector,
+			Func<TSource,TElement>    elementSelector,
+			IEqualityComparer<TKey>?  comparer,
+			CancellationToken         token)
+			where TKey : notnull
+		{
+			var lookup = new Lookup<TKey,TElement>(comparer);
+
+#if NET6_0_OR_GREATER
+			if (source.TryGetNonEnumeratedCount(out var count))
+				lookup.EnsureCapacity(count);
+#endif
+
+			foreach (var item in source)
+			{
+				token.ThrowIfCancellationRequested();
+				lookup.AddItem(keySelector(item), elementSelector(item));
+			}
+
+			return lookup;
+		}
+
 		#endregion
 
 		[AttributeUsage(AttributeTargets.Method)]
@@ -318,7 +345,7 @@ namespace LinqToDB
 			if (LinqExtensions.ExtensionsAdapter != null)
 				return await LinqExtensions.ExtensionsAdapter.ToDictionaryAsync(source, keySelector, token).ConfigureAwait(false);
 
-			return await Task.Run(() => source.AsEnumerable().ToDictionaryToken(keySelector, token), token).ConfigureAwait(false);
+			return await Task.Run(() => source.AsEnumerable().ToDictionaryToken(keySelector, null, token), token).ConfigureAwait(false);
 		}
 
 		/// <summary>
@@ -379,7 +406,7 @@ namespace LinqToDB
 			if (LinqExtensions.ExtensionsAdapter != null)
 				return await LinqExtensions.ExtensionsAdapter.ToDictionaryAsync(source, keySelector, elementSelector, token).ConfigureAwait(false);
 
-			return await Task.Run(() => source.AsEnumerable().ToDictionaryToken(keySelector, elementSelector, token), token).ConfigureAwait(false);
+			return await Task.Run(() => source.AsEnumerable().ToDictionaryToken(keySelector, elementSelector, null, token), token).ConfigureAwait(false);
 		}
 
 		/// <summary>
@@ -413,6 +440,154 @@ namespace LinqToDB
 				return await LinqExtensions.ExtensionsAdapter.ToDictionaryAsync(source, keySelector, elementSelector, comparer, token).ConfigureAwait(false);
 
 			return await Task.Run(() => source.AsEnumerable().ToDictionaryToken(keySelector, elementSelector, comparer, token), token).ConfigureAwait(false);
+		}
+
+		#endregion
+
+		#region ToLookupAsync
+
+		/// <summary>
+		/// Asynchronously creates a <see cref="ILookup{TKey,TElement}"/> from an <see cref="IEnumerable{T}"/>
+		/// according to a specified key selector function.
+		/// </summary>
+		/// <typeparam name="TSource">The type of the elements of <c>source</c>.</typeparam>
+		/// <typeparam name="TKey">The type of the key returned by <c>keySelector</c>.</typeparam>
+		/// <param name="source">The <see cref="IQueryable{T}"/> to create a <see cref="ILookup{TKey,TElement}"/> from.</param>
+		/// <param name="keySelector">A function to extract a key from each element.</param>
+		/// <param name="token">Optional asynchronous operation cancellation token.</param>
+		/// <returns>
+		/// A <see cref="ILookup{TKey,TElement}"/> that contains keys and values.
+		/// The values within each group are in the same order as in <c>source</c>.
+		/// </returns>
+		public static Task<ILookup<TKey,TSource>> ToLookupAsync<TSource,TKey>(
+			this IQueryable<TSource> source,
+			Func<TSource,TKey>       keySelector,
+			CancellationToken        token = default)
+			where TKey : notnull
+		{
+			return ToLookupAsync(source, keySelector, null, token);
+		}
+
+		/// <summary>
+		/// Asynchronously creates a <see cref="ILookup{TKey,TElement}"/> from an <see cref="IEnumerable{T}"/>
+		/// according to a specified key selector function.
+		/// </summary>
+		/// <typeparam name="TSource">The type of the elements of <c>source</c>.</typeparam>
+		/// <typeparam name="TKey">The type of the key returned by <c>keySelector</c>.</typeparam>
+		/// <param name="source">The <see cref="IQueryable{T}"/> to create a <see cref="ILookup{TKey,TElement}"/> from.</param>
+		/// <param name="keySelector">A function to extract a key from each element.</param>
+		/// <param name="comparer">An <see cref="IEqualityComparer{T}"/> to compare keys.</param>
+		/// <param name="token">Optional asynchronous operation cancellation token.</param>
+		/// <returns>
+		/// A <see cref="ILookup{TKey,TElement}"/> that contains keys and values.
+		/// The values within each group are in the same order as in <c>source</c>.
+		/// </returns>
+		public static async Task<ILookup<TKey,TSource>> ToLookupAsync<TSource,TKey>(
+			this IQueryable<TSource> source,
+			Func<TSource,TKey>       keySelector,
+			IEqualityComparer<TKey>? comparer,
+			CancellationToken        token = default)
+			where TKey : notnull
+		{
+			if (source is ExpressionQuery<TSource> query)
+			{
+				var lookup = new Lookup<TKey,TSource>(comparer);
+				await query.GetForEachAsync(item => lookup.AddItem(keySelector(item), item), token).ConfigureAwait(false);
+				return lookup;
+			}
+
+			return await Task.Run(() => source.AsEnumerable().ToLookupWithToken(keySelector, comparer, token), token).ConfigureAwait(false);
+		}
+
+		/// <summary>
+		/// Asynchronously creates a <see cref="ILookup{TKey,TElement}"/> from an <see cref="IEnumerable{T}"/>
+		/// according to a specified key selector function.
+		/// </summary>
+		/// <typeparam name="TSource">The type of the elements of <c>source</c>.</typeparam>
+		/// <typeparam name="TKey">The type of the key returned by <c>keySelector</c>.</typeparam>
+		/// <typeparam name="TElement">The type of the value returned by <c>elementSelector</c>.</typeparam>
+		/// <param name="source">The <see cref="IQueryable{T}"/> to create a <see cref="ILookup{TKey,TElement}"/> from.</param>
+		/// <param name="keySelector">A function to extract a key from each element.</param>
+		/// <param name="elementSelector">A transform function to produce a result element value from each element.</param>
+		/// <param name="token">Optional asynchronous operation cancellation token.</param>
+		/// <returns>
+		/// A <see cref="ILookup{TKey,TElement}"/> that contains keys and values.
+		/// The values within each group are in the same order as in <c>source</c>.
+		/// </returns>
+		public static Task<ILookup<TKey,TElement>> ToLookupAsync<TSource,TKey,TElement>(
+			this IQueryable<TSource> source,
+			Func<TSource,TKey>       keySelector,
+			Func<TSource,TElement>   elementSelector,
+			CancellationToken        token = default)
+			where TKey : notnull
+		{
+			return ToLookupAsync(source, keySelector, elementSelector, null, token);
+		}
+
+		/// <summary>
+		/// Asynchronously creates a <see cref="ILookup{TKey,TElement}"/> from an <see cref="IEnumerable{T}"/>
+		/// according to a specified key selector function.
+		/// </summary>
+		/// <typeparam name="TSource">The type of the elements of <c>source</c>.</typeparam>
+		/// <typeparam name="TKey">The type of the key returned by <c>keySelector</c>.</typeparam>
+		/// <typeparam name="TElement">The type of the value returned by <c>elementSelector</c>.</typeparam>
+		/// <param name="source">The <see cref="IQueryable{T}"/> to create a <see cref="ILookup{TKey,TElement}"/> from.</param>
+		/// <param name="keySelector">A function to extract a key from each element.</param>
+		/// <param name="comparer">An <see cref="IEqualityComparer{T}"/> to compare keys.</param>
+		/// <param name="elementSelector">A transform function to produce a result element value from each element.</param>
+		/// <param name="token">Optional asynchronous operation cancellation token.</param>
+		/// <returns>
+		/// A <see cref="ILookup{TKey,TElement}"/> that contains keys and values.
+		/// The values within each group are in the same order as in <c>source</c>.
+		/// </returns>
+		public static async Task<ILookup<TKey,TElement>> ToLookupAsync<TSource,TKey,TElement>(
+			this IQueryable<TSource> source,
+			Func<TSource,TKey>       keySelector,
+			Func<TSource,TElement>   elementSelector,
+			IEqualityComparer<TKey>? comparer,
+			CancellationToken        token = default)
+			where TKey : notnull
+		{
+			if (source is ExpressionQuery<TSource> query)
+			{
+				var lookup = new Lookup<TKey,TElement>(comparer);
+				await query.GetForEachAsync(item => lookup.AddItem(keySelector(item), elementSelector(item)), token).ConfigureAwait(false);
+				return lookup;
+			}
+
+			return await Task.Run(() => source.AsEnumerable().ToLookupWithToken(keySelector, elementSelector, comparer, token), token).ConfigureAwait(false);
+		}
+
+		class Grouping<TKey,TElement>(TKey key) : List<TElement>(1), IGrouping<TKey,TElement>
+			where TKey : notnull
+		{
+			public TKey Key { get; } = key;
+		}
+
+		class Lookup<TKey,TElement>(IEqualityComparer<TKey>? comparer)
+			: Dictionary<TKey,Grouping<TKey,TElement>>(comparer), ILookup<TKey,TElement>
+			where TKey : notnull
+		{
+			IEnumerator<IGrouping<TKey,TElement>> IEnumerable<IGrouping<TKey,TElement>>.GetEnumerator()
+			{
+				return Values.GetEnumerator();
+			}
+
+			bool ILookup<TKey,TElement>.Contains(TKey key)
+			{
+				return ContainsKey(key);
+			}
+
+			IEnumerable<TElement> ILookup<TKey,TElement>.this[TKey key] =>
+				TryGetValue(key, out var grouping) ? grouping : Enumerable.Empty<TElement>();
+
+			public void AddItem(TKey key, TElement element)
+			{
+				if (TryGetValue(key, out var grouping) == false)
+					Add(key, grouping = new Grouping<TKey,TElement>(key));
+
+				grouping.Add(element);
+			}
 		}
 
 		#endregion
