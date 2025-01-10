@@ -13,15 +13,6 @@ IF [%4] EQU [] (SET EF6_VERSION=6.0.0-local.1)
 IF [%5] EQU [] (SET EF8_VERSION=8.0.0-local.1)
 IF [%6] EQU [] (SET EF9_VERSION=9.0.0-local.1)
 
-cd ..\Redist\
-WHERE nuget.exe >nul 2>&1
-IF %ERRORLEVEL% NEQ 0 (
-ECHO Cannot find nuget.exe. Add it to PATH or place it to current folder
-ECHO nuget.exe could be downloaded from https://dist.nuget.org/win-x86-commandline/latest/nuget.exe
-GOTO :EOF
-)
-cd ..\NuGet\
-
 cd ..
 call Build.cmd
 cd NuGet

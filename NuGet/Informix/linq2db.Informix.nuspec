@@ -3,11 +3,8 @@
 <package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
 	<metadata minClientVersion="3.3.0">
 		<id>linq2db.Informix</id>
-		<title>LINQ to Informix</title>
-		<summary>
-			This package includes a T4 template to generate data models for Informix database.
-			IBM Data Server Provider for .NET will still need to be installed on the production or development machine in order to connect to Informix.
-		</summary>
+		<title>LINQ to DB T4 Scaffold Templates for Informix</title>
+		<tags>Informix IBM</tags>
 	</metadata>
 	<files>
 		<file src="t4bin\IBM.Data.DB2.DLL" target="tools"           />

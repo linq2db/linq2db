@@ -3,11 +3,8 @@
 <package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
 	<metadata minClientVersion="3.3.0">
 		<id>linq2db.DB2</id>
-		<title>LINQ to IBM DB2</title>
-		<summary>
-			This package includes a T4 template to generate data models for DB2 database.
-			IBM Data Server Provider for .NET will still need to be installed on the production or development machine in order to connect to DB2.
-		</summary>
+		<title>LINQ to DB T4 Scaffold Templates for IBM DB2</title>
+		<tags>DB2 LUW IBM</tags>
 	</metadata>
 	<files>
 		<file src="t4bin\IBM.Data.DB2.DLL" target="tools"           />

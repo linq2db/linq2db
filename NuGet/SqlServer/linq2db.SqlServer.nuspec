@@ -3,7 +3,8 @@
 <package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
 	<metadata minClientVersion="3.3.0">
 		<id>linq2db.SqlServer</id>
-		<title>LINQ to SqlServer</title>
+		<title>LINQ to DB T4 Scaffold Templates for SQL Server</title>
+		<tags>SqlServer</tags>
 	</metadata>
 	<files>
 		<file src="t4bin\Microsoft.SqlServer.Types.dll" target="tools"     />

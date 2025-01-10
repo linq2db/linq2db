@@ -20,8 +20,9 @@ var version        = GetArg(args, "version",        mandatory : true)!;
 var linq2DbVersion = GetArg(args, "linq2DbVersion", version)!;
 var clean          = GetArg(args, "clean",          "0");
 var branch         = GetArg(args, "branch");
-var authors        = "Igor Tkachev, Ilya Chudin, Svyatoslav Danyliv, Dmitry Lukashenko";
-var description    = " is a data access technology that provides a run-time infrastructure for managing relational data as objects. Install this package if you want to use database model scaffolding using T4 templates (requires Visual Studio or Rider), otherwise you should use linq2db package.";
+var authors        = "Igor Tkachev, Ilya Chudin, Svyatoslav Danyliv, Dmitry Lukashenko, and others";
+var databaseTags   = "Access ClickHouse DB2 LUW Firebird Informix MySql MariaDB Oracle PostgreSQL SapHana Hana SQLCE SQLite SQLServer Sybase SAP ASE SqlServerCe ODP IBM";
+var genericTags    = "linq linq2db LinqToDB ORM database DB SQL";
 
 string commit;
 
@@ -75,8 +76,6 @@ IEnumerable<string> GetFiles(string path)
 		yield return file;
 }
 
-//System.Diagnostics.Debugger.Launch();
-
 foreach (var xmlPath in GetFiles(path))
 {
 	WriteLine($"Processing '{xmlPath}'...");
@@ -106,11 +105,9 @@ foreach (var xmlPath in GetFiles(path))
 	SetMetadata  ("version",                  version,        true);
 	SetDependency("linq2db",                  linq2DbVersion);
 	SetDependency("linq2db.t4models",         linq2DbVersion);
-	SetMetadata  ("description",              metadata.SelectSingleNode("//ns:title", ns)!.InnerText + description,                               false);
 	SetMetadata  ("releaseNotes",             "https://github.com/linq2db/linq2db/wiki/releases-and-roadmap#release-" + version.Replace(".", ""), true);
 	SetMetadata  ("copyright",                "Copyright © 2025 " + authors, true);
 	SetMetadata  ("authors",                  authors,                       true);
-	SetMetadata  ("owners",                   authors,                       true);
 	SetMetadata  ("readme",                   "README.md",                   true);
 	SetMetadata  ("projectUrl",               "http://linq2db.com",          true);
 	SetMetadata  ("icon",                     "images\\icon.png",            true);
@@ -128,12 +125,17 @@ foreach (var xmlPath in GetFiles(path))
 		SetAttribute("src",    @"NuGet\icon.png"),
 		SetAttribute("target", @"images\icon.png"));
 
-	if (isT4)
+	var packageSpecificTags = metadata.SelectSingleNode("//ns:tags", ns)!.InnerText;
+
+	if (!isT4)
+	{
+		SetMetadata("tags", $"{packageSpecificTags} {genericTags} {databaseTags}", true);
+	}
+	else
 	{
 		var name = Path.GetFileName(xmlPath).Split('.')[1];
 
-		SetMetadata("summary", $"This package includes a T4 template to generate data models for {name} database.", false);
-		SetMetadata("tags",    $"{name} linq linq2db LinqToDB ORM database DB SQL",                                 false);
+		SetMetadata("description", $"T4 scaffolding templates for {name} database to generate LINQ to DB data models. It provides only scaffolding functionality and to use Linq To DB in your project you should add reference to linq2db nuget and corresponding database provider explicitly.", false);
 
 		SetFile(SetAttribute("src", @"NuGet\readme.T4.txt"),                     SetAttribute("target", "readme.txt"));
 		SetFile(SetAttribute("src", @"NuGet\README.T4.md"),                      SetAttribute("target", "README.md"));
@@ -141,12 +143,18 @@ foreach (var xmlPath in GetFiles(path))
 		SetFile(SetAttribute("src", @"..\..\Source\LinqToDB.Templates\*.*"),     SetAttribute("target", @"content\LinqToDB.Templates"));
 		SetFile(SetAttribute("src", @"t4bin\linq2db.dll"),                       SetAttribute("target", "tools"));
 		SetFile(SetAttribute("src", @"t4bin\linq2db.Tools.dll"),                 SetAttribute("target", "tools"));
-		SetFile(SetAttribute("src", @"t4bin\linq2db.Tools.Internal.dll"),        SetAttribute("target", "tools"));
+		SetFile(SetAttribute("src", @"t4bin\linq2db.Scaffold.dll"),              SetAttribute("target", "tools"));
 		SetFile(SetAttribute("src", @"t4bin\Humanizer.dll"),                     SetAttribute("target", "tools"));
 		SetFile(SetAttribute("src", @"t4bin\Microsoft.Bcl.AsyncInterfaces.dll"), SetAttribute("target", "tools"));
 
-		if (name is not "t4models")
+		if (name is "t4models")
 		{
+			SetMetadata("tags", $"{packageSpecificTags} T4 datamodel {genericTags} {databaseTags}", true);
+		}
+		else
+		{
+			SetMetadata("tags", $"{packageSpecificTags} T4 datamodel {genericTags}", true);
+
 			SetFile(
 				SetAttribute("src",     @$"NuGet\{name}\linq2db.{name}.props"),
 				SetAttribute("target",  @$"build"));

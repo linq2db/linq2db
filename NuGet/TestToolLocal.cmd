@@ -5,7 +5,7 @@ ECHO Version required
 GOTO :EOF
 )
 
-SET NUSPECS="..\.build\nuspecs"
+SET NUSPECS=..\.build\nuspecs
 SET NUGETS="..\.build\nugets"
 
 SET VERSION=0.0.%1
@@ -15,7 +15,7 @@ dotnet script BuildNuspecs.csx /path:linq2db.cli.nuspec /buildPath:%NUSPECS% /ve
 
 RMDIR %NUGETS% /S /Q
 MD %NUGETS%
-..\Redist\nuget.exe Pack %NUSPECS%\linq2db.cli.nuspec -OutputDirectory %NUGETS%
+dotnet pack empty\empty.csproj -p:NuspecFile=..\%NUSPECS%\linq2db.cli.nuspec -o %NUGETS%
 
 dotnet tool uninstall linq2db.cli -g
 dotnet tool install -g --add-source %NUGETS% linq2db.cli --version %VERSION%

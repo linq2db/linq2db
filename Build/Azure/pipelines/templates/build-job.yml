@@ -12,9 +12,6 @@ jobs:
 
   steps:
 
-  # mitigate https://status.dev.azure.com/_event/182998791
-  - task: NuGetToolInstaller@1
-
   # .NET 6 and 8 SDKs already installed https://github.com/actions/runner-images/blob/main/images/windows/Windows2022-Readme.md
 
   - task: UseDotNet@2

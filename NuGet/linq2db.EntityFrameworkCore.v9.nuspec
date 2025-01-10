@@ -4,9 +4,7 @@
 		<id>linq2db.EntityFrameworkCore</id>
 		<title>Linq to DB extensions for Entity Framework Core 9</title>
 		<description>Allows to execute Linq to DB queries in Entity Framework Core DbContext.</description>
-		<summary />
-		<tags>linq linq2db LinqToDB ORM database entity-framework-core EntityFrameworkCore EFCore DB SQL SqlServer SqlCe SqlServerCe MySql Firebird SQLite Oracle ODP PostgreSQL DB2</tags>
-		<readme>README.md</readme>
+		<tags>entity-framework-core EntityFrameworkCore EFCore</tags>
 		<dependencies>
 			<group targetFramework="net8.0">
 				<dependency id="Microsoft.EntityFrameworkCore.Relational" version="9.0.0" />

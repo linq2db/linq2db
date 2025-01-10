@@ -3,7 +3,8 @@
 <package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
 	<metadata minClientVersion="3.3.0">
 		<id>linq2db.SQLite</id>
-		<title>LINQ to SQLite</title>
+		<title>LINQ to DB T4 Scaffold Templates for SQLite</title>
+		<tags>Sqlite</tags>
 	</metadata>
 	<files>
 		<file src="t4bin\System.Data.SQLite.dll" target="tools"     />

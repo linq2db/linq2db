@@ -4,10 +4,7 @@
 		<id>linq2db.FSharp</id>
 		<title>LINQ to DB F# Services</title>
 		<description>LINQ to DB F# Services adds support for F#-specific features to Linq To DB.</description>
-		<summary />
-		<tags>
-			linq fsharp linq2db LinqToDB aspnetcore ORM database DB SQL SqlServer Access SqlCe SqlServerCe MySql Firebird SQLite Sybase Oracle PostgreSQL DB2 Informix SapHana
-		</tags>
+		<tags>fsharp aspnetcore</tags>
 		<dependencies>
 			<group targetFramework="net462">
 				<dependency id="linq2db"     version="6.0.0"   />

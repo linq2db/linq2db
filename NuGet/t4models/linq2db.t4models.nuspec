@@ -3,13 +3,9 @@
 <package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
 	<metadata minClientVersion="3.3.0">
 		<id>linq2db.t4models</id>
-		<title>LINQ to DB T4 Models</title>
-		<description>T4 templates to generate data models for LINQ to DB.</description>
-		<summary />
-		<tags>
-			linq linq2db LinqToDB ORM database DB T4 datamodel SqlServer Access SqlCe SqlServerCe MySql Firebird SQLite Sybase
-			Oracle ODP PostgreSQL DB2 Informix SapHana
-		</tags>
+		<title>LINQ to DB T4 Scaffold Templates for All Databases</title>
+		<description>T4 scaffolding templates to generate LINQ to DB data models for different databases. It provides scaffolding functionality and reference to linq2db main package only. To use Linq To DB in your project you should add reference to corresponding database provider(s) explicitly.</description>
+		<tags></tags>
 		<dependencies>
 			<dependency id="linq2db" version="6.0.0" />
 		</dependencies>

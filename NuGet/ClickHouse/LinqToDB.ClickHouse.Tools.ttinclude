@@ -1,4 +1,0 @@
-<#@ include file="$(LinqToDBT4ClickHouseTemplatesPath)LinqToDB.ClickHouse.ttinclude" once="true" #>
-<#+
-#warning 'LinqToDB.ClickHouse.Tools.ttinclude' is obsolete. Use 'LinqToDB.ClickHouse.ttinclude' instead.
-#>

@@ -3,7 +3,8 @@
 <package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
 	<metadata minClientVersion="3.3.0">
 		<id>linq2db.ClickHouse</id>
-		<title>LINQ to ClickHouse</title>
+		<title>LINQ to DB T4 Scaffold Templates for ClickHouse</title>
+		<tags>ClickHouse</tags>
 	</metadata>
 	<files>
 		<file src="t4bin\MySqlConnector.dll"                            target="tools" />

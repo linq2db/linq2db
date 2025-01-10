@@ -3,12 +3,8 @@
 <package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
 	<metadata minClientVersion="3.3.0">
 		<id>linq2db.Sybase</id>
-		<title>LINQ to SAP/Sybase ASE</title>
-		<summary>
-			This package includes a T4 template to generate data models for SAP/Sybase ASE database.
-			Sybase data provider for .NET will still need to be installed on the production or development machine in order to connect to ASE.
-		</summary>
-		<tags>linq linq2db SAP/Sybase LinqToDB ORM database DB SQL</tags>
+		<title>LINQ to DB T4 Scaffold Templates for SAP/Sybase ASE</title>
+		<tags>SAP Sybase ASE</tags>
 	</metadata>
 	<files>
 		<file src="t4bin\AdoNetCore.AseClient.dll" target="tools" />
