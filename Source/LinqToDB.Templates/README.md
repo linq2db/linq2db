@@ -43,7 +43,7 @@ Follow the next steps to create a data model from your existing database:
 
 Your data model template should look like the following:
 
-```
+```cs
 <#@ template language="C#" debug="True" hostSpecific="True"                    #>
 <#@ CleanupBehavior processor="T4VSHost" CleanupAfterProcessingtemplate="true" #>
 <#@ output extension=".generated.cs"                                           #>
