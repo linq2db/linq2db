@@ -421,6 +421,11 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tests.EntityFrameworkCore.S
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LinqToDB.Scaffold", "Source\LinqToDB.Scaffold\LinqToDB.Scaffold.csproj", "{F56E060D-9A5B-4685-B834-7BD2E33B7559}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Redist", "Redist", "{5C6DF933-23D8-4AC5-AE70-D460DBF40485}"
+	ProjectSection(SolutionItems) = preProject
+		Redist\Readme.md = Redist\Readme.md
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Azure|Any CPU = Azure|Any CPU
@@ -602,6 +607,7 @@ Global
 		{B39B3628-49C1-4DCE-BB1B-2CC270FE7C52} = {51E64464-E257-4984-A4D5-BF9FF8B7DF1D}
 		{094CACC0-4F0A-47C0-A74D-CEDF7D0CC755} = {DF8DE665-05A2-4ACF-9799-8FC35E7F1525}
 		{F56E060D-9A5B-4685-B834-7BD2E33B7559} = {AF93451E-198C-4A94-8EB4-C330D886E102}
+		{5C6DF933-23D8-4AC5-AE70-D460DBF40485} = {885042E3-18EA-4927-B1CF-5E0E3DBD1C00}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {15BBD7CE-1C8E-4407-9DCF-674982CEB3F7}
