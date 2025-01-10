@@ -1,6 +1,6 @@
 <#@ assembly name="System.Core"                                               #>
 <#@ assembly name="$(LinqToDBT4SharedTools)linq2db.dll"                       #>
-<#@ assembly name="$(LinqToDBT4SharedTools)linq2db.Tools.Internal.dll"        #>
+<#@ assembly name="$(LinqToDBT4SharedTools)linq2db.Scaffold.dll"              #>
 <#@ assembly name="$(LinqToDBT4SharedTools)Microsoft.Bcl.AsyncInterfaces.dll" #>
 <#@ import   namespace="System.Reflection"                                    #>
 <#@ import   namespace="System.IO"                                            #>

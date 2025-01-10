@@ -1,8 +1,8 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<AssemblyName>linq2db.Tools.Internal</AssemblyName>
-		<RootNamespace>LinqToDB.Tools</RootNamespace>
+		<AssemblyName>linq2db.Scaffold</AssemblyName>
+		<RootNamespace>LinqToDB</RootNamespace>
 
 		<DocumentationFile>$(ArtifactsPath)\bin\$(MSBuildProjectName)\$(Configuration)\$(TargetFramework)\$(AssemblyName).xml</DocumentationFile>
 
@@ -11,24 +11,11 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<Service Include="{508349b6-6b84-4df5-91f0-309beebad82d}" />
-
-		<ProjectReference Include="..\LinqToDB\LinqToDB.csproj" />
 		<ProjectReference Include="..\LinqToDB.Tools\LinqToDB.Tools.csproj" />
 
 		<PackageReference Include="Humanizer.Core" />
 
 		<AdditionalFiles Include="PublicAPI/PublicAPI.*.txt" />
 		<AdditionalFiles Include="PublicAPI/$(TargetFramework)/PublicAPI.*.txt" />
-
-		<None Update="DataProvider\SqlServer\Schemas\Schemas.tt">
-			<Generator>TextTemplatingFileGenerator</Generator>
-			<LastGenOutput>Schemas.generated.cs</LastGenOutput>
-		</None>
-		<Compile Update="DataProvider\SqlServer\Schemas\Schemas.generated.cs">
-			<DesignTime>True</DesignTime>
-			<AutoGen>True</AutoGen>
-			<DependentUpon>Schemas.tt</DependentUpon>
-		</Compile>
 	</ItemGroup>
 </Project>

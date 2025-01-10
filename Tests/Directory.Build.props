@@ -13,8 +13,7 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<ProjectReference Include="..\..\Source\LinqToDB.Tools\LinqToDB.Tools.csproj" />
-		<ProjectReference Include="..\..\Source\LinqToDB.Tools.Internal\LinqToDB.Tools.Internal.csproj" />
+		<ProjectReference Include="..\..\Source\LinqToDB.Scaffold\LinqToDB.Scaffold.csproj" />
 		<ProjectReference Include="..\..\Source\LinqToDB.FSharp\LinqToDB.FSharp.fsproj" />
 
 		<AdditionalFiles Include="$(MSBuildThisFileDirectory)\BannedSymbols.txt" />

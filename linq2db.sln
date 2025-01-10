@@ -419,7 +419,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "net90", "net90", "{B39B3628
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tests.EntityFrameworkCore.STS", "Tests\EntityFrameworkCore\Tests.EntityFrameworkCore.STS.csproj", "{094CACC0-4F0A-47C0-A74D-CEDF7D0CC755}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LinqToDB.Tools.Internal", "Source\LinqToDB.Tools.Internal\LinqToDB.Tools.Internal.csproj", "{F56E060D-9A5B-4685-B834-7BD2E33B7559}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LinqToDB.Scaffold", "Source\LinqToDB.Scaffold\LinqToDB.Scaffold.csproj", "{F56E060D-9A5B-4685-B834-7BD2E33B7559}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

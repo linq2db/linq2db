@@ -38,7 +38,7 @@
 	<ItemGroup>
 		<EmbeddedResource Include="Template.tt" />
 
-		<ProjectReference Include="..\LinqToDB.Tools.Internal\LinqToDB.Tools.Internal.csproj" />
+		<ProjectReference Include="..\LinqToDB.Scaffold\LinqToDB.Scaffold.csproj" />
 
 		<PackageReference Include="Microsoft.CodeAnalysis.CSharp" />
 		<PackageReference Include="Microsoft.Extensions.DependencyModel" />
