@@ -1006,7 +1006,7 @@ namespace LinqToDB.SqlProvider
 						if (func.NullabilityType == ParametersNullabilityType.IfAnyParameterNullable)
 						{
 							var sc = new SqlSearchCondition(true);
-							sc.AddRange(func.Parameters.Select(p => new SqlPredicate.IsNull(func, false)));
+							sc.AddRange(func.Parameters.Select(p => new SqlPredicate.IsNull(p, false)));
 							return Visit(sc.MakeNot(predicate.IsNot));
 						}
 						
