@@ -32,7 +32,7 @@ namespace LinqToDB.DataProvider.DB2
 		{
 			base.InitProvider(dataConnection, options);
 
-			options.DefaultSchema ??= dataConnection.Execute<string>("select current_schema from sysibm.sysdummy1");
+			DefaultSchema = options.DefaultSchema ?? dataConnection.Execute<string>("select current_schema from sysibm.sysdummy1");
 		}
 
 		protected override List<DataTypeInfo> GetDataTypes(DataConnection dataConnection)
@@ -55,7 +55,7 @@ namespace LinqToDB.DataProvider.DB2
 				.ToList();
 		}
 
-		//protected string? CurrentSchema { get; private set; }
+		protected string? DefaultSchema { get; private set; }
 
 		protected override List<TableInfo> GetTables(DataConnection dataConnection, GetSchemaOptions options)
 		{
@@ -69,14 +69,14 @@ namespace LinqToDB.DataProvider.DB2
 				let schema  = t.Field<string>("TABLE_SCHEMA")
 				let name    = t.Field<string>("TABLE_NAME")
 				let system  = t.Field<string>("TABLE_TYPE") == "SYSTEM TABLE"
-				where IncludedSchemas.Count != 0 || ExcludedSchemas.Count != 0 || schema == options.DefaultSchema
+				where IncludedSchemas.Count != 0 || ExcludedSchemas.Count != 0 || schema == DefaultSchema
 				select new TableInfo
 				{
 					TableID            = catalog + '.' + schema + '.' + name,
 					CatalogName        = catalog,
 					SchemaName         = schema,
 					TableName          = name,
-					IsDefaultSchema    = schema                        == options.DefaultSchema,
+					IsDefaultSchema    = schema                        == DefaultSchema,
 					IsView             = t.Field<string>("TABLE_TYPE") == "VIEW",
 					Description        = t.Field<string>("REMARKS"),
 					IsProviderSpecific = system || _systemSchemas.Contains(schema)
@@ -105,7 +105,7 @@ SELECT
 FROM
 	SYSCAT.INDEXES
 WHERE
-	UNIQUERULE = 'P' AND " + GetSchemaFilter("TABSCHEMA", options))
+	UNIQUERULE = 'P' AND " + GetSchemaFilter("TABSCHEMA"))
 				from col in pk.cols.Select((c,i) => new { c, i })
 				select new PrimaryKeyInfo
 				{
@@ -137,7 +137,7 @@ SELECT
 FROM
 	SYSCAT.COLUMNS
 WHERE
-	" + GetSchemaFilter("TABSCHEMA", options);
+	" + GetSchemaFilter("TABSCHEMA");
 
 			return _columns = dataConnection.Query(rd =>
 				{
@@ -228,7 +228,7 @@ SELECT
 FROM
 	SYSCAT.REFERENCES
 WHERE
-	" + GetSchemaFilter("TABSCHEMA", options))
+	" + GetSchemaFilter("TABSCHEMA"))
 				.SelectMany(fk =>
 				{
 					var thisTable    = _columns!.Where(c => c.TableID == fk.thisTable). OrderByDescending(c => c.Name.Length).ToList();
@@ -417,7 +417,7 @@ SELECT * FROM (
 	FROM
 		SYSCAT.PROCEDURES p
 		LEFT JOIN SYSCAT.MODULEOBJECTS o ON p.SPECIFICNAME = o.SPECIFICNAME
-	WHERE " + GetSchemaFilter("p.PROCSCHEMA", options)
+	WHERE " + GetSchemaFilter("p.PROCSCHEMA")
 	+ (IncludedSchemas.Count == 0 ? " AND p.PROCSCHEMA NOT IN ('SYSPROC', 'SYSIBMADM', 'SQLJ', 'SYSIBM')" : null)
 	+ @"
 	UNION ALL
@@ -434,7 +434,7 @@ SELECT * FROM (
 	FROM
 		SYSCAT.FUNCTIONS f
 		LEFT JOIN SYSCAT.MODULEOBJECTS o ON f.SPECIFICNAME = o.SPECIFICNAME
-		WHERE " + GetSchemaFilter("f.FUNCSCHEMA", options)
+		WHERE " + GetSchemaFilter("f.FUNCSCHEMA")
 	+ (IncludedSchemas.Count == 0 ? " AND f.FUNCSCHEMA NOT IN ('SYSPROC', 'SYSIBMADM', 'SQLJ', 'SYSIBM')" : null);
 
 			if (IncludedSchemas.Count == 0)
@@ -471,7 +471,7 @@ ORDER BY OBJECTMODULENAME, PROCSCHEMA, PROCNAME, PARM_COUNT";
 						};
 					},
 					sql)
-				.Where(p => IncludedSchemas.Count != 0 || ExcludedSchemas.Count != 0 || p.SchemaName == options.DefaultSchema)
+				.Where(p => IncludedSchemas.Count != 0 || ExcludedSchemas.Count != 0 || p.SchemaName == DefaultSchema)
 				.ToList();
 		}
 
@@ -528,7 +528,7 @@ SELECT
 	NULLS
 FROM
 	SYSCAT.PROCPARMS
-WHERE " + GetSchemaFilter("PROCSCHEMA", options) + @"
+WHERE " + GetSchemaFilter("PROCSCHEMA") + @"
 UNION ALL
 SELECT
 	SPECIFICNAME,
@@ -543,11 +543,11 @@ SELECT
 	'Y'
 FROM
 	SYSCAT.FUNCPARMS
-	WHERE ROWTYPE <> 'R' AND " + GetSchemaFilter("FUNCSCHEMA", options))
+	WHERE ROWTYPE <> 'R' AND " + GetSchemaFilter("FUNCSCHEMA"))
 				.ToList();
 		}
 
-		protected string GetSchemaFilter(string schemaNameField, GetSchemaOptions options)
+		protected string GetSchemaFilter(string schemaNameField)
 		{
 			if (IncludedSchemas.Count != 0 || ExcludedSchemas.Count != 0)
 			{
@@ -567,7 +567,7 @@ FROM
 				return sql;
 			}
 
-			return $"{schemaNameField} = '{options.DefaultSchema}'";
+			return $"{schemaNameField} = '{DefaultSchema}'";
 		}
 
 		protected override string BuildTableFunctionLoadTableSchemaCommand(ProcedureSchema procedure, string commandText)
