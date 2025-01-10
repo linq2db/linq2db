@@ -977,24 +977,48 @@ namespace LinqToDB.SqlProvider
 					return Visit(result);
 			}
 
-			if (predicate.Expr1 is SqlConditionExpression condition)
+			if (ReferenceEquals(unwrapped, predicate.Expr1) || predicate.Expr1 is SqlNullabilityExpression sqlNullabilityExpression &&
+			    sqlNullabilityExpression.CanBeNullable(_nullabilityContext) == unwrapped.CanBeNullable(_nullabilityContext))
 			{
-				if (condition.TrueValue.IsNullValue())
+				if (unwrapped is SqlConditionExpression condition)
 				{
-					var sc = new SqlSearchCondition();
-					sc.Add(condition.Condition);
-					sc.AddIsNull(condition.FalseValue);
-					return Visit(sc.MakeNot(predicate.IsNot));
-				}
+					if (condition.TrueValue.IsNullValue())
+					{
+						var sc = new SqlSearchCondition();
+						sc.Add(condition.Condition);
+						sc.AddIsNull(condition.FalseValue);
+						return Visit(sc.MakeNot(predicate.IsNot));
+					}
 
-				if (condition.FalseValue.IsNullValue())
+					if (condition.FalseValue.IsNullValue())
+					{
+						var sc = new SqlSearchCondition();
+						sc.Add(condition.Condition.MakeNot());
+						sc.AddIsNull(condition.TrueValue);
+						return Visit(sc.MakeNot(predicate.IsNot));
+					}
+				}
+				else if (unwrapped is SqlFunction func)
 				{
-					var sc = new SqlSearchCondition();
-					sc.Add(condition.Condition.MakeNot());
-					sc.AddIsNull(condition.TrueValue);
-					return Visit(sc.MakeNot(predicate.IsNot));
+					// We can extend to more parameters, but it's not clear if it's needed
+					if (func.Parameters.Length == 1)
+					{
+						if (func.NullabilityType == ParametersNullabilityType.IfAnyParameterNullable)
+						{
+							var sc = new SqlSearchCondition(true);
+							sc.AddRange(func.Parameters.Select(p => new SqlPredicate.IsNull(func, false)));
+							return Visit(sc.MakeNot(predicate.IsNot));
+						}
+						
+						if (func.NullabilityType == ParametersNullabilityType.SameAsFirstParameter)
+						{
+							var newIsNull = new SqlPredicate.IsNull(func.Parameters[0], false);
+							return Visit(newIsNull.MakeNot(predicate.IsNot));
+						}
+					}
 				}
 			}
+
 
 			return predicate;
 		}
