@@ -128,84 +128,9 @@ WHERE database = database() and default_kind <> 'ALIAS'")
 
 		protected override string? GetProviderSpecificTypeNamespace() => null;
 
-		static readonly
-		(
-			string TypeName,   int ProviderDbType,
-			long                        ColumnSize,
-			string                                   CreateFormat,        string? CreateParameters,
-			string                                                                                   DataType,
-			bool                                                                                                        IsAutoIncrementable,
-			bool                                                                                                               IsBestMatch,
-			bool                                                                                                                      IsFixedLength,
-			bool                                                                                                                             IsFixedPrecisionScale,
-			bool                                                                                                                                    IsLong,
-			bool                                                                                                                                           IsNullable,
-			bool                                                                                                                                                  IsSearchableWithLike,
-			bool                                                                                                                                                         IsUnsigned
-		)[] _dataTypes = new[]
-		{
-			("BIGINT",               8,          0L, "BIGINT",                    null,              "System.Int64",    true,  true,  true,  true,  false, true,  false, false),
-			("BIGINT",             508,          0L, "BIGINT UNSIGNED",           null,              "System.UInt64",   true,  true,  true,  true,  false, true,  false, true),
-			("BINARY",             600,          0L, "BINARY({0})",               "length",          "System.Byte[]",   false, false, false, false, false, false, false, false),
-			("BIT",                 16,          0L, "BIT",                       null,              "System.UInt64",   false, false, false, true,  false, true,  false, false),
-			("BLOB",               252,      65535L, "BLOB",                      null,              "System.Byte[]",   false, true,  false, false, true,  false, false, false),
-			("BOOL",                -1,          1L, "BOOL",                      null,              "System.Boolean",  false, true,  true,  true,  false, true,  false, false),
-			("CHAR",               254,          0L, "CHAR({0})",                 "size",            "System.String",   false, false, false, false, false, true,  true,  false),
-			("DATE",                10,          0L, "DATE",                      null,              "System.DateTime", false, false, true,  true,  false, true,  false, false),
-			("DATETIME",            12,          0L, "DATETIME",                  null,              "System.DateTime", false, true,  true,  true,  false, true,  false, false),
-			("DECIMAL",            246,          0L, "DECIMAL({0},{1})",          "precision,scale", "System.Decimal",  false, true,  false, true,  false, true,  false, false),
-			("DECIMAL",            246,          0L, "DECIMAL({0},{1}) UNSIGNED", "precision,scale", "System.Decimal",  false, false, false, true,  false, true,  false, true),
-			("DOUBLE",               5,          0L, "DOUBLE",                    null,              "System.Double",   false, true,  true,  true,  false, true,  false, false),
-			("ENUM",               247,          0L, "ENUM",                      null,              "System.String",   false, false, false, false, false, true,  true,  false),
-			("FLOAT",                4,          0L, "FLOAT",                     null,              "System.Single",   false, true,  true,  true,  false, true,  false, false),
-			("GEOMETRY",           255,          0L, "GEOMETRY",                  null,              "System.Byte[]",   false, false, false, false, false, false, false, false),
-			("GEOMCOLLECTION",     255,          0L, "GEOMCOLLECTION",            null,              "System.Byte[]",   false, false, false, false, false, false, false, false),
-			("GEOMETRYCOLLECTION", 255,          0L, "GEOMETRYCOLLECTION",        null,              "System.Byte[]",   false, false, false, false, false, false, false, false),
-			("GUID",               800,          0L, "CHAR(36)",                  null,              "System.Guid",     false, true,  true,  true,  false, true,  false, false),
-			("INT",                  3,          0L, "INT",                       null,              "System.Int32",    true,  true,  true,  true,  false, true,  false, false),
-			("INT",                503,          0L, "INT UNSIGNED",              null,              "System.UInt32",   true,  true,  true,  true,  false, true,  false, true),
-			("JSON",               245,          0L, "JSON",                      null,              "System.String",   false, false, false, false, false, true,  true,  false),
-			("LINESTRING",         255,          0L, "LINESTRING",                null,              "System.Byte[]",   false, false, false, false, false, false, false, false),
-			("LONGBLOB",           251, 4294967295L, "LONGBLOB",                  null,              "System.Byte[]",   false, false, false, false, true,  false, false, false),
-			("LONGTEXT",           751, 4294967295L, "LONGTEXT",                  null,              "System.String",   false, false, false, false, false, true,  true,  false),
-			("MEDIUMBLOB",         250,   16777215L, "MEDIUMBLOB",                null,              "System.Byte[]",   false, false, false, false, true,  false, false, false),
-			("MEDIUMINT",            9,          0L, "MEDIUMINT",                 null,              "System.Int32",    true,  false, true,  true,  false, true,  false, false),
-			("MEDIUMINT",          509,          0L, "MEDIUMINT UNSIGNED",        null,              "System.UInt32",   true,  false, true,  true,  false, true,  false, true),
-			("MEDIUMTEXT",         750,   16777215L, "MEDIUMTEXT",                null,              "System.String",   false, false, false, false, false, true,  true,  false),
-			("MULTILINESTRING",    255,          0L, "MULTILINESTRING",           null,              "System.Byte[]",   false, false, false, false, false, false, false, false),
-			("MULTIPOINT",         255,          0L, "MULTIPOINT",                null,              "System.Byte[]",   false, false, false, false, false, false, false, false),
-			("MULTIPOLYGON",       255,          0L, "MULTIPOLYGON",              null,              "System.Byte[]",   false, false, false, false, false, false, false, false),
-			("POINT",              255,          0L, "POINT",                     null,              "System.Byte[]",   false, false, false, false, false, false, false, false),
-			("POLYGON",            255,          0L, "POLYGON",                   null,              "System.Byte[]",   false, false, false, false, false, false, false, false),
-			("SET",                248,          0L, "SET",                       null,              "System.String",   false, false, false, false, false, true,  true,  false),
-			("SMALLINT",             2,          0L, "SMALLINT",                  null,              "System.Int16",    true,  true,  true,  true,  false, true,  false, false),
-			("SMALLINT",           502,          0L, "SMALLINT UNSIGNED",         null,              "System.UInt16",   true,  true,  true,  true,  false, true,  false, true),
-			("TEXT",               752,      65535L, "TEXT",                      null,              "System.String",   false, false, false, false, false, true,  true,  false),
-			("TIME",                11,          0L, "TIME",                      null,              "System.TimeSpan", false, true,  true,  true,  false, true,  false, false),
-			("TIMESTAMP",            7,          0L, "TIMESTAMP",                 null,              "System.DateTime", false, false, true,  true,  false, true,  false, false),
-			("TINYBLOB",           249,        255L, "TINYBLOB",                  null,              "System.Byte[]",   false, false, false, false, false, false, false, false),
-			("TINYINT",              1,          0L, "TINYINT",                   null,              "System.SByte",    true,  true,  true,  true,  false, true,  false, false),
-			("TINYINT",            501,          0L, "TINYINT UNSIGNED",          null,              "System.Byte",     true,  true,  true,  true,  false, true,  false, true),
-			("TINYINT",            501,          0L, "TINYINT UNSIGNED",          null,              "System.Byte",     true,  false, true,  true,  false, true,  false, true),
-			("TINYTEXT",           749,        255L, "TINYTEXT",                  null,              "System.String",   false, false, false, false, false, true,  true,  false),
-			("VARBINARY",          601,          0L, "VARBINARY({0})",            "length",          "System.Byte[]",   false, false, false, false, false, false, false, false),
-			("VARCHAR",            253,          0L, "VARCHAR({0})",              "size",            "System.String",   false, true,  false, false, false, true,  true,  false),
-			("YEAR",                13,          0L, "YEAR",                      null,              "System.Int32",    false, false, true,  true,  false, true,  false, false),
-		};
-
-		protected override List<DataTypeInfo> GetDataTypes(DataConnection dataConnection)
-		{
-			return _dataTypes
-				.Select(dt => new DataTypeInfo
-				{
-					TypeName         = dt.TypeName,
-					CreateFormat     = dt.CreateFormat,
-					CreateParameters = dt.CreateParameters,
-					DataType         = dt.DataType,
-					ProviderDbType   = dt.ProviderDbType,
-				})
-				.ToList();
-		}
+		// this provider doesn't depend on GetDataTypes API
+		static readonly List<DataTypeInfo> _dataTypes = [];
+		protected override List<DataTypeInfo> GetDataTypes(DataConnection dataConnection) => _dataTypes;
 
 		protected override string? GetDbType(GetSchemaOptions options, string? columnType, DataTypeInfo? dataType, int? length, int? precision, int? scale, string? udtCatalog, string? udtSchema, string? udtName) => null;
 
