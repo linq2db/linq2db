@@ -1225,6 +1225,33 @@ namespace Tests.Linq
 			query.Invoking(q => q.ToList()).Should().NotThrow();
 		}
 
+		[Test]
+		public void SelectWithToString([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query1 = 
+				from x in db.Parent
+				select new
+				{
+					StrValue = x.Value1.ToString()
+				};
+
+			var query2 = 
+				from x in db.Parent
+				from c in x.Children
+				select new
+				{
+					StrValue = c.Parent1!.Value1!.ToString()
+				};
+
+			var query = query1.Concat(query2);
+
+			query = query.Where(x => x.StrValue != null);
+
+			query.Invoking(q => q.ToList()).Should().NotThrow();
+		}
+
 		[Test(Description = "Test that we generate plain UNION without sub-queries")]
 		public void Issue3359_MultipleSets([DataSources(false)] string context)
 		{
