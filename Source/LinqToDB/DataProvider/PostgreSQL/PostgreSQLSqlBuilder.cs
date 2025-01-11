@@ -188,7 +188,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 #endif
 							;
 
-						if (quote && !(value.Length > 0 && value[0] == '"' && value[^1] == '"'))
+						if (quote)
 							// don't forget to duplicate quotes
 							return sb.Append('"').Append(value.Replace("\"", "\"\"")).Append('"');
 					}
