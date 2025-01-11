@@ -9,6 +9,7 @@
 
 	<PropertyGroup Label="Properties for templates">
 		<LinqToDBT4SharedTools>$(SolutionDir).build\bin\NuGet\Debug\</LinqToDBT4SharedTools>
+		<LinqToDBT4DatabasesPath>$(LinqToDBT4SharedTools)Database\</LinqToDBT4DatabasesPath>
 		<LinqToDBT4TemplatesPath>$(SolutionDir)Source\LinqToDB.Templates\</LinqToDBT4TemplatesPath>
 
 		<LinqToDBT4AccessClientPath>$(LinqToDBT4SharedTools)</LinqToDBT4AccessClientPath>

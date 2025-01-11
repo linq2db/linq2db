@@ -19,8 +19,8 @@ namespace Cli.All.Sybase
 	[Table("Doctor")]
 	public class Doctor : IEquatable<Doctor>
 	{
-		[Column("PersonID", DataType  = DataType.Int32, DbType   = "int"            , Length = 4             , IsPrimaryKey = true)] public int    PersonId { get; set; } // int
-		[Column("Taxonomy", CanBeNull = false         , DataType = DataType.NVarChar, DbType = "nvarchar(50)", Length       = 50  )] public string Taxonomy { get; set; } = null!; // nvarchar(50)
+		[Column("PersonID", DataType  = DataType.Int32, DbType   = "int"            , Length = 4              , IsPrimaryKey = true)] public int    PersonId { get; set; } // int
+		[Column("Taxonomy", CanBeNull = false         , DataType = DataType.NVarChar, DbType = "nvarchar(150)", Length       = 150 )] public string Taxonomy { get; set; } = null!; // nvarchar(150)
 
 		#region IEquatable<T> support
 		private static readonly IEqualityComparer<Doctor> _equalityComparer = ComparerBuilder.GetEqualityComparer<Doctor>(c => c.PersonId);

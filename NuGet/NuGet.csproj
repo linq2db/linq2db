@@ -21,6 +21,11 @@
 
 		<None Include="empty.csproj" />
 
+		<None Include="..\Data\*">
+			<Link>Database/%(FileName)%(Extension)</Link>
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+
 		<Reference Include="System.Data.SqlServerCe">
 			<HintPath>$(SolutionDir)\Redist\SqlCe\System.Data.SqlServerCe.dll</HintPath>
 		</Reference>

@@ -27,6 +27,6 @@ namespace Cli.All.Sybase
 		[Column("SmallIntValue" , DataType = DataType.Int16   , DbType = "smallint"      , Length = 2                             )] public short?    SmallIntValue  { get; set; } // smallint
 		[Column("IntValue"      , DataType = DataType.Int32   , DbType = "int"           , Length = 4                             )] public int?      IntValue       { get; set; } // int
 		[Column("BigIntValue"   , DataType = DataType.Int64   , DbType = "bigint"        , Length = 8                             )] public long?     BigIntValue    { get; set; } // bigint
-		[Column("StringValue"   , DataType = DataType.NVarChar, DbType = "nvarchar(50)"  , Length = 50                            )] public string?   StringValue    { get; set; } // nvarchar(50)
+		[Column("StringValue"   , DataType = DataType.NVarChar, DbType = "nvarchar(150)" , Length = 150                           )] public string?   StringValue    { get; set; } // nvarchar(150)
 	}
 }

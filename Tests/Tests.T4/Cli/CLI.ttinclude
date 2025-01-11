@@ -1,9 +1,10 @@
-﻿<#@ assembly name="$(LinqToDBT4SharedTools)linq2db.Tests.Base.dll" #>
-<#@ import namespace="System"                                      #>
-<#@ import namespace="System.IO"                                   #>
-<#@ import namespace="System.Diagnostics"                          #>
-<#@ import namespace="System.Threading"                            #>
-<#@ import namespace="Microsoft.Win32.SafeHandles"                 #>
+﻿<#@ include file="..\ConnectionStrings.ttinclude" once="true"                               #>
+<#@ assembly name="$(SolutionDir).build\bin\Tests.Base\Debug\net462\linq2db.Tests.Base.dll" #>
+<#@ import namespace="System"                                                               #>
+<#@ import namespace="System.IO"                                                            #>
+<#@ import namespace="System.Diagnostics"                                                   #>
+<#@ import namespace="System.Threading"                                                     #>
+<#@ import namespace="Microsoft.Win32.SafeHandles"                                          #>
 <#+
 #nullable enable
 	void RunCliTool(
