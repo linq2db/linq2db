@@ -16,7 +16,7 @@ namespace Cli.Default.Sybase
 	public class Doctor
 	{
 		[Column("PersonID", IsPrimaryKey = true )] public int    PersonId { get; set; } // int
-		[Column("Taxonomy", CanBeNull    = false)] public string Taxonomy { get; set; } = null!; // nvarchar(50)
+		[Column("Taxonomy", CanBeNull    = false)] public string Taxonomy { get; set; } = null!; // nvarchar(150)
 
 		#region Associations
 		/// <summary>

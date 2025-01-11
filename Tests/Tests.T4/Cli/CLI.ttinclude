@@ -5,6 +5,23 @@
 <#@ import namespace="System.Diagnostics"                                                   #>
 <#@ import namespace="System.Threading"                                                     #>
 <#@ import namespace="Microsoft.Win32.SafeHandles"                                          #>
+<#
+	var databasesPath = Host.ResolveAssemblyReference("$(LinqToDBT4DatabasesPath)");
+	var solutionsPath = Host.ResolveAssemblyReference("$(SolutionDir)");
+	var artifactsPath = Host.ResolveAssemblyReference("$(ArtifactsPath)");
+
+	var dbPath        = $@"{databasesPath}\TestData.ODBC.mdb";
+	var accessOdbcCN  = $"Driver={{Microsoft Access Driver (*.mdb, *.accdb)}};Dbq={dbPath};ExtendedAnsiSQL=1";
+
+	dbPath            = $@"{databasesPath}\TestData.mdb";
+	var accessOleDbCN = $"Provider=Microsoft.ACE.OLEDB.12.0;Data Source={dbPath};Locale Identifier=1033;Persist Security Info=True";
+
+	var sqliteCN      = $"Data Source={databasesPath}TestData.sqlite";
+	var sqliteNwCN    = $"Data Source={databasesPath}Northwind.sqlite";
+	var sqlceCN       = $"Data Source={databasesPath}TestData.sdf";
+
+	var db2ProviderLocation = $@"{artifactsPath}\bin\Tests\Debug\net9.0\IBM.Data.Db2.dll";
+#>
 <#+
 #nullable enable
 	void RunCliTool(

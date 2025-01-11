@@ -24,6 +24,6 @@ namespace Cli.NoMetadata.Sybase
 		public short?    SmallIntValue  { get; set; } // smallint
 		public int?      IntValue       { get; set; } // int
 		public long?     BigIntValue    { get; set; } // bigint
-		public string?   StringValue    { get; set; } // nvarchar(50)
+		public string?   StringValue    { get; set; } // nvarchar(150)
 	}
 }

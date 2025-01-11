@@ -17,6 +17,6 @@ namespace Cli.Default.Sybase
 	{
 		[Column("InheritanceParentId", IsPrimaryKey = true)] public int     InheritanceParentId { get; set; } // int
 		[Column("TypeDiscriminator"                       )] public int?    TypeDiscriminator   { get; set; } // int
-		[Column("Name"                                    )] public string? Name                { get; set; } // nvarchar(50)
+		[Column("Name"                                    )] public string? Name                { get; set; } // nvarchar(150)
 	}
 }

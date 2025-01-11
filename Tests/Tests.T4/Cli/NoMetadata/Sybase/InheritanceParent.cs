@@ -15,6 +15,6 @@ namespace Cli.NoMetadata.Sybase
 	{
 		public int     InheritanceParentId { get; set; } // int
 		public int?    TypeDiscriminator   { get; set; } // int
-		public string? Name                { get; set; } // nvarchar(50)
+		public string? Name                { get; set; } // nvarchar(150)
 	}
 }

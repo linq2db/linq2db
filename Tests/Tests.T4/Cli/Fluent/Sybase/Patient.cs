@@ -14,7 +14,7 @@ namespace Cli.Fluent.Sybase
 	public class Patient
 	{
 		public int    PersonId  { get; set; } // int
-		public string Diagnosis { get; set; } = null!; // nvarchar(256)
+		public string Diagnosis { get; set; } = null!; // nvarchar(768)
 
 		#region Associations
 		/// <summary>

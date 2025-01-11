@@ -14,9 +14,9 @@ namespace Cli.NoMetadata.Sybase
 	public class Person
 	{
 		public int     PersonId   { get; set; } // int
-		public string  FirstName  { get; set; } = null!; // nvarchar(50)
-		public string  LastName   { get; set; } = null!; // nvarchar(50)
-		public string? MiddleName { get; set; } // nvarchar(50)
+		public string  FirstName  { get; set; } = null!; // nvarchar(150)
+		public string  LastName   { get; set; } = null!; // nvarchar(150)
+		public string? MiddleName { get; set; } // nvarchar(150)
 		public char    Gender     { get; set; } // char(1)
 
 		#region Associations

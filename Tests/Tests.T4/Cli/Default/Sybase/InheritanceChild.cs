@@ -18,6 +18,6 @@ namespace Cli.Default.Sybase
 		[Column("InheritanceChildId" , IsPrimaryKey = true)] public int     InheritanceChildId  { get; set; } // int
 		[Column("InheritanceParentId"                     )] public int     InheritanceParentId { get; set; } // int
 		[Column("TypeDiscriminator"                       )] public int?    TypeDiscriminator   { get; set; } // int
-		[Column("Name"                                    )] public string? Name                { get; set; } // nvarchar(50)
+		[Column("Name"                                    )] public string? Name                { get; set; } // nvarchar(150)
 	}
 }

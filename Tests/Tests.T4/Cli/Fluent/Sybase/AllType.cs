@@ -37,8 +37,8 @@ namespace Cli.Fluent.Sybase
 		public string?   Char20DataType        { get; set; } // char(20)
 		public string?   VarcharDataType       { get; set; } // varchar(20)
 		public string?   TextDataType          { get; set; } // text
-		public string?   NcharDataType         { get; set; } // nchar(20)
-		public string?   NvarcharDataType      { get; set; } // nvarchar(20)
+		public string?   NcharDataType         { get; set; } // nchar(60)
+		public string?   NvarcharDataType      { get; set; } // nvarchar(60)
 		public string?   NtextDataType         { get; set; } // unitext
 		public byte[]?   BinaryDataType        { get; set; } // binary(1)
 		public byte[]?   VarbinaryDataType     { get; set; } // varbinary(1)

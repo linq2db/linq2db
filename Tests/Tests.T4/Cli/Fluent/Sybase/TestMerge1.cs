@@ -22,9 +22,9 @@ namespace Cli.Fluent.Sybase
 		public int?      Field5          { get; set; } // int
 		public long?     FieldInt64      { get; set; } // bigint
 		public string?   FieldString     { get; set; } // varchar(20)
-		public string?   FieldNString    { get; set; } // nvarchar(20)
+		public string?   FieldNString    { get; set; } // nvarchar(60)
 		public char?     FieldChar       { get; set; } // char(1)
-		public char?     FieldNChar      { get; set; } // nchar(1)
+		public string?   FieldNChar      { get; set; } // nchar(3)
 		public float?    FieldFloat      { get; set; } // real
 		public double?   FieldDouble     { get; set; } // float
 		public DateTime? FieldDateTime   { get; set; } // datetime

@@ -91,8 +91,8 @@ namespace Cli.T4.Sybase
 		[Column("char20DataType"                                                                      )] public string?   Char20DataType        { get; set; } // char(20)
 		[Column("varcharDataType"                                                                     )] public string?   VarcharDataType       { get; set; } // varchar(20)
 		[Column("textDataType"                                                                        )] public string?   TextDataType          { get; set; } // text
-		[Column("ncharDataType"                                                                       )] public string?   NcharDataType         { get; set; } // nchar(20)
-		[Column("nvarcharDataType"                                                                    )] public string?   NvarcharDataType      { get; set; } // nvarchar(20)
+		[Column("ncharDataType"                                                                       )] public string?   NcharDataType         { get; set; } // nchar(60)
+		[Column("nvarcharDataType"                                                                    )] public string?   NvarcharDataType      { get; set; } // nvarchar(60)
 		[Column("ntextDataType"                                                                       )] public string?   NtextDataType         { get; set; } // unitext
 		[Column("binaryDataType"                                                                      )] public byte[]?   BinaryDataType        { get; set; } // binary(1)
 		[Column("varbinaryDataType"                                                                   )] public byte[]?   VarbinaryDataType     { get; set; } // varbinary(1)
@@ -111,15 +111,15 @@ namespace Cli.T4.Sybase
 	public partial class CollatedTable
 	{
 		[Column("Id"                                )] public int    Id              { get; set; } // int
-		[Column("CaseSensitive"  , CanBeNull = false)] public string CaseSensitive   { get; set; } = null!; // nvarchar(20)
-		[Column("CaseInsensitive", CanBeNull = false)] public string CaseInsensitive { get; set; } = null!; // nvarchar(20)
+		[Column("CaseSensitive"  , CanBeNull = false)] public string CaseSensitive   { get; set; } = null!; // nvarchar(60)
+		[Column("CaseInsensitive", CanBeNull = false)] public string CaseInsensitive { get; set; } = null!; // nvarchar(60)
 	}
 
 	[Table("Doctor", Schema = "dbo")]
 	public partial class Doctor
 	{
 		[Column("PersonID", IsPrimaryKey = true )] public int    PersonID { get; set; } // int
-		[Column("Taxonomy", CanBeNull    = false)] public string Taxonomy { get; set; } = null!; // nvarchar(50)
+		[Column("Taxonomy", CanBeNull    = false)] public string Taxonomy { get; set; } = null!; // nvarchar(150)
 
 		#region Associations
 		/// <summary>
@@ -239,7 +239,7 @@ namespace Cli.T4.Sybase
 		[Column("InheritanceChildId" , IsPrimaryKey = true)] public int     InheritanceChildId  { get; set; } // int
 		[Column("InheritanceParentId"                     )] public int     InheritanceParentId { get; set; } // int
 		[Column("TypeDiscriminator"                       )] public int?    TypeDiscriminator   { get; set; } // int
-		[Column("Name"                                    )] public string? Name                { get; set; } // nvarchar(50)
+		[Column("Name"                                    )] public string? Name                { get; set; } // nvarchar(150)
 	}
 
 	[Table("InheritanceParent", Schema = "dbo")]
@@ -247,7 +247,7 @@ namespace Cli.T4.Sybase
 	{
 		[Column("InheritanceParentId", IsPrimaryKey = true)] public int     InheritanceParentId { get; set; } // int
 		[Column("TypeDiscriminator"                       )] public int?    TypeDiscriminator   { get; set; } // int
-		[Column("Name"                                    )] public string? Name                { get; set; } // nvarchar(50)
+		[Column("Name"                                    )] public string? Name                { get; set; } // nvarchar(150)
 	}
 
 	[Table("KeepIdentityTest", Schema = "dbo")]
@@ -270,7 +270,7 @@ namespace Cli.T4.Sybase
 		[Column("SmallIntValue" )] public short?    SmallIntValue  { get; set; } // smallint
 		[Column("IntValue"      )] public int?      IntValue       { get; set; } // int
 		[Column("BigIntValue"   )] public long?     BigIntValue    { get; set; } // bigint
-		[Column("StringValue"   )] public string?   StringValue    { get; set; } // nvarchar(50)
+		[Column("StringValue"   )] public string?   StringValue    { get; set; } // nvarchar(150)
 	}
 
 	[Table("Parent", Schema = "dbo")]
@@ -284,7 +284,7 @@ namespace Cli.T4.Sybase
 	public partial class Patient
 	{
 		[Column("PersonID" , IsPrimaryKey = true )] public int    PersonID  { get; set; } // int
-		[Column("Diagnosis", CanBeNull    = false)] public string Diagnosis { get; set; } = null!; // nvarchar(256)
+		[Column("Diagnosis", CanBeNull    = false)] public string Diagnosis { get; set; } = null!; // nvarchar(768)
 
 		#region Associations
 		/// <summary>
@@ -299,9 +299,9 @@ namespace Cli.T4.Sybase
 	public partial class Person
 	{
 		[Column("PersonID"  , IsPrimaryKey = true , IsIdentity = true, SkipOnInsert = true, SkipOnUpdate = true)] public int     PersonID   { get; set; } // int
-		[Column("FirstName" , CanBeNull    = false                                                             )] public string  FirstName  { get; set; } = null!; // nvarchar(50)
-		[Column("LastName"  , CanBeNull    = false                                                             )] public string  LastName   { get; set; } = null!; // nvarchar(50)
-		[Column("MiddleName"                                                                                   )] public string? MiddleName { get; set; } // nvarchar(50)
+		[Column("FirstName" , CanBeNull    = false                                                             )] public string  FirstName  { get; set; } = null!; // nvarchar(150)
+		[Column("LastName"  , CanBeNull    = false                                                             )] public string  LastName   { get; set; } = null!; // nvarchar(150)
+		[Column("MiddleName"                                                                                   )] public string? MiddleName { get; set; } // nvarchar(150)
 		[Column("Gender"                                                                                       )] public char    Gender     { get; set; } // char(1)
 
 		#region Associations
@@ -336,9 +336,9 @@ namespace Cli.T4.Sybase
 		[Column("Field5"                              )] public int?      Field5          { get; set; } // int
 		[Column("FieldInt64"                          )] public long?     FieldInt64      { get; set; } // bigint
 		[Column("FieldString"                         )] public string?   FieldString     { get; set; } // varchar(20)
-		[Column("FieldNString"                        )] public string?   FieldNString    { get; set; } // nvarchar(20)
+		[Column("FieldNString"                        )] public string?   FieldNString    { get; set; } // nvarchar(60)
 		[Column("FieldChar"                           )] public char?     FieldChar       { get; set; } // char(1)
-		[Column("FieldNChar"                          )] public char?     FieldNChar      { get; set; } // nchar(1)
+		[Column("FieldNChar"                          )] public string?   FieldNChar      { get; set; } // nchar(3)
 		[Column("FieldFloat"                          )] public float?    FieldFloat      { get; set; } // real
 		[Column("FieldDouble"                         )] public double?   FieldDouble     { get; set; } // float
 		[Column("FieldDateTime"                       )] public DateTime? FieldDateTime   { get; set; } // datetime
@@ -362,9 +362,9 @@ namespace Cli.T4.Sybase
 		[Column("Field5"                              )] public int?      Field5          { get; set; } // int
 		[Column("FieldInt64"                          )] public long?     FieldInt64      { get; set; } // bigint
 		[Column("FieldString"                         )] public string?   FieldString     { get; set; } // varchar(20)
-		[Column("FieldNString"                        )] public string?   FieldNString    { get; set; } // nvarchar(20)
+		[Column("FieldNString"                        )] public string?   FieldNString    { get; set; } // nvarchar(60)
 		[Column("FieldChar"                           )] public char?     FieldChar       { get; set; } // char(1)
-		[Column("FieldNChar"                          )] public char?     FieldNChar      { get; set; } // nchar(1)
+		[Column("FieldNChar"                          )] public string?   FieldNChar      { get; set; } // nchar(3)
 		[Column("FieldFloat"                          )] public float?    FieldFloat      { get; set; } // real
 		[Column("FieldDouble"                         )] public double?   FieldDouble     { get; set; } // float
 		[Column("FieldDateTime"                       )] public DateTime? FieldDateTime   { get; set; } // datetime

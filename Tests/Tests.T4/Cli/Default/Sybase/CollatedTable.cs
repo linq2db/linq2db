@@ -16,7 +16,7 @@ namespace Cli.Default.Sybase
 	public class CollatedTable
 	{
 		[Column("Id"                                )] public int    Id              { get; set; } // int
-		[Column("CaseSensitive"  , CanBeNull = false)] public string CaseSensitive   { get; set; } = null!; // nvarchar(20)
-		[Column("CaseInsensitive", CanBeNull = false)] public string CaseInsensitive { get; set; } = null!; // nvarchar(20)
+		[Column("CaseSensitive"  , CanBeNull = false)] public string CaseSensitive   { get; set; } = null!; // nvarchar(60)
+		[Column("CaseInsensitive", CanBeNull = false)] public string CaseInsensitive { get; set; } = null!; // nvarchar(60)
 	}
 }

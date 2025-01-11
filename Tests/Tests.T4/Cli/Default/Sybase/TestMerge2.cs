@@ -24,9 +24,9 @@ namespace Cli.Default.Sybase
 		[Column("Field5"                              )] public int?      Field5          { get; set; } // int
 		[Column("FieldInt64"                          )] public long?     FieldInt64      { get; set; } // bigint
 		[Column("FieldString"                         )] public string?   FieldString     { get; set; } // varchar(20)
-		[Column("FieldNString"                        )] public string?   FieldNString    { get; set; } // nvarchar(20)
+		[Column("FieldNString"                        )] public string?   FieldNString    { get; set; } // nvarchar(60)
 		[Column("FieldChar"                           )] public char?     FieldChar       { get; set; } // char(1)
-		[Column("FieldNChar"                          )] public char?     FieldNChar      { get; set; } // nchar(1)
+		[Column("FieldNChar"                          )] public string?   FieldNChar      { get; set; } // nchar(3)
 		[Column("FieldFloat"                          )] public float?    FieldFloat      { get; set; } // real
 		[Column("FieldDouble"                         )] public double?   FieldDouble     { get; set; } // float
 		[Column("FieldDateTime"                       )] public DateTime? FieldDateTime   { get; set; } // datetime

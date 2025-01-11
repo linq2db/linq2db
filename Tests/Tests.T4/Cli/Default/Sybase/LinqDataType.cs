@@ -26,6 +26,6 @@ namespace Cli.Default.Sybase
 		[Column("SmallIntValue" )] public short?    SmallIntValue  { get; set; } // smallint
 		[Column("IntValue"      )] public int?      IntValue       { get; set; } // int
 		[Column("BigIntValue"   )] public long?     BigIntValue    { get; set; } // bigint
-		[Column("StringValue"   )] public string?   StringValue    { get; set; } // nvarchar(50)
+		[Column("StringValue"   )] public string?   StringValue    { get; set; } // nvarchar(150)
 	}
 }
