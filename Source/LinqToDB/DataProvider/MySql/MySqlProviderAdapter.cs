@@ -113,10 +113,6 @@ namespace LinqToDB.DataProvider.MySql
 		{
 			switch (provider)
 			{
-				case MySqlProvider.AutoDetect:
-				{
-					return _mysqlConnectorInstance ?? (_mysqlDataInstance ?? GetInstance(MySqlProviderDetector.DetectProvider()));
-				}
 				case MySqlProvider.MySqlConnector:
 				{
 					if (_mysqlConnectorInstance == null)
