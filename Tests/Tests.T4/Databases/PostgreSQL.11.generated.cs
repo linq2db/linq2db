@@ -199,7 +199,7 @@ namespace PostreSQL11DataContext
 			public Guid?                        uuidDataType        { get; set; }
 			public BitArray?                    bitDataType         { get; set; }
 			public bool?                        booleanDataType     { get; set; }
-			public object?                      colorDataType       { get; set; }
+			public string?                      colorDataType       { get; set; }
 			public NpgsqlPoint?                 pointDataType       { get; set; }
 			public NpgsqlLSeg?                  lsegDataType        { get; set; }
 			public NpgsqlBox?                   boxDataType         { get; set; }

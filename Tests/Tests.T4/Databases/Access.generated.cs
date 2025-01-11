@@ -23,9 +23,10 @@ namespace AccessDataContext
 {
 	public partial class TestDataDB : LinqToDB.Data.DataConnection
 	{
+		#region Tables
+
 		public ITable<AllType>             AllTypes             { get { return this.GetTable<AllType>(); } }
 		public ITable<Child>               Children             { get { return this.GetTable<Child>(); } }
-		public ITable<CollatedTable>       CollatedTables       { get { return this.GetTable<CollatedTable>(); } }
 		public ITable<DataTypeTest>        DataTypeTests        { get { return this.GetTable<DataTypeTest>(); } }
 		public ITable<Doctor>              Doctors              { get { return this.GetTable<Doctor>(); } }
 		public ITable<Dual>                Duals                { get { return this.GetTable<Dual>(); } }
@@ -41,11 +42,14 @@ namespace AccessDataContext
 		public ITable<PatientSelectAll>    PatientSelectAll     { get { return this.GetTable<PatientSelectAll>(); } }
 		public ITable<Person>              People               { get { return this.GetTable<Person>(); } }
 		public ITable<PersonSelectAll>     PersonSelectAll      { get { return this.GetTable<PersonSelectAll>(); } }
-		public ITable<RelationsTable>      RelationsTables      { get { return this.GetTable<RelationsTable>(); } }
 		public ITable<ScalarDataReader>    ScalarDataReaders    { get { return this.GetTable<ScalarDataReader>(); } }
 		public ITable<TestIdentity>        TestIdentities       { get { return this.GetTable<TestIdentity>(); } }
 		public ITable<TestMerge1>          TestMerge1           { get { return this.GetTable<TestMerge1>(); } }
 		public ITable<TestMerge2>          TestMerge2           { get { return this.GetTable<TestMerge2>(); } }
+
+		#endregion
+
+		#region .ctor
 
 		public TestDataDB()
 		{
@@ -76,6 +80,8 @@ namespace AccessDataContext
 
 		partial void InitDataContext  ();
 		partial void InitMappingSchema();
+
+		#endregion
 	}
 
 	[Table("AllTypes")]
@@ -110,14 +116,6 @@ namespace AccessDataContext
 	{
 		[Column(DbType="Long", DataType=LinqToDB.DataType.Int32), Nullable] public int? ParentID { get; set; } // Long
 		[Column(DbType="Long", DataType=LinqToDB.DataType.Int32), Nullable] public int? ChildID  { get; set; } // Long
-	}
-
-	[Table("CollatedTable")]
-	public partial class CollatedTable
-	{
-		[Column(DbType="Long",        DataType=LinqToDB.DataType.Int32),              NotNull] public int    Id              { get; set; } // Long
-		[Column(DbType="VarChar(20)", DataType=LinqToDB.DataType.VarChar, Length=20), NotNull] public string CaseSensitive   { get; set; } = null!; // VarChar(20)
-		[Column(DbType="VarChar(20)", DataType=LinqToDB.DataType.VarChar, Length=20), NotNull] public string CaseInsensitive { get; set; } = null!; // VarChar(20)
 	}
 
 	[Table("DataTypeTest")]
@@ -300,47 +298,6 @@ namespace AccessDataContext
 		[Column(DbType="VarChar(1)",  DataType=LinqToDB.DataType.VarChar, Length=1),     Nullable] public char?   Gender     { get; set; } // VarChar(1)
 	}
 
-	[Table("RelationsTable")]
-	public partial class RelationsTable
-	{
-		[Column(DbType="Long", DataType=LinqToDB.DataType.Int32), PrimaryKey(1), NotNull] public int  ID1   { get; set; } // Long
-		[Column(DbType="Long", DataType=LinqToDB.DataType.Int32), PrimaryKey(2), NotNull] public int  ID2   { get; set; } // Long
-		[Column(DbType="Long", DataType=LinqToDB.DataType.Int32),                NotNull] public int  Int1  { get; set; } // Long
-		[Column(DbType="Long", DataType=LinqToDB.DataType.Int32),                NotNull] public int  Int2  { get; set; } // Long
-		[Column(DbType="Long", DataType=LinqToDB.DataType.Int32),    Nullable           ] public int? IntN1 { get; set; } // Long
-		[Column(DbType="Long", DataType=LinqToDB.DataType.Int32),    Nullable           ] public int? IntN2 { get; set; } // Long
-		[Column(DbType="Long", DataType=LinqToDB.DataType.Int32),                NotNull] public int  FK    { get; set; } // Long
-		[Column(DbType="Long", DataType=LinqToDB.DataType.Int32),    Nullable           ] public int? FKN   { get; set; } // Long
-
-		#region Associations
-
-		/// <summary>
-		/// FK_NotNullable_BackReference (RelationsTable)
-		/// </summary>
-		[Association(ThisKey=nameof(ID1) + ", " + nameof(ID2), OtherKey=nameof(AccessDataContext.RelationsTable.Int1) + ", " + nameof(AccessDataContext.RelationsTable.Int2), CanBeNull=true)]
-		public IEnumerable<RelationsTable> FkNotNullableBackReferences { get; set; } = null!;
-
-		/// <summary>
-		/// FK_Nullable_BackReference (RelationsTable)
-		/// </summary>
-		[Association(ThisKey=nameof(ID1) + ", " + nameof(ID2), OtherKey=nameof(AccessDataContext.RelationsTable.IntN1) + ", " + nameof(AccessDataContext.RelationsTable.IntN2), CanBeNull=true)]
-		public IEnumerable<RelationsTable> FkNullableBackReferences { get; set; } = null!;
-
-		/// <summary>
-		/// FK_NotNullable (RelationsTable)
-		/// </summary>
-		[Association(ThisKey=nameof(Int1) + ", " + nameof(Int2), OtherKey=nameof(AccessDataContext.RelationsTable.ID1) + ", " + nameof(AccessDataContext.RelationsTable.ID2), CanBeNull=false)]
-		public RelationsTable NotNullable { get; set; } = null!;
-
-		/// <summary>
-		/// FK_Nullable (RelationsTable)
-		/// </summary>
-		[Association(ThisKey=nameof(IntN1) + ", " + nameof(IntN2), OtherKey=nameof(AccessDataContext.RelationsTable.ID1) + ", " + nameof(AccessDataContext.RelationsTable.ID2), CanBeNull=true)]
-		public RelationsTable? Nullable { get; set; }
-
-		#endregion
-	}
-
 	[Table("Scalar_DataReader", IsView=true)]
 	public partial class ScalarDataReader
 	{
@@ -410,14 +367,9 @@ namespace AccessDataContext
 	{
 		#region AddIssue792Record
 
-		public static int AddIssue792Record(this TestDataDB dataConnection, int? id)
+		public static int AddIssue792Record(this TestDataDB dataConnection)
 		{
-			var parameters = new []
-			{
-				new DataParameter("id", id, LinqToDB.DataType.Int32)
-			};
-
-			return dataConnection.ExecuteProc("[AddIssue792Record]", parameters);
+			return dataConnection.ExecuteProc("[AddIssue792Record]");
 		}
 
 		#endregion
@@ -514,11 +466,12 @@ namespace AccessDataContext
 
 		#region PersonUpdate
 
-		public static int PersonUpdate(this TestDataDB dataConnection, int? @id, string? @FirstName, string? @MiddleName, string? @LastName, char? @Gender)
+		public static int PersonUpdate(this TestDataDB dataConnection, int? @id, int? @PersonID, string? @FirstName, string? @MiddleName, string? @LastName, char? @Gender)
 		{
 			var parameters = new []
 			{
 				new DataParameter("@id",         @id,         LinqToDB.DataType.Int32),
+				new DataParameter("@PersonID",   @PersonID,   LinqToDB.DataType.Int32),
 				new DataParameter("@FirstName",  @FirstName,  LinqToDB.DataType.NText, 50),
 				new DataParameter("@MiddleName", @MiddleName, LinqToDB.DataType.NText, 50),
 				new DataParameter("@LastName",   @LastName,   LinqToDB.DataType.NText, 50),
@@ -526,15 +479,6 @@ namespace AccessDataContext
 			};
 
 			return dataConnection.ExecuteProc("[Person_Update]", parameters);
-		}
-
-		#endregion
-
-		#region ThisProcedureNotVisibleFromODBC
-
-		public static int ThisProcedureNotVisibleFromODBC(this TestDataDB dataConnection)
-		{
-			return dataConnection.ExecuteProc("[ThisProcedureNotVisibleFromODBC]");
 		}
 
 		#endregion
@@ -576,13 +520,6 @@ namespace AccessDataContext
 		{
 			return table.FirstOrDefault(t =>
 				t.PersonID == PersonID);
-		}
-
-		public static RelationsTable? Find(this ITable<RelationsTable> table, int ID1, int ID2)
-		{
-			return table.FirstOrDefault(t =>
-				t.ID1 == ID1 &&
-				t.ID2 == ID2);
 		}
 
 		public static TestIdentity? Find(this ITable<TestIdentity> table, int ID)

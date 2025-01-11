@@ -1,8 +1,8 @@
-﻿<#@ template language="C#" debug="True" hostSpecific="True" compilerOptions="/langversion:6"       #>
-<#@ CleanupBehavior processor="T4VSHost" CleanupAfterProcessingtemplate="true"                     #>
-<#@ output extension=".generated.cs"                                                               #>
-<#@ include file="$(LinqToDBT4FirebirdTemplatesPath)LinqToDB.Firebird.Tools.ttinclude" once="true" #>
-<#@ include file="..\Shared.ttinclude"                                                 once="true" #>
+﻿<#@ template language="C#" debug="True" hostSpecific="True" compilerOptions="/langversion:6" #>
+<#@ CleanupBehavior processor="T4VSHost" CleanupAfterProcessingtemplate="true"               #>
+<#@ output extension=".generated.cs"                                                         #>
+<#@ include file="$(LinqToDBT4FirebirdTemplatesPath)LinqToDB.Firebird.ttinclude" once="true" #>
+<#@ include file="..\Shared.ttinclude"                                           once="true" #>
 <#
 	NamespaceName = "Firebird3DataContext";
 

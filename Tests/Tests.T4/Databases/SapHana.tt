@@ -1,12 +1,12 @@
-﻿<#@ template language="C#" debug="True" hostSpecific="True" compilerOptions="/langversion:6"     #>
-<#@ CleanupBehavior processor="T4VSHost" CleanupAfterProcessingtemplate="true"                   #>
-<#@ output extension=".generated.cs"                                                             #>
-<#@ include file="$(LinqToDBT4SapHanaTemplatesPath)LinqToDB.SapHana.Tools.ttinclude" once="true" #>
-<#@ include file="..\Shared.ttinclude"                                               once="true" #>
+﻿<#@ template language="C#" debug="True" hostSpecific="True" compilerOptions="/langversion:6" #>
+<#@ CleanupBehavior processor="T4VSHost" CleanupAfterProcessingtemplate="true"               #>
+<#@ output extension=".generated.cs"                                                         #>
+<#@ include file="$(LinqToDBT4SapHanaTemplatesPath)LinqToDB.SapHana.ttinclude" once="true"   #>
+<#@ include file="..\Shared.ttinclude"                                         once="true"   #>
 <#
 	NamespaceName = "SapHanaDataContext";
 
-	LoadSapHanaMetadata(GetConnectionString("SapHana.Native"), LinqToDB.DataProvider.SapHana.SapHanaProvider.ODBC);
+	LoadSapHanaMetadata(GetConnectionString("SapHana.Odbc"), LinqToDB.DataProvider.SapHana.SapHanaProvider.ODBC);
 
 	GenerateModel();
 #>

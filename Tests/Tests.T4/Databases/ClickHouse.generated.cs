@@ -18,6 +18,8 @@ namespace ClickHouseDataContext
 {
 	public partial class ClickHouseDB : LinqToDB.Data.DataConnection
 	{
+		#region Tables
+
 		public ITable<AllType>                 AllTypes                 { get { return this.GetTable<AllType>(); } }
 		public ITable<Child>                   Children                 { get { return this.GetTable<Child>(); } }
 		public ITable<CollatedTable>           CollatedTables           { get { return this.GetTable<CollatedTable>(); } }
@@ -32,6 +34,10 @@ namespace ClickHouseDataContext
 		public ITable<ReplacingMergeTreeTable> ReplacingMergeTreeTables { get { return this.GetTable<ReplacingMergeTreeTable>(); } }
 		public ITable<TestMerge1>              TestMerge1               { get { return this.GetTable<TestMerge1>(); } }
 		public ITable<TestMerge2>              TestMerge2               { get { return this.GetTable<TestMerge2>(); } }
+
+		#endregion
+
+		#region .ctor
 
 		public ClickHouseDB()
 		{
@@ -62,6 +68,8 @@ namespace ClickHouseDataContext
 
 		partial void InitDataContext  ();
 		partial void InitMappingSchema();
+
+		#endregion
 	}
 
 	[Table("AllTypes")]
