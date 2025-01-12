@@ -19,10 +19,10 @@ namespace Cli.All.Sybase
 	[Table("InheritanceChild")]
 	public class InheritanceChild : IEquatable<InheritanceChild>
 	{
-		[Column("InheritanceChildId" , DataType = DataType.Int32   , DbType = "int"          , Length = 4  , IsPrimaryKey = true)] public int     InheritanceChildId  { get; set; } // int
-		[Column("InheritanceParentId", DataType = DataType.Int32   , DbType = "int"          , Length = 4                       )] public int     InheritanceParentId { get; set; } // int
-		[Column("TypeDiscriminator"  , DataType = DataType.Int32   , DbType = "int"          , Length = 4                       )] public int?    TypeDiscriminator   { get; set; } // int
-		[Column("Name"               , DataType = DataType.NVarChar, DbType = "nvarchar(150)", Length = 150                     )] public string? Name                { get; set; } // nvarchar(150)
+		[Column("InheritanceChildId" , DataType = DataType.Int32   , DbType = "int"         , Length = 4 , IsPrimaryKey = true)] public int     InheritanceChildId  { get; set; } // int
+		[Column("InheritanceParentId", DataType = DataType.Int32   , DbType = "int"         , Length = 4                      )] public int     InheritanceParentId { get; set; } // int
+		[Column("TypeDiscriminator"  , DataType = DataType.Int32   , DbType = "int"         , Length = 4                      )] public int?    TypeDiscriminator   { get; set; } // int
+		[Column("Name"               , DataType = DataType.NVarChar, DbType = "nvarchar(50)", Length = 50                     )] public string? Name                { get; set; } // nvarchar(50)
 
 		#region IEquatable<T> support
 		private static readonly IEqualityComparer<InheritanceChild> _equalityComparer = ComparerBuilder.GetEqualityComparer<InheritanceChild>(c => c.InheritanceChildId);

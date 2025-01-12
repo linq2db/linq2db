@@ -19,11 +19,11 @@ namespace Cli.All.Sybase
 	[Table("Person")]
 	public class Person : IEquatable<Person>
 	{
-		[Column("PersonID"  , DataType  = DataType.Int32   , DbType   = "int"            , Length = 4              , IsPrimaryKey = true, IsIdentity = true, SkipOnInsert = true, SkipOnUpdate = true)] public int     PersonId   { get; set; } // int
-		[Column("FirstName" , CanBeNull = false            , DataType = DataType.NVarChar, DbType = "nvarchar(150)", Length       = 150                                                              )] public string  FirstName  { get; set; } = null!; // nvarchar(150)
-		[Column("LastName"  , CanBeNull = false            , DataType = DataType.NVarChar, DbType = "nvarchar(150)", Length       = 150                                                              )] public string  LastName   { get; set; } = null!; // nvarchar(150)
-		[Column("MiddleName", DataType  = DataType.NVarChar, DbType   = "nvarchar(150)"  , Length = 150                                                                                              )] public string? MiddleName { get; set; } // nvarchar(150)
-		[Column("Gender"    , DataType  = DataType.Char    , DbType   = "char(1)"        , Length = 1                                                                                                )] public char    Gender     { get; set; } // char(1)
+		[Column("PersonID"  , DataType  = DataType.Int32   , DbType   = "int"            , Length = 4             , IsPrimaryKey = true, IsIdentity = true, SkipOnInsert = true, SkipOnUpdate = true)] public int     PersonId   { get; set; } // int
+		[Column("FirstName" , CanBeNull = false            , DataType = DataType.NVarChar, DbType = "nvarchar(50)", Length       = 50                                                               )] public string  FirstName  { get; set; } = null!; // nvarchar(50)
+		[Column("LastName"  , CanBeNull = false            , DataType = DataType.NVarChar, DbType = "nvarchar(50)", Length       = 50                                                               )] public string  LastName   { get; set; } = null!; // nvarchar(50)
+		[Column("MiddleName", DataType  = DataType.NVarChar, DbType   = "nvarchar(50)"   , Length = 50                                                                                              )] public string? MiddleName { get; set; } // nvarchar(50)
+		[Column("Gender"    , DataType  = DataType.Char    , DbType   = "char(1)"        , Length = 1                                                                                               )] public char    Gender     { get; set; } // char(1)
 
 		#region IEquatable<T> support
 		private static readonly IEqualityComparer<Person> _equalityComparer = ComparerBuilder.GetEqualityComparer<Person>(c => c.PersonId);

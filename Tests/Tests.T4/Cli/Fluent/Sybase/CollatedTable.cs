@@ -14,7 +14,7 @@ namespace Cli.Fluent.Sybase
 	public class CollatedTable
 	{
 		public int    Id              { get; set; } // int
-		public string CaseSensitive   { get; set; } = null!; // nvarchar(60)
-		public string CaseInsensitive { get; set; } = null!; // nvarchar(60)
+		public string CaseSensitive   { get; set; } = null!; // nvarchar(20)
+		public string CaseInsensitive { get; set; } = null!; // nvarchar(20)
 	}
 }

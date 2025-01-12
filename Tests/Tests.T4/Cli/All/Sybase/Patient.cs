@@ -20,7 +20,7 @@ namespace Cli.All.Sybase
 	public class Patient : IEquatable<Patient>
 	{
 		[Column("PersonID" , DataType  = DataType.Int32, DbType   = "int"            , Length = 4              , IsPrimaryKey = true)] public int    PersonId  { get; set; } // int
-		[Column("Diagnosis", CanBeNull = false         , DataType = DataType.NVarChar, DbType = "nvarchar(768)", Length       = 768 )] public string Diagnosis { get; set; } = null!; // nvarchar(768)
+		[Column("Diagnosis", CanBeNull = false         , DataType = DataType.NVarChar, DbType = "nvarchar(256)", Length       = 256 )] public string Diagnosis { get; set; } = null!; // nvarchar(256)
 
 		#region IEquatable<T> support
 		private static readonly IEqualityComparer<Patient> _equalityComparer = ComparerBuilder.GetEqualityComparer<Patient>(c => c.PersonId);

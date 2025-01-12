@@ -16,7 +16,7 @@ namespace Cli.Default.Sybase
 	public class Patient
 	{
 		[Column("PersonID" , IsPrimaryKey = true )] public int    PersonId  { get; set; } // int
-		[Column("Diagnosis", CanBeNull    = false)] public string Diagnosis { get; set; } = null!; // nvarchar(768)
+		[Column("Diagnosis", CanBeNull    = false)] public string Diagnosis { get; set; } = null!; // nvarchar(256)
 
 		#region Associations
 		/// <summary>

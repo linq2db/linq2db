@@ -24,6 +24,6 @@ namespace Cli.Fluent.Sybase
 		public short?    SmallIntValue  { get; set; } // smallint
 		public int?      IntValue       { get; set; } // int
 		public long?     BigIntValue    { get; set; } // bigint
-		public string?   StringValue    { get; set; } // nvarchar(150)
+		public string?   StringValue    { get; set; } // nvarchar(50)
 	}
 }

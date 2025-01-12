@@ -27,9 +27,9 @@ namespace Cli.All.Sybase
 		[Column("Field5"         , DataType = DataType.Int32    , DbType = "int"            , Length = 4                                  )] public int?      Field5          { get; set; } // int
 		[Column("FieldInt64"     , DataType = DataType.Int64    , DbType = "bigint"         , Length = 8                                  )] public long?     FieldInt64      { get; set; } // bigint
 		[Column("FieldString"    , DataType = DataType.VarChar  , DbType = "varchar(20)"    , Length = 20                                 )] public string?   FieldString     { get; set; } // varchar(20)
-		[Column("FieldNString"   , DataType = DataType.NVarChar , DbType = "nvarchar(60)"   , Length = 60                                 )] public string?   FieldNString    { get; set; } // nvarchar(60)
+		[Column("FieldNString"   , DataType = DataType.NVarChar , DbType = "nvarchar(20)"   , Length = 20                                 )] public string?   FieldNString    { get; set; } // nvarchar(20)
 		[Column("FieldChar"      , DataType = DataType.Char     , DbType = "char(1)"        , Length = 1                                  )] public char?     FieldChar       { get; set; } // char(1)
-		[Column("FieldNChar"     , DataType = DataType.NChar    , DbType = "nchar(3)"       , Length = 3                                  )] public string?   FieldNChar      { get; set; } // nchar(3)
+		[Column("FieldNChar"     , DataType = DataType.NChar    , DbType = "nchar(1)"       , Length = 1                                  )] public char?     FieldNChar      { get; set; } // nchar(1)
 		[Column("FieldFloat"     , DataType = DataType.Single   , DbType = "real"           , Length = 4                                  )] public float?    FieldFloat      { get; set; } // real
 		[Column("FieldDouble"    , DataType = DataType.Double   , DbType = "float"          , Length = 8                                  )] public double?   FieldDouble     { get; set; } // float
 		[Column("FieldDateTime"  , DataType = DataType.DateTime , DbType = "datetime"       , Length = 8                                  )] public DateTime? FieldDateTime   { get; set; } // datetime

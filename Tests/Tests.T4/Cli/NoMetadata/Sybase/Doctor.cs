@@ -14,7 +14,7 @@ namespace Cli.NoMetadata.Sybase
 	public class Doctor
 	{
 		public int    PersonId { get; set; } // int
-		public string Taxonomy { get; set; } = null!; // nvarchar(150)
+		public string Taxonomy { get; set; } = null!; // nvarchar(50)
 
 		#region Associations
 		/// <summary>

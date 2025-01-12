@@ -16,9 +16,9 @@ namespace Cli.Default.Sybase
 	public class Person
 	{
 		[Column("PersonID"  , IsPrimaryKey = true , IsIdentity = true, SkipOnInsert = true, SkipOnUpdate = true)] public int     PersonId   { get; set; } // int
-		[Column("FirstName" , CanBeNull    = false                                                             )] public string  FirstName  { get; set; } = null!; // nvarchar(150)
-		[Column("LastName"  , CanBeNull    = false                                                             )] public string  LastName   { get; set; } = null!; // nvarchar(150)
-		[Column("MiddleName"                                                                                   )] public string? MiddleName { get; set; } // nvarchar(150)
+		[Column("FirstName" , CanBeNull    = false                                                             )] public string  FirstName  { get; set; } = null!; // nvarchar(50)
+		[Column("LastName"  , CanBeNull    = false                                                             )] public string  LastName   { get; set; } = null!; // nvarchar(50)
+		[Column("MiddleName"                                                                                   )] public string? MiddleName { get; set; } // nvarchar(50)
 		[Column("Gender"                                                                                       )] public char    Gender     { get; set; } // char(1)
 
 		#region Associations

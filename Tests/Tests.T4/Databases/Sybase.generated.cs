@@ -107,8 +107,8 @@ namespace SybaseDataContext
 		[Column("char20DataType"),                                                 Nullable] public string?   Char20DataType        { get; set; } // char(20)
 		[Column("varcharDataType"),                                                Nullable] public string?   VarcharDataType       { get; set; } // varchar(20)
 		[Column("textDataType"),                                                   Nullable] public string?   TextDataType          { get; set; } // text
-		[Column("ncharDataType"),                                                  Nullable] public string?   NcharDataType         { get; set; } // nchar(60)
-		[Column("nvarcharDataType"),                                               Nullable] public string?   NvarcharDataType      { get; set; } // nvarchar(60)
+		[Column("ncharDataType"),                                                  Nullable] public string?   NcharDataType         { get; set; } // nchar(20)
+		[Column("nvarcharDataType"),                                               Nullable] public string?   NvarcharDataType      { get; set; } // nvarchar(20)
 		[Column("ntextDataType"),                                                  Nullable] public string?   NtextDataType         { get; set; } // unitext
 		[Column("binaryDataType"),                                                 Nullable] public byte[]?   BinaryDataType        { get; set; } // binary(1)
 		[Column("varbinaryDataType"),                                              Nullable] public byte[]?   VarbinaryDataType     { get; set; } // varbinary(1)
@@ -127,15 +127,15 @@ namespace SybaseDataContext
 	public partial class CollatedTable
 	{
 		[Column, NotNull] public int    Id              { get; set; } // int
-		[Column, NotNull] public string CaseSensitive   { get; set; } = null!; // nvarchar(60)
-		[Column, NotNull] public string CaseInsensitive { get; set; } = null!; // nvarchar(60)
+		[Column, NotNull] public string CaseSensitive   { get; set; } = null!; // nvarchar(20)
+		[Column, NotNull] public string CaseInsensitive { get; set; } = null!; // nvarchar(20)
 	}
 
 	[Table(Schema="dbo", Name="Doctor")]
 	public partial class Doctor
 	{
 		[PrimaryKey, NotNull] public int    PersonID { get; set; } // int
-		[Column,     NotNull] public string Taxonomy { get; set; } = null!; // nvarchar(150)
+		[Column,     NotNull] public string Taxonomy { get; set; } = null!; // nvarchar(50)
 
 		#region Associations
 
@@ -162,7 +162,7 @@ namespace SybaseDataContext
 		[PrimaryKey, NotNull    ] public int     InheritanceChildId  { get; set; } // int
 		[Column,     NotNull    ] public int     InheritanceParentId { get; set; } // int
 		[Column,        Nullable] public int?    TypeDiscriminator   { get; set; } // int
-		[Column,        Nullable] public string? Name                { get; set; } // nvarchar(150)
+		[Column,        Nullable] public string? Name                { get; set; } // nvarchar(50)
 	}
 
 	[Table(Schema="dbo", Name="InheritanceParent")]
@@ -170,7 +170,7 @@ namespace SybaseDataContext
 	{
 		[PrimaryKey, NotNull    ] public int     InheritanceParentId { get; set; } // int
 		[Column,        Nullable] public int?    TypeDiscriminator   { get; set; } // int
-		[Column,        Nullable] public string? Name                { get; set; } // nvarchar(150)
+		[Column,        Nullable] public string? Name                { get; set; } // nvarchar(50)
 	}
 
 	[Table(Schema="dbo", Name="KeepIdentityTest")]
@@ -193,7 +193,7 @@ namespace SybaseDataContext
 		[Column,    Nullable] public short?    SmallIntValue  { get; set; } // smallint
 		[Column,    Nullable] public int?      IntValue       { get; set; } // int
 		[Column,    Nullable] public long?     BigIntValue    { get; set; } // bigint
-		[Column,    Nullable] public string?   StringValue    { get; set; } // nvarchar(150)
+		[Column,    Nullable] public string?   StringValue    { get; set; } // nvarchar(50)
 	}
 
 	[Table(Schema="dbo", Name="Parent")]
@@ -207,7 +207,7 @@ namespace SybaseDataContext
 	public partial class Patient
 	{
 		[PrimaryKey, NotNull] public int    PersonID  { get; set; } // int
-		[Column,     NotNull] public string Diagnosis { get; set; } = null!; // nvarchar(768)
+		[Column,     NotNull] public string Diagnosis { get; set; } = null!; // nvarchar(256)
 
 		#region Associations
 
@@ -224,9 +224,9 @@ namespace SybaseDataContext
 	public partial class Person
 	{
 		[PrimaryKey, Identity   ] public int     PersonID   { get; set; } // int
-		[Column,     NotNull    ] public string  FirstName  { get; set; } = null!; // nvarchar(150)
-		[Column,     NotNull    ] public string  LastName   { get; set; } = null!; // nvarchar(150)
-		[Column,        Nullable] public string? MiddleName { get; set; } // nvarchar(150)
+		[Column,     NotNull    ] public string  FirstName  { get; set; } = null!; // nvarchar(50)
+		[Column,     NotNull    ] public string  LastName   { get; set; } = null!; // nvarchar(50)
+		[Column,        Nullable] public string? MiddleName { get; set; } // nvarchar(50)
 		[Column,     NotNull    ] public char    Gender     { get; set; } // char(1)
 
 		#region Associations
@@ -314,9 +314,9 @@ namespace SybaseDataContext
 		[Column,        Nullable] public int?      Field5          { get; set; } // int
 		[Column,        Nullable] public long?     FieldInt64      { get; set; } // bigint
 		[Column,        Nullable] public string?   FieldString     { get; set; } // varchar(20)
-		[Column,        Nullable] public string?   FieldNString    { get; set; } // nvarchar(60)
+		[Column,        Nullable] public string?   FieldNString    { get; set; } // nvarchar(20)
 		[Column,        Nullable] public char?     FieldChar       { get; set; } // char(1)
-		[Column,        Nullable] public string?   FieldNChar      { get; set; } // nchar(3)
+		[Column,        Nullable] public char?     FieldNChar      { get; set; } // nchar(1)
 		[Column,        Nullable] public float?    FieldFloat      { get; set; } // real
 		[Column,        Nullable] public double?   FieldDouble     { get; set; } // float
 		[Column,        Nullable] public DateTime? FieldDateTime   { get; set; } // datetime
@@ -340,9 +340,9 @@ namespace SybaseDataContext
 		[Column,        Nullable] public int?      Field5          { get; set; } // int
 		[Column,        Nullable] public long?     FieldInt64      { get; set; } // bigint
 		[Column,        Nullable] public string?   FieldString     { get; set; } // varchar(20)
-		[Column,        Nullable] public string?   FieldNString    { get; set; } // nvarchar(60)
+		[Column,        Nullable] public string?   FieldNString    { get; set; } // nvarchar(20)
 		[Column,        Nullable] public char?     FieldChar       { get; set; } // char(1)
-		[Column,        Nullable] public string?   FieldNChar      { get; set; } // nchar(3)
+		[Column,        Nullable] public char?     FieldNChar      { get; set; } // nchar(1)
 		[Column,        Nullable] public float?    FieldFloat      { get; set; } // real
 		[Column,        Nullable] public double?   FieldDouble     { get; set; } // float
 		[Column,        Nullable] public DateTime? FieldDateTime   { get; set; } // datetime
