@@ -17,6 +17,9 @@ namespace LinqToDB.SqlQuery
 		internal static ObjectPool<SelectQueryOptimizerVisitor> SelectOptimizer =
 			new(() => new SelectQueryOptimizerVisitor(), v => v.Cleanup(), 100);
 
+		internal static ObjectPool<AggregationCheckVisitor> AggregationCheckVisitors =
+			new(() => new AggregationCheckVisitor(), v => v.Cleanup(), 100);
+
 		sealed class IsDependsOnSourcesContext
 		{
 			public IsDependsOnSourcesContext(IReadOnlyCollection<ISqlTableSource> onSources, IReadOnlyCollection<IQueryElement>? elementsToIgnore)
@@ -1311,6 +1314,101 @@ namespace LinqToDB.SqlQuery
 				SqlExpression expression => (expression.Flags & SqlFlags.IsAggregate) != 0,
 				_                        => false,
 			};
+		}
+
+		internal class AggregationCheckVisitor : QueryElementVisitor
+		{
+			public bool IsAggregation { get; set; }
+			public bool IsWindow      { get; set; }
+			public bool HasReference  { get; set; }
+
+			public AggregationCheckVisitor() : base(VisitMode.ReadOnly)
+			{
+			}
+
+			public void Cleanup()
+			{
+				IsAggregation = false;
+				IsWindow      = false;
+				HasReference  = false;
+			}
+
+			[return : NotNullIfNotNull(nameof(element))]
+			public override IQueryElement? Visit(IQueryElement? element)
+			{
+				// if we already found aggregation or window function, we can stop
+				if (IsAggregation && IsWindow && HasReference)
+					return element;
+
+				return base.Visit(element);
+			}
+
+			protected override IQueryElement VisitSqlFunction(SqlFunction element)
+			{
+				var isAggregation = IsAggregationFunction(element);
+				var isWindow      = IsWindowFunction(element);
+
+				IsAggregation = IsAggregation || isAggregation;
+				IsWindow      = IsWindow      || isWindow;
+
+				if (isAggregation || isWindow)
+				{
+					return element;
+				}
+
+				return base.VisitSqlFunction(element);
+			}
+
+			protected override IQueryElement VisitSqlExpression(SqlExpression element)
+			{
+				var isAggregation = IsAggregationFunction(element);
+				var isWindow      = IsWindowFunction(element);
+
+				IsAggregation = IsAggregation || isAggregation;
+				IsWindow      = IsWindow      || isWindow;
+
+				if (isAggregation || isWindow)
+				{
+					return element;
+				}
+
+				return base.VisitSqlExpression(element);
+			}
+
+			protected override IQueryElement VisitSqlFieldReference(SqlField element)
+			{
+				HasReference = true;
+				return base.VisitSqlFieldReference(element);
+			}
+
+			protected override IQueryElement VisitSqlColumnReference(SqlColumn element)
+			{
+				HasReference = true;
+				return base.VisitSqlColumnReference(element);
+			}
+		}
+
+		public static bool IsAggregationQuery(SelectQuery selectQuery)
+		{
+			using var visitorRef = AggregationCheckVisitors.Allocate();
+
+			var visitor        = visitorRef.Value;
+			var hasAggregation = false;
+			foreach (var column in selectQuery.Select.Columns)
+			{
+				visitor.Cleanup();
+				visitor.Visit(column.Expression);
+
+				if (visitor.HasReference)
+					return false;
+
+				if (visitor.IsAggregation)
+				{
+					hasAggregation = true;
+				}
+			}
+
+			return hasAggregation;
 		}
 
 		public static bool IsWindowFunction(IQueryElement expr)

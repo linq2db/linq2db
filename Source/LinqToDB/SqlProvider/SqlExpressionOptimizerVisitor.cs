@@ -850,9 +850,7 @@ namespace LinqToDB.SqlProvider
 			{
 				if (query.GroupBy.IsEmpty)
 				{
-					var isAggregateQuery = query.Select.Columns.All(static c => QueryHelper.IsAggregationOrWindowFunction(c.Expression));
-
-					if (isAggregateQuery)
+					if (QueryHelper.IsAggregationQuery(query))
 						return SqlPredicate.True;
 				}
 			}
