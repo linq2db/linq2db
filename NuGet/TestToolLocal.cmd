@@ -15,7 +15,7 @@ dotnet script BuildNuspecs.csx /path:linq2db.cli.nuspec /buildPath:%NUSPECS% /ve
 
 RMDIR %NUGETS% /S /Q
 MD %NUGETS%
-dotnet pack empty\empty.csproj -p:NuspecFile=..\%NUSPECS%\linq2db.cli.nuspec -o %NUGETS%
+dotnet pack empty\empty.csproj --no-build -p:NuspecFile=..\%NUSPECS%\linq2db.cli.nuspec -o %NUGETS%
 
 dotnet tool uninstall linq2db.cli -g
 dotnet tool install -g --add-source %NUGETS% linq2db.cli --version %VERSION%
