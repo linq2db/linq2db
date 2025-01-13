@@ -274,8 +274,16 @@ namespace LinqToDB.Tools.ModelGeneration
 
 				foreach (var schema in schemas.Values)
 				{
-					schemaMembers.Members.Add(new TProperty { EnforceNotNullable = EnableNullableReferenceTypes, TypeBuilder = () => schema.TypeName + "." + SchemaDataContextTypeName, Name = schema.PropertyName });
-					body.Add(() => [$"{schema.PropertyName}{LenDiff(maxLen1, schema.PropertyName)} = new {schema.TypeName}.{LenDiff(maxLen2, schema.TypeName)}{SchemaDataContextTypeName}({(GenerateModelOnly ? "_dataContext" : "this")});"]);
+					schemaMembers.Members.Add(new TProperty
+					{
+						EnforceNotNullable = EnableNullableReferenceTypes && DataContextObject?.IsInterface == false,
+						TypeBuilder        = () => schema.TypeName + "." + SchemaDataContextTypeName,
+						Name               = schema.PropertyName
+					});
+
+					var implements = GenerateModelInterface ? "DataContext" : GenerateModelOnly ? "_dataContext" : "this";
+
+					body.Add(() => [$"{schema.PropertyName}{LenDiff(maxLen1, schema.PropertyName)} = new {schema.TypeName}.{LenDiff(maxLen2, schema.TypeName)}{SchemaDataContextTypeName}({implements});"]);
 				}
 
 				schemaGroup.Members.Add(schemaMembers);
@@ -284,7 +292,15 @@ namespace LinqToDB.Tools.ModelGeneration
 				DataContextObject?.Members.Add(schemaGroup);
 			}
 
-			if (GenerateModelOnly)
+			if (GenerateModelInterface)
+			{
+				var propsGroup = new TMemberGroup { Region = "Properties" };
+
+				propsGroup.Members.Add(new TProperty() { TypeBuilder = () => "IDataContext", Name = "DataContext", GetBodyBuilders = [() => new[] { "this;" }] });
+
+				DataContextObject?.Members.Add(propsGroup);
+			}
+			else if (GenerateModelOnly)
 			{
 				var ctorGroup = new TMemberGroup { Region = ".ctor" };
 
@@ -388,7 +404,7 @@ namespace LinqToDB.Tools.ModelGeneration
 					{
 						TypeBuilder     = () => $"ITable<{t.TypeName}>",
 						Name            = t.DataContextPropertyName,
-						GetBodyBuilders = { () => [ string.Format(CultureInfo.InvariantCulture, (schema != null || GenerateModelOnly ? "_dataContext" : "this") + ".GetTable<{0}>()", t.TypeName) ] },
+						GetBodyBuilders = { () => [ string.Format(CultureInfo.InvariantCulture, (schema == null && GenerateModelInterface ? "DataContext" : schema != null || GenerateModelOnly ? "_dataContext" : "this") + ".GetTable<{0}>()", t.TypeName) ] },
 						IsAuto          = false,
 						HasGetter       = true,
 						HasSetter       = false
@@ -871,7 +887,7 @@ namespace LinqToDB.Tools.ModelGeneration
 				if (schema.Aliases.Members.Count > 0)
 					schema.Type.Members.Add(defAliases);
 
-			if (Procedures.Count > 0 && !GenerateModelOnly)
+			if (Procedures.Count > 0 && !(GenerateModelOnly || GenerateModelInterface))
 			{
 				Model.Usings.Add("System.Collections.Generic");
 				Model.Usings.Add("System.Data");
@@ -901,7 +917,7 @@ namespace LinqToDB.Tools.ModelGeneration
 					Action<IMemberGroup> addFuncs = funcs.Members.Add;
 					Action<IMemberGroup> addTabfs = tabfs.Members.Add;
 
-					var thisDataContext = GenerateModelOnly ? "_dataContext" : "this";
+					var thisDataContext = GenerateModelInterface ? "DataContext" : GenerateModelOnly ? "_dataContext" : "this";
 
 					var schema = p.Schema != null && schemas.TryGetValue(p.Schema, out var s) ? s : null;
 

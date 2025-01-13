@@ -20,6 +20,7 @@ public string   DataContextName               { get { return ModelGenerator.Data
 public string   BaseEntityClass               { get { return ModelGenerator.BaseEntityClass;               } set { ModelGenerator.BaseEntityClass               = value; } }
 public string   OneToManyAssociationType      { get { return ModelGenerator.OneToManyAssociationType;      } set { ModelGenerator.OneToManyAssociationType      = value; } }
 
+public bool     GenerateModelInterface        { get { return ModelGenerator.GenerateModelInterface;        } set { ModelGenerator.GenerateModelInterface        = value; } }
 public bool     GenerateModelOnly             { get { return ModelGenerator.GenerateModelOnly;             } set { ModelGenerator.GenerateModelOnly             = value; } }
 public bool     GenerateDatabaseInfo          { get { return ModelGenerator.GenerateDatabaseInfo;          } set { ModelGenerator.GenerateDatabaseInfo          = value; } }
 public bool     GenerateDatabaseName          { get { return ModelGenerator.GenerateDatabaseName;          } set { ModelGenerator.GenerateDatabaseName          = value; } }

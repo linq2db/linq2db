@@ -138,6 +138,9 @@
 		<None Update="Databases\Model.tt" Generator="TextTemplatingFileGenerator" LastGenOutput="Model.generated.cs" />
 		<Compile Update="Databases\Model.generated.cs" DesignTime="True" AutoGen="True" DependentUpon="Model.tt" />
 
+		<None Update="Databases\ModelInterface.tt" Generator="TextTemplatingFileGenerator" LastGenOutput="ModelInterface.generated.cs" />
+		<Compile Update="Databases\ModelInterface.generated.cs" DesignTime="True" AutoGen="True" DependentUpon="ModelInterface.tt" />
+
 		<None Update="Databases\SqlServer.2017.ProceduresFromSchema.tt" Generator="TextTemplatingFileGenerator" LastGenOutput="SqlServer.2017.ProceduresFromSchema.generated.cs" />
 		<Compile Update="Databases\SqlServer.2017.ProceduresFromSchema.generated.cs" DesignTime="True" AutoGen="True" DependentUpon="SqlServer.2017.ProceduresFromSchema.tt" />
 

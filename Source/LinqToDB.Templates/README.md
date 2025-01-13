@@ -199,7 +199,7 @@ Func<string,boolean> IsValueType = IsValueTypeDefault;
 DataContextName                 = null;
 
 // (string) Name of base class for generated data context class.
-// Default: LinqToDB.Data.DataConnection.
+// Default: LinqToDB.Data.DataConnection or LinqToDB.IDataContext.
 BaseDataContextClass            = null;
 
 // Enables generation of constructors for data context class.
@@ -212,6 +212,9 @@ DefaultConfiguration            = null;
 
 // Enables generation of data model only without data context class.
 GenerateModelOnly               = false;
+
+// Enables generation of data model as an interface.
+GenerateModelInterface          = false;
 
 // Enables generation of data context comment with database name, data source and database version
 GenerateDatabaseInfo            = true;

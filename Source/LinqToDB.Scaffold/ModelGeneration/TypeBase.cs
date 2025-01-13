@@ -31,7 +31,7 @@ namespace LinqToDB.Tools.ModelGeneration
 		public List<string>     Comment        { get; set; } = [];
 		public List<IAttribute> Attributes     { get; set; } = [];
 		public string?          Conditional    { get; set; }
-		public string           ClassKeyword   { get; set; } = "class";
+		public virtual string   ClassKeyword   { get; set; } = "class";
 
 		private string? _name;
 		public  string?  Name

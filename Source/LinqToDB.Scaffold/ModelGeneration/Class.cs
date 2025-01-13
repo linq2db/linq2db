@@ -11,6 +11,7 @@ namespace LinqToDB.Tools.ModelGeneration
 	{
 		string?            BaseClass        { get; set; }
 		bool               IsStatic         { get; }
+		bool               IsInterface      { get; set; }
 		List<string>       GenericArguments { get; }
 		List<string>       Interfaces       { get; }
 		List<IClassMember> Members          { get; }
@@ -27,9 +28,17 @@ namespace LinqToDB.Tools.ModelGeneration
 		public List<string>       GenericArguments { get; set; } = [];
 		public List<string>       Interfaces       { get; set; } = [];
 		public List<IClassMember> Members          { get; set; } = [];
+		public bool               IsInterface      { get; set; }
 
 		public Class()
 		{
+		}
+
+		string?               _classKeyword;
+		public override string ClassKeyword
+		{
+			get => _classKeyword ?? (IsInterface ? "interface" : "class");
+			set => _classKeyword = value;
 		}
 
 		public Class(string name, params IClassMember[] members)

@@ -30,7 +30,30 @@ namespace LinqToDB.Tools.ModelGeneration
 		public string? BaseEntityClass                     { get; set; }
 		public string  OneToManyAssociationType            { get; set; } = "IEnumerable<{0}>";
 
-		public bool    GenerateModelOnly                   { get; set; }
+		public bool GenerateModelOnly
+		{
+			get => _generateModelOnly;
+			set
+			{
+				_generateModelOnly = value;
+
+				if (value)
+					BaseDataContextClass = null;
+			}
+		}
+
+		public bool GenerateModelInterface
+		{
+			get => _generateModelInterface;
+			set
+			{
+				_generateModelInterface = value;
+
+				if (value)
+					BaseDataContextClass = "LinqToDB.IDataContext";
+			}
+		}
+
 		public bool    GenerateDatabaseInfo                { get; set; } = true;
 		public bool    GenerateDatabaseName                { get; set; }
 		public bool    GenerateDatabaseNameFromTable       { get; set; }
@@ -298,6 +321,8 @@ namespace LinqToDB.Tools.ModelGeneration
 		}
 
 		public SqlProvider.ISqlBuilder? SqlBuilder;
+		bool                            _generateModelOnly;
+		bool                            _generateModelInterface;
 
 		protected Dictionary<string,TR> ToDictionary<T,TR>(IEnumerable<T> source, Func<T,string> keyGetter, Func<T,TR> objGetter, Func<TR,int,string> getKeyName)
 		{
@@ -454,7 +479,7 @@ namespace LinqToDB.Tools.ModelGeneration
 				DatabaseName = db.Database;
 
 			if (DataContextName == null)
-				DataContextObject!.Name = DataContextName = ToValidName(db.Database, true) + "DB";
+				DataContextObject!.Name = DataContextName = ToValidName((GenerateModelInterface ? "I" : "") + db.Database, true) + "DB";
 
 			if (GenerateDatabaseInfo)
 			{
@@ -822,11 +847,13 @@ namespace LinqToDB.Tools.ModelGeneration
 			{
 				DataContextObject = new TClass { Name = DataContextName ?? "" };
 
-				if (!GenerateModelOnly)
-					DataContextObject.BaseClass = BaseDataContextClass;
+				DataContextObject.BaseClass = BaseDataContextClass;
 
 				Model.Types.Add(DataContextObject);
 			}
+
+			if (GenerateModelInterface)
+				DataContextObject.IsInterface = true;
 
 			LoadServerMetadata<TForeignKey,TColumn>(dataConnection);
 

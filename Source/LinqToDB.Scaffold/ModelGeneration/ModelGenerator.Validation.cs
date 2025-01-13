@@ -92,17 +92,17 @@ namespace LinqToDB.Tools.ModelGeneration
 							});
 
 						if (conditional != null)
-							isValid.BodyBuilders.Add(() => new [] { $"\t#if {conditional}" });
+							isValid.BodyBuilders.Add(() => [$"\t#if {conditional}"]);
 
-						isValid.BodyBuilders.Add(() => new [] { $"\tvar flag{ii} = ValidationResult.Success == {mname}(obj, obj.{name});" });
+						isValid.BodyBuilders.Add(() => [$"\tvar flag{ii} = ValidationResult.Success == {mname}(obj, obj.{name});"]);
 
 						if (conditional != null)
-							isValid.BodyBuilders.Add(() => new []
-							{
+							isValid.BodyBuilders.Add(() =>
+							[
 								"\t#else",
 								$"\tvar flag{ii} = true;",
-								"\t#endif",
-							});
+								"\t#endif"
+							]);
 
 						ret += (i == 0 ? "" : " && ") + "flag" + ii;
 
