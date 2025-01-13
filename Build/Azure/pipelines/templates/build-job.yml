@@ -67,7 +67,7 @@ jobs:
     inputs:
       command: build
       projects: $(solution)
-      arguments: --configuration $(test_configuration)
+      arguments: --configuration $(test_configuration) --tl:off -v diag
     displayName: Build Solution for Tests
     condition: and(succeeded(), ${{ parameters.with_tests }})
 
