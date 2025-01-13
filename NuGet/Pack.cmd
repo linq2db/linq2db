@@ -10,6 +10,8 @@ DIR %NUSPECS%
 
 cmd /c "exit /b 0"
 
+dotnet restore empty\empty.csproj
+
 ECHO build binary nugets (with debug support)
 FOR %%n IN (linq2db linq2db.Extensions linq2db.Tools linq2db.Scaffold linq2db.Remote.Grpc linq2db.Remote.Wcf linq2db.FSharp linq2db.EntityFrameworkCore.v3 linq2db.EntityFrameworkCore.v6 linq2db.EntityFrameworkCore.v8 linq2db.EntityFrameworkCore.v9) DO (
     ECHO %NUSPECS%\%%n.nuspec

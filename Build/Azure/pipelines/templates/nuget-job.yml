@@ -143,7 +143,7 @@ jobs:
     inputs:
       script: $(Build.SourcesDirectory)/NuGet/Pack.cmd
       workingDirectory: $(Build.SourcesDirectory)/NuGet
-      failOnStderr: true
+      failOnStderr: true # needed as dotnet pack doesn't set exit code
     displayName: Build nugets for Azure Artifacts
     condition: and(succeeded(), ne(variables['Build.SourceBranchName'], variables['release_branch']))
 
@@ -151,7 +151,7 @@ jobs:
     inputs:
       script: $(Build.SourcesDirectory)/NuGet/Pack.cmd snupkg
       workingDirectory: $(Build.SourcesDirectory)/NuGet
-      failOnStderr: true
+      failOnStderr: true # needed as dotnet pack doesn't set exit code
     displayName: Build nugets for Nuget.org
     condition: and(succeeded(), eq(variables['Build.SourceBranchName'], variables['release_branch']))
 
