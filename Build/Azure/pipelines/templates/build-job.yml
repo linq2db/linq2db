@@ -86,6 +86,7 @@ jobs:
       arguments: --configuration $(test_configuration)
     displayName: Build Solution for Tests
     condition: and(succeeded(), ${{ parameters.with_tests }})
+    retryCountOnTaskFailure: 1 # https://github.com/dotnet/sdk/issues/44080
 
   - task: CmdLine@2
     inputs:
