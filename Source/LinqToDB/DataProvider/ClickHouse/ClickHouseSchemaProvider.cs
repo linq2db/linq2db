@@ -181,7 +181,6 @@ WHERE database = database() and default_kind <> 'ALIAS'")
 			if (dataType.StartsWith("Enum8("))       return (DataType.Enum8     , typeof(sbyte));
 			if (dataType.StartsWith("Enum16("))      return (DataType.Enum16    , typeof(short));
 
-			// use binary as FixedString has more chances to be binary
 			if (dataType.StartsWith("FixedString("))
 				return (DataType.NChar, length is 1 ? typeof(char) : typeof(string));
 
