@@ -12,13 +12,8 @@ jobs:
 
   steps:
 
-  # .NET 6 and 8 SDKs already installed https://github.com/actions/runner-images/blob/main/images/windows/Windows2022-Readme.md
-
-  - task: UseDotNet@2
-    displayName: 'Install .NET 9 SDK'
-    inputs:
-      packageType: sdk
-      version: 9.x
+  # .NET 6, 8 and 9 SDKs already installed https://github.com/actions/runner-images/blob/main/images/windows/Windows2022-Readme.md
+  # Don't add explicit SDK install for now as it will break LinqToDB.CLI without fix for https://github.com/dotnet/sdk/issues/45926
 
   - task: PowerShell@2
     inputs:
@@ -70,6 +65,7 @@ jobs:
       arguments: --configuration $(test_configuration)
     displayName: Build Solution for Tests
     condition: and(succeeded(), ${{ parameters.with_tests }})
+    retryCountOnTaskFailure: 1 # https://github.com/dotnet/sdk/issues/44080
 
   - task: CmdLine@2
     inputs:
