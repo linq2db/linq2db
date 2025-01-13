@@ -1,4 +1,4 @@
-<#@ assembly name="$(LinqToDBT4DB2ClientPath)IBM.Data.DB2.DLL"                    #>
+<#@ assembly name="$(LinqToDBT4InformixClientPath)IBM.Data.DB2.DLL"               #>
 <#@ include file="$(LinqToDBT4TemplatesPath)LinqToDB.ttinclude" once="true"       #>
 <#@ include file="$(LinqToDBT4TemplatesPath)LinqToDB.Tools.ttinclude" once="true" #>
 <#+

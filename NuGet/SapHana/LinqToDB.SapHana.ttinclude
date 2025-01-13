@@ -1,4 +1,4 @@
-<#@ assembly name="$(LinqToDBT4MySqlClientPath)System.Data.Odbc.dll"              #>
+<#@ assembly name="$(LinqToDBT4SapHanaClientPath)System.Data.Odbc.dll"            #>
 <#@ include file="$(LinqToDBT4TemplatesPath)LinqToDB.ttinclude"       once="true" #>
 <#@ include file="$(LinqToDBT4TemplatesPath)LinqToDB.Tools.ttinclude" once="true" #>
 <#@ import namespace="LinqToDB.DataProvider.SapHana"                              #>
