@@ -101,42 +101,42 @@ jobs:
 
   - task: DotNetCoreCLI@2
     displayName: Update nuspecs
-    workingDirectory: '$(Build.SourcesDirectory)/NuGet'
     inputs:
       command: custom
       custom: script
+      workingDirectory: '$(Build.SourcesDirectory)/NuGet'
       arguments: BuildNuspecs.csx /path:**/*.nuspec /buildPath:../.build/nuspecs /version:$(packageVersion) /clean:true /branch:$(Build.SourceBranchName)
 
   - task: DotNetCoreCLI@2
     displayName: Update nuspecs (EF3)
-    workingDirectory: '$(Build.SourcesDirectory)'
     inputs:
       command: custom
       custom: script
+      workingDirectory: '$(Build.SourcesDirectory)/NuGet'
       arguments: BuildNuspecs.csx /path:linq2db.EntityFrameworkCore.v3.nuspec /buildPath:../.build/nuspecs /version:$(ef3PackageVersion) /linq2DbVersion:$(packageVersion) /branch:$(Build.SourceBranchName)
 
   - task: DotNetCoreCLI@2
     displayName: Update nuspecs (EF6)
-    workingDirectory: '$(Build.SourcesDirectory)'
     inputs:
       command: custom
       custom: script
+      workingDirectory: '$(Build.SourcesDirectory)/NuGet'
       arguments: BuildNuspecs.csx /path:linq2db.EntityFrameworkCore.v6.nuspec /buildPath:../.build/nuspecs /version:$(ef6PackageVersion) /linq2DbVersion:$(packageVersion) /branch:$(Build.SourceBranchName)
 
   - task: DotNetCoreCLI@2
     displayName: Update nuspecs (EF8)
-    workingDirectory: '$(Build.SourcesDirectory)'
     inputs:
       command: custom
       custom: script
+      workingDirectory: '$(Build.SourcesDirectory)/NuGet'
       arguments: BuildNuspecs.csx /path:linq2db.EntityFrameworkCore.v7.nuspec /buildPath:../.build/nuspecs /version:$(ef8PackageVersion) /linq2DbVersion:$(packageVersion) /branch:$(Build.SourceBranchName)
 
   - task: DotNetCoreCLI@2
     displayName: Update nuspecs (EF9)
-    workingDirectory: '$(Build.SourcesDirectory)'
     inputs:
       command: custom
       custom: script
+      workingDirectory: '$(Build.SourcesDirectory)/NuGet'
       arguments: BuildNuspecs.csx /path:linq2db.EntityFrameworkCore.v8.nuspec /buildPath:../.build/nuspecs /version:$(ef9PackageVersion) /linq2DbVersion:$(packageVersion) /branch:$(Build.SourceBranchName)
 
   - task: CmdLine@2
