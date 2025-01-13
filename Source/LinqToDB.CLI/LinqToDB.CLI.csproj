@@ -21,16 +21,16 @@
 	<Target Name="BuildSpecific" AfterTargets="Build" Condition=" '$(RID)' == '' ">
 		<ItemGroup>
 			<TFM Include="$(TargetFrameworks)" Condition=" '$(TargetFramework)' == '' " Label="Build from VS" />
-			<TFM Include="$(TargetFramework)"  Condition=" '$(TargetFramework)' != '' " Label="Build from MSBUILD or dotnet" />
+			<TFM Include="$(TargetFramework)" Condition=" '$(TargetFramework)' != '' " Label="Build from MSBUILD or dotnet" />
 		</ItemGroup>
 
 		<!--we need to remove apphost.exe as Build target doesn't validate already existing file to be compatible with requested RID-->
-		<Delete Files="$(ArtifactsPath)\obj\$(MSBuildProjectName)\$(Configuration)\%(TFM.Identity)\apphost.exe" />
-		<MSBuild Projects="$(MSBuildProjectFullPath)" Properties="RID=win-x86;Platform=$(Platform);Configuration=$(Configuration)" Targets="Build" />
+		<RemoveDir Directories="$(ArtifactsPath)\obj\$(MSBuildProjectName)\$(Configuration)\%(TFM.Identity)" />
+		<MSBuild Projects="$(MSBuildProjectFullPath)" Properties="RID=win-x86;Platform=x64;Configuration=$(Configuration)" Targets="Build" />
 		<Copy SourceFiles="$(ArtifactsPath)\bin\$(MSBuildProjectName)\$(Configuration)\apphosts\%(TFM.Identity)\win-x86\$(AssemblyName).exe" DestinationFiles="$(ArtifactsPath)\bin\$(MSBuildProjectName)\$(Configuration)\%(TFM.Identity)\$(AssemblyName).win-x86.exe" />
 
-		<Delete Files="$(ArtifactsPath)\obj\$(MSBuildProjectName)\$(Configuration)\%(TFM.Identity)\apphost.exe" />
-		<MSBuild Projects="$(MSBuildProjectFullPath)" Properties="RID=win-x64;Platform=$(Platform);Configuration=$(Configuration)" Targets="Build" />
+		<RemoveDir Directories="$(ArtifactsPath)\obj\$(MSBuildProjectName)\$(Configuration)\%(TFM.Identity)" />
+		<MSBuild Projects="$(MSBuildProjectFullPath)" Properties="RID=win-x64;Platform=x86;Configuration=$(Configuration)" Targets="Build" />
 		<Copy SourceFiles="$(ArtifactsPath)\bin\$(MSBuildProjectName)\$(Configuration)\apphosts\%(TFM.Identity)\win-x64\$(AssemblyName).exe" DestinationFiles="$(ArtifactsPath)\bin\$(MSBuildProjectName)\$(Configuration)\%(TFM.Identity)\$(AssemblyName).win-x64.exe" />
 	</Target>
 
