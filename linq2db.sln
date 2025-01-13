@@ -4,7 +4,6 @@ VisualStudioVersion = 17.0.32002.185
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Build", "Build", "{885042E3-18EA-4927-B1CF-5E0E3DBD1C00}"
 	ProjectSection(SolutionItems) = preProject
-		Build\BuildNuspecs.ps1 = Build\BuildNuspecs.ps1
 		Directory.Build.props = Directory.Build.props
 		Directory.Packages.props = Directory.Packages.props
 		Build\linq2db.snk = Build\linq2db.snk

@@ -91,40 +91,53 @@ jobs:
       artifactName: '$(artifact_t4_binaries)'
       targetPath: '$(Build.SourcesDirectory)/.build/bin/NuGet/$(release_configuration)'
 
-  - task: PowerShell@2
+#dotnet tool install -g dotnet-script
+  - task: DotNetCoreCLI@2
+    displayName: Install dotnet-script tool
     inputs:
-      filePath: '$(Build.SourcesDirectory)/Build/BuildNuspecs.ps1'
-      workingDirectory: '$(Build.SourcesDirectory)'
-      arguments: -path $(Build.SourcesDirectory)/NuGet/**/*.nuspec -buildPath $(Build.SourcesDirectory)/.build/nuspecs -version $(packageVersion) -branch $(Build.SourceBranchName)
+      command: custom
+      custom: tool
+      arguments: install -g dotnet-script
+
+  - task: DotNetCoreCLI@2
     displayName: Update nuspecs
-
-  - task: PowerShell@2
+    workingDirectory: '$(Build.SourcesDirectory)/NuGet'
     inputs:
-      filePath: '$(Build.SourcesDirectory)/Build/BuildNuspecs.ps1'
-      workingDirectory: '$(Build.SourcesDirectory)'
-      arguments: -path $(Build.SourcesDirectory)/NuGet/linq2db.EntityFrameworkCore.v3.nuspec -buildPath $(Build.SourcesDirectory)/.build/nuspecs -version $(ef3PackageVersion) -branch $(Build.SourceBranchName) -linq2DbVersion $(packageVersion)
+      command: custom
+      custom: script
+      arguments: BuildNuspecs.csx /path:**/*.nuspec /buildPath:../.build/nuspecs /version:$(packageVersion) /clean:true /branch:$(Build.SourceBranchName)
+
+  - task: DotNetCoreCLI@2
     displayName: Update nuspecs (EF3)
-
-  - task: PowerShell@2
+    workingDirectory: '$(Build.SourcesDirectory)'
     inputs:
-      filePath: '$(Build.SourcesDirectory)/Build/BuildNuspecs.ps1'
-      workingDirectory: '$(Build.SourcesDirectory)'
-      arguments: -path $(Build.SourcesDirectory)/NuGet/linq2db.EntityFrameworkCore.v6.nuspec -buildPath $(Build.SourcesDirectory)/.build/nuspecs -version $(ef6PackageVersion) -branch $(Build.SourceBranchName) -linq2DbVersion $(packageVersion)
+      command: custom
+      custom: script
+      arguments: BuildNuspecs.csx /path:linq2db.EntityFrameworkCore.v3.nuspec /buildPath:../.build/nuspecs /version:$(ef3PackageVersion) /linq2DbVersion:$(packageVersion) /branch:$(Build.SourceBranchName)
+
+  - task: DotNetCoreCLI@2
     displayName: Update nuspecs (EF6)
-
-  - task: PowerShell@2
+    workingDirectory: '$(Build.SourcesDirectory)'
     inputs:
-      filePath: '$(Build.SourcesDirectory)/Build/BuildNuspecs.ps1'
-      workingDirectory: '$(Build.SourcesDirectory)'
-      arguments: -path $(Build.SourcesDirectory)/NuGet/linq2db.EntityFrameworkCore.v8.nuspec -buildPath $(Build.SourcesDirectory)/.build/nuspecs -version $(ef8PackageVersion) -branch $(Build.SourceBranchName) -linq2DbVersion $(packageVersion)
+      command: custom
+      custom: script
+      arguments: BuildNuspecs.csx /path:linq2db.EntityFrameworkCore.v6.nuspec /buildPath:../.build/nuspecs /version:$(ef6PackageVersion) /linq2DbVersion:$(packageVersion) /branch:$(Build.SourceBranchName)
+
+  - task: DotNetCoreCLI@2
     displayName: Update nuspecs (EF8)
-
-  - task: PowerShell@2
+    workingDirectory: '$(Build.SourcesDirectory)'
     inputs:
-      filePath: '$(Build.SourcesDirectory)/Build/BuildNuspecs.ps1'
-      workingDirectory: '$(Build.SourcesDirectory)'
-      arguments: -path $(Build.SourcesDirectory)/NuGet/linq2db.EntityFrameworkCore.v9.nuspec -buildPath $(Build.SourcesDirectory)/.build/nuspecs -version $(ef9PackageVersion) -branch $(Build.SourceBranchName) -linq2DbVersion $(packageVersion)
+      command: custom
+      custom: script
+      arguments: BuildNuspecs.csx /path:linq2db.EntityFrameworkCore.v7.nuspec /buildPath:../.build/nuspecs /version:$(ef8PackageVersion) /linq2DbVersion:$(packageVersion) /branch:$(Build.SourceBranchName)
+
+  - task: DotNetCoreCLI@2
     displayName: Update nuspecs (EF9)
+    workingDirectory: '$(Build.SourcesDirectory)'
+    inputs:
+      command: custom
+      custom: script
+      arguments: BuildNuspecs.csx /path:linq2db.EntityFrameworkCore.v8.nuspec /buildPath:../.build/nuspecs /version:$(ef9PackageVersion) /linq2DbVersion:$(packageVersion) /branch:$(Build.SourceBranchName)
 
   - task: CmdLine@2
     inputs:
