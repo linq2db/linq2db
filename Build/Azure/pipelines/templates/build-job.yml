@@ -12,29 +12,8 @@ jobs:
 
   steps:
 
-  # .NET 6 and 8 SDKs already installed https://github.com/actions/runner-images/blob/main/images/windows/Windows2022-Readme.md
-  # but we need them to properly build LinqToDB.CLI (GetPackageDirectory MSBUILD task should return Path for packages)
-  # This is SDK build scripts bug https://github.com/dotnet/sdk/issues/45926
-
-  # - task: UseDotNet@2
-  #   displayName: 'Install .NET 6 SDK'
-  #   condition: and(succeeded(), or(${{ parameters.with_tests }}, ${{ parameters.with_nugets }}))
-  #   inputs:
-  #     packageType: sdk
-  #     version: 6.x
-
-  # - task: UseDotNet@2
-  #   displayName: 'Install .NET 8 SDK'
-  #   condition: and(succeeded(), or(${{ parameters.with_tests }}, ${{ parameters.with_nugets }}))
-  #   inputs:
-  #     packageType: sdk
-  #     version: 8.x
-
-  # - task: UseDotNet@2
-  #   displayName: 'Install .NET 9 SDK'
-  #   inputs:
-  #     packageType: sdk
-  #     version: 9.x
+  # .NET 6, 8 and 9 SDKs already installed https://github.com/actions/runner-images/blob/main/images/windows/Windows2022-Readme.md
+  # Don't add explicit SDK install for now as it will break LinqToDB.CLI without fix for https://github.com/dotnet/sdk/issues/45926
 
   - task: PowerShell@2
     inputs:
