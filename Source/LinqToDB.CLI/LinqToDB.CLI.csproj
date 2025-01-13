@@ -4,8 +4,6 @@
 		<RootNamespace>LinqToDB.CLI</RootNamespace>
 		<AssemblyName>dotnet-linq2db</AssemblyName>
 		<TargetFrameworks>net6.0;net8.0;net9.0</TargetFrameworks>
-		<!--don't uncomment, used to generate x86 apphosts manually
-		<PlatformTarget>x86</PlatformTarget>-->
 		<DocumentationFile>$(ArtifactsPath)\bin\$(MSBuildProjectName)\$(Configuration)\$(TargetFramework)\$(AssemblyName).xml</DocumentationFile>
 		<OutputType>Exe</OutputType>
 		<WarningsAsErrors>true</WarningsAsErrors>
