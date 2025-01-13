@@ -1,0 +1,22 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<ItemGroup>
+		<PackageReference Include="linq2db.DB2" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<None Include="..\Templates\DB2.tt" Generator="TextTemplatingFileGenerator">
+		  <LastGenOutput>DB2.generated.cs</LastGenOutput>
+		</None>
+		<Compile Include="..\Templates\DB2.generated.cs">
+		  <DesignTime>True</DesignTime>
+		  <AutoGen>True</AutoGen>
+		  <DependentUpon>DB2.tt</DependentUpon>
+		</Compile>
+	</ItemGroup>
+
+	<ItemGroup>
+		<Service Include="{508349b6-6b84-4df5-91f0-309beebad82d}" />
+	</ItemGroup>
+
+</Project>

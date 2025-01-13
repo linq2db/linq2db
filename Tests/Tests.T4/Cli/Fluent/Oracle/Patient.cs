@@ -18,9 +18,9 @@ namespace Cli.Fluent.Oracle
 
 		#region Associations
 		/// <summary>
-		/// Fk_Patient_Person
+		/// FK_Patient_Person
 		/// </summary>
-		public Person FkPerson { get; set; } = null!;
+		public Person Person { get; set; } = null!;
 		#endregion
 	}
 }

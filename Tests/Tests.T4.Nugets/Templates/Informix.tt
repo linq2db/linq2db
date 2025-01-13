@@ -1,0 +1,14 @@
+﻿<#@ template language="C#" debug="True" hostSpecific="True"                                  #>
+<#@ CleanupBehavior processor="T4VSHost" CleanupAfterProcessingtemplate="true"               #>
+<#@ output extension=".generated.cs"                                                         #>
+<#@ include file="$(LinqToDBT4InformixTemplatesPath)LinqToDB.Informix.ttinclude" once="true" #>
+<#@ include file="$(LinqToDBT4TemplatesPath)PluralizationService.ttinclude"      once="true" #>
+<#@ include file="ConnectionStrings.ttinclude"                                   once="true" #>
+<#
+	NamespaceName        = "Informix";
+	GenerateSchemaAsType = true;
+
+	LoadInformixMetadata(GetConnectionString("Informix.DB2"));
+
+	GenerateModel();
+#>

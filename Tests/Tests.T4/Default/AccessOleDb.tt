@@ -1,14 +1,15 @@
-﻿<#@ template language="C#" debug="True" hostSpecific="True" compilerOptions="/langversion:6" #>
-<#@ output extension=".generated.cs"                                                         #>
-<#@ include file="..\Shared.ttinclude"                                          once="true"  #>
-<#@ include file="..\..\..\Source\LinqToDB.Templates\LinqToDB.Access.ttinclude" once="true"  #>
+﻿<#@ template language="C#" debug="True" hostSpecific="True" compilerOptions="/langversion:6"   #>
+<#@ CleanupBehavior processor="T4VSHost" CleanupAfterProcessingtemplate="true"                 #>
+<#@ output extension=".generated.cs"                                                           #>
+<#@ include file="$(LinqToDBT4AccessTemplatesPath)LinqToDB.Access.ttinclude"       once="true" #>
+<#@ include file="..\Shared.ttinclude"                                             once="true" #>
 <#
 	NamespaceName     = "Default.Access.OleDb";
 	DataContextName   = "TestDataDB";
 
 	var artifactsPath = Host.ResolveAssemblyReference("$(ArtifactsPath)");
 	var path          = $@"{artifactsPath}\bin\Tests\Debug\net462\Database\TestData.mdb";
-	LoadAccessMetadata($"Provider=Microsoft.ACE.OLEDB.12.0;Data Source={path};Locale Identifier=1033;Persist Security Info=True");
 
+	LoadAccessMetadata($"Provider=Microsoft.ACE.OLEDB.12.0;Data Source={path};Locale Identifier=1033;Persist Security Info=True");
 	GenerateModel();
 #>

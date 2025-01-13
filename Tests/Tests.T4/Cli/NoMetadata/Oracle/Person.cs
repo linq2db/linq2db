@@ -21,12 +21,12 @@ namespace Cli.NoMetadata.Oracle
 
 		#region Associations
 		/// <summary>
-		/// Fk_Doctor_Person backreference
+		/// FK_Doctor_Person backreference
 		/// </summary>
 		public Doctor? Doctor { get; set; }
 
 		/// <summary>
-		/// Fk_Patient_Person backreference
+		/// FK_Patient_Person backreference
 		/// </summary>
 		public Patient? Patient { get; set; }
 		#endregion

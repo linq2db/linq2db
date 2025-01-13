@@ -3,12 +3,8 @@
 	<metadata>
 		<id>linq2db.Remote.Wcf</id>
 		<title>LINQ to DB remote data context over WCF</title>
-		<description>LINQ to DB Remote gRPC package provides client and server classes to query database remotely using WCF.</description>
-		<summary />
-		<tags>
-			linq linq2db LinqToDB WCF ORM database DB SQL SqlServer Access SqlCe SqlServerCe MySql Firebird SQLite Sybase Oracle ODP PostgreSQL DB2 Informix SapHana
-		</tags>
-		<readme>README.md</readme>
+		<description>LINQ to DB Remote WCF package provides client and server classes to query database remotely using WCF.</description>
+		<tags>WCF RemoteLinq</tags>
 		<dependencies>
 			<group targetFramework="net462">
 				<dependency id="linq2db" version="6.0.0" />
@@ -17,10 +13,10 @@
 	</metadata>
 
 	<files>
-		<file src="..\..\NuGet\README.Remote.Wcf.md"                                 target="README.md"   />
+		<file src="NuGet\README.Remote.Wcf.md"                                target="README.md"  />
 
-		<file src="..\bin\LinqToDB.Remote.Wcf\Release\net462\linq2db.Remote.Wcf.pdb" target="lib\net462\" />
-		<file src="..\bin\LinqToDB.Remote.Wcf\Release\net462\linq2db.Remote.Wcf.xml" target="lib\net462\" />
-		<file src="..\bin\LinqToDB.Remote.Wcf\Release\net462\linq2db.Remote.Wcf.dll" target="lib\net462\" />
+		<file src="bin\LinqToDB.Remote.Wcf\{0}\net462\linq2db.Remote.Wcf.pdb" target="lib\net462\" />
+		<file src="bin\LinqToDB.Remote.Wcf\{0}\net462\linq2db.Remote.Wcf.xml" target="lib\net462\" />
+		<file src="bin\LinqToDB.Remote.Wcf\{0}\net462\linq2db.Remote.Wcf.dll" target="lib\net462\" />
 	</files>
 </package>

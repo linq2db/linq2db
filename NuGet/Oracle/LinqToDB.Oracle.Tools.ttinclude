@@ -1,3 +1,4 @@
-<#@ assembly name="$(LinqToDBT4OracleManagedClientPath)Oracle.ManagedDataAccess.dll" #>
-<#@ include file="LinqToDB.Tools.ttinclude"  once="true"                             #>
-<#@ include file="LinqToDB.Oracle.ttinclude" once="true"                             #>
+<#@ include file="$(LinqToDBT4OracleTemplatesPath)LinqToDB.Oracle.ttinclude" once="true"   #>
+<#+
+#warning "LinqToDB.Oracle.Tools.ttinclude is obsolete. Use LinqToDB.Oracle.ttinclude instead."
+#>

@@ -1,12 +1,13 @@
-﻿<#@ template language="C#" debug="True" hostSpecific="True" compilerOptions="/langversion:6" #>
-<#@ output extension=".generated.cs"                                                         #>
-<#@ include file="..\Shared.ttinclude"                                          once="true"  #>
-<#@ include file="..\..\..\Source\LinqToDB.Templates\LinqToDB.Sybase.ttinclude" once="true"  #>
+﻿<#@ template language="C#" debug="True" hostSpecific="True"                              #>
+<#@ CleanupBehavior processor="T4VSHost" CleanupAfterProcessingtemplate="true"           #>
+<#@ output extension=".generated.cs"                                                     #>
+<#@ include file="$(LinqToDBT4SybaseTemplatesPath)LinqToDB.Sybase.ttinclude" once="true" #>
+<#@ include file="..\Shared.ttinclude"                                       once="true" #>
 <#
 	NamespaceName = "SybaseDataContext";
 
 	GenerateSybaseSystemTables = true;
 
-	LoadSybaseMetadata(GetConnectionString("Sybase"));
+	LoadSybaseMetadata(GetConnectionString("Sybase.Managed"));
 	GenerateModel();
 #>

@@ -1,46 +1,55 @@
 ﻿<#@ template language="C#" debug="True" hostSpecific="True" compilerOptions="/langversion:6" #>
+<#@ CleanupBehavior processor="T4VSHost" CleanupAfterProcessingtemplate="true"               #>
 <#@ output extension=".generated.cs"                                                         #>
-<#@ assembly name="$(ArtifactsPath)\bin\Tests\Debug\net462\System.Data.SQLite.dll"           #>
-<#@ include file="..\Shared.ttinclude"                                          once="true"  #>
-<#@ include file="..\..\..\Source\LinqToDB.Templates\LinqToDB.SQLite.ttinclude" once="true"  #>
+<#@ include file="$(LinqToDBT4SQLiteTemplatesPath)LinqToDB.SQLite.ttinclude" once="true"     #>
+<#@ include file="..\Shared.ttinclude"                                       once="true"     #>
 <#
 	LoadDatabaseSchema = (dataConnection, schemaOptions) =>
 	{
-		var sp = dataConnection.DataProvider.GetSchemaProvider();
+		var sp     = dataConnection.DataProvider.GetSchemaProvider();
 		var schema = sp.GetSchema(dataConnection, schemaOptions);
 
 		// setup testcase for https://github.com/linq2db/linq2db/issues/4058
-		var table      = schema.Tables.First(t => t.TableName == "AllTypes");
+		//
+		var table = schema.Tables.First(t => t.TableName == "AllTypes");
+
 		table.TypeName = "class";
 
 		return schema;
 	};
 
 	// setup testcase for https://github.com/linq2db/linq2db/issues/4058
+	//
 	ConvertToCompilable = (name, mayRemoveUnderscore) =>
 	{
 		if (name == "class")
 			name = "struct";
-		return ConvertToCompilableDefault(name, mayRemoveUnderscore);
+
+		return ModelGenerator.ConvertToCompilableDefault(name, mayRemoveUnderscore);
 	};
 
 	// setup testcase for https://github.com/linq2db/linq2db/issues/4058
+	//
 	ToValidName = (name, mayRemoveUnderscore) =>
 	{
 		if (name == "struct")
 			name = "event";
-		var result = ToValidNameDefault(name, mayRemoveUnderscore);
+
+		var result = ModelGenerator.ToValidNameDefault(name, mayRemoveUnderscore);
+
 		if (result == "Event")
 			result = "namespace";
+
 		return result;
 	};
 
-	NamespaceName = "SQLiteDataContext";
+	NamespaceName        = "SQLiteDataContext";
 	BaseDataContextClass = "LinqToDB.DataContext";
 
 	GenerateAssociationExtensions = true;
 
 	var solutionsPath = Host.ResolveAssemblyReference("$(SolutionDir)");
+
 	LoadSQLiteMetadata(solutionsPath + @"\Data\", "TestData.sqlite");
 
 	foreach (var t in Tables.Values)

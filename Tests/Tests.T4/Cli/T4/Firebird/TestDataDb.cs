@@ -407,11 +407,11 @@ namespace Cli.T4.Firebird
 		#endregion
 
 		#region PersonDelete
-		public static int PersonDelete(this TestDataDB dataConnection, int? personid)
+		public static int PersonDelete(this TestDataDB dataConnection, int? personId)
 		{
 			var parameters = new []
 			{
-				new DataParameter("PERSONID", personid, DataType.Int32)
+				new DataParameter("PersonID", personId, DataType.Int32)
 				{
 					Size = 4
 				}

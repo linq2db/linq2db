@@ -1,9 +1,11 @@
-<#@ assembly name="System.Core"                         #>
-<#@ assembly name="$(LinqToDBT4SharedTools)linq2db.dll" #>
-<#@ import   namespace="System.Reflection"              #>
-<#@ import   namespace="System.IO"                      #>
-<#@ import   namespace="System.Linq"                    #>
-<#@ import   namespace="System.Runtime.InteropServices" #>
+<#@ assembly name="System.Core"                                               #>
+<#@ assembly name="$(LinqToDBT4SharedTools)linq2db.dll"                       #>
+<#@ assembly name="$(LinqToDBT4SharedTools)linq2db.Scaffold.dll"              #>
+<#@ assembly name="$(LinqToDBT4SharedTools)Microsoft.Bcl.AsyncInterfaces.dll" #>
+<#@ import   namespace="System.Reflection"                                    #>
+<#@ import   namespace="System.IO"                                            #>
+<#@ import   namespace="System.Linq"                                          #>
+<#@ import   namespace="System.Runtime.InteropServices"                       #>
 
 <#
 AppDomain.CurrentDomain.AssemblyResolve += (_, args) =>
@@ -13,10 +15,6 @@ AppDomain.CurrentDomain.AssemblyResolve += (_, args) =>
 	// ignore version mismatch
 	return AppDomain.CurrentDomain.GetAssemblies().FirstOrDefault(a => a.GetName().Name == requestedAssembly.Name);
 };
-
-var sharedPath = Path.GetDirectoryName(GetAssemblyLocation(typeof(LinqToDB.Data.DataConnection).Assembly));
-
-LoadAssembly("Microsoft.Bcl.AsyncInterfaces", sharedPath);
 #>
 
 <#+
@@ -25,7 +23,7 @@ static string GetAssemblyLocation(Assembly assembly)
 	if (RuntimeInformation.FrameworkDescription.Contains(".NET Framework"))
 	{
 		// CodeBase used instead of Location, as Location could point to shadow copy, but we need to get original path
-		// to be able to locate sibling asemblies
+		// to be able to locate sibling assemblies
 		return assembly.CodeBase.Replace("file:///", "");
 	}
 
@@ -49,7 +47,7 @@ public static void LoadAssembly(string assemblyName, string toolsPath)
 	// check if already loaded
 	if (AppDomain.CurrentDomain.GetAssemblies().Any(a => a.GetName().Name == assemblyName))
 		return;
-	
+
 	try
 	{
 		// try to load using VS (host) lookup paths

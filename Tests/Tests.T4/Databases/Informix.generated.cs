@@ -18,8 +18,10 @@ using LinqToDB.Mapping;
 
 namespace InformixDataContext
 {
-	public partial class Testdatadb2DB : LinqToDB.Data.DataConnection
+	public partial class TESTDATADB2DB : LinqToDB.Data.DataConnection
 	{
+		#region Tables
+
 		public ITable<Alltype>           Alltypes           { get { return this.GetTable<Alltype>(); } }
 		public ITable<Child>             Children           { get { return this.GetTable<Child>(); } }
 		public ITable<Collatedtable>     Collatedtables     { get { return this.GetTable<Collatedtable>(); } }
@@ -38,27 +40,31 @@ namespace InformixDataContext
 		public ITable<Testmerge2>        Testmerge2         { get { return this.GetTable<Testmerge2>(); } }
 		public ITable<Testunique>        Testuniques        { get { return this.GetTable<Testunique>(); } }
 
-		public Testdatadb2DB()
+		#endregion
+
+		#region .ctor
+
+		public TESTDATADB2DB()
 		{
 			InitDataContext();
 			InitMappingSchema();
 		}
 
-		public Testdatadb2DB(string configuration)
+		public TESTDATADB2DB(string configuration)
 			: base(configuration)
 		{
 			InitDataContext();
 			InitMappingSchema();
 		}
 
-		public Testdatadb2DB(DataOptions options)
+		public TESTDATADB2DB(DataOptions options)
 			: base(options)
 		{
 			InitDataContext();
 			InitMappingSchema();
 		}
 
-		public Testdatadb2DB(DataOptions<Testdatadb2DB> options)
+		public TESTDATADB2DB(DataOptions<TESTDATADB2DB> options)
 			: base(options.Options)
 		{
 			InitDataContext();
@@ -67,6 +73,8 @@ namespace InformixDataContext
 
 		partial void InitDataContext  ();
 		partial void InitMappingSchema();
+
+		#endregion
 	}
 
 	[Table(Schema="informix", Name="alltypes")]
@@ -121,7 +129,7 @@ namespace InformixDataContext
 		/// <summary>
 		/// FK_doctor_person (informix.person)
 		/// </summary>
-		[Association(ThisKey="Personid", OtherKey="Personid", CanBeNull=false)]
+		[Association(ThisKey=nameof(Personid), OtherKey=nameof(InformixDataContext.Person.Personid), CanBeNull=false)]
 		public Person Person { get; set; } = null!;
 
 		#endregion
@@ -186,7 +194,7 @@ namespace InformixDataContext
 		/// <summary>
 		/// FK_patient_person (informix.person)
 		/// </summary>
-		[Association(ThisKey="Personid", OtherKey="Personid", CanBeNull=false)]
+		[Association(ThisKey=nameof(Personid), OtherKey=nameof(InformixDataContext.Person.Personid), CanBeNull=false)]
 		public Person Person { get; set; } = null!;
 
 		#endregion
@@ -206,13 +214,13 @@ namespace InformixDataContext
 		/// <summary>
 		/// FK_doctor_person_BackReference (informix.doctor)
 		/// </summary>
-		[Association(ThisKey="Personid", OtherKey="Personid", CanBeNull=true)]
+		[Association(ThisKey=nameof(Personid), OtherKey=nameof(InformixDataContext.Doctor.Personid), CanBeNull=true)]
 		public Doctor? Doctor { get; set; }
 
 		/// <summary>
 		/// FK_patient_person_BackReference (informix.patient)
 		/// </summary>
-		[Association(ThisKey="Personid", OtherKey="Personid", CanBeNull=true)]
+		[Association(ThisKey=nameof(Personid), OtherKey=nameof(InformixDataContext.Patient.Personid), CanBeNull=true)]
 		public Patient? Patient { get; set; }
 
 		#endregion
@@ -241,13 +249,13 @@ namespace InformixDataContext
 		/// <summary>
 		/// FK_testfkunique_testunique_1 (informix.testunique)
 		/// </summary>
-		[Association(ThisKey="Id3, Id4", OtherKey="Id3, Id4", CanBeNull=false)]
+		[Association(ThisKey=nameof(Id3) + ", " + nameof(Id4), OtherKey=nameof(InformixDataContext.Testunique.Id3) + ", " + nameof(InformixDataContext.Testunique.Id4), CanBeNull=false)]
 		public Testunique FkTestfkuniqueTestunique1 { get; set; } = null!;
 
 		/// <summary>
 		/// FK_testfkunique_testunique (informix.testunique)
 		/// </summary>
-		[Association(ThisKey="Id1, Id2", OtherKey="Id1, Id2", CanBeNull=false)]
+		[Association(ThisKey=nameof(Id1) + ", " + nameof(Id2), OtherKey=nameof(InformixDataContext.Testunique.Id1) + ", " + nameof(InformixDataContext.Testunique.Id2), CanBeNull=false)]
 		public Testunique Testunique { get; set; } = null!;
 
 		#endregion
@@ -320,13 +328,13 @@ namespace InformixDataContext
 		/// <summary>
 		/// FK_testfkunique_testunique_1_BackReference (informix.testfkunique)
 		/// </summary>
-		[Association(ThisKey="Id3, Id4", OtherKey="Id3, Id4", CanBeNull=true)]
+		[Association(ThisKey=nameof(Id3) + ", " + nameof(Id4), OtherKey=nameof(InformixDataContext.Testfkunique.Id3) + ", " + nameof(InformixDataContext.Testfkunique.Id4), CanBeNull=true)]
 		public IEnumerable<Testfkunique> FkTestfkuniqueTestunique1BackReferences { get; set; } = null!;
 
 		/// <summary>
 		/// FK_testfkunique_testunique_BackReference (informix.testfkunique)
 		/// </summary>
-		[Association(ThisKey="Id1, Id2", OtherKey="Id1, Id2", CanBeNull=true)]
+		[Association(ThisKey=nameof(Id1) + ", " + nameof(Id2), OtherKey=nameof(InformixDataContext.Testfkunique.Id1) + ", " + nameof(InformixDataContext.Testfkunique.Id2), CanBeNull=true)]
 		public IEnumerable<Testfkunique> Testfkuniques { get; set; } = null!;
 
 		#endregion

@@ -4,20 +4,18 @@
 		<id>linq2db.cli</id>
 		<title>LINQ to DB command-line tools</title>
 		<description>LINQ to DB CLI is a dotnet tool for Linq To DB database model scaffolding.</description>
-		<summary />
-		<tags>linq2db LinqToDB ORM O/RM Access DB2 Firebird Informix MySql MariaDB Oracle PostgeSQL Postgres SAP SAPHANA SqlCe SqlServerCe SQLite SqlServer Sybase Ase</tags>
-		<readme>README.md</readme>
+		<tags>cli</tags>
 		<packageTypes>
 			<packageType name="DotnetTool" />
 		</packageTypes>
 	</metadata>
 	<files>
-		<file src="..\bin\LinqToDB.CLI\Release\net6.0\**\*" target="tools\net6.0\any\" />
-		<file src="..\..\NuGet\CLI\DotnetToolSettings.xml"  target="tools\net6.0\any\" />
-		<file src="..\bin\LinqToDB.CLI\Release\net8.0\**\*" target="tools\net8.0\any\" />
-		<file src="..\..\NuGet\CLI\DotnetToolSettings.xml"  target="tools\net8.0\any\" />
-		<file src="..\bin\LinqToDB.CLI\Release\net9.0\**\*" target="tools\net9.0\any\" />
-		<file src="..\..\NuGet\CLI\DotnetToolSettings.xml"  target="tools\net9.0\any\" />
-		<file src="..\..\NuGet\CLI\README.md"               target="README.md"         />
+		<file src="bin\LinqToDB.CLI\{0}\net6.0\**\*" target="tools\net6.0\any\" />
+		<file src="NuGet\CLI\DotnetToolSettings.xml" target="tools\net6.0\any\" />
+		<file src="bin\LinqToDB.CLI\{0}\net8.0\**\*" target="tools\net8.0\any\" />
+		<file src="NuGet\CLI\DotnetToolSettings.xml" target="tools\net8.0\any\" />
+		<file src="bin\LinqToDB.CLI\{0}\net9.0\**\*" target="tools\net9.0\any\" />
+		<file src="NuGet\CLI\DotnetToolSettings.xml" target="tools\net9.0\any\" />
+		<file src="NuGet\CLI\README.md"              target="README.md"         />
 	</files>
 </package>

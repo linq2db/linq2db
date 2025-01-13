@@ -1,0 +1,15 @@
+﻿<#@ template language="C#" debug="True" hostSpecific="True"                              #>
+<#@ CleanupBehavior processor="T4VSHost" CleanupAfterProcessingtemplate="true"           #>
+<#@ output extension=".generated.cs"                                                     #>
+<#@ include file="$(LinqToDBT4AccessTemplatesPath)LinqToDB.Access.ttinclude" once="true" #>
+<#@ include file="$(LinqToDBT4TemplatesPath)PluralizationService.ttinclude"  once="true" #>
+<#@ include file="ConnectionStrings.ttinclude"                               once="true" #>
+<#
+	NamespaceName        = "Access.ODBC";
+	DataContextName      = "DataContextDB";
+	GenerateSchemaAsType = true;
+
+	LoadAccessMetadata($"Driver={{Microsoft Access Driver (*.mdb, *.accdb)}};Dbq={GetDatabasePath("TestData.ODBC.mdb")};ExtendedAnsiSQL=1");
+
+	GenerateModel();
+#>

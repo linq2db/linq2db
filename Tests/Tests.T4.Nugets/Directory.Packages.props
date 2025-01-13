@@ -1,0 +1,28 @@
+﻿<Project>
+	<PropertyGroup>
+		<Version>6.0.0-local.1</Version>
+	</PropertyGroup>
+	<ItemGroup Label="Build: Prerelease Nugets">
+		<PackageVersion Include="linq2db"            Version="$(Version)" />
+		<PackageVersion Include="linq2db.Access"     Version="$(Version)" />
+		<PackageVersion Include="linq2db.ClickHouse" Version="$(Version)" />
+		<PackageVersion Include="linq2db.DB2"        Version="$(Version)" />
+		<PackageVersion Include="linq2db.Firebird"   Version="$(Version)" />
+		<PackageVersion Include="linq2db.Informix"   Version="$(Version)" />
+		<PackageVersion Include="linq2db.MySql"      Version="$(Version)" />
+		<PackageVersion Include="linq2db.Oracle"     Version="$(Version)" />
+		<PackageVersion Include="linq2db.PostgreSQL" Version="$(Version)" />
+		<PackageVersion Include="linq2db.SapHana"    Version="$(Version)" />
+		<PackageVersion Include="linq2db.SqlCe"      Version="$(Version)" />
+		<PackageVersion Include="linq2db.SQLite"     Version="$(Version)" />
+		<PackageVersion Include="linq2db.SqlServer"  Version="$(Version)" />
+		<PackageVersion Include="linq2db.Sybase"     Version="$(Version)" />
+		<PackageVersion Include="linq2db.t4models"   Version="$(Version)" />
+	</ItemGroup>
+
+	<ItemGroup Label="Build: Providers">
+		<PackageVersion Include="FirebirdSql.Data.FirebirdClient"     Version="10.3.2" />
+		<PackageVersion Include="Npgsql"                              Version="9.0.2"  />
+		<PackageVersion Include="dotMorten.Microsoft.SqlServer.Types" Version="1.5.0"  />
+	</ItemGroup>
+</Project>

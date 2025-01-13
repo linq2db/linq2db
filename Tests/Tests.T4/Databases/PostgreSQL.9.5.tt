@@ -1,8 +1,8 @@
-﻿<#@ template language="C#" debug="True" hostSpecific="True" compilerOptions="/langversion:6"    #>
-<#@ output extension=".generated.cs"                                                            #>
-<#@ assembly name="$(ArtifactsPath)\bin\Tests\Debug\net462\Npgsql.dll"                          #>
-<#@ include file="..\..\..\Source\LinqToDB.Templates\LinqToDB.PostgreSQL.ttinclude" once="true" #>
-<#@ include file="..\Shared.ttinclude"                                              once="true" #>
+﻿<#@ template language="C#" debug="True" hostSpecific="True" compilerOptions="/langversion:6"     #>
+<#@ CleanupBehavior processor="T4VSHost" CleanupAfterProcessingtemplate="true"                   #>
+<#@ output extension=".generated.cs"                                                             #>
+<#@ include file="$(LinqToDBT4PostgreSQLTemplatesPath)LinqToDB.PostgreSQL.ttinclude" once="true" #>
+<#@ include file="..\Shared.ttinclude"                                               once="true" #>
 <#
 	NamespaceName = "PostreSQL9_5DataContext";
 	GenerateConstructors = false;

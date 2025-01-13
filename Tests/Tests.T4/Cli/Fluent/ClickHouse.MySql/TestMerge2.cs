@@ -24,8 +24,8 @@ namespace Cli.Fluent.ClickHouse.MySql
 		public bool?           FieldBoolean    { get; set; } // Bool
 		public string?         FieldString     { get; set; } // String
 		public string?         FieldNString    { get; set; } // String
-		public byte[]?         FieldChar       { get; set; } // FixedString(1)
-		public byte[]?         FieldNChar      { get; set; } // FixedString(2)
+		public char?           FieldChar       { get; set; } // FixedString(1)
+		public string?         FieldNChar      { get; set; } // FixedString(2)
 		public float?          FieldFloat      { get; set; } // Float32
 		public double?         FieldDouble     { get; set; } // Float64
 		public DateTimeOffset? FieldDateTime   { get; set; } // DateTime64(3)

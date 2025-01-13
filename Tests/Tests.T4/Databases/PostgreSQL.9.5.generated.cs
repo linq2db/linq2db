@@ -29,6 +29,8 @@ namespace PostreSQL9_5DataContext
 {
 	public partial class TestdataDB : LinqToDB.Data.DataConnection
 	{
+		#region Tables
+
 		public ITable<_testsamename>                  _testsamename             { get { return this.GetTable<_testsamename>(); } }
 		public ITable<AllType>                        AllTypes                  { get { return this.GetTable<AllType>(); } }
 		public ITable<Child>                          Children                  { get { return this.GetTable<Child>(); } }
@@ -63,6 +65,8 @@ namespace PostreSQL9_5DataContext
 		public ITable<test_schema_Testsamename>       Testsamenames             { get { return this.GetTable<test_schema_Testsamename>(); } }
 		public ITable<test_schema_TestSchemaIdentity> TestSchemaIdentities      { get { return this.GetTable<test_schema_TestSchemaIdentity>(); } }
 		public ITable<test_schema_Testserialidentity> Testserialidentities      { get { return this.GetTable<test_schema_Testserialidentity>(); } }
+
+		#endregion
 
 		protected void InitMappingSchema()
 		{
@@ -265,7 +269,7 @@ namespace PostreSQL9_5DataContext
 		/// <summary>
 		/// Doctor_PersonID_fkey (public.Person)
 		/// </summary>
-		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false)]
+		[Association(ThisKey=nameof(PersonID), OtherKey=nameof(PostreSQL9_5DataContext.Person.PersonID), CanBeNull=false)]
 		public Person Person { get; set; } = null!;
 
 		#endregion
@@ -352,7 +356,7 @@ namespace PostreSQL9_5DataContext
 		/// <summary>
 		/// Patient_PersonID_fkey (public.Person)
 		/// </summary>
-		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false)]
+		[Association(ThisKey=nameof(PersonID), OtherKey=nameof(PostreSQL9_5DataContext.Person.PersonID), CanBeNull=false)]
 		public Person Person { get; set; } = null!;
 
 		#endregion
@@ -378,13 +382,13 @@ namespace PostreSQL9_5DataContext
 		/// <summary>
 		/// Doctor_PersonID_fkey_BackReference (public.Doctor)
 		/// </summary>
-		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=true)]
+		[Association(ThisKey=nameof(PersonID), OtherKey=nameof(PostreSQL9_5DataContext.Doctor.PersonID), CanBeNull=true)]
 		public Doctor? DoctorPersonIDfkey { get; set; }
 
 		/// <summary>
 		/// Patient_PersonID_fkey_BackReference (public.Patient)
 		/// </summary>
-		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=true)]
+		[Association(ThisKey=nameof(PersonID), OtherKey=nameof(PostreSQL9_5DataContext.Patient.PersonID), CanBeNull=true)]
 		public Patient? PatientPersonIDfkey { get; set; }
 
 		#endregion
@@ -400,13 +404,13 @@ namespace PostreSQL9_5DataContext
 		/// <summary>
 		/// same_name_BackReference (public.same_name2)
 		/// </summary>
-		[Association(ThisKey="Id", OtherKey="SameName", CanBeNull=true)]
+		[Association(ThisKey=nameof(Id), OtherKey=nameof(PostreSQL9_5DataContext.SameName2.SameName), CanBeNull=true)]
 		public IEnumerable<SameName2> SameNameBackReferences { get; set; } = null!;
 
 		/// <summary>
 		/// same_name_BackReference (public.same_name1)
 		/// </summary>
-		[Association(ThisKey="Id", OtherKey="SameName", CanBeNull=true)]
+		[Association(ThisKey=nameof(Id), OtherKey=nameof(PostreSQL9_5DataContext.SameName1.SameName), CanBeNull=true)]
 		public IEnumerable<SameName1> Samenames { get; set; } = null!;
 
 		#endregion
@@ -423,7 +427,7 @@ namespace PostreSQL9_5DataContext
 		/// <summary>
 		/// same_name (public.same_name)
 		/// </summary>
-		[Association(ThisKey="SameName", OtherKey="Id", CanBeNull=true)]
+		[Association(ThisKey=nameof(SameName), OtherKey=nameof(PostreSQL9_5DataContext.SameName.Id), CanBeNull=true)]
 		public SameName? Samename { get; set; }
 
 		#endregion
@@ -440,7 +444,7 @@ namespace PostreSQL9_5DataContext
 		/// <summary>
 		/// same_name (public.same_name)
 		/// </summary>
-		[Association(ThisKey="SameName", OtherKey="Id", CanBeNull=true)]
+		[Association(ThisKey=nameof(SameName), OtherKey=nameof(PostreSQL9_5DataContext.SameName.Id), CanBeNull=true)]
 		public SameName? Samename { get; set; }
 
 		#endregion

@@ -4,7 +4,7 @@ parameters:
 steps:
 - checkout: none
 
-# .NET 6 and 8 SDKs already installed https://github.com/actions/runner-images/blob/main/images/windows/Windows2022-Readme.md
+# .NET 6, 8 and 9 SDKs already installed https://github.com/actions/runner-images/blob/main/images/windows/Windows2022-Readme.md
 # so we need to install only x86 versions
 
 - task: UseDotNet@2
@@ -247,13 +247,6 @@ steps:
 - script: dotnet test net8.0/efcore/x86/linq2db.EntityFrameworkCore.Tests.dll --filter "TestCategory != SkipCI" -f net80 -l trx --blame-hang-timeout 5m
   displayName: 'EF.Core Tests (.NET 8 x86): $(title)'
   condition: and(eq(variables.net80, 'true'), eq(variables.x86, 'true'), variables.title, succeeded())
-
-- task: UseDotNet@2
-  displayName: 'Use .NET 9'
-  inputs:
-    packageType: sdk
-    version: 9.x
-  condition: and(variables.title, eq(variables.net90, 'true'), succeeded())
 
 - task: CmdLine@2
   inputs:

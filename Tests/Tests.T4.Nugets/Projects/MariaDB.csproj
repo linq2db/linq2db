@@ -1,0 +1,22 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<ItemGroup>
+		<PackageReference Include="linq2db.MySql" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<None Include="..\Templates\MariaDB.tt" Generator="TextTemplatingFileGenerator">
+		  <LastGenOutput>MariaDB.generated.cs</LastGenOutput>
+		</None>
+		<Compile Include="..\Templates\MariaDB.generated.cs">
+		  <DesignTime>True</DesignTime>
+		  <AutoGen>True</AutoGen>
+		  <DependentUpon>MariaDB.tt</DependentUpon>
+		</Compile>
+	</ItemGroup>
+
+	<ItemGroup>
+		<Service Include="{508349b6-6b84-4df5-91f0-309beebad82d}" />
+	</ItemGroup>
+
+</Project>

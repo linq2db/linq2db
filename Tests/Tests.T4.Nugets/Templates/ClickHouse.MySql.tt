@@ -1,0 +1,14 @@
+﻿<#@ template language="C#" debug="True" hostSpecific="True"                                      #>
+<#@ CleanupBehavior processor="T4VSHost" CleanupAfterProcessingtemplate="true"                   #>
+<#@ output extension=".generated.cs"                                                             #>
+<#@ include file="$(LinqToDBT4ClickHouseTemplatesPath)LinqToDB.ClickHouse.ttinclude" once="true" #>
+<#@ include file="$(LinqToDBT4TemplatesPath)PluralizationService.ttinclude"          once="true" #>
+<#@ include file="ConnectionStrings.ttinclude"                                       once="true" #>
+<#
+	NamespaceName        = "ClickHouse.MySql";
+	GenerateSchemaAsType = true;
+
+	LoadClickHouseMetadata(GetConnectionString("ClickHouse.MySql"));
+
+	GenerateModel();
+#>

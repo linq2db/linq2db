@@ -2,6 +2,7 @@
 	<PropertyGroup>
 		<LinqToDBT4SharedTools>$(MSBuildThisFileDirectory)..\tools\</LinqToDBT4SharedTools>
 		<LinqToDBT4FirebirdClientPath>$(MSBuildThisFileDirectory)..\tools\</LinqToDBT4FirebirdClientPath>
+		<LinqToDBT4TemplatesPath>$(MSBuildThisFileDirectory)..\contentFiles\any\any\LinqToDB.Templates\</LinqToDBT4TemplatesPath>
 		<LinqToDBT4FirebirdTemplatesPath>$(MSBuildThisFileDirectory)..\contentFiles\any\any\LinqToDB.Templates\</LinqToDBT4FirebirdTemplatesPath>
 	</PropertyGroup>
 </Project>

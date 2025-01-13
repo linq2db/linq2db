@@ -44,6 +44,7 @@ namespace LinqToDB.SchemaProvider
 		protected string? BuildSchemaFilter(GetSchemaOptions? options, string defaultSchema, Action<StringBuilder, string> stringLiteralBuilder)
 		{
 			var schemas = new HashSet<string>();
+
 			schemas.Add(defaultSchema);
 
 			if (options != null)
@@ -97,7 +98,7 @@ namespace LinqToDB.SchemaProvider
 
 			var dbConnection = dataConnection.Connection;
 
-			InitProvider(dataConnection);
+			InitProvider(dataConnection, options);
 
 			DataTypesDic                                 = new Dictionary<string,DataTypeInfo>(StringComparer.OrdinalIgnoreCase);
 			ProviderSpecificDataTypesDic                 = new Dictionary<string,DataTypeInfo>(StringComparer.OrdinalIgnoreCase);
@@ -572,7 +573,7 @@ namespace LinqToDB.SchemaProvider
 		protected virtual string GetDataSourceName(DataConnection dbConnection) => dbConnection.Connection.DataSource;
 		protected virtual string GetDatabaseName  (DataConnection dbConnection) => dbConnection.Connection.Database;
 
-		protected virtual void InitProvider(DataConnection dataConnection)
+		protected virtual void InitProvider(DataConnection dataConnection, GetSchemaOptions options)
 		{
 		}
 

@@ -17,21 +17,6 @@ Usage:
 SetVersion.ps1 -path <PATH_TO_PROPS_FILE> -version <VERSION> -prop <VERSION_PROP>
 ```
 
-#### `BuildNuspecs.ps1`
-
-This script updates nuget generation `*.nuspec` files with common information:
-
-- nuget/linq2db version
-- copyright strings
-- repository details
-- etc
-
-Usage:
-
-```ps
-BuildNuspecs.ps1 -path <NUSPEC_SEARCH_MASK> -version <NUGET_VERSION>[ -branch <BRANCH_NAME>]
-```
-
 #### `BannedSymbols.txt`
 
 Contains information on banned from use in `LinqToDB` symbols (types and type members). Used by [this](https://github.com/dotnet/roslyn-analyzers/blob/main/src/Microsoft.CodeAnalysis.BannedApiAnalyzers/BannedApiAnalyzers.Help.md) analyzer during build in `Release` configuration (including CI builds)
