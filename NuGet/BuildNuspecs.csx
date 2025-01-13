@@ -267,7 +267,7 @@ foreach (var xmlPath in GetFiles(path))
 
 [return: NotNullIfNotNull(nameof(defaultValue))]
 string? GetArg(Dictionary<string,string?> args, string key, string? defaultValue = null, bool mandatory = false) =>
-	args.TryGetValue(key, out var value) ? value : !mandatory ? defaultValue : throw new ArgumentException($"Argument '{key}' is required.");
+	args.TryGetValue(key, out var value) && !string.IsNullOrEmpty(value) ? value : !mandatory ? defaultValue : throw new ArgumentException($"Argument '{key}' is required.");
 
 Dictionary<string,string?> GetArgs() =>
 	(
