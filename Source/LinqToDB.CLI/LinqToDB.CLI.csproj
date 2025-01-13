@@ -24,11 +24,11 @@
 
 		<!--we need to remove apphost.exe as Build target doesn't validate already existing file to be compatible with requested RID-->
 		<Delete Files="$(ArtifactsPath)\obj\$(MSBuildProjectName)\$(Configuration)\%(TFM.Identity)\apphost.exe" />
-		<MSBuild Projects="$(MSBuildProjectFullPath)" Properties="RID=win-x86;Platform=x64;Configuration=$(Configuration)" Targets="Build" />
+		<MSBuild Projects="$(MSBuildProjectFullPath)" Properties="RID=win-x86;Configuration=$(Configuration)" Targets="Build" />
 		<Copy SourceFiles="$(ArtifactsPath)\bin\$(MSBuildProjectName)\$(Configuration)\apphosts\%(TFM.Identity)\win-x86\$(AssemblyName).exe" DestinationFiles="$(ArtifactsPath)\bin\$(MSBuildProjectName)\$(Configuration)\%(TFM.Identity)\$(AssemblyName).win-x86.exe" />
 
 		<Delete Files="$(ArtifactsPath)\obj\$(MSBuildProjectName)\$(Configuration)\%(TFM.Identity)\apphost.exe" />
-		<MSBuild Projects="$(MSBuildProjectFullPath)" Properties="RID=win-x64;Platform=x86;Configuration=$(Configuration)" Targets="Build" />
+		<MSBuild Projects="$(MSBuildProjectFullPath)" Properties="RID=win-x64;Configuration=$(Configuration)" Targets="Build" />
 		<Copy SourceFiles="$(ArtifactsPath)\bin\$(MSBuildProjectName)\$(Configuration)\apphosts\%(TFM.Identity)\win-x64\$(AssemblyName).exe" DestinationFiles="$(ArtifactsPath)\bin\$(MSBuildProjectName)\$(Configuration)\%(TFM.Identity)\$(AssemblyName).win-x64.exe" />
 	</Target>
 
