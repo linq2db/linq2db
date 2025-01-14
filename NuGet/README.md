@@ -1,6 +1,6 @@
 ### T4 nugets structure
 
-- `tools` folder contains `linq2db.dll` and, optionally, provider assemblies. Assemblies should target .net framework, as they run under .net framework x86 T4 host in Visual Studio (what about Rider?)
+- `tools` folder contains `linq2db.dll`, `linq2db.Tools.dll`, `linq2db.Scaffold.dll` and, optionally, provider assemblies. Assemblies should target .net framework, as they run under .net framework x86 T4 host in Visual Studio (what about Rider?)
 - `build` folder contains `.props` file, included into user's project. It defines MSBuild properties, needed for T4 templates preprocessor. See list of properties below
 - `contentFiles` folder contains set of T4 templates, used for scaffolding
 - `content` folder contains copy of T4 templates, included into legacy projects (note that legacy project use templates from `contentFiles` for scaffolding). The only reason we have this folder with copy of templates is to make templates visible to user from legacy project. Unfortunately we cannot show templates from `contentFiles` in legacy project using `ItemGroup` in imported `.props` file, as Visual Studio (not MS Build) doesn't support display of imported `ItemGroup`s
@@ -10,8 +10,8 @@
 Properties implemented in a way to support redefinition if multiple T4 templates installed.
 All T4 properties use `LinqToDBT4` name prefix.
 
-- `LinqToDBT4SharedTools`: defines path to `tools` folder and must be used only for assemblies, included into all T4 nugets: `linq2db.dll`, `Humanizer.dll`. Defined by every T4 nuget, so last one will be used.
-- `LinqToDBT4<PROVIDER>Path`: defines path to `tools` folder in nuget cache for T4 template, that use this provider to read database schema. Could be defined by multiple T4 nugets and we will use last one imported (we don't care which one). List of such properties:
+- `LinqToDBT4SharedTools`: defines path to `tools` folder and must be used only for assemblies, included into all T4 nugets: `linq2db.dll`, `linq2db.Tools.dll`, `linq2db.Scaffold.dll`, `Humanizer.dll`. Defined by every T4 nuget, so last one will be used.
+- `LinqToDBT4<PROVIDER>ClientPath`: defines path to `tools` folder in nuget cache for T4 template, that use this provider to read database schema. Could be defined by multiple T4 nugets and we will use last one imported (we don't care which one). List of such properties:
   - `LinqToDBT4AccessClientPath`: path to `tools` folder with Access client
   - `LinqToDBT4ClickHouseClientPath`: path to `tools` folder with ClickHouse client
   - `LinqToDBT4DB2ClientPath`: path to `tools` folder with DB2 client
