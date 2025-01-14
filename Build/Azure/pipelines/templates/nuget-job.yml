@@ -68,6 +68,12 @@ jobs:
       targetPath: '$(Build.SourcesDirectory)/.build/bin/LinqToDB.CLI/Release'
 
   - task: DownloadPipelineArtifact@2
+    displayName: Download LinqToDB.Scaffold files
+    inputs:
+      artifactName: '$(artifact_linq2db_scaffold_binaries)'
+      targetPath: '$(Build.SourcesDirectory)/.build/bin/LinqToDB.Scaffold/Release'
+
+  - task: DownloadPipelineArtifact@2
     displayName: Download LinqToDB.FSharp files
     inputs:
       artifactName: '$(artifact_linq2db_fsharp_binaries)'

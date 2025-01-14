@@ -15,6 +15,7 @@ variables:
   artifact_linq2db_remote_wcf_binaries: 'linq2db_remote_wcf_binaries'
   artifact_linq2db_remote_grpc_binaries: 'linq2db_remote_grpc_binaries'
   artifact_linq2db_cli_binaries: 'linq2db_cli_binaries'
+  artifact_linq2db_scaffold_binaries: 'linq2db_scaffold_binaries'
   artifact_linq2db_fsharp_binaries: 'linq2db_fsharp_binaries'
   artifact_linq2db_efcore_binaries: 'linq2db_efcore_binaries'
   artifact_linq2db_efcore_sts_binaries: 'linq2db_efcore_sts_binaries'
