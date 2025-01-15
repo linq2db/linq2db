@@ -767,5 +767,33 @@ namespace Tests.DataProvider
 			public int Id { get; set; }
 		}
 		#endregion
+
+		#region Type Convert With Null
+
+		[Table("AllTypes")]
+		public class AllTypesTable
+		{
+			// nullable in db with null values
+			[Column("datetimeDataType")] public DateTime? DateTime { get; set; }
+		}
+
+		[Test]
+		public void TestConvertToDate_Nullable([IncludeDataSources(TestProvName.AllAccess)] string context)
+		{
+			using var db = GetDataConnection(context);
+
+			db.GetTable<AllTypesTable>().Select(r => Sql.AsSql(r.DateTime!.Value.Date)).ToArray();
+		}
+
+		[Test]
+		public void TestConvertToDate_WithNull([IncludeDataSources(TestProvName.AllAccess)] string context)
+		{
+			using var db = GetDataConnection(context);
+
+			Assert.That(() => db.GetTable<AllTypesTable>().Select(r => Sql.AsSql(Sql.AsNotNull(r.DateTime!.Value).Date)).ToArray(),
+				Throws.Exception);
+		}
+
+		#endregion
 	}
 }
