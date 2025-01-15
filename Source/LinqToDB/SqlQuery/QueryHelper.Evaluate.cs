@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Globalization;
-using System.Net.WebSockets;
 
 namespace LinqToDB.SqlQuery
 {
@@ -441,6 +440,8 @@ namespace LinqToDB.SqlQuery
 
 				case QueryElementType.SearchCondition:
 				{
+					// SQL condition evaluation logic notes:
+					// - if any predicate evaluated to UNKNOWN - condition is UNKNOWN
 					var cond = (SqlSearchCondition)expr;
 
 					if (cond.Predicates.Count == 0)
@@ -449,59 +450,69 @@ namespace LinqToDB.SqlQuery
 						return true;
 					}
 
-					bool? value = true;
-					var hasAny  = false;
+					bool? evaluatedValue = cond.IsAnd; // evaluated condition value without non-evaluated predicates
+					var evaluatedCount   = 0; // to track if we have non-evaluated predicates
+					var canBeUnknown     = false; // at least one non-evaluated predicate could be UNKNOWN
 
 					for (var i = 0; i < cond.Predicates.Count; i++)
 					{
 						var predicate = cond.Predicates[i];
 						if (predicate.TryEvaluateExpression(forServer, context, out var evaluated))
 						{
-							hasAny = true;
+							evaluatedCount++;
+
 							if (evaluated is bool boolValue)
 							{
-								if (cond.IsOr)
+								// don't change evaluatedValue if it is null - UNKNOWN cannot be changed
+								if (cond.IsOr && boolValue && evaluatedValue == false)
 								{
-									if (boolValue)
-									{
-										value = true;
-										break;
-									}
-									else if (i == 0)
-									{
-										value = false;
-										break;
-									}
+									evaluatedValue = true;
 								}
-								else
+
+								if (cond.IsAnd && !boolValue && evaluatedValue == true)
 								{
-									if (!boolValue)
-									{
-										value = false;
-										break;
-									}
+									evaluatedValue = false;
 								}
 							}
 							else if (evaluated is null)
 							{
-								value = null;
+								evaluatedValue = null;
 								break;
 							}
-							else if (cond.IsAnd)
+							else
 							{
+								// shouldn't be reachable?
 								return false;
 							}
 						}
-						else if (cond.IsAnd)
+						else
 						{
-							return false;
+
+							if (predicate.CanBeUnknown(NullabilityContext.NonQuery))
+							{
+								canBeUnknown = true;
+							}
 						}
 					}
 
-					if (!hasAny)
+					if (evaluatedCount == 0)
 						return false;
 
-					result = value;
+					// condition evaluated partially to non-UNKNOWN value
+					if (evaluatedCount < cond.Predicates.Count && evaluatedValue != null)
+					{
+						// remaining predicates could return UNKNOWN
+						if (canBeUnknown)
+							return false;
+
+						// condition result depends on remaining predicates evaluation
+						if (cond.IsOr && evaluatedValue == false)
+							return false;
+						if (cond.IsAnd && evaluatedValue == true)
+							return false;
+					}
+
+					result = evaluatedValue;
 					return true;
 				}
 

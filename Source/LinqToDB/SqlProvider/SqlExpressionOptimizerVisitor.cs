@@ -1001,7 +1001,7 @@ namespace LinqToDB.SqlProvider
 				else if (unwrapped is SqlFunction func)
 				{
 					// We can extend to more parameters, but it's not clear if it's needed
-					if (func is { IsAggregate: false, IsPure: true, Parameters.Length: 1 })
+					if (func is { IsAggregate: false, IsPure: true })
 					{
 						if (func.NullabilityType == ParametersNullabilityType.IfAnyParameterNullable)
 						{
