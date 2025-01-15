@@ -1,0 +1,111 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.12.35527.113
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Templates", "Templates", "{B7A380EF-0112-4B11-BB02-918B6DB683F2}"
+	ProjectSection(SolutionItems) = preProject
+		Templates\Access.Odbc.tt = Templates\Access.Odbc.tt
+		Templates\Access.OleDb.tt = Templates\Access.OleDb.tt
+		Templates\ClickHouse.Client.tt = Templates\ClickHouse.Client.tt
+		Templates\ClickHouse.MySql.tt = Templates\ClickHouse.MySql.tt
+		Templates\ConnectionStrings.ttinclude = Templates\ConnectionStrings.ttinclude
+		Templates\DB2.tt = Templates\DB2.tt
+		Templates\Firebird.tt = Templates\Firebird.tt
+		Templates\Hana.Native.tt = Templates\Hana.Native.tt
+		Templates\Hana.ODBC.tt = Templates\Hana.ODBC.tt
+		Templates\Informix.tt = Templates\Informix.tt
+		Templates\MariaDB.tt = Templates\MariaDB.tt
+		Templates\Oracle.tt = Templates\Oracle.tt
+		Templates\PostgreSQL.tt = Templates\PostgreSQL.tt
+		Templates\SQLCE.tt = Templates\SQLCE.tt
+		Templates\SQLite.tt = Templates\SQLite.tt
+		Templates\SqlServer.tt = Templates\SqlServer.tt
+		Templates\Sybase.tt = Templates\Sybase.tt
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Build", "Build", "{709F1E86-DDC6-4862-AA39-437EAD18C963}"
+	ProjectSection(SolutionItems) = preProject
+		Directory.Build.props = Directory.Build.props
+		Directory.Packages.props = Directory.Packages.props
+		nuget.config = nuget.config
+	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Access.ODBC", "Projects\Access.ODBC.csproj", "{27B742AA-DACF-44D1-A796-4DA708A5B697}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Access.OleDb", "Projects\Access.OleDb.csproj", "{DA8BB5B5-4857-451A-AD9F-C8825D1A50B8}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ClickHouse.Client", "Projects\ClickHouse.Client.csproj", "{3D1AF1AC-0173-4A7F-94CF-54541E6EDBA4}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ClickHouse.MySql", "Projects\ClickHouse.MySql.csproj", "{F2C9E455-6801-4A4D-A5F3-04882AECE885}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DB2", "Projects\DB2.csproj", "{AC9E6584-7A6F-4920-BE8E-E880DD0E307E}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Firebird", "Projects\Firebird.csproj", "{E7AAF5E9-FB43-40F9-A981-186570A5D424}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Hana.Native", "Projects\Hana.Native.csproj", "{55379839-5C81-43B1-8220-9003F71F726B}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Hana.ODBC", "Projects\Hana.ODBC.csproj", "{EFCE4DEF-DDB2-42DB-ACDD-C3B3DE1B4A5E}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Informix", "Projects\Informix.csproj", "{D31556BD-F2FE-47D4-B0EA-C33A03369C25}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MariaDB", "Projects\MariaDB.csproj", "{30B1BBA8-3C04-4BAE-9CBD-27CB938F04FE}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Oracle", "Projects\Oracle.csproj", "{69D86109-4198-49E3-9B35-75855645032E}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PostgreSQL", "Projects\PostgreSQL.csproj", "{74DC99BA-27EE-4CEE-AAD2-C61D3E0A3A93}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SQLCE", "Projects\SQLCE.csproj", "{2D6277D0-6077-4372-BD5C-3A987E7BEB0F}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SQLite", "Projects\SQLite.csproj", "{70448110-4000-4C33-91DD-04B095E6395D}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SqlServer", "Projects\SqlServer.csproj", "{3FFA9C64-5FA6-4E43-BBDF-4DAC2EEE5DA4}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sybase", "Projects\Sybase.csproj", "{7E946179-8124-41D5-BC18-31ECA8C63ED2}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "t4models", "Projects\t4models.csproj", "{41E5CD53-6301-4D41-A8CA-4E4AE3C7711E}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{27B742AA-DACF-44D1-A796-4DA708A5B697}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{27B742AA-DACF-44D1-A796-4DA708A5B697}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DA8BB5B5-4857-451A-AD9F-C8825D1A50B8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DA8BB5B5-4857-451A-AD9F-C8825D1A50B8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3D1AF1AC-0173-4A7F-94CF-54541E6EDBA4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3D1AF1AC-0173-4A7F-94CF-54541E6EDBA4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F2C9E455-6801-4A4D-A5F3-04882AECE885}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F2C9E455-6801-4A4D-A5F3-04882AECE885}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AC9E6584-7A6F-4920-BE8E-E880DD0E307E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AC9E6584-7A6F-4920-BE8E-E880DD0E307E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E7AAF5E9-FB43-40F9-A981-186570A5D424}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E7AAF5E9-FB43-40F9-A981-186570A5D424}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{55379839-5C81-43B1-8220-9003F71F726B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{55379839-5C81-43B1-8220-9003F71F726B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EFCE4DEF-DDB2-42DB-ACDD-C3B3DE1B4A5E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EFCE4DEF-DDB2-42DB-ACDD-C3B3DE1B4A5E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D31556BD-F2FE-47D4-B0EA-C33A03369C25}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D31556BD-F2FE-47D4-B0EA-C33A03369C25}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{30B1BBA8-3C04-4BAE-9CBD-27CB938F04FE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{30B1BBA8-3C04-4BAE-9CBD-27CB938F04FE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{69D86109-4198-49E3-9B35-75855645032E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{69D86109-4198-49E3-9B35-75855645032E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{74DC99BA-27EE-4CEE-AAD2-C61D3E0A3A93}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{74DC99BA-27EE-4CEE-AAD2-C61D3E0A3A93}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2D6277D0-6077-4372-BD5C-3A987E7BEB0F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2D6277D0-6077-4372-BD5C-3A987E7BEB0F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{70448110-4000-4C33-91DD-04B095E6395D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{70448110-4000-4C33-91DD-04B095E6395D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3FFA9C64-5FA6-4E43-BBDF-4DAC2EEE5DA4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3FFA9C64-5FA6-4E43-BBDF-4DAC2EEE5DA4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7E946179-8124-41D5-BC18-31ECA8C63ED2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7E946179-8124-41D5-BC18-31ECA8C63ED2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{41E5CD53-6301-4D41-A8CA-4E4AE3C7711E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{41E5CD53-6301-4D41-A8CA-4E4AE3C7711E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal

@@ -20,6 +20,8 @@ namespace Default.SQLite
 {
 	public partial class TestDataDB : LinqToDB.Data.DataConnection
 	{
+		#region Tables
+
 		public ITable<AllType>           AllTypes            { get { return this.GetTable<AllType>(); } }
 		public ITable<AllTypesView>      AllTypesViews       { get { return this.GetTable<AllTypesView>(); } }
 		public ITable<Child>             Children            { get { return this.GetTable<Child>(); } }
@@ -39,6 +41,10 @@ namespace Default.SQLite
 		public ITable<TestMerge1>        TestMerge1          { get { return this.GetTable<TestMerge1>(); } }
 		public ITable<TestMerge2>        TestMerge2          { get { return this.GetTable<TestMerge2>(); } }
 		public ITable<TestT4Casing>      TestT4Casings       { get { return this.GetTable<TestT4Casing>(); } }
+
+		#endregion
+
+		#region .ctor
 
 		public TestDataDB()
 		{
@@ -69,6 +75,8 @@ namespace Default.SQLite
 
 		partial void InitDataContext  ();
 		partial void InitMappingSchema();
+
+		#endregion
 	}
 
 	[Table("AllTypes")]
@@ -148,7 +156,7 @@ namespace Default.SQLite
 		/// <summary>
 		/// FK_Doctor_0_0 (Person)
 		/// </summary>
-		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false)]
+		[Association(ThisKey=nameof(PersonID), OtherKey=nameof(Default.SQLite.Person.PersonID), CanBeNull=false)]
 		public Person Person { get; set; } = null!;
 
 		#endregion
@@ -180,7 +188,7 @@ namespace Default.SQLite
 		/// <summary>
 		/// FK_ForeignKeyTable_0_0 (PrimaryKeyTable)
 		/// </summary>
-		[Association(ThisKey="PrimaryKeyTableID", OtherKey="ID", CanBeNull=false)]
+		[Association(ThisKey=nameof(PrimaryKeyTableID), OtherKey=nameof(Default.SQLite.PrimaryKeyTable.ID), CanBeNull=false)]
 		public PrimaryKeyTable PrimaryKeyTable { get; set; } = null!;
 
 		#endregion
@@ -245,7 +253,7 @@ namespace Default.SQLite
 		/// <summary>
 		/// FK_Patient_0_0 (Person)
 		/// </summary>
-		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false)]
+		[Association(ThisKey=nameof(PersonID), OtherKey=nameof(Default.SQLite.Person.PersonID), CanBeNull=false)]
 		public Person Person { get; set; } = null!;
 
 		#endregion
@@ -265,13 +273,13 @@ namespace Default.SQLite
 		/// <summary>
 		/// FK_Doctor_0_0_BackReference (Doctor)
 		/// </summary>
-		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=true)]
+		[Association(ThisKey=nameof(PersonID), OtherKey=nameof(Default.SQLite.Doctor.PersonID), CanBeNull=true)]
 		public Doctor? Doctor { get; set; }
 
 		/// <summary>
 		/// FK_Patient_0_0_BackReference (Patient)
 		/// </summary>
-		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=true)]
+		[Association(ThisKey=nameof(PersonID), OtherKey=nameof(Default.SQLite.Patient.PersonID), CanBeNull=true)]
 		public Patient? Patient { get; set; }
 
 		#endregion
@@ -288,7 +296,7 @@ namespace Default.SQLite
 		/// <summary>
 		/// FK_ForeignKeyTable_0_0_BackReference (ForeignKeyTable)
 		/// </summary>
-		[Association(ThisKey="ID", OtherKey="PrimaryKeyTableID", CanBeNull=true)]
+		[Association(ThisKey=nameof(ID), OtherKey=nameof(Default.SQLite.ForeignKeyTable.PrimaryKeyTableID), CanBeNull=true)]
 		public IEnumerable<ForeignKeyTable> ForeignKeyTables { get; set; } = null!;
 
 		#endregion

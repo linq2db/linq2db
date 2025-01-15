@@ -634,14 +634,14 @@ namespace LinqToDB.Data
 		/// <seealso cref="TraceSwitch"/>
 		/// <remarks>Should only not use to write trace lines, only use <see cref="WriteTraceLineConnection"/>.</remarks>
 		/// </summary>
-		public static Action<string?, string?, TraceLevel> WriteTraceLine = (message, category, level) => Debug.WriteLine(message, category);
+		public static Action<string,string,TraceLevel> WriteTraceLine = (message, category, level) => Debug.WriteLine(message, category);
 
 		/// <summary>
 		/// Gets the delegate to write logging messages for this connection.
 		/// Defaults to <see cref="WriteTraceLine"/>.
 		/// Used for the current instance.
 		/// </summary>
-		public Action<string?, string?, TraceLevel> WriteTraceLineConnection { get; protected set; } = WriteTraceLine;
+		public Action<string,string,TraceLevel> WriteTraceLineConnection { get; protected set; } = WriteTraceLine;
 
 		#endregion
 
@@ -1140,7 +1140,7 @@ namespace LinqToDB.Data
 					}
 					else
 					{
-						reader = result.Value;	
+						reader = result.Value;
 					}
 
 					using (ActivityService.Start(ActivityID.CommandInterceptorAfterExecuteReader))

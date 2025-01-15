@@ -1,8 +1,8 @@
 ﻿<#@ template language="C#" debug="True" hostSpecific="True"  compilerOptions="/langversion:6" #>
+<#@ CleanupBehavior processor="T4VSHost" CleanupAfterProcessingtemplate="true"                #>
 <#@ output extension=".generated.cs"                                                          #>
-<#@ assembly name="$(ArtifactsPath)\bin\Tests\Debug\net462\MySqlConnector.dll"                #>
-<#@ include file="..\..\..\Source\LinqToDB.Templates\LinqToDB.MySql.ttinclude" once="true"    #>
-<#@ include file="..\Shared.ttinclude"                                         once="true"    #>
+<#@ include file="$(LinqToDBT4MySqlTemplatesPath)LinqToDB.MySql.ttinclude"        once="true" #>
+<#@ include file="..\Shared.ttinclude"                                            once="true" #>
 <#
 	NamespaceName = "MySqlConnectorDataContext";
 

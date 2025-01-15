@@ -23,6 +23,8 @@ namespace Default.SqlServerNorthwind
 {
 	public partial class TestDataDB : LinqToDB.Data.DataConnection
 	{
+		#region Tables
+
 		public ITable<AlphabeticalListOfProduct>  AlphabeticalListOfProducts   { get { return this.GetTable<AlphabeticalListOfProduct>(); } }
 		public ITable<Category>                   Categories                   { get { return this.GetTable<Category>(); } }
 		public ITable<CategorySalesFor1997>       CategorySalesFor1997         { get { return this.GetTable<CategorySalesFor1997>(); } }
@@ -53,6 +55,10 @@ namespace Default.SqlServerNorthwind
 		public ITable<Supplier>                   Suppliers                    { get { return this.GetTable<Supplier>(); } }
 		public ITable<Territory>                  Territories                  { get { return this.GetTable<Territory>(); } }
 
+		#endregion
+
+		#region .ctor
+
 		public TestDataDB()
 		{
 			InitDataContext();
@@ -82,6 +88,8 @@ namespace Default.SqlServerNorthwind
 
 		partial void InitDataContext  ();
 		partial void InitMappingSchema();
+
+		#endregion
 	}
 
 	[Table(Schema="dbo", Name="Alphabetical list of products", IsView=true)]
@@ -113,7 +121,7 @@ namespace Default.SqlServerNorthwind
 		/// <summary>
 		/// FK_Products_Categories_BackReference (dbo.Products)
 		/// </summary>
-		[Association(ThisKey="CategoryID", OtherKey="CategoryID", CanBeNull=true)]
+		[Association(ThisKey=nameof(CategoryID), OtherKey=nameof(Default.SqlServerNorthwind.Product.CategoryID), CanBeNull=true)]
 		public IEnumerable<Product> Products { get; set; } = null!;
 
 		#endregion
@@ -153,13 +161,13 @@ namespace Default.SqlServerNorthwind
 		/// <summary>
 		/// FK_CustomerCustomerDemo_Customers_BackReference (dbo.CustomerCustomerDemo)
 		/// </summary>
-		[Association(ThisKey="CustomerID", OtherKey="CustomerID", CanBeNull=true)]
+		[Association(ThisKey=nameof(CustomerID), OtherKey=nameof(Default.SqlServerNorthwind.CustomerCustomerDemo.CustomerID), CanBeNull=true)]
 		public IEnumerable<CustomerCustomerDemo> CustomerCustomerDemoes { get; set; } = null!;
 
 		/// <summary>
 		/// FK_Orders_Customers_BackReference (dbo.Orders)
 		/// </summary>
-		[Association(ThisKey="CustomerID", OtherKey="CustomerID", CanBeNull=true)]
+		[Association(ThisKey=nameof(CustomerID), OtherKey=nameof(Default.SqlServerNorthwind.Order.CustomerID), CanBeNull=true)]
 		public IEnumerable<Order> Orders { get; set; } = null!;
 
 		#endregion
@@ -185,13 +193,13 @@ namespace Default.SqlServerNorthwind
 		/// <summary>
 		/// FK_CustomerCustomerDemo_Customers (dbo.Customers)
 		/// </summary>
-		[Association(ThisKey="CustomerID", OtherKey="CustomerID", CanBeNull=false)]
+		[Association(ThisKey=nameof(CustomerID), OtherKey=nameof(Default.SqlServerNorthwind.Customer.CustomerID), CanBeNull=false)]
 		public Customer Customer { get; set; } = null!;
 
 		/// <summary>
 		/// FK_CustomerCustomerDemo (dbo.CustomerDemographics)
 		/// </summary>
-		[Association(ThisKey="CustomerTypeID", OtherKey="CustomerTypeID", CanBeNull=false)]
+		[Association(ThisKey=nameof(CustomerTypeID), OtherKey=nameof(Default.SqlServerNorthwind.CustomerDemographic.CustomerTypeID), CanBeNull=false)]
 		public CustomerDemographic CustomerType { get; set; } = null!;
 
 		#endregion
@@ -208,7 +216,7 @@ namespace Default.SqlServerNorthwind
 		/// <summary>
 		/// FK_CustomerCustomerDemo_BackReference (dbo.CustomerCustomerDemo)
 		/// </summary>
-		[Association(ThisKey="CustomerTypeID", OtherKey="CustomerTypeID", CanBeNull=true)]
+		[Association(ThisKey=nameof(CustomerTypeID), OtherKey=nameof(Default.SqlServerNorthwind.CustomerCustomerDemo.CustomerTypeID), CanBeNull=true)]
 		public IEnumerable<CustomerCustomerDemo> CustomerCustomerDemoes { get; set; } = null!;
 
 		#endregion
@@ -241,25 +249,25 @@ namespace Default.SqlServerNorthwind
 		/// <summary>
 		/// FK_EmployeeTerritories_Employees_BackReference (dbo.EmployeeTerritories)
 		/// </summary>
-		[Association(ThisKey="EmployeeID", OtherKey="EmployeeID", CanBeNull=true)]
+		[Association(ThisKey=nameof(EmployeeID), OtherKey=nameof(Default.SqlServerNorthwind.EmployeeTerritory.EmployeeID), CanBeNull=true)]
 		public IEnumerable<EmployeeTerritory> EmployeeTerritories { get; set; } = null!;
 
 		/// <summary>
 		/// FK_Employees_Employees (dbo.Employees)
 		/// </summary>
-		[Association(ThisKey="ReportsTo", OtherKey="EmployeeID", CanBeNull=true)]
+		[Association(ThisKey=nameof(ReportsTo), OtherKey=nameof(Default.SqlServerNorthwind.Employee.EmployeeID), CanBeNull=true)]
 		public Employee? FkEmployeesEmployee { get; set; }
 
 		/// <summary>
 		/// FK_Employees_Employees_BackReference (dbo.Employees)
 		/// </summary>
-		[Association(ThisKey="EmployeeID", OtherKey="ReportsTo", CanBeNull=true)]
+		[Association(ThisKey=nameof(EmployeeID), OtherKey=nameof(Default.SqlServerNorthwind.Employee.ReportsTo), CanBeNull=true)]
 		public IEnumerable<Employee> FkEmployeesEmployeesBackReferences { get; set; } = null!;
 
 		/// <summary>
 		/// FK_Orders_Employees_BackReference (dbo.Orders)
 		/// </summary>
-		[Association(ThisKey="EmployeeID", OtherKey="EmployeeID", CanBeNull=true)]
+		[Association(ThisKey=nameof(EmployeeID), OtherKey=nameof(Default.SqlServerNorthwind.Order.EmployeeID), CanBeNull=true)]
 		public IEnumerable<Order> Orders { get; set; } = null!;
 
 		#endregion
@@ -276,13 +284,13 @@ namespace Default.SqlServerNorthwind
 		/// <summary>
 		/// FK_EmployeeTerritories_Employees (dbo.Employees)
 		/// </summary>
-		[Association(ThisKey="EmployeeID", OtherKey="EmployeeID", CanBeNull=false)]
+		[Association(ThisKey=nameof(EmployeeID), OtherKey=nameof(Default.SqlServerNorthwind.Employee.EmployeeID), CanBeNull=false)]
 		public Employee Employee { get; set; } = null!;
 
 		/// <summary>
 		/// FK_EmployeeTerritories_Territories (dbo.Territories)
 		/// </summary>
-		[Association(ThisKey="TerritoryID", OtherKey="TerritoryID", CanBeNull=false)]
+		[Association(ThisKey=nameof(TerritoryID), OtherKey=nameof(Default.SqlServerNorthwind.Territory.TerritoryID), CanBeNull=false)]
 		public Territory Territory { get; set; } = null!;
 
 		#endregion
@@ -342,25 +350,25 @@ namespace Default.SqlServerNorthwind
 		/// <summary>
 		/// FK_Orders_Customers (dbo.Customers)
 		/// </summary>
-		[Association(ThisKey="CustomerID", OtherKey="CustomerID", CanBeNull=true)]
+		[Association(ThisKey=nameof(CustomerID), OtherKey=nameof(Default.SqlServerNorthwind.Customer.CustomerID), CanBeNull=true)]
 		public Customer? Customer { get; set; }
 
 		/// <summary>
 		/// FK_Orders_Employees (dbo.Employees)
 		/// </summary>
-		[Association(ThisKey="EmployeeID", OtherKey="EmployeeID", CanBeNull=true)]
+		[Association(ThisKey=nameof(EmployeeID), OtherKey=nameof(Default.SqlServerNorthwind.Employee.EmployeeID), CanBeNull=true)]
 		public Employee? Employee { get; set; }
 
 		/// <summary>
 		/// FK_Order_Details_Orders_BackReference (dbo.Order Details)
 		/// </summary>
-		[Association(ThisKey="OrderID", OtherKey="OrderID", CanBeNull=true)]
+		[Association(ThisKey=nameof(OrderID), OtherKey=nameof(Default.SqlServerNorthwind.OrderDetail.OrderID), CanBeNull=true)]
 		public IEnumerable<OrderDetail> OrderDetails { get; set; } = null!;
 
 		/// <summary>
 		/// FK_Orders_Shippers (dbo.Shippers)
 		/// </summary>
-		[Association(ThisKey="ShipVia", OtherKey="ShipperID", CanBeNull=true)]
+		[Association(ThisKey=nameof(ShipVia), OtherKey=nameof(Default.SqlServerNorthwind.Shipper.ShipperID), CanBeNull=true)]
 		public Shipper? Shipper { get; set; }
 
 		#endregion
@@ -380,13 +388,13 @@ namespace Default.SqlServerNorthwind
 		/// <summary>
 		/// FK_Order_Details_Orders (dbo.Orders)
 		/// </summary>
-		[Association(ThisKey="OrderID", OtherKey="OrderID", CanBeNull=false)]
+		[Association(ThisKey=nameof(OrderID), OtherKey=nameof(Default.SqlServerNorthwind.Order.OrderID), CanBeNull=false)]
 		public Order Order { get; set; } = null!;
 
 		/// <summary>
 		/// FK_Order_Details_Products (dbo.Products)
 		/// </summary>
-		[Association(ThisKey="ProductID", OtherKey="ProductID", CanBeNull=false)]
+		[Association(ThisKey=nameof(ProductID), OtherKey=nameof(Default.SqlServerNorthwind.Product.ProductID), CanBeNull=false)]
 		public Product Product { get; set; } = null!;
 
 		#endregion
@@ -455,19 +463,19 @@ namespace Default.SqlServerNorthwind
 		/// <summary>
 		/// FK_Products_Categories (dbo.Categories)
 		/// </summary>
-		[Association(ThisKey="CategoryID", OtherKey="CategoryID", CanBeNull=true)]
+		[Association(ThisKey=nameof(CategoryID), OtherKey=nameof(Default.SqlServerNorthwind.Category.CategoryID), CanBeNull=true)]
 		public Category? Category { get; set; }
 
 		/// <summary>
 		/// FK_Order_Details_Products_BackReference (dbo.Order Details)
 		/// </summary>
-		[Association(ThisKey="ProductID", OtherKey="ProductID", CanBeNull=true)]
+		[Association(ThisKey=nameof(ProductID), OtherKey=nameof(Default.SqlServerNorthwind.OrderDetail.ProductID), CanBeNull=true)]
 		public IEnumerable<OrderDetail> OrderDetails { get; set; } = null!;
 
 		/// <summary>
 		/// FK_Products_Suppliers (dbo.Suppliers)
 		/// </summary>
-		[Association(ThisKey="SupplierID", OtherKey="SupplierID", CanBeNull=true)]
+		[Association(ThisKey=nameof(SupplierID), OtherKey=nameof(Default.SqlServerNorthwind.Supplier.SupplierID), CanBeNull=true)]
 		public Supplier? Supplier { get; set; }
 
 		#endregion
@@ -518,7 +526,7 @@ namespace Default.SqlServerNorthwind
 		/// <summary>
 		/// FK_Territories_Region_BackReference (dbo.Territories)
 		/// </summary>
-		[Association(ThisKey="RegionID", OtherKey="RegionID", CanBeNull=true)]
+		[Association(ThisKey=nameof(RegionID), OtherKey=nameof(Default.SqlServerNorthwind.Territory.RegionID), CanBeNull=true)]
 		public IEnumerable<Territory> Territories { get; set; } = null!;
 
 		#endregion
@@ -554,7 +562,7 @@ namespace Default.SqlServerNorthwind
 		/// <summary>
 		/// FK_Orders_Shippers_BackReference (dbo.Orders)
 		/// </summary>
-		[Association(ThisKey="ShipperID", OtherKey="ShipVia", CanBeNull=true)]
+		[Association(ThisKey=nameof(ShipperID), OtherKey=nameof(Default.SqlServerNorthwind.Order.ShipVia), CanBeNull=true)]
 		public IEnumerable<Order> Orders { get; set; } = null!;
 
 		#endregion
@@ -597,7 +605,7 @@ namespace Default.SqlServerNorthwind
 		/// <summary>
 		/// FK_Products_Suppliers_BackReference (dbo.Products)
 		/// </summary>
-		[Association(ThisKey="SupplierID", OtherKey="SupplierID", CanBeNull=true)]
+		[Association(ThisKey=nameof(SupplierID), OtherKey=nameof(Default.SqlServerNorthwind.Product.SupplierID), CanBeNull=true)]
 		public IEnumerable<Product> Products { get; set; } = null!;
 
 		#endregion
@@ -615,13 +623,13 @@ namespace Default.SqlServerNorthwind
 		/// <summary>
 		/// FK_EmployeeTerritories_Territories_BackReference (dbo.EmployeeTerritories)
 		/// </summary>
-		[Association(ThisKey="TerritoryID", OtherKey="TerritoryID", CanBeNull=true)]
+		[Association(ThisKey=nameof(TerritoryID), OtherKey=nameof(Default.SqlServerNorthwind.EmployeeTerritory.TerritoryID), CanBeNull=true)]
 		public IEnumerable<EmployeeTerritory> EmployeeTerritories { get; set; } = null!;
 
 		/// <summary>
 		/// FK_Territories_Region (dbo.Region)
 		/// </summary>
-		[Association(ThisKey="RegionID", OtherKey="RegionID", CanBeNull=false)]
+		[Association(ThisKey=nameof(RegionID), OtherKey=nameof(Default.SqlServerNorthwind.Region.RegionID), CanBeNull=false)]
 		public Region Region { get; set; } = null!;
 
 		#endregion
@@ -635,10 +643,7 @@ namespace Default.SqlServerNorthwind
 		{
 			var parameters = new []
 			{
-				new DataParameter("@CustomerID", @CustomerID, LinqToDB.DataType.NChar)
-				{
-					Size = 5
-				}
+				new DataParameter("@CustomerID", @CustomerID, LinqToDB.DataType.NChar, 5)
 			};
 
 			return dataConnection.QueryProc<CustOrderHistResult>("[dbo].[CustOrderHist]", parameters);
@@ -681,10 +686,7 @@ namespace Default.SqlServerNorthwind
 		{
 			var parameters = new []
 			{
-				new DataParameter("@CustomerID", @CustomerID, LinqToDB.DataType.NChar)
-				{
-					Size = 5
-				}
+				new DataParameter("@CustomerID", @CustomerID, LinqToDB.DataType.NChar, 5)
 			};
 
 			return dataConnection.QueryProc<CustOrdersOrdersResult>("[dbo].[CustOrdersOrders]", parameters);
@@ -731,14 +733,8 @@ namespace Default.SqlServerNorthwind
 		{
 			var parameters = new []
 			{
-				new DataParameter("@CategoryName", @CategoryName, LinqToDB.DataType.NVarChar)
-				{
-					Size = 15
-				},
-				new DataParameter("@OrdYear",      @OrdYear,      LinqToDB.DataType.NVarChar)
-				{
-					Size = 4
-				}
+				new DataParameter("@CategoryName", @CategoryName, LinqToDB.DataType.NVarChar, 15),
+				new DataParameter("@OrdYear",      @OrdYear,      LinqToDB.DataType.NVarChar, 4)
 			};
 
 			return dataConnection.QueryProc<SalesByCategoryResult>("[dbo].[SalesByCategory]", parameters);

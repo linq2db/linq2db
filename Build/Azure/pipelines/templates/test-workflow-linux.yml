@@ -4,7 +4,8 @@ parameters:
 steps:
 - checkout: none
 
-# .NET 8 SDK already installed https://github.com/actions/runner-images/blob/main/images/ubuntu/Ubuntu2204-Readme.md
+# .NET 6 and 8 SDK already installed https://github.com/actions/runner-images/blob/main/images/ubuntu/Ubuntu2204-Readme.md
+# but we still need to install all required versions because only last installed available due to bug
 
 - task: UseDotNet@2
   displayName: 'Install .NET 6'
