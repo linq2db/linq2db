@@ -50,7 +50,10 @@ namespace LinqToDB.DataProvider.Sybase.Translation
 				var factory   = translationContext.ExpressionFactory;
 				var intDbType = factory.GetDbDataType(typeof(int));
 
-				var resultExpression = factory.Function(intDbType, "DatePart", factory.Fragment(intDbType, partStr), dateTimeExpression);
+				var resultExpression = factory.Function(intDbType, "DatePart",
+					ParametersNullabilityType.SameAsSecondParameter,
+					factory.NotNullFragment(intDbType, partStr),
+					dateTimeExpression);
 
 				return resultExpression;
 			}
@@ -68,7 +71,10 @@ namespace LinqToDB.DataProvider.Sybase.Translation
 					return null;
 				}
 
-				var resultExpression = factory.Function(dateType, "DateAdd", factory.Fragment(factory.GetDbDataType(typeof(string)), partStr), increment, dateTimeExpression);
+				var resultExpression = factory.Function(dateType, "DateAdd",
+					factory.NotNullFragment(factory.GetDbDataType(typeof(string)), partStr),
+					increment,
+					dateTimeExpression);
 				return resultExpression;
 			}
 
@@ -101,6 +107,7 @@ namespace LinqToDB.DataProvider.Sybase.Translation
 					}
 
 					return factory.Function(stringDataType, "RIGHT",
+						ParametersNullabilityType.NotNullable,
 						factory.Concat(factory.Value(stringDataType, "0"), CastToLength(expression, padSize)),
 						factory.Value(intDataType, padSize));
 				}
@@ -146,7 +153,7 @@ namespace LinqToDB.DataProvider.Sybase.Translation
 			protected override ISqlExpression? TranslateSqlGetDate(ITranslationContext translationContext, TranslationFlags translationFlags)
 			{
 				var factory = translationContext.ExpressionFactory;
-				return factory.Function(factory.GetDbDataType(typeof(DateTime)), "GetDate");
+				return factory.Function(factory.GetDbDataType(typeof(DateTime)), "GetDate", ParametersNullabilityType.NotNullable);
 			}
 		}
 

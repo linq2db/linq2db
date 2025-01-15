@@ -88,6 +88,7 @@ namespace LinqToDB.DataProvider.DB2.Translation
 					}
 
 					return factory.Function(stringDataType, "LPad",
+						ParametersNullabilityType.SameAsFirstParameter,
 						CastToLength(expression, padSize),
 						factory.Value(intDataType, padSize),
 						factory.Value(stringDataType, "0"));
@@ -146,7 +147,7 @@ namespace LinqToDB.DataProvider.DB2.Translation
 							factory.Increment(
 								factory.Sub(intDataType,
 									factory.Function(dataTimeType, "Trunc", dateTimeExpression),
-									factory.Function(dataTimeType, "Trunc", dateTimeExpression, factory.Value("IW"))
+									factory.Function(dataTimeType, "Trunc", ParametersNullabilityType.SameAsFirstParameter, dateTimeExpression, factory.Value("IW"))
 								)
 							),
 							factory.Value(7));
@@ -171,7 +172,8 @@ namespace LinqToDB.DataProvider.DB2.Translation
 				}
 				else
 				{
-					resultExpression = factory.Function(intDataType, "To_Number", factory.Function(dataTimeType, "To_Char", dateTimeExpression, factory.Value(partStr)));
+					resultExpression = factory.Function(intDataType, "To_Number",
+						factory.Function(dataTimeType, "To_Char", ParametersNullabilityType.SameAsFirstParameter, dateTimeExpression, factory.Value(partStr)));
 
 					if (datepart == Sql.DateParts.Millisecond)
 					{

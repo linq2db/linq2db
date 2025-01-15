@@ -52,7 +52,7 @@ namespace LinqToDB.DataProvider.Oracle.Translation
 							factory.Increment(
 								factory.Sub(intDataType,
 									factory.Function(dataTimeType, "TRUNC", dateTimeExpression),
-									factory.Function(dataTimeType, "TRUNC", dateTimeExpression, factory.Value("IW"))
+									factory.Function(dataTimeType, "TRUNC", ParametersNullabilityType.SameAsFirstParameter, dateTimeExpression, factory.Value("IW"))
 								)
 							),
 							factory.Value(7));
@@ -79,7 +79,7 @@ namespace LinqToDB.DataProvider.Oracle.Translation
 				}
 				else
 				{
-					resultExpression = factory.Function(intDataType, "TO_NUMBER", factory.Function(dataTimeType, "TO_CHAR", dateTimeExpression, factory.Value(partStr)));
+					resultExpression = factory.Function(intDataType, "TO_NUMBER", factory.Function(dataTimeType, "TO_CHAR", ParametersNullabilityType.SameAsFirstParameter, dateTimeExpression, factory.Value(partStr)));
 
 					if (datepart == Sql.DateParts.Millisecond)
 					{
@@ -115,7 +115,7 @@ namespace LinqToDB.DataProvider.Oracle.Translation
 						return null;
 				}
 
-				var intervalExpression = factory.Multiply(intervalType, increment, factory.Fragment(intervalType, expStr));
+				var intervalExpression = factory.Multiply(intervalType, increment, factory.NotNullFragment(intervalType, expStr));
 				var resultExpression   = factory.Add(dateType, dateTimeExpression, intervalExpression);
 
 				return resultExpression;
@@ -149,6 +149,7 @@ namespace LinqToDB.DataProvider.Oracle.Translation
 					}
 
 					return factory.Function(stringDataType, "LPad",
+						ParametersNullabilityType.SameAsFirstParameter,
 						CastToLength(expression, padSize),
 						factory.Value(intDataType, padSize),
 						factory.Value(stringDataType, "0"));
@@ -172,7 +173,7 @@ namespace LinqToDB.DataProvider.Oracle.Translation
 					PartExpression(millisecond, 3)
 				); 
 				
-				resultExpression = factory.Function(resulType, "TO_TIMESTAMP", resultExpression, factory.Value(stringDataType, "YYYY-MM-DD HH24:MI:SS.FF3"));
+				resultExpression = factory.Function(resulType, "TO_TIMESTAMP", ParametersNullabilityType.SameAsFirstParameter, resultExpression, factory.Value(stringDataType, "YYYY-MM-DD HH24:MI:SS.FF3"));
 
 				return resultExpression;
 			}
@@ -184,7 +185,7 @@ namespace LinqToDB.DataProvider.Oracle.Translation
 				var factory = translationContext.ExpressionFactory;
 				var dateType = factory.GetDbDataType(dateExpression);
 
-				var resultExpression = factory.Function(dateType.WithDataType(DataType.Time), "TO_CHAR", dateExpression, factory.Value("HH24:MI:SS"));
+				var resultExpression = factory.Function(dateType.WithDataType(DataType.Time), "TO_CHAR", ParametersNullabilityType.SameAsFirstParameter, dateExpression, factory.Value("HH24:MI:SS"));
 
 				return resultExpression;
 			}

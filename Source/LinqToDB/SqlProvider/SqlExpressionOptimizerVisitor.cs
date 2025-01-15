@@ -1009,10 +1009,35 @@ namespace LinqToDB.SqlProvider
 							sc.AddRange(func.Parameters.Select(p => new SqlPredicate.IsNull(p, false)));
 							return Visit(sc.MakeNot(predicate.IsNot));
 						}
-						
+
+						if (func.NullabilityType == ParametersNullabilityType.IfAllParametersNullable)
+						{
+							var sc = new SqlSearchCondition(false);
+							sc.AddRange(func.Parameters.Select(p => new SqlPredicate.IsNull(p, false)));
+							return Visit(sc.MakeNot(predicate.IsNot));
+						}
+
 						if (func.NullabilityType == ParametersNullabilityType.SameAsFirstParameter)
 						{
 							var newIsNull = new SqlPredicate.IsNull(func.Parameters[0], false);
+							return Visit(newIsNull.MakeNot(predicate.IsNot));
+						}
+
+						if (func.NullabilityType == ParametersNullabilityType.SameAsSecondParameter)
+						{
+							var newIsNull = new SqlPredicate.IsNull(func.Parameters[1], false);
+							return Visit(newIsNull.MakeNot(predicate.IsNot));
+						}
+
+						if (func.NullabilityType == ParametersNullabilityType.SameAsThirdParameter)
+						{
+							var newIsNull = new SqlPredicate.IsNull(func.Parameters[2], false);
+							return Visit(newIsNull.MakeNot(predicate.IsNot));
+						}
+
+						if (func.NullabilityType == ParametersNullabilityType.SameAsLastParameter)
+						{
+							var newIsNull = new SqlPredicate.IsNull(func.Parameters[^1], false);
 							return Visit(newIsNull.MakeNot(predicate.IsNot));
 						}
 					}
