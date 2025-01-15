@@ -72,7 +72,7 @@ namespace LinqToDB.Remote
 		{
 		}
 
-#region ILinqService Members
+		#region ILinqService Members
 
 		public virtual LinqServiceInfo GetInfo(string? configuration)
 		{
