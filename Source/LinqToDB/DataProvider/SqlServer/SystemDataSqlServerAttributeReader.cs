@@ -27,11 +27,13 @@ namespace LinqToDB.Metadata
 		/// Provider instance, which use mapping attributes from System.Data.SqlClient assembly.
 		/// Could be null of assembly not found.
 		/// </summary>
-		public static IMetadataReader? SystemDataSqlClientProvider = TryCreate(
-			"Microsoft.SqlServer.Server.SqlMethodAttribute, System.Data.SqlClient",
-			"Microsoft.SqlServer.Server.SqlUserDefinedTypeAttribute, System.Data.SqlClient")
+		public static IMetadataReader? SystemDataSqlClientProvider =
 #if NETFRAMEWORK
-			?? new SystemDataSqlServerAttributeReader(typeof(SqlMethodAttribute), typeof(SqlUserDefinedTypeAttribute))
+			new SystemDataSqlServerAttributeReader(typeof(SqlMethodAttribute), typeof(SqlUserDefinedTypeAttribute))
+#else
+			TryCreate(
+				"Microsoft.SqlServer.Server.SqlMethodAttribute, System.Data.SqlClient",
+				"Microsoft.SqlServer.Server.SqlUserDefinedTypeAttribute, System.Data.SqlClient")
 #endif
 			;
 

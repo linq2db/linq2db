@@ -7,6 +7,9 @@
 
 using LinqToDB;
 using LinqToDB.Data;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 
 #pragma warning disable 1573, 1591
 #nullable enable
@@ -17,33 +20,155 @@ namespace Cli.Default.DB2
 	{
 		public TestDataDB()
 		{
-			InitSchemas();
 			InitDataContext();
 		}
 
 		public TestDataDB(string configuration)
 			: base(configuration)
 		{
-			InitSchemas();
 			InitDataContext();
 		}
 
 		public TestDataDB(DataOptions<TestDataDB> options)
 			: base(options.Options)
 		{
-			InitSchemas();
 			InitDataContext();
 		}
 
 		partial void InitDataContext();
 
-		#region Schemas
-		public void InitSchemas()
+		public ITable<Alltype>           Alltypes            => this.GetTable<Alltype>();
+		public ITable<Child>             Children            => this.GetTable<Child>();
+		public ITable<CollatedTable>     CollatedTables      => this.GetTable<CollatedTable>();
+		public ITable<Doctor>            Doctors             => this.GetTable<Doctor>();
+		public ITable<GrandChild>        GrandChildren       => this.GetTable<GrandChild>();
+		public ITable<InheritanceChild>  InheritanceChildren => this.GetTable<InheritanceChild>();
+		public ITable<InheritanceParent> InheritanceParents  => this.GetTable<InheritanceParent>();
+		public ITable<KeepIdentityTest>  KeepIdentityTests   => this.GetTable<KeepIdentityTest>();
+		public ITable<LinqDataType>      LinqDataTypes       => this.GetTable<LinqDataType>();
+		public ITable<Mastertable>       Mastertables        => this.GetTable<Mastertable>();
+		public ITable<Parent>            Parents             => this.GetTable<Parent>();
+		public ITable<Patient>           Patients            => this.GetTable<Patient>();
+		public ITable<Person>            People              => this.GetTable<Person>();
+		public ITable<Slavetable>        Slavetables         => this.GetTable<Slavetable>();
+		public ITable<TestIdentity>      TestIdentities      => this.GetTable<TestIdentity>();
+		public ITable<TestMerge1>        TestMerge1          => this.GetTable<TestMerge1>();
+		public ITable<TestMerge2>        TestMerge2          => this.GetTable<TestMerge2>();
+		public ITable<Personview>        Personviews         => this.GetTable<Personview>();
+	}
+
+	public static partial class ExtensionMethods
+	{
+		#region Table Extensions
+		public static Alltype? Find(this ITable<Alltype> table, int id)
 		{
-			Db2Inst1 = new Db2Inst1Schema.DataContext(this);
+			return table.FirstOrDefault(e => e.Id == id);
 		}
 
-		public Db2Inst1Schema.DataContext Db2Inst1 { get; set; } = null!;
+		public static Task<Alltype?> FindAsync(this ITable<Alltype> table, int id, CancellationToken cancellationToken = default)
+		{
+			return table.FirstOrDefaultAsync(e => e.Id == id, cancellationToken);
+		}
+
+		public static Doctor? Find(this ITable<Doctor> table, int personId)
+		{
+			return table.FirstOrDefault(e => e.PersonId == personId);
+		}
+
+		public static Task<Doctor?> FindAsync(this ITable<Doctor> table, int personId, CancellationToken cancellationToken = default)
+		{
+			return table.FirstOrDefaultAsync(e => e.PersonId == personId, cancellationToken);
+		}
+
+		public static InheritanceChild? Find(this ITable<InheritanceChild> table, int inheritanceChildId)
+		{
+			return table.FirstOrDefault(e => e.InheritanceChildId == inheritanceChildId);
+		}
+
+		public static Task<InheritanceChild?> FindAsync(this ITable<InheritanceChild> table, int inheritanceChildId, CancellationToken cancellationToken = default)
+		{
+			return table.FirstOrDefaultAsync(e => e.InheritanceChildId == inheritanceChildId, cancellationToken);
+		}
+
+		public static InheritanceParent? Find(this ITable<InheritanceParent> table, int inheritanceParentId)
+		{
+			return table.FirstOrDefault(e => e.InheritanceParentId == inheritanceParentId);
+		}
+
+		public static Task<InheritanceParent?> FindAsync(this ITable<InheritanceParent> table, int inheritanceParentId, CancellationToken cancellationToken = default)
+		{
+			return table.FirstOrDefaultAsync(e => e.InheritanceParentId == inheritanceParentId, cancellationToken);
+		}
+
+		public static KeepIdentityTest? Find(this ITable<KeepIdentityTest> table, int id)
+		{
+			return table.FirstOrDefault(e => e.Id == id);
+		}
+
+		public static Task<KeepIdentityTest?> FindAsync(this ITable<KeepIdentityTest> table, int id, CancellationToken cancellationToken = default)
+		{
+			return table.FirstOrDefaultAsync(e => e.Id == id, cancellationToken);
+		}
+
+		public static Mastertable? Find(this ITable<Mastertable> table, int id1, int id2)
+		{
+			return table.FirstOrDefault(e => e.Id1 == id1 && e.Id2 == id2);
+		}
+
+		public static Task<Mastertable?> FindAsync(this ITable<Mastertable> table, int id1, int id2, CancellationToken cancellationToken = default)
+		{
+			return table.FirstOrDefaultAsync(e => e.Id1 == id1 && e.Id2 == id2, cancellationToken);
+		}
+
+		public static Patient? Find(this ITable<Patient> table, int personId)
+		{
+			return table.FirstOrDefault(e => e.PersonId == personId);
+		}
+
+		public static Task<Patient?> FindAsync(this ITable<Patient> table, int personId, CancellationToken cancellationToken = default)
+		{
+			return table.FirstOrDefaultAsync(e => e.PersonId == personId, cancellationToken);
+		}
+
+		public static Person? Find(this ITable<Person> table, int personId)
+		{
+			return table.FirstOrDefault(e => e.PersonId == personId);
+		}
+
+		public static Task<Person?> FindAsync(this ITable<Person> table, int personId, CancellationToken cancellationToken = default)
+		{
+			return table.FirstOrDefaultAsync(e => e.PersonId == personId, cancellationToken);
+		}
+
+		public static TestIdentity? Find(this ITable<TestIdentity> table, int id)
+		{
+			return table.FirstOrDefault(e => e.Id == id);
+		}
+
+		public static Task<TestIdentity?> FindAsync(this ITable<TestIdentity> table, int id, CancellationToken cancellationToken = default)
+		{
+			return table.FirstOrDefaultAsync(e => e.Id == id, cancellationToken);
+		}
+
+		public static TestMerge1? Find(this ITable<TestMerge1> table, int id)
+		{
+			return table.FirstOrDefault(e => e.Id == id);
+		}
+
+		public static Task<TestMerge1?> FindAsync(this ITable<TestMerge1> table, int id, CancellationToken cancellationToken = default)
+		{
+			return table.FirstOrDefaultAsync(e => e.Id == id, cancellationToken);
+		}
+
+		public static TestMerge2? Find(this ITable<TestMerge2> table, int id)
+		{
+			return table.FirstOrDefault(e => e.Id == id);
+		}
+
+		public static Task<TestMerge2?> FindAsync(this ITable<TestMerge2> table, int id, CancellationToken cancellationToken = default)
+		{
+			return table.FirstOrDefaultAsync(e => e.Id == id, cancellationToken);
+		}
 		#endregion
 	}
 }

@@ -4,16 +4,25 @@
 		<LinqToDBT4SharedTools>$(MSBuildThisFileDirectory)..\tools\</LinqToDBT4SharedTools>
 
 		<!--client assemblies pathes-->
+		<LinqToDBT4AccessClientPath>$(MSBuildThisFileDirectory)..\tools\</LinqToDBT4AccessClientPath>
+		<LinqToDBT4ClickHouseClientPath>$(MSBuildThisFileDirectory)..\tools\</LinqToDBT4ClickHouseClientPath>
+		<LinqToDBT4DB2ClientPath>$(MSBuildThisFileDirectory)..\tools\</LinqToDBT4DB2ClientPath>
 		<LinqToDBT4FirebirdClientPath>$(MSBuildThisFileDirectory)..\tools\</LinqToDBT4FirebirdClientPath>
-		<LinqToDBT4MySqlConnectorClientPath>$(MSBuildThisFileDirectory)..\tools\</LinqToDBT4MySqlConnectorClientPath>
-		<LinqToDBT4OracleManagedClientPath>$(MSBuildThisFileDirectory)..\tools\</LinqToDBT4OracleManagedClientPath>
-		<LinqToDBT4NpgsqlClientPath>$(MSBuildThisFileDirectory)..\tools\</LinqToDBT4NpgsqlClientPath>
+		<LinqToDBT4InformixClientPath>$(MSBuildThisFileDirectory)..\tools\</LinqToDBT4InformixClientPath>
+		<LinqToDBT4MySqlClientPath>$(MSBuildThisFileDirectory)..\tools\</LinqToDBT4MySqlClientPath>
+		<LinqToDBT4OracleClientPath>$(MSBuildThisFileDirectory)..\tools\</LinqToDBT4OracleClientPath>
+		<LinqToDBT4PostgreSQLClientPath>$(MSBuildThisFileDirectory)..\tools\</LinqToDBT4PostgreSQLClientPath>
+		<LinqToDBT4SapHanaClientPath>$(MSBuildThisFileDirectory)..\tools\</LinqToDBT4SapHanaClientPath>
+		<LinqToDBT4SqlCeClientPath>$(MSBuildThisFileDirectory)..\tools\</LinqToDBT4SqlCeClientPath>
 		<LinqToDBT4SQLiteClientPath>$(MSBuildThisFileDirectory)..\tools\</LinqToDBT4SQLiteClientPath>
-		<LinqToDBT4SQLServerClientPath>$(MSBuildThisFileDirectory)..\tools\</LinqToDBT4SQLServerClientPath>
-		<LinqToDBT4SybaseDataActionClientPath>$(MSBuildThisFileDirectory)..\tools\</LinqToDBT4SybaseDataActionClientPath>
+		<LinqToDBT4SqlServerClientPath>$(MSBuildThisFileDirectory)..\tools\</LinqToDBT4SqlServerClientPath>
+		<LinqToDBT4SybaseClientPath>$(MSBuildThisFileDirectory)..\tools\</LinqToDBT4SybaseClientPath>
 
 		<!--templates pathes-->
+		<LinqToDBT4TemplatesPath>$(MSBuildThisFileDirectory)..\contentFiles\any\any\LinqToDB.Templates\</LinqToDBT4TemplatesPath>
+
 		<LinqToDBT4AccessTemplatesPath>$(MSBuildThisFileDirectory)..\contentFiles\any\any\LinqToDB.Templates\</LinqToDBT4AccessTemplatesPath>
+		<LinqToDBT4ClickHouseTemplatesPath>$(MSBuildThisFileDirectory)..\contentFiles\any\any\LinqToDB.Templates\</LinqToDBT4ClickHouseTemplatesPath>
 		<LinqToDBT4DB2TemplatesPath>$(MSBuildThisFileDirectory)..\contentFiles\any\any\LinqToDB.Templates\</LinqToDBT4DB2TemplatesPath>
 		<LinqToDBT4FirebirdTemplatesPath>$(MSBuildThisFileDirectory)..\contentFiles\any\any\LinqToDB.Templates\</LinqToDBT4FirebirdTemplatesPath>
 		<LinqToDBT4InformixTemplatesPath>$(MSBuildThisFileDirectory)..\contentFiles\any\any\LinqToDB.Templates\</LinqToDBT4InformixTemplatesPath>
@@ -24,6 +33,6 @@
 		<LinqToDBT4SqlCeTemplatesPath>$(MSBuildThisFileDirectory)..\contentFiles\any\any\LinqToDB.Templates\</LinqToDBT4SqlCeTemplatesPath>
 		<LinqToDBT4SQLiteTemplatesPath>$(MSBuildThisFileDirectory)..\contentFiles\any\any\LinqToDB.Templates\</LinqToDBT4SQLiteTemplatesPath>
 		<LinqToDBT4SqlServerTemplatesPath>$(MSBuildThisFileDirectory)..\contentFiles\any\any\LinqToDB.Templates\</LinqToDBT4SqlServerTemplatesPath>
-		<LinqToDBT4SybaseAseTemplatesPath>$(MSBuildThisFileDirectory)..\contentFiles\any\any\LinqToDB.Templates\</LinqToDBT4SybaseAseTemplatesPath>
+		<LinqToDBT4SybaseTemplatesPath>$(MSBuildThisFileDirectory)..\contentFiles\any\any\LinqToDB.Templates\</LinqToDBT4SybaseTemplatesPath>
 	</PropertyGroup>
 </Project>

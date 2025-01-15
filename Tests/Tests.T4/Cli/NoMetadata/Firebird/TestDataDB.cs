@@ -338,11 +338,11 @@ namespace Cli.NoMetadata.Firebird
 		#endregion
 
 		#region PersonDelete
-		public static int PersonDelete(this TestDataDB dataConnection, int? personid)
+		public static int PersonDelete(this TestDataDB dataConnection, int? personId)
 		{
 			var parameters = new []
 			{
-				new DataParameter("PERSONID", personid, DataType.Int32)
+				new DataParameter("PersonID", personId, DataType.Int32)
 				{
 					Size = 4
 				}
@@ -350,11 +350,11 @@ namespace Cli.NoMetadata.Firebird
 			return dataConnection.ExecuteProc("\"Person_Delete\"", parameters);
 		}
 
-		public static Task<int> PersonDeleteAsync(this TestDataDB dataConnection, int? personid, CancellationToken cancellationToken = default)
+		public static Task<int> PersonDeleteAsync(this TestDataDB dataConnection, int? personId, CancellationToken cancellationToken = default)
 		{
 			var parameters = new []
 			{
-				new DataParameter("PERSONID", personid, DataType.Int32)
+				new DataParameter("PersonID", personId, DataType.Int32)
 				{
 					Size = 4
 				}

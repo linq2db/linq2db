@@ -1,5 +1,5 @@
 ﻿<#
-	GetConstructors = (conf, name) => new[]
+	GetConstructors = (string conf, string name, Func<IMethod> factory) => new IMethod[]
 	{
 		new Method(null, name, new Func<string>[] { () => "int i" }),
 		new Method(null, name, new Func<string>[] { () => "string configuration" }) { AfterSignature = { ": base(configuration)" } },

@@ -1003,6 +1003,7 @@ namespace Tests.Data
 		#region IDataContextInterceptor
 
 		#region EntityCreated
+
 		[Test]
 		public void EntityCreated_DataConnection_Or_RemoteContext([IncludeDataSources(true, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
@@ -1038,6 +1039,7 @@ namespace Tests.Data
 		}
 
 		#endregion
+
 		#region OnClosing/OnClosed
 
 		[Test]

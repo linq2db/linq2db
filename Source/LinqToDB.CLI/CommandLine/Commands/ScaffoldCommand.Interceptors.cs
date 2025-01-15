@@ -8,6 +8,7 @@ using System.Runtime.Loader;
 
 using LinqToDB.Common.Internal;
 using LinqToDB.Scaffold;
+using LinqToDB.Tools;
 
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
@@ -390,8 +391,10 @@ namespace LinqToDB.CommandLine
 			// default linq2db imports
 			// current tool (for host class)
 			referencesList.Add(MetadataReference.CreateFromFile(typeof(LinqToDBHost).Assembly.Location));
-			// linq2db.Tools
+			// linq2db.Scaffold
 			referencesList.Add(MetadataReference.CreateFromFile(typeof(ScaffoldOptions).Assembly.Location));
+			// linq2db.Tools
+			referencesList.Add(MetadataReference.CreateFromFile(typeof(MappingSchemaExtensions).Assembly.Location));
 			// linq2db
 			referencesList.Add(MetadataReference.CreateFromFile(typeof(ProviderName).Assembly.Location));
 

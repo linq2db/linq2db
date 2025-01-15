@@ -13,9 +13,21 @@ namespace LinqToDB.DataProvider.Sybase
 	sealed class SybaseSchemaProvider : SchemaProviderBase
 	{
 		private readonly SybaseDataProvider _provider;
+
 		public SybaseSchemaProvider(SybaseDataProvider provider)
 		{
 			_provider = provider;
+		}
+
+		private int _uniCharSize = 2;
+		private int _nCharSize   = 3;
+
+		protected override void InitProvider(DataConnection dataConnection, GetSchemaOptions options)
+		{
+			base.InitProvider(dataConnection, options);
+
+			_uniCharSize = dataConnection.Execute<int>("select @@unicharsize");
+			_nCharSize   = dataConnection.Execute<int>("select @@ncharsize");
 		}
 
 		protected override DataType GetDataType(string? dataType, string? columnType, int? length, int? precision, int? scale)
@@ -114,7 +126,11 @@ SELECT
 	Convert(bit, c.status & 0x08)                    as IsNullable,
 	c.colid                                          as Ordinal,
 	t.name                                           as DataType,
-	c.length                                         as Length,
+	CASE
+		WHEN t.name IN ('nvarchar', 'nchar') THEN c.length / @@ncharsize
+		WHEN t.name IN ('univarchar', 'unichar') THEN c.length / @@unicharsize
+		ELSE c.length
+	END                                              as Length,
 	c.prec                                           as [Precision],
 	c.scale                                          as Scale,
 	Convert(bit, c.status & 0x80)                    as IsIdentity,
@@ -219,7 +235,9 @@ WHERE
 					var type       = rd.GetString(15);
 
 					if (type == "nchar" || type == "nvarchar")
-						length /= 3; // that's right...
+						length /= _nCharSize;
+					else if (type == "unichar" || type == "univarchar")
+						length /= _uniCharSize;
 
 					return new ProcedureParameterInfo()
 					{
@@ -278,6 +296,12 @@ WHERE
 				let scale      = Converter.ChangeTypeTo<int>(r["NumericScale"])
 				let columnType = r.Field<string>(dataTypeNameColumn)
 				let dt         = GetDataType(columnType, null, options)
+
+				let Length = columnType is "nchar" or "nvarchar"
+					? length / _nCharSize
+					: columnType is "unichar" or "univarchar"
+						? length / _uniCharSize
+						: length
 
 				select new ColumnSchema
 				{

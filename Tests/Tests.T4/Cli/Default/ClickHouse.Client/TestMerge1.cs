@@ -26,8 +26,8 @@ namespace Cli.Default.ClickHouse.Client
 		[Column("FieldBoolean"                                             )] public bool?           FieldBoolean    { get; set; } // Bool
 		[Column("FieldString"                                              )] public string?         FieldString     { get; set; } // String
 		[Column("FieldNString"                                             )] public string?         FieldNString    { get; set; } // String
-		[Column("FieldChar"                                                )] public byte[]?         FieldChar       { get; set; } // FixedString(1)
-		[Column("FieldNChar"                                               )] public byte[]?         FieldNChar      { get; set; } // FixedString(2)
+		[Column("FieldChar"                                                )] public char?           FieldChar       { get; set; } // FixedString(1)
+		[Column("FieldNChar"                                               )] public string?         FieldNChar      { get; set; } // FixedString(2)
 		[Column("FieldFloat"                                               )] public float?          FieldFloat      { get; set; } // Float32
 		[Column("FieldDouble"                                              )] public double?         FieldDouble     { get; set; } // Float64
 		[Column("FieldDateTime"                                            )] public DateTimeOffset? FieldDateTime   { get; set; } // DateTime64(3)

@@ -1,0 +1,26 @@
+<#@ assembly name="$(LinqToDBT4InformixClientPath)IBM.Data.DB2.DLL"               #>
+<#@ include file="$(LinqToDBT4TemplatesPath)LinqToDB.ttinclude" once="true"       #>
+<#@ include file="$(LinqToDBT4TemplatesPath)LinqToDB.Tools.ttinclude" once="true" #>
+<#+
+LinqToDB.Data.DataConnection GetInformixConnection(string connectionString, LinqToDB.DataProvider.Informix.InformixProvider provider)
+{
+	return new LinqToDB.Data.DataConnection(LinqToDB.DataProvider.Informix.InformixTools.GetDataProvider(provider), connectionString);
+}
+
+LinqToDB.Data.DataConnection GetInformixConnection(string host, string port, string server, string database, string uid, string password)
+{
+	return GetInformixConnection(string.Format("Host={0};Service={1};Server={2};Protocol=onsoctcp;Database={3};UID={4};PWD={5}", host, port, server, database, uid, password), LinqToDB.DataProvider.Informix.InformixProvider.Informix);
+}
+
+public void LoadInformixMetadata(string connectionString, LinqToDB.DataProvider.Informix.InformixProvider provider = LinqToDB.DataProvider.Informix.InformixProvider.AutoDetect)
+{
+	using (var dataConnection = GetInformixConnection(connectionString, provider))
+		LoadMetadata(dataConnection);
+}
+
+public void LoadInformixMetadata(string host, string port, string server, string database, string uid, string password)
+{
+	using (var dataConnection = GetInformixConnection(host, port, server, database, uid, password))
+		LoadMetadata(dataConnection);
+}
+#>
