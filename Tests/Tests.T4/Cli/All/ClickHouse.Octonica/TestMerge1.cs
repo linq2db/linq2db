@@ -29,8 +29,8 @@ namespace Cli.All.ClickHouse.Octonica
 		[Column("FieldBoolean"   , DataType = DataType.Boolean   , DbType = "Bool"                                                     )] public bool?           FieldBoolean    { get; set; } // Bool
 		[Column("FieldString"    , DataType = DataType.NVarChar  , DbType = "String"                                                   )] public string?         FieldString     { get; set; } // String
 		[Column("FieldNString"   , DataType = DataType.NVarChar  , DbType = "String"                                                   )] public string?         FieldNString    { get; set; } // String
-		[Column("FieldChar"      , DataType = DataType.Binary    , DbType = "FixedString(1)" , Length       = 1                        )] public byte[]?         FieldChar       { get; set; } // FixedString(1)
-		[Column("FieldNChar"     , DataType = DataType.Binary    , DbType = "FixedString(2)" , Length       = 2                        )] public byte[]?         FieldNChar      { get; set; } // FixedString(2)
+		[Column("FieldChar"      , DataType = DataType.NChar     , DbType = "FixedString(1)" , Length       = 1                        )] public char?           FieldChar       { get; set; } // FixedString(1)
+		[Column("FieldNChar"     , DataType = DataType.NChar     , DbType = "FixedString(2)" , Length       = 2                        )] public string?         FieldNChar      { get; set; } // FixedString(2)
 		[Column("FieldFloat"     , DataType = DataType.Single    , DbType = "Float32"                                                  )] public float?          FieldFloat      { get; set; } // Float32
 		[Column("FieldDouble"    , DataType = DataType.Double    , DbType = "Float64"                                                  )] public double?         FieldDouble     { get; set; } // Float64
 		[Column("FieldDateTime"  , DataType = DataType.DateTime64, DbType = "DateTime64(3)"  , Precision    = 3                        )] public DateTimeOffset? FieldDateTime   { get; set; } // DateTime64(3)

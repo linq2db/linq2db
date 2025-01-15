@@ -1,9 +1,7 @@
-﻿<#@ assembly name="$(ArtifactsPath)\bin\Tests\Debug\net462\linq2db.dll"                       #>
-<#@ assembly name="$(ArtifactsPath)\bin\Tests\Debug\net462\Microsoft.Bcl.AsyncInterfaces.dll" #>
-<#@ assembly name="$(ArtifactsPath)\bin\Tests\Debug\net462\linq2db.Tests.Base.dll"            #>
-<#@ include file="..\..\Source\LinqToDB.Templates\PluralizationService.ttinclude" once="true" #>
-<#@ include file="ConnectionStrings.ttinclude"                                    once="true" #>
-<#@ import namespace="System.IO" #>
+﻿<#@ assembly name="$(LinqToDBT4SharedTools)linq2db.dll"                                 #>
+<#@ assembly name="$(LinqToDBT4SharedTools)Microsoft.Bcl.AsyncInterfaces.dll"           #>
+<#@ include file="$(LinqToDBT4TemplatesPath)PluralizationService.ttinclude" once="true" #>
+<#@ include file="ConnectionStrings.ttinclude"                              once="true" #>
 <#
 	EnableNullableReferenceTypes = true;
 	GenerateDatabaseInfo         = false;

@@ -30,6 +30,8 @@ namespace Default.PostgreSQL
 {
 	public partial class TestDataDB : LinqToDB.Data.DataConnection
 	{
+		#region Tables
+
 		public ITable<AllType>                        AllTypes                  { get { return this.GetTable<AllType>(); } }
 		public ITable<Child>                          Children                  { get { return this.GetTable<Child>(); } }
 		public ITable<CollatedTable>                  CollatedTables            { get { return this.GetTable<CollatedTable>(); } }
@@ -43,6 +45,7 @@ namespace Default.PostgreSQL
 		/// </summary>
 		public ITable<Issue2023>                      Issue2023                 { get { return this.GetTable<Issue2023>(); } }
 		public ITable<LinqDataType>                   LinqDataTypes             { get { return this.GetTable<LinqDataType>(); } }
+		public ITable<MultitenantTable>               MultitenantTables         { get { return this.GetTable<MultitenantTable>(); } }
 		public ITable<Parent>                         Parents                   { get { return this.GetTable<Parent>(); } }
 		public ITable<Patient>                        Patients                  { get { return this.GetTable<Patient>(); } }
 		/// <summary>
@@ -65,10 +68,14 @@ namespace Default.PostgreSQL
 		public ITable<test_schema_TestSchemaIdentity> TestSchemaIdentities      { get { return this.GetTable<test_schema_TestSchemaIdentity>(); } }
 		public ITable<test_schema_Testserialidentity> Testserialidentities      { get { return this.GetTable<test_schema_Testserialidentity>(); } }
 
+		#endregion
+
 		partial void InitMappingSchema()
 		{
 			MappingSchema.SetConvertExpression<object?[], TestFunctionParametersResult>(tuple => new TestFunctionParametersResult() { param2 = (int?)tuple[0], param3 = (int?)tuple[1] });
 		}
+
+		#region .ctor
 
 		public TestDataDB()
 		{
@@ -99,6 +106,8 @@ namespace Default.PostgreSQL
 
 		partial void InitDataContext  ();
 		partial void InitMappingSchema();
+
+		#endregion
 
 		#region Table Functions
 
@@ -292,7 +301,7 @@ namespace Default.PostgreSQL
 		/// <summary>
 		/// Doctor_PersonID_fkey (public.Person)
 		/// </summary>
-		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false)]
+		[Association(ThisKey=nameof(PersonID), OtherKey=nameof(Default.PostgreSQL.Person.PersonID), CanBeNull=false)]
 		public Person Person { get; set; } = null!;
 
 		#endregion
@@ -361,6 +370,16 @@ namespace Default.PostgreSQL
 		[Column, Nullable] public string?   StringValue    { get; set; } // character varying(50)
 	}
 
+	[Table(Schema="public", Name="multitenant_table")]
+	public partial class MultitenantTable
+	{
+		[Column("tenantid",    SkipOnUpdate=true), PrimaryKey(1), NotNull] public Guid     Tenantid    { get; set; } // uuid
+		[Column("id",          SkipOnUpdate=true), PrimaryKey(2), NotNull] public Guid     Id          { get; set; } // uuid
+		[Column("name",        SkipOnUpdate=true),    Nullable           ] public string?  Name        { get; set; } // character varying(100)
+		[Column("description", SkipOnUpdate=true),    Nullable           ] public string?  Description { get; set; } // text
+		[Column("createdat",   SkipOnUpdate=true),                NotNull] public DateTime Createdat   { get; set; } // timestamp (6) without time zone
+	}
+
 	[Table(Schema="public", Name="Parent")]
 	public partial class Parent
 	{
@@ -379,7 +398,7 @@ namespace Default.PostgreSQL
 		/// <summary>
 		/// Patient_PersonID_fkey (public.Person)
 		/// </summary>
-		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false)]
+		[Association(ThisKey=nameof(PersonID), OtherKey=nameof(Default.PostgreSQL.Person.PersonID), CanBeNull=false)]
 		public Person Person { get; set; } = null!;
 
 		#endregion
@@ -405,13 +424,13 @@ namespace Default.PostgreSQL
 		/// <summary>
 		/// Doctor_PersonID_fkey_BackReference (public.Doctor)
 		/// </summary>
-		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=true)]
+		[Association(ThisKey=nameof(PersonID), OtherKey=nameof(Default.PostgreSQL.Doctor.PersonID), CanBeNull=true)]
 		public Doctor? DoctorPersonIDfkey { get; set; }
 
 		/// <summary>
 		/// Patient_PersonID_fkey_BackReference (public.Patient)
 		/// </summary>
-		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=true)]
+		[Association(ThisKey=nameof(PersonID), OtherKey=nameof(Default.PostgreSQL.Patient.PersonID), CanBeNull=true)]
 		public Patient? PatientPersonIDfkey { get; set; }
 
 		#endregion
@@ -427,13 +446,13 @@ namespace Default.PostgreSQL
 		/// <summary>
 		/// same_name_BackReference (public.same_name2)
 		/// </summary>
-		[Association(ThisKey="Id", OtherKey="SameName", CanBeNull=true)]
+		[Association(ThisKey=nameof(Id), OtherKey=nameof(Default.PostgreSQL.SameName2.SameName), CanBeNull=true)]
 		public IEnumerable<SameName2> SameNameBackReferences { get; set; } = null!;
 
 		/// <summary>
 		/// same_name_BackReference (public.same_name1)
 		/// </summary>
-		[Association(ThisKey="Id", OtherKey="SameName", CanBeNull=true)]
+		[Association(ThisKey=nameof(Id), OtherKey=nameof(Default.PostgreSQL.SameName1.SameName), CanBeNull=true)]
 		public IEnumerable<SameName1> Samenames { get; set; } = null!;
 
 		#endregion
@@ -450,7 +469,7 @@ namespace Default.PostgreSQL
 		/// <summary>
 		/// same_name (public.same_name)
 		/// </summary>
-		[Association(ThisKey="SameName", OtherKey="Id", CanBeNull=true)]
+		[Association(ThisKey=nameof(SameName), OtherKey=nameof(Default.PostgreSQL.SameName.Id), CanBeNull=true)]
 		public SameName? Samename { get; set; }
 
 		#endregion
@@ -467,7 +486,7 @@ namespace Default.PostgreSQL
 		/// <summary>
 		/// same_name (public.same_name)
 		/// </summary>
-		[Association(ThisKey="SameName", OtherKey="Id", CanBeNull=true)]
+		[Association(ThisKey=nameof(SameName), OtherKey=nameof(Default.PostgreSQL.SameName.Id), CanBeNull=true)]
 		public SameName? Samename { get; set; }
 
 		#endregion
@@ -666,10 +685,20 @@ namespace Default.PostgreSQL
 
 		#endregion
 
+		#region Overloads
+
+		[Sql.Function(Name="public.overloads", ServerSideOnly=true)]
+		public static short? Overloads(int? input1, int? input2)
+		{
+			throw new InvalidOperationException();
+		}
+
+		#endregion
+
 		#region Reverse
 
 		[Sql.Function(Name="public.reverse", ServerSideOnly=true)]
-		public static string? Reverse(string? par7)
+		public static string? Reverse(string? par11)
 		{
 			throw new InvalidOperationException();
 		}
@@ -679,7 +708,7 @@ namespace Default.PostgreSQL
 		#region TestAvg
 
 		[Sql.Function(Name="public.test_avg", ServerSideOnly=true, IsAggregate = true, ArgIndices = new[] { 0 })]
-		public static double? TestAvg<TSource>(this IEnumerable<TSource> src, Expression<Func<TSource, double?>> par9)
+		public static double? TestAvg<TSource>(this IEnumerable<TSource> src, Expression<Func<TSource, double?>> par13)
 		{
 			throw new InvalidOperationException();
 		}
@@ -741,6 +770,13 @@ namespace Default.PostgreSQL
 		{
 			return table.FirstOrDefault(t =>
 				t.InheritanceParentId == InheritanceParentId);
+		}
+
+		public static MultitenantTable? Find(this ITable<MultitenantTable> table, Guid Tenantid, Guid Id)
+		{
+			return table.FirstOrDefault(t =>
+				t.Tenantid == Tenantid &&
+				t.Id       == Id);
 		}
 
 		public static Patient? Find(this ITable<Patient> table, int PersonID)

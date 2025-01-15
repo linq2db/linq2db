@@ -21,6 +21,7 @@ uid: contributing
 |.\Source\LinqToDB.FSharp | F# support extension for Linq To DB|
 |.\Source\LinqToDB.Remote.Grpc| LINQ to DB Remote Context GRPC client/server source code|
 |.\Source\LinqToDB.Remote.Wcf| LINQ to DB Remote Context WCF client/server source code|
+|.\Source\LinqToDB.Scaffold| LINQ to DB scaffold framework for cli and T4|
 |.\Source\LinqToDB.Templates| LINQ to DB t4models source code|
 |.\Source\LinqToDB.Tools| LINQ to DB Tools source code|
 |.\Tests| Unit test projects folder|
@@ -33,6 +34,7 @@ uid: contributing
 |.\Tests\Tests.Benchmarks| Benchmarks|
 |.\Tests\Tests.PLayground| Test project for use with linq2db.playground.sln lite test solution. Used for work on specific test without full solution load|
 |.\Tests\Tests.T4|T4 templates test project|
+|.\Tests\Tests.T4.Nugets|T4 nugets test project|
 |.\Tests\VisualBasic|Visual Basic models and tests support|
 
 #### Solutions
@@ -40,6 +42,7 @@ uid: contributing
 * `.\linq2db.sln` - full linq2db solution
 * `.\linq2db.playground.slnf` - ligthweight linq2db test solution. Used to work on specific test without loading of all payload of full solution
 * `.\linq2db.Benchmarks.slnf` - ligthweight linq2db benchmarks solution. Used to work on benchmarks without loading of all payload of full solution
+* `.\Tests\Tests.T4.Nugets\Tests.T4.Nugets.sln` - separate solution for T4 nugets testing
 
 #### Source projects
 

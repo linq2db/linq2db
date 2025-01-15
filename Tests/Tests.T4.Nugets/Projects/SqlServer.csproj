@@ -1,0 +1,23 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<ItemGroup>
+		<PackageReference Include="linq2db.SqlServer" />
+		<PackageReference Include="dotMorten.Microsoft.SqlServer.Types" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<None Include="..\Templates\SqlServer.tt" Generator="TextTemplatingFileGenerator">
+		  <LastGenOutput>SqlServer.generated.cs</LastGenOutput>
+		</None>
+		<Compile Include="..\Templates\SqlServer.generated.cs">
+		  <DesignTime>True</DesignTime>
+		  <AutoGen>True</AutoGen>
+		  <DependentUpon>SqlServer.tt</DependentUpon>
+		</Compile>
+	</ItemGroup>
+
+	<ItemGroup>
+		<Service Include="{508349b6-6b84-4df5-91f0-309beebad82d}" />
+	</ItemGroup>
+
+</Project>

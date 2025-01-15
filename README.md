@@ -213,7 +213,7 @@ With Fluent approach you can configure only things that require it explicitly. A
 // Never create new mapping schema for each connection as
 // it will seriously harm performance
 var myFluentMappings = new MappingSchema();
-var builder       = mappingSchema.GetFluentMappingBuilder();
+var builder       = new FluentMappingBuilder(mappingSchema);
 
 builder.Entity<Product>()
     .HasTableName("Products")

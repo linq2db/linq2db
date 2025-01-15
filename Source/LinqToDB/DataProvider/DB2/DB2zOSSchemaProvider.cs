@@ -205,8 +205,6 @@ namespace LinqToDB.DataProvider.DB2
 
 		protected override List<ProcedureInfo>? GetProcedures(DataConnection dataConnection, GetSchemaOptions options)
 		{
-			LoadCurrentSchema(dataConnection);
-
 			return dataConnection
 				.Query(rd =>
 				{
@@ -232,7 +230,7 @@ namespace LinqToDB.DataProvider.DB2
 						SYSIBM.SYSROUTINES
 					WHERE
 						" + GetSchemaFilter("SCHEMA"))
-				.Where(p => IncludedSchemas.Count != 0 || ExcludedSchemas.Count != 0 || p.SchemaName == CurrentSchema)
+				.Where(p => IncludedSchemas.Count != 0 || ExcludedSchemas.Count != 0 || p.SchemaName == DefaultSchema)
 				.ToList();
 		}
 
