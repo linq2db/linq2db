@@ -33,7 +33,7 @@ namespace LinqToDB.Remote.Http.Client
 		/// <typeparam name="TContext">
 		/// 	The class or interface that will be used to resolve the context from the container.
 		/// </typeparam>
-		/// <param name="serviceCollection"> The <see cref="IServiceCollection" /> to add services to. </param>
+		/// <param name="services"> The <see cref="IServiceCollection" /> to add services to. </param>
 		/// <param name="baseAddress">LinqToDB API controller base address.</param>
 		/// <param name="serviceName">LinqToDB API controller address.</param>
 		/// <param name="getContext"></param>
@@ -45,32 +45,28 @@ namespace LinqToDB.Remote.Http.Client
 		///     The same service collection so that multiple calls can be chained.
 		/// </returns>
 		public static IServiceCollection AddLinqToDBHttpDataContext<TContext>(
-			this IServiceCollection              serviceCollection,
+			this IServiceCollection              services,
 			string                               baseAddress,
 			string                               serviceName,
 			Func<HttpLinqServiceClient,TContext> getContext)
 			where TContext: class, IDataContext
 		{
-			_serviceNames.Add(serviceName);
+			services.AddHttpClient(serviceName, client => client.BaseAddress = new Uri(baseAddress));
 
-			serviceCollection.AddHttpClient(serviceName, client => client.BaseAddress = new Uri(baseAddress));
-
-			serviceCollection.AddKeyedScoped(serviceName, (provider, _) =>
+			services.AddKeyedScoped(serviceName, (provider, _) =>
 			{
 				var http = provider.GetRequiredService<IHttpClientFactory>().CreateClient(serviceName);
 				return new HttpLinqServiceClient(http, serviceName);
 			});
 
-			serviceCollection.AddTransient(provider =>
+			services.AddTransient(provider =>
 			{
 				var client = provider.GetRequiredKeyedService<HttpLinqServiceClient>(serviceName);
 				return getContext(client);
 			});
 
-			return serviceCollection;
+			return services;
 		}
-
-		static readonly HashSet<string> _serviceNames = [];
 
 		/// <summary>
 		///     Registers <typeparamref name="TContext"/> as a service in the <see cref="IServiceCollection" />.
@@ -111,19 +107,11 @@ namespace LinqToDB.Remote.Http.Client
 			return serviceCollection.AddLinqToDBHttpDataContext(baseAddress, "api/linq2db", getContext);
 		}
 
-		/// <summary>
-		/// Configures LinqToDB Http DataContext.
-		/// </summary>
-		/// <param name="provider"></param>
-		/// <returns></returns>
-		public static async Task ConfigureLinqToDBHttpDataContext(this IServiceProvider provider)
+		public static async Task InitAsync(this IDataContext dataContext)
 		{
-			foreach (var serviceName in _serviceNames)
+			if (dataContext is HttpDataContext httpDataContext)
 			{
-				var client = provider.GetRequiredKeyedService<HttpLinqServiceClient>(serviceName);
-
-				await using var db = new HttpDataContext(client.HttpClient, serviceName);
-				await db.ConfigureAsync(default);
+				await httpDataContext.ConfigureAsync(default).ConfigureAwait(false);
 			}
 		}
 	}
