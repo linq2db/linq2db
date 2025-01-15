@@ -28,25 +28,32 @@ using LinqToDB.DataProvider.SqlCe;
 using LinqToDB.DataProvider.SQLite;
 using LinqToDB.DataProvider.SqlServer;
 using LinqToDB.DataProvider.Sybase;
-using LinqToDB.Interceptors;
 using LinqToDB.Mapping;
 
 using FirebirdSql.Data.Types;
+
 using IBM.Data.DB2Types;
+
 using Microsoft.SqlServer.Types;
+
 using NUnit.Framework;
+
 using StackExchange.Profiling;
 using StackExchange.Profiling.Data;
+
 using Tests.DataProvider;
 using Tests.Model;
+
 #if NETFRAMEWORK
 using IBM.Data.Informix;
 #endif
 
-using MySqlConnectorDateTime   = MySqlConnector::MySqlConnector.MySqlDateTime;
-using MySqlDataDateTime        = MySqlData::MySql.Data.Types.MySqlDateTime;
-using MySqlDataDecimal         = MySqlData::MySql.Data.Types.MySqlDecimal;
+using MySqlConnectorDateTime = MySqlConnector::MySqlConnector.MySqlDateTime;
+using MySqlDataDateTime = MySqlData::MySql.Data.Types.MySqlDateTime;
+using MySqlDataDecimal = MySqlData::MySql.Data.Types.MySqlDecimal;
 using MySqlDataMySqlConnection = MySqlData::MySql.Data.MySqlClient.MySqlConnection;
+
+using LinqToDB.Data.RetryPolicy;
 
 namespace Tests.Data
 {
@@ -79,7 +86,9 @@ namespace Tests.Data
 			private static DbConnection GetConnection(string configurationString)
 			{
 #pragma warning disable CA2000 // Dispose objects before losing scope
+#pragma warning disable CS0618 // Type or member is obsolete
 				var dbConnection = new SqlConnection(GetConnectionString(configurationString));
+#pragma warning restore CS0618 // Type or member is obsolete
 #pragma warning restore CA2000 // Dispose objects before losing scope
 				return new ProfiledDbConnection(dbConnection, MiniProfiler.Current);
 			}
@@ -98,13 +107,14 @@ namespace Tests.Data
 		// tests must check all code, that use provider-specific functionality for specific provider
 		// also test must create new instance of provider, to not benefit from existing instance
 		[Test]
-		public void TestAccessOleDb([IncludeDataSources(ProviderName.Access)] string context, [Values] ConnectionType type)
+		public void TestAccessOleDb([IncludeDataSources(TestProvName.AllAccessOleDb)] string context, [Values] ConnectionType type)
 		{
 			var unmapped = type == ConnectionType.MiniProfilerNoMappings;
+			var connectionString = DataConnection.GetConnectionString(context);
 #if NETFRAMEWORK
-			using (var db = CreateDataConnection(new AccessOleDbDataProvider(), context, type, cs => new System.Data.OleDb.OleDbConnection(cs)))
+			using (var db = CreateDataConnection(AccessTools.GetDataProvider(provider: AccessProvider.OleDb, connectionString: connectionString), context, type, cs => new System.Data.OleDb.OleDbConnection(cs)))
 #else
-			using (var db = CreateDataConnection(new AccessOleDbDataProvider(), context, type, "System.Data.OleDb.OleDbConnection, System.Data.OleDb"))
+			using (var db = CreateDataConnection(AccessTools.GetDataProvider(provider: AccessProvider.OleDb, connectionString: connectionString), context, type, "System.Data.OleDb.OleDbConnection, System.Data.OleDb"))
 #endif
 			{
 				var trace = string.Empty;
@@ -140,10 +150,11 @@ namespace Tests.Data
 
 #if NETFRAMEWORK
 		[Test]
-		public void TestAccessOleDbSchema([IncludeDataSources(ProviderName.Access)] string context, [Values] ConnectionType type)
+		public void TestAccessOleDbSchema([IncludeDataSources(TestProvName.AllAccessOleDb)] string context, [Values] ConnectionType type)
 		{
 			var unmapped = type == ConnectionType.MiniProfilerNoMappings;
-			using (var db = CreateDataConnection(new AccessOleDbDataProvider(), context, type, cs => new System.Data.OleDb.OleDbConnection(cs)))
+			var connectionString = DataConnection.GetConnectionString(context);
+			using (var db = CreateDataConnection(AccessTools.GetDataProvider(provider: AccessProvider.OleDb, connectionString: connectionString), context, type, cs => new System.Data.OleDb.OleDbConnection(cs)))
 			{
 				// TODO: reenable for .net, when issue with OleDb transactions under .net core fixed
 				// assert custom schema table access
@@ -154,13 +165,14 @@ namespace Tests.Data
 #endif
 
 		[Test]
-		public void TestAccessODBC([IncludeDataSources(ProviderName.AccessOdbc)] string context, [Values] ConnectionType type)
+		public void TestAccessODBC([IncludeDataSources(TestProvName.AllAccessOdbc)] string context, [Values] ConnectionType type)
 		{
 			var unmapped = type == ConnectionType.MiniProfilerNoMappings;
+			var connectionString = DataConnection.GetConnectionString(context);
 #if NETFRAMEWORK
-			using (var db = CreateDataConnection(new AccessODBCDataProvider(), context, type, cs => new System.Data.Odbc.OdbcConnection(cs)))
+			using (var db = CreateDataConnection(AccessTools.GetDataProvider(provider: AccessProvider.ODBC, connectionString: connectionString), context, type, cs => new System.Data.Odbc.OdbcConnection(cs)))
 #else
-			using (var db = CreateDataConnection(new AccessODBCDataProvider(), context, type, "System.Data.Odbc.OdbcConnection, System.Data.Odbc"))
+			using (var db = CreateDataConnection(AccessTools.GetDataProvider(provider: AccessProvider.ODBC, connectionString: connectionString), context, type, "System.Data.Odbc.OdbcConnection, System.Data.Odbc"))
 #endif
 			{
 				var trace = string.Empty;
@@ -690,24 +702,19 @@ namespace Tests.Data
 			}
 		}
 
-		[ActiveIssue("Investigation required. Timeouts on CI", Configurations = [TestProvName.AllSqlServer2008Minus])]
 		[Test]
 		public async Task TestRetryPolicy([IncludeDataSources(TestProvName.AllSqlServer)] string context, [Values] ConnectionType type)
 		{
-			Configuration.RetryPolicy.Factory = connection => new SqlServerRetryPolicy();
-			try
-			{
-				await TestSqlServer(context, type);
-			}
-			finally
-			{
-				Configuration.RetryPolicy.Factory = null;
-			}
+			await TestSqlServerImpl(context, type, connection => new SqlServerRetryPolicy());
 		}
 
-		[ActiveIssue("Investigation required. Timeouts on CI", Configurations = [TestProvName.AllSqlServer2008Minus])]
 		[Test]
 		public async Task TestSqlServer([IncludeDataSources(TestProvName.AllSqlServer)] string context, [Values] ConnectionType type)
+		{
+			await TestSqlServerImpl(context, type, null);
+		}
+
+		async Task TestSqlServerImpl(string context, ConnectionType type, Func<DataConnection, IRetryPolicy?>? factory)
 		{
 			string providerName;
 			SqlServerVersion version;
@@ -838,18 +845,18 @@ namespace Tests.Data
 						var options = new BulkCopyOptions()
 						{
 							BulkCopyType       = BulkCopyType.ProviderSpecific,
-							NotifyAfter        = 500,
+							NotifyAfter        = 5,
 							RowsCopiedCallback = arg => copied = arg.RowsCopied
 						};
 
 						db.BulkCopy(
 							options,
-							Enumerable.Range(0, 1000).Select(n => new SqlServerTests.AllTypes() { ID = 2000 + n }));
+							Enumerable.Range(0, 10).Select(n => new SqlServerTests.AllTypes() { ID = 2000 + n }));
 
 						Assert.Multiple(() =>
 						{
 							Assert.That(trace.Contains("INSERT BULK"), Is.EqualTo(!unmapped));
-							Assert.That(copied, Is.EqualTo(1000));
+							Assert.That(copied, Is.EqualTo(10));
 						});
 					}
 					finally
@@ -869,18 +876,18 @@ namespace Tests.Data
 						var options = new BulkCopyOptions()
 						{
 							BulkCopyType       = BulkCopyType.ProviderSpecific,
-							NotifyAfter        = 500,
+							NotifyAfter        = 5,
 							RowsCopiedCallback = arg => copied = arg.RowsCopied
 						};
 
 						await db.BulkCopyAsync(
 							options,
-							Enumerable.Range(0, 1000).Select(n => new SqlServerTests.AllTypes() { ID = 2000 + n }));
+							Enumerable.Range(0, 10).Select(n => new SqlServerTests.AllTypes() { ID = 2000 + n }));
 
 						Assert.Multiple(() =>
 						{
 							Assert.That(trace.Contains("INSERT ASYNC BULK"), Is.EqualTo(!unmapped));
-							Assert.That(copied, Is.EqualTo(1000));
+							Assert.That(copied, Is.EqualTo(10));
 						});
 					}
 					finally
@@ -894,7 +901,6 @@ namespace Tests.Data
 			}
 		}
 
-		[ActiveIssue("Investigation required. Timeouts on CI", Configurations = [TestProvName.AllSqlServer2008Minus])]
 		[Test]
 		public async Task TestSqlServerMS([IncludeDataSources(TestProvName.AllSqlServer)] string context, [Values] ConnectionType type)
 		{
@@ -1018,18 +1024,18 @@ namespace Tests.Data
 						var options = new BulkCopyOptions()
 						{
 							BulkCopyType       = BulkCopyType.ProviderSpecific,
-							NotifyAfter        = 500,
+							NotifyAfter        = 5,
 							RowsCopiedCallback = arg => copied = arg.RowsCopied
 						};
 
 						db.BulkCopy(
 							options,
-							Enumerable.Range(0, 1000).Select(n => new SqlServerTests.AllTypes() { ID = 2000 + n }));
+							Enumerable.Range(0, 10).Select(n => new SqlServerTests.AllTypes() { ID = 2000 + n }));
 
 						Assert.Multiple(() =>
 						{
 							Assert.That(trace.Contains("INSERT BULK"), Is.EqualTo(!unmapped));
-							Assert.That(copied, Is.EqualTo(1000));
+							Assert.That(copied, Is.EqualTo(10));
 						});
 					}
 					finally
@@ -1049,18 +1055,18 @@ namespace Tests.Data
 						var options = new BulkCopyOptions()
 						{
 							BulkCopyType       = BulkCopyType.ProviderSpecific,
-							NotifyAfter        = 500,
+							NotifyAfter        = 5,
 							RowsCopiedCallback = arg => copied = arg.RowsCopied
 						};
 
 						await db.BulkCopyAsync(
 							options,
-							Enumerable.Range(0, 1000).Select(n => new SqlServerTests.AllTypes() { ID = 2000 + n }));
+							Enumerable.Range(0, 10).Select(n => new SqlServerTests.AllTypes() { ID = 2000 + n }));
 
 						Assert.Multiple(() =>
 						{
 							Assert.That(trace.Contains("INSERT ASYNC BULK"), Is.EqualTo(!unmapped));
-							Assert.That(copied, Is.EqualTo(1000));
+							Assert.That(copied, Is.EqualTo(10));
 						});
 					}
 					finally
@@ -2037,9 +2043,9 @@ namespace Tests.Data
 			return CreateDataConnection(provider, context, type, cs => (DbConnection)Activator.CreateInstance(Type.GetType(connectionTypeName, true)!, cs)!, csExtra);
 		}
 
-		private DataConnection CreateDataConnection(IDataProvider provider, string context, ConnectionType type, Func<string, DbConnection> connectionFactory, string? csExtra = null)
+		private DataConnection CreateDataConnection(IDataProvider provider, string context, ConnectionType type, Func<string, DbConnection> connectionFactory, string? csExtra = null, Func<DataConnection, IRetryPolicy?>? retryPolicyFactory = null)
 		{
-			var db = new DataConnection(provider, options =>
+			var db = new DataConnection(new DataOptions().UseConnectionFactory(provider, options =>
 			{
 				// don't create connection using provider, or it will initialize types
 				var cn = connectionFactory(DataConnection.GetConnectionString(context) + csExtra);
@@ -2053,7 +2059,7 @@ namespace Tests.Data
 				}
 
 				return cn;
-			});
+			}).UseFactory(retryPolicyFactory));
 
 			switch (type)
 			{

@@ -35,9 +35,11 @@ namespace LinqToDB
 		/// Default value: <c>false</c>.
 		/// </summary>
 		[Pure]
+		// TODO: V7 remove
+		[Obsolete("This API doesn't have effect anymore and will be removed in future")]
 		public static LinqOptions WithPreloadGroups(this LinqOptions options, bool preloadGroups)
 		{
-			return options with { PreloadGroups = preloadGroups };
+			return options;
 		}
 
 		/// <summary>
@@ -158,7 +160,7 @@ namespace LinqToDB
 		/// <summary>
 		/// Controls behavior of LINQ query, which ends with GroupBy call.
 		/// - if <c>true</c> - <seealso cref="LinqToDBException"/> will be thrown for such queries;
-		/// - if <c>false</c> - behavior is controlled by <see cref="UsePreloadGroups"/> option.
+		/// - if <c>false</c> - eager loading used.
 		/// Default value: <c>true</c>.
 		/// </summary>
 		/// <remarks>
@@ -206,9 +208,11 @@ namespace LinqToDB
 		/// Default value: <c>true</c>.
 		/// </summary>
 		[Pure]
+		// TODO: V7 remove
+		[Obsolete("This API doesn't have effect anymore and will be removed in future")]
 		public static LinqOptions WithPreferApply(this LinqOptions options, bool preferApply)
 		{
-			return options with { PreferApply = preferApply };
+			return options;
 		}
 
 		/// <summary>
@@ -218,9 +222,11 @@ namespace LinqToDB
 		/// Default value: <c>true</c>.
 		/// </summary>
 		[Pure]
+		// TODO: V7 remove
+		[Obsolete("This API doesn't have effect anymore and will be removed in future")]
 		public static LinqOptions WithKeepDistinctOrdered(this LinqOptions options, bool keepDistinctOrdered)
 		{
-			return options with { KeepDistinctOrdered = keepDistinctOrdered };
+			return options;
 		}
 
 		/// <summary>
@@ -268,9 +274,11 @@ namespace LinqToDB
 		/// Default value: <c>false</c>.
 		/// </summary>
 		[Pure]
+		// TODO: V7 remove
+		[Obsolete("This API doesn't have effect anymore and will be removed in future")]
 		public static DataOptions UsePreloadGroups(this DataOptions options, bool preloadGroups)
 		{
-			return options.WithOptions<LinqOptions>(o => o with { PreloadGroups = preloadGroups });
+			return options;
 		}
 
 		/// <summary>
@@ -391,7 +399,7 @@ namespace LinqToDB
 		/// <summary>
 		/// Controls behavior of LINQ query, which ends with GroupBy call.
 		/// - if <c>true</c> - <seealso cref="LinqToDBException"/> will be thrown for such queries;
-		/// - if <c>false</c> - behavior is controlled by <see cref="UsePreloadGroups"/> option.
+		/// - if <c>false</c> - eager loading used.
 		/// Default value: <c>true</c>.
 		/// </summary>
 		/// <remarks>
@@ -439,9 +447,11 @@ namespace LinqToDB
 		/// Default value: <c>true</c>.
 		/// </summary>
 		[Pure]
+		// TODO: V7 remove
+		[Obsolete("This API doesn't have effect anymore and will be removed in future")]
 		public static DataOptions UsePreferApply(this DataOptions options, bool preferApply)
 		{
-			return options.WithOptions<LinqOptions>(o => o with { PreferApply = preferApply });
+			return options;
 		}
 
 		/// <summary>
@@ -451,9 +461,11 @@ namespace LinqToDB
 		/// Default value: <c>true</c>.
 		/// </summary>
 		[Pure]
+		// TODO: V7 remove
+		[Obsolete("This API doesn't have effect anymore and will be removed in future")]
 		public static DataOptions UseKeepDistinctOrdered(this DataOptions options, bool keepDistinctOrdered)
 		{
-			return options.WithOptions<LinqOptions>(o => o with { KeepDistinctOrdered = keepDistinctOrdered });
+			return options;
 		}
 
 		/// <summary>
@@ -851,6 +863,30 @@ namespace LinqToDB
 			return options.WithOptions<ConnectionOptions>(o => o with { DataProvider = dataProvider, DbTransaction = transaction });
 		}
 
+		#endregion
+
+		#region DataContextOptions
+
+		/// <summary>
+		/// Command timeout or <c>null</c> for default timeout.
+		/// Default value: <c>null</c>.
+		/// </summary>
+		[Pure]
+		public static DataContextOptions WithCommandTimeout(this DataContextOptions options, int? commandTimeout)
+		{
+			return options with { CommandTimeout = commandTimeout };
+		}
+
+		/// <summary>
+		/// Command timeout or <c>null</c> for default timeout.
+		/// Default value: <c>null</c>.
+		/// </summary>
+		[Pure]
+		public static DataOptions UseCommandTimeout(this DataOptions options, int? commandTimeout)
+		{
+			return options.WithOptions<DataContextOptions>(o => o with { CommandTimeout = commandTimeout });
+		}
+
 		/// <summary>
 		/// <para>
 		/// Adds <see cref="IInterceptor" /> instances to those registered on the context.
@@ -1134,7 +1170,7 @@ namespace LinqToDB
 		/// <param name="write">Callback, may not be called depending on the trace level.</param>
 		/// <returns>The builder instance so calls can be chained.</returns>
 		[Pure]
-		public static DataOptions UseTraceWith(this DataOptions options, Action<string?,string?,TraceLevel> write)
+		public static DataOptions UseTraceWith(this DataOptions options, Action<string,string,TraceLevel> write)
 		{
 			return options.WithOptions<QueryTraceOptions>(o => o with { WriteTrace = write });
 		}

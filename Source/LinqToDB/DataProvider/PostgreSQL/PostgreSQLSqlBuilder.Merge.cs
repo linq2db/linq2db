@@ -16,8 +16,13 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			IReadOnlyList<ISqlExpression[]>                                      rows, int row, int column)
 		{
 			return row < 0
-				// if column contains NULL in all rows, pgsql will type is as "text"
-				|| (row == 0 && rows.All(r => r[column] is SqlValue value && value.Value == null));
+				|| (row == 0
+					&& (
+						// if column contains NULL in all rows, pgsql will type is as "text"
+						rows.All(r => r[column] is SqlValue value && value.Value == null)
+						// json(b) should be typed explicitly or it will be typed as text
+						|| PostgreSQLSqlExpressionConvertVisitor.IsJson(source.Fields[column].Type, out _)
+				));
 		}
 
 		// available since PGSQL17

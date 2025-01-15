@@ -12,10 +12,8 @@ jobs:
 
   steps:
 
-  # mitigate https://status.dev.azure.com/_event/182998791
-  - task: NuGetToolInstaller@1
-  
-  # .NET 6 and 8 SDKs already installed https://github.com/actions/runner-images/blob/main/images/windows/Windows2022-Readme.md
+  # .NET 6, 8 and 9 SDKs already installed https://github.com/actions/runner-images/blob/main/images/windows/Windows2022-Readme.md
+  # Don't add explicit SDK install for now as it will break LinqToDB.CLI without fix for https://github.com/dotnet/sdk/issues/45926
 
   - task: PowerShell@2
     inputs:
@@ -45,6 +43,13 @@ jobs:
       arguments: -path $(Build.SourcesDirectory)/Directory.Build.props -version $(ef8AssemblyVersion) -prop EF8Version
     displayName: Update EF.Core 8 integration assembly version
 
+  - task: PowerShell@2
+    inputs:
+      filePath: '$(Build.SourcesDirectory)/Build/SetVersion.ps1'
+      workingDirectory: '$(Build.SourcesDirectory)'
+      arguments: -path $(Build.SourcesDirectory)/Directory.Build.props -version $(ef9AssemblyVersion) -prop EF9Version
+    displayName: Update EF.Core 9 integration assembly version
+
   - task: DotNetCoreCLI@2
     inputs:
       command: build
@@ -60,29 +65,39 @@ jobs:
       arguments: --configuration $(test_configuration)
     displayName: Build Solution for Tests
     condition: and(succeeded(), ${{ parameters.with_tests }})
-    retryCountOnTaskFailure: 1 # temporary workaround for https://github.com/dotnet/sdk/issues/44080
+    retryCountOnTaskFailure: 1 # https://github.com/dotnet/sdk/issues/44080
 
   - task: CmdLine@2
     inputs:
       script: |
         ECHO ON
         REM publish main and ef.core tests for all TFMs (without architecture!)
-        FOR %%f IN ($(netfx_tfm) net6.0 net8.0) DO (
+        FOR %%f IN ($(netfx_tfm) net6.0 net8.0 net9.0) DO (
             dotnet publish Tests/Linq/Tests.csproj -f %%f -c $(test_configuration) -o .build/publish/Tests/$(test_configuration)/%%f_x64
             if %errorlevel% neq 0 exit
-            dotnet publish Tests/EntityFrameworkCore/Tests.EntityFrameworkCore.csproj -f %%f -c $(test_configuration) -o .build/publish/EFTests/$(test_configuration)/%%f_x64
+
+            IF %%f EQU net9.0 (
+                dotnet publish Tests/EntityFrameworkCore/Tests.EntityFrameworkCore.STS.csproj -f %%f -c $(test_configuration) -o .build/publish/EFTests/$(test_configuration)/%%f_x64
+            ) ELSE (
+                dotnet publish Tests/EntityFrameworkCore/Tests.EntityFrameworkCore.csproj -f %%f -c $(test_configuration) -o .build/publish/EFTests/$(test_configuration)/%%f_x64
+            )
             if %errorlevel% neq 0 exit
         )
 
         REM publish main and ef.core tests for all TFMs for win-x86
-        FOR %%f IN ($(netfx_tfm) net6.0 net8.0) DO (
+        FOR %%f IN ($(netfx_tfm) net6.0 net8.0 net9.0) DO (
             IF %%f EQU $(netfx_tfm) (
                 dotnet publish Tests/Linq/Tests.csproj -f %%f -c $(test_configuration) -a x86 -o .build/publish/Tests/$(test_configuration)/%%f_x86
             ) ELSE (
                 dotnet publish Tests/Linq/Tests.csproj -f %%f -c $(test_configuration) -a x86 /p:DB2STUB=True -o .build/publish/Tests/$(test_configuration)/%%f_x86
             )
             if %errorlevel% neq 0 exit
-            dotnet publish Tests/EntityFrameworkCore/Tests.EntityFrameworkCore.csproj -f %%f -c $(test_configuration) -a x86 -o .build/publish/EFTests/$(test_configuration)/%%f_x86
+
+            IF %%f EQU net9.0 (
+                dotnet publish Tests/EntityFrameworkCore/Tests.EntityFrameworkCore.STS.csproj -f %%f -c $(test_configuration) -a x86 -o .build/publish/EFTests/$(test_configuration)/%%f_x86
+            ) ELSE (
+                dotnet publish Tests/EntityFrameworkCore/Tests.EntityFrameworkCore.csproj -f %%f -c $(test_configuration) -a x86 -o .build/publish/EFTests/$(test_configuration)/%%f_x86
+            )
             if %errorlevel% neq 0 exit
         )
 
@@ -90,7 +105,7 @@ jobs:
         if %errorlevel% neq 0 exit
 
         REM prepare test artifacts with binaries and test configs
-        FOR %%f IN ($(netfx_tfm) net6.0 net8.0) DO (
+        FOR %%f IN ($(netfx_tfm) net6.0 net8.0 net9.0) DO (
             FOR %%a IN (x86 x64) DO (
                 xcopy /i /s .build\publish\Tests\$(test_configuration)\%%f_%%a testing\%%f\main\%%a
                 if %errorlevel% neq 0 exit
@@ -109,7 +124,7 @@ jobs:
         copy .build\bin\Tests\$(test_configuration)\$(netfx_tfm)\x64\SQLite.Interop.dll testing\$(netfx_tfm)\main\x64\x64\SQLite.Interop.dll
         if %errorlevel% neq 0 exit
 
-        FOR %%c IN (netfx net60 net80) DO (
+        FOR %%c IN (netfx net60 net80 net90) DO (
             xcopy /i Build\$(test_configuration)\%%c testing\configs\%%c
             if %errorlevel% neq 0 exit
         )
@@ -181,6 +196,13 @@ jobs:
 
   - task: PublishPipelineArtifact@1
     inputs:
+      path: '$(Build.SourcesDirectory)/.build/bin/LinqToDB.Scaffold/Release'
+      artifact: '$(artifact_linq2db_scaffold_binaries)'
+    displayName: Publish linq2db.Scaffold build results
+    condition: and(succeeded(), ${{ parameters.with_nugets }})
+
+  - task: PublishPipelineArtifact@1
+    inputs:
       path: '$(Build.SourcesDirectory)/.build/bin/LinqToDB.FSharp/Release'
       artifact: '$(artifact_linq2db_fsharp_binaries)'
     displayName: Publish linq2db.FSharp build results
@@ -195,7 +217,14 @@ jobs:
 
   - task: PublishPipelineArtifact@1
     inputs:
-      path: '$(Build.SourcesDirectory)/.build/bin/Tests/$(release_configuration)/$(netfx_tfm)'
+      path: '$(Build.SourcesDirectory)/.build/bin/LinqToDB.EntityFrameworkCore.STS/Release'
+      artifact: '$(artifact_linq2db_efcore_sts_binaries)'
+    displayName: Publish linq2db.EntityFrameworkCore.STS build results
+    condition: and(succeeded(), ${{ parameters.with_nugets }})
+
+  - task: PublishPipelineArtifact@1
+    inputs:
+      path: '$(Build.SourcesDirectory)/.build/bin/NuGet/$(release_configuration)'
       artifact: '$(artifact_t4_binaries)'
     displayName: Publish nuget artifacts part 1
     condition: and(succeeded(), ${{ parameters.with_nugets }})

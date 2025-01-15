@@ -18,8 +18,9 @@ namespace LinqToDB.Common
 		/// </summary>
 		/// <remarks>
 		/// This constructor initializes the <see cref="Exception.Message"/>
-		/// property of the new instance such as "A Build Type exception has occurred."
+		/// property of the new instance such as "A Linq To DB exception has occurred."
 		/// </remarks>
+		[Obsolete("Use one of constructors with message")]
 		public LinqToDBConvertException()
 		{
 		}
@@ -58,6 +59,7 @@ namespace LinqToDB.Common
 		/// <param name="innerException">The InnerException, if any, that threw
 		/// the current exception.</param>
 		/// <seealso cref="Exception.InnerException"/>
+		[Obsolete("Use one of constructors with message")]
 		public LinqToDBConvertException(Exception innerException)
 			: base(innerException.Message, innerException)
 		{

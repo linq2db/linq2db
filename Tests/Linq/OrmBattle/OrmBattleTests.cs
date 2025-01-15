@@ -38,11 +38,11 @@ namespace Tests.OrmBattle
 		List<Northwind.Product>?  Products;
 
 		[MemberNotNull(nameof(Customers), nameof(Employees), nameof(Order), nameof(Products))]
-		private NorthwindDB Setup(string context)
+		private NorthwindDB Setup(string context, bool guardGrouping = true)
 		{
 			using (new DisableLogging())
 			{
-				var db = new NorthwindDB(context);
+				var db = new NorthwindDB(new DataOptions().UseConfiguration(context).UseGuardGrouping(guardGrouping));
 
 				Customers ??= db.Customer.ToList();
 				Employees ??= db.Employee.ToList();
@@ -707,65 +707,51 @@ namespace Tests.OrmBattle
 		[Test]
 		public void GroupByTest([NorthwindDataContext] string context)
 		{
-			using (new GuardGrouping(false))
-			{
-				using var db = Setup(context);
-				var result = from o in db.Order
-							 group o by o.OrderDate;
-				var list = result.ToList();
-				Assert.That(list, Has.Count.EqualTo(480));
-			}
+			using var db = Setup(context, false);
+			var result = from o in db.Order
+				group o by o.OrderDate;
+			var list = result.ToList();
+			Assert.That(list, Has.Count.EqualTo(480));
 		}
 
 		[Test]
 		public void GroupByReferenceTest([NorthwindDataContext] string context)
 		{
-			using (new GuardGrouping(false))
-			{
-				using var db = Setup(context);
-				var result = from o in db.Order
-							 group o by o.Customer;
-				var list = result.ToList();
-				Assert.That(list, Has.Count.EqualTo(89));
-			}
+			using var db = Setup(context, false);
+			var result = from o in db.Order
+				group o by o.Customer;
+			var list = result.ToList();
+			Assert.That(list, Has.Count.EqualTo(89));
 		}
 
 		[Test]
 		public void GroupByWhereTest([NorthwindDataContext] string context)
 		{
-			using (new GuardGrouping(false))
-			{
-				using var db = Setup(context);
-				var result =
-					from o in db.Order
-					group o by o.OrderDate
-					into g
-					where g.Count() > 5
-					select g;
-				var list = result.ToList();
-				Assert.That(list, Has.Count.EqualTo(1));
-			}
+			using var db = Setup(context, false);
+			var result =
+				from o in db.Order
+				group o by o.OrderDate
+				into g
+				where g.Count() > 5
+				select g;
+			var list = result.ToList();
+			Assert.That(list, Has.Count.EqualTo(1));
 		}
 
 		[Test]
 		public void GroupByTestAnonymous([NorthwindDataContext] string context)
 		{
-			using (new GuardGrouping(false))
-			{
-				using var db = Setup(context);
-				var result = from c in db.Customer
-							 group c by new { c.Region, c.City };
-				var list = result.ToList();
-				Assert.That(list, Has.Count.EqualTo(69));
-			}
+			using var db = Setup(context, false);
+			var result = from c in db.Customer
+				group c by new { c.Region, c.City };
+			var list = result.ToList();
+			Assert.That(list, Has.Count.EqualTo(69));
 		}
 
 		[Test]
 		public void GroupByCalculatedTest([NorthwindDataContext] string context)
 		{
-			using var _ = new GuardGrouping(false);
-
-			using var db = Setup(context);
+			using var db = Setup(context, false);
 
 			var result =
 				from o in db.Order
@@ -827,9 +813,7 @@ namespace Tests.OrmBattle
 		[Test]
 		public void GroupByAggregate([NorthwindDataContext] string context)
 		{
-			using var _ = new GuardGrouping(false);
-
-			using var db = Setup(context);
+			using var db = Setup(context,false);
 
 			var result =
 				from c in db.Customer
@@ -844,9 +828,7 @@ namespace Tests.OrmBattle
 		[Test]
 		public void ComplexGroupingTest([NorthwindDataContext] string context)
 		{
-			using var _ = new GuardGrouping(false);
-
-			using var db = Setup(context);
+			using var db = Setup(context, false);
 
 			var result =
 				from c in db.Customer
@@ -861,8 +843,8 @@ namespace Tests.OrmBattle
 					{
 						Year = yg.Key,
 						MonthGroups =
-						from o in yg
-						group o by o.OrderDate!.Value.Month
+						from order in yg
+						group order by order.OrderDate!.Value.Month
 						into mg
 						select new {Month = mg.Key, Order = mg}
 					}

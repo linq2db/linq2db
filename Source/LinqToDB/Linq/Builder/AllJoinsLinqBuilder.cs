@@ -4,7 +4,6 @@ using System.Linq.Expressions;
 
 namespace LinqToDB.Linq.Builder
 {
-	using Common;
 	using LinqToDB.Expressions;
 	using SqlQuery;
 
@@ -116,19 +115,17 @@ namespace LinqToDB.Linq.Builder
 
 				conditionExpr = builder.ConvertExpression(conditionExpr);
 
-				var join  = new SqlFromClause.Join(joinType, innerContext.SelectQuery, null, false, []);
-
-				outerContext.SelectQuery.From.Tables[0].Joins.Add(join.JoinedTable);
+				var join = new SqlFromClause.Join(joinType, innerContext.SelectQuery, null, false, []);
 
 				if (extensions != null)
 					join.JoinedTable.SqlQueryExtensions = extensions;
 
-				var flags = ProjectFlags.SQL;
-
 				builder.BuildSearchCondition(
 					joinContext,
-					conditionExpr, flags,
+					conditionExpr, 
 					join.JoinedTable.Condition);
+
+				outerContext.SelectQuery.From.Tables[0].Joins.Add(join.JoinedTable);
 
 				/*if (joinType == JoinType.Full)
 				{

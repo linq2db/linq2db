@@ -403,10 +403,9 @@ namespace LinqToDB.Data
 				finally
 				{
 					stopwatch.Stop();
+
 					if (disposeReader)
 					{
-						rd.Dispose();
-
 						if (DataConnection.TraceSwitchConnection.TraceInfo)
 						{
 							DataConnection.OnTraceConnection(new TraceInfo(DataConnection, TraceInfoStep.Completed, TraceOperation.DisposeQuery, isAsync: false)
@@ -418,6 +417,8 @@ namespace LinqToDB.Data
 								RecordsAffected = rowCount
 							});
 						}
+
+						rd.Dispose();
 					}
 				}
 		}
@@ -802,7 +803,7 @@ namespace LinqToDB.Data
 					}
 
 					var genericMethod = valueMethodInfo.MakeGenericMethod(elementType);
-					var value = genericMethod.Invoke(this, new object[] { rd });
+					var value = genericMethod.InvokeExt(this, new object[] { rd });
 
 					member.SetValue(result, value);
 				}
@@ -944,11 +945,11 @@ namespace LinqToDB.Data
 					}
 
 					var genericMethod = valueMethodInfo.MakeGenericMethod(elementType);
-					var task = (Task)genericMethod.Invoke(this, new object[] { rd, cancellationToken })!;
+					var task          = genericMethod.InvokeExt<Task>(this, new object[] { rd, cancellationToken });
+
 					await task.ConfigureAwait(false);
 
-					// Task<T>.Result
-					var value = ((dynamic)task).Result;
+					var value = task.GetType().GetProperty(nameof(Task<int>.Result))!.GetValue(task);
 
 					member.SetValue(result, value);
 				}
@@ -1522,7 +1523,7 @@ namespace LinqToDB.Data
 				return null;
 
 			var methodInfo = _convertParameterValueMethodInfo.MakeGenericMethod(value.GetType());
-			var result     = methodInfo.Invoke(null, new[] { value, mappingSchema });
+			var result     = methodInfo.InvokeExt(null, new[] { value, mappingSchema });
 
 			return result;
 		}

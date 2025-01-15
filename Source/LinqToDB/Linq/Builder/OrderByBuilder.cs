@@ -5,8 +5,8 @@ using System.Linq.Expressions;
 
 namespace LinqToDB.Linq.Builder
 {
-	using SqlQuery;
 	using LinqToDB.Expressions;
+	using SqlQuery;
 
 	[BuildsMethodCall("OrderBy", "OrderByDescending", "ThenBy", "ThenByDescending", "ThenOrBy", "ThenOrByDescending")]
 	sealed class OrderByBuilder : MethodCallBuilder
@@ -41,7 +41,6 @@ namespace LinqToDB.Linq.Builder
 
 			var sequence = sequenceResult.BuildContext;
 
-			var orderByProjectFlags = ProjectFlags.SQL | ProjectFlags.Keys;
 			var isContinuousOrder   = !sequence.SelectQuery.OrderBy.IsEmpty && methodCall.Method.Name.StartsWith("Then");
 			var lambda              = (LambdaExpression)methodCall.Arguments[1].Unwrap();
 
@@ -55,9 +54,36 @@ namespace LinqToDB.Linq.Builder
 				if (sequence is not SubQueryContext)
 					sequence = new SubQueryContext(sequence);
 
-				if (builder.DataContext.Options.LinqOptions.DoNotClearOrderBys && !prevSequence.SelectQuery.OrderBy.IsEmpty && !prevSequence.SelectQuery.Select.HasModifier)
+				if (builder.DataContext.Options.LinqOptions.DoNotClearOrderBys)
 				{
-					sequence.SelectQuery.OrderBy.Items.AddRange(prevSequence.SelectQuery.OrderBy.Items.Select(x => x.Clone()));
+					var isValid = true;
+					while (true)
+					{
+						if (prevSequence.SelectQuery.Select.HasModifier)
+						{
+							isValid = false;
+							break;
+						}
+
+						if (!prevSequence.SelectQuery.OrderBy.IsEmpty)
+							break;
+
+						if (prevSequence is SubQueryContext { IsSelectWrapper: true } subQuery)
+						{
+							prevSequence = subQuery.SubQuery;
+						}
+						else if (prevSequence is SelectContext { InnerContext: not null } selectContext)
+						{
+							prevSequence = selectContext.InnerContext;
+						}
+						else
+							break;
+					}
+
+					if (isValid && !prevSequence.SelectQuery.OrderBy.IsEmpty)
+					{
+						sequence.SelectQuery.OrderBy.Items.AddRange(prevSequence.SelectQuery.OrderBy.Items.Select(x => x.Clone()));
+					}
 				}
 			}
 
@@ -69,12 +95,12 @@ namespace LinqToDB.Linq.Builder
 
 			if (body is MethodCallExpression mc && mc.Method.DeclaringType == typeof(Sql) && mc.Method.Name == nameof(Sql.Ordinal))
 			{
-				sqlExpr = builder.ConvertToSqlExpr(sequence, mc.Arguments[0], orderByProjectFlags);
+				sqlExpr = builder.BuildSqlExpression(sequence, mc.Arguments[0], BuildPurpose.Sql, BuildFlags.ForKeys);
 				byIndex = true;
 			}
 			else
 			{
-				sqlExpr = builder.ConvertToSqlExpr(sequence, body, orderByProjectFlags);
+				sqlExpr = builder.BuildSqlExpression(sequence, body, BuildPurpose.Sql, BuildFlags.ForKeys);
 				byIndex = false;
 			}
 
@@ -85,7 +111,7 @@ namespace LinqToDB.Linq.Builder
 				return BuildSequenceResult.Error(methodCall);
 			}
 
-			var placeholders = ExpressionBuilder.CollectDistinctPlaceholders(sqlExpr);
+			var placeholders = ExpressionBuilder.CollectDistinctPlaceholders(sqlExpr, false);
 
 			foreach (var placeholder in placeholders)
 			{
@@ -98,7 +124,6 @@ namespace LinqToDB.Linq.Builder
 					if (builder.DataOptions.SqlOptions.EnableConstantExpressionInOrderBy && orderSql is SqlValue { Value: int position })
 					{
 						// Dangerous way to set oder ordinal position. Used for legacy software support.
-
 						if (position <= 0)
 							return BuildSequenceResult.Error(sequenceArgument, $"Invalid Index '{position.ToString(CultureInfo.InvariantCulture)}' for positioned OrderBy. Should be in range 1..N.");
 

@@ -2,16 +2,18 @@
 using System.Diagnostics;
 
 using LinqToDB;
+using LinqToDB.Data;
 using LinqToDB.Data.RetryPolicy;
+using LinqToDB.DataProvider;
 using LinqToDB.FSharp;
 using LinqToDB.Interceptors;
 using LinqToDB.Mapping;
 
-using Tests.Model;
-using Tests.Remote.ServerContainer;
-
 namespace Tests
 {
+	using Model;
+	using Remote.ServerContainer;
+
 	public partial class TestBase
 	{
 		static readonly MappingSchema _sequentialAccessSchema = new ("SequentialAccess");
@@ -35,7 +37,40 @@ namespace Tests
 			}
 
 			var str = configuration.StripRemote();
-			return _serverContainer.Prepare(ms, interceptor, str, opt => opt.UseFSharp());
+			return _serverContainer.CreateContext(
+				ms,
+				str,
+				opt => opt.UseFSharp(),
+				(conf, ms) =>
+				{
+					var dc = new DataConnection(conf);
+
+					if (conf.IsAnyOf(TestProvName.AllSqlServerSequentialAccess))
+					{
+						if (!suppressSequentialAccess)
+							dc.AddInterceptor(SequentialAccessCommandInterceptor.Instance);
+
+						ms = ms == null ? _sequentialAccessSchema : MappingSchema.CombineSchemas(ms, _sequentialAccessSchema);
+					}
+
+					if (interceptor != null)
+						dc.AddInterceptor(interceptor);
+
+					if (ms != null)
+						dc.AddMappingSchema(ms);
+
+					return dc;
+				});
+		}
+
+		protected static string GetConnectionString(string configuration)
+		{
+			return DataConnection.GetConnectionString(configuration.StripRemote());
+		}
+
+		protected static IDataProvider GetDataProvider(string configuration)
+		{
+			return DataConnection.GetDataProvider(configuration.StripRemote());
 		}
 
 		protected ITestDataContext GetDataContext(string configuration, Func<DataOptions, DataOptions> dbOptionsBuilder)
@@ -46,7 +81,17 @@ namespace Tests
 			}
 
 			var str = configuration.StripRemote();
-			return _serverContainer.Prepare(null, null, str, opt => dbOptionsBuilder(opt).UseFSharp());
+			return _serverContainer.CreateContext(
+				null,
+				str,
+				opt => dbOptionsBuilder(opt).UseFSharp(),
+				(conf, ms) =>
+				{
+					var dc = new DataConnection(conf);
+					if (ms != null)
+						dc.AddMappingSchema(ms);
+					return dc;
+				});
 		}
 
 		protected TestDataConnection GetDataConnection(string configuration, Func<DataOptions, DataOptions> dbOptionsBuilder)

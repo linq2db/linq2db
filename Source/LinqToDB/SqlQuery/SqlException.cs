@@ -4,6 +4,8 @@ using System.Runtime.Serialization;
 
 namespace LinqToDB.SqlQuery
 {
+	// TODO: remove V7
+	[Obsolete($"This exception type is not used anymore. Please update your code to handle {nameof(LinqToDBException)}.")]
 	[Serializable]
 	public class SqlException : Exception
 	{

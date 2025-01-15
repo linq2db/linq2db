@@ -1,8 +1,9 @@
 ﻿<#@ template language="C#" debug="True" hostSpecific="True" compilerOptions="/langversion:6" #>
+<#@ CleanupBehavior processor="T4VSHost" CleanupAfterProcessingtemplate="true"               #>
 <#@ output extension=".generated.cs"                                                         #>
-<#@ include file="..\Shared.ttinclude"                                         once="true"   #>
-<#@ include file="..\..\..\Source\LinqToDB.Templates\LinqToDB.SqlCe.ttinclude" once="true"   #>
-<#@ include file="..\..\..\Source\LinqToDB.Templates\Humanizer.ttinclude"      once="true"   #>
+<#@ include file="$(LinqToDBT4SqlCeTemplatesPath)LinqToDB.SqlCe.ttinclude" once="true"       #>
+<#@ include file="..\Shared.ttinclude"                                     once="true"       #>
+<#@ include file="$(LinqToDBT4TemplatesPath)Humanizer.ttinclude"           once="true"       #>
 <#
 	NamespaceName = "SqlCeDataContext";
 
@@ -10,6 +11,7 @@
 	GenerateDataOptionsConstructors = false;
 
 	var solutionsPath = Host.ResolveAssemblyReference("$(SolutionDir)");
+
 	LoadSqlCeMetadata(solutionsPath + @"\Data\", "TestData.sdf");
 	GenerateModel();
 #>

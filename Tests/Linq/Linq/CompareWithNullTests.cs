@@ -102,8 +102,7 @@ namespace Tests.Linq
 			// when creating baseline file and this would result in path names too long for Windows to handle.
 			[Range(0, 35)]                              int index)
 		{
-			using var _   = new CompareNullsOption(withNullCompares);
-			using var db  = GetDataContext(context, mappingSchema);
+			using var db  = GetDataContext(context, o => o.UseMappingSchema(mappingSchema).UseCompareNulls(withNullCompares ? CompareNulls.LikeClr : CompareNulls.LikeSql));
 			using var src = db.CreateLocalTable(Data);
 
 			var (where, withoutNulls, withNulls) = _conditions[index];
@@ -138,8 +137,7 @@ namespace Tests.Linq
 			[IncludeDataSources(ProviderName.SQLiteMS)] string       context,
 			[Values]                                    CompareNulls option)
 		{
-			using var _   = new CompareNullsOption(option);
-			using var db  = GetDataContext(context, mappingSchema);
+			using var db  = GetDataContext(context, o => o.UseMappingSchema(mappingSchema).UseCompareNulls(option));
 			using var src = db.CreateLocalTable(Data);
 			
 			// == null always translates to IS NULL
@@ -163,9 +161,8 @@ namespace Tests.Linq
 			[IncludeDataSources(TestProvName.AllOracle)] string      context,
 			[Values]                                    CompareNulls option)
 		{
-			using var _   = new CompareNullsOption(option);
-			using var db  = GetDataContext(context);
-			using var src = db.CreateLocalTable(new[] 
+			using var db  = GetDataContext(context, o => o.UseCompareNulls(option));
+			using var src = db.CreateLocalTable(new[]
 			{
 				new Src { Id = 1, Text = "abc" },
 				new Src { Id = 2, Text = null  },

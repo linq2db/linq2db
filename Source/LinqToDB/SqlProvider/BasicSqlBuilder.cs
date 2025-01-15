@@ -18,6 +18,7 @@ namespace LinqToDB.SqlProvider
 	using Common.Internal;
 	using DataProvider;
 	using Extensions;
+	using Infrastructure;
 	using Mapping;
 	using SqlQuery;
 
@@ -257,10 +258,10 @@ namespace LinqToDB.SqlProvider
 
 			if (!SqlProviderFlags.GetIsSkipSupportedFlag(takeExpr, skipExpr)
 				&& skipExpr != null)
-				throw new SqlException("Skip for subqueries is not supported by the '{0}' provider.", Name);
+				throw new LinqToDBException(ErrorHelper.Error_Skip_in_Subquery);
 
 			if (!SqlProviderFlags.IsTakeSupported && takeExpr != null)
-				throw new SqlException("Take for subqueries is not supported by the '{0}' provider.", Name);
+				throw new LinqToDBException($"Take for subqueries is not supported by the '{Name}' provider.");
 
 			var sqlBuilder = (BasicSqlBuilder)CreateSqlBuilder();
 			sqlBuilder.BuildSql(0,
@@ -527,11 +528,11 @@ namespace LinqToDB.SqlProvider
 		}
 
 		protected virtual void BuildMultiInsertQuery(SqlMultiInsertStatement statement)
-			=> throw new SqlException(ErrorHelper.Error_MutiTable_Insert);
+			=> throw new LinqToDBException(ErrorHelper.Error_MutiTable_Insert);
 
 		protected virtual void BuildUnknownQuery()
 		{
-			throw new SqlException("Unknown query type '{0}'.", Statement.QueryType);
+			throw new LinqToDBException($"Unknown query type '{Statement.QueryType}'.");
 		}
 
 		// Default implementation. Doesn't generate linked server and package name components.
@@ -900,12 +901,6 @@ namespace LinqToDB.SqlProvider
 				AppendIndent()
 					.AppendLine(OutputKeyword);
 
-				if (output.InsertedTable?.SqlTableType == SqlTableType.SystemTable)
-					output.InsertedTable.TableName = output.InsertedTable.TableName with { Name = InsertedOutputTable };
-
-				if (output.DeletedTable?.SqlTableType == SqlTableType.SystemTable)
-					output.DeletedTable.TableName  = output.DeletedTable.TableName  with { Name = DeletedOutputTable  };
-
 				++Indent;
 
 				var first = true;
@@ -1053,7 +1048,7 @@ namespace LinqToDB.SqlProvider
 						first = false;
 
 						AppendIndent();
-						BuildExpression(ConvertElement(expr.Expression!));
+						BuildExpression(ConvertElement(expr).Expression!);
 					}
 
 					Indent--;
@@ -1066,7 +1061,7 @@ namespace LinqToDB.SqlProvider
 
 		protected virtual void BuildGetIdentity(SqlInsertClause insertClause)
 		{
-			//throw new SqlException("Insert with identity is not supported by the '{0}' sql provider.", Name);
+			//throw new LinqToDBException($"Insert with identity is not supported by the '{Name}' sql provider.");
 		}
 
 		#endregion
@@ -1075,7 +1070,7 @@ namespace LinqToDB.SqlProvider
 
 		protected virtual void BuildInsertOrUpdateQuery(SqlInsertOrUpdateStatement insertOrUpdate)
 		{
-			throw new SqlException("InsertOrUpdate query type is not supported by {0} provider.", Name);
+			throw new LinqToDBException($"InsertOrUpdate query type is not supported by {Name} provider.");
 		}
 
 		protected void BuildInsertOrUpdateQueryAsOnConflictUpdateOrNothing(SqlInsertOrUpdateStatement insertOrUpdate)
@@ -1590,7 +1585,16 @@ namespace LinqToDB.SqlProvider
 			{
 				StringBuilder.AppendLine(Comma).AppendLine();
 
-				BuildCreateTablePrimaryKey(createTable, ConvertInline("PK_" + createTable.Table.TableName.Name, ConvertType.NameToQueryTable),
+				var pkName = "PK_" + createTable.Table.TableName.Name;
+
+				if (DataProvider != null)
+				{
+					var iIdentifierService = ((IInfrastructure<IServiceProvider>)DataProvider).Instance.GetRequiredService<IIdentifierService>();
+
+					pkName = IdentifiersHelper.TruncateIdentifier(iIdentifierService, IdentifierKind.PrimaryKey, pkName);
+				}
+
+				BuildCreateTablePrimaryKey(createTable, ConvertInline(pkName, ConvertType.NameToQueryTable),
 					pk.Select(f => ConvertInline(f.Field.PhysicalName, ConvertType.NameToQueryField)));
 			}
 
@@ -1943,17 +1947,7 @@ namespace LinqToDB.SqlProvider
 
 		protected static ISqlExtensionBuilder GetExtensionBuilder(Type builderType)
 		{
-			return _extensionBuilders.GetOrAdd(
-				builderType,
-				type =>
-				{
-					var inst = Activator.CreateInstance(type);
-
-					if (inst is not ISqlExtensionBuilder builder)
-						throw new LinqToDBException($"Type '{builderType.FullName}' must implement the '{typeof(ISqlExtensionBuilder).FullName}' interface.");
-
-					return builder;
-				});
+			return _extensionBuilders.GetOrAdd(builderType, ActivatorExt.CreateInstance<ISqlExtensionBuilder>);
 		}
 
 		protected void BuildTableExtensions(
@@ -2513,8 +2507,9 @@ namespace LinqToDB.SqlProvider
 					BuildPredicate(((SqlPredicate.IsTrue)predicate).Reduce(NullabilityContext, _isInsideNot));
 					break;
 
-				case QueryElementType.FuncLikePredicate:
-					BuildExpression(((SqlPredicate.FuncLike)predicate).Function.Precedence, ((SqlPredicate.FuncLike)predicate).Function);
+				case QueryElementType.ExistsPredicate:
+					StringBuilder.Append(((SqlPredicate.Exists)predicate).IsNot ? "NOT EXISTS" : "EXISTS");
+					BuildExpression(GetPrecedence((SqlPredicate.Exists)predicate), ((SqlPredicate.Exists)predicate).SubQuery);
 					break;
 
 				case QueryElementType.SearchCondition:
@@ -2669,7 +2664,7 @@ namespace LinqToDB.SqlProvider
 			{
 				var keys = table.GetKeys(true);
 				if (keys is null or { Count: 0 })
-					throw new SqlException("Cannot create IN expression.");
+					throw new LinqToDBException("Cannot create IN expression.");
 
 				var firstValue = true;
 
@@ -2951,7 +2946,7 @@ namespace LinqToDB.SqlProvider
 									//SqlQuery.GetTableSource(field.Table);
 #endif
 									if (throwExceptionIfTableNotFound)
-										throw new SqlException("Table '{0}' not found.", field.Table.ToDebugString());
+										throw new LinqToDBException($"Table '{field.Table.ToDebugString()}' not found.");
 								}
 							}
 							else
@@ -2969,7 +2964,7 @@ namespace LinqToDB.SqlProvider
 									Convert(StringBuilder, table, ConvertType.NameToQueryTableAlias);
 
 								if (len == StringBuilder.Length)
-									throw new SqlException("Table {0} should have an alias.", field.Table);
+									throw new LinqToDBException($"Table {field.Table} should have an alias.");
 
 								addAlias = alias != field.PhysicalName;
 
@@ -3021,13 +3016,13 @@ namespace LinqToDB.SqlProvider
 							table = Statement.GetTableSource(column.Parent!, out noAlias);
 #endif
 
-							throw new SqlException("Table not found for '{0}'.", column);
+							throw new LinqToDBException($"Table not found for '{column}'.");
 						}
 
 						var tableAlias = (noAlias ? null : GetTableAlias(table)) ?? GetPhysicalTableName(column.Parent!, null, ignoreTableExpression : true);
 
 						if (string.IsNullOrEmpty(tableAlias))
-							throw new SqlException("Table {0} should have an alias.", column.Parent);
+							throw new LinqToDBException($"Table {column.Parent} should have an alias.");
 
 						addAlias = alias != column.Alias;
 
@@ -3060,7 +3055,7 @@ namespace LinqToDB.SqlProvider
 				case QueryElementType.SqlValue:
 					var sqlval = (SqlValue)expr;
 
-					BuildValue(sqlval.ValueType, sqlval.Value);
+					BuildSqlValue(sqlval);
 					break;
 
 				case QueryElementType.SqlExpression:
@@ -3313,7 +3308,7 @@ namespace LinqToDB.SqlProvider
 					if (sqlField == null || sqlField.Table == null)
 						throw new LinqToDBException("Cannot find Table or Column associated with expression");
 
-					var table = sqlField.Table as SqlTable;
+					var table = FindTable(sqlField.Table);
 					if (table == null)
 						throw new LinqToDBException("Cannot find table.");
 
@@ -3327,11 +3322,11 @@ namespace LinqToDB.SqlProvider
 					if (sqlField == null || sqlField.Table == null)
 						throw new LinqToDBException("Cannot find Table or Column associated with expression");
 
-					var table = sqlField.Table as SqlTable;
+					var table = FindTable(sqlField.Table);
 					if (table == null)
 						throw new LinqToDBException("Cannot find table.");
 
-					if (sqlField == table.All)
+					if (sqlField == sqlField.Table.All)
 					{
 						BuildExpression(new SqlField(table, table.TableName.Name));
 					}
@@ -3351,6 +3346,24 @@ namespace LinqToDB.SqlProvider
 			BuildExpression(anchor.SqlExpression, false, false, null, ref addAlias, false);
 
 			_disableAlias = saveDisableAlias;
+
+			SqlTable? FindTable(ISqlTableSource tableSource)
+			{
+				if (tableSource is SqlTable table)
+					return table;
+
+				var currentTable = tableSource;
+				while (currentTable is SelectQuery { From.Tables.Count: 1 } sc)
+				{
+					currentTable = sc.From.Tables[0].Source;
+					if (currentTable is SqlTable st)
+					{
+						return st;
+					}
+				}
+
+				return null;
+			}
 		}
 
 		protected virtual bool TryConvertParameterToSql(SqlParameterValue paramValue)
@@ -3486,6 +3499,11 @@ namespace LinqToDB.SqlProvider
 			}
 		}
 
+		public virtual void BuildSqlValue(SqlValue value)
+		{
+			BuildValue(value.ValueType, value.Value);
+		}
+
 		#endregion
 
 		#region BuildBinaryExpression
@@ -3532,7 +3550,7 @@ namespace LinqToDB.SqlProvider
 				if (!first)
 					StringBuilder.Append(InlineComma);
 
-				BuildExpression(parameter, true, !first || name == "EXISTS");
+				BuildExpression(parameter, true, !first);
 
 				first = false;
 			}
@@ -3715,13 +3733,13 @@ namespace LinqToDB.SqlProvider
 
 			if (identityField == null)
 				if (throwException)
-					throw new SqlException("Identity field must be defined for '{0}'.", table.NameForLogging);
+					throw new LinqToDBException($"Identity field must be defined for '{table.NameForLogging}'.");
 				else
 					return null;
 
 			if (table.ObjectType == null)
 				if (throwException)
-					throw new SqlException("Sequence name can not be retrieved for the '{0}' table.", table.NameForLogging);
+					throw new LinqToDBException($"Sequence name can not be retrieved for the '{table.NameForLogging}' table.");
 				else
 					return null;
 
@@ -3729,7 +3747,7 @@ namespace LinqToDB.SqlProvider
 
 			if (attrs.IsNullOrEmpty())
 				if (throwException)
-					throw new SqlException("Sequence name can not be retrieved for the '{0}' table.", table.NameForLogging);
+					throw new LinqToDBException($"Sequence name can not be retrieved for the '{table.NameForLogging}' table.");
 				else
 					return null;
 

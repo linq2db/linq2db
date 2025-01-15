@@ -1,3 +1,4 @@
-<#@ assembly name="$(LinqToDBT4SQLServerClientPath)Microsoft.SqlServer.Types.dll" #>
-<#@ include file="LinqToDB.Tools.ttinclude"              once="true"              #>
-<#@ include file="LinqToDB.SqlServer.SqlTypes.ttinclude" once="true"              #>
+<#@ include file="$(LinqToDBT4SqlServerTemplatesPath)LinqToDB.SqlServer.SqlTypes.ttinclude" once="true" #>
+<#+
+#warning 'LinqToDB.SqlServer.SqlTypes.Tools.ttinclude' is obsolete. Use 'LinqToDB.SqlServer.SqlTypes.ttinclude' instead.
+#>

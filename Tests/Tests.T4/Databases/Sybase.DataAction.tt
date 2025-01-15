@@ -1,9 +1,8 @@
 <#@ template language="C#" debug="True" hostSpecific="True" compilerOptions="/langversion:6" #>
+<#@ CleanupBehavior processor="T4VSHost" CleanupAfterProcessingtemplate="true"               #>
 <#@ output extension=".generated.cs"                                                         #>
-<#@ assembly name="$(ArtifactsPath)\bin\Tests\Debug\net462\AdoNetCore.AseClient.dll"         #>
-<#@ include file="..\Shared.ttinclude"                                          once="true"  #>
-<#@ include file="..\..\..\Source\LinqToDB.Templates\LinqToDB.Sybase.ttinclude" once="true"  #>
-
+<#@ include file="$(LinqToDBT4SybaseTemplatesPath)LinqToDB.Sybase.ttinclude" once="true"     #>
+<#@ include file="..\Shared.ttinclude"                                       once="true"     #>
 <#
 	NamespaceName = "SybaseDataActionDataContext";
 
@@ -11,5 +10,4 @@
 
 	LoadSybaseMetadata(GetConnectionString("Sybase.Managed"));
 	GenerateModel();
-
 #>

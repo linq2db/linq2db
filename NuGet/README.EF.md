@@ -138,11 +138,11 @@ using (var ctx = CreateAdventureWorksContext())
     var items2 = await neededRecords.ToLinqToDB().ToArrayAsync(); 
     
     // and simple bonus - how to generate SQL
-    var sql = neededRecords.ToLinqToDB().ToString();
+    var command = neededRecords.ToLinqToDB().ToSqlQuery();
 }
 ```
 
-Also check [existing tests](https://github.com/linq2db/linq2db.EntityFrameworkCore/blob/master/Tests/LinqToDB.EntityFrameworkCore.Tests/ToolsTests.cs) in test project for some examples.
+Also check [existing tests](https://github.com/linq2db/linq2db/blob/master/Tests/EntityFrameworkCore/Tests/ToolsTests.cs) in test project for some examples.
 
 ## Why should I want to use it?
 

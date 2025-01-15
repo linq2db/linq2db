@@ -736,11 +736,11 @@ namespace Cli.All.Sybase
 
 		public partial class PersonSelectAllResult
 		{
-			[Column("PersonID"  , DbType    = "Integer"                            )] public int     PersonId   { get; set; }
-			[Column("FirstName" , CanBeNull = false        , DbType = "varchar(50)")] public string  FirstName  { get; set; } = null!;
-			[Column("LastName"  , CanBeNull = false        , DbType = "varchar(50)")] public string  LastName   { get; set; } = null!;
-			[Column("MiddleName", DbType    = "varchar(50)"                        )] public string? MiddleName { get; set; }
-			[Column("Gender"    , CanBeNull = false        , DbType = "char(1)"    )] public string  Gender     { get; set; } = null!;
+			[Column("PersonID"  , DbType    = "Integer"                              )] public int     PersonId   { get; set; }
+			[Column("FirstName" , CanBeNull = false         , DbType = "varchar(150)")] public string  FirstName  { get; set; } = null!;
+			[Column("LastName"  , CanBeNull = false         , DbType = "varchar(150)")] public string  LastName   { get; set; } = null!;
+			[Column("MiddleName", DbType    = "varchar(150)"                         )] public string? MiddleName { get; set; }
+			[Column("Gender"    , CanBeNull = false         , DbType = "char(1)"     )] public string  Gender     { get; set; } = null!;
 		}
 
 		public class PersonSelectAllResults

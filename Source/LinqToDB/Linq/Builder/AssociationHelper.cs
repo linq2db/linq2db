@@ -6,6 +6,7 @@ using System.Reflection;
 
 namespace LinqToDB.Linq.Builder
 {
+	using Common.Internal;
 	using Extensions;
 	using Interceptors;
 	using LinqToDB.Expressions;
@@ -51,13 +52,13 @@ namespace LinqToDB.Linq.Builder
 				{
 					var associationExpression = association.GetQueryMethod(parentType, objectType) ?? throw new InvalidOperationException();
 
-                    if (dc is IInterceptable<IQueryExpressionInterceptor> { Interceptor: { } interceptor })
-                    {
-                        associationExpression = (LambdaExpression)interceptor.ProcessExpression(associationExpression,
-                            new QueryExpressionArgs(dc, associationExpression, QueryExpressionArgs.ExpressionKind.AssociationExpression));
-                    }
+					if (dc is IInterceptable<IQueryExpressionInterceptor> { Interceptor: { } interceptor })
+					{
+						associationExpression = (LambdaExpression)interceptor.ProcessExpression(associationExpression,
+							new QueryExpressionArgs(dc, associationExpression, QueryExpressionArgs.ExpressionKind.AssociationExpression));
+					}
 
-                    var optimizationContext = new ExpressionTreeOptimizationContext(dc);
+					var optimizationContext = new ExpressionTreeOptimizationContext(dc);
 					associationExpression = (LambdaExpression)ExpressionBuilder.ExposeExpression(associationExpression, dc, optimizationContext, null, optimizeConditions : true, compactBinary : true);
 					return associationExpression;
 				});
@@ -84,7 +85,7 @@ namespace LinqToDB.Linq.Builder
 				var body = definedQueryMethod.Body.Transform(parameterMatch, static (parameterMatch, e) =>
 				{
 					if (e.NodeType == ExpressionType.Parameter &&
-					    parameterMatch.TryGetValue((ParameterExpression)e, out var newExpression))
+						parameterMatch.TryGetValue((ParameterExpression)e, out var newExpression))
 					{
 						return newExpression;
 					}
@@ -120,15 +121,13 @@ namespace LinqToDB.Linq.Builder
 					}
 
 					if (parentMember == null)
-						throw new LinqException("Association key '{0}' not found for type '{1}.", parentName,
-							parentType);
+						throw new LinqToDBException($"Association key '{parentName}' not found for type '{parentType}.");
 
 					var childName = association.OtherKey[i];
 					var childMember = childMembers.Find(m => m.MemberInfo.Name == childName);
 
 					if (childMember == null)
-						throw new LinqException("Association key '{0}' not found for type '{1}.", childName,
-							objectType);
+						throw new LinqToDBException($"Association key '{childName}' not found for type '{objectType}.");
 
 					var current = ExpressionBuilder.Equal(builder.MappingSchema,
 						Expression.MakeMemberAccess(currentParentParam, parentMember.MemberInfo),
@@ -150,7 +149,7 @@ namespace LinqToDB.Linq.Builder
 				}
 
 				if (predicate == null)
-					throw new LinqException("Cannot generate Association predicate");
+					throw new LinqToDBException("Cannot generate Association predicate");
 
 				if (inline && !shouldAddDefaultIfEmpty)
 				{
@@ -251,7 +250,7 @@ namespace LinqToDB.Linq.Builder
 						li.MemberInfo?.Name == association.MemberInfo.Name);
 
 				if (associationLoadWith != null &&
-				    (associationLoadWith.MemberFilter != null || associationLoadWith.FilterFunc != null))
+					(associationLoadWith.MemberFilter != null || associationLoadWith.FilterFunc != null))
 				{
 					var body = definedQueryMethod.Body.Unwrap();
 
@@ -278,16 +277,16 @@ namespace LinqToDB.Linq.Builder
 						else
 						{
 							var filterDelegate = builder.EvaluateExpression<Delegate>(loadWithFunc) ??
-							                     throw new LinqException($"Cannot convert filter function '{loadWithFunc}' to Delegate.");
+												 throw new LinqToDBException($"Cannot convert filter function '{loadWithFunc}' to Delegate.");
 
 							var argumentType = filterDelegate.GetType().GetGenericArguments()[0].GetGenericArguments()[0];
 							// check for fake argument q => q
 							if (argumentType.IsSameOrParentOf(objectType))
 							{
 
-								var query = ExpressionQueryImpl.CreateQuery(objectType, builder.DataContext, body);
-								var filtered = (IQueryable)filterDelegate.DynamicInvoke(query)!;
-								body = filtered.Expression;
+								var query    = ExpressionQueryImpl.CreateQuery(objectType, builder.DataContext, body);
+								var filtered = filterDelegate.DynamicInvokeExt<IQueryable>(query);
+								body         = filtered.Expression;
 							}
 						}
 					}
@@ -346,7 +345,7 @@ namespace LinqToDB.Linq.Builder
 		public static Expression BuildAssociationQuery(ExpressionBuilder builder, ContextRefExpression tableContext,
 			AccessorMember onMember, AssociationDescriptor descriptor, Expression? additionalCondition, bool inline, LoadWithInfo? loadwith, MemberInfo[]? loadWithPath, ref bool? isOptional)
 		{
-			var elementType     = descriptor.GetElementType(builder.MappingSchema);
+			var elementType     = descriptor.GetElementType();
 			var parentExactType = descriptor.GetParentElementType();
 
 			var queryMethod = CreateAssociationQueryLambda(
@@ -354,7 +353,7 @@ namespace LinqToDB.Linq.Builder
 				additionalCondition,
 				inline, isOptional, loadwith, loadWithPath, out isOptional);
 
-			var correctedContext = tableContext.WithType(parentExactType);
+			var correctedContext = tableContext.WithType(queryMethod.Parameters[0].Type);
 
 			var body = queryMethod.GetBody(correctedContext);
 
@@ -371,5 +370,4 @@ namespace LinqToDB.Linq.Builder
 			return typeAccessor.Members.Concat(dynamicColumnAccessors).ToList();
 		}
 	}
-
 }

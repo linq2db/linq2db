@@ -154,17 +154,15 @@ namespace Tests.DataProvider
 
 				var sql = string.Format(CultureInfo.InvariantCulture, "SELECT Cast({0} as {1})", sqlValue ?? "NULL", sqlType);
 
-				Debug.WriteLine(sql + " -> " + typeof(T));
-
 				Assert.That(conn.Execute<T>(sql), Is.EqualTo(expectedValue));
 			}
 
-			Debug.WriteLine("{0} -> DataType.{1}",  typeof(T), dataType);
-			Assert.That(conn.Execute<T>("SELECT @p", new DataParameter { Name = "p", DataType = dataType, Value = expectedValue }), Is.EqualTo(expectedValue));
-			Debug.WriteLine("{0} -> auto", typeof(T));
-			Assert.That(conn.Execute<T>("SELECT @p", new DataParameter { Name = "p", Value = expectedValue }), Is.EqualTo(expectedValue));
-			Debug.WriteLine("{0} -> new",  typeof(T));
-			Assert.That(conn.Execute<T>("SELECT @p", new { p = expectedValue }), Is.EqualTo(expectedValue));
+			Assert.Multiple(() =>
+			{
+				Assert.That(conn.Execute<T>("SELECT @p", new DataParameter { Name = "p", DataType = dataType, Value = expectedValue }), Is.EqualTo(expectedValue));
+				Assert.That(conn.Execute<T>("SELECT @p", new DataParameter { Name = "p", Value = expectedValue }), Is.EqualTo(expectedValue));
+				Assert.That(conn.Execute<T>("SELECT @p", new { p = expectedValue }), Is.EqualTo(expectedValue));
+			});
 		}
 
 		static void TestSimple<T>(DataConnection conn, T expectedValue, DataType dataType)
@@ -895,7 +893,6 @@ namespace Tests.DataProvider
 						new BulkCopyOptions
 						{
 							BulkCopyType       = BulkCopyType.MultipleRows,
-							RowsCopiedCallback = copied => Debug.WriteLine(copied.RowsCopied)
 						},
 						Enumerable.Range(0, 10).Select(n =>
 							new DataTypes
@@ -927,7 +924,6 @@ namespace Tests.DataProvider
 						new BulkCopyOptions
 						{
 							BulkCopyType       = BulkCopyType.MultipleRows,
-							RowsCopiedCallback = copied => Debug.WriteLine(copied.RowsCopied)
 						},
 						Enumerable.Range(0, 10).Select(n =>
 							new DataTypes
@@ -959,7 +955,6 @@ namespace Tests.DataProvider
 						new BulkCopyOptions
 						{
 							BulkCopyType       = BulkCopyType.ProviderSpecific,
-							RowsCopiedCallback = copied => Debug.WriteLine(copied.RowsCopied)
 						},
 						Enumerable.Range(0, 10).Select(n =>
 							new DataTypes
@@ -991,7 +986,6 @@ namespace Tests.DataProvider
 						new BulkCopyOptions
 						{
 							BulkCopyType       = BulkCopyType.ProviderSpecific,
-							RowsCopiedCallback = copied => Debug.WriteLine(copied.RowsCopied)
 						},
 						Enumerable.Range(0, 10).Select(n =>
 							new DataTypes
@@ -1141,7 +1135,6 @@ namespace Tests.DataProvider
 						new BulkCopyOptions
 						{
 							BulkCopyType       = bulkCopyType,
-							RowsCopiedCallback = copied => Debug.WriteLine(copied.RowsCopied),
 							KeepIdentity       = true,
 						},
 						_allTypeses);
@@ -1176,7 +1169,6 @@ namespace Tests.DataProvider
 						new BulkCopyOptions
 						{
 							BulkCopyType       = bulkCopyType,
-							RowsCopiedCallback = copied => Debug.WriteLine(copied.RowsCopied),
 							KeepIdentity       = true,
 						},
 						_allTypeses);
@@ -1302,7 +1294,6 @@ namespace Tests.DataProvider
 					new BulkCopyOptions
 					{
 						BulkCopyType       = bulkCopyType,
-						RowsCopiedCallback = copied => Debug.WriteLine(copied.RowsCopied),
 						KeepIdentity       = true,
 					},
 					allTypes2);
@@ -1332,7 +1323,6 @@ namespace Tests.DataProvider
 					new BulkCopyOptions
 					{
 						BulkCopyType       = bulkCopyType,
-						RowsCopiedCallback = copied => Debug.WriteLine(copied.RowsCopied),
 						KeepIdentity       = true,
 					},
 					allTypes2);
@@ -2100,10 +2090,16 @@ AS
 	RETURN ( SELECT * FROM dbo.Person WHERE PersonID = @ID AND FirstName = @FirstName )
 ");
 					PersonTableFunction(db, null, person.ID, person.FirstName).First().Should().Be(person);
+					GetCurrentBaselines().Should().Contain("DECLARE", Exactly.Times(2));
+
 					PersonTableFunctionTable(db, null, person.ID, person.FirstName).First().Should().Be(person);
+					GetCurrentBaselines().Should().Contain("DECLARE", Exactly.Times(4));
 
 					PersonTableFunction(db, null, person.ID, person.FirstName).First().Should().Be(person);
+					GetCurrentBaselines().Should().Contain("DECLARE", Exactly.Times(6));
+
 					PersonTableFunctionTable(db, null, person.ID, person.FirstName).First().Should().Be(person);
+					GetCurrentBaselines().Should().Contain("DECLARE", Exactly.Times(8));
 
 					var query =
 						from p in db.Person
@@ -2114,6 +2110,9 @@ AS
 						select p;
 
 					query.First().Should().Be(person);;
+
+					// last query should have only 2 parameters
+					GetCurrentBaselines().Should().Contain("DECLARE", Exactly.Times(10));
 				}
 				finally
 				{

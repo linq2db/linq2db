@@ -16,15 +16,16 @@ namespace LinqToDB.EntityFrameworkCore
 	using Data;
 	using Expressions;
 	using Interceptors;
-	using Linq;
+
+	using LinqToDB.Common;
 
 	/// <summary>
 	/// Linq To DB EF.Core data connection.
 	/// </summary>
-	public class LinqToDBForEFToolsDataConnection : DataConnection, IExpressionPreprocessor, IEntityServiceInterceptor
+	public class LinqToDBForEFToolsDataConnection : DataConnection, IEntityServiceInterceptor
 	{
-		readonly IModel? _model;
-		readonly Func<Expression, IDataContext, DbContext?, IModel?, Expression>? _transformFunc;
+		readonly IModel?                                                                _model;
+		readonly Func<Expression, IDataContext, DbContext?, IModel?, bool, Expression>? _transformFunc;
 
 		private IEntityType?   _lastEntityType;
 		private Type?          _lastType;
@@ -37,6 +38,20 @@ namespace LinqToDB.EntityFrameworkCore
 
 		private static readonly ConstructorInfo TupleConstructor =
 			MemberHelper.ConstructorOf(() => new Tuple<InternalEntityEntry?, bool>(null, false));
+
+		sealed class ExpressionInterceptor : IQueryExpressionInterceptor
+		{
+			private readonly LinqToDBForEFToolsDataConnection _dataConnection;
+			public ExpressionInterceptor(LinqToDBForEFToolsDataConnection dataConnection)
+			{
+				_dataConnection = dataConnection;
+			}
+			public Expression ProcessExpression(Expression expression, QueryExpressionArgs args)
+			{
+				return _dataConnection.ProcessExpression(expression, args);
+			}
+		}
+
 
 		/// <summary>
 		/// Change tracker enable flag.
@@ -59,12 +74,15 @@ namespace LinqToDB.EntityFrameworkCore
 			DbContext?  context,
 			DataOptions options,
 			IModel?     model,
-			Func<Expression, IDataContext, DbContext?, IModel?, Expression>? transformFunc) : base(options)
+			Func<Expression, IDataContext, DbContext?, IModel?, bool, Expression>? transformFunc) : base(options)
 		{
 			Context          = context;
 			_model           = model;
 			_transformFunc   = transformFunc;
 			CopyDatabaseProperties();
+
+			AddInterceptor(new ExpressionInterceptor(this));
+
 			if (LinqToDBForEFTools.EnableChangeTracker)
 				AddInterceptor(this);
 		}
@@ -73,12 +91,13 @@ namespace LinqToDB.EntityFrameworkCore
 		/// Converts expression using convert function, passed to context.
 		/// </summary>
 		/// <param name="expression">Expression to convert.</param>
+		/// <param name="args">Additional arguments.</param>
 		/// <returns>Converted expression.</returns>
-		public Expression ProcessExpression(Expression expression)
+		public Expression ProcessExpression(Expression expression, QueryExpressionArgs args)
 		{
 			if (_transformFunc == null)
 				return expression;
-			return _transformFunc(expression, this, Context, _model);
+			return _transformFunc(expression, this, Context, _model, args.Kind == QueryExpressionArgs.ExpressionKind.Query);
 		}
 
 		private sealed class TypeKey
@@ -177,7 +196,12 @@ namespace LinqToDB.EntityFrameworkCore
 			if (!valid)
 				return entity;
 
-			entry = retrieved ?? _stateManager.StartTrackingFromQuery(_lastEntityType, entity, ValueBuffer.Empty);
+			entry = retrieved ?? _stateManager.StartTrackingFromQuery(_lastEntityType, entity,
+#if !EF31 && !EF6 && !EF8
+				Snapshot.Empty);
+#else
+				ValueBuffer.Empty);
+#endif
 
 			return entry.Entity;
 		}
@@ -230,7 +254,7 @@ namespace LinqToDB.EntityFrameworkCore
 			var lambda =
 				Expression.Lambda<Func<IStateManager, object, Tuple<InternalEntityEntry?, bool>>>(body, stateManagerParam, objParam);
 
-			return lambda.Compile();
+			return lambda.CompileExpression();
 		}
 
 		private void CopyDatabaseProperties()

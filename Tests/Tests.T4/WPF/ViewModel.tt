@@ -1,21 +1,22 @@
-﻿<#@ template language="C#" debug="True" hostSpecific="True" compilerOptions="/langversion:6"      #>
-<#@ output extension=".generated.cs"                                                              #>
-<#@ include file="..\..\..\Source\LinqToDB.Templates\T4Model.ttinclude"               once="true" #>
-<#@ include file="..\..\..\Source\LinqToDB.Templates\NotifyPropertyChanged.ttinclude" once="true" #>
-<#@ include file="..\..\..\Source\LinqToDB.Templates\Validation.ttinclude"            once="true" #>
-<#@ include file="..\..\..\Source\LinqToDB.Templates\NotifyDataErrorInfo.ttinclude"   once="true" #>
-<#@ include file="..\..\..\Source\LinqToDB.Templates\DataAnnotations.ttinclude"       once="true" #>
+﻿<#@ template language="C#" debug="True" hostSpecific="True" compilerOptions="/langversion:6" #>
+<#@ CleanupBehavior processor="T4VSHost" CleanupAfterProcessingtemplate="true"               #>
+<#@ output extension=".generated.cs"                                                         #>
+<#@ include file="$(LinqToDBT4TemplatesPath)T4Model.ttinclude"                   once="true" #>
+<#@ include file="$(LinqToDBT4TemplatesPath)NotifyPropertyChanged.ttinclude"     once="true" #>
+<#@ include file="$(LinqToDBT4TemplatesPath)Validation.ttinclude"                once="true" #>
+<#@ include file="$(LinqToDBT4TemplatesPath)NotifyDataErrorInfo.ttinclude"       once="true" #>
+<#@ include file="$(LinqToDBT4TemplatesPath)DataAnnotations.ttinclude"           once="true" #>
 <#
 	EnableNullableReferenceTypes = true;
-	Model.Usings.Add("System.Windows.Media");
+
 	Model.Namespace.Name = "Tests.T4.Wpf";
 	Model.Types.Add(
 		new Class("ViewModel",
-			new NotifyingProperty("double", "NotifiedProp1", "NotifiedProp1", "NotifiedBrush1"),
-			new NotifyingProperty("int",    "NotifiedProp2", "NotifiedProp1", "NotifiedProp2") { InitValue = "500" },
-			new NotifyingProperty("Brush",  "NotifiedBrush1").InitGetter(() => new [] { "GetBrush()" }),
-			new NotifyingProperty(ModelType.Create<string>(false),    "ConditionalProp") { InitValue = "string.Empty", CustomValidation = true, Conditional = "DEBUG" },
-			new NotifyingProperty(ModelType.Create<string>(false),    "NotifiedProp3") { InitValue = "string.Empty", CustomValidation = true }));
+			new NotifyingProperty("double", "NotifiedProp1", "NotifiedProp1", "NotifiedBrush1") { Conditional = "NET462" },
+			new NotifyingProperty("int",    "NotifiedProp2", "NotifiedProp1", "NotifiedProp2")  { Conditional = "NET462", InitValue = "500" },
+			new NotifyingProperty("System.Windows.Media.Brush", "NotifiedBrush1")     { Conditional = "NET462" }.InitGetter("GetBrush()"),
+			new NotifyingProperty(ModelType.Create<string>(false), "ConditionalProp") { InitValue = "string.Empty", CustomValidation = true, Conditional = "DEBUG" },
+			new NotifyingProperty(ModelType.Create<string>(false), "NotifiedProp3")   { InitValue = "string.Empty", CustomValidation = true }));
 
 	GenerateModel();
 #>

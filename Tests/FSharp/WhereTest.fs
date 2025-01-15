@@ -9,7 +9,6 @@ open LinqToDB
 open LinqToDB.Data
 open LinqToDB.Mapping
 open NUnit.Framework
-open Tests.Tools
 
 let private TestOnePerson id firstName persons =
     let list = persons :> Person System.Linq.IQueryable |> Seq.toList
@@ -17,8 +16,8 @@ let private TestOnePerson id firstName persons =
 
     let person = list |> List.head
 
-    Assert.That(person.ID, Is.EqualTo id)
-    Assert.That(person.FirstName, Is.EqualTo firstName)
+    Assert.That(person.ID, Is.EqualTo(id : int))
+    Assert.That(person.FirstName, Is.EqualTo(firstName : string))
 
 let TestOneJohn = TestOnePerson 1 "John"
 
@@ -35,7 +34,7 @@ let LoadSingle (db : IDataContext) =
 
 
 let LoadSinglesWithPatient (db : IDataContext) =
-    let persons = db.GetTable<Person>().LoadWith( fun x -> x.Patient :> Object )
+    let persons = db.GetTable<Person>().LoadWith( fun x -> x.Patient)
     let johnId = 1
     let john = query {
         for p in persons do
@@ -118,8 +117,8 @@ let LoadSingleWithOptions (db : IDataContext) =
 
 
 
-let LoadSingleCLIMutable (db : IDataContext)  (nullPatient : PatientCLIMutable)  =
-    let persons = db.GetTable<PersonCLIMutable>().LoadWith( fun x -> x.Patient :> Object )
+let LoadSingleCLIMutable (db : IDataContext)  =
+    let persons = db.GetTable<PersonCLIMutable>().LoadWith( fun x -> x.Patient )
     let john = query {
         for p in persons do
         where (p.ID = 1)

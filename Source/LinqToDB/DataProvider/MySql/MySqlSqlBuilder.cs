@@ -159,9 +159,8 @@ namespace LinqToDB.DataProvider.MySql
 				(DataType.UInt64,         _,                   _,                  _                   ) => "BIGINT UNSIGNED",
 				(DataType.Money,          _,                   _,                  _                   ) => "DECIMAL(19, 4)",
 				(DataType.SmallMoney,     _,                   _,                  _                   ) => "DECIMAL(10, 4)",
-				(DataType.Decimal,        _,                   not null and not 0, _                   ) => FormattableString.Invariant($"DECIMAL({type.Precision ?? 10}, {type.Scale})"),
-				(DataType.Decimal,        not null and not 10, _,                  _                   ) => FormattableString.Invariant($"DECIMAL({type.Precision})"),
-				(DataType.Decimal,        _,                   _,                  _                   ) => "DECIMAL",
+				(DataType.Decimal,        null,                null,               _                   ) => "DECIMAL",
+				(DataType.Decimal,        _,                   _,                  _                   ) => FormattableString.Invariant($"DECIMAL({type.Precision ?? 29}, {type.Scale ?? 10})"),
 				(DataType.DateTime  or
 				 DataType.DateTime2 or
 				 DataType.SmallDateTime,  > 0 and <= 6,        _,                  _                   ) => FormattableString.Invariant($"DATETIME({type.Precision})"),

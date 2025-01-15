@@ -115,51 +115,30 @@ namespace LinqToDB.EntityFrameworkCore
 				var filter = et.GetQueryFilter();
 				if (filter != null)
 				{
-					var queryParam   = Expression.Parameter(typeof(IQueryable<>).MakeGenericType(type), "q");
-					var dcParam      = Expression.Parameter(typeof(IDataContext), "dc");
-					var contextProp  = Expression.Property(Expression.Convert(dcParam, typeof(LinqToDBForEFToolsDataConnection)), "Context");
+					var dcParam     = Expression.Parameter(typeof(IDataContext), "dc");
+					var contextProp = Expression.Property(Expression.Convert(dcParam, typeof(LinqToDBForEFToolsDataConnection)), "Context");
 					var filterBody   = filter.Body.Transform(contextProp, static (contextProp, e) =>
-						{
-							if (typeof(DbContext).IsSameOrParentOf(e.Type))
-							{
-								Expression newExpr = contextProp;
-								if (newExpr.Type != e.Type)
-									newExpr = Expression.Convert(newExpr, e.Type);
-								return newExpr;
-							}
-
-							return e;
-						});
-
-					filterBody = LinqToDBForEFTools.TransformExpression(filterBody, null, null, _model);
-
-					// we have found dependency, check for compatibility
-
-					var filterLambda = Expression.Lambda(filterBody, filter.Parameters[0]);
-					Expression body  = Expression.Call(Methods.Queryable.Where.MakeGenericMethod(type), queryParam, filterLambda);
-
-					var checkType = filter.Body != filterBody;
-					if (checkType)
 					{
-						body = Expression.Condition(
-							Expression.TypeIs(dcParam, typeof(LinqToDBForEFToolsDataConnection)), body, queryParam);
-					}
+						if (typeof(DbContext).IsSameOrParentOf(e.Type))
+						{
+							Expression newExpr = contextProp;
+							if (newExpr.Type != e.Type)
+								newExpr = Expression.Convert(newExpr, e.Type);
+							return newExpr;
+						}
 
-					var lambda       = Expression.Lambda(body, queryParam, dcParam);
+						return e;
+					});
 
-					result.Add(new QueryFilterAttribute() { FilterFunc = lambda.Compile() });
+					var newFilter = Expression.Lambda(filterBody, filter.Parameters[0], dcParam);
+
+					result.Add(new QueryFilterAttribute() { FilterLambda = newFilter });
 				}
 
 				// InheritanceMappingAttribute
 				if (_model != null)
 				{
-					foreach (var e in _model.GetEntityTypes())
-					{
-						if (GetBaseTypeRecursive(e) == et && e.GetDiscriminatorValue() != null)
-						{
-							result.AddRange(GetMappingAttributesRecursive(e));
-						}
-					}
+					result.AddRange(LoadInheritanceAttributes(et));
 				}
 			}
 			else
@@ -173,33 +152,37 @@ namespace LinqToDB.EntityFrameworkCore
 			return result == null ? [] : result.ToArray();
 		}
 
-		static IEntityType GetBaseTypeRecursive(IEntityType entityType)
+		private IEnumerable<InheritanceMappingAttribute> LoadInheritanceAttributes(IEntityType entityType)
 		{
-			if (entityType.BaseType == null)
-				return entityType;
-			return GetBaseTypeRecursive(entityType.BaseType);
-		}
-		
-		static List<InheritanceMappingAttribute> GetMappingAttributesRecursive(IEntityType entityType)
-		{
-			var mappings = new List<InheritanceMappingAttribute>();
-			return ProcessEntityType(entityType);
+			Dictionary<Type, InheritanceMappingAttribute>? inheritanceAttributes = null;
 
-			List<InheritanceMappingAttribute> ProcessEntityType(IEntityType et)
+			foreach (var e in _model!.GetEntityTypes())
 			{
-				if (!et.ClrType.IsAbstract)
+				var baseType = e;
+				while (baseType.BaseType != null)
+					baseType = baseType.BaseType;
+
+				if (baseType == entityType && e.GetDiscriminatorValue() != null)
 				{
-					mappings.Add(new()
+					var entity = e;
+
+					while (!entity.ClrType.IsAbstract && inheritanceAttributes?.ContainsKey(entity.ClrType) != true)
 					{
-						Type = et.ClrType,
-						Code = entityType.GetDiscriminatorValue()
-					});
+						(inheritanceAttributes ??= new()).Add(entity.ClrType, new()
+						{
+							Type = entity.ClrType,
+							Code = entity.GetDiscriminatorValue()
+						});
+
+						if (entity.BaseType == null)
+							break;
+
+						entity = entity.BaseType;
+					}
 				}
-				
-				if (et.BaseType == null)
-					return mappings;
-				return ProcessEntityType(et.BaseType);
 			}
+
+			return (IEnumerable<InheritanceMappingAttribute>?)inheritanceAttributes?.Values ?? [];
 		}
 
 		static bool CompareProperty(MemberInfo? property, MemberInfo memberInfo)
@@ -542,9 +525,9 @@ namespace LinqToDB.EntityFrameworkCore
 
 		sealed class SqlTransparentExpression : EfSqlExpression
 		{
-			public Expression Expression { get; }
+			public ConstantExpression Expression { get; }
 
-			public SqlTransparentExpression(Expression expression, RelationalTypeMapping? typeMapping) : base(expression.Type, typeMapping)
+			public SqlTransparentExpression(ConstantExpression expression, RelationalTypeMapping? typeMapping) : base(expression.Type, typeMapping)
 			{
 				Expression = expression;
 			}
@@ -561,6 +544,26 @@ namespace LinqToDB.EntityFrameworkCore
 				expressionPrinter.Print(Expression);
 #endif
 			}
+
+#if !EF31 && !EF6 && !EF8
+			private static readonly ConstructorInfo _ctor = typeof(SqlTransparentExpression).GetConstructor([typeof(ExceptExpression), typeof(RelationalTypeMapping)])
+				?? throw new InvalidOperationException();
+
+			private static readonly MethodInfo _constantExpressionFactoryMethod = typeof(Expression).GetMethod(nameof(Constant), [typeof(object), typeof(Type)])
+				?? throw new InvalidOperationException();
+
+
+			public override Expression Quote()
+			{
+				// not tested
+#pragma warning disable EF9100 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
+				return New(
+					_ctor,
+					Call(_constantExpressionFactoryMethod, Constant(Expression.Value), Constant(Expression.Type)),
+					RelationalExpressionQuotingUtilities.QuoteTypeMapping(TypeMapping));
+#pragma warning restore EF9100 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
+			}
+#endif
 
 			private bool Equals(SqlTransparentExpression other)
 			{

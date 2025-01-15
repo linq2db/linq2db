@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Data;
 using System.Data.Common;
 using System.Linq;
 using System.Linq.Expressions;
@@ -12,6 +11,8 @@ namespace LinqToDB.Reflection
 	using Expressions;
 	using Extensions;
 	using Linq;
+	using Expressions.Internal;
+
 	using SqlQuery;
 
 	/// <summary>
@@ -140,7 +141,9 @@ namespace LinqToDB.Reflection
 			public static readonly MethodInfo DisableGuard        = MemberHelper.MethodOfGeneric<IQueryable<IGrouping<int, object>>>(q => q.DisableGuard());
 			public static readonly MethodInfo InlineParameters    = MemberHelper.MethodOfGeneric<IQueryable<object>>(q => q.InlineParameters());
 
-			internal static readonly MethodInfo SelectDistinct    = MemberHelper.MethodOfGeneric<IQueryable<IGrouping<int, object>>>(q => q.SelectDistinct());
+			public static readonly MethodInfo Select              = MemberHelper.MethodOfGeneric<IDataContext>(dc => dc.Select(() => 1));
+
+			internal static readonly MethodInfo SelectDistinct = MemberHelper.MethodOfGeneric<IQueryable<IGrouping<int, object>>>(q => q.SelectDistinct());
 
 			public static readonly MethodInfo AsQueryable         = MemberHelper.MethodOfGeneric<IQueryable<object>>(q => q.AsQueryable(null!));
 			public static readonly MethodInfo AsSubQuery          = MemberHelper.MethodOfGeneric<IQueryable<object>>(q => q.AsSubQuery());
@@ -189,7 +192,9 @@ namespace LinqToDB.Reflection
 				public static readonly MethodInfo UpdateSetterAsync           = MemberHelper.MethodOfGeneric((IQueryable<LW1> q, Expression<Func<LW1, LW1>> s) => q.UpdateAsync(s, default));
 				public static readonly MethodInfo UpdatePredicateSetter       = MemberHelper.MethodOfGeneric((IQueryable<LW1> q, Expression<Func<LW1, bool>> p, Expression<Func<LW1, LW1>> s) => q.Update(p, s));
 				public static readonly MethodInfo UpdatePredicateSetterAsync  = MemberHelper.MethodOfGeneric((IQueryable<LW1> q, Expression<Func<LW1, bool>> p, Expression<Func<LW1, LW1>> s) => q.UpdateAsync(p, s, default));
+				[Obsolete("Remove in V7")]
 				public static readonly MethodInfo UpdateTarget                = MemberHelper.MethodOfGeneric((IQueryable<LW1> q, ITable<LW2> t, Expression<Func<LW1, LW2>> s) => q.Update(t, s));
+				[Obsolete("Remove in V7")]
 				public static readonly MethodInfo UpdateTargetAsync           = MemberHelper.MethodOfGeneric((IQueryable<LW1> q, ITable<LW2> t, Expression<Func<LW1, LW2>> s) => q.UpdateAsync(t, s, default));
 				public static readonly MethodInfo UpdateTargetFuncSetter      = MemberHelper.MethodOfGeneric((IQueryable<LW1> q, Expression<Func<LW1, LW2>> t, Expression<Func<LW1, LW2>> s) => q.Update(t, s));
 				public static readonly MethodInfo UpdateTargetFuncSetterAsync = MemberHelper.MethodOfGeneric((IQueryable<LW1> q, Expression<Func<LW1, LW2>> t, Expression<Func<LW1, LW2>> s) => q.UpdateAsync(t, s, default));

@@ -44,25 +44,19 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 		#region array_agg
 
-		[Sql.Extension("ARRAY_AGG({expr})", TokenName = AnalyticFunctions.FunctionToken, ChainPrecedence = 1, IsAggregate = true)]
+		[Sql.Extension("ARRAY_AGG({expr})", TokenName = AnalyticFunctions.FunctionToken, ChainPrecedence = 1, IsAggregate = true, ServerSideOnly = true)]
 		public static AnalyticFunctions.IAnalyticFunctionWithoutWindow<T[]> ArrayAggregate<T>(this Sql.ISqlExtension? ext,
 			[ExprParameter] T expr)
-		{
-			throw new LinqException($"'{nameof(ArrayAggregate)}' is server-side method.");
-		}
+			=> throw new ServerSideOnlyException(nameof(ArrayAggregate));
 
-		[Sql.Extension("ARRAY_AGG({modifier?}{_}{expr})", TokenName = AnalyticFunctions.FunctionToken, BuilderType = typeof(ApplyAggregateModifier), ChainPrecedence = 0, IsAggregate = true)]
+		[Sql.Extension("ARRAY_AGG({modifier?}{_}{expr})", TokenName = AnalyticFunctions.FunctionToken, BuilderType = typeof(ApplyAggregateModifier), ChainPrecedence = 0, IsAggregate = true, ServerSideOnly = true)]
 		public static AnalyticFunctions.IAnalyticFunctionWithoutWindow<T[]> ArrayAggregate<T>(this Sql.ISqlExtension? ext,
 			[ExprParameter] T expr, [SqlQueryDependent] Sql.AggregateModifier modifier)
-		{
-			throw new LinqException($"'{nameof(ArrayAggregate)}' is server-side method.");
-		}
+			=> throw new ServerSideOnlyException(nameof(ArrayAggregate));
 
-		[Sql.Extension("ARRAY_AGG({modifier?}{_}{expr}{_}{order_by_clause?})", BuilderType = typeof(ApplyAggregateModifier), IsAggregate = true, ChainPrecedence = 10)]
+		[Sql.Extension("ARRAY_AGG({modifier?}{_}{expr}{_}{order_by_clause?})", BuilderType = typeof(ApplyAggregateModifier), IsAggregate = true, ChainPrecedence = 10, ServerSideOnly = true)]
 		public static Sql.IAggregateFunctionNotOrdered<TEntity, TV[]> ArrayAggregate<TEntity, TV>(this IEnumerable<TEntity> source, [ExprParameter] Func<TEntity, TV> expr, [SqlQueryDependent] Sql.AggregateModifier modifier)
-		{
-			throw new LinqException($"'{nameof(ArrayAggregate)}' is server-side method.");
-		}
+			=> throw new ServerSideOnlyException(nameof(ArrayAggregate));
 
 		[Sql.Extension("ARRAY_AGG({expr}{_}{order_by_clause?})", IsAggregate = true, ChainPrecedence = 10)]
 		public static Sql.IAggregateFunctionNotOrdered<TEntity, TV[]> ArrayAggregate<TEntity, TV>(this IQueryable<TEntity> source, [ExprParameter] Expression<Func<TEntity, TV>> expr)
@@ -106,10 +100,8 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 		[ExpressionMethod(nameof(UnnestImpl))]
 		public static IQueryable<T> Unnest<T>(this IDataContext dc, T[] array)
-		{
 			//TODO: can be executable when we finish queryable arrays
-			throw new LinqException($"'{nameof(Unnest)}' is server-side method.");
-		}
+			=> throw new ServerSideOnlyException(nameof(Unnest));
 
 		static Expression<Func<IDataContext, T[], IQueryable<T>>> UnnestImpl<T>()
 		{
@@ -124,10 +116,8 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 		[ExpressionMethod(nameof(UnnestWithOrdinalityImpl))]
 		public static IQueryable<Ordinality<T>> UnnestWithOrdinality<T>(this IDataContext dc, T[] array)
-		{
 			//TODO: can be executable when we finish queryable arrays
-			throw new LinqException($"'{nameof(UnnestWithOrdinality)}' is server-side method.");
-		}
+			=> throw new ServerSideOnlyException(nameof(UnnestWithOrdinality));
 
 		static Expression<Func<IDataContext, T[], IQueryable<Ordinality<T>>>> UnnestWithOrdinalityImpl<T>()
 		{
@@ -140,208 +130,140 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 		[Sql.Extension("{arrays, ' || '}", ServerSideOnly = true, CanBeNull = true, Precedence = Precedence.Additive)]
 		public static T[] ConcatArrays<T>(this IPostgreSQLExtensions? ext, [ExprParameter] params T[][] arrays)
-		{
-			throw new LinqException($"'{nameof(ConcatArrays)}' is server-side method.");
-		}
+			=> throw new ServerSideOnlyException(nameof(ConcatArrays));
 
 		[Sql.Extension("{array1} || {array2}", ServerSideOnly = true, CanBeNull = true, Precedence = Precedence.Additive)]
 		public static T[] ConcatArrays<T>(this IPostgreSQLExtensions? ext, [ExprParameter] T[] array1, [ExprParameter] T[][] array2)
-		{
-			throw new LinqException($"'{nameof(ConcatArrays)}' is server-side method.");
-		}
+			=> throw new ServerSideOnlyException(nameof(ConcatArrays));
 
 		[CLSCompliant(false)]
 		[Sql.Extension("{array1} || {array2}", ServerSideOnly = true, CanBeNull = true, Precedence = Precedence.Additive)]
 		public static T[] ConcatArrays<T>(this IPostgreSQLExtensions? ext, [ExprParameter] T[][] array1, [ExprParameter] T[] array2)
-		{
-			throw new LinqException($"'{nameof(ConcatArrays)}' is server-side method.");
-		}
+			=> throw new ServerSideOnlyException(nameof(ConcatArrays));
 
-		[Sql.Extension("{array1} < {array2}", ServerSideOnly = true, CanBeNull = true, IsPredicate = true, Precedence = Precedence.Comparison)]
+		[Sql.Extension("{array1} < {array2}", ServerSideOnly = true, IsNullable = Sql.IsNullableType.IfAnyParameterNullable, IsPredicate = true, Precedence = Precedence.Comparison)]
 		public static bool LessThan<T>(this IPostgreSQLExtensions? ext, [ExprParameter] T[] array1, [ExprParameter] T[] array2)
-		{
-			throw new LinqException($"'{nameof(LessThan)}' is server-side method.");
-		}
+			=> throw new ServerSideOnlyException(nameof(LessThan));
 
-		[Sql.Extension("{array1} <= {array2}", ServerSideOnly = true, CanBeNull = false, IsPredicate = true, Precedence = Precedence.Comparison)]
+		[Sql.Extension("{array1} <= {array2}", ServerSideOnly = true, IsNullable = Sql.IsNullableType.IfAnyParameterNullable, IsPredicate = true, Precedence = Precedence.Comparison)]
 		public static bool LessThanOrEqual<T>(this IPostgreSQLExtensions? ext, [ExprParameter] T[] array1, [ExprParameter] T[] array2)
-		{
-			throw new LinqException($"'{nameof(LessThanOrEqual)}' is server-side method.");
-		}
+			=> throw new ServerSideOnlyException(nameof(LessThanOrEqual));
 
-		[Sql.Extension("{array1} > {array2}", ServerSideOnly = true, CanBeNull = false, IsPredicate = true, Precedence = Precedence.Comparison)]
+		[Sql.Extension("{array1} > {array2}", ServerSideOnly = true, IsNullable = Sql.IsNullableType.IfAnyParameterNullable, IsPredicate = true, Precedence = Precedence.Comparison)]
 		public static bool GreaterThan<T>(this IPostgreSQLExtensions? ext, [ExprParameter] T[] array1, [ExprParameter] T[] array2)
-		{
-			throw new LinqException($"'{nameof(GreaterThan)}' is server-side method.");
-		}
+			=> throw new ServerSideOnlyException(nameof(GreaterThan));
 
-		[Sql.Extension("{array1} > {array2}", ServerSideOnly = true, CanBeNull = false, IsPredicate = true, Precedence = Precedence.Comparison)]
+		[Sql.Extension("{array1} >= {array2}", ServerSideOnly = true, IsNullable = Sql.IsNullableType.IfAnyParameterNullable, IsPredicate = true, Precedence = Precedence.Comparison)]
 		public static bool GreaterThanOrEqual<T>(this IPostgreSQLExtensions? ext, [ExprParameter] T[] array1, [ExprParameter] T[] array2)
-		{
-			throw new LinqException($"'{nameof(GreaterThanOrEqual)}' is server-side method.");
-		}
+			=> throw new ServerSideOnlyException(nameof(GreaterThanOrEqual));
 
-		[Sql.Extension("{array1} @> {array2}", ServerSideOnly = true, CanBeNull = false, IsPredicate = true, Precedence = Precedence.Comparison)]
+		[Sql.Extension("{array1} @> {array2}", ServerSideOnly = true, IsNullable = Sql.IsNullableType.IfAnyParameterNullable, IsPredicate = true, Precedence = Precedence.Comparison)]
 		public static bool Contains<T>(this IPostgreSQLExtensions? ext, [ExprParameter] T[] array1, [ExprParameter] T[] array2)
-		{
-			throw new LinqException($"'{nameof(Contains)}' is server-side method.");
-		}
+			=> throw new ServerSideOnlyException(nameof(Contains));
 
-		[Sql.Extension("{array1} <@ {array2}", ServerSideOnly = true, CanBeNull = false, IsPredicate = true, Precedence = Precedence.Comparison)]
+		[Sql.Extension("{array1} <@ {array2}", ServerSideOnly = true, IsNullable = Sql.IsNullableType.IfAnyParameterNullable, IsPredicate = true, Precedence = Precedence.Comparison)]
 		public static bool ContainedBy<T>(this IPostgreSQLExtensions? ext, [ExprParameter] T[] array1, [ExprParameter] T[] array2)
-		{
-			throw new LinqException($"'{nameof(ContainedBy)}' is server-side method.");
-		}
+			=> throw new ServerSideOnlyException(nameof(ContainedBy));
 
-		[Sql.Extension("{array1} && {array2}", ServerSideOnly = true, CanBeNull = false, IsPredicate = true, Precedence = Precedence.Comparison)]
+		[Sql.Extension("{array1} && {array2}", ServerSideOnly = true, IsNullable = Sql.IsNullableType.IfAnyParameterNullable, IsPredicate = true, Precedence = Precedence.Comparison)]
 		public static bool Overlaps<T>(this IPostgreSQLExtensions? ext, [ExprParameter] T[] array1, [ExprParameter] T[] array2)
-		{
-			throw new LinqException($"'{nameof(Overlaps)}' is server-side method.");
-		}
+			=> throw new ServerSideOnlyException(nameof(Overlaps));
 
 		[Sql.Extension("ARRAY_APPEND({array}, {element})", ServerSideOnly = true, CanBeNull = true, Precedence = Precedence.Primary)]
 		public static T[] ArrayAppend<T>(this IPostgreSQLExtensions? ext, [ExprParameter] T[] array, [ExprParameter] T element)
-		{
-			throw new LinqException($"'{nameof(ArrayAppend)}' is server-side method.");
-		}
+			=> throw new ServerSideOnlyException(nameof(ArrayAppend));
 
 		[Sql.Extension("ARRAY_CAT({array1}, {array2})", ServerSideOnly = true, CanBeNull = true, Precedence = Precedence.Primary)]
 		public static T[] ArrayCat<T>(this IPostgreSQLExtensions? ext, [ExprParameter] T[] array1, [ExprParameter] T[] array2)
-		{
-			throw new LinqException($"'{nameof(ArrayCat)}' is server-side method.");
-		}
+			=> throw new ServerSideOnlyException(nameof(ArrayCat));
 
 		[Sql.Extension("ARRAY_NDIMS({array})", ServerSideOnly = true, CanBeNull = true, Precedence = Precedence.Primary)]
 		public static int ArrayNDims<T>(this IPostgreSQLExtensions? ext, [ExprParameter] T[] array)
-		{
-			throw new LinqException($"'{nameof(ArrayNDims)}' is server-side method.");
-		}
+			=> throw new ServerSideOnlyException(nameof(ArrayNDims));
 
 		[Sql.Extension("ARRAY_DIMS({array})", ServerSideOnly = true, CanBeNull = true, Precedence = Precedence.Primary)]
 		public static string ArrayDims<T>(this IPostgreSQLExtensions? ext, [ExprParameter] T[] array)
-		{
-			throw new LinqException($"'{nameof(ArrayDims)}' is server-side method.");
-		}
+			=> throw new ServerSideOnlyException(nameof(ArrayDims));
 
 		[Sql.Extension("ARRAY_LENGTH({array}, {dimension})", ServerSideOnly = true, CanBeNull = true, Precedence = Precedence.Primary)]
 		public static int ArrayLength<T>(this IPostgreSQLExtensions? ext, [ExprParameter] T[] array, [ExprParameter] int dimension)
-		{
-			throw new LinqException($"'{nameof(ArrayLength)}' is server-side method.");
-		}
+			=> throw new ServerSideOnlyException(nameof(ArrayLength));
 
 		[Sql.Extension("ARRAY_LOWER({array}, {dimension})", ServerSideOnly = true, CanBeNull = true, Precedence = Precedence.Primary)]
 		public static int ArrayLower<T>(this IPostgreSQLExtensions? ext, [ExprParameter] T[] array, [ExprParameter] int dimension)
-		{
-			throw new LinqException($"'{nameof(ArrayLower)}' is server-side method.");
-		}
+			=> throw new ServerSideOnlyException(nameof(ArrayLower));
 
 		[Sql.Extension("ARRAY_POSITION({array}, {element})", ServerSideOnly = true, CanBeNull = true, Precedence = Precedence.Primary)]
 		public static int ArrayPosition<T>(this IPostgreSQLExtensions? ext, [ExprParameter] T[] array, [ExprParameter] T element)
-		{
-			throw new LinqException($"'{nameof(ArrayPosition)}' is server-side method.");
-		}
+			=> throw new ServerSideOnlyException(nameof(ArrayPosition));
 
 		[Sql.Extension("ARRAY_POSITION({array}, {element}, {start})", ServerSideOnly = true, CanBeNull = true, Precedence = Precedence.Primary)]
 		public static int ArrayPosition<T>(this IPostgreSQLExtensions? ext, [ExprParameter] T[] array, [ExprParameter] T element, [ExprParameter] int start)
-		{
-			throw new LinqException($"'{nameof(ArrayPosition)}' is server-side method.");
-		}
+			=> throw new ServerSideOnlyException(nameof(ArrayPosition));
 
 		[Sql.Extension("ARRAY_POSITIONS({array}, {element})", ServerSideOnly = true, CanBeNull = true, Precedence = Precedence.Primary)]
 		public static int[] ArrayPositions<T>(this IPostgreSQLExtensions? ext, [ExprParameter] T[] array, [ExprParameter] T element)
-		{
-			throw new LinqException($"'{nameof(ArrayPositions)}' is server-side method.");
-		}
+			=> throw new ServerSideOnlyException(nameof(ArrayPositions));
 
 		[Sql.Extension("ARRAY_PREPEND({element}, {array})", ServerSideOnly = true, CanBeNull = true, Precedence = Precedence.Primary)]
 		public static T[] ArrayPrepend<T>(this IPostgreSQLExtensions? ext, [ExprParameter] T element, [ExprParameter] T[] array)
-		{
-			throw new LinqException($"'{nameof(ArrayPrepend)}' is server-side method.");
-		}
+			=> throw new ServerSideOnlyException(nameof(ArrayPrepend));
 
 		[Sql.Extension("ARRAY_REMOVE({array}, {element})", ServerSideOnly = true, CanBeNull = true, Precedence = Precedence.Primary)]
 		public static T[] ArrayRemove<T>(this IPostgreSQLExtensions? ext, [ExprParameter] T[] array, [ExprParameter] T element)
-		{
-			throw new LinqException($"'{nameof(ArrayRemove)}' is server-side method.");
-		}
+			=> throw new ServerSideOnlyException(nameof(ArrayRemove));
 
 		[Sql.Extension("ARRAY_REPLACE({array}, {oldElement}, {newElement})", ServerSideOnly = true, CanBeNull = true, Precedence = Precedence.Primary)]
 		public static T[] ArrayReplace<T>(this IPostgreSQLExtensions? ext, [ExprParameter] T[] array, [ExprParameter] T oldElement, [ExprParameter] T newElement)
-		{
-			throw new LinqException($"'{nameof(ArrayReplace)}' is server-side method.");
-		}
+			=> throw new ServerSideOnlyException(nameof(ArrayReplace));
 
 		[Sql.Extension("ARRAY_UPPER({array}, {dimension})", ServerSideOnly = true, CanBeNull = true, Precedence = Precedence.Primary)]
 		public static T[] ArrayUpper<T>(this IPostgreSQLExtensions? ext, [ExprParameter] T[] array, [ExprParameter] int dimension)
-		{
-			throw new LinqException($"'{nameof(ArrayUpper)}' is server-side method.");
-		}
+			=> throw new ServerSideOnlyException(nameof(ArrayUpper));
 
 		[Sql.Extension("CARDINALITY({array})", ServerSideOnly = true, CanBeNull = true, Precedence = Precedence.Primary)]
 		public static int Cardinality<T>(this IPostgreSQLExtensions? ext, [ExprParameter] T[] array)
-		{
-			throw new LinqException($"'{nameof(Cardinality)}' is server-side method.");
-		}
+			=> throw new ServerSideOnlyException(nameof(Cardinality));
 
 		[Sql.Extension("ARRAY_TO_STRING({array}, {delimiter})", ServerSideOnly = true, CanBeNull = true, Precedence = Precedence.Primary)]
 		public static string ArrayToString<T>(this IPostgreSQLExtensions? ext, [ExprParameter] T[] array, [ExprParameter] string delimiter)
-		{
-			throw new LinqException($"'{nameof(ArrayToString)}' is server-side method.");
-		}
+			=> throw new ServerSideOnlyException(nameof(ArrayToString));
 
 		[Sql.Extension("STRING_TO_ARRAY({str}, {delimiter})", ServerSideOnly = true, CanBeNull = true, Precedence = Precedence.Primary)]
 		public static string[] StringToArray(this IPostgreSQLExtensions? ext, [ExprParameter] string str, [ExprParameter] string delimiter)
-		{
-			throw new LinqException($"'{nameof(StringToArray)}' is server-side method.");
-		}
+			=> throw new ServerSideOnlyException(nameof(StringToArray));
 
 		[Sql.Extension("STRING_TO_ARRAY({str}, {delimiter}, {nullString})", ServerSideOnly = true, CanBeNull = true, Precedence = Precedence.Primary)]
 		public static string[] StringToArray(this IPostgreSQLExtensions? ext, [ExprParameter] string str, [ExprParameter] string delimiter, [ExprParameter] string nullString)
-		{
-			throw new LinqException($"'{nameof(StringToArray)}' is server-side method.");
-		}
+			=> throw new ServerSideOnlyException(nameof(StringToArray));
 
 		[Sql.Extension("ARRAY_TO_STRING({array}, {delimiter}, {nullString})", ServerSideOnly = true, CanBeNull = true, Precedence = Precedence.Primary)]
 		public static string ArrayToString<T>(this IPostgreSQLExtensions? ext, [ExprParameter] T[] array, [ExprParameter] string delimiter, [ExprParameter] string nullString)
-		{
-			throw new LinqException($"'{nameof(ArrayToString)}' is server-side method.");
-		}
+			=> throw new ServerSideOnlyException(nameof(ArrayToString));
 
-		[Sql.Extension("{value} = ANY({array})", ServerSideOnly = true, CanBeNull = true, Precedence = Precedence.Comparison, IsPredicate = true)]
+		[Sql.Extension("{value} = ANY({array})", ServerSideOnly = true, IsNullable = Sql.IsNullableType.IfAnyParameterNullable, Precedence = Precedence.Comparison, IsPredicate = true)]
 		public static bool ValueIsEqualToAny<T>(this IPostgreSQLExtensions? ext, [ExprParameter] T value, [ExprParameter] T[] array)
-		{
-			throw new LinqException($"'{nameof(ValueIsEqualToAny)}' is server-side method.");
-		}
+			=> throw new ServerSideOnlyException(nameof(ValueIsEqualToAny));
 
-		[Sql.Extension("{value} < ANY({array})", ServerSideOnly = true, CanBeNull = true, Precedence = Precedence.Comparison, IsPredicate = true)]
+		[Sql.Extension("{value} < ANY({array})", ServerSideOnly = true, IsNullable = Sql.IsNullableType.IfAnyParameterNullable, Precedence = Precedence.Comparison, IsPredicate = true)]
 		public static bool ValueIsLessThanAny<T>(this IPostgreSQLExtensions? ext, [ExprParameter] T value, [ExprParameter] T[] array)
-		{
-			throw new LinqException($"'{nameof(ValueIsLessThanAny)}' is server-side method.");
-		}
+			=> throw new ServerSideOnlyException(nameof(ValueIsLessThanAny));
 
-		[Sql.Extension("{value} <= ANY({array})", ServerSideOnly = true, CanBeNull = true, Precedence = Precedence.Comparison, IsPredicate = true)]
+		[Sql.Extension("{value} <= ANY({array})", ServerSideOnly = true, IsNullable = Sql.IsNullableType.IfAnyParameterNullable, Precedence = Precedence.Comparison, IsPredicate = true)]
 		public static bool ValueIsLessThanOrEqualToAny<T>(this IPostgreSQLExtensions? ext, [ExprParameter] T value, [ExprParameter] T[] array)
-		{
-			throw new LinqException($"'{nameof(ValueIsLessThanOrEqualToAny)}' is server-side method.");
-		}
+			=> throw new ServerSideOnlyException(nameof(ValueIsLessThanOrEqualToAny));
 
-		[Sql.Extension("{value} > ANY({array})", ServerSideOnly = true, CanBeNull = true, Precedence = Precedence.Comparison, IsPredicate = true)]
+		[Sql.Extension("{value} > ANY({array})", ServerSideOnly = true, IsNullable = Sql.IsNullableType.IfAnyParameterNullable, Precedence = Precedence.Comparison, IsPredicate = true)]
 		public static bool ValueIsGreaterThanAny<T>(this IPostgreSQLExtensions? ext, [ExprParameter] T value, [ExprParameter] T[] array)
-		{
-			throw new LinqException($"'{nameof(ValueIsGreaterThanAny)}' is server-side method.");
-		}
+			=> throw new ServerSideOnlyException(nameof(ValueIsGreaterThanAny));
 
-		[Sql.Extension("{value} >= ANY({array})", ServerSideOnly = true, CanBeNull = true, Precedence = Precedence.Comparison, IsPredicate = true)]
+		[Sql.Extension("{value} >= ANY({array})", ServerSideOnly = true, IsNullable = Sql.IsNullableType.IfAnyParameterNullable, Precedence = Precedence.Comparison, IsPredicate = true)]
 		public static bool ValueIsGreaterThanOrEqualToAny<T>(this IPostgreSQLExtensions? ext, [ExprParameter] T value, [ExprParameter] T[] array)
-		{
-			throw new LinqException($"'{nameof(ValueIsGreaterThanOrEqualToAny)}' is server-side method.");
-		}
+			=> throw new ServerSideOnlyException(nameof(ValueIsGreaterThanOrEqualToAny));
 
-		[Sql.Extension("{value} <> ANY({array})", ServerSideOnly = true, CanBeNull = true, Precedence = Precedence.Comparison, IsPredicate = true)]
+		[Sql.Extension("{value} <> ANY({array})", ServerSideOnly = true, IsNullable = Sql.IsNullableType.IfAnyParameterNullable, Precedence = Precedence.Comparison, IsPredicate = true)]
 		public static bool ValueIsNotEqualToAny<T>(this IPostgreSQLExtensions? ext, [ExprParameter] T value, [ExprParameter] T[] array)
-		{
-			throw new LinqException($"'{nameof(ValueIsNotEqualToAny)}' is server-side method.");
-		}
+			=> throw new ServerSideOnlyException(nameof(ValueIsNotEqualToAny));
 
 		#endregion
 
@@ -391,22 +313,18 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 		[ExpressionMethod(nameof(GenerateSubscriptsImpl))]
 		public static IQueryable<int> GenerateSubscripts<T>(this IDataContext dc, T[] array, int dimension)
-		{
 			//TODO: can be executable when we finish queryable arrays
-			throw new LinqException($"'{nameof(GenerateSubscripts)}' is server-side method.");
-		}
+			=> throw new ServerSideOnlyException(nameof(GenerateSubscripts));
 
-		static Expression<Func<IDataContext, T[], int, IQueryable<int>>> GenerateSubscriptsImpl<T>()
+			static Expression<Func<IDataContext, T[], int, IQueryable<int>>> GenerateSubscriptsImpl<T>()
 		{
 			return (dc, array, dimension) => dc.FromSqlScalar<int>($"GENERATE_SUBSCRIPTS({array}, {dimension})");
 		}
 
 		[ExpressionMethod(nameof(GenerateSubscriptsReverseImpl))]
 		public static IQueryable<int> GenerateSubscripts<T>(this IDataContext dc, T[] array, int dimension, bool reverse)
-		{
 			//TODO: can be executable when we finish queryable arrays
-			throw new LinqException($"'{nameof(GenerateSubscripts)}' is server-side method.");
-		}
+			=> throw new ServerSideOnlyException(nameof(GenerateSubscripts));
 
 		static Expression<Func<IDataContext, T[], int, bool, IQueryable<int>>> GenerateSubscriptsReverseImpl<T>()
 		{

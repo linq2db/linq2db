@@ -6,20 +6,21 @@ namespace LinqToDB.Linq.Builder
 	using LinqToDB.Expressions;
 	using Mapping;
 	using SqlQuery;
+	using Reflection;
 
-	[BuildsExpression(ExpressionType.Lambda)]
-	sealed class ScalarSelectBuilder : ISequenceBuilder
+	[BuildsMethodCall("Select")]
+	sealed class ScalarSelectBuilder : MethodCallBuilder
 	{
-		public static bool CanBuild(Expression expr, BuildInfo info, ExpressionBuilder builder)
-			=> ((LambdaExpression)expr).Parameters.Count == 0;
 
-		public BuildSequenceResult BuildSequence(ExpressionBuilder builder, BuildInfo buildInfo)
+		public static bool CanBuildMethod(MethodCallExpression call, BuildInfo info, ExpressionBuilder builder) 
+			=> call.IsSameGenericMethod(Methods.LinqToDB.Select);
+
+		public override bool IsSequence(ExpressionBuilder builder, BuildInfo buildInfo) => true;
+
+		protected override BuildSequenceResult BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
-			return BuildSequenceResult.FromContext(new ScalarSelectContext(builder, buildInfo.Expression.UnwrapLambda().Body, buildInfo.SelectQuery));
+			return BuildSequenceResult.FromContext(new ScalarSelectContext(builder, methodCall.Arguments[1].UnwrapLambda().Body, buildInfo.SelectQuery));
 		}
-
-		public bool IsSequence(ExpressionBuilder builder, BuildInfo buildInfo)
-			=> true;
 
 		[DebuggerDisplay("{BuildContextDebuggingHelper.GetContextInfo(this)}")]
 		sealed class ScalarSelectContext : BuildContextBase

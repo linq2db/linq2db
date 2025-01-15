@@ -24,7 +24,7 @@ namespace LinqToDB.DataProvider.SQLite
 	 * For now we don't have SQLite versioning as SQLite engine usually provided by ADO.NET provider as nuget dependency
 	 * and we should just support some sane number of latest releases:
 	 * System.Data.Sqlite: 1.0.115.5+ [3.37.0, 3.46.1]
-	 * Microsoft.Data.Sqlite: 6.0.0+  [3.35.5, 3.41.2]
+	 * Microsoft.Data.Sqlite: 6.0.0+  [3.35.5, 3.46.1]
 	 * where second version is version, shipped with latest provider release.
 	 * This means we don't support anything lower than SQLite 3.35.5 and could also implement/enable features from newer versions if they doesn't break compatibility
 	 * https://www.sqlite.org/changes.html
@@ -41,6 +41,8 @@ namespace LinqToDB.DataProvider.SQLite
 			SqlProviderFlags.IsSkipSupportedIfTake             = true;
 			SqlProviderFlags.IsCommonTableExpressionsSupported = true;
 			SqlProviderFlags.IsSubQueryOrderBySupported        = true;
+			SqlProviderFlags.IsDistinctFromSupported           = true; // since 3.39.0
+			SqlProviderFlags.SupportsPredicatesComparison      = true;
 			SqlProviderFlags.DefaultMultiQueryIsolationLevel   = IsolationLevel.Serializable;
 
 			// this actually requires compilation flag set

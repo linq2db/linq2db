@@ -5,7 +5,6 @@ using LinqToDB.SqlQuery;
 
 namespace LinqToDB.Linq.Translation
 {
-	// Empty, but should be extended
 	public interface ISqlExpressionFactory
 	{
 		DataOptions DataOptions { get; }

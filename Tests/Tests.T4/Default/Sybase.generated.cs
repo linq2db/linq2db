@@ -23,6 +23,8 @@ namespace Default.Sybase
 {
 	public partial class TestDataDB : LinqToDB.Data.DataConnection
 	{
+		#region Tables
+
 		public ITable<AllType>           AllTypes            { get { return this.GetTable<AllType>(); } }
 		public ITable<Child>             Children            { get { return this.GetTable<Child>(); } }
 		public ITable<CollatedTable>     CollatedTables      { get { return this.GetTable<CollatedTable>(); } }
@@ -40,6 +42,10 @@ namespace Default.Sybase
 		public ITable<TestMerge1>        TestMerge1          { get { return this.GetTable<TestMerge1>(); } }
 		public ITable<TestMerge2>        TestMerge2          { get { return this.GetTable<TestMerge2>(); } }
 		public ITable<TestMergeIdentity> TestMergeIdentities { get { return this.GetTable<TestMergeIdentity>(); } }
+
+		#endregion
+
+		#region .ctor
 
 		public TestDataDB()
 		{
@@ -70,6 +76,8 @@ namespace Default.Sybase
 
 		partial void InitDataContext  ();
 		partial void InitMappingSchema();
+
+		#endregion
 	}
 
 	[Table(Schema="dbo", Name="AllTypes")]
@@ -133,7 +141,7 @@ namespace Default.Sybase
 		/// <summary>
 		/// FK_Doctor_Person (dbo.Person)
 		/// </summary>
-		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false)]
+		[Association(ThisKey=nameof(PersonID), OtherKey=nameof(Default.Sybase.Person.PersonID), CanBeNull=false)]
 		public Person Person { get; set; } = null!;
 
 		#endregion
@@ -205,7 +213,7 @@ namespace Default.Sybase
 		/// <summary>
 		/// FK_Patient_Person (dbo.Person)
 		/// </summary>
-		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false)]
+		[Association(ThisKey=nameof(PersonID), OtherKey=nameof(Default.Sybase.Person.PersonID), CanBeNull=false)]
 		public Person Person { get; set; } = null!;
 
 		#endregion
@@ -225,13 +233,13 @@ namespace Default.Sybase
 		/// <summary>
 		/// FK_Doctor_Person_BackReference (dbo.Doctor)
 		/// </summary>
-		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=true)]
+		[Association(ThisKey=nameof(PersonID), OtherKey=nameof(Default.Sybase.Doctor.PersonID), CanBeNull=true)]
 		public Doctor? Doctor { get; set; }
 
 		/// <summary>
 		/// FK_Patient_Person_BackReference (dbo.Patient)
 		/// </summary>
-		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=true)]
+		[Association(ThisKey=nameof(PersonID), OtherKey=nameof(Default.Sybase.Patient.PersonID), CanBeNull=true)]
 		public Patient? Patient { get; set; }
 
 		#endregion
@@ -335,10 +343,9 @@ namespace Default.Sybase
 		{
 			var parameters = new []
 			{
-				new DataParameter("RETURN_VALUE", null, LinqToDB.DataType.Int32)
+				new DataParameter("RETURN_VALUE", null, LinqToDB.DataType.Int32, 10)
 				{
-					Direction = ParameterDirection.ReturnValue,
-					Size      = 10
+					Direction = ParameterDirection.ReturnValue
 				}
 			};
 
@@ -357,10 +364,9 @@ namespace Default.Sybase
 		{
 			var parameters = new []
 			{
-				new DataParameter("RETURN_VALUE", null, LinqToDB.DataType.Int32)
+				new DataParameter("RETURN_VALUE", null, LinqToDB.DataType.Int32, 10)
 				{
-					Direction = ParameterDirection.ReturnValue,
-					Size      = 10
+					Direction = ParameterDirection.ReturnValue
 				}
 			};
 

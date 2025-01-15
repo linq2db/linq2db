@@ -13,7 +13,8 @@ namespace LinqToDB.DataProvider.Informix
 		{
 		}
 
-		protected override bool SupportsNullInColumn => false;
+		protected override bool SupportsNullInColumn              => false;
+		protected override bool SupportsDistinctAsExistsIntersect => true;
 
 		public override ISqlPredicate ConvertLikePredicate(SqlPredicate.Like predicate)
 		{
@@ -48,7 +49,7 @@ namespace LinqToDB.DataProvider.Informix
 
 		public override ISqlExpression ConvertCoalesce(SqlCoalesceExpression element)
 		{
-			if (SqlProviderFlags == null || element.SystemType == null)
+			if (element.SystemType == null)
 				return element;
 
 			return ConvertCoalesceToBinaryFunc(element, "Nvl", supportsParameters : false);
@@ -87,14 +88,6 @@ namespace LinqToDB.DataProvider.Informix
 						break;
 					}
 
-					case TypeCode.Boolean  :
-					{
-						if (ReferenceEquals(cast, IsForPredicate))
-							return ConvertToBooleanSearchCondition(cast.Expression);
-						
-						break;
-					}
-
 					case TypeCode.UInt64   :
 						if (argument.SystemType!.IsFloatType())
 							argument = new SqlFunction(cast.SystemType, "Floor", argument);
@@ -127,6 +120,12 @@ namespace LinqToDB.DataProvider.Informix
 
 						return new SqlFunction(cast.SystemType, "To_Date", argument);
 
+					case TypeCode.Boolean:
+						// boolean literal already has explicit cast
+						if (argument is SqlValue { Value: bool, ValueType.DataType: DataType.Boolean })
+							return argument;
+						break;
+
 					default:
 						if (cast.SystemType.ToUnderlying() == typeof(DateTimeOffset))
 							goto case TypeCode.DateTime;
@@ -137,18 +136,91 @@ namespace LinqToDB.DataProvider.Informix
 			return base.ConvertConversion(cast);
 		}
 
+		protected override ISqlExpression ConvertSqlCaseExpression(SqlCaseExpression element)
+		{
+			if (element.ElseExpression != null)
+			{
+				var elseExpression = WrapBooleanExpression(element.ElseExpression, includeFields : true, forceConvert: true);
+
+				if (!ReferenceEquals(elseExpression, element.ElseExpression))
+				{
+					return new SqlCaseExpression(element.Type, element.Cases, elseExpression);
+				}
+			}
+
+			return element;
+		}
+
+		protected override SqlCaseExpression.CaseItem ConvertCaseItem(SqlCaseExpression.CaseItem newElement)
+		{
+			var resultExpr = WrapBooleanExpression(newElement.ResultExpression, includeFields : true, forceConvert: true);
+
+			if (!ReferenceEquals(resultExpr, newElement.ResultExpression))
+			{
+				newElement = new SqlCaseExpression.CaseItem(newElement.Condition, resultExpr);
+			}
+
+			return newElement;
+		}
+
+		protected override ISqlExpression ConvertSqlCondition(SqlConditionExpression element)
+		{
+			var trueValue  = WrapBooleanExpression(element.TrueValue, includeFields : true, forceConvert: true);
+			var falseValue = WrapBooleanExpression(element.FalseValue, includeFields : true, forceConvert: true);
+
+			if (!ReferenceEquals(trueValue, element.TrueValue) || !ReferenceEquals(falseValue, element.FalseValue))
+			{
+				return new SqlConditionExpression(element.Condition, trueValue, falseValue);
+			}
+
+			return element;
+		}
+
 		protected override ISqlExpression WrapColumnExpression(ISqlExpression expr)
 		{
 			var columnExpression = base.WrapColumnExpression(expr);
 
-			if (SqlProviderFlags != null 
-			    && columnExpression.SystemType == typeof(bool)
-			    && QueryHelper.UnwrapNullablity(columnExpression) is not (SqlCastExpression or SqlColumn or SqlField))
+			if (columnExpression.SystemType == typeof(bool))
 			{
-				columnExpression = new SqlCastExpression(columnExpression, new DbDataType(columnExpression.SystemType!, DataType.Boolean), null, isMandatory: true);
+				var unwrapped = QueryHelper.UnwrapNullablity(columnExpression);
+
+				if (unwrapped is not SqlFunction and not SqlValue and not SqlCastExpression
+					&& !QueryHelper.IsBoolean(columnExpression, includeFields: true))
+				{
+					columnExpression = new SqlCastExpression(columnExpression, new DbDataType(columnExpression.SystemType!, DataType.Boolean), null, isMandatory: true);
+				}
 			}
 
 			return columnExpression;
+		}
+
+		protected override IQueryElement ConvertIsDistinctPredicateAsIntersect(SqlPredicate.IsDistinct predicate)
+		{
+			return InformixSqlOptimizer.WrapParameters(base.ConvertIsDistinctPredicateAsIntersect(predicate), EvaluationContext);
+		}
+
+		protected override IQueryElement VisitSqlSetExpression(SqlSetExpression element)
+		{
+			var newElement = (SqlSetExpression)base.VisitSqlSetExpression(element);
+
+			// IFX expression cannot be predicate
+			var wrapped = newElement.Expression == null ? null : WrapBooleanExpression(newElement.Expression, includeFields : false, withNull: newElement.Column.CanBeNullable(NullabilityContext), forceConvert: true);
+
+			if (!ReferenceEquals(wrapped, newElement.Expression))
+			{
+				if (wrapped != null)
+					wrapped = (ISqlExpression)Optimize(wrapped);
+				if (GetVisitMode(newElement) == VisitMode.Modify)
+				{
+					newElement.Expression = wrapped;
+				}
+				else
+				{
+					newElement = new SqlSetExpression(newElement.Column, wrapped);
+				}
+			}
+
+			return newElement;
 		}
 	}
 }

@@ -19,6 +19,7 @@ using LinqToDB.Expressions;
 namespace LinqToDB.EntityFrameworkCore.Internal
 {
 	using Async;
+	using Common.Internal;
 	using Linq;
 
 	/// <summary>
@@ -27,7 +28,7 @@ namespace LinqToDB.EntityFrameworkCore.Internal
 	///		It may change or be removed without further notice.
 	/// </summary>
 	/// <typeparam name="T">Type of query element.</typeparam>
-	public class LinqToDBForEFQueryProvider<T> : IAsyncQueryProvider, IQueryProviderAsync, IQueryable<T>, IAsyncEnumerable<T>
+	public class LinqToDBForEFQueryProvider<T> : IAsyncQueryProvider, IQueryProviderAsync, IQueryable<T>, IAsyncEnumerable<T>, IExpressionQuery
 	{
 		/// <summary>
 		/// Creates instance of adapter.
@@ -114,7 +115,7 @@ namespace LinqToDB.EntityFrameworkCore.Internal
 		{
 			var item = typeof(TResult).GetGenericArguments()[0];
 			var method = _executeAsyncMethodInfo.MakeGenericMethod(item);
-			return (TResult)method.Invoke(QueryProvider, [expression, cancellationToken])!;
+			return method.InvokeExt<TResult>(QueryProvider, [expression, cancellationToken]);
 		}
 
 		/// <summary>
@@ -185,5 +186,16 @@ namespace LinqToDB.EntityFrameworkCore.Internal
 		{
 			return QueryProvider.ToString();
 		}
+
+		#region IExpressionQuery
+
+		Expression IExpressionQuery.Expression => ((IExpressionQuery)QueryProvider).Expression;
+
+		IDataContext IExpressionQuery.DataContext => ((IExpressionQuery)QueryProvider).DataContext;
+
+		IReadOnlyList<QuerySql> IExpressionQuery.GetSqlQueries(SqlGenerationOptions? options) =>
+			((IExpressionQuery)QueryProvider).GetSqlQueries(options);
+
+		#endregion
 	}
 }

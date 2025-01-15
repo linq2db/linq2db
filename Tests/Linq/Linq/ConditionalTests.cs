@@ -26,6 +26,7 @@ namespace Tests.Linq
 			{
 				return Enumerable.Range(1, 10)
 					.Select(x => new ConditionalData { Id = x, StringProp = x % 3 == 0 ? null : "String" + x })
+					.Concat([new ConditionalData { Id = 11, StringProp = "-1" }])
 					.ToArray();
 			}
 		}
@@ -141,7 +142,7 @@ namespace Tests.Linq
 
 				query = query.Where(m => m.child.StringProp!.Contains("2") && m.child.IntProp == 1);
 
-				query.Enumerating(x => x).Should().ThrowExactly<LinqException>().Where(e => e.Message.Contains("m.child.IntProp"));
+				query.Enumerating(x => x).Should().ThrowExactly<LinqToDBException>().Where(e => e.Message.Contains("m.child.IntProp"));
 			}
 		}
 
@@ -195,6 +196,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllAccess, TestProvName.AllSybase, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
 		public void CrossToOuterApply([DataSources] string context)
 		{
 			using var db = GetDataContext(context);

@@ -87,10 +87,7 @@ namespace Tests.Linq
 					.Where(p => p.ID == 1)
 					.Select(p => p.FirstName)
 					.Take(1)
-					.ToString()!;
-
-				sql = string.Join(Environment.NewLine, sql.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries)
-					.Where(line => !line.StartsWith("--")));
+					.ToSqlQuery().Sql;
 
 				var res = await conn.SetCommand(sql).ExecuteAsync<string>();
 
@@ -109,10 +106,7 @@ namespace Tests.Linq
 					.Where(p => p.ID == 1)
 					.Select(p => p.FirstName)
 					.Take(1)
-					.ToString()!;
-
-				sql = string.Join(Environment.NewLine, sql.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries)
-					.Where(line => !line.StartsWith("--")));
+					.ToSqlQuery().Sql;
 
 				var res = conn.SetCommand(sql).ExecuteAsync<string>().Result;
 
@@ -136,10 +130,7 @@ namespace Tests.Linq
 					.Where(p => p.ID == 1)
 					.Select(p => p.FirstName)
 					.Take(1)
-					.ToString()!;
-
-				sql = string.Join(Environment.NewLine, sql.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries)
-					.Where(line => !line.StartsWith("--")));
+					.ToSqlQuery().Sql;
 
 				await using (var rd = await conn.SetCommand(sql).ExecuteReaderAsync())
 				{
@@ -162,9 +153,7 @@ namespace Tests.Linq
 			{
 				conn.InlineParameters = true;
 
-				var sql = conn.Person.Where(p => p.ID == 1).Select(p => p.Name).Take(1).ToString()!;
-				sql = string.Join(Environment.NewLine, sql.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries)
-					.Where(line => !line.StartsWith("--")));
+				var sql = conn.Person.Where(p => p.ID == 1).Select(p => p.Name).Take(1).ToSqlQuery().Sql;
 
 				var list = await conn.SetCommand(sql)
 					.QueryToAsyncEnumerable<string>()
@@ -294,13 +283,6 @@ namespace Tests.Linq
 				}
 				catch (OperationCanceledException)
 				{
-#if !NETFRAMEWORK
-					if (context.IsAnyOf(TestProvName.AllOracleManaged) && !context.IsRemote())
-					{
-						Assert.Fail("Update test. Oracle developers evolved");
-					}
-#endif
-
 					// this casts any exception that inherits from OperationCanceledException
 					//   to a OperationCanceledException to pass the assert check above
 					//   (needed for TaskCanceledException)

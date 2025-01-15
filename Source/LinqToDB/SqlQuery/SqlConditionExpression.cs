@@ -42,9 +42,9 @@ namespace LinqToDB.SqlQuery
 			if (!(other is SqlConditionExpression otherCondition))
 				return false;
 
-			return this.Condition.Equals(otherCondition.Condition, comparer) &&
-			       this.TrueValue.Equals(otherCondition.TrueValue, comparer) &&
-			       this.FalseValue.Equals(otherCondition.FalseValue, comparer);
+			return Condition.Equals(otherCondition.Condition, comparer) &&
+			       TrueValue.Equals(otherCondition.TrueValue, comparer) &&
+			       FalseValue.Equals(otherCondition.FalseValue, comparer);
 		}
 
 		public override bool CanBeNullable(NullabilityContext nullability)

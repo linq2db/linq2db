@@ -127,9 +127,16 @@ namespace Tests.Linq
 		public void ClientCoalesce1([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
+			{
+				var query = from p in db.Parent select p.Value1 ?? GetDefault1();
+
+				query = query.Where(x => x > 10);
+				query.ToList();
+
 				AreEqual(
-					from p in    Parent select p.Value1 ?? GetDefault1(),
+					from p in Parent select p.Value1    ?? GetDefault1(),
 					from p in db.Parent select p.Value1 ?? GetDefault1());
+			}
 		}
 
 		static int GetDefault2(int n)
@@ -354,7 +361,7 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 				AreEqual(
 					from p in    Person where string.Concat(p.FirstName, " ", 1, 2) == "John 12" select p.FirstName,
-					from p in db.Person where string.Concat(p.FirstName, " ", 1, 2) == "John 12" select p.FirstName);
+					from p in db.Person where string.Concat(new object[] { p.FirstName, " ", 1, 2 }) == "John 12" select p.FirstName);
 		}
 
 		enum PersonID
@@ -568,19 +575,17 @@ namespace Tests.Linq
 		[Test]
 		public void Issue191Test([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				string? firstName = null;
-				int?    status    = null;
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable<User>();
 
-				var str = db.GetTable<User>()
-					.Where(user =>
-						user.Status == status &&
-						(string.IsNullOrEmpty(firstName) || user.FirstName!.Contains(firstName)))
-					.ToString();
+			string? firstName = null;
+			int?    status    = null;
 
-				Debug.WriteLine(str);
-			}
+			db.GetTable<User>()
+				.Where(user =>
+					user.Status == status &&
+					(string.IsNullOrEmpty(firstName) || user.FirstName!.Contains(firstName)))
+				.ToArray();
 		}
 	}
 

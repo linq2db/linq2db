@@ -19,13 +19,12 @@ namespace Tests.UserTests
 		}
 
 		[Table("mega_composites")]
+		[Column("y1.q1.ref1", $"{nameof(y1)}.{nameof(mega_composites__y1.q1)}.{nameof(mega_composites__y1.mega_composites__y1__q1.ref1)}")]
 		public class mega_composites
 		{
 			public mega_composites() : base()
 			{
-				{
-					y1 = new mega_composites__y1();
-				}
+				y1 = new mega_composites__y1();
 			}
 
 			public virtual mega_composites__y1 y1 { get; set; }
@@ -39,11 +38,12 @@ namespace Tests.UserTests
 				{
 					q1 = new mega_composites__y1__q1();
 				}
+
 				public mega_composites__y1__q1 q1 { get; set; }
 
 				public sealed class mega_composites__y1__q1
 				{
-					[Column("\"y1.q1.ref1\"")]
+					//[Column("\"y1.q1.ref1\"")]
 					public long? ref1 { get; set; }
 				}
 			}
@@ -101,18 +101,18 @@ namespace Tests.UserTests
 				});
 
 				var ref1 = db.GetTable<mega_composites>()
-									.Select(x => new __mega_composites_View
-									{
-										ref1 = x.ref1,
-										__face_ref1 = db.GetTable<Qwerty>().Where(q => q.Id == x.ref1).Select(q => q.asdfgh).FirstOrDefault()
-									}).Take(2).ToArray();
+					.Select(x => new __mega_composites_View
+					{
+						ref1 = x.ref1,
+						__face_ref1 = db.GetTable<Qwerty>().Where(q => q.Id == x.ref1).Select(q => q.asdfgh).FirstOrDefault()
+					}).Take(2).ToArray();
 
 				Assert.That(ref1, Is.Not.Null);
 			}
 
 		}
 
-		[Test, ActiveIssue(1298, Details = "Expression 'x.y1' is not a Field.")]
+		[Test]
 		public void Issue1298Test1([IncludeDataSources(TestProvName.AllPostgreSQL, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataConnection(context))
@@ -158,16 +158,14 @@ namespace Tests.UserTests
 				});
 
 				var ref1 = db.GetTable<mega_composites>()
-									.Select(x => new __mega_composites_View
-									{
-										y1 = x.y1,
-										__face_y1_q1_ref1 = db.GetTable<Qwerty>().Where(q => q.Id == x.y1.q1.ref1).Select(q => q.asdfgh).FirstOrDefault()
-									}).Take(2).ToArray();
+					.Select(x => new __mega_composites_View
+					{
+						y1 = x.y1,
+						__face_y1_q1_ref1 = db.GetTable<Qwerty>().Where(q => q.Id == x.y1.q1.ref1).Select(q => q.asdfgh).FirstOrDefault()
+					}).Take(2).ToArray();
 
 				Assert.That(ref1, Is.Not.Null);
 			}
-
-
 		}
 	}
 }

@@ -31,10 +31,10 @@ namespace LinqToDB.Linq.Builder
 
 			var result = builder.BuildWhere(
 				buildInfo.Parent, sequence, condition: condition,
-				checkForSubQuery: !isHaving, enforceHaving: isHaving, isTest: buildInfo.IsTest);
+				checkForSubQuery: !isHaving, enforceHaving: isHaving, out var error);
 
 			if (result == null)
-				return BuildSequenceResult.Error(methodCall);
+				return BuildSequenceResult.Error(error ?? methodCall);
 
 			result.SetAlias(condition.Parameters[0].Name);
 

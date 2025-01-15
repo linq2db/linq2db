@@ -72,14 +72,16 @@ namespace LinqToDB.DataProvider
 			if (options.DbTransaction?.Connection != null)
 				return DetectVersion(options, options.DbTransaction.Connection);
 
-			if (options.ConnectionString == null)
+			var connectionString = TryGetConnectionString(options);
+
+			if (connectionString == null)
 				throw new InvalidOperationException("Connection string is not provided.");
 
-			var version = _providerCache.GetOrCreate(options.ConnectionString, entry =>
+			var version = _providerCache.GetOrCreate(connectionString, entry =>
 			{
 				entry.SlidingExpiration = Common.Configuration.Linq.CacheSlidingExpiration;
 
-				using var conn = CreateConnection(provider, options.ConnectionString);
+				using var conn = CreateConnection(provider, connectionString);
 				return DetectVersion(options, conn);
 			});
 
@@ -113,10 +115,12 @@ namespace LinqToDB.DataProvider
 		{
 			if (_hasVersioning && dialect.Equals(AutoDetectVersion))
 			{
-				if (options.ConnectionOptions.ConnectionString == null)
+				var connectionString = TryGetConnectionString(options.ConnectionOptions);
+
+				if (connectionString == null)
 					throw new InvalidOperationException("Connection string is not provided.");
 
-				if (TryGetCachedServerVersion(options.ConnectionOptions.ConnectionString, out var version))
+				if (TryGetCachedServerVersion(connectionString, out var version))
 					dialect = version ?? DefaultVersion;
 				else
 					return options.WithOptions<ConnectionOptions>(o => o with
@@ -130,6 +134,14 @@ namespace LinqToDB.DataProvider
 			}
 
 			return options.UseDataProvider(GetDataProvider(options.ConnectionOptions, provider, dialect));
+		}
+
+		private static string? TryGetConnectionString(ConnectionOptions options)
+		{
+			return options.ConnectionString
+								?? (options.ConfigurationString != null
+									? DataConnection.GetConnectionString(options.ConfigurationString)
+									: null);
 		}
 
 		public    abstract IDataProvider? DetectProvider     (ConnectionOptions options);

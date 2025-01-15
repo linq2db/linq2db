@@ -4,22 +4,35 @@
 	<PropertyGroup>
 		<AssemblyName>linq2db.EntityFrameworkCore.Tests</AssemblyName>
 		<RootNamespace>LinqToDB.EntityFrameworkCore.Tests</RootNamespace>
+
+		<TargetFrameworks>net462;net6.0;net8.0</TargetFrameworks>
+
+		<MSBuildWarningsAsMessages>$(MSBuildWarningsAsMessages);MSB3277</MSBuildWarningsAsMessages>
 	</PropertyGroup>
 	
 	<ItemGroup>
-		<ProjectReference Include="..\..\Source\LinqToDB.EntityFrameworkCore\LinqToDB.EntityFrameworkCore.csproj" />
 		<ProjectReference Include="..\Base\Tests.Base.csproj" />
+		<ProjectReference Include="..\..\Source\LinqToDB.EntityFrameworkCore\LinqToDB.EntityFrameworkCore.csproj" />
 
 		<PackageReference Include="Microsoft.Extensions.Logging.Console" />
 		<PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" />
-		<PackageReference Include="Pomelo.EntityFrameworkCore.MySql" />
 		<PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL.NodaTime" />
 		<PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" />
 		<PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" />
+		<PackageReference Include="Pomelo.EntityFrameworkCore.MySql" />
 	</ItemGroup>
 
-	<ItemGroup Condition="'$(TargetFramework)' != 'net462'">
+	<ItemGroup Condition="'$(TargetFramework)' == 'net6.0' OR '$(TargetFramework)' == 'net8.0'">
 		<ProjectReference Include="..\EntityFrameworkCore.FSharp\Tests.EntityFrameworkCore.FSharp.fsproj" />
 	</ItemGroup>
 
+	<ItemGroup Label="Override Transient Vulnerable Deps">
+		<PackageReference Include="Microsoft.Data.SqlClient" VersionOverride="5.2.2" />
+	</ItemGroup>
+	
+	<ItemGroup Condition="'$(TargetFramework)' == 'net462'" Label="Override Transient Vulnerable Deps">
+		<PackageReference Include="Npgsql" VersionOverride="4.1.14" />
+	</ItemGroup>
+
 </Project>
+ 

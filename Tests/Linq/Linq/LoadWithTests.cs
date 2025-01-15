@@ -270,7 +270,7 @@ namespace Tests.Linq
 
 		[Test]
 //		[Timeout(15000)]
-		public void LoadWith10([DataSources(ProviderName.Access)] string context)
+		public void LoadWith10([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -287,7 +287,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void LoadWith11([DataSources(ProviderName.Access)] string context)
+		public void LoadWith11([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{

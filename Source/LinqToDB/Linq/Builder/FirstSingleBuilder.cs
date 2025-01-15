@@ -90,10 +90,10 @@ namespace LinqToDB.Linq.Builder
 			if (argumentCount > 1)
 			{
 				var filterLambda = methodCall.Arguments[1].UnwrapLambda();
-				sequence = builder.BuildWhere(buildInfo.Parent, sequence, filterLambda, false, false, buildInfo.IsTest);
+				sequence = builder.BuildWhere(buildInfo.Parent, sequence, filterLambda, checkForSubQuery : false, enforceHaving : false, out var error);
 
 				if (sequence == null)
-					return BuildSequenceResult.Error(methodCall);
+					return BuildSequenceResult.Error(error ?? methodCall);
 			}
 
 			sequence = new SubQueryContext(sequence);
@@ -129,7 +129,7 @@ namespace LinqToDB.Linq.Builder
 
 			if (take != 0)
 			{
-				var takeExpression = new SqlValue(take);
+				var takeExpression = new SqlValue(sequence.MappingSchema.GetDbDataType(typeof(int)), take);
 				builder.BuildTake(sequence, takeExpression, null);
 			}
 
@@ -148,15 +148,15 @@ namespace LinqToDB.Linq.Builder
 				canBeWeak = true;
 			}
 
-			var firstSingleContext = new FirstSingleContext(buildInfo.Parent, sequence, methodKind, buildInfo.IsSubQuery, buildInfo.IsAssociation, canBeWeak, cardinality, buildInfo.IsTest);
-
+			var firstSingleContext = new FirstSingleContext(buildInfo.Parent, sequence, methodKind, buildInfo.IsSubQuery, buildInfo.IsAssociation, canBeWeak, cardinality);
+			
 			return BuildSequenceResult.FromContext(firstSingleContext);
 		}
 
 		public sealed class FirstSingleContext : SequenceContextBase
 		{
 			public FirstSingleContext(IBuildContext? parent, IBuildContext sequence, MethodKind methodKind,
-				bool isSubQuery, bool isAssociation, bool canBeWeak, SourceCardinality cardinality, bool isTest)
+				bool isSubQuery, bool isAssociation, bool canBeWeak, SourceCardinality cardinality)
 				: base(parent, sequence, null)
 			{
 				_methodKind   = methodKind;
@@ -164,7 +164,6 @@ namespace LinqToDB.Linq.Builder
 				IsAssociation = isAssociation;
 				CanBeWeak     = canBeWeak;
 				Cardinality   = cardinality;
-				IsTest        = isTest;
 			}
 
 			readonly MethodKind _methodKind;
@@ -172,7 +171,6 @@ namespace LinqToDB.Linq.Builder
 			public bool              IsSubQuery    { get; }
 			public bool              IsAssociation { get; }
 			public bool              CanBeWeak     { get; }
-			public bool              IsTest        { get; }
 			public SourceCardinality Cardinality   { get; set; }
 
 			public override bool IsOptional => (Cardinality & SourceCardinality.Zero) != 0 || Cardinality == SourceCardinality.Unknown;
@@ -235,18 +233,16 @@ namespace LinqToDB.Linq.Builder
 			bool _isJoinCreated;
 			bool _asSubquery;
 
-			void CreateJoin()
+			public void CreateJoin()
 			{
-				// sequence created in test mode and there can be no tables.
-				//
-				if (IsTest)
-					return;
-
 				if (_isJoinCreated  || _asSubquery)
 					return;
 
+				if (Parent == null)
+					return;
+
 				// process as subquery
-				if (Parent!.SelectQuery.From.Tables.Count == 0)
+				if (Parent.SelectQuery.From.Tables.Count == 0)
 				{
 					_asSubquery = true;
 					return;
@@ -271,7 +267,7 @@ namespace LinqToDB.Linq.Builder
 					return path;
 				}
 
-				if (!flags.IsTest() && IsSubQuery)
+				if (IsSubQuery)
 				{
 					CreateJoin();
 				}
@@ -286,8 +282,7 @@ namespace LinqToDB.Linq.Builder
 					if (Parent == null)
 						return path;
 
-					projected = Builder.BuildSqlExpression(this, projected, ProjectFlags.SQL,
-						buildFlags : ExpressionBuilder.BuildFlags.ForceAssignments);
+					projected = Builder.BuildSqlExpression(this, projected);
 
 					if (projected is SqlPlaceholderExpression placeholder)
 					{
@@ -313,11 +308,26 @@ namespace LinqToDB.Linq.Builder
 			public override IBuildContext Clone(CloningContext context)
 			{
 				return new FirstSingleContext(null, context.CloneContext(Sequence),
-					_methodKind, IsSubQuery, IsAssociation, CanBeWeak, Cardinality, false)
+					_methodKind, IsSubQuery, IsAssociation, CanBeWeak, Cardinality)
 				{
 					_isJoinCreated = _isJoinCreated
 				};
 			}
+
+			public override void Detach()
+			{
+				if (_isJoinCreated)
+				{
+					var joins = Parent!.SelectQuery.From.Tables[0].Joins;
+					var found = joins.Find(j => j.Table.Source == SelectQuery);
+					if (found != null)
+					{
+						joins.Remove(found);
+					}
+				}
+			}
+
+			public override bool IsSingleElement => true;
 		}
 	}
 }

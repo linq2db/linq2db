@@ -73,7 +73,7 @@ namespace LinqToDB.SqlQuery
 		/// <summary>
 		/// Source value expression.
 		/// </summary>
-		internal ISqlExpression? Source { get; }
+		internal ISqlExpression? Source { get; private set; }
 
 		/// <summary>
 		/// Used only during build.
@@ -233,5 +233,10 @@ namespace LinqToDB.SqlQuery
 		#region IEquatable
 		bool IEquatable<ISqlExpression>.Equals(ISqlExpression? other) => throw new NotImplementedException();
 		#endregion
+
+		public void Modify(ISqlExpression? source)
+		{
+			Source = source;
+		}
 	}
 }

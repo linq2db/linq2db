@@ -1,0 +1,14 @@
+﻿<#@ template language="C#" debug="True" hostSpecific="True"                             #>
+<#@ CleanupBehavior processor="T4VSHost" CleanupAfterProcessingtemplate="true"          #>
+<#@ output extension=".generated.cs"                                                    #>
+<#@ include file="$(LinqToDBT4MySqlTemplatesPath)LinqToDB.MySql.ttinclude"  once="true" #>
+<#@ include file="$(LinqToDBT4TemplatesPath)PluralizationService.ttinclude" once="true" #>
+<#@ include file="ConnectionStrings.ttinclude"                              once="true" #>
+<#
+	NamespaceName        = "MariaDB";
+	GenerateSchemaAsType = true;
+
+	LoadMySqlMetadata(GetConnectionString("MariaDB.11"));
+
+	GenerateModel();
+#>

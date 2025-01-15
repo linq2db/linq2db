@@ -19,6 +19,8 @@ namespace LinqToDB
 	using Async;
 	using Common;
 
+	using LinqToDB.Common.Internal;
+
 	[DebuggerStepThrough]
 	internal static class SharedTypeExtensions
 	{
@@ -422,7 +424,7 @@ namespace LinqToDB
 			// for all value types.
 			return CommonTypeDictionary.TryGetValue(type, out var value)
 				? value
-				: Activator.CreateInstance(type);
+				: ActivatorExt.CreateInstance(type);
 		}
 
 		/*[RequiresUnreferencedCode("Gets all types from the given assembly - unsafe for trimming")]*/

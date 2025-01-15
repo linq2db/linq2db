@@ -1,9 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
-using System.Linq.Expressions;
+
 using JetBrains.Annotations;
+
 using LinqToDB.Linq;
+using LinqToDB.Linq.Internal;
 using LinqToDB.SqlQuery;
 
 namespace Tests
@@ -12,18 +13,18 @@ namespace Tests
 	{
 		public static SqlStatement GetStatement<T>(this IQueryable<T> query)
 		{
-			var eq = (IExpressionQuery)query;
-			var expression = eq.Expression;
-			var info = Query<T>.GetQuery(eq.DataContext, ref expression, out _);
+			var eq          = (IExpressionQuery)query;
+			var expressions = (IQueryExpressions)new RuntimeExpressionsContainer(eq.Expression);
+			var info        = Query<T>.GetQuery(eq.DataContext, ref expressions, out _);
 
-			InitParameters(eq, info, expression);
+			InitParameters(eq, info, expressions);
 
 			return info.GetQueries().Single().Statement;
 		}
 
-		private static void InitParameters<T>(IExpressionQuery eq, Query<T> info, Expression expression)
+		private static void InitParameters<T>(IExpressionQuery eq, Query<T> info, IQueryExpressions expressions)
 		{
-			eq.DataContext.GetQueryRunner(info, eq.DataContext, 0, expression, null, null).GetSqlText();
+			eq.DataContext.GetQueryRunner(info, eq.DataContext, 0, expressions, null, null).GetSqlText();
 		}
 
 		public static SelectQuery GetSelectQuery<T>(this IQueryable<T> query)
@@ -73,15 +74,26 @@ namespace Tests
 			Query<T>.ClearCache();
 		}
 
-		public static Expression GetCacheExpression<T>(this IQueryable<T> query)
+		public static SqlParameter[] CollectParameters(this SqlStatement statement)
 		{
-			var expression = query.Expression;
-			var queryInternal =
-				Query<T>.GetQuery(
-					Internals.GetDataContext(query) ??
-					throw new InvalidOperationException("Could not retrieve DataContext."), ref expression, out _);
+			var parametersHash = new HashSet<SqlParameter>();
 
-			return queryInternal.GetExpression()!;
+			statement.VisitAll(parametersHash, static (parametersHash, expr) =>
+			{
+				switch (expr.ElementType)
+				{
+					case QueryElementType.SqlParameter:
+					{
+						var p = (SqlParameter)expr;
+						if (p.IsQueryParameter)
+							parametersHash.Add(p);
+
+						break;
+					}
+				}
+			});
+
+			return parametersHash.ToArray();
 		}
 
 	}

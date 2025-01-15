@@ -24,11 +24,11 @@ namespace LinqToDB.DataProvider.Access
 
 		protected override string? GetProviderTypeName(IDataContext dataContext, DbParameter parameter)
 		{
-			if (DataProvider is AccessOleDbDataProvider provider)
+			if (DataProvider is AccessDataProvider provider && provider.Provider == AccessProvider.OleDb)
 			{
 				var param = provider.TryGetProviderParameter(dataContext, parameter);
 				if (param != null)
-					return provider.Adapter.GetDbType(param).ToString();
+					return provider.Adapter.GetOleDbDbType!(param).ToString();
 			}
 
 			return base.GetProviderTypeName(dataContext, parameter);

@@ -78,9 +78,9 @@ namespace LinqToDB.SqlQuery
 		{
 			writer
 				//.DebugAppendUniqueId(this)
-				.Append('(')
+				.Append("{")
 				.AppendElement(SqlExpression)
-				.Append(")");
+				.Append("}");
 
 			if (CanBeNull)
 				writer.Append("?");

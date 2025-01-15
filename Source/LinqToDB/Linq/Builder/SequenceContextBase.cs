@@ -34,7 +34,7 @@ namespace LinqToDB.Linq.Builder
 		public override Expression MakeExpression(Expression path, ProjectFlags flags)
 		{
 			var newPath = SequenceHelper.CorrectExpression(path, this, Sequence);
-			var result = Builder.MakeExpression(Sequence, newPath, flags);
+			var result  = Builder.BuildExpression(Sequence, newPath);
 
 			if (ExpressionEqualityComparer.Instance.Equals(newPath, result))
 				return path;
@@ -56,14 +56,6 @@ namespace LinqToDB.Linq.Builder
 		public override SqlStatement GetResultStatement()
 		{
 			return Sequence.GetResultStatement();
-		}
-
-		public override void CompleteColumns()
-		{
-			foreach (var sequence in Sequences)
-			{
-				sequence.CompleteColumns();
-			}
 		}
 
 		public override void SetAlias(string? alias)

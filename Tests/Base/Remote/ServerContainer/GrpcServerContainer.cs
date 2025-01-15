@@ -5,6 +5,7 @@ using System.Diagnostics;
 using System.Security.Authentication;
 
 using LinqToDB;
+using LinqToDB.Data;
 using LinqToDB.Interceptors;
 using LinqToDB.Mapping;
 using LinqToDB.Remote;
@@ -19,11 +20,11 @@ using NUnit.Framework;
 
 using ProtoBuf.Grpc.Server;
 
-using Tests.Model;
-using Tests.Model.Remote.Grpc;
-
 namespace Tests.Remote.ServerContainer
 {
+	using Model;
+	using Model.Remote.Grpc;
+
 	public class GrpcServerContainer : IServerContainer
 	{
 		private const int Port = 22654;
@@ -35,31 +36,36 @@ namespace Tests.Remote.ServerContainer
 
 		private ConcurrentDictionary<int, TestGrpcLinqService> _openHosts = new();
 
-		private static string GetServiceUrl(int port) => $"https://localhost:{port}";
-
-		public ITestDataContext Prepare(
-			MappingSchema? ms,
-			IInterceptor? interceptor,
-			string configuration,
-			Func<DataOptions,DataOptions>? optionBuilder)
+		private static string GetServiceUrl(int port)
 		{
-			var service = OpenHost(ms, interceptor);
-
-			if (interceptor != null)
+#if NET6_0
+			// https://learn.microsoft.com/en-us/aspnet/core/grpc/troubleshoot?view=aspnetcore-7.0#unable-to-start-aspnet-core-grpc-app-on-macos
+			if (OperatingSystem.IsMacOS())
 			{
-				service.AddInterceptor(interceptor);
+				return $"http://localhost:{port}";
 			}
+#endif
+			return $"https://localhost:{port}";
+		}
+
+		private Func<string, MappingSchema?, DataConnection> _connectionFactory = null!;
+
+		ITestDataContext IServerContainer.CreateContext(
+			MappingSchema? ms,
+			string configuration,
+			Func<DataOptions,DataOptions>? optionBuilder,
+			Func<string, MappingSchema?, DataConnection> connectionFactory)
+		{
+			_connectionFactory = connectionFactory;
+			var service = OpenHost(ms);
 
 			var url = GetServiceUrl(GetPort());
 
 			var dx = new TestGrpcDataContext(
 				url,
-				() =>
-				{
-					if (interceptor != null)
-						service.RemoveInterceptor();
-				},
-				optionBuilder)
+				o => optionBuilder == null
+					? o.UseConfiguration(configuration)
+					: optionBuilder(o.UseConfiguration(configuration)))
 			{ ConfigurationString = configuration };
 
 			Debug.WriteLine(((IDataContext) dx).ConfigurationID, "Provider ");
@@ -70,7 +76,7 @@ namespace Tests.Remote.ServerContainer
 			return dx;
 		}
 
-		private TestGrpcLinqService OpenHost(MappingSchema? ms, IInterceptor? interceptor)
+		private TestGrpcLinqService OpenHost(MappingSchema? ms)
 		{
 			var port = GetPort();
 
@@ -89,11 +95,10 @@ namespace Tests.Remote.ServerContainer
 				}
 
 				service = new TestGrpcLinqService(
-					new LinqService()
+					new TestLinqService((c, ms) => _connectionFactory(c, ms))
 					{
 						AllowUpdates = true
-					},
-					interceptor);
+					});
 
 				if (ms != null)
 					service.MappingSchema = ms;
@@ -105,6 +110,17 @@ namespace Tests.Remote.ServerContainer
 				webBuilder =>
 				{
 					webBuilder.UseStartup<Startup>();
+
+#if NET6_0
+					// https://learn.microsoft.com/en-us/aspnet/core/grpc/troubleshoot?view=aspnetcore-7.0#unable-to-start-aspnet-core-grpc-app-on-macos
+					if (OperatingSystem.IsMacOS())
+					{
+						webBuilder.ConfigureKestrel(o =>
+						{
+							o.ListenLocalhost(port, o => o.Protocols = Microsoft.AspNetCore.Server.Kestrel.Core.HttpProtocols.Http2);
+						});
+					}
+#endif
 
 					var url = GetServiceUrl(port);
 					webBuilder.UseUrls(url);

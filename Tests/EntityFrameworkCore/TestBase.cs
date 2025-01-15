@@ -21,6 +21,12 @@ using NUnit.Framework;
 
 using Tests;
 
+#if NETFRAMEWORK
+using MySqlConnectionStringBuilder = MySql.Data.MySqlClient.MySqlConnectionStringBuilder;
+#else
+using MySqlConnectionStringBuilder = MySqlConnector.MySqlConnectionStringBuilder;
+#endif
+
 namespace LinqToDB.EntityFrameworkCore.Tests
 {
 	public abstract class TestBase
@@ -78,6 +84,8 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 			BaselinesManager.Dump(".EF6");
 #elif NET8_0
 			BaselinesManager.Dump(".EF8");
+#elif NET9_0
+			BaselinesManager.Dump(".EF9");
 #else
 #error Unknown framework
 #endif
@@ -146,5 +154,73 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 				Assert.That(exceptResult, Is.EqualTo(0), $"Expect Result{Environment.NewLine}{message}");
 			});
 		}
+
+		// use TFM-specific suffix to avoid database conflicts on parallel runs
+#if NETFRAMEWORK
+		private const string DB_SUFFIX = "ef31";
+#elif NET6_0
+		private const string DB_SUFFIX = "ef6";
+#elif NET8_0
+		private const string DB_SUFFIX = "ef8";
+#elif NET9_0
+		private const string DB_SUFFIX = "ef9";
+#else
+#error Unknown framework
+#endif
+
+
+		protected virtual string GetConnectionString(string provider)
+		{
+			var efProvider = provider + ".EF";
+			var connectionString = DataConnection.TryGetConnectionString(efProvider);
+
+			if (connectionString == null)
+			{
+				var originalCS = connectionString = DataConnection.GetConnectionString(provider);
+				var dbProvider = DataConnection.GetDataProvider(provider);
+
+				// create and register ef-specific connection string
+				// and create database if needed (if EnsureCreated doesn't do it)
+				switch (provider)
+				{
+					case var _ when provider.IsAnyOf(TestProvName.AllSqlServer):
+					{
+						var cnb = new Microsoft.Data.SqlClient.SqlConnectionStringBuilder(connectionString);
+						cnb.InitialCatalog += $".{DB_SUFFIX}";
+						connectionString = cnb.ConnectionString;
+						break;
+					}
+					case var _ when provider.IsAnyOf(TestProvName.AllPostgreSQL):
+					{
+						var cnb = new Npgsql.NpgsqlConnectionStringBuilder(connectionString);
+						cnb.Database += $"_{DB_SUFFIX}";
+						connectionString = cnb.ConnectionString;
+						break;
+					}
+					case var _ when provider.IsAnyOf(TestProvName.AllMySql):
+					{
+						var cnb = new MySqlConnectionStringBuilder(connectionString);
+						cnb.Database += $"_{DB_SUFFIX}";
+						cnb.PersistSecurityInfo = true;
+						connectionString = cnb.ConnectionString;
+						break;
+					}
+					case var _ when provider.IsAnyOf(TestProvName.AllSQLite):
+					{
+						var cnb = new Microsoft.Data.Sqlite.SqliteConnectionStringBuilder(connectionString);
+						cnb.DataSource = $"sqlite.{provider}.{DB_SUFFIX}.db";
+						connectionString = cnb.ConnectionString;
+						break;
+					}
+					default:
+						throw new InvalidOperationException($"{nameof(GetConnectionString)} is not implemented for provider {provider}");
+				}
+
+				DataConnection.AddConfiguration(efProvider, connectionString, dbProvider);
+			}
+
+			return connectionString;
+		}
+
 	}
 }

@@ -20,8 +20,9 @@ namespace LinqToDB.DataProvider
 
 	public class BasicBulkCopy
 	{
-		protected virtual int MaxParameters => 999;
-		protected virtual int MaxSqlLength  => 100000;
+		protected virtual int? MaxMultipleRows => null;
+		protected virtual int  MaxParameters   => 999;
+		protected virtual int  MaxSqlLength    => 100000;
 
 		protected virtual bool CastFirstRowLiteralOnUnionAll    => false;
 		protected virtual bool CastFirstRowParametersOnUnionAll => false;
@@ -531,21 +532,48 @@ namespace LinqToDB.DataProvider
 
 		protected BulkCopyRowsCopied MultipleRowsCopy1<T>(ITable<T> table, DataOptions options, IEnumerable<T> source)
 			where T : notnull
-			=> MultipleRowsCopy1(new MultipleRowsHelper<T>(table, options), source);
+		{
+			if (MaxMultipleRows != null
+				&& (options.BulkCopyOptions.MaxBatchSize == null
+					|| options.BulkCopyOptions.MaxBatchSize > MaxMultipleRows))
+			{
+				options = options.UseBulkCopyMaxBatchSize(MaxMultipleRows);
+			}
+
+			return MultipleRowsCopy1(new MultipleRowsHelper<T>(table, options), source);
+		}
 
 		protected BulkCopyRowsCopied MultipleRowsCopy1(MultipleRowsHelper helper, IEnumerable source)
 			=> MultipleRowsCopyHelper(helper, source, null, MultipleRowsCopy1Prep, MultipleRowsCopy1Add, MultipleRowsCopy1Finish,MaxParameters, MaxSqlLength);
 
 		protected Task<BulkCopyRowsCopied> MultipleRowsCopy1Async<T>(ITable<T> table, DataOptions options, IEnumerable<T> source, CancellationToken cancellationToken)
 			where T : notnull
-			=> MultipleRowsCopy1Async(new MultipleRowsHelper<T>(table, options), source, cancellationToken);
+		{
+			if (MaxMultipleRows != null
+				&& (options.BulkCopyOptions.MaxBatchSize == null
+					|| options.BulkCopyOptions.MaxBatchSize > MaxMultipleRows))
+			{
+				options = options.UseBulkCopyMaxBatchSize(MaxMultipleRows);
+			}
+
+			return MultipleRowsCopy1Async(new MultipleRowsHelper<T>(table, options), source, cancellationToken);
+		}
 
 		protected Task<BulkCopyRowsCopied> MultipleRowsCopy1Async(MultipleRowsHelper helper, IEnumerable source, CancellationToken cancellationToken)
 			=> MultipleRowsCopyHelperAsync(helper, source, null, MultipleRowsCopy1Prep, MultipleRowsCopy1Add, MultipleRowsCopy1Finish, cancellationToken, MaxParameters, MaxSqlLength);
 
 		protected Task<BulkCopyRowsCopied> MultipleRowsCopy1Async<T>(ITable<T> table, DataOptions options, IAsyncEnumerable<T> source, CancellationToken cancellationToken)
-		where T: notnull
-			=> MultipleRowsCopy1Async(new MultipleRowsHelper<T>(table, options), source, cancellationToken);
+		where T : notnull
+		{
+			if (MaxMultipleRows != null
+				&& (options.BulkCopyOptions.MaxBatchSize == null
+					|| options.BulkCopyOptions.MaxBatchSize > MaxMultipleRows))
+			{
+				options = options.UseBulkCopyMaxBatchSize(MaxMultipleRows);
+			}
+
+			return MultipleRowsCopy1Async(new MultipleRowsHelper<T>(table, options), source, cancellationToken);
+		}
 
 		protected Task<BulkCopyRowsCopied> MultipleRowsCopy1Async<T>(MultipleRowsHelper helper, IAsyncEnumerable<T> source, CancellationToken cancellationToken)
 		where T: notnull
@@ -597,21 +625,48 @@ namespace LinqToDB.DataProvider
 
 		protected BulkCopyRowsCopied MultipleRowsCopy2<T>(ITable<T> table, DataOptions options, IEnumerable<T> source, string from)
 			where T : notnull
-			=> MultipleRowsCopy2(new MultipleRowsHelper<T>(table, options), source, from);
+		{
+			if (MaxMultipleRows != null
+				&& (options.BulkCopyOptions.MaxBatchSize == null
+					|| options.BulkCopyOptions.MaxBatchSize > MaxMultipleRows))
+			{
+				options = options.UseBulkCopyMaxBatchSize(MaxMultipleRows);
+			}
+
+			return MultipleRowsCopy2(new MultipleRowsHelper<T>(table, options), source, from);
+		}
 
 		protected BulkCopyRowsCopied MultipleRowsCopy2(MultipleRowsHelper helper, IEnumerable source, string from)
 			=> MultipleRowsCopyHelper(helper, source, from, MultipleRowsCopy2Prep, MultipleRowsCopy2Add, MultipleRowsCopy2Finish, MaxParameters, MaxSqlLength);
 
 		protected Task<BulkCopyRowsCopied> MultipleRowsCopy2Async<T>(ITable<T> table, DataOptions options, IEnumerable<T> source, string from, CancellationToken cancellationToken)
 			where T : notnull
-			=> MultipleRowsCopy2Async(new MultipleRowsHelper<T>(table, options), source, from, cancellationToken);
+		{
+			if (MaxMultipleRows != null
+				&& (options.BulkCopyOptions.MaxBatchSize == null
+					|| options.BulkCopyOptions.MaxBatchSize > MaxMultipleRows))
+			{
+				options = options.UseBulkCopyMaxBatchSize(MaxMultipleRows);
+			}
+
+			return MultipleRowsCopy2Async(new MultipleRowsHelper<T>(table, options), source, from, cancellationToken);
+		}
 
 		protected Task<BulkCopyRowsCopied> MultipleRowsCopy2Async(MultipleRowsHelper helper, IEnumerable source, string from, CancellationToken cancellationToken)
 			=> MultipleRowsCopyHelperAsync(helper, source, from, MultipleRowsCopy2Prep, MultipleRowsCopy2Add, MultipleRowsCopy2Finish, cancellationToken, MaxParameters, MaxSqlLength);
 
 		protected Task<BulkCopyRowsCopied> MultipleRowsCopy2Async<T>(ITable<T> table, DataOptions options, IAsyncEnumerable<T> source, string from, CancellationToken cancellationToken)
-		where T: notnull
-			=> MultipleRowsCopy2Async(new MultipleRowsHelper<T>(table, options), source, from, cancellationToken);
+		where T : notnull
+		{
+			if (MaxMultipleRows != null
+				&& (options.BulkCopyOptions.MaxBatchSize == null
+					|| options.BulkCopyOptions.MaxBatchSize > MaxMultipleRows))
+			{
+				options = options.UseBulkCopyMaxBatchSize(MaxMultipleRows);
+			}
+
+			return MultipleRowsCopy2Async(new MultipleRowsHelper<T>(table, options), source, from, cancellationToken);
+		}
 
 		protected Task<BulkCopyRowsCopied> MultipleRowsCopy2Async<T>(MultipleRowsHelper helper, IAsyncEnumerable<T> source, string from, CancellationToken cancellationToken)
 		where T: notnull

@@ -3,18 +3,20 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
-using System.Text.RegularExpressions;
 using System.Threading;
 
 using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.DataProvider.Firebird;
 
+using NUnit.Framework;
+
 namespace Tests
 {
 	using Model;
 #if NETFRAMEWORK
 	using Model.Remote.Wcf;
+
 #else
 	using Model.Remote.Grpc;
 #endif
@@ -139,11 +141,11 @@ namespace Tests
 		{
 			return context switch
 			{
-				string when context.IsAnyOf(TestProvName.AllSQLite)   => "main",
+				string when context.IsAnyOf(TestProvName.AllSQLite)      => "main",
 				// Access adds extension automatically to database name, but if there are
 				// dots in name, extension not added as dot treated as extension separator by Access
-				string when context.IsAnyOf(ProviderName.Access)      => "Database\\TestData",
-				string when context.IsAnyOf(ProviderName.AccessOdbc)  => "Database\\TestData.ODBC.mdb",
+				string when context.IsAnyOf(TestProvName.AllAccessOleDb) => "Database\\TestData",
+				string when context.IsAnyOf(TestProvName.AllAccessOdbc)  => "Database\\TestData.ODBC.mdb",
 				string when context.IsAnyOf(
 					TestProvName.AllMySql,
 					TestProvName.AllClickHouse,
@@ -158,7 +160,7 @@ namespace Tests
 
 		public static bool ProviderNeedsTimeFix(this IDataContext db, string context)
 		{
-			if (context.IsAnyOf(ProviderName.AccessOdbc))
+			if (context.IsAnyOf(TestProvName.AllAccessOdbc))
 			{
 				// ODBC driver strips milliseconds from values on both save and load
 				return true;
@@ -301,6 +303,8 @@ namespace Tests
 			return "NET60";
 #elif NET8_0
 			return "NET80";
+#elif NET9_0
+			return "NET90";
 #elif NETFRAMEWORK
 			return "NETFX";
 #else
@@ -343,6 +347,37 @@ namespace Tests
 			}
 
 			return tableName;
+		}
+
+		public static void DeleteTestCases()
+		{
+			var fileName = GetTestFilePath();
+
+			if (File.Exists(fileName))
+				File.Delete(fileName);
+		}
+
+		public static string? GetLastTestCase()
+		{
+			var fileName = GetTestFilePath();
+
+			TestContext.Out.WriteLine($"Test expression file: {fileName} ({File.Exists(fileName)})");
+
+			if (File.Exists(fileName))
+				return File.ReadAllText(fileName);
+
+			return null;
+		}
+
+		// sync logic with ExpressionTestGenerator.GetTestFilePath
+		static string GetTestFilePath()
+		{
+			var dir = Path.Combine(Path.GetTempPath(), "linq2db");
+
+			if (!Directory.Exists(dir))
+				Directory.CreateDirectory(dir);
+
+			return Path.Combine(dir, FormattableString.Invariant($"ExpressionTest.0.cs"));
 		}
 	}
 }

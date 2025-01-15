@@ -17,6 +17,8 @@ using NUnit.Framework;
 
 namespace Tests.DataProvider
 {
+	using System.Globalization;
+
 	using Model;
 
 	[TestFixture]
@@ -135,12 +137,12 @@ namespace Tests.DataProvider
 
 			conn.InlineParameters = false;
 
-			Debug.WriteLine("{0} -> DataType.{1}",  typeof(T), dataType);
-			Assert.That(conn.Execute<T>("SELECT @p", new DataParameter { Name = "p", DataType = dataType, Value = expectedValue }), Is.EqualTo(expectedValue));
-			Debug.WriteLine("{0} -> auto", typeof(T));
-			Assert.That(conn.Execute<T>("SELECT @p", new DataParameter { Name = "p", Value = expectedValue }), Is.EqualTo(expectedValue));
-			Debug.WriteLine("{0} -> new",  typeof(T));
-			Assert.That(conn.Execute<T>("SELECT @p", new { p = expectedValue }), Is.EqualTo(expectedValue));
+			Assert.Multiple(() =>
+			{
+				Assert.That(conn.Execute<T>("SELECT @p", new DataParameter { Name = "p", DataType = dataType, Value = expectedValue }), Is.EqualTo(expectedValue));
+				Assert.That(conn.Execute<T>("SELECT @p", new DataParameter { Name = "p", Value = expectedValue }), Is.EqualTo(expectedValue));
+				Assert.That(conn.Execute<T>("SELECT @p", new { p = expectedValue }), Is.EqualTo(expectedValue));
+			});
 		}
 
 		static void TestSimple<T>(DataConnection conn, T expectedValue, DataType dataType, string skip = "")
@@ -771,7 +773,7 @@ namespace Tests.DataProvider
 					expectedVersion = "3.46.1";
 					break;
 				case ProviderName.SQLiteMS:
-					expectedVersion = "3.41.2";
+					expectedVersion = "3.46.1";
 					break;
 				default:
 					throw new InvalidOperationException();
@@ -785,6 +787,153 @@ namespace Tests.DataProvider
 
 				Assert.That(version, Is.EqualTo(expectedVersion));
 			}
+		}
+
+		[ActiveIssue]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/3899")]
+		public void Issue3899Test([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable<Issue3899Table>();
+
+			db.Insert(new Issue3899Table()
+			{
+				Value1 = ulong.MinValue,
+				Value2 = ulong.MaxValue,
+			});
+
+			var res = tb.Single();
+
+			Assert.Multiple(() =>
+			{
+				Assert.That(res.Value1, Is.EqualTo(ulong.MinValue));
+				Assert.That(res.Value2, Is.EqualTo(ulong.MaxValue));
+			});
+		}
+
+		sealed class Issue3899Table
+		{
+			public ulong  Value1 { get; set; }
+			public ulong? Value2 { get; set; }
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/3766")]
+		public void Issue3766Test1([IncludeDataSources(true, TestProvName.AllSQLite)] string context, [Values] bool inline)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable<Issue3766Table>();
+			db.InlineParameters = inline;
+
+			var record = new Issue3766Table() { Id = TestData.DateTimeOffsetUtc };
+			db.InsertOrReplace(record);
+			db.InsertOrReplace(record);
+		}
+
+		[ActiveIssue(Configuration = TestProvName.AllSQLiteClassic)]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/3766")]
+		public void Issue3766Test2([IncludeDataSources(true, TestProvName.AllSQLite)] string context, [Values] bool inline)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable<Issue3766Table>();
+			db.InlineParameters = inline;
+
+			var record = new Issue3766Table() { Id = TestData.DateTimeOffsetUtc };
+			db.Insert(record);
+			var cnt = db.Update(record);
+
+			Assert.That(cnt, Is.EqualTo(1));
+		}
+
+		[Table]
+		sealed class Issue3766Table
+		{
+			[PrimaryKey] public DateTimeOffset Id { get; set; }
+			[Column] public int Value { get; set; }
+		}
+
+		[ActiveIssue]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/2432")]
+		public void Issue2432Test1([IncludeDataSources(true, TestProvName.AllSQLite)] string context, [Values] bool inline)
+		{
+			var ms = new MappingSchema();
+
+			ms.SetDataType(typeof(DateTime), DataType.Int64);
+			ms.SetConvertExpression(
+				(long ticks) => new DateTime(ticks, DateTimeKind.Unspecified)
+			);
+			ms.SetConvertExpression(
+				(DateTime dt) => dt.Ticks
+			);
+			ms.SetValueToSqlConverter(
+				typeof(DateTime),
+				(sb, dType, v) => sb.Append(((DateTime)v).Ticks.ToString(CultureInfo.InvariantCulture))
+			);
+
+			using var db = GetDataContext(context, ms);
+			using var tb = db.CreateLocalTable<Issue2432Table>();
+			db.InlineParameters = inline;
+
+			var record = new Issue2432Table() { DateTime = TestData.DateTime };
+
+			db.Insert(record);
+			var cnt = db.Update(record);
+			var result = tb.Where(r => r.DateTime == TestData.DateTime).Single();
+
+			Assert.Multiple(() =>
+			{
+				Assert.That(cnt, Is.EqualTo(1));
+				Assert.That(result.DateTime, Is.EqualTo(TestData.DateTime));
+			});
+		}
+
+		[ActiveIssue]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/2432")]
+		public void Issue2432Test2([IncludeDataSources(true, TestProvName.AllSQLite)] string context, [Values] bool inline)
+		{
+			var ms = new MappingSchema();
+
+			ms.SetDataType(typeof(DateTime), DataType.Int64);
+			ms.SetConvertExpression(
+				(long ticks) => new DateTime(ticks, DateTimeKind.Unspecified)
+			);
+			ms.SetConvertExpression(
+				(DateTime dt) => dt.Ticks
+			);
+			ms.SetValueToSqlConverter(
+				typeof(DateTime),
+				(sb, dType, v) => sb.Append(((DateTime)v).Ticks.ToString(CultureInfo.InvariantCulture))
+			);
+
+			using var db = GetDataContext(context, ms);
+			using var tb = db.CreateLocalTable<Issue2432Table>();
+			db.InlineParameters = inline;
+
+			var record = new Issue2432Table() { DateTime = TestData.DateTime };
+
+			db.Insert(record);
+
+			var result = tb.Where(r => r.DateTime == TestData.DateTime).Single();
+			Assert.That(result.DateTime, Is.EqualTo(TestData.DateTime));
+		}
+
+		[Table]
+		sealed class Issue2432Table
+		{
+			[PrimaryKey] public DateTime DateTime { get; set; }
+			[Column] public int Field { get; set; }
+		}
+
+		[ActiveIssue]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/2099")]
+		public void Issue2099Test([IncludeDataSources(true, TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable<Issue2099Table>();
+		}
+
+		sealed class Issue2099Table
+		{
+			[PrimaryKey, Identity] public long Id { get; set; }
 		}
 	}
 }

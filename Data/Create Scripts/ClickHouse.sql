@@ -108,7 +108,8 @@ CREATE TABLE AllTypes
 	ncharDataType            Nullable(FixedString(20)),
 	char20DataType           Nullable(FixedString(20)),
 	varcharDataType          Nullable(String),
-	charDataType             Nullable(FixedString(1))
+	charDataType             Nullable(FixedString(1)),
+	bitDataType              Nullable(BIT)
 
 ) ENGINE = MergeTree() ORDER BY ID PRIMARY KEY ID;
 GO

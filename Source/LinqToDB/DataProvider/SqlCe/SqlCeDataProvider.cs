@@ -37,6 +37,8 @@ namespace LinqToDB.DataProvider.SqlCe
 			SqlProviderFlags.IsUpdateFromSupported                = false;
 			SqlProviderFlags.IsCountDistinctSupported             = false;
 			SqlProviderFlags.IsAggregationDistinctSupported       = false;
+			SqlProviderFlags.SupportsBooleanType                  = false;
+			SqlProviderFlags.IsWindowFunctionsSupported           = false;
 
 			SetCharFieldToType<char>("NChar", DataTools.GetCharExpression);
 

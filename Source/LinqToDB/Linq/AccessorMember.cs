@@ -9,17 +9,6 @@ namespace LinqToDB.Linq
 	[DebuggerDisplay("Member: {MemberInfo.Name}")]
 	public class AccessorMember
 	{
-		public AccessorMember(MemberInfo memberInfo)
-		{
-			MemberInfo = memberInfo;
-		}
-
-		public AccessorMember(MemberInfo memberInfo, ReadOnlyCollection<Expression>? arguments)
-		{
-			MemberInfo = memberInfo;
-			Arguments  = arguments;
-		}
-
 		public AccessorMember(Expression expression)
 		{
 			if (expression is MethodCallExpression mc)

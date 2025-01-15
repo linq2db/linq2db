@@ -1,0 +1,26 @@
+<#@ assembly name="$(LinqToDBT4MySqlClientPath)MySqlConnector.dll"                #>
+<#@ include file="$(LinqToDBT4TemplatesPath)LinqToDB.ttinclude"       once="true" #>
+<#@ include file="$(LinqToDBT4TemplatesPath)LinqToDB.Tools.ttinclude" once="true" #>
+<#+
+LinqToDB.Data.DataConnection GetMySqlConnection(string connectionString)
+{
+	return LinqToDB.DataProvider.MySql.MySqlTools.CreateDataConnection(connectionString, provider: LinqToDB.DataProvider.MySql.MySqlProvider.MySqlConnector);
+}
+
+LinqToDB.Data.DataConnection GetMySqlConnection(string server, string database, string uid, string password, int port=3306)
+{
+	return GetMySqlConnection(string.Format("Server={0};Port={1};Database={2};Uid={3};Pwd={4};charset=utf8;", server, port, database, uid, password));
+}
+
+public void LoadMySqlMetadata(string connectionString)
+{
+	using (var dataConnection = GetMySqlConnection(connectionString))
+		LoadMetadata(dataConnection);
+}
+
+public void LoadMySqlMetadata(string server, string database, string uid, string password,int port=3306)
+{
+	using (var dataConnection = GetMySqlConnection(server, database, uid, password, port))
+		LoadMetadata(dataConnection);
+}
+#>

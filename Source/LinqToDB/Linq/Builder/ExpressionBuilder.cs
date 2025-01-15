@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data.Common;
+using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Linq.Expressions;
@@ -11,6 +12,7 @@ namespace LinqToDB.Linq.Builder
 {
 	using Common;
 	using Common.Internal;
+	using DataProvider;
 	using Extensions;
 	using Infrastructure;
 	using LinqToDB.Expressions;
@@ -19,7 +21,6 @@ namespace LinqToDB.Linq.Builder
 	using Tools;
 	using Translation;
 	using Visitors;
-	using DataProvider;
 
 	internal sealed partial class ExpressionBuilder : IExpressionEvaluator
 	{
@@ -31,13 +32,6 @@ namespace LinqToDB.Linq.Builder
 			return builder != null;
 		}
 
-		public ISequenceBuilder FindBuilder(BuildInfo info)
-		{
-			return FindBuilderImpl(info, this) is {} builder
-				? builder 
-				: throw new LinqException($"Sequence '{SqlErrorExpression.PrepareExpressionString(info.Expression)}' cannot be converted to SQL.");
-		}
-
 		// Declaring a partial FindBuilderImpl so that the source generator doesn't change semantics
 		// and can use `RegisterImplementationSourceOutput` which is less taxing for VS / IDE.
 		private static partial ISequenceBuilder? FindBuilderImpl(BuildInfo info, ExpressionBuilder builder);
@@ -46,18 +40,21 @@ namespace LinqToDB.Linq.Builder
 
 		#region Pools
 
-		public static readonly ObjectPool<SelectQuery> QueryPool = new(() => new SelectQuery(), sq => sq.Cleanup(), 100);
-		public static readonly ObjectPool<ParentInfo> ParentInfoPool = new(() => new ParentInfo(), pi => pi.Cleanup(), 100);
+		public static readonly ObjectPool<SelectQuery>               QueryPool               = new(() => new SelectQuery(), sq => sq.Cleanup(), 100);
+		public static readonly ObjectPool<ParentInfo>                ParentInfoPool           = new(() => new ParentInfo(), pi => pi.Cleanup(), 100);
+
+		static readonly ObjectPool<PlaceholderCollectVisitor> _placeholderCollectorPool = new(() => new PlaceholderCollectVisitor(), sq => sq.Cleanup(), 100);
 
 		#endregion
 
 		#region Init
 
-		readonly Query                             _query;
-		bool                                       _validateSubqueries;
-		readonly IMemberTranslator                 _memberTranslator;
-		readonly ExpressionTreeOptimizationContext _optimizationContext;
-		readonly ParametersContext                 _parametersContext;
+		readonly          Query                             _query;
+		internal readonly IMemberTranslator                 _memberTranslator;
+		readonly          ExpressionTreeOptimizationContext _optimizationContext;
+		readonly          ParametersContext                 _parametersContext;
+
+		ExpressionBuildVisitor _buildVisitor;
 
 		public ExpressionTreeOptimizationContext   OptimizationContext => _optimizationContext;
 		public ParametersContext                   ParametersContext   => _parametersContext;
@@ -65,6 +62,8 @@ namespace LinqToDB.Linq.Builder
 		public SqlComment?                      Tag;
 		public List<SqlQueryExtension>?         SqlQueryExtensions;
 		public List<TableBuilder.TableContext>? TablesInScope;
+
+		public bool ValidateSubqueries { get; }
 
 		public readonly DataOptions DataOptions;
 
@@ -75,19 +74,18 @@ namespace LinqToDB.Linq.Builder
 			ParametersContext                 parametersContext,
 			IDataContext                      dataContext,
 			Expression                        expression,
-			ParameterExpression[]?            compiledParameters,
 			object?[]?                        parameterValues)
 		{
-			_query               = query;
-			_validateSubqueries  = validateSubqueries;
+			_query             = query;
+			ValidateSubqueries = validateSubqueries;
 
-			CompiledParameters = compiledParameters;
 			ParameterValues    = parameterValues;
 			DataContext        = dataContext;
 			DataOptions        = dataContext.Options;
-			OriginalExpression = expression;
 
 			_memberTranslator = ((IInfrastructure<IServiceProvider>)dataContext).Instance.GetRequiredService<IMemberTranslator>();
+
+			_buildVisitor = new ExpressionBuildVisitor(this);
 
 			if (DataOptions.DataContextOptions.MemberTranslators != null)
 			{
@@ -105,16 +103,15 @@ namespace LinqToDB.Linq.Builder
 		#region Public Members
 
 		public readonly IDataContext           DataContext;
-		public readonly Expression             OriginalExpression;
 		public readonly Expression             Expression;
 		public readonly ParameterExpression[]? CompiledParameters;
 		public readonly object?[]?             ParameterValues;
 
-		public static readonly ParameterExpression QueryRunnerParam = Expression.Parameter(typeof(IQueryRunner), "qr");
-		public static readonly ParameterExpression DataReaderParam  = Expression.Parameter(typeof(DbDataReader), "rd");
-		public static readonly ParameterExpression ParametersParam  = Expression.Parameter(typeof(object[]),     "ps");
-		public static readonly ParameterExpression ExpressionParam  = Expression.Parameter(typeof(Expression),   "expr");
-		public static readonly ParameterExpression RowCounterParam  = Expression.Parameter(typeof(int),          "counter");
+		public static readonly ParameterExpression QueryRunnerParam              = Expression.Parameter(typeof(IQueryRunner), "qr");
+		public static readonly ParameterExpression DataReaderParam               = Expression.Parameter(typeof(DbDataReader), "rd");
+		public static readonly ParameterExpression ParametersParam               = Expression.Parameter(typeof(object[]),     "ps");
+		public static readonly ParameterExpression QueryExpressionContainerParam = Expression.Parameter(typeof(IQueryExpressions), "container");
+		public static readonly ParameterExpression RowCounterParam               = Expression.Parameter(typeof(int),          "counter");
 
 		public MappingSchema MappingSchema => DataContext.MappingSchema;
 
@@ -122,7 +119,7 @@ namespace LinqToDB.Linq.Builder
 
 		#region Builder SQL
 
-		public Query<T> Build<T>()
+		public Query<T> Build<T>(ref IQueryExpressions expressions)
 		{
 			using var m = ActivityService.Start(ActivityID.Build);
 
@@ -130,7 +127,7 @@ namespace LinqToDB.Linq.Builder
 
 			using var mq = ActivityService.Start(ActivityID.BuildQuery);
 
-			_query.Init(sequence, _parametersContext.CurrentSqlParameters);
+			_query.Init(sequence);
 
 			var param = Expression.Parameter(typeof(Query<T>), "info");
 
@@ -153,9 +150,8 @@ namespace LinqToDB.Linq.Builder
 				}
 
 				_query.SetPreambles(preambles);
-				_query.SetParameterized(_parametersContext.GetParameterized());
-				_query.SetParametersDuplicates(_parametersContext.GetParameterDuplicates());
-				_query.SetDynamicAccessors(_parametersContext.GetDynamicAccessors());
+
+				expressions = FinalizeQueryCacheInformation((Query<T>)_query, preambles);
 			}
 
 			return (Query<T>)_query;
@@ -168,7 +164,7 @@ namespace LinqToDB.Linq.Builder
 			ref List<Preamble>? preambles,
 			Expression[]        previousKeys)
 		{
-			var expr = MakeExpression(sequence, new ContextRefExpression(typeof(T), sequence), ProjectFlags.Expression);
+			var expr = _buildVisitor.BuildExpression(sequence, new ContextRefExpression(typeof(T), sequence), buildPurpose: BuildPurpose.Expression);
 
 			var finalized = FinalizeProjection(query, sequence, expr, queryParameter, ref preambles, previousKeys);
 
@@ -195,17 +191,82 @@ namespace LinqToDB.Linq.Builder
 					}
 				}
 
+				// Applying accessors to all found constants in mapping expression
+				finalized = ParametersContext.ApplyAccessors(finalized);
+
 				query.IsFinalized = true;
+				sequence.SetRunQuery(query, finalized);
+				FinalizeQueryCacheInformation(query, preambles);
 			}
 
-			sequence.SetRunQuery(query, finalized);
+			return true;
+		}
+
+		IQueryExpressions FinalizeQueryCacheInformation<T>(Query<T> query, List<Preamble>? preambles)
+		{
+			List<SqlParameter>? builtParameters = null;
+			List<SqlValue>?     builtValues     = null;
+
+			if (ParametersContext.CacheManager.HasParameters || ParametersContext.CacheManager.HasConstants)
+			{
+				var usedParameters = new HashSet<SqlParameter>();
+				var usedValues     = new HashSet<SqlValue>();
+
+				foreach (var queryInfo in query.Queries)
+				{
+					QueryHelper.CollectParametersAndValues(queryInfo.Statement, usedParameters, usedValues);
+				}
+
+				if (preambles?.Count > 0)
+				{
+					foreach (var preamble in preambles)
+					{
+						preamble.GetUsedParametersAndValues(usedParameters, usedValues);
+					}
+				}
+
+				builtParameters = usedParameters.ToList();
+				builtValues     = usedValues.ToList();
+			}
+
+			var (compareInfo, parameterAccessors, expressions) = ParametersContext.CacheManager.BuildQueryCacheCompareInfo(this, DataContext, ParametersContext.ParametersExpression, builtParameters, builtValues);
+			
+			query.ParameterAccessors = parameterAccessors;
+			query.CompareInfo        = compareInfo;
+			query.BuiltParameters    = builtParameters;
+
+			return expressions;
+		}
+
+		Stack<Expression>? _recursiveBuildItems;
+
+		internal void PushRecursive(Expression expression)
+		{
+			_recursiveBuildItems ??= new();
+			_recursiveBuildItems.Push(expression);
+		}
+
+		internal void PopRecursive(Expression expression)
+		{
+			if (_recursiveBuildItems == null || _recursiveBuildItems.Count == 0 || !ReferenceEquals(expression, _recursiveBuildItems.Pop()))
+				throw new InvalidOperationException("Wrong Push/Pop for Recursive Build");
+		}
+
+		internal bool IsUnderRecursiveBuild(Expression expression)
+		{
+			if (_recursiveBuildItems == null || _recursiveBuildItems.Count == 0)
+				return false;
+
+			if (!_recursiveBuildItems.Contains(expression, ExpressionEqualityComparer.Instance))
+				return false;
+
 			return true;
 		}
 
 		/// <summary>
 		/// Used internally to avoid RecursiveCTE build failing
 		/// </summary>
-		internal bool IsRecursiveBuild { get; set; }
+		internal bool IsRecursiveBuild => _recursiveBuildItems?.Count > 0;
 
 		/// <summary>
 		/// Contains information from which expression sequence were built. Used for Eager Loading.
@@ -236,20 +297,28 @@ namespace LinqToDB.Linq.Builder
 		Expression UnwrapSequenceExpression(Expression expression)
 		{
 			var result = expression.Unwrap();
+
+			if (result is SqlDefaultIfEmptyExpression defaultIfEmpty)
+				result = UnwrapSequenceExpression(defaultIfEmpty.InnerExpression);
+
+			if (result.NodeType is ExpressionType.Conditional)
+			{
+				var newResult = RemoveNullPropagation(result, true);
+
+				if (!ReferenceEquals(newResult, result))
+					return UnwrapSequenceExpression(newResult);
+			}
+
 			return result;
 		}
 
 		Expression ExpandToRoot(Expression expression, BuildInfo buildInfo)
 		{
-			var flags = buildInfo.IsAggregation ? ProjectFlags.AggregationRoot : ProjectFlags.Root;
-
-			flags = buildInfo.GetFlags(flags) | ProjectFlags.Subquery;
-
 			expression = UnwrapSequenceExpression(expression);
 			Expression result;
 			do
 			{
-				result = MakeExpression(buildInfo.Parent, expression, flags);
+				result = buildInfo.IsAggregation ? BuildAggregationRootExpression(expression) : BuildSubqueryExpression(expression);
 				result = UnwrapSequenceExpression(result);
 
 				if (ExpressionEqualityComparer.Instance.Equals(expression, result))
@@ -278,14 +347,16 @@ namespace LinqToDB.Linq.Builder
 
 			using var mb = ActivityService.Start(ActivityID.BuildSequenceBuild);
 
+			#if DEBUG
+
+			Debug.WriteLine($"Building {builder.GetType().Name}");
+
+			#endif
+
 			var result = builder.BuildSequence(this, buildInfo);
 
 			if (result.BuildContext != null)
 			{
-#if BUGCHECK
-				if (!buildInfo.IsTest)
-					QueryHelper.DebugCheckNesting(result.BuildContext.GetResultStatement(), buildInfo.IsSubQuery);
-#endif
 				RegisterSequenceExpression(result.BuildContext, originalExpression);
 			}
 
@@ -332,36 +403,11 @@ namespace LinqToDB.Linq.Builder
 
 		#region ConvertExpression
 
-		public ParameterExpression? SequenceParameter;
-
 		public Expression ConvertExpressionTree(Expression expression)
 		{
 			var expr = ExposeExpression(expression, DataContext, _optimizationContext, ParameterValues, optimizeConditions:false, compactBinary:true);
 
 			return expr;
-		}
-
-		#endregion
-
-		#region ConvertParameters
-
-		Expression ConvertParameters(Expression expression)
-		{
-			if (CompiledParameters == null) return expression;
-
-			return expression.Transform(CompiledParameters, static(compiledParameters, expr) =>
-			{
-				if (expr.NodeType == ExpressionType.Parameter)
-				{
-					var idx = Array.IndexOf(compiledParameters, (ParameterExpression)expr);
-					if (idx >= 0)
-						return Expression.Convert(
-							Expression.ArrayIndex(ParametersParam, ExpressionInstances.Int32(idx)),
-							expr.Type);
-				}
-
-				return expr;
-			});
 		}
 
 		#endregion
@@ -374,7 +420,7 @@ namespace LinqToDB.Linq.Builder
 		{
 			using var visitor = _exposeVisitorPool.Allocate();
 
-			var result = visitor.Value.ExposeExpression(dataContext, optimizationContext, parameterValues, expression, false, optimizeConditions, compactBinary);
+			var result = visitor.Value.ExposeExpression(dataContext, optimizationContext, parameterValues, expression, false, optimizeConditions, compactBinary, isSingleConvert: false);
 
 			return result;
 		}
@@ -384,7 +430,6 @@ namespace LinqToDB.Linq.Builder
 		#region OptimizeExpression
 
 		public static readonly MethodInfo[] EnumerableMethods      = typeof(Enumerable     ).GetMethods();
-		public static readonly MethodInfo[] QueryableMethods       = typeof(Queryable      ).GetMethods();
 
 		#endregion
 
@@ -491,7 +536,7 @@ namespace LinqToDB.Linq.Builder
 
 		public bool CanBeEvaluated(Expression expression)
 		{
-			return CanBeCompiled(expression, false);
+			return CanBeEvaluatedOnClient(expression);
 		}
 
 		public object? Evaluate(Expression expression)

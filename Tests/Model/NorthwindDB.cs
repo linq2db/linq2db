@@ -14,6 +14,10 @@ namespace Tests.Model
 		{
 		}
 
+		public NorthwindDB(DataOptions options) : base(options)
+		{
+		}
+
 		public ITable<Northwind.Category>            Category            { get { return this.GetTable<Northwind.Category>();            } }
 		public ITable<Northwind.Customer>            Customer            { get { return this.GetTable<Northwind.Customer>();            } }
 		public ITable<Northwind.Employee>            Employee            { get { return this.GetTable<Northwind.Employee>();            } }

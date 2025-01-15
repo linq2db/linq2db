@@ -39,14 +39,14 @@ namespace LinqToDB.Linq
 
 				sqlTable.Set(ifExists, TableOptions.DropIfExists);
 
-				var query = new Query<int>(dataContext, null)
+				var query = new Query<int>(dataContext)
 				{
 					Queries = { new QueryInfo { Statement = dropTable } }
 				};
 
 				SetNonQueryQuery(query);
 
-				query.GetElement(dataContext, ExpressionInstances.UntypedNull, null, null);
+				query.GetElement(dataContext, EmptyQueryExpressions, null, null);
 			}
 
 			public static async Task QueryAsync(
@@ -77,14 +77,14 @@ namespace LinqToDB.Linq
 
 					sqlTable.Set(ifExists, TableOptions.DropIfExists);
 
-					var query = new Query<int>(dataContext, null)
+					var query = new Query<int>(dataContext)
 					{
 						Queries = { new QueryInfo { Statement = dropTable, } }
 					};
 
 					SetNonQueryQuery(query);
 
-					await query.GetElementAsync(dataContext, ExpressionInstances.UntypedNull, null, null, token).ConfigureAwait(false);
+					await query.GetElementAsync(dataContext, EmptyQueryExpressions, null, null, token).ConfigureAwait(false);
 				}
 			}
 		}

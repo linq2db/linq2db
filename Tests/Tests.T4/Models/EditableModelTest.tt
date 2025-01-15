@@ -1,7 +1,8 @@
 ﻿<#@ template language="C#" debug="True" hostSpecific="True" compilerOptions="/langversion:6" #>
+<#@ CleanupBehavior processor="T4VSHost" CleanupAfterProcessingtemplate="true"               #>
 <#@ output extension=".generated.cs"                                                         #>
-<#@ include file="..\..\..\Source\LinqToDB.Templates\T4Model.ttinclude"        once="true"   #>
-<#@ include file="..\..\..\Source\LinqToDB.Templates\EditableObject.ttinclude" once="true"   #>
+<#@ include file="$(LinqToDBT4TemplatesPath)T4Model.ttinclude"                   once="true" #>
+<#@ include file="$(LinqToDBT4TemplatesPath)EditableObject.ttinclude"            once="true" #>
 <#
 	EnableNullableReferenceTypes = true;
 

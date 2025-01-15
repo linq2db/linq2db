@@ -15,6 +15,7 @@ namespace LinqToDB.Linq.Builder
 		{
 			var saveInline = builder.DataContext.InlineParameters;
 			builder.DataContext.InlineParameters = true;
+			buildInfo.InlineParameters           = true;
 
 			var sequence = builder.TryBuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
 

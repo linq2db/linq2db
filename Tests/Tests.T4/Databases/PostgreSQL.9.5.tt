@@ -1,0 +1,24 @@
+﻿<#@ template language="C#" debug="True" hostSpecific="True" compilerOptions="/langversion:6"     #>
+<#@ CleanupBehavior processor="T4VSHost" CleanupAfterProcessingtemplate="true"                   #>
+<#@ output extension=".generated.cs"                                                             #>
+<#@ include file="$(LinqToDBT4PostgreSQLTemplatesPath)LinqToDB.PostgreSQL.ttinclude" once="true" #>
+<#@ include file="..\Shared.ttinclude"                                               once="true" #>
+<#
+	NamespaceName = "PostreSQL9_5DataContext";
+	GenerateConstructors = false;
+
+	GetSchemaOptions.PreferProviderSpecificTypes = true;
+
+	LoadPostgreSQLMetadata(GetConnectionString("PostgreSQL.9.5"));
+
+	GetTable("testsamename").TypeName = "_testsamename";
+	GetTable("testsamename").DataContextPropertyName = "_testsamename";
+
+	GenerateDataTypes                            = true;
+
+	GenerateModel();
+
+//	GenerationEnvironment.Replace(
+//		"#pragma warning disable 1573, 1591",
+//		"#pragma warning disable 1573, 1591, 618");
+#>

@@ -36,7 +36,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			// SQL Server FOR SYSTEM_TIME clause does not support expressions. Parameters or literals only.
 			//
 			if (ConvertDateTimeAsLiteral && paramValue.ProviderValue is DateTime)
-				return base.TryConvertParameterToSql(new (paramValue.ProviderValue, new (typeof(DateTime), DataType.Char)));
+				return base.TryConvertParameterToSql(new (paramValue.ProviderValue, paramValue.ClientValue, new (typeof(DateTime), DataType.Char)));
 
 			return base.TryConvertParameterToSql(paramValue);
 		}

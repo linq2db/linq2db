@@ -69,6 +69,9 @@ namespace LinqToDB.Common
 		internal static MethodInfo WithSetValuesMethodInfo =
 			MemberHelper.MethodOf<DbDataType>(dt => dt.WithSetValues(dt));
 
+		internal static MethodInfo WithSystemTypeMethodInfo =
+			MemberHelper.MethodOf<DbDataType>(dt => dt.WithSystemType(typeof(object)));
+
 		public readonly DbDataType WithSetValues(DbDataType from)
 		{
 			return new DbDataType(
