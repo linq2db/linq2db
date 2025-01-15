@@ -906,7 +906,7 @@ namespace LinqToDB
 			{
 				var str = builder.GetExpression("str")!;
 
-				var predicate = new SqlPredicate.IsNull(new SqlFunction(typeof(string), "LTRIM", str, new SqlValue(typeof(string), WHITESPACES)), false);
+				var predicate = new SqlPredicate.IsNull(new SqlFunction(typeof(string), "LTRIM", ParametersNullabilityType.Nullable, str, new SqlValue(typeof(string), WHITESPACES)), false);
 
 				var nullability = new NullabilityContext(builder.Query);
 				if (str.CanBeNullable(nullability))
