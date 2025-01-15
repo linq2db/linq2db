@@ -217,11 +217,12 @@ namespace LinqToDB.SqlProvider
 		public bool IsCommonTableExpressionsSupported     { get; set; }
 
 		/// <summary>
-		/// Indicates support for aggregate functions in ORDER BY statement.
-		/// Default (set by <see cref="DataProviderBase"/>): <c>true</c>.
+		/// Provider treats empty string as <c>null</c> in queries.
+		/// It is specific behaviour only for Oracle.
+		/// Default <c>false</c>
 		/// </summary>
 		[DataMember(Order = 31)]
-		public bool IsOrderByAggregateFunctionsSupported  { get; set; }
+		public bool DoesProviderTreatsEmptyStringAsNull { get; set; }
 
 		/// <summary>
 		/// Provider supports EXCEPT ALL, INTERSECT ALL set operators. Otherwise they will be emulated.
@@ -517,14 +518,6 @@ namespace LinqToDB.SqlProvider
 		[DataMember(Order = 60)]
 		public bool IsDistinctFromSupported { get; set; }
 
-		/// <summary>
-		/// Provider treats empty string as <c>null</c> in queries.
-		/// It is specific behaviour only for Oracle.
-		/// Default <c>false</c>
-		/// </summary>
-		[DataMember(Order = 61)]
-		public bool DoesProviderTreatsEmptyStringAsNull { get; set; }
-
 		public bool GetAcceptsTakeAsParameterFlag(SelectQuery selectQuery)
 		{
 			return AcceptsTakeAsParameter || AcceptsTakeAsParameterIfSkip && selectQuery.Select.SkipValue != null;
@@ -574,7 +567,6 @@ namespace LinqToDB.SqlProvider
 				^ (TakeHintsSupported?                                 .GetHashCode() ?? 0)
 				^ IsCrossJoinSupported                                 .GetHashCode()
 				^ IsCommonTableExpressionsSupported                    .GetHashCode()
-				^ IsOrderByAggregateFunctionsSupported                 .GetHashCode()
 				^ IsAllSetOperationsSupported                          .GetHashCode()
 				^ IsDistinctSetOperationsSupported                     .GetHashCode()
 				^ IsCountDistinctSupported                             .GetHashCode()
@@ -640,7 +632,6 @@ namespace LinqToDB.SqlProvider
 				&& TakeHintsSupported                                    == other.TakeHintsSupported
 				&& IsCrossJoinSupported                                  == other.IsCrossJoinSupported
 				&& IsCommonTableExpressionsSupported                     == other.IsCommonTableExpressionsSupported
-				&& IsOrderByAggregateFunctionsSupported                  == other.IsOrderByAggregateFunctionsSupported
 				&& IsAllSetOperationsSupported                           == other.IsAllSetOperationsSupported
 				&& IsDistinctSetOperationsSupported                      == other.IsDistinctSetOperationsSupported
 				&& IsCountDistinctSupported                              == other.IsCountDistinctSupported
