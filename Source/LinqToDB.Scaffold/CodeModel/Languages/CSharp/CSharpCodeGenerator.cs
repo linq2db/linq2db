@@ -560,14 +560,13 @@ namespace LinqToDB.CodeModel
 				if (!multiline && property.HasGetter)
 					Write(' ');
 
+				WriteModifiers(property.SetterModifiers);
 				if (property.Setter == null)
 				{
-					WriteModifiers(property.SetterModifiers);
 					Write("set;");
 				}
 				else
 				{
-					WriteModifiers(property.SetterModifiers);
 					Write("set");
 					if (property.Setter.Items.Count == 1)
 						Write(" =>");
@@ -1589,14 +1588,13 @@ namespace LinqToDB.CodeModel
 					if (property.HasGetter)
 						Write(' ');
 
+					WriteModifiers(property.SetterModifiers);
 					if (property.Setter == null)
 					{
-						WriteModifiers(property.SetterModifiers);
 						Write("set;");
 					}
 					else
 					{
-						WriteModifiers(property.SetterModifiers);
 						Write("set");
 
 						if (property.Setter.Items.Count == 1)
