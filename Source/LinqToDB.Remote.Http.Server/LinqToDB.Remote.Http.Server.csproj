@@ -8,9 +8,6 @@
 	<ItemGroup>
 		<ProjectReference Include="..\LinqToDB\LinqToDB.csproj" />
 
-<!--
-		<PackageReference Include="Microsoft.AspNetCore.Components.Web" />
--->
 		<PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.Server" />
 	</ItemGroup>
 </Project>

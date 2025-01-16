@@ -64,6 +64,9 @@ else
 
 	protected override void OnInitialized()
 	{
+		// In some rendering modes Blazor renders content twice.
+		// This is a workaround to minimize the visible effect.
+		//
 		_persistingSubscription = ApplicationState.RegisterOnPersisting(() =>
 		{
 			if (_forecasts is not null)
