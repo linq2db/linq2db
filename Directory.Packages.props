@@ -152,6 +152,8 @@
 		<PackageVersion Condition="'$(TargetFramework)'=='net6.0'" Include="Microsoft.AspNetCore.Components.WebAssembly.Server" Version="6.0.36"  />
 		<PackageVersion Condition="'$(TargetFramework)'=='net8.0'" Include="Microsoft.AspNetCore.Components.WebAssembly.Server" Version="8.0.12"  />
 		<PackageVersion Condition="'$(TargetFramework)'=='net9.0'" Include="Microsoft.AspNetCore.Components.WebAssembly.Server" Version="9.0.0"  />
+
+		<PackageVersion Condition="'$(TargetFramework)'=='net9.0'" Include="Microsoft.AspNetCore.Components.WebAssembly"    Version="9.0.0" />
 	</ItemGroup>
 
 	<ItemGroup Label="Testing" Condition=" '$(TargetFramework)' == 'net462' ">

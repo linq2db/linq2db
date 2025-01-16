@@ -1,0 +1,86 @@
+﻿@implements IDisposable
+@inject PersistentComponentState ApplicationState
+@inject IDemoDataModel           Data
+
+<PageTitle>Weather</PageTitle>
+
+<h1>Weather</h1>
+
+<p>Page parameters</p>
+
+<table class="table w-auto">
+	<thead>
+		<tr>
+			<th>Parameter</th>
+			<th>Value</th>
+		</tr>
+	</thead>
+	<tbody>
+		<tr>
+			<td><label for="os">Operating System</label></td>
+			<td><span id="os">@(OperatingSystem.IsBrowser() ? "Browser" : "Server")</span></td>
+		</tr>
+		<tr>
+			<td><label for="rm">RendererInfo</label></td>
+			<td><span id="rm">@((RendererInfo.IsInteractive ? "Interactive " : " ") + RendererInfo.Name)</span></td>
+		</tr>
+	</tbody>
+</table>
+
+<p>This component demonstrates showing data.</p>
+
+@if (_forecasts == null)
+{
+	<p><em>Loading...</em></p>
+}
+else
+{
+	<table class="table">
+		<thead>
+			<tr>
+				<th>Date</th>
+				<th aria-label="Temperature in Celsius">Temp. (C)</th>
+				<th aria-label="Temperature in Farenheit">Temp. (F)</th>
+				<th>Summary</th>
+			</tr>
+		</thead>
+		<tbody>
+			@foreach (var forecast in _forecasts)
+			{
+				<tr>
+					<td>@forecast.Date.ToShortDateString()</td>
+					<td>@forecast.TemperatureC</td>
+					<td>@forecast.TemperatureF</td>
+					<td>@forecast.Summary</td>
+				</tr>
+			}
+		</tbody>
+	</table>
+}
+
+@code {
+	WeatherForecast[]?                    _forecasts;
+	PersistingComponentStateSubscription? _persistingSubscription;
+
+	protected override void OnInitialized()
+	{
+		_persistingSubscription = ApplicationState.RegisterOnPersisting(() =>
+		{
+			if (_forecasts is not null)
+				ApplicationState.PersistAsJson("forecasts", _forecasts);
+			return Task.CompletedTask;
+		});
+
+		ApplicationState.TryTakeFromJson("forecasts", out _forecasts);
+	}
+
+	protected override async Task OnInitializedAsync()
+	{
+		_forecasts = await Data.Model.WeatherForecasts.ToArrayAsync();
+	}
+
+	public void Dispose()
+	{
+		_persistingSubscription?.Dispose();
+	}
+}
