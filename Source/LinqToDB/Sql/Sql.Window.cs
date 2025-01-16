@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace LinqToDB
@@ -54,9 +55,13 @@ namespace LinqToDB
 
 		public interface IFramePart
 		{
-			IPrecedingPart RowsBetween;
-			IPrecedingPart RangeBetween;
-			IPrecedingPart GroupsBetween;
+			IBoundaryPart<IDefinedWindow> Rows   { get; }
+			IBoundaryPart<IDefinedWindow> Range  { get; }
+			IBoundaryPart<IDefinedWindow> Groups { get; }
+
+			IBoundaryPart<IRangePrecedingPart> RowsBetween   { get; }
+			IBoundaryPart<IRangePrecedingPart> RangeBetween  { get; }
+			IBoundaryPart<IRangePrecedingPart> GroupsBetween { get; }
 		}
 
 		public interface IBoundaryPart<TBoundaryDefined>
@@ -67,9 +72,9 @@ namespace LinqToDB
 			TBoundaryDefined Value(object? preceding, Sql.NullsPosition nulls);
 		}
 
-		public interface IPrecedingPart: IDefinedWindow
+		public interface IRangePrecedingPart
 		{
-			
+			IBoundaryPart<IDefinedRangeFrame> And { get; }
 		}
 
 		public interface IDefinedRangeFrame : IDefinedWindow
@@ -78,8 +83,6 @@ namespace LinqToDB
 			public IDefinedWindow ExcludeGroup();
 			public IDefinedWindow ExcludeTies();
 		}
-
-		public interface IFrameBoundaryDefined {}
 
 		public interface IFrameBoundary
 		{
@@ -318,8 +321,9 @@ namespace LinqToDB
 
 		#region Percenile Cont
 
-		public static TValue PercentileCont<TKey, TElement, TValue>(this IGrouping<TKey, TElement> window, double argument, Func<IOrderByPart<TValue, IDefinedFunction<TValue>>, IDefinedFunction<TValue>> func)
-			=> throw new ServerSideOnlyException(nameof(PercentileCont));
+		public static TValue PercentileCont<TElement, TValue>(this IEnumerable<TElement>     window, double argument, 
+			Func<TElement, IOrderByPart<TValue, IDefinedFunction<TValue>>, IDefinedFunction<TValue>> func
+			) => throw new ServerSideOnlyException(nameof(PercentileCont));
 
 		#endregion
 	}
@@ -353,7 +357,7 @@ namespace LinqToDB
 				select new
 				{
 					g.Key,
-					//PC = g.PercentileCont(0.5, f => f.OrderBy())
+					PC = g.PercentileCont(0.5, (e, f) => f.OrderBy(e.Id))
 				};
 		}
 	}
