@@ -5051,7 +5051,12 @@ namespace LinqToDB.Linq.Builder
 				result |= TranslationFlags.Sql;
 
 			if (_buildPurpose is BuildPurpose.Expression)
-				result |= TranslationFlags.Expression;
+			{
+				if (_buildFlags.HasFlag(BuildFlags.ForSetProjection))
+					result |= TranslationFlags.Sql;
+				else
+					result |= TranslationFlags.Expression;
+			}
 
 			return result;
 		}

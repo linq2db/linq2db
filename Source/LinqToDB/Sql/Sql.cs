@@ -594,7 +594,7 @@ namespace LinqToDB
 
 				var startExpr = new SqlBinaryExpression(lengthExpr.SystemType!,
 					new SqlFunction(lengthExpr.SystemType!, "LEN", stringExpr), "-",
-					new SqlBinaryExpression(lengthExpr.SystemType!, lengthExpr, "-", new SqlValue(1), Precedence.Subtraction), 
+					new SqlBinaryExpression(lengthExpr.SystemType!, lengthExpr, "-", new SqlValue(1), Precedence.Subtraction),
 					Precedence.Subtraction);
 
 				builder.ResultExpression = new SqlFunction(stringExpr.SystemType!, "SUBSTRING", false, true, stringExpr, startExpr, lengthExpr);
@@ -906,7 +906,7 @@ namespace LinqToDB
 			{
 				var str = builder.GetExpression("str")!;
 
-				var predicate = new SqlPredicate.IsNull(new SqlFunction(typeof(string), "LTRIM", str, new SqlValue(typeof(string), WHITESPACES)), false);
+				var predicate = new SqlPredicate.IsNull(new SqlFunction(typeof(string), "LTRIM", ParametersNullabilityType.Nullable, str, new SqlValue(typeof(string), WHITESPACES)), false);
 
 				var nullability = new NullabilityContext(builder.Query);
 				if (str.CanBeNullable(nullability))
