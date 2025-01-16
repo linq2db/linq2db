@@ -561,9 +561,13 @@ namespace LinqToDB.CodeModel
 					Write(' ');
 
 				if (property.Setter == null)
+				{
+					WriteModifiers(property.SetterModifiers);
 					Write("set;");
+				}
 				else
 				{
+					WriteModifiers(property.SetterModifiers);
 					Write("set");
 					if (property.Setter.Items.Count == 1)
 						Write(" =>");
@@ -1586,9 +1590,13 @@ namespace LinqToDB.CodeModel
 						Write(' ');
 
 					if (property.Setter == null)
+					{
+						WriteModifiers(property.SetterModifiers);
 						Write("set;");
+					}
 					else
 					{
+						WriteModifiers(property.SetterModifiers);
 						Write("set");
 
 						if (property.Setter.Items.Count == 1)

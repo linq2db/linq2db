@@ -137,7 +137,7 @@ namespace LinqToDB.DataModel
 			propertyBuilder.SetModifiers(property.Modifiers);
 
 			if (property.IsDefault)
-				propertyBuilder.Default(property.HasSetter);
+				propertyBuilder.Default(property.HasSetter, property.SetterModifiers);
 
 			if (property.Summary != null)
 				propertyBuilder.XmlComment().Summary(property.Summary);
