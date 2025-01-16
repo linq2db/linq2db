@@ -70,7 +70,7 @@ namespace LinqToDB.DataProvider.PostgreSQL.Translation
 					{
 						// Cast(To_Char({date}, 'MS') as int
 
-						var toCharExpression = factory.Function(factory.GetDbDataType(typeof(string)), "To_Char", dateTimeExpression, factory.Value("MS"));
+						var toCharExpression = factory.Function(factory.GetDbDataType(typeof(string)), "To_Char",ParametersNullabilityType.SameAsFirstParameter, dateTimeExpression, factory.Value("MS"));
 						var castExpression   = factory.Cast(toCharExpression, intDbType);
 
 						return castExpression;
@@ -112,7 +112,7 @@ namespace LinqToDB.DataProvider.PostgreSQL.Translation
 
 				var factory = translationContext.ExpressionFactory;
 
-				var dateTruncExpression = factory.Function(factory.GetDbDataType(dateExpression), "Date_Trunc", factory.Value("day"), dateExpression);
+				var dateTruncExpression = factory.Function(factory.GetDbDataType(dateExpression), "Date_Trunc", ParametersNullabilityType.SameAsSecondParameter, factory.Value("day"), dateExpression);
 
 				return dateTruncExpression;
 			}
@@ -125,7 +125,7 @@ namespace LinqToDB.DataProvider.PostgreSQL.Translation
 
 				var atTimeZone = factory.Fragment(factory.GetDbDataType(dateExpression), "{0} AT TIME ZONE {1}", dateExpression, factory.Value("UTC"));
 
-				var dateTruncExpression = factory.Function(factory.GetDbDataType(dateExpression), "Date_Trunc", factory.Value("day"), atTimeZone);
+				var dateTruncExpression = factory.Function(factory.GetDbDataType(dateExpression), "Date_Trunc", ParametersNullabilityType.SameAsSecondParameter, factory.Value("day"), atTimeZone);
 
 				dateTruncExpression = factory.Cast(dateTruncExpression, factory.GetDbDataType(typeof(DateTime)).WithDataType(DataType.Date));
 
@@ -139,7 +139,7 @@ namespace LinqToDB.DataProvider.PostgreSQL.Translation
 
 				ISqlExpression ToInterval(ISqlExpression numberExpression, string intervalKind)
 				{
-					var intervalExpr = factory.Fragment(intervalType, "Interval {0}", factory.Value(intervalKind));
+					var intervalExpr = factory.NotNullFragment(intervalType, "Interval {0}", factory.Value(intervalKind));
 
 					return factory.Multiply(intervalType, numberExpression, intervalExpr);
 				}

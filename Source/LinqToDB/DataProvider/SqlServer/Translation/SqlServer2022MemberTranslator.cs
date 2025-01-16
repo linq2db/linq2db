@@ -15,7 +15,7 @@ namespace LinqToDB.DataProvider.SqlServer.Translation
 
 				var dbType = factory.GetDbDataType(xValue);
 
-				return factory.Function(dbType, "GREATEST", xValue, yValue);
+				return factory.Function(dbType, "GREATEST", ParametersNullabilityType.IfAllParametersNullable, xValue, yValue);
 			}
 
 			protected override ISqlExpression? TranslateMinMethod(ITranslationContext translationContext, MethodCallExpression methodCall, ISqlExpression xValue, ISqlExpression yValue)
@@ -24,7 +24,7 @@ namespace LinqToDB.DataProvider.SqlServer.Translation
 
 				var dbType = factory.GetDbDataType(xValue);
 
-				return factory.Function(dbType, "LEAST", xValue, yValue);
+				return factory.Function(dbType, "LEAST", ParametersNullabilityType.IfAllParametersNullable, xValue, yValue);
 			}
 		}
 

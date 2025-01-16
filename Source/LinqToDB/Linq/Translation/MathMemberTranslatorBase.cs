@@ -358,7 +358,7 @@ namespace LinqToDB.Linq.Translation
 
 				var trueValue = factory.Function(valueType, "FLOOR", value);
 
-				var falseValue = factory.Function(valueType, "ROUND", value, factory.Value(0));
+				var falseValue = factory.Function(valueType, "ROUND", ParametersNullabilityType.SameAsFirstParameter, value, factory.Value(0));
 
 				result = factory.Condition(condition, trueValue, falseValue);
 			}

@@ -148,6 +148,7 @@ namespace LinqToDB.DataProvider.SQLite.Translation
 					var formatStr = "%0" + padSize.ToString(CultureInfo.InvariantCulture) + "d";
 
 					return factory.Function(stringDataType, "printf",
+						ParametersNullabilityType.NotNullable,
 						factory.Value(stringDataType, formatStr),
 						expression);
 				}

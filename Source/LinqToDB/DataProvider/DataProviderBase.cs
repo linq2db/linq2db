@@ -60,7 +60,6 @@ namespace LinqToDB.DataProvider
 				OutputUpdateUseSpecialTables         = false,
 				IsCrossJoinSupported                 = true,
 				IsCommonTableExpressionsSupported    = false,
-				IsOrderByAggregateFunctionsSupported = true,
 				IsAllSetOperationsSupported          = false,
 				IsDistinctSetOperationsSupported     = true,
 				IsCountDistinctSupported             = true,

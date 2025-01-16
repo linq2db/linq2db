@@ -52,19 +52,20 @@ namespace LinqToDB.DataProvider.SapHana.Translation
 						var doubleDbType = factory.GetDbDataType(typeof(double));
 
 						var resultExpression = factory.Increment(
-							factory.Function(intDbType, "Floor", 
+							factory.Function(intDbType, "Floor",
 								factory.Div(doubleDbType, factory.Decrement(factory.Function(intDbType, "Month", dateTimeExpression)), factory.Value(3)))
 						);
 
 						return resultExpression;
 					}
 					case Sql.DateParts.Month:     return factory.Function(intDbType, "Month", dateTimeExpression);
-					case Sql.DateParts.DayOfYear: return factory.Function(intDbType, "DayOfYear", dateTimeExpression); 
-					case Sql.DateParts.Day: return factory.Function(intDbType, "DayOfMonth", dateTimeExpression);      
-					case Sql.DateParts.Week: return factory.Function(intDbType, "Week", dateTimeExpression);           
+					case Sql.DateParts.DayOfYear: return factory.Function(intDbType, "DayOfYear", dateTimeExpression);
+					case Sql.DateParts.Day: return factory.Function(intDbType, "DayOfMonth", dateTimeExpression);
+					case Sql.DateParts.Week: return factory.Function(intDbType, "Week", dateTimeExpression);
 					case Sql.DateParts.WeekDay:
 					{
 						var resultExpression = factory.Function(intDbType, "Mod",
+							ParametersNullabilityType.SameAsFirstParameter,
 							factory.Increment(factory.Function(intDbType, "Weekday", dateTimeExpression)),
 							factory.Value(7)
 						);
@@ -72,13 +73,13 @@ namespace LinqToDB.DataProvider.SapHana.Translation
 						return factory.Increment(resultExpression);
 					}
 					case Sql.DateParts.Hour:   return factory.Function(intDbType, "Hour", dateTimeExpression);
-					case Sql.DateParts.Minute: return factory.Function(intDbType, "Minute", dateTimeExpression); 
+					case Sql.DateParts.Minute: return factory.Function(intDbType, "Minute", dateTimeExpression);
 					case Sql.DateParts.Second: return factory.Function(intDbType, "Second", dateTimeExpression);
 					case Sql.DateParts.Millisecond:
 					{
 						// Not found better solution for this
 						var stringDbType = factory.GetDbDataType(typeof(string));
-						var result       = factory.Cast(factory.Function(stringDbType, "To_NVarchar", dateTimeExpression, factory.Value(stringDbType, "FF3")), intDbType);
+						var result       = factory.Cast(factory.Function(stringDbType, "To_NVarchar", ParametersNullabilityType.SameAsFirstParameter, dateTimeExpression, factory.Value(stringDbType, "FF3")), intDbType);
 
 						return result;
 					}
@@ -178,6 +179,7 @@ namespace LinqToDB.DataProvider.SapHana.Translation
 					}
 
 					return factory.Function(stringDataType, "LPad",
+						ParametersNullabilityType.SameAsFirstParameter,
 						expression,
 						factory.Value(intDataType, padSize),
 						factory.Value(stringDataType, "0"));
