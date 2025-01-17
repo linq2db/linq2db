@@ -480,7 +480,7 @@ namespace LinqToDB.CodeModel
 				trailingComment  != property.TrailingComment  ||
 				xmlDoc           != property.XmlDoc           ||
 				initializer      != property.Initializer)
-				return new CodeProperty(customAttributes, name, property.Type, property.Attributes, property.HasGetter, getter, property.HasSetter, setter, trailingComment, xmlDoc, initializer);
+				return new CodeProperty(customAttributes, name, property.Type, property.Attributes, property.HasGetter, getter, property.HasSetter, property.SetterModifiers, setter, trailingComment, xmlDoc, initializer);
 
 			return property;
 		}

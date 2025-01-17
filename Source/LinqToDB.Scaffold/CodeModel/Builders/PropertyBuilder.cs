@@ -30,10 +30,11 @@
 		/// </summary>
 		/// <param name="hasSetter">Indicate that property has setter.</param>
 		/// <returns>Builder instance.</returns>
-		public PropertyBuilder Default(bool hasSetter)
+		public PropertyBuilder Default(bool hasSetter, Modifiers setterModifiers = Modifiers.None)
 		{
 			Property.HasGetter = true;
 			Property.HasSetter = hasSetter;
+			Property.SetterModifiers = setterModifiers;
 			return this;
 		}
 

@@ -62,8 +62,18 @@
 
 		<PackageReference Update="MySql.Data" Aliases="" />
 		<PackageReference Update="MySqlConnector" Aliases="" />
+		<None Update="Cli\Interceptors.tt">
+		  <LastGenOutput>Interceptors.generated.cs</LastGenOutput>
+		  <Generator>TextTemplatingFileGenerator</Generator>
+		</None>
 
 		<None Update="Cli\Fluent.tt" Generator="TextTemplatingFileGenerator" LastGenOutput="Fluent.generated.cs" />
+
+		<Compile Update="Cli\Interceptors.generated.cs">
+		  <DependentUpon>Interceptors.tt</DependentUpon>
+		  <DesignTime>True</DesignTime>
+		  <AutoGen>True</AutoGen>
+		</Compile>
 		<Compile Update="Cli\Fluent.generated.cs" DesignTime="True" AutoGen="True" DependentUpon="Fluent.tt" />
 
 		<None Update="Cli\NoMetadata.tt" Generator="TextTemplatingFileGenerator" LastGenOutput="NoMetadata.generated.cs" />

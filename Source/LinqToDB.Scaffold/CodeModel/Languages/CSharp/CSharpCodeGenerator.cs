@@ -560,8 +560,11 @@ namespace LinqToDB.CodeModel
 				if (!multiline && property.HasGetter)
 					Write(' ');
 
+				WriteModifiers(property.SetterModifiers);
 				if (property.Setter == null)
+				{
 					Write("set;");
+				}
 				else
 				{
 					Write("set");
@@ -1585,8 +1588,11 @@ namespace LinqToDB.CodeModel
 					if (property.HasGetter)
 						Write(' ');
 
+					WriteModifiers(property.SetterModifiers);
 					if (property.Setter == null)
+					{
 						Write("set;");
+					}
 					else
 					{
 						Write("set");
