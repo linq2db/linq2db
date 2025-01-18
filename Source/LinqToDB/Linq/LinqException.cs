@@ -1,6 +1,6 @@
 ﻿using System;
+using System.ComponentModel;
 using System.Globalization;
-using System.Runtime.Serialization;
 
 namespace LinqToDB.Linq
 {
@@ -11,8 +11,8 @@ namespace LinqToDB.Linq
 	/// This class is the base class for exceptions that may occur during
 	/// execution of the namespace members.
 	/// </remarks>
-	// TODO: remove V7
-	[Obsolete($"This exception type is not used anymore. Please update your code to handle {nameof(LinqToDBException)}.")]
+	// TODO: Remove in v7
+	[Obsolete($"This exception type is not used anymore. Please update your code to handle {nameof(LinqToDBException)}."), EditorBrowsable(EditorBrowsableState.Never)]
 	[Serializable]
 	public class LinqException : Exception
 	{
