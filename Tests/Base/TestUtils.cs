@@ -175,7 +175,7 @@ namespace Tests
 			return fix ? new DateTime(value.Year, value.Month, value.Day, value.Hour, value.Minute, value.Second) : value;
 		}
 
-		sealed class FirebirdTempTable<T> : TempTable<T>
+		sealed class FirebirdTempTable<T> : TestTempTable<T>
 			where T : notnull
 		{
 			public FirebirdTempTable(IDataContext db, string? tableName = null, string? databaseName = null, string? schemaName = null, TableOptions tableOptions = TableOptions.NotSet)
@@ -195,12 +195,26 @@ namespace Tests
 				base.Dispose();
 			}
 		}
+		class TestTempTable<T> : TempTable<T>
+			where T : notnull
+		{
+			public TestTempTable(IDataContext db, string? tableName = null, string? databaseName = null, string? schemaName = null, TableOptions tableOptions = TableOptions.NotSet)
+				: base(db, tableName, databaseName, schemaName, tableOptions: tableOptions)
+			{
+			}
+
+			public override void Dispose()
+			{
+				using var _ = new DisableBaseline("Test setup");
+				base.Dispose();
+			}
+		}
 
 		static TempTable<T> CreateTable<T>(IDataContext db, string? tableName, TableOptions tableOptions = TableOptions.NotSet)
 			where T : notnull =>
 			db.CreateSqlProvider() is FirebirdSqlBuilder ?
 				new FirebirdTempTable<T>(db, tableName, tableOptions : tableOptions) :
-				new         TempTable<T>(db, tableName, tableOptions : tableOptions);
+				new     TestTempTable<T>(db, tableName, tableOptions : tableOptions);
 
 		static void ClearDataContext(IDataContext db)
 		{
@@ -225,6 +239,7 @@ namespace Tests
 		public static TempTable<T> CreateLocalTable<T>(this IDataContext db, string? tableName = null, TableOptions tableOptions = TableOptions.CheckExistence)
 			where T : notnull
 		{
+			using var _ = new DisableBaseline("Test setup");
 			try
 			{
 				if ((tableOptions & TableOptions.CheckExistence) == TableOptions.CheckExistence)
@@ -242,6 +257,7 @@ namespace Tests
 		public static TempTable<T> CreateLocalTable<T>(this IDataContext db, string? tableName, IEnumerable<T> items, bool insertInTransaction = false)
 			where T : notnull
 		{
+			using var _ = new DisableBaseline("Test setup");
 			using (new DisableLogging())
 			{
 				var table = CreateLocalTable<T>(db, tableName, TableOptions.CheckExistence);
@@ -268,6 +284,7 @@ namespace Tests
 		public static TempTable<T> CreateLocalTable<T>(this IDataContext db, IEnumerable<T> items, bool insertInTransaction = false)
 			where T : notnull
 		{
+			using var _ = new DisableBaseline("Test setup");
 			return CreateLocalTable(db, null, items, insertInTransaction);
 		}
 
