@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.Linq;
 
 namespace LinqToDB
@@ -17,32 +15,47 @@ namespace LinqToDB
 		}
 
 
-		public interface IOrderByPart<in TValue, out TThenPart>
+		public interface IOrderByPart<out TThenPart>
 			where TThenPart : class
 		{
-			TThenPart OrderBy(TValue     orderBy);
-			TThenPart OrderBy(TValue     orderBy, Sql.NullsPosition nulls);
-			TThenPart OrderByDesc(TValue orderBy);
-			TThenPart OrderByDesc(TValue orderBy, Sql.NullsPosition nulls);
+			TThenPart OrderBy(object?     orderBy);
+			TThenPart OrderBy(object?     orderBy, Sql.NullsPosition nulls);
+			TThenPart OrderByDesc(object? orderBy);
+			TThenPart OrderByDesc(object? orderBy, Sql.NullsPosition nulls);
 		}
 
-		public interface IOrderByPart<out TOrdered> : IOrderByPart<object?, TOrdered>
-			where TOrdered : class
+
+		public interface IOnlyOrderByPart
 		{
+			IDefinedFunction<TValue> OrderBy<TValue>(TValue     orderBy);
+			IDefinedFunction<TValue> OrderBy<TValue>(TValue     orderBy, Sql.NullsPosition nulls);
+			IDefinedFunction<TValue> OrderByDesc<TValue>(TValue orderBy);
+			IDefinedFunction<TValue> OrderByDesc<TValue>(TValue orderBy, Sql.NullsPosition nulls);
 		}
 
-		public interface IThenOrderPart<out TThenPart> : IThenOrderPart<object?, TThenPart>
+		public interface IMultipleOrderByPart
+		{
+			IMultipleThenByPart<TValue> OrderBy<TValue>(TValue     orderBy);
+			IMultipleThenByPart<TValue> OrderBy<TValue>(TValue     orderBy, Sql.NullsPosition nulls);
+			IMultipleThenByPart<TValue> OrderByDesc<TValue>(TValue orderBy);
+			IMultipleThenByPart<TValue> OrderByDesc<TValue>(TValue orderBy, Sql.NullsPosition nulls);
+		}
+
+		public interface IMultipleThenByPart<out TValue> : IDefinedFunction<TValue>
+		{
+			IMultipleThenByPart<TValue> ThenBy(object?     orderBy);
+			IMultipleThenByPart<TValue> ThenBy(object?     orderBy, Sql.NullsPosition nulls);
+			IMultipleThenByPart<TValue> ThenByDesc(object? orderBy);
+			IMultipleThenByPart<TValue> ThenByDesc(object? orderBy, Sql.NullsPosition nulls);
+		}
+
+		public interface IThenOrderPart<out TThenPart>
 			where TThenPart : class
 		{
-		}
-
-		public interface IThenOrderPart<in TValue, out TThenPart>
-			where TThenPart : class
-		{
-			TThenPart ThenBy(TValue     orderBy);
-			TThenPart ThenBy(TValue     orderBy, Sql.NullsPosition nulls);
-			TThenPart ThenByDesc(TValue orderBy);
-			TThenPart ThenByDesc(TValue orderBy, Sql.NullsPosition nulls);
+			TThenPart ThenBy(object?     orderBy);
+			TThenPart ThenBy(object?     orderBy, Sql.NullsPosition nulls);
+			TThenPart ThenByDesc(object? orderBy);
+			TThenPart ThenByDesc(object? orderBy, Sql.NullsPosition nulls);
 		}
 
 		public interface IPartitionPart<out TPartitioned>
@@ -53,15 +66,15 @@ namespace LinqToDB
 
 		public interface IDefinedWindow {}
 
-		public interface IFramePart
+		public interface IFramePartFunction
 		{
-			IBoundaryPart<IDefinedWindow> Rows   { get; }
-			IBoundaryPart<IDefinedWindow> Range  { get; }
-			IBoundaryPart<IDefinedWindow> Groups { get; }
+			IBoundaryPart<IDefinedFunction> Rows   { get; }
+			IBoundaryPart<IDefinedFunction> Range  { get; }
+			IBoundaryPart<IDefinedFunction> Groups { get; }
 
-			IBoundaryPart<IRangePrecedingPart> RowsBetween   { get; }
-			IBoundaryPart<IRangePrecedingPart> RangeBetween  { get; }
-			IBoundaryPart<IRangePrecedingPart> GroupsBetween { get; }
+			IBoundaryPart<IRangePrecedingPartFunction> RowsBetween   { get; }
+			IBoundaryPart<IRangePrecedingPartFunction> RangeBetween  { get; }
+			IBoundaryPart<IRangePrecedingPartFunction> GroupsBetween { get; }
 		}
 
 		public interface IBoundaryPart<TBoundaryDefined>
@@ -72,24 +85,16 @@ namespace LinqToDB
 			TBoundaryDefined Value(object? preceding, Sql.NullsPosition nulls);
 		}
 
-		public interface IRangePrecedingPart
+		public interface IRangePrecedingPartFunction
 		{
-			IBoundaryPart<IDefinedRangeFrame> And { get; }
+			IBoundaryPart<IDefinedRangeFrameFunction> And { get; }
 		}
 
-		public interface IDefinedRangeFrame : IDefinedWindow
+		public interface IDefinedRangeFrameFunction : IDefinedFunction
 		{
-			public IDefinedWindow ExcludeCurrentRow();
-			public IDefinedWindow ExcludeGroup();
-			public IDefinedWindow ExcludeTies();
-		}
-
-		public interface IFrameBoundary
-		{
-			IFrameBoundary Unbounded { get; }
-			IFrameBoundary CurrentRow  { get; }
-			IFrameBoundary Value(object? preceding);
-			IFrameBoundary Value(object? preceding, Sql.NullsPosition nulls);
+			public IDefinedFunction ExcludeCurrentRow();
+			public IDefinedFunction ExcludeGroup();
+			public IDefinedFunction ExcludeTies();
 		}
 
 		public interface IOptionalFilter<out TPartitioned> : IFilterPart<IPartitionPart<TPartitioned>>, IPartitionPart<TPartitioned>
@@ -114,8 +119,25 @@ namespace LinqToDB
 			TWithArgument Argument(Sql.AggregateModifier modifier, object? argument);
 		}
 
+		public interface IUseWindow<TWithWindowPart>
+		{
+			public TWithWindowPart UseWindow(IDefinedFunction window);
+		}
+
+		#region Window
+
+		public interface IWindowBuilder : IOPartitionOOrderOFrameFinal
+		{
+
+		}
+
+		public static IDefinedFunction DefineWindow(this Sql.IWindowFunction window, Func<IWindowBuilder, IDefinedFunction> func)
+			=> throw new ServerSideOnlyException(nameof(DefineWindow));
+
+		#endregion
+
 		// ROW_NUMBER
-		public interface IOPartitionROrderFinal : IPartitionPart<IROrderByPartOThenByPartFinal>, IROrderByPartOThenByPartFinal
+		public interface IOPartitionROrderFinal : IUseWindow<IDefinedFunction>, IPartitionPart<IROrderByPartOThenByPartFinal>, IROrderByPartOThenByPartFinal
 		{
 		}
 
@@ -157,7 +179,7 @@ namespace LinqToDB
 		{
 		}
 
-		public interface IOFrameFinal : IFramePart, IDefinedFunction
+		public interface IOFrameFinal : IFramePartFunction, IDefinedFunction
 		{
 		}
 
@@ -223,30 +245,6 @@ namespace LinqToDB
 		public static byte? Sum(this Sql.IWindowFunction window, byte? argument, Func<IOFilterOPartitionOOrderOFrameFinal, IDefinedFunction> func)
 			=> throw new ServerSideOnlyException(nameof(Sum));
 
-		public static sbyte Sum(this Sql.IWindowFunction window, sbyte argument, Func<IOFilterOPartitionOOrderOFrameFinal, IDefinedFunction> func)
-			=> throw new ServerSideOnlyException(nameof(Sum));
-
-		public static sbyte? Sum(this Sql.IWindowFunction window, sbyte? argument, Func<IOFilterOPartitionOOrderOFrameFinal, IDefinedFunction> func)
-			=> throw new ServerSideOnlyException(nameof(Sum));
-
-		public static ushort Sum(this Sql.IWindowFunction window, ushort argument, Func<IOFilterOPartitionOOrderOFrameFinal, IDefinedFunction> func)
-			=> throw new ServerSideOnlyException(nameof(Sum));
-
-		public static ushort? Sum(this Sql.IWindowFunction window, ushort? argument, Func<IOFilterOPartitionOOrderOFrameFinal, IDefinedFunction> func)
-			=> throw new ServerSideOnlyException(nameof(Sum));
-
-		public static uint Sum(this Sql.IWindowFunction window, uint argument, Func<IOFilterOPartitionOOrderOFrameFinal, IDefinedFunction> func)
-			=> throw new ServerSideOnlyException(nameof(Sum));
-
-		public static uint? Sum(this Sql.IWindowFunction window, uint? argument, Func<IOFilterOPartitionOOrderOFrameFinal, IDefinedFunction> func)
-			=> throw new ServerSideOnlyException(nameof(Sum));
-
-		public static ulong Sum(this Sql.IWindowFunction window, ulong argument, Func<IOFilterOPartitionOOrderOFrameFinal, IDefinedFunction> func)
-			=> throw new ServerSideOnlyException(nameof(Sum));
-
-		public static ulong? Sum(this Sql.IWindowFunction window, ulong? argument, Func<IOFilterOPartitionOOrderOFrameFinal, IDefinedFunction> func)
-			=> throw new ServerSideOnlyException(nameof(Sum));
-
 		#endregion Sum
 
 		#region Average
@@ -293,37 +291,36 @@ namespace LinqToDB
 		public static double? Average(this Sql.IWindowFunction window, byte? argument, Func<IOFilterOPartitionOOrderOFrameFinal, IDefinedFunction> func)
 			=> throw new ServerSideOnlyException(nameof(Average));
 
-		public static double Average(this Sql.IWindowFunction window, sbyte argument, Func<IOFilterOPartitionOOrderOFrameFinal, IDefinedFunction> func)
-			=> throw new ServerSideOnlyException(nameof(Average));
-
-		public static double? Average(this Sql.IWindowFunction window, sbyte? argument, Func<IOFilterOPartitionOOrderOFrameFinal, IDefinedFunction> func)
-			=> throw new ServerSideOnlyException(nameof(Average));
-
-		public static double Average(this Sql.IWindowFunction window, ushort argument, Func<IOFilterOPartitionOOrderOFrameFinal, IDefinedFunction> func)
-			=> throw new ServerSideOnlyException(nameof(Average));
-
-		public static double? Average(this Sql.IWindowFunction window, ushort? argument, Func<IOFilterOPartitionOOrderOFrameFinal, IDefinedFunction> func)
-			=> throw new ServerSideOnlyException(nameof(Average));
-
-		public static double Average(this Sql.IWindowFunction window, uint argument, Func<IOFilterOPartitionOOrderOFrameFinal, IDefinedFunction> func)
-			=> throw new ServerSideOnlyException(nameof(Average));
-
-		public static double? Average(this Sql.IWindowFunction window, uint? argument, Func<IOFilterOPartitionOOrderOFrameFinal, IDefinedFunction> func)
-			=> throw new ServerSideOnlyException(nameof(Average));
-
-		public static double Average(this Sql.IWindowFunction window, ulong argument, Func<IOFilterOPartitionOOrderOFrameFinal, IDefinedFunction> func)
-			=> throw new ServerSideOnlyException(nameof(Average));
-
-		public static double? Average(this Sql.IWindowFunction window, ulong? argument, Func<IOFilterOPartitionOOrderOFrameFinal, IDefinedFunction> func)
-			=> throw new ServerSideOnlyException(nameof(Average));
-
 		#endregion Average
 
 		#region Percenile Cont
 
-		public static TValue PercentileCont<TElement, TValue>(this IEnumerable<TElement>     window, double argument, 
-			Func<TElement, IOrderByPart<TValue, IDefinedFunction<TValue>>, IDefinedFunction<TValue>> func
+		public static TValue PercentileCont<TKey, TElement, TValue>(this IGrouping<TKey, TElement> group, double argument, 
+			Func<TElement, IOnlyOrderByPart, IDefinedFunction<TValue>>                                        func
 			) => throw new ServerSideOnlyException(nameof(PercentileCont));
+
+		#endregion
+
+		#region Percenile Disc
+
+		public static TValue PercentileDisc<TKey, TElement, TValue>(
+			this IGrouping<TKey, TElement>                                 group, 
+			double                                                         argument,
+			Func<TElement, IMultipleOrderByPart, IDefinedFunction<TValue>> func
+		) => throw new ServerSideOnlyException(nameof(PercentileDisc));
+
+		#endregion
+
+		#region Rank
+
+		public static int Rank(this Sql.IWindowFunction window, Func<IOPartitionROrderFinal, IDefinedFunction> func)
+			=> throw new ServerSideOnlyException(nameof(Rank));
+
+		public static TValue RankWithinGroup<TKey, TElement, TValue>(
+			this IGrouping<TKey, TElement>                                   group,
+			Func<TElement, IOPartitionROrderFinal, IDefinedFunction<TValue>> func
+		) => throw new ServerSideOnlyException(nameof(RankWithinGroup));
+
 
 		#endregion
 	}
@@ -357,7 +354,8 @@ namespace LinqToDB
 				select new
 				{
 					g.Key,
-					PC = g.PercentileCont(0.5, (e, f) => f.OrderBy(e.Id))
+					PC = g.PercentileCont(0.5, (e, f) => f.OrderBy(e.Id)),
+					PD = g.PercentileDisc(0.5, (e, f) => f.OrderBy(e.Id).ThenBy(e.Name))
 				};
 		}
 	}

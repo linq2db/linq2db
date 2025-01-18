@@ -24,7 +24,7 @@ namespace LinqToDB.Linq.Translation
 			public required Expression?                                                      Filter      { get; set; }
 		}
 
-		protected static WindowFunctionInformation CollectWindowFunctionInformation(Expression[]? functionArguments, Expression buildBody)
+		protected static WindowFunctionInformation CollectWindowFunctionInformation(ITranslationContext translationContext, Expression[]? functionArguments, Expression buildBody)
 		{
 			List<(Expression expr, Sql.AggregateModifier modifier)>?             argumentsList   = null;
 			List<Expression>?                                                    partitionByList = null;
@@ -44,13 +44,13 @@ namespace LinqToDB.Linq.Translation
 			{
 				switch (mc.Method.Name)
 				{
-					case nameof(WindowFunctionBuilder.IWindowFunction<int>.OrderBy):
-					case nameof(WindowFunctionBuilder.IWindowFunction<int>.OrderByDesc):
-					case nameof(WindowFunctionBuilder.IWindowFunctionOrdered<int>.ThenBy):
-					case nameof(WindowFunctionBuilder.IWindowFunctionOrdered<int>.ThenByDesc):
+					case nameof(WindowFunctionBuilder.IOrderByPart<object>.OrderBy):
+					case nameof(WindowFunctionBuilder.IOrderByPart<object>.OrderByDesc):
+					case nameof(WindowFunctionBuilder.IThenOrderPart<object>.ThenBy):
+					case nameof(WindowFunctionBuilder.IThenOrderPart<object>.ThenByDesc):
 					{
-						var isDesc = mc.Method.Name == nameof(WindowFunctionBuilder.IWindowFunction<int>.OrderByDesc) ||
-						             mc.Method.Name == nameof(WindowFunctionBuilder.IWindowFunctionOrdered<int>.ThenByDesc);
+						var isDesc = mc.Method.Name == nameof(WindowFunctionBuilder.IOrderByPart<object>.OrderByDesc) ||
+						             mc.Method.Name == nameof(WindowFunctionBuilder.IThenOrderPart<object>.ThenByDesc);
 
 						orderByList ??= new();
 
@@ -72,7 +72,7 @@ namespace LinqToDB.Linq.Translation
 						break;
 					}
 
-					case nameof(WindowFunctionBuilder.IWindowFunction<int>.PartitionBy):
+					case nameof(WindowFunctionBuilder.IPartitionPart<object>.PartitionBy):
 					{
 						partitionByList ??= new();
 
@@ -92,7 +92,7 @@ namespace LinqToDB.Linq.Translation
 						break;
 					}
 
-					case nameof(WindowFunctionBuilder.IWindowFunctionWithArgument<int>.Argument):
+					case nameof(WindowFunctionBuilder.IArgumentPart<object>.Argument):
 					{
 						argumentsList ??= new();
 						var modifier = Sql.AggregateModifier.None;
@@ -113,13 +113,31 @@ namespace LinqToDB.Linq.Translation
 						break;
 					}
 
-					case nameof(WindowFunctionBuilder.IWindowFunction<int>.Filter):
+					case nameof(WindowFunctionBuilder.IFilterPart<object>.Filter):
 					{
 						filter = mc.Arguments[0];
 
 						buildBody = mc.Object!;
 						break;
 					}
+
+					case nameof(WindowFunctionBuilder.IUseWindow<object>.UseWindow):
+					{
+						buildBody = mc.Arguments[0];
+						var expanded = translationContext.Translate(buildBody, TranslationFlags.Expand);
+						if (expanded is MethodCallExpression { Method.Name: nameof(WindowFunctionBuilder.DefineWindow) } mce)
+						{
+							buildBody = mce.Arguments[1].UnwrapLambda().Body;
+						}
+						break;
+					}
+
+					case nameof(WindowFunctionBuilder.DefineWindow):
+					{
+						buildBody = mc.Arguments[1];
+						break;
+					}
+
 				}
 
 				if (buildBody == mc)
@@ -137,7 +155,7 @@ namespace LinqToDB.Linq.Translation
 
 		protected Expression TranslateWindowFunction(ITranslationContext translationContext, MethodCallExpression methodCall, DbDataType dbDataType, string functionName)
 		{
-			var information = CollectWindowFunctionInformation(null, methodCall.Arguments[1].UnwrapLambda().Body);
+			var information = CollectWindowFunctionInformation(translationContext, null, methodCall.Arguments[1].UnwrapLambda().Body);
 
 			var arguments   = new List<SqlFunctionArgument>();
 			List<ISqlExpression>?     partitionBy = null;

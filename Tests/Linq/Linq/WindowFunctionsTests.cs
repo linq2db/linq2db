@@ -89,6 +89,61 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		public void RowNumberWithMultiplePartitionsWithDefineWindow([IncludeDataSources(
+			true,
+			// native oracle provider crashes with AV
+			TestProvName.AllOracleManaged,
+			TestProvName.AllOracleDevart,
+			TestProvName.AllSqlServer2012Plus,
+			TestProvName.AllClickHouse,
+			TestProvName.AllPostgreSQL)] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(WindowFunctionTestEntity.Seed());
+
+			var query =
+				from x in table
+				let wnd1 = Sql.Window.DefineWindow(f => f.PartitionBy(x.CategoryId).OrderBy(x.Timestamp))
+				let wnd2 = Sql.Window.DefineWindow(f => f.PartitionBy(x.CategoryId, x.Name).OrderBy(x.Value))
+				let wnd3 = Sql.Window.DefineWindow(f => f.PartitionBy(x.CategoryId, x.Name).OrderByDesc(x.Timestamp))
+				let wnd4 = Sql.Window.DefineWindow(f => f.PartitionBy(x.CategoryId, x.Name).OrderByDesc(x.Value))
+				let wnd5 = Sql.Window.DefineWindow(f => f.PartitionBy(x.CategoryId, x.Name).OrderBy(x.Timestamp).ThenBy(x.Value))
+				let wnd6 = Sql.Window.DefineWindow(f => f.PartitionBy(x.CategoryId, x.Name).OrderByDesc(x.Timestamp).ThenByDesc(x.Value))
+				select new
+				{
+					Entity = x,
+					rn1   = Sql.Window.RowNumber(f => f.UseWindow(wnd1)),
+					rn2   = Sql.Window.RowNumber(f => f.UseWindow(wnd2)),
+					rn3   = Sql.Window.RowNumber(f => f.UseWindow(wnd3)),
+					rn4   = Sql.Window.RowNumber(f => f.UseWindow(wnd4)),
+					rn5   = Sql.Window.RowNumber(f => f.UseWindow(wnd5)),
+					rn6   = Sql.Window.RowNumber(f => f.UseWindow(wnd6))
+				}
+				into s
+				orderby s.Entity.Id
+				select s;
+
+			var expected = new[]
+			{
+				new { Id = 1, rn1 = 1, rn2 = 1, rn3 = 1, rn4 = 1, rn5 = 1, rn6 = 1 },
+				new { Id = 2, rn1 = 2, rn2 = 1, rn3 = 1, rn4 = 1, rn5 = 1, rn6 = 1 },
+				new { Id = 3, rn1 = 1, rn2 = 1, rn3 = 1, rn4 = 1, rn5 = 1, rn6 = 1 },
+				new { Id = 4, rn1 = 2, rn2 = 1, rn3 = 1, rn4 = 1, rn5 = 1, rn6 = 1 },
+				new { Id = 5, rn1 = 3, rn2 = 1, rn3 = 1, rn4 = 1, rn5 = 1, rn6 = 1 },
+				new { Id = 6, rn1 = 1, rn2 = 1, rn3 = 1, rn4 = 1, rn5 = 1, rn6 = 1 },
+				new { Id = 7, rn1 = 2, rn2 = 1, rn3 = 1, rn4 = 1, rn5 = 1, rn6 = 1 },
+				new { Id = 8, rn1 = 4, rn2 = 1, rn3 = 1, rn4 = 1, rn5 = 1, rn6 = 1 },
+				new { Id = 9, rn1 = 5, rn2 = 1, rn3 = 1, rn4 = 1, rn5 = 1, rn6 = 1 }
+			};
+
+			var result = query
+				.Select(x => new { x.Entity.Id, x.rn1, x.rn2, x.rn3, x.rn4, x.rn5, x.rn6 })
+				.ToList();
+
+			result.Should().BeEquivalentTo(expected);
+		}
+
+		[Test]
 		//TODO: we can emulate it for other providers by suing additional order by with CASE:
 		//ROW_NUMBER() OVER(ODER BY WHEN x.Value IS NULL THEN 1 ELSE 0 END, x.Value)
 		public void RowNumberWithNulls([IncludeDataSources(

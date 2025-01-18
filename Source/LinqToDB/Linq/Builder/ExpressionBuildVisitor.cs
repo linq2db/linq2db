@@ -4945,6 +4945,11 @@ namespace LinqToDB.Linq.Builder
 					result = BuildPurpose.Sql;
 				}
 
+				if (translationFlags.HasFlag(TranslationFlags.Expand))
+				{
+					result = BuildPurpose.Expand;
+				}
+
 				return result;
 			}
 
