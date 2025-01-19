@@ -1727,6 +1727,14 @@ namespace LinqToDB.Remote
 						break;
 					}
 
+					case QueryElementType.SqlFunctionArgument:
+					{
+						var elem = (SqlFunctionArgument)e;
+						Append(elem.Expression);
+						Append((int)elem.Modifier);
+						break;
+					}
+
 					case QueryElementType.SqlWindowOrderItem:
 					{
 						var elem = (SqlWindowOrderItem)e;
@@ -2858,6 +2866,16 @@ namespace LinqToDB.Remote
 						var partitionBy          = ReadArray<ISqlExpression>()!;
 
 						obj = new SqlWindowFunction(functionType, name, arguments, argumentsNullability, orderBy: orderBy, partitionBy:partitionBy, filter:filter);
+
+						break;
+					}
+
+					case QueryElementType.SqlFunctionArgument:
+					{
+						var expression = Read<ISqlExpression>()!;
+						var modifier   = (Sql.AggregateModifier)ReadInt();
+
+						obj = new SqlFunctionArgument(expression, modifier);
 
 						break;
 					}

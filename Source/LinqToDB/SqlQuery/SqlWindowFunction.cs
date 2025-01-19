@@ -291,7 +291,7 @@ namespace LinqToDB.SqlQuery
 			Modifier = modifier;
 		}
 
-		public ISqlExpression        Expression { get; }
+		public ISqlExpression        Expression { get; private set; }
 		public Sql.AggregateModifier Modifier   { get; }
 
 		public override QueryElementType ElementType => QueryElementType.SqlFunctionArgument;
@@ -307,6 +307,11 @@ namespace LinqToDB.SqlQuery
 			}
 			writer.AppendElement(Expression);
 			return writer;
+		}
+
+		public void Modify(ISqlExpression sqlExpression)
+		{
+			Expression = sqlExpression;
 		}
 	}
 

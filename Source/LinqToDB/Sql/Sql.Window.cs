@@ -121,7 +121,7 @@ namespace LinqToDB
 
 		public interface IUseWindow<TWithWindowPart>
 		{
-			public TWithWindowPart UseWindow(IDefinedFunction window);
+			public TWithWindowPart UseWindow(IDefinedWindow window);
 		}
 
 		#region Window
@@ -131,7 +131,7 @@ namespace LinqToDB
 
 		}
 
-		public static IDefinedFunction DefineWindow(this Sql.IWindowFunction window, Func<IWindowBuilder, IDefinedFunction> func)
+		public static IDefinedWindow DefineWindow(this Sql.IWindowFunction window, Func<IWindowBuilder, IDefinedFunction> func)
 			=> throw new ServerSideOnlyException(nameof(DefineWindow));
 
 		#endregion
@@ -171,7 +171,7 @@ namespace LinqToDB
 		}
 
 		// SUM, AVERAGE
-		public interface IOFilterOPartitionOOrderOFrameFinal : IFilterPart<IOPartitionOOrderOFrameFinal>, IOPartitionOOrderOFrameFinal
+		public interface IOFilterOPartitionOOrderOFrameFinal : IFilterPart<IOPartitionOOrderOFrameFinal>, IOPartitionOOrderOFrameFinal, IUseWindow<IDefinedFunction>
 		{
 		}
 
@@ -231,18 +231,6 @@ namespace LinqToDB
 			=> throw new ServerSideOnlyException(nameof(Sum));
 
 		public static float? Sum(this Sql.IWindowFunction window, float? argument, Func<IOFilterOPartitionOOrderOFrameFinal, IDefinedFunction> func)
-			=> throw new ServerSideOnlyException(nameof(Sum));
-
-		public static short Sum(this Sql.IWindowFunction window, short argument, Func<IOFilterOPartitionOOrderOFrameFinal, IDefinedFunction> func)
-			=> throw new ServerSideOnlyException(nameof(Sum));
-
-		public static short? Sum(this Sql.IWindowFunction window, short? argument, Func<IOFilterOPartitionOOrderOFrameFinal, IDefinedFunction> func)
-			=> throw new ServerSideOnlyException(nameof(Sum));
-
-		public static byte Sum(this Sql.IWindowFunction window, byte argument, Func<IOFilterOPartitionOOrderOFrameFinal, IDefinedFunction> func)
-			=> throw new ServerSideOnlyException(nameof(Sum));
-
-		public static byte? Sum(this Sql.IWindowFunction window, byte? argument, Func<IOFilterOPartitionOOrderOFrameFinal, IDefinedFunction> func)
 			=> throw new ServerSideOnlyException(nameof(Sum));
 
 		#endregion Sum

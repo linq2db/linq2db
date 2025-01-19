@@ -1,4 +1,6 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Linq.Expressions;
 
@@ -14,6 +16,23 @@ namespace LinqToDB.Linq.Translation
 		public WindowFunctionsMemberTranslator()
 		{
 			Registration.RegisterMethod(() => Sql.Window.RowNumber(f => f.OrderBy(1)), TranslateRowNumber);
+
+			RegisterSum();
+		}
+
+		void RegisterSum()
+		{
+			Registration.RegisterMethod(() => Sql.Window.Sum(1,            f => f.OrderBy(1)), TranslateSum);
+			Registration.RegisterMethod(() => Sql.Window.Sum(1L,           f => f.OrderBy(1)), TranslateSum);
+			Registration.RegisterMethod(() => Sql.Window.Sum(1.0,          f => f.OrderBy(1)), TranslateSum);
+			Registration.RegisterMethod(() => Sql.Window.Sum(1f,           f => f.OrderBy(1)), TranslateSum);
+			Registration.RegisterMethod(() => Sql.Window.Sum(1M,           f => f.OrderBy(1)), TranslateSum);
+
+			Registration.RegisterMethod(() => Sql.Window.Sum((int?)1,      f => f.OrderBy(1)), TranslateSum);
+			Registration.RegisterMethod(() => Sql.Window.Sum((long?)1L,    f => f.OrderBy(1)), TranslateSum);
+			Registration.RegisterMethod(() => Sql.Window.Sum((double?)1.0, f => f.OrderBy(1)), TranslateSum);
+			Registration.RegisterMethod(() => Sql.Window.Sum((float?)1f,   f => f.OrderBy(1)), TranslateSum);
+			Registration.RegisterMethod(() => Sql.Window.Sum((decimal?)1M, f => f.OrderBy(1)), TranslateSum);
 		}
 
 		public class WindowFunctionInformation
@@ -24,8 +43,17 @@ namespace LinqToDB.Linq.Translation
 			public required Expression?                                                      Filter      { get; set; }
 		}
 
-		protected static WindowFunctionInformation CollectWindowFunctionInformation(ITranslationContext translationContext, Expression[]? functionArguments, Expression buildBody)
+		protected static bool CollectWindowFunctionInformation(
+			ITranslationContext                                 translationContext,
+			Type                                                expressionType,
+			Expression[]?                                       functionArguments,
+			Expression                                          buildBody,
+			[NotNullWhen(true)] out  WindowFunctionInformation? functionInfo,
+			[NotNullWhen(false)] out SqlErrorExpression?        error)
 		{
+			functionInfo = null;
+			error        = null;
+
 			List<(Expression expr, Sql.AggregateModifier modifier)>?             argumentsList   = null;
 			List<Expression>?                                                    partitionByList = null;
 			List<(Expression expr, bool isDescending, Sql.NullsPosition nulls)>? orderByList     = null;
@@ -54,7 +82,7 @@ namespace LinqToDB.Linq.Translation
 
 						orderByList ??= new();
 
-						var nulls = Sql.NullsPosition.None;
+						var        nulls = Sql.NullsPosition.None;
 						Expression argument;
 						if (mc.Arguments.Count == 2)
 						{
@@ -95,7 +123,7 @@ namespace LinqToDB.Linq.Translation
 					case nameof(WindowFunctionBuilder.IArgumentPart<object>.Argument):
 					{
 						argumentsList ??= new();
-						var modifier = Sql.AggregateModifier.None;
+						var        modifier = Sql.AggregateModifier.None;
 						Expression argument;
 						if (mc.Arguments.Count == 2)
 						{
@@ -129,6 +157,12 @@ namespace LinqToDB.Linq.Translation
 						{
 							buildBody = mce.Arguments[1].UnwrapLambda().Body;
 						}
+						else
+						{
+							error = translationContext.CreateErrorExpression(buildBody, "Expected window definition", expressionType);
+							return false;
+						}
+
 						break;
 					}
 
@@ -144,18 +178,33 @@ namespace LinqToDB.Linq.Translation
 					break;
 			}
 
-			return new WindowFunctionInformation
+			functionInfo = new WindowFunctionInformation
 			{
 				Arguments = argumentsList?.ToArray(),
 				PartitionBy = partitionByList?.ToArray(),
 				OrderBy = orderByList?.ToArray(),
 				Filter = filter
 			};
+
+			return true;
 		}
 
-		protected Expression TranslateWindowFunction(ITranslationContext translationContext, MethodCallExpression methodCall, DbDataType dbDataType, string functionName)
+		protected Expression TranslateWindowFunction(
+			ITranslationContext  translationContext,
+			MethodCallExpression methodCall,
+			int?                 argumentIndex,
+			int                  windowArgument,
+			DbDataType           dbDataType,
+			string               functionName)
 		{
-			var information = CollectWindowFunctionInformation(translationContext, null, methodCall.Arguments[1].UnwrapLambda().Body);
+			if (!CollectWindowFunctionInformation(
+				    translationContext, 
+				    methodCall.Type, 
+				    argumentIndex == null ? null : [methodCall.Arguments[argumentIndex.Value]],
+				    methodCall.Arguments[windowArgument].UnwrapLambda().Body, 
+				    out var information, 
+				    out var error))
+				return error;
 
 			var arguments   = new List<SqlFunctionArgument>();
 			List<ISqlExpression>?     partitionBy = null;
@@ -221,8 +270,14 @@ namespace LinqToDB.Linq.Translation
 			var factory = translationContext.ExpressionFactory;
 			var dbDataType = factory.GetDbDataType(methodCall.Type);
 
-			return TranslateWindowFunction(translationContext, methodCall, dbDataType, "ROW_NUMBER");
+			return TranslateWindowFunction(translationContext, methodCall, null, 1, dbDataType, "ROW_NUMBER");
 		}
 
+		public virtual Expression? TranslateSum(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags)
+		{
+			var dbDataType = translationContext.ExpressionFactory.GetDbDataType(methodCall.Type);
+
+			return TranslateWindowFunction(translationContext, methodCall, 1, 2, dbDataType, "SUM");
+		}
 	}
 }

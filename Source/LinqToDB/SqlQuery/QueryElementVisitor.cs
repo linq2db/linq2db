@@ -131,6 +131,7 @@ namespace LinqToDB.SqlQuery
 				QueryElementType.SqlCase                   => VisitSqlCaseExpression         ((SqlCaseExpression         )element),
 				QueryElementType.CompareTo                 => VisitSqlCompareToExpression    ((SqlCompareToExpression    )element),
 				QueryElementType.SqlWindowFunction         => VisitSqlWindowFunction         ((SqlWindowFunction         )element),
+				QueryElementType.SqlFunctionArgument       => VisitSqlFunctionArgument       ((SqlFunctionArgument       )element),
 				QueryElementType.SqlWindowOrderItem        => VisitSqlWindowOrderItem        ((SqlWindowOrderItem        )element),
 				QueryElementType.SqlFrameClause            => VisitSqlFrameClause            ((SqlFrameClause            )element),
 				QueryElementType.SqlFrameBoundaryOffset             => VisitSqlFrameBoundaryOffset            ((SqlFrameBoundary.SqlOffset            )element),
@@ -257,6 +258,34 @@ namespace LinqToDB.SqlQuery
 					throw CreateInvalidVisitModeException();
 			}
 
+			return element;
+		}
+
+		protected virtual IQueryElement VisitSqlFunctionArgument(SqlFunctionArgument element)
+		{
+			switch (GetVisitMode(element))
+			{
+				case VisitMode.ReadOnly:
+				{
+					Visit(element.Expression);
+					break;
+				}
+				case VisitMode.Modify:
+				{
+					element.Modify((ISqlExpression)this.Visit(element.Expression));
+					break;
+				}
+				case VisitMode.Transform:
+				{
+					var expression = (ISqlExpression)this.Visit(element.Expression);
+
+					if (ShouldReplace(element) || !ReferenceEquals(element.Expression, expression))
+						return NotifyReplaced(new SqlFunctionArgument(expression, element.Modifier), element);
+					break;
+				}
+				default:
+					throw CreateInvalidVisitModeException();
+			}
 			return element;
 		}
 
