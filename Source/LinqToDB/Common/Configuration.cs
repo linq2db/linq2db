@@ -78,8 +78,8 @@ namespace LinqToDB.Common
 		/// <summary>
 		///	<b>Obsolete</b>: All <see cref="Task"/>s are now awaited using <c>ConfigureAwait(false)</c>. Please remove references to this property.
 		/// </summary>
-		// TODO: V7 remove
-		[Obsolete("This API doesn't have effect anymore and will be removed in future")]
+		// TODO: Remove in v7
+		[Obsolete("This API doesn't have effect anymore and will be removed in version 7"), EditorBrowsable(EditorBrowsableState.Never)]
 		public static bool ContinueOnCapturedContext;
 
 		/// <summary>
@@ -198,8 +198,8 @@ namespace LinqToDB.Common
 			/// - if <c>false</c> - group data will be loaded when you call enumerator for specific group <see cref="System.Linq.IGrouping{TKey, TElement}"/>.
 			/// Default value: <c>false</c>.
 			/// </summary>
-			// TODO: V7 remove
-			[Obsolete("This API doesn't have effect anymore and will be removed in future")]
+			// TODO: Remove in v7
+			[Obsolete("This API doesn't have effect anymore and will be removed in version 7"), EditorBrowsable(EditorBrowsableState.Never)]
 			public static bool PreloadGroups { get; set; }
 
 			/// <summary>
@@ -333,7 +333,8 @@ namespace LinqToDB.Common
 				}
 			}
 
-			[Obsolete("Use CompareNulls instead: true maps to LikeClr and false to LikeSqlExceptParameters"), EditorBrowsable(EditorBrowsableState.Never)]
+			// TODO: Remove in v7
+			[Obsolete("Use CompareNulls instead: true maps to LikeClr and false to LikeSqlExceptParameters. This option will be removed in version 7"), EditorBrowsable(EditorBrowsableState.Never)]
 			public static bool CompareNullsAsValues
 			{
 				get => CompareNulls == CompareNulls.LikeClr;
@@ -402,8 +403,8 @@ namespace LinqToDB.Common
 			/// Used to generate CROSS APPLY or OUTER APPLY if possible.
 			/// Default value: <c>true</c>.
 			/// </summary>
-			// TODO: V7 remove
-			[Obsolete("This API doesn't have effect anymore and will be removed in future")]
+			// TODO: Remove in v7
+			[Obsolete("This API doesn't have effect anymore and will be removed in version 7"), EditorBrowsable(EditorBrowsableState.Never)]
 			public static bool PreferApply { get; set; }
 
 			/// <summary>
@@ -412,8 +413,8 @@ namespace LinqToDB.Common
 			/// Into GROUP BY equivalent if syntax is not supported
 			/// Default value: <c>true</c>.
 			/// </summary>
-			// TODO: V7 remove
-			[Obsolete("This API doesn't have effect anymore and will be removed in future")]
+			// TODO: Remove in v7
+			[Obsolete("This API doesn't have effect anymore and will be removed in version 7"), EditorBrowsable(EditorBrowsableState.Never)]
 			public static bool KeepDistinctOrdered { get; set; }
 
 			/// <summary>

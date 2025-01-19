@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Linq.Expressions;
@@ -13,14 +14,12 @@ using JetBrains.Annotations;
 namespace LinqToDB
 {
 	using Async;
-	using Data;
 	using DataProvider;
 	using Expressions;
 	using Linq;
 	using Linq.Builder;
 	using Reflection;
 	using SqlProvider;
-
 	using static MultiInsertExtensions;
 
 	/// <summary>
@@ -823,8 +822,8 @@ namespace LinqToDB
 		/// <param name="target">Target table.</param>
 		/// <param name="setter">Update expression. Uses record from source query as parameter. Expression supports only target table record new expression with field initializers.</param>
 		/// <returns>Number of updated records.</returns>
-		// TODO: remove in v7
-		[Obsolete($"Use overload with lambda argument for target parameter")]
+		// TODO: Remove in v7
+		[Obsolete("Use overload with lambda argument for target parameter. API will be removed in version 7"), EditorBrowsable(EditorBrowsableState.Never)]
 		public static int Update<TSource, TTarget>(
 							this IQueryable<TSource> source,
 							ITable<TTarget> target,
@@ -855,8 +854,8 @@ namespace LinqToDB
 		/// <param name="setter">Update expression. Uses record from source query as parameter. Expression supports only target table record new expression with field initializers.</param>
 		/// <param name="token">Optional asynchronous operation cancellation token.</param>
 		/// <returns>Number of updated records.</returns>
-		// TODO: remove in v7
-		[Obsolete($"Use overload with lambda argument for target parameter")]
+		// TODO: Remove in v7
+		[Obsolete("Use overload with lambda argument for target parameter. API will be removed in version 7"), EditorBrowsable(EditorBrowsableState.Never)]
 		public static Task<int> UpdateAsync<TSource, TTarget>(
 							this IQueryable<TSource> source,
 							ITable<TTarget> target,
