@@ -1,0 +1,45 @@
+﻿#nullable enable
+const LinqToDB.DataProvider.DB2.DB2ProviderAdapter.AssemblyName = "IBM.Data.Db2" -> string!
+const LinqToDB.DataProvider.DB2.DB2ProviderAdapter.AssemblyNameOld = "IBM.Data.DB2.Core" -> string!
+const LinqToDB.DataProvider.DB2.DB2ProviderAdapter.ClientNamespace = "IBM.Data.Db2" -> string!
+const LinqToDB.DataProvider.DB2.DB2ProviderAdapter.ClientNamespaceOld = "IBM.Data.DB2.Core" -> string!
+LinqToDB.Data.DataConnection.DisposeCommandAsync() -> System.Threading.Tasks.ValueTask
+LinqToDB.Data.RetryPolicy.DbExceptionTransientExceptionDetector
+LinqToDB.Data.RetryPolicy.TransientRetryPolicy
+LinqToDB.Data.RetryPolicy.TransientRetryPolicy.TransientRetryPolicy() -> void
+LinqToDB.Data.RetryPolicy.TransientRetryPolicy.TransientRetryPolicy(int maxRetryCount) -> void
+LinqToDB.Data.RetryPolicy.TransientRetryPolicy.TransientRetryPolicy(int maxRetryCount, System.TimeSpan maxRetryDelay, double randomFactor, double exponentialBase, System.TimeSpan coefficient) -> void
+LinqToDB.DataProvider.IDataProvider.DisposeCommandAsync(System.Data.Common.DbCommand! command) -> System.Threading.Tasks.ValueTask
+override LinqToDB.DataProvider.Access.AccessOptions.<Clone>$() -> LinqToDB.DataProvider.Access.AccessOptions!
+override LinqToDB.DataProvider.BulkCopyReader<T>.DisposeAsync() -> System.Threading.Tasks.ValueTask
+override LinqToDB.DataProvider.ClickHouse.ClickHouseOptions.<Clone>$() -> LinqToDB.DataProvider.ClickHouse.ClickHouseOptions!
+override LinqToDB.DataProvider.DB2.DB2Options.<Clone>$() -> LinqToDB.DataProvider.DB2.DB2Options!
+override LinqToDB.DataProvider.Firebird.FirebirdOptions.<Clone>$() -> LinqToDB.DataProvider.Firebird.FirebirdOptions!
+override LinqToDB.DataProvider.Informix.InformixOptions.<Clone>$() -> LinqToDB.DataProvider.Informix.InformixOptions!
+override LinqToDB.DataProvider.MySql.MySqlOptions.<Clone>$() -> LinqToDB.DataProvider.MySql.MySqlOptions!
+override LinqToDB.DataProvider.Oracle.OracleOptions.<Clone>$() -> LinqToDB.DataProvider.Oracle.OracleOptions!
+override LinqToDB.DataProvider.PostgreSQL.PostgreSQLOptions.<Clone>$() -> LinqToDB.DataProvider.PostgreSQL.PostgreSQLOptions!
+override LinqToDB.DataProvider.SapHana.SapHanaOptions.<Clone>$() -> LinqToDB.DataProvider.SapHana.SapHanaOptions!
+override LinqToDB.DataProvider.SqlCe.SqlCeOptions.<Clone>$() -> LinqToDB.DataProvider.SqlCe.SqlCeOptions!
+override LinqToDB.DataProvider.SQLite.SQLiteOptions.<Clone>$() -> LinqToDB.DataProvider.SQLite.SQLiteOptions!
+override LinqToDB.DataProvider.SqlServer.SqlServerOptions.<Clone>$() -> LinqToDB.DataProvider.SqlServer.SqlServerOptions!
+override LinqToDB.DataProvider.Sybase.SybaseOptions.<Clone>$() -> LinqToDB.DataProvider.Sybase.SybaseOptions!
+override System.Data.Linq.Binary.Equals(object? obj) -> bool
+override System.Data.Linq.Binary.GetHashCode() -> int
+override System.Data.Linq.Binary.ToString() -> string!
+static LinqToDB.Data.RetryPolicy.DbExceptionTransientExceptionDetector.ShouldRetryOn(System.Exception! ex) -> bool
+static LinqToDB.Sql.DateAdd(LinqToDB.Sql.DateParts part, double? number, System.DateOnly? date) -> System.DateOnly?
+static LinqToDB.Sql.DateDiff(LinqToDB.Sql.DateParts part, System.DateOnly? startDate, System.DateOnly? endDate) -> int?
+static LinqToDB.Sql.DatePart(LinqToDB.Sql.DateParts part, System.DateOnly? date) -> int?
+static LinqToDB.Sql.MakeDateOnly(int? year, int? month, int? day) -> System.DateOnly?
+static LinqToDB.Sql.Types.DateOnly.get -> System.DateOnly
+static System.Data.Linq.Binary.implicit operator System.Data.Linq.Binary!(byte[]? value) -> System.Data.Linq.Binary!
+static System.Data.Linq.Binary.operator !=(System.Data.Linq.Binary? binary1, System.Data.Linq.Binary? binary2) -> bool
+static System.Data.Linq.Binary.operator ==(System.Data.Linq.Binary? binary1, System.Data.Linq.Binary? binary2) -> bool
+System.Data.Linq.Binary
+System.Data.Linq.Binary.Binary(byte[]? value) -> void
+System.Data.Linq.Binary.Equals(System.Data.Linq.Binary? other) -> bool
+System.Data.Linq.Binary.Length.get -> int
+System.Data.Linq.Binary.ToArray() -> byte[]!
+virtual LinqToDB.DataProvider.DataProviderBase.DisposeCommandAsync(System.Data.Common.DbCommand! command) -> System.Threading.Tasks.ValueTask
+virtual LinqToDB.Linq.Translation.SqlTypesTranslationDefault.ConvertDateOnly(LinqToDB.Linq.Translation.ITranslationContext! translationContext, System.Linq.Expressions.MemberExpression! memberExpression, LinqToDB.Linq.Translation.TranslationFlags translationFlags) -> System.Linq.Expressions.Expression?

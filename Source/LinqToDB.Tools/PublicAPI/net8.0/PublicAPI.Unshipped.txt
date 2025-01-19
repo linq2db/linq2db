@@ -1,1 +1,10 @@
 ﻿#nullable enable
+*REMOVED*override LinqToDB.Schema.AggregateFunction.<Clone>$() -> LinqToDB.Schema.AggregateFunction!
+*REMOVED*override LinqToDB.Schema.ScalarFunction.<Clone>$() -> LinqToDB.Schema.ScalarFunction!
+*REMOVED*override LinqToDB.Schema.ScalarResult.<Clone>$() -> LinqToDB.Schema.ScalarResult!
+*REMOVED*override LinqToDB.Schema.StoredProcedure.<Clone>$() -> LinqToDB.Schema.StoredProcedure!
+*REMOVED*override LinqToDB.Schema.Table.<Clone>$() -> LinqToDB.Schema.Table!
+*REMOVED*override LinqToDB.Schema.TableFunction.<Clone>$() -> LinqToDB.Schema.TableFunction!
+*REMOVED*override LinqToDB.Schema.TupleResult.<Clone>$() -> LinqToDB.Schema.TupleResult!
+*REMOVED*override LinqToDB.Schema.View.<Clone>$() -> LinqToDB.Schema.View!
+*REMOVED*override LinqToDB.Schema.VoidResult.<Clone>$() -> LinqToDB.Schema.VoidResult!

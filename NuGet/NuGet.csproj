@@ -19,8 +19,6 @@
 		<PackageReference Include="System.Data.SQLite.Core" />
 		<PackageReference Include="Microsoft.SqlServer.Types" />
 
-		<None Include="empty.csproj" />
-
 		<None Include="..\Data\*">
 			<Link>Database/%(FileName)%(Extension)</Link>
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -39,6 +37,7 @@
 			<Link>x86\%(RecursiveDir)%(FileName)%(Extension)</Link>
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</None>
+		<None Include="empty\empty.csproj" />
 
 		<Reference Include="Sap.Data.Hana.v4.5">
 			<HintPath>$(SolutionDir)\Redist\SapHana\v4.5\Sap.Data.Hana.v4.5.dll</HintPath>
