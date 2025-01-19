@@ -141,13 +141,6 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			return ReservedWords.IsReserved(word, ProviderName.PostgreSQL);
 		}
 
-		[Obsolete("Use PostgreSQLOptions.Default.IdentifierQuoteMode instead.")]
-		public static PostgreSQLIdentifierQuoteMode IdentifierQuoteMode
-		{
-			get => PostgreSQLOptions.Default.IdentifierQuoteMode;
-			set => PostgreSQLOptions.Default = PostgreSQLOptions.Default with { IdentifierQuoteMode = value };
-		}
-
 		public override StringBuilder Convert(StringBuilder sb, string value, ConvertType convertType)
 		{
 			// TODO: implement better quotation logic

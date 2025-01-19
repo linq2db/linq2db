@@ -1,4 +1,5 @@
 ﻿using System;
+using System.ComponentModel;
 using System.Data.Common;
 using System.IO;
 using System.Security;
@@ -91,8 +92,8 @@ namespace LinqToDB.DataProvider.Access
 		/// <remarks>
 		/// Provider value examples: Microsoft.Jet.OLEDB.4.0 (for JET database), Microsoft.ACE.OLEDB.12.0, Microsoft.ACE.OLEDB.15.0 (for ACE database).
 		/// </remarks>
-		// TODO: return in v7
-		[Obsolete("Use overload with 'AccessVersion version' argument")]
+		// TODO: Remove in v7
+		[Obsolete("Use overload with 'AccessVersion version' argument. API will be removed in version 7"), EditorBrowsable(EditorBrowsableState.Never)]
 		public static void CreateDatabase(string databaseName, bool deleteIfExists = false, string provider = "Microsoft.Jet.OLEDB.4.0")
 		{
 			if (databaseName == null) throw new ArgumentNullException(nameof(databaseName));
