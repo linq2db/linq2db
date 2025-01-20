@@ -10,6 +10,7 @@ using JetBrains.Annotations;
 namespace LinqToDB.Tools.Comparers
 {
 	using Common;
+	using Common.Internal;
 	using Expressions;
 	using Extensions;
 	using Reflection;
@@ -115,7 +116,7 @@ namespace LinqToDB.Tools.Comparers
 		public static IEqualityComparer GetEqualityComparer(Type type)
 		{
 			var method = _getEqualityComparerMethodInfo.MakeGenericMethod(type);
-			return (IEqualityComparer)method.Invoke(null, null)!;
+			return method.InvokeExt<IEqualityComparer>(null, null);
 		}
 
 		/// <summary>

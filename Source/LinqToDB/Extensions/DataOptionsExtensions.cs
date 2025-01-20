@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Data.Common;
 using System.Diagnostics;
 using System.Linq.Expressions;
@@ -11,6 +12,7 @@ using JetBrains.Annotations;
 // ReSharper disable once CheckNamespace
 namespace LinqToDB
 {
+	using Common;
 	using Data;
 	using Data.RetryPolicy;
 	using DataProvider;
@@ -33,9 +35,11 @@ namespace LinqToDB
 		/// Default value: <c>false</c>.
 		/// </summary>
 		[Pure]
+		// TODO: Remove in v7
+		[Obsolete("This API doesn't have effect anymore and will be removed in version 7"), EditorBrowsable(EditorBrowsableState.Never)]
 		public static LinqOptions WithPreloadGroups(this LinqOptions options, bool preloadGroups)
 		{
-			return options with { PreloadGroups = preloadGroups };
+			return options;
 		}
 
 		/// <summary>
@@ -104,9 +108,14 @@ namespace LinqToDB
 		}
 
 		/// <summary>
-		/// If set to true nullable fields would be checked for IS NULL in Equal/NotEqual comparisons.
+		/// If set to <see cref="CompareNulls.LikeClr" /> nullable fields would be checked for <c>IS NULL</c> in Equal/NotEqual comparisons.
+		/// If set to <see cref="CompareNulls.LikeSql" /> comparisons are compiled straight to equivalent SQL operators,
+		/// which consider nulls values as not equal.
+		/// <see cref="CompareNulls.LikeSqlExceptParameters" /> is a backward compatible option that works mostly as <see cref="CompareNulls.LikeSql" />,
+		/// but sniffs parameters value and changes = into <c>IS NULL</c> when parameters are null.
+		/// Comparisons to literal null are always compiled into <c>IS NULL</c>.
 		/// This affects: Equal, NotEqual, Not Contains
-		/// Default value: <c>true</c>.
+		/// Default value: <see cref="CompareNulls.LikeClr" />.
 		/// </summary>
 		/// <example>
 		/// <code>
@@ -125,7 +134,7 @@ namespace LinqToDB
 		/// db.MyEntity.Where(e => ! filter.Contains(e.Value))
 		/// </code>
 		///
-		/// Would be converted to next queries:
+		/// Would be converted to next queries under <see cref="CompareNulls.LikeClr" />:
 		/// <code>
 		/// SELECT Value FROM MyEntity WHERE Value IS NULL OR Value != 10
 		///
@@ -137,15 +146,23 @@ namespace LinqToDB
 		/// </code>
 		/// </example>
 		[Pure]
+		public static LinqOptions WithCompareNulls(this LinqOptions options, CompareNulls compareNulls)
+		{
+			return options with { CompareNulls = compareNulls };
+		}
+
+		[Pure]
+		// TODO: Remove in v7
+		[Obsolete("Use CompareNulls instead: true maps to LikeClr and false to LikeSqlExceptParameters. This option will be removed in version 7"), EditorBrowsable(EditorBrowsableState.Never)]
 		public static LinqOptions WithCompareNullsAsValues(this LinqOptions options, bool compareNullsAsValues)
 		{
-			return options with { CompareNullsAsValues = compareNullsAsValues };
+			return options.WithCompareNulls(compareNullsAsValues ? CompareNulls.LikeClr : CompareNulls.LikeSqlExceptParameters);
 		}
 
 		/// <summary>
 		/// Controls behavior of LINQ query, which ends with GroupBy call.
 		/// - if <c>true</c> - <seealso cref="LinqToDBException"/> will be thrown for such queries;
-		/// - if <c>false</c> - behavior is controlled by <see cref="UsePreloadGroups"/> option.
+		/// - if <c>false</c> - eager loading used.
 		/// Default value: <c>true</c>.
 		/// </summary>
 		/// <remarks>
@@ -193,9 +210,11 @@ namespace LinqToDB
 		/// Default value: <c>true</c>.
 		/// </summary>
 		[Pure]
+		// TODO: Remove in v7
+		[Obsolete("This API doesn't have effect anymore and will be removed in version 7"), EditorBrowsable(EditorBrowsableState.Never)]
 		public static LinqOptions WithPreferApply(this LinqOptions options, bool preferApply)
 		{
-			return options with { PreferApply = preferApply };
+			return options;
 		}
 
 		/// <summary>
@@ -205,9 +224,11 @@ namespace LinqToDB
 		/// Default value: <c>true</c>.
 		/// </summary>
 		[Pure]
+		// TODO: Remove in v7
+		[Obsolete("This API doesn't have effect anymore and will be removed in version 7"), EditorBrowsable(EditorBrowsableState.Never)]
 		public static LinqOptions WithKeepDistinctOrdered(this LinqOptions options, bool keepDistinctOrdered)
 		{
-			return options with { KeepDistinctOrdered = keepDistinctOrdered };
+			return options;
 		}
 
 		/// <summary>
@@ -255,9 +276,11 @@ namespace LinqToDB
 		/// Default value: <c>false</c>.
 		/// </summary>
 		[Pure]
+		// TODO: Remove in v7
+		[Obsolete("This API doesn't have effect anymore and will be removed in version 7"), EditorBrowsable(EditorBrowsableState.Never)]
 		public static DataOptions UsePreloadGroups(this DataOptions options, bool preloadGroups)
 		{
-			return options.WithOptions<LinqOptions>(o => o with { PreloadGroups = preloadGroups });
+			return options;
 		}
 
 		/// <summary>
@@ -326,9 +349,14 @@ namespace LinqToDB
 		}
 
 		/// <summary>
-		/// If set to true nullable fields would be checked for IS NULL in Equal/NotEqual comparisons.
+		/// If set to <see cref="CompareNulls.LikeClr" /> nullable fields would be checked for <c>IS NULL</c> in Equal/NotEqual comparisons.
+		/// If set to <see cref="CompareNulls.LikeSql" /> comparisons are compiled straight to equivalent SQL operators,
+		/// which consider nulls values as not equal.
+		/// <see cref="CompareNulls.LikeSqlExceptParameters" /> is a backward compatible option that works mostly as <see cref="CompareNulls.LikeSql" />,
+		/// but sniffs parameters value and changes = into <c>IS NULL</c> when parameters are null.
+		/// Comparisons to literal null are always compiled into <c>IS NULL</c>.
 		/// This affects: Equal, NotEqual, Not Contains
-		/// Default value: <c>true</c>.
+		/// Default value: <see cref="CompareNulls.LikeClr" />.
 		/// </summary>
 		/// <example>
 		/// <code>
@@ -347,7 +375,7 @@ namespace LinqToDB
 		/// db.MyEntity.Where(e => ! filter.Contains(e.Value))
 		/// </code>
 		///
-		/// Would be converted to next queries:
+		/// Would be converted to next queries under <see cref="CompareNulls.LikeClr" />:
 		/// <code>
 		/// SELECT Value FROM MyEntity WHERE Value IS NULL OR Value != 10
 		///
@@ -359,15 +387,23 @@ namespace LinqToDB
 		/// </code>
 		/// </example>
 		[Pure]
+		public static DataOptions UseCompareNulls(this DataOptions options, CompareNulls compareNulls)
+		{
+			return options.WithOptions<LinqOptions>(o => o with { CompareNulls = compareNulls });
+		}
+
+		[Pure]
+		// TODO: Remove in v7
+		[Obsolete("Use CompareNulls instead: true maps to LikeClr and false to LikeSqlExceptParameters. This option will be removed in version 7"), EditorBrowsable(EditorBrowsableState.Never)]
 		public static DataOptions UseCompareNullsAsValues(this DataOptions options, bool compareNullsAsValues)
 		{
-			return options.WithOptions<LinqOptions>(o => o with { CompareNullsAsValues = compareNullsAsValues });
+			return options.UseCompareNulls(compareNullsAsValues ? CompareNulls.LikeClr : CompareNulls.LikeSqlExceptParameters);
 		}
 
 		/// <summary>
 		/// Controls behavior of LINQ query, which ends with GroupBy call.
 		/// - if <c>true</c> - <seealso cref="LinqToDBException"/> will be thrown for such queries;
-		/// - if <c>false</c> - behavior is controlled by <see cref="UsePreloadGroups"/> option.
+		/// - if <c>false</c> - eager loading used.
 		/// Default value: <c>true</c>.
 		/// </summary>
 		/// <remarks>
@@ -415,9 +451,11 @@ namespace LinqToDB
 		/// Default value: <c>true</c>.
 		/// </summary>
 		[Pure]
+		// TODO: Remove in v7
+		[Obsolete("This API doesn't have effect anymore and will be removed in version 7"), EditorBrowsable(EditorBrowsableState.Never)]
 		public static DataOptions UsePreferApply(this DataOptions options, bool preferApply)
 		{
-			return options.WithOptions<LinqOptions>(o => o with { PreferApply = preferApply });
+			return options;
 		}
 
 		/// <summary>
@@ -427,9 +465,11 @@ namespace LinqToDB
 		/// Default value: <c>true</c>.
 		/// </summary>
 		[Pure]
+		// TODO: Remove in v7
+		[Obsolete("This API doesn't have effect anymore and will be removed in version 7"), EditorBrowsable(EditorBrowsableState.Never)]
 		public static DataOptions UseKeepDistinctOrdered(this DataOptions options, bool keepDistinctOrdered)
 		{
-			return options.WithOptions<LinqOptions>(o => o with { KeepDistinctOrdered = keepDistinctOrdered });
+			return options;
 		}
 
 		/// <summary>
@@ -827,6 +867,30 @@ namespace LinqToDB
 			return options.WithOptions<ConnectionOptions>(o => o with { DataProvider = dataProvider, DbTransaction = transaction });
 		}
 
+		#endregion
+
+		#region DataContextOptions
+
+		/// <summary>
+		/// Command timeout or <c>null</c> for default timeout.
+		/// Default value: <c>null</c>.
+		/// </summary>
+		[Pure]
+		public static DataContextOptions WithCommandTimeout(this DataContextOptions options, int? commandTimeout)
+		{
+			return options with { CommandTimeout = commandTimeout };
+		}
+
+		/// <summary>
+		/// Command timeout or <c>null</c> for default timeout.
+		/// Default value: <c>null</c>.
+		/// </summary>
+		[Pure]
+		public static DataOptions UseCommandTimeout(this DataOptions options, int? commandTimeout)
+		{
+			return options.WithOptions<DataContextOptions>(o => o with { CommandTimeout = commandTimeout });
+		}
+
 		/// <summary>
 		/// <para>
 		/// Adds <see cref="IInterceptor" /> instances to those registered on the context.
@@ -965,7 +1029,7 @@ namespace LinqToDB
 		/// </para>
 		/// <para>
 		/// Translators can be used translate member expressions to SQL expressions.
-		/// </para>	
+		/// </para>
 		/// </summary>
 		/// <param name="options"></param>
 		/// <param name="translator"></param>
@@ -991,7 +1055,7 @@ namespace LinqToDB
 		/// </para>
 		/// <para>
 		/// Translators can be used translate member expressions to SQL expressions.
-		/// </para>	
+		/// </para>
 		/// </summary>
 		/// <param name="options"></param>
 		/// <param name="translators"></param>
@@ -1110,7 +1174,7 @@ namespace LinqToDB
 		/// <param name="write">Callback, may not be called depending on the trace level.</param>
 		/// <returns>The builder instance so calls can be chained.</returns>
 		[Pure]
-		public static DataOptions UseTraceWith(this DataOptions options, Action<string?,string?,TraceLevel> write)
+		public static DataOptions UseTraceWith(this DataOptions options, Action<string,string,TraceLevel> write)
 		{
 			return options.WithOptions<QueryTraceOptions>(o => o with { WriteTrace = write });
 		}

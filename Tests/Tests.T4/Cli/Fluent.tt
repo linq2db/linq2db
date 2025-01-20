@@ -1,23 +1,10 @@
 ﻿<#@ template language="C#" debug="True" hostSpecific="True" compilerOptions="/langversion:latest" #>
+<#@ CleanupBehavior processor="T4VSHost" CleanupAfterProcessingtemplate="true"                    #>
 <#@ output extension=".generated.cs"                                                              #>
 <#@ include file="CLI.ttinclude"                                               once="true"        #>
 <#
-	var solutionsPath = Host.ResolveAssemblyReference("$(SolutionDir)");
-	var artifactsPath = Host.ResolveAssemblyReference("$(ArtifactsPath)");
 	var targetDir     = Path.Combine(solutionsPath, "Tests", "Tests.T4", "Cli", "Fluent");
 	var mode          = "default";
-
-	var dbPath        = $@"{artifactsPath}\bin\Tests\Debug\net462\Database\TestData.ODBC.mdb";
-	var accessOdbcCN  = $"Driver={{Microsoft Access Driver (*.mdb, *.accdb)}};Dbq={dbPath};ExtendedAnsiSQL=1";
-
-	dbPath            = $@"{artifactsPath}\bin\Tests\Debug\net462\Database\TestData.mdb";
-	var accessOleDbCN = $"Provider=Microsoft.ACE.OLEDB.12.0;Data Source={dbPath};Locale Identifier=1033;Persist Security Info=True";
-
-	var sqliteCN      = "Data Source=" + Path.Combine(solutionsPath, "Data", "TestData.sqlite");
-	var sqliteNwCN    = "Data Source=" + Path.Combine(solutionsPath, "Data", "Northwind.sqlite");
-	var sqlceCN       = "Data Source=" + Path.Combine(solutionsPath, "Data", "TestData.sdf");
-
-	var db2ProviderLocation = $@"{artifactsPath}\bin\Tests\Debug\net6.0\IBM.Data.Db2.dll";
 
 	var options = new string[]
 	{

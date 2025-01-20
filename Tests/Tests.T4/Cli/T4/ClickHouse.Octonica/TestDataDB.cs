@@ -67,10 +67,11 @@ namespace Cli.T4.ClickHouse.Octonica
 		[Column("smallintDataType"                                          )] public short?  SmallintDataType { get; set; } // Int16
 		[Column("floatDataType"                                             )] public float?  FloatDataType    { get; set; } // Float32
 		[Column("doubleDataType"                                            )] public double? DoubleDataType   { get; set; } // Float64
-		[Column("ncharDataType"                                             )] public byte[]? NcharDataType    { get; set; } // FixedString(20)
-		[Column("char20DataType"                                            )] public byte[]? Char20DataType   { get; set; } // FixedString(20)
+		[Column("ncharDataType"                                             )] public string? NcharDataType    { get; set; } // FixedString(20)
+		[Column("char20DataType"                                            )] public string? Char20DataType   { get; set; } // FixedString(20)
 		[Column("varcharDataType"                                           )] public string? VarcharDataType  { get; set; } // String
-		[Column("charDataType"                                              )] public byte[]? CharDataType     { get; set; } // FixedString(1)
+		[Column("charDataType"                                              )] public char?   CharDataType     { get; set; } // FixedString(1)
+		[Column("bitDataType"                                               )] public ulong?  BitDataType      { get; set; } // UInt64
 	}
 
 	public static partial class ExtensionMethods
@@ -217,7 +218,7 @@ namespace Cli.T4.ClickHouse.Octonica
 		[Column("FirstName" , CanBeNull    = false                     )] public string  FirstName  { get; set; } = null!; // String
 		[Column("LastName"  , CanBeNull    = false                     )] public string  LastName   { get; set; } = null!; // String
 		[Column("MiddleName"                                           )] public string? MiddleName { get; set; } // String
-		[Column("Gender"    , CanBeNull    = false                     )] public byte[]  Gender     { get; set; } = null!; // FixedString(1)
+		[Column("Gender"                                               )] public char    Gender     { get; set; } // FixedString(1)
 	}
 
 	[Table("ReplacingMergeTreeTable")]
@@ -240,8 +241,8 @@ namespace Cli.T4.ClickHouse.Octonica
 		[Column("FieldBoolean"                                             )] public bool?           FieldBoolean    { get; set; } // Bool
 		[Column("FieldString"                                              )] public string?         FieldString     { get; set; } // String
 		[Column("FieldNString"                                             )] public string?         FieldNString    { get; set; } // String
-		[Column("FieldChar"                                                )] public byte[]?         FieldChar       { get; set; } // FixedString(1)
-		[Column("FieldNChar"                                               )] public byte[]?         FieldNChar      { get; set; } // FixedString(2)
+		[Column("FieldChar"                                                )] public char?           FieldChar       { get; set; } // FixedString(1)
+		[Column("FieldNChar"                                               )] public string?         FieldNChar      { get; set; } // FixedString(2)
 		[Column("FieldFloat"                                               )] public float?          FieldFloat      { get; set; } // Float32
 		[Column("FieldDouble"                                              )] public double?         FieldDouble     { get; set; } // Float64
 		[Column("FieldDateTime"                                            )] public DateTimeOffset? FieldDateTime   { get; set; } // DateTime64(3)
@@ -268,8 +269,8 @@ namespace Cli.T4.ClickHouse.Octonica
 		[Column("FieldBoolean"                                             )] public bool?           FieldBoolean    { get; set; } // Bool
 		[Column("FieldString"                                              )] public string?         FieldString     { get; set; } // String
 		[Column("FieldNString"                                             )] public string?         FieldNString    { get; set; } // String
-		[Column("FieldChar"                                                )] public byte[]?         FieldChar       { get; set; } // FixedString(1)
-		[Column("FieldNChar"                                               )] public byte[]?         FieldNChar      { get; set; } // FixedString(2)
+		[Column("FieldChar"                                                )] public char?           FieldChar       { get; set; } // FixedString(1)
+		[Column("FieldNChar"                                               )] public string?         FieldNChar      { get; set; } // FixedString(2)
 		[Column("FieldFloat"                                               )] public float?          FieldFloat      { get; set; } // Float32
 		[Column("FieldDouble"                                              )] public double?         FieldDouble     { get; set; } // Float64
 		[Column("FieldDateTime"                                            )] public DateTimeOffset? FieldDateTime   { get; set; } // DateTime64(3)

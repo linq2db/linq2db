@@ -1,10 +1,27 @@
-<#@ assembly name="$(ArtifactsPath)\bin\Tests\Debug\net462\linq2db.Tests.Base.dll" #>
-<#@ import namespace="System"                                                      #>
-<#@ import namespace="System.IO"                                                   #>
-<#@ import namespace="System.Diagnostics"                                          #>
-<#@ import namespace="System.Threading"                                            #>
-<#@ import namespace="Microsoft.Win32.SafeHandles"                                 #>
-<#@ include file="..\ConnectionStrings.ttinclude" once="true"                      #>
+﻿<#@ include file="..\ConnectionStrings.ttinclude" once="true"                               #>
+<#@ assembly name="$(SolutionDir).build\bin\Tests.Base\Debug\net462\linq2db.Tests.Base.dll" #>
+<#@ import namespace="System"                                                               #>
+<#@ import namespace="System.IO"                                                            #>
+<#@ import namespace="System.Diagnostics"                                                   #>
+<#@ import namespace="System.Threading"                                                     #>
+<#@ import namespace="Microsoft.Win32.SafeHandles"                                          #>
+<#
+	var databasesPath = Host.ResolveAssemblyReference("$(LinqToDBT4DatabasesPath)");
+	var solutionsPath = Host.ResolveAssemblyReference("$(SolutionDir)");
+	var artifactsPath = Host.ResolveAssemblyReference("$(ArtifactsPath)");
+
+	var dbPath        = $@"{databasesPath}\TestData.ODBC.mdb";
+	var accessOdbcCN  = $"Driver={{Microsoft Access Driver (*.mdb, *.accdb)}};Dbq={dbPath};ExtendedAnsiSQL=1";
+
+	dbPath            = $@"{databasesPath}\TestData.mdb";
+	var accessOleDbCN = $"Provider=Microsoft.ACE.OLEDB.12.0;Data Source={dbPath};Locale Identifier=1033;Persist Security Info=True";
+
+	var sqliteCN      = $"Data Source={databasesPath}TestData.sqlite";
+	var sqliteNwCN    = $"Data Source={databasesPath}Northwind.sqlite";
+	var sqlceCN       = $"Data Source={databasesPath}TestData.sdf";
+
+	var db2ProviderLocation = $@"{artifactsPath}\bin\Tests\Debug\net9.0\IBM.Data.Db2.dll";
+#>
 <#+
 #nullable enable
 	void RunCliTool(
@@ -37,14 +54,19 @@
 		{
 			// FOR DEBUG
 			// WriteLine($"// {arguments}");
-			process.StartInfo.FileName       = "dotnet";
-			process.StartInfo.Arguments      = arguments;
-			process.StartInfo.CreateNoWindow = true;
-			process.StartInfo.WindowStyle    = ProcessWindowStyle.Hidden;
-			using var waitHandle             = new ManualResetEvent(false);
+			process.StartInfo.FileName              = "dotnet";
+			process.StartInfo.Arguments             = arguments;
+			process.StartInfo.CreateNoWindow        = true;
+			process.StartInfo.WindowStyle           = ProcessWindowStyle.Hidden;
+			process.StartInfo.RedirectStandardError = true;
+			process.StartInfo.UseShellExecute       = false;
+
+			using var waitHandle = new ManualResetEvent(false);
 
 			if (process.Start())
 			{
+//				var stderr = process.StandardError.ReadToEnd();
+
 				using var handle = new SafeWaitHandle(process.Handle, false);
 				waitHandle.SetSafeWaitHandle(handle);
 
@@ -55,8 +77,10 @@
 
 				if (timeouted)
 					throw new Exception($"Timeout during scaffolding of {connectionStringName} database");
-			}
 
+//				if (process.ExitCode != 0)
+//					Error($"Error during scaffolding of {connectionStringName} database: {stderr}");
+			}
 		}
 	}
 #>

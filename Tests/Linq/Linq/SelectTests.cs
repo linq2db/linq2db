@@ -221,7 +221,6 @@ namespace Tests.Linq
 
 		// ProviderName.SqlServer2014 disabled due to:
 		// https://connect.microsoft.com/SQLServer/feedback/details/3139577/performace-regression-for-compatibility-level-2014-for-specific-query
-		[ActiveIssue("ClickHouse performs slow leading to timeout with specified provider", Configuration = ProviderName.ClickHouseOctonica)]
 		[Test]
 		public void MultipleSelect11([IncludeDataSources(
 			TestProvName.AllSqlServer2008, TestProvName.AllSqlServer2012, TestProvName.AllSqlServer2019, TestProvName.AllSapHana, TestProvName.AllClickHouse)]
@@ -427,7 +426,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[ThrowsForProvider(typeof(LinqException), TestProvName.AllSybase, "Provider does not support CROSS/OUTER/LATERAL joins.")]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSybase, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
 		public void Coalesce4([DataSources(ProviderName.SqlCe, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -445,6 +444,49 @@ namespace Tests.Linq
 				AreEqual(
 					from p in    Parent select Sql.AsSql(p.Children.Max(c => (int?)c.ChildID) ?? p.Value1),
 					from p in db.Parent select Sql.AsSql(p.Children.Max(c => (int?)c.ChildID) ?? p.Value1));
+		}
+
+		class CoalesceNullableFields
+		{
+			[PrimaryKey]
+			public int Id { get; set; }
+
+			[Column] public int? Nullable1 { get; set; }
+			[Column] public int? Nullable2 { get; set; }
+			[Column] public int? Nullable3 { get; set; }
+
+			public static CoalesceNullableFields[] Seed()
+			{
+				return
+				[
+					new CoalesceNullableFields { Id = 1, Nullable1 = 10,   Nullable2 = null, Nullable3 = null },
+					new CoalesceNullableFields { Id = 2, Nullable1 = null, Nullable2 = 20,   Nullable3 = null },
+					new CoalesceNullableFields { Id = 3, Nullable1 = null, Nullable2 = null, Nullable3 = 30   },
+					new CoalesceNullableFields { Id = 4, Nullable1 = null, Nullable2 = null, Nullable3 = null  }
+				];
+			}
+		}
+
+		[Test]
+		public void CoalesceMany([DataSources] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(CoalesceNullableFields.Seed());
+
+			var query = table.Select(t => new
+			{
+				Value1 = t.Nullable1 ?? t.Nullable2 ?? t.Nullable3 ?? t.Id,
+				Value2 = t.Nullable2 ?? t.Nullable1 ?? t.Nullable3 ?? t.Id,
+				Value3 = t.Nullable2 ?? t.Nullable3 ?? t.Nullable1 ?? t.Id,
+				Value4 = t.Nullable3 ?? t.Nullable1 ?? t.Nullable2 ?? t.Id,
+				Value5 = t.Nullable3 ?? t.Nullable2 ?? t.Nullable1 ?? t.Id,
+
+				OptimalValue1 = Sql.AsSql((int?)t.Id  ?? t.Nullable1 ?? t.Nullable2 ?? t.Nullable3),
+				OptimalValue2 = Sql.AsSql(t.Nullable1 ?? (int?)t.Id  ?? t.Nullable2 ?? t.Nullable3),
+				OptimalValue3 = Sql.AsSql(t.Nullable1 ?? t.Nullable2 ?? (int?)t.Id  ?? t.Nullable3),
+			});
+
+			AssertQuery(query);
 		}
 
 		[Test]
@@ -632,18 +674,19 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void SelectField()
+		public void SelectField([DataSources] string context)
 		{
-			using (var db = new DataConnection())
-			{
-				var q =
+			using var db = GetDataContext(context);
+
+			var q =
 					from p in db.GetTable<TestParent>()
 					select p.Value1_;
 
-				var sql = q.ToString()!;
+			q.ToArray();
 
-				Assert.That(sql.IndexOf("ParentID_"), Is.LessThan(0));
-			}
+			var sql = q.ToSqlQuery().Sql;
+
+			Assert.That(sql, Does.Not.Contain("ParentID_"));
 		}
 
 		[Test]
@@ -655,14 +698,14 @@ namespace Tests.Linq
 					from p in db.GetTable<ComplexPerson>()
 					select p.Name.LastName;
 
-				var sql = q.ToString()!;
+				q.ToArray();
 
-				TestContext.WriteLine(sql);
+				var sql = q.ToSqlQuery().Sql;
 
 				Assert.Multiple(() =>
 				{
-					Assert.That(sql.IndexOf("First"), Is.LessThan(0));
-					Assert.That(sql.IndexOf("LastName"), Is.GreaterThan(0));
+					Assert.That(sql, Does.Not.Contain("First"));
+					Assert.That(sql, Does.Contain("LastName"));
 				});
 			}
 		}
@@ -1118,7 +1161,7 @@ namespace Tests.Linq
 		[Test]
 		public void TestConditionalProjectionOptimization(
 			[IncludeDataSources(false, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context,
-			[Values(true, false)] bool includeChild,
+			[Values] bool includeChild,
 			[Values(1, 2)] int iteration)
 		{
 			using var db = GetDataContext(context);
@@ -1399,8 +1442,6 @@ namespace Tests.Linq
 			}
 		}
 
-		// IFX: Informix needs type hint for NULL value
-		[ActiveIssue(Configurations = new[] { TestProvName.AllInformix })]
 		[Test]
 		public void Select_TernaryNullableValue([DataSources] string context, [Values(null, 0, 1)] int? value)
 		{
@@ -1413,8 +1454,6 @@ namespace Tests.Linq
 			}
 		}
 
-		// IFX: Informix needs type hint for NULL value
-		[ActiveIssue(Configurations = new[] { TestProvName.AllInformix })]
 		[Test]
 		public void Select_TernaryNullableValueReversed([DataSources] string context, [Values(null, 0, 1)] int? value)
 		{
@@ -1427,9 +1466,7 @@ namespace Tests.Linq
 			}
 		}
 
-		// INFORMIX needs type hint in select
 		[Test]
-		[ActiveIssue(Configurations = new[] { TestProvName.AllInformix })]
 		public void Select_TernaryNullableValue_Nested([DataSources] string context, [Values(null, 0, 1)] int? value)
 		{
 			// mapping fails and fallbacks to slow-mapper
@@ -1441,9 +1478,7 @@ namespace Tests.Linq
 			}
 		}
 
-		// INFORMIX needs type hint in select
 		[Test]
-		[ActiveIssue(Configurations = new[] { TestProvName.AllInformix })]
 		public void Select_TernaryNullableValueReversed_Nested([DataSources] string context, [Values(null, 0, 1)] int? value)
 		{
 			// mapping fails and fallbacks to slow-mapper
@@ -1453,6 +1488,48 @@ namespace Tests.Linq
 
 				Assert.That(result, Is.EqualTo(value));
 			}
+		}
+
+		[Test]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllAccess, ProviderName.Firebird25, TestProvName.AllMySql57, ProviderName.SqlCe, TestProvName.AllSybase, ErrorMessage = ErrorHelper.Error_RowNumber)]
+		public void SelectWithIndexer([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = db.Person
+				.OrderByDescending(p => p.ID)
+				.Select((p, idx) => new { p.FirstName, p.LastName, Index = idx })
+				.Where(x => x.Index > 0);
+
+			AssertQuery(query);
+		}
+
+		[Test]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllAccess, ProviderName.Firebird25, TestProvName.AllMySql57, ProviderName.SqlCe, TestProvName.AllSybase, ErrorMessage = ErrorHelper.Error_RowNumber)]
+		public void SelectWithIndexerAfterGroupBy([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = db.Person
+				.GroupBy(p => p.ID)
+				.OrderByDescending(g => g.Key)
+				.Select((g, idx) => new { g.Key, Index = idx })
+				.Where(x => x.Index > 0);
+
+			AssertQuery(query);
+		}
+
+		[Test]
+		[ThrowsForProvider(typeof(LinqToDBException), ErrorMessage = ErrorHelper.Error_OrderByRequiredForIndexing)]
+		public void SelectWithIndexerNoOrder([DataSources(TestProvName.AllAccess, ProviderName.Firebird25, TestProvName.AllMySql57, ProviderName.SqlCe, TestProvName.AllSybase)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = db.Person
+				.Select((p, idx) => new { p.FirstName, Index = idx })
+				.Where(x => x.Index > 1);
+
+			AssertQuery(query);
 		}
 
 		public class Table1788
@@ -1682,11 +1759,14 @@ namespace Tests.Linq
 					where p.ParentID == id
 					select p;
 
-				var sql1 = query.ToString();
+				var sql1 = query.ToSqlQuery(new SqlGenerationOptions() { InlineParameters = true }).Sql;
 
 				id = 2;
 
-				var sql2 = query.ToString();
+				var sql2 = query.ToSqlQuery(new SqlGenerationOptions() { InlineParameters = true }).Sql;
+
+				BaselinesManager.LogQuery(sql1);
+				BaselinesManager.LogQuery(sql2);
 
 				Assert.That(sql1, Is.Not.EqualTo(sql2));
 			}
@@ -1940,5 +2020,237 @@ namespace Tests.Linq
 			}
 		}
 		#endregion
+
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSybase, ErrorMessage = ErrorHelper.Sybase.Error_JoinToDerivedTableWithTakeInvalid)]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4520")]
+		public void Issue4520Test([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			db.Types2
+				.Where(i => i.ID == 1)
+				.Select(i =>
+				new
+				{
+					IsCurrent = !i.BoolValue.GetValueOrDefault() && i.IntValue == db.Types2.Where(p => p.ID == 2).Select(p => p.IntValue).FirstOrDefault()
+				})
+				.ToList();
+		}
+
+		#region Issue 3372
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/3372")]
+		public void Issue3372Test1([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = db.Person
+					.Select(e => new
+					{
+						FirstName = e.FirstName,
+						MiddleName = e.Patient!.Person != null && e.Patient.Person.LastName != null
+							? new { Id = e.Patient.Person.LastName }
+							: null
+					});
+
+			query.ToList();
+
+			Assert.That(query.GetSelectQuery().Select.Columns, Has.Count.EqualTo(3));
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/3372")]
+		public void Issue3372Test2([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = db.Person
+					.Select(e => new
+					{
+						FirstName = e.FirstName,
+						MiddleName = e.Patient!.Person != null && e.Patient.Person.MiddleName != null
+							? new { Id = e.Patient.Person.MiddleName }
+							: null
+					});
+
+			query.ToList();
+
+			Assert.That(query.GetSelectQuery().Select.Columns, Has.Count.EqualTo(3));
+		}
+		#endregion
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4198")]
+		public void Issue4198Test([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q = db.GetTable<Person>().Select(a => new
+			{
+				Account = (Person)a
+			}).Where(cwa => cwa.Account.ID == 1);
+
+			var r = q.Count();
+		}
+
+		#region 4199
+		[ActiveIssue]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4199")]
+		public void Issue4199Test1([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q = db.GetTable<IUserAccount>().Select(a => new
+			{
+				Account = (UserAccountImplicit)a
+			}).Where(cwa => cwa.Account.ID == 1);
+
+			var r = q.Count();
+		}
+
+		[ActiveIssue]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4199")]
+		public void Issue4199Test2([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q = db.GetTable<IUserAccount>().Select(a => new
+			{
+				Account = (UserAccountExplicit)a
+			}).Where(cwa => cwa.Account.ID == 1);
+
+			var r = q.Count();
+		}
+
+		[Table("Person")]
+		sealed class UserAccountImplicit : IUserAccount
+		{
+			[Column("PersonID")]
+			public int ID { get; set; }
+		}
+
+		[Table("Person")]
+		sealed class UserAccountExplicit : IUserAccount
+		{
+			[Column("PersonID")]
+			public int ID { get; set; }
+
+			[NotColumn]
+			int IUserAccount.ID { get; }
+		}
+
+		interface IUserAccount
+		{
+			public int ID { get; }
+		}
+		#endregion
+
+		sealed record NullableIssue4200Record(int? Id);
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4200")]
+		public void Issue4200Test([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			int[] parentIds = { 1, 2, 3 };
+
+			var result = db.Person.Select(a => new NullableIssue4200Record(a.ID))
+				.Where(i => i.Id != null && parentIds.Contains(i.Id.Value))
+				.ToList();
+		}
+
+		#region issue 4192
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4192")]
+		public void Issue4192Test1([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable<Issue4192TableNotNullable>();
+
+			var resultQueryable = GetByParentId(tb, 12);
+			Assert.That(() => resultQueryable.ToList(), Throws.Exception);
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4192")]
+		public void Issue4192Test2([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable<Issue4192TableNullable>();
+
+			var resultQueryable = GetByParentId(tb, 12);
+			var result = resultQueryable.ToList();
+		}
+
+		static IQueryable<T> GetByParentId<T>(IQueryable<T> items, int? parentId) where T : IWithParent
+		{
+			return items.Where(i => i.ParentId == parentId);
+		}
+
+		interface IWithParent { int? ParentId { get; } }
+
+		[Table]
+		sealed class Issue4192TableNotNullable : IWithParent
+		{
+			[Column] public string? Name { get; set; }
+			[Column] public int ParentId { get; set; }
+
+			int? IWithParent.ParentId => ParentId;
+		}
+
+		[Table]
+		sealed class Issue4192TableNullable : IWithParent
+		{
+			[Column] public string? Name { get; set; }
+			[Column] public int? ParentId { get; set; }
+		}
+		#endregion
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/3181")]
+		public void Issue3181Test1([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q = from t1 in db.Person
+					let t2 = new Person()
+					{
+						FirstName = t1.FirstName,
+					}
+					select new Person()
+					{
+						FirstName = t2.FirstName,
+						LastName = t2.LastName,
+						Gender = t2.Gender
+					};
+
+			var res = q.ToList();
+			Assert.Multiple(() =>
+			{
+				Assert.That(res.All(r => r.LastName == null), Is.True);
+				Assert.That(res.All(r => r.Gender == default), Is.True);
+			});
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/3181")]
+		public void Issue3181Test2([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var q = from t2 in
+						from t1 in db.Person
+						select new Person()
+						{
+							FirstName = t1.FirstName,
+						}
+					select new Person()
+					{
+						FirstName = t2.FirstName,
+						LastName = t2.LastName,
+						Gender = t2.Gender
+					};
+
+			var res = q.ToList();
+			Assert.Multiple(() =>
+			{
+				Assert.That(res.All(r => r.LastName == null), Is.True);
+				Assert.That(res.All(r => r.Gender == default), Is.True);
+			});
+		}
 	}
 }

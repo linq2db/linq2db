@@ -1,0 +1,14 @@
+﻿<#@ template language="C#" debug="True" hostSpecific="True"                                  #>
+<#@ CleanupBehavior processor="T4VSHost" CleanupAfterProcessingtemplate="true"               #>
+<#@ output extension=".generated.cs"                                                         #>
+<#@ include file="$(LinqToDBT4FirebirdTemplatesPath)LinqToDB.Firebird.ttinclude" once="true" #>
+<#@ include file="$(LinqToDBT4TemplatesPath)PluralizationService.ttinclude"      once="true" #>
+<#@ include file="ConnectionStrings.ttinclude"                                   once="true" #>
+<#
+	NamespaceName        = "Firebird";
+	GenerateSchemaAsType = true;
+
+	LoadFirebirdMetadata(GetConnectionString("Firebird.5"));
+
+	GenerateModel();
+#>

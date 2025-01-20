@@ -10,22 +10,16 @@ namespace LinqToDB.Linq.Builder
 	using LinqToDB.Expressions;
 	using SqlQuery;
 
+	[BuildsMethodCall("First", "FirstOrDefault", "Single", "SingleOrDefault")]
+	[BuildsMethodCall("FirstAsync", "FirstOrDefaultAsync", "SingleAsync", "SingleOrDefaultAsync", 
+		CanBuildName = nameof(CanBuildAsyncMethod))]
 	sealed class FirstSingleBuilder : MethodCallBuilder
 	{
-		static readonly string[] MethodNames      = { "First"     , "FirstOrDefault"     , "Single"     , "SingleOrDefault"      };
-		static readonly string[] MethodNamesAsync = { "FirstAsync", "FirstOrDefaultAsync", "SingleAsync", "SingleOrDefaultAsync" };
+		public static bool CanBuildMethod(MethodCallExpression call, BuildInfo info, ExpressionBuilder builder)
+			=> call.IsQueryable() && call.Arguments.Count <= 2;
 
-		protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
-		{
-			return IsApplicable(methodCall);
-		}
-
-		private static bool IsApplicable(MethodCallExpression methodCall)
-		{
-			return
-				methodCall.IsQueryable(MethodNames)           && methodCall.Arguments.Count <= 2 ||
-				methodCall.IsAsyncExtension(MethodNamesAsync) && methodCall.Arguments.Count <= 3;
-		}
+		public static bool CanBuildAsyncMethod(MethodCallExpression call, BuildInfo info, ExpressionBuilder builder)
+			=> call.IsAsyncExtension() && call.Arguments.Count <= 3;
 
 		public enum MethodKind
 		{
@@ -56,7 +50,7 @@ namespace LinqToDB.Linq.Builder
 			var argument = methodCall.Arguments[0];
 			var argumentCount = methodCall.Arguments.Count;
 
-			if (methodCall.IsAsyncExtension(MethodNamesAsync))
+			if (methodCall.IsAsyncExtension())
 				--argumentCount;
 
 			var cardinality = buildInfo.SourceCardinality;
@@ -96,10 +90,10 @@ namespace LinqToDB.Linq.Builder
 			if (argumentCount > 1)
 			{
 				var filterLambda = methodCall.Arguments[1].UnwrapLambda();
-				sequence = builder.BuildWhere(buildInfo.Parent, sequence, filterLambda, false, false, buildInfo.IsTest);
+				sequence = builder.BuildWhere(buildInfo.Parent, sequence, filterLambda, checkForSubQuery : false, enforceHaving : false, out var error);
 
 				if (sequence == null)
-					return BuildSequenceResult.Error(methodCall);
+					return BuildSequenceResult.Error(error ?? methodCall);
 			}
 
 			sequence = new SubQueryContext(sequence);
@@ -135,7 +129,7 @@ namespace LinqToDB.Linq.Builder
 
 			if (take != 0)
 			{
-				var takeExpression = new SqlValue(take);
+				var takeExpression = new SqlValue(sequence.MappingSchema.GetDbDataType(typeof(int)), take);
 				builder.BuildTake(sequence, takeExpression, null);
 			}
 
@@ -143,17 +137,26 @@ namespace LinqToDB.Linq.Builder
 
 			if (buildInfo.Parent != null && (cardinality & SourceCardinality.Zero) != 0)
 			{
-				sequence = new DefaultIfEmptyBuilder.DefaultIfEmptyContext(buildInfo.Parent, sequence, sequence, null, allowNullField: true);
+				sequence = new DefaultIfEmptyBuilder.DefaultIfEmptyContext(
+					buildInfo.Parent,
+					sequence,
+					sequence,
+					defaultValue: null,
+					allowNullField: true,
+					isNullValidationDisabled: false);
+
 				canBeWeak = true;
 			}
 
-			return BuildSequenceResult.FromContext(new FirstSingleContext(buildInfo.Parent, sequence, methodKind, buildInfo.IsSubQuery, buildInfo.IsAssociation, canBeWeak, cardinality, buildInfo.IsTest));
+			var firstSingleContext = new FirstSingleContext(buildInfo.Parent, sequence, methodKind, buildInfo.IsSubQuery, buildInfo.IsAssociation, canBeWeak, cardinality);
+			
+			return BuildSequenceResult.FromContext(firstSingleContext);
 		}
 
 		public sealed class FirstSingleContext : SequenceContextBase
 		{
 			public FirstSingleContext(IBuildContext? parent, IBuildContext sequence, MethodKind methodKind,
-				bool isSubQuery, bool isAssociation, bool canBeWeak, SourceCardinality cardinality, bool isTest)
+				bool isSubQuery, bool isAssociation, bool canBeWeak, SourceCardinality cardinality)
 				: base(parent, sequence, null)
 			{
 				_methodKind   = methodKind;
@@ -161,7 +164,6 @@ namespace LinqToDB.Linq.Builder
 				IsAssociation = isAssociation;
 				CanBeWeak     = canBeWeak;
 				Cardinality   = cardinality;
-				IsTest        = isTest;
 			}
 
 			readonly MethodKind _methodKind;
@@ -169,7 +171,6 @@ namespace LinqToDB.Linq.Builder
 			public bool              IsSubQuery    { get; }
 			public bool              IsAssociation { get; }
 			public bool              CanBeWeak     { get; }
-			public bool              IsTest        { get; }
 			public SourceCardinality Cardinality   { get; set; }
 
 			public override bool IsOptional => (Cardinality & SourceCardinality.Zero) != 0 || Cardinality == SourceCardinality.Unknown;
@@ -196,7 +197,7 @@ namespace LinqToDB.Linq.Builder
 
 				query.GetElementAsync = query.GetElementAsync = async (db, expr, ps, preambles, token) =>
 					await query.GetResultEnumerable(db, expr, ps, preambles)
-						.FirstAsync(token).ConfigureAwait(Configuration.ContinueOnCapturedContext);
+						.FirstAsync(token).ConfigureAwait(false);
 			}
 
 			static void GetFirstOrDefaultElement<T>(Query<T> query)
@@ -206,7 +207,7 @@ namespace LinqToDB.Linq.Builder
 
 				query.GetElementAsync = query.GetElementAsync = async (db, expr, ps, preambles, token) =>
 					await query.GetResultEnumerable(db, expr, ps, preambles)
-						.FirstOrDefaultAsync(token).ConfigureAwait(Configuration.ContinueOnCapturedContext);
+						.FirstOrDefaultAsync(token).ConfigureAwait(false);
 			}
 
 			static void GetSingleElement<T>(Query<T> query)
@@ -216,7 +217,7 @@ namespace LinqToDB.Linq.Builder
 
 				query.GetElementAsync = async (db, expr, ps, preambles, token) =>
 					await query.GetResultEnumerable(db, expr, ps, preambles)
-						.SingleAsync(token).ConfigureAwait(Configuration.ContinueOnCapturedContext);
+						.SingleAsync(token).ConfigureAwait(false);
 			}
 
 			static void GetSingleOrDefaultElement<T>(Query<T> query)
@@ -226,24 +227,22 @@ namespace LinqToDB.Linq.Builder
 
 				query.GetElementAsync = async (db, expr, ps, preambles, token) =>
 					await query.GetResultEnumerable(db, expr, ps, preambles)
-						.SingleOrDefaultAsync(token).ConfigureAwait(Configuration.ContinueOnCapturedContext);
+						.SingleOrDefaultAsync(token).ConfigureAwait(false);
 			}
 
 			bool _isJoinCreated;
 			bool _asSubquery;
 
-			void CreateJoin()
+			public void CreateJoin()
 			{
-				// sequence created in test mode and there can be no tables.
-				//
-				if (IsTest)
-					return;
-
 				if (_isJoinCreated  || _asSubquery)
 					return;
 
+				if (Parent == null)
+					return;
+
 				// process as subquery
-				if (Parent!.SelectQuery.From.Tables.Count == 0)
+				if (Parent.SelectQuery.From.Tables.Count == 0)
 				{
 					_asSubquery = true;
 					return;
@@ -268,7 +267,7 @@ namespace LinqToDB.Linq.Builder
 					return path;
 				}
 
-				if (!flags.IsTest() && IsSubQuery)
+				if (IsSubQuery)
 				{
 					CreateJoin();
 				}
@@ -283,8 +282,7 @@ namespace LinqToDB.Linq.Builder
 					if (Parent == null)
 						return path;
 
-					projected = Builder.BuildSqlExpression(this, projected, ProjectFlags.SQL,
-						buildFlags : ExpressionBuilder.BuildFlags.ForceAssignments);
+					projected = Builder.BuildSqlExpression(this, projected);
 
 					if (projected is SqlPlaceholderExpression placeholder)
 					{
@@ -310,11 +308,26 @@ namespace LinqToDB.Linq.Builder
 			public override IBuildContext Clone(CloningContext context)
 			{
 				return new FirstSingleContext(null, context.CloneContext(Sequence),
-					_methodKind, IsSubQuery, IsAssociation, CanBeWeak, Cardinality, false)
+					_methodKind, IsSubQuery, IsAssociation, CanBeWeak, Cardinality)
 				{
 					_isJoinCreated = _isJoinCreated
 				};
 			}
+
+			public override void Detach()
+			{
+				if (_isJoinCreated)
+				{
+					var joins = Parent!.SelectQuery.From.Tables[0].Joins;
+					var found = joins.Find(j => j.Table.Source == SelectQuery);
+					if (found != null)
+					{
+						joins.Remove(found);
+					}
+				}
+			}
+
+			public override bool IsSingleElement => true;
 		}
 	}
 }

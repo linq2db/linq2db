@@ -8,6 +8,7 @@ using System.Reflection;
 using LinqToDB;
 using LinqToDB.Common;
 using LinqToDB.Expressions;
+using LinqToDB.Expressions.Internal;
 using LinqToDB.Extensions;
 using LinqToDB.Linq;
 using LinqToDB.Reflection;
@@ -20,35 +21,6 @@ namespace Tests
 {
 	partial class TestBase
 	{
-		protected static List<Expression> GetMemberPath(Expression? expression)
-		{
-			var result = new List<Expression>();
-
-			var current = expression;
-			while (current != null)
-			{
-				var prev = current;
-				switch (current.NodeType)
-				{
-					case ExpressionType.MemberAccess:
-					{
-						result.Add(current);
-						current = ((MemberExpression)current).Expression;
-						break;
-					}
-				}
-
-				if (prev == current)
-				{
-					result.Add(current);
-					break;
-				}
-			}
-
-			result.Reverse();
-			return result;
-		}
-
 		class ApplyNullPropagationVisitor : ExpressionVisitorBase
 		{
 
@@ -208,7 +180,7 @@ namespace Tests
 			return items1;
 		}
 
-		protected static MethodCallExpression RemapMethod(MethodCallExpression mc)
+		static MethodCallExpression RemapMethod(MethodCallExpression mc)
 		{
 			MethodCallExpression SetOperationRemap(MethodInfo genericMethodInfo)
 			{
@@ -371,6 +343,5 @@ namespace Tests
 
 			return actual;
 		}
-
 	}
 }

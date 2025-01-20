@@ -17,6 +17,7 @@ namespace LinqToDB.Expressions
 		public static readonly ConstantExpression True        = Expression.Constant(true);
 		public static readonly ConstantExpression False       = Expression.Constant(false);
 		public static readonly ConstantExpression UntypedNull = Expression.Constant(null);
+		public static readonly ConstantExpression EmptyString = Expression.Constant(string.Empty);
 
 		public static readonly ConstantExpression Constant0  = Expression.Constant(0);
 		public static readonly ConstantExpression Constant1  = Expression.Constant(1);

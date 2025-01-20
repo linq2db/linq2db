@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq.Expressions;
 
 namespace LinqToDB.Linq.Builder
@@ -7,12 +6,11 @@ namespace LinqToDB.Linq.Builder
 	using LinqToDB.Expressions;
 	using SqlQuery;
 
+	[BuildsMethodCall("SelectMany")]
 	sealed class SelectManyBuilder : MethodCallBuilder
 	{
-		protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
-		{
-			return methodCall.IsQueryable("SelectMany");
-		}
+		public static bool CanBuildMethod(MethodCallExpression call, BuildInfo info, ExpressionBuilder builder)
+			=> call.IsQueryable();
 
 		protected override BuildSequenceResult BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
@@ -52,38 +50,79 @@ namespace LinqToDB.Linq.Builder
 				SourceCardinality = SourceCardinality.Many
 			};
 
+
+			using var snapshot = builder.CreateSnapshot();
+
 			var collectionResult = builder.TryBuildSequence(collectionInfo);
 
 			if (collectionResult.BuildContext == null)
 				return collectionResult;
 
-			var collection = collectionResult.BuildContext;
+			var originalCollection = collectionResult.BuildContext;
+
+			var collection = originalCollection;
 
 			// DefaultIfEmptyContext wil handle correctly projecting NULL objects
 			//
 			if (collectionInfo.JoinType == JoinType.Full || collectionInfo.JoinType == JoinType.Right)
 			{
-				sequence = new DefaultIfEmptyBuilder.DefaultIfEmptyContext(buildInfo.Parent, sequence, collection, null, false);
+				sequence = new DefaultIfEmptyBuilder.DefaultIfEmptyContext(
+					buildInfo.Parent,
+					sequence,
+					collection,
+					defaultValue: null,
+					allowNullField: false,
+					isNullValidationDisabled: false);
 			}
 
-			var projected = builder.BuildSqlExpression(collection,
-				new ContextRefExpression(collection.ElementType, collection), buildInfo.GetFlags(),
-				buildFlags : ExpressionBuilder.BuildFlags.ForceAssignments);
+			var collectionDefaultIfEmptyContext = SequenceHelper.GetDefaultIfEmptyContext(collection);
+			if (collectionDefaultIfEmptyContext != null)
+			{
+				collectionDefaultIfEmptyContext.IsNullValidationDisabled = true;
+			}
+
+			var isLeftJoin =
+				collectionDefaultIfEmptyContext != null ||
+				collectionInfo.JoinType         == JoinType.Left;
+
+			var joinType = collectionInfo.JoinType;
+			joinType = joinType switch
+			{
+				JoinType.Inner => isLeftJoin ? JoinType.OuterApply : JoinType.CrossApply,
+				JoinType.Auto => isLeftJoin ? JoinType.OuterApply : JoinType.CrossApply,
+				JoinType.Left => JoinType.OuterApply,
+				JoinType.Full => JoinType.FullApply,
+				JoinType.Right => JoinType.RightApply,
+				_ => joinType
+			};
+
+			var expanded = builder.BuildExtractExpression(collection, new ContextRefExpression(collection.ElementType, collection));
 
 			collection = new SubQueryContext(collection);
 
-			projected = builder.UpdateNesting(collection, projected);
+			if (collectionDefaultIfEmptyContext != null)
+			{
+				var collectionSelectContext = new SelectContext(buildInfo.Parent, builder, null, expanded, collection.SelectQuery, buildInfo.IsSubQuery);
+
+				collection = new DefaultIfEmptyBuilder.DefaultIfEmptyContext(
+					sequence,
+					collectionSelectContext,
+					collection,
+					defaultValue: collectionDefaultIfEmptyContext.DefaultValue,
+					allowNullField: joinType is not (JoinType.Right or JoinType.RightApply or JoinType.Full or JoinType.FullApply),
+					isNullValidationDisabled: false);
+			}
 
 			if (resultSelector == null)
 			{
-				resultExpression = projected;
+				resultExpression = expanded;
 			}
 			else
 			{
 				resultExpression = SequenceHelper.ReplaceBody(resultSelector.Body, resultSelector.Parameters[0], sequence);
 				if (resultSelector.Parameters.Count > 1)
 				{
-					resultExpression = SequenceHelper.ReplaceBody(resultExpression, resultSelector.Parameters[1], new ScopeContext(collection, sequence));
+					resultExpression = SequenceHelper.ReplaceBody(resultExpression, resultSelector.Parameters[1], collection);
 				}
 			}
 
@@ -98,32 +137,22 @@ namespace LinqToDB.Linq.Builder
 				collection.SetAlias(collectionAlias);
 			}
 
-			var isLeftJoin =
-				SequenceHelper.IsDefaultIfEmpty(collection) ||
-				collectionInfo.JoinType == JoinType.Left;
-
-			var joinType = collectionInfo.JoinType;
-			joinType = joinType switch
-			{
-				JoinType.Inner => isLeftJoin ? JoinType.OuterApply : JoinType.CrossApply,
-				JoinType.Auto  => isLeftJoin ? JoinType.OuterApply : JoinType.CrossApply,
-				JoinType.Left  => JoinType.OuterApply,
-				JoinType.Full  => JoinType.FullApply,
-				JoinType.Right => JoinType.RightApply,
-				_ => joinType
-			};
-
 			var join = new SqlFromClause.Join(joinType, collection.SelectQuery, collectionAlias, false, null);
 			sequence.SelectQuery.From.Tables[0].Joins.Add(join.JoinedTable);
 
-			var jhc = SequenceHelper.GetJoinHintContext(collection);
+			var jhc = SequenceHelper.GetJoinHintContext(originalCollection);
 			if (jhc != null)
 			{
 				join.JoinedTable.SqlQueryExtensions = jhc.Extensions;
 			}
 
-			if (buildInfo.Parent == null && !SequenceHelper.IsSupportedSubquery(sequence, collection, out var errorMessage))
+			if (buildInfo.Parent == null && !builder.IsSupportedSubquery(sequence, collection, out var errorMessage))
+			{
+				collection.Detach();
 				return BuildSequenceResult.Error(methodCall, errorMessage);
+			}
+
+			snapshot.Accept();
 
 			return BuildSequenceResult.FromContext(context);
 		}

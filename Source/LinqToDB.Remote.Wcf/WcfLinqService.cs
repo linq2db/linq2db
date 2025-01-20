@@ -84,7 +84,7 @@ namespace LinqToDB.Remote.Wcf
 			try
 			{
 				return await _linqService.GetInfoAsync(configuration)
-					.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext); ;
+					.ConfigureAwait(false); ;
 			}
 			catch (Exception exception) when (_transferInternalExceptionToClient)
 			{
@@ -97,7 +97,7 @@ namespace LinqToDB.Remote.Wcf
 			try
 			{
 				return await _linqService.ExecuteBatchAsync(configuration, queryData)
-					.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext); ;
+					.ConfigureAwait(false); ;
 			}
 			catch (Exception exception) when (_transferInternalExceptionToClient)
 			{
@@ -110,7 +110,7 @@ namespace LinqToDB.Remote.Wcf
 			try
 			{
 				return await _linqService.ExecuteNonQueryAsync(configuration, queryData)
-					.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext); ;
+					.ConfigureAwait(false); ;
 			}
 			catch (Exception exception) when (_transferInternalExceptionToClient)
 			{
@@ -123,7 +123,7 @@ namespace LinqToDB.Remote.Wcf
 			try
 			{
 				return await _linqService.ExecuteReaderAsync(configuration, queryData)
-					.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext); ;
+					.ConfigureAwait(false); ;
 			}
 			catch (Exception exception) when (_transferInternalExceptionToClient)
 			{
@@ -136,7 +136,7 @@ namespace LinqToDB.Remote.Wcf
 			try
 			{
 				return await _linqService.ExecuteScalarAsync(configuration, queryData)
-					.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext); ;
+					.ConfigureAwait(false); ;
 			}
 			catch (Exception exception) when (_transferInternalExceptionToClient)
 			{

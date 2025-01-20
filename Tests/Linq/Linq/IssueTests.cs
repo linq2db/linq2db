@@ -36,8 +36,6 @@ namespace Tests.Linq
 				var sql = ((TestDataConnection)db).LastQuery;
 
 				Assert.That(sql, Is.Not.Contains("INNER JOIN"));
-
-				Debug.WriteLine(sql);
 			}
 		}
 
@@ -222,8 +220,7 @@ namespace Tests.Linq
 		[Test()]
 		public void Issue498Test([DataSources] string context)
 		{
-			using (new WithoutJoinOptimization())
-			using (var db = GetDataContext(context))
+			using (var db = GetDataContext(context, o => o.UseOptimizeJoins(false)))
 			{
 				var q = from x in db.Child
 					//join y in db.GrandChild on new { x.ParentID, x.ChildID } equals new { ParentID = (int)y.ParentID, ChildID = (int)y.ChildID }
@@ -246,8 +243,8 @@ namespace Tests.Linq
 
 				AreEqual(rr, r);
 
-				var sql = r.ToString()!;
-				Assert.That(sql.IndexOf("INNER", 1), Is.GreaterThan(0), sql);
+				var sql = r.ToSqlQuery().Sql;
+				Assert.That(sql, Does.Contain("INNER"));
 			}
 		}
 
@@ -256,8 +253,7 @@ namespace Tests.Linq
 		public void Issue528Test1([DataSources] string context)
 		{
 			//using (new AllowMultipleQuery())
-			using (new GuardGrouping(false))
-			using (var db = GetDataContext(context))
+			using (var db = GetDataContext(context, o => o.UseGuardGrouping(false)))
 			{
 				var expected =    Person.GroupBy(_ => _.FirstName).Select(_ => new { _.Key, Data = _.ToList() });
 				var result   = db.Person.GroupBy(_ => _.FirstName).Select(_ => new { _.Key, Data = _.ToList() });
@@ -275,8 +271,7 @@ namespace Tests.Linq
 		public void Issue528Test2([DataSources] string context)
 		{
 			//using (new AllowMultipleQuery())
-			using (new GuardGrouping(false))
-			using (var db = GetDataContext(context))
+			using (var db = GetDataContext(context, o => o.UseGuardGrouping(false)))
 			{
 				var expected =    Person.GroupBy(_ => _.FirstName).Select(_ => new { _.Key, Data = _.ToList() }).ToList();
 				var result   = db.Person.GroupBy(_ => _.FirstName).Select(_ => new { _.Key, Data = _.ToList() }).ToList();
@@ -294,8 +289,7 @@ namespace Tests.Linq
 		public void Issue528Test3([DataSources] string context)
 		{
 			//using (new AllowMultipleQuery())
-			using (new GuardGrouping(false))
-			using (var db = GetDataContext(context))
+			using (var db = GetDataContext(context, o => o.UseGuardGrouping(false)))
 			{
 				var expected =    Person.GroupBy(_ => _.FirstName).Select(_ => new { _.Key, Data = _ });
 				var result   = db.Person.GroupBy(_ => _.FirstName).Select(_ => new { _.Key, Data = _ });
@@ -397,6 +391,7 @@ namespace Tests.Linq
 			Client
 		}
 
+		[ActiveIssue("https://github.com/linq2db/linq2db/issues/754", Configuration = TestProvName.AllOracle)]
 		[Test]
 		public void Issue535Test2([DataSources(TestProvName.AllSybase)] string context)
 		{
@@ -646,45 +641,61 @@ namespace Tests.Linq
 			}
 		}
 
-		[Table("AllTypes")]
-		[Table("ALLTYPES", Configuration = ProviderName.DB2)]
+		[Table]
 		private sealed class InsertIssueTest
 		{
-			[Column("smallintDataType")]
-			[Column("SMALLINTDATATYPE", Configuration = ProviderName.DB2)]
-			public short ID;
+			[Column] public short ID;
 
-			[Column]
-			[Column("INTDATATYPE", Configuration = ProviderName.DB2)]
-			public int? intDataType;
+			[Column] public int? intDataType;
 
 			[Association(ThisKey = nameof(ID), OtherKey = nameof(intDataType), CanBeNull = true)]
 			public IQueryable<InsertIssueTest> Association => throw new InvalidOperationException();
+
+			public static InsertIssueTest[] TestData =
+			[
+				new InsertIssueTest() { ID = 0, intDataType = 0 },
+				new InsertIssueTest() { ID = 0, intDataType = 0 },
+				new InsertIssueTest() { ID = 1234, intDataType = 1234 },
+				new InsertIssueTest() { ID = 1234, intDataType = 1234 },
+			];
 		}
 
 		[Test]
 		public void InsertFromSelectWithNullableFilter([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				Query(true);
-				Query(false);
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable(InsertIssueTest.TestData);
 
-				void Query(bool isNull)
-				{
-					db.GetTable<InsertIssueTest>()
-						.Where(_ => _.ID == GetId(isNull))
-						.SelectMany(_ => _.Association)
-						.Select(_ => _.ID)
-						.Distinct()
-						.Insert(
-							db.GetTable<InsertIssueTest>(),
-							_ => new InsertIssueTest()
-							{
-								ID = 123,
-								intDataType = _
-							});
-				}
+			Query(true);
+
+			Query(false);
+
+			var data = tb.ToArray();
+			Assert.That(data, Has.Length.EqualTo(5));
+			Assert.Multiple(() =>
+			{
+				Assert.That(data.Count(r => r.ID == 0 && r.intDataType == 0), Is.EqualTo(2));
+				Assert.That(data.Count(r => r.ID == 123 && r.intDataType == 1234), Is.EqualTo(1));
+				Assert.That(data.Count(r => r.ID == 1234 && r.intDataType == 1234), Is.EqualTo(2));
+			});
+
+			void Query(bool isNull)
+			{
+				var rows = db.GetTable<InsertIssueTest>()
+					.Where(_ => _.ID == GetId(isNull))
+					.SelectMany(_ => _.Association)
+					.Select(_ => _.ID)
+					.Distinct()
+					.Insert(
+						db.GetTable<InsertIssueTest>(),
+						_ => new InsertIssueTest()
+						{
+							ID = 123,
+							intDataType = _
+						});
+
+				if (!context.IsAnyOf(TestProvName.AllClickHouse))
+					Assert.That(rows, Is.EqualTo(isNull ? 0 : 1));
 			}
 		}
 
@@ -756,5 +767,82 @@ namespace Tests.Linq
 			[Column(DataType = DataType.Guid) ] public Guid? BinaryN  { get; set; }
 			[Column(DataType = DataType.NChar)] public Guid? StringN  { get; set; }
 		}
+
+		#region StackOverflow in ExpressionBuilder
+
+		public class StackOverflowTable1
+		{
+			[PrimaryKey]
+			public int Id { get; set; }
+			public int FK { get; set; }
+
+			[Association(ThisKey = nameof(FK), OtherKey = nameof(StackOverflowTable2.Id), CanBeNull = false)]
+			public StackOverflowTable2 Table2 { get; } = null!;
+		}
+
+		public class StackOverflowTable2
+		{
+			[PrimaryKey]
+			public int Id { get; set; }
+		}
+
+		public class StackOverflowTable3
+		{
+			[PrimaryKey]
+			public int Id { get; set; }
+			public int Value2 { get; set; }
+			public int Value { get; set; }
+		}
+
+		public class StackOverflowTable4
+		{
+			[PrimaryKey]
+			public int Id { get; set; }
+			public int? Value { get; set; }
+		}
+
+		public class StackOverflowTable5
+		{
+			[PrimaryKey]
+			public int Id { get; set; }
+			public int Value { get; set; }
+		}
+
+		private sealed record StackOverflowCteRecord(int Id);
+
+		[Test]
+		public void ExpressionBuilder_StackOverflow([IncludeDataSources(false, TestProvName.AllSqlServer)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t1 = db.CreateLocalTable<StackOverflowTable1>();
+			using var t2 = db.CreateLocalTable<StackOverflowTable2>();
+			using var t3 = db.CreateLocalTable<StackOverflowTable3>();
+			using var t4 = db.CreateLocalTable<StackOverflowTable4>();
+			using var t5 = db.CreateLocalTable<StackOverflowTable5>();
+
+			var cte = db.GetCte<StackOverflowCteRecord>(cte =>
+			{
+				return t1.Select(s => new StackOverflowCteRecord(s.Table2.Id))
+					.Concat(
+						from c in cte
+						join r3 in t3 on c.Id equals r3.Value2
+						select new StackOverflowCteRecord(r3.Value));
+			});
+
+			var query =
+				from c in cte
+				join r4 in t4 on c.Id equals r4.Id into records4
+				from r3 in records4.DefaultIfEmpty()
+				where r3.Value != null
+				select new
+				{
+					Values = t5
+						.Where(a => a.Value == c.Id)
+						.ToArray()
+				};
+
+			query.ToArray();
+		}
+		#endregion
 	}
 }

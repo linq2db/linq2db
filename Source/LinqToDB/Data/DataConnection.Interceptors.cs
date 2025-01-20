@@ -12,7 +12,8 @@ namespace LinqToDB.Data
 		IInterceptable<IEntityServiceInterceptor>,
 		IInterceptable<IUnwrapDataObjectInterceptor>,
 		IInterceptable<IEntityBindingInterceptor>,
-		IInterceptable<IQueryExpressionInterceptor>
+		IInterceptable<IQueryExpressionInterceptor>,
+		IInterceptable<IExceptionInterceptor>
 	{
 		ICommandInterceptor?          IInterceptable<ICommandInterceptor>.         Interceptor { get; set; }
 		IConnectionInterceptor?       IInterceptable<IConnectionInterceptor>.      Interceptor { get; set; }
@@ -21,6 +22,7 @@ namespace LinqToDB.Data
 		IUnwrapDataObjectInterceptor? IInterceptable<IUnwrapDataObjectInterceptor>.Interceptor { get; set; }
 		IEntityBindingInterceptor?    IInterceptable<IEntityBindingInterceptor>.   Interceptor { get; set; }
 		IQueryExpressionInterceptor?  IInterceptable<IQueryExpressionInterceptor>. Interceptor { get; set; }
+		IExceptionInterceptor?        IInterceptable<IExceptionInterceptor>.       Interceptor { get; set; }
 
 		/// <inheritdoc cref="IDataContext.AddInterceptor(IInterceptor)"/>
 		public void AddInterceptor(IInterceptor interceptor)
@@ -30,16 +32,10 @@ namespace LinqToDB.Data
 
 		public Action<IInterceptor>? OnRemoveInterceptor { get; set; }
 
+		/// <inheritdoc cref="IDataContext.RemoveInterceptor(IInterceptor)"/>
 		public void RemoveInterceptor(IInterceptor interceptor)
 		{
-			((IInterceptable<ICommandInterceptor>)         this).RemoveInterceptor(interceptor);
-			((IInterceptable<IConnectionInterceptor>)      this).RemoveInterceptor(interceptor);
-			((IInterceptable<IDataContextInterceptor>)     this).RemoveInterceptor(interceptor);
-			((IInterceptable<IEntityServiceInterceptor>)   this).RemoveInterceptor(interceptor);
-			((IInterceptable<IUnwrapDataObjectInterceptor>)this).RemoveInterceptor(interceptor);
-			((IInterceptable<IEntityBindingInterceptor>)   this).RemoveInterceptor(interceptor);
-			((IInterceptable<IQueryExpressionInterceptor>) this).RemoveInterceptor(interceptor);
-
+			this.RemoveInterceptorImpl(interceptor);
 			OnRemoveInterceptor?.Invoke(interceptor);
 		}
 	}

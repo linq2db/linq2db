@@ -59,11 +59,8 @@ namespace Tests.xUpdate
 			}
 		}
 
-		// ASE: server dies
 		[Test]
-		public void ExplicitIdentityInsert([IdentityInsertMergeDataContextSource(
-			false,
-			TestProvName.AllSybase)]
+		public void ExplicitIdentityInsert([IdentityInsertMergeDataContextSource(false, TestProvName.AllSybase)]
 			string context)
 		{
 			ResetPersonIdentity(context);
@@ -80,8 +77,8 @@ namespace Tests.xUpdate
 					.Using(db.GetTable<MPerson>())
 					.On((t, s) => t.ID == s.ID && t.FirstName != "first 3")
 					.InsertWhenNotMatchedAnd(
-						s => s.Patient!.Diagnosis.Contains("sick")
-						, s => new MPerson()
+						s => s.Patient!.Diagnosis.Contains("sick"),
+						s => new MPerson()
 						{
 							ID        = nextId + 1,
 							FirstName = "Inserted 1",
@@ -117,11 +114,8 @@ namespace Tests.xUpdate
 			}
 		}
 
-		// ASE: server dies
 		[Test]
-		public void ExplicitNoIdentityInsert([IdentityInsertMergeDataContextSource(
-			false,
-			TestProvName.AllSybase)]
+		public void ExplicitNoIdentityInsert([IdentityInsertMergeDataContextSource(false, TestProvName.AllSybase)]
 			string context)
 		{
 			ResetPersonIdentity(context);

@@ -1,8 +1,7 @@
-﻿using System;
-
-namespace LinqToDB.DataProvider.DB2
+﻿namespace LinqToDB.DataProvider.DB2
 {
 	using Extensions;
+	using LinqToDB.Common;
 	using SqlProvider;
 	using SqlQuery;
 
@@ -70,21 +69,15 @@ namespace LinqToDB.DataProvider.DB2
 		{
 			cast = FloorBeforeConvert(cast);
 
-			var toType       = cast.ToType;
-			var argument     = cast.Expression;
-			var argumentType = QueryHelper.GetDbDataType(cast.Expression, MappingSchema);
+			var argument = cast.Expression;
 
 			var isNull = argument is SqlValue sqlValue && sqlValue.Value == null;
 
 			if (isNull)
-			{
 				return cast.MakeMandatory();
-			}
 
-			if (cast.SystemType.ToUnderlying() == typeof(bool) && ReferenceEquals(cast, IsForPredicate))
-			{
-				return ConvertToBooleanSearchCondition(cast.Expression);
-			}
+			var toType       = cast.ToType;
+			var argumentType = QueryHelper.GetDbDataType(cast.Expression, MappingSchema);
 
 			if (toType.SystemType == typeof(string) && argumentType.SystemType != typeof(string))
 			{
@@ -97,7 +90,7 @@ namespace LinqToDB.DataProvider.DB2
 			if (toType.Precision > 0)
 				return new SqlFunction(cast.SystemType, toType.DataType.ToString(), argument, new SqlValue(toType.Precision), new SqlValue(toType.Scale ?? 0));
 
-			if (QueryHelper.UnwrapNullablity(argument) is SqlParameter param)
+			if (!cast.IsMandatory && QueryHelper.UnwrapNullablity(argument) is SqlParameter param)
 			{
 				if (toType.Equals(param.Type))
 					return param;
@@ -122,6 +115,19 @@ namespace LinqToDB.DataProvider.DB2
 			}
 
 			return base.ConvertConversion(cast);
+		}
+
+		protected override ISqlExpression WrapColumnExpression(ISqlExpression expr)
+		{
+			var columnExpression = base.WrapColumnExpression(expr);
+
+			if (columnExpression.SystemType == typeof(bool)
+				&& QueryHelper.IsBoolean(columnExpression))
+			{
+				columnExpression = new SqlCastExpression(columnExpression, new DbDataType(columnExpression.SystemType!, DataType.Boolean), null, isMandatory: true);
+			}
+
+			return columnExpression;
 		}
 	}
 }

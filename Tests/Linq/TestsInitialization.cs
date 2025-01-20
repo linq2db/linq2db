@@ -40,7 +40,7 @@ public class TestsInitialization
 
 		_doMetrics = true;
 #else
-		_doMetrics = TestBase.StoreMetrics == true;
+		_doMetrics = TestConfiguration.StoreMetrics == true;
 #endif
 
 		if (_doMetrics)
@@ -124,8 +124,8 @@ public class TestsInitialization
 			Debug.WriteLine(str);
 			TestContext.Progress.WriteLine(str);
 
-			if (TestBase.StoreMetrics == true)
-				BaselinesWriter.WriteMetrics(TestBase.BaselinesPath!, str);
+			if (TestConfiguration.StoreMetrics == true)
+				BaselinesWriter.WriteMetrics(TestConfiguration.BaselinesPath!, str);
 		}
 	}
 }

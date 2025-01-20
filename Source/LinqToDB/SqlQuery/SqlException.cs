@@ -1,9 +1,11 @@
 ﻿using System;
+using System.ComponentModel;
 using System.Globalization;
-using System.Runtime.Serialization;
 
 namespace LinqToDB.SqlQuery
 {
+	// TODO: Remove in v7
+	[Obsolete($"This exception type is not used anymore. Please update your code to handle {nameof(LinqToDBException)}."), EditorBrowsable(EditorBrowsableState.Never)]
 	[Serializable]
 	public class SqlException : Exception
 	{

@@ -8,12 +8,11 @@ namespace LinqToDB.Linq.Builder
 	using LinqToDB.Expressions;
 	using SqlQuery;
 
+	[BuildsMethodCall("OfType")]
 	sealed class OfTypeBuilder : MethodCallBuilder
 	{
-		protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
-		{
-			return methodCall.IsQueryable("OfType");
-		}
+		public static bool CanBuildMethod(MethodCallExpression call, BuildInfo info, ExpressionBuilder builder)
+			=> call.IsQueryable();
 
 		protected override BuildSequenceResult BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
@@ -31,13 +30,10 @@ namespace LinqToDB.Linq.Builder
 
 				if (table.ObjectType.IsSameOrParentOf(objectType))
 				{
-					if (!buildInfo.IsTest)
-					{
-						var predicate = builder.MakeIsPredicate(table, objectType);
+					var predicate = builder.MakeIsPredicate(table, objectType);
 
-						if (predicate.GetType() != typeof(SqlPredicate.Expr))
-							sequence.SelectQuery.Where.EnsureConjunction().Add(predicate);
-					}
+					if (predicate != null)
+						sequence.SelectQuery.Where.EnsureConjunction().Add(predicate);
 
 					return BuildSequenceResult.FromContext(new OfTypeContext(sequence, objectType));
 				}
@@ -56,12 +52,10 @@ namespace LinqToDB.Linq.Builder
 
 						if (mapping.Count > 0)
 						{
-							if (!buildInfo.IsTest)
-							{
-								var predicate = MakeIsPredicate(builder, sequence, fromType, toType);
+							var predicate = MakeIsPredicate(builder, sequence, fromType, toType);
 
+							if (predicate != null)
 								sequence.SelectQuery.Where.EnsureConjunction().Add(predicate);
-							}
 
 							return BuildSequenceResult.FromContext(new OfTypeContext(sequence, toType));
 						}
@@ -72,7 +66,7 @@ namespace LinqToDB.Linq.Builder
 			return BuildSequenceResult.FromContext(sequence);
 		}
 
-		static ISqlPredicate MakeIsPredicate(ExpressionBuilder builder, IBuildContext context, Type fromType, Type toType)
+		static ISqlPredicate? MakeIsPredicate(ExpressionBuilder builder, IBuildContext context, Type fromType, Type toType)
 		{
 			var mapper         = context.MappingSchema.GetEntityDescriptor(fromType, builder.DataOptions.ConnectionOptions.OnEntityDescriptorCreated);
 			var table          = new SqlTable(mapper);
@@ -81,12 +75,12 @@ namespace LinqToDB.Linq.Builder
 			return builder.MakeIsPredicate((context, table), context, discriminators, toType,
 				static (context, name) =>
 				{
-					var field  = context.table.FindFieldByMemberName(name) ?? throw new LinqException($"Field {name} not found in table {context.table}");
+					var field  = context.table.FindFieldByMemberName(name) ?? throw new LinqToDBException($"Field {name} not found in table {context.table}");
 					var member = field.ColumnDescriptor.MemberInfo;
 
 					var contextRef = new ContextRefExpression(member.DeclaringType!, context.context);
 					var expr       = Expression.MakeMemberAccess(contextRef, member);
-					var sql        = context.context.Builder.ConvertToSql(contextRef.BuildContext, expr);
+					var sql        = context.context.Builder.ConvertToSql(contextRef.BuildContext, expr, false);
 
 					return sql;
 				});

@@ -344,5 +344,55 @@ namespace LinqToDB.DataProvider.Informix
 		{
 			return ReservedWords.IsReserved(word, ProviderName.Informix);
 		}
+
+		protected override void BuildParameter(SqlParameter parameter)
+		{
+			// Known cases of Informix having parameter typing issues:
+			// - CTE query column
+			//
+			// TODO: refactor. Code similar to DB2/Firebird logic
+			if (parameter.NeedsCast && BuildStep != Step.TypedExpression)
+			{
+				var paramValue = parameter.GetParameterValue(OptimizationContext.EvaluationContext.ParameterValues);
+
+				var dbDataType = paramValue.DbDataType;
+
+				if (dbDataType.DataType == DataType.Undefined)
+				{
+					dbDataType = MappingSchema.GetDataType(dbDataType.SystemType).Type;
+				}
+
+				if (paramValue.ProviderValue is byte[] bytes)
+				{
+					dbDataType = dbDataType.WithLength(bytes.Length);
+				}
+				else if (paramValue.ProviderValue is string str)
+				{
+					dbDataType = dbDataType.WithLength(str.Length);
+				}
+				else if (paramValue.ProviderValue is decimal d)
+				{
+					if (dbDataType.Precision == null)
+						dbDataType = dbDataType.WithPrecision(DecimalHelper.GetPrecision(d));
+					if (dbDataType.Scale == null)
+						dbDataType = dbDataType.WithScale(DecimalHelper.GetScale(d));
+				}
+
+				if (dbDataType.DataType == DataType.Undefined)
+				{
+					base.BuildParameter(parameter);
+					return;
+				}
+
+				var saveStep = BuildStep;
+				BuildStep = Step.TypedExpression;
+				BuildTypedExpression(dbDataType, parameter);
+				BuildStep = saveStep;
+
+				return;
+			}
+
+			base.BuildParameter(parameter);
+		}
 	}
 }

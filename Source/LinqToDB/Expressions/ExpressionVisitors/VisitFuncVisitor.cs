@@ -313,6 +313,11 @@ namespace LinqToDB.Expressions
 			{
 				Visit(adjustType.Expression);
 			}
+			else if (expr is SqlDefaultIfEmptyExpression defaultIfEmpty)
+			{
+				Visit(defaultIfEmpty.InnerExpression);
+				Visit(defaultIfEmpty.NotNullExpressions);
+			}
 			else if (expr is SqlPathExpression keyHolder)
 			{
 			}

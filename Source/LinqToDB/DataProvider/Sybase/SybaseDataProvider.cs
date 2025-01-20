@@ -39,14 +39,16 @@ namespace LinqToDB.DataProvider.Sybase
 			SqlProviderFlags.IsSubQueryTakeSupported          = false;
 			SqlProviderFlags.CanCombineParameters             = false;
 			SqlProviderFlags.IsCrossJoinSupported             = false;
+			// TODO: add versioning as it is available since 16SP3 or just ignore old versions?
 			SqlProviderFlags.IsDistinctSetOperationsSupported = false;
 			SqlProviderFlags.IsWindowFunctionsSupported       = false;
 			SqlProviderFlags.IsDerivedTableOrderBySupported   = false;
 			SqlProviderFlags.IsUpdateTakeSupported            = true;
+			SqlProviderFlags.SupportsBooleanType              = false;
 
-			SqlProviderFlags.IsColumnSubqueryWithParentReferenceSupported = false;
-			SqlProviderFlags.IsCorrelatedSubQueryTakeSupported            = false;
-			SqlProviderFlags.IsJoinDerivedTableWithTakeInvalid            = true;
+			SqlProviderFlags.SupportedCorrelatedSubqueriesLevel        = 1;
+			SqlProviderFlags.IsCorrelatedSubQueryTakeSupported         = false;
+			SqlProviderFlags.IsJoinDerivedTableWithTakeInvalid         = true;
 
 			SetCharField("char",  (r,i) => r.GetString(i).TrimEnd(' '));
 			SetCharField("nchar", (r,i) => r.GetString(i).TrimEnd(' '));

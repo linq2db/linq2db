@@ -84,7 +84,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void EntityCreatedTest3([DataSources] string configString, [Values(false,true)] bool checkEntityIdentity)
+		public void EntityCreatedTest3([DataSources] string configString, [Values] bool checkEntityIdentity)
 		{
 			var interceptor = new TestEntityServiceInterceptor();
 			using (var db = GetEntityCreatedContext(configString, interceptor))

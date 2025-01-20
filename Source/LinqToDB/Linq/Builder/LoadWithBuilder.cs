@@ -8,28 +8,26 @@ namespace LinqToDB.Linq.Builder
 {
 	using Extensions;
 	using LinqToDB.Expressions;
-	using LinqToDB.Reflection;
+	using LinqToDB.Expressions.Internal;
+	using Reflection;
 	using Mapping;
 
+	[BuildsMethodCall("LoadWith", "ThenLoad", "LoadWithAsTable", "LoadWithInternal")]
 	sealed class LoadWithBuilder : MethodCallBuilder
 	{
-		public static readonly string[] MethodNames = { "LoadWith", "ThenLoad", "LoadWithAsTable", "LoadWithInternal" };
-
-		protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
-		{
-			return methodCall.IsQueryable(MethodNames);
-		}
+		public static bool CanBuildMethod(MethodCallExpression call, BuildInfo info, ExpressionBuilder builder)
+			=> call.IsQueryable();
 
 		static void CheckFilterFunc(Type expectedType, Type filterType, MappingSchema mappingSchema)
 		{
 			var propType = expectedType;
-			if (EagerLoading.IsEnumerableType(expectedType, mappingSchema))
+			if (mappingSchema.IsCollectionType(expectedType))
 				propType = EagerLoading.GetEnumerableElementType(expectedType, mappingSchema);
 			var itemType = typeof(Expression<>).IsSameOrParentOf(filterType) ?
 				filterType.GetGenericArguments()[0].GetGenericArguments()[0].GetGenericArguments()[0] :
 				filterType.GetGenericArguments()[0].GetGenericArguments()[0];
 			if (propType != itemType)
-				throw new LinqException("Invalid filter function usage.");
+				throw new LinqToDBException("Invalid filter function usage.");
 		}
 
 		static LoadWithInfo CorrectLastPath(LoadWithInfo lastPath, MemberInfo[]? loadWithPath)
@@ -59,7 +57,7 @@ namespace LinqToDB.Linq.Builder
 				return buildResult;
 			var sequence = buildResult.BuildContext;
 
-			ITableContext? table = null;
+			ILoadWithContext? table = null;
 
 			LoadWithInfo lastLoadWith;
 
@@ -90,7 +88,7 @@ namespace LinqToDB.Linq.Builder
 				else
 				{
 					if (sequence is LoadWithContext lw)
-						table = lw.RegisterContext as ITableContext;
+						table = lw.RegisterContext as ILoadWithContext;
 				}
 
 				var path = SequenceHelper.PrepareBody(selector, sequence);
@@ -161,7 +159,7 @@ namespace LinqToDB.Linq.Builder
 			return BuildSequenceResult.FromContext(loadWithSequence);
 		}
 
-		static (ITableContext? context, LoadWithInfo[] info)? ExtractAssociations(ExpressionBuilder builder, ITableContext? parentContext, Expression expression, Expression? stopExpression)
+		static (ILoadWithContext? context, LoadWithInfo[] info)? ExtractAssociations(ExpressionBuilder builder, ILoadWithContext? parentContext, Expression expression, Expression? stopExpression)
 		{
 			var currentExpression = expression;
 
@@ -196,10 +194,10 @@ namespace LinqToDB.Linq.Builder
 			return (context, loadWithInfos);
 		}
 
-		static (ITableContext? context, List<MemberInfo> members) GetAssociations(ExpressionBuilder builder, ITableContext? parentContext, Expression expression, Expression? stopExpression)
+		static (ILoadWithContext? context, List<MemberInfo> members) GetAssociations(ExpressionBuilder builder, ILoadWithContext? parentContext, Expression expression, Expression? stopExpression)
 		{
-			ITableContext? context    = parentContext;
-			MemberInfo?    lastMember = null;
+			ILoadWithContext? context    = parentContext;
+			MemberInfo?       lastMember = null;
 
 			var members = new List<MemberInfo>();
 			var stop    = false;
@@ -263,7 +261,7 @@ namespace LinqToDB.Linq.Builder
 
 					case ExpressionType.MemberAccess :
 					{
-						expression = builder.MakeExpression(context, expression, ProjectFlags.Traverse);
+						expression = builder.BuildTraverseExpression(expression).UnwrapConvert();
 
 						if (expression.NodeType != ExpressionType.MemberAccess)
 							break;
@@ -274,7 +272,7 @@ namespace LinqToDB.Linq.Builder
 
 						if (!isAssociation)
 						{
-							var projected = builder.MakeExpression(context, expression, ProjectFlags.Traverse);
+							var projected = builder.BuildTraverseExpression(expression);
 							if (ExpressionEqualityComparer.Instance.Equals(projected, expression))
 								throw new LinqToDBException($"Member '{expression}' is not an association.");
 							expression = projected;
@@ -304,7 +302,7 @@ namespace LinqToDB.Linq.Builder
 
 						if (expression is ContextRefExpression contextRef)
 						{
-							var newExpression = builder.MakeExpression(context, expression, ProjectFlags.Table);
+							var newExpression = builder.BuildTableExpression(expression);
 							if (!ReferenceEquals(newExpression, expression))
 							{
 								expression = newExpression;
@@ -312,7 +310,7 @@ namespace LinqToDB.Linq.Builder
 							else
 							{
 								stop    = true;
-								context = contextRef.BuildContext as ITableContext;
+								context = contextRef.BuildContext as ILoadWithContext;
 							}
 
 							break;

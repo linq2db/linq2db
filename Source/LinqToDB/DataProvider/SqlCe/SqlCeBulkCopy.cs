@@ -39,18 +39,18 @@ namespace LinqToDB.DataProvider.SqlCe
 
 			if (options.BulkCopyOptions.KeepIdentity == true)
 				await helper.DataConnection.ExecuteAsync("SET IDENTITY_INSERT " + helper.TableName + " ON", cancellationToken)
-					.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+					.ConfigureAwait(false);
 
 			var ret = await MultipleRowsCopy2Async(helper, source, "", cancellationToken)
-					.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+					.ConfigureAwait(false);
 
 			if (options.BulkCopyOptions.KeepIdentity == true)
 			{
 				await helper.DataConnection.ExecuteAsync("SET IDENTITY_INSERT " + helper.TableName + " OFF", cancellationToken)
-					.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+					.ConfigureAwait(false);
 
 				if (helper.OriginalContext.CloseAfterUse)
-					await helper.OriginalContext.CloseAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+					await helper.OriginalContext.CloseAsync().ConfigureAwait(false);
 			}
 
 			return ret;
@@ -64,18 +64,18 @@ namespace LinqToDB.DataProvider.SqlCe
 
 			if (options.BulkCopyOptions.KeepIdentity == true)
 				await helper.DataConnection.ExecuteAsync("SET IDENTITY_INSERT " + helper.TableName + " ON", cancellationToken)
-					.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+					.ConfigureAwait(false);
 
 			var ret = await MultipleRowsCopy2Async(helper, source, "", cancellationToken)
-					.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+					.ConfigureAwait(false);
 
 			if (options.BulkCopyOptions.KeepIdentity == true)
 			{
 				await helper.DataConnection.ExecuteAsync("SET IDENTITY_INSERT " + helper.TableName + " OFF", cancellationToken)
-					.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+					.ConfigureAwait(false);
 
 				if (helper.OriginalContext.CloseAfterUse)
-					await helper.OriginalContext.CloseAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+					await helper.OriginalContext.CloseAsync().ConfigureAwait(false);
 			}
 
 			return ret;

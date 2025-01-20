@@ -11,93 +11,76 @@ namespace Tests
 		{
 			return new SubstringsConstraint(expected);
 		}
-	}
 
-	class SubstringsConstraint : StringConstraint
-	{
-		StringComparison? _comparisonType;
-		string[]          _substrings;
-		int               _matched;
-
-		/// <summary>
-		/// Initializes a new instance of the <see cref="SubstringConstraint"/> class.
-		/// </summary>
-		/// <param name="expected">The expected.</param>
-		public SubstringsConstraint(params string[] expected)
-			: base(string.Join(Environment.NewLine, expected))
+		class SubstringsConstraint : StringConstraint
 		{
-			_substrings     = expected;
-			descriptionText = "String containing";
-		}
+			string[]          _substrings;
+			int               _matched;
 
-		/// <summary>
-		/// The Description of what this constraint tests, for
-		/// use in messages and in the ConstraintResult.
-		/// </summary>
-		public override string Description
-		{
-			get
+			/// <summary>
+			/// Initializes a new instance of the <see cref="SubstringConstraint"/> class.
+			/// </summary>
+			/// <param name="expected">The expected.</param>
+			public SubstringsConstraint(params string[] expected)
+				: base(string.Join(Environment.NewLine, expected))
 			{
-				var sb = new StringBuilder("String containing substrings");
-
-				if (caseInsensitive)
-					sb.Append(", ignoring case");
-
-				sb.Append(" :");
-
-				for (var i = 0; i < _substrings.Length; i++)
-				{
-					sb.AppendLine().Append($"\"{_substrings[i]}\"");
-
-					if (i == _matched)
-						sb.Append("    <-- not found");
-				}
-
-				return sb.ToString();
+				_substrings = expected;
+				descriptionText = "String containing";
 			}
-		}
 
-		/// <summary>
-		/// Test whether the constraint is satisfied by a given value
-		/// </summary>
-		/// <param name="actual">The value to be tested</param>
-		/// <returns>True for success, false for failure</returns>
-		protected override bool Matches(string? actual)
-		{
-			if (actual == null)
-				return false;
-
-			var actualComparison = _comparisonType ?? StringComparison.InvariantCulture;
-			var idx              = 0;
-
-			_matched = 0;
-
-			foreach (var str in _substrings)
+			/// <summary>
+			/// The Description of what this constraint tests, for
+			/// use in messages and in the ConstraintResult.
+			/// </summary>
+			public override string Description
 			{
-				idx =  actual.IndexOf(str, idx, actualComparison);
+				get
+				{
+					var sb = new StringBuilder("String containing substrings");
 
-				if (idx < 0)
+					if (caseInsensitive)
+						sb.Append(", ignoring case");
+
+					sb.Append(" :");
+
+					for (var i = 0; i < _substrings.Length; i++)
+					{
+						sb.AppendLine().Append($"\"{_substrings[i]}\"");
+
+						if (i == _matched)
+							sb.Append("    <-- not found");
+					}
+
+					return sb.ToString();
+				}
+			}
+
+			/// <summary>
+			/// Test whether the constraint is satisfied by a given value
+			/// </summary>
+			/// <param name="actual">The value to be tested</param>
+			/// <returns>True for success, false for failure</returns>
+			protected override bool Matches(string? actual)
+			{
+				if (actual == null)
 					return false;
 
-				_matched++;
+				var idx = 0;
+
+				_matched = 0;
+
+				foreach (var str in _substrings)
+				{
+					idx = actual.IndexOf(str, idx, StringComparison.InvariantCulture);
+
+					if (idx < 0)
+						return false;
+
+					_matched++;
+				}
+
+				return true;
 			}
-
-			return true;
-		}
-
-		/// <summary>
-		/// Modify the constraint to the specified comparison.
-		/// </summary>
-		/// <exception cref="InvalidOperationException">Thrown when a comparison type different
-		/// than <paramref name="comparisonType"/> was already set.</exception>
-		public SubstringsConstraint Using(StringComparison comparisonType)
-		{
-			if (_comparisonType == null)
-				_comparisonType = comparisonType;
-			else if (_comparisonType != comparisonType)
-				throw new InvalidOperationException("A different comparison type was already set.");
-
-			return this;
 		}
 	}
 }

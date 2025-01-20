@@ -232,30 +232,22 @@ namespace LinqToDB
 		[Pure]
 		[Extension("", BuilderType = typeof(FieldNameBuilder), ServerSideOnly = true)]
 		public static string FieldName(object fieldExpr)
-		{
-			throw new LinqToDBException("'Sql.FieldName' is server side only method and used only for generating custom SQL parts");
-		}
+			=> throw new ServerSideOnlyException(nameof(FieldName));
 
 		[Pure]
 		[Extension("", BuilderType = typeof(FieldNameBuilder), ServerSideOnly = true)]
 		public static string FieldName(object fieldExpr, bool qualified)
-		{
-			throw new LinqToDBException("'Sql.FieldName' is server side only method and used only for generating custom SQL parts");
-		}
+			=> throw new ServerSideOnlyException(nameof(FieldName));
 
 		[Pure]
 		[Extension("", BuilderType = typeof(FieldNameBuilder), ServerSideOnly = true)]
 		public static ISqlExpression FieldExpr(object fieldExpr)
-		{
-			throw new LinqToDBException("'Sql.FieldExpr' is server side only method and used only for generating custom SQL parts");
-		}
+			=> throw new ServerSideOnlyException(nameof(FieldExpr));
 
 		[Pure]
 		[Extension("", BuilderType = typeof(FieldNameBuilder), ServerSideOnly = true)]
 		public static ISqlExpression FieldExpr(object fieldExpr, bool qualified)
-		{
-			throw new LinqToDBException("'Sql.FieldExpr' is server side only method and used only for generating custom SQL parts");
-		}
+			=> throw new ServerSideOnlyException(nameof(FieldExpr));
 
 		private abstract class TableHelper
 		{
@@ -290,7 +282,7 @@ namespace LinqToDB
 				var tableExpr    = builder.EvaluateExpression(builder.Arguments[0]);
 				var tableType    = ((MethodInfo)builder.Member).GetGenericArguments()[0];
 				var helperType   = typeof(TableHelper<>).MakeGenericType(tableType);
-				var tableHelper  = (TableHelper)Activator.CreateInstance(helperType, tableExpr)!;
+				var tableHelper  = ActivatorExt.CreateInstance<TableHelper>(helperType, tableExpr);
 				var qualified    = builder.Arguments.Length <= 1 ? TableQualification.Full : builder.GetValue<TableQualification>(1);
 				var isExpression = builder.Member.Name == "TableExpr";
 
@@ -413,26 +405,20 @@ namespace LinqToDB
 
 		[ExpressionMethod(nameof(TableFieldIml))]
 		public static TColumn TableField<TEntity, TColumn>([NoEnumeration] TEntity entity, string fieldName)
-		{
-			throw new LinqToDBException("'Sql.TableField' is server side only method and used only for generating custom SQL parts");
-		}
+			=> throw new ServerSideOnlyException(nameof(TableField));
 
 		static Expression<Func<TEntity, string, TColumn>> TableFieldIml<TEntity, TColumn>()
 		{
 			return (entity, fieldName) => Property<TColumn>(entity, fieldName);
 		}
 
-		[Extension("", BuilderType = typeof(TableOrColumnAsFieldBuilder))]
+		[Extension("", BuilderType = typeof(TableOrColumnAsFieldBuilder), ServerSideOnly = true)]
 		internal static TColumn TableOrColumnAsField<TColumn>([NoEnumeration] object? entityOrColumn)
-		{
-			throw new LinqToDBException("'Sql.TableOrColumnAsField' is server side only method and used only for generating custom SQL parts");
-		}
+			=> throw new ServerSideOnlyException(nameof(TableOrColumnAsField));
 
-		[Extension("", BuilderType = typeof(TableAsFieldBuilder))]
+		[Extension("", BuilderType = typeof(TableAsFieldBuilder), ServerSideOnly = true)]
 		internal static TColumn TableAsField<TEntity, TColumn>([NoEnumeration] TEntity entity)
-		{
-			throw new LinqToDBException("'Sql.TableAsField' is server side only method and used only for generating custom SQL parts");
-		}
+			=> throw new ServerSideOnlyException(nameof(TableAsField));
 
 		[Extension("", BuilderType = typeof(TableNameBuilderDirect))]
 		public static string TableName<T>([NoEnumeration] ITable<T> table)
@@ -469,15 +455,11 @@ namespace LinqToDB
 
 		[Extension("", BuilderType = typeof(TableNameBuilder), ServerSideOnly = true)]
 		public static string TableName(object tableExpr)
-		{
-			throw new LinqToDBException("'Sql.TableName' is server side only method and used only for generating custom SQL parts");
-		}
+			=> throw new ServerSideOnlyException(nameof(TableName));
 
 		[Extension("", BuilderType = typeof(TableNameBuilder), ServerSideOnly = true)]
 		public static string TableName(object tableExpr, [SqlQueryDependent] TableQualification qualification)
-		{
-			throw new LinqToDBException("'Sql.TableName' is server side only method and used only for generating custom SQL parts");
-		}
+			=> throw new ServerSideOnlyException(nameof(TableName));
 
 		[Extension("", BuilderType = typeof(TableNameBuilderDirect))]
 		public static ISqlExpression TableExpr<T>([NoEnumeration] ITable<T> table)
@@ -516,15 +498,11 @@ namespace LinqToDB
 
 		[Extension("", BuilderType = typeof(TableNameBuilder), ServerSideOnly = true)]
 		public static ISqlExpression TableExpr(object tableExpr)
-		{
-			throw new LinqToDBException("'Sql.TableExpr' is server side only method and used only for generating custom SQL parts");
-		}
+			=> throw new ServerSideOnlyException(nameof(TableExpr));
 
 		[Extension("", BuilderType = typeof(TableNameBuilder), ServerSideOnly = true)]
 		public static ISqlExpression TableExpr(object tableExpr, [SqlQueryDependent] TableQualification qualification)
-		{
-			throw new LinqToDBException("'Sql.TableExpr' is server side only method and used only for generating custom SQL parts");
-		}
+			=> throw new ServerSideOnlyException(nameof(TableExpr));
 
 		class AliasExprBuilder : IExtensionCallBuilder
 		{
@@ -583,9 +561,7 @@ namespace LinqToDB
 		[Extension("", BuilderType = typeof(ExprBuilder), ServerSideOnly = true)]
 		[StringFormatMethod("sql")]
 		public static T Expr<T>(FormattableString sql)
-		{
-			throw new LinqToDBException("'Sql.Expr' is server side only method and used only for generating custom SQL parts");
-		}
+			=> throw new ServerSideOnlyException(nameof(Expr));
 
 		[Extension("", BuilderType = typeof(ExprBuilder), ServerSideOnly = true)]
 		[StringFormatMethod("sql")]
@@ -593,9 +569,7 @@ namespace LinqToDB
 			[SqlQueryDependent]              RawSqlString sql,
 			[SqlQueryDependentParams] params object[]     parameters
 			)
-		{
-			throw new LinqToDBException("'Sql.Expr' is server side only method and used only for generating custom SQL parts");
-		}
+			=> throw new ServerSideOnlyException(nameof(Expr));
 
 	}
 }

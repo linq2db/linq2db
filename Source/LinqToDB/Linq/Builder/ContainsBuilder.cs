@@ -9,25 +9,24 @@ namespace LinqToDB.Linq.Builder
 	using Mapping;
 	using SqlQuery;
 
+	[BuildsMethodCall("Contains")]
+	[BuildsMethodCall("ContainsAsync", CanBuildName = nameof(CanBuildAsyncMethod))]
 	sealed class ContainsBuilder : MethodCallBuilder
 	{
-		static readonly string[] MethodNames      = { "Contains"      };
-		static readonly string[] MethodNamesAsync = { "ContainsAsync" };
-
-		protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
+		public static bool CanBuildMethod(MethodCallExpression call, BuildInfo info, ExpressionBuilder builder)
 		{
-			var result =
-				methodCall.IsQueryable     (MethodNames     ) && methodCall.Arguments.Count == 2 ||
-				methodCall.IsAsyncExtension(MethodNamesAsync) && methodCall.Arguments.Count == 3;
-
-			if (result)
-			{
+			return call.IsQueryable()
+				&& call.Arguments.Count == 2
 				// Contains over constant works through ConvertPredicate
-				if (builder.CanBeCompiled(methodCall.Arguments[0], false))
-					result = false;
-			}
+				&& !builder.CanBeEvaluatedOnClient(call.Arguments[0]);
+		}
 
-			return result;
+		public static bool CanBuildAsyncMethod(MethodCallExpression call, BuildInfo info, ExpressionBuilder builder)
+		{
+			return call.IsAsyncExtension()
+				&& call.Arguments.Count == 3
+				// Contains over constant works through ConvertPredicate
+				&& !builder.CanBeEvaluatedOnClient(call.Arguments[0]);
 		}
 
 		protected override BuildSequenceResult BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
@@ -46,14 +45,6 @@ namespace LinqToDB.Linq.Builder
 				return BuildSequenceResult.Error(methodCall, ErrorHelper.Error_Correlated_Subqueries);
 
 			return BuildSequenceResult.FromContext(containsContext);
-		}
-
-		public static bool IsConstant(MethodCallExpression methodCall)
-		{
-			if (!methodCall.IsQueryable("Contains"))
-				return false;
-
-			return methodCall.IsQueryable(false) == false;
 		}
 
 		sealed class ContainsContext : BuildContextBase
@@ -136,32 +127,31 @@ namespace LinqToDB.Linq.Builder
 				if (_cachedPlaceholder != null)
 					return _cachedPlaceholder;
 
-				_cachedPlaceholder = CreatePlaceholder(ProjectFlags.SQL);
+				_cachedPlaceholder = CreatePlaceholder();
 
 				return _cachedPlaceholder;
 			}
 
-			public SqlPlaceholderExpression? CreatePlaceholder(ProjectFlags flags)
+			public SqlPlaceholderExpression? CreatePlaceholder()
 			{
 				var args     = _methodCall.Method.GetGenericArguments();
 				var param    = Expression.Parameter(args[0], "param");
 				var expr     = _methodCall.Arguments[1];
-				var keysFlag = flags.SqlFlag().KeyFlag();
 
 				var placeholderContext = Parent ?? InnerSequence;
 
 				var contextRef   = new ContextRefExpression(args[0], InnerSequence);
-				var sequenceExpr = Builder.ConvertToSqlExpr(InnerSequence, contextRef, keysFlag);
+				var sequenceExpr = Builder.BuildSqlExpression(InnerSequence, contextRef, BuildPurpose.Sql, BuildFlags.ForKeys);
 
-				var sequencePlaceholders = ExpressionBuilder.CollectPlaceholders(sequenceExpr);
+				var sequencePlaceholders = ExpressionBuilder.CollectPlaceholders(sequenceExpr, false);
 				if (sequencePlaceholders.Count == 0)
 				{
 					//TODO: better error handling
 					return null;
 				}
 
-				var testExpr         = Builder.ConvertToSqlExpr(placeholderContext, expr, keysFlag);
-				var testPlaceholders = ExpressionBuilder.CollectPlaceholders(testExpr);
+				var testExpr         = Builder.BuildSqlExpression(placeholderContext, expr, BuildPurpose.Sql, BuildFlags.ForKeys);
+				var testPlaceholders = ExpressionBuilder.CollectPlaceholders(testExpr, false);
 
 				ISqlPredicate predicate;
 
@@ -177,7 +167,7 @@ namespace LinqToDB.Linq.Builder
 					var availableComparisons = EnumerateAssignments(expr, sequenceExpr).Take(2).ToList();
 					if (availableComparisons.Count == 1)
 					{
-						testExpr  = Builder.ConvertToSqlExpr(placeholderContext, availableComparisons[0].Item1, keysFlag);
+						testExpr  = Builder.BuildSqlExpression(placeholderContext, availableComparisons[0].Item1, BuildPurpose.Sql, BuildFlags.ForKeys);
 						if (testExpr is SqlPlaceholderExpression placeholder)
 						{
 							testPlaceholders.Add(placeholder);
@@ -188,26 +178,23 @@ namespace LinqToDB.Linq.Builder
 
 				if (useExists)
 				{
-					if (Builder.DataContext.SqlProviderFlags.DoesNotSupportCorrelatedSubquery)
+					if (Builder.DataContext.SqlProviderFlags.SupportedCorrelatedSubqueriesLevel == 0)
 					{
 						return null;
 					}
 
 					var condition = Expression.Lambda(ExpressionBuilder.Equal(MappingSchema, param, expr), param);
 					var sequence = Builder.BuildWhere(Parent, InnerSequence,
-						condition : condition, checkForSubQuery : true, enforceHaving : false, isTest : flags.IsTest());
+						condition : condition, checkForSubQuery : true, enforceHaving : false, out var error);
 
 					if (sequence == null)
 						return null;
 
-					predicate = new SqlPredicate.FuncLike(SqlFunction.CreateExists(sequence.SelectQuery));
+					predicate = new SqlPredicate.Exists(false, sequence.SelectQuery);
 				}
 				else
 				{
-					if (!flags.IsTest())
-					{
-						var columns = Builder.ToColumns(InnerSequence, sequenceExpr);
-					}
+					var columns = Builder.ToColumns(InnerSequence, sequenceExpr);
 
 					var testPlaceholder = testPlaceholders[0];
 					testPlaceholder = Builder.UpdateNesting(placeholderContext, testPlaceholder);
@@ -227,6 +214,8 @@ namespace LinqToDB.Linq.Builder
 				var mapper = Builder.BuildMapper<object>(SelectQuery, expr);
 				QueryRunner.SetRunQuery(query, mapper);
 			}
+
+			public override bool IsSingleElement => true;
 		}
 	}
 }

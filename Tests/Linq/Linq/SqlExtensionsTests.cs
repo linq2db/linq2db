@@ -72,7 +72,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TableNameTests1([IncludeDataSources(true, TestProvName.AllSqlServer2012)] string context)
+		public void TableNameTests1([IncludeDataSources(true, TestProvName.AllSqlServer2012Plus)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (var table = db.CreateLocalTable<SampleClass>("sample_table_temp", new[]{new SampleClass{Id = 1, Value = 2} }))
@@ -105,7 +105,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TableNameTests2([IncludeDataSources(true, TestProvName.AllSqlServer2012)] string context)
+		public void TableNameTests2([IncludeDataSources(true, TestProvName.AllSqlServer2012Plus)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -122,7 +122,7 @@ namespace Tests.Linq
 						TableName_Database = Sql.TableName(t, Sql.TableQualification.DatabaseName),
 					};
 
-				TestContext.WriteLine(query.ToString());
+				BaselinesManager.LogQuery(query.ToSqlQuery().Sql);
 
 				var ast = query.GetSelectQuery();
 
@@ -144,7 +144,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TableExprTests1([IncludeDataSources(true, TestProvName.AllSqlServer2012)] string context)
+		public void TableExprTests1([IncludeDataSources(true, TestProvName.AllSqlServer2012Plus)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (var table = db.CreateLocalTable<SampleClass>("sample_table_temp", new[]{new SampleClass{Id = 1, Value = 2} }))
@@ -177,7 +177,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TableExprTests2([IncludeDataSources(true, TestProvName.AllSqlServer2012)] string context)
+		public void TableExprTests2([IncludeDataSources(true, TestProvName.AllSqlServer2012Plus)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -194,7 +194,7 @@ namespace Tests.Linq
 						TableName_Database = Sql.TableExpr(t, Sql.TableQualification.DatabaseName),
 					};
 
-				TestContext.WriteLine(query.ToString());
+				BaselinesManager.LogQuery(query.ToSqlQuery().Sql);
 
 				var ast = query.GetSelectQuery();
 
@@ -244,7 +244,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void FreeTextTableTest([IncludeDataSources(true, TestProvName.AllSqlServer2012)] string context)
+		public void FreeTextTableTest([IncludeDataSources(true, TestProvName.AllSqlServer2012Plus)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -258,9 +258,9 @@ namespace Tests.Linq
 						.InnerJoin(ft => ft.Key == t.Id)
 					select t;
 
-				var query1Str = query1.ToString();
+				var query1Str = query1.ToSqlQuery().Sql;
 
-				TestContext.WriteLine(query1Str);
+				BaselinesManager.LogQuery(query1Str);
 
 				var query2 = from t in table
 					from ft in db.FromSql<FreeTextKey<int>>(
@@ -268,17 +268,17 @@ namespace Tests.Linq
 						.InnerJoin(ft => ft.Key == t.Id)
 					select t;
 
-				var query2Str = query2.ToString();
+				var query2Str = query2.ToSqlQuery().Sql;
 
-				TestContext.WriteLine(query2Str);
+				BaselinesManager.LogQuery(query2Str);
 
 
 				var query3 = db.FromSql<FreeTextKey<int>>(
 					$"FREETEXTTABLE({Sql.TableExpr(table)}, {Sql.FieldExpr(table, t => t.Value)}, {queryText})");
 
-				var query3Str = query3.ToString();
+				var query3Str = query3.ToSqlQuery().Sql;
 
-				TestContext.WriteLine(query3Str);
+				BaselinesManager.LogQuery(query3Str);
 
 				Assert.Multiple(() =>
 				{

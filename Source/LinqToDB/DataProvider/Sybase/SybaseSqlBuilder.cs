@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data.Common;
+using System.Globalization;
 using System.Text;
 
 namespace LinqToDB.DataProvider.Sybase
@@ -72,6 +73,15 @@ namespace LinqToDB.DataProvider.Sybase
 						return;
 					}
 					break;
+				case DataType.Decimal:
+					// default is ASE is 18,0
+					if (type.Scale != null)
+						StringBuilder.Append(CultureInfo.InvariantCulture, $"DECIMAL({type.Precision ?? 18}{InlineComma}{type.Scale})");
+					else if (type.Precision != null)
+						StringBuilder.Append(CultureInfo.InvariantCulture, $"DECIMAL({type.Precision})");
+					else
+						StringBuilder.Append("DECIMAL");
+					return;
 			}
 
 			base.BuildDataTypeFromDataType(type, forCreateTable, canBeNull);

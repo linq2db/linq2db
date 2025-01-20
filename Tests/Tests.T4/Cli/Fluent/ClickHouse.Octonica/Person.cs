@@ -17,6 +17,6 @@ namespace Cli.Fluent.ClickHouse.Octonica
 		public string  FirstName  { get; set; } = null!; // String
 		public string  LastName   { get; set; } = null!; // String
 		public string? MiddleName { get; set; } // String
-		public byte[]  Gender     { get; set; } = null!; // FixedString(1)
+		public char    Gender     { get; set; } // FixedString(1)
 	}
 }

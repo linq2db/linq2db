@@ -23,39 +23,22 @@
 {
 	"NETFX": {
 		"BasedOn": "LocalConnectionStrings",
-		"DefaultConfiguration": "SQLite.MS",
-		"Providers": [
-			"Access",
-			"Access.Odbc",
-			"SqlCe",
-			"SQLite.Classic",
-			"SQLite.Classic.MPU",
-			"SQLite.Classic.MPM",
-			"SQLite.MS",
-			"Northwind.SQLite",
-			"Northwind.SQLite.MS",
-			"TestNoopProvider"
-		]
+		"DefaultConfiguration": "SQLite.MS"
 	},
 
 	"NET60": {
 		"BasedOn": "LocalConnectionStrings",
-		"DefaultConfiguration": "SQLite.MS",
-		"Providers": [
-			"SQLite.MS",
-			"Northwind.SQLite.MS",
-			"TestNoopProvider"
-		]
+		"DefaultConfiguration": "SQLite.MS"
 	},
 
 	"NET80": {
 		"BasedOn": "LocalConnectionStrings",
-		"DefaultConfiguration": "SQLite.MS",
-		"Providers": [
-			"SQLite.MS",
-			"Northwind.SQLite.MS",
-			"TestNoopProvider"
-		]
+		"DefaultConfiguration": "SQLite.MS"
+	},
+
+	"NET90": {
+		"BasedOn": "LocalConnectionStrings",
+		"DefaultConfiguration": "SQLite.MS"
 	},
 
 	"NETFX.Azure": {
@@ -76,23 +59,33 @@
 		"TraceLevel": "Info"
 	},
 
-	"CommonConnectionStrings": {
-		"Connections": {
-			"Access"             : {                                      "ConnectionString": "Provider=Microsoft.Jet.OLEDB.4.0;Data Source=Database\\TestData.mdb;Locale Identifier=1033;Jet OLEDB:Engine Type=5;Persist Security Info=True"       },
-			"Access.Data"        : {                                      "ConnectionString": "Provider=Microsoft.Jet.OLEDB.4.0;Data Source=Database\\Data\\TestData.mdb;Locale Identifier=1033;Jet OLEDB:Engine Type=5;Persist Security Info=True" },
-			"Access.Odbc"        : {                                      "ConnectionString": "Driver={Microsoft Access Driver (*.mdb, *.accdb)};Dbq=Database\\TestData.ODBC.mdb;"                                                                  },
-			"Access.Odbc.Data"   : {                                      "ConnectionString": "Driver={Microsoft Access Driver (*.mdb, *.accdb)};Dbq=Database\\TestData.ODBC.mdb;"                                                                  },
-			"SqlCe"              : {                                      "ConnectionString": "Data Source=Database\\TestData.sdf"                                                                                                                  },
-			"SqlCe.Data"         : {                                      "ConnectionString": "Data Source=Database\\Data\\TestData.sdf"                                                                                                            },
-			"SQLite.Classic"     : { "Provider": "SQLite",                "ConnectionString": "Data Source=Database/TestData.sqlite"                                                                                                                },
-			"SQLite.Classic.MPU" : { "Provider": "SQLite.Classic.MPU",    "ConnectionString": "Data Source=Database/TestData.MiniProfiler.Unmapped.sqlite"                                                                                          },
-			"SQLite.Classic.MPM" : { "Provider": "SQLite.Classic.MPM",    "ConnectionString": "Data Source=Database/TestData.MiniProfiler.Mapped.sqlite"                                                                                            },
-			"SQLite.Classic.Data": { "Provider": "SQLite.Classic",        "ConnectionString": "Data Source=Database/Data/TestData.sqlite"                                                                                                           },
-			"SQLite.MS"          : { "Provider": "SQLite.MS",             "ConnectionString": "Data Source=Database/TestData.MS.sqlite"                                                                                                             },
-			"SQLite.MS.Data"     : { "Provider": "Microsoft.Data.Sqlite", "ConnectionString": "Data Source=Database/Data/TestData.MS.sqlite"                                                                                                        },
-			"Northwind.SQLite"   : { "Provider": "System.Data.SQLite",    "ConnectionString": "Data Source=Database/Northwind.sqlite"                                                                                                               },
-			"Northwind.SQLite.MS": { "Provider": "SQLite.Microsoft",      "ConnectionString": "Data Source=Database/Northwind.MS.sqlite"                                                                                                            },
-			"TestNoopProvider"   : { "Provider": "TestNoopProvider",      "ConnectionString": "TestNoopProvider"                                                                                                                                    }
+	"NET90.Azure": {
+		"BasedOn": "AzureConnectionStrings",
+		"DefaultConfiguration": "SQLite.MS",
+		"TraceLevel": "Info"
+	},
+
+	"CommonConnectionStrings" : {
+		"Connections"               : {
+			"Access.Ace.OleDb"      : {                                      "ConnectionString": "Provider=Microsoft.ACE.OLEDB.12.0;Data Source=Database\\TestData.mdb;Locale Identifier=1033;Persist Security Info=True"                              },
+			"Access.Ace.OleDb.Data" : {                                      "ConnectionString": "Provider=Microsoft.ACE.OLEDB.12.0;Data Source=Database\\Data\\TestData.mdb;Locale Identifier=1033;Persist Security Info=True"                        },
+			"Access.Ace.Odbc"       : {                                      "ConnectionString": "Driver={Microsoft Access Driver (*.mdb, *.accdb)};Dbq=Database\\TestData.ODBC.mdb;ExtendedAnsiSQL=1"                                                 },
+			"Access.Ace.Odbc.Data"  : {                                      "ConnectionString": "Driver={Microsoft Access Driver (*.mdb, *.accdb)};Dbq=Database\\TestData.ODBC.mdb;ExtendedAnsiSQL=1"                                                 },
+			"Access.Jet.OleDb"      : {                                      "ConnectionString": "Provider=Microsoft.Jet.OLEDB.4.0;Data Source=Database\\TestData.mdb;Locale Identifier=1033;Jet OLEDB:Engine Type=5;Persist Security Info=True"       },
+			"Access.Jet.OleDb.Data" : {                                      "ConnectionString": "Provider=Microsoft.Jet.OLEDB.4.0;Data Source=Database\\Data\\TestData.mdb;Locale Identifier=1033;Jet OLEDB:Engine Type=5;Persist Security Info=True" },
+			"Access.Jet.Odbc"       : {                                      "ConnectionString": "Driver={Microsoft Access Driver (*.mdb)};Dbq=Database\\TestData.ODBC.mdb;ExtendedAnsiSQL=1;"                                                         },
+			"Access.Jet.Odbc.Data"  : {                                      "ConnectionString": "Driver={Microsoft Access Driver (*.mdb)};Dbq=Database\\TestData.ODBC.mdb;ExtendedAnsiSQL=1;"                                                         },
+			"SqlCe"                 : {                                      "ConnectionString": "Data Source=Database\\TestData.sdf"                                                                                                                  },
+			"SqlCe.Data"            : {                                      "ConnectionString": "Data Source=Database\\Data\\TestData.sdf"                                                                                                            },
+			"SQLite.Classic"        : { "Provider": "SQLite",                "ConnectionString": "Data Source=Database/TestData.sqlite"                                                                                                                },
+			"SQLite.Classic.MPU"    : { "Provider": "SQLite.Classic.MPU",    "ConnectionString": "Data Source=Database/TestData.MiniProfiler.Unmapped.sqlite"                                                                                          },
+			"SQLite.Classic.MPM"    : { "Provider": "SQLite.Classic.MPM",    "ConnectionString": "Data Source=Database/TestData.MiniProfiler.Mapped.sqlite"                                                                                            },
+			"SQLite.Classic.Data"   : { "Provider": "SQLite.Classic",        "ConnectionString": "Data Source=Database/Data/TestData.sqlite"                                                                                                           },
+			"SQLite.MS"             : { "Provider": "SQLite.MS",             "ConnectionString": "Data Source=Database/TestData.MS.sqlite"                                                                                                             },
+			"SQLite.MS.Data"        : { "Provider": "Microsoft.Data.Sqlite", "ConnectionString": "Data Source=Database/Data/TestData.MS.sqlite"                                                                                                        },
+			"Northwind.SQLite"      : { "Provider": "System.Data.SQLite",    "ConnectionString": "Data Source=Database/Northwind.sqlite"                                                                                                               },
+			"Northwind.SQLite.MS"   : { "Provider": "SQLite.Microsoft",      "ConnectionString": "Data Source=Database/Northwind.MS.sqlite"                                                                                                            },
+			"TestNoopProvider"      : { "Provider": "TestNoopProvider",      "ConnectionString": "TestNoopProvider"                                                                                                                                    }
 		}
 	},
 
@@ -126,6 +119,7 @@
 			"PostgreSQL.14"             : { "Provider": "Npgsql",                           "ConnectionString": "Server=localhost;Port=5414;Database=testdata;User Id=postgres;Password=Password12!;Pooling=true;MinPoolSize=10;MaxPoolSize=100;"                                     },
 			"PostgreSQL.15"             : { "Provider": "Npgsql",                           "ConnectionString": "Server=localhost;Port=5415;Database=testdata;User Id=postgres;Password=Password12!;Pooling=true;MinPoolSize=10;MaxPoolSize=100;"                                     },
 			"PostgreSQL.16"             : { "Provider": "Npgsql",                           "ConnectionString": "Server=localhost;Port=5416;Database=testdata;User Id=postgres;Password=Password12!;Pooling=true;MinPoolSize=10;MaxPoolSize=100;"                                     },
+			"PostgreSQL.17"             : { "Provider": "Npgsql",                           "ConnectionString": "Server=localhost;Port=5417;Database=testdata;User Id=postgres;Password=Password12!;Pooling=true;MinPoolSize=10;MaxPoolSize=100;"                                     },
 			"SapHana.Native"            : { "Provider": "Sap.Data.Hana",                    "ConnectionString": "Server=localhost:39017;Current Schema=TESTDB;UserID=SYSTEM;Password=Passw0rd;"                                                                                       },
 			"SqlServer.2005"            : { "Provider": "System.Data.SqlClient",            "ConnectionString": "Server=DBHost\\SQLSERVER2005;Database=TestData;User Id=sa;Password=TestPassword;Encrypt=true;TrustServerCertificate=true"                                            },
 			"SqlServer.2005.MS"         : { "Provider": "Microsoft.Data.SqlClient",         "ConnectionString": "Server=DBHost\\SQLSERVER2005;Database=TestData;User Id=sa;Password=TestPassword;Encrypt=true;TrustServerCertificate=true"                                            },
@@ -158,20 +152,18 @@
 
 	"AzureConnectionStrings": {
 		"BasedOn": "CommonConnectionStrings",
-		"BaselinesPath": "./../baselines",
+		"BaselinesPath": "./../../../baselines",
 		"Connections": {
 			"MySql.5.7"                 : { "Provider": "MySql.Data",                      "ConnectionString": "Server=localhost;Port=3306;Database=testdata;Uid=root;Pwd=root;charset=utf8;Allow User Variables=True;SslMode=None;"                                                 },
 			"MySqlConnector.5.7"        : { "Provider": "MySqlConnector",                  "ConnectionString": "Server=localhost;Port=3306;Database=testdataconnector;Uid=root;Pwd=root;charset=utf8;Allow User Variables=True;SslMode=None;AllowLoadLocalInfile=true;"              },
 			"MySql.8.0"                 : { "Provider": "MySql.Data",                      "ConnectionString": "Server=localhost;Port=3306;Database=testdata;Uid=root;Pwd=root;charset=utf8;Allow User Variables=True;"                                                              },
 			"MySqlConnector.8.0"        : { "Provider": "MySqlConnector",                  "ConnectionString": "Server=localhost;Port=3306;Database=testdataconnector;Uid=root;Pwd=root;charset=utf8;Allow User Variables=True;AllowLoadLocalInfile=true;"                           },
 			"MariaDB.11"                : { "Provider": "MySqlConnector",                  "ConnectionString": "Server=localhost;Port=3306;Database=testdata;Uid=root;Pwd=root;charset=utf8;Allow User Variables=True;SslMode=None;AllowLoadLocalInfile=true;"                       },
-			"PostgreSQL.10"             : { "Provider": "Npgsql",                          "ConnectionString": "Server=localhost;Port=5432;Database=testdata;User Id=postgres;Password=Password12!;Pooling=true;MinPoolSize=10;MaxPoolSize=100"                                      },
-			"PostgreSQL.11"             : { "Provider": "Npgsql",                          "ConnectionString": "Server=localhost;Port=5432;Database=testdata;User Id=postgres;Password=Password12!;Pooling=true;MinPoolSize=10;MaxPoolSize=100"                                      },
-			"PostgreSQL.12"             : { "Provider": "Npgsql",                          "ConnectionString": "Server=localhost;Port=5432;Database=testdata;User Id=postgres;Password=Password12!;Pooling=true;MinPoolSize=10;MaxPoolSize=100"                                      },
 			"PostgreSQL.13"             : { "Provider": "Npgsql",                          "ConnectionString": "Server=localhost;Port=5432;Database=testdata;User Id=postgres;Password=Password12!;Pooling=true;MinPoolSize=10;MaxPoolSize=100"                                      },
 			"PostgreSQL.14"             : { "Provider": "Npgsql",                          "ConnectionString": "Server=localhost;Port=5432;Database=testdata;User Id=postgres;Password=Password12!;Pooling=true;MinPoolSize=10;MaxPoolSize=100"                                      },
 			"PostgreSQL.15"             : { "Provider": "Npgsql",                          "ConnectionString": "Server=localhost;Port=5432;Database=testdata;User Id=postgres;Password=Password12!;Pooling=true;MinPoolSize=10;MaxPoolSize=100"                                      },
 			"PostgreSQL.16"             : { "Provider": "Npgsql",                          "ConnectionString": "Server=localhost;Port=5432;Database=testdata;User Id=postgres;Password=Password12!;Pooling=true;MinPoolSize=10;MaxPoolSize=100"                                      },
+			"PostgreSQL.17"             : { "Provider": "Npgsql",                          "ConnectionString": "Server=localhost;Port=5432;Database=testdata;User Id=postgres;Password=Password12!;Pooling=true;MinPoolSize=10;MaxPoolSize=100"                                      },
 			"Firebird.2.5"              : {                                                "ConnectionString": "DataSource=localhost;Port=3050;Database=/firebird/data/testdb.fdb;User Id=sysdba;Password=masterkey;charset=UTF8"                                                    },
 			"Firebird.3"                : {                                                "ConnectionString": "DataSource=localhost;Port=3050;Database=/firebird/data/testdb.fdb;User Id=sysdba;Password=masterkey;charset=UTF8;wirecrypt=disabled"                                 },
 			"Firebird.4"                : {                                                "ConnectionString": "DataSource=localhost;Port=3050;Database=/firebird/data/testdb.fdb;User Id=sysdba;Password=masterkey;charset=UTF8;wirecrypt=disabled"                                 },
@@ -239,6 +231,7 @@
 			"PostgreSQL.14",
 			"PostgreSQL.15",
 			"PostgreSQL.16",
+			"PostgreSQL.17",
 			"Firebird.2.5",
 			"Firebird.3",
 			"Firebird.4",
@@ -268,8 +261,10 @@
 			"SqlServer.Northwind.MS",
 			"SqlServer.Azure",
 			"SqlServer.Azure.MS",
-			"Access",
-			"Access.Odbc",
+			"Access.Jet.OleDb",
+			"Access.Ace.OleDb",
+			"Access.Jet.Odbc",
+			"Access.Ace.Odbc",
 			"DB2",
 			"Informix",
 			"Informix.DB2",
@@ -318,7 +313,7 @@
 
 		// List of tested providers.
 		"Providers": [
-			"Access",
+			"Access.Jet.OleDb",
 			"SQLite.Classic",
 			"SqlServer.2014"
 		],
@@ -333,14 +328,14 @@
 		// Default configuration is used to load etalon data to compare.
 		"DefaultConfiguration": "SQLite.MS",
 		"Providers": [
-			"Access",
+			"Access.Jet.OleDb",
 			"SQLite.Classic",
 			"SQLite.MS"
 		],
 		"Connections": {
-			"Access"        : {                          "ConnectionString": "Provider=Microsoft.Jet.OLEDB.4.0;Data Source=Database\\TestData.mdb;Locale Identifier=1033;Jet OLEDB:Engine Type=5;Persist Security Info=True" },
-			"SQLite.Classic": { "Provider": "SQLite",    "ConnectionString": "Data Source=Database\\TestData.sqlite"                                                                                                         },
-			"SQLite.MS"     : { "Provider": "SQLite.MS", "ConnectionString": "Data Source=Database\\TestData..MS.sqlite"                                                                                                     }
+			"Access.Jet.OleDb" : {                          "ConnectionString": "Provider=Microsoft.Jet.OLEDB.4.0;Data Source=Database\\TestData.mdb;Locale Identifier=1033;Jet OLEDB:Engine Type=5;Persist Security Info=True" },
+			"SQLite.Classic"   : { "Provider": "SQLite",    "ConnectionString": "Data Source=Database\\TestData.sqlite"                                                                                                         },
+			"SQLite.MS"        : { "Provider": "SQLite.MS", "ConnectionString": "Data Source=Database\\TestData..MS.sqlite"                                                                                                     }
 		}
 	},
 
@@ -348,15 +343,15 @@
 		"TraceLevel": "Error",
 		"DefaultConfiguration": "SQLite.MS",
 		"Providers": [
-			"Access",
+			"Access.Jet.OleDb",
 			"SQLite.Classic",
 			"SqlServer.2014"
 		],
 		"Connections": {
-			"Access"        : {                                      "ConnectionString": "Provider=Microsoft.Jet.OLEDB.4.0;Data Source=Database\\TestData.mdb;Locale Identifier=1033;Jet OLEDB:Engine Type=5;Persist Security Info=True" },
-			"SQLite.Classic": { "Provider": "SQLite",                "ConnectionString": "Data Source=Database\\TestData.sqlite"                                                                                                         },
-			"SQLite.MS"     : { "Provider": "SQLite.MS",             "ConnectionString": "Data Source=Database\\TestData..MS.sqlite"                                                                                                     },
-			"SqlServer.2014": { "Provider": "System.Data.SqlClient", "ConnectionString": "Server=DBHost\\SQLSERVER2014;Database=TestData;User Id=sa;Password=TestPassword;Encrypt=true;TrustServerCertificate=true"                      }
+			"Access.Jet.OleDb" : {                                      "ConnectionString": "Provider=Microsoft.Jet.OLEDB.4.0;Data Source=Database\\TestData.mdb;Locale Identifier=1033;Jet OLEDB:Engine Type=5;Persist Security Info=True" },
+			"SQLite.Classic"   : { "Provider": "SQLite",                "ConnectionString": "Data Source=Database\\TestData.sqlite"                                                                                                         },
+			"SQLite.MS"        : { "Provider": "SQLite.MS",             "ConnectionString": "Data Source=Database\\TestData..MS.sqlite"                                                                                                     },
+			"SqlServer.2014"   : { "Provider": "System.Data.SqlClient", "ConnectionString": "Server=DBHost\\SQLSERVER2014;Database=TestData;User Id=sa;Password=TestPassword;Encrypt=true;TrustServerCertificate=true"                      }
 		}
 	}
 }

@@ -16,6 +16,27 @@ namespace Tests.xUpdate
 	public partial class MergeTests : TestBase
 	{
 		[AttributeUsage(AttributeTargets.Parameter)]
+		public class MergeNotMatchedBySourceDataContextSourceAttribute : IncludeDataSourcesAttribute
+		{
+			static string[] Supported = new[]
+			{
+				TestProvName.AllFirebird5Plus,
+				TestProvName.AllSqlServer2008Plus,
+				TestProvName.AllPostgreSQL17Plus,
+			}.SelectMany(_ => _.Split(',')).ToArray();
+
+			public MergeNotMatchedBySourceDataContextSourceAttribute(params string[] except)
+				: base(true, Supported.Except(except.SelectMany(_ => _.Split(','))).ToArray())
+			{
+			}
+
+			public MergeNotMatchedBySourceDataContextSourceAttribute(bool excludeLinqService, params string[] except)
+				: base(!excludeLinqService, Supported.Except(except.SelectMany(_ => _.Split(','))).ToArray())
+			{
+			}
+		}
+
+		[AttributeUsage(AttributeTargets.Parameter)]
 		public class MergeDataContextSourceAttribute : DataSourcesAttribute
 		{
 			public static List<string> Unsupported = new[]
@@ -125,12 +146,16 @@ namespace Tests.xUpdate
 			public int OtherFake;
 		}
 
-		private static ITable<TestMapping1> GetTarget(IDataContext db)
+#pragma warning disable NUnit1028 // The non-test method is public
+		internal static ITable<TestMapping1> GetTarget(IDataContext db)
+#pragma warning restore NUnit1028 // The non-test method is public
 		{
 			return db.GetTable<TestMapping1>().TableName("TestMerge1");
 		}
 
-		private static ITable<TestMapping1> GetSource1(IDataContext db)
+#pragma warning disable NUnit1028 // The non-test method is public
+		internal static ITable<TestMapping1> GetSource1(IDataContext db)
+#pragma warning restore NUnit1028 // The non-test method is public
 		{
 			return db.GetTable<TestMapping1>().TableName("TestMerge2");
 		}
@@ -153,7 +178,9 @@ namespace Tests.xUpdate
 			});
 		}
 
-		private void PrepareData(IDataContext db)
+#pragma warning disable NUnit1028 // The non-test method is public
+		internal static void PrepareData(IDataContext db)
+#pragma warning restore NUnit1028 // The non-test method is public
 		{
 			using (new DisableLogging())
 			{

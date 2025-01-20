@@ -4,6 +4,7 @@ using FluentAssertions;
 
 using JetBrains.Annotations;
 using LinqToDB;
+using LinqToDB.Data;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
@@ -66,7 +67,12 @@ namespace Tests.xUpdate
 
 				var r = table.OrderBy(t => t.ID).Skip(1).Single();
 
-				Assert.That(r.ID, Is.EqualTo(id));
+				// Oracle sequence is not guaranted to be sequential
+				// (in short sequence values generated in batches that could be discarded for whatever reason leading to gaps)
+				if (context.IsAnyOf(TestProvName.AllOracle))
+					Assert.That(r.ID, Is.GreaterThanOrEqualTo(id));
+				else
+					Assert.That(r.ID, Is.EqualTo(id));
 
 				table.Drop();
 			}
@@ -99,6 +105,27 @@ namespace Tests.xUpdate
 				Assert.That(r.ID, Is.GreaterThanOrEqualTo(id + 2));
 			else
 				Assert.That(r.ID, Is.EqualTo(id + 2));
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/2847")]
+		public void Issue2847Test([IncludeDataSources(TestProvName.AllOracle)] string context, [Values] bool withIdentity)
+		{
+			using var db = GetDataConnection(context);
+
+			using var table = db.CreateLocalTable<TestIdTrun>();
+
+			table.Insert(() => new TestIdTrun { Field1 = 1m });
+
+			db.Execute("DROP SEQUENCE \"SIDENTITY_TestIdTrun\"");
+
+			if (withIdentity)
+			{
+				Assert.That(() => table.Truncate(withIdentity), Throws.Exception.With.Message.Contain("ORA-02289"));
+			}
+			else
+			{
+				table.Truncate(withIdentity);
+			}
 		}
 	}
 }

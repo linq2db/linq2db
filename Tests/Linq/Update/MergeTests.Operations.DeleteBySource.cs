@@ -9,7 +9,7 @@ namespace Tests.xUpdate
 	public partial class MergeTests
 	{
 		[Test]
-		public void SameSourceDeleteBySource([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus, TestProvName.AllFirebird5Plus)] string context)
+		public void SameSourceDeleteBySource([MergeNotMatchedBySourceDataContextSource] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -39,7 +39,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void SameSourceDeleteBySourceWithPredicate([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus, TestProvName.AllFirebird5Plus)] string context)
+		public void SameSourceDeleteBySourceWithPredicate([MergeNotMatchedBySourceDataContextSource] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -70,7 +70,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void OtherSourceDeleteBySource([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus, TestProvName.AllFirebird5Plus)] string context)
+		public void OtherSourceDeleteBySource([MergeNotMatchedBySourceDataContextSource] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -99,7 +99,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void OtherSourceDeleteBySourceWithPredicate([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus, TestProvName.AllFirebird5Plus)] string context)
+		public void OtherSourceDeleteBySourceWithPredicate([MergeNotMatchedBySourceDataContextSource] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -130,8 +130,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void AnonymousSourceDeleteBySourceWithPredicate(
-			[IncludeDataSources(true, TestProvName.AllSqlServer2008Plus, TestProvName.AllFirebird5Plus)] string context)
+		public void AnonymousSourceDeleteBySourceWithPredicate([MergeNotMatchedBySourceDataContextSource] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -165,8 +164,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void AnonymousListSourceDeleteBySourceWithPredicate(
-			[IncludeDataSources(true, TestProvName.AllSqlServer2008Plus, TestProvName.AllFirebird5Plus)] string context)
+		public void AnonymousListSourceDeleteBySourceWithPredicate([MergeNotMatchedBySourceDataContextSource] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -200,7 +198,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void DeleteBySourceReservedAndCaseNames([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus, TestProvName.AllFirebird5Plus)] string context)
+		public void DeleteBySourceReservedAndCaseNames([MergeNotMatchedBySourceDataContextSource] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -235,8 +233,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void DeleteBySourceReservedAndCaseNamesFromList(
-			[IncludeDataSources(true, TestProvName.AllSqlServer2008Plus, TestProvName.AllFirebird5Plus)] string context)
+		public void DeleteBySourceReservedAndCaseNamesFromList([MergeNotMatchedBySourceDataContextSource] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -271,8 +268,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void DeleteBySourceFromPartialSourceProjection(
-			[IncludeDataSources(true, TestProvName.AllSqlServer2008Plus, TestProvName.AllFirebird5Plus)] string context)
+		public void DeleteBySourceFromPartialSourceProjection([MergeNotMatchedBySourceDataContextSource] string context)
 		{
 			using (var db = GetDataContext(context))
 			{

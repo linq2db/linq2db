@@ -1,6 +1,7 @@
 ﻿using System.Linq;
 
 using LinqToDB;
+using LinqToDB.Linq;
 using LinqToDB.Mapping;
 using LinqToDB.SqlQuery;
 
@@ -60,7 +61,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void OrderByDistinctTestOrdering([DataSources(ProviderName.SqlCe)] string context)
+		public void OrderByDistinctTestOrdering([DataSources] string context)
 		{
 			var testData = GetUniqueTestData();
 
@@ -181,7 +182,7 @@ namespace Tests.Linq
 
 		// if this test fails for mysql, check that you have no ONLY_FULL_GROUP_BY option set
 		[Test]
-		public void OrderByDistinctTest([DataSources(ProviderName.SqlCe)] string context)
+		public void OrderByDistinctTest([DataSources] string context)
 		{
 			var testData = GetTestData();
 
@@ -237,7 +238,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void OrderByDistinctNotFailTest([DataSources()] string context)
+		public void OrderByDistinctNotFailTest([DataSources] string context)
 		{
 			var testData = GetTestData();
 
@@ -255,7 +256,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void OrderByExpressionDistinctTests([DataSources(ProviderName.SqlCe)] string context)
+		public void OrderByExpressionDistinctTests([DataSources] string context)
 		{
 			var testData = GetTestData();
 
@@ -288,9 +289,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void OrderByDistinctNoTransformTests(
-			[DataSources(TestProvName.AllFirebird, ProviderName.SqlCe)]  // Firebird incorrectly sorts strings
-			string context)
+		public void OrderByDistinctNoTransformTests([DataSources] string context)
 		{
 			var testData = GetTestData();
 
@@ -318,9 +317,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void OrderByDistinctPartialTransformTests(
-			[DataSources(TestProvName.AllFirebird, ProviderName.SqlCe)]  // Firebird incorrectly sorts strings
-			string context)
+		public void OrderByDistinctPartialTransformTests([DataSources] string context)
 		{
 			var testData = GetTestData();
 
@@ -356,7 +353,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void OrderByUnionOptimization([DataSources(ProviderName.SqlCe)] string context)
+		public void OrderByUnionOptimization([DataSources] string context)
 		{
 			var testData = GetTestData();
 
@@ -404,8 +401,9 @@ namespace Tests.Linq
 			}
 		}
 
+		[ThrowsForProvider(typeof(LinqToDBException), providers: [TestProvName.AllClickHouse], ErrorMessage = ErrorHelper.Error_Correlated_Subqueries)]
 		[Test]
-		public void OrderBySubQuery([DataSources(ProviderName.SqlCe, TestProvName.AllClickHouse)] string context)
+		public void OrderBySubQuery([DataSources] string context)
 		{
 			var testData = GetTestData();
 
@@ -435,12 +433,11 @@ namespace Tests.Linq
 
 				var result = query.ToArray();
 			}
-
 		}
 
-
+		[ThrowsForProvider(typeof(LinqToDBException), providers: [TestProvName.AllSybase], ErrorMessage = ErrorHelper.Error_OrderBy_in_Derived)]
 		[Test]
-		public void DoubleOrderBy([DataSources(TestProvName.AllSybase)] string context)
+		public void DoubleOrderBy([DataSources] string context)
 		{
 			var testData = GetTestData();
 

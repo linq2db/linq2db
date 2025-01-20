@@ -19,6 +19,7 @@ namespace LinqToDB.DataProvider.Access
 
 		public override SqlStatement TransformStatement(SqlStatement statement, DataOptions dataOptions, MappingSchema mappingSchema)
 		{
+			statement = base.TransformStatement(statement, dataOptions, mappingSchema);
 			statement = CorrectMultiTableQueries(statement);
 			statement = CorrectInnerJoins(statement);
 			statement = CorrectExistsAndIn(statement, dataOptions);
@@ -158,9 +159,10 @@ namespace LinqToDB.DataProvider.Access
 						{
 							QueryHelper.ExtractPredicate(sc.Predicates[0], out var underlying, out var isNot);
 
-							if (underlying is SqlPredicate.FuncLike { Function.Name: "EXISTS" } funcLike)
+							if (underlying is SqlPredicate.Exists exists)
 							{
-								var existsQuery = (SelectQuery)funcLike.Function.Parameters[0];
+								isNot = isNot ^ exists.IsNot;
+								var existsQuery = exists.SubQuery;
 
 								// note that it still will not work as we need to rewrite union queries
 								// see ConcatInAny test
@@ -173,9 +175,9 @@ namespace LinqToDB.DataProvider.Access
 
 								var countExpr = SqlFunction.CreateCount(typeof(int), existsQuery.From.Tables[0]);
 								if (!isNot)
-									newSearch.AddGreater(countExpr, new SqlValue(0), dataOptions.LinqOptions.CompareNullsAsValues);
+									newSearch.AddGreater(countExpr, new SqlValue(0), dataOptions.LinqOptions.CompareNulls);
 								else
-									newSearch.AddEqual(countExpr, new SqlValue(0), dataOptions.LinqOptions.CompareNullsAsValues);
+									newSearch.AddEqual(countExpr, new SqlValue(0), dataOptions.LinqOptions.CompareNulls);
 
 								existsQuery.Select.AddColumn(newSearch);
 
@@ -186,7 +188,7 @@ namespace LinqToDB.DataProvider.Access
 							{
 								var subquery = inSubQuery.SubQuery;
 								subquery.Where.EnsureConjunction()
-									.AddEqual(subquery.Select.Columns[0].Expression, inSubQuery.Expr1, dataOptions.LinqOptions.CompareNullsAsValues);
+									.AddEqual(subquery.Select.Columns[0].Expression, inSubQuery.Expr1, dataOptions.LinqOptions.CompareNulls);
 
 								subquery.Select.Columns.Clear();
 
@@ -196,9 +198,9 @@ namespace LinqToDB.DataProvider.Access
 								isNot = isNot != inSubQuery.IsNot;
 
 								if (!isNot)
-									newSearch.AddGreater(countExpr, new SqlValue(0), dataOptions.LinqOptions.CompareNullsAsValues);
+									newSearch.AddGreater(countExpr, new SqlValue(0), dataOptions.LinqOptions.CompareNulls);
 								else
-									newSearch.AddEqual(countExpr, new SqlValue(0), dataOptions.LinqOptions.CompareNullsAsValues);
+									newSearch.AddEqual(countExpr, new SqlValue(0), dataOptions.LinqOptions.CompareNulls);
 
 								subquery.Select.AddColumn(newSearch);
 

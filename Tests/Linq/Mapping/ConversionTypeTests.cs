@@ -1,12 +1,9 @@
-﻿using System;
-using System.Diagnostics;
-using System.Linq;
+﻿using System.Linq;
 
 using LinqToDB;
 using LinqToDB.Common;
 using LinqToDB.Data;
 using LinqToDB.Mapping;
-using LinqToDB.Tools;
 
 using NUnit.Framework;
 
@@ -44,8 +41,6 @@ namespace Tests.Mapping
 
 			t.Insert(() => new TrimTestTable { ID = 3, Data = "VVV" });
 
-			Debug.WriteLine(t.ToDiagnosticString());
-
 			AreEqual(
 				[
 					new { ID = 1, Data = "OOO" },
@@ -56,15 +51,13 @@ namespace Tests.Mapping
 
 			using var db1 = GetDataContext(context);
 
-			Debug.WriteLine(db1.GetTable<TrimTestTable>().ToDiagnosticString());
-
 			AreEqual(
 				[
 					new { ID = 1, Data = "***OOO***"},
 					new { ID = 2, Data = "***HHH***"},
 					new { ID = 3, Data = "***VVV***"}
 				],
-				db1.GetTable<TrimTestTable>().OrderBy(_ => _.ID).Select(r => new { r.ID, r.Data}));
+				db1.GetTable<TrimTestTable>().OrderBy(r => r.ID).Select(r => new { r.ID, r.Data}));
 		}
 
 		[Test]
@@ -96,9 +89,6 @@ namespace Tests.Mapping
 					inserted => new { inserted.ID, inserted.Data })
 				.ToList();
 
-			Debug.WriteLine(o.ToDiagnosticString());
-			Debug.WriteLine(t.ToDiagnosticString());
-
 			AreEqual([new { ID = 2, Data = "HHH" }], o.OrderBy(r => r.ID));
 
 			AreEqual(
@@ -109,8 +99,6 @@ namespace Tests.Mapping
 				t.OrderBy(r => r.ID).Select(r => new { r.ID, r.Data}));
 
 			using var db1 = GetDataContext(context);
-
-			Debug.WriteLine(db1.GetTable<TrimTestTable>().ToDiagnosticString());
 
 			AreEqual(
 				[
@@ -130,15 +118,11 @@ namespace Tests.Mapping
 
 			t.BulkCopy([new TrimTestTable { ID = 1, Data = "OOO" }]);
 
-			Debug.WriteLine(t.ToDiagnosticString());
-
 			AreEqual(
 				[ new { ID = 1, Data = "OOO"} ],
 				t.OrderBy(r => r.ID).Select(r => new { r.ID, r.Data}));
 
 			using var db1 = GetDataContext(context);
-
-			Debug.WriteLine(db1.GetTable<TrimTestTable>().ToDiagnosticString());
 
 			AreEqual(
 				[ new { ID = 1, Data = "***OOO***"} ],
@@ -173,8 +157,6 @@ namespace Tests.Mapping
 				.Set(t => t.Data, "SSS")
 				.Update();
 
-			Debug.WriteLine(t.ToDiagnosticString());
-
 			AreEqual(
 				[
 					new { ID = 1, Data = "OOO"},
@@ -184,8 +166,6 @@ namespace Tests.Mapping
 				t.OrderBy(r => r.ID).Select(r => new { r.ID, r.Data}));
 
 			using var db1 = GetDataContext(context);
-
-			Debug.WriteLine(db1.GetTable<TrimTestTable>().ToDiagnosticString());
 
 			AreEqual(
 				[
@@ -233,13 +213,11 @@ namespace Tests.Mapping
 				;
 
 #pragma warning disable CS0618 // Type or member is obsolete
-				t.Merge(
+			t.Merge(
 				[
 					new TrimTestTable { ID = 3, Data = "III" }
 				]);
 #pragma warning restore CS0618 // Type or member is obsolete
-
-				Debug.WriteLine(t.ToDiagnosticString());
 
 			AreEqual(
 				[
@@ -250,8 +228,6 @@ namespace Tests.Mapping
 				t.OrderBy(r => r.ID).Select(r => new { r.ID, r.Data}));
 
 			using var db1 = GetDataContext(context);
-
-			Debug.WriteLine(db1.GetTable<TrimTestTable>().ToDiagnosticString());
 
 			AreEqual(
 				[

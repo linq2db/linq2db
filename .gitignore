@@ -7,6 +7,7 @@ Thumbs.db
 *.cache
 *.log
 *.cs.ide
+*.playlist
 NuGet/[nN]u[gG]et.exe
 bin/
 obj/
@@ -26,3 +27,4 @@ linq2db.sln.ide/
 packages/
 .vscode/
 .build/
+**/launchSettings.json

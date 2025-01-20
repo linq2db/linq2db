@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
+
 using JetBrains.Annotations;
 
 namespace LinqToDB
@@ -33,14 +35,14 @@ namespace LinqToDB
 		{
 			if (source == null) throw new ArgumentNullException(nameof(source));
 
-			var currentSource = ProcessSourceQueryable?.Invoke(source) ?? source;
+			var currentSource = source.GetLinqToDBSource();
 
-			return currentSource.Provider.CreateQuery<TSource>(
-					Expression.Call(
-						null,
-						MethodHelper.GetMethodInfo(DeleteWithOutput, source),
-						currentSource.Expression))
-				.AsEnumerable();
+			var expr = Expression.Call(
+				null,
+				MethodHelper.GetMethodInfo(DeleteWithOutput, source),
+				currentSource.Expression);
+
+			return currentSource.CreateQuery<TSource>(expr).AsEnumerable();
 		}
 
 		/// <summary>
@@ -64,14 +66,14 @@ namespace LinqToDB
 		{
 			if (source == null) throw new ArgumentNullException(nameof(source));
 
-			var currentSource = ProcessSourceQueryable?.Invoke(source) ?? source;
+			var currentSource = source.GetLinqToDBSource();
 
-			return currentSource.Provider.CreateQuery<TSource>(
-					Expression.Call(
-						null,
-						MethodHelper.GetMethodInfo(DeleteWithOutput, source),
-						currentSource.Expression))
-				.AsAsyncEnumerable();
+			var expr = Expression.Call(
+				null,
+				MethodHelper.GetMethodInfo(DeleteWithOutput, source),
+				currentSource.Expression);
+
+			return currentSource.CreateQuery<TSource>(expr).AsAsyncEnumerable();
 		}
 
 		/// <summary>
@@ -91,7 +93,8 @@ namespace LinqToDB
 		/// <item>MariaDB 10.0+ (doesn't support multi-table statements; database limitation)</item>
 		/// </list>
 		/// </remarks>
-		[Obsolete("Will be removed in Linq To DB 7")]
+		// TODO: Remove in v7
+		[Obsolete("Use overload with IAsyncEnumerable return type. API will be removed in version 7"), EditorBrowsable(EditorBrowsableState.Never)]
 		public static Task<TSource[]> DeleteWithOutputAsync<TSource>(
 			IQueryable<TSource> source,
 			CancellationToken token)
@@ -127,15 +130,15 @@ namespace LinqToDB
 			if (source           == null) throw new ArgumentNullException(nameof(source));
 			if (outputExpression == null) throw new ArgumentNullException(nameof(outputExpression));
 
-			var currentSource = ProcessSourceQueryable?.Invoke(source) ?? source;
+			var currentSource = source.GetLinqToDBSource();
 
-			return currentSource.Provider.CreateQuery<TOutput>(
-					Expression.Call(
-						null,
-						MethodHelper.GetMethodInfo(DeleteWithOutput, source, outputExpression),
-						currentSource.Expression,
-						Expression.Quote(outputExpression)))
-				.AsEnumerable();
+			var expr = Expression.Call(
+				null,
+				MethodHelper.GetMethodInfo(DeleteWithOutput, source, outputExpression),
+				currentSource.Expression,
+				Expression.Quote(outputExpression));
+
+			return currentSource.CreateQuery<TOutput>(expr).AsEnumerable();
 		}
 
 		/// <summary>
@@ -164,15 +167,15 @@ namespace LinqToDB
 			if (source           == null) throw new ArgumentNullException(nameof(source));
 			if (outputExpression == null) throw new ArgumentNullException(nameof(outputExpression));
 
-			var currentSource = ProcessSourceQueryable?.Invoke(source) ?? source;
+			var currentSource = source.GetLinqToDBSource();
 
-			return currentSource.Provider.CreateQuery<TOutput>(
-					Expression.Call(
-						null,
-						MethodHelper.GetMethodInfo(DeleteWithOutput, source, outputExpression),
-						currentSource.Expression,
-						Expression.Quote(outputExpression)))
-				.AsAsyncEnumerable();
+			var expr = Expression.Call(
+				null,
+				MethodHelper.GetMethodInfo(DeleteWithOutput, source, outputExpression),
+				currentSource.Expression,
+				Expression.Quote(outputExpression));
+
+			return currentSource.CreateQuery<TOutput>(expr).AsAsyncEnumerable();
 		}
 
 		/// <summary>
@@ -195,7 +198,8 @@ namespace LinqToDB
 		/// <item>MariaDB 10.0+ (doesn't support multi-table statements; database limitation)</item>
 		/// </list>
 		/// </remarks>
-		[Obsolete("Will be removed in Linq To DB 7")]
+		// TODO: Remove in v7
+		[Obsolete("Use overload with IAsyncEnumerable return type. API will be removed in version 7"), EditorBrowsable(EditorBrowsableState.Never)]
 		public static Task<TOutput[]> DeleteWithOutputAsync<TSource, TOutput>(
 			IQueryable<TSource> source,
 			Expression<Func<TSource, TOutput>> outputExpression,
@@ -227,14 +231,15 @@ namespace LinqToDB
 			if (source      == null) throw new ArgumentNullException(nameof(source));
 			if (outputTable == null) throw new ArgumentNullException(nameof(outputTable));
 
-			var currentSource = ProcessSourceQueryable?.Invoke(source) ?? source;
+			var currentSource = source.GetLinqToDBSource();
 
-			return currentSource.Provider.Execute<int>(
-				Expression.Call(
-					null,
-					MethodHelper.GetMethodInfo(DeleteWithOutputInto, source, outputTable),
-					currentSource.Expression,
-					((IQueryable<TOutput>)outputTable).Expression));
+			var expr = Expression.Call(
+				null,
+				MethodHelper.GetMethodInfo(DeleteWithOutputInto, source, outputTable),
+				currentSource.Expression,
+				((IQueryable<TOutput>)outputTable).Expression);
+
+			return currentSource.Execute<int>(expr);
 		}
 
 		/// <summary>
@@ -261,19 +266,15 @@ namespace LinqToDB
 			if (source      == null) throw new ArgumentNullException(nameof(source));
 			if (outputTable == null) throw new ArgumentNullException(nameof(outputTable));
 
-			var currentSource = ProcessSourceQueryable?.Invoke(source) ?? source;
+			var currentSource = source.GetLinqToDBSource();
 
-			var expr =
-				Expression.Call(
-					null,
-					MethodHelper.GetMethodInfo(DeleteWithOutputInto, source, outputTable),
-					currentSource.Expression,
-					((IQueryable<TOutput>)outputTable).Expression);
+			var expr = Expression.Call(
+				null,
+				MethodHelper.GetMethodInfo(DeleteWithOutputInto, source, outputTable),
+				currentSource.Expression,
+				((IQueryable<TOutput>)outputTable).Expression);
 
-			if (source is IQueryProviderAsync queryAsync)
-				return queryAsync.ExecuteAsync<int>(expr, token);
-
-			return Task.Run(() => source.Provider.Execute<int>(expr), token);
+			return currentSource.ExecuteAsync<int>(expr, token);
 		}
 
 		/// <summary>
@@ -302,15 +303,16 @@ namespace LinqToDB
 			if (outputTable      == null) throw new ArgumentNullException(nameof(outputTable));
 			if (outputExpression == null) throw new ArgumentNullException(nameof(outputExpression));
 
-			var currentSource = ProcessSourceQueryable?.Invoke(source) ?? source;
+			var currentSource = source.GetLinqToDBSource();
 
-			return source.Provider.Execute<int>(
-				Expression.Call(
-					null,
-					MethodHelper.GetMethodInfo(DeleteWithOutputInto, source, outputTable, outputExpression),
-					currentSource.Expression,
-					((IQueryable<TOutput>)outputTable).Expression,
-					Expression.Quote(outputExpression)));
+			var expr = Expression.Call(
+				null,
+				MethodHelper.GetMethodInfo(DeleteWithOutputInto, source, outputTable, outputExpression),
+				currentSource.Expression,
+				((IQueryable<TOutput>)outputTable).Expression,
+				Expression.Quote(outputExpression));
+
+			return currentSource.Execute<int>(expr);
 		}
 
 		/// <summary>
@@ -341,20 +343,16 @@ namespace LinqToDB
 			if (outputTable      == null) throw new ArgumentNullException(nameof(outputTable));
 			if (outputExpression == null) throw new ArgumentNullException(nameof(outputExpression));
 
-			var currentSource = ProcessSourceQueryable?.Invoke(source) ?? source;
+			var currentSource = source.GetLinqToDBSource();
 
-			var expr =
-				Expression.Call(
-					null,
-					MethodHelper.GetMethodInfo(DeleteWithOutputInto, source, outputTable, outputExpression),
-					currentSource.Expression,
-					((IQueryable<TOutput>)outputTable).Expression,
-					Expression.Quote(outputExpression));
+			var expr = Expression.Call(
+				null,
+				MethodHelper.GetMethodInfo(DeleteWithOutputInto, source, outputTable, outputExpression),
+				currentSource.Expression,
+				((IQueryable<TOutput>)outputTable).Expression,
+				Expression.Quote(outputExpression));
 
-			if (currentSource is IQueryProviderAsync queryAsync)
-				return queryAsync.ExecuteAsync<int>(expr, token);
-
-			return Task.Run(() => currentSource.Provider.Execute<int>(expr), token);
+			return currentSource.ExecuteAsync<int>(expr, token);
 		}
 	}
 }

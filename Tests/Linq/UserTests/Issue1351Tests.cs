@@ -14,7 +14,6 @@ namespace Tests.UserTests
 			public sbyte? TestNullable { get; set; }
 		}
 
-		[ActiveIssue("CreateTable(sbyte) support missing", Configuration = ProviderName.DB2)]
 		[Test]
 		public void TestSByteQuery([DataSources(false)] string context)
 		{

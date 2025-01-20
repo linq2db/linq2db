@@ -2472,7 +2472,7 @@ namespace LinqToDB.Data
 			async Task<BulkCopyRowsCopied> CallAwait()
 			{
 				await using (a)
-					return await call().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+					return await call().ConfigureAwait(false);
 			}
 		}
 

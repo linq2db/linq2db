@@ -568,6 +568,13 @@ namespace LinqToDB.DataProvider.Oracle
 							Expression.Block(
 								Expression.IfThen(
 									Expression.LessThanOrEqual(Expression.SubtractAssign(precision, ExpressionInstances.Constant1), ExpressionInstances.Constant26),
+									Expression.Rethrow()))),
+						// since 23.5 exception thrown is InvalidCastException
+						Expression.Catch(
+							typeof(InvalidCastException),
+							Expression.Block(
+								Expression.IfThen(
+									Expression.LessThanOrEqual(Expression.SubtractAssign(precision, ExpressionInstances.Constant1), ExpressionInstances.Constant26),
 									Expression.Rethrow())))),
 					label));
 

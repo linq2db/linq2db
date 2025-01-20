@@ -2,6 +2,6 @@
 
 cd /d "%~dp0"
 
-dotnet build linq2db.sln -c Release --no-incremental -v m
-dotnet build linq2db.sln -c Debug --no-incremental -v m
-dotnet build linq2db.sln -c Azure --no-incremental -v m
+FOR %%c IN (Release Debug Azure) DO (
+    dotnet build linq2db.sln -c %%c --no-incremental -v m
+)

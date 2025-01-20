@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Reflection;
 
 namespace LinqToDB.Linq.Builder
 {
@@ -11,16 +12,13 @@ namespace LinqToDB.Linq.Builder
 	using LinqToDB.Expressions;
 	using SqlQuery;
 
+	[BuildsMethodCall("Concat", "UnionAll", "Union", "Except", "Intersect", "ExceptAll", "IntersectAll")]
 	internal sealed class SetOperationBuilder : MethodCallBuilder
 	{
-		static readonly string[] MethodNames = { "Concat", "UnionAll", "Union", "Except", "Intersect", "ExceptAll", "IntersectAll" };
+		public static bool CanBuildMethod(MethodCallExpression call, BuildInfo info, ExpressionBuilder builder)
+			=> call.Arguments.Count == 2 && call.IsQueryable();
 
 		#region Builder
-
-		protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
-		{
-			return methodCall.Arguments.Count == 2 && methodCall.IsQueryable(MethodNames);
-		}
 
 		protected override BuildSequenceResult BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
@@ -68,13 +66,15 @@ namespace LinqToDB.Linq.Builder
 
 			if (setOperation != SetOperation.UnionAll)
 			{
-				var sqlExpr = builder.BuildSqlExpression(setContext, new ContextRefExpression(elementType, setContext),
-					buildInfo.GetFlags());
+				var sqlExpr = builder.BuildSqlExpression(setContext, new ContextRefExpression(elementType, setContext));
 			}
 
 			if (needsEmulation)
 			{
-				return BuildSequenceResult.FromContext(setContext.Emulate());
+				var emulated = setContext.Emulate(out var error);
+				if (emulated != null)
+					return BuildSequenceResult.FromContext(emulated);
+				return BuildSequenceResult.Error(error!);
 			}
 
 			return BuildSequenceResult.FromContext(setContext);
@@ -84,7 +84,7 @@ namespace LinqToDB.Linq.Builder
 
 		#region Context
 
-		internal sealed class SetOperationContext : SubQueryContext
+		internal sealed class SetOperationContext : SubQueryContext, ILoadWithContext
 		{
 			public SetOperationContext(SetOperation setOperation, SelectQuery selectQuery, SubQueryContext sequence1, SubQueryContext sequence2,
 				MethodCallExpression                methodCall)
@@ -123,13 +123,7 @@ namespace LinqToDB.Linq.Builder
 
 			public override Expression MakeExpression(Expression path, ProjectFlags flags)
 			{
-				if (SequenceHelper.IsSameContext(path, this) &&
-				    (flags.HasFlag(ProjectFlags.Root) || flags.HasFlag(ProjectFlags.AssociationRoot)))
-				{
-					return path;
-				}
-
-				if (flags.IsRoot() || flags.IsTraverse())
+				if (flags.IsRoot() || flags.IsTraverse() || flags.IsAggregationRoot() || flags.IsAssociationRoot() || flags.IsTable())
 					return path;
 
 				if (_setIdReference != null && ExpressionEqualityComparer.Instance.Equals(_setIdReference, path))
@@ -139,7 +133,8 @@ namespace LinqToDB.Linq.Builder
 
 				if (ReferenceEquals(_pathMapping, null))
 				{
-					InitializeProjections();
+					if (!InitializeProjections(out var error))
+						return SqlErrorExpression.EnsureError(error, path.Type);
 				}
 
 				Expression projection1;
@@ -201,7 +196,7 @@ namespace LinqToDB.Linq.Builder
 
 					if (projection1 is SqlErrorExpression || projection2 is SqlErrorExpression)
 					{
-						return ExpressionBuilder.CreateSqlError(this, path);
+						return ExpressionBuilder.CreateSqlError(path);
 					}
 				}
 
@@ -505,7 +500,7 @@ namespace LinqToDB.Linq.Builder
 						return false;
 					}
 
-					var resultGeneric = generic1.ReplaceAssignments(resultAssignments);
+					var resultGeneric = generic1.ReplaceAssignments(resultAssignments.AsReadOnly());
 
 					if (generic1.Parameters.Count > 0)
 					{
@@ -520,7 +515,7 @@ namespace LinqToDB.Linq.Builder
 							resultParameters.Add(generic1.Parameters[i].WithExpression(mergedAssignment));
 						}
 
-						resultGeneric = resultGeneric.ReplaceParameters(resultParameters);
+						resultGeneric = resultGeneric.ReplaceParameters(resultParameters.AsReadOnly());
 					}
 
 					if (Builder.TryConstruct(MappingSchema, resultGeneric, flags) == null)
@@ -555,6 +550,32 @@ namespace LinqToDB.Linq.Builder
 				{
 					merged = projection2;
 					return true;
+				}
+
+				if (projection1.NodeType is ExpressionType.Convert or ExpressionType.ConvertChecked)
+				{
+					if (TryMergeProjections(((UnaryExpression)projection1).Operand, projection2, flags, out merged))
+					{
+						if (merged.Type != projection1.Type)
+						{
+							merged = Expression.Convert(merged, projection1.Type);
+						}
+
+						return true;
+					}
+				}
+
+				if (projection2.NodeType is ExpressionType.Convert or ExpressionType.ConvertChecked)
+				{
+					if (TryMergeProjections(projection1, ((UnaryExpression)projection2).Operand, flags, out merged))
+					{
+						if (merged.Type != projection2.Type)
+						{
+							merged = Expression.Convert(merged, projection2.Type);
+						}
+
+						return true;
+					}
 				}
 
 				if (TryMergeViaDifferencePredicate(projection1, projection2, out merged))
@@ -596,15 +617,21 @@ namespace LinqToDB.Linq.Builder
 				return false;
 			}
 
-			void InitializeProjections()
+			bool InitializeProjections([NotNullWhen(false)] out SqlErrorExpression? error)
 			{
+				error = null;
 				var ref1 = new ContextRefExpression(ElementType, _sequence1);
 
-				_projection1 = BuildProjectionExpression(ref1, _sequence1, out var placeholders1, out var eager1);
+				if (!BuildProjectionExpression(ref1, _sequence1, out var projection1, out var placeholders1, out var eager1, out error))
+					return false;
 
 				var ref2 = new ContextRefExpression(ElementType, _sequence2);
 
-				_projection2 = BuildProjectionExpression(ref2, _sequence2, out var placeholders2, out var eager2);
+				if (!BuildProjectionExpression(ref2, _sequence2, out var projection2, out var placeholders2, out var eager2, out error))
+					return false;
+
+				_projection1 = projection1;
+				_projection2 = projection2;
 
 				var pathMapping = new Dictionary<Expression[], (SqlPlaceholderExpression placeholder1, SqlPlaceholderExpression placeholder2)>(PathComparer.Instance);
 
@@ -624,7 +651,7 @@ namespace LinqToDB.Linq.Builder
 					case SetOperation.IntersectAll:
 						break;
 					default:
-						throw new ArgumentOutOfRangeException();
+						throw new ArgumentOutOfRangeException($"Invalid SetOperation {_setOperation}");
 				}
 
 				foreach (var (placeholder, path) in placeholders1)
@@ -734,6 +761,8 @@ namespace LinqToDB.Linq.Builder
 					_projection1 = ReplaceEagerExpressions(_projection1, eagerMapping);
 					_projection2 = ReplaceEagerExpressions(_projection2, eagerMapping);
 				}
+
+				return true;
 			}
 
 			static Expression ReplaceEagerExpressions(Expression expression, Dictionary<SqlEagerLoadExpression, SqlEagerLoadExpression> raplacements)
@@ -791,8 +820,9 @@ namespace LinqToDB.Linq.Builder
 
 				var setIdReference = GetSetIdReference();
 
-				var sqlValueLeft  = new SqlValue(_leftSetId!);
-				var sqlValueRight = new SqlValue(_rightSetId!);
+				var intDataType   = MappingSchema.GetDbDataType(typeof(int));
+				var sqlValueLeft  = new SqlValue(intDataType,_leftSetId!);
+				var sqlValueRight = new SqlValue(intDataType, _rightSetId!);
 
 				var leftRef  = new ContextRefExpression(_type, _sequence1);
 				var rightRef = new ContextRefExpression(_type, _sequence2);
@@ -888,6 +918,7 @@ namespace LinqToDB.Linq.Builder
 				public override Expression VisitSqlGenericConstructorExpression(SqlGenericConstructorExpression node)
 				{
 					_stack.Push(Expression.Constant("construct"));
+					_stack.Push(Expression.Constant(node.Type));
 
 					if (node.Assignments.Count > 0)
 					{
@@ -904,7 +935,7 @@ namespace LinqToDB.Linq.Builder
 							_stack.Pop();
 						}
 
-						node = node.ReplaceAssignments(newAssignments);
+						node = node.ReplaceAssignments(newAssignments.AsReadOnly());
 					}
 
 					if (node.Parameters.Count > 0)
@@ -933,9 +964,10 @@ namespace LinqToDB.Linq.Builder
 							}
 						}
 
-						node = node.ReplaceParameters(newParameters);
+						node = node.ReplaceParameters(newParameters.AsReadOnly());
 					}
 
+					_stack.Pop();
 					_stack.Pop();
 
 					return node;
@@ -961,6 +993,7 @@ namespace LinqToDB.Linq.Builder
 
 					_stack.Pop();
 					_stack.Pop();
+
 					return newNode;
 				}
 
@@ -973,6 +1006,7 @@ namespace LinqToDB.Linq.Builder
 
 					_stack.Pop();
 					_stack.Pop();
+
 					return newNode;
 				}
 
@@ -985,15 +1019,18 @@ namespace LinqToDB.Linq.Builder
 
 					_stack.Pop();
 					_stack.Pop();
+
 					return newNode;
 				}
 
 				protected override Expression VisitMemberInit(MemberInitExpression node)
 				{
 					_stack.Push(Expression.Constant("init"));
+					_stack.Push(Expression.Constant(node.NewExpression.Constructor));
 
 					var newExpr = base.VisitMemberInit(node);
 
+					_stack.Pop();
 					_stack.Pop();
 
 					return newExpr;
@@ -1011,23 +1048,10 @@ namespace LinqToDB.Linq.Builder
 
 						var nodeArgument = node.Arguments[i];
 
-						/*
-						if (_isDictionary && i == 0)
-						{
-							_stack.Push(nodeArgument);
-						}
-						*/
-
 						var arg = Visit(nodeArgument);
 
-						/*
-						if (_isDictionary && i == 0)
-						{
-							_stack.Pop();
-						}
-						*/
-
 						_stack.Pop();
+
 						arguments.Add(arg);
 					}
 
@@ -1061,6 +1085,50 @@ namespace LinqToDB.Linq.Builder
 					_stack.Pop();
 
 					return newExpr;
+				}
+
+				protected override Expression VisitNew(NewExpression node)
+				{
+					_stack.Push(Expression.Constant("new"));
+					_stack.Push(Expression.Constant(node.Constructor));
+
+					var args = new List<Expression>(node.Arguments.Count);
+
+					for (int i = 0; i < node.Arguments.Count; i++)
+					{
+						_stack.Push(Expression.Constant(i));
+						args.Add(Visit(node.Arguments[i]));
+						_stack.Pop();
+					}
+
+					var newNode = node.Update(args);
+
+					_stack.Pop();
+					_stack.Pop();
+
+					return newNode;
+				}
+
+				protected override Expression VisitNewArray(NewArrayExpression node)
+				{
+					_stack.Push(Expression.Constant("new array"));
+					_stack.Push(Expression.Constant(node.Type));
+
+					var args = new List<Expression>(node.Expressions.Count);
+
+					for (int i = 0; i < node.Expressions.Count; i++)
+					{
+						_stack.Push(Expression.Constant(i));
+						args.Add(Visit(node.Expressions[i]));
+						_stack.Pop();
+					}
+
+					var newNode = node.Update(args);
+
+					_stack.Pop();
+					_stack.Pop();
+
+					return newNode;
 				}
 
 				protected override Expression VisitMethodCall(MethodCallExpression node)
@@ -1108,25 +1176,41 @@ namespace LinqToDB.Linq.Builder
 				}
 			}
 
-			Expression BuildProjectionExpression(Expression path, IBuildContext context,
-				out List<(SqlPlaceholderExpression placeholder, Expression[] path)> foundPlaceholders,
-				out List<SqlEagerLoadExpression> foundEager)
+			bool BuildProjectionExpression(
+				Expression                                                                                path, 
+				IBuildContext                                                                             context,
+				[NotNullWhen(true)] out  Expression?                                                      projection,
+				[NotNullWhen(true)] out  List<(SqlPlaceholderExpression placeholder, Expression[] path)>? foundPlaceholders,
+				[NotNullWhen(true)] out  List<SqlEagerLoadExpression>?                                    foundEager,
+				[NotNullWhen(false)] out SqlErrorExpression?                                              error)
 			{
 				var correctedPath = SequenceHelper.ReplaceContext(path, this, context);
 
 				var current = correctedPath;
 				do
 				{
-					var projected = Builder.BuildSqlExpression(context, current, ProjectFlags.Expression,
-						buildFlags : ExpressionBuilder.BuildFlags.ForceAssignments | ExpressionBuilder.BuildFlags.ForceDefaultIfEmpty);
+					var projected = Builder.BuildSqlExpression(context, current, buildPurpose: BuildPurpose.Expression, buildFlags: BuildFlags.ForceDefaultIfEmpty | BuildFlags.ForSetProjection | BuildFlags.ResetPrevious);
 
-					projected = Builder.ExtractProjection(context, projected);
+					error = SequenceHelper.FindError(projected);
 
-					var lambdaResolver = new LambdaResolveVisitor(context);
+					if (error != null)
+					{
+						projection = null;
+						foundPlaceholders = null;
+						foundEager = null;
+						return false;
+					}
+
+					projected = Builder.BuildExtractExpression(context, projected);
+
+
+					var lambdaResolver = new LambdaResolveVisitor(context, BuildPurpose.Sql, true);
 					projected = lambdaResolver.Visit(projected);
 
 					var optimizer = new ExpressionOptimizerVisitor();
 					projected = optimizer.Visit(projected);
+
+					projected = SequenceHelper.RemoveMarkers(projected);
 
 					if (ExpressionEqualityComparer.Instance.Equals(projected, current))
 						break;
@@ -1138,14 +1222,11 @@ namespace LinqToDB.Linq.Builder
 				var withPath    = pathBuilder.Visit(current);
 
 				foundPlaceholders = pathBuilder.FoundPlaceholders;
-
 				foundEager = pathBuilder.FoundEager;
+				projection = withPath;
 
-				return withPath;
+				return true;
 			}
-
-			// For Set we have to ensure hat columns are not optimized
-			protected override bool OptimizeColumns => false;
 
 			public override IBuildContext Clone(CloningContext context)
 			{
@@ -1171,11 +1252,15 @@ namespace LinqToDB.Linq.Builder
 				return this;
 			}
 
-			public IBuildContext Emulate()
+			public IBuildContext? Emulate(out SqlErrorExpression? error)
 			{
+				error = null;
 				// ReSharper disable once ConditionIsAlwaysTrueOrFalseAccordingToNullableAPIContract
 				if (_projection1 == null)
-					InitializeProjections();
+				{
+					if (!InitializeProjections(out error))
+						return null;
+				}
 
 				var sequence = _sequence1;
 				var query    = _sequence2;
@@ -1200,7 +1285,7 @@ namespace LinqToDB.Linq.Builder
 					var column1 = _sequence1.SelectQuery.Select.Columns[i];
 					var column2 = _sequence2.SelectQuery.Select.Columns[i];
 
-					sc.AddEqual(column1.Expression, column2.Expression, Builder.DataOptions.LinqOptions.CompareNullsAsValues);
+					sc.AddEqual(column1.Expression, column2.Expression, Builder.DataOptions.LinqOptions.CompareNulls);
 				}
 
 				_sequence2.SelectQuery.Select.Columns.Clear();
@@ -1214,6 +1299,9 @@ namespace LinqToDB.Linq.Builder
 
 				return SubQuery;
 			}
+
+			public LoadWithInfo  LoadWithRoot { get; set; } = new();
+			public MemberInfo[]? LoadWithPath { get; set; }
 		}
 
 		#endregion

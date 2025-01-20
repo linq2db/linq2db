@@ -1,0 +1,51 @@
+<?xml version="1.0"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
+	<metadata>
+		<id>linq2db.Scaffold</id>
+		<title>LINQ to DB Scaffold Framework</title>
+		<description>LINQ to DB Scaffold framework is used for database model generation for Linq To DB projects.</description>
+		<tags>Scaffold T4 cli RevEng</tags>
+		<dependencies>
+			<group targetFramework="net462">
+				<dependency id="linq2db"        version="6.0.0"  />
+				<dependency id="Humanizer.Core" version="2.14.1" />
+			</group>
+			<group targetFramework="netstandard2.0">
+				<dependency id="linq2db"        version="6.0.0"  />
+				<dependency id="Humanizer.Core" version="2.14.1" />
+			</group>
+			<group targetFramework="net6.0">
+				<dependency id="linq2db"        version="6.0.0"  />
+				<dependency id="Humanizer.Core" version="2.14.1" />
+			</group>
+			<group targetFramework="net8.0">
+				<dependency id="linq2db"        version="6.0.0"  />
+				<dependency id="Humanizer.Core" version="2.14.1" />
+			</group>
+			<group targetFramework="net9.0">
+				<dependency id="linq2db"        version="6.0.0"  />
+				<dependency id="Humanizer.Core" version="2.14.1" />
+			</group>
+		</dependencies>
+	</metadata>
+
+	<files>
+		<file src="NuGet\README.Scaffold.md"                                      target="README.md"           />
+
+		<file src="bin\LinqToDB.Scaffold\{0}\net462\linq2db.Scaffold.pdb"         target="lib\net462\"         />
+		<file src="bin\LinqToDB.Scaffold\{0}\net462\linq2db.Scaffold.xml"         target="lib\net462\"         />
+		<file src="bin\LinqToDB.Scaffold\{0}\net462\linq2db.Scaffold.dll"         target="lib\net462\"         />
+		<file src="bin\LinqToDB.Scaffold\{0}\netstandard2.0\linq2db.Scaffold.pdb" target="lib\netstandard2.0\" />
+		<file src="bin\LinqToDB.Scaffold\{0}\netstandard2.0\linq2db.Scaffold.xml" target="lib\netstandard2.0\" />
+		<file src="bin\LinqToDB.Scaffold\{0}\netstandard2.0\linq2db.Scaffold.dll" target="lib\netstandard2.0\" />
+		<file src="bin\LinqToDB.Scaffold\{0}\net6.0\linq2db.Scaffold.pdb"         target="lib\net6.0\"         />
+		<file src="bin\LinqToDB.Scaffold\{0}\net6.0\linq2db.Scaffold.xml"         target="lib\net6.0\"         />
+		<file src="bin\LinqToDB.Scaffold\{0}\net6.0\linq2db.Scaffold.dll"         target="lib\net6.0\"         />
+		<file src="bin\LinqToDB.Scaffold\{0}\net8.0\linq2db.Scaffold.pdb"         target="lib\net8.0\"         />
+		<file src="bin\LinqToDB.Scaffold\{0}\net8.0\linq2db.Scaffold.xml"         target="lib\net8.0\"         />
+		<file src="bin\LinqToDB.Scaffold\{0}\net8.0\linq2db.Scaffold.dll"         target="lib\net8.0\"         />
+		<file src="bin\LinqToDB.Scaffold\{0}\net9.0\linq2db.Scaffold.pdb"         target="lib\net9.0\"         />
+		<file src="bin\LinqToDB.Scaffold\{0}\net9.0\linq2db.Scaffold.xml"         target="lib\net9.0\"         />
+		<file src="bin\LinqToDB.Scaffold\{0}\net9.0\linq2db.Scaffold.dll"         target="lib\net9.0\"         />
+	</files>
+</package>

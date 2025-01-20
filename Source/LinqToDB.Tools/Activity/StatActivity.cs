@@ -4,9 +4,10 @@ using System.Threading;
 
 namespace LinqToDB.Tools.Activity
 {
-	sealed class StatActivity(string name) : IStatActivity
+	sealed class StatActivity(string name, ActivityID activityID) : IStatActivity
 	{
-		public string Name { get; } = name;
+		public string     Name       { get; } = name;
+		public ActivityID ActivityID { get; } = activityID;
 
 		private long     _elapsedTicks;
 		public  TimeSpan  Elapsed => new(_elapsedTicks);
@@ -36,7 +37,7 @@ namespace LinqToDB.Tools.Activity
 			readonly StatActivity _metric;
 			readonly Stopwatch    _stopwatch = new();
 
-			public Watcher(StatActivity metric)
+			public Watcher(StatActivity metric) : base(metric.ActivityID)
 			{
 				_stopwatch.Start();
 				_metric = metric;
@@ -49,7 +50,7 @@ namespace LinqToDB.Tools.Activity
 			}
 		}
 
-		sealed class WatcherLowRes(StatActivity metric) : ActivityBase
+		sealed class WatcherLowRes(StatActivity metric) : ActivityBase(metric.ActivityID)
 		{
 			readonly DateTime _time = DateTime.Now;
 

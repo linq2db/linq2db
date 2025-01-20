@@ -219,7 +219,7 @@ namespace Tests.Tools.Mapper
 				sw.Start(); map.Map(src); sw.Stop();
 			}
 
-			TestContext.WriteLine(sw.Elapsed);
+			TestContext.Out.WriteLine(sw.Elapsed);
 
 			sw.Reset();
 
@@ -228,7 +228,7 @@ namespace Tests.Tools.Mapper
 				sw.Start(); map.Map(src, null); sw.Stop();
 			}
 
-			TestContext.WriteLine(sw.Elapsed);
+			TestContext.Out.WriteLine(sw.Elapsed);
 
 			sw.Reset();
 
@@ -237,7 +237,7 @@ namespace Tests.Tools.Mapper
 				sw.Start(); map.Map(src, null, null); sw.Stop();
 			}
 
-			TestContext.WriteLine(sw.Elapsed);
+			TestContext.Out.WriteLine(sw.Elapsed);
 
 			sw.Reset();
 
@@ -248,7 +248,7 @@ namespace Tests.Tools.Mapper
 				sw.Start(); map3(src); sw.Stop();
 			}
 
-			TestContext.WriteLine(sw.Elapsed);
+			TestContext.Out.WriteLine(sw.Elapsed);
 
 			sw.Reset();
 
@@ -259,7 +259,7 @@ namespace Tests.Tools.Mapper
 				sw.Start(); map4(src, null, null); sw.Stop();
 			}
 
-			TestContext.WriteLine(sw.Elapsed);
+			TestContext.Out.WriteLine(sw.Elapsed);
 		}
 
 		[Test]

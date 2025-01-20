@@ -7,12 +7,13 @@
 	internal static class SqlOptimizerExtensions
 	{
 		public static SqlStatement PrepareStatementForRemoting(this ISqlOptimizer optimizer, SqlStatement statement,
+			SqlProviderFlags sqlProviderFlags,
 			MappingSchema mappingSchema, DataOptions dataOptions, EvaluationContext evaluationContext)
 		{
 			var optimizationContext = new OptimizationContext(
 				evaluationContext,
 				dataOptions,
-				sqlProviderFlags: null,
+				sqlProviderFlags: sqlProviderFlags,
 				mappingSchema,
 				optimizer.CreateOptimizerVisitor(false),
 				optimizer.CreateConvertVisitor(false),
@@ -22,7 +23,7 @@
 
 			var nullability = NullabilityContext.GetContext(statement.SelectQuery);
 
-			var newStatement = optimizationContext.OptimizeAndConvertAll(statement, nullability);
+			var newStatement = optimizationContext.OptimizeAndConvertAllForRemoting(statement, nullability);
 
 			return newStatement;
 		}

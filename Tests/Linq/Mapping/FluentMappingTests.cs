@@ -700,22 +700,21 @@ namespace Tests.Mapping
 		[Test]
 		public void ExpressionAlias([IncludeDataSources(TestProvName.AllSQLite)] string context, [Values] bool finalAliases)
 		{
-			using (new GenerateFinalAliases(finalAliases))
-			using (var db = GetDataContext(context))
+			using (var db = GetDataContext(context, o => o.UseGenerateFinalAliases(finalAliases)))
 			{
 				Query.ClearCaches();
 
 				var query = db.GetTable<PersonCustom>().Where(p => p.Name != "");
-				var sql1 = query.ToString();
-				TestContext.WriteLine(sql1);
+				var sql1 = query.ToSqlQuery().Sql;
+				BaselinesManager.LogQuery(sql1);
 
 				if (finalAliases)
 					Assert.That(sql1, Does.Contain("[AGE]"));
 				else
 					Assert.That(sql1, Does.Not.Contain("[AGE]"));
 
-				var sql2 = query.Select(q => new { q.Name, q.Age }).ToString();
-				TestContext.WriteLine(sql2);
+				var sql2 = query.Select(q => new { q.Name, q.Age }).ToSqlQuery().Sql;
+				BaselinesManager.LogQuery(sql2);
 
 				if (finalAliases)
 					Assert.That(sql2, Does.Contain("[AGE]"));
@@ -734,22 +733,21 @@ namespace Tests.Mapping
 				.Property(p => p.Money).IsExpression(p => Sql.AsSql(p.Age * Sql.AsSql(1000) + p.Name.Length * 10), true, "MONEY")
 				.Build();
 
-			using (new GenerateFinalAliases(finalAliases))
-			using (var db = GetDataContext(context, ms))
+			using (var db = GetDataContext(context, o => o.UseMappingSchema(ms).UseGenerateFinalAliases(finalAliases)))
 			{
 				Query.ClearCaches();
 
 				var query = db.GetTable<PersonCustom>().Where(p => p.Name != "");
-				var sql1 = query.ToString();
-				TestContext.WriteLine(sql1);
+				var sql1 = query.ToSqlQuery().Sql;
+				BaselinesManager.LogQuery(sql1);
 
 				if (finalAliases)
 					Assert.That(sql1, Does.Contain("[MONEY]"));
 				else
 					Assert.That(sql1, Does.Not.Contain("[MONEY]"));
 
-				var sql2 = query.Select(q => new { q.Name, q.Money }).ToString();
-				TestContext.WriteLine(sql2);
+				var sql2 = query.Select(q => new { q.Name, q.Money }).ToSqlQuery().Sql;
+				BaselinesManager.LogQuery(sql2);
 
 				if (finalAliases)
 					Assert.That(sql2, Does.Contain("[MONEY]"));
@@ -842,6 +840,61 @@ namespace Tests.Mapping
 				Assert.That(records[1].Gender, Is.EqualTo(GenderEnum.Male));
 				Assert.That(records[2].Gender, Is.EqualTo(GenderEnum.Female));
 				Assert.That(records[3].Gender, Is.EqualTo(GenderEnum.Male));
+			});
+		}
+
+		[ActiveIssue]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/3119")]
+		public void Issue3119Test()
+		{
+			var mb = new FluentMappingBuilder();
+
+			mb.Entity<Issue3119Entity>()
+				.Property(u => u.UserId)
+				.HasAttribute(new ColumnAttribute() { IsIdentity = true })
+				.HasAttribute(new ColumnAttribute() { IsPrimaryKey = true });
+
+			mb.Build();
+
+			var attrs = mb.MappingSchema.GetAttributes<ColumnAttribute>(typeof(Issue3119Entity), typeof(Issue3119Entity).GetProperty("UserId")!);
+
+			Assert.That(attrs, Has.Length.EqualTo(1));
+			Assert.Multiple(() =>
+			{
+				Assert.That(attrs[0].IsIdentity, Is.True);
+				Assert.That(attrs[0].IsPrimaryKey, Is.True);
+			});
+		}
+
+		sealed class Issue3119Entity
+		{
+			public int UserId { get; set; }
+		}
+
+		[ActiveIssue]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/3136")]
+		public void Issue3136Test()
+		{
+			const string configuration = "MyConfiguration";
+			var mb = new FluentMappingBuilder();
+
+			mb
+				.Entity<Issue3119Entity>()
+				.Property(u => u.UserId)
+				.Entity<Issue3119Entity>(configuration)
+				.HasAttribute(new ColumnAttribute() { IsIdentity = true });
+
+			mb.Build();
+
+			var attrs = mb.MappingSchema.GetAttributes<ColumnAttribute>(typeof(Issue3119Entity), typeof(Issue3119Entity).GetProperty("UserId")!);
+
+			Assert.That(attrs, Has.Length.EqualTo(2));
+			Assert.Multiple(() =>
+			{
+				Assert.That(attrs[0].IsIdentity, Is.False);
+				Assert.That(attrs[0].Configuration, Is.Null);
+				Assert.That(attrs[1].IsIdentity, Is.True);
+				Assert.That(attrs[1].Configuration, Is.EqualTo(configuration));
 			});
 		}
 	}

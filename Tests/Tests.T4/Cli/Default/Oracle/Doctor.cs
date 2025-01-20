@@ -20,10 +20,10 @@ namespace Cli.Default.Oracle
 
 		#region Associations
 		/// <summary>
-		/// Fk_Doctor_Person
+		/// FK_Doctor_Person
 		/// </summary>
-		[Association(CanBeNull = false, ThisKey = nameof(PersonId), OtherKey = nameof(Person.PersonId))]
-		public Person FkPerson { get; set; } = null!;
+		[Association(CanBeNull = false, ThisKey = nameof(PersonId), OtherKey = nameof(Oracle.Person.PersonId))]
+		public Person Person { get; set; } = null!;
 		#endregion
 	}
 }

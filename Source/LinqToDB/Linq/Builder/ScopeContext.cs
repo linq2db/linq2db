@@ -8,9 +8,8 @@ namespace LinqToDB.Linq.Builder
 
 	class ScopeContext : BuildContextBase
 	{
-		public IBuildContext Context    { get; }
-		public IBuildContext UpTo       { get; }
-		public bool          OnlyForSql { get; }
+		public IBuildContext Context { get; }
+		public IBuildContext UpTo    { get; }
 
 		public ScopeContext(IBuildContext context, IBuildContext upTo) : base(context.Builder, context.ElementType, upTo.SelectQuery)
 		{
@@ -18,17 +17,15 @@ namespace LinqToDB.Linq.Builder
 			UpTo    = upTo;
 		}
 
-		public ScopeContext(IBuildContext context, IBuildContext upTo, bool onlyForSql) : this(context, upTo)
-		{
-			OnlyForSql = onlyForSql;
-		}
-
 		public override MappingSchema MappingSchema => Context.MappingSchema;
 
 		public override Expression MakeExpression(Expression path, ProjectFlags flags)
 		{
+			if (flags.IsRoot())
+				return path;
+
 			var correctedPath = SequenceHelper.CorrectExpression(path, this, Context);
-			var newExpr       = Builder.MakeExpression(Context, correctedPath, flags);
+			var newExpr       = Builder.BuildExpression(Context, correctedPath);
 
 			if (flags.IsTable())
 				return newExpr;
@@ -42,15 +39,9 @@ namespace LinqToDB.Linq.Builder
 			if (ExpressionEqualityComparer.Instance.Equals(newExpr, correctedPath))
 				return path;
 
-			if (!flags.IsTest())
+			if (flags.IsSql())
 			{
-				if (flags.IsSql())
-				{
-					newExpr = Builder.BuildSqlExpression(UpTo, newExpr, flags,
-						buildFlags : ExpressionBuilder.BuildFlags.ForceAssignments);
-
-					newExpr = Builder.UpdateNesting(UpTo, newExpr);
-				}
+				newExpr = Builder.BuildSqlExpression(UpTo, newExpr);
 			}
 
 			return newExpr;
@@ -81,7 +72,7 @@ namespace LinqToDB.Linq.Builder
 
 		protected bool Equals(ScopeContext other)
 		{
-			return Context.Equals(other.Context) && UpTo.Equals(other.UpTo) && OnlyForSql == other.OnlyForSql;
+			return Context.Equals(other.Context) && UpTo.Equals(other.UpTo);
 		}
 
 		public override bool Equals(object? obj)
@@ -96,7 +87,7 @@ namespace LinqToDB.Linq.Builder
 				return true;
 			}
 
-			if (obj.GetType() != this.GetType())
+			if (obj.GetType() != GetType())
 			{
 				return false;
 			}
@@ -110,7 +101,6 @@ namespace LinqToDB.Linq.Builder
 			{
 				var hashCode = Context.GetHashCode();
 				hashCode = (hashCode * 397) ^ UpTo.GetHashCode();
-				hashCode = (hashCode * 397) ^ OnlyForSql.GetHashCode();
 				return hashCode;
 			}
 		}

@@ -9,7 +9,7 @@ using System.Xml.Linq;
 
 namespace LinqToDB.Data
 {
-	using LinqToDB.Common;
+	using Common;
 	using Mapping;
 
 	[ScalarType]
@@ -39,6 +39,14 @@ namespace LinqToDB.Data
 			Name     = name;
 			Value    = value;
 			DataType = dataType;
+		}
+
+		public DataParameter(string? name, object? value, DataType dataType, int size)
+		{
+			Name     = name;
+			Value    = value;
+			DataType = dataType;
+			Size     = size;
 		}
 
 		public DataParameter(string? name, object? value, DataType dataType, string? dbType)

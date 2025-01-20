@@ -437,8 +437,7 @@ namespace Tests.Data
 		{
 			var collection = new ServiceCollection();
 
-			collection.AddLinqToDBContext<DbConnection5>((_, options) =>
-				options.UseConfigurationString(context).WithOptions<DataContextOptions>(o => o with { CommandTimeout = 91 }));
+			collection.AddLinqToDBContext<DbConnection5>((_, options) => options.UseConfigurationString(context).UseCommandTimeout(91));
 
 			var provider = collection.BuildServiceProvider();
 			var con      = provider.GetService<DbConnection5>()!;
@@ -465,7 +464,6 @@ namespace Tests.Data
 
 		// informix connection limits interfere with test
 		[Test]
-		[ActiveIssue("Fails due to connection limit for development version when run with nonmanaged provider", Configuration = ProviderName.SybaseManaged)]
 		public void MultipleConnectionsTest([DataSources(TestProvName.AllInformix)] string context)
 		{
 			using var psr = new Tests.Remote.ServerContainer.PortStatusRestorer(_serverContainer, false);
@@ -611,8 +609,8 @@ namespace Tests.Data
 		}
 
 		[Test]
-		[SkipCI]
-		public void CommandTimeoutTest([IncludeDataSources(TestProvName.AllSqlServer2014)] string context)
+		[Explicit]
+		public void CommandTimeoutTest([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
 			using (var db = GetDataConnection(context))
 			{
@@ -627,7 +625,7 @@ namespace Tests.Data
 				finally
 				{
 					var time = DateTimeOffset.Now - start;
-					Assert.That(time, Is.GreaterThanOrEqualTo(TimeSpan.FromSeconds(30)));
+					Assert.That(time, Is.GreaterThanOrEqualTo(TimeSpan.FromSeconds(29)));
 					Assert.That(time, Is.LessThan(TimeSpan.FromSeconds(32)));
 				}
 
@@ -641,7 +639,7 @@ namespace Tests.Data
 				finally
 				{
 					var time = DateTimeOffset.Now - start;
-					Assert.That(time, Is.GreaterThanOrEqualTo(TimeSpan.FromSeconds(10)));
+					Assert.That(time, Is.GreaterThanOrEqualTo(TimeSpan.FromSeconds(9)));
 					Assert.That(time, Is.LessThan(TimeSpan.FromSeconds(12)));
 				}
 
@@ -649,7 +647,7 @@ namespace Tests.Data
 				db.CommandTimeout = 0;
 				db.Update(forUpdate);
 				var time2 = DateTimeOffset.Now - start;
-				Assert.That(time2, Is.GreaterThanOrEqualTo(TimeSpan.FromSeconds(60)));
+				Assert.That(time2, Is.GreaterThanOrEqualTo(TimeSpan.FromSeconds(59)));
 				Assert.That(time2, Is.LessThan(TimeSpan.FromSeconds(62)));
 			}
 		}

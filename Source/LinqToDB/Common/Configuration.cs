@@ -1,15 +1,17 @@
 ﻿using System;
+using System.ComponentModel;
 using System.Data;
 using System.Linq.Expressions;
-using System.Reflection;
 using System.Threading.Tasks;
 
 using JetBrains.Annotations;
 
+#if SUPPORTS_COMPOSITE_FORMAT
+using System.Text;
+#endif
+
 namespace LinqToDB.Common
 {
-	using System.Text;
-
 	using Data;
 	using Data.RetryPolicy;
 	using Linq;
@@ -36,7 +38,10 @@ namespace LinqToDB.Common
 		public static TDelegate CompileExpression<TDelegate>(this Expression<TDelegate> expression)
 			where TDelegate : Delegate
 		{
-			return ((TDelegate?)_compiler?.Invoke(expression)) ?? expression.Compile();
+			return ((TDelegate?)_compiler?.Invoke(expression))
+#pragma warning disable RS0030 // Do not use banned APIs
+				?? expression.Compile();
+#pragma warning restore RS0030 // Do not use banned APIs
 		}
 
 		/// <summary>
@@ -44,7 +49,10 @@ namespace LinqToDB.Common
 		/// </summary>
 		public static Delegate CompileExpression(this LambdaExpression expression)
 		{
-			return _compiler?.Invoke(expression) ?? expression.Compile();
+			return _compiler?.Invoke(expression)
+#pragma warning disable RS0030 // Do not use banned APIs
+				?? expression.Compile();
+#pragma warning restore RS0030 // Do not use banned APIs
 		}
 	}
 
@@ -68,9 +76,10 @@ namespace LinqToDB.Common
 		public static bool UseEnumValueNameForStringColumns = true;
 
 		/// <summary>
-		/// Defines value to pass to <see cref="Task.ConfigureAwait(bool)"/> method for all linq2db internal await operations.
-		/// Default value: <c>false</c>.
+		///	<b>Obsolete</b>: All <see cref="Task"/>s are now awaited using <c>ConfigureAwait(false)</c>. Please remove references to this property.
 		/// </summary>
+		// TODO: Remove in v7
+		[Obsolete("This API doesn't have effect anymore and will be removed in version 7"), EditorBrowsable(EditorBrowsableState.Never)]
 		public static bool ContinueOnCapturedContext;
 
 		/// <summary>
@@ -189,20 +198,14 @@ namespace LinqToDB.Common
 			/// - if <c>false</c> - group data will be loaded when you call enumerator for specific group <see cref="System.Linq.IGrouping{TKey, TElement}"/>.
 			/// Default value: <c>false</c>.
 			/// </summary>
-			public static bool PreloadGroups
-			{
-				get => Options.PreloadGroups;
-				set
-				{
-					if (Options.PreloadGroups != value)
-						Options = Options with { PreloadGroups = value };
-				}
-			}
+			// TODO: Remove in v7
+			[Obsolete("This API doesn't have effect anymore and will be removed in version 7"), EditorBrowsable(EditorBrowsableState.Never)]
+			public static bool PreloadGroups { get; set; }
 
 			/// <summary>
 			/// Controls behavior of linq2db when there is no updateable fields in Update query:
 			/// - if <c>true</c> - query not executed and Update operation returns 0 as number of affected records;
-			/// - if <c>false</c> - <see cref="LinqException"/> will be thrown.
+			/// - if <c>false</c> - <see cref="LinqToDBException"/> will be thrown.
 			/// Default value: <c>false</c>.
 			/// </summary>
 			public static bool IgnoreEmptyUpdate
@@ -283,9 +286,14 @@ namespace LinqToDB.Common
 			}
 
 			/// <summary>
-			/// If set to true nullable fields would be checked for IS NULL in Equal/NotEqual comparisons.
+			/// If set to <see cref="CompareNulls.LikeClr" /> nullable fields would be checked for <c>IS NULL</c> in Equal/NotEqual comparisons.
+			/// If set to <see cref="CompareNulls.LikeSql" /> comparisons are compiled straight to equivalent SQL operators,
+	  		/// which consider nulls values as not equal.
+			/// <see cref="CompareNulls.LikeSqlExceptParameters" /> is a backward compatible option that works mostly as <see cref="CompareNulls.LikeSql" />,
+			/// but sniffs parameters value and changes = into <c>IS NULL</c> when parameters are null.
+			/// Comparisons to literal null are always compiled into <c>IS NULL</c>.
 			/// This affects: Equal, NotEqual, Not Contains
-			/// Default value: <c>true</c>.
+			/// Default value: <see cref="CompareNulls.LikeClr" />.
 			/// </summary>
 			/// <example>
 			/// <code>
@@ -304,7 +312,7 @@ namespace LinqToDB.Common
 			/// db.MyEntity.Where(e => ! filter.Contains(e.Value))
 			/// </code>
 			///
-			/// Would be converted to next queries:
+			/// Would be converted to next queries under <see cref="CompareNulls.LikeClr" />:
 			/// <code>
 			/// SELECT Value FROM MyEntity WHERE Value IS NULL OR Value != 10
 			///
@@ -315,20 +323,28 @@ namespace LinqToDB.Common
 			/// SELECT Value FROM MyEntity WHERE Value IS NULL OR NOT Value IN (1, 2, 3)
 			/// </code>
 			/// </example>
-			public static bool CompareNullsAsValues
+			public static CompareNulls CompareNulls
 			{
-				get => Options.CompareNullsAsValues;
+				get => Options.CompareNulls;
 				set
 				{
-					if (Options.CompareNullsAsValues != value)
-						Options = Options with { CompareNullsAsValues = value };
+					if (Options.CompareNulls != value)
+						Options = Options with { CompareNulls = value };
 				}
+			}
+
+			// TODO: Remove in v7
+			[Obsolete("Use CompareNulls instead: true maps to LikeClr and false to LikeSqlExceptParameters. This option will be removed in version 7"), EditorBrowsable(EditorBrowsableState.Never)]
+			public static bool CompareNullsAsValues
+			{
+				get => CompareNulls == CompareNulls.LikeClr;
+				set => CompareNulls = value ? CompareNulls.LikeClr : CompareNulls.LikeSqlExceptParameters;
 			}
 
 			/// <summary>
 			/// Controls behavior of LINQ query, which ends with GroupBy call.
 			/// - if <c>true</c> - <seealso cref="LinqToDBException"/> will be thrown for such queries;
-			/// - if <c>false</c> - behavior is controlled by <see cref="PreloadGroups"/> option.
+			/// - if <c>false</c> - eager loading used.
 			/// Default value: <c>true</c>.
 			/// </summary>
 			/// <remarks>
@@ -387,15 +403,9 @@ namespace LinqToDB.Common
 			/// Used to generate CROSS APPLY or OUTER APPLY if possible.
 			/// Default value: <c>true</c>.
 			/// </summary>
-			public static bool PreferApply
-			{
-				get => Options.PreferApply;
-				set
-				{
-					if (Options.PreferApply != value)
-						Options = Options with { PreferApply = value };
-				}
-			}
+			// TODO: Remove in v7
+			[Obsolete("This API doesn't have effect anymore and will be removed in version 7"), EditorBrowsable(EditorBrowsableState.Never)]
+			public static bool PreferApply { get; set; }
 
 			/// <summary>
 			/// Allows SQL generation to automatically transform
@@ -403,15 +413,9 @@ namespace LinqToDB.Common
 			/// Into GROUP BY equivalent if syntax is not supported
 			/// Default value: <c>true</c>.
 			/// </summary>
-			public static bool KeepDistinctOrdered
-			{
-				get => Options.KeepDistinctOrdered;
-				set
-				{
-					if (Options.KeepDistinctOrdered != value)
-						Options = Options with { KeepDistinctOrdered = value };
-				}
-			}
+			// TODO: Remove in v7
+			[Obsolete("This API doesn't have effect anymore and will be removed in version 7"), EditorBrowsable(EditorBrowsableState.Never)]
+			public static bool KeepDistinctOrdered { get; set; }
 
 			/// <summary>
 			/// Enables Take/Skip parameterization.
@@ -460,7 +464,7 @@ namespace LinqToDB.Common
 		}
 
 		/// <summary>
-		/// Linq over WCF global settings.
+		/// Remote context global settings.
 		/// </summary>
 		[PublicAPI]
 		public static class LinqService
@@ -474,7 +478,7 @@ namespace LinqToDB.Common
 			public static bool SerializeAssemblyQualifiedName;
 
 			/// <summary>
-			/// Controls behavior of linq2db, when it cannot load <see cref="Type"/> by type name on query deserialization:
+			/// Controls behavior of Linq To DB, when it cannot load <see cref="Type"/> by type name on query deserialization:
 			/// - if <c>true</c> - <see cref="LinqToDBException"/> will be thrown;
 			/// - if <c>false</c> - type load error will be ignored.
 			/// Default value: <c>false</c>.

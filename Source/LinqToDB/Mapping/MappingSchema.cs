@@ -539,6 +539,7 @@ namespace LinqToDB.Mapping
 		/// Wrapper will be added only if source type can have <c>null</c> values and conversion expression doesn't use
 		/// default value provider.
 		/// See <see cref="DefaultValue{T}"/> and <see cref="DefaultValue"/> types for more details.
+		/// This parameter is ignored for conversions to <see cref="DataParameter"/> and treated as <c>false</c>.
 		/// </param>
 		/// <param name="conversionType">Conversion type. See <see cref="ConversionType"/> for more details.</param>
 		public MappingSchema SetConvertExpression(
@@ -552,7 +553,7 @@ namespace LinqToDB.Mapping
 			if (toType   == null) throw new ArgumentNullException(nameof(toType));
 			if (expr     == null) throw new ArgumentNullException(nameof(expr));
 
-			var ex = addNullCheck && Converter.IsDefaultValuePlaceHolderVisitor.Find(expr) == null?
+			var ex = addNullCheck && toType != typeof(DataParameter) && Converter.IsDefaultValuePlaceHolderVisitor.Find(expr) == null?
 				AddNullCheck(expr) :
 				expr;
 
@@ -575,6 +576,7 @@ namespace LinqToDB.Mapping
 		/// Wrapper will be added only if source type can have <c>null</c> values and conversion expression doesn't use
 		/// default value provider.
 		/// See <see cref="DefaultValue{T}"/> and <see cref="DefaultValue"/> types for more details.
+		/// This parameter is ignored for conversions to <see cref="DataParameter"/> and treated as <c>false</c>.
 		/// </param>
 		/// <param name="conversionType">Conversion type. See <see cref="ConversionType"/> for more details.</param>
 		public MappingSchema SetConvertExpression(
@@ -586,7 +588,7 @@ namespace LinqToDB.Mapping
 		{
 			if (expr == null) throw new ArgumentNullException(nameof(expr));
 
-			var ex = addNullCheck && Converter.IsDefaultValuePlaceHolderVisitor.Find(expr) == null?
+			var ex = addNullCheck && toType.SystemType != typeof(DataParameter) && Converter.IsDefaultValuePlaceHolderVisitor.Find(expr) == null?
 				AddNullCheck(expr) :
 				expr;
 
@@ -609,6 +611,7 @@ namespace LinqToDB.Mapping
 		/// Wrapper will be added only if source type can have <c>null</c> values and conversion expression doesn't use
 		/// default value provider.
 		/// See <see cref="DefaultValue{T}"/> and <see cref="DefaultValue"/> types for more details.
+		/// This parameter is ignored for conversions to <see cref="DataParameter"/> and treated as <c>false</c>.
 		/// </param>
 		/// <param name="conversionType">Conversion type. See <see cref="ConversionType"/> for more details.</param>
 		public MappingSchema SetConvertExpression<TFrom,TTo>(
@@ -618,7 +621,7 @@ namespace LinqToDB.Mapping
 		{
 			if (expr == null) throw new ArgumentNullException(nameof(expr));
 
-			var ex = addNullCheck && Converter.IsDefaultValuePlaceHolderVisitor.Find(expr) == null?
+			var ex = addNullCheck && typeof(TTo) != typeof(DataParameter) && Converter.IsDefaultValuePlaceHolderVisitor.Find(expr) == null?
 				AddNullCheck(expr) :
 				expr;
 

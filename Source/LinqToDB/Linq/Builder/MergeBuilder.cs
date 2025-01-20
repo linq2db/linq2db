@@ -11,6 +11,10 @@ namespace LinqToDB.Linq.Builder
 
 	using static LinqToDB.Reflection.Methods.LinqToDB.Merge;
 
+	[BuildsMethodCall(
+		nameof(LinqExtensions.Merge), 
+		nameof(LinqExtensions.MergeWithOutput), 
+		nameof(LinqExtensions.MergeWithOutputInto))]
 	internal sealed partial class MergeBuilder : MethodCallBuilder
 	{
 		static readonly MethodInfo[] _supportedMethods =
@@ -22,10 +26,8 @@ namespace LinqToDB.Linq.Builder
 			MergeWithOutputIntoSource
 		};
 
-		protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
-		{
-			return methodCall.IsSameGenericMethod(_supportedMethods);
-		}
+		public static bool CanBuildMethod(MethodCallExpression call, BuildInfo info, ExpressionBuilder builder)
+			=> call.IsSameGenericMethod(_supportedMethods);
 
 		enum MergeKind
 		{
@@ -51,15 +53,11 @@ namespace LinqToDB.Linq.Builder
 
 			if (kind != MergeKind.Merge)
 			{
-				var actionField   = SqlField.FakeField(new DbDataType(typeof(string)), "$action", false);
+				var actionField   = SqlField.FakeField(new DbDataType(typeof(string)), PseudoFunctions.MERGE_ACTION, false);
 
-				var (deletedContext, insertedContext, deletedTable, insertedTable) = UpdateBuilder.CreateDeletedInsertedContexts(builder, mergeContext.TargetContext, out var outputContext);
+				var (deletedContext, insertedContext) = UpdateBuilder.CreateDeletedInsertedContexts(builder, mergeContext.TargetContext, out var outputContext);
 
-				mergeContext.Merge.Output = new SqlOutputClause()
-				{
-					InsertedTable = insertedTable,
-					DeletedTable  = deletedTable,
-				};
+				mergeContext.Merge.Output = new SqlOutputClause();
 
 				mergeContext.OutputContext = outputContext;
 
@@ -134,19 +132,20 @@ namespace LinqToDB.Linq.Builder
 
 				if (!source.IsTargetAssociation(targetKeySelector))
 				{
-					var compareSearchCondition = builder.GenerateComparison(source.SourceContextRef.BuildContext, targetKeySelector, sourceKeySelector);
+					var compareSearchCondition = builder.GenerateComparison(source.SourceContextRef.BuildContext, targetKeySelector, sourceKeySelector, BuildPurpose.Sql);
 					searchCondition.Predicates.AddRange(compareSearchCondition.Predicates);
 				}
 				else
 				{
 					var cloningContext      = new CloningContext();
+					cloningContext.CloneElements(builder.GetCteClauses());
 					var targetContext       = source.TargetContextRef.BuildContext;
 					var clonedTargetContext = cloningContext.CloneContext(targetContext);
 					var clonedContextRef    = source.TargetContextRef.WithContext(clonedTargetContext);
 
 					var correctedTargetKeySelector = targetKeySelector.Replace(source.TargetPropAccess, clonedContextRef);
 
-					var compareSearchCondition = builder.GenerateComparison(clonedTargetContext, correctedTargetKeySelector, sourceKeySelector);
+					var compareSearchCondition = builder.GenerateComparison(clonedTargetContext, correctedTargetKeySelector, sourceKeySelector, BuildPurpose.Sql);
 
 					var selectQuery = clonedTargetContext.SelectQuery;
 
@@ -168,18 +167,19 @@ namespace LinqToDB.Linq.Builder
 			}
 			else if (!source.IsTargetAssociation(condition))
 			{
-				builder.BuildSearchCondition(source.SourceContextRef.BuildContext, condition, ProjectFlags.SQL, searchCondition);
+				builder.BuildSearchCondition(source.SourceContextRef.BuildContext, condition, searchCondition);
 			}
 			else
 			{
 				var cloningContext      = new CloningContext();
+				cloningContext.CloneElements(builder.GetCteClauses());
 				var targetContext       = source.TargetContextRef.BuildContext;
 				var clonedTargetContext = cloningContext.CloneContext(targetContext);
 				var clonedContextRef    = source.TargetContextRef.WithContext(clonedTargetContext);
 
 				var correctedCondition = condition.Replace(source.TargetPropAccess, clonedContextRef);
 
-				builder.BuildSearchCondition(clonedTargetContext, correctedCondition, ProjectFlags.SQL,
+				builder.BuildSearchCondition(clonedTargetContext, correctedCondition,
 					clonedTargetContext.SelectQuery.Where.EnsureConjunction());
 
 				var targetTable = GetTargetTable(targetContext);
@@ -229,14 +229,6 @@ namespace LinqToDB.Linq.Builder
 		{
 			var tableContext = SequenceHelper.GetTableOrCteContext(target);
 			return tableContext?.SqlTable;
-		}
-
-		static Expression EnsureType(Expression expression, Type type)
-		{
-			if (expression.Type == type)
-				return expression;
-
-			return Expression.Convert(expression, type);
 		}
 	}
 }

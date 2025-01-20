@@ -2,6 +2,6 @@
 
 cd /d "%~dp0"
 
-dotnet clean linq2db.sln -c Release -v m
-dotnet clean linq2db.sln -c Debug -v m
-dotnet clean linq2db.sln -c Azure -v m
+FOR %%c IN (Release Debug Azure) DO (
+    dotnet clean linq2db.sln -c %%c -v m
+)

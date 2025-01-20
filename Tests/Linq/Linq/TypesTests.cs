@@ -255,8 +255,7 @@ namespace Tests.Linq
 			[DataSources(
 				ProviderName.DB2,
 				TestProvName.AllInformix,
-				TestProvName.AllSQLite,
-				ProviderName.Access)]
+				TestProvName.AllSQLite)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -467,7 +466,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void DateTimeArray2([DataSources(ProviderName.Access)] string context)
+		public void DateTimeArray2([DataSources(TestProvName.AllAccessOleDb)] string context)
 		{
 			var arr = new DateTime?[] { new DateTime(2001, 1, 11, 1, 11, 21, 100), new DateTime(2012, 11, 7, 19, 19, 29, 90) };
 
@@ -478,7 +477,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void DateTimeArray3([DataSources(ProviderName.Access)] string context)
+		public void DateTimeArray3([DataSources(TestProvName.AllAccessOleDb)] string context)
 		{
 			var arr = new List<DateTime?> { new DateTime(2001, 1, 11, 1, 11, 21, 100) };
 
@@ -902,6 +901,100 @@ namespace Tests.Linq
 				Assert.That(double.IsPositiveInfinity(res[2].doubleDataType!.Value), Is.True);
 			}
 		}
+
+		#region Issue 4469
+		[ActiveIssue(Configurations = [TestProvName.AllSQLite])]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4469")]
+		public void Issue4469Test1([DataSources] string context, [Values] bool inline)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable(Issue4469Table.Data);
+			db.InlineParameters = inline;
+
+			var param = 33;
+
+			var result = (from v in tb
+						 select new
+						 {
+							 Integer = Sql.AsSql(v.Integer / param),
+							 Decimal = Sql.AsSql(v.Decimal / param),
+							 Double = Sql.AsSql(v.Double / param),
+						 })
+						 .Single();
+
+			Assert.Multiple(() =>
+			{
+				Assert.That(result.Integer, Is.EqualTo(Issue4469Table.Data[0].Integer / param));
+				Assert.That(Math.Round(result.Decimal, 5), Is.EqualTo(Math.Round(Issue4469Table.Data[0].Decimal / param, 5)));
+				Assert.That(result.Double, Is.EqualTo(Issue4469Table.Data[0].Double / param));
+			});
+		}
+
+		[ActiveIssue(Configurations = [TestProvName.AllSQLite])]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4469")]
+		public void Issue4469Test2([DataSources] string context, [Values] bool inline)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable(Issue4469Table.Data);
+			db.InlineParameters = inline;
+
+			var param = 33m;
+
+			var result = (from v in tb
+						  select new
+						  {
+							  Integer = Sql.AsSql(v.Integer / param),
+							  Decimal = Sql.AsSql(v.Decimal / param),
+							  Double = Sql.AsSql(v.Double / (double)param),
+						  })
+						 .Single();
+
+			Assert.Multiple(() =>
+			{
+				Assert.That(Math.Round(result.Integer, 5), Is.EqualTo(Math.Round(Issue4469Table.Data[0].Integer / param, 5)));
+				Assert.That(Math.Round(result.Decimal, 5), Is.EqualTo(Math.Round(Issue4469Table.Data[0].Decimal / param, 5)));
+				Assert.That(result.Double, Is.EqualTo(Issue4469Table.Data[0].Double / (double)param));
+			});
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4469")]
+		public void Issue4469Test3([DataSources] string context, [Values] bool inline)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable(Issue4469Table.Data);
+			db.InlineParameters = inline;
+
+			var param = 33D;
+
+			var result = (from v in tb
+						  select new
+						  {
+							  Integer = Sql.AsSql(v.Integer / param),
+							  Decimal = Sql.AsSql((double)v.Decimal / param),
+							  Double = Sql.AsSql(v.Double / param),
+						  })
+						 .Single();
+
+			Assert.Multiple(() =>
+			{
+				Assert.That(Math.Round(result.Integer, 5), Is.EqualTo(Math.Round(Issue4469Table.Data[0].Integer / param, 5)));
+				Assert.That(Math.Round(result.Decimal, 5), Is.EqualTo(Math.Round((double)Issue4469Table.Data[0].Decimal / param, 5)));
+				Assert.That(Math.Round(result.Double, 5), Is.EqualTo(Math.Round(Issue4469Table.Data[0].Double / param, 5)));
+			});
+		}
+
+		sealed class Issue4469Table
+		{
+			public int Integer { get; set; }
+			[Column(Precision = 10, Scale = 5)] public decimal Decimal { get; set; }
+			public double Double { get; set; }
+
+			public static readonly Issue4469Table[] Data =
+			[
+				new Issue4469Table() { Integer = 100, Decimal = 100m, Double = 100.0 },
+			];
+		}
+		#endregion
 
 	}
 }

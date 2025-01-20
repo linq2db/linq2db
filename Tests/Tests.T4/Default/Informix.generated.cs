@@ -20,6 +20,8 @@ namespace Default.Informix
 {
 	public partial class TestDataDB : LinqToDB.Data.DataConnection
 	{
+		#region Tables
+
 		public ITable<Alltype>           Alltypes           { get { return this.GetTable<Alltype>(); } }
 		public ITable<Child>             Children           { get { return this.GetTable<Child>(); } }
 		public ITable<Collatedtable>     Collatedtables     { get { return this.GetTable<Collatedtable>(); } }
@@ -37,6 +39,10 @@ namespace Default.Informix
 		public ITable<Testmerge1>        Testmerge1         { get { return this.GetTable<Testmerge1>(); } }
 		public ITable<Testmerge2>        Testmerge2         { get { return this.GetTable<Testmerge2>(); } }
 		public ITable<Testunique>        Testuniques        { get { return this.GetTable<Testunique>(); } }
+
+		#endregion
+
+		#region .ctor
 
 		public TestDataDB()
 		{
@@ -67,6 +73,8 @@ namespace Default.Informix
 
 		partial void InitDataContext  ();
 		partial void InitMappingSchema();
+
+		#endregion
 	}
 
 	[Table(Schema="informix", Name="alltypes")]
@@ -121,7 +129,7 @@ namespace Default.Informix
 		/// <summary>
 		/// FK_doctor_person (informix.person)
 		/// </summary>
-		[Association(ThisKey="Personid", OtherKey="Personid", CanBeNull=false)]
+		[Association(ThisKey=nameof(Personid), OtherKey=nameof(Default.Informix.Person.Personid), CanBeNull=false)]
 		public Person Person { get; set; } = null!;
 
 		#endregion
@@ -186,7 +194,7 @@ namespace Default.Informix
 		/// <summary>
 		/// FK_patient_person (informix.person)
 		/// </summary>
-		[Association(ThisKey="Personid", OtherKey="Personid", CanBeNull=false)]
+		[Association(ThisKey=nameof(Personid), OtherKey=nameof(Default.Informix.Person.Personid), CanBeNull=false)]
 		public Person Person { get; set; } = null!;
 
 		#endregion
@@ -206,13 +214,13 @@ namespace Default.Informix
 		/// <summary>
 		/// FK_doctor_person_BackReference (informix.doctor)
 		/// </summary>
-		[Association(ThisKey="Personid", OtherKey="Personid", CanBeNull=true)]
+		[Association(ThisKey=nameof(Personid), OtherKey=nameof(Default.Informix.Doctor.Personid), CanBeNull=true)]
 		public Doctor? Doctor { get; set; }
 
 		/// <summary>
 		/// FK_patient_person_BackReference (informix.patient)
 		/// </summary>
-		[Association(ThisKey="Personid", OtherKey="Personid", CanBeNull=true)]
+		[Association(ThisKey=nameof(Personid), OtherKey=nameof(Default.Informix.Patient.Personid), CanBeNull=true)]
 		public Patient? Patient { get; set; }
 
 		#endregion
@@ -241,13 +249,13 @@ namespace Default.Informix
 		/// <summary>
 		/// FK_testfkunique_testunique_1 (informix.testunique)
 		/// </summary>
-		[Association(ThisKey="Id3, Id4", OtherKey="Id3, Id4", CanBeNull=false)]
+		[Association(ThisKey=nameof(Id3) + ", " + nameof(Id4), OtherKey=nameof(Default.Informix.Testunique.Id3) + ", " + nameof(Default.Informix.Testunique.Id4), CanBeNull=false)]
 		public Testunique FkTestfkuniqueTestunique1 { get; set; } = null!;
 
 		/// <summary>
 		/// FK_testfkunique_testunique (informix.testunique)
 		/// </summary>
-		[Association(ThisKey="Id1, Id2", OtherKey="Id1, Id2", CanBeNull=false)]
+		[Association(ThisKey=nameof(Id1) + ", " + nameof(Id2), OtherKey=nameof(Default.Informix.Testunique.Id1) + ", " + nameof(Default.Informix.Testunique.Id2), CanBeNull=false)]
 		public Testunique Testunique { get; set; } = null!;
 
 		#endregion
@@ -320,13 +328,13 @@ namespace Default.Informix
 		/// <summary>
 		/// FK_testfkunique_testunique_1_BackReference (informix.testfkunique)
 		/// </summary>
-		[Association(ThisKey="Id3, Id4", OtherKey="Id3, Id4", CanBeNull=true)]
+		[Association(ThisKey=nameof(Id3) + ", " + nameof(Id4), OtherKey=nameof(Default.Informix.Testfkunique.Id3) + ", " + nameof(Default.Informix.Testfkunique.Id4), CanBeNull=true)]
 		public IEnumerable<Testfkunique> FkTestfkuniqueTestunique1BackReferences { get; set; } = null!;
 
 		/// <summary>
 		/// FK_testfkunique_testunique_BackReference (informix.testfkunique)
 		/// </summary>
-		[Association(ThisKey="Id1, Id2", OtherKey="Id1, Id2", CanBeNull=true)]
+		[Association(ThisKey=nameof(Id1) + ", " + nameof(Id2), OtherKey=nameof(Default.Informix.Testfkunique.Id1) + ", " + nameof(Default.Informix.Testfkunique.Id2), CanBeNull=true)]
 		public IEnumerable<Testfkunique> Testfkuniques { get; set; } = null!;
 
 		#endregion

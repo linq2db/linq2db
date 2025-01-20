@@ -10,6 +10,8 @@ namespace LinqToDB.Linq
 	using Mapping;
 	using SqlQuery;
 	using Tools;
+	using Infrastructure;
+	using Internal;
 
 	static partial class QueryRunner
 	{
@@ -46,17 +48,19 @@ namespace LinqToDB.Linq
 					Insert = { Into = sqlTable, WithIdentity = true }
 				};
 
-				var ei = new Query<object>(dataContext, null)
+				var ei = new Query<object>(dataContext)
 				{
 					Queries = { new QueryInfo { Statement = insertStatement, } }
 				};
+
+				var accessorIdGenerator = new UniqueIdGenerator<ParameterAccessor>();
 
 				foreach (var field in sqlTable.Fields.Where(x => columnFilter == null || columnFilter(obj, x.ColumnDescriptor)))
 				{
 					if (field.IsInsertable && !field.ColumnDescriptor.ShouldSkip(obj!, descriptor, SkipModification.Insert))
 					{
-						var param = GetParameter(type, dataContext, field);
-						ei.Queries[0].AddParameterAccessor(param);
+						var param = GetParameter(accessorIdGenerator, type, dataContext, field);
+						ei.AddParameterAccessor(param);
 
 						insertStatement.Insert.Items.Add(new SqlSetExpression(field, param.SqlParameter));
 					}
@@ -114,7 +118,7 @@ namespace LinqToDB.Linq
 							return CreateQuery(context.dataContext, context.entityDescriptor, context.obj, null, key.tableName, key.serverName, key.databaseName, key.schemaName, key.tableOptions, key.type);
 						});
 
-				return ei.GetElement(dataContext, Expression.Constant(obj), null, null)!;
+				return ei.GetElement(dataContext, new RuntimeExpressionsContainer(Expression.Constant(obj)), null, null)!;
 			}
 
 			public static async Task<object> QueryAsync(
@@ -157,7 +161,7 @@ namespace LinqToDB.Linq
 								return CreateQuery(context.dataContext, context.entityDescriptor, context.obj, null, key.tableName, key.serverName, key.databaseName, key.schemaName, key.tableOptions, key.type);
 							});
 
-					return await ((Task<object>)ei.GetElementAsync(dataContext, Expression.Constant(obj), null, null, token)!).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+					return await ((Task<object>)ei.GetElementAsync(dataContext, new RuntimeExpressionsContainer(Expression.Constant(obj)), null, null, token)!).ConfigureAwait(false);
 				}
 			}
 		}

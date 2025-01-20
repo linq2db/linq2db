@@ -233,12 +233,12 @@ namespace LinqToDB.DataProvider.SqlServer
 					return sb.Append('@').Append(value);
 
 				case ConvertType.NameToQueryField:
+					if (value == PseudoFunctions.MERGE_ACTION)
+						return sb.Append("$action");
+					goto case ConvertType.NameToQueryFieldAlias;
 				case ConvertType.NameToQueryFieldAlias:
 				case ConvertType.NameToQueryTableAlias:
 					if (value.Length > 0 && value[0] == '[')
-						return sb.Append(value);
-
-					if (value == "$action")
 						return sb.Append(value);
 
 					return SqlServerTools.QuoteIdentifier(sb, value);

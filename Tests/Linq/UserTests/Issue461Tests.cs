@@ -1,6 +1,7 @@
 ﻿using System.Linq;
 
 using LinqToDB.Data;
+using LinqToDB.Linq;
 
 using NUnit.Framework;
 
@@ -68,6 +69,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSybase, ErrorMessage = ErrorHelper.Sybase.Error_JoinToDerivedTableWithTakeInvalid)]
 		public void SelectToAnonimousTest1([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -82,9 +84,6 @@ namespace Tests.UserTests
 									   Id = l.ParentID + 1
 								   }).FirstOrDefault()
 							  }).ToList();
-
-				if (db is DataConnection connection)
-					TestContext.WriteLine(connection.LastQuery);
 
 				var expected = from sep in Parent
 							   select new
@@ -102,6 +101,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSybase, ErrorMessage = ErrorHelper.Sybase.Error_JoinToDerivedTableWithTakeInvalid)]
 		public void SelectToAnonymousTest2([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -117,9 +117,6 @@ namespace Tests.UserTests
 									   ParentId = l.ParentID
 								   }).FirstOrDefault()
 							  }).ToList();
-
-				if (db is DataConnection connection)
-					TestContext.WriteLine(connection.LastQuery);
 
 				var expected = from sep in Parent
 							   select new
@@ -138,6 +135,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSybase, ErrorMessage = ErrorHelper.Sybase.Error_JoinToDerivedTableWithTakeInvalid)]
 		public void SelectToTypeTest1([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -152,9 +150,6 @@ namespace Tests.UserTests
 									   Id = l.ParentID + 1
 								   }).FirstOrDefault()
 							  }).ToList();
-
-				if (db is DataConnection connection)
-					TestContext.WriteLine(connection.LastQuery);
 
 				var expected = from sep in Parent
 							   select new ValueValueHolder
@@ -172,6 +167,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSybase, ErrorMessage = ErrorHelper.Sybase.Error_JoinToDerivedTableWithTakeInvalid)]
 		public void SelectToTypeTest2([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -187,9 +183,6 @@ namespace Tests.UserTests
 									   ParentId = l.ParentID
 								   }).FirstOrDefault()
 							  }).ToList();
-
-				if (db is DataConnection connection)
-					TestContext.WriteLine(connection.LastQuery);
 
 				var expected = from sep in Parent
 							   select new ValueValueHolder
@@ -256,6 +249,5 @@ namespace Tests.UserTests
 				);
 			}
 		}
-
 	}
 }

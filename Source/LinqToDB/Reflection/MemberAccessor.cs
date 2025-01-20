@@ -309,14 +309,6 @@ namespace LinqToDB.Reflection
 		#endregion
 
 		#region Set/Get Value
-		[Obsolete($"Use {nameof(GetGetterExpression)} method instead")]
-		public LambdaExpression        GetterExpression => Expression.Lambda(_getterExpression, _getterArguments);
-		[Obsolete($"Use {nameof(GetSetterExpression)} method instead")]
-		public LambdaExpression        SetterExpression => Expression.Lambda(_setterExpression, _setterArguments);
-		[Obsolete($"Use {nameof(GetValue)} method instead")]
-		public Func  <object,object?>? Getter           => _getter?.Value;
-		[Obsolete($"Use {nameof(SetValue)} method instead")]
-		public Action<object,object?>? Setter           => _setter?.Value;
 
 		private Lazy<Func<object, object?>>?   _getter;
 		private Lazy<Action<object, object?>>? _setter;

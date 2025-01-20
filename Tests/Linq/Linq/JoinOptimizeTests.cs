@@ -1,5 +1,4 @@
-﻿using System.Diagnostics;
-using System.Linq;
+﻿using System.Linq;
 
 using LinqToDB;
 using LinqToDB.Mapping;
@@ -9,7 +8,6 @@ using NUnit.Framework;
 
 namespace Tests.Linq
 {
-
 	using Model;
 
 	[TestFixture]
@@ -21,7 +19,6 @@ namespace Tests.Linq
 			using (var db = new NorthwindDB(context))
 			{
 				var dd = GetNorthwindAsList(context);
-				//Configuration.Linq.OptimizeJoins = false;
 
 				var q = from od in db.OrderDetail
 					join o1 in db.Order on od.OrderID equals o1.OrderID
@@ -67,7 +64,6 @@ namespace Tests.Linq
 			using (var db = new NorthwindDB(context))
 			{
 				var dd = GetNorthwindAsList(context);
-				//Configuration.Linq.OptimizeJoins = false;
 
 				var q = from od in db.OrderDetail
 					join o1 in db.Order on od.OrderID equals o1.OrderID
@@ -84,9 +80,6 @@ namespace Tests.Linq
 						OrderID2 = o2.OrderID,
 						OrderID3 = o3.OrderID,
 					};
-
-
-				var sql = q.ToString();
 
 				var q2 = from od in dd.OrderDetail
 					join o1 in dd.Order on od.OrderID equals o1.OrderID
@@ -112,7 +105,7 @@ namespace Tests.Linq
 				});
 
 				var proj1 = q.Select(v => v.OrderID);
-				TestContext.WriteLine(proj1.ToString());
+				proj1.ToArray();
 				var sq1 = proj1.GetSelectQuery();
 				Assert.Multiple(() =>
 				{
@@ -121,7 +114,7 @@ namespace Tests.Linq
 				});
 
 				var proj2 = q.Select(v => v.OrderDate);
-				TestContext.WriteLine(proj2.ToString());
+				proj2.ToArray();
 				var sq2 = proj2.GetSelectQuery();
 				Assert.Multiple(() =>
 				{
@@ -137,7 +130,6 @@ namespace Tests.Linq
 			using (var db = new NorthwindDB(context))
 			{
 				var dd = GetNorthwindAsList(context);
-				//Configuration.Linq.OptimizeJoins = false;
 
 				var q = from od in db.OrderDetail
 					join o1 in db.Order on od.OrderID equals o1.OrderID
@@ -151,8 +143,6 @@ namespace Tests.Linq
 						OrderID1 = o1.OrderID,
 						OrderID2 = od2.OrderID,
 					};
-
-				var str = q.ToString();
 
 				var q2 = from od in dd.OrderDetail
 					join o1 in dd.Order on od.OrderID equals o1.OrderID
@@ -180,7 +170,6 @@ namespace Tests.Linq
 			using (var db = new NorthwindDB(context))
 			{
 				var dd = GetNorthwindAsList(context);
-				//Configuration.Linq.OptimizeJoins = false;
 
 				var q = from od in db.OrderDetail
 					join o1 in db.Order on new {od.OrderID, od.ProductID} equals new {o1.OrderID, ProductID = 39}
@@ -205,8 +194,6 @@ namespace Tests.Linq
 						OrderID3 = o3 == null ? 0 : o3.OrderID,
 						OrderID4 = o4 == null ? 0 : o4.OrderID,
 					};
-
-				var str = q.ToString();
 
 				var q2 = from od in dd.OrderDetail
 					join o1 in dd.Order on new {od.OrderID, od.ProductID} equals new {o1.OrderID, ProductID = 39}
@@ -286,7 +273,7 @@ namespace Tests.Linq
 					join o1 in db.Order on e.OrderID equals o1.OrderID
 					select e;
 
-				TestContext.WriteLine(q2.ToString());
+				q2.ToArray();
 				var ts = q2.GetTableSource();
 				Assert.That(ts.Joins, Has.Count.EqualTo(1));
 			}
@@ -311,11 +298,12 @@ namespace Tests.Linq
 						OrderID3 = o3.OrderID,
 					};
 
-				var str = q.ToString();
+				q.ToArray();
 
 				Assert.That(q.GetTableSource().Joins, Has.Count.EqualTo(1));
 
 				var proj1 = q.Select(v => v.OrderID);
+				proj1.ToArray();
 				Assert.That(proj1.GetTableSource().Joins, Has.Count.EqualTo(1));
 			}
 		}
@@ -341,11 +329,11 @@ namespace Tests.Linq
 						OrderID4 = o4.OrderID,
 					};
 
-				TestContext.WriteLine(q.ToString());
+				q.ToArray();
 				Assert.That(q.GetTableSource().Joins, Has.Count.EqualTo(1));
 
 				var proj1 = q.Select(v => v.OrderID);
-				TestContext.WriteLine(proj1.ToString());
+				proj1.ToArray();
 				Assert.That(proj1.GetTableSource().Joins, Has.Count.EqualTo(1));
 			}
 		}
@@ -516,7 +504,7 @@ namespace Tests.Linq
 						OrderID2 = o2.OrderID,
 					};
 
-				TestContext.WriteLine(q.ToString());
+				q.ToArray();
 
 				Assert.That(q.GetTableSource().Joins, Has.Count.EqualTo(1), "Join not optimized");
 
@@ -526,7 +514,7 @@ namespace Tests.Linq
 #pragma warning disable CS0472 // comparison of int with null
 				var qw = q.Where(v => v.OrderID1 != null);
 #pragma warning restore CS0472
-				var str = qw.ToString();
+				qw.ToArray();
 				Assert.That(qw.GetTableSource().Joins, Has.Count.EqualTo(2), "If LEFT join is used in where condition - it can not be optimized");
 
 				var proj1 = q.Select(v => v.OrderID1);

@@ -39,11 +39,13 @@ namespace Tests.DataProvider
 			}
 		}
 
+#pragma warning disable CS0618 // Type or member is obsolete
 		public static IEnumerable<SqlDataRecord> GetSqlDataRecords()
 		{
 			var sqlRecord = new SqlDataRecord(
 				new SqlMetaData("Id",   SqlDbType.Int),
 				new SqlMetaData("Name", SqlDbType.NVarChar, 10));
+#pragma warning restore CS0618 // Type or member is obsolete
 
 			foreach (var record in TestUDTData)
 			{

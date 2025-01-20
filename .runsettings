@@ -6,5 +6,6 @@
 	<NUnit>
 		<AssemblySelectLimit>1000000</AssemblySelectLimit>
 		<ShadowCopyFiles>false</ShadowCopyFiles>
+		<ThrowOnEachFailureUnderDebugger>true</ThrowOnEachFailureUnderDebugger>
 	</NUnit>
 </RunSettings>

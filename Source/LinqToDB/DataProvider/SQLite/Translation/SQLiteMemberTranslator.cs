@@ -1,17 +1,26 @@
 ﻿using System;
 using System.Globalization;
 
-using LinqToDB.Common;
-using LinqToDB.SqlQuery;
-
 namespace LinqToDB.DataProvider.SQLite.Translation
 {
+	using Common;
+	using SqlQuery;
 	using Linq.Translation;
 
 	public class SQLiteMemberTranslator : ProviderMemberTranslatorDefault
 	{
 		class SqlTypesTranslation : SqlTypesTranslationDefault
 		{
+		}
+
+		protected override IMemberTranslator CreateSqlTypesTranslator()
+		{
+			return new SqlTypesTranslation();
+		}
+
+		protected override IMemberTranslator CreateDateMemberTranslator()
+		{
+			return new DateFunctionsTranslator();
 		}
 
 		public class DateFunctionsTranslator : DateFunctionsTranslatorBase
@@ -68,7 +77,7 @@ namespace LinqToDB.DataProvider.SQLite.Translation
 
 			ISqlExpression StrFTime(ISqlExpressionFactory factory, DbDataType resultDbType, string format, ISqlExpression date)
 			{
-				return factory!.Function(resultDbType, StrFTimeFuncName, factory.Value(format), date);
+				return factory!.Function(resultDbType, StrFTimeFuncName, ParametersNullabilityType.SameAsSecondParameter, factory.Value(format), date);
 			}
 
 			ISqlExpression StrFTimeInt(ISqlExpressionFactory factory, DbDataType intDbType, DbDataType stringDbType, string format, ISqlExpression date)
@@ -108,7 +117,7 @@ namespace LinqToDB.DataProvider.SQLite.Translation
 						return null;
 				}
 
-				var resultExpression = factory.Function(dateType, StrFTimeFuncName, factory.Value(stringDbType, DateFormat), dateTimeExpression, dateExpr);
+				var resultExpression = factory.Function(dateType, StrFTimeFuncName, ParametersNullabilityType.SameAsSecondParameter, factory.Value(stringDbType, DateFormat), dateTimeExpression, dateExpr);
 
 				return resultExpression;
 			}
@@ -139,6 +148,7 @@ namespace LinqToDB.DataProvider.SQLite.Translation
 					var formatStr = "%0" + padSize.ToString(CultureInfo.InvariantCulture) + "d";
 
 					return factory.Function(stringDataType, "printf",
+						ParametersNullabilityType.NotNullable,
 						factory.Value(stringDataType, formatStr),
 						expression);
 				}
@@ -161,7 +171,7 @@ namespace LinqToDB.DataProvider.SQLite.Translation
 					PartExpression(millisecond, 3)
 				);
 
-				resultExpression = factory.Function(resulType, StrFTimeFuncName,  factory.Value(stringDataType, DateFormat), resultExpression);
+				resultExpression = factory.Function(resulType, StrFTimeFuncName, ParametersNullabilityType.SameAsSecondParameter, factory.Value(stringDataType, DateFormat), resultExpression);
 
 				return resultExpression;
 			}
@@ -180,32 +190,10 @@ namespace LinqToDB.DataProvider.SQLite.Translation
 			{
 				var factory = translationContext.ExpressionFactory;
 
-				var resultExpression = factory.Function(factory.GetDbDataType(typeof(TimeSpan)), StrFTimeFuncName, factory.Value(TimeFormat), dateExpression);
+				var resultExpression = factory.Function(factory.GetDbDataType(typeof(TimeSpan)), StrFTimeFuncName, ParametersNullabilityType.SameAsSecondParameter, factory.Value(TimeFormat), dateExpression);
 
 				return resultExpression;
 			}
-
-			protected override ISqlExpression? TranslateDateOnlyDateAdd(ITranslationContext translationContext, TranslationFlags translationFlag, ISqlExpression dateTimeExpression, ISqlExpression increment, Sql.DateParts datepart)
-			{
-				return TranslateDateTimeDateAdd(translationContext, translationFlag, dateTimeExpression, increment, datepart);
-			}
-
-			protected override ISqlExpression? TranslateDateOnlyDatePart(ITranslationContext translationContext, TranslationFlags translationFlag, ISqlExpression dateTimeExpression, Sql.DateParts datepart)			
-			{
-				return TranslateDateTimeDatePart(translationContext, translationFlag, dateTimeExpression, datepart);
-			}
-
 		}
-
-		protected override IMemberTranslator CreateSqlTypesTranslator()
-		{
-			return new SqlTypesTranslation();
-		}
-
-		protected override IMemberTranslator CreateDateMemberTranslator()
-		{
-			return new DateFunctionsTranslator();
-		}
-
 	}
 }

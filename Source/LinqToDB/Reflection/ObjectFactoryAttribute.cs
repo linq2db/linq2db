@@ -1,7 +1,9 @@
-using System;
+﻿using System;
 
 namespace LinqToDB.Reflection
 {
+	using Common.Internal;
+
 	[AttributeUsage(AttributeTargets.Class | AttributeTargets.Interface)]
 	public class ObjectFactoryAttribute : Attribute
 	{
@@ -9,10 +11,7 @@ namespace LinqToDB.Reflection
 		{
 			if (type == null) throw new ArgumentNullException(nameof(type));
 
-			ObjectFactory = (Activator.CreateInstance(type) as IObjectFactory)!;
-
-			if (ObjectFactory == null)
-				throw new ArgumentException($"Type '{type}' does not implement IObjectFactory interface.");
+			ObjectFactory = ActivatorExt.CreateInstance<IObjectFactory>(type);
 		}
 
 		public IObjectFactory ObjectFactory { get; }

@@ -11,6 +11,7 @@ namespace LinqToDB.Expressions
 	using Common.Internal;
 	using Extensions;
 	using Linq;
+	using Internal;
 	using Mapping;
 
 	/// <summary>
@@ -201,7 +202,7 @@ namespace LinqToDB.Expressions
 				MemberCache.GetMemberInfo(method.Method).IsQueryable;
 		}
 
-		public static bool IsAsyncExtension(this MethodCallExpression method, bool enumerable = true)
+		public static bool IsAsyncExtension(this MethodCallExpression method)
 		{
 			var type = method.Method.DeclaringType;
 

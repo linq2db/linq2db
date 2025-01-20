@@ -4,6 +4,7 @@ using System.Linq.Expressions;
 using System.Threading.Tasks;
 using FluentAssertions;
 using LinqToDB;
+using LinqToDB.Linq;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
@@ -122,7 +123,6 @@ namespace Tests.Linq
 					Where(c => c.ChildID != 1032));
 		}
 
-		[ActiveIssue("https://github.com/ClickHouse/ClickHouse/issues/23194", Configuration = TestProvName.AllClickHouse)]
 		[Test]
 		public void Concat5([DataSources(TestProvName.AllInformix)] string context)
 		{
@@ -137,7 +137,6 @@ namespace Tests.Linq
 					Where(c => c.ChildID != 1032));
 		}
 
-		[ActiveIssue("https://github.com/ClickHouse/ClickHouse/issues/23194", Configuration = TestProvName.AllClickHouse)]
 		[Test]
 		public void Concat501([DataSources(TestProvName.AllInformix)] string context)
 		{
@@ -242,7 +241,6 @@ namespace Tests.Linq
 					db.Child. Select(c => new { ID1 = c.ParentID, ID2 = c.ParentID + 1, ID3 = c.ChildID,  })));
 		}
 
-		[ActiveIssue("https://github.com/linq2db/linq2db/issues/3360", Configuration = TestProvName.AllClickHouse)]
 		[Test]
 		public void Concat851([DataSources] string context)
 		{
@@ -298,7 +296,6 @@ namespace Tests.Linq
 					db.Parent.Select(c => new Parent { ParentID = c.ParentID, Value1   = c.Value1   })));
 		}
 
-		[ActiveIssue("https://github.com/linq2db/linq2db/issues/3360", Configuration = TestProvName.AllClickHouse)]
 		[Test]
 		public void Concat89([DataSources(TestProvName.AllInformix)] string context)
 		{
@@ -524,6 +521,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllAccess, TestProvName.AllSybase, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
 		public void Union54([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
@@ -550,6 +548,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllAccess, TestProvName.AllSybase, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
 		public void Union541([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -689,10 +688,7 @@ namespace Tests.Linq
 
 				var q = q1.Union(q2).Take(5);
 
-				foreach (var item in q)
-				{
-					TestContext.WriteLine(item);
-				}
+				q.ToArray();
 			}
 		}
 
@@ -700,40 +696,35 @@ namespace Tests.Linq
 		public class TestEntity2 { public int Id; public string? Field1; }
 
 		[Test]
-		public void Concat90()
+		public void Concat90([DataSources] string context)
 		{
-			using(var context = new DataConnection())
-			{
-				var join1 =
-					from t1 in context.GetTable<TestEntity1>()
-					join t2 in context.GetTable<TestEntity2>()
+			using var db = GetDataContext(context);
+			using var tb1 = db.CreateLocalTable<TestEntity1>();
+			using var tb2 = db.CreateLocalTable<TestEntity2>();
+			var join1 =
+					from t1 in db.GetTable<TestEntity1>()
+					join t2 in db.GetTable<TestEntity2>()
 						on t1.Id equals t2.Id
 					into tmp
 					from t2 in tmp.DefaultIfEmpty()
 					select new { t1, t2 };
 
-				var join1Sql = join1.ToString();
-				Assert.That(join1Sql, Is.Not.Null);
+			join1.ToArray();
 
-				var join2 =
-					from t2 in context.GetTable<TestEntity2>()
-					join t1 in context.GetTable<TestEntity1>()
+			var join2 =
+					from t2 in db.GetTable<TestEntity2>()
+					join t1 in db.GetTable<TestEntity1>()
 						on t2.Id equals t1.Id
 					into tmp
 					from t1 in tmp.DefaultIfEmpty()
 					where t1 == null
 					select new { t1, t2 };
 
-				var join2Sql = join2.ToString();
-				Assert.That(join2Sql, Is.Not.Null);
+			join2.ToArray();
 
-				var fullJoin = join1.Concat(join2);
+			var fullJoin = join1.Concat(join2);
 
-				var fullJoinSql = fullJoin.ToString(); // BLToolkit.Data.Linq.LinqException : Types in Concat are constructed incompatibly.
-				Assert.That(fullJoinSql, Is.Not.Null);
-
-				TestContext.Write(fullJoinSql);
-			}
+			fullJoin.ToArray();
 		}
 
 		[Test]
@@ -806,6 +797,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSybase, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
 		public void ConcatDefaultIfEmpty([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
@@ -968,6 +960,41 @@ namespace Tests.Linq
 			}
 		}
 
+		[Test]
+		public void ConcatConditions([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				var query1 =
+					from c in db.Child
+					from p in db.Parent.Where(p => p.ParentID == c.ParentID).DefaultIfEmpty()
+					select new
+					{
+						Parent1 = Sql.ToNullable(p.ParentID) == null
+							? null
+							: new { ParentID = p.ParentID, Value1 = p.Value1 },
+						Parent2 = Sql.ToNullable(p.ParentID) == null
+							? null
+							: new Parent { ParentID = p.ParentID, Value1 = p.Value1, Children = p.Children.ToList() }
+					};
+
+				var query2 =
+					from c in db.Child
+					from p in db.Parent.Where(p => p.ParentID == c.ParentID).DefaultIfEmpty()
+					select new
+					{
+						Parent1 = Sql.ToNullable(p.ParentID) == null
+							? null
+							: new { ParentID = p.ParentID, Value1 = p.Value1 },
+						Parent2 = (Parent?)null
+					};
+
+				var query = query1.Concat(query2);
+
+				AssertQuery(query);
+			}
+		}
+
 		[Table("ConcatTest")]
 		[InheritanceMapping(Code = 0, Type = typeof(BaseEntity), IsDefault = true)]
 		[InheritanceMapping(Code = 1, Type = typeof(DerivedEntity))]
@@ -987,7 +1014,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestConcatInheritance([IncludeDataSources(TestProvName.AllSQLiteClassic, TestProvName.AllClickHouse)] string context)
+		public void TestConcatInheritance1([IncludeDataSources(TestProvName.AllSQLiteClassic, TestProvName.AllClickHouse)] string context)
 		{
 			var testData = new[]
 			{
@@ -1007,13 +1034,71 @@ namespace Tests.Linq
 					.Concat(db.GetTable<BaseEntity>().OfType<DerivedEntity>())
 					.ToArray();
 
+				var expected = testData.OfType<BaseEntity>()
+					.Concat(testData.OfType<DerivedEntity>())
+					.ToArray();
+
+				AreEqualWithComparer(expected, result);
+			}
+		}
+
+		[ActiveIssue("type !=/== type parsing is not supported currently")]
+		[Test]
+		public void TestConcatInheritance2([IncludeDataSources(TestProvName.AllSQLiteClassic, TestProvName.AllClickHouse)] string context)
+		{
+			var testData = new[]
+			{
+				new BaseEntity { Discr = 0, EntityId = 1, Value = "VBase1" },
+				new BaseEntity { Discr = 0, EntityId = 2, Value = "VBase2" },
+				new BaseEntity { Discr = 0, EntityId = 3, Value = "VBase3" },
+
+				new DerivedEntity { Discr = 1, EntityId = 10, Value = "Derived1" },
+				new DerivedEntity { Discr = 1, EntityId = 20, Value = "Derived2" },
+				new DerivedEntity { Discr = 1, EntityId = 30, Value = "Derived3" }
+			};
+
+			using (var db = GetDataContext(context))
+			using (db.CreateLocalTable(testData))
+			{
+				var result = db.GetTable<BaseEntity>().Where(t => t.GetType() == typeof(BaseEntity))
+					.Concat(db.GetTable<BaseEntity>().OfType<DerivedEntity>())
+					.ToArray();
+
 				var expected = testData.Where(t => t.GetType() == typeof(BaseEntity))
 					.Concat(testData.OfType<DerivedEntity>())
 					.ToArray();
 
 				AreEqualWithComparer(expected, result);
 			}
+		}
 
+		[Test]
+		public void TestConcatInheritance3([IncludeDataSources(TestProvName.AllSQLiteClassic, TestProvName.AllClickHouse)] string context)
+		{
+			var testData = new[]
+			{
+				new BaseEntity { Discr = 0, EntityId = 1, Value = "VBase1" },
+				new BaseEntity { Discr = 0, EntityId = 2, Value = "VBase2" },
+				new BaseEntity { Discr = 0, EntityId = 3, Value = "VBase3" },
+
+				new DerivedEntity { Discr = 1, EntityId = 10, Value = "Derived1" },
+				new DerivedEntity { Discr = 1, EntityId = 20, Value = "Derived2" },
+				new DerivedEntity { Discr = 1, EntityId = 30, Value = "Derived3" }
+			};
+
+			using (var db = GetDataContext(context))
+			using (db.CreateLocalTable(testData))
+			{
+				var result = db.GetTable<BaseEntity>().Where(t => t.Discr == 0)
+					.Concat(db.GetTable<BaseEntity>().OfType<DerivedEntity>())
+					.ToArray();
+
+				var expected = testData.Where(t => t.GetType() == typeof(BaseEntity))
+					.Concat(testData.OfType<DerivedEntity>())
+					.ToArray();
+
+				AreEqualWithComparer(expected, result);
+			}
 		}
 
 		[Test]
@@ -1136,6 +1221,33 @@ namespace Tests.Linq
 				select new {a = db.Child.Any(), b = (bool?)null};
 
 			var query = query1.UnionAll(query2);
+
+			query.Invoking(q => q.ToList()).Should().NotThrow();
+		}
+
+		[Test]
+		public void SelectWithToString([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query1 = 
+				from x in db.Parent
+				select new
+				{
+					StrValue = x.Value1.ToString()
+				};
+
+			var query2 = 
+				from x in db.Parent
+				from c in x.Children
+				select new
+				{
+					StrValue = c.Parent1!.Value1!.ToString()
+				};
+
+			var query = query1.Concat(query2);
+
+			query = query.Where(x => x.StrValue != null);
 
 			query.Invoking(q => q.ToList()).Should().NotThrow();
 		}
@@ -1392,6 +1504,278 @@ namespace Tests.Linq
 		}
 
 		[Table]
+		private class Issue3360Table
+		{
+			[PrimaryKey                         ] public int     Id  { get; set; }
+			// by default we generate N-literal, which is not compatible with (var)char
+			[Column(DataType = DataType.VarChar)] public string? Str { get; set; }
+		}
+
+		[Test(Description = "Test that we type literal/parameter in set query column properly")]
+		public void Issue3360_TypeByOtherQuery([IncludeDataSources(true, TestProvName.AllSqlServer)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable<Issue3360Table>();
+
+			var query1 = tb.Select(p => new { p.Id, p.Str                });
+			var query2 = tb.Select(p => new { p.Id, Str = (string?)"str" });
+
+			query1.Concat(query2).ToArray();
+			if (db is TestDataConnection dc1)
+				dc1.LastQuery!.Should().NotContain("N'");
+
+			query2.Concat(query1).ToArray();
+			if (db is TestDataConnection dc2)
+				dc2.LastQuery!.Should().NotContain("N'");
+		}
+
+		[ActiveIssue(Configurations = [TestProvName.AllDB2])]
+		[Test(Description = "Test that we type literal/parameter in set query column properly")]
+		public void Issue3360_TypeByOtherQuery_AllProviders([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable<Issue3360Table>();
+
+			var query1 = tb.Select(p => new { p.Id, p.Str                });
+			var query2 = tb.Select(p => new { p.Id, Str = (string?)"str" });
+
+			query1.Concat(query2).ToArray();
+			query2.Concat(query1).ToArray();
+		}
+
+		[Test(Description = "Test that we type literal/parameter in set query column properly")]
+		public void Issue3360_TypeByProjectionProperty([IncludeDataSources(true, TestProvName.AllSqlServer)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable<Issue3360Table>();
+
+			var query1 = tb.Select(p => new Issue3360Table() { Id = p.Id, Str = (string?)"str1" });
+			var query2 = tb.Select(p => new Issue3360Table() { Id = p.Id, Str = (string?)"str2" });
+
+			query1.Concat(query2).ToArray();
+			if (db is TestDataConnection dc1)
+				dc1.LastQuery!.Should().NotContain("N'");
+
+			query2.Concat(query1).ToArray();
+			if (db is TestDataConnection dc2)
+				dc2.LastQuery!.Should().NotContain("N'");
+		}
+
+		[ActiveIssue(Configurations = [TestProvName.AllDB2])]
+		[Test(Description = "Test that non-sqlserver providers work too")]
+		public void Issue3360_TypeByProjectionProperty_AllProviders([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable<Issue3360Table>();
+
+			var query1 = tb.Select(p => new Issue3360Table() { Id = p.Id, Str = (string?)"str1" });
+			var query2 = tb.Select(p => new Issue3360Table() { Id = p.Id, Str = (string?)"str2" });
+
+			query1.Concat(query2).ToArray();
+			query2.Concat(query1).ToArray();
+		}
+
+		public enum InvalidColumnIndexMappingEnum1
+		{
+			[MapValue("ENUM1_VALUE")]
+			Value
+		}
+
+		public enum InvalidColumnIndexMappingEnum2
+		{
+			[MapValue("ENUM2_VALUE")]
+			Value
+		}
+
+		[Table]
+		public class Issue3360Table1
+		{
+			[PrimaryKey] public int                             Id    { get; set; }
+			[Column    ] public byte                            Byte  { get; set; }
+			[Column    ] public byte?                           ByteN { get; set; }
+			[Column]
+			[Column    ] public Guid                            Guid  { get; set; }
+			[Column    ] public Guid?                           GuidN { get; set; }
+			[Column    ] public InvalidColumnIndexMappingEnum1  Enum  { get; set; }
+			[Column    ] public InvalidColumnIndexMappingEnum2? EnumN { get; set; }
+			[Column    ] public bool                            Bool  { get; set; }
+			[Column    ] public bool?                           BoolN { get; set; }
+
+			public static Issue3360Table1[] Items = new[]
+			{
+				new Issue3360Table1() { Id = 1 },
+				new Issue3360Table1() { Id = 2, Byte = 1, ByteN = 2, Guid = TestData.Guid1, GuidN = TestData.Guid2, Enum = InvalidColumnIndexMappingEnum1.Value, EnumN = InvalidColumnIndexMappingEnum2.Value, Bool = true, BoolN = false },
+				new Issue3360Table1() { Id = 4, Byte = 3, ByteN = 4, Guid = TestData.Guid3, GuidN = TestData.Guid1, Enum = InvalidColumnIndexMappingEnum1.Value, EnumN = InvalidColumnIndexMappingEnum2.Value, Bool = false, BoolN = true },
+			};
+		}
+
+		private record Issue3360NullsRecord(int Id, byte? Byte, byte? ByteN, Guid? Guid, Guid? GuidN, InvalidColumnIndexMappingEnum1? Enum, InvalidColumnIndexMappingEnum2? EnumN, bool? Bool, bool? BoolN);
+
+		[ActiveIssue(Configuration = TestProvName.AllSybase, Details = "Update BoolN handling for sybase")]
+		[Test(Description = "null literals in first query")]
+		public void Issue3360_NullsInAnchor([DataSources] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(Issue3360Table1.Items);
+
+			var query = table.Where(r => r.Id == 1)
+				.Select(r => new Issue3360NullsRecord(r.Id, null, null, null, null, null, null, null, null))
+				.Concat(
+					table.Where(r => r.Id == 2)
+						.Select(r => new Issue3360NullsRecord(r.Id, r.Byte, r.ByteN, r.Guid, r.GuidN, r.Enum, r.EnumN, r.Bool, r.BoolN)))
+				.OrderBy(r => r.Id);
+
+			var data = query.ToArray();
+
+			Assert.That(data, Has.Length.EqualTo(2));
+
+			Assert.Multiple(() =>
+			{
+				Assert.That(data[0].Id, Is.EqualTo(1));
+				Assert.That(data[0].Byte, Is.Null);
+				Assert.That(data[0].ByteN, Is.Null);
+				Assert.That(data[0].Guid, Is.Null);
+				Assert.That(data[0].GuidN, Is.Null);
+				Assert.That(data[0].Enum, Is.Null);
+				Assert.That(data[0].EnumN, Is.Null);
+				Assert.That(data[0].Bool, Is.Null);
+			});
+			if (!context.IsAnyOf(TestProvName.AllSybase))
+				Assert.That(data[0].BoolN, Is.Null);
+
+			Assert.Multiple(() =>
+			{
+				Assert.That(data[1].Id, Is.EqualTo(2));
+				Assert.That(data[1].Byte, Is.EqualTo(1));
+				Assert.That(data[1].ByteN, Is.EqualTo(2));
+				Assert.That(data[1].Guid, Is.EqualTo(TestData.Guid1));
+				Assert.That(data[1].GuidN, Is.EqualTo(TestData.Guid2));
+				Assert.That(data[1].Enum, Is.EqualTo(InvalidColumnIndexMappingEnum1.Value));
+				Assert.That(data[1].EnumN, Is.EqualTo(InvalidColumnIndexMappingEnum2.Value));
+				Assert.That(data[1].Bool, Is.EqualTo(true));
+				Assert.That(data[1].BoolN, Is.EqualTo(false));
+			});
+		}
+
+		[ActiveIssue(Configuration = TestProvName.AllSybase, Details = "Update BoolN handling for sybase")]
+		[Test(Description = "double columns in first query")]
+		public void Issue3360_DoubleColumnSelection([DataSources] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(Issue3360Table1.Items);
+
+			var query = table.Where(r => r.Id == 2)
+				.Select(r => new Issue3360NullsRecord(r.Id, r.Byte, r.Byte, r.Guid, r.Guid, null, null, r.Bool, r.Bool))
+				.Concat(
+					table.Where(r => r.Id == 4)
+						.Select(r => new Issue3360NullsRecord(r.Id, r.Byte, r.ByteN, r.Guid, r.GuidN, r.Enum, r.EnumN, r.Bool, r.BoolN)))
+				.OrderBy(r => r.Id);
+
+			var data = query.ToArray();
+
+			Assert.That(data, Has.Length.EqualTo(2));
+
+			Assert.Multiple(() =>
+			{
+				Assert.That(data[0].Id, Is.EqualTo(2));
+				Assert.That(data[0].Byte, Is.EqualTo(1));
+				Assert.That(data[0].ByteN, Is.EqualTo(1));
+				Assert.That(data[0].Guid, Is.EqualTo(TestData.Guid1));
+				Assert.That(data[0].GuidN, Is.EqualTo(TestData.Guid1));
+				Assert.That(data[0].Enum, Is.Null);
+				Assert.That(data[0].EnumN, Is.Null);
+				Assert.That(data[0].Bool, Is.EqualTo(true));
+				Assert.That(data[0].BoolN, Is.EqualTo(true));
+
+				Assert.That(data[1].Id, Is.EqualTo(4));
+				Assert.That(data[1].Byte, Is.EqualTo(3));
+				Assert.That(data[1].ByteN, Is.EqualTo(4));
+				Assert.That(data[1].Guid, Is.EqualTo(TestData.Guid3));
+				Assert.That(data[1].GuidN, Is.EqualTo(TestData.Guid1));
+				Assert.That(data[1].Enum, Is.EqualTo(InvalidColumnIndexMappingEnum1.Value));
+				Assert.That(data[1].EnumN, Is.EqualTo(InvalidColumnIndexMappingEnum2.Value));
+				Assert.That(data[1].Bool, Is.EqualTo(false));
+				Assert.That(data[1].BoolN, Is.EqualTo(true));
+			});
+		}
+
+		[ActiveIssue(Configurations = [TestProvName.AllSybase, TestProvName.AllSQLite])]
+		[Test(Description = "null literals in first query")]
+		public void Issue3360_LiteralsInFirstQuery([DataSources] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var table = db.CreateLocalTable(Issue3360Table1.Items);
+
+			var query = table.Where(r => r.Id == 2)
+				.Select(r => new Issue3360NullsRecord(r.Id, 5, 5, new Guid("0B8AFE27-481C-442E-B8CF-729DDFEECE29"), new Guid("0B8AFE27-481C-442E-B8CF-729DDFEECE30"), InvalidColumnIndexMappingEnum1.Value, InvalidColumnIndexMappingEnum2.Value, true, false))
+				.Concat(
+					table.Where(r => r.Id == 4)
+						.Select(r => new Issue3360NullsRecord(r.Id, r.Byte, r.ByteN, r.Guid, r.GuidN, r.Enum, r.EnumN, r.Bool, r.BoolN)))
+				.OrderBy(r => r.Id);
+
+			var data = query.ToArray();
+
+			Assert.That(data, Has.Length.EqualTo(2));
+
+			Assert.Multiple(() =>
+			{
+				Assert.That(data[0].Id, Is.EqualTo(2));
+				Assert.That(data[0].Byte, Is.EqualTo(5));
+				Assert.That(data[0].ByteN, Is.EqualTo(5));
+				Assert.That(data[0].Guid, Is.EqualTo(new Guid("0B8AFE27-481C-442E-B8CF-729DDFEECE29")));
+				Assert.That(data[0].GuidN, Is.EqualTo(new Guid("0B8AFE27-481C-442E-B8CF-729DDFEECE30")));
+				Assert.That(data[0].Enum, Is.EqualTo(InvalidColumnIndexMappingEnum1.Value));
+				Assert.That(data[0].EnumN, Is.EqualTo(InvalidColumnIndexMappingEnum2.Value));
+				Assert.That(data[0].Bool, Is.EqualTo(true));
+				Assert.That(data[0].BoolN, Is.EqualTo(false));
+
+				Assert.That(data[1].Id, Is.EqualTo(4));
+				Assert.That(data[1].Byte, Is.EqualTo(3));
+				Assert.That(data[1].ByteN, Is.EqualTo(4));
+				Assert.That(data[1].Guid, Is.EqualTo(TestData.Guid3));
+				Assert.That(data[1].GuidN, Is.EqualTo(TestData.Guid1));
+				Assert.That(data[1].Enum, Is.EqualTo(InvalidColumnIndexMappingEnum1.Value));
+				Assert.That(data[1].EnumN, Is.EqualTo(InvalidColumnIndexMappingEnum2.Value));
+				Assert.That(data[1].Bool, Is.EqualTo(false));
+				Assert.That(data[1].BoolN, Is.EqualTo(true));
+			});
+		}
+
+
+		[Test(Description = "Test that we type non-field union column properly")]
+		public void Issue2451_ComplexColumn([IncludeDataSources(true, TestProvName.AllSqlServer)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query1 = db.Person.Select(p => new Person() { FirstName = p.FirstName });
+			var query2 = db.Person.Select(p => new Person() { FirstName = p.FirstName + '/' + p.LastName });
+
+			query1.Concat(query2).ToArray();
+
+			// too many things is wrong here:
+			// [p].[FirstName] + Convert(VarChar(4000), N'/') + [p].[LastName]
+			// 1. why we cast N-literal to varchar instead of varchar literal generation
+			// 2. why we even mention varchar in expression with N-columns only
+			if (db is TestDataConnection dc1)
+				dc1.LastQuery!.Should().NotContain("Convert(VarChar");
+			query2.Concat(query1).ToArray();
+			if (db is TestDataConnection dc2)
+				dc2.LastQuery!.Should().NotContain("Convert(VarChar");
+		}
+
+		[Test(Description = "Test that other providers work")]
+		public void Issue2451_ComplexColumn_All([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query1 = db.Person.Select(p => new Person() { FirstName = p.FirstName });
+			var query2 = db.Person.Select(p => new Person() { FirstName = p.FirstName + '/' + p.LastName });
+
+			query1.Concat(query2).ToArray();
+			query2.Concat(query1).ToArray();
+		}
+
+		[Table]
 		[Column(MemberName = $"{nameof(Name)}.{nameof(FullName.FirstName)}")]
 		[Column(MemberName = $"{nameof(Name)}.{nameof(FullName.LastName)}")]
 		public class ComplexPerson
@@ -1522,7 +1906,7 @@ namespace Tests.Linq
 				.OrderBy(i => i.ID))
 				.Union((from item in db.Person select item));
 
-			var sql = query.ToString()!;
+			var sql = query.ToSqlQuery().Sql;
 
 			sql.Should().NotContain("ORDER BY");
 
@@ -1538,7 +1922,7 @@ namespace Tests.Linq
 				.Union((from item in db.Person select item)
 				.OrderBy(i => i.ID));
 
-			var sql = query.ToString()!;
+			var sql = query.ToSqlQuery().Sql;
 
 			sql.Should().NotContain("ORDER BY");
 
@@ -1555,7 +1939,7 @@ namespace Tests.Linq
 				.OrderBy(i => i.ID))
 				.UnionAll((from item in db.Person select item));
 
-			var sql = query.ToString()!;
+			var sql = query.ToSqlQuery().Sql;
 
 			sql.Should().Contain("ORDER BY", Exactly.Once());
 			sql.Substring(sql.IndexOf("ORDER BY")).Should().Contain("UNION", Exactly.Once());
@@ -1573,7 +1957,7 @@ namespace Tests.Linq
 				.UnionAll((from item in db.Person select item)
 				.OrderBy(i => i.ID));
 
-			var sql = query.ToString()!;
+			var sql = query.ToSqlQuery().Sql;
 
 			sql.Should().Contain("ORDER BY", Exactly.Once());
 			sql.Should().Contain("UNION", Exactly.Once());
@@ -1805,9 +2189,6 @@ namespace Tests.Linq
 			}
 		}
 
-		// ClickHouse developers themself doesn't know how their aliases work, so there will be no workaround
-		// from our side. User should use names carefully in queries
-		[ActiveIssue("https://github.com/ClickHouse/ClickHouse/issues/23194", Configuration = TestProvName.AllClickHouse)]
 		[Test]
 		public void Issue3369Test([DataSources] string context)
 		{
@@ -1863,5 +2244,239 @@ namespace Tests.Linq
 
 			resultingQuery.ToList();
 		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4225")]
+		public void Issue4225Test1([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query1 = db.Person.Select(x => new
+			{
+				person = (Person?)x,
+				patient = (Patient?)null
+			});
+			var query2 = db.Patient.Select(x => new
+			{
+				person = (Person?)null,
+				patient = (Patient?)x
+			});
+
+			var q = query1.UnionAll(query2).ToList();
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4225")]
+		public void Issue4225Test2([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query1 = db.Person.Select(x => new
+			{
+				person = x,
+				patient = (Patient?)null!
+			});
+			var query2 = db.Patient.Select(x => new
+			{
+				person = (Person?)null!,
+				patient = x
+			});
+
+			var q = query1.UnionAll(query2).ToList();
+		}
+
+		#region Issue 4220
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4220")]
+		public void Issue4220Test([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var ta = db.CreateLocalTable<ConcreteA>();
+			using var tb = db.CreateLocalTable<ConcreteB>();
+
+			db.Insert(new ConcreteA { Id = 1, AOnly = "a only" });
+			db.Insert(new ConcreteB { Id = 2, BOnly = "b only" });
+
+			var result = ta.Select(e => new { A = (ConcreteA?)e, B = (ConcreteB?)null })
+				.UnionAll(tb.Select(e => new { A = (ConcreteA?)null, B = (ConcreteB?)e }))
+				.ToArray()
+				.Select(e => (Abstr?)e.A ?? e.B)
+				.OrderBy(e => e!.Id)
+				.ToArray()!;
+
+			Assert.That(result, Has.Length.EqualTo(2));
+
+			Assert.Multiple(() =>
+			{
+				Assert.That(result[0]!.Id, Is.EqualTo(1));
+				Assert.That(result[0], Is.InstanceOf<ConcreteA>());
+				Assert.That(((ConcreteA)result[0]!).AOnly, Is.EqualTo("a only"));
+
+				Assert.That(result[1]!.Id, Is.EqualTo(2));
+				Assert.That(result[1], Is.InstanceOf<ConcreteB>());
+				Assert.That(((ConcreteB)result[1]!).BOnly, Is.EqualTo("b only"));
+			});
+		}
+
+		record Abstr
+		{
+			[PrimaryKey] public int Id { get; set; }
+		}
+
+		[Table]
+		sealed record ConcreteA : Abstr
+		{
+			[Column] public string? AOnly { get; set; }
+		}
+
+		[Table]
+		sealed record ConcreteB : Abstr
+		{
+			[Column] public string? BOnly { get; set; }
+		}
+		#endregion
+
+		#region Issue 4620
+		class Issue4620Client
+		{
+			public int Id { get; set; }
+			public string? Name { get; set; }
+
+			public static readonly Issue4620Client[] Data =
+			[
+				new Issue4620Client() { Id = 1, Name = "Client 1" },
+				new Issue4620Client() { Id = 2, Name = "Client 2" },
+			];
+		}
+
+		class Issue4620Contract
+		{
+			public int Id { get; set; }
+			public int IdClient { get; set; }
+
+			public static readonly Issue4620Contract[] Data =
+			[
+				new Issue4620Contract() { Id = 1, IdClient = 1 },
+				new Issue4620Contract() { Id = 2, IdClient = 2 },
+			];
+		}
+
+		[Table("Issue4620Table")]
+		class Issue4620Bill
+		{
+			[Column] public int Id { get; set; }
+
+			// either IdContract or IdClient will be null
+			[Column] public int? IdContract { get; set; }
+			[Column] public int? IdClient { get; set; }
+
+			[Column] public decimal Sum { get; set; }
+
+			public static readonly Issue4620Bill[] Data =
+			[
+				new Issue4620Bill() { Id = 1, IdClient = 1, IdContract = null },
+				new Issue4620Bill() { Id = 2, IdClient = null, IdContract = 2 },
+				new Issue4620Bill() { Id = 3 },
+				new Issue4620Bill() { Id = 4, IdClient = 1, IdContract = 2 },
+			];
+		}
+
+		interface Issue4620IBill
+		{
+			int Id { get; set; }
+			int? IdContract { get; set; }
+			int? IdClient { get; set; }
+			decimal Sum { get; set; }
+		}
+
+		interface Issue4620IBillWithClient : Issue4620IBill
+		{
+			public Issue4620Client Client { get; set; }
+		}
+
+		class Issue4620BillWithClient : Issue4620Bill
+		{
+			public Issue4620Client Client { get; set; } = null!;
+		}
+
+		[Table("Issue4620Table")]
+		class Issue4620LegacyBill : Issue4620Bill, Issue4620IBillWithClient
+		{
+			[Association(ThisKey = nameof(IdClient), OtherKey = nameof(Client.Id), CanBeNull = false)]
+			public Issue4620Client Client { get; set; } = null!;
+		}
+
+		[Table("Issue4620Table")]
+		class Issue4620ModernBill : Issue4620Bill, Issue4620IBillWithClient
+		{
+			[Association(ThisKey = nameof(IdContract), OtherKey = nameof(Contract.Id), CanBeNull = false)]
+			public Issue4620Contract Contract { get; set; } = null!;
+
+			[Association(ExpressionPredicate = nameof(ModernBill_Client_Expr), CanBeNull = false)]
+			public Issue4620Client Client { get; set; } = null!;
+
+			static Expression<Func<Issue4620ModernBill, Issue4620Client, bool>> ModernBill_Client_Expr
+				=> (b, cl) => b.Contract.IdClient == cl.Id;
+		}
+
+		[ActiveIssue]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4620")]
+		public void Issue4620Test1([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var _ = db.CreateLocalTable(Issue4620Bill.Data);
+			using var t1 = db.CreateLocalTable(Issue4620Client.Data);
+			using var t2 = db.CreateLocalTable(Issue4620Contract.Data);
+
+			var union = db.GetTable<Issue4620LegacyBill>().Where(b => b.IdClient != null)
+				.UnionAll<Issue4620IBillWithClient>(
+					db.GetTable<Issue4620ModernBill>().Where(b => b.IdContract != null));
+
+			var result = union.Select(b => new { Id = b.Id, b.Client.Name }).OrderBy(r => r.Id).ThenBy(r => r.Name).ToArray();
+
+			Assert.That(result, Has.Length.EqualTo(4));
+			Assert.Multiple(() =>
+			{
+				Assert.That(result[0].Id, Is.EqualTo(1));
+				Assert.That(result[0].Name, Is.EqualTo("Client 1"));
+				Assert.That(result[1].Id, Is.EqualTo(2));
+				Assert.That(result[1].Name, Is.EqualTo("Client 2"));
+				Assert.That(result[2].Id, Is.EqualTo(4));
+				Assert.That(result[2].Name, Is.EqualTo("Client 1"));
+				Assert.That(result[3].Id, Is.EqualTo(4));
+				Assert.That(result[3].Name, Is.EqualTo("Client 2"));
+			});
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4620")]
+		public void Issue4620Test2([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var _ = db.CreateLocalTable(Issue4620Bill.Data);
+			using var t1 = db.CreateLocalTable(Issue4620Client.Data);
+			using var t2 = db.CreateLocalTable(Issue4620Contract.Data);
+
+			var union = db
+					.GetTable<Issue4620LegacyBill>()
+					.Where(b => b.IdClient != null)
+					.Select(b => new Issue4620BillWithClient { Id = b.Id, IdClient = b.IdClient, IdContract = b.IdContract, Sum = b.Sum, Client = b.Client })
+				.UnionAll<Issue4620BillWithClient>(
+					db.GetTable<Issue4620ModernBill>()
+					.Where(b => b.IdContract != null)
+					.Select(b => new Issue4620BillWithClient { Id = b.Id, IdClient = b.IdClient, IdContract = b.IdContract, Sum = b.Sum, Client = b.Client }));
+
+			var result = union.Select(b => new { Id = b.Id, b.Client.Name }).OrderBy(r => r.Id).ThenBy(r => r.Name).ToArray();
+
+			Assert.That(result, Has.Length.EqualTo(4));
+			Assert.Multiple(() =>
+			{
+				Assert.That(result[0].Id, Is.EqualTo(1));
+				Assert.That(result[0].Name, Is.EqualTo("Client 1"));
+				Assert.That(result[1].Id, Is.EqualTo(2));
+				Assert.That(result[1].Name, Is.EqualTo("Client 2"));
+				Assert.That(result[2].Id, Is.EqualTo(4));
+				Assert.That(result[2].Name, Is.EqualTo("Client 1"));
+				Assert.That(result[3].Id, Is.EqualTo(4));
+				Assert.That(result[3].Name, Is.EqualTo("Client 2"));
+			});
+		}
+		#endregion
 	}
 }

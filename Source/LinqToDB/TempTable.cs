@@ -311,7 +311,7 @@ namespace LinqToDB
 
 			return new TempTable<T>(await db
 				.CreateTableAsync<T>(tableDescriptor, tableName, databaseName, schemaName, serverName: serverName, tableOptions: tableOptions, token: cancellationToken)
-				.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext),
+				.ConfigureAwait(false),
 				tableDescriptor);
 		}
 
@@ -395,18 +395,18 @@ namespace LinqToDB
 			CancellationToken cancellationToken)
 		{
 			var table = await CreateAsync(db, tableDescriptor, tableName, databaseName, schemaName, serverName, tableOptions, cancellationToken)
-				.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+				.ConfigureAwait(false);
 
 			try
 			{
 				await table.CopyAsync(items, options, cancellationToken)
-					.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+					.ConfigureAwait(false);
 			}
 			catch
 			{
 				try
 				{
-					await table.DisposeAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+					await table.DisposeAsync().ConfigureAwait(false);
 				}
 				catch
 				{
@@ -474,22 +474,22 @@ namespace LinqToDB
 			CancellationToken     cancellationToken)
 		{
 			var table = await CreateAsync(db, tableDescriptor, tableName, databaseName, schemaName, serverName, tableOptions, cancellationToken)
-				.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+				.ConfigureAwait(false);
 
 			try
 			{
 				if (action != null)
 					await action(table)
-						.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+						.ConfigureAwait(false);
 
 				await table.InsertAsync(items, cancellationToken)
-					.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+					.ConfigureAwait(false);
 			}
 			catch
 			{
 				try
 				{
-					await table.DisposeAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+					await table.DisposeAsync().ConfigureAwait(false);
 				}
 				catch
 				{
@@ -554,8 +554,8 @@ namespace LinqToDB
 		public async Task<long> CopyAsync(IEnumerable<T> items, BulkCopyOptions? options = null, CancellationToken cancellationToken = default)
 		{
 			var count = options != null ?
-				await _table.BulkCopyAsync(options, items, cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext) :
-				await _table.BulkCopyAsync(items, cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+				await _table.BulkCopyAsync(options, items, cancellationToken).ConfigureAwait(false) :
+				await _table.BulkCopyAsync(items, cancellationToken).ConfigureAwait(false);
 
 			TotalCopied += count.RowsCopied;
 
@@ -590,7 +590,7 @@ namespace LinqToDB
 		{
 			var l = GenerateInsertSetter(items ?? throw new ArgumentNullException(nameof(items)));
 
-			var count = await items.InsertAsync(_table, l, cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+			var count = await items.InsertAsync(_table, l, cancellationToken).ConfigureAwait(false);
 
 			TotalCopied += count;
 
@@ -699,6 +699,7 @@ namespace LinqToDB
 			return _table.ExecuteAsyncEnumerable<TResult>(expression, cancellationToken);
 		}
 
+		Expression IQueryProviderAsync.Expression => ((IQueryable)_table).Expression;
 		#endregion
 
 		#region IExpressionQuery<T>
@@ -714,8 +715,8 @@ namespace LinqToDB
 		/// </summary>
 		public IDataContext DataContext => _table.DataContext;
 
-		string       IExpressionQuery.SqlText    => _table.SqlText;
-		Expression   IExpressionQuery.Expression => ((IExpressionQuery)_table).Expression;
+		IReadOnlyList<QuerySql> IExpressionQuery.GetSqlQueries(SqlGenerationOptions? options) => _table.GetSqlQueries(options);
+		Expression              IExpressionQuery.Expression                                   => ((IExpressionQuery)_table).Expression;
 
 		#endregion
 

@@ -1,5 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
+using System.Linq;
 
 namespace LinqToDB.SqlQuery
 {
@@ -9,6 +9,7 @@ namespace LinqToDB.SqlQuery
 	public class SqlQueryColumnUsageCollector : SqlQueryVisitor
 	{
 		SelectQuery?                _parentSelectQuery;
+		bool                        _isCteQuery;
 		readonly HashSet<SqlColumn> _usedColumns = new(Utils.ObjectReferenceEqualityComparer<SqlColumn>.Default);
 
 		public SqlQueryColumnUsageCollector() : base(VisitMode.ReadOnly, null)
@@ -37,11 +38,23 @@ namespace LinqToDB.SqlQuery
 			if (!_usedColumns.Add(column))
 				return;
 
+			if (column.Parent?.HasSetOperators == true)
+			{
+				var idx = column.Parent.Select.Columns.IndexOf(column);
+				if (idx >= 0)
+				{
+					foreach (var set in column.Parent.SetOperators)
+					{
+						RegisterColumn(set.SelectQuery.Select.Columns[idx]);
+					}
+				}
+			}
+
 			column.Expression.VisitParentFirst(this, (v, e) =>
 			{
-				if (e is SelectQuery selectQuery)
+				if (e is SqlSelectClause selectClause)
 				{
-					foreach(var ec in selectQuery.Select.Columns)
+					foreach(var ec in selectClause.Columns)
 					{
 						_usedColumns.Add(ec);
 					}
@@ -54,8 +67,39 @@ namespace LinqToDB.SqlQuery
 					v.RegisterColumn(c);
 				}
 
+				if (e is SqlField f && f.Table is SqlCteTable cte)
+				{
+					for (var i = 0; i < cte.Cte!.Fields.Count; i++)
+					{
+						if (cte.Cte!.Fields[i].Name == f.PhysicalName)
+						{
+							var column = cte.Cte.Body!.Select.Columns[i];
+							v.RegisterColumn(column);
+							break;
+						}
+					}
+				}
+
 				return true;
 			});
+		}
+
+		protected override IQueryElement VisitSqlFieldReference(SqlField element)
+		{
+			if (element.Table is SqlCteTable cte)
+			{
+				for (var i = 0; i < cte.Cte!.Fields.Count; i++)
+				{
+					if (cte.Cte!.Fields[i].Name == element.PhysicalName)
+					{
+						var column = cte.Cte.Body!.Select.Columns[i];
+						RegisterColumn(column);
+						break;
+					}
+				}
+			}
+
+			return element;
 		}
 
 		protected override IQueryElement VisitSqlColumnReference(SqlColumn element)
@@ -120,7 +164,17 @@ namespace LinqToDB.SqlQuery
 		{
 			base.VisitExprExprPredicate(predicate);
 
-			if (QueryHelper.UnwrapNullablity(predicate.Expr1).ElementType == QueryElementType.SqlRow && QueryHelper.UnwrapNullablity(predicate.Expr2) is SelectQuery selectQuery2)
+			var unwrapped1 = QueryHelper.UnwrapNullablity(predicate.Expr1);
+			var unwrapped2 = QueryHelper.UnwrapNullablity(predicate.Expr2);
+
+			if (unwrapped1.ElementType == QueryElementType.SqlQuery)
+			{
+				foreach (var column in ((SelectQuery)unwrapped1).Select.Columns)
+				{
+					RegisterColumn(column);
+				}
+			}
+			else if (unwrapped1.ElementType == QueryElementType.SqlRow && unwrapped2 is SelectQuery selectQuery2)
 			{
 				foreach (var column in selectQuery2.Select.Columns)
 				{
@@ -128,7 +182,14 @@ namespace LinqToDB.SqlQuery
 				}
 			}
 
-			if (QueryHelper.UnwrapNullablity(predicate.Expr2).ElementType == QueryElementType.SqlRow && QueryHelper.UnwrapNullablity(predicate.Expr1) is SelectQuery selectQuery1)
+			if (unwrapped2.ElementType == QueryElementType.SqlQuery)
+			{
+				foreach (var column in ((SelectQuery)unwrapped2).Select.Columns)
+				{
+					RegisterColumn(column);
+				}
+			}
+			else if (unwrapped2.ElementType == QueryElementType.SqlRow && unwrapped1 is SelectQuery selectQuery1)
 			{
 				foreach (var column in selectQuery1.Select.Columns)
 				{
@@ -141,11 +202,28 @@ namespace LinqToDB.SqlQuery
 
 		protected override IQueryElement VisitSqlQuery(SelectQuery selectQuery)
 		{
-			if (_parentSelectQuery == null || selectQuery.HasSetOperators || selectQuery.Select.IsDistinct || selectQuery.From.Tables.Count == 0)
+			var isCteQuery = _isCteQuery;
+			_isCteQuery    = false;
+
+			if (selectQuery.Select.IsDistinct
+				// we cannot remove unused columns for non-UNION ALL operators as it could affect result
+				|| (selectQuery.HasSetOperators && selectQuery.SetOperators.Any(o => o.Operation != SetOperation.UnionAll))
+				|| (!isCteQuery && _parentSelectQuery == null))
 			{
 				foreach (var c in selectQuery.Select.Columns)
 				{
 					RegisterColumn(c);
+				}
+
+				if (selectQuery.HasSetOperators)
+				{
+					foreach (var so in selectQuery.SetOperators)
+					{
+						foreach (var c in so.SelectQuery.Select.Columns)
+						{
+							RegisterColumn(c);
+						}
+					}
 				}
 			}
 			else
@@ -168,26 +246,27 @@ namespace LinqToDB.SqlQuery
 				}
 			}
 
-			if (selectQuery.HasSetOperators)
-			{
-				foreach (var so in selectQuery.SetOperators)
-				{
-					foreach (var c in so.SelectQuery.Select.Columns)
-					{
-						RegisterColumn(c);
-					}
-				}
-			}
-
 			var saveParentQuery = _parentSelectQuery;
 			_parentSelectQuery  = selectQuery;
 
 			base.VisitSqlQuery(selectQuery);
 
 			_parentSelectQuery  = saveParentQuery;
+			_isCteQuery         = isCteQuery;
 
 			return selectQuery;
 		}
 
+		protected override IQueryElement VisitCteClause(CteClause element)
+		{
+			var saveIsCteQuery = _isCteQuery;
+			_isCteQuery        = true;
+
+			VisitSqlQuery(element.Body!);
+
+			_isCteQuery = saveIsCteQuery;
+
+			return element;
+		}
 	}
 }

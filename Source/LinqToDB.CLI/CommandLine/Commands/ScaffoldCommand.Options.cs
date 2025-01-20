@@ -217,7 +217,7 @@ If you choose T4, you can create initial empty template using 'dotnet linq2db te
 Customization using compiled assembly has several requirements:
 - it should be compatible with current runtime, used by 'dotnet linq2db' tool;
 - assembly should contain exactly one interceptor class with customization logic. It should be inherited from {nameof(ScaffoldInterceptors)} and has default public constructor;
-- linq2db.Tools version should match tool's version to avoid possible compatibility issues/errors.",
+- linq2db.Scaffold version should match tool's version to avoid possible compatibility issues/errors.",
 					null,
 					null,
 					null,

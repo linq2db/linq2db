@@ -43,19 +43,14 @@ namespace Tests.xUpdate
 		[Test]
 		[ActiveIssue(3015, Configurations = new[]
 		{
-			TestProvName.AllAccess,
 			ProviderName.DB2,
 			TestProvName.AllFirebird,
 			TestProvName.AllInformix,
-			TestProvName.AllMySql,
 			TestProvName.AllOracle,
 			TestProvName.AllPostgreSQL,
-			ProviderName.SqlCe,
-			TestProvName.AllSQLite,
-			TestProvName.AllSapHana,
-			TestProvName.AllSybase,
+			TestProvName.AllSapHana
 		})]
-		public void MergeIntoCte([MergeDataContextSource] string context)
+		public void MergeIntoCte([MergeDataContextSource(TestProvName.AllSybase)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -87,19 +82,14 @@ namespace Tests.xUpdate
 		[Test]
 		[ActiveIssue(3015, Configurations = new[]
 		{
-			TestProvName.AllAccess,
 			ProviderName.DB2,
 			TestProvName.AllFirebird,
 			TestProvName.AllInformix,
-			TestProvName.AllMySql,
 			TestProvName.AllOracle,
 			TestProvName.AllPostgreSQL,
-			ProviderName.SqlCe,
-			TestProvName.AllSQLite,
-			TestProvName.AllSapHana,
-			TestProvName.AllSybase,
+			TestProvName.AllSapHana
 		})]
-		public void MergeIntoCteIssue4107([MergeDataContextSource] string context)
+		public void MergeIntoCteIssue4107([MergeDataContextSource(TestProvName.AllSybase)] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -148,19 +138,14 @@ namespace Tests.xUpdate
 		[Test]
 		[ActiveIssue(3015, Configurations = new[]
 		{
-			TestProvName.AllAccess,
 			ProviderName.DB2,
 			TestProvName.AllFirebird,
 			TestProvName.AllInformix,
-			TestProvName.AllMySql,
 			TestProvName.AllOracle,
 			TestProvName.AllPostgreSQL,
-			ProviderName.SqlCe,
-			TestProvName.AllSQLite,
 			TestProvName.AllSapHana,
-			TestProvName.AllSybase,
 		})]
-		public void MergeFromCte([MergeDataContextSource] string context)
+		public void MergeFromCte([MergeDataContextSource(TestProvName.AllSybase)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -192,18 +177,13 @@ namespace Tests.xUpdate
 		[Test]
 		[ActiveIssue(3015, Configurations = new[]
 		{
-			TestProvName.AllAccess,
 			ProviderName.DB2,
 			TestProvName.AllFirebird,
 			TestProvName.AllInformix,
-			TestProvName.AllMySql,
 			TestProvName.AllOracle,
-			ProviderName.SqlCe,
-			TestProvName.AllSQLite,
-			TestProvName.AllSapHana,
-			TestProvName.AllSybase,
+			TestProvName.AllSapHana
 		})]
-		public void MergeUsingCteJoin([MergeDataContextSource] string context)
+		public void MergeUsingCteJoin([MergeDataContextSource(TestProvName.AllSybase)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -235,18 +215,13 @@ namespace Tests.xUpdate
 		[Test]
 		[ActiveIssue(3015, Configurations = new[]
 		{
-			TestProvName.AllAccess,
 			ProviderName.DB2,
 			TestProvName.AllFirebird,
 			TestProvName.AllInformix,
-			TestProvName.AllMySql,
 			TestProvName.AllOracle,
-			ProviderName.SqlCe,
-			TestProvName.AllSQLite,
-			TestProvName.AllSapHana,
-			TestProvName.AllSybase,
+			TestProvName.AllSapHana
 		})]
-		public void MergeUsingCteWhere([MergeDataContextSource] string context)
+		public void MergeUsingCteWhere([MergeDataContextSource(TestProvName.AllSybase)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{

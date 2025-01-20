@@ -9,7 +9,7 @@ namespace Tests.xUpdate
 	public partial class MergeTests
 	{
 		[Test]
-		public void SameSourceUpdateBySource([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus, TestProvName.AllFirebird5Plus)] string context)
+		public void SameSourceUpdateBySource([MergeNotMatchedBySourceDataContextSource] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -64,7 +64,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void SameSourceUpdateBySourceWithPredicate([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus, TestProvName.AllFirebird5Plus)] string context)
+		public void SameSourceUpdateBySourceWithPredicate([MergeNotMatchedBySourceDataContextSource] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -115,8 +115,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void OnConditionPartialSourceProjection_KnownFieldInCondition(
-			[IncludeDataSources(true, TestProvName.AllSqlServer2008Plus, TestProvName.AllFirebird5Plus)] string context)
+		public void OnConditionPartialSourceProjection_KnownFieldInCondition([MergeNotMatchedBySourceDataContextSource] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -171,7 +170,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void OtherSourceUpdateBySourceWithPredicate([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus, TestProvName.AllFirebird5Plus)] string context)
+		public void OtherSourceUpdateBySourceWithPredicate([MergeNotMatchedBySourceDataContextSource] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -232,8 +231,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void AnonymousSourceUpdateBySourceWithPredicate(
-			[IncludeDataSources(true, TestProvName.AllSqlServer2008Plus, TestProvName.AllFirebird5Plus)] string context)
+		public void AnonymousSourceUpdateBySourceWithPredicate([MergeNotMatchedBySourceDataContextSource] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -302,8 +300,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void AnonymousListSourceUpdateBySourceWithPredicate(
-			[IncludeDataSources(true, TestProvName.AllSqlServer2008Plus, TestProvName.AllFirebird5Plus)] string context)
+		public void AnonymousListSourceUpdateBySourceWithPredicate([MergeNotMatchedBySourceDataContextSource] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -372,7 +369,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void UpdateBySourceReservedAndCaseNames([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus, TestProvName.AllFirebird5Plus)] string context)
+		public void UpdateBySourceReservedAndCaseNames([MergeNotMatchedBySourceDataContextSource] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -441,8 +438,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void UpdateBySourceReservedAndCaseNamesFromList(
-			[IncludeDataSources(true, TestProvName.AllSqlServer2008Plus, TestProvName.AllFirebird5Plus)] string context)
+		public void UpdateBySourceReservedAndCaseNamesFromList([MergeNotMatchedBySourceDataContextSource] string context)
 		{
 			using (var db = GetDataContext(context))
 			{

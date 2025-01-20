@@ -129,9 +129,7 @@ namespace Tests.Data
 			using (var conn = GetDataConnection(context))
 			{
 				conn.InlineParameters = true;
-				var sql = conn.Person.Where(p => p.ID == 1).Select(p => p.FirstName).Take(1).ToString()!;
-				sql = string.Join(Environment.NewLine, sql.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries)
-					.Where(line => !line.StartsWith("--")));
+				var sql = conn.Person.Where(p => p.ID == 1).Select(p => p.FirstName).Take(1).ToSqlQuery().Sql;
 				var res = conn.Execute<string>(sql);
 
 				Assert.That(res, Is.EqualTo("John"));
@@ -178,44 +176,35 @@ namespace Tests.Data
 		[Test]
 		public void TestGrouping1([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
-			using (new GuardGrouping(false))
-			using (new PreloadGroups(false))
-			using (var dc = new DataContext(context))
-			{
-				var dictionary = dc.GetTable<Person>()
-					.GroupBy(p => p.FirstName)
-					.ToDictionary(p => p.Key);
+			using var dc = GetDataContext(context, options => options.UseGuardGrouping(false));
 
-				var tables = dictionary.ToDictionary(p => p.Key, p => p.Value.ToList());
-			}
+			var dictionary = dc.GetTable<Person>()
+				.GroupBy(p => p.FirstName)
+				.ToDictionary(p => p.Key);
+
+			var tables = dictionary.ToDictionary(p => p.Key, p => p.Value.ToList());
 		}
 
 		[Test]
 		public void TestGrouping2([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
-			using (new GuardGrouping(false))
-			using (new PreloadGroups(false))
-			{
-				using (var dc = new DataContext(context))
+			using var dc = GetDataContext(context, options => options.UseGuardGrouping(false));
+			var query =
+				from p in dc.GetTable<Person>()
+				group p by new { p.FirstName } into g
+				select new
 				{
-					var query =
-						from p in dc.GetTable<Person>()
-						group p by new { p.FirstName } into g
-						select new
-						{
-							g.Key.FirstName,
-							List = g.Select(k => k.ID),
-						};
+					g.Key.FirstName,
+					List = g.Select(k => k.ID),
+				};
 
-					var array = query.ToArray();
-					Assert.That(array, Is.Not.Empty);
+			var array = query.ToArray();
+			Assert.That(array, Is.Not.Empty);
 
-					foreach (var row in array)
-					{
-						var ids = row.List.ToArray();
-						Assert.That(ids, Is.Not.Empty);
-					}
-				}
+			foreach (var row in array)
+			{
+				var ids = row.List.ToArray();
+				Assert.That(ids, Is.Not.Empty);
 			}
 		}
 
@@ -293,7 +282,6 @@ namespace Tests.Data
 			}
 		}
 
-		[ActiveIssue("Poor parameters support", Configuration = ProviderName.ClickHouseClient)]
 		[Test]
 		public void TestDataParameterMapping2([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
@@ -303,12 +291,9 @@ namespace Tests.Data
 			ms.SetConvertExpression<TwoValues,DataParameter>(tv => new DataParameter { Value = (long)tv.Value1 << 32 | tv.Value2 });
 #pragma warning restore CS0675
 
-			using (var conn = (DataConnection)GetDataContext(context, ms))
-			{
-				var n = conn.Execute<long?>("SELECT @p", new { p = (TwoValues?)null });
+			using var conn = (DataConnection)GetDataContext(context, ms);
 
-				Assert.That(n, Is.EqualTo(null));
-			}
+			Assert.That(() => conn.Execute<long?>("SELECT @p", new { p = (TwoValues?)null }), Throws.TypeOf<NullReferenceException>());
 		}
 
 		[ActiveIssue("Poor parameters support", Configuration = ProviderName.ClickHouseClient)]

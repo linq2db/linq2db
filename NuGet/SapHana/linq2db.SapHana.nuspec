@@ -1,0 +1,13 @@
+<?xml version="1.0"?>
+<!-- %T4% -->
+<package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
+	<metadata minClientVersion="3.3.0">
+		<id>linq2db.SapHana</id>
+		<title>LINQ to DB T4 Scaffold Templates for SAP HANA</title>
+		<tags>SapHana SAP Hana</tags>
+	</metadata>
+	<files>
+		<file src="t4bin\System.Data.Odbc.dll"   target="tools" />
+		<file src="t4bin\Sap.Data.Hana.v4.5.dll" target="tools" />
+	</files>
+</package>

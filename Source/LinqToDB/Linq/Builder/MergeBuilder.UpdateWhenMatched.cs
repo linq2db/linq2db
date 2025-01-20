@@ -13,12 +13,11 @@ namespace LinqToDB.Linq.Builder
 
 	internal partial class MergeBuilder
 	{
+		[BuildsMethodCall(nameof(LinqExtensions.UpdateWhenMatchedAnd))]
 		internal sealed class UpdateWhenMatched : MethodCallBuilder
 		{
-			protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
-			{
-				return methodCall.IsSameGenericMethod(UpdateWhenMatchedAndMethodInfo);
-			}
+			public static bool CanBuildMethod(MethodCallExpression call, BuildInfo info, ExpressionBuilder builder)
+				=> call.IsSameGenericMethod(UpdateWhenMatchedAndMethodInfo);
 
 			protected override BuildSequenceResult BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 			{
@@ -51,7 +50,7 @@ namespace LinqToDB.Linq.Builder
 
 					var sourceRef = mergeContext.SourceContext.SourcePropAccess;
 					var targetRef = new ContextRefExpression(sqlTable.ObjectType, mergeContext.TargetContext);
-					var keys       = sqlTable.GetKeys(false)!.Cast<SqlField>().ToList();
+					var keys      = sqlTable.GetKeys(false)!.Cast<SqlField>().ToList();
 
 					foreach (var field in sqlTable.Fields.Where(f => f.IsUpdatable).Except(keys))
 					{
@@ -83,8 +82,13 @@ namespace LinqToDB.Linq.Builder
 
 					operation.Where = new SqlSearchCondition();
 
+					var saveIsSourceOuter = mergeContext.SourceContext.IsSourceOuter;
+					mergeContext.SourceContext.IsSourceOuter = false;
+
 					builder.BuildSearchCondition(mergeContext.SourceContext.SourceContextRef.BuildContext,
-						conditionPrepared, ProjectFlags.SQL, operation.Where);
+						conditionPrepared, operation.Where);
+
+					mergeContext.SourceContext.IsSourceOuter = saveIsSourceOuter;
 				}
 
 				return BuildSequenceResult.FromContext(mergeContext);

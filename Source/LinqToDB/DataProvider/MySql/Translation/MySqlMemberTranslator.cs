@@ -87,8 +87,10 @@ namespace LinqToDB.DataProvider.MySql.Translation
 					case Sql.DateParts.Week: partStr = "week"; break;
 					case Sql.DateParts.WeekDay:
 					{
-						var addDaysFunc = factory.Function(factory.GetDbDataType(dateTimeExpression), "Date_Add", dateTimeExpression,
-							factory.Fragment(intDataType, "interval {0} day", factory.Value(intDataType, 1)));
+						var addDaysFunc = factory.Function(factory.GetDbDataType(dateTimeExpression), "Date_Add",
+							ParametersNullabilityType.SameAsFirstParameter,
+							dateTimeExpression,
+							factory.NotNullFragment(intDataType, "interval 1 day"));
 
 						var weekDayFunc = factory.Function(intDataType, "WeekDay", addDaysFunc);
 
@@ -174,6 +176,7 @@ namespace LinqToDB.DataProvider.MySql.Translation
 					}
 
 					return factory.Function(stringDataType, "LPad",
+						ParametersNullabilityType.SameAsFirstParameter,
 						CastToLength(expression, padSize),
 						factory.Value(intDataType, padSize),
 						factory.Value(stringDataType, "0"));
@@ -197,7 +200,7 @@ namespace LinqToDB.DataProvider.MySql.Translation
 					PartExpression(millisecond, 3)
 				);
 
-				resultExpression = factory.Function(resulType, "STR_TO_DATE", resultExpression, factory.Value(stringDataType, "%Y-%m-%d %H:%i:%s.%f"));
+				resultExpression = factory.Function(resulType, "STR_TO_DATE", ParametersNullabilityType.SameAsFirstParameter, resultExpression, factory.Value(stringDataType, "%Y-%m-%d %H:%i:%s.%f"));
 
 				return resultExpression;
 			}

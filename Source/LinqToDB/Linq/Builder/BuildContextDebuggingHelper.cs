@@ -8,7 +8,7 @@ namespace LinqToDB.Linq.Builder
 		public static string GetContextInfo(IBuildContext context)
 		{
 #if DEBUG
-			var contextId = $"[ID:{context.ContextId}]";
+			var contextId = FormattableString.Invariant($"[ID:{context.ContextId}]");
 #else
 			var contextId = string.Empty;
 #endif

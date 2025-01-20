@@ -11,12 +11,11 @@ namespace LinqToDB.Linq.Builder
 
 	internal partial class MergeBuilder
 	{
+		[BuildsMethodCall(nameof(LinqExtensions.InsertWhenNotMatchedAnd))]
 		internal sealed class InsertWhenNotMatched : MethodCallBuilder
 		{
-			protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
-			{
-				return methodCall.IsSameGenericMethod(InsertWhenNotMatchedAndMethodInfo);
-			}
+			public static bool CanBuildMethod(MethodCallExpression call, BuildInfo info, ExpressionBuilder builder)
+				=> call.IsSameGenericMethod(InsertWhenNotMatchedAndMethodInfo);
 
 			protected override BuildSequenceResult BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 			{
@@ -64,7 +63,7 @@ namespace LinqToDB.Linq.Builder
 
 					builder.BuildSearchCondition(
 						mergeContext.SourceContext,
-						conditionExpr, ProjectFlags.SQL,
+						conditionExpr,
 						operation.Where);
 				}
 

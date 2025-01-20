@@ -9,6 +9,7 @@ using System.Threading;
 namespace LinqToDB
 {
 	using Common;
+	using Common.Internal;
 
 	// implementation based on code from https://github.com/dotnet/runtime/issues/12587
 	/// <summary>
@@ -29,11 +30,11 @@ namespace LinqToDB
 		public static dynamic Create(string progID)
 		{
 #if NETFRAMEWORK
-			return new ComWrapper(Activator.CreateInstance(Type.GetTypeFromProgID(progID, true)!)!);
+			return new ComWrapper(ActivatorExt.CreateInstance(Type.GetTypeFromProgID(progID, true)!));
 #else
 			if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
 			{
-				return new ComWrapper(Activator.CreateInstance(Type.GetTypeFromProgID(progID, true)!)!);
+				return new ComWrapper(ActivatorExt.CreateInstance(Type.GetTypeFromProgID(progID, true)!));
 			}
 #endif
 

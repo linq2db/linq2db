@@ -19,6 +19,8 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 		public override SqlStatement TransformStatement(SqlStatement statement, DataOptions dataOptions, MappingSchema mappingSchema)
 		{
+			statement = base.TransformStatement(statement, dataOptions, mappingSchema);
+
 			return statement.QueryType switch
 			{
 				QueryType.Delete => CorrectPostgreSqlDelete((SqlDeleteStatement)statement, dataOptions),

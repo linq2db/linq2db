@@ -11,12 +11,22 @@ namespace LinqToDB.SqlQuery
 			{
 				return value;
 			}
-			return new SqlParameterValue(parameter.Value, parameter.Type);
+			return new SqlParameterValue(parameter.Value, parameter.Value, parameter.Type);
 		}
 
 		public static bool TryEvaluateExpression(this IQueryElement expr, EvaluationContext context, out object? result)
 		{
-			(result, var success) = expr.TryEvaluateExpression(context);
+			return expr.TryEvaluateExpression(false, context, out result);
+		}
+
+		public static bool TryEvaluateExpressionForServer(this IQueryElement expr, EvaluationContext context, out object? result)
+		{
+			return expr.TryEvaluateExpression(true, context, out result);
+		}
+
+		static bool TryEvaluateExpression(this IQueryElement expr, bool forServer, EvaluationContext context, out object? result)
+		{
+			(result, var success) = expr.TryEvaluateExpression(forServer, context);
 			return success;
 		}
 
@@ -59,18 +69,18 @@ namespace LinqToDB.SqlQuery
 			return expr.TryEvaluateExpression(context, out _);
 		}
 
-		static (object? value, bool success) TryEvaluateExpression(this IQueryElement expr, EvaluationContext context)
+		static (object? value, bool success) TryEvaluateExpression(this IQueryElement expr, bool forServer, EvaluationContext context)
 		{
-			if (!context.TryGetValue(expr, out var info))
+			if (!context.TryGetValue(expr, forServer, out var info))
 			{
-				if (TryEvaluateExpressionInternal(expr, context, out var result))
+				if (TryEvaluateExpressionInternal(expr, forServer, context, out var result))
 				{
-					context.Register(expr, result);
+					context.Register(expr, forServer, result);
 					return (result, true);
 				}
 				else
 				{
-					context.RegisterError(expr);
+					context.RegisterError(expr, forServer);
 					return (result, false);
 				}
 			}
@@ -78,7 +88,7 @@ namespace LinqToDB.SqlQuery
 			return info.Value;
 		}
 
-		static bool TryEvaluateExpressionInternal(this IQueryElement expr, EvaluationContext context, out object? result)
+		static bool TryEvaluateExpressionInternal(this IQueryElement expr, bool forServer, EvaluationContext context, out object? result)
 		{
 			result = null;
 			switch (expr.ElementType)
@@ -101,14 +111,21 @@ namespace LinqToDB.SqlQuery
 
 					var parameterValue = sqlParameter.GetParameterValue(context.ParameterValues);
 
-					result = parameterValue.ProviderValue;
+					if (parameterValue.ClientValue is null && parameterValue.ProviderValue is not null)
+						return false;
+
+					result = forServer ? parameterValue.ProviderValue : parameterValue.ClientValue;
+
+					// ???
+					if (parameterValue.ProviderValue is null)
+						result = null;
 					return true;
 				}
 
 				case QueryElementType.IsNullPredicate:
 				{
 					var isNullPredicate = (SqlPredicate.IsNull)expr;
-					if (!isNullPredicate.Expr1.TryEvaluateExpression(context, out var value))
+					if (!isNullPredicate.Expr1.TryEvaluateExpression(forServer, context, out var value))
 						return false;
 					result = isNullPredicate.IsNot == (value != null);
 					return true;
@@ -123,8 +140,8 @@ namespace LinqToDB.SqlQuery
 						return TryEvaluateExpression(reduced, context, out result);
 						*/
 
-					if (!exprExpr.Expr1.TryEvaluateExpression(context, out var value1) ||
-					    !exprExpr.Expr2.TryEvaluateExpression(context, out var value2))
+					if (!exprExpr.Expr1.TryEvaluateExpression(forServer, context, out var value1) ||
+					    !exprExpr.Expr2.TryEvaluateExpression(forServer, context, out var value2))
 						return false;
 
 					if (value1 != null && value2 != null)
@@ -169,30 +186,37 @@ namespace LinqToDB.SqlQuery
 								return true;
 							}
 
-							switch (exprExpr.Operator)
+							try
 							{
-								case SqlPredicate.Operator.Greater:
-									result = comp1.CompareTo(comp2) > 0;
-									break;
-								case SqlPredicate.Operator.GreaterOrEqual:
-									result = comp1.CompareTo(comp2) >= 0;
-									break;
-								case SqlPredicate.Operator.NotGreater:
-									result = !(comp1.CompareTo(comp2) > 0);
-									break;
-								case SqlPredicate.Operator.Less:
-									result = comp1.CompareTo(comp2) < 0;
-									break;
-								case SqlPredicate.Operator.LessOrEqual:
-									result = comp1.CompareTo(comp2) <= 0;
-									break;
-								case SqlPredicate.Operator.NotLess:
-									result = !(comp1.CompareTo(comp2) < 0);
-									break;
+								switch (exprExpr.Operator)
+								{
+									case SqlPredicate.Operator.Greater:
+										result = comp1.CompareTo(comp2) > 0;
+										break;
+									case SqlPredicate.Operator.GreaterOrEqual:
+										result = comp1.CompareTo(comp2) >= 0;
+										break;
+									case SqlPredicate.Operator.NotGreater:
+										result = !(comp1.CompareTo(comp2) > 0);
+										break;
+									case SqlPredicate.Operator.Less:
+										result = comp1.CompareTo(comp2) < 0;
+										break;
+									case SqlPredicate.Operator.LessOrEqual:
+										result = comp1.CompareTo(comp2) <= 0;
+										break;
+									case SqlPredicate.Operator.NotLess:
+										result = !(comp1.CompareTo(comp2) < 0);
+										break;
 
-								default:
-									return false;
+									default:
+										return false;
 
+								}
+							}
+							catch 
+							{
+								return false;
 							}
 							break;
 						}
@@ -204,10 +228,18 @@ namespace LinqToDB.SqlQuery
 				case QueryElementType.NotPredicate:
 				{
 					var notPredicate = (SqlPredicate.Not)expr;
-					if (notPredicate.Predicate.TryEvaluateExpression(context, out var value) && value is bool boolValue)
+					if (notPredicate.Predicate.TryEvaluateExpression(forServer, context, out var value))
 					{
-						result = !boolValue;
-						return true;
+						if (value is bool boolValue)
+						{
+							result = !boolValue;
+							return true;
+						}
+						if (value is null)
+						{
+							result = null;
+							return true;
+						}
 					}
 
 					return false;
@@ -228,15 +260,12 @@ namespace LinqToDB.SqlQuery
 				case QueryElementType.IsTruePredicate:
 				{
 					var isTruePredicate = (SqlPredicate.IsTrue)expr;
-					if (!isTruePredicate.Expr1.TryEvaluateExpression(context, out var value))
+					if (!isTruePredicate.Expr1.TryEvaluateExpression(forServer, context, out var value))
 						return false;
 
 					if (value == null)
 					{
-						if (isTruePredicate.WithNull != null)
-							result = isTruePredicate.WithNull;
-						else
-							result = false;
+						result = null;
 						return true;
 					}
 
@@ -252,7 +281,7 @@ namespace LinqToDB.SqlQuery
 				case QueryElementType.SqlCast:
 				{
 					var cast = (SqlCastExpression)expr;
-					if (!cast.Expression.TryEvaluateExpression(context, out var value))
+					if (!cast.Expression.TryEvaluateExpression(forServer, context, out var value))
 						return false;
 
 					result = value;
@@ -311,9 +340,9 @@ namespace LinqToDB.SqlQuery
 				case QueryElementType.SqlBinaryExpression:
 				{
 					var binary = (SqlBinaryExpression)expr;
-					if (!binary.Expr1.TryEvaluateExpression(context, out var leftEvaluated))
+					if (!binary.Expr1.TryEvaluateExpression(forServer, context, out var leftEvaluated))
 						return false;
-					if (!binary.Expr2.TryEvaluateExpression(context, out var rightEvaluated))
+					if (!binary.Expr2.TryEvaluateExpression(forServer, context, out var rightEvaluated))
 						return false;
 					dynamic? left  = leftEvaluated;
 					dynamic? right = rightEvaluated;
@@ -356,7 +385,7 @@ namespace LinqToDB.SqlQuery
 						case "Length":
 						{
 							if (function.Parameters[0]
-								.TryEvaluateExpression(context, out var strValue))
+								.TryEvaluateExpression(forServer, context, out var strValue))
 							{
 								if (strValue == null)
 									return true;
@@ -373,7 +402,7 @@ namespace LinqToDB.SqlQuery
 						case PseudoFunctions.TO_LOWER:
 						{
 							if (function.Parameters[0]
-								.TryEvaluateExpression(context, out var strValue))
+								.TryEvaluateExpression(forServer, context, out var strValue))
 							{
 								if (strValue == null)
 									return true;
@@ -390,7 +419,7 @@ namespace LinqToDB.SqlQuery
 						case PseudoFunctions.TO_UPPER:
 						{
 							if (function.Parameters[0]
-								.TryEvaluateExpression(context, out var strValue))
+								.TryEvaluateExpression(forServer, context, out var strValue))
 							{
 								if (strValue == null)
 									return true;
@@ -409,8 +438,10 @@ namespace LinqToDB.SqlQuery
 					}
 				}
 
-				case QueryElementType.SearchCondition    :
+				case QueryElementType.SearchCondition:
 				{
+					// SQL condition evaluation logic notes:
+					// - if any predicate evaluated to UNKNOWN - condition is UNKNOWN
 					var cond = (SqlSearchCondition)expr;
 
 					if (cond.Predicates.Count == 0)
@@ -419,34 +450,70 @@ namespace LinqToDB.SqlQuery
 						return true;
 					}
 
+					bool? evaluatedValue = cond.IsAnd; // evaluated condition value without non-evaluated predicates
+					var evaluatedCount   = 0; // to track if we have non-evaluated predicates
+					var canBeUnknown     = false; // at least one non-evaluated predicate could be UNKNOWN
+
 					for (var i = 0; i < cond.Predicates.Count; i++)
 					{
 						var predicate = cond.Predicates[i];
-						if (predicate.TryEvaluateExpression(context, out var evaluated))
+						if (predicate.TryEvaluateExpression(forServer, context, out var evaluated))
 						{
+							evaluatedCount++;
+
 							if (evaluated is bool boolValue)
 							{
-								if (boolValue)
+								// don't change evaluatedValue if it is null - UNKNOWN cannot be changed
+								if (cond.IsOr && boolValue && evaluatedValue == false)
 								{
-									if (cond.IsOr)
-									{
-										result = true;
-										return true;
-									}
+									evaluatedValue = true;
 								}
-								else
+
+								if (cond.IsAnd && !boolValue && evaluatedValue == true)
 								{
-									if (!cond.IsOr)
-									{
-										result = false;
-										return true;
-									}
+									evaluatedValue = false;
 								}
+							}
+							else if (evaluated is null)
+							{
+								evaluatedValue = null;
+								break;
+							}
+							else
+							{
+								// shouldn't be reachable?
+								return false;
+							}
+						}
+						else
+						{
+
+							if (predicate.CanBeUnknown(NullabilityContext.NonQuery))
+							{
+								canBeUnknown = true;
 							}
 						}
 					}
 
-					return false;
+					if (evaluatedCount == 0)
+						return false;
+
+					// condition evaluated partially to non-UNKNOWN value
+					if (evaluatedCount < cond.Predicates.Count && evaluatedValue != null)
+					{
+						// remaining predicates could return UNKNOWN
+						if (canBeUnknown)
+							return false;
+
+						// condition result depends on remaining predicates evaluation
+						if (cond.IsOr && evaluatedValue == false)
+							return false;
+						if (cond.IsAnd && evaluatedValue == true)
+							return false;
+					}
+
+					result = evaluatedValue;
+					return true;
 				}
 
 				case QueryElementType.SqlCase:
@@ -455,11 +522,11 @@ namespace LinqToDB.SqlQuery
 
 					foreach (var caseItem in caseExpr.Cases)
 					{
-						if (caseItem.Condition.TryEvaluateExpression(context, out var evaluatedCondition) && evaluatedCondition is bool boolValue)
+						if (caseItem.Condition.TryEvaluateExpression(forServer, context, out var evaluatedCondition) && evaluatedCondition is bool boolValue)
 						{
 							if (boolValue)
 							{
-								if (caseItem.ResultExpression.TryEvaluateExpression(context, out var resultValue))
+								if (caseItem.ResultExpression.TryEvaluateExpression(forServer, context, out var resultValue))
 								{
 									result = resultValue;
 									return true;
@@ -478,7 +545,7 @@ namespace LinqToDB.SqlQuery
 						return true;
 					}
 
-					if (caseExpr.ElseExpression.TryEvaluateExpression(context, out var elseValue))
+					if (caseExpr.ElseExpression.TryEvaluateExpression(forServer, context, out var elseValue))
 					{
 						result = elseValue;
 						return true;
@@ -490,7 +557,7 @@ namespace LinqToDB.SqlQuery
 				case QueryElementType.ExprPredicate      :
 				{
 					var predicate = (SqlPredicate.Expr)expr;
-					if (!predicate.Expr1.TryEvaluateExpression(context, out var value))
+					if (!predicate.Expr1.TryEvaluateExpression(forServer, context, out var value))
 						return false;
 
 					result = value;
@@ -500,7 +567,7 @@ namespace LinqToDB.SqlQuery
 				case QueryElementType.SqlNullabilityExpression:
 				{
 					var nullability = (SqlNullabilityExpression)expr;
-					if (nullability.SqlExpression.TryEvaluateExpression(context, out var evaluated))
+					if (nullability.SqlExpression.TryEvaluateExpression(forServer, context, out var evaluated))
 					{
 						result = evaluated;
 						return true;
@@ -515,7 +582,7 @@ namespace LinqToDB.SqlQuery
 
 					if (sqlExpression is { Expr: "{0}", Parameters: [var p] })
 					{
-						if (p.TryEvaluateExpression(context, out var evaluated))
+						if (p.TryEvaluateExpression(forServer, context, out var evaluated))
 						{
 							result = evaluated;
 							return true;
@@ -528,7 +595,7 @@ namespace LinqToDB.SqlQuery
 				case QueryElementType.CompareTo:
 				{
 					var compareTo = (SqlCompareToExpression)expr;
-					if (!compareTo.Expression1.TryEvaluateExpression(context, out var value1) || !compareTo.Expression2.TryEvaluateExpression(context, out var value2))
+					if (!compareTo.Expression1.TryEvaluateExpression(forServer, context, out var value1) || !compareTo.Expression2.TryEvaluateExpression(forServer, context, out var value2))
 						return false;
 
 					if (value1 == null || value2 == null)
@@ -550,11 +617,11 @@ namespace LinqToDB.SqlQuery
 				{
 					var compareTo = (SqlConditionExpression)expr;
 
-					if (compareTo.Condition.TryEvaluateExpression(context, out var conditionValue) && conditionValue is bool boolCondition)
+					if (compareTo.Condition.TryEvaluateExpression(forServer, context, out var conditionValue) && conditionValue is bool boolCondition)
 					{
 						if (boolCondition)
 						{
-							if (compareTo.TrueValue.TryEvaluateExpression(context, out var trueValue))
+							if (compareTo.TrueValue.TryEvaluateExpression(forServer, context, out var trueValue))
 							{
 								result = trueValue;
 								return true;
@@ -562,7 +629,7 @@ namespace LinqToDB.SqlQuery
 						}
 						else
 						{
-							if (compareTo.FalseValue.TryEvaluateExpression(context, out var falseValue))
+							if (compareTo.FalseValue.TryEvaluateExpression(forServer, context, out var falseValue))
 							{
 								result = falseValue;
 								return true;
@@ -571,6 +638,31 @@ namespace LinqToDB.SqlQuery
 					}
 
 					return false;
+				}
+
+				case QueryElementType.IsDistinctPredicate:
+				{
+					var isDistinct = (SqlPredicate.IsDistinct)expr;
+					if (!isDistinct.Expr1.TryEvaluateExpression(forServer, context, out var value1) || !isDistinct.Expr2.TryEvaluateExpression(forServer, context, out var value2))
+						return false;
+
+					if (value1 == null)
+					{
+						result = value2 != null;
+					}
+					else if (value2 == null)
+					{
+						result = true;
+					}
+					else
+					{
+						result = !value1.Equals(value2);
+					}
+
+					if (isDistinct.IsNot)
+						result = !(bool)result;
+
+					return true;
 				}
 
 				default:
@@ -582,7 +674,7 @@ namespace LinqToDB.SqlQuery
 
 		public static object? EvaluateExpression(this IQueryElement expr, EvaluationContext context)
 		{
-			var (value, success) = expr.TryEvaluateExpression(context);
+			var (value, success) = expr.TryEvaluateExpression(false, context);
 			if (!success)
 				throw new LinqToDBException($"Cannot evaluate expression: {expr}");
 

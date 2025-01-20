@@ -1,2 +1,4 @@
-<#@ include file="LinqToDB.Tools.ttinclude"  once="true" #>
-<#@ include file="LinqToDB.Access.ttinclude" once="true" #>
+<#@ include file="$(LinqToDBT4AccessTemplatesPath)LinqToDB.Access.ttinclude" once="true" #>
+<#+
+#warning 'LinqToDB.Access.Tools.ttinclude' is obsolete. Use 'LinqToDB.Access.ttinclude' instead.
+#>

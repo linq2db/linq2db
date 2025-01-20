@@ -8,9 +8,12 @@ namespace LinqToDB.Linq
 	using Mapping;
 	using SqlQuery;
 	using Tools;
+	using Internal;
 
 	static partial class QueryRunner
 	{
+		static IQueryExpressions EmptyQueryExpressions  = new RuntimeExpressionsContainer(ExpressionInstances.UntypedNull);
+
 		public static class CreateTable<T>
 			where T : notnull
 		{
@@ -46,14 +49,14 @@ namespace LinqToDB.Linq
 				createTable.StatementFooter = statementFooter;
 				createTable.DefaultNullable = defaultNullable;
 
-				var query = new Query<int>(dataContext, null)
+				var query = new Query<int>(dataContext)
 				{
 					Queries = { new QueryInfo { Statement = createTable, } }
 				};
 
 				SetNonQueryQuery(query);
 
-				query.GetElement(dataContext, ExpressionInstances.UntypedNull, null, null);
+				query.GetElement(dataContext, EmptyQueryExpressions, null, null);
 
 				ITable<T> table = new Table<T>(dataContext, tableDescriptor);
 
@@ -99,14 +102,14 @@ namespace LinqToDB.Linq
 					createTable.StatementFooter = statementFooter;
 					createTable.DefaultNullable = defaultNullable;
 
-					var query = new Query<int>(dataContext, null)
+					var query = new Query<int>(dataContext)
 					{
 						Queries = { new QueryInfo { Statement = createTable, } }
 					};
 
 					SetNonQueryQuery(query);
 
-					await query.GetElementAsync(dataContext, ExpressionInstances.UntypedNull, null, null, token).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+					await query.GetElementAsync(dataContext, EmptyQueryExpressions, null, null, token).ConfigureAwait(false);
 
 					ITable<T> table = new Table<T>(dataContext, tableDescriptor);
 

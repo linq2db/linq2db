@@ -1,0 +1,22 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<ItemGroup>
+		<PackageReference Include="linq2db.Access" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<None Include="..\Templates\Access.OleDb.tt" Generator="TextTemplatingFileGenerator">
+		  <LastGenOutput>Access.OleDb.generated.cs</LastGenOutput>
+		</None>
+		<Compile Include="..\Templates\Access.OleDb.generated.cs">
+		  <DesignTime>True</DesignTime>
+		  <AutoGen>True</AutoGen>
+		  <DependentUpon>Access.OleDb.tt</DependentUpon>
+		</Compile>
+	</ItemGroup>
+
+	<ItemGroup>
+		<Service Include="{508349b6-6b84-4df5-91f0-309beebad82d}" />
+	</ItemGroup>
+
+</Project>

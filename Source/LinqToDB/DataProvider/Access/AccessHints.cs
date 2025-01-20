@@ -48,7 +48,7 @@ namespace LinqToDB.DataProvider.Access
 		public static IAccessSpecificQueryable<TSource> SubQueryHint<TSource>(this IAccessSpecificQueryable<TSource> source, [SqlQueryDependent] string hint)
 			where TSource : notnull
 		{
-			var currentSource = LinqExtensions.ProcessSourceQueryable?.Invoke(source) ?? source;
+			var currentSource = source.ProcessIQueryable();
 
 			return new AccessSpecificQueryable<TSource>(currentSource.Provider.CreateQuery<TSource>(
 				Expression.Call(

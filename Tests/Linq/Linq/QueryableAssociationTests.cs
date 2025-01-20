@@ -483,8 +483,7 @@ WHERE
 		}
 
 		[Test]
-		[ThrowsForProvider(typeof(LinqException), TestProvName.AllClickHouse, ErrorMessage = ErrorHelper.Error_Correlated_Subqueries)]
-		public void AssociationFromSqlTest([IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllClickHouse)] string context)
+		public void AssociationFromSqlTest([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
 			using (var db = (DataConnection)GetDataContext(context, GetMapping()))
 			using (db.CreateLocalTable<FewNumberEntity>())
@@ -503,7 +502,7 @@ WHERE
 					x.SomeValue.Value
 				});
 
-				TestContext.WriteLine(q.ToString());
+				q.ToArray();
 
 				var select = q.GetSelectQuery();
 
@@ -972,39 +971,39 @@ WHERE
 		[Test]
 		public void TestOneToOneAssociationTransformParameter([IncludeDataSources(TestProvName.AllSqlServer)] string context)
 		{
-			using (var db = GetDataContext(context))
-			using (db.CreateLocalTable(new[]
+			using var db = GetDataConnection(context);
+			using var t1 = db.CreateLocalTable(new[]
 			{
 				new UserGroup {Id = 1}
-			}))
-			using (db.CreateLocalTable(new[]
+			});
+			using var t2 = db.CreateLocalTable(new[]
 			{
 				new User {Id = 1, UserGroupId = 1, LanguageId = 1},
 				new User {Id = 2, UserGroupId = 1, LanguageId = 1},
 				new User {Id = 3, UserGroupId = 1, LanguageId = 2}
-			}))
-			using (db.CreateLocalTable(new[]
+			});
+			using var t3 = db.CreateLocalTable(new[]
 			{
 				new Language {Id = 1, Name = "English"},
 				new Language {Id = 2, Name = "French"}
-			}))
-			{
-				var data = db
-					.GetTable<UserGroup>()
-					.Select(x => new
-					{
-						x.Id,
-						LanguagesWithEnCount  = x.UsersWithLanguageLike(db, "_En").Count(),
-						LanguagesWithLisCount = x.UsersWithLanguageLike(db, "Lis").Count()
-					})
-					.First();
+			});
 
-				Assert.Multiple(() =>
+			var data = db
+				.GetTable<UserGroup>()
+				.Select(x => new
 				{
-					Assert.That(data.LanguagesWithEnCount, Is.EqualTo(IsCaseSensitiveDB(context) ? 2 : 3));
-					Assert.That(data.LanguagesWithLisCount, Is.EqualTo(IsCaseSensitiveDB(context) ? 0 : 2));
-				});
-			}
+					x.Id,
+					LanguagesWithEnCount  = x.UsersWithLanguageLike(db, "_En").Count(),
+					LanguagesWithLisCount = x.UsersWithLanguageLike(db, "Lis").Count()
+				})
+				.First();
+
+			Assert.Multiple(() =>
+			{
+				Assert.That(data.LanguagesWithEnCount, Is.EqualTo(IsCaseSensitiveDB(context) ? 2 : 3));
+				Assert.That(data.LanguagesWithLisCount, Is.EqualTo(IsCaseSensitiveDB(context) ? 0 : 2));
+				Assert.That(db.LastQuery!.ToUpper(), Does.Not.Contain("REPLACE"));
+			});
 		}
 
 		[Test]
@@ -1147,5 +1146,152 @@ WHERE
 				})
 				.ToList();
 		}
+
+		#region Issue 4596
+		sealed class Issue4596Form
+		{
+			public int Id { get; set; }
+			public char C1 { get; set; }
+
+			[Association(QueryExpressionMethod = nameof(ItemsImpl))]
+			public IEnumerable<Issue4596Item> Items { get; set; } = default!;
+
+			internal static Expression<Func<Issue4596Form, IDataContext, IQueryable<Issue4596Item>>> ItemsImpl()
+				=> (p, db) => db.GetTable<Issue4596Item>()
+				.Where(x => x.FormId == p.Id)
+				.OrderBy(x => p.C1 == 'T' ? x.OrderIndex : 0)
+				.ThenBy(x => p.C1 != 'T' ? x.Name1 : "")
+				.ThenBy(x => p.C1 != 'T' ? x.Name2 : "")
+				.ThenBy(x => p.C1 != 'T' ? x.Name3 : "");
+		}
+
+		sealed class Issue4596Item
+		{
+			public int Id { get; set; }
+			public int FormId { get; set; }
+			public int OrderIndex { get; set; }
+			public string? Name1 { get; set; }
+			public string? Name2 { get; set; }
+			public string? Name3 { get; set; }
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4596")]
+		public void Issue4596Test([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t1 = db.CreateLocalTable<Issue4596Form>();
+			using var t2 = db.CreateLocalTable<Issue4596Item>();
+
+			t1.LoadWith(x => x.Items).FirstOrDefault();
+		}
+		#endregion
+
+		#region Issue 4723
+		class Issue4723Table1
+		{
+			public int Id { get; set; }
+
+			[Association(QueryExpressionMethod = nameof(AssociationImpl), CanBeNull = true)]
+			public string? Association { get; set; }
+
+			[ExpressionMethod(nameof(ExpressionMethodImpl))]
+			public string? ExpressionMethod { get; set; }
+
+			private static Expression<Func<Issue4723Table1, IDataContext, IQueryable<string?>>> AssociationImpl()
+			{
+				return (e, db) => db.GetTable<Issue4723Table2>().Where(se => se.Id == e.Id)
+					.Select(o => o.Value)
+					.Take(1);
+			}
+
+			private static Expression<Func<Issue4723Table1, IDataContext, string?>> ExpressionMethodImpl()
+			{
+				return (e, db) => db.GetTable<Issue4723Table2>().Where(se => se.Id == e.Id)
+					.Select(o => o.Value)
+					.FirstOrDefault();
+			}
+
+			public static Issue4723Table1[] TestData =
+			[
+				new Issue4723Table1() { Id = 1 }
+			];
+		}
+
+		class Issue4723Table2
+		{
+			public int Id { get; set; }
+			public string? Value { get; set; }
+
+			public static Issue4723Table2[] TestData =
+			[
+				new Issue4723Table2() { Id = 1, Value = "Value 1" },
+				new Issue4723Table2() { Id = 1, Value = "Value 1" }, // same value to simplify assertion
+				new Issue4723Table2() { Id = 2, Value = "Value 2" },
+			];
+		}
+
+		[ThrowsForProvider(typeof(LinqToDBException), [TestProvName.AllAccess, ProviderName.Firebird25, TestProvName.AllMySql57, TestProvName.AllSybase], ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4723")]
+		public void Issue4723Test1_Association([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t1 = db.CreateLocalTable(Issue4723Table1.TestData);
+			using var t2 = db.CreateLocalTable(Issue4723Table2.TestData);
+
+			var records = t1.LoadWith(x => x.Association).ToArray();
+
+			Assert.That(records, Has.Length.EqualTo(1));
+			Assert.Multiple(() =>
+			{
+				Assert.That(records[0].Id, Is.EqualTo(1));
+				Assert.That(records[0].Association, Is.EqualTo("Value 1"));
+				Assert.That(records[0].ExpressionMethod, Is.EqualTo("Value 1"));
+			});
+		}
+
+		[ThrowsForProvider(typeof(LinqToDBException), [TestProvName.AllAccess, ProviderName.Firebird25, TestProvName.AllMySql57, TestProvName.AllSybase], ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4723")]
+		public void Issue4723Test1Test_NoJoinDuplicates([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t1 = db.CreateLocalTable(Issue4723Table1.TestData);
+			using var t2 = db.CreateLocalTable(Issue4723Table2.TestData);
+
+			var query = t1.Where(x => x.Association != null && x.Association != "unknown").Select(x => new { x.Id, x1 = x.Association, x2 = x.Association });
+
+
+			var select = query.GetSelectQuery();
+			Assert.That(select.Select.From.Tables[0].Joins, Has.Count.EqualTo(1));
+
+			var records = query.ToArray();
+
+			Assert.That(records, Has.Length.EqualTo(1));
+			Assert.Multiple(() =>
+			{
+				Assert.That(records[0].Id, Is.EqualTo(1));
+				Assert.That(records[0].x1, Is.EqualTo("Value 1"));
+				Assert.That(records[0].x2, Is.EqualTo("Value 1"));
+			});
+		}
+
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSybase, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4723")]
+		public void Issue4723Test_ExpressionMethod([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t1 = db.CreateLocalTable(Issue4723Table1.TestData);
+			using var t2 = db.CreateLocalTable(Issue4723Table2.TestData);
+
+			var records = t1.ToArray();
+
+			Assert.That(records, Has.Length.EqualTo(1));
+			Assert.Multiple(() =>
+			{
+				Assert.That(records[0].Id, Is.EqualTo(1));
+				Assert.That(records[0].Association, Is.Null);
+				Assert.That(records[0].ExpressionMethod, Is.EqualTo("Value 1"));
+			});
+		}
+		#endregion
 	}
 }

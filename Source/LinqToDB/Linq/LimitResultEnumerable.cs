@@ -94,7 +94,7 @@ namespace LinqToDB.Linq
 				{
 					while (_skipped < _skip.Value)
 					{
-						if (!await _enumerator.MoveNextAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext))
+						if (!await _enumerator.MoveNextAsync().ConfigureAwait(false))
 						{
 							_finished = true;
 							return false;
@@ -112,7 +112,7 @@ namespace LinqToDB.Linq
 						return false;
 					}
 
-					if (!await _enumerator.MoveNextAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext))
+					if (!await _enumerator.MoveNextAsync().ConfigureAwait(false))
 					{
 						_finished = true;
 						return false;
@@ -122,7 +122,7 @@ namespace LinqToDB.Linq
 					return true;
 				}
 
-				if (!await _enumerator.MoveNextAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext))
+				if (!await _enumerator.MoveNextAsync().ConfigureAwait(false))
 				{
 					_finished = true;
 					return false;

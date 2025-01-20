@@ -1,5 +1,5 @@
 ﻿using System;
-using System.Runtime.Serialization;
+using System.ComponentModel;
 
 namespace LinqToDB.Common
 {
@@ -18,8 +18,10 @@ namespace LinqToDB.Common
 		/// </summary>
 		/// <remarks>
 		/// This constructor initializes the <see cref="Exception.Message"/>
-		/// property of the new instance such as "A Build Type exception has occurred."
+		/// property of the new instance such as "A Linq To DB exception has occurred."
 		/// </remarks>
+		// don't remove, we just want to guard users from using it explicitly
+		[Obsolete("Use one of constructors with message parameter"), EditorBrowsable(EditorBrowsableState.Never)]
 		public LinqToDBConvertException()
 		{
 		}
@@ -58,6 +60,8 @@ namespace LinqToDB.Common
 		/// <param name="innerException">The InnerException, if any, that threw
 		/// the current exception.</param>
 		/// <seealso cref="Exception.InnerException"/>
+		// don't remove, we just want to guard users from using it explicitly
+		[Obsolete("Use one of constructors with message parameter"), EditorBrowsable(EditorBrowsableState.Never)]
 		public LinqToDBConvertException(Exception innerException)
 			: base(innerException.Message, innerException)
 		{

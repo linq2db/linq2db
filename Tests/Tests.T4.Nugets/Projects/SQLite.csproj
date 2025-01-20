@@ -1,0 +1,22 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<ItemGroup>
+		<PackageReference Include="linq2db.SQLite" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<None Include="..\Templates\SQLite.tt" Generator="TextTemplatingFileGenerator">
+		  <LastGenOutput>SQLite.generated.cs</LastGenOutput>
+		</None>
+		<Compile Include="..\Templates\SQLite.generated.cs">
+		  <DesignTime>True</DesignTime>
+		  <AutoGen>True</AutoGen>
+		  <DependentUpon>SQLite.tt</DependentUpon>
+		</Compile>
+	</ItemGroup>
+
+	<ItemGroup>
+		<Service Include="{508349b6-6b84-4df5-91f0-309beebad82d}" />
+	</ItemGroup>
+
+</Project>

@@ -12,7 +12,9 @@ using System.Threading.Tasks;
 namespace LinqToDB.Expressions
 {
 	using Common;
+	using Common.Internal;
 	using Extensions;
+	using Internal;
 
 	/// <summary>
 	/// Implements typed mappings support for dynamically loaded types.
@@ -132,11 +134,11 @@ namespace LinqToDB.Expressions
 				var w2oType = typeof(Dictionary<,>).MakeGenericType(wrapperType, originalType);
 				var o2wType = typeof(Dictionary<,>).MakeGenericType(originalType, wrapperType);
 
-				var wrapperToOriginal = w2oType.GetConstructor([])!.Invoke([]);
-				var originalToWrapper = o2wType.GetConstructor([])!.Invoke([]);
+				var wrapperToOriginal = w2oType.GetConstructor([])!.InvokeExt<IDictionary>([]);
+				var originalToWrapper = o2wType.GetConstructor([])!.InvokeExt<IDictionary>([]);
 
-				var w2o = (IDictionary)wrapperToOriginal;
-				var o2w = (IDictionary)originalToWrapper;
+				var w2o = wrapperToOriginal;
+				var o2w = originalToWrapper;
 
 				foreach (var kvp in wrapperValues)
 					if (originalValues.TryGetValue(kvp.Key, out var orig))
@@ -812,9 +814,7 @@ namespace LinqToDB.Expressions
 
 			if (!_typeMapperInstancesCache.TryGetValue(mapperType, out var mapper))
 			{
-				mapper = Activator.CreateInstance(mapperType) as ICustomMapper;
-				if (mapper == null)
-					throw new LinqToDBException($"Type {mapperType} must implement {nameof(ICustomMapper)} interface.");
+				mapper = ActivatorExt.CreateInstance<ICustomMapper>(mapperType);
 
 				_typeMapperInstancesCache[mapperType] = mapper;
 			}
@@ -1303,7 +1303,7 @@ namespace LinqToDB.Expressions
 		public async Task<TR?> WrapTask<TR>(Task instanceTask, Type instanceType, CancellationToken cancellationToken)
 			where TR : TypeWrapper
 		{
-			await instanceTask.ConfigureAwait(Configuration.ContinueOnCapturedContext);
+			await instanceTask.ConfigureAwait(false);
 
 			return (TR?)WrapTask(typeof(TR), instanceTask);
 		}

@@ -79,12 +79,11 @@ namespace LinqToDB.Common
 
 				name = defaultName(item);
 
-				if (string.IsNullOrEmpty(name))
-					name = nameFunc(item);
-				if (string.IsNullOrEmpty(name))
-					name = "t";
+				if (string.IsNullOrEmpty(name)) name = nameFunc(item);
+				if (string.IsNullOrEmpty(name)) name = "t";
 
 				var digitCount = 0;
+
 				while (char.IsDigit(name![name.Length - 1 - digitCount]))
 				{
 					++digitCount;
@@ -94,7 +93,9 @@ namespace LinqToDB.Common
 				if (digitCount > 0)
 				{
 					digitCount = Math.Min(6, digitCount);
+
 					var prevName = name;
+
 					name = name.Remove(name.Length - digitCount);
 
 					if (!currentCounters.TryGetValue(name, out startDigit))
@@ -104,6 +105,7 @@ namespace LinqToDB.Common
 				}
 
 				string newName;
+
 				do
 				{
 					newName = FormattableString.Invariant($"{name}{startDigit}");

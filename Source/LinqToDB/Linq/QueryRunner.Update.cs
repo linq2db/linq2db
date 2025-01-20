@@ -12,6 +12,8 @@ namespace LinqToDB.Linq
 	using Mapping;
 	using SqlQuery;
 	using Tools;
+	using Infrastructure;
+	using Internal;
 
 	static partial class QueryRunner
 	{
@@ -63,7 +65,7 @@ namespace LinqToDB.Linq
 
 				sqlQuery.From.Table(sqlTable);
 
-				var ei = new Query<int>(dataContext, null)
+				var ei = new Query<int>(dataContext)
 				{
 					Queries = { new QueryInfo { Statement = updateStatement, } }
 				};
@@ -73,12 +75,14 @@ namespace LinqToDB.Linq
 					.Where(f => f.IsUpdatable && !f.ColumnDescriptor.ShouldSkip(obj!, descriptor, SkipModification.Update) && (columnFilter == null || columnFilter(obj, f.ColumnDescriptor)))
 					.Except(keys);
 
+				var accessorIdGenerator = new UniqueIdGenerator<ParameterAccessor>();
+
 				var fieldCount = 0;
 				foreach (var field in fields)
 				{
-					var param = GetParameter(type, dataContext, field);
+					var param = GetParameter(accessorIdGenerator, type, dataContext, field);
 
-					ei.Queries[0].AddParameterAccessor(param);
+					ei.AddParameterAccessor(param);
 
 					updateStatement.Update.Items.Add(new SqlSetExpression(field, param.SqlParameter));
 
@@ -90,7 +94,7 @@ namespace LinqToDB.Linq
 					if (dataContext.Options.LinqOptions.IgnoreEmptyUpdate)
 						return null;
 
-					throw new LinqException(
+					throw new LinqToDBException(
 						keys.Count == sqlTable.Fields.Count ?
 							$"There are no fields to update in the type '{sqlTable.NameForLogging}'. No PK is defined or all fields are keys." :
 							$"There are no fields to update in the type '{sqlTable.NameForLogging}'.");
@@ -98,11 +102,11 @@ namespace LinqToDB.Linq
 
 				foreach (var field in keys)
 				{
-					var param = GetParameter(type, dataContext, field);
+					var param = GetParameter(accessorIdGenerator, type, dataContext, field);
 
-					ei.Queries[0].AddParameterAccessor(param);
+					ei.AddParameterAccessor(param);
 
-					sqlQuery.Where.SearchCondition.AddEqual(field, param.SqlParameter, false);
+					sqlQuery.Where.SearchCondition.AddEqual(field, param.SqlParameter, CompareNulls.LikeSql);
 
 					if (field.CanBeNull)
 						sqlQuery.IsParameterDependent = true;
@@ -152,7 +156,7 @@ namespace LinqToDB.Linq
 							return CreateQuery(context.dataContext, context.entityDescriptor, context.obj, null, key.tableName, key.serverName, key.databaseName, key.schemaName, key.tableOptions, key.type);
 						});
 
-				return ei == null ? 0 : (int)ei.GetElement(dataContext, Expression.Constant(obj), null, null)!;
+				return ei == null ? 0 : (int)ei.GetElement(dataContext, new RuntimeExpressionsContainer(Expression.Constant(obj)), null, null)!;
 			}
 
 			public static async Task<int> QueryAsync(
@@ -195,7 +199,7 @@ namespace LinqToDB.Linq
 								return CreateQuery(context.dataContext, context.entityDescriptor, context.obj, null, key.tableName, key.serverName, key.databaseName, key.schemaName, key.tableOptions, key.type);
 							});
 
-					var result = ei == null ? 0 : await ei.GetElementAsync(dataContext, Expression.Constant(obj), null, null, token).ConfigureAwait(Configuration.ContinueOnCapturedContext);
+					var result = ei == null ? 0 : await ei.GetElementAsync(dataContext, new RuntimeExpressionsContainer(Expression.Constant(obj)), null, null, token).ConfigureAwait(false);
 
 					return (int)result!;
 				}

@@ -128,15 +128,18 @@ WHERE database = database() and default_kind <> 'ALIAS'")
 
 		protected override string? GetProviderSpecificTypeNamespace() => null;
 
-		protected override List<DataTypeInfo> GetDataTypes(DataConnection dataConnection) => new();
+		// this provider doesn't depend on GetDataTypes API
+		static readonly List<DataTypeInfo> _dataTypes = [];
+		protected override List<DataTypeInfo> GetDataTypes(DataConnection dataConnection) => _dataTypes;
 
 		protected override string? GetDbType(GetSchemaOptions options, string? columnType, DataTypeInfo? dataType, int? length, int? precision, int? scale, string? udtCatalog, string? udtSchema, string? udtName) => null;
 
 		protected override DataTypeInfo? GetDataType(string? typeName, DataType? dataType, GetSchemaOptions options) => null;
 
-		protected override DataType GetDataType(string? dataType, string? columnType, int? length, int? precision, int? scale) => GetTypeMapping(dataType, precision).dataType;
+		protected override DataType GetDataType(string? dataType, string? columnType, int? length, int? precision, int? scale) => GetTypeMapping(dataType, precision, length).dataType;
 
-		protected override Type? GetSystemType(string? dataType, string? columnType, DataTypeInfo? dataTypeInfo, int? length, int? precision, int? scale, GetSchemaOptions options) => GetTypeMapping(dataType, precision).type;
+		protected override Type? GetSystemType(string? dataType, string? columnType, DataTypeInfo? dataTypeInfo, int? length, int? precision, int? scale, GetSchemaOptions options) =>
+			GetTypeMapping(dataType, precision, length).type;
 
 		// currently we doesn't handle nested types like tuples and arrays
 		private static (string type, bool isNullable, bool lowCardinality) PreParseTypeName(string type)
@@ -163,7 +166,7 @@ WHERE database = database() and default_kind <> 'ALIAS'")
 			return (type, isNullable, lowCardinality);
 		}
 
-		private static (DataType dataType, Type? type) GetTypeMapping(string? dataType, int? precision)
+		private static (DataType dataType, Type? type) GetTypeMapping(string? dataType, int? precision, int? length)
 		{
 			if (dataType == null)
 				return (DataType.Undefined, null);
@@ -178,8 +181,8 @@ WHERE database = database() and default_kind <> 'ALIAS'")
 			if (dataType.StartsWith("Enum8("))       return (DataType.Enum8     , typeof(sbyte));
 			if (dataType.StartsWith("Enum16("))      return (DataType.Enum16    , typeof(short));
 
-			// use binary as FixedString has more chances to be binary
-			if (dataType.StartsWith("FixedString(")) return (DataType.Binary    , typeof(byte[]));
+			if (dataType.StartsWith("FixedString("))
+				return (DataType.NChar, length is 1 ? typeof(char) : typeof(string));
 
 			if (dataType.StartsWith("DateTime64("))  return (DataType.DateTime64, typeof(DateTimeOffset));
 

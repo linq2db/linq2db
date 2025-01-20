@@ -25,9 +25,9 @@ namespace LinqToDB.DataProvider.SqlServer.Translation
 				var intDataType = factory.GetDbDataType(typeof(int));
 				var dateType = factory.GetDbDataType(dateExpression);
 
-				var datePart = factory.Fragment(DbDataType.Undefined, "dd");
-				var dateDiff = factory.Function(intDataType, "DateDiff", datePart, factory.Value(intDataType, 0), dateExpression);
-				var dateAdd  = factory.Function(dateType, "DateAdd", datePart, dateDiff, factory.Value(intDataType, 0));
+				var datePart = factory.NotNullFragment(DbDataType.Undefined, "dd");
+				var dateDiff = factory.Function(intDataType, "DateDiff", ParametersNullabilityType.SameAsLastParameter, datePart, factory.Value(intDataType, 0), dateExpression);
+				var dateAdd  = factory.Function(dateType, "DateAdd", ParametersNullabilityType.SameAsSecondParameter, datePart, dateDiff, factory.Value(intDataType, 0));
 
 				return dateAdd;
 			}

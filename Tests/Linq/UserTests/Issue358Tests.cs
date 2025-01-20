@@ -1,12 +1,14 @@
 ﻿using System;
 using System.Linq;
 
+using LinqToDB;
+using LinqToDB.Common;
+using LinqToDB.Data;
+
 using NUnit.Framework;
 
 namespace Tests.UserTests
 {
-	using LinqToDB;
-	using LinqToDB.Data;
 	using Model;
 
 	[TestFixture]
@@ -25,75 +27,71 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void HasIsNull()
+		public void HasIsNull([DataSources] string context)
 		{
-			using (var db = new DataConnection())
-			{
-				var qry =
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable<TestIssue358Class>();
+
+			var qry =
 					from p in db.GetTable<TestIssue358Class>()
 					where p.MyEnum != TestIssue358Enum.Value1
 					select p;
 
-				var sql = qry.ToString()!;
-				TestContext.WriteLine(sql);
+			Assert.That(qry.ToSqlQuery().Sql, Does.Contain("NULL"));
 
-				Assert.That(sql, Does.Contain("NULL"));
-			}
+			qry.ToArray();
 		}
 
 		[Test]
-		public void ContainsDoesNotHaveIsNull()
+		public void ContainsDoesNotHaveIsNull([DataSources] string context)
 		{
-			using (var db = new DataConnection())
-			{
-				var filter = new[] {TestIssue358Enum.Value2};
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable<TestIssue358Class>();
 
-				var qry =
+			var filter = new[] {TestIssue358Enum.Value2};
+
+			var qry =
 					from p in db.GetTable<TestIssue358Class>()
 					where !!filter.Contains(p.MyEnum!.Value)
 					select p;
 
-				var sql = qry.ToString()!;
-				TestContext.WriteLine(sql);
+			Assert.That(qry.ToSqlQuery().Sql, Does.Not.Contain("NULL"));
 
-				Assert.That(sql, Does.Not.Contain("NULL"));
-			}
+			qry.ToArray();
 		}
 
 		[Test]
-		public void NoIsNull()
+		public void NoIsNull([DataSources] string context)
 		{
-			using (var db = new DataConnection())
-			{
-				var qry =
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable<TestIssue358Class>();
+
+			var qry =
 					from p in db.GetTable<TestIssue358Class>()
 					where p.MyEnum2 != TestIssue358Enum.Value1
 					select p;
 
-				var sql = qry.ToString()!;
-				TestContext.WriteLine(sql);
+			Assert.That(qry.ToSqlQuery().Sql, Does.Not.Contain("NULL"));
 
-				Assert.That(sql, Does.Not.Contain("NULL"));
-			}
+			qry.ToArray();
 		}
 
 		[Test]
-		public void ContainsNoIsNull()
+		public void ContainsNoIsNull([DataSources] string context)
 		{
-			using (var db = new DataConnection())
-			{
-				var filter = new[] {TestIssue358Enum.Value2};
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable<TestIssue358Class>();
 
-				var qry =
+			var filter = new[] {TestIssue358Enum.Value2};
+
+			var qry =
 					from p in db.GetTable<TestIssue358Class>()
 					where !filter.Contains(p.MyEnum2)
 					select p;
 
-				var sql = qry.ToString()!;
-				TestContext.WriteLine(sql);
+			Assert.That(qry.ToSqlQuery().Sql, Does.Not.Contain("NULL"));
 
-				Assert.That(sql, Does.Not.Contain("NULL"));
-			}
+			qry.ToArray();
 		}
 
 		static LinqDataTypes2 FixData(LinqDataTypes2 data)
@@ -152,8 +150,7 @@ namespace Tests.UserTests
 		[Test]
 		public void Test4WithoutComparasionNullCheck([DataSources] string context)
 		{
-			using var _  = new CompareNullsAsValuesOption(false);
-			using var db = GetDataContext(context);
+			using var db = GetDataContext(context, o => o.UseCompareNulls(CompareNulls.LikeSql));
 			var bigintFilter = new long?[] {2};
 
 			AreEqual(FixData,

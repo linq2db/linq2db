@@ -44,7 +44,9 @@ namespace Cli.Fluent.ClickHouse.Octonica
 					.Member(e => e.VarcharDataType)
 						.HasAttribute(new ColumnAttribute("varcharDataType"))
 					.Member(e => e.CharDataType)
-						.HasAttribute(new ColumnAttribute("charDataType"));
+						.HasAttribute(new ColumnAttribute("charDataType"))
+					.Member(e => e.BitDataType)
+						.HasAttribute(new ColumnAttribute("bitDataType"));
 
 			builder
 				.Entity<Child>()
@@ -198,10 +200,7 @@ namespace Cli.Fluent.ClickHouse.Octonica
 					.Member(e => e.MiddleName)
 						.HasAttribute(new ColumnAttribute("MiddleName"))
 					.Member(e => e.Gender)
-						.HasAttribute(new ColumnAttribute("Gender")
-						{
-							CanBeNull = false
-						});
+						.HasAttribute(new ColumnAttribute("Gender"));
 
 			builder
 				.Entity<ReplacingMergeTreeTable>()

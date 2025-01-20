@@ -10,16 +10,20 @@ You can read about T4 templates options [here](https://linq2db.github.io/article
 
 ## Important
 
-Don't use this package if you don't need database scaffolding functionality. Instead of this package, use:
+This package includes only scaffolding functionality. Additionally you will need to reference:
 
 1. main [linq2db](https://www.nuget.org/packages/linq2db) package
-2. database provider nuget (see list of supported providers below)
+2. database provider nuget (see list of supported providers below) or assembly
 
 ### Supported database providers
 
 - MS Access (.NET Core-only)
   - [System.Data.Odbc](https://www.nuget.org/packages/System.Data.Odbc) for ODBC Access provider
   - [System.Data.OleDb](https://www.nuget.org/packages/System.Data.OleDb) for OLE DB Access provider
+- ClickHouse
+  - [ClickHouse.Client](https://www.nuget.org/packages/ClickHouse.Client) for use with HTTP protocol (recommended provider)
+  - [MySqlConnector](https://www.nuget.org/packages/MySqlConnector) for use with MySql protocol
+  - [Octonica.ClickHouseClient](https://www.nuget.org/packages/Octonica.ClickHouseClient) for use with binary protocol (we wouldn't recommend it as it displays several times worse performance in our tests)
 - DB2 LUW and Informix
   - [IBM.Data.DB.Provider](https://www.nuget.org/packages/IBM.Data.DB.Provider): .NET Framework provider
   - [IBM.Data.DB2.Core](https://www.nuget.org/packages/IBM.Data.DB2.Core): .NET Core Windows provider

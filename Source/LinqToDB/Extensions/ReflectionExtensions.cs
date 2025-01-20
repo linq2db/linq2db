@@ -317,7 +317,9 @@ namespace LinqToDB.Extensions
 		{
 			try
 			{
+#pragma warning disable RS0030 // Do not use banned APIs
 				return type.GetInterfaceMap(interfaceType);
+#pragma warning restore RS0030 // Do not use banned APIs
 			}
 			// PNSE: corert
 			// NSE: NativeAOUT
@@ -841,7 +843,7 @@ namespace LinqToDB.Extensions
 			return RuntimeHelpers.GetUninitializedObject(type);
 #else
 			var dtype  = typeof(GetDefaultValueHelper<>).MakeGenericType(type);
-			var helper = (IGetDefaultValueHelper)Activator.CreateInstance(dtype)!;
+			var helper = ActivatorExt.CreateInstance<IGetDefaultValueHelper>(dtype);
 
 			return helper.GetDefaultValue();
 #endif

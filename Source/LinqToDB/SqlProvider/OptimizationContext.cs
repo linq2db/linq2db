@@ -19,7 +19,7 @@ namespace LinqToDB.SqlProvider
 		private Dictionary<(DbDataType, object?), SqlParameter>? _dynamicParameters;
 
 		public DataOptions                   DataOptions      { get; }
-		public SqlProviderFlags?             SqlProviderFlags { get; }
+		public SqlProviderFlags              SqlProviderFlags { get; }
 		public MappingSchema                 MappingSchema    { get; }
 		public SqlExpressionConvertVisitor   ConvertVisitor   { get; }
 		public SqlExpressionOptimizerVisitor OptimizerVisitor { get; }
@@ -39,7 +39,7 @@ namespace LinqToDB.SqlProvider
 		public OptimizationContext(
 			EvaluationContext                evaluationContext,
 			DataOptions                      dataOptions,
-			SqlProviderFlags?                sqlProviderFlags,
+			SqlProviderFlags                 sqlProviderFlags,
 			MappingSchema                    mappingSchema,
 			SqlExpressionOptimizerVisitor    optimizerVisitor,
 			SqlExpressionConvertVisitor      convertVisitor,
@@ -119,6 +119,16 @@ namespace LinqToDB.SqlProvider
 			// must discard instance instead of Clean as it is returned by GetParameters
 			_actualParameters     = null;
 			_parametersNormalizer = null;
+		}
+
+		[return: NotNullIfNotNull(nameof(element))]
+		public T OptimizeAndConvertAllForRemoting<T>(T element, NullabilityContext nullabilityContext)
+			where T : class, IQueryElement
+		{
+			var newElement = OptimizerVisitor.Optimize(EvaluationContext, nullabilityContext, null, DataOptions, MappingSchema, element, visitQueries : true, isInsideNot : false, reduceBinary: false);
+			var result     = (T)ConvertVisitor.Convert(this, nullabilityContext, newElement, visitQueries : true, isInsideNot : false);
+
+			return result;
 		}
 
 		[return : NotNullIfNotNull(nameof(element))]

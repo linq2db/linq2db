@@ -1,0 +1,25 @@
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+	<PropertyGroup>
+		<Configurations>Debug;Release;Azure</Configurations>
+		
+		<LangVersion>latest</LangVersion>
+		<Nullable>enable</Nullable>
+		<WarningLevel>9999</WarningLevel>
+		<ErrorReport>prompt</ErrorReport>
+		<Features>strict</Features>
+		<TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+
+		<ArtifactsPath>$(MSBuildThisFileDirectory)..\..\.build</ArtifactsPath>
+		<ArtifactsPivots>$(Configuration)</ArtifactsPivots>
+
+		<ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+
+		<RunAnalyzersDuringBuild>true</RunAnalyzersDuringBuild>
+		<RunAnalyzersDuringLiveAnalysis>true</RunAnalyzersDuringLiveAnalysis>
+		<AnalysisLevel>preview-All</AnalysisLevel>
+		<EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+		<ReportAnalyzer>true</ReportAnalyzer>
+		<GenerateDocumentationFile>true</GenerateDocumentationFile>
+	</PropertyGroup>
+</Project>
+

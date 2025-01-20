@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Linq;
 
+using FluentAssertions;
+
 using LinqToDB;
 
 using NUnit.Framework;
@@ -199,6 +201,16 @@ namespace Tests.Linq
 					from t in from p in db.Types select Math.Floor(Math.Pow((double)p.MoneyValue, 3)) where t != 0 select t);
 		}
 
+		// Sybase: https://stackoverflow.com/questions/25281843
+		[Test]
+		public void PowDecimal([DataSources(ProviderName.SQLiteMS, TestProvName.AllSybase)] string context)
+		{
+			using (var db = GetDataContext(context))
+				AreEqual(
+					from t in from p in Types select Math.Floor(Sql.Power(p.MoneyValue, 3)!.Value) where t != 0 select t,
+					from t in from p in db.Types select Math.Floor(Sql.Power(p.MoneyValue, 3)!.Value) where t != 0 select t);
+		}
+
 		[Test]
 		public void Round1([DataSources(ProviderName.SQLiteMS)] string context)
 		{
@@ -329,8 +341,11 @@ namespace Tests.Linq
 					from t in from p in db.Types select Math.Round((double)p.MoneyValue, 1, MidpointRounding.ToEven) where t != 0 select Math.Round(t, 5));
 		}
 
+		// TODO: implement other MidpointRounding values (and remove NUnit4001 suppress)
 		[Test]
-		public void Round12([DataSources(TestProvName.AllSQLite)] string context, [Values(MidpointRounding.AwayFromZero, MidpointRounding.ToEven)] MidpointRounding mp)
+#pragma warning disable NUnit4001
+		public void Round12([DataSources(TestProvName.AllSQLite)] string context, [Values(MidpointRounding.AwayFromZero, MidpointRounding.ToEven)] MidpointRounding mp, [Values(1, 2)] int iteration)
+#pragma warning restore NUnit4001
 		{
 
 			using (var db = GetDataContext(context))
@@ -340,9 +355,14 @@ namespace Tests.Linq
 				if (context.IsAnyOf(ProviderName.DB2))
 					q = q.AsQueryable().Select(t => Math.Round(t, 1, mp));
 
+				var cacheMissCount = q.GetCacheMissCount();
+
 				AreEqual(
 					from t in from p in    Types select Math.Round(p.MoneyValue, 1, mp) where t != 0 && t != 7 select t,
 					q);
+
+				if (iteration > 1)
+					q.GetCacheMissCount().Should().Be(cacheMissCount);
 			}
 		}
 

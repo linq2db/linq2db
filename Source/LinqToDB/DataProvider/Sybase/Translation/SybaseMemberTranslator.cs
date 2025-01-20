@@ -50,7 +50,10 @@ namespace LinqToDB.DataProvider.Sybase.Translation
 				var factory   = translationContext.ExpressionFactory;
 				var intDbType = factory.GetDbDataType(typeof(int));
 
-				var resultExpression = factory.Function(intDbType, "DatePart", factory.Fragment(intDbType, partStr), dateTimeExpression);
+				var resultExpression = factory.Function(intDbType, "DatePart",
+					ParametersNullabilityType.SameAsSecondParameter,
+					factory.NotNullFragment(intDbType, partStr),
+					dateTimeExpression);
 
 				return resultExpression;
 			}
@@ -68,7 +71,10 @@ namespace LinqToDB.DataProvider.Sybase.Translation
 					return null;
 				}
 
-				var resultExpression = factory.Function(dateType, "DateAdd", factory.Fragment(factory.GetDbDataType(typeof(string)), partStr), increment, dateTimeExpression);
+				var resultExpression = factory.Function(dateType, "DateAdd",
+					factory.NotNullFragment(factory.GetDbDataType(typeof(string)), partStr),
+					increment,
+					dateTimeExpression);
 				return resultExpression;
 			}
 
@@ -101,6 +107,7 @@ namespace LinqToDB.DataProvider.Sybase.Translation
 					}
 
 					return factory.Function(stringDataType, "RIGHT",
+						ParametersNullabilityType.NotNullable,
 						factory.Concat(factory.Value(stringDataType, "0"), CastToLength(expression, padSize)),
 						factory.Value(intDataType, padSize));
 				}
@@ -146,7 +153,31 @@ namespace LinqToDB.DataProvider.Sybase.Translation
 			protected override ISqlExpression? TranslateSqlGetDate(ITranslationContext translationContext, TranslationFlags translationFlags)
 			{
 				var factory = translationContext.ExpressionFactory;
-				return factory.Function(factory.GetDbDataType(typeof(DateTime)), "GetDate");
+				return factory.Function(factory.GetDbDataType(typeof(DateTime)), "GetDate", ParametersNullabilityType.NotNullable);
+			}
+		}
+
+		public class SybaseMathMemberTranslator : MathMemberTranslatorBase
+		{
+			protected override ISqlExpression? TranslateRoundAwayFromZero(ITranslationContext translationContext, MethodCallExpression methodCall, ISqlExpression value, ISqlExpression? precision)
+			{
+				return base.TranslateRoundAwayFromZero(translationContext, methodCall, value, precision ?? translationContext.ExpressionFactory.Value(0));
+			}
+
+			protected override ISqlExpression? TranslateRoundToEven(ITranslationContext translationContext, MethodCallExpression methodCall, ISqlExpression value, ISqlExpression? precision)
+			{
+				return base.TranslateRoundToEven(translationContext, methodCall, value, precision ?? translationContext.ExpressionFactory.Value(0));
+			}
+		}
+
+		class SybaseStingMemberTranslator : StringMemberTranslatorBase
+		{
+			public override ISqlExpression? TranslateReplace(ITranslationContext translationContext, MethodCallExpression methodCall, TranslationFlags translationFlags, ISqlExpression value, ISqlExpression oldValue,
+				ISqlExpression newValue)
+			{
+				var func = base.TranslateReplace(translationContext, methodCall, translationFlags, value, oldValue, newValue) as SqlFunction;
+
+				return func?.WithName("Str_Replace");
 			}
 		}
 
@@ -158,6 +189,16 @@ namespace LinqToDB.DataProvider.Sybase.Translation
 		protected override IMemberTranslator CreateDateMemberTranslator()
 		{
 			return new DateFunctionsTranslator();
+		}
+
+		protected override IMemberTranslator CreateStringMemberTranslator()
+		{
+			return new SybaseStingMemberTranslator();
+		}
+
+		protected override IMemberTranslator CreateMathMemberTranslator()
+		{
+			return new SybaseMathMemberTranslator();
 		}
 
 		protected override ISqlExpression? TranslateNewGuidMethod(ITranslationContext translationContext, TranslationFlags translationFlags)

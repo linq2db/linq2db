@@ -68,7 +68,7 @@ namespace LinqToDB.DataProvider
 					if (tableSource.Alias is ("$F" or "$")) 
 						return tableSource.Alias;
 
-					return TruncateIdentifier(IdentifierKind.Alias, tableSource.Alias ?? string.Empty);
+					return TruncateAlias(tableSource.Alias ?? string.Empty);
 				}
 
 				return _newAliases;
@@ -106,22 +106,11 @@ namespace LinqToDB.DataProvider
 				return base.Visit(element);
 			}
 
-			string TruncateIdentifier(IdentifierKind identifierKind, string identifier)
+			string TruncateAlias(string identifier)
 			{
 				identifier = _identifierService.CorrectAlias(identifier);
 
-				if (!_identifierService.IsFit(identifierKind, identifier, out var sizeDecrement) && sizeDecrement != null)
-				{
-					//TODO: It is quick solution
-					var decrement = sizeDecrement.Value + 4;
-
-					var size = identifier.Length - decrement;
-					if (size < 0)
-						size = 0;
-					identifier = identifier.Substring(0, size);
-				}
-
-				return identifier;
+				return IdentifiersHelper.TruncateIdentifier(_identifierService, IdentifierKind.Alias, identifier);
 			}
 
 			bool IsValidAlias(string identifier)
@@ -147,11 +136,11 @@ namespace LinqToDB.DataProvider
 					element.SourceFields,
 					null,
 					(n, a) => IsValidAlias(n),
-					f => TruncateIdentifier(IdentifierKind.Alias, f.PhysicalName),
+					f => TruncateAlias(f.PhysicalName),
 					(f, n, a) => { f.PhysicalName = n; },
 					f =>
 					{
-						var a = TruncateIdentifier(IdentifierKind.Alias, f.PhysicalName);
+						var a = TruncateAlias(f.PhysicalName);
 						return string.IsNullOrEmpty(a)
 							? "c1"
 							: a + (a!.EndsWith("_") ? string.Empty : "_") + "1";
@@ -177,7 +166,7 @@ namespace LinqToDB.DataProvider
 					element.Fields,
 					null,
 					(n, a) => IsValidAlias(n),
-					f => TruncateIdentifier(IdentifierKind.Alias, f.PhysicalName),
+					f => TruncateAlias(f.PhysicalName),
 					(f, n, a) =>
 					{
 						f.PhysicalName = n;
@@ -185,7 +174,7 @@ namespace LinqToDB.DataProvider
 					},
 					f =>
 					{
-						var a = TruncateIdentifier(IdentifierKind.Alias, f.PhysicalName);
+						var a = TruncateAlias(f.PhysicalName);
 						return string.IsNullOrEmpty(a)
 							? "f1"
 							: a + (a!.EndsWith("_") ? string.Empty : "_") + "1";
@@ -257,7 +246,7 @@ namespace LinqToDB.DataProvider
 						selectQuery.Select.Columns.Where(c => c.Alias != "*"),
 						null,
 						(n, a) => IsValidAlias(n),
-						c => TruncateIdentifier(IdentifierKind.Alias, c.Alias ?? string.Empty),
+						c => TruncateAlias(c.Alias ?? string.Empty),
 						(c, n, a) =>
 						{
 							a?.Add(n);
@@ -265,7 +254,7 @@ namespace LinqToDB.DataProvider
 						},
 						c =>
 						{
-							var a = TruncateIdentifier(IdentifierKind.Alias, c.Alias ?? string.Empty);
+							var a = TruncateAlias(c.Alias ?? string.Empty);
 							return string.IsNullOrEmpty(a)
 								? "c1"
 								: a + (a!.EndsWith("_") ? string.Empty : "_") + "1";

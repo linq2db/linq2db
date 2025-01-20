@@ -80,6 +80,9 @@ namespace LinqToDB.SqlQuery
 
 			writer
 				.AppendLine()
+				.Append('(')
+				.Append(SelectQuery.SourceID)
+				.Append(')')
 				.AppendLine(" GROUP BY");
 
 			switch (GroupingType)

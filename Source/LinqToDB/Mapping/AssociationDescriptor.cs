@@ -9,6 +9,7 @@ using System.Reflection;
 namespace LinqToDB.Mapping
 {
 	using Common;
+	using Common.Internal;
 	using Extensions;
 	using Linq.Builder;
 	using Expressions;
@@ -35,19 +36,20 @@ namespace LinqToDB.Mapping
 		/// <param name="canBeNull">If <c>true</c>, association will generate outer join, otherwise - inner join.</param>
 		/// <param name="aliasName">Optional alias for representation in SQL.</param>
 		public AssociationDescriptor(
-			Type        type,
-			MemberInfo  memberInfo,
-			string[]    thisKey,
-			string[]    otherKey,
-			string?     expressionPredicate,
-			Expression? predicate,
-			string?     expressionQueryMethod,
-			Expression? expressionQuery,
-			string?     storage,
-			string?     associationSetterExpressionMethod,
-			Expression? associationSetterExpression,
-			bool?       canBeNull,
-			string?     aliasName)
+			MappingSchema mappingSchema,
+			Type          type,
+			MemberInfo    memberInfo,
+			string[]      thisKey,
+			string[]      otherKey,
+			string?       expressionPredicate,
+			Expression?   predicate,
+			string?       expressionQueryMethod,
+			Expression?   expressionQuery,
+			string?       storage,
+			string?       associationSetterExpressionMethod,
+			Expression?   associationSetterExpression,
+			bool?         canBeNull,
+			string?       aliasName)
 		{
 			if (memberInfo == null) throw new ArgumentNullException(nameof(memberInfo));
 			if (thisKey    == null) throw new ArgumentNullException(nameof(thisKey));
@@ -62,6 +64,7 @@ namespace LinqToDB.Mapping
 				throw new ArgumentException(
 					$"Association '{type.Name}.{memberInfo.Name}' has different number of keys for parent and child objects.");
 
+			MappingSchema                     = mappingSchema;
 			MemberInfo                        = memberInfo;
 			ThisKey                           = thisKey;
 			OtherKey                          = otherKey;
@@ -75,6 +78,11 @@ namespace LinqToDB.Mapping
 			CanBeNull                         = canBeNull ?? AnalyzeCanBeNull();
 			AliasName                         = aliasName;
 		}
+
+		/// <summary>
+		/// Gets MappingSchema for current descriptor.
+		/// </summary>
+		public MappingSchema MappingSchema     { get; }
 
 		/// <summary>
 		/// Gets association member (field, property or method).
@@ -151,20 +159,11 @@ namespace LinqToDB.Mapping
 			return string.Empty;
 		}
 
-		public bool IsList
-		{
-			get
-			{
-				var type = MemberInfo.GetMemberType();
-				return typeof(IEnumerable).IsSameOrParentOf(type);
-			}
-		}
+		bool? _isList;
+		public bool IsList => _isList ??= MappingSchema.IsCollectionType(MemberInfo.GetMemberType());
 
-		public Type GetElementType(MappingSchema mappingSchema)
-		{
-			var type = MemberInfo.GetMemberType();
-			return EagerLoading.GetEnumerableElementType(type, mappingSchema);
-		}
+		Type? _elementType;
+		public Type GetElementType() => _elementType ??= EagerLoading.GetEnumerableElementType(MemberInfo.GetMemberType(), MappingSchema);
 
 		public Type GetParentElementType()
 		{
@@ -238,7 +237,7 @@ namespace LinqToDB.Mapping
 					{
 						if (method.GetParameters().Length > 0)
 							throw new LinqToDBException($"Method '{ExpressionPredicate}' for type '{type.Name}' should have no parameters");
-						var value = method.Invoke(null, []);
+						var value = method.InvokeExt(null, []);
 						if (value == null)
 							return null;
 

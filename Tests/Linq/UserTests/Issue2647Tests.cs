@@ -32,8 +32,6 @@ namespace Tests.UserTests
 				                                     db.GetTable<IssueClass>().Count(ss3 => ss3.Id == ss.Id));
 
 				query.ToList();
-				var sql = query.ToString();
-				TestContext.WriteLine(sql);
 
 				var selectQuery = query.GetSelectQuery();
 				Assert.That(selectQuery.OrderBy.Items, Has.Count.EqualTo(2));

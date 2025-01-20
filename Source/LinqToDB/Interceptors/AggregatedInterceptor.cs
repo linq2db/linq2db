@@ -75,7 +75,7 @@ namespace LinqToDB.Interceptors
 
 			try
 			{
-				await func().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+				await func().ConfigureAwait(false);
 			}
 			finally
 			{
@@ -91,7 +91,7 @@ namespace LinqToDB.Interceptors
 
 			try
 			{
-				return await func().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+				return await func().ConfigureAwait(false);
 			}
 			finally
 			{

@@ -76,7 +76,6 @@ namespace Tests.xUpdate
 			}
 		}
 
-		// ASE: just fails
 		[Test]
 		public void UpdateWithConditionDelete([MergeDataContextSource(
 			TestProvName.AllOracle,
@@ -164,8 +163,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void InsertUpdateBySourceWithConditionDeleteBySource(
-			[IncludeDataSources(true, TestProvName.AllSqlServer2008Plus, TestProvName.AllFirebird5Plus)] string context)
+		public void InsertUpdateBySourceWithConditionDeleteBySource([MergeNotMatchedBySourceDataContextSource] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -211,7 +209,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void InsertDeleteUpdateBySource([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus, TestProvName.AllFirebird5Plus)] string context)
+		public void InsertDeleteUpdateBySource([MergeNotMatchedBySourceDataContextSource] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -407,7 +405,6 @@ namespace Tests.xUpdate
 			}
 		}
 
-		// ASE: just fails
 		[Test]
 		public void DeleteWithConditionUpdate([MergeDataContextSource(
 			TestProvName.AllOracle,
@@ -473,7 +470,6 @@ namespace Tests.xUpdate
 			}
 		}
 
-		// ASE: just fails
 		[Test]
 		public void InsertUpdateWithConditionDeleteWithCondition([MergeDataContextSource(
 			TestProvName.AllOracle,
@@ -544,7 +540,6 @@ namespace Tests.xUpdate
 			}
 		}
 
-		// ASE: just fails
 		[Test]
 		public void InsertDeleteWithConditionUpdate([MergeDataContextSource(
 			TestProvName.AllOracle,
@@ -584,7 +579,6 @@ namespace Tests.xUpdate
 			}
 		}
 
-		// ASE: just fails
 		[Test]
 		public void UpdateWithConditionInsertDeleteWithCondition([MergeDataContextSource(
 			TestProvName.AllOracle,
@@ -624,7 +618,6 @@ namespace Tests.xUpdate
 			}
 		}
 
-		// ASE: just fails
 		[Test]
 		public void UpdateWithConditionDeleteWithConditionInsert([MergeDataContextSource(
 			TestProvName.AllOracle,
@@ -664,7 +657,6 @@ namespace Tests.xUpdate
 			}
 		}
 
-		// ASE: just fails
 		[Test]
 		public void DeleteWithConditionUpdateWithConditionInsert([MergeDataContextSource(
 			TestProvName.AllOracle,
@@ -704,7 +696,6 @@ namespace Tests.xUpdate
 			}
 		}
 
-		// ASE: just fails
 		[Test]
 		public void DeleteWithConditionInsertUpdateWithCondition([MergeDataContextSource(
 			TestProvName.AllOracle,
@@ -805,9 +796,7 @@ namespace Tests.xUpdate
 
 				var result = table.OrderBy(_ => _.ID).ToList();
 
-				if (context.IsAnyOf(TestProvName.AllSybase))
-					Assert.That(rows, Is.EqualTo(3));
-				else if (context.IsAnyOf(TestProvName.AllOracleNative))
+				if (context.IsAnyOf(TestProvName.AllOracleNative))
 					Assert.That(rows, Is.EqualTo(-1));
 				else
 					Assert.That(rows, Is.EqualTo(2));

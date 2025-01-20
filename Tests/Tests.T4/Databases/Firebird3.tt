@@ -1,14 +1,14 @@
-﻿<#@ template language="C#" debug="True" hostSpecific="True" compilerOptions="/langversion:6"    #>
-<#@ output extension=".generated.cs"                                                            #>
-<#@ assembly name="$(ArtifactsPath)\bin\Tests\Debug\net462\FirebirdSql.Data.FirebirdClient.dll" #>
-<#@ include file="..\..\..\Source\LinqToDB.Templates\LinqToDB.Firebird.ttinclude" once="true"   #>
-<#@ include file="..\Shared.ttinclude"                                            once="true"   #>
+﻿<#@ template language="C#" debug="True" hostSpecific="True" compilerOptions="/langversion:6" #>
+<#@ CleanupBehavior processor="T4VSHost" CleanupAfterProcessingtemplate="true"               #>
+<#@ output extension=".generated.cs"                                                         #>
+<#@ include file="$(LinqToDBT4FirebirdTemplatesPath)LinqToDB.Firebird.ttinclude" once="true" #>
+<#@ include file="..\Shared.ttinclude"                                           once="true" #>
 <#
 	NamespaceName = "Firebird3DataContext";
 
-	IncludeDefaultSchema = false;
-	GenerateDataTypes = true;
-	GenerateDbTypes   = true;
+	IncludeDefaultSchema   = false;
+	GenerateDataTypes      = true;
+	GenerateDbTypes        = true;
 	NormalizeParameterName = false;
 
 	LoadFirebirdMetadata(GetConnectionString("Firebird.3"));

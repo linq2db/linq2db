@@ -16,6 +16,8 @@ using NUnit.Framework;
 
 namespace Tests.Linq
 {
+	using System.Security.Cryptography.Xml;
+
 	using Model;
 
 	[TestFixture]
@@ -300,8 +302,7 @@ namespace Tests.Linq
 		[Test]
 		public void ComparisionNullCheckOff([DataSources] string context)
 		{
-			using var _  = new CompareNullsAsValuesOption(false);
-			using var db = GetDataContext(context);
+			using var db = GetDataContext(context, o => o.UseCompareNulls(CompareNulls.LikeSql));
 			AreEqual(
 				   Parent.Where(p => p.Value1 != 1 && p.Value1 != null),
 				db.Parent.Where(p => p.Value1 != 1 && p.Value1 != null));
@@ -323,7 +324,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Coalesce1([DataSources] string context)
+		public void Coalesce([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				TestOneJohn(
@@ -336,21 +337,21 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Coalesce2([DataSources] string context)
+		public void Conditional1([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				Assert.That((from p in db.Parent where p.ParentID == 1 ? true : false select p).ToList(), Has.Count.EqualTo(1));
 		}
 
 		[Test]
-		public void Coalesce3([DataSources] string context)
+		public void Conditional2([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				Assert.That((from p in db.Parent where p.ParentID != 1 ? false : true select p).ToList(), Has.Count.EqualTo(1));
 		}
 
 		[Test]
-		public void Coalesce4([DataSources] string context)
+		public void Conditional3([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -359,14 +360,14 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Coalesce5([DataSources] string context)
+		public void Conditional4([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				Assert.That((from p in db.Parent where (p.Value1 == 1 ? 10 : 20) == 10 select p).ToList(), Has.Count.EqualTo(2));
 		}
 
 		[Test]
-		public void Coalesce6([DataSources] string context)
+		public void Conditional5([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -375,7 +376,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Coalesce7([DataSources] string context)
+		public void Conditional6([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -384,7 +385,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Conditional([DataSources] string context)
+		public void Conditional7([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				TestOneJohn(
@@ -397,7 +398,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Conditional2([DataSources] string context)
+		public void Conditional8([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				TestOneJohn(
@@ -410,7 +411,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Conditional3([DataSources] string context)
+		public void Conditional9([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				TestOneJohn(
@@ -795,8 +796,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void CheckLeftJoin3([DataSources(ProviderName.Access)]
-			string context)
+		public void CheckLeftJoin3([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -1437,7 +1437,7 @@ namespace Tests.Linq
 				var exp = expected.Where(predicate.CompileExpression());
 				var act = actual.  Where(predicate);
 				AreEqual(exp, act, WhereCases.Comparer);
-				Assert.That(act.ToString(), Does.Not.Contain("<>"));
+				Assert.That(act.ToSqlQuery().Sql, Does.Not.Contain("<>"));
 
 				var notPredicate = Expression.Lambda<Func<WhereCases, bool>>(
 					Expression.Not(predicate.Body), predicate.Parameters);
@@ -1447,14 +1447,14 @@ namespace Tests.Linq
 				var actNot      = actNotQuery.ToArray();
 				AreEqual(expNot, actNot, WhereCases.Comparer);
 
-				Assert.That(actNotQuery.ToString(), Does.Not.Contain("<>"));
+				Assert.That(actNotQuery.ToSqlQuery().Sql, Does.Not.Contain("<>"));
 			}
 
 			void AreEqualLocalPredicate(IEnumerable<WhereCases> expected, IQueryable<WhereCases> actual, Expression<Func<WhereCases, bool>> predicate, Expression<Func<WhereCases, bool>> localPredicate)
 			{
 				var actualQuery = actual.Where(predicate);
 				AreEqual(expected.Where(localPredicate.CompileExpression()), actualQuery, WhereCases.Comparer);
-				Assert.That(actualQuery.ToString(), Does.Not.Contain("<>"));
+				Assert.That(actualQuery.ToSqlQuery().Sql, Does.Not.Contain("<>"));
 
 				var notLocalPredicate = Expression.Lambda<Func<WhereCases, bool>>(
 					Expression.Not(localPredicate.Body), localPredicate.Parameters);
@@ -1468,7 +1468,7 @@ namespace Tests.Linq
 				var actNot = actualNotQuery.ToArray();
 				AreEqual(expNot, actNot, WhereCases.Comparer);
 
-				Assert.That(actualNotQuery.ToString(), Does.Not.Contain("<>"));
+				Assert.That(actualNotQuery.ToSqlQuery().Sql, Does.Not.Contain("<>"));
 			}
 
 			using (var db = GetDataContext(context))
@@ -1611,7 +1611,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Issue1755Test1([DataSources] string context, [Values(1, 2)] int id, [Values(null, true, false)] bool? flag)
+		public void Issue1755Test1([DataSources] string context, [Values(1, 2)] int id, [Values] bool? flag)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1620,9 +1620,7 @@ namespace Tests.Linq
 								   && (!flag.HasValue || flag.Value && c.Value1 == null || !flag.Value && c.Value1 != null)
 							   select c);
 
-				var sql = results.ToString()!;
-
-				TestContext.WriteLine(sql);
+				var sql = results.ToSqlQuery().Sql;
 
 				AreEqual(
 					from c in db.Parent.AsEnumerable()
@@ -1632,14 +1630,12 @@ namespace Tests.Linq
 					results,
 					true);
 
-				// remote context doesn't have access to final SQL
-				if (!context.IsRemote())
-					Assert.That(Regex.Matches(sql, " AND "), Has.Count.EqualTo(flag == null ? 0 : 1));
+				Assert.That(Regex.Matches(sql, " AND "), Has.Count.EqualTo(flag == null ? 0 : 1));
 			}
 		}
 
 		[Test]
-		public void Issue1755Test2([DataSources] string context, [Values(1, 2)] int id, [Values(null, true, false)] bool? flag)
+		public void Issue1755Test2([DataSources] string context, [Values(1, 2)] int id, [Values] bool? flag)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1648,7 +1644,7 @@ namespace Tests.Linq
 								   && (flag == null || flag.Value && c.Value1 == null || !flag.Value && c.Value1 != null)
 							   select c);
 
-				var sql = results.ToString()!;
+				var sql = results.ToSqlQuery().Sql;
 
 				AreEqual(
 					from c in db.Parent.AsEnumerable()
@@ -1658,9 +1654,7 @@ namespace Tests.Linq
 					results,
 					true);
 
-				// remote context doesn't have access to final SQL
-				if (!context.IsRemote())
-					Assert.That(Regex.Matches(sql, " AND "), Has.Count.EqualTo(flag == null ? 0 : 1));
+				Assert.That(Regex.Matches(sql, " AND "), Has.Count.EqualTo(flag == null ? 0 : 1));
 			}
 		}
 
@@ -1723,7 +1717,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void NullableBooleanConditionEvaluationTrueTests([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context, [Values(true, null, false)] bool? value1)
+		public void NullableBooleanConditionEvaluationTrueTests([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context, [Values] bool? value1)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1732,7 +1726,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void NullableBooleanConditionEvaluationTrueTestsNot([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context, [Values(true, null, false)] bool? value1)
+		public void NullableBooleanConditionEvaluationTrueTestsNot([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context, [Values] bool? value1)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1741,7 +1735,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void NullableBooleanConditionEvaluationFalseTests([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context, [Values(true, null, false)] bool? value1)
+		public void NullableBooleanConditionEvaluationFalseTests([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse, TestProvName.AllSqlServer)] string context, [Values] bool? value1)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1750,7 +1744,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void NullableBooleanConditionEvaluationFalseTestsNot([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context, [Values(true, null, false)] bool? value1)
+		public void NullableBooleanConditionEvaluationFalseTestsNot([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context, [Values] bool? value1)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1776,13 +1770,30 @@ namespace Tests.Linq
 			}
 		}
 
+		sealed class ComplexPredicate
+		{
+			public int Id { get; set; }
+			public string? Value { get; set; }
+
+			public static ComplexPredicate[] Data =
+			[
+				new ComplexPredicate() { Id = 1 },
+				new ComplexPredicate() { Id = 2, Value = "other" },
+				new ComplexPredicate() { Id = 3, Value = "123" },
+				new ComplexPredicate() { Id = 4, Value = "test" },
+				new ComplexPredicate() { Id = 5, Value = "1" },
+			];
+		}
+
 		[Test]
 		public void ComplexIsNullPredicateTest([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				db.Person.Where(_ => (_.MiddleName == "123") == (ComplexIsNullPredicateTestFunc(_.MiddleName) == "test")).Any();
-			}
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable(ComplexPredicate.Data);
+
+			var query = tb.OrderBy(r => r.Id).Where(r => (r.Value == "123") == (ComplexIsNullPredicateTestFunc(r.Value) == "test"));
+
+			AssertQuery(query);
 		}
 
 		[ExpressionMethod(nameof(ComplexIsNullPredicateTestFuncExpr))]
@@ -1849,9 +1860,9 @@ namespace Tests.Linq
 
 				var result = query.ToArray();
 
-				var str = query.ToString();
+				var str = query.ToSqlQuery().Sql;
 
-				str.Should().NotContain("NULL");
+				str.Should().Contain("IS NOT NULL");
 			}
 		}
 
@@ -1875,7 +1886,6 @@ namespace Tests.Linq
 					result.Should().HaveCount(0);
 			}
 		}
-
 
 		#region issue 2424
 		sealed class Isue2424Table
@@ -1967,7 +1977,7 @@ namespace Tests.Linq
 					db.Parent.AsEnumerable().Where(p => p.Value1 != null && p.Value1 != 1),
 					query);
 
-				var sql = query.ToString()!;
+				var sql = query.ToSqlQuery().Sql;
 				Assert.Multiple(() =>
 				{
 					Assert.That(sql, Does.Not.Contain("IS NULL"), sql);
@@ -1988,7 +1998,7 @@ namespace Tests.Linq
 					db.Parent.AsEnumerable().Where(p => p.Value1 == null || p.Value1 != 1),
 					query);
 
-				var sql = query.ToString()!;
+				var sql = query.ToSqlQuery().Sql;
 				Assert.Multiple(() =>
 				{
 					Assert.That(Regex.Matches(sql, "IS NULL"), Has.Count.EqualTo(1), sql);
@@ -2198,6 +2208,210 @@ namespace Tests.Linq
 			var result2 = query2.Where(rec => !query1.Contains(rec)).Select(p => Sql.Ext.Count(p, Sql.AggregateModifier.None).ToValue()).Single() == 0;
 
 			Assert.That(result1 && result2, Is.False);
+		}
+
+
+		#region Issue 2667
+		[Table("LinkedContracts", IsColumnAttributeRequired = false)]
+		public class LinkedContractsRaw
+		{
+			public int Id { get; set; }
+			public int FK { get; set; }
+
+			public static readonly LinkedContractsRaw[] Data = new []
+			{
+				new LinkedContractsRaw() { Id = 11, FK = 1 },
+				new LinkedContractsRaw() { Id = 22, FK = 2 }
+			};
+		}
+
+		[Table("Contract", IsColumnAttributeRequired = false)]
+		public class ContractRaw
+		{
+			public int Id { get; set; }
+			public bool? Bit01 { get; set; }
+
+			public static readonly ContractRaw[] Data = new []
+			{
+				new ContractRaw() { Id = 1 },
+				new ContractRaw() { Id = 2 }
+			};
+		}
+
+		[Table("LinkedContracts", IsColumnAttributeRequired = false)]
+		public class LinkedContracts
+		{
+			public int Id { get; set; }
+
+			public int FK { get; set; }
+
+			[Association(ThisKey = nameof(FK), OtherKey = nameof(Contract.Id))]
+			public Contract? Ref { get; set; }
+		}
+
+		[Table("Contract", IsColumnAttributeRequired = false)]
+		public class Contract
+		{
+			[Nullable] public bool Bit01 { get; set; }
+
+			public int Id { get; set; }
+		}
+
+		[Test]
+		public void Issue2667Test1([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (db.CreateLocalTable(ContractRaw.Data))
+			using (var linkedContracts = db.CreateLocalTable(LinkedContractsRaw.Data))
+			{
+				var linkedContract = db.GetTable<LinkedContracts>()
+					.LoadWith(linked => linked.Ref)
+					.Where(linked => linked.FK == 1)
+					.ToList();
+
+				Assert.That(linkedContract[0].Ref, Is.Not.Null);
+			}
+		}
+
+		[Test]
+		public void Issue2667Test2([IncludeDataSources(TestProvName.AllSqlServer)] string context)
+		{
+			using (var db = GetDataContext(context))
+			using (var linkedContracts = db.CreateLocalTable(LinkedContractsRaw.Data))
+			using (db.CreateLocalTable(ContractRaw.Data))
+			{
+				var result = db.GetTable<LinkedContracts>()
+					.Where(linked => linked.FK == 1)
+					.Select(verträge => verträge.Ref)
+					.ToList();
+
+				Assert.That(result[0], Is.Not.Null);
+			}
+		}
+		#endregion
+
+		[Test]
+		public void Issue2897_ParensGeneration_Or([DataSources(false)] string context)
+		{
+			using (var db = new TestDataConnection(context))
+			{
+				db.Parent.Where(p => p.ParentID > 1 || p.ParentID > 2 || p.ParentID > 3).ToList();
+
+				var sql = db.LastQuery!;
+				Assert.That(sql, Does.Not.Contain("("), sql);
+				Assert.That(sql, Does.Not.Contain(")"), sql);
+			}
+		}
+
+		[Test]
+		public void Issue2897_ParensGeneration_And([DataSources(false)] string context)
+		{
+			using (var db = new TestDataConnection(context))
+			{
+				db.Parent.Where(p => p.ParentID > 1 && p.ParentID > 2 && p.ParentID > 3).ToList();
+
+				var sql = db.LastQuery!;
+				Assert.That(sql, Does.Not.Contain("("), sql);
+				Assert.That(sql, Does.Not.Contain(")"), sql);
+			}
+		}
+
+		[Test]
+		public void Issue2897_ParensGeneration_MixedFromAnd([DataSources(false)] string context)
+		{
+			using (var db = new TestDataConnection(context))
+			{
+				db.Parent
+					.Where(p => p.ParentID > 1 && p.ParentID > 2 && (p.ParentID > 3 || p.ParentID > 4) && (p.ParentID > 5 || p.ParentID > 6 || p.ParentID > 7) && p.ParentID > 8 && p.ParentID > 9 && p.ParentID > 10 && (p.ParentID > 11 || p.ParentID > 12))
+					.ToList();
+
+				CompareSql(@"SELECT
+		p.ParentID,
+		p.Value1
+	FROM
+		Parent p
+	WHERE
+		p.ParentID > 1 AND
+		p.ParentID > 2 AND
+		(p.ParentID > 3 OR p.ParentID > 4) AND
+		(p.ParentID > 5 OR p.ParentID > 6 OR p.ParentID > 7) AND
+		p.ParentID > 8 AND
+		p.ParentID > 9 AND
+		p.ParentID > 10 AND
+		(p.ParentID > 11 OR p.ParentID > 12)", db.LastQuery!.Replace("\"", "").Replace("[", "").Replace("]", "").Replace("`", ""));
+			}
+		}
+
+		[Test]
+		public void Issue2897_ParensGeneration_MixedFromOr([DataSources(false)] string context)
+		{
+			using (var db = new TestDataConnection(context))
+			{
+				db.Parent
+					.Where(p => (p.ParentID > 1 || p.ParentID > 2) && (p.ParentID > 3 || p.ParentID > 4) && (p.ParentID > 5 || p.ParentID > 6 || p.ParentID > 7) && p.ParentID > 8 && p.ParentID > 9 && p.ParentID > 10 && (p.ParentID > 11 || p.ParentID > 12) && p.ParentID > 13)
+					.ToList();
+
+				CompareSql(@"SELECT
+		p.ParentID,
+		p.Value1
+	FROM
+		Parent p
+	WHERE
+		(p.ParentID > 1 OR p.ParentID > 2) AND
+		(p.ParentID > 3 OR p.ParentID > 4) AND
+		(p.ParentID > 5 OR p.ParentID > 6 OR p.ParentID > 7) AND
+		p.ParentID > 8 AND
+		p.ParentID > 9 AND
+		p.ParentID > 10 AND
+		(p.ParentID > 11 OR p.ParentID > 12) AND
+		p.ParentID > 13", db.LastQuery!.Replace("\"", "").Replace("[", "").Replace("]", "").Replace("`", ""));
+			}
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/1662")]
+		public void Boolean_NotFalse_AsTrue1([DataSources(false)] string context)
+		{
+			using var db = GetDataConnection(context);
+			db.Types.Where(r => r.BoolValue != false).ToList();
+
+			Assert.That(db.LastQuery, Does.Contain(" = "));
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/1662")]
+		public void Boolean_NotFalse_AsTrue2([DataSources(false)] string context)
+		{
+			using var db = GetDataConnection(context);
+			db.Types.Where(r => !r.BoolValue).ToList();
+
+			if (context.IsAnyOf(TestProvName.AllPostgreSQL, TestProvName.AllFirebird3Plus, TestProvName.AllMySql, TestProvName.AllSQLite, TestProvName.AllDB2, TestProvName.AllClickHouse, TestProvName.AllAccess, TestProvName.AllInformix))
+			{
+				Assert.That(db.LastQuery, Does.Not.Contain(" = "));
+				Assert.That(db.LastQuery, Does.Contain("NOT "));
+			}
+			else
+			{
+				Assert.That(db.LastQuery, Does.Not.Contain("NOT "));
+				Assert.That(db.LastQuery, Does.Contain(" = "));
+			}
+		}
+
+		[Table]
+		sealed class NullableBool
+		{
+			[Column] public int   ID   { get; set; }
+			[Column] public bool? Bool { get; set; }
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/1662")]
+		public void NullableBoolean_NotFalse_AsNotTrue([DataSources(false, TestProvName.AllSybase)] string context)
+		{
+			using var db = GetDataConnection(context);
+			using var tb = db.CreateLocalTable<NullableBool>();
+
+			tb.Where(r => r.Bool != false).ToList();
+
+			Assert.That(db.LastQuery, Does.Contain(" = "));
+			Assert.That(db.LastQuery, Does.Contain("IS NULL"));
 		}
 	}
 }

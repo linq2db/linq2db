@@ -24,10 +24,11 @@ namespace Cli.All.ClickHouse.Octonica
 		[Column("smallintDataType", DataType = DataType.Int16   , DbType = "Int16"                                                    )] public short?  SmallintDataType { get; set; } // Int16
 		[Column("floatDataType"   , DataType = DataType.Single  , DbType = "Float32"                                                  )] public float?  FloatDataType    { get; set; } // Float32
 		[Column("doubleDataType"  , DataType = DataType.Double  , DbType = "Float64"                                                  )] public double? DoubleDataType   { get; set; } // Float64
-		[Column("ncharDataType"   , DataType = DataType.Binary  , DbType = "FixedString(20)", Length       = 20                       )] public byte[]? NcharDataType    { get; set; } // FixedString(20)
-		[Column("char20DataType"  , DataType = DataType.Binary  , DbType = "FixedString(20)", Length       = 20                       )] public byte[]? Char20DataType   { get; set; } // FixedString(20)
+		[Column("ncharDataType"   , DataType = DataType.NChar   , DbType = "FixedString(20)", Length       = 20                       )] public string? NcharDataType    { get; set; } // FixedString(20)
+		[Column("char20DataType"  , DataType = DataType.NChar   , DbType = "FixedString(20)", Length       = 20                       )] public string? Char20DataType   { get; set; } // FixedString(20)
 		[Column("varcharDataType" , DataType = DataType.NVarChar, DbType = "String"                                                   )] public string? VarcharDataType  { get; set; } // String
-		[Column("charDataType"    , DataType = DataType.Binary  , DbType = "FixedString(1)" , Length       = 1                        )] public byte[]? CharDataType     { get; set; } // FixedString(1)
+		[Column("charDataType"    , DataType = DataType.NChar   , DbType = "FixedString(1)" , Length       = 1                        )] public char?   CharDataType     { get; set; } // FixedString(1)
+		[Column("bitDataType"     , DataType = DataType.UInt64  , DbType = "UInt64"                                                   )] public ulong?  BitDataType      { get; set; } // UInt64
 
 		#region IEquatable<T> support
 		private static readonly IEqualityComparer<AllType> _equalityComparer = ComparerBuilder.GetEqualityComparer<AllType>(c => c.Id);

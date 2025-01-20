@@ -20,10 +20,6 @@ namespace LinqToDB.DataProvider.DB2
 #if NETFRAMEWORK
 		public const string AssemblyName         = "IBM.Data.DB2";
 		public const string ClientNamespace      = "IBM.Data.DB2";
-		[Obsolete("Unused. Will be removed in v6")]
-		public const string? AssemblyNameOld     = null;
-		[Obsolete("Unused. Will be removed in v6")]
-		public const string? ClientNamespaceOld  = null;
 #else
 		public const string  AssemblyName        = "IBM.Data.Db2";
 		public const string  ClientNamespace     = "IBM.Data.Db2";

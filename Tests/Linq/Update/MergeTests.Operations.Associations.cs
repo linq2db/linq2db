@@ -8,7 +8,7 @@ namespace Tests.xUpdate
 	public partial class MergeTests
 	{
 		[Test]
-		public void TargetAssociation([IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllFirebird5Plus)] string context)
+		public void TargetAssociation([MergeNotMatchedBySourceDataContextSource(true, TestProvName.AllPostgreSQL17Plus)] string context)
 		{
 			ResetPersonIdentity(context);
 
@@ -42,7 +42,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void TargetQueryAssociation([IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllFirebird5Plus)] string context)
+		public void TargetQueryAssociation([MergeNotMatchedBySourceDataContextSource(true, TestProvName.AllPostgreSQL17Plus)] string context)
 		{
 			ResetPersonIdentity(context);
 
@@ -151,7 +151,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void OtherSourceAssociationInDeleteBySourcePredicate([IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllFirebird5Plus)] string context)
+		public void OtherSourceAssociationInDeleteBySourcePredicate([MergeNotMatchedBySourceDataContextSource(true, TestProvName.AllPostgreSQL17Plus)] string context)
 		{
 			ResetPersonIdentity(context);
 
@@ -223,13 +223,12 @@ namespace Tests.xUpdate
 			}
 		}
 
-		// ASE: server dies
 		// Oracle: associations in insert setter
 		[Test]
 		public void OtherSourceAssociationInInsertCreate([MergeDataContextSource(
 			false,
 			TestProvName.AllOracle,
-			TestProvName.AllSybase, TestProvName.AllInformix,
+			TestProvName.AllInformix,
 			TestProvName.AllSapHana, ProviderName.Firebird25)]
 			string context)
 		{
@@ -279,7 +278,6 @@ namespace Tests.xUpdate
 			}
 		}
 
-		// ASE: server dies
 		// Oracle: associations in insert setters
 		// Informix: associations doesn't work right now
 		// SAP: associations doesn't work right now
@@ -287,7 +285,7 @@ namespace Tests.xUpdate
 		public void OtherSourceAssociationInInsertCreate2([MergeDataContextSource(
 			false,
 			TestProvName.AllOracle,
-			TestProvName.AllSybase, TestProvName.AllInformix, TestProvName.AllSapHana)]
+			TestProvName.AllInformix, TestProvName.AllSapHana)]
 			string context)
 		{
 			ResetPersonIdentity(context);
@@ -336,7 +334,6 @@ namespace Tests.xUpdate
 			}
 		}
 
-		// ASE: server dies
 		[Test]
 		public void OtherSourceAssociationInInsertPredicate([MergeDataContextSource(
 			false,
@@ -438,12 +435,9 @@ namespace Tests.xUpdate
 			}
 		}
 
-		// ASE: server dies
 		// Informix: associations doesn't work right now
 		[Test]
-		public void OtherSourceAssociationInUpdate([MergeDataContextSource(
-			false,
-			TestProvName.AllSybase, TestProvName.AllInformix)]
+		public void OtherSourceAssociationInUpdate([MergeDataContextSource(false, TestProvName.AllInformix)]
 			string context)
 		{
 			ResetPersonIdentity(context);
@@ -489,7 +483,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void OtherSourceAssociationInUpdateBySource([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
+		public void OtherSourceAssociationInUpdateBySource([MergeNotMatchedBySourceDataContextSource(true)] string context)
 		{
 			ResetPersonIdentity(context);
 
@@ -538,8 +532,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void OtherSourceAssociationInUpdateBySourcePredicate(
-			[IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllFirebird5Plus)] string context)
+		public void OtherSourceAssociationInUpdateBySourcePredicate([MergeNotMatchedBySourceDataContextSource(true)] string context)
 		{
 			ResetPersonIdentity(context);
 
@@ -586,7 +579,6 @@ namespace Tests.xUpdate
 			}
 		}
 
-		// ASE: server dies
 		[Test]
 		public void OtherSourceAssociationInUpdatePredicate([MergeDataContextSource(
 			false,
@@ -638,8 +630,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void SameSourceAssociationInDeleteBySourcePredicate(
-			[IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllFirebird5Plus)] string context)
+		public void SameSourceAssociationInDeleteBySourcePredicate([MergeNotMatchedBySourceDataContextSource(true, TestProvName.AllPostgreSQL17Plus)] string context)
 		{
 			ResetPersonIdentity(context);
 
@@ -711,13 +702,12 @@ namespace Tests.xUpdate
 			}
 		}
 
-		// ASE: server dies
 		// Oracle: associations in instert setters
 		[Test]
 		public void SameSourceAssociationInInsertCreate([MergeDataContextSource(
 			false,
 			TestProvName.AllOracle,
-			TestProvName.AllSybase, TestProvName.AllInformix,
+			TestProvName.AllInformix,
 			TestProvName.AllSapHana, ProviderName.Firebird25)]
 			string context)
 		{
@@ -769,7 +759,6 @@ namespace Tests.xUpdate
 			}
 		}
 
-		// ASE: server dies
 		// Oracle: associations in instert setters
 		// Informix: associations doesn't work right now
 		// SAP: associations doesn't work right now
@@ -777,7 +766,7 @@ namespace Tests.xUpdate
 		public void SameSourceAssociationInInsertCreate2([MergeDataContextSource(
 			false,
 			TestProvName.AllOracle,
-			TestProvName.AllSybase, TestProvName.AllInformix, TestProvName.AllSapHana)]
+			TestProvName.AllInformix, TestProvName.AllSapHana)]
 			string context)
 		{
 			ResetPersonIdentity(context);
@@ -826,7 +815,6 @@ namespace Tests.xUpdate
 			}
 		}
 
-		// ASE: server dies
 		[Test]
 		public void SameSourceAssociationInInsertPredicate([MergeDataContextSource(
 			false,
@@ -930,13 +918,9 @@ namespace Tests.xUpdate
 			}
 		}
 
-		// ASE: server dies
 		// Informix: associations doesn't work right now
 		[Test]
-		public void SameSourceAssociationInUpdate([MergeDataContextSource(
-			false,
-			TestProvName.AllSybase, TestProvName.AllInformix)]
-			string context)
+		public void SameSourceAssociationInUpdate([MergeDataContextSource(false, TestProvName.AllInformix)] string context)
 		{
 			ResetPersonIdentity(context);
 
@@ -981,7 +965,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void SameSourceAssociationInUpdateBySource([IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllFirebird5Plus)] string context)
+		public void SameSourceAssociationInUpdateBySource([MergeNotMatchedBySourceDataContextSource(true)] string context)
 		{
 			ResetPersonIdentity(context);
 
@@ -1031,8 +1015,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void SameSourceAssociationInUpdateBySourcePredicate(
-			[IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllFirebird5Plus)] string context)
+		public void SameSourceAssociationInUpdateBySourcePredicate([MergeNotMatchedBySourceDataContextSource(true)] string context)
 		{
 			ResetPersonIdentity(context);
 
@@ -1080,7 +1063,6 @@ namespace Tests.xUpdate
 			}
 		}
 
-		// ASE: server dies
 		[Test]
 		public void SameSourceAssociationInUpdatePredicate([MergeDataContextSource(
 			false,

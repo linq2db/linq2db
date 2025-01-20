@@ -89,7 +89,7 @@ namespace LinqToDB.Remote.Grpc
 					Configuration = configuration,
 					QueryData     = queryData
 				}, cancellationToken)
-				.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext); ;
+				.ConfigureAwait(false); ;
 		}
 
 		async Task<string?> ILinqService.ExecuteScalarAsync(string? configuration, string queryData, CancellationToken cancellationToken)
@@ -100,7 +100,7 @@ namespace LinqToDB.Remote.Grpc
 					Configuration = configuration,
 					QueryData     = queryData
 				}, cancellationToken)
-				.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+				.ConfigureAwait(false);
 		}
 
 		async Task<string> ILinqService.ExecuteReaderAsync(string? configuration, string queryData, CancellationToken cancellationToken)
@@ -111,7 +111,7 @@ namespace LinqToDB.Remote.Grpc
 					Configuration = configuration,
 					QueryData     = queryData
 				}, cancellationToken)
-				.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+				.ConfigureAwait(false);
 
 			return result.Value ?? throw new LinqToDBException("Return value is not allowed to be null");
 		}
@@ -124,7 +124,7 @@ namespace LinqToDB.Remote.Grpc
 					Configuration = configuration,
 					QueryData = queryData
 				})
-				.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+				.ConfigureAwait(false);
 		}
 
 		void IDisposable.Dispose()

@@ -2,6 +2,7 @@
 
 namespace LinqToDB.DataProvider.Oracle
 {
+	using LinqToDB.Common;
 	using LinqToDB.Extensions;
 	using SqlProvider;
 	using SqlQuery;
@@ -22,75 +23,83 @@ namespace LinqToDB.DataProvider.Oracle
 
 		public override IQueryElement ConvertExprExprPredicate(SqlPredicate.ExprExpr predicate)
 		{
-			var expr = predicate;
+			var (a, op, b, withNull) = predicate;
+			
+			// We want to modify comparisons involving "" as Oracle treats "" as null
 
-			// Oracle saves empty string as null to database, so we need predicate modification before sending query
-			//
-			if (expr is
-				{
-					WithNull: true,
-					Operator: SqlPredicate.Operator.Equal
-						or SqlPredicate.Operator.NotEqual
-						or SqlPredicate.Operator.GreaterOrEqual
-						or SqlPredicate.Operator.LessOrEqual,
-				})
+			// Comparisons to a literal constant "" are always converted to IS [NOT] NULL (same as == null or == default)
+			if (op is SqlPredicate.Operator.Equal or SqlPredicate.Operator.NotEqual)
 			{
-				if (expr.Expr1.SystemType == typeof(string) &&
-				    expr.Expr1.TryEvaluateExpression(EvaluationContext, out var value1) && value1 is string string1)
+				if (QueryHelper.UnwrapNullablity(a) is SqlValue { Value: string { Length: 0 } })
+					return new SqlPredicate.IsNull(SqlNullabilityExpression.ApplyNullability(b, true), isNot: op == SqlPredicate.Operator.NotEqual);
+				if (QueryHelper.UnwrapNullablity(b) is SqlValue { Value: string { Length: 0 } })
+					return new SqlPredicate.IsNull(SqlNullabilityExpression.ApplyNullability(a, true), isNot: op == SqlPredicate.Operator.NotEqual);
+			}
+
+			// CompareNulls.LikeSql compiles as-is, no change
+			// CompareNulls.LikeSqlExceptParameters sniffs parameters to == and != and replaces by IS [NOT] NULL
+			// CompareNulls.LikeClr (withNull) always handles nulls.
+			// Note: LikeClr sometimes generates `withNull: null` expressions, in which case it works the
+			//       same way as LikeSqlExceptParameters (for backward compatibility).
+
+			if (withNull != null
+				|| (DataOptions.LinqOptions.CompareNulls != CompareNulls.LikeSql
+					&& op is SqlPredicate.Operator.Equal or SqlPredicate.Operator.NotEqual))
+			{
+				if (Oracle11SqlOptimizer.IsTextType(b, MappingSchema)                   &&
+				    b.TryEvaluateExpressionForServer(EvaluationContext, out var bValue) &&
+					bValue is string { Length: 0 })
 				{
-					if (string1.Length == 0)
-					{
-						// Add 'AND [col] IS NOT NULL' when checking Not Equal to Empty String,
-						// else add 'OR [col] IS NULL'
-
-						if (expr.Operator == SqlPredicate.Operator.NotEqual)
-						{
-							var sc = new SqlSearchCondition(true,
-								new SqlPredicate.ExprExpr(expr.Expr2, SqlPredicate.Operator.NotEqual, expr.Expr1, null),
-								new SqlPredicate.IsNull(expr.Expr2, true));
-
-							return sc;
-						}
-						else
-						{
-							var sc = new SqlSearchCondition(true,
-								new SqlPredicate.ExprExpr(expr.Expr2, expr.Operator, expr.Expr1, null),
-								new SqlPredicate.IsNull(expr.Expr2, false));
-
-							return sc;
-						}
-					}
+					return CompareToEmptyString(a, op);
 				}
-
-				if (expr.Expr2.SystemType == typeof(string)                             &&
-				    expr.Expr2.TryEvaluateExpression(EvaluationContext, out var value2) && value2 is string string2)
+				
+				if (Oracle11SqlOptimizer.IsTextType(a, MappingSchema)                   &&
+				    a.TryEvaluateExpressionForServer(EvaluationContext, out var aValue) &&
+					aValue is string { Length: 0 })
 				{
-					if (string2.Length == 0)
-					{
-						// Add 'AND [col] IS NOT NULL' when checking Not Equal to Empty String,
-						// else add 'OR [col] IS NULL'
-
-						if (expr.Operator == SqlPredicate.Operator.NotEqual)
-						{
-							var sc = new SqlSearchCondition(true, 
-								new SqlPredicate.ExprExpr(expr.Expr1, SqlPredicate.Operator.NotEqual, expr.Expr2, null),
-								new SqlPredicate.IsNull(expr.Expr1, true));
-
-							return sc;
-						}
-						else
-						{
-							var sc = new SqlSearchCondition(true,
-								new SqlPredicate.ExprExpr(expr.Expr1, expr.Operator, expr.Expr2, null),
-								new SqlPredicate.IsNull(expr.Expr1, false));
-
-							return sc;
-						}
-					}
+					return CompareToEmptyString(b, InvertDirection(op));
 				}
 			}
 
 			return base.ConvertExprExprPredicate(predicate);
+
+			static ISqlPredicate CompareToEmptyString(ISqlExpression x, SqlPredicate.Operator op)
+			{
+				return op switch
+				{
+					SqlPredicate.Operator.NotGreater     or
+					SqlPredicate.Operator.LessOrEqual    or
+					SqlPredicate.Operator.Equal          => new SqlPredicate.IsNull(SqlNullabilityExpression.ApplyNullability(x, true), isNot: false),
+					SqlPredicate.Operator.NotLess        or
+					SqlPredicate.Operator.Greater        or
+					SqlPredicate.Operator.NotEqual       => new SqlPredicate.IsNull(SqlNullabilityExpression.ApplyNullability(x, true), isNot: true),
+					SqlPredicate.Operator.GreaterOrEqual => new SqlPredicate.ExprExpr(
+						// Always true
+						new SqlValue(1), SqlPredicate.Operator.Equal, new SqlValue(1), withNull: null),
+					SqlPredicate.Operator.Less           => new SqlPredicate.ExprExpr(
+						// Always false
+						new SqlValue(1), SqlPredicate.Operator.Equal, new SqlValue(0), withNull: null),
+					// Overlaps doesn't operate on strings
+					_ => throw new InvalidOperationException(),
+				};
+			}
+
+			static SqlPredicate.Operator InvertDirection(SqlPredicate.Operator op)
+			{
+				return op switch 
+				{
+					SqlPredicate.Operator.NotEqual       or 
+					SqlPredicate.Operator.Equal          => op,
+					SqlPredicate.Operator.Greater        => SqlPredicate.Operator.Less,
+					SqlPredicate.Operator.GreaterOrEqual => SqlPredicate.Operator.LessOrEqual,
+					SqlPredicate.Operator.Less           => SqlPredicate.Operator.Greater,
+					SqlPredicate.Operator.LessOrEqual    => SqlPredicate.Operator.GreaterOrEqual,
+					SqlPredicate.Operator.NotGreater     => SqlPredicate.Operator.NotLess,
+					SqlPredicate.Operator.NotLess        => SqlPredicate.Operator.NotGreater,
+					// Overlaps doesn't operate on strings
+					_ => throw new InvalidOperationException(),
+				};
+			}
 		}
 
 		public override IQueryElement ConvertSqlBinaryExpression(SqlBinaryExpression element)
@@ -128,9 +137,6 @@ namespace LinqToDB.DataProvider.Oracle
 		{
 			switch (func)
 			{
-				case { Name: "Coalesce", Parameters.Length: 2 }:
-					return ConvertCoalesceToBinaryFunc(func, "Nvl");
-
 				case {
 					Name: "CharIndex",
 					Parameters: [var p0, var p1],
@@ -156,11 +162,6 @@ namespace LinqToDB.DataProvider.Oracle
 
 			var toType   = cast.ToType;
 			var argument = cast.Expression;
-
-			if (ftype == typeof(bool) && ReferenceEquals(cast, IsForPredicate))
-			{
-				return ConvertToBooleanSearchCondition(cast.Expression);
-			}
 
 			if (ftype == typeof(DateTime) || ftype == typeof(DateTimeOffset)
 #if NET6_0_OR_GREATER

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Data.Common;
 using System.Linq;
 using System.Linq.Expressions;
@@ -11,11 +12,9 @@ using System.Threading.Tasks;
 
 namespace LinqToDB.DataProvider.PostgreSQL
 {
-
 	using Common;
 	using Data;
 	using Expressions;
-	using Extensions;
 	using Mapping;
 
 	public class NpgsqlProviderAdapter : IDynamicProviderAdapter
@@ -560,7 +559,8 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			/// Added as alias to <see cref="TimestampTZ"/> in npgsql 4.0.0.
 			/// Don't use it, as it will not work with 3.x.
 			/// </summary>
-			[Obsolete("Marked obsolete to avoid unintentional use")]
+			// don't remove, both values valid and must be defined
+			[Obsolete("Marked obsolete to avoid unintentional use"), EditorBrowsable(EditorBrowsableState.Never)]
 			TimestampTz                    = 26,
 			// members with same name but different case
 			[CLSCompliant(false)]
@@ -569,7 +569,8 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			/// Added as alias to <see cref="TimeTZ"/> in npgsql 4.0.0.
 			/// Don't use it, as it will not work with 3.x.
 			/// </summary>
-			[Obsolete("Marked obsolete to avoid unintentional use")]
+			// don't remove, both values valid and must be defined
+			[Obsolete("Marked obsolete to avoid unintentional use"), EditorBrowsable(EditorBrowsableState.Never)]
 			TimeTz                         = 31,
 			// members with same name but different case
 			[CLSCompliant(false)]

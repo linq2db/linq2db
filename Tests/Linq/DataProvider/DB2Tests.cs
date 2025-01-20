@@ -135,17 +135,12 @@ namespace Tests.DataProvider
 
 				var sql = string.Format(CultureInfo.InvariantCulture, "SELECT Cast({0} as {1}) FROM SYSIBM.SYSDUMMY1", sqlValue ?? "NULL", sqlType);
 
-				Debug.WriteLine(sql + " -> " + typeof(T));
-
 				Assert.That(conn.Execute<T>(sql), Is.EqualTo(expectedValue));
 			}
 
 			// [IBM][DB2/LINUXX8664] SQL0418N  The statement was not processed because the statement contains an invalid use of one of the following: an untyped parameter marker, the DEFAULT keyword, or a null value.
-//			Debug.WriteLine("{0} -> DataType.{1}",  typeof(T), dataType);
 //			Assert.That(conn.Execute<T>("SELECT @p FROM SYSIBM.SYSDUMMY1", new DataParameter { Name = "p", DataType = dataType, Value = expectedValue }), Is.EqualTo(expectedValue));
-//			Debug.WriteLine("{0} -> auto", typeof(T));
 //			Assert.That(conn.Execute<T>("SELECT @p FROM SYSIBM.SYSDUMMY1", new DataParameter { Name = "p", Value = expectedValue }), Is.EqualTo(expectedValue));
-//			Debug.WriteLine("{0} -> new",  typeof(T));
 //			Assert.That(conn.Execute<T>("SELECT @p FROM SYSIBM.SYSDUMMY1", new { p = expectedValue }), Is.EqualTo(expectedValue));
 		}
 
@@ -454,7 +449,6 @@ namespace Tests.DataProvider
 							MaxBatchSize       = maxSize,
 							BulkCopyType       = bulkCopyType,
 							NotifyAfter        = 10000,
-							RowsCopiedCallback = copied => Debug.WriteLine(copied.RowsCopied)
 						},
 						Enumerable.Range(0, batchSize).Select(n =>
 							new ALLTYPE
@@ -501,7 +495,6 @@ namespace Tests.DataProvider
 							MaxBatchSize       = maxSize,
 							BulkCopyType       = bulkCopyType,
 							NotifyAfter        = 10000,
-							RowsCopiedCallback = copied => Debug.WriteLine(copied.RowsCopied)
 						},
 						Enumerable.Range(0, batchSize).Select(n =>
 							new ALLTYPE

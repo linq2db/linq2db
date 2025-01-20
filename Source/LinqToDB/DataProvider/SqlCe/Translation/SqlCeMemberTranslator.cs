@@ -62,7 +62,7 @@ namespace LinqToDB.DataProvider.SqlCe.Translation
 				var factory = translationContext.ExpressionFactory;
 				var intDbType = factory.GetDbDataType(typeof(int));
 
-				var resultExpression = factory.Function(intDbType, "DatePart", factory.Fragment(intDbType, partStr), dateTimeExpression);
+				var resultExpression = factory.Function(intDbType, "DatePart", ParametersNullabilityType.SameAsSecondParameter, factory.NotNullFragment(intDbType, partStr), dateTimeExpression);
 
 				return resultExpression;
 			}
@@ -119,6 +119,7 @@ namespace LinqToDB.DataProvider.SqlCe.Translation
 					return
 						factory.Concat(
 							factory.Function(stringDataType, "REPLICATE",
+								ParametersNullabilityType.SameAsSecondParameter,
 								factory.Value(stringDataType, "0"),
 								factory.Sub(intDataType, factory.Value(intDataType, padSize), factory.Function(intDataType, "LEN", castToLength))
 							),
@@ -169,7 +170,7 @@ namespace LinqToDB.DataProvider.SqlCe.Translation
 					return null;
 				}
 
-				var resultExpression = factory.Function(dateType, "DateAdd", factory.Fragment(factory.GetDbDataType(typeof(string)), partStr), increment, dateTimeExpression);
+				var resultExpression = factory.Function(dateType, "DateAdd", factory.NotNullFragment(factory.GetDbDataType(typeof(string)), partStr), increment, dateTimeExpression);
 				return resultExpression;
 			}
 
@@ -180,7 +181,7 @@ namespace LinqToDB.DataProvider.SqlCe.Translation
 				var factory    = translationContext.ExpressionFactory;
 				var stringType = factory.GetDbDataType(typeof(string)).WithDataType(DataType.NVarChar).WithLength(10);
 
-				var convert = factory.Function(stringType, "CONVERT", new SqlDataType(stringType), dateExpression, factory.Value(101));
+				var convert = factory.Function(stringType, "CONVERT", ParametersNullabilityType.SameAsSecondParameter, new SqlDataType(stringType), dateExpression, factory.Value(101));
 				var cast    = factory.Cast(convert, translationContext.GetDbDataType(dateExpression));
 
 				return cast;
@@ -190,7 +191,20 @@ namespace LinqToDB.DataProvider.SqlCe.Translation
 			{
 				var factory = translationContext.ExpressionFactory;
 
-				return factory.Function(factory.GetDbDataType(typeof(DateTime)), "GetDate");
+				return factory.Function(factory.GetDbDataType(typeof(DateTime)), "GetDate", ParametersNullabilityType.NotNullable);
+			}
+		}
+
+		public class SqlCeMathMemberTranslator : MathMemberTranslatorBase
+		{
+			protected override ISqlExpression? TranslateRoundAwayFromZero(ITranslationContext translationContext, MethodCallExpression methodCall, ISqlExpression value, ISqlExpression? precision)
+			{
+				return base.TranslateRoundAwayFromZero(translationContext, methodCall, value, precision ?? translationContext.ExpressionFactory.Value(0));
+			}
+
+			protected override ISqlExpression? TranslateRoundToEven(ITranslationContext translationContext, MethodCallExpression methodCall, ISqlExpression value, ISqlExpression? precision)
+			{
+				return base.TranslateRoundToEven(translationContext, methodCall, value, precision ?? translationContext.ExpressionFactory.Value(0));
 			}
 		}
 
@@ -202,6 +216,11 @@ namespace LinqToDB.DataProvider.SqlCe.Translation
 		protected override IMemberTranslator CreateDateMemberTranslator()
 		{
 			return new DateFunctionsTranslator();
+		}
+
+		protected override IMemberTranslator CreateMathMemberTranslator()
+		{
+			return new SqlCeMathMemberTranslator();
 		}
 
 		protected override ISqlExpression? TranslateNewGuidMethod(ITranslationContext translationContext, TranslationFlags translationFlags)

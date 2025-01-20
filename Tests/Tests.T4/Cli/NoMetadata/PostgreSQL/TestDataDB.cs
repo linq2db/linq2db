@@ -86,6 +86,7 @@ namespace Cli.NoMetadata.PostgreSQL
 		public ITable<TestMerge2>               TestMerge2                => this.GetTable<TestMerge2>();
 		public ITable<TestMergeIdentity>        TestMergeIdentities       => this.GetTable<TestMergeIdentity>();
 		public ITable<Entity>                   Entities                  => this.GetTable<Entity>();
+		public ITable<MultitenantTable>         MultitenantTables         => this.GetTable<MultitenantTable>();
 		public ITable<SameName>                 SameNames                 => this.GetTable<SameName>();
 		public ITable<SameName1>                SameName1                 => this.GetTable<SameName1>();
 		public ITable<SameName2>                SameName2                 => this.GetTable<SameName2>();
@@ -344,8 +345,29 @@ namespace Cli.NoMetadata.PostgreSQL
 		}
 		#endregion
 
+		#region Overloads
+		public static int? Overloads(int? input1)
+		{
+			throw new InvalidOperationException("Scalar function cannot be called outside of query");
+		}
+		#endregion
+
+		#region Overloads
+		public static short? Overloads(int? input1, short? input2)
+		{
+			throw new InvalidOperationException("Scalar function cannot be called outside of query");
+		}
+		#endregion
+
+		#region Overloads
+		public static short? Overloads(int? input1, int? input2)
+		{
+			throw new InvalidOperationException("Scalar function cannot be called outside of query");
+		}
+		#endregion
+
 		#region Reverse
-		public static string? Reverse(string? par7)
+		public static string? Reverse(string? par10)
 		{
 			throw new InvalidOperationException("Scalar function cannot be called outside of query");
 		}
@@ -354,7 +376,7 @@ namespace Cli.NoMetadata.PostgreSQL
 
 		#region Aggregate Functions
 		#region TestAvg
-		public static double? TestAvg<TSource>(this IEnumerable<TSource> src, Expression<Func<TSource, double?>> par9)
+		public static double? TestAvg<TSource>(this IEnumerable<TSource> src, Expression<Func<TSource, double?>> par12)
 		{
 			throw new InvalidOperationException("Association cannot be called outside of query");
 		}

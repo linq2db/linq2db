@@ -122,9 +122,9 @@ namespace LinqToDB.Common.Internal
 					? typeof(DefaultValueComparer<>)
 					: typeof(ValueComparer<>);
 
-			return (ValueComparer)Activator.CreateInstance(
+			return ActivatorExt.CreateInstance<ValueComparer>(
 				comparerType.MakeGenericType(type),
-				new object[] { favorStructuralComparisons })!;
+				new object[] { favorStructuralComparisons });
 		}
 
 		static readonly ConcurrentDictionary<(Type, bool), ValueComparer> _defaultValueComparers = new();

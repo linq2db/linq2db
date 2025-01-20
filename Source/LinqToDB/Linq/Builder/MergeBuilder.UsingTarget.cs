@@ -8,12 +8,11 @@ namespace LinqToDB.Linq.Builder
 
 	internal partial class MergeBuilder
 	{
+		[BuildsMethodCall(nameof(LinqExtensions.UsingTarget))]
 		internal sealed class UsingTarget : MethodCallBuilder
 		{
-			protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
-			{
-				return methodCall.IsSameGenericMethod(UsingTargetMethodInfo);
-			}
+			public static bool CanBuildMethod(MethodCallExpression call, BuildInfo info, ExpressionBuilder builder)
+				=> call.IsSameGenericMethod(UsingTargetMethodInfo);
 
 			protected override BuildSequenceResult BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 			{
@@ -22,6 +21,7 @@ namespace LinqToDB.Linq.Builder
 				var genericArguments = methodCall.Method.GetGenericArguments();
 
 				var cloningContext      = new CloningContext();
+				cloningContext.CloneElements(builder.GetCteClauses());
 				var clonedTargetContext = cloningContext.CloneContext(mergeContext.TargetContext);
 
 				var targetContextRef = new ContextRefExpression(genericArguments[0], mergeContext.TargetContext, "target");

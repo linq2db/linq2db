@@ -72,6 +72,7 @@ namespace Cli.Default.PostgreSQL
 		public ITable<TestMerge2>               TestMerge2                => this.GetTable<TestMerge2>();
 		public ITable<TestMergeIdentity>        TestMergeIdentities       => this.GetTable<TestMergeIdentity>();
 		public ITable<Entity>                   Entities                  => this.GetTable<Entity>();
+		public ITable<MultitenantTable>         MultitenantTables         => this.GetTable<MultitenantTable>();
 		public ITable<SameName>                 SameNames                 => this.GetTable<SameName>();
 		public ITable<SameName1>                SameName1                 => this.GetTable<SameName1>();
 		public ITable<SameName2>                SameName2                 => this.GetTable<SameName2>();

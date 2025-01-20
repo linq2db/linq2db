@@ -5,6 +5,6 @@
 // associated with an assembly.
 [assembly: AssemblyTitle("UnitTests.Linq")]
 [assembly: AssemblyProduct("UnitTests.Linq")]
-[assembly: AssemblyCopyright("\xA9 2002-2024 www.LinqToDB.net")]
+[assembly: AssemblyCopyright("\xA9 2002-2025 www.LinqToDB.net")]
 [assembly: AssemblyCulture("")]
 

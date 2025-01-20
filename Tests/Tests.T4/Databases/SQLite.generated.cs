@@ -20,6 +20,8 @@ namespace SQLiteDataContext
 {
 	public partial class TestDataDB : LinqToDB.DataContext
 	{
+		#region Tables
+
 		public ITable<@namespace>        Classes             { get { return this.GetTable<@namespace>(); } }
 		public ITable<AllTypesView>      AllTypesViews       { get { return this.GetTable<AllTypesView>(); } }
 		public ITable<Child>             Children            { get { return this.GetTable<Child>(); } }
@@ -39,6 +41,10 @@ namespace SQLiteDataContext
 		public ITable<TestMerge1>        TestMerge1          { get { return this.GetTable<TestMerge1>(); } }
 		public ITable<TestMerge2>        TestMerge2          { get { return this.GetTable<TestMerge2>(); } }
 		public ITable<TestT4Casing>      TestT4Casings       { get { return this.GetTable<TestT4Casing>(); } }
+
+		#endregion
+
+		#region .ctor
 
 		public TestDataDB()
 		{
@@ -69,6 +75,8 @@ namespace SQLiteDataContext
 
 		partial void InitDataContext  ();
 		partial void InitMappingSchema();
+
+		#endregion
 	}
 
 	[Table("AllTypes")]
@@ -148,7 +156,7 @@ namespace SQLiteDataContext
 		/// <summary>
 		/// FK_Doctor_0_0 (Person)
 		/// </summary>
-		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false)]
+		[Association(ThisKey=nameof(SQLiteDataContext.Doctor.PersonID), OtherKey=nameof(SQLiteDataContext.Person.PersonID), CanBeNull=false)]
 		public Person Person { get; set; } = null!;
 
 		#endregion
@@ -180,7 +188,7 @@ namespace SQLiteDataContext
 		/// <summary>
 		/// FK_ForeignKeyTable_0_0 (PrimaryKeyTable)
 		/// </summary>
-		[Association(ThisKey="PrimaryKeyTableID", OtherKey="ID", CanBeNull=false)]
+		[Association(ThisKey=nameof(SQLiteDataContext.ForeignKeyTable.PrimaryKeyTableID), OtherKey=nameof(SQLiteDataContext.PrimaryKeyTable.ID), CanBeNull=false)]
 		public PrimaryKeyTable PrimaryKeyTable { get; set; } = null!;
 
 		#endregion
@@ -245,7 +253,7 @@ namespace SQLiteDataContext
 		/// <summary>
 		/// FK_Patient_0_0 (Person)
 		/// </summary>
-		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false)]
+		[Association(ThisKey=nameof(SQLiteDataContext.Patient.PersonID), OtherKey=nameof(SQLiteDataContext.Person.PersonID), CanBeNull=false)]
 		public Person Person { get; set; } = null!;
 
 		#endregion
@@ -265,13 +273,13 @@ namespace SQLiteDataContext
 		/// <summary>
 		/// FK_Doctor_0_0_BackReference (Doctor)
 		/// </summary>
-		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=true)]
+		[Association(ThisKey=nameof(SQLiteDataContext.Person.PersonID), OtherKey=nameof(SQLiteDataContext.Doctor.PersonID), CanBeNull=true)]
 		public Doctor? Doctor { get; set; }
 
 		/// <summary>
 		/// FK_Patient_0_0_BackReference (Patient)
 		/// </summary>
-		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=true)]
+		[Association(ThisKey=nameof(SQLiteDataContext.Person.PersonID), OtherKey=nameof(SQLiteDataContext.Patient.PersonID), CanBeNull=true)]
 		public Patient? Patient { get; set; }
 
 		#endregion
@@ -288,7 +296,7 @@ namespace SQLiteDataContext
 		/// <summary>
 		/// FK_ForeignKeyTable_0_0_BackReference (ForeignKeyTable)
 		/// </summary>
-		[Association(ThisKey="ID", OtherKey="PrimaryKeyTableID", CanBeNull=true)]
+		[Association(ThisKey=nameof(SQLiteDataContext.PrimaryKeyTable.ID), OtherKey=nameof(SQLiteDataContext.ForeignKeyTable.PrimaryKeyTableID), CanBeNull=true)]
 		public IEnumerable<ForeignKeyTable> ForeignKeyTables { get; set; } = null!;
 
 		#endregion
@@ -415,7 +423,7 @@ namespace SQLiteDataContext
 		/// <summary>
 		/// FK_Doctor_0_0
 		/// </summary>
-		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false)]
+		[Association(ThisKey=nameof(SQLiteDataContext.Doctor.PersonID), OtherKey=nameof(SQLiteDataContext.Person.PersonID), CanBeNull=false)]
 		public static IQueryable<Person> People(this Doctor obj, IDataContext db)
 		{
 			return db.GetTable<Person>().Where(c => c.PersonID == obj.PersonID);
@@ -424,7 +432,7 @@ namespace SQLiteDataContext
 		/// <summary>
 		/// FK_Doctor_0_0
 		/// </summary>
-		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false)]
+		[Association(ThisKey=nameof(SQLiteDataContext.Doctor.PersonID), OtherKey=nameof(SQLiteDataContext.Person.PersonID), CanBeNull=false)]
 		public static Doctor Person(this Person obj, IDataContext db)
 		{
 			return db.GetTable<Doctor>().Where(c => c.PersonID == obj.PersonID).First();
@@ -437,7 +445,7 @@ namespace SQLiteDataContext
 		/// <summary>
 		/// FK_ForeignKeyTable_0_0
 		/// </summary>
-		[Association(ThisKey="PrimaryKeyTableID", OtherKey="ID", CanBeNull=false)]
+		[Association(ThisKey=nameof(SQLiteDataContext.ForeignKeyTable.PrimaryKeyTableID), OtherKey=nameof(SQLiteDataContext.PrimaryKeyTable.ID), CanBeNull=false)]
 		public static IQueryable<PrimaryKeyTable> PrimaryKeyTables(this ForeignKeyTable obj, IDataContext db)
 		{
 			return db.GetTable<PrimaryKeyTable>().Where(c => c.ID == obj.PrimaryKeyTableID);
@@ -446,7 +454,7 @@ namespace SQLiteDataContext
 		/// <summary>
 		/// FK_ForeignKeyTable_0_0
 		/// </summary>
-		[Association(ThisKey="PrimaryKeyTableID", OtherKey="ID", CanBeNull=false)]
+		[Association(ThisKey=nameof(SQLiteDataContext.ForeignKeyTable.PrimaryKeyTableID), OtherKey=nameof(SQLiteDataContext.PrimaryKeyTable.ID), CanBeNull=false)]
 		public static ForeignKeyTable PrimaryKeyTable(this PrimaryKeyTable obj, IDataContext db)
 		{
 			return db.GetTable<ForeignKeyTable>().Where(c => c.PrimaryKeyTableID == obj.ID).First();
@@ -459,7 +467,7 @@ namespace SQLiteDataContext
 		/// <summary>
 		/// FK_Patient_0_0
 		/// </summary>
-		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false)]
+		[Association(ThisKey=nameof(SQLiteDataContext.Patient.PersonID), OtherKey=nameof(SQLiteDataContext.Person.PersonID), CanBeNull=false)]
 		public static IQueryable<Person> People0(this Patient obj, IDataContext db)
 		{
 			return db.GetTable<Person>().Where(c => c.PersonID == obj.PersonID);
@@ -468,7 +476,7 @@ namespace SQLiteDataContext
 		/// <summary>
 		/// FK_Patient_0_0
 		/// </summary>
-		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false)]
+		[Association(ThisKey=nameof(SQLiteDataContext.Patient.PersonID), OtherKey=nameof(SQLiteDataContext.Person.PersonID), CanBeNull=false)]
 		public static Patient Person0(this Person obj, IDataContext db)
 		{
 			return db.GetTable<Patient>().Where(c => c.PersonID == obj.PersonID).First();
@@ -481,7 +489,7 @@ namespace SQLiteDataContext
 		/// <summary>
 		/// FK_Doctor_0_0_BackReference
 		/// </summary>
-		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=true)]
+		[Association(ThisKey=nameof(SQLiteDataContext.Person.PersonID), OtherKey=nameof(SQLiteDataContext.Doctor.PersonID), CanBeNull=true)]
 		public static IQueryable<Doctor> Doctors(this Person obj, IDataContext db)
 		{
 			return db.GetTable<Doctor>().Where(c => c.PersonID == obj.PersonID);
@@ -490,7 +498,7 @@ namespace SQLiteDataContext
 		/// <summary>
 		/// FK_Doctor_0_0_BackReference
 		/// </summary>
-		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=true)]
+		[Association(ThisKey=nameof(SQLiteDataContext.Person.PersonID), OtherKey=nameof(SQLiteDataContext.Doctor.PersonID), CanBeNull=true)]
 		public static Person? Doctor(this Doctor obj, IDataContext db)
 		{
 			return db.GetTable<Person>().Where(c => c.PersonID == obj.PersonID).FirstOrDefault();
@@ -499,7 +507,7 @@ namespace SQLiteDataContext
 		/// <summary>
 		/// FK_Patient_0_0_BackReference
 		/// </summary>
-		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=true)]
+		[Association(ThisKey=nameof(SQLiteDataContext.Person.PersonID), OtherKey=nameof(SQLiteDataContext.Patient.PersonID), CanBeNull=true)]
 		public static IQueryable<Patient> Patients(this Person obj, IDataContext db)
 		{
 			return db.GetTable<Patient>().Where(c => c.PersonID == obj.PersonID);
@@ -508,7 +516,7 @@ namespace SQLiteDataContext
 		/// <summary>
 		/// FK_Patient_0_0_BackReference
 		/// </summary>
-		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=true)]
+		[Association(ThisKey=nameof(SQLiteDataContext.Person.PersonID), OtherKey=nameof(SQLiteDataContext.Patient.PersonID), CanBeNull=true)]
 		public static Person? Patient(this Patient obj, IDataContext db)
 		{
 			return db.GetTable<Person>().Where(c => c.PersonID == obj.PersonID).FirstOrDefault();
@@ -521,7 +529,7 @@ namespace SQLiteDataContext
 		/// <summary>
 		/// FK_ForeignKeyTable_0_0_BackReference
 		/// </summary>
-		[Association(ThisKey="ID", OtherKey="PrimaryKeyTableID", CanBeNull=true)]
+		[Association(ThisKey=nameof(SQLiteDataContext.PrimaryKeyTable.ID), OtherKey=nameof(SQLiteDataContext.ForeignKeyTable.PrimaryKeyTableID), CanBeNull=true)]
 		public static IQueryable<ForeignKeyTable> ForeignKeyTables(this PrimaryKeyTable obj, IDataContext db)
 		{
 			return db.GetTable<ForeignKeyTable>().Where(c => c.PrimaryKeyTableID == obj.ID);

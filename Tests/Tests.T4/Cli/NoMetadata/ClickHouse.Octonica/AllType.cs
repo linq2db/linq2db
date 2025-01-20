@@ -18,9 +18,10 @@ namespace Cli.NoMetadata.ClickHouse.Octonica
 		public short?  SmallintDataType { get; set; } // Int16
 		public float?  FloatDataType    { get; set; } // Float32
 		public double? DoubleDataType   { get; set; } // Float64
-		public byte[]? NcharDataType    { get; set; } // FixedString(20)
-		public byte[]? Char20DataType   { get; set; } // FixedString(20)
+		public string? NcharDataType    { get; set; } // FixedString(20)
+		public string? Char20DataType   { get; set; } // FixedString(20)
 		public string? VarcharDataType  { get; set; } // String
-		public byte[]? CharDataType     { get; set; } // FixedString(1)
+		public char?   CharDataType     { get; set; } // FixedString(1)
+		public ulong?  BitDataType      { get; set; } // UInt64
 	}
 }

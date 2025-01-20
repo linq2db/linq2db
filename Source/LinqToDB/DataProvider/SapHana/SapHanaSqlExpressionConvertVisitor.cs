@@ -11,6 +11,8 @@ namespace LinqToDB.DataProvider.SapHana
 		{
 		}
 
+		protected override bool SupportsDistinctAsExistsIntersect => true;
+
 		#region LIKE
 
 		// https://help.sap.com/viewer/4fe29514fd584807ac9f2a04f6754767/2.0.01/en-US/20fa17f375191014a4d8d8cbfddfe340.html

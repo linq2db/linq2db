@@ -1,0 +1,22 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<ItemGroup>
+		<PackageReference Include="linq2db.SapHana" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<None Include="..\Templates\Hana.Native.tt" Generator="TextTemplatingFileGenerator">
+		  <LastGenOutput>Hana.Native.generated.cs</LastGenOutput>
+		</None>
+		<Compile Include="..\Templates\Hana.Native.generated.cs">
+		  <DesignTime>True</DesignTime>
+		  <AutoGen>True</AutoGen>
+		  <DependentUpon>Hana.Native.tt</DependentUpon>
+		</Compile>
+	</ItemGroup>
+
+	<ItemGroup>
+		<Service Include="{508349b6-6b84-4df5-91f0-309beebad82d}" />
+	</ItemGroup>
+
+</Project>

@@ -2,20 +2,21 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+
 using FluentAssertions;
+
 using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.DataProvider.Informix;
+using LinqToDB.DataProvider.Oracle;
+using LinqToDB.Interceptors;
 using LinqToDB.Mapping;
+
 using NUnit.Framework;
 
 namespace Tests.xUpdate
 {
-	using LinqToDB.DataProvider.Oracle;
-	using LinqToDB.Interceptors;
-
 	using Model;
-
 	using Tests.DataProvider;
 
 	[TestFixture]
@@ -57,7 +58,7 @@ namespace Tests.xUpdate
 		[Test]
 		public async Task KeepIdentity_SkipOnInsertTrue(
 			[DataSources(false, TestProvName.AllClickHouse)] string context,
-			[Values(null, true, false)                     ] bool? keepIdentity,
+			[Values                                        ] bool? keepIdentity,
 			[Values                                        ] BulkCopyType copyType,
 			[Values(0, 1, 2)                               ] int asyncMode) // 0 == sync, 1 == async, 2 == async with IAsyncEnumerable
 		{
@@ -146,10 +147,10 @@ namespace Tests.xUpdate
 		[Test]
 		public async Task KeepIdentity_SkipOnInsertFalse(
 			[DataSources(false, TestProvName.AllClickHouse)]
-		                                string       context,
-			[Values(null, true, false)] bool?        keepIdentity,
-			[Values]                    BulkCopyType copyType,
-			[Values(0, 1, 2)]           int          asyncMode) // 0 == sync, 1 == async, 2 == async with IAsyncEnumerable
+		                      string       context,
+			[Values] bool?    keepIdentity,
+			[Values]          BulkCopyType copyType,
+			[Values(0, 1, 2)] int          asyncMode) // 0 == sync, 1 == async, 2 == async with IAsyncEnumerable
 		{
 			if ((context == ProviderName.Sybase) && copyType == BulkCopyType.ProviderSpecific && keepIdentity != true)
 				Assert.Inconclusive("Sybase native bulk copy doesn't support identity insert (despite documentation)");
@@ -435,8 +436,7 @@ namespace Tests.xUpdate
 		)
 		{
 			// This makes use of array-bound parameters, which is a unique code-path in OracleBulkCopy (issue #4385)
-			using var mode  = new OracleAlternativeBulkCopyMode(AlternativeBulkCopy.InsertInto);
-			using var db    = new DataConnection(context);
+			using var db    = new DataConnection(context, o => o.UseOracle(o => o with { AlternativeBulkCopy = AlternativeBulkCopy.InsertInto }));
 			var options     = GetDefaultBulkCopyOptions(context) with { BulkCopyType = BulkCopyType.MultipleRows };
 			using var table = db.CreateLocalTable<DateOnlyTable>();
 			
@@ -867,9 +867,8 @@ namespace Tests.xUpdate
 			[IncludeDataSources(TestProvName.AllOracle)] string context,
 			[Values(AlternativeBulkCopy.InsertDual, AlternativeBulkCopy.InsertInto)] AlternativeBulkCopy alternateCopyType)
 		{
-			using var mode  = new OracleAlternativeBulkCopyMode(alternateCopyType);
 			var interceptor = new TestDataContextInterceptor();
-			using var db    = new DataContext(context);
+			using var db    = new DataContext(new DataOptions().UseConfiguration(context).UseOracle(o => o with { AlternativeBulkCopy = alternateCopyType }));
 			using var table = db.CreateLocalTable<SimpleBulkCopyTable>();
 			var options     = GetDefaultBulkCopyOptions(context) with { BulkCopyType = BulkCopyType.MultipleRows };
 
@@ -892,9 +891,8 @@ namespace Tests.xUpdate
 			[IncludeDataSources(TestProvName.AllOracle)] string context,
 			[Values(AlternativeBulkCopy.InsertDual, AlternativeBulkCopy.InsertInto)] AlternativeBulkCopy alternateCopyType)
 		{
-			using var mode  = new OracleAlternativeBulkCopyMode(alternateCopyType);
 			var interceptor = new TestDataContextInterceptor();
-			using var db    = new DataContext(context);
+			using var db    = new DataContext(new DataOptions().UseConfiguration(context).UseOracle(o => o with { AlternativeBulkCopy = alternateCopyType }));
 			using var table = db.CreateLocalTable<SimpleBulkCopyTable>();
 			var options     = GetDefaultBulkCopyOptions(context) with { BulkCopyType = BulkCopyType.MultipleRows };
 
@@ -917,9 +915,8 @@ namespace Tests.xUpdate
 			[IncludeDataSources(TestProvName.AllOracle)] string context,
 			[Values(AlternativeBulkCopy.InsertDual, AlternativeBulkCopy.InsertInto)] AlternativeBulkCopy alternateCopyType)
 		{
-			using var mode  = new OracleAlternativeBulkCopyMode(alternateCopyType);
 			var interceptor = new TestDataContextInterceptor();
-			using var db    = new DataContext(context);
+			using var db    = new DataContext(new DataOptions().UseConfiguration(context).UseOracle(o => o with { AlternativeBulkCopy = alternateCopyType }));
 			using var table = db.CreateLocalTable<SimpleBulkCopyTable>();
 			var options     = GetDefaultBulkCopyOptions(context) with { BulkCopyType = BulkCopyType.MultipleRows };
 
@@ -942,9 +939,8 @@ namespace Tests.xUpdate
 			[IncludeDataSources(TestProvName.AllOracle)] string context,
 			[Values(AlternativeBulkCopy.InsertDual, AlternativeBulkCopy.InsertInto)] AlternativeBulkCopy alternateCopyType)
 		{
-			using var mode  = new OracleAlternativeBulkCopyMode(alternateCopyType);
 			var interceptor = new TestDataContextInterceptor();
-			using var db    = new DataConnection(context);
+			using var db    = new DataConnection(context, o => o.UseOracle(o => o with { AlternativeBulkCopy = alternateCopyType }));
 			using var table = db.CreateLocalTable<SimpleBulkCopyTable>();
 			var options     = GetDefaultBulkCopyOptions(context) with { BulkCopyType = BulkCopyType.MultipleRows };
 
@@ -966,9 +962,8 @@ namespace Tests.xUpdate
 			[IncludeDataSources(TestProvName.AllOracle)] string context,
 			[Values(AlternativeBulkCopy.InsertDual, AlternativeBulkCopy.InsertInto)] AlternativeBulkCopy alternateCopyType)
 		{
-			using var mode  = new OracleAlternativeBulkCopyMode(alternateCopyType);
 			var interceptor = new TestDataContextInterceptor();
-			using var db    = new DataConnection(context);
+			using var db    = new DataConnection(context, o => o.UseOracle(o => o with { AlternativeBulkCopy = alternateCopyType }));
 			using var table = db.CreateLocalTable<SimpleBulkCopyTable>();
 			var options     = GetDefaultBulkCopyOptions(context) with { BulkCopyType = BulkCopyType.MultipleRows };
 
@@ -990,9 +985,8 @@ namespace Tests.xUpdate
 			[IncludeDataSources(TestProvName.AllOracle)] string context,
 			[Values(AlternativeBulkCopy.InsertDual, AlternativeBulkCopy.InsertInto)] AlternativeBulkCopy alternateCopyType)
 		{
-			using var mode  = new OracleAlternativeBulkCopyMode(alternateCopyType);
 			var interceptor = new TestDataContextInterceptor();
-			using var db    = new DataConnection(context);
+			using var db    = GetDataConnection(context, o => o.UseOracle(o => o with { AlternativeBulkCopy = alternateCopyType }));
 			using var table = db.CreateLocalTable<SimpleBulkCopyTable>();
 			var options     = GetDefaultBulkCopyOptions(context) with { BulkCopyType = BulkCopyType.MultipleRows };
 
@@ -1172,6 +1166,58 @@ namespace Tests.xUpdate
 				table.Single(x => ((InheritedDefault2)x).Value2 == "Str2").Should().BeOfType<InheritedDefault2>();
 				table.Single(x => ((InheritedDefault3)x).Value3 == "Str3").Should().BeOfType<InheritedDefault3>();
 			}
+		}
+
+		[Table]
+		sealed class IdentityOnlyField
+		{
+			[Identity] public int Id { get; set; }
+		}
+
+		[Table]
+		sealed class SkipOnlyField
+		{
+			[Column(SkipOnInsert = true)] public int? Id { get; set; }
+		}
+
+		[ActiveIssue(Configurations = [TestProvName.AllClickHouse, TestProvName.AllDB2, TestProvName.AllFirebird, TestProvName.AllInformix, TestProvName.AllMySql, TestProvName.AllOracle, TestProvName.AllPostgreSQL, TestProvName.AllSapHana, ProviderName.SqlCe, TestProvName.AllSQLite, TestProvName.AllSqlServer, TestProvName.AllSybase])]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4615")]
+		public void BulkCopyAutoOnly([DataSources(false)] string context, [Values] BulkCopyType copyType)
+		{
+			var data = new IdentityOnlyField[]
+			{
+				new IdentityOnlyField()
+			};
+
+			using var db = new DataConnection(context);
+			using var table = db.CreateLocalTable<IdentityOnlyField>();
+
+			var options = GetDefaultBulkCopyOptions(context) with { BulkCopyType = copyType };
+			table.BulkCopy(options, data);
+
+			var item = table.Single();
+
+			Assert.That(item.Id, Is.EqualTo(1));
+		}
+
+		[ActiveIssue(Configurations = [TestProvName.AllClickHouse, TestProvName.AllDB2, TestProvName.AllFirebird, TestProvName.AllInformix, TestProvName.AllMySql, TestProvName.AllOracle, TestProvName.AllPostgreSQL, TestProvName.AllSapHana, ProviderName.SqlCe, TestProvName.AllSQLite, TestProvName.AllSqlServer, TestProvName.AllSybase])]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4615")]
+		public void BulkCopySkipOnly([DataSources(false)] string context, [Values] BulkCopyType copyType)
+		{
+			var data = new SkipOnlyField[]
+			{
+				new SkipOnlyField()
+			};
+
+			using var db = new DataConnection(context);
+			using var table = db.CreateLocalTable<SkipOnlyField>();
+
+			var options = GetDefaultBulkCopyOptions(context) with { BulkCopyType = copyType };
+			table.BulkCopy(options, data);
+
+			var item = table.Single();
+
+			Assert.That(item.Id, Is.Null);
 		}
 	}
 }

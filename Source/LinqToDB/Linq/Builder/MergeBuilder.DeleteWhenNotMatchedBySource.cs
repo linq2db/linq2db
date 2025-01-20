@@ -9,12 +9,11 @@ namespace LinqToDB.Linq.Builder
 
 	internal partial class MergeBuilder
 	{
+		[BuildsMethodCall(nameof(LinqExtensions.DeleteWhenNotMatchedBySourceAnd))]
 		internal sealed class DeleteWhenNotMatchedBySource : MethodCallBuilder
 		{
-			protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
-			{
-				return methodCall.IsSameGenericMethod(DeleteWhenNotMatchedBySourceAndMethodInfo);
-			}
+			public static bool CanBuildMethod(MethodCallExpression call, BuildInfo info, ExpressionBuilder builder)
+				=> call.IsSameGenericMethod(DeleteWhenNotMatchedBySourceAndMethodInfo);
 
 			protected override BuildSequenceResult BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 			{
@@ -32,7 +31,12 @@ namespace LinqToDB.Linq.Builder
 
 					operation.Where = new SqlSearchCondition();
 
-					builder.BuildSearchCondition(mergeContext.TargetContext, conditionCorrected, ProjectFlags.SQL, operation.Where);
+					var saveIsSourceOuter = mergeContext.SourceContext.IsSourceOuter;
+					mergeContext.SourceContext.IsSourceOuter = true;
+
+					builder.BuildSearchCondition(mergeContext.TargetContext, conditionCorrected, operation.Where);
+
+					mergeContext.SourceContext.IsSourceOuter = saveIsSourceOuter;
 				}
 
 				return BuildSequenceResult.FromContext(mergeContext);

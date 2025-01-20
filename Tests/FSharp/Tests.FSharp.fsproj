@@ -4,6 +4,8 @@
 	<PropertyGroup>
 		<AssemblyName>linq2db.Tests.FSharp</AssemblyName>
 		<WarningLevel>5</WarningLevel>
+
+		<MSBuildWarningsAsMessages>$(MSBuildWarningsAsMessages);MSB3277</MSBuildWarningsAsMessages>
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -15,6 +17,8 @@
 		<Compile Include="InsertTest.fs" />
 		<Compile Include="MappingSchema.fs" />
 		<Compile Include="Issue3743.fs" />
+		<Compile Include="Issue4132.fs" />
+		<Compile Include="Issue1813.fs" />
 	</ItemGroup>
 
 	<ItemGroup>

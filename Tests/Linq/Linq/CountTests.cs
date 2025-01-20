@@ -166,7 +166,6 @@ namespace Tests.Linq
 					select g.Count(ch => ch.ChildID > 20));
 		}
 
-		[ActiveIssue("The column ((expression)) must be in the GROUP BY list.", Configuration = TestProvName.AllInformix)]
 		[Test]
 		public void GroupBy21([DataSources(TestProvName.AllClickHouse)] string context)
 		{
@@ -186,7 +185,6 @@ namespace Tests.Linq
 					select g.Count(p => p.ParentID < 3));
 		}
 
-		[ActiveIssue("The column ((expression)) must be in the GROUP BY list.", Configuration = TestProvName.AllInformix)]
 		[Test]
 		public void GroupBy22([DataSources(TestProvName.AllClickHouse)] string context)
 		{
@@ -223,7 +221,6 @@ namespace Tests.Linq
 					select g.Count(p => p.ParentID < 3));
 		}
 
-		[ActiveIssue("The column ((expression)) must be in the GROUP BY list.", Configuration = TestProvName.AllInformix)]
 		[Test]
 		public void GroupBy3([DataSources(TestProvName.AllClickHouse)] string context)
 		{
@@ -517,7 +514,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void SubQuery7([DataSources(ProviderName.SqlCe, TestProvName.AllOracle, ProviderName.Access, TestProvName.AllClickHouse)] string context)
+		public void SubQuery7([DataSources(ProviderName.SqlCe, TestProvName.AllOracle, TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(

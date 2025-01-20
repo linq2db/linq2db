@@ -3,7 +3,7 @@
 	<PropertyGroup>
 		<RootNamespace>LinqToDB.CLI</RootNamespace>
 		<AssemblyName>dotnet-linq2db</AssemblyName>
-		<TargetFrameworks>net6.0;net8.0</TargetFrameworks>
+		<TargetFrameworks>net6.0;net8.0;net9.0</TargetFrameworks>
 		<DocumentationFile>$(ArtifactsPath)\bin\$(MSBuildProjectName)\$(Configuration)\$(TargetFramework)\$(AssemblyName).xml</DocumentationFile>
 		<OutputType>Exe</OutputType>
 		<WarningsAsErrors>true</WarningsAsErrors>
@@ -11,31 +11,31 @@
 		<RollForward>Major</RollForward>
 	</PropertyGroup>
 
-	<Target Name="CopyHosts" AfterTargets="Build">
-		<Copy SourceFiles="$(SolutionDir)\Redist\CLI\net6.0\dotnet-linq2db.win-x64.exe;$(SolutionDir)\Redist\CLI\net6.0\dotnet-linq2db.win-x86.exe" DestinationFolder="$(ArtifactsPath)\bin\$(MSBuildProjectName)\$(Configuration)\net6.0" />
-		<Copy SourceFiles="$(SolutionDir)\Redist\CLI\net8.0\dotnet-linq2db.win-x64.exe;$(SolutionDir)\Redist\CLI\net8.0\dotnet-linq2db.win-x86.exe" DestinationFolder="$(ArtifactsPath)\bin\$(MSBuildProjectName)\$(Configuration)\net8.0" />
+	<PropertyGroup Condition="$(RID) != ''">
+		<AppHostRuntimeIdentifier>$(RID)</AppHostRuntimeIdentifier>
+		<OutputPath>$(ArtifactsPath)\bin\$(MSBuildProjectName)\$(Configuration)\apphosts\$(TargetFramework)\$(RID)\</OutputPath>
+	</PropertyGroup>
 
-		<!--cleanup for pack-->
+	<Target Name="BuildSpecific" AfterTargets="Build" Condition=" '$(RID)' == '' ">
 		<ItemGroup>
-			<JunkFiles
-				Condition="$(Configuration) == 'Release'"
-				Include="
-			$(ArtifactsPath)\bin\$(MSBuildProjectName)\Release\net6.0\*.xml;
-			$(ArtifactsPath)\bin\$(MSBuildProjectName)\Release\net6.0\*.pdb;
-			$(ArtifactsPath)\bin\$(MSBuildProjectName)\Release\net8.0\*.xml;
-			$(ArtifactsPath)\bin\$(MSBuildProjectName)\Release\net8.0\*.pdb;"
-		/>
+			<TFM Include="$(TargetFrameworks)" Condition=" '$(TargetFramework)' == '' " Label="Build from VS" />
+			<TFM Include="$(TargetFramework)" Condition=" '$(TargetFramework)' != '' " Label="Build from MSBUILD or dotnet" />
 		</ItemGroup>
 
-		<Delete Condition="$(Configuration) == 'Release'" Files="@(JunkFiles)" />
+		<!--we need to remove apphost.exe as Build target doesn't validate already existing file to be compatible with requested RID-->
+		<Delete Files="$(ArtifactsPath)\obj\$(MSBuildProjectName)\$(Configuration)\%(TFM.Identity)\apphost.exe" />
+		<MSBuild Projects="$(MSBuildProjectFullPath)" Properties="RID=win-x86;Configuration=$(Configuration)" Targets="Build" />
+		<Copy SourceFiles="$(ArtifactsPath)\bin\$(MSBuildProjectName)\$(Configuration)\apphosts\%(TFM.Identity)\win-x86\$(AssemblyName).exe" DestinationFiles="$(ArtifactsPath)\bin\$(MSBuildProjectName)\$(Configuration)\%(TFM.Identity)\$(AssemblyName).win-x86.exe" />
+
+		<Delete Files="$(ArtifactsPath)\obj\$(MSBuildProjectName)\$(Configuration)\%(TFM.Identity)\apphost.exe" />
+		<MSBuild Projects="$(MSBuildProjectFullPath)" Properties="RID=win-x64;Configuration=$(Configuration)" Targets="Build" />
+		<Copy SourceFiles="$(ArtifactsPath)\bin\$(MSBuildProjectName)\$(Configuration)\apphosts\%(TFM.Identity)\win-x64\$(AssemblyName).exe" DestinationFiles="$(ArtifactsPath)\bin\$(MSBuildProjectName)\$(Configuration)\%(TFM.Identity)\$(AssemblyName).win-x64.exe" />
 	</Target>
 
 	<ItemGroup>
 		<EmbeddedResource Include="Template.tt" />
-	</ItemGroup>
 
-	<ItemGroup>
-		<ProjectReference Include="..\LinqToDB.Tools\LinqToDB.Tools.csproj" />
+		<ProjectReference Include="..\LinqToDB.Scaffold\LinqToDB.Scaffold.csproj" />
 
 		<PackageReference Include="Microsoft.CodeAnalysis.CSharp" />
 		<PackageReference Include="Microsoft.Extensions.DependencyModel" />
@@ -53,9 +53,7 @@
 		<PackageReference Include="System.Data.OleDb" />
 		<PackageReference Include="ClickHouse.Client" />
 		<PackageReference Include="Octonica.ClickHouseClient" />
-	</ItemGroup>
 
-	<ItemGroup>
 		<AdditionalFiles Include="PublicAPI.*.txt" />
 	</ItemGroup>
 </Project>

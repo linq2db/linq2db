@@ -11,11 +11,11 @@ namespace LinqToDB.DataProvider.SapHana
 	{
 		internal enum Dialect { }
 
-		public SapHanaProviderDetector() : base(default, default)
+		public SapHanaProviderDetector() : base()
 		{
 		}
 
-		static readonly Lazy<IDataProvider> _hanaDataProvider     = CreateDataProvider<SapHanaDataProvider>();
+		static readonly Lazy<IDataProvider> _hanaDataProvider     = CreateDataProvider<SapHanaNativeDataProvider>();
 		static readonly Lazy<IDataProvider> _hanaOdbcDataProvider = CreateDataProvider<SapHanaOdbcDataProvider>();
 
 		public override IDataProvider? DetectProvider(ConnectionOptions options)
@@ -25,14 +25,14 @@ namespace LinqToDB.DataProvider.SapHana
 
 			var provider = options.ProviderName switch
 			{
-				SapHanaProviderAdapter.ClientNamespace => SapHanaProvider.Unmanaged,
-				OdbcProviderAdapter.ClientNamespace    => SapHanaProvider.ODBC,
-				_                                      => DetectProvider()
+				SapHanaProviderAdapter.UnmanagedClientNamespace => SapHanaProvider.Unmanaged,
+				OdbcProviderAdapter.ClientNamespace             => SapHanaProvider.ODBC,
+				_                                               => DetectProvider()
 			};
 
 			switch (options.ProviderName)
 			{
-				case SapHanaProviderAdapter.ClientNamespace:
+				case SapHanaProviderAdapter.UnmanagedClientNamespace:
 				case "Sap.Data.Hana.v4.5"                  :
 				case "Sap.Data.Hana.Core"                  :
 				case "Sap.Data.Hana.Core.v2.1"             :
@@ -70,7 +70,7 @@ namespace LinqToDB.DataProvider.SapHana
 			var fileName = typeof(SapHanaProviderDetector).Assembly.GetFileName();
 			var dirName  = Path.GetDirectoryName(fileName);
 
-			return File.Exists(Path.Combine(dirName ?? ".", SapHanaProviderAdapter.AssemblyName + ".dll"))
+			return File.Exists(Path.Combine(dirName ?? ".", SapHanaProviderAdapter.UnmanagedAssemblyName + ".dll"))
 				? SapHanaProvider.Unmanaged
 				: SapHanaProvider.ODBC;
 		}
@@ -82,9 +82,7 @@ namespace LinqToDB.DataProvider.SapHana
 
 		protected override DbConnection CreateConnection(SapHanaProvider provider, string connectionString)
 		{
-			return provider == SapHanaProvider.Unmanaged
-				? SapHanaProviderAdapter.GetInstance().CreateConnection(connectionString)
-				: OdbcProviderAdapter.GetInstance().CreateConnection(connectionString);
+			return SapHanaProviderAdapter.GetInstance(provider).CreateConnection(connectionString);
 		}
 	}
 }

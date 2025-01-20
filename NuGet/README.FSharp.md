@@ -5,6 +5,7 @@
 LINQ to DB F# Services provides support for F#-specific language features in Linq To DB.
 
 Supported features:
+
 - F# record types support in mappings and projections
 
 More features planned for future releases.

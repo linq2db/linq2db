@@ -14,6 +14,9 @@ T:System.Data.IDbTransaction;Use DbTransaction class instead of ADO.NET interfac
 T:System.ThreadStaticAttribute;don't do it
 M:System.Linq.Expressions.Expression.Property(System.Linq.Expressions.Expression,System.Reflection.MethodInfo); use overload with PropertyInfo parameter
 
+// Better to throw using ThrowIfCancellationRequested
+P:System.Threading.CancellationToken.IsCancellationRequested; prefer to throw instead
+
 // ban raw Attribute query methods and redirect to AttributesExtensions cached helpers
 M:System.Reflection.CustomAttributeExtensions.GetCustomAttribute(System.Reflection.Assembly,System.Type); Use AttributesExtensions.GetAttribute<TAttribute>(bool inherit) extension
 M:System.Reflection.CustomAttributeExtensions.GetCustomAttribute(System.Reflection.MemberInfo,System.Type); Use AttributesExtensions.GetAttribute<TAttribute>(bool inherit) extension
@@ -284,3 +287,43 @@ M:System.Convert.ToUInt64(System.Object); use overload with IFormatProvider para
 M:System.Convert.ToUInt64(System.String); use overload with IFormatProvider parameter
 M:System.Convert.ChangeType(System.Object,System.Type); use overload with IFormatProvider parameter
 M:System.Convert.ChangeType(System.Object,System.TypeCode); use overload with IFormatProvider parameter
+
+# GetInterfaceMap => GetInterfaceMapEx
+M:System.Type.GetInterfaceMap(System.Type); use GetInterfaceMapEx extension
+
+# Expression Compile
+M:System.Linq.Expressions.Expression`1.Compile; use CompileExpression extension
+M:System.Linq.Expressions.Expression`1.Compile(System.Boolean); are u sure you need it?
+M:System.Linq.Expressions.Expression`1.Compile(System.Runtime.CompilerServices.DebugInfoGenerator); are u sure you need it?
+M:System.Linq.Expressions.LambdaExpression.Compile; use CompileExpression extension
+M:System.Linq.Expressions.LambdaExpression.Compile(System.Boolean); are u sure you need it?
+M:System.Linq.Expressions.LambdaExpression.Compile(System.Runtime.CompilerServices.DebugInfoGenerator); are u sure you need it?
+
+// ban reflection-based APIs that should be called indirectly to unwrap TargetInvocationException
+M:System.Delegate.DynamicInvoke(System.Object[]); Use DynamicInvokeExt extension
+M:System.Reflection.ConstructorInfo.Invoke(System.Object[]); Use InvokeExt extension
+M:System.Reflection.ConstructorInfo.Invoke(System.Reflection.BindingFlags,System.Reflection.Binder,System.Object[],System.Globalization.CultureInfo); Use InvokeExt extension (TODO 03:implement when needed)
+M:System.Reflection.ConstructorInvoker.Invoke; Use InvokeExt extension (TODO 04:implement when needed)
+M:System.Reflection.ConstructorInvoker.Invoke(System.Object,System.Object,System.Object,System.Object); Use InvokeExt extension (TODO 05:implement when needed)
+M:System.Reflection.ConstructorInvoker.Invoke(System.Object,System.Object,System.Object); Use InvokeExt extension (TODO 06:implement when needed)
+M:System.Reflection.ConstructorInvoker.Invoke(System.Object,System.Object); Use InvokeExt extension (TODO 07:implement when needed)
+M:System.Reflection.ConstructorInvoker.Invoke(System.Object); Use InvokeExt extension (TODO 08:implement when needed)
+M:System.Reflection.ConstructorInvoker.Invoke(System.Span{System.Object}); Use InvokeExt extension (TODO 09:implement when needed)
+M:System.Reflection.MethodBase.Invoke(System.Object,System.Object[]); Use InvokeExt extension
+M:System.Reflection.MethodBase.Invoke(System.Object,System.Reflection.BindingFlags,System.Reflection.Binder,System.Object[],System.Globalization.CultureInfo); Use InvokeExt extension (TODO 11:implement when needed)
+M:System.Reflection.MethodInvoker.Invoke(System.Object,System.Object,System.Object,System.Object,System.Object); Use InvokeExt extension (TODO 12:implement when needed)
+M:System.Reflection.MethodInvoker.Invoke(System.Object,System.Object,System.Object,System.Object); Use InvokeExt extension (TODO 13:implement when needed)
+M:System.Reflection.MethodInvoker.Invoke(System.Object,System.Object,System.Object); Use InvokeExt extension (TODO 14:implement when needed)
+M:System.Reflection.MethodInvoker.Invoke(System.Object,System.Object); Use InvokeExt extension (TODO 15:implement when needed)
+M:System.Reflection.MethodInvoker.Invoke(System.Object,System.Span{System.Object}); Use InvokeExt extension (TODO 16:implement when needed)
+M:System.Reflection.MethodInvoker.Invoke(System.Object); Use InvokeExt extension (TODO 17:implement when needed)
+M:System.Activator.CreateInstance(System.String,System.String,System.Boolean,System.Reflection.BindingFlags,System.Reflection.Binder,System.Object[],System.Globalization.CultureInfo,System.Object[]); Use CreateInstanceExt extension (TODO 18:implement when needed)
+M:System.Activator.CreateInstance(System.String,System.String,System.Object[]); Use CreateInstanceExt extension (TODO 19:implement when needed)
+M:System.Activator.CreateInstance(System.String,System.String); Use CreateInstanceExt extension (TODO 20:implement when needed)
+M:System.Activator.CreateInstance(System.Type,System.Boolean); Use ActivatorExt.CreateInstance extension
+M:System.Activator.CreateInstance(System.Type,System.Object[],System.Object[]); Use CreateInstanceExt extension (TODO 22:implement when needed)
+M:System.Activator.CreateInstance(System.Type,System.Object[]); Use ActivatorExt.CreateInstance extension
+M:System.Activator.CreateInstance(System.Type,System.Reflection.BindingFlags,System.Reflection.Binder,System.Object[],System.Globalization.CultureInfo,System.Object[]); Use CreateInstanceExt extension (TODO 24:implement when needed)
+M:System.Activator.CreateInstance(System.Type,System.Reflection.BindingFlags,System.Reflection.Binder,System.Object[],System.Globalization.CultureInfo); Use CreateInstanceExt extension (TODO 25:implement when needed)
+M:System.Activator.CreateInstance(System.Type); Use ActivatorExt.CreateInstance extension
+M:System.Activator.CreateInstance``1; Use CreateInstanceExt extension (TODO 27:implement when needed)

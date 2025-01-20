@@ -2,22 +2,14 @@
 
 namespace LinqToDB.Linq.Builder
 {
-	using Common;
 	using LinqToDB.Expressions;
 	using SqlQuery;
 
+	[BuildsMethodCall(nameof(LinqExtensions.With), nameof(LinqExtensions.WithTableExpression))]
 	sealed class WithTableExpressionBuilder : MethodCallBuilder
 	{
-		static readonly string[] MethodNames =
-		{
-			nameof(LinqExtensions.With),
-			nameof(LinqExtensions.WithTableExpression)
-		};
-
-		protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
-		{
-			return methodCall.IsQueryable(MethodNames);
-		}
+		public static bool CanBuildMethod(MethodCallExpression call, BuildInfo info, ExpressionBuilder builder)
+			=> call.IsQueryable();
 
 		protected override BuildSequenceResult BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{

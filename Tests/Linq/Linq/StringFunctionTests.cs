@@ -382,15 +382,15 @@ namespace Tests.Linq
 
 		[Test]
 		public void ContainsValueAll([DataSources] string context,
-			[Values("n", "-", "*", "?", "#", "%", "[", "]", "[]", "[[", "]]")]string toTest)
+			[Values("n", "-", "*", "?", "#", "%", "[", "]", "[]", "[[", "]]")] string toTest)
 		{
-			using (var db = GetDataContext(context))
-			{
-				var s  = "123" + toTest + "456";
+			using var db = GetDataContext(context);
+			db.InlineParameters = true;
 
-				db.Person.Count(p => p.ID == 1 && s.Contains(Sql.ToSql(toTest))).Should().Be(1);
-				db.Person.Count(p => p.ID == 1 && !s.Contains(Sql.ToSql(toTest))).Should().Be(0);
-			}
+			var s  = "123" + toTest + "456";
+
+			db.Person.Count(p => p.ID == 1 && s.Contains(Sql.ToSql(toTest))).Should().Be(1);
+			db.Person.Count(p => p.ID == 1 && !s.Contains(Sql.ToSql(toTest))).Should().Be(0);
 		}
 
 
@@ -398,12 +398,12 @@ namespace Tests.Linq
 		public void ContainsParameterAll([DataSources] string context,
 			[Values("n", "-", "*", "?", "#", "%", "[", "]", "[]", "[[", "]]")]string toTest)
 		{
-			using (var db = GetDataContext(context))
-			{
-				var s  = "123" + toTest + "456";
+			using var db = GetDataContext(context);
+			db.InlineParameters = false;
 
-				db.Person.Count(p => p.ID == 1 && s.Contains(toTest)).Should().Be(1);
-			}
+			var s  = "123" + toTest + "456";
+
+			db.Person.Count(p => p.ID == 1 && s.Contains(toTest)).Should().Be(1);
 		}
 
 		[Test]
@@ -491,7 +491,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void ContainsNull([DataSources(ProviderName.Access)] string context)
+		public void ContainsNull([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -886,7 +886,18 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue(Details = "Sql.CharIndex(string, string, int) have incorrect SQL logic for all providers (except HANA)")]
+		[ActiveIssue(Details = "Sql.CharIndex(string, string, int) have incorrect SQL logic for all providers (except HANA)",
+			Configurations =
+			[
+				TestProvName.AllClickHouse,
+				TestProvName.AllInformix,
+				TestProvName.AllMySql,
+				TestProvName.AllOracle,
+				TestProvName.AllPostgreSQL,
+				TestProvName.AllSqlServer,
+				TestProvName.AllSybase,
+				TestProvName.AllSQLiteClassic,
+			])]
 		[Test]
 		public void IndexOf3([DataSources(
 			ProviderName.DB2, TestProvName.AllFirebird,
@@ -917,7 +928,6 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue("Nothing to see here, it just broke after new ClickHouse release (broken in: 24.2.2)", Configuration = ProviderName.ClickHouseMySql)]
 		[Test]
 		public void LastIndexOf2([DataSources(
 			ProviderName.DB2, ProviderName.SqlCe,
@@ -932,7 +942,6 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue("Nothing to see here, it just broke after new ClickHouse release (broken in: 24.2.2)", Configuration = ProviderName.ClickHouseMySql)]
 		[Test]
 		public void LastIndexOf3([DataSources(
 			ProviderName.DB2, ProviderName.SqlCe,
@@ -1060,11 +1069,14 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Stuff2([IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllClickHouse)] string context)
+		public void Stuff2([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				var q =
+			using var db = GetDataContext(context);
+			using var t1 = db.CreateLocalTable<Task>();
+			using var t2 = db.CreateLocalTable<TaskCategory>();
+			using var t3 = db.CreateLocalTable<Category>();
+
+			var q =
 					from t in db.GetTable<Task>()
 					join tc in db.GetTable<TaskCategory>() on t.Id equals tc.TaskId into g
 					from tc in g.DefaultIfEmpty()
@@ -1078,8 +1090,7 @@ namespace Tests.Linq
 							select "," + c.Name, 1, 1, "")
 					};
 
-				TestContext.WriteLine(q.ToString());
-			}
+			_ = q.ToArray();
 		}
 
 		[Test]
@@ -1244,7 +1255,7 @@ namespace Tests.Linq
 				from p in db.Person
 				where p.ID == 1
 				select new { p.ID, Name = "  " + p.FirstName + " " } into pp
-				where pp.Name.TrimStart(' ', 'J') == "ohn "
+				where pp.Name.TrimStart(new char[]{ ' ', 'J' }) == "ohn "
 				select pp;
 			Assert.That(q.ToList().First().ID, Is.EqualTo(1));
 		}
@@ -1263,7 +1274,7 @@ namespace Tests.Linq
 				from p in db.Person
 				where p.ID == 1
 				select new { p.ID, Name = "  " + p.FirstName + " " } into pp
-				where pp.Name.TrimEnd(' ', 'n') == "  Joh"
+				where pp.Name.TrimEnd(new char[]{ ' ', 'n' }) == "  Joh"
 				select pp;
 			Assert.That(q.ToList().First().ID, Is.EqualTo(1));
 		}

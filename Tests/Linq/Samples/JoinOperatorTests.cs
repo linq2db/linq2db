@@ -20,10 +20,7 @@ namespace Tests.Samples
 					where !p.Discontinued
 					select c;
 
-				foreach (var category in query)
-				{
-					TestContext.WriteLine(category.CategoryID);
-				}
+				query.ToArray();
 			}
 		}
 

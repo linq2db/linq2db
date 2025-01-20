@@ -13,7 +13,7 @@ namespace LinqToDB.DataProvider.Firebird.Translation
 		class SqlTypesTranslation : SqlTypesTranslationDefault
 		{
 			protected override Expression? ConvertMoney(ITranslationContext translationContext, MemberExpression memberExpression, TranslationFlags translationFlags)
-				=> MakeSqlTypeExpression(translationContext, memberExpression, t => t.WithDataType(DataType.Decimal).WithPrecisionScale(18, 4));
+				=> MakeSqlTypeExpression(translationContext, memberExpression, t => t.WithDataType(DataType.Decimal).WithPrecisionScale(18, 10));
 
 			protected override Expression? ConvertSmallMoney(ITranslationContext translationContext, MemberExpression memberExpression, TranslationFlags translationFlags)
 				=> MakeSqlTypeExpression(translationContext, memberExpression, t => t.WithDataType(DataType.Decimal).WithPrecisionScale(10, 4));
@@ -139,7 +139,7 @@ namespace LinqToDB.DataProvider.Firebird.Translation
 				// Firebird does not support dynamic increment in DateAdd function
 				QueryHelper.MarkAsNonQueryParameters(number);
 
-				var partExpression   = factory.Fragment(factory.GetDbDataType(typeof(string)), datepart.ToString());
+				var partExpression   = factory.NotNullFragment(factory.GetDbDataType(typeof(string)), datepart.ToString());
 				var resultExpression = factory.Function(factory.GetDbDataType(dateTimeExpression), "DateAdd", partExpression, number, dateTimeExpression);
 
 				return resultExpression;
@@ -173,6 +173,7 @@ namespace LinqToDB.DataProvider.Firebird.Translation
 					}
 
 					return factory.Function(stringDataType, "LPad",
+						ParametersNullabilityType.SameAsFirstParameter,
 						CastToLength(expression, padSize),
 						factory.Value(intDataType, padSize),
 						factory.Value(stringDataType, "0"));
@@ -219,7 +220,7 @@ namespace LinqToDB.DataProvider.Firebird.Translation
 			protected override ISqlExpression? TranslateSqlGetDate(ITranslationContext translationContext, TranslationFlags translationFlags)
 			{
 				var factory = translationContext.ExpressionFactory;
-				return factory.Fragment(factory.GetDbDataType(typeof(DateTime)), "LOCALTIMESTAMP");
+				return factory.NotNullFragment(factory.GetDbDataType(typeof(DateTime)), "LOCALTIMESTAMP");
 			}
 		}
 

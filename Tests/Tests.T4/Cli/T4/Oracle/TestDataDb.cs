@@ -616,10 +616,10 @@ namespace Cli.T4.Oracle
 
 		#region Associations
 		/// <summary>
-		/// Fk_Doctor_Person
+		/// FK_Doctor_Person
 		/// </summary>
-		[Association(CanBeNull = false, ThisKey = nameof(PersonID), OtherKey = nameof(Person.PersonID))]
-		public Person FkPerson { get; set; } = null!;
+		[Association(CanBeNull = false, ThisKey = nameof(PersonID), OtherKey = nameof(Oracle.Person.PersonID))]
+		public Person Person { get; set; } = null!;
 		#endregion
 	}
 
@@ -701,10 +701,10 @@ namespace Cli.T4.Oracle
 
 		#region Associations
 		/// <summary>
-		/// Fk_Patient_Person
+		/// FK_Patient_Person
 		/// </summary>
-		[Association(CanBeNull = false, ThisKey = nameof(PersonID), OtherKey = nameof(Person.PersonID))]
-		public Person FkPerson { get; set; } = null!;
+		[Association(CanBeNull = false, ThisKey = nameof(PersonID), OtherKey = nameof(Oracle.Person.PersonID))]
+		public Person Person { get; set; } = null!;
 		#endregion
 	}
 
@@ -719,13 +719,13 @@ namespace Cli.T4.Oracle
 
 		#region Associations
 		/// <summary>
-		/// Fk_Doctor_Person backreference
+		/// FK_Doctor_Person backreference
 		/// </summary>
 		[Association(ThisKey = nameof(PersonID), OtherKey = nameof(Oracle.Doctor.PersonID))]
 		public Doctor? Doctor { get; set; }
 
 		/// <summary>
-		/// Fk_Patient_Person backreference
+		/// FK_Patient_Person backreference
 		/// </summary>
 		[Association(ThisKey = nameof(PersonID), OtherKey = nameof(Oracle.Patient.PersonID))]
 		public Patient? Patient { get; set; }

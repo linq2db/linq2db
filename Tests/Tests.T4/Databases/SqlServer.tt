@@ -1,40 +1,30 @@
-﻿<#@ template language="C#" debug="True" hostSpecific="True" compilerOptions="/langversion:6"   #>
-<#@ output extension=".generated.cs"                                                           #>
-<#@ assembly name="$(ArtifactsPath)\bin\Tests\Debug\net462\Microsoft.SqlServer.Types.dll"      #>
-<#@ include file="..\Shared.ttinclude"                                             once="true" #>
-<#@ include file="SqlServer.ttinclude"                                             once="true" #>
-<#@ include file="..\..\..\Source\LinqToDB.Templates\LinqToDB.SqlServer.ttinclude" once="true" #>
-<#@ include file="..\..\..\Source\LinqToDB.Templates\ObsoleteAttributes.ttinclude" once="true" #>
+﻿<#@ template language="C#" debug="True" hostSpecific="True"                                             #>
+<#@ CleanupBehavior processor="T4VSHost" CleanupAfterProcessingtemplate="true"                          #>
+<#@ output extension=".generated.cs"                                                                    #>
+<#@ include file="$(LinqToDBT4SqlServerTemplatesPath)LinqToDB.SqlServer.ttinclude"          once="true" #>
+<#@ include file="$(LinqToDBT4SqlServerTemplatesPath)LinqToDB.SqlServer.SqlTypes.ttinclude" once="true" #>
+<#@ include file="..\Shared.ttinclude"                                                      once="true" #>
+<#@ include file="SqlServer.ttinclude"                                                      once="true" #>
+<#@ include file="$(LinqToDBT4TemplatesPath)ObsoleteAttributes.ttinclude"                   once="true" #>
 <#
-//	NamespaceName   = "DataContext";
-//	DataContextName = "NorthwindDB";
-	DatabaseName    = null;//"Northwind";
-	GenerateDatabaseName = false;
-	OneToManyAssociationType = "List<{0}>";
-	GenerateSchemaAsType = true;
-	GenerateAssociationExtensions = true;
-//	BaseEntityClass = "object";
-	GenerateSqlServerFreeText = true;
-	GenerateConstructors = false;
-
-//	GenerateBackReferences = false;
-//	GenerateAssociations = true;
-
-//	GetSchemaOptions.GetProcedures = false;
-
-	GenerateProcedureErrors = false;
-	IncludeDefaultSchema = false;
+	DatabaseName                        = null;//"Northwind";
+	GenerateDatabaseName                = false;
+	OneToManyAssociationType            = "List<{0}>";
+	GenerateSchemaAsType                = true;
+	GenerateAssociationExtensions       = true;
+	GenerateSqlServerFreeText           = true;
+	GenerateConstructors                = false;
+	GenerateProcedureErrors             = false;
+	IncludeDefaultSchema                = false;
 	GenerateObsoleteAttributeForAliases = true;
-	GenerateDataTypes = true;
-	GenerateDbTypes   = true;
-
-	//GenerateSchemaAsType = true;
+	GenerateDataTypes                   = true;
+	GenerateDbTypes                     = true;
 
 	SchemaNameMapping.Add("TestSchema", "MySchema");
 
 	GenerateProcedureResultAsList = true;
 
-	GetSchemaOptions.LoadTable = t => t.Name != "Products" && t.Name != "Person";
+	GetSchemaOptions.LoadTable = t => t.Name is not "Products" && t.Name != "Person";
 
 	LoadSqlServerMetadata(GetConnectionString("SqlServer.Northwind"));
 
@@ -54,8 +44,6 @@
 	DataContextObject = null;
 
 	DatabaseName = null;//"TestData";
-
-	//GenerateConstructors = false;
 
 	LoadSqlServerMetadata(GetConnectionString("SqlServer.2019"));
 

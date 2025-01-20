@@ -25,8 +25,15 @@ namespace LinqToDB.DataProvider.DB2
 		}
 
 		readonly HashSet<string?> _systemSchemas =
-			GetHashSet(new [] {"SYSCAT", "SYSFUN", "SYSIBM", "SYSIBMADM", "SYSPROC", "SYSPUBLIC", "SYSSTAT", "SYSTOOLS" },
+			GetHashSet(["SYSCAT", "SYSFUN", "SYSIBM", "SYSIBMADM", "SYSPROC", "SYSPUBLIC", "SYSSTAT", "SYSTOOLS"],
 				StringComparer.OrdinalIgnoreCase);
+
+		protected override void InitProvider(DataConnection dataConnection, GetSchemaOptions options)
+		{
+			base.InitProvider(dataConnection, options);
+
+			DefaultSchema = options.DefaultSchema ?? dataConnection.Execute<string>("select current_schema from sysibm.sysdummy1");
+		}
 
 		protected override List<DataTypeInfo> GetDataTypes(DataConnection dataConnection)
 		{
@@ -48,12 +55,10 @@ namespace LinqToDB.DataProvider.DB2
 				.ToList();
 		}
 
-		protected string? CurrentSchema { get; private set; }
+		protected string? DefaultSchema { get; private set; }
 
 		protected override List<TableInfo> GetTables(DataConnection dataConnection, GetSchemaOptions options)
 		{
-			LoadCurrentSchema(dataConnection);
-
 			var tables = dataConnection.Connection.GetSchema("Tables");
 
 			return
@@ -64,24 +69,19 @@ namespace LinqToDB.DataProvider.DB2
 				let schema  = t.Field<string>("TABLE_SCHEMA")
 				let name    = t.Field<string>("TABLE_NAME")
 				let system  = t.Field<string>("TABLE_TYPE") == "SYSTEM TABLE"
-				where IncludedSchemas.Count != 0 || ExcludedSchemas.Count != 0 || schema == CurrentSchema
+				where IncludedSchemas.Count != 0 || ExcludedSchemas.Count != 0 || schema == DefaultSchema
 				select new TableInfo
 				{
 					TableID            = catalog + '.' + schema + '.' + name,
 					CatalogName        = catalog,
 					SchemaName         = schema,
 					TableName          = name,
-					IsDefaultSchema    = string.IsNullOrEmpty(schema),
+					IsDefaultSchema    = schema                        == DefaultSchema,
 					IsView             = t.Field<string>("TABLE_TYPE") == "VIEW",
 					Description        = t.Field<string>("REMARKS"),
 					IsProviderSpecific = system || _systemSchemas.Contains(schema)
 				}
 			).ToList();
-		}
-
-		protected void LoadCurrentSchema(DataConnection dataConnection)
-		{
-			CurrentSchema ??= dataConnection.Execute<string>("select current_schema from sysibm.sysdummy1");
 		}
 
 		protected override IReadOnlyCollection<PrimaryKeyInfo> GetPrimaryKeys(DataConnection dataConnection,
@@ -402,8 +402,6 @@ WHERE
 
 		protected override List<ProcedureInfo>? GetProcedures(DataConnection dataConnection, GetSchemaOptions options)
 		{
-			LoadCurrentSchema(dataConnection);
-
 			var sql = @"
 SELECT * FROM (
 	SELECT
@@ -473,7 +471,7 @@ ORDER BY OBJECTMODULENAME, PROCSCHEMA, PROCNAME, PARM_COUNT";
 						};
 					},
 					sql)
-				.Where(p => IncludedSchemas.Count != 0 || ExcludedSchemas.Count != 0 || p.SchemaName == CurrentSchema)
+				.Where(p => IncludedSchemas.Count != 0 || ExcludedSchemas.Count != 0 || p.SchemaName == DefaultSchema)
 				.ToList();
 		}
 
@@ -569,7 +567,7 @@ FROM
 				return sql;
 			}
 
-			return $"{schemaNameField} = '{CurrentSchema}'";
+			return $"{schemaNameField} = '{DefaultSchema}'";
 		}
 
 		protected override string BuildTableFunctionLoadTableSchemaCommand(ProcedureSchema procedure, string commandText)

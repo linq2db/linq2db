@@ -6,7 +6,7 @@ namespace LinqToDB.SqlQuery
 {
 	using Common;
 
-	public class SqlParameter : ISqlExpression
+	public class SqlParameter : SqlExpressionBase
 	{
 		public SqlParameter(DbDataType type, string? name, object? value)
 		{
@@ -30,8 +30,6 @@ namespace LinqToDB.SqlQuery
 		public   DbDataType Type             { get; set; }
 		public   bool       IsQueryParameter { get; set; }
 		internal int?       AccessorId       { get; set; }
-
-		Type ISqlExpression.SystemType => Type.SystemType;
 
 		public object? Value     { get; }
 		public bool    NeedsCast { get; set; }
@@ -84,61 +82,34 @@ namespace LinqToDB.SqlQuery
 
 		#endregion
 
-		#region Overrides
+		#region SqlExpressionBase overrides
 
-#if OVERRIDETOSTRING
+		public override int  Precedence => SqlQuery.Precedence.Primary;
+		public override Type SystemType => Type.SystemType;
 
-		public override string ToString()
+		public override bool CanBeNullable(NullabilityContext nullability) 
+			=> SqlDataType.TypeCanBeNull(Type.SystemType);
+
+		public override bool Equals(ISqlExpression other, Func<ISqlExpression, ISqlExpression, bool> comparer)
 		{
-			return this.ToDebugString();
+			return ReferenceEquals(this, other) && comparer(this, other);
 		}
 
-#endif
-
 		#endregion
-
-		#region ISqlExpression Members
-
-		public int Precedence => SqlQuery.Precedence.Primary;
-
-		#endregion
-
-		#region IEquatable<ISqlExpression> Members
-
-		bool IEquatable<ISqlExpression>.Equals(ISqlExpression? other)
-		{
-			return ReferenceEquals(this, other);
-		}
 
 		public override int GetHashCode()
 		{
 			return RuntimeHelpers.GetHashCode(this);
 		}
 
-		#endregion
-
-		#region ISqlExpression Members
-
-		public bool CanBeNullable(NullabilityContext nullability) => CanBeNull;
-
-		public bool CanBeNull => SqlDataType.TypeCanBeNull(Type.SystemType);
-
-		public bool Equals(ISqlExpression other, Func<ISqlExpression,ISqlExpression,bool> comparer)
-		{
-			return ((ISqlExpression)this).Equals(other) && comparer(this, other);
-		}
-
-		#endregion
-
 		#region IQueryElement Members
 
-#if DEBUG
-		public string DebugText => this.ToDebugString();
-#endif
-		public QueryElementType ElementType => QueryElementType.SqlParameter;
+		public override QueryElementType ElementType => QueryElementType.SqlParameter;
 
-		QueryElementTextWriter IQueryElement.ToString(QueryElementTextWriter writer)
+		public override QueryElementTextWriter ToString(QueryElementTextWriter writer)
 		{
+			writer.DebugAppendUniqueId(this);
+
 			if (NeedsCast)
 				writer.Append("$Cast$(");
 
@@ -148,6 +119,8 @@ namespace LinqToDB.SqlQuery
 			writer
 				.Append(Name ?? "parameter");
 
+			if (AccessorId != null)
+				writer.Append("(A:").Append(AccessorId.Value).Append(')');
 #if DEBUG
 			writer.Append('(').Append(_paramNumber).Append(')');
 #endif

@@ -23,7 +23,7 @@ type Person =
       [<Nullable>]
       MiddleName : string
       Gender : Gender
-      [<Association(ThisKey = "ID", OtherKey = "PersonID", CanBeNull=true)>]
+      [<Association(ThisKey = "ID", OtherKey = "PersonID", CanBeNull = true)>]
       Patient : Patient }
 and Patient =
     { [<PrimaryKey>]
