@@ -150,7 +150,7 @@ jobs:
     inputs:
       script: |
         ECHO ON
-        RD $(Build.SourcesDirectory)/testing /S /Q
+        RD $(Build.SourcesDirectory)\testing /S /Q
     condition: and(succeeded(), ${{ parameters.with_tests }})
     displayName: Cleanup Test Artifacts
 
