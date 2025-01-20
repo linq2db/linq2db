@@ -13,7 +13,6 @@ dotnet_diagnostic.MA0076.severity = error # MA0076: Do not use implicit culture-
 MA0076.consider_nullable_types = true
 dotnet_diagnostic.MA0107.severity = error # MA0107: Do not use culture-sensitive object.ToString
 
-
 dotnet_diagnostic.ca1827.severity = error # CA1827: Do not use Count/LongCount when Any can be used
 dotnet_diagnostic.ca2007.severity = error # CA2007: Do not directly await a Task
 dotnet_diagnostic.ca1829.severity = error # CA1829: Use Length/Count property instead of Enumerable.Count method
@@ -21,7 +20,3 @@ dotnet_diagnostic.ca1829.severity = error # CA1829: Use Length/Count property in
 # ReSharper properties
 resharper_csharp_allow_far_alignment = true
 resharper_int_align_switch_sections = true
-
-dotnet_diagnostic.RS0026.severity = none # bad public API optional parameters use
-dotnet_diagnostic.RS0027.severity = none # bad public API optional parameters use
-dotnet_diagnostic.RS0041.severity = none # fake NRT issues

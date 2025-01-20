@@ -24,6 +24,7 @@ stages:
       with_nugets: true
       with_examples: true
       with_tests: eq(variables['System.PullRequest.TargetBranch'], variables['release_branch'])
+      with_api_analyzers: eq(variables['System.PullRequest.TargetBranch'], variables['release_branch'])
       with_analyzers: true
 
 #############

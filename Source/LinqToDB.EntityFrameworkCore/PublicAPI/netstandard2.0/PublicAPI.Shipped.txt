@@ -1,1 +1,2 @@
 ﻿#nullable enable
+static readonly LinqToDB.EntityFrameworkCore.Internal.ReflectionMethods.FromSqlOnQueryableMethodInfo -> System.Reflection.MethodInfo!
