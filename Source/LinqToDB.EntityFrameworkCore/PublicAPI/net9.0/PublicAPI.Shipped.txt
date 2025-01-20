@@ -1,1 +1,12 @@
 ﻿#nullable enable
+static LinqToDB.EntityFrameworkCore.Internal.TransformExpressionVisitor.GetPropValue<TValue>(object! obj, string! propName) -> TValue
+static readonly LinqToDB.EntityFrameworkCore.Internal.ReflectionMethods.AsNoTrackingWithIdentityResolutionMethodInfo -> System.Reflection.MethodInfo!
+static readonly LinqToDB.EntityFrameworkCore.Internal.ReflectionMethods.AsSingleQueryMethodInfo -> System.Reflection.MethodInfo!
+static readonly LinqToDB.EntityFrameworkCore.Internal.ReflectionMethods.AsSplitQueryMethodInfo -> System.Reflection.MethodInfo!
+static readonly LinqToDB.EntityFrameworkCore.Internal.ReflectionMethods.AsSqlServerTable -> System.Reflection.MethodInfo!
+static readonly LinqToDB.EntityFrameworkCore.Internal.ReflectionMethods.TemporalAll -> System.Reflection.MethodInfo!
+static readonly LinqToDB.EntityFrameworkCore.Internal.ReflectionMethods.TemporalAsOfTable -> System.Reflection.MethodInfo!
+static readonly LinqToDB.EntityFrameworkCore.Internal.ReflectionMethods.TemporalBetween -> System.Reflection.MethodInfo!
+static readonly LinqToDB.EntityFrameworkCore.Internal.ReflectionMethods.TemporalContainedIn -> System.Reflection.MethodInfo!
+static readonly LinqToDB.EntityFrameworkCore.Internal.ReflectionMethods.TemporalFromTo -> System.Reflection.MethodInfo!
+virtual LinqToDB.EntityFrameworkCore.Internal.TransformExpressionVisitor.TransformQueryRootExpression(LinqToDB.IDataContext! dc, Microsoft.EntityFrameworkCore.Query.QueryRootExpression! queryRoot) -> System.Linq.Expressions.Expression!

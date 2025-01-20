@@ -27,8 +27,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<AdditionalFiles Include="PublicAPI/PublicAPI.*.txt" />
-		<AdditionalFiles Include="PublicAPI/$(TargetFramework)/PublicAPI.*.txt" />
+		<AdditionalFiles Include="PublicAPI.*.txt" />
 	</ItemGroup>
 
 </Project>

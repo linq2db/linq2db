@@ -1,4 +1,1 @@
 ﻿#nullable enable
-*REMOVED*const LinqToDB.DataProvider.SapHana.SapHanaProviderAdapter.AssemblyName = "Sap.Data.Hana.v4.5" -> string!
-*REMOVED*const LinqToDB.DataProvider.DB2.DB2ProviderAdapter.ClientNamespaceOld = null -> string?
-*REMOVED*const LinqToDB.DataProvider.DB2.DB2ProviderAdapter.AssemblyNameOld = null -> string?

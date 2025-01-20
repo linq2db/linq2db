@@ -1,3 +1,1 @@
 ﻿#nullable enable
-*REMOVED*override LinqToDB.DataProvider.Access.AccessOleDbDataProvider.SetParameter(LinqToDB.Data.DataConnection! dataConnection, System.Data.Common.DbParameter! parameter, string! name, LinqToDB.Common.DbDataType dataType, object? value) -> void
-*REMOVED*const LinqToDB.DataProvider.SapHana.SapHanaProviderAdapter.AssemblyName = "Sap.Data.Hana.Core.v2.1" -> string!
