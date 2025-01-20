@@ -200,7 +200,9 @@ namespace LinqToDB.DataProvider.Access
 
 			if (!string.IsNullOrEmpty(funcName))
 			{
-				return new SqlFunction(cast.SystemType, funcName, expression); 
+				var isNotNull = new SqlPredicate.IsNull(expression, true);
+				var funcCall = new SqlFunction(cast.Type, funcName, false, true, Precedence.Primary, nullabilityType : ParametersNullabilityType.NotNullable, canBeNull : false, expression);
+				return new SqlConditionExpression(isNotNull, funcCall, new SqlValue(cast.Type, null));
 			}
 
 			return expression;

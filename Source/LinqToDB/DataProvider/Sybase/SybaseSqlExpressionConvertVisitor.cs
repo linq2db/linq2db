@@ -86,14 +86,12 @@ namespace LinqToDB.DataProvider.Sybase
 						var p0, var p1, _,
 						SqlValue { Value: string @string, ValueType: var valueType }
 					],
-					SystemType: var type,
-					Precedence: var precedence,
+					Type: var type
 				} when string.IsNullOrEmpty(@string):
 					return new SqlFunction(
 						type,
 						"Stuff",
-						false,
-						precedence,
+						ParametersNullabilityType.SameAsFirstParameter,
 						p0,
 						p1,
 						p1,

@@ -44,6 +44,10 @@ namespace LinqToDB.DataModel
 		/// </summary>
 		public bool                 HasSetter        { get; set; }
 		/// <summary>
+		/// Gets or sets setter modifiers.
+		/// </summary>
+		public Modifiers            SetterModifiers  { get; set; }
+		/// <summary>
 		/// Gets or sets trailing code comment after property definition.
 		/// Example:
 		/// <code>

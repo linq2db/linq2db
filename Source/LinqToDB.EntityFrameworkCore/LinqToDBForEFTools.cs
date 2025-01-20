@@ -248,19 +248,6 @@ namespace LinqToDB.EntityFrameworkCore
 		/// <param name="transaction">Optional transaction instance, to which created connection should be attached.
 		/// If not specified, will use current <see cref="DbContext"/> transaction if it available.</param>
 		/// <returns>LINQ To DB <see cref="DataConnection"/> instance.</returns>
-		[Obsolete($"Use {nameof(CreateLinqToDBConnection)} overload.")]
-		public static DataConnection CreateLinqToDbConnection(this DbContext context,
-			IDbContextTransaction? transaction = null)
-			=> CreateLinqToDBConnection(context, transaction);
-
-		/// <summary>
-		/// Creates LINQ To DB <see cref="DataConnection"/> instance, attached to provided
-		/// EF Core <see cref="DbContext"/> instance connection and transaction.
-		/// </summary>
-		/// <param name="context">EF Core <see cref="DbContext"/> instance.</param>
-		/// <param name="transaction">Optional transaction instance, to which created connection should be attached.
-		/// If not specified, will use current <see cref="DbContext"/> transaction if it available.</param>
-		/// <returns>LINQ To DB <see cref="DataConnection"/> instance.</returns>
 		public static DataConnection CreateLinqToDBConnection(this DbContext context,
 			IDbContextTransaction? transaction = null)
 		{
@@ -331,17 +318,6 @@ namespace LinqToDB.EntityFrameworkCore
 		/// <param name="context">EF Core database context.</param>
 		/// <param name="transaction">Transaction instance.</param>
 		/// <returns>Linq To DB data context.</returns>
-		[Obsolete($"Use {nameof(CreateLinqToDBContext)} overload.")]
-		public static IDataContext CreateLinqToDbContext(this DbContext context,
-			IDbContextTransaction? transaction = null)
-			=> CreateLinqToDBContext(context, transaction);
-
-		/// <summary>
-		/// Creates Linq To DB data context for EF Core database context.
-		/// </summary>
-		/// <param name="context">EF Core database context.</param>
-		/// <param name="transaction">Transaction instance.</param>
-		/// <returns>Linq To DB data context.</returns>
 		public static IDataContext CreateLinqToDBContext(this DbContext context,
 			IDbContextTransaction? transaction = null)
 		{
@@ -405,16 +381,6 @@ namespace LinqToDB.EntityFrameworkCore
 		/// </summary>
 		/// <param name="context">EF Core <see cref="DbContext"/> instance.</param>
 		/// <returns>LINQ To DB <see cref="DataConnection"/> instance.</returns>
-		[Obsolete($"Use {nameof(CreateLinqToDBConnectionDetached)} overload.")]
-		public static DataConnection CreateLinq2DbConnectionDetached(this DbContext context)
-			=> CreateLinqToDBConnectionDetached(context);
-
-		/// <summary>
-		/// Creates LINQ To DB <see cref="DataConnection"/> instance that creates new database connection using connection
-		/// information from EF Core <see cref="DbContext"/> instance.
-		/// </summary>
-		/// <param name="context">EF Core <see cref="DbContext"/> instance.</param>
-		/// <returns>LINQ To DB <see cref="DataConnection"/> instance.</returns>
 		public static DataConnection CreateLinqToDBConnectionDetached(this DbContext context)
 		{
 			ArgumentNullException.ThrowIfNull(context);
@@ -469,16 +435,6 @@ namespace LinqToDB.EntityFrameworkCore
 				return null;
 			return Implementation.ExtractModel(options);
 		}
-
-		/// <summary>
-		/// Creates new LINQ To DB <see cref="DataConnection"/> instance using connectivity information from
-		/// EF Core <see cref="DbContextOptions"/> instance.
-		/// </summary>
-		/// <param name="options">EF Core <see cref="DbContextOptions"/> instance.</param>
-		/// <returns>New LINQ To DB <see cref="DataConnection"/> instance.</returns>
-		[Obsolete($"Use {nameof(CreateLinqToDBConnection)} overload.")]
-		public static DataConnection CreateLinqToDbConnection(this DbContextOptions options)
-			=> CreateLinqToDBConnection(options);
 
 		/// <summary>
 		/// Creates new LINQ To DB <see cref="DataConnection"/> instance using connectivity information from

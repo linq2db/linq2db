@@ -16,6 +16,7 @@ namespace LinqToDB.CodeModel
 			bool                        hasGetter,
 			CodeBlock?                  getter,
 			bool                        hasSetter,
+			Modifiers                   setterModifiers,
 			CodeBlock?                  setter,
 			CodeComment?                trailingComment,
 			CodeXmlComment?             xmlDoc,
@@ -28,6 +29,7 @@ namespace LinqToDB.CodeModel
 			HasGetter       = hasGetter;
 			Getter          = getter;
 			HasSetter       = hasSetter;
+			SetterModifiers = setterModifiers;
 			Setter          = setter;
 			TrailingComment = trailingComment;
 			XmlDoc          = xmlDoc;
@@ -40,7 +42,7 @@ namespace LinqToDB.CodeModel
 		}
 
 		public CodeProperty(CodeIdentifier name, IType type)
-			: this(null, name, new CodeTypeToken(type), default, default, null, default, null, null, null, null)
+			: this(null, name, new CodeTypeToken(type), default, default, null, default, default, null, null, null, null)
 		{
 		}
 
@@ -68,6 +70,10 @@ namespace LinqToDB.CodeModel
 		/// Indicates that property has setter.
 		/// </summary>
 		public bool             HasSetter       { get; internal set; }
+		/// <summary>
+		/// Setter modifiers.
+		/// </summary>
+		public Modifiers        SetterModifiers { get; internal set; }
 		/// <summary>
 		/// Setter body.
 		/// </summary>

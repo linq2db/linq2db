@@ -849,56 +849,6 @@ namespace LinqToDB.SqlQuery
 		}
 
 		/// <summary>
-		/// Converts ORDER BY DISTINCT to GROUP BY equivalent
-		/// </summary>
-		/// <param name="select"></param>
-		/// <param name="flags"></param>
-		/// <returns></returns>
-		public static bool TryConvertOrderedDistinctToGroupBy(SelectQuery select, SqlProviderFlags flags)
-		{
-			if (!select.Select.IsDistinct || select.OrderBy.IsEmpty)
-				return false;
-
-			var nonProjecting = select.Select.OrderBy.Items.Select(static i => i.Expression)
-				.Except(select.Select.Columns.Select(static c => c.Expression))
-				.ToList();
-
-			if (nonProjecting.Count > 0)
-			{
-				if (!flags.IsOrderByAggregateFunctionsSupported)
-					throw new LinqToDBException("Cannot convert sequence to SQL. DISTINCT with ORDER BY not supported.");
-
-				// converting to Group By
-
-				var newOrderItems = new SqlOrderByItem[select.Select.OrderBy.Items.Count];
-				for (var i = 0; i < newOrderItems.Length; i++)
-				{
-					var oi = select.Select.OrderBy.Items[i];
-					newOrderItems[i] = !nonProjecting.Contains(oi.Expression)
-							? oi
-							: new SqlOrderByItem(
-								new SqlFunction(oi.Expression.SystemType!, !oi.IsDescending ? "MIN" : "MAX", true, oi.Expression),
-								oi.IsDescending, oi.IsPositioned);
-				}
-
-				select.Select.OrderBy.Items.Clear();
-				select.Select.OrderBy.Items.AddRange(newOrderItems);
-
-				// add only missing group items
-				var currentGroupItems = new HashSet<ISqlExpression>(select.Select.GroupBy.Items);
-				foreach (var c in select.Select.Columns)
-					if (!currentGroupItems.Contains(c.Expression))
-						select.Select.GroupBy.Items.Add(c.Expression);
-
-				select.Select.IsDistinct = false;
-
-				return true;
-			}
-
-			return false;
-		}
-
-		/// <summary>
 		/// Detects when we can remove order
 		/// </summary>
 		/// <param name="selectQuery"></param>

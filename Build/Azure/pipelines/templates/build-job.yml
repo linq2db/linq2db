@@ -3,6 +3,7 @@ parameters:
   with_examples: false
   with_tests: false
   with_analyzers: false
+  with_api_analyzers: false
 
 jobs:
 - job: build_job
@@ -148,7 +149,7 @@ jobs:
     inputs:
       command: build
       projects: $(solution)
-      arguments: -property:ContinuousIntegrationBuild=true -property:RunAnalyzersDuringBuild=$(with_analyzers) --configuration $(release_configuration)
+      arguments: -property:ContinuousIntegrationBuild=true -property:RunAnalyzersDuringBuild=$(with_analyzers) -property:RunApiAnalyzersDuringBuild=$(with_api_analyzers) --configuration $(release_configuration)
     displayName: Build Solution for Release and Nuget
     condition: and(succeeded(), ${{ parameters.with_nugets }})
 

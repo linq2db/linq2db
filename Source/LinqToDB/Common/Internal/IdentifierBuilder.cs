@@ -139,7 +139,7 @@ namespace LinqToDB.Common.Internal
 			var id  = _identifiers.GetOrAdd(key, static _ => CreateNextID());
 
 #if DEBUG
-			Debug.WriteLine($"CreateID => ({id}) : '{key}'");
+			Debug.WriteLine(FormattableString.Invariant($"CreateID => ({id}) : '{key}'"));
 #endif
 
 			return id;

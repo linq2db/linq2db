@@ -49,6 +49,23 @@ namespace LinqToDB.SqlQuery
 
 		public override bool CanBeNullable(NullabilityContext nullability)
 		{
+			if (Condition is SqlPredicate.IsNull isNullPredicate)
+			{
+				var unwrapped = QueryHelper.UnwrapNullablity(isNullPredicate.Expr1);
+
+				if (isNullPredicate.IsNot)
+				{
+					if (unwrapped.Equals(TrueValue, SqlExpression.DefaultComparer) && !FalseValue.CanBeNullable(nullability))
+					{
+						return false;
+					}
+				}
+				else if (unwrapped.Equals(FalseValue, SqlExpression.DefaultComparer) && !TrueValue.CanBeNullable(nullability))
+				{
+					return false;
+				}
+			}
+
 			return TrueValue.CanBeNullable(nullability) || FalseValue.CanBeNullable(nullability);
 		}
 

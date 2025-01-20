@@ -35,8 +35,8 @@ namespace LinqToDB
 		/// Default value: <c>false</c>.
 		/// </summary>
 		[Pure]
-		// TODO: V7 remove
-		[Obsolete("This API doesn't have effect anymore and will be removed in future")]
+		// TODO: Remove in v7
+		[Obsolete("This API doesn't have effect anymore and will be removed in version 7"), EditorBrowsable(EditorBrowsableState.Never)]
 		public static LinqOptions WithPreloadGroups(this LinqOptions options, bool preloadGroups)
 		{
 			return options;
@@ -151,7 +151,9 @@ namespace LinqToDB
 			return options with { CompareNulls = compareNulls };
 		}
 
-		[Pure, Obsolete("Use WithCompareNulls instead: true maps to LikeClr and false to LikeSqlExceptParameters"), EditorBrowsable(EditorBrowsableState.Never)]
+		[Pure]
+		// TODO: Remove in v7
+		[Obsolete("Use CompareNulls instead: true maps to LikeClr and false to LikeSqlExceptParameters. This option will be removed in version 7"), EditorBrowsable(EditorBrowsableState.Never)]
 		public static LinqOptions WithCompareNullsAsValues(this LinqOptions options, bool compareNullsAsValues)
 		{
 			return options.WithCompareNulls(compareNullsAsValues ? CompareNulls.LikeClr : CompareNulls.LikeSqlExceptParameters);
@@ -208,8 +210,8 @@ namespace LinqToDB
 		/// Default value: <c>true</c>.
 		/// </summary>
 		[Pure]
-		// TODO: V7 remove
-		[Obsolete("This API doesn't have effect anymore and will be removed in future")]
+		// TODO: Remove in v7
+		[Obsolete("This API doesn't have effect anymore and will be removed in version 7"), EditorBrowsable(EditorBrowsableState.Never)]
 		public static LinqOptions WithPreferApply(this LinqOptions options, bool preferApply)
 		{
 			return options;
@@ -222,8 +224,8 @@ namespace LinqToDB
 		/// Default value: <c>true</c>.
 		/// </summary>
 		[Pure]
-		// TODO: V7 remove
-		[Obsolete("This API doesn't have effect anymore and will be removed in future")]
+		// TODO: Remove in v7
+		[Obsolete("This API doesn't have effect anymore and will be removed in version 7"), EditorBrowsable(EditorBrowsableState.Never)]
 		public static LinqOptions WithKeepDistinctOrdered(this LinqOptions options, bool keepDistinctOrdered)
 		{
 			return options;
@@ -274,8 +276,8 @@ namespace LinqToDB
 		/// Default value: <c>false</c>.
 		/// </summary>
 		[Pure]
-		// TODO: V7 remove
-		[Obsolete("This API doesn't have effect anymore and will be removed in future")]
+		// TODO: Remove in v7
+		[Obsolete("This API doesn't have effect anymore and will be removed in version 7"), EditorBrowsable(EditorBrowsableState.Never)]
 		public static DataOptions UsePreloadGroups(this DataOptions options, bool preloadGroups)
 		{
 			return options;
@@ -390,7 +392,9 @@ namespace LinqToDB
 			return options.WithOptions<LinqOptions>(o => o with { CompareNulls = compareNulls });
 		}
 
-		[Pure, Obsolete("Use UseCompareNulls instead: true maps to LikeClr and false to LikeSqlExceptParameters"), EditorBrowsable(EditorBrowsableState.Never)]
+		[Pure]
+		// TODO: Remove in v7
+		[Obsolete("Use CompareNulls instead: true maps to LikeClr and false to LikeSqlExceptParameters. This option will be removed in version 7"), EditorBrowsable(EditorBrowsableState.Never)]
 		public static DataOptions UseCompareNullsAsValues(this DataOptions options, bool compareNullsAsValues)
 		{
 			return options.UseCompareNulls(compareNullsAsValues ? CompareNulls.LikeClr : CompareNulls.LikeSqlExceptParameters);
@@ -447,8 +451,8 @@ namespace LinqToDB
 		/// Default value: <c>true</c>.
 		/// </summary>
 		[Pure]
-		// TODO: V7 remove
-		[Obsolete("This API doesn't have effect anymore and will be removed in future")]
+		// TODO: Remove in v7
+		[Obsolete("This API doesn't have effect anymore and will be removed in version 7"), EditorBrowsable(EditorBrowsableState.Never)]
 		public static DataOptions UsePreferApply(this DataOptions options, bool preferApply)
 		{
 			return options;
@@ -461,8 +465,8 @@ namespace LinqToDB
 		/// Default value: <c>true</c>.
 		/// </summary>
 		[Pure]
-		// TODO: V7 remove
-		[Obsolete("This API doesn't have effect anymore and will be removed in future")]
+		// TODO: Remove in v7
+		[Obsolete("This API doesn't have effect anymore and will be removed in version 7"), EditorBrowsable(EditorBrowsableState.Never)]
 		public static DataOptions UseKeepDistinctOrdered(this DataOptions options, bool keepDistinctOrdered)
 		{
 			return options;

@@ -25,4 +25,9 @@
 			<DependentUpon>Schemas.tt</DependentUpon>
 		</Compile>
 	</ItemGroup>
+
+	<ItemGroup>
+		<AdditionalFiles Include="PublicAPI.*.txt" />
+	</ItemGroup>
+
 </Project>

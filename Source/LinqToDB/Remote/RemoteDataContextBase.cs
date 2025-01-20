@@ -37,13 +37,6 @@ namespace LinqToDB.Remote
 			options.Apply(this);
 		}
 
-		[Obsolete("Use ConfigurationString instead.")]
-		public string? Configuration
-		{
-			get => ConfigurationString;
-			set => ConfigurationString = value;
-		}
-
 		public string?          ConfigurationString { get; set; }
 
 		protected void InitServiceProvider(SimpleServiceProvider serviceProvider)

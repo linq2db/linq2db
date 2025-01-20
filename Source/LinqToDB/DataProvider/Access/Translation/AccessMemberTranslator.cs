@@ -118,8 +118,9 @@ namespace LinqToDB.DataProvider.Access.Translation
 						}
 
 						return factory.Function(stringDataType, "Format",
+							ParametersNullabilityType.SameAsFirstParameter,
 							expression,
-							factory.Function(stringDataType, "String", factory.Value(stringDataType, "0"), factory.Value(intDataType, padSize))
+							factory.Function(stringDataType, "String", ParametersNullabilityType.NotNullable, factory.Value(stringDataType, "0"), factory.Value(intDataType, padSize))
 						);
 					}
 

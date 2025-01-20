@@ -1,5 +1,5 @@
 ﻿using System;
-using System.Runtime.Serialization;
+using System.ComponentModel;
 
 namespace LinqToDB.Metadata
 {
@@ -20,7 +20,8 @@ namespace LinqToDB.Metadata
 		/// This constructor initializes the <see cref="Exception.Message"/>
 		/// property of the new instance such as "A Metadata exception has occurred."
 		/// </remarks>
-		[Obsolete("Use one of constructors with message")]
+		// don't remove, we just want to guard users from using it explicitly
+		[Obsolete("Use one of constructors with message parameter"), EditorBrowsable(EditorBrowsableState.Never)]
 		public MetadataException()
 			: base("A Metadata exception has occurred.")
 		{
@@ -60,7 +61,8 @@ namespace LinqToDB.Metadata
 		/// <param name="innerException">The InnerException, if any, that threw
 		/// the current exception.</param>
 		/// <seealso cref="Exception.InnerException"/>
-		[Obsolete("Use one of constructors with message")]
+		// don't remove, we just want to guard users from using it explicitly
+		[Obsolete("Use one of constructors with message parameter"), EditorBrowsable(EditorBrowsableState.Never)]
 		public MetadataException(Exception innerException)
 			: base(innerException.Message, innerException)
 		{

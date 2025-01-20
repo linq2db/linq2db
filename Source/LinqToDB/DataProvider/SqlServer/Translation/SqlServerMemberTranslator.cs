@@ -47,7 +47,7 @@ namespace LinqToDB.DataProvider.SqlServer.Translation
 				var factory   = translationContext.ExpressionFactory;
 				var intDbType = factory.GetDbDataType(typeof(int));
 
-				var resultExpression = factory.Function(intDbType, "DatePart", factory.Fragment(intDbType, partStr), dateTimeExpression);
+				var resultExpression = factory.Function(intDbType, "DatePart", ParametersNullabilityType.SameAsSecondParameter, factory.NotNullFragment(intDbType, partStr), dateTimeExpression);
 
 				return resultExpression;
 			}
@@ -70,7 +70,7 @@ namespace LinqToDB.DataProvider.SqlServer.Translation
 					return null;
 				}
 
-				var resultExpression = factory.Function(dateType, "DateAdd", factory.Fragment(factory.GetDbDataType(typeof(string)), partStr), increment, dateTimeExpression);
+				var resultExpression = factory.Function(dateType, "DateAdd", factory.NotNullFragment(factory.GetDbDataType(typeof(string)), partStr), increment, dateTimeExpression);
 				return resultExpression;
 			}
 
