@@ -10,7 +10,7 @@ namespace LinqToDB.Remote.Http.Server
 	[ApiController]
 	public class LinqToDBController : ControllerBase //, ILinqService
 	{
-		readonly LinqService _linqService = new () { AllowUpdates = true };
+		readonly LinqService _linqService = new () { AllowUpdates = true, RemoteClientTag = "Http" };
 
 		[HttpPost("GetInfo/{configuration?}")]
 		public virtual ActionResult<LinqServiceInfo> GetInfo(string? configuration)

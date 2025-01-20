@@ -65,6 +65,12 @@ namespace LinqToDB.Remote.Http.Client
 				return getContext(client);
 			});
 
+			services.AddTransient<IDataContextFactory<TContext>>(provider =>
+			{
+				var client = provider.GetRequiredKeyedService<HttpLinqServiceClient>(serviceName);
+				return new DataContextFactory<TContext>(() => getContext(client));
+			});
+
 			return services;
 		}
 

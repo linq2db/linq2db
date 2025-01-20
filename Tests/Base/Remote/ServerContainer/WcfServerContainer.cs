@@ -76,9 +76,12 @@ namespace Tests.Remote.ServerContainer
 #pragma warning disable CA2000 // Dispose objects before losing scope
 				var host = new ServiceHost(
 					service = new TestWcfLinqService(
-						new TestLinqService((c, ms) => _connectionFactory(c, ms)))
+						new TestLinqService((c, ms) => _connectionFactory(c, ms))
 						{
-							AllowUpdates = true
+							RemoteClientTag = "Wcf",
+						})
+						{
+							AllowUpdates = true,
 						},
 					new Uri($"net.tcp://localhost:{GetPort()}"));
 #pragma warning restore CA2000 // Dispose objects before losing scope

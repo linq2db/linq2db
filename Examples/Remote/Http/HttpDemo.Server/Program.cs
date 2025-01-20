@@ -60,11 +60,9 @@ namespace HttpDemo.Server
 
 
 
-			// Map linq2db controller.
+			// Map controllers including linq2db controller.
 			//
 			app.MapControllers();
-
-
 
 			InitDemoDatabase(app.Services);
 

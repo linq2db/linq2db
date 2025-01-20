@@ -4,9 +4,9 @@ using System.Data;
 using System.Data.Common;
 using System.Diagnostics;
 using System.Globalization;
-using System.Linq;
 using System.Text;
 using System.Threading;
+
 using JetBrains.Annotations;
 
 namespace LinqToDB.Data
@@ -421,12 +421,23 @@ namespace LinqToDB.Data
 #pragma warning disable CS8618
 		public DataConnection(DataOptions options)
 		{
+#if DEBUG
+			_dataConnectionID = Interlocked.Increment(ref _dataConnectionIDCounter);
+			Interlocked.Increment(ref _dataConnectionCount);
+#endif
+
 			Options = options ?? throw new ArgumentNullException(nameof(options));
 
 			options.Apply(this);
 
 			DataProvider!.InitContext(this);
 		}
+
+#if DEBUG
+		int _dataConnectionID;
+		static int _dataConnectionIDCounter;
+		static int _dataConnectionCount;
+#endif
 
 #pragma warning restore CS8618
 
@@ -456,6 +467,7 @@ namespace LinqToDB.Data
 		/// Retry policy for current connection.
 		/// </summary>
 		public IRetryPolicy? RetryPolicy         { get; set; }
+		public object?       Tag                 { get; set; }
 
 		private bool? _isMarsEnabled;
 		/// <summary>
@@ -504,13 +516,23 @@ namespace LinqToDB.Data
 					break;
 
 				case TraceInfoStep.AfterExecute:
+				{
+					var str = (info.IsAsync, Client: info.DataConnection.Tag) switch
+					{
+						(true,  not null) => $" (async, {info.DataConnection.Tag})",
+						(true,      null) =>  " (async)",
+						(false, not null) => $" ({info.DataConnection.Tag})",
+						(false,     null) => "",
+					};
+
 					dc.WriteTraceLineConnection(
 						info.RecordsAffected != null
-							? FormattableString.Invariant($"Query Execution Time ({info.TraceInfoStep}){(info.IsAsync ? " (async)" : "")}: {info.ExecutionTime}. Records Affected: {info.RecordsAffected}.\r\n")
-							: FormattableString.Invariant($"Query Execution Time ({info.TraceInfoStep}){(info.IsAsync ? " (async)" : "")}: {info.ExecutionTime}\r\n"),
+							? FormattableString.Invariant($"Query Execution Time ({info.TraceInfoStep}){str}: {info.ExecutionTime}. Records Affected: {info.RecordsAffected}.\r\n")
+							: FormattableString.Invariant($"Query Execution Time ({info.TraceInfoStep}){str}: {info.ExecutionTime}\r\n"),
 						dc.TraceSwitchConnection.DisplayName,
 						info.TraceLevel);
 					break;
+				}
 
 				case TraceInfoStep.Error:
 				{
@@ -1529,6 +1551,10 @@ namespace LinqToDB.Data
 			Disposed = true;
 
 			Close();
+
+#if DEBUG
+			Interlocked.Decrement(ref _dataConnectionCount);
+#endif
 		}
 
 		#endregion

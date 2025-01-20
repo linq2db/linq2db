@@ -17,12 +17,16 @@
 	</thead>
 	<tbody>
 		<tr>
-			<td><label for="os">Operating System</label></td>
-			<td><span id="os">@(OperatingSystem.IsBrowser() ? "Browser" : "Server")</span></td>
+			<td>Operating System</td>
+			<td>@(OperatingSystem.IsBrowser() ? "Browser" : "Server")</td>
 		</tr>
 		<tr>
-			<td><label for="rm">RendererInfo</label></td>
-			<td><span id="rm">@((RendererInfo.IsInteractive ? "Interactive " : " ") + RendererInfo.Name)</span></td>
+			<td>RendererInfo</td>
+			<td>@RendererInfo.Name</td>
+		</tr>
+		<tr>
+			<td>IsInteractive</td>
+			<td>@(RendererInfo.IsInteractive ? "Yes" : "No")</td>
 		</tr>
 	</tbody>
 </table>
