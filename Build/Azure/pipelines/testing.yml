@@ -16,10 +16,15 @@ stages:
 ##############
   - template: templates/build-job.yml
     parameters:
-      with_nugets: false
-      with_examples: false
+      with_nugets: true
+      with_examples: true
       with_tests: true
-      with_analyzers: false
+      with_api_analyzers: true
+      with_analyzers: true
+
+  - template: templates/nuget-job.yml
+    parameters:
+      publish: false
 
 #############
 # TEST JOBS #
@@ -29,7 +34,7 @@ stages:
       enabled: succeeded()
       with_baselines: true
       mac_enabled: false
-      full_run: false
+      full_run: true
       # db_filter parameter. [] wrap used to avoid potential naming conflicts
       ${{ if eq(variables['Build.DefinitionName'], 'test-access') }}:
         db_filter: '[access.all]'
