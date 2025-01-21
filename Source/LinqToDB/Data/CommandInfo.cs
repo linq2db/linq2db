@@ -704,11 +704,11 @@ namespace LinqToDB.Data
 			{
 				var rd = await DataConnection.ExecuteDataReaderAsync(GetCommandBehavior(), cancellationToken).ConfigureAwait(false);
 				await using (rd.ConfigureAwait(false))
-			{
+				{
 					result = await ReadMultipleResultSetsAsync<T>(rd.DataReader!, cancellationToken).ConfigureAwait(false);
 
 					SetRebindParameters(rd);
-			}
+				}
 			}
 
 			return result;

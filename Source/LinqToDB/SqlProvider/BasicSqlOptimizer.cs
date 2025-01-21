@@ -900,9 +900,9 @@ namespace LinqToDB.SqlProvider
 			return false;
 		}
 
-		bool MoveConditions(SqlTable table, 
+		bool MoveConditions(SqlTable table,
 			IReadOnlyCollection<ISqlTableSource> currentSources,
-			SqlSearchCondition       source, 
+			SqlSearchCondition       source,
 			SqlSearchCondition       destination,
 			SqlSearchCondition       common)
 		{
@@ -962,7 +962,7 @@ namespace LinqToDB.SqlProvider
 		{
 			source = null;
 
-			
+
 			if (query.Select.HasSomeModifiers(SqlProviderFlags.IsUpdateSkipTakeSupported, SqlProviderFlags.IsUpdateTakeSupported) ||
 				!query.GroupBy.IsEmpty)
 				return false;
@@ -1198,7 +1198,7 @@ namespace LinqToDB.SqlProvider
 			{
 				updateStatement = QueryHelper.WrapQuery(updateStatement, updateStatement.SelectQuery, allowMutation : true);
 			}
-			
+
 			needsComparison = false;
 
 			if (!needsComparison)
@@ -1955,10 +1955,10 @@ namespace LinqToDB.SqlProvider
 							processingQuery.Where.SearchCondition.AddLessOrEqual(
 								rowNumberColumn,
 								new SqlBinaryExpression(
-									query.Select.SkipValue.SystemType!, 
-									query.Select.SkipValue, 
-									"+", 
-									query.Select.TakeValue), 
+									query.Select.SkipValue.SystemType!,
+									query.Select.SkipValue,
+									"+",
+									query.Select.TakeValue),
 								CompareNulls.LikeSql);
 					}
 					else
