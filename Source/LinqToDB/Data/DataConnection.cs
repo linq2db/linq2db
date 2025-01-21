@@ -517,18 +517,10 @@ namespace LinqToDB.Data
 
 				case TraceInfoStep.AfterExecute:
 				{
-					var str = (info.IsAsync, Client: info.DataConnection.Tag) switch
-					{
-						(true,  not null) => $" (async, {info.DataConnection.Tag})",
-						(true,      null) =>  " (async)",
-						(false, not null) => $" ({info.DataConnection.Tag})",
-						(false,     null) => "",
-					};
-
 					dc.WriteTraceLineConnection(
 						info.RecordsAffected != null
-							? FormattableString.Invariant($"Query Execution Time ({info.TraceInfoStep}){str}: {info.ExecutionTime}. Records Affected: {info.RecordsAffected}.\r\n")
-							: FormattableString.Invariant($"Query Execution Time ({info.TraceInfoStep}){str}: {info.ExecutionTime}\r\n"),
+							? FormattableString.Invariant($"Query Execution Time ({info.TraceInfoStep}){GetTagInfo()}: {info.ExecutionTime}. Records Affected: {info.RecordsAffected}.\r\n")
+							: FormattableString.Invariant($"Query Execution Time ({info.TraceInfoStep}){GetTagInfo()}: {info.ExecutionTime}\r\n"),
 						dc.TraceSwitchConnection.DisplayName,
 						info.TraceLevel);
 					break;
@@ -587,7 +579,7 @@ namespace LinqToDB.Data
 				{
 					using var sb = Pools.StringBuilder.Allocate();
 
-					sb.Value.Append(CultureInfo.InvariantCulture, $"Total Execution Time ({info.TraceInfoStep}){(info.IsAsync ? " (async)" : "")}: {info.ExecutionTime}.");
+					sb.Value.Append(CultureInfo.InvariantCulture, $"Total Execution Time ({info.TraceInfoStep}){GetTagInfo()}: {info.ExecutionTime}.");
 
 					if (info.RecordsAffected != null)
 						sb.Value.Append(CultureInfo.InvariantCulture, $" Rows Count: {info.RecordsAffected}.");
@@ -598,6 +590,17 @@ namespace LinqToDB.Data
 
 					break;
 				}
+			}
+
+			string GetTagInfo()
+			{
+				return (info.IsAsync, Client: info.DataConnection.Tag) switch
+				{
+					(true,  not null) => $" (async, {info.DataConnection.Tag})",
+					(true,      null) =>  " (async)",
+					(false, not null) => $" ({info.DataConnection.Tag})",
+					(false,     null) => "",
+				};
 			}
 		}
 

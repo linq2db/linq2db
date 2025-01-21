@@ -195,10 +195,12 @@ namespace LinqToDB.Extensions.DependencyInjection
 		///     The same service collection so that multiple calls can be chained.
 		/// </returns>
 		public static IServiceCollection AddLinqToDBContext<
-			[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] TContext>(
+			[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] TContext>
+		(
 			this IServiceCollection                        serviceCollection,
 			Func<IServiceProvider,DataOptions,DataOptions> configure,
-			ServiceLifetime                                lifetime = DefaultLifetime)
+			ServiceLifetime                                lifetime = DefaultLifetime
+		)
 			where TContext : IDataContext
 		{
 			return AddLinqToDBContext<TContext,TContext>(serviceCollection, configure, lifetime);
@@ -246,10 +248,12 @@ namespace LinqToDB.Extensions.DependencyInjection
 		///     The same service collection so that multiple calls can be chained.
 		/// </returns>
 		public static IServiceCollection AddLinqToDBContext<
-			[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] TContext>(
+			[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] TContext>
+		(
 			this IServiceCollection        serviceCollection,
 			Func<DataOptions,DataOptions>? configure = null,
-			ServiceLifetime                lifetime  = DefaultLifetime)
+			ServiceLifetime                lifetime  = DefaultLifetime
+		)
 			where TContext : IDataContext
 		{
 			return AddLinqToDBContext<TContext,TContext>(serviceCollection, configure == null ? (_, c) => c : (_, c) => configure(c), lifetime);
@@ -298,10 +302,12 @@ namespace LinqToDB.Extensions.DependencyInjection
 		///     The same service collection so that multiple calls can be chained.
 		/// </returns>
 		public static IServiceCollection AddLinqToDBContext<
-			[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] TContext>(
+			[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] TContext>
+		(
 			this IServiceCollection serviceCollection,
 			Func<DataOptions>       configure,
-			ServiceLifetime         lifetime = DefaultLifetime)
+			ServiceLifetime         lifetime = DefaultLifetime
+		)
 			where TContext : IDataContext
 		{
 			return AddLinqToDBContext<TContext,TContext>(serviceCollection, (_, _) => configure(), lifetime);
@@ -353,16 +359,18 @@ namespace LinqToDB.Extensions.DependencyInjection
 		/// <returns>
 		///     The same service collection so that multiple calls can be chained.
 		/// </returns>
-		public static IServiceCollection AddLinqToDBContext<TContext,
-			[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)]
-			TContextImplementation>(
+		public static IServiceCollection AddLinqToDBContext<
+			TContext,
+			[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] TContextImplementation>
+		(
 			this IServiceCollection serviceCollection,
 			Func<DataOptions>       configure,
-			ServiceLifetime         lifetime = DefaultLifetime)
+			ServiceLifetime         lifetime = DefaultLifetime
+		)
 			where TContextImplementation : TContext, IDataContext
 			where TContext : IDataContext
 		{
-			return AddLinqToDBContext<TContext,TContext>(serviceCollection, (_, _) => configure(), lifetime);
+			return AddLinqToDBContext<TContext,TContextImplementation>(serviceCollection, (_, _) => configure(), lifetime);
 		}
 
 		/// <summary>
@@ -410,16 +418,18 @@ namespace LinqToDB.Extensions.DependencyInjection
 		/// <returns>
 		///     The same service collection so that multiple calls can be chained.
 		/// </returns>
-		public static IServiceCollection AddLinqToDBContext<TContext,
-			[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)]
-			TContextImplementation>(
+		public static IServiceCollection AddLinqToDBContext<
+			TContext,
+			[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] TContextImplementation>
+		(
 			this IServiceCollection        serviceCollection,
 			Func<DataOptions,DataOptions>? configure = null,
-			ServiceLifetime                lifetime = DefaultLifetime)
+			ServiceLifetime                lifetime = DefaultLifetime
+		)
 			where TContextImplementation : TContext, IDataContext
 			where TContext : IDataContext
 		{
-			return AddLinqToDBContext<TContext,TContext>(serviceCollection, configure == null ? (_, c) => c : (_, c) => configure(c), lifetime);
+			return AddLinqToDBContext<TContext,TContextImplementation>(serviceCollection, configure == null ? (_, c) => c : (_, c) => configure(c), lifetime);
 		}
 
 		/// <summary>
@@ -467,11 +477,14 @@ namespace LinqToDB.Extensions.DependencyInjection
 		/// <returns>
 		///     The same service collection so that multiple calls can be chained.
 		/// </returns>
-		public static IServiceCollection AddLinqToDBContext<TContext,
-			[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] TContextImplementation>(
+		public static IServiceCollection AddLinqToDBContext<
+			TContext,
+			[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] TContextImplementation>
+		(
 			this IServiceCollection                        serviceCollection,
 			Func<IServiceProvider,DataOptions,DataOptions> configure,
-			ServiceLifetime                                lifetime = DefaultLifetime)
+			ServiceLifetime                                lifetime = DefaultLifetime
+		)
 			where TContextImplementation : TContext, IDataContext
 			where TContext: IDataContext
 		{

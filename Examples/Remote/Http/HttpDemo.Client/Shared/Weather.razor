@@ -1,6 +1,7 @@
 ﻿@implements IDisposable
 @inject PersistentComponentState ApplicationState
 @inject IDemoDataModel           Data
+@inject ILogger<Weather>         Logger
 
 <PageTitle>Weather</PageTitle>
 
@@ -73,17 +74,20 @@ else
 		//
 		_persistingSubscription = ApplicationState.RegisterOnPersisting(() =>
 		{
+			Logger.LogInformation("Persisting state");
+
 			if (_forecasts is not null)
 				ApplicationState.PersistAsJson("forecasts", _forecasts);
 			return Task.CompletedTask;
 		});
 
-		ApplicationState.TryTakeFromJson("forecasts", out _forecasts);
+		if (ApplicationState.TryTakeFromJson("forecasts", out _forecasts))
+			Logger.LogInformation("Restored state");
 	}
 
 	protected override async Task OnInitializedAsync()
 	{
-		_forecasts = await Data.Model.WeatherForecasts.ToArrayAsync();
+		_forecasts ??= await Data.Model.WeatherForecasts.ToArrayAsync();
 	}
 
 	public void Dispose()

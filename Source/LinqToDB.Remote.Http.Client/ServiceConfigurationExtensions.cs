@@ -119,6 +119,10 @@ namespace LinqToDB.Remote.Http.Client
 			{
 				await httpDataContext.ConfigureAsync(default).ConfigureAwait(false);
 			}
+			else if (dataContext is SignalRDataContext signalRDataContext)
+			{
+				await signalRDataContext.ConfigureAsync(default).ConfigureAwait(false);
+			}
 		}
 	}
 }

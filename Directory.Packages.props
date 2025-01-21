@@ -1,8 +1,8 @@
 ﻿<Project>
-	<!--
+  <!--
 	When multiple versions of same nuget references, don't put it to unconditional ItemGroup
 	as while it works fine in Visual Studio in general there are still issues with tooling (dotnet publish, testing)
-	
+
 	IMPORTANT:
 	avoid use of different package versions in tests for different frameworks just for testing purposes if package referenced by source project
 	as it will result in old package consumed by released package and affect users (especially for projects where user has no control
@@ -147,13 +147,17 @@
 
 		<PackageVersion Condition="'$(TargetFramework)'=='net6.0'" Include="Microsoft.AspNetCore.Components.Web"            Version="6.0.36"  />
 		<PackageVersion Condition="'$(TargetFramework)'=='net8.0'" Include="Microsoft.AspNetCore.Components.Web"            Version="8.0.12"  />
-		<PackageVersion Condition="'$(TargetFramework)'=='net9.0'" Include="Microsoft.AspNetCore.Components.Web"            Version="9.0.0"  />
+		<PackageVersion Condition="'$(TargetFramework)'=='net9.0'" Include="Microsoft.AspNetCore.Components.Web"            Version="9.0.1"  />
 
 		<PackageVersion Condition="'$(TargetFramework)'=='net6.0'" Include="Microsoft.AspNetCore.Components.WebAssembly.Server" Version="6.0.36"  />
 		<PackageVersion Condition="'$(TargetFramework)'=='net8.0'" Include="Microsoft.AspNetCore.Components.WebAssembly.Server" Version="8.0.12"  />
-		<PackageVersion Condition="'$(TargetFramework)'=='net9.0'" Include="Microsoft.AspNetCore.Components.WebAssembly.Server" Version="9.0.0"  />
+		<PackageVersion Condition="'$(TargetFramework)'=='net9.0'" Include="Microsoft.AspNetCore.Components.WebAssembly.Server" Version="9.0.1"  />
 
-		<PackageVersion Condition="'$(TargetFramework)'=='net9.0'" Include="Microsoft.AspNetCore.Components.WebAssembly"    Version="9.0.0" />
+		<PackageVersion Condition="'$(TargetFramework)'=='net9.0'" Include="Microsoft.AspNetCore.Components.WebAssembly"    Version="9.0.1" />
+
+		<PackageVersion Condition="'$(TargetFramework)'=='net6.0'" Include="Microsoft.AspNetCore.SignalR.Client"            Version="6.0.36" />
+		<PackageVersion Condition="'$(TargetFramework)'=='net8.0'" Include="Microsoft.AspNetCore.SignalR.Client"            Version="8.0.12" />
+		<PackageVersion Condition="'$(TargetFramework)'=='net9.0'" Include="Microsoft.AspNetCore.SignalR.Client"            Version="9.0.1" />
 	</ItemGroup>
 
 	<ItemGroup Label="Testing" Condition=" '$(TargetFramework)' == 'net462' ">
