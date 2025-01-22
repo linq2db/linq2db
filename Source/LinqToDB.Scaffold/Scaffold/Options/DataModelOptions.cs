@@ -217,6 +217,15 @@ namespace LinqToDB.Scaffold
 		public string? ContextClassName { get; set; }
 
 		/// <summary>
+		/// Gets or sets the modifier of data context class. When not set, public will be used. Context class is always partial.
+		/// <list type="bullet">
+		/// <item>Default: not set</item>
+		/// <item>In T4 compability mode: not set</item>
+		/// </list>
+		/// </summary>
+		public string? ContextClassModifier { get; set; }
+
+		/// <summary>
 		/// Gets or sets type name (full name with namespace) of base class for generated data context. When not specified, <see cref="DataConnection"/> type used.
 		/// Provided type should implement <see cref="IDataContext"/> interface and it is recommented to use wether <see cref="DataConnection"/>
 		/// or <see cref="DataContext"/> classes or classes, derived from them.
