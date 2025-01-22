@@ -184,7 +184,7 @@ namespace LinqToDB.Data
 			InitCommand();
 
 			return ReadEnumerator(
-				await DataConnection.ExecuteDataReaderAsync(GetCommandBehavior(), cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext),
+				await DataConnection.ExecuteDataReaderAsync(GetCommandBehavior(), cancellationToken).ConfigureAwait(false),
 				objectReader,
 				DataConnection.DataProvider.ExecuteScope(DataConnection));
 		}
@@ -214,7 +214,7 @@ namespace LinqToDB.Data
 		public async Task<List<T>> QueryToListAsync<T>(Func<DbDataReader, T> objectReader, CancellationToken cancellationToken = default)
 		{
 			var list = new List<T>();
-			await QueryForEachAsync(objectReader, list.Add, cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
+			await QueryForEachAsync(objectReader, list.Add, cancellationToken).ConfigureAwait(false);
 			return list;
 		}
 
@@ -228,7 +228,7 @@ namespace LinqToDB.Data
 		public async Task<T[]> QueryToArrayAsync<T>(Func<DbDataReader, T> objectReader, CancellationToken cancellationToken = default)
 		{
 			var list = new List<T>();
-			await QueryForEachAsync(objectReader, list.Add, cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
+			await QueryForEachAsync(objectReader, list.Add, cancellationToken).ConfigureAwait(false);
 			return list.ToArray();
 		}
 
@@ -242,15 +242,15 @@ namespace LinqToDB.Data
 		/// <returns>Returns task.</returns>
 		public async Task QueryForEachAsync<T>(Func<DbDataReader, T> objectReader, Action<T> action, CancellationToken cancellationToken = default)
 		{
-			await DataConnection.EnsureConnectionAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
+			await DataConnection.EnsureConnectionAsync(cancellationToken).ConfigureAwait(false);
 
 			InitCommand();
 
-			await using ((DataConnection.DataProvider.ExecuteScope(DataConnection) ?? EmptyIAsyncDisposable.Instance).ConfigureAwait(Configuration.ContinueOnCapturedContext))
+			await using ((DataConnection.DataProvider.ExecuteScope(DataConnection) ?? EmptyIAsyncDisposable.Instance).ConfigureAwait(false))
 			{
-				var rd = await DataConnection.ExecuteDataReaderAsync(GetCommandBehavior(), cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
-				await using (rd.ConfigureAwait(Configuration.ContinueOnCapturedContext))
-					while (await rd.DataReader!.ReadAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext))
+				var rd = await DataConnection.ExecuteDataReaderAsync(GetCommandBehavior(), cancellationToken).ConfigureAwait(false);
+				await using (rd.ConfigureAwait(false))
+					while (await rd.DataReader!.ReadAsync(cancellationToken).ConfigureAwait(false))
 						action(objectReader(rd.DataReader!));
 			}
 		}
@@ -267,19 +267,19 @@ namespace LinqToDB.Data
 
 			async IAsyncEnumerable<T> Impl(Func<DbDataReader, T> objectReader, [EnumeratorCancellation] CancellationToken cancellationToken = default)
 			{
-				await DataConnection.EnsureConnectionAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
+				await DataConnection.EnsureConnectionAsync(cancellationToken).ConfigureAwait(false);
 
 				InitCommand();
 
-				await using ((DataConnection.DataProvider.ExecuteScope(DataConnection) ?? EmptyIAsyncDisposable.Instance).ConfigureAwait(Configuration.ContinueOnCapturedContext))
+				await using ((DataConnection.DataProvider.ExecuteScope(DataConnection) ?? EmptyIAsyncDisposable.Instance).ConfigureAwait(false))
 				{
 #if NET6_0_OR_GREATER
-					var rd = await DataConnection.ExecuteDataReaderAsync(GetCommandBehavior(), cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
-					await using (rd.ConfigureAwait(Configuration.ContinueOnCapturedContext))
+					var rd = await DataConnection.ExecuteDataReaderAsync(GetCommandBehavior(), cancellationToken).ConfigureAwait(false);
+					await using (rd.ConfigureAwait(false))
 #else
-					using (var rd = await DataConnection.ExecuteDataReaderAsync(GetCommandBehavior(), cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext))
+					using (var rd = await DataConnection.ExecuteDataReaderAsync(GetCommandBehavior(), cancellationToken).ConfigureAwait(false))
 #endif
-						while (await rd.DataReader!.ReadAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext))
+						while (await rd.DataReader!.ReadAsync(cancellationToken).ConfigureAwait(false))
 							yield return objectReader(rd.DataReader!);
 				}
 			}
@@ -337,7 +337,7 @@ namespace LinqToDB.Data
 			InitCommand();
 
 			return ReadEnumerator<T>(
-				await DataConnection.ExecuteDataReaderAsync(GetCommandBehavior(), cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext),
+				await DataConnection.ExecuteDataReaderAsync(GetCommandBehavior(), cancellationToken).ConfigureAwait(false),
 				DataConnection.DataProvider.ExecuteScope(DataConnection));
 		}
 
@@ -403,10 +403,9 @@ namespace LinqToDB.Data
 				finally
 				{
 					stopwatch.Stop();
+
 					if (disposeReader)
 					{
-						rd.Dispose();
-
 						if (DataConnection.TraceSwitchConnection.TraceInfo)
 						{
 							DataConnection.OnTraceConnection(new TraceInfo(DataConnection, TraceInfoStep.Completed, TraceOperation.DisposeQuery, isAsync: false)
@@ -418,6 +417,8 @@ namespace LinqToDB.Data
 								RecordsAffected = rowCount
 							});
 						}
+
+						rd.Dispose();
 					}
 				}
 		}
@@ -435,7 +436,7 @@ namespace LinqToDB.Data
 		public async Task<List<T>> QueryToListAsync<T>(CancellationToken cancellationToken = default)
 		{
 			var list = new List<T>();
-			await QueryForEachAsync<T>(list.Add, cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
+			await QueryForEachAsync<T>(list.Add, cancellationToken).ConfigureAwait(false);
 			return list;
 		}
 
@@ -448,7 +449,7 @@ namespace LinqToDB.Data
 		public async Task<T[]> QueryToArrayAsync<T>(CancellationToken cancellationToken = default)
 		{
 			var list = new List<T>();
-			await QueryForEachAsync<T>(list.Add, cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
+			await QueryForEachAsync<T>(list.Add, cancellationToken).ConfigureAwait(false);
 			return list.ToArray();
 		}
 
@@ -461,16 +462,16 @@ namespace LinqToDB.Data
 		/// <returns>Returns task.</returns>
 		public async Task QueryForEachAsync<T>(Action<T> action, CancellationToken cancellationToken = default)
 		{
-			await DataConnection.EnsureConnectionAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
+			await DataConnection.EnsureConnectionAsync(cancellationToken).ConfigureAwait(false);
 
 			InitCommand();
 
-			await using ((DataConnection.DataProvider.ExecuteScope(DataConnection) ?? EmptyIAsyncDisposable.Instance).ConfigureAwait(Configuration.ContinueOnCapturedContext))
+			await using ((DataConnection.DataProvider.ExecuteScope(DataConnection) ?? EmptyIAsyncDisposable.Instance).ConfigureAwait(false))
 			{
-				var rd = await DataConnection.ExecuteDataReaderAsync(GetCommandBehavior(), cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
-				await using (rd.ConfigureAwait(Configuration.ContinueOnCapturedContext))
+				var rd = await DataConnection.ExecuteDataReaderAsync(GetCommandBehavior(), cancellationToken).ConfigureAwait(false);
+				await using (rd.ConfigureAwait(false))
 				{
-					if (await rd.DataReader!.ReadAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext))
+					if (await rd.DataReader!.ReadAsync(cancellationToken).ConfigureAwait(false))
 					{
 						var additionalKey = GetCommandAdditionalKey(rd.DataReader!, typeof(T));
 
@@ -509,7 +510,7 @@ namespace LinqToDB.Data
 
 							action(result);
 
-						} while (await rd.DataReader!.ReadAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext));
+						} while (await rd.DataReader!.ReadAsync(cancellationToken).ConfigureAwait(false));
 					}
 				}
 			}
@@ -526,20 +527,20 @@ namespace LinqToDB.Data
 
 			async IAsyncEnumerable<T> Impl([EnumeratorCancellation] CancellationToken cancellationToken = default)
 			{
-				await DataConnection.EnsureConnectionAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
+				await DataConnection.EnsureConnectionAsync(cancellationToken).ConfigureAwait(false);
 
 				InitCommand();
 
-				await using ((DataConnection.DataProvider.ExecuteScope(DataConnection) ?? EmptyIAsyncDisposable.Instance).ConfigureAwait(Configuration.ContinueOnCapturedContext))
+				await using ((DataConnection.DataProvider.ExecuteScope(DataConnection) ?? EmptyIAsyncDisposable.Instance).ConfigureAwait(false))
 				{
 #if NET6_0_OR_GREATER
-					var rd = await DataConnection.ExecuteDataReaderAsync(GetCommandBehavior(), cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
-					await using (rd.ConfigureAwait(Configuration.ContinueOnCapturedContext))
+					var rd = await DataConnection.ExecuteDataReaderAsync(GetCommandBehavior(), cancellationToken).ConfigureAwait(false);
+					await using (rd.ConfigureAwait(false))
 #else
-					using (var rd = await DataConnection.ExecuteDataReaderAsync(GetCommandBehavior(), cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext))
+					using (var rd = await DataConnection.ExecuteDataReaderAsync(GetCommandBehavior(), cancellationToken).ConfigureAwait(false))
 #endif
 					{
-						if (await rd.DataReader!.ReadAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext))
+						if (await rd.DataReader!.ReadAsync(cancellationToken).ConfigureAwait(false))
 						{
 							var additionalKey = GetCommandAdditionalKey(rd.DataReader!, typeof(T));
 
@@ -578,7 +579,7 @@ namespace LinqToDB.Data
 
 								yield return result;
 
-							} while (await rd.DataReader!.ReadAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext));
+							} while (await rd.DataReader!.ReadAsync(cancellationToken).ConfigureAwait(false));
 						}
 					}
 				}
@@ -694,17 +695,17 @@ namespace LinqToDB.Data
 		public async Task<T> QueryMultipleAsync<T>(CancellationToken cancellationToken = default)
 			where T : class
 		{
-			await DataConnection.EnsureConnectionAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
+			await DataConnection.EnsureConnectionAsync(cancellationToken).ConfigureAwait(false);
 			InitCommand();
 
 			T result;
 
-			await using ((DataConnection.DataProvider.ExecuteScope(DataConnection) ?? EmptyIAsyncDisposable.Instance).ConfigureAwait(Configuration.ContinueOnCapturedContext))
+			await using ((DataConnection.DataProvider.ExecuteScope(DataConnection) ?? EmptyIAsyncDisposable.Instance).ConfigureAwait(false))
 			{
-				var rd = await DataConnection.ExecuteDataReaderAsync(GetCommandBehavior(), cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
-				await using (rd.ConfigureAwait(Configuration.ContinueOnCapturedContext))
+				var rd = await DataConnection.ExecuteDataReaderAsync(GetCommandBehavior(), cancellationToken).ConfigureAwait(false);
+				await using (rd.ConfigureAwait(false))
 			{
-					result = await ReadMultipleResultSetsAsync<T>(rd.DataReader!, cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
+					result = await ReadMultipleResultSetsAsync<T>(rd.DataReader!, cancellationToken).ConfigureAwait(false);
 
 					SetRebindParameters(rd);
 			}
@@ -802,7 +803,7 @@ namespace LinqToDB.Data
 					}
 
 					var genericMethod = valueMethodInfo.MakeGenericMethod(elementType);
-					var value = genericMethod.Invoke(this, new object[] { rd });
+					var value = genericMethod.InvokeExt(this, new object[] { rd });
 
 					member.SetValue(result, value);
 				}
@@ -871,7 +872,7 @@ namespace LinqToDB.Data
 			{
 				if (_isFinished)
 					return false;
-				if (!await _rd.ReadAsync(_cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext))
+				if (!await _rd.ReadAsync(_cancellationToken).ConfigureAwait(false))
 				{
 					_isFinished = true;
 					return false;
@@ -944,17 +945,17 @@ namespace LinqToDB.Data
 					}
 
 					var genericMethod = valueMethodInfo.MakeGenericMethod(elementType);
-					var task = (Task)genericMethod.Invoke(this, new object[] { rd, cancellationToken })!;
-					await task.ConfigureAwait(Configuration.ContinueOnCapturedContext);
+					var task          = genericMethod.InvokeExt<Task>(this, new object[] { rd, cancellationToken });
 
-					// Task<T>.Result
-					var value = ((dynamic)task).Result;
+					await task.ConfigureAwait(false);
+
+					var value = task.GetType().GetProperty(nameof(Task<int>.Result))!.GetValue(task);
 
 					member.SetValue(result, value);
 				}
 
 				resultIndex++;
-			} while (await rd.NextResultAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext));
+			} while (await rd.NextResultAsync(cancellationToken).ConfigureAwait(false));
 
 			return result;
 		}
@@ -1069,14 +1070,14 @@ namespace LinqToDB.Data
 		{
 			await using (ActivityService.StartAndConfigureAwait(ActivityID.CommandInfoExecuteAsync))
 			{
-				await DataConnection.EnsureConnectionAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
+				await DataConnection.EnsureConnectionAsync(cancellationToken).ConfigureAwait(false);
 
 				var startedOn = DateTime.UtcNow;
 				var stopwatch = Stopwatch.StartNew();
 
 				InitCommand();
 
-				var commandResult = await DataConnection.ExecuteNonQueryDataAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
+				var commandResult = await DataConnection.ExecuteNonQueryDataAsync(cancellationToken).ConfigureAwait(false);
 
 				stopwatch.Stop();
 				if (DataConnection.TraceSwitchConnection.TraceInfo)
@@ -1211,7 +1212,7 @@ namespace LinqToDB.Data
 		{
 			await using (ActivityService.StartAndConfigureAwait(ActivityID.CommandInfoExecuteAsyncT))
 			{
-				await DataConnection.EnsureConnectionAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
+				await DataConnection.EnsureConnectionAsync(cancellationToken).ConfigureAwait(false);
 
 				var startedOn     = DateTime.UtcNow;
 				var stopwatch     = Stopwatch.StartNew();
@@ -1219,12 +1220,12 @@ namespace LinqToDB.Data
 
 				T result = default!;
 
-				await using ((DataConnection.DataProvider.ExecuteScope(DataConnection) ?? EmptyIAsyncDisposable.Instance).ConfigureAwait(Configuration.ContinueOnCapturedContext))
+				await using ((DataConnection.DataProvider.ExecuteScope(DataConnection) ?? EmptyIAsyncDisposable.Instance).ConfigureAwait(false))
 				{
-					var rd = await DataConnection.ExecuteDataReaderAsync(GetCommandBehavior(), cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
-					await using (rd.ConfigureAwait(Configuration.ContinueOnCapturedContext))
+					var rd = await DataConnection.ExecuteDataReaderAsync(GetCommandBehavior(), cancellationToken).ConfigureAwait(false);
+					await using (rd.ConfigureAwait(false))
 					{
-						if (await rd.DataReader!.ReadAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext))
+						if (await rd.DataReader!.ReadAsync(cancellationToken).ConfigureAwait(false))
 						{
 							var additionalKey = GetCommandAdditionalKey(rd.DataReader!, typeof(T));
 							try
@@ -1362,11 +1363,11 @@ namespace LinqToDB.Data
 		/// <returns>Task with data reader object.</returns>
 		public async Task<DataReaderAsync> ExecuteReaderAsync(CancellationToken cancellationToken = default)
 		{
-			await DataConnection.EnsureConnectionAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext);
+			await DataConnection.EnsureConnectionAsync(cancellationToken).ConfigureAwait(false);
 
 			var hasParameters = InitCommand();
 
-			var dataReader = new DataReaderAsync(this, await DataConnection.ExecuteDataReaderAsync(GetCommandBehavior(), cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext));
+			var dataReader = new DataReaderAsync(this, await DataConnection.ExecuteDataReaderAsync(GetCommandBehavior(), cancellationToken).ConfigureAwait(false));
 
 			if (hasParameters && dataReader.ReaderWrapper?.Command?.Parameters.Count > 0)
 				dataReader.ReaderWrapper.OnBeforeCommandDispose = RebindParameters;
@@ -1391,7 +1392,7 @@ namespace LinqToDB.Data
 
 		internal async Task ExecuteQueryAsync<T>(DbDataReader rd, string sql, Action<T> action, CancellationToken cancellationToken)
 		{
-			if (await rd.ReadAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext))
+			if (await rd.ReadAsync(cancellationToken).ConfigureAwait(false))
 			{
 				var additionalKey = GetCommandAdditionalKey(rd, typeof(T));
 				var objectReader  = GetObjectReader<T>(DataConnection, rd, sql, additionalKey);
@@ -1417,7 +1418,7 @@ namespace LinqToDB.Data
 
 					action(result);
 
-				} while (await rd.ReadAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext));
+				} while (await rd.ReadAsync(cancellationToken).ConfigureAwait(false));
 			}
 		}
 
@@ -1427,7 +1428,7 @@ namespace LinqToDB.Data
 
 			async IAsyncEnumerable<T> Impl(DbDataReader rd, string sql, [EnumeratorCancellation] CancellationToken cancellationToken = default)
 			{
-				if (await rd.ReadAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext))
+				if (await rd.ReadAsync(cancellationToken).ConfigureAwait(false))
 				{
 					var additionalKey = GetCommandAdditionalKey(rd, typeof(T));
 					var objectReader  = GetObjectReader<T>(DataConnection, rd, sql, additionalKey);
@@ -1453,14 +1454,14 @@ namespace LinqToDB.Data
 
 						yield return result;
 
-					} while (await rd.ReadAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext));
+					} while (await rd.ReadAsync(cancellationToken).ConfigureAwait(false));
 				}
 			}
 		}
 
 		internal async Task<T> ExecuteScalarAsync<T>(DbDataReader rd, string sql, CancellationToken cancellationToken)
 		{
-			if (await rd.ReadAsync(cancellationToken).ConfigureAwait(Configuration.ContinueOnCapturedContext))
+			if (await rd.ReadAsync(cancellationToken).ConfigureAwait(false))
 			{
 				var additionalKey = GetCommandAdditionalKey(rd, typeof(T));
 				try
@@ -1522,7 +1523,7 @@ namespace LinqToDB.Data
 				return null;
 
 			var methodInfo = _convertParameterValueMethodInfo.MakeGenericMethod(value.GetType());
-			var result     = methodInfo.Invoke(null, new[] { value, mappingSchema });
+			var result     = methodInfo.InvokeExt(null, new[] { value, mappingSchema });
 
 			return result;
 		}

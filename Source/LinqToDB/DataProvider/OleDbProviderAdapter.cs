@@ -25,7 +25,8 @@ namespace LinqToDB.DataProvider
 
 			Action<DbParameter, OleDbType> dbTypeSetter,
 			Func  <DbParameter, OleDbType> dbTypeGetter,
-			Func  <DbConnection, Guid, object[]?, DataTable> schemaTableGetter)
+			Func  <DbConnection, Guid, object[]?, DataTable> schemaTableGetter,
+			Func<DbConnection, OleDbConnection> connectionWrapper)
 		{
 			ConnectionType     = connectionType;
 			DataReaderType     = dataReaderType;
@@ -38,6 +39,8 @@ namespace LinqToDB.DataProvider
 			GetDbType = dbTypeGetter;
 
 			GetOleDbSchemaTable = schemaTableGetter;
+
+			ConnectionWrapper = connectionWrapper;
 		}
 
 #region IDynamicProviderAdapter
@@ -57,6 +60,8 @@ namespace LinqToDB.DataProvider
 		public Func  <DbParameter, OleDbType> GetDbType { get; }
 
 		public Func<DbConnection, Guid, object[]?, DataTable> GetOleDbSchemaTable { get; }
+
+		internal Func<DbConnection, OleDbConnection> ConnectionWrapper { get; }
 
 		public static OleDbProviderAdapter GetInstance()
 		{
@@ -103,7 +108,8 @@ namespace LinqToDB.DataProvider
 							typeMapper.BuildTypedFactory<string, OleDbConnection, DbConnection>((string connectionString) => new OleDbConnection(connectionString)),
 							typeSetter,
 							typeGetter,
-							oleDbSchemaTableGetter);
+							oleDbSchemaTableGetter,
+							typeMapper.Wrap<OleDbConnection>);
 					}
 			}
 
@@ -125,11 +131,24 @@ namespace LinqToDB.DataProvider
 		}
 
 		[Wrapper]
-		private sealed class OleDbConnection
+		internal sealed class OleDbConnection : TypeWrapper
 		{
+			private static LambdaExpression[] Wrappers { get; } =
+			{
+				// [0]: get Provider
+				(Expression<Func<OleDbConnection, string>>)((OleDbConnection this_) => this_.Provider),
+			};
+
+			public OleDbConnection(object instance, Delegate[] wrappers) : base(instance, wrappers)
+			{
+			}
+
 			public OleDbConnection(string connectionString) => throw new NotImplementedException();
 
 			public DataTable GetOleDbSchemaTable(Guid schema, object[]? restrictions) => throw new NotImplementedException();
+
+			// implementation returns string.Empty instead of null
+			public string Provider => ((Func<OleDbConnection, string>)CompiledWrappers[0])(this);
 		}
 
 		[Wrapper]

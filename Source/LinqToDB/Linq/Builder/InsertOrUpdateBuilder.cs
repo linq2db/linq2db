@@ -9,14 +9,13 @@ namespace LinqToDB.Linq.Builder
 	using Mapping;
 	using SqlQuery;
 
+	[BuildsMethodCall("InsertOrUpdate")]
 	sealed class InsertOrUpdateBuilder : MethodCallBuilder
 	{
 		#region InsertOrUpdateBuilder
 
-		protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
-		{
-			return methodCall.IsQueryable("InsertOrUpdate");
-		}
+		public static bool CanBuildMethod(MethodCallExpression call, BuildInfo info, ExpressionBuilder builder)
+			=> call.IsQueryable();
 
 		protected override BuildSequenceResult BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
@@ -43,7 +42,7 @@ namespace LinqToDB.Linq.Builder
 
 			var tableContext = SequenceHelper.GetTableContext(sequence);
 			if (tableContext == null)
-				throw new LinqException("Could not retrieve table information from query.");
+				throw new LinqToDBException("Could not retrieve table information from query.");
 
 			UpdateBuilder.InitializeSetExpressions(builder, tableContext, sequence,
 				insertExpressions, insertOrUpdateStatement.Insert.Items, createColumns : false);
@@ -65,7 +64,7 @@ namespace LinqToDB.Linq.Builder
 				var keys  = table.GetKeys(false);
 
 				if (!(keys?.Count > 0))
-					throw new LinqException("InsertOrUpdate method requires the '{0}' table to have a primary key.", table.NameForLogging);
+					throw new LinqToDBException($"InsertOrUpdate method requires the '{table.NameForLogging}' table to have a primary key.");
 
 				var q =
 				(
@@ -77,9 +76,7 @@ namespace LinqToDB.Linq.Builder
 				var missedKey = keys.Except(q.Select(i => i.k)).FirstOrDefault();
 
 				if (missedKey != null)
-					throw new LinqException("InsertOrUpdate method requires the '{0}.{1}' field to be included in the insert setter.",
-						table.NameForLogging,
-						((SqlField)missedKey).Name);
+					throw new LinqToDBException($"InsertOrUpdate method requires the '{table.NameForLogging}.{((SqlField)missedKey).Name}' field to be included in the insert setter.");
 
 				insertOrUpdateStatement.Update.Keys.AddRange(q.Select(i => i.i));
 			}

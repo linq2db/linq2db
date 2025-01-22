@@ -14,7 +14,6 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
-using System.Windows.Media;
 
 namespace Tests.T4.Wpf
 {
@@ -23,6 +22,8 @@ namespace Tests.T4.Wpf
 	public partial class ViewModel : INotifyPropertyChanged, INotifyDataErrorInfo
 	{
 		#region NotifiedProp1 : double
+
+#if NET462
 
 		private double _notifiedProp1;
 		public  double  NotifiedProp1
@@ -58,9 +59,13 @@ namespace Tests.T4.Wpf
 
 		#endregion
 
+#endif
+
 		#endregion
 
 		#region NotifiedProp2 : int
+
+#if NET462
 
 		private int _notifiedProp2 = 500;
 		public  int  NotifiedProp2
@@ -96,11 +101,15 @@ namespace Tests.T4.Wpf
 
 		#endregion
 
+#endif
+
 		#endregion
 
-		#region NotifiedBrush1 : Brush
+		#region NotifiedBrush1 : System.Windows.Media.Brush
 
-		public Brush NotifiedBrush1
+#if NET462
+
+		public System.Windows.Media.Brush NotifiedBrush1
 		{
 			get { return GetBrush(); }
 		}
@@ -117,6 +126,8 @@ namespace Tests.T4.Wpf
 		}
 
 		#endregion
+
+#endif
 
 		#endregion
 
@@ -156,8 +167,8 @@ namespace Tests.T4.Wpf
 		}
 
 		#endregion
-#endif
 
+#endif
 
 		#endregion
 
@@ -269,7 +280,7 @@ namespace Tests.T4.Wpf
 				{
 					foreach (var result in list)
 						foreach (var name in result.MemberNames)
-							obj.AddError(name, result.ErrorMessage);
+							obj.AddError(name, result.ErrorMessage ?? "");
 
 					return list[0];
 				}
@@ -295,7 +306,7 @@ namespace Tests.T4.Wpf
 				{
 					foreach (var result in list)
 						foreach (var name in result.MemberNames)
-							obj.AddError(name, result.ErrorMessage);
+							obj.AddError(name, result.ErrorMessage ?? "");
 
 					return list[0];
 				}
@@ -323,7 +334,7 @@ namespace Tests.T4.Wpf
 
 		public void AddError(string propertyName, string error)
 		{
-			List<string> errors;
+			List<string>? errors;
 
 			if (!_validationErrors.TryGetValue(propertyName, out errors))
 			{
@@ -341,7 +352,7 @@ namespace Tests.T4.Wpf
 
 		public void RemoveError(string propertyName)
 		{
-			List<string> errors;
+			List<string>? errors;
 
 			if (_validationErrors.TryGetValue(propertyName, out errors) && errors.Count > 0)
 			{
@@ -364,7 +375,7 @@ namespace Tests.T4.Wpf
 
 		public IEnumerable? GetErrors(string? propertyName)
 		{
-			List<string> errors;
+			List<string>? errors;
 			return propertyName != null && _validationErrors.TryGetValue(propertyName, out errors) ? errors : null;
 		}
 

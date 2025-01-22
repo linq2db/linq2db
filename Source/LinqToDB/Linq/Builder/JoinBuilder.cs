@@ -3,24 +3,26 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 
+using LinqToDB.Common;
+
 namespace LinqToDB.Linq.Builder
 {
 	using LinqToDB.Expressions;
 	using SqlQuery;
 
+	[BuildsMethodCall("Join")]
 	sealed class JoinBuilder : MethodCallBuilder
 	{
-		protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
+		public static bool CanBuildMethod(MethodCallExpression call, BuildInfo info, ExpressionBuilder builder)
 		{
-			if (methodCall.Method.DeclaringType == typeof(LinqExtensions) || !methodCall.IsQueryable("Join"))
+			if (call.Method.DeclaringType == typeof(LinqExtensions) || !call.IsQueryable())
 				return false;
 
 			// other overload for Join
-			if (methodCall.Arguments[2].Unwrap() is not LambdaExpression lambda)
+			if (call.Arguments[2].Unwrap() is not LambdaExpression lambda)
 				return false;
 
 			var body = lambda.Body.Unwrap();
-
 			if (body.NodeType == ExpressionType.MemberInit)
 			{
 				var mi = (MemberInitExpression)body;
@@ -57,8 +59,6 @@ namespace LinqToDB.Linq.Builder
 			var join = innerContext.SelectQuery.InnerJoin();
 			var sql  = outerContext.SelectQuery;
 
-			sql.From.Tables[0].Joins.Add(join.JoinedTable);
-
 			if (extensions != null)
 				join.JoinedTable.SqlQueryExtensions = extensions;
 
@@ -75,17 +75,18 @@ namespace LinqToDB.Linq.Builder
 			var outerKeySelector = SequenceHelper.PrepareBody(outerKeyLambda, outerContext).Unwrap();
 			var innerKeySelector = SequenceHelper.PrepareBody(innerKeyLambda, innerKeyContext).Unwrap();
 
-			outerKeySelector = builder.BuildSqlExpression(outerContext, outerKeySelector, buildInfo.GetFlags(ProjectFlags.Keys | ProjectFlags.SQL));
-			innerKeySelector = builder.BuildSqlExpression(outerContext, innerKeySelector, buildInfo.GetFlags(ProjectFlags.Keys | ProjectFlags.SQL));
+			if (!builder.TryGenerateComparison(outerContext, outerKeySelector, innerKeySelector, out var compareSearchCondition, out var error, BuildPurpose.Sql))
+				return BuildSequenceResult.Error(error);
 
-			var compareSearchCondition = builder.TryGenerateComparison(outerContext, outerKeySelector, innerKeySelector, buildInfo.GetFlags());
-			if (compareSearchCondition == null)
-				throw new SqlErrorExpression(FormattableString.Invariant($"Could not compare '{outerKeyLambda}' with {innerKeyLambda}"), typeof(bool)).CreateException();
+			outerKeySelector = builder.BuildSqlExpression(outerContext, outerKeySelector, BuildPurpose.Sql, BuildFlags.ForKeys);
+			innerKeySelector = builder.BuildSqlExpression(outerContext, innerKeySelector, BuildPurpose.Sql, BuildFlags.ForKeys);
+
+			sql.From.Tables[0].Joins.Add(join.JoinedTable);
 
 			bool allowNullComparison = outerKeySelector is SqlGenericConstructorExpression ||
 			                           innerKeySelector is SqlGenericConstructorExpression;
 
-			if (!allowNullComparison)
+			if (!allowNullComparison && builder.CompareNulls is CompareNulls.LikeClr or CompareNulls.LikeSqlExceptParameters)
 				compareSearchCondition = QueryHelper.CorrectComparisonForJoin(compareSearchCondition);
 
 			join.JoinedTable.Condition = compareSearchCondition;

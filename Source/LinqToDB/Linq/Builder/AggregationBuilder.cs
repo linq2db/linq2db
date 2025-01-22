@@ -9,9 +9,11 @@ namespace LinqToDB.Linq.Builder
 	using Common.Internal;
 	using Extensions;
 	using LinqToDB.Expressions;
-	using Mapping;
 	using SqlQuery;
 
+	[BuildsMethodCall("Average", "Min", "Max", "Sum", "Count", "LongCount")]
+	[BuildsMethodCall("AverageAsync", "MinAsync", "MaxAsync", "SumAsync", "CountAsync", "LongCountAsync", 
+		CanBuildName = nameof(CanBuildAsyncMethod))]
 	sealed class AggregationBuilder : MethodCallBuilder
 	{
 		enum AggregationType
@@ -24,14 +26,11 @@ namespace LinqToDB.Linq.Builder
 			Custom
 		}
 
-		static readonly string[] MethodNames      = { "Average"     , "Min"     , "Max"     , "Sum",      "Count"     , "LongCount"      };
-		static readonly string[] MethodNamesAsync = { "AverageAsync", "MinAsync", "MaxAsync", "SumAsync", "CountAsync", "LongCountAsync" };
+		public static bool CanBuildMethod(MethodCallExpression call, BuildInfo info, ExpressionBuilder builder)
+			=> call.IsQueryable();
 
-		public static Sql.ExpressionAttribute? GetAggregateDefinition(MethodCallExpression methodCall, MappingSchema mapping)
-		{
-			var function = methodCall.Method.GetExpressionAttribute(mapping);
-			return function != null  && function is not Sql.ExtensionAttribute && (function.IsAggregate || function.IsWindowFunction) ? function : null;
-		}
+		public static bool CanBuildAsyncMethod(MethodCallExpression call, BuildInfo info, ExpressionBuilder builder)
+			=> call.IsAsyncExtension();
 
 		static Type ExtractTaskType(Type taskType)
 		{
@@ -132,41 +131,7 @@ namespace LinqToDB.Linq.Builder
 			return aggregationType;
 		}
 
-		protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
-		{
-			if (methodCall.IsQueryable(MethodNames) || methodCall.IsAsyncExtension(MethodNamesAsync))
-				return true;
-
-			var definition = GetAggregateDefinition(methodCall, builder.MappingSchema);
-
-			if (definition != null)
-			{
-				if (methodCall.Arguments.Count > 0)
-				{
-					if (builder.IsSequence(new BuildInfo(buildInfo, methodCall.Arguments[0])))
-						return true;
-				}
-			}
-
-			return false;
-		}
-
-		public override bool IsAggregationContext(ExpressionBuilder builder, BuildInfo buildInfo)
-		{
-			return true;
-		}
-
 		static string[] AllowedNames = [nameof(Queryable.Select), nameof(Queryable.Where), nameof(Queryable.Distinct)];
-
-		internal class AggregationInfo
-		{
-			public ISqlExpression?                DistinctValue      { get; set; }
-			public ISqlExpression?                ValueSqlExpression { get; set; }
-			public bool                           IsDistinct         { get; set; }
-			public GroupByBuilder.GroupByContext? GroupByContext     { get; set; }
-			public Expression?                    FilterExpression   { get; set; }
-			public Expression?                    ValueExpression    { get; set; }
-		}
 
 		bool GetSimplifiedAggregationInfo(
 			AggregationType                                        aggregationType, 
@@ -192,7 +157,7 @@ namespace LinqToDB.Linq.Builder
 			List<MethodCallExpression>? chain = null;
 
 			var builder = context.Builder;
-			var current = expression;
+			var current = expression.UnwrapConvert();
 
 			ContextRefExpression? contextRef;
 
@@ -200,7 +165,7 @@ namespace LinqToDB.Linq.Builder
 			{
 				if (current is ContextRefExpression refExpression)
 				{
-					var root = builder.CorrectRoot(refExpression.BuildContext, current);
+					var root = builder.BuildAggregationRootExpression(current);
 					if (ExpressionEqualityComparer.Instance.Equals(root, current))
 					{
 						contextRef = refExpression;
@@ -325,14 +290,14 @@ namespace LinqToDB.Linq.Builder
 					valueExpression = new ContextRefExpression(returnType, groupByContext);
 				}
 
-				var convertedExpr = builder.ConvertToSqlExpr(groupByContext.SubQuery, valueExpression, buildInfo.GetFlags());
+				var convertedExpr = builder.BuildSqlExpression(groupByContext.SubQuery, valueExpression, BuildFlags.ForKeys | BuildFlags.ResetPrevious);
 
 				if (!SequenceHelper.IsSqlReady(convertedExpr))
 				{
 					return false;
 				}
 
-				var placeholders = ExpressionBuilder.CollectDistinctPlaceholders(convertedExpr);
+				var placeholders = ExpressionBuilder.CollectDistinctPlaceholders(convertedExpr, false);
 
 				if (placeholders.Count != 1)
 				{
@@ -367,26 +332,13 @@ namespace LinqToDB.Linq.Builder
 			SqlPlaceholderExpression functionPlaceholder;
 			AggregationContext       context;
 
-			var functionName = methodCall.Method.Name;
+			AggregationType aggregationType = GetAggregationType(
+				methodCall,
+				out int argumentsCount,
+				out string functionName,
+				out Type returnType);
 
-			AggregationType aggregationType;
-
-			int  argumentsCount;
-			Type returnType;
-			var  definition = GetAggregateDefinition(methodCall, builder.MappingSchema);
-
-			if (definition != null)
-			{
-				aggregationType = AggregationType.Custom;
-				returnType      = methodCall.Method.ReturnType;
-				argumentsCount  = methodCall.Arguments.Count;
-			}
-			else
-			{
-				aggregationType = GetAggregationType(methodCall, out argumentsCount, out functionName, out returnType);
-			}
-
-			var sequenceArgument = builder.CorrectRoot(null, methodCall.Arguments[0]);
+			var sequenceArgument = builder.BuildAggregationRootExpression(methodCall.Arguments[0]);
 
 			if (!buildInfo.IsSubQuery)
 			{
@@ -396,8 +348,7 @@ namespace LinqToDB.Linq.Builder
 
 				// finalizing context
 				var projected = builder.BuildSqlExpression(sequence,
-					new ContextRefExpression(sequence.ElementType, sequence), buildInfo.GetFlags(ProjectFlags.Keys),
-					buildFlags : ExpressionBuilder.BuildFlags.ForceAssignments);
+					new ContextRefExpression(sequence.ElementType, sequence), BuildPurpose.Sql, buildFlags: BuildFlags.ForKeys);
 
 				sequence  = new SubQueryContext(sequence);
 				projected = builder.UpdateNesting(sequence, projected);
@@ -407,10 +358,10 @@ namespace LinqToDB.Linq.Builder
 					if (argumentsCount == 2)
 					{
 						var lambda = methodCall.Arguments[1].UnwrapLambda();
-						sequence = builder.BuildWhere(null, sequence, lambda, false, false, buildInfo.IsTest);
+						sequence = builder.BuildWhere(null, sequence, lambda, checkForSubQuery : false, enforceHaving : false, out var error);
 
 						if (sequence == null)
-							return BuildSequenceResult.Error(methodCall);
+							return BuildSequenceResult.Error(error ?? methodCall);
 					}
 
 					functionPlaceholder = ExpressionBuilder.CreatePlaceholder(sequence,
@@ -433,7 +384,9 @@ namespace LinqToDB.Linq.Builder
 						valueExpression = new ContextRefExpression(elementType, sequence);
 					}
 
-					var sqlPlaceholder = builder.ConvertToSqlPlaceholder(sequence, valueExpression, ProjectFlags.SQL);
+					if (builder.BuildSqlExpression(sequence, valueExpression) is not SqlPlaceholderExpression sqlPlaceholder)
+						return BuildSequenceResult.Error(valueExpression);
+
 					context = new AggregationContext(buildInfo.Parent, sequence, aggregationType, functionName, returnType);
 
 					var sql = sqlPlaceholder.Sql;
@@ -474,6 +427,8 @@ namespace LinqToDB.Linq.Builder
 					inputFilterLambda = methodCall.Arguments[1].UnwrapLambda();
 				}
 
+				var isNonGrouping = false;
+
 				if (GetSimplifiedAggregationInfo(
 						aggregationType,
 						returnType,
@@ -493,8 +448,9 @@ namespace LinqToDB.Linq.Builder
 					placeholderSequence = groupByContext.SubQuery;
 					placeholderSelect   = groupByContext.Element.SelectQuery;
 					sequence            = groupByContext;
+					isNonGrouping       = groupByContext.SubQuery.SelectQuery.GroupBy.IsEmpty;
 				}
-				else
+				else 
 				{
 					var sequenceResult = builder.TryBuildSequence(new BuildInfo(buildInfo, sequenceArgument, new SelectQuery()) { CreateSubQuery = true, IsAggregation = true });
 
@@ -506,9 +462,9 @@ namespace LinqToDB.Linq.Builder
 
 					if (inputFilterLambda != null)
 					{
-						sequence = builder.BuildWhere(buildInfo.Parent, sequence, inputFilterLambda, false, false, buildInfo.IsTest);
+						sequence = builder.BuildWhere(buildInfo.Parent, sequence, inputFilterLambda, checkForSubQuery : false, enforceHaving : false, out var error);
 						if (sequence == null)
-							return BuildSequenceResult.Error(methodCall);
+							return BuildSequenceResult.Error(error ?? methodCall);
 					}
 
 					valueSqlExpression = null;
@@ -530,20 +486,24 @@ namespace LinqToDB.Linq.Builder
 
 				if (isSimple && filterExpression != null)
 				{
-					var sqlExpr = builder.ConvertToSqlExpr(placeholderSequence, filterExpression, buildInfo.GetFlags());
-
-					if (sqlExpr is not SqlPlaceholderExpression placeholer)
+					if (!builder.TryConvertToSql(placeholderSequence, filterExpression, out var sqlExpr))
 						return BuildSequenceResult.Error(filterExpression);
 
-					if (placeholer.Sql is SqlSearchCondition searchCondition)
+					if (sqlExpr is SqlSearchCondition searchCondition)
 					{
 						filterSqlExpression = searchCondition;
 					}
 					else
 					{
-						filterSqlExpression = new SqlSearchCondition().Add(new SqlPredicate.Expr(placeholer.Sql));
+						filterSqlExpression = new SqlSearchCondition().Add(new SqlPredicate.Expr(sqlExpr));
 					}
 				}
+
+				/* notes on aggregate nullability:
+				 * in SQL aggregates are nullable on empty set (query without groupby) or when aggregated expression is nullable
+				 *    exception: COUNT aggregate
+				 */
+				bool? canBeNull = null;
 
 				switch (aggregationType)
 				{
@@ -561,18 +521,19 @@ namespace LinqToDB.Linq.Builder
 								if (filterSqlExpression != null)
 #pragma warning restore CA1508
 								{
-									sql = new SqlConditionExpression(filterSqlExpression, new SqlValue(1), new SqlValue(returnType, null));
+									canBeNull = true;
+									sql       = new SqlConditionExpression(filterSqlExpression, new SqlValue(1), new SqlValue(returnType, null));
 								}
 								else
 								{
-									sql = new SqlExpression("*", new SqlValue(placeholderSequence.SelectQuery.SourceID));
+									sql = new SqlExpression("*", new SqlValue(placeholderSequence.SelectQuery.SourceID)) { CanBeNull = false };
 								}
 							}
 
 						}
 						else
 						{
-							sql = new SqlExpression("*", new SqlValue(placeholderSequence.SelectQuery.SourceID));
+							sql = new SqlExpression("*", new SqlValue(placeholderSequence.SelectQuery.SourceID)) { CanBeNull = false };
 						}
 
 						break;
@@ -584,6 +545,9 @@ namespace LinqToDB.Linq.Builder
 					{
 						if (isSimple)
 						{
+							if (isNonGrouping)
+								canBeNull = true;
+
 							if (valueExpression == null)
 								throw new InvalidOperationException();
 
@@ -591,7 +555,8 @@ namespace LinqToDB.Linq.Builder
 							if (filterSqlExpression != null)
 #pragma warning restore CA1508
 							{
-								sql = new SqlConditionExpression(filterSqlExpression, valueSqlExpression!, new SqlValue(returnType, null));
+								canBeNull = true;
+								sql       = new SqlConditionExpression(filterSqlExpression, valueSqlExpression!, new SqlValue(returnType, null));
 							}
 							else
 							{
@@ -605,14 +570,16 @@ namespace LinqToDB.Linq.Builder
 						}
 						else
 						{
+							canBeNull = true;
+
 							if (valueExpression == null)
 								throw new InvalidOperationException();
 
-							var sqlExpr = builder.ConvertToSqlExpr(placeholderSequence, valueExpression, buildInfo.GetFlags());
+							var sqlExpr = builder.BuildSqlExpression(placeholderSequence, valueExpression);
 							if (!SequenceHelper.IsSqlReady(sqlExpr))
 								return BuildSequenceResult.Error(valueExpression);
 
-							var placeholders = ExpressionBuilder.CollectDistinctPlaceholders(sqlExpr);
+							var placeholders = ExpressionBuilder.CollectDistinctPlaceholders(sqlExpr, false);
 							if (placeholders.Count != 1)
 								return BuildSequenceResult.Error(valueExpression);
 
@@ -624,28 +591,7 @@ namespace LinqToDB.Linq.Builder
 					}
 					case AggregationType.Custom:
 					{
-						if (definition != null)
-						{
-							var sqlExpr = definition.GetExpression((builder, context : placeholderSequence, flags: buildInfo.GetFlags()),
-								builder.DataContext,
-								builder,
-								placeholderSelect,
-								methodCall,
-								static (ctx, e, descriptor, inline) => ctx.builder.ConvertToExtensionSql(ctx.context, ctx.flags, e, descriptor, inline));
-
-							if (sqlExpr is not SqlPlaceholderExpression placeholder)
-								return BuildSequenceResult.Error(methodCall);
-
-							builder.RegisterExtensionAccessors(methodCall);
-
-							sql = builder.PosProcessCustomExpression(methodCall, placeholder.Sql, NullabilityContext.GetContext(placeholder.SelectQuery));
-						}
-						else
-						{
-							return BuildSequenceResult.Error(methodCall);
-						}
-
-						break;
+						return BuildSequenceResult.Error(methodCall);
 					}
 					
 				}
@@ -653,11 +599,7 @@ namespace LinqToDB.Linq.Builder
 				if (sql == null)
 					throw new InvalidOperationException();
 
-				if (definition == null)
-				{
-					var canBeNull = aggregationType != AggregationType.Count;
-					sql = new SqlFunction(returnType, functionName, true, sql) { CanBeNull = canBeNull };
-				}
+				sql = new SqlFunction(returnType, functionName, true, true, Precedence.Primary, ParametersNullabilityType.IfAnyParameterNullable, canBeNull, sql);
 
 				functionPlaceholder = ExpressionBuilder.CreatePlaceholder(placeholderSequence, /*context*/sql, buildInfo.Expression, convertType: returnType);
 
@@ -697,17 +639,23 @@ namespace LinqToDB.Linq.Builder
 
 			SqlJoinedTable? _joinedTable;
 
-			static int CheckNullValue(bool isNull, object context)
+			static TValue CheckNullValue<TValue>(TValue? maybeNull, string context)
+				where TValue : struct
 			{
-				if (isNull)
+				if (maybeNull is null)
 					throw new InvalidOperationException(
 						$"Function {context} returns non-nullable value, but result is NULL. Use nullable version of the function instead.");
-				return 0;
+				return maybeNull.Value;
 			}
 
 			Expression GenerateNullCheckIfNeeded(Expression expression)
 			{
-				if ((_aggregationType != AggregationType.Sum && _aggregationType != AggregationType.Count) && !expression.Type.IsNullableType())
+				// in LINQ Min, Max, Avg aggregates throw exception on empty set(so Sum and Count are exceptions which return 0)
+				if (
+					_aggregationType != AggregationType.Sum
+					&& _aggregationType != AggregationType.Count
+					&& !expression.Type.IsNullableType()
+					)
 				{
 					var checkExpression = expression;
 
@@ -716,11 +664,13 @@ namespace LinqToDB.Linq.Builder
 						checkExpression = Expression.Convert(expression, expression.Type.AsNullable());
 					}
 
-					expression = Expression.Block(
-						Expression.Call(null, MemberHelper.MethodOf(() => CheckNullValue(false, null!)),
-							Expression.Equal(checkExpression, Expression.Default(checkExpression.Type)),
-							Expression.Constant(_methodName)),
-						expression);
+					expression = Expression.Call(
+						typeof(AggregationContext),
+						nameof(CheckNullValue),
+						[_returnType],
+						checkExpression,
+						Expression.Constant(_methodName)
+					);
 				}
 
 				return expression;
@@ -734,6 +684,8 @@ namespace LinqToDB.Linq.Builder
 
 				QueryRunner.SetRunQuery(query, mapper);
 			}
+
+			public override Type ElementType => _returnType;
 
 			void CreateWeakOuterJoin(SelectQuery parentQuery, SelectQuery selectQuery)
 			{
@@ -760,15 +712,13 @@ namespace LinqToDB.Linq.Builder
 
 				if (OuterJoinParentQuery != null)
 				{
-					if (!flags.HasFlag(ProjectFlags.Test))
-					{
-						CreateWeakOuterJoin(OuterJoinParentQuery, SelectQuery);
-					}
+					CreateWeakOuterJoin(OuterJoinParentQuery, SelectQuery);
 				}
 
 				var result = (Expression)Placeholder;
 
-				if (flags.IsExpression())
+				// We do not need this check for UNION/UNION ALL queries
+				if (flags.IsExpression() && !flags.IsForSetProjection())
 					result = GenerateNullCheckIfNeeded(result);
 
 				return result;
@@ -788,6 +738,8 @@ namespace LinqToDB.Linq.Builder
 			{
 				return null;
 			}
+
+			public override bool IsSingleElement => true;
 		}
 	}
 }

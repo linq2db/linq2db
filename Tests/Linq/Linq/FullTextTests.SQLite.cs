@@ -62,9 +62,12 @@ namespace Tests.Linq
 				}
 				else
 				{
-					var sql = query.ToString()!;
+					// FTS5 required
+					//query.ToArray();
 
-					TestContext.WriteLine(sql);
+					var sql = query.ToSqlQuery().Sql;
+
+					BaselinesManager.LogQuery(sql);
 
 					Assert.That(sql, Does.Contain("[r].[FTS5_TABLE] MATCH 'something'"));
 				}
@@ -129,7 +132,10 @@ namespace Tests.Linq
 				}
 				else
 				{
-					var sql = query.ToString()!;
+					// FTS5 required
+					//query.ToArray();
+
+					var sql = query.ToSqlQuery().Sql;
 					Assert.That(sql, Does.Contain("[r].[text1] MATCH 'found'"));
 				}
 			}
@@ -142,9 +148,16 @@ namespace Tests.Linq
 			{
 				var query = Sql.Ext.SQLite().MatchTable(db.GetTable<FtsTable>(), "found");
 
-				var sql = query.ToString()!;
-				Assert.That(sql, Does.Contain(" = 'found'"));
-				Assert.That(sql, Does.Contain("[FTS5_TABLE](@"));
+				// FTS5 required
+				//query.ToArray();
+
+				var command = query.ToSqlQuery();
+				Assert.Multiple(() =>
+				{
+					Assert.That(command.Sql, Does.Contain("[FTS5_TABLE](@"));
+					Assert.That(command.Parameters, Has.Count.EqualTo(1));
+				});
+				Assert.That(command.Parameters[0].Value, Is.EqualTo("found"));
 			}
 		}
 
@@ -167,7 +180,10 @@ namespace Tests.Linq
 				}
 				else
 				{
-					var sql = query.ToString()!;
+					// FTS5 required
+					//query.ToArray();
+
+					var sql = query.ToSqlQuery().Sql;
 					Assert.That(sql, Does.Contain("[r].[rowid] = 3"));
 				}
 			}
@@ -180,7 +196,10 @@ namespace Tests.Linq
 			{
 				var query = db.GetTable<FtsTable>().OrderBy(r => Sql.Ext.SQLite().Rank(r));
 
-				var sql = query.ToString()!;
+				// FTS5 required
+				//query.ToArray();
+
+				var sql = query.ToSqlQuery().Sql;
 				Assert.That(sql, Does.Contain("ORDER BY"));
 				Assert.That(sql, Does.Contain("[t1].[rank]"));
 			}
@@ -337,7 +356,10 @@ namespace Tests.Linq
 			{
 				var query = db.GetTable<FtsTable>().Select(r => Sql.Ext.SQLite().FTS5bm25(r));
 
-				var sql = query.ToString()!;
+				// FTS5 required
+				//query.ToArray();
+
+				var sql = query.ToSqlQuery().Sql;
 				Assert.That(sql, Does.Contain("bm25([r].[FTS5_TABLE])"));
 			}
 		}
@@ -349,7 +371,10 @@ namespace Tests.Linq
 			{
 				var query = db.GetTable<FtsTable>().Select(r => Sql.Ext.SQLite().FTS5bm25(r, 1.4, 5.6));
 
-				var sql = query.ToString()!;
+				// FTS5 required
+				//query.ToArray();
+
+				var sql = query.ToSqlQuery().Sql;
 				Assert.That(sql, Does.Contain("bm25([r].[FTS5_TABLE], 1.3999999999999999, 5.5999999999999996)"));
 			}
 		}
@@ -361,7 +386,10 @@ namespace Tests.Linq
 			{
 				var query = db.GetTable<FtsTable>().Select(r => Sql.Ext.SQLite().FTS5Highlight(r, 2, "start", "end"));
 
-				var sql = query.ToString()!;
+				// FTS5 required
+				//query.ToArray();
+
+				var sql = query.ToSqlQuery().Sql;
 				Assert.That(sql, Does.Contain("highlight([r].[FTS5_TABLE], 2, 'start', 'end')"));
 			}
 		}
@@ -373,7 +401,10 @@ namespace Tests.Linq
 			{
 				var query = db.GetTable<FtsTable>().Select(r => Sql.Ext.SQLite().FTS5Snippet(r, 1, "->", "<-", "zzz", 4));
 
-				var sql = query.ToString()!;
+				// FTS5 required
+				//query.ToArray();
+
+				var sql = query.ToSqlQuery().Sql;
 				Assert.That(sql, Does.Contain("snippet([r].[FTS5_TABLE], 1, '->', '<-', 'zzz', 4)"));
 			}
 		}

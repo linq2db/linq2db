@@ -13,8 +13,13 @@ namespace Tests.xUpdate
 {
 	public partial class MergeTests
 	{
+		private const string SIMPLE_OUTPUT = $"{TestProvName.AllSqlServer2008Plus},{TestProvName.AllPostgreSQL17Plus},{TestProvName.AllFirebird3Plus}";
+		private const string OUTPUT_WITH_ACTION = $"{TestProvName.AllSqlServer2008Plus},{TestProvName.AllPostgreSQL17Plus}";
+		private const string OUTPUT_WITH_HISTORY = $"{TestProvName.AllSqlServer2008Plus},{TestProvName.AllFirebird3Plus}";
+		private const string OUTPUT_WITH_ACTION_AND_HISTORY = TestProvName.AllSqlServer2008Plus;
+
 		[Test]
-		public void MergeWithOutputFull([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
+		public void MergeWithOutputFull([IncludeDataSources(true, OUTPUT_WITH_ACTION_AND_HISTORY)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -44,7 +49,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void MergeWithOutputWithoutAction([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus, TestProvName.AllFirebird3Plus)] string context)
+		public void MergeWithOutputWithoutAction([IncludeDataSources(true, OUTPUT_WITH_HISTORY)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -73,7 +78,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public async Task MergeWithOutputFullAsync([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
+		public async Task MergeWithOutputFullAsync([IncludeDataSources(true, OUTPUT_WITH_ACTION_AND_HISTORY)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -105,7 +110,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public async Task MergeWithOutputWithoutActionAsync([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus, TestProvName.AllFirebird3Plus)] string context)
+		public async Task MergeWithOutputWithoutActionAsync([IncludeDataSources(true, OUTPUT_WITH_HISTORY)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -137,7 +142,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void MergeWithOutputProjected([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
+		public void MergeWithOutputProjected([IncludeDataSources(true, OUTPUT_WITH_ACTION)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -165,7 +170,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void MergeWithOutputSource([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
+		public void MergeWithOutputSource([IncludeDataSources(true, OUTPUT_WITH_ACTION)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -199,7 +204,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void MergeWithOutputSourceNoAction([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus, TestProvName.AllFirebird3Plus)] string context)
+		public void MergeWithOutputSourceNoAction([IncludeDataSources(true, SIMPLE_OUTPUT)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -230,7 +235,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void MergeWithOutputFromQuery([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus, TestProvName.AllFirebird3Plus)] string context)
+		public void MergeWithOutputFromQuery([IncludeDataSources(true, SIMPLE_OUTPUT)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -264,7 +269,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void MergeWithOutputProjectedWithoutAction([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus, TestProvName.AllFirebird3Plus)] string context)
+		public void MergeWithOutputProjectedWithoutAction([IncludeDataSources(true, SIMPLE_OUTPUT)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -298,7 +303,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void MergeWithOutputInto([IncludeDataSources(false, TestProvName.AllSqlServer2008Plus)] string context)
+		public void MergeWithOutputInto([IncludeDataSources(false, OUTPUT_WITH_ACTION_AND_HISTORY)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -339,7 +344,7 @@ namespace Tests.xUpdate
 		}
 		
 		[Test]
-		public async Task MergeWithOutputIntoWithSourceAsync([IncludeDataSources(false, TestProvName.AllSqlServer2008Plus)] string context)
+		public async Task MergeWithOutputIntoWithSourceAsync([IncludeDataSources(false, OUTPUT_WITH_ACTION_AND_HISTORY)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -380,7 +385,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void MergeWithOutputConditionalInto([IncludeDataSources(false, TestProvName.AllSqlServer2008Plus)] string context)
+		public void MergeWithOutputConditionalInto([IncludeDataSources(false, OUTPUT_WITH_ACTION_AND_HISTORY)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -421,7 +426,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void MergeWithOutputIntoTempTable([IncludeDataSources(false, TestProvName.AllSqlServer2008Plus)] string context)
+		public void MergeWithOutputIntoTempTable([IncludeDataSources(false, OUTPUT_WITH_ACTION_AND_HISTORY)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -457,7 +462,7 @@ namespace Tests.xUpdate
 		}
 		
 		[Test]
-		public void MergeWithOutputIntoTempTableByTableName([IncludeDataSources(false, TestProvName.AllSqlServer2008Plus)] string context)
+		public void MergeWithOutputIntoTempTableByTableName([IncludeDataSources(false, OUTPUT_WITH_ACTION_AND_HISTORY)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -496,7 +501,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void MergeWithOutputIntoNonTemp([IncludeDataSources(true, TestProvName.AllSqlServer2008Plus)] string context)
+		public void MergeWithOutputIntoNonTemp([IncludeDataSources(true, OUTPUT_WITH_ACTION_AND_HISTORY)] string context)
 		{
 			using (var db = GetDataContext(context))
 			using (var temp = db.CreateLocalTable<InsertTempTable>())
@@ -531,7 +536,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public async Task MergeWithOutputIntoAsync([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
+		public async Task MergeWithOutputIntoAsync([IncludeDataSources(OUTPUT_WITH_ACTION_AND_HISTORY)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -567,7 +572,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public async Task MergeWithOutputIntoTempTableByTableNameAsync([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
+		public async Task MergeWithOutputIntoTempTableByTableNameAsync([IncludeDataSources(OUTPUT_WITH_ACTION_AND_HISTORY)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -606,7 +611,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public void MergeWithOutputIntoTempTableByTableNameWithSource([IncludeDataSources(false, TestProvName.AllSqlServer2008Plus)] string context)
+		public void MergeWithOutputIntoTempTableByTableNameWithSource([IncludeDataSources(false, OUTPUT_WITH_ACTION_AND_HISTORY)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -650,7 +655,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		public async Task MergeWithOutputIntoTempTableByTableNameWithSourceAsync([IncludeDataSources(false, TestProvName.AllSqlServer2008Plus)] string context)
+		public async Task MergeWithOutputIntoTempTableByTableNameWithSourceAsync([IncludeDataSources(false, OUTPUT_WITH_ACTION_AND_HISTORY)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -690,6 +695,24 @@ namespace Tests.xUpdate
 				record.NewId.Should().Be(5);
 				record.DeletedId.Should().BeNull();
 				record.SourceId.Should().Be(6);
+			}
+		}
+
+		[Test]
+		public void Issue4213Test([IncludeDataSources(false, TestProvName.AllSqlServer2008Plus)] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+				db.Person.Where(x => x.FirstName == "unknown").AsCte()
+					.Merge()
+					.Using(db.Child)
+					.On((dest, src) => dest.ID == src.ChildID)
+					.UpdateWhenMatched((dest, temp) => new Model.Person()
+					{
+						MiddleName = "unpdated"
+					})
+					.MergeWithOutput((a, d, i) => i.Gender)
+					.ToArray();
 			}
 		}
 	}

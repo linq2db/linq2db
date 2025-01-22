@@ -5,10 +5,12 @@ using System.Linq.Expressions;
 
 namespace LinqToDB.Linq.Builder
 {
-	using SqlQuery;
 	using Common;
+
 	using LinqToDB.Expressions;
 	using LinqToDB.Mapping;
+
+	using SqlQuery;
 
 	internal class CteContext : BuildContextBase
 	{
@@ -18,7 +20,7 @@ namespace LinqToDB.Linq.Builder
 		public override MappingSchema MappingSchema => CteInnerQueryContext?.MappingSchema ?? Builder.MappingSchema;
 
 		public IBuildContext?   CteInnerQueryContext { get; private set; }
-		public SubQueryContext? SubqueryContext      { get; private set; }
+		public SubQueryContext? SubQueryContext      { get; private set; }
 		public CteClause        CteClause            { get; private set; }
 
 		public CteContext(ExpressionBuilder builder, IBuildContext? cteInnerQueryContext, CteClause cteClause, Expression cteExpression)
@@ -36,8 +38,9 @@ namespace LinqToDB.Linq.Builder
 			CteExpression = default!;
 		}
 
-		Dictionary<Expression, SqlPlaceholderExpression> _knownMap = new (ExpressionEqualityComparer.Instance);
-		Dictionary<Expression, SqlPlaceholderExpression> _recursiveMap = new (ExpressionEqualityComparer.Instance);
+		Dictionary<Expression, SqlPlaceholderExpression>                               _knownMap     = new (ExpressionEqualityComparer.Instance);
+		Dictionary<Expression, (SqlField field, SqlPlaceholderExpression placeholder)> _fieldsMap    = new(ExpressionEqualityComparer.Instance);
+		Dictionary<Expression, SqlPlaceholderExpression>                               _recursiveMap = new (ExpressionEqualityComparer.Instance);
 
 		bool _isRecursiveCall;
 
@@ -49,9 +52,9 @@ namespace LinqToDB.Linq.Builder
 			if (_isRecursiveCall)
 				return;
 
-			var saveRecursiveBuild = Builder.IsRecursiveBuild;
+			var thisRef = new ContextRefExpression(ElementType, this);
 
-			Builder.IsRecursiveBuild = true;
+			Builder.PushRecursive(thisRef);
 
 			var cteBuildInfo = new BuildInfo((IBuildContext?)null, Expression!, new SelectQuery());
 
@@ -62,24 +65,21 @@ namespace LinqToDB.Linq.Builder
 			CteInnerQueryContext = cteInnerQueryContext;
 			CteClause.Body       = cteInnerQueryContext.SelectQuery;
 			SelectQuery          = cteInnerQueryContext.SelectQuery;
-			SubqueryContext      = new SubQueryContext(cteInnerQueryContext);
+			SubQueryContext      = new SubQueryContext(cteInnerQueryContext);
 
 			_isRecursiveCall = false;
 
 			if (_recursiveMap.Count > 0)
 			{
-				var subQueryExpr = new ContextRefExpression(SubqueryContext.ElementType, SubqueryContext);
-				var buildFlags = ExpressionBuilder.BuildFlags.ForceAssignments;
+				var innerQueryContext = new ContextRefExpression(cteInnerQueryContext.ElementType, cteInnerQueryContext);
 
-				var all = Builder.BuildSqlExpression(SubqueryContext, subQueryExpr, ProjectFlags.SQL,
-					buildFlags : buildFlags);
+				var cteExpr = SequenceHelper.CreateRef(this);
+				var proxy   = new CteProxy(this, cteExpr, innerQueryContext);
 
-				var cteExpr = subQueryExpr.WithContext(this);
-
-				PostProcessExpression(all, cteExpr);
+				var all = Builder.BuildSqlExpression(cteInnerQueryContext, SequenceHelper.CreateRef(proxy));
 			}
 
-			Builder.IsRecursiveBuild = saveRecursiveBuild;
+			Builder.PopRecursive(thisRef);
 		}
 
 		public override Expression MakeExpression(Expression path, ProjectFlags flags)
@@ -113,41 +113,151 @@ namespace LinqToDB.Linq.Builder
 
 			InitQuery();
 
-			if (SubqueryContext == null || CteInnerQueryContext == null)
+			if (SubQueryContext == null || CteInnerQueryContext == null)
 				throw new InvalidOperationException();
 
-			var subqueryPath  = SequenceHelper.CorrectExpression(path, this, SubqueryContext);
+			var subqueryPath  = SequenceHelper.CorrectExpression(path, this, CteInnerQueryContext);
 			var correctedPath = subqueryPath;
 
 			if (!ReferenceEquals(subqueryPath, path))
 			{
 				_isRecursiveCall = true;
 
-				var buildFlags = ExpressionBuilder.BuildFlags.ForceAssignments;
-				correctedPath = Builder.BuildSqlExpression(SubqueryContext, correctedPath, flags.SqlFlag(), buildFlags: buildFlags);
+				var proxy = new CteProxy(this, path, subqueryPath);
+
+				var buildExpression = Builder.BuildSqlExpression(CteInnerQueryContext, SequenceHelper.CreateRef(proxy));
 
 				_isRecursiveCall = false;
 
-				if (!flags.HasFlag(ProjectFlags.Test))
-				{
-					var postProcessed = PostProcessExpression(correctedPath, path);
-
-					return postProcessed;
-				}
+				return buildExpression;
 			}
 
 			return correctedPath;
 		}
 
-		Expression PostProcessExpression(Expression correctedPath, Expression subqueryPath)
+		public SqlPlaceholderExpression RegisterField(Expression? path, SqlPlaceholderExpression placeholder)
 		{
-			correctedPath = SequenceHelper.CorrectTrackingPath(Builder, correctedPath, subqueryPath);
+			if (_fieldsMap.TryGetValue(placeholder.Path, out var pair))
+			{
+				return pair.placeholder;
+			}
 
-			var placeholders = ExpressionBuilder.CollectDistinctPlaceholders(correctedPath);
+			if (_knownMap.TryGetValue(placeholder.Path, out var knownPlaceholder))
+			{
+				return knownPlaceholder;
+			}
 
-			var remapped = TableLikeHelpers.RemapToFields(SubqueryContext!, null, CteClause.Fields, _knownMap, _recursiveMap, correctedPath,
-				placeholders);
-			return remapped;
+			if (placeholder.Sql is not SqlColumn column)
+				throw new InvalidOperationException("Invalid SQL.");
+
+			SqlField? field = null;
+
+			var index = CteInnerQueryContext == null ? -1 : CteInnerQueryContext.SelectQuery.Select.Columns.IndexOf(column);
+
+			if (index >= 0 && CteClause.Fields.Count != index)
+			{
+				field = CteClause.Fields[index];
+
+				foreach (var map in _fieldsMap.Values)
+				{
+					if (map.field == field)
+					{
+						return map.placeholder;
+					}
+				}
+			}
+
+
+			SqlField? recursiveField = null;
+
+			if (field == null)
+			{
+				if (_recursiveMap.TryGetValue(placeholder.Path, out var recursivePlaceholder))
+				{
+					recursiveField = (SqlField)recursivePlaceholder.Sql;
+				}
+			}
+
+
+			if (field == null)
+			{
+				var nullabilityContext = NullabilityContext.GetContext(CteInnerQueryContext?.SelectQuery);
+				var isNullable         = placeholder.Sql.CanBeNullable(nullabilityContext);
+
+				var alias    = TableLikeHelpers.GenerateColumnAlias(placeholder.TrackingPath!) ?? TableLikeHelpers.GenerateColumnAlias(placeholder.Sql);
+				var dataType = QueryHelper.GetDbDataType(placeholder.Sql, MappingSchema);
+
+				if (recursiveField != null)
+				{
+					field           = recursiveField;
+					field.CanBeNull = isNullable;
+					field.Type      = dataType;
+				}
+				else
+				{
+					field = new SqlField(dataType, alias, isNullable);
+				}
+
+				Utils.MakeUniqueNames([field], CteClause.Fields.Where(f => f != null).Select(t => t.Name), f => f.Name, (f, n, a) =>
+				{
+					f.Name         = n;
+					f.PhysicalName = n;
+				}, f => (string.IsNullOrEmpty(f.Name) ? "field" : f.Name) + "_1");
+
+				CteClause.Fields.Add(field);
+			}
+
+			var newPlaceholderPath = path;
+
+			if (newPlaceholderPath == null)
+			{
+				var refExpr = SequenceHelper.CreateRef(this);
+				newPlaceholderPath = SequenceHelper.CreateSpecialProperty(refExpr, placeholder.Type, "$" + field.Name);
+			}
+
+			var newPlaceholder = ExpressionBuilder.CreatePlaceholder(SelectQuery, field, newPlaceholderPath, index: placeholder.Index);
+
+			_fieldsMap[placeholder.Path] = (field, newPlaceholder);
+			_knownMap[newPlaceholderPath] = newPlaceholder;
+
+			return newPlaceholder;
+		}
+
+		class CteProxy : BuildProxyBase<CteContext>
+		{
+			public CteProxy(CteContext ownerContext, Expression currentPath, Expression innerExpression) 
+				: base(ownerContext, ownerContext.CteInnerQueryContext!, currentPath, innerExpression)
+			{
+				if (ownerContext.CteInnerQueryContext == null)
+					throw new InvalidOperationException();
+			}
+
+			public override IBuildContext Clone(CloningContext context)
+			{
+				return new CteProxy(context.CloneContext(OwnerContext), context.CloneExpression(CurrentPath), context.CloneExpression(InnerExpression));
+			}
+
+			public override Expression HandleTranslated(Expression? path, SqlPlaceholderExpression placeholder)
+			{
+				var withNesting = OwnerContext.SubQueryContext == null
+					? placeholder
+					: Builder.UpdateNesting(OwnerContext.SubQueryContext!, placeholder);
+
+				if (path != null)
+					withNesting = withNesting.WithPath(path).WithTrackingPath(path);
+				else
+					withNesting = withNesting.WithPath(withNesting.TrackingPath ?? withNesting.Path);
+
+				var field = OwnerContext.RegisterField(path, withNesting);
+				field = field.WithType(placeholder.Type);
+
+				return field;
+			}
+
+			public override BuildProxyBase<CteContext> CreateProxy(CteContext ownerContext, IBuildContext buildContext, Expression currentPath, Expression innerExpression)
+			{
+				return new CteProxy(ownerContext, currentPath, innerExpression);
+			}
 		}
 
 		public override IBuildContext Clone(CloningContext context)
@@ -156,10 +266,25 @@ namespace LinqToDB.Linq.Builder
 
 			context.RegisterCloned(this, newContext);
 
-			newContext.SubqueryContext      = context.CloneContext(SubqueryContext);
+			newContext.SubQueryContext      = context.CloneContext(SubQueryContext);
 			newContext.CteInnerQueryContext = context.CloneContext(CteInnerQueryContext);
 			newContext.CteClause            = context.CloneElement(CteClause);
 			newContext.CteExpression        = context.CloneExpression(CteExpression);
+
+			foreach (var fm in _fieldsMap)
+			{
+				newContext._fieldsMap.Add(context.CloneExpression(fm.Key), (field: context.CloneElement(fm.Value.field), placeholder: context.CloneExpression(fm.Value.placeholder)));
+			}
+
+			foreach (var km in _knownMap)
+			{
+				newContext._knownMap.Add(context.CloneExpression(km.Key), context.CloneExpression(km.Value));
+			}
+
+			foreach (var rm in _recursiveMap)
+			{
+				newContext._recursiveMap.Add(context.CloneExpression(rm.Key), context.CloneExpression(rm.Value));
+			}
 
 			return newContext;
 		}

@@ -27,12 +27,15 @@ namespace LinqToDB.Linq.Builder
 		/// Optional cardinality for associations
 		/// </summary>
 		bool          IsOptional { get; }
-		IBuildContext Clone(CloningContext      context);
 
-		void           SetRunQuery<T>(Query<T>   query,      Expression   expr);
-		IBuildContext? GetContext(Expression     expression, BuildInfo    buildInfo);
-		void           SetAlias(string?          alias);
+		IBuildContext Clone(CloningContext context);
+
+		void           SetRunQuery<T>(Query<T> query,      Expression expr);
+		IBuildContext? GetContext(Expression   expression, BuildInfo  buildInfo);
+		void           SetAlias(string?        alias);
 		SqlStatement   GetResultStatement();
-		void           CompleteColumns();
+		void           Detach();
+		bool           IsSingleElement       { get; }
+		bool           AutomaticAssociations { get; }
 	}
 }

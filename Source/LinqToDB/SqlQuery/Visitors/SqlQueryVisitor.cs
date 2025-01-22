@@ -22,9 +22,10 @@ namespace LinqToDB.SqlQuery.Visitors
 
 		public interface IVisitorTransformationInfo
 		{
-			bool GetReplacement(IQueryElement   element, [NotNullWhen(true)] out IQueryElement? replacement);
-			bool IsReplaced(IQueryElement       element);
-			void RegisterReplaced(IQueryElement newElement, IQueryElement oldElement);
+			bool          GetReplacement(IQueryElement   element, [NotNullWhen(true)] out IQueryElement? replacement);
+			bool          IsReplaced(IQueryElement       element);
+			IQueryElement GetOriginal(IQueryElement      element);
+			void          RegisterReplaced(IQueryElement newElement, IQueryElement oldElement);
 
 			int         Version { get; }
 			public void GetReplacements(Dictionary<IQueryElement, IQueryElement> objectTree);
@@ -117,10 +118,14 @@ namespace LinqToDB.SqlQuery.Visitors
 		/// </summary>
 		public override IQueryElement NotifyReplaced(IQueryElement newElement, IQueryElement oldElement)
 		{
-			_transformationInfo ??= new VisitorTransformationInfo();
-			_transformationInfo.RegisterReplaced(newElement, oldElement);
+			GetTransformationInfo().RegisterReplaced(newElement, oldElement);
 
 			return base.NotifyReplaced(newElement, oldElement);
+		}
+
+		protected IVisitorTransformationInfo GetTransformationInfo()
+		{
+			return _transformationInfo ??= new VisitorTransformationInfo();
 		}
 
 		/// <summary>
@@ -128,14 +133,14 @@ namespace LinqToDB.SqlQuery.Visitors
 		/// </summary>
 		protected void AddReplacements(IReadOnlyDictionary<IQueryElement, IQueryElement> replacements)
 		{
-			_transformationInfo ??= new VisitorTransformationInfo();
+			var info = GetTransformationInfo();
 
 			foreach (var pair in replacements)
 			{
 				if (ReferenceEquals(pair.Key, pair.Value))
 					throw new ArgumentException($"{nameof(replacements)} contains entry with key == value");
 
-				_transformationInfo.RegisterReplaced(pair.Value, pair.Key);
+				info.RegisterReplaced(pair.Value, pair.Key);
 			}
 		}
 
@@ -215,7 +220,7 @@ namespace LinqToDB.SqlQuery.Visitors
 		public class VisitorTransformationInfo : IVisitorTransformationInfo
 		{
 			Dictionary<IQueryElement, IQueryElement>? _replacements;
-			HashSet<IQueryElement>?                   _replaced;
+			Dictionary<IQueryElement, IQueryElement>? _newToOldLookup;
 			int                                       _version;
 
 			public bool GetReplacement(IQueryElement element, [NotNullWhen(true)] out IQueryElement? replacement)
@@ -238,16 +243,36 @@ namespace LinqToDB.SqlQuery.Visitors
 
 			public bool IsReplaced(IQueryElement element)
 			{
-				return _replaced?.Contains(element) == true;
+				return _newToOldLookup?.ContainsKey(element) == true;
+			}
+
+			public IQueryElement GetOriginal(IQueryElement element)
+			{
+				if (_newToOldLookup == null)
+					return element;
+
+
+				if (!_newToOldLookup.TryGetValue(element, out var oldElement))
+					return element;
+
+				while (true)
+				{
+					if (!_newToOldLookup.TryGetValue(oldElement, out var foundOldElement))
+						break;
+
+					oldElement = foundOldElement;
+				}
+
+				return oldElement;
 			}
 
 			public void RegisterReplaced(IQueryElement newElement, IQueryElement oldElement)
 			{
-				_replacements ??= new Dictionary<IQueryElement, IQueryElement>(Utils.ObjectReferenceEqualityComparer<IQueryElement>.Default);
-				_replaced     ??= new HashSet<IQueryElement>(Utils.ObjectReferenceEqualityComparer<IQueryElement>.Default);
+				_replacements   ??= new Dictionary<IQueryElement, IQueryElement>(Utils.ObjectReferenceEqualityComparer<IQueryElement>.Default);
+				_newToOldLookup ??= new Dictionary<IQueryElement, IQueryElement>(Utils.ObjectReferenceEqualityComparer<IQueryElement>.Default);
 
-				_replacements[oldElement] = newElement;
-				_replaced.Add(newElement);
+				_replacements[oldElement]   = newElement;
+				_newToOldLookup[newElement] = oldElement;
 				_version++;
 			}
 

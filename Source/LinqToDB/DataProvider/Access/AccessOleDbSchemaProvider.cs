@@ -13,11 +13,11 @@ namespace LinqToDB.DataProvider.Access
 
 	sealed class AccessOleDbSchemaProvider : AccessSchemaProviderBase
 	{
-		private readonly AccessOleDbDataProvider _provider;
+		private readonly AccessDataProvider _provider;
 
 		protected override bool GetProcedureSchemaExecutesProcedure => true;
 
-		public AccessOleDbSchemaProvider(AccessOleDbDataProvider provider)
+		public AccessOleDbSchemaProvider(AccessDataProvider provider)
 		{
 			_provider = provider;
 		}
@@ -51,7 +51,7 @@ namespace LinqToDB.DataProvider.Access
 			// this method (GetOleDbSchemaTable) could crash application hard with AV:
 			// https://github.com/linq2db/linq2db.LINQPad/issues/23
 			// we cannot do anything about it as it is not exception you can handle without hacks (and it doesn't make sense anyways)
-			var data = _provider.Adapter.GetOleDbSchemaTable(connection, OleDbProviderAdapter.OleDbSchemaGuid.Foreign_Keys, null);
+			var data = _provider.Adapter.GetOleDbSchemaTable!(connection, OleDbProviderAdapter.OleDbSchemaGuid.Foreign_Keys, null);
 
 			var q = from fk in data.AsEnumerable()
 				select new ForeignKeyInfo

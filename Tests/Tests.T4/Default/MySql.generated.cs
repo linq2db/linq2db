@@ -23,6 +23,8 @@ namespace Default.MySql
 {
 	public partial class TestDataDB : LinqToDB.Data.DataConnection
 	{
+		#region Tables
+
 		public ITable<AllType>           AllTypes            { get { return this.GetTable<AllType>(); } }
 		public ITable<AllTypesNoYear>    AllTypesNoYears     { get { return this.GetTable<AllTypesNoYear>(); } }
 		public ITable<Child>             Children            { get { return this.GetTable<Child>(); } }
@@ -46,6 +48,10 @@ namespace Default.MySql
 		public ITable<TestMerge1>        TestMerge1          { get { return this.GetTable<TestMerge1>(); } }
 		public ITable<TestMerge2>        TestMerge2          { get { return this.GetTable<TestMerge2>(); } }
 		public ITable<TestSameName>      TestSameNames       { get { return this.GetTable<TestSameName>(); } }
+
+		#endregion
+
+		#region .ctor
 
 		public TestDataDB()
 		{
@@ -76,6 +82,8 @@ namespace Default.MySql
 
 		partial void InitDataContext  ();
 		partial void InitMappingSchema();
+
+		#endregion
 	}
 
 	[Table("AllTypes")]
@@ -194,7 +202,7 @@ namespace Default.MySql
 		/// <summary>
 		/// FK_Doctor_Person (Person)
 		/// </summary>
-		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false)]
+		[Association(ThisKey=nameof(PersonID), OtherKey=nameof(Default.MySql.Person.PersonID), CanBeNull=false)]
 		public Person Person { get; set; } = null!;
 
 		#endregion
@@ -274,7 +282,7 @@ namespace Default.MySql
 		/// <summary>
 		/// FK_Patient_Person (Person)
 		/// </summary>
-		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=false)]
+		[Association(ThisKey=nameof(PersonID), OtherKey=nameof(Default.MySql.Person.PersonID), CanBeNull=false)]
 		public Person Person { get; set; } = null!;
 
 		#endregion
@@ -294,13 +302,13 @@ namespace Default.MySql
 		/// <summary>
 		/// FK_Doctor_Person_BackReference (Doctor)
 		/// </summary>
-		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=true)]
+		[Association(ThisKey=nameof(PersonID), OtherKey=nameof(Default.MySql.Doctor.PersonID), CanBeNull=true)]
 		public Doctor? Doctor { get; set; }
 
 		/// <summary>
 		/// FK_Patient_Person_BackReference (Patient)
 		/// </summary>
-		[Association(ThisKey="PersonID", OtherKey="PersonID", CanBeNull=true)]
+		[Association(ThisKey=nameof(PersonID), OtherKey=nameof(Default.MySql.Patient.PersonID), CanBeNull=true)]
 		public Patient? Patient { get; set; }
 
 		#endregion
@@ -398,55 +406,19 @@ namespace Default.MySql
 		{
 			var parameters = new []
 			{
-				new DataParameter("VarCharDefault",     varCharDefault,     LinqToDB.DataType.VarChar)
-				{
-					Size = 255
-				},
-				new DataParameter("VarChar1",           varChar1,           LinqToDB.DataType.VarChar)
-				{
-					Size = 1
-				},
-				new DataParameter("Char255",            char255,            LinqToDB.DataType.Char)
-				{
-					Size = 255
-				},
-				new DataParameter("Char1",              char1,              LinqToDB.DataType.Char)
-				{
-					Size = 1
-				},
-				new DataParameter("VarBinary255",       varBinary255,       LinqToDB.DataType.VarBinary)
-				{
-					Size = 255
-				},
-				new DataParameter("Binary255",          binary255,          LinqToDB.DataType.Binary)
-				{
-					Size = 255
-				},
-				new DataParameter("TinyBlob",           tinyBlob,           LinqToDB.DataType.Blob)
-				{
-					Size = 255
-				},
-				new DataParameter("Blob",               blob,               LinqToDB.DataType.Blob)
-				{
-					Size = 65535
-				},
-				new DataParameter("MediumBlob",         mediumBlob,         LinqToDB.DataType.Blob)
-				{
-					Size = 16777215
-				},
+				new DataParameter("VarCharDefault",     varCharDefault,     LinqToDB.DataType.VarChar, 255),
+				new DataParameter("VarChar1",           varChar1,           LinqToDB.DataType.VarChar, 1),
+				new DataParameter("Char255",            char255,            LinqToDB.DataType.Char, 255),
+				new DataParameter("Char1",              char1,              LinqToDB.DataType.Char, 1),
+				new DataParameter("VarBinary255",       varBinary255,       LinqToDB.DataType.VarBinary, 255),
+				new DataParameter("Binary255",          binary255,          LinqToDB.DataType.Binary, 255),
+				new DataParameter("TinyBlob",           tinyBlob,           LinqToDB.DataType.Blob, 255),
+				new DataParameter("Blob",               blob,               LinqToDB.DataType.Blob, 65535),
+				new DataParameter("MediumBlob",         mediumBlob,         LinqToDB.DataType.Blob, 16777215),
 				new DataParameter("LongBlob",           longBlob,           LinqToDB.DataType.Blob),
-				new DataParameter("TinyText",           tinyText,           LinqToDB.DataType.Text)
-				{
-					Size = 255
-				},
-				new DataParameter("Text",               text,               LinqToDB.DataType.Text)
-				{
-					Size = 65535
-				},
-				new DataParameter("MediumText",         mediumText,         LinqToDB.DataType.Text)
-				{
-					Size = 16777215
-				},
+				new DataParameter("TinyText",           tinyText,           LinqToDB.DataType.Text, 255),
+				new DataParameter("Text",               text,               LinqToDB.DataType.Text, 65535),
+				new DataParameter("MediumText",         mediumText,         LinqToDB.DataType.Text, 16777215),
 				new DataParameter("LongText",           longText,           LinqToDB.DataType.Text),
 				new DataParameter("Date",               date,               LinqToDB.DataType.Date),
 				new DataParameter("DateTime",           dateTime,           LinqToDB.DataType.DateTime),
@@ -473,14 +445,8 @@ namespace Default.MySql
 				new DataParameter("Bit16",              bit16,              LinqToDB.DataType.BitArray),
 				new DataParameter("Bit32",              bit32,              LinqToDB.DataType.BitArray),
 				new DataParameter("Bit64",              bit64,              LinqToDB.DataType.BitArray),
-				new DataParameter("Enum",               @enum,              LinqToDB.DataType.VarChar)
-				{
-					Size = 3
-				},
-				new DataParameter("Set",                set,                LinqToDB.DataType.VarChar)
-				{
-					Size = 3
-				},
+				new DataParameter("Enum",               @enum,              LinqToDB.DataType.VarChar, 3),
+				new DataParameter("Set",                set,                LinqToDB.DataType.VarChar, 3),
 				new DataParameter("Year",               year,               LinqToDB.DataType.Int32),
 				new DataParameter("Geometry",           geometry,           LinqToDB.DataType.Undefined),
 				new DataParameter("Point",              point,              LinqToDB.DataType.Undefined),
@@ -557,55 +523,19 @@ namespace Default.MySql
 		{
 			var parameters = new []
 			{
-				new DataParameter("VarCharDefault",     varCharDefault,     LinqToDB.DataType.VarChar)
-				{
-					Size = 4000
-				},
-				new DataParameter("VarChar1",           varChar1,           LinqToDB.DataType.VarChar)
-				{
-					Size = 1
-				},
-				new DataParameter("Char255",            char255,            LinqToDB.DataType.Char)
-				{
-					Size = 255
-				},
-				new DataParameter("Char1",              char1,              LinqToDB.DataType.Char)
-				{
-					Size = 1
-				},
-				new DataParameter("VarBinary255",       varBinary255,       LinqToDB.DataType.VarBinary)
-				{
-					Size = 255
-				},
-				new DataParameter("Binary255",          binary255,          LinqToDB.DataType.Binary)
-				{
-					Size = 255
-				},
-				new DataParameter("TinyBlob",           tinyBlob,           LinqToDB.DataType.Blob)
-				{
-					Size = 255
-				},
-				new DataParameter("Blob",               blob,               LinqToDB.DataType.Blob)
-				{
-					Size = 65535
-				},
-				new DataParameter("MediumBlob",         mediumBlob,         LinqToDB.DataType.Blob)
-				{
-					Size = 16777215
-				},
+				new DataParameter("VarCharDefault",     varCharDefault,     LinqToDB.DataType.VarChar, 4000),
+				new DataParameter("VarChar1",           varChar1,           LinqToDB.DataType.VarChar, 1),
+				new DataParameter("Char255",            char255,            LinqToDB.DataType.Char, 255),
+				new DataParameter("Char1",              char1,              LinqToDB.DataType.Char, 1),
+				new DataParameter("VarBinary255",       varBinary255,       LinqToDB.DataType.VarBinary, 255),
+				new DataParameter("Binary255",          binary255,          LinqToDB.DataType.Binary, 255),
+				new DataParameter("TinyBlob",           tinyBlob,           LinqToDB.DataType.Blob, 255),
+				new DataParameter("Blob",               blob,               LinqToDB.DataType.Blob, 65535),
+				new DataParameter("MediumBlob",         mediumBlob,         LinqToDB.DataType.Blob, 16777215),
 				new DataParameter("LongBlob",           longBlob,           LinqToDB.DataType.Blob),
-				new DataParameter("TinyText",           tinyText,           LinqToDB.DataType.Text)
-				{
-					Size = 255
-				},
-				new DataParameter("Text",               text,               LinqToDB.DataType.Text)
-				{
-					Size = 65535
-				},
-				new DataParameter("MediumText",         mediumText,         LinqToDB.DataType.Text)
-				{
-					Size = 16777215
-				},
+				new DataParameter("TinyText",           tinyText,           LinqToDB.DataType.Text, 255),
+				new DataParameter("Text",               text,               LinqToDB.DataType.Text, 65535),
+				new DataParameter("MediumText",         mediumText,         LinqToDB.DataType.Text, 16777215),
 				new DataParameter("LongText",           longText,           LinqToDB.DataType.Text),
 				new DataParameter("Date",               date,               LinqToDB.DataType.Date),
 				new DataParameter("DateTime",           dateTime,           LinqToDB.DataType.DateTime),
@@ -631,14 +561,8 @@ namespace Default.MySql
 				new DataParameter("Bit16",              bit16,              LinqToDB.DataType.BitArray),
 				new DataParameter("Bit32",              bit32,              LinqToDB.DataType.BitArray),
 				new DataParameter("Bit64",              bit64,              LinqToDB.DataType.BitArray),
-				new DataParameter("Enum",               @enum,              LinqToDB.DataType.VarChar)
-				{
-					Size = 3
-				},
-				new DataParameter("Set",                set,                LinqToDB.DataType.VarChar)
-				{
-					Size = 3
-				},
+				new DataParameter("Enum",               @enum,              LinqToDB.DataType.VarChar, 3),
+				new DataParameter("Set",                set,                LinqToDB.DataType.VarChar, 3),
 				new DataParameter("Json",               json,               LinqToDB.DataType.Json),
 				new DataParameter("Geometry",           geometry,           LinqToDB.DataType.Undefined),
 				new DataParameter("Point",              point,              LinqToDB.DataType.Undefined),
@@ -716,10 +640,7 @@ namespace Default.MySql
 		{
 			var parameters = new []
 			{
-				new DataParameter("aInParam",  aInParam,  LinqToDB.DataType.VarChar)
-				{
-					Size = 256
-				},
+				new DataParameter("aInParam",  aInParam,  LinqToDB.DataType.VarChar, 256),
 				new DataParameter("aOutParam", null, LinqToDB.DataType.SByte)
 				{
 					Direction = ParameterDirection.Output

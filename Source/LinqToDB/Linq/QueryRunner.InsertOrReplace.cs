@@ -7,10 +7,13 @@ using System.Threading.Tasks;
 
 namespace LinqToDB.Linq
 {
+	using Common;
 	using Common.Internal.Cache;
 	using Mapping;
 	using SqlQuery;
 	using Tools;
+	using Infrastructure;
+	using Internal;
 
 	static partial class QueryRunner
 	{
@@ -54,12 +57,14 @@ namespace LinqToDB.Linq
 
 				sqlQuery.From.Table(sqlTable);
 
-				var ei = new Query<int>(dataContext, null)
+				var ei = new Query<int>(dataContext)
 				{
 					Queries = { new QueryInfo { Statement = insertOrUpdateStatement, } }
 				};
 
 				var supported = ei.SqlProviderFlags.IsInsertOrUpdateSupported && ei.SqlProviderFlags.CanCombineParameters;
+
+				var accessorIdGenerator = new UniqueIdGenerator<ParameterAccessor>();
 
 				// Insert.
 				//
@@ -71,8 +76,8 @@ namespace LinqToDB.Linq
 						{
 							if (!supported || !fieldDic.TryGetValue(field, out param))
 							{
-								param = GetParameter(type, dataContext, field);
-								ei.Queries[0].AddParameterAccessor(param);
+								param = GetParameter(accessorIdGenerator, type, dataContext, field);
+								ei.AddParameterAccessor(param);
 
 								if (supported)
 									fieldDic.Add(field, param);
@@ -83,7 +88,7 @@ namespace LinqToDB.Linq
 					}
 					else if (field.IsIdentity)
 					{
-						throw new LinqException("InsertOrReplace method does not support identity field '{0}.{1}'.", sqlTable.NameForLogging, field.Name);
+						throw new LinqToDBException($"InsertOrReplace method does not support identity field '{sqlTable.NameForLogging}.{field.Name}'.");
 					}
 				}
 
@@ -95,7 +100,7 @@ namespace LinqToDB.Linq
 					.Except(keys);
 
 				if (keys.Count == 0)
-					throw new LinqException("InsertOrReplace method requires the '{0}' table to have a primary key.", sqlTable.NameForLogging);
+					throw new LinqToDBException($"InsertOrReplace method requires the '{sqlTable.NameForLogging}' table to have a primary key.");
 
 				var q =
 				(
@@ -107,9 +112,7 @@ namespace LinqToDB.Linq
 				var missedKey = keys.Except(q.Select(i => i.k)).FirstOrDefault();
 
 				if (missedKey != null)
-					throw new LinqException("InsertOrReplace method requires the '{0}.{1}' field to be included in the insert setter.",
-						sqlTable.NameForLogging,
-						missedKey.Name);
+					throw new LinqToDBException($"InsertOrReplace method requires the '{sqlTable.NameForLogging}.{missedKey.Name}' field to be included in the insert setter.");
 
 				var fieldCount = 0;
 
@@ -120,8 +123,8 @@ namespace LinqToDB.Linq
 
 					if (!supported || !fieldDic.TryGetValue(field, out param))
 					{
-						param = GetParameter(type, dataContext, field);
-						ei.Queries[0].AddParameterAccessor(param);
+						param = GetParameter(accessorIdGenerator, type, dataContext, field);
+						ei.AddParameterAccessor(param);
 
 						if (supported)
 							fieldDic.Add(field, param);
@@ -133,7 +136,7 @@ namespace LinqToDB.Linq
 				}
 
 				if (fieldCount == 0)
-					throw new LinqException("There are no fields to update in the type '{0}'.", sqlTable.NameForLogging);
+					throw new LinqToDBException($"There are no fields to update in the type '{sqlTable.NameForLogging}'.");
 
 				insertOrUpdateStatement.Update.Keys.AddRange(q.Select(i => i.i));
 
@@ -192,7 +195,7 @@ namespace LinqToDB.Linq
 						return CreateQuery(context.dataContext, context.entityDescriptor, context.obj, null, key.tableName, key.serverName, key.databaseName, key.schema, key.tableOptions, key.type);
 					});
 
-				return (int)ei.GetElement(dataContext, Expression.Constant(obj), null, null)!;
+				return (int)ei.GetElement(dataContext, new RuntimeExpressionsContainer(Expression.Constant(obj)), null, null)!;
 			}
 
 			public static async Task<int> QueryAsync(
@@ -241,7 +244,7 @@ namespace LinqToDB.Linq
 								return CreateQuery(context.dataContext, context.entityDescriptor, context.obj, null, key.tableName, key.serverName, key.databaseName, key.schema, key.tableOptions, key.type);
 							});
 
-					var result = await ei.GetElementAsync(dataContext, Expression.Constant(obj), null, null, token).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+					var result = await ei.GetElementAsync(dataContext, new RuntimeExpressionsContainer(Expression.Constant(obj)), null, null, token).ConfigureAwait(false);
 
 					return (int)result!;
 				}
@@ -264,7 +267,6 @@ namespace LinqToDB.Linq
 			query.Queries.Add(new QueryInfo
 			{
 				Statement          = insertStatement,
-				ParameterAccessors = query.Queries[0].ParameterAccessors
 			});
 
 			var keys = firstStatement.Update.Keys;
@@ -272,7 +274,7 @@ namespace LinqToDB.Linq
 			var wsc = firstStatement.SelectQuery.Where.EnsureConjunction();
 
 			foreach (var key in keys)
-				wsc.AddEqual(key.Column, key.Expression!, false);
+				wsc.AddEqual(key.Column, key.Expression!, CompareNulls.LikeSql);
 
 			// TODO! looks not working solution
 			if (firstStatement.Update.Items.Count > 0)
@@ -283,6 +285,7 @@ namespace LinqToDB.Linq
 					Tag                = firstStatement.Tag,
 					SqlQueryExtensions = firstStatement.SqlQueryExtensions
 				};
+				query.IsFinalized = false; 
 				SetNonQueryQuery2(query);
 			}
 			else
@@ -290,14 +293,15 @@ namespace LinqToDB.Linq
 				firstStatement.SelectQuery.Select.Columns.Clear();
 				firstStatement.SelectQuery.Select.Columns.Add(new SqlColumn(firstStatement.SelectQuery, new SqlExpression("1")));
 				query.Queries[0].Statement = new SqlSelectStatement(firstStatement.SelectQuery);
+				query.IsFinalized          = false;
 				SetQueryQuery2(query);
 			}
 
 			query.Queries.Add(new QueryInfo
 			{
 				Statement  = new SqlSelectStatement(firstStatement.SelectQuery),
-				ParameterAccessors = query.Queries[0].ParameterAccessors.ToList(),
 			});
+			query.IsFinalized = false;
 		}
 	}
 }

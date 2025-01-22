@@ -10,12 +10,11 @@ namespace LinqToDB.Linq.Builder
 	using Mapping;
 	using LinqToDB.Expressions;
 
-	class GroupJoinBuilder : MethodCallBuilder
+	[BuildsMethodCall("GroupJoin")]
+	sealed class GroupJoinBuilder : MethodCallBuilder
 	{
-		protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
-		{
-			return methodCall.IsQueryable("GroupJoin");
-		}
+		public static bool CanBuildMethod(MethodCallExpression call, BuildInfo info, ExpressionBuilder builder)
+			=> call.IsQueryable();
 
 		protected override BuildSequenceResult BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
@@ -70,17 +69,18 @@ namespace LinqToDB.Linq.Builder
 
 			public override Expression MakeExpression(Expression path, ProjectFlags flags)
 			{
-				if (flags.HasFlag(ProjectFlags.Root) && SequenceHelper.IsSameContext(path, this))
-				{
-					return path;
-				}
-
+				
 				if (SequenceHelper.IsSameContext(path, this) 
-					&& (flags.IsExpression() || flags.IsExtractProjection())
+					&& (flags.IsRoot() || flags.IsExtractProjection() || flags.IsExpand() || flags.IsSubquery() || flags.IsAggregationRoot() || flags.IsExpand())
 				    && !path.Type.IsAssignableFrom(ElementType))
 				{
 					var result = GetGroupJoinCall();
-					return result;
+					if (result.Type == path.Type)
+					{
+						return result;
+					}
+
+					return SqlAdjustTypeExpression.AdjustType(result, path.Type, MappingSchema);
 				}
 
 				return path;

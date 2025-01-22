@@ -337,7 +337,10 @@ namespace Tests.Linq
 		{
 			using (var db = GetDataContext(context))
 			{
-				var sql = db.Parent.LoadWith(p => p.Children).ToString()!;
+				var query = db.Parent.LoadWith(p => p.Children);
+				query.ToArray();
+
+				var sql = query.ToSqlQuery().Sql;
 
 				Assert.That(sql, Does.Not.Contain("LoadWithQueryable"));
 
@@ -356,8 +359,9 @@ FROM
 			using var db = GetDataContext(context);
 
 			var query = db.Person.LoadWith(p => p.Patient).AsQueryable();
-			var sql   = query.ToString()!;
-			TestContext.WriteLine(sql);
+			query.ToArray();
+
+			var sql = query.ToSqlQuery().Sql;
 
 			sql.Should().NotContain("LoadWithQueryable");
 
@@ -912,7 +916,6 @@ FROM
 			}
 		}
 
-		[ActiveIssue("https://github.com/linq2db/linq2db/issues/3619", Configuration = TestProvName.AllClickHouse)]
 		[Test]
 		public void TestSelectGroupBy([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
@@ -929,7 +932,7 @@ FROM
 					{
 						Master = m,
 						Detail = dd,
-						FirstMaster = master.Where(mm => m.Id1 == dd.MasterId)
+						FirstMaster = master.Where(mm => mm.Id1 == dd.MasterId)
 							.AsEnumerable()
 							.GroupBy(_ => _.Id1)
 							.Select(_ => _.OrderBy(mm => mm.Id1).First())
@@ -942,7 +945,7 @@ FROM
 					{
 						Master = m,
 						Detail = dd,
-						FirstMaster = masterRecords.Where(mm => m.Id1 == dd.MasterId)
+						FirstMaster = masterRecords.Where(mm => mm.Id1 == dd.MasterId)
 							.GroupBy(_ => _.Id1)
 							.Select(_ => _.OrderBy(mm => mm.Id1).First())
 					};
@@ -1145,6 +1148,8 @@ FROM
 		}
 
 		[Test]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllClickHouse, ErrorMessage = ErrorHelper.Error_Correlated_Subqueries)]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllAccess, TestProvName.AllFirebirdLess4, TestProvName.AllMySql57, TestProvName.AllSybase, TestProvName.AllOracle11, TestProvName.AllMariaDB, TestProvName.AllDB2, TestProvName.AllInformix, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
 		public void TestAggregate([DataSources] string context)
 		{
 			var (masterRecords, detailRecords) = GenerateData();
@@ -1174,7 +1179,8 @@ FROM
 		}
 
 		[Test]
-		[ThrowsForProvider(typeof(LinqException), TestProvName.AllClickHouse, ErrorMessage = ErrorHelper.Error_Correlated_Subqueries)]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllClickHouse, ErrorMessage = ErrorHelper.Error_Correlated_Subqueries)]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllAccess, TestProvName.AllFirebirdLess4, TestProvName.AllMySql57, TestProvName.AllSybase, TestProvName.AllOracle11, TestProvName.AllMariaDB, TestProvName.AllDB2, TestProvName.AllInformix, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
 		public void TestAggregateAverage([DataSources] string context)
 		{
 			var (masterRecords, detailRecords) = GenerateData();
@@ -1679,6 +1685,43 @@ FROM
 		}
 		#endregion
 
+		#region Issue 3806
+
+		[Table(IsColumnAttributeRequired = false)]
+		public class Issue3806Table
+		{
+			[PrimaryKey] public int Id { get; set; }
+
+			[Association(ThisKey = nameof(Id), OtherKey = nameof(Issue3806ItemTable.AssociationKey))]
+			public IEnumerable<Issue3806ItemTable> Items { get; set; } = null!;
+		}
+
+		[Table(IsColumnAttributeRequired = false)]
+		public class Issue3806ItemTable
+		{
+			[PrimaryKey] public int Id             { get; set; }
+			[Column    ] public int Value          { get; set; }
+			[Column    ] public int AssociationKey { get; set; }
+		}
+
+		[ActiveIssue]
+		[Test]
+		public void Issue3806Test([DataSources(false)] string context)
+		{
+			var queries = new SaveQueriesInterceptor();
+			using var db = GetDataContext(context);
+			db.AddInterceptor(queries);
+
+			using var table = db.CreateLocalTable<Issue3806Table>();
+			using var items = db.CreateLocalTable<Issue3806ItemTable>();
+
+			queries.Queries.Clear();
+			table.LoadWith(a => a.Items).Where(a => a.Id != 0).ToList();
+
+			Assert.That(queries.Queries, Has.Count.EqualTo(1));
+		}
+		#endregion
+
 		#region Issue 3799
 
 		[Table]
@@ -1728,6 +1771,7 @@ FROM
 		}
 
 		[Test]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSybase, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
 		public void Issue3799Test([DataSources] string context)
 		{
 			using var db    = GetDataContext(context);
@@ -1873,7 +1917,7 @@ FROM
 		}
 		#endregion
 
-		[Test, ActiveIssue(4060)]
+		[Test]
 		public void Issue4060([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
@@ -1883,6 +1927,94 @@ FROM
 				.LoadWith(p => p.Patient)
 				.ToList();
 		}
+
+		#region Issue 3226
+		[Table]
+		sealed class Item
+		{
+			[PrimaryKey] public int Id { get; set; }
+			[Column] public string? Text { get; set; }
+
+			[Association(ThisKey = nameof(Id), OtherKey = nameof(ItemValue.ItemId), CanBeNull = true)]
+			public IEnumerable<ItemValue> Values { get; set; } = null!;
+		}
+
+		[Table]
+		sealed class ItemValue
+		{
+			[Column] public int Id { get; set; }
+			[Column] public int ItemId { get; set; }
+			[Column] public decimal Value { get; set; }
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/3226")]
+		public void Issue3226Test1([DataSources(TestProvName.AllClickHouse)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t1 = db.CreateLocalTable<Item>();
+			using var t2 = db.CreateLocalTable<ItemValue>();
+
+			t1
+				.OrderBy(x => x.Values.Sum(y => y.Value))
+				.Select(x => new {
+					Id = x.Id,
+					Text = x.Text
+				})
+				.ToList();
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/3226")]
+		public void Issue3226Test2([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t1 = db.CreateLocalTable<Item>();
+			using var t2 = db.CreateLocalTable<ItemValue>();
+
+			t1
+				.Select(x => new {
+					Id = x.Id,
+					Text = x.Text,
+					Summary = x.Values.Select(y => new { Total = y.Value }).AsEnumerable()
+				})
+				.ToList();
+		}
+
+		[ThrowsForProvider(typeof(LinqToDBException), providers: [TestProvName.AllClickHouse], ErrorMessage = ErrorHelper.Error_Correlated_Subqueries)]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/3226")]
+		public void Issue3226Test3([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t1 = db.CreateLocalTable<Item>();
+			using var t2 = db.CreateLocalTable<ItemValue>();
+
+			t1
+				.OrderBy(x => x.Values.Sum(y => y.Value))
+				.Select(x => new {
+					Id = x.Id,
+					Text = x.Text,
+					Summary = x.Values.Select(y => new { Total = y.Value }).AsEnumerable()
+				})
+				.ToList();
+		}
+
+		[ThrowsForProvider(typeof(LinqToDBException), providers: [TestProvName.AllClickHouse], ErrorMessage = ErrorHelper.Error_Correlated_Subqueries)]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/3226")]
+		public void Issue3226Test4([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t1 = db.CreateLocalTable<Item>();
+			using var t2 = db.CreateLocalTable<ItemValue>();
+
+			t1
+				.OrderBy(x => x.Values.Sum(y => (decimal?)y.Value) ?? (decimal)0.0)
+				.Select(x => new {
+					Id = x.Id,
+					Text = x.Text,
+					Summary = x.Values.Select(y => new { Total = y.Value }).AsEnumerable()
+				})
+				.ToList();
+		}
+		#endregion
 
 		abstract class EntityBase
 		{
@@ -2843,11 +2975,14 @@ FROM
 			using var tc = db.CreateLocalTable(EntityC.Data);
 			using var td = db.CreateLocalTable(EntityD.Data);
 
-			var result = testCase == 1
-				? db.GetTable<EntityA>().Select(e => new { e.Id, ObjectBOptional = e.ObjectBOptional == null ? null : new { e.ObjectBOptional.Id, e.ObjectBOptional.ObjectCRequired, ObjectsD = (EntityD[]?)null } }).ToList()
-				: testCase == 2
-					? db.GetTable<EntityA>().Select(e => new { e.Id, ObjectBOptional = e.ObjectBOptional == null ? null : new { e.ObjectBOptional.Id, ObjectCRequired = (EntityC)null!, e.ObjectBOptional.ObjectsD } }).ToList()
-					: db.GetTable<EntityA>().Select(e => new { e.Id, ObjectBOptional = e.ObjectBOptional == null ? null : new { e.ObjectBOptional.Id, e.ObjectBOptional.ObjectCRequired, e.ObjectBOptional.ObjectsD } }).ToList();
+			var query = testCase switch
+			{
+				1 => db.GetTable<EntityA>().Select(e => new { e.Id, ObjectBOptional = e.ObjectBOptional == null ? null : new { e.ObjectBOptional.Id, e.ObjectBOptional.ObjectCRequired, ObjectsD = (EntityD[]?)null } }),
+				2 => db.GetTable<EntityA>().Select(e => new { e.Id, ObjectBOptional = e.ObjectBOptional == null ? null : new { e.ObjectBOptional.Id, ObjectCRequired                             = (EntityC)null!, e.ObjectBOptional.ObjectsD } }),
+				_ => db.GetTable<EntityA>().Select(e => new { e.Id, ObjectBOptional = e.ObjectBOptional == null ? null : new { e.ObjectBOptional.Id, e.ObjectBOptional.ObjectCRequired, e.ObjectBOptional.ObjectsD } })
+			};
+
+			var result = query.ToList();
 
 			var expected = new int?[][]
 			{
@@ -2922,5 +3057,432 @@ FROM
 				}
 			}
 		}
+
+		#region Issue 4497
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4497")]
+		public void Issue4497Test1([DataSources(false)] string context)
+		{
+			using var db = GetDataConnection(context);
+
+			db.Person
+				.LeftJoin(
+					db.Patient,
+					(join, p) => join.ID == p.PersonID,
+					(join, p) => new { join, p })
+				.Where(i => i.p.PersonID != 0)
+				.ToList();
+
+			Assert.That(db.LastQuery, Does.Contain("LEFT JOIN"));
+			Assert.That(db.LastQuery, Does.Contain("IS NULL"));
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4497")]
+		public void Issue4497Test2([DataSources(false)] string context)
+		{
+			using var db = GetDataConnection(context);
+
+			db.Person
+				.LoadWith(p => p.Patient)
+				.Where(i => i.Patient!.PersonID != 0)
+				.ToList();
+
+			Assert.That(db.LastQuery, Does.Contain("LEFT JOIN"));
+			Assert.That(db.LastQuery, Does.Contain("IS NULL"));
+		}
+		#endregion
+
+		#region Issue 4585
+		[ActiveIssue]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4585")]
+		public void Issue4585Test([DataSources] string context)
+		{
+			var fluentMappingBuilder = new FluentMappingBuilder(new MappingSchema());
+
+			fluentMappingBuilder
+				.Entity<Issue4585TableNested>()
+				.Property(x => x.Id)
+				.Property(x => x.Code);
+
+			fluentMappingBuilder
+				.Entity<Issue4585TableBase>()
+				.Inheritance(x => x.TypeId, HierarchyType.Type1, typeof(Issue4585Table))
+				.Property(t => t.Data).HasColumnName("data")
+				.Property(t => t.Id).IsPrimaryKey()
+				.Property(t => t.TypeId).IsDiscriminator()
+				.Build();
+
+			fluentMappingBuilder.Entity<Issue4585Table>()
+				.Property(x => x.SomeField)
+				.Property(x => x.NestedTypeId)
+				.Association(x => x.Nested, x => x.NestedTypeId, x => x!.Id);
+
+			using var db = GetDataContext(context, fluentMappingBuilder.MappingSchema);
+
+			using var table = db.CreateLocalTable<Issue4585TableBase>();
+			using var table1 = db.CreateLocalTable<Issue4585TableNested>();
+
+			var list      = db.GetTable<Issue4585Table>()
+				.LoadWith(x => x.Nested)
+				.ToList();
+		}
+
+		class Issue4585TableBase
+		{
+			public int Id { get; set; }
+			public string Data { get; set; } = null!;
+			public HierarchyType TypeId { get; set; }
+		}
+
+		enum HierarchyType
+		{
+			Type1 = 0,
+			Type2 = 1
+		}
+
+		sealed class Issue4585Table : Issue4585TableBase
+		{
+			public string? SomeField { get; set; }
+			public int? NestedTypeId { get; set; }
+			public Issue4585TableNested? Nested { get; set; }
+		}
+
+		sealed class Issue4585TableNested
+		{
+			public int Id { get; set; }
+			public string Code { get; set; } = null!;
+		}
+		#endregion
+
+		#region Issue 3140
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/3140")]
+		public void Issue3140Test1([DataSources(false)] string context)
+		{
+			using var db = GetDataConnection(context);
+			using var t1 = db.CreateLocalTable<Issue3140Parent>();
+			using var t2 = db.CreateLocalTable<Issue3140Child>();
+
+			var query = from p in t1
+						select new Issue3140Parent()
+						{
+							Id = p.Id,
+							Child = new Issue3140Child()
+							{
+								Id = p.Child!.Id,
+								Name = p.Child!.Name,
+							}
+						};
+
+			query.ToArray();
+
+			var selects = db.LastQuery!.Split(["SELECT"], StringSplitOptions.None).Length - 1;
+			var joins = db.LastQuery.Split(["LEFT JOIN"], StringSplitOptions.None).Length - 1;
+
+			Assert.Multiple(() =>
+			{
+				Assert.That(selects, Is.EqualTo(1));
+				Assert.That(joins, Is.EqualTo(1));
+			});
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/3140")]
+		public void Issue3140Test2([DataSources(false)] string context)
+		{
+			using var db = GetDataConnection(context);
+			using var t1 = db.CreateLocalTable<Issue3140Parent>();
+			using var t2 = db.CreateLocalTable<Issue3140Child>();
+
+			var query = t1
+				.LoadWith(
+					p => p.Child,
+					c => c.Select(x => new Issue3140Child() { Id = x.Id, Name = x.Name }));
+
+			query.ToArray();
+
+			var selects = db.LastQuery!.Split(["SELECT"], StringSplitOptions.None).Length - 1;
+			var joins = db.LastQuery.Split(["LEFT JOIN"], StringSplitOptions.None).Length - 1;
+
+			Assert.Multiple(() =>
+			{
+				Assert.That(selects, Is.EqualTo(1));
+				Assert.That(joins, Is.EqualTo(1));
+			});
+		}
+
+		sealed class Issue3140Parent
+		{
+			[PrimaryKey] public int Id { get; set; }
+			public int ChildId { get; set; }
+			[Association(ThisKey = nameof(ChildId), OtherKey = nameof(Issue3140Child.Id))] public Issue3140Child? Child { get; set; }
+		}
+
+		sealed class Issue3140Child
+		{
+			[PrimaryKey] public int Id { get; set; }
+			public string? Name { get; set; }
+		}
+		#endregion
+
+		#region Issue 4588
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllAccess, ErrorMessage = ErrorHelper.Error_Skip_in_Subquery)]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSybase, ErrorMessage = ErrorHelper.Error_OrderBy_in_Derived)]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4588")]
+		public void Issue4588Test([DataSources(false)] string context)
+		{
+			using var db = GetDataConnection(context);
+			using var t1 = db.CreateLocalTable<Order>();
+			using var t2 = db.CreateLocalTable<SubOrder>();
+			using var t3 = db.CreateLocalTable<SubOrderDetail>();
+
+			db.GetTable<Order>()
+				.Where(x => x.Name!.StartsWith("cat"))
+				.LoadWith(x => x.SubOrders)
+				.ThenLoad(x => x.SubOrderDetails)
+				.OrderBy(x => x.Id)
+				.Skip(100)
+				.Take(10)
+				.ToArray();
+		}
+
+		sealed class Order
+		{
+			public int Id { get; set; }
+			public string? Name { get; set; }
+			[Association(ThisKey = nameof(Id), OtherKey = nameof(SubOrder.OrderId))]
+			public List<SubOrder> SubOrders { get; set; } = null!;
+		}
+
+		sealed class SubOrder
+		{
+			public int Id { get; set; }
+			public int OrderId { get; set; }
+			[Association(ThisKey = nameof(OrderId), OtherKey = nameof(Order.Id))]
+			public Order? Order { get; set; }
+			[Association(ThisKey = nameof(Id), OtherKey = nameof(SubOrderDetail.SubOrderId))]
+			public List<SubOrderDetail> SubOrderDetails { get; set; } = null!;
+		}
+
+		sealed class SubOrderDetail
+		{
+			public int Id { get; set; }
+			public int SubOrderId { get; set; }
+			[Association(ThisKey = nameof(SubOrderId), OtherKey = nameof(SubOrder.Id))]
+			public SubOrder? SubOrder { get; set; }
+			public string? Code { get; set; }
+			public DateTime Date { get; set; }
+			public bool IsActive { get; set; }
+		}
+		#endregion
+
+		#region Issue : CTE cloning
+
+		class CteTable
+		{
+			public int Id { get; set; }
+			public int Value1 { get; set; }
+			public int Value2 { get; set; }
+			public int Value3 { get; set; }
+			public int Value4 { get; set; }
+			public int Value5 { get; set; }
+		}
+
+		class CteChildTable
+		{
+			public int Id { get; set; }
+			public int Value { get; set; }
+
+			[Association(ThisKey = nameof(Id), OtherKey = nameof(CteTable.Value3))]
+			public CteTable[]? MainRecords { get; set; }
+		}
+
+		sealed record CteRecord(int Id, int Value1, int Value2, int Value4, int Value5);
+
+		[Test]
+		public void CteCloning_Original([CteTests.CteContextSource(TestProvName.AllSapHana)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable<CteTable>();
+			using var tc = db.CreateLocalTable<CteChildTable>();
+
+			var cte = db.GetCte<CteTable>(cte =>
+			{
+				return (
+				from r in tb
+				select new CteTable() { Id = r.Id, Value1 = r.Value1, Value2 = r.Value2, Value3 = r.Value3, Value4 = r.Value4, Value5 = r.Value5 }
+				).Concat(
+					from c in cte
+					join r in tb on c.Value2 equals r.Value3
+					select new CteTable() { Id = r.Id, Value1 = r.Value1, Value2 = r.Value2, Value3 = r.Value3, Value4 = r.Value4, Value5 = r.Value5 }
+					);
+			});
+
+			var query = (from r in cte
+						 join c in tc on r.Value4 equals c.Id into ds
+						 from d in ds.DefaultIfEmpty()
+						 select new
+						 {
+							 r.Id,
+							 r.Value1,
+							 r.Value2,
+							 r.Value3,
+							 r.Value4,
+							 r.Value5,
+							 Children = d.MainRecords!.ToArray()
+						 }
+						);
+
+			query.ToArray();
+		}
+
+		[Test]
+		public void CteCloning_Simple([CteTests.CteContextSource] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable<CteTable>();
+			using var tc = db.CreateLocalTable<CteChildTable>();
+
+			var cte = (
+				from r in tb
+				select new CteTable() { Id = r.Id, Value1 = r.Value1, Value2 = r.Value2, Value3 = r.Value3, Value4 = r.Value4, Value5 = r.Value5 }
+				).AsCte();
+
+			var query = (from r in cte
+						 join c in tc on r.Value4 equals c.Id into ds
+						 from d in ds.DefaultIfEmpty()
+						 select new
+						 {
+							 r.Id,
+							 r.Value1,
+							 r.Value2,
+							 r.Value3,
+							 r.Value4,
+							 r.Value5,
+							 Children = d.MainRecords!.ToArray()
+						 }
+						);
+
+			query.ToArray();
+		}
+
+		[Test]
+		public void CteCloning_SimpleChain([CteTests.CteContextSource] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable<CteTable>();
+			using var tc = db.CreateLocalTable<CteChildTable>();
+
+			var cte1 = (
+				from r in tb
+				select new CteTable() { Id = r.Id, Value1 = r.Value1, Value2 = r.Value2, Value3 = r.Value3, Value4 = r.Value4, Value5 = r.Value5 }
+				).AsCte();
+
+			var cte2 = (
+				from r in cte1
+				select new CteTable() { Id = r.Id, Value1 = r.Value2, Value2 = r.Value2, Value3 = r.Value5, Value4 = r.Value4, Value5 = r.Value3 }
+				).AsCte();
+
+			var cte3 = (
+				from r in cte2
+				select new CteTable() { Id = r.Value1, Value1 = r.Value3, Value2 = r.Value5, Value3 = r.Value2, Value4 = r.Id, Value5 = r.Value4 }
+				).AsCte();
+
+			var query = (from r in cte3
+						 join c in tc on r.Value4 equals c.Id into ds
+						 from d in ds.DefaultIfEmpty()
+						 select new
+						 {
+							 r.Id,
+							 r.Value1,
+							 r.Value2,
+							 r.Value3,
+							 r.Value4,
+							 r.Value5,
+							 Children = d.MainRecords!.ToArray()
+						 }
+						);
+
+			query.ToArray();
+		}
+
+		[Test]
+		public void CteCloning_RecursiveChain([CteTests.CteContextSource(TestProvName.AllSapHana, TestProvName.AllOracle)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable<CteTable>();
+			using var tc = db.CreateLocalTable<CteChildTable>();
+
+			var cte1 = db.GetCte<CteTable>(cte =>
+			{
+				return (
+				from r in tb
+				select new CteTable() { Id = r.Id, Value1 = r.Value1, Value2 = r.Value2, Value3 = r.Value3, Value4 = r.Value4, Value5 = r.Value5 }
+				).Concat(
+					from c in cte
+					join r in tb on c.Value2 equals r.Value3
+					select new CteTable() { Id = r.Id, Value1 = r.Value1, Value2 = r.Value1, Value3 = r.Value3, Value4 = r.Value1, Value5 = r.Value5 }
+					);
+			});
+
+			var cte2 = db.GetCte<CteTable>(cte =>
+			{
+				return (
+				from r in tb
+				select new CteTable() { Id = r.Id, Value1 = r.Value1, Value2 = r.Value2, Value3 = r.Value3, Value4 = r.Value4, Value5 = r.Id }
+				)
+				.Concat(
+					from c in cte1
+					join r in tb on c.Value2 equals r.Value3
+					select new CteTable() { Id = r.Id, Value1 = r.Value1, Value2 = r.Value2, Value3 = r.Value2, Value4 = r.Id, Value5 = r.Value5 }
+					)
+				.Concat(
+					from c in cte
+					join r in tb on c.Value2 equals r.Value3
+					select new CteTable() { Id = r.Id, Value1 = r.Value1, Value2 = r.Value2, Value3 = r.Id, Value4 = r.Value2, Value5 = r.Value5 }
+					)
+				;
+			});
+
+			var cte3 = db.GetCte<CteTable>(cte =>
+			{
+				return (
+				from r in tb
+				select new CteTable() { Id = r.Value4, Value1 = r.Value1, Value2 = r.Value2, Value3 = r.Value3, Value4 = r.Value4, Value5 = r.Value5 }
+				)
+				.Concat(
+					from c in cte2
+					join r in tb on c.Value2 equals r.Value3
+					select new CteTable() { Id = r.Id, Value1 = r.Value1, Value2 = r.Value2, Value3 = r.Value3, Value4 = r.Id, Value5 = r.Value4 }
+					)
+				.Concat(
+					from c in cte1
+					join r in tb on c.Value2 equals r.Value3
+					select new CteTable() { Id = r.Id, Value1 = r.Value4, Value2 = r.Id, Value3 = r.Value3, Value4 = r.Value4, Value5 = r.Value5 }
+					)
+				.Concat(
+					from c in cte
+					join r in tb on c.Value2 equals r.Value3
+					select new CteTable() { Id = r.Id, Value1 = r.Value1, Value2 = r.Value2, Value3 = r.Id, Value4 = r.Value4, Value5 = r.Value5 }
+					);
+			});
+
+			var query = (from r in cte3
+						 join c in tc on r.Value4 equals c.Id into ds
+						 from d in ds.DefaultIfEmpty()
+						 select new
+						 {
+							 r.Id,
+							 r.Value1,
+							 r.Value2,
+							 r.Value3,
+							 r.Value4,
+							 r.Value5,
+							 Children = d.MainRecords!.ToArray()
+						 }
+						);
+
+			query.ToArray();
+		}
+
+		#endregion
+
 	}
 }

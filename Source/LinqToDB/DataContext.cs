@@ -357,7 +357,7 @@ namespace LinqToDB
 					if (_dataConnection.NextQueryHints.Count > 0) NextQueryHints.AddRange(_nextQueryHints!);
 
 					_dataConnection.OnRemoveInterceptor -= RemoveInterceptor;
-					await _dataConnection.DisposeAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+					await _dataConnection.DisposeAsync().ConfigureAwait(false);
 					_dataConnection = null;
 				}
 			}
@@ -392,7 +392,7 @@ namespace LinqToDB
 
 		public async ValueTask DisposeAsync()
 		{
-			await DisposeAsync(disposing: true).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+			await DisposeAsync(disposing: true).ConfigureAwait(false);
 		}
 
 		/// <summary>
@@ -430,7 +430,7 @@ namespace LinqToDB
 			if (_dataContextInterceptor != null)
 				await using (ActivityService.StartAndConfigureAwait(ActivityID.DataContextInterceptorOnClosingAsync))
 					await _dataContextInterceptor.OnClosingAsync(new(this))
-						.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+						.ConfigureAwait(false);
 
 			if (_dataConnection != null)
 			{
@@ -438,14 +438,14 @@ namespace LinqToDB
 				if (_dataConnection.NextQueryHints.Count > 0) (_nextQueryHints ??= new ()).AddRange(_dataConnection.NextQueryHints);
 
 				_dataConnection.OnRemoveInterceptor -= RemoveInterceptor;
-				await _dataConnection.DisposeAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+				await _dataConnection.DisposeAsync().ConfigureAwait(false);
 				_dataConnection = null;
 			}
 
 			if (_dataContextInterceptor != null)
 				await using (ActivityService.StartAndConfigureAwait(ActivityID.DataContextInterceptorOnClosedAsync))
 					await _dataContextInterceptor.OnClosedAsync(new (this))
-						.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+						.ConfigureAwait(false);
 		}
 
 		/// <summary>
@@ -488,7 +488,7 @@ namespace LinqToDB
 		{
 			var dct = new DataContextTransaction(this);
 
-			await dct.BeginTransactionAsync(level, cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+			await dct.BeginTransactionAsync(level, cancellationToken).ConfigureAwait(false);
 
 			return dct;
 		}
@@ -503,14 +503,14 @@ namespace LinqToDB
 		{
 			var dct = new DataContextTransaction(this);
 
-			await dct.BeginTransactionAsync(cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+			await dct.BeginTransactionAsync(cancellationToken).ConfigureAwait(false);
 
 			return dct;
 		}
 
-		IQueryRunner IDataContext.GetQueryRunner(Query query, IDataContext parametersContext, int queryNumber, Expression expression, object?[]? parameters, object?[]? preambles)
+		IQueryRunner IDataContext.GetQueryRunner(Query query, IDataContext parametersContext, int queryNumber, IQueryExpressions expressions, object?[]? parameters, object?[]? preambles)
 		{
-			return new QueryRunner(this, ((IDataContext)GetDataConnection()).GetQueryRunner(query, parametersContext, queryNumber, expression, parameters, preambles));
+			return new QueryRunner(this, ((IDataContext)GetDataConnection()).GetQueryRunner(query, parametersContext, queryNumber, expressions, parameters, preambles));
 		}
 
 		sealed class QueryRunner : IQueryRunner
@@ -534,8 +534,8 @@ namespace LinqToDB
 
 			public async ValueTask DisposeAsync()
 			{
-				await _queryRunner!.DisposeAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
-				await _dataContext!.ReleaseQueryAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+				await _queryRunner!.DisposeAsync().ConfigureAwait(false);
+				await _dataContext!.ReleaseQueryAsync().ConfigureAwait(false);
 
 				_queryRunner = null;
 				_dataContext = null;
@@ -571,18 +571,18 @@ namespace LinqToDB
 				return _queryRunner!.ExecuteNonQueryAsync(cancellationToken);
 			}
 
-			public string GetSqlText()
+			public IReadOnlyList<QuerySql> GetSqlText()
 			{
 				return _queryRunner!.GetSqlText();
 			}
 
-			public IDataContext DataContext      => _dataContext!;
-			public Expression   Expression       => _queryRunner!.Expression;
-			public object?[]?   Parameters       => _queryRunner!.Parameters;
-			public object?[]?   Preambles        => _queryRunner!.Preambles;
-			public Expression?  MapperExpression { get => _queryRunner!.MapperExpression; set => _queryRunner!.MapperExpression = value; }
-			public int          RowsCount        { get => _queryRunner!.RowsCount;        set => _queryRunner!.RowsCount        = value; }
-			public int          QueryNumber      { get => _queryRunner!.QueryNumber;      set => _queryRunner!.QueryNumber      = value; }
+			public IDataContext      DataContext      => _dataContext!;
+			public IQueryExpressions Expressions      => _queryRunner!.Expressions;
+			public object?[]?        Parameters       => _queryRunner!.Parameters;
+			public object?[]?        Preambles        => _queryRunner!.Preambles;
+			public Expression?       MapperExpression { get => _queryRunner!.MapperExpression; set => _queryRunner!.MapperExpression = value; }
+			public int               RowsCount        { get => _queryRunner!.RowsCount;        set => _queryRunner!.RowsCount        = value; }
+			public int               QueryNumber      { get => _queryRunner!.QueryNumber;      set => _queryRunner!.QueryNumber      = value; }
 		}
 
 		internal static class ConfigurationApplier

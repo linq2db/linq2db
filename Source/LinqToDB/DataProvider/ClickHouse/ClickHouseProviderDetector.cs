@@ -12,7 +12,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 	{
 		internal enum Dialect { }
 
-		public ClickHouseProviderDetector() : base(default, default)
+		public ClickHouseProviderDetector() : base()
 		{
 		}
 
@@ -56,7 +56,7 @@ namespace LinqToDB.DataProvider.ClickHouse
 
 			return File.Exists(Path.Combine(dirName ?? ".", ClickHouseProviderAdapter.OctonicaAssemblyName + ".dll"))
 				? ClickHouseProvider.Octonica
-				: File.Exists(Path.Combine(dirName ?? ".", ClickHouseProviderAdapter.ClientClientNamespace + ".dll"))
+				: File.Exists(Path.Combine(dirName ?? ".", ClickHouseProviderAdapter.ClientAssemblyName + ".dll"))
 					? ClickHouseProvider.ClickHouseClient
 					: File.Exists(Path.Combine(dirName ?? ".", MySqlProviderAdapter.MySqlConnectorAssemblyName + ".dll"))
 						? ClickHouseProvider.MySqlConnector

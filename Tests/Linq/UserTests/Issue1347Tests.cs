@@ -243,147 +243,164 @@ namespace Tests.UserTests
 		[TestFixture]
 		public class Issue1347Tests : TestBase
 		{
-			sealed class LimitedSources : IncludeDataSourcesAttribute
-			{
-				public LimitedSources() : base(TestProvName.AllSQLite, TestProvName.AllClickHouse)
-				{
-				}
-			}
-
 			[Test]
-			public void Test5([LimitedSources]string context)
+			public void Test5([DataSources] string context)
 			{
-				using (var s = GetDataContext(context))
-				{
-					var gts = s.GetTable<GlobalTaskDTO>().Union(
-						s.GetTable<GlobalTaskDTO>()
+				using var db = GetDataContext(context);
+				using var t1 = db.CreateLocalTable<GlobalTaskDTO>();
+				using var t11 = db.CreateLocalTable<GlobalTaskDTO>("WMS_GlobalTaskA");
+				using var t5 = db.CreateLocalTable<WmsLoadCarrierDTO>();
+				using var t51 = db.CreateLocalTable<WmsLoadCarrierDTO>("WMS_LoadCarrierA");
+
+				var gts = db.GetTable<GlobalTaskDTO>().Union(
+						db.GetTable<GlobalTaskDTO>()
 							.TableName(
 								"WMS_GlobalTaskA"));
 
-					var lcs = s.GetTable<WmsLoadCarrierDTO>().Union(
-						s.GetTable<WmsLoadCarrierDTO>()
+				var lcs = db.GetTable<WmsLoadCarrierDTO>().Union(
+						db.GetTable<WmsLoadCarrierDTO>()
 							.TableName(
 								"WMS_LoadCarrierA"));
 
-					var qry = from g in gts
-							  join res in lcs on g.ResourceID equals res.Id into reslist
-							  from res in reslist.DefaultIfEmpty()
-							  select new WmsGlobalTaskCombinedDTO()
-								  { GlobalTask = g, LoadCarrier = res };
+				var qry = from g in gts
+						  join res in lcs on g.ResourceID equals res.Id into reslist
+						  from res in reslist.DefaultIfEmpty()
+						  select new WmsGlobalTaskCombinedDTO()
+						  { GlobalTask = g, LoadCarrier = res };
 
-					TestContext.WriteLine(qry.ToString());
-				}
+				qry.ToArray();
 			}
 
 			[Test]
-			public void Test4([LimitedSources] string context)
+			public void Test4([DataSources] string context)
 			{
-				using (var s = GetDataContext(context))
-				{
-					var gts = s.GetTable<GlobalTaskDTO>().Union(
-						s.GetTable<GlobalTaskDTO>()
+				using var db = GetDataContext(context);
+				using var t1 = db.CreateLocalTable<GlobalTaskDTO>();
+				using var t11 = db.CreateLocalTable<GlobalTaskDTO>("WMS_GlobalTaskA");
+
+				var gts = db.GetTable<GlobalTaskDTO>().Union(
+						db.GetTable<GlobalTaskDTO>()
 							.TableName(
 								"WMS_GlobalTaskA"));
 
-					var qry = from g in gts
-						join source1 in s.GetTable<WmsResourcePointDTO>() on g.RPSourceID equals source1.Id into
+				var qry = from g in gts
+						  join source1 in db.GetTable<WmsResourcePointDTO>() on g.RPSourceID equals source1.Id into
 							source1List
-						select new WmsGlobalTaskCombinedDTO()
-						{
-							GlobalTask = g,
-						};
+						  select new WmsGlobalTaskCombinedDTO()
+						  {
+							  GlobalTask = g,
+						  };
 
-					TestContext.WriteLine(qry.ToString());
-				}
+				qry.ToArray();
 			}
 
 			[Test]
-			public void Test3([LimitedSources] string context)
+			public void Test3([DataSources] string context)
 			{
-				using (var s = GetDataContext(context))
-				{
-					var gts = s.GetTable<GlobalTaskDTO>().Union(
-						s.GetTable<GlobalTaskDTO>()
+				using var db = GetDataContext(context);
+				using var t1 = db.CreateLocalTable<GlobalTaskDTO>();
+				using var t11 = db.CreateLocalTable<GlobalTaskDTO>("WMS_GlobalTaskA");
+				using var t2 = db.CreateLocalTable<WmsResourcePointDTO>();
+				using var t3 = db.CreateLocalTable<StorageShelfDTO>();
+
+				var gts = db.GetTable<GlobalTaskDTO>().Union(
+						db.GetTable<GlobalTaskDTO>()
 							.TableName(
 								"WMS_GlobalTaskA"));
 
-						var qry = from g in gts
-						join source1 in s.GetTable<WmsResourcePointDTO>() on g.RPSourceID equals source1.Id into
+				var qry = from g in gts
+						  join source1 in db.GetTable<WmsResourcePointDTO>() on g.RPSourceID equals source1.Id into
 							source1List
-						from source in source1List.DefaultIfEmpty()
-						join sourceShelf1 in s.GetTable<StorageShelfDTO>() on g.StorageShelfSourceID equals sourceShelf1
+						  from source in source1List.DefaultIfEmpty()
+						  join sourceShelf1 in db.GetTable<StorageShelfDTO>() on g.StorageShelfSourceID equals sourceShelf1
 							.Id into sourceShelf1List
-						from sourceShelf in sourceShelf1List.DefaultIfEmpty()
-						join dest1 in s.GetTable<WmsResourcePointDTO>() on g.RPDestinationID equals dest1.Id into
+						  from sourceShelf in sourceShelf1List.DefaultIfEmpty()
+						  join dest1 in db.GetTable<WmsResourcePointDTO>() on g.RPDestinationID equals dest1.Id into
 							destList
-						from dest in destList.DefaultIfEmpty()
-						join destShelf1 in s.GetTable<StorageShelfDTO>() on g.StorageShelfDestinationID equals
+						  from dest in destList.DefaultIfEmpty()
+						  join destShelf1 in db.GetTable<StorageShelfDTO>() on g.StorageShelfDestinationID equals
 							destShelf1.Id into destShelf1List
-						from destShelf in destShelf1List.DefaultIfEmpty()
-						join origdest1 in s.GetTable<WmsResourcePointDTO>() on g.RPOrigDestinationID equals origdest1.Id
+						  from destShelf in destShelf1List.DefaultIfEmpty()
+						  join origdest1 in db.GetTable<WmsResourcePointDTO>() on g.RPOrigDestinationID equals origdest1.Id
 							into origdestList
-						from origdest in origdestList.DefaultIfEmpty()
-						select new WmsGlobalTaskCombinedDTO()
-						{
-							GlobalTask = g, Source = source, SourceShelf = sourceShelf,
-							Destination = dest, DestinationShelf = destShelf, OriginDestination = origdest
-						};
+						  from origdest in origdestList.DefaultIfEmpty()
+						  select new WmsGlobalTaskCombinedDTO()
+						  {
+							  GlobalTask = g,
+							  Source = source,
+							  SourceShelf = sourceShelf,
+							  Destination = dest,
+							  DestinationShelf = destShelf,
+							  OriginDestination = origdest
+						  };
 
-					TestContext.WriteLine(qry.ToString());
-				}
+				qry.ToArray();
 			}
 
 			[Test]
-			public void Test2([LimitedSources]string context)
+			public void Test2([DataSources] string context)
 			{
-				using (var s = GetDataContext(context))
-				{
-					var gts = s.GetTable<GlobalTaskDTO>().Union(
-						s.GetTable<GlobalTaskDTO>()
+				using var db = GetDataContext(context);
+				using var t1 = db.CreateLocalTable<GlobalTaskDTO>();
+				using var t11 = db.CreateLocalTable<GlobalTaskDTO>("WMS_GlobalTaskA");
+				using var t2 = db.CreateLocalTable<WmsResourcePointDTO>();
+				using var t3 = db.CreateLocalTable<StorageShelfDTO>();
+				using var t4 = db.CreateLocalTable<OutfeedTransportOrderDTO>();
+				using var t41 = db.CreateLocalTable<OutfeedTransportOrderDTO>("WMS_OutfeedTransportOrderA");
+				using var t5 = db.CreateLocalTable<WmsLoadCarrierDTO>();
+				using var t51 = db.CreateLocalTable<WmsLoadCarrierDTO>("WMS_LoadCarrierA");
+
+				var gts = db.GetTable<GlobalTaskDTO>().Union(
+						db.GetTable<GlobalTaskDTO>()
 							.TableName(
 								"WMS_GlobalTaskA"));
 
-					var lcs = s.GetTable<WmsLoadCarrierDTO>().Union(
-						s.GetTable<WmsLoadCarrierDTO>()
+				var lcs = db.GetTable<WmsLoadCarrierDTO>().Union(
+						db.GetTable<WmsLoadCarrierDTO>()
 							.TableName(
 								"WMS_LoadCarrierA"));
 
-					var ots = s.GetTable<OutfeedTransportOrderDTO>().Union(
-						s.GetTable<OutfeedTransportOrderDTO>()
+				var ots = db.GetTable<OutfeedTransportOrderDTO>().Union(
+						db.GetTable<OutfeedTransportOrderDTO>()
 							.TableName(
 								"WMS_OutfeedTransportOrderA"));
 
-					var qry = from g in gts
-						join source1 in s.GetTable<WmsResourcePointDTO>() on g.RPSourceID equals source1.Id into source1List
-						from source in source1List.DefaultIfEmpty()
-						join sourceShelf1 in s.GetTable<StorageShelfDTO>() on g.StorageShelfSourceID equals sourceShelf1.Id into sourceShelf1List
-						from sourceShelf in sourceShelf1List.DefaultIfEmpty()
-						join dest1 in s.GetTable<WmsResourcePointDTO>() on g.RPDestinationID equals dest1.Id into destList
-						from dest in destList.DefaultIfEmpty()
-						join destShelf1 in s.GetTable<StorageShelfDTO>() on g.StorageShelfDestinationID equals destShelf1.Id into destShelf1List
-						from destShelf in destShelf1List.DefaultIfEmpty()
-						join origdest1 in s.GetTable<WmsResourcePointDTO>() on g.RPOrigDestinationID equals origdest1.Id into origdestList
-						from origdest in origdestList.DefaultIfEmpty()
-						join res in lcs on g.ResourceID equals res.Id into reslist
-						from res in reslist.DefaultIfEmpty()
-						join outfeed1 in ots on g.OutfeedTransportOrderID equals outfeed1.Id into outfeed1List
-						from outfeed in outfeed1List.DefaultIfEmpty()
-						select new WmsGlobalTaskCombinedDTO() { GlobalTask = g, LoadCarrier = res, Source = source, SourceShelf = sourceShelf, Destination = dest, DestinationShelf = destShelf, OriginDestination = origdest, OutfeedTransportOrder = outfeed };
+				var qry = from g in gts
+						  join source1 in db.GetTable<WmsResourcePointDTO>() on g.RPSourceID equals source1.Id into source1List
+						  from source in source1List.DefaultIfEmpty()
+						  join sourceShelf1 in db.GetTable<StorageShelfDTO>() on g.StorageShelfSourceID equals sourceShelf1.Id into sourceShelf1List
+						  from sourceShelf in sourceShelf1List.DefaultIfEmpty()
+						  join dest1 in db.GetTable<WmsResourcePointDTO>() on g.RPDestinationID equals dest1.Id into destList
+						  from dest in destList.DefaultIfEmpty()
+						  join destShelf1 in db.GetTable<StorageShelfDTO>() on g.StorageShelfDestinationID equals destShelf1.Id into destShelf1List
+						  from destShelf in destShelf1List.DefaultIfEmpty()
+						  join origdest1 in db.GetTable<WmsResourcePointDTO>() on g.RPOrigDestinationID equals origdest1.Id into origdestList
+						  from origdest in origdestList.DefaultIfEmpty()
+						  join res in lcs on g.ResourceID equals res.Id into reslist
+						  from res in reslist.DefaultIfEmpty()
+						  join outfeed1 in ots on g.OutfeedTransportOrderID equals outfeed1.Id into outfeed1List
+						  from outfeed in outfeed1List.DefaultIfEmpty()
+						  select new WmsGlobalTaskCombinedDTO() { GlobalTask = g, LoadCarrier = res, Source = source, SourceShelf = sourceShelf, Destination = dest, DestinationShelf = destShelf, OriginDestination = origdest, OutfeedTransportOrder = outfeed };
 
-					TestContext.WriteLine(qry.ToString());
-				}
+				_ = qry.ToArray();
 			}
 
 			[Test]
-			public void Test([LimitedSources]string context)
+			public void Test([DataSources] string context)
 			{
-				using (var db = GetDataContext(context))
-				{
-					var query = db.GetTable<GlobalTaskDTO>()
+				using var db = GetDataContext(context);
+				using var t1 = db.CreateLocalTable<GlobalTaskDTO>();
+				using var t11 = db.CreateLocalTable<GlobalTaskDTO>("WMS_GlobalTaskA");
+				using var t2 = db.CreateLocalTable<WmsResourcePointDTO>();
+				using var t3 = db.CreateLocalTable<StorageShelfDTO>();
+				using var t4 = db.CreateLocalTable<OutfeedTransportOrderDTO>();
+				using var t41 = db.CreateLocalTable<OutfeedTransportOrderDTO>("WMS_OutfeedTransportOrderA");
+				using var t5 = db.CreateLocalTable<WmsLoadCarrierDTO>();
+				using var t51 = db.CreateLocalTable<WmsLoadCarrierDTO>("WMS_ResourceA");
+
+				var query = db.GetTable<GlobalTaskDTO>()
 						.Union(
 							db.GetTable<GlobalTaskDTO>()
-								.TableName(
-									"WMS_GlobalTaskA")
 								.TableName(
 									"WMS_GlobalTaskA"))
 						.GroupJoin(
@@ -476,8 +493,6 @@ namespace Tests.UserTests
 								.Union(
 									db.GetTable<WmsLoadCarrierDTO>()
 										.TableName(
-											"WMS_ResourceA")
-										.TableName(
 											"WMS_ResourceA")),
 							tp9 => tp9.tp8.tp7.tp6.tp5.tp4.tp3.tp2.tp1.tp0.g.ResourceID,
 							res => res.Id,
@@ -498,8 +513,6 @@ namespace Tests.UserTests
 							db.GetTable<OutfeedTransportOrderDTO>()
 								.Union(
 									db.GetTable<OutfeedTransportOrderDTO>()
-										.TableName(
-											"WMS_OutfeedTransportOrderA")
 										.TableName(
 											"WMS_OutfeedTransportOrderA")),
 							tp11 => tp11.tp10.tp9.tp8.tp7.tp6.tp5.tp4.tp3.tp2.tp1.tp0.g.OutfeedTransportOrderID,
@@ -524,9 +537,7 @@ namespace Tests.UserTests
 								OutfeedTransportOrder = outfeed
 							});
 
-					var str = query.ToString();
-					TestContext.WriteLine(str);
-				}
+				_ = query.ToArray();
 			}
 		}
 	}

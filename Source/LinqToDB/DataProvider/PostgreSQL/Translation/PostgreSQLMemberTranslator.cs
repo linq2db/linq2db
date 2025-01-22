@@ -70,7 +70,7 @@ namespace LinqToDB.DataProvider.PostgreSQL.Translation
 					{
 						// Cast(To_Char({date}, 'MS') as int
 
-						var toCharExpression = factory.Function(factory.GetDbDataType(typeof(string)), "To_Char", dateTimeExpression, factory.Value("MS"));
+						var toCharExpression = factory.Function(factory.GetDbDataType(typeof(string)), "To_Char",ParametersNullabilityType.SameAsFirstParameter, dateTimeExpression, factory.Value("MS"));
 						var castExpression   = factory.Cast(toCharExpression, intDbType);
 
 						return castExpression;
@@ -112,7 +112,7 @@ namespace LinqToDB.DataProvider.PostgreSQL.Translation
 
 				var factory = translationContext.ExpressionFactory;
 
-				var dateTruncExpression = factory.Function(factory.GetDbDataType(dateExpression), "Date_Trunc", factory.Value("day"), dateExpression);
+				var dateTruncExpression = factory.Function(factory.GetDbDataType(dateExpression), "Date_Trunc", ParametersNullabilityType.SameAsSecondParameter, factory.Value("day"), dateExpression);
 
 				return dateTruncExpression;
 			}
@@ -125,7 +125,7 @@ namespace LinqToDB.DataProvider.PostgreSQL.Translation
 
 				var atTimeZone = factory.Fragment(factory.GetDbDataType(dateExpression), "{0} AT TIME ZONE {1}", dateExpression, factory.Value("UTC"));
 
-				var dateTruncExpression = factory.Function(factory.GetDbDataType(dateExpression), "Date_Trunc", factory.Value("day"), atTimeZone);
+				var dateTruncExpression = factory.Function(factory.GetDbDataType(dateExpression), "Date_Trunc", ParametersNullabilityType.SameAsSecondParameter, factory.Value("day"), atTimeZone);
 
 				dateTruncExpression = factory.Cast(dateTruncExpression, factory.GetDbDataType(typeof(DateTime)).WithDataType(DataType.Date));
 
@@ -139,7 +139,7 @@ namespace LinqToDB.DataProvider.PostgreSQL.Translation
 
 				ISqlExpression ToInterval(ISqlExpression numberExpression, string intervalKind)
 				{
-					var intervalExpr = factory.Fragment(intervalType, "Interval {0}", factory.Value(intervalKind));
+					var intervalExpr = factory.NotNullFragment(intervalType, "Interval {0}", factory.Value(intervalKind));
 
 					return factory.Multiply(intervalType, numberExpression, intervalExpr);
 				}
@@ -164,11 +164,6 @@ namespace LinqToDB.DataProvider.PostgreSQL.Translation
 
 				var resultExpression = factory.Add(factory.GetDbDataType(dateTimeExpression), dateTimeExpression, intervalExpr);
 				return resultExpression;
-			}
-
-			protected override ISqlExpression? TranslateDateTimeOffsetDateAdd(ITranslationContext translationContext, TranslationFlags translationFlag, ISqlExpression dateTimeExpression, ISqlExpression increment, Sql.DateParts datepart)
-			{
-				return TranslateDateTimeDateAdd(translationContext, translationFlag, dateTimeExpression, increment, datepart);
 			}
 
 			protected override ISqlExpression? TranslateMakeDateTime(
@@ -208,17 +203,35 @@ namespace LinqToDB.DataProvider.PostgreSQL.Translation
 
 				return resultExpression;
 			}
+		}
 
-			protected override ISqlExpression? TranslateDateOnlyDateAdd(ITranslationContext translationContext, TranslationFlags translationFlag, ISqlExpression dateTimeExpression, ISqlExpression increment, Sql.DateParts datepart)
+		class MathMemberTranslator : MathMemberTranslatorBase
+		{
+			protected override ISqlExpression? TranslateRoundToEven(ITranslationContext translationContext, MethodCallExpression methodCall, ISqlExpression value, ISqlExpression? precision)
 			{
-				return TranslateDateTimeDateAdd(translationContext, translationFlag, dateTimeExpression, increment, datepart);
-			}
+				var factory     = translationContext.ExpressionFactory;
+				var decimalType = factory.GetDbDataType(typeof(decimal));
 
-			protected override ISqlExpression? TranslateDateOnlyDatePart(ITranslationContext translationContext, TranslationFlags translationFlag, ISqlExpression dateTimeExpression, Sql.DateParts datepart)
-			{
-				return TranslateDateTimeDatePart(translationContext, translationFlag, dateTimeExpression, datepart);
+				var valueType   = factory.GetDbDataType(value);
+				var shouldCast  = decimalType != valueType;
+
+				var valueCasted = value;
+				if (shouldCast)
+				{
+					valueCasted = factory.Cast(value, decimalType);
+				}
+
+				var result = base.TranslateRoundToEven(translationContext, methodCall, valueCasted, precision);
+
+				if (result != null && shouldCast)
+				{
+					result = factory.Cast(result, valueType);
+				}
+
+				return result;
 			}
 		}
+
 
 		protected override IMemberTranslator CreateSqlTypesTranslator()
 		{
@@ -228,6 +241,11 @@ namespace LinqToDB.DataProvider.PostgreSQL.Translation
 		protected override IMemberTranslator CreateDateMemberTranslator()
 		{
 			return new DateFunctionsTranslator();
+		}
+
+		protected override IMemberTranslator CreateMathMemberTranslator()
+		{
+			return new MathMemberTranslator();
 		}
 
 	}

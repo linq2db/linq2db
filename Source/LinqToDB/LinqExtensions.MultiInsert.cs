@@ -144,14 +144,14 @@ namespace LinqToDB
 		{
 			if (insert == null) throw new ArgumentNullException(nameof(insert));
 
-			IQueryable query = ((MultiInsertQuery<TSource>)insert).Query;
-			query = LinqExtensions.ProcessSourceQueryable?.Invoke(query) ?? query;
+			var query = ((MultiInsertQuery<TSource>)insert).Query.GetLinqToDBSource();
 
-			return query.Provider.Execute<int>(
-				Expression.Call(
-					null,
-					Methods.Insert.MakeGenericMethod(typeof(TSource)),
-					query.Expression));
+			var expr = Expression.Call(
+				null,
+				Methods.Insert.MakeGenericMethod(typeof(TSource)),
+				query.Expression);
+
+			return query.Execute<int>(expr);
 		}
 
 		/// <summary>
@@ -165,18 +165,14 @@ namespace LinqToDB
 		{
 			if (insert == null) throw new ArgumentNullException(nameof(insert));
 
-			IQueryable query = ((MultiInsertQuery<TSource>)insert).Query;
-			query = LinqExtensions.ProcessSourceQueryable?.Invoke(query) ?? query;
+			var query = ((MultiInsertQuery<TSource>)insert).Query.GetLinqToDBSource();
 
 			var expr = Expression.Call(
 				null,
 				Methods.Insert.MakeGenericMethod(typeof(TSource)),
 				query.Expression);
 
-			if (query is IQueryProviderAsync queryAsync)
-				return queryAsync.ExecuteAsync<int>(expr, token);
-
-			return Task.Run(() => query.Provider.Execute<int>(expr), token);
+			return query.ExecuteAsync<int>(expr, token);
 		}
 
 		/// <summary>
@@ -189,14 +185,14 @@ namespace LinqToDB
 		{
 			if (insert == null) throw new ArgumentNullException(nameof(insert));
 
-			IQueryable query = ((MultiInsertQuery<TSource>)insert).Query;
-			query = LinqExtensions.ProcessSourceQueryable?.Invoke(query) ?? query;
+			var query = ((MultiInsertQuery<TSource>)insert).Query.GetLinqToDBSource();
 
-			return query.Provider.Execute<int>(
-				Expression.Call(
-					null,
-					Methods.InsertAll.MakeGenericMethod(typeof(TSource)),
-					query.Expression));
+			var expr = Expression.Call(
+				null,
+				Methods.InsertAll.MakeGenericMethod(typeof(TSource)),
+				query.Expression);
+
+			return query.Execute<int>(expr);
 		}
 
 		/// <summary>
@@ -210,18 +206,14 @@ namespace LinqToDB
 		{
 			if (insert == null) throw new ArgumentNullException(nameof(insert));
 
-			IQueryable query = ((MultiInsertQuery<TSource>)insert).Query;
-			query = LinqExtensions.ProcessSourceQueryable?.Invoke(query) ?? query;
+			var query = ((MultiInsertQuery<TSource>)insert).Query.GetLinqToDBSource();
 
 			var expr = Expression.Call(
 				null,
 				Methods.InsertAll.MakeGenericMethod(typeof(TSource)),
 				query.Expression);
 
-			if (query is IQueryProviderAsync queryAsync)
-				return queryAsync.ExecuteAsync<int>(expr, token);
-
-			return Task.Run(() => query.Provider.Execute<int>(expr), token);
+			return query.ExecuteAsync<int>(expr, token);
 		}
 
 		/// <summary>
@@ -234,14 +226,14 @@ namespace LinqToDB
 		{
 			if (insert == null) throw new ArgumentNullException(nameof(insert));
 
-			IQueryable query = ((MultiInsertQuery<TSource>)insert).Query;
-			query = LinqExtensions.ProcessSourceQueryable?.Invoke(query) ?? query;
+			var query = ((MultiInsertQuery<TSource>)insert).Query.GetLinqToDBSource();
 
-			return query.Provider.Execute<int>(
-				Expression.Call(
-					null,
-					Methods.InsertFirst.MakeGenericMethod(typeof(TSource)),
-					query.Expression));
+			var expr = Expression.Call(
+				null,
+				Methods.InsertFirst.MakeGenericMethod(typeof(TSource)),
+				query.Expression);
+
+			return query.Execute<int>(expr);
 		}
 
 		/// <summary>
@@ -255,18 +247,14 @@ namespace LinqToDB
 		{
 			if (insert == null) throw new ArgumentNullException(nameof(insert));
 
-			IQueryable query = ((MultiInsertQuery<TSource>)insert).Query;
-			query = LinqExtensions.ProcessSourceQueryable?.Invoke(query) ?? query;
+			var query = ((MultiInsertQuery<TSource>)insert).Query.GetLinqToDBSource();
 
 			var expr = Expression.Call(
 				null,
 				Methods.InsertFirst.MakeGenericMethod(typeof(TSource)),
 				query.Expression);
 
-			if (query is IQueryProviderAsync queryAsync)
-				return queryAsync.ExecuteAsync<int>(expr, token);
-
-			return Task.Run(() => query.Provider.Execute<int>(expr), token);
+			return query.ExecuteAsync<int>(expr, token);
 		}
 
 		#endregion
@@ -287,7 +275,7 @@ namespace LinqToDB
 		public interface IMultiInsertElse<TSource>
 		{ }
 
-		private sealed class MultiInsertQuery<TSource> : IMultiInsertSource<TSource>
+		internal sealed class MultiInsertQuery<TSource> : IMultiInsertSource<TSource>
 		{
 			public readonly IQueryable<TSource> Query;
 

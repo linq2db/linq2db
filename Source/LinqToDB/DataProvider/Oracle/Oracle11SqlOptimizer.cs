@@ -2,6 +2,7 @@
 
 namespace LinqToDB.DataProvider.Oracle
 {
+	using Common;
 	using Mapping;
 	using SqlProvider;
 	using SqlQuery;
@@ -19,6 +20,8 @@ namespace LinqToDB.DataProvider.Oracle
 
 		public override SqlStatement TransformStatement(SqlStatement statement, DataOptions dataOptions, MappingSchema mappingSchema)
 		{
+			statement = base.TransformStatement(statement, dataOptions, mappingSchema);
+
 			switch (statement.QueryType)
 			{
 				case QueryType.Delete : statement = GetAlternativeDelete((SqlDeleteStatement) statement, dataOptions); break;
@@ -30,32 +33,44 @@ namespace LinqToDB.DataProvider.Oracle
 			return statement;
 		}
 
-		public override bool IsParameterDependedElement(NullabilityContext nullability, IQueryElement element)
+		public override bool IsParameterDependedElement(NullabilityContext nullability, IQueryElement element, DataOptions dataOptions, MappingSchema mappingSchema)
 		{
-			if (base.IsParameterDependedElement(nullability, element))
+			if (base.IsParameterDependedElement(nullability, element, dataOptions, mappingSchema))
 				return true;
 
 			switch (element.ElementType)
 			{
 				case QueryElementType.ExprExprPredicate:
 				{
-					var expr = (SqlPredicate.ExprExpr)element;
+					var (a, op, b, withNull) = (SqlPredicate.ExprExpr)element;
 
-					// Oracle saves empty string as null to database, so we need predicate modification before sending query
-					//
-					if ((expr.Operator == SqlPredicate.Operator.Equal          ||
-						 expr.Operator == SqlPredicate.Operator.NotEqual       ||
-						 expr.Operator == SqlPredicate.Operator.GreaterOrEqual ||
-						 expr.Operator == SqlPredicate.Operator.LessOrEqual) && expr.WithNull == true)
+					// This condition matches OracleSqlExpressionConvertVisitor.ConvertExprExprPredicate, 
+					// where we transform empty strings "" into null-handling expressions.
+					if (withNull != null ||
+						(dataOptions.LinqOptions.CompareNulls != CompareNulls.LikeSql &&
+							op is SqlPredicate.Operator.Equal or SqlPredicate.Operator.NotEqual))
 					{
-						if (expr.Expr1.SystemType == typeof(string) && expr.Expr1.CanBeEvaluated(true))
+						if (IsTextType(a, mappingSchema) && a.CanBeEvaluated(true))
 							return true;
-						if (expr.Expr2.SystemType == typeof(string) && expr.Expr2.CanBeEvaluated(true))
+						if (IsTextType(b, mappingSchema) && b.CanBeEvaluated(true))
 							return true;
 					}
 					break;
 				}
 			}
+
+			return false;
+		}
+
+		internal static bool IsTextType(ISqlExpression expr, MappingSchema mappingSchema)
+		{
+			var type = QueryHelper.GetDbDataType(expr, mappingSchema);
+
+			if (type.DataType is DataType.VarChar or DataType.NVarChar or DataType.Char or DataType.NChar)
+				return true;
+
+			if (type.SystemType == typeof(string))
+				return true;
 
 			return false;
 		}
@@ -73,18 +88,22 @@ namespace LinqToDB.DataProvider.Oracle
 		protected SqlStatement ReplaceTakeSkipWithRowNum(SqlStatement statement, bool onlySubqueries)
 		{
 			return QueryHelper.WrapQuery(
-				(object?)null,
+				statement,
 				statement,
 				static (_, query, _) =>
 				{
 					if (query.Select.TakeValue == null && query.Select.SkipValue == null)
 						return 0;
+
 					if (query.Select.SkipValue != null)
 						return 2;
 
+					if (QueryHelper.IsAggregationQuery(query))
+						return 1;
+
 					if (query.Select.TakeValue != null && query.Select.OrderBy.IsEmpty && query.GroupBy.IsEmpty && !query.Select.IsDistinct)
 					{
-						query.Select.Where.EnsureConjunction().AddLessOrEqual(RowNumExpr, query.Select.TakeValue, false);
+						query.Select.Where.EnsureConjunction().AddLessOrEqual(RowNumExpr, query.Select.TakeValue, CompareNulls.LikeSql);
 
 						query.Select.Take(null, null);
 						return 0;
@@ -92,8 +111,33 @@ namespace LinqToDB.DataProvider.Oracle
 
 					return 1;
 				},
-				static (_, queries) =>
+				static (statement, queries) =>
 				{
+					if (statement.SelectQuery == queries[^1])
+					{
+						// move orderby to root
+						for (var i = queries.Count - 1; i > 0; i--)
+						{
+							var innerQuery = queries[i];
+							var outerQuery = queries[i - 1];
+							foreach (var item in innerQuery.Select.OrderBy.Items)
+							{
+								foreach (var c in innerQuery.Select.Columns)
+								{
+									if (c.Expression.Equals(item.Expression))
+									{
+										outerQuery.OrderBy.Items.Add(new SqlOrderByItem(c, item.IsDescending, item.IsPositioned));
+										break;
+									}
+								}
+							}
+						}
+
+						// cleanup unnecessary intermediate copy to have ordering only on root query
+						for (var i = 1; i < queries.Count - 1; i++)
+							queries[i].OrderBy.Items.Clear();
+					}
+
 					var query = queries[queries.Count - 1];
 					var processingQuery = queries[queries.Count - 2];
 
@@ -105,14 +149,14 @@ namespace LinqToDB.DataProvider.Oracle
 						if (query.Select.TakeValue != null)
 						{
 							processingQuery.Where.EnsureConjunction().AddLessOrEqual(RowNumExpr, new SqlBinaryExpression(query.Select.SkipValue.SystemType!,
-									query.Select.SkipValue, "+", query.Select.TakeValue), false);
+									query.Select.SkipValue, "+", query.Select.TakeValue), CompareNulls.LikeSql);
 						}
 
-						queries[queries.Count - 3].Where.SearchCondition.AddGreater(rnColumn, query.Select.SkipValue, false);
+						queries[queries.Count - 3].Where.SearchCondition.AddGreater(rnColumn, query.Select.SkipValue, CompareNulls.LikeSql);
 					}
 					else
 					{
-						processingQuery.Where.EnsureConjunction().AddLessOrEqual(RowNumExpr, query.Select.TakeValue!, false);
+						processingQuery.Where.EnsureConjunction().AddLessOrEqual(RowNumExpr, query.Select.TakeValue!, CompareNulls.LikeSql);
 					}
 
 					query.Select.SkipValue = null;

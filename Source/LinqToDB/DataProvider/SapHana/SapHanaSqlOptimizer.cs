@@ -1,12 +1,10 @@
-﻿using System;
-
-namespace LinqToDB.DataProvider.SapHana
+﻿namespace LinqToDB.DataProvider.SapHana
 {
+	using Mapping;
 	using SqlProvider;
 	using SqlQuery;
-	using Mapping;
 
-	class SapHanaSqlOptimizer : BasicSqlOptimizer
+	sealed class SapHanaSqlOptimizer : BasicSqlOptimizer
 	{
 		public SapHanaSqlOptimizer(SqlProviderFlags sqlProviderFlags) : base(sqlProviderFlags)
 		{
@@ -20,6 +18,8 @@ namespace LinqToDB.DataProvider.SapHana
 
 		public override SqlStatement TransformStatement(SqlStatement statement, DataOptions dataOptions, MappingSchema mappingSchema)
 		{
+			statement = base.TransformStatement(statement, dataOptions, mappingSchema);
+
 			switch (statement.QueryType)
 			{
 				case QueryType.Delete: statement = GetAlternativeDelete((SqlDeleteStatement) statement, dataOptions); break;
@@ -66,6 +66,5 @@ namespace LinqToDB.DataProvider.SapHana
 				return sqlParameter;
 			}
 		}
-
 	}
 }

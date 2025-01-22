@@ -5,12 +5,11 @@ namespace LinqToDB.Linq.Builder
 {
 	using LinqToDB.Expressions;
 
+	[BuildsMethodCall("HasUniqueKey")]
 	sealed class HasUniqueKeyBuilder : MethodCallBuilder
 	{
-		protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
-		{
-			return methodCall.IsQueryable("HasUniqueKey");
-		}
+		public static bool CanBuildMethod(MethodCallExpression call, BuildInfo buildInfo, ExpressionBuilder builder)
+			=> call.IsQueryable();
 
 		protected override BuildSequenceResult BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
@@ -23,9 +22,9 @@ namespace LinqToDB.Linq.Builder
 			var keySelector = methodCall.Arguments[1].UnwrapLambda();
 
 			var keyExpr = SequenceHelper.PrepareBody(keySelector, sequence);
-			var keySql  = builder.BuildSqlExpression(sequence, keyExpr, ProjectFlags.SQL);
+			var keySql  = builder.BuildSqlExpression(sequence, keyExpr);
 
-			var placeholders = ExpressionBuilder.CollectDistinctPlaceholders(keySql);
+			var placeholders = ExpressionBuilder.CollectDistinctPlaceholders(keySql, false);
 
 			sequence.SelectQuery.UniqueKeys.Add(placeholders.Select(p => p.Sql).ToArray());
 

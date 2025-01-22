@@ -1,37 +1,31 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Linq.Expressions;
 
 namespace LinqToDB.Linq.Builder
 {
-	using SqlQuery;
 	using LinqToDB.Expressions;
+	using SqlQuery;
 
+	[BuildsMethodCall("OrderBy", "OrderByDescending", "ThenBy", "ThenByDescending", "ThenOrBy", "ThenOrByDescending")]
 	sealed class OrderByBuilder : MethodCallBuilder
 	{
-		private static readonly string[] MethodNames = { "OrderBy", "OrderByDescending", "ThenBy", "ThenByDescending", "ThenOrBy", "ThenOrByDescending" };
-
-		protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
+		public static bool CanBuildMethod(MethodCallExpression call, BuildInfo info, ExpressionBuilder builder)
 		{
-			if (!methodCall.IsQueryable(MethodNames))
+			if (!call.IsQueryable())
 				return false;
 
-			var body = methodCall.Arguments[1].UnwrapLambda().Body.Unwrap();
-
+			var body = call.Arguments[1].UnwrapLambda().Body.Unwrap();
 			if (body.NodeType == ExpressionType.MemberInit)
 			{
 				var mi = (MemberInitExpression)body;
-				bool throwExpr;
-
-				if (mi.NewExpression.Arguments.Count > 0 || mi.Bindings.Count == 0)
-					throwExpr = true;
-				else
-					throwExpr = mi.Bindings.Any(b => b.BindingType != MemberBindingType.Assignment);
-
-				if (throwExpr)
+				if (mi.NewExpression.Arguments.Count > 0 || 
+					mi.Bindings.Count == 0 ||
+					mi.Bindings.Any(b => b.BindingType != MemberBindingType.Assignment))
+				{
 					throw new NotSupportedException($"Explicit construction of entity type '{body.Type}' in order by is not allowed.");
+				}
 			}
 
 			return true;
@@ -47,80 +41,77 @@ namespace LinqToDB.Linq.Builder
 
 			var sequence = sequenceResult.BuildContext;
 
-			var wrapped = false;
-
-			if (sequence.SelectQuery.Select.HasModifier)
-			{
-				sequence = new SubQueryContext(sequence);
-				wrapped = true;
-			}
-
-			var orderByProjectFlags = ProjectFlags.SQL | ProjectFlags.Keys;
 			var isContinuousOrder   = !sequence.SelectQuery.OrderBy.IsEmpty && methodCall.Method.Name.StartsWith("Then");
 			var lambda              = (LambdaExpression)methodCall.Arguments[1].Unwrap();
 
-			var byIndex = false;
-
-			List<SqlPlaceholderExpression> placeholders;
-			while (true)
+			if (!isContinuousOrder)
 			{
-				Expression sqlExpr;
+				var prevSequence = sequence;
 
-				var body = SequenceHelper.PrepareBody(lambda, sequence).Unwrap();
+				if (!builder.DataContext.Options.LinqOptions.DoNotClearOrderBys && !sequence.SelectQuery.Select.HasModifier)
+					sequence.SelectQuery.OrderBy.Items.Clear();
 
-				if (body is MethodCallExpression mc && mc.Method.DeclaringType == typeof(Sql) && mc.Method.Name == nameof(Sql.Ordinal))
+				if (sequence is not SubQueryContext)
+					sequence = new SubQueryContext(sequence);
+
+				if (builder.DataContext.Options.LinqOptions.DoNotClearOrderBys)
 				{
-					sqlExpr = builder.ConvertToSqlExpr(sequence, mc.Arguments[0], orderByProjectFlags);
-					byIndex = true;
+					var isValid = true;
+					while (true)
+					{
+						if (prevSequence.SelectQuery.Select.HasModifier)
+						{
+							isValid = false;
+							break;
+						}
+
+						if (!prevSequence.SelectQuery.OrderBy.IsEmpty)
+							break;
+
+						if (prevSequence is SubQueryContext { IsSelectWrapper: true } subQuery)
+						{
+							prevSequence = subQuery.SubQuery;
+						}
+						else if (prevSequence is SelectContext { InnerContext: not null } selectContext)
+						{
+							prevSequence = selectContext.InnerContext;
+						}
+						else
+							break;
+					}
+
+					if (isValid && !prevSequence.SelectQuery.OrderBy.IsEmpty)
+					{
+						sequence.SelectQuery.OrderBy.Items.AddRange(prevSequence.SelectQuery.OrderBy.Items.Select(x => x.Clone()));
+					}
 				}
-				else
-				{
-					sqlExpr = builder.ConvertToSqlExpr(sequence, body, orderByProjectFlags);
-					byIndex = false;
-				}
-
-				if (!SequenceHelper.IsSqlReady(sqlExpr))
-				{
-					if (sqlExpr is SqlErrorExpression errorExpr)
-						return BuildSequenceResult.Error(methodCall, errorExpr.Message);
-					return BuildSequenceResult.Error(methodCall);
-				}
-
-				placeholders = ExpressionBuilder.CollectDistinctPlaceholders(sqlExpr);
-
-				// Do not create subquery for ThenByExtensions
-				//
-				if (wrapped || isContinuousOrder)
-					break;
-
-				// handle situation when order by uses complex field
-				//
-				var isComplex = false;
-
-				foreach (var placeholder in placeholders)
-				{
-					// immutable expressions will be removed later
-					//
-					var isImmutable = QueryHelper.IsConstant(placeholder.Sql);
-					if (isImmutable)
-						continue;
-
-					// possible we have to extend this list
-					//
-					isComplex = null != placeholder.Sql.Find(e => e.ElementType == QueryElementType.SqlQuery || e.ElementType == QueryElementType.SqlFunction);
-					if (isComplex)
-						break;
-				}
-
-				if (!isComplex)
-					break;
-
-				sequence = new SubQueryContext(sequence);
-				wrapped = true;
 			}
 
-			if (!isContinuousOrder && !builder.DataContext.Options.LinqOptions.DoNotClearOrderBys)
-				sequence.SelectQuery.OrderBy.Items.Clear();
+			Expression sqlExpr;
+
+			var body = SequenceHelper.PrepareBody(lambda, sequence).Unwrap();
+
+			bool byIndex;
+
+			if (body is MethodCallExpression mc && mc.Method.DeclaringType == typeof(Sql) && mc.Method.Name == nameof(Sql.Ordinal))
+			{
+				sqlExpr = builder.BuildSqlExpression(sequence, mc.Arguments[0], BuildPurpose.Sql, BuildFlags.ForKeys);
+				byIndex = true;
+			}
+			else
+			{
+				sqlExpr = builder.BuildSqlExpression(sequence, body, BuildPurpose.Sql, BuildFlags.ForKeys);
+				byIndex = false;
+			}
+
+			if (!SequenceHelper.IsSqlReady(sqlExpr))
+			{
+				if (sqlExpr is SqlErrorExpression errorExpr)
+					return BuildSequenceResult.Error(methodCall, errorExpr.Message);
+				return BuildSequenceResult.Error(methodCall);
+			}
+
+			var placeholders = ExpressionBuilder.CollectDistinctPlaceholders(sqlExpr, false);
 
 			foreach (var placeholder in placeholders)
 			{
@@ -133,7 +124,6 @@ namespace LinqToDB.Linq.Builder
 					if (builder.DataOptions.SqlOptions.EnableConstantExpressionInOrderBy && orderSql is SqlValue { Value: int position })
 					{
 						// Dangerous way to set oder ordinal position. Used for legacy software support.
-
 						if (position <= 0)
 							return BuildSequenceResult.Error(sequenceArgument, $"Invalid Index '{position.ToString(CultureInfo.InvariantCulture)}' for positioned OrderBy. Should be in range 1..N.");
 

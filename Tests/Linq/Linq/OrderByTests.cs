@@ -166,8 +166,7 @@ namespace Tests.Linq
 		[Test]
 		public void OrderBy7([DataSources] string context)
 		{
-			using (new DoNotClearOrderBys(true))
-			using (var db = GetDataContext(context))
+			using (var db = GetDataContext(context, o => o.UseDoNotClearOrderBys(true)))
 			{
 
 				var expected =
@@ -182,7 +181,7 @@ namespace Tests.Linq
 
 				var result = qry.OrderBy(x => x.ch.ChildID).Select(x => x.ch);
 
-				AreEqual(expected, result);
+				AreSame(expected, result);
 			}
 		}
 
@@ -318,7 +317,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void OrderBySelectMany1([DataSources(ProviderName.Access)] string context)
+		public void OrderBySelectMany1([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -360,7 +359,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void OrderBySelectMany3([DataSources(ProviderName.Access)] string context)
+		public void OrderBySelectMany3([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -381,8 +380,8 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		[ThrowsForProvider(typeof(LinqException), TestProvName.AllClickHouse, ErrorMessage = ErrorHelper.Error_Correlated_Subqueries)]
-		public void OrderByContinuous([DataSources(ProviderName.Access)] string context)
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllClickHouse, ErrorMessage = ErrorHelper.Error_Correlated_Subqueries)]
+		public void OrderByContinuous([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -397,7 +396,7 @@ namespace Tests.Linq
 					orderby pp.ParentID
 					select p;
 
-				TestContext.WriteLine(secondOrder.ToString());
+				secondOrder.ToArray();
 
 				var selectQuery = secondOrder.GetSelectQuery();
 				Assert.That(selectQuery.OrderBy.Items, Has.Count.EqualTo(2));
@@ -408,7 +407,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void OrderByContinuousDuplicates([DataSources(ProviderName.Access)] string context)
+		public void OrderByContinuousDuplicates([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -423,7 +422,7 @@ namespace Tests.Linq
 					orderby p.ParentID descending
 					select p;
 
-				TestContext.WriteLine(secondOrder.ToString());
+				secondOrder.ToArray();
 			
 				var selectQuery = secondOrder.GetSelectQuery();
 				Assert.That(selectQuery.OrderBy.Items, Has.Count.EqualTo(1));
@@ -459,6 +458,33 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 				Assert.That(
 					db.Parent.OrderBy(p => p.ParentID).Take(3).Count(), Is.EqualTo(Parent.OrderBy(p => p.ParentID).Take(3).Count()));
+		}
+
+		[Test]
+		public void OrderByAndGroupByConstant([DataSources] string context)
+		{
+			using (var db = GetDataContext(context))
+			{
+
+				var qry =
+					from ch in db.Child
+					orderby ch.ChildID
+					select ch;
+
+				var query =
+					from ch in qry
+					group ch by 1 into g
+					select new
+					{
+						Count = g.Count(),
+						Expr  = 1 + g.Min(c => c.ChildID),
+						Max   = g.Max(c => c.ChildID),
+					};
+
+				query = query.Take(1);
+
+				AssertQuery(query);
+			}
 		}
 
 		[Test]
@@ -626,8 +652,8 @@ namespace Tests.Linq
 
 				FluentActions.Enumerating(() => query)
 					.Should()
-					.Throw<LinqException>()
-					.WithMessage("The LINQ expression 'Sql.Ordinal<string>(p.Name.LastName) == \"Some\"' could not be converted to SQL.");
+					.Throw<LinqToDBException>()
+					.WithMessage("The LINQ expression 'Sql.Ordinal<string>(p.Name.LastName)' could not be converted to SQL.");
 			}
 		}
 
@@ -769,6 +795,37 @@ namespace Tests.Linq
 			.ToList();
 
 			Assert.That(q[0].ID, Is.EqualTo(enableConstantExpressionInOrderBy ? 1 : 3));
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4586")]
+		public void Issue4586Test([DataSources(false)] string context)
+		{
+			using var db  = GetDataConnection(context);
+
+			var result = db.Person.AsQueryable().Where(x => x.FirstName.StartsWith("J"))
+				.OrderByDescending(x => x.ID)
+				.Skip(1)
+				.Take(2)
+				.ToArray();
+
+			Assert.That(result, Has.Length.EqualTo(2));
+			Assert.Multiple(() =>
+			{
+				Assert.That(result[0].ID, Is.EqualTo(3));
+				Assert.That(result[1].ID, Is.EqualTo(1));
+			});
+
+			var selects = db.LastQuery!.Split(["SELECT"], StringSplitOptions.None).Length - 1;
+
+			Assert.That(selects, Is.EqualTo(1).Or.EqualTo(2).Or.EqualTo(3));
+
+			var expectedOrders = selects switch
+			{
+				1 => 1,
+				_ => 2
+			};
+
+			Assert.That(expectedOrders, Is.EqualTo(db.LastQuery.Split(["ORDER BY"], StringSplitOptions.None).Length - 1));
 		}
 	}
 }

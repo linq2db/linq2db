@@ -2,8 +2,7 @@
 	<Import Project="$(MSBuildThisFileDirectory)\..\Directory.Build.props" />
 
 	<PropertyGroup>
-		<TargetFrameworks>net462;net6.0;net8.0</TargetFrameworks>
-		<Configurations>Debug;Release;Azure</Configurations>
+		<TargetFrameworks>net462;net6.0;net8.0;net9.0</TargetFrameworks>
 		<DefineConstants Condition=" $(DB2STUB) == 'True' ">$(DefineConstants);DB2STUBS</DefineConstants>
 	</PropertyGroup>
 
@@ -14,7 +13,7 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<ProjectReference Include="..\..\Source\LinqToDB.Tools\LinqToDB.Tools.csproj" />
+		<ProjectReference Include="..\..\Source\LinqToDB.Scaffold\LinqToDB.Scaffold.csproj" />
 		<ProjectReference Include="..\..\Source\LinqToDB.FSharp\LinqToDB.FSharp.fsproj" />
 
 		<AdditionalFiles Include="$(MSBuildThisFileDirectory)\BannedSymbols.txt" />
@@ -22,6 +21,13 @@
 
 	<ItemGroup Condition="'$(TargetFramework)' == 'net462' ">
 		<Reference Include="System.Data.Linq" />
+	</ItemGroup>
+
+	<ItemGroup Label="Ignore Useless NugetAudit Errors">
+		<!--System.Private.Uri 4.3.0 (3 errors)-->
+		<NuGetAuditSuppress Include="https://github.com/advisories/GHSA-5f2m-466j-3848" />
+		<NuGetAuditSuppress Include="https://github.com/advisories/GHSA-x5qj-9vmx-7g6g" />
+		<NuGetAuditSuppress Include="https://github.com/advisories/GHSA-xhfc-gr8f-ffwc" />
 	</ItemGroup>
 
 </Project>

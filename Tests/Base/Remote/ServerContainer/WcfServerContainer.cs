@@ -1,11 +1,12 @@
 ﻿#if NETFRAMEWORK
 using System;
+using System.Collections.Concurrent;
+using System.Diagnostics;
 using System.ServiceModel;
 using System.ServiceModel.Description;
-using System.Diagnostics;
-using System.Collections.Concurrent;
 
 using LinqToDB;
+using LinqToDB.Data;
 using LinqToDB.Interceptors;
 using LinqToDB.Mapping;
 using LinqToDB.Remote;
@@ -14,7 +15,7 @@ using LinqToDB.Remote.Wcf;
 namespace Tests.Remote.ServerContainer
 {
 	using Model;
-	using Tests.Model.Remote.Wcf;
+	using Model.Remote.Wcf;
 
 	public class WcfServerContainer : IServerContainer
 	{
@@ -27,34 +28,23 @@ namespace Tests.Remote.ServerContainer
 
 		private ConcurrentDictionary<int, TestWcfLinqService> _openHosts = new();
 
-		public WcfServerContainer()
-		{
-		}
+		private Func<string, MappingSchema?, DataConnection> _connectionFactory = null!;
 
-		public ITestDataContext Prepare(
+		ITestDataContext IServerContainer.CreateContext(
 			MappingSchema? ms,
-			IInterceptor? interceptor,
-			bool suppressSequentialAccess,
 			string configuration,
-			Func<DataOptions,DataOptions>? optionBuilder)
+			Func<DataOptions, DataOptions>? optionBuilder,
+			Func<string, MappingSchema?, DataConnection> connectionFactory)
 		{
-			var service = OpenHost(ms);
+			_connectionFactory = connectionFactory;
 
-			service.SuppressSequentialAccess = suppressSequentialAccess;
-			if (interceptor != null)
-			{
-				service.AddInterceptor(interceptor);
-			}
+			var service = OpenHost(ms);
 
 			var dx = new TestWcfDataContext(
 				GetPort(),
-				() =>
-				{
-					service.SuppressSequentialAccess = false;
-					if (interceptor != null)
-						service.RemoveInterceptor();
-				},
-				optionBuilder)
+				o => optionBuilder == null
+					? o.UseConfiguration(configuration)
+					: optionBuilder(o.UseConfiguration(configuration)))
 			{ ConfigurationString = configuration };
 
 			Debug.WriteLine(((IDataContext)dx).ConfigurationID, "Provider ");
@@ -84,7 +74,13 @@ namespace Tests.Remote.ServerContainer
 				}
 
 #pragma warning disable CA2000 // Dispose objects before losing scope
-				var host = new ServiceHost(service = new TestWcfLinqService(new TestLinqService(), null, false) { AllowUpdates = true }, new Uri($"net.tcp://localhost:{GetPort()}"));
+				var host = new ServiceHost(
+					service = new TestWcfLinqService(
+						new TestLinqService((c, ms) => _connectionFactory(c, ms)))
+						{
+							AllowUpdates = true
+						},
+					new Uri($"net.tcp://localhost:{GetPort()}"));
 #pragma warning restore CA2000 // Dispose objects before losing scope
 
 				if (ms != null)
@@ -132,7 +128,6 @@ namespace Tests.Remote.ServerContainer
 
 			return Port + (Environment.CurrentManagedThreadId % 1000) + TestExternals.RunID;
 		}
-
 	}
 }
 #endif

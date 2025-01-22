@@ -43,7 +43,8 @@ namespace LinqToDB.DataProvider.Access
 
 		public override ISqlExpression EscapeLikeCharacters(ISqlExpression expression, ref ISqlExpression? escape)
 		{
-			throw new LinqException("Access does not support `Replace` function which is required for such query.");
+			// TODO: implement for ACE engine, as it has REPLACE
+			throw new LinqToDBException("Access does not support `Replace` function which is required for such query.");
 		}
 
 		public override ISqlPredicate ConvertSearchStringPredicate(SqlPredicate.SearchString predicate)
@@ -117,6 +118,31 @@ namespace LinqToDB.DataProvider.Access
 			return result;
 		}
 
+		public override ISqlExpression ConvertCoalesce(SqlCoalesceExpression element)
+		{
+			if (element.SystemType == null)
+				return element;
+
+			if (element.Expressions.Length == 2)
+			{
+				return new SqlConditionExpression(new SqlPredicate.IsNull(element.Expressions[0], false), element.Expressions[1], element.Expressions[0]);
+			}
+
+			if (element.Expressions.Length > 2)
+			{
+				return new SqlConditionExpression(new SqlPredicate.IsNull(element.Expressions[0], false), new SqlCoalesceExpression(GetSubArray(element.Expressions)), element.Expressions[0]);
+			}
+
+			static ISqlExpression[] GetSubArray(ISqlExpression[] array)
+			{
+				var parms = new ISqlExpression[array.Length - 1];
+				Array.Copy(array, 1, parms, 0, parms.Length);
+				return parms;
+			};
+
+			return element;
+		}
+
 		public override ISqlExpression ConvertSqlFunction(SqlFunction func)
 		{
 			switch (func)
@@ -127,20 +153,6 @@ namespace LinqToDB.DataProvider.Access
 					return func.WithName("UCase");
 				case { Name: "Length" }:
 					return func.WithName("Len");
-
-				case {
-					Name: PseudoFunctions.COALESCE,
-					Parameters: [var p0, var p1],
-					SystemType: var type,
-				}:
-					return new SqlFunction(type, "IIF", new SqlSearchCondition { Predicates = { new SqlPredicate.IsNull(p0, false) } }, p1, p0);
-
-				case {
-					Name: PseudoFunctions.COALESCE,
-					Parameters: [var p0, ..] parms,
-					SystemType: var type,
-				}:
-					return new SqlFunction(type, PseudoFunctions.COALESCE, p0, new SqlFunction(type, PseudoFunctions.COALESCE, GetSubArray(parms)));
 
 				case {
 					Name: "CharIndex",
@@ -158,13 +170,6 @@ namespace LinqToDB.DataProvider.Access
 
 				default:
 					return base.ConvertSqlFunction(func);
-			};
-
-			static ISqlExpression[] GetSubArray(ISqlExpression[] array)
-			{
-				var parms = new ISqlExpression[array.Length - 1];
-				Array.Copy(array, 1, parms, 0, parms.Length);
-				return parms;
 			}
 		}
 
@@ -195,7 +200,9 @@ namespace LinqToDB.DataProvider.Access
 
 			if (!string.IsNullOrEmpty(funcName))
 			{
-				return new SqlFunction(cast.SystemType, funcName, expression); 
+				var isNotNull = new SqlPredicate.IsNull(expression, true);
+				var funcCall = new SqlFunction(cast.Type, funcName, false, true, Precedence.Primary, nullabilityType : ParametersNullabilityType.NotNullable, canBeNull : false, expression);
+				return new SqlConditionExpression(isNotNull, funcCall, new SqlValue(cast.Type, null));
 			}
 
 			return expression;

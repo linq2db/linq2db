@@ -18,9 +18,9 @@ namespace Cli.NoMetadata.Oracle
 
 		#region Associations
 		/// <summary>
-		/// Fk_Doctor_Person
+		/// FK_Doctor_Person
 		/// </summary>
-		public Person FkPerson { get; set; } = null!;
+		public Person Person { get; set; } = null!;
 		#endregion
 	}
 }

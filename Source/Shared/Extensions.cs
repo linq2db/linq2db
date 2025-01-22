@@ -1,5 +1,23 @@
 ﻿#if NETFRAMEWORK || NETSTANDARD2_0
-using System.Runtime.CompilerServices;
+
+namespace System
+{
+	internal static class StringExtensions
+	{
+		public static bool Contains(this string str, string value, StringComparison comparisonType) => str.IndexOf(value, comparisonType) != -1;
+	}
+}
+
+namespace System.Collections.Concurrent
+{
+	internal static class ConcurrentDictionaryExtensions
+	{
+		public static TValue GetOrAdd<TKey, TValue, TArg>(this ConcurrentDictionary<TKey, TValue> dictionary, TKey key, Func<TKey, TArg, TValue> valueFactory, TArg factoryArgument)
+		{
+			return dictionary.GetOrAdd(key, key => valueFactory(key, factoryArgument));
+		}
+	}
+}
 
 namespace System.Text
 {

@@ -17,6 +17,8 @@
 
 		public override SqlStatement TransformStatement(SqlStatement statement, DataOptions dataOptions, MappingSchema mappingSchema)
 		{
+			CorrectOutputTables(statement);
+
 			switch (statement.QueryType)
 			{
 				case QueryType.Delete : statement = GetAlternativeDelete((SqlDeleteStatement) statement, dataOptions); break;

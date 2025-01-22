@@ -18,7 +18,7 @@ namespace Tests.UserTests
 			[Column("optional_field")] public Guid? Optional { get; set; }
 		}
 
-		[ActiveIssue("CreateTable(Guid)", Configurations = new[]
+		[ActiveIssue("Unsupported INSERT syntax", Configurations = new[]
 		{
 			TestProvName.AllAccess,
 			ProviderName.SqlCe,

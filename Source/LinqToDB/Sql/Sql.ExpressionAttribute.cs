@@ -241,6 +241,7 @@ namespace LinqToDB
 				bool                                                                  includeInstance,
 				out List<(Expression? expression, ExprParameterAttribute? parameter)> knownExpressions,
 				bool                                                                  ignoreGenericParameters,
+				bool                                                                  forceInlineParameters,
 				out List<SqlDataType>?                                                genericTypes,
 				ConvertFunc<TContext>                                                 converter)
 			{
@@ -263,7 +264,7 @@ namespace LinqToDB
 
 						pis ??= mc.Method.GetParameters();
 						var p              = pis[i];
-						var paramAttribute = p.GetAttributes<ExprParameterAttribute>().FirstOrDefault();
+						var paramAttribute = p.GetAttribute<ExprParameterAttribute>();
 
 						if (arg is NewArrayExpression nae)
 						{
@@ -302,9 +303,9 @@ namespace LinqToDB
 									{
 										if (pi[i].ParameterType == t)
 										{
-											var paramAttribute = pi[i].GetAttributes<ExprParameterAttribute>().FirstOrDefault();
+											var paramAttribute = pi[i].GetAttribute<ExprParameterAttribute>();
 
-											var converted      = converter(context, mc.Arguments[i], null, paramAttribute?.DoNotParameterize);
+											var converted      = converter(context, mc.Arguments[i], null, forceInlineParameters || paramAttribute?.DoNotParameterize == true);
 											if (converted is SqlPlaceholderExpression placeholder)
 											{
 												var dbType = QueryHelper.GetDbDataType(placeholder.Sql, mappingSchema);
@@ -332,9 +333,9 @@ namespace LinqToDB
 									{
 										if (pi[i].ParameterType == t)
 										{
-											var paramAttribute = pi[i].GetAttributes<ExprParameterAttribute>().FirstOrDefault();
+											var paramAttribute = pi[i].GetAttribute<ExprParameterAttribute>();
 
-											var converted = converter(context, mc.Arguments[i], null, paramAttribute?.DoNotParameterize);
+											var converted = converter(context, mc.Arguments[i], null, forceInlineParameters || paramAttribute?.DoNotParameterize == true);
 											if (converted is SqlPlaceholderExpression placeholder)
 											{
 												var dbType = QueryHelper.GetDbDataType(placeholder.Sql, mappingSchema);
@@ -368,10 +369,11 @@ namespace LinqToDB
 				List<(Expression? expression, ExprParameterAttribute? parameter)> knownExpressions,
 				List<SqlDataType>?                                                genericTypes,
 				ConvertFunc<TContext>                                             converter,
+				bool                                                              forceInlineParameters,
 				out Expression?                                                   error)
 			{
 				var parms = new List<ISqlExpression?>();
-				var ctx   = WritableContext.Create((found: false, error: (Expression?)null), (context, expressionStr, argIndices, knownExpressions, genericTypes, converter, parms));
+				var ctx   = WritableContext.Create((found: false, error: (Expression?)null), (context, expressionStr, argIndices, knownExpressions, genericTypes, converter, parms, forceInlineParameters));
 
 				ResolveExpressionValues(
 					ctx,
@@ -417,7 +419,7 @@ namespace LinqToDB
 								var (expression, parameter) = ctx.StaticValue.knownExpressions[argIdx];
 								if (expression != null)
 								{
-									var converted = ctx.StaticValue.converter(ctx.StaticValue.context, expression, null, parameter?.DoNotParameterize);
+									var converted = ctx.StaticValue.converter(ctx.StaticValue.context, expression, null, ctx.StaticValue.forceInlineParameters || parameter?.DoNotParameterize == true);
 									if (converted is SqlPlaceholderExpression placeholder)
 									{
 										paramExpr = placeholder.Sql;
@@ -471,7 +473,7 @@ namespace LinqToDB
 									var (expression, parameter) = knownExpressions[argIdx];
 									if (expression != null)
 									{
-										var converted = converter(context, expression, null, parameter?.DoNotParameterize);
+										var converted = converter(context, expression, null, ctx.StaticValue.forceInlineParameters || parameter?.DoNotParameterize == true);
 										if (converted is SqlPlaceholderExpression placeholder)
 										{
 											paramExpr = placeholder.Sql;
@@ -501,7 +503,7 @@ namespace LinqToDB
 									parms.Add(null);
 								else
 								{
-									var converted = converter(context, expression, null, parameter?.DoNotParameterize);
+									var converted = converter(context, expression, null, ctx.StaticValue.forceInlineParameters || parameter?.DoNotParameterize == true);
 
 									if (converted is SqlPlaceholderExpression placeholder)
 										parms.Add(placeholder.Sql);
@@ -536,12 +538,12 @@ namespace LinqToDB
 				ConvertFunc<TContext> converter)
 			{
 				var expressionStr = Expression;
-				PrepareParameterValues(context, dataContext.MappingSchema, expression, ref expressionStr, true, out var knownExpressions, IgnoreGenericParameters, out var genericTypes, converter);
+				PrepareParameterValues(context, dataContext.MappingSchema, expression, ref expressionStr, true, out var knownExpressions, IgnoreGenericParameters, InlineParameters, out var genericTypes, converter);
 
 				if (string.IsNullOrEmpty(expressionStr))
 					throw new LinqToDBException($"Cannot retrieve SQL Expression body from expression '{expression}'.");
 
-				var parameters = PrepareArguments(context, expressionStr!, ArgIndices, false, knownExpressions, genericTypes, converter, out var error);
+				var parameters = PrepareArguments(context, expressionStr!, ArgIndices, false, knownExpressions, genericTypes, converter, InlineParameters, out var error);
 
 				if (error != null)
 					return SqlErrorExpression.EnsureError(error, expression.Type);

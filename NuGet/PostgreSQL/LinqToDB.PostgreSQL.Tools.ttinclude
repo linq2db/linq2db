@@ -1,12 +1,4 @@
-<#@ assembly name="$(LinqToDBT4NpgsqlClientPath)Npgsql.dll"   #>
-<#@ include  file="LinqToDB.Tools.ttinclude"      once="true" #>
-<#@ include  file="LinqToDB.PostgreSQL.ttinclude" once="true" #>
-<#
-
-var toolsPath = GetProviderToolsPath("Npgsql", "Npgsql, Version=8.0.3.0, Culture=neutral, PublicKeyToken=5d8b90d52f46fda7");
-
-LoadAssembly("System.Threading.Tasks.Extensions"        , toolsPath);
-LoadAssembly("System.Text.Json"                         , toolsPath);
-LoadAssembly("Microsoft.Extensions.Logging.Abstractions", toolsPath);
-
+<#@ include  file="$(LinqToDBT4PostgreSQLTemplatesPath)LinqToDB.PostgreSQL.ttinclude" once="true" #>
+<#+
+#warning "LinqToDB.PostgreSQL.Tools.ttinclude is obsolete. Use LinqToDB.PostgreSQL.ttinclude instead."
 #>

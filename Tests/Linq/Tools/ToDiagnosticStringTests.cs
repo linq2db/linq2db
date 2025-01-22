@@ -14,8 +14,6 @@ namespace Tests.Tools
 		{
 			var str = new[] { 1, 2, 222 }.ToDiagnosticString();
 
-			TestContext.Write(str);
-
 			Assert.That(@"Count : 3
 +-------+
 | Value |
@@ -44,8 +42,6 @@ namespace Tests.Tools
 				new TestDiagnostic { StringValue = "dakasdlkjjkasd  djkadlskdj ", DateTimeValue = new DateTime(2016, 11, 22), DecimalValue = 111.3m },
 				new TestDiagnostic { StringValue = "dkjdkdjkl102398 3 1231233",   DateTimeValue = new DateTime(2016, 10, 23), DecimalValue = 1111111 },
 			}.ToDiagnosticString();
-
-			TestContext.Write(str);
 
 			Assert.That(@"Count : 4
 +---------------------+--------------+-----------------------------+

@@ -6,8 +6,8 @@ using System.Threading.Tasks;
 
 namespace LinqToDB.Data.RetryPolicy
 {
+	using Async;
 	using Configuration;
-	using LinqToDB.Async;
 
 	sealed class RetryingDbConnection : IAsyncDbConnection, IProxy<DbConnection>
 	{
@@ -50,7 +50,7 @@ namespace LinqToDB.Data.RetryPolicy
 		ValueTask<IAsyncDbTransaction> IAsyncDbConnection.BeginTransactionAsync(CancellationToken cancellationToken) => _connection.BeginTransactionAsync(cancellationToken);
 		ValueTask<IAsyncDbTransaction> IAsyncDbConnection.BeginTransactionAsync(IsolationLevel isolationLevel, CancellationToken cancellationToken) => _connection.BeginTransactionAsync(isolationLevel, cancellationToken);
 
-		DbCommand IAsyncDbConnection.CreateCommand() => new RetryingDbCommand(_connection.CreateCommand(), _policy);
+		DbCommand IAsyncDbConnection.CreateCommand() => new RetryingDbCommand(_dataConnection, _connection.CreateCommand(), _policy);
 
 		void IAsyncDbConnection.Close() => _connection.Close();
 		Task IAsyncDbConnection.CloseAsync() => _connection.CloseAsync();

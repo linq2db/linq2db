@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
@@ -2991,6 +2992,140 @@ namespace Tests.xUpdate
 			result = records.InnerJoin(items, (a, b) => a.Id == b.TestId, (a, b) => b)
 				.UpdateWithOutput(a => new Test3697Item() { Value = 1 }, (d, i) => i.Id)
 				.ToArray();
+
+			Assert.That(result, Has.Length.EqualTo(1));
+			Assert.That(result[0], Is.EqualTo(1));
+		}
+
+		sealed class Issue4135Table
+		{
+			[PrimaryKey] public int     Id          { get; set; }
+			[Column    ] public string? Name        { get; set; }
+			[Column    ] public bool    NeedsUpdate { get; set; }
+		}
+
+		[Test]
+		public void Issue4135Test([IncludeDataSources(true, FeatureUpdateOutputWithOldSingle)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable(
+			[
+				new Issue4135Table() { Id = 1, Name = "name1", NeedsUpdate = true },
+				new Issue4135Table() { Id = 2, Name = "name2", NeedsUpdate = false },
+			]);
+
+			var people = tb
+				.Where(e => e.NeedsUpdate)
+				.OrderBy(e => e.Id)
+				.Take(4)
+				.UpdateWithOutput(e => new Issue4135Table()
+				{
+					NeedsUpdate = false
+				}, (d, _) => new Issue4135Table()
+				{
+					Id           = d.Id,
+					Name         = d.Name,
+					NeedsUpdate  = d.NeedsUpdate
+				})
+				.ToArray();
+
+			Assert.That(people, Has.Length.EqualTo(1));
+			Assert.Multiple(() =>
+			{
+				Assert.That(people[0].Id, Is.EqualTo(1));
+				Assert.That(people[0].Name, Is.EqualTo("name1"));
+				Assert.That(people[0].NeedsUpdate, Is.EqualTo(true));
+			});
+		}
+
+		[Table]
+		sealed class Issue4193Person
+		{
+			[Column(CanBeNull = false)] public string Name { get; set; } = null!;
+			[Column] public int? EmployeeId { get; set; }
+
+			[Association(ThisKey = nameof(EmployeeId), OtherKey = nameof(Issue4193Employee.Id))]
+			public Issue4193Employee? Employee { get; set; }
+		}
+
+		[Table]
+		sealed class Issue4193Employee
+		{
+			[Column] public int SalaryId { get; set; }
+			[PrimaryKey] public int Id { get; set; }
+
+			[Association(CanBeNull = false, ThisKey = nameof(SalaryId), OtherKey = nameof(Issue4193Salary.Id))]
+			public Issue4193Salary Salary { get; set; } = null!;
+
+			[Association(ThisKey = nameof(Id), OtherKey = nameof(Issue4193Person.EmployeeId))]
+			public IEnumerable<Issue4193Person> People { get; set; } = null!;
+		}
+
+		[Table]
+		sealed class Issue4193Salary
+		{
+			[PrimaryKey] public int Id { get; set; }
+			[Column] public int? Amount { get; set; }
+
+			[Association(ThisKey = nameof(Id), OtherKey = nameof(Issue4193Employee.SalaryId))]
+			public IEnumerable<Issue4193Employee> Employees { get; set; } = null!;
+		}
+
+		[Test]
+		public void Issue4193Test([IncludeDataSources(true, FeatureUpdateOutputWithoutOldSingle)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t1 = db.CreateLocalTable([new Issue4193Person() { EmployeeId = 1, Name = "foo" }]);
+			using var t2 = db.CreateLocalTable([new Issue4193Employee() { Id = 1, SalaryId = 1 }]);
+			using var t3 = db.CreateLocalTable([new Issue4193Salary { Id = 1, Amount = 10 }]);
+
+			var salary = t1.Where(e => e.Name == "foo").Select(e => e.Employee!.Salary);
+			var newAmount = salary.UpdateWithOutput(
+				s => new Issue4193Salary { Amount = s.Amount + 15 },
+				(_, inserted) => inserted.Amount)
+				.Single();
+
+			Assert.That(newAmount, Is.EqualTo(25));
+		}
+
+		[Test]
+		public void Issue4414Test([IncludeDataSources(true, FeatureUpdateOutputWithoutOldSingle)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t1 = db.CreateLocalTable([new Issue4193Person() { EmployeeId = 1, Name = "foo" }]);
+
+			var result = t1
+				.Where(x => x.EmployeeId == 1)
+				.OrderBy(x => x.EmployeeId)
+				.Take(3)
+				.UpdateWithOutput(
+					_ => new Issue4193Person() { Name = "new_name" },
+					(d, i) => new { i.EmployeeId, i.Name })
+				.ToArray();
+
+			Assert.That(result, Has.Length.EqualTo(1));
+			Assert.Multiple(() =>
+			{
+				Assert.That(result[0].EmployeeId, Is.EqualTo(1));
+				Assert.That(result[0].Name, Is.EqualTo("new_name"));
+			});
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4253")]
+		public void Issue4253Test([IncludeDataSources(true, FeatureUpdateOutputWithoutOldSingle)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t1 = db.CreateLocalTable([new Issue4193Person() { EmployeeId = 1, Name = "foo" }]);
+			using var t2 = db.CreateLocalTable([new Issue4193Employee() { Id = 1, SalaryId = 1 }]);
+			using var t3 = db.CreateLocalTable([new Issue4193Salary { Id = 1, Amount = 10 }]);
+
+			var result = t1
+					.Join(t2, SqlJoinType.Inner,
+						(p, r) => p.EmployeeId == r.Id,
+						(p, r) => Tuple.Create(p, r))
+					.Set(tup => tup.Item1.Name, tup => tup.Item1.Name + tup.Item2.SalaryId)
+					.UpdateWithOutput((_, tup) => tup.Item1.EmployeeId)
+					.ToArray();
 
 			Assert.That(result, Has.Length.EqualTo(1));
 			Assert.That(result[0], Is.EqualTo(1));

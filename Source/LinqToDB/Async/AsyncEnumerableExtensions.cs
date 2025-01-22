@@ -36,9 +36,9 @@ namespace LinqToDB.Async
 
 			var result = new List<T>();
 			var enumerator = source.GetAsyncEnumerator(cancellationToken);
-			await using (enumerator.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext))
+			await using (enumerator.ConfigureAwait(false))
 			{
-				while (await enumerator.MoveNextAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext))
+				while (await enumerator.MoveNextAsync().ConfigureAwait(false))
 				{
 					result.Add(enumerator.Current);
 				}
@@ -66,7 +66,7 @@ namespace LinqToDB.Async
 			this IAsyncEnumerable<T> source,
 			CancellationToken        cancellationToken = default)
 		{
-			return (await source.ToListAsync(cancellationToken).ConfigureAwait(Common.Configuration.ContinueOnCapturedContext)).ToArray();
+			return (await source.ToListAsync(cancellationToken).ConfigureAwait(false)).ToArray();
 		}
 
 		/// <summary>
@@ -92,9 +92,9 @@ namespace LinqToDB.Async
 			if (source == null) throw new ArgumentNullException(nameof(source));
 
 			var enumerator = source.GetAsyncEnumerator(cancellationToken);
-			await using (enumerator.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext))
+			await using (enumerator.ConfigureAwait(false))
 			{
-				if (await enumerator.MoveNextAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext))
+				if (await enumerator.MoveNextAsync().ConfigureAwait(false))
 					return enumerator.Current;
 				return default;
 			}
@@ -113,9 +113,9 @@ namespace LinqToDB.Async
 			if (source == null) throw new ArgumentNullException(nameof(source));
 
 			var enumerator = source.GetAsyncEnumerator(token);
-			await using (enumerator.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext))
+			await using (enumerator.ConfigureAwait(false))
 			{
-				if (await enumerator.MoveNextAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext))
+				if (await enumerator.MoveNextAsync().ConfigureAwait(false))
 					return enumerator.Current;
 			}
 
@@ -145,13 +145,13 @@ namespace LinqToDB.Async
 			if (source == null) throw new ArgumentNullException(nameof(source));
 
 			var enumerator = source.GetAsyncEnumerator(cancellationToken);
-			await using (enumerator.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext))
+			await using (enumerator.ConfigureAwait(false))
 			{
-				if (!await enumerator.MoveNextAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext))
+				if (!await enumerator.MoveNextAsync().ConfigureAwait(false))
 					return default;
 
 				var first = enumerator.Current;
-				if (await enumerator.MoveNextAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext))
+				if (await enumerator.MoveNextAsync().ConfigureAwait(false))
 					throw new InvalidOperationException("The input sequence contains more than one element.");
 
 				return first;
@@ -187,13 +187,13 @@ namespace LinqToDB.Async
 			if (source == null) throw new ArgumentNullException(nameof(source));
 
 			var enumerator = source.GetAsyncEnumerator(cancellationToken);
-			await using (enumerator.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext))
+			await using (enumerator.ConfigureAwait(false))
 			{
-				if (!await enumerator.MoveNextAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext))
+				if (!await enumerator.MoveNextAsync().ConfigureAwait(false))
 					throw new InvalidOperationException("Sequence contains no elements.");
 
 				var first = enumerator.Current;
-				if (await enumerator.MoveNextAsync().ConfigureAwait(Common.Configuration.ContinueOnCapturedContext))
+				if (await enumerator.MoveNextAsync().ConfigureAwait(false))
 					throw new InvalidOperationException("Sequence contains more than one element.");
 
 				return first;

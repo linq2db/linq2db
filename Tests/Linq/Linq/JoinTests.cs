@@ -6,13 +6,14 @@ using System.Data.Common;
 using System.Linq;
 
 using LinqToDB;
+using LinqToDB.Common;
 using LinqToDB.Interceptors;
+using LinqToDB.Linq;
 using LinqToDB.Mapping;
 using NUnit.Framework;
 
 namespace Tests.Linq
 {
-	using LinqToDB.Common;
 	using Model;
 
 	public static class EnumerableExtensions
@@ -178,12 +179,15 @@ namespace Tests.Linq
 		[Test]
 		public void InnerJoin6([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-				TestJohn(
-					from p1 in db.Person
-						join p2 in from p3 in db.Person select new { ID = p3.ID + 1, p3.FirstName } on p1.ID equals p2.ID - 1
-					where p1.ID == 1
-					select new Person { ID = p1.ID, FirstName = p2.FirstName });
+			using var db = GetDataContext(context);
+
+			TestJohn(
+				from p1 in db.Person
+					join p2 in from p3 in db.Person select new { ID = p3.ID + 1, p3.FirstName } on p1.ID equals p2.ID - 1
+				where p1.ID == 1
+				select new Person { ID = p1.ID, FirstName = p2.FirstName });
+
+			Assert.That(GetCurrentBaselines(), Does.Not.Contain("JOIN"));
 		}
 
 		[Test]
@@ -373,6 +377,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllAccess, TestProvName.AllSybase, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
 		public void GroupJoin5([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -397,6 +402,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllAccess, ProviderName.Firebird25, TestProvName.AllMySql57, TestProvName.AllSybase, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
 		public void GroupJoin51([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -423,7 +429,8 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void GroupJoin52([DataSources(TestProvName.AllClickHouse, TestProvName.AllAccess)] string context)
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllAccess, ProviderName.Firebird25, TestProvName.AllMySql57, TestProvName.AllSybase, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
+		public void GroupJoin52([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -439,6 +446,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllAccess, ProviderName.Firebird25, TestProvName.AllMySql57, TestProvName.AllSybase, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
 		public void GroupJoin53([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -455,6 +463,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllAccess, ProviderName.Firebird25, TestProvName.AllMySql57, TestProvName.AllSybase, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
 		public void GroupJoin54([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -553,6 +562,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllAccess, TestProvName.AllSybase, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
 		public void GroupJoin8([DataSources] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -786,6 +796,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSybase, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
 		public void LeftJoin4([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -956,7 +967,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void FourTableJoin([DataSources(ProviderName.Access, TestProvName.AllClickHouse)] string context)
+		public void FourTableJoin([DataSources(TestProvName.AllClickHouse)] string context)
 		{
 			using (var db = GetDataContext(context))
 				AreEqual(
@@ -1026,9 +1037,14 @@ namespace Tests.Linq
 			}
 		}
 
-		[Test, Explicit]
-		public void StackOverflow([IncludeDataSources(TestProvName.AllSqlServer2008, TestProvName.AllSqlServer2012, TestProvName.AllClickHouse)]
-			string context)
+		// MySQL: 61 joined tables limit
+		// SQLite: 64 joined tables limit
+		// ASE: The "default data cache (id: 0)" is configured with 410 buffers.  The current query plan requires 2448 buffers.  Please reconfigure the data cache and try the command again.
+		// Access: Query is too complex (lol)
+		// DB2: Processing was cancelled due to an interrupt.
+		// SQLCE: slow (~2-3 min)
+		[Test]
+		public void StackOverflow([DataSources(TestProvName.AllAccess, ProviderName.SqlCe, TestProvName.AllDB2, TestProvName.AllMySql, TestProvName.AllSQLite, TestProvName.AllSybase)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1050,9 +1066,8 @@ namespace Tests.Linq
 			}
 		}
 
-		[ActiveIssue("HanaException : feature not supported: field or table alias is not allowed as an input of table functions", Configuration = TestProvName.AllSapHana)]
 		[Test]
-		public void ApplyJoin([IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllPostgreSQL93Plus, TestProvName.AllSapHana)] string context)
+		public void ApplyJoin([IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllPostgreSQL93Plus)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -1930,7 +1945,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void SqlRightJoinWithInnerJoinOnLeftWithConditions([DataSources(ProviderName.Access, TestProvName.AllSQLite)] string context)
+		public void SqlRightJoinWithInnerJoinOnLeftWithConditions([DataSources(TestProvName.AllSQLite)] string context)
 		{
 			using (var db = GetDataContext(context))
 			{
@@ -2906,10 +2921,10 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSybase, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
 		public void Issue1455Test1([DataSources(TestProvName.AllClickHouse)] string context)
 		{
-			using (new GuardGrouping(false))
-			using (var db = GetDataContext(context))
+			using (var db = GetDataContext(context, o => o.UseGuardGrouping(false)))
 			using (var queryLastUpd = db.CreateLocalTable<Alert>())
 			using (db.CreateLocalTable<AuditAlert>())
 			using (db.CreateLocalTable<Trade>())
@@ -2965,10 +2980,11 @@ namespace Tests.Linq
 		}
 
 		[Test]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSybase, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
 		public void Issue1455Test2([DataSources(TestProvName.AllClickHouse)] string context)
 		{
-			using (new GuardGrouping(false)) // For Sybase, which do not support Window functions
-			using (var db = GetDataContext(context))
+			// UseGuardGrouping: For Sybase, which do not support Window functions
+			using (var db = GetDataContext(context, o => o.UseGuardGrouping(false)))
 			using (db.CreateLocalTable<Alert>())
 			using (db.CreateLocalTable<AuditAlert>())
 			using (db.CreateLocalTable<Trade>())
@@ -3024,6 +3040,82 @@ namespace Tests.Linq
 		}
 		#endregion
 
+		#region issue 2421
+		[Table]
+		public class UserDTO
+		{
+			[PrimaryKey, Identity] public int     UserId { get; set; }
+			[Column,     Nullable] public string? UserName { get; set; }
+		}
+
+		[Table]
+		public class UserPositionDTO
+		{
+			[PrimaryKey, Identity] public int UserPositionId { get; set; }
+			[Column,     NotNull ] public int UserId         { get; set; }
+			[Column,     NotNull ] public int PositionId     { get; set; }
+
+			[Association(ThisKey = nameof(UserId), OtherKey = nameof(UserDTO.UserId), CanBeNull = false)]
+			public UserDTO User { get; set; } = null!;
+
+			[Association(ThisKey = nameof(PositionId), OtherKey = nameof(PositionDTO.PositionId), CanBeNull = false)]
+			public PositionDTO Position { get; set; } = null!;
+		}
+
+		[Table("UPS")]
+		public class UserPositionSectorDTO
+		{
+			[PrimaryKey, Identity] public int UserPositionSectorId { get; set; }
+			[Column,     NotNull ] public int UserPositionId       { get; set; }
+			[Column,     NotNull ] public int SectorId             { get; set; }
+
+			[Association(ThisKey = nameof(UserPositionId), OtherKey = nameof(UserPositionDTO.UserPositionId), CanBeNull = false)]
+			public UserPositionDTO UserPosition { get; set; } = null!;
+
+			[Association(ThisKey = nameof(SectorId), OtherKey = nameof(SectorDTO.SectorId), CanBeNull = false)]
+			public SectorDTO Sector { get; set; } = null!;
+		}
+
+		[Table]
+		public class PositionDTO
+		{
+			[PrimaryKey, Identity] public int    PositionId   { get; set; }
+			[Column,     NotNull ] public string PositionName { get; set; } = null!;
+		}
+
+		[Table]
+		public class SectorDTO
+		{
+			[PrimaryKey, Identity] public int    SectorId { get; set; }
+			[Column,     NotNull ] public string SectorName { get; set; } = null!;
+
+			[Association(ThisKey = nameof(SectorId), OtherKey = nameof(UserPositionSectorDTO.SectorId))]
+			public List<UserPositionSectorDTO> UserPositionSectors { get; set; } = null!;
+		}
+
+		// to sdanyliv: we generate same sql for sqlite and it works there, so fix should affect only access
+		[Test]
+		public void Issue2421([DataSources] string context)
+		{
+			using var db                  = GetDataContext(context);
+			using var users               = db.CreateLocalTable<UserDTO>();
+			using var userPositions       = db.CreateLocalTable<UserPositionDTO>();
+			using var userPositionSectors = db.CreateLocalTable<UserPositionSectorDTO>();
+			using var positions           = db.CreateLocalTable<PositionDTO>();
+			using var sectors             = db.CreateLocalTable<SectorDTO>();
+
+			var query = sectors
+				.Select(x => new
+				{
+					SectorId = x.SectorId,
+					UserId   = x.UserPositionSectors
+						.Where(y => y.UserPosition.PositionId == 1)
+						.Select(y => y.UserPosition.User.UserId)
+				});
+
+			var result = query.ToArray();
+		}
+		#endregion
 
 		[ActiveIssue(1224, Configurations = new[]
 		{
@@ -3049,6 +3141,77 @@ namespace Tests.Linq
 
 				Assert.That(count, Is.Not.EqualTo(0));
 			}
+		}
+
+		[Table]
+		private class Issue4160Person
+		{
+			[Column] public string Code { get; set; } = default!;
+
+			public static readonly Issue4160Person[] Data = new[]
+			{
+				new Issue4160Person() { Code = "SD" },
+				new Issue4160Person() { Code = "SD" },
+				new Issue4160Person() { Code = "SH" },
+			};
+		}
+
+		[Table]
+		private class Issue4160City
+		{
+			[Column] public string  Code { get; set; } = default!;
+			[Column] public string? Name { get; set; }
+
+			public static readonly Issue4160City[] Data = new[]
+			{
+				new Issue4160City() { Code = "SD", Name = "SYDNEY" },
+				new Issue4160City() { Code = "SD", Name = "SUNDAY" },
+				new Issue4160City() { Code = "SH", Name = "SYDHIP" }
+			};
+		}
+
+		[ActiveIssue(Configuration = TestProvName.AllOracle12)]
+		[Test]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSybase, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
+		public void Issue4160Test1([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var persons = db.CreateLocalTable(Issue4160Person.Data);
+			using var cities  = db.CreateLocalTable(Issue4160City.Data);
+
+			var query = (
+			 from pe in persons
+			 select new
+			 {
+				 Value = (from cc in cities
+						  where cc.Code == pe.Code
+						  select cc.Name).FirstOrDefault()
+			 }).Distinct();
+
+			var data = query.ToList();
+
+			Assert.That(data, Has.Count.EqualTo(2));
+			// TODO: disable is_empty field generation for this query as it is not needed
+			//Assert.That(query.GetSelectQuery().Select.Columns.Count, Is.EqualTo(1));
+		}
+
+		[ThrowsForProvider(typeof(LinqToDBException), [TestProvName.AllAccess, ProviderName.Firebird25, TestProvName.AllSybase, TestProvName.AllMySql57], ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
+		[Test]
+		public void Issue4160Test2([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var persons = db.CreateLocalTable(Issue4160Person.Data);
+			using var cities  = db.CreateLocalTable(Issue4160City.Data);
+
+			var data = (
+				from pe in persons
+				from cc in cities.Where(cc => cc.Code == pe.Code).Take(1).DefaultIfEmpty()
+				select new
+				{
+					Value = cc.Name
+				}).Distinct().ToList();
+
+			Assert.That(data, Has.Count.EqualTo(2));
 		}
 
 		class t_ws_submissions
@@ -3116,5 +3279,205 @@ namespace Tests.Linq
 				return new DoNotExecuteDataReader();
 			}
 		}
+
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSybase, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/2912")]
+		public void Issue2912Test1([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = (from employee in db.Parent
+						  let user = employee.Children.FirstOrDefault()
+						  select user != null ? user.ChildID : 0);
+			query.ToArray();
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/2912")]
+		public void Issue2912Test2([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = (from employee in db.Parent
+						  join x in db.GrandChild on employee.ParentID equals x.ParentID into y
+						  from names in y.DefaultIfEmpty()
+						  join x2 in db.Parent on employee.ParentID equals x2.ParentID into y2
+						  from user in y2.DefaultIfEmpty()
+						  select user.ParentID);
+			query.ToArray();
+		}
+
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSybase, ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/2912")]
+		public void Issue2912Test3([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query = (from employee in db.Parent
+						 join x in db.GrandChild on employee.ParentID equals x.ParentID into y
+						  from names in y.DefaultIfEmpty()
+						  let user = employee.Children.FirstOrDefault()
+						  select user != null ? user.ChildID : 0);
+			query.ToArray();
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/3311")]
+		public void Issue3311Test1([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query =
+				from x in db.GetTable<Person>()
+				from apply in db.SelectQuery(() => Sql.AsSql(x.ID + 1))
+				select apply;
+
+			query.ToArray();
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/3311")]
+		public void Issue3311Test2([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var query =
+				from x in db.GetTable<Person>()
+				from apply in db.SelectQuery(() => Sql.AsSql(x.ID + 1)).DefaultIfEmpty()
+				select apply;
+
+			query.ToArray();
+		}
+
+		[ThrowsForProvider(typeof(LinqToDBException), providers: [TestProvName.AllSQLite, TestProvName.AllAccess, TestProvName.AllDB2, TestProvName.AllFirebirdLess4, TestProvName.AllInformix, TestProvName.AllMariaDB, TestProvName.AllMySql57, TestProvName.AllOracle11, TestProvName.AllSybase], ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
+		[ThrowsForProvider(typeof(LinqToDBException), providers: [TestProvName.AllClickHouse], ErrorMessage = ErrorHelper.Error_Correlated_Subqueries)]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/3311")]
+		public void Issue3311Test3([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			(from u in db.Person
+			 from x in (from r in db.SelectQuery(() => 1)
+						from l in db.Patient.LeftJoin(l => l.PersonID == u.ID)
+						select l.PersonID).AsSubQuery()
+			 select new { u.ID, x, }
+			).ToList();
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/3560")]
+		public void Issue3560Test1([DataSources(false, TestProvName.AllClickHouse)] string context, [Values] CompareNulls compareNulls)
+		{
+			using var db = GetDataConnection(context, o => o.UseCompareNulls(compareNulls));
+
+			var query = (from p1 in db.Person
+						 join p2 in db.Person on new { p1.MiddleName } equals new { p2.MiddleName }
+						 select new { p1, p2 });
+
+			query.ToArray();
+
+			var isNullCount = db.LastQuery!.Split(["IS NULL"], StringSplitOptions.None).Length - 1;
+			Assert.That(isNullCount, Is.EqualTo(compareNulls == CompareNulls.LikeSql ? 0 : 2));
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/3560")]
+		public void Issue3560Test2([DataSources(false, TestProvName.AllClickHouse, TestProvName.AllMySql)] string context, [Values] CompareNulls compareNulls)
+		{
+			using var db = GetDataConnection(context, o => o.UseCompareNulls(compareNulls));
+
+			// null + str => str
+			var query = (from p1 in db.Person
+						 join p2 in db.Person on p1.MiddleName equals p2.MiddleName + " Jr."
+						 select new { p1, p2 });
+			query.ToArray();
+
+			var isNullCount = db.LastQuery!.Split(["IS NULL"], StringSplitOptions.None).Length - 1;
+			Assert.Multiple(() =>
+			{
+				Assert.That(isNullCount, Is.EqualTo(0));
+				Assert.That(db.LastQuery, Does.Contain(" Jr."));
+			});
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/3560")]
+		public void Issue3560Test3([DataSources(false, TestProvName.AllClickHouse)] string context, [Values] CompareNulls compareNulls)
+		{
+			using var db = GetDataConnection(context, o => o.UseCompareNulls(compareNulls));
+
+			var query = (from p1 in db.Parent
+						 join p2 in db.Parent on new { p1.Value1 } equals new { p2.Value1 }
+						 select new { p1, p2 });
+			query.ToArray();
+
+			var isNullCount = db.LastQuery!.Split(["IS NULL"], StringSplitOptions.None).Length - 1;
+			Assert.That(isNullCount, Is.EqualTo(compareNulls == CompareNulls.LikeSql ? 0 : 2));
+		}
+
+		[ActiveIssue]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/3560")]
+		public void Issue3560Test4([DataSources(false, TestProvName.AllClickHouse)] string context, [Values] CompareNulls compareNulls)
+		{
+			using var db = GetDataConnection(context, o => o.UseCompareNulls(compareNulls));
+
+			// null + int => null
+			var query = (from p1 in db.Parent
+						 join p2 in db.Parent on p1.Value1 equals p2.Value1 + 321
+						 select new { p1, p2 });
+			query.ToArray();
+
+			var isNullCount = db.LastQuery!.Split(["IS NULL"], StringSplitOptions.None).Length - 1;
+			Assert.Multiple(() =>
+			{
+				Assert.That(isNullCount, Is.EqualTo(compareNulls == CompareNulls.LikeSql ? 0 : 2));
+				Assert.That(db.LastQuery, Does.Contain(321));
+			});
+		}
+
+		#region Issue 4714
+		public class YearMap
+		{
+			public DateTime StartDate { get; set; }
+			public DateTime EndDate { get; set; }
+			public int Year { get; set; }
+		}
+
+		public class Sample
+		{
+			public int SampleId { get; set; }
+		}
+
+		public class Source
+		{
+			public int Key1 { get; set; }
+			public int Key2 { get; set; }
+		}
+
+		public class SelectionMap
+		{
+			public int Key1 { get; set; }
+			public int Key2 { get; set; }
+			public decimal SelectionProperty { get; set; }
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4714")]
+		public void Issue4714Test([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var sampleTable = db.CreateLocalTable<Sample>();
+			using var sourceTable = db.CreateLocalTable<Source>();
+			using var selectionMap = db.CreateLocalTable<SelectionMap>();
+			using var yearTable = db.CreateLocalTable<YearMap>();
+
+			var sampleIds = sampleTable.Select(entity => entity.SampleId);
+
+			var sourcesBySelection = sourceTable
+				.InnerJoin(selectionMap,
+					(source, map) => source.Key1 == map.Key1 && source.Key2 == map.Key2,
+					(source, map) => map.SelectionProperty)
+				.CrossJoin(sampleIds, (selection, id) => new { Selection = selection, Id = id });
+
+			var failure = yearTable
+				.SelectMany(
+					year => sourcesBySelection,
+					(year, source) => new { source.Id, year.Year, year.StartDate, year.EndDate })
+				.ToList();
+		}
+		#endregion
 	}
 }

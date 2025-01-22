@@ -20,11 +20,10 @@ namespace LinqToDB.DataProvider.SqlCe
 
 		public override SqlStatement TransformStatement(SqlStatement statement, DataOptions dataOptions, MappingSchema mappingSchema)
 		{
-			// This function mutates statement which is allowed only in this place
-			CorrectSkipAndColumns(statement);
+			statement = base.TransformStatement(statement, dataOptions, mappingSchema);
 
 			// This function mutates statement which is allowed only in this place
-			CorrectInsertParameters(statement);
+			CorrectSkipAndColumns(statement);
 
 			CorrectFunctionParameters(statement, dataOptions);
 
@@ -92,26 +91,6 @@ namespace LinqToDB.DataProvider.SqlCe
 			return newStatement;
 		}
 
-		void CorrectInsertParameters(SqlStatement statement)
-		{
-			//SlqCe do not support parameters in columns for insert
-			//
-			if (statement.IsInsert())
-			{
-				var query = statement.SelectQuery;
-				if (query != null)
-				{
-					foreach (var column in query.Select.Columns)
-					{
-						if (column.Expression is SqlParameter parameter)
-						{
-							parameter.IsQueryParameter = false;
-						}
-					}
-				}
-			}
-		}
-
 		static void CorrectSkipAndColumns(SqlStatement statement)
 		{
 			statement.Visit(static e =>
@@ -124,10 +103,10 @@ namespace LinqToDB.DataProvider.SqlCe
 
 							if (q.Select.SkipValue != null && q.OrderBy.IsEmpty)
 							{
+								var source = q.Select.From.Tables[0].Source;
 								if (q.Select.Columns.Count == 0)
 								{
-									var source = q.Select.From.Tables[0].Source;
-									var keys   = source.GetKeys(true);
+									var keys = source.GetKeys(true);
 
 									if (keys != null)
 									{
@@ -141,13 +120,21 @@ namespace LinqToDB.DataProvider.SqlCe
 								for (var i = 0; i < q.Select.Columns.Count; i++)
 								{
 									var sqlExpression = q.Select.Columns[i].Expression;
-									if (!QueryHelper.ContainsAggregationOrWindowFunction(sqlExpression))
+
+									if (!QueryHelper.ContainsAggregationOrWindowFunction(sqlExpression) && sqlExpression is not SqlValue)
+									{
 										q.OrderBy.ExprAsc(sqlExpression);
+										break;
+									}
 								}
 
-								if (q.OrderBy.IsEmpty)
+								if (q.OrderBy.IsEmpty && !q.Select.IsDistinct)
 								{
-									throw new LinqToDBException("Order by required for Skip operation.");
+									// https://learn.microsoft.com/en-us/previous-versions/sql/sql-server-2005/ms173288(v=sql.90)
+									// 1. The ORDER BY clause can include items not appearing in the select list
+									// 2. but: for DISTINCT, ORDER BY could contain only selected columns
+									// TODO: could we have anything except SqlTable for CE?
+									q.OrderBy.ExprAsc(((SqlTable)source).Fields[0]);
 								}
 							}
 
@@ -170,16 +157,36 @@ namespace LinqToDB.DataProvider.SqlCe
 
 			statement.Visit(static e =>
 			{
-				if (e.ElementType == QueryElementType.SqlFunction)
+				switch (e.ElementType)
 				{
-					var sqlFunction = (SqlFunction)e;
-					foreach (var parameter in sqlFunction.Parameters)
+					case QueryElementType.SqlFunction:
 					{
-						if (parameter.ElementType == QueryElementType.SqlParameter &&
-						    parameter is SqlParameter sqlParameter)
+						var sqlFunction = (SqlFunction)e;
+						foreach (var parameter in sqlFunction.Parameters)
 						{
-							sqlParameter.IsQueryParameter = false;
+							if (parameter.ElementType == QueryElementType.SqlParameter &&
+							    parameter is SqlParameter sqlParameter)
+							{
+								sqlParameter.IsQueryParameter = false;
+							}
 						}
+
+						break;
+					}
+
+					case QueryElementType.SqlCoalesce:
+					{
+						var sqlCoalesce = (SqlCoalesceExpression)e;
+						foreach (var expression in sqlCoalesce.Expressions)
+						{
+							if (expression.ElementType == QueryElementType.SqlParameter &&
+							    expression is SqlParameter sqlParameter)
+							{
+								sqlParameter.IsQueryParameter = false;
+							}
+						}
+
+						break;
 					}
 				}
 			});
@@ -204,7 +211,7 @@ namespace LinqToDB.DataProvider.SqlCe
 								isTruePredicate.FalseValue, isTruePredicate.WithNull, isTruePredicate.IsNot));
 						query.Select.Columns.Clear();
 
-						return new SqlPredicate.FuncLike(SqlFunction.CreateExists(query));
+						return new SqlPredicate.Exists(false, query);
 					}
 				}
 

@@ -2,6 +2,8 @@
 
 namespace LinqToDB.SqlQuery
 {
+	using Common;
+
 	public static class PredicateExtensions
 	{
 		public static ISqlPredicate MakeNot(this ISqlPredicate predicate)
@@ -31,29 +33,29 @@ namespace LinqToDB.SqlQuery
 			return search.Add(sc);
 		}
 
-		public static SqlSearchCondition AddGreater(this SqlSearchCondition search,  ISqlExpression expr1, ISqlExpression expr2, bool compareNullsAsValues)
+		public static SqlSearchCondition AddGreater(this SqlSearchCondition search,  ISqlExpression expr1, ISqlExpression expr2, CompareNulls compareNulls)
 		{
-			return search.Add(new SqlPredicate.ExprExpr(expr1, SqlPredicate.Operator.Greater, expr2, compareNullsAsValues ? true : null));
+			return search.Add(new SqlPredicate.ExprExpr(expr1, SqlPredicate.Operator.Greater, expr2, compareNulls == CompareNulls.LikeClr ? true : null));
 		}
 
-		public static SqlSearchCondition AddGreaterOrEqual(this SqlSearchCondition search,  ISqlExpression expr1, ISqlExpression expr2, bool compareNullsAsValues)
+		public static SqlSearchCondition AddGreaterOrEqual(this SqlSearchCondition search,  ISqlExpression expr1, ISqlExpression expr2, CompareNulls compareNulls)
 		{
-			return search.Add(new SqlPredicate.ExprExpr(expr1, SqlPredicate.Operator.GreaterOrEqual, expr2, compareNullsAsValues ? true : null));
+			return search.Add(new SqlPredicate.ExprExpr(expr1, SqlPredicate.Operator.GreaterOrEqual, expr2, compareNulls == CompareNulls.LikeClr ? true : null));
 		}
 
-		public static SqlSearchCondition AddLess(this SqlSearchCondition search, ISqlExpression expr1, ISqlExpression expr2, bool compareNullsAsValues)
+		public static SqlSearchCondition AddLess(this SqlSearchCondition search, ISqlExpression expr1, ISqlExpression expr2, CompareNulls compareNulls)
 		{
-			return search.Add(new SqlPredicate.ExprExpr(expr1, SqlPredicate.Operator.Less, expr2, compareNullsAsValues ? true : null));
+			return search.Add(new SqlPredicate.ExprExpr(expr1, SqlPredicate.Operator.Less, expr2, compareNulls == CompareNulls.LikeClr ? true : null));
 		}
 		
-		public static SqlSearchCondition AddLessOrEqual(this SqlSearchCondition search,  ISqlExpression expr1, ISqlExpression expr2, bool compareNullsAsValues)
+		public static SqlSearchCondition AddLessOrEqual(this SqlSearchCondition search,  ISqlExpression expr1, ISqlExpression expr2, CompareNulls compareNulls)
 		{
-			return search.Add(new SqlPredicate.ExprExpr(expr1, SqlPredicate.Operator.LessOrEqual, expr2, compareNullsAsValues ? true : null));
+			return search.Add(new SqlPredicate.ExprExpr(expr1, SqlPredicate.Operator.LessOrEqual, expr2, compareNulls == CompareNulls.LikeClr ? true : null));
 		}
 
-		public static SqlSearchCondition AddEqual(this SqlSearchCondition search,  ISqlExpression expr1, ISqlExpression expr2, bool compareNullsAsValues)
+		public static SqlSearchCondition AddEqual(this SqlSearchCondition search,  ISqlExpression expr1, ISqlExpression expr2, CompareNulls compareNulls)
 		{
-			return search.Add(new SqlPredicate.ExprExpr(expr1, SqlPredicate.Operator.Equal, expr2, compareNullsAsValues ? true : null));
+			return search.Add(new SqlPredicate.ExprExpr(expr1, SqlPredicate.Operator.Equal, expr2, compareNulls == CompareNulls.LikeClr ? true : null));
 		}
 
 		public static SqlSearchCondition AddIsNull(this SqlSearchCondition search, ISqlExpression expr)
@@ -71,19 +73,19 @@ namespace LinqToDB.SqlQuery
 			return search.Add(new SqlPredicate.IsNull(expr, true));
 		}
 
-		public static SqlSearchCondition AddNotEqual(this SqlSearchCondition search,  ISqlExpression expr1, ISqlExpression expr2, bool compareNullsAsValues)
+		public static SqlSearchCondition AddNotEqual(this SqlSearchCondition search,  ISqlExpression expr1, ISqlExpression expr2, CompareNulls compareNulls)
 		{
-			return search.Add(new SqlPredicate.ExprExpr(expr1, SqlPredicate.Operator.NotEqual, expr2, compareNullsAsValues ? true : null));
+			return search.Add(new SqlPredicate.ExprExpr(expr1, SqlPredicate.Operator.NotEqual, expr2, compareNulls == CompareNulls.LikeClr ? true : null));
 		}
 	
 		public static SqlSearchCondition AddExists(this SqlSearchCondition search, SelectQuery selectQuery, bool isNot = false)
 		{
-			return search.Add(new SqlPredicate.FuncLike(SqlFunction.CreateExists(selectQuery)).MakeNot(isNot));
+			return search.Add(new SqlPredicate.Exists(isNot, selectQuery));
 		}
 	
 		public static SqlSearchCondition AddNotExists(this SqlSearchCondition search, SelectQuery selectQuery)
 		{
-			return search.Add(new SqlPredicate.FuncLike(SqlFunction.CreateExists(selectQuery)).MakeNot());
+			return search.Add(new SqlPredicate.Exists(true, selectQuery));
 		}
 
 		public static SqlSearchCondition AddNot(this SqlSearchCondition search, ISqlExpression expression)

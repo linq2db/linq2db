@@ -6,14 +6,13 @@ namespace LinqToDB.Linq.Builder
 	using LinqToDB.Expressions;
 	using Reflection;
 
+	[BuildsMethodCall("Distinct", nameof(LinqExtensions.SelectDistinct))]
 	sealed class DistinctBuilder : MethodCallBuilder
 	{
 		static readonly MethodInfo[] _supportedMethods = { Methods.Queryable.Distinct, Methods.Enumerable.Distinct, Methods.LinqToDB.SelectDistinct };
 
-		protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
-		{
-			return methodCall.IsSameGenericMethod(_supportedMethods);
-		}
+		public static bool CanBuildMethod(MethodCallExpression call, BuildInfo info, ExpressionBuilder builder)
+			=> call.IsSameGenericMethod(_supportedMethods);
 
 		protected override BuildSequenceResult BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
@@ -43,7 +42,14 @@ namespace LinqToDB.Linq.Builder
 			else
 			{
 				// create all columns
-				var sqlExpr = builder.BuildSqlExpression(outerSubqueryContext, new ContextRefExpression(methodCall.Method.GetGenericArguments()[0], subQueryContext), buildInfo.GetFlags());
+				var sqlExpr = builder.BuildSqlExpression(
+					outerSubqueryContext,
+					new ContextRefExpression(
+						methodCall.Method.GetGenericArguments()[0],
+						subQueryContext
+					)
+				);
+
 				SequenceHelper.EnsureNoErrors(sqlExpr);
 				sqlExpr = builder.UpdateNesting(outerSubqueryContext, sqlExpr);
 			}
@@ -68,14 +74,14 @@ namespace LinqToDB.Linq.Builder
 					return corrected;
 
 				Expression result;
-				if (flags.IsExtractProjection())
+				if (flags.IsSql() || flags.IsExpression())
 				{
-					result = Builder.MakeExpression(Context, corrected, flags);
+					result = Builder.BuildSqlExpression(Context, corrected);
+					result = Builder.UpdateNesting(Context, result);
 				}
 				else
 				{
-					result = Builder.BuildSqlExpression(Context, corrected, flags.SqlFlag());
-					result = Builder.UpdateNesting(Context, result);
+					result = Builder.BuildExpression(Context, corrected);
 				}
 
 				return result;

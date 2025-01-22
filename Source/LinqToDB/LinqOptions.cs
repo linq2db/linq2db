@@ -1,4 +1,5 @@
 ﻿using System;
+using System.ComponentModel;
 using System.Linq.Expressions;
 
 namespace LinqToDB
@@ -17,7 +18,7 @@ namespace LinqToDB
 	/// <param name="IgnoreEmptyUpdate">
 	/// Controls behavior of linq2db when there is no updateable fields in Update query:
 	/// - if <c>true</c> - query not executed and Update operation returns 0 as number of affected records;
-	/// - if <c>false</c> - <see cref="LinqException"/> will be thrown.
+	/// - if <c>false</c> - <see cref="LinqToDBException"/> will be thrown.
 	/// Default value: <c>false</c>.
 	/// </param>
 	/// <param name="GenerateExpressionTest">
@@ -47,11 +48,16 @@ namespace LinqToDB
 	/// - removes left joins if joined table is not used in query.
 	/// Default value: <c>true</c>.
 	/// </param>
-	/// <param name="CompareNullsAsValues">
+	/// <param name="CompareNulls">
 	/// <summary>
-	/// If set to true nullable fields would be checked for IS NULL in Equal/NotEqual comparisons.
+	/// If set to <see cref="CompareNulls.LikeClr" /> nullable fields would be checked for <c>IS NULL</c> in Equal/NotEqual comparisons.
+	/// If set to <see cref="CompareNulls.LikeSql" /> comparisons are compiled straight to equivalent SQL operators, 
+	/// which consider nulls values as not equal.
+	/// <see cref="CompareNulls.LikeSqlExceptParameters" /> is a backward compatible option that works mostly as <see cref="CompareNulls.LikeSql" />, 
+	/// but sniffs parameters value and changes = into <c>IS NULL</c> when parameters are null.
+	/// Comparisons to literal null are always compiled into <c>IS NULL</c>.
 	/// This affects: Equal, NotEqual, Not Contains
-	/// Default value: <c>true</c>.
+	/// Default value: <see cref="CompareNulls.LikeClr" />.
 	/// </summary>
 	/// <example>
 	/// <code>
@@ -70,7 +76,7 @@ namespace LinqToDB
 	/// db.MyEntity.Where(e => ! filter.Contains(e.Value))
 	/// </code>
 	///
-	/// Would be converted to next queries:
+	/// Would be converted to next queries under <see cref="CompareNulls.LikeClr" />:
 	/// <code>
 	/// SELECT Value FROM MyEntity WHERE Value IS NULL OR Value != 10
 	///
@@ -86,7 +92,7 @@ namespace LinqToDB
 	/// <summary>
 	/// Controls behavior of LINQ query, which ends with GroupBy call.
 	/// - if <c>true</c> - <seealso cref="LinqToDBException"/> will be thrown for such queries;
-	/// - if <c>false</c> - behavior is controlled by <see cref="PreloadGroups"/> option.
+	/// - if <c>false</c> - eager loading used.
 	/// Default value: <c>true</c>.
 	/// </summary>
 	/// <remarks>
@@ -148,21 +154,27 @@ namespace LinqToDB
 	/// </param>
 	public sealed record LinqOptions
 	(
-		bool      PreloadGroups           = false,
-		bool      IgnoreEmptyUpdate       = false,
-		bool      GenerateExpressionTest  = false,
-		bool      TraceMapperExpression   = false,
-		bool      DoNotClearOrderBys      = false,
-		bool      OptimizeJoins           = true,
-		bool      CompareNullsAsValues    = true,
-		bool      GuardGrouping           = true,
-		bool      DisableQueryCache       = false,
-		TimeSpan? CacheSlidingExpiration  = default,
-		bool      PreferApply             = true,
-		bool      KeepDistinctOrdered     = true,
-		bool      ParameterizeTakeSkip    = true,
-		bool      EnableContextSchemaEdit = false,
-		bool      PreferExistsForScalar   = default
+		// TODO: Remove in v7
+		[property: Obsolete("This API doesn't have effect anymore and will be removed in version 7"), EditorBrowsable(EditorBrowsableState.Never)]
+		bool         PreloadGroups           = false,
+		bool         IgnoreEmptyUpdate       = false,
+		bool         GenerateExpressionTest  = false,
+		bool         TraceMapperExpression   = false,
+		bool         DoNotClearOrderBys      = false,
+		bool         OptimizeJoins           = true,
+		CompareNulls CompareNulls            = CompareNulls.LikeClr,
+		bool         GuardGrouping           = true,
+		bool         DisableQueryCache       = false,
+		TimeSpan?    CacheSlidingExpiration  = default,
+		// TODO: Remove in v7
+		[property: Obsolete("This API doesn't have effect anymore and will be removed in version 7"), EditorBrowsable(EditorBrowsableState.Never)]
+		bool         PreferApply             = true,
+		// TODO: Remove in v7
+		[property: Obsolete("This API doesn't have effect anymore and will be removed in version 7"), EditorBrowsable(EditorBrowsableState.Never)]
+		bool         KeepDistinctOrdered     = true,
+		bool         ParameterizeTakeSkip    = true,
+		bool         EnableContextSchemaEdit = false,
+		bool         PreferExistsForScalar   = default
 		// If you add another parameter here, don't forget to update
 		// LinqOptions copy constructor and IConfigurationID.ConfigurationID.
 	)
@@ -174,18 +186,15 @@ namespace LinqToDB
 
 		LinqOptions(LinqOptions original)
 		{
-			PreloadGroups           = original.PreloadGroups;
 			IgnoreEmptyUpdate       = original.IgnoreEmptyUpdate;
 			GenerateExpressionTest  = original.GenerateExpressionTest;
 			TraceMapperExpression   = original.TraceMapperExpression;
 			DoNotClearOrderBys      = original.DoNotClearOrderBys;
 			OptimizeJoins           = original.OptimizeJoins;
-			CompareNullsAsValues    = original.CompareNullsAsValues;
+			CompareNulls            = original.CompareNulls;
 			GuardGrouping           = original.GuardGrouping;
 			DisableQueryCache       = original.DisableQueryCache;
 			CacheSlidingExpiration  = original.CacheSlidingExpiration;
-			PreferApply             = original.PreferApply;
-			KeepDistinctOrdered     = original.KeepDistinctOrdered;
 			ParameterizeTakeSkip    = original.ParameterizeTakeSkip;
 			EnableContextSchemaEdit = original.EnableContextSchemaEdit;
 			PreferExistsForScalar   = original.PreferExistsForScalar;
@@ -200,18 +209,15 @@ namespace LinqToDB
 				{
 					using var idBuilder = new IdentifierBuilder();
 					_configurationID = idBuilder
-						.Add(PreloadGroups)
 						.Add(IgnoreEmptyUpdate)
 						.Add(GenerateExpressionTest)
 						.Add(TraceMapperExpression)
 						.Add(DoNotClearOrderBys)
 						.Add(OptimizeJoins)
-						.Add(CompareNullsAsValues)
+						.Add((int)CompareNulls)
 						.Add(GuardGrouping)
 						.Add(DisableQueryCache)
 						.Add(CacheSlidingExpiration)
-						.Add(PreferApply)
-						.Add(KeepDistinctOrdered)
 						.Add(ParameterizeTakeSkip)
 						.Add(EnableContextSchemaEdit)
 						.Add(PreferExistsForScalar)

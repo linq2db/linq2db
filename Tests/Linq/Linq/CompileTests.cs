@@ -5,6 +5,7 @@ using System.Linq.Expressions;
 using System.Threading.Tasks;
 
 using LinqToDB;
+using LinqToDB.Tools.EntityServices;
 
 using NUnit.Framework;
 
@@ -162,8 +163,6 @@ namespace Tests.Linq
 			}
 		}
 
-
-		[ActiveIssue("https://github.com/DarkWanderer/ClickHouse.Client/issues/153 HttpIOException : The response ended prematurely", Configuration = ProviderName.ClickHouseClient)]
 		[Test, Order(100)]
 		public void ConcurrentTestWithOptmization([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{
@@ -584,6 +583,65 @@ namespace Tests.Linq
 					Assert.That(await query(db, -1), Is.EqualTo(null));
 				});
 			}
+		}
+
+		[ActiveIssue]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4365")]
+		public void IDataContext_CompiledQueryTest_AsList([DataSources(false)] string context)
+		{
+			using var db  = new TestDataConnection(context);
+			using var map = new IdentityMap(db);
+
+			var query = CompiledQuery.Compile(static (TestDataConnection db) => db.Person.Where(p => p.ID == 1).ToList());
+
+			var result1 = query(db);
+			var result2 = query(db);
+
+			Assert.That(result2[0], Is.SameAs(result1[0]));
+		}
+
+		[ActiveIssue]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4365")]
+		public void CustomContext_CompiledQueryCustomTest_AsList([DataSources(false)] string context)
+		{
+			using var db  = new TestDataCustomConnection(context);
+			using var map = new IdentityMap(db);
+
+			var query = CompiledQuery.Compile(static (TestDataCustomConnection db) => db.Person.Where(p => p.ID == 1).ToList());
+
+			var result1 = query(db);
+			var result2 = query(db);
+
+			Assert.That(result2[0], Is.SameAs(result1[0]));
+		}
+
+		[Test]
+		public void IDataContext_CompiledQueryTest([DataSources(false)] string context)
+		{
+			using var db  = new TestDataConnection(context);
+			using var map = new IdentityMap(db);
+
+			var query = CompiledQuery.Compile(static (TestDataConnection db) => db.Person.Where(p => p.ID == 1));
+
+			var result1 = query(db).ToList();
+			var result2 = query(db).ToList();
+
+			Assert.That(result2[0], Is.SameAs(result1[0]));
+		}
+
+		[ActiveIssue]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4365")]
+		public void CustomContext_CompiledQueryCustomTest([DataSources(false)] string context)
+		{
+			using var db  = new TestDataCustomConnection(context);
+			using var map = new IdentityMap(db);
+
+			var query = CompiledQuery.Compile(static (TestDataCustomConnection db) => db.Person.Where(p => p.ID == 1));
+
+			var result1 = query(db).ToList();
+			var result2 = query(db).ToList();
+
+			Assert.That(result2[0], Is.SameAs(result1[0]));
 		}
 	}
 }

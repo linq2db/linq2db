@@ -1,5 +1,5 @@
 ﻿using System.Collections.Generic;
-using System.Linq;
+
 using JetBrains.Annotations;
 
 namespace LinqToDB.DataProvider.Oracle
@@ -7,30 +7,24 @@ namespace LinqToDB.DataProvider.Oracle
 	using Configuration;
 
 	[UsedImplicitly]
-	sealed class OracleFactory : IDataProviderFactory
+	sealed class OracleFactory : DataProviderFactoryBase
 	{
-		IDataProvider IDataProviderFactory.GetDataProvider(IEnumerable<NamedValue> attributes)
+		public override IDataProvider GetDataProvider(IEnumerable<NamedValue> attributes)
 		{
-			string? version      = null;
-			string? assemblyName = null;
-
-			foreach (var attr in attributes)
+			var dialect = GetVersion(attributes) switch
 			{
-				if (attr.Name == "version" && version == null)
-					version = attr.Value;
-				else if (attr.Name == "assemblyName" && assemblyName == null)
-					assemblyName = attr.Value;
-			}
+				"11" => OracleVersion.v11,
+				"12" => OracleVersion.v12,
+				_    => OracleVersion.AutoDetect
+			};
 
-			var dialect = OracleVersion.v12;
-			if (version?.Contains("11") == true)
-				dialect = OracleVersion.v11;
-
-			var provider = OracleProvider.Managed;
-			if (assemblyName == OracleProviderAdapter.DevartAssemblyName)
-				provider = OracleProvider.Devart;
-			else if (assemblyName == OracleProviderAdapter.NativeAssemblyName)
-				provider = OracleProvider.Native;
+			var provider = GetAssemblyName(attributes) switch
+			{
+				OracleProviderAdapter.DevartAssemblyName  => OracleProvider.Devart,
+				OracleProviderAdapter.NativeAssemblyName  => OracleProvider.Native,
+				OracleProviderAdapter.ManagedAssemblyName => OracleProvider.Managed,
+				_                                         => OracleProvider.AutoDetect
+			};
 
 			return OracleTools.GetDataProvider(dialect, provider);
 		}

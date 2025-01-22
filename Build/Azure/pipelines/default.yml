@@ -1,13 +1,5 @@
 variables:
   - template: templates/build-vars.yml
-  - name: artifact_nugets
-    value: nugets
-  - name: artifact_linq2db_binaries
-    value: linq2db_binaries
-  - name: artifact_linq2db_tools_binaries
-    value: linq2db_tools_binaries
-  - name: artifact_linq2db_extensions_binaries
-    value: linq2db_extensions_binaries
 
 # build on commits to important branches: 'release', 'master'
 trigger:
@@ -29,8 +21,11 @@ stages:
 ##############
   - template: templates/build-job.yml
     parameters:
-      for_nuget: true
-      for_tests: eq(variables['System.PullRequest.TargetBranch'], variables['release_branch'])
+      with_nugets: true
+      with_examples: true
+      with_tests: eq(variables['System.PullRequest.TargetBranch'], variables['release_branch'])
+      with_api_analyzers: eq(variables['System.PullRequest.TargetBranch'], variables['release_branch'])
+      with_analyzers: true
 
 #############
 # NUGET JOB #
@@ -45,7 +40,7 @@ stages:
   - template: templates/test-matrix.yml
     parameters:
       enabled: and(eq(variables['System.PullRequest.TargetBranch'], variables['release_branch']), succeeded())
-      experimental: false
       with_baselines: true
-      mac_enabled: and(eq(variables['System.PullRequest.TargetBranch'], variables['release_branch']), succeeded()) # enable macos testing only for release
+      mac_enabled: false
+      full_run: true
       db_filter: '[all][metrics]'

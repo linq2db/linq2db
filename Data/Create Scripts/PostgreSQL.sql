@@ -698,3 +698,67 @@ CREATE TABLE "TestMergeIdentity"
 	"Field"  INT NULL
 )
 GO
+CREATE OR REPLACE FUNCTION overloads(input1 integer)
+ RETURNS integer
+ LANGUAGE sql
+AS $function$
+   SELECT input1;
+$function$
+;
+
+CREATE OR REPLACE FUNCTION overloads(input1 integer, input2 smallint)
+ RETURNS smallint
+ LANGUAGE sql
+AS $function$
+   SELECT input2;
+$function$
+;
+
+CREATE OR REPLACE FUNCTION overloads(input1 integer, input2 integer)
+ RETURNS smallint
+ LANGUAGE sql
+AS $function$
+   SELECT overloads(input2, input1::smallint);
+$function$
+;
+
+-- SKIP PostgreSQL.9.2 BEGIN
+-- SKIP PostgreSQL.9.3 BEGIN
+-- SKIP PostgreSQL.9.5 BEGIN
+
+DROP TABLE IF EXISTS multitenant_table;
+
+-- Create the main table
+CREATE TABLE multitenant_table (
+    TenantId UUID NOT NULL,
+    Id UUID NOT NULL,
+    Name VARCHAR(100),
+    Description TEXT,
+    CreatedAt TIMESTAMP NOT NULL DEFAULT NOW()
+-- SKIP PostgreSQL.10 BEGIN
+	, PRIMARY KEY (TenantId, Id)
+-- SKIP PostgreSQL.10 END
+) PARTITION BY LIST (TenantId);
+
+-- Create partitions
+CREATE TABLE multitenant_table_tenant1 PARTITION OF multitenant_table
+    FOR VALUES IN ('11111111-1111-1111-1111-111111111111');
+
+CREATE TABLE multitenant_table_tenant2 PARTITION OF multitenant_table
+    FOR VALUES IN ('22222222-2222-2222-2222-222222222222');
+
+CREATE TABLE multitenant_table_tenant3 PARTITION OF multitenant_table
+    FOR VALUES IN ('33333333-3333-3333-3333-333333333333');
+
+-- Insert sample data
+INSERT INTO multitenant_table (TenantId, Id, Name, Description, CreatedAt) VALUES
+('11111111-1111-1111-1111-111111111111', 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', 'Tenant1 Record1', 'Description for Tenant1 Record1', NOW()),
+('11111111-1111-1111-1111-111111111111', 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb', 'Tenant1 Record2', 'Description for Tenant1 Record2', NOW()),
+('22222222-2222-2222-2222-222222222222', 'cccccccc-cccc-cccc-cccc-cccccccccccc', 'Tenant2 Record1', 'Description for Tenant2 Record1', NOW()),
+('22222222-2222-2222-2222-222222222222', 'dddddddd-dddd-dddd-dddd-dddddddddddd', 'Tenant2 Record2', 'Description for Tenant2 Record2', NOW()),
+('33333333-3333-3333-3333-333333333333', 'eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee', 'Tenant3 Record1', 'Description for Tenant3 Record1', NOW()),
+('33333333-3333-3333-3333-333333333333', 'ffffffff-ffff-ffff-ffff-ffffffffffff', 'Tenant3 Record2', 'Description for Tenant3 Record2', NOW());
+
+-- SKIP PostgreSQL.9.2 END
+-- SKIP PostgreSQL.9.3 END
+-- SKIP PostgreSQL.9.5 END

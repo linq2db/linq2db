@@ -39,7 +39,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			var identityField = insertClause.Into!.GetIdentityField();
 
 			if (identityField == null)
-				throw new SqlException("Identity field must be defined for '{0}'.", insertClause.Into.NameForLogging);
+				throw new LinqToDBException($"Identity field must be defined for '{insertClause.Into.NameForLogging}'.");
 
 			AppendIndent().AppendLine("RETURNING ");
 			AppendIndent().Append('\t');
@@ -141,13 +141,6 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			return ReservedWords.IsReserved(word, ProviderName.PostgreSQL);
 		}
 
-		[Obsolete("Use PostgreSQLOptions.Default.IdentifierQuoteMode instead.")]
-		public static PostgreSQLIdentifierQuoteMode IdentifierQuoteMode
-		{
-			get => PostgreSQLOptions.Default.IdentifierQuoteMode;
-			set => PostgreSQLOptions.Default = PostgreSQLOptions.Default with { IdentifierQuoteMode = value };
-		}
-
 		public override StringBuilder Convert(StringBuilder sb, string value, ConvertType convertType)
 		{
 			// TODO: implement better quotation logic
@@ -156,6 +149,9 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			switch (convertType)
 			{
 				case ConvertType.NameToQueryField     :
+					if (value == PseudoFunctions.MERGE_ACTION)
+						return sb.Append("merge_action()");
+					goto case ConvertType.NameToQueryFieldAlias;
 				case ConvertType.NameToQueryFieldAlias:
 				case ConvertType.NameToQueryTable     :
 				case ConvertType.NameToProcedure      :
@@ -181,15 +177,13 @@ namespace LinqToDB.DataProvider.PostgreSQL
 #if NET8_0_OR_GREATER
 							|| value.Skip(1).Any(c => !char.IsLetter(c) && !char.IsAsciiDigit(c) && c is not '_' and not '$')
 #else
-							|| value.Skip(1).Any(c => !char.IsLetter(c) && !(c >= '0' && c <= '9') && c is not '_' and not '$')
+							|| value.Skip(1).Any(c => !char.IsLetter(c) && c is (< '0' or > '9') and not '_' and not '$')
 #endif
 							;
 
 						if (quote)
-						{
 							// don't forget to duplicate quotes
 							return sb.Append('"').Append(value.Replace("\"", "\"\"")).Append('"');
-						}
 					}
 
 					break;
@@ -279,14 +273,12 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			// so we can ignore database name to avoid error from server
 			if (name.Database != null && schemaName != null)
 			{
-				(escape ? Convert(sb, name.Database, ConvertType.NameToDatabase) : sb.Append(name.Database))
-					.Append('.');
+				(escape ? Convert(sb, name.Database, ConvertType.NameToDatabase) : sb.Append(name.Database)).Append('.');
 			}
 
 			if (schemaName != null)
 			{
-				(escape ? Convert(sb, schemaName, ConvertType.NameToSchema) : sb.Append(schemaName))
-					.Append('.');
+				(escape ? Convert(sb, schemaName, ConvertType.NameToSchema) : sb.Append(schemaName)).Append('.');
 			}
 
 			return escape ? Convert(sb, name.Name, objectType) : sb.Append(name.Name);

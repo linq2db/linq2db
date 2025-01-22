@@ -14,6 +14,7 @@ namespace LinqToDB
 	using Expressions;
 	using Extensions;
 	using Linq;
+	using Expressions.Internal;
 	using Mapping;
 	using SqlQuery;
 
@@ -65,9 +66,7 @@ namespace LinqToDB
 			if (parameters  == null) throw new ArgumentNullException(nameof(parameters));
 
 			if (!typeof(IQueryable<>).IsSameOrParentOf(methodInfo.ReturnType))
-				throw new LinqException(
-					"Method '{0}.{1}' must return type 'IQueryable<{2}>'",
-					methodInfo.Name, methodInfo.DeclaringType!.FullName, typeof(T).FullName);
+				throw new LinqToDBException($"Method '{methodInfo.Name}.{methodInfo.DeclaringType!.FullName}' must return type 'IQueryable<{typeof(T).FullName}>'");
 
 			Expression expr;
 
@@ -742,7 +741,7 @@ namespace LinqToDB
 
 			var ret = await QueryRunner.InsertWithIdentity<T>
 				.QueryAsync(dataContext, obj, columnFilter, tableName: tableName, serverName: serverName, databaseName: databaseName, schemaName: schemaName, tableOptions: tableOptions, token)
-				.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+				.ConfigureAwait(false);
 			return dataContext.MappingSchema.ChangeTypeTo<int>(ret);
 		}
 
@@ -805,7 +804,7 @@ namespace LinqToDB
 
 			var ret = await QueryRunner.InsertWithIdentity<T>
 				.QueryAsync(dataContext, obj, columnFilter, tableName: tableName, serverName: serverName, databaseName: databaseName, schemaName: schemaName, tableOptions: tableOptions, token)
-				.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+				.ConfigureAwait(false);
 
 			return dataContext.MappingSchema.ChangeTypeTo<long>(ret);
 		}
@@ -869,7 +868,7 @@ namespace LinqToDB
 
 			var ret = await QueryRunner.InsertWithIdentity<T>
 				.QueryAsync(dataContext, obj, columnFilter, tableName: tableName, serverName: serverName, databaseName: databaseName, schemaName: schemaName, tableOptions: tableOptions, token)
-				.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+				.ConfigureAwait(false);
 
 			return dataContext.MappingSchema.ChangeTypeTo<decimal>(ret);
 		}
@@ -1349,7 +1348,7 @@ namespace LinqToDB
 			{
 				await QueryRunner.DropTable<T>
 					.QueryAsync(dataContext, tableName: tableName, serverName: serverName, databaseName: databaseName, schemaName: schemaName, !throwExceptionIfNotExists, tableOptions: tableOptions, token)
-					.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+					.ConfigureAwait(false);
 			}
 			catch when (!throwExceptionIfNotExists ?? tableOptions.HasDropIfExists() || SqlTable.Create<T>(dataContext).TableOptions.HasDropIfExists())
 			{
@@ -1399,7 +1398,7 @@ namespace LinqToDB
 						!throwExceptionIfNotExists,
 						tableOptions.IsSet() ? tableOptions : table.TableOptions,
 						token)
-					.ConfigureAwait(Common.Configuration.ContinueOnCapturedContext);
+					.ConfigureAwait(false);
 			}
 			catch when (!throwExceptionIfNotExists ?? tableOptions.HasDropIfExists() || SqlTable.Create<T>(table.DataContext).TableOptions.HasDropIfExists())
 			{

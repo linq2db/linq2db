@@ -243,7 +243,7 @@ namespace LinqToDB.Linq
 							continue;
 
 						var gtype    = type.Key.MakeGenericType(types);
-						var provider = (IGenericInfoProvider)Activator.CreateInstance(gtype)!;
+						var provider = ActivatorExt.CreateInstance<IGenericInfoProvider>(gtype);
 
 						provider.SetInfo(mappingSchema);
 
@@ -498,11 +498,6 @@ namespace LinqToDB.Linq
 			}
 		}
 
-		interface ISetInfo
-		{
-			void SetInfo();
-		}
-
 		#region Mapping
 
 		private static          Dictionary<string, Dictionary<MemberHelper.MemberInfoWithType, IExpressionInfo>>? _members;
@@ -543,8 +538,6 @@ namespace LinqToDB.Linq
 			{ M(() => "".PadLeft    (0,' ')   ), N(() => L<string?,int,char,string?>       ((string? obj,int  p0,char   p1)           => Sql.PadLeft  (obj, p0, p1))) },
 			{ M(() => "".PadRight   (0)       ), N(() => L<string?,int,string?>            ((string? obj,int  p0)                     => Sql.PadRight (obj, p0, ' '))) },
 			{ M(() => "".PadRight   (0,' ')   ), N(() => L<string?,int,char,string?>       ((string? obj,int  p0,char   p1)           => Sql.PadRight (obj, p0, p1))) },
-			{ M(() => "".Replace    ("","")   ), N(() => L<string?,string?,string?,string?>((string? obj,string? p0,string? p1)       => Sql.Replace  (obj, p0, p1))) },
-			{ M(() => "".Replace    (' ',' ') ), N(() => L<string?,char,char,string?>      ((string? obj,char   p0,char   p1)         => Sql.Replace  (obj, p0, p1))) },
 			{ M(() => "".Trim       ()        ), N(() => L<string?,string?>                ((string? obj)                             => Sql.Trim     (obj))) },
 
 #if NET6_0_OR_GREATER
@@ -988,14 +981,6 @@ namespace LinqToDB.Linq
 
 			#region Math
 
-			{ M(() => Math.Abs    ((decimal)0)), N(() => L<decimal,decimal>((decimal p) => Sql.Abs(p)!.Value )) },
-			{ M(() => Math.Abs    ((double) 0)), N(() => L<double, double> ((double  p) => Sql.Abs(p)!.Value )) },
-			{ M(() => Math.Abs    ((short)  0)), N(() => L<short,  short>  ((short   p) => Sql.Abs(p)!.Value )) },
-			{ M(() => Math.Abs    ((int)    0)), N(() => L<int,    int>    ((int     p) => Sql.Abs(p)!.Value )) },
-			{ M(() => Math.Abs    ((long)   0)), N(() => L<long,    long>  ((long    p) => Sql.Abs(p)!.Value )) },
-			{ M(() => Math.Abs    ((sbyte)  0)), N(() => L<sbyte,  sbyte>  ((sbyte   p) => Sql.Abs(p)!.Value )) },
-			{ M(() => Math.Abs    ((float)  0)), N(() => L<float,  float>  ((float   p) => Sql.Abs(p)!.Value )) },
-
 			{ M(() => Math.Acos   (0)   ),       N(() => L<double,double>       ((double p)          => Sql.Acos   (p)!   .Value )) },
 			{ M(() => Math.Asin   (0)   ),       N(() => L<double,double>       ((double p)          => Sql.Asin   (p)!   .Value )) },
 			{ M(() => Math.Atan   (0)   ),       N(() => L<double,double>       ((double p)          => Sql.Atan   (p)!   .Value )) },
@@ -1013,26 +998,6 @@ namespace LinqToDB.Linq
 
 			{ M(() => Math.Pow        (0,0) ), N(() => L<double,double,double>    ((double x,double y) => Sql.Power(x, y)!.Value )) },
 
-			{ M(() => Sql.Round       (0m)  ), N(() => L<decimal?,decimal?>       ((decimal? d)          => Sql.Round(d, 0))) },
-			{ M(() => Sql.Round       (0.0) ), N(() => L<double?, double?>        ((double?  d)          => Sql.Round(d, 0))) },
-
-			{ M(() => Sql.RoundToEven(0m)   ), N(() => L<decimal?,decimal?>       ((decimal? d)          => d - Sql.Floor(d) == 0.5m && Sql.Floor(d) % 2 == 0? Sql.Floor(d) : Sql.Round(d))) },
-			{ M(() => Sql.RoundToEven(0.0)  ), N(() => L<double?, double?>        ((double?  d)          => d - Sql.Floor(d) == 0.5  && Sql.Floor(d) % 2 == 0? Sql.Floor(d) : Sql.Round(d))) },
-
-			{ M(() => Sql.RoundToEven(0m, 0)), N(() => L<decimal?,int?,decimal?>((decimal? d,int? n) => d * 2 == Sql.Round(d * 2, n) && d != Sql.Round(d, n) ? Sql.Round(d / 2, n) * 2 : Sql.Round(d, n))) },
-			{ M(() => Sql.RoundToEven(0.0,0)), N(() => L<double?, int?,double?> ((double?  d,int? n) => d * 2 == Sql.Round(d * 2, n) && d != Sql.Round(d, n) ? Sql.Round(d / 2, n) * 2 : Sql.Round(d, n))) },
-
-			{ M(() => Math.Round     (0m)   ), N(() => L<decimal,decimal>         ( d    => Sql.RoundToEven(d)!.Value )) },
-			{ M(() => Math.Round     (0.0)  ), N(() => L<double, double>          ( d    => Sql.RoundToEven(d)!.Value )) },
-
-			{ M(() => Math.Round     (0m, 0)), N(() => L<decimal,int,decimal>   ((d,n) => Sql.RoundToEven(d, n)!.Value )) },
-			{ M(() => Math.Round     (0.0,0)), N(() => L<double, int,double>    ((d,n) => Sql.RoundToEven(d, n)!.Value )) },
-
-			{ M(() => Math.Round (0m,    MidpointRounding.ToEven)), N(() => L<decimal,MidpointRounding,decimal>      ((d,  p) => p == MidpointRounding.ToEven ? Sql.RoundToEven(d)!.  Value : Sql.Round(d)!.  Value )) },
-			{ M(() => Math.Round (0.0,   MidpointRounding.ToEven)), N(() => L<double, MidpointRounding,double>       ((d,  p) => p == MidpointRounding.ToEven ? Sql.RoundToEven(d)!.  Value : Sql.Round(d)!.  Value )) },
-
-			{ M(() => Math.Round (0m, 0, MidpointRounding.ToEven)), N(() => L<decimal,int,MidpointRounding,decimal>((d,n,p) => p == MidpointRounding.ToEven ? Sql.RoundToEven(d,n)!.Value : Sql.Round(d,n)!.Value )) },
-			{ M(() => Math.Round (0.0,0, MidpointRounding.ToEven)), N(() => L<double, int,MidpointRounding,double> ((d,n,p) => p == MidpointRounding.ToEven ? Sql.RoundToEven(d,n)!.Value : Sql.Round(d,n)!.Value )) },
 
 			{ M(() => Math.Sign  ((decimal)0)), N(() => L<decimal,int>(p => Sql.Sign(p)!.Value )) },
 			{ M(() => Math.Sign  ((double) 0)), N(() => L<double, int>(p => Sql.Sign(p)!.Value )) },
@@ -1376,30 +1341,9 @@ namespace LinqToDB.Linq
 				}},
 
 				#endregion
-
-				#region ClickHouse
-
-				{ ProviderName.ClickHouse, new Dictionary<MemberHelper.MemberInfoWithType,IExpressionInfo> {
-					{ M(() => DateTime.Now.Date      ), N(() => L<DateTime,DateTime>      ((DateTime obj)       => ClickHouseGetDate(obj)!.Value)) },
-					{ M(() => DateTimeOffset.Now.Date), N(() => L<DateTimeOffset,DateTime>((DateTimeOffset obj) => ClickHouseGetDate(obj)!.Value)) },
-
-					{ M(() => DateTimeOffset.Now.TimeOfDay), N(() => L<DateTimeOffset,TimeSpan>((DateTimeOffset obj) => ClickHouseGetTime(obj)!.Value)) },
-					{ M(() => DateTime.Now.TimeOfDay      ), N(() => L<DateTime,TimeSpan>      ((DateTime obj)       => ClickHouseGetTime(obj)!.Value)) },
-
-					// TODO:
-					// we shouldn't have this mapping, but currently Math.Round -> Sql.RoundToEven mapping ignores expression attribute on Sql.RoundToEven
-					// and maps it to expression
-					{ M(() => Sql.RoundToEven(0m)   ), N(() => L<decimal?,decimal?>     ( v   => ClickHouseRoundToEven(v))) },
-					{ M(() => Sql.RoundToEven(0.0)  ), N(() => L<double?, double?>      ( v   => ClickHouseRoundToEven(v))) },
-					{ M(() => Sql.RoundToEven(0m, 0)), N(() => L<decimal?,int?,decimal?>((v,p)=> ClickHouseRoundToEven(v, p))) },
-					{ M(() => Sql.RoundToEven(0.0,0)), N(() => L<double?, int?,double?> ((v,p)=> ClickHouseRoundToEven(v, p))) },
-
-				}},
-
-				#endregion
 			};
 
-#if DEBUG
+#if BUGCHECK
 
 			foreach (var membersValue in members.Values)
 			{
@@ -1481,11 +1425,6 @@ namespace LinqToDB.Linq
 		public static void MapMember<T1,T2,T3,T4,T5,TR>(string providerName, Type objectType, Expression<Func<T1,T2,T3,T4,T5,TR>> memberInfo, Expression<Func<T1,T2,T3,T4,T5,TR>> expression) { MapMember(providerName, objectType, MemberHelper.GetMemberInfo(memberInfo), expression); }
 		public static void MapMember<T1,T2,T3,T4,T5,TR>(                     Type objectType, Expression<Func<T1,T2,T3,T4,T5,TR>> memberInfo, Expression<Func<T1,T2,T3,T4,T5,TR>> expression) { MapMember("",           objectType, MemberHelper.GetMemberInfo(memberInfo), expression); }
 
-		static MemberHelper.MemberInfoWithType MT<T>(Expression<Func<object>> func)
-		{
-			return NormalizeMemeberInfo(MemberHelper.GetMemberInfoWithType(func));
-		}
-
 		#region Sql specific
 
 		// Missing support for trimChars: Access, SqlCe, SybaseASE
@@ -1498,7 +1437,7 @@ namespace LinqToDB.Linq
 		[Sql.Extension(ProviderName.SqlServer2022 , "RTRIM({0}, {1})"            , ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(RTrimCharactersBuilder))]
 		[Sql.Extension(ProviderName.DB2           , "RTRIM({0}, {1})"            , ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(RTrimCharactersBuilder))]
 		[Sql.Extension(ProviderName.Informix      , "RTRIM({0}, {1})"            , ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(RTrimCharactersBuilder))]
-		[Sql.Extension(ProviderName.Oracle        , "RTRIM({0}, {1})"            , ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(RTrimCharactersBuilder))]
+		[Sql.Extension(ProviderName.Oracle        , "RTRIM({0}, {1})"            , ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(RTrimCharactersBuilder), IsNullable = Sql.IsNullableType.Nullable)]
 		[Sql.Extension(ProviderName.PostgreSQL    , "RTRIM({0}, {1})"            , ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(RTrimCharactersBuilder))]
 		[Sql.Extension(ProviderName.SapHana       , "RTRIM({0}, {1})"            , ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(RTrimCharactersBuilder))]
 		[Sql.Extension(ProviderName.SQLite        , "RTRIM({0}, {1})"            , ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(RTrimCharactersBuilder))]
@@ -1518,7 +1457,7 @@ namespace LinqToDB.Linq
 		[Sql.Extension(ProviderName.SqlServer2022 , "LTRIM({0}, {1})"           , ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(LTrimCharactersBuilder))]
 		[Sql.Extension(ProviderName.DB2           , "LTRIM({0}, {1})"           , ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(LTrimCharactersBuilder))]
 		[Sql.Extension(ProviderName.Informix      , "LTRIM({0}, {1})"           , ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(LTrimCharactersBuilder))]
-		[Sql.Extension(ProviderName.Oracle        , "LTRIM({0}, {1})"           , ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(LTrimCharactersBuilder))]
+		[Sql.Extension(ProviderName.Oracle        , "LTRIM({0}, {1})"           , ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(LTrimCharactersBuilder), IsNullable = Sql.IsNullableType.Nullable)]
 		[Sql.Extension(ProviderName.PostgreSQL    , "LTRIM({0}, {1})"           , ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(LTrimCharactersBuilder))]
 		[Sql.Extension(ProviderName.SapHana       , "LTRIM({0}, {1})"           , ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(LTrimCharactersBuilder))]
 		[Sql.Extension(ProviderName.SQLite        , "LTRIM({0}, {1})"           , ServerSideOnly = false, PreferServerSide = false, BuilderType = typeof(LTrimCharactersBuilder))]
@@ -1775,28 +1714,6 @@ namespace LinqToDB.Linq
 				(DateTime?)null :
 				new DateTime(year.Value, month.Value, day.Value);
 		}
-
-		// ClickHouse
-		//
-		[Sql.Function("toDate32", ServerSideOnly = true, IsNullable = Sql.IsNullableType.IfAnyParameterNullable)]
-		private static DateTime? ClickHouseGetDate(DateTimeOffset? dto) => throw new InvalidOperationException();
-		[Sql.Function("toDate32", ServerSideOnly = true, IsNullable = Sql.IsNullableType.IfAnyParameterNullable)]
-		private static DateTime? ClickHouseGetDate(DateTime?       dt) => throw new InvalidOperationException();
-
-		// :-/
-		[Sql.Expression("toInt64((toUnixTimestamp64Nano(toDateTime64({0}, 7)) - toUnixTimestamp64Nano(toDateTime64(toDate32({0}), 7))) / 100)", ServerSideOnly = true, IsNullable = Sql.IsNullableType.IfAnyParameterNullable, Precedence = SqlQuery.Precedence.Primary)]
-		private static TimeSpan? ClickHouseGetTime(DateTimeOffset? dto) => throw new InvalidOperationException();
-		[Sql.Expression("toInt64((toUnixTimestamp64Nano(toDateTime64({0}, 7)) - toUnixTimestamp64Nano(toDateTime64(toDate32({0}), 7))) / 100)", ServerSideOnly = true, IsNullable = Sql.IsNullableType.IfAnyParameterNullable, Precedence = SqlQuery.Precedence.Primary)]
-		private static TimeSpan? ClickHouseGetTime(DateTime? dt) => throw new InvalidOperationException();
-
-		[Sql.Function("roundBankers", IsNullable = Sql.IsNullableType.SameAsFirstParameter)]
-		private static decimal? ClickHouseRoundToEven(decimal? value) => throw new InvalidOperationException();
-		[Sql.Function("roundBankers", IsNullable = Sql.IsNullableType.SameAsFirstParameter)]
-		private static double? ClickHouseRoundToEven(double? value) => throw new InvalidOperationException();
-		[Sql.Function("roundBankers", IsNullable = Sql.IsNullableType.IfAnyParameterNullable)]
-		private static decimal? ClickHouseRoundToEven(decimal? value, int? precision) => throw new InvalidOperationException();
-		[Sql.Function("roundBankers", IsNullable = Sql.IsNullableType.IfAnyParameterNullable)]
-		private static double? ClickHouseRoundToEven(double? value, int? precision) => throw new InvalidOperationException();
 
 		#endregion
 

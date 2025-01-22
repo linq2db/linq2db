@@ -3,6 +3,7 @@ using System.Linq;
 using System.Threading.Tasks;
 
 using LinqToDB;
+using LinqToDB.Linq;
 
 using NUnit.Framework;
 
@@ -231,9 +232,9 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void SubQueryTest([DataSources(
-			TestProvName.AllAccess, TestProvName.AllInformix, ProviderName.SqlCe,
-			TestProvName.AllSybase, TestProvName.AllSapHana)]
+		[ThrowsForProvider(typeof(LinqToDBException), providers: [ProviderName.SqlCe], ErrorMessage = ErrorHelper.Error_Subquery_in_Column)]
+		[ThrowsForProvider(typeof(LinqToDBException), providers: [TestProvName.AllSybase, TestProvName.AllInformix], ErrorMessage = ErrorHelper.Error_Take_in_Subquery)]
+		public void SubQueryTest([DataSources(TestProvName.AllAccess)]
 			string context)
 		{
 			using (var db = GetDataContext(context))

@@ -4,16 +4,13 @@ using System.Linq.Expressions;
 
 namespace LinqToDB.Linq
 {
+	using Common.Internal;
+
 	sealed class ExpressionQueryImpl<T> : ExpressionQuery<T>
 	{
 		public ExpressionQueryImpl(IDataContext dataContext, Expression? expression)
 		{
 			Init(dataContext, expression);
-		}
-
-		public override string ToString()
-		{
-			return SqlText;
 		}
 	}
 
@@ -22,7 +19,7 @@ namespace LinqToDB.Linq
 		public static IQueryable CreateQuery(Type entityType, IDataContext dataContext, Expression? expression)
 		{
 			var queryType = typeof(ExpressionQueryImpl<>).MakeGenericType(entityType);
-			var query     = (IQueryable)Activator.CreateInstance(queryType, dataContext, expression)!;
+			var query     = ActivatorExt.CreateInstance<IQueryable>(queryType, dataContext, expression);
 			return query;
 		}
 	}

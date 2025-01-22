@@ -20,9 +20,10 @@ namespace Cli.Default.ClickHouse.MySql
 		[Column("smallintDataType"                                          )] public short?  SmallintDataType { get; set; } // Int16
 		[Column("floatDataType"                                             )] public float?  FloatDataType    { get; set; } // Float32
 		[Column("doubleDataType"                                            )] public double? DoubleDataType   { get; set; } // Float64
-		[Column("ncharDataType"                                             )] public byte[]? NcharDataType    { get; set; } // FixedString(20)
-		[Column("char20DataType"                                            )] public byte[]? Char20DataType   { get; set; } // FixedString(20)
+		[Column("ncharDataType"                                             )] public string? NcharDataType    { get; set; } // FixedString(20)
+		[Column("char20DataType"                                            )] public string? Char20DataType   { get; set; } // FixedString(20)
 		[Column("varcharDataType"                                           )] public string? VarcharDataType  { get; set; } // String
-		[Column("charDataType"                                              )] public byte[]? CharDataType     { get; set; } // FixedString(1)
+		[Column("charDataType"                                              )] public char?   CharDataType     { get; set; } // FixedString(1)
+		[Column("bitDataType"                                               )] public ulong?  BitDataType      { get; set; } // UInt64
 	}
 }

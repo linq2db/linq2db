@@ -2,6 +2,7 @@
 using System.Linq;
 
 using LinqToDB;
+using LinqToDB.Common;
 
 using NUnit.Framework;
 
@@ -138,12 +139,13 @@ namespace Tests.Linq
 				where t.Value == null
 				select t);
 
-			AreEqual(
+			//TODO: weird test, we should not check for NULL in this case
+			/*AreEqual(
 				[ data[0] ]
 				,
 				from t in tt
 				where Sql.AsNotNull(t.Value) == null
-				select t);
+				select t);*/
 
 			AreEqual(
 				[ data[1], data[2] ]
@@ -152,12 +154,13 @@ namespace Tests.Linq
 				where t.Value != null
 				select t);
 
-			AreEqual(
+			//TODO: weird test, we should not check for NULL in this case
+			/*AreEqual(
 				[ data[1], data[2] ]
 				,
 				from t in tt
 				where Sql.AsNotNull(t.Value) != null
-				select t);
+				select t);*/
 		}
 
 		[Test]
@@ -228,7 +231,7 @@ namespace Tests.Linq
 				new () { Value = false },
 			};
 
-			using var db = GetDataContext(context, o => o.WithOptions<LinqOptions>(lo => lo with { CompareNullsAsValues = compareNullsAsValues }));
+			using var db = GetDataContext(context, o => o.UseCompareNulls(compareNullsAsValues ? CompareNulls.LikeClr : CompareNulls.LikeSql));
 			using var tt = db.CreateLocalTable(data);
 
 			AreEqual(

@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Linq;
 using System.Threading.Tasks;
+
 using LinqToDB;
 using LinqToDB.Data;
+using LinqToDB.Linq;
 
 using NUnit.Framework;
 
@@ -140,7 +142,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllClickHouse, "Correlated DELETE not supported by ClickHouse")]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllClickHouse, ErrorMessage = ErrorHelper.ClickHouse.Error_CorrelatedDelete)]
 		public void DeleteMany1([DataSources(false)] string context)
 		{
 			using (var db = GetDataContext(context))
@@ -208,7 +210,7 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllClickHouse, "Correlated DELETE not supported by ClickHouse")]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllClickHouse, ErrorMessage = ErrorHelper.ClickHouse.Error_CorrelatedDelete)]
 		[Test]
 		public void DeleteMany3([DataSources] string context)
 		{
@@ -245,7 +247,7 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/2549")]
 		public void DeleteTakeNotOrdered(
 			[DataSources(
 			TestProvName.AllAccess,
@@ -281,8 +283,8 @@ namespace Tests.xUpdate
 			}
 		}
 
-		[Test]
-		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSybase, "The Sybase ASE does not support the DELETE statement with the TOP + ORDER BY clause.")]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/2549")]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSybase, ErrorMessage = ErrorHelper.Sybase.Error_DeleteWithTopOrderBy)]
 		public void DeleteTakeOrdered([DataSources(
 			TestProvName.AllAccess,
 			TestProvName.AllClickHouse,
@@ -327,7 +329,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSybase, "The Sybase ASE does not support the DELETE statement with the TOP + ORDER BY clause.")]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSybase, ErrorMessage = ErrorHelper.Sybase.Error_DeleteWithTopOrderBy)]
 		public void DeleteSkipTakeOrdered([DataSources(
 			TestProvName.AllAccess,
 			TestProvName.AllClickHouse,
@@ -374,7 +376,7 @@ namespace Tests.xUpdate
 		}
 
 		[Test]
-		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSybase, "The Sybase ASE does not support the DELETE statement with the SKIP clause.")]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSybase, ErrorMessage = ErrorHelper.Sybase.Error_DeleteWithSkip)]
 		public void DeleteSkipTakeNotOrdered([DataSources(
 			TestProvName.AllAccess,
 			TestProvName.AllClickHouse,
@@ -603,6 +605,66 @@ namespace Tests.xUpdate
 					throw;
 				}
 			}
+		}
+
+		// based on TestDeleteFrom test in EFCore tests project, it should be reenabled after fix
+		[ActiveIssue(Configurations = [TestProvName.AllClickHouse, TestProvName.AllFirebird, TestProvName.AllInformix, TestProvName.AllMySql, TestProvName.AllOracle, TestProvName.AllPostgreSQL, TestProvName.AllSapHana, ProviderName.SqlCe, TestProvName.AllSQLite])]
+		[ThrowsForProvider(typeof(LinqToDBException), TestProvName.AllSybase, ErrorMessage = ErrorHelper.Error_OrderBy_in_Derived)]
+		[Test]
+		public void DeleteFromWithTake([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var _ = new RestoreBaseTables(db);
+
+			db.Insert(new Parent() { ParentID = 1001 });
+			db.Insert(new Parent() { ParentID = 1002 });
+			db.Insert(new Parent() { ParentID = 1003 });
+
+			var query = db.Parent.OrderBy(c => c.ParentID).Where(c => c.ParentID > 1000).Take(2);
+
+			// note how query used twice
+			var cnt = query.Where(p => query.Select(c => c.ParentID).Contains(p.ParentID)).Delete();
+
+			var left = db.Parent.Count(c => c.ParentID > 1000);
+			var deleted = db.Parent.Delete(c => c.ParentID == 1003) == 1;
+
+			Assert.Multiple(() =>
+			{
+				if (!context.IsAnyOf(TestProvName.AllClickHouse))
+					Assert.That(cnt, Is.EqualTo(2));
+				Assert.That(left, Is.EqualTo(1));
+				if (!context.IsAnyOf(TestProvName.AllClickHouse))
+					Assert.That(deleted, Is.True);
+			});
+		}
+
+		[ActiveIssue(Configurations = [TestProvName.AllClickHouse, TestProvName.AllFirebird, TestProvName.AllInformix, TestProvName.AllMySql, TestProvName.AllOracle, TestProvName.AllPostgreSQL, TestProvName.AllSapHana, ProviderName.SqlCe, TestProvName.AllSQLite, TestProvName.AllSybase])]
+		[Test]
+		public void DeleteFromWithTake_NoSort([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var _ = new RestoreBaseTables(db);
+
+			db.Insert(new Parent() { ParentID = 1001 });
+			db.Insert(new Parent() { ParentID = 1002 });
+			db.Insert(new Parent() { ParentID = 1003 });
+
+			var query = db.Parent.Where(c => c.ParentID > 1000).Take(2);
+
+			// note how query used twice
+			var cnt = query.Where(p => query.Select(c => c.ParentID).Contains(p.ParentID)).Delete();
+
+			var left = db.Parent.Count(c => c.ParentID > 1000);
+			var deleted = db.Parent.Delete(c => c.ParentID > 1000) == 1;
+
+			Assert.Multiple(() =>
+			{
+				if (!context.IsAnyOf(TestProvName.AllClickHouse))
+					Assert.That(cnt, Is.EqualTo(2));
+				Assert.That(left, Is.EqualTo(1));
+				if (!context.IsAnyOf(TestProvName.AllClickHouse))
+					Assert.That(deleted, Is.True);
+			});
 		}
 	}
 }

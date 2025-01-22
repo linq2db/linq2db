@@ -28,8 +28,9 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 			{
 				var query = (IQueryable<Person>)CompilerServices.CompareString(db);
-				var str   = query.ToString();
-				TestContext.WriteLine(str);
+				query.ToArray();
+
+				var str   = query.ToSqlQuery().Sql;
 				Assert.That(str, Does.Not.Contain("CASE"));
 			}
 		}
@@ -162,7 +163,7 @@ namespace Tests.Linq
 					LastChild = data.Grouped.Max(f => f.ChildID)
 				});
 
-				var str = q1.ToString();
+				_ = q1.ToArray();
 			}
 		}
 

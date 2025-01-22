@@ -31,9 +31,9 @@ type FSharpEntityBindingInterceptor private () =
             then false
         else
             let mapping = objectType.GetAttribute<CompilationMappingAttribute>()
-            if mapping :> obj = null
-            then false
-            else mapping.SourceConstructFlags = SourceConstructFlags.RecordType
+            match mapping with
+            | null -> false
+            | attr -> attr.SourceConstructFlags = SourceConstructFlags.RecordType
 
     static member TryMapMembersToConstructor(typeAccessor: TypeAccessor) : IReadOnlyDictionary<int, MemberAccessor> option =
         let found, map = _cache.TryGetValue typeAccessor.Type
@@ -46,11 +46,11 @@ type FSharpEntityBindingInterceptor private () =
                 let mappings = Dictionary<int, MemberAccessor>()
                 for m in typeAccessor.Members do
                     let memberAttr = m.MemberInfo.GetAttribute<CompilationMappingAttribute> true
-                    if memberAttr :> obj = null
-                    then ()
-                    else
-                        if memberAttr.SourceConstructFlags = SourceConstructFlags.Field
-                        then mappings.Add(memberAttr.SequenceNumber, m)
+                    match memberAttr with
+                    | null -> ()
+                    | attr ->
+                        if attr.SourceConstructFlags = SourceConstructFlags.Field
+                        then mappings.Add(attr.SequenceNumber, m)
                         else ()
                 _cache.GetOrAdd(typeAccessor.Type, Some(mappings :> IReadOnlyDictionary<int, MemberAccessor>))
             else None
@@ -79,11 +79,17 @@ type FSharpEntityBindingInterceptor private () =
                             assignments.Remove ma.MemberInfo
                         | _ ->
                             let memberType = ma.MemberInfo.GetMemberType()
-                            arguments.[i] <- Expression.Constant(expression.MappingSchema.GetDefaultValue(memberType), memberType)
+                            let defaultValue = match expression.MappingSchema with
+                                                | null -> null
+                                                | ms -> ms.GetDefaultValue(memberType)
+                            arguments.[i] <- Expression.Constant(defaultValue, memberType)
                             false
                     | _ ->
                         let memberType = parameters[i].ParameterType
-                        arguments.[i] <- Expression.Constant(expression.MappingSchema.GetDefaultValue(memberType), memberType)
+                        let defaultValue = match expression.MappingSchema with
+                                            | null -> null
+                                            | ms -> ms.GetDefaultValue(memberType)
+                        arguments.[i] <- Expression.Constant(defaultValue, memberType)
                         false
                     |> ignore
 

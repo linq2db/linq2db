@@ -1,5 +1,5 @@
 ﻿using System;
-using System.Diagnostics;
+using System.Linq;
 using System.Linq.Expressions;
 
 namespace LinqToDB.Linq.Builder
@@ -8,28 +8,18 @@ namespace LinqToDB.Linq.Builder
 	using Mapping;
 	using SqlQuery;
 
+	[BuildsMethodCall("Select")]
 	sealed class SelectBuilder : MethodCallBuilder
 	{
 		#region SelectBuilder
 
-		protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
+		public static bool CanBuildMethod(MethodCallExpression call, BuildInfo info, ExpressionBuilder builder)
 		{
-			if (methodCall.IsQueryable("Select"))
-			{
-				switch (((LambdaExpression)methodCall.Arguments[1].Unwrap()).Parameters.Count)
-				{
-					case 1 :
-					case 2 : return true;
-				}
-			}
-
-			return false;
-		}
-
-		public override bool IsAggregationContext(ExpressionBuilder builder, BuildInfo buildInfo)
-		{
-			// Select is transparent and we can treat it as an aggregation.
-			return true;
+			if (!call.IsQueryable())
+				return false;
+			
+			var lambda = (LambdaExpression)call.Arguments[1].Unwrap();
+			return lambda.Parameters.Count is 1 or 2;
 		}
 
 		protected override BuildSequenceResult BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
@@ -43,44 +33,105 @@ namespace LinqToDB.Linq.Builder
 			var sequence = buildResult.BuildContext;
 
 			// finalizing context
-			_ = builder.MakeExpression(sequence, new ContextRefExpression(sequence.ElementType, sequence),
-				ProjectFlags.ExtractProjection);
+			_ = builder.BuildExtractExpression(sequence, new ContextRefExpression(sequence.ElementType, sequence));
 
+			sequence.SetAlias(selector.Parameters[0].Name);
+			sequence = new SubQueryContext(sequence) { IsSelectWrapper = true };
 			sequence.SetAlias(selector.Parameters[0].Name);
 
 			var body = selector.Parameters.Count == 1
 				? SequenceHelper.PrepareBody(selector, sequence)
-				: SequenceHelper.PrepareBody(selector, sequence, new CounterContext(sequence));
+				: SequenceHelper.PrepareBody(selector, sequence, new CounterContext(buildResult.BuildContext));
 
-			var context = new SelectContext (buildInfo.Parent, body, sequence, buildInfo.IsSubQuery);
+			var context       = new SelectContext (buildInfo.Parent, body, sequence, buildInfo.IsSubQuery);
+			var resultContext = (IBuildContext) context;
+
 #if DEBUG
 			context.Debug_MethodCall = methodCall;
 #endif
-			return BuildSequenceResult.FromContext(context);
+			return BuildSequenceResult.FromContext(resultContext);
 		}
 
 		#endregion
 
 		class CounterContext : BuildContextBase
 		{
-			public CounterContext(IBuildContext sequence) : this(sequence.Builder, sequence.SelectQuery)
-			{
-			}
+			readonly IBuildContext _sequence;
 
-			CounterContext(ExpressionBuilder builder, SelectQuery selectQuery) : base(builder, typeof(int), selectQuery)
-			{
+			SqlPlaceholderExpression? _rowNumberPlaceholder;
 
+			public CounterContext(IBuildContext sequence) : base(sequence.Builder, typeof(int), sequence.SelectQuery)
+			{
+				_sequence = sequence;
 			}
 
 			public override MappingSchema MappingSchema => Builder.MappingSchema;
+
+
+			static IBuildContext GetOrderSequence(IBuildContext context)
+			{
+				var prevSequence = context;
+				while (true)
+				{
+					if (prevSequence.SelectQuery.Select.HasModifier)
+					{
+						break;
+					}
+					if (!prevSequence.SelectQuery.OrderBy.IsEmpty)
+						break;
+					if (prevSequence is SubQueryContext { IsSelectWrapper: true } subQuery)
+					{
+						prevSequence = subQuery.SubQuery;
+					}
+					else if (prevSequence is SelectContext { InnerContext: not null } selectContext)
+					{
+						prevSequence = selectContext.InnerContext;
+					}
+					else
+						break;
+				}
+				return prevSequence;
+			}
 
 			public override Expression MakeExpression(Expression path, ProjectFlags flags)
 			{
 				if (SequenceHelper.IsSameContext(path, this))
 				{
-					if (flags.IsExpression())
+					if (flags.IsSqlOrExpression())
 					{
-						return ExpressionBuilder.RowCounterParam;
+						if (_rowNumberPlaceholder != null)
+							return _rowNumberPlaceholder;
+
+						if (!Builder.DataContext.SqlProviderFlags.IsWindowFunctionsSupported)
+						{
+							if (flags.IsExpression())
+							{
+								return ExpressionBuilder.RowCounterParam;
+							}
+
+							return new SqlErrorExpression(path, ErrorHelper.Error_RowNumber, path.Type);
+						}
+
+						var orderSequence = GetOrderSequence(_sequence);
+
+						var orderQuery = orderSequence.SelectQuery;
+
+						if (orderQuery.OrderBy.IsEmpty)
+						{
+							return new SqlErrorExpression(path, ErrorHelper.Error_OrderByRequiredForIndexing, path.Type);
+						}
+
+						var orderBy = string.Join(", ",
+							orderQuery.OrderBy.Items.Select(static (oi, i) => oi.IsDescending ? FormattableString.Invariant($"{{{i}}} DESC") : FormattableString.Invariant($"{{{i}}}")));
+
+						var parameters = orderQuery.OrderBy.Items.Select(static oi => oi.Expression).ToArray();
+
+						var rn = new SqlExpression(typeof(long), $"ROW_NUMBER() OVER (ORDER BY {orderBy})", Precedence.Primary, SqlFlags.IsWindowFunction, ParametersNullabilityType.NotNullable, null, parameters);
+						var intType = MappingSchema.GetDbDataType(typeof(int));
+						var sql = new SqlBinaryExpression(intType, rn, "-", new SqlValue(intType, 1));
+
+						_rowNumberPlaceholder = ExpressionBuilder.CreatePlaceholder(_sequence, sql, path);
+						return _rowNumberPlaceholder;
 					}
 				}
 
@@ -89,7 +140,7 @@ namespace LinqToDB.Linq.Builder
 
 			public override IBuildContext Clone(CloningContext context)
 			{
-				return new CounterContext(Builder, context.CloneElement(SelectQuery));
+				return new CounterContext(context.CloneContext(_sequence)) { _rowNumberPlaceholder = context.CloneExpression(_rowNumberPlaceholder) };
 			}
 
 			public override SqlStatement GetResultStatement()

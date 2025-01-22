@@ -634,14 +634,14 @@ namespace LinqToDB.Data
 		/// <seealso cref="TraceSwitch"/>
 		/// <remarks>Should only not use to write trace lines, only use <see cref="WriteTraceLineConnection"/>.</remarks>
 		/// </summary>
-		public static Action<string?, string?, TraceLevel> WriteTraceLine = (message, category, level) => Debug.WriteLine(message, category);
+		public static Action<string,string,TraceLevel> WriteTraceLine = (message, category, level) => Debug.WriteLine(message, category);
 
 		/// <summary>
 		/// Gets the delegate to write logging messages for this connection.
 		/// Defaults to <see cref="WriteTraceLine"/>.
 		/// Used for the current instance.
 		/// </summary>
-		public Action<string?, string?, TraceLevel> WriteTraceLineConnection { get; protected set; } = WriteTraceLine;
+		public Action<string,string,TraceLevel> WriteTraceLineConnection { get; protected set; } = WriteTraceLine;
 
 		#endregion
 
@@ -653,10 +653,13 @@ namespace LinqToDB.Data
 		IAsyncDbConnection?              _connection;
 		Func<DataOptions, DbConnection>? _connectionFactory;
 
+		// TODO: V6 remove it or replace with non-creating access + creation method if such public APIs needed
 		/// <summary>
 		/// Gets underlying database connection, used by current connection object.
 		/// </summary>
 		public DbConnection Connection => EnsureConnection().Connection;
+
+		internal DbConnection? CurrentConnection => _connection?.Connection;
 
 		internal IAsyncDbConnection EnsureConnection(bool connect = true)
 		{
@@ -673,7 +676,7 @@ namespace LinqToDB.Data
 					else
 						connection = DataProvider.CreateConnection(ConnectionString!);
 
-					_connection = AsyncFactory.Create(connection);
+					_connection = AsyncFactory.CreateAndSetDataContext(this, connection);
 
 					if (RetryPolicy != null)
 						_connection = new RetryingDbConnection(this, _connection, RetryPolicy);
@@ -863,24 +866,28 @@ namespace LinqToDB.Data
 
 		protected virtual int ExecuteNonQuery(DbCommand command)
 		{
-			var interceptor = ((IInterceptable<ICommandInterceptor>)this).Interceptor;
-			if (interceptor == null)
+			try
 			{
-				using (ActivityService.Start(ActivityID.CommandExecuteNonQuery))
+				if (((IInterceptable<ICommandInterceptor>)this).Interceptor is { } cInterceptor)
+				{
+					Option<int> result;
+
+					using (ActivityService.Start(ActivityID.CommandInterceptorExecuteNonQuery))
+						result = cInterceptor.ExecuteNonQuery(new(this), command, Option<int>.None);
+
+					if (result.HasValue)
+						return result.Value;
+				}
+
+				using (ActivityService.Start(ActivityID.CommandExecuteNonQuery)?.AddQueryInfo(this, _command!.Connection, _command))
 					return command.ExecuteNonQuery();
 			}
-
-			Option<int> result;
-
-			using (ActivityService.Start(ActivityID.CommandInterceptorExecuteNonQuery))
-				result = interceptor.ExecuteNonQuery(new (this), command, Option<int>.None);
-
-			if (result.HasValue)
-				return result.Value;
-
-			using var m = ActivityService.Start(ActivityID.CommandExecuteNonQuery);
-
-			return command.ExecuteNonQuery();
+			catch (Exception ex) when (((IInterceptable<IExceptionInterceptor>)this).Interceptor is { } eInterceptor)
+			{
+				using (ActivityService.Start(ActivityID.ExceptionInterceptorProcessException))
+					eInterceptor.ProcessException(new(this), ex);
+				throw;
+			}
 		}
 
 		internal int ExecuteNonQuery()
@@ -942,18 +949,28 @@ namespace LinqToDB.Data
 
 		internal int ExecuteNonQueryCustom(DbCommand command, Func<DbCommand, int> customExecute)
 		{
-			var interceptor = ((IInterceptable<ICommandInterceptor>)this).Interceptor;
-			if (interceptor == null)
-				return customExecute(command);
+			try
+			{
+				if (((IInterceptable<ICommandInterceptor>)this).Interceptor is { } cInterceptor)
+				{
+					Option<int> result;
 
-			Option<int> result;
+					using (ActivityService.Start(ActivityID.CommandInterceptorExecuteNonQuery))
+						result = cInterceptor.ExecuteNonQuery(new(this), command, Option<int>.None);
 
-			using (ActivityService.Start(ActivityID.CommandInterceptorExecuteNonQuery))
-				result = interceptor.ExecuteNonQuery(new (this), command, Option<int>.None);
+					if (result.HasValue)
+						return result.Value;
+				}
 
-			return result.HasValue
-				? result.Value
-				: customExecute(command);
+				using (ActivityService.Start(ActivityID.CommandExecuteNonQuery)?.AddQueryInfo(this, _command!.Connection, _command))
+					return customExecute(command);
+			}
+			catch (Exception ex) when (((IInterceptable<IExceptionInterceptor>)this).Interceptor is { } eInterceptor)
+			{
+				using (ActivityService.Start(ActivityID.ExceptionInterceptorProcessException))
+					eInterceptor.ProcessException(new(this), ex);
+				throw;
+			}
 		}
 
 		internal int ExecuteNonQueryCustom(Func<DbCommand, int> customExecute)
@@ -1019,21 +1036,28 @@ namespace LinqToDB.Data
 
 		protected virtual object? ExecuteScalar(DbCommand command)
 		{
-			var result = Option<object?>.None;
-
-			var interceptor = ((IInterceptable<ICommandInterceptor>)this).Interceptor;
-			if (interceptor != null)
+			try
 			{
-				using (ActivityService.Start(ActivityID.CommandInterceptorExecuteScalar))
-					result = interceptor.ExecuteScalar(new (this), command, result);
+				if (((IInterceptable<ICommandInterceptor>)this).Interceptor is { } cInterceptor)
+				{
+					Option<object?> result;
+
+					using (ActivityService.Start(ActivityID.CommandInterceptorExecuteScalar))
+						result = cInterceptor.ExecuteScalar(new(this), command, Option<object?>.None);
+
+					if (result.HasValue)
+						return result.Value;
+				}
+
+				using (ActivityService.Start(ActivityID.CommandExecuteScalar)?.AddQueryInfo(this, Connection, _command))
+					return command.ExecuteScalar();
 			}
-
-			if (result.HasValue)
-				return result.Value;
-
-			using var m = ActivityService.Start(ActivityID.CommandExecuteScalar);
-
-			return command.ExecuteScalar();
+			catch (Exception ex) when (((IInterceptable<IExceptionInterceptor>)this).Interceptor is { } eInterceptor)
+			{
+				using (ActivityService.Start(ActivityID.ExceptionInterceptorProcessException))
+					eInterceptor.ProcessException(new(this), ex);
+				throw;
+			}
 		}
 
 		object? ExecuteScalar()
@@ -1098,38 +1122,48 @@ namespace LinqToDB.Data
 
 		protected virtual DataReaderWrapper ExecuteReader(CommandBehavior commandBehavior)
 		{
-			var result = Option<DbDataReader>.None;
-
-			var interceptor = ((IInterceptable<ICommandInterceptor>)this).Interceptor;
-			if (interceptor != null)
+			try
 			{
-				using (ActivityService.Start(ActivityID.CommandInterceptorExecuteReader))
-					result = interceptor.ExecuteReader(new (this), _command!, commandBehavior, result);
+				DbDataReader reader;
+
+				if (((IInterceptable<ICommandInterceptor>)this).Interceptor is { } cInterceptor)
+				{
+					Option<DbDataReader> result;
+
+					using (ActivityService.Start(ActivityID.CommandInterceptorExecuteScalar))
+						result = cInterceptor.ExecuteReader(new(this), _command!, commandBehavior, Option<DbDataReader>.None);
+
+					if (!result.HasValue)
+					{
+						using (ActivityService.Start(ActivityID.CommandExecuteReader)?.AddQueryInfo(this, _command!.Connection, _command))
+							reader = _command!.ExecuteReader(commandBehavior);
+					}
+					else
+					{
+						reader = result.Value;
+					}
+
+					using (ActivityService.Start(ActivityID.CommandInterceptorAfterExecuteReader))
+						cInterceptor.AfterExecuteReader(new(this), _command!, commandBehavior, reader);
+				}
+				else
+				{
+					using (ActivityService.Start(ActivityID.CommandExecuteReader)?.AddQueryInfo(this, _command!.Connection, _command))
+						reader = _command!.ExecuteReader(commandBehavior);
+				}
+
+
+				var wrapper = new DataReaderWrapper(this, reader, _command!);
+				_command = null;
+
+				return wrapper;
 			}
-
-			DbDataReader? rd;
-
-			if (result.HasValue)
+			catch (Exception ex) when (((IInterceptable<IExceptionInterceptor>)this).Interceptor is { } eInterceptor)
 			{
-				rd = result.Value;
+				using (ActivityService.Start(ActivityID.ExceptionInterceptorProcessException))
+					eInterceptor.ProcessException(new(this), ex);
+				throw;
 			}
-			else
-			{
-				using var m = ActivityService.Start(ActivityID.CommandExecuteReader);
-				rd = _command!.ExecuteReader(commandBehavior);
-			}
-
-			if (interceptor != null)
-			{
-				using (ActivityService.Start(ActivityID.CommandInterceptorAfterExecuteReader))
-					interceptor.AfterExecuteReader(new (this), _command!, commandBehavior, rd);
-			}
-
-			var wrapper = new DataReaderWrapper(this, rd, _command!);
-
-			_command = null;
-
-			return wrapper;
 		}
 
 		DataReaderWrapper ExecuteReader()

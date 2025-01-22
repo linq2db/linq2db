@@ -109,7 +109,7 @@ namespace Tests.xUpdate
 		[Test]
 		public void DeleteWithPredicatePartialSourceProjection_UnknownFieldInCondition([MergeDataContextSource(
 			TestProvName.AllOracle,
-			TestProvName.AllSybase, TestProvName.AllInformix,
+			TestProvName.AllInformix,
 			TestProvName.AllSapHana, ProviderName.Firebird25)]
 			string context)
 		{
@@ -127,7 +127,7 @@ namespace Tests.xUpdate
 					.DeleteWhenMatchedAnd((t, s) => s.Field2 == 4)
 					.Merge())!;
 
-				Assert.That(exception, Is.InstanceOf<LinqException>());
+				Assert.That(exception, Is.InstanceOf<LinqToDBException>());
 				Assert.That(exception.Message,  Does.EndWith(".Field2' could not be converted to SQL."));
 			}
 		}
@@ -202,7 +202,7 @@ namespace Tests.xUpdate
 		[Test]
 		public void OtherSourceDeletePartialSourceProjection_UnknownFieldInMatch([MergeDataContextSource(
 			TestProvName.AllOracle,
-			TestProvName.AllSybase, TestProvName.AllSapHana, ProviderName.Firebird25)]
+			TestProvName.AllSapHana, ProviderName.Firebird25)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -219,7 +219,7 @@ namespace Tests.xUpdate
 					.DeleteWhenMatched()
 					.Merge())!;
 
-				Assert.That(exception, Is.InstanceOf<LinqException>());
+				Assert.That(exception, Is.InstanceOf<LinqToDBException>());
 				Assert.That(exception.Message,  Does.EndWith(".Field2' could not be converted to SQL."));
 			}
 		}
@@ -419,8 +419,7 @@ namespace Tests.xUpdate
 
 		[Test]
 		public void DeleteFromPartialSourceProjection_MissingKeyField([MergeDataContextSource(
-			TestProvName.AllOracle,
-			TestProvName.AllSybase, TestProvName.AllSapHana)]
+			TestProvName.AllOracle, TestProvName.AllSapHana)]
 			string context)
 		{
 			using (var db = GetDataContext(context))
@@ -437,7 +436,7 @@ namespace Tests.xUpdate
 						.DeleteWhenMatched()
 						.Merge())!;
 
-				Assert.That(exception, Is.InstanceOf<LinqException>());
+				Assert.That(exception, Is.InstanceOf<LinqToDBException>());
 				Assert.That(exception.Message, Does.EndWith(".Id' could not be converted to SQL."));
 			}
 		}

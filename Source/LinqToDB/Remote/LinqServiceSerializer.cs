@@ -11,6 +11,7 @@ using System.Text;
 namespace LinqToDB.Remote
 {
 	using Common;
+	using Common.Internal;
 	using Extensions;
 	using Mapping;
 	using SqlQuery;
@@ -569,7 +570,7 @@ namespace LinqToDB.Remote
 					{
 						if (!_arrayDeserializers.TryGetValue(elem, out deserializer))
 						{
-							var helper = (IDeserializerHelper)Activator.CreateInstance(typeof(DeserializerHelper<>).MakeGenericType(elem))!;
+							var helper = ActivatorExt.CreateInstance<IDeserializerHelper>(typeof(DeserializerHelper<>).MakeGenericType(elem));
 							_arrayDeserializers.Add(elem, deserializer = helper.GetArray);
 						}
 					}
@@ -705,7 +706,8 @@ namespace LinqToDB.Remote
 				protected override IQueryElement VisitSqlValuesTable(SqlValuesTable element)
 				{
 					VisitElements(element.Fields, VisitMode.ReadOnly);
-					return base.VisitSqlValuesTable(element);
+					VisitListOfArrays(element.Rows, VisitMode.ReadOnly);
+					return element;
 				}
 
 				void RegisterInSerializer(IQueryElement element)
@@ -1223,12 +1225,15 @@ namespace LinqToDB.Remote
 							break;
 						}
 
-					case QueryElementType.FuncLikePredicate :
-						{
-							var elem = (SqlPredicate.FuncLike)e;
-							Append(elem.Function);
-							break;
-						}
+					case QueryElementType.ExistsPredicate:
+					{
+						var elem = (SqlPredicate.Exists)e;
+
+						Append(elem.IsNot);
+						Append(elem.SubQuery);
+
+						break;
+					}
 
 					case QueryElementType.SqlQuery :
 						{
@@ -1603,8 +1608,6 @@ namespace LinqToDB.Remote
 						{
 							var elem = (SqlOutputClause)e;
 
-							Append(elem.DeletedTable);
-							Append(elem.InsertedTable);
 							Append(elem.OutputTable);
 
 							if (elem.HasOutputItems)
@@ -1685,6 +1688,14 @@ namespace LinqToDB.Remote
 						Append(elem.Expression1);
 						Append(elem.Expression2);
 
+						break;
+					}
+
+					case QueryElementType.SqlCoalesce:
+					{
+						var elem = (SqlCoalesceExpression)e;
+
+						Append(elem.Expressions);
 						break;
 					}
 
@@ -2193,12 +2204,15 @@ namespace LinqToDB.Remote
 							break;
 						}
 
-					case QueryElementType.FuncLikePredicate :
-						{
-							var func = Read<SqlFunction>()!;
-							obj = new SqlPredicate.FuncLike(func);
-							break;
-						}
+					case QueryElementType.ExistsPredicate:
+					{
+						var isNot    = ReadBool();
+						var subQuery = Read<SelectQuery>()!;
+
+						obj = new SqlPredicate.Exists(isNot, subQuery);
+
+						break;
+					}
 
 					case QueryElementType.SqlQuery :
 						{
@@ -2658,17 +2672,12 @@ namespace LinqToDB.Remote
 
 					case QueryElementType.OutputClause:
 						{
-
-							var deleted  = Read<SqlTable>();
-							var inserted = Read<SqlTable>();
 							var output   = Read<SqlTable>();
 							var items    = ReadArray<SqlSetExpression>()!;
 							var columns  = ReadList<ISqlExpression>();
 
 							var c = new SqlOutputClause()
 							{
-								DeletedTable  = deleted,
-								InsertedTable = inserted,
 								OutputTable   = output,
 								OutputColumns = columns
 							};
@@ -2765,6 +2774,15 @@ namespace LinqToDB.Remote
 						var expr2 = Read<ISqlExpression>();
 
 						obj = new SqlCompareToExpression(expr1!, expr2!);
+
+						break;
+					}
+
+					case QueryElementType.SqlCoalesce:
+					{
+						var expressions = ReadArray<ISqlExpression>()!;
+
+						obj = new SqlCoalesceExpression(expressions);
 
 						break;
 					}
@@ -2958,7 +2976,7 @@ namespace LinqToDB.Remote
 			{
 				if (!_arrayTypes.TryGetValue(elementType, out arrayType))
 				{
-					var helper = (IArrayHelper)Activator.CreateInstance(typeof(ArrayHelper<>).MakeGenericType(elementType))!;
+					var helper = ActivatorExt.CreateInstance<IArrayHelper>(typeof(ArrayHelper<>).MakeGenericType(elementType));
 					_arrayTypes.Add(elementType, arrayType = helper.GetArrayType());
 				}
 			}
@@ -2974,7 +2992,7 @@ namespace LinqToDB.Remote
 			{
 				if (!_arrayConverters.TryGetValue(elementType, out converter))
 				{
-					var helper = (IArrayHelper)Activator.CreateInstance(typeof(ArrayHelper<>).MakeGenericType(elementType))!;
+					var helper = ActivatorExt.CreateInstance<IArrayHelper>(typeof(ArrayHelper<>).MakeGenericType(elementType));
 					_arrayConverters.Add(elementType, converter = helper.ConvertToArray);
 				}
 			}

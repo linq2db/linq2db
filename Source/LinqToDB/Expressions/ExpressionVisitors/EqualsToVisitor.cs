@@ -1,12 +1,10 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq.Expressions;
-using System.Runtime.CompilerServices;
 
-namespace LinqToDB.Expressions
+namespace LinqToDB.Expressions.ExpressionVisitors
 {
 	using Extensions;
-	using Mapping;
+	using Internal;
 
 	static class EqualsToVisitor
 	{
@@ -14,36 +12,10 @@ namespace LinqToDB.Expressions
 			this Expression                                                                                                                      expr1,
 			Expression                                                                                                                           expr2,
 			IDataContext                                                                                                                         dataContext,
-			List<(Func<Expression, IDataContext?, object?[]?, object?> main, Func<Expression, IDataContext?, object?[]?, object?> substituted)>? parametersDuplicates,
-			List<(Expression used, MappingSchema mappingSchema, Func<IDataContext, MappingSchema, Expression> accessorFunc)>?                    dynamicAccessors,
 			bool                                                                                                                                 compareConstantValues = false)
 		{
 			var equalsInfo = PrepareEqualsInfo(dataContext, compareConstantValues);
 			var result     = EqualsTo(expr1, expr2, equalsInfo);
-
-			if (result && parametersDuplicates != null)
-			{
-				foreach (var (main, substituted) in parametersDuplicates)
-				{
-					var value1 = main(expr2, dataContext, null);
-					var value2 = substituted(expr2, dataContext, null);
-					result = value1 == null && value2 == null || value1 != null && value1.Equals(value2);
-
-					if (!result)
-						break;
-				}
-			}
-
-			if (result && dynamicAccessors != null)
-			{
-				foreach (var (used, mappingSchema, accessorFunc) in dynamicAccessors)
-				{
-					var current = accessorFunc(dataContext, mappingSchema);
-					result = EqualsTo(used, current, equalsInfo);
-					if (!result)
-						break;
-				}
-			}
 
 			return result;
 		}

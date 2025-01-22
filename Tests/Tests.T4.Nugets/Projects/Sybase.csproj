@@ -1,0 +1,22 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<ItemGroup>
+		<PackageReference Include="linq2db.Sybase" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<None Include="..\Templates\Sybase.tt" Generator="TextTemplatingFileGenerator">
+		  <LastGenOutput>Sybase.generated.cs</LastGenOutput>
+		</None>
+		<Compile Include="..\Templates\Sybase.generated.cs">
+		  <DesignTime>True</DesignTime>
+		  <AutoGen>True</AutoGen>
+		  <DependentUpon>Sybase.tt</DependentUpon>
+		</Compile>
+	</ItemGroup>
+
+	<ItemGroup>
+		<Service Include="{508349b6-6b84-4df5-91f0-309beebad82d}" />
+	</ItemGroup>
+
+</Project>

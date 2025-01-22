@@ -7,10 +7,10 @@ using System.Linq.Expressions;
 namespace LinqToDB.Linq.Builder
 {
 	using Extensions;
-	using Mapping;
+	using LinqToDB.Common.Internal;
 	using LinqToDB.Expressions;
+	using Mapping;
 	using SqlQuery;
-	using DataProvider;
 
 	internal static class SequenceHelper
 	{
@@ -56,6 +56,11 @@ namespace LinqToDB.Linq.Builder
 				|| (expression is ContextRefExpression contextRef && contextRef.BuildContext == context);
 		}
 
+		public static ContextRefExpression CreateRef(IBuildContext buildContext)
+		{
+			return new ContextRefExpression(buildContext.ElementType, buildContext);
+		}
+
 		[return: NotNullIfNotNull(nameof(expression))]
 		public static Expression? CorrectExpression(Expression? expression, IBuildContext current,
 			IBuildContext                                       underlying)
@@ -68,17 +73,9 @@ namespace LinqToDB.Linq.Builder
 			return expression;
 		}
 
-		[return: NotNullIfNotNull(nameof(expression))]
-		public static Expression? CorrectTrackingPath(ExpressionBuilder builder, Expression? expression, IBuildContext toContext)
+		public static bool HasContextRef(Expression expression)
 		{
-			if (expression == null || expression.Find(1, (_, e) => e is SqlPlaceholderExpression) == null)
-				return expression;
-
-			var contextRef = new ContextRefExpression(toContext.ElementType, toContext);
-
-			var transformed = CorrectTrackingPath(builder, expression, contextRef);
-
-			return transformed;
+			return null != expression.Find(1, static (_, e) => e is ContextRefExpression);
 		}
 
 		public static Expression CorrectTrackingPath(ExpressionBuilder builder, Expression expression, Expression toPath)
@@ -179,7 +176,7 @@ namespace LinqToDB.Linq.Builder
 
 					if (assignments != null)
 					{
-						generic = generic.ReplaceAssignments(assignments);
+						generic = generic.ReplaceAssignments(assignments.AsReadOnly());
 					}
 
 					for (var i = 0; i < generic.Parameters.Count; i++)
@@ -214,7 +211,7 @@ namespace LinqToDB.Linq.Builder
 
 					if (parameters != null)
 					{
-						generic = generic.ReplaceParameters(parameters);
+						generic = generic.ReplaceParameters(parameters.AsReadOnly());
 					}
 
 					return generic;
@@ -244,9 +241,9 @@ namespace LinqToDB.Linq.Builder
 						}
 					}
 
-					if (placeholder.TrackingPath is MemberExpression me && me.Member.DeclaringType != null && me.Member.DeclaringType.IsAssignableFrom(toPath.Type))
+					if (placeholder.TrackingPath is MemberExpression { Member.DeclaringType: { } declaringType, Expression: not null} me && declaringType.IsAssignableFrom(toPath.Type))
 					{
-						var toPathConverted = EnsureType(toPath, me.Member.DeclaringType);
+						var toPathConverted = EnsureType(toPath, declaringType);
 						var newExpr         = (Expression)Expression.MakeMemberAccess(toPathConverted, me.Member);
 
 						return placeholder.WithTrackingPath(newExpr);
@@ -420,12 +417,12 @@ namespace LinqToDB.Linq.Builder
 
 				if (assignments != null)
 				{
-					generic = generic.ReplaceAssignments(assignments);
+					generic = generic.ReplaceAssignments(assignments.AsReadOnly());
 				}
 
 				if (parameters != null)
 				{
-					generic = generic.ReplaceParameters(parameters);
+					generic = generic.ReplaceParameters(parameters.AsReadOnly());
 				}
 
 				generic = generic.WithConstructionRoot(toPath);
@@ -539,12 +536,12 @@ namespace LinqToDB.Linq.Builder
 
 					if (assignments != null)
 					{
-						generic = generic.ReplaceAssignments(assignments);
+						generic = generic.ReplaceAssignments(assignments.AsReadOnly());
 					}
 
 					if (parameters != null)
 					{
-						generic = generic.ReplaceParameters(parameters);
+						generic = generic.ReplaceParameters(parameters.AsReadOnly());
 					}
 
 					generic = generic.WithConstructionRoot(toPath);
@@ -688,66 +685,69 @@ namespace LinqToDB.Linq.Builder
 			return toPath;
 		}
 
+		#region ReplaceContext
+
 		public static Expression ReplaceContext(Expression expression, IBuildContext current, IBuildContext onContext)
 		{
-			var newExpression = expression.Transform((expression, current, onContext), (ctx, e) =>
-			{
-				if (e.NodeType is ExpressionType.Convert or ExpressionType.ConvertChecked)
-				{
-					if (((UnaryExpression)e).Operand is ContextRefExpression contextOperand)
-					{
-						return new TransformInfo(contextOperand.WithType(e.Type), false, true);
-					}
-				}
+			using var visitor = _replaceContextVisitorPool.Allocate();
 
-				if (e is ContextRefExpression contextRef)
-				{
-					if (contextRef.BuildContext == ctx.current)
-						return new TransformInfo(new ContextRefExpression(contextRef.Type, ctx.onContext, contextRef.Alias));
-				}
-
-				if (e is SqlPlaceholderExpression { TrackingPath: { } } placeholder)
-				{
-					return new TransformInfo(placeholder
-						.WithTrackingPath(
-							ReplaceContext(
-								placeholder.TrackingPath, 
-								ctx.current, 
-								ctx.onContext)));
-				}
-
-				return new TransformInfo(e);
-			});
-
-			return newExpression;
+			return visitor.Value.ReplaceContext(expression, current, onContext);
 		}
 
-		public static Expression ReplaceContext(Expression expression, IBuildContext current, Expression onPath)
+		static ObjectPool<ReplaceContextVisitor> _replaceContextVisitorPool = new(() => new ReplaceContextVisitor(), v => v.Cleanup(), 100);
+
+		sealed class ReplaceContextVisitor : ExpressionVisitorBase
 		{
-			var newExpression = expression.Transform((expression, current, onPath), (ctx, e) =>
+			IBuildContext _current   = null!;
+			IBuildContext _onContext = null!;
+
+			public Expression ReplaceContext(Expression expression, IBuildContext current, IBuildContext onContext)
 			{
-				if (e.NodeType is ExpressionType.Convert or ExpressionType.ConvertChecked)
+				_current   = current;
+				_onContext = onContext;
+
+				return Visit(expression);
+			}
+
+			public override void Cleanup()
+			{
+				_current   = null!;
+				_onContext = null!;
+
+				base.Cleanup();
+			}
+
+			protected override Expression VisitUnary(UnaryExpression node)
+			{
+				if (node.NodeType is ExpressionType.Convert or ExpressionType.ConvertChecked)
 				{
-					if (((UnaryExpression)e).Operand is ContextRefExpression contextOperand)
+					if (node.Operand is ContextRefExpression contextOperand)
 					{
-						return new TransformInfo(contextOperand.WithType(e.Type), false, true);
+						return Visit(contextOperand.WithType(node.Type));
 					}
 				}
 
-				if (e is ContextRefExpression contextRef && contextRef.BuildContext == ctx.current)
-				{
-					var replacement = ctx.onPath;
-					if (replacement.Type != e.Type)
-						replacement = Expression.Convert(replacement, e.Type);
+				return base.VisitUnary(node);
+			}
 
-					return new TransformInfo(replacement);
-				}
+			internal override Expression VisitContextRefExpression(ContextRefExpression node)
+			{
+				if (node.BuildContext == _current)
+					return new ContextRefExpression(node.Type, _onContext, node.Alias);
 
-				return new TransformInfo(e);
-			});
+				return node;
+			}
 
-			return newExpression;
+			public override Expression VisitSqlPlaceholderExpression(SqlPlaceholderExpression node)
+			{
+				if (node.TrackingPath != null)
+					return node.WithTrackingPath(Visit(node.TrackingPath));
+
+				return node;
+			}
 		}
+
+		#endregion
 
 		public static Expression CorrectSelectQuery(Expression expression, SelectQuery selectQuery)
 		{
@@ -764,23 +764,6 @@ namespace LinqToDB.Linq.Builder
 			return newExpression;
 		}
 
-		public static Expression StampNullability(Expression expression, SelectQuery query)
-		{
-			var nullability = new NullabilityContext(query);
-			var translated = expression.Transform(e =>
-			{
-				if (e is SqlPlaceholderExpression placeholder)
-				{
-					placeholder = placeholder.WithSql(SqlNullabilityExpression.ApplyNullability(placeholder.Sql, nullability));
-					return placeholder;
-				}
-
-				return e;
-			});
-
-			return translated;
-		}
-
 		public static ISqlExpression UnwrapNullability(ISqlExpression expression)
 		{
 			while (expression is SqlNullabilityExpression nullability)
@@ -789,16 +772,6 @@ namespace LinqToDB.Linq.Builder
 			}
 
 			return expression;
-		}
-
-		public static ISqlTableSource? GetExpressionSource(ISqlExpression expression)
-		{
-			return expression switch
-			{
-				SqlColumn column => column.Parent,
-				SqlField field   => field.Table,
-				_                => null,
-			};
 		}
 
 		public static Expression MoveToScopedContext(Expression expression, IBuildContext upTo)
@@ -810,7 +783,7 @@ namespace LinqToDB.Linq.Builder
 
 		public static ITableContext? GetTableOrCteContext(ExpressionBuilder builder, Expression pathExpression)
 		{
-			var rootContext = builder.MakeExpression(null, pathExpression, ProjectFlags.Table) as ContextRefExpression;
+			var rootContext = builder.BuildTableExpression(pathExpression) as ContextRefExpression;
 
 			var tableContext = rootContext?.BuildContext as ITableContext;
 
@@ -819,7 +792,7 @@ namespace LinqToDB.Linq.Builder
 
 		public static TableBuilder.TableContext? GetTableContext(ExpressionBuilder builder, Expression pathExpression)
 		{
-			var rootContext = builder.MakeExpression(null, pathExpression, ProjectFlags.Table) as ContextRefExpression;
+			var rootContext = builder.BuildTableExpression(pathExpression) as ContextRefExpression;
 
 			var tableContext = rootContext?.BuildContext as TableBuilder.TableContext;
 
@@ -830,22 +803,9 @@ namespace LinqToDB.Linq.Builder
 		{
 			var contextRef = new ContextRefExpression(context.ElementType, context);
 
-			var rootContext =
-				context.Builder.MakeExpression(context, contextRef, ProjectFlags.Table) as ContextRefExpression;
+			var rootContext = context.Builder.BuildTableExpression(contextRef) as ContextRefExpression;
 
 			var tableContext = rootContext?.BuildContext as TableBuilder.TableContext;
-
-			return tableContext;
-		}
-
-		public static CteTableContext? GetCteContext(IBuildContext context)
-		{
-			var contextRef = new ContextRefExpression(context.ElementType, context);
-
-			var rootContext =
-				context.Builder.MakeExpression(context, contextRef, ProjectFlags.Table) as ContextRefExpression;
-
-			var tableContext = rootContext?.BuildContext as CteTableContext;
 
 			return tableContext;
 		}
@@ -855,7 +815,7 @@ namespace LinqToDB.Linq.Builder
 			var contextRef = new ContextRefExpression(context.ElementType, context);
 
 			var rootContext =
-				context.Builder.MakeExpression(context, contextRef, ProjectFlags.Table) as ContextRefExpression;
+				context.Builder.BuildTableExpression(contextRef) as ContextRefExpression;
 
 			var tableContext = rootContext?.BuildContext as ITableContext;
 
@@ -889,76 +849,6 @@ namespace LinqToDB.Linq.Builder
 			return found;
 		}
 
-		/// <summary>
-		/// Checks that provider can handle limitation inside subquery. This function is tightly coupled with <see cref="SelectQueryOptimizerVisitor.OptimizeApply"/>
-		/// </summary>
-		/// <param name="context"></param>
-		/// <returns></returns>
-		public static bool IsSupportedSubquery(IBuildContext parent, IBuildContext context, out string? errorMessage)
-		{
-			errorMessage = null;
-
-			// No check during recursion. Cloning may fail
-			if (parent.Builder.IsRecursiveBuild)
-				return true;
-
-			if (!context.Builder.DataContext.SqlProviderFlags.IsApplyJoinSupported)
-			{
-				// We are trying to simulate what will be with query after optimizer's work
-				//
-				var cloningContext = new CloningContext();
-
-				var clonedParentContext = cloningContext.CloneContext(parent);
-				var clonedContext       = cloningContext.CloneContext(context);
-
-				 cloningContext.UpdateContextParents();
-
-				var expr = parent.Builder.MakeExpression(clonedContext, new ContextRefExpression(clonedContext.ElementType, clonedContext), ProjectFlags.SQL);
-
-				expr = parent.Builder.ToColumns(clonedParentContext, expr);
-
-				SqlJoinedTable? fakeJoin = null;
-
-				// add fake join there is no still reference
-				if (null == clonedParentContext.SelectQuery.Find(e => e is SelectQuery sc && sc == clonedContext.SelectQuery))
-				{
-				 	fakeJoin = clonedContext.SelectQuery.OuterApply().JoinedTable;
-				
-				    clonedParentContext.SelectQuery.From.Tables[0].Joins.Add(fakeJoin);
-				}
-
-				using var visitor = QueryHelper.SelectOptimizer.Allocate();
-
-				#if DEBUG
-
-				var sqlText = clonedParentContext.SelectQuery.ToDebugString();
-
-				#endif
-
-				var optimizedQuery = (SelectQuery)visitor.Value.Optimize(
-					root : clonedParentContext.SelectQuery,
-					rootElement : clonedParentContext.SelectQuery,
-					providerFlags : parent.Builder.DataContext.SqlProviderFlags,
-					removeWeakJoins : false,
-					dataOptions : parent.Builder.DataOptions,
-					mappingSchema: context.MappingSchema,
-					evaluationContext : new EvaluationContext()
-				);
-
-				if (!SqlProviderHelper.IsValidQuery(optimizedQuery, parentQuery: null, fakeJoin: fakeJoin, forColumn: false, parent.Builder.DataContext.SqlProviderFlags, out errorMessage))
-				{
-					return false;
-				}
-			}
-
-			return true;
-		}
-
-		public static bool HasDependencyWithOuter(SelectQuery selectQuery)
-		{
-			return QueryHelper.IsDependsOnOuterSources(selectQuery);
-		}
-
 		static IBuildContext UnwrapSubqueryContext(IBuildContext context)
 		{
 			var current = context;
@@ -979,9 +869,9 @@ namespace LinqToDB.Linq.Builder
 			return current;
 		}
 
-		public static bool IsDefaultIfEmpty(IBuildContext context)
+		public static DefaultIfEmptyBuilder.DefaultIfEmptyContext? GetDefaultIfEmptyContext(IBuildContext context)
 		{
-			return UnwrapSubqueryContext(context) is DefaultIfEmptyBuilder.DefaultIfEmptyContext;
+			return UnwrapSubqueryContext(context) as DefaultIfEmptyBuilder.DefaultIfEmptyContext;
 		}
 
 		public static Expression UnwrapDefaultIfEmpty(Expression expression)
@@ -989,6 +879,12 @@ namespace LinqToDB.Linq.Builder
 			if (expression is SqlDefaultIfEmptyExpression defaultIfEmptyExpression)
 				return UnwrapDefaultIfEmpty(defaultIfEmptyExpression.InnerExpression);
 			return expression;
+		}
+
+		public static Expression RemoveMarkers(Expression expression)
+		{
+			var result = expression.Transform(e => e is MarkerExpression marker ? marker.InnerExpression : e);
+			return result;
 		}
 
 		public static LambdaExpression? GetArgumentLambda(MethodCallExpression methodCall, string argumentName)

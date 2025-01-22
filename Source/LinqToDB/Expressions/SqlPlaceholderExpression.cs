@@ -19,7 +19,7 @@ namespace LinqToDB.Expressions
 
 		public SqlPlaceholderExpression(SelectQuery? selectQuery, ISqlExpression sql, Expression path, Type? convertType = null, string? alias = null, int? index = null, Expression? trackingPath = null)
 		{
-			#if DEBUG
+#if BUGCHECK
 
 			if (sql is SqlColumn column && column.Parent == selectQuery)
 				throw new InvalidOperationException();
@@ -33,9 +33,9 @@ namespace LinqToDB.Expressions
 				throw new InvalidOperationException($"Wrong select query.");
 			}
 
-			#endif
+#endif
 
-			SelectQuery  = selectQuery;
+			SelectQuery = selectQuery;
 			Path         = path;
 			ConvertType  = convertType ?? path.Type;
 			Alias        = alias;
@@ -173,7 +173,7 @@ namespace LinqToDB.Expressions
 
 			var startStr = "SQL";
 #if DEBUG
-			startStr += $"[ID:{Id}]";
+			startStr += $"[ID:{Id}][{Type.Name}]";
 #endif
 			string result;
 			if (SelectQuery == null)

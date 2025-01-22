@@ -1,4 +1,7 @@
 ﻿using System.Linq;
+
+using LinqToDB;
+
 using NUnit.Framework;
 
 using Tests.Model;
@@ -11,8 +14,7 @@ namespace Tests.UserTests
 		[Test]
 		public void Test([NorthwindDataContext] string context)
 		{
-			using (new GuardGrouping(false))
-			using (var db = new NorthwindDB(context))
+			using (var db = new NorthwindDB(new DataOptions().UseConfiguration(context).UseGuardGrouping(false)))
 			{
 				var jj  = from o in db.Customer select o;
 				jj      = jj.Where(x => x.CompanyName.Contains("t"));

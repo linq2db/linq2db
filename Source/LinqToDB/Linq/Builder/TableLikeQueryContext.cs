@@ -27,6 +27,11 @@ namespace LinqToDB.Linq.Builder
 		Expression ProjectionBody       { get; }
 		Expression SelfTargetPropAccess { get; }
 
+		public override bool AutomaticAssociations => true;
+		public override bool IsSingleElement       => true;
+
+		public bool? IsSourceOuter { get; set; }
+
 		public TableLikeQueryContext(ContextRefExpression targetContextRef, ContextRefExpression sourceContextRef)
 			: base(sourceContextRef.BuildContext.Builder, targetContextRef.ElementType, sourceContextRef.BuildContext.SelectQuery)
 		{
@@ -87,20 +92,114 @@ namespace LinqToDB.Linq.Builder
 			return lambdaExpression.GetBody(TargetPropAccess);
 		}
 
+		class CorrectingVisitor: ExpressionVisitorBase
+		{
+			public   ParameterExpression  TargetParam      { get; }
+			public   ContextRefExpression TargetContextRef { get; }
+
+			public CorrectingVisitor(ParameterExpression targetParam, ContextRefExpression targetContextRef)
+			{
+				TargetParam      = targetParam;
+				TargetContextRef = targetContextRef;
+			}
+
+			bool HasTargetRoot(Expression node)
+			{
+				switch (node.NodeType)
+				{
+					case ExpressionType.MemberAccess:
+					{
+						var member = (MemberExpression)node;
+						if (member.Expression == TargetParam)
+						{
+							return true;
+						}
+
+						if (member.Expression != null)
+						{
+							return HasTargetRoot(member.Expression);
+						}
+
+						break;
+					}
+					case ExpressionType.Call:
+					{
+						var method = (MethodCallExpression)node;
+						if (method.Object == TargetParam)
+						{
+							return true;
+						}
+
+						if (method.Method.IsStatic && method.Arguments.Count > 0 && method.IsAssociation(TargetContextRef.BuildContext.MappingSchema))
+						{
+							return HasTargetRoot(method.Arguments[0]);
+						}
+
+						if (method.Object != null)
+						{
+							return HasTargetRoot(method.Object);
+						}
+
+						if (method.IsQueryable() && method.Arguments.Count > 0)
+						{
+							if (HasTargetRoot(method.Arguments[0]))
+							{
+								return true;
+							}
+						}
+
+						break;
+					}
+
+					case ExpressionType.Convert:
+					case ExpressionType.ConvertChecked:
+					{
+						var unary = (UnaryExpression)node;
+						return HasTargetRoot(unary.Operand);
+					}
+				}
+
+				return false;
+			}
+
+			protected override Expression VisitMethodCall(MethodCallExpression node)
+			{
+				if (HasTargetRoot(node))
+				{
+					return CreateContextFromNode(node);
+				}
+
+				return base.VisitMethodCall(node);
+			}
+
+			protected override Expression VisitMember(MemberExpression node)
+			{
+				if (HasTargetRoot(node))
+				{
+					return CreateContextFromNode(node);
+				}
+
+				return base.VisitMember(node);
+			}
+
+			Expression CreateContextFromNode(Expression node)
+			{
+				var containerContext = new SelfTargetContainerContext(TargetParam, TargetContextRef, node, true);
+				var context          = new ContextRefExpression(node.Type, containerContext);
+				return context;
+			}
+		}
+
+
 		public Expression PrepareSelfTargetLambda(LambdaExpression lambdaExpression)
 		{
 			if (lambdaExpression.Parameters.Count != 1)
 				throw new InvalidOperationException();
 
-			return lambdaExpression.GetBody(EnsureType(SelfTargetPropAccess, lambdaExpression.Parameters[0].Type));
-		}
+			var visitor = new CorrectingVisitor(lambdaExpression.Parameters[0], TargetContextRef);
+			var correctedExpression = visitor.Visit(lambdaExpression.Body);
 
-		static Expression EnsureType(Expression expression, Type type)
-		{
-			if (expression.Type == type)
-				return expression;
-
-			return Expression.Convert(expression, type);
+			return correctedExpression;
 		}
 
 		public Expression GenerateCondition()
@@ -108,8 +207,8 @@ namespace LinqToDB.Linq.Builder
 			if (ConnectionLambda is null)
 				throw new ArgumentNullException(nameof(ConnectionLambda));
 
-			return ConnectionLambda.GetBody(EnsureType(TargetPropAccess, ConnectionLambda.Parameters[0].Type),
-				EnsureType(SourcePropAccess, ConnectionLambda.Parameters[1].Type));
+			return ConnectionLambda.GetBody(TargetPropAccess.EnsureType(ConnectionLambda.Parameters[0].Type),
+				SourcePropAccess.EnsureType(ConnectionLambda.Parameters[1].Type));
 		}
 
 		Dictionary<Expression, SqlPlaceholderExpression> _knownMap = new (ExpressionEqualityComparer.Instance);
@@ -129,21 +228,6 @@ namespace LinqToDB.Linq.Builder
 							return true;
 						}
 					}
-				}
-
-				return false;
-			});
-
-			return result;
-		}
-
-		bool IsSelfTargetExpression(Expression pathExpression)
-		{
-			var result = null != pathExpression.Find(this, static (ctx, e) =>
-			{
-				if (ExpressionEqualityComparer.Instance.Equals(e, ctx.SelfTargetPropAccess))
-				{
-					return true;
 				}
 
 				return false;
@@ -175,7 +259,7 @@ namespace LinqToDB.Linq.Builder
 
 		public override Expression MakeExpression(Expression path, ProjectFlags flags)
 		{
-			if (flags.HasFlag(ProjectFlags.AssociationRoot))
+			if (!flags.IsSql())
 				return path;
 
 			if (SequenceHelper.IsSameContext(path, this))
@@ -183,77 +267,67 @@ namespace LinqToDB.Linq.Builder
 
 			var projectedPath = Builder.Project(this, path, null, -1, flags, ProjectionBody, true);
 
+			if (projectedPath is SqlErrorExpression)
+				projectedPath = path;
+
 			if (!ReferenceEquals(projectedPath, path))
 			{
-				if (flags.HasFlag(ProjectFlags.Root))
+				if (flags.IsRoot())
 					return path;
 			}
 
 			var subqueryPath        = projectedPath;
 			var correctedPath       = subqueryPath;
 
-			if (!flags.IsTest())
+			if (IsTargetAssociation(projectedPath))
 			{
-				if (IsTargetAssociation(projectedPath))
+				// Redirecting to TargetInSourceContextRef for correct processing associations
+				//
+
+				if (TargetInSourceContextRef == null)
 				{
-					if (IsSelfTargetExpression(path))
-					{
-						var selfTargetContext = new SelfTargetContext(TargetContextRef);
-						correctedPath = correctedPath.Replace(TargetContextRef, TargetContextRef.WithContext(selfTargetContext));
-						return correctedPath;
-					}
+					var cloningContext = new CloningContext();
+					cloningContext.CloneElements(Builder.GetCteClauses());
+					var targetCloned   = cloningContext.CloneContext(TargetContextRef.BuildContext);
 
-					// Redirecting to TargetInSourceContextRef for correct processing associations
-					//
+					if (ConnectionLambda == null)
+						throw new InvalidOperationException();
 
-					if (TargetInSourceContextRef == null)
-					{
-						var cloningContext = new CloningContext();
-						var targetCloned   = cloningContext.CloneContext(TargetContextRef.BuildContext);
+					var predicate = SequenceHelper.PrepareBody(ConnectionLambda, targetCloned, SourceContextRef.BuildContext);
 
-						if (ConnectionLambda == null)
-							throw new InvalidOperationException();
+					var join = new SqlJoinedTable(JoinType.Left, targetCloned.SelectQuery, null, true);
+					SourceContextRef.BuildContext.SelectQuery.From.Tables[0].Joins.Add(join);
 
-						var predicate = SequenceHelper.PrepareBody(ConnectionLambda, targetCloned, SourceContextRef.BuildContext);
+					Builder.BuildSearchCondition(SourceContextRef.BuildContext, predicate, join.Condition);
 
-						var join = new SqlJoinedTable(JoinType.Left, targetCloned.SelectQuery, null, true);
-						SourceContextRef.BuildContext.SelectQuery.From.Tables[0].Joins.Add(join);
-
-						Builder.BuildSearchCondition(SourceContextRef.BuildContext, predicate, ProjectFlags.SQL, join.Condition);
-
-						TargetInSourceContextRef =
-							new ContextRefExpression(TargetContextRef.Type, targetCloned, "target");
-					}
-
-					correctedPath = correctedPath.Replace(TargetContextRef, TargetInSourceContextRef);
+					TargetInSourceContextRef =
+						new ContextRefExpression(TargetContextRef.Type, targetCloned, "target");
 				}
-				else if (IsTargetExpression(projectedPath))
-				{
-					// let target context to MakeExpression
-					//
-					return projectedPath;
-				}
+
+				correctedPath = correctedPath.Replace(TargetContextRef, TargetInSourceContextRef);
+			}
+			else if (IsTargetExpression(projectedPath))
+			{
+				// let target context to MakeExpression
+				//
+				return projectedPath;
 			}
 
 			if (!ReferenceEquals(correctedPath, path))
 			{
-				// remove forcing, if association is created in source. Maybe we can find better way...
-				if (!HasAssociation(Builder, path))
-					flags &= ~ProjectFlags.ForceOuterAssociation;
+				var isOuter = IsSourceOuter == true;
+				correctedPath = Builder.BuildSqlExpression(InnerQueryContext, correctedPath, isOuter ? BuildFlags.ForceOuter : BuildFlags.None);
 
-				correctedPath = Builder.ConvertToSqlExpr(InnerQueryContext, correctedPath, flags);
+				correctedPath = Builder.UpdateNesting(InnerQueryContext, correctedPath);
 
-				if (!flags.IsTest())
-				{
-					// replace tracking path back
-					var translated = SequenceHelper.CorrectTrackingPath(Builder, correctedPath, path);
+				// replace tracking path back
+				var translated = SequenceHelper.CorrectTrackingPath(Builder, correctedPath, path);
 
-					var placeholders = ExpressionBuilder.CollectPlaceholders(translated);
+				var placeholders = ExpressionBuilder.CollectPlaceholders(translated, true);
 
-					var remapped = TableLikeHelpers.RemapToFields(SubqueryContext, Source, Source.SourceFields, _knownMap, null, translated, placeholders);
+				var remapped = TableLikeHelpers.RemapToFields(SubqueryContext, Source, Source.SourceFields, _knownMap, null, translated, placeholders);
 
-					return remapped;
-				}
+				return remapped;
 			}
 
 			return correctedPath;
@@ -274,18 +348,6 @@ namespace LinqToDB.Linq.Builder
 			return SubqueryContext.GetResultStatement();
 		}
 
-		public static bool HasAssociation(ExpressionBuilder builder, Expression expression)
-		{
-			var result = null != expression.Find(builder, static (builder, expr) =>
-			{
-				if (builder.IsAssociation(expr, out _))
-					return true;
-				return false;
-			});
-
-			return result;
-		}
-
 		class ProjectionHelper<TTarget, TSource>
 		{
 			public TTarget? target       { get; set; }
@@ -293,41 +355,78 @@ namespace LinqToDB.Linq.Builder
 			public TTarget? selft_target { get; set; }
 		}
 
-		class SelfTargetContext : PassThroughContext
+		class SelfTargetContainerContext : BuildContextBase
 		{
-			public SelfTargetContext(ContextRefExpression targetContextRef) : base(targetContextRef.BuildContext)
+			public SelfTargetContainerContext(ParameterExpression targetParam, ContextRefExpression targetContextRef, Expression substitutedExpression, bool needsCloning) : 
+				base(targetContextRef.BuildContext.Builder, targetContextRef.BuildContext.ElementType, targetContextRef.BuildContext.SelectQuery)
 			{
-				TargetContextRef = targetContextRef;
+				TargetParam           = targetParam;
+				TargetContextRef      = targetContextRef;
+				SubstitutedExpression = substitutedExpression;
+				NeedsCloning          = needsCloning;
 			}
 
-			public ContextRefExpression TargetContextRef { get; }
-			IBuildContext               TargetContext    => Context;
+			public ParameterExpression  TargetParam           { get; }
+			public ContextRefExpression TargetContextRef      { get; }
+			public Expression           SubstitutedExpression { get; }
+			public bool                 NeedsCloning          { get; }
+			IBuildContext               TargetContext         => TargetContextRef.BuildContext;
+
+			public override bool IsSingleElement       => true;
+
+			public override void SetRunQuery<T>(Query<T> query, Expression expr)
+			{
+				throw new NotImplementedException();
+			}
 
 			public override IBuildContext Clone(CloningContext context)
 			{
 				throw new NotImplementedException();
 			}
 
+			public override SqlStatement GetResultStatement()
+			{
+				throw new NotImplementedException();
+			}
+
+			public override MappingSchema MappingSchema => TargetContextRef.BuildContext.MappingSchema;
+
 			public override Expression MakeExpression(Expression path, ProjectFlags flags)
 			{
-				if (flags.IsTest() || !HasAssociation(Builder, path))
-					return base.MakeExpression(path, flags);
+				if (!flags.IsSql())
+					return path;
+
+				if (!SequenceHelper.IsSameContext(path, this))
+					return path;
 
 				// in case when there is no access to the Source we are trying to generate subquery SQL
 				//
 				var cloningContext = new CloningContext();
+				cloningContext.CloneElements(Builder.GetCteClauses());
 
-				var targetContext = TargetContext;
-				var clonedTargetContext = cloningContext.CloneContext(targetContext);
+				var targetContext       = TargetContext;
+				var clonedTargetContext = NeedsCloning ? cloningContext.CloneContext(targetContext) : targetContext;
 
-				var correctedPath = SequenceHelper.ReplaceContext(path, this, clonedTargetContext);
+				var clonedRef     = new ContextRefExpression(TargetParam.Type, clonedTargetContext, TargetParam.Name);
+				var correctedPath = SubstitutedExpression.Replace(TargetParam, clonedRef);
 
-				var sqlExpr = Builder.ConvertToSqlExpr(clonedTargetContext, correctedPath, flags);
+				if (!NeedsCloning)
+				{
+					var resultExpr = Builder.BuildSqlExpression(clonedTargetContext, correctedPath, BuildFlags.ForceOuter);
+					return resultExpr;
+				}
+
+				var sqlExpr = Builder.BuildExpression(clonedTargetContext, correctedPath);
+
+				if (!flags.IsSql())
+					return sqlExpr;
+
+				sqlExpr = Builder.UpdateNesting(clonedTargetContext, sqlExpr);
 
 				SqlPlaceholderExpression? placeholder = null;
 				if (sqlExpr is SqlPlaceholderExpression fieldPlaceholder)
 					placeholder = fieldPlaceholder;
-				else if (SequenceHelper.UnwrapDefaultIfEmpty(sqlExpr) is SqlGenericConstructorExpression generic)
+				else if (Builder.ParseGenericConstructor(SequenceHelper.UnwrapDefaultIfEmpty(sqlExpr), flags, null) is SqlGenericConstructorExpression generic)
 				{
 					if (generic.Assignments.Count != 1)
 						throw new InvalidOperationException();
@@ -338,7 +437,7 @@ namespace LinqToDB.Linq.Builder
 
 				if (placeholder == null)
 				{
-					return ExpressionBuilder.CreateSqlError(this, path);
+					return ExpressionBuilder.CreateSqlError(SubstitutedExpression);
 				}
 
 				// forcing making column
@@ -357,8 +456,14 @@ namespace LinqToDB.Linq.Builder
 
 				query = MergeBuilder.ReplaceSourceInQuery(query, clonedTargetTable, targetTable);
 
+				ISqlExpression placeholderSqlExpr = query;
+
+				// if there is no FROM clause and only one column in SELECT clause, it means that we just used expression from Target
+				if (query.Select.From.Tables.Count == 0 && query.Select.Columns.Count == 1)
+					placeholderSqlExpr = query.Select.Columns[0].Expression;
+
 				// creating subquery placeholder
-				var resultPlaceholder = ExpressionBuilder.CreatePlaceholder(TargetContextRef.BuildContext, query, placeholder.Path);
+				var resultPlaceholder = ExpressionBuilder.CreatePlaceholder(TargetContextRef.BuildContext, placeholderSqlExpr, placeholder.Path);
 
 				var result = sqlExpr.Replace(placeholder, resultPlaceholder, ExpressionEqualityComparer.Instance);
 

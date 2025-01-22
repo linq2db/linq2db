@@ -108,7 +108,7 @@ namespace LinqToDB.DataProvider.Firebird
 			var identityField = insertClause.Into!.GetIdentityField();
 
 			if (identityField == null)
-				throw new SqlException("Identity field must be defined for '{0}'.", insertClause.Into.NameForLogging);
+				throw new LinqToDBException($"Identity field must be defined for '{insertClause.Into.NameForLogging}'.");
 
 			AppendIndent().AppendLine("RETURNING");
 			AppendIndent().Append('\t');
@@ -161,7 +161,7 @@ namespace LinqToDB.DataProvider.Firebird
 
 					// type for UUID, e.g. see https://firebirdsql.org/refdocs/langrefupd25-intfunc-gen_uuid.html
 					StringBuilder.Append(" CHARACTER SET UNICODE_FSS");
-					                                                                                      break;
+																										  break;
 
 				case DataType.Guid          : StringBuilder.Append("CHAR(16) CHARACTER SET OCTETS");      break;
 				case DataType.NChar         :
@@ -173,16 +173,16 @@ namespace LinqToDB.DataProvider.Firebird
 					break;
 
 				case DataType.Binary when type.Length == null || type.Length < 1:
-                    StringBuilder.Append("CHAR CHARACTER SET OCTETS");
-                    break;
+					StringBuilder.Append("CHAR CHARACTER SET OCTETS");
+					break;
 
 				case DataType.Binary:
-                    StringBuilder.Append(CultureInfo.InvariantCulture, $"CHAR({type.Length}) CHARACTER SET OCTETS");
+					StringBuilder.Append(CultureInfo.InvariantCulture, $"CHAR({type.Length}) CHARACTER SET OCTETS");
 					break;
 
 				case DataType.VarBinary when type.Length == null || type.Length > 32_765:
 					StringBuilder.Append("BLOB");
-                    break;
+					break;
 
 				case DataType.VarBinary:
 					StringBuilder.Append(CultureInfo.InvariantCulture, $"VARCHAR({type.Length}) CHARACTER SET OCTETS");
@@ -260,13 +260,7 @@ namespace LinqToDB.DataProvider.Firebird
 
 		protected override void BuildParameter(SqlParameter parameter)
 		{
-			if (BuildStep == Step.TypedExpression || !parameter.NeedsCast)
-			{
-				base.BuildParameter(parameter);
-				return;
-			}
-
-			if (parameter.NeedsCast)
+			if (parameter.NeedsCast && BuildStep != Step.TypedExpression)
 			{
 				var paramValue = parameter.GetParameterValue(OptimizationContext.EvaluationContext.ParameterValues);
 

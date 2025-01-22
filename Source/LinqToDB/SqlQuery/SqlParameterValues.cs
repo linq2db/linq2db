@@ -12,11 +12,11 @@ namespace LinqToDB.SqlQuery
 		private Dictionary<SqlParameter, SqlParameterValue>? _valuesByParameter;
 		private Dictionary<int, SqlParameterValue>?          _valuesByAccessor;
 
-		public void AddValue(SqlParameter parameter, object? providerValue, DbDataType dbDataType)
+		public void AddValue(SqlParameter parameter, object? providerValue, object? clientValue, DbDataType dbDataType)
 		{
 			_valuesByParameter ??= new ();
 
-			var parameterValue = new SqlParameterValue(providerValue, dbDataType);
+			var parameterValue = new SqlParameterValue(providerValue, clientValue, dbDataType);
 
 			_valuesByParameter.Remove(parameter);
 			_valuesByParameter.Add(parameter, parameterValue);
@@ -29,18 +29,18 @@ namespace LinqToDB.SqlQuery
 			}
 		}
 
-		public void SetValue(SqlParameter parameter, object? value)
+		public void SetValue(SqlParameter parameter, object? providerValue, object? clientValue)
 		{
 			_valuesByParameter ??= new ();
 			if (!_valuesByParameter.TryGetValue(parameter, out var parameterValue))
 			{
-				parameterValue = new SqlParameterValue(value, parameter.Type);
+				parameterValue = new SqlParameterValue(providerValue, clientValue, parameter.Type);
 				_valuesByParameter.Add(parameter, parameterValue);
 			}
 			else
 			{
 				_valuesByParameter.Remove(parameter);
-				_valuesByParameter.Add(parameter, new SqlParameterValue(value, parameterValue.DbDataType));
+				_valuesByParameter.Add(parameter, new SqlParameterValue(providerValue, clientValue, parameterValue.DbDataType));
 			}
 
 			if (parameter.AccessorId != null)
@@ -48,13 +48,13 @@ namespace LinqToDB.SqlQuery
 				_valuesByAccessor ??= new ();
 				if (!_valuesByAccessor.TryGetValue(parameter.AccessorId.Value, out parameterValue))
 				{
-					parameterValue = new SqlParameterValue(value, parameter.Type);
+					parameterValue = new SqlParameterValue(providerValue, clientValue, parameter.Type);
 					_valuesByAccessor.Add(parameter.AccessorId.Value, parameterValue);
 				}
 				else
 				{
 					_valuesByAccessor.Remove(parameter.AccessorId.Value);
-					_valuesByAccessor.Add(parameter.AccessorId.Value, new SqlParameterValue(value, parameterValue.DbDataType));
+					_valuesByAccessor.Add(parameter.AccessorId.Value, new SqlParameterValue(providerValue, clientValue, parameterValue.DbDataType));
 				}
 			}
 		}

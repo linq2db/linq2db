@@ -1,4 +1,5 @@
 ﻿using LinqToDB;
+using LinqToDB.Mapping;
 using NUnit.Framework;
 using System;
 using System.Linq;
@@ -541,23 +542,84 @@ namespace Tests.xUpdate
 			}
 		}
 
+		[Test]
+		public void Issue2990([IncludeDataSources(true, TestProvName.AllOracle)] string context)
+		{
+			using var db    = GetDataContext(context);
+			using var src   = db.CreateLocalTable<TestSource>();
+			using var dest2 = db.CreateLocalTable<Dest2>();
+
+			var q =
+				from s in src
+				let d = dest2.Where(x => x.ID > 5).First()
+				select new
+				{
+					A = s.ID,
+					B = d.ID,
+				};
+
+			var count = q.MultiInsert()
+				.When(x => true, dest2, x => new Dest2 { ID = x.A, Int = x.B })
+				.InsertFirst();
+
+			// INSERT ALL should be generated with OUTER APPLY, as if SELECT was executed alone, and not crash.
+			// #2990 crashes with 'value(TestDataContext).GetTable().Where(x => (x.ID > 5)).First().ID' cannot be converted to SQL.
+			count.Should().Be(0);
+		}
+
 		sealed class TestSource
 		{
 			public int   ID { get; set; }
 			public short N  { get; set; }
 		}
 
-		sealed class Dest1
+		public sealed class Dest1
 		{
 			public int     ID          { get; set; }
 			public short?  Value       { get; set; }
 			public string? StringValue { get; set; }
 		}
 
-		sealed class Dest2
+		public sealed class Dest2
 		{
 			public int ID    { get; set; }
 			public int Int   { get; set; }
+		}
+
+		[ActiveIssue]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/2988")]
+		public void InheritanceMapping([IncludeDataSources(true, TestProvName.AllOracle)] string context)
+		{
+			using var db   = GetDataContext(context);
+			using var dest = db.CreateLocalTable<Base>();
+
+			db
+				.SelectQuery(() => new TestSource { ID = 1 })
+				.MultiInsert()
+				.Into(
+					db.GetTable<Base>(),
+					src => new Derived { ID = src.ID }
+					)
+				.Insert();
+
+			var entity = db.GetTable<Base>().First();
+
+			entity.Should().BeOfType<Derived>();
+		}
+
+		[Table("MULTI_INSERT_INHERIT", IsColumnAttributeRequired = false)]
+		[InheritanceMapping(Code = 42, Type = typeof(Derived))]
+		abstract class Base
+		{
+			public int ID { get; set; }
+
+			[Column(IsDiscriminator = true)]
+			public abstract int Type { get; }
+		}
+
+		class Derived : Base
+		{
+			public override int Type => 42;
 		}
 	}
 }

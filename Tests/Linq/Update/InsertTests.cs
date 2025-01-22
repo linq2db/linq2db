@@ -8,6 +8,7 @@ using LinqToDB.Data;
 using LinqToDB.DataProvider.SqlServer;
 using LinqToDB.Linq;
 using LinqToDB.Mapping;
+using LinqToDB.Tools;
 
 using NUnit.Framework;
 
@@ -320,15 +321,12 @@ namespace Tests.xUpdate
 				var id = 1;
 
 				var insertable = db.Child
-					.Where(c => c.ChildID == 11)
+					.Where(c => c.ChildID == 111)
 					.Into(db.Child)
 					.Value(c => c.ParentID, c => c.ParentID)
 					.Value(c => c.ChildID, () => id);
 
-				var sql = insertable.ToString();
-				TestContext.WriteLine(sql);
-
-				Assert.That(sql, Does.Contain("INSERT"));
+				var sql = insertable.Insert();
 			}
 		}
 
@@ -1236,7 +1234,7 @@ namespace Tests.xUpdate
 		[Test]
 		public void InsertOrReplaceWithIdentity()
 		{
-			Assert.Throws<LinqException>(() =>
+			Assert.Throws<LinqToDBException>(() =>
 			{
 				using (var db = new DataConnection())
 				{
@@ -2411,6 +2409,73 @@ namespace Tests.xUpdate
 				});
 			}
 		}
-#endregion
+		#endregion
+
+		#region Issue 3927
+		[Table]
+		sealed class Issue3927Table
+		{
+			[Column(DataType = DataType.Char, Length = 11), PrimaryKey, NotNull] public string SerialNumber { get; set; } = null!;
+			[Column(DataType = DataType.Int32)] public int PageNumber { get; set; }
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/3927")]
+		public void Issue3927Test1([DataSources(TestProvName.AllSybase, TestProvName.AllSapHana, TestProvName.AllMariaDB)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable<Issue3927Table>();
+
+			var serialNumber = "12345678901";
+			var pageNumber = 9;
+			tb
+				.Where(display => display.SerialNumber == serialNumber)
+				.Into(tb)
+				.Value(display => display.PageNumber, pageNumber)
+				.Insert();
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/3927")]
+		public void Issue3927Test2([DataSources(TestProvName.AllSybase, TestProvName.AllSapHana, TestProvName.AllMariaDB)] string context)
+		{
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable<Issue3927Table>();
+
+			var serialNumber = "12345678901";
+			var pageNumber = 9;
+			tb
+				.Where(display => display.SerialNumber == serialNumber)
+				.Into(tb)
+				.Value(display => display.PageNumber, r => pageNumber)
+				.Insert();
+		}
+		#endregion
+
+		#region Issue 4702
+		[Table]
+		public partial class Issue4702Table
+		{
+			//[SequenceName("Issue4702Table_Id_seq")]
+			[PrimaryKey, Identity] public int Id { get; set; }
+			[Column] public string? Text { get; set; }
+		}
+
+		[ActiveIssue(
+			Details = "Update test to test different RetrieveIdentity modes for all providers with sequences",
+			Configurations = [TestProvName.AllFirebird, TestProvName.AllAccess, TestProvName.AllDB2, TestProvName.AllPostgreSQL, ProviderName.SqlCe, TestProvName.AllSqlServer, TestProvName.AllSapHana])]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4702")]
+		public void Issue4702Test([DataSources(false)] string context, [Values] bool useSequence)
+		{
+			using var db = GetDataConnection(context);
+			using var tb = db.CreateLocalTable<Issue4702Table>();
+
+			List<Issue4702Table> records = [
+				new() { Text = "Text 1" },
+				new() { Text = "Text 2" }
+			];
+
+			db.BulkCopy(new BulkCopyOptions { KeepIdentity = true }, records.RetrieveIdentity(db, useSequence));
+			tb.Insert(() => new Issue4702Table() { Text = "Text 3" });
+		}
+		#endregion
 	}
 }

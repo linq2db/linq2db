@@ -5,7 +5,6 @@ using NUnit.Framework;
 namespace Tests.UserTests
 {
 	using LinqToDB;
-	using LinqToDB.Data;
 
 	[TestFixture]
 	public class UnknownSqlTests : TestBase
@@ -22,21 +21,23 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void Test()
+		public void Test([DataSources] string context)
 		{
-			using (var db = new DataConnection())
-			{
-				var q = db.GetTable<CustomTableColumn>()
+			using var db = GetDataContext(context);
+			using var tb = db.CreateLocalTable<CustomTableColumn>();
+
+			var q = db.GetTable<CustomTableColumn>()
 					.Select(
 						x => new
 						{
 							DataType = Sql.AsSql(ColumnDataType.Unknown),
 						});
 
-				var sql = q.ToString();
+			var sql = q.ToSqlQuery().Sql;
 
-				Assert.That(sql, Is.Not.Contains("Unknown"));
-			}
+			Assert.That(sql, Is.Not.Contains("Unknown"));
+
+			q.ToArray();
 		}
 	}
 }

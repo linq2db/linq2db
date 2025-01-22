@@ -32,7 +32,7 @@ namespace Tests.Linq
 		TemporalTest[] CreateTestTable(ITestDataContext db)
 		{
 			using var dc = db is TestDataConnection dcx ?
-				new DataConnection(db.Options.WithOptions<ConnectionOptions>(o => o with { DbConnection = dcx.Connection, DataProvider = dcx.DataProvider})) :
+				new DataConnection(db.Options.UseConnection(dcx.DataProvider, dcx.Connection)) :
 				new DataConnection(db.ConfigurationString);
 
 			using var sy = new SystemDB(db.ConfigurationString!);
@@ -70,7 +70,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void AsOfTest([IncludeDataSources(true, TestProvName.AllSqlServer2016Plus)] string context, [Values(true, false)] bool inlinParameters)
+		public void AsOfTest([IncludeDataSources(true, TestProvName.AllSqlServer2016Plus)] string context, [Values] bool inlinParameters)
 		{
 			using var _  = new DisableBaseline("Current datetime parameters used");
 			using var db = GetDataContext(context);
@@ -91,7 +91,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void AsOfTest2([IncludeDataSources(true, TestProvName.AllSqlServer2016Plus)] string context, [Values(true, false)] bool inlinParameters)
+		public void AsOfTest2([IncludeDataSources(true, TestProvName.AllSqlServer2016Plus)] string context, [Values] bool inlinParameters)
 		{
 			using var _  = new DisableBaseline("Current datetime parameters used");
 			using var db = GetDataContext(context);
@@ -118,7 +118,7 @@ namespace Tests.Linq
 		public void RangeTest(
 			[IncludeDataSources(true, TestProvName.AllSqlServer2016Plus)] string context,
 			[Values(SqlServerHints.TemporalTable.FromTo, SqlServerHints.TemporalTable.Between, SqlServerHints.TemporalTable.ContainedIn)] string hint,
-			[Values(true, false)] bool inlinParameters)
+			[Values] bool inlinParameters)
 		{
 			using var _  = new DisableBaseline("Current datetime parameters used");
 			using var db = GetDataContext(context);
@@ -225,7 +225,7 @@ namespace Tests.Linq
 					.DefaultIfEmpty()
 				select t;
 
-			TestContext.WriteLine(q.ToString());
+			_ = q.ToSqlQuery();
 
 			var selectQuery = q.GetSelectQuery();
 

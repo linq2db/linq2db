@@ -26,6 +26,8 @@ namespace Default.SqlServer
 {
 	public partial class TestDataDB : LinqToDB.Data.DataConnection
 	{
+		#region Tables
+
 		public ITable<AllType>                  AllTypes                 { get { return this.GetTable<AllType>(); } }
 		public ITable<AllTypes2>                AllTypes2                { get { return this.GetTable<AllTypes2>(); } }
 		public ITable<Child>                    Children                 { get { return this.GetTable<Child>(); } }
@@ -67,6 +69,10 @@ namespace Default.SqlServer
 		/// </summary>
 		public ITable<TheParent>                TheParents               { get { return this.GetTable<TheParent>(); } }
 
+		#endregion
+
+		#region .ctor
+
 		public TestDataDB()
 		{
 			InitDataContext();
@@ -96,6 +102,8 @@ namespace Default.SqlServer
 
 		partial void InitDataContext  ();
 		partial void InitMappingSchema();
+
+		#endregion
 
 		#region Table Functions
 
@@ -251,7 +259,7 @@ namespace Default.SqlServer
 		/// <summary>
 		/// FK_Doctor_Person (dbo.Person)
 		/// </summary>
-		[Association(ThisKey="PersonID", OtherKey="ID", CanBeNull=false)]
+		[Association(ThisKey=nameof(PersonID), OtherKey=nameof(Default.SqlServer.Person.ID), CanBeNull=false)]
 		public Person Person { get; set; } = null!;
 
 		#endregion
@@ -292,7 +300,7 @@ namespace Default.SqlServer
 		/// <summary>
 		/// FK_Patient2_IndexTable_BackReference (dbo.IndexTable2)
 		/// </summary>
-		[Association(ThisKey="PKField2, PKField1", OtherKey="PKField2, PKField1", CanBeNull=true)]
+		[Association(ThisKey=nameof(PKField2) + ", " + nameof(PKField1), OtherKey=nameof(Default.SqlServer.IndexTable2.PKField2) + ", " + nameof(Default.SqlServer.IndexTable2.PKField1), CanBeNull=true)]
 		public IndexTable2? Patient { get; set; }
 
 		#endregion
@@ -309,7 +317,7 @@ namespace Default.SqlServer
 		/// <summary>
 		/// FK_Patient2_IndexTable (dbo.IndexTable)
 		/// </summary>
-		[Association(ThisKey="PKField2, PKField1", OtherKey="PKField2, PKField1", CanBeNull=false)]
+		[Association(ThisKey=nameof(PKField2) + ", " + nameof(PKField1), OtherKey=nameof(Default.SqlServer.IndexTable.PKField2) + ", " + nameof(Default.SqlServer.IndexTable.PKField1), CanBeNull=false)]
 		public IndexTable Patient2IndexTable { get; set; } = null!;
 
 		#endregion
@@ -375,7 +383,7 @@ namespace Default.SqlServer
 		/// <summary>
 		/// FK_Provider_Member_BackReference (dbo.Provider)
 		/// </summary>
-		[Association(ThisKey="MemberId", OtherKey="ProviderId", CanBeNull=true)]
+		[Association(ThisKey=nameof(MemberId), OtherKey=nameof(Default.SqlServer.Provider.ProviderId), CanBeNull=true)]
 		public Provider? Provider { get; set; }
 
 		#endregion
@@ -414,7 +422,7 @@ namespace Default.SqlServer
 		/// <summary>
 		/// FK_Patient_Person (dbo.Person)
 		/// </summary>
-		[Association(ThisKey="PersonID", OtherKey="ID", CanBeNull=false)]
+		[Association(ThisKey=nameof(PersonID), OtherKey=nameof(Default.SqlServer.Person.ID), CanBeNull=false)]
 		public Person Person { get; set; } = null!;
 
 		#endregion
@@ -434,13 +442,13 @@ namespace Default.SqlServer
 		/// <summary>
 		/// FK_Doctor_Person_BackReference (dbo.Doctor)
 		/// </summary>
-		[Association(ThisKey="ID", OtherKey="PersonID", CanBeNull=true)]
+		[Association(ThisKey=nameof(ID), OtherKey=nameof(Default.SqlServer.Doctor.PersonID), CanBeNull=true)]
 		public Doctor? Doctor { get; set; }
 
 		/// <summary>
 		/// FK_Patient_Person_BackReference (dbo.Patient)
 		/// </summary>
-		[Association(ThisKey="ID", OtherKey="PersonID", CanBeNull=true)]
+		[Association(ThisKey=nameof(ID), OtherKey=nameof(Default.SqlServer.Patient.PersonID), CanBeNull=true)]
 		public Patient? Patient { get; set; }
 
 		#endregion
@@ -457,7 +465,7 @@ namespace Default.SqlServer
 		/// <summary>
 		/// FK_Provider_Member (dbo.Member)
 		/// </summary>
-		[Association(ThisKey="ProviderId", OtherKey="MemberId", CanBeNull=false)]
+		[Association(ThisKey=nameof(ProviderId), OtherKey=nameof(Default.SqlServer.Member.MemberId), CanBeNull=false)]
 		public Member Member { get; set; } = null!;
 
 		#endregion
@@ -562,19 +570,19 @@ namespace Default.SqlServer
 		/// <summary>
 		/// FK_TestSchema_TestSchemaBY_TargetTestSchemaA2_BackReference (TestSchema.TestSchemaB)
 		/// </summary>
-		[Association(ThisKey="ID", OtherKey="TargetTestSchemaAId", CanBeNull=true)]
+		[Association(ThisKey=nameof(ID), OtherKey=nameof(Default.SqlServer.TestSchema_TestSchemaB.TargetTestSchemaAId), CanBeNull=true)]
 		public IEnumerable<TestSchema_TestSchemaB> FkTestSchemaTestSchemaBYTargetTestSchemaA2BackReferences { get; set; } = null!;
 
 		/// <summary>
 		/// FK_TestSchema_TestSchemaBY_OriginTestSchemaA_BackReference (TestSchema.TestSchemaB)
 		/// </summary>
-		[Association(ThisKey="ID", OtherKey="OriginTestSchemaAID", CanBeNull=true)]
+		[Association(ThisKey=nameof(ID), OtherKey=nameof(Default.SqlServer.TestSchema_TestSchemaB.OriginTestSchemaAID), CanBeNull=true)]
 		public IEnumerable<TestSchema_TestSchemaB> TestSchemaBYOriginTestSchemaA { get; set; } = null!;
 
 		/// <summary>
 		/// FK_TestSchema_TestSchemaBY_TargetTestSchemaA_BackReference (TestSchema.TestSchemaB)
 		/// </summary>
-		[Association(ThisKey="ID", OtherKey="TargetTestSchemaAID", CanBeNull=true)]
+		[Association(ThisKey=nameof(ID), OtherKey=nameof(Default.SqlServer.TestSchema_TestSchemaB.TargetTestSchemaAID), CanBeNull=true)]
 		public IEnumerable<TestSchema_TestSchemaB> TestSchemaBYTargetTestSchemaA { get; set; } = null!;
 
 		#endregion
@@ -593,19 +601,19 @@ namespace Default.SqlServer
 		/// <summary>
 		/// FK_TestSchema_TestSchemaBY_TargetTestSchemaA (TestSchema.TestSchemaA)
 		/// </summary>
-		[Association(ThisKey="TargetTestSchemaAID", OtherKey="ID", CanBeNull=false)]
+		[Association(ThisKey=nameof(TargetTestSchemaAID), OtherKey=nameof(Default.SqlServer.TestSchema_TestSchemaA.ID), CanBeNull=false)]
 		public TestSchema_TestSchemaA FKTargetTestSchemaA { get; set; } = null!;
 
 		/// <summary>
 		/// FK_TestSchema_TestSchemaBY_OriginTestSchemaA (TestSchema.TestSchemaA)
 		/// </summary>
-		[Association(ThisKey="OriginTestSchemaAID", OtherKey="ID", CanBeNull=false)]
+		[Association(ThisKey=nameof(OriginTestSchemaAID), OtherKey=nameof(Default.SqlServer.TestSchema_TestSchemaA.ID), CanBeNull=false)]
 		public TestSchema_TestSchemaA OriginTestSchemaA { get; set; } = null!;
 
 		/// <summary>
 		/// FK_TestSchema_TestSchemaBY_TargetTestSchemaA2 (TestSchema.TestSchemaA)
 		/// </summary>
-		[Association(ThisKey="TargetTestSchemaAId", OtherKey="ID", CanBeNull=false)]
+		[Association(ThisKey=nameof(TargetTestSchemaAId), OtherKey=nameof(Default.SqlServer.TestSchema_TestSchemaA.ID), CanBeNull=false)]
 		public TestSchema_TestSchemaA TargetTestSchemaA { get; set; } = null!;
 
 		#endregion
@@ -628,19 +636,19 @@ namespace Default.SqlServer
 		/// <summary>
 		/// FK_TestSchemaY_TestSchemaX_BackReference (dbo.TestSchemaY)
 		/// </summary>
-		[Association(ThisKey="ID", OtherKey="TestSchemaXID", CanBeNull=true)]
+		[Association(ThisKey=nameof(ID), OtherKey=nameof(Default.SqlServer.TestSchemaY.TestSchemaXID), CanBeNull=true)]
 		public IEnumerable<TestSchemaY> TestSchemaY { get; set; } = null!;
 
 		/// <summary>
 		/// FK_TestSchemaY_OtherID_BackReference (dbo.TestSchemaY)
 		/// </summary>
-		[Association(ThisKey="ID", OtherKey="TestSchemaXID", CanBeNull=true)]
+		[Association(ThisKey=nameof(ID), OtherKey=nameof(Default.SqlServer.TestSchemaY.TestSchemaXID), CanBeNull=true)]
 		public IEnumerable<TestSchemaY> TestSchemaYOtherIds { get; set; } = null!;
 
 		/// <summary>
 		/// FK_TestSchemaY_ParentTestSchemaX_BackReference (dbo.TestSchemaY)
 		/// </summary>
-		[Association(ThisKey="ID", OtherKey="ParentTestSchemaXID", CanBeNull=true)]
+		[Association(ThisKey=nameof(ID), OtherKey=nameof(Default.SqlServer.TestSchemaY.ParentTestSchemaXID), CanBeNull=true)]
 		public IEnumerable<TestSchemaY> TestSchemaYParentTestSchemaX { get; set; } = null!;
 
 		#endregion
@@ -658,19 +666,19 @@ namespace Default.SqlServer
 		/// <summary>
 		/// FK_TestSchemaY_OtherID (dbo.TestSchemaX)
 		/// </summary>
-		[Association(ThisKey="TestSchemaXID", OtherKey="ID", CanBeNull=false)]
+		[Association(ThisKey=nameof(TestSchemaXID), OtherKey=nameof(Default.SqlServer.TestSchemaX.ID), CanBeNull=false)]
 		public TestSchemaX FkTestSchemaYOtherID { get; set; } = null!;
 
 		/// <summary>
 		/// FK_TestSchemaY_ParentTestSchemaX (dbo.TestSchemaX)
 		/// </summary>
-		[Association(ThisKey="ParentTestSchemaXID", OtherKey="ID", CanBeNull=false)]
+		[Association(ThisKey=nameof(ParentTestSchemaXID), OtherKey=nameof(Default.SqlServer.TestSchemaX.ID), CanBeNull=false)]
 		public TestSchemaX ParentTestSchemaX { get; set; } = null!;
 
 		/// <summary>
 		/// FK_TestSchemaY_TestSchemaX (dbo.TestSchemaX)
 		/// </summary>
-		[Association(ThisKey="TestSchemaXID", OtherKey="ID", CanBeNull=false)]
+		[Association(ThisKey=nameof(TestSchemaXID), OtherKey=nameof(Default.SqlServer.TestSchemaX.ID), CanBeNull=false)]
 		public TestSchemaX TestSchemaX { get; set; } = null!;
 
 		#endregion
@@ -804,19 +812,14 @@ namespace Default.SqlServer
 		{
 			var parameters = new []
 			{
-				new DataParameter("@str",            @str,            LinqToDB.DataType.VarChar)
+				new DataParameter("@str",            @str,            LinqToDB.DataType.VarChar, 50),
+				new DataParameter("@outputStr",      @outputStr,      LinqToDB.DataType.VarChar, 50)
 				{
-					Size = 50
+					Direction = ParameterDirection.InputOutput
 				},
-				new DataParameter("@outputStr",      @outputStr,      LinqToDB.DataType.VarChar)
+				new DataParameter("@inputOutputStr", @inputOutputStr, LinqToDB.DataType.VarChar, 50)
 				{
-					Direction = ParameterDirection.InputOutput,
-					Size      = 50
-				},
-				new DataParameter("@inputOutputStr", @inputOutputStr, LinqToDB.DataType.VarChar)
-				{
-					Direction = ParameterDirection.InputOutput,
-					Size      = 50
+					Direction = ParameterDirection.InputOutput
 				}
 			};
 
@@ -845,19 +848,14 @@ namespace Default.SqlServer
 				{
 					Direction = ParameterDirection.InputOutput
 				},
-				new DataParameter("@str",            @str,            LinqToDB.DataType.VarChar)
+				new DataParameter("@str",            @str,            LinqToDB.DataType.VarChar, 50),
+				new DataParameter("@outputStr",      @outputStr,      LinqToDB.DataType.VarChar, 50)
 				{
-					Size = 50
+					Direction = ParameterDirection.InputOutput
 				},
-				new DataParameter("@outputStr",      @outputStr,      LinqToDB.DataType.VarChar)
+				new DataParameter("@inputOutputStr", @inputOutputStr, LinqToDB.DataType.VarChar, 50)
 				{
-					Direction = ParameterDirection.InputOutput,
-					Size      = 50
-				},
-				new DataParameter("@inputOutputStr", @inputOutputStr, LinqToDB.DataType.VarChar)
-				{
-					Direction = ParameterDirection.InputOutput,
-					Size      = 50
+					Direction = ParameterDirection.InputOutput
 				}
 			};
 
@@ -898,14 +896,8 @@ namespace Default.SqlServer
 		{
 			var parameters = new []
 			{
-				new DataParameter("@firstName", @firstName, LinqToDB.DataType.NVarChar)
-				{
-					Size = 50
-				},
-				new DataParameter("@lastName",  @lastName,  LinqToDB.DataType.NVarChar)
-				{
-					Size = 50
-				}
+				new DataParameter("@firstName", @firstName, LinqToDB.DataType.NVarChar, 50),
+				new DataParameter("@lastName",  @lastName,  LinqToDB.DataType.NVarChar, 50)
 			};
 
 			return dataConnection.QueryProc<PatientSelectByNameResult>("[dbo].[Patient_SelectByName]", parameters);
@@ -943,22 +935,10 @@ namespace Default.SqlServer
 		{
 			var parameters = new []
 			{
-				new DataParameter("@FirstName",  @FirstName,  LinqToDB.DataType.NVarChar)
-				{
-					Size = 50
-				},
-				new DataParameter("@LastName",   @LastName,   LinqToDB.DataType.NVarChar)
-				{
-					Size = 50
-				},
-				new DataParameter("@MiddleName", @MiddleName, LinqToDB.DataType.NVarChar)
-				{
-					Size = 50
-				},
-				new DataParameter("@Gender",     @Gender,     LinqToDB.DataType.Char)
-				{
-					Size = 1
-				}
+				new DataParameter("@FirstName",  @FirstName,  LinqToDB.DataType.NVarChar, 50),
+				new DataParameter("@LastName",   @LastName,   LinqToDB.DataType.NVarChar, 50),
+				new DataParameter("@MiddleName", @MiddleName, LinqToDB.DataType.NVarChar, 50),
+				new DataParameter("@Gender",     @Gender,     LinqToDB.DataType.Char, 1)
 			};
 
 			return dataConnection.QueryProc<PersonInsertResult>("[dbo].[Person_Insert]", parameters);
@@ -977,22 +957,10 @@ namespace Default.SqlServer
 		{
 			var parameters = new []
 			{
-				new DataParameter("@FirstName", @FirstName, LinqToDB.DataType.NVarChar)
-				{
-					Size = 50
-				},
-				new DataParameter("@LastName", @LastName, LinqToDB.DataType.NVarChar)
-				{
-					Size = 50
-				},
-				new DataParameter("@MiddleName", @MiddleName, LinqToDB.DataType.NVarChar)
-				{
-					Size = 50
-				},
-				new DataParameter("@Gender",   @Gender,   LinqToDB.DataType.Char)
-				{
-					Size = 1
-				},
+				new DataParameter("@FirstName", @FirstName, LinqToDB.DataType.NVarChar, 50),
+				new DataParameter("@LastName", @LastName, LinqToDB.DataType.NVarChar, 50),
+				new DataParameter("@MiddleName", @MiddleName, LinqToDB.DataType.NVarChar, 50),
+				new DataParameter("@Gender",   @Gender,   LinqToDB.DataType.Char, 1),
 				new DataParameter("@PersonID", @PersonID, LinqToDB.DataType.Int32)
 				{
 					Direction = ParameterDirection.InputOutput
@@ -1057,14 +1025,8 @@ namespace Default.SqlServer
 		{
 			var parameters = new []
 			{
-				new DataParameter("@firstName", @firstName, LinqToDB.DataType.NVarChar)
-				{
-					Size = 50
-				},
-				new DataParameter("@lastName",  @lastName,  LinqToDB.DataType.NVarChar)
-				{
-					Size = 50
-				}
+				new DataParameter("@firstName", @firstName, LinqToDB.DataType.NVarChar, 50),
+				new DataParameter("@lastName",  @lastName,  LinqToDB.DataType.NVarChar, 50)
 			};
 
 			return dataConnection.QueryProc<Person>("[dbo].[Person_SelectByName]", parameters);
@@ -1078,14 +1040,8 @@ namespace Default.SqlServer
 		{
 			var parameters = new []
 			{
-				new DataParameter("@firstName", @firstName, LinqToDB.DataType.NVarChar)
-				{
-					Size = 50
-				},
-				new DataParameter("@lastName",  @lastName,  LinqToDB.DataType.NVarChar)
-				{
-					Size = 50
-				}
+				new DataParameter("@firstName", @firstName, LinqToDB.DataType.NVarChar, 50),
+				new DataParameter("@lastName",  @lastName,  LinqToDB.DataType.NVarChar, 50)
 			};
 
 			return dataConnection.QueryProc<Person>("[dbo].[Person_SelectListByName]", parameters);
@@ -1100,22 +1056,10 @@ namespace Default.SqlServer
 			var parameters = new []
 			{
 				new DataParameter("@PersonID",   @PersonID,   LinqToDB.DataType.Int32),
-				new DataParameter("@FirstName",  @FirstName,  LinqToDB.DataType.NVarChar)
-				{
-					Size = 50
-				},
-				new DataParameter("@LastName",   @LastName,   LinqToDB.DataType.NVarChar)
-				{
-					Size = 50
-				},
-				new DataParameter("@MiddleName", @MiddleName, LinqToDB.DataType.NVarChar)
-				{
-					Size = 50
-				},
-				new DataParameter("@Gender",     @Gender,     LinqToDB.DataType.Char)
-				{
-					Size = 1
-				}
+				new DataParameter("@FirstName",  @FirstName,  LinqToDB.DataType.NVarChar, 50),
+				new DataParameter("@LastName",   @LastName,   LinqToDB.DataType.NVarChar, 50),
+				new DataParameter("@MiddleName", @MiddleName, LinqToDB.DataType.NVarChar, 50),
+				new DataParameter("@Gender",     @Gender,     LinqToDB.DataType.Char, 1)
 			};
 
 			return dataConnection.ExecuteProc("[dbo].[Person_Update]", parameters);

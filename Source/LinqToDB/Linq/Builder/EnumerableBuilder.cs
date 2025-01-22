@@ -10,57 +10,35 @@ namespace LinqToDB.Linq.Builder
 	using Reflection;
 	using LinqToDB.Expressions;
 
+	[BuildsExpression(ExpressionType.Constant, ExpressionType.Call, ExpressionType.MemberAccess, ExpressionType.NewArrayInit)]
 	sealed class EnumerableBuilder : ISequenceBuilder
 	{
-		static readonly MethodInfo[] _containsMethodInfos = { Methods.Enumerable.Contains, Methods.Queryable.Contains };
-
-		public int          BuildCounter { get; set; }
-
-		public bool CanBuild(ExpressionBuilder builder, BuildInfo buildInfo)
+		public static bool CanBuild(Expression expr, BuildInfo info, ExpressionBuilder builder)
 		{
-			var expr = buildInfo.Expression;
-
 			if (expr.NodeType == ExpressionType.NewArrayInit)
-			{
 				return true;
-			}
-
-			if (expr.NodeType == ExpressionType.Call)
-			{
-				var mc = (MethodCallExpression)expr;
-				if (mc.IsSameGenericMethod(_containsMethodInfos))
-					return false;
-			}
 
 			if (!typeof(IEnumerable<>).IsSameOrParentOf(expr.Type))
 				return false;
 
-			var collectionType = typeof(IEnumerable<>).GetGenericType(expr.Type);
-			if (collectionType == null)
+			if (typeof(IEnumerable<>).GetGenericType(expr.Type) is null)
 				return false;
 
-			switch (expr.NodeType)
+			return expr.NodeType switch
 			{
-				case ExpressionType.MemberAccess:
-					return CanBuildMemberChain(((MemberExpression)expr).Expression);
-				case ExpressionType.Constant
-					when ((ConstantExpression)expr).Value is IEnumerable:
-						return true;
-				default:
-					return false;
-			}
+				ExpressionType.MemberAccess => CanBuildMemberChain(((MemberExpression)expr).Expression),
+				ExpressionType.Constant     => ((ConstantExpression)expr).Value is IEnumerable,
+				ExpressionType.Call         => builder.CanBeEvaluatedOnClient(expr),
+				_ => false,
+			};
 
 			static bool CanBuildMemberChain(Expression? expr)
 			{
-				if (expr == null)
-					return true;
-
-				if (expr.NodeType == ExpressionType.MemberAccess)
-					return CanBuildMemberChain(((MemberExpression)expr).Expression);
-
-				return expr.NodeType == ExpressionType.Constant;
+				while (expr is { NodeType: ExpressionType.MemberAccess })
+					expr = ((MemberExpression)expr).Expression;
+				
+				return expr is null or { NodeType: ExpressionType.Constant };
 			}
-
 		}
 
 		public BuildSequenceResult BuildSequence(ExpressionBuilder builder, BuildInfo buildInfo)

@@ -42,7 +42,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 			SqlProviderFlags.IsCommonTableExpressionsSupported = true;
 			SqlProviderFlags.IsSubQueryOrderBySupported        = true;
 			SqlProviderFlags.IsAllSetOperationsSupported       = true;
-			SqlProviderFlags.SupportsBooleanComparison         = true;
+			SqlProviderFlags.IsDistinctFromSupported           = true;
 
 			SqlProviderFlags.RowConstructorSupport = RowFeature.Equality        | RowFeature.Comparisons |
 			                                         RowFeature.CompareToSelect | RowFeature.In | RowFeature.IsNull |

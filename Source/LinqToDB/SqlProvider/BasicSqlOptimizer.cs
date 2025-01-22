@@ -9,6 +9,7 @@ namespace LinqToDB.SqlProvider
 {
 	using Common;
 	using Expressions;
+	using Linq;
 	using Mapping;
 	using SqlQuery;
 	using SqlQuery.Visitors;
@@ -23,6 +24,8 @@ namespace LinqToDB.SqlProvider
 		}
 
 		protected SqlProviderFlags SqlProviderFlags { get; }
+
+		public virtual bool RequiresCastingParametersForSetOperations => true;
 
 		#endregion
 
@@ -58,7 +61,7 @@ namespace LinqToDB.SqlProvider
 			statement = FinalizeInsert(statement);
 			statement = FinalizeSelect(statement);
 			statement = CorrectUnionOrderBy(statement);
-			statement = FixSetOperationNulls(statement);
+			statement = FixSetOperationValues(mappingSchema, statement);
 
 			// provider specific query correction
 			statement = FinalizeStatement(statement, evaluationContext, dataOptions, mappingSchema);
@@ -231,7 +234,7 @@ namespace LinqToDB.SqlProvider
 					var tableKey = tableKeys[i];
 
 					found = true;
-					searchCondition.AddEqual(tableKey, compareKeys[i], dataOptions.LinqOptions.CompareNullsAsValues);
+					searchCondition.AddEqual(tableKey, compareKeys[i], dataOptions.LinqOptions.CompareNulls);
 				}
 			}
 
@@ -307,7 +310,7 @@ namespace LinqToDB.SqlProvider
 
 							var originalColumn = keysColumns[index];
 
-							sc.AddEqual((ISqlExpression)newField, originalColumn, dataOptions.LinqOptions.CompareNullsAsValues);
+							sc.AddEqual((ISqlExpression)newField, originalColumn, dataOptions.LinqOptions.CompareNulls);
 						}
 
 						if (!SqlProviderFlags.IsUpdateFromSupported)
@@ -384,7 +387,6 @@ namespace LinqToDB.SqlProvider
 				{
 					item.Expression = QueryHelper.SimplifyColumnExpression(item.Expression);
 				});
-
 			}
 
 			return statement;
@@ -516,32 +518,51 @@ namespace LinqToDB.SqlProvider
 				withStack: true);
 		}
 
-		static void CorrelateNullValueTypes(ref ISqlExpression toCorrect, ISqlExpression reference)
+		static void CorrelateValueTypes(bool castParameters, ref ISqlExpression toCorrect, ISqlExpression reference)
 		{
 			if (toCorrect.ElementType == QueryElementType.Column)
 			{
 				var column     = (SqlColumn)toCorrect;
 				var columnExpr = column.Expression;
-				CorrelateNullValueTypes(ref columnExpr, reference);
+				CorrelateValueTypes(castParameters, ref columnExpr, reference);
 				column.Expression = columnExpr;
 			}
-			else if (toCorrect.ElementType == QueryElementType.SqlValue)
+			else
 			{
-				var value = (SqlValue)toCorrect;
-				if (value.Value == null)
+				var unwrapped = QueryHelper.UnwrapNullablity(toCorrect);
+				if (unwrapped.ElementType == QueryElementType.SqlValue)
 				{
-					var suggested = QueryHelper.SuggestDbDataType(reference);
-					if (suggested != null)
+					var value = (SqlValue)unwrapped;
+					if (value.Value == null)
 					{
-						toCorrect = new SqlValue(suggested.Value, null);
+						var suggested = QueryHelper.SuggestDbDataType(reference);
+						if (suggested != null)
+						{
+							toCorrect = new SqlValue(suggested.Value, null);
+						}
 					}
+					else
+					{
+						var suggested = QueryHelper.SuggestDbDataType(reference);
+						if (suggested == null)
+							suggested = value.ValueType;
+						toCorrect = new SqlCastExpression(value, suggested.Value, null, true);
+					}
+				}
+				else if (castParameters && unwrapped.ElementType == QueryElementType.SqlParameter)
+				{
+					var parameter = (SqlParameter)unwrapped;
+					var suggested = QueryHelper.SuggestDbDataType(reference);
+					if (suggested == null)
+						suggested = parameter.Type;
+					toCorrect = new SqlCastExpression(parameter, suggested.Value, null, true);
 				}
 			}
 		}
 
-		protected virtual SqlStatement FixSetOperationNulls(SqlStatement statement)
+		protected virtual SqlStatement FixSetOperationValues(MappingSchema mappingSchema, SqlStatement statement)
 		{
-			statement.VisitParentFirst(static e =>
+			statement.VisitParentFirst(this, static (ctx, e) =>
 			{
 				if (e.ElementType == QueryElementType.SqlQuery)
 				{
@@ -558,8 +579,8 @@ namespace LinqToDB.SqlProvider
 								var otherColumn = setOperator.SelectQuery.Select.Columns[i];
 								var otherExpr   = otherColumn.Expression;
 
-								CorrelateNullValueTypes(ref columnExpr, otherExpr);
-								CorrelateNullValueTypes(ref otherExpr, columnExpr);
+								CorrelateValueTypes(ctx.RequiresCastingParametersForSetOperations, ref columnExpr, otherExpr);
+								CorrelateValueTypes(ctx.RequiresCastingParametersForSetOperations, ref otherExpr, columnExpr);
 
 								otherColumn.Expression = otherExpr;
 							}
@@ -592,7 +613,67 @@ namespace LinqToDB.SqlProvider
 		/// <returns></returns>
 		public virtual SqlStatement TransformStatement(SqlStatement statement, DataOptions dataOptions, MappingSchema mappingSchema)
 		{
+			CorrectOutputTables(statement);
+
 			return statement;
+		}
+
+		protected virtual void CorrectOutputTables(SqlStatement statement)
+		{
+			SqlOutputClause CorrectOutputClause(SqlOutputClause output, ISqlTableSource? originalTable)
+			{
+				var result = output.Convert(1, (_, e) =>
+				{
+					if (e is SqlAnchor anchor)
+					{
+						if (anchor.AnchorKind is SqlAnchor.AnchorKindEnum.Inserted or SqlAnchor.AnchorKindEnum.Deleted)
+						{
+							var resultExpression = anchor.SqlExpression;
+
+							if (anchor is { AnchorKind: SqlAnchor.AnchorKindEnum.Inserted })
+							{
+								if (QueryHelper.GetUnderlyingField(anchor.SqlExpression) is { } field)
+								{
+									resultExpression = field;
+									if (field.Table != originalTable)
+									{
+										var newField = (originalTable as SqlTable)?.Fields.FirstOrDefault(f => f.PhysicalName == field.PhysicalName);
+										if (newField != null)
+										{
+											resultExpression = newField;
+										}
+									}
+								}
+							}
+
+							return resultExpression;
+						}
+					}
+
+					return e;
+				});
+				return result;
+			}
+
+			if (!SqlProviderFlags.OutputDeleteUseSpecialTable && statement is SqlDeleteStatement { Output.HasOutput: true } deleteStatement)
+			{
+				deleteStatement.Output = CorrectOutputClause(deleteStatement.Output, deleteStatement.Table);
+			}
+
+			if (!SqlProviderFlags.OutputUpdateUseSpecialTables && statement is SqlUpdateStatement { Output.HasOutput: true } updateStatement)
+			{
+				updateStatement.Output = CorrectOutputClause(updateStatement.Output, updateStatement.Update.Table);
+			}
+
+			if (!SqlProviderFlags.OutputInsertUseSpecialTable && statement is SqlInsertStatement { Output.HasOutput: true } insertStatement)
+			{
+				insertStatement.Output = CorrectOutputClause(insertStatement.Output, null);
+			}
+
+			if (!SqlProviderFlags.OutputMergeUseSpecialTables && statement is SqlMergeStatement { Output.HasOutput: true } mergeStatement)
+			{
+				mergeStatement.Output = CorrectOutputClause(mergeStatement.Output, mergeStatement.Target);
+			}
 		}
 
 		static void RegisterDependency(CteClause cteClause, Dictionary<CteClause, HashSet<CteClause>> foundCte)
@@ -783,7 +864,7 @@ namespace LinqToDB.SqlProvider
 				}
 
 				for (var i = 0; i < tableKeys.Count; i++)
-					wsc.AddEqual(copyKeys[i], tableKeys[i], false);
+					wsc.AddEqual(copyKeys[i], tableKeys[i], CompareNulls.LikeSql);
 
 				newDeleteStatement.SelectQuery.From.Table(copy).Where.SearchCondition.AddExists(deleteStatement.SelectQuery);
 				newDeleteStatement.With = deleteStatement.With;
@@ -1534,7 +1615,7 @@ namespace LinqToDB.SqlProvider
 			return false;
 		}
 
-		public virtual bool IsParameterDependedElement(NullabilityContext nullability, IQueryElement element)
+		public virtual bool IsParameterDependedElement(NullabilityContext nullability, IQueryElement element, DataOptions dataOptions, MappingSchema mappingSchema)
 		{
 			switch (element.ElementType)
 			{
@@ -1561,6 +1642,9 @@ namespace LinqToDB.SqlProvider
 					if (!param.IsQueryParameter)
 						return true;
 					if (param.NeedsCast)
+						return true;
+
+					if (param.Type.SystemType.IsNullableType())
 						return true;
 
 					return false;
@@ -1630,7 +1714,7 @@ namespace LinqToDB.SqlProvider
 					if (searchString.Expr2.ElementType != QueryElementType.SqlValue)
 						return true;
 
-					return IsParameterDependedElement(nullability, searchString.CaseSensitive);
+					return IsParameterDependedElement(nullability, searchString.CaseSensitive, dataOptions, mappingSchema);
 				}
 				case QueryElementType.SqlCase:
 				{
@@ -1672,10 +1756,10 @@ namespace LinqToDB.SqlProvider
 			return false;
 		}
 
-		public bool IsParameterDependent(NullabilityContext nullability, SqlStatement statement)
+		public bool IsParameterDependent(NullabilityContext nullability, MappingSchema mappingSchema, SqlStatement statement, DataOptions dataOptions)
 		{
-			return null != statement.Find((optimizer : this, nullability),
-				static (ctx, e) => ctx.optimizer.IsParameterDependedElement(ctx.nullability, e));
+			return null != statement.Find((optimizer : this, nullability, dataOptions, mappingSchema),
+				static (ctx, e) => ctx.optimizer.IsParameterDependedElement(ctx.nullability, e, ctx.dataOptions, ctx.mappingSchema));
 		}
 
 		public virtual SqlStatement FinalizeStatement(SqlStatement statement, EvaluationContext context, DataOptions dataOptions, MappingSchema mappingSchema)
@@ -1794,7 +1878,7 @@ namespace LinqToDB.SqlProvider
 		protected SqlStatement ReplaceTakeSkipWithRowNumber<TContext>(TContext context, SqlStatement statement, Func<TContext, SelectQuery, bool> predicate, bool supportsEmptyOrderBy)
 		{
 			return QueryHelper.WrapQuery(
-				(predicate, context, supportsEmptyOrderBy),
+				(predicate, context, supportsEmptyOrderBy, statement),
 				statement,
 				static (context, query, _) =>
 				{
@@ -1804,6 +1888,31 @@ namespace LinqToDB.SqlProvider
 				},
 				static (context, queries) =>
 				{
+					if (context.statement.SelectQuery == queries[^1])
+					{
+						// move orderby to root
+						for (var i = queries.Count - 1; i > 0; i--)
+						{
+							var innerQuery = queries[i];
+							var outerQuery = queries[i - 1];
+							foreach (var item in innerQuery.Select.OrderBy.Items)
+							{
+								foreach (var c in innerQuery.Select.Columns)
+								{
+									if (c.Expression.Equals(item.Expression))
+									{
+										outerQuery.OrderBy.Items.Add(new SqlOrderByItem(c, item.IsDescending, item.IsPositioned));
+										break;
+									}
+								}
+							}
+						}
+
+						// cleanup unnecessary intermediate copy to have ordering only on root query
+						for (var i = 1; i < queries.Count - 1; i++)
+							queries[i].OrderBy.Items.Clear();
+					}
+
 					var query = queries[queries.Count - 1];
 					var processingQuery = queries[queries.Count - 2];
 
@@ -1840,16 +1949,21 @@ namespace LinqToDB.SqlProvider
 
 					if (query.Select.SkipValue != null)
 					{
-						processingQuery.Where.EnsureConjunction().AddGreater(rowNumberColumn, query.Select.SkipValue, false);
+						processingQuery.Where.EnsureConjunction().AddGreater(rowNumberColumn, query.Select.SkipValue, CompareNulls.LikeSql);
 
 						if (query.Select.TakeValue != null)
-							processingQuery.Where.SearchCondition.AddLessOrEqual(rowNumberColumn,
-								new SqlBinaryExpression(query.Select.SkipValue.SystemType!,
-									query.Select.SkipValue, "+", query.Select.TakeValue), false);
+							processingQuery.Where.SearchCondition.AddLessOrEqual(
+								rowNumberColumn,
+								new SqlBinaryExpression(
+									query.Select.SkipValue.SystemType!, 
+									query.Select.SkipValue, 
+									"+", 
+									query.Select.TakeValue), 
+								CompareNulls.LikeSql);
 					}
 					else
 					{
-						processingQuery.Where.EnsureConjunction().AddLessOrEqual(rowNumberColumn, query.Select.TakeValue!, false);
+						processingQuery.Where.EnsureConjunction().AddLessOrEqual(rowNumberColumn, query.Select.TakeValue!, CompareNulls.LikeSql);
 					}
 
 					query.Select.SkipValue = null;
@@ -1868,8 +1982,10 @@ namespace LinqToDB.SqlProvider
 			// ReSharper disable once NotAccessedVariable
 			var sqlText = startFrom.DebugText;
 
-			if (startFrom is SqlStatement statementBefore)
-				QueryHelper.DebugCheckNesting(statementBefore, false);
+			if (startFrom is SqlSelectStatement statementBefore)
+			{
+
+			}
 #endif
 
 			var result = visitor.Value.Optimize(startFrom, root, SqlProviderFlags, true, dataOptions, mappingSchema, evaluationContext);
@@ -1878,88 +1994,13 @@ namespace LinqToDB.SqlProvider
 			// ReSharper disable once NotAccessedVariable
 			var newSqlText = result.DebugText;
 
-			if (startFrom is SqlStatement statementAfter)
-				QueryHelper.DebugCheckNesting(statementAfter, false);
+			if (startFrom is SqlSelectStatement statementAfter)
+			{
+
+			}
 #endif
+
 			return result;
-		}
-
-		/// <summary>
-		/// Alternative mechanism how to prevent loosing sorting in Distinct queries.
-		/// </summary>
-		/// <param name="statement">Statement which may contain Distinct queries.</param>
-		/// <param name="queryFilter">Query filter predicate to determine if query needs processing.</param>
-		/// <returns>The same <paramref name="statement"/> or modified statement when transformation has been performed.</returns>
-		protected SqlStatement ReplaceDistinctOrderByWithRowNumber(SqlStatement statement, Func<SelectQuery, bool> queryFilter)
-		{
-			return QueryHelper.WrapQuery(
-				queryFilter,
-				statement,
-				static (queryFilter, q, _) => (q.Select.IsDistinct && !q.Select.OrderBy.IsEmpty && queryFilter(q)) /*|| q.Select.TakeValue != null || q.Select.SkipValue != null*/,
-				static (_, p, q) =>
-				{
-					var columnItems  = q.Select.Columns.Select(static c => c.Expression).ToList();
-					var orderItems   = q.Select.OrderBy.Items.Select(static o => o.Expression).ToList();
-
-					var projectionItemsCount = columnItems.Union(orderItems).Count();
-					if (projectionItemsCount < columnItems.Count)
-					{
-						// Sort columns not in projection, transforming to
-						/*
-							 SELECT {S.columnItems}, S.RN FROM
-							 (
-								  SELECT {columnItems + orderItems}, RN = ROW_NUMBER() OVER (PARTITION BY {columnItems} ORDER BY {orderItems}) FROM T
-							 )
-							 WHERE S.RN = 1
-						*/
-
-						var orderByItems = q.Select.OrderBy.Items;
-
-						var partitionBy = string.Join(", ", columnItems.Select(static (oi, i) => FormattableString.Invariant($"{{{i}}}")));
-
-						var columns = new string[orderByItems.Count];
-						for (var i = 0; i < columns.Length; i++)
-							columns[i] = orderByItems[i].IsDescending
-								? FormattableString.Invariant($"{{{i + columnItems.Count}}} DESC")
-								: FormattableString.Invariant($"{{{i + columnItems.Count}}}");
-						var orderBy = string.Join(", ", columns);
-
-						var parameters = columnItems.Concat(orderByItems.Select(static oi => oi.Expression)).ToArray();
-
-						var rnExpr = new SqlExpression(typeof(long),
-							$"ROW_NUMBER() OVER (PARTITION BY {partitionBy} ORDER BY {orderBy})", Precedence.Primary,
-							SqlFlags.IsWindowFunction, ParametersNullabilityType.NotNullable, null, parameters);
-
-						var additionalProjection = orderItems.Except(columnItems);
-						foreach (var expr in additionalProjection)
-						{
-							q.Select.AddNew(expr);
-						}
-
-						var rnColumn = q.Select.AddNewColumn(rnExpr);
-						rnColumn.Alias = "RN";
-
-						q.Select.IsDistinct = false;
-						q.OrderBy.Items.Clear();
-						p.Select.Where.EnsureConjunction().AddEqual(rnColumn, new SqlValue(1), false);
-					}
-					else
-					{
-						// All sorting columns in projection, transforming to
-						/*
-							 SELECT {S.columnItems} FROM
-							 (
-								  SELECT DISTINCT {columnItems} FROM T
-							 )
-							 ORDER BY {orderItems}
-
-						*/
-
-						QueryHelper.MoveOrderByUp(p, q);
-					}
-				},
-				allowMutation: true,
-				withStack: false);
 		}
 
 		protected SqlStatement CorrectMultiTableQueries(SqlStatement statement)
@@ -2025,6 +2066,37 @@ namespace LinqToDB.SqlProvider
 
 			return statement;
 		}
+
+		#region Visitors
+		protected sealed class ClearColumParametersVisitor : SqlQueryVisitor
+		{
+			bool _disableParameters;
+
+			public ClearColumParametersVisitor() : base(VisitMode.Modify, null)
+			{
+			}
+
+			protected override ISqlExpression VisitSqlColumnExpression(SqlColumn column, ISqlExpression expression)
+			{
+				var old            = _disableParameters;
+				_disableParameters = true;
+
+				var result         = base.VisitSqlColumnExpression(column, expression);
+
+				_disableParameters = old;
+
+				return result;
+			}
+
+			protected override IQueryElement VisitSqlParameter(SqlParameter sqlParameter)
+			{
+				if (_disableParameters)
+					sqlParameter.IsQueryParameter = false;
+
+				return base.VisitSqlParameter(sqlParameter);
+			}
+		}
+		#endregion
 
 	}
 }

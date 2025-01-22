@@ -12,6 +12,11 @@ namespace LinqToDB.SqlQuery
 		{
 		}
 
+		public SqlFunction(DbDataType dbDataType, string name, ParametersNullabilityType parametersNullability, params ISqlExpression[] parameters)
+			: this(dbDataType, name, false, true, SqlQuery.Precedence.Primary, parametersNullability, null, parameters)
+		{
+		}
+
 		public SqlFunction(DbDataType dbDataType, string name, bool isAggregate, bool isPure, params ISqlExpression[] parameters)
 			: this(dbDataType, name, isAggregate, isPure, SqlQuery.Precedence.Primary, ParametersNullabilityType.IfAnyParameterNullable, null, parameters)
 		{
@@ -46,6 +51,11 @@ namespace LinqToDB.SqlQuery
 
 		public SqlFunction(Type systemType, string name, params ISqlExpression[] parameters)
 			: this(systemType, name, false, true, SqlQuery.Precedence.Primary, ParametersNullabilityType.IfAnyParameterNullable, null, parameters)
+		{
+		}
+
+		public SqlFunction(Type systemType, string name, ParametersNullabilityType nullabilityType, params ISqlExpression[] parameters)
+			: this(systemType, name, false, true, SqlQuery.Precedence.Primary, nullabilityType, null, parameters)
 		{
 		}
 
@@ -87,11 +97,6 @@ namespace LinqToDB.SqlQuery
 			return new SqlFunction(type, "COUNT", true, true, SqlQuery.Precedence.Primary,
 				ParametersNullabilityType.NotNullable, null, new SqlExpression("*", new SqlValue(table.SourceID)));
 		}
-
-		public static SqlFunction CreateAll   (SelectQuery subQuery) { return new SqlFunction(typeof(bool), "ALL",    false, SqlQuery.Precedence.Comparison, subQuery); }
-		public static SqlFunction CreateSome  (SelectQuery subQuery) { return new SqlFunction(typeof(bool), "SOME",   false, SqlQuery.Precedence.Comparison, subQuery); }
-		public static SqlFunction CreateAny   (SelectQuery subQuery) { return new SqlFunction(typeof(bool), "ANY",    false, SqlQuery.Precedence.Comparison, subQuery); }
-		public static SqlFunction CreateExists(SelectQuery subQuery) { return new SqlFunction(typeof(bool), "EXISTS", false, SqlQuery.Precedence.Comparison, subQuery); }
 
 		public SqlFunction WithName(string name)
 		{

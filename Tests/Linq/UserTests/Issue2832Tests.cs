@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Linq;
+
 using LinqToDB;
 using LinqToDB.Mapping;
 using LinqToDB.SqlQuery;
+
 using NUnit.Framework;
 
 namespace Tests.UserTests
@@ -58,18 +60,18 @@ namespace Tests.UserTests
 			[Column] public int? WellId { get; set; }
 		}
 
-		[LinqToDB.Sql.FunctionAttribute(Name = "UTILS.GREATESTNOTNULL3", ServerSideOnly = true)]
+		[Sql.FunctionAttribute(Name = "UTILS.GREATESTNOTNULL3", ServerSideOnly = true, IsNullable = Sql.IsNullableType.Nullable)]
 		private static decimal? UtilsGreatestnotnull3(decimal? value1, decimal? value2, decimal? value3)
 		{
 			throw new NotImplementedException();
 		}
 
 		[Test]
-		public void TestIssue2832([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
+		public void TestIssue2832([DataSources] string context)
 		{
-			using (var db = GetDataContext(context))
-			{
-				var query =
+			using var db = GetDataContext(context);
+
+			var query =
 					from spt in db.GetTable<DctSetpointtype>()
 					from t2 in (
 						from w in db.GetTable<VWellTree>()
@@ -80,7 +82,7 @@ namespace Tests.UserTests
 									.DefaultIfEmpty()
 								from oudg in db.GetTable<UacUsersDatagroup>()
 									.Where(oudg =>
-										c.ParentId                 == oudg.DatagroupId && oudg.UserId == 150 &&
+										c.ParentId == oudg.DatagroupId && oudg.UserId == 150 &&
 										oudg.Inheritablepermission > 0)
 									.DefaultIfEmpty()
 								let p = UtilsGreatestnotnull3(
@@ -89,7 +91,8 @@ namespace Tests.UserTests
 								where p.HasValue
 								select new DataGroupPermission
 								{
-									DatagroupId = c.Id, Permission = Sql.Convert<int, decimal>(Sql.ToNotNull(p))
+									DatagroupId = c.Id,
+									Permission = Sql.Convert<int, decimal>(Sql.ToNotNull(p))
 								}
 							)
 							on w.ShopId equals tp2.DatagroupId
@@ -98,13 +101,11 @@ namespace Tests.UserTests
 					).LeftJoin(x => x.SetpointtypeId == spt.Id).DefaultIfEmpty()
 					select new {spt.Id};
 
-				var sql = query.ToString();
-				TestContext.WriteLine(sql);
+			BaselinesManager.LogQuery(query.ToSqlQuery().Sql);
 
-				var sourcesCount = QueryHelper.EnumerateAccessibleSources(query.GetSelectQuery()).Count(s => s.ElementType == QueryElementType.SqlQuery);
+			var sourcesCount = QueryHelper.EnumerateAccessibleSources(query.GetSelectQuery()).Count(s => s.ElementType == QueryElementType.SqlQuery);
 
-				Assert.That(sourcesCount, Is.LessThanOrEqualTo(2));
-			}
+			Assert.That(sourcesCount, Is.LessThanOrEqualTo(2));
 		}
 	}
 }

@@ -1,4 +1,5 @@
-﻿using System.Diagnostics.CodeAnalysis;
+﻿using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq.Expressions;
 
 namespace LinqToDB.Linq.Translation
@@ -47,6 +48,34 @@ namespace LinqToDB.Linq.Translation
 
 			translated = placeholder.Sql;
 			return true;
+		}
+
+		public static IDisposable? UsingTypeFromExpression(this ITranslationContext translationContext, ISqlExpression? fromExpression)
+		{
+			if (fromExpression is null)
+				return null;
+
+			var columnDescriptor = QueryHelper.GetColumnDescriptor(fromExpression);
+
+			if (columnDescriptor == null)
+				return null;
+
+			return translationContext.UsingColumnDescriptor(columnDescriptor);
+		}
+
+		public static IDisposable? UsingTypeFromExpression(this ITranslationContext translationContext, params Expression[] fromExpressions)
+		{
+			for (var i = 0; i < fromExpressions.Length; i++)
+			{
+				var translated = translationContext.Translate(fromExpressions[i], TranslationFlags.Sql);
+				if (translated is not SqlPlaceholderExpression placeholder)
+					continue;
+				var found = translationContext.UsingTypeFromExpression(placeholder.Sql);
+				if (found != null)
+					return found;
+			}
+
+			return null;
 		}
 	}
 }

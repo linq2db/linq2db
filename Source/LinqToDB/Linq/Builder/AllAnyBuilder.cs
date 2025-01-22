@@ -6,17 +6,14 @@ namespace LinqToDB.Linq.Builder
 	using LinqToDB.Expressions;
 	using SqlQuery;
 
+	[BuildsMethodCall("All", "Any")]
+	[BuildsMethodCall("AllAsync", "AnyAsync", CanBuildName = nameof(CanBuildAsyncMethod))]
 	internal sealed class AllAnyBuilder : MethodCallBuilder
 	{
-		static readonly string[] MethodNames      = { "All"     , "Any"      };
-		static readonly string[] MethodNamesAsync = { "AllAsync", "AnyAsync" };
-
-		protected override bool CanBuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
-		{
-			return
-				methodCall.IsQueryable     (MethodNames     ) ||
-				methodCall.IsAsyncExtension(MethodNamesAsync);
-		}
+		public static bool CanBuildMethod(MethodCallExpression call, BuildInfo info, ExpressionBuilder builder)
+			=> call.IsQueryable();
+		public static bool CanBuildAsyncMethod(MethodCallExpression call, BuildInfo info, ExpressionBuilder builder)
+			=> call.IsAsyncExtension();
 
 		protected override BuildSequenceResult BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
@@ -50,18 +47,17 @@ namespace LinqToDB.Linq.Builder
 					condition = Expression.Lambda(Expression.Not(condition.Body), condition.Name, condition.Parameters);
 
 				sequence = builder.BuildWhere(buildInfo.Parent, sequence,
-					condition : condition, checkForSubQuery : true, enforceHaving : false,
-					isTest : buildInfo.IsTest);
+					condition : condition, checkForSubQuery : true, enforceHaving : false, out var error);
 
 				if (sequence == null)
-					return BuildSequenceResult.Error(methodCall);
+					return BuildSequenceResult.Error(error ?? methodCall);
 
 				sequence.SetAlias(condition.Parameters[0].Name);
 			}
 
 			// finalizing context
-			_ = builder.MakeExpression(sequence, new ContextRefExpression(methodCall.Method.GetGenericArguments()[0], sequence),
-				ProjectFlags.ExtractProjection);
+			var sqlExpr = builder.BuildSqlExpression(sequence, new ContextRefExpression(methodCall.Method.GetGenericArguments()[0], sequence));
+			sqlExpr = builder.ToColumns(sequence, sqlExpr);
 
 			return BuildSequenceResult.FromContext(new AllAnyContext(buildInfo.Parent, buildInfo.SelectQuery, methodCall, sequence));
 		}
@@ -88,14 +84,11 @@ namespace LinqToDB.Linq.Builder
 				if (_innerSql != null)
 					return _innerSql;
 
-				var predicate = new SqlPredicate.FuncLike(SqlFunction.CreateExists(Sequence.SelectQuery)).MakeNot(_methodCall.Method.Name.StartsWith("All"));
+				var predicate = new SqlPredicate.Exists(_methodCall.Method.Name.StartsWith("All"), Sequence.SelectQuery);
 				
 				var innerSql = ExpressionBuilder.CreatePlaceholder(Parent?.SelectQuery ?? SelectQuery, new SqlSearchCondition(false, predicate), path, convertType: typeof(bool));
 
-				if (flags.IsTest())
-				{
-					_innerSql = innerSql;
-				}
+				_innerSql = innerSql;
 
 				return innerSql;
 			}
@@ -116,6 +109,8 @@ namespace LinqToDB.Linq.Builder
 			{
 				return new AllAnyContext(null, context.CloneElement(SelectQuery), context.CloneExpression(_methodCall), context.CloneContext(Sequence));
 			}
+
+			public override bool IsSingleElement => true;
 		}
 	}
 }

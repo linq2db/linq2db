@@ -12,60 +12,59 @@ namespace LinqToDB.Tools.Activity
 		{
 			All =
 			[
-				QueryProviderExecuteT               = new("IQueryProvider.Execute<T>"),
-				QueryProviderExecute                = new("IQueryProvider.Execute"),
-				QueryProviderGetEnumeratorT         = new("IQueryProvider.GetEnumerator<T>"),
-				QueryProviderGetEnumerator          = new("IQueryProvider.GetEnumerator"),
-				GetQueryTotal                       = new("  GetQuery"),
-				GetQueryFind                        = new("    Find"),
-				GetQueryFindExpose                  = new("      Expose"),
-				GetQueryFindFind                    = new("      Find"),
-				GetQueryCreate                      = new("    Create"),
-				Build                               = new("      Build"),
-				BuildSequence                       = new("        BuildSequence"),
-				BuildSequenceCanBuild               = new("          CanBuild"),
-				BuildSequenceBuild                  = new("          Build"),
-				ReorderBuilders                     = new("        ReorderBuilders"),
-				BuildQuery                          = new("        BuildQuery"),
-				FinalizeQuery                       = new("          FinalizeQuery"),
-				GetIEnumerable                      = new("  GetIEnumerable"),
+				QueryProviderExecuteT               = new("IQueryProvider.Execute<T>",            ActivityID.QueryProviderExecuteT),
+				QueryProviderExecute                = new("IQueryProvider.Execute",               ActivityID.QueryProviderExecute),
+				QueryProviderGetEnumeratorT         = new("IQueryProvider.GetEnumerator<T>",      ActivityID.QueryProviderGetEnumeratorT),
+				QueryProviderGetEnumerator          = new("IQueryProvider.GetEnumerator",         ActivityID.QueryProviderGetEnumerator),
+				GetQueryTotal                       = new("  GetQuery",                           ActivityID.GetQueryTotal),
+				GetQueryFind                        = new("    Find",                             ActivityID.GetQueryFind),
+				GetQueryFindExpose                  = new("      Expose",                         ActivityID.GetQueryFindExpose),
+				GetQueryFindFind                    = new("      Find",                           ActivityID.GetQueryFindFind),
+				GetQueryCreate                      = new("    Create",                           ActivityID.GetQueryCreate),
+				Build                               = new("      Build",                          ActivityID.Build),
+				BuildSequence                       = new("        BuildSequence",                ActivityID.BuildSequence),
+				BuildSequenceCanBuild               = new("          CanBuild",                   ActivityID.BuildSequenceCanBuild),
+				BuildSequenceBuild                  = new("          Build",                      ActivityID.BuildSequenceBuild),
+				BuildQuery                          = new("        BuildQuery",                   ActivityID.BuildQuery),
+				FinalizeQuery                       = new("          FinalizeQuery",              ActivityID.FinalizeQuery),
+				GetIEnumerable                      = new("  GetIEnumerable",                     ActivityID.GetIEnumerable),
 
 				ExecuteTotal                        = new("Execute",
-					ExecuteQuery                    = new("  Execute Query"),
-					ExecuteQueryAsync               = new("  Execute Query Async"),
-					ExecuteElement                  = new("  Execute Element"),
-					ExecuteElementAsync             = new("  Execute Element Async"),
-					ExecuteScalar                   = new("  Execute Scalar"),
-					ExecuteScalarAsync              = new("  Execute Scalar Async"),
-					ExecuteScalarAlternative        = new("  Execute Scalar Alternative"),
-					ExecuteScalarAlternativeAsync   = new("  Execute Scalar Alternative Async"),
-					ExecuteNonQuery                 = new("  Execute NonQuery"),
-					ExecuteNonQueryAsync            = new("  Execute NonQuery Async"),
-					ExecuteNonQueryAlternative      = new("  Execute NonQuery Alternative"),
-					ExecuteNonQueryAlternativeAsync = new("  Execute NonQuery Alternative Async"),
+					ExecuteQuery                    = new("  Execute Query",                      ActivityID.ExecuteQuery),
+					ExecuteQueryAsync               = new("  Execute Query Async",                ActivityID.ExecuteQueryAsync),
+					ExecuteElement                  = new("  Execute Element",                    ActivityID.ExecuteElement),
+					ExecuteElementAsync             = new("  Execute Element Async",              ActivityID.ExecuteElementAsync),
+					ExecuteScalar                   = new("  Execute Scalar",                     ActivityID.ExecuteScalar),
+					ExecuteScalarAsync              = new("  Execute Scalar Async",               ActivityID.ExecuteScalarAsync),
+					ExecuteScalarAlternative        = new("  Execute Scalar Alternative",         ActivityID.ExecuteScalarAlternative),
+					ExecuteScalarAlternativeAsync   = new("  Execute Scalar Alternative Async",   ActivityID.ExecuteScalarAlternativeAsync),
+					ExecuteNonQuery                 = new("  Execute NonQuery",                   ActivityID.ExecuteNonQuery),
+					ExecuteNonQueryAsync            = new("  Execute NonQuery Async",             ActivityID.ExecuteNonQueryAsync),
+					ExecuteNonQueryAlternative      = new("  Execute NonQuery Alternative",       ActivityID.ExecuteNonQuery2),
+					ExecuteNonQueryAlternativeAsync = new("  Execute NonQuery Alternative Async", ActivityID.ExecuteNonQuery2Async),
 
-					CommandInfoExecute              = new("  SQL Execute"),
-					CommandInfoExecuteAsync         = new("  SQL ExecuteAsync"),
-					CommandInfoExecuteT             = new("  SQL Execute<T>"),
-					CommandInfoExecuteAsyncT        = new("  SQL ExecuteAsync<T>"),
-					CommandInfoExecuteCustom        = new("  SQL ExecuteCustom"),
+					CommandInfoExecute              = new("  SQL Execute",                        ActivityID.CommandInfoExecute),
+					CommandInfoExecuteAsync         = new("  SQL ExecuteAsync",                   ActivityID.CommandInfoExecuteAsync),
+					CommandInfoExecuteT             = new("  SQL Execute<T>",                     ActivityID.CommandInfoExecuteT),
+					CommandInfoExecuteAsyncT        = new("  SQL ExecuteAsync<T>",                ActivityID.CommandInfoExecuteAsyncT),
+					CommandInfoExecuteCustom        = new("  SQL ExecuteCustom",                  ActivityID.CommandInfoExecuteCustom),
 
-					CreateTable                     = new("  CreateTable"),
-					CreateTableAsync                = new("  CreateTable Async"),
-					DropTable                       = new("  DropTable"),
-					DropTableAsync                  = new("  DropTable Async"),
-					DeleteObject                    = new("  Delete Object"),
-					DeleteObjectAsync               = new("  Delete Object Async"),
-					InsertObject                    = new("  Insert Object"),
-					InsertObjectAsync               = new("  Insert Object Async"),
-					InsertOrReplaceObject           = new("  InsertOrReplace Object"),
-					InsertOrReplaceObjectAsync      = new("  InsertOrReplace Object Async"),
-					InsertWithIdentityObject        = new("  InsertWithIdentity Object"),
-					InsertWithIdentityObjectAsync   = new("  InsertWithIdentity Object Async"),
-					UpdateObject                    = new("  Update Object"),
-					UpdateObjectAsync               = new("  Update Object Async"),
-					BulkCopy                        = new("  BulkCopy"),
-					BulkCopyAsync                   = new("  BulkCopy Async")
+					CreateTable                     = new("  CreateTable",                        ActivityID.CreateTable),
+					CreateTableAsync                = new("  CreateTable Async",                  ActivityID.CreateTableAsync),
+					DropTable                       = new("  DropTable",                          ActivityID.DropTable),
+					DropTableAsync                  = new("  DropTable Async",                    ActivityID.DropTableAsync),
+					DeleteObject                    = new("  Delete Object",                      ActivityID.DeleteObject),
+					DeleteObjectAsync               = new("  Delete Object Async",                ActivityID.DeleteObjectAsync),
+					InsertObject                    = new("  Insert Object",                      ActivityID.InsertObject),
+					InsertObjectAsync               = new("  Insert Object Async",                ActivityID.InsertObjectAsync),
+					InsertOrReplaceObject           = new("  InsertOrReplace Object",             ActivityID.InsertOrReplaceObject),
+					InsertOrReplaceObjectAsync      = new("  InsertOrReplace Object Async",       ActivityID.InsertOrReplaceObjectAsync),
+					InsertWithIdentityObject        = new("  InsertWithIdentity Object",          ActivityID.InsertWithIdentityObject),
+					InsertWithIdentityObjectAsync   = new("  InsertWithIdentity Object Async",    ActivityID.InsertWithIdentityObjectAsync),
+					UpdateObject                    = new("  Update Object",                      ActivityID.UpdateObject),
+					UpdateObjectAsync               = new("  Update Object Async",                ActivityID.UpdateObjectAsync),
+					BulkCopy                        = new("  BulkCopy",                           ActivityID.BulkCopy),
+					BulkCopyAsync                   = new("  BulkCopy Async",                     ActivityID.BulkCopyAsync)
 				),
 				ExecuteQuery,
 				ExecuteQueryAsync,
@@ -97,7 +96,7 @@ namespace LinqToDB.Tools.Activity
 				BulkCopy,
 				BulkCopyAsync,
 
-				BuildSql                            = new("    BuildSql"),
+				BuildSql                            = new("    BuildSql",                           ActivityID.BuildSql),
 
 				CommandInfoExecute,
 				CommandInfoExecuteT,
@@ -106,26 +105,26 @@ namespace LinqToDB.Tools.Activity
 				CommandInfoExecuteAsyncT,
 
 				ExecuteAdo                          = new("    ADO.NET",
-					ConnectionOpen                  = new("      Connection Open"),
-					ConnectionOpenAsync             = new("      Connection OpenAsync"),
-					ConnectionClose                 = new("      Connection Close"),
-					ConnectionCloseAsync            = new("      Connection CloseAsync"),
-					ConnectionDispose               = new("      Connection Dispose"),
-					ConnectionDisposeAsync          = new("      Connection DisposeAsync"),
-					ConnectionBeginTransaction      = new("      Connection BeginTransaction"),
-					ConnectionBeginTransactionAsync = new("      Connection BeginTransactionAsync"),
-					TransactionCommit               = new("      Transaction Commit"),
-					TransactionCommitAsync          = new("      Transaction CommitAsync"),
-					TransactionRollback             = new("      Transaction Rollback"),
-					TransactionRollbackAsync        = new("      Transaction RollbackAsync"),
-					TransactionDispose              = new("      Transaction Dispose"),
-					TransactionDisposeAsync         = new("      Transaction DisposeAsync"),
-					CommandExecuteScalar            = new("      Command ExecuteScalar"),
-					CommandExecuteScalarAsync       = new("      Command ExecuteScalarAsync"),
-					CommandExecuteReader            = new("      Command ExecuteReader"),
-					CommandExecuteReaderAsync       = new("      Command ExecuteReaderAsync"),
-					CommandExecuteNonQuery          = new("      Command ExecuteNonQuery"),
-					CommandExecuteNonQueryAsync     = new("      Command ExecuteNonQueryAsync")
+					ConnectionOpen                  = new("      Connection Open",                  ActivityID.ConnectionOpen),
+					ConnectionOpenAsync             = new("      Connection OpenAsync",             ActivityID.ConnectionOpenAsync),
+					ConnectionClose                 = new("      Connection Close",                 ActivityID.ConnectionClose),
+					ConnectionCloseAsync            = new("      Connection CloseAsync",            ActivityID.ConnectionCloseAsync),
+					ConnectionDispose               = new("      Connection Dispose",               ActivityID.ConnectionDispose),
+					ConnectionDisposeAsync          = new("      Connection DisposeAsync",          ActivityID.ConnectionDisposeAsync),
+					ConnectionBeginTransaction      = new("      Connection BeginTransaction",      ActivityID.ConnectionBeginTransaction),
+					ConnectionBeginTransactionAsync = new("      Connection BeginTransactionAsync", ActivityID.ConnectionBeginTransactionAsync),
+					TransactionCommit               = new("      Transaction Commit",               ActivityID.TransactionCommit),
+					TransactionCommitAsync          = new("      Transaction CommitAsync",          ActivityID.TransactionCommitAsync),
+					TransactionRollback             = new("      Transaction Rollback",             ActivityID.TransactionRollback),
+					TransactionRollbackAsync        = new("      Transaction RollbackAsync",        ActivityID.TransactionRollbackAsync),
+					TransactionDispose              = new("      Transaction Dispose",              ActivityID.TransactionDispose),
+					TransactionDisposeAsync         = new("      Transaction DisposeAsync",         ActivityID.TransactionDisposeAsync),
+					CommandExecuteScalar            = new("      Command ExecuteScalar",            ActivityID.CommandExecuteScalar),
+					CommandExecuteScalarAsync       = new("      Command ExecuteScalarAsync",       ActivityID.CommandExecuteScalarAsync),
+					CommandExecuteReader            = new("      Command ExecuteReader",            ActivityID.CommandExecuteReader),
+					CommandExecuteReaderAsync       = new("      Command ExecuteReaderAsync",       ActivityID.CommandExecuteReaderAsync),
+					CommandExecuteNonQuery          = new("      Command ExecuteNonQuery",          ActivityID.CommandExecuteNonQuery),
+					CommandExecuteNonQueryAsync     = new("      Command ExecuteNonQueryAsync",     ActivityID.CommandExecuteNonQueryAsync)
 				),
 				ConnectionOpen,
 				ConnectionOpenAsync,
@@ -148,44 +147,47 @@ namespace LinqToDB.Tools.Activity
 				CommandExecuteNonQuery,
 				CommandExecuteNonQueryAsync,
 
-				OnTraceInternal                     = new("    OnTraceInternal"),
-				Materialization                     = new("    Materialization"),
+				OnTraceInternal                                      = new("    OnTraceInternal",                      ActivityID.OnTraceInternal),
+				Materialization                                      = new("    Materialization",                      ActivityID.Materialization),
 
-				GetSqlText                          = new("  GetSqlText"),
+				GetSqlText                                           = new("  GetSqlText",                             ActivityID.GetSqlText),
 
-				Interceptors                        = new("Interceptors",
-					CommandInterceptor              = new("  CommandInterceptor",
-						CommandInterceptorCommandInitialized         = new("    CommandInitialized"),
-						CommandInterceptorExecuteScalar              = new("    ExecuteScalar"),
-						CommandInterceptorExecuteScalarAsync         = new("    ExecuteScalarAsync"),
-						CommandInterceptorExecuteNonQuery            = new("    ExecuteNonQuery"),
-						CommandInterceptorExecuteNonQueryAsync       = new("    ExecuteNonQueryAsync"),
-						CommandInterceptorExecuteReader              = new("    ExecuteReader"),
-						CommandInterceptorExecuteReaderAsync         = new("    ExecuteReaderAsync"),
-						CommandInterceptorAfterExecuteReader         = new("    AfterExecuteReader"),
-						CommandInterceptorBeforeReaderDispose        = new("    BeforeReaderDispose"),
-						CommandInterceptorBeforeReaderDisposeAsync   = new("    BeforeReaderDisposeAsync")
+				Interceptors                                         = new("Interceptors",
+					CommandInterceptor                               = new("  CommandInterceptor",
+						CommandInterceptorCommandInitialized         = new("    CommandInitialized",                   ActivityID.CommandInterceptorCommandInitialized),
+						CommandInterceptorExecuteScalar              = new("    ExecuteScalar",                        ActivityID.CommandInterceptorExecuteScalar),
+						CommandInterceptorExecuteScalarAsync         = new("    ExecuteScalarAsync",                   ActivityID.CommandInterceptorExecuteScalarAsync),
+						CommandInterceptorExecuteNonQuery            = new("    ExecuteNonQuery",                      ActivityID.CommandInterceptorExecuteNonQuery),
+						CommandInterceptorExecuteNonQueryAsync       = new("    ExecuteNonQueryAsync",                 ActivityID.CommandInterceptorExecuteNonQueryAsync),
+						CommandInterceptorExecuteReader              = new("    ExecuteReader",                        ActivityID.CommandInterceptorExecuteReader),
+						CommandInterceptorExecuteReaderAsync         = new("    ExecuteReaderAsync",                   ActivityID.CommandInterceptorExecuteReaderAsync),
+						CommandInterceptorAfterExecuteReader         = new("    AfterExecuteReader",                   ActivityID.CommandInterceptorAfterExecuteReader),
+						CommandInterceptorBeforeReaderDispose        = new("    BeforeReaderDispose",                  ActivityID.CommandInterceptorBeforeReaderDispose),
+						CommandInterceptorBeforeReaderDisposeAsync   = new("    BeforeReaderDisposeAsync",             ActivityID.CommandInterceptorBeforeReaderDisposeAsync)
 					),
 					ConnectionInterceptor           = new("  ConnectionInterceptor",
-						ConnectionInterceptorConnectionOpening       = new("    ConnectionOpening"),
-						ConnectionInterceptorConnectionOpeningAsync  = new("    ConnectionOpeningAsync"),
-						ConnectionInterceptorConnectionOpened        = new("    ConnectionOpened"),
-						ConnectionInterceptorConnectionOpenedAsync   = new("    ConnectionOpenedAsync")
+						ConnectionInterceptorConnectionOpening       = new("    ConnectionOpening",                    ActivityID.ConnectionInterceptorConnectionOpening),
+						ConnectionInterceptorConnectionOpeningAsync  = new("    ConnectionOpeningAsync",               ActivityID.ConnectionInterceptorConnectionOpeningAsync),
+						ConnectionInterceptorConnectionOpened        = new("    ConnectionOpened",                     ActivityID.ConnectionInterceptorConnectionOpened),
+						ConnectionInterceptorConnectionOpenedAsync   = new("    ConnectionOpenedAsync",                ActivityID.ConnectionInterceptorConnectionOpenedAsync)
 					),
 					DataContextInterceptor          = new("  DataContextInterceptor",
-						DataContextInterceptorOnClosing              = new("    OnClosing"),
-						DataContextInterceptorOnClosingAsync         = new("    OnClosingAsync"),
-						DataContextInterceptorOnClosed               = new("    OnClosed"),
-						DataContextInterceptorOnClosedAsync          = new("    OnClosedAsync")
+						DataContextInterceptorOnClosing              = new("    OnClosing",                            ActivityID.DataContextInterceptorOnClosing),
+						DataContextInterceptorOnClosingAsync         = new("    OnClosingAsync",                       ActivityID.DataContextInterceptorOnClosingAsync),
+						DataContextInterceptorOnClosed               = new("    OnClosed",                             ActivityID.DataContextInterceptorOnClosed),
+						DataContextInterceptorOnClosedAsync          = new("    OnClosedAsync",                        ActivityID.DataContextInterceptorOnClosedAsync)
 					),
 					EntityServiceInterceptor        = new("  EntityServiceInterceptor",
-						EntityServiceInterceptorEntityCreated        = new("    EntityCreated")
+						EntityServiceInterceptorEntityCreated        = new("    EntityCreated",                        ActivityID.EntityServiceInterceptorEntityCreated)
 					),
 					UnwrapDataObjectInterceptor     = new("  UnwrapDataObjectInterceptor",
-						UnwrapDataObjectInterceptorUnwrapConnection  = new("    UnwrapConnection"),
-						UnwrapDataObjectInterceptorUnwrapTransaction = new("    UnwrapTransaction"),
-						UnwrapDataObjectInterceptorUnwrapCommand     = new("    UnwrapCommand"),
-						UnwrapDataObjectInterceptorUnwrapDataReader  = new("    UnwrapDataReader")
+						UnwrapDataObjectInterceptorUnwrapConnection  = new("    UnwrapConnection",                     ActivityID.UnwrapDataObjectInterceptorUnwrapConnection),
+						UnwrapDataObjectInterceptorUnwrapTransaction = new("    UnwrapTransaction",                    ActivityID.UnwrapDataObjectInterceptorUnwrapTransaction),
+						UnwrapDataObjectInterceptorUnwrapCommand     = new("    UnwrapCommand",                        ActivityID.UnwrapDataObjectInterceptorUnwrapCommand),
+						UnwrapDataObjectInterceptorUnwrapDataReader  = new("    UnwrapDataReader",                     ActivityID.UnwrapDataObjectInterceptorUnwrapDataReader)
+					),
+					ExceptionInterceptor            = new("  ExceptionInterceptor",
+						ExceptionInterceptorProcessException         = new("    ExceptionInterceptorProcessException", ActivityID.ExceptionInterceptorProcessException)
 					)
 				),
 
@@ -247,7 +249,6 @@ namespace LinqToDB.Tools.Activity
 				ActivityID.BuildSequence                                => BuildSequence,
 				ActivityID.BuildSequenceCanBuild                        => BuildSequenceCanBuild,
 				ActivityID.BuildSequenceBuild                           => BuildSequenceBuild,
-				ActivityID.ReorderBuilders                              => ReorderBuilders,
 				ActivityID.BuildQuery                                   => BuildQuery,
 				ActivityID.FinalizeQuery                                => FinalizeQuery,
 				ActivityID.GetIEnumerable                               => GetIEnumerable,
@@ -303,6 +304,7 @@ namespace LinqToDB.Tools.Activity
 				ActivityID.CommandExecuteReaderAsync                    => CommandExecuteReaderAsync,
 				ActivityID.CommandExecuteNonQuery                       => CommandExecuteNonQuery,
 				ActivityID.CommandExecuteNonQueryAsync                  => CommandExecuteNonQueryAsync,
+
 				ActivityID.CommandInfoExecute                           => CommandInfoExecute,
 				ActivityID.CommandInfoExecuteT                          => CommandInfoExecuteT,
 				ActivityID.CommandInfoExecuteCustom                     => CommandInfoExecuteCustom,
@@ -336,6 +338,8 @@ namespace LinqToDB.Tools.Activity
 				ActivityID.UnwrapDataObjectInterceptorUnwrapTransaction => UnwrapDataObjectInterceptorUnwrapTransaction,
 				ActivityID.UnwrapDataObjectInterceptorUnwrapCommand     => UnwrapDataObjectInterceptorUnwrapCommand,
 				ActivityID.UnwrapDataObjectInterceptorUnwrapDataReader  => UnwrapDataObjectInterceptorUnwrapDataReader,
+
+				ActivityID.ExceptionInterceptorProcessException         => ExceptionInterceptorProcessException,
 
 				ActivityID.GetSqlText                                   => GetSqlText,
 				ActivityID.OnTraceInternal                              => OnTraceInternal,
@@ -405,7 +409,6 @@ namespace LinqToDB.Tools.Activity
 		static StatActivity BuildSequence;
 		static StatActivity BuildSequenceCanBuild;
 		static StatActivity BuildSequenceBuild;
-		static StatActivity ReorderBuilders;
 		static StatActivity BuildQuery;
 		static StatActivity FinalizeQuery;
 		static StatActivity GetIEnumerable;
@@ -497,6 +500,8 @@ namespace LinqToDB.Tools.Activity
 		static StatActivity UnwrapDataObjectInterceptorUnwrapCommand;
 		static StatActivity UnwrapDataObjectInterceptorUnwrapDataReader;
 
+		static StatActivity ExceptionInterceptorProcessException;
+
 		static StatActivity GetSqlText;
 
 		static StatActivity OnTraceInternal;
@@ -512,6 +517,7 @@ namespace LinqToDB.Tools.Activity
 		static StatActivitySum DataContextInterceptor;
 		static StatActivitySum EntityServiceInterceptor;
 		static StatActivitySum UnwrapDataObjectInterceptor;
+		static StatActivitySum ExceptionInterceptor;
 
 		static IStatActivity[] All;
 	}

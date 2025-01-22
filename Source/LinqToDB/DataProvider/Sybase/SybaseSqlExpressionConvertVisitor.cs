@@ -12,6 +12,9 @@ namespace LinqToDB.DataProvider.Sybase
 		{
 		}
 
+		// could be enabled if we add SP03 version support (also IsDistinctFromSupported should be enabled)
+		//protected override bool SupportsDistinctAsExistsIntersect => true;
+
 		#region LIKE
 
 		private static string[] SybaseCharactersToEscape = {"_", "%", "[", "]", "^"};
@@ -40,24 +43,27 @@ namespace LinqToDB.DataProvider.Sybase
 			return base.ConvertConversion(cast);
 		}
 
+		protected override IQueryElement VisitExistsPredicate(SqlPredicate.Exists predicate)
+		{
+			var result = base.VisitExistsPredicate(predicate);
+
+			if (result is SqlPredicate.Exists { SubQuery: { HasSetOperators: true } selectQuery } exists)
+			{
+				var query = new SelectQuery() {DoNotRemove = true};
+				query.From.Table(selectQuery);
+
+				result = new SqlPredicate.Exists(exists.IsNot, query);
+			}
+
+			return result;
+		}
+
 		public override ISqlExpression ConvertSqlFunction(SqlFunction func)
 		{
 			switch (func)
 			{
 				case { Name: PseudoFunctions.REPLACE }:
 					return func.WithName("Str_Replace");
-
-				case { Name: "EXISTS", Parameters: [var sql] }
-					when sql is SelectQuery selectQuery:
-				{
-					if (selectQuery.HasSetOperators)
-					{
-						var query = new SelectQuery() {DoNotRemove = true};
-						query.From.Table(selectQuery);
-						return func.WithParameters([query]);
-					}
-					return func;
-				}
 
 				case {
 					Name: "CharIndex",
@@ -80,14 +86,12 @@ namespace LinqToDB.DataProvider.Sybase
 						var p0, var p1, _,
 						SqlValue { Value: string @string, ValueType: var valueType }
 					],
-					SystemType: var type,
-					Precedence: var precedence,
+					Type: var type
 				} when string.IsNullOrEmpty(@string):
 					return new SqlFunction(
 						type,
 						"Stuff",
-						false,
-						precedence,
+						ParametersNullabilityType.SameAsFirstParameter,
 						p0,
 						p1,
 						p1,

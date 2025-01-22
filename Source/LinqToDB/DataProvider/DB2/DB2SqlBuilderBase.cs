@@ -181,13 +181,6 @@ namespace LinqToDB.DataProvider.DB2
 			base.BuildCreateTableNullAttribute(field, defaultNullable);
 		}
 
-		[Obsolete("Use DB2Options.Default.IdentifierQuoteMode instead.")]
-		public static DB2IdentifierQuoteMode IdentifierQuoteMode
-		{
-			get => DB2Options.Default.IdentifierQuoteMode;
-			set => DB2Options.Default = DB2Options.Default with { IdentifierQuoteMode = value };
-		}
-
 		public override StringBuilder Convert(StringBuilder sb, string value, ConvertType convertType)
 		{
 			switch (convertType)
@@ -413,13 +406,7 @@ END");
 		// TODO: Copy of Firebird's BuildParameter, looks like we can move such functionality to SqlProviderFlags
 		protected override void BuildParameter(SqlParameter parameter)
 		{
-			if (BuildStep == Step.TypedExpression || !parameter.NeedsCast)
-			{
-				base.BuildParameter(parameter);
-				return;
-			}
-
-			if (parameter.NeedsCast)
+			if (parameter.NeedsCast && BuildStep != Step.TypedExpression)
 			{
 				var paramValue = parameter.GetParameterValue(OptimizationContext.EvaluationContext.ParameterValues);
 

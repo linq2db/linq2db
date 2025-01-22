@@ -7,17 +7,8 @@
 		<DocumentationFile>$(ArtifactsPath)\bin\$(MSBuildProjectName)\$(Configuration)\$(TargetFramework)\$(AssemblyName).xml</DocumentationFile>
 
 		<!--published targets-->
-		<TargetFrameworks>net462;netstandard2.0;net6.0;net8.0</TargetFrameworks>
+		<TargetFrameworks>net462;netstandard2.0;net6.0;net8.0;net9.0</TargetFrameworks>
 	</PropertyGroup>
-
-	<ItemGroup>
-		<PackageReference Include="Humanizer.Core" />
-	</ItemGroup>
-
-	<ItemGroup>
-		<AdditionalFiles Include="PublicAPI/PublicAPI.*.txt" />
-		<AdditionalFiles Include="PublicAPI/$(TargetFramework)/PublicAPI.*.txt" />
-	</ItemGroup>
 
 	<ItemGroup>
 		<Service Include="{508349b6-6b84-4df5-91f0-309beebad82d}" />
@@ -33,6 +24,10 @@
 			<AutoGen>True</AutoGen>
 			<DependentUpon>Schemas.tt</DependentUpon>
 		</Compile>
-
 	</ItemGroup>
+
+	<ItemGroup>
+		<AdditionalFiles Include="PublicAPI.*.txt" />
+	</ItemGroup>
+
 </Project>

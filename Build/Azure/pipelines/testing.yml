@@ -16,8 +16,10 @@ stages:
 ##############
   - template: templates/build-job.yml
     parameters:
-      for_nuget: false
-      for_tests: true
+      with_nugets: false
+      with_examples: false
+      with_tests: true
+      with_analyzers: false
 
 #############
 # TEST JOBS #
@@ -26,12 +28,9 @@ stages:
     parameters:
       enabled: succeeded()
       with_baselines: true
-      # experimental parameter
-      ${{ if eq(variables['Build.DefinitionName'], 'experimental') }}:
-          experimental: true
-      ${{ if ne(variables['Build.DefinitionName'], 'experimental') }}:
-          experimental: false
-      # db_filter parameter
+      mac_enabled: false
+      full_run: false
+      # db_filter parameter. [] wrap used to avoid potential naming conflicts
       ${{ if eq(variables['Build.DefinitionName'], 'test-access') }}:
         db_filter: '[access.all]'
       ${{ if eq(variables['Build.DefinitionName'], 'test-db2') }}:
@@ -64,5 +63,5 @@ stages:
         db_filter: '[clickhouse.all]'
       ${{ if eq(variables['Build.DefinitionName'], 'test-metrics') }}:
         db_filter: '[metrics]'
-      ${{ if ne(variables['Build.DefinitionName'], 'test-all') }}:
-        mac_enabled: true
+      # ${{ if ne(variables['Build.DefinitionName'], 'test-all') }}:
+      #   mac_enabled: true

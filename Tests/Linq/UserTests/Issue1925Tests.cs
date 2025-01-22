@@ -56,14 +56,14 @@ namespace Tests.UserTests
 					Assert.That(table.Where(r => r.Value!.Contains("6")).ToList(), Has.Count.EqualTo(1));
 				});
 
-				if (context.IsAnyOf(ProviderName.Access))
+				if (context.IsAnyOf(TestProvName.AllAccessOleDb))
 				{
 #pragma warning disable CA1416 // windows-specific API
 					Assert.Throws<OleDbException>(() => table.Where(r => Sql.Like(r.Value, "[0")).ToList());
 					Assert.Throws<OleDbException>(() => table.Where(r => Sql.Like(r.Value, asParamUnterm)).ToList());
 #pragma warning disable CA1416
 				}
-				else if (context.IsAnyOf(ProviderName.AccessOdbc))
+				else if (context.IsAnyOf(TestProvName.AllAccessOdbc))
 				{
 					Assert.Throws<OdbcException>(() => table.Where(r => Sql.Like(r.Value, "[0")).ToList());
 					Assert.Throws<OdbcException>(() => table.Where(r => Sql.Like(r.Value, asParamUnterm)).ToList());

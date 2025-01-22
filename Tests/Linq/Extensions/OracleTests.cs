@@ -2,7 +2,9 @@
 using System.Linq;
 
 using LinqToDB;
+using LinqToDB.Common;
 using LinqToDB.DataProvider.Oracle;
+using LinqToDB.Mapping;
 
 using NUnit.Framework;
 
@@ -496,9 +498,9 @@ namespace Tests.Extensions
 			Assert.That(LastQuery, Contains.Substring("INSERT /*+ FULL(c_1) ALL_ROWS FIRST_ROWS(10) */ INTO "));
 		}
 
+		[Obsolete("Remove test after API removed")]
 		[Test]
-
-		public void UpdateTest([IncludeDataSources(true, TestProvName.AllOracle)] string context)
+		public void UpdateTestOld([IncludeDataSources(true, TestProvName.AllOracle)] string context)
 		{
 			using var db = GetDataContext(context);
 
@@ -510,6 +512,26 @@ namespace Tests.Extensions
 			.QueryHint(OracleHints.Hint.AllRows)
 			.QueryHint(OracleHints.Hint.FirstRows(10))
 			.Update(db.Child, c => new()
+			{
+				ChildID = c.ChildID * 2
+			});
+
+			Assert.That(LastQuery, Contains.Substring("UPDATE /*+ ALL_ROWS FIRST_ROWS(10) */"));
+		}
+
+		[Test]
+		public void UpdateTest([IncludeDataSources(true, TestProvName.AllOracle)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			(
+				from c in db.Child//.TableHint(Hints.TableHint.Full)
+				where c.ParentID < -1111
+				select c
+			)
+			.QueryHint(OracleHints.Hint.AllRows)
+			.QueryHint(OracleHints.Hint.FirstRows(10))
+			.Update(q => q, c => new()
 			{
 				ChildID = c.ChildID * 2
 			});
@@ -821,8 +843,100 @@ namespace Tests.Extensions
 
 
 			Assert.That(LastQuery, Should.Contain(
-				"ELECT /*+ CONTAINERS(DEFAULT_PDB_HINT='NO_PARALLEL')",
+				"SELECT /*+ CONTAINERS(DEFAULT_PDB_HINT='NO_PARALLEL')",
 				"UNION"));
 		}
+
+		#region Issue 4163
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4163")]
+		public void Issue4163Test1([IncludeDataSources(true, TestProvName.AllOracle)] string context, [Values] CompareNulls compareNulls)
+		{
+			using var db = GetDataContext(context, o => o.UseCompareNulls(compareNulls));
+			using var tb = db.CreateLocalTable(Issue4163TableExplicitNullability.Data);
+
+			var cnt = db.GetTable<Issue4163TableExplicitNullability>().Where(r => r.Method != PaymentMethod.Unknown).Count();
+
+			Assert.That(cnt, Is.EqualTo(2));
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4163")]
+		public void Issue4163Test2([IncludeDataSources(true, TestProvName.AllOracle)] string context, [Values] CompareNulls compareNulls)
+		{
+			using var db = GetDataContext(context, o => o.UseCompareNulls(compareNulls));
+			using var tb = db.CreateLocalTable(Issue4163TableExplicitNullability.Data);
+
+			var cnt = db.GetTable<Issue4163TableUnknownNullability>().Where(r => r.Method != PaymentMethod.Unknown).Count();
+
+			Assert.That(cnt, Is.EqualTo(2));
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4163")]
+		public void Issue4163Test3([IncludeDataSources(true, TestProvName.AllOracle)] string context, [Values] CompareNulls compareNulls)
+		{
+			using var db = GetDataContext(context, o => o.UseCompareNulls(compareNulls));
+			using var tb = db.CreateLocalTable(Issue4163TableExplicitNullability.Data);
+
+			var cnt = db.GetTable<Issue4163TableInferredNullability>().Where(r => r.Method != PaymentMethodWithNull.Unknown).Count();
+
+			Assert.That(cnt, Is.EqualTo(2));
+		}
+
+		[Table("Issue4163Table")]
+		sealed class Issue4163TableExplicitNullability
+		{
+			[Column] public int Id { get; set; }
+			[Column(CanBeNull = true)] public PaymentMethod Method { get; set; }
+
+			public static readonly Issue4163TableExplicitNullability[] Data = new[]
+			{
+				new Issue4163TableExplicitNullability() { Id = 1, Method = PaymentMethod.Unknown },
+				new Issue4163TableExplicitNullability() { Id = 2, Method = PaymentMethod.Cheque },
+				new Issue4163TableExplicitNullability() { Id = 3, Method = PaymentMethod.EFT },
+			};
+		}
+
+		[Table("Issue4163Table")]
+		sealed class Issue4163TableUnknownNullability
+		{
+			[Column] public int Id { get; set; }
+			[Column] public PaymentMethod Method { get; set; }
+		}
+
+		[Table("Issue4163Table")]
+		sealed class Issue4163TableInferredNullability
+		{
+			[Column] public int Id { get; set; }
+			[Column] public PaymentMethodWithNull Method { get; set; }
+		}
+
+		enum PaymentMethod
+		{
+			[MapValue("")]
+			Unknown,
+
+			[MapValue("C")]
+			Cheque,
+
+			[MapValue("E")]
+			EFT
+		}
+
+		enum PaymentMethodWithNull
+		{
+			[MapValue("")]
+			Unknown,
+
+			[MapValue(null)]
+			Null = Unknown,
+
+			[MapValue("C")]
+			Cheque,
+
+			[MapValue("E")]
+			EFT
+		}
+
+		#endregion
 	}
 }

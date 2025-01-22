@@ -561,7 +561,7 @@ namespace Tests.Linq
 			using (var db = GetDataContext(context))
 				AreEqual(
 					from p in from t in    Types select Convert.ToString(t.MoneyValue) where p.Length > 0 select p.Replace(',', '.').TrimEnd('0', '.'),
-					from p in from t in db.Types select Convert.ToString(t.MoneyValue) where p.Length > 0 select p.Replace(',', '.').TrimEnd('0', '.'));
+					from p in from t in db.Types select Convert.ToString(t.MoneyValue) where p.Length > 0 select p.Replace(',', '.').TrimEnd(new char[] { '0', '.' }));
 		}
 
 		[Test]
@@ -683,7 +683,7 @@ namespace Tests.Linq
 		{
 			var r = db.Types.Select(_ => ServerConvert<TTo, TFrom>(value)).First();
 
-			TestContext.WriteLine($"Expected {expected} result {r}");
+			TestContext.Out.WriteLine($"Expected {expected} result {r}");
 
 			Assert.That(Math.Abs(LinqToDB.Common.Convert<TTo, decimal>.From(expected) - LinqToDB.Common.Convert<TTo, decimal>.From(r)), Is.LessThan(0.01m));
 		}
@@ -735,8 +735,8 @@ namespace Tests.Linq
 					select
 						Sql.AsSql(od.UnitPrice * od.Quantity * (decimal)(1 - od.Discount));
 
-				var sqlActual   = qActual.  ToString();
-				var sqlExpected = qExpected.ToString();
+				var sqlActual   = qActual.ToSqlQuery().Sql;
+				var sqlExpected = qExpected.ToSqlQuery().Sql;
 
 				Assert.Multiple(() =>
 				{

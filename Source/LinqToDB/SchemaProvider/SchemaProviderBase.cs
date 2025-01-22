@@ -44,6 +44,7 @@ namespace LinqToDB.SchemaProvider
 		protected string? BuildSchemaFilter(GetSchemaOptions? options, string defaultSchema, Action<StringBuilder, string> stringLiteralBuilder)
 		{
 			var schemas = new HashSet<string>();
+
 			schemas.Add(defaultSchema);
 
 			if (options != null)
@@ -97,7 +98,7 @@ namespace LinqToDB.SchemaProvider
 
 			var dbConnection = dataConnection.Connection;
 
-			InitProvider(dataConnection);
+			InitProvider(dataConnection, options);
 
 			DataTypesDic                                 = new Dictionary<string,DataTypeInfo>(StringComparer.OrdinalIgnoreCase);
 			ProviderSpecificDataTypesDic                 = new Dictionary<string,DataTypeInfo>(StringComparer.OrdinalIgnoreCase);
@@ -572,7 +573,7 @@ namespace LinqToDB.SchemaProvider
 		protected virtual string GetDataSourceName(DataConnection dbConnection) => dbConnection.Connection.DataSource;
 		protected virtual string GetDatabaseName  (DataConnection dbConnection) => dbConnection.Connection.Database;
 
-		protected virtual void InitProvider(DataConnection dataConnection)
+		protected virtual void InitProvider(DataConnection dataConnection, GetSchemaOptions options)
 		{
 		}
 
@@ -627,7 +628,8 @@ namespace LinqToDB.SchemaProvider
 						{
 							case "size"       :
 							case "length"     : paramValues[i] = length; break;
-							case "max length" : paramValues[i] = length == int.MaxValue ? "max" : length?.ToString(NumberFormatInfo.InvariantInfo); break;
+							// -1: https://learn.microsoft.com/en-us/sql/relational-databases/system-information-schema-views/parameters-transact-sql
+							case "max length" : paramValues[i] = length is int.MaxValue or -1 ? "max" : length?.ToString(NumberFormatInfo.InvariantInfo); break;
 							case "precision"  : paramValues[i] = precision;   break;
 							case "scale"      : paramValues[i] = scale.HasValue || paramNames.Length == 2 ? scale : precision; break;
 						}

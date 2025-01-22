@@ -1213,10 +1213,10 @@ namespace Cli.All.Oracle
 		#region Associations
 		#region Doctor Associations
 		/// <summary>
-		/// Fk_Doctor_Person
+		/// FK_Doctor_Person
 		/// </summary>
-		[Association(CanBeNull = false, ThisKey = nameof(Oracle.Doctor.PersonId), OtherKey = nameof(Person.PersonId))]
-		public static Person FkPerson(this Doctor obj, IDataContext db)
+		[Association(CanBeNull = false, ThisKey = nameof(Oracle.Doctor.PersonId), OtherKey = nameof(Oracle.Person.PersonId))]
+		public static Person Person(this Doctor obj, IDataContext db)
 		{
 			return db.GetTable<Person>().First(t => obj.PersonId == t.PersonId);
 		}
@@ -1224,18 +1224,18 @@ namespace Cli.All.Oracle
 
 		#region Person Associations
 		/// <summary>
-		/// Fk_Doctor_Person backreference
+		/// FK_Doctor_Person backreference
 		/// </summary>
-		[Association(ThisKey = nameof(Person.PersonId), OtherKey = nameof(Oracle.Doctor.PersonId))]
+		[Association(ThisKey = nameof(Oracle.Person.PersonId), OtherKey = nameof(Oracle.Doctor.PersonId))]
 		public static Doctor? Doctor(this Person obj, IDataContext db)
 		{
 			return db.GetTable<Doctor>().FirstOrDefault(t => t.PersonId == obj.PersonId);
 		}
 
 		/// <summary>
-		/// Fk_Patient_Person backreference
+		/// FK_Patient_Person backreference
 		/// </summary>
-		[Association(ThisKey = nameof(Person.PersonId), OtherKey = nameof(Oracle.Patient.PersonId))]
+		[Association(ThisKey = nameof(Oracle.Person.PersonId), OtherKey = nameof(Oracle.Patient.PersonId))]
 		public static Patient? Patient(this Person obj, IDataContext db)
 		{
 			return db.GetTable<Patient>().FirstOrDefault(t => t.PersonId == obj.PersonId);
@@ -1244,10 +1244,10 @@ namespace Cli.All.Oracle
 
 		#region Patient Associations
 		/// <summary>
-		/// Fk_Patient_Person
+		/// FK_Patient_Person
 		/// </summary>
-		[Association(CanBeNull = false, ThisKey = nameof(Oracle.Patient.PersonId), OtherKey = nameof(Person.PersonId))]
-		public static Person FkPerson(this Patient obj, IDataContext db)
+		[Association(CanBeNull = false, ThisKey = nameof(Oracle.Patient.PersonId), OtherKey = nameof(Oracle.Person.PersonId))]
+		public static Person Person(this Patient obj, IDataContext db)
 		{
 			return db.GetTable<Person>().First(t => obj.PersonId == t.PersonId);
 		}

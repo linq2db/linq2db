@@ -5,8 +5,11 @@ using System.Threading.Tasks;
 
 using LinqToDB;
 using LinqToDB.Mapping;
+using LinqToDB.Tools.EntityServices;
 
 using NUnit.Framework;
+
+using Tests.Model;
 
 namespace Tests.Linq
 {
@@ -746,5 +749,48 @@ namespace Tests.Linq
 
 		#endregion
 
+		[Test]
+		public async Task IDataContext_CompiledQueryTest([DataSources(false)] string context)
+		{
+			await using var db  = new TestDataConnection(context);
+			using       var map = new IdentityMap(db);
+
+			var query = CompiledQuery.Compile<TestDataConnection,CancellationToken,Task<List<Person>>>(static (db, ct) => db.Person.Where(p => p.ID == 1).ToListAsync(ct));
+
+			var result1 = await query(db, default);
+			var result2 = await query(db, default);
+
+			Assert.That(result2[0], Is.SameAs(result1[0]));
+		}
+
+		[ActiveIssue]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4365")]
+		public async Task CustomContext_CompiledQueryCustomTest([DataSources(false)] string context)
+		{
+			await using var db  = new TestDataCustomConnection(context);
+			using       var map = new IdentityMap(db);
+
+			var query = CompiledQuery.Compile<TestDataCustomConnection,CancellationToken,Task<List<Person>>>(static (db, ct) => db.Person.Where(p => p.ID == 1).ToListAsync(ct));
+
+			var result1 = await query(db, default);
+			var result2 = await query(db, default);
+
+			Assert.That(result2[0], Is.SameAs(result1[0]));
+		}
+
+		[ActiveIssue]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/3266")]
+		public async Task Issue3266Test([DataSources(false)] string context)
+		{
+			var query = CompiledQuery.Compile(
+				(ITestDataContext db, int id) =>  db.Person
+					.Where(p => p.ID == id)
+					.Set(p => p.LastName, "updated")
+					.UpdateAsync(default));
+
+			using var db  = GetDataContext(context);
+
+			await query(db, -1);
+		}
 	}
 }

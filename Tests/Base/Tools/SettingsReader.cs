@@ -125,7 +125,7 @@ namespace Tests.Tools
 						switch (provider)
 						{
 							case "++" or "+++" or "all":
-								foreach (var p in TestBase.Providers)
+								foreach (var p in TestConfiguration.Providers)
 									providers.Add(p);
 								break;
 							case "--" or "---":

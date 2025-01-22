@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using FluentAssertions;
 
 using LinqToDB;
+using LinqToDB.Linq;
 using LinqToDB.Mapping;
 
 using NUnit.Framework;
@@ -183,24 +184,20 @@ namespace Tests.Linq
 		[Test]
 		public void GroupBy2([DataSources] string context)
 		{
-			using (new GuardGrouping(false))
-			{
-				using var db = GetDataContext(context);
+			using var db = GetDataContext(context, o => o.UseGuardGrouping(false));
 
-				AreEqual(
-					(from ch in    Child group ch by ch.Parent1).ToList().Select(g => g.Key),
-					(from ch in db.Child group ch by ch.Parent1).ToList().Select(g => g.Key));
-			}
+			AreEqual(
+				(from ch in Child group ch by ch.Parent1).ToList().Select(g => g.Key),
+				(from ch in db.Child group ch by ch.Parent1).ToList().Select(g => g.Key));
 		}
 
 		[Test]
 		public async Task GroupBy2Async([DataSources] string context)
 		{
-			using (new GuardGrouping(false))
-			using (var db = GetDataContext(context))
-				AreEqual(
-					       (from ch in    Child group ch by ch.Parent1).ToList().      Select(g => g.Key),
-					(await (from ch in db.Child group ch by ch.Parent1).ToListAsync()).Select(g => g.Key));
+			using var db = GetDataContext(context, o => o.UseGuardGrouping(false));
+			AreEqual(
+				       (from ch in    Child group ch by ch.Parent1).ToList().      Select(g => g.Key),
+				(await (from ch in db.Child group ch by ch.Parent1).ToListAsync()).Select(g => g.Key));
 		}
 
 		[Test]
@@ -587,7 +584,7 @@ namespace Tests.Linq
 		sealed class Parent170
 		{
 			[Column] public int ParentID;
-			[Column] public int Value1;
+			[Column(CanBeNull = true)] public int Value1;
 
 			[Association(ThisKey = "ParentID", OtherKey = "Value1", CanBeNull = true)]
 			public Parent170? Parent;
@@ -828,7 +825,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void TestGenericAssociationRuntimeMany([DataSources(ProviderName.Access, TestProvName.AllSQLite)] string context)
+		public void TestGenericAssociationRuntimeMany([DataSources(TestProvName.AllSQLite)] string context)
 		{
 			var ids = new[] { 1, 5 };
 
@@ -1287,16 +1284,23 @@ namespace Tests.Linq
 		[Test]
 		public void Issue845Test([IncludeDataSources(false, TestProvName.AllSqlServer, TestProvName.AllSQLite)] string context)
 		{
-			using (var db = GetDataConnection(context))
-			using (db.CreateLocalTable<Employee>())
-			using (db.CreateLocalTable<Department>())
-			{
-				var result = db.GetTable<Employee>()
-					.Select(e => new { e.Id, e.Department!.Name })
-					.ToList();
+			using var db = GetDataConnection(context);
+			using var t1 = db.CreateLocalTable<Employee>();
+			using var t2 = db.CreateLocalTable<Department>();
 
+			var result = db.GetTable<Employee>()
+				.Select(e => new { e.Id, e.Department!.Name })
+				.ToList();
+
+			if (context.IsAnyOf(TestProvName.AllSqlServer))
+			{
 				Assert.That(db.LastQuery!, Does.Not.Contain(" NOT"));
 				Assert.That(db.LastQuery!, Does.Contain("AND [a_Department].[Deleted] = 0"));
+			}
+			else
+			{
+				Assert.That(db.LastQuery!, Does.Contain(" NOT"));
+				Assert.That(db.LastQuery!, Does.Not.Contain(" = 0"));
 			}
 		}
 
@@ -1901,6 +1905,283 @@ namespace Tests.Linq
 
 		#endregion
 
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/2022")]
+		public void TestAssociationAliasEscaping([DataSources(false)] string context)
+		{
+			var old = LinqToDB.Common.Configuration.Sql.AssociationAlias;
+			try
+			{
+				LinqToDB.Common.Configuration.Sql.AssociationAlias = "test.[aLыi`\",:!@#$%^&*()_'=as].{0}";
+
+				using var db = GetDataConnection(context);
+
+				db.Child.Select(c => new { c.ChildID, c.Parent!.Value1 }).ToArray();
+			}
+			finally
+			{
+				LinqToDB.Common.Configuration.Sql.AssociationAlias = old;
+			}
+		}
+
+		#region Issue 2933
+
+		[ThrowsForProvider(typeof(LinqToDBException), providers: [TestProvName.AllSybase], ErrorMessage = ErrorHelper.Error_OUTER_Joins)]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/2933")]
+		public void Issue2933Test([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t1 = db.CreateLocalTable(Issue2933Car.Data);
+			using var t2 = db.CreateLocalTable(Issue2933Person.Data);
+			using var t3 = db.CreateLocalTable(Issue2933Pet.Data);
+
+			var data = t1
+				.Select(x => new
+				{
+					x.Id,
+					PetName = x
+						.Person!
+						.PetIds
+						.Select(y => y.Name)
+						.FirstOrDefault()
+				})
+				.ToArray();
+
+			Assert.That(data, Has.Length.EqualTo(2));
+		}
+
+		sealed class Issue2933Car
+		{
+			[PrimaryKey] public int Id;
+
+			public int? PersonId { get; set; }
+
+			[Association(ThisKey = nameof(PersonId), OtherKey = nameof(Issue2933Person.Id), CanBeNull = true)]
+			public Issue2933Person? Person { get; set; }
+
+			public static readonly Issue2933Car[] Data =
+			[
+				new() { Id = 1, PersonId = 1 },
+				new() { Id = 2 }
+			];
+		}
+
+		sealed class Issue2933Person
+		{
+			[PrimaryKey] public int Id;
+
+			[Association(ThisKey = nameof(Id), OtherKey = nameof(Issue2933Pet.PersonId), CanBeNull = true)]
+			public IEnumerable<Issue2933Pet> PetIds { get; set; } = null!;
+
+			public static readonly Issue2933Person[] Data =
+			[
+				new() { Id = 1 }
+			];
+		}
+
+		sealed class Issue2933Pet
+		{
+			[PrimaryKey] public int Id;
+
+			[Column, NotNull] public string Name { get; set; } = null!;
+
+			[Column] public int PersonId;
+
+			[Association(ThisKey = nameof(PersonId), OtherKey = nameof(Issue2933Person.Id), CanBeNull = false)]
+			public Issue2933Person Person { get; set; } = null!;
+
+			public static readonly Issue2933Pet[] Data =
+			[
+				new() { Id = 1, PersonId = 1, Name = "Snuffles" },
+				new() { Id = 2, PersonId = 1, Name = "Buddy" },
+			];
+		}
+		#endregion
+
+		#region Issue 4454
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4454")]
+		public void Issue4454Test1([DataSources(false)] string context)
+		{
+			using var db = GetDataConnection(context);
+			using var t1 = db.CreateLocalTable<Issue4454Client>();
+			using var t2 = db.CreateLocalTable<Issue4454Service>();
+
+			t2.Select(s => s.Client1.Name).ToArray();
+
+			Assert.That(db.LastQuery, Does.Contain("INNER JOIN"));
+		}
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4454")]
+		public void Issue4454Test2([DataSources(false)] string context)
+		{
+			using var db = GetDataConnection(context);
+			using var t1 = db.CreateLocalTable<Issue4454Client>();
+			using var t2 = db.CreateLocalTable<Issue4454Service>();
+
+			t2.Select(s => s.Client2.Name).ToArray();
+
+			Assert.That(db.LastQuery, Does.Contain("INNER JOIN"));
+		}
+
+		sealed class Issue4454Client
+		{
+			public int Id { get; set; }
+			public string? Name { get; set; }
+		}
+
+		sealed class Issue4454Service
+		{
+			public int Id { get; set; }
+			public int? IdClient { get; set; }
+
+			[Association(ExpressionPredicate = nameof(Client_ExprPr), CanBeNull = false)]
+			public Issue4454Client Client1 { get; set; } = null!;
+
+			[Association(QueryExpressionMethod = nameof(Client_QExpr), CanBeNull = false)]
+			public Issue4454Client Client2 { get; set; } = null!;
+
+			// works fine
+			static Expression<Func<Issue4454Service, Issue4454Client, bool>> Client_ExprPr =>
+			    (s, c) => s.IdClient == c.Id;
+
+			// always generates left join or outer apply (if query is more complicated)
+			static Expression<Func<Issue4454Service, IDataContext, IQueryable<Issue4454Client>>> Client_QExpr =>
+				(s, db) => db.GetTable<Issue4454Client>().Where(c => c.Id == s.IdClient);
+		}
+
+		#endregion
+
+		#region Issue 3822
+
+		[ThrowsForProvider(typeof(LinqToDBException), providers: [TestProvName.AllAccess], ErrorMessage = ErrorHelper.Error_Join_Without_Condition)]
+		[ThrowsForProvider(typeof(LinqToDBException), providers: [TestProvName.AllSybase], ErrorMessage = ErrorHelper.Sybase.Error_JoinToDerivedTableWithTakeInvalid)]
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/3822")]
+		public void Issue3822Test([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			using (db.CreateLocalTable(new[] { new Dog { Id = 1, OwnerId = 1 } }))
+			using (db.CreateLocalTable(new[] { new Human { Id = 1, HouseId = 1 } }))
+			using (db.CreateLocalTable(new[] { new House { Id = 1 } }))
+			using (db.CreateLocalTable(new[] { new Window { Id = 6, Position = 6 } }))
+			{
+				var windowId = db
+					.GetTable<Dog>()
+					.Select(x => x.House.WindowAtPosition(db, 6)!.Id)
+					.FirstOrDefault();
+
+				Assert.That(windowId, Is.EqualTo(6));
+			}
+		}
+
+		public class Dog
+		{
+			public int Id { get; set; }
+
+			public int OwnerId { get; set; }
+
+			[Association(ThisKey = nameof(OwnerId), OtherKey = nameof(Human.Id), CanBeNull = false)]
+			public Human Owner { get; set; } = null!;
+
+			[ExpressionMethod(nameof(HouseExpression), IsColumn = false)]
+			public House House { get; set; } = null!;
+
+			private static Expression<Func<Dog, House>> HouseExpression()
+			{
+				return entity => entity
+					.Owner
+					.House;
+			}
+		}
+
+		public class Human
+		{
+			public int Id { get; set; }
+
+			public int HouseId { get; set; }
+
+			[Association(ThisKey = nameof(HouseId), OtherKey = nameof(House.Id), CanBeNull = false)]
+			public House House { get; set; } = null!;
+		}
+
+		public class House
+		{
+			public int Id { get; set; }
+
+			[Association(QueryExpressionMethod = nameof(WindowAtPositionExpression), CanBeNull = true)]
+			public Window? WindowAtPosition(IDataContext db, int position)
+			{
+				return (_windowAtPositionExpression ??= WindowAtPositionExpression().Compile())(this, db, position).FirstOrDefault();
+			}
+
+			private static Func<House, IDataContext, int, IQueryable<Window?>>? _windowAtPositionExpression;
+
+			private static Expression<Func<House, IDataContext, int, IQueryable<Window?>>> WindowAtPositionExpression()
+			{
+				return (entity, db, position) => db
+					.GetTable<Window>()
+					.Where(x => x.Position == position)
+					.Take(1);
+			}
+		}
+
+		public class Window
+		{
+			public int Id { get; set; }
+
+			public int Position { get; set; }
+		}
+		#endregion
+
+		[Test]
+		public void ManyAssociationEmptyCheck1([DataSources(TestProvName.AllClickHouse)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var parents = db.Parent.Where(p => p.Children != null).ToArray();
+
+			Assert.That(parents, Has.Length.EqualTo(6));
+			Assert.That(parents.Any(p => p.ParentID == 5), Is.False);
+		}
+
+		[Test]
+		public void ManyAssociationEmptyCheck2([DataSources(TestProvName.AllClickHouse)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			var parents = db.Parent.Where(p => p.Children == null).ToArray();
+
+			Assert.That(parents, Has.Length.EqualTo(1));
+			Assert.That(parents[0].ParentID, Is.EqualTo(5));
+		}
+
+		#region issue 4274
+
+		[Test(Description = "https://github.com/linq2db/linq2db/issues/4274")]
+		public void Issue4274Test([DataSources(false)] string context)
+		{
+			using var db = GetDataConnection(context);
+
+			var query1 = (
+					from serv in db.Patient
+					group serv by new { serv.PersonID } into gr
+					select new Patient
+					{
+						PersonID = gr.Key.PersonID,
+					}
+				);
+
+			var query2 = (
+					from serv in query1
+					where serv.Person.ID == 1
+					select serv
+				);
+
+			var result = query2.ToList();
+		}
+
+		#endregion
 	}
 
 	public static class AssociationExtension

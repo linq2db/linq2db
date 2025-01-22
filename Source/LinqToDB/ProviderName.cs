@@ -17,16 +17,40 @@ namespace LinqToDB
 	public static class ProviderName
 	{
 		/// <summary>
-		/// Microsoft Access OleDb provider (both JET or ACE).
+		/// Microsoft Access OleDb provider (with JET or ACE detection).
 		/// Used as configuration name for Access mapping schema <see cref="DataProvider.Access.AccessMappingSchema"/>.
 		/// </summary>
 		public const string Access        = "Access";
 
 		/// <summary>
-		/// Microsoft Access ODBC provider.
+		/// Microsoft Access ODBC provider (with JET or ACE detection).
 		/// Used as configuration name for Access mapping schema <see cref="DataProvider.Access.AccessMappingSchema"/>.
 		/// </summary>
 		public const string AccessOdbc    = "Access.Odbc";
+
+		/// <summary>
+		/// Microsoft Access JET OleDb provider.
+		/// Used as configuration name for Access mapping schema <see cref="DataProvider.Access.AccessMappingSchema"/>.
+		/// </summary>
+		public const string AccessJetOleDb        = "Access.Jet.OleDb";
+
+		/// <summary>
+		/// Microsoft Access JET ODBC provider.
+		/// Used as configuration name for Access mapping schema <see cref="DataProvider.Access.AccessMappingSchema"/>.
+		/// </summary>
+		public const string AccessJetOdbc    = "Access.Jet.Odbc";
+
+		/// <summary>
+		/// Microsoft Access ACE OleDb provider.
+		/// Used as configuration name for Access mapping schema <see cref="DataProvider.Access.AccessMappingSchema"/>.
+		/// </summary>
+		public const string AccessAceOleDb        = "Access.Ace.OleDb";
+
+		/// <summary>
+		/// Microsoft Access ACE ODBC provider.
+		/// Used as configuration name for Access mapping schema <see cref="DataProvider.Access.AccessMappingSchema"/>.
+		/// </summary>
+		public const string AccessAceOdbc    = "Access.Ace.Odbc";
 
 		/// <summary>
 		/// IBM DB2 default provider (DB2 LUW).
@@ -153,12 +177,12 @@ namespace LinqToDB
 		/// </summary>
 		public const string MySql57MySqlConnector = "MySql.5.7.MySqlConnector";
 		/// <summary>
-		/// MySql 8.x using MySql.Data provider.
+		/// MySql 8+ using MySql.Data provider.
 		/// Used as configuration name for MySql mapping schema <see cref="MySqlMappingSchema.MySqlData80MappingSchema"/>.
 		/// </summary>
 		public const string MySql80MySqlData = "MySql.8.0.MySql.Data";
 		/// <summary>
-		/// MySql 8.x using MySqlConnector provider.
+		/// MySql 8+ using MySqlConnector provider.
 		/// Used as configuration name for MySql mapping schema <see cref="MySqlMappingSchema.MySqlConnector80MappingSchema"/>.
 		/// </summary>
 		public const string MySql80MySqlConnector = "MySql.8.0.MySqlConnector";

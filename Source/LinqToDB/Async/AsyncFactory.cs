@@ -11,6 +11,8 @@ using System.Threading.Tasks;
 
 using JetBrains.Annotations;
 
+using LinqToDB.Data;
+
 namespace LinqToDB.Async
 {
 	using Common;
@@ -75,6 +77,16 @@ namespace LinqToDB.Async
 			return _connectionFactories.GetOrAdd(connection.GetType(), ConnectionFactory)(connection);
 		}
 
+		internal static IAsyncDbConnection CreateAndSetDataContext(DataConnection dataConnection, DbConnection connection)
+		{
+			var c = Create(connection);
+				
+			if (c is AsyncDbConnection asyncDbConnection)
+				asyncDbConnection.DataConnection = dataConnection;
+
+			return c;
+		}
+
 		/// <summary>
 		/// Wraps <see cref="DbTransaction"/> instance into type, implementing <see cref="IAsyncDbTransaction"/>.
 		/// </summary>
@@ -92,16 +104,27 @@ namespace LinqToDB.Async
 			return _transactionFactories.GetOrAdd(transaction.GetType(), TransactionFactory)(transaction);
 		}
 
-		private static async Task<IAsyncDbTransaction> Wrap<TTransaction>(Task<TTransaction> transaction)
-			where TTransaction: DbTransaction
+		internal static IAsyncDbConnection SetDataContext(this IAsyncDbConnection connection, DataConnection dataConnection)
 		{
-			return Create(await transaction.ConfigureAwait(Configuration.ContinueOnCapturedContext));
+			if (connection is AsyncDbConnection asyncDbConnection)
+				asyncDbConnection.DataConnection = dataConnection;
+			return connection;
+		}
+
+		internal static IAsyncDbTransaction CreateAndSetDataContext(DataConnection? dataConnection, DbTransaction transaction)
+		{
+			var t = Create(transaction);
+
+			if (t is AsyncDbTransaction asyncDbTransaction)
+				asyncDbTransaction.DataConnection = dataConnection;
+
+			return t;
 		}
 
 		private static async ValueTask<IAsyncDbTransaction> WrapValue<TTransaction>(ValueTask<TTransaction> transaction)
 			where TTransaction : DbTransaction
 		{
-			return Create(await transaction.ConfigureAwait(Configuration.ContinueOnCapturedContext));
+			return Create(await transaction.ConfigureAwait(false));
 		}
 
 		private static Func<DbTransaction, IAsyncDbTransaction> TransactionFactory(Type type)
