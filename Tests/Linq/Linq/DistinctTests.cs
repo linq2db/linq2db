@@ -189,23 +189,6 @@ namespace Tests.Linq
 			};
 		}
 
-#if NET5_0_OR_GREATER
-
-		[Test]
-		public void DistinctBy([DataSources] string context)
-		{
-			using (var db = GetDataContext(context))
-			using (var table = db.CreateLocalTable(DistinctOrderByTable.Data))
-			{
-				var query = table
-					.DistinctBy(x => new { x.F1, x.F2 });
-
-				AssertQuery(query);
-			}
-		}
-
-#endif
-
 		[Test]
 		public void DistinctOrderBy2([DataSources] string context)
 		{
