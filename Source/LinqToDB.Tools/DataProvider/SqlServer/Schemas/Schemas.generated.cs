@@ -976,7 +976,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// </summary>
 			[Column("description"),        NotNull] public string   Description      { get; set; } = null!; // nvarchar(max)
 			/// <summary>
-			/// *Note: This value is always NULL for Azure SQL Database V12. See [examples](#Deadlock) section for how to retrieve deadlock events for V12.*<br/><br/> For <strong>Deadlock</strong> events, this column contains the deadlock graph. This column is NULL for other event types.
+			/// *Note: This value is always NULL for Azure SQL Database V12. See [examples](https://learn.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-event-log-azure-sql-database?view=azuresqldb-current#examples) section for how to retrieve deadlock events for V12.*<br/><br/> For <strong>Deadlock</strong> events, this column contains the deadlock graph. This column is NULL for other event types.
 			/// </summary>
 			[Column("additional_data"),    NotNull] public object   AdditionalData   { get; set; } = null!; // XML
 		}
@@ -13223,7 +13223,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// </summary>
 			[Column("version"),       Nullable] public int?  Version      { get; set; } // int
 			/// <summary>
-			/// Dictionary type:<br/><br/> 1 - Hash dictionary containing <strong>int</strong> values<br/><br/> 2 - Not used<br/><br/> 3 - Hash dictionary containing string values<br/><br/> 4 - Hash dictionary containing <strong>float</strong> values<br/><br/> For more information about dictionaries, see <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/~/relational-databases/indexes/columnstore-indexes-overview'>Columnstore Indexes Guide</a>.
+			/// Dictionary type:<br/><br/> 1 - Hash dictionary containing <strong>int</strong> values<br/><br/> 2 - Not used<br/><br/> 3 - Hash dictionary containing string values<br/><br/> 4 - Hash dictionary containing <strong>float</strong> values<br/><br/> For more information about dictionaries, see <a href='https://docs.microsoft.com/en-us/sql/relational-databases/indexes/columnstore-indexes-overview'>Columnstore Indexes Guide</a>.
 			/// </summary>
 			[Column("type"),          Nullable] public int?  TypeColumn   { get; set; } // int
 			/// <summary>
@@ -13335,7 +13335,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// </summary>
 			[Column("version"),                 Nullable] public int?    Version               { get; set; } // int
 			/// <summary>
-			/// Type of encoding used for that segment:<br/><br/> 1 = VALUE_BASED - non-string/binary with no dictionary (similar to 4 with some internal variations)<br/><br/> 2 = VALUE_HASH_BASED - non-string/binary column with common values in dictionary<br/><br/> 3 = STRING_HASH_BASED - string/binary column with common values in dictionary<br/><br/> 4 = STORE_BY_VALUE_BASED - non-string/binary with no dictionary<br/><br/> 5 = STRING_STORE_BY_VALUE_BASED - string/binary with no dictionary<br/><br/> For more information, see the [Remarks](#remarks) section.
+			/// Type of encoding used for that segment:<br/><br/> 1 = VALUE_BASED - non-string/binary with no dictionary (similar to 4 with some internal variations)<br/><br/> 2 = VALUE_HASH_BASED - non-string/binary column with common values in dictionary<br/><br/> 3 = STRING_HASH_BASED - string/binary column with common values in dictionary<br/><br/> 4 = STORE_BY_VALUE_BASED - non-string/binary with no dictionary<br/><br/> 5 = STRING_STORE_BY_VALUE_BASED - string/binary with no dictionary<br/><br/> For more information, see the [Remarks](https://learn.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-column-store-segments-transact-sql?view=sql-server-ver16#remarks) section.
 			/// </summary>
 			[Column("encoding_type"),           Nullable] public int?    EncodingType          { get; set; } // int
 			/// <summary>
@@ -23274,7 +23274,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// </summary>
 			[Column("remote_table_name"),           Nullable] public string? RemoteTableName        { get; set; } // sysname
 			/// <summary>
-			/// The filter predicate, if any, that identifies rows in the table to be migrated. If the value is null, the entire table is eligible to be migrated.<br/><br/> For more info, see <a href='https://docs.microsoft.com/en-us/sql/sql-server/stretch-database/enable-stretch-database-for-a-table'>Enable Stretch Database for a table</a> and <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/~/sql-server/stretch-database/select-rows-to-migrate-by-using-a-filter-function-stretch-database'>Select rows to migrate by using a filter predicate</a>.
+			/// The filter predicate, if any, that identifies rows in the table to be migrated. If the value is null, the entire table is eligible to be migrated.<br/><br/> For more info, see <a href='https://docs.microsoft.com/en-us/sql/sql-server/stretch-database/enable-stretch-database-for-a-table'>Enable Stretch Database for a table</a> and <a href='https://docs.microsoft.com/en-us/sql/sql-server/stretch-database/select-rows-to-migrate-by-using-a-filter-function-stretch-database'>Select rows to migrate by using a filter predicate</a>.
 			/// </summary>
 			[Column("filter_predicate"),            Nullable] public string? FilterPredicate        { get; set; } // nvarchar(max)
 			/// <summary>
