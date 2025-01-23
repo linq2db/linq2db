@@ -1596,7 +1596,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			[Column("distribution_id"), NotNull] public int    DistributionID { get; set; } // int
 			/// <summary>
 			/// ID of the node this distribution is on.<br/>
-			/// Range: See pdw_node_id in [sys.dm_pdw_nodes (Transact-SQL)](../../relational-databases/system-dynamic-management-views/sys-dm-pdw-nodes-transact-sql.md).
+			/// Range: See pdw_node_id in [sys.dm_pdw_nodes (Transact-SQL)](https://learn.microsoft.com/en-us/sql/relational-databases/system-dynamic-management-views/sys-dm-pdw-nodes-transact-sql?view=aps-pdw-2016-au7).
 			/// </summary>
 			[Column("pdw_node_id"),     NotNull] public int    PdwNodeID      { get; set; } // int
 			/// <summary>
@@ -1877,12 +1877,12 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			[Column("Principal_id"),       NotNull] public int      PrincipalID      { get; set; } // int
 			/// <summary>
 			/// ID of the session performing the operation.<br/>
-			/// Range: See session_id in [sys.dm_pdw_exec_sessions (Transact-SQL)](../../relational-databases/system-dynamic-management-views/sys-dm-pdw-exec-sessions-transact-sql.md).
+			/// Range: See session_id in [sys.dm_pdw_exec_sessions (Transact-SQL)](https://learn.microsoft.com/en-us/sql/relational-databases/system-dynamic-management-views/sys-dm-pdw-exec-sessions-transact-sql?view=aps-pdw-2016-au7).
 			/// </summary>
 			[Column("session_id"),         NotNull] public string   SessionID        { get; set; } = null!; // nvarchar(32)
 			/// <summary>
 			/// ID of the request performing the operation. For loads, this is the current or last request associated with this load..<br/>
-			/// Range: See request_id in [sys.dm_pdw_exec_requests (Transact-SQL)](../../relational-databases/system-dynamic-management-views/sys-dm-pdw-exec-requests-transact-sql.md).
+			/// Range: See request_id in [sys.dm_pdw_exec_requests (Transact-SQL)](https://learn.microsoft.com/en-us/sql/relational-databases/system-dynamic-management-views/sys-dm-pdw-exec-requests-transact-sql?view=aps-pdw-2016-au7).
 			/// </summary>
 			[Column("request_id"),         NotNull] public string   RequestID        { get; set; } = null!; // nvarchar(32)
 			/// <summary>
@@ -1929,7 +1929,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			[Column("run_id"),             NotNull] public int      RunID            { get; set; } // int
 			/// <summary>
 			/// Unique identifier of an appliance node for which this record holds details.<br/><br/> run_id and pdw_node_id form the key for this view.<br/>
-			/// Range: See node_id in [sys.dm_pdw_nodes (Transact-SQL)](../../relational-databases/system-dynamic-management-views/sys-dm-pdw-nodes-transact-sql.md).
+			/// Range: See node_id in [sys.dm_pdw_nodes (Transact-SQL)](https://learn.microsoft.com/en-us/sql/relational-databases/system-dynamic-management-views/sys-dm-pdw-nodes-transact-sql?view=aps-pdw-2016-au7).
 			/// </summary>
 			[Column("pdw_node_id"),        NotNull] public int      PdwNodeID        { get; set; } // int
 			/// <summary>
@@ -2080,7 +2080,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// </summary>
 			[Column("physical_name"), NotNull] public string PhysicalName { get; set; } = null!; // nvarchar(36)
 			/// <summary>
-			/// The object ID for the materialized view. See [sys.objects (Transact-SQL)](./sys-objects-transact-sql.md?view=azure-sqldw-latest&amp;preserve-view=true).
+			/// The object ID for the materialized view. See [sys.objects (Transact-SQL)](https://learn.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-objects-transact-sql?view=sql-server-ver16).
 			/// </summary>
 			[Column("object_id"),     NotNull] public int    ObjectID     { get; set; } // int
 
