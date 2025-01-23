@@ -9,7 +9,7 @@ namespace Tests.Linq
 	partial class WindowFunctionsTests
 	{
 		[Test]
-		public void SumOverloads([IncludeDataSources(
+		public void AverageOverloads([IncludeDataSources(
 			true,
 			// native oracle provider crashes with AV
 			TestProvName.AllOracleManaged,
@@ -50,7 +50,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void SumOverloadsViaWindow([IncludeDataSources(
+		public void AverageOverloadsViaWindow([IncludeDataSources(
 			true,
 			// native oracle provider crashes with AV
 			TestProvName.AllOracleManaged,
@@ -65,7 +65,7 @@ namespace Tests.Linq
 			using var table = db.CreateLocalTable(data);
 			var query =
 				from t in table
-				let wnd = Sql.Window.DefineWindow(w => w.PartitionBy(t.CategoryId).OrderBy(t.Id))
+				let wnd = Sql.Window.DefineWindow(w => w.PartitionBy(t.CategoryId).OrderBy(t.Id).RangeBetween.CurrentRow.And.Value(70))
 				select new
 				{
 					IntSum             = Sql.Window.Sum(t.IntValue,             w => w.UseWindow(wnd)),
