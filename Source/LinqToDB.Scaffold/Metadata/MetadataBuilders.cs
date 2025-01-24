@@ -13,12 +13,12 @@ namespace LinqToDB.Metadata
 		/// <param name="languageProvider">Language provider.</param>
 		/// <param name="metadataSource">Type of metadata source.</param>
 		/// <returns>Attribute-based metadata builder instance or <c>null</c>.</returns>
-		public static IMetadataBuilder? GetMetadataBuilder(ILanguageProvider languageProvider, MetadataSource metadataSource)
+		public static IMetadataBuilder? GetMetadataBuilder(ILanguageProvider languageProvider, MetadataSource metadataSource, IType? fluentBuilderType )
 		{
 			return metadataSource switch
 			{
 				MetadataSource.Attributes    => AttributeBasedMetadataBuilder.Instance,
-				MetadataSource.FluentMapping => new FluentMetadataBuilder(languageProvider.ASTBuilder),
+				MetadataSource.FluentMapping => new FluentMetadataBuilder(languageProvider.ASTBuilder, fluentBuilderType ),
 				_                            => null
 			};
 		}

@@ -19,14 +19,16 @@ namespace LinqToDB.Metadata
 	{
 		private const string BUILDER_VAR_NAME = "builder";
 
+		private readonly IType                                                                                                         _fluentBuilderType;
 		private readonly CodeVariable                                                                                                  _builderVar;
 		private readonly List<ICodeStatement>                                                                                          _builderCalls = new();
 		// [T, (Attr, [Member, Attr])]
 		private readonly Dictionary<CodeClass, (ICodeExpression? tableAttribute, Dictionary<CodeReference, ICodeExpression?> members)> _entities     = new();
 
-		public FluentMetadataBuilder(CodeBuilder builder)
+		public FluentMetadataBuilder(CodeBuilder builder, IType? fluentBuilderType )
 		{
-			_builderVar = builder.Variable(builder.Name(BUILDER_VAR_NAME), WellKnownTypes.LinqToDB.Mapping.FluentMappingBuilder, true);
+			_fluentBuilderType = fluentBuilderType ?? WellKnownTypes.LinqToDB.Mapping.FluentMappingBuilder;
+			_builderVar = builder.Variable(builder.Name(BUILDER_VAR_NAME), _fluentBuilderType, true);
 		}
 
 		void IMetadataBuilder.BuildEntityMetadata(IDataModelGenerationContext context, EntityModel entity)
@@ -451,7 +453,7 @@ namespace LinqToDB.Metadata
 			// generate fluent builder setup in context static constructor
 
 			// var fluentBuilder = new FluentMappingBuilder(ContextSchema);
-			context.StaticInitializer.Append(context.AST.Assign(_builderVar, context.AST.New(WellKnownTypes.LinqToDB.Mapping.FluentMappingBuilder, context.ContextMappingSchema)).NewLine());
+			context.StaticInitializer.Append(context.AST.Assign(_builderVar, context.AST.New( _fluentBuilderType, context.ContextMappingSchema)).NewLine());
 
 			// add entity attributes (with properties)
 			foreach (var kvp in _entities)

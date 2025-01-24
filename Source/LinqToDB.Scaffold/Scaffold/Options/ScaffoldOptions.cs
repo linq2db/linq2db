@@ -81,6 +81,7 @@ namespace LinqToDB.Scaffold
 			options.DataModel.GenerateAssociationExtensions                  = false;
 			options.DataModel.AssociationCollectionAsArray                   = false;
 			options.DataModel.AssociationCollectionType                      = null;
+			options.DataModel.FluentMappingBuilderType                       = null;
 			options.DataModel.MapProcedureResultToEntity                     = true;
 			options.DataModel.TableFunctionReturnsTable                      = true;
 			options.DataModel.GenerateProceduresSchemaError                  = false;

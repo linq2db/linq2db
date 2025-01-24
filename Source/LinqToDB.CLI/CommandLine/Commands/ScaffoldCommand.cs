@@ -73,6 +73,7 @@ namespace LinqToDB.CommandLine
 			AddOption(_dataModelOptions, DataModel.EmitAssociationExtensions);
 			// combines AssociationCollectionAsArray + AssociationCollectionType options
 			AddOption(_dataModelOptions, DataModel.AssociationCollectionType);
+			AddOption(_dataModelOptions, DataModel.FluentMappingBuilderType);
 			AddOption(_dataModelOptions, DataModel.ReuseEntitiesInFunctions);
 			AddOption(_dataModelOptions, DataModel.TableFunctionReturnsITable);
 			AddOption(_dataModelOptions, DataModel.EmitSchemaErrors);

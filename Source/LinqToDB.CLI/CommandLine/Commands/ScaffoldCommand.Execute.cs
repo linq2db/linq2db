@@ -137,10 +137,14 @@ namespace LinqToDB.CommandLine
 			var generator  = new Scaffolder(LanguageProviders.CSharp, HumanizerNameConverter.Instance, settings, interceptors);
 			var dataModel  = generator.LoadDataModel(schemaProvider, typeMappingsProvider);
 			var sqlBuilder = dc.DataProvider.CreateSqlBuilder(dc.MappingSchema, dc.Options);
+			var fluentBuilderType = settings.DataModel.FluentMappingBuilderType != null
+				? language.TypeParser.Parse( settings.DataModel.FluentMappingBuilderType, false )
+				: null;
+
 			var files      = generator.GenerateCodeModel(
 				sqlBuilder,
 				dataModel,
-				MetadataBuilders.GetMetadataBuilder(generator.Language, settings.DataModel.Metadata),
+				MetadataBuilders.GetMetadataBuilder(generator.Language, settings.DataModel.Metadata, fluentBuilderType),
 				new ProviderSpecificStructsEqualityFixer(generator.Language));
 			var sourceCode = generator.GenerateSourceCode(dataModel, files);
 

@@ -314,6 +314,15 @@ namespace LinqToDB.Scaffold
 		/// </list>
 		/// </summary>
 		public string? AssociationCollectionType { get; set; }
+
+		/// <summary>
+		/// When specified, FluentMappingBuilder will be replaced with the configured type in the generated DataContext
+		/// <list type="bullet">
+		/// <item>Default: not set</item>
+		/// <item>In T4 compability mode: not set</item>
+		/// </list>
+		/// </summary>
+		public string? FluentMappingBuilderType { get; set; }
 		#endregion
 
 		#region Procedures/Functions

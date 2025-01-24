@@ -175,6 +175,9 @@ namespace LinqToDB.CommandLine
 				}
 			}
 
+			// FluentMappingBuilder type
+			if ( options.Remove( DataModel.FluentMappingBuilderType, out value ) ) settings.FluentMappingBuilderType = (string)value!;
+
 			// non-default schema name mappings
 			if (options.Remove(DataModel.SchemaTypeClassNames, out value))
 			{

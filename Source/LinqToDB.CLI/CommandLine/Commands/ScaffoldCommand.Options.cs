@@ -775,6 +775,29 @@ If you don't specify some property, CLI will use default value for current optio
 					new[] { "System.Collections.Generic.IEnumerable<>" },
 					new[] { "System.Collections.Generic.IEnumerable<>" });
 
+
+			/// <summary>
+			/// Type of association return type for association back reference with many cardinality option.
+			/// </summary>
+			public static readonly CliOption FluentMappingBuilderType = new StringCliOption(
+					"fluent-mapping-builder-type",
+					null,
+					false,
+					false,
+					"Type to use instead of FluentMappingBuilder in the generated DataContext",
+					"Type should either inherit FluentMappingBuilder or provide the exact same methods",
+					new[]
+					{
+						"--fluent-mapping-builder-type MyBuilder",
+					},
+					new[]
+					{
+						/*lang=json,strict*/
+						"{ \"dataModel\": { \"fluent-mapping-builder-type\": \"MyBuilder\" } }",
+					},
+					new[] { "not set" },
+					new[] { "not set" });
+
 			/// <summary>
 			/// Reuse of known entity mappings for procedure/table function return record option.
 			/// </summary>
