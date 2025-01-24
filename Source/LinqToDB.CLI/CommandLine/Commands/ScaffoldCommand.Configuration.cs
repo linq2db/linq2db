@@ -80,6 +80,7 @@ namespace LinqToDB.CommandLine
 			if (options.Remove(DataModel.ScaleOnTables                 , out value)) settings.GenerateScale                      = (bool)value!;
 			if (options.Remove(DataModel.EmitDbInfo                    , out value)) settings.IncludeDatabaseInfo                = (bool)value!;
 			if (options.Remove(DataModel.EmitInitDataContextMethod     , out value)) settings.GenerateInitDataContextMethod      = (bool)value!;
+			if (options.Remove(DataModel.EmitStaticInitDataContextMethod, out value)) settings.GenerateStaticInitDataContextMethod = (bool)value!;
 			if (options.Remove(DataModel.EmitDefaultConstructor        , out value)) settings.HasDefaultConstructor              = (bool)value!;
 			if (options.Remove(DataModel.EmitConfigurationConstructor  , out value)) settings.HasConfigurationConstructor        = (bool)value!;
 			if (options.Remove(DataModel.EmitOptionsConstructor        , out value)) settings.HasUntypedOptionsConstructor       = (bool)value!;

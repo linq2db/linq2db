@@ -630,6 +630,20 @@ If you don't specify some property, CLI will use default value for current optio
 					_t4ModeOptions.DataModel.GenerateInitDataContextMethod);
 
 			/// <summary>
+			/// Generate StaticInitDataContext partial method on data context class option.
+			/// </summary>
+			public static readonly CliOption EmitStaticInitDataContextMethod = new BooleanCliOption(
+					"add-static-init-context",
+					null,
+					false,
+					"generate StaticInitDataContext partial method on data context for custom context setup",
+					null,
+					null,
+					null,
+					_defaultOptions.DataModel.GenerateStaticInitDataContextMethod,
+					_t4ModeOptions.DataModel.GenerateStaticInitDataContextMethod);
+
+			/// <summary>
 			/// Default data context contructor generation option.
 			/// </summary>
 			public static readonly CliOption EmitDefaultConstructor = new BooleanCliOption(

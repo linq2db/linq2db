@@ -244,6 +244,15 @@ namespace LinqToDB.Scaffold
 		/// </list>
 		/// </summary>
 		public bool GenerateInitDataContextMethod { get; set; } = true;
+
+		/// <summary>
+		/// Enables generation of StaticInitDataContext partial method on data context class.
+		/// <list type="bullet">
+		/// <item>Default: <c>false</c></item>
+		/// <item>In T4 compability mode: <c>false</c></item>
+		/// </list>
+		/// </summary>
+		public bool GenerateStaticInitDataContextMethod { get; set; } = false;
 		#endregion
 
 		#region Associations
