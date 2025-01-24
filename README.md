@@ -15,8 +15,6 @@ In other words **LINQ to DB is type-safe SQL**.
 
 Development version nuget [feed](https://pkgs.dev.azure.com/linq2db/linq2db/_packaging/linq2db/nuget/v3/index.json) ([how to use](https://docs.microsoft.com/en-us/nuget/consume-packages/install-use-packages-visual-studio#package-sources))
 
-You can follow our [twitter bot](https://twitter.com/linq2db) to receive notifications about new releases. Note that currently it is only release notification bot and we don't monitor questions there.
-
 ## Standout Features
 
 - Rich Querying API:
