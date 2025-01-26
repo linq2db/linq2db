@@ -16,7 +16,7 @@ using System.Threading.Tasks;
 
 namespace Cli.Interceptors.SQLite
 {
-	public partial class TestDataDB : DataConnection
+	internal partial class TestDataDB : DataConnection
 	{
 		public TestDataDB()
 		{
