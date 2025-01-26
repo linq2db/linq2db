@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+
+using LinqToDB.CodeModel;
 using LinqToDB.Data;
 using LinqToDB.DataModel;
 using LinqToDB.Metadata;
@@ -223,7 +225,7 @@ namespace LinqToDB.Scaffold
 		/// <item>In T4 compability mode: not set</item>
 		/// </list>
 		/// </summary>
-		public string? ContextClassModifier { get; set; }
+		public Modifiers? ContextClassModifier { get; set; }
 
 		/// <summary>
 		/// Gets or sets type name (full name with namespace) of base class for generated data context. When not specified, <see cref="DataConnection"/> type used.
