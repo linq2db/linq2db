@@ -156,6 +156,16 @@ namespace LinqToDB.Scaffold
 		/// </list>
 		/// </summary>
 		public bool GenerateScale { get; set; }
+
+		/// <summary>
+		/// Enables the use of a type discriminator parameter in fluent mapping.
+		/// Enabling this requires that a set of extension methods taking (this FluentMappingBuilder builder) and type discriminators.
+		/// <list type="bullet">
+		/// <item>Default: <c>false</c></item>
+		/// <item>In T4 compability mode: <c>false</c></item>
+		/// </list>
+		/// </summary>
+		public bool UseFluentEntityTypeDiscriminator { get; set; }
 		#endregion
 
 		#region Context

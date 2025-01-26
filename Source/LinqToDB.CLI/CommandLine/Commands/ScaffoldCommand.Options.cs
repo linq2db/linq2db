@@ -602,6 +602,26 @@ If you don't specify some property, CLI will use default value for current optio
 					_t4ModeOptions.DataModel.GenerateScale);
 
 			/// <summary>
+			/// Generate database type scale on entity columns mappings option.
+			/// </summary>
+			public static readonly CliOption UseFluentEntityTypeDiscriminator = new BooleanCliOption(
+					"use-fluent-entity-type-discriminator",
+					null,
+					false,
+					"Enables the use of a type discriminator parameter in fluent mapping.",
+					@"Enabling this requires that a set of extension methods taking (this FluentMappingBuilder builder) and type discriminators.
+Ex.
+public static EntityMappingBuilder<T> Entity<T>( this FluentMappingBuilder builder, IHasTenantId? _) where T : IHasTenantId {
+  return builder.Entity<T>().HasQueryFilter( (T e, DbContext db) => e.TenantId == db.CurrentTenantId );
+}
+Add as many as needed. Both concrete types and marker interfaces work.
+",
+					null,
+					null,
+					_defaultOptions.DataModel.UseFluentEntityTypeDiscriminator,
+					_t4ModeOptions.DataModel.UseFluentEntityTypeDiscriminator);
+
+			/// <summary>
 			/// Generate database information comment on data context class option.
 			/// </summary>
 			public static readonly CliOption EmitDbInfo = new BooleanCliOption(

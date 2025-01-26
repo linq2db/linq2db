@@ -464,8 +464,8 @@ namespace LinqToDB.Metadata
 					continue;
 
 
-				ICodeExpression entityCallArgs =
-					context.Options.UseEntityTypeDiscriminator
+				ICodeExpression[] entityCallArgs =
+					context.Options.UseFluentEntityTypeDiscriminator
 					? [context.AST.Default( entityType, false )]
 					: [];
 
