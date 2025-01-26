@@ -485,5 +485,47 @@ namespace Tests.Linq
 			});
 		}
 		#endregion
+
+		#region v6p2 regression
+		class ExtensionTable1 : IEntity
+		{
+			public int ID { get; set; }
+			public int? FK { get; set; }
+
+			[Association(ThisKey = nameof(FK), OtherKey = nameof(ExtensionTable2.ID))]
+			public ExtensionTable2? Child => throw new InvalidOperationException();
+		}
+
+		class ExtensionTable2 : IEntity
+		{
+			public int ID { get; set; }
+		}
+
+		interface IEntity
+		{
+			int ID { get; set; }
+		}
+
+		[Test(Description = "6.0.0-preview.2 regression")]
+		public void ExtensionRegression([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+			using var t1 = db.CreateLocalTable<ExtensionTable1>();
+			using var t2 = db.CreateLocalTable<ExtensionTable2>();
+
+			Execute(t1.Select(r => r.Child!));
+
+			void Execute<T>(IQueryable<T> query)
+				where T : IEntity
+			{
+				query
+					.Where(e => Sql.ToNullable(e.ID) != null)
+					.Select(e => e.ID)
+					.Distinct()
+					.ToArray();
+			}
+		}
+
+		#endregion
 	}
 }
