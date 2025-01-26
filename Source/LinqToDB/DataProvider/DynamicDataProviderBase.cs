@@ -127,6 +127,19 @@ namespace LinqToDB.DataProvider
 			return true;
 		}
 
+		protected bool SetGetFieldValueReader(Type toType, Type fieldType, Type? dataReaderType = null, string? typeName = null)
+		{
+			var dataReaderParameter = Expression.Parameter(DataReaderType, "r");
+			var indexParameter      = Expression.Parameter(typeof(int), "i");
+
+			var methodCall = Expression.Call(dataReaderParameter, nameof(DbDataReader.GetFieldValue), new[] { toType }, indexParameter);
+
+			ReaderExpressions[new ReaderInfo { ToType = toType, ProviderFieldType = fieldType, DataReaderType = dataReaderType, DataTypeName = typeName }] =
+				Expression.Lambda(methodCall, dataReaderParameter, indexParameter);
+
+			return true;
+		}
+
 		#endregion
 
 		#region Provider Type Converters

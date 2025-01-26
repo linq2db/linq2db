@@ -501,6 +501,8 @@ CREATE TABLE AllTypes
 -- SKIP SqlServer.Contained.MS BEGIN
 -- SKIP SqlServer.Azure BEGIN
 -- SKIP SqlServer.Azure.MS BEGIN
+-- SKIP SqlServer.Azure.MI BEGIN
+-- SKIP SqlServer.Azure.MI.MS BEGIN
 	datetime2DataType        varchar(50)       NULL,
 	datetimeoffsetDataType   varchar(50)       NULL,
 	datetimeoffset0DataType  varchar(50)       NULL,
@@ -533,6 +535,8 @@ CREATE TABLE AllTypes
 -- SKIP SqlServer.Contained.MS END
 -- SKIP SqlServer.Azure END
 -- SKIP SqlServer.Azure.MS END
+-- SKIP SqlServer.Azure.MI END
+-- SKIP SqlServer.Azure.MI.MS END
 
 ) ON [PRIMARY]
 GO
@@ -650,6 +654,8 @@ GO
 
 -- SKIP SqlServer.Azure BEGIN
 -- SKIP SqlServer.Azure.MS BEGIN
+-- SKIP SqlServer.Azure.MI BEGIN
+-- SKIP SqlServer.Azure.MI.MS BEGIN
 
 EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'This is Parent table' , @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'Parent'
 GO
@@ -658,6 +664,8 @@ EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'This ChildID c
 GO
 -- SKIP SqlServer.Azure END
 -- SKIP SqlServer.Azure.MS END
+-- SKIP SqlServer.Azure.MI END
+-- SKIP SqlServer.Azure.MI.MS END
 
 
 CREATE FUNCTION GetParentByID(@id int)
@@ -736,6 +744,8 @@ GO
 -- SKIP SqlServer.Contained.MS BEGIN
 -- SKIP SqlServer.Azure BEGIN
 -- SKIP SqlServer.Azure.MS BEGIN
+-- SKIP SqlServer.Azure.MI BEGIN
+-- SKIP SqlServer.Azure.MI.MS BEGIN
 CREATE TABLE LinqDataTypes
 (
 	ID             int,
@@ -771,6 +781,8 @@ GO
 -- SKIP SqlServer.Contained.MS END
 -- SKIP SqlServer.Azure END
 -- SKIP SqlServer.Azure.MS END
+-- SKIP SqlServer.Azure.MI END
+-- SKIP SqlServer.Azure.MI.MS END
 
 IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID('TestIdentity') AND type in (N'U'))
 BEGIN DROP TABLE TestIdentity END

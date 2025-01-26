@@ -46,13 +46,21 @@ namespace LinqToDB.DataProvider.SqlServer
 		}
 
 		protected SqlServerDataProvider(string name, SqlServerVersion version, SqlServerProvider provider)
-			: base(
+			: this(
 				name,
-				MappingSchemaInstance.Get(version),
+				version,
 				SqlServerProviderAdapter.GetInstance(provider == SqlServerProvider.AutoDetect ? provider = SqlServerProviderDetector.DetectProvider() : provider))
 		{
+		}
+
+		protected SqlServerDataProvider(string name, SqlServerVersion version, SqlServerProviderAdapter adapter)
+			: base(
+				name,
+				MappingSchemaInstance.Get(version, adapter.MappingSchema),
+				adapter)
+		{
 			Version  = version;
-			Provider = provider;
+			Provider = adapter.Provider;
 
 			SqlProviderFlags.AcceptsOuterExpressionInAggregate  = false;
 			SqlProviderFlags.OutputDeleteUseSpecialTable        = true;
@@ -103,6 +111,15 @@ namespace LinqToDB.DataProvider.SqlServer
 			SetProviderField<SqlString  , SqlString  >(SqlTypes.GetSqlStringReaderMethod  , dataReaderType: Adapter.DataReaderType);
 			SetProviderField<SqlXml     , SqlXml     >(Adapter.GetSqlXmlReaderMethod      , dataReaderType: Adapter.DataReaderType);
 
+			if (Adapter.SqlJsonType != null)
+			{
+				SetProviderField(Adapter.SqlJsonType, typeof(string), Adapter.GetSqlJsonReaderMethod!, dataReaderType: Adapter.DataReaderType, typeName: "json");
+				// safe assumption as if SqlJson type found, JsonDocument will also exist
+				var jsonDocumentType = Type.GetType("System.Text.Json.JsonDocument, System.Text.Json");
+				if (jsonDocumentType != null)
+					SetGetFieldValueReader(jsonDocumentType, typeof(string), dataReaderType: Adapter.DataReaderType, typeName: "json");
+			}
+
 			SetProviderField<DateTimeOffset>(Adapter.GetDateTimeOffsetReaderMethod        , dataReaderType: Adapter.DataReaderType);
 			SetProviderField<TimeSpan>      (Adapter.GetTimeSpanReaderMethod              , dataReaderType: Adapter.DataReaderType);
 
@@ -126,18 +143,18 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		static class MappingSchemaInstance
 		{
-			public static MappingSchema Get(SqlServerVersion version)
+			public static MappingSchema Get(SqlServerVersion version, MappingSchema? adapterSchema)
 			{
 				return version switch
 				{
-					SqlServerVersion.v2005 => new SqlServerMappingSchema.SqlServer2005MappingSchema(),
-					SqlServerVersion.v2012 => new SqlServerMappingSchema.SqlServer2012MappingSchema(),
-					SqlServerVersion.v2014 => new SqlServerMappingSchema.SqlServer2014MappingSchema(),
-					SqlServerVersion.v2016 => new SqlServerMappingSchema.SqlServer2016MappingSchema(),
-					SqlServerVersion.v2017 => new SqlServerMappingSchema.SqlServer2017MappingSchema(),
-					SqlServerVersion.v2019 => new SqlServerMappingSchema.SqlServer2019MappingSchema(),
-					SqlServerVersion.v2022 => new SqlServerMappingSchema.SqlServer2022MappingSchema(),
-					_                      => new SqlServerMappingSchema.SqlServer2008MappingSchema(),
+					SqlServerVersion.v2005 => new SqlServerMappingSchema.SqlServer2005MappingSchema(adapterSchema),
+					SqlServerVersion.v2012 => new SqlServerMappingSchema.SqlServer2012MappingSchema(adapterSchema),
+					SqlServerVersion.v2014 => new SqlServerMappingSchema.SqlServer2014MappingSchema(adapterSchema),
+					SqlServerVersion.v2016 => new SqlServerMappingSchema.SqlServer2016MappingSchema(adapterSchema),
+					SqlServerVersion.v2017 => new SqlServerMappingSchema.SqlServer2017MappingSchema(adapterSchema),
+					SqlServerVersion.v2019 => new SqlServerMappingSchema.SqlServer2019MappingSchema(adapterSchema),
+					SqlServerVersion.v2022 => new SqlServerMappingSchema.SqlServer2022MappingSchema(adapterSchema),
+					_                      => new SqlServerMappingSchema.SqlServer2008MappingSchema(adapterSchema),
 				};
 			}
 		}
@@ -402,6 +419,7 @@ namespace LinqToDB.DataProvider.SqlServer
 				case DataType.SmallDateTime : type = SqlDbType.SmallDateTime; break;
 				case DataType.Timestamp     : type = SqlDbType.Timestamp;     break;
 				case DataType.Structured    : type = SqlDbType.Structured;    break;
+				case DataType.Json          : type = Adapter.JsonDbType;      break;
 			}
 
 			if (type != null)

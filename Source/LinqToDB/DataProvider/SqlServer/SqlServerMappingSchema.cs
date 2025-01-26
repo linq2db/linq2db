@@ -298,7 +298,7 @@ namespace LinqToDB.DataProvider.SqlServer
 			stringBuilder.Append(CultureInfo.InvariantCulture, $"char({value})");
 		}
 
-		static void ConvertStringToSql(StringBuilder stringBuilder, DataType dataType, string value)
+		internal static void ConvertStringToSql(StringBuilder stringBuilder, DataType dataType, string value)
 		{
 			string? startPrefix;
 
@@ -582,7 +582,7 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		public sealed class SqlServer2005MappingSchema : LockedMappingSchema
 		{
-			public SqlServer2005MappingSchema() : base(ProviderName.SqlServer2005, Instance)
+			public SqlServer2005MappingSchema(MappingSchema? adapterSchema) : base(ProviderName.SqlServer2005, adapterSchema == null ? [Instance] : [adapterSchema, Instance])
 			{
 				ColumnNameComparer = StringComparer.OrdinalIgnoreCase;
 
@@ -605,7 +605,7 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		public sealed class SqlServer2008MappingSchema : LockedMappingSchema
 		{
-			public SqlServer2008MappingSchema() : base(ProviderName.SqlServer2008, Instance)
+			public SqlServer2008MappingSchema(MappingSchema? adapterSchema) : base(ProviderName.SqlServer2008, adapterSchema == null ? [Instance] : [adapterSchema, Instance])
 			{
 				ColumnNameComparer = StringComparer.OrdinalIgnoreCase;
 
@@ -627,7 +627,7 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		public sealed class SqlServer2012MappingSchema : LockedMappingSchema
 		{
-			public SqlServer2012MappingSchema() : base(ProviderName.SqlServer2012, Instance)
+			public SqlServer2012MappingSchema(MappingSchema? adapterSchema) : base(ProviderName.SqlServer2012, adapterSchema == null ? [Instance] : [adapterSchema, Instance])
 			{
 				ColumnNameComparer = StringComparer.OrdinalIgnoreCase;
 
@@ -649,7 +649,7 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		public sealed class SqlServer2014MappingSchema : LockedMappingSchema
 		{
-			public SqlServer2014MappingSchema() : base(ProviderName.SqlServer2014, Instance)
+			public SqlServer2014MappingSchema(MappingSchema? adapterSchema) : base(ProviderName.SqlServer2014, adapterSchema == null ? [Instance] : [adapterSchema, Instance])
 			{
 				ColumnNameComparer = StringComparer.OrdinalIgnoreCase;
 
@@ -671,7 +671,7 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		public sealed class SqlServer2016MappingSchema : LockedMappingSchema
 		{
-			public SqlServer2016MappingSchema() : base(ProviderName.SqlServer2016, Instance)
+			public SqlServer2016MappingSchema(MappingSchema? adapterSchema) : base(ProviderName.SqlServer2016, adapterSchema == null ? [Instance] : [adapterSchema, Instance])
 			{
 				ColumnNameComparer = StringComparer.OrdinalIgnoreCase;
 
@@ -693,7 +693,7 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		public sealed class SqlServer2017MappingSchema : LockedMappingSchema
 		{
-			public SqlServer2017MappingSchema() : base(ProviderName.SqlServer2017, Instance)
+			public SqlServer2017MappingSchema(MappingSchema? adapterSchema) : base(ProviderName.SqlServer2017, adapterSchema == null ? [Instance] : [adapterSchema, Instance])
 			{
 				ColumnNameComparer = StringComparer.OrdinalIgnoreCase;
 
@@ -715,7 +715,7 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		public sealed class SqlServer2019MappingSchema : LockedMappingSchema
 		{
-			public SqlServer2019MappingSchema() : base(ProviderName.SqlServer2019, Instance)
+			public SqlServer2019MappingSchema(MappingSchema? adapterSchema) : base(ProviderName.SqlServer2019, adapterSchema == null ? [Instance] : [adapterSchema, Instance])
 			{
 				ColumnNameComparer = StringComparer.OrdinalIgnoreCase;
 
@@ -737,7 +737,7 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		public sealed class SqlServer2022MappingSchema : LockedMappingSchema
 		{
-			public SqlServer2022MappingSchema() : base(ProviderName.SqlServer2022, Instance)
+			public SqlServer2022MappingSchema(MappingSchema? adapterSchema) : base(ProviderName.SqlServer2022, adapterSchema == null ? [Instance] : [adapterSchema, Instance])
 			{
 				ColumnNameComparer = StringComparer.OrdinalIgnoreCase;
 
