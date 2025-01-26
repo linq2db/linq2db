@@ -252,7 +252,7 @@ namespace LinqToDB.Scaffold
 		/// <item>In T4 compability mode: <c>false</c></item>
 		/// </list>
 		/// </summary>
-		public bool GenerateStaticInitDataContextMethod { get; set; } = false;
+		public bool GenerateStaticInitDataContextMethod { get; set; }
 		#endregion
 
 		#region Associations
