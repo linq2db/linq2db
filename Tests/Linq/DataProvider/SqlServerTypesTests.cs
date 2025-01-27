@@ -2,14 +2,12 @@
 using System.Collections.Generic;
 using System.Data.SqlTypes;
 using System.Linq;
-using System.Text.Json;
 
 using LinqToDB;
 using LinqToDB.Data;
 using LinqToDB.DataProvider.SqlServer;
 using LinqToDB.Mapping;
 
-using Microsoft.Data.SqlTypes;
 using Microsoft.SqlServer.Types;
 
 using NUnit.Framework;
@@ -568,156 +566,6 @@ namespace Tests.DataProvider
 					Assert.That(interceptor.Parameters, Has.Length.EqualTo(1));
 				});
 			}
-		}
-#endif
-
-		// for legacy provider we test only string mapping
-		class JsonTestLegacy
-		{
-			public int Id { get; set; }
-			[Column(DataType = DataType.Json)] public string? AsString { get; set; }
-		}
-
-		// for M.D.C provider we test all supported types
-		sealed class JsonTest : JsonTestLegacy
-		{
-			[Column(DataType = DataType.Json)] public SqlJson? AsSqlJson { get; set; }
-			[Column(DataType = DataType.Json)] public JsonDocument? AsDocument { get; set; }
-		}
-
-		[Test]
-		public void TestJsonType_Simple_Legacy([IncludeDataSources(TestProvName.SqlAzure)] string context)
-		{
-			using var db = GetDataContext(context);
-			using var tb = db.CreateLocalTable<JsonTestLegacy>();
-
-			// Looks like Azure SQL Database doesn't support JSON parameters (yet?)
-			db.InlineParameters = true;
-
-			tb.Insert(() => new JsonTestLegacy() { Id = 1 });
-			var doc = JsonDocument.Parse("{ \"prop\": -1 }");
-			tb.Insert(() => new JsonTestLegacy()
-			{
-				Id = 2,
-				AsString = /*lang=json,strict*/ "{ \"prop\": 123 }",
-			});
-
-			var res = tb.OrderBy(r => r.Id).ToArray();
-
-			Assert.That(res, Has.Length.EqualTo(2));
-
-			Assert.Multiple(() =>
-			{
-				Assert.That(res[0].Id, Is.EqualTo(1));
-				Assert.That(res[0].AsString, Is.Null);
-
-				Assert.That(res[1].Id, Is.EqualTo(2));
-				Assert.That(res[1].AsString, Is.EqualTo(/*lang=json,strict*/ "{\"prop\":123}"));
-			});
-		}
-
-#if !NET6_0 // net6 tests use old v5 provider
-		[Test]
-		public void TestJsonType_Simple_Modern([IncludeDataSources(TestProvName.SqlAzureMS)] string context)
-		{
-			using var db = GetDataContext(context);
-			using var tb = db.CreateLocalTable<JsonTest>();
-
-			// Looks like Azure SQL Database doesn't support JSON parameters (yet?)
-			db.InlineParameters = true;
-
-			tb.Insert(() => new JsonTest() { Id = 1 });
-			var doc = JsonDocument.Parse("{ \"prop\": -1 }");
-			tb.Insert(() => new JsonTest()
-			{
-				Id = 2,
-				AsString = /*lang=json,strict*/ "{ \"prop\": 123 }",
-				AsSqlJson = new SqlJson(/*lang=json,strict*/ "{ \"prop\": 321 }"),
-				AsDocument = doc
-			});
-
-			var res = tb.OrderBy(r => r.Id).ToArray();
-
-			Assert.That(res, Has.Length.EqualTo(2));
-
-			Assert.Multiple(() =>
-			{
-				Assert.That(res[0].Id, Is.EqualTo(1));
-				Assert.That(res[0].AsString, Is.Null);
-				Assert.That(res[0].AsSqlJson!.IsNull, Is.EqualTo(true));
-				Assert.That(res[0].AsDocument, Is.Null);
-
-				Assert.That(res[1].Id, Is.EqualTo(2));
-				Assert.That(res[1].AsString, Is.EqualTo(/*lang=json,strict*/ "{\"prop\":123}"));
-				Assert.That(res[1].AsSqlJson!.Value, Is.EqualTo(/*lang=json,strict*/ "{\"prop\":321}"));
-				Assert.That(res[1].AsDocument!.RootElement.GetRawText(), Is.EqualTo(/*lang=json,strict*/ "{\"prop\":-1}"));
-			});
-		}
-#endif
-
-		[Test]
-		public void TestJsonType_Legacy([IncludeDataSources(TestProvName.SqlAzureMi)] string context, [Values] bool inline)
-		{
-			using var db = GetDataContext(context);
-			using var tb = db.CreateLocalTable<JsonTestLegacy>();
-
-			db.InlineParameters = inline;
-
-			db.Insert(new JsonTestLegacy() { Id = 1 });
-			db.Insert(new JsonTestLegacy()
-			{
-				Id = 2,
-				AsString = /*lang=json,strict*/ "{ \"prop\": 123 }",
-			});
-
-			var res = tb.OrderBy(r => r.Id).ToArray();
-
-			Assert.That(res, Has.Length.EqualTo(2));
-
-			Assert.Multiple(() =>
-			{
-				Assert.That(res[0].Id, Is.EqualTo(1));
-				Assert.That(res[0].AsString, Is.Null);
-
-				Assert.That(res[1].Id, Is.EqualTo(2));
-				Assert.That(res[1].AsString, Is.EqualTo(/*lang=json,strict*/ "{\"prop\":123}"));
-			});
-		}
-
-#if !NET6_0 // net6 tests use old v5 provider
-		[Test]
-		public void TestJsonType_Modern([IncludeDataSources(TestProvName.SqlAzureMiMS)] string context, [Values] bool inline)
-		{
-			using var db = GetDataContext(context);
-			using var tb = db.CreateLocalTable<JsonTest>();
-
-			db.InlineParameters = inline;
-
-			db.Insert(new JsonTest() { Id = 1 });
-			db.Insert(new JsonTest()
-			{
-				Id = 2,
-				AsString = /*lang=json,strict*/ "{ \"prop\": 123 }",
-				AsSqlJson = new SqlJson(/*lang=json,strict*/ "{ \"prop\": 321 }"),
-				AsDocument = JsonDocument.Parse("{ \"prop\": -1 }")
-			});
-
-			var res = tb.OrderBy(r => r.Id).ToArray();
-
-			Assert.That(res, Has.Length.EqualTo(2));
-
-			Assert.Multiple(() =>
-			{
-				Assert.That(res[0].Id, Is.EqualTo(1));
-				Assert.That(res[0].AsString, Is.Null);
-				Assert.That(res[0].AsSqlJson!.IsNull, Is.EqualTo(true));
-				Assert.That(res[0].AsDocument, Is.Null);
-
-				Assert.That(res[1].Id, Is.EqualTo(2));
-				Assert.That(res[1].AsString, Is.EqualTo(/*lang=json,strict*/ "{\"prop\":123}"));
-				Assert.That(res[1].AsSqlJson!.Value, Is.EqualTo(/*lang=json,strict*/ "{\"prop\":321}"));
-				Assert.That(res[1].AsDocument!.RootElement.GetRawText(), Is.EqualTo(/*lang=json,strict*/ "{\"prop\":-1}"));
-			});
 		}
 #endif
 	}

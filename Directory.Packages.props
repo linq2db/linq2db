@@ -113,7 +113,7 @@
 		<PackageVersion Include="MiniProfiler.Minimal"                                  Version="4.5.4"                 />
 		<PackageVersion Include="NodaTime"                                              Version="3.2.1"                 />
 		<PackageVersion Include="protobuf-net.Grpc.AspNetCore"                          Version="1.2.2"                 />
-		<PackageVersion Include="System.Linq.Dynamic.Core"                              Version="1.6.0-preview-03"      />
+		<PackageVersion Include="System.Linq.Dynamic.Core"                              Version="1.6.0"                 />
 		<PackageVersion Include="FSharp.Core"                                           Version="9.0.101"               Condition="'$(TargetFramework)'=='net9.0'" />
 		<PackageVersion Include="FSharp.Core"                                           Version="8.0.403"               Condition="'$(TargetFramework)'!='net9.0'" />
 		<PackageVersion Include="LinqKit"                                               Version="1.3.8"                 />

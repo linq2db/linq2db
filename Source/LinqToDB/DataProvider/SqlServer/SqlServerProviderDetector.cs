@@ -174,6 +174,8 @@ namespace LinqToDB.DataProvider.SqlServer
 
 			return level switch
 			{
+				// coming soon
+				//>= 170 => SqlServerVersion.v2025,
 				>= 160 => SqlServerVersion.v2022,
 				>= 150 => SqlServerVersion.v2019,
 				>= 140 => SqlServerVersion.v2017,

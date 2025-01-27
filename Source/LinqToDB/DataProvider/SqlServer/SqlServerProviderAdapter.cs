@@ -245,7 +245,7 @@ namespace LinqToDB.DataProvider.SqlServer
 
 			if (provider == SqlServerProvider.MicrosoftDataSqlClient)
 			{
-				sqlJsonType = LoadType("SqlJson", DataType.Json, "json", true, true);
+				sqlJsonType = LoadType("SqlJson", DataType.Json, null, true, true);
 				if (sqlJsonType != null)
 				{
 					var sb = Expression.Parameter(typeof(StringBuilder));
@@ -271,6 +271,9 @@ namespace LinqToDB.DataProvider.SqlServer
 
 					if (jsonDocumentType != null)
 					{
+						mappingSchema.SetScalarType(jsonDocumentType);
+						mappingSchema.SetDataType(jsonDocumentType, new SqlDataType(new DbDataType(jsonDocumentType, DataType.Json)));
+
 						var jsdocConverter = Expression.Lambda<Action<StringBuilder,SqlDataType,DataOptions,object>>(
 						Expression.Call(
 							null,
@@ -318,7 +321,7 @@ namespace LinqToDB.DataProvider.SqlServer
 
 			IEnumerable<int> exceptionErrorsGettter(Exception ex) => typeMapper.Wrap<SqlException>(ex).Errors.Errors.Select(err => err.Number);
 
-			Type? LoadType(string typeName, DataType dataType, string dbType, bool optional = false, bool register = true)
+			Type? LoadType(string typeName, DataType dataType, string? dbType, bool optional = false, bool register = true)
 			{
 				var type = assembly!.GetType($"Microsoft.Data.SqlTypes.{typeName}", !optional);
 

@@ -57,6 +57,8 @@ namespace TestAzureSQL
 		public ITable<SameTableName>            SameTableNames           { get { return this.GetTable<SameTableName>(); } }
 		public ITable<TestSchema_SameTableName> SameTableNames0          { get { return this.GetTable<TestSchema_SameTableName>(); } }
 		public ITable<SqlType>                  SqlTypes                 { get { return this.GetTable<SqlType>(); } }
+		public ITable<TemporalTest>             TemporalTests            { get { return this.GetTable<TemporalTest>(); } }
+		public ITable<TemporalTestHistory>      TemporalTestHistories    { get { return this.GetTable<TemporalTestHistory>(); } }
 		public ITable<TestIdentity>             TestIdentities           { get { return this.GetTable<TestIdentity>(); } }
 		public ITable<TestMerge1>               TestMerge1               { get { return this.GetTable<TestMerge1>(); } }
 		public ITable<TestMerge2>               TestMerge2               { get { return this.GetTable<TestMerge2>(); } }
@@ -170,6 +172,7 @@ namespace TestAzureSQL
 		[Column("varchar_max_DataType"),                                           Nullable            ] public string?         VarcharMaxDataType       { get; set; } // varchar(max)
 		[Column("varbinary_max_DataType"),                                         Nullable            ] public byte[]?         VarbinaryMaxDataType     { get; set; } // varbinary(max)
 		[Column("xmlDataType"),                                                    Nullable            ] public string?         XmlDataType              { get; set; } // xml
+		[Column("jsonDataType"),                                                   Nullable            ] public string?         JsonDataType             { get; set; } // json
 		[Column("datetime2DataType"),                                              Nullable            ] public DateTime?       Datetime2DataType        { get; set; } // datetime2(7)
 		[Column("datetimeoffsetDataType"),                                         Nullable            ] public DateTimeOffset? DatetimeoffsetDataType   { get; set; } // datetimeoffset(7)
 		[Column("datetimeoffset0DataType"),                                        Nullable            ] public DateTimeOffset? Datetimeoffset0DataType  { get; set; } // datetimeoffset(0)
@@ -485,6 +488,24 @@ namespace TestAzureSQL
 	{
 		[PrimaryKey, NotNull    ] public int             ID  { get; set; } // int
 		[Column,        Nullable] public SqlHierarchyId? HID { get; set; } // hierarchyid
+	}
+
+	[Table(Schema="dbo", Name="TemporalTest")]
+	public partial class TemporalTest
+	{
+		[PrimaryKey,                                   NotNull] public int      ID        { get; set; } // int
+		[Column,                                       NotNull] public string   Name      { get; set; } = null!; // nvarchar(100)
+		[Column(SkipOnInsert=true, SkipOnUpdate=true), NotNull] public DateTime StartedOn { get; set; } // datetime2(7)
+		[Column(SkipOnInsert=true, SkipOnUpdate=true), NotNull] public DateTime EndedOn   { get; set; } // datetime2(7)
+	}
+
+	[Table(Schema="dbo", Name="TemporalTestHistory")]
+	public partial class TemporalTestHistory
+	{
+		[Column(SkipOnInsert=true, SkipOnUpdate=true), NotNull] public int      ID        { get; set; } // int
+		[Column(SkipOnInsert=true, SkipOnUpdate=true), NotNull] public string   Name      { get; set; } = null!; // nvarchar(100)
+		[Column(SkipOnInsert=true, SkipOnUpdate=true), NotNull] public DateTime StartedOn { get; set; } // datetime2(7)
+		[Column(SkipOnInsert=true, SkipOnUpdate=true), NotNull] public DateTime EndedOn   { get; set; } // datetime2(7)
 	}
 
 	[Table(Schema="dbo", Name="TestIdentity")]
@@ -1337,6 +1358,12 @@ namespace TestAzureSQL
 		}
 
 		public static SqlType? Find(this ITable<SqlType> table, int ID)
+		{
+			return table.FirstOrDefault(t =>
+				t.ID == ID);
+		}
+
+		public static TemporalTest? Find(this ITable<TemporalTest> table, int ID)
 		{
 			return table.FirstOrDefault(t =>
 				t.ID == ID);

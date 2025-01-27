@@ -263,6 +263,8 @@
 			"SqlServer.Northwind.MS",
 			"SqlServer.Azure",
 			"SqlServer.Azure.MS",
+			"SqlServer.Azure.MI",
+			"SqlServer.Azure.MI.MS",
 			"Access.Jet.OleDb",
 			"Access.Ace.OleDb",
 			"Access.Jet.Odbc",

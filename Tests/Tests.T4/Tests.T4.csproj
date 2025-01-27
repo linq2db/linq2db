@@ -166,6 +166,9 @@
 		<None Update="Databases\SqlServerAzure.tt" Generator="TextTemplatingFileGenerator" LastGenOutput="SqlServerAzure.generated.cs" />
 		<Compile Update="Databases\SqlServerAzure.generated.cs" DesignTime="True" AutoGen="True" DependentUpon="SqlServerAzure.tt" />
 
+		<None Update="Databases\SqlServerAzureMI.tt" Generator="TextTemplatingFileGenerator" LastGenOutput="SqlServerAzureMI.generated.cs" />
+		<Compile Update="Databases\SqlServerAzureMI.generated.cs" DesignTime="True" AutoGen="True" DependentUpon="SqlServerAzureMI.tt" />
+
 		<None Update="Databases\Sybase.DataAction.tt" Generator="TextTemplatingFileGenerator" LastGenOutput="Sybase.DataAction.generated.cs" />
 		<Compile Update="Databases\Sybase.DataAction.generated.cs" DesignTime="True" AutoGen="True" DependentUpon="Sybase.DataAction.tt" />
 

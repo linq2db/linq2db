@@ -464,6 +464,50 @@ CREATE TABLE AllTypes
 
 	xmlDataType              xml               NULL,
 
+-- SKIP SqlServer.2005.MS BEGIN
+-- SKIP SqlServer.2005 BEGIN
+-- SKIP SqlServer.2008 BEGIN
+-- SKIP SqlServer.2008.MS BEGIN
+-- SKIP SqlServer.2012 BEGIN
+-- SKIP SqlServer.2012.MS BEGIN
+-- SKIP SqlServer.2014 BEGIN
+-- SKIP SqlServer.2014.MS BEGIN
+-- SKIP SqlServer.2016 BEGIN
+-- SKIP SqlServer.2016.MS BEGIN
+-- SKIP SqlServer.2017 BEGIN
+-- SKIP SqlServer.2017.MS BEGIN
+-- SKIP SqlServer.2019 BEGIN
+-- SKIP SqlServer.2019.MS BEGIN
+-- SKIP SqlServer.2022 BEGIN
+-- SKIP SqlServer.2022.MS BEGIN
+-- SKIP SqlServer.SA BEGIN
+-- SKIP SqlServer.SA.MS BEGIN
+-- SKIP SqlServer.Contained BEGIN
+-- SKIP SqlServer.Contained.MS BEGIN
+
+	jsonDataType             JSON              NULL,
+
+-- SKIP SqlServer.2005.MS END
+-- SKIP SqlServer.2005 END
+-- SKIP SqlServer.2008 END
+-- SKIP SqlServer.2008.MS END
+-- SKIP SqlServer.2012 END
+-- SKIP SqlServer.2012.MS END
+-- SKIP SqlServer.2014 END
+-- SKIP SqlServer.2014.MS END
+-- SKIP SqlServer.2016 END
+-- SKIP SqlServer.2016.MS END
+-- SKIP SqlServer.2017 END
+-- SKIP SqlServer.2017.MS END
+-- SKIP SqlServer.2019 END
+-- SKIP SqlServer.2019.MS END
+-- SKIP SqlServer.2022 END
+-- SKIP SqlServer.2022.MS END
+-- SKIP SqlServer.SA END
+-- SKIP SqlServer.SA.MS END
+-- SKIP SqlServer.Contained END
+-- SKIP SqlServer.Contained.MS END
+
 -- SKIP SqlServer.2005 BEGIN
 -- SKIP SqlServer.2005.MS BEGIN
 	datetime2DataType        datetime2         NULL,
@@ -654,8 +698,6 @@ GO
 
 -- SKIP SqlServer.Azure BEGIN
 -- SKIP SqlServer.Azure.MS BEGIN
--- SKIP SqlServer.Azure.MI BEGIN
--- SKIP SqlServer.Azure.MI.MS BEGIN
 
 EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'This is Parent table' , @level0type=N'SCHEMA', @level0name=N'dbo', @level1type=N'TABLE', @level1name=N'Parent'
 GO
@@ -664,8 +706,6 @@ EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'This ChildID c
 GO
 -- SKIP SqlServer.Azure END
 -- SKIP SqlServer.Azure.MS END
--- SKIP SqlServer.Azure.MI END
--- SKIP SqlServer.Azure.MI.MS END
 
 
 CREATE FUNCTION GetParentByID(@id int)

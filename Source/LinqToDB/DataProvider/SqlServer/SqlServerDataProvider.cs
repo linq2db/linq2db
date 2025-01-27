@@ -46,21 +46,13 @@ namespace LinqToDB.DataProvider.SqlServer
 		}
 
 		protected SqlServerDataProvider(string name, SqlServerVersion version, SqlServerProvider provider)
-			: this(
-				name,
-				version,
-				SqlServerProviderAdapter.GetInstance(provider == SqlServerProvider.AutoDetect ? provider = SqlServerProviderDetector.DetectProvider() : provider))
-		{
-		}
-
-		protected SqlServerDataProvider(string name, SqlServerVersion version, SqlServerProviderAdapter adapter)
 			: base(
 				name,
-				MappingSchemaInstance.Get(version, adapter.MappingSchema),
-				adapter)
+				MappingSchemaInstance.Get(version, provider),
+				SqlServerProviderAdapter.GetInstance(provider == SqlServerProvider.AutoDetect ? provider = SqlServerProviderDetector.DetectProvider() : provider))
 		{
 			Version  = version;
-			Provider = adapter.Provider;
+			Provider = provider;
 
 			SqlProviderFlags.AcceptsOuterExpressionInAggregate  = false;
 			SqlProviderFlags.OutputDeleteUseSpecialTable        = true;
@@ -117,7 +109,9 @@ namespace LinqToDB.DataProvider.SqlServer
 				// safe assumption as if SqlJson type found, JsonDocument will also exist
 				var jsonDocumentType = Type.GetType("System.Text.Json.JsonDocument, System.Text.Json");
 				if (jsonDocumentType != null)
+				{
 					SetGetFieldValueReader(jsonDocumentType, typeof(string), dataReaderType: Adapter.DataReaderType, typeName: "json");
+				}
 			}
 
 			SetProviderField<DateTimeOffset>(Adapter.GetDateTimeOffsetReaderMethod        , dataReaderType: Adapter.DataReaderType);
@@ -143,18 +137,29 @@ namespace LinqToDB.DataProvider.SqlServer
 
 		static class MappingSchemaInstance
 		{
-			public static MappingSchema Get(SqlServerVersion version, MappingSchema? adapterSchema)
+			public static MappingSchema Get(SqlServerVersion version, SqlServerProvider provider)
 			{
-				return version switch
+				return (version, provider) switch
 				{
-					SqlServerVersion.v2005 => new SqlServerMappingSchema.SqlServer2005MappingSchema(adapterSchema),
-					SqlServerVersion.v2012 => new SqlServerMappingSchema.SqlServer2012MappingSchema(adapterSchema),
-					SqlServerVersion.v2014 => new SqlServerMappingSchema.SqlServer2014MappingSchema(adapterSchema),
-					SqlServerVersion.v2016 => new SqlServerMappingSchema.SqlServer2016MappingSchema(adapterSchema),
-					SqlServerVersion.v2017 => new SqlServerMappingSchema.SqlServer2017MappingSchema(adapterSchema),
-					SqlServerVersion.v2019 => new SqlServerMappingSchema.SqlServer2019MappingSchema(adapterSchema),
-					SqlServerVersion.v2022 => new SqlServerMappingSchema.SqlServer2022MappingSchema(adapterSchema),
-					_                      => new SqlServerMappingSchema.SqlServer2008MappingSchema(adapterSchema),
+					(SqlServerVersion.v2005, SqlServerProvider.SystemDataSqlClient) => new SqlServerMappingSchema.SqlServer2005MappingSchemaSystem(),
+					(SqlServerVersion.v2008, SqlServerProvider.SystemDataSqlClient) => new SqlServerMappingSchema.SqlServer2008MappingSchemaSystem(),
+					(SqlServerVersion.v2012, SqlServerProvider.SystemDataSqlClient) => new SqlServerMappingSchema.SqlServer2012MappingSchemaSystem(),
+					(SqlServerVersion.v2014, SqlServerProvider.SystemDataSqlClient) => new SqlServerMappingSchema.SqlServer2014MappingSchemaSystem(),
+					(SqlServerVersion.v2016, SqlServerProvider.SystemDataSqlClient) => new SqlServerMappingSchema.SqlServer2016MappingSchemaSystem(),
+					(SqlServerVersion.v2017, SqlServerProvider.SystemDataSqlClient) => new SqlServerMappingSchema.SqlServer2017MappingSchemaSystem(),
+					(SqlServerVersion.v2019, SqlServerProvider.SystemDataSqlClient) => new SqlServerMappingSchema.SqlServer2019MappingSchemaSystem(),
+					(SqlServerVersion.v2022, SqlServerProvider.SystemDataSqlClient) => new SqlServerMappingSchema.SqlServer2022MappingSchemaSystem(),
+
+					(SqlServerVersion.v2005, SqlServerProvider.MicrosoftDataSqlClient) => new SqlServerMappingSchema.SqlServer2005MappingSchemaMicrosoft(),
+					(SqlServerVersion.v2008, SqlServerProvider.MicrosoftDataSqlClient) => new SqlServerMappingSchema.SqlServer2008MappingSchemaMicrosoft(),
+					(SqlServerVersion.v2012, SqlServerProvider.MicrosoftDataSqlClient) => new SqlServerMappingSchema.SqlServer2012MappingSchemaMicrosoft(),
+					(SqlServerVersion.v2014, SqlServerProvider.MicrosoftDataSqlClient) => new SqlServerMappingSchema.SqlServer2014MappingSchemaMicrosoft(),
+					(SqlServerVersion.v2016, SqlServerProvider.MicrosoftDataSqlClient) => new SqlServerMappingSchema.SqlServer2016MappingSchemaMicrosoft(),
+					(SqlServerVersion.v2017, SqlServerProvider.MicrosoftDataSqlClient) => new SqlServerMappingSchema.SqlServer2017MappingSchemaMicrosoft(),
+					(SqlServerVersion.v2019, SqlServerProvider.MicrosoftDataSqlClient) => new SqlServerMappingSchema.SqlServer2019MappingSchemaMicrosoft(),
+					(SqlServerVersion.v2022, SqlServerProvider.MicrosoftDataSqlClient) => new SqlServerMappingSchema.SqlServer2022MappingSchemaMicrosoft(),
+
+					_ => throw new InvalidOperationException($"Unexpected dialect/provider: {version}, {provider}")
 				};
 			}
 		}
