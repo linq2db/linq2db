@@ -723,6 +723,30 @@ If you don't specify some property, CLI will use default value for current optio
 					new[] { "LinqToDB.Data.DataConnection" });
 
 			/// <summary>
+			/// Data context class access modifier.
+			/// </summary>
+			public static readonly CliOption DataContextModifier = new StringEnumCliOption(
+					"context-modifier",
+					null,
+					false,
+					false,
+					"access modifier for generated data context",
+					null,
+					new[]
+					{
+						"--context-modifier internal",
+					},
+					new[]
+					{
+						/*lang=json,strict*/
+						"{ \"dataModel\": { \"context-modifier\": \"internal\" } }"
+					},
+					false,
+					new (false, false, "private", "applies 'public' to data context class"),
+					new (false, false, "internal", "applies 'internal' to data context class"),
+					new (true, true, "public", "applies 'private' to data context class"));
+
+			/// <summary>
 			/// Generation of association properties on entity option.
 			/// </summary>
 			public static readonly CliOption EmitAssociations = new BooleanCliOption(
