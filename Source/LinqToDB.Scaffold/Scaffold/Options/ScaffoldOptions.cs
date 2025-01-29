@@ -75,6 +75,7 @@ namespace LinqToDB.Scaffold
 			options.DataModel.HasUntypedOptionsConstructor                   = true;
 			options.DataModel.HasTypedOptionsConstructor                     = true;
 			options.DataModel.ContextClassName                               = null;
+			options.DataModel.ContextClassModifier                           = null;
 			options.DataModel.BaseContextClass                               = null;
 			options.DataModel.GenerateInitDataContextMethod                  = true;
 			options.DataModel.GenerateAssociations                           = true;

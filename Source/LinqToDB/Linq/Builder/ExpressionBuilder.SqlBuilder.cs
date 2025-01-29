@@ -1421,7 +1421,8 @@ namespace LinqToDB.Linq.Builder
 				{
 					if (member != null && nextPath != null)
 					{
-						if (nextPath[nextIndex] is MemberExpression nextMember && body.Type.IsSameOrParentOf(nextMember.Expression!.Type))
+						if (nextPath[nextIndex] is MemberExpression nextMember
+							&& (body.Type.IsSameOrParentOf(nextMember.Expression!.Type) || nextMember.Expression!.Type.IsSameOrParentOf(body.Type)))
 						{
 							var newMember = body.Type.GetMemberEx(nextMember.Member);
 							if (newMember != null)
