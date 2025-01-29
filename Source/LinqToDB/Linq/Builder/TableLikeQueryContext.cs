@@ -32,8 +32,8 @@ namespace LinqToDB.Linq.Builder
 
 		public bool? IsSourceOuter { get; set; }
 
-		public TableLikeQueryContext(ContextRefExpression targetContextRef, ContextRefExpression sourceContextRef)
-			: base(sourceContextRef.BuildContext.Builder, targetContextRef.ElementType, sourceContextRef.BuildContext.SelectQuery)
+		public TableLikeQueryContext(TranslationModifier translationModifier, ContextRefExpression targetContextRef, ContextRefExpression sourceContextRef)
+			: base(translationModifier, sourceContextRef.BuildContext.Builder, targetContextRef.ElementType, sourceContextRef.BuildContext.SelectQuery)
 		{
 			TargetContextRef  = targetContextRef;
 			SourceContextRef  = sourceContextRef;
@@ -358,7 +358,7 @@ namespace LinqToDB.Linq.Builder
 		class SelfTargetContainerContext : BuildContextBase
 		{
 			public SelfTargetContainerContext(ParameterExpression targetParam, ContextRefExpression targetContextRef, Expression substitutedExpression, bool needsCloning) : 
-				base(targetContextRef.BuildContext.Builder, targetContextRef.BuildContext.ElementType, targetContextRef.BuildContext.SelectQuery)
+				base(targetContextRef.BuildContext.TranslationModifier, targetContextRef.BuildContext.Builder, targetContextRef.BuildContext.ElementType, targetContextRef.BuildContext.SelectQuery)
 			{
 				TargetParam           = targetParam;
 				TargetContextRef      = targetContextRef;

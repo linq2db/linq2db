@@ -26,13 +26,13 @@ namespace LinqToDB.Linq.Builder
 				}
 
 				var cteClause = new CteClause(null, elementType, true, tableName);
-				cteContext               = new CteContext(builder, null, cteClause, null!);
+				cteContext               = new CteContext(builder.GetTranslationModifier(), builder, null, cteClause, null!);
 				cteContext.CteExpression = cteBody;
 
 				builder.RegisterCteContext(cteContext, methodCall);
 			}
 
-			var cteTableContext = new CteTableContext(builder, buildInfo.Parent, elementType, buildInfo.SelectQuery, cteContext);
+			var cteTableContext = new CteTableContext(cteContext.TranslationModifier, builder, buildInfo.Parent, elementType, buildInfo.SelectQuery, cteContext);
 
 			return BuildSequenceResult.FromContext(cteTableContext);
 		}
@@ -53,13 +53,13 @@ namespace LinqToDB.Linq.Builder
 				var tableName = builder.EvaluateExpression<string>(methodCall.Arguments[isSecondVariant ? 1 : 2]);
 
 				var cteClause  = new CteClause(null, elementType, true, tableName);
-				cteContext = new CteContext(builder, null, cteClause, null!);
+				cteContext = new CteContext(builder.GetTranslationModifier(), builder, null, cteClause, null!);
 
 				var cteBody = lambda.Body.Transform(e =>
 				{
 					if (e == lambda.Parameters[0])
 					{
-						var cteTableContext    = new CteTableContext(builder, null, elementType, new SelectQuery(), cteContext);
+						var cteTableContext    = new CteTableContext(cteContext.TranslationModifier, builder, null, elementType, new SelectQuery(), cteContext);
 						var cteTableContextRef = new ContextRefExpression(e.Type, cteTableContext);
 						return cteTableContextRef;
 					}
@@ -71,7 +71,7 @@ namespace LinqToDB.Linq.Builder
 				builder.RegisterCteContext(cteContext, methodCall);
 			}
 
-			var cteTableContext = new CteTableContext(builder, buildInfo.Parent, elementType, buildInfo.SelectQuery, cteContext);
+			var cteTableContext = new CteTableContext(cteContext.TranslationModifier, builder, buildInfo.Parent, elementType, buildInfo.SelectQuery, cteContext);
 
 			return BuildSequenceResult.FromContext(cteTableContext);
 		}

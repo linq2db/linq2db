@@ -34,8 +34,8 @@ namespace LinqToDB.Linq.Builder
 
 		public override Expression? Expression => Body;
 
-		public SelectContext(IBuildContext? parent, ExpressionBuilder builder, IBuildContext? innerContext, Expression body, SelectQuery selectQuery, bool isSubQuery)
-			: base(builder, body.Type, selectQuery)
+		public SelectContext(TranslationModifier translationModifier, IBuildContext? parent, ExpressionBuilder builder, IBuildContext? innerContext, Expression body, SelectQuery selectQuery, bool isSubQuery)
+			: base(translationModifier, builder, body.Type, selectQuery)
 		{
 			Parent         = parent;
 			InnerContext   = innerContext;
@@ -57,7 +57,7 @@ namespace LinqToDB.Linq.Builder
 		}
 
 		public SelectContext(IBuildContext? parent, Expression body, IBuildContext innerContext, SelectQuery selectQuery, bool isSubQuery)
-			: this(parent, innerContext.Builder, innerContext, body, selectQuery, isSubQuery)
+			: this(innerContext.TranslationModifier, parent, innerContext.Builder, innerContext, body, selectQuery, isSubQuery)
 		{
 			_mappingSchema = innerContext.MappingSchema;
 		}
@@ -202,7 +202,7 @@ namespace LinqToDB.Linq.Builder
 		public override IBuildContext Clone(CloningContext context)
 		{
 			var sc = context.CloneElement(SelectQuery);
-			return new SelectContext(null, Builder, context.CloneContext(InnerContext), context.CloneExpression(Body), sc, IsSubQuery);
+			return new SelectContext(TranslationModifier, null, Builder, context.CloneContext(InnerContext), context.CloneExpression(Body), sc, IsSubQuery);
 		}
 
 		public override void SetRunQuery<T>(Query<T> query, Expression expr)

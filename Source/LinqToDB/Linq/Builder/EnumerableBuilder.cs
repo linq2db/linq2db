@@ -46,7 +46,7 @@ namespace LinqToDB.Linq.Builder
 			var collectionType = typeof(IEnumerable<>).GetGenericType(buildInfo.Expression.Type) ??
 			                     throw new InvalidOperationException();
 
-			var enumerableContext = new EnumerableContext(builder, buildInfo, buildInfo.SelectQuery, collectionType.GetGenericArguments()[0]);
+			var enumerableContext = new EnumerableContext(builder.GetTranslationModifier(), builder, buildInfo, buildInfo.SelectQuery, collectionType.GetGenericArguments()[0]);
 
 			return BuildSequenceResult.FromContext(enumerableContext);
 		}
