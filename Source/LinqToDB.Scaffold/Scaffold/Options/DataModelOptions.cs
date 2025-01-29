@@ -165,7 +165,7 @@ namespace LinqToDB.Scaffold
 		/// <item>In T4 compability mode: <c>false</c></item>
 		/// </list>
 		/// </summary>
-		public bool UseFluentEntityTypeDiscriminator { get; set; }
+		public IReadOnlyCollection<string> FluentEntityTypeDiscriminators { get; set; } = [];
 		#endregion
 
 		#region Context

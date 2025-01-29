@@ -463,21 +463,27 @@ namespace LinqToDB.Metadata
 				if (isStatement && kvp.Value.tableAttribute == null)
 					continue;
 
-
-				ICodeExpression[] entityCallArgs =
-					context.Options.UseFluentEntityTypeDiscriminator
-					? [context.AST.Default( entityType, false )]
-					: [];
-
 				// builder.Entity<T>()
 				var expression = context.AST.Call(
 					_builderVar.Reference,
 					WellKnownTypes.LinqToDB.Mapping.FluentMappingBuilder_Entity,
 					entityBuilderType,
 					new IType[] { entityType },
-					false,
-					entityCallArgs
+					false
 					).Wrap(1);
+
+				foreach (var entityDiscriminator in context.Options.FluentEntityTypeDiscriminators)
+				{
+					expression = context.AST.Call(
+						expression,
+						new CodeIdentifier( entityDiscriminator, true),
+						entityBuilderType,
+						new IType[] { entityType },
+						false,
+						[context.AST.Default( entityType, false )]
+					).Wrap(1);
+
+				}
 
 				// builder.Entity<T>().HasAttribute(new TableAttribute("table") { ... })
 				if (isStatement)

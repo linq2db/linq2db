@@ -96,7 +96,7 @@ namespace LinqToDB.CommandLine
 			if (options.Remove(DataModel.GenerateIEquatable            , out value)) settings.GenerateIEquatable                 = (bool)value!;
 			if (options.Remove(DataModel.FindParametersInOrdinalOrder  , out value)) settings.OrderFindParametersByColumnOrdinal = (bool)value!;
 			if (options.Remove(DataModel.EntityClassIsPartial          , out value)) settings.EntityClassIsPartial               = (bool)value!;
-			if (options.Remove(DataModel.UseFluentEntityTypeDiscriminator, out value)) settings.UseFluentEntityTypeDiscriminator = (bool)value!;
+			if (options.Remove(DataModel.FluentEntityTypeDiscriminators, out value)) settings.FluentEntityTypeDiscriminators     = (string[])value!;
 
 			// strings
 			if (options.Remove(DataModel.BaseEntity          , out value)) settings.BaseEntityClass  = (string)value!;

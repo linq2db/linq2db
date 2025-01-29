@@ -604,22 +604,24 @@ If you don't specify some property, CLI will use default value for current optio
 			/// <summary>
 			/// Generate database type scale on entity columns mappings option.
 			/// </summary>
-			public static readonly CliOption UseFluentEntityTypeDiscriminator = new BooleanCliOption(
-					"use-fluent-entity-type-discriminator",
+			public static readonly CliOption FluentEntityTypeDiscriminators = new StringCliOption(
+					"fluent-entity-type-discriminators",
 					null,
 					false,
-					"Enables the use of a type discriminator parameter in fluent mapping.",
-					@"Enabling this requires that a set of extension methods taking (this FluentMappingBuilder builder) and type discriminators.
+					true,
+					"Enables the use of entity extension methods with type discriminator parameter in fluent mapping.",
+					@"Enabling this requires a set of extension methods, with matching names, taking (this EntityMappingBuilder<T> builder) and type discriminators, are in scope.
 Ex.
-public static EntityMappingBuilder<T> Entity<T>( this FluentMappingBuilder builder, IHasTenantId? _) where T : IHasTenantId {
-  return builder.Entity<T>().HasQueryFilter( (T e, DbContext db) => e.TenantId == db.CurrentTenantId );
+public static EntityMappingBuilder<T> MyTenantDiscriminator<T>( this EntityMappingBuilder<T> builder, IHasTenantId? _) where T : IHasTenantId {
+  return builder.HasQueryFilter( (T e, DbContext db) => e.TenantId == db.CurrentTenantId );
 }
 Add as many as needed. Both concrete types and marker interfaces work.
 ",
 					null,
 					null,
-					_defaultOptions.DataModel.UseFluentEntityTypeDiscriminator,
-					_t4ModeOptions.DataModel.UseFluentEntityTypeDiscriminator);
+					_defaultOptions.DataModel.FluentEntityTypeDiscriminators?.ToArray(),
+					_t4ModeOptions.DataModel.FluentEntityTypeDiscriminators?.ToArray());
+
 
 			/// <summary>
 			/// Generate database information comment on data context class option.
