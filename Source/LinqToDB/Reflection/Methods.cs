@@ -13,6 +13,7 @@ namespace LinqToDB.Reflection
 	using Expressions.Internal;
 	using Extensions;
 	using Linq;
+	using LinqToDB.DataProvider.SqlServer;
 	using SqlQuery;
 
 	/// <summary>
@@ -372,6 +373,11 @@ namespace LinqToDB.Reflection
 				public static readonly ConstructorInfo SqlParameterConstructor = MemberHelper.ConstructorOf(() => new SqlParameter(default(DbDataType), default(string), null));
 				public static readonly ConstructorInfo SqlValueConstructor     = MemberHelper.ConstructorOf(() => new SqlValue    (default(DbDataType), null));
 			}
+		}
+
+		internal class SqlServer
+		{
+			public static readonly MethodInfo ConvertStringToSql = typeof(SqlServerMappingSchema).GetMethod(nameof(SqlServerMappingSchema.ConvertStringToSql), BindingFlags.Static | BindingFlags.NonPublic)!;
 		}
 
 		#region Method definition helper classes

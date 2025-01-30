@@ -25,11 +25,9 @@
 
 	<ItemGroup Label="Ignore Useless NugetAudit Errors">
 		<!--System.Private.Uri 4.3.0 (3 errors)-->
-		<NuGetAuditSuppress Include="https://github.com/advisories/GHSA-5f2m-466j-3848" />
+		<!--<NuGetAuditSuppress Include="https://github.com/advisories/GHSA-5f2m-466j-3848" />
 		<NuGetAuditSuppress Include="https://github.com/advisories/GHSA-x5qj-9vmx-7g6g" />
-		<NuGetAuditSuppress Include="https://github.com/advisories/GHSA-xhfc-gr8f-ffwc" />
-		<!--System.Linq.Dynamic.Core-->
-		<NuGetAuditSuppress Include="https://github.com/advisories/GHSA-4cv2-4hjh-77rx" />
+		<NuGetAuditSuppress Include="https://github.com/advisories/GHSA-xhfc-gr8f-ffwc" />-->
 	</ItemGroup>
 
 </Project>
