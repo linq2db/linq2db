@@ -3747,5 +3747,25 @@ namespace Tests.Linq
 				.Take(100)
 				.ToList();
 		}
+
+		[Test]
+		public void Issue_SubqueryNotEliminated([DataSources] string context)
+		{
+			using var db = GetDataContext(context);
+
+			db.GetTable<Person>()
+				.GroupBy(_ => new
+				{
+					key = _.ID,
+					sort = _.ID,
+				})
+				.Select(_ => new
+				{
+					Key = _.Key.key,
+					Sort = _.Key.sort,
+					label = "label"
+				})
+				.LongCount();
+		}
 	}
 }
