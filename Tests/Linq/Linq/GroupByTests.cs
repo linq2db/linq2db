@@ -3749,7 +3749,7 @@ namespace Tests.Linq
 		}
 
 		[Test]
-		public void Issue_SubqueryNotEliminated([DataSources] string context)
+		public void Issue_UnusedColumnsElimination([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
 
