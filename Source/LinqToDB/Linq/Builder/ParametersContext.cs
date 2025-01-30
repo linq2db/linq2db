@@ -156,7 +156,7 @@ namespace LinqToDB.Linq.Builder
 			sqlParameter = new SqlParameter(entry.DbDataType, entry.ParameterName, null)
 			{
 				AccessorId       = finalParameterId,
-				IsQueryParameter = !DataContext.InlineParameters
+				IsQueryParameter = !(context != null ? context.Builder.GetTranslationModifier().InlineParameters : DataContext.InlineParameters)
 			};
 
 			_parametersById[finalParameterId] = sqlParameter;

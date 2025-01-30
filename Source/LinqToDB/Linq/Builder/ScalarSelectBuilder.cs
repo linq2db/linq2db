@@ -19,7 +19,7 @@ namespace LinqToDB.Linq.Builder
 
 		protected override BuildSequenceResult BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
-			return BuildSequenceResult.FromContext(new ScalarSelectContext(builder, methodCall.Arguments[1].UnwrapLambda().Body, buildInfo.SelectQuery));
+			return BuildSequenceResult.FromContext(new ScalarSelectContext(builder.GetTranslationModifier(), builder, methodCall.Arguments[1].UnwrapLambda().Body, buildInfo.SelectQuery));
 		}
 
 		[DebuggerDisplay("{BuildContextDebuggingHelper.GetContextInfo(this)}")]
@@ -30,7 +30,8 @@ namespace LinqToDB.Linq.Builder
 
 			public Expression Body { get; }
 
-			public ScalarSelectContext(ExpressionBuilder builder, Expression body, SelectQuery selectQuery) : base(builder, body.Type, selectQuery)
+			public ScalarSelectContext(TranslationModifier translationModifier, ExpressionBuilder builder, Expression body, SelectQuery selectQuery) 
+				: base(translationModifier, builder, body.Type, selectQuery)
 			{
 				Body = body;
 			}
@@ -48,7 +49,7 @@ namespace LinqToDB.Linq.Builder
 
 			public override IBuildContext Clone(CloningContext context)
 			{
-				return new ScalarSelectContext(Builder, context.CloneExpression(Body), context.CloneElement(SelectQuery));
+				return new ScalarSelectContext(TranslationModifier, Builder, context.CloneExpression(Body), context.CloneElement(SelectQuery));
 			}
 
 			public override void SetRunQuery<T>(Query<T> query, Expression expr)

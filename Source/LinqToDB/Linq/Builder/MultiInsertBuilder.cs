@@ -67,7 +67,7 @@ namespace LinqToDB.Linq.Builder
 
 			var sourceContextRef = new ContextRefExpression(methodCall.Method.GetGenericArguments()[0], sourceContext);
 
-			var source = new TableLikeQueryContext(sourceContextRef, sourceContextRef);
+			var source = new TableLikeQueryContext(sourceContext.TranslationModifier, sourceContextRef, sourceContextRef);
 			return new MultiInsertContext(source);
 		}
 
@@ -201,7 +201,7 @@ namespace LinqToDB.Linq.Builder
 		sealed class MultiInsertContext : BuildContextBase
 		{
 			public MultiInsertContext(TableLikeQueryContext source)
-				: base(source.Builder, source.ElementType, source.SelectQuery)
+				: base(source.TranslationModifier, source.Builder, source.ElementType, source.SelectQuery)
 			{
 				MultiInsertStatement = new SqlMultiInsertStatement(source.Source);
 				QuerySource          = source;

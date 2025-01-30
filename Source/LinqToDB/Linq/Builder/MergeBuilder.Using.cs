@@ -30,6 +30,7 @@ namespace LinqToDB.Linq.Builder
 				var allFields   = builder.BuildExtractExpression(sourceContext, sourceRef);
 
 				var source = new TableLikeQueryContext(
+					sourceContext.TranslationModifier,
 					new ContextRefExpression(genericArgs[0], mergeContext.TargetContext, "target"),
 					sourceRef);
 

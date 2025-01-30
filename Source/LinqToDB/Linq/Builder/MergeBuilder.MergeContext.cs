@@ -18,8 +18,8 @@ namespace LinqToDB.Linq.Builder
 				Merge = merge;
 			}
 
-			public MergeContext(SqlMergeStatement merge, IBuildContext target, TableLikeQueryContext source)
-				: base(null, new[] { target, source }, null)
+			public MergeContext(TranslationModifier translationModifier, SqlMergeStatement merge, IBuildContext target, TableLikeQueryContext source)
+				: base(translationModifier, null, [target, source], null)
 			{
 				Merge        = merge;
 				Merge.Source = source.Source;

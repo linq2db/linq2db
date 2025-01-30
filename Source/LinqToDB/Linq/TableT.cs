@@ -3,6 +3,8 @@ using System.Reflection;
 
 namespace LinqToDB.Linq
 {
+	using System.Diagnostics;
+
 	using Extensions;
 	using LinqToDB.Expressions;
 	using Mapping;
@@ -132,6 +134,7 @@ namespace LinqToDB.Linq
 			return expression;
 		}
 
+		[DebuggerBrowsable(DebuggerBrowsableState.Never)]
 		private SqlObjectName _name;
 
 		public  string?  ServerName
@@ -176,6 +179,7 @@ namespace LinqToDB.Linq
 			}
 		}
 
+		[DebuggerBrowsable(DebuggerBrowsableState.Never)]
 		private TableOptions _tableOptions;
 		public  TableOptions  TableOptions
 		{
@@ -205,6 +209,7 @@ namespace LinqToDB.Linq
 			}
 		}
 
+		[DebuggerBrowsable(DebuggerBrowsableState.Never)]
 		private string? _tableID;
 		public string?   TableID
 		{

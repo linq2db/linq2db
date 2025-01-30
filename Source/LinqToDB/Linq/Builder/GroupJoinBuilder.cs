@@ -34,7 +34,7 @@ namespace LinqToDB.Linq.Builder
 			var outerKey = SequenceHelper.PrepareBody(outerKeyLambda, outerContext);
 
 			var elementType = TypeHelper.GetEnumerableElementType(resultLambda.Parameters[1].Type);
-			var innerContext = new GroupJoinInnerContext(buildInfo.Parent, outerContext.SelectQuery, builder,
+			var innerContext = new GroupJoinInnerContext(builder.GetTranslationModifier(), buildInfo.Parent, outerContext.SelectQuery, builder,
 				elementType,
 				outerKey,
 				innerKeyLambda, innerExpression);
@@ -52,10 +52,15 @@ namespace LinqToDB.Linq.Builder
 			public override MappingSchema MappingSchema => Parent?.MappingSchema ?? Builder.MappingSchema;
 
 			public GroupJoinInnerContext(
-				IBuildContext? parent, SelectQuery outerQuery, ExpressionBuilder builder, Type elementType,
-				Expression outerKey, LambdaExpression innerKeyLambda,
-				Expression innerExpression
-			) : base(builder, elementType, outerQuery)
+				TranslationModifier translationModifier, 
+				IBuildContext?      parent, 
+				SelectQuery         outerQuery, 
+				ExpressionBuilder   builder, 
+				Type                elementType,
+				Expression          outerKey,            
+				LambdaExpression    innerKeyLambda,
+				Expression          innerExpression
+			) : base(translationModifier, builder, elementType, outerQuery)
 			{
 				Parent          = parent;
 				OuterKey        = outerKey;
@@ -88,7 +93,7 @@ namespace LinqToDB.Linq.Builder
 
 			public override IBuildContext Clone(CloningContext context)
 			{
-				return new GroupJoinInnerContext(null, context.CloneElement(SelectQuery), Builder, ElementType,
+				return new GroupJoinInnerContext(TranslationModifier, null, context.CloneElement(SelectQuery), Builder, ElementType,
 					context.CloneExpression(OuterKey), context.CloneExpression(InnerKeyLambda), context.CloneExpression(InnerExpression));
 			}
 
