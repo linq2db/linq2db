@@ -3732,18 +3732,18 @@ namespace Tests.Linq
 			using var db = GetDataContext(context);
 
 			db.GetTable<Person>()
-				.GroupBy(_ => new
+				.GroupBy(r => new
 				{
-					key = _.ID,
-					sort = _.ID,
+					key = r.ID,
+					sort = r.ID,
 				})
-				.Select(_ => new
+				.Select(r => new
 				{
-					Key = _.Key.key,
-					Sort = _.Key.sort,
+					Key = r.Key.key,
+					Sort = r.Key.sort,
 					label = "label"
 				})
-				.OrderBy(_ => _.Sort)
+				.OrderBy(r => r.Sort)
 				.Take(100)
 				.ToList();
 		}
@@ -3754,15 +3754,15 @@ namespace Tests.Linq
 			using var db = GetDataContext(context);
 
 			db.GetTable<Person>()
-				.GroupBy(_ => new
+				.GroupBy(r => new
 				{
-					key = _.ID,
-					sort = _.ID,
+					key = r.ID,
+					sort = r.ID,
 				})
-				.Select(_ => new
+				.Select(r => new
 				{
-					Key = _.Key.key,
-					Sort = _.Key.sort,
+					Key = r.Key.key,
+					Sort = r.Key.sort,
 					label = "label"
 				})
 				.LongCount();
