@@ -110,7 +110,7 @@ namespace LinqToDB.Linq.Builder
 				var filterLambda = Expression.Lambda(testEd.QueryFilterLambda.Body.Replace(dcParam, dcExpr), testEd.QueryFilterLambda.Parameters[0]);
 
 				// to avoid recursion
-				filteredExpression = Expression.Call(Methods.LinqToDB.IgnoreFilters.MakeGenericMethod(entityType), tableExpression, ExpressionInstances.EmptyTypes);
+				filteredExpression = Expression.Call(Methods.LinqToDB.DisableFilterInternal.MakeGenericMethod(entityType), tableExpression);
 
 				filteredExpression = Expression.Call(Methods.Queryable.Where.MakeGenericMethod(entityType), filteredExpression, Expression.Quote(filterLambda));
 				filteredExpression = ExpressionBuilder.ExposeExpression(filteredExpression, builder.DataContext, builder.OptimizationContext, builder.ParameterValues, optimizeConditions: true, compactBinary: true);

@@ -1,8 +1,10 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Linq;
 
 namespace LinqToDB.Linq.Builder
 {
+	[DebuggerDisplay("InlineParameters = {InlineParameters}, IgnoreQueryFilters = {IgnoreQueryFilters}")]
 	public class TranslationModifier : IEquatable<TranslationModifier>
 	{
 		public static readonly TranslationModifier Default = new();
