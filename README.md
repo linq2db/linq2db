@@ -13,6 +13,8 @@ However, it's not as heavy as LINQ to SQL or Entity Framework. There is no chang
 
 In other words **LINQ to DB is type-safe SQL**.
 
+**LINQ to DB** also very nice for F# developers (see Tests/FSharp and Source/LinqToDB.FSharp project for details).
+
 Development version nuget [feed](https://pkgs.dev.azure.com/linq2db/linq2db/_packaging/linq2db/nuget/v3/index.json) ([how to use](https://docs.microsoft.com/en-us/nuget/consume-packages/install-use-packages-visual-studio#package-sources))
 
 ## Standout Features
@@ -738,6 +740,24 @@ public class DbDataContext : DataConnection
   }
 #endif
 }
+```
+
+## F#
+
+### Sample query with load child relations 
+
+```fsharp
+let getPerson (db: IDataContext) (id: int) =
+    let persons = db.GetTable<Person>().LoadWith(fun x -> x.Patient)
+
+    let person =
+        query {
+            for p in persons do
+                where (p.ID = id)
+                exactlyOne
+        }
+
+    person
 ```
 
 ## More
