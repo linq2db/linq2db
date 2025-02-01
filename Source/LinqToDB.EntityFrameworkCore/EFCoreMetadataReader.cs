@@ -360,15 +360,14 @@ namespace LinqToDB.EntityFrameworkCore
 						}
 					}
 
-					var behavior = prop.GetBeforeSaveBehavior();
-					var skipOnInsert = prop.ValueGenerated.HasFlag(ValueGenerated.OnAdd);
+					var beforeSaveBehavior = prop.GetBeforeSaveBehavior();
+					var afterSaveBehavior = prop.GetAfterSaveBehavior();
 
-					if (skipOnInsert)
-					{
-						skipOnInsert = isIdentity || behavior != PropertySaveBehavior.Save;
-					}
+					var skipOnInsert = prop.ValueGenerated.HasFlag(ValueGenerated.OnAdd)
+						|| isIdentity
+						|| beforeSaveBehavior != PropertySaveBehavior.Save;
 
-					var skipOnUpdate = behavior != PropertySaveBehavior.Save ||
+					var skipOnUpdate = afterSaveBehavior != PropertySaveBehavior.Save ||
 						prop.ValueGenerated.HasFlag(ValueGenerated.OnUpdate);
 
 					var ca = new ColumnAttribute()
