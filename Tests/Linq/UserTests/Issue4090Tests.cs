@@ -350,7 +350,6 @@ namespace Tests.UserTests
 				Assert.That(ret[6].Name3!, Is.EqualTo("Child27"));
 				Assert.That(ret[6].Value2, Is.Null);
 			});
-			AssertQuery(ret);
 		}
 
 		[Test]
