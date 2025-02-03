@@ -277,9 +277,83 @@ namespace Tests.UserTests
 							Id2 = t2.Id2,
 						})
 						.FirstOrDefault()
-			});
+				});
 
-			AssertQuery(query);
+			// assert the generated SQL
+			var ret = AssertQuery(query);
+
+			// assert the result (more important than the SQL for these tests)
+			Assert.That(ret, Has.Length.EqualTo(7));
+
+			Assert.Multiple(() =>
+			{
+				Assert.That(ret[0].Name3!, Is.EqualTo("Child21"));
+				Assert.That(ret[0].Value2, Is.Not.Null);
+			});
+			Assert.Multiple(() =>
+			{
+				Assert.That(ret[0].Value2!.Name2!, Is.EqualTo("Child11"));
+				Assert.That(ret[0].Value2!.Value1, Is.Not.Null);
+			});
+			Assert.Multiple(() =>
+			{
+				Assert.That(ret[0].Value2!.Value1!.Name1!, Is.EqualTo("Some1"));
+
+				Assert.That(ret[1].Name3!, Is.EqualTo("Child22"));
+				Assert.That(ret[1].Value2, Is.Not.Null);
+			});
+			Assert.Multiple(() =>
+			{
+				Assert.That(ret[1].Value2!.Name2!, Is.EqualTo("Child12"));
+				Assert.That(ret[1].Value2!.Value1, Is.Not.Null);
+			});
+			Assert.Multiple(() =>
+			{
+				Assert.That(ret[1].Value2!.Value1!.Name1, Is.Null);
+
+				Assert.That(ret[2].Name3!, Is.EqualTo("Child23"));
+				Assert.That(ret[2].Value2, Is.Not.Null);
+			});
+			Assert.Multiple(() =>
+			{
+				Assert.That(ret[2].Value2!.Name2!, Is.EqualTo("Child13"));
+				Assert.That(ret[2].Value2!.Value1, Is.Null);
+
+				Assert.That(ret[3].Name3!, Is.EqualTo("Child24"));
+				Assert.That(ret[3].Value2, Is.Not.Null);
+			});
+			Assert.Multiple(() =>
+			{
+				Assert.That(ret[3].Value2!.Name2!, Is.Null);
+				Assert.That(ret[3].Value2!.Value1, Is.Not.Null);
+			});
+			Assert.Multiple(() =>
+			{
+				Assert.That(ret[3].Value2!.Value1!.Name1!, Is.EqualTo("Some1"));
+
+				Assert.That(ret[4].Name3!, Is.EqualTo("Child25"));
+				Assert.That(ret[4].Value2, Is.Not.Null);
+			});
+			Assert.Multiple(() =>
+			{
+				Assert.That(ret[4].Value2!.Name2!, Is.Null);
+				Assert.That(ret[4].Value2!.Value1, Is.Not.Null);
+			});
+			Assert.Multiple(() =>
+			{
+				Assert.That(ret[4].Value2!.Value1!.Name1, Is.Null);
+
+				Assert.That(ret[5].Name3!, Is.EqualTo("Child26"));
+				Assert.That(ret[5].Value2, Is.Not.Null);
+			});
+			Assert.Multiple(() =>
+			{
+				Assert.That(ret[5].Value2!.Name2!, Is.Null);
+				Assert.That(ret[5].Value2!.Value1, Is.Null);
+
+				Assert.That(ret[6].Name3!, Is.EqualTo("Child27"));
+				Assert.That(ret[6].Value2, Is.Null);
+			});
 		}
 
 		[Test]
