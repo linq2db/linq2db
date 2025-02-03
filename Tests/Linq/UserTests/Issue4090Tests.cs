@@ -254,7 +254,7 @@ namespace Tests.UserTests
 				new Table3 { Id3 = 26, ParentId3 = 16, Name3 = "Child26" },
 				new Table3 { Id3 = 27, ParentId3 = null, Name3 = "Child27" },
 			});
-			var query = db.GetTable<Table3>()
+			var ret = db.GetTable<Table3>()
 				.OrderBy(x => x.Id3)
 				.Select(t3 => new
 				{
@@ -350,7 +350,7 @@ namespace Tests.UserTests
 				Assert.That(ret[6].Name3!, Is.EqualTo("Child27"));
 				Assert.That(ret[6].Value2, Is.Null);
 			});
-			AssertQuery(query);
+			AssertQuery(ret);
 		}
 
 		[Test]
