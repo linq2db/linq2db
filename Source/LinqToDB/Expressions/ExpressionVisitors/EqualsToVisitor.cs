@@ -50,11 +50,6 @@ namespace LinqToDB.Expressions.ExpressionVisitors
 
 		internal static bool EqualsTo(this Expression? expr1, Expression? expr2, EqualsToInfo info)
 		{
-			if (expr1 == expr2)
-			{
-				return true;
-			}
-
 			if (expr1 == null || expr2 == null || expr1.Type != expr2.Type)
 				return false;
 
