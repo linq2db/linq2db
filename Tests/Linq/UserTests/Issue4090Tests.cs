@@ -254,7 +254,7 @@ namespace Tests.UserTests
 				new Table3 { Id3 = 26, ParentId3 = 16, Name3 = "Child26" },
 				new Table3 { Id3 = 27, ParentId3 = null, Name3 = "Child27" },
 			});
-			var ret = db.GetTable<Table3>()
+			var query = db.GetTable<Table3>()
 				.OrderBy(x => x.Id3)
 				.Select(t3 => new
 				{
