@@ -37,7 +37,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void WithIdFirst_NoData([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
+		public void WithIdFirst_NoData([IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllSQLite)] string context)
 		{
 			using var db = GetDataContext(context);
 			using var tbl1 = db.CreateLocalTable(new[]
@@ -82,7 +82,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void WithIdFirst_WithData([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
+		public void WithIdFirst_WithData([IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllSQLite)] string context)
 		{
 			using var db = GetDataContext(context);
 			using var tbl1 = db.CreateLocalTable(new[]
@@ -132,7 +132,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void WithIdAfter_NoData([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
+		public void WithIdAfter_NoData([IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllSQLite)] string context)
 		{
 			using var db = GetDataContext(context);
 			using var tbl1 = db.CreateLocalTable(new[]
@@ -177,7 +177,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void WithIdAfter_WithData([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
+		public void WithIdAfter_WithData([IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllSQLite)] string context)
 		{
 			using var db = GetDataContext(context);
 			using var tbl1 = db.CreateLocalTable(new[]
@@ -227,7 +227,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void CrossApply_NullableFields_WithIds([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
+		public void CrossApply_NullableFields_WithIds([IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllSQLite)] string context)
 		{
 			using var db = GetDataContext(context);
 			using var tbl1 = db.CreateLocalTable(new[]
@@ -353,7 +353,7 @@ namespace Tests.UserTests
 		}
 
 		[Test]
-		public void CrossApply_NullableFields_WithoutIds([IncludeDataSources(TestProvName.AllSqlServer2008Plus)] string context)
+		public void CrossApply_NullableFields_WithoutIds([IncludeDataSources(TestProvName.AllSqlServer2008Plus, TestProvName.AllSQLite)] string context)
 		{
 			using var db = GetDataContext(context);
 			using var tbl1 = db.CreateLocalTable(new[]
@@ -380,7 +380,7 @@ namespace Tests.UserTests
 				new Table3 { Id3 = 26, ParentId3 = 16, Name3 = "Child26" },
 				new Table3 { Id3 = 27, ParentId3 = null, Name3 = "Child27" },
 			});
-			var ret = db.GetTable<Table3>()
+			var query = db.GetTable<Table3>()
 				.OrderBy(x => x.Id3)
 				.Select(t3 => new
 				{
@@ -401,8 +401,8 @@ namespace Tests.UserTests
 							Name2 = t2.Name2,
 						})
 						.FirstOrDefault()
-				})
-				.ToList();
+				});
+			var ret = AssertQuery(query);
 			Assert.That(ret, Has.Count.EqualTo(7));
 
 			Assert.Multiple(() =>
