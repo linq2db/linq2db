@@ -407,7 +407,7 @@ namespace Tests.UserTests
 						.FirstOrDefault()
 				})
 				.ToList();
-			Assert.That(ret, Has.Length.EqualTo(7));
+			Assert.That(ret, Has.Count.EqualTo(7));
 
 			Assert.Multiple(() =>
 			{
