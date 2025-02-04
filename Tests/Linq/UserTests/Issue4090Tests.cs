@@ -283,7 +283,7 @@ namespace Tests.UserTests
 			var ret = AssertQuery(query);
 
 			// assert the result (more important than the SQL for these tests)
-			Assert.That(ret, Has.Count.EqualTo(7));
+			Assert.That(ret, Has.Length.EqualTo(7));
 
 			Assert.Multiple(() =>
 			{
