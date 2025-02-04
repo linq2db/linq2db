@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Threading.Tasks;
 
+using Microsoft.AspNetCore.SignalR.Client;
+
 namespace LinqToDB.Remote.Http.Client
 {
 	/// <summary>
@@ -30,10 +32,9 @@ namespace LinqToDB.Remote.Http.Client
 		/// <summary>
 		/// Creates instance of http-based remote data context.
 		/// </summary>
-		/// <param name="requestUri"></param>
 		/// <param name="optionBuilder"></param>
-		public SignalRDataContext(Uri requestUri, Func<DataOptions,DataOptions>? optionBuilder = null)
-			: this(new SignalRLinqServiceClient(requestUri), optionBuilder)
+		public SignalRDataContext(HubConnection hubConnection, Func<DataOptions,DataOptions>? optionBuilder = null)
+			: this(new SignalRLinqServiceClient(hubConnection), optionBuilder)
 		{
 			_dispose = true;
 		}

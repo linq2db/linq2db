@@ -1,40 +1,35 @@
 ﻿using System;
-using System.Globalization;
-using System.Net.Http;
-using System.Net.Http.Json;
+using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
 
 using Microsoft.AspNetCore.SignalR.Client;
 
 #pragma warning disable CA2007
-
 #pragma warning disable IL2026
 #pragma warning disable IL3050
 
 namespace LinqToDB.Remote.Http.Client
 {
+	public class Container<T>(T @object)
+	{
+		public T Object { get; } = @object;
+	}
+
 	/// <summary>
 	/// Signal/R-base remote data context client.
 	/// </summary>
-	public class SignalRLinqServiceClient(Uri requestUri) : ILinqService, IAsyncDisposable
+	public class SignalRLinqServiceClient : ILinqService, IAsyncDisposable
 	{
-		async Task<HubConnection> GetHubConnectionAsync()
+		HubConnection _hubConnection;
+
+		/// <summary>
+		/// Signal/R-base remote data context client.
+		/// </summary>
+		public SignalRLinqServiceClient(HubConnection hubConnection)
 		{
-			if (_hubConnection is null)
-			{
-				_hubConnection = new HubConnectionBuilder()
-					.WithUrl(requestUri)
-					.WithAutomaticReconnect()
-					.Build();
-
-				await _hubConnection.StartAsync();
-			}
-
-			return _hubConnection;
+			_hubConnection = hubConnection;
 		}
-
-		HubConnection? _hubConnection;
 
 		LinqServiceInfo ILinqService.GetInfo(string? configuration)
 		{
@@ -61,44 +56,37 @@ namespace LinqToDB.Remote.Http.Client
 			throw new NotImplementedException();
 		}
 
-		async Task<LinqServiceInfo> ILinqService.GetInfoAsync(string? configuration, CancellationToken cancellationToken)
+		Task<LinqServiceInfo> ILinqService.GetInfoAsync(string? configuration, CancellationToken cancellationToken)
 		{
-			var hc = await GetHubConnectionAsync();
-			return await hc.InvokeAsync<LinqServiceInfo>(nameof(ILinqService.GetInfoAsync), configuration, cancellationToken : cancellationToken);
+			return _hubConnection.InvokeAsync<LinqServiceInfo>(nameof(ILinqService.GetInfoAsync), configuration, cancellationToken : cancellationToken);
 		}
 
-		async Task<int> ILinqService.ExecuteNonQueryAsync(string? configuration, string queryData, CancellationToken cancellationToken)
+		Task<int> ILinqService.ExecuteNonQueryAsync(string? configuration, string queryData, CancellationToken cancellationToken)
 		{
-			var hc = await GetHubConnectionAsync();
-			return await hc.InvokeAsync<int>(nameof(ILinqService.ExecuteNonQueryAsync), configuration, queryData, cancellationToken : cancellationToken);
+			return _hubConnection.InvokeAsync<int>(nameof(ILinqService.ExecuteNonQueryAsync), configuration, queryData, cancellationToken : cancellationToken);
 		}
 
-		async Task<string?> ILinqService.ExecuteScalarAsync(string? configuration, string queryData, CancellationToken cancellationToken)
+		Task<string?> ILinqService.ExecuteScalarAsync(string? configuration, string queryData, CancellationToken cancellationToken)
 		{
-			var hc = await GetHubConnectionAsync();
-			return await hc.InvokeAsync<string?>(nameof(ILinqService.ExecuteScalarAsync), configuration, queryData, cancellationToken : cancellationToken);
+			return _hubConnection.InvokeAsync<string?>(nameof(ILinqService.ExecuteScalarAsync), configuration, queryData, cancellationToken : cancellationToken);
 		}
 
-		async Task<string> ILinqService.ExecuteReaderAsync(string? configuration, string queryData, CancellationToken cancellationToken)
+		Task<string> ILinqService.ExecuteReaderAsync(string? configuration, string queryData, CancellationToken cancellationToken)
 		{
-			var hc = await GetHubConnectionAsync();
-			return await hc.InvokeAsync<string>(nameof(ILinqService.ExecuteReaderAsync), configuration, queryData, cancellationToken: cancellationToken);
+			Console.WriteLine("ExecuteReaderAsync before");
+			var r  = _hubConnection.InvokeAsync<string>(nameof(ILinqService.ExecuteReaderAsync), configuration, queryData, cancellationToken: cancellationToken);
+			Console.WriteLine("ExecuteReaderAsync after");
+			return r;
 		}
 
-		async Task<int> ILinqService.ExecuteBatchAsync(string? configuration, string queryData, CancellationToken cancellationToken)
+		Task<int> ILinqService.ExecuteBatchAsync(string? configuration, string queryData, CancellationToken cancellationToken)
 		{
-			var hc = await GetHubConnectionAsync();
-			return await hc.InvokeAsync<int>(nameof(ILinqService.ExecuteBatchAsync), configuration, queryData, cancellationToken: cancellationToken);
+			return _hubConnection.InvokeAsync<int>(nameof(ILinqService.ExecuteBatchAsync), configuration, queryData, cancellationToken: cancellationToken);
 		}
 
 		public async ValueTask DisposeAsync()
 		{
-			var hc = _hubConnection;
-
-			_hubConnection = null;
-
-			if (hc is not null)
-				await hc.DisposeAsync();
+			await Task.CompletedTask;
 		}
 	}
 }

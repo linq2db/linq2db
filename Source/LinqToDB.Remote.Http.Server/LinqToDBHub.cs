@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Threading;
 using System.Threading.Tasks;
 
 using Microsoft.AspNetCore.SignalR;
@@ -37,27 +36,42 @@ namespace LinqToDB.Remote.Http.Server
 
 		public virtual Task<LinqServiceInfo> GetInfoAsync(string? configuration)
 		{
-			return _linqService.GetInfoAsync(configuration, default);
+			Console.WriteLine("GetInfoAsync before");
+			var result = _linqService.GetInfoAsync(configuration, default);
+			Console.WriteLine("GetInfoAsync after");
+			return result;
 		}
 
-		public virtual Task<int> ExecuteNonQueryAsync(string? configuration, string queryData, CancellationToken cancellationToken)
+		public virtual Task<int> ExecuteNonQueryAsync(string? configuration, string queryData)
 		{
-			return _linqService.ExecuteNonQueryAsync(configuration, queryData, cancellationToken);
+			Console.WriteLine("ExecuteNonQueryAsync before");
+			var result = _linqService.ExecuteNonQueryAsync(configuration, queryData, default);
+			Console.WriteLine("ExecuteNonQueryAsync after");
+			return result;
 		}
 
-		public virtual Task<string?> ExecuteScalarAsync(string? configuration, string queryData, CancellationToken cancellationToken)
+		public virtual Task<string?> ExecuteScalarAsync(string? configuration, string queryData)
 		{
-			return _linqService.ExecuteScalarAsync(configuration, queryData, cancellationToken);
+			Console.WriteLine("ExecuteScalarAsync before");
+			var result = _linqService.ExecuteScalarAsync(configuration, queryData, default);
+			Console.WriteLine("ExecuteScalarAsync after");
+			return result;
 		}
 
 		public virtual Task<string> ExecuteReaderAsync(string? configuration, string queryData)
 		{
-			return _linqService.ExecuteReaderAsync(configuration, queryData, default);
+			Console.WriteLine("ExecuteReaderAsync before");
+			var result = _linqService.ExecuteReaderAsync(configuration, queryData, default);
+			Console.WriteLine("ExecuteReaderAsync after");
+			return result;
 		}
 
-		public virtual Task<int> ExecuteBatchAsync(string? configuration, string queryData, CancellationToken cancellationToken)
+		public virtual Task<int> ExecuteBatchAsync(string? configuration, string queryData)
 		{
-			return _linqService.ExecuteBatchAsync(configuration, queryData, cancellationToken);
+			Console.WriteLine("ExecuteBatchAsync before");
+			var result = _linqService.ExecuteBatchAsync(configuration, queryData, default);
+			Console.WriteLine("ExecuteBatchAsync after");
+			return result;
 		}
 	}
 }
