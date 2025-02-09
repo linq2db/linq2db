@@ -1919,5 +1919,14 @@ namespace Tests.Linq
 				Assert.That(record.Value, Is.EqualTo(!value));
 			}
 		}
+
+		[ActiveIssue]
+		[Test]
+		public void Issue_NRE_InAccessor([IncludeDataSources(TestProvName.AllSQLite)] string context)
+		{
+			using var db = GetDataContext(context);
+
+			Assert.That(db.Select(() => Sql.AsSql(Sql.PadLeft(null, 1, '.'))), Is.EqualTo(null));
+		}
 	}
 }
