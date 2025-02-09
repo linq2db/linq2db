@@ -19,7 +19,7 @@ dotnet add package linq2db.Compat
 ### Using PackageReference in `csproj`:
 Add the following line inside the `<ItemGroup>` section of your `.csproj` file:
 ```xml
-<PackageReference Include="linq2db.Compat" Version="*" />
+<PackageReference Include="linq2db.Compat" Version="6.0.0" />
 ```
 
 ## 🚀 Usage
