@@ -1,4 +1,6 @@
-﻿#if NETFRAMEWORK
+﻿#if NETFRAMEWORK && COMPAT
+[assembly: System.Runtime.CompilerServices.TypeForwardedTo(typeof(LinqToDB.Configuration.DataProviderElement))]
+#elif NETFRAMEWORK || COMPAT
 using System.Configuration;
 using System.Collections.Generic;
 using System.Linq;
@@ -42,10 +44,8 @@ namespace LinqToDB.Configuration
 		/// </summary>
 		public bool Default => (bool)base[_propDefault];
 
-		IEnumerable<NamedValue> IDataProviderSettings.Attributes
-		{
-			get => Attributes.AllKeys.Select(e => new NamedValue() { Name = e, Value = Attributes[e] });
-		}
+		IEnumerable<NamedValue> IDataProviderSettings.Attributes =>
+			Attributes.AllKeys.Select(e => new NamedValue { Name = e ?? string.Empty, Value = Attributes[e ?? string.Empty] ?? string.Empty });
 	}
 }
 #endif
