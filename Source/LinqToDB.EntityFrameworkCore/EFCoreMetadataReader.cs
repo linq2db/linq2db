@@ -8,10 +8,6 @@ using System.Linq.Expressions;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 
-#if !EF6 && !EF31
-using LinqToDB.Common.Internal;
-
-#endif
 using Microsoft.EntityFrameworkCore;
 #if !EF31
 using Microsoft.EntityFrameworkCore.Diagnostics;
@@ -27,15 +23,11 @@ using Microsoft.EntityFrameworkCore.Query.SqlExpressions;
 using Microsoft.EntityFrameworkCore.Storage;
 
 using LinqToDB.Common;
-
+using LinqToDB.Common.Internal;
 using LinqToDB.Expressions;
-
 using LinqToDB.Extensions;
-
 using LinqToDB.Mapping;
-
 using LinqToDB.Metadata;
-
 using LinqToDB.SqlQuery;
 
 using EfExpressionPrinter = Microsoft.EntityFrameworkCore.Query.ExpressionPrinter;
@@ -81,7 +73,7 @@ namespace LinqToDB.EntityFrameworkCore
 				_dependencies         = accessor.GetService<RelationalSqlTranslatingExpressionVisitorDependencies>();
 				_mappingSource        = accessor.GetService<IRelationalTypeMappingSource>();
 #if EF31
-				_annotationProvider = accessor.GetService<IMigrationsAnnotationProvider>();
+				_annotationProvider   = accessor.GetService<IMigrationsAnnotationProvider>();
 #else
 				_annotationProvider   = accessor.GetService<IRelationalAnnotationProvider>();
 				_logger               = accessor.GetService<IDiagnosticsLogger<DbLoggerCategory.Query>>();

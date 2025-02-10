@@ -39,7 +39,7 @@ namespace LinqToDB.EntityFrameworkCore.Internal
 			ArgumentNullException.ThrowIfNull(expression);
 			ArgumentNullException.ThrowIfNull(dataContext);
 
-			QueryProvider = (IQueryProviderAsync) Linq.Internals.CreateExpressionQueryInstance<T>(dataContext, expression);
+			QueryProvider = (IQueryProviderAsync)Internals.CreateExpressionQueryInstance<T>(dataContext, expression);
 			QueryProviderAsQueryable = (IQueryable<T>) QueryProvider;
 		}
 
