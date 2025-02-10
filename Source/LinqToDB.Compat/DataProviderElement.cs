@@ -1,7 +1,4 @@
-﻿#if NETFRAMEWORK && COMPAT
-[assembly: System.Runtime.CompilerServices.TypeForwardedTo(typeof(LinqToDB.Configuration.DataProviderElement))]
-#elif NETFRAMEWORK || COMPAT
-using System.Configuration;
+﻿using System.Configuration;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -48,4 +45,3 @@ namespace LinqToDB.Configuration
 			Attributes.AllKeys.Select(e => new NamedValue { Name = e ?? string.Empty, Value = Attributes[e ?? string.Empty] ?? string.Empty });
 	}
 }
-#endif

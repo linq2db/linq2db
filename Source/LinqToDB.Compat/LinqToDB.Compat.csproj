@@ -7,9 +7,6 @@
 
 		<!--published targets-->
 		<TargetFrameworks>net462;netstandard2.0;net6.0;net8.0;net9.0</TargetFrameworks>
-
-		<!-- Define COMPAT constant -->
-		<DefineConstants>$(DefineConstants);COMPAT</DefineConstants>
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -18,11 +15,5 @@
 		<PackageReference Include="System.Configuration.ConfigurationManager" />
 
 		<AdditionalFiles Include="PublicAPI.*.txt" />
-
-		<Compile Include="..\LinqToDB\Configuration\LinqToDBSection.cs"               Link="LinqToDBSection.cs" />
-		<Compile Include="..\LinqToDB\Configuration\DataProviderElementCollection.cs" Link="DataProviderElementCollection.cs" />
-		<Compile Include="..\LinqToDB\Configuration\DataProviderElement.cs"           Link="DataProviderElement.cs" />
-		<Compile Include="..\LinqToDB\Configuration\ElementBase.cs"                   Link="ElementBase.cs" />
-		<Compile Include="..\LinqToDB\Configuration\ElementCollectionBase.cs"         Link="ElementCollectionBase.cs" />
 	</ItemGroup>
 </Project>

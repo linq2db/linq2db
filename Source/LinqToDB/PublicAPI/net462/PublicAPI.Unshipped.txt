@@ -1,1 +1,28 @@
 ﻿#nullable enable
+*REMOVED*abstract LinqToDB.Configuration.ElementCollectionBase<T>.GetElementKey(T! element) -> object!
+*REMOVED*LinqToDB.Configuration.DataProviderElement
+*REMOVED*LinqToDB.Configuration.DataProviderElement.DataProviderElement() -> void
+*REMOVED*LinqToDB.Configuration.DataProviderElement.Default.get -> bool
+*REMOVED*LinqToDB.Configuration.DataProviderElement.Name.get -> string!
+*REMOVED*LinqToDB.Configuration.DataProviderElement.TypeName.get -> string!
+*REMOVED*LinqToDB.Configuration.DataProviderElementCollection
+*REMOVED*LinqToDB.Configuration.DataProviderElementCollection.DataProviderElementCollection() -> void
+*REMOVED*LinqToDB.Configuration.ElementBase
+*REMOVED*LinqToDB.Configuration.ElementBase.Attributes.get -> System.Collections.Specialized.NameValueCollection!
+*REMOVED*LinqToDB.Configuration.ElementBase.ElementBase() -> void
+*REMOVED*LinqToDB.Configuration.ElementCollectionBase<T>
+*REMOVED*LinqToDB.Configuration.ElementCollectionBase<T>.ElementCollectionBase() -> void
+*REMOVED*LinqToDB.Configuration.ElementCollectionBase<T>.this[int index].get -> T!
+*REMOVED*LinqToDB.Configuration.ElementCollectionBase<T>.this[string! name].get -> T!
+*REMOVED*LinqToDB.Configuration.LinqToDBSection
+*REMOVED*LinqToDB.Configuration.LinqToDBSection.DataProviders.get -> LinqToDB.Configuration.DataProviderElementCollection!
+*REMOVED*LinqToDB.Configuration.LinqToDBSection.DefaultConfiguration.get -> string!
+*REMOVED*LinqToDB.Configuration.LinqToDBSection.DefaultDataProvider.get -> string!
+*REMOVED*LinqToDB.Configuration.LinqToDBSection.LinqToDBSection() -> void
+*REMOVED*override LinqToDB.Configuration.DataProviderElementCollection.GetElementKey(LinqToDB.Configuration.DataProviderElement! element) -> object!
+*REMOVED*override LinqToDB.Configuration.ElementBase.OnDeserializeUnrecognizedAttribute(string! name, string! value) -> bool
+*REMOVED*override LinqToDB.Configuration.ElementBase.Properties.get -> System.Configuration.ConfigurationPropertyCollection!
+*REMOVED*override LinqToDB.Configuration.ElementCollectionBase<T>.CreateNewElement() -> System.Configuration.ConfigurationElement!
+*REMOVED*override LinqToDB.Configuration.LinqToDBSection.Properties.get -> System.Configuration.ConfigurationPropertyCollection!
+*REMOVED*override sealed LinqToDB.Configuration.ElementCollectionBase<T>.GetElementKey(System.Configuration.ConfigurationElement! element) -> object!
+*REMOVED*static LinqToDB.Configuration.LinqToDBSection.Instance.get -> LinqToDB.Configuration.LinqToDBSection?

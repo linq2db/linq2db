@@ -37,17 +37,24 @@ namespace LinqToDB.Data
 
 		static ILinqToDBSettings? _defaultSettings;
 
+#if NETFRAMEWORK
 		/// <summary>
-		/// Gets or sets default connection settings. By default, contains settings from linq2db configuration section from configuration file (not supported by .Net Core).
+		/// Gets or sets default connection settings.
 		/// <seealso cref="ILinqToDBSettings"/>
 		/// </summary>
+		/// <remarks>
+		/// Previously, this would contain settings from linq2db configuration section from configuration file.
+		/// Functionality for loading data automatically from app.config has been moved to the linq2db.Compat package.
+		/// </remarks>
+#else
+		/// <summary>
+		/// Gets or sets default connection settings.
+		/// <seealso cref="ILinqToDBSettings"/>
+		/// </summary>
+#endif
 		public static ILinqToDBSettings? DefaultSettings
 		{
-#if NETFRAMEWORK
-			get => _defaultSettings ??= LinqToDBSection.Instance;
-#else
 			get => _defaultSettings;
-#endif
 			set
 			{
 				_defaultSettings    = value;
