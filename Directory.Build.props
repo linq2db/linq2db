@@ -52,7 +52,7 @@
 		<DefineConstants Condition=" $([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net8.0')) ">SUPPORTS_COMPOSITE_FORMAT;$(DefineConstants)</DefineConstants>
 
 		<ArtifactsPath>$(MSBuildThisFileDirectory).build</ArtifactsPath>
-		<ArtifactsPivots>$(Configuration)\$(TargetFramework)</ArtifactsPivots>
+		<ArtifactsPivots>$(Configuration)\$(TargetFramework)\$(RuntimeIdentifier)</ArtifactsPivots>
 	</PropertyGroup>
 
 	<PropertyGroup Label="Code Analysis Setup">
