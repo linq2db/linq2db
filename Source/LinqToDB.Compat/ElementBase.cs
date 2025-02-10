@@ -1,7 +1,4 @@
-﻿#if NETFRAMEWORK && COMPAT
-[assembly: System.Runtime.CompilerServices.TypeForwardedTo(typeof(LinqToDB.Configuration.ElementBase))]
-#elif NETFRAMEWORK || COMPAT
-using System;
+﻿using System;
 using System.Collections.Specialized;
 using System.Configuration;
 
@@ -42,4 +39,3 @@ namespace LinqToDB.Configuration
 		public   NameValueCollection  Attributes { get; } = new NameValueCollection(StringComparer.OrdinalIgnoreCase);
 	}
 }
-#endif

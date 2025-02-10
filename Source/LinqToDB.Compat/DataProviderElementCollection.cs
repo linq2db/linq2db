@@ -1,7 +1,4 @@
-﻿#if NETFRAMEWORK && COMPAT
-[assembly: System.Runtime.CompilerServices.TypeForwardedTo(typeof(LinqToDB.Configuration.DataProviderElementCollection))]
-#elif NETFRAMEWORK || COMPAT
-using System;
+﻿using System;
 using System.Configuration;
 
 namespace LinqToDB.Configuration
@@ -21,4 +18,3 @@ namespace LinqToDB.Configuration
 		}
 	}
 }
-#endif
