@@ -34,21 +34,21 @@ namespace Tests.UserTests
 				var id = (from infeed in db.GetTable<InfeedAdvicePositionDTO>()
 						   select Sql.GuidToNormalizedString(infeed.Id)).First();
 
-				Assert.AreEqual(expected, id);
+				Assert.That(id, Is.EqualTo(expected));
 
 				var qryA = from infeed in db.GetTable<InfeedAdvicePositionDTO>()
 						   where Sql.GuidToNormalizedString(infeed.Id)!.Contains("7f4-53")
 						   select infeed;
 
 				var lA = qryA.ToList();
-				Assert.AreEqual(1, lA.Count);
+				Assert.That(lA, Has.Count.EqualTo(1));
 
 				var qryB = from infeed in db.GetTable<InfeedAdvicePositionDTO>()
 						   where Sql.GuidToNormalizedString(infeed.Id)!.StartsWith("193ae")
 						   select infeed;
 
 				var lB = qryB.ToList();
-				Assert.AreEqual(1, lB.Count);
+				Assert.That(lB, Has.Count.EqualTo(1));
 
 
 				var qryC = from infeed in db.GetTable<InfeedAdvicePositionDTO>()
@@ -56,14 +56,14 @@ namespace Tests.UserTests
 						   select infeed;
 
 				var lC = qryC.ToList();
-				Assert.AreEqual(0, lC.Count);
+				Assert.That(lC, Has.Count.EqualTo(0));
 
 				var qryD = from infeed in db.GetTable<InfeedAdvicePositionDTO>()
 						   where Sql.GuidToNormalizedString(infeed.Id)!.ToLower().StartsWith("293ae")
 						   select infeed;
 
 				var lD = qryD.ToList();
-				Assert.AreEqual(0, lD.Count);
+				Assert.That(lD, Has.Count.EqualTo(0));
 			}
 		}
 	}

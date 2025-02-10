@@ -259,8 +259,9 @@ namespace LinqToDB
 			public void Build(ISqExtensionBuilder builder)
 			{
 				var para = builder.GetExpression(0);
-				
-				builder.ResultExpression = PseudoFunctions.MakeConvert(SqlDataType.String, SqlDataType.Guid, para);
+				var toType = builder.Mapping.GetDbDataType(typeof(string));
+
+				builder.ResultExpression = PseudoFunctions.MakeMandatoryCast(para!, toType, SqlDataType.Guid);
 			}
 		}
 
