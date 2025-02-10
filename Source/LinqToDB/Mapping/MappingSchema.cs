@@ -10,10 +10,15 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Text;
+using System.Threading;
 using System.Xml;
 using System.Xml.Linq;
 
 using JetBrains.Annotations;
+
+#if !NET9_0_OR_GREATER
+using Lock = System.Object;
+#endif
 
 namespace LinqToDB.Mapping
 {
@@ -161,7 +166,7 @@ namespace LinqToDB.Mapping
 			(_cache, _firstOnlyCache) = CreateAttributeCaches();
 		}
 
-		object _syncRoot = new();
+		Lock _syncRoot = new();
 		internal readonly MappingSchemaInfo[] Schemas;
 		readonly TransformVisitor<MappingSchema> _reduceDefaultValueTransformer;
 

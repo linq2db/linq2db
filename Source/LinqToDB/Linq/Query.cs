@@ -7,6 +7,10 @@ using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
 
+#if !NET9_0_OR_GREATER
+using Lock = System.Object;
+#endif
+
 // ReSharper disable StaticMemberInGenericType
 
 namespace LinqToDB.Linq
@@ -267,8 +271,9 @@ namespace LinqToDB.Linq
 			}
 
 			// lock for cache instance modification
-			readonly object _syncCache    = new ();
+			readonly Lock   _syncCache    = new ();
 			// lock for query priority modification
+			// NB: remains an `object` for use with `Monitor.TryEnter()` instead of `lock()`
 			readonly object _syncPriority = new ();
 
 			// stores all cached queries

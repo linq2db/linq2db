@@ -2,6 +2,11 @@
 using System.Data;
 using System.Data.Common;
 using System.Linq.Expressions;
+using System.Threading;
+
+#if !NET9_0_OR_GREATER
+using Lock = System.Object;
+#endif
 
 namespace LinqToDB.DataProvider.SqlCe
 {
@@ -9,7 +14,7 @@ namespace LinqToDB.DataProvider.SqlCe
 
 	public class SqlCeProviderAdapter : IDynamicProviderAdapter
 	{
-		private static readonly object _syncRoot = new object();
+		private static readonly Lock _syncRoot = new();
 		private static SqlCeProviderAdapter? _instance;
 
 		public const string AssemblyName        = "System.Data.SqlServerCe";

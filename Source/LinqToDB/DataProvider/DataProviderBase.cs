@@ -12,6 +12,10 @@ using System.Threading.Tasks;
 using System.Xml;
 using System.Xml.Linq;
 
+#if !NET9_0_OR_GREATER
+using Lock = System.Object;
+#endif
+
 namespace LinqToDB.DataProvider
 {
 	using Common;
@@ -514,7 +518,7 @@ namespace LinqToDB.DataProvider
 		}
 
 		SimpleServiceProvider? _serviceProvider;
-		readonly object        _guard = new();
+		readonly Lock          _guard = new();
 
 		IServiceProvider IInfrastructure<IServiceProvider>.Instance
 		{

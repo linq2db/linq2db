@@ -10,6 +10,10 @@ using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 
+#if !NET9_0_OR_GREATER
+using Lock = System.Object;
+#endif
+
 namespace LinqToDB.DataProvider.PostgreSQL
 {
 	using Common;
@@ -19,7 +23,7 @@ namespace LinqToDB.DataProvider.PostgreSQL
 
 	public class NpgsqlProviderAdapter : IDynamicProviderAdapter
 	{
-		private static readonly object _syncRoot = new ();
+		private static readonly Lock _syncRoot = new ();
 		private static NpgsqlProviderAdapter? _instance;
 
 		public const string AssemblyName    = "Npgsql";

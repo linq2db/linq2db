@@ -2,6 +2,11 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
+
+#if !NET9_0_OR_GREATER
+using Lock = System.Object;
+#endif
 
 namespace LinqToDB.Mapping
 {
@@ -23,7 +28,7 @@ namespace LinqToDB.Mapping
 
 		public  string           Configuration;
 		private MetadataReader? _metadataReader;
-		readonly object         _syncRoot = new();
+		readonly Lock           _syncRoot = new();
 
 		public MetadataReader? MetadataReader
 		{

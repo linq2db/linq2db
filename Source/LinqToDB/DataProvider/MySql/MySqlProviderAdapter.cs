@@ -7,6 +7,10 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
+#if !NET9_0_OR_GREATER
+using Lock = System.Object;
+#endif
+
 namespace LinqToDB.DataProvider.MySql
 {
 	using Expressions;
@@ -17,8 +21,8 @@ namespace LinqToDB.DataProvider.MySql
 	{
 		private static readonly Type[] _ordinalParameters = [typeof(int)];
 
-		private static readonly object _mysqlDataSyncRoot      = new ();
-		private static readonly object _mysqlConnectorSyncRoot = new ();
+		private static readonly Lock _mysqlDataSyncRoot      = new ();
+		private static readonly Lock _mysqlConnectorSyncRoot = new ();
 
 		private static MySqlProviderAdapter? _mysqlDataInstance;
 		private static MySqlProviderAdapter? _mysqlConnectorInstance;

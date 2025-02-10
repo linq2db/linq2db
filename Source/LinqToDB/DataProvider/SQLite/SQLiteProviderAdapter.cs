@@ -1,6 +1,11 @@
 ﻿using System;
 using System.Data.Common;
 using System.Linq.Expressions;
+using System.Threading;
+
+#if !NET9_0_OR_GREATER
+using Lock = System.Object;
+#endif
 
 namespace LinqToDB.DataProvider.SQLite
 {
@@ -8,8 +13,8 @@ namespace LinqToDB.DataProvider.SQLite
 
 	public class SQLiteProviderAdapter : IDynamicProviderAdapter
 	{
-		private static readonly object _systemSyncRoot = new ();
-		private static readonly object _msSyncRoot     = new ();
+		private static readonly Lock _systemSyncRoot = new ();
+		private static readonly Lock _msSyncRoot     = new ();
 
 		private static SQLiteProviderAdapter? _systemDataSQLite;
 		private static SQLiteProviderAdapter? _microsoftDataSQLite;

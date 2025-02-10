@@ -3,6 +3,11 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Threading;
+
+#if !NET9_0_OR_GREATER
+using Lock = System.Object;
+#endif
 
 namespace LinqToDB.Metadata
 {
@@ -25,7 +30,7 @@ namespace LinqToDB.Metadata
 		readonly MappingAttributesCache                   _cache;
 		readonly string                                   _objectId;
 		readonly ConcurrentDictionary<Type, MemberInfo[]> _dynamicColumns = new();
-		readonly object                                   _syncRoot = new();
+		readonly Lock                                     _syncRoot = new();
 
 		readonly IMetadataReader[]              _readers;
 		public   IReadOnlyList<IMetadataReader> Readers => _readers;

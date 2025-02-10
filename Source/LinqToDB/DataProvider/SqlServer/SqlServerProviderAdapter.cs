@@ -10,10 +10,15 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
+#if !NET9_0_OR_GREATER
+using Lock = System.Object;
+#endif
+
 namespace LinqToDB.DataProvider.SqlServer
 {
-	using Expressions;
 	using LinqToDB.Common;
+	using LinqToDB.Expressions;
+	using LinqToDB.Expressions.Types;
 	using LinqToDB.Mapping;
 	using LinqToDB.Reflection;
 	using LinqToDB.SqlQuery;
@@ -23,8 +28,8 @@ namespace LinqToDB.DataProvider.SqlServer
 	// We don't take it into account, as there is no reason to use such old provider versions
 	public class SqlServerProviderAdapter : IDynamicProviderAdapter
 	{
-		private static readonly object _sysSyncRoot = new ();
-		private static readonly object _msSyncRoot  = new ();
+		private static readonly Lock _sysSyncRoot = new ();
+		private static readonly Lock _msSyncRoot  = new ();
 
 		private static SqlServerProviderAdapter? _systemAdapter;
 		private static SqlServerProviderAdapter? _microsoftAdapter;

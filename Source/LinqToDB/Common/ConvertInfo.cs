@@ -2,6 +2,11 @@
 using System.Collections.Concurrent;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Threading;
+
+#if !NET9_0_OR_GREATER
+using Lock = System.Object;
+#endif
 
 namespace LinqToDB.Common
 {
@@ -102,7 +107,7 @@ namespace LinqToDB.Common
 		         ConcurrentDictionary<DbDataType,ConcurrentDictionary<DbDataType,LambdaInfo>>? _toDatabaseExpressions;
 		         ConcurrentDictionary<DbDataType,ConcurrentDictionary<DbDataType,LambdaInfo>>? _fromDatabaseExpressions;
 
-		readonly object _sync = new();
+		readonly Lock _sync = new();
 
 		ConcurrentDictionary<DbDataType,ConcurrentDictionary<DbDataType,LambdaInfo>> GetForSetExpressions(ConversionType conversionType)
 		{

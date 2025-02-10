@@ -7,6 +7,10 @@ using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
 
+#if !NET9_0_OR_GREATER
+using Lock = System.Object;
+#endif
+
 namespace LinqToDB.DataProvider.ClickHouse
 {
 	using Common;
@@ -17,9 +21,9 @@ namespace LinqToDB.DataProvider.ClickHouse
 
 	public class ClickHouseProviderAdapter : IDynamicProviderAdapter
 	{
-		private static readonly object _octonicaSyncRoot = new ();
-		private static readonly object _clientSyncRoot   = new ();
-		private static readonly object _mysqlSyncRoot    = new ();
+		private static readonly Lock _octonicaSyncRoot = new ();
+		private static readonly Lock _clientSyncRoot   = new ();
+		private static readonly Lock _mysqlSyncRoot    = new ();
 
 		private static ClickHouseProviderAdapter? _octonicaAdapter;
 		private static ClickHouseProviderAdapter? _clientAdapter;
@@ -521,8 +525,8 @@ namespace LinqToDB.DataProvider.ClickHouse
 				private static LambdaExpression[] Wrappers { get; }
 					= new LambdaExpression[]
 				{
-				// [0]: get ErrorCode
-				(Expression<Func<ClickHouseException, int>>)((ClickHouseException this_) => this_.ErrorCode),
+						// [0]: get ErrorCode
+						(Expression<Func<ClickHouseException, int>>)((ClickHouseException this_) => this_.ErrorCode),
 				};
 
 				public ClickHouseException(object instance, Delegate[] wrappers) : base(instance, wrappers)

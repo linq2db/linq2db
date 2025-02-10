@@ -8,6 +8,10 @@ using System.Threading;
 using System.Threading.Tasks;
 using JetBrains.Annotations;
 
+#if !NET9_0_OR_GREATER
+using Lock = System.Object;
+#endif
+
 namespace LinqToDB.Remote
 {
 	using Common;
@@ -45,7 +49,7 @@ namespace LinqToDB.Remote
 		}
 
 		SimpleServiceProvider? _serviceProvider;
-		readonly object        _guard = new();
+		readonly Lock          _guard = new();
 
 		IServiceProvider IInfrastructure<IServiceProvider>.Instance
 		{

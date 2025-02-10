@@ -2,6 +2,11 @@
 using System.Data;
 using System.Data.Common;
 using System.Linq.Expressions;
+using System.Threading;
+
+#if !NET9_0_OR_GREATER
+using Lock = System.Object;
+#endif
 
 namespace LinqToDB.DataProvider.Informix
 {
@@ -24,8 +29,8 @@ namespace LinqToDB.DataProvider.Informix
 		public const string IfxProviderFactoryName = "IBM.Data.Informix";
 		public const string IfxTypesNamespace      = "IBM.Data.Informix";
 
-		private static readonly object _ifxSyncRoot = new ();
-		private static readonly object _db2SyncRoot = new ();
+		private static readonly Lock _ifxSyncRoot = new ();
+		private static readonly Lock _db2SyncRoot = new ();
 
 		private static InformixProviderAdapter? _ifxAdapter;
 		private static InformixProviderAdapter? _db2Adapter;

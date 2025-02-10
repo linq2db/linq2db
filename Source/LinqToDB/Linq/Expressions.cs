@@ -6,8 +6,13 @@ using System.Globalization;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+using System.Threading;
 
 using JetBrains.Annotations;
+
+#if !NET9_0_OR_GREATER
+using Lock = System.Object;
+#endif
 
 #region ReSharper disables
 // ReSharper disable RedundantTypeArgumentsOfMethod
@@ -501,7 +506,7 @@ namespace LinqToDB.Linq
 		#region Mapping
 
 		private static          Dictionary<string, Dictionary<MemberHelper.MemberInfoWithType, IExpressionInfo>>? _members;
-		private static readonly object _memberSync = new();
+		private static readonly Lock _memberSync = new();
 
 		static readonly Lazy<Dictionary<string,Dictionary<Tuple<ExpressionType,Type,Type>,IExpressionInfo>>> _binaries =
 			new Lazy<Dictionary<string,Dictionary<Tuple<ExpressionType,Type,Type>,IExpressionInfo>>>(() => new Dictionary<string,Dictionary<Tuple<ExpressionType,Type,Type>,IExpressionInfo>>());
