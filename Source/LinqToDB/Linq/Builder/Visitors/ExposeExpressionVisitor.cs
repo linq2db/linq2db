@@ -584,7 +584,7 @@ namespace LinqToDB.Linq.Builder.Visitors
 				return expr;
 			}
 
-			if (!Configuration.DisableLegacySqlBuilderDateDiffCalls)
+			if (!Common.Configuration.DisableLegacySqlBuilderDateDiffCalls)
 			{
 				if (node.Member.DeclaringType == typeof(TimeSpan) && node.Expression != null)
 				{
