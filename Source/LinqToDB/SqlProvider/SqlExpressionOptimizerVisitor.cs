@@ -1043,7 +1043,6 @@ namespace LinqToDB.SqlProvider
 				}
 			}
 
-
 			return predicate;
 		}
 

@@ -167,7 +167,6 @@ namespace LinqToDB.Linq.Builder
 				}
 			}
 
-
 			SqlField? recursiveField = null;
 
 			if (field == null)
@@ -177,7 +176,6 @@ namespace LinqToDB.Linq.Builder
 					recursiveField = (SqlField)recursivePlaceholder.Sql;
 				}
 			}
-
 
 			if (field == null)
 			{

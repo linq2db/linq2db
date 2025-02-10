@@ -615,6 +615,7 @@ namespace LinqToDB.Linq
 						query = new Query<T>(dataContext);
 						query = new ExpressionBuilder(query, true, optimizationContext, parametersContext, dataContext, expressions.MainExpression, null).Build<T>(ref expressions);
 					}
+
 					if (query.ErrorExpression != null)
 						throw query.ErrorExpression.CreateException();
 				}

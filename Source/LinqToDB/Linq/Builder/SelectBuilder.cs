@@ -67,7 +67,6 @@ namespace LinqToDB.Linq.Builder
 
 			public override MappingSchema MappingSchema => Builder.MappingSchema;
 
-
 			static IBuildContext GetOrderSequence(IBuildContext context)
 			{
 				var prevSequence = context;
@@ -77,8 +76,10 @@ namespace LinqToDB.Linq.Builder
 					{
 						break;
 					}
+
 					if (!prevSequence.SelectQuery.OrderBy.IsEmpty)
 						break;
+
 					if (prevSequence is SubQueryContext { IsSelectWrapper: true } subQuery)
 					{
 						prevSequence = subQuery.SubQuery;
@@ -90,6 +91,7 @@ namespace LinqToDB.Linq.Builder
 					else
 						break;
 				}
+
 				return prevSequence;
 			}
 

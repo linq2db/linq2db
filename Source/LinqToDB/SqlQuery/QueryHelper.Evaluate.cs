@@ -239,6 +239,7 @@ namespace LinqToDB.SqlQuery
 							result = !boolValue;
 							return true;
 						}
+
 						if (value is null)
 						{
 							result = null;
