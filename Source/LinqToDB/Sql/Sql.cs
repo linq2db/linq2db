@@ -261,7 +261,7 @@ namespace LinqToDB
 				var para = builder.GetExpression(0);
 				var toType = builder.Mapping.GetDbDataType(typeof(string));
 
-				builder.ResultExpression = PseudoFunctions.MakeMandatoryCast(para!, toType, SqlDataType.Guid);
+				builder.ResultExpression = PseudoFunctions.MakeToLower(PseudoFunctions.MakeMandatoryCast(para!, toType, SqlDataType.Guid));
 			}
 		}
 
