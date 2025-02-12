@@ -290,7 +290,7 @@ namespace LinqToDB
 #endif
 		public static string? GuidToNormalizedString(Guid? guid)
 		{
-			return guid == null ? null : guid.ToString();
+			return guid == null ? null : guid.Value.ToString();
 		}
 
 		#endregion

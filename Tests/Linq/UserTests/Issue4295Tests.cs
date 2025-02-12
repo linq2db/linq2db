@@ -1,13 +1,10 @@
-﻿using System.Linq;
-using FluentAssertions;
+﻿using System;
+using System.Linq;
+
 using LinqToDB;
 using LinqToDB.Mapping;
+
 using NUnit.Framework;
-using System.Linq.Dynamic.Core;
-using System.Linq.Dynamic.Core.CustomTypeProviders;
-using System.Collections.Generic;
-using System;
-using LinqToDB.Data;
 
 namespace Tests.UserTests
 {
@@ -32,19 +29,19 @@ namespace Tests.UserTests
 				db.Insert(a);
 
 				var id = (from infeed in db.GetTable<InfeedAdvicePositionDTO>()
-						   select Sql.GuidToNormalizedString(infeed.Id)).First();
+						   select infeed.Id.ToString()).First();
 
 				Assert.That(id, Is.EqualTo(expected));
 
 				var qryA = from infeed in db.GetTable<InfeedAdvicePositionDTO>()
-						   where Sql.GuidToNormalizedString(infeed.Id)!.Contains("7f4-53")
+						   where infeed.Id.ToString().Contains("7f4-53")
 						   select infeed;
 
 				var lA = qryA.ToList();
 				Assert.That(lA, Has.Count.EqualTo(1));
 
 				var qryB = from infeed in db.GetTable<InfeedAdvicePositionDTO>()
-						   where Sql.GuidToNormalizedString(infeed.Id)!.StartsWith("193ae")
+						   where infeed.Id.ToString().StartsWith("193ae")
 						   select infeed;
 
 				var lB = qryB.ToList();
@@ -52,14 +49,14 @@ namespace Tests.UserTests
 
 
 				var qryC = from infeed in db.GetTable<InfeedAdvicePositionDTO>()
-						   where Sql.GuidToNormalizedString(infeed.Id)!.Contains("8f4-53")
+						   where infeed.Id.ToString().Contains("8f4-53")
 						   select infeed;
 
 				var lC = qryC.ToList();
 				Assert.That(lC, Has.Count.EqualTo(0));
 
 				var qryD = from infeed in db.GetTable<InfeedAdvicePositionDTO>()
-						   where Sql.GuidToNormalizedString(infeed.Id)!.ToLower().StartsWith("293ae")
+						   where infeed.Id.ToString().ToLower().StartsWith("293ae")
 						   select infeed;
 
 				var lD = qryD.ToList();

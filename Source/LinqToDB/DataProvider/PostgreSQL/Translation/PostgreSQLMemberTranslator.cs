@@ -232,6 +232,20 @@ namespace LinqToDB.DataProvider.PostgreSQL.Translation
 			}
 		}
 
+		class GuidMemberTranslator : GuidMemberTranslatorBase
+		{
+			protected override ISqlExpression? TranslateGuildToString(ITranslationContext translationContext, MethodCallExpression methodCall, ISqlExpression guidExpr, TranslationFlags translationFlags)
+			{
+				// Cast({0} as VarChar(36))
+
+				var factory        = translationContext.ExpressionFactory;
+				var stringDataType = factory.GetDbDataType(typeof(string)).WithDataType(DataType.VarChar).WithLength(36);
+
+				var cast  = factory.Cast(guidExpr, stringDataType);
+				
+				return cast;
+			}
+		}
 
 		protected override IMemberTranslator CreateSqlTypesTranslator()
 		{
@@ -248,5 +262,9 @@ namespace LinqToDB.DataProvider.PostgreSQL.Translation
 			return new MathMemberTranslator();
 		}
 
+		protected override IMemberTranslator CreateGuidMemberTranslator()
+		{
+			return new GuidMemberTranslator();
+		}
 	}
 }
