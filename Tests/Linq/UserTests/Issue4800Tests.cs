@@ -2,12 +2,9 @@
 using System.Collections.Generic;
 using System.Linq;
 
+using FluentAssertions;
+
 using LinqToDB;
-using LinqToDB.Data;
-using LinqToDB.DataProvider.Firebird;
-using LinqToDB.Mapping;
-using LinqToDB.SqlProvider;
-using LinqToDB.SqlQuery;
 
 using NUnit.Framework;
 
@@ -113,48 +110,9 @@ namespace Tests.UserTests
 
 
 		[Test]
-		public void TestQuery([DataSources] string context)
+		public void JoinUsingAggregateResult([DataSources] string context)
 		{
 			using var db = GetDataContext(context);
-
-			/*
-			// Sample Data for Testing
-			var testeeCoverages = new List<TesteeCoverage>
-			{
-				new TesteeCoverage { Id = 1, TestId = 1, TesteeId = 1, Status = 14650, Token = "T1", StructureId = 10, SoleId = 20, Distance = 100, Placement = 1 },
-				new TesteeCoverage { Id = 2, TestId = 2, TesteeId = 2, Status = 14650, Token = "T2", StructureId = 11, SoleId = 21, Distance = 200, Placement = 2 }
-			};
-
-			var tests = new List<Test>
-			{
-				new Test { Id = 1, Name = "Test 1" },
-				new Test { Id = 2, Name = "Test 2" }
-			};
-
-			var executants = new List<Executant>
-			{
-				new Executant { Id = 1, TestId = 1 },
-				new Executant { Id = 2, TestId = 2 }
-			};
-
-			var testees = new List<Testee>
-			{
-				new Testee { Id = 1, WorkblankId = 100 },
-				new Testee { Id = 2, WorkblankId = 200 }
-			};
-
-			var outfits = new List<Outfit>
-			{
-				new Outfit { Id = 1, WorkblankId = 100, AccountId = 10 },
-				new Outfit { Id = 2, WorkblankId = 200, AccountId = 20 }
-			};
-
-			var accounts = new List<Account>
-			{
-				new Account { Id = 10, Name = "Account 1" },
-				new Account { Id = 20, Name = "Account 2" }
-			};
-			*/
 
 			using var testeeCoverageTable = db.CreateLocalTable(GetCoverages());
 			using var testTable = db.CreateLocalTable(GetTests());
@@ -162,7 +120,6 @@ namespace Tests.UserTests
 			using var testeeTable = db.CreateLocalTable(GetTestees());
 			using var outfitTable = db.CreateLocalTable(GetOutfits());
 			using var accountTable = db.CreateLocalTable(GetAccounts());
-
 
 			var query =
 				from coverage in db.GetTable<Coverage>()
@@ -209,9 +166,14 @@ namespace Tests.UserTests
 
 			var query2 =
 				from q in query
-				from 
+				join t in testeeTable on q.TesteeId equals t.Id into gj
+				from t in gj.DefaultIfEmpty()
+				select new { q.TesteeId };
 
-			var result = query.ToList();
+
+			var result = query2.ToList();
+
+			result.Should().HaveCount(1);
 		}
 	}
 }

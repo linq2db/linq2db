@@ -61,6 +61,16 @@ namespace LinqToDB.Linq.Builder
 			return new ContextRefExpression(buildContext.ElementType, buildContext);
 		}
 
+		public static IBuildContext UnwrapProxy(IBuildContext buildContext)
+		{
+			var current = buildContext;
+			while (current is IBuildProxy proxy)
+			{
+				current = proxy.Owner;
+			}
+			return current;
+		}
+
 		[return: NotNullIfNotNull(nameof(expression))]
 		public static Expression? CorrectExpression(Expression? expression, IBuildContext current,
 			IBuildContext                                       underlying)
@@ -878,9 +888,16 @@ namespace LinqToDB.Linq.Builder
 		{
 			if (expression is SqlDefaultIfEmptyExpression defaultIfEmptyExpression)
 				return UnwrapDefaultIfEmpty(defaultIfEmptyExpression.InnerExpression);
+
 			return expression;
 		}
 
+		public static Expression UnwrapProxy(Expression expression)
+		{
+			if (expression is ContextRefExpression contextRefExpression && contextRefExpression.BuildContext is IBuildProxy proxy)
+				return UnwrapDefaultIfEmpty(proxy.InnerExpression);
+			return expression;
+		}
 		public static Expression RemoveMarkers(Expression expression)
 		{
 			var result = expression.Transform(e => e is MarkerExpression marker ? marker.InnerExpression : e);
