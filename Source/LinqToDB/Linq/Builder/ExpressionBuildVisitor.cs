@@ -437,7 +437,11 @@ namespace LinqToDB.Linq.Builder
 
 			var saveRoot = FoundRoot;
 
+			Builder.PushTranslationModifier(context.TranslationModifier, true);
+
 			translated = context.MakeExpression(expression, flags);
+
+			Builder.PopTranslationModifier();
 
 			FoundRoot = saveRoot;
 
@@ -1218,16 +1222,18 @@ namespace LinqToDB.Linq.Builder
 
 		public Expression ConvertToExtensionSql(IBuildContext context, Expression expression, ColumnDescriptor? columnDescriptor, bool? inlineParameters)
 		{
-			var saveInline           = Builder.DataContext.InlineParameters;
+			var translationModifier = context.TranslationModifier;
+			if (inlineParameters == true)
+				translationModifier = translationModifier.WithInlineParameters(true);
+
+			Builder.PushTranslationModifier(translationModifier, true);
+
 			var saveFlags            = _buildFlags;
 			var saveColumnDescriptor = _columnDescriptor;
 			try
 			{
 				_buildFlags       |= BuildFlags.ForExtension;
 				_columnDescriptor  = columnDescriptor;
-
-				if (inlineParameters == true)
-					Builder.DataContext.InlineParameters = true;
 
 				expression = expression.UnwrapConvertToObject();
 				var unwrapped = expression.Unwrap();
@@ -1298,9 +1304,9 @@ namespace LinqToDB.Linq.Builder
 			}
 			finally
 			{
-				Builder.DataContext.InlineParameters = saveInline;
-				_buildFlags                          = saveFlags;
-				_columnDescriptor                    = saveColumnDescriptor;
+				_buildFlags       = saveFlags;
+				_columnDescriptor = saveColumnDescriptor;
+				Builder.PopTranslationModifier();
 			}
 
 			bool HandleGenericConstructor(Expression expr, [NotNullWhen(true)] out Expression? translated)
@@ -1616,8 +1622,10 @@ namespace LinqToDB.Linq.Builder
 				}
 			}
 
+			var modifier = associationRoot.BuildContext.TranslationModifier;
+
 			var association = AssociationHelper.BuildAssociationQuery(Builder, rootContext, memberInfo,
-				associationDescriptor, notNullCheck, !associationDescriptor.IsList, loadWith, loadWithPath, ref isOptional);
+				associationDescriptor, notNullCheck, !associationDescriptor.IsList, modifier, loadWith, loadWithPath, ref isOptional);
 
 			associationExpression = association;
 
@@ -3078,7 +3086,7 @@ namespace LinqToDB.Linq.Builder
 
 				if (tableContext != null)
 				{
-					return Visit(MakeIsPredicateExpression(node));
+					return Visit(MakeIsPredicateExpression(tableContext, node));
 				}
 			}
 
@@ -4721,15 +4729,14 @@ namespace LinqToDB.Linq.Builder
 
 		#region MakeIsPredicate
 
-		Expression MakeIsPredicateExpression(TypeBinaryExpression expression)
+		Expression MakeIsPredicateExpression(TableBuilder.TableContext tableContext, TypeBinaryExpression expression)
 		{
 			var typeOperand = expression.TypeOperand;
-			var table       = new TableBuilder.TableContext(Builder, MappingSchema, new BuildInfo((IBuildContext?)null, ExpressionInstances.UntypedNull, new SelectQuery()), typeOperand);
-
-			if (typeOperand == table.ObjectType)
+			
+			if (typeOperand == tableContext.ObjectType)
 			{
 				var all = true;
-				foreach (var m in table.InheritanceMapping)
+				foreach (var m in tableContext.InheritanceMapping)
 				{
 					if (m.Type == typeOperand)
 					{
@@ -4742,11 +4749,11 @@ namespace LinqToDB.Linq.Builder
 					return Expression.Constant(true);
 			}
 
-			var mapping = new List<(InheritanceMapping m, int i)>(table.InheritanceMapping.Count);
+			var mapping = new List<(InheritanceMapping m, int i)>(tableContext.InheritanceMapping.Count);
 
-			for (var i = 0; i < table.InheritanceMapping.Count; i++)
+			for (var i = 0; i < tableContext.InheritanceMapping.Count; i++)
 			{
-				var m = table.InheritanceMapping[i];
+				var m = tableContext.InheritanceMapping[i];
 				if (typeOperand.IsAssignableFrom(m.Type) && !m.IsDefault)
 					mapping.Add((m, i));
 			}
@@ -4755,9 +4762,9 @@ namespace LinqToDB.Linq.Builder
 
 			if (mapping.Count == 0)
 			{
-				for (var i = 0; i < table.InheritanceMapping.Count; i++)
+				for (var i = 0; i < tableContext.InheritanceMapping.Count; i++)
 				{
-					var m = table.InheritanceMapping[i];
+					var m = tableContext.InheritanceMapping[i];
 					if (!m.IsDefault)
 						mapping.Add((m, i));
 				}
@@ -4769,7 +4776,7 @@ namespace LinqToDB.Linq.Builder
 
 			foreach (var m in mapping)
 			{
-				var field = table.SqlTable.FindFieldByMemberName(table.InheritanceMapping[m.i].DiscriminatorName) ?? throw new LinqToDBException($"Field {table.InheritanceMapping[m.i].DiscriminatorName} not found in table {table.SqlTable}");
+				var field = tableContext.SqlTable.FindFieldByMemberName(tableContext.InheritanceMapping[m.i].DiscriminatorName) ?? throw new LinqToDBException($"Field {tableContext.InheritanceMapping[m.i].DiscriminatorName} not found in table {tableContext.SqlTable}");
 				var ttype = field.ColumnDescriptor.MemberAccessor.TypeAccessor.Type;
 				var obj   = expression.Expression;
 

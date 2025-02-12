@@ -92,7 +92,7 @@ namespace LinqToDB.Linq.Builder
 					keysExpressions, insertOrUpdateStatement.Update.Keys, false);
 			}
 
-			return BuildSequenceResult.FromContext(new InsertOrUpdateContext(builder, sequence, insertOrUpdateStatement));
+			return BuildSequenceResult.FromContext(new InsertOrUpdateContext(sequence.TranslationModifier, builder, sequence, insertOrUpdateStatement));
 		}
 
 		#endregion
@@ -107,8 +107,8 @@ namespace LinqToDB.Linq.Builder
 
 			public SqlInsertOrUpdateStatement InsertOrUpdateStatement { get; }
 
-			public InsertOrUpdateContext(ExpressionBuilder buider, IBuildContext sequence,
-				SqlInsertOrUpdateStatement insertOrUpdateStatement) : base(buider, typeof(object), sequence.SelectQuery)
+			public InsertOrUpdateContext(TranslationModifier translationModifier, ExpressionBuilder buider, IBuildContext sequence,
+				SqlInsertOrUpdateStatement                   insertOrUpdateStatement) : base(translationModifier, buider, typeof(object), sequence.SelectQuery)
 			{
 				Context                 = sequence;
 				InsertOrUpdateStatement = insertOrUpdateStatement;
@@ -136,7 +136,7 @@ namespace LinqToDB.Linq.Builder
 
 			public override IBuildContext Clone(CloningContext context)
 			{
-				return new InsertOrUpdateContext(Builder, context.CloneContext(Context), context.CloneElement(InsertOrUpdateStatement));
+				return new InsertOrUpdateContext(TranslationModifier, Builder, context.CloneContext(Context), context.CloneElement(InsertOrUpdateStatement));
 			}
 		}
 

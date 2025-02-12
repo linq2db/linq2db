@@ -11,7 +11,7 @@ namespace LinqToDB.Linq.Builder
 		public IBuildContext Context { get; }
 		public IBuildContext UpTo    { get; }
 
-		public ScopeContext(IBuildContext context, IBuildContext upTo) : base(context.Builder, context.ElementType, upTo.SelectQuery)
+		public ScopeContext(IBuildContext context, IBuildContext upTo) : base(context.TranslationModifier, context.Builder, context.ElementType, upTo.SelectQuery)
 		{
 			Context = context;
 			UpTo    = upTo;

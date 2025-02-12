@@ -68,19 +68,24 @@ namespace Tests.DataProvider
 		/// <param name="filterByNullableValue">Enable/disable selection filter by nullable column (default: <c>true</c>).</param>
 		/// <param name="getExpectedValue">Optional expected non-nullable value provider to use when value doesn't roundtrip.</param>
 		/// <param name="getExpectedNullableValue">Optional expected nullable value provider to use when value doesn't roundtrip.</param>
+		/// <param name="isExpectedValue">Optional custom check that non-nullable value returned by server is correct.Takes priority over <paramref name="getExpectedValue"/>.</param>
+		/// <param name="isExpectedNullableValue">Optional custom check that nullable value returned by server is correct.Takes priority over <paramref name="getExpectedNullableValue"/>.</param>
 		/// <param name="optionsBuilder">Optional ooptions builder to configure connection.</param>
 		protected async ValueTask TestType<TType, TNullableType>(
-			string                                context,
-			DbDataType                            dbType,
-			TType                                 value,
-			TNullableType?                        nullableValue,
-			bool?                                 testParameters           = null,
-			bool                                  skipNullable             = false,
-			bool                                  filterByValue            = true,
-			bool                                  filterByNullableValue    = true,
-			Func<TType, TType>?                   getExpectedValue         = null,
+			string context,
+			DbDataType dbType,
+			TType value,
+			TNullableType? nullableValue,
+			bool? testParameters = null,
+			bool skipNullable = false,
+			bool filterByValue = true,
+			bool filterByNullableValue = true,
+			Func<TType, TType>? getExpectedValue = null,
 			Func<TNullableType?, TNullableType?>? getExpectedNullableValue = null,
-			Func<DataOptions, DataOptions>?       optionsBuilder           = null)
+			Func<TType, bool>? isExpectedValue = null,
+			Func<TNullableType?, bool>? isExpectedNullableValue = null,
+			Func<DataOptions, DataOptions>? optionsBuilder = null,
+			Func<BulkCopyType, bool>? testBulkCopyType = null)
 		{
 			testParameters ??= TestParameters;
 
@@ -91,21 +96,21 @@ namespace Tests.DataProvider
 
 			var prop = ent.Property(e => e.Column).IsNullable(false);
 
-			if (dbType.DataType  != DataType.Undefined) prop.HasDataType (dbType.DataType       );
-			if (dbType.DbType    != null              ) prop.HasDbType   (dbType.DbType         );
-			if (dbType.Precision != null              ) prop.HasPrecision(dbType.Precision.Value);
-			if (dbType.Scale     != null              ) prop.HasScale    (dbType.Scale.Value    );
-			if (dbType.Length    != null              ) prop.HasLength   (dbType.Length.Value   );
+			if (dbType.DataType != DataType.Undefined) prop.HasDataType(dbType.DataType);
+			if (dbType.DbType != null) prop.HasDbType(dbType.DbType);
+			if (dbType.Precision != null) prop.HasPrecision(dbType.Precision.Value);
+			if (dbType.Scale != null) prop.HasScale(dbType.Scale.Value);
+			if (dbType.Length != null) prop.HasLength(dbType.Length.Value);
 
 			if (!skipNullable)
 			{
 				var propN = ent.Property(e => e.ColumnNullable).IsNullable(true);
 
-				if (dbType.DataType  != DataType.Undefined) propN.HasDataType (dbType.DataType             );
-				if (dbType.DbType    != null              ) propN.HasDbType   ($"Nullable({dbType.DbType})");
-				if (dbType.Precision != null              ) propN.HasPrecision(dbType.Precision.Value      );
-				if (dbType.Scale     != null              ) propN.HasScale    (dbType.Scale.Value          );
-				if (dbType.Length    != null              ) propN.HasLength   (dbType.Length.Value         );
+				if (dbType.DataType != DataType.Undefined) propN.HasDataType(dbType.DataType);
+				if (dbType.DbType != null) propN.HasDbType($"Nullable({dbType.DbType})");
+				if (dbType.Precision != null) propN.HasPrecision(dbType.Precision.Value);
+				if (dbType.Scale != null) propN.HasScale(dbType.Scale.Value);
+				if (dbType.Length != null) propN.HasLength(dbType.Length.Value);
 			}
 			else
 				ent.Property(e => e.ColumnNullable).IsNotColumn();
@@ -123,13 +128,15 @@ namespace Tests.DataProvider
 			{
 				db.InlineParameters = false;
 
+				var expectedParamCount = (filterByValue ? 1 : 0) + (filterByNullableValue && nullableValue != null ? 1 : 0);
+
 				db.OnNextCommandInitialized((_, cmd) =>
 				{
-					Assert.That(cmd.Parameters, Has.Count.EqualTo(nullableValue == null ? 1 : 2));
+					Assert.That(cmd.Parameters, Has.Count.EqualTo(expectedParamCount));
 					return cmd;
 				});
 
-				AssertData(table, value, nullableValue, skipNullable, filterByValue, filterByNullableValue, getExpectedValue, getExpectedNullableValue);
+				AssertData(table, value, nullableValue, skipNullable, filterByValue, filterByNullableValue, getExpectedValue, getExpectedNullableValue, isExpectedValue, isExpectedNullableValue);
 			}
 
 			// test literal
@@ -141,33 +148,42 @@ namespace Tests.DataProvider
 					return cmd;
 				});
 
-				AssertData(table, value, nullableValue, skipNullable, filterByValue, filterByNullableValue, getExpectedValue, getExpectedNullableValue);
+				AssertData(table, value, nullableValue, skipNullable, filterByValue, filterByNullableValue, getExpectedValue, getExpectedNullableValue, isExpectedValue, isExpectedNullableValue);
 				db.InlineParameters = false;
 			}
 
 			var options = GetDefaultBulkCopyOptions(context);
 
 			// test bulk copy modes
-			options = GetDefaultBulkCopyOptions(context) with { BulkCopyType = BulkCopyType.RowByRow };
-			table.Delete();
-			db.BulkCopy(options, data);
-			AssertData(table, value, nullableValue, skipNullable, filterByValue, filterByNullableValue, getExpectedValue, getExpectedNullableValue);
+			if (testBulkCopyType?.Invoke(BulkCopyType.RowByRow) != false)
+			{
+				options = GetDefaultBulkCopyOptions(context) with { BulkCopyType = BulkCopyType.RowByRow };
+				table.Delete();
+				db.BulkCopy(options, data);
+				AssertData(table, value, nullableValue, skipNullable, filterByValue, filterByNullableValue, getExpectedValue, getExpectedNullableValue, isExpectedValue, isExpectedNullableValue);
+			}
 
-			options = GetDefaultBulkCopyOptions(context) with { BulkCopyType = BulkCopyType.MultipleRows };
-			table.Delete();
-			db.BulkCopy(options, data);
-			AssertData(table, value, nullableValue, skipNullable, filterByValue, filterByNullableValue, getExpectedValue, getExpectedNullableValue);
+			if (testBulkCopyType?.Invoke(BulkCopyType.MultipleRows) != false)
+			{
+				options = GetDefaultBulkCopyOptions(context) with { BulkCopyType = BulkCopyType.MultipleRows };
+				table.Delete();
+				db.BulkCopy(options, data);
+				AssertData(table, value, nullableValue, skipNullable, filterByValue, filterByNullableValue, getExpectedValue, getExpectedNullableValue, isExpectedValue, isExpectedNullableValue);
+			}
 
-			options = GetDefaultBulkCopyOptions(context) with { BulkCopyType = BulkCopyType.ProviderSpecific };
-			table.Delete();
-			db.BulkCopy(options, data);
-			AssertData(table, value, nullableValue, skipNullable, filterByValue, filterByNullableValue, getExpectedValue, getExpectedNullableValue);
+			if (testBulkCopyType?.Invoke(BulkCopyType.ProviderSpecific) != false)
+			{
+				options = GetDefaultBulkCopyOptions(context) with { BulkCopyType = BulkCopyType.ProviderSpecific };
+				table.Delete();
+				db.BulkCopy(options, data);
+				AssertData(table, value, nullableValue, skipNullable, filterByValue, filterByNullableValue, getExpectedValue, getExpectedNullableValue, isExpectedValue, isExpectedNullableValue);
 
-			// test async provider-specific bulk copy as it often has own implementation
-			options = GetDefaultBulkCopyOptions(context) with { BulkCopyType = BulkCopyType.ProviderSpecific };
-			await table.DeleteAsync();
-			await db.BulkCopyAsync(options, data);
-			AssertData(table, value, nullableValue, skipNullable, filterByValue, filterByNullableValue, getExpectedValue, getExpectedNullableValue);
+				// test async provider-specific bulk copy as it often has own implementation
+				options = GetDefaultBulkCopyOptions(context) with { BulkCopyType = BulkCopyType.ProviderSpecific };
+				await table.DeleteAsync();
+				await db.BulkCopyAsync(options, data);
+				AssertData(table, value, nullableValue, skipNullable, filterByValue, filterByNullableValue, getExpectedValue, getExpectedNullableValue, isExpectedValue, isExpectedNullableValue);
+			}
 		}
 
 		/// <summary>
@@ -195,7 +211,9 @@ namespace Tests.DataProvider
 			bool                                       filterByValue,
 			bool                                       filterByNullableValue,
 			Func<TType, TType>?                        getExpectedValue,
-			Func<TNullableType?, TNullableType?>?      getExpectedNullableValue)
+			Func<TNullableType?, TNullableType?>?      getExpectedNullableValue,
+			Func<TType, bool>?                         isExpectedValue,
+			Func<TNullableType?, bool>?                isExpectedNullableValue)
 		{
 			filterByNullableValue = filterByNullableValue && !skipNullable;
 
@@ -215,9 +233,18 @@ namespace Tests.DataProvider
 			Assert.That(records, Has.Length.EqualTo(1));
 
 			var record = records[0];
-			Assert.That(record.Column, Is.EqualTo(getExpectedValue != null ? getExpectedValue(value) : value));
+			if (isExpectedValue != null)
+				Assert.That(isExpectedValue(record.Column), Is.True);
+			else
+				Assert.That(record.Column, Is.EqualTo(getExpectedValue != null ? getExpectedValue(value) : value));
+
 			if (!skipNullable)
-				Assert.That(record.ColumnNullable, Is.EqualTo(getExpectedNullableValue != null ? getExpectedNullableValue(nullableValue) : nullableValue));
+			{
+				if (isExpectedNullableValue != null)
+					Assert.That(isExpectedNullableValue(record.ColumnNullable), Is.True);
+				else
+					Assert.That(record.ColumnNullable, Is.EqualTo(getExpectedNullableValue != null ? getExpectedNullableValue(nullableValue) : nullableValue));
+			}
 		}
 	}
 }

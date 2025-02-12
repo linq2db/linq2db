@@ -7,7 +7,7 @@ namespace LinqToDB.Linq.Builder
 
 	abstract class PassThroughContext : BuildContextBase
 	{
-		protected PassThroughContext(IBuildContext context, SelectQuery selectQuery) : base(context.Builder, context.ElementType, selectQuery)
+		protected PassThroughContext(IBuildContext context, SelectQuery selectQuery) : base(context.TranslationModifier, context.Builder, context.ElementType, selectQuery)
 		{
 			Context = context;
 			Parent  = context.Parent;

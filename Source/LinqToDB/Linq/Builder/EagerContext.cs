@@ -11,7 +11,7 @@ namespace LinqToDB.Linq.Builder
 		public override MappingSchema MappingSchema => Context.MappingSchema;
 		public          IBuildContext Context       { get; }
 
-		public EagerContext(IBuildContext context, Type elementType) : base(context.Builder, elementType, context.SelectQuery)
+		public EagerContext(IBuildContext context, Type elementType) : base(context.TranslationModifier, context.Builder, elementType, context.SelectQuery)
 		{
 			Context = context;
 		}

@@ -233,5 +233,54 @@ namespace LinqToDB.EntityFrameworkCore.Tests
 			using var dc = db.CreateLinqToDBConnectionDetached();
 			Assert.That(dc.MappingSchema.DisplayID, Does.Contain("2005"));
 		}
+
+		[Test]
+		public virtual async Task TestSkipModes([EFDataSources] string provider)
+		{
+			using var context = CreateContext(provider);
+			using var connection = context.CreateLinqToDBConnection();
+
+			var entityEF = new SkipModesTable() { Id = 1, InsertOnly = 2, UpdateOnly = 3, ReadOnly = 4 };
+			var entityL2D = new SkipModesTable() { Id = 2, InsertOnly = 2, UpdateOnly = 3, ReadOnly = 4 };
+			context.SkipModes.Add(entityEF);
+			await context.SaveChangesAsync();
+			connection.Insert(entityL2D);
+
+			var result = context.GetTable<SkipModesTable>().OrderBy(r => r.Id).ToArray();
+
+			Assert.That(result, Has.Length.EqualTo(2));
+			Assert.Multiple(() =>
+			{
+				Assert.That(result[0].InsertOnly, Is.EqualTo(2));
+				Assert.That(result[0].UpdateOnly, Is.Null);
+				Assert.That(result[0].ReadOnly, Is.Null);
+				Assert.That(result[1].InsertOnly, Is.EqualTo(2));
+				Assert.That(result[1].UpdateOnly, Is.Null);
+				Assert.That(result[1].ReadOnly, Is.Null);
+			});
+
+			entityEF.InsertOnly = 11;
+			entityEF.UpdateOnly = 12;
+			entityEF.ReadOnly = 13;
+			entityL2D.InsertOnly = 11;
+			entityL2D.UpdateOnly = 12;
+			entityL2D.ReadOnly = 13;
+
+			await context.SaveChangesAsync();
+			connection.Update(entityL2D);
+
+			result = context.GetTable<SkipModesTable>().OrderBy(r => r.Id).ToArray();
+
+			Assert.That(result, Has.Length.EqualTo(2));
+			Assert.Multiple(() =>
+			{
+				Assert.That(result[0].InsertOnly, Is.EqualTo(2));
+				Assert.That(result[0].UpdateOnly, Is.EqualTo(12));
+				Assert.That(result[0].ReadOnly, Is.Null);
+				Assert.That(result[1].InsertOnly, Is.EqualTo(2));
+				Assert.That(result[1].UpdateOnly, Is.EqualTo(12));
+				Assert.That(result[1].ReadOnly, Is.Null);
+			});
+		}
 	}
 }

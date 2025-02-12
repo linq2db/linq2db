@@ -699,7 +699,7 @@ namespace LinqToDB.Linq.Builder
 		Expression MakeIsPredicateExpression(IBuildContext context, TypeBinaryExpression expression)
 		{
 			var typeOperand = expression.TypeOperand;
-			var table       = new TableBuilder.TableContext(this, context.MappingSchema, new BuildInfo((IBuildContext?)null, ExpressionInstances.UntypedNull, new SelectQuery()), typeOperand);
+			var table       = new TableBuilder.TableContext(context.TranslationModifier, this, context.MappingSchema, new BuildInfo((IBuildContext?)null, ExpressionInstances.UntypedNull, new SelectQuery()), typeOperand);
 
 			if (typeOperand == table.ObjectType)
 			{
@@ -1091,30 +1091,70 @@ namespace LinqToDB.Linq.Builder
 
 		#region Query Filter
 
-		Stack<Type[]>? _disabledFilters;
+		TranslationModifier?        _globalModifier;
+		Stack<TranslationModifier>? _translationModifiers;
+		Stack<Expression>?          _disableFiltersForExpression;
+
+		public void PushTranslationModifier(TranslationModifier modifier, bool isTemporary)
+		{
+			_translationModifiers ??= new Stack<TranslationModifier>();
+
+			if (!isTemporary && _translationModifiers.Count == 0)
+				_globalModifier = modifier;
+
+			_translationModifiers.Push(modifier);
+		}
+
+		public void PopTranslationModifier()
+		{
+			if (_translationModifiers == null)
+				throw new InvalidOperationException();
+			_ = _translationModifiers.Pop();
+		}
+
+		public TranslationModifier GetTranslationModifier()
+		{
+			if (_translationModifiers is { Count: > 0 })
+				return _translationModifiers.Peek();
+			return _globalModifier ?? TranslationModifier.Default;
+		}
 
 		public void PushDisabledQueryFilters(Type[] disabledFilters)
 		{
-			_disabledFilters ??= new Stack<Type[]>();
-			_disabledFilters.Push(disabledFilters);
+			PushTranslationModifier(GetTranslationModifier().WithIgnoreQueryFilters(disabledFilters), true);
 		}
 
 		public bool IsFilterDisabled(Type entityType)
 		{
-			if (_disabledFilters == null || _disabledFilters.Count == 0)
-				return false;
-			var filter = _disabledFilters.Peek();
-			if (filter.Length == 0)
-				return true;
-			return Array.IndexOf(filter, entityType) >= 0;
+			return GetTranslationModifier().IsFilterDisabled(entityType);
 		}
 
 		public void PopDisabledFilter()
 		{
-			if (_disabledFilters == null)
+			if (_translationModifiers == null)
 				throw new InvalidOperationException();
 
-			_ = _disabledFilters.Pop();
+			_ = _translationModifiers.Pop();
+		}
+
+		public void PushDisableFiltersForExpression(Expression expression)
+		{
+			_disableFiltersForExpression ??= new Stack<Expression>();
+			_disableFiltersForExpression.Push(expression);
+		}
+
+		public void PopDisableFiltersForExpression()
+		{
+			if (_disableFiltersForExpression == null)
+				throw new InvalidOperationException();
+			_ = _disableFiltersForExpression.Pop();
+		}
+
+		public bool IsFilterDisabledForExpression(Expression expression)
+		{
+			if (_disableFiltersForExpression == null)
+				return false;
+			return _disableFiltersForExpression.Contains(expression);
 		}
 
 		#endregion
@@ -1381,7 +1421,8 @@ namespace LinqToDB.Linq.Builder
 				{
 					if (member != null && nextPath != null)
 					{
-						if (nextPath[nextIndex] is MemberExpression nextMember && body.Type.IsSameOrParentOf(nextMember.Expression!.Type))
+						if (nextPath[nextIndex] is MemberExpression nextMember
+							&& (body.Type.IsSameOrParentOf(nextMember.Expression!.Type) || nextMember.Expression!.Type.IsSameOrParentOf(body.Type)))
 						{
 							var newMember = body.Type.GetMemberEx(nextMember.Member);
 							if (newMember != null)

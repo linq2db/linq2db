@@ -976,7 +976,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// </summary>
 			[Column("description"),        NotNull] public string   Description      { get; set; } = null!; // nvarchar(max)
 			/// <summary>
-			/// *Note: This value is always NULL for Azure SQL Database V12. See [examples](#Deadlock) section for how to retrieve deadlock events for V12.*<br/><br/> For <strong>Deadlock</strong> events, this column contains the deadlock graph. This column is NULL for other event types.
+			/// *Note: This value is always NULL for Azure SQL Database V12. See [examples](https://learn.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-event-log-azure-sql-database?view=azuresqldb-current#examples) section for how to retrieve deadlock events for V12.*<br/><br/> For <strong>Deadlock</strong> events, this column contains the deadlock graph. This column is NULL for other event types.
 			/// </summary>
 			[Column("additional_data"),    NotNull] public object   AdditionalData   { get; set; } = null!; // XML
 		}
@@ -1596,7 +1596,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			[Column("distribution_id"), NotNull] public int    DistributionID { get; set; } // int
 			/// <summary>
 			/// ID of the node this distribution is on.<br/>
-			/// Range: See pdw_node_id in [sys.dm_pdw_nodes (Transact-SQL)](../../relational-databases/system-dynamic-management-views/sys-dm-pdw-nodes-transact-sql.md).
+			/// Range: See pdw_node_id in [sys.dm_pdw_nodes (Transact-SQL)](https://learn.microsoft.com/en-us/sql/relational-databases/system-dynamic-management-views/sys-dm-pdw-nodes-transact-sql?view=aps-pdw-2016-au7).
 			/// </summary>
 			[Column("pdw_node_id"),     NotNull] public int    PdwNodeID      { get; set; } // int
 			/// <summary>
@@ -1877,12 +1877,12 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			[Column("Principal_id"),       NotNull] public int      PrincipalID      { get; set; } // int
 			/// <summary>
 			/// ID of the session performing the operation.<br/>
-			/// Range: See session_id in [sys.dm_pdw_exec_sessions (Transact-SQL)](../../relational-databases/system-dynamic-management-views/sys-dm-pdw-exec-sessions-transact-sql.md).
+			/// Range: See session_id in [sys.dm_pdw_exec_sessions (Transact-SQL)](https://learn.microsoft.com/en-us/sql/relational-databases/system-dynamic-management-views/sys-dm-pdw-exec-sessions-transact-sql?view=aps-pdw-2016-au7).
 			/// </summary>
 			[Column("session_id"),         NotNull] public string   SessionID        { get; set; } = null!; // nvarchar(32)
 			/// <summary>
 			/// ID of the request performing the operation. For loads, this is the current or last request associated with this load..<br/>
-			/// Range: See request_id in [sys.dm_pdw_exec_requests (Transact-SQL)](../../relational-databases/system-dynamic-management-views/sys-dm-pdw-exec-requests-transact-sql.md).
+			/// Range: See request_id in [sys.dm_pdw_exec_requests (Transact-SQL)](https://learn.microsoft.com/en-us/sql/relational-databases/system-dynamic-management-views/sys-dm-pdw-exec-requests-transact-sql?view=aps-pdw-2016-au7).
 			/// </summary>
 			[Column("request_id"),         NotNull] public string   RequestID        { get; set; } = null!; // nvarchar(32)
 			/// <summary>
@@ -1929,7 +1929,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			[Column("run_id"),             NotNull] public int      RunID            { get; set; } // int
 			/// <summary>
 			/// Unique identifier of an appliance node for which this record holds details.<br/><br/> run_id and pdw_node_id form the key for this view.<br/>
-			/// Range: See node_id in [sys.dm_pdw_nodes (Transact-SQL)](../../relational-databases/system-dynamic-management-views/sys-dm-pdw-nodes-transact-sql.md).
+			/// Range: See node_id in [sys.dm_pdw_nodes (Transact-SQL)](https://learn.microsoft.com/en-us/sql/relational-databases/system-dynamic-management-views/sys-dm-pdw-nodes-transact-sql?view=aps-pdw-2016-au7).
 			/// </summary>
 			[Column("pdw_node_id"),        NotNull] public int      PdwNodeID        { get; set; } // int
 			/// <summary>
@@ -2080,7 +2080,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// </summary>
 			[Column("physical_name"), NotNull] public string PhysicalName { get; set; } = null!; // nvarchar(36)
 			/// <summary>
-			/// The object ID for the materialized view. See [sys.objects (Transact-SQL)](./sys-objects-transact-sql.md?view=azure-sqldw-latest&amp;preserve-view=true).
+			/// The object ID for the materialized view. See [sys.objects (Transact-SQL)](https://learn.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-objects-transact-sql?view=sql-server-ver16).
 			/// </summary>
 			[Column("object_id"),     NotNull] public int    ObjectID     { get; set; } // int
 
@@ -13223,7 +13223,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// </summary>
 			[Column("version"),       Nullable] public int?  Version      { get; set; } // int
 			/// <summary>
-			/// Dictionary type:<br/><br/> 1 - Hash dictionary containing <strong>int</strong> values<br/><br/> 2 - Not used<br/><br/> 3 - Hash dictionary containing string values<br/><br/> 4 - Hash dictionary containing <strong>float</strong> values<br/><br/> For more information about dictionaries, see <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/~/relational-databases/indexes/columnstore-indexes-overview'>Columnstore Indexes Guide</a>.
+			/// Dictionary type:<br/><br/> 1 - Hash dictionary containing <strong>int</strong> values<br/><br/> 2 - Not used<br/><br/> 3 - Hash dictionary containing string values<br/><br/> 4 - Hash dictionary containing <strong>float</strong> values<br/><br/> For more information about dictionaries, see <a href='https://docs.microsoft.com/en-us/sql/relational-databases/indexes/columnstore-indexes-overview'>Columnstore Indexes Guide</a>.
 			/// </summary>
 			[Column("type"),          Nullable] public int?  TypeColumn   { get; set; } // int
 			/// <summary>
@@ -13335,7 +13335,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// </summary>
 			[Column("version"),                 Nullable] public int?    Version               { get; set; } // int
 			/// <summary>
-			/// Type of encoding used for that segment:<br/><br/> 1 = VALUE_BASED - non-string/binary with no dictionary (similar to 4 with some internal variations)<br/><br/> 2 = VALUE_HASH_BASED - non-string/binary column with common values in dictionary<br/><br/> 3 = STRING_HASH_BASED - string/binary column with common values in dictionary<br/><br/> 4 = STORE_BY_VALUE_BASED - non-string/binary with no dictionary<br/><br/> 5 = STRING_STORE_BY_VALUE_BASED - string/binary with no dictionary<br/><br/> For more information, see the [Remarks](#remarks) section.
+			/// Type of encoding used for that segment:<br/><br/> 1 = VALUE_BASED - non-string/binary with no dictionary (similar to 4 with some internal variations)<br/><br/> 2 = VALUE_HASH_BASED - non-string/binary column with common values in dictionary<br/><br/> 3 = STRING_HASH_BASED - string/binary column with common values in dictionary<br/><br/> 4 = STORE_BY_VALUE_BASED - non-string/binary with no dictionary<br/><br/> 5 = STRING_STORE_BY_VALUE_BASED - string/binary with no dictionary<br/><br/> For more information, see the [Remarks](https://learn.microsoft.com/en-us/sql/relational-databases/system-catalog-views/sys-column-store-segments-transact-sql?view=sql-server-ver16#remarks) section.
 			/// </summary>
 			[Column("encoding_type"),           Nullable] public int?    EncodingType          { get; set; } // int
 			/// <summary>
@@ -23274,7 +23274,7 @@ namespace LinqToDB.Tools.DataProvider.SqlServer.Schemas
 			/// </summary>
 			[Column("remote_table_name"),           Nullable] public string? RemoteTableName        { get; set; } // sysname
 			/// <summary>
-			/// The filter predicate, if any, that identifies rows in the table to be migrated. If the value is null, the entire table is eligible to be migrated.<br/><br/> For more info, see <a href='https://docs.microsoft.com/en-us/sql/sql-server/stretch-database/enable-stretch-database-for-a-table'>Enable Stretch Database for a table</a> and <a href='https://docs.microsoft.com/en-us/sql/relational-databases/system-catalog-views/~/sql-server/stretch-database/select-rows-to-migrate-by-using-a-filter-function-stretch-database'>Select rows to migrate by using a filter predicate</a>.
+			/// The filter predicate, if any, that identifies rows in the table to be migrated. If the value is null, the entire table is eligible to be migrated.<br/><br/> For more info, see <a href='https://docs.microsoft.com/en-us/sql/sql-server/stretch-database/enable-stretch-database-for-a-table'>Enable Stretch Database for a table</a> and <a href='https://docs.microsoft.com/en-us/sql/sql-server/stretch-database/select-rows-to-migrate-by-using-a-filter-function-stretch-database'>Select rows to migrate by using a filter predicate</a>.
 			/// </summary>
 			[Column("filter_predicate"),            Nullable] public string? FilterPredicate        { get; set; } // nvarchar(max)
 			/// <summary>

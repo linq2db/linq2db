@@ -14,7 +14,8 @@ namespace LinqToDB.Linq.Builder
 	{
 		class SimpleSelectContext : BuildContextBase
 		{
-			public SimpleSelectContext(ExpressionBuilder builder, Type elementType, SelectQuery selectQuery) : base(builder, elementType, selectQuery)
+			public SimpleSelectContext(TranslationModifier translationModifier, ExpressionBuilder builder, Type elementType, SelectQuery selectQuery) 
+				: base(translationModifier, builder, elementType, selectQuery)
 			{
 			}
 
@@ -53,7 +54,7 @@ namespace LinqToDB.Linq.Builder
 
 			var sqlArguments = new ISqlExpression[arguments.Count];
 
-			var context = buildInfo.Parent ?? new SimpleSelectContext(builder, typeof(object), buildInfo.SelectQuery);
+			var context = buildInfo.Parent ?? new SimpleSelectContext(builder.GetTranslationModifier(), builder, typeof(object), buildInfo.SelectQuery);
 
 			for (var i = 0; i < arguments.Count; i++)
 			{
@@ -63,7 +64,7 @@ namespace LinqToDB.Linq.Builder
 				sqlArguments[i] = arg;
 			}
 
-			return BuildSequenceResult.FromContext(new RawSqlContext(builder, buildInfo, methodCall.Method.GetGenericArguments()[0], isScalar, format, sqlArguments));
+			return BuildSequenceResult.FromContext(new RawSqlContext(builder.GetTranslationModifier(), builder, buildInfo, methodCall.Method.GetGenericArguments()[0], isScalar, format, sqlArguments));
 		}
 
 		public static void PrepareRawSqlArguments(Expression formatArg, Expression? parametersArg, out string format, out IReadOnlyList<Expression> arguments)
@@ -148,8 +149,8 @@ namespace LinqToDB.Linq.Builder
 		//TODO: We have to separate TableContext in proper hierarchy
 		sealed class RawSqlContext : TableContext
 		{
-			public RawSqlContext(ExpressionBuilder builder, BuildInfo buildInfo, Type originalType, bool isScalar, string sql, ISqlExpression[] parameters)
-				: base(builder, builder.MappingSchema, buildInfo, new SqlRawSqlTable(builder.MappingSchema.GetEntityDescriptor(originalType, builder.DataOptions.ConnectionOptions.OnEntityDescriptorCreated), sql, parameters))
+			public RawSqlContext(TranslationModifier translationModifier, ExpressionBuilder builder, BuildInfo buildInfo, Type originalType, bool isScalar, string sql, ISqlExpression[] parameters)
+				: base(translationModifier, builder, builder.MappingSchema, buildInfo, new SqlRawSqlTable(builder.MappingSchema.GetEntityDescriptor(originalType, builder.DataOptions.ConnectionOptions.OnEntityDescriptorCreated), sql, parameters))
 			{
 				// Marking All field as not nullable for satisfying DefaultIfEmptyBuilder
 				if (isScalar)

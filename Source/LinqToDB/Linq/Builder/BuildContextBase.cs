@@ -17,11 +17,12 @@ namespace LinqToDB.Linq.Builder
 		public int    ContextId    { get; }
 #endif
 
-		protected BuildContextBase(ExpressionBuilder builder, Type elementType, SelectQuery selectQuery)
+		protected BuildContextBase(TranslationModifier translationModifier, ExpressionBuilder builder, Type elementType, SelectQuery selectQuery)
 		{
-			Builder     = builder;
-			ElementType = elementType;
-			SelectQuery = selectQuery;
+			TranslationModifier = translationModifier;
+			Builder             = builder;
+			ElementType         = elementType;
+			SelectQuery         = selectQuery;
 #if DEBUG
 			ContextId = builder.GenerateContextId();
 #endif
@@ -33,8 +34,9 @@ namespace LinqToDB.Linq.Builder
 		public          SelectQuery       SelectQuery   { get; protected set; }
 		public          IBuildContext?    Parent        { get; set; }
 
-		public virtual  Type       ElementType { get; }
-		public abstract Expression MakeExpression(Expression path, ProjectFlags flags);
+		public          TranslationModifier TranslationModifier { get; }
+		public virtual  Type                ElementType         { get; }
+		public abstract Expression          MakeExpression(Expression path, ProjectFlags flags);
 
 		public abstract void SetRunQuery<T>(Query<T> query, Expression expr);
 
