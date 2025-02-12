@@ -14,11 +14,12 @@ namespace LinqToDB.Linq.Builder
 		int     ContextId     { get; }
 #endif
 
-		ExpressionBuilder Builder       { get; }
-		MappingSchema     MappingSchema { get; }
-		Expression?       Expression    { get; }
-		SelectQuery       SelectQuery   { get; }
-		IBuildContext?    Parent        { get; set; } // TODO: probably not needed
+		ExpressionBuilder   Builder             { get; }
+		MappingSchema       MappingSchema       { get; }
+		Expression?         Expression          { get; }
+		SelectQuery         SelectQuery         { get; }
+		IBuildContext?      Parent              { get; set; } // TODO: probably not needed
+		TranslationModifier TranslationModifier { get; }
 
 		Type ElementType { get; }
 

@@ -41,7 +41,7 @@ namespace Tests.Linq
 		}
 
 		[Table]
-		sealed class InfoClass
+		sealed class InfoClass : ISoftDelete
 		{
 			[Column] public int     Id    { get; set; }
 			[Column] public string? Value { get; set; }
@@ -93,7 +93,7 @@ namespace Tests.Linq
 					{
 						Id = i,
 						Value = "InfoValue_" + i,
-						IsDeleted = i % 3 == 0,
+						IsDeleted = i % 2 == 0,
 						MasterId = i % 4 == 0 ? (int?)i : null
 					}
 				)
@@ -104,7 +104,7 @@ namespace Tests.Linq
 				{
 					Id = i,
 					Value = "DetailValue_" + i,
-					IsDeleted = i % 3 == 0,
+					IsDeleted = i % 4 == 0,
 					MasterId = i / 100
 				})
 				.ToArray();
@@ -161,7 +161,6 @@ namespace Tests.Linq
 			var resultFiltered1 = query.ToArray();
 
 			db.IsSoftDeleteFilterEnabled = false;
-			query                        = Internals.CreateExpressionQueryInstance<T>(db, query.Expression);
 			var resultNotFiltered1 = query.ToArray();
 
 			Assert.That(resultFiltered1, Has.Length.LessThan(resultNotFiltered1.Length));
@@ -234,7 +233,7 @@ namespace Tests.Linq
 			using (db.CreateLocalTable(testData.Item2))
 			using (db.CreateLocalTable(testData.Item3))
 			{
-				var query = from m in db.GetTable<MasterClass>().IgnoreFilters()
+				var query = from m in db.GetTable<MasterClass>().IgnoreFilters(typeof(MasterClass))
 					from d in m.Details!
 					select d;
 
@@ -262,7 +261,7 @@ namespace Tests.Linq
 			using (db.CreateLocalTable(testData.Item2))
 			using (db.CreateLocalTable(testData.Item3))
 			{
-				var query = from m in db.GetTable<MasterClass>().IgnoreFilters()
+				var query = from m in db.GetTable<MasterClass>().IgnoreFilters(typeof(MasterClass))
 					from d in m.Details!
 					select d;
 
@@ -305,11 +304,47 @@ namespace Tests.Linq
 			using (db.CreateLocalTable(testData.Item2))
 			using (db.CreateLocalTable(testData.Item3))
 			{
-				var query = from m in db.GetTable<MasterClass>().IgnoreFilters()
+				var query = from m in db.GetTable<MasterClass>().IgnoreFilters(typeof(MasterClass))
 					from d in m.Details!
 					select d;
 
 				CheckFiltersForQuery(db, query);
+			}
+		}
+
+		[Test]
+		public void AssociationNesting([IncludeDataSources(false, TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
+		{
+			var testData = GenerateTestData();
+
+			var builder = new FluentMappingBuilder(new MappingSchema());
+
+			builder.Entity<MasterClass>().HasQueryFilter<MyDataContext>(FilterDeletedCondition);
+			builder.Entity<DetailClass>().HasQueryFilter<MyDataContext>(FilterDeletedCondition);
+			builder.Entity<InfoClass>()  .HasQueryFilter<MyDataContext>(FilterDeletedCondition);
+
+			builder.Build();
+
+			var ms = builder.MappingSchema;
+
+			using (var db = new MyDataContext(context, ms))
+			using (db.CreateLocalTable(testData.Item1))
+			using (db.CreateLocalTable(testData.Item2))
+			using (db.CreateLocalTable(testData.Item3))
+			{
+				var query = from m in db.GetTable<MasterClass>()
+						.LoadWith(x => x.Info)
+						.IgnoreFilters(typeof(InfoClass))
+					where m.Info != null && m.Info.IsDeleted == true
+					select m;
+
+				var result = query.ToArray();
+
+				result.Should().AllSatisfy(m =>
+				{
+					m.IsDeleted.Should().BeFalse();
+					m.Info?.IsDeleted.Should().BeTrue();
+				});
 			}
 		}
 

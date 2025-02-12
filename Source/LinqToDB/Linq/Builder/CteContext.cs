@@ -23,16 +23,16 @@ namespace LinqToDB.Linq.Builder
 		public SubQueryContext? SubQueryContext      { get; private set; }
 		public CteClause        CteClause            { get; private set; }
 
-		public CteContext(ExpressionBuilder builder, IBuildContext? cteInnerQueryContext, CteClause cteClause, Expression cteExpression)
-			: this(builder, cteClause.ObjectType, cteInnerQueryContext?.SelectQuery ?? new SelectQuery())
+		public CteContext(TranslationModifier translationModifier, ExpressionBuilder builder, IBuildContext? cteInnerQueryContext, CteClause cteClause, Expression cteExpression)
+			: this(translationModifier, builder, cteClause.ObjectType, cteInnerQueryContext?.SelectQuery ?? new SelectQuery())
 		{
 			CteInnerQueryContext = cteInnerQueryContext;
 			CteClause            = cteClause;
 			CteExpression        = cteExpression;
 		}
 
-		CteContext(ExpressionBuilder builder, Type objectType, SelectQuery selectQuery)
-			: base(builder, objectType, selectQuery)
+		CteContext(TranslationModifier translationModifier, ExpressionBuilder builder, Type objectType, SelectQuery selectQuery)
+			: base(translationModifier, builder, objectType, selectQuery)
 		{
 			CteClause     = default!;
 			CteExpression = default!;
@@ -262,7 +262,7 @@ namespace LinqToDB.Linq.Builder
 
 		public override IBuildContext Clone(CloningContext context)
 		{
-			var newContext = new CteContext(Builder, ElementType, SelectQuery);
+			var newContext = new CteContext(TranslationModifier, Builder, ElementType, SelectQuery);
 
 			context.RegisterCloned(this, newContext);
 

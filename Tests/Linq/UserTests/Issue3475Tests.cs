@@ -34,6 +34,7 @@ namespace Tests.UserTests
 			public NumberLikeTestTable? Obj { get; set; }
 		}
 
+		[ActiveIssue("Broken in 1.6.0")]
 		[Test]
 		public void NumberLikeTests([IncludeDataSources(TestProvName.AllSQLite, TestProvName.AllClickHouse)] string context)
 		{

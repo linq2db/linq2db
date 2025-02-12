@@ -13,13 +13,11 @@ namespace LinqToDB.Linq.Builder
 
 		protected override BuildSequenceResult BuildMethodCall(ExpressionBuilder builder, MethodCallExpression methodCall, BuildInfo buildInfo)
 		{
-			var saveInline = builder.DataContext.InlineParameters;
-			builder.DataContext.InlineParameters = true;
-			buildInfo.InlineParameters           = true;
+			builder.PushTranslationModifier(builder.GetTranslationModifier().WithInlineParameters(true), false);
 
 			var sequence = builder.TryBuildSequence(new BuildInfo(buildInfo, methodCall.Arguments[0]));
 
-			builder.DataContext.InlineParameters = saveInline;
+			builder.PopTranslationModifier();
 
 			return sequence;
 		}

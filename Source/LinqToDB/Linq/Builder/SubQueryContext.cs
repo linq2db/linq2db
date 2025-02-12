@@ -13,7 +13,7 @@ namespace LinqToDB.Linq.Builder
 	class SubQueryContext : BuildContextBase
 	{
 		public SubQueryContext(IBuildContext subQuery, SelectQuery selectQuery, bool addToSql)
-			: base(subQuery.Builder, subQuery.ElementType, selectQuery)
+			: base(subQuery.TranslationModifier, subQuery.Builder, subQuery.ElementType, selectQuery)
 		{
 			if (selectQuery == subQuery.SelectQuery)
 				throw new ArgumentException("Wrong subQuery argument.", nameof(subQuery));

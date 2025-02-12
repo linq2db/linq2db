@@ -70,7 +70,9 @@ namespace LinqToDB.Linq.Builder
 
 				defaultValue ??= Expression.Default(methodCall.Method.GetGenericArguments()[0]);
 
-				var defaultValueContext = new SelectContext(buildInfo.Parent,
+				var defaultValueContext = new SelectContext(
+					builder.GetTranslationModifier(),
+					buildInfo.Parent,
 					builder,
 					null,
 					defaultValue,

@@ -80,23 +80,5 @@ namespace LinqToDB.Linq.Builder
 
 			set => _isAggregation = value;
 		}
-
-		bool? _inlineParameters;
-		public bool? InlineParameters
-		{
-			get
-			{
-				if (SequenceInfo == null)
-					return _inlineParameters;
-				return SequenceInfo.InlineParameters ?? _inlineParameters;
-			}
-
-			set
-			{
-				_inlineParameters = value;
-				if (SequenceInfo != null)
-					SequenceInfo.InlineParameters = value;
-			}
-		}
 	}
 }

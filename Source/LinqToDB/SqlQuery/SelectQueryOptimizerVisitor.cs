@@ -2957,6 +2957,12 @@ namespace LinqToDB.SqlQuery
 						// in theory it could be lifted for providers with Fake column, but we don't have this
 						// information here currently (it's in SqlBuilder)
 						|| element.From.Tables.Count == 0
+						// we can replace
+						// SELECT xxx GROUP BY ...
+						// with
+						// SELECT * GROUP BY ...
+						// only if we know that all columns in source are in group-by, which is not worth of extra logic
+						|| !element.GroupBy.IsEmpty
 					))
 				{
 					element.AddNew(new SqlValue(1), alias: cte != null ? "c1" : null);
